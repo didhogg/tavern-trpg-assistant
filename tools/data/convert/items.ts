@@ -62,6 +62,19 @@ function displayName(variant: Raw, base: Raw): { name: string; nameEn: string } 
   return { name: `${baseName}${suffix}`, nameEn: `${baseEn}${suffix}`.trim() }
 }
 
+/** 变体对基础物品价格、重量的调整：valueMult/weightMult，或「[[baseItem.value]] + N」形式的 valueExpression。 */
+function adjustments(base: Raw, inherits: Raw): Raw {
+  const out: Raw = {}
+  const baseValue = typeof base.value === 'number' ? base.value : undefined
+  const baseWeight = typeof base.weight === 'number' ? base.weight : undefined
+  const expression = typeof inherits.valueExpression === 'string' ? /^\[\[baseItem\.value\]\]\s*([+*])\s*(\d+(?:\.\d+)?)$/.exec(inherits.valueExpression.trim()) : null
+  if (typeof inherits.valueExpression === 'string' && !expression) throw new Error(`无法识别的价格表达式：${inherits.valueExpression}`)
+  if (baseValue !== undefined && typeof inherits.valueMult === 'number') out.value = baseValue * inherits.valueMult
+  else if (baseValue !== undefined && expression) out.value = expression[1] === '+' ? baseValue + Number(expression[2]) : baseValue * Number(expression[2])
+  if (baseWeight !== undefined && typeof inherits.weightMult === 'number') out.weight = baseWeight * inherits.weightMult
+  return out
+}
+
 /** 把 magicvariants 展开成具体物品；通用变体与基础物品交叉，具名变体直接生成一条。 */
 export function expandMagicVariants(data: { items: Raw[]; baseItems: Raw[]; magicVariants: Raw[] }): { items: Raw[]; created: number; skipped: number } {
   const out: Raw[] = []
@@ -97,6 +110,7 @@ export function expandMagicVariants(data: { items: Raw[]; baseItems: Raw[]; magi
         source,
         page: Number(inherits.page ?? variant.page ?? 0),
         srd: inherits.srd ?? variant.srd,
+        ...adjustments(base, inherits),
         _baseItem: base,
         _variant: variant,
         _variantSlug: `${slug(str(base.ENG_name))}-${genericSlug || 'variant'}`,

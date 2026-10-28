@@ -85,4 +85,12 @@ describe('D1 §12 转换器金样', () => {
     expect(json('monster.goblin.mm')).toContain('命中：')
     expect(json('monster.adult-red-dragon.mm')).toContain('（充能5–6）')
   })
+  it('第二轮核对修复：物品正文模板、变体价格、种族飞行速度、同调法术要求', async () => {
+    const all = await allEntries()
+    expect(JSON.stringify(all.get('item.breastplate-of-acid-resistance.dmg')?.data.text)).toContain('强酸')
+    expect([...all.values()].filter((e) => JSON.stringify(e.data).includes('{#'))).toEqual([])
+    expect(all.get('item.breastplate-barding.phb')?.data).toMatchObject({ value: 160000, weight: 40 })
+    expect(all.get('race.aarakocra.mpmm')?.data.speed).toEqual({ walk: 30, fly: 30 })
+    expect(JSON.stringify(all.get('feature.agonizing-blast.phb')?.data.requires)).not.toContain('#c')
+  })
 })

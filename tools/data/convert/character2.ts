@@ -28,12 +28,18 @@ function abilityBonus(raw: Record<string, unknown>): Record<string, unknown> | u
   return { ...(Object.keys(fixed).length ? { fixed } : {}), ...(choose ? { choose } : {}) }
 }
 
+/** 速度值 true 表示「与步行速度相同」（如鸟羽人的飞行）。 */
 function speed(raw: Record<string, unknown>): Record<string, number> {
   const value = raw.speed
   if (typeof value === 'number') return { walk: value }
   if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+    const walk = entries.find(([key, v]) => key === 'walk' && typeof v === 'number')?.[1] as number | undefined
     const out: Record<string, number> = {}
-    for (const [key, v] of Object.entries(value as Record<string, unknown>)) if (typeof v === 'number') out[key] = v
+    for (const [key, v] of entries) {
+      if (typeof v === 'number') out[key] = v
+      else if (v === true && walk !== undefined) out[key] = walk
+    }
     return out
   }
   return { walk: 0 }
@@ -121,7 +127,7 @@ export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<s
       else if (typeof obj.other === 'string') all.push({ text: obj.other })
     }
     if (typeof obj.other === 'string') all.push({ text: obj.other })
-    if (Array.isArray(obj.spell)) all.push({ text: `需要法术：${obj.spell.map(String).join('、')}` })
+    if (Array.isArray(obj.spell)) all.push({ text: `需要法术：${obj.spell.map((name) => String(name).replace(/#c$/, '')).join('、')}` })
   }
   return all.length ? { all } : undefined
 }

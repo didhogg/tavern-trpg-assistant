@@ -3,6 +3,7 @@ import { readJson, REPO_ROOT, writeBytes, writeText, sha256 } from './lib/io'
 import { createSnapshot, changedFiles, loadSnapshot, saveSnapshot } from './snapshot'
 import { loadRawData } from './extract/load'
 import { expandMagicVariants, mergeItemLists } from './convert/items'
+import { expandItemEntries } from './extract/load'
 import { planAll } from './convert/plan'
 import { convertAll, type ConversionResult } from './convert'
 import { validatePacks, assertVolume } from './validate'
@@ -39,7 +40,7 @@ async function main(): Promise<void> {
   console.log(`法术 ${data.spells.length}，怪物 ${data.monsters.length}，物品 ${data.items.length}，基础物品 ${data.baseItems.length}`)
   const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants })
   console.log(`魔法变体展开：生成 ${expanded.created} 条，跳过 ${expanded.skipped} 个通用变体`)
-  const items = mergeItemLists(data.items, data.baseItems, expanded.items)
+  const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
   const plan = planAll(data, items)
   console.log(`计划条目：${plan.entries.length}，随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)

@@ -132,7 +132,8 @@ function renderTag(name: string, arg: string, ctx: InlineContext): string {
     case 'ref':
       return refMarkup(ctx, spec.refType ?? 'rule', parts, name)
     case 'em':
-      return `{{em:${inlinePlainText(renderInline(arg, ctx))}}}`
+      // {@color 文字|颜色码}：只保留文字
+      return `{{em:${inlinePlainText(renderInline(name === 'color' ? parts[0] ?? '' : arg, ctx))}}}`
     case 'text':
       if (name === 'note') return renderInline(arg, ctx)
       if (name === 'link') return renderInline(parts[0] ?? '', ctx)

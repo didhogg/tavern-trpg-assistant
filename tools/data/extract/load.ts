@@ -18,6 +18,8 @@ export interface RawData {
   monsters: Raw[]
   items: Raw[]
   baseItems: Raw[]
+  /** 物品正文模板（{#itemEntry}）。 */
+  itemEntryTemplates: Raw[]
   magicVariants: Raw[]
   classes: Raw[]
   subclasses: Raw[]
@@ -176,6 +178,41 @@ async function loadFallbackNames(): Promise<Set<string>> {
   return names
 }
 
+const DAMAGE_CN: Record<string, string> = {
+  acid: '强酸', bludgeoning: '钝击', cold: '冷冻', fire: '火焰', force: '力场', lightning: '闪电', necrotic: '死灵',
+  piercing: '穿刺', poison: '毒素', psychic: '心灵', radiant: '光耀', slashing: '挥砍', thunder: '雷鸣',
+}
+
+function fillTemplate(value: unknown, item: Raw): unknown {
+  if (typeof value === 'string') {
+    return value.replace(/\{\{item\.(\w+)\}\}/g, (_all, key: string) => {
+      const field = item[key]
+      if (Array.isArray(field)) return field.map((v) => DAMAGE_CN[String(v)] ?? String(v)).join('、')
+      if (typeof field === 'string' || typeof field === 'number') return String(field)
+      throw new Error(`物品「${String(item.name)}」缺少模板变量 item.${key}`)
+    })
+  }
+  if (Array.isArray(value)) return value.map((v) => fillTemplate(v, item))
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, fillTemplate(v, item)]))
+  return value
+}
+
+/** 把物品正文里的 {#itemEntry 名称|来源} 换成 items-base.json 里的模板正文，并填入物品自己的字段。 */
+export function expandItemEntries(items: Raw[], templates: Raw[]): Raw[] {
+  return items.map((item) => {
+    if (!Array.isArray(item.entries)) return item
+    const entries = item.entries.flatMap((entry: unknown) => {
+      const match = typeof entry === 'string' ? /^\{#itemEntry ([^|}]+)(?:\|([^}]+))?\}$/.exec(entry) : null
+      if (!match) return [entry]
+      const source = match[2] ?? String(item.source)
+      const template = templates.find((t) => t.name === match[1] && t.source === source) ?? templates.find((t) => t.name === match[1] && BOOK_SOURCES.has(String(t.source)))
+      if (!template || !Array.isArray(template.entriesTemplate)) throw new Error(`找不到物品正文模板：${match[1]}|${source}`)
+      return fillTemplate(template.entriesTemplate, item) as unknown[]
+    })
+    return { ...item, entries }
+  })
+}
+
 export async function loadRawData(): Promise<RawData> {
   const booksRaw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, 'books.json'))
   const books = (Array.isArray(booksRaw.book) ? booksRaw.book : []).filter(isObj).map((b) => ({ source: String(b.source), name: String(b.name), translator: typeof b.translator === 'string' ? b.translator : undefined }))
@@ -184,6 +221,7 @@ export async function loadRawData(): Promise<RawData> {
     spells: await loadSpells(),
     monsters: await loadMonsters(),
     items: filterBooks(await loadArray('items.json', 'item')),
+    itemEntryTemplates: await loadArray('items-base.json', 'itemEntry'),
     baseItems: filterBooks(await loadArray('items-base.json', 'baseitem')),
     magicVariants: (await loadArray('magicvariants.json', 'magicvariant')).filter((v) => BOOK_SOURCES.has(String((v.inherits as Raw | undefined)?.source ?? v.source))),
     ...classes,

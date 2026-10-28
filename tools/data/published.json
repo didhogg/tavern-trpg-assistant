@@ -2,28 +2,28 @@
   "formatVersion": 1,
   "packs": {
     "dnd5e2014-srd": {
-      "version": "1.0.0",
-      "sha256": "807ea49f32c4a7b058a5a44d097f74b64bd3e3dc5fddc5b6b85f9a9b9dc58b40"
+      "version": "1.0.1",
+      "sha256": "cfd078be85a1a7a31b4c19c9c2187f5783f20d8490fdadb92d45a0817d86c338"
     },
     "dnd5e2014-phb": {
-      "version": "1.0.0",
-      "sha256": "5ccdf47a321c038cb88a089136db6aaae6baee406a846fd4534bbcb90253a98f"
+      "version": "1.0.1",
+      "sha256": "b26673bffceb5384f2bfc1003281a09b0a693a41dc890821150f57ed8fa8b62e"
     },
     "dnd5e2014-dmg": {
-      "version": "1.0.0",
-      "sha256": "bef6b7694b8f48e06a766141dba192eed5204ebc8dc3eb66a28894e33a9dc2ca"
+      "version": "1.0.1",
+      "sha256": "b8c9c1935d3f6d349752d5efdd7b1fdc904a99f95ac40ab8584299cbf6666a66"
     },
     "dnd5e2014-mm": {
       "version": "1.0.0",
       "sha256": "78769cfe477d29954e63ae2c4df8756d6a38631827ad8cb44067f19708165e85"
     },
     "dnd5e2014-xge": {
-      "version": "1.0.0",
-      "sha256": "17240267c962c61d035ba35117498ebddebbf7199c1419277285166f9eeffae5"
+      "version": "1.0.1",
+      "sha256": "b39cc3c28cae1b6dbd878c801855d7d6a0069bd7af12107d1da348052776b93e"
     },
     "dnd5e2014-tce": {
-      "version": "1.0.0",
-      "sha256": "3e94c598848d35b5f23c83a1dc037a38ecb6c713f02cb11b0a5a2dcc743520e0"
+      "version": "1.0.1",
+      "sha256": "12dcd0814d79845febdc138ce4ebeb72838cfdb84aa8496f36040e9ac8774870"
     },
     "dnd5e2014-scag": {
       "version": "1.0.0",
@@ -38,12 +38,12 @@
       "sha256": "26b6367cd2b19a14220ca6b34d20cc1b5b16c0a11507b7418c4b22d68dd1bfe9"
     },
     "dnd5e2014-mpmm": {
-      "version": "1.0.0",
-      "sha256": "02fa920adae470acc9a73916c49f27895e8731153f78511056b3a0cac9370628"
+      "version": "1.0.1",
+      "sha256": "fedf7bfe7e317ce93349d42778d86b345864c48f411a6805d13ab62f58814d6b"
     },
     "dnd5e2014-bmt": {
-      "version": "1.0.0",
-      "sha256": "77395cf7c2629f2d04336ac1d80b0f4504112ecfcfbbe47642c663b1afa57087"
+      "version": "1.0.1",
+      "sha256": "e2e29503d7958243b7e768e7c2d0463b82d075018de6e4dab65110259acb978e"
     }
   }
 }

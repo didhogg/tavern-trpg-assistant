@@ -30,7 +30,7 @@ function checkDice(label: string, value: unknown): void {
 }
 
 function raw5eTools(value: unknown): string | undefined {
-  if (typeof value === 'string') return value.includes('{@') || value.includes('{=') ? value.slice(0, 120) : undefined
+  if (typeof value === 'string') return value.includes('{@') || value.includes('{=') || value.includes('{#') ? value.slice(0, 120) : undefined
   if (Array.isArray(value)) {
     for (const item of value) { const found = raw5eTools(item); if (found) return found }
   } else if (value && typeof value === 'object') {

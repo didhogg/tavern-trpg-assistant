@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { ConversionResult } from '../convert'
 import type { Entry } from '../../../src/schemas/pack'
@@ -117,9 +118,17 @@ export async function writeChecklist(root: string, result: ConversionResult): Pr
   }
   if (rows.length !== 50) throw new Error(`抽检应有 50 条，实际 ${rows.length} 条`)
 
+  // 保留已填写的「结果」：按 id 沿用上一版文件里的内容。
+  const file = join(root, 'docs', 'probes', 'D1_抽检.md')
+  const previous = new Map<string, string>()
+  for (const line of (await readFile(file, 'utf-8').catch(() => '')).split('\n')) {
+    const cells = line.split('|').map((c) => c.trim())
+    const id = /^`(.+)`$/.exec(cells[3] ?? '')?.[1]
+    if (id && cells[6]) previous.set(id, cells[6])
+  }
   const header = ['# D1 抽检', '', '由构建生成。每条对照官方书核对「要核对的字段」，在「结果」一栏填写「一致」或具体差异。', '', '| # | 类型 | id | 书名与页码 | 要核对的字段 | 结果 |', '|---:|---|---|---|---|---|']
-  const body = rows.map((row, index) => `| ${index + 1} | ${row.entry.type} | \`${row.entry.id}\` | ${pageOf(row.entry)} | ${row.fields} |  |`)
-  await writeText(join(root, 'docs', 'probes', 'D1_抽检.md'), [...header, ...body, ''].join('\n'))
+  const body = rows.map((row, index) => `| ${index + 1} | ${row.entry.type} | \`${row.entry.id}\` | ${pageOf(row.entry)} | ${row.fields} | ${previous.get(row.entry.id) ?? ''} |`)
+  await writeText(file, [...header, ...body, ''].join('\n'))
 }
 
 function crOf(entry: Entry): number {
