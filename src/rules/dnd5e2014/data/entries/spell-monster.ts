@@ -51,6 +51,15 @@ const spellcastingSchema = z.looseObject({
   atWill: z.array(z.string()).default([]),
   perDay: z.record(z.string(), z.array(z.string())).default({}),
   slots: z.record(z.string(), z.number().int()).default({}),
+  /** 按环阶列出的法术：{ "1": { slots: 4, spells: [...] } }；戏法没有 slots。 */
+  spells: z.record(z.string(), z.object({ slots: z.number().int().optional(), spells: z.array(z.string()) })).optional(),
+  /** 其他使用频率：充能、短休/长休、传奇动作、法术充能、仪式。键是次数或充能值，值是法术文字。 */
+  recharge: z.record(z.string(), z.array(z.string())).optional(),
+  rest: z.record(z.string(), z.array(z.string())).optional(),
+  restLong: z.record(z.string(), z.array(z.string())).optional(),
+  legendary: z.record(z.string(), z.array(z.string())).optional(),
+  charges: z.record(z.string(), z.array(z.string())).optional(),
+  ritual: z.array(z.string()).optional(),
 })
 
 export const monsterDataSchema = z.looseObject({

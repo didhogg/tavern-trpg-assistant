@@ -123,6 +123,30 @@ export function tableFromBlock(block: Raw, ctx: TableContext): TableSeed | undef
   return seed
 }
 
+const LOOT_LABEL: Record<string, { cn: string; en: string }> = {
+  individual: { cn: '个人宝藏', en: 'Individual Treasure' },
+  hoard: { cn: '宝藏堆', en: 'Treasure Hoard' },
+}
+
+function coinText(coins: Raw): string {
+  return Object.entries(coins).map(([coin, formula]) => `${String(formula)} ${coin}`).join('、')
+}
+
+/** 宝藏堆的行：宝石、艺术品、魔法物品表（可多个）。 */
+function hoardCells(row: Raw): string[] {
+  const cells: string[] = []
+  const gems = row.gems as Raw | undefined
+  if (gems) cells.push(`${String(gems.amount)} 颗价值 ${String(gems.type)} gp 的宝石`)
+  const art = row.artObjects as Raw | undefined
+  if (art) cells.push(`${String(art.amount)} 件价值 ${String(art.type)} gp 的艺术品`)
+  const magic = Array.isArray(row.magicItems) ? row.magicItems : []
+  for (const item of magic) {
+    const m = item as Raw
+    cells.push(`魔法物品表${String(m.type)}：掷 ${String(m.amount)} 次`)
+  }
+  return cells
+}
+
 export function lootTable(raw: Raw, category: string): TableSeed | undefined {
   const rowsRaw = Array.isArray(raw.table) ? raw.table : []
   if (!rowsRaw.length) return undefined
@@ -136,23 +160,28 @@ export function lootTable(raw: Raw, category: string): TableSeed | undefined {
     const rangeMax = Number(row.max)
     if (!Number.isFinite(min) || !Number.isFinite(rangeMax)) continue
     const cells: string[] = []
-    if (row.coins && typeof row.coins === 'object') {
-      cells.push(Object.entries(row.coins as Raw).map(([coin, formula]) => `${String(formula)} ${coin}`).join(' + '))
-    }
+    if (row.coins && typeof row.coins === 'object') cells.push(coinText(row.coins as Raw).replace('、', ' + '))
     if (typeof row.item === 'string') cells.push(row.item)
+    if (category === 'hoard') cells.push(...hoardCells(row))
     for (const [key, value] of Object.entries(row)) {
       if (['min', 'max', 'coins', 'item'].includes(key)) continue
       if (typeof value === 'string') cells.push(value)
     }
-    rows.push({ min, max: rangeMax, cells: cells.length ? cells : ['—'], refs: [], then: thenOf(cells) })
+    const cell = cells.join('；')
+    rows.push({ min, max: rangeMax, cells: [cell || '—'], refs: [], then: thenOf(cells) })
   }
   if (!rows.length) return undefined
+  const label = LOOT_LABEL[category]
+  const baseName = String(raw.name ?? raw.ENG_name ?? '随机表')
+  const baseEn = typeof raw.ENG_name === 'string' ? raw.ENG_name : undefined
+  const fixedCoins = category === 'hoard' && raw.coins && typeof raw.coins === 'object' ? `固定钱币：${coinText(raw.coins as Raw)}` : undefined
   const seed: TableSeed = {
     source: String(raw.source),
     book: String(raw.source),
     page: Number(raw.page ?? 0),
-    name: String(raw.name ?? raw.ENG_name ?? '随机表'),
-    nameEn: typeof raw.ENG_name === 'string' ? raw.ENG_name : undefined,
+    name: label ? `${label.cn}·${baseName}` : baseName,
+    nameEn: label && baseEn ? `${label.en} ${baseEn}` : baseEn,
+    ...(fixedCoins ? { caption: fixedCoins } : {}),
     dice,
     cols: ['结果'],
     rows,

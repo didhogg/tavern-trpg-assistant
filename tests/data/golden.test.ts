@@ -61,4 +61,28 @@ describe('D1 §12 转换器金样', () => {
     expect(table.data).toMatchObject({ dice: 'd100' })
     expect((table.data.rows as unknown[]).length).toBe(8)
   })
+  it('复核中发现并修复的转换问题：子职业 id、等级表、阵营、抗性、施法、宝藏堆、属性加值', async () => {
+    const all = await allEntries()
+    const json = (id: string) => JSON.stringify(all.get(id)?.data)
+    expect(all.get('subclass.cleric-light-domain.phb')?.data).toMatchObject({ classId: 'class.cleric.phb' })
+    expect([...all.keys()].filter((id) => /(^|[.-])entry([.-]|$)/.test(id))).toEqual([])
+    const rogue = all.get('class.rogue.phb')!.data.table as { cols: string[]; rows: Array<{ level: number; values: string[] }> }
+    expect(rogue.cols).toEqual(['偷袭'])
+    expect(rogue.rows[4].values).toEqual(['3d6'])
+    const bard = all.get('class.bard.phb')!.data.proficiencies as { skills?: { choose: number; from: string[] } }
+    expect(bard.skills?.choose).toBe(3)
+    expect(bard.skills?.from.length).toBe(18)
+    expect(all.get('class.druid.phb')!.data.multiclass).toMatchObject({ proficiencies: { armor: ['light', 'medium', 'shield'] } })
+    expect(all.get('monster.empyrean.mm')!.data.alignment).not.toContain('object')
+    expect(all.get('monster.lich.mm')!.data.immune).toContain('bludgeoning、piercing、slashing（来自非魔法攻击）')
+    const lich = (all.get('monster.lich.mm')!.data.spellcasting as Array<{ spells?: Record<string, { slots?: number; spells: string[] }> }>)[0]
+    expect(lich.spells?.['9']).toMatchObject({ slots: 1 })
+    expect(lich.spells?.['1'].spells.length).toBe(4)
+    expect(all.get('race.half-elf.phb')!.data.abilityBonus).toEqual({ fixed: { cha: 2 }, choose: { count: 2, amount: 1, from: ['str', 'dex', 'con', 'int', 'wis'] } })
+    const hoard = all.get('table.treasure-hoard-challenge-0-4.dmg')!
+    expect(hoard.data.caption).toContain('固定钱币')
+    expect(JSON.stringify(hoard.data.rows)).toContain('魔法物品表A')
+    expect(json('monster.goblin.mm')).toContain('命中：')
+    expect(json('monster.adult-red-dragon.mm')).toContain('（充能5–6）')
+  })
 })

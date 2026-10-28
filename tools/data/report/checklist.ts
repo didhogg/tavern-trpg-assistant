@@ -9,8 +9,17 @@ interface Pick {
   fields: string
 }
 
+/** 抽检优先取玩家手册、城主指南、怪物图鉴等最容易对照的书；同一本书内按 id 排序，结果稳定。 */
+const BOOK_RANK = ['PHB', 'DMG', 'MM', 'XGE', 'TCE', 'VGM', 'MTF', 'MPMM', 'SCAG', 'BMT']
+
+function bookRank(entry: Entry): number {
+  const book = (entry.data.src as { book?: string } | undefined)?.book ?? ''
+  const index = BOOK_RANK.indexOf(book)
+  return index < 0 ? BOOK_RANK.length : index
+}
+
 function allEntries(result: ConversionResult): Entry[] {
-  return result.packs.flatMap((p) => p.entries).sort((a, b) => a.id.localeCompare(b.id))
+  return result.packs.flatMap((p) => p.entries).sort((a, b) => bookRank(a) - bookRank(b) || a.id.localeCompare(b.id))
 }
 
 function picker(entries: Entry[]) {

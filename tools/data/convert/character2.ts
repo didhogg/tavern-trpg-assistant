@@ -8,20 +8,24 @@ import { plainText, summaryOf } from '../summary/summary'
 import { renderInline } from '../markup/inline'
 import type { InlineContext } from '../markup/inline'
 
+const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha']
+
+/** 固定加值与「自选几项加几点」可以同时存在（如半精灵：魅力+2，另选两项各+1）。 */
 function abilityBonus(raw: Record<string, unknown>): Record<string, unknown> | undefined {
   const fixed: Record<string, number> = {}
   let choose: Record<string, unknown> | undefined
   for (const item of Array.isArray(raw.ability) ? raw.ability : []) {
     if (!item || typeof item !== 'object') continue
     const obj = item as Record<string, unknown>
-    for (const key of ['str', 'dex', 'con', 'int', 'wis', 'cha']) if (typeof obj[key] === 'number') fixed[key] = Number(obj[key])
+    for (const key of ABILITY_KEYS) if (typeof obj[key] === 'number') fixed[key] = Number(obj[key])
     if (obj.choose && typeof obj.choose === 'object') {
       const c = obj.choose as Record<string, unknown>
-      choose = { count: Number(c.count ?? 1), amount: Number(c.amount ?? 1), from: ['str', 'dex', 'con', 'int', 'wis', 'cha'] }
+      const from = Array.isArray(c.from) ? c.from.map(String).filter((k) => ABILITY_KEYS.includes(k)) : ABILITY_KEYS
+      choose = { count: Number(c.count ?? 1), amount: Number(c.amount ?? 1), from }
     }
   }
-  if (Object.keys(fixed).length) return { fixed }
-  return choose ? { choose } : undefined
+  if (!Object.keys(fixed).length && !choose) return undefined
+  return { ...(Object.keys(fixed).length ? { fixed } : {}), ...(choose ? { choose } : {}) }
 }
 
 function speed(raw: Record<string, unknown>): Record<string, number> {

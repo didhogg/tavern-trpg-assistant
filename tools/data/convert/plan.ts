@@ -109,7 +109,7 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
     const key = `${str(raw.className)}|${str(raw.classSource)}`
     const info = classSlugs.get(key)
     if (!info) continue
-    const subclassSlug = slug(str(raw.shortName) || str(raw.ENG_name) || str(raw.name))
+    const subclassSlug = slug(str(raw.ENG_name) || str(raw.shortName) || str(raw.name))
     const entry = make('subclass', raw, [info.classSlug, subclassSlug], { classId: classIds.get(key) ?? '' })
     entries.push(entry)
     subclassIds.set(`${key}|${str(raw.shortName)}|${str(raw.source)}`, entry.id)

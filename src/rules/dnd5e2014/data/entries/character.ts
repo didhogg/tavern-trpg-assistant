@@ -65,10 +65,12 @@ export const featureDataSchema = z.looseObject({
 })
 export type FeatureData = z.infer<typeof featureDataSchema>
 
-const abilityBonusSchema = z.union([
-  z.object({ fixed: z.record(z.string(), z.number().int()) }),
-  z.object({ choose: z.object({ count: z.number().int().positive(), amount: z.number().int().positive(), from: z.array(abilityKeySchema) }) }),
-])
+const abilityBonusSchema = z
+  .object({
+    fixed: z.record(z.string(), z.number().int()).optional(),
+    choose: z.object({ count: z.number().int().positive(), amount: z.number().int().positive(), from: z.array(abilityKeySchema) }).optional(),
+  })
+  .refine((v) => v.fixed !== undefined || v.choose !== undefined, { message: '属性加值至少要有固定值或自选之一' })
 
 const raceTraitsSchema = z.array(z.union([z.string(), z.object({ name: z.string(), text: z.array(textBlockSchema).default([]) })]))
 

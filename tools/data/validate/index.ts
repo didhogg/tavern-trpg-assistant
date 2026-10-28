@@ -39,6 +39,33 @@ function raw5eTools(value: unknown): string | undefined {
   return undefined
 }
 
+/** 转换时把对象、空值直接转成文字的痕迹，出现就说明转换器漏处理了某种写法。 */
+function stringifyArtifact(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    const hit = /\[object Object\]|\bundefined\b|\bNaN\b|^\s*[[{]\s*"/.exec(value)
+    return hit ? value.slice(Math.max(0, hit.index - 20), hit.index + 30) : undefined
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) { const found = stringifyArtifact(item); if (found) return found }
+  } else if (value && typeof value === 'object') {
+    for (const item of Object.values(value)) { const found = stringifyArtifact(item); if (found) return found }
+  }
+  return undefined
+}
+
+/** 引用标记的显示文字不应是书籍代码（说明取错了标签的参数位置）。 */
+const BOOK_CODES = new Set(['PHB', 'DMG', 'MM', 'XGE', 'TCE', 'SCAG', 'VGM', 'MTF', 'MPMM', 'BMT', 'XPHB', 'XDMG', 'XMM'])
+function bookCodeDisplay(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    for (const match of value.matchAll(/\{\{ref:[^|}]+\|([^}]*)\}\}/g)) if (BOOK_CODES.has(match[1].trim().toUpperCase())) return match[0]
+  } else if (Array.isArray(value)) {
+    for (const item of value) { const found = bookCodeDisplay(item); if (found) return found }
+  } else if (value && typeof value === 'object') {
+    for (const item of Object.values(value)) { const found = bookCodeDisplay(item); if (found) return found }
+  }
+  return undefined
+}
+
 function diceInEntry(entry: Entry): void {
   const data = entry.data as Record<string, unknown>
   if (entry.type === 'table') {
@@ -89,6 +116,11 @@ export function validatePack(pack: ConvertedPack, ctx: ValidationContext): void 
     if (!credit?.by || !credit.license) fail(`${entry.id} 缺少来源或许可`)
     const rawText = raw5eTools(entry.data)
     if (rawText) fail(`${entry.id} 还有未转换的 5etools 标签：${rawText}`)
+    const artifact = stringifyArtifact(entry.data)
+    if (artifact) fail(`${entry.id} 里有转换残留：${artifact}`)
+    const badDisplay = bookCodeDisplay(entry.data)
+    if (badDisplay) fail(`${entry.id} 的引用显示文字是书籍代码：${badDisplay}`)
+    if (/(^|[.-])entry([.-]|$)/.test(entry.id)) fail(`${entry.id} 的 id 里有占位词 entry（英文名缺失）`)
     diceInEntry(entry)
     for (const id of [...refsIn(entry.data)]) {
       if (own.has(id)) continue

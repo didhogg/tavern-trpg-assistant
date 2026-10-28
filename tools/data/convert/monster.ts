@@ -9,12 +9,36 @@ import { activitiesFromText } from './activities'
 import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'
 
+function tagText(tag: unknown): string {
+  if (tag && typeof tag === 'object') {
+    const t = tag as Record<string, unknown>
+    return `${t.prefixHidden === true ? '' : str(t.prefix)}${str(t.tag)}`
+  }
+  return String(tag)
+}
+
+/** 阵营：代码用空格连接；特殊写法与带备注的写法取其文字。 */
+function alignmentText(list: unknown[]): string {
+  return list
+    .map((v) => {
+      if (v && typeof v === 'object') {
+        const o = v as Record<string, unknown>
+        if (typeof o.special === 'string') return o.special
+        if (Array.isArray(o.alignment)) return o.alignment.map(String).join(' ')
+        return ''
+      }
+      return String(v)
+    })
+    .filter(Boolean)
+    .join(' ')
+}
+
 function creatureType(raw: Record<string, unknown>): { type: string; tags: string[]; swarm?: boolean } {
   const value = raw.type
   if (typeof value === 'string') return { type: value, tags: [] }
   if (value && typeof value === 'object') {
     const obj = value as Record<string, unknown>
-    return { type: str(obj.type) || 'unknown', tags: Array.isArray(obj.tags) ? obj.tags.map(String) : [], ...(obj.swarm === true ? { swarm: true } : {}) }
+    return { type: str(obj.type) || 'unknown', tags: Array.isArray(obj.tags) ? obj.tags.map(tagText) : [], ...(obj.swarm === true ? { swarm: true } : {}) }
   }
   return { type: 'unknown', tags: [] }
 }
@@ -46,9 +70,22 @@ function speedOf(raw: Record<string, unknown>): Record<string, number | boolean>
   return { walk: 0 }
 }
 
+/** 抗性、免疫、易伤可能是 { resist/immune/vulnerable/conditionImmune: [...], preNote?, note? } 或 { special }。 */
+function resistanceText(item: Record<string, unknown>): string {
+  if (typeof item.special === 'string') return item.special
+  const list = ['resist', 'immune', 'vulnerable', 'conditionImmune']
+    .map((key) => item[key])
+    .find((v): v is unknown[] => Array.isArray(v))
+  if (!list) throw new Error(`抗性写法无法识别：${JSON.stringify(item)}`)
+  const body = list.map((v) => (typeof v === 'string' ? v : resistanceText(v as Record<string, unknown>))).join('、')
+  const pre = typeof item.preNote === 'string' ? `${item.preNote} ` : ''
+  const note = typeof item.note === 'string' ? `（${item.note}）` : ''
+  return `${pre}${body}${note}`
+}
+
 function names(value: unknown, inline: InlineContext): string[] {
   if (!Array.isArray(value)) return []
-  return value.map((item) => renderInline(typeof item === 'string' ? item : str((item as Record<string, unknown>).name) || JSON.stringify(item), inline))
+  return value.map((item) => renderInline(typeof item === 'string' ? item : typeof (item as Record<string, unknown>).name === 'string' ? str((item as Record<string, unknown>).name) : resistanceText(item as Record<string, unknown>), inline))
 }
 
 function signedMap(value: unknown): Record<string, number> | undefined {
@@ -79,17 +116,39 @@ function namedActions(value: unknown, inline: InlineContext, entry: PlannedEntry
   })
 }
 
+/** { "1e": [法术…] } 这类「次数 → 法术列表」的写法。 */
+function listMap(value: unknown, inline: InlineContext): Record<string, string[]> {
+  return Object.fromEntries(Object.entries((value ?? {}) as Record<string, unknown>).map(([k, v]) => [k, names(v, inline)]))
+}
+
+function spellsByLevel(value: unknown, inline: InlineContext): Record<string, { slots?: number; spells: string[] }> {
+  const out: Record<string, { slots?: number; spells: string[] }> = {}
+  for (const [level, item] of Object.entries((value ?? {}) as Record<string, unknown>)) {
+    const obj = item as Record<string, unknown>
+    out[level] = { ...(typeof obj.slots === 'number' ? { slots: obj.slots } : {}), spells: names(obj.spells, inline) }
+  }
+  return out
+}
+
 function spellcastingOf(raw: Record<string, unknown>, inline: InlineContext): Array<Record<string, unknown>> {
   const list = Array.isArray(raw.spellcasting) ? raw.spellcasting : []
   return list.map((item) => {
     const obj = item as Record<string, unknown>
+    const extra = (key: string): Record<string, unknown> => (obj[key] ? { [key]: listMap(obj[key], inline) } : {})
     return {
       ability: str(obj.ability) || 'int',
       ...(typeof obj.dc === 'number' ? { dc: obj.dc } : {}),
       ...(typeof obj.attack === 'number' ? { attack: obj.attack } : {}),
       atWill: names(obj.will, inline),
-      perDay: Object.fromEntries(Object.entries((obj.daily ?? {}) as Record<string, unknown>).map(([k, v]) => [k, names(v, inline)])),
+      perDay: listMap(obj.daily, inline),
       slots: Object.fromEntries(Object.entries((obj.slots ?? {}) as Record<string, unknown>).map(([k, v]) => [k, Number(v)])),
+      ...(obj.spells ? { spells: spellsByLevel(obj.spells, inline) } : {}),
+      ...extra('recharge'),
+      ...extra('rest'),
+      ...extra('restLong'),
+      ...extra('legendary'),
+      ...extra('charges'),
+      ...(Array.isArray(obj.ritual) ? { ritual: names(obj.ritual, inline) } : {}),
       name: renderInline(str(obj.name), inline),
       text: convertBlocks([...(Array.isArray(obj.headerEntries) ? obj.headerEntries : []), ...(Array.isArray(obj.entries) ? obj.entries : [])], inline),
     }
@@ -108,7 +167,7 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
     text,
     size: Array.isArray(raw.size) ? raw.size.map(String) : [String(raw.size ?? 'M')],
     creatureType: creatureType(raw),
-    ...(Array.isArray(raw.alignment) ? { alignment: raw.alignment.map(String).join(' ') } : str(raw.alignment) ? { alignment: str(raw.alignment) } : {}),
+    ...(Array.isArray(raw.alignment) ? { alignment: alignmentText(raw.alignment) } : str(raw.alignment) ? { alignment: str(raw.alignment) } : {}),
     ac: acOf(raw),
     hp: hpOf(raw),
     speed: speedOf(raw),

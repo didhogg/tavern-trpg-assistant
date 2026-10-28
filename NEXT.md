@@ -15,15 +15,15 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
   - 安装器与存储：formatVersion 2 识别与 L1 §2.2 全部限制；formatVersion 1 兼容；PackManifest 新字段；lineage/requires/recommends/conflicts/不支持功能的安装预案；Dexie 第 2 版（blobs、blobHashes、packTrash、迁移失败保持旧数据）；安装不再改写当前数据；内置包与推荐包数据层；自动存档原因「改动模组前」；`.trpgsave` 带图片。
   - 构建管线：`tools/data/` 从本地 5etools-cn 批量抽取、展开 `_copy`/`_mod`、展开魔法变体、转换、标记、来源与摘要、分包、校验、确定性打包、版本检查、报告；生成 11 个包。
   - 往返验证：`tests/data/` 的 fixture-data、fixture-adventure；D1 §8 每一行；官方 11 包全量安装、逐包导出再装、每种类型抽 20 条生成副本并做存档往返。
-  - 产品：`packs/dnd5e2014-srd.trpgpack`、`packs/DATA-NOTICE.md`、`packs/LICENSES/`；本地数据仓库 `/Users/xxx/tavern-trpg-data`（10 个书籍包、catalog、NOTICE、LICENSES、README，已本地提交 `ed0f216`，未推送）。
+  - 产品：`packs/dnd5e2014-srd.trpgpack`、`packs/DATA-NOTICE.md`、`packs/LICENSES/`；本地数据仓库 `/Users/xxx/tavern-trpg-data`（10 个书籍包、catalog、NOTICE、LICENSES、README，已本地提交 `beab468`，未推送）。
   - 探针：「M2 数据自检」5 步；e2e 用本地模拟目录与包跑通下载步骤。
 
 ## 证据
-- `npm run check`：114 个单元测试通过（12 个测试文件）。
+- `npm run check`：114 个单元测试通过（12 个测试文件）；`npm run test:data` 26 项通过（5 个测试文件）。
 - `npm run build`：通过；`dist/index.js` 已更新。
 - `npm run e2e`：Chrome 与 WebKit 共 96 项通过，0 失败；含「M1 数据层自检 10/10」与「M2 数据自检 5/5」（4 个视口组合）。
-- `npm run test:data`：21 项通过（4 个测试文件）；含官方 11 包全量往返、200 个引用解析、D1 §7 校验与金样。职业只有 16 条、疾病 9 条，抽 20 条时按实际条数。
-- 连续两次 `npm run build:data`：11 个包 sha256 完全相同；包体积合计 1.54MB，最大单包 SRD 466.7KB（上限 3MB/包、12MB 合计）。
+- `npm run test:data` 含官方 11 包全量往返、200 个引用解析、D1 §7 校验与金样。职业只有 16 条、疾病 9 条，抽 20 条时按实际条数。
+- 连续两次 `npm run build:data`：11 个包 sha256 完全相同；包体积合计 1.56MB，最大单包 SRD 471.6KB（上限 3MB/包、12MB 合计）。
 - 报告：`docs/probes/D1_构建报告.md`；抽检：`docs/probes/D1_抽检.md`（50 条，类型分布 10/10/10/6/5/3/3/2/1）；两次构建对照：`docs/probes/D1_确定性.md`。
 - `packs/` 只有 SRD 包、`DATA-NOTICE.md` 与 `LICENSES/`；`reference/` 仍被 `.gitignore` 忽略。
 
@@ -46,6 +46,10 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
 - 子职业按「名称 + 来源」去重（109 条），因此与 D1 §2 表中的 218 条原始行数不同；2024 重印（classSource XPHB）与跨书重印特性未重复计入。
 - 5 个无名称的抽象亚种族跳过并写入构建报告；1 个职业特性（Ki）缺中文名，用英文名兜底并标记 `credit.by: dnd-data`，报告中有记录。
 - 官方书籍包没有冒险内容项与图片，M2 探针第 4 步对这两类显示跳过；由 `fixture-adventure` 与测试图片覆盖。
+
+- 数据范围外的缺口（原始数据没有或 D1 未定义，未手写补齐）：PHB 的 d100 饰品表不在 5etools-cn 数据中；人类（PHB）原始数据没有属性加值字段；巢穴行动与区域效果（`legendaryGroup`）、物品的 `packContents`/`attachedSpells`、怪物的 `environment` 未导入，内容仍在正文中。
+- SRD 包内法术指向的子职业只含 SRD 子职业；其他子职业对该法术的关联在各自书籍包里，不跨包引用。
+- 重名 id 加 `-2`（特性、随机表共约 200 条，见构建报告）：顺序随 5etools-cn 数据排列，数据更新后可能变动；发布前需决定是否改用稳定后缀。
 
 ## 需要驾驶员授权
 - 创建 GitHub 数据仓库 `didhogg/tavern-trpg-data`。

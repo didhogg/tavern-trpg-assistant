@@ -58,6 +58,10 @@ describe('D1 §7 校验', () => {
     fails(mutate((p) => { const t = p.entries.find((e) => e.id === 'table.loot-a.test')!; t.data.rows = [{ min: 1, max: 3, cells: ['x'], refs: [] }] }), '没有恰好覆盖')
     fails(mutate((p) => { p.entries[0].summary = '字'.repeat(81) }), '摘要超过 80 字')
     fails(mutate((p) => { p.entries[0].id = 'Spell.Bad' }), 'id 不符合规则')
+    fails(mutate((p) => { (p.entries[1].data.text as unknown[]).push({ p: '命中[object Object]' }) }), '转换残留')
+    fails(mutate((p) => { (p.entries[1].data.text as unknown[]).push({ p: '{"immune":["poison"]}' }) }), '转换残留')
+    fails(mutate((p) => { (p.entries[1].data.text as unknown[]).push({ p: '{{ref:spell.fireball.test|PHB}}' }) }), '书籍代码')
+    fails(mutate((p) => { p.entries[0].id = 'subclass.cleric-entry.phb' }), '占位词 entry')
   })
 
   it('体积上限：单包 3MB、合计 12MB', () => {

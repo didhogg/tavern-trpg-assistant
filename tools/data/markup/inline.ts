@@ -62,10 +62,11 @@ function resolve(ctx: InlineContext, type: string, name: string, source?: string
   return ctx.index.byTypeName.get(`${type}|${name}`)?.[0]
 }
 
-function refMarkup(ctx: InlineContext, specType: string, parts: string[]): string {
+function refMarkup(ctx: InlineContext, specType: string, parts: string[], tag = ''): string {
   const name = parts[0] ?? ''
   const source = sourcePart(parts, 1)
-  const display = parts.length > 2 && parts[2] ? parts[2] : name
+  const displayAt = REF_DISPLAY_INDEX[tag] ?? 2
+  const display = parts[displayAt] ? parts[displayAt] : name
   const target = resolve(ctx, specType, name, source)
   if (!target || !ctx.allowed.has(target.packId)) {
     ctx.softRefs.count++
@@ -74,11 +75,39 @@ function refMarkup(ctx: InlineContext, specType: string, parts: string[]): strin
   return `{{ref:${target.id}|${display}}}`
 }
 
-function textValue(parts: string[]): string {
-  if (parts[0] === 'chance') return parts.slice(3).find(Boolean) ?? parts[0]
-  const display = parts.find((p, i) => i > 0 && p)
-  return display ?? parts[0] ?? ''
+/** 各标签中「显示文字」所在的位置（5etools 语法）；没有该位置时显示第一项。 */
+const DISPLAY_INDEX: Record<string, number> = {
+  deity: 3,
+  card: 3,
+  book: 3,
+  deck: 2,
+  object: 2,
+  hazard: 2,
+  language: 2,
+  itemProperty: 2,
+  quickref: 4,
 }
+
+function textValue(name: string, parts: string[]): string {
+  const first = parts[0] ?? ''
+  switch (name) {
+    case 'h':
+      return '命中：'
+    case 'recharge': {
+      const n = first.trim()
+      return n ? `（充能${n}–6）` : '（充能6）'
+    }
+    case 'chance':
+      return parts[1] ? parts[1] : `${first.trim()}%`
+    default: {
+      const index = DISPLAY_INDEX[name]
+      return (index !== undefined && parts[index]) || first
+    }
+  }
+}
+
+/** 职业与子职业特性标签的显示文字在后面的位置；第三项是来源，不能当显示文字。 */
+const REF_DISPLAY_INDEX: Record<string, number> = { classFeature: 5, subclassFeature: 7 }
 
 function renderTag(name: string, arg: string, ctx: InlineContext): string {
   const spec = tagSpec(name, ctx.book)
@@ -101,13 +130,13 @@ function renderTag(name: string, arg: string, ctx: InlineContext): string {
       return `{{atk:${kinds.join(',') || 'mw'}|${parts[1] || names.join('或') || '攻击'}}}`
     }
     case 'ref':
-      return refMarkup(ctx, spec.refType ?? 'rule', parts)
+      return refMarkup(ctx, spec.refType ?? 'rule', parts, name)
     case 'em':
       return `{{em:${inlinePlainText(renderInline(arg, ctx))}}}`
     case 'text':
       if (name === 'note') return renderInline(arg, ctx)
       if (name === 'link') return renderInline(parts[0] ?? '', ctx)
-      return renderInline(textValue(parts), ctx)
+      return renderInline(textValue(name, parts), ctx)
     default:
       return arg
   }

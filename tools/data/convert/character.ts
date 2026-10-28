@@ -33,15 +33,56 @@ function progressionOf(value: string): 'full' | 'half' | 'third' | 'pact' {
   return 'full'
 }
 
+const ALL_SKILLS = [
+  'acrobatics', 'animal handling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation',
+  'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleight of hand', 'stealth', 'survival',
+]
+const WEAPON_GROUP: Record<string, string> = { simple: '简易', martial: '军用', firearms: '火器' }
+
+/** 熟练项可能是文字，也可能是 { proficiency, optional? }。 */
+function proficiencyText(value: unknown, inline: InlineContext, kind: 'armor' | 'weapons' | 'tools'): string {
+  if (value && typeof value === 'object') {
+    const id = str((value as Record<string, unknown>).proficiency)
+    if (!id) throw new Error(`职业熟练项出现未知写法：${JSON.stringify(value)}`)
+    return kind === 'weapons' ? (WEAPON_GROUP[id] ?? id) : id
+  }
+  return renderInline(String(value), inline)
+}
+
+function skillChoice(list: unknown): { choose: number; from: string[] } | undefined {
+  if (!Array.isArray(list) || !list.length) return undefined
+  const first = list[0] as Record<string, unknown>
+  const choose = first.choose as Record<string, unknown> | undefined
+  if (choose) return { choose: Number(choose.count ?? 0), from: Array.isArray(choose.from) ? choose.from.map(String) : [] }
+  if (typeof first.any === 'number') return { choose: first.any, from: [...ALL_SKILLS] }
+  return undefined
+}
+
 function proficienciesOf(value: unknown, inline: InlineContext): Record<string, unknown> {
   const prof = (value ?? {}) as Record<string, unknown>
-  const skills = Array.isArray(prof.skills) ? ((prof.skills[0] as Record<string, unknown> | undefined)?.choose as Record<string, unknown> | undefined) : undefined
+  const skills = skillChoice(prof.skills)
+  const list = (key: 'armor' | 'weapons' | 'tools'): string[] =>
+    Array.isArray(prof[key]) ? (prof[key] as unknown[]).map((v) => proficiencyText(v, inline, key)) : []
   return {
-    armor: Array.isArray(prof.armor) ? prof.armor.map((v) => renderInline(String(v), inline)) : [],
-    weapons: Array.isArray(prof.weapons) ? prof.weapons.map((v) => renderInline(String(v), inline)) : [],
-    tools: Array.isArray(prof.tools) ? prof.tools.map((v) => renderInline(String(v), inline)) : [],
-    ...(skills ? { skills: { choose: Number(skills.count ?? 0), from: Array.isArray(skills.from) ? skills.from.map(String) : [] } } : {}),
+    armor: list('armor'),
+    weapons: list('weapons'),
+    tools: list('tools'),
+    ...(skills ? { skills } : {}),
   }
+}
+
+/** 等级表单元格：字符串、数字，或带类型的对象（加值、骰子、速度加值）。 */
+function cellText(value: unknown, inline: InlineContext): string {
+  if (value && typeof value === 'object') {
+    const cell = value as Record<string, unknown>
+    if (cell.type === 'bonus') return `+${Number(cell.value ?? 0)}`
+    if (cell.type === 'bonusSpeed') return Number(cell.value ?? 0) ? `+${Number(cell.value)}尺` : '—'
+    if (cell.type === 'dice' && Array.isArray(cell.toRoll)) {
+      return cell.toRoll.map((d) => `${Number((d as Record<string, unknown>).number ?? 1)}d${Number((d as Record<string, unknown>).faces ?? 0)}`).join('+')
+    }
+    throw new Error(`职业等级表出现未知单元格：${JSON.stringify(value)}`)
+  }
+  return renderInline(String(value), inline)
 }
 
 function classTable(raw: Record<string, unknown>, inline: InlineContext): Record<string, unknown> | undefined {
@@ -51,8 +92,7 @@ function classTable(raw: Record<string, unknown>, inline: InlineContext): Record
   for (const group of groups) {
     const g = group as Record<string, unknown>
     const labels = Array.isArray(g.colLabels) ? g.colLabels.map((l) => renderInline(String(l), inline)) : []
-    if (g.title) cols.push(str(g.title))
-    cols.push(...labels)
+    cols.push(...labels.map((label) => (g.title ? `${str(g.title)}·${label}` : label)))
   }
   const rows: Array<{ level: number; values: string[] }> = []
   for (let level = 1; level <= 20; level++) {
@@ -61,8 +101,7 @@ function classTable(raw: Record<string, unknown>, inline: InlineContext): Record
       const g = group as Record<string, unknown>
       const list = Array.isArray(g.rows) ? g.rows : Array.isArray(g.rowsSpellProgression) ? g.rowsSpellProgression : []
       const row = Array.isArray(list[level - 1]) ? (list[level - 1] as unknown[]) : []
-      if (g.title) values.push('')
-      values.push(...row.map((v) => renderInline(String(v), inline)))
+      values.push(...row.map((v) => cellText(v, inline)))
     }
     rows.push({ level, values })
   }
