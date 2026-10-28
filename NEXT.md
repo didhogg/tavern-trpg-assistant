@@ -15,7 +15,7 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
   - 安装器与存储：formatVersion 2 识别与 L1 §2.2 全部限制；formatVersion 1 兼容；PackManifest 新字段；lineage/requires/recommends/conflicts/不支持功能的安装预案；Dexie 第 2 版（blobs、blobHashes、packTrash、迁移失败保持旧数据）；安装不再改写当前数据；内置包与推荐包数据层；自动存档原因「改动模组前」；`.trpgsave` 带图片。
   - 构建管线：`tools/data/` 从本地 5etools-cn 批量抽取、展开 `_copy`/`_mod`、展开魔法变体、转换、标记、来源与摘要、分包、校验、确定性打包、版本检查、报告；生成 11 个包。
   - 往返验证：`tests/data/` 的 fixture-data、fixture-adventure；D1 §8 每一行；官方 11 包全量安装、逐包导出再装、每种类型抽 20 条生成副本并做存档往返。
-  - 产品：`packs/dnd5e2014-srd.trpgpack`、`packs/DATA-NOTICE.md`、`packs/LICENSES/`；本地数据仓库 `/Users/xxx/tavern-trpg-data`（10 个书籍包、catalog、NOTICE、LICENSES、README，已本地提交 `2bde6d4`，未推送）。
+  - 产品：`packs/dnd5e2014-srd.trpgpack`、`packs/DATA-NOTICE.md`、`packs/LICENSES/`；本地数据仓库 `/Users/xxx/tavern-trpg-data`（10 个书籍包、catalog、NOTICE、LICENSES、README，已本地提交 `0ccec9d`，未推送）。
   - 探针：「M2 数据自检」5 步；e2e 用本地模拟目录与包跑通下载步骤。
 
 ## 证据
