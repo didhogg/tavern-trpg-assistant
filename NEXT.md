@@ -1,7 +1,8 @@
 # NEXT
 
 ## 当前里程碑
-M0 脚手架与真机探针（进行中）
+M0 脚手架与真机探针（已完成；未验证项见 `docs/probes/M0.md`）
+下一步里程碑：M1 核心数据层（开工前须定稿 `docs/units/U2_存档与内容包.md`）
 
 ## 当前任务
 - 目标：搭好 Vite + Vue 3 + TypeScript 的 SillyTavern 扩展骨架，推送到 GitHub，在 TauriTavern 中以 Git 地址安装；扩展内置一个探针面板，测出 `docs/probes/M0.md` 所需的真机结论。
@@ -14,9 +15,8 @@ M0 脚手架与真机探针（进行中）
 - 参考资料已置于 `reference/`
 
 ## 下一步
-1. 驾驶员在 TauriTavern 更新扩展后补测：事件 4 项（切换聊天、切换回复、编辑、删除）、群组与无聊天标识、请求日志核对按钮、完全退出后的持久性。
-2. 结论写入 `docs/probes/M0.md`。
-3. M0 完成后，用 Grill Me 对齐并产出 M1 前必须定稿的单元蓝图（U2）草案。
+1. 用 Grill Me 与驾驶员对齐 U2，产出 `docs/units/U2_存档与内容包.md` 草案；驾驶员批准后定稿。
+2. U2 定稿后开始 M1。
 
 ## 阻塞
 - 无

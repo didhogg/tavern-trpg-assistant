@@ -27,7 +27,9 @@ export async function auditLlmLogs(): Promise<{ status: ProbeStatus; summary: st
   const index = await logs.index()
   const entries = Array.isArray(index) ? index : []
   const latest = entries[entries.length - 1] ?? entries[0]
-  const detail: Dict = { indexType: typeof index, count: entries.length, latestEntry: latest ?? null }
+  const meta = (latest && typeof latest === 'object' ? latest : {}) as Dict
+  // 日志条目含接口地址与模型名，报告中只保留与判定有关的字段
+  const detail: Dict = { count: entries.length, latestEntry: { id: meta.id, ok: meta.ok, stream: meta.stream, durationMs: meta.durationMs } }
   if (latest === undefined) return { status: 'info', summary: '请求日志为空（可能未开启记录，或还没有发过请求）', detail }
   const raw = await logs.getRaw(entryId(latest))
   const scan = scanPayload(raw)

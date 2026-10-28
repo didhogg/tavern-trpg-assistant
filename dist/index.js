@@ -5205,21 +5205,25 @@ async function id() {
 		summary: "宿主没有请求日志接口，只能依靠事件判定",
 		detail: null
 	};
-	let t = await e.index(), n = Array.isArray(t) ? t : [], r = n[n.length - 1] ?? n[0], i = {
-		indexType: typeof t,
+	let t = await e.index(), n = Array.isArray(t) ? t : [], r = n[n.length - 1] ?? n[0], i = r && typeof r == "object" ? r : {}, a = {
 		count: n.length,
-		latestEntry: r ?? null
+		latestEntry: {
+			id: i.id,
+			ok: i.ok,
+			stream: i.stream,
+			durationMs: i.durationMs
+		}
 	};
 	if (r === void 0) return {
 		status: "info",
 		summary: "请求日志为空（可能未开启记录，或还没有发过请求）",
-		detail: i
+		detail: a
 	};
-	let a = nd(await e.getRaw(rd(r)));
-	return i.scan = a, i.markers = [Zu, Qu], {
+	let s = nd(await e.getRaw(rd(r)));
+	return a.scan = s, a.markers = [Zu, Qu], {
 		status: "info",
-		summary: `最近一次请求原文：${a.comment ? `含注释标记${a.commentIntact ? "（符号完整）" : "（符号被改）"}` : "无注释标记"}；${a.inject ? "含注入标记" : "无注入标记"}`,
-		detail: i
+		summary: `最近一次请求原文：${s.comment ? `含注释标记${s.commentIntact ? "（符号完整）" : "（符号被改）"}` : "无注释标记"}；${s.inject ? "含注入标记" : "无注入标记"}`,
+		detail: a
 	};
 }
 // src/probes/promptProbes.ts
