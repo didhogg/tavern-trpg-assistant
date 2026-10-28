@@ -111,6 +111,12 @@ try {
     await page.waitForSelector('.trpg-window')
     check(`[${label}] 点击悬浮球打开窗口`, await page.locator('.trpg-window').isVisible())
 
+    // M1 数据层自检：在真实浏览器内核（含 WebKit）里跑完存储、压缩、哈希、事务的主路径
+    await page.getByRole('button', { name: '运行 M1 数据层自检' }).click()
+    await page.getByText(/全部通过（\d+\/\d+ 步）|未通过：/).first().waitFor({ timeout: 60000 })
+    const m1 = await page.locator('.trpg-window__body').innerText()
+    check(`[${label}] M1 数据层自检全部通过`, /全部通过（10\/10 步）/.test(m1), (m1.match(/未通过：[^\n]*/) ?? [''])[0])
+
     // 注释与注入：写入 → 模拟发送 → 判定
     await page.getByRole('button', { name: '写入测试注释到输入框' }).click()
     await page.getByRole('button', { name: '注入探针' }).click()

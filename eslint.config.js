@@ -14,6 +14,7 @@ export default tseslint.config(
   {
     rules: {
       'no-undef': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true, argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-empty': ['error', { allowEmptyCatch: false }],
       'vue/multi-word-component-names': 'off',
       'vue/max-attributes-per-line': 'off',

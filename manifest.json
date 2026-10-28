@@ -5,6 +5,6 @@
   "optional": [],
   "js": "dist/index.js",
   "author": "didhogg",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "auto_update": true
 }
