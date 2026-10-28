@@ -4,7 +4,8 @@ import type { ConvertedPack } from '../convert'
 import { BOOKS, SRD_PACK_ID } from '../config/books'
 import { writeText } from '../lib/io'
 
-const PLACEHOLDER_TAG = 'v0.0.0-placeholder'
+/** 发布时用 TRPG_DATA_TAG 指定版本标签；未指定时写占位标签（未发布）。 */
+const PLACEHOLDER_TAG = process.env.TRPG_DATA_TAG ?? 'v0.0.0-placeholder'
 
 export async function writeDataRepo(repo: string, packs: ConvertedPack[], outputs: Map<string, { bytes: Uint8Array; sha256: string }>): Promise<void> {
   await mkdir(join(repo, 'packs', 'dnd5e2014'), { recursive: true })
