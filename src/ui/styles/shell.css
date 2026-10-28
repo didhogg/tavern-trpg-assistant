@@ -60,3 +60,53 @@
   border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--primary);
 }
 .subpage-back:hover { background: var(--panel); }
+
+/* ⚄ 骰盘按钮与骰盘悬浮窗（独立窗口，不挡住后面，点外部不关闭） */
+.trpg-body { position: relative; display: flex; flex: 1; min-height: 0; }
+.trpg-body .trpg-content { flex: 1; }
+.trpg-dice-btn {
+  position: absolute; right: 20px; bottom: 20px; z-index: 6; display: grid; place-items: center; width: 52px; height: 52px; padding: 0;
+  border: 2px solid var(--gold); border-radius: 50%; background: var(--primary); color: var(--primary-ink); box-shadow: var(--shadow-float);
+}
+.trpg-dice-btn[aria-pressed='true'] { box-shadow: 0 0 0 3px var(--gold), var(--shadow-float); }
+.trpg-window[data-layout='narrow'] .trpg-dice-btn { right: 16px; bottom: 16px; }
+.trpg-dice {
+  position: fixed; z-index: 10; display: flex; flex-direction: column; width: 360px; max-height: 70vh;
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-float); overflow: hidden;
+}
+.trpg-dice[data-narrow='true'] { max-height: calc(100dvh - 140px); }
+.trpg-dice__head {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 6px 0 14px; flex: none;
+  background: var(--chrome); color: var(--chrome-ink); cursor: grab; touch-action: none; user-select: none;
+}
+.trpg-dice__title { flex: 1; font-family: var(--font-serif); font-size: 16px; }
+.trpg-dice__body { display: grid; gap: 12px; padding: 12px; overflow-y: auto; }
+.trpg-dice__result {
+  display: grid; justify-items: center; gap: 2px; padding: 12px 8px; min-height: 108px; align-content: center;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card);
+}
+.trpg-dice__result[data-natural='20'] { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.trpg-dice__result[data-natural='1'] { border-color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger); }
+.trpg-dice__total { font-family: var(--font-serif); font-size: 48px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; animation: trpg-roll 200ms ease-out; }
+.trpg-dice__result[data-natural='20'] .trpg-dice__total { color: var(--gold); }
+.trpg-dice__result[data-natural='1'] .trpg-dice__total { color: var(--danger); }
+.trpg-dice__line { color: var(--ink-2); font-size: 13px; text-align: center; overflow-wrap: anywhere; }
+.trpg-dice__placeholder { margin: 0; color: var(--ink-2); }
+.trpg-dice__quick { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.trpg-dice__quick .trpg-btn { min-width: 0; min-height: 44px; padding: 0; }
+.trpg-dice__mods { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.trpg-dice__mods .trpg-seg button { min-height: 40px; }
+.trpg-dice__bonus { display: inline-flex; align-items: center; gap: 4px; }
+.trpg-dice__bonus .trpg-icon-btn { min-width: 40px; min-height: 40px; border-color: var(--line); background: var(--card); font-size: 18px; }
+.trpg-dice__bonus-value { min-width: 2.5em; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+.trpg-dice__expr-row { display: flex; gap: 6px; }
+.trpg-dice__expr-row .trpg-btn { min-width: 56px; min-height: 40px; }
+.trpg-dice__expr-row .trpg-input { min-height: 40px; }
+.trpg-dice__out { display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px; }
+.trpg-dice__out .trpg-btn { min-height: 44px; }
+.trpg-dice__recent-head { display: flex; align-items: center; justify-content: space-between; }
+.trpg-dice__list { margin: 0; padding: 0; list-style: none; max-height: 168px; overflow-y: auto; }
+.trpg-dice__item { display: flex; align-items: center; gap: 8px; min-height: 40px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.trpg-dice__item-total { min-width: 2.2em; font-family: var(--font-serif); font-size: 16px; }
+.trpg-dice__item-main { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+@keyframes trpg-roll { from { opacity: 0; transform: translateY(-10px) scale(0.9); } to { opacity: 1; transform: none; } }

@@ -132,9 +132,14 @@ onBeforeUnmount(() => {
             <Icon name="x" :size="18" />
           </button>
         </header>
-        <main class="trpg-content" tabindex="-1">
-          <component :is="VIEWS[ui.page]" />
-        </main>
+        <div class="trpg-body">
+          <main class="trpg-content" tabindex="-1">
+            <component :is="VIEWS[ui.page]" />
+          </main>
+          <button class="trpg-dice-btn" type="button" aria-label="掷骰" :aria-pressed="ui.diceOpen" @click="ui.diceOpen = !ui.diceOpen">
+            <Icon name="dice-five" :size="28" />
+          </button>
+        </div>
         <nav v-if="layout === 'narrow'" class="trpg-tabs" aria-label="主导航">
           <button v-for="n in NAV" :key="n.id" class="trpg-tab" type="button" :aria-current="ui.page === n.id ? 'page' : undefined" @click="ui.go(n.id)">
             <Icon :name="n.icon" :size="22" /><span>{{ n.label }}</span>

@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { check, failures } from './helpers.mjs'
 import { startServer, root } from './server.mjs'
 import { probeSuite } from './suite-probes.mjs'
+import { diceSuite } from './suite-dice.mjs'
 import { shellSuite } from './suite-shell.mjs'
 
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -35,6 +36,7 @@ try {
         check(`[${label}] 点击悬浮球打开窗口`, await page.locator('.trpg-window').isVisible())
         const ctx = { width, height, engine, viewLabel, scheme, url }
         if (!only || only === 'shell') await shellSuite(page, label, ctx)
+        if (!only || only === 'dice') await diceSuite(page, label, ctx)
         if (scheme === 'light' && (!only || only === 'probes')) await probeSuite(page, label, ctx)
         await page.screenshot({ path: join(root, `docs/reviews/M3-${engine}-${viewLabel}-${scheme}.png`) })
         check(`[${label}] 页面无脚本错误`, errors.length === 0, errors.join(' | '))
