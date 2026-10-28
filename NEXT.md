@@ -23,7 +23,7 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
 - `npm run build`：通过；`dist/index.js` 已更新。
 - `npm run e2e`：Chrome 与 WebKit 共 96 项通过，0 失败；含「M1 数据层自检 10/10」与「M2 数据自检 5/5」（4 个视口组合）。
 - `npm run test:data`：21 项通过（4 个测试文件）；含官方 11 包全量往返、200 个引用解析、D1 §7 校验与金样。职业只有 16 条、疾病 9 条，抽 20 条时按实际条数。
-- 连续两次 `npm run build:data`：11 个包 sha256 完全相同；包体积合计 1.53MB，最大单包 SRD 466.2KB（上限 3MB/包、12MB 合计）。
+- 连续两次 `npm run build:data`：11 个包 sha256 完全相同；包体积合计 1.54MB，最大单包 SRD 466.7KB（上限 3MB/包、12MB 合计）。
 - 报告：`docs/probes/D1_构建报告.md`；抽检：`docs/probes/D1_抽检.md`（50 条，类型分布 10/10/10/6/5/3/3/2/1）。
 - `packs/` 只有 SRD 包、`DATA-NOTICE.md` 与 `LICENSES/`；`reference/` 仍被 `.gitignore` 忽略。
 
