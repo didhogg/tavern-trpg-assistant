@@ -40,7 +40,7 @@ export const saveSummarySchema = z.object({
 })
 export type SaveSummary = z.infer<typeof saveSummarySchema>
 
-export const autoReasonSchema = z.enum(['读档前', '新存档前', '切换规则前', '恢复备份前'])
+export const autoReasonSchema = z.enum(['读档前', '新存档前', '切换规则前', '恢复备份前', '改动模组前'])
 export type AutoReason = z.infer<typeof autoReasonSchema>
 
 export const saveSlotSchema = z.object({

@@ -86,13 +86,13 @@ describe('导出与导入单个存档', () => {
       // 在另一个全新的数据库里装回附带的内容包
       await withDb(async (db2) => {
         const fresh = new PackService(db2, { rules: makeRegistry(), now: makeClock(), appVersion: '1.0.0' })
-        await fresh.installBuiltin(makePack({ id: 'dnd5e2014-core', name: '核心规则' }))
+        await fresh.installBuiltin(makePack({ id: 'dnd5e2014-srd', name: '核心规则' }))
         for (const f of files) {
           const r = fresh.recognize(f.bytes)
           if (r.type !== 'pack') throw new Error()
           await fresh.install(r, { source: 'import' })
         }
-        expect((await fresh.list()).map((p) => p.id).sort()).toEqual(['dnd5e2014-core', 'storm-isle', 'xge'].sort())
+        expect((await fresh.list()).map((p) => p.id).sort()).toEqual(['dnd5e2014-srd', 'storm-isle', 'xge'].sort())
       })
     })
   })
@@ -137,7 +137,7 @@ describe('完整备份', () => {
       expect(rec.saves.some((s) => s.id === first[0].id)).toBe(false)
       expect(rec.workspaces.map((w) => w.ownerKey).sort()).toEqual([OTHER_OWNER.ownerKey, OWNER.ownerKey].sort())
       expect(rec.settings?.reminderDays).toBe(3)
-      expect(rec.packList.map((p) => p.id)).toContain('dnd5e2014-core')
+      expect(rec.packList.map((p) => p.id)).toContain('dnd5e2014-srd')
     })
   })
 

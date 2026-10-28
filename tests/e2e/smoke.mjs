@@ -1,6 +1,7 @@
 // 冒烟测试：在模拟宿主页中验证扩展挂载、探针接线、弹层不被裁切。不能代替真机验证。
 import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium, webkit } from 'playwright-core'
@@ -8,11 +9,35 @@ import { chromium, webkit } from 'playwright-core'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' }
+const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
+const catalogPath = join(DATA_REPO, 'catalog.json')
+if (!existsSync(catalogPath)) {
+  console.error(`缺少 ${catalogPath}；先运行 npm run build:data`)
+  process.exit(1)
+}
+const catalog = JSON.parse(await readFile(catalogPath, 'utf8'))
 
 const server = createServer(async (req, res) => {
   const requested = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname))
   if (requested === '/favicon.ico') {
     res.writeHead(204).end()
+    return
+  }
+  if (requested === '/mock-data/catalog.json') {
+    const local = { ...catalog, packs: catalog.packs.map((p) => ({ ...p, url: `/mock-data/packs/${p.id}-${p.version}.trpgpack` })) }
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify(local))
+    return
+  }
+  if (requested.startsWith('/mock-data/packs/')) {
+    try {
+      const file = requested.slice('/mock-data/packs/'.length)
+      const body = await readFile(join(DATA_REPO, 'packs', 'dnd5e2014', file))
+      res.writeHead(200, { 'content-type': 'application/octet-stream' })
+      res.end(body)
+    } catch {
+      res.writeHead(404).end()
+    }
     return
   }
   const path = requested === '/' ? '/tests/e2e/mock-host.html' : requested
@@ -116,6 +141,12 @@ try {
     await page.getByText(/全部通过（\d+\/\d+ 步）|未通过：/).first().waitFor({ timeout: 60000 })
     const m1 = await page.locator('.trpg-window__body').innerText()
     check(`[${label}] M1 数据层自检全部通过`, /全部通过（10\/10 步）/.test(m1), (m1.match(/未通过：[^\n]*/) ?? [''])[0])
+
+    const m2Section = page.locator('section.probe').filter({ hasText: 'M2 数据自检' })
+    await page.getByRole('button', { name: '运行 M2 数据自检' }).click()
+    await m2Section.locator('.probe__summary').filter({ hasText: /全部通过|未通过/ }).waitFor({ timeout: 120000 })
+    const m2 = await m2Section.innerText()
+    check(`[${label}] M2 数据自检全部通过（含本地数据仓库下载）`, /全部通过（5\/5 步/.test(m2), (m2.match(/未通过：[^\n]*/) ?? [''])[0])
 
     // 注释与注入：写入 → 模拟发送 → 判定
     await page.getByRole('button', { name: '写入测试注释到输入框' }).click()

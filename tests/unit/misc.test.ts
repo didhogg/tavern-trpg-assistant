@@ -127,7 +127,7 @@ describe('目录与下载', () => {
 
   async function oneEntry(): Promise<{ bytes: Uint8Array; entry: CatalogPack }> {
     const bytes = makePack({ id: 'scag', name: '剑湾冒险指南', version: '1.0.0' }, makeEntries(2))
-    return { bytes, entry: { id: 'scag', ruleId: 'dnd5e2014', kind: 'data', name: '剑湾冒险指南', version: '1.0.0', license: '', description: '', typeCounts: {}, dependsOn: [], byteSize: bytes.length, sha256: sha256Hex(bytes), url: 'packs/scag.trpgpack' } }
+    return { bytes, entry: { id: 'scag', ruleId: 'dnd5e2014', category: 'rules', name: '剑湾冒险指南', version: '1.0.0', license: '', description: '', typeCounts: {}, contributes: {}, recommended: false, relationships: { requires: [], recommends: [], conflicts: [] }, byteSize: bytes.length, sha256: sha256Hex(bytes), url: 'packs/scag.trpgpack' } }
   }
 
   it('下载：分块读取并报告进度，校验通过后可安装；相对地址按目录地址解析', async () => {
@@ -178,12 +178,12 @@ describe('目录与下载', () => {
   it('找出可更新与可下载的内容包（内置包不在更新之列）', async () => {
     await withDb(async (db) => {
       const svc = new PackService(db, { rules: makeRegistry(), now: makeClock(), appVersion: '1.0.0' })
-      await svc.installBuiltin(makePack({ id: 'dnd5e2014-core', version: '1.0.0' }))
+      await svc.installBuiltin(makePack({ id: 'dnd5e2014-srd', version: '1.0.0' }))
       const x = svc.recognize(makePack({ id: 'xge', name: 'XGE', version: '1.0.0' }))
       if (x.type !== 'pack') throw new Error()
       await svc.install(x, { source: 'download' })
-      const mk = (id: string, version: string): CatalogPack => ({ id, ruleId: 'dnd5e2014', kind: 'data', name: id, version, license: '', description: '', typeCounts: {}, dependsOn: [], byteSize: 1, sha256: 'h', url: 'u' })
-      const catalog = sampleCatalog([mk('dnd5e2014-core', '2.0.0'), mk('xge', '1.1.0'), mk('tce', '1.0.0')])
+      const mk = (id: string, version: string): CatalogPack => ({ id, ruleId: 'dnd5e2014', category: 'rules', name: id, version, license: '', description: '', typeCounts: {}, contributes: {}, recommended: false, relationships: { requires: [], recommends: [], conflicts: [] }, byteSize: 1, sha256: 'h', url: 'u' })
+      const catalog = sampleCatalog([mk('dnd5e2014-srd', '2.0.0'), mk('xge', '1.1.0'), mk('tce', '1.0.0')])
       const installed = await svc.list()
       expect(findUpdates(installed, catalog).map((p) => p.id)).toEqual(['xge'])
       expect(findDownloadable(installed, catalog, 'dnd5e2014').map((p) => p.id)).toEqual(['tce'])

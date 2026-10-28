@@ -11,7 +11,10 @@
     "lint": "eslint src tests",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "e2e": "npm run build && node tests/e2e/smoke.mjs"
+    "e2e": "npm run build:data && npm run build && node tests/e2e/smoke.mjs",
+    "build:data": "tsx tools/data/build.ts",
+    "publish:data": "tsx tools/data/publish.ts",
+    "test:data": "vitest run --config vitest.data.config.ts"
   },
   "dependencies": {
     "@noble/hashes": "^2.4.0",
@@ -30,6 +33,7 @@
     "eslint-plugin-vue": "^10.12.0",
     "fake-indexeddb": "^6.2.6",
     "playwright-core": "^1.64.1",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",

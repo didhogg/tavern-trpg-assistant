@@ -11,10 +11,14 @@ export function readZip(bytes: Uint8Array): ZipFiles {
   }
 }
 
+/** 固定的压缩级别与文件时间，保证同一内容得到逐字节相同的包。 */
 export function writeZip(files: Record<string, Uint8Array | string>): Uint8Array {
   const input: Record<string, Uint8Array> = {}
-  for (const [name, content] of Object.entries(files)) input[name] = typeof content === 'string' ? strToU8(content) : content
-  return zipSync(input, { level: 6 })
+  for (const name of Object.keys(files).sort()) {
+    const content = files[name]
+    input[name] = typeof content === 'string' ? strToU8(content) : content
+  }
+  return zipSync(input, { level: 6, mtime: new Date(1980, 0, 1, 0, 0, 0) })
 }
 
 export function readJson(files: ZipFiles, name: string): unknown {

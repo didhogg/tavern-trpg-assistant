@@ -1,0 +1,206 @@
+import type { Raw, RawData } from '../extract/load'
+import { BOOK_BY_SOURCE, PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
+import { slug } from '../lib/slug'
+import { collectTables, type TableSeed } from './tables'
+
+export type PlannedType =
+  | 'spell' | 'monster' | 'item' | 'class' | 'subclass' | 'feature'
+  | 'race' | 'subrace' | 'background' | 'feat'
+  | 'condition' | 'disease' | 'status' | 'table' | 'rule'
+
+export interface PlannedEntry {
+  key: string
+  type: PlannedType
+  raw: Raw
+  source: string
+  packId: string
+  srd: boolean
+  name: string
+  nameEn: string
+  page: number
+  id: string
+  missingName: boolean
+  missingPage: boolean
+  context: Record<string, string>
+}
+
+export interface PlanResult {
+  entries: PlannedEntry[]
+  tables: PlannedEntry[]
+  tableSeeds: TableSeed[]
+  classIds: Map<string, string>
+  subclassIds: Map<string, string>
+  skippedFeatures: number
+  skippedSubraces: number
+}
+
+function str(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
+
+function pageOf(raw: Raw): number {
+  return typeof raw.page === 'number' && Number.isFinite(raw.page) ? raw.page : 0
+}
+
+function is2024(source: string): boolean {
+  return source === 'XPHB' || source === 'XDMG' || source === 'XMM'
+}
+
+export function planAll(data: RawData, items: Raw[]): PlanResult {
+  const entries: PlannedEntry[] = []
+  const tables: PlannedEntry[] = []
+  const used = new Set<string>()
+  const classIds = new Map<string, string>()
+  const subclassIds = new Map<string, string>()
+  const subclassSlugs = new Map<string, string>()
+  const classSlugs = new Map<string, { classSlug: string; subclassSlug: string }>()
+  let skippedFeatures = 0
+  let skippedSubraces = 0
+  let counter = 0
+
+  const idFor = (type: PlannedType, parts: string[], source: string): string => {
+    const base = `${type}.${parts.map((p) => p || 'entry').join('-')}.${source.toLowerCase()}`
+    let id = base
+    let n = 2
+    while (used.has(id)) id = `${base}-${n++}`
+    used.add(id)
+    return id
+  }
+
+  const make = (type: PlannedType, raw: Raw, parts: string[], context: Record<string, string> = {}): PlannedEntry => {
+    const source = str(raw.source)
+    const nameCn = str(raw.name).trim()
+    const nameEn = str(raw.ENG_name).trim() || nameCn
+    const missingName = !nameCn || (nameCn === nameEn && /[A-Za-z]/.test(nameCn))
+    const name = nameCn || nameEn
+    if (!name) throw new Error(`条目没有名称（类型 ${type}，来源 ${source || '未知'}，ENG ${str(raw.ENG_name) || '—'}，序号 ${counter}）`)
+    const page = pageOf(raw)
+    const srd = raw.srd === true
+    const book = BOOK_BY_SOURCE.get(source)
+    if (!book) throw new Error(`来源不在白名单内：${source}（${name}）`)
+    counter++
+    return {
+      key: `${type}|${source}|${name}|${counter}`,
+      type,
+      raw,
+      source,
+      packId: srd ? SRD_PACK_ID : PACK_BY_SOURCE.get(source)!,
+      srd,
+      name,
+      nameEn,
+      page,
+      id: idFor(type, parts, source),
+      missingName,
+      missingPage: page === 0,
+      context,
+    }
+  }
+
+  for (const raw of data.classes) {
+    const classSlug = slug(str(raw.ENG_name) || str(raw.name))
+    const entry = make('class', raw, [classSlug])
+    entries.push(entry)
+    const key = `${str(raw.name)}|${str(raw.source)}`
+    classIds.set(key, entry.id)
+    classSlugs.set(key, { classSlug, subclassSlug: '' })
+  }
+  for (const raw of data.subclasses) {
+    if (is2024(str(raw.classSource))) continue
+    const key = `${str(raw.className)}|${str(raw.classSource)}`
+    const info = classSlugs.get(key)
+    if (!info) continue
+    const subclassSlug = slug(str(raw.shortName) || str(raw.ENG_name) || str(raw.name))
+    const entry = make('subclass', raw, [info.classSlug, subclassSlug], { classId: classIds.get(key) ?? '' })
+    entries.push(entry)
+    subclassIds.set(`${key}|${str(raw.shortName)}|${str(raw.source)}`, entry.id)
+    subclassIds.set(`${key}|${str(raw.shortName)}`, entry.id)
+    subclassIds.set(`${key}|${str(raw.name)}|${str(raw.source)}`, entry.id)
+    subclassSlugs.set(`${key}|${str(raw.shortName)}|${str(raw.source)}`, subclassSlug)
+    subclassSlugs.set(`${key}|${str(raw.shortName)}`, subclassSlug)
+  }
+
+  for (const raw of data.spells) entries.push(make('spell', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  for (const raw of data.monsters) entries.push(make('monster', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  for (const raw of items) {
+    const idSlug = str(raw._variantSlug) || slug(str(raw.ENG_name) || str(raw.name))
+    entries.push(make('item', raw, [idSlug], { baseOnly: raw._baseOnly ? '1' : '0' }))
+  }
+  for (const raw of data.races) entries.push(make('race', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  for (const raw of data.subraces) {
+    if (!str(raw.name).trim() && !str(raw.ENG_name).trim()) {
+      skippedSubraces++
+      continue
+    }
+    const parentKey = `${str(raw.raceName)}|${str(raw.raceSource)}`
+    const parent = entries.find((e) => e.type === 'race' && `${e.name}|${e.source}` === parentKey)
+    const parentSlug = parent ? slug(parent.nameEn) : slug(str(raw.raceName))
+    const displayName = parent ? `${str(raw.name)}${parent.name}` : str(raw.name)
+    const displayEn = parent ? `${str(raw.ENG_name) || str(raw.name)} ${parent.nameEn}` : str(raw.ENG_name)
+    entries.push(make('subrace', { ...raw, name: displayName, ENG_name: displayEn }, [parentSlug, slug(str(raw.ENG_name) || str(raw.name))], { parentRace: parent?.id ?? '' }))
+  }
+  for (const raw of data.backgrounds) {
+    const entry = make('background', raw, [slug(str(raw.ENG_name) || str(raw.name))])
+    entries.push(entry)
+    const blocks = Array.isArray(raw.entries) ? raw.entries : []
+    for (const block of blocks) {
+      if (!block || typeof block !== 'object') continue
+      const rec = block as Raw
+      const meta = rec.data as Raw | undefined
+      if (meta?.isFeature !== true || typeof rec.name !== 'string') continue
+      entries.push(make('feature', { ...rec, source: entry.source, page: entry.page, srd: raw.srd }, [slug(entry.nameEn), slug(str(rec.ENG_name) || rec.name)], { ownerType: 'background', ownerId: entry.id, featureKind: 'background' }))
+    }
+  }
+  for (const raw of data.feats) entries.push(make('feat', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  for (const raw of data.conditions) entries.push(make('condition', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  for (const raw of data.diseases) entries.push(make('disease', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  for (const raw of data.statuses) entries.push(make('status', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  for (const raw of data.variantRules) entries.push(make('rule', { ...raw, _ruleCategory: 'variant' }, [slug(str(raw.ENG_name) || str(raw.name))], { ruleCategory: 'variant' }))
+  for (const raw of data.actions) entries.push(make('rule', { ...raw, _ruleCategory: 'action' }, [slug(str(raw.ENG_name) || str(raw.name))], { ruleCategory: 'action' }))
+
+  for (const raw of data.classFeatures) {
+    const key = `${str(raw.className)}|${str(raw.classSource)}`
+    const info = classSlugs.get(key)
+    if (!info || is2024(str(raw.classSource)) || (str(raw.classSource) && str(raw.source) !== str(raw.classSource))) {
+      skippedFeatures++
+      continue
+    }
+    entries.push(make('feature', raw, [info.classSlug, slug(str(raw.ENG_name) || str(raw.name))], { ownerType: 'class', ownerId: classIds.get(key) ?? '', featureKind: 'class' }))
+  }
+  for (const raw of data.subclassFeatures) {
+    const key = `${str(raw.className)}|${str(raw.classSource)}`
+    const info = classSlugs.get(key)
+    const owner = subclassIds.get(`${key}|${str(raw.subclassShortName)}|${str(raw.subclassSource)}`) ?? subclassIds.get(`${key}|${str(raw.subclassShortName)}`)
+    if (!info || !owner || is2024(str(raw.classSource)) || is2024(str(raw.subclassSource)) || (str(raw.subclassSource) && str(raw.source) !== str(raw.subclassSource))) {
+      skippedFeatures++
+      continue
+    }
+    const subclassSlug = subclassSlugs.get(`${key}|${str(raw.subclassShortName)}|${str(raw.subclassSource)}`) ?? subclassSlugs.get(`${key}|${str(raw.subclassShortName)}`) ?? 'subclass'
+    entries.push(make('feature', raw, [info.classSlug, subclassSlug, slug(str(raw.ENG_name) || str(raw.name))], { ownerType: 'subclass', ownerId: owner, featureKind: 'subclass' }))
+  }
+  for (const raw of data.optionalFeatures) {
+    entries.push(make('feature', raw, [slug(str(raw.ENG_name) || str(raw.name))], { ownerType: 'optional', ownerId: 'optional', featureKind: 'optional' }))
+  }
+
+  const scanEntries = entries
+    .filter((e) => ['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'rule'].includes(e.type))
+    .map((e) => ({ raw: e.raw, source: e.source, page: e.page, name: e.name, nameEn: e.nameEn }))
+  const tableSeeds = collectTables(data, scanEntries)
+  if (process.env.TRPG_DEBUG_TABLE) console.error(`TABLE SRD ${tableSeeds.filter((s) => s.srd).length} / ${tableSeeds.length}`, tableSeeds.filter((s) => s.srd).slice(0, 5).map((s) => s.name))
+  for (const seed of tableSeeds) {
+    const raw: Raw = { ...seed, name: seed.name, ENG_name: seed.nameEn, source: seed.source, page: seed.page, srd: seed.srd === true, __seed: seed }
+    tables.push(make('table', raw, [slug(seed.nameEn || seed.name)]))
+  }
+
+  for (const entry of [...entries]) {
+    if (entry.type !== 'race' && entry.type !== 'subrace') continue
+    const blocks = Array.isArray(entry.raw.entries) ? entry.raw.entries : []
+    for (const block of blocks) {
+      if (!block || typeof block !== 'object') continue
+      const rec = block as Raw
+      if (rec.type !== 'entries' || typeof rec.name !== 'string' || !Array.isArray(rec.entries)) continue
+      const feature = make('feature', { ...rec, source: entry.source, page: entry.page, ENG_name: rec.ENG_name, srd: entry.raw.srd }, [slug(entry.nameEn), slug(str(rec.ENG_name) || rec.name)], { ownerType: 'race', ownerId: entry.id, featureKind: 'race' })
+      entries.push(feature)
+    }
+  }
+  return { entries, tables, tableSeeds, classIds, subclassIds, skippedFeatures, skippedSubraces }
+}

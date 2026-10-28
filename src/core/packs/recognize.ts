@@ -1,21 +1,27 @@
 import { strFromU8 } from 'fflate'
-import type { ZodIssue } from 'zod'
 import { TrpgError } from '../errors'
 import { sha256Hex } from '../hash'
 import { migrateRecord } from '../migrate'
 import { compareVersions } from '../semver'
-import { FORMAT_VERSION } from '../../schemas/common'
+import { FORMAT_VERSION, SUPPORTED_DATA_VERSION } from '../../schemas/common'
 import { saveSlotSchema, settingsSchema, workspaceSchema, type SaveSlot, type Settings, type Workspace } from '../../schemas/campaign'
+import { adventureFallbackSchema, adventureFileSchema, adventureItemSchema, type AdventureItem } from '../../schemas/adventure'
 import {
   entrySchema,
   packFileManifestSchema,
   packListItemSchema,
   saveFileManifestSchema,
+  type BlobInfo,
   type Entry,
+  type PackFeature,
   type PackListItem,
   type PackManifest,
   type SaveFileManifest,
 } from '../../schemas/pack'
+import { assertImage } from './images'
+import { normalizeManifest, field } from './manifest'
+import { assertPackPaths } from './paths'
+import { assertPackRefs } from './refs'
 import { readJson, readZip, type ZipFiles } from './zip'
 
 export interface RecognizeContext {
@@ -23,11 +29,18 @@ export interface RecognizeContext {
   hasRule: (ruleId: string) => boolean
 }
 
+export interface RecognizedBlob extends BlobInfo {
+  bytes: Uint8Array
+}
+
 export interface RecognizedPack {
   type: 'pack'
   manifest: PackManifest
   entries: Entry[]
-  assets: Map<string, Uint8Array>
+  blobs: Map<string, RecognizedBlob>
+  features: PackFeature[]
+  adventure: Record<string, unknown>
+  fallback: AdventureItem[]
   byteSize: number
   sha256: string
 }
@@ -39,24 +52,23 @@ export interface RecognizedSaveFile {
   workspaces: Workspace[]
   settings?: Settings
   packList: PackListItem[]
-  /** 附带的内容包文件，键为包内路径。 */
   attachedPacks: Map<string, Uint8Array>
+  blobs: Map<string, Uint8Array>
 }
 
 export type Recognized = RecognizedPack | RecognizedSaveFile
-
-function field(issue: ZodIssue | undefined): string {
-  const path = issue?.path.map(String).join('.')
-  return path ? path : '整体'
-}
 
 function badContent(detail: string): TrpgError {
   return new TrpgError('E_BAD_CONTENT', `文件内容损坏：${detail}`)
 }
 
+function leafFiles(files: ZipFiles): string[] {
+  return Object.keys(files).filter((n) => !n.endsWith('/'))
+}
+
 function readEntries(files: ZipFiles): Entry[] {
   const entries: Entry[] = []
-  const names = Object.keys(files).filter((n) => n.startsWith('entries/') && n.endsWith('.json')).sort()
+  const names = leafFiles(files).filter((n) => n.startsWith('entries/') && n.endsWith('.json')).sort()
   for (const name of names) {
     const raw = readJson(files, name)
     if (!Array.isArray(raw)) throw badContent(`${name} 不是条目列表`)
@@ -72,30 +84,128 @@ function readEntries(files: ZipFiles): Entry[] {
   return entries
 }
 
-function recognizePack(files: ZipFiles, raw: unknown, bytes: Uint8Array, ctx: RecognizeContext): RecognizedPack {
+function readFeatures(files: ZipFiles): PackFeature[] {
+  const out: PackFeature[] = []
+  for (const name of leafFiles(files).filter((n) => n.startsWith('features/') && n.endsWith('.json')).sort()) {
+    const raw = readJson(files, name)
+    if (!Array.isArray(raw)) throw badContent(`${name} 不是功能列表`)
+    for (const item of raw) {
+      const rec = item as Partial<PackFeature> | null
+      if (!rec || typeof rec.id !== 'string' || typeof rec.kind !== 'string' || typeof rec.name !== 'string' || typeof rec.data !== 'object' || rec.data === null) {
+        throw badContent(`${name} 的功能定义不合法`)
+      }
+      out.push({ defaultEnabled: false, description: '', ...rec } as PackFeature)
+    }
+  }
+  return out
+}
+
+function readAdventure(files: ZipFiles): { adventure: Record<string, unknown>; fallback: AdventureItem[] } {
+  const adventure: Record<string, unknown> = {}
+  for (const name of leafFiles(files).filter((n) => n.startsWith('adventure/') && n.endsWith('.json')).sort()) {
+    if (name === 'adventure/fallback.json') continue
+    const raw = readJson(files, name)
+    if (name === 'adventure/adventure.json') {
+      const parsed = adventureFileSchema.safeParse(raw)
+      if (!parsed.success) throw badContent(`adventure/adventure.json 的 ${field(parsed.error.issues[0])} 不合法`)
+      adventure[name] = parsed.data
+    } else {
+      const parsed = adventureItemSchema.array().safeParse(raw)
+      if (!parsed.success) throw badContent(`${name} 的 ${field(parsed.error.issues[0])} 不合法`)
+      adventure[name] = parsed.data
+    }
+  }
+  const fallbackRaw = readJson(files, 'adventure/fallback.json')
+  let fallback: AdventureItem[] = []
+  if (fallbackRaw !== undefined) {
+    const parsed = adventureFallbackSchema.safeParse(fallbackRaw)
+    if (!parsed.success) throw badContent(`adventure/fallback.json 的 ${field(parsed.error.issues[0])} 不合法`)
+    fallback = parsed.data.items
+  }
+  return { adventure, fallback }
+}
+
+function readBlobs(files: ZipFiles, formatVersion: number, manifest: PackManifest): Map<string, RecognizedBlob> {
+  const blobs = new Map<string, RecognizedBlob>()
+  if (formatVersion >= 2) {
+    for (const name of leafFiles(files).filter((n) => n.startsWith('blobs/'))) {
+      const hash = name.slice('blobs/'.length)
+      if (!/^[a-f0-9]{64}$/.test(hash)) throw badContent(`图片「${hash}」的文件名不是哈希`)
+      const bytes = files[name]
+      if (sha256Hex(bytes) !== hash) throw badContent(`图片「${hash.slice(0, 12)}」的哈希不一致`)
+      const mime = assertImage(hash, bytes)
+      blobs.set(hash, { hash, mime, size: bytes.length, bytes })
+    }
+    if (manifest.blobs.length !== blobs.size) throw badContent('缺少图片或图片清单不一致')
+    for (const info of manifest.blobs) {
+      const blob = blobs.get(info.hash)
+      if (!blob) throw badContent(`缺少图片「${info.hash.slice(0, 12)}」`)
+      if (blob.size !== info.size || blob.mime !== info.mime) throw badContent(`图片「${info.hash.slice(0, 12)}」与清单不一致`)
+    }
+  }
+  return blobs
+}
+
+/** formatVersion 1 的 assets/ 按内容哈希转入图片仓库，并改写引用。 */
+function migrateAssets(files: ZipFiles, entries: Entry[], blobs: Map<string, RecognizedBlob>): void {
+  const byPath = new Map<string, string>()
+  for (const name of leafFiles(files).filter((n) => n.startsWith('assets/'))) {
+    const path = name.slice(7)
+    const bytes = files[name]
+    const hash = sha256Hex(bytes)
+    byPath.set(path, hash)
+    if (!blobs.has(hash)) {
+      const mime = assertImage(path, bytes)
+      blobs.set(hash, { hash, mime, size: bytes.length, bytes })
+    }
+  }
+  for (const entry of entries) {
+    if (typeof entry.image === 'string' && byPath.has(entry.image)) entry.image = { $asset: byPath.get(entry.image)! }
+  }
+}
+
+function recognizePack(files: ZipFiles, raw: unknown, bytes: Uint8Array, ctx: RecognizeContext, formatVersion: number): RecognizedPack {
   const ruleId = (raw as { pack?: { ruleId?: unknown } }).pack?.ruleId
   if (typeof ruleId === 'string' && !ctx.hasRule(ruleId)) {
     throw new TrpgError('E_RULE_MISSING', `需要先安装规则『${ruleId}』`, { ruleId })
   }
   const parsed = packFileManifestSchema.safeParse(raw)
   if (!parsed.success) throw badContent(`说明文件的 ${field(parsed.error.issues[0])} 不合法`)
-  const manifest = parsed.data.pack
+  const manifest = normalizeManifest(parsed.data.pack, formatVersion)
   if (manifest.minAppVersion && compareVersions(manifest.minAppVersion, ctx.appVersion) > 0) {
     throw new TrpgError('E_NEWER_APP', `需要先把扩展更新到 v${manifest.minAppVersion} 才能安装这个内容包`)
   }
+  if (manifest.dataVersion > SUPPORTED_DATA_VERSION) {
+    throw new TrpgError('E_NEWER_DATA', '这个内容包由更新版本的扩展制作，请先更新扩展')
+  }
+  assertPackPaths(leafFiles(files), files, formatVersion)
   const entries = readEntries(files)
   if (entries.length !== manifest.entryCount) {
     throw badContent(`条目数量不符（说明为 ${manifest.entryCount}，实际 ${entries.length}）`)
   }
   const typeCounts: Record<string, number> = {}
   for (const e of entries) typeCounts[e.type] = (typeCounts[e.type] ?? 0) + 1
-  const assets = new Map<string, Uint8Array>()
-  for (const [name, content] of Object.entries(files)) if (name.startsWith('assets/') && !name.endsWith('/')) assets.set(name.slice(7), content)
+  const features = formatVersion >= 2 ? readFeatures(files) : []
+  const { adventure, fallback } = formatVersion >= 2 ? readAdventure(files) : { adventure: {}, fallback: [] }
+  const blobs = readBlobs(files, formatVersion, manifest)
+  if (formatVersion <= 1) migrateAssets(files, entries, blobs)
+  manifest.blobs = [...blobs.values()].map(({ hash, mime, size }) => ({ hash, mime, size })).sort((a, b) => a.hash.localeCompare(b.hash))
+  const contributes = {
+    entries: entries.length,
+    tables: entries.filter((e) => e.type === 'table').length,
+    variants: entries.filter((e) => (e as { override?: unknown }).override !== undefined).length,
+    adventures: ((adventure['adventure/adventure.json'] as { adventures?: unknown[] } | undefined)?.adventures ?? []).length,
+    ruleOptions: features.filter((f) => f.kind === 'ruleOptions').length,
+  }
+  assertPackRefs({ manifest, entries, adventure, fallback, blobHashes: new Set(blobs.keys()) })
   return {
     type: 'pack',
-    manifest: { ...manifest, typeCounts },
+    manifest: { ...manifest, typeCounts, contributes },
     entries,
-    assets,
+    blobs,
+    features,
+    adventure,
+    fallback,
     byteSize: bytes.length,
     sha256: sha256Hex(bytes),
   }
@@ -141,11 +251,20 @@ function recognizeSaveFile(files: ZipFiles, manifestRaw: unknown): RecognizedSav
     }
   }
   const attachedPacks = new Map<string, Uint8Array>()
-  for (const [name, content] of Object.entries(files)) if (name.startsWith('packs/') && name.endsWith('.trpgpack')) attachedPacks.set(name, content)
-  return { type: parsed.data.format === 'trpg-backup' ? 'backup' : 'save', manifest: parsed.data, saves, workspaces, settings, packList, attachedPacks }
+  for (const name of leafFiles(files)) if (name.startsWith('packs/') && name.endsWith('.trpgpack')) attachedPacks.set(name, files[name])
+  const blobs = new Map<string, Uint8Array>()
+  for (const name of leafFiles(files).filter((n) => n.startsWith('blobs/'))) {
+    const hash = name.slice('blobs/'.length)
+    if (!/^[a-f0-9]{64}$/.test(hash)) throw badContent(`图片「${hash}」的文件名不是哈希`)
+    const content = files[name]
+    if (sha256Hex(content) !== hash) throw badContent(`图片「${hash.slice(0, 12)}」的哈希不一致`)
+    assertImage(hash, content)
+    blobs.set(hash, content)
+  }
+  return { type: parsed.data.format === 'trpg-backup' ? 'backup' : 'save', manifest: parsed.data, saves, workspaces, settings, packList, attachedPacks, blobs }
 }
 
-/** 按 U2 §2.3 的顺序识别与校验文件；第一处失败即抛出带提示文字的错误。 */
+/** 按 U2 §2.3 与 L1 §2.2 的顺序识别与校验文件；第一处失败即抛出带提示文字的错误。 */
 export function recognizeFile(bytes: Uint8Array, ctx: RecognizeContext): Recognized {
   const files = readZip(bytes)
   const manifestFile = files['trpg-manifest.json']
@@ -160,10 +279,11 @@ export function recognizeFile(bytes: Uint8Array, ctx: RecognizeContext): Recogni
   if (head.format !== 'trpg-pack' && head.format !== 'trpg-save' && head.format !== 'trpg-backup') {
     throw new TrpgError('E_UNKNOWN_FORMAT', '无法识别：未知的文件类型')
   }
-  if (typeof head.formatVersion !== 'number' || head.formatVersion > FORMAT_VERSION) {
+  if (typeof head.formatVersion !== 'number' || head.formatVersion < 1 || head.formatVersion > FORMAT_VERSION) {
     throw new TrpgError('E_NEWER_FORMAT', '这个文件由更新版本的扩展创建，请先更新扩展')
   }
-  return head.format === 'trpg-pack' ? recognizePack(files, raw, bytes, ctx) : recognizeSaveFile(files, raw)
+  const version = Math.max(1, Math.floor(head.formatVersion))
+  return head.format === 'trpg-pack' ? recognizePack(files, raw, bytes, ctx, version) : recognizeSaveFile(files, raw)
 }
 
 /** 校验下载文件的大小与校验值（U2 §2.3 最后一项）。 */

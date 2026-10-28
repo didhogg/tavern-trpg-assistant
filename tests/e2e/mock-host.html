@@ -36,6 +36,7 @@
   }
   window.__mockInjected = () => Object.values(injected).map((v) => v.value)
   window.SillyTavern = { getContext: () => ctx, libs: {} }
+  window.__TRPG_M2_CATALOG_URL__ = '/mock-data/catalog.json'
   // 模拟一次发送：把输入框内容与注入文本组成请求，依次触发事件
   window.__mockSend = async () => {
     const text = document.getElementById('send_textarea').value

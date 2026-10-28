@@ -1,10 +1,11 @@
 import type { TrpgDatabase } from '../db'
 import { TrpgError } from '../errors'
 import type { PackService } from '../packs/installer'
+import { collectAssetHashes } from '../packs/refs'
 import { writeZip } from '../packs/zip'
 import { loadSettings } from '../backup'
 import { FORMAT_VERSION } from '../../schemas/common'
-import type { SaveSlot } from '../../schemas/campaign'
+import type { SaveSlot, Workspace } from '../../schemas/campaign'
 
 export type ExportScope = { type: 'save'; saveId: string } | { type: 'backup' }
 
@@ -52,9 +53,16 @@ export async function exportSaves(deps: ExportDeps, scope: ExportScope, opts: { 
   const saves = await collectSaves(deps.db, scope)
   const files: Record<string, Uint8Array | string> = {}
   for (const save of saves) files[`saves/${save.id}.json`] = JSON.stringify(save)
+  let workspaces: Workspace[] = []
   if (scope.type === 'backup') {
-    for (const ws of await deps.db.workspaces.toArray()) files[`workspaces/${encodeURIComponent(ws.ownerKey)}.json`] = JSON.stringify(ws)
+    workspaces = await deps.db.workspaces.toArray()
+    for (const ws of workspaces) files[`workspaces/${encodeURIComponent(ws.ownerKey)}.json`] = JSON.stringify(ws)
     files['settings.json'] = JSON.stringify(await loadSettings(deps.db))
+  }
+  const hashes = collectAssetHashes([saves, workspaces])
+  for (const hash of [...hashes].sort()) {
+    const blob = await deps.db.blobs.get(hash)
+    if (blob) files[`blobs/${hash}`] = blob.bytes
   }
   const installed = await deps.packs.list()
   files['packs.json'] = JSON.stringify(installed.map((p) => ({ id: p.id, version: p.version, name: p.name })))

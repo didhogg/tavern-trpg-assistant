@@ -15,5 +15,5 @@ export default defineConfig({
     minify: true,
     sourcemap: false,
   },
-  test: { include: ['tests/**/*.test.ts'], setupFiles: ['tests/helpers/setup.ts'] },
+  test: { include: ['tests/unit/**/*.test.ts', 'tests/*.test.ts'], setupFiles: ['tests/helpers/setup.ts'] },
 })

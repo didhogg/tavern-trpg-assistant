@@ -1,0 +1,118 @@
+import type { Entry } from '../../../src/schemas/pack'
+import { entryDataByType, DND5E2014_ENTRY_TYPES } from '../../../src/rules/dnd5e2014/data/entries'
+import { diceSchema } from '../../../src/rules/dnd5e2014/data/common'
+import type { ConvertedPack } from '../convert'
+
+export interface ValidationContext {
+  packs: ConvertedPack[]
+}
+
+function fail(message: string): never {
+  throw new Error(`校验失败：${message}`)
+}
+
+function refsIn(value: unknown, out: Set<string> = new Set()): Set<string> {
+  if (typeof value === 'string') {
+    for (const match of value.matchAll(/\{\{ref:([^|}]+)/g)) out.add(match[1])
+  } else if (Array.isArray(value)) {
+    for (const item of value) refsIn(item, out)
+  } else if (value && typeof value === 'object') {
+    for (const item of Object.values(value)) refsIn(item, out)
+  }
+  return out
+}
+
+function checkDice(label: string, value: unknown): void {
+  if (value === undefined) return
+  if (typeof value !== 'string') fail(`${label} 的骰式无法识别：${String(value)}`)
+  if (!/^[\d\sdD+\-]+$/.test(value)) return
+  if (!diceSchema.safeParse(value).success) fail(`${label} 的骰式无法识别：${value}`)
+}
+
+function raw5eTools(value: unknown): string | undefined {
+  if (typeof value === 'string') return value.includes('{@') || value.includes('{=') ? value.slice(0, 120) : undefined
+  if (Array.isArray(value)) {
+    for (const item of value) { const found = raw5eTools(item); if (found) return found }
+  } else if (value && typeof value === 'object') {
+    for (const item of Object.values(value)) { const found = raw5eTools(item); if (found) return found }
+  }
+  return undefined
+}
+
+function diceInEntry(entry: Entry): void {
+  const data = entry.data as Record<string, unknown>
+  if (entry.type === 'table') {
+    checkDice(`${entry.id} 的随机表`, data.dice)
+    const faces = facesOf(String(data.dice ?? ''))
+    const seen = new Set<number>()
+    for (const row of (data.rows as Array<{ min: number; max: number }> | undefined) ?? []) {
+      if (row.min < 1 || row.max > faces) fail(`${entry.id} 的范围超出骰子`)
+      for (let n = row.min; n <= row.max; n++) {
+        if (seen.has(n)) fail(`${entry.id} 的范围重叠`)
+        seen.add(n)
+      }
+    }
+    if (seen.size !== faces) fail(`${entry.id} 没有恰好覆盖骰子全部结果`)
+  }
+  const activities = data.activities as Array<Record<string, unknown>> | undefined
+  for (const activity of activities ?? []) {
+    for (const part of (activity.damage as Array<{ dice?: string }> | undefined) ?? []) checkDice(`${entry.id} 的行动`, part.dice)
+    for (const part of (activity.parts as Array<{ dice?: string }> | undefined) ?? []) checkDice(`${entry.id} 的行动`, part.dice)
+  }
+  const weapon = data.weapon as { damage?: Array<{ dice?: string }> } | undefined
+  for (const part of weapon?.damage ?? []) checkDice(`${entry.id} 的武器伤害`, part.dice)
+  const hp = data.hp as { formula?: string } | undefined
+  if (hp?.formula) checkDice(`${entry.id} 的生命值公式`, hp.formula)
+}
+
+function facesOf(dice: string): number {
+  const match = /^(\d{0,2})d(\d{1,3})/.exec(dice)
+  const count = match?.[1] ? Number(match[1]) : 1
+  const faces = Number(match?.[2] ?? 0)
+  return count * faces
+}
+
+export function validatePack(pack: ConvertedPack, ctx: ValidationContext): void {
+  const own = new Set(pack.entries.map((e) => e.id))
+  const required = new Set(pack.manifest.relationships.requires.map((r) => r.id))
+  const byEntry = new Map<string, string>()
+  for (const other of ctx.packs) for (const entry of other.entries) byEntry.set(entry.id, other.manifest.id)
+  for (const entry of pack.entries) {
+    if (!/^[a-z0-9][a-z0-9.-]*$/.test(entry.id)) fail(`${entry.id} 的 id 不符合规则`)
+    const schema = entryDataByType[entry.type as keyof typeof entryDataByType]
+    if (!schema) fail(`${entry.id} 的类型 ${entry.type} 不在 D1 §4.2 中`)
+    const parsed = schema.safeParse(entry.data)
+    if (!parsed.success) fail(`${entry.id} 的 ${parsed.error.issues[0]?.path.join('.')}：${parsed.error.issues[0]?.message}`)
+    if (!DND5E2014_ENTRY_TYPES.includes(entry.type as never)) fail(`${entry.id} 的类型未知`)
+    if (Array.from(entry.summary).length > 80) fail(`${entry.id} 的摘要超过 80 字`)
+    const credit = (entry.data as { credit?: { by?: string; license?: string; missing?: string[] } }).credit
+    if (!credit?.by || !credit.license) fail(`${entry.id} 缺少来源或许可`)
+    const rawText = raw5eTools(entry.data)
+    if (rawText) fail(`${entry.id} 还有未转换的 5etools 标签：${rawText}`)
+    diceInEntry(entry)
+    for (const id of [...refsIn(entry.data)]) {
+      if (own.has(id)) continue
+      const target = byEntry.get(id)
+      if (!target) fail(`${entry.id} 引用的 ${id} 不存在`)
+      if (target !== pack.manifest.id && !required.has(target)) fail(`${entry.id} 引用的 ${id} 不在本包或 requires 中`)
+    }
+  }
+}
+
+export function validatePacks(packs: ConvertedPack[]): void {
+  const ctx = { packs }
+  const ids = new Set(packs.map((p) => p.manifest.id))
+  for (const pack of packs) {
+    for (const dep of pack.manifest.relationships.requires) if (!ids.has(dep.id)) fail(`${pack.manifest.id} 依赖的 ${dep.id} 不存在`)
+    validatePack(pack, ctx)
+  }
+}
+
+export function assertVolume(packs: Array<{ id: string; bytes: number }>): void {
+  let total = 0
+  for (const pack of packs) {
+    total += pack.bytes
+    if (pack.bytes > 3 * 1024 * 1024) fail(`${pack.id} 压缩后 ${(pack.bytes / 1024 / 1024).toFixed(2)}MB，超过 3MB`)
+  }
+  if (total > 12 * 1024 * 1024) fail(`全部包合计 ${(total / 1024 / 1024).toFixed(2)}MB，超过 12MB`)
+}

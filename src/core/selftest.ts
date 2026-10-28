@@ -1,4 +1,5 @@
 import { uuid } from './ids'
+import { sha256Hex } from './hash'
 import { buildPackFile } from './packs/file'
 import { createServices } from './services'
 import { exportSaves } from './transfer/exporter'
@@ -47,11 +48,12 @@ export async function runSelfTest(onStep?: (step: SelfTestStep) => void): Promis
   }
 
   const tom: Entry = { id: 'tom', type: 'npc', name: '托姆', keywords: ['托姆'], unique: true, summary: '', data: { hp: 9 } }
-  const pack = (id: string, kind: 'data' | 'module', version = '1.0.0', extra: Entry[] = []) =>
+  const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='), (c) => c.charCodeAt(0))
+  const pack = (id: string, category: 'rules' | 'adventure', version = '1.0.0', extra: Entry[] = []) =>
     buildPackFile({
-      manifest: { id, ruleId: 'dnd5e2014', kind, name: `自检-${id}`, version, dependsOn: kind === 'module' ? [{ id: 'dnd5e2014-core' }] : [] },
+      manifest: { id, ruleId: 'dnd5e2014', category, name: `自检-${id}`, version, relationships: { requires: category === 'adventure' ? [{ id: 'dnd5e2014-srd' }] : [], recommends: [], conflicts: [] } },
       entries: [...entries(5, 'spell', 'sp'), ...extra],
-      assets: new Map([['a.bin', new Uint8Array(1024)]]),
+      blobs: new Map([[sha256Hex(png), { bytes: png, mime: 'image/png' }]]),
     })
 
   try {
@@ -63,19 +65,19 @@ export async function runSelfTest(onStep?: (step: SelfTestStep) => void): Promis
       return `secureContext=${String(globalThis.isSecureContext)}`
     })
     await run('生成并识别内容包（zip 压缩与解压）', async () => {
-      const rec = s.packs.recognize(pack('selftest-core', 'data'))
+      const rec = s.packs.recognize(pack('selftest-core', 'rules'))
       check(rec.type === 'pack' && rec.manifest.entryCount === 5, '识别结果不对')
       return `${rec.type === 'pack' ? rec.byteSize : 0} 字节`
     })
     await run('安装内置包与模组（模组依赖核心包）', async () => {
-      check((await s.packs.installBuiltin(pack('dnd5e2014-core', 'data'))) === 'installed', '内置包未安装')
-      const module = s.packs.recognize(pack('selftest-module', 'module', '1.0.0', [tom]))
+      check((await s.packs.installBuiltin(pack('dnd5e2014-srd', 'rules'))) === 'installed', '内置包未安装')
+      const module = s.packs.recognize(pack('selftest-module', 'adventure', '1.0.0', [tom]))
       check(module.type === 'pack', '不是内容包')
       await s.packs.install(module, { source: 'import' })
       check((await s.packs.list()).length === 2, '安装数量不对')
     })
     await run('重复导入同一个包：要求先选择覆盖；选择后升级', async () => {
-      const again = s.packs.recognize(pack('selftest-module', 'module', '1.1.0', [tom]))
+      const again = s.packs.recognize(pack('selftest-module', 'adventure', '1.1.0', [tom]))
       check(again.type === 'pack', '不是内容包')
       let refused = false
       try {

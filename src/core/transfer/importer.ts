@@ -1,6 +1,7 @@
 import type { TrpgDatabase } from '../db'
 import { uuid as defaultUuid } from '../ids'
 import type { RecognizedSaveFile } from '../packs/recognize'
+import { sniffImageMime } from '../packs/images'
 import type { CampaignService, Owner } from '../saves/campaign'
 import { settingsSchema, type SaveSlot } from '../../schemas/campaign'
 
@@ -57,7 +58,12 @@ export async function importSaves(deps: ImportDeps, rec: RecognizedSaveFile, opt
   const selected = new Set(opts.selectedIds)
   let imported = 0
 
-  return db.transaction('rw', [db.saves, db.workspaces, db.meta, db.packs], async () => {
+  return db.transaction('rw', [db.saves, db.workspaces, db.meta, db.packs, db.blobs], async () => {
+    const createdAt = deps.now()
+    for (const [hash, bytes] of rec.blobs) {
+      if (await db.blobs.get(hash)) continue
+      await db.blobs.put({ hash, bytes, mime: sniffImageMime(bytes) ?? 'application/octet-stream', size: bytes.length, createdAt })
+    }
     if (rec.type === 'save') {
       for (const save of usable.filter((s) => selected.has(s.id))) {
         const taken = await campaign.manualNames(opts.owner.ownerKey, save.ruleId)

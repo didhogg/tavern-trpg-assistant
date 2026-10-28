@@ -12,6 +12,8 @@ export interface RuleDefinition {
   description: string
   /** 核心包：始终启用且不可停用。 */
   corePackIds: string[]
+  /** 随扩展分发、启动时安装的内置包（L1 §3.3）；未提供时等于 corePackIds。 */
+  builtinPacks?: string[]
   /** 首页默认战役横幅；未提供时使用纹样底图。 */
   defaultBanner?: RuleBanner
 }

@@ -12,7 +12,7 @@ let services: Services
 beforeEach(async () => {
   setActivePinia(createPinia())
   services = createServices({ dbName: `store-${uuid()}`, now: makeClock(), appVersion: '1.0.0' })
-  await services.packs.installBuiltin(makePack({ id: 'dnd5e2014-core', name: '核心规则' }, makeEntries(2)))
+  await services.packs.installBuiltin(makePack({ id: 'dnd5e2014-srd', name: '核心规则' }, makeEntries(2)))
 })
 
 afterEach(async () => {

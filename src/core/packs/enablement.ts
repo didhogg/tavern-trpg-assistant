@@ -11,7 +11,7 @@ export interface EnableResult {
 
 /** 依赖 `packId` 的、已启用的内容包 id。 */
 export function enabledDependents(packId: string, enabled: EnabledPack[], installed: Map<string, InstalledPack>): string[] {
-  return enabled.filter((e) => installed.get(e.id)?.dependsOn.some((d) => d.id === packId)).map((e) => e.id)
+  return enabled.filter((e) => installed.get(e.id)?.relationships.requires.some((d) => d.id === packId)).map((e) => e.id)
 }
 
 export function enablePack(enabled: EnabledPack[], packId: string, installed: Map<string, InstalledPack>, rule: RuleDefinition): EnableResult {
@@ -22,7 +22,7 @@ export function enablePack(enabled: EnabledPack[], packId: string, installed: Ma
     const pack = installed.get(id)
     if (!pack) throw new TrpgError('E_DEP_MISSING', `需要先安装『${id}』`, { packId: id })
     if (pack.ruleId !== rule.id) throw new TrpgError('E_RULE_MISMATCH', `『${pack.name}』属于其他规则，不能在当前存档中启用`)
-    for (const dep of pack.dependsOn) visit(dep.id, true)
+    for (const dep of pack.relationships.requires) visit(dep.id, true)
     next.push({ id, version: pack.version })
     if (viaDependency) autoEnabled.push(id)
   }
