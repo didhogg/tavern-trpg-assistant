@@ -2,6 +2,7 @@ import { eventName, getTextarea, onEvent, setTextareaValue } from '../host/conte
 import type { ChatMessage, StContext } from '../host/types'
 import { guard, setResult } from './store'
 import { MARKER_COMMENT, MARKER_INJECT, scanPayload, type ScanResult } from './promptScan'
+import { auditLlmLogs } from './llmLogAudit'
 import type { ProbeModule } from './types'
 
 const COMMENT_ID = 'comment'
@@ -119,6 +120,15 @@ export function createPromptProbes(ctx: StContext): ProbeModule[] {
       },
     ],
   }
+
+  commentModule.actions.push({
+    label: '从 TauriTavern 请求日志核对',
+    run: () =>
+      guard(COMMENT_ID, COMMENT_TITLE, async () => {
+        const audit = await auditLlmLogs()
+        setResult(COMMENT_ID, COMMENT_TITLE, audit.status, audit.summary, { runType, audit: audit.detail, message: messageChecks })
+      }),
+  })
 
   const injectModule: ProbeModule = {
     id: INJECT_ID,

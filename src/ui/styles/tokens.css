@@ -1,5 +1,6 @@
 :host {
   all: initial;
+  pointer-events: inherit; /* 让浮层库对 body 设置的"不接受点击"能传到面板内 */
   --paper: #f4ecdd;
   --panel: #eee5d3;
   --card: #fffcf6;

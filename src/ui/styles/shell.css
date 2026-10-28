@@ -1,15 +1,15 @@
-.trpg-root { position: fixed; inset: 0; pointer-events: none; z-index: 100000; }
+.trpg-root { position: fixed; top: 0; left: 0; width: 0; height: 0; z-index: 100000; }
 .trpg-ball {
   position: fixed; width: 48px; height: 48px; border-radius: 50%;
   border: 2px solid var(--gold); background: var(--primary); color: var(--primary-ink);
-  font-size: 22px; cursor: grab; pointer-events: auto; touch-action: none;
+  font-size: 22px; cursor: grab; touch-action: none;
   box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
 }
 .trpg-window {
   position: fixed; display: flex; flex-direction: column;
   width: min(92vw, 440px); height: min(80vh, 640px);
   background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
-  box-shadow: 0 8px 28px rgb(0 0 0 / 40%); pointer-events: auto; overflow: hidden;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 40%); overflow: hidden;
 }
 .trpg-window__head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;

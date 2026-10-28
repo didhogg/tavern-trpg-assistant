@@ -30,6 +30,14 @@ async function attempt(label: string, fn: () => unknown): Promise<unknown> {
 
 async function findHandle(chat: Dict): Promise<{ handle: Dict | null; via: string | null }> {
   if (typeof chat.searchMessages === 'function' || chat.store) return { handle: chat, via: 'api.chat 本身' }
+  const current = chat.current as Dict | undefined
+  if (current && typeof current.handle === 'function') {
+    const result = (await attempt('api.chat.current.handle()', () => (current.handle as () => unknown).call(current))) as {
+      ok: boolean
+      value?: unknown
+    }
+    if (result.ok && result.value && typeof result.value === 'object') return { handle: result.value as Dict, via: 'api.chat.current.handle()' }
+  }
   for (const name of HANDLE_GETTERS) {
     const candidate = chat[name]
     if (typeof candidate === 'function') {
@@ -86,6 +94,22 @@ export function createTauriProbe(): ProbeModule {
           if (h.store.deleteJson) detail.storeDelete = await attempt('store.deleteJson', () => h.store!.deleteJson!({ namespace: NAMESPACE, key: 'probe' }))
         }
         if (h.metadata?.get) detail.metadata = await attempt('metadata.get', () => h.metadata!.get!())
+      }
+      const extensionStore = (api.extension as Dict | undefined)?.store as
+        | (Dict & {
+            setJson?: (a: unknown) => Promise<unknown>
+            getJson?: (a: unknown) => Promise<unknown>
+            listKeys?: (a: unknown) => Promise<unknown>
+            deleteJson?: (a: unknown) => Promise<unknown>
+          })
+        | undefined
+      if (extensionStore?.setJson && extensionStore.getJson) {
+        const value = { at: new Date().toISOString() }
+        const args = { namespace: NAMESPACE, key: 'probe' }
+        detail.extStoreSet = await attempt('extension.store.setJson', () => extensionStore.setJson!({ ...args, value }))
+        detail.extStoreGet = await attempt('extension.store.getJson', () => extensionStore.getJson!(args))
+        if (extensionStore.listKeys) detail.extStoreKeys = await attempt('extension.store.listKeys', () => extensionStore.listKeys!({ namespace: NAMESPACE }))
+        if (extensionStore.deleteJson) detail.extStoreDelete = await attempt('extension.store.deleteJson', () => extensionStore.deleteJson!(args))
       }
       setResult(
         ID,

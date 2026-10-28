@@ -3,7 +3,7 @@ import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { chromium } from 'playwright-core'
+import { chromium, webkit } from 'playwright-core'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -33,9 +33,72 @@ const check = (name, ok, extra = '') => {
   if (!ok) failures.push(name)
 }
 
-const browser = await chromium.launch({ executablePath: chrome, headless: true })
+const settle = (page) => page.waitForTimeout(250)
+const modelText = (page) => page.getByTestId('select-model').innerText()
+const listCount = (page) => page.getByRole('listbox').count()
+const bodyPointerEvents = (page) => page.evaluate(() => document.body.style.pointerEvents)
+const clickCenter = async (page, locator) => {
+  const box = await locator.boundingBox()
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+}
+
+// 下拉控件的交互测试：必须真的选中选项，并在界面稳定后检查结果
+async function selectTests(page, label) {
+  const first = page.getByRole('combobox', { name: '测试下拉（8 项）' })
+  const second = page.getByRole('combobox', { name: '测试下拉（3 项）' })
+  await first.scrollIntoViewIfNeeded()
+
+  for (const wait of [0, 150, 800]) {
+    await clickCenter(page, first)
+    await page.waitForTimeout(wait)
+    await clickCenter(page, page.getByRole('option', { name: '3 环', exact: true }))
+    await settle(page)
+    check(`[${label}] 下拉打开后等 ${wait}ms 点选项，值变为「3 环」`, (await modelText(page)).includes('3 环 /'), await modelText(page))
+    check(`[${label}] 选中后列表关闭且页面恢复可点击`, (await listCount(page)) === 0 && (await bodyPointerEvents(page)) === '')
+    await clickCenter(page, first)
+    await clickCenter(page, page.getByRole('option', { name: '戏法', exact: true }))
+    await settle(page)
+  }
+
+  // 打开第一个下拉后，再点第二个下拉所在位置：任何时刻最多一个列表，且最终能恢复并选中
+  await clickCenter(page, first)
+  await settle(page)
+  await clickCenter(page, second)
+  await settle(page)
+  check(`[${label}] 打开第一个后点第二个：最多只有一个列表`, (await listCount(page)) <= 1, `列表数 ${await listCount(page)}`)
+  if ((await listCount(page)) > 0) await page.keyboard.press('Escape')
+  await settle(page)
+  check(`[${label}] 上述操作后页面恢复可点击`, (await bodyPointerEvents(page)) === '')
+  await clickCenter(page, second)
+  await clickCenter(page, page.getByRole('option', { name: '金', exact: true }))
+  await settle(page)
+  check(`[${label}] 第二个下拉也能选中「金」`, (await modelText(page)).endsWith('/ 金'), await modelText(page))
+
+  // 键盘：打开、移动、选择、Esc 关闭后焦点回到触发按钮
+  await first.focus()
+  await page.keyboard.press('Enter')
+  await settle(page)
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await settle(page)
+  check(`[${label}] 键盘可打开并选择`, (await listCount(page)) === 0 && /下拉当前值：(?!未选)/.test(await modelText(page)), await modelText(page))
+  await page.keyboard.press('Enter')
+  await settle(page)
+  await page.keyboard.press('Escape')
+  await settle(page)
+  check(`[${label}] Esc 关闭后焦点回到触发按钮`, await first.evaluate((el) => el === el.getRootNode().activeElement))
+}
+
+// 宿主 TauriTavern 使用 WebKit 内核，因此两种内核都要通过
+const engines = [
+  ['chrome', () => chromium.launch({ executablePath: chrome, headless: true })],
+  ['webkit', () => webkit.launch({ headless: true })],
+]
 try {
-  for (const [label, width, height] of [['desktop', 1440, 900], ['narrow', 390, 780]]) {
+  for (const [engine, launch] of engines) {
+  const browser = await launch()
+  for (const [viewLabel, width, height] of [['desktop', 1440, 900], ['narrow', 390, 780]]) {
+    const label = `${engine}/${viewLabel}`
     const page = await browser.newPage({ viewport: { width, height } })
     const errors = []
     page.on('pageerror', (e) => errors.push(e.message))
@@ -81,12 +144,15 @@ try {
     check(`[${label}] 下拉列表完整落在屏幕内`, list.x >= 0 && list.y >= 0 && list.x + list.width <= width + 1 && list.y + list.height <= height + 1, JSON.stringify(list))
     await page.keyboard.press('Escape')
 
-    await page.screenshot({ path: join(root, `docs/reviews/M0-mock-${label}.png`) })
+    await selectTests(page, label)
+
+    await page.screenshot({ path: join(root, `docs/reviews/M0-mock-${engine}-${viewLabel}.png`) })
     check(`[${label}] 页面无脚本错误`, errors.length === 0, errors.join(' | '))
     await page.close()
   }
-} finally {
   await browser.close()
+  }
+} finally {
   server.close()
 }
 if (failures.length) {

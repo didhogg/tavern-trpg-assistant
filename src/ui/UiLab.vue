@@ -29,6 +29,7 @@ function mark(id: string, title: string, status: 'pass' | 'fail'): void {
     <div class="lab">
       <div class="lab__row">
         <SelectField v-model="choice" label="测试下拉（8 项）" :options="['戏法', '1 环', '2 环', '3 环', '4 环', '5 环', '6 环', '7 环', '8 环', '9 环']" placeholder="下拉测试：选择环阶" />
+        <p class="probe__hint" data-testid="select-model">下拉当前值：{{ choice || '未选' }} / {{ color || '未选' }}</p>
         <SelectField v-model="color" label="测试下拉（3 项）" :options="['红', '金', '墨']" placeholder="下拉测试：选择颜色" />
       </div>
       <div class="lab__row">
