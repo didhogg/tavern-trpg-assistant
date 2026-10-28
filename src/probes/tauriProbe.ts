@@ -28,6 +28,28 @@ async function attempt(label: string, fn: () => unknown): Promise<unknown> {
   }
 }
 
+/** 报告只保留结构信息（数量、字段名、长度），不带出聊天内容。 */
+function shapeOf(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    const first = value[0]
+    return {
+      count: value.length,
+      itemKeys: first && typeof first === 'object' ? Object.keys(first as Dict) : typeof first,
+      textLengths: value.map((v) => (typeof (v as Dict)?.text === 'string' ? String((v as Dict).text).length : null)),
+    }
+  }
+  if (value && typeof value === 'object') {
+    const keys = Object.keys(value as Dict)
+    return { keys, approxBytes: JSON.stringify(value).length }
+  }
+  return { type: typeof value, length: typeof value === 'string' ? value.length : null }
+}
+
+function redact(result: unknown): unknown {
+  const r = result as { ok: boolean; value?: unknown; error?: string }
+  return r.ok ? { ok: true, shape: shapeOf(r.value) } : r
+}
+
 async function findHandle(chat: Dict): Promise<{ handle: Dict | null; via: string | null }> {
   if (typeof chat.searchMessages === 'function' || chat.store) return { handle: chat, via: 'api.chat 本身' }
   const current = chat.current as Dict | undefined
@@ -83,9 +105,9 @@ export function createTauriProbe(): ProbeModule {
           metadata?: { get?: () => Promise<unknown> }
         }
         detail.handleShape = describe(handle, 2)
-        if (h.searchMessages) detail.searchMessages = await attempt('searchMessages', () => h.searchMessages!({ query: '你', limit: 3 }))
+        if (h.searchMessages) detail.searchMessages = redact(await attempt('searchMessages', () => h.searchMessages!({ query: '你', limit: 3 })))
         const findLast = h.locate?.findLastMessage
-        if (findLast) detail.findLastMessage = await attempt('findLastMessage', () => findLast.call(h.locate, { role: 'user', scanLimit: 50 }))
+        if (findLast) detail.findLastMessage = redact(await attempt('findLastMessage', () => findLast.call(h.locate, { role: 'user', scanLimit: 50 })))
         if (h.store?.setJson && h.store.getJson) {
           const value = { at: new Date().toISOString() }
           detail.storeSet = await attempt('store.setJson', () => h.store!.setJson!({ namespace: NAMESPACE, key: 'probe', value }))
@@ -93,7 +115,9 @@ export function createTauriProbe(): ProbeModule {
           if (h.store.listKeys) detail.storeKeys = await attempt('store.listKeys', () => h.store!.listKeys!({ namespace: NAMESPACE }))
           if (h.store.deleteJson) detail.storeDelete = await attempt('store.deleteJson', () => h.store!.deleteJson!({ namespace: NAMESPACE, key: 'probe' }))
         }
-        if (h.metadata?.get) detail.metadata = await attempt('metadata.get', () => h.metadata!.get!())
+        if (h.metadata?.get) detail.metadata = redact(await attempt('metadata.get', () => h.metadata!.get!()))
+        if (typeof h.stableId === 'function') detail.stableId = redact(await attempt('stableId', () => (h.stableId as () => unknown).call(h)))
+        if (typeof h.summary === 'function') detail.summary = redact(await attempt('summary', () => (h.summary as () => unknown).call(h)))
       }
       const extensionStore = (api.extension as Dict | undefined)?.store as
         | (Dict & {

@@ -34,6 +34,7 @@
     setExtensionPrompt(key, value, position, depth) { injected[key] = { value, position, depth } },
     getCurrentChatId() { return 'mock-chat' },
   }
+  window.__mockInjected = () => Object.values(injected).map((v) => v.value)
   window.SillyTavern = { getContext: () => ctx, libs: {} }
   // 模拟一次发送：把输入框内容与注入文本组成请求，依次触发事件
   window.__mockSend = async () => {

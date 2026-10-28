@@ -118,6 +118,7 @@ try {
     const body = await page.locator('.trpg-window__body').innerText()
     check(`[${label}] 注释探针判定通过`, /注释原样进入了请求/.test(body))
     check(`[${label}] 注入探针判定通过`, /注入文本进入了请求/.test(body))
+    check(`[${label}] 判定后探针注入已自动清除`, (await page.evaluate(() => window.__mockInjected())).every((v) => v === ''), JSON.stringify(await page.evaluate(() => window.__mockInjected())))
     await page.getByRole('button', { name: '运行输入框测试' }).click()
     check(`[${label}] 输入框读写通过`, /写入、读回、恢复都正常/.test(await page.locator('.trpg-window__body').innerText()))
     check(`[${label}] IndexedDB 探针运行`, /IndexedDB 第 \d+ 次启动读写正常/.test(await page.locator('.trpg-window__body').innerText()))

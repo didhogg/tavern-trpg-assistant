@@ -71,7 +71,14 @@ export function createPromptProbes(ctx: StContext): ProbeModule[] {
         { runType, captures: live },
       )
       injectArmed = false
+      clearInjection()
     }
+  }
+
+  const clearInjection = () => {
+    const inChat = ctx.extension_prompt_types?.IN_CHAT ?? FALLBACK_IN_CHAT
+    const roleSystem = ctx.extension_prompt_roles?.SYSTEM ?? FALLBACK_ROLE_SYSTEM
+    ctx.setExtensionPrompt?.(INJECT_KEY, '', inChat, 0, false, roleSystem)
   }
 
   const start = () => {
@@ -144,7 +151,7 @@ export function createPromptProbes(ctx: StContext): ProbeModule[] {
             const roleSystem = ctx.extension_prompt_roles?.SYSTEM ?? FALLBACK_ROLE_SYSTEM
             ctx.setExtensionPrompt(INJECT_KEY, `[${MARKER_INJECT}] 这是探针注入文本`, inChat, 0, false, roleSystem)
             injectArmed = true
-            setResult(INJECT_ID, INJECT_TITLE, 'waiting', '已注入（IN_CHAT，深度 0）。请发送一条消息', {
+            setResult(INJECT_ID, INJECT_TITLE, 'waiting', '已注入（IN_CHAT，深度 0）。请发送一条消息，判定后会自动清除', {
               enumsFromContext: !!ctx.extension_prompt_types,
             })
           }),
@@ -153,9 +160,7 @@ export function createPromptProbes(ctx: StContext): ProbeModule[] {
         label: '清除注入',
         run: () =>
           guard(INJECT_ID, INJECT_TITLE, () => {
-            const inChat = ctx.extension_prompt_types?.IN_CHAT ?? FALLBACK_IN_CHAT
-            const roleSystem = ctx.extension_prompt_roles?.SYSTEM ?? FALLBACK_ROLE_SYSTEM
-            ctx.setExtensionPrompt?.(INJECT_KEY, '', inChat, 0, false, roleSystem)
+            clearInjection()
             injectArmed = false
             setResult(INJECT_ID, INJECT_TITLE, 'idle', '已清除注入')
           }),

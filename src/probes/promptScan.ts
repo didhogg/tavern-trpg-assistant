@@ -26,7 +26,7 @@ function safeStringify(payload: unknown): string {
 function snippet(text: string, marker: string): string | undefined {
   const index = text.indexOf(marker)
   if (index < 0) return undefined
-  return text.slice(Math.max(0, index - 40), index + marker.length + 60)
+  return text.slice(Math.max(0, index - 6), index + marker.length + 12)
 }
 
 function locateInChat(payload: unknown, marker: string): { role: string; indexFromEnd: number } | undefined {
