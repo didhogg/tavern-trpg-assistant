@@ -51,6 +51,11 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
 - SRD 包内法术指向的子职业只含 SRD 子职业；其他子职业对该法术的关联在各自书籍包里，不跨包引用。
 - 重名 id 加 `-2`（特性、随机表共约 200 条，见构建报告）：顺序随 5etools-cn 数据排列，数据更新后可能变动；发布前需决定是否改用稳定后缀。
 
+## 发布进度
+- 扩展仓库已推送到 GitHub（`94a35c8`）。
+- 数据仓库：本地已提交并打好标签 `v1.0.0`（`b7d7d26`，目录地址已指向该标签），GitHub 上还没有 `didhogg/tavern-trpg-data`；待创建后执行 `git remote add origin`、`git push origin main v1.0.0`，再刷新 jsDelivr 的 `@main/catalog.json`。
+- 之后用真实地址跑一遍下载自检，再交驾驶员真机验收。
+
 ## 需要驾驶员授权
 - 创建 GitHub 数据仓库 `didhogg/tavern-trpg-data`。
 - 推送扩展仓库与数据仓库、打版本标签、刷新 jsDelivr CDN。
