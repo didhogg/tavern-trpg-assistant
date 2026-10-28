@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { MODULE_NAME } from '../host/context'
-import type { StContext } from '../host/types'
-import { collectEnv } from '../probes/envProbe'
-import { createProbes } from '../probes'
-import { buildReport, results } from '../probes/store'
+import { MODULE_NAME } from '../../host/context'
+import type { StContext } from '../../host/types'
+import { collectEnv } from '../../probes/envProbe'
+import { createProbes } from '../../probes'
+import { buildReport, results } from '../../probes/store'
 import UiLab from './UiLab.vue'
 
 const props = defineProps<{ ctx: StContext }>()

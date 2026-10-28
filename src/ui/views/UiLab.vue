@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { results, setResult } from '../probes/store'
-import SelectField from './kit/SelectField.vue'
-import Segmented from './kit/Segmented.vue'
+import { results, setResult } from '../../probes/store'
+import { markRaw } from 'vue'
+import { useModalStore } from '../../stores/modal'
+import { useToastStore } from '../../stores/toast'
+import { askConfirm } from '../kit/confirm'
+import MoreMenu from '../kit/MoreMenu.vue'
+import SelectField from '../kit/SelectField.vue'
+import Segmented from '../kit/Segmented.vue'
+import Switch from '../kit/Switch.vue'
+import Term from '../kit/Term.vue'
+import LabModalPage from './LabModalPage.vue'
 
 const items = [
   { id: 'ui.ball', title: '悬浮球可拖动（鼠标/手指）', how: '拖动悬浮球到屏幕各处，松手后停在松手位置；单击能开关窗口。' },
@@ -17,6 +25,18 @@ const color = ref('')
 const segment = ref('a')
 const checked = ref(false)
 const typed = ref('')
+const on = ref(false)
+const menuPick = ref('')
+const modal = useModalStore()
+const toast = useToastStore()
+
+function openModal(): void {
+  modal.open({ key: 'lab:1', title: '演示弹窗', component: markRaw(LabModalPage), props: { level: 1 } })
+}
+async function dangerConfirm(): Promise<void> {
+  const ok = await askConfirm({ title: '卸载演示', message: '确定要卸载吗？', confirmLabel: '卸载', danger: true })
+  toast.info(ok ? '已确认' : '已取消')
+}
 
 function mark(id: string, title: string, status: 'pass' | 'fail'): void {
   setResult(id, title, status, status === 'pass' ? '人工确认：通过' : '人工确认：不通过')
@@ -36,6 +56,21 @@ function mark(id: string, title: string, status: 'pass' | 'fail'): void {
         <Segmented v-model="segment" label="分段按钮" :options="[{ value: 'a', label: '优势' }, { value: 'b', label: '普通' }, { value: 'c', label: '劣势' }]" />
         <label class="trpg-check"><input v-model="checked" type="checkbox" /> 勾选框测试</label>
         <input v-model="typed" class="trpg-input" type="text" placeholder="输入测试：中文 / English" />
+      </div>
+      <div class="lab__row">
+        <div class="trpg-row">
+          <span class="trpg-row__main">开关演示：<span data-testid="switch-state">{{ on ? '开' : '关' }}</span></span>
+          <Switch v-model="on" label="演示开关" />
+          <MoreMenu label="演示条目" :items="[{ key: 'copy', label: '复制为我的包' }, { key: 'x', label: '不可用项', disabled: true, reason: '演示' }, { key: 'del', label: '卸载', danger: true }]" @select="menuPick = $event" />
+        </div>
+        <p class="probe__hint" data-testid="menu-pick">菜单选择：{{ menuPick || '无' }}</p>
+        <p>下划线术语：<Term @open="openModal">点我打开演示弹窗</Term></p>
+        <div class="probe__actions">
+          <button class="trpg-btn" type="button" @click="dangerConfirm">危险确认</button>
+          <button class="trpg-btn" type="button" @click="toast.success('已保存')">成功提示</button>
+          <button class="trpg-btn" type="button" @click="toast.undoable('已删除一项', () => { toast.info('已撤销') })">可撤销提示</button>
+          <button class="trpg-btn" type="button" @click="toast.error('下载失败：网络中断')">失败提示</button>
+        </div>
       </div>
     </div>
     <div v-for="item in items" :key="item.id" class="probe">

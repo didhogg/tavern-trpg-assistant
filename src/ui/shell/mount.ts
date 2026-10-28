@@ -1,6 +1,7 @@
+import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 import type { StContext } from '../../host/types'
-import ProbeApp from '../ProbeApp.vue'
+import App from '../App.vue'
 import kit from '../styles/kit.css?inline'
 import probe from '../styles/probe.css?inline'
 import shell from '../styles/shell.css?inline'
@@ -21,5 +22,5 @@ export function mountApp(ctx: StContext): void {
   const container = document.createElement('div')
   shadow.append(style, container, portal)
   document.body.appendChild(host)
-  createApp(ProbeApp, { ctx, portalTarget: portal }).mount(container)
+  createApp(App, { ctx, portalTarget: portal }).use(createPinia()).mount(container)
 }
