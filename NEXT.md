@@ -1,7 +1,7 @@
 # NEXT
 
 ## 当前里程碑
-M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L1、U2 已定稿。
+M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L1、U2 已定稿。M2 自动与真机自检已通过，只差 50 条抽检由驾驶员填写。
 
 ## 当前任务
 - 目标：把 SRD 与十本官方书转成 formatVersion 2 的扩展包，证明每种数据都能导入、读取、使用、导出、再导入且结果一致，并把安装器与数据库升级到第 2 版。
@@ -10,7 +10,7 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
 
 ## 已完成
 - M0；U2 定稿；M1 核心数据层。
-- M2（实现完成，待复核与驾驶员真机验收）：
+- M2（实现、复核与真机自检完成；待驾驶员填写 50 条抽检）：
   - D1 数据定义：`src/rules/dnd5e2014/data/`（通用字段、15 种条目、7 种 advancement、7 种行动、正文块与行内标记、requires、ruleOptions/aiNotes）；`src/schemas/adventure/` 冒险内容项外壳。
   - 安装器与存储：formatVersion 2 识别与 L1 §2.2 全部限制；formatVersion 1 兼容；PackManifest 新字段；lineage/requires/recommends/conflicts/不支持功能的安装预案；Dexie 第 2 版（blobs、blobHashes、packTrash、迁移失败保持旧数据）；安装不再改写当前数据；内置包与推荐包数据层；自动存档原因「改动模组前」；`.trpgsave` 带图片。
   - 构建管线：`tools/data/` 从本地 5etools-cn 批量抽取、展开 `_copy`/`_mod`、展开魔法变体、转换、标记、来源与摘要、分包、校验、确定性打包、版本检查、报告；生成 11 个包。
@@ -27,18 +27,20 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
 - 报告：`docs/probes/D1_构建报告.md`；抽检：`docs/probes/D1_抽检.md`（50 条，类型分布 10/10/10/6/5/3/3/2/1）；两次构建对照：`docs/probes/D1_确定性.md`。
 - `packs/` 只有 SRD 包、`DATA-NOTICE.md` 与 `LICENSES/`；`reference/` 仍被 `.gitignore` 忽略。
 
+- 真机（TauriTavern）「M2 数据自检」5/5 通过：SRD 包 2232 条安装成功；从真实 jsDelivr 下载玩家手册 v1.0.0（168.5KB）校验值一致；15 种数据往返全部通过；测试库已清理。
+- 发布：扩展仓库已推送；数据仓库 `didhogg/tavern-trpg-data` 已推送并打标签 `v1.0.0`（`b7d7d26`），10 个包经 CDN 下载的大小与 sha256 全部与目录一致。
+
 ## 下一步
-1. 上一位 agent 按 `docs/handoff/M2_交接.md` 第 6 节复核。
-2. 驾驶员按 D1 §12 真机验收，并填写 `docs/probes/D1_抽检.md` 的 50 条结果。
+1. 驾驶员对照官方书填写 `docs/probes/D1_抽检.md` 的 50 条结果；发现的差异回到 D1 管线修。
+2. 填完后 M2 收尾，进入 M3（L1 的库界面与存档内容管理，见任务总纲）。
 
 ## 阻塞
 - 无（等待复核与真机验收）。
 
 ## 未验证
-- TauriTavern 真机上的 M2 自检（内置 SRD 包读取、jsDelivr 访问、真实 IndexedDB 迁移）；e2e 只覆盖模拟宿主。
 - 50 条抽检的人工对照结果。
-- 上一位 agent 的复核结论。
-- 运行时的 `resolveRef`（L1 M3）未实现；本次用构建期校验与测试期引用检查覆盖 D1 §7 的引用可解析性。
+- 真机上的数据量与性能：自检只装了 SRD 与玩家手册两个包；十个书籍包全部装入后的搜索与存储表现，留到 M3 有界面时观察。
+- 自检第 3 步只列出 4 个抽样条目（标题写 5 个）；背景类条目的摘要偏长，取的是正文开头。
 
 ## 待议
 - 新增开发依赖 `tsx`（MIT）：本机 Node 22 可直接运行 `.ts`，但 `src/` 的导入不带扩展名，直接用 Node 跑构建脚本会失败；`tsx` 只用于 `tools/data/` 与 `npm run e2e`，不进入扩展产物。已记入 `THIRD_PARTY_NOTICES.md`。
@@ -51,12 +53,6 @@ M2 5e2014 扩展包（D1 基础数据管线 + L1 里程碑表 M2 行）。D1、L
 - SRD 包内法术指向的子职业只含 SRD 子职业；其他子职业对该法术的关联在各自书籍包里，不跨包引用。
 - 重名 id 加 `-2`（特性、随机表共约 200 条，见构建报告）：顺序随 5etools-cn 数据排列，数据更新后可能变动；发布前需决定是否改用稳定后缀。
 
-## 发布进度
-- 扩展仓库已推送到 GitHub（`94a35c8`）。
-- 数据仓库：本地已提交并打好标签 `v1.0.0`（`b7d7d26`，目录地址已指向该标签），GitHub 上还没有 `didhogg/tavern-trpg-data`；待创建后执行 `git remote add origin`、`git push origin main v1.0.0`，再刷新 jsDelivr 的 `@main/catalog.json`。
-- 之后用真实地址跑一遍下载自检，再交驾驶员真机验收。
-
 ## 需要驾驶员授权
-- 创建 GitHub 数据仓库 `didhogg/tavern-trpg-data`。
-- 推送扩展仓库与数据仓库、打版本标签、刷新 jsDelivr CDN。
-- 在 TauriTavern 真机安装并运行 M2 自检、填写抽检结果。
+- 暂无。之后每次发布数据（改版本号、打新标签、刷新 CDN）与推送仍需单独授权。
+- 用于推送数据仓库的细粒度令牌用完建议删除。
