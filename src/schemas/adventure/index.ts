@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { entryIdSchema } from '../common'
-import { creditSchema, srcSchema } from '../../rules/dnd5e2014/data/common'
+import { creditSchema, srcSchema } from '../credit'
 import { textBlockSchema, assetRefSchema } from '../text'
 
 /** L1 §2.3 已登记的类型；其他类型原样保留。 */
