@@ -1,0 +1,38 @@
+:host {
+  all: initial;
+  --paper: #f4ecdd;
+  --panel: #eee5d3;
+  --card: #fffcf6;
+  --line: #cbbca3;
+  --ink: #2b211c;
+  --ink-2: #6c6255;
+  --primary: #7a2e26;
+  --primary-ink: #fffcf6;
+  --gold: #b8954a;
+  --danger: #a3352b;
+  --ok: #3f7a3a;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --font-serif: 'Songti SC', 'Noto Serif SC', Georgia, serif;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+@media (prefers-color-scheme: dark) {
+  :host {
+    --paper: #20231f;
+    --panel: #2b3029;
+    --card: #181c18;
+    --line: #515849;
+    --ink: #f1ebdc;
+    --ink-2: #bcbbaa;
+    --primary: #e6bf73;
+    --primary-ink: #20231f;
+    --gold: #e6bf73;
+    --danger: #e07a6e;
+    --ok: #8cc47f;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }

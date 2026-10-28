@@ -1,0 +1,14 @@
+.probe { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.probe__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.probe__title { margin: 0; font-family: var(--font-serif); font-size: 15px; }
+.probe__hint { margin: 4px 0; color: var(--ink-2); font-size: 12.5px; }
+.probe__summary { margin: 4px 0; }
+.probe__actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.probe pre {
+  max-height: 200px; overflow: auto; margin: 6px 0 0; padding: 8px; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 11.5px; white-space: pre-wrap; word-break: break-all;
+}
+.probe summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
+.lab { display: grid; gap: 10px; margin-top: 8px; padding: 10px; background: var(--panel); border-radius: var(--radius); }
+.lab__row { display: grid; gap: 6px; }
+.report-bar { position: sticky; bottom: -12px; display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 0; background: var(--paper); }

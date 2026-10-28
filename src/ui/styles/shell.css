@@ -1,0 +1,24 @@
+.trpg-root { position: fixed; inset: 0; pointer-events: none; z-index: 100000; }
+.trpg-ball {
+  position: fixed; width: 48px; height: 48px; border-radius: 50%;
+  border: 2px solid var(--gold); background: var(--primary); color: var(--primary-ink);
+  font-size: 22px; cursor: grab; pointer-events: auto; touch-action: none;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+}
+.trpg-window {
+  position: fixed; display: flex; flex-direction: column;
+  width: min(92vw, 440px); height: min(80vh, 640px);
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 40%); pointer-events: auto; overflow: hidden;
+}
+.trpg-window__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 12px; background: var(--primary); color: var(--primary-ink);
+  font-family: var(--font-serif); font-size: 16px; cursor: grab; touch-action: none; user-select: none;
+}
+.trpg-window__body { flex: 1; overflow-y: auto; padding: 12px; }
+.trpg-icon-btn {
+  min-width: 32px; min-height: 32px; border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: inherit; font-size: 16px; cursor: pointer;
+}
+.trpg-icon-btn:hover { border-color: currentColor; }

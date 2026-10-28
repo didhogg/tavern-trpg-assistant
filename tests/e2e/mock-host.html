@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>模拟酒馆宿主（仅用于连通性冒烟测试）</title>
+<style>
+  body { font-family: sans-serif; background: #333; color: #ddd; margin: 0; padding: 16px; }
+  input[type='checkbox'] { appearance: none; width: 6px; height: 40px; background: #555; } /* 模拟宿主污染样式 */
+  textarea { width: 100%; height: 80px; }
+</style>
+</head>
+<body>
+<h3>模拟酒馆（冒烟测试）</h3>
+<textarea id="send_textarea"></textarea>
+<input type="checkbox" /> 宿主自己的勾选框（被污染样式）
+<script>
+  const handlers = {}
+  const eventSource = {
+    on(n, h) { (handlers[n] ||= []).push(h) },
+    removeListener(n, h) { handlers[n] = (handlers[n] || []).filter((x) => x !== h) },
+    async emit(n, ...a) { for (const h of handlers[n] || []) await h(...a) },
+  }
+  const event_types = {
+    CHAT_CHANGED: 'chat_id_changed', MESSAGE_SENT: 'message_sent', MESSAGE_RECEIVED: 'message_received',
+    GENERATION_STARTED: 'generation_started', GENERATION_ENDED: 'generation_ended',
+    CHAT_COMPLETION_PROMPT_READY: 'chat_completion_prompt_ready', USER_MESSAGE_RENDERED: 'user_message_rendered',
+  }
+  const injected = {}
+  const ctx = {
+    eventSource, event_types, extensionSettings: {}, chat: [], characterId: 0,
+    characters: [{ name: '测试角色', avatar: 'test.png' }], groupId: null, name1: '玩家', chatMetadata: {},
+    saveSettingsDebounced() {},
+    setExtensionPrompt(key, value, position, depth) { injected[key] = { value, position, depth } },
+    getCurrentChatId() { return 'mock-chat' },
+  }
+  window.SillyTavern = { getContext: () => ctx, libs: {} }
+  // 模拟一次发送：把输入框内容与注入文本组成请求，依次触发事件
+  window.__mockSend = async () => {
+    const text = document.getElementById('send_textarea').value
+    ctx.chat.push({ mes: text, is_user: true })
+    await eventSource.emit('message_sent', ctx.chat.length - 1)
+    await eventSource.emit('generation_started', 'normal', {}, false)
+    const messages = [{ role: 'user', content: text }]
+    for (const v of Object.values(injected)) if (v.value) messages.splice(messages.length - 1, 0, { role: 'system', content: v.value })
+    await eventSource.emit('chat_completion_prompt_ready', { chat: messages, dryRun: false })
+    await eventSource.emit('generation_ended', 1)
+    document.getElementById('send_textarea').value = ''
+  }
+</script>
+<script type="module" src="/dist/index.js"></script>
+</body>
+</html>

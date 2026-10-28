@@ -9,17 +9,17 @@ M0 脚手架与真机探针（进行中）
 - 验收：① `npm run check` 与 `npm run build` 通过；② 模拟宿主页中扩展能挂载、探针可运行；③ 驾驶员在 TauriTavern 安装后能打开探针面板并跑完全部探针；④ `docs/probes/M0.md` 记录每项结论，未验证项标明。
 
 ## 已完成
+- M0 代码：Vite + Vue 3 + TS 骨架、探针面板、模拟宿主冒烟测试（`npm run check` 与 `npm run e2e` 通过）；真机结论待测
 - 项目权威文档：`docs/任务总纲.md`、`docs/基本蓝图.md`、`docs/开发规范.md`
 - 参考资料已置于 `reference/`
 
 ## 下一步
-1. 与驾驶员确认 M0 的真机安装方式（本地扩展目录 / Git 地址）。
-2. 搭建 Vite + Vue 3 + TypeScript 扩展骨架。
-3. 编写并执行 M0 探针，结果写入 `docs/probes/M0.md`。
+1. 驾驶员创建 GitHub 仓库；推送；在 TauriTavern 以 Git 地址安装。
+2. 驾驶员按 `docs/probes/M0.md` 跑完探针；结论写入该文件。
+3. M0 完成后，用 Grill Me 对齐并产出 M1 前必须定稿的单元蓝图（U2）草案。
 
 ## 阻塞
 - 无
 
 ## 待议
 - 各 Unit 单元蓝图逐个讨论定稿后写入 `docs/units/`（M1 前需定稿 U2）。
-- M0 真机安装方式待驾驶员选择：本地扩展目录 / Git 地址。

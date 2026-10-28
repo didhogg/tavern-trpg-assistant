@@ -1,0 +1,46 @@
+.trpg-btn {
+  min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--ink); font: inherit; cursor: pointer;
+}
+.trpg-btn:hover { border-color: var(--primary); }
+.trpg-btn:focus-visible, .trpg-select-trigger:focus-visible, .trpg-input:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 1px;
+}
+.trpg-btn--primary { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+.trpg-input {
+  width: 100%; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: var(--card); color: var(--ink); font: inherit;
+}
+.trpg-select-trigger {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; min-height: 36px; padding: 4px 10px; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: var(--card); color: var(--ink); font: inherit; cursor: pointer;
+}
+.trpg-select-content {
+  min-width: var(--reka-select-trigger-width); max-height: min(8 * 36px, var(--reka-select-content-available-height));
+  overflow: hidden; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); box-shadow: 0 6px 18px rgb(0 0 0 / 30%); z-index: 100001;
+}
+.trpg-select-viewport { max-height: inherit; overflow-y: auto; padding: 4px; }
+.trpg-select-item {
+  display: flex; align-items: center; min-height: 36px; padding: 4px 8px;
+  border-radius: 4px; cursor: pointer; color: var(--ink);
+}
+.trpg-select-item[data-highlighted] { background: var(--panel); outline: none; }
+.trpg-select-item[data-state='checked'] { font-weight: 600; color: var(--primary); }
+.trpg-seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+.trpg-seg button {
+  min-height: 32px; padding: 2px 12px; border: 0; background: var(--card); color: var(--ink);
+  font: inherit; cursor: pointer;
+}
+.trpg-seg button + button { border-left: 1px solid var(--line); }
+.trpg-seg button[aria-pressed='true'] { background: var(--primary); color: var(--primary-ink); }
+.trpg-badge {
+  display: inline-block; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  background: var(--panel); border: 1px solid var(--line); color: var(--ink-2);
+}
+.trpg-badge[data-status='pass'] { color: var(--ok); border-color: var(--ok); }
+.trpg-badge[data-status='fail'], .trpg-badge[data-status='error'] { color: var(--danger); border-color: var(--danger); }
+.trpg-badge[data-status='waiting'] { color: var(--gold); border-color: var(--gold); }
+.trpg-check { display: flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; }
+.trpg-check input { width: 18px; height: 18px; accent-color: var(--primary); }
