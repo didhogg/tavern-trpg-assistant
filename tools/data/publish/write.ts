@@ -67,6 +67,8 @@ function notice(): string {
 - 中文译文来自 5etools 中文共库：标注「不全书」的译文按 GPL-3.0 使用；其余中文译文与机翻按 CC BY-NC-SA 4.0 使用。每个条目在 \`credit\` 中单独标明。
 - SRD 5.1 内容 © Wizards of the Coast，按 CC BY 4.0 使用。
 - 5etools 的英文原文与数据结构按 MIT 使用。
+- Foundry dnd5e 6.1.0 的系统代码 MIT；其 SRD 5.1 结构化字段按 CC BY 4.0 使用，只采用 2014 目录。
+- 5e-bits/5e-database 与 Open5e 仅用于公开值对照，不导入文件。
 - 本项目原创的整理、摘要与结构化内容按 CC BY-NC-SA 4.0 使用。
 - 同一个包中混有 GPL-3.0 与 CC BY-NC-SA 4.0 的内容，按条目分别适用。数据许可与扩展代码许可（AGPL-3.0）各自独立。
 

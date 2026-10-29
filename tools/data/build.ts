@@ -11,6 +11,8 @@ import { buildPackFile } from '../../src/core/packs/file'
 import { BOOKS, SRD_PACK_ID } from './config/books'
 import { writeReport } from './report/report'
 import { writeChecklist } from './report/checklist'
+import { writeCharacterReport } from './report/characterReport'
+import { writeChecklist11 } from './report/checklist11'
 import { writeDataRepo } from './publish/write'
 import { checkPublished, type Published } from './version'
 
@@ -77,6 +79,8 @@ async function main(): Promise<void> {
     await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'report.json'), `${JSON.stringify(reportOf(result, outputs, data), null, 2)}\n`)
     await writeReport(REPO_ROOT, result, outputs, data)
     await writeChecklist(REPO_ROOT, result)
+    await writeCharacterReport(REPO_ROOT, result)
+    await writeChecklist11(REPO_ROOT, result)
   }
   for (const [id, out] of outputs) console.log(`${id.padEnd(24)} ${(out.bytes.length / 1024).toFixed(1)} KB  ${out.sha256}`)
   console.log(`合计 ${(volumes.reduce((n, v) => n + v.bytes, 0) / 1024 / 1024).toFixed(2)} MB`)

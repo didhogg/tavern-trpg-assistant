@@ -74,7 +74,9 @@ function weaponOf(raw: Record<string, unknown>): Record<string, unknown> | undef
 
 function armorOf(raw: Record<string, unknown>): Record<string, unknown> | undefined {
   const base = (raw._baseItem ?? {}) as Record<string, unknown>
-  const code = str(raw.type)
+  const rawCode = str(raw.type).split('|')[0]
+  const baseCode = str(base.type).split('|')[0]
+  const code = ['S', 'LA', 'MA', 'HA'].includes(rawCode) ? rawCode : baseCode
   const kind = code === 'S' ? 'shield' : code === 'LA' ? 'light' : code === 'MA' ? 'medium' : code === 'HA' ? 'heavy' : ''
   if (!kind) return undefined
   const ac = typeof raw.ac === 'number' ? raw.ac : typeof base.ac === 'number' ? base.ac : kind === 'shield' ? 2 : 10
@@ -82,7 +84,7 @@ function armorOf(raw: Record<string, unknown>): Record<string, unknown> | undefi
     category: kind,
     ac,
     ...(Number.isFinite(Number(raw.dexMax)) ? { dexCap: Number(raw.dexMax) } : kind === 'medium' ? { dexCap: 2 } : {}),
-    ...(Number.isFinite(Number(raw.strength)) ? { strReq: Number(raw.strength) } : {}),
+    ...(Number.isFinite(Number(raw.strength)) && Number(raw.strength) > 0 ? { strReq: Number(raw.strength) } : {}),
     stealthDisadvantage: raw.stealth === true,
   }
 }
@@ -150,6 +152,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     properties: (Array.isArray(raw.property) ? raw.property : Array.isArray(base.property) ? base.property : []).map(String),
     lootTables: (Array.isArray(raw.lootTables) ? raw.lootTables : []).map(String),
   }
+  if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }
   const unique = data.rarity === 'artifact'
   return { id: entry.id, type: 'item', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique, summary: summaryOf('item', entry.name, data, plainText(text)), data }
 }

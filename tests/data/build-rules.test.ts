@@ -111,3 +111,32 @@ describe('变异检查（故意改坏时应失败）', () => {
     expect(sha256Hex(original)).not.toBe(sha256Hex(changed))
   })
 })
+
+describe('P11 变异检查', () => {
+  it('改坏法术位行数、uses 公式、scale 引用、伤害枚举、2024 来源都应失败', () => {
+    const slots = pack()
+    const cls = slots.entries.find((e) => e.type === 'class')!
+    cls.data.spellcasting = { ability: 'int', progression: 'full', slotsByLevel: [{ level: 1, slots: [1, 0, 0, 0, 0, 0, 0, 0, 0] }] }
+    expect(() => validatePacks([slots])).toThrow()
+
+    const formula = pack()
+    const feature = formula.entries.find((e) => e.type === 'feature')!
+    feature.data.uses = { max: 'bad(', recharge: 'long' }
+    expect(() => validatePacks([formula])).toThrow()
+
+    const scale = pack()
+    const feat = scale.entries.find((e) => e.type === 'feat')!
+    feat.data.uses = { max: 'scale.missing', recharge: 'long' }
+    expect(() => validatePacks([scale])).toThrow('scale.missing')
+
+    const damage = pack()
+    const spell = damage.entries.find((e) => e.type === 'spell')!
+    spell.data.damage = [{ dice: '1d6', type: 'holy' }]
+    expect(() => validatePacks([damage])).toThrow()
+
+    const old = pack()
+    const entry = old.entries[0]
+    entry.data.src = { book: 'XPHB', page: 1 }
+    expect(() => validatePacks([old])).toThrow('2024')
+  })
+})

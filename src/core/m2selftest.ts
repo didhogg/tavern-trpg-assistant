@@ -95,6 +95,40 @@ export async function runM2SelfTest(onStep?: (step: M2Step) => void): Promise<M2
       }
     })
 
+    await run('人物规则数据抽样', async () => {
+      const entries = await s.db.entries.toArray()
+      const get = (id: string) => entries.find((e) => e.entryId === id)
+      const wizard = get('class.wizard.phb')
+      const barbarian = get('class.barbarian.phb')
+      const dwarf = get('subrace.dwarf-mountain.phb')
+      const tough = get('feat.tough.phb')
+      const poisoned = get('condition.poisoned.phb')
+      if (!wizard || !barbarian || !dwarf || !tough || !poisoned) throw new Error('抽样条目缺失（需要 SRD + 玩家手册）')
+      const slots = (wizard.data.spellcasting as { slotsByLevel: Array<{ level: number; slots: number[] }> }).slotsByLevel[4].slots
+      const scale = (entry: { data: Record<string, unknown> }, id: string, level: number): unknown => {
+        const list = (entry.data.advancement as Array<Record<string, unknown>> | undefined) ?? []
+        const item = list.find((a) => a.kind === 'scaleValue' && a.id === id)
+        const table = (item?.scale ?? {}) as Record<string, unknown>
+        for (let n = level; n >= 1; n--) if (table[String(n)] !== undefined) return table[String(n)]
+        return undefined
+      }
+      const uses = scale(barbarian, 'rage-uses', 9)
+      const damage = scale(barbarian, 'rage-damage', 9)
+      const speed = (dwarf.data.speed as { walk?: number }).walk
+      const resist = (dwarf.data.resist as string[] | undefined)?.join('、')
+      const hp = (tough.data.effects as Array<{ kind: string; perLevel?: number }> | undefined)?.find((e) => e.kind === 'hpMax')?.perLevel
+      const poisonedEffects = (poisoned.data.effects as Array<{ kind: string }> | undefined)?.map((e) => e.kind).join('、')
+      return {
+        detail: [
+          `法师 5 级法术位：${slots.join('/')}`,
+          `野蛮人 9 级狂暴：${String(uses)} 次，伤害 +${String(damage)}`,
+          `山地矮人：速度 ${String(speed)} 尺，抗性 ${resist ?? '—'}`,
+          `健壮：每级生命上限 +${String(hp)}`,
+          `中毒：${poisonedEffects ?? '—'}`,
+        ].join('\n'),
+      }
+    })
+
     await run('每种数据做一次导入 → 读取 → 使用 → 导出 → 再导入', async () => {
       const packs = await s.packs.list({ ruleId: 'dnd5e2014' })
       if (!packs.length) throw new Error('没有已安装的内容包')

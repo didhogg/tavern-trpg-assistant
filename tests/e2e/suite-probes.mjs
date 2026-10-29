@@ -62,7 +62,7 @@ export async function probeSuite(page, label, { width, height }) {
   await page.getByRole('button', { name: '运行 M2 数据自检' }).click()
   await m2Section.locator('.probe__summary').filter({ hasText: /全部通过|未通过/ }).waitFor({ timeout: 120000 })
   const m2 = await m2Section.innerText()
-  check(`[${label}] M2 数据自检全部通过（含本地数据仓库下载）`, /全部通过（5\/5 步/.test(m2), (m2.match(/未通过：[^\n]*/) ?? [''])[0])
+  check(`[${label}] M2 数据自检全部通过（含本地数据仓库下载）`, /全部通过（6\/6 步/.test(m2), (m2.match(/未通过：[^\n]*/) ?? [''])[0])
 
   await page.getByRole('button', { name: '写入测试注释到输入框' }).click()
   await page.getByRole('button', { name: '注入探针' }).click()

@@ -19,7 +19,7 @@ export function createM2Probe(): ProbeModule {
             const steps: M2Step[] = await runM2SelfTest((step) => setResult(ID, TITLE, 'waiting', `已完成 ${step.name}`))
             const failed = steps.find((s) => !s.ok)
             const skipped = steps.filter((s) => s.skipped).length
-            const total = 5
+            const total = 6
             setResult(
               ID,
               TITLE,

@@ -119,7 +119,7 @@ export async function librarySuite(page, label, { width }) {
   await page.getByTestId('ext-dnd5e2014-mpmm').getByRole('button', { name: /安装/ }).click()
   await page.getByText(`已安装「${mpmmName}」`).waitFor({ timeout: 60000 })
   await settle(page, 400)
-  check(`[${label}] 重新安装：下载安装完成，显示版本号与「⋯」`, (await page.getByTestId('ext-dnd5e2014-mpmm').locator('.trpg-badge', { hasText: /v1\.0/ }).count()) === 1)
+  check(`[${label}] 重新安装：下载安装完成，显示版本号与「⋯」`, (await page.getByTestId('ext-dnd5e2014-mpmm').locator('.trpg-badge', { hasText: /v1\.1/ }).count()) === 1)
 
   // 断网：下载失败显示原因与「重试」，联网后重试成功
   const scagRow = page.getByTestId('ext-dnd5e2014-scag')
@@ -139,7 +139,7 @@ export async function librarySuite(page, label, { width }) {
   await scagRow.getByRole('button', { name: '重试' }).click()
   await page.getByText('已安装「剑湾冒险者指南」').waitFor({ timeout: 60000 })
   await settle(page, 400)
-  check(`[${label}] 联网后点「重试」：安装成功`, (await scagRow.locator('.trpg-badge', { hasText: /v1\.0/ }).count()) === 1)
+  check(`[${label}] 联网后点「重试」：安装成功`, (await scagRow.locator('.trpg-badge', { hasText: /v1\.1/ }).count()) === 1)
 
   // 导出为文件、复制为我的包
   await clearToasts(page)

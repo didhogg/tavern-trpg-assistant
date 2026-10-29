@@ -258,6 +258,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ...(ownerType === 'optional' ? { optional: true } : {}),
     activities,
   }
+  if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }
   const owner = ownerType === 'class' ? str(raw.className) : ownerType === 'subclass' ? `${str(raw.className)}·${str(raw.subclassShortName)}` : ''
   const level = typeof raw.level === 'number' ? `${raw.level}级` : ''
   const first = plainText(data.text as never).split(/[。！？.!?]/)[0] ?? ''

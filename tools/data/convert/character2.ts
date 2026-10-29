@@ -335,6 +335,7 @@ export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(effects.length ? { effects } : {}),
     advancement: [],
   }
+  if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }
   return { id: entry.id, type: 'feat', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('feat', entry.name, data, plainText(data.text as never)), data }
 }
 

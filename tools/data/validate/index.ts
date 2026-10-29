@@ -1,6 +1,7 @@
 import type { Entry } from '../../../src/schemas/pack'
 import { entryDataByType, DND5E2014_ENTRY_TYPES } from '../../../src/rules/dnd5e2014/data/entries'
 import { diceSchema } from '../../../src/rules/dnd5e2014/data/common'
+import { parseFormula } from '../../../src/rules/dnd5e2014/data/formula'
 import type { ConvertedPack } from '../convert'
 
 export interface ValidationContext {
@@ -99,6 +100,55 @@ function facesOf(dice: string): number {
   return count * faces
 }
 
+function scaleIds(packs: ConvertedPack[]): Set<string> {
+  const out = new Set<string>()
+  for (const pack of packs) for (const entry of pack.entries) for (const item of (entry.data.advancement as Array<Record<string, unknown>> | undefined) ?? []) {
+    if (item.kind === 'scaleValue' && typeof item.id === 'string') out.add(item.id)
+  }
+  return out
+}
+
+function checkFormula(label: string, value: unknown): void {
+  if (typeof value !== 'string') return
+  if (/^\d{0,2}d\d{1,3}(?:\s*[+-].*)?$/i.test(value)) return
+  const parsed = parseFormula(value)
+  if (!parsed.ok) fail(`${label} 的公式无法解析：${value}（${parsed.error.message}）`)
+}
+
+function checkEntryRules(entry: Entry, scales: Set<string>, packId: string): void {
+  const data = entry.data as Record<string, unknown>
+  const uses = data.uses as { max?: unknown } | undefined
+  if (uses?.max !== undefined) checkFormula(`${entry.id} 的 uses.max`, uses.max)
+  const effects = data.effects as Array<Record<string, unknown>> | undefined
+  for (const effect of effects ?? []) {
+    for (const key of ['amount', 'formula', 'perLevel', 'flat', 'bonus']) if (typeof effect[key] === 'string') checkFormula(`${entry.id} 的 effects.${key}`, effect[key])
+  }
+  for (const activity of (data.activities as Array<Record<string, unknown>> | undefined) ?? []) {
+    if (typeof activity.dc === 'string' && activity.dc !== 'spell') checkFormula(`${entry.id} 的 activity.dc`, activity.dc)
+    if (typeof activity.formula === 'string') checkFormula(`${entry.id} 的 activity.formula`, activity.formula)
+  }
+  const text = JSON.stringify(data)
+  for (const match of text.matchAll(/scale\.([a-z0-9-]+)/g)) {
+    if (!scales.has(match[1])) fail(`${entry.id} 引用的 scale.${match[1]} 没有定义（包 ${packId}）`)
+  }
+  const spellcasting = data.spellcasting as { progression?: string; slotsByLevel?: Array<{ level?: number; slots?: number[]; pact?: { count?: number; level?: number } }> } | undefined
+  if (spellcasting?.slotsByLevel) {
+    const rows = spellcasting.slotsByLevel
+    if (rows.length !== 20) fail(`${entry.id} 的 slotsByLevel 不是 20 行`)
+    let previous: number[] | undefined
+    for (const row of rows) {
+      if (spellcasting.progression === 'pact') {
+        if (!row.pact || (row.pact.count ?? 0) < 1 || (row.pact.level ?? 0) < 1) fail(`${entry.id} 的契约位不合法`)
+      } else {
+        const slots = row.slots ?? []
+        if (slots.length !== 9) fail(`${entry.id} 的法术位不是 9 环`)
+        if (previous) for (let i = 0; i < slots.length; i++) if (slots[i] < previous[i]) fail(`${entry.id} 的法术位随等级减少`)
+        previous = slots
+      }
+    }
+  }
+}
+
 export function validatePack(pack: ConvertedPack, ctx: ValidationContext): void {
   const own = new Set(pack.entries.map((e) => e.id))
   const required = new Set(pack.manifest.relationships.requires.map((r) => r.id))
@@ -122,6 +172,9 @@ export function validatePack(pack: ConvertedPack, ctx: ValidationContext): void 
     if (badDisplay) fail(`${entry.id} 的引用显示文字是书籍代码：${badDisplay}`)
     if (/(^|[.-])entry([.-]|$)/.test(entry.id)) fail(`${entry.id} 的 id 里有占位词 entry（英文名缺失）`)
     diceInEntry(entry)
+    checkEntryRules(entry, scaleIds(ctx.packs), pack.manifest.id)
+    const src = (entry.data as { src?: { book?: string } }).src
+    if (src?.book && ['XPHB', 'XDMG', 'XMM'].includes(src.book)) fail(`${entry.id} 含 2024 来源 ${src.book}`)
     for (const id of [...refsIn(entry.data)]) {
       if (own.has(id)) continue
       const target = byEntry.get(id)
