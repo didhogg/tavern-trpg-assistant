@@ -38,7 +38,7 @@ const saveActivity = z.looseObject({
   ...activityBase,
   kind: z.literal('save'),
   ability: abilityKeySchema,
-  dc: z.union([z.number().int().positive(), z.literal('spell')]),
+  dc: z.union([z.number().int().positive(), z.literal('spell'), z.string().min(1)]),
   onSave: z.union([z.enum(['half', 'none']), z.string().min(1).max(200)]),
   damage: z.array(damagePartSchema).optional(),
   condition: z.string().max(60).optional(),

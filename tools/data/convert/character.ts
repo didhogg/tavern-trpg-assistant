@@ -7,6 +7,8 @@ import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
 import { clip, plainText, summaryOf } from '../summary/summary'
 import { prereqToRequires } from './character2'
+import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
+import { FEATURE_EFFECTS, FEATURE_USES } from '../config/featureRules'
 import { advancementExtras, foundryScaleValues, scaleValuesOf, spellcastingOf } from './classRules'
 import type { InlineContext } from '../markup/inline'
 import { renderInline } from '../markup/inline'
@@ -212,20 +214,50 @@ function choicesOf(raw: Record<string, unknown>): Array<{ name: string; count: n
 
 export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
+  const ownerType = entry.context.ownerType ?? 'optional'
+  const foundryRaw = foundryFeature({
+    classFeatures: ctx.foundryClassFeatures,
+    subclassFeatures: ctx.foundrySubclassFeatures,
+    feats: ctx.foundryFeats,
+    races: ctx.foundryRaces,
+    optionalFeatures: ctx.foundryOptionalFeatures,
+  }, raw, ownerType, entry.source)
+  const rules = foundryRaw ? foundryRulesFor(foundryRaw) : undefined
+  for (const [key, value] of rules?.unmapped ?? []) {
+    const current = ctx.unmappedFoundry?.get(key) ?? { count: 0, example: entry.id }
+    ctx.unmappedFoundry?.set(key, { count: current.count + value.count, example: current.example })
+  }
+  const text = plainText(convertBlocks(raw.entries, inline))
+  const uses = rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text)
+  const configEffects = FEATURE_EFFECTS[entry.id] ?? []
+  const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...configEffects])
+  const baseActivities = rules?.activities?.length ? rules.activities : activitiesFromText(raw.entries, entry.name, entry.id)
+  const consumes = ownerType === 'optional' ? (Array.isArray(raw.consumes) ? raw.consumes : raw.consumes && typeof raw.consumes === 'object' ? [raw.consumes] : []) : []
+  const activities = consumes.length
+    ? [...baseActivities, {
+        id: `${entry.id}.consume`,
+        name: `消耗：${entry.name}`,
+        kind: 'utility' as const,
+        text: `消耗 ${consumes.map((c) => `${Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1)} ${String((c as Record<string, unknown>).name ?? '资源')}`).join('、')}`,
+        activation: { type: 'special' as const },
+        consumption: { targets: consumes.map((c) => ({ type: 'resource' as const, value: Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1), target: String((c as Record<string, unknown>).name ?? 'resource') })) },
+      }]
+    : baseActivities
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
-    owner: { type: entry.context.ownerType ?? 'optional', id: entry.context.ownerId ?? 'optional' },
+    owner: { type: ownerType, id: entry.context.ownerId ?? 'optional' },
     ...(typeof raw.level === 'number' ? { level: raw.level } : {}),
     ...(featureType(raw) ? { featureType: featureType(raw) } : {}),
-    ...(raw.uses ? { uses: raw.uses } : {}),
+    ...(uses ? { uses } : {}),
+    ...(effects.length ? { effects } : {}),
     ...(raw.prerequisite ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
     ...(choicesOf(raw) ? { choices: choicesOf(raw) } : {}),
-    ...(entry.context.ownerType === 'optional' ? { optional: true } : {}),
-    activities: activitiesFromText(raw.entries, entry.name, entry.id),
+    ...(ownerType === 'optional' ? { optional: true } : {}),
+    activities,
   }
-  const owner = entry.context.ownerType === 'class' ? str(raw.className) : entry.context.ownerType === 'subclass' ? `${str(raw.className)}·${str(raw.subclassShortName)}` : ''
+  const owner = ownerType === 'class' ? str(raw.className) : ownerType === 'subclass' ? `${str(raw.className)}·${str(raw.subclassShortName)}` : ''
   const level = typeof raw.level === 'number' ? `${raw.level}级` : ''
   const first = plainText(data.text as never).split(/[。！？.!?]/)[0] ?? ''
   const summary = owner ? clip([entry.name, `${owner} ${level}`.trim(), first].filter(Boolean).join('｜')) : summaryOf('feature', entry.name, data, plainText(data.text as never))

@@ -29,6 +29,7 @@ export interface ConversionStats {
   skippedFeatures: number
   skippedSubraces: number
   textOnlyActivities: number
+  unmappedFoundry: Array<{ key: string; count: number; example: string }>
   interiorRequires: Array<{ packId: string; require: string }>
 }
 
@@ -181,6 +182,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     if (seed.nameEn) tableByName.set(seed.nameEn, table.id)
   }
   const bookMachine = new Map(data.books.map((b) => [b.source, b.translator === '机翻']))
+  const unmappedFoundry = new Map<string, { count: number; example: string }>()
   const ctx: ConvertContext = makeContext({
     bookMachine,
     classIds: makeClassIds(planned),
@@ -193,6 +195,12 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     index,
     foundryClasses: data.foundryClasses,
     foundrySubclasses: data.foundrySubclasses,
+    foundryClassFeatures: data.foundryClassFeatures,
+    foundrySubclassFeatures: data.foundrySubclassFeatures,
+    foundryFeats: data.foundryFeats,
+    foundryRaces: data.foundryRaces,
+    foundryOptionalFeatures: data.foundryOptionalFeatures,
+    unmappedFoundry,
   })
   const allowedAll = new Set(all.map((e) => e.packId))
   const stats: ConversionStats = {
@@ -204,6 +212,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     skippedFeatures,
     skippedSubraces,
     textOnlyActivities: 0,
+    unmappedFoundry: [...unmappedFoundry].map(([key, value]) => ({ key, ...value })),
     interiorRequires: [],
   }
   const converted = new Map<string, Entry>()

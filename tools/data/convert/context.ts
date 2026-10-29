@@ -14,6 +14,12 @@ export interface ConvertContext {
   resolveEntryId: (type: string, name: string) => string | undefined
   foundryClasses?: Raw[]
   foundrySubclasses?: Raw[]
+  foundryClassFeatures?: Raw[]
+  foundrySubclassFeatures?: Raw[]
+  foundryFeats?: Raw[]
+  foundryRaces?: Raw[]
+  foundryOptionalFeatures?: Raw[]
+  unmappedFoundry?: Map<string, { count: number; example: string }>
 }
 
 export function makeContext(input: {
@@ -28,6 +34,12 @@ export function makeContext(input: {
   index: RefIndex
   foundryClasses?: Raw[]
   foundrySubclasses?: Raw[]
+  foundryClassFeatures?: Raw[]
+  foundrySubclassFeatures?: Raw[]
+  foundryFeats?: Raw[]
+  foundryRaces?: Raw[]
+  foundryOptionalFeatures?: Raw[]
+  unmappedFoundry?: Map<string, { count: number; example: string }>
 }): ConvertContext {
   return {
     ...input,

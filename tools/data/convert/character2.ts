@@ -7,6 +7,8 @@ import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
 import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'
+import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
+import { FEAT_EFFECTS } from '../config/featureRules'
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
@@ -99,13 +101,13 @@ function spellNames(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string').map((item) => item.replace(/#\w+$/, ''))
 }
 
-function spellGrants(raw: Record<string, unknown>, ctx: ConvertContext): Array<Record<string, unknown>> {
+export function spellGrants(raw: Record<string, unknown>, ctx: ConvertContext): Array<Record<string, unknown>> {
   const out: Array<Record<string, unknown>> = []
   const ability = typeof raw.ability === 'string' ? raw.ability : undefined
   for (const item of Array.isArray(raw.additionalSpells) ? raw.additionalSpells : []) {
     if (!item || typeof item !== 'object') continue
     const rec = item as Record<string, unknown>
-    const abilityValue = typeof rec.ability === 'string' ? rec.ability : ability
+    const abilityValue = typeof rec.ability === 'string' && ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(rec.ability) ? rec.ability : ability && ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(ability) ? ability : undefined
     for (const [mode, groups] of [['known', rec.known], ['innate', rec.innate]] as const) {
       if (!groups || typeof groups !== 'object') continue
       for (const value of Object.values(groups as Record<string, unknown>)) {
@@ -290,14 +292,42 @@ export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<s
   return all.length ? { all } : undefined
 }
 
+function abilityIncreaseOf(raw: Record<string, unknown>): Array<Record<string, unknown>> | undefined {
+  const out: Array<Record<string, unknown>> = []
+  for (const item of Array.isArray(raw.ability) ? raw.ability : []) {
+    if (!item || typeof item !== 'object') continue
+    const rec = item as Record<string, unknown>
+    for (const key of ABILITY_KEYS) if (typeof rec[key] === 'number') out.push({ ability: key, amount: Number(rec[key]) })
+    if (rec.choose && typeof rec.choose === 'object') {
+      const c = rec.choose as Record<string, unknown>
+      out.push({ choose: Number(c.count ?? 1), ...(Array.isArray(c.from) ? { from: c.from.map(String) } : {}) })
+    }
+  }
+  return out.length ? out : undefined
+}
+
 export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const requires = prereqToRequires(raw.prerequisite, ctx)
+  const foundryRaw = foundryFeature({ feats: ctx.foundryFeats }, raw, 'feat', entry.source)
+  const rules = foundryRaw ? foundryRulesFor(foundryRaw) : undefined
+  for (const [key, value] of rules?.unmapped ?? []) {
+    const current = ctx.unmappedFoundry?.get(key) ?? { count: 0, example: entry.id }
+    ctx.unmappedFoundry?.set(key, { count: current.count + value.count, example: current.example })
+  }
+  const abilityIncrease = abilityIncreaseOf(raw)
+  const grants = spellGrants(raw, ctx)
+  const uses = rules?.uses ?? usesFromText(plainText(convertBlocks(raw.entries, inline)))
+  const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...(FEAT_EFFECTS[entry.id] ?? [])])
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
+    ...(abilityIncrease ? { abilityIncrease } : {}),
     ...(requires ? { requires } : {}),
+    ...(grants.length ? { spellGrants: grants } : {}),
+    ...(uses ? { uses } : {}),
+    ...(effects.length ? { effects } : {}),
     advancement: [],
   }
   return { id: entry.id, type: 'feat', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('feat', entry.name, data, plainText(data.text as never)), data }

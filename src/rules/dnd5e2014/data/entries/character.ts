@@ -86,6 +86,8 @@ export const featureDataSchema = z.looseObject({
   featureType: z.string().max(60).optional(),
   uses: usesSchema.optional(),
   choices: z.array(z.object({ name: z.string().min(1), count: z.number().int().positive(), pool: z.array(z.string()).default([]) })).optional(),
+  effects: effectListSchema.optional(),
+  spellGrants: z.array(spellGrantSchema).optional(),
   optional: z.boolean().optional(),
 })
 export type FeatureData = z.infer<typeof featureDataSchema>
@@ -170,7 +172,14 @@ export type BackgroundData = z.infer<typeof backgroundDataSchema>
 
 export const featDataSchema = z.looseObject({
   ...entryCommonFields,
-  abilityIncrease: z.array(z.object({ ability: abilityKeySchema, amount: z.number().int().positive().optional(), choose: z.number().int().positive().optional() })).optional(),
+  abilityIncrease: z.array(
+    z.object({
+      ability: abilityKeySchema.optional(),
+      amount: z.number().int().positive().optional(),
+      choose: z.number().int().positive().optional(),
+      from: z.array(abilityKeySchema).optional(),
+    }).refine((v) => v.ability !== undefined || v.choose !== undefined, { message: 'abilityIncrease 必须有 ability 或 choose' }),
+  ).optional(),
   advancement: z.array(advancementSchema).default([]),
   prerequisite: z.array(z.string()).optional(),
   effects: effectListSchema.optional(),
