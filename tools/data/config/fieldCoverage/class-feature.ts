@@ -153,7 +153,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "class-feature.entryData.skillProficiencies[].choose.count": {"how":"text","to":"data.text","wp":"R1"},
   "class-feature.entryData.skillProficiencies[].choose.from": {"how":"text","to":"data.text","wp":"R1"},
   "class-feature.header": {"how":"text","to":"data.text","wp":"R1"},
-  "class-feature.ignoreSrdEffects": {"how":"mapped","to":"data.ignoreSrdEffects","wp":"R5"},
+  "class-feature.ignoreSrdEffects": {"how":"dropped","kind":"internal-meta","why":"Foundry 的 SRD 效果忽略标记"},
   "class-feature.isClassFeatureVariant": {"how":"mapped","to":"data.optional","wp":"R3"},
   "class-feature.isIgnored": {"how":"dropped","kind":"internal-meta","why":"Foundry 中的忽略标记，不是规则数据"},
   "class-feature.level": {"how":"mapped","to":"data.level","wp":"R1"},

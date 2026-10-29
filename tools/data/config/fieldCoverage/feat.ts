@@ -53,7 +53,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "feat.armorProficiencies[].light": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "feat.armorProficiencies[].medium": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "feat.armorProficiencies[].shield": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
-  "feat.bonusSenses": {"how":"mapped","to":"data.senses","wp":"R5"},
+  "feat.bonusSenses": {"how":"mapped","to":"data.effects","wp":"R5"},
   "feat.bonusSenses[].darkvision": {"how":"mapped","to":"data.senses","wp":"R5"},
   "feat.effects": {"how":"mapped","to":"data.effects","wp":"R5"},
   "feat.effects[].ENG_name": {"how":"mapped","to":"data.effects","wp":"R5"},

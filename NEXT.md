@@ -6,7 +6,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 ## 当前任务
 - 目标：完成 D1.2a R0 第三次修订（RW14–RW16），校验已登记的 `to` 与 `wp` 不再退化到自由正文或 dropped；R1 保持已通过。
 - 红线：不推送/打标签/刷新 CDN/安装；不读凭证；不动图片；不改转换器/数据包；不把 mapped/text 改成 dropped；不得用 data.text 解决结构化字段；规格缺口继续记录不停止；保留 5,985 个已发布 id；单文件 ≤400 行。
-- 验收：mapped → 文本容器 0；derived 规则命中并残留测试通过；text 1,669；新增 plannedFields 248；规格缺口 32；R1 兑现检查通过；四条命令通过且两次 build:data sha 一致；一次提交后停下等「矩阵通过」。
+- 验收：mapped → 文本容器 0；derived 规则命中并残留测试通过；text 1,670；新增 plannedFields 277；规格缺口 32；R1 兑现检查通过；四条命令通过且两次 build:data sha 一致；一次提交后停下等「矩阵通过」。
 
 ## 已完成
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
@@ -28,10 +28,10 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
   - 数据包重新生成；R1 矩阵登记复核无 `to/wp/how` 改动。
 
 - D1.2a R0 第三次修订（RW14–RW16，完成待复审）：
-  - `textContainers.ts`：mapped 指向文本容器 0；text 1,669；`to` 前 30 名见检查点报告。
-  - `fieldCoverage/derived.ts`：`_copy/_mod/_preserve/_abstract/_trait` 命中 683；静态路径移除；残留测试通过。
-  - `plannedFields` 新增 248；`docs/probes/D1.2a_规格缺口.md` 32 条（每条 3 个样例）。
-  - 矩阵变更追加 1,640；R1 兑现检查重新通过；新增 `rw14.test.ts`。
+  - `textContainers.ts`：mapped 指向文本容器 0；text 1,670；`to` 前 30 名见检查点报告。
+  - `fieldCoverage/derived.ts`：`_copy/_mod/_preserve/_abstract/_trait` 命中 685；静态路径移除；残留测试通过。
+  - `book.data.entries.ts` 补回 book 嵌套 162 条；`plannedFields` 新增 277（source-mirror 208）；`docs/probes/D1.2a_规格缺口.md` 32 条。
+  - 矩阵最终对账 2,411；R1 兑现检查重新通过；新增 `rw14.test.ts`。
 
 - M0；U2 定稿；M1 核心数据层。
 - M2（实现、复核与真机自检完成；50 条抽检已完成；数据 1.0.1 已发布）：

@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "spell.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "spell.abilityCheck": {"how":"mapped","to":"data.abilityCheck","wp":"R14"},
+  "spell.abilityCheck": {"how":"mapped","to":"data.tags","wp":"R7"},
   "spell.activities": {"how":"mapped","to":"data.activities","wp":"R14"},
   "spell.activities[].ENG_name": {"how":"mapped","to":"i18n.en.fields.activities","wp":"R13"},
   "spell.activities[].activation": {"how":"mapped","to":"data.activities[].activation","wp":"R14"},
@@ -79,7 +79,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "spell.components.r": {"how":"mapped","to":"data.components.r","wp":"R14"},
   "spell.components.s": {"how":"mapped","to":"data.components.s","wp":"R14"},
   "spell.components.v": {"how":"mapped","to":"data.components.v","wp":"R14"},
-  "spell.conditionImmune": {"how":"mapped","to":"data.conditionImmune","wp":"R14"},
+  "spell.conditionImmune": {"how":"mapped","to":"data.tags","wp":"R7"},
   "spell.conditionInflict": {"how":"mapped","to":"data.tags","wp":"R7"},
   "spell.damageImmune": {"how":"mapped","to":"data.tags","wp":"R7"},
   "spell.damageInflict": {"how":"mapped","to":"data.tags","wp":"R7"},
@@ -139,7 +139,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "spell.entries[].type": {"how":"text","to":"data.text","wp":"R14"},
   "spell.hasFluff": {"how":"dropped","kind":"internal-meta","why":"布尔标记：hasFluff 只描述来源文件存在性/展示资源"},
   "spell.level": {"how":"mapped","to":"data.level","wp":"R14"},
-  "spell.meta": {"how":"mapped","to":"data.meta","wp":"R14"},
+  "spell.meta": {"how":"mapped","to":"data.ritual","wp":"R14"},
   "spell.meta.ritual": {"how":"mapped","to":"data.meta","wp":"R14"},
   "spell.migrationVersion": {"how":"mapped","to":"data.versionGroup","wp":"R10"},
   "spell.miscTags": {"how":"mapped","to":"data.tags","wp":"R7"},

@@ -23,10 +23,13 @@ export function expectedWp(sourceType: string, path: string, to: string): string
   if (to === 'data.lore') return 'R8'
   if (sourceType === 'book' || sourceType === 'location' || outputTypeOf(sourceType) === 'book') return 'R12'
   if (['table', 'table-group', 'individual', 'hoard', 'gems', 'art-object', 'magic-item', 'dragon', 'dragon-mundane-item', 'encounter', 'cr', 'name', 'deck', 'card', 'life-class', 'life-background', 'life-trinket'].includes(sourceType)) return 'R9'
-  if (['language', 'deity', 'reward', 'boon', 'cult', 'hazard', 'trap', 'object', 'vehicle', 'skill', 'sense', 'item-property', 'item-type', 'item-type-additional-entries', 'language-script', 'monster-feature', 'makebrew-creature-trait', 'makebrew-creature-action', 'recipe', 'charoption', 'charoption-fluff', 'recipe-fluff', 'language-fluff', 'reward-fluff', 'vehicle-fluff', 'object-fluff', 'trap-fluff', 'hazard-fluff'].includes(sourceType)) return 'R11'
+  if (['language', 'deity', 'reward', 'boon', 'cult', 'hazard', 'trap', 'object', 'vehicle', 'skill', 'sense', 'item-property', 'item-type', 'item-type-additional-entries', 'language-script', 'monster-feature', 'makebrew-creature-trait', 'makebrew-creature-action', 'variant-rule', 'recipe', 'charoption', 'charoption-fluff', 'recipe-fluff', 'language-fluff', 'reward-fluff', 'vehicle-fluff', 'object-fluff', 'trap-fluff', 'hazard-fluff'].includes(sourceType)) return 'R11'
   if (sourceType === 'spell' || sourceType === 'spell-fluff') {
+    if (/abilityCheck|conditionImmune/i.test(path)) return 'R7'
     return /(?:tags|scalingLevelDice|damageInflict|conditionInflict|damageResist|damageImmune|damageVulnerable|affectsCreatureType)/i.test(path) ? 'R7' : 'R14'
   }
+  if (sourceType === 'action' && path === 'action.fromVariant') return 'R10'
+  if (sourceType === 'subclass' && path === 'subclass.subclassTableGroups') return 'R14'
   if (sourceType === 'optional-feature') return 'R2'
   if (sourceType === 'class-feature' || sourceType === 'subclass-feature' || sourceType === 'race-feature') {
     if (/(?:uses|effects|activities|charges)/i.test(path)) return 'R5'

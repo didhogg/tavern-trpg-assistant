@@ -16,7 +16,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "action.entries[].entries[].type": {"how":"text","to":"data.text","wp":"R8"},
   "action.entries[].name": {"how":"text","to":"data.text","wp":"R8"},
   "action.entries[].type": {"how":"text","to":"data.text","wp":"R8"},
-  "action.fromVariant": {"how":"mapped","to":"data.fromVariant","wp":"R8"},
+  "action.fromVariant": {"how":"mapped","to":"data.fromVariantRule","wp":"R10"},
   "action.migrationVersion": {"how":"mapped","to":"data.versionGroup","wp":"R10"},
   "action.name": {"how":"mapped","to":"entry.name","wp":"R8"},
   "action.page": {"how":"mapped","to":"data.src.page","wp":"R8"},

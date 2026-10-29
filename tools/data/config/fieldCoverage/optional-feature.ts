@@ -92,7 +92,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "optional-feature.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "optional-feature.reprintedAs[].tag": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "optional-feature.reprintedAs[].uid": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
-  "optional-feature.senses": {"how":"mapped","to":"data.senses","wp":"R2"},
+  "optional-feature.senses": {"how":"mapped","to":"data.effects","wp":"R2"},
   "optional-feature.senses[].blindsight": {"how":"mapped","to":"data.senses","wp":"R2"},
   "optional-feature.senses[].darkvision": {"how":"mapped","to":"data.senses","wp":"R2"},
   "optional-feature.skillProficiencies": {"how":"mapped","to":"data.advancement[].grants","wp":"R2"},

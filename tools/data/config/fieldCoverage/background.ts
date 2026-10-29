@@ -59,7 +59,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "background.feats[].符文塑形者|bgg": {"how":"mapped","to":"data.advancement[].pool","wp":"R5"},
   "background.feats[].警觉|phb": {"how":"mapped","to":"data.advancement[].pool","wp":"R5"},
   "background.feats[].魔法学徒|phb": {"how":"mapped","to":"data.advancement[].pool","wp":"R5"},
-  "background.fromFeature": {"how":"mapped","to":"data.fromFeature","wp":"R5"},
+  "background.fromFeature": {"how":"dropped","kind":"derived","why":"背景授予专长，由 advancement 的 itemChoice 体现"},
   "background.fromFeature.additionalSpells": {"how":"mapped","to":"data.fromFeature","wp":"R5"},
   "background.fromFeature.feats": {"how":"mapped","to":"data.fromFeature","wp":"R5"},
   "background.hasFluff": {"how":"dropped","kind":"internal-meta","why":"布尔标记：hasFluff 只描述来源文件存在性/展示资源"},
