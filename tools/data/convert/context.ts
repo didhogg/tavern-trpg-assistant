@@ -19,6 +19,7 @@ export interface ConvertContext {
   foundryFeats?: Raw[]
   foundryRaces?: Raw[]
   foundryOptionalFeatures?: Raw[]
+  foundryItems?: Raw[]
   unmappedFoundry?: Map<string, { count: number; example: string }>
 }
 
@@ -39,6 +40,7 @@ export function makeContext(input: {
   foundryFeats?: Raw[]
   foundryRaces?: Raw[]
   foundryOptionalFeatures?: Raw[]
+  foundryItems?: Raw[]
   unmappedFoundry?: Map<string, { count: number; example: string }>
 }): ConvertContext {
   return {

@@ -21,7 +21,23 @@ import { ABILITY, ALIGNMENT, ARMOR_CATEGORY, CREATURE, DAMAGE, ITEM_CATEGORY, LA
 const join = (items: string[], sep = '、'): string => items.filter(Boolean).join(sep)
 const abilityList = (v: unknown): string => list(v, ABILITY)
 const unit = (u: unknown): string => tr(UNIT, u)
-const list = (v: unknown, map: Record<string, string>): string => join(arr(v).map((x) => tr(map, x)))
+const list = (v: unknown, map: Record<string, string>): string => {
+  if (isObj(v)) {
+    const fixed = arr(v.fixed).map((x) => tr(map, x))
+    const choose = isObj(v.choose) ? `自选 ${v.choose.count ?? 1} 项` : ''
+    return join([...fixed, choose].filter(Boolean))
+  }
+  return join(arr(v).map((x) => tr(map, x)))
+}
+
+function equipmentText(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (!isObj(v)) return ''
+  const fixed = arr(v.fixed).map((item) => isObj(item) ? `${str(item.item)}${Number(item.qty ?? 1) > 1 ? `×${item.qty}` : ''}` : str(item))
+  const choices = arr(v.choice).map((group) => arr(group).map((item) => isObj(item) ? `${str(item.item)}${Number(item.qty ?? 1) > 1 ? `×${item.qty}` : ''}` : str(item)).join(' / ')).filter(Boolean)
+  const gold = isObj(v.gold) ? `${str(v.gold.dice)}×${Number(v.gold.multiplier ?? 1)} gp` : ''
+  return join([...fixed, ...choices.map((c) => `(${c})`), gold].filter(Boolean), '，')
+}
 
 function bonusMap(v: unknown, labels: Record<string, string>): string {
   return isObj(v) ? join(Object.entries(v).map(([k, n]) => `${labels[k] ?? k} ${Number(n) >= 0 ? '+' : ''}${n}`), ' ') : ''
@@ -105,7 +121,7 @@ function classFacts(d: Obj): Fact[] {
     add(out, '工具熟练', list(p.tools, TOOL))
     if (isObj(p.skills)) add(out, '技能熟练', `从 ${join(arr(p.skills.from).map((s) => SKILL[str(s)] ?? str(s)))} 中选 ${p.skills.choose} 项`)
   }
-  if (arr(d.startingEquipment).length) out.push({ label: '起始装备', parts: arr(d.startingEquipment).flatMap((s, i) => [i ? '\n' : '', str(s)]) })
+  if (arr(d.startingEquipment).length) out.push({ label: '起始装备', parts: arr(d.startingEquipment).flatMap((s, i) => [i ? '\n' : '', equipmentText(s)]) })
   if (d.subclassTitle) add(out, '子职业', `${d.subclassTitle}（${d.subclassLevel} 级选择）`)
   if (isObj(d.table) && arr(d.table.rows).length) {
     const cols = ['等级', ...arr(d.table.cols).map(str)]
@@ -163,7 +179,12 @@ function raceFacts(d: Obj): Fact[] {
   add(out, '体型', arr(d.size).map((x) => tr(SIZE, x)).join('/'))
   add(out, '速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${tr(MOVE, k)} ${v} 尺`), '，') : '')
   add(out, '黑暗视觉', d.darkvision ? `${d.darkvision} 尺` : '')
-  add(out, '熟练项', list(d.proficiencies, { ...SKILL, ...TOOL }))
+  if (isObj(d.proficiencies)) {
+    add(out, '技能熟练', list(d.proficiencies.skills, SKILL))
+    add(out, '工具熟练', list(d.proficiencies.tools, TOOL))
+    add(out, '武器熟练', join(arr((d.proficiencies as Obj).weapons).map(str)))
+    add(out, '护甲熟练', list(d.proficiencies.armor, ARMOR_CATEGORY))
+  } else add(out, '熟练项', list(d.proficiencies, { ...SKILL, ...TOOL }))
   add(out, '语言', list(d.languages, LANGUAGE))
   if (arr(d.traits).length) out.push({ label: '种族特质', parts: arr(d.traits).flatMap((t, i) => [i ? '、' : '', { ref: str(t) }]) })
   if (d.parentRace) out.push({ label: '所属种族', parts: [{ ref: str(d.parentRace) }] })

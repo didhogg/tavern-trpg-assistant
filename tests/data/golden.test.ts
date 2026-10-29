@@ -31,7 +31,7 @@ describe('D1 §12 转换器金样', () => {
     expect(fireball.data.classes).toEqual(['class.sorcerer.phb', 'class.wizard.phb'])
     expect((fireball.data.activities as Array<{ kind: string; onSave: string }>)[0]).toMatchObject({ kind: 'save', onSave: 'half' })
     const missile = all.get('spell.magic-missile.phb')!
-    expect(missile.data).toMatchObject({ level: 1, damage: [{ dice: '1d4+1', type: '力场' }] })
+    expect(missile.data).toMatchObject({ level: 1, damage: [{ dice: '1d4+1', type: 'force' }] })
     const dragon = all.get('monster.adult-red-dragon.mm')!
     expect(dragon.data).toMatchObject({ size: ['H'], ac: [{ value: 19 }], hp: { average: 256 }, cr: 17 })
     expect((dragon.data.actions as Array<{ name: string; activities?: Array<{ bonus: number; damage: Array<{ dice: string }> }> }>).find((a) => a.name === '啃咬')?.activities?.[0]).toMatchObject({ bonus: 14, damage: [{ dice: '2d10+8' }] })
@@ -52,7 +52,7 @@ describe('D1 §12 转换器金样', () => {
     expect(all.get('race.elf.phb')?.data).toMatchObject({ size: ['M'], darkvision: 60 })
     expect(all.get('subrace.elf-high.phb')?.data).toMatchObject({ parentRace: 'race.elf.phb' })
     const acolyte = all.get('background.acolyte.phb')!
-    expect(acolyte.data).toMatchObject({ proficiencies: { skills: ['insight', 'religion'] } })
+    expect(acolyte.data).toMatchObject({ proficiencies: { skills: { fixed: ['insight', 'religion'] } } })
     expect((acolyte.data.characteristics as unknown[]).length).toBe(4)
     expect(all.get('feat.alert.phb')?.data.requires).toBeUndefined()
     expect(all.get('feat.grappler.phb')?.data.requires).toEqual({ all: [{ ability: { str: 13 } }] })

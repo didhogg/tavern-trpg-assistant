@@ -4,14 +4,15 @@ import type { PlannedEntry } from './plan'
 export function creditFor(entry: PlannedEntry, bookMachine: boolean): Credit {
   const missing: string[] = []
   if (entry.missingPage) missing.push('page')
+  const structured = { by: '5etools' as const, license: 'MIT' as const }
   if (entry.missingName) {
     missing.push('name')
-    return { by: 'dnd-data', license: 'MIT', machine: false, missing, srd: entry.srd }
+    return { by: 'dnd-data', license: 'MIT', machine: false, missing, srd: entry.srd, structured }
   }
   const translator = typeof entry.raw.translator === 'string' ? entry.raw.translator : ''
-  if (translator === '不全书') return { by: '不全书', license: 'GPL-3.0', machine: false, missing, srd: entry.srd }
-  if (bookMachine) return { by: '共库机翻', license: 'CC-BY-NC-SA-4.0', machine: true, missing, srd: entry.srd }
-  return { by: '共库', license: 'CC-BY-NC-SA-4.0', machine: false, missing, srd: entry.srd }
+  if (translator === '不全书') return { by: '不全书', license: 'GPL-3.0', machine: false, missing, srd: entry.srd, structured }
+  if (bookMachine) return { by: '共库机翻', license: 'CC-BY-NC-SA-4.0', machine: true, missing, srd: entry.srd, structured }
+  return { by: '共库', license: 'CC-BY-NC-SA-4.0', machine: false, missing, srd: entry.srd, structured }
 }
 
 export function keywordsOf(entry: PlannedEntry): string[] {

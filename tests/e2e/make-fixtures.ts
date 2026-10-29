@@ -19,6 +19,6 @@ const other: Entry = { id: 'house-note', type: 'rule', name: '本世界的补充
 const bytes = buildPackFile({
   manifest: { id: 'e2e-variants', ruleId: 'dnd5e2014', category: 'rules', name: '测试修改版包', version: '1.0.0', lineage: 'e2e-lineage-variants', relationships: { requires: [{ id: 'dnd5e2014-srd' }], recommends: [], conflicts: [] } },
   entries: [variant, other],
-  features: [{ id: 'rule-option.e2e', kind: 'ruleOptions', name: '测试规则选项', description: '', defaultEnabled: true, data: { id: 'e2e', name: '测试规则选项', summary: '只用来测试', implemented: false, text: '这是一条用来测试的规则选项。' } }],
+  features: [{ id: 'rule-option.e2e', kind: 'ruleOptions', name: '测试规则选项', description: '', defaultEnabled: true, data: { id: 'e2e', name: '测试规则选项', summary: '只用来测试', text: '这是一条用来测试的规则选项。' } }],
 })
 writeFileSync(join(out, 'variants.trpgpack'), bytes)

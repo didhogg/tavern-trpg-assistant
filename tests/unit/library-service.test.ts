@@ -79,7 +79,7 @@ describe('启用与停用', () => {
 })
 
 describe('功能与规则选项', () => {
-  const opt = (id: string, def: boolean) => ({ id: `ro.${id}`, kind: 'ruleOptions', name: `选项${id}`, description: '', defaultEnabled: def, data: { summary: '说明', implemented: false } })
+  const opt = (id: string, def: boolean) => ({ id: `ro.${id}`, kind: 'ruleOptions', name: `选项${id}`, description: '', defaultEnabled: def, data: { summary: '说明' } })
 
   it('启用复制定义并写初始值，开关写 featureState，停用后状态保留、重新启用恢复', async () => {
     await pack('house', {}, makeEntries(1, 'spell', 'h-'), [opt('a', true), opt('b', false)])

@@ -126,6 +126,7 @@ describe('官方包里显示用的枚举代码都有中文', () => {
     try {
       await installAll(s, await loadPacks())
       const missing = new Map<string, Set<string>>()
+      const values = (v: unknown): unknown[] => Array.isArray(v) ? v : v && typeof v === 'object' && Array.isArray((v as { fixed?: unknown[] }).fixed) ? (v as { fixed: unknown[] }).fixed : []
       const need = (field: string, map: Record<string, string>, value: unknown, code = false): void => {
         if (typeof value !== 'string' || value === '') return
         const key = code ? value.split('|')[0] : value
@@ -148,14 +149,17 @@ describe('官方包里显示用的枚举代码都有中文', () => {
           need('item.armor.category', zh.ARMOR_CATEGORY, d.armor?.category)
         }
         if (e.type === 'race' || e.type === 'subrace') {
-          for (const v of d.languages ?? []) need('race.languages', zh.LANGUAGE, v)
-          for (const v of d.proficiencies ?? []) need('race.proficiencies', { ...zh.SKILL, ...zh.TOOL }, v)
+          for (const v of values(d.languages)) need('race.languages', zh.LANGUAGE, v)
+          const prof = (d.proficiencies ?? {}) as Record<string, unknown>
+          for (const v of values(prof.skills)) need('race.skills', zh.SKILL, v)
+          for (const v of values(prof.armor)) need('race.armor', zh.ARMOR_CATEGORY, v)
+          for (const v of values(prof.tools)) if (Object.prototype.hasOwnProperty.call({ ...zh.SKILL, ...zh.TOOL }, String(v))) need('race.tools', { ...zh.SKILL, ...zh.TOOL }, v)
           for (const v of d.size ?? []) need('race.size', zh.SIZE, v)
         }
         if (e.type === 'background') {
-          for (const v of d.proficiencies?.languages ?? []) need('background.languages', zh.LANGUAGE, v)
-          for (const v of d.proficiencies?.skills ?? []) need('background.skills', zh.SKILL, v)
-          for (const v of d.proficiencies?.tools ?? []) need('background.tools', zh.TOOL, v)
+          for (const v of values(d.proficiencies?.languages)) need('background.languages', zh.LANGUAGE, v)
+          for (const v of values(d.proficiencies?.skills)) need('background.skills', zh.SKILL, v)
+          for (const v of values(d.proficiencies?.tools)) need('background.tools', zh.TOOL, v)
         }
         if (e.type === 'class') {
           for (const v of d.proficiencies?.armor ?? []) need('class.armor', zh.ARMOR_CATEGORY, v)

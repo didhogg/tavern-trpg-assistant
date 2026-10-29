@@ -1,7 +1,7 @@
 import type { Entry } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
-import { creditFor, DAMAGE_FROM_CN, keywordsOf, pageOf } from './common'
+import { creditFor, DAMAGE_FROM_CN, keywordsOf, pageOf, str } from './common'
 import { CONDITIONS, DAMAGE_TYPES, SKILL_KEYS } from '../../../src/rules/dnd5e2014/data/enums'
 import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
@@ -9,6 +9,7 @@ import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'
 import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
 import { FEAT_EFFECTS } from '../config/featureRules'
+import { ACTION_RULES, CONDITION_EFFECTS, EXHAUSTION_LEVELS } from '../config/conditionEffects'
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
@@ -139,8 +140,9 @@ export function spellGrants(raw: Record<string, unknown>, ctx: ConvertContext): 
 }
 
 
-function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<string, unknown>> {
-  const groups = Array.isArray(raw.startingEquipment) ? raw.startingEquipment : []
+export function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<string, unknown>> {
+  const source = raw.startingEquipment
+  const groups = Array.isArray(source) ? source : source && typeof source === 'object' && Array.isArray((source as Record<string, unknown>).defaultData) ? (source as Record<string, unknown>).defaultData as unknown[] : []
   const out: Array<Record<string, unknown>> = []
   const item = (value: unknown): Record<string, unknown> | undefined => {
     if (typeof value === 'string') return { item: value.split('|')[0], qty: 1 }
@@ -166,6 +168,9 @@ function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<string,
     if (choice.length) row.choice = choice
     if (Object.keys(row).length) out.push(row)
   }
+  const alternative = str((raw.startingEquipment as Record<string, unknown> | undefined)?.goldAlternative) || str(raw.goldAlternative)
+  const goldMatch = /(\d+d\d+)\s*[×x*]\s*(\d+)/.exec(alternative)
+  if (goldMatch) out.push({ gold: { dice: goldMatch[1], multiplier: Number(goldMatch[2]) } })
   return out
 }
 
@@ -338,7 +343,8 @@ export function convertCondition(entry: PlannedEntry, ctx: ConvertContext, inlin
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(entry.raw.entries, inline),
-    effects: [],
+    effects: CONDITION_EFFECTS[entry.id] ?? [],
+    ...(entry.id === 'condition.exhaustion.phb' ? { levels: EXHAUSTION_LEVELS } : {}),
     kind: entry.type,
   }
   return { id: entry.id, type: entry.type, name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf(entry.type, entry.name, data, plainText(data.text as never)), data }
@@ -347,12 +353,14 @@ export function convertCondition(entry: PlannedEntry, ctx: ConvertContext, inlin
 export function convertRule(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const category = entry.context.ruleCategory === 'action' ? 'action' : 'variant'
+  const action = category === 'action' ? ACTION_RULES[entry.id] : undefined
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
     category,
-    ...(category === 'action' ? { activities: activitiesFromText(raw.entries, entry.name, entry.id) } : {}),
+    ...(action ? { activation: action.activation, activities: action.activities, effects: action.effects } : {}),
+    ...(category === 'action' && !action ? { activities: activitiesFromText(raw.entries, entry.name, entry.id) } : {}),
   }
   return { id: entry.id, type: 'rule', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('rule', entry.name, data, plainText(data.text as never)), data }
 }

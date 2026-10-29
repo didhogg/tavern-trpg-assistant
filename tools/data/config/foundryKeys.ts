@@ -13,6 +13,8 @@ export const SCALE_ALIASES: Record<string, string> = {
   'fighter.action-surge': 'action-surge',
   'fighter.indomitable': 'indomitable',
   'fighter.second-wind': 'second-wind',
+  'artificer.infused': 'infusions-active',
+  'artificer.infusions': 'infusions-known',
   superiority: 'superiority-dice',
 }
 

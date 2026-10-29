@@ -20,6 +20,20 @@ function rangeOf(raw: Record<string, unknown>): { type: string; amount?: number;
   return { type: str(range.type) || 'special' }
 }
 
+function healFromText(value: unknown): string | undefined {
+  const text = strings(value).join(' ')
+  const match = /(?:恢复|治疗)[^。]{0,60}?(?:@dice |@damage )?(\d+d\d+|\d+)/.exec(text)
+  if (!match) return undefined
+  return match[1].replace(/\s+/g, '')
+}
+
+function strings(value: unknown, out: string[] = []): string[] {
+  if (typeof value === 'string') out.push(value)
+  else if (Array.isArray(value)) for (const item of value) strings(item, out)
+  else if (value && typeof value === 'object') for (const item of Object.values(value)) strings(item, out)
+  return out
+}
+
 function classIdsOf(entry: PlannedEntry, ctx: ConvertContext): { classes: string[]; subclasses: string[] } {
   const lookup = ctx.spellLookup[entry.source.toLowerCase()] as Record<string, unknown> | undefined
   const info = lookup?.[entry.name] as Record<string, unknown> | undefined
@@ -30,6 +44,15 @@ function classIdsOf(entry: PlannedEntry, ctx: ConvertContext): { classes: string
     for (const [classSource, byClass] of Object.entries(classMap)) {
       for (const [className, present] of Object.entries(byClass)) {
         if (!present) continue
+        const id = ctx.classIds.get(`${className}|${classSource}`)
+        if (id) classes.add(id)
+      }
+    }
+  }
+  const variantMap = info?.classVariant as Record<string, Record<string, unknown>> | undefined
+  if (variantMap) {
+    for (const [classSource, byClass] of Object.entries(variantMap)) {
+      for (const className of Object.keys(byClass ?? {})) {
         const id = ctx.classIds.get(`${className}|${classSource}`)
         if (id) classes.add(id)
       }
@@ -73,7 +96,18 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
   const textDamage = damageFromText(raw.entries)
   const saveCodes = Array.isArray(raw.savingThrow) ? raw.savingThrow.map((s) => String(s).slice(0, 3)) : []
   const activities = activitiesFromText(raw.entries, entry.name, entry.id)
-  if (saveCodes.length && textDamage.length && !activities.some((a) => a.kind === 'save')) {
+  const attack = Array.isArray(raw.spellAttack) ? String(raw.spellAttack[0]) : ''
+  if (attack && !activities.some((a) => a.kind === 'attack')) {
+    activities.push({
+      id: `${entry.id}.attack`,
+      name: `${entry.name}（攻击）`,
+      kind: 'attack',
+      attackKind: attack.toUpperCase() === 'M' ? 'ms' : 'rs',
+      damage: textDamage,
+      activation: { type: 'action' },
+    })
+  }
+  if (saveCodes.length && !activities.some((a) => a.kind === 'save')) {
     activities.push({
       id: `${entry.id}.save`,
       name: `${entry.name}（豁免）`,
@@ -81,9 +115,16 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
       ability: saveCodes[0] as never,
       dc: 'spell',
       onSave: /半伤|伤害减半|一半/.test(plainText(text)) ? 'half' : 'none',
-      damage: textDamage,
+      ...(textDamage.length ? { damage: textDamage } : {}),
       activation: { type: 'action' },
     })
+  }
+  if (!activities.length && textDamage.length) {
+    activities.push({ id: `${entry.id}.damage`, name: entry.name, kind: 'damage', parts: textDamage, activation: { type: 'action' } })
+  }
+  const heal = healFromText(raw.entries)
+  if (heal && !activities.some((a) => a.kind === 'heal')) {
+    activities.push({ id: `${entry.id}.heal`, name: `${entry.name}（治疗）`, kind: 'heal', formula: heal, activation: { type: 'action' } })
   }
   const data: Record<string, unknown> = {
     src: pageOf(entry),

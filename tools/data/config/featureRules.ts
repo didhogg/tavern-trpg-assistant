@@ -1,6 +1,15 @@
 import type { Uses } from '../../../src/rules/dnd5e2014/data/common'
+import type { Activity } from '../../../src/rules/dnd5e2014/data/activities'
 
 /** 少数关键特性的资源在 5etools 正文/职业表里，不从 Foundry 猜。 */
+export const FEATURE_NO_USES = new Set([
+  'feature.bard-spellcasting.phb', 'feature.cleric-spellcasting.phb', 'feature.druid-spellcasting.phb', 'feature.paladin-spellcasting.phb',
+  'feature.ranger-spellcasting.phb', 'feature.sorcerer-spellcasting.phb', 'feature.warlock-pact-magic.phb', 'feature.wizard-spellcasting.phb',
+  'feature.artificer-spellcasting.tce', 'feature.sorcerer-flexible-casting.phb', 'feature.fighter-eldritch-knight-spellcasting.phb',
+  'feature.yuan-ti-serpentine-spellcasting.mpmm', 'feature.cleric-knowledge-domain-channel-divinity-read-thoughts.phb',
+  'feature.rogue-arcane-trickster-spellcasting.phb', 'feature.spellcaster-sidekick-spellcasting.tce', 'feature.warlock-the-genie-sanctuary-vessel.tce',
+])
+
 export const FEATURE_USES: Record<string, Uses> = {
   'feature.barbarian-rage.phb': { max: 'scale.rage-uses', recharge: 'long' },
   'feature.fighter-action-surge.phb': { max: 'scale.action-surge', recharge: 'shortOrLong' },
@@ -16,6 +25,27 @@ export const FEATURE_USES: Record<string, Uses> = {
   'feature.artificer-flash-of-genius.tce': { max: 'max(1,int.mod)', recharge: 'long' },
   'feature.artificer-infuse-item.tce': { max: 'scale.infusions-known', recharge: 'long' },
   'feature.dragonborn-breath-weapon.phb': { max: 1, recharge: 'shortOrLong' },
+  'feature.paladin-lay-on-hands.phb': { max: '5*class.paladin.level', recharge: 'long' },
+  'feature.thief-of-five-fates.phb': { max: 1, recharge: 'long' },
+  'feature.warlock-mystic-arcanum-6th-level.phb': { max: 1, recharge: 'long' },
+  'feature.warlock-mystic-arcanum-7th-level.phb': { max: 1, recharge: 'long' },
+  'feature.warlock-mystic-arcanum-8th-level.phb': { max: 1, recharge: 'long' },
+  'feature.warlock-mystic-arcanum-9th-level.phb': { max: 1, recharge: 'long' },
+  'feature.wizard-signature-spells.phb': { max: 2, recharge: 'shortOrLong' },
+  'feature.air-genasi-mingle-with-the-wind.mpmm': { max: 1, recharge: 'long' },
+  'feature.cleric-divine-intervention.phb': { max: 1, recharge: 'long' },
+  'feature.bard-college-of-creation-animating-performance.tce': { max: 1, recharge: 'long' },
+  'feature.bard-college-of-creation-performance-of-creation.tce': { max: 1, recharge: 'long' },
+  'feature.bard-college-of-eloquence-universal-speech.tce': { max: 1, recharge: 'long' },
+  'feature.paladin-oath-of-glory-living-legend.tce': { max: 1, recharge: 'long' },
+  'feature.paladin-oath-of-the-watchers-mortal-bulwark.tce': { max: 1, recharge: 'long' },
+  'feature.ranger-fey-wanderer-fey-reinforcements.tce': { max: 1, recharge: 'long' },
+  'feature.warlock-the-fathomless-grasping-tentacles.tce': { max: 1, recharge: 'long' },
+  'feature.gift-of-the-depths.xge': { max: 1, recharge: 'long' },
+  'feature.tricksters-escape.xge': { max: 1, recharge: 'long' },
+  'feature.rogue-arcane-trickster-spell-thief.phb': { max: 1, recharge: 'long' },
+  'feature.wizard-school-of-transmutation-master-transmuter.phb': { max: 1, recharge: 'long' },
+  'feature.wizard-school-of-transmutation-shapechanger.phb': { max: 1, recharge: 'shortOrLong' },
   'feature.half-orc-relentless-endurance.phb': { max: 1, recharge: 'long' },
 }
 
@@ -27,6 +57,11 @@ export const FEAT_EFFECTS: Record<string, Array<Record<string, unknown>>> = {
   'feat.sentinel.phb': [{ kind: 'note', text: '借机攻击命中后目标速度降为 0；撤离仍会引发借机攻击；可对攻击盟友者用反应反击' }],
   'feat.war-caster.phb': [{ kind: 'advantage', on: 'save', scope: 'concentration' }],
 }
+export const FEATURE_ACTIVITIES: Record<string, Activity[]> = {
+  'feature.fighter-second-wind.phb': [{ id: 'feature.fighter-second-wind.phb.heal', name: '回气', kind: 'heal', formula: '1d10+class.fighter.level', activation: { type: 'bonus' } }],
+  'feature.paladin-lay-on-hands.phb': [{ id: 'feature.paladin-lay-on-hands.phb.heal', name: '圣疗', kind: 'heal', formula: '5*class.paladin.level', activation: { type: 'action' } }],
+}
+
 export const FEATURE_EFFECTS: Record<string, Array<Record<string, unknown>>> = {
   'feature.barbarian-rage.phb': [
     { kind: 'damageBonus', amount: 'scale.rage-damage', scope: 'melee', when: { all: [{ text: '狂暴中' }] } },

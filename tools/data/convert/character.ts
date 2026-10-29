@@ -6,9 +6,9 @@ import { creditFor, keywordsOf, pageOf, str } from './common'
 import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
 import { clip, plainText, summaryOf } from '../summary/summary'
-import { prereqToRequires } from './character2'
+import { prereqToRequires, startingEquipmentOf } from './character2'
 import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
-import { FEATURE_EFFECTS, FEATURE_USES } from '../config/featureRules'
+import { FEATURE_ACTIVITIES, FEATURE_EFFECTS, FEATURE_NO_USES, FEATURE_USES } from '../config/featureRules'
 import { advancementExtras, foundryScaleValues, scaleValuesOf, spellcastingOf } from './classRules'
 import type { InlineContext } from '../markup/inline'
 import { renderInline } from '../markup/inline'
@@ -151,7 +151,7 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
     primaryAbility: primary,
     saves: (Array.isArray(raw.proficiency) ? raw.proficiency : []).map(String),
     proficiencies,
-    startingEquipment: Array.isArray((raw.startingEquipment as Record<string, unknown> | undefined)?.default) ? ((raw.startingEquipment as Record<string, unknown>).default as string[]).map((v) => renderInline(v, inline)) : [],
+    startingEquipment: startingEquipmentOf(raw),
     ...(spellcastingOf(raw, false) ? { spellcasting: spellcastingOf(raw, false) } : {}),
     ...(classTable(raw, inline) ? { table: classTable(raw, inline) } : {}),
     subclassLevel,
@@ -228,13 +228,14 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ctx.unmappedFoundry?.set(key, { count: current.count + value.count, example: current.example })
   }
   const text = plainText(convertBlocks(raw.entries, inline))
-  const uses = rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text)
+  const uses = FEATURE_NO_USES.has(entry.id) ? undefined : rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text)
   const configEffects = FEATURE_EFFECTS[entry.id] ?? []
   const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...configEffects])
   const baseActivities = rules?.activities?.length ? rules.activities : activitiesFromText(raw.entries, entry.name, entry.id)
+  const configuredActivities = FEATURE_ACTIVITIES[entry.id] ?? []
   const consumes = ownerType === 'optional' ? (Array.isArray(raw.consumes) ? raw.consumes : raw.consumes && typeof raw.consumes === 'object' ? [raw.consumes] : []) : []
   const activities = consumes.length
-    ? [...baseActivities, {
+    ? [...baseActivities, ...configuredActivities, {
         id: `${entry.id}.consume`,
         name: `消耗：${entry.name}`,
         kind: 'utility' as const,
@@ -242,7 +243,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
         activation: { type: 'special' as const },
         consumption: { targets: consumes.map((c) => ({ type: 'resource' as const, value: Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1), target: String((c as Record<string, unknown>).name ?? 'resource') })) },
       }]
-    : baseActivities
+    : [...baseActivities, ...configuredActivities]
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),

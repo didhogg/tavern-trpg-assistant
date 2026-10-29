@@ -192,13 +192,14 @@ export const conditionDataSchema = z.looseObject({
   ...entryCommonFields,
   effects: legacyEffectListSchema,
   kind: z.enum(['condition', 'disease', 'status']).optional(),
-  exhaustion: z.array(z.object({ level: z.number().int().min(1).max(6), effects: effectListSchema })).length(6).optional(),
+  levels: z.array(z.object({ level: z.number().int().min(1).max(6), effects: effectListSchema })).length(6).optional(),
 })
 export type ConditionData = z.infer<typeof conditionDataSchema>
 
 export const ruleDataSchema = z.looseObject({
   ...entryCommonFields,
   category: z.enum(['variant', 'action', 'sense', 'skill']).default('variant'),
+  effects: effectListSchema.optional(),
   engine: z.string().max(60).optional(),
   group: z.string().max(40).optional(),
   optionId: z.string().max(60).optional(),

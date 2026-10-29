@@ -200,6 +200,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     foundryFeats: data.foundryFeats,
     foundryRaces: data.foundryRaces,
     foundryOptionalFeatures: data.foundryOptionalFeatures,
+    foundryItems: data.foundryItems,
     unmappedFoundry,
   })
   const allowedAll = new Set(all.map((e) => e.packId))
@@ -236,6 +237,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     for (const packId of required) if (packId !== SRD_PACK_ID && packId !== entry.packId) stats.interiorRequires.push({ packId: entry.packId, require: packId })
     converted.set(entry.id, built)
   }
+  stats.unmappedFoundry = [...unmappedFoundry].map(([key, value]) => ({ key, ...value }))
   const packIds = [SRD_PACK_ID, ...BOOKS.map((b) => b.packId)]
   const packs: ConvertedPack[] = packIds.map((packId) => {
     const entries = [...converted.values()].filter((e) => {

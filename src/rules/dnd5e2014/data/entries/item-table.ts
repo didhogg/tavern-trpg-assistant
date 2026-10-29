@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { damagePartSchema, usesSchema, diceSchema } from '../common'
 import { entryCommonFields } from './base'
+import { effectListSchema } from '../effects'
 
 export const ITEM_CATEGORIES = ['weapon', 'armor', 'shield', 'gear', 'tool', 'consumable', 'wondrous', 'ammunition', 'mount', 'vehicle', 'treasure'] as const
 
@@ -47,6 +48,7 @@ export const itemDataSchema = z.looseObject({
   armor: armorSchema.optional(),
   charges: chargesSchema.optional(),
   bonuses: bonusesSchema.optional(),
+  effects: effectListSchema.optional(),
   consumable: z.boolean().optional(),
   properties: z.array(z.string().max(40)).default([]),
   lootTables: z.array(z.string().max(80)).default([]),

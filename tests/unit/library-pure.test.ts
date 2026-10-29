@@ -142,7 +142,7 @@ describe('包里的修改版条目', () => {
 })
 
 describe('功能：启用、停用、规则选项', () => {
-  const feature = (id: string, defaultEnabled: boolean, extra: Record<string, unknown> = {}) => ({ id, kind: 'ruleOptions', name: `选项${id}`, description: '', defaultEnabled, data: { summary: '一句话', implemented: false, ...extra } })
+  const feature = (id: string, defaultEnabled: boolean, extra: Record<string, unknown> = {}) => ({ id, kind: 'ruleOptions', name: `选项${id}`, description: '', defaultEnabled, data: { summary: '一句话', ...extra } })
   const dmg = pack('dmg', { content: { features: [feature('a', true), feature('b', false)], adventure: {}, fallback: [] } })
 
   it('启用时复制定义，初始值取 defaultEnabled；已有值不覆盖', () => {

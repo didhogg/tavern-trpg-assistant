@@ -177,7 +177,7 @@ function activityOf(raw: Raw, index: number, prefix: string): Activity | undefin
   const activation = { type: typeMap[str(activationRaw.type)] ?? 'special', ...(number(activationRaw.value) ? { cost: number(activationRaw.value) } : {}) }
   const base = {
     id: `${prefix}.${index}`,
-    name: str(raw.name) || type || `行动 ${index + 1}`,
+    name: str(raw.name) || `${prefix}${index ? `（${index + 1}）` : ''}`,
     activation,
     ...(rangeOf(raw.range) ? { range: rangeOf(raw.range) } : {}),
     ...(raw.target && typeof raw.target === 'object' ? { target: raw.target as Record<string, unknown> } : {}),
@@ -269,11 +269,17 @@ export function usesFromText(text: string): Uses | undefined {
     return { max: `max(${Number(ability[2] ?? 1)},${key}.mod)`, recharge: /长休/.test(normalized) ? 'long' : 'special' }
   }
   if (/次数等于你的?熟练加值|熟练加值次/.test(normalized)) return { max: 'prof', recharge: /长休/.test(normalized) ? 'long' : 'special' }
-  if (/完成一次短休或长休后才能再次使用|完成一次长休或短休后才能再次使用|短休或长休后才能再次使用/.test(normalized)) return { max: 1, recharge: 'shortOrLong' }
-  if (/完成一次长休后才能再次使用|完成一次长休前你都不能再次使用|直到完成一次长休/.test(normalized)) return { max: 1, recharge: 'long' }
+  if (/完成一次短休或长休后才能再次使用|完成一次长休或短休后才能再次使用|短休或长休后才能再次使用|完成一次短休或长休后.*恢复|完成一次长休或短休后.*恢复|完成一次短休或长休/.test(normalized)) return { max: 1, recharge: 'shortOrLong' }
+  if (/完成一次长休后才能再次使用|完成一次长休后才能再?次?施展|完成一次长休前你都不能再次使用|直到(?:你)?完成一次长休|必须完成一次长休才能再次|完成一次长休后.*恢复.*次数|完成一次长休后.*重获.*次数/.test(normalized)) return { max: 1, recharge: 'long' }
   if (/完成一次短休后才能再次使用|直到完成一次短休/.test(normalized)) return { max: 1, recharge: 'short' }
   if (/每长休|每完成一次长休|长休后.*恢复.*次数/.test(normalized)) return { max: 1, recharge: 'long' }
   if (/每短休/.test(normalized)) return { max: 1, recharge: 'short' }
+  if (/充能/.test(normalized)) return { max: 1, recharge: 'special' }
+  if (/长休/.test(normalized) && /短休/.test(normalized) && !/法术位/.test(normalized)) return { max: 1, recharge: 'shortOrLong' }
+  if (/完成一次长休|每长休|每次长休/.test(normalized) && !/法术位/.test(normalized)) return { max: 1, recharge: 'long' }
+  if (/次数/.test(normalized) && !/法术位/.test(normalized)) return { max: 1, recharge: 'long' }
+  if (/完成一次短休|每短休/.test(normalized) && !/法术位/.test(normalized)) return { max: 1, recharge: 'short' }
+  if (/次数等于|次数为|次数等同于/.test(normalized)) return { max: 1, recharge: 'long' }
   return undefined
 }
 
@@ -291,6 +297,7 @@ export function foundryFeature(ctx: {
   feats?: Raw[]
   races?: Raw[]
   optionalFeatures?: Raw[]
+  items?: Raw[]
 }, raw: Raw, ownerType: string, source: string): Raw | undefined {
   const name = str(raw.name)
   if (ownerType === 'class') return ctx.classFeatures?.find((x) => str(x.name) === name && str(x.className) === str(raw.className) && str(x.classSource) === str(raw.classSource) && str(x.source) === source)
@@ -298,6 +305,7 @@ export function foundryFeature(ctx: {
   if (ownerType === 'feat') return ctx.feats?.find((x) => str(x.name) === name && str(x.source) === source)
   if (ownerType === 'race') return ctx.races?.find((x) => str(x.name) === name && str(x.source) === source)
   if (ownerType === 'optional') return ctx.optionalFeatures?.find((x) => str(x.name) === name && str(x.source) === source)
+  if (ownerType === 'item') return ctx.items?.find((x) => str(x.name) === name && str(x.source) === source)
   return undefined
 }
 

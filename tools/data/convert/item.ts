@@ -5,6 +5,8 @@ import { creditFor, DAMAGE_TYPE, keywordsOf, pageOf, str } from './common'
 import { convertBlocks } from './blocks'
 import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'
+import { dedupeEffects, foundryFeature, foundryRulesFor } from './foundry'
+import { ITEM_ACTIVITIES } from '../config/itemRules'
 
 const RARITY = new Set(['none', 'common', 'uncommon', 'rare', 'very rare', 'legendary', 'artifact', 'varies'])
 
@@ -79,7 +81,7 @@ function armorOf(raw: Record<string, unknown>): Record<string, unknown> | undefi
   return {
     category: kind,
     ac,
-    ...(Number.isFinite(Number(raw.dexMax)) ? { dexCap: Number(raw.dexMax) } : {}),
+    ...(Number.isFinite(Number(raw.dexMax)) ? { dexCap: Number(raw.dexMax) } : kind === 'medium' ? { dexCap: 2 } : {}),
     ...(Number.isFinite(Number(raw.strength)) ? { strReq: Number(raw.strength) } : {}),
     stealthDisadvantage: raw.stealth === true,
   }
@@ -92,7 +94,7 @@ function chargesOf(raw: Record<string, unknown>): Record<string, unknown> | unde
 
 function bonusesOf(raw: Record<string, unknown>): Record<string, string> | undefined {
   const out: Record<string, string> = {}
-  const map: Record<string, string> = { bonusAc: 'ac', bonusWeapon: 'attack', bonusSpellAttack: 'spellAttack', bonusSpellSaveDc: 'spellDc' }
+  const map: Record<string, string> = { bonusAc: 'ac', bonusSavingThrow: 'save', bonusWeapon: 'attack', bonusSpellAttack: 'spellAttack', bonusSpellSaveDc: 'spellDc' }
   for (const [key, target] of Object.entries(map)) {
     const value = bonus(raw[key])
     if (value) out[target] = value
@@ -100,8 +102,31 @@ function bonusesOf(raw: Record<string, unknown>): Record<string, string> | undef
   return Object.keys(out).length ? out : undefined
 }
 
+function itemEffects(raw: Record<string, unknown>): Array<Record<string, unknown>> {
+  const out: Array<Record<string, unknown>> = []
+  const staticAbility = (raw.ability as Record<string, unknown> | undefined)?.static
+  if (staticAbility && typeof staticAbility === 'object') {
+    for (const [ability, value] of Object.entries(staticAbility as Record<string, unknown>)) if (typeof value === 'number') out.push({ kind: 'abilitySet', ability, value })
+  }
+  const modify = (raw.modifySpeed as Record<string, unknown> | undefined)?.multiply
+  if (modify && typeof modify === 'object') {
+    for (const [mode, value] of Object.entries(modify as Record<string, unknown>)) if (typeof value === 'number') out.push({ kind: 'speed', mode, multiplier: value })
+  }
+  if (Array.isArray(raw.resist)) for (const value of raw.resist) if (typeof value === 'string') out.push({ kind: 'resistance', damage: [value] })
+  if (Array.isArray(raw.immune)) for (const value of raw.immune) if (typeof value === 'string') out.push({ kind: 'immunity', damage: [value] })
+  return out
+}
+
 export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
+  const foundryRaw = foundryFeature({ items: ctx.foundryItems }, raw, 'item', entry.source)
+  const rules = foundryRaw ? foundryRulesFor(foundryRaw) : undefined
+  for (const [key, value] of rules?.unmapped ?? []) {
+    const current = ctx.unmappedFoundry?.get(key) ?? { count: 0, example: entry.id }
+    ctx.unmappedFoundry?.set(key, { count: current.count + value.count, example: current.example })
+  }
+  const effects = dedupeEffects([...itemEffects(raw), ...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>])
+  const activities = [...(rules?.activities ?? []), ...(ITEM_ACTIVITIES[entry.id] ?? [])]
   const base = (raw._baseItem ?? {}) as Record<string, unknown>
   const text = convertBlocks(raw.entries, inline)
   const category = categoryOf(raw)
@@ -119,6 +144,8 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(armorOf(raw) ? { armor: armorOf(raw) } : {}),
     ...(chargesOf(raw) ? { charges: chargesOf(raw) } : {}),
     ...(bonusesOf(raw) ? { bonuses: bonusesOf(raw) } : {}),
+    ...(effects.length ? { effects } : {}),
+    ...(activities.length ? { activities } : {}),
     ...(category === 'consumable' ? { consumable: true } : {}),
     properties: (Array.isArray(raw.property) ? raw.property : Array.isArray(base.property) ? base.property : []).map(String),
     lootTables: (Array.isArray(raw.lootTables) ? raw.lootTables : []).map(String),

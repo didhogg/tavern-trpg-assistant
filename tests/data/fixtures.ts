@@ -35,7 +35,7 @@ export function fixtureEntries(): Entry[] {
 
 export function fixtureFeatures(): PackFeature[] {
   return [
-    { id: 'rule-option.test', kind: 'ruleOptions', name: '测试规则选项', description: '测试用', defaultEnabled: true, data: { id: 'test-option', name: '测试规则选项', summary: '测试', text: '测试', implemented: false, source: 'TEST' } },
+    { id: 'rule-option.test', kind: 'ruleOptions', name: '测试规则选项', description: '测试用', defaultEnabled: true, data: { id: 'test-option', name: '测试规则选项', summary: '测试', text: '测试', source: 'TEST' } },
     { id: 'ai-note.test', kind: 'aiNotes', name: '测试基调', description: '测试用', defaultEnabled: false, data: { text: '这是一个测试基调。', appliesTo: [], tone: '平静' } },
     { id: 'future-feature.test', kind: 'futureKind', name: '未来功能', description: '本版本不认识', defaultEnabled: false, data: { any: ['value'] } },
   ]
