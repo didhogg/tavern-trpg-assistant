@@ -96,7 +96,7 @@ function reportOf(result: ConversionResult, outputs: Map<string, { bytes: Uint8A
   })
   return {
     generatedAt: new Date().toISOString(),
-    dataVersion: 1,
+    dataVersion: 2,
     inputs: { books: BOOKS.map((b) => b.source), counts: { spells: data.spells.length, monsters: data.monsters.length, items: data.items.length, baseItems: data.baseItems.length, magicVariants: data.magicVariants.length } },
     packs,
     stats: result.stats,

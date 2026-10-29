@@ -69,7 +69,7 @@ export class MyLibrary {
       contributes: { entries: 0, tables: 0, variants: 0, adventures: 0, ruleOptions: 0 },
       relationships: { requires: [], recommends: [], conflicts: [] },
       blobs: [],
-      dataVersion: 1,
+      dataVersion: 2,
       source: 'user',
       byteSize: 0,
       sha256: '',

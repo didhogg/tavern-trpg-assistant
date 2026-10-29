@@ -27,7 +27,7 @@ describe('D1 §12 转换器金样', () => {
   it('火球术、魔法飞弹、成年红龙、地精、长剑、长剑 +1、板甲', async () => {
     const all = await allEntries()
     const fireball = all.get('spell.fireball.phb')!
-    expect(fireball.data).toMatchObject({ level: 3, school: 'evocation', range: { amount: 150 }, save: ['dex'], damage: [{ dice: '8d6', type: '火焰' }] })
+    expect(fireball.data).toMatchObject({ level: 3, school: 'evocation', range: { amount: 150 }, save: ['dex'], damage: [{ dice: '8d6', type: 'fire' }] })
     expect(fireball.data.classes).toEqual(['class.sorcerer.phb', 'class.wizard.phb'])
     expect((fireball.data.activities as Array<{ kind: string; onSave: string }>)[0]).toMatchObject({ kind: 'save', onSave: 'half' })
     const missile = all.get('spell.magic-missile.phb')!
@@ -38,9 +38,9 @@ describe('D1 §12 转换器金样', () => {
     const goblin = all.get('monster.goblin.mm')!
     expect(goblin.data).toMatchObject({ size: ['S'], ac: [{ value: 15 }], hp: { average: 7 }, cr: 0.25 })
     const sword = all.get('item.longsword.phb')!
-    expect(sword.data).toMatchObject({ category: 'weapon', weapon: { damage: [{ dice: '1d8', type: '挥砍' }], versatile: '1d10' } })
+    expect(sword.data).toMatchObject({ category: 'weapon', weapon: { damage: [{ dice: '1d8', type: 'slashing' }], versatile: '1d10' } })
     const plus = all.get('item.longsword-plus-1.dmg')!
-    expect(plus.data).toMatchObject({ rarity: 'uncommon', weapon: { damage: [{ dice: '1d8+1', type: '挥砍' }] } })
+    expect(plus.data).toMatchObject({ rarity: 'uncommon', weapon: { damage: [{ dice: '1d8+1', type: 'slashing' }] } })
     const plate = all.get('item.plate-armor.phb')!
     expect(plate.data).toMatchObject({ category: 'armor', armor: { category: 'heavy', ac: 18, strReq: 15, stealthDisadvantage: true } })
   })

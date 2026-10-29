@@ -56,14 +56,14 @@ function weaponOf(raw: Record<string, unknown>): Record<string, unknown> | undef
   const code = str(raw.type)
   if (raw.weapon !== true && code !== 'M' && code !== 'R' && !base.weapon) return undefined
   const dmg1 = str(raw.dmg1) || str(base.dmg1)
-  const dmgType = DAMAGE_TYPE[str(raw.dmgType) || str(base.dmgType)] ?? '未注明'
+  const dmgType = DAMAGE_TYPE[str(raw.dmgType) || str(base.dmgType)]
   const bonusValue = bonus(raw.bonusWeapon)
   const properties = (Array.isArray(raw.property) ? raw.property : Array.isArray(base.property) ? base.property : []).map(String)
   const range = typeof raw.range === 'number' ? raw.range : typeof base.range === 'number' ? base.range : undefined
   const rangeMax = typeof raw.rangeMax === 'number' ? raw.rangeMax : typeof base.rangeMax === 'number' ? base.rangeMax : undefined
   return {
     category: str(raw.weaponCategory) || str(base.weaponCategory) || undefined,
-    damage: dmg1 ? [{ dice: damageDice(dmg1, bonusValue), type: dmgType }] : [],
+    damage: dmg1 && dmgType ? [{ dice: damageDice(dmg1, bonusValue), type: dmgType }] : [],
     ...(str(raw.dmg2) || str(base.dmg2) ? { versatile: str(raw.dmg2) || str(base.dmg2) } : {}),
     properties,
     ...(range ? { range: { normal: range, ...(rangeMax ? { long: rangeMax } : {}) } } : {}),

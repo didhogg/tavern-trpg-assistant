@@ -50,7 +50,7 @@ export function buildPackFile(input: BuildPackInput): Uint8Array {
       description: '',
       relationships: { requires: [], recommends: [], conflicts: [] },
       contributes: {},
-      dataVersion: 1,
+      dataVersion: 2,
     },
     input.manifest,
     {

@@ -18,12 +18,21 @@ const LICENSE_BY_CREDIT: Record<z.infer<typeof creditBySchema>, z.infer<typeof c
   本项目: 'CC-BY-NC-SA-4.0',
 }
 
+export const structuredBySchema = z.enum(['5etools', '5etools-foundry', 'foundry-dnd5e', '5e-database', '本项目'])
+export const structuredCreditSchema = z.object({
+  by: structuredBySchema,
+  license: creditLicenseSchema,
+})
+export type StructuredCredit = z.infer<typeof structuredCreditSchema>
+
 export const creditSchema = z
   .object({
     by: creditBySchema,
     license: creditLicenseSchema,
     machine: z.boolean().default(false),
     missing: z.array(z.string()).default([]),
+    /** 中文数据之外，结构化字段来自哪个来源。 */
+    structured: structuredCreditSchema.optional(),
     /** SRD 5.1 署名（CC BY 4.0，Wizards of the Coast）。 */
     srd: z.boolean().default(false),
   })

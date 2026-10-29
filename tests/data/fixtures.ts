@@ -14,9 +14,9 @@ function base(id: string, type: string, name: string, data: Record<string, unkno
 
 export function fixtureEntries(): Entry[] {
   return [
-    base('spell.fireball.test', 'spell', '火球术', { level: 3, school: 'evocation', castTime: [{ n: 1, unit: 'action' }], range: { type: 'point', amount: 150, unit: 'feet' }, components: { v: true, s: true }, duration: [{ type: 'instant', concentration: false }], ritual: false, classes: [], subclasses: [], damage: [{ dice: '8d6', type: '火焰' }] }),
+    base('spell.fireball.test', 'spell', '火球术', { level: 3, school: 'evocation', castTime: [{ n: 1, unit: 'action' }], range: { type: 'point', amount: 150, unit: 'feet' }, components: { v: true, s: true }, duration: [{ type: 'instant', concentration: false }], ritual: false, classes: [], subclasses: [], damage: [{ dice: '8d6', type: 'fire' }] }),
     base('monster.goblin.test', 'monster', '地精', { size: ['S'], creatureType: { type: 'humanoid', tags: ['goblinoid'] }, ac: [{ value: 15 }], hp: { average: 7, formula: '2d6' }, speed: { walk: 30 }, abilities: { str: 8, dex: 14, con: 10, int: 10, wis: 8, cha: 8 }, senses: [], languages: ['通用语'], cr: 0.25, resist: [], immune: [], vulnerable: [], conditionImmune: [], traits: [], actions: [], bonusActions: [], reactions: [], spellcasting: [] }),
-    base('item.longsword.test', 'item', '长剑', { category: 'weapon', rarity: 'none', attunement: { required: false }, weapon: { category: 'martial', damage: [{ dice: '1d8', type: '挥砍' }], properties: ['V'] }, properties: [], lootTables: [] }),
+    base('item.longsword.test', 'item', '长剑', { category: 'weapon', rarity: 'none', attunement: { required: false }, weapon: { category: 'martial', damage: [{ dice: '1d8', type: 'slashing' }], properties: ['V'] }, properties: [], lootTables: [] }),
     base('class.fighter.test', 'class', '战士', { hitDie: 10, primaryAbility: ['str'], saves: ['str', 'con'], proficiencies: { armor: ['heavy'], weapons: ['martial'], tools: [] }, startingEquipment: [], subclassLevel: 3, subclassTitle: '武术范型', advancement: [] }),
     base('subclass.fighter-champion.test', 'subclass', '冠军勇士', { classId: 'class.fighter.test', advancement: [] }),
     base('feature.fighter-second-wind.test', 'feature', '恢复活力', { owner: { type: 'class', id: 'class.fighter.test' }, level: 1 }),
@@ -24,7 +24,7 @@ export function fixtureEntries(): Entry[] {
     base('subrace.human-variant.test', 'subrace', '人类变体', { parentRace: 'race.human.test', size: ['M'], speed: { walk: 30 }, languages: ['通用语'], proficiencies: [], traits: [], advancement: [] }),
     base('background.acolyte.test', 'background', '侍僧', { proficiencies: { skills: ['insight'], tools: [], languages: [] }, equipment: [], characteristics: [] }),
     base('feat.alert.test', 'feat', '警觉', { advancement: [] }),
-    base('condition.poisoned.test', 'condition', '中毒', { effects: ['attack-disadvantage'] }),
+    base('condition.poisoned.test', 'condition', '中毒', { effects: [] }),
     base('disease.sewer-plague.test', 'disease', '下水道瘟疫', { effects: [] }),
     base('status.concentration.test', 'status', '专注', { effects: [] }),
     base('rule.encumbrance.test', 'rule', '负重', { category: 'variant' }),

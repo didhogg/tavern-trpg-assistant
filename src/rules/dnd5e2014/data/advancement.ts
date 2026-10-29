@@ -19,7 +19,7 @@ const itemChoice = z.looseObject({
 const scaleValue = z.looseObject({
   kind: z.literal('scaleValue'),
   id: z.string().min(1).max(80),
-  type: z.enum(['number', 'dice', 'distance']),
+  type: z.enum(['number', 'dice', 'distance', 'text']),
   scale: z.record(z.string().regex(/^\d+$/), z.union([z.number(), z.string()])),
   label: z.string().max(80).optional(),
 })
@@ -43,6 +43,13 @@ const subclassAdvancement = z.looseObject({ kind: z.literal('subclass'), level: 
 
 const sizeAdvancement = z.looseObject({ kind: z.literal('size'), sizes: z.array(z.string().max(30)) })
 
+const expertiseAdvancement = z.looseObject({
+  kind: z.literal('expertise'),
+  level: z.number().int().min(1).max(20),
+  count: z.number().int().positive(),
+  from: z.union([z.literal('proficient'), z.array(z.string().min(1))]),
+})
+
 export const advancementSchema = z.discriminatedUnion('kind', [
   itemGrant,
   itemChoice,
@@ -51,6 +58,7 @@ export const advancementSchema = z.discriminatedUnion('kind', [
   abilityScoreImprovement,
   subclassAdvancement,
   sizeAdvancement,
+  expertiseAdvancement,
 ])
 export type Advancement = z.infer<typeof advancementSchema>
 

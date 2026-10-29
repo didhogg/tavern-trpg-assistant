@@ -256,7 +256,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
       contributes: {},
       relationships: { requires, recommends: [], conflicts: [] },
       blobs: [],
-      dataVersion: 1,
+      dataVersion: 2,
       minAppVersion: '0.1.0',
     }
     return { manifest, entries, features }
@@ -298,7 +298,7 @@ function ruleOptionsFor(packId: string, entries: Entry[], planned: PlannedEntry[
       name: option.name,
       description: text.slice(0, 500),
       defaultEnabled: false,
-      data: { id: option.id, name: option.name, summary: option.name, text, implemented: option.implemented, source: option.source },
+      data: { id: option.id, name: option.name, summary: option.name, text, ...(option.engine ? { engine: option.engine } : {}), ...(option.group ? { group: option.group } : {}), source: option.source },
     })
   }
   return out

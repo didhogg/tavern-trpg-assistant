@@ -1,5 +1,6 @@
 import type { TextBlock } from '../../../src/schemas/text'
 import type { Dnd5e2014EntryType } from '../../../src/rules/dnd5e2014/data/entries'
+import { DAMAGE_LABELS } from '../../../src/rules/dnd5e2014/data/enums'
 
 const SCHOOL: Record<string, string> = {
   abjuration: '防护',
@@ -12,6 +13,7 @@ const SCHOOL: Record<string, string> = {
   transmutation: '变化',
 }
 
+const DAMAGE_CN = (code: string): string => DAMAGE_LABELS[code] ?? code
 const SIZE: Record<string, string> = { T: '微型', S: '小型', M: '中型', L: '大型', H: '巨型', G: '超巨型' }
 const ITEM_CATEGORY: Record<string, string> = { weapon: '武器', armor: '护甲', shield: '盾牌', gear: '装备', tool: '工具', consumable: '消耗品', wondrous: '奇物', ammunition: '弹药', mount: '坐骑', vehicle: '载具', treasure: '宝藏' }
 const RARITY: Record<string, string> = { none: '普通', common: '常见', uncommon: '罕见', rare: '稀有', 'very rare': '极稀有', legendary: '传奇', artifact: '神器', varies: '多变' }
@@ -47,7 +49,7 @@ function firstSentence(text: string): string {
 }
 
 function damageText(parts: Array<{ dice: string; type: string }> | undefined): string {
-  return (parts ?? []).map((p) => `${p.dice}${p.type && p.type !== '未注明' ? ` ${p.type}` : ''}`).join('+')
+  return (parts ?? []).map((p) => `${p.dice}${p.type ? ` ${DAMAGE_CN(p.type)}` : ''}`).join('+')
 }
 
 export function summaryOf(type: Dnd5e2014EntryType | string, name: string, data: Record<string, unknown>, text: string): string {

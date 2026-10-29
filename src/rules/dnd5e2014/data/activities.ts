@@ -8,6 +8,21 @@ const activityBase = {
   range: rangeSchema.optional(),
   target: targetSchema.optional(),
   uses: usesSchema.optional(),
+  consumption: z
+    .object({
+      targets: z.array(
+        z.object({
+          type: z.enum(['uses', 'spellSlot', 'resource', 'hitDie', 'itemUses']),
+          value: z.union([z.number(), z.string().min(1)]),
+          target: z.string().max(80).optional(),
+        }),
+      ),
+    })
+    .optional(),
+  effects: z.array(z.string().min(1)).optional(),
+  duration: z
+    .object({ type: z.string().max(30).optional(), amount: z.number().nonnegative().optional(), unit: z.string().max(20).optional(), concentration: z.boolean().optional() })
+    .optional(),
 }
 
 const attackActivity = z.looseObject({

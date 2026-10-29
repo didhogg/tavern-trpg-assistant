@@ -12,7 +12,8 @@ export const ruleOptionDataSchema = z.looseObject({
   name: z.string().min(1).max(80),
   summary: z.string().max(200).default(''),
   text: z.string().default(''),
-  implemented: z.boolean().default(false),
+  engine: z.string().min(1).max(60).optional(),
+  group: z.string().min(1).max(40).optional(),
   source: z.string().max(20).optional(),
 })
 export type RuleOptionData = z.infer<typeof ruleOptionDataSchema>

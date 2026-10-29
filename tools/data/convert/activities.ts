@@ -1,5 +1,6 @@
 import type { Activity } from '../../../src/rules/dnd5e2014/data/activities'
-import { abilityFromText, str } from './common'
+import { abilityFromText, DAMAGE_FROM_CN, str } from './common'
+import type { DamageType } from '../../../src/rules/dnd5e2014/data/enums'
 
 function strings(value: unknown, out: string[] = []): string[] {
   if (typeof value === 'string') out.push(value)
@@ -8,14 +9,15 @@ function strings(value: unknown, out: string[] = []): string[] {
   return out
 }
 
-function damageOf(text: string): Array<{ dice: string; type: string }> {
+function damageOf(text: string): Array<{ dice: string; type: DamageType }> {
   const match = /@damage ([0-9]{0,2}d[0-9]{1,3}(?:\s*[+-]\s*\d+)?)/.exec(text)
   if (!match) return []
   const typeMatch = /点([\u4e00-\u9fa5]{1,4})伤害/.exec(text) ?? /([\u4e00-\u9fa5]{1,4})伤害/.exec(text)
-  return [{ dice: match[1].replace(/\s+/g, ''), type: typeMatch?.[1]?.replace(/^[点的]/, '') || '未注明' }]
+  const typeCn = typeMatch?.[1]?.replace(/^[点的]/, '') || ''
+  return [{ dice: match[1].replace(/\s+/g, ''), type: (DAMAGE_FROM_CN[typeCn] ?? 'force') as DamageType }]
 }
 
-export function damageFromText(value: unknown): Array<{ dice: string; type: string }> {
+export function damageFromText(value: unknown): Array<{ dice: string; type: DamageType }> {
   return damageOf(strings(value).join(' '))
 }
 

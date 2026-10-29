@@ -4,6 +4,9 @@ import type { InstalledPack, PackFeature } from '../../schemas/pack'
 import { featureSupport } from '../../rules/dnd5e2014/data/features'
 import { featureKey, libraryOf, withLibrary, type FeatureRecord } from './types'
 
+/** R1.2 才会提供实现清单；当前为空，所有规则选项都显示「仅说明」。 */
+const IMPLEMENTED_ENGINES: readonly string[] = []
+
 const featuresOf = (pack: InstalledPack): PackFeature[] => (pack.content?.features ?? []) as PackFeature[]
 
 /** 启用扩展包：功能定义全部复制进存档；规则选项的初始值写入 featureState（已有值不覆盖）。 */
@@ -51,9 +54,10 @@ export function ruleOptionRows(data: WorkspaceData): RuleOptionRow[] {
   return Object.entries(lib.features)
     .filter(([, rec]) => rec.enabled && rec.def.kind === 'ruleOptions')
     .map(([key, rec]) => {
-      const d = rec.def.data as { summary?: string; text?: string; implemented?: boolean }
+      const d = rec.def.data as { summary?: string; text?: string; engine?: string }
       const text = typeof d.text === 'string' && d.text.trim() !== '[]' ? d.text : ''
-      return { key, name: rec.def.name, summary: d.summary ?? '', text, packId: rec.packId, implemented: d.implemented === true, on: lib.featureState[key] === true }
+      const implemented = typeof d.engine === 'string' && IMPLEMENTED_ENGINES.includes(d.engine)
+      return { key, name: rec.def.name, summary: d.summary ?? '', text, packId: rec.packId, implemented, on: lib.featureState[key] === true }
     })
 }
 
