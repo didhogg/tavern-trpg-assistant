@@ -9,6 +9,16 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 - 验收：起点数字与 §2 一致；P0/R0 检查点报告；R1–R15 每包按 §7 金样/数字验收；`npm run check`、`npm run test:data`、`npm run build:data`、`npm run build`、完整 `npm run e2e` 通过且连续构建 sha 相同；报告、抽检、截图、NEXT 完整；不自行宣布验收通过。
 
 ## 已完成
+- D1.2a P0/R0（初版完成，等待检查点 1）：
+  - 来源与许可清单、`data`/`data-bak` 版本对照、六个待定来源；见 `docs/probes/D1.2a_检查点1.md`。
+  - 字段覆盖矩阵 `tools/data/config/fieldCoverage*.ts`：4,721 个路径，`mapped` 3,011 / `text` 1,418 / `dropped` 292；构建时未登记即失败。
+  - 体检报数 `tools/data/validate/health.ts` 接入构建；当前与 D1.1 体检数字的差异已在检查点报告 §3 逐项说明。
+
+## 检查点 1
+- 状态：**停在检查点，等待规划 agent 回复「检查点 1 通过」或修改意见。**
+- 待决定：六个待定来源；字段矩阵默认分类；体检统计口径差异（A4/B3/B4/B6/B8/D1–D5）；英文 `data-bak` 的 MIT 署名文字。
+- 未开始 R1。
+
 - M0；U2 定稿；M1 核心数据层。
 - M2（实现、复核与真机自检完成；50 条抽检已完成；数据 1.0.1 已发布）：
   - D1 数据定义：`src/rules/dnd5e2014/data/`（通用字段、15 种条目、7 种 advancement、7 种行动、正文块与行内标记、requires、ruleOptions/aiNotes）；`src/schemas/adventure/` 冒险内容项外壳。
@@ -32,6 +42,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
   - P11：校验、报告、626 行抽检表、`D1.1_确定性.md`；M2 自检新增人物规则抽样（6 步）；数据仓库本地提交 `6290d8b`。
 
 ## 证据
+- D1.2a P0/R0：字段矩阵 4,721 路径、未登记 0；检查点报告 `docs/probes/D1.2a_检查点1.md`；`npm run check` 241 项、`npm run test:data` 53 项通过；`npm run build:data` 通过，11 包 1.60MB；`npm run build` 通过。
 - D1.1：`npm run check` 241 项单元测试（24 个文件）；`npm run test:data` 51 项（14 个文件）；`npm run e2e` Chrome+WebKit 共 1610 项通过、0 失败，M1 10/10、M2 6/6。
 - D1.1：连续两次 `npm run build:data` 的 11 个当前包 sha256 相同，见 `docs/probes/D1.1_确定性.md`；合计 1.60MB，最大单包 SRD 约 487KB。
 - D1.1：`docs/probes/D1.1_人物数据_报告.md`（覆盖率、来源构成、未映射）；`docs/probes/D1.1_抽检.md`（626 行，页码与字段，结果栏待驾驶员填写）。
@@ -46,7 +57,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 4. M3 的驾驶员真机验收仍待进行。
 
 ## 阻塞
-- 无（等待复核与真机验收）。
+- D1.2a 检查点 1：等待规划 agent 审批；见 `docs/probes/D1.2a_检查点1.md` §4–§5。未开始 R1。
 
 ## 未验证
 - D1.1 只在模拟宿主核对；真机 TauriTavern 的 M2 六步（含内置 SRD 读取、IndexedDB、下载校验）未实测。

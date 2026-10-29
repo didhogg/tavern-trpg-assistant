@@ -7,6 +7,8 @@ import { expandItemEntries } from './extract/load'
 import { planAll } from './convert/plan'
 import { convertAll, type ConversionResult } from './convert'
 import { validatePacks, assertVolume } from './validate'
+import { assertFieldCoverage } from './validate/coverage'
+import { healthMetrics } from './validate/health'
 import { buildPackFile } from '../../src/core/packs/file'
 import { BOOKS, SRD_PACK_ID } from './config/books'
 import { writeReport } from './report/report'
@@ -37,6 +39,7 @@ async function main(): Promise<void> {
     }
   }
 
+  await assertFieldCoverage()
   console.log('读取参考数据…')
   const data = await loadRawData()
   console.log(`法术 ${data.spells.length}，怪物 ${data.monsters.length}，物品 ${data.items.length}，基础物品 ${data.baseItems.length}`)
@@ -47,6 +50,9 @@ async function main(): Promise<void> {
   console.log(`计划条目：${plan.entries.length}，随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   validatePacks(result.packs)
+  const health = healthMetrics(result, data)
+  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'health.json'), `${JSON.stringify(health, null, 2)}\n`)
+  console.log('体检报数：' + health.map((h) => `${h.id}=${h.count}`).join(' '))
   console.log(`转换完成：${result.packs.length} 个包`)
 
   const published = await readJson<Published>(join(REPO_ROOT, 'tools', 'data', 'published.json')).catch(() => ({ formatVersion: 1, packs: {} }) as Published)
