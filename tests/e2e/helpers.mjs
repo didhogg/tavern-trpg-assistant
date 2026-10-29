@@ -30,3 +30,9 @@ export const modalCount = (page) => page.locator('.trpg-modal').count()
 
 /** 当前页面为浅色或深色主题，供截图命名用。 */
 export const theme = (page) => page.evaluate(() => (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'))
+
+/** 等提示条都消失：窄屏时提示条会盖在列表底部，等它们自己走完再点。 */
+export const clearToasts = async (page) => {
+  await page.mouse.move(1, 1) // 鼠标停在提示条上会暂停计时
+  await page.waitForFunction(() => !document.getElementById('trpg-assistant-root').shadowRoot.querySelector('.trpg-toast'), null, { timeout: 15000 })
+}

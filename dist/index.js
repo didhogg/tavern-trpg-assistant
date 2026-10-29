@@ -18614,7 +18614,7 @@ var SE = ["data-narrow"], CE = { class: "trpg-dice__body" }, wE = ["data-natural
 		}
 		function p() {
 			let e = r.value;
-			return e ? [e.querySelector(".trpg-modal__head"), e.querySelector(".trpg-modal__page:not(.is-under)")].flatMap((e) => e ? [...e.querySelectorAll(sD)] : []).filter((e) => e.getClientRects().length > 0) : [];
+			return e ? [e.querySelector(".trpg-modal__head"), e.querySelector(".trpg-modal__page:not(.is-under)")].flatMap((e) => e ? [...e.querySelectorAll(sD)] : []).filter((e) => e.getClientRects().length > 0 && e.tabIndex >= 0 && e.getAttribute("aria-hidden") !== "true") : [];
 		}
 		function m() {
 			let e = r.value?.querySelector(".trpg-modal__page:not(.is-under)");

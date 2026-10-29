@@ -41,7 +41,7 @@ function topFocusables(): HTMLElement[] {
   const card = cardEl.value
   if (!card) return []
   const scopes = [card.querySelector('.trpg-modal__head'), card.querySelector('.trpg-modal__page:not(.is-under)')]
-  return scopes.flatMap((scope) => (scope ? [...scope.querySelectorAll<HTMLElement>(FOCUSABLE)] : [])).filter((el) => el.getClientRects().length > 0)
+  return scopes.flatMap((scope) => (scope ? [...scope.querySelectorAll<HTMLElement>(FOCUSABLE)] : [])).filter((el) => el.getClientRects().length > 0 && el.tabIndex >= 0 && el.getAttribute('aria-hidden') !== 'true')
 }
 
 function focusInto(): void {

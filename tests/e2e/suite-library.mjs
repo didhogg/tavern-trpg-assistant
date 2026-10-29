@@ -1,5 +1,5 @@
 // P5：库·本存档、规则选项、库·扩展、包详情弹窗（条目列表、条目详情、卸载与重装、导出、复制）。
-import { check, gotoPage, modalCount, settle } from './helpers.mjs'
+import { check, clearToasts, gotoPage, modalCount, settle } from './helpers.mjs'
 
 export const sw = (page, name) => page.getByRole('switch', { name })
 
@@ -103,7 +103,9 @@ export async function librarySuite(page, label, { width }) {
   check(`[${label}] 确认后弹窗关闭，列表里变为「安装」`, (await modalCount(page)) === 0 && (await page.getByTestId('ext-dnd5e2014-mpmm').getByRole('button', { name: /安装/ }).isVisible()))
   await page.getByRole('button', { name: '本存档', exact: true }).click()
   check(`[${label}] 本存档：该书显示「未安装 · 已用到的条目照常可用」与「去安装」`, (await page.getByTestId('save-pack-dnd5e2014-mpmm').innerText()).includes('已用到的条目照常可用') && (await page.getByTestId('save-pack-dnd5e2014-mpmm').getByRole('button', { name: '去安装' }).isVisible()))
+  await clearToasts(page)
   await page.getByTestId('save-pack-dnd5e2014-mpmm').getByRole('button', { name: '去安装' }).click()
+  await clearToasts(page)
   await page.getByTestId('ext-dnd5e2014-mpmm').getByRole('button', { name: /安装/ }).click()
   await page.getByText(`已安装「${mpmmName}」`).waitFor({ timeout: 60000 })
   await settle(page, 400)
@@ -111,25 +113,30 @@ export async function librarySuite(page, label, { width }) {
 
   // 断网：下载失败显示原因与「重试」，联网后重试成功
   const scagRow = page.getByTestId('ext-dnd5e2014-scag')
+  await clearToasts(page)
   await scagRow.getByRole('button', { name: /的更多操作/ }).click()
   await page.getByRole('menuitem', { name: '卸载' }).click()
   await page.getByRole('button', { name: '卸载', exact: true }).last().click()
   await page.getByText(/已卸载「剑湾冒险者指南」/).waitFor()
   await settle(page, 400)
   await page.route('**/mock-data/packs/*scag*', (route) => route.abort())
+  await clearToasts(page)
   await scagRow.getByRole('button', { name: /安装/ }).click()
   await scagRow.getByRole('button', { name: '重试' }).waitFor({ timeout: 30000 })
   check(`[${label}] 断网：该行显示 ⚠ 失败原因与「重试」，其余行不受影响`, (await scagRow.innerText()).includes('⚠') && (await page.getByTestId('ext-dnd5e2014-phb').getByRole('button', { name: '重试' }).count()) === 0)
   await page.unroute('**/mock-data/packs/*scag*')
+  await clearToasts(page)
   await scagRow.getByRole('button', { name: '重试' }).click()
   await page.getByText('已安装「剑湾冒险者指南」').waitFor({ timeout: 60000 })
   await settle(page, 400)
   check(`[${label}] 联网后点「重试」：安装成功`, (await scagRow.locator('.trpg-badge', { hasText: /v1\.0/ }).count()) === 1)
 
   // 导出为文件、复制为我的包
+  await clearToasts(page)
   await page.getByTestId('ext-dnd5e2014-scag').getByRole('button', { name: /的更多操作/ }).click()
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('menuitem', { name: '导出为文件' }).click()])
   check(`[${label}] 导出为文件：.trpgpack`, download.suggestedFilename().endsWith('.trpgpack'), download.suggestedFilename())
+  await clearToasts(page)
   await page.getByTestId('ext-dnd5e2014-bmt').getByRole('button', { name: /的更多操作/ }).click()
   await page.getByRole('menuitem', { name: '复制为我的包' }).click()
   await page.getByTestId('mine-tab').waitFor()
