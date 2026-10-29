@@ -38,7 +38,7 @@ function onMenu(key: string): void {
   <span class="trpg-pack-actions">
     <template v-if="task?.state === 'failed'">
       <span class="trpg-badge" data-tone="danger" :title="task.error">⚠ {{ task.error?.slice(0, 18) }}</span>
-      <button class="trpg-btn trpg-btn--small" type="button" @click="retryInstall(row.id)">重试</button>
+      <button class="trpg-btn trpg-btn--small" type="button" :disabled="campaign.readOnly" @click="retryInstall(row.id)">重试</button>
     </template>
     <template v-else-if="task || queued">
       <span v-if="queued === 'waiting' && (!task || task.state === 'waiting')" class="trpg-badge">等待中</span>
@@ -47,13 +47,13 @@ function onMenu(key: string): void {
       <span v-if="task?.state === 'installing'" class="trpg-row__meta">安装中</span>
       <button class="trpg-btn trpg-btn--small" type="button" @click="library.cancel(row.id)">取消</button>
     </template>
-    <template v-else-if="removedBuiltin"><button class="trpg-btn trpg-btn--small" type="button" @click="restoreBuiltinFlow(row)">恢复内置</button></template>
+    <template v-else-if="removedBuiltin"><button class="trpg-btn trpg-btn--small" type="button" :disabled="campaign.readOnly" @click="restoreBuiltinFlow(row)">恢复内置</button></template>
     <template v-else-if="!row.installed">
       <span v-if="row.recommended" class="trpg-badge" data-tone="gold">推荐</span>
-      <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :aria-label="`安装 ${row.name}`" @click="installFromCatalog(row.id)"><Icon name="download-simple" :size="14" />安装</button>
+      <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :aria-label="`安装 ${row.name}`" :disabled="campaign.readOnly" :title="campaign.readOnly ? '只读窗口不能修改' : undefined" @click="installFromCatalog(row.id)"><Icon name="download-simple" :size="14" />安装</button>
     </template>
     <template v-else>
-      <button v-if="row.updateVersion" class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :title="`更新到 v${row.updateVersion}`" :aria-label="`更新 ${row.name}`" @click="installFromCatalog(row.id)">更新</button>
+      <button v-if="row.updateVersion" class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :disabled="campaign.readOnly" :title="`更新到 v${row.updateVersion}`" :aria-label="`更新 ${row.name}`" @click="installFromCatalog(row.id)">更新</button>
       <span v-else class="trpg-badge">{{ SOURCE_LABEL[row.source] ? `${SOURCE_LABEL[row.source]} ` : '' }}v{{ row.version }}</span>
     </template>
     <MoreMenu v-if="row.installed" :label="row.name" :items="items" @select="onMenu" />

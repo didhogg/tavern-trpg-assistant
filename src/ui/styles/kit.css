@@ -130,10 +130,10 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-toast-enter-active, .trpg-toast-leave-active { transition: opacity 160ms, transform 160ms; }
 
 /* 模态弹窗：遮罩只盖住主悬浮窗；弹窗内换页，不叠加第二个弹窗 */
-.trpg-modal-root { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+.trpg-modal-root { display: contents; }
 .trpg-modal {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  padding: 16px; background: var(--scrim); pointer-events: auto;
+  padding: 16px; background: var(--scrim); z-index: 20;
 }
 .trpg-modal__card {
   display: flex; flex-direction: column; width: min(640px, 100%); height: min(80%, 640px);
@@ -161,7 +161,7 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
   transition: opacity 160ms, transform 160ms, visibility 0s;
 }
 .trpg-modal__page.is-under {
-  opacity: 0; transform: translateX(-24px); visibility: hidden; pointer-events: none;
+  opacity: 0; transform: translateX(-24px); visibility: hidden;
   transition: opacity 160ms, transform 160ms, visibility 0s 160ms;
 }
 .trpg-page-enter-from, .trpg-page-leave-to { opacity: 0; transform: translateX(24px); }
@@ -299,3 +299,21 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-toolbar__end { display: inline-flex; align-items: center; gap: 10px; }
 .trpg-minesub { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 420px; }
 .trpg-minesub__list { flex: 1; min-height: 220px; }
+
+.trpg-drawer[data-dragging='true']::after {
+  content: '松开以导入'; position: absolute; inset: 0; display: grid; place-items: center; z-index: 5;
+  border: 2px dashed var(--primary); border-radius: var(--radius); background: color-mix(in srgb, var(--paper) 88%, transparent); color: var(--primary); font-weight: 600;
+}
+.trpg-drawer { position: relative; }
+
+/* 可搜索下拉与药丸标签 */
+.trpg-combo__anchor { display: flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); }
+.trpg-combo__input { flex: 1; min-width: 0; min-height: 36px; padding: 4px 10px; border: 0; background: transparent; color: var(--ink); }
+.trpg-combo__input:focus-visible { outline: none; }
+.trpg-combo__anchor:focus-within { outline: 2px solid var(--primary); outline-offset: 1px; }
+.trpg-combo__content { width: var(--reka-combobox-trigger-width); min-width: 260px; }
+.trpg-combo__count { padding: 6px 10px; border-bottom: 1px solid var(--line); color: var(--ink-2); font-size: 12.5px; }
+.trpg-combo__empty { padding: 12px 10px; color: var(--ink-2); }
+.trpg-tag { gap: 2px; padding-right: 2px; }
+.trpg-tag__x { min-width: 28px; min-height: 28px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font-size: 16px; line-height: 1; }
+.trpg-tag__x:hover { color: var(--danger); }

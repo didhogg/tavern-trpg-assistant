@@ -14,7 +14,9 @@
     "e2e": "npm run build:data && npm run build && node tests/e2e/smoke.mjs",
     "build:data": "tsx tools/data/build.ts",
     "publish:data": "tsx tools/data/publish.ts",
-    "test:data": "vitest run --config vitest.data.config.ts"
+    "test:data": "vitest run --config vitest.data.config.ts",
+    "shots": "node tests/e2e/screenshots.mjs",
+    "keys": "node tests/e2e/keyboard.mjs"
   },
   "dependencies": {
     "@noble/hashes": "^2.4.0",

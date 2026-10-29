@@ -1,17 +1,39 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue'
+import { inject, onMounted, ref } from 'vue'
 import { APP_VERSION } from '../../core/services'
 import type { StContext } from '../../host/types'
+import { useAppStore } from '../../stores/app'
+import { useToastStore } from '../../stores/toast'
+import Segmented from '../kit/Segmented.vue'
 import Icon from '../kit/Icon.vue'
 import ProbeList from './ProbeList.vue'
 
 const ctx = inject<StContext>('stCtx')
 const sub = ref<'diag' | 'about' | null>(null)
+const app = useAppStore()
+const toast = useToastStore()
+onMounted(() => void (app.booted && app.refreshSettings().catch((e) => console.error('[trpg-assistant] 读取设置失败', e))))
+
+async function setVariantDefault(value: string): Promise<void> {
+  try {
+    await app.updateSettings({ variantDefault: value as 'apply' | 'skip' })
+  } catch (error) {
+    console.error('[trpg-assistant] 保存设置失败', error)
+    toast.error('保存设置失败')
+  }
+}
 </script>
 
 <template>
   <div v-if="sub === null" class="page-stack">
     <ul class="trpg-list">
+      <li v-if="app.settings" class="trpg-row">
+        <div class="trpg-row__main">
+          <div class="trpg-row__title">启用扩展包时，对官方条目的修改</div>
+          <div class="trpg-row__meta">启用扩展包（含导入冒险）时，它带来的修改默认应用还是不应用；之后随时可以逐条改</div>
+        </div>
+        <Segmented :model-value="app.settings.variantDefault" label="官方条目修改的默认" :options="[{ value: 'apply', label: '默认应用' }, { value: 'skip', label: '默认不应用' }]" @update:model-value="setVariantDefault($event ?? 'apply')" />
+      </li>
       <li class="trpg-row">
         <div class="trpg-row__main">
           <div class="trpg-row__title">诊断</div>

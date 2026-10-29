@@ -109,6 +109,23 @@ export async function librarySuite(page, label, { width }) {
   await settle(page, 400)
   check(`[${label}] 重新安装：下载安装完成，显示版本号与「⋯」`, (await page.getByTestId('ext-dnd5e2014-mpmm').locator('.trpg-badge', { hasText: /v1\.0/ }).count()) === 1)
 
+  // 断网：下载失败显示原因与「重试」，联网后重试成功
+  const scagRow = page.getByTestId('ext-dnd5e2014-scag')
+  await scagRow.getByRole('button', { name: /的更多操作/ }).click()
+  await page.getByRole('menuitem', { name: '卸载' }).click()
+  await page.getByRole('button', { name: '卸载', exact: true }).last().click()
+  await page.getByText(/已卸载「剑湾冒险者指南」/).waitFor()
+  await settle(page, 400)
+  await page.route('**/mock-data/packs/*scag*', (route) => route.abort())
+  await scagRow.getByRole('button', { name: /安装/ }).click()
+  await scagRow.getByRole('button', { name: '重试' }).waitFor({ timeout: 30000 })
+  check(`[${label}] 断网：该行显示 ⚠ 失败原因与「重试」，其余行不受影响`, (await scagRow.innerText()).includes('⚠') && (await page.getByTestId('ext-dnd5e2014-phb').getByRole('button', { name: '重试' }).count()) === 0)
+  await page.unroute('**/mock-data/packs/*scag*')
+  await scagRow.getByRole('button', { name: '重试' }).click()
+  await page.getByText('已安装「剑湾冒险者指南」').waitFor({ timeout: 60000 })
+  await settle(page, 400)
+  check(`[${label}] 联网后点「重试」：安装成功`, (await scagRow.locator('.trpg-badge', { hasText: /v1\.0/ }).count()) === 1)
+
   // 导出为文件、复制为我的包
   await page.getByTestId('ext-dnd5e2014-scag').getByRole('button', { name: /的更多操作/ }).click()
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('menuitem', { name: '导出为文件' }).click()])

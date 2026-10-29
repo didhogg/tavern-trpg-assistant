@@ -8,7 +8,9 @@ import { askConfirm } from '../kit/confirm'
 import MoreMenu from '../kit/MoreMenu.vue'
 import SelectField from '../kit/SelectField.vue'
 import Segmented from '../kit/Segmented.vue'
+import Combobox from '../kit/Combobox.vue'
 import Switch from '../kit/Switch.vue'
+import TagPill from '../kit/TagPill.vue'
 import Term from '../kit/Term.vue'
 import LabModalPage from './LabModalPage.vue'
 
@@ -26,6 +28,9 @@ const segment = ref('a')
 const checked = ref(false)
 const typed = ref('')
 const on = ref(false)
+const combo = ref('')
+const comboOptions = Array.from({ length: 300 }, (_, i) => ({ value: `s${i}`, label: `法术-${String(i + 1).padStart(3, '0')}`, en: `Spell ${i + 1}`, badge: i % 2 ? 'PHB' : 'XGE' }))
+const tags = ref(['队伍成员', '风暴岛'])
 const menuPick = ref('')
 const modal = useModalStore()
 const toast = useToastStore()
@@ -56,6 +61,11 @@ function mark(id: string, title: string, status: 'pass' | 'fail'): void {
         <Segmented v-model="segment" label="分段按钮" :options="[{ value: 'a', label: '优势' }, { value: 'b', label: '普通' }, { value: 'c', label: '劣势' }]" />
         <label class="trpg-check"><input v-model="checked" type="checkbox" /> 勾选框测试</label>
         <input v-model="typed" class="trpg-input" type="text" placeholder="输入测试：中文 / English" />
+      </div>
+      <div class="lab__row">
+        <Combobox v-model="combo" :options="comboOptions" label="可搜索下拉演示" placeholder="搜索 300 条法术" />
+        <p class="probe__hint" data-testid="combo-model">可搜索下拉当前值：{{ combo || '未选' }}</p>
+        <div class="probe__actions"><TagPill v-for="t in tags" :key="t" :label="t" owner="盖尔" @remove="tags = tags.filter((x) => x !== t)" /></div>
       </div>
       <div class="lab__row">
         <div class="trpg-row">

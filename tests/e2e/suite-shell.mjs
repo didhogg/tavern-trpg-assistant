@@ -161,6 +161,36 @@ async function menuTests(page, label) {
   check(`[${label}] Esc 关闭菜单后焦点回到「⋯」按钮`, await inShadowFocus(trigger))
 }
 
+async function comboTests(page, label) {
+  const input = page.getByRole('combobox', { name: '可搜索下拉演示' })
+  await input.scrollIntoViewIfNeeded()
+  await input.click()
+  await page.getByRole('listbox').waitFor()
+  await settle(page)
+  const count = page.locator('.trpg-combo__count')
+  check(`[${label}] 可搜索下拉：打开显示「共 300 条」，只渲染前 200 行`, (await count.innerText()).includes('共 300 条') && (await page.getByRole('option').count()) === 200)
+  await input.fill('法术-02')
+  await settle(page, 400)
+  check(`[${label}] 边输边筛：结果数同步为「共 10 条」`, (await count.innerText()).includes('共 10 条') && (await page.getByRole('option').count()) === 10)
+  await page.getByRole('option', { name: /法术-025/ }).click()
+  await settle(page)
+  check(`[${label}] 点选项：值变化，列表关闭，页面恢复可点击`, (await page.getByTestId('combo-model').innerText()).includes('s24') && (await page.getByRole('listbox').count()) === 0 && (await bodyPointerEvents(page)) === '')
+  await input.click()
+  await input.fill('法术-1')
+  await settle(page, 300)
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await settle(page, 300)
+  check(`[${label}] 键盘：↑↓ 移动、Enter 选择`, /s(9|1)\d/.test(await page.getByTestId('combo-model').innerText()) && (await page.getByRole('listbox').count()) === 0, await page.getByTestId('combo-model').innerText())
+  await input.click()
+  await page.keyboard.press('Escape')
+  await settle(page, 300)
+  check(`[${label}] Esc 关闭列表`, (await page.getByRole('listbox').count()) === 0 && (await bodyPointerEvents(page)) === '')
+  const pill = page.getByRole('button', { name: '移除盖尔的『队伍成员』标签' })
+  await pill.click()
+  check(`[${label}] 药丸标签：点 × 移除，× 的名称写明是谁的哪个标签`, (await page.getByRole('button', { name: '移除盖尔的『队伍成员』标签' }).count()) === 0 && (await page.getByRole('button', { name: '移除盖尔的『风暴岛』标签' }).count()) === 1)
+}
+
 async function toastTests(page, label) {
   const btn = (name) => page.getByRole('button', { name, exact: true })
   const toasts = page.locator('.trpg-toast')
@@ -191,6 +221,7 @@ export async function shellSuite(page, label, ctx) {
   await switchTests(page, label)
   await modalTests(page, label, ctx)
   await menuTests(page, label)
+  await comboTests(page, label)
   await toastTests(page, label)
   await gotoPage(page, '首页')
 }

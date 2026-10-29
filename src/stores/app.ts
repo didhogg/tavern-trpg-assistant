@@ -4,7 +4,7 @@ import { loadBackupState, loadSettings, reminderStatus, type ReminderStatus } fr
 import { OpQueue } from '../core/libraryQueue'
 import { resolveCatalogUrl } from '../core/packs/catalogUrl'
 import type { Services } from '../core/services'
-import type { Settings } from '../schemas/campaign'
+import { settingsSchema, type Settings } from '../schemas/campaign'
 
 /** 应用级状态：服务（数据库、安装器、存档）、设置、备份提醒与库操作队列。 */
 export const useAppStore = defineStore('app', () => {
@@ -30,6 +30,13 @@ export const useAppStore = defineStore('app', () => {
     return loaded
   }
 
+  /** 修改设置（只改给出的字段）。 */
+  async function updateSettings(patch: Partial<Settings>): Promise<void> {
+    const next = settingsSchema.parse({ ...(await loadSettings(svc().db)), ...patch })
+    await svc().db.setMeta('settings', next)
+    settings.value = next
+  }
+
   async function refreshBackup(): Promise<void> {
     const s = svc()
     const [state, config] = await Promise.all([loadBackupState(s.db), loadSettings(s.db)])
@@ -41,5 +48,5 @@ export const useAppStore = defineStore('app', () => {
     return resolveCatalogUrl(settings.value ?? { catalogUrl: 'https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json' })
   }
 
-  return { services, booted, bootError, settings, reminder, queue, svc, setServices, refreshSettings, refreshBackup, catalogUrl }
+  return { services, booted, bootError, settings, reminder, queue, svc, setServices, refreshSettings, updateSettings, refreshBackup, catalogUrl }
 })

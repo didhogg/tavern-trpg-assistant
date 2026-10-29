@@ -55,7 +55,7 @@ export async function savesSuite(page, label, { width, url }) {
   await page.getByRole('menuitem', { name: '改名' }).click()
   const rename = page.getByRole('textbox', { name: '存档名' })
   await rename.fill('旧存档')
-  await rename.press('Enter')
+  await page.keyboard.press('Enter')
   await settle(page, 300)
   check(`[${label}] 改名：行内输入，回车保存`, (await rowOf(page, '旧存档').count()) === 1)
   await menuOf(page, '旧存档').click()
@@ -141,6 +141,17 @@ export async function savesSuite(page, label, { width, url }) {
   await page.locator('input[type=file]').setInputFiles(junk)
   await page.getByRole('alert').waitFor()
   check(`[${label}] 错误文件：显示原因，提供「选择其他文件」与「关闭」`, (await page.getByRole('alert').innerText()).includes('无法识别') && (await page.getByRole('button', { name: '选择其他文件' }).isVisible()))
+  await page.getByRole('button', { name: '关闭', exact: true }).first().click()
+  await settle(page)
+
+  // 拖放导入
+  await openDrawer(page, narrow)
+  const dt = await page.evaluateHandle(() => { const d = new DataTransfer(); d.items.add(new File(['拖进来的不是存档'], 'drop.trpgsave')); return d })
+  await page.getByTestId('save-drawer').dispatchEvent('dragover', { dataTransfer: dt })
+  check(`[${label}] 拖入文件：抽屉显示「松开以导入」`, (await page.getByTestId('save-drawer').getAttribute('data-dragging')) === 'true')
+  await page.getByTestId('save-drawer').dispatchEvent('drop', { dataTransfer: dt })
+  await page.getByRole('alert').waitFor()
+  check(`[${label}] 松开后打开导入窗口并识别（这里是无法识别的文件，显示原因）`, (await page.getByTestId('import-filename').innerText()) === 'drop.trpgsave' && (await modalCount(page)) === 1)
   await page.getByRole('button', { name: '关闭', exact: true }).first().click()
   await settle(page)
 

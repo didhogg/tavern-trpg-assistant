@@ -19,6 +19,7 @@ const saves = useSavesStore()
 const toast = useToastStore()
 const search = ref('')
 const picker = ref<HTMLInputElement | null>(null)
+const dragging = ref(false)
 
 onMounted(() => void saves.refresh().catch((e) => console.error('[trpg-assistant] 读取存档列表失败', e)))
 
@@ -69,6 +70,12 @@ async function onPurgeAll(): Promise<void> {
   if (ok) await guarded(() => saves.purge(saves.deleted.map((s) => s.id)), '清空失败')
 }
 
+async function onDrop(event: DragEvent): Promise<void> {
+  dragging.value = false
+  const file = event.dataTransfer?.files?.[0]
+  if (file && !campaign.readOnly) await openImportPicker(file)
+}
+
 async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -78,7 +85,7 @@ async function onFile(event: Event): Promise<void> {
 </script>
 
 <template>
-  <div class="trpg-drawer" data-testid="save-drawer">
+  <div class="trpg-drawer" data-testid="save-drawer" :data-dragging="dragging" @dragover.prevent="dragging = true" @dragleave.self="dragging = false" @drop.prevent="onDrop">
     <section v-if="campaign.hasCampaign" class="trpg-drawer__current">
       <div class="trpg-drawer__name">
         <span class="trpg-drawer__title">{{ current?.name ?? '当前存档' }}</span>

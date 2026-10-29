@@ -40,7 +40,8 @@ try {
         const page = await context.newPage()
         const errors = []
         page.on('pageerror', (e) => errors.push(e.message))
-        page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+        // 断网测试会故意让下载失败，这类日志不算脚本错误
+        page.on('console', (m) => m.type() === 'error' && !/net::ERR_FAILED|安装失败：dnd5e2014-scag/.test(m.text()) && errors.push(m.text()))
         await page.goto(url)
         await page.waitForSelector('#trpg-assistant-root', { state: 'attached' })
         check(`[${label}] 扩展挂载`, true)
