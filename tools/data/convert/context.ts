@@ -6,7 +6,7 @@ export interface ConvertContext {
   classIds: Map<string, string>
   subclassIds: Map<string, string>
   spellLookup: Record<string, unknown>
-  featuresByOwner: Map<string, Array<{ id: string; name: string; level: number }>>
+  featuresByOwner: Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>
   subclassLevelByClass: Map<string, number>
   tablesByParent: Map<string, Array<{ id: string; name: string }>>
   tableByName: Map<string, string>
@@ -28,7 +28,7 @@ export function makeContext(input: {
   classIds: Map<string, string>
   subclassIds: Map<string, string>
   spellLookup: Record<string, unknown>
-  featuresByOwner: Map<string, Array<{ id: string; name: string; level: number }>>
+  featuresByOwner: Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>
   subclassLevelByClass: Map<string, number>
   tablesByParent: Map<string, Array<{ id: string; name: string }>>
   tableByName: Map<string, string>

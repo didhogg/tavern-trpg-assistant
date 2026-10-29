@@ -3,7 +3,7 @@ import type { CoverageEntry } from '../config/fieldCoverage'
 import { KNOWN_EMPTY } from '../config/knownEmpty'
 
 /** 已完成并承诺兑现的工作包；每个包提交前加入。R0 为空。 */
-export const DELIVERED_WP: string[] = []
+export const DELIVERED_WP: string[] = ['R1']
 
 function values(value: unknown, path: string): unknown[] {
   if (!value || typeof value !== 'object') return []

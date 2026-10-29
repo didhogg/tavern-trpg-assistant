@@ -155,12 +155,12 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     addRef(index, { id: entry.id, type: entry.type, name: entry.name, packId: entry.packId }, entry.source)
     if (entry.nameEn && entry.nameEn !== entry.name) addRef(index, { id: entry.id, type: entry.type, name: entry.nameEn, packId: entry.packId }, entry.source)
   }
-  const featuresByOwner = new Map<string, Array<{ id: string; name: string; level: number }>>()
+  const featuresByOwner = new Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>()
   const subclassLevelByClass = new Map<string, number>()
   for (const entry of planned) {
     if (entry.type !== 'feature' || !entry.context.ownerId) continue
     const list = featuresByOwner.get(entry.context.ownerId) ?? []
-    list.push({ id: entry.id, name: entry.name, level: Number(entry.raw.level ?? 0) })
+    list.push({ id: entry.id, name: entry.name, level: Number(entry.raw.level ?? 0), raw: entry.raw })
     featuresByOwner.set(entry.context.ownerId, list)
     if (entry.context.ownerType === 'subclass' && typeof entry.raw.level === 'number') {
       const subclass = byId.get(entry.context.ownerId)

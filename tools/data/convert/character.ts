@@ -125,13 +125,46 @@ function expandedSpells(raw: Record<string, unknown>, ctx: ConvertContext): Arra
 }
 
 function mergeAdvancement(items: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
-  const seen = new Set<string>()
-  return items.filter((item) => {
-    const key = `${String(item.kind)}|${String(item.id ?? item.level ?? '')}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  const out: Array<Record<string, unknown>> = []
+  const index = new Map<string, Record<string, unknown>>()
+  for (const item of items) {
+    const kind = String(item.kind)
+    const level = String(item.level ?? '')
+    const key = kind === 'itemGrant'
+      ? `${kind}|${level}|${String(item.optional ?? false)}`
+      : `${kind}|${level}|${String(item.id ?? item.featureType ?? '')}`
+    const current = index.get(key)
+    if (current && kind === 'itemGrant') {
+      current.items = [...new Set([...(current.items as string[]), ...((item.items as string[] | undefined) ?? [])])]
+      continue
+    }
+    if (current) continue
+    const copy = { ...item }
+    index.set(key, copy)
+    out.push(copy)
+  }
+  return out
+}
+
+function optionRefs(raw: Record<string, unknown>): { level: number; count: number; names: string[] }[] {
+  const out: Array<{ level: number; count: number; names: string[] }> = []
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) return value.forEach(walk)
+    if (!value || typeof value !== 'object') return
+    const rec = value as Record<string, unknown>
+    if (rec.type === 'options' && Array.isArray(rec.entries)) {
+      const names = rec.entries.flatMap((x) => {
+        const r = x as Record<string, unknown>
+        if (r.type !== 'refSubclassFeature' && r.type !== 'refClassFeature') return []
+        const text = str(r.subclassFeature) || str(r.classFeature)
+        return text ? [text.split('|')[0]] : []
+      }).filter(Boolean)
+      if (names.length) out.push({ level: Number(raw.level ?? 0), count: Number(rec.count ?? 1), names })
+    }
+    for (const item of Object.values(rec)) walk(item)
+  }
+  walk(raw.entries)
+  return out
 }
 
 export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
@@ -173,6 +206,13 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
 export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const features = ctx.featuresByOwner.get(entry.id) ?? []
+  const optionNames = new Set<string>()
+  const choices: Array<Record<string, unknown>> = []
+  for (const feature of features) for (const choice of optionRefs(feature.raw)) {
+    const pool = choice.names.map((name) => features.find((f) => f.name === name && f.level === choice.level)?.id ?? features.find((f) => f.name === name)?.id ?? ctx.resolveEntryId('feature', name)).filter((id): id is string => !!id)
+    for (const name of choice.names) optionNames.add(name)
+    if (pool.length) choices.push({ kind: 'itemChoice', level: choice.level || feature.level, count: choice.count, pool })
+  }
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
@@ -181,7 +221,8 @@ export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline
     ...(spellcastingOf(raw, true) ? { spellcasting: spellcastingOf(raw, true) } : {}),
     ...(expandedSpells(raw, ctx) ? { expandedSpells: expandedSpells(raw, ctx) } : {}),
     advancement: mergeAdvancement([
-      ...features.map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
+      ...features.filter((f) => !optionNames.has(f.name)).map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
+      ...choices,
       ...foundryScaleValues(ctx, entry),
     ]),
   }
