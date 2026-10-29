@@ -2,12 +2,14 @@ import type { Entry } from '../../../src/schemas/pack'
 import type { RawData } from '../extract/load'
 import type { ConversionResult } from '../convert'
 import { BOOK_SOURCES } from '../config/books'
+import { LATIN_ALLOW } from '../config/latinAllow'
 
 export interface HealthMetric {
   id: string
   label: string
-  count: number
-  note?: string
+  definition: string
+  status: 'measured' | 'pending' | 'informational'
+  count?: number
 }
 
 function allEntries(result: ConversionResult): Entry[] {
@@ -21,8 +23,24 @@ function strings(value: unknown, out: string[] = []): string[] {
   return out
 }
 
-function entryText(entry: Entry): string {
-  return strings(entry.data.text).join(' ')
+function walk(v: unknown, visit: (block: Record<string, unknown>) => void): void {
+  if (Array.isArray(v)) { for (const item of v) walk(item, visit); return }
+  if (!v || typeof v !== 'object') return
+  const rec = v as Record<string, unknown>
+  visit(rec)
+  for (const item of Object.values(rec)) walk(item, visit)
+}
+
+function groupCount(entries: Entry[], type: string | null): number {
+  const groups = new Map<string, number>()
+  for (const e of entries) {
+    if (type && e.type !== type) continue
+    if (!type && e.type === 'feature') continue
+    const book = (e.data.src as { book?: string } | undefined)?.book ?? ''
+    const key = `${e.type}|${book}|${e.name}`
+    groups.set(key, (groups.get(key) ?? 0) + 1)
+  }
+  return [...groups.values()].filter((n) => n > 1).length
 }
 
 export function healthMetrics(result: ConversionResult, data: RawData): HealthMetric[] {
@@ -35,76 +53,69 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
   }
   const orphan = features.filter((e) => ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !referenced.has(e.id))
   const optional = features.filter((e) => (e.data.owner as { type?: string } | undefined)?.type === 'optional')
-  const bgPrefix = features.filter((e) => e.name.startsWith('特性：'))
+  const bgPrefix = entries.filter((e) => (e.type === 'feature' || e.type === 'background') && e.name.includes('特性：'))
   const dmgRaces = entries.filter((e) => e.type === 'race' && (e.data.src as { book?: string } | undefined)?.book === 'DMG')
-  const dup = new Map<string, number>()
-  for (const e of entries) {
-    const src = (e.data.src as { book?: string } | undefined)?.book ?? ''
-    const key = `${e.type}|${src}|${e.name}`
-    dup.set(key, (dup.get(key) ?? 0) + 1)
-  }
-  const duplicateNames = [...dup.values()].filter((n) => n > 1).length
   const tableNoParent = entries.filter((e) => e.type === 'table' && !(e.data.parent as unknown) && !(e.data.chapter as unknown)).length
-  const formulaMarkers = entries.reduce((n, e) => n + (JSON.stringify(e.data).match(/\{\{spellcasting_mod\}\}/g)?.length ?? 0), 0) + entries.reduce((n, e) => n + (JSON.stringify(e.data).match(/class\.druid\.level/g)?.length ?? 0), 0)
-  const tableCellRefs = entries.filter((e) => {
-    let hit = false
-    const walk = (v: unknown): void => {
-      if (hit) return
-      if (Array.isArray(v)) { for (const item of v) walk(item); return }
-      if (!v || typeof v !== 'object') return
-      const rec = v as Record<string, unknown>
-      const table = rec.table as { rows?: unknown[][] } | undefined
-      if (table?.rows) for (const row of table.rows) for (const cell of row) if (String(cell).includes('{{ref:')) hit = true
-      for (const item of Object.values(rec)) walk(item)
-    }
-    walk(e.data.text)
-    return hit
-  }).length
-  const emptyCells = entries.reduce((n, e) => {
-    let count = 0
-    const walk = (v: unknown): void => {
-      if (Array.isArray(v)) { for (const item of v) walk(item); return }
-      if (!v || typeof v !== 'object') return
-      const rec = v as Record<string, unknown>
-      const table = rec.table as { rows?: unknown[][] } | undefined
-      if (table?.rows) for (const row of table.rows) for (const cell of row) if (String(cell) === '') count++
-      for (const item of Object.values(rec)) walk(item)
-    }
-    walk(e.data.text)
-    return n + count
+  const formulaMarkers = entries.reduce((n, e) => n + (JSON.stringify(e.data).match(/\{\{spellcasting_mod\}\}/g)?.length ?? 0) + (JSON.stringify(e.data).match(/class\.druid\.level/g)?.length ?? 0), 0)
+  let tableCellRefs = 0
+  let emptyCells = 0
+  for (const e of entries) walk(e.data.text, (block) => {
+    const table = block.table as { rows?: unknown[][] } | undefined
+    if (!table?.rows) return
+    if (table.rows.some((row) => row.some((cell) => String(cell).includes('{{ref:')))) tableCellRefs += 1
+    for (const row of table.rows) for (const cell of row) if (String(cell) === '') emptyCells += 1
+  })
+  const d2 = entries.reduce((n, e) => {
+    const props = (e.data.properties as string[] | undefined) ?? ((e.data.weapon as { properties?: string[] } | undefined)?.properties ?? [])
+    return n + props.filter((p) => String(p).includes('|')).length
   }, 0)
   const noActions = entries.filter((e) => e.type === 'spell' && (e.data.spellAttack || e.data.save || e.data.damage) && !(e.data.activities as unknown[] | undefined)?.length).length
   const missingName = entries.filter((e) => ((e.data.credit as { missing?: string[] } | undefined)?.missing ?? []).includes('name')).length
-  const cnEnGlued = entries.reduce((n, e) => n + (entryText(e).match(/[\u4e00-\u9fff][A-Za-z]/g)?.length ?? 0), 0)
+  const d1 = entries.reduce((n, e) => {
+    for (let text of strings(e.data.text) as string[]) {
+      text = text.replace(/\{\{[^{}]*\}\}/g, '')
+      for (const match of text.matchAll(/[\u4e00-\u9fff]([A-Za-z]{3,})/g)) if (!LATIN_ALLOW.has(match[1])) n += 1
+    }
+    return n
+  }, 0)
+  const d7 = entries.reduce((n, e) => {
+    let count = 0
+    walk(e.data.text, (block) => {
+      if (block.p === '') count += 1
+      if (Array.isArray(block.list)) {
+        if (block.list.length === 0) count += 1
+        for (const item of block.list) if (item === '') count += 1
+      }
+    })
+    return n + count
+  }, 0)
   const tce = data.classFeatures.filter((f) => f.isClassFeatureVariant === true).length
   const reprintMonsters = data.monsters.filter((m) => Array.isArray(m.reprintedAs) && m.reprintedAs.some((r) => BOOK_SOURCES.has(String(r).split('|')[1]) && String(r).split('|')[1] !== m.source)).length
   const reprintRaces = [...data.races, ...data.subraces].filter((m) => Array.isArray(m.reprintedAs) && m.reprintedAs.some((r) => BOOK_SOURCES.has(String(r).split('|')[1]) && String(r).split('|')[1] !== m.source)).length
-  const emptyText = entries.filter((e) => JSON.stringify(e.data.text ?? '').includes('"p":""') || JSON.stringify(e.data.text ?? '').includes('"list":[]')).length
   return [
-    { id: 'A1', label: '孤儿特性', count: orphan.length, note: 'owner 为 class/subclass 且未被 advancement 引用' },
-    { id: 'A2', label: '可选特性 owner=optional', count: optional.length },
-    { id: 'A3', label: 'TCE 可选职业特性源记录', count: tce },
-    { id: 'A4', label: '缺少 trait 的附赠熟练', count: features.filter((e) => e.id.includes('bonus-proficien')).length, note: '按附赠熟练特性 id 计；R5 补 trait' },
-    { id: 'A5', label: '公式/标记错误出现次数', count: formulaMarkers },
-    { id: 'B1-ASI', label: '属性值提升特性源记录', count: data.classFeatures.filter((f) => String(f.name).includes('属性值提升')).length },
-    { id: 'B2', label: '背景特性名带「特性：」前缀', count: bgPrefix.length },
-    { id: 'B3', label: '通用魔法变体源记录', count: data.magicVariants.filter((v) => String(v.type).startsWith('GV')).length },
-    { id: 'B4-monster', label: '跨核心书重印的怪物源记录', count: reprintMonsters },
-    { id: 'B4-race', label: '跨核心书重印的种族/亚种族源记录', count: reprintRaces },
-    { id: 'B5', label: 'DMG NPC 种族', count: dmgRaces.length },
-    { id: 'B6', label: '同书同名条目数', count: duplicateNames },
-    { id: 'B7', label: '重复拼接随机表名', count: 0, note: 'R9 导入 parent 后才能判断' },
-    { id: 'B8', label: '没有所属条目的随机表', count: tableNoParent },
-    { id: 'C-language', label: '语言源记录', count: 0, note: 'R11 导入，P0 复核源文件为 201 条（非核心范围）' },
-    { id: 'D1', label: '中文后紧跟英文原名出现次数', count: cnEnGlued },
-    { id: 'D2', label: '带来源后缀的武器属性', count: entries.reduce((n, e) => n + ((e.data.weapon as { properties?: string[] } | undefined)?.properties ?? []).filter((p) => String(p).includes('|')).length, 0), note: '当前为 items 的 properties 出现数' },
-    { id: 'D3', label: '表格单元里有引用的条目', count: tableCellRefs },
-    { id: 'D4', label: '空表格单元', count: emptyCells },
-    { id: 'D5', label: '中英混用的职业表列名', count: entries.filter((e) => e.type === 'class' && Array.isArray((e.data.table as { cols?: string[] } | undefined)?.cols) && ((e.data.table as { cols: string[] }).cols.some((c) => /(?:st|th|环)/i.test(c)))).length },
-    { id: 'D6', label: '缺中文名称', count: missingName },
-    { id: 'D7', label: '空段落/空列表', count: emptyText },
-    { id: 'D9', label: '对比页 JSON 显示', count: 0, note: '界面项，R15 处理' },
-    { id: 'D10', label: '新字段未显示', count: 0, note: '界面项，R15 处理' },
-    { id: 'spell-actions', label: '有攻击/豁免/伤害但无行动的法术', count: noActions },
+    { id: 'A1', label: '孤儿特性', status: 'measured', count: orphan.length, definition: 'owner 为 class/subclass 且未被任何 advancement 授予或列入选择的特性' },
+    { id: 'A2', label: '可选特性 owner=optional', status: 'measured', count: optional.length, definition: 'owner.type 为 optional 的可选特性' },
+    { id: 'A3', label: 'TCE 可选职业特性源记录', status: 'measured', count: tce, definition: 'classFeatures 中 isClassFeatureVariant=true 的记录' },
+    { id: 'A4', label: '有附赠熟练但没有 trait 升级操作的特性', status: 'measured', count: features.filter((e) => e.id.includes('bonus-proficien')).length, definition: 'id 含 bonus-proficien 的附赠熟练特性' },
+    { id: 'A5', label: '公式/标记错误出现次数', status: 'measured', count: formulaMarkers, definition: '{{spellcasting_mod}} 与 class.druid.level 错公式出现次数' },
+    { id: 'B1-ASI', label: '属性值提升特性源记录', status: 'measured', count: data.classFeatures.filter((f) => String(f.name).includes('属性值提升')).length, definition: 'classFeatures 名称含「属性值提升」的记录' },
+    { id: 'B2', label: '背景特性/背景名带「特性：」', status: 'measured', count: bgPrefix.length, definition: 'feature 或 background 名称含「特性：」的条目（含变体贵族：家仆）' },
+    { id: 'B3', label: '通用魔法变体源记录', status: 'measured', count: data.magicVariants.filter((v) => String(v.type).startsWith('GV')).length, definition: '核心范围 magicvariant 中 type 以 GV| 开头的模板记录' },
+    { id: 'B4-monster', label: '跨核心书重印怪物源记录', status: 'measured', count: reprintMonsters, definition: 'reprintedAs 指向核心书且目标书不同的怪物' },
+    { id: 'B4-race', label: '跨核心书重印种族/亚种族源记录', status: 'measured', count: reprintRaces, definition: 'reprintedAs 指向核心书且目标书不同的种族与亚种族' },
+    { id: 'B5', label: 'DMG NPC 种族', status: 'measured', count: dmgRaces.length, definition: 'src.book=DMG 的 race 条目' },
+    { id: 'B6a', label: 'feature 以外同书同名组', status: 'measured', count: groupCount(entries, null), definition: '非 feature 条目按 type+书+名称分组的重复组数' },
+    { id: 'B6b', label: 'feature 同书同名组', status: 'measured', count: groupCount(entries, 'feature'), definition: 'feature 按书+名称分组的重复组数，只报数不改名' },
+    { id: 'B7', label: '重复拼接随机表名', status: 'pending', definition: 'R9 后才能判断表名与所属条目名重复拼接' },
+    { id: 'B8', label: '没有所属条目的随机表', status: 'measured', count: tableNoParent, definition: 'table 条目没有 parent/chapter 的数量；R9 后目标 0' },
+    { id: 'C-language', label: '语言源记录', status: 'pending', definition: 'R11 导入语言后才能报数与核对' },
+    { id: 'D1', label: '汉字紧挨拉丁词', status: 'measured', count: d1, definition: '正文中一个汉字后紧接 3 个以上拉丁字母，排除 {{…}} 与 latinAllow 白名单' },
+    { id: 'D2', label: '物品属性带来源代码', status: 'measured', count: d2, definition: 'properties 顶层（缺失时用 weapon.properties）中含 | 的属性代码出现次数' },
+    { id: 'D3', label: '表格单元引用条目', status: 'informational', count: tableCellRefs, definition: '正文表格单元含 {{ref:…}} 的条目数，仅作参考' },
+    { id: 'D4', label: '空表格单元', status: 'measured', count: emptyCells, definition: '表格 rows 中为空字符串的单元数' },
+    { id: 'D5', label: '中英混用的职业表列名', status: 'measured', count: entries.filter((e) => e.type === 'class' && Array.isArray((e.data.table as { cols?: string[] } | undefined)?.cols) && (e.data.table as { cols: string[] }).cols.some((c) => /(?:st|th|环)/i.test(c))).length, definition: 'class.table.cols 含 st/th/环 的条目数' },
+    { id: 'D6', label: '缺中文名称', status: 'measured', count: missingName, definition: 'credit.missing 含 name 的条目' },
+    { id: 'D7', label: '空段落/空列表项', status: 'measured', count: d7, definition: '正文块中 p 为空字符串或 list 项为空字符串的出现次数' },
+    { id: 'spell-actions', label: '有攻击/豁免/伤害但无行动的法术', status: 'measured', count: noActions, definition: 'spell 有攻击/豁免/伤害但 activities 为空' },
   ]
 }

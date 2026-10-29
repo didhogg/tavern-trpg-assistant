@@ -3,11 +3,13 @@ import { FIELD_COVERAGE } from '../../tools/data/config/fieldCoverage'
 import { checkFieldCoverage } from '../../tools/data/validate/coverage'
 
 describe('R0 字段覆盖矩阵', () => {
-  it('核心来源没有未登记字段', async () => {
+  it('核心来源没有未登记字段，且登记自检通过', async () => {
     const summary = await checkFieldCoverage()
-    expect(summary.paths).toBeGreaterThan(2000)
+    expect(summary.paths).toBeGreaterThan(5000)
     expect(summary.unregistered).toEqual([])
     expect(summary.mapped + summary.text + summary.dropped).toBe(summary.paths)
+    expect(summary.imageHits).toBeGreaterThan(300)
+    expect(summary.droppedByKind['image']).toBeGreaterThan(300)
   })
 
   it('移掉一个登记后能被报出来', async () => {
