@@ -1,13 +1,48 @@
 import type { CoverageEntry } from './types'
 import { IMAGE_PATH } from './image'
+import { entryDataByType } from '../../../../src/rules/dnd5e2014/data/entries'
+import { PLANNED_FIELDS } from '../plannedFields'
+import { outputTypeOf } from '../outputTypes'
 
 const TO = /^(data\.[A-Za-z0-9_$[\]\.]+|entry\.[A-Za-z0-9_$]+|i18n\.en\.[A-Za-z0-9_$[\]\.]+)$/
 const WP = /^R(?:[1-9]|1[0-5])$/
 const KINDS = new Set(['image', 'audio', 'layout', '2024-only', 'internal-meta', 'derived'])
 const PROTECTED = /(?:^|\.)(uses|activities|effects|entries|name|level|damage|save|range|duration|components|prerequisite|requires|recovery|charges)(?:\.|\[|$)/i
 
+function hasOutputField(outputType: string, first: string): boolean {
+  if (first === 'system') return false
+  const schema = entryDataByType[outputType as keyof typeof entryDataByType]
+  const shape = schema && typeof schema === 'object' && 'shape' in schema ? (schema as { shape: Record<string, unknown> }).shape : undefined
+  return !!shape?.[first] || !!PLANNED_FIELDS[`${outputType}.${first}`]
+}
+
+export function expectedWp(sourceType: string, path: string, to: string): string {
+  if (to.startsWith('i18n.en.')) return 'R13'
+  if (/^(data\.(supersededBy|versionGroup|playable|nameSuffix)|entry\.nameSuffix)$/.test(to)) return 'R10'
+  if (to === 'data.lore') return 'R8'
+  if (sourceType === 'book' || sourceType === 'location' || outputTypeOf(sourceType) === 'book') return 'R12'
+  if (['table', 'table-group', 'individual', 'hoard', 'gems', 'art-object', 'magic-item', 'dragon', 'dragon-mundane-item', 'encounter', 'cr', 'name', 'deck', 'card', 'life-class', 'life-background', 'life-trinket'].includes(sourceType)) return 'R9'
+  if (['language', 'deity', 'reward', 'boon', 'cult', 'hazard', 'trap', 'object', 'vehicle', 'skill', 'sense', 'item-property', 'item-type', 'item-type-additional-entries', 'language-script', 'monster-feature', 'makebrew-creature-trait', 'makebrew-creature-action', 'recipe', 'charoption', 'charoption-fluff', 'recipe-fluff', 'language-fluff', 'reward-fluff', 'vehicle-fluff', 'object-fluff', 'trap-fluff', 'hazard-fluff'].includes(sourceType)) return 'R11'
+  if (sourceType === 'spell' || sourceType === 'spell-fluff') {
+    return /(?:tags|scalingLevelDice|damageInflict|conditionInflict|damageResist|damageImmune|damageVulnerable|affectsCreatureType)/i.test(path) ? 'R7' : 'R14'
+  }
+  if (sourceType === 'optional-feature') return 'R2'
+  if (sourceType === 'class-feature' || sourceType === 'subclass-feature' || sourceType === 'race-feature') {
+    if (/(?:uses|effects|activities|charges)/i.test(path)) return 'R5'
+    if (sourceType === 'class-feature' && /optional|isClassFeatureVariant/i.test(path)) return 'R3'
+    return 'R1'
+  }
+  if (sourceType === 'class' || sourceType === 'subclass') return /advancement|explain|feature/i.test(path) ? 'R1' : 'R1'
+  if (['race', 'subrace', 'background', 'feat'].includes(sourceType)) return 'R5'
+  if (sourceType === 'item' || sourceType === 'base-item' || sourceType === 'item-group' || sourceType === 'item-entry' || sourceType === 'magic-variant') return 'R6'
+  if (sourceType === 'monster' || sourceType === 'monster-template' || sourceType === 'legendary-group' || sourceType === 'legendary-group-template') return 'R7'
+  if (['action', 'condition', 'condition-fluff', 'disease', 'status'].includes(sourceType)) return 'R8'
+  return 'R14'
+}
+
 export function validateCoverageEntry(path: string, entry: CoverageEntry): void {
   if (!['mapped', 'text', 'dropped'].includes(entry.how)) throw new Error(`登记方式非法：${path}`)
+  const sourceType = path.split('.', 1)[0]
   if (entry.how === 'dropped') {
     if (!entry.kind || !KINDS.has(entry.kind)) throw new Error(`dropped 缺少 kind：${path}`)
     if (!entry.why?.trim()) throw new Error(`dropped 缺少理由：${path}`)
@@ -19,4 +54,11 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
   if (!entry.to || !TO.test(entry.to)) throw new Error(`to 不是具体输出位置：${path} → ${entry.to ?? '（空）'}`)
   if (/R\d|汇总转换|统一处理|批量|TODO/i.test(entry.to)) throw new Error(`to 仍是批量标签：${path} → ${entry.to}`)
   if (!entry.wp || !WP.test(entry.wp)) throw new Error(`wp 缺失或非法：${path}`)
+  if (entry.to.startsWith('data.')) {
+    const first = entry.to.slice(5).split(/[.\[]/, 1)[0]
+    if (first === 'system') throw new Error(`data.system 一律拒绝：${path}`)
+    if (!hasOutputField(outputTypeOf(sourceType), first)) throw new Error(`目标字段不在输出结构：${path} → ${entry.to}`)
+  }
+  const want = expectedWp(sourceType, path, entry.to)
+  if (entry.wp !== want) throw new Error(`wp 与规则不一致：${path} → ${entry.to}，应为 ${want}，实际 ${entry.wp}`)
 }

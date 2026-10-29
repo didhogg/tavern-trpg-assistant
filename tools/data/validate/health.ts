@@ -3,6 +3,7 @@ import type { RawData } from '../extract/load'
 import type { ConversionResult } from '../convert'
 import { BOOK_SOURCES } from '../config/books'
 import { LATIN_ALLOW } from '../config/latinAllow'
+import { NAME_OVERRIDES } from '../config/nameOverrides'
 
 export interface HealthMetric {
   id: string
@@ -53,7 +54,8 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
   }
   const orphan = features.filter((e) => ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !referenced.has(e.id))
   const optional = features.filter((e) => (e.data.owner as { type?: string } | undefined)?.type === 'optional')
-  const bgPrefix = entries.filter((e) => (e.type === 'feature' || e.type === 'background') && e.name.includes('特性：'))
+  const bgPrefix = features.filter((e) => e.name.startsWith('特性：'))
+  const bgNameMismatch = entries.filter((e) => NAME_OVERRIDES[e.id] && e.name !== NAME_OVERRIDES[e.id].name)
   const dmgRaces = entries.filter((e) => e.type === 'race' && (e.data.src as { book?: string } | undefined)?.book === 'DMG')
   const tableNoParent = entries.filter((e) => e.type === 'table' && !(e.data.parent as unknown) && !(e.data.chapter as unknown)).length
   const formulaMarkers = entries.reduce((n, e) => n + (JSON.stringify(e.data).match(/\{\{spellcasting_mod\}\}/g)?.length ?? 0) + (JSON.stringify(e.data).match(/class\.druid\.level/g)?.length ?? 0), 0)
@@ -65,10 +67,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     if (table.rows.some((row) => row.some((cell) => String(cell).includes('{{ref:')))) tableCellRefs += 1
     for (const row of table.rows) for (const cell of row) if (String(cell) === '') emptyCells += 1
   })
-  const d2 = entries.reduce((n, e) => {
-    const props = (e.data.properties as string[] | undefined) ?? ((e.data.weapon as { properties?: string[] } | undefined)?.properties ?? [])
-    return n + props.filter((p) => String(p).includes('|')).length
-  }, 0)
+  const d2 = entries.filter((e) => e.type === 'item' && ((e.data.properties as string[] | undefined) ?? ((e.data.weapon as { properties?: string[] } | undefined)?.properties ?? [])).some((p) => String(p).includes('|'))).length
   const noActions = entries.filter((e) => e.type === 'spell' && (e.data.spellAttack || e.data.save || e.data.damage) && !(e.data.activities as unknown[] | undefined)?.length).length
   const missingName = entries.filter((e) => ((e.data.credit as { missing?: string[] } | undefined)?.missing ?? []).includes('name')).length
   const d1 = entries.reduce((n, e) => {
@@ -99,7 +98,8 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     { id: 'A4', label: '有附赠熟练但没有 trait 升级操作的特性', status: 'measured', count: features.filter((e) => e.id.includes('bonus-proficien')).length, definition: 'id 含 bonus-proficien 的附赠熟练特性' },
     { id: 'A5', label: '公式/标记错误出现次数', status: 'measured', count: formulaMarkers, definition: '{{spellcasting_mod}} 与 class.druid.level 错公式出现次数' },
     { id: 'B1-ASI', label: '属性值提升特性源记录', status: 'measured', count: data.classFeatures.filter((f) => String(f.name).includes('属性值提升')).length, definition: 'classFeatures 名称含「属性值提升」的记录' },
-    { id: 'B2', label: '背景特性/背景名带「特性：」', status: 'measured', count: bgPrefix.length, definition: 'feature 或 background 名称含「特性：」的条目（含变体贵族：家仆）' },
+    { id: 'B2', label: 'feature 名称带「特性：」前缀', status: 'measured', count: bgPrefix.length, definition: 'feature 类型名称以「特性：」开头的条目' },
+    { id: 'B2b', label: '变体背景名称与英文名不对应', status: 'measured', count: bgNameMismatch.length, definition: 'nameOverrides 中登记、当前中文名仍与英文名不对应的变体背景' },
     { id: 'B3', label: '通用魔法变体源记录', status: 'measured', count: data.magicVariants.filter((v) => String(v.type).startsWith('GV')).length, definition: '核心范围 magicvariant 中 type 以 GV| 开头的模板记录' },
     { id: 'B4-monster', label: '跨核心书重印怪物源记录', status: 'measured', count: reprintMonsters, definition: 'reprintedAs 指向核心书且目标书不同的怪物' },
     { id: 'B4-race', label: '跨核心书重印种族/亚种族源记录', status: 'measured', count: reprintRaces, definition: 'reprintedAs 指向核心书且目标书不同的种族与亚种族' },
@@ -110,7 +110,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     { id: 'B8', label: '没有所属条目的随机表', status: 'measured', count: tableNoParent, definition: 'table 条目没有 parent/chapter 的数量；R9 后目标 0' },
     { id: 'C-language', label: '语言源记录', status: 'pending', definition: 'R11 导入语言后才能报数与核对' },
     { id: 'D1', label: '汉字紧挨拉丁词', status: 'measured', count: d1, definition: '正文中一个汉字后紧接 3 个以上拉丁字母，排除 {{…}} 与 latinAllow 白名单' },
-    { id: 'D2', label: '物品属性带来源代码', status: 'measured', count: d2, definition: 'properties 顶层（缺失时用 weapon.properties）中含 | 的属性代码出现次数' },
+    { id: 'D2', label: '物品属性带来源代码', status: 'measured', count: d2, definition: 'properties 顶层（缺失时用 weapon.properties）至少含一个带 | 的属性代码的物品条目数（同一物品只算一次）' },
     { id: 'D3', label: '表格单元引用条目', status: 'informational', count: tableCellRefs, definition: '正文表格单元含 {{ref:…}} 的条目数，仅作参考' },
     { id: 'D4', label: '空表格单元', status: 'measured', count: emptyCells, definition: '表格 rows 中为空字符串的单元数' },
     { id: 'D5', label: '中英混用的职业表列名', status: 'measured', count: entries.filter((e) => e.type === 'class' && Array.isArray((e.data.table as { cols?: string[] } | undefined)?.cols) && (e.data.table as { cols: string[] }).cols.some((c) => /(?:st|th|环)/i.test(c))).length, definition: 'class.table.cols 含 st/th/环 的条目数' },

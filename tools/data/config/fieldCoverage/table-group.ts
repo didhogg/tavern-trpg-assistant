@@ -1,7 +1,7 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "table-group.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R9"},
+  "table-group.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "table-group.chapter": {"how":"mapped","to":"data.chapter","wp":"R9"},
   "table-group.chapter.index": {"how":"mapped","to":"data.chapter.index","wp":"R9"},
   "table-group.chapter.name": {"how":"mapped","to":"data.chapter.name","wp":"R9"},
@@ -11,16 +11,16 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "table-group.name": {"how":"mapped","to":"entry.name","wp":"R9"},
   "table-group.page": {"how":"mapped","to":"data.src.page","wp":"R9"},
   "table-group.source": {"how":"mapped","to":"data.src.book","wp":"R9"},
-  "table-group.tables": {"how":"mapped","to":"data.tables","wp":"R9"},
-  "table-group.tables[].caption": {"how":"mapped","to":"data.tables[].caption","wp":"R9"},
+  "table-group.tables": {"how":"mapped","to":"data.text","wp":"R9"},
+  "table-group.tables[].caption": {"how":"mapped","to":"data.text","wp":"R9"},
   "table-group.tables[].colLabels": {"how":"mapped","to":"data.cols","wp":"R9"},
-  "table-group.tables[].colStyles": {"how":"mapped","to":"data.tables[].colStyles","wp":"R9"},
-  "table-group.tables[].footnotes": {"how":"mapped","to":"data.tables[].footnotes","wp":"R9"},
+  "table-group.tables[].colStyles": {"how":"mapped","to":"data.text","wp":"R9"},
+  "table-group.tables[].footnotes": {"how":"mapped","to":"data.text","wp":"R9"},
   "table-group.tables[].page": {"how":"mapped","to":"data.src.page","wp":"R9"},
   "table-group.tables[].rows": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table-group.tables[].rows[].row": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table-group.tables[].rows[].style": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table-group.tables[].rows[].type": {"how":"mapped","to":"data.rows","wp":"R9"},
-  "table-group.tables[].type": {"how":"mapped","to":"data.tables[].type","wp":"R9"},
-  "table-group.type": {"how":"mapped","to":"data.type","wp":"R9"},
+  "table-group.tables[].type": {"how":"mapped","to":"data.text","wp":"R9"},
+  "table-group.type": {"how":"mapped","to":"data.text","wp":"R9"},
 }

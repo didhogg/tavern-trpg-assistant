@@ -19,6 +19,11 @@ describe('R0 返工验收', () => {
     expect(() => validateCoverageEntry('item.activities[].uses.recovery', { how: 'dropped', kind: 'internal-meta', why: 'x' })).toThrow()
   })
 
+  it('RW9 拒绝 data.system，RW10 拒绝错位 i18n wp', () => {
+    expect(() => validateCoverageEntry('feat.system.uses.max', { how: 'mapped', to: 'data.system.uses.max', wp: 'R5' })).toThrow()
+    expect(() => validateCoverageEntry('feat.ENG_name', { how: 'mapped', to: 'i18n.en.name', wp: 'R8' })).toThrow()
+  })
+
   it('扫描到无来源记录和 inherits.source', async () => {
     const scan = await scanSourceRecords()
     const count = (file: string, key: string): number => scan.records.filter((x) => x.file === file && x.key === key).length

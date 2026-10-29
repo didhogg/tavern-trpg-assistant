@@ -4,22 +4,23 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-- 目标：本次只做 D1.2a R0 返工，按执行手册 §14.3 的 RW1–RW8 重做扫描器、按类型拆分的字段覆盖矩阵、体检报数口径、兑现检查和对应测试，并重写检查点报告的 R0 部分。
-- 红线：不重做 P0、不开始 R1、不改转换器/数据包/界面；不推送/打标签/刷新 CDN/安装；不读凭证；不导入图片；不猜无来源记录归属；不放宽校验、不加宽例外、不删条目；不改规格 §5 字段；单文件 ≤400 行；不加 npm 依赖；一次本地提交。
-- 验收：P0 保留；RW1–RW8 逐项完成；矩阵每个类型分文件、每项有具体 `to` 与 `wp`、`dropped` 有 kind/理由；扫描逐文件对账；体检指标按 §14.4 定义并区分 pending；六类测试及变异通过；四条命令通过；汇报后停下等「检查点 1 通过」。
+- 目标：完成 D1.2a R0 第二轮修订（RW9–RW13），只动扫描器、矩阵、校验器、体检、测试与报告；随后按 RW13 复核后开始 R1 特性授予。
+- 红线：不重做 P0；不放宽校验/不加宽例外；不把 mapped/text 改成 dropped；不改规格 §5 字段；不推送/打标签/刷新 CDN/安装；不读凭证；不导入图片；保留 5,985 个已发布 id；单文件 ≤400 行；R0 与 R1 分别一次本地提交。
+- 验收：RW9 目标字段落在真实结构（`data.system.*` 0）、RW10 `wp` 自动一致；B2=35、B2b=2、D2=120、D1=484；四条命令通过且两次 build:data sha 一致；检查点报告末尾有完成记录；R1 金样测试与孤儿特性 0 完成后单独提交。
 
 ## 已完成
-- D1.2a R0 返工（P0 已通过；R0 等待复审）：
-  - 扫描器认 `source`、`inherits.source` 与逐项登记的无来源记录；`makebrew-creature`、`monsterfeatures`、`msbcr`、`recipes`、`charcreationoptions` 均进入扫描。逐文件对账：27,305 条 = 核心 9,027 + D1.2b 5,220 + 跳过 13,058。
-  - 字段矩阵改为按来源类型拆分：79 个类型、81 个类型文件（每个 ≤352 行），5,896 个路径；`mapped` 3,566 / `text` 1,908 / `dropped` 422；未登记 0。图片/音频规则命中 413 条。
-  - `tools/data/validate/delivered.ts` 与 `DELIVERED_WP` 已加入构建；R0 时为空。体检按 §14.4 重写，`B7`、`C-language` 输出 pending。
-  - 测试：`npm run check` 241 项、`npm run test:data` 59 项；`build:data` 连续两次一致；`build` 通过。
-  - 检查点报告 `docs/probes/D1.2a_检查点1.md` 保留 P0，重写 R0。未开始 R1。
+- D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
+  - RW9：`outputTypes.ts`、`plannedFields.ts` 与目标字段校验接入；1,846 条 `to` 修正，`data.system.*` 0，未登记 0；同路径 529 条，抽样 20 条见报告。
+  - RW10：`wp` 自动一致性校验接入，1,108 条修正；`i18n.en.*` R13、版本字段 R10、`lore` R8、表 R9、书 R12、新类型 R11、法术标签 R7/其余 R14。
+  - RW11：B2=35，新增 B2b=2（`nameOverrides.ts`，PHB 136 / SCAG 145）；D2=120，D1=484。
+  - RW12：无来源页码补中文版 PDF 页；RW13：monster 矩阵文件按 stats/actions/spellcasting/misc 命名，矩阵变更表在 `docs/probes/D1.2a_矩阵变更.md`。
+  - 测试 241 / 60；`build:data` 与 `build` 通过；R1 尚未开始。
 
 ## 检查点 1
-- 状态：**P0 通过；R0 返工完成，停在检查点 1，等待规划 agent 复审。**
-- 待决定：无来源记录页码依据、B2 的 36 定位、D1 新定义当前 484、D2 132 口径；见检查点报告 §2.6。
-- 未开始 R1。
+- 状态：**有条件通过；R0 第二轮修订完成，准备开始 R1。**
+- 未开始 R1（本轮 R0 提交后立即开工）。
+
+
 - M0；U2 定稿；M1 核心数据层。
 - M2（实现、复核与真机自检完成；50 条抽检已完成；数据 1.0.1 已发布）：
   - D1 数据定义：`src/rules/dnd5e2014/data/`（通用字段、15 种条目、7 种 advancement、7 种行动、正文块与行内标记、requires、ruleOptions/aiNotes）；`src/schemas/adventure/` 冒险内容项外壳。
@@ -43,7 +44,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
   - P11：校验、报告、626 行抽检表、`D1.1_确定性.md`；M2 自检新增人物规则抽样（6 步）；数据仓库本地提交 `6290d8b`。
 
 ## 证据
-- D1.2a R0 返工：5,896 路径、未登记 0；79 类型/81 文件；`npm run check` 241 项、`npm run test:data` 59 项；`build:data` 连续两次 sha256 一致；`build` 通过；检查点报告 `docs/probes/D1.2a_检查点1.md`。
+- D1.2a R0 复审修订：5,896 路径、未登记 0；79 类型/84 文件；`to` 修正 1,846、`wp` 修正 1,108、同路径 529；`npm run check` 241 项、`npm run test:data` 60 项；`build:data`/`build` 通过；矩阵变更表 `docs/probes/D1.2a_矩阵变更.md`。
 - D1.1：`npm run check` 241 项单元测试（24 个文件）；`npm run test:data` 51 项（14 个文件）；`npm run e2e` Chrome+WebKit 共 1610 项通过、0 失败，M1 10/10、M2 6/6。
 - D1.1：连续两次 `npm run build:data` 的 11 个当前包 sha256 相同，见 `docs/probes/D1.1_确定性.md`；合计 1.60MB，最大单包 SRD 约 487KB。
 - D1.1：`docs/probes/D1.1_人物数据_报告.md`（覆盖率、来源构成、未映射）；`docs/probes/D1.1_抽检.md`（626 行，页码与字段，结果栏待驾驶员填写）。
@@ -59,7 +60,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 5. M3 的驾驶员真机验收仍待进行。
 
 ## 阻塞
-- D1.2a 检查点 1：P0 已通过，R0 返工等待规划 agent 复审；见 `docs/probes/D1.2a_检查点1.md` §2。未开始 R1。
+- D1.2a R1：按 RW13 先复核 `wp=R1` 登记与职业/特性来源字段。
 
 ## 未验证
 - D1.1 只在模拟宿主核对；真机 TauriTavern 的 M2 六步（含内置 SRD 读取、IndexedDB、下载校验）未实测。

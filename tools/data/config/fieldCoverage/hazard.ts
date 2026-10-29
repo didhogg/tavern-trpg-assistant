@@ -1,9 +1,9 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "hazard.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R11"},
+  "hazard.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "hazard.entries": {"how":"text","to":"data.text","wp":"R11"},
-  "hazard.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R11"},
+  "hazard.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},
   "hazard.entries[].caption": {"how":"text","to":"data.text","wp":"R11"},
   "hazard.entries[].colLabels": {"how":"text","to":"data.text","wp":"R11"},
   "hazard.entries[].colStyles": {"how":"text","to":"data.text","wp":"R11"},
@@ -17,7 +17,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "hazard.otherSources[].page": {"how":"mapped","to":"data.src.page","wp":"R11"},
   "hazard.otherSources[].source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "hazard.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "hazard.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R11"},
+  "hazard.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "hazard.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "hazard.trapHazType": {"how":"mapped","to":"data.kind","wp":"R11"},
 }

@@ -1,14 +1,14 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "charoption.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R11"},
+  "charoption.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "charoption.entries": {"how":"text","to":"data.text","wp":"R11"},
-  "charoption.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R11"},
+  "charoption.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},
   "charoption.entries[].caption": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.entries[].colLabels": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.entries[].colStyles": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.entries[].entries": {"how":"text","to":"data.text","wp":"R11"},
-  "charoption.entries[].entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R11"},
+  "charoption.entries[].entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},
   "charoption.entries[].entries[].caption": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.entries[].entries[].colLabels": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.entries[].entries[].colStyles": {"how":"text","to":"data.text","wp":"R11"},
@@ -28,10 +28,10 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "charoption.entries[].rows": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.entries[].type": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.name": {"how":"mapped","to":"entry.name","wp":"R11"},
-  "charoption.optionType": {"how":"mapped","to":"data.optionType","wp":"R11"},
+  "charoption.optionType": {"how":"mapped","to":"data.text","wp":"R11"},
   "charoption.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "charoption.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R11"},
-  "charoption.reprintedAs[].tag": {"how":"mapped","to":"data.supersededBy","wp":"R11"},
-  "charoption.reprintedAs[].uid": {"how":"mapped","to":"data.supersededBy","wp":"R11"},
+  "charoption.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "charoption.reprintedAs[].tag": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "charoption.reprintedAs[].uid": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "charoption.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
 }

@@ -8,10 +8,10 @@ export interface SourcelessSource {
 }
 
 export const SOURCELESS_RECORDS: SourcelessSource[] = [
-  { file: 'life.json', key: 'lifeTrinket', book: 'PHB', page: 160, basis: 'PHB 第 160–161 页「饰品」表，100 项，与记录逐项对应' },
+  { file: 'life.json', key: 'lifeTrinket', book: 'PHB', page: 160, basis: 'PHB 第 160–161 页「饰品」表；中文版 PDF 页 160–161（不是印刷页）' },
   { file: 'loot.json', key: 'dragonMundaneItems', book: 'FTD', page: 72, basis: 'FTD 第 72 页龙族宝藏表引用的普通物品子表；D1.2b 来源，矩阵扫描但 D1.2a 跳过' },
-  { file: 'monsterfeatures.json', key: 'monsterfeatures', book: 'DMG', page: 280, basis: 'DMG 第 280 页「Monster Features」表；中文版同表第 207 页' },
-  { file: 'msbcr.json', key: 'cr', book: 'DMG', page: 274, basis: 'DMG 第 274 页「Monster Statistics by Challenge Rating」表，34 行与记录一致' }
+  { file: 'monsterfeatures.json', key: 'monsterfeatures', book: 'DMG', page: 280, basis: 'DMG 第 280 页「Monster Features」表；中文版 PDF 页 208（印刷页 207）' },
+  { file: 'msbcr.json', key: 'cr', book: 'DMG', page: 274, basis: 'DMG 第 274 页「Monster Statistics by Challenge Rating」表；中文版 PDF 页 203，34 行与记录一致' }
 ]
 
 export function sourcelessFor(file: string, key: string): SourcelessSource | undefined {

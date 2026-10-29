@@ -1,16 +1,16 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "disease.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R8"},
+  "disease.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "disease.entries": {"how":"text","to":"data.text","wp":"R8"},
-  "disease.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R8"},
+  "disease.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},
   "disease.entries[].entries": {"how":"text","to":"data.text","wp":"R8"},
   "disease.entries[].name": {"how":"text","to":"data.text","wp":"R8"},
   "disease.entries[].page": {"how":"text","to":"data.text","wp":"R8"},
   "disease.entries[].type": {"how":"text","to":"data.text","wp":"R8"},
   "disease.name": {"how":"mapped","to":"entry.name","wp":"R8"},
   "disease.page": {"how":"mapped","to":"data.src.page","wp":"R8"},
-  "disease.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R8"},
+  "disease.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "disease.source": {"how":"mapped","to":"data.src.book","wp":"R8"},
   "disease.srd": {"how":"mapped","to":"data.credit.license","wp":"R8"},
   "disease.translator": {"how":"mapped","to":"data.credit.by","wp":"R8"},
