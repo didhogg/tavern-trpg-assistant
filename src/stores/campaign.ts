@@ -20,6 +20,8 @@ export const useCampaignStore = defineStore('campaign', () => {
   const dirty = ref(false)
 
   const hasCampaign = computed(() => workspace.value !== null)
+  const currentSave = shallowRef<SaveSlot | null>(null)
+  let adoptSeq = 0
 
   function svc(): Services {
     if (!services) throw new Error('存档服务尚未初始化')
@@ -35,6 +37,14 @@ export const useCampaignStore = defineStore('campaign', () => {
     dirty.value = ws ? isDirty(ws) : false
   }
 
+  /** 当前存档的名称等信息（页头芯片与存档抽屉显示）。 */
+  async function refreshCurrentSave(): Promise<void> {
+    const seq = ++adoptSeq
+    const id = workspace.value?.currentSaveId
+    const save = id && services ? await services.campaign.getSave(id) : null
+    if (seq === adoptSeq) currentSave.value = save
+  }
+
   /** 载入指定归属（角色卡或群组）的当前数据；owner 为 null 表示没有打开聊天。 */
   async function init(s: Services, who: OwnerInfo | null): Promise<void> {
     services = s
@@ -46,6 +56,13 @@ export const useCampaignStore = defineStore('campaign', () => {
     readOnly.value = s.lock.readOnly
     adopt(who ? await s.campaign.getWorkspace(who.ownerKey) : null)
     ready.value = true
+  }
+
+  /** 切换聊天后换成另一个归属的当前数据（先把未写入的改动写掉）。 */
+  async function switchOwner(who: OwnerInfo | null): Promise<void> {
+    await flush()
+    owner.value = who
+    adopt(who && services ? await services.campaign.getWorkspace(who.ownerKey) : null)
   }
 
   async function flush(): Promise<void> {
@@ -108,5 +125,5 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result.autoEnabled
   }
 
-  return { owner, workspace, readOnly, ready, dirty, hasCampaign, init, flush, updateData, startNew, save, branch, load, setPackEnabled }
+  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, save, branch, load, setPackEnabled }
 })

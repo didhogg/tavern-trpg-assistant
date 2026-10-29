@@ -68,6 +68,8 @@ export const settingsSchema = z.object({
   reminderDays: z.number().int().positive().default(7),
   reminderSaves: z.number().int().positive().default(10),
   catalogUrl: z.string().default('https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json'),
+  /** 启用扩展包（含导入冒险）时，对官方条目的修改默认应用还是不应用（L1 §2.5）。 */
+  variantDefault: z.enum(['apply', 'skip']).default('apply'),
 })
 export type Settings = z.infer<typeof settingsSchema>
 

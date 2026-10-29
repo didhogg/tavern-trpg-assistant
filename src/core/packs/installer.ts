@@ -172,6 +172,15 @@ export class PackService {
     this.deps.onChange?.({ type: 'uninstalled', packId })
   }
 
+  /** 只删除包记录、条目与索引（图片留给统一的清理，因为存档可能还在用）；内置包也可以删，由调用方决定。 */
+  async remove(packId: string): Promise<InstalledPack> {
+    const pack = await this.db.packs.get(packId)
+    if (!pack) throw new TrpgError('E_NOT_FOUND', '没有找到这个内容包')
+    await this.db.transaction('rw', [this.db.packs, this.db.entries, this.db.searchIndex], () => this.removeRows(packId))
+    this.deps.onChange?.({ type: 'uninstalled', packId })
+    return pack
+  }
+
   /** 引用了这个内容包的存档（不含最近删除）。 */
   async referencingSaves(packId: string): Promise<SaveSlot[]> {
     const saves = await this.db.saves.toArray()

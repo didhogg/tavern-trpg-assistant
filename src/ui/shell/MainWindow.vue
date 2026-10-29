@@ -7,6 +7,7 @@ import ModalHost from '../kit/ModalHost.vue'
 import HomeView from '../views/HomeView.vue'
 import LibraryView from '../views/LibraryView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import { saveNow } from '../saves/actions'
 import HeaderChips from './HeaderChips.vue'
 import { clampRect, loadRect, MIN_H, MIN_W, saveRect, type Rect } from './windowRect'
 import { useDrag, type Point } from './useDrag'
@@ -78,6 +79,14 @@ function onViewport(): void {
   rect.value = clampRect(rect.value, vw.value, vh.value)
 }
 
+/** ⌘/Ctrl+S：焦点在助手内时保存。 */
+function onKey(event: KeyboardEvent): void {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+    event.preventDefault()
+    void saveNow()
+  }
+}
+
 let observer: ResizeObserver | undefined
 onMounted(() => {
   window.addEventListener('resize', onViewport)
@@ -102,6 +111,7 @@ onBeforeUnmount(() => {
     :data-fullscreen="fullscreen"
     role="dialog"
     aria-label="TRPG 跑团助手"
+    @keydown="onKey"
   >
     <div class="trpg-shell" :inert="modal.isOpen">
       <nav v-if="layout !== 'narrow'" class="trpg-side" aria-label="主导航">

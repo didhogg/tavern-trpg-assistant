@@ -1,5 +1,5 @@
 import { markRaw } from 'vue'
-import { useModalStore } from '../../stores/modal'
+import { askChoice } from './choice'
 import ConfirmPage from './ConfirmPage.vue'
 
 export interface ConfirmOptions {
@@ -18,31 +18,13 @@ let counter = 0
  * 返回 true 表示玩家点了确认；任何其他方式离开都返回 false。
  */
 export function askConfirm(options: ConfirmOptions): Promise<boolean> {
-  const modal = useModalStore()
-  return new Promise((resolve) => {
-    let settled = false
-    const settle = (value: boolean) => {
-      if (settled) return
-      settled = true
-      resolve(value)
-    }
-    modal.push({
+  return askChoice<boolean>(
+    {
       key: `confirm:${++counter}`,
       title: options.title,
       component: markRaw(ConfirmPage),
-      props: {
-        message: options.message,
-        details: options.details,
-        confirmLabel: options.confirmLabel,
-        cancelLabel: options.cancelLabel,
-        danger: options.danger,
-        onAnswer: (value: boolean) => {
-          settle(value)
-          modal.pop()
-        },
-      },
-      variant: 'confirm',
-      onLeave: () => settle(false),
-    })
-  })
+      props: (answer) => ({ ...options, onAnswer: answer }),
+    },
+    false,
+  )
 }

@@ -2,6 +2,8 @@ import { uuid } from './ids'
 import { stableStringify } from './hash'
 import { createServices } from './services'
 import { fetchCatalog, downloadPack } from './packs/catalog'
+import { loadBuiltinPack } from './packs/builtinFile'
+import { resolveCatalogUrl } from './packs/catalogUrl'
 import type { Entry, InstalledPack } from '../schemas/pack'
 import type { RecognizedPack } from './packs/recognize'
 
@@ -23,18 +25,10 @@ function sourceLine(entry: Entry): string {
   return `出自《${BOOK_NAMES[src?.book ?? ''] ?? src?.book ?? '未知'}》第 ${src?.page ?? 0} 页 · 中文：${credit?.by ?? '未知'}（${credit?.license ?? '未知'}）`
 }
 
-async function builtinBytes(): Promise<Uint8Array> {
-  const url = new URL('../packs/dnd5e2014-srd.trpgpack', import.meta.url).toString()
-  const response = await fetch(url)
-  if (!response.ok) throw new Error(`内置 SRD 包读取失败（${response.status}）`)
-  return new Uint8Array(await response.arrayBuffer())
-}
+const builtinBytes = () => loadBuiltinPack('dnd5e2014-srd')
 
 function catalogUrl(): string {
-  const override = (globalThis as { __TRPG_M2_CATALOG_URL__?: string }).__TRPG_M2_CATALOG_URL__
-  if (!override) return 'https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json'
-  if (typeof location !== 'undefined') return new URL(override, location.href).toString()
-  return override
+  return resolveCatalogUrl({ catalogUrl: 'https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json' })
 }
 
 /** D1 §12 驾驶员第 2 项的 5 步；只在临时数据库运行，不触碰真实数据。 */

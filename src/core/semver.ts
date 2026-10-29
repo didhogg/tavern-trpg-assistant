@@ -13,3 +13,9 @@ export function compareVersions(a: string, b: string): -1 | 0 | 1 {
   }
   return 0
 }
+
+/** 末位加 1：1.0.24 → 1.0.25（库内编辑每次保存都这样）。 */
+export function bumpPatch(version: string): string {
+  const [major, minor, patch] = parts(version)
+  return `${major}.${minor}.${patch + 1}`
+}

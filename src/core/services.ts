@@ -1,4 +1,6 @@
 import { TrpgDatabase, DEFAULT_DB_NAME } from './db'
+import { LibraryService } from './library/service'
+import { MyLibrary } from './library/mine'
 import { PackService } from './packs/installer'
 import { CampaignService, type CampaignDeps } from './saves/campaign'
 import { WindowLock } from './windowLock'
@@ -12,6 +14,8 @@ export interface Services {
   rules: RuleRegistry
   packs: PackService
   campaign: CampaignService
+  library: LibraryService
+  mine: MyLibrary
   lock: WindowLock
   now: () => number
 }
@@ -23,5 +27,7 @@ export function createServices(opts: { dbName?: string; now?: () => number; rule
   const db = new TrpgDatabase(opts.dbName ?? DEFAULT_DB_NAME)
   const packs = new PackService(db, { rules, now, appVersion: opts.appVersion ?? APP_VERSION })
   const campaign = new CampaignService(db, { rules, now, ...opts.campaign })
-  return { db, rules, packs, campaign, lock: new WindowLock(), now }
+  const library = new LibraryService(db, { rules, now, campaign })
+  const mine = new MyLibrary({ db, packs, rules, now })
+  return { db, rules, packs, campaign, library, mine, lock: new WindowLock(), now }
 }

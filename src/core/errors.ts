@@ -6,7 +6,7 @@ export type ErrorCode =
   | 'E_RULE_MISMATCH' | 'E_RULE_SWITCH_REQUIRED' | 'E_NOT_FOUND' | 'E_SAVE_IN_USE'
   | 'E_AUTO_NOT_DELETABLE' | 'E_BAD_NAME' | 'E_CORE_LOCKED' | 'E_REQUIRED_BY' | 'E_DEP_MISSING'
   | 'E_PACK_DISABLED' | 'E_NO_WORKSPACE' | 'E_READ_ONLY' | 'E_NETWORK' | 'E_HTTP' | 'E_CANCELLED'
-  | 'E_TOO_LARGE' | 'E_FORBIDDEN_FILE' | 'E_LINEAGE'
+  | 'E_TOO_LARGE' | 'E_FORBIDDEN_FILE' | 'E_LINEAGE' | 'E_PACK_CONFLICT' | 'E_NOT_MINE' | 'E_BAD_ENTRY'
 
 export class TrpgError extends Error {
   readonly code: ErrorCode

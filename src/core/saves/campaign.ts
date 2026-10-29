@@ -2,6 +2,7 @@ import type { TrpgDatabase } from '../db'
 import { TrpgError } from '../errors'
 import { uuid as defaultUuid } from '../ids'
 import { materializeInstances, type MaterializeResult } from '../instances'
+import { enableFeatures } from '../library/features'
 import { disablePack, enablePack } from '../packs/enablement'
 import { SCHEMA_VERSIONS } from '../../schemas/common'
 import { backupStateSchema, type AutoReason, type EnabledPack, type SaveSlot, type Workspace, type WorkspaceData } from '../../schemas/campaign'
@@ -99,7 +100,8 @@ export class CampaignService {
     return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta, this.db.packs], async () => {
       const existing = await this.getWorkspace(input.ownerKey)
       if (existing) await this.writeAutoSave(existing, '新存档前')
-      const data: WorkspaceData = { instances: [] }
+      let data: WorkspaceData = { instances: [] }
+      for (const e of enabled) data = enableFeatures(data, installed.get(e.id)!, this.deps.now())
       const ws: Workspace = {
         ownerKey: input.ownerKey,
         ownerLabel: input.ownerLabel,

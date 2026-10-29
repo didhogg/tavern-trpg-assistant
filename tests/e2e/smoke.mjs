@@ -6,7 +6,9 @@ import { check, failures } from './helpers.mjs'
 import { startServer, root } from './server.mjs'
 import { probeSuite } from './suite-probes.mjs'
 import { diceSuite } from './suite-dice.mjs'
+import { savesSuite } from './suite-saves.mjs'
 import { shellSuite } from './suite-shell.mjs'
+import { wizardSuite } from './suite-wizard.mjs'
 
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const engines = [
@@ -37,6 +39,8 @@ try {
         const ctx = { width, height, engine, viewLabel, scheme, url }
         if (!only || only === 'shell') await shellSuite(page, label, ctx)
         if (!only || only === 'dice') await diceSuite(page, label, ctx)
+        if (!only || only === 'wizard' || only === 'saves') await wizardSuite(page, label, ctx)
+        if (!only || only === 'saves') await savesSuite(page, label, ctx)
         if (scheme === 'light' && (!only || only === 'probes')) await probeSuite(page, label, ctx)
         await page.screenshot({ path: join(root, `docs/reviews/M3-${engine}-${viewLabel}-${scheme}.png`) })
         check(`[${label}] 页面无脚本错误`, errors.length === 0, errors.join(' | '))
