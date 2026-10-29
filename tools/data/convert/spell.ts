@@ -141,6 +141,7 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
     subclasses: classes.subclasses,
     ...(Array.isArray(raw.entriesHigherLevel) ? { higherLevel: plainText(convertBlocks(raw.entriesHigherLevel, inline)).slice(0, 2000) } : {}),
     ...(raw.scalingLevelDice ? { cantripScaling: raw.scalingLevelDice } : {}),
+    ...(Array.isArray(raw.miscTags) || Array.isArray(raw.areaTags) || Array.isArray(raw.damageInflict) || Array.isArray(raw.conditionInflict) || Array.isArray(raw.damageResist) || Array.isArray(raw.damageImmune) || Array.isArray(raw.damageVulnerable) || Array.isArray(raw.affectsCreatureType) ? { tags: [...(Array.isArray(raw.miscTags) ? raw.miscTags : []), ...(Array.isArray(raw.areaTags) ? raw.areaTags : []), ...(Array.isArray(raw.damageInflict) ? raw.damageInflict : []), ...(Array.isArray(raw.conditionInflict) ? raw.conditionInflict : []), ...(Array.isArray(raw.damageResist) ? raw.damageResist : []), ...(Array.isArray(raw.damageImmune) ? raw.damageImmune : []), ...(Array.isArray(raw.damageVulnerable) ? raw.damageVulnerable : []), ...(Array.isArray(raw.affectsCreatureType) ? raw.affectsCreatureType : [])].map(String) } : {}),
     ...(saveCodes.length ? { save: saveCodes } : {}),
     ...(textDamage.length ? { damage: textDamage } : {}),
     activities,

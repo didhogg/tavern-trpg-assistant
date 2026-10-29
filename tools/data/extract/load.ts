@@ -17,6 +17,7 @@ export interface RawData {
   spells: Raw[]
   monsters: Raw[]
   items: Raw[]
+  itemGroups: Raw[]
   baseItems: Raw[]
   /** 物品正文模板（{#itemEntry}）。 */
   itemEntryTemplates: Raw[]
@@ -35,6 +36,7 @@ export interface RawData {
   statuses: Raw[]
   variantRules: Raw[]
   actions: Raw[]
+  legendaryGroups: Raw[]
   tables: Raw[]
   loot: Raw[]
   books: BookInfo[]
@@ -237,6 +239,7 @@ export async function loadRawData(): Promise<RawData> {
     spells: await loadSpells(),
     monsters: await loadMonsters(),
     items: filterBooks(await loadArray('items.json', 'item')),
+    itemGroups: filterBooks(await loadArray('items.json', 'itemGroup')),
     itemEntryTemplates: await loadArray('items-base.json', 'itemEntry'),
     baseItems: filterBooks(await loadArray('items-base.json', 'baseitem')),
     magicVariants: (await loadArray('magicvariants.json', 'magicvariant')).filter((v) => BOOK_SOURCES.has(String((v.inherits as Raw | undefined)?.source ?? v.source))),
@@ -251,6 +254,7 @@ export async function loadRawData(): Promise<RawData> {
     statuses: filterBooks(await loadArray('conditionsdiseases.json', 'status')),
     variantRules: filterBooks(await loadArray('variantrules.json', 'variantrule')),
     actions: filterBooks(await loadArray('actions.json', 'action')),
+    legendaryGroups: filterBooks(await loadArray('bestiary/legendarygroups.json', 'legendaryGroup')),
     tables: filterBooks(await loadArray('tables.json', 'table')),
     loot: await loadLoot(),
     books,

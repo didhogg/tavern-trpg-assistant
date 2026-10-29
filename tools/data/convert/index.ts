@@ -188,6 +188,8 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     classIds: makeClassIds(planned),
     subclassIds: makeSubclassIds(planned),
     spellLookup: data.spellLookup,
+    itemGroups: data.itemGroups,
+    legendaryGroups: data.legendaryGroups,
     featuresByOwner,
     subclassLevelByClass,
     tablesByParent,

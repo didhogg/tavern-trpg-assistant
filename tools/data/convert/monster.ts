@@ -3,6 +3,7 @@ import type { TextBlock } from '../../../src/schemas/text'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
 import { creditFor, keywordsOf, pageOf, parseFraction, str } from './common'
+import { slug } from '../lib/slug'
 import { convertBlocks } from './blocks'
 import { renderInline } from '../markup/inline'
 import { activitiesFromText } from './activities'
@@ -157,6 +158,8 @@ function spellcastingOf(raw: Record<string, unknown>, inline: InlineContext): Ar
 
 export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
+  const groupRef = raw.legendaryGroup as Record<string, unknown> | undefined
+  const group = groupRef ? (ctx.legendaryGroups.find((g) => String(g.name) === String(groupRef.name) && String(g.source) === String(groupRef.source)) ?? ctx.legendaryGroups.find((g) => String(g.name) === String(groupRef.name) || String(g.ENG_name) === String(groupRef.ENG_name))) : undefined
   const text = convertBlocks(raw.entries, inline)
   const actions = namedActions(raw.action, inline, entry)
   const legendaryRaw = raw.legendary as Record<string, unknown> | undefined
@@ -187,7 +190,9 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
     actions,
     bonusActions: namedActions(raw.bonus, inline, entry),
     reactions: namedActions(raw.reaction, inline, entry),
-    ...(legendaryRaw ? { legendary: { count: Number(legendaryRaw.count ?? 0), actions: legendaryActions } } : {}),
+    ...(legendaryRaw ? { legendary: { count: Number(legendaryRaw.count ?? 0), actions: legendaryActions, ...(group ? { lairActions: convertBlocks(group.lairActions, inline), regionalEffects: convertBlocks(group.regionalEffects, inline), group: `legendary.${slug(str(group.ENG_name) || str(group.name))}.${str(group.source).toLowerCase()}` } : {}) } } : {}),
+    ...(!legendaryRaw && group ? { legendary: { count: 0, actions: [], lairActions: convertBlocks(group.lairActions, inline), regionalEffects: convertBlocks(group.regionalEffects, inline), group: `legendary.${slug(str(group.ENG_name) || str(group.name))}.${str(group.source).toLowerCase()}` } } : {}),
+    ...(Array.isArray(raw.environment) ? { tags: [...raw.environment, ...(Array.isArray(raw.damageTags) ? raw.damageTags : []), ...(Array.isArray(raw.miscTags) ? raw.miscTags : [])].map(String) } : {}),
     ...(Array.isArray(raw.mythic) ? { mythic: namedActions(raw.mythic, inline, entry) } : {}),
     spellcasting: spellcastingOf(raw, inline),
   }

@@ -2,6 +2,7 @@ import type { Entry } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
 import { creditFor, DAMAGE_TYPE, keywordsOf, pageOf, str } from './common'
+import { slug } from '../lib/slug'
 import { convertBlocks } from './blocks'
 import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'
@@ -119,6 +120,27 @@ function itemEffects(raw: Record<string, unknown>): Array<Record<string, unknown
   return out
 }
 
+function contentsOf(raw: Record<string, unknown>, ctx: ConvertContext): Array<{ item: string; qty: number }> | undefined {
+  const source = Array.isArray(raw.packContents) ? raw.packContents : []
+  const out: Array<{ item: string; qty: number }> = []
+  for (const entry of source) {
+    const rec = typeof entry === 'string' ? { item: entry } : entry && typeof entry === 'object' ? entry as Record<string, unknown> : undefined
+    if (!rec) continue
+    const name = str(rec.item).split('|')[0]
+    const id = ctx.resolveEntryId('item', name)
+    if (id) out.push({ item: id, qty: Number(rec.quantity ?? rec.qty ?? 1) })
+  }
+  return out.length ? out : undefined
+}
+function familyOf(raw: Record<string, unknown>, ctx: ConvertContext): Record<string, unknown> | undefined {
+  const group = ctx.itemGroups.find((g) => Array.isArray(g.items) && (g.items as unknown[]).some((x) => String(x).split('|')[0] === str(raw.name)) && String(g.source) === str(raw.source)) ?? ctx.itemGroups.find((g) => Array.isArray(g.items) && (g.items as unknown[]).some((x) => String(x).split('|')[0] === str(raw.name)))
+  if (!group) return undefined
+  const memberNames = Array.isArray(group.items) ? (group.items as unknown[]).map((x) => String(x).split('|')[0]) : []
+  const members = memberNames.map((name) => ctx.resolveEntryId('item', name)).filter((id): id is string => !!id)
+  const index = ctx.itemGroups.indexOf(group)
+  return { id: `item.${slug(str(group.ENG_name) || str(group.name))}.${str(group.source).toLowerCase()}-${index + 1}`, name: group.name, members }
+}
+
 export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const foundryRaw = foundryFeature({ items: ctx.foundryItems }, raw, 'item', entry.source)
@@ -149,6 +171,12 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(effects.length ? { effects } : {}),
     ...(activities.length ? { activities } : {}),
     ...(category === 'consumable' ? { consumable: true } : {}),
+    ...(contentsOf(raw, ctx) ? { contents: contentsOf(raw, ctx) } : {}),
+    ...(raw.atomicPackContents === true ? { atomic: true } : {}),
+    ...(raw.containerCapacity && typeof raw.containerCapacity === 'object' ? { container: raw.containerCapacity } : {}),
+    ...(familyOf(raw, ctx) ? { family: familyOf(raw, ctx) } : {}),
+    tags: [str(raw.type ?? raw.baseItem ?? 'item')],
+    ...(raw._variant && typeof raw._variant === 'object' ? { variantOf: `item.${slug(str((raw._variant as Record<string, unknown>).ENG_name) || str((raw._variant as Record<string, unknown>).name))}.${str(raw.source).toLowerCase()}` } : {}),
     properties: (Array.isArray(raw.property) ? raw.property : Array.isArray(base.property) ? base.property : []).map(String),
     lootTables: (Array.isArray(raw.lootTables) ? raw.lootTables : []).map(String),
   }

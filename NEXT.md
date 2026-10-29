@@ -37,6 +37,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 - D1.2a R3 可选职业特性（完成）：TCE 29 条，optional/replaces，游侠金样；A3=29、A1=0。
 - D1.2a R4 流程型特性（完成）：role=procedure/mechanic/intro、ASI 与子职业 explain；子职业 text 回退；D1 升至 541，待 R14。
 - D1.2a R5 熟练 trait（完成）：19 条附赠熟练全部有 trait；自然领域/勇气学院金样；A4=19。
+- D1.2a R6–R7（受阻塞）：物品家族 36/38、传说动作组 66/67；已停止，等待 R7 复核/修补，未开始 R8。
 - M0；U2 定稿；M1 核心数据层。
 - M2（实现、复核与真机自检完成；50 条抽检已完成；数据 1.0.1 已发布）：
   - D1 数据定义：`src/rules/dnd5e2014/data/`（通用字段、15 种条目、7 种 advancement、7 种行动、正文块与行内标记、requires、ruleOptions/aiNotes）；`src/schemas/adventure/` 冒险内容项外壳。
