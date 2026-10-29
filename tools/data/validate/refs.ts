@@ -10,6 +10,7 @@ export interface RefIssue {
 export interface RefResult {
   dangling: RefIssue[]
   dependency: RefIssue[]
+  softRefs: RefIssue[]
 }
 
 function walkStrings(value: unknown, visit: (s: string, field: string) => void, field = ''): void {
@@ -28,17 +29,25 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
   const all = new Map(packs.flatMap((p) => p.entries).map((e) => [e.id, e]))
   const srd = 'dnd5e2014-srd'
   const issues: RefIssue[] = []
+  const softRefs: RefIssue[] = []
   for (const pack of packs) {
-    const requires = pack.manifest.id === srd ? new Set(packs.map((p) => p.manifest.id)) : new Set([pack.manifest.id, srd, ...(BOOKS.find((b) => b.packId === pack.manifest.id)?.requiresBooks.map((s) => `dnd5e2014-${s.toLowerCase()}`) ?? [])])
+    const requires = pack.manifest.id === srd ? new Set([srd]) : new Set([pack.manifest.id, srd, ...(BOOKS.find((b) => b.packId === pack.manifest.id)?.requiresBooks.map((s) => `dnd5e2014-${s.toLowerCase()}`) ?? [])])
     const check = (entryId: string, field: string, value: string): void => {
       if (!value || !value.includes('.')) return
       if (!all.has(value)) issues.push({ pack: pack.manifest.id, entry: entryId, field, value })
       else if (![...requires].some((id) => byPack.get(id)?.entries.some((e) => e.id === value))) issues.push({ pack: pack.manifest.id, entry: entryId, field: `${field}（依赖缺失）`, value })
     }
+    const soft = (entryId: string, field: string, value: string, step: Record<string, unknown>): boolean => {
+      if (pack.manifest.id !== srd || step.kind !== 'itemGrant' || step.optional !== 'tce-ocf') return false
+      const target = byPack.get('dnd5e2014-tce')?.entries.some((e) => e.id === value)
+      if (!target) return false
+      softRefs.push({ pack: pack.manifest.id, entry: entryId, field, value })
+      return true
+    }
     for (const entry of pack.entries) {
       const d = entry.data as Record<string, unknown>
       const fields: Array<[string, unknown]> = [
-        ['variantOf', d.variantOf], ['baseItem', d.baseItem], ['family.id', (d.family as Record<string, unknown> | undefined)?.id],
+        ['variantOf', d.variantOf], ['baseItem', d.baseItem],
         ['owner.id', (d.owner as Record<string, unknown> | undefined)?.id], ['classId', d.classId], ['parentRace', d.parentRace],
         ['feature', d.feature], ['supersededBy', d.supersededBy], ['versionGroup', d.versionGroup],
         ['expandedSpells', d.expandedSpells],
@@ -48,7 +57,7 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
       for (const content of (d.contents as Array<{ item?: string }> | undefined) ?? []) if (content.item) check(entry.id, 'contents[].item', content.item)
       for (const choice of (d.contentsChoice as Array<{ from?: Array<{ item?: string }> }> | undefined) ?? []) for (const x of choice.from ?? []) if (x.item) check(entry.id, 'contentsChoice[].from[].item', x.item)
       for (const step of (d.advancement as Array<Record<string, unknown>> | undefined) ?? []) {
-        for (const id of (step.items as string[] | undefined) ?? []) check(entry.id, 'advancement[].items[]', id)
+        for (const id of (step.items as string[] | undefined) ?? []) { if (!soft(entry.id, 'advancement[].items[]', id, step)) check(entry.id, 'advancement[].items[]', id) }
         for (const id of (step.pool as string[] | undefined) ?? []) check(entry.id, 'advancement[].pool[]', id)
         if (typeof step.explain === 'string') check(entry.id, 'advancement[].explain', step.explain)
         if (typeof step.replaces === 'string') check(entry.id, 'advancement[].replaces', step.replaces)
@@ -63,5 +72,5 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
       }
     }
   }
-  return { dangling: issues.filter((x) => !x.field.includes('依赖缺失')), dependency: issues.filter((x) => x.field.includes('依赖缺失')) }
+  return { dangling: issues.filter((x) => !x.field.includes('依赖缺失')), dependency: issues.filter((x) => x.field.includes('依赖缺失')), softRefs }
 }

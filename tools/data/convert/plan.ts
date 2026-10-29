@@ -227,5 +227,21 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
     const name = str(group.name).replace(/[（(]\*[）)]/g, '').trim()
     entries.push(make('item', { ...group, _family: true, name, ENG_name: group.ENG_name }, [slug(str(group.ENG_name) || name) + '-family'], { family: '1' }))
   }
+  for (const entry of entries) {
+    if (entry.type !== 'item' || !entry.raw._variant || !entry.raw._baseItem) continue
+    const variant = entry.raw._variant as Raw
+    const inherits = (variant.inherits && typeof variant.inherits === 'object' ? variant.inherits : {}) as Raw
+    const templateSource = str(inherits.source || variant.source)
+    const base = entry.raw._baseItem as Raw
+    const baseSource = str(base.source)
+    const templateBook = BOOK_BY_SOURCE.get(templateSource)
+    const baseBook = BOOK_BY_SOURCE.get(baseSource)
+    if (!templateBook || !baseBook) continue
+    const bothSrd = inherits.srd === true && base.srd === true
+    const packSource = templateBook.layer >= baseBook.layer ? templateSource : baseSource
+    entry.packId = bothSrd ? SRD_PACK_ID : PACK_BY_SOURCE.get(packSource)!
+    entry.srd = bothSrd
+    entry.raw = { ...entry.raw, srd: entry.srd }
+  }
   return { entries, tables, tableSeeds, classIds, subclassIds, skippedFeatures, skippedSubraces }
 }

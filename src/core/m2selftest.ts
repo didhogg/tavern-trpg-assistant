@@ -4,6 +4,7 @@ import { createServices } from './services'
 import { fetchCatalog, downloadPack } from './packs/catalog'
 import { loadBuiltinPack } from './packs/builtinFile'
 import { resolveCatalogUrl } from './packs/catalogUrl'
+import { uninstallPack } from './library/uninstall'
 import type { Entry, InstalledPack } from '../schemas/pack'
 import type { RecognizedPack } from './packs/recognize'
 
@@ -31,7 +32,7 @@ function catalogUrl(): string {
   return resolveCatalogUrl({ catalogUrl: 'https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json' })
 }
 
-/** D1 §12 驾驶员第 2 项的 5 步；只在临时数据库运行，不触碰真实数据。 */
+/** D1 §12 驾驶员第 2 项的 6 步；只在临时数据库运行，不触碰真实数据。 */
 export async function runM2SelfTest(onStep?: (step: M2Step) => void): Promise<M2Step[]> {
   const steps: M2Step[] = []
   const s = createServices({ dbName: `tavern-trpg-assistant-m2-${uuid()}`, appVersion: '99.0.0' })
@@ -164,6 +165,51 @@ export async function runM2SelfTest(onStep?: (step: M2Step) => void): Promise<M2
       }
       lines.push('↷ 图片、冒险内容项：官方书籍包不含，跳过（由测试夹具覆盖）')
       if (failures.length) throw new Error(failures.join('；'))
+      return lines.join('\n')
+    })
+
+    await run('依赖与卸载顺序', async () => {
+      let catalog
+      try {
+        catalog = await fetchCatalog({ url: catalogUrl() })
+      } catch (error) {
+        return { skipped: true, detail: `跳过：数据仓库尚未发布（${error instanceof Error ? error.message : String(error)}）` }
+      }
+      if (!catalog.packs.length) return { skipped: true, detail: '跳过：目录中没有书籍包' }
+      const entries: Array<{ catalog: (typeof catalog.packs)[number]; rec: RecognizedPack }> = []
+      for (const target of catalog.packs) {
+        if (target.id === 'dnd5e2014-srd') continue
+        const rec = s.packs.recognize(await downloadPack(target, { catalogUrl: catalogUrl() }))
+        if (rec.type !== 'pack') throw new Error(`${target.id} 下载的不是内容包`)
+        entries.push({ catalog: target, rec })
+      }
+      const byId = new Map(entries.map((x) => [x.rec.manifest.id, x]))
+      const order: Array<{ catalog: (typeof catalog.packs)[number]; rec: RecognizedPack }> = []
+      const visiting = new Set<string>()
+      const done = new Set<string>()
+      const visit = (id: string): void => {
+        if (done.has(id)) return
+        if (visiting.has(id)) throw new Error(`依赖成环：${id}`)
+        const item = byId.get(id)
+        if (!item) return
+        visiting.add(id)
+        for (const dep of item.rec.manifest.relationships.requires) if (dep.id !== 'dnd5e2014-srd') visit(dep.id)
+        visiting.delete(id)
+        done.add(id)
+        order.push(item)
+      }
+      for (const item of entries) visit(item.rec.manifest.id)
+      const lines: string[] = []
+      for (const item of order) {
+        const plan = await s.packs.plan(item.rec)
+        if (plan.missingRequires.length) throw new Error(`${item.rec.manifest.id} 缺少依赖：${plan.missingRequires.map((d) => d.id).join('、')}`)
+        await s.packs.install(item.rec, { source: 'download', resolution: 'overwrite' })
+        lines.push(`安装 ✓ ${item.rec.manifest.name}`)
+      }
+      for (const item of [...order].reverse()) {
+        await uninstallPack({ db: s.db, packs: s.packs, rules: s.rules, now: s.now }, item.rec.manifest.id)
+        lines[order.findIndex((x) => x.rec.manifest.id === item.rec.manifest.id)] += ' / 卸载 ✓'
+      }
       return lines.join('\n')
     })
 

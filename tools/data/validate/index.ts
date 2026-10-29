@@ -152,6 +152,7 @@ function checkEntryRules(entry: Entry, scales: Set<string>, packId: string): voi
 export function validatePack(pack: ConvertedPack, ctx: ValidationContext): void {
   const own = new Set(pack.entries.map((e) => e.id))
   const required = new Set(pack.manifest.relationships.requires.map((r) => r.id))
+  if (pack.manifest.id !== 'dnd5e2014-srd') required.add('dnd5e2014-srd')
   const byEntry = new Map<string, string>()
   for (const other of ctx.packs) for (const entry of other.entries) byEntry.set(entry.id, other.manifest.id)
   for (const entry of pack.entries) {

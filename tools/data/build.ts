@@ -10,6 +10,7 @@ import { validatePacks, assertVolume } from './validate'
 import { assertFieldCoverage } from './validate/coverage'
 import { BASELINE_ALIASES } from './config/baselineAliases'
 import { checkReferences } from './validate/refs'
+import { checkLayers } from './validate/layers'
 import { healthMetrics } from './validate/health'
 import { assertDelivered } from './validate/delivered'
 import { FIELD_COVERAGE } from './config/fieldCoverage'
@@ -55,10 +56,25 @@ async function main(): Promise<void> {
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
   if (srd) for (const alias of BASELINE_ALIASES) if (!srd.entries.some((e) => e.id === alias.id)) srd.entries.push(alias)
+  const allConverted = result.packs.flatMap((p) => p.entries)
+  const itemIdByName = new Map(allConverted.filter((e) => e.type === 'item').map((e) => [e.name, e.id]))
+  for (const alias of BASELINE_ALIASES) {
+    const baseItem = alias.data.baseItem
+    if (typeof baseItem === 'string' && !baseItem.includes('.')) {
+      const resolved = itemIdByName.get(baseItem)
+      if (resolved) alias.data.baseItem = resolved
+      else console.warn(`基线别名 ${alias.id} 的 baseItem 无法解析：${baseItem}`)
+    }
+  }
   validatePacks(result.packs)
   assertDelivered(result.packs.flatMap((p) => p.entries), FIELD_COVERAGE)
+  const layers = checkLayers(result.packs)
+  console.log(`层级/依赖问题：${layers.length}`)
+  for (const issue of layers) console.log(`LAYER ${issue.kind} ${issue.pack} ${issue.detail}`)
+  if (layers.length) throw new Error(`层级/依赖校验失败：${layers.map((x) => `${x.pack} ${x.detail}`).join('；')}`)
   const refs = await checkReferences(result.packs)
-  console.log(`引用悬空：${refs.dangling.length}，需新增依赖：${refs.dependency.length}`)
+  console.log(`引用悬空：${refs.dangling.length}，需新增依赖：${refs.dependency.length}，软引用：${refs.softRefs.length}`)
+  if (refs.softRefs.length !== 29) throw new Error(`软引用数量应为 29，实际 ${refs.softRefs.length}`)
   if (refs.dangling.length) throw new Error(`引用悬空 ${refs.dangling.length} 条：${refs.dangling.slice(0, 10).map((x) => `${x.entry} ${x.field} ${x.value}`).join('；')}`)
   if (refs.dependency.length) throw new Error(`缺少包依赖 ${refs.dependency.length} 条：${refs.dependency.slice(0, 10).map((x) => `${x.pack} ${x.field} ${x.value}`).join('；')}`)
   const health = healthMetrics(result, data)

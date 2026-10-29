@@ -20,7 +20,7 @@ export const PLANNED_FIELDS: Record<string, string | PlannedField> = {
   'rule.supersededBy': { spec: '§5.2', origin: 'source-mirror' },
   // §5.3 物品内部结构
   'item.contents': '§5.3', 'item.contentsChoice': '§5.3', 'item.atomic': '§5.3', 'item.container': '§5.3',
-  'item.family': '§5.3', 'item.variantTemplate': '§5.3', 'item.variantOf': '§5.3', 'item.ability': '§5.3',
+  'item.variantTemplate': '§5.3', 'item.variantOf': '§5.3', 'item.ability': '§5.3',
   // §5.4 怪物子结构
   'monster.environment': '§5.4', 'monster.damageTags': '§5.4', 'monster.miscTags': '§5.4',
   'monster.variant': '§5.4', 'monster.attachedItems': '§5.4', 'monster.legendaryGroup': '§5.4',

@@ -31859,6 +31859,57 @@ async function PG(e) {
 			}
 			if (i.push("↷ 图片、冒险内容项：官方书籍包不含，跳过（由测试夹具覆盖）"), a.length) throw Error(a.join("；"));
 			return i.join("\n");
+		}), await a("依赖与卸载顺序", async () => {
+			let e;
+			try {
+				e = await mC({ url: NG() });
+			} catch (e) {
+				return {
+					skipped: !0,
+					detail: `跳过：数据仓库尚未发布（${e instanceof Error ? e.message : String(e)}）`
+				};
+			}
+			if (!e.packs.length) return {
+				skipped: !0,
+				detail: "跳过：目录中没有书籍包"
+			};
+			let t = [];
+			for (let r of e.packs) {
+				if (r.id === "dnd5e2014-srd") continue;
+				let e = n.packs.recognize(await hC(r, { catalogUrl: NG() }));
+				if (e.type !== "pack") throw Error(`${r.id} 下载的不是内容包`);
+				t.push({
+					catalog: r,
+					rec: e
+				});
+			}
+			let r = new Map(t.map((e) => [e.rec.manifest.id, e])), i = [], a = /* @__PURE__ */ new Set(), o = /* @__PURE__ */ new Set(), s = (e) => {
+				if (o.has(e)) return;
+				if (a.has(e)) throw Error(`依赖成环：${e}`);
+				let t = r.get(e);
+				if (t) {
+					a.add(e);
+					for (let e of t.rec.manifest.relationships.requires) e.id !== "dnd5e2014-srd" && s(e.id);
+					a.delete(e), o.add(e), i.push(t);
+				}
+			};
+			for (let e of t) s(e.rec.manifest.id);
+			let c = [];
+			for (let e of i) {
+				let t = await n.packs.plan(e.rec);
+				if (t.missingRequires.length) throw Error(`${e.rec.manifest.id} 缺少依赖：${t.missingRequires.map((e) => e.id).join("、")}`);
+				await n.packs.install(e.rec, {
+					source: "download",
+					resolution: "overwrite"
+				}), c.push(`安装 ✓ ${e.rec.manifest.name}`);
+			}
+			for (let e of [...i].reverse()) await Uz({
+				db: n.db,
+				packs: n.packs,
+				rules: n.rules,
+				now: n.now
+			}, e.rec.manifest.id), c[i.findIndex((t) => t.rec.manifest.id === e.rec.manifest.id)] += " / 卸载 ✓";
+			return c.join("\n");
 		}), await a("清理测试数据库", async () => {
 			let e = n.db.name;
 			if (n.db.close(), await n.db.delete(), (typeof indexedDB.databases == "function" ? await indexedDB.databases() : []).some((t) => t.name === e)) throw Error("临时数据库未删除");
@@ -31875,13 +31926,13 @@ function LG() {
 	return {
 		id: FG,
 		title: IG,
-		hint: "在临时数据库里安装内置 SRD 包、从数据仓库下载一个书籍包、显示条数与抽样来源、对每种数据做一次往返，最后清理测试数据库。数据仓库尚未发布时下载一步会跳过；只用临时库，不影响真实数据。",
+		hint: "在临时数据库里安装内置 SRD 包、从数据仓库下载一个书籍包、显示条数与抽样来源、对每种数据做一次往返，按依赖层级安装和卸载全部书籍包，最后清理测试数据库。数据仓库尚未发布时下载一步会跳过；只用临时库，不影响真实数据。",
 		actions: [{
 			label: "运行 M2 数据自检",
 			run: () => lG(FG, IG, async () => {
 				cG(FG, IG, "waiting", "正在运行…");
 				let e = await PG((e) => cG(FG, IG, "waiting", `已完成 ${e.name}`)), t = e.find((e) => !e.ok), n = e.filter((e) => e.skipped).length;
-				cG(FG, IG, t ? "fail" : "pass", t ? `未通过：${t.name} — ${t.detail ?? ""}` : `全部通过（${e.length}/6 步${n ? `，${n} 步跳过` : ""}）`, e.map((e) => `${e.ok ? e.skipped ? "↷" : "✓" : "✗"} ${e.name}${e.detail ? ` — ${e.detail}` : ""}`));
+				cG(FG, IG, t ? "fail" : "pass", t ? `未通过：${t.name} — ${t.detail ?? ""}` : `全部通过（${e.length}/7 步${n ? `，${n} 步跳过` : ""}）`, e.map((e) => `${e.ok ? e.skipped ? "↷" : "✓" : "✗"} ${e.name}${e.detail ? ` — ${e.detail}` : ""}`));
 			})
 		}]
 	};

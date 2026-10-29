@@ -15,8 +15,8 @@ export async function librarySuite(page, label, { width }) {
   check(`[${label}] 本存档：列出 11 本资料`, (await page.locator('[data-testid^="save-pack-"]').count()) === 11)
   const srd = sw(page, '启用 SRD 基础规则')
   check(`[${label}] SRD：开关为开（━●）且不可关，旁边有 🔒 与说明`, (await srd.getAttribute('aria-checked')) === 'true' && (await srd.isDisabled()) && (await page.getByTestId('save-pack-dnd5e2014-srd').innerText()).includes('其他资料都需要它'))
-  const phb = sw(page, '启用 玩家手册（2014）')
-  check(`[${label}] 没有被依赖的书：开关可以操作`, (await phb.isEnabled()) && (await phb.getAttribute('aria-checked')) === 'true')
+  const bmt = sw(page, '启用 万象无常书')
+  check(`[${label}] 没有被依赖的书：开关可以操作`, (await bmt.isEnabled()) && (await bmt.getAttribute('aria-checked')) === 'true')
   const mtf = sw(page, '启用 魔邓肯的众敌卷册')
   check(`[${label}] 向导里没勾的书：开关为关（○━）`, (await mtf.getAttribute('aria-checked')) === 'false')
 

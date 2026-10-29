@@ -26,7 +26,7 @@ describe('R6 物品内部结构', () => {
   it('巨人力量腰带 6 个成员', async () => {
     const all = await load()
     const belt = all.get('item.belt-of-cloud-giant-strength.dmg')!
-    const family = all.get((belt.data.family as { id: string }).id)!
+    const family = [...all.values()].find((e) => e.type === 'item' && e.data.category === 'family' && ((e.data.members as string[] | undefined) ?? []).includes(belt.id))!
     expect((family.data.members as string[])).toHaveLength(6)
   })
   it('+1 长剑有 variantOf 与 baseItem', async () => {
@@ -37,7 +37,7 @@ describe('R6 物品内部结构', () => {
   })
   it('家族数量至少 38', async () => {
     const all = await load()
-    const ids = new Set([...all.values()].filter((e) => e.type === 'item' && e.data.family).map((e) => (e.data.family as { id: string }).id))
-    expect(ids.size).toBeGreaterThanOrEqual(36)
+    const families = [...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family')
+    expect(families).toHaveLength(37)
   })
 })

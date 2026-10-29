@@ -80,12 +80,11 @@ function pruneRefs(value: unknown, allowed: Set<string>, planned: Map<string, Pl
 function requiresFor(entry: PlannedEntry, data: Record<string, unknown>, planned: Map<string, PlannedEntry>): Set<string> {
   const packs = new Set<string>()
   if (entry.packId === SRD_PACK_ID) return packs
-  packs.add(SRD_PACK_ID)
   for (const id of structuralIds(data)) {
     const target = planned.get(id)
     if (target && target.packId !== entry.packId) {
       packs.add(target.packId)
-      if (process.env.TRPG_DEBUG_REQ) console.error(`REQ ${entry.id} -> ${id} (${target.packId})`)
+      if (process.env.TRPG_DEBUG_REQ) console.error(`REQ ${entry.packId}:${entry.id} -> ${id} (${target.packId})`)
     }
   }
   return packs
@@ -104,12 +103,20 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
   if (owner && owner.type !== 'optional' && typeof owner.id === 'string' && !ok(owner.id)) delete data.owner
   const characteristics = data.characteristics as Array<{ table?: string }> | undefined
   if (Array.isArray(characteristics)) data.characteristics = characteristics.filter((c) => ok(c.table))
-  const advancement = data.advancement as Array<{ items?: string[]; pool?: string[] }> | undefined
+  const advancement = data.advancement as Array<{ items?: string[]; pool?: string[]; explain?: string }> | undefined
   if (Array.isArray(advancement)) {
     for (const item of advancement) {
       if (Array.isArray(item.items)) item.items = item.items.filter((id) => ok(id) || planned.has(String(id)))
       if (Array.isArray(item.pool)) item.pool = item.pool.filter((id) => ok(id) || planned.has(String(id)))
+      if (typeof item.explain === 'string' && !ok(item.explain)) delete item.explain
     }
+  }
+  const equipment = data.equipment as { fixed?: Array<{ item?: string }>; choose?: { from?: Array<{ item?: string }> } } | undefined
+  if (equipment?.fixed) equipment.fixed = equipment.fixed.filter((x) => typeof x.item !== 'string' || ok(x.item))
+  if (equipment?.choose?.from) equipment.choose.from = equipment.choose.from.filter((x) => typeof x.item !== 'string' || ok(x.item))
+  const expanded = data.expandedSpells as Array<{ spells?: string[] }> | undefined
+  if (Array.isArray(expanded)) {
+    for (const group of expanded) if (Array.isArray(group.spells)) group.spells = group.spells.filter(ok)
   }
   const rows = data.rows as Array<{ refs?: string[]; then?: { table?: string } }> | undefined
   if (Array.isArray(rows)) {
@@ -227,7 +234,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     const built = convertOne(entry, ctx, inline)
     const data = built.data as Record<string, unknown>
     const required = requiresFor(entry, data, byId)
-    const allowed = new Set([entry.packId, ...required])
+    const allowed = new Set([entry.packId, SRD_PACK_ID, ...required])
     const prunedCount = { n: 0 }
     const pruned = pruneRefs(data, allowed, byId, prunedCount) as Record<string, unknown>
     pruneStructural(pruned, allowed, byId)
@@ -242,6 +249,29 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     for (const packId of required) if (packId !== SRD_PACK_ID && packId !== entry.packId) stats.interiorRequires.push({ packId: entry.packId, require: packId })
     converted.set(entry.id, built)
   }
+  const layerOf = (packId: string): number => packId === SRD_PACK_ID ? 0 : (BOOKS.find((b) => b.packId === packId)?.layer ?? 0)
+  for (const plan of planned) {
+    if (plan.raw._family !== true) continue
+    const family = converted.get(plan.id)
+    const members = (family?.data.members as string[] | undefined) ?? []
+    if (!members.length) continue
+    const target = members.map((id) => byId.get(id)).filter((e): e is PlannedEntry => !!e)
+    let highPack = plan.packId
+    for (const member of target) if (layerOf(member.packId) > layerOf(highPack)) highPack = member.packId
+    plan.packId = highPack
+    plan.srd = target.every((e) => e.srd)
+    if (family) (family.data.credit as { srd?: boolean }).srd = plan.srd
+  }
+  for (const [id, built] of converted) {
+    const plan = byId.get(id)
+    if (!plan) continue
+    const required = requiresFor(plan, built.data as Record<string, unknown>, byId)
+    const allowed = new Set([plan.packId, SRD_PACK_ID, ...required])
+    const count = { n: 0 }
+    built.data = pruneRefs(built.data, allowed, byId, count) as typeof built.data
+    pruneStructural(built.data as Record<string, unknown>, allowed, byId)
+    stats.prunedRefs += count.n
+  }
   stats.unmappedFoundry = [...unmappedFoundry].map(([key, value]) => ({ key, ...value }))
   const packIds = [SRD_PACK_ID, ...BOOKS.map((b) => b.packId)]
   const packs: ConvertedPack[] = packIds.map((packId) => {
@@ -249,14 +279,14 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
       const p = byId.get(e.id)
       return p?.packId === packId
     })
-    const requireSet = new Set<string>()
+    const book = BOOKS.find((b) => b.packId === packId)
+    const requireSet = new Set<string>((book?.requiresBooks ?? []).map((s) => PACK_BY_SOURCE.get(s)!))
     for (const entry of entries) {
       const plan = byId.get(entry.id)!
       for (const pack of requiresFor(plan, entry.data, byId)) requireSet.add(pack)
     }
     const features = ruleOptionsFor(packId, entries, planned)
-    const book = BOOKS.find((b) => b.packId === packId)
-    const requires = [...requireSet].filter((id) => id !== packId).sort().map((id) => ({ id }))
+    const requires = [...requireSet].filter((id) => id !== packId && id !== SRD_PACK_ID).sort().map((id) => ({ id }))
     const manifest: PackManifest = {
       id: packId,
       ruleId: 'dnd5e2014',

@@ -132,12 +132,6 @@ function contentsOf(raw: Record<string, unknown>, ctx: ConvertContext): Array<{ 
   }
   return out.length ? out : undefined
 }
-function familyOf(raw: Record<string, unknown>, ctx: ConvertContext): Record<string, unknown> | undefined {
-  const group = ctx.itemGroups.find((g) => Array.isArray(g.items) && (g.items as unknown[]).some((x) => String(x).split('|')[0] === str(raw.name)) && String(g.source) === str(raw.source)) ?? ctx.itemGroups.find((g) => Array.isArray(g.items) && (g.items as unknown[]).some((x) => String(x).split('|')[0] === str(raw.name)))
-  if (!group) return undefined
-  return { id: `item.${slug(str(group.ENG_name) || str(group.name))}-family.${str(group.source).toLowerCase()}` }
-}
-
 export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const foundryRaw = foundryFeature({ items: ctx.foundryItems }, raw, 'item', entry.source)
@@ -150,7 +144,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
   const activities = [...(rules?.activities ?? []), ...(ITEM_ACTIVITIES[entry.id] ?? [])]
   const base = (raw._baseItem ?? {}) as Record<string, unknown>
   const family = raw._family === true
-  const text = raw._template === true || family ? [{ p: entry.name }] : convertBlocks(raw.entries, inline)
+  const text = raw._template === true || family ? [{ p: family ? `${entry.name}（系列）` : entry.name }] : convertBlocks(raw.entries, inline)
   const category = family ? 'family' : raw._template === true ? 'template' : categoryOf(raw)
   const baseId = str(base.name) ? ctx.resolveEntryId('item', str(base.name)) : undefined
   const data: Record<string, unknown> = {
@@ -174,7 +168,6 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(contentsOf(raw, ctx) ? { contents: contentsOf(raw, ctx) } : {}),
     ...(raw.atomicPackContents === true ? { atomic: true } : {}),
     ...(raw.containerCapacity && typeof raw.containerCapacity === 'object' ? { container: raw.containerCapacity } : {}),
-    ...(!family && familyOf(raw, ctx) ? { family: familyOf(raw, ctx) } : {}),
     ...(family ? { members: (Array.isArray(raw.items) ? raw.items : []).map((x) => ctx.resolveEntryId('item', String(x).split('|')[0])).filter((id): id is string => !!id) } : {}),
     tags: [str(raw.type ?? raw.baseItem ?? 'item')],
     ...(raw._variant && typeof raw._variant === 'object' ? { variantOf: `item.${slug(str((raw._variant as Record<string, unknown>).ENG_name) || str((raw._variant as Record<string, unknown>).name))}.${str(raw.source).toLowerCase()}` } : {}),
@@ -183,5 +176,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
   }
   if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }
   const unique = data.rarity === 'artifact'
-  return { id: entry.id, type: 'item', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique, summary: summaryOf('item', entry.name, data, plainText(text)), data }
+  const displayName = family ? `${entry.name}（系列）` : entry.name
+  const displayNameEn = family ? `${entry.nameEn} (Family)` : entry.nameEn
+  return { id: entry.id, type: 'item', name: displayName, nameEn: displayNameEn, keywords: keywordsOf(entry), unique, summary: summaryOf('item', displayName, data, plainText(text)), data }
 }

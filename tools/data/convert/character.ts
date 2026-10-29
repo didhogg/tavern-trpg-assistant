@@ -203,7 +203,7 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
       ...features.filter((f) => f.name.includes('属性值提升')).map((f) => ({ kind: 'abilityScoreImprovement', level: f.level, points: 2, explain: f.id })),
       ...features.flatMap((f) => PROFICIENCY_TRAITS[f.id] ? [{ kind: 'trait', level: f.level, grants: PROFICIENCY_TRAITS[f.id].grants ?? [], choices: PROFICIENCY_TRAITS[f.id].choices ?? [] }] : []),
       ...features.filter((f) => f.name.includes('专精')).map((f) => ({ kind: 'expertise', level: f.level, count: 2, from: 'proficient' })),
-      { kind: 'subclass', level: subclassLevel, ...(() => { const all = [...ctx.featuresByOwner.values()].flat(); const f = all.find((x) => String((x.raw as Record<string, unknown>).className ?? '') === className && Number((x.raw as Record<string, unknown>).level ?? 0) === subclassLevel); return f ? { explain: f.id } : {} })() },
+      { kind: 'subclass', level: subclassLevel, ...(() => { const all = [...ctx.featuresByOwner.values()].flat(); const candidates = all.filter((x) => String((x.raw as Record<string, unknown>).className ?? '') === className && Number((x.raw as Record<string, unknown>).level ?? 0) === subclassLevel); const f = candidates.find((x) => /道途|范型/.test(x.name)) ?? candidates[0]; return f ? { explain: f.id } : {} })() },
       ...scaleValuesOf(raw),
       ...foundryScaleValues(ctx, entry),
       ...advancementExtras(raw),

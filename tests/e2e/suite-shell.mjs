@@ -204,6 +204,16 @@ async function comboTests(page, label) {
   check(`[${label}] 药丸标签：点 × 移除，× 的名称写明是谁的哪个标签`, (await page.getByRole('button', { name: '移除盖尔的『队伍成员』标签' }).count()) === 0 && (await page.getByRole('button', { name: '移除盖尔的『风暴岛』标签' }).count()) === 1)
 }
 
+async function waitToastCount(page, count, timeout = 10_000) {
+  const toasts = page.locator('.trpg-toast')
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    if ((await toasts.count()) === count) return
+    await page.waitForTimeout(100)
+  }
+  throw new Error(`提示条数量未在 ${timeout}ms 内变为 ${count}（当前 ${await toasts.count()}）`)
+}
+
 async function toastTests(page, label) {
   const btn = (name) => page.getByRole('button', { name, exact: true })
   const toasts = page.locator('.trpg-toast')
@@ -213,11 +223,13 @@ async function toastTests(page, label) {
   await btn('成功提示').click()
   await settle(page, 350)
   check(`[${label}] 三种提示同时显示`, (await toasts.count()) === 3)
-  await page.waitForTimeout(4300)
+  await page.mouse.move(0, 0)
+  await page.mouse.move(0, 0)
+  await waitToastCount(page, 2)
   check(`[${label}] 成功提示 4 秒后自动消失，其余仍在`, (await toasts.count()) === 2 && (await page.getByText('下载失败：网络中断').isVisible()))
-  await page.waitForTimeout(2000)
+  await waitToastCount(page, 1)
   check(`[${label}] 可撤销提示 6 秒后自动消失`, (await toasts.count()) === 1)
-  await page.waitForTimeout(2000)
+  await waitToastCount(page, 0)
   check(`[${label}] 失败提示 8 秒后自动消失，没有常驻提示`, (await toasts.count()) === 0)
   for (let i = 0; i < 4; i++) await btn('成功提示').click()
   await settle(page, 350)
