@@ -2,8 +2,8 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "book.data[].ENG_name": {"how":"mapped","to":"i18n.en.fields.data","wp":"R13"},
-  "book.data[].data": {"how":"mapped","to":"data.text","wp":"R12"},
-  "book.data[].data.quickref": {"how":"mapped","to":"data.text","wp":"R12"},
+  "book.data[].data": {"how":"text","to":"data.text","wp":"R12"},
+  "book.data[].data.quickref": {"how":"text","to":"data.text","wp":"R12"},
   "book.data[].entries": {"how":"text","to":"data.text","wp":"R12"},
   "book.data[].entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},
   "book.data[].entries[].altText": {"how":"text","to":"data.text","wp":"R12"},

@@ -6,6 +6,6 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "gems.page": {"how":"mapped","to":"data.src.page","wp":"R9"},
   "gems.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "gems.source": {"how":"mapped","to":"data.src.book","wp":"R9"},
-  "gems.table": {"how":"mapped","to":"data.text","wp":"R9"},
-  "gems.type": {"how":"mapped","to":"data.text","wp":"R9"},
+  "gems.table": {"how":"mapped","to":"data.rows","wp":"R9"},
+  "gems.type": {"how":"mapped","to":"data.type","wp":"R9"},
 }

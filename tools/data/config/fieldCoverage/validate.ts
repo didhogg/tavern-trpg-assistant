@@ -3,6 +3,7 @@ import { IMAGE_PATH } from './image'
 import { entryDataByType } from '../../../../src/rules/dnd5e2014/data/entries'
 import { PLANNED_FIELDS } from '../plannedFields'
 import { outputTypeOf } from '../outputTypes'
+import { isTextContainer, isProsePath } from '../textContainers'
 
 const TO = /^(data\.[A-Za-z0-9_$[\]\.]+|entry\.[A-Za-z0-9_$]+|i18n\.en\.[A-Za-z0-9_$[\]\.]+)$/
 const WP = /^R(?:[1-9]|1[0-5])$/
@@ -54,6 +55,8 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
   if (!entry.to || !TO.test(entry.to)) throw new Error(`to 不是具体输出位置：${path} → ${entry.to ?? '（空）'}`)
   if (/R\d|汇总转换|统一处理|批量|TODO/i.test(entry.to)) throw new Error(`to 仍是批量标签：${path} → ${entry.to}`)
   if (!entry.wp || !WP.test(entry.wp)) throw new Error(`wp 缺失或非法：${path}`)
+  if (entry.how === 'mapped' && isTextContainer(entry.to)) throw new Error(`mapped 不能指向自由正文容器：${path} → ${entry.to}`)
+  if (entry.how === 'text' && !isProsePath(path)) throw new Error(`text 只能用于散文路径：${path}`)
   if (entry.to.startsWith('data.')) {
     const first = entry.to.slice(5).split(/[.\[]/, 1)[0]
     if (first === 'system') throw new Error(`data.system 一律拒绝：${path}`)

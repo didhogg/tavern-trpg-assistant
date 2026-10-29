@@ -28,7 +28,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "charoption.entries[].rows": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.entries[].type": {"how":"text","to":"data.text","wp":"R11"},
   "charoption.name": {"how":"mapped","to":"entry.name","wp":"R11"},
-  "charoption.optionType": {"how":"mapped","to":"data.text","wp":"R11"},
+  "charoption.optionType": {"how":"mapped","to":"data.optionType","wp":"R11"},
   "charoption.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
   "charoption.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "charoption.reprintedAs[].tag": {"how":"mapped","to":"data.supersededBy","wp":"R10"},

@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "skill.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "skill.ability": {"how":"mapped","to":"data.text","wp":"R11"},
+  "skill.ability": {"how":"mapped","to":"data.ability","wp":"R11"},
   "skill.basicRules": {"how":"mapped","to":"data.credit.license","wp":"R11"},
   "skill.entries": {"how":"text","to":"data.text","wp":"R11"},
   "skill.entries[].items": {"how":"text","to":"data.text","wp":"R11"},

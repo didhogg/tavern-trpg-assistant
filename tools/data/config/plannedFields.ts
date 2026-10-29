@@ -1,3 +1,5 @@
+import { PLANNED_EXTRA_1 } from './plannedFields.extra.1'
+import { PLANNED_EXTRA_2 } from './plannedFields.extra.2'
 /**
  * 规格 §5 写明、但当前 zod 尚未覆盖的输出字段。键为 `<输出类型>.<data 第一段>`。
  * 只登记规格字段；不登记 data.system。
@@ -166,4 +168,5 @@ export const PLANNED_FIELDS: Record<string, string> = {
   'charoption.versionGroup': '§5.2',
   'charoption.playable': '§5.2',
   'charoption.nameSuffix': '§5.2',
+  ...PLANNED_EXTRA_1, ...PLANNED_EXTRA_2,
 }

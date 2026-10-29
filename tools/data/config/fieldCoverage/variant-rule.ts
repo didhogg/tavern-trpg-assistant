@@ -86,9 +86,9 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "variant-rule.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "variant-rule.reprintedAs[].tag": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "variant-rule.reprintedAs[].uid": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
-  "variant-rule.ruleType": {"how":"mapped","to":"data.text","wp":"R14"},
+  "variant-rule.ruleType": {"how":"mapped","to":"data.ruleType","wp":"R14"},
   "variant-rule.source": {"how":"mapped","to":"data.src.book","wp":"R14"},
   "variant-rule.srd": {"how":"mapped","to":"data.credit.license","wp":"R14"},
   "variant-rule.translator": {"how":"mapped","to":"data.credit.by","wp":"R14"},
-  "variant-rule.type": {"how":"mapped","to":"data.text","wp":"R14"},
+  "variant-rule.type": {"how":"mapped","to":"data.type","wp":"R14"},
 }
