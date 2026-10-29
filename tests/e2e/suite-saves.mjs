@@ -163,6 +163,13 @@ export async function savesSuite(page, label, { width, url }) {
   await page.evaluate(() => { const c = window.SillyTavern.getContext(); c.characterId = 0; return c.eventSource.emit('chat_id_changed') })
   await page.getByTestId('banner-title').waitFor()
   check(`[${label}] 回到聊天：战役数据自动载入`, (await page.getByTestId('banner-title').innerText()) === '分支一')
+  const homeBox = await page.evaluate(() => {
+    const root = document.getElementById('trpg-assistant-root').shadowRoot
+    const banner = root.querySelector('.trpg-banner')
+    const cell = root.querySelector('.trpg-cell')
+    return { bannerH: banner.getBoundingClientRect().height, bannerPos: getComputedStyle(banner).position, cellBorder: getComputedStyle(cell).borderTopWidth, cellMinH: cell.getBoundingClientRect().height }
+  })
+  check(`[${label}] 首页样式在位：横幅高度受限（≤200px）、概览格有边框`, homeBox.bannerH > 100 && homeBox.bannerH <= 200 && homeBox.bannerPos === 'relative' && homeBox.cellBorder === '1px' && homeBox.cellMinH >= 88, JSON.stringify(homeBox))
 
   // 第二个窗口：只读
   const second = await page.context().newPage()
