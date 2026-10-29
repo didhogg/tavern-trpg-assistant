@@ -199,9 +199,9 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
         const target = match ? features.find((x) => x.name === match[1] && x.id !== f.id)?.id : undefined
         return { kind: 'itemGrant', level: f.level, items: [featureId], optional: 'tce-ocf', ...(target ? { replaces: target } : {}) }
       }),
-      ...features.filter((f) => f.name.includes('属性值提升')).map((f) => ({ kind: 'abilityScoreImprovement', level: f.level, points: 2 })),
+      ...features.filter((f) => f.name.includes('属性值提升')).map((f) => ({ kind: 'abilityScoreImprovement', level: f.level, points: 2, explain: f.id })),
       ...features.filter((f) => f.name.includes('专精')).map((f) => ({ kind: 'expertise', level: f.level, count: 2, from: 'proficient' })),
-      { kind: 'subclass', level: subclassLevel },
+      { kind: 'subclass', level: subclassLevel, ...(() => { const all = [...ctx.featuresByOwner.values()].flat(); const f = all.find((x) => String((x.raw as Record<string, unknown>).className ?? '') === className && Number((x.raw as Record<string, unknown>).level ?? 0) === subclassLevel); return f ? { explain: f.id } : {} })() },
       ...scaleValuesOf(raw),
       ...foundryScaleValues(ctx, entry),
       ...advancementExtras(raw),
@@ -223,7 +223,7 @@ export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
-    text: convertBlocks(raw.entries, inline),
+    text: (() => { const own = convertBlocks(raw.entries, inline); if (own.length) return own; const intro = features.slice().sort((a, b) => a.level - b.level).find((f) => f.level > 0); return intro ? convertBlocks(intro.raw.entries, inline) : [] })(),
     classId: entry.context.classId ?? '',
     ...(spellcastingOf(raw, true) ? { spellcasting: spellcastingOf(raw, true) } : {}),
     ...(expandedSpells(raw, ctx) ? { expandedSpells: expandedSpells(raw, ctx) } : {}),
@@ -242,6 +242,12 @@ function featureType(raw: Record<string, unknown>): string | undefined {
   const list = Array.isArray(raw.featureType) ? raw.featureType.map(String) : []
   if (!list.length) return undefined
   return list.map((code) => FEATURE_TYPES[code] ?? code).join('、')
+}
+
+function roleOf(name: string, ownerType: string): 'mechanic' | 'procedure' | 'intro' {
+  if (/属性值提升|道途特性|范型特性|子职业特性|选择.*(子职业|道途|范型)/.test(name)) return 'procedure'
+  if (ownerType === 'subclass' && /(道途|范型|领域|学派|誓言|结社|宗派)$/.test(name)) return 'intro'
+  return 'mechanic'
 }
 
 function optionKinds(raw: Record<string, unknown>): string[] | undefined {
@@ -311,6 +317,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ...(optionKinds(raw) ? { optionKind: optionKinds(raw) } : {}),
     ...(typeof raw.level === 'number' ? { level: raw.level } : {}),
     ...(featureType(raw) ? { featureType: featureType(raw) } : {}),
+    role: roleOf(entry.name, ownerType),
     ...(uses ? { uses } : {}),
     ...(effects.length ? { effects } : {}),
     ...(raw.prerequisite ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
