@@ -7,6 +7,7 @@ import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
 import { clip, plainText, summaryOf } from '../summary/summary'
 import { prereqToRequires } from './character2'
+import { advancementExtras, foundryScaleValues, scaleValuesOf, spellcastingOf } from './classRules'
 import type { InlineContext } from '../markup/inline'
 import { renderInline } from '../markup/inline'
 
@@ -24,13 +25,6 @@ function multiclassRequires(raw: Record<string, unknown> | undefined): Record<st
   }
   for (const [key, value] of Object.entries(req)) if (typeof value === 'number') all.push({ ability: { [key]: value } })
   return all.length ? { all } : undefined
-}
-
-function progressionOf(value: string): 'full' | 'half' | 'third' | 'pact' {
-  if (value === 'full' || value === 'pact') return value
-  if (value === '1/3') return 'third'
-  if (value === '1/2' || value === 'artificer') return 'half'
-  return 'full'
 }
 
 const ALL_SKILLS = [
@@ -128,6 +122,16 @@ function expandedSpells(raw: Record<string, unknown>, ctx: ConvertContext): Arra
   return out.size ? [...out].sort(([a], [b]) => a - b).map(([level, spells]) => ({ level, spells })) : undefined
 }
 
+function mergeAdvancement(items: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  const seen = new Set<string>()
+  return items.filter((item) => {
+    const key = `${String(item.kind)}|${String(item.id ?? item.level ?? '')}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const className = str(raw.name)
@@ -146,16 +150,20 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
     saves: (Array.isArray(raw.proficiency) ? raw.proficiency : []).map(String),
     proficiencies,
     startingEquipment: Array.isArray((raw.startingEquipment as Record<string, unknown> | undefined)?.default) ? ((raw.startingEquipment as Record<string, unknown>).default as string[]).map((v) => renderInline(v, inline)) : [],
-    ...(str(raw.spellcastingAbility) ? { spellcasting: { ability: str(raw.spellcastingAbility), progression: progressionOf(str(raw.casterProgression)), preparation: raw.preparedSpells ? 'prepared' : 'known' } } : {}),
+    ...(spellcastingOf(raw, false) ? { spellcasting: spellcastingOf(raw, false) } : {}),
     ...(classTable(raw, inline) ? { table: classTable(raw, inline) } : {}),
     subclassLevel,
     subclassTitle: str(raw.subclassTitle) || `${className}子职业`,
     ...(multiclass ? { multiclass: { requires: multiclassRequires(multiclass) ?? { all: [{ text: '见原书兼职规则' }] }, ...(multiclass.proficienciesGained ? { proficiencies: proficienciesOf(multiclass.proficienciesGained, inline) } : {}) } } : {}),
-    advancement: [
+    advancement: mergeAdvancement([
       ...features.filter((f) => f.level > 0).map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
       ...features.filter((f) => f.name.includes('属性值提升')).map((f) => ({ kind: 'abilityScoreImprovement', level: f.level, points: 2 })),
+      ...features.filter((f) => f.name.includes('专精')).map((f) => ({ kind: 'expertise', level: f.level, count: 2, from: 'proficient' })),
       { kind: 'subclass', level: subclassLevel },
-    ],
+      ...scaleValuesOf(raw),
+      ...foundryScaleValues(ctx, entry),
+      ...advancementExtras(raw),
+    ]),
   }
   return { id: entry.id, type: 'class', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('class', entry.name, data, plainText(data.text as never)), data }
 }
@@ -168,9 +176,12 @@ export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
     classId: entry.context.classId ?? '',
-    ...(str(raw.spellcastingAbility) ? { spellcasting: { ability: str(raw.spellcastingAbility), progression: 'full' } } : {}),
+    ...(spellcastingOf(raw, true) ? { spellcasting: spellcastingOf(raw, true) } : {}),
     ...(expandedSpells(raw, ctx) ? { expandedSpells: expandedSpells(raw, ctx) } : {}),
-    advancement: features.map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
+    advancement: mergeAdvancement([
+      ...features.map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
+      ...foundryScaleValues(ctx, entry),
+    ]),
   }
   return { id: entry.id, type: 'subclass', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('subclass', entry.name, data, plainText(data.text as never)), data }
 }

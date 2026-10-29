@@ -1,4 +1,5 @@
 import type { RefIndex } from '../markup/inline'
+import type { Raw } from '../extract/load'
 
 export interface ConvertContext {
   bookMachine: Map<string, boolean>
@@ -11,6 +12,8 @@ export interface ConvertContext {
   tableByName: Map<string, string>
   index: RefIndex
   resolveEntryId: (type: string, name: string) => string | undefined
+  foundryClasses?: Raw[]
+  foundrySubclasses?: Raw[]
 }
 
 export function makeContext(input: {
@@ -23,6 +26,8 @@ export function makeContext(input: {
   tablesByParent: Map<string, Array<{ id: string; name: string }>>
   tableByName: Map<string, string>
   index: RefIndex
+  foundryClasses?: Raw[]
+  foundrySubclasses?: Raw[]
 }): ConvertContext {
   return {
     ...input,

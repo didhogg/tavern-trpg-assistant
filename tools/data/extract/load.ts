@@ -40,6 +40,15 @@ export interface RawData {
   books: BookInfo[]
   spellLookup: Record<string, Raw>
   fallbackNames: Set<string>
+  foundryClasses: Raw[]
+  foundrySubclasses: Raw[]
+  foundryClassFeatures: Raw[]
+  foundrySubclassFeatures: Raw[]
+  foundryFeats: Raw[]
+  foundryRaces: Raw[]
+  foundryOptionalFeatures: Raw[]
+  foundryItems: Raw[]
+  foundryActions: Raw[]
 }
 
 function isObj(value: unknown): value is Raw {
@@ -213,6 +222,13 @@ export function expandItemEntries(items: Raw[], templates: Raw[]): Raw[] {
   })
 }
 
+async function loadFoundry(path: string, key: string): Promise<Raw[]> {
+  const raw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, path))
+  const list = raw[key]
+  if (!Array.isArray(list)) throw new Error(`${path} 缺少数组 ${key}`)
+  return list.filter(isObj).filter((item) => BOOK_SOURCES.has(String(item.source)))
+}
+
 export async function loadRawData(): Promise<RawData> {
   const booksRaw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, 'books.json'))
   const books = (Array.isArray(booksRaw.book) ? booksRaw.book : []).filter(isObj).map((b) => ({ source: String(b.source), name: String(b.name), translator: typeof b.translator === 'string' ? b.translator : undefined }))
@@ -240,5 +256,14 @@ export async function loadRawData(): Promise<RawData> {
     books,
     spellLookup: await readJson<Record<string, Raw>>(join(DATA_5ETOOLS, 'generated', 'gendata-spell-source-lookup.json')),
     fallbackNames: await loadFallbackNames(),
+    foundryClasses: await loadFoundry('class/foundry.json', 'class'),
+    foundrySubclasses: await loadFoundry('class/foundry.json', 'subclass'),
+    foundryClassFeatures: await loadFoundry('class/foundry.json', 'classFeature'),
+    foundrySubclassFeatures: await loadFoundry('class/foundry.json', 'subclassFeature'),
+    foundryFeats: await loadFoundry('foundry-feats.json', 'feat'),
+    foundryRaces: await loadFoundry('foundry-races.json', 'raceFeature'),
+    foundryOptionalFeatures: await loadFoundry('foundry-optionalfeatures.json', 'optionalfeature'),
+    foundryItems: await loadFoundry('foundry-items.json', 'item'),
+    foundryActions: await loadFoundry('foundry-actions.json', 'action'),
   }
 }

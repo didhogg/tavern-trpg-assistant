@@ -191,6 +191,8 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     tablesByParent,
     tableByName,
     index,
+    foundryClasses: data.foundryClasses,
+    foundrySubclasses: data.foundrySubclasses,
   })
   const allowedAll = new Set(all.map((e) => e.packId))
   const stats: ConversionStats = {

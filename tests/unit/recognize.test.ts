@@ -55,8 +55,8 @@ describe('recognizeFile（U2 §2.3 识别顺序与提示）', () => {
   it('规则未安装 / 要求更高扩展 / 数据版本 v1、v2 接受、v3 拒绝', () => {
     expect(codeOf(() => recognizeFile(makePack({ ruleId: 'coc7' }), ctx))).toEqual({ code: 'E_RULE_MISSING', message: '需要先安装规则『coc7』' })
     expect(codeOf(() => recognizeFile(makePack({ minAppVersion: '9.0.0' }), ctx)).code).toBe('E_NEWER_APP')
-    expect(recognizeFile(pack({ 'entries/spell.json': '[]' }, { dataVersion: 1 }), ctx).manifest.dataVersion).toBe(1)
-    expect(recognizeFile(pack({ 'entries/spell.json': '[]' }, { dataVersion: 2 }), ctx).manifest.dataVersion).toBe(2)
+    expect((recognizeFile(pack({ 'entries/spell.json': '[]' }, { dataVersion: 1 }), ctx) as { manifest: { dataVersion: number } }).manifest.dataVersion).toBe(1)
+    expect((recognizeFile(pack({ 'entries/spell.json': '[]' }, { dataVersion: 2 }), ctx) as { manifest: { dataVersion: number } }).manifest.dataVersion).toBe(2)
     expect(codeOf(() => recognizeFile(pack({ 'entries/spell.json': '[]' }, { dataVersion: 3 }), ctx))).toEqual({ code: 'E_NEWER_DATA', message: '这个内容包由更新版本的扩展制作，请先更新扩展' })
   })
 
