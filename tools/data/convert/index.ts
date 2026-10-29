@@ -259,7 +259,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     let highPack = plan.packId
     for (const member of target) if (layerOf(member.packId) > layerOf(highPack)) highPack = member.packId
     plan.packId = highPack
-    plan.srd = target.every((e) => e.srd)
+    plan.srd = plan.packId === SRD_PACK_ID
     if (family) (family.data.credit as { srd?: boolean }).srd = plan.srd
   }
   for (const [id, built] of converted) {

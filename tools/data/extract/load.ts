@@ -118,6 +118,10 @@ export function resolveCopies(list: Raw[]): Raw[] {
     if (!base) return item
     const { _copy, _mod, ...own } = item
     const merged = { ...base, ...own }
+    delete merged.srd
+    delete merged.basicRules
+    if (own.srd !== undefined) merged.srd = own.srd
+    if (own.basicRules !== undefined) merged.basicRules = own.basicRules
     if (isObj(_mod)) return applyMods(merged, _mod)
     return merged
   })
