@@ -125,7 +125,15 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
     const idSlug = str(raw._variantSlug) || slug(str(raw.ENG_name) || str(raw.name))
     entries.push(make('item', raw, [idSlug], { baseOnly: raw._baseOnly ? '1' : '0' }))
   }
-  for (const raw of data.races) entries.push(make('race', raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  const hiddenAbilities = new Map<string, unknown>()
+  for (const sub of data.subraces) {
+    if (str(sub.name).trim() || str(sub.ENG_name).trim() || !sub.ability) continue
+    hiddenAbilities.set(`${str(sub.raceName)}|${str(sub.raceSource)}`, sub.ability)
+  }
+  for (const raw of data.races) {
+    const ability = raw.ability ?? hiddenAbilities.get(`${str(raw.name)}|${str(raw.source)}`)
+    entries.push(make('race', ability ? { ...raw, ability } : raw, [slug(str(raw.ENG_name) || str(raw.name))]))
+  }
   for (const raw of data.subraces) {
     if (!str(raw.name).trim() && !str(raw.ENG_name).trim()) {
       skippedSubraces++
@@ -136,7 +144,7 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
     const parentSlug = parent ? slug(parent.nameEn) : slug(str(raw.raceName))
     const displayName = parent ? `${str(raw.name)}${parent.name}` : str(raw.name)
     const displayEn = parent ? `${str(raw.ENG_name) || str(raw.name)} ${parent.nameEn}` : str(raw.ENG_name)
-    entries.push(make('subrace', { ...raw, name: displayName, ENG_name: displayEn }, [parentSlug, slug(str(raw.ENG_name) || str(raw.name))], { parentRace: parent?.id ?? '' }))
+    entries.push(make('subrace', { ...raw, name: displayName, ENG_name: displayEn }, [parentSlug, slug(str(raw.ENG_name) || str(raw.name))], { parentRace: parent?.id ?? '', parentSpeed: parent?.raw.speed === undefined ? '' : JSON.stringify(parent.raw.speed) }))
   }
   for (const raw of data.backgrounds) {
     const entry = make('background', raw, [slug(str(raw.ENG_name) || str(raw.name))])

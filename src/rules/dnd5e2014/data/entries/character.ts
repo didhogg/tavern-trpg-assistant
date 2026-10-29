@@ -103,14 +103,20 @@ const languageListSchema = z.union([
   z.array(z.string()),
   z.object({ fixed: z.array(languageSchema).default([]), choose: z.number().int().nonnegative().optional() }),
 ])
+const proficiencyGroupSchema = z.union([
+  z.array(z.string()),
+  z.object({
+    fixed: z.array(z.string()).default([]),
+    choose: z.object({ count: z.number().int().positive(), from: z.array(z.string()).optional() }).optional(),
+  }),
+])
 const raceProficiencySchema = z.union([
   z.array(z.string()),
   z.object({
-    skills: z.array(z.string()).default([]),
-    tools: z.array(z.string()).default([]),
-    weapons: z.array(z.string()).default([]),
-    armor: z.array(z.string()).default([]),
-    choose: z.object({ count: z.number().int().positive(), from: z.array(z.string()).optional() }).optional(),
+    skills: proficiencyGroupSchema.default([]),
+    tools: proficiencyGroupSchema.default([]),
+    weapons: proficiencyGroupSchema.default([]),
+    armor: proficiencyGroupSchema.default([]),
   }),
 ])
 
@@ -120,7 +126,15 @@ export const raceDataSchema = z.looseObject({
   size: z.array(z.enum(['T', 'S', 'M', 'L', 'H', 'G'])).default(['M']),
   speed: z.record(z.string(), z.number()).default({ walk: 30 }),
   abilityBonus: abilityBonusSchema.optional(),
-  flexibleAbility: z.object({ count: z.number().int().positive(), amount: z.number().int().positive() }).optional(),
+  flexibleAbility: z
+    .union([
+      z.object({ count: z.number().int().positive(), amount: z.number().int().positive() }),
+      z.object({
+        modes: z.array(z.object({ count: z.number().int().positive(), amount: z.number().int().positive() })).min(1),
+        alternative: z.object({ count: z.number().int().positive(), amount: z.number().int().positive() }).optional(),
+      }),
+    ])
+    .optional(),
   darkvision: z.number().int().nonnegative().optional(),
   senses: z.array(z.object({ type: z.enum(['darkvision', 'blindsight', 'tremorsense', 'truesight']), range: z.number().int().nonnegative() })).optional(),
   languages: languageListSchema.default([]),
@@ -138,13 +152,7 @@ export type RaceData = z.infer<typeof raceDataSchema>
 export const subraceDataSchema = raceDataSchema.extend({ parentRace: entryIdSchema })
 export type SubraceData = z.infer<typeof subraceDataSchema>
 
-const backgroundProficiencySchema = z.union([
-  z.array(z.string()),
-  z.object({
-    fixed: z.array(z.string()).default([]),
-    choose: z.object({ count: z.number().int().positive(), from: z.array(z.string()).optional() }).optional(),
-  }),
-])
+const backgroundProficiencySchema = proficiencyGroupSchema
 
 export const backgroundDataSchema = z.looseObject({
   ...entryCommonFields,

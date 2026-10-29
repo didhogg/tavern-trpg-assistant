@@ -1,11 +1,11 @@
 import type { Entry } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
-import { creditFor, keywordsOf, pageOf } from './common'
+import { creditFor, DAMAGE_FROM_CN, keywordsOf, pageOf } from './common'
+import { CONDITIONS, DAMAGE_TYPES, SKILL_KEYS } from '../../../src/rules/dnd5e2014/data/enums'
 import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
 import { plainText, summaryOf } from '../summary/summary'
-import { renderInline } from '../markup/inline'
 import type { InlineContext } from '../markup/inline'
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha']
@@ -45,31 +45,185 @@ function speed(raw: Record<string, unknown>): Record<string, number> {
   return { walk: 0 }
 }
 
-function keys(value: unknown): string[] {
+function fixedAndChoose(value: unknown, from: string[]): { fixed: string[]; choose?: { count: number; from?: string[] } } {
+  const fixed: string[] = []
+  let choose: { count: number; from?: string[] } | undefined
+  for (const item of Array.isArray(value) ? value : []) {
+    if (!item || typeof item !== 'object') continue
+    for (const [key, v] of Object.entries(item as Record<string, unknown>)) {
+      if (key === 'choose' && v && typeof v === 'object') {
+        const c = v as Record<string, unknown>
+        choose = { count: Number(c.count ?? 1), ...(Array.isArray(c.from) ? { from: c.from.map(String) } : {}) }
+      } else if (key === 'any' && typeof v === 'number') {
+        choose = { count: v, from }
+      } else if (v === true) {
+        fixed.push(key)
+      } else if (typeof v === 'number' && v > 0) {
+        choose = { count: v, from: [key] }
+      }
+    }
+  }
+  return { fixed, ...(choose ? { choose } : {}) }
+}
+
+function langSet(value: unknown): { fixed: string[]; choose?: number } {
+  const fixed: string[] = []
+  let choose = 0
+  for (const item of Array.isArray(value) ? value : []) {
+    if (!item || typeof item !== 'object') continue
+    for (const [key, v] of Object.entries(item as Record<string, unknown>)) {
+      if (key === 'anyStandard' && typeof v === 'number') choose += v
+      else if (v === true && key !== 'choose') fixed.push(key)
+      else if (typeof v === 'number' && v > 0) choose += v
+    }
+  }
+  return { fixed, ...(choose ? { choose } : {}) }
+}
+
+function damageCodes(value: unknown): string[] {
+  const list = Array.isArray(value) ? value : []
+  return list.flatMap((item) => {
+    if (typeof item !== 'string') return []
+    const code = DAMAGE_FROM_CN[item] ?? (DAMAGE_TYPES.includes(item as never) ? item : undefined)
+    return code ? [code] : []
+  })
+}
+
+function conditionCodes(value: unknown): string[] {
+  const list = Array.isArray(value) ? value : []
+  return list.filter((item): item is string => typeof item === 'string' && (CONDITIONS as readonly string[]).includes(item))
+}
+
+function spellNames(value: unknown): string[] {
   if (!Array.isArray(value)) return []
-  const out = new Set<string>()
-  for (const item of value) if (item && typeof item === 'object') for (const key of Object.keys(item)) out.add(key)
-  return [...out]
+  return value.filter((item): item is string => typeof item === 'string').map((item) => item.replace(/#\w+$/, ''))
+}
+
+function spellGrants(raw: Record<string, unknown>, ctx: ConvertContext): Array<Record<string, unknown>> {
+  const out: Array<Record<string, unknown>> = []
+  const ability = typeof raw.ability === 'string' ? raw.ability : undefined
+  for (const item of Array.isArray(raw.additionalSpells) ? raw.additionalSpells : []) {
+    if (!item || typeof item !== 'object') continue
+    const rec = item as Record<string, unknown>
+    const abilityValue = typeof rec.ability === 'string' ? rec.ability : ability
+    for (const [mode, groups] of [['known', rec.known], ['innate', rec.innate]] as const) {
+      if (!groups || typeof groups !== 'object') continue
+      for (const value of Object.values(groups as Record<string, unknown>)) {
+        const names = Array.isArray(value) ? spellNames(value) : []
+        if (!names.length) continue
+        const ids = names.map((name) => ctx.resolveEntryId('spell', name)).filter((id): id is string => !!id)
+        if (ids.length) out.push({ spell: ids[0], mode, ...(abilityValue ? { ability: abilityValue } : {}), ...(mode === 'innate' ? { uses: { max: 1, recharge: 'long' } } : {}) })
+      }
+    }
+    const daily = rec.innate && typeof rec.innate === 'object' ? (rec.innate as Record<string, unknown>) : undefined
+    if (daily) for (const value of Object.values(daily)) {
+      if (!value || typeof value !== 'object' || !('daily' in value)) continue
+      const list = (value as Record<string, unknown>).daily
+      if (list && typeof list === 'object') for (const names of Object.values(list as Record<string, unknown>)) {
+        for (const name of spellNames(names)) {
+          const id = ctx.resolveEntryId('spell', name)
+          if (id) out.push({ spell: id, mode: 'innate', ...(abilityValue ? { ability: abilityValue } : {}), uses: { max: 1, recharge: 'long' } })
+        }
+      }
+    }
+  }
+  const seen = new Set<string>()
+  return out.filter((item) => {
+    const key = `${String(item.spell)}|${String(item.mode)}|${String(item.uses ? 'uses' : '')}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+
+function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<string, unknown>> {
+  const groups = Array.isArray(raw.startingEquipment) ? raw.startingEquipment : []
+  const out: Array<Record<string, unknown>> = []
+  const item = (value: unknown): Record<string, unknown> | undefined => {
+    if (typeof value === 'string') return { item: value.split('|')[0], qty: 1 }
+    if (!value || typeof value !== 'object') return undefined
+    const rec = value as Record<string, unknown>
+    const name = typeof rec.item === 'string' ? rec.item.split('|')[0] : typeof rec.special === 'string' ? rec.special : undefined
+    if (!name) return undefined
+    return { item: name, qty: typeof rec.quantity === 'number' ? rec.quantity : 1 }
+  }
+  for (const group of groups) {
+    if (!group || typeof group !== 'object') continue
+    const rec = group as Record<string, unknown>
+    const fixed = Array.isArray(rec._) ? rec._.map(item).filter((x): x is Record<string, unknown> => !!x) : []
+    const choice: Array<Array<Record<string, unknown>>> = []
+    for (const key of Object.keys(rec).filter((k) => /^[a-z]$/.test(k)).sort()) {
+      const list = rec[key]
+      if (!Array.isArray(list)) continue
+      const options = list.map(item).filter((x): x is Record<string, unknown> => !!x)
+      if (options.length) choice.push(options)
+    }
+    const row: Record<string, unknown> = {}
+    if (fixed.length) row.fixed = fixed
+    if (choice.length) row.choice = choice
+    if (Object.keys(row).length) out.push(row)
+  }
+  return out
 }
 
 export function convertRace(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const traits = (ctx.featuresByOwner.get(entry.id) ?? []).map((f) => f.id)
-  const flexible = !raw.ability && entry.source === 'MPMM' ? { count: 3, amount: 1 } : undefined
+  const sources = raw.additionalSpells
+  const grants = spellGrants({ ...raw, additionalSpells: sources }, ctx)
+  const effects: Array<Record<string, unknown>> = []
+  const resist = damageCodes(raw.resist)
+  const immune = damageCodes(raw.immune)
+  const conditionImmune = conditionCodes(raw.conditionImmune)
+  const resistChoice = Array.isArray(raw.resist) && raw.resist.some((x) => x && typeof x === 'object' && 'choose' in (x as Record<string, unknown>))
+    ? (raw.resist as Array<Record<string, unknown>>).flatMap((x) => {
+        const choose = x.choose as { from?: unknown[] } | undefined
+        return Array.isArray(choose?.from) ? choose.from.map(String) : []
+      })
+    : []
+  if (resistChoice.length) effects.push({ kind: 'note', text: `选择一种伤害抗性：${resistChoice.join('、')}` })
+  const clean = (value: { fixed: string[]; choose?: { count: number; from?: string[] } }): { fixed: string[]; choose?: { count: number; from?: string[] } } => ({
+    fixed: value.fixed.map((v) => ctx.resolveEntryId('item', v.split('|')[0]) ?? v.split('|')[0]),
+    ...(value.choose ? { choose: { ...value.choose, ...(value.choose.from ? { from: value.choose.from.map((v) => ctx.resolveEntryId('item', v.split('|')[0]) ?? v.split('|')[0]) } : {}) } } : {}),
+  })
+  const prof = {
+    skills: fixedAndChoose(raw.skillProficiencies, SKILL_KEYS),
+    tools: clean(fixedAndChoose(raw.toolProficiencies, [])),
+    weapons: clean(fixedAndChoose(raw.weaponProficiencies, [])),
+    armor: fixedAndChoose(raw.armorProficiencies, []),
+  }
+  let speedData: Record<string, number> | undefined
+  if (raw.speed !== undefined) speedData = speed(raw)
+  else if (entry.context.parentSpeed) {
+    try { const parent = JSON.parse(entry.context.parentSpeed) as unknown; if (typeof parent === 'number') speedData = { walk: parent }; else if (parent && typeof parent === 'object') speedData = speed({ speed: parent }) } catch { speedData = undefined }
+  }
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
     ...(entry.type === 'subrace' ? { parentRace: entry.context.parentRace } : {}),
     size: Array.isArray(raw.size) ? raw.size.map(String) : [String(raw.size ?? 'M')],
-    speed: speed(raw),
+    ...(speedData ? { speed: speedData } : {}),
     ...(abilityBonus(raw) ? { abilityBonus: abilityBonus(raw) } : {}),
-    ...(flexible ? { flexibleAbility: flexible } : {}),
-    ...(typeof raw.darkvision === 'number' ? { darkvision: raw.darkvision } : {}),
-    languages: keys(raw.languageProficiencies),
-    proficiencies: [...keys(raw.skillProficiencies), ...keys(raw.toolProficiencies)],
+    ...(!raw.ability && entry.source === 'MPMM'
+      ? { flexibleAbility: { modes: [{ count: 1, amount: 2 }, { count: 2, amount: 1 }], alternative: { count: 3, amount: 1 } } }
+      : {}),
+    ...(typeof raw.darkvision === 'number' ? { darkvision: raw.darkvision, senses: [{ type: 'darkvision', range: raw.darkvision }] } : {}),
+    languages: langSet(raw.languageProficiencies),
+    proficiencies: prof,
+    ...(resist.length ? { resist } : {}),
+    ...(immune.length ? { immune } : {}),
+    ...(conditionImmune.length ? { conditionImmune } : {}),
+    ...(grants.length ? { spellGrants: grants } : {}),
+    ...(effects.length ? { effects } : {}),
     traits,
-    advancement: traits.map((id) => ({ kind: 'itemGrant', level: 1, items: [id], optional: false })),
+    advancement: [
+      ...traits.map((id) => ({ kind: 'itemGrant', level: 1, items: [id], optional: false })),
+      ...(Array.isArray(raw.feats) && raw.feats.some((f) => f && typeof f === 'object' && 'any' in (f as Record<string, unknown>))
+        ? [{ kind: 'itemChoice', level: 1, count: 1, featureType: '专长' }]
+        : []),
+    ],
   }
   return { id: entry.id, type: entry.type, name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf(entry.type, entry.name, data, plainText(data.text as never)), data }
 }
@@ -82,8 +236,12 @@ export function convertBackground(entry: PlannedEntry, ctx: ConvertContext, inli
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
-    proficiencies: { skills: keys(raw.skillProficiencies), tools: keys(raw.toolProficiencies), languages: keys(raw.languageProficiencies) },
-    equipment: Array.isArray((raw.startingEquipment as Record<string, unknown> | undefined)?.default) ? ((raw.startingEquipment as Record<string, unknown>).default as string[]).map((v) => renderInline(v, inline)) : [],
+    proficiencies: {
+      skills: fixedAndChoose(raw.skillProficiencies, SKILL_KEYS),
+      tools: fixedAndChoose(raw.toolProficiencies, []),
+      languages: (() => { const l = langSet(raw.languageProficiencies); return { fixed: l.fixed, ...(l.choose ? { choose: { count: l.choose } } : {}) } })(),
+    },
+    equipment: startingEquipmentOf(raw),
     ...(feature ? { feature: feature.id } : {}),
     characteristics: tables.map((t) => ({ table: t.id, label: t.name })),
   }
@@ -127,7 +285,7 @@ export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<s
       else if (typeof obj.other === 'string') all.push({ text: obj.other })
     }
     if (typeof obj.other === 'string') all.push({ text: obj.other })
-    if (Array.isArray(obj.spell)) all.push({ text: `需要法术：${obj.spell.map((name) => String(name).replace(/#c$/, '')).join('、')}` })
+    if (Array.isArray(obj.spell)) all.push({ text: `需要法术：${obj.spell.map((name) => String(name).replace(/#\w+$/, '')).join('、')}` })
   }
   return all.length ? { all } : undefined
 }
