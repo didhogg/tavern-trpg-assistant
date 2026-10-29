@@ -177,7 +177,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "subclass-feature.entryData.weaponProficiencies[].martial": {"how":"text","to":"data.text","wp":"R1"},
   "subclass-feature.entryData.weaponProficiencies[].scimitar|phb": {"how":"text","to":"data.text","wp":"R1"},
   "subclass-feature.header": {"how":"text","to":"data.text","wp":"R1"},
-  "subclass-feature.isClassFeatureVariant": {"how":"mapped","to":"data.optional","wp":"R1"},
+  "subclass-feature.isClassFeatureVariant": {"how":"mapped","to":"data.optional","wp":"R3"},
   "subclass-feature.isIgnored": {"how":"dropped","kind":"internal-meta","why":"Foundry 中的忽略标记，不是规则数据"},
   "subclass-feature.level": {"how":"mapped","to":"data.level","wp":"R1"},
   "subclass-feature.migrationVersion": {"how":"mapped","to":"data.versionGroup","wp":"R10"},

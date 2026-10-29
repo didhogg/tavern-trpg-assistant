@@ -131,7 +131,7 @@ function mergeAdvancement(items: Array<Record<string, unknown>>): Array<Record<s
     const kind = String(item.kind)
     const level = String(item.level ?? '')
     const key = kind === 'itemGrant'
-      ? `${kind}|${level}|${String(item.optional ?? false)}`
+      ? `${kind}|${level}|${String(item.optional ?? false)}|${String(item.replaces ?? '')}`
       : `${kind}|${level}|${String(item.id ?? item.featureType ?? '')}`
     const current = index.get(key)
     if (current && kind === 'itemGrant') {
@@ -191,7 +191,14 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
     subclassTitle: str(raw.subclassTitle) || `${className}子职业`,
     ...(multiclass ? { multiclass: { requires: multiclassRequires(multiclass) ?? { all: [{ text: '见原书兼职规则' }] }, ...(multiclass.proficienciesGained ? { proficiencies: proficienciesOf(multiclass.proficienciesGained, inline) } : {}) } } : {}),
     advancement: mergeAdvancement([
-      ...features.filter((f) => f.level > 0).map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
+      ...features.filter((f) => f.level > 0).map((f) => {
+        const featureId = f.id || ctx.resolveEntryId('feature', f.name) || ''
+        if ((f.raw as Record<string, unknown>).isClassFeatureVariant !== true) return { kind: 'itemGrant', level: f.level, items: [featureId], optional: false }
+        const text = JSON.stringify((f.raw as Record<string, unknown>).entries ?? '')
+        const match = /替代([^，。；、]+?)特性/.exec(text)
+        const target = match ? features.find((x) => x.name === match[1] && x.id !== f.id)?.id : undefined
+        return { kind: 'itemGrant', level: f.level, items: [featureId], optional: 'tce-ocf', ...(target ? { replaces: target } : {}) }
+      }),
       ...features.filter((f) => f.name.includes('属性值提升')).map((f) => ({ kind: 'abilityScoreImprovement', level: f.level, points: 2 })),
       ...features.filter((f) => f.name.includes('专精')).map((f) => ({ kind: 'expertise', level: f.level, count: 2, from: 'proficient' })),
       { kind: 'subclass', level: subclassLevel },
@@ -308,7 +315,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ...(effects.length ? { effects } : {}),
     ...(raw.prerequisite ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
     ...(choicesOf(raw) ? { choices: choicesOf(raw) } : {}),
-    ...(ownerType === 'optional' ? { optional: true } : {}),
+    ...((ownerType === 'optional' || raw.isClassFeatureVariant === true) ? { optional: true } : {}),
     activities,
   }
   if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }

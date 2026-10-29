@@ -107,8 +107,8 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
   const advancement = data.advancement as Array<{ items?: string[]; pool?: string[] }> | undefined
   if (Array.isArray(advancement)) {
     for (const item of advancement) {
-      if (Array.isArray(item.items)) item.items = item.items.filter(ok)
-      if (Array.isArray(item.pool)) item.pool = item.pool.filter(ok)
+      if (Array.isArray(item.items)) item.items = item.items.filter((id) => ok(id) || planned.has(String(id)))
+      if (Array.isArray(item.pool)) item.pool = item.pool.filter((id) => ok(id) || planned.has(String(id)))
     }
   }
   const rows = data.rows as Array<{ refs?: string[]; then?: { table?: string } }> | undefined

@@ -45,7 +45,7 @@ describe('P4 专长与可选特性', () => {
     const feats = [...all.values()].filter((e) => e.type === 'feat')
     expect(feats.length).toBeGreaterThanOrEqual(74)
     expect(feats.filter((e) => e.data.abilityIncrease).length).toBeGreaterThan(0)
-    const optional = [...all.values()].filter((e) => e.type === 'feature' && e.data.optional === true)
+    const optional = [...all.values()].filter((e) => e.type === 'feature' && e.data.optional === true && !e.data.owner)
     expect(optional.length).toBe(151)
     expect(optional.every((e) => (e.data.owner as { type?: string } | undefined)?.type !== 'optional')).toBe(true)
     expect(optional.every((e) => Array.isArray(e.data.optionKind) && e.data.optionKind.length > 0)).toBe(true)

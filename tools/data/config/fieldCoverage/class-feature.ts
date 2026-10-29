@@ -95,7 +95,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "class-feature.entries[].entries[].entries[].style": {"how":"text","to":"data.text","wp":"R1"},
   "class-feature.entries[].entries[].entries[].type": {"how":"text","to":"data.text","wp":"R1"},
   "class-feature.entries[].entries[].name": {"how":"text","to":"data.text","wp":"R1"},
-  "class-feature.entries[].entries[].optionalfeature": {"how":"text","to":"data.text","wp":"R3"},
+  "class-feature.entries[].entries[].optionalfeature": {"how":"text","to":"data.text","wp":"R1"},
   "class-feature.entries[].entries[].preserve": {"how":"text","to":"data.text","wp":"R1"},
   "class-feature.entries[].entries[].preserve.consumes": {"how":"text","to":"data.text","wp":"R1"},
   "class-feature.entries[].entries[].rows": {"how":"text","to":"data.text","wp":"R1"},

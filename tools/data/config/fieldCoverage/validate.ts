@@ -33,7 +33,7 @@ export function expectedWp(sourceType: string, path: string, to: string): string
   if (sourceType === 'optional-feature') return 'R2'
   if (sourceType === 'class-feature' || sourceType === 'subclass-feature' || sourceType === 'race-feature') {
     if (/(?:uses|effects|activities|charges)/i.test(path)) return 'R5'
-    if (sourceType === 'class-feature' && /optional|isClassFeatureVariant/i.test(path)) return 'R3'
+    if ((sourceType === 'class-feature' || sourceType === 'subclass-feature') && path === `${sourceType}.isClassFeatureVariant`) return 'R3'
     return 'R1'
   }
   if (sourceType === 'class' || sourceType === 'subclass') return /advancement|explain|feature/i.test(path) ? 'R1' : 'R1'

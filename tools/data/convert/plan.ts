@@ -168,7 +168,7 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
   for (const raw of data.classFeatures) {
     const key = `${str(raw.className)}|${str(raw.classSource)}`
     const info = classSlugs.get(key)
-    if (!info || is2024(str(raw.classSource)) || (str(raw.classSource) && str(raw.source) !== str(raw.classSource))) {
+    if (!info || is2024(str(raw.classSource)) || (str(raw.classSource) && str(raw.source) !== str(raw.classSource) && raw.isClassFeatureVariant !== true)) {
       skippedFeatures++
       continue
     }

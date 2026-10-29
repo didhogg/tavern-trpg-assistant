@@ -5,7 +5,8 @@ const itemGrant = z.looseObject({
   kind: z.literal('itemGrant'),
   level: z.number().int().min(1).max(20),
   items: z.array(entryIdSchema),
-  optional: z.boolean().default(false),
+  optional: z.union([z.boolean(), z.string().max(30)]).default(false),
+  replaces: z.string().max(200).optional(),
 })
 
 const itemChoice = z.looseObject({
