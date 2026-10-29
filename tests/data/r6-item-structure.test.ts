@@ -26,13 +26,14 @@ describe('R6 物品内部结构', () => {
   it('巨人力量腰带 6 个成员', async () => {
     const all = await load()
     const belt = all.get('item.belt-of-cloud-giant-strength.dmg')!
-    expect((belt.data.family as { members: string[] }).members).toHaveLength(6)
+    const family = all.get((belt.data.family as { id: string }).id)!
+    expect((family.data.members as string[])).toHaveLength(6)
   })
   it('+1 长剑有 variantOf 与 baseItem', async () => {
     const all = await load()
     const sword = all.get('item.longsword-plus-1.dmg')!
     expect(sword.data.variantOf).toBe('item.plus-1-weapon.dmg')
-    expect(sword.data.baseItem).toBe('长剑')
+    expect(sword.data.baseItem).toBe('item.longsword.phb')
   })
   it('家族数量至少 38', async () => {
     const all = await load()

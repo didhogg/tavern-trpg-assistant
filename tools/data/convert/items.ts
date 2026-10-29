@@ -14,6 +14,8 @@ function matches(req: Raw, base: Raw): boolean {
   if (req.weapon === true) return !!base.weapon
   if (req.armor === true) return !!base.armor
   if (req.net === true) return base.net === true
+  if (req.crossbow === true) return base.crossbow === true || base.type === 'R'
+  if (typeof req.dmgType === 'string') return base.dmgType === req.dmgType
   if (req.sword === true) return base.sword === true
   if (req.axe === true) return base.axe === true
   if (req.bow === true) return base.bow === true

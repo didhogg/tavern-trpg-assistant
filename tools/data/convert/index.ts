@@ -157,6 +157,8 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   }
   const featuresByOwner = new Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>()
   const subclassLevelByClass = new Map<string, number>()
+  const subclassNames = new Map<string, string>()
+  for (const e of planned) if (e.type === 'subclass') subclassNames.set(e.id, e.name)
   for (const entry of planned) {
     if (entry.type !== 'feature' || !entry.context.ownerId) continue
     const list = featuresByOwner.get(entry.context.ownerId) ?? []
@@ -192,6 +194,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     legendaryGroups: data.legendaryGroups,
     featuresByOwner,
     subclassLevelByClass,
+    subclassNames,
     tablesByParent,
     tableByName,
     index,

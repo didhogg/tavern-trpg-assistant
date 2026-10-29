@@ -21,6 +21,9 @@ export const requirementSchema = z
       })
       .optional(),
     spellcasting: z.literal(true).optional(),
+    spell: z.array(entryIdSchema).optional(),
+    pact: z.enum(['blade', 'chain', 'tome', 'talisman']).optional(),
+    patron: z.array(entryIdSchema).optional(),
     feature: entryIdSchema.optional(),
     text: z.string().min(1).max(400).optional(),
   })
@@ -32,6 +35,9 @@ export const requirementSchema = z
       value.class !== undefined ||
       value.proficiency !== undefined ||
       value.spellcasting !== undefined ||
+      value.spell !== undefined ||
+      value.pact !== undefined ||
+      value.patron !== undefined ||
       value.feature !== undefined ||
       value.text !== undefined,
     '限制至少要有一个条件',

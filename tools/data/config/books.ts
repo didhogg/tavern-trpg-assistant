@@ -17,16 +17,16 @@ export const SRD_PACK_ID = 'dnd5e2014-srd'
 export const SRD_VERSION = '1.1.0'
 
 export const BOOKS: BookConfig[] = [
-  { source: 'PHB', packId: 'dnd5e2014-phb', name: '玩家手册（2014）', nameEn: "Player's Handbook", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: [] },
-  { source: 'DMG', packId: 'dnd5e2014-dmg', name: '城主指南（2014）', nameEn: "Dungeon Master's Guide", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: [] },
-  { source: 'MM', packId: 'dnd5e2014-mm', name: '怪物图鉴（2014）', nameEn: 'Monster Manual', group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: [] },
-  { source: 'XGE', packId: 'dnd5e2014-xge', name: '珊娜萨的万事指南', nameEn: "Xanathar's Guide to Everything", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: ['PHB'] },
+  { source: 'PHB', packId: 'dnd5e2014-phb', name: '玩家手册（2014）', nameEn: "Player's Handbook", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: ['DMG'] },
+  { source: 'DMG', packId: 'dnd5e2014-dmg', name: '城主指南（2014）', nameEn: "Dungeon Master's Guide", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: ['PHB', 'SCAG'] },
+  { source: 'MM', packId: 'dnd5e2014-mm', name: '怪物图鉴（2014）', nameEn: 'Monster Manual', group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: ['DMG', 'SCAG'] },
+  { source: 'XGE', packId: 'dnd5e2014-xge', name: '珊娜萨的万事指南', nameEn: "Xanathar's Guide to Everything", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: ['PHB', 'DMG', 'SCAG'] },
   { source: 'TCE', packId: 'dnd5e2014-tce', name: '塔莎的万事坩埚', nameEn: "Tasha's Cauldron of Everything", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: ['PHB'] },
   { source: 'SCAG', packId: 'dnd5e2014-scag', name: '剑湾冒险者指南', nameEn: "Sword Coast Adventurer's Guide", group: '官方扩展 · 一档', tier: 1, version: '1.1.0', recommended: true, requiresBooks: ['PHB'] },
   { source: 'VGM', packId: 'dnd5e2014-vgm', name: '瓦罗怪物指南', nameEn: "Volo's Guide to Monsters", group: '官方扩展 · 二档', tier: 2, version: '1.1.0', recommended: true, requiresBooks: ['PHB'] },
   { source: 'MTF', packId: 'dnd5e2014-mtf', name: '魔邓肯的众敌卷册', nameEn: "Mordenkainen's Tome of Foes", group: '官方扩展 · 二档', tier: 2, version: '1.1.0', recommended: true, requiresBooks: ['PHB'] },
   { source: 'MPMM', packId: 'dnd5e2014-mpmm', name: '魔邓肯巨献：多元宇宙的怪物', nameEn: 'Mordenkainen Presents: Monsters of the Multiverse', group: '官方扩展 · 二档', tier: 2, version: '1.1.0', recommended: true, requiresBooks: ['PHB'] },
-  { source: 'BMT', packId: 'dnd5e2014-bmt', name: '万象无常书', nameEn: 'The Book of Many Things', group: '官方扩展 · 二档', tier: 2, version: '1.1.0', recommended: true, requiresBooks: [] },
+  { source: 'BMT', packId: 'dnd5e2014-bmt', name: '万象无常书', nameEn: 'The Book of Many Things', group: '官方扩展 · 二档', tier: 2, version: '1.1.0', recommended: true, requiresBooks: ['DMG', 'SCAG'] },
 ]
 
 export const BOOK_BY_SOURCE = new Map(BOOKS.map((b) => [b.source, b]))

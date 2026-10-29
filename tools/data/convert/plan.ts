@@ -1,5 +1,5 @@
 import type { Raw, RawData } from '../extract/load'
-import { BOOK_BY_SOURCE, PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
+import { BOOK_BY_SOURCE, BOOK_SOURCES, PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
 import { slug } from '../lib/slug'
 import { collectTables, type TableSeed } from './tables'
 
@@ -209,6 +209,23 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
       const feature = make('feature', { ...rec, source: entry.source, page: entry.page, ENG_name: rec.ENG_name, srd: entry.raw.srd }, [slug(entry.nameEn), slug(str(rec.ENG_name) || rec.name)], { ownerType: 'race', ownerId: entry.id, featureKind: 'race' })
       entries.push(feature)
     }
+  }
+  for (const variant of data.magicVariants) {
+    const inherits = (variant.inherits && typeof variant.inherits === 'object' ? variant.inherits : {}) as Raw
+    const source = str(inherits.source || variant.source)
+    if (!BOOK_BY_SOURCE.has(source) || !String(variant.type).startsWith('GV')) continue
+    const raw: Raw = { ...variant, ...inherits, source, name: variant.name, ENG_name: variant.ENG_name, page: inherits.page ?? variant.page, entries: inherits.entries ?? variant.entries, _template: true }
+    entries.push(make('item', raw, [slug(str(variant.ENG_name) || str(variant.name))], { template: '1' }))
+  }
+  const familyGroups = new Map<string, Raw>()
+  for (const group of data.itemGroups) {
+    if (!BOOK_SOURCES.has(String(group.source))) continue
+    const names = (Array.isArray(group.items) ? group.items : []).map(String).sort().join('|')
+    if (!familyGroups.has(names)) familyGroups.set(names, group)
+  }
+  for (const group of familyGroups.values()) {
+    const name = str(group.name).replace(/[（(]\*[）)]/g, '').trim()
+    entries.push(make('item', { ...group, _family: true, name, ENG_name: group.ENG_name }, [slug(str(group.ENG_name) || name) + '-family'], { family: '1' }))
   }
   return { entries, tables, tableSeeds, classIds, subclassIds, skippedFeatures, skippedSubraces }
 }

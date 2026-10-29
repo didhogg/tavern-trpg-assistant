@@ -1,0 +1,67 @@
+import type { ConvertedPack } from '../convert'
+import { BOOKS } from '../config/books'
+
+export interface RefIssue {
+  pack: string
+  entry: string
+  field: string
+  value: string
+}
+export interface RefResult {
+  dangling: RefIssue[]
+  dependency: RefIssue[]
+}
+
+function walkStrings(value: unknown, visit: (s: string, field: string) => void, field = ''): void {
+  if (typeof value === 'string') { visit(value, field); return }
+  if (Array.isArray(value)) { for (const x of value) walkStrings(x, visit, field); return }
+  if (value && typeof value === 'object') for (const [k, x] of Object.entries(value)) walkStrings(x, visit, field ? `${field}.${k}` : k)
+}
+function idsOf(value: unknown): string[] {
+  const out: string[] = []
+  walkStrings(value, (s) => { if (/^[a-z]+[a-z0-9.-]*$/.test(s) && s.includes('.')) out.push(s) })
+  return out
+}
+
+export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult> {
+  const byPack = new Map(packs.map((p) => [p.manifest.id, p]))
+  const all = new Map(packs.flatMap((p) => p.entries).map((e) => [e.id, e]))
+  const srd = 'dnd5e2014-srd'
+  const issues: RefIssue[] = []
+  for (const pack of packs) {
+    const requires = pack.manifest.id === srd ? new Set(packs.map((p) => p.manifest.id)) : new Set([pack.manifest.id, srd, ...(BOOKS.find((b) => b.packId === pack.manifest.id)?.requiresBooks.map((s) => `dnd5e2014-${s.toLowerCase()}`) ?? [])])
+    const check = (entryId: string, field: string, value: string): void => {
+      if (!value || !value.includes('.')) return
+      if (!all.has(value)) issues.push({ pack: pack.manifest.id, entry: entryId, field, value })
+      else if (![...requires].some((id) => byPack.get(id)?.entries.some((e) => e.id === value))) issues.push({ pack: pack.manifest.id, entry: entryId, field: `${field}（依赖缺失）`, value })
+    }
+    for (const entry of pack.entries) {
+      const d = entry.data as Record<string, unknown>
+      const fields: Array<[string, unknown]> = [
+        ['variantOf', d.variantOf], ['baseItem', d.baseItem], ['family.id', (d.family as Record<string, unknown> | undefined)?.id],
+        ['owner.id', (d.owner as Record<string, unknown> | undefined)?.id], ['classId', d.classId], ['parentRace', d.parentRace],
+        ['feature', d.feature], ['supersededBy', d.supersededBy], ['versionGroup', d.versionGroup],
+        ['expandedSpells', d.expandedSpells],
+      ]
+      for (const [field, value] of fields) for (const id of idsOf(value)) check(entry.id, field, id)
+      for (const member of (d.members as string[] | undefined) ?? []) check(entry.id, 'members[]', member)
+      for (const content of (d.contents as Array<{ item?: string }> | undefined) ?? []) if (content.item) check(entry.id, 'contents[].item', content.item)
+      for (const choice of (d.contentsChoice as Array<{ from?: Array<{ item?: string }> }> | undefined) ?? []) for (const x of choice.from ?? []) if (x.item) check(entry.id, 'contentsChoice[].from[].item', x.item)
+      for (const step of (d.advancement as Array<Record<string, unknown>> | undefined) ?? []) {
+        for (const id of (step.items as string[] | undefined) ?? []) check(entry.id, 'advancement[].items[]', id)
+        for (const id of (step.pool as string[] | undefined) ?? []) check(entry.id, 'advancement[].pool[]', id)
+        if (typeof step.explain === 'string') check(entry.id, 'advancement[].explain', step.explain)
+        if (typeof step.replaces === 'string') check(entry.id, 'advancement[].replaces', step.replaces)
+      }
+      const requires = d.requires as Record<string, unknown> | undefined
+      for (const key of ['race', 'class', 'feature', 'spell', 'patron']) for (const id of idsOf(requires?.[key])) check(entry.id, `requires.${key}`, id)
+      for (const effect of (d.effects as Array<Record<string, unknown>> | undefined) ?? []) if (effect.kind === 'spellGrant') for (const id of (effect.spells as string[] | undefined) ?? []) check(entry.id, 'effects[].spells[]', id)
+      for (const row of (d.rows as Array<Record<string, unknown>> | undefined) ?? []) {
+        for (const id of (row.refs as string[] | undefined) ?? []) check(entry.id, 'rows[].refs[]', id)
+        const then = row.then as { table?: string } | undefined
+        if (then?.table) check(entry.id, 'rows[].then.table', then.table)
+      }
+    }
+  }
+  return { dangling: issues.filter((x) => !x.field.includes('依赖缺失')), dependency: issues.filter((x) => x.field.includes('依赖缺失')) }
+}

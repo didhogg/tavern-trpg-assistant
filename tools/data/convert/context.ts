@@ -10,6 +10,7 @@ export interface ConvertContext {
   legendaryGroups: Raw[]
   featuresByOwner: Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>
   subclassLevelByClass: Map<string, number>
+  subclassNames: Map<string, string>
   tablesByParent: Map<string, Array<{ id: string; name: string }>>
   tableByName: Map<string, string>
   index: RefIndex
@@ -34,6 +35,7 @@ export function makeContext(input: {
   legendaryGroups: Raw[]
   featuresByOwner: Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>
   subclassLevelByClass: Map<string, number>
+  subclassNames: Map<string, string>
   tablesByParent: Map<string, Array<{ id: string; name: string }>>
   tableByName: Map<string, string>
   index: RefIndex

@@ -135,10 +135,7 @@ function contentsOf(raw: Record<string, unknown>, ctx: ConvertContext): Array<{ 
 function familyOf(raw: Record<string, unknown>, ctx: ConvertContext): Record<string, unknown> | undefined {
   const group = ctx.itemGroups.find((g) => Array.isArray(g.items) && (g.items as unknown[]).some((x) => String(x).split('|')[0] === str(raw.name)) && String(g.source) === str(raw.source)) ?? ctx.itemGroups.find((g) => Array.isArray(g.items) && (g.items as unknown[]).some((x) => String(x).split('|')[0] === str(raw.name)))
   if (!group) return undefined
-  const memberNames = Array.isArray(group.items) ? (group.items as unknown[]).map((x) => String(x).split('|')[0]) : []
-  const members = memberNames.map((name) => ctx.resolveEntryId('item', name)).filter((id): id is string => !!id)
-  const index = ctx.itemGroups.indexOf(group)
-  return { id: `item.${slug(str(group.ENG_name) || str(group.name))}.${str(group.source).toLowerCase()}-${index + 1}`, name: group.name, members }
+  return { id: `item.${slug(str(group.ENG_name) || str(group.name))}-family.${str(group.source).toLowerCase()}` }
 }
 
 export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
@@ -152,14 +149,17 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
   const effects = dedupeEffects([...itemEffects(raw), ...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>])
   const activities = [...(rules?.activities ?? []), ...(ITEM_ACTIVITIES[entry.id] ?? [])]
   const base = (raw._baseItem ?? {}) as Record<string, unknown>
-  const text = convertBlocks(raw.entries, inline)
-  const category = categoryOf(raw)
+  const family = raw._family === true
+  const text = raw._template === true || family ? [{ p: entry.name }] : convertBlocks(raw.entries, inline)
+  const category = family ? 'family' : raw._template === true ? 'template' : categoryOf(raw)
+  const baseId = str(base.name) ? ctx.resolveEntryId('item', str(base.name)) : undefined
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text,
     category,
-    ...(str(base.name) ? { baseItem: str(base.name) } : {}),
+    ...(baseId ? { baseItem: baseId } : {}),
+    ...(raw._template === true ? { variantTemplate: { requires: Array.isArray(raw.requires) ? raw.requires : [], ...(Array.isArray(raw.excludes) ? { excludes: raw.excludes } : {}) } } : {}),
     rarity: rarityOf(raw),
     attunement: attunementOf(raw),
     ...(typeof raw.weight === 'number' ? { weight: raw.weight } : typeof base.weight === 'number' ? { weight: base.weight } : {}),
@@ -174,7 +174,8 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(contentsOf(raw, ctx) ? { contents: contentsOf(raw, ctx) } : {}),
     ...(raw.atomicPackContents === true ? { atomic: true } : {}),
     ...(raw.containerCapacity && typeof raw.containerCapacity === 'object' ? { container: raw.containerCapacity } : {}),
-    ...(familyOf(raw, ctx) ? { family: familyOf(raw, ctx) } : {}),
+    ...(!family && familyOf(raw, ctx) ? { family: familyOf(raw, ctx) } : {}),
+    ...(family ? { members: (Array.isArray(raw.items) ? raw.items : []).map((x) => ctx.resolveEntryId('item', String(x).split('|')[0])).filter((id): id is string => !!id) } : {}),
     tags: [str(raw.type ?? raw.baseItem ?? 'item')],
     ...(raw._variant && typeof raw._variant === 'object' ? { variantOf: `item.${slug(str((raw._variant as Record<string, unknown>).ENG_name) || str((raw._variant as Record<string, unknown>).name))}.${str(raw.source).toLowerCase()}` } : {}),
     properties: (Array.isArray(raw.property) ? raw.property : Array.isArray(base.property) ? base.property : []).map(String),

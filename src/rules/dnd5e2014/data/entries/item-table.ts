@@ -3,7 +3,7 @@ import { damagePartSchema, usesSchema, diceSchema } from '../common'
 import { entryCommonFields } from './base'
 import { effectListSchema } from '../effects'
 
-export const ITEM_CATEGORIES = ['weapon', 'armor', 'shield', 'gear', 'tool', 'consumable', 'wondrous', 'ammunition', 'mount', 'vehicle', 'treasure'] as const
+export const ITEM_CATEGORIES = ['weapon', 'armor', 'shield', 'gear', 'tool', 'consumable', 'wondrous', 'ammunition', 'mount', 'vehicle', 'treasure', 'template', 'family'] as const
 
 const weaponSchema = z.looseObject({
   category: z.enum(['simple', 'martial']).optional(),

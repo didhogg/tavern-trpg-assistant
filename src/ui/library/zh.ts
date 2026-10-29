@@ -29,7 +29,7 @@ export const CONDITION: Record<string, string> = CONDITION_LABELS
 export const LANGUAGE: Record<string, string> = LANGUAGE_LABELS
 export const TOOL: Record<string, string> = TOOL_LABELS
 export const ITEM_CATEGORY: Record<string, string> = {
-  weapon: '武器', ammunition: '弹药', wondrous: '奇物', shield: '盾牌', armor: '护甲', gear: '冒险装备', consumable: '消耗品', treasure: '财宝', mount: '坐骑', tool: '工具', vehicle: '载具',
+  weapon: '武器', ammunition: '弹药', wondrous: '奇物', shield: '盾牌', armor: '护甲', gear: '冒险装备', consumable: '消耗品', treasure: '财宝', mount: '坐骑', tool: '工具', vehicle: '载具', template: '变体模板', family: '物品家族',
 }
 export const RARITY: Record<string, string> = { none: '无', common: '普通', uncommon: '非普通', rare: '珍稀', 'very rare': '极珍稀', legendary: '传说', artifact: '神器', varies: '不定' }
 export const WEAPON_CATEGORY: Record<string, string> = WEAPON_CATEGORY_LABELS

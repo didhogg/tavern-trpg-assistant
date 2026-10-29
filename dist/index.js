@@ -28422,7 +28422,9 @@ var eR = {
 	treasure: "财宝",
 	mount: "坐骑",
 	tool: "工具",
-	vehicle: "载具"
+	vehicle: "载具",
+	template: "变体模板",
+	family: "物品家族"
 }, gR = {
 	none: "无",
 	common: "普通",

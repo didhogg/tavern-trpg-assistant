@@ -8,6 +8,8 @@ import { planAll } from './convert/plan'
 import { convertAll, type ConversionResult } from './convert'
 import { validatePacks, assertVolume } from './validate'
 import { assertFieldCoverage } from './validate/coverage'
+import { BASELINE_ALIASES } from './config/baselineAliases'
+import { checkReferences } from './validate/refs'
 import { healthMetrics } from './validate/health'
 import { assertDelivered } from './validate/delivered'
 import { FIELD_COVERAGE } from './config/fieldCoverage'
@@ -51,8 +53,14 @@ async function main(): Promise<void> {
   const plan = planAll(data, items)
   console.log(`计划条目：${plan.entries.length}，随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
+  const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
+  if (srd) for (const alias of BASELINE_ALIASES) if (!srd.entries.some((e) => e.id === alias.id)) srd.entries.push(alias)
   validatePacks(result.packs)
   assertDelivered(result.packs.flatMap((p) => p.entries), FIELD_COVERAGE)
+  const refs = await checkReferences(result.packs)
+  console.log(`引用悬空：${refs.dangling.length}，需新增依赖：${refs.dependency.length}`)
+  if (refs.dangling.length) throw new Error(`引用悬空 ${refs.dangling.length} 条：${refs.dangling.slice(0, 10).map((x) => `${x.entry} ${x.field} ${x.value}`).join('；')}`)
+  if (refs.dependency.length) throw new Error(`缺少包依赖 ${refs.dependency.length} 条：${refs.dependency.slice(0, 10).map((x) => `${x.pack} ${x.field} ${x.value}`).join('；')}`)
   const health = healthMetrics(result, data)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'health.json'), `${JSON.stringify(health, null, 2)}\n`)
   console.log('体检报数：' + health.map((h) => `${h.id}=${h.count ?? 'pending'}`).join(' '))

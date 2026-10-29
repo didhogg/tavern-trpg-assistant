@@ -38,7 +38,7 @@ describe('P3 种族、亚种族与背景', () => {
     expect(prof(all.get('race.elf.phb')!.data, 'skills').fixed).toEqual(['perception'])
     expect(all.get('subrace.elf-high.phb')?.data.parentRace).toBe('race.elf.phb')
     expect(all.get('race.tiefling.phb')?.data.resist).toEqual(['fire'])
-    expect((all.get('race.tiefling.phb')!.data.spellGrants as unknown[]).length).toBe(3)
+    expect((all.get('race.tiefling.phb')!.data.effects as Array<{kind?:string}>).filter((x)=>x.kind==='spellGrant').length).toBe(3)
   })
 
   it('龙裔抗性选择有说明；MPMM 自选属性结构完整', async () => {

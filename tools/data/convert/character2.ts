@@ -95,9 +95,17 @@ function proficiencyTrait(raw: Record<string, unknown>, level = 1): Record<strin
         else if (k === 'choose' && v && typeof v === 'object') {
           const c = v as Record<string, unknown>
           choices.push({ count: Number(c.count ?? 1), pool: Array.isArray(c.from) ? c.from.map((x) => `${prefix}:${String(x)}`) : [`${prefix}:*`] })
-        } else if (v === true) grants.push(`${prefix}:${k}`)
+        } else if (v === true) grants.push(`${prefix}:${k.split('|')[0]}`)
         else if (typeof v === 'number' && v > 0) choices.push({ count: v, pool: [`${prefix}:${k}`] })
       }
+    }
+  }
+  for (const item of Array.isArray(raw.skillToolLanguageProficiencies) ? raw.skillToolLanguageProficiencies : []) {
+    if (!item || typeof item !== 'object') continue
+    for (const c of Array.isArray((item as Record<string, unknown>).choose) ? (item as Record<string, unknown>).choose as Array<Record<string, unknown>> : []) {
+      const from = Array.isArray(c.from) ? c.from.map(String) : []
+      const pool = from.flatMap((x) => x.includes('技能') ? ['skill:*'] : x.includes('工具') ? ['tool:*'] : [])
+      if (pool.length) choices.push({ count: Number(c.count ?? 1), pool })
     }
   }
   add('skillProficiencies', 'skill')
@@ -241,7 +249,6 @@ export function convertRace(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(raw.creatureTypeTags ? { creatureTypeTags: raw.creatureTypeTags } : {}),
     ...(raw.lineage ? { lineage: raw.lineage } : {}),
     ...(raw.overwrite ? { overwrite: raw.overwrite } : {}),
-    ...(proficiencyTrait(raw) ? { advancement: [proficiencyTrait(raw)!] } : {}),
     size: Array.isArray(raw.size) ? raw.size.map(String) : [String(raw.size ?? 'M')],
     ...(speedData ? { speed: speedData } : {}),
     ...(abilityBonus(raw) ? { abilityBonus: abilityBonus(raw) } : {}),
@@ -254,10 +261,10 @@ export function convertRace(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(resist.length ? { resist } : {}),
     ...(immune.length ? { immune } : {}),
     ...(conditionImmune.length ? { conditionImmune } : {}),
-    ...(grants.length ? { spellGrants: grants } : {}),
-    ...(effects.length ? { effects } : {}),
+    ...(grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))] } : effects.length ? { effects } : {}),
     traits,
     advancement: [
+      ...(proficiencyTrait(raw) ? [proficiencyTrait(raw)!] : []),
       ...traits.map((id) => ({ kind: 'itemGrant', level: 1, items: [id], optional: false })),
       ...(Array.isArray(raw.feats) && raw.feats.some((f) => f && typeof f === 'object' && 'any' in (f as Record<string, unknown>))
         ? [{ kind: 'itemChoice', level: 1, count: 1, featureType: '专长' }]
@@ -307,24 +314,25 @@ function abilityReq(value: unknown): Record<string, unknown> | undefined {
 export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<string, unknown> | undefined {
   if (!Array.isArray(prereq) || !prereq.length) return undefined
   const all: Array<Record<string, unknown>> = []
+  const any: Array<Record<string, unknown>> = []
   for (const item of prereq) {
     if (!item || typeof item !== 'object') continue
     const obj = item as Record<string, unknown>
+    if (Array.isArray(obj.ability) && obj.ability.length > 1) {
+      for (const a of obj.ability) if (a && typeof a === 'object') any.push({ ability: Object.fromEntries(Object.entries(a as Record<string, unknown>).filter(([, v]) => typeof v === 'number')) })
+      continue
+    }
     const ability = abilityReq(obj.ability)
     if (ability) all.push(ability)
     if (typeof obj.level === 'number') all.push({ level: obj.level })
     if (obj.level && typeof obj.level === 'object') {
       const level = obj.level as Record<string, unknown>
-      if (typeof level.level === 'number') all.push({ level: level.level })
+      const cls = level.class && typeof level.class === 'object' ? level.class as Record<string, unknown> : undefined
+      const classId = cls ? ctx.classIds.get(`${String(cls.name ?? '')}|${String(cls.source ?? '')}`) ?? [...ctx.classIds].find(([k]) => k.startsWith(`${String(cls.name ?? '')}|`))?.[1] : undefined
+      if (typeof level.level === 'number') all.push({ level: level.level, ...(classId ? { class: [classId] } : {}) })
     }
-    if (typeof obj.pact === 'string') all.push({ text: `契约：${obj.pact}` })
-    if (Array.isArray(obj.optionalfeature)) all.push({ text: `需要可选特性：${obj.optionalfeature.map(String).join('、')}` })
     if (obj.spellcasting === true || obj.spellcasting2020 === true) all.push({ spellcasting: true })
-    if (Array.isArray(obj.proficiency)) {
-      for (const prof of obj.proficiency) {
-        if (prof && typeof prof === 'object') all.push({ proficiency: prof })
-      }
-    }
+    if (Array.isArray(obj.proficiency)) for (const prof of obj.proficiency) if (prof && typeof prof === 'object') all.push({ proficiency: prof })
     if (Array.isArray(obj.race)) {
       const ids = obj.race.map((r) => ctx.resolveEntryId('race', String((r as Record<string, unknown>)?.name ?? ''))).filter((id): id is string => !!id)
       if (ids.length === 1) all.push({ race: ids })
@@ -332,8 +340,18 @@ export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<s
       else if (typeof obj.other === 'string') all.push({ text: obj.other })
     }
     if (typeof obj.other === 'string') all.push({ text: obj.other })
-    if (Array.isArray(obj.spell)) all.push({ text: `需要法术：${obj.spell.map((name) => String(name).replace(/#\w+$/, '')).join('、')}` })
+    if (Array.isArray(obj.spell)) {
+      const ids = obj.spell.map((s) => ctx.resolveEntryId('spell', String(s).replace(/#\w+$/, '').split('|')[0])).filter((id): id is string => !!id)
+      if (ids.length) all.push({ spell: ids })
+    }
+    if (typeof obj.pact === 'string') {
+      const pact = obj.pact.includes('刃') ? 'blade' : obj.pact.includes('链') ? 'chain' : obj.pact.includes('书') ? 'tome' : obj.pact.includes('符') ? 'talisman' : undefined
+      if (pact) all.push({ pact })
+      else all.push({ text: `契约：${obj.pact}` })
+    }
+    if (Array.isArray(obj.optionalfeature)) all.push({ text: `需要可选特性：${obj.optionalfeature.map(String).join('、')}` })
   }
+  if (any.length) return { ...(all.length ? { all } : {}), any }
   return all.length ? { all } : undefined
 }
 
@@ -370,9 +388,8 @@ export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: In
     text: convertBlocks(raw.entries, inline),
     ...(abilityIncrease ? { abilityIncrease } : {}),
     ...(requires ? { requires } : {}),
-    ...(grants.length ? { spellGrants: grants } : {}),
     ...(uses ? { uses } : {}),
-    ...(effects.length ? { effects } : {}),
+    ...(effects.length || grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))] } : {}),
     ...(Array.isArray(raw.traitTags) ? { tags: raw.traitTags.map(String) } : {}),
     advancement: proficiencyTrait(raw) ? [proficiencyTrait(raw)!] : [],
   }

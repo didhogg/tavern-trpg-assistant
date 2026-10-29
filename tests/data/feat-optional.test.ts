@@ -34,7 +34,7 @@ describe('P4 专长与可选特性', () => {
   it('可选特性的前置条件、消耗与苦痛魔爆效果', async () => {
     const all = await load()
     const agonizing = all.get('feature.agonizing-blast.phb')!
-    expect(agonizing.data.requires).toMatchObject({ all: [{ text: expect.stringContaining('魔能爆') }] })
+    expect(agonizing.data.requires).toEqual({ all: [{ spell: ['spell.eldritch-blast.phb'] }] })
     expect(agonizing.data.effects).toContainEqual({ amount: 'cha.mod', kind: 'damageBonus', scope: 'spell', transfer: true })
     const trip = all.get('feature.trip-attack.phb')!
     expect(trip.data.activities).toContainEqual(expect.objectContaining({ kind: 'utility', consumption: { targets: [expect.objectContaining({ type: 'resource', target: '卓越骰' })] } }))
@@ -50,8 +50,8 @@ describe('P4 专长与可选特性', () => {
     expect(optional.every((e) => (e.data.owner as { type?: string } | undefined)?.type !== 'optional')).toBe(true)
     expect(optional.every((e) => Array.isArray(e.data.optionKind) && e.data.optionKind.length > 0)).toBe(true)
     expect(optional.filter((e) => e.data.requires).length).toBeGreaterThan(0)
-    expect(all.get('feature.agonizing-blast.phb')?.data.requires).toMatchObject({ all: [{ text: expect.stringContaining('魔能爆') }] })
-    expect(all.get('feature.thirsting-blade.phb')?.data.requires).toBeTruthy()
+    expect(all.get('feature.agonizing-blast.phb')?.data.requires).toEqual({ all: [{ spell: ['spell.eldritch-blast.phb'] }] })
+    expect(all.get('feature.thirsting-blade.phb')?.data.requires).toEqual({ all: [{ level: 5, class: ['class.warlock.phb'] }, { pact: 'blade' }] })
     const warlock = all.get('class.warlock.phb')!
     const level2 = (warlock.data.advancement as Array<Record<string, unknown>>).find((a) => a.kind === 'itemChoice' && a.level === 2)
     expect(level2).toMatchObject({ count: 2, optionKind: ['EI'] })

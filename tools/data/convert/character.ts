@@ -225,7 +225,7 @@ export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
-    text: (() => { const own = convertBlocks(raw.entries, inline); if (own.length) return own; const intro = features.slice().sort((a, b) => a.level - b.level).find((f) => f.level > 0); return intro ? convertBlocks(intro.raw.entries, inline) : [] })(),
+    text: (() => { const own = convertBlocks(raw.entries, inline); if (own.length) return own; const minLevel = Math.min(...features.filter((f) => f.level > 0).map((f) => f.level)); const intro = features.find((f) => f.level === minLevel && (f.name === entry.name || f.name === str(raw.shortName))); return intro ? convertBlocks(intro.raw.entries, inline) : [] })(),
     classId: entry.context.classId ?? '',
     ...(spellcastingOf(raw, true) ? { spellcasting: spellcastingOf(raw, true) } : {}),
     ...(expandedSpells(raw, ctx) ? { expandedSpells: expandedSpells(raw, ctx) } : {}),
@@ -247,9 +247,8 @@ function featureType(raw: Record<string, unknown>): string | undefined {
   return list.map((code) => FEATURE_TYPES[code] ?? code).join('、')
 }
 
-function roleOf(name: string, ownerType: string): 'mechanic' | 'procedure' | 'intro' {
+function roleOf(name: string): 'mechanic' | 'procedure' | 'intro' {
   if (/属性值提升|道途特性|范型特性|子职业特性|选择.*(子职业|道途|范型)/.test(name)) return 'procedure'
-  if (ownerType === 'subclass' && /(道途|范型|领域|学派|誓言|结社|宗派)$/.test(name)) return 'intro'
   return 'mechanic'
 }
 
@@ -320,7 +319,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ...(optionKinds(raw) ? { optionKind: optionKinds(raw) } : {}),
     ...(typeof raw.level === 'number' ? { level: raw.level } : {}),
     ...(featureType(raw) ? { featureType: featureType(raw) } : {}),
-    role: roleOf(entry.name, ownerType),
+    role: (() => { if (ownerType !== 'subclass') return roleOf(entry.name); const siblings = ctx.featuresByOwner.get(entry.context.ownerId ?? '') ?? []; const min = Math.min(...siblings.filter((f) => f.level > 0).map((f) => f.level)); const subName = ctx.subclassNames.get(entry.context.ownerId ?? ''); const intro = siblings.find((f) => f.level === min && (f.name === subName || f.name === str(raw.subclassShortName))); return intro?.id === entry.id ? 'intro' : roleOf(entry.name) })(),
     ...(uses ? { uses } : {}),
     ...(effects.length ? { effects } : {}),
     ...(raw.prerequisite ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
