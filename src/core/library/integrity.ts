@@ -99,8 +99,10 @@ function setAt<T>(root: T, path: Path, update: (current: unknown) => unknown, re
 }
 
 /** 修复一个问题（调用方先写自动存档）。install / pick-image 需要界面配合，不在这里处理。 */
-export async function repairIssue(db: TrpgDatabase, data: WorkspaceData, issue: Issue, fix: FixKind, now: number): Promise<WorkspaceData> {
+export async function repairIssue(db: TrpgDatabase, data: WorkspaceData, issue: Issue, fix: FixKind, now: number, arg?: string): Promise<WorkspaceData> {
   switch (fix) {
+    case 'pick-image':
+      return arg ? setAt(data, issue.path, () => ({ $asset: arg })) : data
     case 'pin':
       return (await pinEntry(db, data, issue.packId!, issue.entryId!, now)) ?? data
     case 'text-only':

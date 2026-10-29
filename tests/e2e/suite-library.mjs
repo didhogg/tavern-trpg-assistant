@@ -1,0 +1,121 @@
+// P5：库·本存档、规则选项、库·扩展、包详情弹窗（条目列表、条目详情、卸载与重装、导出、复制）。
+import { check, gotoPage, modalCount, settle } from './helpers.mjs'
+
+export const sw = (page, name) => page.getByRole('switch', { name })
+
+async function toastText(page) {
+  return (await page.locator('.trpg-toast').allInnerTexts()).join('|')
+}
+
+export async function librarySuite(page, label, { width }) {
+  const narrow = width <= 480
+  await gotoPage(page, '库')
+  await page.getByTestId('save-tab').waitFor({ timeout: 20000 })
+  check(`[${label}] 库默认打开「本存档」，三个分段`, (await page.getByRole('button', { name: '本存档', exact: true }).getAttribute('aria-pressed')) === 'true' && (await page.locator('.trpg-seg button').count()) === 3)
+  check(`[${label}] 本存档：列出 11 本资料`, (await page.locator('[data-testid^="save-pack-"]').count()) === 11)
+  const srd = sw(page, '启用 SRD 基础规则')
+  check(`[${label}] SRD：开关为开（━●）且不可关，旁边有 🔒 与说明`, (await srd.getAttribute('aria-checked')) === 'true' && (await srd.isDisabled()) && (await page.getByTestId('save-pack-dnd5e2014-srd').innerText()).includes('其他资料都需要它'))
+  const phb = sw(page, '启用 玩家手册（2014）')
+  check(`[${label}] 没有被依赖的书：开关可以操作`, (await phb.isEnabled()) && (await phb.getAttribute('aria-checked')) === 'true')
+  const mtf = sw(page, '启用 魔邓肯的众敌卷册')
+  check(`[${label}] 向导里没勾的书：开关为关（○━）`, (await mtf.getAttribute('aria-checked')) === 'false')
+
+  await mtf.click()
+  await page.getByText('已启用「魔邓肯的众敌卷册」').waitFor()
+  check(`[${label}] 打开开关：立即生效，提示条带「撤销」，页头出现「● 保存」`, (await mtf.getAttribute('aria-checked')) === 'true' && (await page.getByRole('button', { name: '撤销', exact: true }).isVisible()) && (await page.getByTestId('save-button').isVisible()))
+  await page.getByRole('button', { name: '撤销', exact: true }).click()
+  await settle(page, 500)
+  check(`[${label}] 撤销：开关回到关`, (await mtf.getAttribute('aria-checked')) === 'false')
+
+  // 规则选项
+  const options = page.locator('[data-testid^="option-"]')
+  check(`[${label}] 规则选项：列出已启用的包带来的选项（≥10）`, (await options.count()) >= 10, `${await options.count()}`)
+  const first = options.first()
+  const optSwitch = first.getByRole('switch')
+  const before = await optSwitch.getAttribute('aria-checked')
+  await optSwitch.click()
+  await settle(page, 400)
+  check(`[${label}] 规则选项开关即时生效并提示`, (await optSwitch.getAttribute('aria-checked')) !== before && /已(打开|关闭)/.test(await toastText(page)))
+  await first.locator('.trpg-term').click()
+  await page.locator('.trpg-modal').waitFor()
+  check(`[${label}] 点选项名：弹窗显示说明与来源`, (await modalCount(page)) === 1 && (await page.locator('.trpg-modal').innerText()).includes('来源：'))
+  await page.locator('.trpg-modal__close').click()
+  await settle(page)
+
+  // 扩展
+  await page.getByRole('button', { name: '扩展', exact: true }).click()
+  await page.getByTestId('ext-list').waitFor()
+  await page.getByTestId('ext-dnd5e2014-bmt').waitFor({ timeout: 20000 })
+  check(`[${label}] 扩展：11 个包按分组排成单列，SRD 标「内置」`, (await page.locator('[data-testid^="ext-dnd5e2014"]').count()) === 11 && (await page.getByTestId('ext-dnd5e2014-srd').innerText()).includes('内置'))
+  check(`[${label}] 超过 8 个包时出现搜索框`, await page.getByRole('searchbox', { name: '搜索扩展包' }).isVisible())
+  await page.getByRole('searchbox', { name: '搜索扩展包' }).fill('玩家')
+  check(`[${label}] 搜索：就地过滤列表`, (await page.locator('[data-testid^="ext-dnd5e2014"]').count()) === 1)
+  await page.getByRole('searchbox', { name: '搜索扩展包' }).fill('')
+
+  // 包详情弹窗：条目列表（虚拟滚动）、类别、搜索、条目详情、关联术语
+  await page.getByTestId('ext-dnd5e2014-phb').locator('.trpg-term').click()
+  await page.getByTestId('pack-detail').waitFor()
+  await page.getByText(/共 \d+ 条/).waitFor()
+  await settle(page, 400)
+  const total = Number((await page.getByTestId('entry-count').innerText()).match(/\d+/)[0])
+  const domRows = await page.locator('.trpg-vlist__row').count()
+  check(`[${label}] 点包名：弹窗里是条目列表，虚拟滚动只渲染可见行（${domRows}/${total}）`, (await modalCount(page)) === 1 && total >= 500 && domRows < 60)
+  check(`[${label}] 弹窗标题栏有该包的状态按钮与「⋯ 更多」`, (await page.locator('.trpg-modal__head').getByRole('button', { name: /的更多操作/ }).count()) === 1)
+  await page.getByRole('combobox', { name: '类别' }).click()
+  await page.getByRole('option', { name: /法术/ }).click()
+  await settle(page)
+  const spells = Number((await page.getByTestId('entry-count').innerText()).match(/\d+/)[0])
+  check(`[${label}] 类别下拉：只看法术（${spells} 条）`, spells > 0 && spells < total)
+  const sample = (await page.locator('.trpg-vlist__row .trpg-term').nth(3).innerText()).trim()
+  await page.getByRole('searchbox', { name: '搜索条目' }).fill(sample)
+  await settle(page, 300)
+  check(`[${label}] 搜索「${sample}」就地过滤`, (await page.locator('.trpg-vlist__row').count()) >= 1 && (await page.locator('.trpg-vlist__row').first().innerText()).includes(sample))
+  await page.locator('.trpg-vlist__row .trpg-term').first().click()
+  await page.getByTestId('entry-detail').waitFor()
+  await settle(page)
+  check(`[${label}] 点条目：同一个弹窗换到条目详情，标题栏有「‹ 玩家手册（2014）」`, (await modalCount(page)) === 1 && (await page.getByRole('button', { name: '返回：玩家手册（2014）' }).isVisible()))
+  const ref = page.locator('[data-testid=entry-detail] .trpg-blocks .trpg-term').first()
+  if (await ref.count()) {
+    await ref.click()
+    await settle(page, 600)
+    check(`[${label}] 点正文里的关联术语：仍在同一个弹窗里换页`, (await modalCount(page)) === 1 && (await page.locator('[data-testid=entry-detail]').count()) === 1)
+    await page.getByRole('button', { name: /^返回：/ }).click()
+    await settle(page, 300)
+  }
+  await page.getByRole('button', { name: /^返回：/ }).click()
+  await settle(page, 300)
+  check(`[${label}] 返回后搜索词与类别保持不变`, (await page.getByRole('searchbox', { name: '搜索条目' }).inputValue()) === sample && (await page.getByTestId('pack-detail').isVisible()))
+  await page.keyboard.press('Escape')
+  await settle(page)
+  check(`[${label}] Esc 关闭，焦点回到包名`, (await modalCount(page)) === 0)
+
+  // 卸载（弹窗内确认页）与重装
+  const mpmmName = '魔邓肯巨献：多元宇宙的怪物'
+  await page.getByTestId('ext-dnd5e2014-mpmm').locator('.trpg-term').click()
+  await page.getByTestId('pack-detail').waitFor()
+  await page.locator('.trpg-modal__head').getByRole('button', { name: /的更多操作/ }).click()
+  await page.getByRole('menuitem', { name: '卸载' }).click()
+  await settle(page)
+  check(`[${label}] 卸载：确认页在包弹窗内换页，说明影响，不叠加弹窗`, (await modalCount(page)) === 1 && (await page.locator('.trpg-modal').innerText()).includes('个存档启用了它'))
+  await page.getByRole('button', { name: '卸载', exact: true }).last().click()
+  await page.getByText(`已卸载「${mpmmName}」`).waitFor()
+  await settle(page, 400)
+  check(`[${label}] 确认后弹窗关闭，列表里变为「安装」`, (await modalCount(page)) === 0 && (await page.getByTestId('ext-dnd5e2014-mpmm').getByRole('button', { name: /安装/ }).isVisible()))
+  await page.getByRole('button', { name: '本存档', exact: true }).click()
+  check(`[${label}] 本存档：该书显示「未安装 · 已用到的条目照常可用」与「去安装」`, (await page.getByTestId('save-pack-dnd5e2014-mpmm').innerText()).includes('已用到的条目照常可用') && (await page.getByTestId('save-pack-dnd5e2014-mpmm').getByRole('button', { name: '去安装' }).isVisible()))
+  await page.getByTestId('save-pack-dnd5e2014-mpmm').getByRole('button', { name: '去安装' }).click()
+  await page.getByTestId('ext-dnd5e2014-mpmm').getByRole('button', { name: /安装/ }).click()
+  await page.getByText(`已安装「${mpmmName}」`).waitFor({ timeout: 60000 })
+  await settle(page, 400)
+  check(`[${label}] 重新安装：下载安装完成，显示版本号与「⋯」`, (await page.getByTestId('ext-dnd5e2014-mpmm').locator('.trpg-badge', { hasText: /v1\.0/ }).count()) === 1)
+
+  // 导出为文件、复制为我的包
+  await page.getByTestId('ext-dnd5e2014-scag').getByRole('button', { name: /的更多操作/ }).click()
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('menuitem', { name: '导出为文件' }).click()])
+  check(`[${label}] 导出为文件：.trpgpack`, download.suggestedFilename().endsWith('.trpgpack'), download.suggestedFilename())
+  await page.getByTestId('ext-dnd5e2014-bmt').getByRole('button', { name: /的更多操作/ }).click()
+  await page.getByRole('menuitem', { name: '复制为我的包' }).click()
+  await page.getByTestId('mine-tab').waitFor()
+  check(`[${label}] 复制为我的包：切到「我的」并出现新包`, (await page.locator('[data-testid^="mine-row-"]').filter({ hasText: '万象无常书' }).count()) >= 1)
+  void narrow
+}

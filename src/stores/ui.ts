@@ -11,7 +11,7 @@ export const useUiStore = defineStore('ui', () => {
   const windowOpen = ref(false)
   const page = ref<PageId>('home')
   const diceOpen = ref(false)
-  const librarySegment = ref<LibrarySegment>('ext')
+  const librarySegment = ref<LibrarySegment>('save')
   /** 库·扩展中需要定位的包 id（例如从「去安装」跳转）。 */
   const libraryFocusPack = ref<string | null>(null)
 

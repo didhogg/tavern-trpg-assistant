@@ -71,6 +71,7 @@ export async function wizardSuite(page, label, { width }) {
   check(`[${label}] 选「继续填写」回到向导，已填内容保留`, (await page.getByRole('textbox', { name: '战役名称' }).inputValue()) === '测试战役')
 
   await page.getByRole('button', { name: '上一步' }).click()
+  await page.getByRole('checkbox', { name: 'SRD 基础规则' }).waitFor()
   check(`[${label}] 上一步回到第 ② 步`, await page.getByRole('checkbox', { name: 'SRD 基础规则' }).isVisible())
   await page.getByTestId('wizard-next').click()
   await page.getByTestId('wizard-next').click()

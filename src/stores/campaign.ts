@@ -116,6 +116,23 @@ export const useCampaignStore = defineStore('campaign', () => {
     adopt(await svc().campaign.loadSave(owner.value, saveId, opts))
   }
 
+  /** 只读地查看（预览启用或停用的结果）：先把未写入的改动写掉，保证看到的是最新数据。 */
+  async function inspect<T>(action: (s: Services, ownerKey: string) => Promise<T>): Promise<T> {
+    if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '请先在酒馆中打开一个聊天')
+    await flush()
+    return action(svc(), owner.value.ownerKey)
+  }
+
+  /** 经服务修改当前数据（启停扩展、规则选项、修改版等）：先把未写入的改动写掉，结果直接成为当前状态。 */
+  async function mutate<T extends { workspace: Workspace }>(action: (s: Services, ownerKey: string) => Promise<T>): Promise<T> {
+    guardWrite()
+    if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '请先在酒馆中打开一个聊天')
+    await flush()
+    const result = await action(svc(), owner.value.ownerKey)
+    adopt(result.workspace)
+    return result
+  }
+
   async function setPackEnabled(packId: string, enabled: boolean): Promise<string[]> {
     guardWrite()
     if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
@@ -125,5 +142,5 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result.autoEnabled
   }
 
-  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, save, branch, load, setPackEnabled }
+  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, save, branch, load, setPackEnabled }
 })

@@ -242,3 +242,60 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-radio input { width: 18px; height: 18px; accent-color: var(--primary); }
 .trpg-detail-links { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .trpg-info__line { margin: 0; }
+
+/* 虚拟列表 */
+.trpg-vlist { position: relative; height: 100%; min-height: 160px; overflow-y: auto; }
+.trpg-vlist__space { position: relative; }
+.trpg-vlist__row { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 10px; padding: 0 4px; border-bottom: 1px solid var(--line); }
+
+/* 条目正文 */
+.trpg-blocks { display: grid; gap: 8px; }
+.trpg-blocks__p { margin: 0; }
+.trpg-blocks__h h4 { margin: 8px 0 4px; font-family: var(--font-serif); font-size: 15px; }
+.trpg-blocks__list { margin: 0; padding-left: 20px; }
+.trpg-blocks__table { overflow-x: auto; }
+.trpg-blocks__table table { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+.trpg-blocks__table th, .trpg-blocks__table td { padding: 4px 8px; border: 1px solid var(--line); text-align: left; }
+.trpg-blocks__table caption { text-align: left; font-weight: 600; padding: 4px 0; }
+.trpg-blocks__quote { margin: 0; padding-left: 12px; border-left: 3px solid var(--gold); color: var(--ink-2); }
+.trpg-blocks__read { padding: 8px 12px; background: var(--panel); border-radius: var(--radius-sm); }
+.trpg-blocks__mark { color: var(--primary); }
+
+/* 版本条 */
+.trpg-variantbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--gold); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--gold) 12%, transparent); }
+.trpg-variantbar__text { flex: 1; min-width: 200px; }
+.trpg-variantbar__actions { display: flex; gap: 6px; }
+.trpg-variantpick { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; }
+.trpg-variantpick .trpg-radio { display: flex; align-items: flex-start; gap: 8px; min-height: 36px; }
+
+/* 包详情弹窗与扩展列表 */
+.trpg-pack-actions { display: inline-flex; align-items: center; gap: 6px; }
+.trpg-packdetail { display: flex; flex-direction: column; gap: 10px; height: 100%; }
+.trpg-packdetail__desc { margin: 0; }
+.trpg-packdetail__filter { display: grid; grid-template-columns: minmax(140px, 200px) 1fr auto; align-items: center; gap: 8px; }
+.trpg-packdetail__list { flex: 1; min-height: 200px; }
+.trpg-entryrow { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex: 1; }
+.trpg-entryrow .trpg-term { flex: none; white-space: nowrap; }
+.trpg-entryrow__sum { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trpg-entry__summary { margin: 0; color: var(--ink-2); }
+.trpg-window[data-layout='narrow'] .trpg-packdetail__filter { grid-template-columns: 1fr; }
+.trpg-modal__page:has(.trpg-packdetail) { display: flex; flex-direction: column; overflow: hidden; }
+
+.trpg-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.trpg-toolbar__search { flex: 1; min-width: 160px; max-width: 280px; }
+.trpg-pill[aria-pressed='true'] { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
+.trpg-row--series { min-height: 36px; background: var(--panel); }
+.trpg-row--nested { padding-left: 20px; }
+.trpg-packdetail { flex: 1; min-height: 0; }
+
+.trpg-issuerow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 1px solid var(--unsaved); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--unsaved) 12%, transparent); }
+.trpg-variantrow { margin-top: 8px; }
+
+.trpg-group--first { margin-top: 0; }
+.trpg-row__end--select { width: 180px; }
+.trpg-row__end--wrap { flex-wrap: wrap; justify-content: flex-end; }
+
+.trpg-toolbar--between { justify-content: space-between; }
+.trpg-toolbar__end { display: inline-flex; align-items: center; gap: 10px; }
+.trpg-minesub { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 420px; }
+.trpg-minesub__list { flex: 1; min-height: 220px; }

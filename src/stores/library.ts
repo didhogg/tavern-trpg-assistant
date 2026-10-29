@@ -3,10 +3,13 @@ import { computed, ref, shallowRef } from 'vue'
 import { TrpgError } from '../core/errors'
 import type { Resolution } from '../core/packs/installer'
 import type { RecognizedPack } from '../core/packs/recognize'
-import { getBuiltinRemoved, getUserRemoved } from '../core/packs/builtins'
+import { checkIntegrity, type Issue } from '../core/library/integrity'
+import { featureUpdates } from '../core/library/features'
+import { getBuiltinRemoved, getUserRemoved, setUserRemoved } from '../core/packs/builtins'
 import { downloadPack, fetchCatalog, findDownloadable, findUpdates, installDownloaded } from '../core/packs/catalog'
 import type { Catalog, CatalogPack, InstalledPack } from '../schemas/pack'
 import { useAppStore } from './app'
+import { useCampaignStore } from './campaign'
 
 export type TaskState = 'waiting' | 'downloading' | 'installing' | 'failed'
 
@@ -21,11 +24,15 @@ export interface PackTask {
 /** 库的状态：已安装的包、数据仓库目录、下载与安装任务。 */
 export const useLibraryStore = defineStore('library', () => {
   const app = useAppStore()
+  const campaign = useCampaignStore()
   const installed = shallowRef<InstalledPack[]>([])
   const catalog = shallowRef<Catalog | null>(null)
   const catalogState = ref<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const catalogError = ref('')
   const tasks = ref<Record<string, PackTask>>({})
+  const issues = shallowRef<Issue[]>([])
+  const builtinRemoved = ref<string[]>([])
+  let entryIndex: Map<string, string> | null = null
 
   const installedMap = computed(() => new Map(installed.value.map((p) => [p.id, p])))
   const updates = computed(() => (catalog.value ? findUpdates(installed.value, catalog.value) : []))
@@ -36,6 +43,27 @@ export const useLibraryStore = defineStore('library', () => {
 
   async function refreshInstalled(): Promise<void> {
     installed.value = await app.svc().packs.list()
+    builtinRemoved.value = await getBuiltinRemoved(app.svc().db)
+    entryIndex = null
+  }
+
+  /** 本存档的体检：读取存档后、启用或停用扩展后在后台运行。 */
+  async function runIntegrity(): Promise<Issue[]> {
+    const ws = campaign.workspace
+    issues.value = ws ? await checkIntegrity(app.svc().db, ws.data) : []
+    return issues.value
+  }
+
+  /** 存档里的包有比已复制的更新的功能定义：包 id → 数量。 */
+  const featureUpdateCounts = computed(() => (campaign.workspace ? featureUpdates(campaign.workspace.data, installedMap.value) : new Map<string, number>()))
+
+  /** 按条目 id 找它所在的已安装包（条目里的 {{ref:…}} 关联术语用）。 */
+  async function packOfEntry(entryId: string): Promise<string | undefined> {
+    if (!entryIndex) {
+      const keys = (await app.svc().db.entries.toCollection().primaryKeys()) as Array<[string, string]>
+      entryIndex = new Map(keys.map(([packId, id]) => [id, packId]))
+    }
+    return entryIndex.get(entryId)
   }
 
   async function loadCatalog(force = false): Promise<boolean> {
@@ -86,6 +114,7 @@ export const useLibraryStore = defineStore('library', () => {
   async function install(pack: CatalogPack): Promise<boolean> {
     const list = withRequires(pack)
     let ok = true
+    for (const p of list) await setUserRemoved(app.svc().db, p.id, false)
     for (const p of list) setTask(p.id, { state: 'waiting', received: 0, total: p.byteSize, error: undefined })
     const runs = list.map((p) =>
       app.queue
@@ -172,5 +201,5 @@ export const useLibraryStore = defineStore('library', () => {
     return app.queue.state(`pack:${id}`)
   }
 
-  return { installed, catalog, catalogState, catalogError, tasks, installedMap, updates, downloadable, refreshInstalled, loadCatalog, install, installFile, waitFor, ensureRecommended, cancel, queueState, clearTask }
+  return { installed, issues, builtinRemoved, featureUpdateCounts, runIntegrity, packOfEntry, catalog, catalogState, catalogError, tasks, installedMap, updates, downloadable, refreshInstalled, loadCatalog, install, installFile, waitFor, ensureRecommended, cancel, queueState, clearTask }
 })

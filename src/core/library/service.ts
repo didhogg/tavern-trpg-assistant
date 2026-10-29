@@ -7,6 +7,7 @@ import type { RuleRegistry } from '../../rules/registry'
 import type { Workspace } from '../../schemas/campaign'
 import type { InstalledPack } from '../../schemas/pack'
 import { disableFeatures, enableFeatures, setRuleOption, updateFeatures } from './features'
+import { repairIssue, type FixKind, type Issue } from './integrity'
 import { pinEntry } from './pins'
 import { entryKey, libraryOf, type Variant } from './types'
 import {
@@ -188,6 +189,20 @@ export class LibraryService {
     const ws = await this.workspace(ownerKey)
     const { data, changed } = setSourceUse(ws.data, match, use)
     return { workspace: await this.save({ ...ws, data }), changed }
+  }
+
+  /** 体检修复：先写自动存档（原因「改动模组前」），再修；修复后由调用方重新检查。 */
+  async repair(ownerKey: string, issue: Issue, fix: FixKind, arg?: string): Promise<Workspace> {
+    const ws = await this.workspace(ownerKey)
+    await this.deps.campaign.writeAutoSave(ws, '改动模组前')
+    const data = await repairIssue(this.db, ws.data, issue, fix, this.deps.now(), arg)
+    return this.save({ ...ws, data })
+  }
+
+  /** 更新功能定义前先写自动存档。 */
+  async updateFeaturesSafely(ownerKey: string, packId: string): Promise<{ workspace: Workspace; kept: Array<{ key: string; reason: string }> }> {
+    await this.deps.campaign.writeAutoSave(await this.workspace(ownerKey), '改动模组前')
+    return this.updateFeatures(ownerKey, packId)
   }
 
   entryKeyOf = entryKey
