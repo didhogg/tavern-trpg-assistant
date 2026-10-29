@@ -112,7 +112,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "subrace.otherSources[].source": {"how":"mapped","to":"data.src.book","wp":"R5"},
   "subrace.overwrite": {"how":"mapped","to":"data.overwrite","wp":"R5"},
   "subrace.overwrite.ability": {"how":"mapped","to":"data.overwrite","wp":"R5"},
-  "subrace.overwrite.languageProficiencies": {"how":"mapped","to":"data.languages","wp":"R5"},
+  "subrace.overwrite.languageProficiencies": {"how":"mapped","to":"data.overwrite","wp":"R5"},
   "subrace.overwrite.skillProficiencies": {"how":"mapped","to":"data.overwrite","wp":"R5"},
   "subrace.overwrite.traitTags": {"how":"mapped","to":"data.overwrite","wp":"R5"},
   "subrace.page": {"how":"mapped","to":"data.src.page","wp":"R5"},

@@ -7,7 +7,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "action.activities[].target.affects": {"how":"mapped","to":"data.activities[].target.affects","wp":"R8"},
   "action.activities[].target.affects.count": {"how":"mapped","to":"data.activities[].target.affects.count","wp":"R8"},
   "action.activities[].target.affects.type": {"how":"mapped","to":"data.activities[].target.affects.type","wp":"R8"},
-  "action.activities[].type": {"how":"mapped","to":"data.activities[].type","wp":"R8"},
+  "action.activities[].type": {"how":"mapped","to":"data.activities","wp":"R8"},
   "action.basicRules": {"how":"mapped","to":"data.credit.license","wp":"R8"},
   "action.entries": {"how":"text","to":"data.text","wp":"R8"},
   "action.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},

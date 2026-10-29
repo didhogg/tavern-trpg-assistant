@@ -83,6 +83,31 @@ function langSet(value: unknown): { fixed: string[]; choose?: number } {
   return { fixed, ...(choose ? { choose } : {}) }
 }
 
+function proficiencyTrait(raw: Record<string, unknown>, level = 1): Record<string, unknown> | undefined {
+  const grants: string[] = []
+  const choices: Array<{ count: number; pool: string[] }> = []
+  const add = (key: string, prefix: string): void => {
+    const value = raw[key]
+    for (const item of Array.isArray(value) ? value : []) {
+      if (!item || typeof item !== 'object') continue
+      for (const [k, v] of Object.entries(item as Record<string, unknown>)) {
+        if (k === 'any' && typeof v === 'number') choices.push({ count: v, pool: [`${prefix}:*`] })
+        else if (k === 'choose' && v && typeof v === 'object') {
+          const c = v as Record<string, unknown>
+          choices.push({ count: Number(c.count ?? 1), pool: Array.isArray(c.from) ? c.from.map((x) => `${prefix}:${String(x)}`) : [`${prefix}:*`] })
+        } else if (v === true) grants.push(`${prefix}:${k}`)
+        else if (typeof v === 'number' && v > 0) choices.push({ count: v, pool: [`${prefix}:${k}`] })
+      }
+    }
+  }
+  add('skillProficiencies', 'skill')
+  add('toolProficiencies', 'tool')
+  add('languageProficiencies', 'lang')
+  add('weaponProficiencies', 'weapon')
+  add('armorProficiencies', 'armor')
+  return grants.length || choices.length ? { kind: 'trait', level, grants, choices } : undefined
+}
+
 function damageCodes(value: unknown): string[] {
   const list = Array.isArray(value) ? value : []
   return list.flatMap((item) => {
@@ -210,6 +235,13 @@ export function convertRace(entry: PlannedEntry, ctx: ConvertContext, inline: In
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
     ...(entry.type === 'subrace' ? { parentRace: entry.context.parentRace } : {}),
+    ...(raw.age ? { age: raw.age } : {}),
+    ...(raw.heightAndWeight ? { heightWeight: raw.heightAndWeight } : {}),
+    ...(raw.creatureTypes ? { creatureTypes: raw.creatureTypes } : {}),
+    ...(raw.creatureTypeTags ? { creatureTypeTags: raw.creatureTypeTags } : {}),
+    ...(raw.lineage ? { lineage: raw.lineage } : {}),
+    ...(raw.overwrite ? { overwrite: raw.overwrite } : {}),
+    ...(proficiencyTrait(raw) ? { advancement: [proficiencyTrait(raw)!] } : {}),
     size: Array.isArray(raw.size) ? raw.size.map(String) : [String(raw.size ?? 'M')],
     ...(speedData ? { speed: speedData } : {}),
     ...(abilityBonus(raw) ? { abilityBonus: abilityBonus(raw) } : {}),
@@ -249,8 +281,10 @@ export function convertBackground(entry: PlannedEntry, ctx: ConvertContext, inli
       languages: (() => { const l = langSet(raw.languageProficiencies); return { fixed: l.fixed, ...(l.choose ? { choose: { count: l.choose } } : {}) } })(),
     },
     equipment: startingEquipmentOf(raw),
+    ...(prereqToRequires(raw.prerequisite, ctx) ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
     ...(feature ? { feature: feature.id } : {}),
     characteristics: tables.map((t) => ({ table: t.id, label: t.name })),
+    ...(proficiencyTrait(raw) ? { advancement: [proficiencyTrait(raw)!] } : {}),
   }
   return { id: entry.id, type: 'background', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('background', entry.name, data, plainText(data.text as never)), data }
 }
@@ -339,7 +373,8 @@ export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(grants.length ? { spellGrants: grants } : {}),
     ...(uses ? { uses } : {}),
     ...(effects.length ? { effects } : {}),
-    advancement: [],
+    ...(Array.isArray(raw.traitTags) ? { tags: raw.traitTags.map(String) } : {}),
+    advancement: proficiencyTrait(raw) ? [proficiencyTrait(raw)!] : [],
   }
   if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }
   return { id: entry.id, type: 'feat', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('feat', entry.name, data, plainText(data.text as never)), data }

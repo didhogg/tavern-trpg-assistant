@@ -9,6 +9,7 @@ import { clip, plainText, summaryOf } from '../summary/summary'
 import { prereqToRequires, spellGrants, startingEquipmentOf } from './character2'
 import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
 import { FEATURE_ACTIVITIES, FEATURE_EFFECTS, FEATURE_NO_USES, FEATURE_USES } from '../config/featureRules'
+import { PROFICIENCY_TRAITS } from '../config/proficiencyTraits'
 import { advancementExtras, foundryScaleValues, scaleValuesOf, spellcastingOf } from './classRules'
 import type { InlineContext } from '../markup/inline'
 import { renderInline } from '../markup/inline'
@@ -200,6 +201,7 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
         return { kind: 'itemGrant', level: f.level, items: [featureId], optional: 'tce-ocf', ...(target ? { replaces: target } : {}) }
       }),
       ...features.filter((f) => f.name.includes('属性值提升')).map((f) => ({ kind: 'abilityScoreImprovement', level: f.level, points: 2, explain: f.id })),
+      ...features.flatMap((f) => PROFICIENCY_TRAITS[f.id] ? [{ kind: 'trait', level: f.level, grants: PROFICIENCY_TRAITS[f.id].grants ?? [], choices: PROFICIENCY_TRAITS[f.id].choices ?? [] }] : []),
       ...features.filter((f) => f.name.includes('专精')).map((f) => ({ kind: 'expertise', level: f.level, count: 2, from: 'proficient' })),
       { kind: 'subclass', level: subclassLevel, ...(() => { const all = [...ctx.featuresByOwner.values()].flat(); const f = all.find((x) => String((x.raw as Record<string, unknown>).className ?? '') === className && Number((x.raw as Record<string, unknown>).level ?? 0) === subclassLevel); return f ? { explain: f.id } : {} })() },
       ...scaleValuesOf(raw),
@@ -229,6 +231,7 @@ export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline
     ...(expandedSpells(raw, ctx) ? { expandedSpells: expandedSpells(raw, ctx) } : {}),
     advancement: mergeAdvancement([
       ...features.filter((f) => !optionNames.has(f.name)).map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
+      ...features.flatMap((f) => PROFICIENCY_TRAITS[f.id] ? [{ kind: 'trait', level: f.level, grants: PROFICIENCY_TRAITS[f.id].grants ?? [], choices: PROFICIENCY_TRAITS[f.id].choices ?? [] }] : []),
       ...choices,
       ...foundryScaleValues(ctx, entry),
     ]),
