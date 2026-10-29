@@ -10,6 +10,8 @@ import type { RecognizedSaveFile } from '../../src/core/packs/recognize'
 import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { DND5E2014_ENTRY_TYPES } from '../../src/rules/dnd5e2014/data/entries'
 import { uuid } from '../../src/core/ids'
+import { z } from 'zod'
+import { textBlockSchema } from '../../src/schemas/text'
 
 const REPO = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
@@ -91,4 +93,28 @@ describe('官方包全量往返', () => {
       a.db.close(); b.db.close(); await a.db.delete(); await b.db.delete()
     }
   }, 180_000)
+})
+
+describe('官方包的规则选项说明', () => {
+  it('说明要么为空，要么是能读成正文块的 JSON（界面按正文块显示，不会露出原始 JSON）', async () => {
+    const s = createServices({ dbName: `official-options-${uuid()}`, appVersion: '99.0.0' })
+    try {
+      await installAll(s, await loadPacks())
+      let readable = 0
+      for (const pack of await s.packs.list()) {
+        for (const f of (pack.content?.features ?? []) as Array<{ kind: string; name: string; data: { text?: string } }>) {
+          if (f.kind !== 'ruleOptions') continue
+          const text = String(f.data.text ?? '').trim()
+          if (text === '' || text === '[]') continue
+          const parsed = z.array(textBlockSchema).safeParse(JSON.parse(text))
+          expect(parsed.success, `${pack.id} 的「${f.name}」`).toBe(true)
+          readable++
+        }
+      }
+      expect(readable).toBeGreaterThanOrEqual(7)
+    } finally {
+      s.db.close()
+      await s.db.delete()
+    }
+  }, 120_000)
 })

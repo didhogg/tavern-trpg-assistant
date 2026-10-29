@@ -42,6 +42,16 @@ export async function librarySuite(page, label, { width }) {
   await page.locator('.trpg-modal__close').click()
   await settle(page)
 
+  // 说明是 JSON 文本的规则选项（DMG）：按正文块显示，不露出原始 JSON
+  const epic = page.getByTestId('option-史诗英雄休息')
+  await epic.waitFor()
+  await epic.locator('.trpg-term').click()
+  await page.locator('.trpg-modal').waitFor()
+  const epicText = await page.locator('.trpg-modal').innerText()
+  check(`[${label}] 「史诗英雄休息」说明按正文显示（有小标题，没有原始 JSON）`, epicText.includes('英雄史诗') && epicText.includes('残酷现实') && !epicText.includes('{"p"') && !epicText.includes('"body"'))
+  await page.locator('.trpg-modal__close').click()
+  await settle(page)
+
   // 扩展
   await page.getByRole('button', { name: '扩展', exact: true }).click()
   await page.getByTestId('ext-list').waitFor()
