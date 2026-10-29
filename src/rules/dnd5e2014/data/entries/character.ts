@@ -81,7 +81,8 @@ export type SubclassData = z.infer<typeof subclassDataSchema>
 
 export const featureDataSchema = z.looseObject({
   ...entryCommonFields,
-  owner: z.object({ type: z.enum(['class', 'subclass', 'race', 'feat', 'background', 'optional']), id: z.string().min(1) }),
+  owner: z.object({ type: z.enum(['class', 'subclass', 'race', 'feat', 'background', 'optional']), id: z.string().min(1) }).optional(),
+  optionKind: z.array(z.string().max(20)).optional(),
   level: z.number().int().min(0).max(20).optional(),
   featureType: z.string().max(60).optional(),
   uses: usesSchema.optional(),

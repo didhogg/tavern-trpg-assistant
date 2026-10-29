@@ -279,6 +279,12 @@ export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<s
     const ability = abilityReq(obj.ability)
     if (ability) all.push(ability)
     if (typeof obj.level === 'number') all.push({ level: obj.level })
+    if (obj.level && typeof obj.level === 'object') {
+      const level = obj.level as Record<string, unknown>
+      if (typeof level.level === 'number') all.push({ level: level.level })
+    }
+    if (typeof obj.pact === 'string') all.push({ text: `契约：${obj.pact}` })
+    if (Array.isArray(obj.optionalfeature)) all.push({ text: `需要可选特性：${obj.optionalfeature.map(String).join('、')}` })
     if (obj.spellcasting === true || obj.spellcasting2020 === true) all.push({ spellcasting: true })
     if (Array.isArray(obj.proficiency)) {
       for (const prof of obj.proficiency) {

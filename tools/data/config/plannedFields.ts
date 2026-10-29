@@ -189,4 +189,7 @@ export const PLANNED_FIELDS: Record<string, string | PlannedField> = {
   'monsterPart.src': { spec: '§5.2', origin: 'source-mirror' },
   'recipe.src': { spec: '§5.2', origin: 'source-mirror' },
   'recipe.credit': { spec: '§5.2', origin: 'source-mirror' },
+  'background.effects': '§5.1',
+  'class.effects': '§5.1',
+  'subclass.effects': '§5.1',
 }

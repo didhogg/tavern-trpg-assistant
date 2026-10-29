@@ -14,6 +14,7 @@ const itemChoice = z.looseObject({
   count: z.number().int().positive(),
   pool: z.array(entryIdSchema).optional(),
   featureType: z.string().max(60).optional(),
+  optionKind: z.array(z.string().max(20)).optional(),
 })
 
 const scaleValue = z.looseObject({

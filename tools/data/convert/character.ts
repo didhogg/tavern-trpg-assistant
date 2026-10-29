@@ -6,7 +6,7 @@ import { creditFor, keywordsOf, pageOf, str } from './common'
 import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
 import { clip, plainText, summaryOf } from '../summary/summary'
-import { prereqToRequires, startingEquipmentOf } from './character2'
+import { prereqToRequires, spellGrants, startingEquipmentOf } from './character2'
 import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
 import { FEATURE_ACTIVITIES, FEATURE_EFFECTS, FEATURE_NO_USES, FEATURE_USES } from '../config/featureRules'
 import { advancementExtras, foundryScaleValues, scaleValuesOf, spellcastingOf } from './classRules'
@@ -237,6 +237,11 @@ function featureType(raw: Record<string, unknown>): string | undefined {
   return list.map((code) => FEATURE_TYPES[code] ?? code).join('、')
 }
 
+function optionKinds(raw: Record<string, unknown>): string[] | undefined {
+  const list = Array.isArray(raw.featureType) ? raw.featureType.map(String) : []
+  return list.length ? list : undefined
+}
+
 function choicesOf(raw: Record<string, unknown>): Array<{ name: string; count: number; pool: string[] }> | undefined {
   const out: Array<{ name: string; count: number; pool: string[] }> = []
   const walk = (value: unknown): void => {
@@ -271,7 +276,13 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
   const text = plainText(convertBlocks(raw.entries, inline))
   const uses = FEATURE_NO_USES.has(entry.id) ? undefined : rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text)
   const configEffects = FEATURE_EFFECTS[entry.id] ?? []
-  const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...configEffects])
+  const spellEffects = spellGrants(raw, ctx).map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))
+  const skillEffects: Array<Record<string, unknown>> = []
+  for (const item of Array.isArray(raw.skillProficiencies) ? raw.skillProficiencies : []) {
+    if (!item || typeof item !== 'object') continue
+    for (const [skill, value] of Object.entries(item as Record<string, unknown>)) if (value === true) skillEffects.push({ kind: 'skill', skill, level: 'proficient' })
+  }
+  const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...configEffects, ...spellEffects, ...skillEffects])
   const baseActivities = rules?.activities?.length ? rules.activities : activitiesFromText(raw.entries, entry.name, entry.id)
   const configuredActivities = FEATURE_ACTIVITIES[entry.id] ?? []
   const consumes = ownerType === 'optional' ? (Array.isArray(raw.consumes) ? raw.consumes : raw.consumes && typeof raw.consumes === 'object' ? [raw.consumes] : []) : []
@@ -289,7 +300,8 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text: convertBlocks(raw.entries, inline),
-    owner: { type: ownerType, id: entry.context.ownerId ?? 'optional' },
+    ...(ownerType !== 'optional' ? { owner: { type: ownerType, id: entry.context.ownerId ?? 'optional' } } : {}),
+    ...(optionKinds(raw) ? { optionKind: optionKinds(raw) } : {}),
     ...(typeof raw.level === 'number' ? { level: raw.level } : {}),
     ...(featureType(raw) ? { featureType: featureType(raw) } : {}),
     ...(uses ? { uses } : {}),

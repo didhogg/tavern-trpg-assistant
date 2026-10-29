@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "background.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "background.additionalSpells": {"how":"mapped","to":"data.spellGrants","wp":"R5"},
+  "background.additionalSpells": {"how":"mapped","to":"data.effects","wp":"R5"},
   "background.additionalSpells[].expanded": {"how":"mapped","to":"data.expandedSpells","wp":"R5"},
   "background.additionalSpells[].expanded.s0": {"how":"mapped","to":"data.expandedSpells","wp":"R5"},
   "background.additionalSpells[].expanded.s1": {"how":"mapped","to":"data.expandedSpells","wp":"R5"},

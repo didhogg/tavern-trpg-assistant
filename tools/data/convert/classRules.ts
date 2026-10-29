@@ -189,11 +189,11 @@ export function advancementExtras(raw: Record<string, unknown>): Array<Record<st
       const progression = rec.progression
       if (Array.isArray(progression)) {
         progression.forEach((count, index) => {
-          if (Number(count) > 0) out.push({ kind: 'itemChoice', level: index + 1, count: Number(count), featureType: (Array.isArray(rec.featureType) ? rec.featureType : []).map(String).join('、') || str(rec.name) })
+          if (Number(count) > 0) out.push({ kind: 'itemChoice', level: index + 1, count: Number(count), featureType: (Array.isArray(rec.featureType) ? rec.featureType : []).map(String).join('、') || str(rec.name), optionKind: (Array.isArray(rec.featureType) ? rec.featureType : []).map(String) })
         })
       } else if (progression && typeof progression === 'object') {
         for (const [level, count] of Object.entries(progression as Record<string, unknown>)) {
-          if (Number(count) > 0) out.push({ kind: 'itemChoice', level: Number(level), count: Number(count), featureType: (Array.isArray(rec.featureType) ? rec.featureType : []).map(String).join('、') || str(rec.name) })
+          if (Number(count) > 0) out.push({ kind: 'itemChoice', level: Number(level), count: Number(count), featureType: (Array.isArray(rec.featureType) ? rec.featureType : []).map(String).join('、') || str(rec.name), optionKind: (Array.isArray(rec.featureType) ? rec.featureType : []).map(String) })
         }
       }
     }
