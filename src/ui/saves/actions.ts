@@ -32,7 +32,7 @@ export function openWizard(): void {
   modal.open({ key: 'wizard', title: '开始新冒险', component: markRaw(WizardPage), variant: 'dialog', guard })
 }
 
-/** 保存：成功提示「已保存」，没有改动提示「已是最新」。 */
+/** 保存存档：成功提示「已保存存档」，没有改动提示「已是最新」。 */
 export async function saveNow(): Promise<void> {
   const campaign = useCampaignStore()
   const toast = useToastStore()
@@ -40,17 +40,17 @@ export async function saveNow(): Promise<void> {
   try {
     const changed = await campaign.save()
     await useAppStore().refreshBackup()
-    toast.success(changed ? '已保存' : '已是最新')
+    toast.success(changed ? '已保存存档' : '已是最新')
   } catch (error) {
-    console.error('[trpg-assistant] 保存失败', error)
-    toast.error(`保存失败：${errorText(error)}`)
+    console.error('[trpg-assistant] 保存存档失败', error)
+    toast.error(`保存存档失败：${errorText(error)}`)
   }
 }
 
 export interface LoadOutcome { loaded: boolean }
 
 /**
- * 读取存档（U2 §3.5）：有未保存改动时先问「保存后读取 / 不保存直接读取 / 取消」；
+ * 读取存档（U2 §3.5）：有未保存改动时先问「保存存档后读取 / 不保存直接读取 / 取消」；
  * 其他规则的存档先确认切换规则。确认页都在当前弹窗内换页显示。
  */
 export async function loadSaveFlow(save: SaveSlot): Promise<LoadOutcome> {
@@ -73,7 +73,7 @@ export async function loadSaveFlow(save: SaveSlot): Promise<LoadOutcome> {
       const choice = await askChoice<'save' | 'discard' | 'cancel'>(
         {
           key: 'confirm:unsaved',
-          title: '有未保存的改动',
+          title: '有未保存到存档的改动',
           component: markRaw(UnsavedLoadPage),
           props: (answer) => ({ current: campaign.currentSave?.name ?? '当前存档', target: save.name, onChoose: answer }),
         },

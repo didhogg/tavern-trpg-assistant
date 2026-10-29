@@ -22,7 +22,7 @@ export async function librarySuite(page, label, { width }) {
 
   await mtf.click()
   await page.getByText('已启用「魔邓肯的众敌卷册」').waitFor()
-  check(`[${label}] 打开开关：立即生效，提示条带「撤销」，页头出现「● 保存」`, (await mtf.getAttribute('aria-checked')) === 'true' && (await page.getByRole('button', { name: '撤销', exact: true }).isVisible()) && (await page.getByTestId('save-button').isVisible()))
+  check(`[${label}] 打开开关：立即生效，提示条带「撤销」，页头出现「● 保存存档」`, (await mtf.getAttribute('aria-checked')) === 'true' && (await page.getByRole('button', { name: '撤销', exact: true }).isVisible()) && (await page.getByTestId('save-button').isVisible()))
   await page.getByRole('button', { name: '撤销', exact: true }).click()
   await settle(page, 500)
   check(`[${label}] 撤销：开关回到关`, (await mtf.getAttribute('aria-checked')) === 'false')

@@ -27686,14 +27686,14 @@ var RF = ["value"], [zF, BF] = /*#__PURE__*/ Ak("SelectRoot"), VF = /* @__PURE__
 			onDrop: Ou(y, ["prevent"])
 		}, [
 			I(n).hasCampaign ? (H(), U("section", iL, [
-				G("div", aL, [G("span", oL, M(c.value?.name ?? "当前存档"), 1), I(n).dirty ? (H(), U("span", sL, "● 有未保存改动")) : J("", !0)]),
+				G("div", aL, [G("span", oL, M(c.value?.name ?? "当前存档"), 1), I(n).dirty ? (H(), U("span", sL, "● 有未保存到存档的改动")) : J("", !0)]),
 				G("div", cL, [
 					G("button", {
 						class: "trpg-btn trpg-btn--primary",
 						type: "button",
 						disabled: I(n).readOnly || !I(n).dirty,
 						onClick: i[0] ||= (e) => I(LV)()
-					}, M(I(n).dirty ? "保存" : "已是最新"), 9, lL),
+					}, M(I(n).dirty ? "保存存档" : "已是最新"), 9, lL),
 					K(dI, {
 						"default-name": `${c.value?.name ?? "存档"} 分支`,
 						disabled: I(n).readOnly,
@@ -27843,7 +27843,7 @@ var RF = ["value"], [zF, BF] = /*#__PURE__*/ Ak("SelectRoot"), VF = /* @__PURE__
 	setup(e) {
 		let t = e;
 		return (e, n) => (H(), U("div", xL, [
-			G("p", SL, "「" + M(t.current) + "」有未保存的改动。读取「" + M(t.target) + "」前：", 1),
+			G("p", SL, "「" + M(t.current) + "」有未保存到存档的改动。读取「" + M(t.target) + "」前：", 1),
 			G("div", CL, [
 				G("button", {
 					class: "trpg-btn",
@@ -27854,13 +27854,13 @@ var RF = ["value"], [zF, BF] = /*#__PURE__*/ Ak("SelectRoot"), VF = /* @__PURE__
 					class: "trpg-btn",
 					type: "button",
 					onClick: n[1] ||= (e) => t.onChoose("discard")
-				}, "不保存，直接读取"),
+				}, "不保存存档，直接读取"),
 				G("button", {
 					class: "trpg-btn trpg-btn--primary",
 					type: "button",
 					"data-autofocus": "",
 					onClick: n[2] ||= (e) => t.onChoose("save")
-				}, "保存后读取")
+				}, "保存存档后读取")
 			]),
 			n[3] ||= G("p", { class: "trpg-field__hint" }, "无论选哪一项，当前状态都会先写入自动存档。", -1)
 		]));
@@ -29803,9 +29803,9 @@ async function LV() {
 	let e = RT(), t = vE();
 	if (e.hasCampaign && !e.readOnly) try {
 		let n = await e.save();
-		await IT().refreshBackup(), t.success(n ? "已保存" : "已是最新");
+		await IT().refreshBackup(), t.success(n ? "已保存存档" : "已是最新");
 	} catch (e) {
-		console.error("[trpg-assistant] 保存失败", e), t.error(`保存失败：${PD(e)}`);
+		console.error("[trpg-assistant] 保存存档失败", e), t.error(`保存存档失败：${PD(e)}`);
 	}
 }
 async function RV(e) {
@@ -29823,7 +29823,7 @@ async function RV(e) {
 		} else if (t.hasCampaign && t.dirty) {
 			let n = await ID({
 				key: "confirm:unsaved",
-				title: "有未保存的改动",
+				title: "有未保存到存档的改动",
 				component: Sn(wL),
 				props: (n) => ({
 					current: t.currentSave?.name ?? "当前存档",
@@ -29854,7 +29854,7 @@ var zV = { class: "page-stack" }, BV = ["src", "alt"], VV = { class: "trpg-banne
 			rule: s.value,
 			data: n.workspace.data,
 			narrow: window.innerWidth <= 480
-		})), l = Y(() => !!c.value.src && !a.value), u = Y(() => n.currentSave?.name ?? "存档"), d = Y(() => n.dirty ? "● 有未保存改动" : n.currentSave ? `已保存 ${jD(n.currentSave.updatedAt)}` : ""), f = Y(() => n.workspace?.enabledPacks.length ?? 0), p = Y(() => r.catalogState === "ok" ? r.updates.length ? `${r.updates.length} 个可更新` : "已是最新" : "");
+		})), l = Y(() => !!c.value.src && !a.value), u = Y(() => n.currentSave?.name ?? "存档"), d = Y(() => n.dirty ? "● 有未保存到存档的改动" : n.currentSave ? `存档已保存 ${jD(n.currentSave.updatedAt)}` : ""), f = Y(() => n.workspace?.enabledPacks.length ?? 0), p = Y(() => r.catalogState === "ok" ? r.updates.length ? `${r.updates.length} 个可更新` : "已是最新" : "");
 		return ha(() => void r.loadCatalog()), (e, t) => (H(), U("div", zV, [
 			G("section", {
 				class: Ne(["trpg-banner", { "trpg-banner--pattern": !l.value }]),
@@ -32574,7 +32574,7 @@ var aK = {
 				type: "button",
 				"data-testid": "save-button",
 				onClick: n[1] ||= (e) => I(LV)()
-			}, "● 保存")) : J("", !0),
+			}, "● 保存存档")) : J("", !0),
 			I(r).readOnly ? (H(), U("button", {
 				key: 2,
 				class: "trpg-badge trpg-badge--button",

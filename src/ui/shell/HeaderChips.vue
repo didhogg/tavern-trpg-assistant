@@ -31,7 +31,7 @@ const explainReadOnly = () => toast.info('另一个窗口正在使用这份数�
       <button v-if="props.layout !== 'narrow'" class="trpg-pill trpg-chip" type="button" data-testid="save-chip" aria-haspopup="dialog" @click="openSaveDrawer">
         <span class="trpg-chip__name">{{ name }}</span><Icon name="caret-down" :size="14" />
       </button>
-      <button v-if="campaign.dirty && !campaign.readOnly" class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" data-testid="save-button" @click="saveNow()">● 保存</button>
+      <button v-if="campaign.dirty && !campaign.readOnly" class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" data-testid="save-button" @click="saveNow()">● 保存存档</button>
       <button v-if="campaign.readOnly" class="trpg-badge trpg-badge--button" data-tone="warn" type="button" @click="explainReadOnly">只读</button>
     </template>
     <MoreMenu v-if="props.layout === 'narrow'" label="助手" :items="menu" @select="onMenu" />

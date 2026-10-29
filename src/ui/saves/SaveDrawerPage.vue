@@ -89,10 +89,10 @@ async function onFile(event: Event): Promise<void> {
     <section v-if="campaign.hasCampaign" class="trpg-drawer__current">
       <div class="trpg-drawer__name">
         <span class="trpg-drawer__title">{{ current?.name ?? '当前存档' }}</span>
-        <span v-if="campaign.dirty" class="trpg-badge" data-tone="warn">● 有未保存改动</span>
+        <span v-if="campaign.dirty" class="trpg-badge" data-tone="warn">● 有未保存到存档的改动</span>
       </div>
       <div class="trpg-drawer__buttons">
-        <button class="trpg-btn trpg-btn--primary" type="button" :disabled="campaign.readOnly || !campaign.dirty" @click="saveNow()">{{ campaign.dirty ? '保存' : '已是最新' }}</button>
+        <button class="trpg-btn trpg-btn--primary" type="button" :disabled="campaign.readOnly || !campaign.dirty" @click="saveNow()">{{ campaign.dirty ? '保存存档' : '已是最新' }}</button>
         <BranchPopover :default-name="`${current?.name ?? '存档'} 分支`" :disabled="campaign.readOnly" @create="onBranch" />
         <button v-if="current" class="trpg-btn" type="button" @click="openExport(current.id)">导出…</button>
       </div>

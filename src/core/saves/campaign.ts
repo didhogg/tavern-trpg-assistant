@@ -158,7 +158,7 @@ export class CampaignService {
   // ---------- 读取 ----------
 
   /**
-   * 读取存档（调用方已处理"保存后读取 / 不保存"的选择）：
+   * 读取存档（调用方已处理"保存存档后读取 / 不保存存档"的选择）：
    * 先为当前数据写自动存档；其他卡的存档先复制为本卡的新存档；其他规则须 allowRuleSwitch。
    */
   async loadSave(owner: Owner, saveId: string, opts: { allowRuleSwitch?: boolean } = {}): Promise<Workspace> {

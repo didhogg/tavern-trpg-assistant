@@ -20,7 +20,7 @@ const rule = computed(() => (campaign.workspace ? app.svc().rules.get(campaign.w
 const banner = computed(() => getCampaignBanner({ rule: rule.value, data: campaign.workspace!.data, narrow: window.innerWidth <= 480 }))
 const showImage = computed(() => !!banner.value.src && !failed.value)
 const saveName = computed(() => campaign.currentSave?.name ?? '存档')
-const stateText = computed(() => (campaign.dirty ? '● 有未保存改动' : campaign.currentSave ? `已保存 ${formatClock(campaign.currentSave.updatedAt)}` : ''))
+const stateText = computed(() => (campaign.dirty ? '● 有未保存到存档的改动' : campaign.currentSave ? `存档已保存 ${formatClock(campaign.currentSave.updatedAt)}` : ''))
 const enabledCount = computed(() => campaign.workspace?.enabledPacks.length ?? 0)
 const updateText = computed(() => (library.catalogState !== 'ok' ? '' : library.updates.length ? `${library.updates.length} 个可更新` : '已是最新'))
 
