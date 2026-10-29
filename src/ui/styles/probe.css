@@ -11,4 +11,4 @@
 .probe summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
 .lab { display: grid; gap: 10px; margin-top: 8px; padding: 10px; background: var(--panel); border-radius: var(--radius); }
 .lab__row { display: grid; gap: 6px; }
-.report-bar { position: sticky; bottom: -12px; display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 0; background: var(--paper); }
+.report-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 10px 0; }

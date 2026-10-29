@@ -52,7 +52,7 @@ export function ruleOptionRows(data: WorkspaceData): RuleOptionRow[] {
     .filter(([, rec]) => rec.enabled && rec.def.kind === 'ruleOptions')
     .map(([key, rec]) => {
       const d = rec.def.data as { summary?: string; text?: string; implemented?: boolean }
-      const text = typeof d.text === 'string' && d.text !== '[]' ? d.text : ''
+      const text = typeof d.text === 'string' && d.text.trim() !== '[]' ? d.text : ''
       return { key, name: rec.def.name, summary: d.summary ?? '', text, packId: rec.packId, implemented: d.implemented === true, on: lib.featureState[key] === true }
     })
 }

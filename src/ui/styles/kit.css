@@ -317,3 +317,12 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-tag { gap: 2px; padding-right: 2px; }
 .trpg-tag__x { min-width: 28px; min-height: 28px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font-size: 16px; line-height: 1; }
 .trpg-tag__x:hover { color: var(--danger); }
+
+/* 条目事实列表 */
+.trpg-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; }
+.trpg-facts__label { color: var(--ink-2); font-size: 13px; padding-top: 1px; white-space: nowrap; }
+.trpg-facts__value { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.trpg-facts__sections { display: grid; gap: 8px; white-space: normal; }
+.trpg-facts__sections h4 { margin: 0 0 2px; font-family: var(--font-serif); font-size: 14px; }
+.trpg-window[data-layout='narrow'] .trpg-facts { grid-template-columns: 1fr; gap: 2px; }
+.trpg-window[data-layout='narrow'] .trpg-facts__value { margin-bottom: 8px; }

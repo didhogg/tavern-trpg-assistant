@@ -12,6 +12,8 @@ import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import { openEntry } from './openDetail'
 import { sourceLine, typeLabel } from './typeLabels'
+import EntryFacts from './EntryFacts.vue'
+import { entryFacts } from './facts'
 import TextBlocks from './TextBlocks.vue'
 import VariantBar from './VariantBar.vue'
 
@@ -35,6 +37,7 @@ const original = computed<Entry | null>(() => (stored.value ? toEntry(stored.val
 const slot = computed(() => (campaign.workspace ? libraryOf(campaign.workspace.data).variants[key.value] : undefined))
 const resolved = computed(() => (original.value ? resolveVariant(original.value, slot.value) : null))
 const shown = computed(() => resolved.value?.entry ?? original.value)
+const facts = computed(() => (shown.value ? entryFacts(shown.value) : []))
 const blocks = computed(() => ((shown.value?.data.text as TextBlock[] | undefined) ?? []))
 
 async function onRef(id: string): Promise<void> {
@@ -62,6 +65,7 @@ async function onSwitch(variantKey: string): Promise<void> {
     <VariantBar v-if="slot && slot.candidates.length" :variants="slot" :original="original" :read-only="campaign.readOnly" :origin-name="original.name" @switch="onSwitch" />
     <p class="trpg-row__meta">{{ typeLabel(shown.type) }}<template v-if="shown.nameEn"> · {{ shown.nameEn }}</template></p>
     <p v-if="shown.summary" class="trpg-entry__summary">{{ shown.summary }}</p>
+    <EntryFacts v-if="facts.length" :facts="facts" @ref="onRef" />
     <TextBlocks :blocks="blocks" @ref="onRef" />
     <p v-if="sourceLine(shown.data)" class="trpg-field__hint">{{ sourceLine(shown.data) }}</p>
   </div>

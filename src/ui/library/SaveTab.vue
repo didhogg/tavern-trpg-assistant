@@ -7,10 +7,10 @@ import { useCampaignStore } from '../../stores/campaign'
 import { useLibraryStore } from '../../stores/library'
 import { useModalStore } from '../../stores/modal'
 import { useUiStore } from '../../stores/ui'
-import InfoPage from '../kit/InfoPage.vue'
 import Switch from '../kit/Switch.vue'
 import Term from '../kit/Term.vue'
 import { disableFlow, enableFlow } from './actions'
+import OptionDetailPage from './OptionDetailPage.vue'
 import { openPackDetail } from './openDetail'
 import { ruleOptionFlow, updateFeaturesFlow } from './saveActions'
 import { buildPackRows } from './rows'
@@ -66,8 +66,7 @@ function toggle(r: Row, on: boolean): void {
 }
 
 function optionDetail(o: (typeof options.value)[number]): void {
-  const lines = [o.text || o.summary || '这个选项没有更多说明。', `来源：${nameOfPack(o.packId)}`, ...(o.implemented ? [] : ['仅说明：结算不会自动应用。'])]
-  const page = { key: `option:${o.key}`, title: o.name, component: markRaw(InfoPage), props: { lines } }
+  const page = { key: `option:${o.key}`, title: o.name, component: markRaw(OptionDetailPage), props: { summary: o.summary, text: o.text, source: nameOfPack(o.packId), implemented: o.implemented } }
   if (modal.isOpen) modal.push(page)
   else modal.open({ ...page, variant: 'dialog' })
 }

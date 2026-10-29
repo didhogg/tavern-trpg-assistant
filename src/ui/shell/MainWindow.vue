@@ -135,7 +135,7 @@ onBeforeUnmount(() => {
         </ul>
       </nav>
       <div class="trpg-main">
-        <header class="trpg-head" @pointerdown="layout === 'narrow' ? startDrag($event) : undefined">
+        <header class="trpg-head" title="拖动窗口" @pointerdown="startDrag">
           <h1 class="trpg-head__title">{{ title }}</h1>
           <HeaderChips :layout="layout" />
           <button v-if="layout !== 'narrow'" class="trpg-icon-btn" type="button" aria-label="收起助手" @click="ui.windowOpen = false">
