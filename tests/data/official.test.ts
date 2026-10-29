@@ -11,6 +11,7 @@ import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { DND5E2014_ENTRY_TYPES } from '../../src/rules/dnd5e2014/data/entries'
 import { uuid } from '../../src/core/ids'
 import { z } from 'zod'
+import * as zh from '../../src/ui/library/zh'
 import { textBlockSchema } from '../../src/schemas/text'
 
 const REPO = process.cwd()
@@ -112,6 +113,57 @@ describe('官方包的规则选项说明', () => {
         }
       }
       expect(readable).toBeGreaterThanOrEqual(7)
+    } finally {
+      s.db.close()
+      await s.db.delete()
+    }
+  }, 120_000)
+})
+
+describe('官方包里显示用的枚举代码都有中文', () => {
+  it('伤害类型、状态、语言、工具、技能、物品类别、稀有度、武器与护甲类别、武器属性、学派、体型、怪物类型', async () => {
+    const s = createServices({ dbName: `official-zh-${uuid()}`, appVersion: '99.0.0' })
+    try {
+      await installAll(s, await loadPacks())
+      const missing = new Map<string, Set<string>>()
+      const need = (field: string, map: Record<string, string>, value: unknown, code = false): void => {
+        if (typeof value !== 'string' || value === '') return
+        const key = code ? value.split('|')[0] : value
+        if (map[key] === undefined && map[key.toLowerCase()] === undefined) missing.set(field, (missing.get(field) ?? new Set()).add(value))
+      }
+      for (const e of await s.db.entries.toArray()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 官方包条目形状各异，这里只按字段名抽查
+        const d = e.data as Record<string, any>
+        if (e.type === 'monster') {
+          for (const f of ['resist', 'immune', 'vulnerable', 'conditionImmune']) for (const v of d[f] ?? []) if (/[A-Za-z]/.test(zh.trWords(String(v)))) missing.set(`monster.${f}`, (missing.get(`monster.${f}`) ?? new Set()).add(String(v)))
+          for (const v of d.size ?? []) need('monster.size', zh.SIZE, v)
+          need('monster.creatureType', zh.CREATURE, d.creatureType?.type)
+          for (const v of d.languages ?? []) if (/^[a-z ]+$/i.test(String(v))) need('monster.languages', zh.LANGUAGE, v)
+        }
+        if (e.type === 'item') {
+          need('item.category', zh.ITEM_CATEGORY, d.category)
+          need('item.rarity', zh.RARITY, d.rarity)
+          need('item.weapon.category', zh.WEAPON_CATEGORY, d.weapon?.category)
+          for (const v of d.weapon?.properties ?? []) need('item.weapon.properties', zh.WEAPON_PROPERTY, v, true)
+          need('item.armor.category', zh.ARMOR_CATEGORY, d.armor?.category)
+        }
+        if (e.type === 'race' || e.type === 'subrace') {
+          for (const v of d.languages ?? []) need('race.languages', zh.LANGUAGE, v)
+          for (const v of d.proficiencies ?? []) need('race.proficiencies', { ...zh.SKILL, ...zh.TOOL }, v)
+          for (const v of d.size ?? []) need('race.size', zh.SIZE, v)
+        }
+        if (e.type === 'background') {
+          for (const v of d.proficiencies?.languages ?? []) need('background.languages', zh.LANGUAGE, v)
+          for (const v of d.proficiencies?.skills ?? []) need('background.skills', zh.SKILL, v)
+          for (const v of d.proficiencies?.tools ?? []) need('background.tools', zh.TOOL, v)
+        }
+        if (e.type === 'class') {
+          for (const v of d.proficiencies?.armor ?? []) need('class.armor', zh.ARMOR_CATEGORY, v)
+          for (const v of d.proficiencies?.skills?.from ?? []) need('class.skills', zh.SKILL, v)
+        }
+        if (e.type === 'spell') need('spell.school', zh.SCHOOL, d.school)
+      }
+      expect(Object.fromEntries([...missing].map(([k, v]) => [k, [...v]]))).toEqual({})
     } finally {
       s.db.close()
       await s.db.delete()

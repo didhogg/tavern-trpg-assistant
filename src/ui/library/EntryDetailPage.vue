@@ -37,7 +37,7 @@ const original = computed<Entry | null>(() => (stored.value ? toEntry(stored.val
 const slot = computed(() => (campaign.workspace ? libraryOf(campaign.workspace.data).variants[key.value] : undefined))
 const resolved = computed(() => (original.value ? resolveVariant(original.value, slot.value) : null))
 const shown = computed(() => resolved.value?.entry ?? original.value)
-const facts = computed(() => (shown.value ? entryFacts(shown.value) : []))
+const facts = computed(() => (shown.value ? [...entryFacts(shown.value), ...(shown.value.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : [])] : []))
 const blocks = computed(() => ((shown.value?.data.text as TextBlock[] | undefined) ?? []))
 
 async function onRef(id: string): Promise<void> {
@@ -63,7 +63,7 @@ async function onSwitch(variantKey: string): Promise<void> {
 <template>
   <div v-if="shown && original" class="page-stack" data-testid="entry-detail">
     <VariantBar v-if="slot && slot.candidates.length" :variants="slot" :original="original" :read-only="campaign.readOnly" :origin-name="original.name" @switch="onSwitch" />
-    <p class="trpg-row__meta">{{ typeLabel(shown.type) }}<template v-if="shown.nameEn"> · {{ shown.nameEn }}</template></p>
+    <p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p>
     <p v-if="shown.summary" class="trpg-entry__summary">{{ shown.summary }}</p>
     <EntryFacts v-if="facts.length" :facts="facts" @ref="onRef" />
     <TextBlocks :blocks="blocks" @ref="onRef" />

@@ -1,52 +1,103 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useDiceStore, BONUS_MAX, BONUS_MIN } from '../../stores/dice'
+import { countOf, heroSides, DICE_FACES, type RollMode } from '../../rules/dice'
+import { useDiceStore } from '../../stores/dice'
 import { useUiStore } from '../../stores/ui'
+import DieIcon from '../kit/DieIcon.vue'
 import Icon from '../kit/Icon.vue'
-import Segmented from '../kit/Segmented.vue'
 import { loadPoint, savePoint } from './storage'
 import { useDrag, type Point } from './useDrag'
 
 const ui = useUiStore()
 const dice = useDiceStore()
-const QUICK = [4, 6, 8, 10, 12, 20, 100]
-const MODES = [{ value: 'adv', label: '优势' }, { value: 'normal', label: '普通' }, { value: 'dis', label: '劣势' }]
+const MODES: Array<{ value: RollMode; label: string }> = [{ value: 'adv', label: '优势' }, { value: 'normal', label: '普通' }, { value: 'dis', label: '劣势' }]
+const REDUCE = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const el = ref<HTMLElement | null>(null)
 const vw = ref(window.innerWidth)
 const vh = ref(window.innerHeight)
 const narrow = computed(() => vw.value <= 480)
-const pos = ref<Point>(loadPoint('trpg-assistant:dice', { x: Math.max(8, window.innerWidth - 384), y: Math.max(8, window.innerHeight - 640) }))
-const recentOpen = ref(!narrow.value)
+const pos = ref<Point>(loadPoint('trpg-assistant:dice', { x: Math.max(8, window.innerWidth - 384), y: Math.max(8, window.innerHeight - 700) }))
+const recentOpen = ref(false)
 
+const bottomGap = () => (narrow.value ? 64 : 0) // 窄屏避开底部标签栏
 const size = () => ({ w: el.value?.offsetWidth ?? 360, h: el.value?.offsetHeight ?? 480 })
 function fit(): void {
   vw.value = window.innerWidth
   vh.value = window.innerHeight
   const { w, h } = size()
-  const bottomGap = narrow.value ? 64 : 0 // 窄屏避开底部标签栏
   pos.value = {
     x: narrow.value ? Math.round(vw.value * 0.04) : Math.min(Math.max(pos.value.x, 0), Math.max(0, vw.value - w)),
-    y: Math.min(Math.max(pos.value.y, 0), Math.max(0, vh.value - h - bottomGap)),
+    y: Math.min(Math.max(pos.value.y, 0), Math.max(0, vh.value - h - bottomGap())),
   }
 }
-const drag = useDrag({ position: pos, size, lockX: () => narrow.value, onEnd: () => savePoint('trpg-assistant:dice', pos.value) })
-const style = computed(() =>
-  narrow.value
-    ? { left: '4vw', width: '92vw', top: `${pos.value.y}px` }
-    : { left: `${pos.value.x}px`, top: `${pos.value.y}px` },
-)
+const drag = useDrag({ position: pos, size, lockX: () => narrow.value, bottomGap, onEnd: () => savePoint('trpg-assistant:dice', pos.value) })
+const style = computed(() => (narrow.value ? { left: '4vw', width: '92vw', top: `${pos.value.y}px` } : { left: `${pos.value.x}px`, top: `${pos.value.y}px` }))
 
 onMounted(() => {
   window.addEventListener('resize', fit)
   void nextTick(fit)
 })
-onBeforeUnmount(() => window.removeEventListener('resize', fit))
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', fit)
+  clearInterval(timer)
+})
 watch(() => ui.diceOpen, (open) => open && void nextTick(fit))
+// 结果区高度变化（掷骰后出现小骰子）时，避免窗口被推出屏幕
+watch(() => dice.lastResult, () => void nextTick(fit))
 
-const bonusLabel = computed(() => (dice.bonus > 0 ? `+${dice.bonus}` : String(dice.bonus)))
+// 掷骰：骰子转一下、数字滚动，落定后才显示结果
+const rolling = ref(false)
+const shownId = ref<number | null>(null)
+const tumble = ref(20)
+let timer: ReturnType<typeof setInterval> | undefined
+
+function roll(): void {
+  if (rolling.value || !dice.canRoll) return
+  const rec = dice.roll()
+  if (!rec) return
+  if (REDUCE) {
+    shownId.value = rec.id
+    return
+  }
+  const sides = heroSides(dice.builder)
+  rolling.value = true
+  shownId.value = null
+  tumble.value = Math.ceil(Math.random() * sides)
+  timer = setInterval(() => (tumble.value = Math.ceil(Math.random() * sides)), 70)
+  setTimeout(() => {
+    clearInterval(timer)
+    rolling.value = false
+    shownId.value = rec.id
+  }, 460)
+}
+
+const shown = computed(() => (dice.last && dice.lastResult && shownId.value === dice.last.id ? { rec: dice.last, result: dice.lastResult } : null))
+const heroKind = computed(() => {
+  if (!shown.value || rolling.value) return heroSides(dice.builder)
+  const sides = shown.value.result.terms.map((t) => (t.term.kind === 'dice' ? t.term.sides : 0))
+  return heroSides({ dice: [{ count: 1, sides: Math.max(0, ...sides), sign: 1 }], mod: 0 })
+})
+const visibleHistory = computed(() => dice.history.filter((h) => !(rolling.value && h.id === dice.last?.id)))
+type Mini = { key: string; kind: 'const'; value: number } | { key: string; kind: 'die'; sides: number; value: number; dim: boolean }
+const minis = computed<Mini[]>(() => {
+  if (!shown.value) return []
+  const out: Mini[] = []
+  for (const t of shown.value.result.terms) {
+    if (t.term.kind === 'const') out.push({ key: `c${out.length}`, kind: 'const', value: t.subtotal })
+    else {
+      const sides = t.term.sides
+      t.rolls.forEach((v, i) => out.push({ key: `${sides}-${out.length}-${i}`, kind: 'die', sides, value: v, dim: t.kept !== undefined && t.kept !== i }))
+    }
+  }
+  return out
+})
+const bonusText = (n: number): string => `${n > 0 ? '+' : '−'}${Math.abs(n)}`
+const modText = computed(() => (dice.builder.mod > 0 ? `+${dice.builder.mod}` : String(dice.builder.mod)))
 const fillLabel = computed(() => (dice.fillState === 'done' ? '已填入 ✓' : dice.fillState === 'failed' ? '尚未填入，再试一次' : '填入输入框'))
 const timeText = (at: number) => new Date(at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
+const hint = computed(() => (dice.canMode ? '' : '优势劣势只对单个 1d20 有效'))
+const onFormula = (e: Event): void => dice.setText((e.target as HTMLInputElement).value)
 </script>
 
 <template>
@@ -57,75 +108,79 @@ const timeText = (at: number) => new Date(at).toLocaleTimeString('zh-CN', { hour
       <button class="trpg-icon-btn" type="button" aria-label="关闭掷骰" @click="ui.diceOpen = false"><Icon name="x" :size="18" /></button>
     </header>
     <div class="trpg-dice__body">
-      <div class="trpg-dice__result" aria-live="polite" :data-natural="dice.last?.natural">
-        <template v-if="dice.last">
-          <div :key="dice.last.id" class="trpg-dice__total" data-testid="dice-total">{{ dice.last.total }}</div>
-          <div class="trpg-dice__line" data-testid="dice-line">{{ dice.last.line }}</div>
-          <span v-if="dice.last.natural" class="trpg-badge" :data-tone="dice.last.natural === 20 ? 'gold' : 'danger'">天然 {{ dice.last.natural }}</span>
-        </template>
-        <p v-else class="trpg-dice__placeholder">点一个骰子开始掷</p>
-      </div>
-
-      <div class="trpg-dice__quick" role="group" aria-label="快捷骰">
-        <button
-          v-for="s in QUICK"
-          :key="s"
-          class="trpg-btn"
-          :class="{ 'trpg-btn--primary': s === 20 }"
-          type="button"
-          @click="dice.rollQuick(s)"
-        >
-          d{{ s }}
-        </button>
-      </div>
-
-      <div class="trpg-dice__mods">
-        <Segmented :model-value="dice.mode" label="优势或劣势（d20）" :options="MODES" @update:model-value="dice.setMode($event as 'adv' | 'normal' | 'dis')" />
-        <div class="trpg-dice__bonus" role="group" aria-label="d20 加值">
-          <span class="trpg-field__label">加值</span>
-          <button class="trpg-icon-btn" type="button" aria-label="加值减 1" :disabled="dice.bonus <= BONUS_MIN" @click="dice.setBonus(dice.bonus - 1)">–</button>
-          <output class="trpg-dice__bonus-value" data-testid="dice-bonus">{{ bonusLabel }}</output>
-          <button class="trpg-icon-btn" type="button" aria-label="加值加 1" :disabled="dice.bonus >= BONUS_MAX" @click="dice.setBonus(dice.bonus + 1)">+</button>
+      <div>
+        <div class="trpg-dice__lbl"><label for="trpg-dice-formula">骰式</label><span>点下面的骰子加进骰式，也可以直接写</span></div>
+        <div class="trpg-dice__row">
+          <input id="trpg-dice-formula" :value="dice.text" class="trpg-input trpg-dice__formula" type="text" autocomplete="off" spellcheck="false" placeholder="点骰子，或写 2d6+3" :aria-invalid="!!dice.error" @input="onFormula" @keydown.stop @keydown.enter.prevent="roll" />
+          <button class="trpg-btn trpg-btn--quiet" type="button" :disabled="!dice.text" @click="dice.clear()">清空</button>
         </div>
+        <div class="trpg-field__error trpg-dice__err" role="alert">{{ dice.error }}</div>
       </div>
 
-      <form class="trpg-dice__expr" @submit.prevent="dice.rollExpression()">
-        <label class="trpg-field">
-          <span class="trpg-field__label">骰式</span>
-          <span class="trpg-dice__expr-row">
-            <input v-model="dice.expression" class="trpg-input" type="text" inputmode="text" placeholder="2d6+3" aria-label="骰式" autocomplete="off" @keydown.stop />
-            <button class="trpg-btn trpg-btn--primary" type="submit">掷</button>
-          </span>
-          <span v-if="dice.error" class="trpg-field__error" role="alert">{{ dice.error }}</span>
-        </label>
-      </form>
-
-      <label class="trpg-field">
-        <span class="trpg-field__label">说明（可空）</span>
-        <input :value="dice.note" class="trpg-input" type="text" placeholder="感知检定" aria-label="说明" autocomplete="off" @input="dice.setNote(($event.target as HTMLInputElement).value)" @keydown.stop />
-      </label>
-
-      <div class="trpg-dice__out">
-        <button class="trpg-btn trpg-btn--primary" type="button" :disabled="!dice.last" @click="dice.fill()">{{ fillLabel }}</button>
-        <button class="trpg-btn" type="button" :disabled="!dice.last" @click="dice.copy()">{{ dice.copied ? '已复制 ✓' : '复制' }}</button>
-      </div>
-
-      <section class="trpg-dice__recent" aria-label="最近记录">
-        <div class="trpg-dice__recent-head">
-          <button v-if="narrow" class="trpg-btn trpg-btn--quiet trpg-btn--small" type="button" :aria-expanded="recentOpen" @click="recentOpen = !recentOpen">
-            最近 {{ dice.history.length }} 次<Icon :name="recentOpen ? 'caret-down' : 'caret-right'" :size="14" />
+      <div class="trpg-dice__faces" role="group" aria-label="骰子">
+        <div v-for="f in DICE_FACES" :key="f" class="trpg-dice__face">
+          <button class="trpg-dice__die" type="button" :data-n="countOf(dice.builder, f)" :aria-label="`加一颗 d${f}${countOf(dice.builder, f) ? `，现有 ${countOf(dice.builder, f)} 颗` : ''}`" @click="dice.addOne(f)">
+            <DieIcon :sides="f" /><span>d{{ f }}</span>
+            <span v-if="countOf(dice.builder, f)" class="trpg-dice__cnt">×{{ countOf(dice.builder, f) }}</span>
           </button>
-          <span v-else class="trpg-field__label">最近</span>
-          <button v-if="dice.history.length" class="trpg-btn trpg-btn--quiet trpg-btn--small" type="button" @click="dice.clearHistory()">清空</button>
+          <button v-if="countOf(dice.builder, f)" class="trpg-dice__minus" type="button" :aria-label="`减一颗 d${f}`" @click="dice.removeOne(f)">−</button>
         </div>
-        <ul v-if="recentOpen && dice.history.length" class="trpg-dice__list">
-          <li v-for="rec in dice.history" :key="rec.id" class="trpg-dice__item">
-            <b class="trpg-dice__item-total">{{ rec.total }}</b>
-            <span class="trpg-dice__item-main">{{ rec.line }}<template v-if="rec.note"> · {{ rec.note }}</template></span>
-            <time class="trpg-row__meta">{{ timeText(rec.at) }}</time>
-            <button class="trpg-icon-btn" type="button" :aria-label="`再掷一次 ${rec.expression}`" @click="dice.reroll(rec)"><Icon name="arrow-clockwise" :size="16" /></button>
-          </li>
-        </ul>
+      </div>
+
+      <div class="trpg-dice__adjust">
+        <div class="trpg-dice__step" role="group" aria-label="加减值">
+          <span class="trpg-dice__small">加减值</span>
+          <button type="button" aria-label="减 1" @click="dice.step(-1)">−</button>
+          <output data-testid="dice-mod">{{ modText }}</output>
+          <button type="button" aria-label="加 1" @click="dice.step(1)">+</button>
+        </div>
+        <div>
+          <div class="trpg-seg" :class="{ 'is-off': !dice.canMode }" role="group" aria-label="d20 掷法">
+            <button v-for="m in MODES" :key="m.value" type="button" :disabled="!dice.canMode" :aria-pressed="(dice.canMode ? dice.mode : 'normal') === m.value" @click="dice.setMode(m.value)">{{ m.label }}</button>
+          </div>
+          <div class="trpg-dice__small" data-testid="dice-hint">{{ hint }}</div>
+        </div>
+      </div>
+
+      <button class="trpg-btn trpg-btn--primary trpg-dice__roll" type="button" :disabled="!dice.canRoll || rolling" :title="dice.canRoll ? undefined : '先选一个骰子'" data-testid="dice-roll" @click="roll"><Icon name="dice-five" :size="22" />掷骰</button>
+
+      <section class="trpg-dice__result" aria-label="结果" aria-live="polite">
+        <div class="trpg-dice__hero" :class="{ 'is-rolling': rolling, 'is-nat20': shown?.rec.natural === 20, 'is-nat1': shown?.rec.natural === 1 }" data-testid="dice-hero">
+          <DieIcon :sides="heroKind" :value="rolling ? tumble : shown?.rec.total" />
+        </div>
+        <div class="trpg-dice__line" data-testid="dice-line">
+          <template v-if="shown">{{ shown.rec.line }} <span v-if="shown.rec.natural" class="trpg-badge" :data-tone="shown.rec.natural === 20 ? 'gold' : 'danger'">天然 {{ shown.rec.natural }}</span></template>
+          <template v-else-if="!rolling">点「掷骰」，结果会落在这里</template>
+        </div>
+        <span class="trpg-sr-only" data-testid="dice-total">{{ shown?.rec.total }}</span>
+        <div class="trpg-dice__minis">
+          <template v-for="m in minis" :key="m.key">
+            <span v-if="m.kind === 'const'" class="trpg-dice__const">{{ bonusText(m.value) }}</span>
+            <span v-else class="trpg-dice__mini" :class="{ 'is-dim': m.dim }" :title="m.dim ? '没有采用' : undefined"><DieIcon :sides="m.sides" :value="m.value" /></span>
+          </template>
+        </div>
+        <div class="trpg-dice__send">
+          <input :value="dice.note" class="trpg-input" type="text" placeholder="说明（可空），如：感知检定" aria-label="说明" autocomplete="off" @input="dice.setNote(($event.target as HTMLInputElement).value)" @keydown.stop />
+          <button class="trpg-btn trpg-btn--primary" type="button" :disabled="!shown" @click="dice.fill()">{{ fillLabel }}</button>
+          <button class="trpg-btn" type="button" :disabled="!shown" @click="dice.copy()">{{ dice.copied ? '已复制 ✓' : '复制' }}</button>
+        </div>
+      </section>
+
+      <section aria-label="最近记录">
+        <button class="trpg-dice__recent" type="button" :aria-expanded="recentOpen" @click="recentOpen = !recentOpen">
+          <span>最近 {{ visibleHistory.length }} 次<template v-if="visibleHistory.length"> · 上一次 <b>{{ visibleHistory[0].total }}</b></template></span>
+          <Icon :name="recentOpen ? 'caret-down' : 'caret-right'" :size="14" />
+        </button>
+        <template v-if="recentOpen">
+          <ul v-if="visibleHistory.length" class="trpg-dice__list">
+            <li v-for="rec in visibleHistory" :key="rec.id">
+              <button type="button" :aria-label="`载入骰式 ${rec.formula}`" @click="dice.loadRecord(rec)">
+                <b>{{ rec.total }}</b><span>{{ rec.formula }}<template v-if="rec.note"> · {{ rec.note }}</template></span><time>{{ timeText(rec.at) }}</time>
+              </button>
+            </li>
+          </ul>
+          <div v-if="visibleHistory.length" class="trpg-dice__clear"><button class="trpg-btn trpg-btn--quiet trpg-btn--small" type="button" @click="dice.clearHistory()">清空记录</button></div>
+        </template>
       </section>
     </div>
   </aside>

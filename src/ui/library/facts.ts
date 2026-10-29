@@ -16,29 +16,12 @@ const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 const str = (v: unknown): string => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '')
 
-const ABILITY: Record<string, string> = { str: '力量', dex: '敏捷', con: '体质', int: '智力', wis: '感知', cha: '魅力' }
-const SKILL: Record<string, string> = {
-  acrobatics: '杂技', 'animal handling': '驯兽', arcana: '奥秘', athletics: '运动', deception: '欺瞒', history: '历史', insight: '洞悉',
-  intimidation: '威吓', investigation: '调查', medicine: '医药', nature: '自然', perception: '察觉', performance: '表演', persuasion: '游说',
-  religion: '宗教', 'sleight of hand': '巧手', stealth: '隐匿', survival: '求生',
-}
-const ARMOR: Record<string, string> = { light: '轻甲', medium: '中甲', heavy: '重甲', shield: '盾牌' }
-const SIZE: Record<string, string> = { T: '微型', S: '小型', M: '中型', L: '大型', H: '巨型', G: '超巨型' }
-const MOVE: Record<string, string> = { walk: '步行', swim: '游泳', fly: '飞行', climb: '攀爬', burrow: '掘地', hover: '悬浮' }
-const CREATURE: Record<string, string> = {
-  aberration: '异怪', beast: '野兽', celestial: '天界生物', construct: '构装体', dragon: '龙', elemental: '元素生物', fey: '精类', fiend: '邪魔',
-  giant: '巨人', humanoid: '类人生物', monstrosity: '怪兽', ooze: '泥怪', plant: '植物', undead: '不死生物',
-}
-const ALIGN: Record<string, string> = { L: '守序', N: '中立', C: '混乱', G: '善良', E: '邪恶', U: '无阵营', A: '任意阵营' }
-const SCHOOL: Record<string, string> = {
-  abjuration: '防护', conjuration: '咒法', divination: '预言', enchantment: '惑控', evocation: '塑能', illusion: '幻术', necromancy: '死灵', transmutation: '变化',
-}
-const UNIT: Record<string, string> = { feet: '尺', miles: '里', action: '动作', bonus: '附赠动作', reaction: '反应', minute: '分钟', hour: '小时', round: '轮', day: '天' }
-const RARITY: Record<string, string> = { none: '无', common: '普通', uncommon: '非普通', rare: '珍稀', 'very rare': '极珍稀', legendary: '传说', artifact: '神器', varies: '不定' }
+import { ABILITY, ALIGNMENT, ARMOR_CATEGORY, CREATURE, DAMAGE, ITEM_CATEGORY, LANGUAGE, MOVE, RANGE_SHAPE, RANGE_WORD, RARITY, RECHARGE, RULE_CATEGORY, SCHOOL, SIZE, SKILL, TOOL, UNIT, WEAPON_CATEGORY, WEAPON_PROPERTY, tr, trCode, trWords } from './zh'
 
 const join = (items: string[], sep = '、'): string => items.filter(Boolean).join(sep)
-const abilityList = (v: unknown): string => join(arr(v).map((a) => ABILITY[str(a)] ?? str(a)))
-const unit = (u: unknown): string => UNIT[str(u)] ?? str(u)
+const abilityList = (v: unknown): string => list(v, ABILITY)
+const unit = (u: unknown): string => tr(UNIT, u)
+const list = (v: unknown, map: Record<string, string>): string => join(arr(v).map((x) => tr(map, x)))
 
 function bonusMap(v: unknown, labels: Record<string, string>): string {
   return isObj(v) ? join(Object.entries(v).map(([k, n]) => `${labels[k] ?? k} ${Number(n) >= 0 ? '+' : ''}${n}`), ' ') : ''
@@ -47,8 +30,9 @@ function bonusMap(v: unknown, labels: Record<string, string>): string {
 function formatRange(range: unknown): string {
   if (!isObj(range)) return ''
   const t = str(range.type)
-  if (range.amount !== undefined) return `${range.amount} ${unit(range.unit)}`
-  return ({ self: '自身', touch: '触及', sight: '视线内', unlimited: '无限', special: '特殊' } as Record<string, string>)[t] ?? t
+  const shape = t === 'point' ? '' : `${tr(RANGE_SHAPE, t)} `
+  if (range.amount !== undefined) return `${shape}${range.amount} ${unit(range.unit)}`
+  return tr(RANGE_WORD, range.unit ?? t)
 }
 
 function formatDuration(list: unknown): string {
@@ -116,9 +100,9 @@ function classFacts(d: Obj): Fact[] {
   add(out, '豁免熟练', abilityList(d.saves))
   if (isObj(d.proficiencies)) {
     const p = d.proficiencies
-    add(out, '护甲熟练', join(arr(p.armor).map((a) => ARMOR[str(a)] ?? str(a))))
+    add(out, '护甲熟练', list(p.armor, ARMOR_CATEGORY))
     add(out, '武器熟练', join(arr(p.weapons).map(str)))
-    add(out, '工具熟练', join(arr(p.tools).map(str)))
+    add(out, '工具熟练', list(p.tools, TOOL))
     if (isObj(p.skills)) add(out, '技能熟练', `从 ${join(arr(p.skills.from).map((s) => SKILL[str(s)] ?? str(s)))} 中选 ${p.skills.choose} 项`)
   }
   if (arr(d.startingEquipment).length) out.push({ label: '起始装备', parts: arr(d.startingEquipment).flatMap((s, i) => [i ? '\n' : '', str(s)]) })
@@ -134,21 +118,21 @@ function classFacts(d: Obj): Fact[] {
 
 function monsterFacts(d: Obj): Fact[] {
   const out: Fact[] = []
-  const type = isObj(d.creatureType) ? CREATURE[str(d.creatureType.type)] ?? str(d.creatureType.type) : ''
-  const align = str(d.alignment).split(' ').map((c) => ALIGN[c] ?? c).join('')
-  add(out, '类型', join([arr(d.size).map((s) => SIZE[str(s)] ?? str(s)).join('/'), type, align], ' · '))
+  const type = isObj(d.creatureType) ? tr(CREATURE, d.creatureType.type) : ''
+  const align = str(d.alignment).split(' ').map((c) => tr(ALIGNMENT, c)).join('')
+  add(out, '类型', join([arr(d.size).map((x) => tr(SIZE, x)).join('/'), type, align], ' · '))
   add(out, '护甲等级', join(arr(d.ac).map((a) => (isObj(a) ? `${a.value}${a.from ? `（${arr(a.from).map(str).join('、')}）` : ''}` : str(a)))))
   if (isObj(d.hp)) add(out, '生命值', `${d.hp.average}${d.hp.formula ? `（${d.hp.formula}）` : ''}`)
-  add(out, '速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${MOVE[k] ?? k} ${v} 尺`), '，') : '')
+  add(out, '速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${tr(MOVE, k)} ${v} 尺`), '，') : '')
   add(out, '属性', isObj(d.abilities) ? join(Object.entries(ABILITY).map(([k, n]) => `${n} ${(d.abilities as Obj)[k] ?? '—'}`), '  ') : '')
   add(out, '豁免', bonusMap(d.saves, ABILITY))
   add(out, '技能', bonusMap(d.skills, SKILL))
-  add(out, '伤害易伤', join(arr(d.vulnerable).map(str)))
-  add(out, '伤害抗性', join(arr(d.resist).map(str)))
-  add(out, '伤害免疫', join(arr(d.immune).map(str)))
-  add(out, '状态免疫', join(arr(d.conditionImmune).map(str)))
+  add(out, '伤害易伤', join(arr(d.vulnerable).map((x) => trWords(str(x)))))
+  add(out, '伤害抗性', join(arr(d.resist).map((x) => trWords(str(x)))))
+  add(out, '伤害免疫', join(arr(d.immune).map((x) => trWords(str(x)))))
+  add(out, '状态免疫', join(arr(d.conditionImmune).map((x) => trWords(str(x)))))
   add(out, '感官', join([...arr(d.senses).map(str), d.passive ? `被动察觉 ${d.passive}` : '']))
-  add(out, '语言', join(arr(d.languages).map(str)) )
+  add(out, '语言', join(arr(d.languages).map((x) => tr(LANGUAGE, x))))
   add(out, '挑战等级', formatCr(d.cr))
   for (const [label, key] of [['特性', 'traits'], ['动作', 'actions'], ['附赠动作', 'bonusActions'], ['反应', 'reactions']] as const) {
     const f = named(label, d[key])
@@ -164,7 +148,7 @@ function monsterFacts(d: Obj): Fact[] {
 function spellFacts(d: Obj): Fact[] {
   const out: Fact[] = []
   const level = Number(d.level)
-  add(out, '环阶', `${level === 0 ? '戏法' : `${level} 环`} · ${SCHOOL[str(d.school)] ?? str(d.school)}${d.ritual ? ' · 仪式' : ''}`)
+  add(out, '环阶', `${level === 0 ? '戏法' : `${level} 环`} · ${tr(SCHOOL, d.school)}${d.ritual ? ' · 仪式' : ''}`)
   add(out, '施法时间', join(arr(d.castTime).map((c) => (isObj(c) ? `${c.n ?? 1} ${unit(c.unit)}` : '')), '；'))
   add(out, '施法距离', formatRange(d.range))
   add(out, '法术成分', formatComponents(d.components))
@@ -176,19 +160,43 @@ function spellFacts(d: Obj): Fact[] {
 function raceFacts(d: Obj): Fact[] {
   const out: Fact[] = []
   add(out, '属性加值', isObj(d.abilityBonus) ? bonusMap(d.abilityBonus.fixed, ABILITY) : '')
-  add(out, '体型', arr(d.size).map((s) => SIZE[str(s)] ?? str(s)).join('/'))
-  add(out, '速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${MOVE[k] ?? k} ${v} 尺`), '，') : '')
+  add(out, '体型', arr(d.size).map((x) => tr(SIZE, x)).join('/'))
+  add(out, '速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${tr(MOVE, k)} ${v} 尺`), '，') : '')
   add(out, '黑暗视觉', d.darkvision ? `${d.darkvision} 尺` : '')
-  add(out, '语言', join(arr(d.languages).map(str)))
+  add(out, '熟练项', list(d.proficiencies, { ...SKILL, ...TOOL }))
+  add(out, '语言', list(d.languages, LANGUAGE))
   if (arr(d.traits).length) out.push({ label: '种族特质', parts: arr(d.traits).flatMap((t, i) => [i ? '、' : '', { ref: str(t) }]) })
   if (d.parentRace) out.push({ label: '所属种族', parts: [{ ref: str(d.parentRace) }] })
   return out
 }
 
+function backgroundFacts(d: Obj): Fact[] {
+  const out: Fact[] = []
+  if (isObj(d.proficiencies)) {
+    add(out, '技能熟练', list(d.proficiencies.skills, SKILL))
+    add(out, '工具熟练', list(d.proficiencies.tools, TOOL))
+    add(out, '语言', list(d.proficiencies.languages, LANGUAGE))
+  }
+  if (typeof d.feature === 'string') out.push({ label: '背景特性', parts: [{ ref: d.feature }] })
+  return out
+}
+
 function itemFacts(d: Obj): Fact[] {
   const out: Fact[] = []
-  add(out, '类别', str(d.category))
-  add(out, '稀有度', d.rarity ? RARITY[str(d.rarity)] ?? str(d.rarity) : '')
+  add(out, '类别', tr(ITEM_CATEGORY, d.category))
+  add(out, '稀有度', d.rarity ? tr(RARITY, d.rarity) : '')
+  if (isObj(d.weapon)) {
+    add(out, '武器类别', tr(WEAPON_CATEGORY, d.weapon.category))
+    add(out, '伤害', join(arr(d.weapon.damage).map((x) => (isObj(x) ? `${x.dice} ${tr(DAMAGE, x.type)}` : '')), '；') + (d.weapon.versatile ? `（两用 ${d.weapon.versatile}）` : ''))
+    add(out, '武器属性', join(arr(d.weapon.properties).map((x) => trCode(WEAPON_PROPERTY, x))))
+  }
+  if (isObj(d.armor)) {
+    add(out, '护甲类别', tr(ARMOR_CATEGORY, d.armor.category))
+    add(out, '护甲等级', d.armor.ac !== undefined ? String(d.armor.ac) : '')
+    add(out, '隐匿', d.armor.stealthDisadvantage ? '劣势' : '')
+  }
+  if (isObj(d.bonuses)) add(out, '加值', join(Object.entries(d.bonuses).map(([k, v]) => `${({ attack: '攻击', damage: '伤害', ac: '护甲等级' } as Record<string, string>)[k] ?? k} ${v}`), '，'))
+  if (isObj(d.charges)) add(out, '充能', `${d.charges.max} 次，${tr(RECHARGE, d.charges.recharge)}恢复`)
   add(out, '价格', typeof d.value === 'number' ? money(d.value) : '')
   add(out, '重量', d.weight ? `${d.weight} 磅` : '')
   add(out, '同调', isObj(d.attunement) && d.attunement.required ? `需要${d.attunement.by ? `（${str(d.attunement.by)}）` : ''}` : '')
@@ -217,14 +225,16 @@ export function entryFacts(entry: Pick<Entry, 'type' | 'data'>): Fact[] {
     case 'spell': return spellFacts(d)
     case 'race':
     case 'subrace': return raceFacts(d)
+    case 'background': return backgroundFacts(d)
     case 'item': return itemFacts(d)
     case 'table': return tableFacts(d)
     case 'feature': {
       const out: Fact[] = []
       add(out, '等级', d.level ? `${d.level} 级` : '')
-      if (d.owner) out.push({ label: '来自', parts: [{ ref: str(d.owner) }] })
+      if (isObj(d.owner) && d.owner.id && d.owner.type !== 'optional') out.push({ label: '来自', parts: [{ ref: str(d.owner.id) }] })
       return out
     }
+    case 'rule': return isObj(d) && d.category ? [{ label: '类别', parts: [tr(RULE_CATEGORY, d.category)] }] : []
     default: return []
   }
 }

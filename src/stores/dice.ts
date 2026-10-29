@@ -1,14 +1,20 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { appendToInput } from '../host/input'
 import { copyText } from '../host/clipboard'
-import { commentFromLine, cryptoRng, lineText, rollDice, type Rng, type RollMode, type RollResult } from '../rules/dice'
+import {
+  addDie, builderText, canUseMode, commentFromLine, cryptoRng, diceTotal, lineText, readBuilder, removeDie, rollDice, stepMod,
+  type Builder, type Rng, type RollMode, type RollResult,
+} from '../rules/dice'
 
 export interface RollRecord {
   id: number
   at: number
   note: string
+  /** 规范写法（`1d20+5`）。 */
   expression: string
+  /** 掷骰窗里的骰式文字（`1d20 + 5`），点「最近」里的一行时载入它。 */
+  formula: string
   mode: RollMode
   total: number
   line: string
@@ -16,25 +22,22 @@ export interface RollRecord {
 }
 
 export const HISTORY_MAX = 20
-export const BONUS_MIN = -20
-export const BONUS_MAX = 30
 const KEY = 'trpg-assistant:dice'
+const EMPTY: Builder = { dice: [], mod: 0 }
 
-interface Saved { history: RollRecord[]; bonus: number; mode: RollMode; note: string }
+interface Saved { history: RollRecord[]; text: string; mode: RollMode; note: string }
 
-function storageKey(owner: string | null): string {
-  return owner ? `${KEY}:${owner}` : KEY
-}
+const storageKey = (owner: string | null): string => (owner ? `${KEY}:${owner}` : KEY)
 
 function load(owner: string | null): Saved {
-  const empty: Saved = { history: [], bonus: 0, mode: 'normal', note: '' }
+  const empty: Saved = { history: [], text: '', mode: 'normal', note: '' }
   try {
     const raw = localStorage.getItem(storageKey(owner))
     if (!raw) return empty
     const data = JSON.parse(raw) as Partial<Saved>
     return {
-      history: Array.isArray(data.history) ? data.history.slice(0, HISTORY_MAX) : [],
-      bonus: Number.isFinite(data.bonus) ? Math.min(BONUS_MAX, Math.max(BONUS_MIN, data.bonus as number)) : 0,
+      history: Array.isArray(data.history) ? data.history.filter((h) => typeof h?.formula === 'string').slice(0, HISTORY_MAX) : [],
+      text: typeof data.text === 'string' ? data.text : '',
       mode: data.mode === 'adv' || data.mode === 'dis' ? data.mode : 'normal',
       note: typeof data.note === 'string' ? data.note : '',
     }
@@ -44,91 +47,73 @@ function load(owner: string | null): Saved {
   }
 }
 
-/** 自由掷骰（基本蓝图 §2.1.1 基础版）：不改 HP、不扣资源、不写战役日志。 */
+/**
+ * 自由掷骰（基本蓝图 §2.1.1 基础版）：骰式是唯一的真相。
+ * 点骰子、加减值、优势劣势都只是在改骰式文字，只有 roll() 会出结果。
+ * 不改 HP、不扣资源、不写战役日志。
+ */
 export const useDiceStore = defineStore('dice', () => {
   let owner: string | null = null
   let rng: Rng = cryptoRng
   let nextId = 1
   let fillTimer: ReturnType<typeof setTimeout> | undefined
 
-  const initial = load(null)
-  const history = ref<RollRecord[]>(initial.history)
-  const bonus = ref(initial.bonus)
-  const mode = ref<RollMode>(initial.mode)
-  const note = ref(initial.note)
-  const expression = ref('')
+  const saved = load(null)
+  const text = ref(saved.text)
+  const mode = ref<RollMode>(saved.mode)
+  const note = ref(saved.note)
+  const history = ref<RollRecord[]>(saved.history)
   const last = ref<RollRecord | null>(null)
-  const error = ref('')
+  const lastResult = shallowRef<RollResult | null>(null)
   const fillState = ref<'idle' | 'done' | 'failed'>('idle')
   const copied = ref(false)
 
+  const read = computed(() => readBuilder(text.value))
+  const error = computed(() => (read.value.ok ? '' : read.value.error))
+  const builder = computed<Builder>(() => (read.value.ok ? read.value.builder : EMPTY))
+  const canMode = computed(() => canUseMode(builder.value))
+  const canRoll = computed(() => read.value.ok && diceTotal(builder.value) > 0)
+
   function persist(): void {
     try {
-      localStorage.setItem(storageKey(owner), JSON.stringify({ history: history.value, bonus: bonus.value, mode: mode.value, note: note.value }))
+      localStorage.setItem(storageKey(owner), JSON.stringify({ history: history.value, text: text.value, mode: mode.value, note: note.value }))
     } catch (err) {
       console.warn('[trpg-assistant] 保存掷骰记录失败', err)
     }
   }
 
-  /** 记录按角色卡 / 群组分开保存；切换聊天时重新载入。 */
+  /** 记录与骰式按角色卡 / 群组分开保存；切换聊天时重新载入。 */
   function setOwner(key: string | null): void {
     owner = key
-    const saved = load(key)
-    history.value = saved.history
-    bonus.value = saved.bonus
-    mode.value = saved.mode
-    note.value = saved.note
+    const s = load(key)
+    history.value = s.history
+    text.value = s.text
+    mode.value = s.mode
+    note.value = s.note
     last.value = null
-    error.value = ''
+    lastResult.value = null
   }
 
-  function setRng(next: Rng): void {
-    rng = next
+  /** 测试用：注入固定随机数；传 null 恢复真随机。 */
+  const setRng = (next: Rng | null): void => {
+    rng = next ?? cryptoRng
   }
 
-  function record(result: RollResult): RollRecord {
-    const rec: RollRecord = {
-      id: nextId++,
-      at: Date.now(),
-      note: note.value.trim(),
-      expression: result.expression,
-      mode: result.mode,
-      total: result.total,
-      line: lineText(result),
-      ...(result.natural ? { natural: result.natural } : {}),
-    }
-    last.value = rec
-    history.value = [rec, ...history.value].slice(0, HISTORY_MAX)
-    fillState.value = 'idle'
-    copied.value = false
-    error.value = ''
-    persist()
-    return rec
-  }
-
-  function rollQuick(sides: number): RollRecord {
-    const isD20 = sides === 20
-    return record(rollDice(`1d${sides}`, { rng, mode: isD20 ? mode.value : 'normal', bonus: isD20 ? bonus.value : 0 }))
-  }
-
-  /** 按输入框里的骰式掷；骰式不合法时返回 null，原因写在 error。 */
-  function rollExpression(): RollRecord | null {
-    try {
-      return record(rollDice(expression.value, { rng, mode: mode.value }))
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : String(err)
-      return null
-    }
-  }
-
-  function reroll(rec: RollRecord): RollRecord {
-    return record(rollDice(rec.expression, { rng, mode: rec.mode }))
-  }
-
-  function setBonus(value: number): void {
-    bonus.value = Math.min(BONUS_MAX, Math.max(BONUS_MIN, Math.round(value)))
+  function edit(next: string): void {
+    text.value = next
     persist()
   }
+
+  const addOne = (sides: number): void => edit(addDie(text.value, sides))
+  const removeOne = (sides: number): void => edit(removeDie(text.value, sides))
+  const step = (delta: number): void => edit(stepMod(text.value, delta))
+  const clear = (): void => {
+    text.value = ''
+    mode.value = 'normal'
+    persist()
+  }
+  /** 直接改骰式文字（打字）：不改写文字本身，读不出来时显示原因。 */
+  const setText = (value: string): void => edit(value)
 
   function setMode(value: RollMode): void {
     mode.value = value
@@ -140,14 +125,46 @@ export const useDiceStore = defineStore('dice', () => {
     persist()
   }
 
+  /** 掷骰：唯一会出结果的动作。骰式不合法或没有骰子时返回 null。 */
+  function roll(): RollRecord | null {
+    if (!canRoll.value) return null
+    const effective: RollMode = canMode.value ? mode.value : 'normal'
+    const result = rollDice(text.value, { rng, mode: effective })
+    const rec: RollRecord = {
+      id: nextId++,
+      at: Date.now(),
+      note: note.value.trim(),
+      expression: result.expression,
+      formula: builderText(builder.value),
+      mode: effective,
+      total: result.total,
+      line: lineText(result),
+      ...(result.natural ? { natural: result.natural } : {}),
+    }
+    last.value = rec
+    lastResult.value = result
+    history.value = [rec, ...history.value].slice(0, HISTORY_MAX)
+    fillState.value = 'idle'
+    copied.value = false
+    persist()
+    return rec
+  }
+
+  /** 点「最近」里的一行：把那次的骰式与掷法载入回来，不掷骰。 */
+  function loadRecord(rec: RollRecord): void {
+    text.value = rec.formula
+    mode.value = rec.mode
+    persist()
+  }
+
   function clearHistory(): void {
     history.value = []
     persist()
   }
 
-  const commentOf = (rec: RollRecord): string => commentFromLine(rec.line, rec.note)
+  const commentOf = (rec: RollRecord): string => commentFromLine(rec.line, note.value.trim() || rec.note)
 
-  /** 把最近一次结果以注释追加到酒馆输入框；失败时保留结果，可再试或复制。 */
+  /** 把最近一次结果以注释追加到酒馆输入框；失败时结果还在，可再试或复制。 */
   function fill(): boolean {
     if (!last.value) return false
     const ok = appendToInput(commentOf(last.value))
@@ -164,7 +181,7 @@ export const useDiceStore = defineStore('dice', () => {
   }
 
   return {
-    history, bonus, mode, note, expression, last, error, fillState, copied,
-    setOwner, setRng, rollQuick, rollExpression, reroll, setBonus, setMode, setNote, clearHistory, fill, copy, commentOf,
+    text, mode, note, history, last, lastResult, fillState, copied, error, builder, canMode, canRoll,
+    setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, roll, loadRecord, clearHistory, fill, copy, commentOf,
   }
 })

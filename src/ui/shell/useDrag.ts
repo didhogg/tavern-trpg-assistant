@@ -10,6 +10,8 @@ interface DragOptions {
   threshold?: number
   /** 只允许上下拖动（窄屏的骰盘悬浮窗）。 */
   lockX?: boolean | (() => boolean)
+  /** 屏幕底部要让出的高度（窄屏的标签栏）。 */
+  bottomGap?: () => number
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -39,7 +41,7 @@ export function useDrag(options: DragOptions) {
       const { w, h } = options.size()
       options.position.value = {
         x: (typeof options.lockX === 'function' ? options.lockX() : options.lockX) ? origin.x : clamp(origin.x + dx, 0, window.innerWidth - w),
-        y: clamp(origin.y + dy, 0, window.innerHeight - h),
+        y: clamp(origin.y + dy, 0, window.innerHeight - h - (options.bottomGap?.() ?? 0)),
       }
     }
     const onUp = (e: PointerEvent) => {
