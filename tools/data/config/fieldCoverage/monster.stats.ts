@@ -83,7 +83,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "monster.immune[].cond": { "how": "lost", "why": "免疫条目的条件说明；resistanceText 不读取 cond", "affected": 53 },
   "monster.immune[].immune": { "how": "mapped", "to": "data.immune", "wp": "R7" },
   "monster.immune[].note": { "how": "mapped", "to": "data.immune", "wp": "R7" },
-  "monster.immune[].special": { "how": "lost", "why": "names/resistanceText 对 special 没有输出内容，输出为空数组；R14 判丢失", "affected": 0 },
+  "monster.immune[].special": { "how": "mapped", "to": "data.immune", "wp": "R7" },
   "monster.int": { "how": "mapped", "to": "data.abilities.int", "wp": "R7" },
   "monster.languages": { "how": "mapped", "to": "data.languages", "wp": "R7" },
   "monster.name": { "how": "mapped", "to": "entry.name", "wp": "R7" },

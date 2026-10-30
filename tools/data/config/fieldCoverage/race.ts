@@ -154,7 +154,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "race.toolProficiencies[].choose": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "race.toolProficiencies[].choose.from": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "race.toolProficiencies[].poisoner's kit": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
-  "race.traitTags": {"how":"mapped","to":"data.tags","wp":"R5"},
+  "race.traitTags": { "how": "lost", "why": "转换器输出中没有该位置，按 R14 判丢失", "affected": 51 },
   "race.translator": {"how":"mapped","to":"data.credit.by","wp":"R5"},
   "race.vulnerable": {"how":"mapped","to":"data.effects","wp":"R5"},
   "race.weaponProficiencies": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},

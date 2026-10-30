@@ -11,6 +11,8 @@ import { recordCountsByPath } from '../../tools/data/report/pathRecords'
 
 const ROOT = process.cwd()
 const A1_ROOTS = new Set(['monster', 'monster-template', 'legendary-group', 'legendary-group-template'])
+const A2_PATHS = new Set<string>(JSON.parse(readFileSync(join(process.cwd(), 'tests/data/fixtures/r8b-a2-paths.json'), 'utf8')) as string[])
+const inAudit = (path: string): boolean => (A1_ROOTS.has(path.split('.')[0]) && path !== 'monster.hasFluff') || A2_PATHS.has(path)
 const AUDIT = readFileSync(join(ROOT, 'docs/probes/D1.2a_R8b_去向审计.md'), 'utf8')
 const auditRows = [...AUDIT.matchAll(/^\| `([^`]+)` \| `data\.tags` \| `([^`]*)`(?: `([^`]*)`)? \| (.*) \|$/gm)].map((m) => ({ path: m[1], how: m[2], to: m[3] ?? '', evidence: m[4] }))
 const auditPaths = new Set(auditRows.map((x) => x.path))
@@ -55,8 +57,25 @@ describe('R8b-A1 去向审计', () => {
     expect(get(all, 'monster.adult-red-dragon.mm', 'abilities.dex')).toContain(10)
   })
 
+  it('金样 A-2：物品 abilitySet 与家族表', async () => {
+    const all = await entries()
+    const belt = get(all, 'item.belt-of-hill-giant-strength.dmg', 'effects')
+    expect(JSON.stringify(belt)).toContain('abilitySet')
+    expect(JSON.stringify(belt)).toContain('"str"')
+    expect(JSON.stringify(belt)).toContain('21')
+    const gauntlets = get(all, 'item.gauntlets-of-ogre-power.dmg', 'effects')
+    expect(JSON.stringify(gauntlets)).toContain('abilitySet')
+    expect(JSON.stringify(gauntlets)).toContain('"str"')
+    expect(JSON.stringify(gauntlets)).toContain('19')
+    const family = get(all, 'item.armor-of-resistance-family.dmg', 'text')
+    const text = JSON.stringify(family)
+    expect(text).toContain('"cols":["d10","伤害类型"]')
+    expect((text.match(/"rows":/g) ?? []).length).toBe(1)
+    expect(text).toContain('强酸')
+  })
+
   it('1 审计表路径集合等于 A1 范围', () => {
-    const expected = new Set(Object.keys(FIELD_COVERAGE).filter((p) => A1_ROOTS.has(p.split('.')[0]) && p !== 'monster.hasFluff'))
+    const expected = new Set([...Object.keys(FIELD_COVERAGE).filter((p) => A1_ROOTS.has(p.split('.')[0]) && p !== 'monster.hasFluff'), ...A2_PATHS])
     expect(auditPaths).toEqual(expected)
   })
 
@@ -69,7 +88,7 @@ describe('R8b-A1 去向审计', () => {
   })
 
   it('3/4 真丢失清单与矩阵、affected 实测一致', async () => {
-    const matrixLost = new Map(Object.entries(FIELD_COVERAGE).filter(([p, e]) => A1_ROOTS.has(p.split('.')[0]) && e.how === 'lost').map(([p, e]) => [p, e]))
+    const matrixLost = new Map(Object.entries(FIELD_COVERAGE).filter(([p, e]) => inAudit(p) && e.how === 'lost').map(([p, e]) => [p, e]))
     expect(new Set(lossRows.map((x) => x.path))).toEqual(new Set(matrixLost.keys()))
     const scan = await getScan()
     const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
@@ -82,7 +101,7 @@ describe('R8b-A1 去向审计', () => {
   it('5 dropped 理由具体且不同顶层字段不重复', () => {
     const seen = new Map<string, string>()
     for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
-      if (!A1_ROOTS.has(path.split('.')[0]) || entry.how !== 'dropped') continue
+      if (!inAudit(path) || entry.how !== 'dropped') continue
       expect(entry.why!.trim().length, path).toBeGreaterThanOrEqual(12)
       const top = path.split('.')[1].replace(/\[\]$/, '')
       const prev = seen.get(entry.why!)
@@ -95,7 +114,7 @@ describe('R8b-A1 去向审计', () => {
     const scan = await getScan()
     const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
     for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
-      if (!A1_ROOTS.has(path.split('.')[0]) || entry.how !== 'dropped') continue
+      if (!inAudit(path) || entry.how !== 'dropped') continue
       expect(counts.get(path) ?? 0, path).toBeGreaterThan(0)
       expect(entry.why, path).not.toContain('没有该字段值')
       expect(entry.why, path).not.toContain('未找到')
@@ -103,12 +122,12 @@ describe('R8b-A1 去向审计', () => {
   })
 
   it('6 已知字段不得 lost/dropped', () => {
-    for (const path of ['monster.skill', 'monster.speed', 'monster.spellcasting']) expect(['mapped', 'text'], path).toContain(FIELD_COVERAGE[path].how)
+    for (const path of ['monster.skill', 'monster.speed', 'monster.spellcasting', 'item.ability.static']) expect(['mapped', 'text'], path).toContain(FIELD_COVERAGE[path].how)
   })
 
   it('7 mapped/text 的 data.tags 只允许标签字段', () => {
     for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
-      if (!A1_ROOTS.has(path.split('.')[0]) || entry.to !== 'data.tags') continue
+      if (!inAudit(path) || entry.to !== 'data.tags') continue
       const last = path.split('.').pop()?.replace(/\[\]$/, '') ?? ''
       expect(/tags$/i.test(last) || last === 'environment', path).toBe(true)
     }

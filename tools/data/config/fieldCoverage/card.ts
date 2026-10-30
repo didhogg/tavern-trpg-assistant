@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "card.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "card.alias": {"how":"mapped","to":"data.tags","wp":"R9"},
+  "card.alias": { "how": "mapped", "to": "entry.keywords", "wp": "R9" },
   "card.back": {"how":"text","to":"data.text","wp":"R9"},
   "card.back.height": {"how":"text","to":"data.text","wp":"R9"},
   "card.back.href": {"how":"text","to":"data.text","wp":"R9"},

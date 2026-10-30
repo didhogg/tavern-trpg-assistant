@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "item-type-additional-entries.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "item-type-additional-entries.appliesTo": {"how":"mapped","to":"data.tags","wp":"R11"},
+  "item-type-additional-entries.appliesTo": { "how": "lost", "why": "物品类型附加条目 appliesTo 没有写入输出", "affected": 2 },
   "item-type-additional-entries.entries": {"how":"text","to":"data.text","wp":"R11"},
   "item-type-additional-entries.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},
   "item-type-additional-entries.entries[].caption": {"how":"text","to":"data.text","wp":"R11"},

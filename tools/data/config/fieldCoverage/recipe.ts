@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "recipe.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "recipe.alias": {"how":"mapped","to":"data.tags","wp":"R11"},
+  "recipe.alias": { "how": "mapped", "to": "entry.keywords", "wp": "R11" },
   "recipe.allergenGroups": {"how":"mapped","to":"data.allergenGroups","wp":"R11"},
   "recipe.diet": {"how":"mapped","to":"data.diet","wp":"R11"},
   "recipe.dishTypes": {"how":"mapped","to":"data.dishTypes","wp":"R11"},
@@ -34,7 +34,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "recipe.instructions[].name": {"how":"text","to":"data.instructions","wp":"R11"},
   "recipe.instructions[].type": {"how":"text","to":"data.instructions","wp":"R11"},
   "recipe.makes": {"how":"mapped","to":"data.makes","wp":"R11"},
-  "recipe.miscTags": {"how":"mapped","to":"data.tags","wp":"R11"},
+  "recipe.miscTags": { "how": "lost", "why": "配方 miscTags 没有写入输出；标签不会显示", "affected": 0 },
   "recipe.name": {"how":"mapped","to":"entry.name","wp":"R11"},
   "recipe.noteCook": {"how":"text","to":"data.text","wp":"R11"},
   "recipe.noteCook[].entries": {"how":"text","to":"data.text","wp":"R11"},

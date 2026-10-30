@@ -23,7 +23,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "action.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "action.reprintedAs[].tag": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "action.reprintedAs[].uid": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
-  "action.seeAlsoAction": {"how":"mapped","to":"data.tags","wp":"R8"},
+  "action.seeAlsoAction": { "how": "lost", "why": "动作的 seeAlsoAction 没有写入输出", "affected": 9 },
   "action.source": {"how":"mapped","to":"data.src.book","wp":"R8"},
   "action.srd": {"how":"mapped","to":"data.credit.license","wp":"R8"},
   "action.time": {"how":"mapped","to":"data.activation","wp":"R8"},

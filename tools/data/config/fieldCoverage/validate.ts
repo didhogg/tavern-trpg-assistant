@@ -18,8 +18,6 @@ function hasOutputField(outputType: string, first: string): boolean {
   return !!shape?.[first] || !!PLANNED_FIELDS[`${outputType}.${first}`]
 }
 
-export const T1_ENFORCED_ROOTS = new Set(['monster', 'monster-template', 'legendary-group', 'legendary-group-template'])
-
 export function expectedWp(sourceType: string, path: string, to: string): string {
   if (to.startsWith('i18n.en.')) return 'R13'
   if (/^(data\.(supersededBy|versionGroup|playable|nameSuffix)|entry\.nameSuffix)$/.test(to)) return 'R10'
@@ -74,7 +72,7 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
     if (first === 'system') throw new Error(`data.system 一律拒绝：${path}`)
     if (!hasOutputField(outputTypeOf(sourceType), first)) throw new Error(`目标字段不在输出结构：${path} → ${entry.to}`)
   }
-  if (entry.to === 'data.tags' && T1_ENFORCED_ROOTS.has(path.split('.', 1)[0])) {
+  if (entry.to === 'data.tags') {
     const last = path.split('.').pop()?.replace(/\[\]$/, '') ?? ''
     if (!(/tags$/i.test(last) || last === 'environment' || TAG_TARGET_EXCEPTIONS[path])) throw new Error(`data.tags 只用于标签字段：${path}`)
   }
