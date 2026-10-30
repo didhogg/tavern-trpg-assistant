@@ -64,7 +64,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "vehicle.pace.swim": {"how":"mapped","to":"data.pace","wp":"R11"},
   "vehicle.pace.walk": {"how":"mapped","to":"data.pace","wp":"R11"},
   "vehicle.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "vehicle.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "vehicle.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "vehicle 的 reprintedAs（核心 1 条）目标全是 2024 新版，样本 [\"夸力许装置|XDMG\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "vehicle.size": {"how":"mapped","to":"data.size","wp":"R11"},
   "vehicle.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "vehicle.speed": {"how":"mapped","to":"data.speed","wp":"R11"},

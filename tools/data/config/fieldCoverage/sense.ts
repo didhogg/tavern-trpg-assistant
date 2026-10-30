@@ -6,7 +6,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "sense.entries": {"how":"text","to":"data.text","wp":"R11"},
   "sense.name": {"how":"mapped","to":"entry.name","wp":"R11"},
   "sense.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "sense.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "sense.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "sense 的 reprintedAs（核心 4 条）目标全是 2024 新版，样本 [\"盲视|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "sense.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "sense.srd": {"how":"mapped","to":"data.credit.license","wp":"R11"},
   "sense.translator": {"how":"mapped","to":"data.credit.by","wp":"R11"},

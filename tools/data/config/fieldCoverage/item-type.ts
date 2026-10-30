@@ -10,6 +10,6 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "item-type.entries[].type": {"how":"text","to":"data.text","wp":"R11"},
   "item-type.name": {"how":"mapped","to":"entry.name","wp":"R11"},
   "item-type.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "item-type.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "item-type.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "item-type 的 reprintedAs（核心 30 条）目标全是 2024 新版，样本 [\"$A|XDMG\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "item-type.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
 }

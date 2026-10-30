@@ -11,7 +11,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "item-property.entries[].type": {"how":"text","to":"data.text","wp":"R11"},
   "item-property.name": {"how":"mapped","to":"entry.name","wp":"R11"},
   "item-property.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "item-property.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "item-property.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "item-property 的 reprintedAs（核心 12 条）目标全是 2024 新版，样本 [\"2H|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "item-property.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "item-property.template": { "how": "lost", "why": "物品属性模板没有写入输出", "affected": 13 },
 }

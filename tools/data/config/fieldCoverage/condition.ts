@@ -14,7 +14,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "condition.otherSources[].page": {"how":"mapped","to":"data.src.page","wp":"R8"},
   "condition.otherSources[].source": {"how":"mapped","to":"data.src.book","wp":"R8"},
   "condition.page": {"how":"mapped","to":"data.src.page","wp":"R8"},
-  "condition.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "condition.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "condition 的 reprintedAs（核心 15 条）目标全是 2024 新版，样本 [\"目盲|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "condition.source": {"how":"mapped","to":"data.src.book","wp":"R8"},
   "condition.srd": {"how":"mapped","to":"data.credit.license","wp":"R8"},
   "condition.translator": {"how":"mapped","to":"data.credit.by","wp":"R8"},

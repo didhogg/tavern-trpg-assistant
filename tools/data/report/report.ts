@@ -32,6 +32,8 @@ export async function writeReport(root: string, result: ConversionResult, output
   }
   for (const [by, count] of Object.entries(creditCounts).sort((a, b) => b[1] - a[1])) lines.push(`| ${by} | ${count} | ${licenseByCredit[by] ?? '—'} |`)
   lines.push('', '## 校验与统计', '', `- 软引用（写成纯文字）：${result.stats.prunedRefs} 处。`, `- 只保留文本的行动：${result.stats.textOnlyActivities} 个。`, `- 重名加后缀的 id：${result.stats.duplicateIds} 个。`, `- 缺页码：${result.stats.missingPages} 条；缺中文名称：${result.stats.missingNames} 条（用英文名兜底）。`, `- 跳过的无名称抽象亚种族：${result.stats.skippedSubraces} 条（原数据只有模板，没有名称）。`, `- 跳过找不到所属职业/子职业的特性：${result.stats.skippedFeatures} 条。`)
+  const v = result.stats.versions
+  lines.push(`- 重印标记 supersededBy：${v.superseded} 条；未能解析的范围内重印：${v.unresolvedReprints.length} 条（${v.unresolvedReprints.map((x) => `${x.entry}→${x.target}`).join('、') || '无'}）；指向 D1.2b 书的重印（到 D1.2b 补）：${v.deferredReprints.length} 条；NPC 种族 playable:false：${v.npcRaces.length} 条；同书同名加后缀：${v.nameSuffixed.length} 条（${v.nameSuffixed.map((x) => x.id).join('、') || '无'}）；特性同名组：${v.featureNameGroups} 组（只报数）。`)
   const textRequires = result.packs.flatMap((p) => p.entries).filter((e) => {
     const req = e.data.requires as { all?: Array<{ text?: string }> } | undefined
     return req?.all?.some((r) => r.text)

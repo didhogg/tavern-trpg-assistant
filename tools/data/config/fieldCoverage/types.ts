@@ -1,4 +1,4 @@
-export type DropKind = 'image' | 'audio' | 'layout' | '2024-only' | 'internal-meta' | 'derived'
+export type DropKind = 'image' | 'audio' | 'layout' | '2024-only' | 'out-of-scope' | 'internal-meta' | 'derived'
 
 export interface CoverageEntry {
   how: 'mapped' | 'text' | 'dropped' | 'lost'

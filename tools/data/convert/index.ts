@@ -15,6 +15,7 @@ import { convertLore, loreForEntry } from './lore'
 import { BOOKS, BOOK_BY_SOURCE, BOOK_NAMES, PACK_BY_SOURCE, SRD_PACK_ID, SRD_VERSION, lineageFor } from '../config/books'
 import { DAMAGE_TYPE } from './common'
 import type { RawData } from '../extract/load'
+import { disambiguateNames, emptyVersionStats, markNpcRaces, resolveSupersededBy, type VersionStats } from './versions'
 
 export interface ConvertedPack {
   manifest: PackManifest
@@ -33,6 +34,7 @@ export interface ConversionStats {
   textOnlyActivities: number
   unmappedFoundry: Array<{ key: string; count: number; example: string }>
   interiorRequires: Array<{ packId: string; require: string }>
+  versions: VersionStats
 }
 
 export interface ConversionResult {
@@ -132,6 +134,8 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
 
 
 export function convertAll(data: RawData, planned: PlannedEntry[], tables: PlannedEntry[], skippedFeatures: number, skippedSubraces = 0): ConversionResult {
+  const versionStats = emptyVersionStats()
+  disambiguateNames(planned, versionStats)
   const all = [...planned, ...tables]
   const byId = new Map(all.map((e) => [e.id, e]))
   const index: RefIndex = { byTypeName: new Map(), byTypeNameSource: new Map() }
@@ -204,12 +208,14 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     textOnlyActivities: 0,
     unmappedFoundry: [...unmappedFoundry].map(([key, value]) => ({ key, ...value })),
     interiorRequires: [],
+    versions: versionStats,
   }
   const converted = new Map<string, Entry>()
   for (const entry of all) {
     const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry) }
     const built = convertOne(entry, ctx, inline)
     const data = built.data as Record<string, unknown>
+    if (entry.context.nameSuffix) data.nameSuffix = entry.context.nameSuffix
     if (entry.type !== 'lore') {
       const lore = loreForEntry(entry, inline)
       if (lore) data.lore = lore
@@ -274,6 +280,8 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     pruneStructural(built.data as Record<string, unknown>, allowed, byId)
     stats.prunedRefs += count.n
   }
+  resolveSupersededBy(planned, converted, versionStats)
+  markNpcRaces(planned, converted, versionStats)
   stats.unmappedFoundry = [...unmappedFoundry].map(([key, value]) => ({ key, ...value }))
   const packIds = [SRD_PACK_ID, ...BOOKS.map((b) => b.packId)]
   const packs: ConvertedPack[] = packIds.map((packId) => {

@@ -36,7 +36,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "race-feature.effects[].disabled": {"how":"mapped","to":"data.effects","wp":"R5"},
   "race-feature.effects[].name": {"how":"mapped","to":"data.effects","wp":"R5"},
   "race-feature.effects[].transfer": {"how":"mapped","to":"data.effects","wp":"R5"},
-  "race-feature.migrationVersion": {"how":"mapped","to":"data.versionGroup","wp":"R10"},
+  "race-feature.migrationVersion": { "how": "dropped", "kind": "internal-meta", "why": "race-feature 的 migrationVersion 是 5etools 数据迁移批次的内部标记，核心共 18 条，值恒为 3，玩家用不到，不是版本组" },
   "race-feature.name": {"how":"mapped","to":"entry.name","wp":"R1"},
   "race-feature.raceName": {"how":"mapped","to":"data.owner","wp":"R1"},
   "race-feature.raceSource": {"how":"mapped","to":"data.owner","wp":"R1"},

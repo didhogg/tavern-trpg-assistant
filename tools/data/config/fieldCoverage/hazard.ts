@@ -17,7 +17,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "hazard.otherSources[].page": {"how":"mapped","to":"data.src.page","wp":"R11"},
   "hazard.otherSources[].source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "hazard.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "hazard.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "hazard.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "hazard 的 reprintedAs（核心 15 条）目标全是 2024 新版，样本 [\"棕霉菌|XDMG\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "hazard.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "hazard.trapHazType": {"how":"mapped","to":"data.kind","wp":"R11"},
 }

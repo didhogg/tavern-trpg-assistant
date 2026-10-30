@@ -14,7 +14,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "language.entries[].type": {"how":"text","to":"data.text","wp":"R11"},
   "language.name": {"how":"mapped","to":"entry.name","wp":"R11"},
   "language.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "language.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "language.reprintedAs": { "how": "dropped", "kind": "out-of-scope", "why": "language 的 reprintedAs（核心 44 条）目标是 2024 新版（33 个）和 D1.2b 才收录的书（FRHoF×11），范围内没有可指向的新版；D1.2b 导入那些书时补 supersededBy" },
   "language.script": {"how":"mapped","to":"data.script","wp":"R11"},
   "language.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "language.srd": {"how":"mapped","to":"data.credit.license","wp":"R11"},

@@ -10,6 +10,10 @@ export const entryCommonFields = {
   credit: creditSchema,
   text: z.array(textBlockSchema).default([]),
   lore: z.array(textBlockSchema).optional(),
+  supersededBy: z.string().optional(),
+  versionGroup: z.string().optional(),
+  playable: z.boolean().optional(),
+  nameSuffix: z.string().max(40).optional(),
   requires: requiresSchema.optional(),
   activities: z.array(activitySchema).optional(),
 }

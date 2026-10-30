@@ -26,7 +26,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "table.parentEntity": {"how":"mapped","to":"data.parent","wp":"R9"},
   "table.parentEntity.prop": {"how":"mapped","to":"data.parent","wp":"R9"},
   "table.parentEntity.uid": {"how":"mapped","to":"data.parent","wp":"R9"},
-  "table.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "table.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "table 的 reprintedAs（核心 70 条）目标全是 2024 新版，样本 [\"属性值点数花费|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "table.rows": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table.rows[].row": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table.rows[].style": {"how":"mapped","to":"data.rows","wp":"R9"},

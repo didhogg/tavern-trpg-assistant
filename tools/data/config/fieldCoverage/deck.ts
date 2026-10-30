@@ -42,7 +42,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "deck.entries[].type": {"how":"text","to":"data.text","wp":"R9"},
   "deck.name": {"how":"mapped","to":"entry.name","wp":"R9"},
   "deck.page": {"how":"mapped","to":"data.src.page","wp":"R9"},
-  "deck.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "deck.reprintedAs": { "how": "mapped", "to": "data.supersededBy", "wp": "R10" },
   "deck.source": {"how":"mapped","to":"data.src.book","wp":"R9"},
   "deck.spreads": {"how":"mapped","to":"data.spreads","wp":"R9"},
   "deck.spreads[].ENG_name": {"how":"mapped","to":"i18n.en.fields.spreads","wp":"R13"},

@@ -157,7 +157,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "class-feature.isClassFeatureVariant": {"how":"mapped","to":"data.optional","wp":"R3"},
   "class-feature.isIgnored": {"how":"dropped","kind":"internal-meta","why":"Foundry 中的忽略标记，不是规则数据"},
   "class-feature.level": {"how":"mapped","to":"data.level","wp":"R1"},
-  "class-feature.migrationVersion": {"how":"mapped","to":"data.versionGroup","wp":"R10"},
+  "class-feature.migrationVersion": { "how": "dropped", "kind": "internal-meta", "why": "class-feature 的 migrationVersion 是 5etools 数据迁移批次的内部标记，核心共 50 条，值恒为 3，玩家用不到，不是版本组" },
   "class-feature.name": {"how":"mapped","to":"entry.name","wp":"R1"},
   "class-feature.otherSources": {"how":"mapped","to":"data.src.book","wp":"R1"},
   "class-feature.otherSources[].page": {"how":"mapped","to":"data.src.page","wp":"R1"},

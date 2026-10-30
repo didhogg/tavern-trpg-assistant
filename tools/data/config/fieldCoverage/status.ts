@@ -12,7 +12,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "status.entries[].type": {"how":"text","to":"data.text","wp":"R8"},
   "status.name": {"how":"mapped","to":"entry.name","wp":"R8"},
   "status.page": {"how":"mapped","to":"data.src.page","wp":"R8"},
-  "status.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "status.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "status 的 reprintedAs（核心 2 条）目标全是 2024 新版，样本 [\"专注|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "status.source": {"how":"mapped","to":"data.src.book","wp":"R8"},
   "status.srd": {"how":"mapped","to":"data.credit.license","wp":"R8"},
   "status.translator": {"how":"mapped","to":"data.credit.by","wp":"R8"},

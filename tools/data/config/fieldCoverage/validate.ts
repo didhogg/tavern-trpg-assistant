@@ -8,7 +8,7 @@ import { isTextContainer, isProsePath } from '../textContainers'
 
 const TO = /^(data\.[A-Za-z0-9_$[\]\.]+|entry\.[A-Za-z0-9_$]+|i18n\.en\.[A-Za-z0-9_$[\]\.]+)$/
 const WP = /^R(?:[1-9]|1[0-5])$/
-const KINDS = new Set(['image', 'audio', 'layout', '2024-only', 'internal-meta', 'derived'])
+const KINDS = new Set(['image', 'audio', 'layout', '2024-only', 'out-of-scope', 'internal-meta', 'derived'])
 const PROTECTED = /(?:^|\.)(uses|activities|effects|entries|name|level|damage|save|range|duration|components|prerequisite|requires|recovery|charges)(?:\.|\[|$)/i
 
 function hasOutputField(outputType: string, first: string): boolean {

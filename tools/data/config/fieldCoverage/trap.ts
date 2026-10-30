@@ -57,7 +57,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "trap.rating": {"how":"mapped","to":"data.rating","wp":"R11"},
   "trap.rating[].threat": {"how":"mapped","to":"data.rating","wp":"R11"},
   "trap.rating[].tier": {"how":"mapped","to":"data.rating","wp":"R11"},
-  "trap.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "trap.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "trap 的 reprintedAs（核心 7 条）目标全是 2024 新版，样本 [\"塌方|XDMG\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "trap.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "trap.srd": {"how":"mapped","to":"data.credit.license","wp":"R11"},
   "trap.translator": {"how":"mapped","to":"data.credit.by","wp":"R11"},

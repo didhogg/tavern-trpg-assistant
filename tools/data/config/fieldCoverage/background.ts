@@ -74,7 +74,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "background.page": {"how":"mapped","to":"data.src.page","wp":"R5"},
   "background.prerequisite": {"how":"mapped","to":"data.requires","wp":"R5"},
   "background.prerequisite[].campaign": {"how":"mapped","to":"data.requires","wp":"R5"},
-  "background.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "background.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "background 的 reprintedAs（核心 9 条）目标全是 2024 新版，样本 [\"侍僧|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "background.skillProficiencies": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "background.skillProficiencies[].acrobatics": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "background.skillProficiencies[].animal handling": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},

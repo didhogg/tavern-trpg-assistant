@@ -39,7 +39,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "object.name": {"how":"mapped","to":"entry.name","wp":"R11"},
   "object.objectType": {"how":"mapped","to":"data.objectType","wp":"R11"},
   "object.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
-  "object.reprintedAs": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
+  "object.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "object 的 reprintedAs（核心 7 条）目标全是 2024 新版，样本 [\"弩炮|XDMG\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "object.size": {"how":"mapped","to":"data.size","wp":"R11"},
   "object.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "object.speed": {"how":"mapped","to":"data.speed","wp":"R11"},
