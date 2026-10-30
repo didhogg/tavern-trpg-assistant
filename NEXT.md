@@ -96,6 +96,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 - 更早的未验证项（M2）：真机上内置包升级路径、1.0.1 包的真机下载。
 
 ## 待议
+- D1.2a R10 登记：D1.2b 导入 EFA、FRHoF、FRAiF、AU 等书时补指向它们的 `supersededBy`（清单见 R10 报告 `deferredReprints`）；`playable` 只作严格建卡模式参考；旧版默认隐藏的界面等统一数据库优化后重建库页面时做；传奇组 `_versions` 待模板应用工作包。详见 `docs/任务总纲.md` §5。
 - D1.1 的 `src/ui/library/facts.ts` 为结构化技能/语言/起装做了只读展示适配（不改布局），因为新的 `languages/proficiencies/startingEquipment` 不再是纯字符串数组；若严格执行“只改 zh.ts”，请驾驶员决定是否回退。
 - D1.1 的 `credit.structured` 目前主标注为 5etools；使用 Foundry 覆盖的条目标为 5etools-foundry。5e-bits/Open5e 仅作校验，不导入。
 - D1.1 抽检表是 626 行（按 §8 最小覆盖生成），不是 50 行；结果栏留空，等待驾驶员填写。
