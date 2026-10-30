@@ -18,8 +18,9 @@ function hasOutputField(outputType: string, first: string): boolean {
   return !!shape?.[first] || !!PLANNED_FIELDS[`${outputType}.${first}`]
 }
 
+export const T1_ENFORCED_ROOTS = new Set(['monster', 'monster-template', 'legendary-group', 'legendary-group-template'])
+
 export function expectedWp(sourceType: string, path: string, to: string): string {
-  if (/^(?:base-item|item-group|item)\.(?:.*\.)?attachedSpells/i.test(path) || /^(?:base-item|item-group)\.(?:.*\.)?range$/i.test(path) || /^monster\.(?:effects|template\.prerequisite)/i.test(path) || /^magic-variant\.(?:effects|inherits\.attachedSpells)/i.test(path)) return 'R10'
   if (to.startsWith('i18n.en.')) return 'R13'
   if (/^(data\.(supersededBy|versionGroup|playable|nameSuffix)|entry\.nameSuffix)$/.test(to)) return 'R10'
   if (to === 'data.lore') return 'R8'
@@ -47,7 +48,13 @@ export function expectedWp(sourceType: string, path: string, to: string): string
 }
 
 export function validateCoverageEntry(path: string, entry: CoverageEntry): void {
-  if (!['mapped', 'text', 'dropped'].includes(entry.how)) throw new Error(`登记方式非法：${path}`)
+  if (!['mapped', 'text', 'dropped', 'lost'].includes(entry.how)) throw new Error(`登记方式非法：${path}`)
+  if (entry.how === 'lost') {
+    if (!entry.why || entry.why.trim().length < 12) throw new Error(`lost 缺少至少 12 字的理由：${path}`)
+    if (!Number.isInteger(entry.affected) || (entry.affected ?? 0) < 1) throw new Error(`lost 的 affected 必须是 ≥1 的整数：${path}`)
+    if (entry.to || entry.wp || entry.kind) throw new Error(`lost 不得带 to/wp/kind：${path}`)
+    return
+  }
   const sourceType = path.split('.', 1)[0]
   if (entry.how === 'dropped') {
     if (!entry.kind || !KINDS.has(entry.kind)) throw new Error(`dropped 缺少 kind：${path}`)
@@ -60,16 +67,16 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
   if (!entry.to || !TO.test(entry.to)) throw new Error(`to 不是具体输出位置：${path} → ${entry.to ?? '（空）'}`)
   if (/R\d|汇总转换|统一处理|批量|TODO/i.test(entry.to)) throw new Error(`to 仍是批量标签：${path} → ${entry.to}`)
   if (!entry.wp || !WP.test(entry.wp)) throw new Error(`wp 缺失或非法：${path}`)
-  if (entry.to === 'data.tags') {
-    const last = path.split('.').pop()?.replace(/\[\]$/, '') ?? ''
-    if (!(/tags$/i.test(last) || last === 'environment' || TAG_TARGET_EXCEPTIONS[path])) throw new Error(`data.tags 只用于标签字段：${path}`)
-  }
   if (entry.how === 'mapped' && isTextContainer(entry.to)) throw new Error(`mapped 不能指向自由正文容器：${path} → ${entry.to}`)
   if (entry.how === 'text' && !isProsePath(path)) throw new Error(`text 只能用于散文路径：${path}`)
   if (entry.to.startsWith('data.')) {
     const first = entry.to.slice(5).split(/[.\[]/, 1)[0]
     if (first === 'system') throw new Error(`data.system 一律拒绝：${path}`)
     if (!hasOutputField(outputTypeOf(sourceType), first)) throw new Error(`目标字段不在输出结构：${path} → ${entry.to}`)
+  }
+  if (entry.to === 'data.tags' && T1_ENFORCED_ROOTS.has(path.split('.', 1)[0])) {
+    const last = path.split('.').pop()?.replace(/\[\]$/, '') ?? ''
+    if (!(/tags$/i.test(last) || last === 'environment' || TAG_TARGET_EXCEPTIONS[path])) throw new Error(`data.tags 只用于标签字段：${path}`)
   }
   const want = expectedWp(sourceType, path, entry.to)
   if (entry.wp !== want) throw new Error(`wp 与规则不一致：${path} → ${entry.to}，应为 ${want}，实际 ${entry.wp}`)

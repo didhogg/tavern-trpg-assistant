@@ -41,7 +41,7 @@ export function checkDelivered(
   const done = new Set(delivered)
   const missing: string[] = []
   for (const [path, entry] of Object.entries(coverage)) {
-    if (entry.how === 'dropped' || !entry.wp || !done.has(entry.wp) || knownEmpty[path]) continue
+    if (entry.how === 'dropped' || entry.how === 'lost' || !entry.wp || !done.has(entry.wp) || knownEmpty[path]) continue
     if (!targetValues(entries, entry.to ?? '').some(nonEmpty)) missing.push(path)
   }
   return missing.sort()

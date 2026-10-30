@@ -7,7 +7,7 @@ describe('R0 字段覆盖矩阵', () => {
     const summary = await checkFieldCoverage()
     expect(summary.paths).toBeGreaterThan(5000)
     expect(summary.unregistered).toEqual([])
-    expect(summary.mapped + summary.text + summary.dropped).toBe(summary.paths)
+    expect(summary.mapped + summary.text + summary.dropped + summary.lost).toBe(summary.paths)
     expect(summary.imageHits).toBeGreaterThan(300)
     expect(summary.droppedByKind['image']).toBeGreaterThan(300)
   })

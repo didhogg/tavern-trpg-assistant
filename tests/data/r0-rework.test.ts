@@ -53,7 +53,7 @@ describe('R0 返工验收', () => {
 
   it('登记表里没有批量标签，且 uses.recovery 已映射', () => {
     for (const value of Object.values(FIELD_COVERAGE)) {
-      if (value.how !== 'dropped') expect(value.to).not.toMatch(/汇总转换|统一处理|R\d/)
+      if (value.how !== 'dropped' && value.how !== 'lost') expect(value.to).not.toMatch(/汇总转换|统一处理|R\d/)
     }
     const recovery = Object.entries(FIELD_COVERAGE).filter(([p]) => p.includes('uses.recovery'))
     expect(recovery.length).toBeGreaterThan(0)
