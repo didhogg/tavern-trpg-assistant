@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "recipe.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "recipe.alias": { "how": "mapped", "to": "entry.keywords", "wp": "R11" },
+  "recipe.alias": { "how": "lost", "why": "配方的别名没有写入任何条目：转换器目前不生成配方条目，别名不会出现在搜索里", "affected": 0 },
   "recipe.allergenGroups": {"how":"mapped","to":"data.allergenGroups","wp":"R11"},
   "recipe.diet": {"how":"mapped","to":"data.diet","wp":"R11"},
   "recipe.dishTypes": {"how":"mapped","to":"data.dishTypes","wp":"R11"},

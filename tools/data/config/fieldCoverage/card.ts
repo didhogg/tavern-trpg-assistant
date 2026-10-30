@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "card.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "card.alias": { "how": "mapped", "to": "entry.keywords", "wp": "R9" },
+  "card.alias": { "how": "lost", "why": "牌组卡牌（如 谜题，别名 白痴）的别名没有写入任何条目：转换器目前不生成卡牌条目，别名不会出现在搜索里", "affected": 4 },
   "card.back": {"how":"text","to":"data.text","wp":"R9"},
   "card.back.height": {"how":"text","to":"data.text","wp":"R9"},
   "card.back.href": {"how":"text","to":"data.text","wp":"R9"},
