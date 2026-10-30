@@ -243,6 +243,27 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     plan.srd = plan.packId === SRD_PACK_ID
     if (family) (family.data.credit as { srd?: boolean }).srd = plan.srd
   }
+  const keyValueSpecs: Record<string, { label: string; match: RegExp }> = {
+    'item.potion-of-healing-family.dmg': { label: '恢复量', match: /\{\{roll:([^|}]+)\|/ },
+    'item.belt-of-giant-strength-family.dmg': { label: '力量值', match: /力量值变为(\d+)/ },
+    'item.potion-of-giant-strength-family.dmg': { label: '力量值', match: /力量属性值将变为(\d+)/ },
+  }
+  for (const plan of planned) {
+    if (plan.raw._family !== true) continue
+    const spec = keyValueSpecs[plan.id]
+    if (!spec) continue
+    const family = converted.get(plan.id)
+    const members = (family?.data.members as string[] | undefined) ?? []
+    const values: Record<string, string> = {}
+    for (const member of members) {
+      const text = JSON.stringify(converted.get(member)?.data.text ?? '')
+      const match = spec.match.exec(text)
+      if (!match) throw new Error(`家族 ${plan.id} 的成员 ${member} 缺少要点值`)
+      values[member] = match[1]
+    }
+    if (!family || !Object.keys(values).length) throw new Error(`家族 ${plan.id} 没有要点列成员`)
+    family.data.keyValue = { label: spec.label, values }
+  }
   for (const [id, built] of converted) {
     const plan = byId.get(id)
     if (!plan) continue

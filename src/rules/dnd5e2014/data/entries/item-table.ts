@@ -52,6 +52,7 @@ export const itemDataSchema = z.looseObject({
   consumable: z.boolean().optional(),
   properties: z.array(z.string().max(40)).default([]),
   lootTables: z.array(z.string().max(80)).default([]),
+  keyValue: z.object({ label: z.string().min(1).max(80), values: z.record(z.string(), z.string().max(120)) }).optional(),
 })
 export type ItemData = z.infer<typeof itemDataSchema>
 

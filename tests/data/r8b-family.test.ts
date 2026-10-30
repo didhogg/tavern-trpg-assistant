@@ -80,6 +80,40 @@ describe('R8b-B 家族来源说明文字', () => {
     expect(textOf(await family('item.belt-of-giant-strength-family.dmg'))).toEqual([])
   })
 
+  it('12 治疗药水 keyValue 恢复量', async () => {
+    const e = await family('item.potion-of-healing-family.dmg')
+    expect(e.data.keyValue).toEqual({ label: '恢复量', values: {
+      'item.potion-of-healing.dmg': '2d4+2',
+      'item.potion-of-greater-healing.dmg': '4d4+4',
+      'item.potion-of-superior-healing.dmg': '8d4+8',
+      'item.potion-of-supreme-healing.dmg': '10d4+20',
+    } })
+  })
+
+  it('13 巨人之力腰带 keyValue 力量值', async () => {
+    const e = await family('item.belt-of-giant-strength-family.dmg')
+    expect(e.data.keyValue).toEqual({ label: '力量值', values: {
+      'item.belt-of-cloud-giant-strength.dmg': '27',
+      'item.belt-of-fire-giant-strength.dmg': '25',
+      'item.belt-of-frost-giant-strength.dmg': '23',
+      'item.belt-of-hill-giant-strength.dmg': '21',
+      'item.belt-of-stone-giant-strength.dmg': '23',
+      'item.belt-of-storm-giant-strength.dmg': '29',
+    } })
+  })
+
+  it('14 巨人之力药水 keyValue 力量值', async () => {
+    const e = await family('item.potion-of-giant-strength-family.dmg')
+    expect(e.data.keyValue).toEqual({ label: '力量值', values: {
+      'item.potion-of-cloud-giant-strength.dmg': '27',
+      'item.potion-of-fire-giant-strength.dmg': '25',
+      'item.potion-of-frost-giant-strength.dmg': '23',
+      'item.potion-of-hill-giant-strength.dmg': '21',
+      'item.potion-of-stone-giant-strength.dmg': '23',
+      'item.potion-of-storm-giant-strength.dmg': '29',
+    } })
+  })
+
   it('6 治疗药水脚注不导入，text 为空数组', async () => {
     expect(textOf(await family('item.potion-of-healing-family.dmg'))).toEqual([])
   })
