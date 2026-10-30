@@ -1,5 +1,6 @@
 import type { Entry } from '../../../src/schemas/pack'
 import type { TextBlock } from '../../../src/schemas/text'
+import { convertVariants } from './variants'
 import type { InlineContext } from '../markup/inline'
 import { creditFor, keywordsOf, pageOf, str } from './common'
 import { convertBlocks } from './blocks'
@@ -44,9 +45,11 @@ export function loreForEntry(entry: PlannedEntry, inline: InlineContext): TextBl
 /** 描述补丁条目：目标条目在 SRD，正文放进来源书对应的包。 */
 export function convertLore(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const target = str(entry.raw._target)
+  const variants = convertVariants(entry.raw._variants, inline)
   const data: Record<string, unknown> = {
     target,
-    lore: loreBlocks(entry, entry.raw._lore, inline),
+    ...(entry.raw._lore !== undefined ? { lore: loreBlocks(entry, entry.raw._lore, inline) } : {}),
+    ...(variants.length ? { variants } : {}),
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
   }

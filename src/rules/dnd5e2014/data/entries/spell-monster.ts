@@ -62,6 +62,17 @@ const spellcastingSchema = z.looseObject({
   ritual: z.array(z.string()).optional(),
 })
 
+export const monsterVariantSchema = z.looseObject({
+  name: z.string().min(1).max(200),
+  nameEn: z.string().max(240).optional(),
+  kind: z.enum(['variant', 'inset']),
+  text: z.array(textBlockSchema).default([]),
+  src: z.object({ book: z.string().min(1), page: z.number().int().nonnegative().optional() }).optional(),
+  version: z.object({ name: z.string().min(1), addAs: z.string().max(80).optional(), addHeadersAs: z.string().max(80).optional() }).optional(),
+})
+
+export type MonsterVariant = z.infer<typeof monsterVariantSchema>
+
 export const monsterDataSchema = z.looseObject({
   ...common,
   size: z.array(z.enum(['T', 'S', 'M', 'L', 'H', 'G'])).min(1),
@@ -89,5 +100,6 @@ export const monsterDataSchema = z.looseObject({
   legendary: z.object({ count: z.number().int().nonnegative(), actions: z.array(namedAction) }).optional(),
   mythic: z.array(namedAction).optional(),
   spellcasting: z.array(spellcastingSchema).default([]),
+  variants: z.array(monsterVariantSchema).optional(),
 })
 export type MonsterData = z.infer<typeof monsterDataSchema>

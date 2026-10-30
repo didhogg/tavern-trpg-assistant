@@ -7,6 +7,7 @@ import { slug } from '../lib/slug'
 import { convertBlocks } from './blocks'
 import { renderInline } from '../markup/inline'
 import { activitiesFromText } from './activities'
+import { convertVariants } from './variants'
 import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'
 
@@ -161,6 +162,7 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
   const groupRef = raw.legendaryGroup as Record<string, unknown> | undefined
   const group = groupRef ? (ctx.legendaryGroups.find((g) => String(g.name) === String(groupRef.name) && String(g.source) === String(groupRef.source)) ?? ctx.legendaryGroups.find((g) => String(g.name) === String(groupRef.name) || String(g.ENG_name) === String(groupRef.ENG_name))) : undefined
   const text = convertBlocks(raw.entries, inline)
+  const variants = convertVariants(raw._variants, inline)
   const actions = namedActions(raw.action, inline, entry)
   const legendaryRaw = raw.legendary as Record<string, unknown> | undefined
   const legendaryActions = namedActions(legendaryRaw?.legendaryActions, inline, entry)
@@ -195,6 +197,7 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
     ...(Array.isArray(raw.environment) ? { tags: [...raw.environment, ...(Array.isArray(raw.damageTags) ? raw.damageTags : []), ...(Array.isArray(raw.miscTags) ? raw.miscTags : [])].map(String) } : {}),
     ...(Array.isArray(raw.mythic) ? { mythic: namedActions(raw.mythic, inline, entry) } : {}),
     spellcasting: spellcastingOf(raw, inline),
+    ...(variants.length ? { variants } : {}),
   }
   const unique = raw.isNamedCreature === true
   return { id: entry.id, type: 'monster', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique, summary: summaryOf('monster', entry.name, data, plainText(text)), data }

@@ -300,5 +300,32 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
       target.raw = { ...target.raw, _lore: entriesValue }
     }
   }
+  for (const entry of [...entries]) {
+    if (entry.type !== 'monster' || !Array.isArray(entry.raw.variant) || !entry.raw.variant.length) continue
+    const variants = entry.raw.variant
+    if (entry.packId === SRD_PACK_ID) {
+      const patchId = `lore.${entry.id}`
+      const existing = entries.find((e) => e.id === patchId)
+      if (existing) {
+        existing.raw = { ...existing.raw, _variants: variants }
+      } else {
+        const patch = make('lore', {
+          ...entry.raw,
+          source: entry.source,
+          name: entry.name,
+          ENG_name: entry.nameEn,
+          srd: false,
+          _variants: variants,
+          _target: entry.id,
+        }, [entry.id], { target: entry.id })
+        patch.id = patchId
+        used.add(patchId)
+        entries.push(patch)
+      }
+      loreTargets.add(entry.id)
+    } else {
+      entry.raw = { ...entry.raw, _variants: variants }
+    }
+  }
   return { entries, tables, tableSeeds, classIds, subclassIds, skippedFeatures, skippedSubraces, unmatchedFluff }
 }
