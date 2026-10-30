@@ -144,7 +144,13 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
   const activities = [...(rules?.activities ?? []), ...(ITEM_ACTIVITIES[entry.id] ?? [])]
   const base = (raw._baseItem ?? {}) as Record<string, unknown>
   const family = raw._family === true
-  const text = raw._template === true || family ? [{ p: family ? `${entry.name}（系列）` : entry.name }] : convertBlocks(raw.entries, inline)
+  const familyEntries = raw.entries
+  const footnote = family && Array.isArray(familyEntries) && familyEntries.length === 1 && typeof familyEntries[0] === 'string' && familyEntries[0].startsWith('{@note * ')
+  const text = family
+    ? (footnote ? [] : convertBlocks(familyEntries, inline))
+    : raw._template === true
+      ? [{ p: entry.name }]
+      : convertBlocks(raw.entries, inline)
   const category = family ? 'family' : raw._template === true ? 'template' : categoryOf(raw)
   const baseId = str(base.name) ? ctx.resolveEntryId('item', str(base.name)) : undefined
   const data: Record<string, unknown> = {
