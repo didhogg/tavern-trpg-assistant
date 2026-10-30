@@ -72,7 +72,7 @@ describe('R8b-A1 去向审计', () => {
     const scan = await scanSourceRecords()
     const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
     for (const row of lossRows) {
-      expect(row.affected, row.path).toBe(Math.max(1, counts.get(row.path) ?? 0))
+      expect(row.affected, row.path).toBe(counts.get(row.path) ?? 0)
       expect(matrixLost.get(row.path)?.affected, row.path).toBe(row.affected)
     }
   })
@@ -86,6 +86,17 @@ describe('R8b-A1 去向审计', () => {
       const prev = seen.get(entry.why!)
       if (prev !== undefined) expect(prev, path).toBe(top)
       seen.set(entry.why!, top)
+    }
+  })
+
+  it('9 核心零记录不得 dropped，理由不得含模糊措辞', async () => {
+    const scan = await scanSourceRecords()
+    const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
+    for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
+      if (!A1_ROOTS.has(path.split('.')[0]) || entry.how !== 'dropped') continue
+      expect(counts.get(path) ?? 0, path).toBeGreaterThan(0)
+      expect(entry.why, path).not.toContain('没有该字段值')
+      expect(entry.why, path).not.toContain('未找到')
     }
   })
 

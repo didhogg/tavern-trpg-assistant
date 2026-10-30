@@ -9,7 +9,8 @@ describe('lost 状态', () => {
   it('合法 lost 通过；缺 affected、0、带 to、理由过短各自失败', () => {
     expect(() => validateCoverageEntry('monster.example', base)).not.toThrow()
     expect(() => validateCoverageEntry('monster.example', { ...base, affected: undefined })).toThrow(/affected/)
-    expect(() => validateCoverageEntry('monster.example', { ...base, affected: 0 })).toThrow(/affected/)
+    expect(() => validateCoverageEntry('monster.example', { ...base, affected: 0 })).not.toThrow()
+    expect(() => validateCoverageEntry('monster.example', { ...base, affected: -1 })).toThrow(/affected/)
     expect(() => validateCoverageEntry('monster.example', { ...base, to: 'data.text' })).toThrow(/不得带/)
     expect(() => validateCoverageEntry('monster.example', { ...base, why: '太短' })).toThrow(/12/)
   })

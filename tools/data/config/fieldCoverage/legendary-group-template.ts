@@ -1,10 +1,10 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "legendary-group-template.ENG_name": { "how": "dropped", "kind": "internal-meta", "why": "核心十本书来源记录中没有该字段值（ENG_name）" },
-  "legendary-group-template.apply": { "how": "dropped", "kind": "internal-meta", "why": "核心十本书来源记录中没有该字段值（apply）" },
-  "legendary-group-template.name": { "how": "lost", "why": "这是来源模板/组模板字段，核心输出没有对应条目", "affected": 1 },
-  "legendary-group-template.page": { "how": "dropped", "kind": "internal-meta", "why": "核心十本书来源记录中没有该字段值（page）" },
-  "legendary-group-template.ref": { "how": "dropped", "kind": "internal-meta", "why": "核心十本书来源记录中没有该字段值（ref）" },
-  "legendary-group-template.source": { "how": "dropped", "kind": "internal-meta", "why": "核心十本书来源记录中没有该字段值（source）" },
+  "legendary-group-template.ENG_name": { "how": "lost", "why": "传奇组模板的英文名；转换器未读取", "affected": 0 },
+  "legendary-group-template.apply": { "how": "lost", "why": "传奇组模板的应用补丁；转换器未读取", "affected": 0 },
+  "legendary-group-template.name": { "how": "lost", "why": "传奇组模板名称；核心无样本，无法验证", "affected": 0 },
+  "legendary-group-template.page": { "how": "lost", "why": "传奇组模板的页码；转换器未读取", "affected": 0 },
+  "legendary-group-template.ref": { "how": "lost", "why": "传奇组模板的引用；转换器未读取", "affected": 0 },
+  "legendary-group-template.source": { "how": "lost", "why": "传奇组模板的来源书；转换器未读取", "affected": 0 },
 }

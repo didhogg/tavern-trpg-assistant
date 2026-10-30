@@ -51,7 +51,7 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
   if (!['mapped', 'text', 'dropped', 'lost'].includes(entry.how)) throw new Error(`登记方式非法：${path}`)
   if (entry.how === 'lost') {
     if (!entry.why || entry.why.trim().length < 12) throw new Error(`lost 缺少至少 12 字的理由：${path}`)
-    if (!Number.isInteger(entry.affected) || (entry.affected ?? 0) < 1) throw new Error(`lost 的 affected 必须是 ≥1 的整数：${path}`)
+    if (!Number.isInteger(entry.affected) || (entry.affected ?? -1) < 0) throw new Error(`lost 的 affected 必须是 ≥0 的整数：${path}`)
     if (entry.to || entry.wp || entry.kind) throw new Error(`lost 不得带 to/wp/kind：${path}`)
     return
   }
