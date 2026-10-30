@@ -4,9 +4,9 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-- 目标：D1.2a R8b 已通过（A-1、A-2 订正二）；R7b（怪物特性 `traits`、传奇动作 `legendary` 修补）已完成，等待驾驶员验收；R10 与 R10b（重印标记、NPC 种族、同书同名、备选版本 `_versions`）已完成；R11（新类型）已写好执行文档 `docs/handoff/D1.2a_R11_执行文档.md`，交执行 agent 实施，完成后规划 agent 复核；之后 R9（随机表）。
-- 红线：不推送/打标签/刷新 CDN/安装；不读凭证；官方书籍原文只手工核对规则，不进数据；单文件 ≤400 行；任何推送需驾驶员单独授权。
-- 验收：`npm run check`、`npm run test:data`、`npm run build:data`、`npm run build`、`npm run e2e` 通过；R7b 守卫测试 `tests/data/r7b-monster.test.ts`。
+- 目标：按 `docs/handoff/D1.2a_R11_执行文档.md` 分阶段完成 R11 新类型数据、recipe/charoption 转换器与校验形状，以及必要的类型显示名登记。
+- 红线：不改界面（`typeLabels.ts`/分类名除外）；不新增依赖、不改包格式/manifest、不联网/推送/安装；不改锚点、不放宽断言；新逻辑写新文件，避免旧转换器行号漂移。
+- 验收：阶段 0–E 各自 `check`/`test:data` 通过并本地提交；最终 `build:data`、`build`、`e2e` 通过，11 包哈希稳定，R11 来源类型矩阵 `lost` 为 0，条数与文档锚点一致。
 
 ## 已完成
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
