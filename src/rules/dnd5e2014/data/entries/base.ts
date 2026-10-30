@@ -9,6 +9,7 @@ export const entryCommonFields = {
   src: srcSchema,
   credit: creditSchema,
   text: z.array(textBlockSchema).default([]),
+  lore: z.array(textBlockSchema).optional(),
   requires: requiresSchema.optional(),
   activities: z.array(activitySchema).optional(),
 }

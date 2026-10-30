@@ -30,6 +30,7 @@ export function fixtureEntries(): Entry[] {
     base('rule.encumbrance.test', 'rule', '负重', { category: 'variant' }),
     base('table.loot-a.test', 'table', '战利品 A', { dice: 'd6', cols: ['结果'], rows: [{ min: 1, max: 3, cells: ['金币'], refs: [] }, { min: 4, max: 6, cells: ['再掷一次'], refs: [], then: { table: 'table.loot-b.test' } }] }),
     base('table.loot-b.test', 'table', '战利品 B', { dice: 'd4', cols: ['结果'], rows: [{ min: 1, max: 4, cells: ['宝石'], refs: [] }] }),
+    base('lore.spell.fireball.test', 'lore', '火球术描述', { target: 'spell.fireball.test', lore: [{ p: '测试描述。' }] }),
   ]
 }
 

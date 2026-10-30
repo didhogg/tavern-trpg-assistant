@@ -14,6 +14,7 @@ import { askConfirm } from '../kit/confirm'
 import { deleteMineFlow, duplicateMine, exportMine, openCreateMine, pickTargetPack } from './mineActions'
 import { openEntry } from './openDetail'
 import { typeLabel } from './typeLabels'
+import { isHiddenType } from '../../core/library/hiddenTypes'
 
 interface Lite { entryId: string; name: string; type: string; summary: string }
 const props = defineProps<{ packId: string }>()
@@ -29,7 +30,7 @@ const pack = computed(() => library.installedMap.get(props.packId))
 
 async function load(): Promise<void> {
   const rows = await app.svc().mine.entries(props.packId)
-  all.value = rows.map((r) => ({ entryId: r.entryId, name: r.name, type: r.type, summary: r.summary })).sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name, 'zh'))
+  all.value = rows.filter((r) => !isHiddenType(r.type)).map((r) => ({ entryId: r.entryId, name: r.name, type: r.type, summary: r.summary })).sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name, 'zh'))
 }
 onMounted(load)
 

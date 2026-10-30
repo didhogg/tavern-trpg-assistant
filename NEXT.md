@@ -4,9 +4,9 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-- 目标：D1.2a R7 第二轮补丁（§21）已完成，等待驾驶员回复「R7 通过」；R8 未开始。
-- 红线：不推送/打标签/刷新 CDN/安装；不读凭证；不动规格文档；不开始 R8；SRD 只放行 29 条软引用；保留 5,985 个已发布 id；单文件 ≤400 行。
-- 验收：§21.9 A–I；`npm run check`、`npm run test:data`、`npm run build:data`、`npm run build`、`npm run e2e` 通过；一次提交后停下等「R7 通过」。
+- 目标：D1.2a R8 描述文字已完成，等待驾驶员回复「R8 通过」；R8b 未开始。
+- 红线：不推送/打标签/刷新 CDN/安装；不读凭证；不动规格文档；不开始 R8b；SRD 条目不得有 `data.lore`；保留 5,985 个已发布 id（4 条登记重定向）；单文件 ≤400 行。
+- 验收：§22.9 J–R；`npm run check`、`npm run test:data`、`npm run build:data`、`npm run build`、`npm run e2e` 通过；一次提交后停下等「R8 通过」。
 
 ## 已完成
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
@@ -39,6 +39,8 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 - D1.2a R5 熟练 trait（完成）：19 条附赠熟练全部有 trait；自然领域/勇气学院金样；A4=19。
 - D1.2a R6–R7 修订（完成待复审）：§20.8 12/12 通过；模板 82、家族 37、intro 109、trait 54/15/14、spellGrants 0；引用悬空 0；等待 R7 通过，未开始 R8。
 - D1.2a R7 第二轮补丁（完成待复审）：依赖表无环且 layer 严格向下；SRD 2,293→2,236（−57，56 件展开物品另加 1 个跨包家族）；家族 37 全部带后缀、成员无 `family` 字段；软引用 29；安装/卸载与 M2 7/7、e2e 通过。
+- D1.2a R7 补丁二（完成）：0a/0b 后 SRD 2,227；9 个 `_copy` 怪物迁回来源包；非 SRD `credit.srd=true` 0。
+- D1.2a R8（完成待复审）：`_copy._mod` 全量生效；19 条非 lore 变化已接受；4 条 id 重定向；lore 1,069 条（补丁 246、内嵌 823）；SRD 无 `data.lore`；隐藏类型与 e2e 通过。
 - M0；U2 定稿；M1 核心数据层。
 - M2（实现、复核与真机自检完成；50 条抽检已完成；数据 1.0.1 已发布）：
   - D1 数据定义：`src/rules/dnd5e2014/data/`（通用字段、15 种条目、7 种 advancement、7 种行动、正文块与行内标记、requires、ruleOptions/aiNotes）；`src/schemas/adventure/` 冒险内容项外壳。
@@ -121,5 +123,5 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 
 ## 需要驾驶员授权
 - 创建/推送 GitHub 数据仓库、推送扩展仓库、打 1.1.0 标签与刷新 jsDelivr CDN；本次均未执行。
-- 在 TauriTavern 安装并运行 M2 六步、填写 626 行抽检表。
+- 在 TauriTavern 安装并运行 M2 七步、填写 626 行抽检表。
 - 是否保留 `facts.ts` 的只读兼容改动（见「待议」）。

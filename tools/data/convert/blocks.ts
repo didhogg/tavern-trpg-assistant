@@ -53,14 +53,23 @@ function refText(obj: Raw, ctx: InlineContext): string {
   return renderInline(`{@${entry[0]} ${value}}`, ctx)
 }
 
+export interface BlockOptions {
+  /** lore 需要保留嵌套 section 的标题；普通条目正文保持旧行为。 */
+  preserveSection?: boolean
+  /** lore 的 tableGroup 展开成多张独立表格。 */
+  tableGroup?: boolean
+  /** lore 表格里的数字/布尔单元格按文字输出。 */
+  scalarCells?: boolean
+}
+
 /** 5etools 正文 → D1 §4.4 的块结构。未知块保留为段落，不丢正文。 */
-export function convertBlocks(input: unknown, ctx: InlineContext): TextBlock[] {
+export function convertBlocks(input: unknown, ctx: InlineContext, options: BlockOptions = {}): TextBlock[] {
   if (typeof input === 'string') return [{ p: renderInline(input, ctx) }]
   if (Array.isArray(input)) {
     const out: TextBlock[] = []
     for (const item of input) {
       if (typeof item === 'string') out.push({ p: renderInline(item, ctx) })
-      else out.push(...convertBlocks(item, ctx))
+      else out.push(...convertBlocks(item, ctx, options))
     }
     return out
   }
@@ -68,9 +77,18 @@ export function convertBlocks(input: unknown, ctx: InlineContext): TextBlock[] {
   const type = str(input.type)
   const entries = input.entries
   if (type === 'entries') {
-    const body = convertBlocks(entries, ctx)
+    const body = convertBlocks(entries, ctx, options)
     const name = str(input.name)
     return name ? [{ h: renderInline(name, ctx), body }] : body
+  }
+  if (type === 'section') {
+    const body = convertBlocks(entries, ctx, options)
+    const name = str(input.name)
+    return options.preserveSection && name ? [{ h: renderInline(name, ctx), body }] : body
+  }
+  if (type === 'tableGroup' && options.tableGroup) {
+    const tables = Array.isArray(input.tables) ? input.tables : []
+    return tables.flatMap((table) => convertBlocks(table, ctx, options))
   }
   if (type === 'list') {
     const items = Array.isArray(input.items) ? input.items : []
@@ -78,19 +96,19 @@ export function convertBlocks(input: unknown, ctx: InlineContext): TextBlock[] {
   }
   if (type === 'table') {
     const cols = Array.isArray(input.colLabels) ? input.colLabels.map((c) => renderInline(str(c), ctx)) : []
-    const rows = Array.isArray(input.rows) ? input.rows.map((row) => (Array.isArray(row) ? row.map((cell) => renderInline(str(cell), ctx)) : [])) : []
+    const rows = Array.isArray(input.rows) ? input.rows.map((row) => (Array.isArray(row) ? row.map((cell) => renderInline(options.scalarCells && (typeof cell === 'number' || typeof cell === 'boolean') ? String(cell) : str(cell), ctx)) : [])) : []
     const caption = str(input.caption)
     return [{ table: { ...(caption ? { caption: renderInline(caption, ctx) } : {}), cols, rows } }]
   }
   if (type === 'quote') {
-    return [{ quote: convertBlocks(entries, ctx).map(textOf).join('\n'), ...(str(input.by) ? { by: renderInline(str(input.by), ctx) } : {}) }]
+    return [{ quote: convertBlocks(entries, ctx, options).map(textOf).join('\n'), ...(str(input.by) ? { by: renderInline(str(input.by), ctx) } : {}) }]
   }
-  if (type === 'insetReadaloud') return [{ read: convertBlocks(entries, ctx) }]
-  if (type === 'inset' || type === 'options') return convertBlocks(entries, ctx)
+  if (type === 'insetReadaloud') return [{ read: convertBlocks(entries, ctx, options) }]
+  if (type === 'inset' || type === 'options') return convertBlocks(entries, ctx, options)
   if (type === 'item' || type === 'itemSub') {
     const name = str(input.name)
     const entry = input.entry
-    const body = typeof entry === 'string' ? renderInline(entry, ctx) : convertBlocks(entry, ctx).map(textOf).join('')
+    const body = typeof entry === 'string' ? renderInline(entry, ctx) : convertBlocks(entry, ctx, options).map(textOf).join('')
     return [{ p: name ? `${renderInline(name, ctx)}${body ? ` ${body}` : ''}` : body }]
   }
   if (type.startsWith('ref')) return [{ p: refText(input, ctx) }]
@@ -99,7 +117,7 @@ export function convertBlocks(input: unknown, ctx: InlineContext): TextBlock[] {
   }
   if (type === 'inline' || type === 'inlineBlock') return [{ p: renderInline(str(input.entry) || str(input.name), ctx) }]
   if (type === 'hr' || type === 'image' || type === 'gallery') return []
-  if (entries !== undefined) return convertBlocks(entries, ctx)
+  if (entries !== undefined) return convertBlocks(entries, ctx, options)
   if (str(input.name)) return [{ h: renderInline(str(input.name), ctx), body: [] }]
   return []
 }

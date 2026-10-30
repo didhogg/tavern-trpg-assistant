@@ -9,6 +9,7 @@ import { convertItem } from './item'
 import { convertClass, convertFeature, convertSubclass } from './character'
 import { convertBackground, convertCondition, convertFeat, convertRace, convertRule } from './character2'
 import { convertTable } from './table'
+import { convertLore, loreForEntry } from './lore'
 import { BOOKS, BOOK_BY_SOURCE, BOOK_NAMES, PACK_BY_SOURCE, SRD_PACK_ID, SRD_VERSION, lineageFor } from '../config/books'
 import { RULE_OPTIONS } from '../config/ruleOptions'
 import { DAMAGE_TYPE } from './common'
@@ -38,7 +39,7 @@ export interface ConversionResult {
   stats: ConversionStats
 }
 
-const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table'])
+const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore'])
 
 function structuralIds(data: Record<string, unknown>): string[] {
   const out: string[] = []
@@ -233,6 +234,10 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry) }
     const built = convertOne(entry, ctx, inline)
     const data = built.data as Record<string, unknown>
+    if (entry.type !== 'lore') {
+      const lore = loreForEntry(entry, inline)
+      if (lore) data.lore = lore
+    }
     const required = requiresFor(entry, data, byId)
     const allowed = new Set([entry.packId, SRD_PACK_ID, ...required])
     const prunedCount = { n: 0 }
@@ -396,6 +401,8 @@ function convertOne(entry: PlannedEntry, ctx: ConvertContext, inline: Parameters
       return convertRule(entry, ctx, inline)
     case 'table':
       return convertTable(entry, ctx, inline)
+    case 'lore':
+      return convertLore(entry, ctx, inline)
     default:
       throw new Error(`没有为类型 ${entry.type} 准备转换器`)
   }

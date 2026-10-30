@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { spellDataSchema, monsterDataSchema } from './spell-monster'
+import { entryCommonFields } from './base'
 import { itemDataSchema, tableDataSchema } from './item-table'
 import {
   backgroundDataSchema,
@@ -29,6 +30,7 @@ export const DND5E2014_ENTRY_TYPES = [
   'status',
   'table',
   'rule',
+  'lore',
 ] as const
 
 export type Dnd5e2014EntryType = (typeof DND5E2014_ENTRY_TYPES)[number]
@@ -49,6 +51,7 @@ export const entryDataByType = {
   status: conditionDataSchema,
   table: tableDataSchema,
   rule: ruleDataSchema,
+  lore: z.object({ ...entryCommonFields, target: z.string().min(1), variants: z.array(z.unknown()).optional() }),
 } satisfies Record<Dnd5e2014EntryType, z.ZodType>
 
 export const dnd5e2014EntryDataSchema = z.union(Object.values(entryDataByType))

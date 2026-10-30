@@ -2,11 +2,12 @@ import type { Raw, RawData } from '../extract/load'
 import { BOOK_BY_SOURCE, BOOK_SOURCES, PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
 import { slug } from '../lib/slug'
 import { collectTables, type TableSeed } from './tables'
+import type { FluffRecord } from '../extract/fluff'
 
 export type PlannedType =
   | 'spell' | 'monster' | 'item' | 'class' | 'subclass' | 'feature'
   | 'race' | 'subrace' | 'background' | 'feat'
-  | 'condition' | 'disease' | 'status' | 'table' | 'rule'
+  | 'condition' | 'disease' | 'status' | 'table' | 'rule' | 'lore'
 
 export interface PlannedEntry {
   key: string
@@ -24,6 +25,8 @@ export interface PlannedEntry {
   context: Record<string, string>
 }
 
+export interface FluffUnmatched { name: string; source: string; kind: string; reason: string }
+
 export interface PlanResult {
   entries: PlannedEntry[]
   tables: PlannedEntry[]
@@ -32,6 +35,7 @@ export interface PlanResult {
   subclassIds: Map<string, string>
   skippedFeatures: number
   skippedSubraces: number
+  unmatchedFluff: FluffUnmatched[]
 }
 
 function str(value: unknown): string {
@@ -243,5 +247,58 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
     entry.srd = bothSrd
     entry.raw = { ...entry.raw, srd: entry.srd }
   }
-  return { entries, tables, tableSeeds, classIds, subclassIds, skippedFeatures, skippedSubraces }
+  const unmatchedFluff: FluffUnmatched[] = []
+  const loreTargets = new Set<string>()
+  const findFluffTarget = (record: FluffRecord): PlannedEntry | undefined => {
+    const raw = record.raw
+    const source = str(raw.source)
+    const name = str(raw.name)
+    const en = str(raw.ENG_name)
+    const candidates = entries.filter((e) => e.source === source)
+    if (record.kind === 'race') {
+      const race = candidates.find((e) => e.type === 'race' && (e.name === name || e.nameEn === en))
+      if (race) return race
+      const parts = /^(.+?)\s*\((.+?)\)$/.exec(en) ?? /^(.+?)\s*[（(](.+?)[）)]$/.exec(name)
+      if (parts) {
+        const id = `subrace.${slug(parts[1].trim())}-${slug(parts[2].trim())}.${source.toLowerCase()}`
+        return entries.find((e) => e.id === id)
+      }
+      return undefined
+    }
+    const type = record.kind === 'feature' ? 'feature' : record.kind
+    return candidates.find((e) => e.type === type && (e.name === name || e.nameEn === en))
+  }
+  for (const record of data.fluff ?? []) {
+    const raw = record.raw
+    const entriesValue = raw.entries
+    const hasEntries = Array.isArray(entriesValue) ? entriesValue.length > 0 : !!entriesValue
+    if (!hasEntries) continue
+    const target = findFluffTarget(record)
+    if (!target) {
+      unmatchedFluff.push({ name: str(raw.ENG_name) || str(raw.name), source: str(raw.source), kind: record.kind, reason: '没有找到同名目标条目' })
+      continue
+    }
+    if (loreTargets.has(target.id)) throw new Error(`lore 目标重复：${target.id}`)
+    loreTargets.add(target.id)
+    if (target.packId === SRD_PACK_ID) {
+      const patch = make('lore', {
+        ...raw,
+        source: str(raw.source),
+        name: target.name,
+        ENG_name: target.nameEn,
+        srd: false,
+        _lore: entriesValue,
+        _target: target.id,
+      }, [target.id], { target: target.id })
+      const desired = `lore.${target.id}`
+      if (used.has(desired)) throw new Error(`lore 补丁 id 重复：${desired}`)
+      patch.id = desired
+      used.add(desired)
+      entries.push(patch)
+    } else {
+      if (target.id === 'subrace.aasimar-fallen.vgm') console.error('FLUFF DEBUG', JSON.stringify(entriesValue).slice(0,500))
+      target.raw = { ...target.raw, _lore: entriesValue }
+    }
+  }
+  return { entries, tables, tableSeeds, classIds, subclassIds, skippedFeatures, skippedSubraces, unmatchedFluff }
 }

@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { BOOK_SOURCES } from '../config/books'
 import { listFiles, readJson, REPO_ROOT } from '../lib/io'
+import { loadFluff, type FluffRecord } from './fluff'
 
 export const DATA_5ETOOLS = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data')
 export const DATA_FALLBACK = join(REPO_ROOT, 'reference', 'dnd-data-main（数据库）', 'data')
@@ -51,13 +52,32 @@ export interface RawData {
   foundryOptionalFeatures: Raw[]
   foundryItems: Raw[]
   foundryActions: Raw[]
+  unsupportedMods: UnsupportedMod[]
+  fluff?: FluffRecord[]
 }
 
 function isObj(value: unknown): value is Raw {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
-function applyMod(value: unknown, mod: unknown): unknown {
+export interface UnsupportedMod {
+  name: string
+  source: string
+  mode: string
+  key: string
+}
+
+function ownerOf(value: Raw): { name: string; source: string } {
+  return { name: String(value.ENG_name ?? value.name ?? '未知'), source: String(value.source ?? '未知') }
+}
+
+function unsupported(entry: Raw, mode: string, key: string, sink?: UnsupportedMod[]): void {
+  if (!sink) return
+  const owner = ownerOf(entry)
+  sink.push({ ...owner, mode, key })
+}
+
+function applyMod(value: unknown, mod: unknown, entry: Raw, key: string, sink?: UnsupportedMod[]): unknown {
   if (!isObj(mod)) return mod
   const mode = mod.mode
   if (mode === 'appendArr') {
@@ -65,6 +85,17 @@ function applyMod(value: unknown, mod: unknown): unknown {
     const items = mod.items
     return [...base, ...(Array.isArray(items) ? items : [items])]
   }
+  if (mode === 'prependArr') {
+    const base = Array.isArray(value) ? value : []
+    const items = mod.items
+    return [...(Array.isArray(items) ? items : [items]), ...base]
+  }
+  if (mode === 'removeArr') {
+    const base = Array.isArray(value) ? value : []
+    const names = new Set((Array.isArray(mod.names) ? mod.names : [mod.names]).filter((x): x is string => typeof x === 'string'))
+    return base.filter((item) => !(isObj(item) && typeof item.name === 'string' && names.has(item.name)))
+  }
+  if (mode === 'setProp') return mod.value
   if (mode === 'replaceArr' || mode === 'insertArr') {
     const base = Array.isArray(value) ? [...value] : []
     const items = mod.items
@@ -78,7 +109,9 @@ function applyMod(value: unknown, mod: unknown): unknown {
     else base.push(...insert)
     return base
   }
-  return { ...(isObj(value) ? value : {}), ...mod }
+  if (mode === 'replaceTxt' && typeof mod.replace === 'string' && typeof mod.with === 'string') return replaceText(value, mod.replace, mod.with)
+  unsupported(entry, String(mode), key, sink)
+  return value
 }
 
 function replaceText(value: unknown, from: string, to: string): unknown {
@@ -92,23 +125,42 @@ function replaceText(value: unknown, from: string, to: string): unknown {
   return value
 }
 
-function applyMods(base: Raw, mod: Raw): Raw {
+function applyOperations(value: unknown, operations: unknown[], entry: Raw, key: string, sink?: UnsupportedMod[]): unknown {
+  return operations.reduce((current, operation) => applyMod(current, operation, entry, key, sink), value)
+}
+
+/** 处理 5etools 的 _mod：支持操作数组、prependArr/setProp/removeArr；未知模式登记并保留原值。 */
+export function applyMods(base: Raw, mod: Raw, sink?: UnsupportedMod[]): Raw {
   let out: Raw = { ...base }
   const star = mod['*']
-  if (isObj(star) && star.mode === 'replaceTxt' && typeof star.replace === 'string' && typeof star.with === 'string') {
-    out = replaceText(out, star.replace, star.with) as Raw
+  const starOps = Array.isArray(star) ? star : isObj(star) ? [star] : []
+  for (const operation of starOps) {
+    if (!isObj(operation) || typeof operation.mode !== 'string') continue
+    if (operation.mode === 'replaceTxt' && typeof operation.replace === 'string' && typeof operation.with === 'string') {
+      out = replaceText(out, operation.replace, operation.with) as Raw
+    } else {
+      unsupported(base, operation.mode, '*', sink)
+    }
   }
   for (const [key, value] of Object.entries(mod)) {
     if (key === '*') continue
-    if (isObj(value) && typeof value.mode === 'string') out[key] = applyMod(out[key], value)
-    else if (isObj(value) && isObj(out[key])) out[key] = applyMods(out[key] as Raw, value)
-    else out[key] = value
+    if (key === 'images') continue
+    const current = out[key]
+    if (Array.isArray(value) && value.every((item) => isObj(item) && typeof item.mode === 'string')) {
+      out[key] = applyOperations(current, value, base, key, sink)
+    } else if (isObj(value) && typeof value.mode === 'string') {
+      out[key] = applyMod(current, value, base, key, sink)
+    } else if (isObj(value) && isObj(current)) {
+      out[key] = applyMods(current as Raw, value, sink)
+    } else {
+      out[key] = value
+    }
   }
   return out
 }
 
-/** 处理 5etools 的 _copy / _mod 继承。 */
-export function resolveCopies(list: Raw[]): Raw[] {
+/** 处理 5etools 的 _copy / _mod 继承；srd/basicRules 不继承基础记录。 */
+export function resolveCopies(list: Raw[], sink?: UnsupportedMod[]): Raw[] {
   const byKey = new Map<string, Raw>()
   for (const item of list) byKey.set(`${String(item.source)}|${String(item.name)}`, item)
   return list.map((item) => {
@@ -122,41 +174,42 @@ export function resolveCopies(list: Raw[]): Raw[] {
     delete merged.basicRules
     if (own.srd !== undefined) merged.srd = own.srd
     if (own.basicRules !== undefined) merged.basicRules = own.basicRules
-    if (isObj(_mod)) return applyMods(merged, _mod)
+    const mod = isObj(_mod) ? _mod : isObj(copy._mod) ? copy._mod : undefined
+    if (mod) return applyMods(merged, mod, sink)
     return merged
   })
 }
 
-async function loadArray(relPath: string, key: string): Promise<Raw[]> {
+async function loadArray(relPath: string, key: string, sink?: UnsupportedMod[]): Promise<Raw[]> {
   const raw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, relPath))
   const value = raw[key]
   if (!Array.isArray(value)) throw new Error(`${relPath} 缺少数组 ${key}`)
-  return resolveCopies(value.filter(isObj))
+  return resolveCopies(value.filter(isObj), sink)
 }
 
 function filterBooks(list: Raw[]): Raw[] {
   return list.filter((item) => BOOK_SOURCES.has(String(item.source)))
 }
 
-async function loadMonsters(): Promise<Raw[]> {
+async function loadMonsters(sink?: UnsupportedMod[]): Promise<Raw[]> {
   const out: Raw[] = []
   for (const path of await listFiles(join(DATA_5ETOOLS, 'bestiary'), (n) => n.startsWith('bestiary-') && n.endsWith('.json'))) {
     const raw = await readJson<Record<string, unknown>>(path)
     if (Array.isArray(raw.monster)) out.push(...raw.monster.filter(isObj))
   }
-  return filterBooks(resolveCopies(out))
+  return filterBooks(resolveCopies(out, sink))
 }
 
-async function loadSpells(): Promise<Raw[]> {
+async function loadSpells(sink?: UnsupportedMod[]): Promise<Raw[]> {
   const out: Raw[] = []
   for (const path of await listFiles(join(DATA_5ETOOLS, 'spells'), (n) => n.startsWith('spells-') && n.endsWith('.json'))) {
     const raw = await readJson<Record<string, unknown>>(path)
     if (Array.isArray(raw.spell)) out.push(...raw.spell.filter(isObj))
   }
-  return filterBooks(resolveCopies(out))
+  return filterBooks(resolveCopies(out, sink))
 }
 
-async function loadClasses(): Promise<Pick<RawData, 'classes' | 'subclasses' | 'classFeatures' | 'subclassFeatures'>> {
+async function loadClasses(sink?: UnsupportedMod[]): Promise<Pick<RawData, 'classes' | 'subclasses' | 'classFeatures' | 'subclassFeatures'>> {
   const out = { classes: [] as Raw[], subclasses: [] as Raw[], classFeatures: [] as Raw[], subclassFeatures: [] as Raw[] }
   for (const path of await listFiles(join(DATA_5ETOOLS, 'class'), (n) => n.startsWith('class-') && n.endsWith('.json'))) {
     const raw = await readJson<Record<string, unknown>>(path)
@@ -166,20 +219,20 @@ async function loadClasses(): Promise<Pick<RawData, 'classes' | 'subclasses' | '
     }
   }
   return {
-    classes: filterBooks(resolveCopies(out.classes)),
-    subclasses: filterBooks(resolveCopies(out.subclasses)),
-    classFeatures: filterBooks(resolveCopies(out.classFeatures)),
-    subclassFeatures: filterBooks(resolveCopies(out.subclassFeatures)),
+    classes: filterBooks(resolveCopies(out.classes, sink)),
+    subclasses: filterBooks(resolveCopies(out.subclasses, sink)),
+    classFeatures: filterBooks(resolveCopies(out.classFeatures, sink)),
+    subclassFeatures: filterBooks(resolveCopies(out.subclassFeatures, sink)),
   }
 }
 
-async function loadLoot(): Promise<Raw[]> {
+async function loadLoot(sink?: UnsupportedMod[]): Promise<Raw[]> {
   const raw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, 'loot.json'))
   const out: Raw[] = []
   for (const key of ['individual', 'hoard', 'dragon', 'gems', 'artObjects', 'magicItems', 'dragonMundaneItems']) {
     const list = raw[key]
     if (!Array.isArray(list)) continue
-    for (const item of resolveCopies(list.filter(isObj))) if (BOOK_SOURCES.has(String(item.source))) out.push({ ...item, _lootCategory: key })
+    for (const item of resolveCopies(list.filter(isObj), sink)) if (BOOK_SOURCES.has(String(item.source))) out.push({ ...item, _lootCategory: key })
   }
   return out
 }
@@ -236,31 +289,32 @@ async function loadFoundry(path: string, key: string): Promise<Raw[]> {
 }
 
 export async function loadRawData(): Promise<RawData> {
+  const unsupportedMods: UnsupportedMod[] = []
   const booksRaw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, 'books.json'))
   const books = (Array.isArray(booksRaw.book) ? booksRaw.book : []).filter(isObj).map((b) => ({ source: String(b.source), name: String(b.name), translator: typeof b.translator === 'string' ? b.translator : undefined }))
-  const classes = await loadClasses()
+  const classes = await loadClasses(unsupportedMods)
   return {
-    spells: await loadSpells(),
-    monsters: await loadMonsters(),
-    items: filterBooks(await loadArray('items.json', 'item')),
-    itemGroups: filterBooks(await loadArray('items.json', 'itemGroup')),
-    itemEntryTemplates: await loadArray('items-base.json', 'itemEntry'),
-    baseItems: filterBooks(await loadArray('items-base.json', 'baseitem')),
-    magicVariants: (await loadArray('magicvariants.json', 'magicvariant')).filter((v) => BOOK_SOURCES.has(String((v.inherits as Raw | undefined)?.source ?? v.source))),
+    spells: await loadSpells(unsupportedMods),
+    monsters: await loadMonsters(unsupportedMods),
+    items: filterBooks(await loadArray('items.json', 'item', unsupportedMods)),
+    itemGroups: filterBooks(await loadArray('items.json', 'itemGroup', unsupportedMods)),
+    itemEntryTemplates: await loadArray('items-base.json', 'itemEntry', unsupportedMods),
+    baseItems: filterBooks(await loadArray('items-base.json', 'baseitem', unsupportedMods)),
+    magicVariants: (await loadArray('magicvariants.json', 'magicvariant', unsupportedMods)).filter((v) => BOOK_SOURCES.has(String((v.inherits as Raw | undefined)?.source ?? v.source))),
     ...classes,
-    races: filterBooks(await loadArray('races.json', 'race')),
-    subraces: filterBooks(await loadArray('races.json', 'subrace')),
-    backgrounds: filterBooks(await loadArray('backgrounds.json', 'background')),
-    feats: filterBooks(await loadArray('feats.json', 'feat')),
-    optionalFeatures: filterBooks(await loadArray('optionalfeatures.json', 'optionalfeature')),
-    conditions: filterBooks(await loadArray('conditionsdiseases.json', 'condition')),
-    diseases: filterBooks(await loadArray('conditionsdiseases.json', 'disease')),
-    statuses: filterBooks(await loadArray('conditionsdiseases.json', 'status')),
-    variantRules: filterBooks(await loadArray('variantrules.json', 'variantrule')),
-    actions: filterBooks(await loadArray('actions.json', 'action')),
-    legendaryGroups: filterBooks(await loadArray('bestiary/legendarygroups.json', 'legendaryGroup')),
-    tables: filterBooks(await loadArray('tables.json', 'table')),
-    loot: await loadLoot(),
+    races: filterBooks(await loadArray('races.json', 'race', unsupportedMods)),
+    subraces: filterBooks(await loadArray('races.json', 'subrace', unsupportedMods)),
+    backgrounds: filterBooks(await loadArray('backgrounds.json', 'background', unsupportedMods)),
+    feats: filterBooks(await loadArray('feats.json', 'feat', unsupportedMods)),
+    optionalFeatures: filterBooks(await loadArray('optionalfeatures.json', 'optionalfeature', unsupportedMods)),
+    conditions: filterBooks(await loadArray('conditionsdiseases.json', 'condition', unsupportedMods)),
+    diseases: filterBooks(await loadArray('conditionsdiseases.json', 'disease', unsupportedMods)),
+    statuses: filterBooks(await loadArray('conditionsdiseases.json', 'status', unsupportedMods)),
+    variantRules: filterBooks(await loadArray('variantrules.json', 'variantrule', unsupportedMods)),
+    actions: filterBooks(await loadArray('actions.json', 'action', unsupportedMods)),
+    legendaryGroups: filterBooks(await loadArray('bestiary/legendarygroups.json', 'legendaryGroup', unsupportedMods)),
+    tables: filterBooks(await loadArray('tables.json', 'table', unsupportedMods)),
+    loot: await loadLoot(unsupportedMods),
     books,
     spellLookup: await readJson<Record<string, Raw>>(join(DATA_5ETOOLS, 'generated', 'gendata-spell-source-lookup.json')),
     fallbackNames: await loadFallbackNames(),
@@ -273,5 +327,7 @@ export async function loadRawData(): Promise<RawData> {
     foundryOptionalFeatures: await loadFoundry('foundry-optionalfeatures.json', 'optionalfeature'),
     foundryItems: await loadFoundry('foundry-items.json', 'item'),
     foundryActions: await loadFoundry('foundry-actions.json', 'action'),
+    fluff: await loadFluff(unsupportedMods),
+    unsupportedMods,
   }
 }

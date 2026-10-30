@@ -43,6 +43,17 @@ export const TAGS: Record<string, TagSpec> = {
   italic: { kind: 'em' },
   note: { kind: 'em' },
   color: { kind: 'em' },
+  style: { kind: 'text' },
+  font: { kind: 'text' },
+  underline: { kind: 'text' },
+  underlineDouble: { kind: 'text' },
+  strike: { kind: 'text' },
+  strikeDouble: { kind: 'text' },
+  highlight: { kind: 'text' },
+  sup: { kind: 'text' },
+  sub: { kind: 'text' },
+  kbd: { kind: 'text' },
+  code: { kind: 'text' },
   h: { kind: 'text' },
   '5etools': { kind: 'text' },
   card: { kind: 'text' },
@@ -59,6 +70,9 @@ export const TAGS: Record<string, TagSpec> = {
   itemProperty: { kind: 'text' },
   chance: { kind: 'text' },
   book: { kind: 'text' },
+  adventure: { kind: 'text' },
+  reward: { kind: 'text' },
+  cult: { kind: 'text' },
 }
 
 export function tagSpec(name: string, context: string): TagSpec {

@@ -8,11 +8,7 @@ import { PLANNED_EXTRA_2 } from './plannedFields.extra.2'
 export interface PlannedField { spec: string; origin?: string }
 export const PLANNED_FIELDS: Record<string, string | PlannedField> = {
   // §5.2 通用字段
-  'spell.lore': '§5.2', 'spell.tags': '§5.2', 'monster.lore': '§5.2', 'monster.tags': '§5.2',
-  'item.lore': '§5.2', 'class.lore': '§5.2', 'subclass.lore': '§5.2', 'feature.lore': '§5.2',
-  'race.lore': '§5.2', 'subrace.lore': '§5.2', 'background.lore': '§5.2', 'feat.lore': '§5.2',
-  'condition.lore': '§5.2', 'disease.lore': '§5.2', 'status.lore': '§5.2', 'table.lore': '§5.2',
-  'rule.lore': { spec: '§5.2', origin: 'source-mirror' },
+  'spell.tags': '§5.2', 'monster.tags': '§5.2',
   'item.supersededBy': '§5.2', 'class.supersededBy': '§5.2', 'subclass.supersededBy': '§5.2',
   'feature.supersededBy': '§5.2', 'race.supersededBy': '§5.2', 'subrace.supersededBy': '§5.2',
   'background.supersededBy': '§5.2', 'feat.supersededBy': '§5.2', 'condition.supersededBy': '§5.2',

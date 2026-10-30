@@ -9,6 +9,7 @@ import Term from '../kit/Term.vue'
 import VirtualList from '../kit/VirtualList.vue'
 import { openEntry, openPackDetail } from './openDetail'
 import { contributesLabel, findRow, SOURCE_LABEL } from './rows'
+import { isHiddenType } from '../../core/library/hiddenTypes'
 import { typeLabel } from './typeLabels'
 
 interface Lite { entryId: string; name: string; nameEn?: string; type: string; summary: string }
@@ -30,7 +31,7 @@ async function load(): Promise<void> {
   if (!row.value?.installed) return
   const rows = await app.svc().db.entries.where('packId').equals(props.packId).toArray()
   all.value = rows
-    .filter((r) => !r.override)
+    .filter((r) => !r.override && !isHiddenType(r.type))
     .map((r) => ({ entryId: r.entryId, name: r.name, nameEn: r.nameEn, type: r.type, summary: r.summary }))
     .sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name, 'zh'))
   loaded.value = true

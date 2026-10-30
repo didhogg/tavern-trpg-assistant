@@ -8,6 +8,7 @@ import type { ConvertedPack } from '../../tools/data/convert'
 import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { checkReferences } from '../../tools/data/validate/refs'
 import { REQUIRES_TEXT_ALLOWED } from '../../tools/data/config/requiresTextAllowed'
+import { ID_REDIRECTS } from '../../tools/data/config/idRedirects'
 
 const ROOT = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
@@ -29,7 +30,9 @@ const groups = (e: Entry): Array<Record<string, unknown>> => ((e.data.advancemen
 describe('RW20–RW25 验收（§20.8）', () => {
   it('1 条目 id 包含 5,985 基线', async () => {
     const all = allOf(await loadPacks())
-    expect(BASELINE.filter((id) => !all.has(id))).toEqual([])
+    const missing = BASELINE.filter((id) => !all.has(id) && !(ID_REDIRECTS[id] && all.has(ID_REDIRECTS[id].to)))
+    expect(missing).toEqual([])
+    for (const [oldId, redirect] of Object.entries(ID_REDIRECTS)) expect(all.has(redirect.to), `${oldId} → ${redirect.to}`).toBe(true)
   })
   it('2 引用完整性悬空 0', async () => {
     expect((await checkReferences(await loadPacks())).dangling).toEqual([])

@@ -8,6 +8,7 @@ import { createServices } from '../../src/core/services'
 import { uuid } from '../../src/core/ids'
 import { uninstallPack } from '../../src/core/library/uninstall'
 import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { ID_REDIRECTS } from '../../tools/data/config/idRedirects'
 import type { ConvertedPack } from '../../tools/data/convert'
 import { checkReferences } from '../../tools/data/validate/refs'
 
@@ -37,7 +38,9 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
   it('A 基线 5,985 且 §20.8 核心结构仍在', async () => {
     const baseline = JSON.parse(await readFile(join(ROOT, 'tests/fixtures/baseline-ids.json'), 'utf8')) as string[]
     const all = allOf(await loadPacks())
-    expect(baseline.filter((id) => !all.has(id))).toEqual([])
+    const missing = baseline.filter((id) => !all.has(id) && !(ID_REDIRECTS[id] && all.has(ID_REDIRECTS[id].to)))
+    expect(missing).toEqual([])
+    for (const [oldId, redirect] of Object.entries(ID_REDIRECTS)) expect(all.has(redirect.to), `${oldId} → ${redirect.to}`).toBe(true)
     expect([...all.values()].filter((e) => e.type === 'item' && e.data.category === 'template')).toHaveLength(82)
     expect([...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family')).toHaveLength(37)
     expect([...all.values()].filter((e) => e.type === 'feature' && e.data.role === 'intro')).toHaveLength(109)
@@ -56,6 +59,7 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
   it('C SRD 严格引用、29 条软引用、无跨层 baseItem', async () => {
     const packs = await loadPacks()
     const srd = packs.find((p) => p.manifest.id === SRD_PACK_ID)!
+    expect(srd.entries).toHaveLength(2227)
     const srdIds = new Set(srd.entries.map((e) => e.id))
     const badBase = srd.entries.filter((e) => e.data.baseItem && !srdIds.has(String(e.data.baseItem)))
     expect(badBase).toEqual([])
