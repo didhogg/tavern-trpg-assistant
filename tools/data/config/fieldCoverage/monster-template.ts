@@ -16,7 +16,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "monster-template.apply._root.speed.swim": { "how": "lost", "why": "这是来源模板/组模板字段，核心输出没有对应条目", "affected": 2 },
   "monster-template.apply._root.speed.walk": { "how": "lost", "why": "这是来源模板/组模板字段，核心输出没有对应条目", "affected": 11 },
   "monster-template.apply._root.type": { "how": "lost", "why": "这是来源模板/组模板字段，核心输出没有对应条目", "affected": 30 },
-  "monster-template.apply._root.type.tags": {"how":"mapped","to":"data.tags","wp":"R7"},
+  "monster-template.apply._root.type.tags": { "how": "lost", "why": "怪物模板的类型标签；模板应用后只用于类型合并，没有单独写入 data.tags", "affected": 28 },
   "monster-template.apply._root.type.tags[].prefix": { "how": "lost", "why": "这是来源模板/组模板字段，核心输出没有对应条目", "affected": 10 },
   "monster-template.apply._root.type.tags[].prefixHidden": { "how": "lost", "why": "这是来源模板/组模板字段，核心输出没有对应条目", "affected": 10 },
   "monster-template.apply._root.type.tags[].tag": { "how": "lost", "why": "这是来源模板/组模板字段，核心输出没有对应条目", "affected": 10 },

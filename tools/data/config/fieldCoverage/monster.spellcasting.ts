@@ -94,5 +94,5 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "monster.spellcasting[].will": { "how": "mapped", "to": "data.spellcasting[].atWill", "wp": "R7" },
   "monster.spellcasting[].will[].entry": { "how": "lost", "why": "随意施法列表中的条目对象；转换器 names() 只读 name，不读 entry", "affected": 0 },
   "monster.spellcasting[].will[].hidden": { "how": "lost", "why": "随意施法列表项的隐藏标记；转换器未读取", "affected": 0 },
-  "monster.spellcastingTags": {"how":"mapped","to":"data.tags","wp":"R7"},
+  "monster.spellcastingTags": { "how": "lost", "why": "施法标签；转换器没有读取 spellcastingTags，data.tags 不会包含这些施法分类", "affected": 307 },
 }

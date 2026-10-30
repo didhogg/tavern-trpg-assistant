@@ -27,6 +27,8 @@ async function readPacks(): Promise<{ entries: Map<string, Entry> }> {
   return { entries: out }
 }
 const entries = async (): Promise<Map<string, Entry>> => (await readPacks()).entries
+let scanPromise: ReturnType<typeof scanSourceRecords> | undefined
+const getScan = (): ReturnType<typeof scanSourceRecords> => (scanPromise ??= scanSourceRecords())
 const get = (all: Map<string, Entry>, id: string, path: string): unknown => {
   let cur: unknown[] = [all.get(id)?.data]
   for (const part of path.split('.')) {
@@ -69,7 +71,7 @@ describe('R8b-A1 去向审计', () => {
   it('3/4 真丢失清单与矩阵、affected 实测一致', async () => {
     const matrixLost = new Map(Object.entries(FIELD_COVERAGE).filter(([p, e]) => A1_ROOTS.has(p.split('.')[0]) && e.how === 'lost').map(([p, e]) => [p, e]))
     expect(new Set(lossRows.map((x) => x.path))).toEqual(new Set(matrixLost.keys()))
-    const scan = await scanSourceRecords()
+    const scan = await getScan()
     const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
     for (const row of lossRows) {
       expect(row.affected, row.path).toBe(counts.get(row.path) ?? 0)
@@ -90,7 +92,7 @@ describe('R8b-A1 去向审计', () => {
   })
 
   it('9 核心零记录不得 dropped，理由不得含模糊措辞', async () => {
-    const scan = await scanSourceRecords()
+    const scan = await getScan()
     const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
     for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
       if (!A1_ROOTS.has(path.split('.')[0]) || entry.how !== 'dropped') continue
@@ -109,6 +111,42 @@ describe('R8b-A1 去向审计', () => {
       if (!A1_ROOTS.has(path.split('.')[0]) || entry.to !== 'data.tags') continue
       const last = path.split('.').pop()?.replace(/\[\]$/, '') ?? ''
       expect(/tags$/i.test(last) || last === 'environment', path).toBe(true)
+    }
+  })
+
+
+  it('10 非「同父」证据的代码行确实读取末段键', () => {
+    for (const row of auditRows) {
+      if (row.how !== 'mapped' && row.how !== 'text') continue
+      if (row.evidence.startsWith('同父 ')) continue
+      const m = row.evidence.match(/代码 ([^:]+):(\d+)-(\d+)/)
+      expect(m, row.path).not.toBeNull()
+      const [, file, startRaw, endRaw] = m!
+      const start = Number(startRaw)
+      const end = Number(endRaw)
+      expect(end - start + 1, row.path).toBeLessThanOrEqual(20)
+      const key = row.path.split('.').pop()!.replace(/\[\]$/, '')
+      const lines = readFileSync(join(ROOT, file), 'utf8').split('\n').slice(start - 1, end)
+      expect(lines.some((line) => line.includes(key)), `${row.path} ${file}:${start}-${end} ${key}`).toBe(true)
+    }
+  })
+
+  it('11 输出不是纯路径，同父父路径存在', () => {
+    for (const row of auditRows) {
+      if (row.how !== 'mapped' && row.how !== 'text') continue
+      const same = row.evidence.match(/同父 ([^（(]+)/)
+      if (same) {
+        const parent = same[1].trim()
+        expect(FIELD_COVERAGE[parent], `${row.path} -> ${parent}`).toBeDefined()
+        expect(['mapped', 'text'], parent).toContain(FIELD_COVERAGE[parent].how)
+      }
+      const out = row.evidence.match(/→ 输出 (.*)$/)
+      expect(out, row.path).not.toBeNull()
+      const value = out![1].trim()
+      if (!row.evidence.includes('核心无样本')) {
+        expect(value, row.path).not.toMatch(/^data\.[\w.[\]]+$/)
+        expect(row.evidence, row.path).not.toContain('来源 —')
+      }
     }
   })
 
