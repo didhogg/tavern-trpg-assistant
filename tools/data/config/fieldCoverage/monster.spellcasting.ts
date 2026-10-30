@@ -47,7 +47,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "monster.spellcasting[].daily.3": { "how": "mapped", "to": "data.spellcasting[].perDay.3", "wp": "R7" },
   "monster.spellcasting[].daily.3e": { "how": "mapped", "to": "data.spellcasting[].perDay.3e", "wp": "R7" },
   "monster.spellcasting[].displayAs": { "how": "lost", "why": "施法块的这个展示/辅助字段没有进入输出", "affected": 118 },
-  "monster.spellcasting[].footerEntries": { "how": "mapped", "to": "data.spellcasting[].text", "wp": "R7" },
+  "monster.spellcasting[].footerEntries": { "how": "lost", "why": "spellcastingOf 只读 headerEntries 和 entries，不读 footerEntries；大法师脚注不显示", "affected": 11 },
   "monster.spellcasting[].headerEntries": { "how": "mapped", "to": "data.spellcasting[].text", "wp": "R7" },
   "monster.spellcasting[].hidden": { "how": "lost", "why": "施法块的这个展示/辅助字段没有进入输出", "affected": 12 },
   "monster.spellcasting[].name": { "how": "mapped", "to": "data.spellcasting[].name", "wp": "R7" },

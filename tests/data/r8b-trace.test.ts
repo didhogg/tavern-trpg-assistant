@@ -122,6 +122,8 @@ describe('R8b-A1 去向审计', () => {
       const m = row.evidence.match(/代码 ([^:]+):(\d+)-(\d+)/)
       expect(m, row.path).not.toBeNull()
       const [, file, startRaw, endRaw] = m!
+      expect(file.startsWith('tools/data/convert/') || file.startsWith('tools/data/extract/'), `${row.path} 代码文件不在转换代码白名单：${file}`).toBe(true)
+      expect(existsSync(join(ROOT, file)), `${row.path} 代码文件不存在：${file}`).toBe(true)
       const start = Number(startRaw)
       const end = Number(endRaw)
       expect(end - start + 1, row.path).toBeLessThanOrEqual(20)
@@ -147,6 +149,14 @@ describe('R8b-A1 去向审计', () => {
         expect(value, row.path).not.toMatch(/^data\.[\w.[\]]+$/)
         expect(row.evidence, row.path).not.toContain('来源 —')
       }
+    }
+  })
+
+  it('12「同父」必须给出转换代码的文件:行号依据', () => {
+    for (const row of auditRows) {
+      if (row.how !== 'mapped' && row.how !== 'text') continue
+      if (!row.evidence.startsWith('同父 ')) continue
+      expect(row.evidence, row.path).toMatch(/tools\/data\/(?:convert|extract)\/\S+\.ts:\d+/)
     }
   })
 

@@ -22,7 +22,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "monster.action[].name": { "how": "mapped", "to": "data.actions[].name", "wp": "R7" },
   "monster.actionNote": { "how": "lost", "why": "转换器没有读取该字段，核心输出里没有对应内容", "affected": 2 },
   "monster.actionTags": { "how": "lost", "why": "动作标签；转换器没有读取 actionTags，data.tags 不会包含这些动作分类", "affected": 661 },
-  "monster.legendary": { "how": "mapped", "to": "data.legendary", "wp": "R7" },
+  "monster.legendary": { "how": "lost", "why": "传奇动作来源有 3 条，但输出 actions 为空数组、count 为 0；R14 判丢失", "affected": 115 },
   "monster.legendary[].ENG_name": { "how": "lost", "why": "该块的英文名；对应转换函数不读取，详情页不会显示英文名", "affected": 115 },
   "monster.legendary[].entries": { "how": "lost", "why": "转换器读取了该字段，但输出结构未保留，疑似转换器缺陷", "affected": 115 },
   "monster.legendary[].name": { "how": "lost", "why": "转换器读取了该字段，但输出结构未保留，疑似转换器缺陷", "affected": 115 },
