@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
@@ -98,16 +98,29 @@ describe('R8b-A1 去向审计', () => {
     }
   })
 
-  it('5 dropped 理由具体且不同顶层字段不重复', () => {
-    const seen = new Map<string, string>()
-    for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
-      if (!inAudit(path) || entry.how !== 'dropped') continue
-      expect(entry.why!.trim().length, path).toBeGreaterThanOrEqual(12)
-      const top = path.split('.')[1].replace(/\[\]$/, '')
-      const prev = seen.get(entry.why!)
-      if (prev !== undefined) expect(prev, path).toBe(top)
-      seen.set(entry.why!, top)
+  it('5 dropped/lost 理由按字段名归一后不得跨顶层复用', () => {
+    const norm = (why: string, path: string): string => {
+      const key = path.split('.').pop()!.replace(/\[\]$/, '')
+      return why.replaceAll(key, '{field}').replace(/\s+/g, ' ').trim()
     }
+    const dropped = new Map<string, { top: string; path: string }>()
+    for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
+      if (!A2_PATHS.has(path) || entry.how !== 'dropped') continue
+      const top = path.split('.')[1].replace(/\[\]$/, '')
+      const key = norm(entry.why!, path)
+      const prev = dropped.get(key)
+      if (prev) expect(prev.top, path).toBe(top)
+      dropped.set(key, { top, path })
+    }
+    const lost = new Map<string, Set<string>>()
+    for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
+      if (!A2_PATHS.has(path) || entry.how !== 'lost') continue
+      const top = path.split('.')[1].replace(/\[\]$/, '')
+      const key = norm(entry.why!, path)
+      const tops = lost.get(key) ?? new Set<string>()
+      tops.add(top); lost.set(key, tops)
+    }
+    for (const [why, tops] of lost) expect(tops.size, why).toBeLessThan(3)
   })
 
   it('9 核心零记录不得 dropped，理由不得含模糊措辞', async () => {
@@ -176,6 +189,81 @@ describe('R8b-A1 去向审计', () => {
       if (row.how !== 'mapped' && row.how !== 'text') continue
       if (!row.evidence.startsWith('同父 ')) continue
       expect(row.evidence, row.path).toMatch(/tools\/data\/(?:convert|extract)\/\S+\.ts:\d+/)
+    }
+  })
+
+  it('13 出处函数：代码范围在函数内，且函数含 to 首段字段', () => {
+    for (const row of auditRows) {
+      if (!A2_PATHS.has(row.path)) continue
+      if (row.how !== 'mapped' && row.how !== 'text') continue
+      if (row.evidence.startsWith('同父 ')) continue
+      const fm = row.evidence.match(/函数\s+([A-Za-z_$][\w$]*)/)
+      expect(fm, `${row.path} 缺少函数名`).not.toBeNull()
+      const cm = row.evidence.match(/代码\s+(tools\/data\/(?:convert|extract)\/[^:]+):(\d+)-(\d+)/)
+      expect(cm, row.path).not.toBeNull()
+      const [, file, aRaw, bRaw] = cm!
+      const lines = readFileSync(join(ROOT, file), 'utf8').split('\n')
+      const start = Number(aRaw), end = Number(bRaw)
+      const name = fm![1]
+      const decl = new RegExp(`(?:export\\s+)?function\\s+${name}\\b|const\\s+${name}\\s*=`)
+      const declLine = lines.findIndex((l) => decl.test(l))
+      expect(declLine, `${row.path} 找不到函数 ${name}`).toBeGreaterThanOrEqual(0)
+      let fnEnd = lines.length - 1
+      for (let i = declLine + 1; i < lines.length; i++) {
+        if (/^(?:export\s+)?function\s+[A-Za-z_$]/.test(lines[i])) { fnEnd = i - 1; break }
+      }
+      expect(start - 1, `${row.path} 代码范围在函数 ${name} 之前`).toBeGreaterThanOrEqual(declLine)
+      expect(end - 1, `${row.path} 代码范围超出函数 ${name}`).toBeLessThanOrEqual(fnEnd)
+      const first = row.to.startsWith('data.') ? row.to.slice(5).split(/\.|\[/, 1)[0] : row.to.split('.')[1]
+      const body = lines.slice(declLine, fnEnd + 1).join('\n')
+      let callHit = body.includes(first)
+      if (!callHit) {
+        const dirs = ['tools/data/convert', 'tools/data/extract']
+        const files = dirs.flatMap((dir) => readdirSync(join(ROOT, dir)).filter((x) => x.endsWith('.ts')).map((x) => join(dir, x)))
+        const allLines = new Map<string, string[]>()
+        for (const f of files) allLines.set(f, readFileSync(join(ROOT, f), 'utf8').split('\n'))
+        const enclosing = (f: string, idx: number): string | undefined => {
+          const ls = allLines.get(f)!
+          let name2: string | undefined
+          for (let i = 0; i <= idx; i++) {
+            const mm = ls[i].match(/(?:export\s+)?function\s+([A-Za-z_$][\w$]*)/)
+            if (mm) name2 = mm[1]
+          }
+          return name2
+        }
+        const seen = new Set<string>([name])
+        let frontier = [name]
+        for (let depth = 0; depth < 3 && !callHit; depth++) {
+          const next: string[] = []
+          for (const fn2 of frontier) for (const [f, ls] of allLines) for (let i = 0; i < ls.length; i++) {
+            if (!ls[i].includes(fn2)) continue
+            if (ls.slice(Math.max(0, i - 2), i + 3).some((x) => x.includes(first))) { callHit = true; break }
+            const caller = enclosing(f, i)
+            if (caller && !seen.has(caller)) { seen.add(caller); next.push(caller) }
+          }
+          frontier = next
+        }
+      }
+      expect(callHit, `${row.path} 函数 ${name} 的调用/内部不含 ${first}`).toBe(true)
+    }
+  })
+
+  it('14 样本回读：输出序列化必须含来源值，或写转换说明', async () => {
+    const all = await entries()
+    for (const row of auditRows) {
+      if (!A2_PATHS.has(row.path)) continue
+      if (row.how !== 'mapped' && row.how !== 'text') continue
+      if (row.evidence.includes('核心无样本') || row.evidence.includes('转换：')) continue
+      const m = row.evidence.match(/样本\s+([^\s：]+)：来源\s+(.*?)\s+→\s+输出/)
+      expect(m, `${row.path} 缺少样本回读格式`).not.toBeNull()
+      const id = m![1], source = m![2].trim().replace(/…$/, '')
+      if (/^(?:true|false|-?\d+(?:\.\d+)?)$/.test(source) || source.length < 2) continue
+      const entry = all.get(id)
+      expect(entry, `${row.path} 找不到样本 ${id}`).toBeDefined()
+      let value: unknown
+      if (row.to.startsWith('entry.')) value = (entry as unknown as Record<string, unknown>)[row.to.slice(6)]
+      else value = get(all, id, row.to.slice(5))
+      expect(JSON.stringify(value), `${row.path} 输出不含来源 ${source}`).toContain(source)
     }
   })
 

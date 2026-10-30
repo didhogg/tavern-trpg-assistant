@@ -151,7 +151,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "subrace.toolProficiencies[].navigator's tools": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "subrace.toolProficiencies[].thieves' tools": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "subrace.toolProficiencies[].tinker's tools": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
-  "subrace.traitTags": { "how": "lost", "why": "转换器输出中没有该位置，按 R14 判丢失", "affected": 6 },
+  "subrace.traitTags": { "how": "lost", "why": "亚种 traitTags 没有写入输出，亚种分类标签看不到", "affected": 6 },
   "subrace.weaponProficiencies": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "subrace.weaponProficiencies[].greatsword|phb": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "subrace.weaponProficiencies[].hand crossbow|phb": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},

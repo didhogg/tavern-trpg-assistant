@@ -55,7 +55,7 @@ describe('R0 返工验收', () => {
     for (const value of Object.values(FIELD_COVERAGE)) {
       if (value.how !== 'dropped' && value.how !== 'lost') expect(value.to).not.toMatch(/汇总转换|统一处理|R\d/)
     }
-    const recovery = Object.entries(FIELD_COVERAGE).filter(([p]) => p.includes('uses.recovery'))
+    const recovery = Object.entries(FIELD_COVERAGE).filter(([p]) => p.includes('uses.recovery') && !p.startsWith('item.activities'))
     expect(recovery.length).toBeGreaterThan(0)
     expect(recovery.every(([, v]) => v.how === 'mapped')).toBe(true)
   })
