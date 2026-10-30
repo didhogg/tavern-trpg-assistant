@@ -87,8 +87,8 @@ describe('RW20–RW25 验收（§20.8）', () => {
   })
   it('8 种族/亚种族/专长 trait 数', async () => {
     const all = allOf(await loadPacks())
-    expect([...all.values()].filter((e) => e.type === 'race' && hasTrait(e))).toHaveLength(54)
-    expect([...all.values()].filter((e) => e.type === 'subrace' && hasTrait(e))).toHaveLength(15)
+    expect([...all.values()].filter((e) => e.type === 'race' && hasTrait(e))).toHaveLength(61)
+    expect([...all.values()].filter((e) => e.type === 'subrace' && hasTrait(e))).toHaveLength(21)
     expect([...all.values()].filter((e) => e.type === 'feat' && hasTrait(e))).toHaveLength(14)
     expect(groups(all.get('race.elf.phb')!)).toContainEqual(expect.objectContaining({ grants: expect.arrayContaining(['skill:perception']) }))
     expect(groups(all.get('subrace.elf-high.phb')!).some((a) => (a.grants as string[]).includes('weapon:longsword'))).toBe(true)

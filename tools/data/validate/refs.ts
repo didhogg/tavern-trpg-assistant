@@ -53,7 +53,7 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
         ['expandedSpells', d.expandedSpells],
       ]
       for (const [field, value] of fields) for (const id of idsOf(value)) check(entry.id, field, id)
-      for (const field of ['supersededBy', 'versionGroup'] as const) if (typeof d[field] === 'string' && !all.has(d[field] as string)) issues.push({ pack: pack.manifest.id, entry: entry.id, field, value: d[field] as string })
+      for (const field of ['supersededBy', 'versionGroup', 'fromVariantRule'] as const) if (typeof d[field] === 'string' && !all.has(d[field] as string)) issues.push({ pack: pack.manifest.id, entry: entry.id, field, value: d[field] as string })
       for (const member of (d.members as string[] | undefined) ?? []) check(entry.id, 'members[]', member)
       for (const content of (d.contents as Array<{ item?: string }> | undefined) ?? []) if (content.item) check(entry.id, 'contents[].item', content.item)
       for (const choice of (d.contentsChoice as Array<{ from?: Array<{ item?: string }> }> | undefined) ?? []) for (const x of choice.from ?? []) if (x.item) check(entry.id, 'contentsChoice[].from[].item', x.item)

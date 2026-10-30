@@ -15,7 +15,7 @@ import { convertLore, loreForEntry } from './lore'
 import { BOOKS, BOOK_BY_SOURCE, BOOK_NAMES, PACK_BY_SOURCE, SRD_PACK_ID, SRD_VERSION, lineageFor } from '../config/books'
 import { DAMAGE_TYPE } from './common'
 import type { RawData } from '../extract/load'
-import { disambiguateNames, emptyVersionStats, markNpcRaces, resolveSupersededBy, type VersionStats } from './versions'
+import { assignVersionGroups, disambiguateNames, emptyVersionStats, markNpcRaces, resolveFromVariant, resolveSupersededBy, type VersionStats } from './versions'
 
 export interface ConvertedPack {
   manifest: PackManifest
@@ -282,6 +282,8 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   }
   resolveSupersededBy(planned, converted, versionStats)
   markNpcRaces(planned, converted, versionStats)
+  assignVersionGroups(planned, converted, versionStats)
+  resolveFromVariant(planned, converted, versionStats)
   stats.unmappedFoundry = [...unmappedFoundry].map(([key, value]) => ({ key, ...value }))
   const packIds = [SRD_PACK_ID, ...BOOKS.map((b) => b.packId)]
   const packs: ConvertedPack[] = packIds.map((packId) => {

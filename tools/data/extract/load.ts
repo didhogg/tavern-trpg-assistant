@@ -1,3 +1,4 @@
+import { expandVersions } from './versions'
 import { join } from 'node:path'
 import { BOOK_SOURCES } from '../config/books'
 import { listFiles, readJson, REPO_ROOT } from '../lib/io'
@@ -170,7 +171,8 @@ export function resolveCopies(list: Raw[], sink?: UnsupportedMod[]): Raw[] {
     const base = byKey.get(`${String(copy.source)}|${String(copy.name)}`)
     if (!base) return item
     const { _copy, _mod, ...own } = item
-    const merged = { ...base, ...own }
+    const inherited = Object.fromEntries(Object.entries(base).filter(([key]) => key !== '_versions'))
+    const merged = { ...inherited, ...own }
     delete merged.srd
     delete merged.basicRules
     if (own.srd !== undefined) merged.srd = own.srd
@@ -198,7 +200,7 @@ async function loadMonsters(sink?: UnsupportedMod[]): Promise<Raw[]> {
     const raw = await readJson<Record<string, unknown>>(path)
     if (Array.isArray(raw.monster)) out.push(...raw.monster.filter(isObj))
   }
-  return filterBooks(resolveCopies(out, sink))
+  return filterBooks(expandVersions(resolveCopies(out, sink), sink))
 }
 
 async function loadSpells(sink?: UnsupportedMod[]): Promise<Raw[]> {
@@ -303,8 +305,8 @@ export async function loadRawData(): Promise<RawData> {
     baseItems: filterBooks(await loadArray('items-base.json', 'baseitem', unsupportedMods)),
     magicVariants: (await loadArray('magicvariants.json', 'magicvariant', unsupportedMods)).filter((v) => BOOK_SOURCES.has(String((v.inherits as Raw | undefined)?.source ?? v.source))),
     ...classes,
-    races: filterBooks(await loadArray('races.json', 'race', unsupportedMods)),
-    subraces: filterBooks(await loadArray('races.json', 'subrace', unsupportedMods)),
+    races: filterBooks(expandVersions(await loadArray('races.json', 'race', unsupportedMods), unsupportedMods)),
+    subraces: filterBooks(expandVersions(await loadArray('races.json', 'subrace', unsupportedMods), unsupportedMods)),
     backgrounds: filterBooks(await loadArray('backgrounds.json', 'background', unsupportedMods)),
     feats: filterBooks(await loadArray('feats.json', 'feat', unsupportedMods)),
     optionalFeatures: filterBooks(await loadArray('optionalfeatures.json', 'optionalfeature', unsupportedMods)),

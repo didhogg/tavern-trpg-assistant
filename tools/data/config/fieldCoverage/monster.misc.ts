@@ -1,13 +1,13 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "monster._versions": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 49 },
-  "monster._versions[].bonus": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 2 },
-  "monster._versions[].bonus[].entries": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 1 },
-  "monster._versions[].damageTags": { "how": "lost", "why": "旧版本镜像的伤害标签；转换器不读 _versions，data.tags 不会包含", "affected": 5 },
-  "monster._versions[].miscTags": { "how": "lost", "why": "旧版本镜像的杂项标签；转换器不读 _versions，data.tags 不会包含", "affected": 2 },
-  "monster._versions[].skill": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 1 },
-  "monster._versions[].variant": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 40 },
+  "monster._versions": { "how": "mapped", "to": "data.versionGroup", "wp": "R10" },
+  "monster._versions[].bonus": { "how": "mapped", "to": "data.bonusActions", "wp": "R7" },
+  "monster._versions[].bonus[].entries": { "how": "text", "to": "data.bonusActions[].text", "wp": "R7" },
+  "monster._versions[].damageTags": { "how": "mapped", "to": "data.tags", "wp": "R7" },
+  "monster._versions[].miscTags": { "how": "mapped", "to": "data.tags", "wp": "R7" },
+  "monster._versions[].skill": { "how": "mapped", "to": "data.skills", "wp": "R7" },
+  "monster._versions[].variant": { "how": "mapped", "to": "data.variants", "wp": "R7" },
   "monster.alias": { "how": "mapped", "to": "entry.keywords", "wp": "R7" },
   "monster.attachedItems": { "how": "lost", "why": "转换器没有读取该字段，核心输出里没有对应内容", "affected": 291 },
   "monster.basicRules": { "how": "dropped", "kind": "internal-meta", "why": "基础规则标记由 SRD 许可与 credit 字段表达，不需要单独存储" },

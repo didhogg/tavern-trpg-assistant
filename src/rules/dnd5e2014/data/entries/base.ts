@@ -13,6 +13,7 @@ export const entryCommonFields = {
   supersededBy: z.string().optional(),
   versionGroup: z.string().optional(),
   playable: z.boolean().optional(),
+  fromVariantRule: z.string().optional(),
   nameSuffix: z.string().max(40).optional(),
   requires: requiresSchema.optional(),
   activities: z.array(activitySchema).optional(),

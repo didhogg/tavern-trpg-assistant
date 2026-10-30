@@ -47,7 +47,7 @@ describe('R10 重印标记、NPC 种族、同书同名', () => {
     expect(requires.get('dnd5e2014-mm')).not.toContain('dnd5e2014-mpmm')
   })
 
-  it('范围内的重印里，没有解析出来的只剩 3 个布耶格之奴（R10b 生成备选版本后消失）', async () => {
+  it('范围内的重印里，没有解析出来的只剩 3 个布耶格之奴（来源数据里没有它们指向的 MPMM 条目，列入报告）', async () => {
     const { all } = await packs()
     const missing = [...all.values()].filter((e) => e.type === 'monster' && e.id.endsWith('.vgm') && /^monster\.booyahg-slave-of-/.test(e.id) && !d(e).supersededBy).map((e) => e.id).sort()
     expect(missing).toEqual(['monster.booyahg-slave-of-the-archfey.vgm', 'monster.booyahg-slave-of-the-fiend.vgm', 'monster.booyahg-slave-of-the-great-old-one.vgm'])

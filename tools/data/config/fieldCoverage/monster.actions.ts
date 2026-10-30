@@ -1,13 +1,13 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "monster._versions[].action": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 2 },
-  "monster._versions[].action[].ENG_name": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 2 },
-  "monster._versions[].action[].entries": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 2 },
-  "monster._versions[].action[].name": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 2 },
-  "monster._versions[].reaction": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 1 },
-  "monster._versions[].trait": { "how": "lost", "why": "转换器没有读取 _versions，旧版本镜像没有输出", "affected": 5 },
-  "monster._versions[].traitTags": { "how": "lost", "why": "旧版本镜像的特性标签；转换器只读当前 raw 的 environment/damageTags/miscTags，不读 _versions", "affected": 4 },
+  "monster._versions[].action": { "how": "mapped", "to": "data.actions", "wp": "R7" },
+  "monster._versions[].action[].ENG_name": { "how": "lost", "why": "版本字段 action[].ENG_name 对应的基础字段本身没有送达，生成的备选版本同样没有", "affected": 2 },
+  "monster._versions[].action[].entries": { "how": "text", "to": "data.actions[].text", "wp": "R7" },
+  "monster._versions[].action[].name": { "how": "mapped", "to": "data.actions[].name", "wp": "R7" },
+  "monster._versions[].reaction": { "how": "mapped", "to": "data.reactions", "wp": "R7" },
+  "monster._versions[].trait": { "how": "mapped", "to": "data.traits", "wp": "R7" },
+  "monster._versions[].traitTags": { "how": "lost", "why": "版本字段 traitTags 对应的基础字段本身没有送达，生成的备选版本同样没有", "affected": 4 },
   "monster.action": { "how": "mapped", "to": "data.actions", "wp": "R7" },
   "monster.action[].ENG_name": { "how": "lost", "why": "动作块的这个子字段没有进入输出", "affected": 1047 },
   "monster.action[].entries": { "how": "text", "to": "data.actions[].text", "wp": "R7" },

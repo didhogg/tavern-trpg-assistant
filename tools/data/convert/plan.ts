@@ -146,8 +146,8 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
     const parentKey = `${str(raw.raceName)}|${str(raw.raceSource)}`
     const parent = entries.find((e) => e.type === 'race' && `${e.name}|${e.source}` === parentKey)
     const parentSlug = parent ? slug(parent.nameEn) : slug(str(raw.raceName))
-    const displayName = parent ? `${str(raw.name)}${parent.name}` : str(raw.name)
-    const displayEn = parent ? `${str(raw.ENG_name) || str(raw.name)} ${parent.nameEn}` : str(raw.ENG_name)
+    const displayName = parent && !str(raw.name).includes(parent.name) ? `${str(raw.name)}${parent.name}` : str(raw.name)
+    const displayEn = parent && (raw._versionOf === undefined || !(str(raw.ENG_name) || str(raw.name)).includes(parent.nameEn)) ? `${str(raw.ENG_name) || str(raw.name)} ${parent.nameEn}` : str(raw.ENG_name)
     entries.push(make('subrace', { ...raw, name: displayName, ENG_name: displayEn }, [parentSlug, slug(str(raw.ENG_name) || str(raw.name))], { parentRace: parent?.id ?? '', parentSpeed: parent?.raw.speed === undefined ? '' : JSON.stringify(parent.raw.speed) }))
   }
   for (const raw of data.backgrounds) {

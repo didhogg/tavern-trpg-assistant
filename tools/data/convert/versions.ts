@@ -24,6 +24,9 @@ export interface VersionStats {
   npcRaces: string[]
   nameSuffixed: Array<{ id: string; name: string; suffix: string }>
   featureNameGroups: number
+  versionGroups: Array<{ group: string; hasBase: boolean; members: number }>
+  fromVariantRules: number
+  unresolvedVariantRules: Array<{ entry: string; target: string }>
 }
 
 /** `reprintedAs` 的一项：字符串 "名称|书" 或 { uid: "名称|书", tag }；子职业等是 "名称|职业|…|书"。 */
@@ -116,6 +119,43 @@ export function disambiguateNames(planned: PlannedEntry[], stats: VersionStats):
   }
 }
 
+/** 动作（来源 action）的 fromVariant 指向可选规则（变体规则）条目："名称" 或 "名称|书"。 */
+export function resolveFromVariant(planned: PlannedEntry[], converted: Map<string, Entry>, stats: VersionStats): void {
+  const rules = new Map<string, PlannedEntry>()
+  for (const e of planned) if (e.type === 'rule') rules.set(`${e.source}|${e.name}`, e)
+  for (const entry of planned) {
+    if (entry.type !== 'rule' || typeof entry.raw.fromVariant !== 'string') continue
+    const [name, source] = entry.raw.fromVariant.split('|')
+    const target = rules.get(`${source || entry.source}|${name}`)
+    const built = converted.get(entry.id)
+    if (target && built) {
+      ;(built.data as Record<string, unknown>).fromVariantRule = target.id
+      stats.fromVariantRules++
+    } else stats.unresolvedVariantRules.push({ entry: entry.id, target: entry.raw.fromVariant })
+  }
+}
+
+/** 备选版本（来源 _versions）与基础条目同属一个 versionGroup（组 id = 基础条目 id；基础条目没有对应条目时取版本里排序最前的 id）。 */
+export function assignVersionGroups(planned: PlannedEntry[], converted: Map<string, Entry>, stats: VersionStats): void {
+  const baseByKey = new Map(planned.map((e) => [`${e.type}|${e.source}|${String(e.raw.ENG_name)}`, e]))
+  const groups = new Map<string, PlannedEntry[]>()
+  for (const entry of planned) {
+    const of = entry.raw._versionOf as { ENG_name?: string; source?: string } | undefined
+    if (!of) continue
+    const key = `${entry.type}|${of.source}|${of.ENG_name}`
+    groups.set(key, [...(groups.get(key) ?? []), entry])
+  }
+  for (const [key, members] of groups) {
+    const base = baseByKey.get(key)
+    const group = base?.id ?? members.map((m) => m.id).sort()[0]
+    for (const entry of [...(base ? [base] : []), ...members]) {
+      const built = converted.get(entry.id)
+      if (built) (built.data as Record<string, unknown>).versionGroup = group
+    }
+    stats.versionGroups.push({ group, hasBase: !!base, members: members.length })
+  }
+}
+
 export function emptyVersionStats(): VersionStats {
-  return { superseded: 0, unresolvedReprints: [], deferredReprints: [], npcRaces: [], nameSuffixed: [], featureNameGroups: 0 }
+  return { superseded: 0, unresolvedReprints: [], deferredReprints: [], npcRaces: [], nameSuffixed: [], featureNameGroups: 0, versionGroups: [], fromVariantRules: 0, unresolvedVariantRules: [] }
 }
