@@ -72,4 +72,19 @@ describe('R7b 怪物特性与传奇动作', () => {
       for (const id of traits) expect(typeof id === 'string' && all.has(id), `${race.id} -> ${String(id)}`).toBe(true)
     }
   })
+
+  it('R7b 候选：护甲等级、射程、排除条件、变体效果、法术字段、生命值每级', async () => {
+    const all = await packs()
+    const d = (id: string): Record<string, unknown> => data(all.get(id))
+    expect(d('monster.archmage.mm').ac).toContainEqual({ value: 15, condition: '法师护甲时', braces: true })
+    expect(d('monster.ambitious-assassin.bmt').ac).toContainEqual({ value: 16, from: '镶钉皮甲' })
+    expect(JSON.stringify([d('monster.archmage.mm').resist, d('monster.elemental-spirit.tce').resist, d('monster.elemental-spirit.tce').immune])).not.toMatch(/（（|））/)
+    expect((d('item.longbow.phb').weapon as { range: unknown }).range).toEqual({ normal: 150, long: 600 })
+    expect((d('item.adamantine-weapon.xge').variantTemplate as { excludes: unknown }).excludes).toEqual({ net: true })
+    expect(d('item.battleaxe-berserker-axe.dmg').effects).toEqual([{ kind: 'hpMax', perLevel: 1, transfer: true }])
+    expect(d('spell.antagonize.bmt').damageInflict).toEqual(['psychic'])
+    expect(d('spell.antagonize.bmt').tags).toEqual(['SGT'])
+    expect(d('spell.freedom-of-movement.phb').conditionImmune).toEqual(['paralyzed', 'restrained'])
+    expect(d('feat.tough.phb').effects).toEqual([{ kind: 'hpMax', perLevel: 2, transfer: true }])
+  })
 })

@@ -55,7 +55,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "item-group.name": { "how": "mapped", "to": "entry.name", "wp": "R6" },
   "item-group.page": { "how": "mapped", "to": "data.src.page", "wp": "R6" },
   "item-group.property": { "how": "mapped", "to": "data.properties", "wp": "R6" },
-  "item-group.range": { "how": "lost", "why": "家族 range 没有出现在家族物品输出中", "affected": 0 },
+  "item-group.range": { "how": "mapped", "to": "data.weapon.range", "wp": "R6" },
   "item-group.rarity": { "how": "mapped", "to": "data.rarity", "wp": "R6" },
   "item-group.recharge": { "how": "lost", "why": "家族充能恢复公式没有写入 charges.recharge，详情页看不到恢复方式", "affected": 1 },
   "item-group.referenceSources": { "how": "lost", "why": "参考来源列表没有进入物品来源，详情页看不到补充参考", "affected": 22 },

@@ -51,6 +51,7 @@ export interface RawData {
   foundryRaces: Raw[]
   foundryOptionalFeatures: Raw[]
   foundryItems: Raw[]
+  foundryVariants: Raw[]
   foundryActions: Raw[]
   unsupportedMods: UnsupportedMod[]
   fluff?: FluffRecord[]
@@ -326,6 +327,7 @@ export async function loadRawData(): Promise<RawData> {
     foundryRaces: await loadFoundry('foundry-races.json', 'raceFeature'),
     foundryOptionalFeatures: await loadFoundry('foundry-optionalfeatures.json', 'optionalfeature'),
     foundryItems: await loadFoundry('foundry-items.json', 'item'),
+    foundryVariants: await loadFoundry('foundry-items.json', 'magicvariant'),
     foundryActions: await loadFoundry('foundry-actions.json', 'action'),
     fluff: await loadFluff(unsupportedMods),
     unsupportedMods,

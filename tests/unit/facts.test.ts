@@ -52,6 +52,17 @@ describe('条目的结构化展示', () => {
     expect(text(get(race, '属性加值'))).toBe('力量 +2 魅力 +1')
   })
 
+  it('护甲等级附带条件、武器射程、法术的伤害/状态字段', () => {
+    const monster = entryFacts({ type: 'monster', data: { ac: [{ value: 12 }, { value: 15, condition: '法师护甲时', braces: true }, { value: 10, condition: '类人形态下' }, { value: 11, from: '天生护甲', condition: '熊形态下' }] } })
+    expect(text(get(monster, '护甲等级'))).toBe('12、15（法师护甲时）、10 类人形态下、11（天生护甲） 熊形态下')
+    const item = entryFacts({ type: 'item', data: { category: 'weapon', weapon: { category: 'martial', damage: [], properties: [], range: { normal: 150, long: 600 } } } })
+    expect(text(get(item, '射程'))).toBe('150/600 尺')
+    const spell = entryFacts({ type: 'spell', data: { level: 1, school: 'evocation', damageInflict: ['psychic'], conditionInflict: ['blinded'], damageResist: ['necrotic'] } })
+    expect(text(get(spell, '造成伤害'))).toBe('心灵')
+    expect(text(get(spell, '施加状态'))).toBe('目盲')
+    expect(text(get(spell, '赋予伤害抗性'))).toBe('死灵')
+  })
+
   it('没有结构化数据的类型：返回空', () => {
     expect(entryFacts({ type: 'rule', data: {} })).toEqual([])
   })

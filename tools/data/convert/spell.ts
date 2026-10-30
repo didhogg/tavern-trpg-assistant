@@ -11,6 +11,10 @@ import type { InlineContext } from '../markup/inline'
 const SCHOOL: Record<string, string> = { A: 'abjuration', C: 'conjuration', D: 'divination', E: 'enchantment', V: 'evocation', I: 'illusion', N: 'necromancy', T: 'transmutation' }
 const TIME_UNIT: Record<string, 'action' | 'bonus' | 'reaction' | 'minute' | 'hour'> = { action: 'action', bonus: 'bonus', reaction: 'reaction', minute: 'minute', hour: 'hour' }
 
+function strList(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : []
+}
+
 function rangeOf(raw: Record<string, unknown>): { type: string; amount?: number; unit?: string } {
   const range = (raw.range ?? {}) as Record<string, unknown>
   if (typeof range.distance === 'object' && range.distance) {
@@ -141,7 +145,8 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
     subclasses: classes.subclasses,
     ...(Array.isArray(raw.entriesHigherLevel) ? { higherLevel: plainText(convertBlocks(raw.entriesHigherLevel, inline)).slice(0, 2000) } : {}),
     ...(raw.scalingLevelDice ? { cantripScaling: raw.scalingLevelDice } : {}),
-    ...(Array.isArray(raw.miscTags) || Array.isArray(raw.areaTags) || Array.isArray(raw.damageInflict) || Array.isArray(raw.conditionInflict) || Array.isArray(raw.damageResist) || Array.isArray(raw.damageImmune) || Array.isArray(raw.damageVulnerable) || Array.isArray(raw.affectsCreatureType) ? { tags: [...(Array.isArray(raw.miscTags) ? raw.miscTags : []), ...(Array.isArray(raw.areaTags) ? raw.areaTags : []), ...(Array.isArray(raw.damageInflict) ? raw.damageInflict : []), ...(Array.isArray(raw.conditionInflict) ? raw.conditionInflict : []), ...(Array.isArray(raw.damageResist) ? raw.damageResist : []), ...(Array.isArray(raw.damageImmune) ? raw.damageImmune : []), ...(Array.isArray(raw.damageVulnerable) ? raw.damageVulnerable : []), ...(Array.isArray(raw.affectsCreatureType) ? raw.affectsCreatureType : [])].map(String) } : {}),
+    ...(Array.isArray(raw.miscTags) || Array.isArray(raw.areaTags) ? { tags: [...strList(raw.miscTags), ...strList(raw.areaTags)] } : {}),
+    ...Object.fromEntries(['damageInflict', 'conditionInflict', 'conditionImmune', 'damageResist', 'damageImmune', 'damageVulnerable', 'affectsCreatureType'].filter((key) => Array.isArray(raw[key])).map((key) => [key, strList(raw[key])])),
     ...(saveCodes.length ? { save: saveCodes } : {}),
     ...(textDamage.length ? { damage: textDamage } : {}),
     activities,

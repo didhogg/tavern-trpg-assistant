@@ -137,7 +137,7 @@ function monsterFacts(d: Obj): Fact[] {
   const type = isObj(d.creatureType) ? tr(CREATURE, d.creatureType.type) : ''
   const align = str(d.alignment).split(' ').map((c) => tr(ALIGNMENT, c)).join('')
   add(out, '类型', join([arr(d.size).map((x) => tr(SIZE, x)).join('/'), type, align], ' · '))
-  add(out, '护甲等级', join(arr(d.ac).map((a) => (isObj(a) ? `${a.value}${a.from ? `（${arr(a.from).map(str).join('、')}）` : ''}` : str(a)))))
+  add(out, '护甲等级', join(arr(d.ac).map((a) => (isObj(a) ? `${a.value}${a.from ? `（${Array.isArray(a.from) ? arr(a.from).map(str).join('、') : str(a.from)}）` : ''}${a.condition ? (a.braces ? `（${str(a.condition)}）` : ` ${str(a.condition)}`) : ''}` : str(a)))))
   if (isObj(d.hp)) add(out, '生命值', `${d.hp.average}${d.hp.formula ? `（${d.hp.formula}）` : ''}`)
   add(out, '速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${tr(MOVE, k)} ${v} 尺`), '，') : '')
   add(out, '属性', isObj(d.abilities) ? join(Object.entries(ABILITY).map(([k, n]) => `${n} ${(d.abilities as Obj)[k] ?? '—'}`), '  ') : '')
@@ -169,6 +169,7 @@ function spellFacts(d: Obj): Fact[] {
   add(out, '施法距离', formatRange(d.range))
   add(out, '法术成分', formatComponents(d.components))
   add(out, '持续时间', formatDuration(d.duration))
+  for (const [key, label] of [['damageInflict', '造成伤害'], ['conditionInflict', '施加状态'], ['conditionImmune', '赋予状态免疫'], ['damageResist', '赋予伤害抗性'], ['damageImmune', '赋予伤害免疫'], ['damageVulnerable', '造成伤害易伤'], ['affectsCreatureType', '影响的生物']] as const) add(out, label, join(arr(d[key]).map((x) => trWords(str(x)))))
   if (arr(d.classes).length) out.push({ label: '职业', parts: arr(d.classes).flatMap((c, i) => [i ? '、' : '', { ref: str(c) }]) })
   return out
 }
@@ -210,6 +211,7 @@ function itemFacts(d: Obj): Fact[] {
     add(out, '武器类别', tr(WEAPON_CATEGORY, d.weapon.category))
     add(out, '伤害', join(arr(d.weapon.damage).map((x) => (isObj(x) ? `${x.dice} ${tr(DAMAGE, x.type)}` : '')), '；') + (d.weapon.versatile ? `（两用 ${d.weapon.versatile}）` : ''))
     add(out, '武器属性', join(arr(d.weapon.properties).map((x) => trCode(WEAPON_PROPERTY, x))))
+    if (isObj(d.weapon.range) && d.weapon.range.normal) add(out, '射程', `${d.weapon.range.normal}${d.weapon.range.long ? `/${d.weapon.range.long}` : ''} 尺`)
   }
   if (isObj(d.armor)) {
     add(out, '护甲类别', tr(ARMOR_CATEGORY, d.armor.category))

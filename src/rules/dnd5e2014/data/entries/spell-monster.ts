@@ -35,6 +35,13 @@ export const spellDataSchema = z.looseObject({
   activation: activationSchema.optional(),
   spellRange: rangeSchema.optional(),
   damage: z.array(damagePartSchema).optional(),
+  damageInflict: z.array(z.string()).optional(),
+  conditionInflict: z.array(z.string()).optional(),
+  conditionImmune: z.array(z.string()).optional(),
+  damageResist: z.array(z.string()).optional(),
+  damageImmune: z.array(z.string()).optional(),
+  damageVulnerable: z.array(z.string()).optional(),
+  affectsCreatureType: z.array(z.string()).optional(),
 })
 export type SpellData = z.infer<typeof spellDataSchema>
 
@@ -78,7 +85,7 @@ export const monsterDataSchema = z.looseObject({
   size: z.array(z.enum(['T', 'S', 'M', 'L', 'H', 'G'])).min(1),
   creatureType: z.object({ type: z.string().min(1).max(40), tags: z.array(z.string()).default([]), swarm: z.boolean().optional() }),
   alignment: z.string().max(80).optional(),
-  ac: z.array(z.object({ value: z.number().int(), from: z.string().max(120).optional() })).min(1),
+  ac: z.array(z.object({ value: z.number().int(), from: z.string().max(200).optional(), condition: z.string().max(120).optional(), braces: z.boolean().optional() })).min(1),
   hp: z.object({ average: z.number().int().nonnegative(), formula: z.string().max(40).optional(), special: z.string().max(300).optional() }),
   speed: z.record(z.string(), z.union([z.number(), z.boolean()])),
   abilities: z.record(z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha']), z.number().int()),

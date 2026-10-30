@@ -78,7 +78,7 @@ function adjustments(base: Raw, inherits: Raw): Raw {
 }
 
 /** 把 magicvariants 展开成具体物品；通用变体与基础物品交叉，具名变体直接生成一条。 */
-export function expandMagicVariants(data: { items: Raw[]; baseItems: Raw[]; magicVariants: Raw[] }): { items: Raw[]; created: number; skipped: number } {
+export function expandMagicVariants(data: { items: Raw[]; baseItems: Raw[]; magicVariants: Raw[]; foundryVariants?: Raw[] }): { items: Raw[]; created: number; skipped: number } {
   const out: Raw[] = []
   let created = 0
   let skipped = 0
@@ -89,9 +89,11 @@ export function expandMagicVariants(data: { items: Raw[]; baseItems: Raw[]; magi
     if (!BOOK_SOURCES.has(source)) continue
     const generic = str(variant.type).startsWith('GV')
     const nameEn = str(variant.ENG_name)
+    const foundry = (data.foundryVariants ?? []).find((f) => str(f.name) === str(variant.name) && str(f.source) === source)
+    const foundryEffects = Array.isArray(foundry?.effects) ? { effects: foundry.effects } : {}
     if (!generic) {
       const base = bases.find((b) => variantApplies(variant, b))
-      out.push({ ...variant, ...inherits, ...(base ? { _baseItem: base } : {}), name: str(variant.name), ENG_name: nameEn, source, _variant: variant })
+      out.push({ ...variant, ...inherits, ...foundryEffects, ...(base ? { _baseItem: base } : {}), name: str(variant.name), ENG_name: nameEn, source, _variant: variant })
       created++
       continue
     }
@@ -107,6 +109,7 @@ export function expandMagicVariants(data: { items: Raw[]; baseItems: Raw[]; magi
         ...inherits,
         ...variant,
         ...inherits,
+        ...foundryEffects,
         name: label.name,
         ENG_name: label.nameEn,
         source,

@@ -62,8 +62,14 @@ function weaponOf(raw: Record<string, unknown>): Record<string, unknown> | undef
   const dmgType = DAMAGE_TYPE[str(raw.dmgType) || str(base.dmgType)]
   const bonusValue = bonus(raw.bonusWeapon)
   const properties = (Array.isArray(raw.property) ? raw.property : Array.isArray(base.property) ? base.property : []).map(String)
-  const range = typeof raw.range === 'number' ? raw.range : typeof base.range === 'number' ? base.range : undefined
-  const rangeMax = typeof raw.rangeMax === 'number' ? raw.rangeMax : typeof base.rangeMax === 'number' ? base.rangeMax : undefined
+  const pair = (src: Record<string, unknown>): { normal?: number; long?: number } => {
+    const text = typeof src.range === 'string' ? /^(\d+)(?:\/(\d+))?$/.exec(src.range.trim()) : null
+    return { normal: typeof src.range === 'number' ? src.range : text ? Number(text[1]) : undefined, long: typeof src.rangeMax === 'number' ? src.rangeMax : text?.[2] ? Number(text[2]) : undefined }
+  }
+  const own = pair(raw)
+  const inherited = pair(base)
+  const range = own.normal ?? inherited.normal
+  const rangeMax = own.long ?? inherited.long
   return {
     category: str(raw.weaponCategory) || str(base.weaponCategory) || undefined,
     damage: dmg1 && dmgType ? [{ dice: damageDice(dmg1, bonusValue), type: dmgType }] : [],
@@ -135,7 +141,7 @@ function contentsOf(raw: Record<string, unknown>, ctx: ConvertContext): Array<{ 
 export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const foundryRaw = foundryFeature({ items: ctx.foundryItems }, raw, 'item', entry.source)
-  const rules = foundryRaw ? foundryRulesFor(foundryRaw) : undefined
+  const rules = foundryRaw ? foundryRulesFor(foundryRaw) : raw._variant && Array.isArray(raw.effects) ? foundryRulesFor({ name: raw.name, effects: raw.effects }) : undefined
   for (const [key, value] of rules?.unmapped ?? []) {
     const current = ctx.unmappedFoundry?.get(key) ?? { count: 0, example: entry.id }
     ctx.unmappedFoundry?.set(key, { count: current.count + value.count, example: current.example })
@@ -159,7 +165,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     text,
     category,
     ...(baseId ? { baseItem: baseId } : {}),
-    ...(raw._template === true ? { variantTemplate: { requires: Array.isArray(raw.requires) ? raw.requires : [], ...(Array.isArray(raw.excludes) ? { excludes: raw.excludes } : {}) } } : {}),
+    ...(raw._template === true ? { variantTemplate: { requires: Array.isArray(raw.requires) ? raw.requires : [], ...(Array.isArray(raw.excludes) || (raw.excludes && typeof raw.excludes === 'object') ? { excludes: raw.excludes } : {}) } } : {}),
     rarity: rarityOf(raw),
     attunement: attunementOf(raw),
     ...(typeof raw.weight === 'number' ? { weight: raw.weight } : typeof base.weight === 'number' ? { weight: base.weight } : {}),

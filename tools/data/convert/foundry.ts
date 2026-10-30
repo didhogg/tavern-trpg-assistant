@@ -105,7 +105,10 @@ function changeToEffect(change: Raw, result: FoundryRules, example: string): Eff
   if (key === CHANGE_KEYS.acFormula && typeof value === 'string') return { kind: 'ac', mode: 'base', formula: safeFormula(value) }
   if (key === CHANGE_KEYS.hpPerLevel) return { kind: 'hpMax', perLevel: number(value) ?? 0 }
   if (key === CHANGE_KEYS.hpOverall) {
-    if (typeof value === 'string' && /level/i.test(value)) return { kind: 'hpMax', perLevel: 2 }
+    if (typeof value === 'string' && /level/i.test(value)) {
+      const times = /(\d+)\s*\*\s*@details\.level|@details\.level\s*\*\s*(\d+)/i.exec(value)
+      return { kind: 'hpMax', perLevel: times ? Number(times[1] ?? times[2]) : 1 }
+    }
     return { kind: 'hpMax', flat: number(value) ?? 0 }
   }
   if (key === CHANGE_KEYS.initiativeBonus) return { kind: 'initiative', bonus: number(value) ?? 0 }

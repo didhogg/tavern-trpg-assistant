@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   console.log(`未知 _mod 模式：${coreUnsupported.length}${coreUnsupported.length ? `（${coreUnsupported.map((x) => `${x.name}/${x.mode}`).join('；')}）` : ''}`)
   if (coreUnsupported.length) throw new Error(`核心书出现未知 _mod 模式：${coreUnsupported.map((x) => `${x.name}/${x.mode}`).join('；')}`)
   console.log(`法术 ${data.spells.length}，怪物 ${data.monsters.length}，物品 ${data.items.length}，基础物品 ${data.baseItems.length}`)
-  const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants })
+  const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants, foundryVariants: data.foundryVariants })
   console.log(`魔法变体展开：生成 ${expanded.created} 条，跳过 ${expanded.skipped} 个通用变体`)
   const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
   const plan = planAll(data, items)

@@ -5,7 +5,7 @@ import type { ConvertContext } from './context'
 import { creditFor, keywordsOf, pageOf, parseFraction, str } from './common'
 import { slug } from '../lib/slug'
 import { convertBlocks } from './blocks'
-import { renderInline } from '../markup/inline'
+import { inlinePlainText, renderInline } from '../markup/inline'
 import { activitiesFromText } from './activities'
 import { convertVariants } from './variants'
 import { plainText, summaryOf } from '../summary/summary'
@@ -45,15 +45,17 @@ function creatureType(raw: Record<string, unknown>): { type: string; tags: strin
   return { type: 'unknown', tags: [] }
 }
 
-function acOf(raw: Record<string, unknown>): Array<{ value: number; from?: string }> {
+function acOf(raw: Record<string, unknown>, inline: InlineContext): Array<{ value: number; from?: string; condition?: string; braces?: true }> {
   const list = Array.isArray(raw.ac) ? raw.ac : []
   if (!list.length) return [{ value: 10, from: '未给出数值' }]
+  const plain = (text: string): string => inlinePlainText(renderInline(text, inline))
   return list.map((item) => {
     if (typeof item === 'number') return { value: item }
     const obj = item as Record<string, unknown>
     const value = Number(obj.ac ?? obj.value ?? 10)
-    const from = str(obj.from) || str(obj.special)
-    return { value: Number.isFinite(value) ? value : 10, ...(from ? { from } : {}) }
+    const from = (Array.isArray(obj.from) ? obj.from.map(str) : [str(obj.from)]).concat(str(obj.special)).filter(Boolean).map(plain).join('、')
+    const condition = plain(str(obj.condition))
+    return { value: Number.isFinite(value) ? value : 10, ...(from ? { from } : {}), ...(condition ? { condition } : {}), ...(obj.braces === true ? { braces: true as const } : {}) }
   })
 }
 
@@ -81,7 +83,7 @@ function resistanceText(item: Record<string, unknown>): string {
   if (!list) throw new Error(`抗性写法无法识别：${JSON.stringify(item)}`)
   const body = list.map((v) => (typeof v === 'string' ? v : resistanceText(v as Record<string, unknown>))).join('、')
   const pre = typeof item.preNote === 'string' ? `${item.preNote} ` : ''
-  const note = typeof item.note === 'string' ? `（${item.note}）` : ''
+  const note = typeof item.note === 'string' ? (/^[（(]/.test(item.note) ? item.note : `（${item.note}）`) : ''
   return `${pre}${body}${note}`
 }
 
@@ -173,7 +175,7 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
     size: Array.isArray(raw.size) ? raw.size.map(String) : [String(raw.size ?? 'M')],
     creatureType: creatureType(raw),
     ...(Array.isArray(raw.alignment) ? { alignment: alignmentText(raw.alignment) } : str(raw.alignment) ? { alignment: str(raw.alignment) } : {}),
-    ac: acOf(raw),
+    ac: acOf(raw, inline),
     hp: hpOf(raw),
     speed: speedOf(raw),
     abilities: { str: Number(raw.str ?? 0), dex: Number(raw.dex ?? 0), con: Number(raw.con ?? 0), int: Number(raw.int ?? 0), wis: Number(raw.wis ?? 0), cha: Number(raw.cha ?? 0) },

@@ -32,6 +32,9 @@ describe('R7 怪物子结构与法术标签', () => {
   })
   it('法术标签存在', async () => {
     const all = await load()
-    expect((all.get('spell.fireball.phb')!.data.tags as string[])).toEqual(expect.arrayContaining(['fire']))
+    const fireball = all.get('spell.fireball.phb')!.data
+    expect(fireball.tags as string[]).toEqual(expect.arrayContaining(['BO']))
+    expect(fireball.tags as string[]).not.toContain('fire')
+    expect(fireball.damageInflict as string[]).toContain('fire')
   })
 })

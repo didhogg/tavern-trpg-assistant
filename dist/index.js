@@ -28565,7 +28565,7 @@ function WR(e) {
 		DR(e.size).map((e) => CR(aR, e)).join("/"),
 		n,
 		r
-	], " · ")), HR(t, "护甲等级", kR(DR(e.ac).map((e) => ER(e) ? `${e.value}${e.from ? `（${DR(e.from).map(OR).join("、")}）` : ""}` : OR(e)))), ER(e.hp) && HR(t, "生命值", `${e.hp.average}${e.hp.formula ? `（${e.hp.formula}）` : ""}`), HR(t, "速度", ER(e.speed) ? kR(Object.entries(e.speed).map(([e, t]) => `${CR(oR, e)} ${t} 尺`), "，") : ""), HR(t, "属性", ER(e.abilities) ? kR(Object.entries(nR).map(([t, n]) => `${n} ${e.abilities[t] ?? "—"}`), "  ") : ""), HR(t, "豁免", PR(e.saves, nR)), HR(t, "技能", PR(e.skills, rR)), HR(t, "伤害易伤", kR(DR(e.vulnerable).map((e) => TR(OR(e))))), HR(t, "伤害抗性", kR(DR(e.resist).map((e) => TR(OR(e))))), HR(t, "伤害免疫", kR(DR(e.immune).map((e) => TR(OR(e))))), HR(t, "状态免疫", kR(DR(e.conditionImmune).map((e) => TR(OR(e))))), HR(t, "感官", kR([...DR(e.senses).map(OR), e.passive ? `被动察觉 ${e.passive}` : ""])), HR(t, "语言", kR(DR(e.languages).map((e) => CR(pR, e)))), HR(t, "挑战等级", zR(e.cr));
+	], " · ")), HR(t, "护甲等级", kR(DR(e.ac).map((e) => ER(e) ? `${e.value}${e.from ? `（${Array.isArray(e.from) ? DR(e.from).map(OR).join("、") : OR(e.from)}）` : ""}${e.condition ? e.braces ? `（${OR(e.condition)}）` : ` ${OR(e.condition)}` : ""}` : OR(e)))), ER(e.hp) && HR(t, "生命值", `${e.hp.average}${e.hp.formula ? `（${e.hp.formula}）` : ""}`), HR(t, "速度", ER(e.speed) ? kR(Object.entries(e.speed).map(([e, t]) => `${CR(oR, e)} ${t} 尺`), "，") : ""), HR(t, "属性", ER(e.abilities) ? kR(Object.entries(nR).map(([t, n]) => `${n} ${e.abilities[t] ?? "—"}`), "  ") : ""), HR(t, "豁免", PR(e.saves, nR)), HR(t, "技能", PR(e.skills, rR)), HR(t, "伤害易伤", kR(DR(e.vulnerable).map((e) => TR(OR(e))))), HR(t, "伤害抗性", kR(DR(e.resist).map((e) => TR(OR(e))))), HR(t, "伤害免疫", kR(DR(e.immune).map((e) => TR(OR(e))))), HR(t, "状态免疫", kR(DR(e.conditionImmune).map((e) => TR(OR(e))))), HR(t, "感官", kR([...DR(e.senses).map(OR), e.passive ? `被动察觉 ${e.passive}` : ""])), HR(t, "语言", kR(DR(e.languages).map((e) => CR(pR, e)))), HR(t, "挑战等级", zR(e.cr));
 	for (let [n, r] of [
 		["特性", "traits"],
 		["动作", "actions"],
@@ -28583,7 +28583,17 @@ function WR(e) {
 }
 function GR(e) {
 	let t = [], n = Number(e.level);
-	return HR(t, "环阶", `${n === 0 ? "戏法" : `${n} 环`} · ${CR(lR, e.school)}${e.ritual ? " · 仪式" : ""}`), HR(t, "施法时间", kR(DR(e.castTime).map((e) => ER(e) ? `${e.n ?? 1} ${jR(e.unit)}` : ""), "；")), HR(t, "施法距离", FR(e.range)), HR(t, "法术成分", LR(e.components)), HR(t, "持续时间", IR(e.duration)), DR(e.classes).length && t.push({
+	HR(t, "环阶", `${n === 0 ? "戏法" : `${n} 环`} · ${CR(lR, e.school)}${e.ritual ? " · 仪式" : ""}`), HR(t, "施法时间", kR(DR(e.castTime).map((e) => ER(e) ? `${e.n ?? 1} ${jR(e.unit)}` : ""), "；")), HR(t, "施法距离", FR(e.range)), HR(t, "法术成分", LR(e.components)), HR(t, "持续时间", IR(e.duration));
+	for (let [n, r] of [
+		["damageInflict", "造成伤害"],
+		["conditionInflict", "施加状态"],
+		["conditionImmune", "赋予状态免疫"],
+		["damageResist", "赋予伤害抗性"],
+		["damageImmune", "赋予伤害免疫"],
+		["damageVulnerable", "造成伤害易伤"],
+		["affectsCreatureType", "影响的生物"]
+	]) HR(t, r, kR(DR(e[n]).map((e) => TR(OR(e)))));
+	return DR(e.classes).length && t.push({
 		label: "职业",
 		parts: DR(e.classes).flatMap((e, t) => [t ? "、" : "", { ref: OR(e) }])
 	}), t;
@@ -28610,7 +28620,7 @@ function qR(e) {
 }
 function JR(e) {
 	let t = [];
-	return HR(t, "类别", CR(hR, e.category)), HR(t, "稀有度", e.rarity ? CR(gR, e.rarity) : ""), ER(e.weapon) && (HR(t, "武器类别", CR(_R, e.weapon.category)), HR(t, "伤害", kR(DR(e.weapon.damage).map((e) => ER(e) ? `${e.dice} ${CR(dR, e.type)}` : ""), "；") + (e.weapon.versatile ? `（两用 ${e.weapon.versatile}）` : "")), HR(t, "武器属性", kR(DR(e.weapon.properties).map((e) => wR(vR, e))))), ER(e.armor) && (HR(t, "护甲类别", CR(iR, e.armor.category)), HR(t, "护甲等级", e.armor.ac === void 0 ? "" : String(e.armor.ac)), HR(t, "隐匿", e.armor.stealthDisadvantage ? "劣势" : "")), ER(e.bonuses) && HR(t, "加值", kR(Object.entries(e.bonuses).map(([e, t]) => `${{
+	return HR(t, "类别", CR(hR, e.category)), HR(t, "稀有度", e.rarity ? CR(gR, e.rarity) : ""), ER(e.weapon) && (HR(t, "武器类别", CR(_R, e.weapon.category)), HR(t, "伤害", kR(DR(e.weapon.damage).map((e) => ER(e) ? `${e.dice} ${CR(dR, e.type)}` : ""), "；") + (e.weapon.versatile ? `（两用 ${e.weapon.versatile}）` : "")), HR(t, "武器属性", kR(DR(e.weapon.properties).map((e) => wR(vR, e)))), ER(e.weapon.range) && e.weapon.range.normal && HR(t, "射程", `${e.weapon.range.normal}${e.weapon.range.long ? `/${e.weapon.range.long}` : ""} 尺`)), ER(e.armor) && (HR(t, "护甲类别", CR(iR, e.armor.category)), HR(t, "护甲等级", e.armor.ac === void 0 ? "" : String(e.armor.ac)), HR(t, "隐匿", e.armor.stealthDisadvantage ? "劣势" : "")), ER(e.bonuses) && HR(t, "加值", kR(Object.entries(e.bonuses).map(([e, t]) => `${{
 		attack: "攻击",
 		damage: "伤害",
 		ac: "护甲等级"

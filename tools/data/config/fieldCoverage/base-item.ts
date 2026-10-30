@@ -55,7 +55,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "base-item.page": { "how": "mapped", "to": "data.src.page", "wp": "R6" },
   "base-item.polearm": { "how": "lost", "why": "polearm 字段（polearm）表示是否为长柄武器；没有写入输出，详情页看不到", "affected": 2 },
   "base-item.property": { "how": "mapped", "to": "data.properties", "wp": "R6" },
-  "base-item.range": { "how": "lost", "why": "基础物品的射程没有写入物品武器数据，详情页看不到射程", "affected": 25 },
+  "base-item.range": { "how": "mapped", "to": "data.weapon.range", "wp": "R6" },
   "base-item.rapier": { "how": "lost", "why": "rapier 字段（rapier）表示是否为刺剑；没有写入输出，详情页看不到", "affected": 1 },
   "base-item.rarity": { "how": "mapped", "to": "data.rarity", "wp": "R6" },
   "base-item.referenceSources": { "how": "lost", "why": "参考来源列表没有进入物品来源，详情页看不到补充参考", "affected": 76 },
