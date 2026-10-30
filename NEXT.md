@@ -4,9 +4,9 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-- 目标：D1.2a R8 描述文字已完成，等待驾驶员回复「R8 通过」；R8b 未开始。
-- 红线：不推送/打标签/刷新 CDN/安装；不读凭证；不动规格文档；不开始 R8b；SRD 条目不得有 `data.lore`；保留 5,985 个已发布 id（4 条登记重定向）；单文件 ≤400 行。
-- 验收：§22.9 J–R；`npm run check`、`npm run test:data`、`npm run build:data`、`npm run build`、`npm run e2e` 通过；一次提交后停下等「R8 通过」。
+- 目标：D1.2a R8b 已通过（A-1、A-2 订正二）；R7b（怪物特性 `traits`、传奇动作 `legendary` 修补）已完成，等待驾驶员验收；下一步 R10（重印/版本/NPC 种族/同书同名）。
+- 红线：不推送/打标签/刷新 CDN/安装；不读凭证；官方书籍原文只手工核对规则，不进数据；单文件 ≤400 行；任何推送需驾驶员单独授权。
+- 验收：`npm run check`、`npm run test:data`、`npm run build:data`、`npm run build`、`npm run e2e` 通过；R7b 守卫测试 `tests/data/r7b-monster.test.ts`。
 
 ## 已完成
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：

@@ -96,7 +96,7 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
   const ok = (id: unknown): boolean => typeof id === 'string' && (allowed.has(planned.get(id)?.packId ?? '') || false)
   for (const key of ['classes', 'subclasses', 'traits']) {
     const list = data[key]
-    if (Array.isArray(list)) data[key] = list.filter(ok)
+    if (Array.isArray(list)) data[key] = list.filter((x) => typeof x !== 'string' || ok(x))
   }
   for (const key of ['classId', 'parentRace']) {
     if (typeof data[key] === 'string' && !ok(data[key])) delete data[key]

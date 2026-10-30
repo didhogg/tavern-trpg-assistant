@@ -164,8 +164,8 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
   const text = convertBlocks(raw.entries, inline)
   const variants = convertVariants(raw._variants, inline)
   const actions = namedActions(raw.action, inline, entry)
-  const legendaryRaw = raw.legendary as Record<string, unknown> | undefined
-  const legendaryActions = namedActions(legendaryRaw?.legendaryActions, inline, entry)
+  const legendaryRaw = Array.isArray(raw.legendary) ? raw.legendary : undefined
+  const legendaryActions = namedActions(legendaryRaw, inline, entry)
   const data: Record<string, unknown> = {
     src: pageOf(entry),
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
@@ -192,7 +192,7 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
     actions,
     bonusActions: namedActions(raw.bonus, inline, entry),
     reactions: namedActions(raw.reaction, inline, entry),
-    ...(legendaryRaw ? { legendary: { count: Number(legendaryRaw.count ?? 0), actions: legendaryActions, ...(group ? { lairActions: convertBlocks(group.lairActions, inline), regionalEffects: convertBlocks(group.regionalEffects, inline), group: `legendary.${slug(str(group.ENG_name) || str(group.name))}.${str(group.source).toLowerCase()}` } : {}) } } : {}),
+    ...(legendaryRaw ? { legendary: { count: Number(raw.legendaryActions ?? 3), actions: legendaryActions, ...(group ? { lairActions: convertBlocks(group.lairActions, inline), regionalEffects: convertBlocks(group.regionalEffects, inline), group: `legendary.${slug(str(group.ENG_name) || str(group.name))}.${str(group.source).toLowerCase()}` } : {}) } } : {}),
     ...(!legendaryRaw && group ? { legendary: { count: 0, actions: [], lairActions: convertBlocks(group.lairActions, inline), regionalEffects: convertBlocks(group.regionalEffects, inline), group: `legendary.${slug(str(group.ENG_name) || str(group.name))}.${str(group.source).toLowerCase()}` } } : {}),
     ...(Array.isArray(raw.environment) ? { tags: [...raw.environment, ...(Array.isArray(raw.damageTags) ? raw.damageTags : []), ...(Array.isArray(raw.miscTags) ? raw.miscTags : [])].map(String) } : {}),
     ...(Array.isArray(raw.mythic) ? { mythic: namedActions(raw.mythic, inline, entry) } : {}),
