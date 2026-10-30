@@ -2,16 +2,17 @@ import type { Entry, PackFeature, PackManifest } from '../../../src/schemas/pack
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
 import { makeContext } from './context'
+import { attributionOf, licenseOf, makeClassIds, makeSubclassIds, ruleOptionsFor } from './packInfo'
 import { addRef, type RefIndex } from '../markup/inline'
 import { convertSpell } from './spell'
 import { convertMonster } from './monster'
 import { convertItem } from './item'
 import { convertClass, convertFeature, convertSubclass } from './character'
-import { convertBackground, convertCondition, convertFeat, convertRace, convertRule } from './character2'
+import { convertBackground, convertRace } from './character2'
+import { convertCondition, convertFeat, convertRule } from './featRule'
 import { convertTable } from './table'
 import { convertLore, loreForEntry } from './lore'
 import { BOOKS, BOOK_BY_SOURCE, BOOK_NAMES, PACK_BY_SOURCE, SRD_PACK_ID, SRD_VERSION, lineageFor } from '../config/books'
-import { RULE_OPTIONS } from '../config/ruleOptions'
 import { DAMAGE_TYPE } from './common'
 import type { RawData } from '../extract/load'
 
@@ -128,32 +129,7 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
   }
 }
 
-function licenseOf(entries: Entry[]): string {
-  const licenses = new Set<string>()
-  for (const entry of entries) {
-    const credit = entry.data.credit as { license?: string; srd?: boolean } | undefined
-    if (credit?.license) licenses.add(credit.license)
-    if (credit?.srd) licenses.add('CC-BY-4.0')
-  }
-  return [...licenses].sort().join(' OR ')
-}
 
-function attributionOf(entries: Entry[]): string {
-  const sources = new Set<string>()
-  for (const entry of entries) {
-    const credit = entry.data.credit as { by?: string } | undefined
-    if (credit?.by) sources.add(credit.by)
-  }
-  return [
-    '中文数据来自 5etools 中文共库（DND 中文共库）：译者与来源见各条目 credit。',
-    '英文原文与数据结构来自 5etools（MIT）。',
-    sources.has('不全书') ? '标注「不全书」的译文按 GPL-3.0 使用。' : '',
-    'SRD 5.1 内容 © Wizards of the Coast，按 CC BY 4.0 使用。',
-    '非 SRD 的官方内容版权归 Wizards of the Coast；本项目非商用，权利方要求时下架。',
-  ]
-    .filter(Boolean)
-    .join('\n')
-}
 
 export function convertAll(data: RawData, planned: PlannedEntry[], tables: PlannedEntry[], skippedFeatures: number, skippedSubraces = 0): ConversionResult {
   const all = [...planned, ...tables]
@@ -317,45 +293,8 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   return { packs, stats }
 }
 
-function makeClassIds(planned: PlannedEntry[]): Map<string, string> {
-  const out = new Map<string, string>()
-  for (const entry of planned) {
-    if (entry.type !== 'class') continue
-    out.set(`${entry.name}|${entry.source}`, entry.id)
-  }
-  return out
-}
 
-function makeSubclassIds(planned: PlannedEntry[]): Map<string, string> {
-  const out = new Map<string, string>()
-  for (const entry of planned) {
-    if (entry.type !== 'subclass') continue
-    const short = typeof entry.raw.shortName === 'string' ? entry.raw.shortName : entry.name
-    out.set(`${entry.raw.className}|${entry.raw.classSource}|${short}|${entry.source}`, entry.id)
-    out.set(`${entry.raw.className}|${entry.raw.classSource}|${short}`, entry.id)
-  }
-  return out
-}
 
-function ruleOptionsFor(packId: string, entries: Entry[], planned: PlannedEntry[]): PackFeature[] {
-  const out: PackFeature[] = []
-  for (const option of RULE_OPTIONS) {
-    const source = planned.find((p) => p.type === 'rule' && option.rawNames.some((name) => p.name.includes(name)) && p.source === option.source)
-    const targetPack = option.source === 'PHB' ? SRD_PACK_ID : source?.packId
-    if (!source || targetPack !== packId) continue
-    const entry = entries.find((e) => e.id === source.id)
-    const text = entry ? JSON.stringify(entry.data.text) : '[]'
-    out.push({
-      id: `rule-option.${option.id}`,
-      kind: 'ruleOptions',
-      name: option.name,
-      description: text.slice(0, 500),
-      defaultEnabled: false,
-      data: { id: option.id, name: option.name, summary: option.name, text, ...(option.engine ? { engine: option.engine } : {}), ...(option.group ? { group: option.group } : {}), source: option.source },
-    })
-  }
-  return out
-}
 
 function placeholders(entry: PlannedEntry): Record<string, string> {
   const raw = entry.raw
