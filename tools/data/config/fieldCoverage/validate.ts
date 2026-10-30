@@ -2,6 +2,7 @@ import type { CoverageEntry } from './types'
 import { IMAGE_PATH } from './image'
 import { entryDataByType } from '../../../../src/rules/dnd5e2014/data/entries'
 import { PLANNED_FIELDS } from '../plannedFields'
+import { TAG_TARGET_EXCEPTIONS } from '../tagTargets'
 import { outputTypeOf } from '../outputTypes'
 import { isTextContainer, isProsePath } from '../textContainers'
 
@@ -18,6 +19,7 @@ function hasOutputField(outputType: string, first: string): boolean {
 }
 
 export function expectedWp(sourceType: string, path: string, to: string): string {
+  if (/^(?:base-item|item-group|item)\.(?:.*\.)?attachedSpells/i.test(path) || /^(?:base-item|item-group)\.(?:.*\.)?range$/i.test(path) || /^monster\.(?:effects|template\.prerequisite)/i.test(path) || /^magic-variant\.(?:effects|inherits\.attachedSpells)/i.test(path)) return 'R10'
   if (to.startsWith('i18n.en.')) return 'R13'
   if (/^(data\.(supersededBy|versionGroup|playable|nameSuffix)|entry\.nameSuffix)$/.test(to)) return 'R10'
   if (to === 'data.lore') return 'R8'
@@ -58,6 +60,10 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
   if (!entry.to || !TO.test(entry.to)) throw new Error(`to 不是具体输出位置：${path} → ${entry.to ?? '（空）'}`)
   if (/R\d|汇总转换|统一处理|批量|TODO/i.test(entry.to)) throw new Error(`to 仍是批量标签：${path} → ${entry.to}`)
   if (!entry.wp || !WP.test(entry.wp)) throw new Error(`wp 缺失或非法：${path}`)
+  if (entry.to === 'data.tags') {
+    const last = path.split('.').pop()?.replace(/\[\]$/, '') ?? ''
+    if (!(/tags$/i.test(last) || last === 'environment' || TAG_TARGET_EXCEPTIONS[path])) throw new Error(`data.tags 只用于标签字段：${path}`)
+  }
   if (entry.how === 'mapped' && isTextContainer(entry.to)) throw new Error(`mapped 不能指向自由正文容器：${path} → ${entry.to}`)
   if (entry.how === 'text' && !isProsePath(path)) throw new Error(`text 只能用于散文路径：${path}`)
   if (entry.to.startsWith('data.')) {
