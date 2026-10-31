@@ -76,7 +76,7 @@ describe('官方包全量往返', () => {
       await a.campaign.startNewCampaign({ ...OWNER, ruleId: 'dnd5e2014', packIds: packs.map((p) => p.id), name: '官方包存档' })
       let created = 0
       for (const type of DND5E2014_ENTRY_TYPES) {
-        if (TYPES_WITHOUT_CORE_DATA.includes(type) || type === 'book') continue
+        if (TYPES_WITHOUT_CORE_DATA.includes(type)) continue
         const rows = await a.db.entries.where('[ruleId+type]').equals(['dnd5e2014', type]).limit(20).toArray()
         expect(rows.length, type).toBeGreaterThan(0)
         for (const row of rows) {

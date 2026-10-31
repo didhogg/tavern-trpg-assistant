@@ -9249,7 +9249,8 @@ var Iy = {
 	$v({ p: Z() }),
 	$v({
 		h: Z(),
-		body: Zv(Vy)
+		body: Zv(Vy),
+		anchor: Z().optional()
 	}),
 	$v({ list: Zv(Z()) }),
 	$v({ table: $v({
@@ -28003,7 +28004,8 @@ var FL = ["aria-label"], IL = /* @__PURE__ */ R({
 	object: "物件",
 	monsterPart: "怪物部件",
 	recipe: "配方",
-	charoption: "角色创建选项"
+	charoption: "角色创建选项",
+	book: "书籍章节"
 }, RL = (e) => LL[e] ?? e, zL = {
 	PHB: "玩家手册",
 	DMG: "城主指南",

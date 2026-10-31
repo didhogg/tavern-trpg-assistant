@@ -4,12 +4,13 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-D1.2a：R7b、R9、R10、R10b、R11 已完成；**R12 书籍章节待执行**（执行文档 `docs/handoff/D1.2a_R12_执行文档.md`）；之后 R13 → R14 → R15。
-- 目标：十本书的 96 条 `book` 章节条目，每章带小节目录（4,501 项）与锚点；statblock 变引用、正文表变 `tableRef`、怪物族谱背景文字嵌入；不做地点、不导入图片。
+D1.2a：R7b、R9、R10、R10b、R11、R12 已完成；R12 等待规划 agent 复核；之后 R13 → R14 → R15。
+- 目标：R12 已产出十本书 96 条 `book` 章节条目、4,501 项小节目录与锚点；statblock 变引用、正文表变 `tableRef`、怪物族谱背景文字嵌入；不做地点、不导入图片。
 - 红线：不改四个 R12 参考文件；已有条目的输出一个字节都不能变（哈希快照）；`convert/` 下被审计引用的 11 个文件只末尾追加或单行原地修改；不联网。
 - 验收：`check`/`test:data`/`build:data`（两次哈希相同）/`build`/`e2e` 通过；与四个参考文件逐项一致；体检 B7、B8 为 0。
 
 ## 已完成
+- D1.2a R12（完成待复审）：96 条 `book` 章节、4,501 项目录、677 表块（672 `tableRef` + 5 行内表）、2,289 statblock（1,939 引用 + 350 仅背景）、471 背景文字、12 个跨包降级、14 个缺页章；四本参考文件逐项 0 差异；SRD 包哈希不变；B7/B8=0。
 - D1.2a R9（已复核，含正文表补遗）：1095 张表（roll 540、names 69、life 55、encounter 47、loot 28、deck 16、ref 340）；候选 1552、去重 457；630 个参考替换位置（构建后可见 `tableRef` 580）、28 条旧 id 重定向；14 张关键表 `purpose/columns/values`；B7/B8=0；抽样核对 0 不一致。
 - D1.2a R11（已复核）：新类型 1,120 条；规则新分类 id 带类别前缀（`rule.skill-…`、`rule.item-type-…`、`rule.quickref-…` 等），名称保持来源原样；MTF 三艘载具的背景文字已挂到 `lore`；language 64、rule 新分类 140、deity 403、reward 79、cult 25、hazard 48、object 12、vehicle 4、monsterPart 345；recipe/charoption 仅转换器与 5+5 内存样本；矩阵 R11 lost 0；抽样核对表 0 不一致。
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
