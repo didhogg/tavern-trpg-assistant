@@ -6,7 +6,8 @@ import { catalogSchema, type Catalog, type CatalogPack, type InstalledPack } fro
 import type { PackService } from './installer'
 import { verifyDownload } from './recognize'
 
-const CATALOG_TTL = 3_600_000
+/** 应用自己缓存目录的时间：打开库时超过这个时间就重新读（G1：原来是 1 小时）。 */
+const CATALOG_TTL = 600_000
 const CATALOG_TIMEOUT = 10_000
 
 type FetchFn = typeof fetch
@@ -31,7 +32,8 @@ export async function fetchCatalog(opts: { url: string; db?: TrpgDatabase; fetch
   const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? CATALOG_TIMEOUT)
   let response: Response
   try {
-    response = await (opts.fetchFn ?? fetch)(opts.url, { signal: controller.signal })
+    // no-cache：每次都向服务器确认目录有没有变，不吃浏览器的 7 天缓存（CDN 响应带 max-age=604800）
+    response = await (opts.fetchFn ?? fetch)(opts.url, { signal: controller.signal, cache: 'no-cache' })
   } catch (error) {
     if ((error as { name?: string } | null)?.name === 'AbortError') throw new TrpgError('E_NETWORK', '连不上数据仓库：等待超时')
     throw networkError('连不上数据仓库', error)

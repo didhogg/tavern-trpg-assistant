@@ -86,23 +86,28 @@ function sampleCatalog(packs: CatalogPack[] = []): Catalog {
 }
 
 describe('目录与下载', () => {
-  it('读取目录；成功结果缓存 1 小时，强制刷新忽略缓存', async () => {
+  it('读取目录；成功结果缓存 10 分钟，强制刷新忽略缓存；每次下载都要求服务器重新确认（不吃浏览器的 7 天缓存）', async () => {
     await withDb(async (db) => {
       let calls = 0
       let t = 1000
-      const fetchFn = (async () => (calls++, json(sampleCatalog()))) as unknown as typeof fetch
+      const caches: Array<RequestCache | undefined> = []
+      const fetchFn = (async (_url: string, init?: RequestInit) => (calls++, caches.push(init?.cache), json(sampleCatalog()))) as unknown as typeof fetch
       const opts = { url: 'https://x/catalog.json', db, fetchFn, now: () => t }
       const first = await fetchCatalog(opts)
       expect(first.rules[0].id).toBe('coc7')
       await fetchCatalog(opts)
       expect(calls).toBe(1)
-      t += 3_600_001
+      t += 599_000
+      await fetchCatalog(opts)
+      expect(calls).toBe(1)
+      t += 2_000
       await fetchCatalog(opts)
       expect(calls).toBe(2)
       await fetchCatalog({ ...opts, force: true })
       expect(calls).toBe(3)
       await fetchCatalog({ ...opts, url: 'https://y/catalog.json' })
       expect(calls).toBe(4)
+      expect(caches).toEqual(['no-cache', 'no-cache', 'no-cache', 'no-cache'])
     })
   })
 

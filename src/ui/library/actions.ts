@@ -35,6 +35,11 @@ export async function installFromCatalog(id: string): Promise<void> {
   if (ok) toast.success(`已安装「${pack.name}」`)
 }
 
+/** 全部更新：把目录里有新版本的已装包逐个排队更新（排队顺序按目录）。 */
+export async function updateAllPacks(): Promise<void> {
+  for (const pack of useLibraryStore().updates) void installFromCatalog(pack.id)
+}
+
 export function retryInstall(id: string): Promise<void> {
   useLibraryStore().clearTask(id)
   return installFromCatalog(id)

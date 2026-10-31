@@ -14,6 +14,13 @@ describe('库里的包列表', () => {
     expect(rows.find((r) => r.id === 'b')?.updateVersion).toBeUndefined()
   })
 
+  it('旧版数据（dataVersion 低于扩展支持的）的下载包标「旧版数据」；新版数据与内置包不标', () => {
+    const rows = buildPackRows([installed('old', { dataVersion: 1 }), installed('new', { dataVersion: 3 }), installed('bi', { source: 'builtin', dataVersion: 1 })], catalog([]), 'dnd5e2014')
+    expect(rows.find((r) => r.id === 'old')?.outdated).toBe(true)
+    expect(rows.find((r) => r.id === 'new')?.outdated).toBeUndefined()
+    expect(rows.find((r) => r.id === 'bi')?.outdated).toBeUndefined()
+  })
+
   it('已安装的与目录里尚未安装的合并；其他规则的不出现', () => {
     const rows = buildPackRows([installed('a')], catalog([{ id: 'a', version: '1.0.0' }, { id: 'c', version: '1.0.0', recommended: true }, { id: 'z', ruleId: 'other', version: '1.0.0' }]), 'dnd5e2014')
     expect(rows.map((r) => [r.id, r.installed])).toEqual([['a', true], ['c', false]])

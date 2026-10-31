@@ -5,7 +5,8 @@ import { useLibraryStore } from '../../stores/library'
 import { useUiStore } from '../../stores/ui'
 import Term from '../kit/Term.vue'
 import PackActions from './PackActions.vue'
-import { installFromCatalog } from './actions'
+import { updateAllPacks } from './actions'
+import { useToastStore } from '../../stores/toast'
 import { openPackDetail } from './openDetail'
 import { buildPackRows, CATEGORY_LABEL, CATEGORY_ORDER, contributesLabel, type PackRow } from './rows'
 
@@ -16,6 +17,7 @@ const ui = useUiStore()
 const query = ref('')
 const onlyUpdates = ref(false)
 
+const toast = useToastStore()
 onMounted(() => void library.loadCatalog())
 
 const rows = computed(() => buildPackRows(library.installed, library.catalog, props.ruleId).filter((r) => r.source !== 'user'))
@@ -38,8 +40,13 @@ const groups = computed(() =>
   }).filter((g) => g.single.length || g.series.length),
 )
 
-async function updateAll(): Promise<void> {
-  for (const r of updates.value) void installFromCatalog(r.id)
+const updateAll = updateAllPacks
+
+/** 「检查更新」：强制重新读数据仓库目录（不用缓存），告诉用户结果。 */
+async function checkUpdates(): Promise<void> {
+  const ok = await library.loadCatalog(true)
+  if (!ok) return
+  toast.info(library.updates.length ? `有 ${library.updates.length} 个资料包有新版本` : '已经是最新')
 }
 
 watch(() => ui.libraryFocusPack, async (id) => {
@@ -56,19 +63,20 @@ watch(() => ui.libraryFocusPack, async (id) => {
       <input v-if="rows.length > 8" v-model="query" class="trpg-input trpg-toolbar__search" type="search" placeholder="搜索名称" aria-label="搜索扩展包" />
       <button v-if="updates.length" class="trpg-pill" type="button" :aria-pressed="onlyUpdates" data-testid="only-updates" @click="onlyUpdates = !onlyUpdates">有更新 {{ updates.length }}</button>
       <button v-if="onlyUpdates && updates.length" class="trpg-btn trpg-btn--small" type="button" :disabled="campaign.readOnly" @click="updateAll">全部更新</button>
+      <button class="trpg-btn trpg-btn--small" type="button" data-testid="check-updates" :disabled="library.catalogState === 'loading'" @click="checkUpdates">检查更新</button>
     </div>
     <p v-if="library.catalogState === 'error'" class="trpg-field__hint" role="status">没能连上数据仓库：{{ library.catalogError }} <button class="trpg-btn trpg-btn--small" type="button" @click="library.loadCatalog(true)">重试</button></p>
     <section v-for="g in groups" :key="g.category" :aria-label="g.label">
       <h3 class="trpg-group">{{ g.label }}</h3>
       <ul class="trpg-list">
         <li v-for="r in g.single" :key="r.id" class="trpg-row" :data-testid="`ext-${r.id}`">
-          <div class="trpg-row__main"><Term @open="openPackDetail(r.id)">{{ r.name }}</Term><div class="trpg-row__meta">{{ contributesLabel(r) }}</div></div>
+          <div class="trpg-row__main"><Term @open="openPackDetail(r.id)">{{ r.name }}</Term><div class="trpg-row__meta">{{ contributesLabel(r) }}</div><div v-if="r.updateVersion || r.outdated" class="trpg-row__meta trpg-row__warn" data-testid="update-note">{{ r.updateVersion ? `有新版本 v${r.updateVersion}` : '' }}{{ r.updateVersion && r.outdated ? ' · ' : '' }}{{ r.outdated ? '旧版数据，部分内容缺失，建议更新' : '' }}</div></div>
           <div class="trpg-row__end"><PackActions :row="r" /></div>
         </li>
         <template v-for="s in g.series" :key="s[0].series!.id">
           <li class="trpg-row trpg-row--series"><span class="trpg-row__title">{{ s[0].series!.name }}（系列）</span></li>
           <li v-for="r in s" :key="r.id" class="trpg-row trpg-row--nested" :data-testid="`ext-${r.id}`">
-            <div class="trpg-row__main"><span class="trpg-row__meta">{{ r.series!.order }}</span> <Term @open="openPackDetail(r.id)">{{ r.name }}</Term><div class="trpg-row__meta">{{ contributesLabel(r) }}</div></div>
+            <div class="trpg-row__main"><span class="trpg-row__meta">{{ r.series!.order }}</span> <Term @open="openPackDetail(r.id)">{{ r.name }}</Term><div class="trpg-row__meta">{{ contributesLabel(r) }}</div><div v-if="r.updateVersion || r.outdated" class="trpg-row__meta trpg-row__warn" data-testid="update-note">{{ r.updateVersion ? `有新版本 v${r.updateVersion}` : '' }}{{ r.updateVersion && r.outdated ? ' · ' : '' }}{{ r.outdated ? '旧版数据，部分内容缺失，建议更新' : '' }}</div></div>
             <div class="trpg-row__end"><PackActions :row="r" /></div>
           </li>
         </template>

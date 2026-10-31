@@ -1,3 +1,4 @@
+import { SUPPORTED_DATA_VERSION } from '../../schemas/common'
 import type { Catalog, InstalledPack, PackCategory } from '../../schemas/pack'
 
 export type RowSource = 'builtin' | 'download' | 'import' | 'user' | 'catalog'
@@ -26,6 +27,8 @@ export interface PackRow {
   series?: { id: string; name: string; order: number }
   /** 目录里有比已安装更高的版本。 */
   updateVersion?: string
+  /** 已安装的下载包数据代际低于当前扩展支持的：旧版数据缺少后来加的内容（背景描述、跨包可选特性等），建议更新。 */
+  outdated?: boolean
 }
 
 export const CATEGORY_LABEL: Record<PackCategory, string> = { rules: '资料与规则', adventure: '冒险', setting: '设定', toolkit: '工具' }
@@ -53,6 +56,7 @@ function fromInstalled(p: InstalledPack, catalog: Catalog | null): PackRow {
     recommends: p.relationships.recommends.map((d) => d.id),
     conflicts: p.relationships.conflicts,
     series: p.series,
+    ...(p.source !== 'builtin' && (p.dataVersion ?? 1) < SUPPORTED_DATA_VERSION ? { outdated: true } : {}),
     ...(c && c.version !== p.version && p.source !== 'builtin' && c.version.localeCompare(p.version, undefined, { numeric: true }) > 0 ? { updateVersion: c.version } : {}),
   }
 }

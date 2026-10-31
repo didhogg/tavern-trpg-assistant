@@ -9,7 +9,7 @@ import { useModalStore } from '../../stores/modal'
 import { useUiStore } from '../../stores/ui'
 import Switch from '../kit/Switch.vue'
 import Term from '../kit/Term.vue'
-import { disableFlow, enableFlow } from './actions'
+import { disableFlow, enableFlow, updateAllPacks } from './actions'
 import OptionDetailPage from './OptionDetailPage.vue'
 import { openPackDetail } from './openDetail'
 import { ruleOptionFlow, updateFeaturesFlow } from './saveActions'
@@ -22,7 +22,7 @@ const library = useLibraryStore()
 const modal = useModalStore()
 const ui = useUiStore()
 
-onMounted(() => void library.runIntegrity())
+onMounted(() => { void library.runIntegrity(); void library.loadCatalog() })
 
 const ws = computed(() => campaign.workspace!)
 const rule = computed(() => app.svc().rules.get(ws.value.ruleId))
@@ -74,6 +74,10 @@ function optionDetail(o: (typeof options.value)[number]): void {
 
 <template>
   <div class="page-stack" data-testid="save-tab">
+    <div v-if="library.updates.length" class="trpg-issuerow" role="status" data-testid="update-banner">
+      <span>⬆ 有 {{ library.updates.length }} 个资料包有新版本（{{ library.updates.map((p) => p.version).filter((v, i, a) => a.indexOf(v) === i).join('、') }}）</span>
+      <button class="trpg-btn trpg-btn--small" type="button" data-testid="update-all" :disabled="campaign.readOnly" @click="updateAllPacks">全部更新</button>
+    </div>
     <div v-if="library.issues.length" class="trpg-issuerow" role="status">
       <span>⚠ {{ issueText }}</span>
       <button class="trpg-btn trpg-btn--small" type="button" data-testid="go-health" @click="$emit('sub', 'health')">去处理 ›</button>
