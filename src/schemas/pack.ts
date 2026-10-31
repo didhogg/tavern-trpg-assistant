@@ -121,6 +121,8 @@ export interface StoredEntry {
   data: Record<string, unknown>
   image?: string | { $asset: string }
   override?: unknown
+  /** 英文对照（R13）；安装时随条目一起存入 */
+  i18n?: z.infer<typeof entryI18nSchema>
 }
 
 export const packFileManifestSchema = z.object({

@@ -326,7 +326,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
       contributes: {},
       relationships: { requires, recommends: [], conflicts: [] },
       blobs: [],
-      dataVersion: 2,
+      dataVersion: 3,
       minAppVersion: '0.1.0',
     }
     return { manifest, entries, features }

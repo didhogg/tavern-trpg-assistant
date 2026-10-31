@@ -6,7 +6,7 @@
 
 - 本数据包中的 SRD 5.1 英文原文与规则内容：© Wizards of the Coast，按 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 使用。
 - 中文译文：来自 5etools 中文共库（DND 中文共库）。标注「不全书」的译文按 GPL-3.0 使用；其余中文译文与机翻按 CC BY-NC-SA 4.0 使用。每个条目在 `credit` 中单独标明来源与许可。
-- 英文原文与数据结构：来自 5etools，按 MIT 许可使用。
+- 英文原文与数据结构：来自 5etools，按 MIT 许可使用。条目里的 `i18n.en`（英文对照）取自 5etools 英文原版数据，按条目与中文对齐；MIT 版权声明与许可文本见 `LICENSES/MIT.txt`。
 - 结构化校对的 Foundry dnd5e 6.1.0：系统代码 MIT；SRD 5.1 内容 CC BY 4.0。只采用 2014 目录的 SRD 结构化字段，半施法者 2024 取整未采用。
 - 5e-bits/5e-database 与 Open5e 只用于公开值对照，不导入文件；其 SRD 内容按 OGL/CC BY 4.0 标注。
 - 本项目原创的整理、摘要与结构化内容：按 CC BY-NC-SA 4.0 使用。

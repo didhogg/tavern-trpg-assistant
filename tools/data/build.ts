@@ -16,7 +16,7 @@ import { assertFieldCoverage } from './validate/coverage'
 import { BASELINE_ALIASES } from './config/baselineAliases'
 import { checkReferences } from './validate/refs'
 import { checkLayers } from './validate/layers'
-import { healthMetrics } from './validate/health'
+import { assertHealth, healthMetrics } from './validate/health'
 import { assertDelivered } from './validate/delivered'
 import { FIELD_COVERAGE } from './config/fieldCoverage'
 import { buildPackFile } from '../../src/core/packs/file'
@@ -114,6 +114,7 @@ async function main(): Promise<void> {
   if (refs.dangling.length) throw new Error(`引用悬空 ${refs.dangling.length} 条：${refs.dangling.slice(0, 10).map((x) => `${x.entry} ${x.field} ${x.value}`).join('；')}`)
   if (refs.dependency.length) throw new Error(`缺少包依赖 ${refs.dependency.length} 条：${refs.dependency.slice(0, 10).map((x) => `${x.pack} ${x.field} ${x.value}`).join('；')}`)
   const health = healthMetrics(result, data)
+  assertHealth(health)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'health.json'), `${JSON.stringify(health, null, 2)}\n`)
   console.log('体检报数：' + health.map((h) => `${h.id}=${h.count ?? 'pending'}`).join(' '))
   console.log(`转换完成：${result.packs.length} 个包`)
@@ -171,7 +172,7 @@ function reportOf(result: ConversionResult, outputs: Map<string, { bytes: Uint8A
   })
   return {
     generatedAt: new Date().toISOString(),
-    dataVersion: 2,
+    dataVersion: 3,
     inputs: { books: BOOKS.map((b) => b.source), counts: { spells: data.spells.length, monsters: data.monsters.length, items: data.items.length, baseItems: data.baseItems.length, magicVariants: data.magicVariants.length } },
     packs,
     stats: result.stats,

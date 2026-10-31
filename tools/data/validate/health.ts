@@ -45,6 +45,14 @@ function groupCount(entries: Entry[], type: string | null): number {
   return [...groups.values()].filter((n) => n > 1).length
 }
 
+/** R15：目标为 0 的指标，非 0 即构建失败（失败模式）。 */
+export const MUST_BE_ZERO = ['A1', 'A2', 'A5', 'B2b', 'B7', 'B8', 'D1', 'D2', 'D4', 'D5', 'D6', 'D7', 'spell-actions']
+
+export function assertHealth(metrics: HealthMetric[]): void {
+  const bad = metrics.filter((m) => MUST_BE_ZERO.includes(m.id) && m.count !== 0)
+  if (bad.length) throw new Error(`体检指标不为 0：${bad.map((m) => `${m.id}=${m.count ?? '未测'}`).join('、')}`)
+}
+
 export function healthMetrics(result: ConversionResult, data: RawData): HealthMetric[] {
   const entries = allEntries(result)
   const features = entries.filter((e) => e.type === 'feature')
@@ -111,7 +119,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     { id: 'B6b', label: 'feature 同书同名组', status: 'measured', count: groupCount(entries, 'feature'), definition: 'feature 按书+名称分组的重复组数，只报数不改名' },
     { id: 'B7', label: '重复拼接随机表名', status: 'measured', count: tableRepeatedName, definition: '表名形如 X·X 且两半完全相同的条目数' },
     { id: 'B8', label: '没有所属条目的随机表', status: 'measured', count: tableNoParent, definition: 'table 条目没有 parent/chapter 的数量；R9 后目标 0' },
-    { id: 'C-language', label: '语言源记录', status: 'pending', definition: 'R11 导入语言后才能报数与核对' },
+    { id: 'C-language', label: '语言条目数', status: 'measured', count: entries.filter((e) => e.type === 'language').length, definition: '输出里 type 为 language 的条目数' },
     { id: 'D1', label: '汉字紧挨拉丁词', status: 'measured', count: d1, definition: '正文中一个汉字后紧接 3 个以上拉丁字母，排除 {{…}} 与 latinAllow 白名单' },
     { id: 'D2', label: '物品属性带来源代码', status: 'measured', count: d2, definition: 'properties 顶层（缺失时用 weapon.properties）至少含一个带 | 的属性代码的物品条目数（同一物品只算一次）' },
     { id: 'D3', label: '表格单元引用条目', status: 'informational', count: tableCellRefs, definition: '正文表格单元含 {{ref:…}} 的条目数，仅作参考' },

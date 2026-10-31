@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { cp, mkdir } from 'node:fs/promises'
+import { cp, mkdir, readdir, rm } from 'node:fs/promises'
 import type { ConvertedPack } from '../convert'
 import { BOOKS, SRD_PACK_ID } from '../config/books'
 import { writeText } from '../lib/io'
@@ -53,7 +53,9 @@ export async function writeDataRepo(repo: string, packs: ConvertedPack[], output
   await writeText(join(repo, 'catalog.json'), `${JSON.stringify(catalog, null, 2)}\n`)
   await writeText(join(repo, 'NOTICE.md'), notice())
   await writeText(join(repo, 'README.md'), readme(packs))
-  void SRD_PACK_ID
+  // 同一个包只保留当前版本的文件（旧版本由已发布的标签保存）
+  const keep = new Set(packs.filter((p) => p.manifest.id !== SRD_PACK_ID).map((p) => `${p.manifest.id}-${p.manifest.version}.trpgpack`))
+  for (const name of await readdir(join(repo, 'packs', 'dnd5e2014'))) if (name.endsWith('.trpgpack') && !keep.has(name)) await rm(join(repo, 'packs', 'dnd5e2014', name))
 }
 
 function notice(): string {
@@ -66,7 +68,7 @@ function notice(): string {
 - 非 SRD 的官方内容版权归 Wizards of the Coast；本项目非商用，权利方要求时下架。
 - 中文译文来自 5etools 中文共库：标注「不全书」的译文按 GPL-3.0 使用；其余中文译文与机翻按 CC BY-NC-SA 4.0 使用。每个条目在 \`credit\` 中单独标明。
 - SRD 5.1 内容 © Wizards of the Coast，按 CC BY 4.0 使用。
-- 5etools 的英文原文与数据结构按 MIT 使用。
+- 5etools 的英文原文与数据结构按 MIT 使用。条目里的 \`i18n.en\`（英文对照）取自 5etools 英文原版数据，按条目与中文对齐；MIT 版权声明与许可文本见 \`LICENSES/MIT.txt\`。
 - Foundry dnd5e 6.1.0 的系统代码 MIT；其 SRD 5.1 结构化字段按 CC BY 4.0 使用，只采用 2014 目录。
 - 5e-bits/5e-database 与 Open5e 仅用于公开值对照，不导入文件。
 - 本项目原创的整理、摘要与结构化内容按 CC BY-NC-SA 4.0 使用。

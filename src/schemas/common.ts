@@ -8,7 +8,7 @@ export const FORMAT_VERSION = 2
 /** 读得懂的旧格式版本（formatVersion 1 的包在识别时转换）。 */
 export const LEGACY_FORMAT_VERSION = 1
 /** 本版本能读的条目数据版本（D1 dataVersion）。v1 包仍可安装，缺结构化字段的条目由规则引擎返回缺数据。 */
-export const SUPPORTED_DATA_VERSION = 2
+export const SUPPORTED_DATA_VERSION = 3
 
 export const idSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, '必须是小写字母、数字与短横线').max(64)
 /** 条目与内容项 id：允许点号分段，如 spell.fireball.phb。 */
