@@ -1,0 +1,47 @@
+import { readFileSync } from 'node:fs'
+import { J, CORE, parseLabel, rangeOf, normRaw } from './lib.mts'
+export interface Cand { origin: string; source: string; page?: number; name: string; heading?: string; chapter?: string; parentEntity?: any; expr?: string; modifierPrompt?: string; kind?: string; cols: string[]; rows: Array<{ min: number; max: number; cells: string[] }>; extra?: any }
+const S = '/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/'
+const cellText = (c: any): string => (typeof c === 'string' ? c : typeof c === 'number' ? String(c) : c && typeof c === 'object' ? (typeof c.entry === 'string' ? c.entry : JSON.stringify(c)) : '')
+const zero = (n: number, dice: string): number => (n === 0 ? parseLabel(dice)!.hi! : n)
+export function buildPool(): Cand[] {
+  const out: Cand[] = []
+  // E existing seeds
+  for (const t of JSON.parse(readFileSync(S + 'seeds.json', 'utf8'))) out.push({ origin: 'E', source: t.source, page: t.page, name: t.name, expr: t.seed.dice.replace(/^d/, '1d'), cols: t.seed.cols, rows: t.seed.rows.map((r: any) => ({ min: r.min, max: r.max, cells: r.cells })), extra: { id: t.id, parentKey: t.seed.parentKey, group: t.seed.group } })
+  // G gendata rollable
+  const g = J('generated/gendata-tables.json')
+  for (const t of g.table as any[]) {
+    if (!CORE.has(t.source)) continue
+    const L = parseLabel(t.colLabels?.[0]); if (!L) continue
+    const rows: Cand['rows'] = []; let bad = false
+    for (const r of t.rows) { if (!Array.isArray(r)) { bad = true; break }; const rg = rangeOf(r[0], L.hi!); if (!rg) { bad = true; break }; rows.push({ ...rg, cells: r.slice(1).map(cellText) }) }
+    if (bad) continue
+    out.push({ origin: 'G', source: t.source, page: t.page, name: t.name, heading: t.name, chapter: t.chapter?.name, parentEntity: t.parentEntity, expr: L.expr, modifierPrompt: L.modifierPrompt, kind: L.deck ? 'deck' : undefined, cols: (t.colLabels ?? []).slice(1).map(cellText), rows, extra: { caption: t.caption, srd: t.srd === true, reprintedAs: t.reprintedAs, groupless: true } })
+  }
+  // N names
+  for (const rec of J('names.json').name as any[]) {
+    if (!CORE.has(rec.source)) continue
+    for (const t of rec.tables) out.push({ origin: 'N', source: rec.source, page: rec.page, name: `${rec.name}·${t.option}`, expr: parseLabel(t.diceExpression)!.expr, cols: ['名字'], rows: t.table.map((r: any) => ({ min: zero(r.min, t.diceExpression), max: zero(r.max, t.diceExpression), cells: [r.result] })), extra: { race: rec.name, option: t.option } })
+  }
+  // V encounters
+  for (const rec of J('encounters.json').encounter as any[]) {
+    if (!CORE.has(rec.source)) continue
+    for (const t of rec.tables) out.push({ origin: 'V', source: rec.source, page: rec.page, name: `${rec.name}遭遇${t.minlvl != null ? `（等级 ${t.minlvl}—${t.maxlvl}）` : ''}`, expr: parseLabel(t.diceExpression)!.expr, cols: ['遭遇'], rows: t.table.map((r: any) => ({ min: zero(r.min, t.diceExpression), max: zero(r.max, t.diceExpression), cells: [r.result] })), extra: { env: rec.name, minlvl: t.minlvl, maxlvl: t.maxlvl } })
+  }
+  // L life
+  const life = J('life.json')
+  for (const c of life.lifeClass as any[]) {
+    out.push({ origin: 'L', source: 'XGE', name: `${c.name}·出身原因`, expr: `1d${c.reasons.length}`, cols: ['原因'], rows: c.reasons.map((s: string, i: number) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { cls: c.name, clsSource: c.source, kind: 'reasons' } })
+    for (const [k, list] of Object.entries(c.other ?? {}) as Array<[string, string[]]>) { const items = list[0] === 'none' ? list.slice(1) : list; out.push({ origin: 'L', source: 'XGE', name: `${c.name}·${k}`, expr: `1d${items.length}`, cols: [k], rows: items.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { cls: c.name, key: k, hadNone: list[0] === 'none' } }) }
+  }
+  for (const b of life.lifeBackground as any[]) out.push({ origin: 'L', source: 'XGE', name: `${b.name}·出身原因`, expr: `1d${b.reasons.length}`, cols: ['原因'], rows: b.reasons.map((s: string, i: number) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { bg: b.name, bgSource: b.source } })
+  out.push({ origin: 'L', source: 'PHB', name: '饰品', expr: '1d100', cols: ['饰品'], rows: (life.lifeTrinket as string[]).map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { kind: 'trinket' } })
+  // O gems / art
+  const loot = J('loot.json')
+  for (const [key, label] of [['gems', '宝石'], ['artObjects', '艺术品']] as const) for (const r of loot[key] as any[]) if (CORE.has(r.source)) out.push({ origin: 'O', source: r.source, page: r.page, name: r.name, expr: `1d${r.table.length}`, cols: [label], rows: r.table.map((s: string, i: number) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { type: r.type, key } })
+  return out
+}
+export function keyOf(c: Cand): string {
+  return JSON.stringify([c.expr, c.rows.map((r) => [r.min, r.max, r.cells.map(normRaw).join('|')])])
+}
+export function rangeKey(c: Cand): string { return JSON.stringify([c.source, c.page, c.expr, c.rows.map((r) => [r.min, r.max])]) }

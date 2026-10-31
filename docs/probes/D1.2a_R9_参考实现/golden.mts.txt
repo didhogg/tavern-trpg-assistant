@@ -1,0 +1,76 @@
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs'
+import { J, B, CORE, parseLabel, rangeOf, normRaw } from './lib.mts'
+const S = '/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/'
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+const cellText = (c: any): string => (typeof c === 'string' ? c : typeof c === 'number' ? String(c) : c && typeof c === 'object' ? (typeof c.entry === 'string' ? c.entry : JSON.stringify(c)) : '')
+const zero = (n: number, dice: string): number => (n === 0 ? parseLabel(dice)!.hi! : n)
+const planned: any[] = JSON.parse(readFileSync(S + 'planned.json', 'utf8'))
+const seeds: any[] = JSON.parse(readFileSync(S + 'seeds.json', 'utf8'))
+const body: any[] = JSON.parse(readFileSync(S + 'body.json', 'utf8'))
+// ---- 书籍章节表
+const chapters = new Map<string, Array<{ name: string; page: number }>>()
+for (const f of readdirSync(B + 'book').filter((x) => x.startsWith('book-'))) { const src = f.replace('book-', '').replace('.json', '').toUpperCase(); if (!CORE.has(src)) continue; const d = J('book/' + f).bookData[0]; chapters.set(src, d.data.filter((s: any) => s.type === 'section' && typeof s.page === 'number').map((s: any) => ({ name: String(s.name).replace(/^(第[一二三四五六七八九十百]+章|附录[A-Za-z]?)[：:]\s*/, ''), page: s.page }))) }
+const deriveChapter = (source: string, page?: number): string | undefined => { if (!page) return undefined; let pick: any; for (const c of chapters.get(source) ?? []) if (c.page <= page && (!pick || c.page >= pick.page)) pick = c; return pick?.name }
+// ---- 候选
+interface C { origin: string; source: string; page?: number; srd?: boolean; name: string; nameEn?: string; cap: string; expr?: string; modifierPrompt?: string; deck?: boolean; kind: string; cols: string[]; rows: Array<{ min: number; max: number; cells: string[] }>; parentId?: string; parentHint?: any; chapter?: string; oldId?: string; extra: any }
+const pool: C[] = []
+const entryById = new Map(planned.map((e) => [e.id, e]))
+// 旧 164 张：按 (entryId?) 对账——旧种子只有 parentKey，用 rows 内容与 body 候选对账
+const oldBySig = new Map<string, any>()
+for (const t of seeds) { const sig = JSON.stringify([t.source, t.seed.parentKey ?? t.id, t.seed.rows.map((r: any) => [r.min, r.max, r.cells])]); oldBySig.set(sig, t) }
+let matchedOld = 0
+for (const b of body) {
+  const parent = b.entryType === 'lore' ? undefined : b
+  const sig = JSON.stringify([b.source, `${b.source}|${b.entryName}`, b.rows.map((r: any) => [r.min, r.max, r.cells])])
+  const old = oldBySig.get(sig); if (old) matchedOld++
+  const nameEn = `${b.entryNameEn ?? b.entryName} ${b.caption ?? b.cols[0] ?? 'table'}`
+  pool.push({ origin: 'B', source: b.source, page: b.page, srd: b.srd, name: old ? old.name : (normRaw(b.caption ?? '') === normRaw(b.entryName) ? b.entryName : `${b.entryName}·${b.caption ?? b.cols[0] ?? '随机表'}`), nameEn, cap: normRaw(b.caption ?? b.cols[0] ?? ''), expr: b.expr, modifierPrompt: b.modifierPrompt, deck: b.deck, kind: b.deck ? 'deck' : 'roll', cols: b.cols, rows: b.rows, parentId: b.entryId, oldId: old?.id, extra: { entryType: b.entryType, blockIndex: b.blockIndex, where: b.where, footnotes: b.footnotes } })
+}
+console.log('body candidates', body.length, 'matched to old seeds', matchedOld)
+// X：旧的非正文种子（loot.json 17 张、tables.json）
+const bodyOldIds = new Set(pool.map((p) => p.oldId).filter(Boolean))
+for (const t of seeds) { if (bodyOldIds.has(t.id)) continue; const s = t.seed
+  pool.push({ origin: 'X', source: t.source, page: t.page, srd: s.srd, name: t.name, cap: normRaw(t.name.includes('·') ? t.name.slice(t.name.lastIndexOf('·') + 1) : t.name), expr: s.dice.replace(/^d/, '1d'), kind: s.group ? 'loot' : 'roll', cols: s.cols, rows: s.rows.map((r: any) => ({ min: r.min, max: r.max, cells: r.cells })), oldId: t.id, extra: { group: s.group, parentKey: s.parentKey } }) }
+console.log('old non-body', pool.filter((p) => p.origin === 'X').length)
+// G
+const g = J('generated/gendata-tables.json')
+const gCount = new Map<string, number>()
+const addG = (t: any, heading: string, grp?: any) => {
+  if (!CORE.has(t.source ?? grp?.source)) return
+  const src = t.source ?? grp.source
+  const L = parseLabel(t.colLabels?.[0]); if (!L) return
+  const rows: any[] = []; for (const r of t.rows) { if (!Array.isArray(r)) return; const rg = rangeOf(r[0], L.hi!); if (!rg) return; rows.push({ ...rg, cells: r.slice(1).map(cellText) }) }
+  const page = t.page ?? grp?.page
+  const key = `${src}|${page ?? 0}`; const n = (gCount.get(key) ?? 0) + 1; gCount.set(key, n)
+  const tail = heading.split('; ').pop()!
+  pool.push({ origin: grp ? 'GG' : 'G', source: src, page, srd: (t.srd ?? grp?.srd) === true, name: heading, cap: normRaw(t.caption ?? tail), expr: L.expr, modifierPrompt: L.modifierPrompt, deck: L.deck, kind: L.deck ? 'deck' : 'roll', cols: (t.colLabels ?? []).slice(1).map(cellText), rows, chapter: (t.chapter ?? grp?.chapter)?.name, parentHint: t.parentEntity ?? grp?.parentEntity, oldId: undefined, extra: { gid: `table.${src.toLowerCase()}-p${page ?? 0}-${n}`, footnotes: t.footnotes, reprintedAs: t.reprintedAs, lastCol: String((t.colLabels ?? []).slice(-1)[0]) } })
+}
+for (const t of g.table as any[]) addG(t, t.name.replace(/; /g, '·'))
+for (const grp of g.tableGroup as any[]) for (const t of grp.tables) addG({ ...t, source: grp.source }, `${String(grp.name).replace(/; /g, '·')}${t.caption && !String(grp.name).endsWith(t.caption) ? '·' + t.caption : ''}`, grp)
+console.log('G pool', pool.filter((p) => p.origin === 'G').length, 'GG', pool.filter((p) => p.origin === 'GG').length)
+// N 名字
+const RACE_PARENT: Record<string, string> = { 龙裔: 'dragonborn', 矮人: 'dwarf', 精灵: 'elf', 侏儒: 'gnome', 半兽人: 'half-orc', 半身人: 'halfling', 人类: 'human', 提夫林: 'tiefling' }
+for (const rec of J('names.json').name as any[]) { if (!CORE.has(rec.source)) continue; rec.tables.forEach((t: any, i: number) => pool.push({ origin: 'N', source: rec.source, page: rec.page, name: `${rec.name}名字·${t.option}`, nameEn: rec.ENG_name, cap: normRaw(`${rec.name}${t.option}`), expr: parseLabel(t.diceExpression)!.expr, kind: 'names', cols: ['名字'], rows: t.table.map((r: any) => ({ min: zero(r.min, t.diceExpression), max: zero(r.max, t.diceExpression), cells: [r.result] })), parentHint: { race: rec.name, raceEn: RACE_PARENT[rec.name] }, extra: { gid: `table.names-${slug(rec.ENG_name)}-${i + 1}.${rec.source.toLowerCase()}` } })) }
+// V 遭遇
+for (const rec of J('encounters.json').encounter as any[]) { if (!CORE.has(rec.source)) continue; rec.tables.forEach((t: any) => { const band = t.minlvl != null ? `（等级 ${t.minlvl}—${t.maxlvl}）` : ''; pool.push({ origin: 'V', source: rec.source, page: rec.page, name: `${rec.name}遭遇${band}`, cap: normRaw(rec.name + band), expr: parseLabel(t.diceExpression)!.expr, kind: 'encounter', cols: ['遭遇'], rows: t.table.map((r: any) => ({ min: zero(r.min, t.diceExpression), max: zero(r.max, t.diceExpression), cells: [r.result] })), extra: { gid: `table.encounter-${slug(rec.ENG_name)}${t.minlvl != null ? `-${t.minlvl}-${t.maxlvl}` : ''}.${rec.source.toLowerCase()}` } }) }) }
+// L 生活
+const QUIRK_ZH: Record<string, string> = { 'Personal Totems': '个人图腾', Tattoo: '纹身', Superstitions: '迷信', 'Defining Work': '代表作', Instrument: '乐器', Embarrassment: '糗事', Temple: '神庙', Keepsake: '纪念物', Secret: '秘密', 'Treasured Item': '珍视之物', 'Guiding Aspect': '指引之相', Mentor: '导师', 'Heraldic Sign': '纹章标志', Instructor: '教官', 'Signature Style': '招牌风格', Monastery: '修道院', 'Monastic Icon': '修道象征', Master: '师父', 'Personal Goal': '个人目标', Symbol: '象征', Nemesis: '宿敌', Temptation: '诱惑', 'World View': '世界观', Homeland: '家乡', 'Sworn Enemy': '宿敌', 'Guilty Pleasure': '沉溺之乐', Adversaries: '对头', Benefactor: '恩主', 'Arcane Origin': '神秘起源', Reaction: '反应', 'Supernatural Mark': '超自然标记', 'Sign of Sorcery': '魔法迹象', 'Patron Attitude': '庇护人态度', 'Special Terms': '特别条款', 'Binding Mark': '契约印记', Spellbook: '法术书', Ambition: '野心', Eccentricity: '怪癖' }
+const life = J('life.json')
+for (const c of life.lifeClass as any[]) {
+  pool.push({ origin: 'L', source: 'XGE', name: `${c.name}·成为${c.name}的原因`, cap: normRaw(c.name), expr: `1d${c.reasons.length}`, kind: 'life', cols: ['原因'], rows: c.reasons.map((s: string, i: number) => ({ min: i + 1, max: i + 1, cells: [s] })), parentHint: { cls: c.name, clsEn: c.ENG_name }, extra: { gid: `table.life-class-${slug(c.ENG_name)}-reasons.xge` } })
+  if (false) for (const [k, list] of Object.entries(c.other ?? {}) as Array<[string, string[]]>) { const items = list[0] === 'none' ? list.slice(1) : list; if (!QUIRK_ZH[k]) throw new Error('缺中文名 ' + k); pool.push({ origin: 'L', source: 'XGE', name: `${c.name}·${QUIRK_ZH[k]}`, cap: normRaw(`${c.name}${QUIRK_ZH[k]}`), expr: `1d${items.length}`, kind: 'life', cols: [QUIRK_ZH[k]], rows: items.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), parentHint: { cls: c.name, clsEn: c.ENG_name }, extra: { gid: `table.life-class-${slug(c.ENG_name)}-${slug(k)}.xge`, hadNone: list[0] === 'none' } }) }
+}
+for (const b of life.lifeBackground as any[]) pool.push({ origin: 'L', source: 'XGE', name: `${b.name}·成为${b.name}的原因`, cap: normRaw(b.name.replace(/[（(][^）)]*[）)]$/, '')), expr: `1d${b.reasons.length}`, kind: 'life', cols: ['原因'], rows: b.reasons.map((s: string, i: number) => ({ min: i + 1, max: i + 1, cells: [s] })), parentHint: { bg: b.name, bgEn: b.ENG_name }, extra: { gid: `table.life-background-${slug(b.ENG_name)}-reasons.xge` } })
+pool.push({ origin: 'L', source: 'PHB', page: 160, name: '饰品', cap: normRaw('饰品'), expr: '1d100', kind: 'roll', cols: ['饰品'], rows: (life.lifeTrinket as string[]).map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { gid: 'table.trinkets.phb' } })
+// O 宝石/艺术品
+for (const [key, label] of [['gems', '宝石'], ['artObjects', '艺术品']] as const) for (const r of J('loot.json')[key] as any[]) if (CORE.has(r.source)) pool.push({ origin: 'O', source: r.source, page: r.page, srd: r.srd === true, name: r.name, cap: normRaw(r.name), expr: `1d${r.table.length}`, kind: 'loot', cols: [label], rows: r.table.map((s: string, i: number) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { gid: `table.${slug(r.ENG_name)}.${r.source.toLowerCase()}` } })
+// M 挑战等级
+const cr = J('msbcr.json').cr as any[]
+pool.push({ origin: 'M', source: 'DMG', page: 274, name: '按挑战等级的怪物数值', cap: normRaw('按挑战等级的怪物数值'), kind: 'cr', cols: ['熟练加值', 'AC', '生命值', '攻击加值', '伤害（每轮）', '豁免DC'], rows: cr.map((r, i) => ({ min: i + 1, max: i + 1, cells: [String(r._cr), String(r.pb), String(r.ac), `${r.hpMin}—${r.hpMax}`, `+${r.attackBonus}`, `${r.dprMin}—${r.dprMax}`, String(r.saveDc)] })), extra: { gid: 'table.monster-statistics-by-challenge-rating.dmg' } })
+// D 牌组
+const decks = J('decks.json'); const cardsBy = new Map<string, any>(); for (const c of decks.card as any[]) { cardsBy.set(`${c.name}|${c.set}`, c); for (const a of c.alias ?? []) cardsBy.set(`${a}|${c.set}`, c) }
+const uidOf = (u: any): string => (typeof u === 'string' ? u : String(u.uid))
+for (const d of decks.deck as any[]) { if (!CORE.has(d.source)) continue; const cards: string[] = (d.cards ?? []).map(uidOf); const key = (u: string) => u.split('|').slice(0, 2).join('|'); pool.push({ origin: 'D', source: d.source, page: d.page, srd: d.srd === true, name: `${d.name}·牌组内容`, nameEn: d.ENG_name, cap: normRaw(d.name), expr: `1d${cards.length}`, kind: 'deck', cols: ['牌', '效果'], rows: cards.map((u, i) => ({ min: i + 1, max: i + 1, cells: [u.split('|')[0], (cardsBy.get(key(u))?.entries ?? []).map((x: any) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' ')] })), parentHint: { deckName: d.name }, extra: { gid: `table.cards-${slug(d.ENG_name)}${d._copy ? '-13' : ''}.${d.source.toLowerCase()}`, copy: !!d._copy, cardsMissing: cards.filter((u) => !cardsBy.has(key(u))).length, reprintedAs: d.reprintedAs } }) }
+console.log('deck cards missing', pool.filter((p) => p.origin === 'D').map((p) => [p.name, p.extra.cardsMissing]))
+console.log('origins', Object.entries(pool.reduce((m: any, c) => { m[c.origin] = (m[c.origin] ?? 0) + 1; return m }, {})))
+writeFileSync(S + 'pool_all.json', JSON.stringify(pool))

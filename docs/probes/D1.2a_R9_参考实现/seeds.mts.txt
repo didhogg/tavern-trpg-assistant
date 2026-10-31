@@ -1,0 +1,13 @@
+import { writeFileSync } from 'node:fs'
+import { loadRawData, expandItemEntries } from '/Users/xxx/tavern-trpg-assistant/tools/data/extract/load'
+import { expandMagicVariants, mergeItemLists } from '/Users/xxx/tavern-trpg-assistant/tools/data/convert/items'
+import { planAll } from '/Users/xxx/tavern-trpg-assistant/tools/data/convert/plan'
+const data = await loadRawData()
+const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants, foundryVariants: data.foundryVariants })
+const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
+const plan = planAll(data, items)
+const tabs = plan.tables.map((e: any) => ({ id: e.id, name: e.name, source: e.source, page: e.page, seed: e.raw.__seed }))
+writeFileSync('/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/seeds.json', JSON.stringify(tabs))
+writeFileSync('/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/planned.json', JSON.stringify(plan.entries.map((e: any) => ({ id: e.id, type: e.type, source: e.source, name: e.name, nameEn: e.nameEn, page: e.page, srd: e.srd }))))
+console.log('tables', tabs.length, 'seeds with parentKey', tabs.filter((t: any) => t.seed.parentKey).length, 'with group', tabs.filter((t: any) => t.seed.group).length)
+console.log('data.tables', data.tables.length, 'data.loot', data.loot.length, JSON.stringify([...new Set(data.loot.map((x: any) => x._lootCategory))]))

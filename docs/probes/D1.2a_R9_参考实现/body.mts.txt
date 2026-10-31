@@ -1,0 +1,41 @@
+// 原型：从 planAll 的条目原文里抽出全部可掷正文表（新标签解析），与旧 164 张对账
+import { writeFileSync } from 'node:fs'
+import { loadRawData, expandItemEntries } from '/Users/xxx/tavern-trpg-assistant/tools/data/extract/load'
+import { expandMagicVariants, mergeItemLists } from '/Users/xxx/tavern-trpg-assistant/tools/data/convert/items'
+import { planAll } from '/Users/xxx/tavern-trpg-assistant/tools/data/convert/plan'
+import { parseLabel, rangeOf } from './lib.mts'
+const S = '/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/'
+const data = await loadRawData()
+const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants, foundryVariants: data.foundryVariants })
+const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
+const plan = planAll(data, items)
+const cellText = (c: any): string => (typeof c === 'string' ? c : typeof c === 'number' ? String(c) : c && typeof c === 'object' ? (typeof c.entry === 'string' ? c.entry : JSON.stringify(c)) : '')
+const out: any[] = []; const stats = { tableBlocks: 0, rollable: 0, rowFail: 0, nonRoll: 0, groupBlocks: 0 }
+const nonRollSamples: string[] = []; const failSamples: string[] = []
+const TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'rule', 'lore'])
+for (const e of plan.entries as any[]) {
+  if (!TYPES.has(e.type)) continue
+  let idx = 0
+  const walk = (o: any, where: string) => {
+    if (Array.isArray(o)) { o.forEach((x) => walk(x, where)); return }
+    if (!o || typeof o !== 'object') return
+    if (o.type === 'tableGroup') stats.groupBlocks++
+    if (o.type === 'table') {
+      stats.tableBlocks++; const my = idx++
+      const L = parseLabel(o.colLabels?.[0])
+      if (!L) { stats.nonRoll++; if (nonRollSamples.length < 8) nonRollSamples.push(`${e.type}:${e.id} ${JSON.stringify(o.colLabels?.[0])}`) }
+      else {
+        const rows: any[] = []; let bad = false
+        for (const r of o.rows ?? []) { if (!Array.isArray(r)) { bad = true; break } const rg = rangeOf(r[0], L.hi!); if (!rg) { bad = true; break } rows.push({ ...rg, cells: r.slice(1).map(cellText) }) }
+        if (bad || !rows.length) { stats.rowFail++; if (failSamples.length < 8) failSamples.push(`${e.type}:${e.id} cap=${o.caption}`) }
+        else { stats.rollable++; out.push({ entryId: e.id, entryType: e.type, entryName: e.name, entryNameEn: e.nameEn, source: e.source, page: e.page, srd: e.raw.srd === true, where, blockIndex: my, caption: o.caption, label: String(o.colLabels?.[0]), expr: L.expr, modifierPrompt: L.modifierPrompt, deck: L.deck, cols: (o.colLabels ?? []).slice(1).map(cellText), rows, footnotes: o.footnotes }) }
+      }
+    }
+    for (const [k, v] of Object.entries(o)) { if (k === 'rows' || k === 'colLabels') continue; walk(v, where) }
+  }
+  walk(e.raw.entries, 'entries'); walk(e.raw._lore, '_lore')
+}
+console.log(stats, 'candidates', out.length)
+console.log('non-roll samples', nonRollSamples); console.log('rowFail samples', failSamples)
+const byType: Record<string, number> = {}; for (const c of out) byType[c.entryType] = (byType[c.entryType] ?? 0) + 1; console.log(byType)
+writeFileSync(S + 'body.json', JSON.stringify(out))

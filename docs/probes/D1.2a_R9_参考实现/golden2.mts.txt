@@ -1,0 +1,110 @@
+import { readFileSync, writeFileSync } from 'node:fs'
+import { normRaw } from './lib.mts'
+const S = '/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/'
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+const pool: any[] = JSON.parse(readFileSync(S + 'pool_all.json', 'utf8'))
+const planned: any[] = JSON.parse(readFileSync(S + 'planned.json', 'utf8'))
+const byId = new Map(planned.map((e) => [e.id, e]))
+const PRI: Record<string, number> = { X: 0, B: 1, N: 2, V: 3, L: 4, D: 5, O: 6, M: 7, GG: 8, G: 9 }
+pool.forEach((c, i) => (c.i = i))
+const rk = (c: any) => JSON.stringify([c.expr ?? null, c.rows.map((r: any) => [r.min, r.max])])
+const hk = (c: any) => JSON.stringify(c.rows.map((r: any) => r.cells.map(normRaw).join('|')))
+const sim = (A: any, B: any) => { let eq = 0; for (let k = 0; k < A.rows.length; k++) if (A.rows[k].cells.map(normRaw).join('|') === B.rows[k].cells.map(normRaw).join('|')) eq++; return eq / A.rows.length }
+const band = (n: string): string | undefined => { const m = /(\d+)\s*[~—\-–]\s*(\d+)/.exec(n); if (m) return `${m[1]}-${m[2]}`; const p = /(\d+)\s*\+/.exec(n); return p ? `${p[1]}+` : undefined }
+const lootKind = (n: string) => (/个人宝藏|个体宝藏/.test(n) ? 'ind' : /宝藏堆|库藏宝藏/.test(n) ? 'hoard' : undefined)
+const parent = pool.map((_, i) => i); const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])))
+const union = (a: number, b: number) => { parent[find(a)] = find(b) }
+const reason = new Map<string, string>()
+const groupsByRk = new Map<string, number[]>(); pool.forEach((c, i) => { if (!c.expr) return; const k = rk(c); groupsByRk.set(k, [...(groupsByRk.get(k) ?? []), i]) })
+for (const idxs of groupsByRk.values()) for (let a = 0; a < idxs.length; a++) for (let b = a + 1; b < idxs.length; b++) {
+  const A = pool[idxs[a]], Bc = pool[idxs[b]]
+  if (A.source !== Bc.source && A.origin !== 'L' && Bc.origin !== 'L') continue
+  let why = ''
+  if (hk(A) === hk(Bc)) why = '内容完全相同'
+  else if (sim(A, Bc) >= 0.8) why = '80% 以上行相同'
+  else if (A.cap === Bc.cap && sim(A, Bc) >= 0.6) why = '同名且 60% 以上行相同'
+  else if (A.cap === Bc.cap && (A.origin === 'B') !== (Bc.origin === 'B') && A.page != null && Bc.page != null && Math.abs(A.page - Bc.page) <= 1) why = '同名且页码相差不超过 1'
+  else if (((A.origin === 'L' && (Bc.origin === 'GG' || Bc.origin === 'G')) || (Bc.origin === 'L' && (A.origin === 'GG' || A.origin === 'G'))) && A.cap === Bc.cap) why = '出身原因表按职业或背景名配对'
+  else if (A.origin === 'X' && A.kind === 'loot' && (Bc.origin === 'G' || Bc.origin === 'GG') && lootKind(A.name) && lootKind(A.name) === lootKind(Bc.name) && band(A.name) && band(A.name) === band(Bc.name)) why = '宝藏表按挑战等级配对'
+  else if (Bc.origin === 'X' && Bc.kind === 'loot' && (A.origin === 'G' || A.origin === 'GG') && lootKind(Bc.name) && lootKind(Bc.name) === lootKind(A.name) && band(Bc.name) && band(Bc.name) === band(A.name)) why = '宝藏表按挑战等级配对'
+  if (why) { union(idxs[a], idxs[b]); reason.set(`${idxs[a]}-${idxs[b]}`, why) }
+}
+const groups = new Map<number, number[]>(); pool.forEach((_, i) => { const r = find(i); groups.set(r, [...(groups.get(r) ?? []), i]) })
+const survivors: any[] = []; const dropped: any[] = []
+for (const g of groups.values()) {
+  const members = g.map((i) => pool[i]).sort((a, b) => PRI[a.origin] - PRI[b.origin] || a.i - b.i)
+  const s = members[0]; s.merged = members.slice(1).map((m) => ({ origin: m.origin, name: m.name, oldId: m.oldId, source: m.source, page: m.page }))
+  if (!s.chapter) s.chapter = members.find((m) => m.chapter)?.chapter
+  s.footnotes = s.extra?.footnotes ?? members.find((m) => m.extra?.footnotes)?.extra?.footnotes
+  const kinds = new Set(members.map((m) => m.kind)); s.kind = ['loot', 'names', 'encounter', 'life', 'deck', 'cr'].find((k) => kinds.has(k)) ?? 'roll'
+  s.parentHints = members.map((m) => m.parentHint).filter(Boolean)
+  survivors.push(s); for (const m of members.slice(1)) dropped.push({ ...m, survivorIndex: s.i })
+}
+// ---- 父级
+const RACE = new Map(planned.filter((e) => e.type === 'race').map((e) => [e.id, e]))
+const findOne = (type: string, name: string, source?: string) => { const l = planned.filter((e) => e.type === type && e.name === name); return (source ? l.find((e) => e.source === source) : undefined) ?? l.sort((a, b) => (a.source === 'PHB' ? -1 : 0) - (b.source === 'PHB' ? -1 : 0))[0] }
+const stripParen = (n: string) => n.replace(/[（(][^）)]*[）)]$/, '')
+for (const s of survivors) {
+  s.parent = undefined
+  if (s.origin === 'B') s.parent = s.parentId.startsWith('lore.') ? s.parentId.slice(5) : s.parentId
+  for (const h of s.parentHints ?? []) {
+    if (s.parent) break
+    let e: any
+    if (h.prop) { const type = h.prop === 'variantrule' ? 'rule' : h.prop; const name = String(h.uid).split('|')[0]; const src = String(h.uid).split('|').pop(); e = findOne(type, name, /^[A-Z]+$/.test(src!) ? src : undefined) }
+    else if (h.raceEn) e = RACE.get(`race.${h.raceEn}.phb`)
+    else if (h.cls) e = findOne('class', h.cls, 'PHB')
+    else if (h.bg) e = findOne('background', stripParen(h.bg), 'PHB')
+    else if (h.deckName) e = findOne('item', stripParen(h.deckName), s.source) ?? findOne('item', stripParen(h.deckName))
+    if (e) s.parent = e.id
+  }
+}
+// ---- 名称、编号
+const taken = new Set<string>(survivors.filter((s) => s.oldId).map((s) => s.oldId)); const usedNames = new Map<string, number>()
+for (const d of dropped) if (d.oldId) taken.add(d.oldId)
+for (const s of survivors) {
+  if (s.oldId) { s.id = s.oldId; continue }
+  if (s.extra?.gid) { s.id = s.extra.gid; continue }
+  const base = `table.${slug(s.nameEn ? s.nameEn.split(' ')[0] === '' ? 'x' : s.nameEn.slice(0, s.nameEn.lastIndexOf(' ')) : s.name)}.${s.source.toLowerCase()}`
+  s.id = base
+}
+// 新 B 的 id：按父级英文名，依次占位
+for (const s of survivors) if (!s.oldId && s.origin === 'B') {
+  const pe = byId.get(s.parent!); const en = slug(String(pe?.nameEn ?? s.name)); const base = `table.${en}.${s.source.toLowerCase()}`
+  let id = base, n = 2; while (taken.has(id)) id = `${base}-${n++}`; taken.add(id); s.id = id
+}
+for (const s of survivors) if (s.origin === 'G' || s.origin === 'GG') {
+  // G 名称：有父级则「父级·表名」
+  const pe = s.parent ? byId.get(s.parent) : undefined
+  if (pe) { const tail = s.name.split('·').pop()!; s.name = normRaw(tail) === normRaw(pe.name) ? pe.name : `${pe.name}·${tail}` }
+}
+for (const s of survivors) { const parts = s.name.split('·'); if (parts.length === 2 && parts[0] === parts[1]) s.name = parts[0] }
+// ---- kind 补充（G）
+for (const s of survivors) if (s.kind === 'roll') {
+  if (s.origin.startsWith('G') && /名字|姓名/.test(s.name) && !s.parent) s.kind = 'names'
+  else if (s.origin.startsWith('G') && /遭遇/.test(s.name)) s.kind = 'encounter'
+  else if (s.source === 'XGE' && s.chapter === '角色选项' && s.page >= 62 && s.page <= 73) s.kind = 'life'
+}
+// ---- 章节：无父级才写
+const book = JSON.parse(readFileSync(S + 'chapters.json', 'utf8').toString())
+for (const s of survivors) { if (s.parent) { s.chapter = undefined; continue } if (!s.chapter) s.chapter = book[s.source] ? (() => { let pick: any; for (const c of book[s.source]) if (s.page && c.page <= s.page && (!pick || c.page >= pick.page)) pick = c; return pick?.name })() : undefined }
+// ---- 重名
+const nameKey = (s: any) => `${s.source}|${s.name}`
+const nm = new Map<string, any[]>(); for (const s of survivors) nm.set(nameKey(s), [...(nm.get(nameKey(s)) ?? []), s])
+const dupNames = [...nm.values()].filter((l) => l.length > 1)
+// ---- 统计
+const stat = (f: (s: any) => string) => { const m: any = {}; for (const s of survivors) { const k = f(s); m[k] = (m[k] ?? 0) + 1 } return m }
+console.log('pool', pool.length, 'survivors', survivors.length, 'dropped', dropped.length)
+console.log('by origin', stat((s) => s.origin)); console.log('by kind', stat((s) => s.kind)); console.log('by source', stat((s) => s.source))
+console.log('no parent & no chapter', survivors.filter((s) => !s.parent && !s.chapter).map((s) => `${s.origin}:${s.source}:${s.name}(p${s.page})`))
+console.log('parent', survivors.filter((s) => s.parent).length, 'chapter', survivors.filter((s) => s.chapter).length)
+console.log('duplicate names (same source)', dupNames.length, dupNames.slice(0, 20).map((l) => l.map((s) => `${s.origin}:${s.name}`).join(' | ')))
+const ids = new Map<string, number>(); for (const s of survivors) ids.set(s.id, (ids.get(s.id) ?? 0) + 1); console.log('duplicate ids', [...ids].filter(([, n]) => n > 1))
+const oldIds = JSON.parse(readFileSync(S + 'seeds.json', 'utf8')).map((t: any) => t.id)
+const surv = new Set(survivors.map((s) => s.id)); const redirects = dropped.filter((d) => d.oldId).map((d) => [d.oldId, survivors.find((s) => s.i === d.survivorIndex)?.id])
+console.log('old ids kept', oldIds.filter((i: string) => surv.has(i)).length, 'old ids dropped->redirect', redirects.length, 'old ids lost without redirect', oldIds.filter((i: string) => !surv.has(i) && !redirects.some((r: any) => r[0] === i)).length)
+const survOf = (i: number) => survivors.find((s) => s.i === i)
+const replacements = pool.filter((c) => c.origin === 'B').map((c) => ({ entryId: c.parentId, where: c.extra.where, blockIndex: c.extra.blockIndex, tableId: (survivors.find((s) => s.i === c.i) ?? survOf(dropped.find((d) => d.i === c.i)!.survivorIndex))!.id }))
+console.log('replacements', replacements.length, 'srd survivors', survivors.filter((s) => s.srd).length, 'by srd/source', JSON.stringify(survivors.filter((s) => s.srd).reduce((m: any, s) => { m[s.source] = (m[s.source] ?? 0) + 1; return m }, {})))
+console.log('dropped by reason origin', JSON.stringify(dropped.reduce((m: any, d) => { m[d.origin] = (m[d.origin] ?? 0) + 1; return m }, {})))
+writeFileSync(S + 'replacements.json', JSON.stringify(replacements))
+writeFileSync(S + 'golden.json', JSON.stringify({ survivors: survivors.map((s) => ({ id: s.id, name: s.name, kind: s.kind, source: s.source, srd: !!s.srd, dice: s.expr ?? null, modifierPrompt: s.modifierPrompt ?? null, rows: s.rows.length, parent: s.parent ?? null, chapter: s.chapter ?? null, origin: s.origin, page: s.page ?? null, oldId: s.oldId ?? null, merged: s.merged })), redirects, dropped: dropped.map((d) => ({ origin: d.origin, name: d.name, source: d.source, oldId: d.oldId ?? null, survivor: survivors.find((s) => s.i === d.survivorIndex)?.id })) }, null, 1))
