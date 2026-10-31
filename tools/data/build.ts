@@ -66,7 +66,7 @@ async function main(): Promise<void> {
   const r9 = planR9(plan, { includeRef: true, replace: true }, data.legendaryGroups, new Set(r11.entries.map((e) => e.id)))
   plan.tables = r9.tables
   const books = await loadBookData()
-  const r12 = planR12({ books, fluff: data.fluff ?? [], r9, existing: plan.entries, options: { embeds: false, tables: false } })
+  const r12 = planR12({ books, fluff: data.fluff ?? [], r9, existing: plan.entries, options: { embeds: true, tables: false } })
   plan.entries.push(...r12.entries)
   console.log(`书籍章节：${r12.stats.chapters}（R12）`)
   console.log(`载具 fluff 挂上：${attachVehicleFluff(data.fluff ?? [], r11.entries, plan.unmatchedFluff)}`)

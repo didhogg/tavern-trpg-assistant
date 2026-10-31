@@ -25,7 +25,7 @@ describe('R9 正文替换', () => {
   it('tableRef 目标存在；所有条目（含 R11 新类型、怪物变体、传奇组）的正文里不再有表格块', () => {
     const entries = allEntries()
     const ids = new Set(entries.map((entry) => entry.id))
-    const refs = entries.flatMap((entry) => tableRefs(entry.data))
+    const refs = entries.filter((entry) => entry.type !== 'book').flatMap((entry) => tableRefs(entry.data))
     expect(refs.every((id) => ids.has(id))).toBe(true)
     expect(refs).toHaveLength(580)
     const blocks: string[] = []

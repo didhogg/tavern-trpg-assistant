@@ -18,6 +18,19 @@ function textOf(block: TextBlock): string {
 function extra(input: Raw, ctx: InlineContext, options: BlockOptions): TextBlock[] | undefined {
   const type = str(input.type)
   const name = str(input.name)
+  if (type === 'bookRefList') {
+    const items = Array.isArray(input.items) ? input.items : []
+    return [{ list: items.map((item) => {
+      const row = item && typeof item === 'object' ? item as Raw : {}
+      const tag = str(row.tag), name = str(row.name), en = str(row.nameEn), source = str(row.source), display = name
+      const sourcePart = source || ''
+      const attempts = [`{@${tag} ${name}|${sourcePart}|${display}}`, ...(en ? [`{@${tag} ${en}|${sourcePart}|${display}}`] : [])]
+      if (tag === 'race') { const m = /^(.*?) \((.*)\)$/.exec(en); if (m) attempts.push(`{@subrace ${m[2]} ${m[1]}|${sourcePart}|${display}}`) }
+      if (tag === 'deity') attempts.unshift(`{@deity ${name}||${sourcePart}|${display}}`)
+      for (const text of attempts) { const rendered = renderInline(text, ctx); if (rendered.includes('{{ref:')) return rendered }
+      return display
+    }) }]
+  }
   if (type === 'statblock' || type === 'table' || type === 'tableGroup') return []
   if (type === 'image' || type === 'internal' || type === 'gallery' || type === 'square' || type === 'none' || type === 'hr') return []
   if (type === 'quote') {
