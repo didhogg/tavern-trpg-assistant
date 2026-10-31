@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs'
-import { J, B, CORE, parseLabel, rangeOf, normRaw } from './lib.mts'
+import { J, B, CORE, parseLabel, rangeOf, normRaw, refRows, refCell } from './lib.mts'
 const S = '/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/'
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 const cellText = (c: any): string => (typeof c === 'string' ? c : typeof c === 'number' ? String(c) : c && typeof c === 'object' ? (typeof c.entry === 'string' ? c.entry : JSON.stringify(c)) : '')
@@ -20,6 +20,12 @@ const oldBySig = new Map<string, any>()
 for (const t of seeds) { const sig = JSON.stringify([t.source, t.seed.parentKey ?? t.id, t.seed.rows.map((r: any) => [r.min, r.max, r.cells])]); oldBySig.set(sig, t) }
 let matchedOld = 0
 for (const b of body) {
+  if (b.ref) {
+    const nameEn = `${b.entryNameEn ?? b.entryName} ${b.caption ?? b.cols[0] ?? 'table'}`
+    const bn = b.caption ?? b.cols[0] ?? '对照表'
+    pool.push({ origin: 'B', ref: true, source: b.source, page: b.page, srd: b.srd, name: normRaw(bn) === normRaw(b.entryName) ? b.entryName : `${b.entryName}·${bn}`, nameEn, cap: normRaw(bn), kind: 'ref', cols: b.cols, rows: b.rows, parentId: b.entryId, extra: { entryType: b.entryType, blockIndex: b.blockIndex, where: b.where, footnotes: b.footnotes } })
+    continue
+  }
   const parent = b.entryType === 'lore' ? undefined : b
   const sig = JSON.stringify([b.source, `${b.source}|${b.entryName}`, b.rows.map((r: any) => [r.min, r.max, r.cells])])
   const old = oldBySig.get(sig); if (old) matchedOld++
@@ -47,6 +53,26 @@ const addG = (t: any, heading: string, grp?: any) => {
 }
 for (const t of g.table as any[]) addG(t, t.name.replace(/; /g, '·'))
 for (const grp of g.tableGroup as any[]) for (const t of grp.tables) addG({ ...t, source: grp.source }, `${String(grp.name).replace(/; /g, '·')}${t.caption && !String(grp.name).endsWith(t.caption) ? '·' + t.caption : ''}`, grp)
+const gRefCount = new Map<string, number>()
+const addGRef = (t: any, heading: string, grp?: any) => {
+  const src = t.source ?? grp.source; if (!CORE.has(src)) return
+  const page = t.page ?? grp?.page
+  const key = `${src}|${page ?? 0}`; const n = (gRefCount.get(key) ?? 0) + 1; gRefCount.set(key, n)
+  const tail = heading.split('·').pop()!
+  const cols = (t.colLabels ?? []).map(refCell); const rows = refRows(t.rows)
+  const width = Math.max(...rows.map((r) => r.cells.length)); while (cols.length < width) cols.push(`第${cols.length + 1}列`)
+  pool.push({ origin: grp ? 'GG' : 'G', ref: true, source: src, page, srd: (t.srd ?? grp?.srd) === true, name: heading, cap: normRaw(t.caption ?? tail), kind: 'ref', cols, rows, chapter: (t.chapter ?? grp?.chapter)?.name, parentHint: t.parentEntity ?? grp?.parentEntity, extra: { gid: `table.${src.toLowerCase()}-p${page ?? 0}-r${n}`, footnotes: t.footnotes } })
+}
+for (const t of g.table as any[]) if (CORE.has(t.source) && !parseLabel(t.colLabels?.[0])) addGRef(t, t.name.replace(/; /g, '·'))
+for (const grp of g.tableGroup as any[]) if (CORE.has(grp.source)) {
+  const gname = String(grp.name).replace(/; /g, '·'); const mem = grp.tables.filter((t: any) => !parseLabel(t.colLabels?.[0])); const used = new Set<string>()
+  mem.forEach((t: any, k: number) => {
+    let nm: string
+    if (t.caption) nm = gname.endsWith(t.caption) ? gname : `${gname}·${t.caption}`
+    else { const cands = [refCell((t.colLabels ?? [])[0] ?? ''), refCell((t.colLabels ?? []).slice(-1)[0] ?? ''), `第${k + 1}张`].filter(Boolean); nm = gname; for (const c of cands) { const trial = `${gname}·${c}`; if (!used.has(trial) && trial !== gname) { nm = trial; break } } }
+    used.add(nm); addGRef({ ...t, source: grp.source }, nm, grp)
+  })
+}
 console.log('G pool', pool.filter((p) => p.origin === 'G').length, 'GG', pool.filter((p) => p.origin === 'GG').length)
 // N 名字
 const RACE_PARENT: Record<string, string> = { 龙裔: 'dragonborn', 矮人: 'dwarf', 精灵: 'elf', 侏儒: 'gnome', 半兽人: 'half-orc', 半身人: 'halfling', 人类: 'human', 提夫林: 'tiefling' }
@@ -66,7 +92,7 @@ pool.push({ origin: 'L', source: 'PHB', page: 160, name: '饰品', cap: normRaw(
 for (const [key, label] of [['gems', '宝石'], ['artObjects', '艺术品']] as const) for (const r of J('loot.json')[key] as any[]) if (CORE.has(r.source)) pool.push({ origin: 'O', source: r.source, page: r.page, srd: r.srd === true, name: r.name, cap: normRaw(r.name), expr: `1d${r.table.length}`, kind: 'loot', cols: [label], rows: r.table.map((s: string, i: number) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { gid: `table.${slug(r.ENG_name)}.${r.source.toLowerCase()}` } })
 // M 挑战等级
 const cr = J('msbcr.json').cr as any[]
-pool.push({ origin: 'M', source: 'DMG', page: 274, name: '按挑战等级的怪物数值', cap: normRaw('按挑战等级的怪物数值'), kind: 'cr', cols: ['熟练加值', 'AC', '生命值', '攻击加值', '伤害（每轮）', '豁免DC'], rows: cr.map((r, i) => ({ min: i + 1, max: i + 1, cells: [String(r._cr), String(r.pb), String(r.ac), `${r.hpMin}—${r.hpMax}`, `+${r.attackBonus}`, `${r.dprMin}—${r.dprMax}`, String(r.saveDc)] })), extra: { gid: 'table.monster-statistics-by-challenge-rating.dmg' } })
+pool.push({ origin: 'M', ref: true, source: 'DMG', page: 274, name: '按挑战等级的怪物数值', cap: normRaw('按挑战等级的怪物数值'), kind: 'ref', cols: ['挑战等级', '熟练加值', '护甲等级', '生命值', '攻击加值', '伤害（每轮）', '豁免DC'], rows: cr.map((r) => ({ cells: [String(r._cr), `+${r.pb}`, String(r.ac), `${r.hpMin}—${r.hpMax}`, `+${r.attackBonus}`, `${r.dprMin}—${r.dprMax}`, String(r.saveDc)] })), extra: { gid: 'table.monster-statistics-by-challenge-rating.dmg', crRaw: cr } })
 // D 牌组
 const decks = J('decks.json'); const cardsBy = new Map<string, any>(); for (const c of decks.card as any[]) { cardsBy.set(`${c.name}|${c.set}`, c); for (const a of c.alias ?? []) cardsBy.set(`${a}|${c.set}`, c) }
 const uidOf = (u: any): string => (typeof u === 'string' ? u : String(u.uid))

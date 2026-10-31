@@ -1,0 +1,32 @@
+import { readFileSync } from 'node:fs'
+const S = '/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/'
+const kt = JSON.parse(readFileSync(S + 'keytables.json', 'utf8')).tables as any[]
+const by = (p: string) => kt.find((t) => t.purpose === p)
+const fc = readFileSync('/Users/xxx/tavern-trpg-assistant/reference/dnd5e-6.1.x（开源VTT）/module/config.mjs', 'utf8')
+const arr = (name: string): number[] => JSON.parse('[' + new RegExp(name + ' = \\[([\\s\\S]*?)\\];').exec(fc)![1].replace(/\s+/g, ' ') + ']')
+const slot = JSON.parse('[' + /const SPELL_SLOT_TABLE = DND5E\.SPELL_SLOT_TABLE = \[([\s\S]*?)\n\];/.exec(fc)![1].replace(/\s+/g, '') + ']') as number[][]
+const pj = readFileSync('/Users/xxx/tavern-trpg-assistant/reference/5etools-cn-main（数据库）/js/parser.js', 'utf8')
+const lvlXp = JSON.parse(/Parser\.LEVEL_XP_REQUIRED = (\[[^\]]*\])/.exec(pj)![1])
+const xpChart: Record<string, number> = {}; for (const m of /Parser\.XP_CHART_ALT = \{([\s\S]*?)\n\};/.exec(pj)![1].matchAll(/"([^"]+)":\s*([\d]+)/g)) xpChart[m[1]] = Number(m[2])
+const problems: string[] = []; const ok: string[] = []
+const eq = (name: string, a: any, b: any) => (JSON.stringify(a) === JSON.stringify(b) ? ok.push(name) : problems.push(`${name}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`))
+// 角色等级表
+const lp = by('character.levelProgression'); eq('levelProgression.xp vs Foundry CHARACTER_EXP_LEVELS', lp.rows.map((r: any) => r.xp), arr('DND5E\\.CHARACTER_EXP_LEVELS')); eq('levelProgression.xp vs 5etools LEVEL_XP_REQUIRED', lp.rows.map((r: any) => r.xp), lvlXp)
+eq('levelProgression.level 1..20', lp.rows.map((r: any) => r.level), Array.from({ length: 20 }, (_, i) => i + 1)); eq('levelProgression.pb 公式 2+floor((L-1)/4)', lp.rows.map((r: any) => r.proficiencyBonus), lp.rows.map((r: any) => 2 + Math.floor((r.level - 1) / 4)))
+// XP by CR
+const xc = by('cr.xpByCr'); const fx = arr('DND5E\\.CR_EXP_LEVELS')
+for (const r of xc.rows) { const e5 = xpChart[r.cr]; const got = Array.isArray(r.xp) ? r.xp[1] : r.xp; if (e5 !== got) problems.push(`xpByCr ${r.cr}: ${got} ≠ 5etools ${e5}`); if (Number.isInteger(r.crValue) && fx[r.crValue] !== got) problems.push(`xpByCr CR${r.cr}: ${got} ≠ Foundry ${fx[r.crValue]}`) }
+ok.push('xpByCr 对 5etools XP_CHART_ALT（全部 34 个 CR）与 Foundry CR_EXP_LEVELS（31 个整数 CR）已逐行比对')
+// 兼职法术位
+const ms = by('spellcasting.multiclassSlots'); eq('multiclassSlots vs Foundry SPELL_SLOT_TABLE', ms.rows.map((r: any) => [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => r[`slots${n}`])), slot.map((a) => [...a, ...Array(9 - a.length).fill(0)]))
+// 生命骰期望
+const hd = by('monster.hitDieBySize'); eq('hitDie 期望值 = (面数+1)/2', hd.rows.map((r: any) => r.average), hd.rows.map((r: any) => (Number(r.hitDie.slice(1)) + 1) / 2))
+// 阈值单调
+const th = by('encounter.xpThresholdsByLevel'); let mono = true; for (let i = 0; i < th.rows.length; i++) { const r = th.rows[i]; if (!(r.easy < r.medium && r.medium < r.hard && r.hard < r.deadly)) mono = false; if (i && !(r.easy > th.rows[i - 1].easy && r.deadly > th.rows[i - 1].deadly)) mono = false }; eq('xpThresholds 同行递增、随等级递增', mono, true)
+// 倍数连续
+const gm = by('encounter.groupMultiplier'); let prev = 0, cont = true; for (const r of gm.rows) { if (r.monsters.min !== prev + 1) cont = false; prev = r.monsters.max ?? 999 } eq('groupMultiplier 区间连续覆盖 1 起且最后一行无上限', cont && gm.rows.at(-1).monsters.max === null, true)
+const mc = by('cr.monsterStatsByCr'); const crs = JSON.parse(/Parser\.CRS = (\[[^\]]*\])/.exec(pj)![1]) as string[]
+eq('monsterStatsByCr 的 CR 列表 = 5etools Parser.CRS', mc.rows.map((r: any) => r.cr), crs)
+eq('monsterStatsByCr 熟练加值 = 公式 2+max(0,ceil(CR/4)-1)（CR<1 取 2）', mc.rows.map((r: any) => r.proficiencyBonus), mc.rows.map((r: any) => (r.crValue < 1 ? 2 : 2 + Math.max(0, Math.ceil(r.crValue / 4) - 1))))
+eq('monsterStatsByCr 与 xpByCr 的 CR 列表一致', mc.rows.map((r: any) => r.cr), xc.rows.map((r: any) => r.cr))
+console.log('通过', ok.length); ok.forEach((x) => console.log('  ✔', x)); console.log('问题', problems.length); problems.forEach((x) => console.log('  ✘', x))

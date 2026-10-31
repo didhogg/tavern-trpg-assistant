@@ -44,3 +44,18 @@ export function rangeOf(cell: unknown, hi: number): { min: number; max: number }
   if (m) { let a = Number(m[1]), b = Number(m[2]); if (a === 0) a = hi; if (b === 0) b = hi; return { min: a, max: b } }
   return undefined
 }
+
+export function refCell(c: any): string {
+  if (typeof c === 'string') return c
+  if (typeof c === 'number') return String(c)
+  if (c && typeof c === 'object') {
+    if (typeof c.entry === 'string') return c.entry
+    const r = c.roll
+    if (r && typeof r.exact === 'number') return String(r.exact)
+    if (r && typeof r.min === 'number' && typeof r.max === 'number') return `${r.min}—${r.max}`
+  }
+  throw new Error('无法转成文字的单元格 ' + JSON.stringify(c))
+}
+export function refRows(rows: any[]): Array<{ cells: string[]; indent?: boolean }> {
+  return rows.map((r) => (Array.isArray(r) ? { cells: r.map(refCell) } : { cells: (r.row as any[]).map(refCell), ...(r.style === 'row-indent-first' ? { indent: true } : {}) }))
+}

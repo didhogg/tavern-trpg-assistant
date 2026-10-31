@@ -1,0 +1,1924 @@
+{
+ "tables": [
+  {
+   "purpose": "encounter.xpThresholdsByLevel",
+   "id": "table.dmg-p82-r1",
+   "name": "战斗遭遇难度·角色等级对应的经验阈值",
+   "columns": [
+    {
+     "key": "level",
+     "type": "level"
+    },
+    {
+     "key": "easy",
+     "type": "int",
+     "unit": "XP"
+    },
+    {
+     "key": "medium",
+     "type": "int",
+     "unit": "XP"
+    },
+    {
+     "key": "hard",
+     "type": "int",
+     "unit": "XP"
+    },
+    {
+     "key": "deadly",
+     "type": "int",
+     "unit": "XP"
+    }
+   ],
+   "rows": [
+    {
+     "level": 1,
+     "easy": 25,
+     "medium": 50,
+     "hard": 75,
+     "deadly": 100
+    },
+    {
+     "level": 2,
+     "easy": 50,
+     "medium": 100,
+     "hard": 150,
+     "deadly": 200
+    },
+    {
+     "level": 3,
+     "easy": 75,
+     "medium": 150,
+     "hard": 225,
+     "deadly": 400
+    },
+    {
+     "level": 4,
+     "easy": 125,
+     "medium": 250,
+     "hard": 375,
+     "deadly": 500
+    },
+    {
+     "level": 5,
+     "easy": 250,
+     "medium": 500,
+     "hard": 750,
+     "deadly": 1100
+    },
+    {
+     "level": 6,
+     "easy": 300,
+     "medium": 600,
+     "hard": 900,
+     "deadly": 1400
+    },
+    {
+     "level": 7,
+     "easy": 350,
+     "medium": 750,
+     "hard": 1100,
+     "deadly": 1700
+    },
+    {
+     "level": 8,
+     "easy": 450,
+     "medium": 900,
+     "hard": 1400,
+     "deadly": 2100
+    },
+    {
+     "level": 9,
+     "easy": 550,
+     "medium": 1100,
+     "hard": 1600,
+     "deadly": 2400
+    },
+    {
+     "level": 10,
+     "easy": 600,
+     "medium": 1200,
+     "hard": 1900,
+     "deadly": 2800
+    },
+    {
+     "level": 11,
+     "easy": 800,
+     "medium": 1600,
+     "hard": 2400,
+     "deadly": 3600
+    },
+    {
+     "level": 12,
+     "easy": 1000,
+     "medium": 2000,
+     "hard": 3000,
+     "deadly": 4500
+    },
+    {
+     "level": 13,
+     "easy": 1100,
+     "medium": 2200,
+     "hard": 3400,
+     "deadly": 5100
+    },
+    {
+     "level": 14,
+     "easy": 1250,
+     "medium": 2500,
+     "hard": 3800,
+     "deadly": 5700
+    },
+    {
+     "level": 15,
+     "easy": 1400,
+     "medium": 2800,
+     "hard": 4300,
+     "deadly": 6400
+    },
+    {
+     "level": 16,
+     "easy": 1600,
+     "medium": 3200,
+     "hard": 4800,
+     "deadly": 7200
+    },
+    {
+     "level": 17,
+     "easy": 2000,
+     "medium": 3900,
+     "hard": 5900,
+     "deadly": 8800
+    },
+    {
+     "level": 18,
+     "easy": 2100,
+     "medium": 4200,
+     "hard": 6300,
+     "deadly": 9500
+    },
+    {
+     "level": 19,
+     "easy": 2400,
+     "medium": 4900,
+     "hard": 7300,
+     "deadly": 10900
+    },
+    {
+     "level": 20,
+     "easy": 2800,
+     "medium": 5700,
+     "hard": 8500,
+     "deadly": 12700
+    }
+   ]
+  },
+  {
+   "purpose": "encounter.groupMultiplier",
+   "id": "table.dmg-p82-r2",
+   "name": "．调整复数怪物总经验值·遭遇倍数",
+   "columns": [
+    {
+     "key": "monsters",
+     "type": "range"
+    },
+    {
+     "key": "multiplier",
+     "type": "number"
+    }
+   ],
+   "rows": [
+    {
+     "monsters": {
+      "min": 1,
+      "max": 1
+     },
+     "multiplier": 1
+    },
+    {
+     "monsters": {
+      "min": 2,
+      "max": 2
+     },
+     "multiplier": 1.5
+    },
+    {
+     "monsters": {
+      "min": 3,
+      "max": 6
+     },
+     "multiplier": 2
+    },
+    {
+     "monsters": {
+      "min": 7,
+      "max": 10
+     },
+     "multiplier": 2.5
+    },
+    {
+     "monsters": {
+      "min": 11,
+      "max": 14
+     },
+     "multiplier": 3
+    },
+    {
+     "monsters": {
+      "min": 15,
+      "max": null
+     },
+     "multiplier": 4
+    }
+   ]
+  },
+  {
+   "purpose": "encounter.dailyAdjustedXpByLevel",
+   "id": "table.dmg-p84-r1",
+   "name": "当日冒险经验",
+   "columns": [
+    {
+     "key": "level",
+     "type": "level"
+    },
+    {
+     "key": "xpPerCharacter",
+     "type": "int",
+     "unit": "XP"
+    }
+   ],
+   "rows": [
+    {
+     "level": 1,
+     "xpPerCharacter": 300
+    },
+    {
+     "level": 2,
+     "xpPerCharacter": 600
+    },
+    {
+     "level": 3,
+     "xpPerCharacter": 1200
+    },
+    {
+     "level": 4,
+     "xpPerCharacter": 1700
+    },
+    {
+     "level": 5,
+     "xpPerCharacter": 3500
+    },
+    {
+     "level": 6,
+     "xpPerCharacter": 4000
+    },
+    {
+     "level": 7,
+     "xpPerCharacter": 5000
+    },
+    {
+     "level": 8,
+     "xpPerCharacter": 6000
+    },
+    {
+     "level": 9,
+     "xpPerCharacter": 7500
+    },
+    {
+     "level": 10,
+     "xpPerCharacter": 9000
+    },
+    {
+     "level": 11,
+     "xpPerCharacter": 10500
+    },
+    {
+     "level": 12,
+     "xpPerCharacter": 11500
+    },
+    {
+     "level": 13,
+     "xpPerCharacter": 13500
+    },
+    {
+     "level": 14,
+     "xpPerCharacter": 15000
+    },
+    {
+     "level": 15,
+     "xpPerCharacter": 18000
+    },
+    {
+     "level": 16,
+     "xpPerCharacter": 20000
+    },
+    {
+     "level": 17,
+     "xpPerCharacter": 25000
+    },
+    {
+     "level": 18,
+     "xpPerCharacter": 27000
+    },
+    {
+     "level": 19,
+     "xpPerCharacter": 30000
+    },
+    {
+     "level": 20,
+     "xpPerCharacter": 40000
+    }
+   ]
+  },
+  {
+   "purpose": "cr.xpByCr",
+   "id": "table.dmg-p274-r2",
+   "name": "步骤4. 最终挑战等级·按挑战等级分配的经验值",
+   "columns": [
+    {
+     "key": "cr",
+     "type": "cr"
+    },
+    {
+     "key": "xp",
+     "type": "intOrOptions",
+     "unit": "XP"
+    }
+   ],
+   "rows": [
+    {
+     "cr": "0",
+     "crValue": 0,
+     "xp": [
+      0,
+      10
+     ]
+    },
+    {
+     "cr": "1/8",
+     "crValue": 0.125,
+     "xp": 25
+    },
+    {
+     "cr": "1/4",
+     "crValue": 0.25,
+     "xp": 50
+    },
+    {
+     "cr": "1/2",
+     "crValue": 0.5,
+     "xp": 100
+    },
+    {
+     "cr": "1",
+     "crValue": 1,
+     "xp": 200
+    },
+    {
+     "cr": "2",
+     "crValue": 2,
+     "xp": 450
+    },
+    {
+     "cr": "3",
+     "crValue": 3,
+     "xp": 700
+    },
+    {
+     "cr": "4",
+     "crValue": 4,
+     "xp": 1100
+    },
+    {
+     "cr": "5",
+     "crValue": 5,
+     "xp": 1800
+    },
+    {
+     "cr": "6",
+     "crValue": 6,
+     "xp": 2300
+    },
+    {
+     "cr": "7",
+     "crValue": 7,
+     "xp": 2900
+    },
+    {
+     "cr": "8",
+     "crValue": 8,
+     "xp": 3900
+    },
+    {
+     "cr": "9",
+     "crValue": 9,
+     "xp": 5000
+    },
+    {
+     "cr": "10",
+     "crValue": 10,
+     "xp": 5900
+    },
+    {
+     "cr": "11",
+     "crValue": 11,
+     "xp": 7200
+    },
+    {
+     "cr": "12",
+     "crValue": 12,
+     "xp": 8400
+    },
+    {
+     "cr": "13",
+     "crValue": 13,
+     "xp": 10000
+    },
+    {
+     "cr": "14",
+     "crValue": 14,
+     "xp": 11500
+    },
+    {
+     "cr": "15",
+     "crValue": 15,
+     "xp": 13000
+    },
+    {
+     "cr": "16",
+     "crValue": 16,
+     "xp": 15000
+    },
+    {
+     "cr": "17",
+     "crValue": 17,
+     "xp": 18000
+    },
+    {
+     "cr": "18",
+     "crValue": 18,
+     "xp": 20000
+    },
+    {
+     "cr": "19",
+     "crValue": 19,
+     "xp": 22000
+    },
+    {
+     "cr": "20",
+     "crValue": 20,
+     "xp": 25000
+    },
+    {
+     "cr": "21",
+     "crValue": 21,
+     "xp": 33000
+    },
+    {
+     "cr": "22",
+     "crValue": 22,
+     "xp": 41000
+    },
+    {
+     "cr": "23",
+     "crValue": 23,
+     "xp": 50000
+    },
+    {
+     "cr": "24",
+     "crValue": 24,
+     "xp": 62000
+    },
+    {
+     "cr": "25",
+     "crValue": 25,
+     "xp": 75000
+    },
+    {
+     "cr": "26",
+     "crValue": 26,
+     "xp": 90000
+    },
+    {
+     "cr": "27",
+     "crValue": 27,
+     "xp": 105000
+    },
+    {
+     "cr": "28",
+     "crValue": 28,
+     "xp": 120000
+    },
+    {
+     "cr": "29",
+     "crValue": 29,
+     "xp": 135000
+    },
+    {
+     "cr": "30",
+     "crValue": 30,
+     "xp": 155000
+    }
+   ]
+  },
+  {
+   "purpose": "character.levelProgression",
+   "id": "table.phb-p15-r1",
+   "name": "高于1级·角色升级",
+   "columns": [
+    {
+     "key": "xp",
+     "type": "int",
+     "unit": "XP"
+    },
+    {
+     "key": "level",
+     "type": "level"
+    },
+    {
+     "key": "proficiencyBonus",
+     "type": "bonus"
+    }
+   ],
+   "rows": [
+    {
+     "xp": 0,
+     "level": 1,
+     "proficiencyBonus": 2
+    },
+    {
+     "xp": 300,
+     "level": 2,
+     "proficiencyBonus": 2
+    },
+    {
+     "xp": 900,
+     "level": 3,
+     "proficiencyBonus": 2
+    },
+    {
+     "xp": 2700,
+     "level": 4,
+     "proficiencyBonus": 2
+    },
+    {
+     "xp": 6500,
+     "level": 5,
+     "proficiencyBonus": 3
+    },
+    {
+     "xp": 14000,
+     "level": 6,
+     "proficiencyBonus": 3
+    },
+    {
+     "xp": 23000,
+     "level": 7,
+     "proficiencyBonus": 3
+    },
+    {
+     "xp": 34000,
+     "level": 8,
+     "proficiencyBonus": 3
+    },
+    {
+     "xp": 48000,
+     "level": 9,
+     "proficiencyBonus": 4
+    },
+    {
+     "xp": 64000,
+     "level": 10,
+     "proficiencyBonus": 4
+    },
+    {
+     "xp": 85000,
+     "level": 11,
+     "proficiencyBonus": 4
+    },
+    {
+     "xp": 100000,
+     "level": 12,
+     "proficiencyBonus": 4
+    },
+    {
+     "xp": 120000,
+     "level": 13,
+     "proficiencyBonus": 5
+    },
+    {
+     "xp": 140000,
+     "level": 14,
+     "proficiencyBonus": 5
+    },
+    {
+     "xp": 165000,
+     "level": 15,
+     "proficiencyBonus": 5
+    },
+    {
+     "xp": 195000,
+     "level": 16,
+     "proficiencyBonus": 5
+    },
+    {
+     "xp": 225000,
+     "level": 17,
+     "proficiencyBonus": 6
+    },
+    {
+     "xp": 265000,
+     "level": 18,
+     "proficiencyBonus": 6
+    },
+    {
+     "xp": 305000,
+     "level": 19,
+     "proficiencyBonus": 6
+    },
+    {
+     "xp": 355000,
+     "level": 20,
+     "proficiencyBonus": 6
+    }
+   ]
+  },
+  {
+   "purpose": "creature.sizeSpace",
+   "id": "table.phb-p191-r1",
+   "name": "生物体型·体型分类",
+   "columns": [
+    {
+     "key": "size",
+     "type": "size"
+    },
+    {
+     "key": "spaceFeet",
+     "type": "number",
+     "unit": "ft"
+    },
+    {
+     "key": "orLarger",
+     "type": "bool"
+    }
+   ],
+   "rows": [
+    {
+     "size": "T",
+     "spaceFeet": 2.5,
+     "orLarger": false
+    },
+    {
+     "size": "S",
+     "spaceFeet": 5,
+     "orLarger": false
+    },
+    {
+     "size": "M",
+     "spaceFeet": 5,
+     "orLarger": false
+    },
+    {
+     "size": "L",
+     "spaceFeet": 10,
+     "orLarger": false
+    },
+    {
+     "size": "H",
+     "spaceFeet": 15,
+     "orLarger": false
+    },
+    {
+     "size": "G",
+     "spaceFeet": 20,
+     "orLarger": true
+    }
+   ]
+  },
+  {
+   "purpose": "monster.hitDieBySize",
+   "id": "table.mm-p7-r1",
+   "name": "生命值·体型对应生命骰",
+   "columns": [
+    {
+     "key": "size",
+     "type": "size"
+    },
+    {
+     "key": "hitDie",
+     "type": "dice"
+    },
+    {
+     "key": "average",
+     "type": "number"
+    }
+   ],
+   "rows": [
+    {
+     "size": "T",
+     "hitDie": "d4",
+     "average": 2.5
+    },
+    {
+     "size": "S",
+     "hitDie": "d6",
+     "average": 3.5
+    },
+    {
+     "size": "M",
+     "hitDie": "d8",
+     "average": 4.5
+    },
+    {
+     "size": "L",
+     "hitDie": "d10",
+     "average": 5.5
+    },
+    {
+     "size": "H",
+     "hitDie": "d12",
+     "average": 6.5
+    },
+    {
+     "size": "G",
+     "hitDie": "d20",
+     "average": 10.5
+    }
+   ]
+  },
+  {
+   "purpose": "monster.hpMultiplierByResistance",
+   "id": "table.dmg-p277-r1",
+   "name": "步骤9. 伤害抗性、免疫与易伤·基于抗性与免疫的有效生命值",
+   "columns": [
+    {
+     "key": "expectedCr",
+     "type": "range"
+    },
+    {
+     "key": "resistance",
+     "type": "multiplier"
+    },
+    {
+     "key": "immunity",
+     "type": "multiplier"
+    }
+   ],
+   "rows": [
+    {
+     "expectedCr": {
+      "min": 1,
+      "max": 4
+     },
+     "resistance": 2,
+     "immunity": 2
+    },
+    {
+     "expectedCr": {
+      "min": 5,
+      "max": 10
+     },
+     "resistance": 1.5,
+     "immunity": 2
+    },
+    {
+     "expectedCr": {
+      "min": 11,
+      "max": 16
+     },
+     "resistance": 1.25,
+     "immunity": 1.5
+    },
+    {
+     "expectedCr": {
+      "min": 17,
+      "max": null
+     },
+     "resistance": 1,
+     "immunity": 1.25
+    }
+   ]
+  },
+  {
+   "purpose": "trap.saveDcAndAttackBySeverity",
+   "id": "table.dmg-p121-r1",
+   "name": "陷阱豁免难度等级与攻击加值",
+   "columns": [
+    {
+     "key": "severity",
+     "type": "enum"
+    },
+    {
+     "key": "saveDc",
+     "type": "range"
+    },
+    {
+     "key": "attackBonus",
+     "type": "bonusRange"
+    }
+   ],
+   "rows": [
+    {
+     "severity": "setback",
+     "saveDc": {
+      "min": 10,
+      "max": 11
+     },
+     "attackBonus": {
+      "min": 3,
+      "max": 5
+     }
+    },
+    {
+     "severity": "dangerous",
+     "saveDc": {
+      "min": 12,
+      "max": 15
+     },
+     "attackBonus": {
+      "min": 6,
+      "max": 8
+     }
+    },
+    {
+     "severity": "deadly",
+     "saveDc": {
+      "min": 16,
+      "max": 20
+     },
+     "attackBonus": {
+      "min": 9,
+      "max": 12
+     }
+    }
+   ]
+  },
+  {
+   "purpose": "trap.damageBySeverityAndLevel",
+   "id": "table.dmg-p121-r2",
+   "name": "陷阱效应·各等级下危害度对应伤害",
+   "columns": [
+    {
+     "key": "characterLevel",
+     "type": "range"
+    },
+    {
+     "key": "setback",
+     "type": "dice"
+    },
+    {
+     "key": "dangerous",
+     "type": "dice"
+    },
+    {
+     "key": "deadly",
+     "type": "dice"
+    }
+   ],
+   "rows": [
+    {
+     "characterLevel": {
+      "min": 1,
+      "max": 4
+     },
+     "setback": "d10",
+     "dangerous": "2d10",
+     "deadly": "4d10"
+    },
+    {
+     "characterLevel": {
+      "min": 5,
+      "max": 10
+     },
+     "setback": "2d10",
+     "dangerous": "4d10",
+     "deadly": "10d10"
+    },
+    {
+     "characterLevel": {
+      "min": 11,
+      "max": 16
+     },
+     "setback": "4d10",
+     "dangerous": "10d10",
+     "deadly": "18d10"
+    },
+    {
+     "characterLevel": {
+      "min": 17,
+      "max": 20
+     },
+     "setback": "10d10",
+     "dangerous": "18d10",
+     "deadly": "24d10"
+    }
+   ]
+  },
+  {
+   "purpose": "spell.damageByLevel",
+   "id": "table.dmg-p283-r1",
+   "name": "法术伤害",
+   "columns": [
+    {
+     "key": "spellLevel",
+     "type": "int"
+    },
+    {
+     "key": "singleTarget",
+     "type": "dice"
+    },
+    {
+     "key": "multipleTargets",
+     "type": "dice"
+    }
+   ],
+   "rows": [
+    {
+     "spellLevel": 0,
+     "singleTarget": "d10",
+     "multipleTargets": "d6"
+    },
+    {
+     "spellLevel": 1,
+     "singleTarget": "2d10",
+     "multipleTargets": "2d6"
+    },
+    {
+     "spellLevel": 2,
+     "singleTarget": "3d10",
+     "multipleTargets": "4d6"
+    },
+    {
+     "spellLevel": 3,
+     "singleTarget": "5d10",
+     "multipleTargets": "6d6"
+    },
+    {
+     "spellLevel": 4,
+     "singleTarget": "6d10",
+     "multipleTargets": "7d6"
+    },
+    {
+     "spellLevel": 5,
+     "singleTarget": "8d10",
+     "multipleTargets": "8d6"
+    },
+    {
+     "spellLevel": 6,
+     "singleTarget": "10d10",
+     "multipleTargets": "11d6"
+    },
+    {
+     "spellLevel": 7,
+     "singleTarget": "11d10",
+     "multipleTargets": "12d6"
+    },
+    {
+     "spellLevel": 8,
+     "singleTarget": "12d10",
+     "multipleTargets": "13d6"
+    },
+    {
+     "spellLevel": 9,
+     "singleTarget": "15d10",
+     "multipleTargets": "14d6"
+    }
+   ]
+  },
+  {
+   "purpose": "spellcasting.multiclassSlots",
+   "id": "table.multiclassing.phb-3",
+   "name": "兼职·兼职施法者：每环阶的法术位",
+   "columns": [
+    {
+     "key": "level",
+     "type": "level"
+    },
+    {
+     "key": "slots1",
+     "type": "int"
+    },
+    {
+     "key": "slots2",
+     "type": "int"
+    },
+    {
+     "key": "slots3",
+     "type": "int"
+    },
+    {
+     "key": "slots4",
+     "type": "int"
+    },
+    {
+     "key": "slots5",
+     "type": "int"
+    },
+    {
+     "key": "slots6",
+     "type": "int"
+    },
+    {
+     "key": "slots7",
+     "type": "int"
+    },
+    {
+     "key": "slots8",
+     "type": "int"
+    },
+    {
+     "key": "slots9",
+     "type": "int"
+    }
+   ],
+   "rows": [
+    {
+     "level": 1,
+     "slots1": 2,
+     "slots2": 0,
+     "slots3": 0,
+     "slots4": 0,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 2,
+     "slots1": 3,
+     "slots2": 0,
+     "slots3": 0,
+     "slots4": 0,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 3,
+     "slots1": 4,
+     "slots2": 2,
+     "slots3": 0,
+     "slots4": 0,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 4,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 0,
+     "slots4": 0,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 5,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 2,
+     "slots4": 0,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 6,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 0,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 7,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 1,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 8,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 2,
+     "slots5": 0,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 9,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 1,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 10,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 0,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 11,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 1,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 12,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 1,
+     "slots7": 0,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 13,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 1,
+     "slots7": 1,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 14,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 1,
+     "slots7": 1,
+     "slots8": 0,
+     "slots9": 0
+    },
+    {
+     "level": 15,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 1,
+     "slots7": 1,
+     "slots8": 1,
+     "slots9": 0
+    },
+    {
+     "level": 16,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 1,
+     "slots7": 1,
+     "slots8": 1,
+     "slots9": 0
+    },
+    {
+     "level": 17,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 2,
+     "slots6": 1,
+     "slots7": 1,
+     "slots8": 1,
+     "slots9": 1
+    },
+    {
+     "level": 18,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 3,
+     "slots6": 1,
+     "slots7": 1,
+     "slots8": 1,
+     "slots9": 1
+    },
+    {
+     "level": 19,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 3,
+     "slots6": 2,
+     "slots7": 1,
+     "slots8": 1,
+     "slots9": 1
+    },
+    {
+     "level": 20,
+     "slots1": 4,
+     "slots2": 3,
+     "slots3": 3,
+     "slots4": 3,
+     "slots5": 3,
+     "slots6": 2,
+     "slots7": 2,
+     "slots8": 1,
+     "slots9": 1
+    }
+   ]
+  },
+  {
+   "purpose": "object.hpBySize",
+   "id": "table.dmg-p247-r1",
+   "name": "物件生命值",
+   "columns": [
+    {
+     "key": "size",
+     "type": "size"
+    },
+    {
+     "key": "fragile",
+     "type": "diceWithAverage"
+    },
+    {
+     "key": "resilient",
+     "type": "diceWithAverage"
+    }
+   ],
+   "rows": [
+    {
+     "size": "T",
+     "fragile": {
+      "average": 2,
+      "dice": "d4"
+     },
+     "resilient": {
+      "average": 5,
+      "dice": "2d4"
+     }
+    },
+    {
+     "size": "S",
+     "fragile": {
+      "average": 3,
+      "dice": "d6"
+     },
+     "resilient": {
+      "average": 10,
+      "dice": "3d6"
+     }
+    },
+    {
+     "size": "M",
+     "fragile": {
+      "average": 4,
+      "dice": "d8"
+     },
+     "resilient": {
+      "average": 18,
+      "dice": "4d8"
+     }
+    },
+    {
+     "size": "L",
+     "fragile": {
+      "average": 5,
+      "dice": "d10"
+     },
+     "resilient": {
+      "average": 27,
+      "dice": "5d10"
+     }
+    }
+   ]
+  },
+  {
+   "purpose": "cr.monsterStatsByCr",
+   "id": "table.monster-statistics-by-challenge-rating.dmg",
+   "name": "按挑战等级的怪物数值",
+   "columns": [
+    {
+     "key": "cr",
+     "type": "cr"
+    },
+    {
+     "key": "proficiencyBonus",
+     "type": "bonus"
+    },
+    {
+     "key": "ac",
+     "type": "int"
+    },
+    {
+     "key": "hp",
+     "type": "range"
+    },
+    {
+     "key": "attackBonus",
+     "type": "bonus"
+    },
+    {
+     "key": "dpr",
+     "type": "range"
+    },
+    {
+     "key": "saveDc",
+     "type": "int"
+    }
+   ],
+   "rows": [
+    {
+     "cr": "0",
+     "crValue": 0,
+     "proficiencyBonus": 2,
+     "ac": 13,
+     "hp": {
+      "min": 1,
+      "max": 6
+     },
+     "attackBonus": 3,
+     "dpr": {
+      "min": 0,
+      "max": 1
+     },
+     "saveDc": 13
+    },
+    {
+     "cr": "1/8",
+     "crValue": 0.125,
+     "proficiencyBonus": 2,
+     "ac": 13,
+     "hp": {
+      "min": 7,
+      "max": 35
+     },
+     "attackBonus": 3,
+     "dpr": {
+      "min": 2,
+      "max": 3
+     },
+     "saveDc": 13
+    },
+    {
+     "cr": "1/4",
+     "crValue": 0.25,
+     "proficiencyBonus": 2,
+     "ac": 13,
+     "hp": {
+      "min": 36,
+      "max": 49
+     },
+     "attackBonus": 3,
+     "dpr": {
+      "min": 4,
+      "max": 5
+     },
+     "saveDc": 13
+    },
+    {
+     "cr": "1/2",
+     "crValue": 0.5,
+     "proficiencyBonus": 2,
+     "ac": 13,
+     "hp": {
+      "min": 50,
+      "max": 70
+     },
+     "attackBonus": 3,
+     "dpr": {
+      "min": 6,
+      "max": 8
+     },
+     "saveDc": 13
+    },
+    {
+     "cr": "1",
+     "crValue": 1,
+     "proficiencyBonus": 2,
+     "ac": 13,
+     "hp": {
+      "min": 71,
+      "max": 85
+     },
+     "attackBonus": 3,
+     "dpr": {
+      "min": 9,
+      "max": 14
+     },
+     "saveDc": 13
+    },
+    {
+     "cr": "2",
+     "crValue": 2,
+     "proficiencyBonus": 2,
+     "ac": 13,
+     "hp": {
+      "min": 86,
+      "max": 100
+     },
+     "attackBonus": 3,
+     "dpr": {
+      "min": 15,
+      "max": 20
+     },
+     "saveDc": 13
+    },
+    {
+     "cr": "3",
+     "crValue": 3,
+     "proficiencyBonus": 2,
+     "ac": 13,
+     "hp": {
+      "min": 101,
+      "max": 115
+     },
+     "attackBonus": 4,
+     "dpr": {
+      "min": 21,
+      "max": 26
+     },
+     "saveDc": 13
+    },
+    {
+     "cr": "4",
+     "crValue": 4,
+     "proficiencyBonus": 2,
+     "ac": 14,
+     "hp": {
+      "min": 116,
+      "max": 130
+     },
+     "attackBonus": 5,
+     "dpr": {
+      "min": 27,
+      "max": 32
+     },
+     "saveDc": 14
+    },
+    {
+     "cr": "5",
+     "crValue": 5,
+     "proficiencyBonus": 3,
+     "ac": 15,
+     "hp": {
+      "min": 131,
+      "max": 145
+     },
+     "attackBonus": 6,
+     "dpr": {
+      "min": 33,
+      "max": 38
+     },
+     "saveDc": 15
+    },
+    {
+     "cr": "6",
+     "crValue": 6,
+     "proficiencyBonus": 3,
+     "ac": 15,
+     "hp": {
+      "min": 146,
+      "max": 160
+     },
+     "attackBonus": 6,
+     "dpr": {
+      "min": 39,
+      "max": 44
+     },
+     "saveDc": 15
+    },
+    {
+     "cr": "7",
+     "crValue": 7,
+     "proficiencyBonus": 3,
+     "ac": 15,
+     "hp": {
+      "min": 161,
+      "max": 175
+     },
+     "attackBonus": 6,
+     "dpr": {
+      "min": 45,
+      "max": 50
+     },
+     "saveDc": 15
+    },
+    {
+     "cr": "8",
+     "crValue": 8,
+     "proficiencyBonus": 3,
+     "ac": 16,
+     "hp": {
+      "min": 176,
+      "max": 190
+     },
+     "attackBonus": 7,
+     "dpr": {
+      "min": 51,
+      "max": 56
+     },
+     "saveDc": 16
+    },
+    {
+     "cr": "9",
+     "crValue": 9,
+     "proficiencyBonus": 4,
+     "ac": 16,
+     "hp": {
+      "min": 191,
+      "max": 205
+     },
+     "attackBonus": 7,
+     "dpr": {
+      "min": 57,
+      "max": 62
+     },
+     "saveDc": 16
+    },
+    {
+     "cr": "10",
+     "crValue": 10,
+     "proficiencyBonus": 4,
+     "ac": 17,
+     "hp": {
+      "min": 206,
+      "max": 220
+     },
+     "attackBonus": 7,
+     "dpr": {
+      "min": 63,
+      "max": 68
+     },
+     "saveDc": 16
+    },
+    {
+     "cr": "11",
+     "crValue": 11,
+     "proficiencyBonus": 4,
+     "ac": 17,
+     "hp": {
+      "min": 221,
+      "max": 235
+     },
+     "attackBonus": 8,
+     "dpr": {
+      "min": 69,
+      "max": 74
+     },
+     "saveDc": 17
+    },
+    {
+     "cr": "12",
+     "crValue": 12,
+     "proficiencyBonus": 4,
+     "ac": 17,
+     "hp": {
+      "min": 236,
+      "max": 250
+     },
+     "attackBonus": 8,
+     "dpr": {
+      "min": 75,
+      "max": 80
+     },
+     "saveDc": 18
+    },
+    {
+     "cr": "13",
+     "crValue": 13,
+     "proficiencyBonus": 5,
+     "ac": 18,
+     "hp": {
+      "min": 251,
+      "max": 265
+     },
+     "attackBonus": 8,
+     "dpr": {
+      "min": 81,
+      "max": 86
+     },
+     "saveDc": 18
+    },
+    {
+     "cr": "14",
+     "crValue": 14,
+     "proficiencyBonus": 5,
+     "ac": 18,
+     "hp": {
+      "min": 266,
+      "max": 280
+     },
+     "attackBonus": 8,
+     "dpr": {
+      "min": 87,
+      "max": 92
+     },
+     "saveDc": 18
+    },
+    {
+     "cr": "15",
+     "crValue": 15,
+     "proficiencyBonus": 5,
+     "ac": 18,
+     "hp": {
+      "min": 281,
+      "max": 295
+     },
+     "attackBonus": 8,
+     "dpr": {
+      "min": 93,
+      "max": 98
+     },
+     "saveDc": 18
+    },
+    {
+     "cr": "16",
+     "crValue": 16,
+     "proficiencyBonus": 5,
+     "ac": 18,
+     "hp": {
+      "min": 296,
+      "max": 310
+     },
+     "attackBonus": 9,
+     "dpr": {
+      "min": 99,
+      "max": 104
+     },
+     "saveDc": 18
+    },
+    {
+     "cr": "17",
+     "crValue": 17,
+     "proficiencyBonus": 6,
+     "ac": 19,
+     "hp": {
+      "min": 311,
+      "max": 325
+     },
+     "attackBonus": 10,
+     "dpr": {
+      "min": 105,
+      "max": 110
+     },
+     "saveDc": 19
+    },
+    {
+     "cr": "18",
+     "crValue": 18,
+     "proficiencyBonus": 6,
+     "ac": 19,
+     "hp": {
+      "min": 326,
+      "max": 340
+     },
+     "attackBonus": 10,
+     "dpr": {
+      "min": 111,
+      "max": 116
+     },
+     "saveDc": 19
+    },
+    {
+     "cr": "19",
+     "crValue": 19,
+     "proficiencyBonus": 6,
+     "ac": 19,
+     "hp": {
+      "min": 341,
+      "max": 355
+     },
+     "attackBonus": 10,
+     "dpr": {
+      "min": 117,
+      "max": 122
+     },
+     "saveDc": 19
+    },
+    {
+     "cr": "20",
+     "crValue": 20,
+     "proficiencyBonus": 6,
+     "ac": 19,
+     "hp": {
+      "min": 356,
+      "max": 400
+     },
+     "attackBonus": 10,
+     "dpr": {
+      "min": 123,
+      "max": 140
+     },
+     "saveDc": 19
+    },
+    {
+     "cr": "21",
+     "crValue": 21,
+     "proficiencyBonus": 7,
+     "ac": 19,
+     "hp": {
+      "min": 401,
+      "max": 445
+     },
+     "attackBonus": 11,
+     "dpr": {
+      "min": 141,
+      "max": 158
+     },
+     "saveDc": 20
+    },
+    {
+     "cr": "22",
+     "crValue": 22,
+     "proficiencyBonus": 7,
+     "ac": 19,
+     "hp": {
+      "min": 446,
+      "max": 490
+     },
+     "attackBonus": 11,
+     "dpr": {
+      "min": 159,
+      "max": 176
+     },
+     "saveDc": 20
+    },
+    {
+     "cr": "23",
+     "crValue": 23,
+     "proficiencyBonus": 7,
+     "ac": 19,
+     "hp": {
+      "min": 491,
+      "max": 535
+     },
+     "attackBonus": 11,
+     "dpr": {
+      "min": 177,
+      "max": 194
+     },
+     "saveDc": 20
+    },
+    {
+     "cr": "24",
+     "crValue": 24,
+     "proficiencyBonus": 7,
+     "ac": 19,
+     "hp": {
+      "min": 536,
+      "max": 580
+     },
+     "attackBonus": 11,
+     "dpr": {
+      "min": 195,
+      "max": 212
+     },
+     "saveDc": 21
+    },
+    {
+     "cr": "25",
+     "crValue": 25,
+     "proficiencyBonus": 8,
+     "ac": 19,
+     "hp": {
+      "min": 581,
+      "max": 625
+     },
+     "attackBonus": 12,
+     "dpr": {
+      "min": 213,
+      "max": 230
+     },
+     "saveDc": 21
+    },
+    {
+     "cr": "26",
+     "crValue": 26,
+     "proficiencyBonus": 8,
+     "ac": 19,
+     "hp": {
+      "min": 626,
+      "max": 670
+     },
+     "attackBonus": 12,
+     "dpr": {
+      "min": 231,
+      "max": 248
+     },
+     "saveDc": 21
+    },
+    {
+     "cr": "27",
+     "crValue": 27,
+     "proficiencyBonus": 8,
+     "ac": 19,
+     "hp": {
+      "min": 671,
+      "max": 715
+     },
+     "attackBonus": 13,
+     "dpr": {
+      "min": 249,
+      "max": 266
+     },
+     "saveDc": 22
+    },
+    {
+     "cr": "28",
+     "crValue": 28,
+     "proficiencyBonus": 8,
+     "ac": 19,
+     "hp": {
+      "min": 716,
+      "max": 760
+     },
+     "attackBonus": 13,
+     "dpr": {
+      "min": 267,
+      "max": 284
+     },
+     "saveDc": 22
+    },
+    {
+     "cr": "29",
+     "crValue": 29,
+     "proficiencyBonus": 9,
+     "ac": 19,
+     "hp": {
+      "min": 760,
+      "max": 805
+     },
+     "attackBonus": 13,
+     "dpr": {
+      "min": 285,
+      "max": 302
+     },
+     "saveDc": 22
+    },
+    {
+     "cr": "30",
+     "crValue": 30,
+     "proficiencyBonus": 9,
+     "ac": 19,
+     "hp": {
+      "min": 805,
+      "max": 850
+     },
+     "attackBonus": 14,
+     "dpr": {
+      "min": 303,
+      "max": 320
+     },
+     "saveDc": 23
+    }
+   ]
+  }
+ ]
+}

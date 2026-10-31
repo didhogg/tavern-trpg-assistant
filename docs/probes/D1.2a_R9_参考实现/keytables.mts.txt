@@ -1,0 +1,47 @@
+import { readFileSync, writeFileSync } from 'node:fs'
+const S = '/private/tmp/claude-501/-Users-xxx/d84e6010-3bdc-455b-8df8-1a7e45e5a4f0/scratchpad/r9/'
+const pool: any[] = JSON.parse(readFileSync(S + 'pool_all.json', 'utf8')); const gold = JSON.parse(readFileSync(S + 'golden.json', 'utf8'))
+const survByKey = new Map<string, any>(); for (const s of gold.survivors) survByKey.set(`${s.source}|${s.name}|${s.origin}`, s)
+const cand = (src: string, nameRe: RegExp, page?: number) => { const c = pool.filter((p) => p.ref && p.source === src && nameRe.test(p.name) && survByKey.has(`${p.source}|${p.name}|${p.origin}`) && (page === undefined || p.page === page)); if (c.length !== 1) throw new Error(`找不到唯一候选 ${src} ${nameRe} (${c.length})`); return { c: c[0], s: survByKey.get(`${c[0].source}|${c[0].name}|${c[0].origin}`) } }
+// ---- 解析函数
+const untag = (x: string) => { let o = x; for (let i = 0; i < 6 && o.includes('{@'); i++) o = o.replace(/\{@\w+ ([^{}]*)\}/g, (_m, t: string) => t.split('|')[0]); return o.trim() }
+const FR: Record<string, number> = { '½': 0.5, '¼': 0.25, '¾': 0.75 }
+const toNum = (s0: string): number | null => { let s = untag(s0).replace(/[,，\s]/g, '').replace(/^[×x+]/, ''); if (s === '' || /^[—–-]+$/.test(s)) return null; for (const [k, v] of Object.entries(FR)) if (s.includes(k)) { const i = s.replace(k, ''); return (i ? Number(i) : 0) + v }; const n = Number(s); return Number.isFinite(n) ? n : null }
+const int = (s: string): number => { const n = toNum(s); if (n === null || !Number.isInteger(n)) throw new Error('整数解析失败 ' + s); return n }
+const level = (s: string): number => { const m = /^(\d{1,2})(?:环|th|st|nd|rd|级)?$/.exec(untag(s).replace(/\s/g, '')); if (!m) throw new Error('等级解析失败 ' + s); return Number(m[1]) }
+const levelNoun = (s: string): number => (/戏法/.test(s) ? 0 : level(s))
+const range = (s0: string): { min: number; max: number | null } => { const s = untag(s0).replace(/\s/g, '').replace(/[–—]/g, '-').replace(/级$/, ''); let m = /^(\d+)-(\d+)$/.exec(s); if (m) return { min: Number(m[1]), max: Number(m[2]) }; m = /^(\d+)(?:或更高|及以上)$/.exec(s); if (m) return { min: Number(m[1]), max: null }; m = /^(\d+)$/.exec(s); if (m) return { min: Number(m[1]), max: Number(m[1]) }; throw new Error('区间解析失败 ' + s0) }
+const dice = (s0: string): string => { const m = /(\d*)d(\d+)/i.exec(untag(s0)); if (!m) throw new Error('骰子解析失败 ' + s0); return `${m[1] === '1' ? '' : m[1]}d${m[2]}` }
+const bonus = (s: string): number => { const m = /^([+-]?\d+)\s*$/.exec(untag(s)); if (!m) throw new Error('加值解析失败 ' + s); return Number(m[1]) }
+const bonusRange = (s: string) => { const m = /^\+?(\d+)至\+?(\d+)$/.exec(untag(s).replace(/\s/g, '')); if (!m) throw new Error('加值区间解析失败 ' + s); return { min: Number(m[1]), max: Number(m[2]) } }
+const SIZE: Record<string, string> = { 微型: 'T', 小型: 'S', 中型: 'M', 大型: 'L', 巨型: 'H', 超巨型: 'G' }
+const size = (s: string): string => { const k = Object.keys(SIZE).sort((a, b) => b.length - a.length).find((x) => untag(s).startsWith(x)); if (!k) throw new Error('体型解析失败 ' + s); return SIZE[k] }
+const crv = (s: string): { cr: string; value: number } => { const t = untag(s).replace(/\s/g, ''); const m = /^(\d+)(?:\/(\d+))?$/.exec(t); if (!m) throw new Error('CR 解析失败 ' + s); return { cr: t, value: m[2] ? Number(m[1]) / Number(m[2]) : Number(m[1]) } }
+const diceAvg = (s: string) => { const t = untag(s); const m = /^(\d+)\s*\((.+)\)$/.exec(s.replace(/\{@dice ([^}|]*)[^}]*\}/g, '$1').trim()); if (!m) throw new Error('带平均骰解析失败 ' + s); return { average: Number(m[1]), dice: dice(m[2]) } }
+// ---- 关键表定义
+type Spec = { purpose: string; find: { src: string; re: RegExp; page?: number }; columns: Array<{ key: string; type: string; unit?: string }>; row: (c: string[]) => Record<string, any> }
+const sev = (s: string) => ({ 妨害: 'setback', 危险: 'dangerous', 致命: 'deadly' } as any)[untag(s)] ?? (() => { throw new Error('严重度 ' + s) })()
+const specs: Spec[] = [
+  { purpose: 'encounter.xpThresholdsByLevel', find: { src: 'DMG', re: /角色等级对应的经验阈值/, page: 82 }, columns: [{ key: 'level', type: 'level' }, { key: 'easy', type: 'int', unit: 'XP' }, { key: 'medium', type: 'int', unit: 'XP' }, { key: 'hard', type: 'int', unit: 'XP' }, { key: 'deadly', type: 'int', unit: 'XP' }], row: (c) => ({ level: level(c[0]), easy: int(c[1]), medium: int(c[2]), hard: int(c[3]), deadly: int(c[4]) }) },
+  { purpose: 'encounter.groupMultiplier', find: { src: 'DMG', re: /遭遇倍数/, page: 82 }, columns: [{ key: 'monsters', type: 'range' }, { key: 'multiplier', type: 'number' }], row: (c) => ({ monsters: range(c[0]), multiplier: toNum(c[1]) }) },
+  { purpose: 'encounter.dailyAdjustedXpByLevel', find: { src: 'DMG', re: /当日冒险经验/, page: 84 }, columns: [{ key: 'level', type: 'level' }, { key: 'xpPerCharacter', type: 'int', unit: 'XP' }], row: (c) => ({ level: level(c[0]), xpPerCharacter: int(c[1]) }) },
+  { purpose: 'cr.xpByCr', find: { src: 'DMG', re: /按挑战等级分配的经验值/, page: 274 }, columns: [{ key: 'cr', type: 'cr' }, { key: 'xp', type: 'intOrOptions', unit: 'XP' }], row: (c) => { const k = crv(c[0]); const m = /^0或10$/.test(untag(c[1])) ? { options: [0, 10] } : { value: int(c[1]) }; return { cr: k.cr, crValue: k.value, ...(m.options ? { xp: m.options } : { xp: m.value }) } } },
+  { purpose: 'character.levelProgression', find: { src: 'PHB', re: /角色升级/, page: 15 }, columns: [{ key: 'xp', type: 'int', unit: 'XP' }, { key: 'level', type: 'level' }, { key: 'proficiencyBonus', type: 'bonus' }], row: (c) => ({ xp: int(c[0]), level: level(c[1]), proficiencyBonus: bonus(c[2]) }) },
+  { purpose: 'creature.sizeSpace', find: { src: 'PHB', re: /体型分类/, page: 191 }, columns: [{ key: 'size', type: 'size' }, { key: 'spaceFeet', type: 'number', unit: 'ft' }, { key: 'orLarger', type: 'bool' }], row: (c) => { const m = /^([\d½¼¾.]+)/.exec(untag(c[1]).replace(/\s/g, '')); if (!m) throw new Error('空间 ' + c[1]); return { size: size(c[0]), spaceFeet: toNum(m[1]), orLarger: /或更大/.test(c[1]) } } },
+  { purpose: 'monster.hitDieBySize', find: { src: 'MM', re: /体型对应生命骰/, page: 7 }, columns: [{ key: 'size', type: 'size' }, { key: 'hitDie', type: 'dice' }, { key: 'average', type: 'number' }], row: (c) => ({ size: size(c[0]), hitDie: dice(c[1]), average: toNum(c[2]) }) },
+  { purpose: 'monster.hpMultiplierByResistance', find: { src: 'DMG', re: /基于抗性与免疫的有效生命值/, page: 277 }, columns: [{ key: 'expectedCr', type: 'range' }, { key: 'resistance', type: 'multiplier' }, { key: 'immunity', type: 'multiplier' }], row: (c) => ({ expectedCr: range(c[0]), resistance: toNum(c[1]), immunity: toNum(c[2]) }) },
+  { purpose: 'trap.saveDcAndAttackBySeverity', find: { src: 'DMG', re: /陷阱豁免难度等级与攻击加值/, page: 121 }, columns: [{ key: 'severity', type: 'enum' }, { key: 'saveDc', type: 'range' }, { key: 'attackBonus', type: 'bonusRange' }], row: (c) => ({ severity: sev(c[0]), saveDc: range(c[1]), attackBonus: bonusRange(c[2]) }) },
+  { purpose: 'trap.damageBySeverityAndLevel', find: { src: 'DMG', re: /各等级下危害度对应伤害/, page: 121 }, columns: [{ key: 'characterLevel', type: 'range' }, { key: 'setback', type: 'dice' }, { key: 'dangerous', type: 'dice' }, { key: 'deadly', type: 'dice' }], row: (c) => ({ characterLevel: range(c[0]), setback: dice(c[1]), dangerous: dice(c[2]), deadly: dice(c[3]) }) },
+  { purpose: 'spell.damageByLevel', find: { src: 'DMG', re: /^法术伤害$/, page: 283 }, columns: [{ key: 'spellLevel', type: 'int' }, { key: 'singleTarget', type: 'dice' }, { key: 'multipleTargets', type: 'dice' }], row: (c) => ({ spellLevel: levelNoun(c[0]), singleTarget: dice(c[1]), multipleTargets: dice(c[2]) }) },
+  { purpose: 'spellcasting.multiclassSlots', find: { src: 'PHB', re: /兼职施法者：每环阶的法术位/ }, columns: [{ key: 'level', type: 'level' }, ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({ key: `slots${n}`, type: 'int' }))], row: (c) => ({ level: level(c[0]), ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => [`slots${n}`, toNum(c[n]) ?? 0])) }) },
+  { purpose: 'object.hpBySize', find: { src: 'DMG', re: /^物件生命值$/, page: 247 }, columns: [{ key: 'size', type: 'size' }, { key: 'fragile', type: 'diceWithAverage' }, { key: 'resilient', type: 'diceWithAverage' }], row: (c) => ({ size: size(c[0]), fragile: diceAvg(c[1]), resilient: diceAvg(c[2]) }) },
+]
+const out: any = { tables: [] }
+for (const sp of specs) {
+  const { c, s } = cand(sp.find.src, sp.find.re, sp.find.page)
+  const rows = c.rows.map((r: any, i: number) => { try { return sp.row(r.cells) } catch (e: any) { throw new Error(`${sp.purpose} 第 ${i + 1} 行：${e.message}`) } })
+  out.tables.push({ purpose: sp.purpose, id: s.id, name: s.name, columns: sp.columns, rows })
+}
+{ const m = pool.find((p) => p.origin === 'M'); const s = survByKey.get(`${m.source}|${m.name}|M`)
+  out.tables.push({ purpose: 'cr.monsterStatsByCr', id: s.id, name: s.name, columns: [{ key: 'cr', type: 'cr' }, { key: 'proficiencyBonus', type: 'bonus' }, { key: 'ac', type: 'int' }, { key: 'hp', type: 'range' }, { key: 'attackBonus', type: 'bonus' }, { key: 'dpr', type: 'range' }, { key: 'saveDc', type: 'int' }], rows: m.extra.crRaw.map((r: any) => { const k = crv(String(r._cr)); return { cr: k.cr, crValue: k.value, proficiencyBonus: r.pb, ac: r.ac, hp: { min: r.hpMin, max: r.hpMax }, attackBonus: r.attackBonus, dpr: { min: r.dprMin, max: r.dprMax }, saveDc: r.saveDc } }) }) }
+writeFileSync(S + 'keytables.json', JSON.stringify(out, null, 1)); console.log('ok', out.tables.map((t: any) => `${t.purpose}=${t.id}(${t.rows.length})`).join('\n'))
