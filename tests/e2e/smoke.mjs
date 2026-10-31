@@ -14,6 +14,7 @@ import { librarySuite } from './suite-library.mjs'
 import { healthSuite, mineSuite, variantsSuite } from './suite-library2.mjs'
 import { shellSuite } from './suite-shell.mjs'
 import { displaySuite } from './suite-display.mjs'
+import { upgradeSetup, upgradeSuite } from './suite-upgrade.mjs'
 import { wizardSuite } from './suite-wizard.mjs'
 
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -43,6 +44,7 @@ try {
         page.on('pageerror', (e) => errors.push(e.message))
         // 断网测试会故意让下载失败，这类日志不算脚本错误
         page.on('console', (m) => m.type() === 'error' && !/net::ERR_FAILED|安装失败：dnd5e2014-scag/.test(m.text()) && errors.push(m.text()))
+        if (only === 'upgrade') await upgradeSetup(page) // 目录与包文件给旧版
         await page.goto(url)
         await page.waitForSelector('#trpg-assistant-root', { state: 'attached' })
         check(`[${label}] 扩展挂载`, true)
@@ -53,6 +55,7 @@ try {
         if (!only || only === 'shell') await shellSuite(page, label, ctx)
         if (!only || only === 'dice') await diceSuite(page, label, ctx)
         if (!only || only === 'wizard' || only === 'saves' || only === 'library' || only === 'display') await wizardSuite(page, label, ctx)
+        if (only === 'upgrade') await upgradeSuite(page, label, ctx)
         if (!only || only === 'saves') await savesSuite(page, label, ctx)
         if (!only || only === 'library') {
           await librarySuite(page, label, ctx)

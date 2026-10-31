@@ -5,7 +5,7 @@ import { BOOKS, SRD_PACK_ID } from '../config/books'
 import { writeText } from '../lib/io'
 
 /** 发布时用 TRPG_DATA_TAG 指定版本标签；未指定时写占位标签（未发布）。 */
-const PLACEHOLDER_TAG = process.env.TRPG_DATA_TAG ?? 'v0.0.0-placeholder'
+const PLACEHOLDER_TAG = process.env.TRPG_DATA_TAG ?? 'main' // 默认指向 main 分支（占位版本 v0.0.0-placeholder 在 jsDelivr 上不存在，下载会失败）
 
 export async function writeDataRepo(repo: string, packs: ConvertedPack[], outputs: Map<string, { bytes: Uint8Array; sha256: string }>): Promise<void> {
   await mkdir(join(repo, 'packs', 'dnd5e2014'), { recursive: true })
