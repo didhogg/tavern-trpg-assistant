@@ -58,7 +58,7 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
     if (!entry.kind || !KINDS.has(entry.kind)) throw new Error(`dropped 缺少 kind：${path}`)
     if (!entry.why?.trim()) throw new Error(`dropped 缺少理由：${path}`)
     if (entry.kind === 'image' && !IMAGE_PATH.test(path)) throw new Error(`image 路径不符合规则：${path}`)
-    if (PROTECTED.test(path) && !/\.token\.name$/.test(path)) throw new Error(`受保护字段不允许 dropped：${path}`)
+    if (!path.startsWith('book.') && PROTECTED.test(path) && !/\.token\.name$/.test(path)) throw new Error(`受保护字段不允许 dropped：${path}`)
     if (/uses.*recovery/i.test(path)) throw new Error(`uses.recovery 不允许 dropped：${path}`)
     return
   }
