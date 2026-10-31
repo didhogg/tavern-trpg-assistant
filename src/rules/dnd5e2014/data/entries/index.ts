@@ -4,6 +4,7 @@ import { entryCommonFields } from './base'
 import { itemDataSchema, tableDataSchema } from './item-table'
 import { languageDataSchema, deityDataSchema, rewardDataSchema, cultDataSchema, hazardDataSchema, objectDataSchema, vehicleDataSchema } from './world'
 import { monsterPartDataSchema, recipeDataSchema, charOptionDataSchema } from './parts'
+import { bookDataSchema } from './book'
 import {
   backgroundDataSchema,
   classDataSchema,
@@ -43,6 +44,7 @@ export const DND5E2014_ENTRY_TYPES = [
   'monsterPart',
   'recipe',
   'charoption',
+  'book',
 ] as const
 
 export type Dnd5e2014EntryType = (typeof DND5E2014_ENTRY_TYPES)[number]
@@ -74,6 +76,7 @@ export const entryDataByType = {
   monsterPart: monsterPartDataSchema,
   recipe: recipeDataSchema,
   charoption: charOptionDataSchema,
+  book: bookDataSchema,
 } satisfies Record<Dnd5e2014EntryType, z.ZodType>
 
 export const dnd5e2014EntryDataSchema = z.union(Object.values(entryDataByType))

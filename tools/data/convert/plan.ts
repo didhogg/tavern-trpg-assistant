@@ -7,7 +7,7 @@ import type { FluffRecord } from '../extract/fluff'
 export type PlannedType =
   | 'spell' | 'monster' | 'item' | 'class' | 'subclass' | 'feature'
   | 'race' | 'subrace' | 'background' | 'feat'
-  | 'condition' | 'disease' | 'status' | 'table' | 'rule' | 'lore' | 'language' | 'deity' | 'reward' | 'cult' | 'hazard' | 'object' | 'vehicle' | 'monsterPart' | 'recipe' | 'charoption'
+  | 'condition' | 'disease' | 'status' | 'table' | 'rule' | 'lore' | 'language' | 'deity' | 'reward' | 'cult' | 'hazard' | 'object' | 'vehicle' | 'monsterPart' | 'recipe' | 'charoption' | 'book'
 
 export interface PlannedEntry {
   key: string

@@ -78,6 +78,9 @@ export const TAGS: Record<string, TagSpec> = {
   book: { kind: 'text' },
   adventure: { kind: 'text' },
   reward: { kind: 'ref', refType: 'reward' },
+  boon: { kind: 'ref', refType: 'reward' },
+  trap: { kind: 'ref', refType: 'hazard' },
+  s: { kind: 'text' },
   cult: { kind: 'ref', refType: 'cult' },
 }
 

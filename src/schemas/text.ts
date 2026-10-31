@@ -3,7 +3,7 @@ import { z } from 'zod'
 /** 正文块与行内标记是规则包与冒险内容共用的语法（D1 §4.4 / L1 §2.3）。 */
 export type TextBlock =
   | { p: string }
-  | { h: string; body: TextBlock[] }
+  | { h: string; body: TextBlock[]; anchor?: string }
   | { list: string[] }
   | { table: { caption?: string; cols: string[]; rows: string[][] } }
   | { quote: string; by?: string }
@@ -13,7 +13,7 @@ export type TextBlock =
 export const textBlockSchema: z.ZodType<TextBlock> = z.lazy(() =>
   z.union([
     z.object({ p: z.string() }),
-    z.object({ h: z.string(), body: z.array(textBlockSchema) }),
+    z.object({ h: z.string(), body: z.array(textBlockSchema), anchor: z.string().optional() }),
     z.object({ list: z.array(z.string()) }),
     z.object({ table: z.object({ caption: z.string().optional(), cols: z.array(z.string()), rows: z.array(z.array(z.string())) }) }),
     z.object({ quote: z.string(), by: z.string().optional() }),

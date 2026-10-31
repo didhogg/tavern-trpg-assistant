@@ -28,6 +28,7 @@ export function fixtureEntries(): Entry[] {
     base('disease.sewer-plague.test', 'disease', '下水道瘟疫', { effects: [] }),
     base('status.concentration.test', 'status', '专注', { effects: [] }),
     base('rule.encumbrance.test', 'rule', '负重', { category: 'variant' }),
+    base('book.test-book.test', 'book', '测试书', { src: { book: 'PHB', page: 1 }, book: 'PHB', order: 0, anchor: 'phb-000', outline: [{ anchor: 'phb-000', level: 0, kind: 'section', title: '测试书' }] }),
     base('table.loot-a.test', 'table', '战利品 A', { kind: 'roll', dice: 'd6', cols: ['结果'], rows: [{ min: 1, max: 3, cells: ['金币'], refs: [] }, { min: 4, max: 6, cells: ['再掷一次'], refs: [], then: { table: 'table.loot-b.test' } }] }),
     base('table.loot-b.test', 'table', '战利品 B', { kind: 'roll', dice: 'd4', cols: ['结果'], rows: [{ min: 1, max: 4, cells: ['宝石'], refs: [] }] }),
     base('table.ref-test.test', 'table', '测试对照表', { kind: 'ref', cols: ['等级', '说明'], rows: [{ cells: ['1', '一'], refs: [] }, { cells: ['2', '二'], refs: [], indent: true }], chapter: { book: 'TEST', name: '测试章' } }),
