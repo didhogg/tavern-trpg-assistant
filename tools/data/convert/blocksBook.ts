@@ -31,6 +31,14 @@ function extra(input: Raw, ctx: InlineContext, options: BlockOptions): TextBlock
       return display
     }) }]
   }
+  if (type === 'inlineBlock') return convertBlocks(input.entries ?? input.entry, ctx, options)
+  if (type === 'list' && Array.isArray(input.items) && input.items.some((item) => !!item && typeof item === 'object' && (item as Raw).type === 'list')) {
+    const items = input.items.flatMap((item) => {
+      const nested = !!item && typeof item === 'object' && (item as Raw).type === 'list'
+      return convertBlocks(nested ? item : { type: 'list', items: [item] }, ctx, options).flatMap((block) => ('list' in block ? block.list : []))
+    })
+    return [{ list: items }]
+  }
   if (type === 'bookGroup') return [{ h: renderInline(str(input.name), ctx), body: convertBlocks(input.body, ctx, options) }]
   if (type === 'bookTable') {
     const cols = (Array.isArray(input.cols) ? input.cols : []).map((cell) => renderInline(str(cell), ctx))
