@@ -6,12 +6,14 @@ export interface Sample { id: string; path: string; before: string; after: strin
 
 export interface RuleResult { entriesChanged: number; changes: number; samples: Sample[] }
 
+export interface RuleContext { lang: Lang; record: (path: string, before: string, after: string) => void }
+
 /** 一条清理规则：对单个条目就地修改，返回改了多少处；zhOnly 的规则在英文那一遍不运行。 */
 export interface Rule {
   id: string
   title: string
   zhOnly: boolean
-  apply(entry: Entry, record: (path: string, before: string, after: string) => void): number
+  apply(entry: Entry, ctx: RuleContext): number
 }
 
 export interface CleanReport { lang: Lang; rules: Record<string, RuleResult & { title: string }> }

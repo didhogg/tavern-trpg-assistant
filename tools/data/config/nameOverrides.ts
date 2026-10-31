@@ -7,6 +7,10 @@ export interface NameOverride {
 }
 
 export const NAME_OVERRIDES: Record<string, NameOverride> = {
+  'feature.monk-ki.phb': {
+    name: '气', source: 'PHB', page: 76,
+    basis: 'PHB 第 76 页武僧「气」：本条正文已写「一股名为气的神秘能量」；5etools 中文版与规格 §5.9 均约定武僧 Ki 的中文名为「气」',
+  },
   'background.variant-noble-retainers.phb': {
     name: '变体贵族：家仆', source: 'PHB', page: 136,
     basis: 'PHB 第 136 页：Variant Noble (Retainers)，与「变体贵族：骑士」同组；原名「变体特性：家仆」是误译',

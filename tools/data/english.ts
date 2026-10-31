@@ -10,6 +10,7 @@ import { loadBookData } from './extract/books'
 import { planR12 } from './convert/planR12'
 import { loadR11Data } from './extract/r11'
 import { convertAll } from './convert'
+import { cleanEntries } from './clean'
 
 async function main(): Promise<void> {
   const out = process.argv[2]
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
   plan.entries.push(...r12.entries)
   attachVehicleFluff(data.fluff ?? [], r11.entries, plan.unmatchedFluff)
   const result = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
+  cleanEntries(result.packs.flatMap((pack) => pack.entries))
   const entries = result.packs.flatMap((pack) => pack.entries).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   // 表的配对靠顺序（见 i18n/tables.ts）：同时写出表在「规划」里的先后
   writeFileSync(out, JSON.stringify({ entries, tableOrder: plan.tables.map((table) => table.id) }))

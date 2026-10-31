@@ -1,8 +1,13 @@
 import type { Entry } from '../../../src/schemas/pack'
 import type { CleanReport, Lang, Rule } from './types'
+import { namesRule } from './rules/names'
+import { propertiesRule } from './rules/properties'
+import { formulasRule } from './rules/formulas'
+import { emptyRule } from './rules/empty'
+import { classColsRule } from './rules/classCols'
 
 /** 规则按这里的顺序依次运行；新增规则只在这里登记。 */
-export const RULES: Rule[] = []
+export const RULES: Rule[] = [namesRule, propertiesRule, formulasRule, emptyRule, classColsRule]
 
 const SAMPLE_LIMIT = 60
 let last: CleanReport | undefined
@@ -19,7 +24,7 @@ export function cleanEntries(entries: Iterable<Entry>, lang: Lang = langFromEnv(
   for (const entry of entries) {
     for (const rule of active) {
       const result = report.rules[rule.id]
-      const count = rule.apply(entry, (path, before, after) => { if (result.samples.length < SAMPLE_LIMIT) result.samples.push({ id: entry.id, path, before, after }) })
+      const count = rule.apply(entry, { lang, record: (path, before, after) => { if (result.samples.length < SAMPLE_LIMIT) result.samples.push({ id: entry.id, path, before, after }) } })
       if (count > 0) { result.entriesChanged += 1; result.changes += count }
     }
   }

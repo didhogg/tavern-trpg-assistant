@@ -4,6 +4,7 @@ import type { ConversionResult } from '../convert'
 import { BOOK_SOURCES } from '../config/books'
 import { LATIN_ALLOW } from '../config/latinAllow'
 import { NAME_OVERRIDES } from '../config/nameOverrides'
+import { parseFormula } from '../../../src/rules/dnd5e2014/data/formula'
 
 export interface HealthMetric {
   id: string
@@ -59,7 +60,8 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
   const dmgRaces = entries.filter((e) => e.type === 'race' && (e.data.src as { book?: string } | undefined)?.book === 'DMG')
   const tableNoParent = entries.filter((e) => e.type === 'table' && !(e.data.parent as unknown) && !(e.data.chapter as unknown)).length
   const tableRepeatedName = entries.filter((e) => { if (e.type !== 'table') return false; const parts = e.name.split('·'); return parts.length === 2 && parts[0] === parts[1] }).length
-  const formulaMarkers = entries.reduce((n, e) => n + (JSON.stringify(e.data).match(/\{\{spellcasting_mod\}\}/g)?.length ?? 0) + (JSON.stringify(e.data).match(/class\.druid\.level/g)?.length ?? 0), 0)
+  const badUses = entries.filter((e) => typeof (e.data.uses as { max?: unknown } | undefined)?.max === 'string' && !parseFormula((e.data.uses as { max: string }).max).ok).length
+  const formulaMarkers = entries.reduce((n, e) => n + (JSON.stringify(e.data).match(/\{\{spellcasting_mod\}\}/g)?.length ?? 0), 0) + badUses
   let tableCellRefs = 0
   let emptyCells = 0
   for (const e of entries) walk(e.data.text, (block) => {
@@ -97,7 +99,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     { id: 'A2', label: '可选特性 owner=optional', status: 'measured', count: optional.length, definition: 'owner.type 为 optional 的可选特性' },
     { id: 'A3', label: 'TCE 可选职业特性源记录', status: 'measured', count: tce, definition: 'classFeatures 中 isClassFeatureVariant=true 的记录' },
     { id: 'A4', label: '有附赠熟练但没有 trait 升级操作的特性', status: 'measured', count: features.filter((e) => e.id.includes('bonus-proficien')).length, definition: 'id 含 bonus-proficien 的附赠熟练特性' },
-    { id: 'A5', label: '公式/标记错误出现次数', status: 'measured', count: formulaMarkers, definition: '{{spellcasting_mod}} 与 class.druid.level 错公式出现次数' },
+    { id: 'A5', label: '公式/标记错误出现次数', status: 'measured', count: formulaMarkers, definition: '{{spellcasting_mod}} 出现次数 + 不能被 parseFormula 读懂的 uses.max 条目数' },
     { id: 'B1-ASI', label: '属性值提升特性源记录', status: 'measured', count: data.classFeatures.filter((f) => String(f.name).includes('属性值提升')).length, definition: 'classFeatures 名称含「属性值提升」的记录' },
     { id: 'B2', label: 'feature 名称带「特性：」前缀', status: 'measured', count: bgPrefix.length, definition: 'feature 类型名称以「特性：」开头的条目' },
     { id: 'B2b', label: '变体背景名称与英文名不对应', status: 'measured', count: bgNameMismatch.length, definition: 'nameOverrides 中登记、当前中文名仍与英文名不对应的变体背景' },
@@ -114,7 +116,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     { id: 'D2', label: '物品属性带来源代码', status: 'measured', count: d2, definition: 'properties 顶层（缺失时用 weapon.properties）至少含一个带 | 的属性代码的物品条目数（同一物品只算一次）' },
     { id: 'D3', label: '表格单元引用条目', status: 'informational', count: tableCellRefs, definition: '正文表格单元含 {{ref:…}} 的条目数，仅作参考' },
     { id: 'D4', label: '空表格单元', status: 'measured', count: emptyCells, definition: '表格 rows 中为空字符串的单元数' },
-    { id: 'D5', label: '中英混用的职业表列名', status: 'measured', count: entries.filter((e) => e.type === 'class' && Array.isArray((e.data.table as { cols?: string[] } | undefined)?.cols) && (e.data.table as { cols: string[] }).cols.some((c) => /(?:st|th|环)/i.test(c))).length, definition: 'class.table.cols 含 st/th/环 的条目数' },
+    { id: 'D5', label: '中英混用的职业表列名', status: 'measured', count: entries.filter((e) => e.type === 'class' && Array.isArray((e.data.table as { cols?: string[] } | undefined)?.cols) && (e.data.table as { cols: string[] }).cols.some((c) => /\d(?:st|nd|rd|th)\b/i.test(c))).length, definition: 'class.table.cols 含英文序数词（1st、2nd、3rd、4th…）的条目数' },
     { id: 'D6', label: '缺中文名称', status: 'measured', count: missingName, definition: 'credit.missing 含 name 的条目' },
     { id: 'D7', label: '空段落/空列表项', status: 'measured', count: d7, definition: '正文块中 p 为空字符串或 list 项为空字符串的出现次数' },
     { id: 'spell-actions', label: '有攻击/豁免/伤害但无行动的法术', status: 'measured', count: noActions, definition: 'spell 有攻击/豁免/伤害但 activities 为空' },
