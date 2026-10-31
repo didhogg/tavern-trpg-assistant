@@ -28,6 +28,7 @@ const textLength = (blocks: TextBlock[]): number => blocks.map((b) => {
   if ('list' in b) return b.list.join('').length
   if ('quote' in b) return b.quote.length
   if ('table' in b) return b.table.rows.flat().join('').length + b.table.cols.join('').length
+  if ('tableRef' in b) return b.tableRef.label.length
   return textLength(b.read)
 }).reduce((a, b) => a + b, 0)
 function tables(blocks: TextBlock[]): Array<{ caption?: string; cols: string[]; rows: string[][] }> {

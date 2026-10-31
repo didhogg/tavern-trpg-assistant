@@ -32,6 +32,7 @@ export function convertTable(entry: PlannedEntry, ctx: ConvertContext, inline: I
     src: { book: entry.source, page: entry.page },
     credit: creditFor(entry, ctx.bookMachine.get(entry.source) ?? false),
     text,
+    kind: seed.group?.id.startsWith('loot') ? 'loot' : 'roll',
     dice: seed.dice,
     cols: seed.cols.map((c) => renderInline(c, inline)),
     rows,

@@ -16,7 +16,7 @@ const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 const str = (v: unknown): string => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '')
 
-import { ABILITY, ALIGNMENT, ARMOR_CATEGORY, CREATURE, DAMAGE, ITEM_CATEGORY, LANGUAGE, MOVE, RANGE_SHAPE, RANGE_WORD, RARITY, RECHARGE, RULE_CATEGORY, SCHOOL, SIZE, SKILL, TOOL, UNIT, WEAPON_CATEGORY, WEAPON_PROPERTY, tr, trCode, trWords } from './zh'
+import { ABILITY, ALIGNMENT, ARMOR_CATEGORY, CREATURE, DAMAGE, ITEM_CATEGORY, LANGUAGE, MOVE, RANGE_SHAPE, RANGE_WORD, RARITY, RECHARGE, RULE_CATEGORY, SCHOOL, SIZE, SKILL, TABLE_KIND, TOOL, UNIT, WEAPON_CATEGORY, WEAPON_PROPERTY, tr, trCode, trWords } from './zh'
 
 const join = (items: string[], sep = '、'): string => items.filter(Boolean).join(sep)
 const abilityList = (v: unknown): string => list(v, ABILITY)
@@ -228,8 +228,19 @@ function itemFacts(d: Obj): Fact[] {
 
 function tableFacts(d: Obj): Fact[] {
   const cols = arr(d.cols).map(str)
-  const rows = arr(d.rows).filter(isObj).map((r) => [r.min === r.max ? str(r.min) : `${r.min}–${r.max}`, ...arr(r.cells).map(str)])
-  return rows.length ? [{ label: `${d.dice ? `${d.dice} ` : ''}随机表`, table: { cols: [d.dice ? str(d.dice) : '点数', ...cols], rows } }] : []
+  const kind = str(d.kind) || 'roll'
+  const isRef = kind === 'ref'
+  const modifier = isObj(d.modifier) ? `＋修正值（${str(d.modifier.prompt)}）` : ''
+  const rows = arr(d.rows).filter(isObj).map((r) => {
+    const prefix = isRef ? [] : [r.min === r.max ? str(r.min) : `${r.min}–${r.max}`]
+    const cells = arr(r.cells).map((cell) => `${r.indent === true ? '　' : ''}${str(cell)}`)
+    return [...prefix, ...cells]
+  })
+  if (!rows.length) return []
+  const out: Fact[] = [{ label: `${d.dice ? `${d.dice}${modifier} ` : ''}${tr(TABLE_KIND, kind)}`, table: { cols: isRef ? cols : [d.dice ? str(d.dice) : '点数', ...cols], rows } }]
+  if (isObj(d.parent) && str(d.parent.id)) out.push({ label: '所属', parts: [{ ref: str(d.parent.id) }] })
+  else if (isObj(d.chapter)) out.push({ label: '所属章节', parts: [`${str(d.chapter.book)}·${str(d.chapter.name)}`] })
+  return out
 }
 
 /** 取条目的事实列表；没有结构化数据时返回空数组。 */

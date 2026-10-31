@@ -30,6 +30,10 @@ const emit = defineEmits<{ ref: [id: string] }>()
           </template>
         </li>
       </ul>
+      <p v-else-if="'tableRef' in b" class="trpg-blocks__table-ref">
+        <span aria-hidden="true">{{ /（[^）]+）$/.test(b.tableRef.label) ? '🎲' : '📋' }}</span>
+        <Term @open="emit('ref', b.tableRef.id)">{{ b.tableRef.label }}</Term>
+      </p>
       <div v-else-if="'table' in b" class="trpg-blocks__table">
         <table>
           <caption v-if="b.table.caption">{{ b.table.caption }}</caption>

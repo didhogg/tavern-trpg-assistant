@@ -8,6 +8,7 @@ export type TextBlock =
   | { table: { caption?: string; cols: string[]; rows: string[][] } }
   | { quote: string; by?: string }
   | { read: TextBlock[] }
+  | { tableRef: { id: string; label: string } }
 
 export const textBlockSchema: z.ZodType<TextBlock> = z.lazy(() =>
   z.union([
@@ -17,6 +18,7 @@ export const textBlockSchema: z.ZodType<TextBlock> = z.lazy(() =>
     z.object({ table: z.object({ caption: z.string().optional(), cols: z.array(z.string()), rows: z.array(z.array(z.string())) }) }),
     z.object({ quote: z.string(), by: z.string().optional() }),
     z.object({ read: z.array(textBlockSchema) }),
+    z.object({ tableRef: z.object({ id: z.string().min(1), label: z.string().min(1) }) }),
   ]),
 )
 

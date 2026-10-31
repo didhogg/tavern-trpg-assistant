@@ -28,6 +28,7 @@ export function plainText(blocks: TextBlock[]): string {
       if ('list' in block) return block.list
       if ('quote' in block) return [block.quote]
       if ('table' in block) return block.table.rows.map((row) => row.join(' '))
+      if ('tableRef' in block) return [block.tableRef.label]
       return walk(block.read)
     })
   return walk(blocks)

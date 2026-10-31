@@ -38,6 +38,7 @@ export const RANGE_SHAPE: Record<string, string> = { point: '点', cone: '锥形
 export const RANGE_WORD: Record<string, string> = { self: '自身', touch: '触及', sight: '视线内', unlimited: '无限', special: '特殊' }
 export const RECHARGE: Record<string, string> = RECHARGE_LABELS
 export const RULE_CATEGORY: Record<string, string> = { variant: '变体规则', action: '动作', sense: '感官', skill: '技能', script: '文字系统', itemProperty: '物品属性', itemType: '物品类型', itemTypeExtra: '物品类型附加条目', quickref: '速查' }
+export const TABLE_KIND: Record<string, string> = { roll: '随机表', names: '名字表', life: '人生表', deck: '牌组', loot: '宝藏表', encounter: '遭遇表', ref: '对照表' }
 
 export const tr = lookup
 /** 带「|」后缀的代码（如 AF|DMG）只取前半。 */

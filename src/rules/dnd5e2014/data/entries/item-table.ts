@@ -1,5 +1,7 @@
 import { z } from 'zod'
-import { damagePartSchema, usesSchema, diceSchema } from '../common'
+import { damagePartSchema, usesSchema } from '../common'
+import { parseDice } from '../../../dice/parse'
+import { tableColumnSchema, tableValueSchema } from '../tableValues'
 import { entryCommonFields } from './base'
 import { effectListSchema } from '../effects'
 
@@ -56,23 +58,35 @@ export const itemDataSchema = z.looseObject({
 })
 export type ItemData = z.infer<typeof itemDataSchema>
 
+export const tableKindSchema = z.enum(['roll', 'names', 'life', 'deck', 'loot', 'encounter', 'ref'])
+export const tableDiceSchema = z.string().refine((value) => parseDice(value).ok, '骰式必须是 d6、3d6 或 d12+d8')
+
 export const tableRowSchema = z.looseObject({
-  min: z.number().int().nonnegative(),
-  max: z.number().int().nonnegative(),
+  min: z.number().int().nonnegative().optional(),
+  max: z.number().int().nonnegative().optional(),
   cells: z.array(z.string()).default([]),
   refs: z.array(z.string()).default([]),
   then: z.object({ table: z.string().min(1), times: z.number().int().positive().optional() }).optional(),
   qty: z.string().max(40).optional(),
+  indent: z.boolean().optional(),
+  values: z.record(z.string(), tableValueSchema).optional(),
 })
 export type TableRow = z.infer<typeof tableRowSchema>
 
 export const tableDataSchema = z.looseObject({
   ...entryCommonFields,
-  dice: diceSchema,
+  kind: tableKindSchema,
+  dice: tableDiceSchema.optional(),
+  modifier: z.object({ prompt: z.string().min(1).max(40) }).optional(),
   cols: z.array(z.string()).min(1),
   rows: z.array(tableRowSchema).min(1),
   group: z.object({ id: z.string().min(1), name: z.string().min(1) }).optional(),
   caption: z.string().max(200).optional(),
+  footnotes: z.array(z.string()).optional(),
+  parent: z.object({ id: z.string().min(1) }).optional(),
+  chapter: z.object({ book: z.string(), name: z.string().min(1).max(60) }).optional(),
+  purpose: z.string().max(60).optional(),
+  columns: z.array(tableColumnSchema).optional(),
 })
 export type TableData = z.infer<typeof tableDataSchema>
 

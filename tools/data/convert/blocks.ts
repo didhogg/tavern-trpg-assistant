@@ -28,7 +28,7 @@ function textOf(block: TextBlock): string {
   if ('list' in block) return block.list.join('；')
   if ('quote' in block) return block.quote
   if ('table' in block) return block.table.rows.map((r) => r.join(' ')).join('；')
-  return block.read.map(textOf).join('')
+  return 'tableRef' in block ? block.tableRef.label : block.read.map(textOf).join('')
 }
 
 function refText(obj: Raw, ctx: InlineContext): string {
@@ -73,7 +73,7 @@ export function convertBlocks(input: unknown, ctx: InlineContext, options: Block
     }
     return out
   }
-  if (!isObj(input)) return []; const hooked = options.extra?.(input, ctx, options); if (hooked) return hooked
+  if (!isObj(input)) return []; const hooked = options.extra?.(input, ctx, options); if (hooked) return hooked; // type
   const type = str(input.type)
   const entries = input.entries
   if (type === 'entries') {
@@ -116,7 +116,7 @@ export function convertBlocks(input: unknown, ctx: InlineContext, options: Block
     return [{ p: Object.values(input).filter((v) => typeof v === 'string').join(' ') }]
   }
   if (type === 'inline' || type === 'inlineBlock') return [{ p: renderInline(str(input.entry) || str(input.name), ctx) }]
-  if (type === 'hr' || type === 'image' || type === 'gallery') return []
+  if (type === 'tableRef') return [{ tableRef: { id: str(input.id), label: str(input.label) } }]; if (type === 'hr' || type === 'image' || type === 'gallery') return []
   if (entries !== undefined) return convertBlocks(entries, ctx, options)
   if (str(input.name)) return [{ h: renderInline(str(input.name), ctx), body: [] }]
   return []

@@ -18,6 +18,7 @@ function textOf(block: TextBlock): string {
   if ('list' in block) return block.list.join('；')
   if ('quote' in block) return block.quote
   if ('table' in block) return block.table.rows.map((row) => row.join(' ')).join('；')
+  if ('tableRef' in block) return block.tableRef.label
   return block.read.map(textOf).join('')
 }
 
