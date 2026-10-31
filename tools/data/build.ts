@@ -32,6 +32,7 @@ import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
 import { latinLog } from './clean/rules/latin'
+import { writeCleanReport } from './clean/report'
 import { checkPublished, type Published } from './version'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
@@ -148,6 +149,7 @@ async function main(): Promise<void> {
     await writeCharacterReport(REPO_ROOT, result)
     await writeChecklist11(REPO_ROOT, result)
     await writeI18nReport(REPO_ROOT, aligned, english.entries.length, outputs)
+    await writeCleanReport(REPO_ROOT, lastCleanReport()!, health, outputs)
   }
   for (const [id, out] of outputs) console.log(`${id.padEnd(24)} ${(out.bytes.length / 1024).toFixed(1)} KB  ${out.sha256}`)
   console.log(`合计 ${(volumes.reduce((n, v) => n + v.bytes, 0) / 1024 / 1024).toFixed(2)} MB`)

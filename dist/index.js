@@ -9252,7 +9252,10 @@ var Iy = {
 		body: Zv(Vy),
 		anchor: Z().optional()
 	}),
-	$v({ list: Zv(Z()) }),
+	$v({
+		list: Zv(Z()),
+		restated: Gv().optional()
+	}),
 	$v({ table: $v({
 		caption: Z().optional(),
 		cols: Zv(Z()),
@@ -28143,7 +28146,7 @@ var KL = {
 	fire: "火焰",
 	force: "力场",
 	lightning: "闪电",
-	necrotic: "死灵",
+	necrotic: "暗蚀",
 	piercing: "穿刺",
 	poison: "毒素",
 	psychic: "心灵",
