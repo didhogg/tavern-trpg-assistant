@@ -188,7 +188,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
   }
   if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }
   const unique = data.rarity === 'artifact'
-  const displayName = family ? `${entry.name}（系列）` : entry.name
+  const displayName = family ? `${entry.name}${process.env.TRPG_DATA_LANG === 'en' ? ' (Family)' : '（系列）'}` : entry.name
   const displayNameEn = family ? `${entry.nameEn} (Family)` : entry.nameEn
   return { id: entry.id, type: 'item', name: displayName, nameEn: displayNameEn, keywords: keywordsOf(entry), unique, summary: summaryOf('item', displayName, data, plainText(text)), data }
 }

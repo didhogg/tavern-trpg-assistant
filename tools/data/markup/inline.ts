@@ -16,10 +16,14 @@ export interface RefIndex {
 /** R11 新增的规则分类只登记在「类别键」下：与旧规则（动作、变体规则）同名时，不能抢走旧规则的 `rule|名称` 键。 */
 const R11_RULE_CATEGORIES = new Set(['script', 'skill', 'sense', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref'])
 
+/** R13：英文标签的大小写不统一（`{@condition blinded}` 指向条目「Blinded」），英文那一遍的索引键一律小写。 */
+export const refKey = (key: string): string => (process.env.TRPG_DATA_LANG === 'en' ? key.toLowerCase() : key)
+
 export function addRef(index: RefIndex, target: RefTarget, source: string): void {
   const keys = target.type === 'rule' && target.category && R11_RULE_CATEGORIES.has(target.category) ? [] : [`${target.type}|${target.name}`]
   if (target.type === 'rule' && target.category) keys.push(`rule:${target.category}|${target.name}`)
-  for (const key of keys) {
+  for (const rawKey of keys) {
+    const key = refKey(rawKey)
     const list = index.byTypeName.get(key) ?? []
     list.push(target)
     index.byTypeName.set(key, list)
@@ -36,9 +40,12 @@ export interface InlineContext {
   missingTags: Map<string, number>
   vars?: Record<string, string>
   refStats?: Map<string, { ref: number; text: number }>
+  /** R13：英文那一遍。转换器里写死的中文字样改用英文。 */
+  lang?: 'en'
 }
 
 const ATK_NAMES: Record<string, string> = { mw: '近战武器攻击', rw: '远程武器攻击', ms: '近战法术攻击', rs: '远程法术攻击' }
+const ATK_NAMES_EN: Record<string, string> = { mw: 'Melee Weapon Attack', rw: 'Ranged Weapon Attack', ms: 'Melee Spell Attack', rs: 'Ranged Spell Attack' }
 const DICE = /^\d{0,2}d\d{1,3}(?:\s*[+-]\s*\d+)?$/i
 
 function cleanDice(value: string): string | undefined {
@@ -62,13 +69,13 @@ function sourcePart(parts: string[], from = 1): string | undefined {
 
 function resolve(ctx: InlineContext, type: string, name: string, source?: string): RefTarget | undefined {
   if (source) {
-    const exact = ctx.index.byTypeNameSource.get(`${type}|${name}|${source}`)
+    const exact = ctx.index.byTypeNameSource.get(refKey(`${type}|${name}|${source}`))
     if (exact) return exact
   }
-  const sameBook = ctx.index.byTypeNameSource.get(`${type}|${name}|${ctx.book}`)
+  const sameBook = ctx.index.byTypeNameSource.get(refKey(`${type}|${name}|${ctx.book}`))
   if (sameBook) return sameBook
-  const fallback = type.startsWith('rule:') ? ctx.index.byTypeName.get(`rule|${name}`)?.[0] : undefined
-  return ctx.index.byTypeName.get(`${type}|${name}`)?.[0] ?? fallback
+  const fallback = type.startsWith('rule:') ? ctx.index.byTypeName.get(refKey(`rule|${name}`))?.[0] : undefined
+  return ctx.index.byTypeName.get(refKey(`${type}|${name}`))?.[0] ?? fallback
 }
 
 function refMarkup(ctx: InlineContext, specType: string, parts: string[], tag = ''): string {
@@ -104,13 +111,14 @@ const DISPLAY_INDEX: Record<string, number> = {
   recipe: 2,
 }
 
-function textValue(name: string, parts: string[]): string {
+function textValue(name: string, parts: string[], lang?: 'en'): string {
   const first = parts[0] ?? ''
   switch (name) {
     case 'h':
-      return '命中：'
+      return lang === 'en' ? 'Hit: ' : '命中：'
     case 'recharge': {
       const n = first.trim()
+      if (lang === 'en') return n ? `(Recharge ${n}–6)` : '(Recharge 6)'
       return n ? `（充能${n}–6）` : '（充能6）'
     }
     case 'chance':
@@ -132,7 +140,7 @@ function renderTag(name: string, arg: string, ctx: InlineContext): string {
     const number = Number(count)
     return Number.isFinite(number) && number > 1 ? (parts[2] || parts[1] || '') : (parts[1] || parts[2] || '')
   }
-  if (name === 'm') return '未命中：'
+  if (name === 'm') return ctx.lang === 'en' ? 'Miss: ' : '未命中：'
   if (name === 'coinflip') return arg.split('|')[0] ?? ''
   const spec = tagSpec(name, ctx.book)
   const parts = arg.split('|')
@@ -150,8 +158,8 @@ function renderTag(name: string, arg: string, ctx: InlineContext): string {
       return `{{dc:${parts[0] ?? ''}}}`
     case 'atk': {
       const kinds = (parts[0] ?? '').split(',').map((k) => k.trim()).filter(Boolean)
-      const names = kinds.map((k) => ATK_NAMES[k] ?? k)
-      return `{{atk:${kinds.join(',') || 'mw'}|${parts[1] || names.join('或') || '攻击'}}}`
+      const names = kinds.map((k) => (ctx.lang === 'en' ? ATK_NAMES_EN : ATK_NAMES)[k] ?? k)
+      return `{{atk:${kinds.join(',') || 'mw'}|${parts[1] || names.join(ctx.lang === 'en' ? ' or ' : '或') || (ctx.lang === 'en' ? 'Attack' : '攻击')}}}`
     }
     case 'ref':
       return refMarkup(ctx, spec.refType ?? 'rule', parts, name)
@@ -161,7 +169,7 @@ function renderTag(name: string, arg: string, ctx: InlineContext): string {
     case 'text':
       if (name === 'note') return renderInline(arg, ctx)
       if (name === 'link') return renderInline(parts[0] ?? '', ctx)
-      return renderInline(textValue(name, parts), ctx)
+      return renderInline(textValue(name, parts, ctx.lang), ctx)
     default:
       return arg
   }

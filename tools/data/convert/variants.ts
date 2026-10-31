@@ -23,14 +23,14 @@ function spellcastingBlocks(raw: Record<string, unknown>, inline: InlineContext)
     if (!isObj(value)) continue
     const names = (Array.isArray(value.spells) ? value.spells : []).map((x) => spellName(x, inline)).filter(Boolean)
     if (!names.length) continue
-    if (key === '0') lines.push(`戏法：${names.join('、')}`)
+    if (key === '0') lines.push(`${process.env.TRPG_DATA_LANG === 'en' ? 'Cantrips: ' : '戏法：'}${names.join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')}`)
     else if (/^\d+$/.test(key)) {
-      const slots = typeof value.slots === 'number' ? `（${value.slots} 个法术位）` : ''
-      lines.push(`${key} 环${slots}：${names.join('、')}`)
+      const slots = typeof value.slots === 'number' ? (process.env.TRPG_DATA_LANG === 'en' ? ` (${value.slots} slots)` : `（${value.slots} 个法术位）`) : ''
+      lines.push(`${key}${process.env.TRPG_DATA_LANG === 'en' ? ` level${slots}: ` : ` 环${slots}：`}${names.join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')}`)
     }
   }
   const will = Array.isArray(raw.will) ? raw.will.map((x) => spellName(x, inline)).filter(Boolean) : []
-  if (will.length) lines.push(`随意施放：${will.join('、')}`)
+  if (will.length) lines.push(`${process.env.TRPG_DATA_LANG === 'en' ? 'At will: ' : '随意施放：'}${will.join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')}`)
   const daily = isObj(raw.daily) ? raw.daily : {}
   for (const [key, value] of Object.entries(daily)) {
     if (!Array.isArray(value)) continue
@@ -38,7 +38,7 @@ function spellcastingBlocks(raw: Record<string, unknown>, inline: InlineContext)
     if (!names.length) continue
     const every = key.endsWith('e')
     const times = Number(key.replace(/e$/, ''))
-    lines.push(`每日 ${times} 次${every ? '（每个）' : ''}：${names.join('、')}`)
+    lines.push(process.env.TRPG_DATA_LANG === 'en' ? `${times}/day${every ? ' each' : ''}: ${names.join(', ')}` : `每日 ${times} 次${every ? '（每个）' : ''}：${names.join('、')}`)
   }
   if (lines.length) body.push({ list: lines })
   body.push(...convertBlocks(raw.footerEntries, inline))

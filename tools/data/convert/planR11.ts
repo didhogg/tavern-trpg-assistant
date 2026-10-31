@@ -10,6 +10,10 @@ const PANTHEON_EN: Record<string, string> = {
   被遗忘的国度: 'forgotten-realms',
   非人类: 'nonhuman',
   北欧: 'norse',
+  Celtic: 'celtic',
+  'Forgotten Realms': 'forgotten-realms',
+  Nonhuman: 'nonhuman',
+  Norse: 'norse',
 }
 
 /** 新增规则分类的 id 前缀（R11 执行文档 3.2）：同名的物品属性、物品类型、速查、变体规则靠前缀区分，不靠 -2 后缀。 */

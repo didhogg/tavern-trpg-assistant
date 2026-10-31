@@ -4,7 +4,8 @@ import { BOOK_SOURCES } from '../config/books'
 import { listFiles, readJson, REPO_ROOT } from '../lib/io'
 import { loadFluff, type FluffRecord } from './fluff'
 
-export const DATA_5ETOOLS = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data')
+// R13：英文那一遍用环境变量 TRPG_DATA_DIR=data-bak 把数据目录换成英文原版
+export const DATA_5ETOOLS = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data')
 export const DATA_FALLBACK = join(REPO_ROOT, 'reference', 'dnd-data-main（数据库）', 'data')
 
 export type Raw = Record<string, unknown>
@@ -249,7 +250,10 @@ async function loadFallbackNames(): Promise<Set<string>> {
   return names
 }
 
-const DAMAGE_CN: Record<string, string> = {
+const DAMAGE_CN: Record<string, string> = process.env.TRPG_DATA_LANG === 'en' ? {
+  acid: 'acid', bludgeoning: 'bludgeoning', cold: 'cold', fire: 'fire', force: 'force', lightning: 'lightning', necrotic: 'necrotic',
+  piercing: 'piercing', poison: 'poison', psychic: 'psychic', radiant: 'radiant', slashing: 'slashing', thunder: 'thunder',
+} : {
   acid: '强酸', bludgeoning: '钝击', cold: '冷冻', fire: '火焰', force: '力场', lightning: '闪电', necrotic: '死灵',
   piercing: '穿刺', poison: '毒素', psychic: '心灵', radiant: '光耀', slashing: '挥砍', thunder: '雷鸣',
 }
@@ -258,7 +262,7 @@ function fillTemplate(value: unknown, item: Raw): unknown {
   if (typeof value === 'string') {
     return value.replace(/\{\{item\.(\w+)\}\}/g, (_all, key: string) => {
       const field = item[key]
-      if (Array.isArray(field)) return field.map((v) => DAMAGE_CN[String(v)] ?? String(v)).join('、')
+      if (Array.isArray(field)) return field.map((v) => DAMAGE_CN[String(v)] ?? String(v)).join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')
       if (typeof field === 'string' || typeof field === 'number') return String(field)
       throw new Error(`物品「${String(item.name)}」缺少模板变量 item.${key}`)
     })

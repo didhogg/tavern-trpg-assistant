@@ -104,7 +104,7 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
   if (attack && !activities.some((a) => a.kind === 'attack')) {
     activities.push({
       id: `${entry.id}.attack`,
-      name: `${entry.name}（攻击）`,
+      name: `${entry.name}${process.env.TRPG_DATA_LANG === 'en' ? ' (Attack)' : '（攻击）'}`,
       kind: 'attack',
       attackKind: attack.toUpperCase() === 'M' ? 'ms' : 'rs',
       damage: textDamage,
@@ -114,7 +114,7 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
   if (saveCodes.length && !activities.some((a) => a.kind === 'save')) {
     activities.push({
       id: `${entry.id}.save`,
-      name: `${entry.name}（豁免）`,
+      name: `${entry.name}${process.env.TRPG_DATA_LANG === 'en' ? ' (Save)' : '（豁免）'}`,
       kind: 'save',
       ability: saveCodes[0] as never,
       dc: 'spell',

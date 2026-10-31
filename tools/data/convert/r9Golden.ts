@@ -42,8 +42,8 @@ function band(n: string): string | undefined {
   return p ? `${p[1]}+` : undefined
 }
 function lootKind(n: string): string | undefined {
-  if (/个人宝藏|个体宝藏/.test(n)) return 'ind'
-  if (/宝藏堆|库藏宝藏/.test(n)) return 'hoard'
+  if (/个人宝藏|个体宝藏|individual treasure/i.test(n)) return 'ind'
+  if (/宝藏堆|库藏宝藏|treasure hoard/i.test(n)) return 'hoard'
   return undefined
 }
 function stripParen(n: string): string { return n.replace(/[（(][^）)]*[）)]$/, '') }
@@ -97,7 +97,8 @@ export function selectSurvivors(pool: R9Candidate[], planned: PlannedEntry[]): G
   for (const s of survivors) s.srd = s.srd === true
   const byId = new Map(planned.map((e) => [e.id, e]))
   const findOne = (type: string, name: string, source?: string): PlannedEntry | undefined => {
-    const list = planned.filter((e) => e.type === type && e.name === name)
+    const same = (a: string, b: string): boolean => (process.env.TRPG_DATA_LANG === 'en' ? a.toLowerCase() === b.toLowerCase() : a === b)
+    const list = planned.filter((e) => e.type === type && same(e.name, name))
     return (source ? list.find((e) => e.source === source) : undefined) ?? list.sort((a, b) => (a.source === 'PHB' ? -1 : 0) - (b.source === 'PHB' ? -1 : 0))[0]
   }
   for (const s of survivors) {

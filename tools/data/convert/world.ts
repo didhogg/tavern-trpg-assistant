@@ -6,7 +6,7 @@ import { convertBlocks } from './blocks'
 import { r11BlockOptions } from './blocksR11'
 import { creditFor, keywordsOf, pageOf, str, obj } from './common'
 import { plainText, summaryOf } from '../summary/summary'
-import { renderInline, renderInlineList } from '../markup/inline'
+import { refKey, renderInline, renderInlineList } from '../markup/inline'
 import { foundryRulesFor, dedupeEffects } from './foundry'
 import { rewardSpellGrants } from './rewardSpells'
 import { reprintTargets } from './versions'
@@ -43,7 +43,7 @@ export function convertLanguage(entry: PlannedEntry, ctx: ConvertContext, inline
   if (['standard', 'exotic', 'secret'].includes(str(raw.type))) data.type = str(raw.type)
   if (typeof raw.script === 'string') data.script = raw.script
   if (typeof raw.script === 'string') {
-    const target = ctx.index.byTypeName.get(`rule:script|${raw.script}`)?.[0]
+    const target = ctx.index.byTypeName.get(refKey(`rule:script|${raw.script}`))?.[0]
     if (target) data.scriptRule = target.id
   }
   data.typicalSpeakers = renderInlineList(Array.isArray(raw.typicalSpeakers) ? raw.typicalSpeakers.map(String) : [], inline)
@@ -78,7 +78,7 @@ function supersededCult(entry: PlannedEntry, ctx: ConvertContext, data: Record<s
   const targets = reprintTargets(entry.raw)
   for (const target of targets) {
     for (const source of target.sources) {
-      const hit = ctx.index.byTypeNameSource.get(`cult|${target.name}|${source}`)
+      const hit = ctx.index.byTypeNameSource.get(refKey(`cult|${target.name}|${source}`))
       if (hit) {
         data.supersededBy = hit.id
         return
@@ -129,7 +129,7 @@ export function convertCult(entry: PlannedEntry, ctx: ConvertContext, inline: In
   return entryOf(entry, data)
 }
 
-const THREAT: Record<string, string> = { 妨害: 'setback', 中等: 'moderate', 危险: 'dangerous', 致命: 'deadly' }
+const THREAT: Record<string, string> = { 妨害: 'setback', 中等: 'moderate', 危险: 'dangerous', 致命: 'deadly', setback: 'setback', moderate: 'moderate', dangerous: 'dangerous', deadly: 'deadly' }
 
 function textBlocks(value: unknown, inline: InlineContext) {
   return convertBlocks(value, inline, r11BlockOptions)

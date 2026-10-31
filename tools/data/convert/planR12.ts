@@ -6,7 +6,7 @@ import { tableLabel } from './planR9'
 import type { BookData } from '../extract/books'
 import { BOOK_BY_SOURCE, PACK_BY_SOURCE } from '../config/books'
 import { slug } from '../lib/slug'
-import { addRef, type RefIndex } from '../markup/inline'
+import { addRef, refKey, type RefIndex } from '../markup/inline'
 import { cellText, normRaw, parseLabel, rangeOf, refCell, refRows } from './r9lib'
 import type { R9Row } from './r9Types'
 import type { R12OutlineItem, R12PlanResult, R12Stats } from './r12Types'
@@ -101,8 +101,8 @@ function makeIndex(entries: PlannedEntry[], r9: R9PlanResult): RefIndex {
 
 function resolve(index: RefIndex, type: string, name: string, enName: string, src: string | undefined, book: string): string | undefined {
   for (const nm of [name, enName]) {
-    const key = `${type}|${nm}`
-    const target = (src ? index.byTypeNameSource.get(`${key}|${src.toUpperCase()}`) : undefined) ?? index.byTypeNameSource.get(`${key}|${book}`) ?? index.byTypeName.get(key)?.[0] ?? (type.startsWith('rule:') ? index.byTypeName.get(`rule|${nm}`)?.[0] : undefined)
+    const key = refKey(`${type}|${nm}`)
+    const target = (src ? index.byTypeNameSource.get(`${key}|${src.toUpperCase()}`) : undefined) ?? index.byTypeNameSource.get(`${key}|${book}`) ?? index.byTypeName.get(key)?.[0] ?? (type.startsWith('rule:') ? index.byTypeName.get(refKey(`rule|${nm}`))?.[0] : undefined)
     if (target) return target.id
   }
   return undefined
@@ -137,7 +137,7 @@ function inlineTable(node: Raw): Raw {
   const cols = (Array.isArray(node.colLabels) ? node.colLabels : []).map(refCell)
   const rows = (Array.isArray(node.rows) ? node.rows : []).map((row) => Array.isArray(row) ? row : obj(row) && Array.isArray(row.row) ? row.row : [])
   const width = Math.max(cols.length, ...rows.map((row) => row.length))
-  while (cols.length < width) cols.push(`第${cols.length + 1}列`)
+  while (cols.length < width) cols.push(process.env.TRPG_DATA_LANG === 'en' ? `Column ${cols.length + 1}` : `第${cols.length + 1}列`)
   return { type: 'bookTable', ...(str(node.caption) ? { caption: str(node.caption) } : {}), cols, rows: rows.map((row) => row.map(refCell)) }
 }
 

@@ -31,7 +31,7 @@ export function activitiesFromText(value: unknown, name: string, idPrefix: strin
     const kind = (attack[1].split(',')[0] || 'mw') as 'mw' | 'rw' | 'ms' | 'rs'
     out.push({
       id: `${idPrefix}.attack`,
-      name: `${name}（攻击）`,
+      name: `${name}${process.env.TRPG_DATA_LANG === 'en' ? ' (Attack)' : '（攻击）'}`,
       kind: 'attack',
       attackKind: kind,
       ...(hit ? { bonus: Number(hit[1]) } : {}),
@@ -44,7 +44,7 @@ export function activitiesFromText(value: unknown, name: string, idPrefix: strin
   if (dc && ability && /豁免/.test(text)) {
     out.push({
       id: `${idPrefix}.save`,
-      name: `${name}（豁免）`,
+      name: `${name}${process.env.TRPG_DATA_LANG === 'en' ? ' (Save)' : '（豁免）'}`,
       kind: 'save',
       ability,
       dc: Number(dc[1]),

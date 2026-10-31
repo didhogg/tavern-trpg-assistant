@@ -10,6 +10,7 @@ export const MONSTER_PART_TOKENS: MonsterPartToken[] = [
   { pattern: /^dc__(str|dex|con|int|wis|cha)$/, meaning: '豁免 DC = 8 + 该属性调整值 + 熟练加值' },
   { pattern: /^damage_mod__(str|dex|con|int|wis|cha)$/, meaning: '该属性调整值，写在伤害骰后面：0 则为空，正数「 + n」，负数「 - n」' },
   { pattern: /^damage_avg__[0-9.]+\+(str|dex|con|int|wis|cha)$/, meaning: '平均伤害 = 向下取整（该数 + 该属性调整值）' },
+  { pattern: /^to_hit__(str|dex|con|int|wis|cha)$/, meaning: '命中加值 = 熟练加值 + 该属性调整值（英文原版写法；中文数据里已译成文字）' },
   { pattern: /^dc_wis$/, meaning: '同 dc__wis（来源拼写瑕疵）' },
   { pattern: /^dc_体质$/, meaning: '同 dc__con（来源拼写瑕疵）' },
   { pattern: /^damage_mod_力量$/, meaning: '同 damage_mod__str（来源拼写瑕疵）' },

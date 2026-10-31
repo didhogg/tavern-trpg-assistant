@@ -2,19 +2,22 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Raw } from '../extract/load'
 import { DATA_5ETOOLS } from '../extract/load'
+import { addEnglishNames } from '../lib/io'
 import { BOOK_SOURCES } from '../config/books'
 import type { PlanResult, PlannedEntry } from './plan'
 import { nestedOfRows } from './r9Nested'
 import { cellText, isObj, normRaw, parseLabel, rangeOf, refCell, refRows, slug, str, zero } from './r9lib'
 import type { R9Candidate, R9Row } from './r9Types'
 
+const EN = process.env.TRPG_DATA_LANG === 'en'
 const CORE = new Set([...BOOK_SOURCES])
 const BODY_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'rule', 'lore', 'object', 'hazard', 'vehicle'])
 // R11 新增类型里的表多是对书本章节表的转抄：与书本表重复时让书本表当幸存者，保住它们已有的编号
-const RACE_PARENT: Record<string, string> = { 龙裔: 'dragonborn', 矮人: 'dwarf', 精灵: 'elf', 侏儒: 'gnome', 半兽人: 'half-orc', 半身人: 'halfling', 人类: 'human', 提夫林: 'tiefling' }
+const RACE_PARENT: Record<string, string> = { 龙裔: 'dragonborn', 矮人: 'dwarf', 精灵: 'elf', 侏儒: 'gnome', 半兽人: 'half-orc', 半身人: 'halfling', 人类: 'human', 提夫林: 'tiefling', Dragonborn: 'dragonborn', Dwarf: 'dwarf', Elf: 'elf', Gnome: 'gnome', 'Half-Orc': 'half-orc', Halfling: 'halfling', Human: 'human', Tiefling: 'tiefling' }
 
 function json(file: string): Raw {
-  return JSON.parse(readFileSync(join(DATA_5ETOOLS, file), 'utf8')) as Raw
+  const parsed = JSON.parse(readFileSync(join(DATA_5ETOOLS, file), 'utf8')) as Raw
+  return process.env.TRPG_DATA_LANG === 'en' ? addEnglishNames(parsed) : parsed
 }
 
 function tableSeedOf(table: PlannedEntry): { source: string; id: string; name: string; page: number; srd: boolean; seed: Raw } {
@@ -49,8 +52,8 @@ function bodyCandidate(entry: PlannedEntry, block: Raw, where: 'entries' | '_lor
     const lead = !labels.length && rows.length > 1 && rows.every((r) => r.cells.length === 1) ? plainLead(rows[0].cells[0]) : ''
     // 没有标题的多列块（如“交涉·DC”冷漠/敌对两张）：R11 类型里靠末列列头区分，避免被同名的另一张误合并
     const tail = weak && !caption && labels.length > 1 && labels[labels.length - 1] !== labels[0] ? labels[labels.length - 1] : ''
-    const name = normRaw(caption ?? label) === normRaw(entry.name) ? entry.name : `${entry.name}·${caption ?? labels[0] ?? '对照表'}${lead ? `·${lead}` : ''}${tail ? `·${tail}` : ''}`
-    return { origin: 'B', source: entry.source, page: entry.page, srd: entry.raw.srd === true, name, nameEn: `${entry.nameEn} ${caption ?? labels[0] ?? 'table'}`, cap: normRaw(caption ?? (tail || label)), kind: 'ref', ref: true, cols: labels.length ? labels : Array.from({ length: Math.max(1, ...rows.map((r) => r.cells.length)) }, (_, k) => `第${k + 1}列`), rows, parentId: entry.id, block, where, blockIndex, extra: { footnotes: Array.isArray(block.footnotes) ? block.footnotes.map(str) : undefined, parentKey: `${entry.source}|${entry.name}` } }
+    const name = normRaw(caption ?? label) === normRaw(entry.name) ? entry.name : `${entry.name}·${caption ?? labels[0] ?? (EN ? 'Reference Table' : '对照表')}${lead ? `·${lead}` : ''}${tail ? `·${tail}` : ''}`
+    return { origin: 'B', source: entry.source, page: entry.page, srd: entry.raw.srd === true, name, nameEn: `${entry.nameEn} ${caption ?? labels[0] ?? 'table'}`, cap: normRaw(caption ?? (tail || label)), kind: 'ref', ref: true, cols: labels.length ? labels : Array.from({ length: Math.max(1, ...rows.map((r) => r.cells.length)) }, (_, k) => (EN ? `Column ${k + 1}` : `第${k + 1}列`)), rows, parentId: entry.id, block, where, blockIndex, extra: { footnotes: Array.isArray(block.footnotes) ? block.footnotes.map(str) : undefined, parentKey: `${entry.source}|${entry.name}` } }
   }
   const rows: R9Row[] = []
   for (const r of rowsRaw) {
@@ -62,7 +65,7 @@ function bodyCandidate(entry: PlannedEntry, block: Raw, where: 'entries' | '_lor
   if (!rows.length) return undefined
   const sig = JSON.stringify([entry.source, `${entry.source}|${entry.name}`, rows.map((r) => [r.min, r.max, r.cells])])
   const old = oldBySig.get(sig)
-  const fallback = labels.slice(1)[0] ?? '随机表'
+  const fallback = labels.slice(1)[0] ?? (EN ? 'Random Table' : '随机表')
   const name = old?.name ?? (normRaw(caption ?? '') === normRaw(entry.name) ? entry.name : `${entry.name}·${caption ?? fallback}`)
   return { origin: 'B', source: entry.source, page: entry.page, srd: entry.raw.srd === true, name, nameEn: `${entry.nameEn} ${caption ?? labels[0] ?? 'table'}`, cap: normRaw(caption ?? label), kind: parsed.deck ? 'deck' : 'roll', deck: parsed.deck, expr: parsed.expr, modifierPrompt: parsed.modifierPrompt, cols: labels.slice(1), rows, parentId: entry.id, oldId: old?.id, block, where, blockIndex, extra: { footnotes: Array.isArray(block.footnotes) ? block.footnotes.map(str) : undefined, parentKey: `${entry.source}|${entry.name}` } }
 }
@@ -108,7 +111,7 @@ export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r
     const dice = str(seed.dice)
     const name = table.name
     const cap = normRaw(name.includes('·') ? name.slice(name.lastIndexOf('·') + 1) : name)
-    pool.push({ origin: 'X', source: t.source, page: t.page, srd: t.srd, name, cap, expr: `1${dice}`, kind: seed.group ? 'loot' : 'roll', cols: Array.isArray(seed.cols) ? seed.cols.map(str) : [], rows: (Array.isArray(seed.rows) ? seed.rows as Raw[] : []).map((r) => ({ min: Number(r.min), max: Number(r.max), cells: Array.isArray(r.cells) ? r.cells.map(str) : [] })), oldId: table.id, extra: { group: isObj(seed.group) ? { id: str(seed.group.id), name: ({ 'loot-individual': '宝藏表·个人宝藏', 'loot-hoard': '宝藏表·宝藏堆', 'loot-magicItems': '宝藏表·魔法物品表' } as Record<string, string>)[str(seed.group.id)] ?? str(seed.group.name) } : undefined, parentKey: str(seed.parentKey), caption: str(seed.caption) || undefined } })
+    pool.push({ origin: 'X', source: t.source, page: t.page, srd: t.srd, name, cap, expr: `1${dice}`, kind: seed.group ? 'loot' : 'roll', cols: Array.isArray(seed.cols) ? seed.cols.map(str) : [], rows: (Array.isArray(seed.rows) ? seed.rows as Raw[] : []).map((r) => ({ min: Number(r.min), max: Number(r.max), cells: Array.isArray(r.cells) ? r.cells.map(str) : [] })), oldId: table.id, extra: { group: isObj(seed.group) ? { id: str(seed.group.id), name: ((EN ? { 'loot-individual': 'Treasure Table·Individual Treasure', 'loot-hoard': 'Treasure Table·Treasure Hoard', 'loot-magicItems': 'Treasure Table·Magic Item Tables' } : { 'loot-individual': '宝藏表·个人宝藏', 'loot-hoard': '宝藏表·宝藏堆', 'loot-magicItems': '宝藏表·魔法物品表' }) as Record<string, string>)[str(seed.group.id)] ?? str(seed.group.name) } : undefined, parentKey: str(seed.parentKey), caption: str(seed.caption) || undefined } })
   }
   const g = json('generated/gendata-tables.json')
   const gCount = new Map<string, number>()
@@ -140,7 +143,7 @@ export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r
     const cols = Array.isArray(t.colLabels) ? t.colLabels.map(refCell) : []
     const rows = refRows(t.rows)
     const width = Math.max(...rows.map((r) => r.cells.length))
-    while (cols.length < width) cols.push(`第${cols.length + 1}列`)
+    while (cols.length < width) cols.push(EN ? `Column ${cols.length + 1}` : `第${cols.length + 1}列`)
     pool.push({ origin: grp ? 'GG' : 'G', source: src, page, srd: (t.srd ?? grp?.srd) === true, name: heading, cap: normRaw(typeof t.caption === 'string' ? t.caption : tail), kind: 'ref', ref: true, cols, rows, chapter: isObj(t.chapter) ? str(t.chapter.name) : isObj(grp?.chapter) ? str(grp.chapter.name) : undefined, parentHint: isObj(t.parentEntity) ? t.parentEntity as never : isObj(grp?.parentEntity) ? grp.parentEntity as never : undefined, extra: { gid: `table.${src.toLowerCase()}-p${page ?? 0}-r${n}`, footnotes: Array.isArray(t.footnotes) ? t.footnotes.map(str) : undefined } })
   }
   for (const t of Array.isArray(g.table) ? g.table as Raw[] : []) if (CORE.has(str(t.source)) && !parseLabel(Array.isArray(t.colLabels) ? t.colLabels[0] : undefined)) addGRef(t, str(t.name).replace(/; /g, '·'))
@@ -153,7 +156,7 @@ export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r
       let nm = gname
       if (typeof t.caption === 'string') nm = gname.endsWith(t.caption) ? gname : `${gname}·${t.caption}`
       else {
-        const cands = [refCell(Array.isArray(t.colLabels) ? t.colLabels[0] ?? '' : ''), refCell(Array.isArray(t.colLabels) ? t.colLabels[t.colLabels.length - 1] ?? '' : ''), `第${k + 1}张`].filter(Boolean)
+        const cands = [refCell(Array.isArray(t.colLabels) ? t.colLabels[0] ?? '' : ''), refCell(Array.isArray(t.colLabels) ? t.colLabels[t.colLabels.length - 1] ?? '' : ''), (EN ? `Table ${k + 1}` : `第${k + 1}张`)].filter(Boolean)
         for (const c of cands) { const trial = `${gname}·${c}`; if (!used.has(trial) && trial !== gname) { nm = trial; break } }
       }
       used.add(nm)
@@ -168,7 +171,7 @@ export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r
       const parsed = parseLabel(t.diceExpression)
       if (!parsed) return
       const list = Array.isArray(t.table) ? t.table as Raw[] : []
-      pool.push({ origin: 'N', source: str(rec.source), page: Number(rec.page) || 0, name: `${str(rec.name)}名字·${str(t.option)}`, nameEn: str(rec.ENG_name), srd: false, cap: normRaw(`${str(rec.name)}${str(t.option)}`), expr: parsed.expr, kind: 'names', cols: ['名字'], rows: list.map((r) => ({ min: zero(Number(r.min), str(t.diceExpression)), max: zero(Number(r.max), str(t.diceExpression)), cells: [str(r.result)] })), parentHint: { race: str(rec.name), raceEn: RACE_PARENT[str(rec.name)] }, extra: { gid: `table.names-${slug(str(rec.ENG_name))}-${i + 1}.${str(rec.source).toLowerCase()}` } })
+      pool.push({ origin: 'N', source: str(rec.source), page: Number(rec.page) || 0, name: `${str(rec.name)}${EN ? ' Names' : '名字'}·${str(t.option)}`, nameEn: str(rec.ENG_name), srd: false, cap: normRaw(`${str(rec.name)}${str(t.option)}`), expr: parsed.expr, kind: 'names', cols: [EN ? 'Name' : '名字'], rows: list.map((r) => ({ min: zero(Number(r.min), str(t.diceExpression)), max: zero(Number(r.max), str(t.diceExpression)), cells: [str(r.result)] })), parentHint: { race: str(rec.name), raceEn: RACE_PARENT[str(rec.name)] }, extra: { gid: `table.names-${slug(str(rec.ENG_name))}-${i + 1}.${str(rec.source).toLowerCase()}` } })
     })
   }
   const encounters = json('encounters.json')
@@ -177,30 +180,30 @@ export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r
     for (const t of Array.isArray(rec.tables) ? rec.tables as Raw[] : []) {
       const parsed = parseLabel(t.diceExpression)
       if (!parsed) continue
-      const band = typeof t.minlvl === 'number' ? `（等级 ${t.minlvl}—${t.maxlvl}）` : ''
+      const band = typeof t.minlvl === 'number' ? (EN ? ` (Levels ${t.minlvl}–${t.maxlvl})` : `（等级 ${t.minlvl}—${t.maxlvl}）`) : ''
       const list = Array.isArray(t.table) ? t.table as Raw[] : []
-      pool.push({ origin: 'V', source: str(rec.source), page: Number(rec.page) || 0, name: `${str(rec.name)}遭遇${band}`, srd: false, cap: normRaw(`${str(rec.name)}${band}`), expr: parsed.expr, kind: 'encounter', cols: ['遭遇'], rows: list.map((r) => ({ min: zero(Number(r.min), str(t.diceExpression)), max: zero(Number(r.max), str(t.diceExpression)), cells: [str(r.result)] })), extra: { gid: `table.encounter-${slug(str(rec.ENG_name))}${typeof t.minlvl === 'number' ? `-${t.minlvl}-${t.maxlvl}` : ''}.${str(rec.source).toLowerCase()}` } })
+      pool.push({ origin: 'V', source: str(rec.source), page: Number(rec.page) || 0, name: `${str(rec.name)}${EN ? ' Encounters' : '遭遇'}${band}`, srd: false, cap: normRaw(`${str(rec.name)}${band}`), expr: parsed.expr, kind: 'encounter', cols: [EN ? 'Encounter' : '遭遇'], rows: list.map((r) => ({ min: zero(Number(r.min), str(t.diceExpression)), max: zero(Number(r.max), str(t.diceExpression)), cells: [str(r.result)] })), extra: { gid: `table.encounter-${slug(str(rec.ENG_name))}${typeof t.minlvl === 'number' ? `-${t.minlvl}-${t.maxlvl}` : ''}.${str(rec.source).toLowerCase()}` } })
     }
   }
   const life = json('life.json')
   for (const c of Array.isArray(life.lifeClass) ? life.lifeClass as Raw[] : []) {
     const reasons = Array.isArray(c.reasons) ? c.reasons.map(str) : []
-    pool.push({ origin: 'L', source: 'XGE', srd: false, name: `${str(c.name)}·成为${str(c.name)}的原因`, cap: normRaw(str(c.name)), expr: `1d${reasons.length}`, kind: 'life', cols: ['原因'], rows: reasons.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), parentHint: { cls: str(c.name), clsEn: str(c.ENG_name) }, extra: { gid: `table.life-class-${slug(str(c.ENG_name))}-reasons.xge` } })
+    pool.push({ origin: 'L', source: 'XGE', srd: false, name: `${str(c.name)}·${EN ? 'Reasons to Become ' : '成为'}${str(c.name)}${EN ? '' : '的原因'}`, cap: normRaw(str(c.name)), expr: `1d${reasons.length}`, kind: 'life', cols: [EN ? 'Reason' : '原因'], rows: reasons.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), parentHint: { cls: str(c.name), clsEn: str(c.ENG_name) }, extra: { gid: `table.life-class-${slug(str(c.ENG_name))}-reasons.xge` } })
   }
   for (const b of Array.isArray(life.lifeBackground) ? life.lifeBackground as Raw[] : []) {
     const reasons = Array.isArray(b.reasons) ? b.reasons.map(str) : []
-    pool.push({ origin: 'L', source: 'XGE', srd: false, name: `${str(b.name)}·成为${str(b.name)}的原因`, cap: normRaw(str(b.name).replace(/[（(][^）)]*[）)]$/, '')), expr: `1d${reasons.length}`, kind: 'life', cols: ['原因'], rows: reasons.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), parentHint: { bg: str(b.name), bgEn: str(b.ENG_name) }, extra: { gid: `table.life-background-${slug(str(b.ENG_name))}-reasons.xge` } })
+    pool.push({ origin: 'L', source: 'XGE', srd: false, name: `${str(b.name)}·${EN ? 'Reasons to Become ' : '成为'}${str(b.name)}${EN ? '' : '的原因'}`, cap: normRaw(str(b.name).replace(/[（(][^）)]*[）)]$/, '')), expr: `1d${reasons.length}`, kind: 'life', cols: [EN ? 'Reason' : '原因'], rows: reasons.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), parentHint: { bg: str(b.name), bgEn: str(b.ENG_name) }, extra: { gid: `table.life-background-${slug(str(b.ENG_name))}-reasons.xge` } })
   }
   const trinkets = Array.isArray(life.lifeTrinket) ? life.lifeTrinket.map(str) : []
-  pool.push({ origin: 'L', source: 'PHB', page: 160, srd: false, name: '饰品', cap: normRaw('饰品'), expr: '1d100', kind: 'roll', cols: ['饰品'], rows: trinkets.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { gid: 'table.trinkets.phb' } })
+  pool.push({ origin: 'L', source: 'PHB', page: 160, srd: false, name: EN ? 'Trinkets' : '饰品', cap: normRaw(EN ? 'Trinkets' : '饰品'), expr: '1d100', kind: 'roll', cols: [EN ? 'Trinket' : '饰品'], rows: trinkets.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { gid: 'table.trinkets.phb' } })
   const loot = json('loot.json')
-  for (const [key, label] of [['gems', '宝石'], ['artObjects', '艺术品']] as const) for (const r of Array.isArray(loot[key]) ? loot[key] as Raw[] : []) {
+  for (const [key, label] of [['gems', EN ? 'Gems' : '宝石'], ['artObjects', EN ? 'Art Objects' : '艺术品']] as const) for (const r of Array.isArray(loot[key]) ? loot[key] as Raw[] : []) {
     if (!CORE.has(str(r.source))) continue
     const table = Array.isArray(r.table) ? r.table.map(str) : []
     pool.push({ origin: 'O', source: str(r.source), page: Number(r.page) || 0, srd: r.srd === true, name: str(r.name), cap: normRaw(str(r.name)), expr: `1d${table.length}`, kind: 'loot', cols: [label], rows: table.map((s, i) => ({ min: i + 1, max: i + 1, cells: [s] })), extra: { gid: `table.${slug(str(r.ENG_name))}.${str(r.source).toLowerCase()}` } })
   }
   const cr = Array.isArray(json('msbcr.json').cr) ? json('msbcr.json').cr as Raw[] : []
-  pool.push({ origin: 'M', source: 'DMG', page: 274, srd: false, name: '按挑战等级的怪物数值', cap: normRaw('按挑战等级的怪物数值'), kind: 'ref', ref: true, cols: ['挑战等级', '熟练加值', '护甲等级', '生命值', '攻击加值', '伤害（每轮）', '豁免DC'], rows: cr.map((r) => ({ cells: [str(r._cr), `+${r.pb}`, str(r.ac), `${r.hpMin}—${r.hpMax}`, `+${r.attackBonus}`, `${r.dprMin}—${r.dprMax}`, str(r.saveDc)] })), extra: { gid: 'table.monster-statistics-by-challenge-rating.dmg', crRaw: cr } })
+  pool.push({ origin: 'M', source: 'DMG', page: 274, srd: false, name: EN ? 'Monster Statistics by Challenge Rating' : '按挑战等级的怪物数值', cap: normRaw(EN ? 'Monster Statistics by Challenge Rating' : '按挑战等级的怪物数值'), kind: 'ref', ref: true, cols: EN ? ['Challenge Rating', 'Proficiency Bonus', 'Armor Class', 'Hit Points', 'Attack Bonus', 'Damage/Round', 'Save DC'] : ['挑战等级', '熟练加值', '护甲等级', '生命值', '攻击加值', '伤害（每轮）', '豁免DC'], rows: cr.map((r) => ({ cells: [str(r._cr), `+${r.pb}`, str(r.ac), `${r.hpMin}—${r.hpMax}`, `+${r.attackBonus}`, `${r.dprMin}—${r.dprMax}`, str(r.saveDc)] })), extra: { gid: 'table.monster-statistics-by-challenge-rating.dmg', crRaw: cr } })
   const decks = json('decks.json')
   const cardsBy = new Map<string, Raw>()
   for (const c of Array.isArray(decks.card) ? decks.card as Raw[] : []) {
@@ -211,7 +214,7 @@ export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r
   for (const d of Array.isArray(decks.deck) ? decks.deck as Raw[] : []) {
     if (!CORE.has(str(d.source))) continue
     const cards = (Array.isArray(d.cards) ? d.cards : []).map(uidOf)
-    pool.push({ origin: 'D', source: str(d.source), page: Number(d.page) || 0, srd: d.srd === true, name: `${str(d.name)}·牌组内容`, nameEn: str(d.ENG_name), cap: normRaw(str(d.name)), expr: `1d${cards.length}`, kind: 'deck', cols: ['牌', '效果'], rows: cards.map((u, i) => { const key = u.split('|').slice(0, 2).join('|'); const card = cardsBy.get(key); const entries = card && Array.isArray(card.entries) ? card.entries.map((x) => typeof x === 'string' ? x : JSON.stringify(x)).join(' ') : ''; return { min: i + 1, max: i + 1, cells: [u.split('|')[0], entries] } }), parentHint: { deckName: str(d.name) }, extra: { gid: `table.cards-${slug(str(d.ENG_name))}${d._copy ? '-13' : ''}.${str(d.source).toLowerCase()}`, reprintedAs: d.reprintedAs } })
+    pool.push({ origin: 'D', source: str(d.source), page: Number(d.page) || 0, srd: d.srd === true, name: `${str(d.name)}·${EN ? 'Deck Contents' : '牌组内容'}`, nameEn: str(d.ENG_name), cap: normRaw(str(d.name)), expr: `1d${cards.length}`, kind: 'deck', cols: EN ? ['Card', 'Effect'] : ['牌', '效果'], rows: cards.map((u, i) => { const key = u.split('|').slice(0, 2).join('|'); const card = cardsBy.get(key); const entries = card && Array.isArray(card.entries) ? card.entries.map((x) => typeof x === 'string' ? x : JSON.stringify(x)).join(' ') : ''; return { min: i + 1, max: i + 1, cells: [u.split('|')[0], entries] } }), parentHint: { deckName: str(d.name) }, extra: { gid: `table.cards-${slug(str(d.ENG_name))}${d._copy ? '-13' : ''}.${str(d.source).toLowerCase()}`, reprintedAs: d.reprintedAs } })
   }
   return pool
 }

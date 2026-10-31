@@ -2,6 +2,8 @@ import type { Raw } from '../extract/load'
 import { cellText, isObj, normRaw, parseLabel, rangeOf, refCell, str } from './r9lib'
 import type { R9Candidate } from './r9Types'
 
+const RESULT = process.env.TRPG_DATA_LANG === 'en' ? 'Result' : '结果'
+
 export interface NestedRaw {
   /** 子表在外层表里占的行（掷骰区间）。 */
   min: number
@@ -47,7 +49,7 @@ export function findNestedTables(pool: R9Candidate[], survivorOf: (candidate: R9
       const caption = str(nested.table.caption)
       const parsed = parseLabel(Array.isArray(nested.table.colLabels) ? nested.table.colLabels[0] : undefined)
       if (!caption || !parsed) throw new Error(`R9 子表缺少标题或骰式：${survivor.name}`)
-      const labels = (Array.isArray(nested.table.colLabels) ? nested.table.colLabels : []).slice(1).map(refCell).map((label) => label || '结果')
+      const labels = (Array.isArray(nested.table.colLabels) ? nested.table.colLabels : []).slice(1).map(refCell).map((label) => label || RESULT)
       const rows = (Array.isArray(nested.table.rows) ? nested.table.rows : []).map((sub) => {
         const rg = Array.isArray(sub) ? rangeOf(sub[0], parsed.hi) : undefined
         if (!rg || !Array.isArray(sub)) throw new Error(`R9 子表的行无法解析：${survivor.name}·${caption}`)
@@ -67,7 +69,7 @@ export function findNestedTables(pool: R9Candidate[], survivorOf: (candidate: R9
           cap: normRaw(caption),
           expr: parsed.expr,
           kind: 'roll',
-          cols: labels.length ? labels : ['结果'],
+          cols: labels.length ? labels : [RESULT],
           rows,
           extra: { parentKey: survivor.extra.parentKey },
         },

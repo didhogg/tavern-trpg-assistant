@@ -147,7 +147,7 @@ function changeToEffect(change: Raw, result: FoundryRules, example: string): Eff
   if (key.startsWith('system.description') || key.startsWith('system.activation')) return undefined
   if (mode === 'CUSTOM' && typeof value === 'string' && safeFormula(value)) return { kind: 'note', text: `${key}：${value}` }
   markUnmapped(result, key || '（空键）', example)
-  return { kind: 'note', text: `Foundry 效果未映射：${key}` }
+  return { kind: 'note', text: `${process.env.TRPG_DATA_LANG === 'en' ? 'Foundry effect not mapped: ' : 'Foundry 效果未映射：'}${key}` }
 }
 
 function effectsOf(raw: Raw): Effect[] {

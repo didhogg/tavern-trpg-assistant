@@ -127,7 +127,8 @@ export function planR9(plan: PlanResult, options: R9PlanOptions, legendaryGroups
     set.add(candidate.extra.parentKey)
     parentKeys.set(survivor.id, set)
   }
-  const keyTables = keyTableValues(golden.survivors)
+  // 关键表的数值（values/columns）与语言无关，只在中文那一遍里生成；英文那一遍的区间写法（如 15 or more）不必解析
+  const keyTables = process.env.TRPG_DATA_LANG === 'en' ? new Map<string, ReturnType<typeof keyTableValues> extends Map<string, infer V> ? V : never>() : keyTableValues(golden.survivors)
   const tables = golden.survivors.filter((s) => options.includeRef || s.kind !== 'ref').map((s) => { const table = makeTable(s, aliasesBySurvivor.get(s.id!) ?? new Set<string>()); const seed = table.raw.__seed as R9Seed; const keys = parentKeys.get(s.id!); if (keys) seed.parentKeys = [...keys]; const key = keyTables.get(s.id!); if (key) { const meta = table.raw.__r9 as R9Meta; meta.purpose = key.purpose; meta.columns = key.columns; seed.rows.forEach((row, i) => { row.values = key.rows[i] }) } return table })
   const replacements: R9Replacement[] = []
   for (const candidate of pool) {

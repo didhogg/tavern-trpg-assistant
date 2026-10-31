@@ -35,7 +35,7 @@ const ALL_SKILLS = [
   'acrobatics', 'animal handling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation',
   'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleight of hand', 'stealth', 'survival',
 ]
-const WEAPON_GROUP: Record<string, string> = { simple: '简易', martial: '军用', firearms: '火器' }
+const WEAPON_GROUP: Record<string, string> = process.env.TRPG_DATA_LANG === 'en' ? { simple: 'Simple', martial: 'Martial', firearms: 'Firearms' } : { simple: '简易', martial: '军用', firearms: '火器' }
 
 /** 熟练项可能是文字，也可能是 { proficiency, optional? }。 */
 function proficiencyText(value: unknown, inline: InlineContext, kind: 'armor' | 'weapons' | 'tools'): string {
@@ -74,7 +74,7 @@ function cellText(value: unknown, inline: InlineContext): string {
   if (value && typeof value === 'object') {
     const cell = value as Record<string, unknown>
     if (cell.type === 'bonus') return `+${Number(cell.value ?? 0)}`
-    if (cell.type === 'bonusSpeed') return Number(cell.value ?? 0) ? `+${Number(cell.value)}尺` : '—'
+    if (cell.type === 'bonusSpeed') return Number(cell.value ?? 0) ? `+${Number(cell.value)}${process.env.TRPG_DATA_LANG === 'en' ? ' ft.' : '尺'}` : '—'
     if (cell.type === 'dice' && Array.isArray(cell.toRoll)) {
       return cell.toRoll.map((d) => `${Number((d as Record<string, unknown>).number ?? 1)}d${Number((d as Record<string, unknown>).faces ?? 0)}`).join('+')
     }
@@ -190,7 +190,7 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
     ...(spellcastingOf(raw, false) ? { spellcasting: spellcastingOf(raw, false) } : {}),
     ...(classTable(raw, inline) ? { table: classTable(raw, inline) } : {}),
     subclassLevel,
-    subclassTitle: str(raw.subclassTitle) || `${className}子职业`,
+    subclassTitle: str(raw.subclassTitle) || `${className}${process.env.TRPG_DATA_LANG === 'en' ? ' Subclass' : '子职业'}`,
     ...(multiclass ? { multiclass: { requires: multiclassRequires(multiclass) ?? { all: [{ text: '见原书兼职规则' }] }, ...(multiclass.proficienciesGained ? { proficiencies: proficienciesOf(multiclass.proficienciesGained, inline) } : {}) } } : {}),
     advancement: mergeAdvancement([
       ...features.filter((f) => f.level > 0).map((f) => {
@@ -240,12 +240,12 @@ export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline
   return { id: entry.id, type: 'subclass', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('subclass', entry.name, data, plainText(data.text as never)), data }
 }
 
-const FEATURE_TYPES: Record<string, string> = { 'FS:F': '战斗风格', 'MV:B': '战技', EI: '魔能祈唤', AS: '奥秘', ED: '元素戒律', PB: '契约恩赐' }
+const FEATURE_TYPES: Record<string, string> = process.env.TRPG_DATA_LANG === 'en' ? { 'FS:F': 'Fighting Style', 'MV:B': 'Maneuver', EI: 'Eldritch Invocation', AS: 'Arcane Shot', ED: 'Elemental Discipline', PB: 'Pact Boon' } : { 'FS:F': '战斗风格', 'MV:B': '战技', EI: '魔能祈唤', AS: '奥秘', ED: '元素戒律', PB: '契约恩赐' }
 
 function featureType(raw: Record<string, unknown>): string | undefined {
   const list = Array.isArray(raw.featureType) ? raw.featureType.map(String) : []
   if (!list.length) return undefined
-  return list.map((code) => FEATURE_TYPES[code] ?? code).join('、')
+  return list.map((code) => FEATURE_TYPES[code] ?? code).join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')
 }
 
 function roleOf(name: string): 'mechanic' | 'procedure' | 'intro' {
@@ -266,7 +266,7 @@ function choicesOf(raw: Record<string, unknown>): Array<{ name: string; count: n
     const obj = value as Record<string, unknown>
     if (obj.type === 'options' && Array.isArray(obj.entries)) {
       const pool = obj.entries.map((item) => str((item as Record<string, unknown>).optionalfeature) || str((item as Record<string, unknown>).name)).filter(Boolean)
-      out.push({ name: str(obj.name) || '选择', count: Number(obj.count ?? 1), pool })
+      out.push({ name: str(obj.name) || (process.env.TRPG_DATA_LANG === 'en' ? 'Choice' : '选择'), count: Number(obj.count ?? 1), pool })
     }
     for (const child of Object.values(obj)) walk(child)
   }
@@ -305,9 +305,9 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
   const activities = consumes.length
     ? [...baseActivities, ...configuredActivities, {
         id: `${entry.id}.consume`,
-        name: `消耗：${entry.name}`,
+        name: `${process.env.TRPG_DATA_LANG === 'en' ? 'Expend: ' : '消耗：'}${entry.name}`,
         kind: 'utility' as const,
-        text: `消耗 ${consumes.map((c) => `${Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1)} ${String((c as Record<string, unknown>).name ?? '资源')}`).join('、')}`,
+        text: `${process.env.TRPG_DATA_LANG === 'en' ? 'Expend' : '消耗'} ${consumes.map((c) => `${Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1)} ${String((c as Record<string, unknown>).name ?? (process.env.TRPG_DATA_LANG === 'en' ? 'resource' : '资源'))}`).join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')}`,
         activation: { type: 'special' as const },
         consumption: { targets: consumes.map((c) => ({ type: 'resource' as const, value: Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1), target: String((c as Record<string, unknown>).name ?? 'resource') })) },
       }]

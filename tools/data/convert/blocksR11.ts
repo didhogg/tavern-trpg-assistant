@@ -40,11 +40,11 @@ function extra(input: Raw, ctx: InlineContext, options: BlockOptions): TextBlock
   }
   if (type === 'attack') {
     const code = str(input.attackType)
-    const attackName = code === 'MW' ? '近战武器攻击' : code === 'RW' ? '远程武器攻击' : ''
+    const attackName = code === 'MW' ? (ctx.lang === 'en' ? 'Melee Weapon Attack' : '近战武器攻击') : code === 'RW' ? (ctx.lang === 'en' ? 'Ranged Weapon Attack' : '远程武器攻击') : ''
     if (!attackName) throw new Error(`未知的攻击类型：${code || '空'}`)
     const attack = renderList(input.attackEntries, ctx, options)
     const hit = renderList(input.hitEntries, ctx, options)
-    const body = `${attackName}：${attack}${hit ? `　命中：${hit}` : ''}`
+    const body = ctx.lang === 'en' ? `${attackName}: ${attack}${hit ? ` Hit: ${hit}` : ''}` : `${attackName}：${attack}${hit ? `　命中：${hit}` : ''}`
     return [{ p: body }]
   }
   if (type === 'inset' || type === 'actions') {

@@ -1,7 +1,7 @@
 import type { Entry } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
-import type { InlineContext } from '../markup/inline'
+import { refKey, type InlineContext } from '../markup/inline'
 import { creditFor, keywordsOf, pageOf } from './common'
 import { convertBlocks } from './blocks'
 import { plainText, summaryOf } from '../summary/summary'
@@ -51,7 +51,7 @@ export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<s
     if (Array.isArray(obj.race)) {
       const ids = obj.race.map((r) => ctx.resolveEntryId('race', String((r as Record<string, unknown>)?.name ?? ''))).filter((id): id is string => !!id)
       if (ids.length === 1) all.push({ race: ids })
-      else if (ids.length > 1) all.push({ text: ids.map((id) => ctx.index.byTypeName.get(`race|${id}`)?.[0]?.name ?? id).join(' 或 ') })
+      else if (ids.length > 1) all.push({ text: ids.map((id) => ctx.index.byTypeName.get(refKey(`race|${id}`))?.[0]?.name ?? id).join(process.env.TRPG_DATA_LANG === 'en' ? ' or ' : ' 或 ') })
       else if (typeof obj.other === 'string') all.push({ text: obj.other })
     }
     if (typeof obj.other === 'string') all.push({ text: obj.other })
@@ -62,7 +62,7 @@ export function prereqToRequires(prereq: unknown, ctx: ConvertContext): Record<s
     if (typeof obj.pact === 'string') {
       const pact = obj.pact.includes('刃') ? 'blade' : obj.pact.includes('链') ? 'chain' : obj.pact.includes('书') ? 'tome' : obj.pact.includes('符') ? 'talisman' : undefined
       if (pact) all.push({ pact })
-      else all.push({ text: `契约：${obj.pact}` })
+      else all.push({ text: `${process.env.TRPG_DATA_LANG === 'en' ? 'Pact: ' : '契约：'}${obj.pact}` })
     }
     if (Array.isArray(obj.optionalfeature)) all.push({ text: `需要可选特性：${obj.optionalfeature.map(String).join('、')}` })
   }

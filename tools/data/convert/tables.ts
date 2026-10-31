@@ -110,11 +110,11 @@ export function tableFromBlock(block: Raw, ctx: TableContext): TableSeed | undef
     source: ctx.source,
     book: ctx.source,
     page: ctx.page,
-    name: caption ? `${ctx.parentName}·${caption}` : `${ctx.parentName}·${labels[1] ?? '随机表'}`,
+    name: caption ? `${ctx.parentName}·${caption}` : `${ctx.parentName}·${labels[1] ?? (process.env.TRPG_DATA_LANG === 'en' ? 'Random Table' : '随机表')}`,
     nameEn: `${ctx.parentNameEn ?? ctx.parentName} ${caption ?? labels[1] ?? 'table'}`,
     caption,
     dice: parsed.dice,
-    cols: labels.slice(1).map((l) => l || '结果'),
+    cols: labels.slice(1).map((l) => l || (process.env.TRPG_DATA_LANG === 'en' ? 'Result' : '结果')),
     rows,
     parentKey: ctx.parentKey,
     srd: block.srd === true,
@@ -129,20 +129,20 @@ const LOOT_LABEL: Record<string, { cn: string; en: string }> = {
 }
 
 function coinText(coins: Raw): string {
-  return Object.entries(coins).map(([coin, formula]) => `${String(formula)} ${coin}`).join('、')
+  return Object.entries(coins).map(([coin, formula]) => `${String(formula)} ${coin}`).join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')
 }
 
 /** 宝藏堆的行：宝石、艺术品、魔法物品表（可多个）。 */
 function hoardCells(row: Raw): string[] {
   const cells: string[] = []
   const gems = row.gems as Raw | undefined
-  if (gems) cells.push(`${String(gems.amount)} 颗价值 ${String(gems.type)} gp 的宝石`)
+  if (gems) cells.push(process.env.TRPG_DATA_LANG === 'en' ? `${String(gems.amount)} gems worth ${String(gems.type)} gp each` : `${String(gems.amount)} 颗价值 ${String(gems.type)} gp 的宝石`)
   const art = row.artObjects as Raw | undefined
-  if (art) cells.push(`${String(art.amount)} 件价值 ${String(art.type)} gp 的艺术品`)
+  if (art) cells.push(process.env.TRPG_DATA_LANG === 'en' ? `${String(art.amount)} art objects worth ${String(art.type)} gp each` : `${String(art.amount)} 件价值 ${String(art.type)} gp 的艺术品`)
   const magic = Array.isArray(row.magicItems) ? row.magicItems : []
   for (const item of magic) {
     const m = item as Raw
-    cells.push(`魔法物品表${String(m.type)}：掷 ${String(m.amount)} 次`)
+    cells.push(process.env.TRPG_DATA_LANG === 'en' ? `Roll ${String(m.amount)} time(s) on Magic Item Table ${String(m.type)}` : `魔法物品表${String(m.type)}：掷 ${String(m.amount)} 次`)
   }
   return cells
 }
@@ -167,25 +167,25 @@ export function lootTable(raw: Raw, category: string): TableSeed | undefined {
       if (['min', 'max', 'coins', 'item'].includes(key)) continue
       if (typeof value === 'string') cells.push(value)
     }
-    const cell = cells.join('；')
+    const cell = cells.join(process.env.TRPG_DATA_LANG === 'en' ? '; ' : '；')
     rows.push({ min, max: rangeMax, cells: [cell || '—'], refs: [], then: thenOf(cells) })
   }
   if (!rows.length) return undefined
   const label = LOOT_LABEL[category]
-  const baseName = String(raw.name ?? raw.ENG_name ?? '随机表')
+  const baseName = String(raw.name ?? raw.ENG_name ?? (process.env.TRPG_DATA_LANG === 'en' ? 'Random Table' : '随机表'))
   const baseEn = typeof raw.ENG_name === 'string' ? raw.ENG_name : undefined
-  const fixedCoins = category === 'hoard' && raw.coins && typeof raw.coins === 'object' ? `固定钱币：${coinText(raw.coins as Raw)}` : undefined
+  const fixedCoins = category === 'hoard' && raw.coins && typeof raw.coins === 'object' ? `${process.env.TRPG_DATA_LANG === 'en' ? 'Fixed coins: ' : '固定钱币：'}${coinText(raw.coins as Raw)}` : undefined
   const seed: TableSeed = {
     source: String(raw.source),
     book: String(raw.source),
     page: Number(raw.page ?? 0),
-    name: label ? `${label.cn}·${baseName}` : baseName,
+    name: label ? `${process.env.TRPG_DATA_LANG === 'en' ? label.en : label.cn}·${baseName}` : baseName,
     nameEn: label && baseEn ? `${label.en} ${baseEn}` : baseEn,
     ...(fixedCoins ? { caption: fixedCoins } : {}),
     dice,
-    cols: ['结果'],
+    cols: [process.env.TRPG_DATA_LANG === 'en' ? 'Result' : '结果'],
     rows,
-    group: { id: `loot-${category}`, name: `宝藏表·${category}` },
+    group: { id: `loot-${category}`, name: `${process.env.TRPG_DATA_LANG === 'en' ? 'Treasure Table·' : '宝藏表·'}${category}` },
   }
   assertCoverage(seed)
   return seed

@@ -216,7 +216,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   }
   const converted = new Map<string, Entry>()
   for (const entry of all) {
-    const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry), refStats: new Map<string, { ref: number; text: number }>() }
+    const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry), refStats: new Map<string, { ref: number; text: number }>(), ...(process.env.TRPG_DATA_LANG === 'en' ? { lang: 'en' as const } : {}) }
     const built = convertOne(entry, ctx, inline)
     for (const [tag, value] of inline.refStats) {
       const current = stats.refStats[tag] ?? { ref: 0, text: 0 }
@@ -265,7 +265,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     'item.potion-of-giant-strength-family.dmg': { label: '力量值', match: /力量属性值将变为(\d+)/ },
   }
   for (const plan of planned) {
-    if (plan.raw._family !== true) continue
+    if (plan.raw._family !== true || process.env.TRPG_DATA_LANG === 'en') continue // 要点值是与语言无关的结构字段，只在中文那一遍里取
     const spec = keyValueSpecs[plan.id]
     if (!spec) continue
     const family = converted.get(plan.id)

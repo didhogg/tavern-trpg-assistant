@@ -1,4 +1,4 @@
-import type { RefIndex } from '../markup/inline'
+import { refKey, type RefIndex } from '../markup/inline'
 import type { Raw } from '../extract/load'
 
 export interface ConvertContext {
@@ -51,6 +51,6 @@ export function makeContext(input: {
 }): ConvertContext {
   return {
     ...input,
-    resolveEntryId: (type, name) => input.index.byTypeName.get(`${type}|${name}`)?.[0]?.id,
+    resolveEntryId: (type, name) => input.index.byTypeName.get(refKey(`${type}|${name}`))?.[0]?.id,
   }
 }
