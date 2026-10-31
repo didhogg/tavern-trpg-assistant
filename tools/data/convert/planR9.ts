@@ -14,6 +14,11 @@ export interface R9PlanResult {
   replacements: R9Replacement[]
   redirects: Array<[string, string]>
   survivorByCandidate: Map<number, R9Candidate>
+  pool: R9Candidate[]
+}
+
+export function tableLabel(survivor: R9Candidate): string {
+  return `${survivor.name}${survivor.ref ? '' : `（${storageDice(survivor.expr!)}）`}`
 }
 
 function makeTable(candidate: R9Candidate, aliases: Set<string>): PlannedEntry {
@@ -153,5 +158,5 @@ export function planR9(plan: PlanResult, options: R9PlanOptions, legendaryGroups
     }
     for (const root of roots) flattenGroups(root)
   }
-  return { tables, replacements, redirects: golden.redirects, survivorByCandidate }
+  return { tables, replacements, redirects: golden.redirects, survivorByCandidate, pool }
 }

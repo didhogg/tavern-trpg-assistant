@@ -31,6 +31,12 @@ function extra(input: Raw, ctx: InlineContext, options: BlockOptions): TextBlock
       return display
     }) }]
   }
+  if (type === 'bookGroup') return [{ h: renderInline(str(input.name), ctx), body: convertBlocks(input.body, ctx, options) }]
+  if (type === 'bookTable') {
+    const cols = (Array.isArray(input.cols) ? input.cols : []).map((cell) => renderInline(str(cell), ctx))
+    const rows = (Array.isArray(input.rows) ? input.rows : []).map((row) => (Array.isArray(row) ? row : []).map((cell) => renderInline(str(cell), ctx)))
+    return [{ table: { ...(str(input.caption) ? { caption: renderInline(str(input.caption), ctx) } : {}), cols, rows } }]
+  }
   if (type === 'statblock' || type === 'table' || type === 'tableGroup') return []
   if (type === 'image' || type === 'internal' || type === 'gallery' || type === 'square' || type === 'none' || type === 'hr') return []
   if (type === 'quote') {

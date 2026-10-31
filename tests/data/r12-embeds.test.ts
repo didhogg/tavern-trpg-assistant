@@ -52,7 +52,7 @@ describe('R12 嵌入块', () => {
     const fluff: FluffRecord[] = [{ kind: 'monster', raw: { name: '测试怪', ENG_name: 'Test Monster', source: 'PHB', entries: [{ type: 'entries', name: '测试怪', entries: [{ p: '原文' }] }] } }]
     const before = JSON.stringify(fluff)
     const book = { source: 'PHB', contents: [{ ENG_name: 'Test Chapter' }], chapters: [{ id: '000', name: '测试章', ENG_name: 'Test Chapter', page: 1, entries: [{ type: 'statblock', prop: 'monsterFluff', name: '测试怪', ENG_name: 'Test Monster', source: 'PHB' }] }] }
-    const result = planR12({ books: [book], fluff, existing: [], r9: { tables: [], replacements: [], redirects: [], survivorByCandidate: new Map() }, options: { embeds: true, tables: false } })
+    const result = planR12({ books: [book], fluff, existing: [], r9: { tables: [], replacements: [], redirects: [], survivorByCandidate: new Map(), pool: [] }, options: { embeds: true, tables: false } })
     expect(JSON.stringify(fluff)).toBe(before)
     expect(JSON.stringify((result.entries[0].raw._chapter as { entries: unknown[] }).entries)).toContain('原文')
   })

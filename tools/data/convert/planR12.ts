@@ -2,10 +2,13 @@ import type { Raw } from '../extract/load'
 import type { FluffRecord } from '../extract/fluff'
 import type { PlannedEntry } from './plan'
 import type { R9PlanResult } from './planR9'
+import { tableLabel } from './planR9'
 import type { BookData } from '../extract/books'
 import { BOOK_BY_SOURCE, PACK_BY_SOURCE } from '../config/books'
 import { slug } from '../lib/slug'
 import { addRef, type RefIndex } from '../markup/inline'
+import { cellText, normRaw, parseLabel, rangeOf, refCell, refRows } from './r9lib'
+import type { R9Row } from './r9Types'
 import type { R12OutlineItem, R12PlanResult, R12Stats } from './r12Types'
 
 const SKIP = new Set(['table', 'tableGroup', 'image', 'gallery', 'statblock', 'list'])
@@ -105,6 +108,71 @@ function resolve(index: RefIndex, type: string, name: string, enName: string, sr
   return undefined
 }
 
+function tableKey(node: Raw): string | undefined {
+  const parsed = parseLabel(Array.isArray(node.colLabels) ? node.colLabels[0] : undefined)
+  const rowsRaw = (Array.isArray(node.rows) ? node.rows : []).map((row) => Array.isArray(row) ? row : obj(row) && Array.isArray(row.row) ? row.row : [])
+  if (parsed) {
+    const rows: R9Row[] = []
+    for (const row of rowsRaw) { const rg = rangeOf(row[0], parsed.hi); if (!rg) return undefined; rows.push({ ...rg, cells: row.slice(1).map(cellText) }) }
+    return JSON.stringify([parsed.expr, rows.map((row) => [row.min, row.max, row.cells.map(normRaw).join('|')])])
+  }
+  try { const rows = refRows(node.rows); return JSON.stringify([null, rows.map((row) => [null, null, row.cells.map(normRaw).join('|')])]) } catch { return undefined }
+}
+
+function tableIds(node: Raw, source: string, input: R12Input): string[] {
+  const key = tableKey(node)
+  if (!key) return []
+  const ids = new Set<string>()
+  for (const candidate of input.r9.pool) {
+    if (candidate.source !== source) continue
+    const candidateKey = JSON.stringify([candidate.ref ? null : candidate.expr, candidate.rows.map((row) => [row.min ?? null, row.max ?? null, row.cells.map(normRaw).join('|')])])
+    if (candidateKey !== key) continue
+    const survivor = input.r9.survivorByCandidate.get(candidate.i!)
+    if (survivor?.id) ids.add(survivor.id)
+  }
+  return [...ids]
+}
+
+function inlineTable(node: Raw): Raw {
+  const cols = (Array.isArray(node.colLabels) ? node.colLabels : []).map(refCell)
+  const rows = (Array.isArray(node.rows) ? node.rows : []).map((row) => Array.isArray(row) ? row : obj(row) && Array.isArray(row.row) ? row.row : [])
+  const width = Math.max(cols.length, ...rows.map((row) => row.length))
+  while (cols.length < width) cols.push(`第${cols.length + 1}列`)
+  return { type: 'bookTable', ...(str(node.caption) ? { caption: str(node.caption) } : {}), cols, rows: rows.map((row) => row.map(refCell)) }
+}
+
+function nestedTables(node: Raw): Raw[] {
+  const out: Raw[] = []
+  for (const row of Array.isArray(node.rows) ? node.rows : []) {
+    const cells = Array.isArray(row) ? row : obj(row) && Array.isArray(row.row) ? row.row : []
+    for (const cell of cells) if (obj(cell) && cell.type === 'table') out.push(cell)
+  }
+  return out
+}
+
+function rewriteTable(node: Raw, input: R12Input, source: string, stats: R12Stats): unknown[] {
+  if (node.type === 'tableGroup') {
+    const body = (Array.isArray(node.tables) ? node.tables : []).flatMap((member) => obj(member) ? rewriteTable(member, input, source, stats) : [])
+    return str(node.name) ? [{ type: 'bookGroup', name: str(node.name), body }] : body
+  }
+  stats.tableBlocks += 1
+  const ids = tableIds(node, source, input)
+  if (ids.length > 1) throw new Error(`R12 表格匹配集 ≥ 2：${source} ${str(node.caption)}`)
+  let out: unknown
+  if (ids.length === 1) {
+    const survivor = input.r9.survivorByCandidate.get(input.r9.pool.find((candidate) => candidate.id === ids[0])?.i ?? -1)
+    const target = survivor ?? input.r9.pool.find((candidate) => candidate.id === ids[0])
+    if (!target) throw new Error(`R12 表格幸存者缺失：${ids[0]}`)
+    if (target.source !== source && !target.srd) throw new Error(`R12 表格幸存者跨包：${ids[0]}`)
+    stats.tableRefs += 1
+    out = { type: 'tableRef', id: ids[0], label: tableLabel(target) }
+  } else {
+    stats.inlineTables += 1
+    out = inlineTable(node)
+  }
+  return [out, ...nestedTables(node).flatMap((child) => rewriteTable(child, input, source, stats))]
+}
+
 function rewrite(value: unknown, input: R12Input, index: RefIndex, source: string, stats: R12Stats): unknown {
   if (Array.isArray(value)) {
     const out: unknown[] = []
@@ -140,7 +208,9 @@ function rewrite(value: unknown, input: R12Input, index: RefIndex, source: strin
   }
   if (!obj(value)) return value
   const type = str(value.type)
-  if (type === 'table' || type === 'tableGroup') stats.tableBlocks += 1
+  if (type === 'table' || type === 'tableGroup') return rewriteTable(value, input, source, stats)
+  if (type === 'tableRef') { stats.tableBlocks += 1; stats.tableRefs += 1; return { ...value } }
+  if (type === 'bookGroup') return value
   if (type === 'image' || type === 'internal' || type === 'gallery' || type === 'square' || type === 'none') stats.images += 1
   if (!type && !value.name && !value.entries) stats.metadata += 1
   const copy: Raw = { ...value }

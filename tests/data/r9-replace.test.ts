@@ -37,6 +37,7 @@ describe('R9 正文替换', () => {
       for (const item of Object.values(rec)) walk(item, id)
     }
     for (const entry of entries) {
+      if (entry.type === 'book') continue
       walk(entry.data.text, entry.id); walk(entry.data.lore, entry.id); walk(entry.data.variants, entry.id); walk(entry.data.legendary, entry.id)
     }
     expect(blocks).toEqual([])
