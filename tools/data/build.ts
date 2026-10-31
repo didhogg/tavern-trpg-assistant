@@ -26,6 +26,10 @@ import { writeChecklist } from './report/checklist'
 import { writeCharacterReport } from './report/characterReport'
 import { writeChecklist11 } from './report/checklist11'
 import { writeDataRepo } from './publish/write'
+import { runEnglishPass } from './i18n/run'
+import { alignAll } from './i18n/align'
+import { validateI18n } from './i18n/validate'
+import { writeI18nReport } from './i18n/report'
 import { checkPublished, type Published } from './version'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
@@ -85,6 +89,12 @@ async function main(): Promise<void> {
       else console.warn(`基线别名 ${alias.id} 的 baseItem 无法解析：${baseItem}`)
     }
   }
+  const english = runEnglishPass()
+  const aligned = alignAll(allConverted, english, plan.tables.map((table) => table.id))
+  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'i18n.json'), `${JSON.stringify({ stats: aligned.stats, misses: aligned.misses, unmatchedEnglish: aligned.unmatchedEnglish }, null, 1)}\n`)
+  console.log(`英文条目 ${english.entries.length}，已加 i18n：${Object.values(aligned.stats).reduce((n, s) => n + s.withEnglish, 0)}/${allConverted.length}`)
+  const i18nErrors = validateI18n(allConverted)
+  if (i18nErrors.length) throw new Error(`英文对照校验失败 ${i18nErrors.length} 条：${i18nErrors.slice(0, 10).join('；')}`)
   validatePacks(result.packs)
   assertDelivered(result.packs.flatMap((p) => p.entries), FIELD_COVERAGE)
   const layers = checkLayers(result.packs)
@@ -133,6 +143,7 @@ async function main(): Promise<void> {
     await writeChecklist(REPO_ROOT, result)
     await writeCharacterReport(REPO_ROOT, result)
     await writeChecklist11(REPO_ROOT, result)
+    await writeI18nReport(REPO_ROOT, aligned, english.entries.length, outputs)
   }
   for (const [id, out] of outputs) console.log(`${id.padEnd(24)} ${(out.bytes.length / 1024).toFixed(1)} KB  ${out.sha256}`)
   console.log(`合计 ${(volumes.reduce((n, v) => n + v.bytes, 0) / 1024 / 1024).toFixed(2)} MB`)

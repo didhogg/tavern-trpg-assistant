@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { FORMAT_VERSION, idSchema, semverSchema, timestampSchema } from './common'
-import { assetRefSchema } from './text'
+import { assetRefSchema, textBlockSchema } from './text'
 
 /** formatVersion 2 的库分组；旧格式的 kind 在读取时折算为这里。 */
 export const packCategorySchema = z.enum(['rules', 'adventure', 'setting', 'toolkit'])
@@ -84,6 +84,15 @@ export interface PackFeature {
   data: Record<string, unknown>
 }
 
+/** 条目的英文版：`fields` 是「data 内字段路径 → 英文文字（字符串或整段文字块）」的平铺表。 */
+export const entryI18nSchema = z.object({
+  en: z.object({
+    name: z.string().min(1).max(240),
+    summary: z.string().optional(),
+    fields: z.record(z.string(), z.union([z.string(), z.array(textBlockSchema)])).default({}),
+  }),
+})
+
 export const entrySchema = z.looseObject({
   id: z.string().min(1).max(160),
   type: z.string().min(1).max(40),
@@ -94,6 +103,7 @@ export const entrySchema = z.looseObject({
   summary: z.string().default(''),
   data: z.record(z.string(), z.unknown()).default({}),
   image: z.union([z.string(), assetRefSchema]).optional(),
+  i18n: entryI18nSchema.optional(),
 })
 export type Entry = z.infer<typeof entrySchema>
 

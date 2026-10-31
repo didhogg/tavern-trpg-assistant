@@ -72,6 +72,12 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
       for (const key of ['race', 'class', 'feature', 'spell', 'patron']) for (const id of idsOf(requires?.[key])) check(entry.id, `requires.${key}`, id)
       for (const effect of (d.effects as Array<Record<string, unknown>> | undefined) ?? []) if (effect.kind === 'spellGrant') for (const id of (effect.spells as string[] | undefined) ?? []) check(entry.id, 'effects[].spells[]', id)
       for (const id of tableRefs(entry.data)) check(entry.id, 'text.tableRef', id)
+      // R13：英文版里的引用同样不能悬空、不能越过包依赖
+      const english = (entry as { i18n?: { en?: { fields?: Record<string, unknown> } } }).i18n?.en?.fields ?? {}
+      for (const [path, value] of Object.entries(english)) {
+        for (const id of tableRefs(value)) check(entry.id, `i18n.en.fields.${path}.tableRef`, id)
+        walkStrings(value, (s) => { for (const match of s.matchAll(/\{\{ref:([^|}]+)/g)) check(entry.id, `i18n.en.fields.${path}.ref`, match[1]) })
+      }
       for (const row of (d.rows as Array<Record<string, unknown>> | undefined) ?? []) {
         for (const id of (row.refs as string[] | undefined) ?? []) check(entry.id, 'rows[].refs[]', id)
         const then = row.then as { table?: string } | undefined
