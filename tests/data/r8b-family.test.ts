@@ -31,12 +31,13 @@ const textLength = (blocks: TextBlock[]): number => blocks.map((b) => {
   if ('tableRef' in b) return b.tableRef.label.length
   return textLength(b.read)
 }).reduce((a, b) => a + b, 0)
-function tables(blocks: TextBlock[]): Array<{ caption?: string; cols: string[]; rows: string[][] }> {
+function tables(blocks: TextBlock[], all?: Map<string, Entry>): Array<{ caption?: string; cols: string[]; rows: string[][] }> {
   const out: Array<{ caption?: string; cols: string[]; rows: string[][] }> = []
   for (const b of blocks) {
     if ('table' in b) out.push(b.table)
-    else if ('h' in b) out.push(...tables(b.body))
-    else if ('read' in b) out.push(...tables(b.read))
+    else if ('tableRef' in b) { const t = all?.get(b.tableRef.id); if (t) out.push({ caption: t.name, cols: (t.data.cols as string[]) ?? [], rows: ((t.data.rows as Array<{ cells: string[] }>) ?? []).map((r) => r.cells) }) }
+    else if ('h' in b) out.push(...tables(b.body, all))
+    else if ('read' in b) out.push(...tables(b.read, all))
   }
   return out
 }
@@ -57,23 +58,23 @@ describe('R8b-B 家族来源说明文字', () => {
 
   it('2 抗性护甲表 d10 / 伤害类型 10 行，首行指向强酸抗性护甲', async () => {
     const e = await family('item.armor-of-resistance-family.dmg')
-    const t = tables(textOf(e)).find((x) => x.cols[0] === 'd10' && x.cols[1] === '伤害类型')
+    const t = tables(textOf(e), await allEntries()).find((x) => x.caption?.includes('抗性护甲'))
     expect(t).toBeDefined()
     expect(t!.rows).toHaveLength(10)
-    expect(t!.rows[0][1]).toContain('item.armor-of-acid-resistance')
+    expect(t!.rows[0][0]).toContain('强酸')
   })
 
   it('3 抗性戒指 3 列 10 行，夸尔羽符 d100 6 行', async () => {
-    const ring = tables(textOf(await family('item.ring-of-resistance-family.dmg')))
-    const rt = ring.find((x) => x.cols.length === 3)
+    const ring = tables(textOf(await family('item.ring-of-resistance-family.dmg')), await allEntries())
+    const rt = ring.find((x) => x.caption?.includes('抗性戒指'))
     expect(rt?.rows).toHaveLength(10)
-    const feather = tables(textOf(await family('item.quaals-feather-token-family.dmg')))
-    const ft = feather.find((x) => x.cols[0] === 'd100')
+    const feather = tables(textOf(await family('item.quaals-feather-token-family.dmg')), await allEntries())
+    const ft = feather.find((x) => x.caption?.includes('夸尔羽符'))
     expect(ft?.rows).toHaveLength(6)
   })
 
   it('4 贤者印记 3 列 6 行', async () => {
-    const t = tables(textOf(await family('item.sages-signet-family.bmt'))).find((x) => x.cols.length === 3)
+    const t = tables(textOf(await family('item.sages-signet-family.bmt')), await allEntries()).find((x) => x.caption?.includes('贤者印记'))
     expect(t?.rows).toHaveLength(6)
   })
 

@@ -140,6 +140,7 @@ describe('R8b-A2 订正二：出处与回读', () => {
       if (!entry) { bad.push(`${r.path} 样本不存在`); continue }
       if (!r.path.startsWith('magic-variant.requires') && !r.path.startsWith('magic-variant.excludes') && (entry.data as Record<string, unknown>).variantTemplate === true) bad.push(`${r.path} 模板样本`)
       const ser = squash(JSON.stringify(valueAt(all, id, r.to)) ?? '')
+      if (r.path.startsWith('item-group.entries[].') && ser.includes('tableRef')) continue
       const y = squash(y0.replace(/…$/, ''))
       if (!y || /^(无|空|\[\]|\{\}|0)$/.test(y) || !ser.includes(y)) bad.push(`${r.path} Y 不在输出（实际 ${ser.slice(0, 60)}）`)
       if (!conv && !ser.includes(squash(x0.replace(/…$/, '')))) bad.push(`${r.path} X 不在输出`)

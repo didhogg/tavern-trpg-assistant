@@ -95,7 +95,7 @@ export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: In
   }
   const abilityIncrease = abilityIncreaseOf(raw)
   const grants = spellGrants(raw, ctx)
-  const uses = rules?.uses ?? usesFromText(plainText(convertBlocks(raw.entries, inline)))
+  const uses = rules?.uses ?? usesFromText(plainText(convertBlocks(raw._r9OriginalEntries ?? raw.entries, inline)))
   const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...(FEAT_EFFECTS[entry.id] ?? [])])
   const data: Record<string, unknown> = {
     src: pageOf(entry),
@@ -134,7 +134,7 @@ export function convertRule(entry: PlannedEntry, ctx: ConvertContext, inline: In
     text: convertBlocks(raw.entries, inline),
     category,
     ...(action ? { activation: action.activation, activities: action.activities, effects: action.effects } : {}),
-    ...(category === 'action' && !action ? { activities: activitiesFromText(raw.entries, entry.name, entry.id) } : {}),
+    ...(category === 'action' && !action ? { activities: activitiesFromText(raw._r9OriginalEntries ?? raw.entries, entry.name, entry.id) } : {}),
   }
   return { id: entry.id, type: 'rule', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('rule', entry.name, data, plainText(data.text as never)), data }
 }

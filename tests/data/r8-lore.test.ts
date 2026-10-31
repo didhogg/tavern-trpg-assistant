@@ -28,11 +28,12 @@ const blocks = (entry: Entry | undefined): TextBlock[] => (entry?.data.lore as T
 function hasHeading(list: TextBlock[], heading: string): boolean {
   return list.some((b) => ('h' in b && b.h === heading) || ('h' in b && hasHeading(b.body, heading)))
 }
-function tablesUnder(list: TextBlock[], heading: string): Array<{ caption: string; rows: number }> {
+function tablesUnder(list: TextBlock[], heading: string, all?: Map<string, Entry>): Array<{ caption: string; rows: number }> {
   const out: Array<{ caption: string; rows: number }> = []
   const walk = (blocks: TextBlock[]): void => {
     for (const b of blocks) {
       if ('table' in b) out.push({ caption: b.table.caption ?? '', rows: b.table.rows.length })
+      else if ('tableRef' in b) { const t = all?.get(b.tableRef.id); if (t) out.push({ caption: t.name.split('·').pop() ?? t.name, rows: ((t.data.rows as unknown[]) ?? []).length }) }
       else if ('h' in b) walk(b.body)
       else if ('read' in b) walk(b.read)
     }
@@ -40,7 +41,7 @@ function tablesUnder(list: TextBlock[], heading: string): Array<{ caption: strin
   for (const b of list) {
     if ('h' in b && b.h === heading) walk(b.body)
     else if ('h' in b) {
-      const nested = tablesUnder(b.body, heading)
+      const nested = tablesUnder(b.body, heading, all)
       out.push(...nested)
     }
   }
@@ -96,7 +97,7 @@ describe('R8 描述文字验收（§22.8）', () => {
 
   it('6 德鲁伊「学习野兽形态」下有 10 张表且行数正确', async () => {
     const all = allOf(await loadPacks())
-    const tables = tablesUnder(blocks(all.get('lore.class.druid.phb')), '学习野兽形态')
+    const tables = tablesUnder(blocks(all.get('lore.class.druid.phb')), '学习野兽形态', all)
     expect(tables.map((t) => t.caption)).toEqual(['极地', '海岸', '荒漠', '森林', '草地', '丘陵', '山地', '沼泽', '幽暗地域', '水下'])
     expect(tables.map((t) => t.rows)).toEqual([7, 12, 21, 37, 35, 27, 10, 14, 11, 10])
   })

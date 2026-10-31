@@ -18,6 +18,11 @@ function walkStrings(value: unknown, visit: (s: string, field: string) => void, 
   if (Array.isArray(value)) { for (const x of value) walkStrings(x, visit, field); return }
   if (value && typeof value === 'object') for (const [k, x] of Object.entries(value)) walkStrings(x, visit, field ? `${field}.${k}` : k)
 }
+function tableRefs(value: unknown, out: string[] = []): string[] {
+  if (Array.isArray(value)) { for (const item of value) tableRefs(item, out); return out }
+  if (value && typeof value === 'object') { const rec = value as Record<string, unknown>; if (rec.tableRef && typeof rec.tableRef === 'object' && typeof (rec.tableRef as { id?: unknown }).id === 'string') out.push((rec.tableRef as { id: string }).id); for (const item of Object.values(rec)) tableRefs(item, out) }
+  return out
+}
 function idsOf(value: unknown): string[] {
   const out: string[] = []
   walkStrings(value, (s) => { if (/^[a-z]+[a-z0-9.-]*$/.test(s) && s.includes('.')) out.push(s) })
@@ -66,6 +71,7 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
       const requires = d.requires as Record<string, unknown> | undefined
       for (const key of ['race', 'class', 'feature', 'spell', 'patron']) for (const id of idsOf(requires?.[key])) check(entry.id, `requires.${key}`, id)
       for (const effect of (d.effects as Array<Record<string, unknown>> | undefined) ?? []) if (effect.kind === 'spellGrant') for (const id of (effect.spells as string[] | undefined) ?? []) check(entry.id, 'effects[].spells[]', id)
+      for (const id of tableRefs(entry.data)) check(entry.id, 'text.tableRef', id)
       for (const row of (d.rows as Array<Record<string, unknown>> | undefined) ?? []) {
         for (const id of (row.refs as string[] | undefined) ?? []) check(entry.id, 'rows[].refs[]', id)
         const then = row.then as { table?: string } | undefined

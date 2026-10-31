@@ -58,6 +58,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
   const bgNameMismatch = entries.filter((e) => NAME_OVERRIDES[e.id] && e.name !== NAME_OVERRIDES[e.id].name)
   const dmgRaces = entries.filter((e) => e.type === 'race' && (e.data.src as { book?: string } | undefined)?.book === 'DMG')
   const tableNoParent = entries.filter((e) => e.type === 'table' && !(e.data.parent as unknown) && !(e.data.chapter as unknown)).length
+  const tableRepeatedName = entries.filter((e) => { if (e.type !== 'table') return false; const parts = e.name.split('·'); return parts.length === 2 && parts[0] === parts[1] }).length
   const formulaMarkers = entries.reduce((n, e) => n + (JSON.stringify(e.data).match(/\{\{spellcasting_mod\}\}/g)?.length ?? 0) + (JSON.stringify(e.data).match(/class\.druid\.level/g)?.length ?? 0), 0)
   let tableCellRefs = 0
   let emptyCells = 0
@@ -106,7 +107,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     { id: 'B5', label: 'DMG NPC 种族', status: 'measured', count: dmgRaces.length, definition: 'src.book=DMG 的 race 条目' },
     { id: 'B6a', label: 'feature 以外同书同名组', status: 'measured', count: groupCount(entries, null), definition: '非 feature 条目按 type+书+名称分组的重复组数' },
     { id: 'B6b', label: 'feature 同书同名组', status: 'measured', count: groupCount(entries, 'feature'), definition: 'feature 按书+名称分组的重复组数，只报数不改名' },
-    { id: 'B7', label: '重复拼接随机表名', status: 'pending', definition: 'R9 后才能判断表名与所属条目名重复拼接' },
+    { id: 'B7', label: '重复拼接随机表名', status: 'measured', count: tableRepeatedName, definition: '表名形如 X·X 且两半完全相同的条目数' },
     { id: 'B8', label: '没有所属条目的随机表', status: 'measured', count: tableNoParent, definition: 'table 条目没有 parent/chapter 的数量；R9 后目标 0' },
     { id: 'C-language', label: '语言源记录', status: 'pending', definition: 'R11 导入语言后才能报数与核对' },
     { id: 'D1', label: '汉字紧挨拉丁词', status: 'measured', count: d1, definition: '正文中一个汉字后紧接 3 个以上拉丁字母，排除 {{…}} 与 latinAllow 白名单' },

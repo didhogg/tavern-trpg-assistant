@@ -289,7 +289,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     const current = ctx.unmappedFoundry?.get(key) ?? { count: 0, example: entry.id }
     ctx.unmappedFoundry?.set(key, { count: current.count + value.count, example: current.example })
   }
-  const text = plainText(convertBlocks(raw.entries, inline))
+  const text = plainText(convertBlocks(raw._r9OriginalEntries ?? raw.entries, inline))
   const uses = FEATURE_NO_USES.has(entry.id) ? undefined : rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text)
   const configEffects = FEATURE_EFFECTS[entry.id] ?? []
   const spellEffects = spellGrants(raw, ctx).map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))
@@ -299,7 +299,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     for (const [skill, value] of Object.entries(item as Record<string, unknown>)) if (value === true) skillEffects.push({ kind: 'skill', skill, level: 'proficient' })
   }
   const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...configEffects, ...spellEffects, ...skillEffects])
-  const baseActivities = rules?.activities?.length ? rules.activities : activitiesFromText(raw.entries, entry.name, entry.id)
+  const baseActivities = rules?.activities?.length ? rules.activities : activitiesFromText(raw._r9OriginalEntries ?? raw.entries, entry.name, entry.id)
   const configuredActivities = FEATURE_ACTIVITIES[entry.id] ?? []
   const consumes = ownerType === 'optional' ? (Array.isArray(raw.consumes) ? raw.consumes : raw.consumes && typeof raw.consumes === 'object' ? [raw.consumes] : []) : []
   const activities = consumes.length

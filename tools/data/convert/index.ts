@@ -130,7 +130,6 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
   if (Array.isArray(rows)) {
     for (const row of rows) {
       if (Array.isArray(row.refs)) row.refs = row.refs.filter(ok)
-      if (row.then && !ok(row.then.table)) delete row.then
     }
   }
 }

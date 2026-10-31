@@ -67,11 +67,14 @@ describe('R8b-A1 去向审计', () => {
     expect(JSON.stringify(gauntlets)).toContain('abilitySet')
     expect(JSON.stringify(gauntlets)).toContain('"str"')
     expect(JSON.stringify(gauntlets)).toContain('19')
-    const family = get(all, 'item.armor-of-resistance-family.dmg', 'text')
-    const text = JSON.stringify(family)
-    expect(text).toContain('"cols":["d10","伤害类型"]')
+    const family = all.get('item.armor-of-resistance-family.dmg')!.data.text as Array<{ tableRef?: { id: string; label?: string } }>
+    const ref = family.find((b) => b.tableRef)?.tableRef?.id
+    expect(ref).toBeDefined()
+    const table = all.get(ref!)
+    const text = JSON.stringify(table?.data)
     expect((text.match(/"rows":/g) ?? []).length).toBe(1)
     expect(text).toContain('强酸')
+    expect(family.some((b) => b.tableRef?.label?.includes('d10'))).toBe(true)
   })
 
   it('1 审计表路径集合等于 A1 范围', () => {

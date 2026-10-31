@@ -30,30 +30,23 @@ export function allEntries(): Entry[] {
   return loadAllPacks().flatMap((pack) => pack.entries)
 }
 
-function replaceNthTable(blocks: TextBlock[], target: number, ref: { id: string; label: string }): { blocks: TextBlock[]; seen: number } {
+export interface Replacement { entryId: string; where: string; blockIndex: number; tableId: string; label: string }
+
+export function applyReplacements(data: Record<string, unknown>, replacements: Replacement[]): Record<string, unknown> {
+  const out = structuredClone(data)
+  const byIndex = new Map(replacements.map((row) => [row.blockIndex, row]))
   let seen = 0
   const walk = (list: TextBlock[]): TextBlock[] => list.map((block) => {
     if ('table' in block) {
       const index = seen++
-      return index === target ? { tableRef: ref } : block
+      const replacement = byIndex.get(index)
+      return replacement ? { tableRef: { id: replacement.tableId, label: replacement.label } } : block
     }
     if ('h' in block) return { h: block.h, body: walk(block.body) }
     if ('read' in block) return { read: walk(block.read) }
     return block
   })
-  return { blocks: walk(blocks), seen }
-}
-
-export interface Replacement { entryId: string; where: string; blockIndex: number; tableId: string; label: string }
-
-export function applyReplacements(data: Record<string, unknown>, replacements: Replacement[]): Record<string, unknown> {
-  const out = structuredClone(data)
-  for (const replacement of replacements) {
-    const field = replacement.where === 'entries' ? 'text' : 'lore'
-    const blocks = out[field]
-    if (!Array.isArray(blocks)) continue
-    const result = replaceNthTable(blocks as TextBlock[], replacement.blockIndex, { id: replacement.tableId, label: replacement.label })
-    out[field] = result.blocks
-  }
+  if (Array.isArray(out.text)) out.text = walk(out.text as TextBlock[])
+  if (Array.isArray(out.lore)) out.lore = walk(out.lore as TextBlock[])
   return out
 }

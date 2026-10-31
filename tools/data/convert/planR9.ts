@@ -15,11 +15,11 @@ export interface R9PlanResult {
   survivorByCandidate: Map<number, R9Candidate>
 }
 
-function makeTable(candidate: R9Candidate): PlannedEntry {
+function makeTable(candidate: R9Candidate, aliases: Set<string>): PlannedEntry {
   if (!candidate.id) throw new Error(`R9 表没有 id：${candidate.name}`)
   const book = BOOK_BY_SOURCE.get(candidate.source)
   if (!book) throw new Error(`R9 表来源不在白名单：${candidate.source}（${candidate.name}）`)
-  const aliases = new Set<string>([candidate.name])
+  aliases.add(candidate.name)
   for (const merged of candidate.merged ?? []) aliases.add(merged.name)
   const seed: R9Seed = {
     ...(candidate.ref ? {} : { dice: storageDice(candidate.expr!) }),
@@ -90,6 +90,14 @@ export function planR9(plan: PlanResult, options: R9PlanOptions): R9PlanResult {
     const s = golden.survivors.find((x) => x.i === d.survivorIndex)
     if (s) survivorByCandidate.set(d.i!, s)
   }
+  const aliasesBySurvivor = new Map<string, Set<string>>()
+  for (const candidate of pool) {
+    const survivor = survivorByCandidate.get(candidate.i!)
+    if (!survivor?.id) continue
+    const set = aliasesBySurvivor.get(survivor.id) ?? new Set<string>()
+    for (const alias of [candidate.name, candidate.name.split('·').pop() ?? candidate.name, candidate.name.replace(/·/g, '; '), candidate.name.replace(/·/g, ';')]) set.add(alias)
+    aliasesBySurvivor.set(survivor.id, set)
+  }
   const parentKeys = new Map<string, Set<string>>()
   for (const candidate of pool) {
     if (candidate.origin !== 'B' || !candidate.extra.parentKey) continue
@@ -99,7 +107,7 @@ export function planR9(plan: PlanResult, options: R9PlanOptions): R9PlanResult {
     set.add(candidate.extra.parentKey)
     parentKeys.set(survivor.id, set)
   }
-  const tables = golden.survivors.filter((s) => options.includeRef || s.kind !== 'ref').map((s) => { const table = makeTable(s); const seed = table.raw.__seed as R9Seed; const keys = parentKeys.get(s.id!); if (keys) seed.parentKeys = [...keys]; return table })
+  const tables = golden.survivors.filter((s) => options.includeRef || s.kind !== 'ref').map((s) => { const table = makeTable(s, aliasesBySurvivor.get(s.id!) ?? new Set<string>()); const seed = table.raw.__seed as R9Seed; const keys = parentKeys.get(s.id!); if (keys) seed.parentKeys = [...keys]; return table })
   const replacements: R9Replacement[] = []
   for (const candidate of pool) {
     if (candidate.origin !== 'B' || !candidate.block || !candidate.where || candidate.blockIndex === undefined) continue
@@ -111,6 +119,8 @@ export function planR9(plan: PlanResult, options: R9PlanOptions): R9PlanResult {
     const entry = plan.entries.find((e) => e.id === candidate.parentId)
     if (!entry) continue
     const block = candidate.block
+    if (entry.raw._r9OriginalEntries === undefined) entry.raw._r9OriginalEntries = structuredClone(entry.raw.entries)
+    if (entry.raw._r9OriginalLore === undefined) entry.raw._r9OriginalLore = structuredClone(entry.raw._lore)
     const replacement: Raw = { type: 'tableRef', id: survivor.id!, label }
     replaceBlock(entry.raw.entries, block, replacement)
     replaceBlock(entry.raw._lore, block, replacement)

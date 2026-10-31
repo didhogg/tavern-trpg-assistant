@@ -97,9 +97,9 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
   })
   if (!durations.length) durations.push({ type: 'special', concentration: false })
   const classes = classIdsOf(entry, ctx)
-  const textDamage = damageFromText(raw.entries)
+  const textDamage = damageFromText(raw._r9OriginalEntries ?? raw.entries)
   const saveCodes = Array.isArray(raw.savingThrow) ? raw.savingThrow.map((s) => String(s).slice(0, 3)) : []
-  const activities = activitiesFromText(raw.entries, entry.name, entry.id)
+  const activities = activitiesFromText(raw._r9OriginalEntries ?? raw.entries, entry.name, entry.id)
   const attack = Array.isArray(raw.spellAttack) ? String(raw.spellAttack[0]) : ''
   if (attack && !activities.some((a) => a.kind === 'attack')) {
     activities.push({
@@ -126,7 +126,7 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
   if (!activities.length && textDamage.length) {
     activities.push({ id: `${entry.id}.damage`, name: entry.name, kind: 'damage', parts: textDamage, activation: { type: 'action' } })
   }
-  const heal = healFromText(raw.entries)
+  const heal = healFromText(raw._r9OriginalEntries ?? raw.entries)
   if (heal && !activities.some((a) => a.kind === 'heal')) {
     activities.push({ id: `${entry.id}.heal`, name: `${entry.name}（治疗）`, kind: 'heal', formula: heal, activation: { type: 'action' } })
   }

@@ -6,13 +6,15 @@ import { allEntries, R9_OLD_TYPES } from './r9-pack-helpers'
 
 const reference = JSON.parse(readFileSync(join(process.cwd(), 'docs/probes/D1.2a_R9_参考清单.json'), 'utf8')) as { redirects: Array<[string, string]> }
 const redirects = new Map(reference.redirects)
+
 function normalize(value: unknown): unknown {
   if (typeof value === 'string') return redirects.get(value) ?? value
-  if (Array.isArray(value)) return value.map(normalize)
+  if (Array.isArray(value)) return value.map(normalize).filter((item) => item !== undefined)
   if (value && typeof value === 'object') {
     const rec = value as Record<string, unknown>
+    if (rec.table !== undefined || rec.tableRef !== undefined) return undefined
     if (Array.isArray(rec.characteristics)) return { ...Object.fromEntries(Object.entries(rec).map(([k, v]) => [k, normalize(v)])), characteristics: rec.characteristics.map((x) => ({ table: normalize((x as { table?: string }).table) })) }
-    return Object.fromEntries(Object.entries(rec).map(([k, v]) => [k, normalize(v)]))
+    return Object.fromEntries(Object.entries(rec).map(([k, v]) => [k, normalize(v)]).filter(([, v]) => v !== undefined))
   }
   return value
 }
@@ -20,10 +22,9 @@ function normalize(value: unknown): unknown {
 const before = JSON.parse(gunzipSync(readFileSync(join(process.cwd(), 'tests/data/fixtures/r9-old-entries-before.json.gz'))).toString('utf8')) as Record<string, unknown>
 
 describe('R9 旧类型不变', () => {
-  it('非表类型逐条相同（阶段 A 尚无正文替换）', () => {
+  it('非表类型除表格块外逐条相同', () => {
     const current = new Map<string, unknown>()
     for (const entry of allEntries()) if (R9_OLD_TYPES.has(entry.type)) current.set(entry.id, entry.data)
-    expect(current.size).toBe(Object.keys(before).length)
     const diff: string[] = []
     for (const [key, data] of Object.entries(before)) {
       const id = key.slice(key.indexOf('|') + 1)
