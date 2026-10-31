@@ -6,6 +6,8 @@ export interface R9Row {
   cells: string[]
   indent?: boolean
   values?: Record<string, unknown>
+  /** 这一行要再掷的另一张表（子表）的 id。 */
+  then?: string
 }
 
 export interface R9ParentHint {
@@ -29,6 +31,8 @@ export interface R9Extra {
   reprintedAs?: unknown
   lastCol?: string
   crRaw?: Raw[]
+  /** 行里的子表（单元格本身是一张表）；planR9 选完幸存者后补成独立的表。 */
+  nested?: Array<{ min: number; max: number; table: Raw }>
 }
 
 export interface R9Candidate {

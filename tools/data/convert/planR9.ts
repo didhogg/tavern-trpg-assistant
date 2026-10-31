@@ -7,6 +7,7 @@ import { isObj, storageDice } from './r9lib'
 import { BOOK_BY_SOURCE, PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
 import type { R9Meta, R9Seed } from './tableR9'
 import { keyTableValues } from './tableValues'
+import { findNestedTables } from './r9Nested'
 
 export interface R9PlanOptions { includeRef: boolean; replace: boolean }
 export interface R9PlanResult {
@@ -157,6 +158,20 @@ export function planR9(plan: PlanResult, options: R9PlanOptions, legendaryGroups
       if (entry && candidate.host === undefined) { roots.add(entry.raw.entries); roots.add(entry.raw._lore) }
     }
     for (const root of roots) flattenGroups(root)
+  }
+  for (const nested of findNestedTables(pool, (candidate) => survivorByCandidate.get(candidate.i!))) {
+    const outer = nested.outer
+    const row = outer.rows.find((r) => r.min === nested.min && r.max === nested.max)
+    if (!outer.id || !row) throw new Error(`R9 子表找不到外层表的对应行：${nested.candidate.name}`)
+    const candidate = nested.candidate
+    candidate.id = `${outer.id}-row${nested.min}${nested.max > nested.min ? `-${nested.max}` : ''}`
+    candidate.parent = outer.parent
+    candidate.chapter = outer.chapter
+    candidate.i = pool.length
+    pool.push(candidate)
+    survivorByCandidate.set(candidate.i, candidate)
+    row.then = candidate.id
+    tables.push(makeTable(candidate, new Set<string>()))
   }
   return { tables, replacements, redirects: golden.redirects, survivorByCandidate, pool }
 }

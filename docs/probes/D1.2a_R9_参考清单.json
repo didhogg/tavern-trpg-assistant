@@ -21735,6 +21735,40 @@
    "oldId": null,
    "merged": [],
    "purpose": null
+  },
+  {
+   "id": "table.magic-item-table-g.dmg-row12-14",
+   "name": "魔法物品表G·异能塑像",
+   "kind": "roll",
+   "source": "DMG",
+   "srd": false,
+   "dice": "1d8",
+   "modifierPrompt": null,
+   "rows": 7,
+   "parent": null,
+   "chapter": "宝藏",
+   "origin": "B",
+   "page": 147,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.magic-item-table-i.dmg-row76",
+   "name": "魔法物品表I·魔法护甲",
+   "kind": "roll",
+   "source": "DMG",
+   "srd": false,
+   "dice": "1d12",
+   "modifierPrompt": null,
+   "rows": 7,
+   "parent": null,
+   "chapter": "宝藏",
+   "origin": "B",
+   "page": 149,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
   }
  ],
  "redirects": [

@@ -48,7 +48,7 @@ export function convertTableR9(entry: PlannedEntry, ctx: ConvertContext, inline:
   const rows = seed.rows.map((row) => {
     const cells = row.cells.map((cell) => renderInline(cell, inline))
     const thenName = thenOf(row.cells)
-    const then = thenName ? ctx.tableByName.get(thenName) : undefined
+    const then = (thenName ? ctx.tableByName.get(thenName) : undefined) ?? row.then
     return {
       ...(meta.kind === 'ref' ? {} : { min: row.min, max: row.max }),
       cells,

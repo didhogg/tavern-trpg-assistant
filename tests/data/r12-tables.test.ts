@@ -28,7 +28,7 @@ describe('R12 表块', () => {
   const packOf = new Map(packs.flatMap((pack) => pack.entries.map((entry) => [entry.id, pack.id] as const)))
   const bookPack = new Map(books.map((entry) => [entry.id, packOf.get(entry.id)!]))
 
-  it('677 个表块（672 ref + 5 inline）与参考逐项一致', () => {
+  it('677 个表块（674 ref + 3 inline）与参考逐项一致', () => {
     let refs = 0, inline = 0
     const diff: string[] = []
     for (const entry of books) {
@@ -40,8 +40,8 @@ describe('R12 表块', () => {
       inline += actual.filter((row) => row.mode === 'inline').length
     }
     expect(diff).toEqual([])
-    expect(refs).toBe(672)
-    expect(inline).toBe(5)
+    expect(refs).toBe(674)
+    expect(inline).toBe(3)
   })
 
   it('tableRef 目标存在且在本包或 SRD；输出无临时表节点', () => {

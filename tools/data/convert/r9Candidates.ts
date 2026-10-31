@@ -4,6 +4,7 @@ import type { Raw } from '../extract/load'
 import { DATA_5ETOOLS } from '../extract/load'
 import { BOOK_SOURCES } from '../config/books'
 import type { PlanResult, PlannedEntry } from './plan'
+import { nestedOfRows } from './r9Nested'
 import { cellText, isObj, normRaw, parseLabel, rangeOf, refCell, refRows, slug, str, zero } from './r9lib'
 import type { R9Candidate, R9Row } from './r9Types'
 
@@ -124,7 +125,7 @@ export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r
     const n = (gCount.get(key) ?? 0) + 1
     gCount.set(key, n)
     const tail = heading.split('; ').pop() ?? heading
-    pool.push({ origin: grp ? 'GG' : 'G', source: src, page, srd: (t.srd ?? grp?.srd) === true, name: heading, cap: normRaw(typeof t.caption === 'string' ? t.caption : tail), expr: parsed.expr, modifierPrompt: parsed.modifierPrompt, deck: parsed.deck, kind: parsed.deck ? 'deck' : 'roll', cols: Array.isArray(t.colLabels) ? t.colLabels.slice(1).map(cellText) : [], rows, chapter: isObj(t.chapter) ? str(t.chapter.name) : isObj(grp?.chapter) ? str(grp.chapter.name) : undefined, parentHint: isObj(t.parentEntity) ? t.parentEntity as never : isObj(grp?.parentEntity) ? grp.parentEntity as never : undefined, extra: { gid: `table.${src.toLowerCase()}-p${page ?? 0}-${n}`, footnotes: Array.isArray(t.footnotes) ? t.footnotes.map(str) : undefined, reprintedAs: t.reprintedAs, lastCol: Array.isArray(t.colLabels) && t.colLabels.length ? refCell(t.colLabels[t.colLabels.length - 1]) : '' } })
+    pool.push({ origin: grp ? 'GG' : 'G', source: src, page, srd: (t.srd ?? grp?.srd) === true, name: heading, cap: normRaw(typeof t.caption === 'string' ? t.caption : tail), expr: parsed.expr, modifierPrompt: parsed.modifierPrompt, deck: parsed.deck, kind: parsed.deck ? 'deck' : 'roll', cols: Array.isArray(t.colLabels) ? t.colLabels.slice(1).map(cellText) : [], rows, chapter: isObj(t.chapter) ? str(t.chapter.name) : isObj(grp?.chapter) ? str(grp.chapter.name) : undefined, parentHint: isObj(t.parentEntity) ? t.parentEntity as never : isObj(grp?.parentEntity) ? grp.parentEntity as never : undefined, extra: { gid: `table.${src.toLowerCase()}-p${page ?? 0}-${n}`, footnotes: Array.isArray(t.footnotes) ? t.footnotes.map(str) : undefined, reprintedAs: t.reprintedAs, ...(nestedOfRows(t.rows, parsed.hi).length ? { nested: nestedOfRows(t.rows, parsed.hi) } : {}), lastCol: Array.isArray(t.colLabels) && t.colLabels.length ? refCell(t.colLabels[t.colLabels.length - 1]) : '' } })
   }
   for (const t of Array.isArray(g.table) ? g.table as Raw[] : []) addG(t, str(t.name).replace(/; /g, '·'))
   for (const grp of Array.isArray(g.tableGroup) ? g.tableGroup as Raw[] : []) for (const t of Array.isArray(grp.tables) ? grp.tables as Raw[] : []) addG({ ...t, source: grp.source }, `${str(grp.name).replace(/; /g, '·')}${typeof t.caption === 'string' && !str(grp.name).endsWith(t.caption) ? `·${t.caption}` : ''}`, grp)

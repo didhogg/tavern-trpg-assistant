@@ -15,6 +15,6 @@ describe('R9 表内 {@table}', () => {
     }
     expect(tags).toBe(0)
     expect(unresolved).toBe(0)
-    expect(thens).toBe(16)
+    expect(thens).toBe(18)
   })
 })

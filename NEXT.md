@@ -10,7 +10,7 @@ D1.2a：R7b、R9、R10、R10b、R11、R12 已完成；R12 已经规划 agent 复
 - 验收：`check`/`test:data`/`build:data`（两次哈希相同）/`build`/`e2e` 通过；与四个参考文件逐项一致；体检 B7、B8 为 0。
 
 ## 已完成
-- D1.2a R12（已复核）：96 条 `book` 章节、4,501 项目录、677 表块（672 `tableRef` + 5 行内表）、2,289 statblock（1,939 引用 + 350 仅背景）、471 背景文字、12 个跨包降级、14 个缺页章；四本参考文件逐项 0 差异；SRD 包哈希不变；B7/B8=0。
+- D1.2a R12（已复核）：96 条 `book` 章节、4,501 项目录、677 表块（674 `tableRef` + 3 行内表）、2,289 statblock（1,939 引用 + 350 仅背景）、471 背景文字、12 个跨包降级、14 个缺页章；四本参考文件逐项 0 差异；SRD 包哈希不变；B7/B8=0。
 - D1.2a R9（已复核，含正文表补遗）：1095 张表（roll 540、names 69、life 55、encounter 47、loot 28、deck 16、ref 340）；候选 1552、去重 457；630 个参考替换位置（构建后可见 `tableRef` 580）、28 条旧 id 重定向；14 张关键表 `purpose/columns/values`；B7/B8=0；抽样核对 0 不一致。
 - D1.2a R11（已复核）：新类型 1,120 条；规则新分类 id 带类别前缀（`rule.skill-…`、`rule.item-type-…`、`rule.quickref-…` 等），名称保持来源原样；MTF 三艘载具的背景文字已挂到 `lore`；language 64、rule 新分类 140、deity 403、reward 79、cult 25、hazard 48、object 12、vehicle 4、monsterPart 345；recipe/charoption 仅转换器与 5+5 内存样本；矩阵 R11 lost 0；抽样核对表 0 不一致。
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
@@ -101,7 +101,6 @@ D1.2a：R7b、R9、R10、R10b、R11、R12 已完成；R12 已经规划 agent 复
 
 ## 待议
 - 世界地点数据库（地图模块 M8 的前置）：书里的地点不作为地点数据存入；候选数据源 Toril GIS（用户自行导入 GeoJSON；使用条款对再分发未说明，须先核实）、FR 维基信息框（CC BY-SA，须先处理许可）；由 M8 单元蓝图决定坐标体系与数据源后再做。
-- R9 缺口：DMG「魔法物品表G」第 12—14 行的子表「异能塑像」（d8，7 行）与「魔法物品表I」第 76 行的子表「魔法护甲」（1d12，7 行）没有进表条目（这两行在表条目里只剩文字）；R12 在书籍章节里作为行内表保住了内容；是否补成两张可掷表并给两行加 `then`，由规划 agent 决定。
 - 冒险里带编号的房间与区域（`area`、`mapRegions`）属于 R17，不在 R12。
 - R9 参考替换清单 630 个位置中，50 个位于 `lore.*` 补丁条目的 `raw.entries`；`convertLore` 只输出 `_lore`，所以它们不显示（可见 `tableRef` 580）。是否让 lore 补丁同时输出 `entries` 留给规划 agent 决定。
 - 构建后全库没有残留的 `tableGroup` 块（扫描 0）；组里的表换成 `tableRef` 后，该组改写成普通 `entries` 块。
