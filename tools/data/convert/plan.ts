@@ -182,7 +182,7 @@ export function planAll(data: RawData, items: Raw[]): PlanResult {
     const key = `${str(raw.className)}|${str(raw.classSource)}`
     const info = classSlugs.get(key)
     const owner = subclassIds.get(`${key}|${str(raw.subclassShortName)}|${str(raw.subclassSource)}`) ?? subclassIds.get(`${key}|${str(raw.subclassShortName)}`)
-    if (!info || !owner || is2024(str(raw.classSource)) || is2024(str(raw.subclassSource)) || (str(raw.subclassSource) && str(raw.source) !== str(raw.subclassSource))) {
+    if (!info || !owner || is2024(str(raw.classSource)) || is2024(str(raw.subclassSource)) ) {
       skippedFeatures++
       continue
     }

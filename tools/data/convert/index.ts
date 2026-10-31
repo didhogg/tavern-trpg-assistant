@@ -61,7 +61,7 @@ function structuralIds(data: Record<string, unknown>): string[] {
   push(data.parentRace)
   push(data.traits)
   for (const item of (data.characteristics as Array<{ table?: string }> | undefined) ?? []) push(item.table)
-  for (const item of (data.advancement as Array<{ items?: string[]; pool?: string[] }> | undefined) ?? []) {
+  for (const item of ((data.advancement as Array<{ items?: string[]; pool?: string[]; optional?: unknown }> | undefined) ?? []).filter((x) => x.optional !== 'tce-ocf')) {
     push(item.items)
     push(item.pool)
   }

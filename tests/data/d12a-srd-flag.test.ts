@@ -11,7 +11,7 @@ const ROOT = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 const EXPECTED_REQUIRES: Record<string, string[]> = {
   PHB: [], SCAG: ['PHB'], DMG: ['PHB', 'SCAG'], MM: ['DMG', 'SCAG'],
-  XGE: ['PHB', 'DMG', 'SCAG'], TCE: ['PHB'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
+  XGE: ['PHB', 'DMG', 'SCAG'], TCE: ['PHB', 'SCAG', 'DMG', 'XGE'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
 }
 const MOVED = [
   ['Advanced Detention Drone', 'dnd5e2014-bmt'],

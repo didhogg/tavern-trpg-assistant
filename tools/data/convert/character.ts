@@ -213,13 +213,25 @@ export function convertClass(entry: PlannedEntry, ctx: ConvertContext, inline: I
   return { id: entry.id, type: 'class', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('class', entry.name, data, plainText(data.text as never)), data }
 }
 
+/** 别的书给子职业加的选项（如剑湾给图腾武者加麋鹿、猛虎）：来源与子职业来源不同、又不是 TCE 的可选变体；它们不由子职业授予，而是自己「报名」加入某个等级的选择名单。 */
+const isForeignOption = (raw: Record<string, unknown>): boolean => str(raw.subclassSource) !== '' && str(raw.source) !== str(raw.subclassSource) && raw.isClassFeatureVariant !== true
+
+/** 子职业特性的授予：TCE 的可选变体（如受祝击）是「可选」的，并写明取代同一子职业里的哪个特性；其余特性是必得的。 */
+function subclassGrant(f: { id: string; level: number; raw: unknown }, siblings: Array<{ id: string; name: string }>): Record<string, unknown> {
+  const raw = f.raw as Record<string, unknown>
+  if (raw.isClassFeatureVariant !== true) return { kind: 'itemGrant', level: f.level, items: [f.id], optional: false }
+  const match = /(?:替代|取代)([^，。；、}]+?)特性/.exec(JSON.stringify(raw.entries ?? ''))
+  const target = match ? siblings.find((x) => x.name === match[1] && x.id !== f.id)?.id : undefined
+  return { kind: 'itemGrant', level: f.level, items: [f.id], optional: 'tce-ocf', ...(target ? { replaces: target } : {}) }
+}
+
 export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const features = ctx.featuresByOwner.get(entry.id) ?? []
   const optionNames = new Set<string>()
   const choices: Array<Record<string, unknown>> = []
   for (const feature of features) for (const choice of optionRefs(feature.raw)) {
-    const pool = choice.names.map((name) => features.find((f) => f.name === name && f.level === choice.level)?.id ?? features.find((f) => f.name === name)?.id ?? ctx.resolveEntryId('feature', name)).filter((id): id is string => !!id)
+    const pool = choice.names.map((name) => features.find((f) => f.name === name && f.level === choice.level)?.id ?? features.find((f) => f.name === name)?.id ?? ctx.resolveEntryId('feature', name)).filter((id): id is string => !!id && !features.some((f) => f.id === id && isForeignOption(f.raw as Record<string, unknown>)))
     for (const name of choice.names) optionNames.add(name)
     if (pool.length) choices.push({ kind: 'itemChoice', level: choice.level || feature.level, count: choice.count, pool })
   }
@@ -231,7 +243,7 @@ export function convertSubclass(entry: PlannedEntry, ctx: ConvertContext, inline
     ...(spellcastingOf(raw, true) ? { spellcasting: spellcastingOf(raw, true) } : {}),
     ...(expandedSpells(raw, ctx) ? { expandedSpells: expandedSpells(raw, ctx) } : {}),
     advancement: mergeAdvancement([
-      ...features.filter((f) => !optionNames.has(f.name)).map((f) => ({ kind: 'itemGrant', level: f.level, items: [f.id], optional: false })),
+      ...features.filter((f) => !optionNames.has(f.name) && !isForeignOption(f.raw as Record<string, unknown>)).map((f) => subclassGrant(f, features)),
       ...features.flatMap((f) => PROFICIENCY_TRAITS[f.id] ? [{ kind: 'trait', level: f.level, grants: PROFICIENCY_TRAITS[f.id].grants ?? [], choices: PROFICIENCY_TRAITS[f.id].choices ?? [] }] : []),
       ...choices,
       ...foundryScaleValues(ctx, entry),
@@ -326,6 +338,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ...(raw.prerequisite ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
     ...(choicesOf(raw) ? { choices: choicesOf(raw) } : {}),
     ...((ownerType === 'optional' || raw.isClassFeatureVariant === true) ? { optional: true } : {}),
+    ...(ownerType === 'subclass' && isForeignOption(raw) ? { joinsChoice: { id: entry.context.ownerId ?? '', level: Number(raw.level ?? 0) } } : {}),
     activities,
   }
   if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }

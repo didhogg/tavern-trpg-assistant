@@ -3,7 +3,7 @@ import { BOOKS, SRD_PACK_ID } from '../config/books'
 
 export const EXPECTED_REQUIRES: Record<string, string[]> = {
   PHB: [], SCAG: ['PHB'], DMG: ['PHB', 'SCAG'], MM: ['DMG', 'SCAG'], XGE: ['PHB', 'DMG', 'SCAG'],
-  TCE: ['PHB'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
+  TCE: ['PHB', 'SCAG', 'DMG', 'XGE'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
 }
 export interface LayerIssue { kind: string; pack: string; detail: string }
 export function checkLayers(packs: ConvertedPack[]): LayerIssue[] {

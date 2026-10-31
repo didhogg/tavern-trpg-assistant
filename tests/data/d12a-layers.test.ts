@@ -16,7 +16,7 @@ const ROOT = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 const EXPECTED: Record<string, string[]> = {
   PHB: [], SCAG: ['PHB'], DMG: ['PHB', 'SCAG'], MM: ['DMG', 'SCAG'],
-  XGE: ['PHB', 'DMG', 'SCAG'], TCE: ['PHB'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
+  XGE: ['PHB', 'DMG', 'SCAG'], TCE: ['PHB', 'SCAG', 'DMG', 'XGE'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
 }
 const fileOf = (id: string): string => id === SRD_PACK_ID ? join(ROOT, 'packs', `${SRD_PACK_ID}.trpgpack`) : join(DATA_REPO, 'packs', 'dnd5e2014', `${id}-${BOOKS.find((b) => b.packId === id)!.version}.trpgpack`)
 async function loadPacks(): Promise<ConvertedPack[]> {
@@ -56,7 +56,7 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
     for (const id of graph.keys()) visit(id)
     for (const p of packs) expect(p.manifest.relationships.requires.map((d) => d.id).sort()).toEqual((EXPECTED[p.manifest.id.replace('dnd5e2014-', '').toUpperCase()] ?? []).map((s) => `dnd5e2014-${s.toLowerCase()}`).sort())
   })
-  it('C SRD 严格引用、29 条软引用、无跨层 baseItem', async () => {
+  it('C SRD 严格引用、30 条软引用、无跨层 baseItem', async () => {
     const packs = await loadPacks()
     const srd = packs.find((p) => p.manifest.id === SRD_PACK_ID)!
     expect(srd.entries).toHaveLength(2408)
@@ -66,7 +66,7 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
     const refs = await checkReferences(packs)
     expect(refs.dangling).toEqual([])
     const soft = srd.entries.flatMap((e) => ((e.data.advancement as Array<Record<string, unknown>> | undefined) ?? []).filter((a) => a.optional === 'tce-ocf').flatMap((a) => (a.items as string[] | undefined) ?? []))
-    expect(soft).toHaveLength(29)
+    expect(soft).toHaveLength(30)
     expect(soft.every((id) => packs.find((p) => p.manifest.id === 'dnd5e2014-tce')!.entries.some((e) => e.id === id))).toBe(true)
     expect(srd.entries.filter((e) => (e.data.credit as { srd?: boolean } | undefined)?.srd === false)).toHaveLength(0)
   })

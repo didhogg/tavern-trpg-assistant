@@ -61,7 +61,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     for (const id of item.items ?? []) referenced.add(id)
     for (const id of item.pool ?? []) referenced.add(id)
   }
-  const orphan = features.filter((e) => ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !referenced.has(e.id))
+  const orphan = features.filter((e) => ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !referenced.has(e.id) && !e.data.joinsChoice)
   const optional = features.filter((e) => (e.data.owner as { type?: string } | undefined)?.type === 'optional')
   const bgPrefix = features.filter((e) => e.name.startsWith('特性：'))
   const bgNameMismatch = entries.filter((e) => NAME_OVERRIDES[e.id] && e.name !== NAME_OVERRIDES[e.id].name)

@@ -29181,12 +29181,13 @@ async function Qz(e, t, n) {
 		enabledIn: i.filter((e) => e.packs.some((e) => e.id === n)).length,
 		pinnedIn: i.filter((e) => a(e).some((e) => e.startsWith(`${n}/`))).length,
 		adventuresIn: i.filter((e) => o(e).includes(n)).length,
-		core: t.list().some((e) => e.corePackIds.includes(n))
+		core: t.list().some((e) => e.corePackIds.includes(n)),
+		dependents: (await e.packs.toArray()).filter((e) => e.id !== n && e.relationships.requires.some((e) => e.id === n)).map((e) => e.name)
 	};
 }
 function $z(e) {
 	let t = [];
-	return e.enabledIn && t.push(`${e.enabledIn} 个存档启用了它。`), e.adventuresIn && t.push(`${e.adventuresIn} 个存档导入过它的冒险内容。`), e.pinnedIn && t.push(`${e.pinnedIn} 个存档固定了它的条目。`), t.push("存档里已经用到的内容都有副本，不受影响；没用过的条目在重新安装前查不到。"), e.pack.source === "builtin" && t.push("之后可以在库里重新安装。"), e.pack.source === "user" && t.push("这是你自己做的内容，删除后可在库回收站中保留 30 天。建议先导出为文件。"), t;
+	return e.enabledIn && t.push(`${e.enabledIn} 个存档启用了它。`), e.dependents.length && t.push(`${e.dependents.map((e) => `「${e}」`).join("、")}依赖它：卸载后，它们里面指向这个包的内容会查不到（建议先卸载依赖它的包）。`), e.adventuresIn && t.push(`${e.adventuresIn} 个存档导入过它的冒险内容。`), e.pinnedIn && t.push(`${e.pinnedIn} 个存档固定了它的条目。`), t.push("存档里已经用到的内容都有副本，不受影响；没用过的条目在重新安装前查不到。"), e.pack.source === "builtin" && t.push("之后可以在库里重新安装。"), e.pack.source === "user" && t.push("这是你自己做的内容，删除后可在库回收站中保留 30 天。建议先导出为文件。"), t;
 }
 async function eB(e, t) {
 	let n = /* @__PURE__ */ new Set();

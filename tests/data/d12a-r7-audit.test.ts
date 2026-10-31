@@ -115,6 +115,6 @@ describe('RW20–RW25 验收（§20.8）', () => {
     const all = allOf(await loadPacks())
     const refs = new Set<string>()
     for (const e of all.values()) for (const a of (e.data.advancement as Array<Record<string, unknown>> | undefined) ?? []) for (const id of [...((a.items as string[] | undefined) ?? []), ...((a.pool as string[] | undefined) ?? [])]) refs.add(id)
-    expect([...all.values()].filter((e) => e.type === 'feature' && ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !refs.has(e.id))).toEqual([])
+    expect([...all.values()].filter((e) => e.type === 'feature' && ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !refs.has(e.id) && !e.data.joinsChoice)).toEqual([])
   })
 })

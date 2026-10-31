@@ -110,7 +110,7 @@ async function main(): Promise<void> {
   if (layers.length) throw new Error(`层级/依赖校验失败：${layers.map((x) => `${x.pack} ${x.detail}`).join('；')}`)
   const refs = await checkReferences(result.packs)
   console.log(`引用悬空：${refs.dangling.length}，需新增依赖：${refs.dependency.length}，软引用：${refs.softRefs.length}`)
-  if (refs.softRefs.length !== 29) throw new Error(`软引用数量应为 29，实际 ${refs.softRefs.length}`)
+  if (refs.softRefs.length !== 42) throw new Error(`软引用数量应为 42，实际 ${refs.softRefs.length}`)
   if (refs.dangling.length) throw new Error(`引用悬空 ${refs.dangling.length} 条：${refs.dangling.slice(0, 10).map((x) => `${x.entry} ${x.field} ${x.value}`).join('；')}`)
   if (refs.dependency.length) throw new Error(`缺少包依赖 ${refs.dependency.length} 条：${refs.dependency.slice(0, 10).map((x) => `${x.pack} ${x.field} ${x.value}`).join('；')}`)
   const health = healthMetrics(result, data)

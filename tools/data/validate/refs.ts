@@ -43,7 +43,7 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
       else if (![...requires].some((id) => byPack.get(id)?.entries.some((e) => e.id === value))) issues.push({ pack: pack.manifest.id, entry: entryId, field: `${field}（依赖缺失）`, value })
     }
     const soft = (entryId: string, field: string, value: string, step: Record<string, unknown>): boolean => {
-      if (pack.manifest.id !== srd || step.kind !== 'itemGrant' || step.optional !== 'tce-ocf') return false
+      if (pack.manifest.id === 'dnd5e2014-tce' || step.kind !== 'itemGrant' || step.optional !== 'tce-ocf') return false
       const target = byPack.get('dnd5e2014-tce')?.entries.some((e) => e.id === value)
       if (!target) return false
       softRefs.push({ pack: pack.manifest.id, entry: entryId, field, value })

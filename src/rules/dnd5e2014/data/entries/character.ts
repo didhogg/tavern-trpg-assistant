@@ -90,6 +90,8 @@ export const featureDataSchema = z.looseObject({
   effects: effectListSchema.optional(),
   spellGrants: z.array(spellGrantSchema).optional(),
   optional: z.boolean().optional(),
+  /** 别的书给子职业加的选项：自己「报名」加入该子职业某等级的选择名单（引用只指向更低层的包）。 */
+  joinsChoice: z.object({ id: entryIdSchema, level: z.number().int().min(0).max(20) }).optional(),
 })
 export type FeatureData = z.infer<typeof featureDataSchema>
 

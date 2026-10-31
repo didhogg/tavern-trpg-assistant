@@ -19,6 +19,8 @@ export interface UninstallImpact {
   adventuresIn: number
   /** SRD 这类规则必选的包不能卸载。 */
   core: boolean
+  /** 已安装的、依赖它的包（名称）：卸载后它们里面指向这个包的内容会查不到。 */
+  dependents: string[]
 }
 
 /** 卸载前统计各类存档的使用情况（L1 §3.6）。 */
@@ -34,6 +36,7 @@ export async function uninstallImpact(db: TrpgDatabase, rules: RuleRegistry, pac
     pinnedIn: saves.filter((s) => pinsOf(s).some((k) => k.startsWith(`${packId}/`))).length,
     adventuresIn: saves.filter((s) => adventuresOf(s).includes(packId)).length,
     core: rules.list().some((r) => r.corePackIds.includes(packId)),
+    dependents: (await db.packs.toArray()).filter((p) => p.id !== packId && p.relationships.requires.some((d) => d.id === packId)).map((p) => p.name),
   }
 }
 
@@ -41,6 +44,7 @@ export async function uninstallImpact(db: TrpgDatabase, rules: RuleRegistry, pac
 export function impactLines(impact: UninstallImpact): string[] {
   const lines: string[] = []
   if (impact.enabledIn) lines.push(`${impact.enabledIn} 个存档启用了它。`)
+  if (impact.dependents.length) lines.push(`${impact.dependents.map((n) => `「${n}」`).join('、')}依赖它：卸载后，它们里面指向这个包的内容会查不到（建议先卸载依赖它的包）。`)
   if (impact.adventuresIn) lines.push(`${impact.adventuresIn} 个存档导入过它的冒险内容。`)
   if (impact.pinnedIn) lines.push(`${impact.pinnedIn} 个存档固定了它的条目。`)
   lines.push('存档里已经用到的内容都有副本，不受影响；没用过的条目在重新安装前查不到。')

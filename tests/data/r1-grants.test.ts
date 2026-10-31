@@ -69,7 +69,7 @@ describe('R1 特性授予金样', () => {
       for (const id of (step.items as string[] | undefined) ?? []) refs.add(id)
       for (const id of (step.pool as string[] | undefined) ?? []) refs.add(id)
     }
-    const orphan = [...all.values()].filter((e) => e.type === 'feature' && ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !refs.has(e.id))
+    const orphan = [...all.values()].filter((e) => e.type === 'feature' && ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !refs.has(e.id) && !e.data.joinsChoice)
     expect(orphan.map((e) => e.id)).toEqual([])
   })
 })

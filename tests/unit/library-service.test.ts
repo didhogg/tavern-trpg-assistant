@@ -170,6 +170,16 @@ describe('卸载与图片清理', () => {
     expect(lines.at(-1)).toContain('不受影响')
   })
 
+  it('有别的包依赖它时，说明行里列出依赖它的包；没有时不出现', async () => {
+    await install('base-x')
+    await install('top-y', { relationships: { requires: [{ id: 'base-x' }, { id: 'dnd5e2014-srd' }], recommends: [], conflicts: [] } })
+    const impact = await uninstallImpact(db, rules, 'base-x')
+    expect(impact.dependents).toEqual(['包-top-y'])
+    expect(impactLines(impact).some((l) => l.includes('「包-top-y」依赖它'))).toBe(true)
+    expect((await uninstallImpact(db, rules, 'top-y')).dependents).toEqual([])
+    expect(impactLines(await uninstallImpact(db, rules, 'top-y')).some((l) => l.includes('依赖它'))).toBe(false)
+  })
+
   it('核心包不能卸载；卸载下载的包记入 userRemoved，内置的记入 builtinRemoved', async () => {
     const deps = { db, packs: h.packs, rules, now: h.clock }
     await expect(uninstallPack(deps, 'dnd5e2014-srd')).rejects.toMatchObject({ code: 'E_BUILTIN_PROTECTED' })
