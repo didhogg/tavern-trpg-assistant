@@ -89,28 +89,28 @@ export function summaryOf(type: Dnd5e2014EntryType | string, name: string, data:
     case 'class':
       return clip([name, `${data.hitDie}生命骰`, data.subclassTitle].filter(Boolean).join('｜'))
     case 'subclass':
-      return clip([name, '子职业', first].filter(Boolean).join('｜'))
+      return clip([name, first].filter(Boolean).join('｜'))
     case 'feature':
       return clip([name, data.featureType, first].filter(Boolean).join('｜'))
     case 'race':
     case 'subrace': {
       const speed = data.speed as Record<string, number> | undefined
-      return clip([name, data.parentRace ? '亚种族' : '种族', `速度${speed?.walk ?? '—'}尺`].join('｜'))
+      return clip([name, `速度${speed?.walk ?? '—'}尺`].join('｜'))
     }
     case 'background':
-      return clip([name, '背景', first].filter(Boolean).join('｜'))
+      return clip([name, first].filter(Boolean).join('｜'))
     case 'feat':
-      return clip([name, '专长', first].filter(Boolean).join('｜'))
+      return clip([name, first].filter(Boolean).join('｜'))
     case 'table': {
       const rows = Array.isArray(data.rows) ? data.rows.length : 0
-      return clip([name, String(data.dice ?? ''), `${rows} 项`].join('｜'))
+      return clip([name, String(data.dice ?? ''), `${rows} 项`].filter(Boolean).join('｜'))
     }
     case 'condition':
     case 'disease':
     case 'status':
-      return clip([name, type === 'condition' ? '状态' : type === 'disease' ? '疾病' : '状态', first].filter(Boolean).join('｜'))
+      return clip([name, first].filter(Boolean).join('｜'))
     case 'rule':
-      return clip([name, '规则', first].filter(Boolean).join('｜'))
+      return clip([name, first].filter(Boolean).join('｜'))
     default:
       return clip([name, first].filter(Boolean).join('｜'))
   }

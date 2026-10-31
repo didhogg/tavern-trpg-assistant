@@ -60,7 +60,7 @@ describe('条目的结构化展示', () => {
     const spell = entryFacts({ type: 'spell', data: { level: 1, school: 'evocation', damageInflict: ['psychic'], conditionInflict: ['blinded'], damageResist: ['necrotic'] } })
     expect(text(get(spell, '造成伤害'))).toBe('心灵')
     expect(text(get(spell, '施加状态'))).toBe('目盲')
-    expect(text(get(spell, '赋予伤害抗性'))).toBe('死灵')
+    expect(text(get(spell, '赋予伤害抗性'))).toBe('暗蚀')
   })
 
   it('没有结构化数据的类型：返回空', () => {

@@ -36,7 +36,7 @@ export const DAMAGE_TYPES = ['acid', 'bludgeoning', 'cold', 'fire', 'force', 'li
 export type DamageType = (typeof DAMAGE_TYPES)[number]
 export const damageTypeSchema = z.enum(DAMAGE_TYPES)
 export const DAMAGE_LABELS: Record<string, string> = {
-  acid: '强酸', bludgeoning: '钝击', cold: '寒冷', fire: '火焰', force: '力场', lightning: '闪电', necrotic: '死灵',
+  acid: '强酸', bludgeoning: '钝击', cold: '寒冷', fire: '火焰', force: '力场', lightning: '闪电', necrotic: '暗蚀',
   piercing: '穿刺', poison: '毒素', psychic: '心灵', radiant: '光耀', slashing: '挥砍', thunder: '雷鸣',
 }
 

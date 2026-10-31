@@ -5,9 +5,10 @@ import { propertiesRule } from './rules/properties'
 import { formulasRule } from './rules/formulas'
 import { emptyRule } from './rules/empty'
 import { classColsRule } from './rules/classCols'
+import { damageRule } from './rules/damage'
 
 /** 规则按这里的顺序依次运行；新增规则只在这里登记。 */
-export const RULES: Rule[] = [namesRule, propertiesRule, formulasRule, emptyRule, classColsRule]
+export const RULES: Rule[] = [namesRule, propertiesRule, formulasRule, emptyRule, classColsRule, damageRule]
 
 const SAMPLE_LIMIT = 60
 let last: CleanReport | undefined

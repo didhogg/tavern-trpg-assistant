@@ -69,5 +69,5 @@ export function parseFraction(value: unknown): number {
 import { DAMAGE_LABELS } from '../../../src/rules/dnd5e2014/data/enums'
 
 export const DAMAGE_TYPE: Record<string, string> = { A: 'acid', B: 'bludgeoning', C: 'cold', F: 'fire', L: 'lightning', N: 'necrotic', O: 'force', P: 'piercing', R: 'radiant', S: 'slashing', T: 'thunder', Y: 'psychic' }
-export const DAMAGE_FROM_CN: Record<string, string> = Object.fromEntries(Object.entries(DAMAGE_LABELS).map(([code, label]) => [label, code]))
+export const DAMAGE_FROM_CN: Record<string, string> = { ...Object.fromEntries(Object.entries(DAMAGE_LABELS).map(([code, label]) => [label, code])), 冷冻: 'cold', 死灵: 'necrotic', 黯蚀: 'necrotic', 坏死: 'necrotic', 光辉: 'radiant' } // 别名：旧标签与个别译法
 export const DAMAGE_CN = (code: string): string => DAMAGE_LABELS[code] ?? code

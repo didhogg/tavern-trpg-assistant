@@ -18,7 +18,8 @@ const isBlocks = (v: unknown): v is Rec[] => Array.isArray(v) && v.length > 0 &&
  * 其余字符串（id、骰式、代码）逐字比较。
  */
 function norm(value: unknown, key = ''): unknown {
-  if (typeof value === 'string') return HAN.test(value) || value.includes('{{spellcasting_mod}}') ? '〈文字〉' : value
+  // abilityDc / abilityAttackMod 原先被展开成「Ki Ki abilityDc」这样的垃圾段落（规则 8 改写）
+  if (typeof value === 'string') return HAN.test(value) || value.includes('{{spellcasting_mod}}') || /(?:abilityDc|abilityAttackMod)$/.test(value) ? '〈文字〉' : value
   if (Array.isArray(value)) {
     if (isBlocks(value)) {
       return value
@@ -37,7 +38,9 @@ function norm(value: unknown, key = ''): unknown {
   }
   if (isObj(value)) {
     const out: Rec = {}
+    if (key === 'damage' || (Array.isArray((value as Rec).damage))) { /* 见下：damage 数组里的 type 另行处理 */ }
     for (const [k, v] of Object.entries(value)) out[k] = k === 'credit' ? '〈出处〉' : norm(v, k) // credit.missing 随名称覆盖变化（规则 1）
+    if (typeof (value as Rec).dice === 'string' && typeof (value as Rec).type === 'string') out.type = '〈伤害类型〉'
     if (isObj(out.table) && Array.isArray((out.table as Rec).rows)) (out.table as Rec).rows = ((out.table as Rec).rows as unknown[]).map((row) => (Array.isArray(row) ? row.map((c) => (c === '' || c === '—' ? '〈文字〉' : c)) : row))
     return out
   }

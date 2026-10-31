@@ -254,7 +254,7 @@ const DAMAGE_CN: Record<string, string> = process.env.TRPG_DATA_LANG === 'en' ? 
   acid: 'acid', bludgeoning: 'bludgeoning', cold: 'cold', fire: 'fire', force: 'force', lightning: 'lightning', necrotic: 'necrotic',
   piercing: 'piercing', poison: 'poison', psychic: 'psychic', radiant: 'radiant', slashing: 'slashing', thunder: 'thunder',
 } : {
-  acid: '强酸', bludgeoning: '钝击', cold: '冷冻', fire: '火焰', force: '力场', lightning: '闪电', necrotic: '死灵',
+  acid: '强酸', bludgeoning: '钝击', cold: '寒冷', fire: '火焰', force: '力场', lightning: '闪电', necrotic: '暗蚀',
   piercing: '穿刺', poison: '毒素', psychic: '心灵', radiant: '光耀', slashing: '挥砍', thunder: '雷鸣',
 }
 
