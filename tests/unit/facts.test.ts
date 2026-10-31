@@ -120,3 +120,24 @@ describe('R15 新字段的事实栏', () => {
     expect(text).not.toMatch(/save|spellAttack|spellDc/)
   })
 })
+
+describe('S1 显示：可选授予显示名与家族成员', () => {
+  it('职业的可选授予带显示名、目标包与「可选」标注；必得授予不带', () => {
+    const facts = entryFacts({ type: 'class', data: { advancement: [
+      { kind: 'itemGrant', level: 1, items: ['feature.a.phb'], optional: false },
+      { kind: 'itemGrant', level: 2, items: ['feature.druid-wild-companion.tce'], optional: 'tce-ocf', labels: { 'feature.druid-wild-companion.tce': '荒野伙伴' }, packId: 'dnd5e2014-tce' },
+    ] } } as never)
+    const parts = facts.find((f) => f.label === '特性')!.parts!
+    expect(parts.filter((p) => typeof p !== 'string')).toEqual([
+      { ref: 'feature.a.phb' },
+      { ref: 'feature.druid-wild-companion.tce', label: '荒野伙伴', packId: 'dnd5e2014-tce', note: '可选' },
+    ])
+  })
+  it('家族有「成员」事实、物品有「基础物品」事实；collectRefs 包含成员', () => {
+    const family = entryFacts({ type: 'item', data: { category: 'family', members: ['i1', 'i2'] } } as never)
+    expect(family.find((f) => f.label === '成员')!.members).toEqual(['i1', 'i2'])
+    const item = entryFacts({ type: 'item', data: { category: 'weapon', baseItem: 'item.dagger.phb' } } as never)
+    expect(item.find((f) => f.label === '基础物品')!.parts).toEqual([{ ref: 'item.dagger.phb' }])
+    expect(collectRefs(family)).toEqual(['i1', 'i2'])
+  })
+})

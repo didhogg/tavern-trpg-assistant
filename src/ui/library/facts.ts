@@ -2,13 +2,15 @@ import type { Entry } from '../../schemas/pack'
 import type { TextBlock } from '../../schemas/text'
 
 /** 条目的结构化数据 → 可读的「事实」列表（资料卡 U11 之前的通用展示）。 */
-export type Part = string | { ref: string }
+export type Part = string | { ref: string; /** 显示名（目标没装时用；也用于覆盖条目自己的名字） */ label?: string; /** 目标所在的包（没装时引导安装） */ packId?: string; /** 名字后的标注，如「可选」 */ note?: string }
 
 export interface Fact {
   label: string
   parts?: Part[]
   table?: { cols: string[]; rows: string[][] }
   sections?: Array<{ name: string; text: TextBlock[] }>
+  /** 家族的成员条目编号：界面按基础物品与加值档整理成表。 */
+  members?: string[]
 }
 
 type Obj = Record<string, unknown>
@@ -80,18 +82,21 @@ function formatCr(v: unknown): string {
 function featuresByLevel(advancement: unknown): Fact | undefined {
   const rows: string[][] = []
   const parts: Fact['parts'] = []
-  const byLevel = new Map<number, string[]>()
+  const byLevel = new Map<number, Array<{ ref: string; label?: string; packId?: string; note?: string }>>()
   for (const a of arr(advancement)) {
     if (!isObj(a) || a.kind !== 'itemGrant') continue
     const level = Number(a.level) || 1
-    byLevel.set(level, [...(byLevel.get(level) ?? []), ...arr(a.items).map(str)])
+    const optional = a.optional === 'tce-ocf'
+    const labels = isObj(a.labels) ? a.labels : {}
+    const grants = arr(a.items).map(str).map((id) => ({ ref: id, ...(typeof labels[id] === 'string' ? { label: String(labels[id]) } : {}), ...(typeof a.packId === 'string' ? { packId: a.packId } : {}), ...(optional ? { note: '可选' } : {}) }))
+    byLevel.set(level, [...(byLevel.get(level) ?? []), ...grants])
   }
   void rows
-  for (const [level, ids] of [...byLevel].sort((x, y) => x[0] - y[0])) {
+  for (const [level, grants] of [...byLevel].sort((x, y) => x[0] - y[0])) {
     parts.push(`\n${level} 级：`)
-    ids.forEach((id, i) => {
+    grants.forEach((grant, i) => {
       if (i) parts.push('、')
-      parts.push({ ref: id })
+      parts.push(grant)
     })
   }
   return parts.length ? { label: '特性', parts } : undefined
@@ -229,7 +234,9 @@ function abilityGrantText(v: unknown): string {
 function itemFacts(d: Obj): Fact[] {
   const out: Fact[] = []
   add(out, '类别', tr(ITEM_CATEGORY, d.category))
+  if (typeof d.baseItem === 'string' && d.baseItem) out.push({ label: '基础物品', parts: [{ ref: d.baseItem }] })
   add(out, '稀有度', d.rarity ? tr(RARITY, d.rarity) : '')
+  if (d.category === 'family' && arr(d.members).length) out.push({ label: '成员', members: arr(d.members).map(str) })
   if (isObj(d.weapon)) {
     add(out, '武器类别', tr(WEAPON_CATEGORY, d.weapon.category))
     add(out, '伤害', join(arr(d.weapon.damage).map((x) => (isObj(x) ? `${x.dice} ${tr(DAMAGE, x.type)}` : '')), '；') + (d.weapon.versatile ? `（两用 ${d.weapon.versatile}）` : ''))
@@ -302,6 +309,9 @@ export function entryFacts(entry: Pick<Entry, 'type' | 'data'>): Fact[] {
 
 export function collectRefs(facts: Fact[]): string[] {
   const ids = new Set<string>()
-  for (const f of facts) for (const p of f.parts ?? []) if (typeof p !== 'string') ids.add(p.ref)
+  for (const f of facts) {
+    for (const p of f.parts ?? []) if (typeof p !== 'string') ids.add(p.ref)
+    for (const id of f.members ?? []) ids.add(id)
+  }
   return [...ids]
 }

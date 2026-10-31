@@ -13,6 +13,7 @@ import { savesSuite } from './suite-saves.mjs'
 import { librarySuite } from './suite-library.mjs'
 import { healthSuite, mineSuite, variantsSuite } from './suite-library2.mjs'
 import { shellSuite } from './suite-shell.mjs'
+import { displaySuite } from './suite-display.mjs'
 import { wizardSuite } from './suite-wizard.mjs'
 
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -51,13 +52,16 @@ try {
         const ctx = { width, height, engine, viewLabel, scheme, url, fixture }
         if (!only || only === 'shell') await shellSuite(page, label, ctx)
         if (!only || only === 'dice') await diceSuite(page, label, ctx)
-        if (!only || only === 'wizard' || only === 'saves' || only === 'library') await wizardSuite(page, label, ctx)
+        if (!only || only === 'wizard' || only === 'saves' || only === 'library' || only === 'display') await wizardSuite(page, label, ctx)
         if (!only || only === 'saves') await savesSuite(page, label, ctx)
         if (!only || only === 'library') {
           await librarySuite(page, label, ctx)
           await mineSuite(page, label, ctx)
           await healthSuite(page, label, ctx)
           await variantsSuite(page, label, ctx)
+        }
+        if (!only || only === 'library' || only === 'display') {
+          await displaySuite(page, label, ctx)
         }
         if (scheme === 'light' && (!only || only === 'probes')) await probeSuite(page, label, ctx)
         await page.screenshot({ path: join(root, `docs/reviews/M3-${engine}-${viewLabel}-${scheme}.png`) })

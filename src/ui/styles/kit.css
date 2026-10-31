@@ -279,6 +279,8 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-entryrow .trpg-term { flex: none; white-space: nowrap; }
 .trpg-entryrow__sum { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trpg-entry__summary { margin: 0; color: var(--ink-2); }
+.trpg-entry__lore { display: grid; gap: 6px; }
+.trpg-entry__lore-title { margin: 8px 0 0; font-family: var(--font-serif); font-size: 15px; }
 .trpg-window[data-layout='narrow'] .trpg-packdetail__filter { grid-template-columns: 1fr; }
 .trpg-modal__page:has(.trpg-packdetail) { display: flex; flex-direction: column; overflow: hidden; }
 
@@ -324,6 +326,10 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-facts__label { color: var(--ink-2); font-size: 13px; padding-top: 1px; white-space: nowrap; }
 .trpg-facts__value { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
 .trpg-facts__sections { display: grid; gap: 8px; white-space: normal; }
+.trpg-facts__members { display: grid; gap: 8px; white-space: normal; }
+.trpg-facts__members h4 { margin: 0 0 2px; font-family: var(--font-serif); font-size: 14px; }
+.trpg-facts__member-row { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; }
+.trpg-facts__member-label { min-width: 4.5em; font-weight: 600; }
 .trpg-facts__sections h4 { margin: 0 0 2px; font-family: var(--font-serif); font-size: 14px; }
 .trpg-window[data-layout='narrow'] .trpg-facts { grid-template-columns: 1fr; gap: 2px; }
 .trpg-window[data-layout='narrow'] .trpg-facts__value { margin-bottom: 8px; }
