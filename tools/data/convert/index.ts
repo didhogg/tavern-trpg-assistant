@@ -12,6 +12,7 @@ import { convertBackground, convertRace } from './character2'
 import { convertCondition, convertFeat, convertRule } from './featRule'
 import { convertTable } from './table'
 import { convertTableR9 } from './tableR9'
+import { convertBook } from './bookR12'
 import { convertLanguage, convertDeity, convertReward, convertCult, convertHazard, convertObject, convertVehicle } from './world'
 import { convertRuleR11 } from './rulesR11'
 import { convertMonsterPart, convertRecipe, convertCharOption } from './parts'
@@ -47,7 +48,7 @@ export interface ConversionResult {
   stats: ConversionStats
 }
 
-const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore', 'language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart', 'recipe', 'charoption'])
+const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore', 'language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart', 'recipe', 'charoption', 'book'])
 
 function structuralIds(data: Record<string, unknown>): string[] {
   const out: string[] = []
@@ -387,7 +388,7 @@ function convertOne(entry: PlannedEntry, ctx: ConvertContext, inline: Parameters
     case 'vehicle': return convertVehicle(entry, ctx, inline)
     case 'monsterPart': return convertMonsterPart(entry, ctx, inline)
     case 'recipe': return convertRecipe(entry, ctx, inline)
-    case 'charoption': return convertCharOption(entry, ctx, inline)
+    case 'charoption': return convertCharOption(entry, ctx, inline); case 'book': return convertBook(entry, ctx, inline)
     case 'table': return entry.raw.__r9 ? convertTableR9(entry, ctx, inline) : convertTable(entry, ctx, inline)
     case 'lore':
       return convertLore(entry, ctx, inline)

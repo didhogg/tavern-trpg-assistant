@@ -7,6 +7,8 @@ import { expandItemEntries } from './extract/load'
 import { planAll } from './convert/plan'
 import { attachVehicleFluff, planR11 } from './convert/planR11'
 import { planR9 } from './convert/planR9'
+import { loadBookData } from './extract/books'
+import { planR12 } from './convert/planR12'
 import { loadR11Data } from './extract/r11'
 import { convertAll, type ConversionResult } from './convert'
 import { validatePacks, assertVolume } from './validate'
@@ -63,6 +65,10 @@ async function main(): Promise<void> {
   plan.entries.push(...r11.entries)
   const r9 = planR9(plan, { includeRef: true, replace: true }, data.legendaryGroups, new Set(r11.entries.map((e) => e.id)))
   plan.tables = r9.tables
+  const books = await loadBookData()
+  const r12 = planR12({ books, fluff: data.fluff ?? [], r9, existing: plan.entries, options: { embeds: false, tables: false } })
+  plan.entries.push(...r12.entries)
+  console.log(`书籍章节：${r12.stats.chapters}（R12）`)
   console.log(`载具 fluff 挂上：${attachVehicleFluff(data.fluff ?? [], r11.entries, plan.unmatchedFluff)}`)
   console.log(`计划条目：${plan.entries.length}（R11 ${r11.entries.length}），随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)

@@ -24,6 +24,6 @@ describe('R11 已有类型不变', () => {
     }
     expect(diff).toEqual([])
     const newRules = new Set(['script', 'skill', 'sense', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref'])
-    expect(allEntries().filter((entry) => !OLD_TYPES.has(entry.type) || (entry.type === 'rule' && newRules.has(String(entry.data.category)))).length).toBe(1120)
+    expect(allEntries().filter((entry) => entry.type !== 'book').filter((entry) => !OLD_TYPES.has(entry.type) || (entry.type === 'rule' && newRules.has(String(entry.data.category)))).length).toBe(1120)
   })
 })

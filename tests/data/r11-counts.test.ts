@@ -85,6 +85,6 @@ describe('R11 条数锚点', () => {
     expect(byType('monsterPart')).toHaveLength(345)
     expect(byType('recipe')).toHaveLength(0)
     expect(byType('charoption')).toHaveLength(0)
-    expect(packs.filter((entry) => !['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'table', 'rule', 'lore'].includes(entry.type)).length + byCategory('script').length + byCategory('skill').length + byCategory('sense').length + byCategory('itemProperty').length + byCategory('itemType').length + byCategory('itemTypeExtra').length + byCategory('quickref').length).toBe(1120)
+    expect(packs.filter((entry) => entry.type !== 'book').filter((entry) => !['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'table', 'rule', 'lore'].includes(entry.type)).length + byCategory('script').length + byCategory('skill').length + byCategory('sense').length + byCategory('itemProperty').length + byCategory('itemType').length + byCategory('itemTypeExtra').length + byCategory('quickref').length).toBe(1120)
   })
 })
