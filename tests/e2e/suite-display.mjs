@@ -82,7 +82,10 @@ export async function displaySuite(page, label) {
   const loreText = await detailText(page)
   check(`[${label}] 背景描述：SRD 底栖魔鱼有「背景描述」一节，注明出自《怪物图鉴》`, (await page.getByTestId('entry-lore').count()) === 1 && loreText.includes('背景描述') && /背景描述出自《怪物图鉴/.test(loreText))
 
-  // ⑤ 塔莎没装时：职业里的可选特性显示名字与「需要《塔莎的万事坩埚》」，点它出现安装确认
+  // ⑤ 可选特性由塔莎自己登记：装了塔莎，德鲁伊页有「可选特性」一行（名字干净，书名是灰色小字）；卸载塔莎后这一行消失，没有任何「需要…」「可选 ·」的字样
+  await openEntry(page, 'dnd5e2014-srd', '德鲁伊')
+  const withTce = await detailText(page)
+  check(`[${label}] 装了塔莎：德鲁伊有「可选特性」一行，写着「荒野伙伴」与书名，名字里没有括号说明`, withTce.includes('可选特性') && withTce.includes('荒野伙伴') && withTce.includes('塔莎的万事坩埚') && !/需要《|可选 ·|feature\./.test(withTce))
   await closeModals(page)
   await gotoPage(page, '库')
   await page.getByRole('button', { name: '扩展', exact: true }).click()
@@ -96,16 +99,8 @@ export async function displaySuite(page, label) {
   await settle(page, 400)
   await clearToasts(page)
   await openEntry(page, 'dnd5e2014-srd', '德鲁伊')
-  const druid = await detailText(page)
-  const optional = page.getByTestId('entry-detail').last().locator('.trpg-term', { hasText: '荒野伙伴（可选 · 需要《塔莎的万事坩埚》）' })
-  check(`[${label}] 塔莎未装：德鲁伊的特性里有「荒野伙伴（可选 · 需要《塔莎的万事坩埚》）」，没有编号`, (await optional.count()) === 1 && !/feature\./.test(druid))
-  if (await optional.count()) {
-    await optional.first().click()
-    await page.getByText('要现在安装吗').waitFor({ timeout: 10000 })
-    check(`[${label}] 点未安装的特性：出现「这个条目在《塔莎的万事坩埚》里，要现在安装吗？」`, (await page.locator('.trpg-modal, [role=dialog]').allInnerTexts()).join('').includes('塔莎的万事坩埚'))
-    await page.getByRole('button', { name: '取消' }).click()
-    await settle(page, 300)
-  }
+  const noTce = await detailText(page)
+  check(`[${label}] 卸载塔莎后：德鲁伊页没有「可选特性」一行，也没有任何「需要《」或编号`, !noTce.includes('可选特性') && !noTce.includes('荒野伙伴') && !/需要《|feature\./.test(noTce))
   // 装回塔莎，不影响后面的步骤
   await closeModals(page)
   await gotoPage(page, '库')

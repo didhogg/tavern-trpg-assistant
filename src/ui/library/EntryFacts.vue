@@ -7,10 +7,9 @@ import { collectRefs, type Fact, type Part } from './facts'
 import { parseInline } from './inline'
 import { groupMembers, type MemberInfo } from './series'
 import TextBlocks from './TextBlocks.vue'
-import { BOOK_NAME } from './typeLabels'
 
 const props = defineProps<{ facts: Fact[] }>()
-const emit = defineEmits<{ ref: [id: string, packId?: string] }>()
+const emit = defineEmits<{ ref: [id: string] }>()
 const app = useAppStore()
 const library = useLibraryStore()
 const info = ref<Record<string, { name: string; baseItem?: string; category?: string } | undefined>>({})
@@ -34,18 +33,11 @@ onMounted(resolve)
 watch(() => props.facts, resolve)
 const shown = computed(() => props.facts)
 
-/** 目标所在的包的名字（没装的包：优先用目录里的名字，其次按书代号查，最后用包编号）。 */
-function packName(packId: string): string {
-  return library.catalog?.packs.find((p) => p.id === packId)?.name ?? BOOK_NAME[packId.split('-').pop()?.toUpperCase() ?? ''] ?? packId
-}
 const isMissing = (id: string): boolean => id in info.value && info.value[id] === undefined
 
-/** 引用显示的文字：显示名优先；没装的目标写明需要哪本书，绝不显示编号。 */
+/** 引用显示的文字：显示名优先；查不到时写「未安装的条目」，绝不显示编号。 */
 function refText(p: Exclude<Part, string>): string {
-  const base = p.label ?? info.value[p.ref]?.name ?? (isMissing(p.ref) ? '未安装的条目' : '…')
-  const need = isMissing(p.ref) && p.packId ? `需要《${packName(p.packId)}》` : ''
-  const extra = [p.note, need].filter(Boolean).join(' · ')
-  return extra ? `${base}（${extra}）` : base
+  return p.label ?? info.value[p.ref]?.name ?? (isMissing(p.ref) ? '未安装的条目' : '…')
 }
 
 function sectionsOf(f: Fact): ReturnType<typeof groupMembers> {
@@ -62,7 +54,7 @@ function sectionsOf(f: Fact): ReturnType<typeof groupMembers> {
       <dd class="trpg-facts__value">
         <template v-if="f.parts">
           <template v-for="(p, i) in f.parts" :key="i">
-            <Term v-if="typeof p !== 'string'" @open="emit('ref', p.ref, p.packId)">{{ refText(p) }}</Term>
+            <template v-if="typeof p !== 'string'"><Term @open="emit('ref', p.ref)">{{ refText(p) }}</Term><span v-if="p.sub" class="trpg-row__meta trpg-facts__sub"> {{ p.sub }}</span></template>
             <template v-else>
               <template v-for="(s, j) in parseInline(p)" :key="j">
                 <Term v-if="s.kind === 'ref'" @open="emit('ref', s.id)">{{ s.text }}</Term>

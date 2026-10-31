@@ -328,6 +328,7 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-facts__sections { display: grid; gap: 8px; white-space: normal; }
 .trpg-facts__members { display: grid; gap: 8px; white-space: normal; }
 .trpg-facts__members h4 { margin: 0 0 2px; font-family: var(--font-serif); font-size: 14px; }
+.trpg-facts__sub { margin-left: 4px; font-size: 12px; }
 .trpg-facts__member-row { display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; }
 .trpg-facts__member-label { min-width: 4.5em; font-weight: 600; }
 .trpg-facts__sections h4 { margin: 0 0 2px; font-family: var(--font-serif); font-size: 14px; }

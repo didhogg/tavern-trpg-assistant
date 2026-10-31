@@ -121,17 +121,14 @@ describe('R15 新字段的事实栏', () => {
   })
 })
 
-describe('S1 显示：可选授予显示名与家族成员', () => {
-  it('职业的可选授予带显示名、目标包与「可选」标注；必得授予不带', () => {
+describe('S1 显示：家族成员与基础物品', () => {
+  it('职业的「特性」一行只列升级授予（可选特性由塔莎等包自己登记，不在这里）', () => {
     const facts = entryFacts({ type: 'class', data: { advancement: [
       { kind: 'itemGrant', level: 1, items: ['feature.a.phb'], optional: false },
-      { kind: 'itemGrant', level: 2, items: ['feature.druid-wild-companion.tce'], optional: 'tce-ocf', labels: { 'feature.druid-wild-companion.tce': '荒野伙伴' }, packId: 'dnd5e2014-tce' },
+      { kind: 'itemGrant', level: 2, items: ['feature.b.phb'], optional: false },
     ] } } as never)
     const parts = facts.find((f) => f.label === '特性')!.parts!
-    expect(parts.filter((p) => typeof p !== 'string')).toEqual([
-      { ref: 'feature.a.phb' },
-      { ref: 'feature.druid-wild-companion.tce', label: '荒野伙伴', packId: 'dnd5e2014-tce', note: '可选' },
-    ])
+    expect(parts.filter((p) => typeof p !== 'string')).toEqual([{ ref: 'feature.a.phb' }, { ref: 'feature.b.phb' }])
   })
   it('家族有「成员」事实、物品有「基础物品」事实；collectRefs 包含成员', () => {
     const family = entryFacts({ type: 'item', data: { category: 'family', members: ['i1', 'i2'] } } as never)

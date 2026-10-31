@@ -2,7 +2,7 @@ import type { Entry } from '../../schemas/pack'
 import type { TextBlock } from '../../schemas/text'
 
 /** 条目的结构化数据 → 可读的「事实」列表（资料卡 U11 之前的通用展示）。 */
-export type Part = string | { ref: string; /** 显示名（目标没装时用；也用于覆盖条目自己的名字） */ label?: string; /** 目标所在的包（没装时引导安装） */ packId?: string; /** 名字后的标注，如「可选」 */ note?: string }
+export type Part = string | { ref: string; /** 显示名（覆盖条目自己的名字，如去掉「（系列）」） */ label?: string; /** 名字后面的灰色小字，如条目所在的包名 */ sub?: string }
 
 export interface Fact {
   label: string
@@ -82,21 +82,18 @@ function formatCr(v: unknown): string {
 function featuresByLevel(advancement: unknown): Fact | undefined {
   const rows: string[][] = []
   const parts: Fact['parts'] = []
-  const byLevel = new Map<number, Array<{ ref: string; label?: string; packId?: string; note?: string }>>()
+  const byLevel = new Map<number, string[]>()
   for (const a of arr(advancement)) {
     if (!isObj(a) || a.kind !== 'itemGrant') continue
     const level = Number(a.level) || 1
-    const optional = a.optional === 'tce-ocf'
-    const labels = isObj(a.labels) ? a.labels : {}
-    const grants = arr(a.items).map(str).map((id) => ({ ref: id, ...(typeof labels[id] === 'string' ? { label: String(labels[id]) } : {}), ...(typeof a.packId === 'string' ? { packId: a.packId } : {}), ...(optional ? { note: '可选' } : {}) }))
-    byLevel.set(level, [...(byLevel.get(level) ?? []), ...grants])
+    byLevel.set(level, [...(byLevel.get(level) ?? []), ...arr(a.items).map(str)])
   }
   void rows
-  for (const [level, grants] of [...byLevel].sort((x, y) => x[0] - y[0])) {
+  for (const [level, ids] of [...byLevel].sort((x, y) => x[0] - y[0])) {
     parts.push(`\n${level} 级：`)
-    grants.forEach((grant, i) => {
+    ids.forEach((id, i) => {
       if (i) parts.push('、')
-      parts.push(grant)
+      parts.push({ ref: id })
     })
   }
   return parts.length ? { label: '特性', parts } : undefined
