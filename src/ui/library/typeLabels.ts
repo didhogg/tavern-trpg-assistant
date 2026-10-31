@@ -7,15 +7,11 @@ export const TYPE_LABEL: Record<string, string> = {
 
 export const typeLabel = (type: string): string => TYPE_LABEL[type] ?? type
 
-export const BOOK_NAME: Record<string, string> = {
-  PHB: '玩家手册', DMG: '城主指南', MM: '怪物图鉴', XGE: '珊娜萨的万事指南', TCE: '塔莎的万事坩埚', SCAG: '剑湾冒险者指南',
-  VGM: '瓦罗怪物指南', MTF: '魔邓肯的众敌卷册', MPMM: '魔邓肯巨献：多元宇宙的怪物', BMT: '万象无常书', SRD: 'SRD 基础规则',
-}
-
 /** 来源说明：出自《书》第 N 页 · 中文：译者（许可）。 */
-export function sourceLine(data: Record<string, unknown>): string {
+/** names：来源代号 → 书名，由已安装的包的清单提供（见 stores/library 的 sourceNames）；查不到时显示来源代号。 */
+export function sourceLine(data: Record<string, unknown>, names: Record<string, { name: string }> = {}): string {
   const src = data.src as { book?: string; page?: number } | undefined
   const credit = data.credit as { by?: string; license?: string } | undefined
-  const parts = [src?.book ? `出自《${BOOK_NAME[src.book] ?? src.book}》${src.page ? `第 ${src.page} 页` : ''}` : '', credit?.by ? `中文：${credit.by}${credit.license ? `（${credit.license}）` : ''}` : '']
+  const parts = [src?.book ? `出自《${names[src.book]?.name.replace(/（[^）]*）$/, '') ?? src.book}》${src.page ? `第 ${src.page} 页` : ''}` : '', credit?.by ? `中文：${credit.by}${credit.license ? `（${credit.license}）` : ''}` : '']
   return parts.filter(Boolean).join(' · ')
 }

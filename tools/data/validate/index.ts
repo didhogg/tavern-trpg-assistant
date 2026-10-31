@@ -1,3 +1,4 @@
+import { BOOK_SOURCES, RETIRED_SOURCES } from '../config/books'
 import type { Entry } from '../../../src/schemas/pack'
 import { entryDataByType, DND5E2014_ENTRY_TYPES } from '../../../src/rules/dnd5e2014/data/entries'
 import { diceSchema } from '../../../src/rules/dnd5e2014/data/common'
@@ -56,7 +57,7 @@ function stringifyArtifact(value: unknown): string | undefined {
 }
 
 /** 引用标记的显示文字不应是书籍代码（说明取错了标签的参数位置）。 */
-const BOOK_CODES = new Set(['PHB', 'DMG', 'MM', 'XGE', 'TCE', 'SCAG', 'VGM', 'MTF', 'MPMM', 'BMT', 'XPHB', 'XDMG', 'XMM'])
+const BOOK_CODES = new Set([...BOOK_SOURCES, ...RETIRED_SOURCES])
 function bookCodeDisplay(value: unknown): string | undefined {
   if (typeof value === 'string') {
     for (const match of value.matchAll(/\{\{ref:[^|}]+\|([^}]*)\}\}/g)) if (BOOK_CODES.has(match[1].trim().toUpperCase())) return match[0]
@@ -156,7 +157,11 @@ function checkEntryRules(entry: Entry, scales: Set<string>, packId: string): voi
 
 export function validatePack(pack: ConvertedPack, ctx: ValidationContext): void {
   const own = new Set(pack.entries.map((e) => e.id))
-  const required = new Set(pack.manifest.relationships.requires.map((r) => r.id))
+  // 本包能引用的包：声明的依赖及其依赖的依赖（依赖取直接依赖的最小集合，间接依赖不再单列）
+  const direct = new Map(ctx.packs.map((p) => [p.manifest.id, p.manifest.relationships.requires.map((r) => r.id)]))
+  const required = new Set<string>()
+  const visit = (id: string): void => { for (const d of direct.get(id) ?? []) if (!required.has(d)) { required.add(d); visit(d) } }
+  visit(pack.manifest.id)
   if (pack.manifest.id !== 'dnd5e2014-srd') required.add('dnd5e2014-srd')
   const byEntry = new Map<string, string>()
   for (const other of ctx.packs) for (const entry of other.entries) byEntry.set(entry.id, other.manifest.id)
@@ -180,7 +185,7 @@ export function validatePack(pack: ConvertedPack, ctx: ValidationContext): void 
     diceInEntry(entry)
     checkEntryRules(entry, scaleIds(ctx.packs), pack.manifest.id)
     const src = (entry.data as { src?: { book?: string } }).src
-    if (src?.book && ['XPHB', 'XDMG', 'XMM'].includes(src.book)) fail(`${entry.id} 含 2024 来源 ${src.book}`)
+    if (src?.book && RETIRED_SOURCES.has(src.book)) fail(`${entry.id} 含 2024 来源 ${src.book}`)
     for (const id of [...refsIn(entry.data)]) {
       if (own.has(id)) continue
       const target = byEntry.get(id)

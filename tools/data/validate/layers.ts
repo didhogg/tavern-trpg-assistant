@@ -1,25 +1,22 @@
 import type { ConvertedPack } from '../convert'
 import { BOOKS, SRD_PACK_ID } from '../config/books'
 
-export const EXPECTED_REQUIRES: Record<string, string[]> = {
-  PHB: [], SCAG: ['PHB'], DMG: ['PHB', 'SCAG'], MM: ['DMG', 'SCAG'], XGE: ['PHB', 'DMG', 'SCAG'],
-  TCE: ['PHB', 'SCAG', 'DMG', 'XGE'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
-}
 export interface LayerIssue { kind: string; pack: string; detail: string }
 export function checkLayers(packs: ConvertedPack[]): LayerIssue[] {
   const issues: LayerIssue[] = []
   const layers = new Map(BOOKS.map((b) => [b.packId, b.layer]))
   layers.set(SRD_PACK_ID, 0)
-  for (const b of BOOKS) {
-    const expected = EXPECTED_REQUIRES[b.source] ?? []
-    if ([...b.requiresBooks].sort().join('|') !== [...expected].sort().join('|')) issues.push({ kind: 'config', pack: b.packId, detail: `requiresBooks=${b.requiresBooks.join(',')} expected=${expected.join(',')}` })
+  // 政策表里额外写明的依赖：必须是政策表里的书，且层级更低
+  for (const b of BOOKS) for (const r of b.requires) {
+    const dep = BOOKS.find((x) => x.source === r)
+    if (!dep) issues.push({ kind: 'config', pack: b.packId, detail: `requires 里的 ${r} 不在政策表里` })
+    else if (dep.layer >= b.layer) issues.push({ kind: 'config', pack: b.packId, detail: `requires 里的 ${r}（层级 ${dep.layer}）不低于本书（${b.layer}）` })
   }
   for (const p of packs) {
     if (p.manifest.id === SRD_PACK_ID) continue
-    const source = BOOKS.find((b) => b.packId === p.manifest.id)?.source ?? ''
-    const expected = EXPECTED_REQUIRES[source] ?? []
-    const actual = p.manifest.relationships.requires.map((d) => d.id === SRD_PACK_ID ? 'SRD' : (BOOKS.find((b) => b.packId === d.id)?.source ?? d.id)).filter((x) => x !== 'SRD').sort()
-    if (actual.join('|') !== [...expected].sort().join('|')) issues.push({ kind: 'manifest', pack: p.manifest.id, detail: `requires=${actual.join(',')} expected=${expected.join(',')}` })
+    // 依赖 = 条目引用推出的 + 政策表里额外写明的；政策表里写明的必须都在清单里
+    const declared = new Set(p.manifest.relationships.requires.map((d) => d.id))
+    for (const r of BOOKS.find((b) => b.packId === p.manifest.id)?.requires ?? []) if (!declared.has(`dnd5e2014-${r.toLowerCase()}`)) issues.push({ kind: 'manifest', pack: p.manifest.id, detail: `政策表写明的依赖 ${r} 不在清单里` })
     for (const d of p.manifest.relationships.requires) {
       const dl = layers.get(d.id) ?? -1
       if (dl >= (layers.get(p.manifest.id) ?? 0)) issues.push({ kind: 'layer', pack: p.manifest.id, detail: `${d.id} layer ${dl} not below ${layers.get(p.manifest.id)}` })

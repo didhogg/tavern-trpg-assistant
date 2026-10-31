@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { sha256Hex } from '../../../src/core/hash'
+import { REPO_ROOT } from '../lib/io'
+import { BOOK_POLICY, PACK_VERSION } from './bookPolicy'
 
 export interface BookConfig {
   source: string
@@ -6,47 +10,51 @@ export interface BookConfig {
   name: string
   nameEn: string
   group: string
-  tier: 1 | 2
+  tier: 1 | 2 | 3
   version: string
   recommended: boolean
-  /** 书本身依赖的包（SRD 由构建自动加入）。 */
-  requiresBooks: string[]
+  /** 除条目引用推出的依赖之外，要求先装的书（来源代号）；见 bookPolicy.ts。 */
+  requires: string[]
   /** 依赖层级，SRD 为 0。 */
   layer: number
 }
 
 export const SRD_PACK_ID = 'dnd5e2014-srd'
-export const SRD_VERSION = '1.3.0'
+export const SRD_VERSION = PACK_VERSION
 
-export const BOOKS: BookConfig[] = [
-  { source: 'PHB', packId: 'dnd5e2014-phb', name: '玩家手册（2014）', nameEn: "Player's Handbook", group: '官方扩展 · 一档', tier: 1, version: '1.3.0', recommended: true, requiresBooks: [] , layer: 1 },
-  { source: 'SCAG', packId: 'dnd5e2014-scag', name: '剑湾冒险者指南', nameEn: "Sword Coast Adventurer's Guide", group: '官方扩展 · 一档', tier: 1, version: '1.3.0', recommended: true, requiresBooks: ['PHB'] , layer: 2 },
-  { source: 'DMG', packId: 'dnd5e2014-dmg', name: '城主指南（2014）', nameEn: "Dungeon Master's Guide", group: '官方扩展 · 一档', tier: 1, version: '1.3.0', recommended: true, requiresBooks: ['PHB', 'SCAG'] , layer: 3 },
-  { source: 'MM', packId: 'dnd5e2014-mm', name: '怪物图鉴（2014）', nameEn: 'Monster Manual', group: '官方扩展 · 一档', tier: 1, version: '1.3.0', recommended: true, requiresBooks: ['DMG', 'SCAG'] , layer: 4 },
-  { source: 'XGE', packId: 'dnd5e2014-xge', name: '珊娜萨的万事指南', nameEn: "Xanathar's Guide to Everything", group: '官方扩展 · 一档', tier: 1, version: '1.3.0', recommended: true, requiresBooks: ['PHB', 'DMG', 'SCAG'] , layer: 5 },
-  { source: 'TCE', packId: 'dnd5e2014-tce', name: '塔莎的万事坩埚', nameEn: "Tasha's Cauldron of Everything", group: '官方扩展 · 一档', tier: 1, version: '1.3.0', recommended: true, requiresBooks: ['PHB', 'SCAG', 'DMG', 'XGE'] , layer: 6 },
-  { source: 'VGM', packId: 'dnd5e2014-vgm', name: '瓦罗怪物指南', nameEn: "Volo's Guide to Monsters", group: '官方扩展 · 二档', tier: 2, version: '1.3.0', recommended: true, requiresBooks: ['PHB'] , layer: 7 },
-  { source: 'MTF', packId: 'dnd5e2014-mtf', name: '魔邓肯的众敌卷册', nameEn: "Mordenkainen's Tome of Foes", group: '官方扩展 · 二档', tier: 2, version: '1.3.0', recommended: true, requiresBooks: ['PHB'] , layer: 8 },
-  { source: 'MPMM', packId: 'dnd5e2014-mpmm', name: '魔邓肯巨献：多元宇宙的怪物', nameEn: 'Mordenkainen Presents: Monsters of the Multiverse', group: '官方扩展 · 二档', tier: 2, version: '1.3.0', recommended: true, requiresBooks: ['PHB'] , layer: 9 },
-  { source: 'BMT', packId: 'dnd5e2014-bmt', name: '万象无常书', nameEn: 'The Book of Many Things', group: '官方扩展 · 二档', tier: 2, version: '1.3.0', recommended: true, requiresBooks: ['DMG', 'SCAG'] , layer: 10 },
-]
+const TIER_GROUP = { 1: '官方扩展 · 一档', 2: '官方扩展 · 二档', 3: '设定与扩展书 · 三档' } as const
+
+interface BooksJsonEntry { source: string; name: string; ENG_name?: string; published?: string }
+const booksJson = (): Map<string, BooksJsonEntry> => {
+  const file = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data', 'books.json')
+  const list = (JSON.parse(readFileSync(file, 'utf8')) as { book: BooksJsonEntry[] }).book
+  return new Map(list.map((b) => [b.source, b]))
+}
+
+/** 2024 规则版及之后出版的书（来源代号）：不收录，也不允许出现在展示文字里。 */
+export const RETIRED_SOURCES = new Set([...booksJson().values()].filter((b) => (b.published ?? '') >= '2024-09-17').map((b) => b.source))
+
+/** 包编号：dnd5e2014-<来源代号小写，去掉连字符>。现有 11 个包的编号不变。 */
+export const packIdOf = (source: string): string => `dnd5e2014-${source.toLowerCase().replace(/-/g, '')}`
+
+/** 由政策表 + 来源的 books.json 生成；导出的名字与形状不变，所有引用点照旧。 */
+function buildBooks(): BookConfig[] {
+  const json = booksJson()
+  return [...BOOK_POLICY].sort((a, b) => a.order - b.order).map((p) => {
+    const src = json.get(p.source)
+    if (!src) throw new Error(`政策表里的 ${p.source} 不在 books.json 里`)
+    return { source: p.source, packId: packIdOf(p.source), name: p.name ?? src.name, nameEn: p.nameEn ?? src.ENG_name ?? src.name, group: TIER_GROUP[p.tier], tier: p.tier, version: PACK_VERSION, recommended: p.recommended, requires: p.requires ?? [], layer: p.order }
+  })
+}
+
+export const BOOKS: BookConfig[] = buildBooks()
 
 export const BOOK_BY_SOURCE = new Map(BOOKS.map((b) => [b.source, b]))
 export const BOOK_SOURCES = new Set(BOOKS.map((b) => b.source))
 export const PACK_BY_SOURCE = new Map(BOOKS.map((b) => [b.source, b.packId]))
 
-export const BOOK_NAMES: Record<string, string> = {
-  PHB: '玩家手册',
-  DMG: '城主指南',
-  MM: '怪物图鉴',
-  XGE: '珊娜萨的万事指南',
-  TCE: '塔莎的万事坩埚',
-  SCAG: '剑湾冒险者指南',
-  VGM: '瓦罗怪物指南',
-  MTF: '魔邓肯的众敌卷册',
-  MPMM: '魔邓肯巨献：多元宇宙的怪物',
-  BMT: '万象无常书',
-}
+/** 来源代号 → 书名（去掉「（2014）」这类括号后缀）。 */
+export const BOOK_NAMES: Record<string, string> = Object.fromEntries(BOOKS.map((b) => [b.source, b.name.replace(/（[^）]*）$/, '')]))
 
 /** 固定 lineage：同一包的所有版本共用，构建可重现。 */
 export function lineageFor(packId: string): string {

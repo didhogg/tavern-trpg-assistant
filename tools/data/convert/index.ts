@@ -1,3 +1,4 @@
+import { structuralRefs } from '../../../src/rules/dnd5e2014/data/refs'
 import type { Entry, PackFeature, PackManifest } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import { makeContext, type ConvertContext } from './context'
@@ -50,23 +51,7 @@ export interface ConversionResult {
 
 const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore', 'language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart', 'recipe', 'charoption', 'book'])
 
-function structuralIds(data: Record<string, unknown>): string[] {
-  const out: string[] = []
-  const push = (value: unknown) => {
-    if (typeof value === 'string') out.push(value)
-    else if (Array.isArray(value)) for (const item of value) push(item)
-  }
-  push(data.classId)
-  push((data.owner as { id?: string } | undefined)?.id)
-  push(data.parentRace); push(((data.joins as Array<{ to?: string }> | undefined) ?? []).map((j) => j.to))
-  push(data.traits)
-  for (const item of (data.characteristics as Array<{ table?: string }> | undefined) ?? []) push(item.table)
-  for (const item of (data.advancement as Array<{ items?: string[]; pool?: string[] }> | undefined) ?? []) {
-    push(item.items)
-    push(item.pool)
-  }
-  return out
-}
+const structuralIds = (data: Record<string, unknown>): string[] => structuralRefs(data, 'dependency').map((r) => r.id)
 
 function pruneRefs(value: unknown, allowed: Set<string>, planned: Map<string, PlannedEntry>, count: { n: number }): unknown {
   if (typeof value === 'string') {
@@ -302,12 +287,13 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
       return p?.packId === packId
     })
     const book = BOOKS.find((b) => b.packId === packId)
-    const requireSet = new Set<string>((book?.requiresBooks ?? []).map((s) => PACK_BY_SOURCE.get(s)!))
+    const requireSet = new Set<string>((book?.requires ?? []).map((s) => PACK_BY_SOURCE.get(s)!)) // 条目引用推出的依赖在下面加；这里只放政策表里额外写明的
     for (const entry of entries) {
       const plan = byId.get(entry.id)!
       for (const pack of requiresFor(plan, entry.data, byId)) requireSet.add(pack)
     }
     const features = ruleOptionsFor(packId, entries, planned)
+    const sourceNames = Object.fromEntries([...new Set(entries.map((e) => (e.data as { src?: { book?: string } }).src?.book))].filter((s): s is string => !!s && BOOK_BY_SOURCE.has(s)).sort().map((s) => [s, { name: BOOK_BY_SOURCE.get(s)!.name, nameEn: BOOK_BY_SOURCE.get(s)!.nameEn }]))
     const requires = [...requireSet].filter((id) => id !== packId && id !== SRD_PACK_ID).sort().map((id) => ({ id }))
     const manifest: PackManifest = {
       id: packId,
@@ -325,6 +311,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
       typeCounts: {},
       contributes: {},
       relationships: { requires, recommends: [], conflicts: [] },
+      sourceNames,
       blobs: [],
       dataVersion: 3,
       minAppVersion: '0.1.0',

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { ConversionResult } from '../convert'
 import type { Entry } from '../../../src/schemas/pack'
-import { BOOK_NAMES } from '../config/books'
+import { BOOKS, BOOK_NAMES } from '../config/books'
 import { writeText } from '../lib/io'
 
 interface Pick {
@@ -11,7 +11,7 @@ interface Pick {
 }
 
 /** 抽检优先取玩家手册、城主指南、怪物图鉴等最容易对照的书；同一本书内按 id 排序，结果稳定。 */
-const BOOK_RANK = ['PHB', 'DMG', 'MM', 'XGE', 'TCE', 'VGM', 'MTF', 'MPMM', 'SCAG', 'BMT']
+const BOOK_RANK = BOOKS.map((b) => b.source)
 
 function bookRank(entry: Entry): number {
   const book = (entry.data.src as { book?: string } | undefined)?.book ?? ''

@@ -1,3 +1,4 @@
+import { BOOKS } from '../config/books'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { loadRawData, expandItemEntries } from '../extract/load'
@@ -13,7 +14,7 @@ import { PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
 import { DATA_5ETOOLS } from '../extract/load'
 import { writeText } from '../lib/io'
 
-const SOURCES = ['PHB', 'SCAG', 'MM', 'VGM', 'MTF', 'DMG', 'XGE', 'TCE', 'MPMM', 'BMT']
+const SOURCES = BOOKS.map((b) => b.source)
 const SKIP = new Set(['table', 'tableGroup', 'image', 'gallery', 'statblock', 'list'])
 const TAGTYPE: Record<string, string> = { creature: 'monster', spell: 'spell', item: 'item', race: 'race', subclass: 'subclass', optfeature: 'feature', reward: 'reward', feat: 'feat', condition: 'condition', trap: 'hazard', hazard: 'hazard', background: 'background', class: 'class', action: 'rule:action', variantrule: 'rule:variant', object: 'object', deity: 'deity', disease: 'disease' }
 type Obj = Record<string, unknown>

@@ -1,5 +1,4 @@
 import type { ConvertedPack } from '../convert'
-import { BOOKS } from '../config/books'
 
 export interface RefIssue {
   pack: string
@@ -34,7 +33,11 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
   const srd = 'dnd5e2014-srd'
   const issues: RefIssue[] = []
   for (const pack of packs) {
-    const requires = pack.manifest.id === srd ? new Set([srd]) : new Set([pack.manifest.id, srd, ...(BOOKS.find((b) => b.packId === pack.manifest.id)?.requiresBooks.map((s) => `dnd5e2014-${s.toLowerCase()}`) ?? [])])
+    // 本包能引用的包：自己、SRD、声明的依赖及其依赖的依赖
+    const direct = new Map(packs.map((p) => [p.manifest.id, p.manifest.relationships?.requires?.map((d) => d.id) ?? []]))
+    const requires = new Set<string>([pack.manifest.id, srd])
+    const visit = (id: string): void => { for (const d of direct.get(id) ?? []) if (!requires.has(d)) { requires.add(d); visit(d) } }
+    if (pack.manifest.id !== srd) visit(pack.manifest.id)
     const check = (entryId: string, field: string, value: string): void => {
       if (!value || !value.includes('.')) return
       if (!all.has(value)) issues.push({ pack: pack.manifest.id, entry: entryId, field, value })

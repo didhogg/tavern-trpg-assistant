@@ -91,11 +91,15 @@ describe('条目的结构化展示', () => {
     expect(text(get(bg, '语言'))).toBe('任选一种标准语言')
   })
 
-  it('不认识的代码原样显示，不丢信息；来源书名显示中文', async () => {
+  it('不认识的代码原样显示，不丢信息；来源书名来自包清单', async () => {
     const { tr, WEAPON_PROPERTY } = await import('../../src/ui/library/zh')
     expect(tr(WEAPON_PROPERTY, 'ZZ')).toBe('ZZ')
     const { sourceLine } = await import('../../src/ui/library/typeLabels')
-    expect(sourceLine({ src: { book: 'PHB', page: 105 }, credit: { by: '共库机翻', license: 'CC-BY-NC-SA-4.0' } })).toBe('出自《玩家手册》第 105 页 · 中文：共库机翻（CC-BY-NC-SA-4.0）')
+    const data = { src: { book: 'PHB', page: 105 }, credit: { by: '共库机翻', license: 'CC-BY-NC-SA-4.0' } }
+    // 书名来自已安装包清单里的 sourceNames（去掉「（2014）」后缀）；自制包带自己的书名；查不到时显示来源代号
+    expect(sourceLine(data, { PHB: { name: '玩家手册（2014）' } })).toBe('出自《玩家手册》第 105 页 · 中文：共库机翻（CC-BY-NC-SA-4.0）')
+    expect(sourceLine({ ...data, src: { book: 'HB1', page: 3 } }, { HB1: { name: '我的世界设定' } })).toContain('出自《我的世界设定》第 3 页')
+    expect(sourceLine(data)).toContain('出自《PHB》第 105 页')
   })
 })
 

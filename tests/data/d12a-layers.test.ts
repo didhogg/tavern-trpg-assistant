@@ -14,10 +14,6 @@ import { checkReferences } from '../../tools/data/validate/refs'
 
 const ROOT = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
-const EXPECTED: Record<string, string[]> = {
-  PHB: [], SCAG: ['PHB'], DMG: ['PHB', 'SCAG'], MM: ['DMG', 'SCAG'],
-  XGE: ['PHB', 'DMG', 'SCAG'], TCE: ['PHB', 'SCAG', 'DMG', 'XGE'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
-}
 const fileOf = (id: string): string => id === SRD_PACK_ID ? join(ROOT, 'packs', `${SRD_PACK_ID}.trpgpack`) : join(DATA_REPO, 'packs', 'dnd5e2014', `${id}-${BOOKS.find((b) => b.packId === id)!.version}.trpgpack`)
 async function loadPacks(): Promise<ConvertedPack[]> {
   const all: Array<{ id: string; layer: number }> = [{ id: SRD_PACK_ID, layer: 0 }, ...BOOKS.map((b) => ({ id: b.packId, layer: b.layer }))]
@@ -45,16 +41,15 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
     expect([...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family').length).toBeGreaterThanOrEqual(37)
     expect([...all.values()].filter((e) => e.type === 'feature' && e.data.role === 'intro')).toHaveLength(109)
   })
-  it('B requires 表、layer 严格向下、无环', async () => {
+  it('B requires：依赖由引用推导 + 政策表额外写明；layer 严格向下、无环（不再对照手写的依赖表）', async () => {
     const packs = await loadPacks()
-    const byId = new Map(BOOKS.map((b) => [b.packId, b]))
-    for (const b of BOOKS) expect([...b.requiresBooks].sort(), b.source).toEqual([...EXPECTED[b.source]].sort())
-    for (const b of BOOKS) for (const s of b.requiresBooks) expect(byId.get(`dnd5e2014-${s.toLowerCase()}`)?.layer, `${b.source}->${s}`).toBeLessThan(b.layer)
-    const graph = new Map(BOOKS.map((b) => [`dnd5e2014-${b.source.toLowerCase()}`, b.requiresBooks.map((s) => `dnd5e2014-${s.toLowerCase()}`)]))
+    const layerOf = new Map([[SRD_PACK_ID, 0], ...BOOKS.map((b) => [b.packId, b.layer] as const)])
+    const graph = new Map(packs.map((p) => [p.manifest.id, p.manifest.relationships.requires.map((d) => d.id)]))
+    for (const [id, deps] of graph) for (const d of deps) expect(layerOf.get(d)!, `${id} -> ${d}`).toBeLessThan(layerOf.get(id)!)
+    for (const b of BOOKS) for (const r of b.requires) expect(graph.get(b.packId), `${b.source} 的政策表依赖 ${r}`).toContain(`dnd5e2014-${r.toLowerCase()}`)
     const visiting = new Set<string>(); const done = new Set<string>()
     const visit = (id: string): void => { if (done.has(id)) return; if (visiting.has(id)) throw new Error(`cycle ${id}`); visiting.add(id); for (const n of graph.get(id) ?? []) visit(n); visiting.delete(id); done.add(id) }
     for (const id of graph.keys()) visit(id)
-    for (const p of packs) expect(p.manifest.relationships.requires.map((d) => d.id).sort()).toEqual((EXPECTED[p.manifest.id.replace('dnd5e2014-', '').toUpperCase()] ?? []).map((s) => `dnd5e2014-${s.toLowerCase()}`).sort())
   })
   it('C SRD 严格引用、没有指向别的包的可选授予、无跨层 baseItem', async () => {
     const packs = await loadPacks()

@@ -35,6 +35,8 @@ export const useLibraryStore = defineStore('library', () => {
   let entryIndex: Map<string, string> | null = null
 
   const installedMap = computed(() => new Map(installed.value.map((p) => [p.id, p])))
+  /** 来源代号 → 书名：合并所有已安装包清单里的 sourceNames（旧版包没有，回退显示来源代号）。 */
+  const sourceNames = computed(() => Object.assign({}, ...installed.value.map((p) => p.sourceNames ?? {})) as Record<string, { name: string }>)
   const updates = computed(() => (catalog.value ? findUpdates(installed.value, catalog.value) : []))
 
   function downloadable(ruleId: string): CatalogPack[] {
@@ -201,5 +203,5 @@ export const useLibraryStore = defineStore('library', () => {
     return app.queue.state(`pack:${id}`)
   }
 
-  return { installed, issues, builtinRemoved, featureUpdateCounts, runIntegrity, packOfEntry, catalog, catalogState, catalogError, tasks, installedMap, updates, downloadable, refreshInstalled, loadCatalog, install, installFile, waitFor, ensureRecommended, cancel, queueState, clearTask }
+  return { sourceNames, installed, issues, builtinRemoved, featureUpdateCounts, runIntegrity, packOfEntry, catalog, catalogState, catalogError, tasks, installedMap, updates, downloadable, refreshInstalled, loadCatalog, install, installFile, waitFor, ensureRecommended, cancel, queueState, clearTask }
 })

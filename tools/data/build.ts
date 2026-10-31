@@ -20,7 +20,7 @@ import { assertHealth, healthMetrics } from './validate/health'
 import { assertDelivered } from './validate/delivered'
 import { FIELD_COVERAGE } from './config/fieldCoverage'
 import { buildPackFile } from '../../src/core/packs/file'
-import { BOOKS, SRD_PACK_ID } from './config/books'
+import { BOOKS, BOOK_SOURCES, SRD_PACK_ID } from './config/books'
 import { writeReport } from './report/report'
 import { writeChecklist } from './report/checklist'
 import { writeCharacterReport } from './report/characterReport'
@@ -62,7 +62,7 @@ async function main(): Promise<void> {
   await assertFieldCoverage()
   console.log('读取参考数据…')
   const data = await loadRawData()
-  const coreUnsupported = data.unsupportedMods.filter((x) => ['PHB','DMG','MM','SCAG','XGE','TCE','VGM','MTF','MPMM','BMT'].includes(x.source))
+  const coreUnsupported = data.unsupportedMods.filter((x) => BOOK_SOURCES.has(x.source))
   console.log(`未知 _mod 模式：${coreUnsupported.length}${coreUnsupported.length ? `（${coreUnsupported.map((x) => `${x.name}/${x.mode}`).join('；')}）` : ''}`)
   if (coreUnsupported.length) throw new Error(`核心书出现未知 _mod 模式：${coreUnsupported.map((x) => `${x.name}/${x.mode}`).join('；')}`)
   console.log(`法术 ${data.spells.length}，怪物 ${data.monsters.length}，物品 ${data.items.length}，基础物品 ${data.baseItems.length}`)

@@ -98,7 +98,7 @@ async function onSwitch(variantKey: string): Promise<void> {
         <p v-if="src.packId" class="trpg-field__hint">背景描述出自《{{ library.installedMap.get(src.packId)?.name ?? src.packId }}》</p>
       </template>
     </section>
-    <p v-if="sourceLine(shown.data)" class="trpg-field__hint">{{ sourceLine(shown.data) }}</p>
+    <p v-if="sourceLine(shown.data, library.sourceNames)" class="trpg-field__hint">{{ sourceLine(shown.data, library.sourceNames) }}</p>
   </div>
   <p v-else-if="missing" class="trpg-empty">没有找到这个条目</p>
   <div v-else class="trpg-skeleton" aria-busy="true" />

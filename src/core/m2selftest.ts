@@ -15,15 +15,10 @@ export interface M2Step {
   detail?: string
 }
 
-const BOOK_NAMES: Record<string, string> = {
-  PHB: '玩家手册', DMG: '城主指南', MM: '怪物图鉴', XGE: '珊娜萨的万事指南', TCE: '塔莎的万事坩埚',
-  SCAG: '剑湾冒险者指南', VGM: '瓦罗怪物指南', MTF: '魔邓肯的众敌卷册', MPMM: '魔邓肯巨献：多元宇宙的怪物', BMT: '万象无常书',
-}
-
 function sourceLine(entry: Entry): string {
   const src = entry.data.src as { book?: string; page?: number } | undefined
   const credit = entry.data.credit as { by?: string; license?: string } | undefined
-  return `出自《${BOOK_NAMES[src?.book ?? ''] ?? src?.book ?? '未知'}》第 ${src?.page ?? 0} 页 · 中文：${credit?.by ?? '未知'}（${credit?.license ?? '未知'}）`
+  return `出自《${src?.book ?? '未知'}》第 ${src?.page ?? 0} 页 · 中文：${credit?.by ?? '未知'}（${credit?.license ?? '未知'}）`
 }
 
 const builtinBytes = () => loadBuiltinPack('dnd5e2014-srd')

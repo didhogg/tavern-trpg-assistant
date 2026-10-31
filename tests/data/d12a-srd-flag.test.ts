@@ -9,10 +9,6 @@ import type { ConvertedPack } from '../../tools/data/convert'
 
 const ROOT = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
-const EXPECTED_REQUIRES: Record<string, string[]> = {
-  PHB: [], SCAG: ['PHB'], DMG: ['PHB', 'SCAG'], MM: ['DMG', 'SCAG'],
-  XGE: ['PHB', 'DMG', 'SCAG'], TCE: ['PHB', 'SCAG', 'DMG', 'XGE'], VGM: ['PHB'], MTF: ['PHB'], MPMM: ['PHB'], BMT: ['DMG', 'SCAG'],
-}
 const MOVED = [
   ['Advanced Detention Drone', 'dnd5e2014-bmt'],
   ['Animated Armor Detention Drone', 'dnd5e2014-bmt'],
@@ -65,9 +61,6 @@ describe('R7 补丁二：SRD 标记与 _copy 归属', () => {
       expect(packOf(packs, entry!.id), name).toBe(expectedPack)
       expect((entry!.data.credit as { srd?: boolean }).srd, name).toBe(false)
     }
-    for (const p of packs) {
-      const source = p.manifest.id.replace('dnd5e2014-', '').toUpperCase()
-      expect(p.manifest.relationships.requires.map((d) => d.id).sort(), p.manifest.id).toEqual((EXPECTED_REQUIRES[source] ?? []).map((s) => `dnd5e2014-${s.toLowerCase()}`).sort())
-    }
+    // 依赖不再对照手写的表：由引用推导，另由 g1-books 对照开工快照、d12a-layers 检查层级与无环
   })
 })

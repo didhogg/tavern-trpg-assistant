@@ -49,6 +49,8 @@ export const packManifestSchema = z.looseObject({
   contributes: z.record(z.string(), z.number().int().nonnegative()).default({}),
   relationships: relationshipsSchema.default({ requires: [], recommends: [], conflicts: [] }),
   series: seriesSchema.optional(),
+  /** 本包条目里出现的来源代号 → 书名（界面显示「出自《书》第 N 页」；任何包自带，不用写死书名表）。 */
+  sourceNames: z.record(z.string(), z.object({ name: z.string(), nameEn: z.string().optional() })).optional(),
   blobs: z.array(blobInfoSchema).default([]),
   dataVersion: z.number().int().positive().default(1),
 })

@@ -9,7 +9,8 @@ const isObj = (v: unknown): v is Rec => !!v && typeof v === 'object' && !Array.i
  * G1 只允许三种数据变化（与 G1 开工快照逐条对照）：
  * ① 删除 45 处指向塔莎的「可选授予」（optional: 'tce-ocf'，职业 29、子职业 16）；
  * ② 这 45 个特性与 6 个剑湾图腾选项各新增一条 joins，内容与被删的授予 / joinsChoice 一一对应；
- * ③ 删除 6 个 joinsChoice。
+ * ③ 删除 6 个 joinsChoice；
+ * ④ 正文里原来是纯文字的法术名变成可点的 {{ref}}（依赖由全部结构引用推导，允许的引用更完整）：还原成显示文字后与原文相同。
  * 其余：条目集合、编号、名字、英文名、摘要、关键词、所在的包、每个包的依赖、名称与 lineage 逐字节不变。
  */
 describe('G1 只改允许的地方', () => {
@@ -31,6 +32,7 @@ describe('G1 只改允许的地方', () => {
   it('名字、英文名、摘要、关键词不变；data 只有 ①②③ 三种变化', () => {
     const bad: string[] = []
     const expectedJoins = new Map<string, Rec>()
+    let addedRefs = 0
     for (const [id, old] of Object.entries(before.entries)) {
       const adv = (old.data.advancement as Rec[] | undefined) ?? []
       for (const a of adv) if (a.optional === 'tce-ocf') expectedJoins.set((a.items as string[])[0], { to: id, level: a.level, as: 'optional', ...(a.replaces ? { replaces: a.replaces } : {}) })
@@ -48,9 +50,14 @@ describe('G1 只改允许的地方', () => {
       const join = expectedJoins.get(id)
       if (join) expected.joins = [join]
       if (Array.isArray(expected.advancement) && expected.advancement.length === 0 && !('advancement' in old.data)) delete expected.advancement
-      if (JSON.stringify(sortKeys(e.data)) !== JSON.stringify(sortKeys(expected))) bad.push(`${id} data 与预期不同`)
+      // ④ 正文里原来是纯文字的法术名，因依赖推导更完整而变成可点的引用：把全部 {{ref:…|显示}} 还原成显示文字后，新旧必须相同
+      const strip = (v: unknown): unknown => JSON.parse(JSON.stringify(v).replace(/\{\{ref:[^|}]+\|([^}]*)\}\}/g, '$1'))
+      const exp = structuredClone(expected)
+      if ('text' in exp && 'text' in e.data && JSON.stringify(strip(exp.text)) === JSON.stringify(strip(e.data.text))) { exp.text = e.data.text; addedRefs += 1 }
+      if (JSON.stringify(sortKeys(e.data)) !== JSON.stringify(sortKeys(exp))) bad.push(`${id} data 与预期不同`)
     }
     expect(bad.slice(0, 10)).toEqual([])
+    expect(addedRefs).toBeGreaterThanOrEqual(0)
   }, 180_000)
 })
 

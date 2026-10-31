@@ -1,3 +1,4 @@
+import { BOOK_SOURCES } from '../config/books'
 import type { Raw } from '../extract/load'
 import type { FluffRecord } from '../extract/fluff'
 import type { PlannedEntry } from './plan'
@@ -12,7 +13,7 @@ import type { R9Row } from './r9Types'
 import type { R12OutlineItem, R12PlanResult, R12Stats } from './r12Types'
 
 const SKIP = new Set(['table', 'tableGroup', 'image', 'gallery', 'statblock', 'list'])
-const SOURCES = new Set(['PHB', 'SCAG', 'MM', 'VGM', 'MTF', 'DMG', 'XGE', 'TCE', 'MPMM', 'BMT'])
+const SOURCES = BOOK_SOURCES
 const WHITELIST = new Set(['entries', 'section', 'inset', 'insetReadaloud', 'statblock', 'table', 'tableGroup', 'list', 'item', 'itemSub', 'quote', 'image', 'internal', 'gallery', 'square', 'none', 'abilityGeneric', 'inlineBlock', 'cell', 'row'])
 const TAGTYPE: Record<string, string> = { creature: 'monster', spell: 'spell', item: 'item', race: 'race', subclass: 'subclass', optfeature: 'feature', reward: 'reward', feat: 'feat', condition: 'condition', trap: 'hazard', hazard: 'hazard', background: 'background', class: 'class', action: 'rule:action', variantrule: 'rule:variant', object: 'object', deity: 'deity', disease: 'disease' }
 const obj = (v: unknown): v is Raw => !!v && typeof v === 'object' && !Array.isArray(v)
