@@ -52,7 +52,7 @@ describe('R8b-B 家族来源说明文字', () => {
     const e = await family('item.eye-and-hand-of-vecna-family.dmg')
     const blocks = textOf(e)
     const first = blocks[0]
-    expect('p' in first && first.p.startsWith('维克那Vecna之名即为不语之代表')).toBe(true)
+    expect('p' in first && first.p.startsWith('维克那（Vecna）之名即为不语之代表')).toBe(true)
     expect(textLength(blocks)).toBeGreaterThanOrEqual(1500)
   })
 

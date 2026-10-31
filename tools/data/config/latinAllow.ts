@@ -12,6 +12,7 @@ export const LATIN_ALLOW = new Map<string, string>([
   ['UA', 'Unearthed Arcana 缩写，官方试玩稿代号'],
   ['SRD', '系统参考文档缩写，官方许可名称'],
   ['D&D', '游戏名称缩写'],
+  ['DND', 'D&D 的无符号写法，书中用来指游戏名称'],
   ['d20', '二十面骰代号'],
   ['D20', '二十面骰代号'],
   ['TTRPG', '桌面角色扮演游戏缩写'],

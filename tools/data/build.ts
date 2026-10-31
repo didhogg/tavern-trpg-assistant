@@ -31,6 +31,7 @@ import { alignAll } from './i18n/align'
 import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
+import { latinLog } from './clean/rules/latin'
 import { checkPublished, type Published } from './version'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
@@ -79,7 +80,7 @@ async function main(): Promise<void> {
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
-  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify(lastCleanReport(), null, 1)}\n`)
+  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
   if (srd) for (const alias of BASELINE_ALIASES) if (!srd.entries.some((e) => e.id === alias.id)) srd.entries.push(alias)
   const allConverted = result.packs.flatMap((p) => p.entries)
