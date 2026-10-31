@@ -58,10 +58,10 @@ function structuralIds(data: Record<string, unknown>): string[] {
   }
   push(data.classId)
   push((data.owner as { id?: string } | undefined)?.id)
-  push(data.parentRace)
+  push(data.parentRace); push(((data.joins as Array<{ to?: string }> | undefined) ?? []).map((j) => j.to))
   push(data.traits)
   for (const item of (data.characteristics as Array<{ table?: string }> | undefined) ?? []) push(item.table)
-  for (const item of ((data.advancement as Array<{ items?: string[]; pool?: string[]; optional?: unknown }> | undefined) ?? []).filter((x) => x.optional !== 'tce-ocf')) {
+  for (const item of (data.advancement as Array<{ items?: string[]; pool?: string[] }> | undefined) ?? []) {
     push(item.items)
     push(item.pool)
   }

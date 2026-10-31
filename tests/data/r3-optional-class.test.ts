@@ -29,11 +29,12 @@ describe('R3 TCE 可选职业特性', () => {
 
   it('游侠夙敌替换宿敌；原初学识不替换', async () => {
     const all = await load()
-    const ranger = grants(all.get('class.ranger.phb')).filter((a) => a.optional === 'tce-ocf' && a.level === 1)
-    expect(ranger.some((a) => (a.items as string[]).includes('feature.ranger-favored-foe.tce'))).toBe(true)
-    expect(ranger.every((a) => a.replaces === 'feature.ranger-natural-explorer.phb' || a.replaces === 'feature.ranger-favored-enemy.phb' || a.replaces === undefined)).toBe(true)
-    const barbarian = grants(all.get('class.barbarian.phb')).filter((a) => a.optional === 'tce-ocf' && a.level === 3)
-    expect(barbarian.some((a) => (a.items as string[]).includes('feature.barbarian-primal-knowledge.tce'))).toBe(true)
-    expect(barbarian.some((a) => a.replaces)).toBe(false)
+    // G1：塔莎的可选职业特性自己用 joins 登记「加入职业某一级」，职业里不写任何指向塔莎的授予
+    const joinOf = (id: string): Record<string, unknown> => ((all.get(id)!.data.joins as Array<Record<string, unknown>>) ?? [])[0]
+    expect(joinOf('feature.ranger-favored-foe.tce')).toMatchObject({ to: 'class.ranger.phb', level: 1, as: 'optional', replaces: 'feature.ranger-favored-enemy.phb' })
+    expect(joinOf('feature.ranger-deft-explorer.tce')).toMatchObject({ to: 'class.ranger.phb', level: 1, as: 'optional', replaces: 'feature.ranger-natural-explorer.phb' })
+    expect(joinOf('feature.barbarian-primal-knowledge.tce')).toMatchObject({ to: 'class.barbarian.phb', level: 3, as: 'optional' })
+    expect(joinOf('feature.barbarian-primal-knowledge.tce').replaces).toBeUndefined()
+    expect(grants(all.get('class.ranger.phb')).some((a) => a.optional === 'tce-ocf')).toBe(false)
   })
 })

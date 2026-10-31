@@ -13,7 +13,7 @@ function str(value: unknown): string {
 function matches(req: Raw, base: Raw): boolean {
   if (req.weapon === true) return !!base.weapon
   if (req.armor === true) return !!base.armor
-  if (req.net === true) return base.net === true
+  if (req.net === true) return base.net === true; if (req.firearm === true) return base.firearm === true
   if (req.crossbow === true) return base.crossbow === true || base.type === 'R'
   if (typeof req.dmgType === 'string') return base.dmgType === req.dmgType
   if (req.sword === true) return base.sword === true
@@ -141,7 +141,7 @@ function applySeriesExpansion(result: { items: Raw[]; created: number; skipped: 
     const series = variant ? SERIES_BY_KEY.get(str(variant._series)) : undefined
     if (!variant || !series) return true
     const base = isObj(item._baseItem) ? item._baseItem : {}
-    return !series.excludeBase(base) && !(isObj(variant.excludes) && matches(variant.excludes, base))
+    return !(series.excludeBase && matches(series.excludeBase, base)) && !(isObj(variant.excludes) && matches(variant.excludes, base))
   })
   return { items: kept, created: result.created - (result.items.length - kept.length), skipped: result.skipped }
 }

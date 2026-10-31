@@ -11,7 +11,6 @@ import { loadBookData } from './extract/books'
 import { planR12 } from './convert/planR12'
 import { loadR11Data } from './extract/r11'
 import { convertAll, type ConversionResult } from './convert'
-import { labelOptionalGrants } from './convert/grantLabels'
 import { validatePacks, assertVolume } from './validate'
 import { assertFieldCoverage } from './validate/coverage'
 import { BASELINE_ALIASES } from './config/baselineAliases'
@@ -30,6 +29,7 @@ import { writeDataRepo } from './publish/write'
 import { runEnglishPass } from './i18n/run'
 import { alignAll } from './i18n/align'
 import { unifyNameEn } from './i18n/nameEn'
+import { validateJoins } from './validate/joins'
 import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
@@ -84,7 +84,6 @@ async function main(): Promise<void> {
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   console.log(`R15 补字段：${JSON.stringify(carryStats)}`)
-  console.log(`S1 可选授予显示名：${labelOptionalGrants(result.packs)} 处`)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
@@ -113,10 +112,12 @@ async function main(): Promise<void> {
   for (const issue of layers) console.log(`LAYER ${issue.kind} ${issue.pack} ${issue.detail}`)
   if (layers.length) throw new Error(`层级/依赖校验失败：${layers.map((x) => `${x.pack} ${x.detail}`).join('；')}`)
   const refs = await checkReferences(result.packs)
-  console.log(`引用悬空：${refs.dangling.length}，需新增依赖：${refs.dependency.length}，软引用：${refs.softRefs.length}`)
-  if (refs.softRefs.length !== 42) throw new Error(`软引用数量应为 42，实际 ${refs.softRefs.length}`)
+  console.log(`引用悬空：${refs.dangling.length}，需新增依赖：${refs.dependency.length}`)
   if (refs.dangling.length) throw new Error(`引用悬空 ${refs.dangling.length} 条：${refs.dangling.slice(0, 10).map((x) => `${x.entry} ${x.field} ${x.value}`).join('；')}`)
   if (refs.dependency.length) throw new Error(`缺少包依赖 ${refs.dependency.length} 条：${refs.dependency.slice(0, 10).map((x) => `${x.pack} ${x.field} ${x.value}`).join('；')}`)
+  const joinProblems = validateJoins(result.packs)
+  console.log(`joins 问题：${joinProblems.length}`)
+  if (joinProblems.length) throw new Error(`joins 校验失败 ${joinProblems.length} 条：${joinProblems.slice(0, 10).join('；')}`)
   const health = healthMetrics(result, data)
   assertHealth(health)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'health.json'), `${JSON.stringify(health, null, 2)}\n`)

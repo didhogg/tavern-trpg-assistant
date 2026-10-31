@@ -90,8 +90,14 @@ export const featureDataSchema = z.looseObject({
   effects: effectListSchema.optional(),
   spellGrants: z.array(spellGrantSchema).optional(),
   optional: z.boolean().optional(),
-  /** 别的书给子职业加的选项：自己「报名」加入该子职业某等级的选择名单（引用只指向更低层的包）。 */
-  joinsChoice: z.object({ id: entryIdSchema, level: z.number().int().min(0).max(20) }).optional(),
+  /** 「我加入别的条目」：条目自己登记；被加入的一方不写任何东西。to 必须在本包或本包声明的依赖里（见 docs/包格式说明.md）。 */
+  joins: z.array(z.object({
+    to: entryIdSchema,
+    level: z.number().int().min(0).max(20).optional(),
+    as: z.enum(['optional', 'option', 'member']),
+    replaces: entryIdSchema.optional(),
+    pool: entryIdSchema.optional(),
+  })).optional(),
 })
 export type FeatureData = z.infer<typeof featureDataSchema>
 

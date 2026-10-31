@@ -61,7 +61,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
     for (const id of item.items ?? []) referenced.add(id)
     for (const id of item.pool ?? []) referenced.add(id)
   }
-  const orphan = features.filter((e) => ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !referenced.has(e.id) && !e.data.joinsChoice)
+  const orphan = features.filter((e) => ['class', 'subclass'].includes(String((e.data.owner as { type?: string } | undefined)?.type)) && !referenced.has(e.id) && !(Array.isArray(e.data.joins) && e.data.joins.length > 0))
   const optional = features.filter((e) => (e.data.owner as { type?: string } | undefined)?.type === 'optional')
   const bgPrefix = features.filter((e) => e.name.startsWith('特性：'))
   const bgNameMismatch = entries.filter((e) => NAME_OVERRIDES[e.id] && e.name !== NAME_OVERRIDES[e.id].name)
@@ -103,7 +103,7 @@ export function healthMetrics(result: ConversionResult, data: RawData): HealthMe
   const reprintMonsters = data.monsters.filter((m) => Array.isArray(m.reprintedAs) && m.reprintedAs.some((r) => BOOK_SOURCES.has(String(r).split('|')[1]) && String(r).split('|')[1] !== m.source)).length
   const reprintRaces = [...data.races, ...data.subraces].filter((m) => Array.isArray(m.reprintedAs) && m.reprintedAs.some((r) => BOOK_SOURCES.has(String(r).split('|')[1]) && String(r).split('|')[1] !== m.source)).length
   return [
-    { id: 'A1', label: '孤儿特性', status: 'measured', count: orphan.length, definition: 'owner 为 class/subclass 且未被任何 advancement 授予或列入选择的特性' },
+    { id: 'A1', label: '孤儿特性', status: 'measured', count: orphan.length, definition: 'owner 为 class/subclass 且未被任何 advancement 授予、列入选择、也没有用 joins 登记加入的特性' },
     { id: 'A2', label: '可选特性 owner=optional', status: 'measured', count: optional.length, definition: 'owner.type 为 optional 的可选特性' },
     { id: 'A3', label: 'TCE 可选职业特性源记录', status: 'measured', count: tce, definition: 'classFeatures 中 isClassFeatureVariant=true 的记录' },
     { id: 'A4', label: '有附赠熟练但没有 trait 升级操作的特性', status: 'measured', count: features.filter((e) => e.id.includes('bonus-proficien')).length, definition: 'id 含 bonus-proficien 的附赠熟练特性' },

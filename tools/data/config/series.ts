@@ -14,8 +14,8 @@ export interface VariantSeries {
   familyEn: string
   zh: { series: string; sep: string; kind: Record<string, string>; note: string }
   en: { series: string; sep: string; kind: Record<string, string>; note: string }
-  /** 系列不适用的基础物品（除了变体自己 excludes 的）。 */
-  excludeBase: (base: Raw) => boolean
+  /** 系列不适用的基础物品（除了变体自己 excludes 的）：与变体 requires / excludes 同一种写法，如 { firearm: true }。 */
+  excludeBase?: Raw
 }
 
 export const VARIANT_SERIES: VariantSeries[] = [
@@ -28,7 +28,7 @@ export const VARIANT_SERIES: VariantSeries[] = [
     zh: { series: '卓尔装备', sep: '·', kind: { Weapon: '武器', Armor: '护甲' }, note: '每种武器与护甲都有 +1、+2、+3 三档。' },
     en: { series: 'Drow Equipment', sep: ': ', kind: { Weapon: 'Weapon', Armor: 'Armor' }, note: 'Every weapon and armor comes in +1, +2 and +3 versions.' },
     // 卓尔装备是幻想时代的武器与护甲，不含城主指南里的现代、未来枪械
-    excludeBase: (base) => base.firearm === true,
+    excludeBase: { firearm: true },
   },
 ]
 

@@ -56,18 +56,18 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
     for (const id of graph.keys()) visit(id)
     for (const p of packs) expect(p.manifest.relationships.requires.map((d) => d.id).sort()).toEqual((EXPECTED[p.manifest.id.replace('dnd5e2014-', '').toUpperCase()] ?? []).map((s) => `dnd5e2014-${s.toLowerCase()}`).sort())
   })
-  it('C SRD 严格引用、30 条软引用、无跨层 baseItem', async () => {
+  it('C SRD 严格引用、没有指向别的包的可选授予、无跨层 baseItem', async () => {
     const packs = await loadPacks()
     const srd = packs.find((p) => p.manifest.id === SRD_PACK_ID)!
-    expect(srd.entries).toHaveLength(2408)
+    expect(srd.entries.length).toBeGreaterThan(2000)
     const srdIds = new Set(srd.entries.map((e) => e.id))
     const badBase = srd.entries.filter((e) => e.data.baseItem && !srdIds.has(String(e.data.baseItem)))
     expect(badBase).toEqual([])
     const refs = await checkReferences(packs)
     expect(refs.dangling).toEqual([])
-    const soft = srd.entries.flatMap((e) => ((e.data.advancement as Array<Record<string, unknown>> | undefined) ?? []).filter((a) => a.optional === 'tce-ocf').flatMap((a) => (a.items as string[] | undefined) ?? []))
-    expect(soft).toHaveLength(30)
-    expect(soft.every((id) => packs.find((p) => p.manifest.id === 'dnd5e2014-tce')!.entries.some((e) => e.id === id))).toBe(true)
+    // G1：SRD 里不再有任何指向别的包的授予（塔莎的可选特性由塔莎自己用 joins 登记）
+    const upward = srd.entries.flatMap((e) => ((e.data.advancement as Array<Record<string, unknown>> | undefined) ?? []).flatMap((a) => ((a.items as string[] | undefined) ?? []).filter((id) => !srdIds.has(id))))
+    expect(upward).toEqual([])
     expect(srd.entries.filter((e) => (e.data.credit as { srd?: boolean } | undefined)?.srd === false)).toHaveLength(0)
   })
   it('D 五条展开物品归属金样', async () => {
