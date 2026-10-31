@@ -70,6 +70,7 @@ export function refCell(cell: unknown): string {
   if (isObj(cell) && typeof cell.entry === 'string') return cell.entry
   if (isObj(cell) && isObj(cell.roll) && typeof cell.roll.exact === 'number') return String(cell.roll.exact)
   if (isObj(cell) && isObj(cell.roll) && typeof cell.roll.min === 'number' && typeof cell.roll.max === 'number') return `${cell.roll.min}—${cell.roll.max}`
+  if (isObj(cell) && cell.type === 'entries' && Array.isArray(cell.entries) && cell.entries.every((x) => typeof x === 'string')) return (cell.entries as string[]).join(' ')
   throw new Error(`无法转成文字的单元格 ${JSON.stringify(cell)}`)
 }
 

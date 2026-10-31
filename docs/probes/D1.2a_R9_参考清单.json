@@ -921,6 +921,23 @@
    "purpose": null
   },
   {
+   "id": "table.sibriex.mpmm",
+   "name": "巨颅魔·肉体扭曲",
+   "kind": "roll",
+   "source": "MPMM",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 20,
+   "parent": "monster.sibriex.mpmm",
+   "chapter": null,
+   "origin": "B",
+   "page": 217,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
    "id": "table.swashbuckler.mpmm",
    "name": "剑客·剑客剑技",
    "kind": "roll",
@@ -967,6 +984,23 @@
    "chapter": null,
    "origin": "B",
    "page": 257,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.baphomet.mtf",
+   "name": "巴弗灭·巴弗灭的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": "monster.baphomet.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 143,
    "oldId": null,
    "merged": [],
    "purpose": null
@@ -1044,6 +1078,40 @@
    "purpose": null
   },
   {
+   "id": "table.demogorgon.mtf",
+   "name": "狄摩高根·狄摩高根的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": "monster.demogorgon.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 144,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.fraz-urb-luu.mtf",
+   "name": "弗拉兹厄鲁·弗拉兹厄鲁的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": "monster.fraz-urbluu.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 146,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
    "id": "table.gray-render.mtf",
    "name": "灰袋兽·灰袋兽怪癖",
    "kind": "roll",
@@ -1056,6 +1124,108 @@
    "chapter": null,
    "origin": "B",
    "page": 209,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.graz-zt.mtf",
+   "name": "格拉兹特·格拉兹特的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 6,
+   "parent": "monster.grazzt.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 149,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.juiblex.mtf",
+   "name": "朱庇莱克斯·朱庇莱克斯的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": "monster.juiblex.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 151,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.orcus.mtf",
+   "name": "奥喀斯·奥喀斯的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": "monster.orcus.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 153,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.sibriex.mtf",
+   "name": "巨颅魔·肉体扭曲",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 20,
+   "parent": "monster.sibriex.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 137,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.yeenoghu.mtf",
+   "name": "耶诺古·耶诺古的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": "monster.yeenoghu.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 155,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.zuggtmoy.mtf",
+   "name": "祖格莫伊·祖格莫伊的疯狂",
+   "kind": "roll",
+   "source": "MTF",
+   "srd": false,
+   "dice": "1d100",
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": "monster.zuggtmoy.mtf",
+   "chapter": null,
+   "origin": "B",
+   "page": 157,
    "oldId": null,
    "merged": [],
    "purpose": null
@@ -1091,7 +1261,14 @@
    "origin": "B",
    "page": 151,
    "oldId": null,
-   "merged": [],
+   "merged": [
+    {
+     "origin": "B",
+     "name": "夸力许装置·夸力许装置拉杆：",
+     "source": "DMG",
+     "page": 151
+    }
+   ],
    "purpose": null
   },
   {
@@ -4545,6 +4722,13 @@
      "name": "短暂性疯狂",
      "source": "DMG",
      "page": 259
+    },
+    {
+     "origin": "B",
+     "name": "疯狂·短暂性疯狂",
+     "oldId": "table.madness.dmg",
+     "source": "DMG",
+     "page": 258
     }
    ],
    "purpose": null
@@ -4569,6 +4753,13 @@
      "name": "长期性疯狂",
      "source": "DMG",
      "page": 259
+    },
+    {
+     "origin": "B",
+     "name": "疯狂·长期性疯狂",
+     "oldId": "table.madness.dmg-2",
+     "source": "DMG",
+     "page": 258
     }
    ],
    "purpose": null
@@ -4593,6 +4784,13 @@
      "name": "永久性疯狂",
      "source": "DMG",
      "page": 259
+    },
+    {
+     "origin": "B",
+     "name": "疯狂·永久性疯狂",
+     "oldId": "table.madness.dmg-3",
+     "source": "DMG",
+     "page": 258
     }
    ],
    "purpose": null
@@ -4665,6 +4863,12 @@
      "name": "兼职先决条件",
      "source": "PHB",
      "page": 163
+    },
+    {
+     "origin": "B",
+     "name": "兼职·兼职先决条件",
+     "source": "PHB",
+     "page": 163
     }
    ],
    "purpose": null
@@ -4689,6 +4893,12 @@
      "name": "兼职熟练项",
      "source": "PHB",
      "page": 164
+    },
+    {
+     "origin": "B",
+     "name": "兼职·兼职熟练项",
+     "source": "PHB",
+     "page": 163
     }
    ],
    "purpose": null
@@ -4713,6 +4923,12 @@
      "name": "兼职施法者：每环阶的法术位",
      "source": "PHB",
      "page": 164
+    },
+    {
+     "origin": "B",
+     "name": "兼职·兼职施法者：每环阶的法术位",
+     "source": "PHB",
+     "page": 163
     }
    ],
    "purpose": "spellcasting.multiclassSlots"
@@ -5180,7 +5396,14 @@
    "origin": "B",
    "page": 78,
    "oldId": null,
-   "merged": [],
+   "merged": [
+    {
+     "origin": "B",
+     "name": "赌具",
+     "source": "XGE",
+     "page": 0
+    }
+   ],
    "purpose": null
   },
   {
@@ -5299,7 +5522,14 @@
    "origin": "B",
    "page": 78,
    "oldId": null,
-   "merged": [],
+   "merged": [
+    {
+     "origin": "B",
+     "name": "乐器",
+     "source": "XGE",
+     "page": 0
+    }
+   ],
    "purpose": null
   },
   {
@@ -8161,6 +8391,1151 @@
    "purpose": null
   },
   {
+   "id": "table.warhorse.mm",
+   "name": "战马·AC",
+   "kind": "ref",
+   "source": "MM",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 7,
+   "parent": "monster.warhorse.mm",
+   "chapter": null,
+   "origin": "B",
+   "page": 340,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p249-r1",
+   "name": "即兴伤害",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 6,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 249,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "即兴伤害",
+     "source": "DMG",
+     "page": 249
+    },
+    {
+     "origin": "B",
+     "name": "即兴伤害",
+     "source": "DMG",
+     "page": 249
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p121-r2",
+   "name": "陷阱效应·各等级下危害度对应伤害",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 4,
+   "parent": null,
+   "chapter": "冒险环境",
+   "origin": "G",
+   "page": 121,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "G",
+     "name": "即兴伤害·伤害严重性与等级",
+     "source": "DMG",
+     "page": 249
+    },
+    {
+     "origin": "B",
+     "name": "即兴伤害·伤害严重性与等级",
+     "source": "DMG",
+     "page": 249
+    },
+    {
+     "origin": "B",
+     "name": "即兴伤害·伤害严重性与等级",
+     "source": "DMG",
+     "page": 249
+    }
+   ],
+   "purpose": "trap.damageBySeverityAndLevel"
+  },
+  {
+   "id": "table.dmg-p246-r1",
+   "name": "物件护甲等级",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 7,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 246,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "通用物件·物件护甲等级",
+     "source": "DMG",
+     "page": 246
+    },
+    {
+     "origin": "B",
+     "name": "物件·物件护甲等级",
+     "source": "DMG",
+     "page": 246
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p247-r1",
+   "name": "物件生命值",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 4,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 247,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "通用物件·物件生命值",
+     "source": "DMG",
+     "page": 246
+    },
+    {
+     "origin": "B",
+     "name": "物件·物件生命值",
+     "source": "DMG",
+     "page": 246
+    }
+   ],
+   "purpose": "object.hpBySize"
+  },
+  {
+   "id": "table.phb-p15-r1",
+   "name": "高于1级·角色升级",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 20,
+   "parent": null,
+   "chapter": "一步步创建角色",
+   "origin": "G",
+   "page": 15,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "高于1级·角色升级",
+     "source": "PHB",
+     "page": 15
+    }
+   ],
+   "purpose": "character.levelProgression"
+  },
+  {
+   "id": "table.step-by-step-characters.phb",
+   "name": "一步步创建角色·属性值摘要·力量",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 2,
+   "parent": "rule.quickref-step-by-step-characters.phb",
+   "chapter": null,
+   "origin": "B",
+   "page": 11,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.step-by-step-characters.phb-2",
+   "name": "一步步创建角色·属性值摘要·敏捷",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 2,
+   "parent": "rule.quickref-step-by-step-characters.phb",
+   "chapter": null,
+   "origin": "B",
+   "page": 11,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.step-by-step-characters.phb-3",
+   "name": "一步步创建角色·属性值摘要·体质",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 2,
+   "parent": "rule.quickref-step-by-step-characters.phb",
+   "chapter": null,
+   "origin": "B",
+   "page": 11,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.step-by-step-characters.phb-4",
+   "name": "一步步创建角色·属性值摘要·智力",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 2,
+   "parent": "rule.quickref-step-by-step-characters.phb",
+   "chapter": null,
+   "origin": "B",
+   "page": 11,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.step-by-step-characters.phb-5",
+   "name": "一步步创建角色·属性值摘要·感知",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 2,
+   "parent": "rule.quickref-step-by-step-characters.phb",
+   "chapter": null,
+   "origin": "B",
+   "page": 11,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.step-by-step-characters.phb-6",
+   "name": "一步步创建角色·属性值摘要·魅力",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 2,
+   "parent": "rule.quickref-step-by-step-characters.phb",
+   "chapter": null,
+   "origin": "B",
+   "page": 11,
+   "oldId": null,
+   "merged": [],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p13-r1",
+   "name": "创建角色:变体:自定义属性值·属性值花费点数",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 4,
+   "parent": null,
+   "chapter": "一步步创建角色",
+   "origin": "G",
+   "page": 13,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "一步步创建角色·属性值花费点数",
+     "source": "PHB",
+     "page": 11
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p13-r2",
+   "name": "创建角色:变体:自定义属性值·属性值与调整值",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 8,
+   "parent": null,
+   "chapter": "一步步创建角色",
+   "origin": "G",
+   "page": 13,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "G",
+     "name": "属性值与调整值",
+     "source": "PHB",
+     "page": 173
+    },
+    {
+     "origin": "B",
+     "name": "一步步创建角色·属性值与调整值",
+     "source": "PHB",
+     "page": 11
+    },
+    {
+     "origin": "B",
+     "name": "属性值与调整值",
+     "source": "PHB",
+     "page": 173
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p123-r1",
+   "name": "标准语言",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 8,
+   "parent": null,
+   "chapter": "个性与背景",
+   "origin": "G",
+   "page": 123,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "语言·标准语言",
+     "source": "PHB",
+     "page": 123
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p123-r2",
+   "name": "特种语言",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 8,
+   "parent": null,
+   "chapter": "个性与背景",
+   "origin": "G",
+   "page": 123,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "语言·特种语言",
+     "source": "PHB",
+     "page": 123
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p143-r1",
+   "name": "起始装备·对应职业的起始财富",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 12,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 143,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "起始装备·对应职业的起始财富",
+     "source": "PHB",
+     "page": 143
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p143-r2",
+   "name": "币制·标准兑换率",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 143,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "财富·标准兑换率",
+     "source": "PHB",
+     "page": 143
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p144-r1",
+   "name": "护甲与盾牌·护甲",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 17,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 144,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "护甲与盾牌·护甲",
+     "source": "PHB",
+     "page": 144
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p146-r1",
+   "name": "着甲与卸甲·穿戴和卸除盔甲",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 4,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 146,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "护甲与盾牌·穿戴和卸除盔甲",
+     "source": "PHB",
+     "page": 144
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p146-r2",
+   "name": "武器",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 41,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 146,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "武器",
+     "source": "PHB",
+     "page": 146
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p148-r1",
+   "name": "冒险用品",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 108,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 148,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "冒险用品",
+     "source": "PHB",
+     "page": 148
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p148-r2",
+   "name": "冒险用品·容器容量",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 13,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 148,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "冒险用品·容器容量",
+     "source": "PHB",
+     "page": 148
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p154-r1",
+   "name": "工具",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 41,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 154,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "工具·物品·重量",
+     "source": "PHB",
+     "page": 154
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p155-r1",
+   "name": "坐骑与载具·坐骑和其他动物",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 8,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 155,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "坐骑与载具·坐骑和其他动物",
+     "source": "PHB",
+     "page": 155
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p155-r2",
+   "name": "坐骑与载具·鞍具、挽具及陆运载具",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 15,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 155,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "坐骑与载具·鞍具、挽具及陆运载具",
+     "source": "PHB",
+     "page": 155
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p155-r3",
+   "name": "坐骑与载具·水运载具",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 6,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 155,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "坐骑与载具·水运载具",
+     "source": "PHB",
+     "page": 155
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p157-r1",
+   "name": "商业货物",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 13,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 157,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "商业货物",
+     "source": "PHB",
+     "page": 157
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p157-r2",
+   "name": "生活开支",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 7,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 157,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "开销·生活开支",
+     "source": "PHB",
+     "page": 157
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p158-r1",
+   "name": "饮食与住宿",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 24,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 158,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "开销·饮食与住宿",
+     "source": "PHB",
+     "page": 157
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p159-r1",
+   "name": "服务",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 9,
+   "parent": null,
+   "chapter": "装备",
+   "origin": "G",
+   "page": 159,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "开销·服务",
+     "source": "PHB",
+     "page": 157
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p174-r2",
+   "name": "技能",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": null,
+   "chapter": "属性值应用",
+   "origin": "G",
+   "page": 174,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "技能·属性·技能",
+     "source": "PHB",
+     "page": 174
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p174-r1",
+   "name": "属性检定·范例难度等级",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 6,
+   "parent": null,
+   "chapter": "属性值应用",
+   "origin": "G",
+   "page": 174,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "属性检定·范例难度等级",
+     "source": "PHB",
+     "page": 174
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.phb-p191-r1",
+   "name": "生物体型·体型分类",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 6,
+   "parent": null,
+   "chapter": "战斗",
+   "origin": "G",
+   "page": 191,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "移动和位置·体型分类",
+     "source": "PHB",
+     "page": 190
+    }
+   ],
+   "purpose": "creature.sizeSpace"
+  },
+  {
+   "id": "table.phb-p181-r1",
+   "name": "旅行步调",
+   "kind": "ref",
+   "source": "PHB",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 3,
+   "parent": null,
+   "chapter": "冒险",
+   "origin": "G",
+   "page": 181,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "旅行步调",
+     "source": "PHB",
+     "page": 181
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p237-r1",
+   "name": "属性检定",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 6,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 237,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "属性检定",
+     "source": "DMG",
+     "page": 237
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p242-r1",
+   "name": "使用地图·地图旅行步调",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 4,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 242,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "探索·地图旅行步调",
+     "source": "DMG",
+     "page": 242
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p244-r1",
+   "name": "追踪DC",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 244,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "探索·追踪DC",
+     "source": "DMG",
+     "page": 242
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p245-r1",
+   "name": "魅力检定·对话反应",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 3,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "GG",
+   "page": 245,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "交涉·对话反应",
+     "source": "DMG",
+     "page": 244
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p245-r2",
+   "name": "魅力检定·对话反应·DC",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 3,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "GG",
+   "page": 245,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "交涉·DC·冷漠生物的反应",
+     "source": "DMG",
+     "page": 244
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p245-r3",
+   "name": "魅力检定·对话反应·敌对生物的反应",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 3,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "GG",
+   "page": 245,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "交涉·DC·敌对生物的反应",
+     "source": "DMG",
+     "page": 244
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p257-r1",
+   "name": "毒药",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": true,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 14,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 257,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "毒药",
+     "source": "DMG",
+     "page": 257
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p249-r3",
+   "name": "判定效应范围·效应范围内的目标",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 249,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "判定效应范围·效应范围内的目标",
+     "source": "DMG",
+     "page": 249
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p250-r1",
+   "name": "处理乱斗·乱斗攻击",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 7,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 250,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "处理乱斗·乱斗攻击",
+     "source": "DMG",
+     "page": 250
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p251-r1",
+   "name": "方格与六角格中的生物体型·生物体型和空间",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 6,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 251,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "方格与六角格中的生物体型·生物体型和空间",
+     "source": "DMG",
+     "page": 251
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p253-r1",
+   "name": "结束追逐·逃脱因素",
+   "kind": "ref",
+   "source": "DMG",
+   "srd": false,
+   "dice": null,
+   "modifierPrompt": null,
+   "rows": 5,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 253,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "追逐·逃脱因素",
+     "source": "DMG",
+     "page": 252
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p253-1",
+   "name": "城市追逐复杂状况",
+   "kind": "roll",
+   "source": "DMG",
+   "srd": false,
+   "dice": "1d20",
+   "modifierPrompt": null,
+   "rows": 11,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 253,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "追逐·城市追逐复杂状况",
+     "source": "DMG",
+     "page": 252
+    }
+   ],
+   "purpose": null
+  },
+  {
+   "id": "table.dmg-p253-2",
+   "name": "荒野追逐复杂状况",
+   "kind": "roll",
+   "source": "DMG",
+   "srd": false,
+   "dice": "1d20",
+   "modifierPrompt": null,
+   "rows": 11,
+   "parent": null,
+   "chapter": "运作游戏",
+   "origin": "G",
+   "page": 253,
+   "oldId": null,
+   "merged": [
+    {
+     "origin": "B",
+     "name": "追逐·荒野追逐复杂状况",
+     "source": "DMG",
+     "page": 252
+    }
+   ],
+   "purpose": null
+  },
+  {
    "id": "table.derro-madness.mtf",
    "name": "迪洛疯狂",
    "kind": "roll",
@@ -10172,40 +11547,6 @@
    "chapter": "宝藏",
    "origin": "G",
    "page": 219,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p253-1",
-   "name": "城市追逐复杂状况",
-   "kind": "roll",
-   "source": "DMG",
-   "srd": false,
-   "dice": "1d20",
-   "modifierPrompt": null,
-   "rows": 11,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 253,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p253-2",
-   "name": "荒野追逐复杂状况",
-   "kind": "roll",
-   "source": "DMG",
-   "srd": false,
-   "dice": "1d20",
-   "modifierPrompt": null,
-   "rows": 11,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 253,
    "oldId": null,
    "merged": [],
    "purpose": null
@@ -18162,64 +19503,6 @@
    "purpose": null
   },
   {
-   "id": "table.phb-p13-r1",
-   "name": "创建角色:变体:自定义属性值·属性值花费点数",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 4,
-   "parent": null,
-   "chapter": "一步步创建角色",
-   "origin": "G",
-   "page": 13,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p13-r2",
-   "name": "创建角色:变体:自定义属性值·属性值与调整值",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 8,
-   "parent": null,
-   "chapter": "一步步创建角色",
-   "origin": "G",
-   "page": 13,
-   "oldId": null,
-   "merged": [
-    {
-     "origin": "G",
-     "name": "属性值与调整值",
-     "source": "PHB",
-     "page": 173
-    }
-   ],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p15-r1",
-   "name": "高于1级·角色升级",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 20,
-   "parent": null,
-   "chapter": "一步步创建角色",
-   "origin": "G",
-   "page": 15,
-   "oldId": null,
-   "merged": [],
-   "purpose": "character.levelProgression"
-  },
-  {
    "id": "table.phb-p45-r1",
    "name": "职业",
    "kind": "ref",
@@ -18252,363 +19535,6 @@
    "oldId": null,
    "merged": [],
    "purpose": null
-  },
-  {
-   "id": "table.phb-p123-r1",
-   "name": "标准语言",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 8,
-   "parent": null,
-   "chapter": "个性与背景",
-   "origin": "G",
-   "page": 123,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p123-r2",
-   "name": "特种语言",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 8,
-   "parent": null,
-   "chapter": "个性与背景",
-   "origin": "G",
-   "page": 123,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p143-r1",
-   "name": "起始装备·对应职业的起始财富",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 12,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 143,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p143-r2",
-   "name": "币制·标准兑换率",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 5,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 143,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p144-r1",
-   "name": "护甲与盾牌·护甲",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 17,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 144,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p146-r1",
-   "name": "着甲与卸甲·穿戴和卸除盔甲",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 4,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 146,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p146-r2",
-   "name": "武器",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 41,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 146,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p148-r1",
-   "name": "冒险用品",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 108,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 148,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p148-r2",
-   "name": "冒险用品·容器容量",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 13,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 148,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p154-r1",
-   "name": "工具",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 41,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 154,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p155-r1",
-   "name": "坐骑与载具·坐骑和其他动物",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 8,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 155,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p155-r2",
-   "name": "坐骑与载具·鞍具、挽具及陆运载具",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 15,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 155,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p155-r3",
-   "name": "坐骑与载具·水运载具",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 6,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 155,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p157-r1",
-   "name": "商业货物",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 13,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 157,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p157-r2",
-   "name": "生活开支",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 7,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 157,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p158-r1",
-   "name": "饮食与住宿",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 24,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 158,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p159-r1",
-   "name": "服务",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 9,
-   "parent": null,
-   "chapter": "装备",
-   "origin": "G",
-   "page": 159,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p174-r1",
-   "name": "属性检定·范例难度等级",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 6,
-   "parent": null,
-   "chapter": "属性值应用",
-   "origin": "G",
-   "page": 174,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p174-r2",
-   "name": "技能",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 5,
-   "parent": null,
-   "chapter": "属性值应用",
-   "origin": "G",
-   "page": 174,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p181-r1",
-   "name": "旅行步调",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 3,
-   "parent": null,
-   "chapter": "冒险",
-   "origin": "G",
-   "page": 181,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.phb-p191-r1",
-   "name": "生物体型·体型分类",
-   "kind": "ref",
-   "source": "PHB",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 6,
-   "parent": null,
-   "chapter": "战斗",
-   "origin": "G",
-   "page": 191,
-   "oldId": null,
-   "merged": [],
-   "purpose": "creature.sizeSpace"
   },
   {
    "id": "table.phb-p293-r1",
@@ -19138,30 +20064,6 @@
    "purpose": "trap.saveDcAndAttackBySeverity"
   },
   {
-   "id": "table.dmg-p121-r2",
-   "name": "陷阱效应·各等级下危害度对应伤害",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 4,
-   "parent": null,
-   "chapter": "冒险环境",
-   "origin": "G",
-   "page": 121,
-   "oldId": null,
-   "merged": [
-    {
-     "origin": "G",
-     "name": "即兴伤害·伤害严重性与等级",
-     "source": "DMG",
-     "page": 249
-    }
-   ],
-   "purpose": "trap.damageBySeverityAndLevel"
-  },
-  {
    "id": "table.dmg-p126-r1",
    "name": "周期开支·维护费用",
    "kind": "ref",
@@ -19213,23 +20115,6 @@
    "purpose": null
   },
   {
-   "id": "table.dmg-p237-r1",
-   "name": "属性检定",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 6,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 237,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
    "id": "table.dmg-p238-r1",
    "name": "豁免检定",
    "kind": "ref",
@@ -19259,176 +20144,6 @@
    "chapter": "运作游戏",
    "origin": "G",
    "page": 238,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p242-r1",
-   "name": "使用地图·地图旅行步调",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 4,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 242,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p244-r1",
-   "name": "追踪DC",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 5,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 244,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p246-r1",
-   "name": "物件护甲等级",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 7,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 246,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p247-r1",
-   "name": "物件生命值",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 4,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 247,
-   "oldId": null,
-   "merged": [],
-   "purpose": "object.hpBySize"
-  },
-  {
-   "id": "table.dmg-p249-r1",
-   "name": "即兴伤害",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 6,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 249,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p249-r3",
-   "name": "判定效应范围·效应范围内的目标",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 5,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 249,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p250-r1",
-   "name": "处理乱斗·乱斗攻击",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 7,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 250,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p251-r1",
-   "name": "方格与六角格中的生物体型·生物体型和空间",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 6,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 251,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p253-r1",
-   "name": "结束追逐·逃脱因素",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 5,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 253,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p257-r1",
-   "name": "毒药",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": true,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 14,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "G",
-   "page": 257,
    "oldId": null,
    "merged": [],
    "purpose": null
@@ -20852,57 +21567,6 @@
    "purpose": null
   },
   {
-   "id": "table.dmg-p245-r1",
-   "name": "魅力检定·对话反应",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 3,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "GG",
-   "page": 245,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p245-r2",
-   "name": "魅力检定·对话反应·DC",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 3,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "GG",
-   "page": 245,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
-   "id": "table.dmg-p245-r3",
-   "name": "魅力检定·对话反应·敌对生物的反应",
-   "kind": "ref",
-   "source": "DMG",
-   "srd": false,
-   "dice": null,
-   "modifierPrompt": null,
-   "rows": 3,
-   "parent": null,
-   "chapter": "运作游戏",
-   "origin": "GG",
-   "page": 245,
-   "oldId": null,
-   "merged": [],
-   "purpose": null
-  },
-  {
    "id": "table.dmg-p267-r1",
    "name": "爆炸物",
    "kind": "ref",
@@ -21742,6 +22406,13 @@
    "survivor": "table.bronze-scout.mtf-2"
   },
   {
+   "origin": "B",
+   "name": "夸力许装置·夸力许装置拉杆：",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.apparatus-of-kwalish.dmg"
+  },
+  {
    "origin": "D",
    "name": "奇迹牌组·牌组内容",
    "source": "BMT",
@@ -22309,6 +22980,13 @@
    "survivor": "table.madness.dmg"
   },
   {
+   "origin": "B",
+   "name": "疯狂·短暂性疯狂",
+   "source": "DMG",
+   "oldId": "table.madness.dmg",
+   "survivor": "table.madness.dmg"
+  },
+  {
    "origin": "G",
    "name": "长期性疯狂",
    "source": "DMG",
@@ -22316,10 +22994,24 @@
    "survivor": "table.madness.dmg-2"
   },
   {
+   "origin": "B",
+   "name": "疯狂·长期性疯狂",
+   "source": "DMG",
+   "oldId": "table.madness.dmg-2",
+   "survivor": "table.madness.dmg-2"
+  },
+  {
    "origin": "G",
    "name": "永久性疯狂",
    "source": "DMG",
    "oldId": null,
+   "survivor": "table.madness.dmg-3"
+  },
+  {
+   "origin": "B",
+   "name": "疯狂·永久性疯狂",
+   "source": "DMG",
+   "oldId": "table.madness.dmg-3",
    "survivor": "table.madness.dmg-3"
   },
   {
@@ -22344,6 +23036,13 @@
    "survivor": "table.multiclassing.phb"
   },
   {
+   "origin": "B",
+   "name": "兼职·兼职先决条件",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.multiclassing.phb"
+  },
+  {
    "origin": "G",
    "name": "兼职熟练项",
    "source": "PHB",
@@ -22351,8 +23050,22 @@
    "survivor": "table.multiclassing.phb-2"
   },
   {
+   "origin": "B",
+   "name": "兼职·兼职熟练项",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.multiclassing.phb-2"
+  },
+  {
    "origin": "G",
    "name": "兼职施法者：每环阶的法术位",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.multiclassing.phb-3"
+  },
+  {
+   "origin": "B",
+   "name": "兼职·兼职施法者：每环阶的法术位",
    "source": "PHB",
    "oldId": null,
    "survivor": "table.multiclassing.phb-3"
@@ -22433,6 +23146,20 @@
    "source": "DMG",
    "oldId": null,
    "survivor": "table.spell-points.dmg-2"
+  },
+  {
+   "origin": "B",
+   "name": "赌具",
+   "source": "XGE",
+   "oldId": null,
+   "survivor": "table.tool-proficiencies.xge-10"
+  },
+  {
+   "origin": "B",
+   "name": "乐器",
+   "source": "XGE",
+   "oldId": null,
+   "survivor": "table.tool-proficiencies.xge-17"
   },
   {
    "origin": "G",
@@ -22811,6 +23538,342 @@
    "source": "MM",
    "oldId": null,
    "survivor": "table.half-red-dragon-veteran.mm-2"
+  },
+  {
+   "origin": "B",
+   "name": "即兴伤害",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p249-r1"
+  },
+  {
+   "origin": "B",
+   "name": "即兴伤害",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p249-r1"
+  },
+  {
+   "origin": "G",
+   "name": "即兴伤害·伤害严重性与等级",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p121-r2"
+  },
+  {
+   "origin": "B",
+   "name": "即兴伤害·伤害严重性与等级",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p121-r2"
+  },
+  {
+   "origin": "B",
+   "name": "即兴伤害·伤害严重性与等级",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p121-r2"
+  },
+  {
+   "origin": "B",
+   "name": "通用物件·物件护甲等级",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p246-r1"
+  },
+  {
+   "origin": "B",
+   "name": "物件·物件护甲等级",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p246-r1"
+  },
+  {
+   "origin": "B",
+   "name": "通用物件·物件生命值",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p247-r1"
+  },
+  {
+   "origin": "B",
+   "name": "物件·物件生命值",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p247-r1"
+  },
+  {
+   "origin": "B",
+   "name": "高于1级·角色升级",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p15-r1"
+  },
+  {
+   "origin": "B",
+   "name": "一步步创建角色·属性值花费点数",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p13-r1"
+  },
+  {
+   "origin": "G",
+   "name": "属性值与调整值",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p13-r2"
+  },
+  {
+   "origin": "B",
+   "name": "一步步创建角色·属性值与调整值",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p13-r2"
+  },
+  {
+   "origin": "B",
+   "name": "属性值与调整值",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p13-r2"
+  },
+  {
+   "origin": "B",
+   "name": "语言·标准语言",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p123-r1"
+  },
+  {
+   "origin": "B",
+   "name": "语言·特种语言",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p123-r2"
+  },
+  {
+   "origin": "B",
+   "name": "起始装备·对应职业的起始财富",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p143-r1"
+  },
+  {
+   "origin": "B",
+   "name": "财富·标准兑换率",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p143-r2"
+  },
+  {
+   "origin": "B",
+   "name": "护甲与盾牌·护甲",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p144-r1"
+  },
+  {
+   "origin": "B",
+   "name": "护甲与盾牌·穿戴和卸除盔甲",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p146-r1"
+  },
+  {
+   "origin": "B",
+   "name": "武器",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p146-r2"
+  },
+  {
+   "origin": "B",
+   "name": "冒险用品",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p148-r1"
+  },
+  {
+   "origin": "B",
+   "name": "冒险用品·容器容量",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p148-r2"
+  },
+  {
+   "origin": "B",
+   "name": "工具·物品·重量",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p154-r1"
+  },
+  {
+   "origin": "B",
+   "name": "坐骑与载具·坐骑和其他动物",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p155-r1"
+  },
+  {
+   "origin": "B",
+   "name": "坐骑与载具·鞍具、挽具及陆运载具",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p155-r2"
+  },
+  {
+   "origin": "B",
+   "name": "坐骑与载具·水运载具",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p155-r3"
+  },
+  {
+   "origin": "B",
+   "name": "商业货物",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p157-r1"
+  },
+  {
+   "origin": "B",
+   "name": "开销·生活开支",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p157-r2"
+  },
+  {
+   "origin": "B",
+   "name": "开销·饮食与住宿",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p158-r1"
+  },
+  {
+   "origin": "B",
+   "name": "开销·服务",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p159-r1"
+  },
+  {
+   "origin": "B",
+   "name": "技能·属性·技能",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p174-r2"
+  },
+  {
+   "origin": "B",
+   "name": "属性检定·范例难度等级",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p174-r1"
+  },
+  {
+   "origin": "B",
+   "name": "移动和位置·体型分类",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p191-r1"
+  },
+  {
+   "origin": "B",
+   "name": "旅行步调",
+   "source": "PHB",
+   "oldId": null,
+   "survivor": "table.phb-p181-r1"
+  },
+  {
+   "origin": "B",
+   "name": "属性检定",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p237-r1"
+  },
+  {
+   "origin": "B",
+   "name": "探索·地图旅行步调",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p242-r1"
+  },
+  {
+   "origin": "B",
+   "name": "探索·追踪DC",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p244-r1"
+  },
+  {
+   "origin": "B",
+   "name": "交涉·对话反应",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p245-r1"
+  },
+  {
+   "origin": "B",
+   "name": "交涉·DC·冷漠生物的反应",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p245-r2"
+  },
+  {
+   "origin": "B",
+   "name": "交涉·DC·敌对生物的反应",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p245-r3"
+  },
+  {
+   "origin": "B",
+   "name": "毒药",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p257-r1"
+  },
+  {
+   "origin": "B",
+   "name": "判定效应范围·效应范围内的目标",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p249-r3"
+  },
+  {
+   "origin": "B",
+   "name": "处理乱斗·乱斗攻击",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p250-r1"
+  },
+  {
+   "origin": "B",
+   "name": "方格与六角格中的生物体型·生物体型和空间",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p251-r1"
+  },
+  {
+   "origin": "B",
+   "name": "追逐·逃脱因素",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p253-r1"
+  },
+  {
+   "origin": "B",
+   "name": "追逐·城市追逐复杂状况",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p253-1"
+  },
+  {
+   "origin": "B",
+   "name": "追逐·荒野追逐复杂状况",
+   "source": "DMG",
+   "oldId": null,
+   "survivor": "table.dmg-p253-2"
   },
   {
    "origin": "G",
@@ -23980,20 +25043,6 @@
    "source": "XGE",
    "oldId": null,
    "survivor": "table.life-class-wizard-reasons.xge"
-  },
-  {
-   "origin": "G",
-   "name": "属性值与调整值",
-   "source": "PHB",
-   "oldId": null,
-   "survivor": "table.phb-p13-r2"
-  },
-  {
-   "origin": "G",
-   "name": "即兴伤害·伤害严重性与等级",
-   "source": "DMG",
-   "oldId": null,
-   "survivor": "table.dmg-p121-r2"
   },
   {
    "origin": "G",

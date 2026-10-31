@@ -52,7 +52,9 @@ export interface R9Candidate {
   oldId?: string
   extra: R9Extra
   block?: Raw
-  where?: 'entries' | '_lore'
+  where?: 'entries' | '_lore' | 'variants' | 'legendaryGroup'
+  host?: unknown
+  weak?: boolean
   blockIndex?: number
   i?: number
   merged?: Array<{ origin: string; name: string; oldId?: string; source: string; page?: number }>
@@ -64,7 +66,7 @@ export interface R9Candidate {
 
 export interface R9Replacement {
   entryId: string
-  where: 'entries' | '_lore'
+  where: 'entries' | '_lore' | 'variants' | 'legendaryGroup'
   blockIndex: number
   tableId: string
 }

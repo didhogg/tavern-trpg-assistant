@@ -82,7 +82,7 @@ export function selectSurvivors(pool: R9Candidate[], planned: PlannedEntry[]): G
   const survivors: R9Candidate[] = []
   const dropped: R9Candidate[] = []
   for (const g of groups.values()) {
-    const members = g.map((i) => pool[i]).sort((a, b) => PRI[a.origin] - PRI[b.origin] || (a.i ?? 0) - (b.i ?? 0))
+    const members = g.map((i) => pool[i]).sort((a, b) => PRI[a.origin] + (a.weak ? 100 : 0) - PRI[b.origin] - (b.weak ? 100 : 0) || (a.i ?? 0) - (b.i ?? 0))
     const s = members[0]
     s.merged = members.slice(1).map((m) => ({ origin: m.origin, name: m.name, oldId: m.oldId, source: m.source, page: m.page }))
     if (!s.chapter) s.chapter = members.find((m) => m.chapter)?.chapter
@@ -169,7 +169,7 @@ export function selectSurvivors(pool: R9Candidate[], planned: PlannedEntry[]): G
     if (!d.oldId) continue
     const s = survivorOf.get(d.survivorIndex!)
     if (!s) continue
-    redirects.push([d.oldId, s.id!])
+    if (d.oldId !== s.id) redirects.push([d.oldId, s.id!])
   }
   return { survivors, dropped, redirects, duplicateNames, duplicateIds }
 }

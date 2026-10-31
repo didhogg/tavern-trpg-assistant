@@ -8,7 +8,8 @@ import { cellText, isObj, normRaw, parseLabel, rangeOf, refCell, refRows, slug, 
 import type { R9Candidate, R9Row } from './r9Types'
 
 const CORE = new Set([...BOOK_SOURCES])
-const BODY_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'rule', 'lore'])
+const BODY_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'rule', 'lore', 'object', 'hazard', 'vehicle'])
+// R11 新增类型里的表多是对书本章节表的转抄：与书本表重复时让书本表当幸存者，保住它们已有的编号
 const RACE_PARENT: Record<string, string> = { 龙裔: 'dragonborn', 矮人: 'dwarf', 精灵: 'elf', 侏儒: 'gnome', 半兽人: 'half-orc', 半身人: 'halfling', 人类: 'human', 提夫林: 'tiefling' }
 
 function json(file: string): Raw {
@@ -31,7 +32,11 @@ function oldSeeds(plan: PlanResult): Map<string, { id: string; name: string; sou
   return out
 }
 
-function bodyCandidate(entry: PlannedEntry, block: Raw, where: 'entries' | '_lore', blockIndex: number, oldBySig: Map<string, { id: string; name: string; source: string; page: number; srd: boolean; seed: Raw }>): R9Candidate | undefined {
+function plainLead(cell: string): string {
+  return cell.replace(/\{@\w+ ([^}|]*)[^}]*\}/g, '$1').trim()
+}
+
+function bodyCandidate(entry: PlannedEntry, block: Raw, where: 'entries' | '_lore', blockIndex: number, oldBySig: Map<string, { id: string; name: string; source: string; page: number; srd: boolean; seed: Raw }>, weak = false): R9Candidate | undefined {
   const labels = Array.isArray(block.colLabels) ? block.colLabels.map(refCell) : []
   const caption = typeof block.caption === 'string' ? block.caption : undefined
   const label = labels[0] ?? ''
@@ -39,8 +44,12 @@ function bodyCandidate(entry: PlannedEntry, block: Raw, where: 'entries' | '_lor
   const rowsRaw = Array.isArray(block.rows) ? block.rows as unknown[] : []
   if (!parsed) {
     const rows = refRows(rowsRaw)
-    const name = normRaw(caption ?? label) === normRaw(entry.name) ? entry.name : `${entry.name}·${caption ?? labels[0] ?? '对照表'}`
-    return { origin: 'B', source: entry.source, page: entry.page, srd: entry.raw.srd === true, name, nameEn: `${entry.nameEn} ${caption ?? labels[0] ?? 'table'}`, cap: normRaw(caption ?? label), kind: 'ref', ref: true, cols: labels, rows, parentId: entry.id, block, where, blockIndex, extra: { footnotes: Array.isArray(block.footnotes) ? block.footnotes.map(str) : undefined, parentKey: `${entry.source}|${entry.name}` } }
+    // 没有列头的单列小块（如“属性值摘要”六块并排）靠第一格文字区分名字
+    const lead = !labels.length && rows.length > 1 && rows.every((r) => r.cells.length === 1) ? plainLead(rows[0].cells[0]) : ''
+    // 没有标题的多列块（如“交涉·DC”冷漠/敌对两张）：R11 类型里靠末列列头区分，避免被同名的另一张误合并
+    const tail = weak && !caption && labels.length > 1 && labels[labels.length - 1] !== labels[0] ? labels[labels.length - 1] : ''
+    const name = normRaw(caption ?? label) === normRaw(entry.name) ? entry.name : `${entry.name}·${caption ?? labels[0] ?? '对照表'}${lead ? `·${lead}` : ''}${tail ? `·${tail}` : ''}`
+    return { origin: 'B', source: entry.source, page: entry.page, srd: entry.raw.srd === true, name, nameEn: `${entry.nameEn} ${caption ?? labels[0] ?? 'table'}`, cap: normRaw(caption ?? (tail || label)), kind: 'ref', ref: true, cols: labels.length ? labels : Array.from({ length: Math.max(1, ...rows.map((r) => r.cells.length)) }, (_, k) => `第${k + 1}列`), rows, parentId: entry.id, block, where, blockIndex, extra: { footnotes: Array.isArray(block.footnotes) ? block.footnotes.map(str) : undefined, parentKey: `${entry.source}|${entry.name}` } }
   }
   const rows: R9Row[] = []
   for (const r of rowsRaw) {
@@ -57,23 +66,38 @@ function bodyCandidate(entry: PlannedEntry, block: Raw, where: 'entries' | '_lor
   return { origin: 'B', source: entry.source, page: entry.page, srd: entry.raw.srd === true, name, nameEn: `${entry.nameEn} ${caption ?? labels[0] ?? 'table'}`, cap: normRaw(caption ?? label), kind: parsed.deck ? 'deck' : 'roll', deck: parsed.deck, expr: parsed.expr, modifierPrompt: parsed.modifierPrompt, cols: labels.slice(1), rows, parentId: entry.id, oldId: old?.id, block, where, blockIndex, extra: { footnotes: Array.isArray(block.footnotes) ? block.footnotes.map(str) : undefined, parentKey: `${entry.source}|${entry.name}` } }
 }
 
-export function buildCandidates(plan: PlanResult): R9Candidate[] {
+// 与 monster.ts 查传奇组的方式保持一致：先按名称+来源，再按名称/英文名
+export function findLegendaryGroup(raw: Raw, groups: Raw[]): Raw | undefined {
+  const ref = raw.legendaryGroup as Raw | undefined
+  if (!isObj(ref)) return undefined
+  return groups.find((g) => String(g.name) === String(ref.name) && String(g.source) === String(ref.source)) ?? groups.find((g) => String(g.name) === String(ref.name) || String(g.ENG_name) === String(ref.ENG_name))
+}
+
+export function buildCandidates(plan: PlanResult, legendaryGroups: Raw[] = [], r11Ids: ReadonlySet<string> = new Set()): R9Candidate[] {
   const pool: R9Candidate[] = []
   const old = oldSeeds(plan)
+  const seenGroups = new Set<Raw>()
   for (const entry of plan.entries) {
     if (!BODY_TYPES.has(entry.type)) continue
     let blockIndex = 0
-    const walk = (value: unknown, where: 'entries' | '_lore'): void => {
-      if (Array.isArray(value)) { for (const item of value) walk(item, where); return }
+    const walk = (value: unknown, where: R9Candidate['where'], host?: unknown): void => {
+      if (Array.isArray(value)) { for (const item of value) walk(item, where, host); return }
       if (!isObj(value)) return
       if (value.type === 'table') {
-        const candidate = bodyCandidate(entry, value, where, blockIndex++, old)
-        if (candidate) pool.push(candidate)
+        const candidate = bodyCandidate(entry, value, where as 'entries' | '_lore', blockIndex++, old, r11Ids.has(entry.id))
+        if (candidate) { candidate.where = where; if (r11Ids.has(entry.id)) candidate.weak = true; if (host !== undefined) candidate.host = host; pool.push(candidate) }
       }
-      for (const [key, child] of Object.entries(value)) { if (key === 'rows' || key === 'colLabels') continue; walk(child, where) }
+      for (const [key, child] of Object.entries(value)) { if (key === 'rows' || key === 'colLabels') continue; walk(child, where, host) }
     }
     walk(entry.raw.entries, 'entries')
     walk(entry.raw._lore, '_lore')
+    if (entry.raw._variants !== undefined) walk(entry.raw._variants, 'variants', entry.raw._variants)
+    const group = entry.type === 'monster' ? findLegendaryGroup(entry.raw, legendaryGroups) : undefined
+    if (group && !seenGroups.has(group)) {
+      seenGroups.add(group)
+      walk(group.lairActions, 'legendaryGroup', group)
+      walk(group.regionalEffects, 'legendaryGroup', group)
+    }
   }
   const bodyOldIds = new Set(pool.map((c) => c.oldId).filter((x): x is string => !!x))
   for (const table of plan.tables) {

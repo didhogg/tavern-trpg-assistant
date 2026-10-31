@@ -82,8 +82,21 @@ function replaceBlock(value: unknown, target: Raw, replacement: Raw, seen = new 
   return false
 }
 
-export function planR9(plan: PlanResult, options: R9PlanOptions): R9PlanResult {
-  const pool = buildCandidates(plan)
+// tableGroup 在非 lore 条目里不会输出；组里的表都换成 tableRef 后，把组改成普通 entries 块，让它们能显示
+function flattenGroups(value: unknown, seen = new WeakSet<object>()): void {
+  if (Array.isArray(value)) { for (const item of value) flattenGroups(item, seen); return }
+  if (!isObj(value) || seen.has(value)) return
+  seen.add(value)
+  if (value.type === 'tableGroup' && Array.isArray(value.tables) && value.tables.length && value.tables.every((t) => isObj(t) && t.type === 'tableRef')) {
+    value.type = 'entries'
+    value.entries = value.tables
+    delete value.tables
+  }
+  for (const [key, child] of Object.entries(value)) { if (key === 'rows' || key === 'colLabels') continue; flattenGroups(child, seen) }
+}
+
+export function planR9(plan: PlanResult, options: R9PlanOptions, legendaryGroups: Raw[] = [], r11Ids: ReadonlySet<string> = new Set()): R9PlanResult {
+  const pool = buildCandidates(plan, legendaryGroups, r11Ids)
   const golden = selectSurvivors(pool, plan.entries)
   const survivorByCandidate = new Map<number, R9Candidate>()
   for (const s of golden.survivors) survivorByCandidate.set(s.i!, s)
@@ -121,11 +134,24 @@ export function planR9(plan: PlanResult, options: R9PlanOptions): R9PlanResult {
     const entry = plan.entries.find((e) => e.id === candidate.parentId)
     if (!entry) continue
     const block = candidate.block
+    if (candidate.host !== undefined) {
+      replaceBlock(candidate.host, block, { type: 'tableRef', id: survivor.id!, label })
+      continue
+    }
     if (entry.raw._r9OriginalEntries === undefined) entry.raw._r9OriginalEntries = structuredClone(entry.raw.entries)
     if (entry.raw._r9OriginalLore === undefined) entry.raw._r9OriginalLore = structuredClone(entry.raw._lore)
     const replacement: Raw = { type: 'tableRef', id: survivor.id!, label }
     replaceBlock(entry.raw.entries, block, replacement)
     replaceBlock(entry.raw._lore, block, replacement)
+  }
+  if (options.replace) {
+    const roots = new Set<unknown>()
+    for (const candidate of pool) {
+      if (candidate.host !== undefined) roots.add(candidate.host)
+      const entry = candidate.parentId ? plan.entries.find((e) => e.id === candidate.parentId) : undefined
+      if (entry && candidate.host === undefined) { roots.add(entry.raw.entries); roots.add(entry.raw._lore) }
+    }
+    for (const root of roots) flattenGroups(root)
   }
   return { tables, replacements, redirects: golden.redirects, survivorByCandidate }
 }

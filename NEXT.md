@@ -4,13 +4,13 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-D1.2a：R7b、R9、R10、R10b、R11 已完成；R9 等待规划 agent 复核；之后 R12 → R13 → R14 → R15。
-- 目标：R9 已产出 1078 张表、558 个参考替换位置、28 条旧 id 重定向和 14 张关键表类型化数值。
+D1.2a：R7b、R9、R10、R10b、R11 已完成；R9（含正文表补遗）等待驾驶员后续统一验收；之后 R12 → R13 → R14 → R15。
+- 目标：R9 已产出 1095 张表、630 个参考替换位置、28 条旧 id 重定向和 14 张关键表类型化数值；所有条目正文、怪物变体、传奇组里不再有表格块。
 - 红线：不改参考文件/锚点；已有转换器只末尾追加或单行原地修改；旧类型除表格块/`tableRef` 外不变；关键表数值不猜。
 - 验收：`check`/`test:data`/`build:data`（两次哈希相同）/`build`/`e2e` 通过；体检 B7、B8 为 0。
 
 ## 已完成
-- D1.2a R9（完成待复审）：1078 张表（roll 530、names 69、life 55、encounter 47、loot 28、deck 16、ref 333）；候选 1480、去重 402；558 个参考替换位置、28 条旧 id 重定向；14 张关键表 `purpose/columns/values`；B7/B8=0；抽样核对 0 不一致。
+- D1.2a R9（已复核，含正文表补遗）：1095 张表（roll 540、names 69、life 55、encounter 47、loot 28、deck 16、ref 340）；候选 1552、去重 457；630 个参考替换位置（构建后可见 `tableRef` 580）、28 条旧 id 重定向；14 张关键表 `purpose/columns/values`；B7/B8=0；抽样核对 0 不一致。
 - D1.2a R11（已复核）：新类型 1,120 条；规则新分类 id 带类别前缀（`rule.skill-…`、`rule.item-type-…`、`rule.quickref-…` 等），名称保持来源原样；MTF 三艘载具的背景文字已挂到 `lore`；language 64、rule 新分类 140、deity 403、reward 79、cult 25、hazard 48、object 12、vehicle 4、monsterPart 345；recipe/charoption 仅转换器与 5+5 内存样本；矩阵 R11 lost 0；抽样核对表 0 不一致。
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
   - RW9：`outputTypes.ts`、`plannedFields.ts` 与目标字段校验接入；1,846 条 `to` 修正，`data.system.*` 0，未登记 0；同路径 529 条，抽样 20 条见报告。
@@ -99,9 +99,8 @@ D1.2a：R7b、R9、R10、R10b、R11 已完成；R9 等待规划 agent 复核；�
 - 更早的未验证项（M2）：真机上内置包升级路径、1.0.1 包的真机下载。
 
 ## 待议
-- R9 参考替换清单 558 个原始位置中，50 个位于 `lore.*` 的 `raw.entries`；`convertLore` 只输出 `_lore`，构建后可见 `tableRef` 为 508。参考清单未改，建议规划 agent 决定是否让 lore 补丁同时输出 `entries`。
-- R11 新类型（quickref/object/hazard/vehicle/item-type-extra）正文仍有 58 个 `table` 块，不在 R9 的 558 参考替换内；R9 未处理，建议 R14 文字清洁统一转 `tableRef`。
-- 正文仍有 2 个 `tableGroup` 块：`lore.class.druid.phb` 的 `entries` 与 `_lore` 各一处；R9 按文档不处理。
+- R9 参考替换清单 630 个位置中，50 个位于 `lore.*` 补丁条目的 `raw.entries`；`convertLore` 只输出 `_lore`，所以它们不显示（可见 `tableRef` 580）。是否让 lore 补丁同时输出 `entries` 留给规划 agent 决定。
+- 构建后全库没有残留的 `tableGroup` 块（扫描 0）；组里的表换成 `tableRef` 后，该组改写成普通 `entries` 块。
 - `life.json` 的 38 张职业 `other` 表未导入；它们已在职业正文表里，由 R9 去重合并。
 - R11 范围外：已有类型的正文块转换会丢信息（`blocks.ts` 现状）：带名称的 `inset` 约 65 处、`item`/`itemSub` 带 `entries` 约 358 处、无 `type` 的命名块约 2889 处；R11 只让新类型走 `r11BlockOptions`，已有类型未改，留给 R14 文字清洁评估。
 - D1.2a R10 登记：D1.2b 导入 EFA、FRHoF、FRAiF、AU 等书时补指向它们的 `supersededBy`（清单见 R10 报告 `deferredReprints`）；`playable` 只作严格建卡模式参考；旧版默认隐藏的界面等统一数据库优化后重建库页面时做；传奇组 `_versions` 待模板应用工作包。详见 `docs/任务总纲.md` §5。
