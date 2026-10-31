@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { loadAllPacks } from './r9-pack-helpers'
 
-const REQUIRE_REF = false
+const REQUIRE_REF = true
 const reference = JSON.parse(readFileSync(join(process.cwd(), 'docs/probes/D1.2a_R9_参考清单.json'), 'utf8')) as { survivors: Array<Record<string, unknown>>; redirects: Array<[string, string]> }
 
 describe('R9 参考清单', () => {
