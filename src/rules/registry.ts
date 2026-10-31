@@ -16,6 +16,8 @@ export interface RuleDefinition {
   builtinPacks?: string[]
   /** 首页默认战役横幅；未提供时使用纹样底图。 */
   defaultBanner?: RuleBanner
+  /** 安装前检查一个包里条目之间的引用（返回问题列表，空表示合规）；官方包与自制包同一套规则。 */
+  checkPack?: (input: { packId: string; entries: Array<{ id: string; type: string; data: Record<string, unknown> }>; lookup: (id: string) => { type: string; data: Record<string, unknown>; packId: string } | undefined; reach: Set<string> }) => string[]
 }
 
 export class RuleRegistry {

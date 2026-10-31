@@ -1,4 +1,5 @@
 import type { RuleDefinition } from '../registry'
+import { checkPackEntries } from './data/check'
 
 export const DND5E2014_RULE_ID = 'dnd5e2014'
 
@@ -9,6 +10,7 @@ export const dnd5e2014: RuleDefinition = {
   nameShort: 'D&D 5e',
   description: '龙与地下城第五版（2014 规则），核心规则含玩家手册、地下城主指南与怪物图鉴',
   corePackIds: ['dnd5e2014-srd'],
+  checkPack: checkPackEntries,
   builtinPacks: ['dnd5e2014-srd'],
   defaultBanner: {
     wide: 'https://a1.ax1x.com/2026/10/28/wwHs9.png',

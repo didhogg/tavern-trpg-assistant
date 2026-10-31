@@ -1,3 +1,4 @@
+import { SUPPORTED_DATA_VERSION } from '../../schemas/common'
 import type { TrpgDatabase } from '../db'
 import { TrpgError } from '../errors'
 import { sha256Hex } from '../hash'
@@ -69,7 +70,7 @@ export class MyLibrary {
       contributes: { entries: 0, tables: 0, variants: 0, adventures: 0, ruleOptions: 0 },
       relationships: { requires: [], recommends: [], conflicts: [] },
       blobs: [],
-      dataVersion: 2,
+      dataVersion: SUPPORTED_DATA_VERSION, // 新建的自制包用当前格式：与官方包走同一套严格校验
       source: 'user',
       byteSize: 0,
       sha256: '',

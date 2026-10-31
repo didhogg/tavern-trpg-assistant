@@ -8,6 +8,7 @@ import type { RuleRegistry } from '../../rules/registry'
 import { featureSupport } from '../../rules/dnd5e2014/data/features'
 import { buildPackFile } from './file'
 import { recognizeFile, type Recognized, type RecognizedPack } from './recognize'
+import { assertEntryRefs } from './entryRefs'
 
 export interface PackServiceDeps {
   rules: RuleRegistry
@@ -107,6 +108,7 @@ export class PackService {
     if (plan.missingRequires.length) {
       throw new TrpgError('E_DEP_MISSING', `缺少它需要的扩展包：${plan.missingRequires.map((d) => d.id).join('、')}`, { missing: plan.missingRequires })
     }
+    await assertEntryRefs(this.db, this.deps.rules, rec)
     let name = rec.manifest.name
     let removeFirst: string | undefined
     if (plan.action === 'overwrite') {
