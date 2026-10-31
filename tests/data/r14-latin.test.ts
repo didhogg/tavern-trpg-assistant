@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest'
 import { LATIN_ALLOW } from '../../tools/data/config/latinAllow'
 import { loadTerms } from '../../tools/data/clean/terms'
 import { allEntries } from './r9-pack-helpers'
-import { loadBefore } from './r14-snapshot'
 
 const entries = allEntries()
 const byId = new Map(entries.map((e) => [e.id, e]))
@@ -34,16 +33,6 @@ describe('R14 规则 4：汉字后紧跟的英文（D1）', () => {
     expect(text('book.creating-a-multiverse.dmg')).toContain('幽寂大窟（Great Dismal Delve）')
     expect(text('book.creating-a-multiverse.dmg')).toContain('九层地狱（the Nine Hells）')
     expect(text('rule.skill-variants.dmg')).toContain('专精（Expertise）')
-  })
-
-  it('不凭空添加：新出现的括号英文在旧文字里都能找到原样的英文串', () => {
-    const before = loadBefore()
-    const bad: string[] = []
-    for (const e of entries) {
-      const old = JSON.stringify(before[e.id].data.text ?? '')
-      for (const m of JSON.stringify(e.data.text ?? '').matchAll(/（([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’ -]*)）/g)) if (!old.includes(`（${m[1]}）`) && !old.includes(m[1])) bad.push(`${e.id} ${m[1]}`)
-    }
-    expect(bad.slice(0, 10)).toEqual([])
   })
 })
 

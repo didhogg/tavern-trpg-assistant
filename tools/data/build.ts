@@ -31,6 +31,7 @@ import { alignAll } from './i18n/align'
 import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
+import { carryStats } from './convert/carry'
 import { latinLog } from './clean/rules/latin'
 import { writeCleanReport } from './clean/report'
 import { checkPublished, type Published } from './version'
@@ -80,6 +81,7 @@ async function main(): Promise<void> {
   console.log(`计划条目：${plan.entries.length}（R11 ${r11.entries.length}），随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
+  console.log(`R15 补字段：${JSON.stringify(carryStats)}`)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)

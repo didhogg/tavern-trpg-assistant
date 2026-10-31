@@ -19,6 +19,7 @@ const durationSchema = z.object({ type: z.string().max(30), amount: z.number().n
 
 export const spellDataSchema = z.looseObject({
   ...common,
+  abilityCheck: z.array(z.string()).optional(),
   level: z.number().int().min(0).max(9),
   school: z.enum(['abjuration', 'conjuration', 'divination', 'enchantment', 'evocation', 'illusion', 'necromancy', 'transmutation']),
   castTime: z.array(castTimeSchema).min(1),
@@ -82,6 +83,7 @@ export type MonsterVariant = z.infer<typeof monsterVariantSchema>
 
 export const monsterDataSchema = z.looseObject({
   ...common,
+  attachedItems: z.array(z.string()).optional(),
   size: z.array(z.enum(['T', 'S', 'M', 'L', 'H', 'G'])).min(1),
   creatureType: z.object({ type: z.string().min(1).max(40), tags: z.array(z.string()).default([]), swarm: z.boolean().optional() }),
   alignment: z.string().max(80).optional(),

@@ -37,7 +37,8 @@ describe('R9 正文替换', () => {
       for (const item of Object.values(rec)) walk(item, id)
     }
     for (const entry of entries) {
-      if (entry.type === 'book') continue
+      // 书章节与物品除外：物品的 additionalEntries（R15）里的表格是物品自己的附加正文，原样保留成行内表
+      if (entry.type === 'book' || entry.type === 'item') continue
       walk(entry.data.text, entry.id); walk(entry.data.lore, entry.id); walk(entry.data.variants, entry.id); walk(entry.data.legendary, entry.id)
     }
     expect(blocks).toEqual([])

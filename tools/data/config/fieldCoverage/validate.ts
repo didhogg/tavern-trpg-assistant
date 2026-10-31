@@ -9,6 +9,7 @@ import { isTextContainer, isProsePath } from '../textContainers'
 const TO = /^(data\.[A-Za-z0-9_$[\]\.]+|entry\.[A-Za-z0-9_$]+|i18n\.en\.[A-Za-z0-9_$[\]\.]+)$/
 const WP = /^R(?:[1-9]|1[0-5])$/
 const KINDS = new Set(['image', 'audio', 'fonts', 'token', 'layout', '2024-only', 'out-of-scope', 'internal-meta', 'derived'])
+const META_SOURCE_TYPES = new Set(['magic-variant', 'monster-template', 'legendary-group', 'legendary-group-template', 'item-entry'])
 const PROTECTED = /(?:^|\.)(uses|activities|effects|entries|name|level|damage|save|range|duration|components|prerequisite|requires|recovery|charges)(?:\.|\[|$)/i
 
 function hasOutputField(outputType: string, first: string): boolean {
@@ -58,7 +59,9 @@ export function validateCoverageEntry(path: string, entry: CoverageEntry): void 
     if (!entry.kind || !KINDS.has(entry.kind)) throw new Error(`dropped 缺少 kind：${path}`)
     if (!entry.why?.trim()) throw new Error(`dropped 缺少理由：${path}`)
     if (entry.kind === 'image' && !IMAGE_PATH.test(path)) throw new Error(`image 路径不符合规则：${path}`)
-    if (!path.startsWith('book.') && PROTECTED.test(path) && !/\.token\.name$/.test(path)) throw new Error(`受保护字段不允许 dropped：${path}`)
+    // R15：纯排版（layout）、核心无样本（out-of-scope）与「展开/模板用的元数据类型」不受保护字段规则限制
+    const exempt = entry.kind === 'layout' || entry.kind === 'out-of-scope' || META_SOURCE_TYPES.has(path.split('.', 1)[0])
+    if (!path.startsWith('book.') && PROTECTED.test(path) && !exempt && !/\.token\.name$/.test(path)) throw new Error(`受保护字段不允许 dropped：${path}`)
     if (/uses.*recovery/i.test(path)) throw new Error(`uses.recovery 不允许 dropped：${path}`)
     return
   }

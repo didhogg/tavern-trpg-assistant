@@ -2,7 +2,7 @@ import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
   "spell.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
-  "spell.abilityCheck": { "how": "lost", "why": "该法术标签没有独立输出；T1 不允许非标签字段占用 data.tags（族 223）", "affected": 32 },
+  "spell.abilityCheck": {"how":"mapped","to":"data.abilityCheck","wp":"R7"},
   "spell.activities": {"how":"mapped","to":"data.activities","wp":"R14"},
   "spell.activities[].ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "spell.activities[].activation": {"how":"mapped","to":"data.activities[].activation","wp":"R14"},

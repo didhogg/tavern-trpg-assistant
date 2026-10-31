@@ -154,7 +154,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "race.toolProficiencies[].choose": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "race.toolProficiencies[].choose.from": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
   "race.toolProficiencies[].poisoner's kit": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},
-  "race.traitTags": { "how": "lost", "why": "种族 traitTags 没有写入输出，种族分类标签看不到", "affected": 51 },
+  "race.traitTags": {"how":"mapped","to":"data.facets.trait","wp":"R5"},
   "race.translator": {"how":"mapped","to":"data.credit.by","wp":"R5"},
   "race.vulnerable": {"how":"mapped","to":"data.effects","wp":"R5"},
   "race.weaponProficiencies": {"how":"mapped","to":"data.advancement[].grants","wp":"R5"},

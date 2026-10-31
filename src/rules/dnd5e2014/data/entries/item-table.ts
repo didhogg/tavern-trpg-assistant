@@ -40,6 +40,13 @@ const bonusesSchema = z.object({
 
 export const itemDataSchema = z.looseObject({
   ...entryCommonFields,
+  /** 物品家族的成员（条目 id） */
+  members: z.array(z.string()).optional(),
+  attachedSpells: z.record(z.string(), z.unknown()).optional(),
+  abilityGrant: z.unknown().optional(),
+  optionalFeatures: z.array(z.string()).optional(),
+  tier: z.string().optional(),
+  wondrous: z.boolean().optional(),
   category: z.enum(ITEM_CATEGORIES),
   baseItem: z.string().max(80).optional(),
   rarity: z.enum(['none', 'common', 'uncommon', 'rare', 'very rare', 'legendary', 'artifact', 'varies']).default('none'),

@@ -23,7 +23,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "action.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "action 的 reprintedAs（核心 19 条）目标全是 2024 新版，样本 [\"攻击|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "action.reprintedAs[].tag": { "how": "dropped", "kind": "2024-only", "why": "action 的 reprintedAs（核心 19 条）目标全是 2024 新版，样本 [\"攻击|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy；子项（tag/uid）随父字段一并处理" },
   "action.reprintedAs[].uid": { "how": "dropped", "kind": "2024-only", "why": "action 的 reprintedAs（核心 19 条）目标全是 2024 新版，样本 [\"攻击|XPHB\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy；子项（tag/uid）随父字段一并处理" },
-  "action.seeAlsoAction": { "how": "lost", "why": "动作的 seeAlsoAction 没有写入输出", "affected": 9 },
+  "action.seeAlsoAction": {"how":"mapped","to":"data.seeAlso","wp":"R8"},
   "action.source": {"how":"mapped","to":"data.src.book","wp":"R8"},
   "action.srd": {"how":"mapped","to":"data.credit.license","wp":"R8"},
   "action.time": {"how":"mapped","to":"data.activation","wp":"R8"},

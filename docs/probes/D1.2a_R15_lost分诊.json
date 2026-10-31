@@ -1,0 +1,3110 @@
+[
+ {
+  "path": "action.seeAlsoAction",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.seeAlso"
+ },
+ {
+  "path": "base-item.additionalEntries",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "base-item.additionalEntries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「base-item.additionalEntries[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "base-item.additionalEntries[].caption",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「base-item.additionalEntries[].caption」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "base-item.additionalEntries[].colLabels",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "base-item.additionalEntries[].colStyles",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「base-item.additionalEntries[].colStyles」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "base-item.additionalEntries[].entries",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "base-item.additionalEntries[].name",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "base-item.additionalEntries[].rows",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "base-item.additionalEntries[].type",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "base-item.additionalSources",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.additionalSources」是附加正文的出处页码，附加正文本身并入 text；主出处已在 src"
+ },
+ {
+  "path": "base-item.additionalSources[].page",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.additionalSources[].page」是附加正文的出处页码，附加正文本身并入 text；主出处已在 src"
+ },
+ {
+  "path": "base-item.additionalSources[].source",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.additionalSources[].source」是附加正文的出处页码，附加正文本身并入 text；主出处已在 src"
+ },
+ {
+  "path": "base-item.age",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.age"
+ },
+ {
+  "path": "base-item.ammoType",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.ammoType"
+ },
+ {
+  "path": "base-item.armor",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.armor」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.arrow",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.arrow」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.axe",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.axe」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.bolt",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.bolt」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.bow",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.bow」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.bulletFirearm",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.bulletFirearm」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.bulletSling",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.bulletSling」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.cellEnergy",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.cellEnergy」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.club",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.club」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.crossbow",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.crossbow」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.dagger",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.dagger」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "base-item.firearm",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.firearm」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.group",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.group」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.hammer",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.hammer」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.lance",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.lance」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.mace",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.mace」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.miscTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.misc"
+ },
+ {
+  "path": "base-item.needleBlowgun",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.needleBlowgun」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.net",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.net」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.polearm",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.polearm」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.rapier",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.rapier」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.referenceSources",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.referenceSources」是同一物品在其他书中的参考出处列表；主出处已在 src，不影响内容"
+ },
+ {
+  "path": "base-item.reload",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.reload"
+ },
+ {
+  "path": "base-item.scfType",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.scf"
+ },
+ {
+  "path": "base-item.spear",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.spear」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.staff",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.staff」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "base-item.sword",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「base-item.sword」武器/护甲大类标记，只用于魔法变体展开时匹配基础物品；展开结果已写入各物品"
+ },
+ {
+  "path": "item-entry.entriesTemplate",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「item-entry.entriesTemplate」物品正文模板已由转换器展开进物品正文（R3 起），模板本身不单独输出"
+ },
+ {
+  "path": "item-entry.entriesTemplate[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「item-entry.entriesTemplate[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "item-entry.entriesTemplate[].entries",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「item-entry.entriesTemplate[].entries」物品正文模板已由转换器展开进物品正文（R3 起），模板本身不单独输出"
+ },
+ {
+  "path": "item-entry.entriesTemplate[].name",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「item-entry.entriesTemplate[].name」物品正文模板已由转换器展开进物品正文（R3 起），模板本身不单独输出"
+ },
+ {
+  "path": "item-entry.entriesTemplate[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「item-entry.entriesTemplate[].type」物品正文模板已由转换器展开进物品正文（R3 起），模板本身不单独输出"
+ },
+ {
+  "path": "item-group.ability",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item-group.attachedSpells",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.ability",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.charges",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.charges.1",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.charges.2",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.charges.3",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.charges.4",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.charges.5",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.daily",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.daily.1e",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.limited",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.limited.1",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.attachedSpells.other",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item-group.baseItem",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.baseItem"
+ },
+ {
+  "path": "item-group.conditionImmune",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.conditionImmune"
+ },
+ {
+  "path": "item-group.curse",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.curse"
+ },
+ {
+  "path": "item-group.entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "item-group.entries[].colStyles",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「item-group.entries[].colStyles」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "item-group.entries[].entries[].colStyles",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「item-group.entries[].entries[].colStyles」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "item-group.focus",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.focus"
+ },
+ {
+  "path": "item-group.grantsProficiency",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item-group.grantsProficiency」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item-group.items",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.members"
+ },
+ {
+  "path": "item-group.miscTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.misc"
+ },
+ {
+  "path": "item-group.modifySpeed",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item-group.modifySpeed」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item-group.modifySpeed.equal",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item-group.modifySpeed.equal」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item-group.modifySpeed.equal.climb",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item-group.modifySpeed.equal.climb」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item-group.recharge",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.recharge"
+ },
+ {
+  "path": "item-group.referenceSources",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「item-group.referenceSources」是同一物品在其他书中的参考出处列表；主出处已在 src，不影响内容"
+ },
+ {
+  "path": "item-group.reqAttuneTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.reqAttune"
+ },
+ {
+  "path": "item-group.reqAttuneTags[].class",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.reqAttune"
+ },
+ {
+  "path": "item-group.reqAttuneTags[].creatureType",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item-group.reqAttuneTags[].creatureType」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item-group.reqAttuneTags[].spellcasting",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.reqAttune"
+ },
+ {
+  "path": "item-group.scfType",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.scf"
+ },
+ {
+  "path": "item-group.sentient",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item-group.sentient」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item-group.tattoo",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.tattoo"
+ },
+ {
+  "path": "item-group.tier",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.tier"
+ },
+ {
+  "path": "item-group.type",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.type"
+ },
+ {
+  "path": "item-group.wondrous",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.wondrous"
+ },
+ {
+  "path": "item._merge",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "item._merge.effects",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "item.ability",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.amount",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.cha",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.choose",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.choose[].amount",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.choose[].count",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.choose[].from",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.con",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.count",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.dex",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.from",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.int",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.str",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.ability.wis",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityGrant"
+ },
+ {
+  "path": "item.activities[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "item.activities[].attack",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].consumption.targets[].target",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].consumption.targets[].target.prop",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].consumption.targets[].target.uid",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].damage.includeBase",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell.challenge",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell.challenge.override",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell.challenge.save",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell.level",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell.properties",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell.spellbook",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].spell.uuid",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].uses.max",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].uses.recovery",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].uses.recovery[].period",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].uses.recovery[].type",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.foundryActivities"
+ },
+ {
+  "path": "item.activities[].visibility",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.activities[].visibility」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.activities[].visibility.requireMagic",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.activities[].visibility.requireMagic」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.additionalEntries",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "item.additionalEntries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「item.additionalEntries[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "item.additionalEntries[].colLabels",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "item.additionalEntries[].colStyles",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「item.additionalEntries[].colStyles」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "item.additionalEntries[].name",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "item.additionalEntries[].rows",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "item.additionalEntries[].type",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.text"
+ },
+ {
+  "path": "item.age",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.age"
+ },
+ {
+  "path": "item.ammoType",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.ammoType"
+ },
+ {
+  "path": "item.attachedSpells",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.ability",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges.1",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges.2",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges.3",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges.4",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges.5",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges.6",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.charges.7",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.daily",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.daily.1",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.daily.1e",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.daily.5e",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited.1",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited.10",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited.20",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited.3",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited.30",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited.40",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.limited.9",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.other",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.attachedSpells.will",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedSpells"
+ },
+ {
+  "path": "item.bonusAbilityCheck",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.bonusAbilityCheck"
+ },
+ {
+  "path": "item.bonusProficiencyBonus",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.bonusProficiencyBonus"
+ },
+ {
+  "path": "item.bonusSavingThrowConcentration",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.bonusSavingThrowConcentration」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.bonusWeaponDamage",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.bonusWeaponDamage"
+ },
+ {
+  "path": "item.capCargo",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.capCargo"
+ },
+ {
+  "path": "item.capPassenger",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.capPassenger"
+ },
+ {
+  "path": "item.carryingCapacity",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.carryingCapacity"
+ },
+ {
+  "path": "item.conditionImmune",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.conditionImmune"
+ },
+ {
+  "path": "item.crew",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.crew"
+ },
+ {
+  "path": "item.crewMax",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.crewMax」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.crewMin",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.crewMin」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.critThreshold",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.critThreshold"
+ },
+ {
+  "path": "item.curse",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.curse"
+ },
+ {
+  "path": "item.detail1",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.detail1"
+ },
+ {
+  "path": "item.entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "item.entries[].entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "item.entries[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "item.entries[].entries[].items[].items[].ENG_name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.entries[].entries[].items[].items[].ENG_name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "item.firearm",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.firearm」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.focus",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.focus"
+ },
+ {
+  "path": "item.grantsLanguage",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.grantsLanguage"
+ },
+ {
+  "path": "item.grantsProficiency",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.grantsProficiency"
+ },
+ {
+  "path": "item.group",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.group"
+ },
+ {
+  "path": "item.hasRefs",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「item.hasRefs」布尔标记，表示正文里含引用；引用已转换成行内标记"
+ },
+ {
+  "path": "item.light",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.light"
+ },
+ {
+  "path": "item.light[].bright",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.light"
+ },
+ {
+  "path": "item.light[].dim",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.light"
+ },
+ {
+  "path": "item.light[].shape",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.light"
+ },
+ {
+  "path": "item.miscTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.misc"
+ },
+ {
+  "path": "item.modifySpeed",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.modifySpeed.equal",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.modifySpeed.equal.burrow",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.modifySpeed.equal.burrow」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.modifySpeed.equal.climb",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.modifySpeed.equal.fly",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.modifySpeed.static",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.modifySpeed.static.fly",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.modifySpeed.static.swim",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.modifySpeed.static.walk",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.modifySpeed"
+ },
+ {
+  "path": "item.optionalfeatures",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.optionalFeatures"
+ },
+ {
+  "path": "item.poison",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.poison"
+ },
+ {
+  "path": "item.poisonTypes",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.poisonTypes"
+ },
+ {
+  "path": "item.scfType",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.scf"
+ },
+ {
+  "path": "item.seeAlsoDeck",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.seeAlsoDeck"
+ },
+ {
+  "path": "item.seeAlsoVehicle",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.seeAlsoVehicle"
+ },
+ {
+  "path": "item.sentient",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.sentient"
+ },
+ {
+  "path": "item.shippingCost",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.shippingCost」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.speed",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "item.spellScrollLevel",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.spellScrollLevel"
+ },
+ {
+  "path": "item.staff",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.staff"
+ },
+ {
+  "path": "item.system",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.system"
+ },
+ {
+  "path": "item.system.armor.dex",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.system"
+ },
+ {
+  "path": "item.system.armor.type",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.system"
+ },
+ {
+  "path": "item.system.armor.value",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.system"
+ },
+ {
+  "path": "item.tattoo",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.tattoo"
+ },
+ {
+  "path": "item.tier",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.tier"
+ },
+ {
+  "path": "item.travelCost",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「item.travelCost」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "item.typeAlt",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.typeAlt"
+ },
+ {
+  "path": "item.vehAc",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.vehAc"
+ },
+ {
+  "path": "item.vehDmgThresh",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.vehDmgThresh"
+ },
+ {
+  "path": "item.vehHp",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.vehHp"
+ },
+ {
+  "path": "item.vehSpeed",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.vehSpeed"
+ },
+ {
+  "path": "item.vulnerable",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.vulnerable"
+ },
+ {
+  "path": "item.weightNote",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.weightNote"
+ },
+ {
+  "path": "item.wondrous",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.wondrous"
+ },
+ {
+  "path": "legendary-group-template.ENG_name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group-template.ENG_name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group-template.apply",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group-template.apply」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group-template.name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group-template.name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group-template.page",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group-template.page」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group-template.ref",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group-template.ref」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group-template.source",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group-template.source」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group._versions",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group._versions」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group._versions[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「legendary-group._versions[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "legendary-group._versions[]._templates",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group._versions[]._templates」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group._versions[]._templates[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「legendary-group._versions[]._templates[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "legendary-group._versions[]._templates[].name",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group._versions[]._templates[].name」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group._versions[]._templates[].source",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group._versions[]._templates[].source」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group._versions[].name",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group._versions[].name」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group._versions[].source",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group._versions[].source」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group.lairActions[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「legendary-group.lairActions[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "legendary-group.lairActions[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "legendary-group.lairActions[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.lairActions[].entries[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.lairActions[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.lairActions[].entries[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.lairActions[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「legendary-group.lairActions[].items[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "legendary-group.lairActions[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.lairActions[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.lairActions[].source",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group.lairActions[].source」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group.lairActions[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.lairActions[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.mythicEncounter",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group.mythicEncounter」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group.mythicEncounter[].entries",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group.mythicEncounter[].entries」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group.mythicEncounter[].type",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「legendary-group.mythicEncounter[].type」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "legendary-group.page",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group.page」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「legendary-group.regionalEffects[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].entries[].colStyles",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.regionalEffects[].entries[].colStyles」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.regionalEffects[].entries[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.regionalEffects[].entries[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「legendary-group.regionalEffects[].items[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.regionalEffects[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].source",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「legendary-group.regionalEffects[].source」传奇组的出处与排版信息；区域/巢穴效果文字已并入怪物条目，不单独输出"
+ },
+ {
+  "path": "legendary-group.regionalEffects[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「legendary-group.regionalEffects[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "magic-variant._merge",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant._merge」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant._merge.effects",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant._merge.effects」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.ammo",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.ammo」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.effects[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "magic-variant.effects[].changes[].mode",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.effects[].changes[].mode」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.effects[].name",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.effects[].name」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.entries",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.entries」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "magic-variant.entries[].entries",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.entries[].entries」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.entries[].name",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.entries[].name」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.entries[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.entries[].type」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells.charges",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells.charges」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells.charges.1",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells.charges.1」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells.charges.2",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells.charges.2」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells.charges.4",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells.charges.4」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells.charges.5",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells.charges.5」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells.daily",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells.daily」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.attachedSpells.daily.1e",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.attachedSpells.daily.1e」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.barding",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.barding」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.bonusSpellDamage",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「magic-variant.inherits.bonusSpellDamage」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "magic-variant.inherits.bonusWeaponAttack",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.bonusWeaponAttack」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.bonusWeaponDamage",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「magic-variant.inherits.bonusWeaponDamage」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "magic-variant.inherits.curse",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.curse」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "magic-variant.inherits.entries[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "magic-variant.inherits.entries[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.entries[].entries[].items[].type」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.entries[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.entries[].entries[].style」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "magic-variant.inherits.entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.entries[].items[].type」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.entries[].style」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.grantsProficiency",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.grantsProficiency」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.hasRefs",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.hasRefs」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.light",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.light」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.light[].bright",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.light[].bright」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.light[].dim",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.light[].dim」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.modifySpeed",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.modifySpeed」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.modifySpeed.equal",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.modifySpeed.equal」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.modifySpeed.equal.swim",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.modifySpeed.equal.swim」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.nameRemove",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.nameRemove」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.otherSources",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「magic-variant.inherits.otherSources」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "magic-variant.inherits.otherSources[].page",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「magic-variant.inherits.otherSources[].page」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "magic-variant.inherits.otherSources[].source",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「magic-variant.inherits.otherSources[].source」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "magic-variant.inherits.rechargeAmount",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.rechargeAmount」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.reqAttuneTags",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.reqAttuneTags」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.reqAttuneTags[].class",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.reqAttuneTags[].class」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.reqAttuneTags[].race",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「magic-variant.inherits.reqAttuneTags[].race」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "magic-variant.inherits.tier",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.tier"
+ },
+ {
+  "path": "magic-variant.inherits.type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.type」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.weightExpression",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.inherits.weightExpression」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "magic-variant.inherits.wondrous",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「magic-variant.inherits.wondrous」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "magic-variant.referenceSources",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.referenceSources」是同一物品在其他书中的参考出处列表；主出处已在 src，不影响内容"
+ },
+ {
+  "path": "magic-variant.type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "internal-meta",
+  "why": "「magic-variant.type」是魔法变体的展开元数据（继承、类型、效果合并）；展开后的物品已带上对应字段（见 item.* 的补充字段）"
+ },
+ {
+  "path": "monster-template.ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster-template.ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster-template.alias",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.alias」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.int",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.int」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.legendaryGroup",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.legendaryGroup」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.legendaryGroup.ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster-template.apply._root.legendaryGroup.ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster-template.apply._root.legendaryGroup.name",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.legendaryGroup.name」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.legendaryGroup.source",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.legendaryGroup.source」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.size",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.size」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.speed",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.speed」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.speed.fly",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.speed.fly」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.speed.swim",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.speed.swim」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.speed.walk",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.speed.walk」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.type",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.type」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.type.tags",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.type.tags」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.type.tags[].prefix",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.type.tags[].prefix」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.type.tags[].prefixHidden",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.type.tags[].prefixHidden」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.type.tags[].tag",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.type.tags[].tag」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.apply._root.type.type",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.apply._root.type.type」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.crMin",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.crMin」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.name",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.name」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.page",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.page」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.prerequisite",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.prerequisite」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.prerequisite.int",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.prerequisite.int」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.prerequisite.int.max",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.prerequisite.int.max」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.prerequisite.size",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.prerequisite.size」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.prerequisite.size.max",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.prerequisite.size.max」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.prerequisite.type",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.prerequisite.type」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.prerequisite.type.oneOf",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.prerequisite.type.oneOf」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.ref",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.ref」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster-template.source",
+  "bucket": "TP 模板",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster-template.source」是怪物或传奇组模板的定义；模板的结果已体现在展开后的条目里，核心输出没有对应条目"
+ },
+ {
+  "path": "monster._versions[].action[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster._versions[].action[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster._versions[].bonus[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster._versions[].bonus[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster._versions[].conditionInflict",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.conditionInflict"
+ },
+ {
+  "path": "monster._versions[].speed.fly.condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster._versions[].spellcasting[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster._versions[].spellcasting[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster._versions[].spellcasting[].displayAs",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster._versions[].spellcasting[].displayAs」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster._versions[].spellcasting[].will[].entry",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster._versions[].spellcasting[].will[].entry」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster._versions[].spellcasting[].will[].hidden",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster._versions[].spellcasting[].will[].hidden」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster._versions[].traitTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.trait"
+ },
+ {
+  "path": "monster.actionNote",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.actionNote"
+ },
+ {
+  "path": "monster.actionTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.action"
+ },
+ {
+  "path": "monster.action[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.action[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster.action[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.action[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.action[].entries[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.action[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.action[].entries[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.alignmentPrefix",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.alignmentPrefix"
+ },
+ {
+  "path": "monster.alignment[].chance",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.alignmentChance"
+ },
+ {
+  "path": "monster.alignment[].note",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.alignment[].note」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.attachedItems",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.attachedItems"
+ },
+ {
+  "path": "monster.bonus[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.bonus[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster.bonus[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.bonus[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.bonus[].entries[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.bonus[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.bonus[].entries[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.conditionInflict",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.conditionInflict"
+ },
+ {
+  "path": "monster.conditionInflictLegendary",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.conditionInflictLegendary"
+ },
+ {
+  "path": "monster.conditionInflictSpell",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.conditionInflictSpell"
+ },
+ {
+  "path": "monster.cr.xp",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.crXp"
+ },
+ {
+  "path": "monster.damageTagsLegendary",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.damageLegendary"
+ },
+ {
+  "path": "monster.damageTagsSpell",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.damageSpell"
+ },
+ {
+  "path": "monster.dragonAge",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.dragonAge"
+ },
+ {
+  "path": "monster.dragonCastingColor",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.dragonCastingColor"
+ },
+ {
+  "path": "monster.effects",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "monster.effects[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.effects[].changes",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "monster.effects[].changes[].key",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "monster.effects[].changes[].mode",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "monster.effects[].changes[].value",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "monster.effects[].disabled",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "monster.effects[].name",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.effects"
+ },
+ {
+  "path": "monster.familiar",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.familiar"
+ },
+ {
+  "path": "monster.group",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.group"
+ },
+ {
+  "path": "monster.immune[].cond",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.immune[].cond」布尔标记，表示该抗性/免疫/易伤带条件；条件说明已写进抗性文字"
+ },
+ {
+  "path": "monster.initiative",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.initiative"
+ },
+ {
+  "path": "monster.initiative.advantageMode",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.initiative"
+ },
+ {
+  "path": "monster.isNpc",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.isNpc」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.languageTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.language"
+ },
+ {
+  "path": "monster.legendaryHeader",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.legendaryHeader"
+ },
+ {
+  "path": "monster.legendary[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.legendary[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster.mythic",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.mythic」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.mythicHeader",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.mythicHeader」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.mythic[].ENG_name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.mythic[].ENG_name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.mythic[].entries",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.mythic[].entries」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.mythic[].name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.mythic[].name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.pbNote",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.pbNote"
+ },
+ {
+  "path": "monster.reactionHeader",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.reactionHeader」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.reaction[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.reaction[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster.reaction[].entries[].items[].ENG_name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.reaction[].entries[].items[].ENG_name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.reaction[].entries[].items[].type",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.reaction[].entries[].items[].type」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.reaction[].entries[].style",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.reaction[].entries[].style」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.reaction[].entries[].type",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.reaction[].entries[].type」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.resist[].cond",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.resist[].cond」布尔标记，表示该抗性/免疫/易伤带条件；条件说明已写进抗性文字"
+ },
+ {
+  "path": "monster.savingThrowForced",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.saveForced"
+ },
+ {
+  "path": "monster.savingThrowForcedLegendary",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.saveForcedLegendary"
+ },
+ {
+  "path": "monster.savingThrowForcedSpell",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.saveForcedSpell"
+ },
+ {
+  "path": "monster.senseTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.sense"
+ },
+ {
+  "path": "monster.shortName",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.shortName"
+ },
+ {
+  "path": "monster.sizeNote",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.sizeNote"
+ },
+ {
+  "path": "monster.skill.other",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.skillOther"
+ },
+ {
+  "path": "monster.skill.other[].oneOf",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.skillOther"
+ },
+ {
+  "path": "monster.skill.other[].oneOf.arcana",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.skillOther"
+ },
+ {
+  "path": "monster.skill.other[].oneOf.history",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.skillOther"
+ },
+ {
+  "path": "monster.skill.other[].oneOf.nature",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.skillOther"
+ },
+ {
+  "path": "monster.skill.other[].oneOf.religion",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.skillOther"
+ },
+ {
+  "path": "monster.speed.alternate",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.climb",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.climb[].condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.climb[].number",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.fly",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.fly[].condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.fly[].number",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.walk",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.walk[].condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.alternate.walk[].number",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.burrow.condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.climb.condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.fly.condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.swim.condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.speed.walk.condition",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.speed"
+ },
+ {
+  "path": "monster.spellcastingTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.spellcasting"
+ },
+ {
+  "path": "monster.spellcasting[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.spellcasting[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster.spellcasting[].chargesItem",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].chargesItem"
+ },
+ {
+  "path": "monster.spellcasting[].displayAs",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].displayAs"
+ },
+ {
+  "path": "monster.spellcasting[].footerEntries",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].footer"
+ },
+ {
+  "path": "monster.spellcasting[].hidden",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].hidden"
+ },
+ {
+  "path": "monster.spellcasting[].spells.2.lower",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].spells"
+ },
+ {
+  "path": "monster.spellcasting[].spells.3.lower",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].spells"
+ },
+ {
+  "path": "monster.spellcasting[].spells.4.lower",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].spells"
+ },
+ {
+  "path": "monster.spellcasting[].spells.5.lower",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].spells"
+ },
+ {
+  "path": "monster.spellcasting[].type",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.spellcasting[].type"
+ },
+ {
+  "path": "monster.spellcasting[].will[].entry",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.spellcasting[].will[].entry」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.spellcasting[].will[].hidden",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.spellcasting[].will[].hidden」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.summonedByClass",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.summonedByClass"
+ },
+ {
+  "path": "monster.summonedBySpell",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.summonedBySpell"
+ },
+ {
+  "path": "monster.summonedBySpellLevel",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.extra.summonedBySpellLevel"
+ },
+ {
+  "path": "monster.traitTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.trait"
+ },
+ {
+  "path": "monster.trait[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.trait[].ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster.trait[].entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.trait[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.trait[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.trait[].entries[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.trait[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.trait[].entries[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.trait[].type",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.trait[].type」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.type.swarmSize",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.creatureType.swarmSize"
+ },
+ {
+  "path": "monster.type.type.choose",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.type.type.choose」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[]._version.ENG_name",
+  "bucket": "EN 英文名",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.variant[]._version.ENG_name」是来源里的英文名；英文名已由 i18n.en 承载（R13）"
+ },
+ {
+  "path": "monster.variant[].entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.variant[].entries[].ability",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.variants[].text"
+ },
+ {
+  "path": "monster.variant[].entries[].colStyles",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.variant[].entries[].colStyles」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.variant[].entries[].entries[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.variant[].entries[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.variant[].entries[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.variant[].entries[].entries[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.variant[].entries[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.variant[].entries[].entries[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.variant[].entries[].footerEntries",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.variants[].text"
+ },
+ {
+  "path": "monster.variant[].entries[].headerEntries",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.variants[].text"
+ },
+ {
+  "path": "monster.variant[].entries[].items[].ENG_name",
+  "bucket": "EN 英文名",
+  "action": "mapped-i18n",
+  "to": "i18n.en.name"
+ },
+ {
+  "path": "monster.variant[].entries[].items[].type",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.variant[].entries[].items[].type」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.variant[].entries[].page",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].page」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].ENG_name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].ENG_name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].entries",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].entries」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].entries[].ENG_name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].entries[].ENG_name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].entries[].entries",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].entries[].entries」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].entries[].name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].entries[].name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].entries[].type",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].entries[].type」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].name",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].name」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].rows[][].type",
+  "bucket": "N0 核心无样本",
+  "action": "drop",
+  "kind": "out-of-scope",
+  "why": "「monster.variant[].entries[].rows[][].type」在核心十本书里没有记录；D1.2b 扫描非核心来源时重新评估；出现时由未登记字段检查拦截"
+ },
+ {
+  "path": "monster.variant[].entries[].style",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "layout",
+  "why": "「monster.variant[].entries[].style」只管正文排版（样式或块类型），内容已由正文块表达"
+ },
+ {
+  "path": "monster.vulnerable[].cond",
+  "bucket": "FM 版式/元数据",
+  "action": "drop",
+  "kind": "derived",
+  "why": "「monster.vulnerable[].cond」布尔标记，表示该抗性/免疫/易伤带条件；条件说明已写进抗性文字"
+ },
+ {
+  "path": "race.traitTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.trait"
+ },
+ {
+  "path": "spell.abilityCheck",
+  "bucket": "ST 结算与展示字段",
+  "action": "supply",
+  "to": "data.abilityCheck"
+ },
+ {
+  "path": "subrace.traitTags",
+  "bucket": "TG 分类标签",
+  "action": "supply",
+  "to": "data.facets.trait"
+ }
+]

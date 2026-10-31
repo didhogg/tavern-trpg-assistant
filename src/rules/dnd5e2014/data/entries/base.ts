@@ -17,4 +17,8 @@ export const entryCommonFields = {
   nameSuffix: z.string().max(40).optional(),
   requires: requiresSchema.optional(),
   activities: z.array(activitySchema).optional(),
+  /** 分类标签（来源的 senseTags、miscTags 等），值保持来源代码；给筛选与搜索用，不显示 */
+  facets: z.record(z.string(), z.array(z.string())).optional(),
+  /** 来源里的其他展示字段，按来源字段名原样保存（R15） */
+  extra: z.record(z.string(), z.unknown()).optional(),
 }

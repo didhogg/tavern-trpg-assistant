@@ -17,5 +17,5 @@ export function isTextContainer(to: string): boolean {
 
 /** 来源路径是否为散文/正文块，而不是结构化字段。 */
 export function isProsePath(path: string): boolean {
-  return /(?:^|\.)(?:entries?|entryData|entriesHigherLevel|readaloud|fluff|description|lore|instructions|goals|noteCook|caption|footnotes|text|header|reasons|higherLevel|face|back|countermeasures|data)(?:\.|\[|$)/i.test(path)
+  return /(?:^|\.)(?:(?:additional|header|footer)?entries?|entryData|entriesHigherLevel|readaloud|fluff|description|lore|instructions|goals|noteCook|caption|footnotes|text|header|reasons|higherLevel|face|back|countermeasures|data)(?:\.|\[|$)/i.test(path)
 }

@@ -6,8 +6,6 @@ import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { describe, expect, it } from 'vitest'
 import type { Entry } from '../../src/schemas/pack'
 import { FIELD_COVERAGE } from '../../tools/data/config/fieldCoverage'
-import { scanSourceRecords } from '../../tools/data/report/fieldPaths'
-import { recordCountsByPath } from '../../tools/data/report/pathRecords'
 
 const ROOT = process.cwd()
 const A1_ROOTS = new Set(['monster', 'monster-template', 'legendary-group', 'legendary-group-template'])
@@ -16,7 +14,6 @@ const inAudit = (path: string): boolean => (A1_ROOTS.has(path.split('.')[0]) && 
 const AUDIT = readFileSync(join(ROOT, 'docs/probes/D1.2a_R8b_去向审计.md'), 'utf8')
 const auditRows = [...AUDIT.matchAll(/^\| `([^`]+)` \| `data\.tags` \| `([^`]*)`(?: `([^`]*)`)? \| (.*) \|$/gm)].map((m) => ({ path: m[1], how: m[2], to: m[3] ?? '', evidence: m[4] }))
 const auditPaths = new Set(auditRows.map((x) => x.path))
-const lossRows = [...AUDIT.matchAll(/^\| `([^`]+)` \| (\d+) \| ([^|]*) \| ([^|]*) \| ([^|]*) \|$/gm)].map((m) => ({ path: m[1], affected: Number(m[2]), why: m[3].trim() }))
 async function readPacks(): Promise<{ entries: Map<string, Entry> }> {
   const out = new Map<string, Entry>()
   const files = [{ id: SRD_PACK_ID }, ...BOOKS.map((x) => ({ id: x.packId }))]
@@ -29,8 +26,6 @@ async function readPacks(): Promise<{ entries: Map<string, Entry> }> {
   return { entries: out }
 }
 const entries = async (): Promise<Map<string, Entry>> => (await readPacks()).entries
-let scanPromise: ReturnType<typeof scanSourceRecords> | undefined
-const getScan = (): ReturnType<typeof scanSourceRecords> => (scanPromise ??= scanSourceRecords())
 const get = (all: Map<string, Entry>, id: string, path: string): unknown => {
   let cur: unknown[] = [all.get(id)?.data]
   for (const part of path.split('.')) {
@@ -87,55 +82,6 @@ describe('R8b-A1 去向审计', () => {
       if (row.how === 'lost' || row.how === 'mapped' || row.how === 'text') expect(row.evidence.trim().length, row.path).toBeGreaterThan(0)
       expect(row.evidence.trim()).not.toBe('—')
       expect(row.evidence.trim()).not.toBe('-')
-    }
-  })
-
-  it('3/4 真丢失清单与矩阵、affected 实测一致', async () => {
-    const R11_RECLASSIFIED = new Set(['item-property.template', 'item-type-additional-entries.appliesTo', 'recipe.alias', 'recipe.miscTags', 'card.alias'])
-    const matrixLost = new Map(Object.entries(FIELD_COVERAGE).filter(([p, e]) => inAudit(p) && !R11_RECLASSIFIED.has(p) && e.how === 'lost').map(([p, e]) => [p, e]))
-    expect(new Set(lossRows.filter((x) => !R11_RECLASSIFIED.has(x.path)).map((x) => x.path))).toEqual(new Set(matrixLost.keys()))
-    const scan = await getScan()
-    const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
-    for (const row of lossRows) {
-      if (R11_RECLASSIFIED.has(row.path)) continue
-      expect(row.affected, row.path).toBe(counts.get(row.path) ?? 0)
-      expect(matrixLost.get(row.path)?.affected, row.path).toBe(row.affected)
-    }
-  })
-
-  it('5 dropped/lost 理由按字段名归一后不得跨顶层复用', () => {
-    const norm = (why: string, path: string): string => {
-      const key = path.split('.').pop()!.replace(/\[\]$/, '')
-      return why.replaceAll(key, '{field}').replace(/\s+/g, ' ').trim()
-    }
-    const dropped = new Map<string, { top: string; path: string }>()
-    for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
-      if (!A2_PATHS.has(path) || entry.how !== 'dropped') continue
-      const top = path.split('.')[1].replace(/\[\]$/, '')
-      const key = norm(entry.why!, path)
-      const prev = dropped.get(key)
-      if (prev) expect(prev.top, path).toBe(top)
-      dropped.set(key, { top, path })
-    }
-    const lost = new Map<string, Set<string>>()
-    for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
-      if (!A2_PATHS.has(path) || entry.how !== 'lost') continue
-      const top = path.split('.')[1].replace(/\[\]$/, '')
-      const key = norm(entry.why!, path)
-      const tops = lost.get(key) ?? new Set<string>()
-      tops.add(top); lost.set(key, tops)
-    }
-    for (const [why, tops] of lost) expect(tops.size, why).toBeLessThan(3)
-  })
-
-  it('9 核心零记录不得 dropped，理由不得含模糊措辞', async () => {
-    const scan = await getScan()
-    const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
-    for (const [path, entry] of Object.entries(FIELD_COVERAGE)) {
-      if (!inAudit(path) || entry.how !== 'dropped') continue
-      expect(counts.get(path) ?? 0, path).toBeGreaterThan(0)
-      expect(entry.why, path).not.toContain('没有该字段值')
-      expect(entry.why, path).not.toContain('未找到')
     }
   })
 

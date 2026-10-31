@@ -1,7 +1,7 @@
 import type { Entry, PackFeature, PackManifest } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
-import type { ConvertContext } from './context'
-import { makeContext } from './context'
+import { makeContext, type ConvertContext } from './context'
+import { carryExtras } from './carry'
 import { attributionOf, licenseOf, makeClassIds, makeSubclassIds, ruleOptionsFor } from './packInfo'
 import { addRef, type RefIndex } from '../markup/inline'
 import { convertSpell } from './spell'
@@ -217,7 +217,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   const converted = new Map<string, Entry>()
   for (const entry of all) {
     const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry), refStats: new Map<string, { ref: number; text: number }>(), ...(process.env.TRPG_DATA_LANG === 'en' ? { lang: 'en' as const } : {}) }
-    const built = convertOne(entry, ctx, inline)
+    const built = carryExtras(entry, convertOne(entry, ctx, inline), ctx, inline)
     for (const [tag, value] of inline.refStats) {
       const current = stats.refStats[tag] ?? { ref: 0, text: 0 }
       current.ref += value.ref

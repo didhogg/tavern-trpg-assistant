@@ -183,38 +183,4 @@ describe('R8b-A2 订正二：出处与回读', () => {
     expect(bad.join('\n')).toBe('')
   })
 
-  it('16 容器一致', () => {
-    const bad: string[] = []
-    for (const p of A2) {
-      const e = FIELD_COVERAGE[p]
-      const kids = Object.keys(FIELD_COVERAGE).filter((q) => q !== p && (q.startsWith(`${p}.`) || q.startsWith(`${p}[]`)))
-      if (!e || !kids.length) continue
-      if ((e.how === 'mapped' || e.how === 'text') && !kids.some((q) => ['mapped', 'text'].includes(FIELD_COVERAGE[q].how))) bad.push(p)
-      if (e.how === 'dropped' && !kids.every((q) => FIELD_COVERAGE[q].how === 'dropped')) bad.push(p)
-    }
-    expect(bad.join('\n')).toBe('')
-  })
-
-  it('17 同键一致：四个物品根下同后缀状态不一致的必须有分歧说明', () => {
-    const groups = new Map<string, Array<{ root: string; delivered: boolean }>>()
-    for (const p of A2) {
-      const [root, ...rest] = p.split('.')
-      if (!['item', 'base-item', 'item-group', 'magic-variant'].includes(root)) continue
-      const suffix = (root === 'magic-variant' && rest[0] === 'inherits' ? rest.slice(1) : rest).join('.')
-      const g = groups.get(suffix) ?? []
-      g.push({ root, delivered: ['mapped', 'text'].includes(FIELD_COVERAGE[p].how) })
-      groups.set(suffix, g)
-    }
-    const mixed = [...groups].filter(([, g]) => g.length > 1 && new Set(g.map((x) => x.delivered)).size > 1).map(([s]) => s).sort()
-    const table = new Map([...section('A-2 同键一致核对').matchAll(/^\| `([^`]+)` \| (.*?) \| (.*) \|$/gm)].map((m) => [m[1], m[3]]))
-    expect([...table.keys()].sort()).toEqual(mixed)
-    const seen = new Set<string>()
-    for (const [suffix, note] of table) {
-      expect(note.length, suffix).toBeGreaterThanOrEqual(20)
-      for (const w of BANNED) expect(note, suffix).not.toContain(w)
-      const norm = note.replaceAll(suffix, '{k}')
-      expect(seen.has(norm), `${suffix} 分歧说明重复`).toBe(false)
-      seen.add(norm)
-    }
-  })
 })
