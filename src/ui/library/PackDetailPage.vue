@@ -11,6 +11,7 @@ import { openEntry, openPackDetail } from './openDetail'
 import { contributesLabel, findRow, SOURCE_LABEL } from './rows'
 import { isHiddenType } from '../../core/library/hiddenTypes'
 import { typeLabel } from './typeLabels'
+import { humanizeTokens } from './tokens'
 
 interface Lite { entryId: string; name: string; nameEn?: string; type: string; summary: string }
 
@@ -86,7 +87,7 @@ const enabledText = computed(() => {
           <template #default="{ item }">
             <div class="trpg-entryrow">
               <Term @open="openEntry(packId, item.entryId, item.name)">{{ item.name }}</Term>
-              <span class="trpg-row__meta trpg-entryrow__sum">{{ typeLabel(item.type) }}<template v-if="item.summary"> · {{ item.summary }}</template></span>
+              <span class="trpg-row__meta trpg-entryrow__sum">{{ typeLabel(item.type) }}<template v-if="item.summary"> · {{ humanizeTokens(item.summary) }}</template></span>
             </div>
           </template>
         </VirtualList>

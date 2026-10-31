@@ -98,3 +98,25 @@ describe('条目的结构化展示', () => {
     expect(sourceLine({ src: { book: 'PHB', page: 105 }, credit: { by: '共库机翻', license: 'CC-BY-NC-SA-4.0' } })).toBe('出自《玩家手册》第 105 页 · 中文：共库机翻（CC-BY-NC-SA-4.0）')
   })
 })
+
+describe('R15 新字段的事实栏', () => {
+  it('物品附带法术、层级、赋予属性值；怪物携带物品；法术相关属性检定', () => {
+    const item = entryFacts({ type: 'item', data: { category: 'wondrous', tier: '主要', wondrous: true, abilityGrant: { static: { con: 19 } }, attachedSpells: { charges: { '1': ['spell.magic-missile.phb'], '5': ['spell.fireball.phb#5'] }, daily: { '1e': ['spell.light.phb'] } } } as never } as never)
+    const labels = item.map((f) => f.label)
+    expect(labels).toEqual(expect.arrayContaining(['层级', '标记', '赋予属性值', '附带法术·耗充能 1 点', '附带法术·耗充能 5 点', '附带法术·每日 1 次（每个）']))
+    expect(item.find((f) => f.label === '赋予属性值')?.parts).toEqual(['体质 19'])
+    expect(item.find((f) => f.label === '附带法术·耗充能 5 点')?.parts).toEqual(['', { ref: 'spell.fireball.phb' }, '（5 环）'])
+    const monster = entryFacts({ type: 'monster', data: { attachedItems: ['item.javelin.phb'] } as never } as never)
+    expect(monster.find((f) => f.label === '携带物品')?.parts).toEqual(['', { ref: 'item.javelin.phb' }])
+    const spell = entryFacts({ type: 'spell', data: { level: 1, school: 'evocation', abilityCheck: ['str'] } as never } as never)
+    expect(spell.find((f) => f.label === '相关属性检定')?.parts).toBeDefined()
+  })
+
+  it('物品加值的键全部显示中文，不露出英文代码', () => {
+    const item = entryFacts({ type: 'item', data: { category: 'wondrous', bonuses: { ac: '+2', attack: '+2', save: '+2', spellAttack: '+2', spellDc: '+1' } } as never } as never)
+    const text = JSON.stringify(item.find((f) => f.label === '加值')?.parts)
+    expect(text).toContain('豁免 +2')
+    expect(text).toContain('法术攻击 +2')
+    expect(text).not.toMatch(/save|spellAttack|spellDc/)
+  })
+})

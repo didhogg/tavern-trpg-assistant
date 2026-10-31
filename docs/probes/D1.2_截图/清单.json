@@ -1,0 +1,296 @@
+[
+ {
+  "type": "background",
+  "id": "background.charlatan.phb",
+  "name": "骗子",
+  "pack": "dnd5e2014-phb"
+ },
+ {
+  "type": "background",
+  "id": "background.acolyte.phb",
+  "name": "侍僧",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "book",
+  "id": "book.conditions.phb",
+  "name": "状态",
+  "pack": "dnd5e2014-phb"
+ },
+ {
+  "type": "book",
+  "id": "book.treasure.dmg",
+  "name": "宝藏",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "class",
+  "id": "class.wizard.phb",
+  "name": "法师",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "class",
+  "id": "class.artificer.tce",
+  "name": "奇械师",
+  "pack": "dnd5e2014-tce"
+ },
+ {
+  "type": "condition",
+  "id": "condition.blinded.phb",
+  "name": "目盲",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "condition",
+  "id": "condition.charmed.phb",
+  "name": "魅惑",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "cult",
+  "id": "cult.cult-of-asmodeus.mtf",
+  "name": "阿斯蒙蒂斯教派",
+  "pack": "dnd5e2014-mtf"
+ },
+ {
+  "type": "cult",
+  "id": "cult.cult-of-atropus-the-world-born-dead.mtf",
+  "name": "阿托普斯教派，生而为死的世界",
+  "pack": "dnd5e2014-mtf"
+ },
+ {
+  "type": "deity",
+  "id": "deity.aegir.phb",
+  "name": "埃吉尔",
+  "pack": "dnd5e2014-phb"
+ },
+ {
+  "type": "deity",
+  "id": "deity.akadi.scag",
+  "name": "阿卡迪",
+  "pack": "dnd5e2014-scag"
+ },
+ {
+  "type": "disease",
+  "id": "disease.blinding-sickness.phb",
+  "name": "失明症",
+  "pack": "dnd5e2014-phb"
+ },
+ {
+  "type": "disease",
+  "id": "disease.cackle-fever.dmg",
+  "name": "疯笑病",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "feat",
+  "id": "feat.actor.phb",
+  "name": "演员",
+  "pack": "dnd5e2014-phb"
+ },
+ {
+  "type": "feat",
+  "id": "feat.alert.phb",
+  "name": "警觉",
+  "pack": "dnd5e2014-phb"
+ },
+ {
+  "type": "feature",
+  "id": "feature.monk-ki.phb",
+  "name": "气",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "feature",
+  "id": "feature.fighter-battle-master-combat-superiority.phb",
+  "name": "卓越战技",
+  "pack": "dnd5e2014-phb"
+ },
+ {
+  "type": "hazard",
+  "id": "hazard.hazard-avalanche.tce",
+  "name": "雪崩",
+  "pack": "dnd5e2014-tce"
+ },
+ {
+  "type": "hazard",
+  "id": "hazard.hazard-brown-mold.dmg",
+  "name": "棕霉菌",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "item",
+  "id": "item.staff-of-power.dmg",
+  "name": "威力法杖",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "item",
+  "id": "item.longsword.phb",
+  "name": "长剑",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "language",
+  "id": "language.aarakocra.mm",
+  "name": "鸟羽人语",
+  "pack": "dnd5e2014-mm"
+ },
+ {
+  "type": "language",
+  "id": "language.abyssal.phb",
+  "name": "深渊语",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "monster",
+  "id": "monster.vampire.mm",
+  "name": "吸血鬼",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "monster",
+  "id": "monster.aarakocra.mm",
+  "name": "鸟羽人",
+  "pack": "dnd5e2014-mm"
+ },
+ {
+  "type": "monsterPart",
+  "id": "monsterpart.action-acid-spray-ankheg.mm",
+  "name": "酸液喷射（掘地虫）",
+  "pack": "dnd5e2014-mm"
+ },
+ {
+  "type": "monsterPart",
+  "id": "monsterpart.action-animate-chains-chain-devil.mm",
+  "name": "活化魔链（链魔）",
+  "pack": "dnd5e2014-mm"
+ },
+ {
+  "type": "object",
+  "id": "object.ballista.dmg",
+  "name": "弩炮",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "object",
+  "id": "object.cannon.dmg",
+  "name": "火炮",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "race",
+  "id": "race.aasimar-necrotic-shroud.mpmm",
+  "name": "阿斯莫; 死灵斗篷",
+  "pack": "dnd5e2014-mpmm"
+ },
+ {
+  "type": "race",
+  "id": "race.aasimar-radiant-consumption.mpmm",
+  "name": "阿斯莫; 光辉消耗",
+  "pack": "dnd5e2014-mpmm"
+ },
+ {
+  "type": "reward",
+  "id": "reward.blessing-of-bloody-might.bmt",
+  "name": "血腥伟力祝福",
+  "pack": "dnd5e2014-bmt"
+ },
+ {
+  "type": "reward",
+  "id": "reward.blessing-of-health.dmg",
+  "name": "健康祝福",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "rule",
+  "id": "rule.action-options.dmg",
+  "name": "动作选用项",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "rule",
+  "id": "rule.activate-an-item.dmg",
+  "name": "激活物品",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "spell",
+  "id": "spell.fireball.phb",
+  "name": "火球术",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "spell",
+  "id": "spell.hold-person.phb",
+  "name": "定身类人",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "status",
+  "id": "status.concentration.phb",
+  "name": "专注",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "status",
+  "id": "status.surprised.phb",
+  "name": "突袭",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "subrace",
+  "id": "subrace.aasimar-fallen.vgm",
+  "name": "堕落阿斯莫",
+  "pack": "dnd5e2014-vgm"
+ },
+ {
+  "type": "subrace",
+  "id": "subrace.aasimar-protector.vgm",
+  "name": "守护阿斯莫",
+  "pack": "dnd5e2014-vgm"
+ },
+ {
+  "type": "table",
+  "id": "table.treasure-hoard-challenge-0-4.dmg",
+  "name": "宝藏堆·挑战等级 0-4",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "table",
+  "id": "table.acolyte.phb",
+  "name": "侍僧·特点",
+  "pack": "dnd5e2014-srd"
+ },
+ {
+  "type": "vehicle",
+  "id": "vehicle.astral-brig.mtf",
+  "name": "星界帆船",
+  "pack": "dnd5e2014-mtf"
+ },
+ {
+  "type": "vehicle",
+  "id": "vehicle.astral-skiff.mtf",
+  "name": "星界快艇",
+  "pack": "dnd5e2014-mtf"
+ },
+ {
+  "type": "表术语:book",
+  "id": "book.a-world-of-your-own.dmg",
+  "name": "你的世界",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "表术语:book",
+  "id": "book.adventure-environments.dmg",
+  "name": "冒险环境",
+  "pack": "dnd5e2014-dmg"
+ },
+ {
+  "type": "表术语:book",
+  "id": "book.adventuring.phb",
+  "name": "冒险",
+  "pack": "dnd5e2014-phb"
+ }
+]

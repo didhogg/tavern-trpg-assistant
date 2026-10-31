@@ -16,6 +16,7 @@ import EntryFacts from './EntryFacts.vue'
 import { entryFacts } from './facts'
 import TextBlocks from './TextBlocks.vue'
 import VariantBar from './VariantBar.vue'
+import { humanizeTokens } from './tokens'
 
 const props = defineProps<{ packId: string; entryId: string }>()
 const app = useAppStore()
@@ -64,7 +65,7 @@ async function onSwitch(variantKey: string): Promise<void> {
   <div v-if="shown && original" class="page-stack" data-testid="entry-detail">
     <VariantBar v-if="slot && slot.candidates.length" :variants="slot" :original="original" :read-only="campaign.readOnly" :origin-name="original.name" @switch="onSwitch" />
     <p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p>
-    <p v-if="shown.summary" class="trpg-entry__summary">{{ shown.summary }}</p>
+    <p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p>
     <EntryFacts v-if="facts.length" :facts="facts" @ref="onRef" />
     <TextBlocks :blocks="blocks" @ref="onRef" />
     <p v-if="sourceLine(shown.data)" class="trpg-field__hint">{{ sourceLine(shown.data) }}</p>

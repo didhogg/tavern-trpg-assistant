@@ -158,6 +158,7 @@ function monsterFacts(d: Obj): Fact[] {
     const f = named('传奇动作', d.legendary.actions)
     if (f) out.push(f)
   }
+  if (arr(d.attachedItems).length) out.push({ label: '携带物品', parts: arr(d.attachedItems).map(str).flatMap((id, i) => [i ? '、' : '', { ref: id }]) })
   return out
 }
 
@@ -170,6 +171,7 @@ function spellFacts(d: Obj): Fact[] {
   add(out, '法术成分', formatComponents(d.components))
   add(out, '持续时间', formatDuration(d.duration))
   for (const [key, label] of [['damageInflict', '造成伤害'], ['conditionInflict', '施加状态'], ['conditionImmune', '赋予状态免疫'], ['damageResist', '赋予伤害抗性'], ['damageImmune', '赋予伤害免疫'], ['damageVulnerable', '造成伤害易伤'], ['affectsCreatureType', '影响的生物']] as const) add(out, label, join(arr(d[key]).map((x) => trWords(str(x)))))
+  add(out, '相关属性检定', abilityList(d.abilityCheck))
   if (arr(d.classes).length) out.push({ label: '职业', parts: arr(d.classes).flatMap((c, i) => [i ? '、' : '', { ref: str(c) }]) })
   return out
 }
@@ -203,6 +205,27 @@ function backgroundFacts(d: Obj): Fact[] {
   return out
 }
 
+/** 物品附带的法术：随意施放、每日 N 次、耗 N 点充能、限用次数、其他；法术写条目 id，升环写成 `id#环数`。 */
+function spellParts(ids: unknown): Part[] {
+  return arr(ids).map(str).filter(Boolean).flatMap((raw, i) => { const [id, level] = raw.split('#'); return [i ? '、' : '', { ref: id }, level ? `（${level} 环）` : ''] })
+}
+function attachedSpellFacts(v: unknown): Fact[] {
+  if (!isObj(v)) return []
+  const out: Fact[] = []
+  if (arr(v.will).length) out.push({ label: '附带法术·随意施放', parts: spellParts(v.will) })
+  for (const [key, label] of [['daily', '每日'], ['charges', '耗充能'], ['limited', '限用']] as const) {
+    const group = v[key]
+    if (isObj(group)) for (const [n, ids] of Object.entries(group)) out.push({ label: `附带法术·${label}${key === 'charges' ? ` ${n} 点` : key === 'daily' ? ` ${n.replace('e', '')} 次${n.endsWith('e') ? '（每个）' : ''}` : ` ${n} 次`}`, parts: spellParts(ids) })
+  }
+  if (arr(v.other).length) out.push({ label: '附带法术·其他', parts: spellParts(v.other) })
+  if (typeof v.ability === 'string') out.push({ label: '附带法术·施法属性', parts: [tr(ABILITY, v.ability)] })
+  return out
+}
+function abilityGrantText(v: unknown): string {
+  if (!isObj(v) || !isObj(v.static)) return isObj(v) ? '见正文' : ''
+  return join(Object.entries(v.static).map(([k, n]) => `${tr(ABILITY, k)} ${n}`), '，')
+}
+
 function itemFacts(d: Obj): Fact[] {
   const out: Fact[] = []
   add(out, '类别', tr(ITEM_CATEGORY, d.category))
@@ -218,11 +241,15 @@ function itemFacts(d: Obj): Fact[] {
     add(out, '护甲等级', d.armor.ac !== undefined ? String(d.armor.ac) : '')
     add(out, '隐匿', d.armor.stealthDisadvantage ? '劣势' : '')
   }
-  if (isObj(d.bonuses)) add(out, '加值', join(Object.entries(d.bonuses).map(([k, v]) => `${({ attack: '攻击', damage: '伤害', ac: '护甲等级' } as Record<string, string>)[k] ?? k} ${v}`), '，'))
+  if (isObj(d.bonuses)) add(out, '加值', join(Object.entries(d.bonuses).map(([k, v]) => `${({ attack: '攻击', damage: '伤害', ac: '护甲等级', save: '豁免', spellAttack: '法术攻击', spellDc: '法术豁免 DC' } as Record<string, string>)[k] ?? k} ${v}`), '，'))
   if (isObj(d.charges)) add(out, '充能', `${d.charges.max} 次，${tr(RECHARGE, d.charges.recharge)}恢复`)
   add(out, '价格', typeof d.value === 'number' ? money(d.value) : '')
   add(out, '重量', d.weight ? `${d.weight} 磅` : '')
   add(out, '同调', isObj(d.attunement) && d.attunement.required ? `需要${d.attunement.by ? `（${str(d.attunement.by)}）` : ''}` : '')
+  add(out, '层级', str(d.tier))
+  add(out, '标记', d.wondrous === true ? '奇物' : '')
+  add(out, '赋予属性值', abilityGrantText(d.abilityGrant))
+  out.push(...attachedSpellFacts(d.attachedSpells))
   return out
 }
 
