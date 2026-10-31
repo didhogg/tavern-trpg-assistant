@@ -23,9 +23,14 @@ describe('R9 参考清单', () => {
         kind: entry.data.kind,
         source: (entry.data.src as { book?: string }).book,
         srd: packOf.get(entry.id) === 'dnd5e2014-srd',
+        dice: entry.data.dice === undefined ? null : String(entry.data.dice).split('+').map((term) => term.startsWith('d') ? `1${term}` : term).join('+'),
+        modifierPrompt: (entry.data.modifier as { prompt?: string } | undefined)?.prompt ?? null,
         rows: (entry.data.rows as unknown[]).length,
+        parent: (entry.data.parent as { id?: string } | undefined)?.id ?? null,
+        chapter: (entry.data.chapter as { name?: string } | undefined)?.name ?? null,
+        purpose: entry.data.purpose ?? null,
       }
-      for (const key of ['name', 'kind', 'source', 'srd', 'rows'] as const) if (JSON.stringify(actual[key]) !== JSON.stringify(row[key])) diff.push(`${row.id} ${key}`)
+      for (const key of ['name', 'kind', 'source', 'srd', 'dice', 'modifierPrompt', 'rows', 'parent', 'chapter', 'purpose'] as const) if (JSON.stringify(actual[key]) !== JSON.stringify(row[key])) diff.push(`${row.id} ${key}`)
     }
     expect(diff).toEqual([])
     expect(tables.some((entry) => entry.data.kind === 'ref')).toBe(REQUIRE_REF)

@@ -6,6 +6,7 @@ import { selectSurvivors } from './r9Golden'
 import { isObj, storageDice } from './r9lib'
 import { BOOK_BY_SOURCE, PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
 import type { R9Meta, R9Seed } from './tableR9'
+import { keyTableValues } from './tableValues'
 
 export interface R9PlanOptions { includeRef: boolean; replace: boolean }
 export interface R9PlanResult {
@@ -107,7 +108,8 @@ export function planR9(plan: PlanResult, options: R9PlanOptions): R9PlanResult {
     set.add(candidate.extra.parentKey)
     parentKeys.set(survivor.id, set)
   }
-  const tables = golden.survivors.filter((s) => options.includeRef || s.kind !== 'ref').map((s) => { const table = makeTable(s, aliasesBySurvivor.get(s.id!) ?? new Set<string>()); const seed = table.raw.__seed as R9Seed; const keys = parentKeys.get(s.id!); if (keys) seed.parentKeys = [...keys]; return table })
+  const keyTables = keyTableValues(golden.survivors)
+  const tables = golden.survivors.filter((s) => options.includeRef || s.kind !== 'ref').map((s) => { const table = makeTable(s, aliasesBySurvivor.get(s.id!) ?? new Set<string>()); const seed = table.raw.__seed as R9Seed; const keys = parentKeys.get(s.id!); if (keys) seed.parentKeys = [...keys]; const key = keyTables.get(s.id!); if (key) { const meta = table.raw.__r9 as R9Meta; meta.purpose = key.purpose; meta.columns = key.columns; seed.rows.forEach((row, i) => { row.values = key.rows[i] }) } return table })
   const replacements: R9Replacement[] = []
   for (const candidate of pool) {
     if (candidate.origin !== 'B' || !candidate.block || !candidate.where || candidate.blockIndex === undefined) continue
