@@ -15,7 +15,9 @@ const RULES: Array<[RegExp, (m: RegExpExecArray) => string]> = [
 /** 怪物制作部件里的 <$…$> 占位符（要套到具体生物上才有数值）→ 玩家看得懂的文字；不认识的占位符原样保留。 */
 export function humanizeTokens(text: string): string {
   if (!text.includes('<$')) return text
-  return text.replace(TOKEN, (whole, token: string) => {
+  // 摘要被截断时，末尾可能只剩半个占位符（「<$short_na…」）：去掉，只留省略号
+  const trimmed = text.replace(/<\$[^$>]*…$/, '…')
+  return trimmed.replace(TOKEN, (whole, token: string) => {
     for (const [pattern, make] of RULES) {
       const m = pattern.exec(token)
       if (m) return make(m)

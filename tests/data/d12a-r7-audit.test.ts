@@ -55,7 +55,7 @@ describe('RW20–RW25 验收（§20.8）', () => {
   it('5 家族 37 与关键成员数', async () => {
     const all = allOf(await loadPacks())
     const families = [...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family')
-    expect(families).toHaveLength(37)
+    expect(families.length).toBeGreaterThanOrEqual(37) // 来源的 37 个家族 + 之后加的系列（如卓尔装备）；不再写死总数
     for (const family of families) { expect(family.name.endsWith('（系列）'), family.id).toBe(true); expect(String(family.nameEn).endsWith(' (Family)'), family.id).toBe(true) }
     const byName = new Map(families.map((f) => [f.name, f]))
     expect((byName.get('治疗药水（系列）')?.data.members as string[])).toHaveLength(4)

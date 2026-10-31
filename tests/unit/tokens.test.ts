@@ -13,6 +13,9 @@ describe('怪物部件占位符显示成人话', () => {
     expect(humanizeTokens('<$dc_体质$><$dc_wis$><$to_hit_敏捷$><$damage_mod_力量$><$伤害修正__力量$>')).toBe('（8＋熟练加值＋体质调整值）（8＋熟练加值＋感知调整值）（熟练加值＋敏捷调整值）＋力量调整值＋力量调整值')
     expect(humanizeTokens('<$something_else$>')).toBe('<$something_else$>')
   })
+  it('摘要被截断时末尾半个占位符被去掉', () => {
+    expect(humanizeTokens('豁免成功则<$short_na…')).toBe('豁免成功则…')
+  })
   it('行内解析后的文字片段里不再出现 <$', () => {
     const text = parseInline('命中{{hit:<$命中__力量$>}}，伤害<$damage_avg__5+str$>').map((s) => s.text).join('')
     expect(text).not.toContain('<$')

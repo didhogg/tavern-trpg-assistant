@@ -42,7 +42,7 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
     expect(missing).toEqual([])
     for (const [oldId, redirect] of Object.entries(ID_REDIRECTS)) expect(all.has(redirect.to), `${oldId} → ${redirect.to}`).toBe(true)
     expect([...all.values()].filter((e) => e.type === 'item' && e.data.category === 'template')).toHaveLength(82)
-    expect([...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family')).toHaveLength(37)
+    expect([...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family').length).toBeGreaterThanOrEqual(37)
     expect([...all.values()].filter((e) => e.type === 'feature' && e.data.role === 'intro')).toHaveLength(109)
   })
   it('B requires 表、layer 严格向下、无环', async () => {
@@ -82,7 +82,7 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
   it('E 家族后缀、无成员指针、成员数与层级、沙姆管双家族', async () => {
     const packs = await loadPacks(); const all = allOf(packs)
     const families = [...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family')
-    expect(families).toHaveLength(37)
+    expect(families.length).toBeGreaterThanOrEqual(37) // 来源的 37 个家族 + 之后加的系列（如卓尔装备）；不再写死总数
     for (const f of families) { expect(f.name.endsWith('（系列）'), f.id).toBe(true); expect(String(f.nameEn).endsWith(' (Family)'), f.id).toBe(true) }
     expect([...all.values()].filter((e) => e.type === 'item' && e.data.family !== undefined)).toEqual([])
     const counts = new Map(families.map((f) => [f.name, (f.data.members as string[]).length]))

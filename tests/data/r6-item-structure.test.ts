@@ -38,6 +38,6 @@ describe('R6 物品内部结构', () => {
   it('家族数量至少 38', async () => {
     const all = await load()
     const families = [...all.values()].filter((e) => e.type === 'item' && e.data.category === 'family')
-    expect(families).toHaveLength(37)
+    expect(families.length).toBeGreaterThanOrEqual(37) // 来源的 37 个家族 + 之后加的系列（如卓尔装备）；不再写死总数
   })
 })

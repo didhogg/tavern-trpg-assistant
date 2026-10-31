@@ -7,6 +7,9 @@ const itemGrant = z.looseObject({
   items: z.array(entryIdSchema),
   optional: z.union([z.boolean(), z.string().max(30)]).default(false),
   replaces: z.string().max(200).optional(),
+  /** 跨包可选授予（optional: 'tce-ocf'）：目标的显示名与所在的包，目标没装时界面用它们显示并引导安装。 */
+  labels: z.record(z.string(), z.string().max(200)).optional(),
+  packId: z.string().max(80).optional(),
 })
 
 const itemChoice = z.looseObject({

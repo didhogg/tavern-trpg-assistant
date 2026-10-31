@@ -11,6 +11,7 @@ import { loadBookData } from './extract/books'
 import { planR12 } from './convert/planR12'
 import { loadR11Data } from './extract/r11'
 import { convertAll, type ConversionResult } from './convert'
+import { labelOptionalGrants } from './convert/grantLabels'
 import { validatePacks, assertVolume } from './validate'
 import { assertFieldCoverage } from './validate/coverage'
 import { BASELINE_ALIASES } from './config/baselineAliases'
@@ -28,6 +29,7 @@ import { writeChecklist11 } from './report/checklist11'
 import { writeDataRepo } from './publish/write'
 import { runEnglishPass } from './i18n/run'
 import { alignAll } from './i18n/align'
+import { unifyNameEn } from './i18n/nameEn'
 import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
@@ -82,6 +84,7 @@ async function main(): Promise<void> {
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   console.log(`R15 补字段：${JSON.stringify(carryStats)}`)
+  console.log(`S1 可选授予显示名：${labelOptionalGrants(result.packs)} 处`)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
@@ -102,6 +105,7 @@ async function main(): Promise<void> {
   console.log(`英文条目 ${english.entries.length}，已加 i18n：${Object.values(aligned.stats).reduce((n, s) => n + s.withEnglish, 0)}/${allConverted.length}`)
   const i18nErrors = validateI18n(allConverted)
   if (i18nErrors.length) throw new Error(`英文对照校验失败 ${i18nErrors.length} 条：${i18nErrors.slice(0, 10).join('；')}`)
+  console.log(`S1 英文名统一取英文那一遍：${unifyNameEn(allConverted)} 条`)
   validatePacks(result.packs)
   assertDelivered(result.packs.flatMap((p) => p.entries), FIELD_COVERAGE)
   const layers = checkLayers(result.packs)

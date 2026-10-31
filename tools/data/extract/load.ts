@@ -1,3 +1,4 @@
+import { applyVariantSeries } from '../convert/series'
 import { expandVersions } from './versions'
 import { join } from 'node:path'
 import { BOOK_SOURCES } from '../config/books'
@@ -295,7 +296,7 @@ async function loadFoundry(path: string, key: string): Promise<Raw[]> {
   return list.filter(isObj).filter((item) => BOOK_SOURCES.has(String(item.source)))
 }
 
-export async function loadRawData(): Promise<RawData> {
+async function loadRawDataBase(): Promise<RawData> {
   const unsupportedMods: UnsupportedMod[] = []
   const booksRaw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, 'books.json'))
   const books = (Array.isArray(booksRaw.book) ? booksRaw.book : []).filter(isObj).map((b) => ({ source: String(b.source), name: String(b.name), translator: typeof b.translator === 'string' ? b.translator : undefined }))
@@ -338,4 +339,9 @@ export async function loadRawData(): Promise<RawData> {
     fluff: await loadFluff(unsupportedMods),
     unsupportedMods,
   }
+}
+
+/** 加载全部来源数据；加载后应用「系列」（卓尔装备等：改名与家族条目，见 config/series.ts）。 */
+export async function loadRawData(): Promise<RawData> {
+  return applyVariantSeries(await loadRawDataBase())
 }

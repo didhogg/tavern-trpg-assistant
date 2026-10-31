@@ -58,10 +58,10 @@ export const BASELINE_ALIASES: Entry[] = [
     "id": "item.rapier-sword-of-sharpness.dmg",
     "keywords": [
       "锐锋刺剑",
-      "锐锋Rapier"
+      "Sword of Sharpness Rapier"
     ],
     "name": "锐锋刺剑",
-    "nameEn": "锐锋Rapier",
+    "nameEn": "Sword of Sharpness Rapier",
     "summary": "锐锋刺剑｜武器·极稀有｜1d8 穿刺",
     "type": "item",
     "unique": false
@@ -120,10 +120,10 @@ export const BASELINE_ALIASES: Entry[] = [
     "id": "item.rapier-vorpal-sword.dmg",
     "keywords": [
       "斩首刺剑",
-      "斩首Rapier"
+      "Vorpal Sword Rapier"
     ],
     "name": "斩首刺剑",
-    "nameEn": "斩首Rapier",
+    "nameEn": "Vorpal Sword Rapier",
     "summary": "斩首刺剑｜武器·传奇｜1d8+3 穿刺",
     "type": "item",
     "unique": false
@@ -187,10 +187,10 @@ export const BASELINE_ALIASES: Entry[] = [
     "id": "item.shortsword-sword-of-sharpness.dmg",
     "keywords": [
       "锐锋短剑",
-      "锐锋Shortsword"
+      "Sword of Sharpness Shortsword"
     ],
     "name": "锐锋短剑",
-    "nameEn": "锐锋Shortsword",
+    "nameEn": "Sword of Sharpness Shortsword",
     "summary": "锐锋短剑｜武器·极稀有｜1d6 穿刺",
     "type": "item",
     "unique": false
@@ -251,10 +251,10 @@ export const BASELINE_ALIASES: Entry[] = [
     "id": "item.shortsword-vorpal-sword.dmg",
     "keywords": [
       "斩首短剑",
-      "斩首Shortsword"
+      "Vorpal Sword Shortsword"
     ],
     "name": "斩首短剑",
-    "nameEn": "斩首Shortsword",
+    "nameEn": "Vorpal Sword Shortsword",
     "summary": "斩首短剑｜武器·传奇｜1d6+3 穿刺",
     "type": "item",
     "unique": false

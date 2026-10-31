@@ -1,6 +1,6 @@
 import type { Raw } from '../extract/load'
 import { BOOK_SOURCES } from '../config/books'
-import { slug } from '../lib/slug'
+import { slug } from '../lib/slug'; import { SERIES_BY_KEY } from '../config/series'
 
 function isObj(value: unknown): value is Raw {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -55,13 +55,13 @@ function itemCategory(base: Raw, variant: Raw): string {
 
 function displayName(variant: Raw, base: Raw): { name: string; nameEn: string } {
   const inherits = isObj(variant.inherits) ? variant.inherits : {}
-  const prefix = str(inherits.namePrefix).trim()
-  const suffix = str(inherits.nameSuffix).trim()
+  const prefix = process.env.TRPG_DATA_LANG === 'en' ? str(inherits.namePrefix) : str(inherits.namePrefix).trim() // 英文前缀保留结尾的空格（Vicious Battleaxe）；中文名里不加空格（反魔法胸甲）
+  const suffix = str(inherits.nameSuffix)
   const baseName = str(base.name)
   const baseEn = str(base.ENG_name)
-  if (prefix.startsWith('+')) return { name: `${baseName} ${prefix}`, nameEn: `${baseEn} ${prefix}`.trim() }
-  if (prefix) return { name: `${prefix}${baseName}${suffix}`, nameEn: `${prefix}${baseEn}${suffix}`.trim() }
-  return { name: `${baseName}${suffix}`, nameEn: `${baseEn}${suffix}`.trim() }
+  if (prefix.trim().startsWith('+')) return { name: `${baseName} ${prefix.trim()}`.trim(), nameEn: `${baseEn} ${prefix.trim()}`.trim() }
+  if (prefix) return { name: `${prefix}${baseName}${suffix}`.trim(), nameEn: `${prefix}${baseEn}${suffix}`.trim() }
+  return { name: `${baseName}${suffix}`.trim(), nameEn: `${baseEn}${suffix}`.trim() }
 }
 
 /** 变体对基础物品价格、重量的调整：valueMult/weightMult，或「[[baseItem.value]] + N」形式的 valueExpression。 */
@@ -124,7 +124,7 @@ export function expandMagicVariants(data: { items: Raw[]; baseItems: Raw[]; magi
       created++
     }
   }
-  return { items: out, created, skipped }
+  return applySeriesExpansion({ items: out, created, skipped })
 }
 
 /** 普通物品（items.json）与基础物品（items-base.json）合并；同名同书的基础物品让位给魔法物品。 */
@@ -132,4 +132,16 @@ export function mergeItemLists(items: Raw[], baseItems: Raw[], expanded: Raw[]):
   const magicNames = new Set(items.map((i) => `${i.source}|${i.name}`))
   const bases = baseItems.filter((b) => !magicNames.has(`${b.source}|${b.name}`)).map((b) => ({ ...b, _baseOnly: true }))
   return [...bases, ...items, ...expanded]
+}
+
+/** S1：系列变体（卓尔装备等）展开后，去掉系列不适用的基础物品（枪械）与变体自己 excludes 的基础物品（网）。 */
+function applySeriesExpansion(result: { items: Raw[]; created: number; skipped: number }): { items: Raw[]; created: number; skipped: number } {
+  const kept = result.items.filter((item) => {
+    const variant = isObj(item._variant) ? item._variant : undefined
+    const series = variant ? SERIES_BY_KEY.get(str(variant._series)) : undefined
+    if (!variant || !series) return true
+    const base = isObj(item._baseItem) ? item._baseItem : {}
+    return !series.excludeBase(base) && !(isObj(variant.excludes) && matches(variant.excludes, base))
+  })
+  return { items: kept, created: result.created - (result.items.length - kept.length), skipped: result.skipped }
 }
