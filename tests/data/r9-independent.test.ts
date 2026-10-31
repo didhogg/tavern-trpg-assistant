@@ -2,10 +2,16 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { loadAllPacks } from './r9-pack-helpers'
+import { FIELD_COVERAGE } from '../../tools/data/config/fieldCoverage'
 
 const reference = JSON.parse(readFileSync(join(process.cwd(), 'docs/probes/D1.2a_R9_参考清单.json'), 'utf8')) as { survivors: Array<{ kind: string; source: string; oldId: string | null }>; redirects: unknown[]; dropped: unknown[] }
 
 describe('R9 独立数量', () => {
+  it('R9 来源类型矩阵没有 lost', () => {
+    const types = new Set(['table', 'table-group', 'life-class', 'life-background', 'life-trinket', 'name', 'deck', 'card', 'hoard', 'individual', 'gems', 'art-object', 'magic-item', 'encounter', 'cr', 'dragon', 'dragon-mundane-item'])
+    expect(Object.entries(FIELD_COVERAGE).filter(([path, entry]) => types.has(path.split('.', 1)[0]) && entry.how === 'lost')).toEqual([])
+  })
+
   it('最终 1078、kind/来源分布与参考清单和文档锚点一致', () => {
     const packs = loadAllPacks()
     const tables = packs.flatMap((pack) => pack.entries).filter((entry) => entry.type === 'table')

@@ -3,7 +3,7 @@ import type { CoverageEntry } from '../config/fieldCoverage'
 import { KNOWN_EMPTY } from '../config/knownEmpty'
 
 /** 已完成并承诺兑现的工作包；每个包提交前加入。R0 为空。 */
-export const DELIVERED_WP: string[] = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R10', 'R11']
+export const DELIVERED_WP: string[] = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11']
 
 /** 核心范围没有数据的新类型；由 R11 的 5 条内存样本测试替代兑现检查。 */
 export const TYPES_WITHOUT_CORE_DATA = ['recipe', 'charoption'] as const
