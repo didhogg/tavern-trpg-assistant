@@ -1,3 +1,4 @@
+import { cleanEntries } from '../clean'
 import type { Entry, PackFeature, PackManifest } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
@@ -294,6 +295,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   markNpcRaces(planned, converted, versionStats)
   assignVersionGroups(planned, converted, versionStats)
   resolveFromVariant(planned, converted, versionStats)
+  cleanEntries(converted.values()) // R14：文字清理（在引用定型之后、分包之前）
   stats.unmappedFoundry = [...unmappedFoundry].map(([key, value]) => ({ key, ...value }))
   const packIds = [SRD_PACK_ID, ...BOOKS.map((b) => b.packId)]
   const packs: ConvertedPack[] = packIds.map((packId) => {
