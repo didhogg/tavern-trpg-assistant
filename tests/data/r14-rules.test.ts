@@ -81,3 +81,20 @@ describe('R14 规则 10 的副作用修正：暗蚀伤害不再被误判成力�
     expect(damageTypes('spell.eldritch-blast.phb')).toEqual(['force'])
   })
 })
+
+describe('R14 规则 9：restated', () => {
+  it('34 个背景的开头列表标了 restated，内容一字未删；其他条目没有标记', () => {
+    const flagged: string[] = []
+    const walk = (v: unknown, id: string): void => {
+      if (Array.isArray(v)) { v.forEach((x) => walk(x, id)); return }
+      if (v && typeof v === 'object') { const r = v as Rec; if (r.restated === true) flagged.push(id); Object.values(r).forEach((x) => walk(x, id)) }
+    }
+    for (const e of entries) walk(e.data.text, e.id)
+    expect(flagged).toHaveLength(34)
+    expect(flagged.every((id) => id.startsWith('background.'))).toBe(true)
+    const list = (byId.get('background.charlatan.phb')!.data.text as Array<Rec>)[0]
+    expect(list.restated).toBe(true)
+    expect((list.list as string[])[0]).toContain('技能熟练项：')
+    expect((list.list as string[]).length).toBe(3)
+  })
+})

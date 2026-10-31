@@ -4,7 +4,8 @@ import { z } from 'zod'
 export type TextBlock =
   | { p: string }
   | { h: string; body: TextBlock[]; anchor?: string }
-  | { list: string[] }
+  /** restated：这个列表只是把同一条目里的结构化字段（技能熟练项、语言、装备…）复述了一遍 */
+  | { list: string[]; restated?: boolean }
   | { table: { caption?: string; cols: string[]; rows: string[][] } }
   | { quote: string; by?: string }
   | { read: TextBlock[] }
@@ -14,7 +15,7 @@ export const textBlockSchema: z.ZodType<TextBlock> = z.lazy(() =>
   z.union([
     z.object({ p: z.string() }),
     z.object({ h: z.string(), body: z.array(textBlockSchema), anchor: z.string().optional() }),
-    z.object({ list: z.array(z.string()) }),
+    z.object({ list: z.array(z.string()), restated: z.boolean().optional() }),
     z.object({ table: z.object({ caption: z.string().optional(), cols: z.array(z.string()), rows: z.array(z.array(z.string())) }) }),
     z.object({ quote: z.string(), by: z.string().optional() }),
     z.object({ read: z.array(textBlockSchema) }),

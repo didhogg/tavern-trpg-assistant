@@ -26,6 +26,7 @@ function norm(value: unknown, key = ''): unknown {
         .filter((b) => !(typeof b.p === 'string' && b.p.trim() === ''))
         .map((b) => {
           const out: Rec = { ...b }
+          delete out.restated // 规则 9 只加这个标记
           if (Array.isArray(b.list)) { const kept = b.list.filter((x) => !(typeof x === 'string' && x.trim() === '')); out.list = kept }
           return out
         })
