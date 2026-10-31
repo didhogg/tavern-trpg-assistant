@@ -4,13 +4,13 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-R11 完成，下一项 R9（随机表）。
-- 目标：R11 新类型、recipe/charoption 转换器与校验形状已交付，等待规划 agent 复核。
-- 红线：不改界面（`typeLabels.ts`/分类名除外）；不新增依赖、不改包格式/manifest、不联网/推送/安装；不改锚点、不放宽断言。
-- 验收：`check`/`test:data`/`build`/`e2e` 通过，R11 来源类型矩阵 `lost` 为 0，条数与文档锚点一致。
+D1.2a：R7b、R10、R10b、R11 已完成并经规划 agent 复核；下一项 R9（随机表），再 R12 → R13 → R14 → R15。
+- 目标：R9 随机表（按 `docs/handoff/D1.2_全量结构化导入_交接.md` R9 行；执行文档由规划 agent 另写）。
+- 红线：不推送、不发布、不安装；官方书籍原文只手工核对规则；验收只能等 D1.2a 全部做完、推送、更新插件后由驾驶员真机查看。
+- 验收：`check`/`test:data`/`build`/`e2e` 通过，矩阵 `lost` 为 0（R15 前逐包收敛）。
 
 ## 已完成
-- D1.2a R11（完成待复审）：新类型 1,120 条；language 64、rule 新分类 140、deity 403、reward 79、cult 25、hazard 48、object 12、vehicle 4、monsterPart 345；recipe/charoption 仅转换器与 5+5 内存样本；矩阵 R11 lost 0；抽样核对表 0 不一致。
+- D1.2a R11（已复核）：新类型 1,120 条；规则新分类 id 带类别前缀（`rule.skill-…`、`rule.item-type-…`、`rule.quickref-…` 等），名称保持来源原样；MTF 三艘载具的背景文字已挂到 `lore`；language 64、rule 新分类 140、deity 403、reward 79、cult 25、hazard 48、object 12、vehicle 4、monsterPart 345；recipe/charoption 仅转换器与 5+5 内存样本；矩阵 R11 lost 0；抽样核对表 0 不一致。
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
   - RW9：`outputTypes.ts`、`plannedFields.ts` 与目标字段校验接入；1,846 条 `to` 修正，`data.system.*` 0，未登记 0；同路径 529 条，抽样 20 条见报告。
   - RW10：`wp` 自动一致性校验接入，1,108 条修正；`i18n.en.*` R13、版本字段 R10、`lore` R8、表 R9、书 R12、新类型 R11、法术标签 R7/其余 R14。

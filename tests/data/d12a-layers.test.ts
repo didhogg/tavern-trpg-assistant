@@ -97,7 +97,7 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
   it('F 同书同名 0 组（捕网无伤害版已加后缀）与治疗药水关键字', async () => {
     const packs = await loadPacks(); const all = allOf(packs)
     const groups = new Map<string, number>()
-    for (const e of all.values()) { if (e.type === 'feature' || e.type === 'deity') continue; const book = (e.data.src as { book?: string } | undefined)?.book ?? ''; const k = `${book}|${e.type}|${e.name}`; groups.set(k, (groups.get(k) ?? 0) + 1) }
+    for (const e of all.values()) { if (e.type === 'feature' || e.type === 'deity') continue; const book = (e.data.src as { book?: string } | undefined)?.book ?? ''; const k = `${book}|${e.type}|${e.name}|${String(e.data.category ?? e.data.partKind ?? e.data.hazardKind ?? '')}`; groups.set(k, (groups.get(k) ?? 0) + 1) }
     const dup = [...groups].filter(([, n]) => n > 1).map(([k]) => k)
     expect(dup).toHaveLength(0)
     const family = [...all.values()].find((e) => e.name === '治疗药水（系列）')!

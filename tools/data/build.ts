@@ -5,7 +5,7 @@ import { loadRawData } from './extract/load'
 import { expandMagicVariants, mergeItemLists } from './convert/items'
 import { expandItemEntries } from './extract/load'
 import { planAll } from './convert/plan'
-import { planR11 } from './convert/planR11'
+import { attachVehicleFluff, planR11 } from './convert/planR11'
 import { loadR11Data } from './extract/r11'
 import { convertAll, type ConversionResult } from './convert'
 import { validatePacks, assertVolume } from './validate'
@@ -60,6 +60,7 @@ async function main(): Promise<void> {
   const r11Data = await loadR11Data()
   const r11 = planR11(r11Data, plan.entries)
   plan.entries.push(...r11.entries)
+  console.log(`载具 fluff 挂上：${attachVehicleFluff(data.fluff ?? [], r11.entries, plan.unmatchedFluff)}`)
   console.log(`计划条目：${plan.entries.length}（R11 ${r11.entries.length}），随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)

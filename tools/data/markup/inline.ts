@@ -13,8 +13,11 @@ export interface RefIndex {
   byTypeNameSource: Map<string, RefTarget>
 }
 
+/** R11 新增的规则分类只登记在「类别键」下：与旧规则（动作、变体规则）同名时，不能抢走旧规则的 `rule|名称` 键。 */
+const R11_RULE_CATEGORIES = new Set(['script', 'skill', 'sense', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref'])
+
 export function addRef(index: RefIndex, target: RefTarget, source: string): void {
-  const keys = [`${target.type}|${target.name}`]
+  const keys = target.type === 'rule' && target.category && R11_RULE_CATEGORIES.has(target.category) ? [] : [`${target.type}|${target.name}`]
   if (target.type === 'rule' && target.category) keys.push(`rule:${target.category}|${target.name}`)
   for (const key of keys) {
     const list = index.byTypeName.get(key) ?? []

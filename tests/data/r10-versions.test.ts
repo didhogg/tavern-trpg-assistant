@@ -67,7 +67,7 @@ describe('R10 重印标记、NPC 种族、同书同名', () => {
     const groups = new Map<string, string[]>()
     for (const e of all.values()) {
       if (e.type === 'feature' || e.type === 'deity') continue
-      const key = `${e.type}|${(d(e).src as { book: string }).book}|${e.name}`
+      const key = `${e.type}|${(d(e).src as { book: string }).book}|${e.name}|${String(d(e).category ?? d(e).partKind ?? d(e).hazardKind ?? '')}`
       groups.set(key, [...(groups.get(key) ?? []), e.id])
     }
     expect([...groups].filter(([, v]) => v.length > 1)).toEqual([])

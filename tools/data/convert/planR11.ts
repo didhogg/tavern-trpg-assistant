@@ -1,5 +1,6 @@
 import type { Raw } from '../extract/load'
-import type { PlannedEntry, PlannedType } from './plan'
+import type { FluffRecord } from '../extract/fluff'
+import type { FluffUnmatched, PlannedEntry, PlannedType } from './plan'
 import { BOOK_BY_SOURCE, PACK_BY_SOURCE, SRD_PACK_ID } from '../config/books'
 import { slug } from '../lib/slug'
 import type { R11Data } from '../extract/r11'
@@ -9,6 +10,11 @@ const PANTHEON_EN: Record<string, string> = {
   被遗忘的国度: 'forgotten-realms',
   非人类: 'nonhuman',
   北欧: 'norse',
+}
+
+/** 新增规则分类的 id 前缀（R11 执行文档 3.2）：同名的物品属性、物品类型、速查、变体规则靠前缀区分，不靠 -2 后缀。 */
+const RULE_ID_PREFIX: Record<string, string> = {
+  script: 'script', skill: 'skill', sense: 'sense', itemProperty: 'item-property', itemType: 'item-type', itemTypeExtra: 'item-type-extra', quickref: 'quickref',
 }
 
 function str(value: unknown): string {
@@ -36,7 +42,9 @@ export function planR11(data: R11Data, existing: PlannedEntry[]): PlanR11Result 
     if (!name) throw new Error(`条目没有名称（类型 ${type}，来源 ${source || '未知'}）`)
     const book = BOOK_BY_SOURCE.get(source)
     if (!book) throw new Error(`来源不在白名单内：${source}（${name}）`)
-    const base = `${type === 'monsterPart' ? 'monsterpart' : type}.${parts.map((part) => part || 'entry').join('-')}.${source.toLowerCase()}`
+    const prefix = type === 'rule' ? RULE_ID_PREFIX[context.ruleCategory ?? ''] : undefined
+    const idParts = prefix ? [`${prefix}-${parts.map((part) => part || 'entry').join('-')}`] : parts
+    const base = `${type === 'monsterPart' ? 'monsterpart' : type}.${idParts.map((part) => part || 'entry').join('-')}.${source.toLowerCase()}`
     let id = base
     let n = 2
     while (used.has(id)) id = `${base}-${n++}`
@@ -136,4 +144,26 @@ export function planR11(data: R11Data, existing: PlannedEntry[]): PlanR11Result 
   for (const raw of data.quickrefs) push(make('rule', { ...raw, _ruleCategory: 'quickref' }, [slug(str(raw.ENG_name) || str(raw.name))], str(raw.source), { ruleCategory: 'quickref' }))
 
   return { entries: out, deityConflicts }
+}
+
+/** 载具的 fluff：`planAll` 运行时载具条目还没规划，在这里补挂到条目的 `_lore`，并把已挂上的从 unmatched 里去掉。返回挂上的条数。 */
+export function attachVehicleFluff(fluff: FluffRecord[], entries: PlannedEntry[], unmatched: FluffUnmatched[]): number {
+  let attached = 0
+  for (const record of fluff) {
+    if (record.kind !== 'vehicle') continue
+    const value = record.raw.entries
+    if (!(Array.isArray(value) ? value.length > 0 : !!value)) continue
+    const source = str(record.raw.source)
+    const name = str(record.raw.name)
+    const nameEn = str(record.raw.ENG_name)
+    const target = entries.find((entry) => entry.type === 'vehicle' && entry.source === source && (entry.name === name || entry.nameEn === nameEn))
+    if (!target) continue
+    if (target.packId === SRD_PACK_ID) throw new Error(`载具 fluff 的目标在 SRD 包里，需要 lore 补丁条目：${target.id}`)
+    if (target.raw._lore !== undefined) throw new Error(`载具 lore 目标重复：${target.id}`)
+    target.raw = { ...target.raw, _lore: value }
+    attached++
+    const at = unmatched.findIndex((item) => item.kind === 'vehicle' && item.name === (nameEn || name) && item.source === source)
+    if (at >= 0) unmatched.splice(at, 1)
+  }
+  return attached
 }

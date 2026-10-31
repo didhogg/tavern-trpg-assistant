@@ -94,7 +94,7 @@ export function disambiguateNames(planned: PlannedEntry[], stats: VersionStats):
   const groups = new Map<string, PlannedEntry[]>()
   for (const e of planned) {
     if (e.type === 'feature' || e.type === 'lore' || e.raw._family === true || e.raw._deityConflict === true) continue
-    const key = `${e.type}|${e.source}|${e.name}`
+    const key = `${e.type}|${e.source}|${e.name}|${e.context.ruleCategory ?? e.context.partKind ?? e.context.hazardKind ?? ''}`
     groups.set(key, [...(groups.get(key) ?? []), e])
   }
   const features = new Map<string, number>()
@@ -122,7 +122,7 @@ export function disambiguateNames(planned: PlannedEntry[], stats: VersionStats):
 /** 动作（来源 action）的 fromVariant 指向可选规则（变体规则）条目："名称" 或 "名称|书"。 */
 export function resolveFromVariant(planned: PlannedEntry[], converted: Map<string, Entry>, stats: VersionStats): void {
   const rules = new Map<string, PlannedEntry>()
-  for (const e of planned) if (e.type === 'rule') rules.set(`${e.source}|${e.name}`, e)
+  for (const e of planned) if (e.type === 'rule' && (e.context.ruleCategory === 'variant' || e.context.ruleCategory === 'action')) rules.set(`${e.source}|${e.name}`, e)
   for (const entry of planned) {
     if (entry.type !== 'rule' || typeof entry.raw.fromVariant !== 'string') continue
     const [name, source] = entry.raw.fromVariant.split('|')
