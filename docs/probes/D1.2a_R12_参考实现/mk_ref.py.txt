@@ -1,0 +1,27 @@
+import json,collections,sys
+S=sys.argv[1]+'/r12'
+ch=json.load(open(S+'/ch.json')); ol=json.load(open(S+'/outline.json')); tb=json.load(open(S+'/tables.json')); bl=json.load(open(S+'/blocks.json'))
+BOOKN={'PHB':'玩家手册（2014）','SCAG':'剑湾冒险者指南','DMG':'城主指南（2014）','MM':'怪物图鉴（2014）','XGE':'珊娜萨的万事指南','TCE':'塔莎的万事坩埚','VGM':'瓦罗怪物指南','MTF':'魔邓肯的众敌卷册','MPMM':'魔邓肯巨献：多元宇宙的怪物','BMT':'万象无常书'}
+out=[]
+for c in ch:
+    o=c['ordinal']
+    ot='' if not o else (f"第{o['identifier']}章" if o['type']=='chapter' else f"附录{o.get('identifier','')}")
+    t=tb[c['id']]; b=bl[c['id']]
+    out.append({'id':c['id'],'source':c['source'],'order':c['order'],'ordinal':o,'name':c['title'],'nameEn':c['titleEn'],'page':c['page'],'anchor':c['anchor'],'packId':c['packId'],
+      'summary':BOOKN[c['source']]+(' · '+ot if ot else ''),'outlineCount':c['outlineCount'],
+      'tableBlocks':len(t),'tableRefs':sum(1 for x in t if x['mode']=='ref'),'inlineTables':sum(1 for x in t if x['mode']=='inline'),
+      'statblocks':len(b),'statblockRefs':sum(1 for x in b if x['mode']!='fluff'),'fluffEmbeds':sum(1 for x in b if x['mode']!='ref')})
+tot={'chapters':len(out),'outline':sum(c['outlineCount'] for c in out),'tableBlocks':sum(c['tableBlocks'] for c in out),'tableRefs':sum(c['tableRefs'] for c in out),'inlineTables':sum(c['inlineTables'] for c in out),
+ 'statblocks':sum(c['statblocks'] for c in out),'statblockRefs':sum(c['statblockRefs'] for c in out),'fluffEmbeds':sum(c['fluffEmbeds'] for c in out),'prunedStatblockRefs':sum(1 for l in bl.values() for x in l if x['pruned']),
+ 'chaptersWithoutPage':sum(1 for c in out if c['page'] is None),'perBook':dict(collections.Counter(c['source'] for c in out))}
+pb=collections.defaultdict(lambda: collections.Counter())
+for c in out:
+    for k in ('tableBlocks','statblocks','fluffEmbeds','outlineCount','inlineTables'): pb[c['source']][k]+=c[k]
+tot['perBookCounts']={k:dict(v) for k,v in pb.items()}
+D='docs/probes/'
+json.dump({'totals':tot,'chapters':out},open(D+'D1.2a_R12_参考章节.json','w'),ensure_ascii=False,indent=1)
+json.dump(ol,open(D+'D1.2a_R12_参考小节目录.json','w'),ensure_ascii=False,separators=(',',':'))
+json.dump(tb,open(D+'D1.2a_R12_参考表对应.json','w'),ensure_ascii=False,separators=(',',':'))
+json.dump(bl,open(D+'D1.2a_R12_参考嵌入块.json','w'),ensure_ascii=False,separators=(',',':'))
+print(json.dumps(tot,ensure_ascii=False))
+print('titleEn markup left',sum(1 for l in ol.values() for o in l if o['titleEn'] and '{' in o['titleEn']),'title markup left',sum(1 for l in ol.values() for o in l if '{' in o['title']))

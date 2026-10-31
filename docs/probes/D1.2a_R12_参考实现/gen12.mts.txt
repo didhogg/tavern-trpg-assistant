@@ -1,0 +1,132 @@
+import { writeFileSync } from 'node:fs'
+const R = '/Users/xxx/tavern-trpg-assistant/tools/data/'
+const { loadRawData, expandItemEntries } = await import(R + 'extract/load.ts')
+const { expandMagicVariants, mergeItemLists } = await import(R + 'convert/items.ts')
+const { planAll } = await import(R + 'convert/plan.ts')
+const { planR11 } = await import(R + 'convert/planR11.ts')
+const { planR9 } = await import(R + 'convert/planR9.ts')
+const { loadR11Data } = await import(R + 'extract/r11.ts')
+const data = await loadRawData()
+const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants, foundryVariants: data.foundryVariants })
+const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
+const plan = planAll(data, items)
+const r11 = planR11(await loadR11Data(), plan.entries)
+plan.entries.push(...r11.entries)
+
+import { readFileSync } from 'node:fs'
+const { buildCandidates } = await import(R + 'convert/r9Candidates.ts')
+const { selectSurvivors } = await import(R + 'convert/r9Golden.ts')
+const lib = await import(R + 'convert/r9lib.ts')
+const inl = await import(R + 'markup/inline.ts')
+const { SRD_PACK_ID, PACK_BY_SOURCE } = await import(R + 'config/books.ts')
+const r11ids = new Set(r11.entries.map((e: any) => e.id))
+const pool = buildCandidates(plan, data.legendaryGroups, r11ids)
+const g = selectSurvivors(pool, plan.entries)
+const survOf = (c: any) => c.survivorIndex !== undefined ? pool[c.survivorIndex] : c
+const byHk = new Map<string, any[]>()
+const hk = (rows: any[], expr?: string) => JSON.stringify([expr ?? null, rows.map((r) => [r.min ?? null, r.max ?? null, r.cells.map(lib.normRaw).join('|')])])
+for (const c of pool) { const k = hk(c.rows, c.ref ? undefined : c.expr); byHk.set(k, [...(byHk.get(k) ?? []), c]) }
+
+const { slug } = await import(R + 'lib/slug.ts')
+const DD = '/Users/xxx/tavern-trpg-assistant/reference/5etools-cn-main（数据库）/data/'
+const sources = ['PHB','SCAG','MM','VGM','MTF','DMG','XGE','TCE','MPMM','BMT']
+const books = Object.fromEntries(JSON.parse(readFileSync(DD + 'books.json', 'utf8')).book.map((b: any) => [b.source, b]))
+const survById = new Map(g.survivors.map((s: any) => [s.id, s]))
+const plainTitle = (t: string) => { let o = t; for (let i = 0; i < 8 && o.includes('{@'); i++) o = o.replace(/\{@\w+ ([^{}]*)\}/g, (_m: string, inner: string) => inner.split('|')[0]); return o }
+const TAGTYPE: Record<string, string> = { creature: 'monster', spell: 'spell', item: 'item', race: 'race', subclass: 'subclass', optfeature: 'feature', reward: 'reward', feat: 'feat', condition: 'condition', trap: 'hazard', hazard: 'hazard', background: 'background', class: 'class', action: 'rule:action', variantrule: 'rule:variant', object: 'object', deity: 'deity', disease: 'disease' }
+const index: any = { byTypeName: new Map(), byTypeNameSource: new Map() }
+for (const e of [...plan.entries, ...g.survivors.map((s: any) => ({ id: s.id, type: 'table', name: s.name, nameEn: s.nameEn, packId: PACK_BY_SOURCE.get(s.source), source: s.source, context: {} }))] as any[]) {
+  inl.addRef(index, { id: e.id, type: e.type, name: e.name, packId: e.packId, category: e.context?.ruleCategory }, e.source)
+  if (e.nameEn && e.nameEn !== e.name) inl.addRef(index, { id: e.id, type: e.type, name: e.nameEn, packId: e.packId, category: e.context?.ruleCategory }, e.source)
+}
+const resolve = (type: string, name: string, enName: string, src: string | undefined, book: string) => {
+  for (const nm of [name, enName]) {
+    const k = type + '|' + nm
+    const t = (src ? index.byTypeNameSource.get(k + '|' + src.toUpperCase()) : undefined) ?? index.byTypeNameSource.get(k + '|' + book) ?? index.byTypeName.get(k)?.[0] ?? (type.startsWith('rule:') ? index.byTypeName.get('rule|' + nm)?.[0] : undefined)
+    if (t) return t
+  }
+  return undefined
+}
+const SKIP = new Set(['table', 'tableGroup', 'image', 'gallery', 'statblock', 'list'])
+const chaptersOut: any[] = [], outlineOut: Record<string, any[]> = {}, tablesOut: Record<string, any[]> = {}, blocksOut: Record<string, any[]> = {}
+const issues: string[] = []
+for (const src of sources) {
+  const j = JSON.parse(readFileSync(DD + 'book/book-' + src.toLowerCase() + '.json', 'utf8'))
+  const chapters = j.bookData[0].data
+  const contents = books[src].contents
+  if (contents.length !== chapters.length) throw new Error('contents mismatch ' + src)
+  const usedIds = new Set<string>()
+  chapters.forEach((ch: any, order: number) => {
+    const c = contents[order]
+    const id = 'book.' + slug(c.ENG_name) + '.' + src.toLowerCase()
+    if (usedIds.has(id)) throw new Error('dup chapter id ' + id)
+    usedIds.add(id)
+    const anchor = src.toLowerCase() + '-' + ch.id
+    // outline
+    const outline: any[] = []
+    const walkO = (n: any, parent: string, level: number) => {
+      if (Array.isArray(n)) { for (const x of n) walkO(x, parent, level); return }
+      if (!n || typeof n !== 'object') return
+      if (SKIP.has(n.type)) return
+      let p = parent, l = level
+      if (['section', 'entries', 'inset'].includes(n.type) && n.name) {
+        const a = src.toLowerCase() + '-' + n.id
+        outline.push({ anchor: a, parent, level: level + 1, kind: n.type, title: plainTitle(n.name), titleEn: n.ENG_name ? plainTitle(n.ENG_name) : null, page: n.page ?? null })
+        p = a; l = level + 1
+      }
+      for (const [k, v] of Object.entries(n)) if (v && typeof v === 'object') walkO(v, p, l)
+    }
+    walkO(ch.entries, anchor, 0)
+    outlineOut[id] = [{ anchor, parent: null, level: 0, kind: 'section', title: plainTitle(ch.name), titleEn: ch.ENG_name ? plainTitle(ch.ENG_name) : null, page: ch.page ?? null }, ...outline]
+    // tables & statblocks
+    const tl: any[] = [], bl: any[] = []
+    const walk = (n: any, fromFluff: boolean, nestedIn: number | null = null) => {
+      if (Array.isArray(n)) { for (const x of n) walk(x, fromFluff); return }
+      if (!n || typeof n !== 'object') return
+      if (n.type === 'table') {
+        const parsed = lib.parseLabel(Array.isArray(n.colLabels) ? n.colLabels[0] : undefined)
+        const rowsRaw = (Array.isArray(n.rows) ? n.rows : []).map((r: any) => Array.isArray(r) ? r : (r && Array.isArray(r.row) ? r.row : []))
+        let rows: any[] = []; let ok = true
+        if (parsed) { for (const r of rowsRaw) { const rg = lib.rangeOf(r[0], parsed.hi); if (!rg) { ok = false; break } rows.push({ ...rg, cells: r.slice(1).map(lib.cellText) }) } }
+        else { try { rows = lib.refRows(n.rows) } catch { ok = false } }
+        let ids: string[] = []
+        if (ok && rows.length) {
+          const cands = (byHk.get(hk(rows, parsed ? parsed.expr : undefined)) ?? []).filter((c) => c.source === src)
+          ids = [...new Set(cands.map((c: any) => survOf(c).id))] as string[]
+        }
+        if (ids.length > 1) issues.push('ambiguous ' + id + ' ' + (n.caption ?? ''))
+        const sv = ids.length === 1 ? survById.get(ids[0]) : undefined
+        if (sv && !(sv.source === src || sv.srd)) issues.push('cross-pack ' + id + ' ' + ids[0])
+        const myOrd = tl.length
+        tl.push({ ord: myOrd, nestedIn, caption: n.caption ?? null, rows: (n.rows ?? []).length, fromFluff, mode: ids.length === 1 ? 'ref' : 'inline', tableId: ids.length === 1 ? ids[0] : null, label: sv ? sv.name + (sv.ref ? '' : '（' + lib.storageDice(sv.expr) + '）') : null })
+        for (const r of rowsRaw) for (const cell of r) if (cell && typeof cell === 'object' && cell.type === 'table') walk(cell, fromFluff, myOrd)
+        return
+      }
+      if (n.type === 'statblock') {
+        const tag = n.tag ?? null, fluff = n.prop === 'monsterFluff'
+        let target: any = null
+        if (tag) {
+          target = resolve(TAGTYPE[tag], n.name, n.ENG_name, n.source, src)
+          if (!target && tag === 'race') {
+            const m = /^(.*?) \((.*)\)$/.exec(n.ENG_name)
+            if (m) { const rev = m[2] + ' ' + m[1]; const S2 = (n.source ?? src).toUpperCase(); target = index.byTypeNameSource.get('subrace|' + rev + '|' + S2) ?? index.byTypeName.get('subrace|' + rev)?.[0] }
+          }
+        }
+        bl.push({ ord: bl.length, tag, prop: n.prop ?? null, name: n.name, nameEn: n.ENG_name, source: n.source ?? null, mode: tag && fluff ? 'refAndFluff' : tag ? 'ref' : 'fluff', target: target?.id ?? null, pruned: target ? !(target.packId === PACK_BY_SOURCE.get(src) || target.packId === SRD_PACK_ID) : null })
+        if (fluff) {
+          const rec = (data.fluff as any[]).find((f: any) => f.kind === 'monster' && (f.raw.ENG_name === n.ENG_name || f.raw.name === n.name) && f.raw.source === n.source)
+          if (!rec) throw new Error('fluff missing ' + n.ENG_name)
+          walk(rec.raw.entries, true)
+        }
+        return
+      }
+      for (const v of Object.values(n)) if (v && typeof v === 'object') walk(v, fromFluff)
+    }
+    walk(ch.entries, false)
+    tablesOut[id] = tl; blocksOut[id] = bl
+    chaptersOut.push({ id, source: src, order, ordinal: c.ordinal ?? null, title: ch.name, titleEn: ch.ENG_name ?? null, titleContents: c.name, titleEnContents: c.ENG_name, page: ch.page ?? null, anchor, packId: PACK_BY_SOURCE.get(src), outlineCount: outlineOut[id].length, tables: tl.length, statblocks: bl.length })
+  })
+}
+const dir = process.argv[2]
+writeFileSync(dir + '/ch.json', JSON.stringify(chaptersOut)); writeFileSync(dir + '/outline.json', JSON.stringify(outlineOut)); writeFileSync(dir + '/tables.json', JSON.stringify(tablesOut)); writeFileSync(dir + '/blocks.json', JSON.stringify(blocksOut))
+console.log('chapters', chaptersOut.length, 'outline', Object.values(outlineOut).reduce((a, l) => a + l.length, 0), 'issues', issues)
