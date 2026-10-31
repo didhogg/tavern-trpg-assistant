@@ -3,7 +3,7 @@ import type { CoverageEntry } from './types'
 export const COVERAGE: Record<string, CoverageEntry> = {
   "subrace.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "subrace._versions": {"how":"mapped","to":"data.versionGroup","wp":"R10"},
-  "subrace._versions[].ENG_name": {"how":"mapped","to":"i18n.en.fields._versions","wp":"R13"},
+  "subrace._versions[].ENG_name": {"how":"dropped","kind":"derived","why":"「subrace._versions[].ENG_name」是 data._versions 这类结构化字段里的英文名；该结构与语言无关，只由中文侧承载，英文版不重复存放（R13 不复制结构化字段）"},
   "subrace._versions[]._implementations": {"how":"mapped","to":"data.versionGroup","wp":"R10"},
   "subrace._versions[]._implementations[]._variables": {"how":"mapped","to":"data.versionGroup","wp":"R10"},
   "subrace._versions[]._implementations[]._variables.area": {"how":"mapped","to":"data.versionGroup","wp":"R10"},

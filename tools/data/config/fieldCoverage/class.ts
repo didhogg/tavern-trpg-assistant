@@ -3,7 +3,7 @@ import type { CoverageEntry } from './types'
 export const COVERAGE: Record<string, CoverageEntry> = {
   "class.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "class.additionalSpells": {"how":"mapped","to":"data.effects","wp":"R1"},
-  "class.additionalSpells[].ENG_name": {"how":"mapped","to":"i18n.en.fields.additionalSpells","wp":"R13"},
+  "class.additionalSpells[].ENG_name": {"how":"dropped","kind":"derived","why":"「class.additionalSpells[].ENG_name」是 data.additionalSpells 这类结构化字段里的英文名；该结构与语言无关，只由中文侧承载，英文版不重复存放（R13 不复制结构化字段）"},
   "class.additionalSpells[].known": {"how":"mapped","to":"data.effects","wp":"R1"},
   "class.additionalSpells[].known.10": {"how":"mapped","to":"data.effects","wp":"R1"},
   "class.additionalSpells[].known.10[].choose": {"how":"mapped","to":"data.effects","wp":"R1"},
@@ -113,7 +113,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "class.multiclassing.requirements.wis": {"how":"mapped","to":"data.multiclass","wp":"R1"},
   "class.name": {"how":"mapped","to":"entry.name","wp":"R1"},
   "class.optionalfeatureProgression": {"how":"mapped","to":"data.advancement[].pool","wp":"R1"},
-  "class.optionalfeatureProgression[].ENG_name": {"how":"mapped","to":"i18n.en.fields.optionalfeatureProgression","wp":"R13"},
+  "class.optionalfeatureProgression[].ENG_name": {"how":"dropped","kind":"derived","why":"「class.optionalfeatureProgression[].ENG_name」是 data.optionalfeatureProgression 这类结构化字段里的英文名；该结构与语言无关，只由中文侧承载，英文版不重复存放（R13 不复制结构化字段）"},
   "class.optionalfeatureProgression[].featureType": {"how":"mapped","to":"data.advancement[].pool","wp":"R1"},
   "class.optionalfeatureProgression[].name": {"how":"mapped","to":"data.advancement[].pool","wp":"R1"},
   "class.optionalfeatureProgression[].progression": {"how":"mapped","to":"data.advancement[].pool","wp":"R1"},

@@ -1,7 +1,7 @@
 import type { CoverageEntry } from './types'
 
 export const COVERAGE: Record<string, CoverageEntry> = {
-  "book.data[].ENG_name": {"how":"mapped","to":"i18n.en.fields.data","wp":"R13"},
+  "book.data[].ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "book.data[].data": {"how":"dropped","kind":"internal-meta","why":"5etools 内部标记（生成速查与随机表用），章节条目不需要"},
   "book.data[].data.quickref": {"how":"dropped","kind":"internal-meta","why":"5etools 内部标记（生成速查与随机表用），章节条目不需要"},
   "book.data[].entries": {"how":"text","to":"data.text","wp":"R12"},

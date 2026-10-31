@@ -31,7 +31,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "table.rows[].row": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table.rows[].style": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table.rows[].type": {"how":"mapped","to":"data.rows","wp":"R9"},
-  "table.rows[][].ENG_name": {"how":"mapped","to":"i18n.en.fields.rows","wp":"R13"},
+  "table.rows[][].ENG_name": {"how":"mapped","to":"i18n.en.fields.rows[].cells[]","wp":"R13"},
   "table.rows[][].caption": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table.rows[][].colLabels": {"how":"mapped","to":"data.rows","wp":"R9"},
   "table.rows[][].colStyles": {"how":"mapped","to":"data.rows","wp":"R9"},

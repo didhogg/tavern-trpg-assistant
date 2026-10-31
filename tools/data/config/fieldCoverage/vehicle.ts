@@ -79,7 +79,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "vehicle.translator": {"how":"mapped","to":"data.credit.by","wp":"R11"},
   "vehicle.vehicleType": {"how":"mapped","to":"data.vehicleType","wp":"R11"},
   "vehicle.weapon": {"how":"mapped","to":"data.weapon","wp":"R11"},
-  "vehicle.weapon[].ENG_name": {"how":"mapped","to":"i18n.en.fields.weapon","wp":"R13"},
+  "vehicle.weapon[].ENG_name": {"how":"dropped","kind":"derived","why":"「vehicle.weapon[].ENG_name」是 data.weapon 这类结构化字段里的英文名；该结构与语言无关，只由中文侧承载，英文版不重复存放（R13 不复制结构化字段）"},
   "vehicle.weapon[].ac": {"how":"mapped","to":"data.weapon","wp":"R11"},
   "vehicle.weapon[].action": {"how":"mapped","to":"data.weapon","wp":"R11"},
   "vehicle.weapon[].action[].ENG_name": {"how":"mapped","to":"i18n.en.fields.weapon[].action","wp":"R13"},

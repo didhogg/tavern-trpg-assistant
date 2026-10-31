@@ -5,7 +5,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "object.ac": {"how":"mapped","to":"data.ac","wp":"R11"},
   "object.ac.special": {"how":"mapped","to":"data.ac.special","wp":"R11"},
   "object.actionEntries": {"how":"mapped","to":"data.actions","wp":"R11"},
-  "object.actionEntries[].ENG_name": {"how":"mapped","to":"i18n.en.fields.actionEntries","wp":"R13"},
+  "object.actionEntries[].ENG_name": {"how":"dropped","kind":"derived","why":"「object.actionEntries[].ENG_name」是 data.actionEntries 这类结构化字段里的英文名；该结构与语言无关，只由中文侧承载，英文版不重复存放（R13 不复制结构化字段）"},
   "object.actionEntries[].entries": {"how":"text","to":"data.text","wp":"R11"},
   "object.actionEntries[].entries[].attackEntries": {"how":"text","to":"data.text","wp":"R11"},
   "object.actionEntries[].entries[].attackType": {"how":"text","to":"data.text","wp":"R11"},
