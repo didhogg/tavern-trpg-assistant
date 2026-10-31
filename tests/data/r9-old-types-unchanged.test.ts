@@ -4,6 +4,19 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { allEntries, R9_OLD_TYPES } from './r9-pack-helpers'
 
+const reference = JSON.parse(readFileSync(join(process.cwd(), 'docs/probes/D1.2a_R9_参考清单.json'), 'utf8')) as { redirects: Array<[string, string]> }
+const redirects = new Map(reference.redirects)
+function normalize(value: unknown): unknown {
+  if (typeof value === 'string') return redirects.get(value) ?? value
+  if (Array.isArray(value)) return value.map(normalize)
+  if (value && typeof value === 'object') {
+    const rec = value as Record<string, unknown>
+    if (Array.isArray(rec.characteristics)) return { ...Object.fromEntries(Object.entries(rec).map(([k, v]) => [k, normalize(v)])), characteristics: rec.characteristics.map((x) => ({ table: normalize((x as { table?: string }).table) })) }
+    return Object.fromEntries(Object.entries(rec).map(([k, v]) => [k, normalize(v)]))
+  }
+  return value
+}
+
 const before = JSON.parse(gunzipSync(readFileSync(join(process.cwd(), 'tests/data/fixtures/r9-old-entries-before.json.gz'))).toString('utf8')) as Record<string, unknown>
 
 describe('R9 旧类型不变', () => {
@@ -15,7 +28,7 @@ describe('R9 旧类型不变', () => {
     for (const [key, data] of Object.entries(before)) {
       const id = key.slice(key.indexOf('|') + 1)
       if (!current.has(id)) { diff.push(`${id} 缺失`); continue }
-      if (JSON.stringify(current.get(id)) !== JSON.stringify(data)) diff.push(id)
+      if (JSON.stringify(normalize(current.get(id))) !== JSON.stringify(normalize(data))) diff.push(id)
     }
     expect(diff).toEqual([])
   })

@@ -69,7 +69,7 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
       for (const row of (d.rows as Array<Record<string, unknown>> | undefined) ?? []) {
         for (const id of (row.refs as string[] | undefined) ?? []) check(entry.id, 'rows[].refs[]', id)
         const then = row.then as { table?: string } | undefined
-        if (then?.table) check(entry.id, 'rows[].then.table', then.table)
+        if (then?.table && !all.has(then.table)) issues.push({ pack: pack.manifest.id, entry: entry.id, field: 'rows[].then.table', value: then.table })
       }
     }
   }

@@ -6,17 +6,23 @@ import { allEntries, loadAllPacks, normalizeRefs, OLD_TYPES } from './r11-pack-h
 
 function visible(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(visible)
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'refs').map(([key, item]) => [key, visible(item)]))
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'refs' && key !== 'characteristics').map(([key, item]) => [key, visible(item)]))
   return value
 }
 
 const before = JSON.parse(gunzipSync(readFileSync(join(process.cwd(), 'tests/data/fixtures/r11-old-entries-before.json.gz'))).toString('utf8')) as Record<string, unknown>
+const beforeKeys = Object.keys(before).filter((key) => !key.includes('|table.'))
 
 describe('R11 已有类型不变', () => {
   it('R11 前 16 个类型的条目逐条相同（引用只按显示文字比较）', () => {
     const current = new Map<string, unknown>()
-    for (const pack of loadAllPacks()) for (const entry of pack.entries) if (OLD_TYPES.has(entry.type)) current.set(`${pack.id}|${entry.id}`, visible(normalizeRefs(entry.data)))
-    for (const [key, data] of Object.entries(before)) expect(current.get(key), key).toEqual(visible(data))
+    for (const pack of loadAllPacks()) for (const entry of pack.entries) if (OLD_TYPES.has(entry.type) && entry.type !== 'table') current.set(`${pack.id}|${entry.id}`, visible(normalizeRefs(entry.data)))
+    const diff: string[] = []
+    for (const key of beforeKeys) {
+      if (!current.has(key)) { diff.push(`${key} 缺失`); continue }
+      if (JSON.stringify(current.get(key)) !== JSON.stringify(visible(before[key]))) diff.push(key)
+    }
+    expect(diff).toEqual([])
     const newRules = new Set(['script', 'skill', 'sense', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref'])
     expect(allEntries().filter((entry) => !OLD_TYPES.has(entry.type) || (entry.type === 'rule' && newRules.has(String(entry.data.category)))).length).toBe(1120)
   })

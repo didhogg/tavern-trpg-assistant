@@ -59,7 +59,7 @@ describe('R7 第二轮补丁验收（§21.9）', () => {
   it('C SRD 严格引用、29 条软引用、无跨层 baseItem', async () => {
     const packs = await loadPacks()
     const srd = packs.find((p) => p.manifest.id === SRD_PACK_ID)!
-    expect(srd.entries).toHaveLength(2326)
+    expect(srd.entries).toHaveLength(2348)
     const srdIds = new Set(srd.entries.map((e) => e.id))
     const badBase = srd.entries.filter((e) => e.data.baseItem && !srdIds.has(String(e.data.baseItem)))
     expect(badBase).toEqual([])

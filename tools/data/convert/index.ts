@@ -11,6 +11,7 @@ import { convertClass, convertFeature, convertSubclass } from './character'
 import { convertBackground, convertRace } from './character2'
 import { convertCondition, convertFeat, convertRule } from './featRule'
 import { convertTable } from './table'
+import { convertTableR9 } from './tableR9'
 import { convertLanguage, convertDeity, convertReward, convertCult, convertHazard, convertObject, convertVehicle } from './world'
 import { convertRuleR11 } from './rulesR11'
 import { convertMonsterPart, convertRecipe, convertCharOption } from './parts'
@@ -63,7 +64,6 @@ function structuralIds(data: Record<string, unknown>): string[] {
     push(item.items)
     push(item.pool)
   }
-  for (const item of (data.rows as Array<{ then?: { table?: string } }> | undefined) ?? []) push(item.then?.table)
   return out
 }
 
@@ -164,14 +164,15 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   const tableByName = new Map<string, string>()
   for (const table of tables) {
     const seed = table.raw.__seed as { parentKey?: string; name: string; nameEn?: string }
-    if (seed.parentKey) {
-      const list = tablesByParent.get(seed.parentKey) ?? []
+    const parentKeys = [...new Set([...(seed.parentKey ? [seed.parentKey] : []), ...((seed as { parentKeys?: string[] }).parentKeys ?? [])])]
+    for (const parentKey of parentKeys) {
+      const list = tablesByParent.get(parentKey) ?? []
       list.push({ id: table.id, name: table.name })
-      tablesByParent.set(seed.parentKey, list)
+      tablesByParent.set(parentKey, list)
     }
     tableByName.set(seed.name, table.id)
     tableByName.set(table.name, table.id)
-    if (seed.nameEn) tableByName.set(seed.nameEn, table.id)
+    if (seed.nameEn) tableByName.set(seed.nameEn, table.id); for (const alias of (seed as { aliases?: string[] }).aliases ?? []) tableByName.set(alias, table.id)
   }
   const bookMachine = new Map(data.books.map((b) => [b.source, b.translator === '机翻']))
   const unmappedFoundry = new Map<string, { count: number; example: string }>()
@@ -388,8 +389,7 @@ function convertOne(entry: PlannedEntry, ctx: ConvertContext, inline: Parameters
     case 'monsterPart': return convertMonsterPart(entry, ctx, inline)
     case 'recipe': return convertRecipe(entry, ctx, inline)
     case 'charoption': return convertCharOption(entry, ctx, inline)
-    case 'table':
-      return convertTable(entry, ctx, inline)
+    case 'table': return entry.raw.__r9 ? convertTableR9(entry, ctx, inline) : convertTable(entry, ctx, inline)
     case 'lore':
       return convertLore(entry, ctx, inline)
     default:

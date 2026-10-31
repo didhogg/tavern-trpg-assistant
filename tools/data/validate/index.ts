@@ -1,6 +1,7 @@
 import type { Entry } from '../../../src/schemas/pack'
 import { entryDataByType, DND5E2014_ENTRY_TYPES } from '../../../src/rules/dnd5e2014/data/entries'
 import { diceSchema } from '../../../src/rules/dnd5e2014/data/common'
+import { parseDice } from '../../../src/rules/dice/parse'
 import { parseFormula } from '../../../src/rules/dnd5e2014/data/formula'
 import type { ConvertedPack } from '../convert'
 
@@ -70,17 +71,27 @@ function bookCodeDisplay(value: unknown): string | undefined {
 function diceInEntry(entry: Entry): void {
   const data = entry.data as Record<string, unknown>
   if (entry.type === 'table') {
-    checkDice(`${entry.id} 的随机表`, data.dice)
-    const faces = facesOf(String(data.dice ?? ''))
-    const seen = new Set<number>()
-    for (const row of (data.rows as Array<{ min: number; max: number }> | undefined) ?? []) {
-      if (row.min < 1 || row.max > faces) fail(`${entry.id} 的范围超出骰子`)
-      for (let n = row.min; n <= row.max; n++) {
-        if (seen.has(n)) fail(`${entry.id} 的范围重叠`)
-        seen.add(n)
+    const kind = String(data.kind ?? 'roll')
+    if (kind === 'ref') {
+      if (data.dice !== undefined) fail(`${entry.id} 的对照表不应有骰子`)
+      for (const row of (data.rows as Array<{ min?: number; max?: number }> | undefined) ?? []) if (row.min !== undefined || row.max !== undefined) fail(`${entry.id} 的对照表行不应有点数`)
+    } else {
+      const parsed = parseDice(String(data.dice ?? ''))
+      if (!parsed.ok) fail(`${entry.id} 的随机表骰式无法识别：${String(data.dice ?? '')}`)
+      let lo = 0, hi = 0
+      for (const term of parsed.terms) { if (term.kind === 'dice') { lo += term.count; hi += term.count * term.sides } else { lo += term.value; hi += term.value } }
+      const seen = new Set<number>()
+      for (const row of (data.rows as Array<{ min?: number; max?: number }> | undefined) ?? []) {
+        if (row.min === undefined || row.max === undefined) fail(`${entry.id} 的可掷表行缺少点数`)
+        if (row.min > row.max) fail(`${entry.id} 的范围 ${row.min}-${row.max} 起止颠倒`)
+        if (!data.modifier && (row.min < lo || row.max > hi)) fail(`${entry.id} 的范围 ${row.min}-${row.max} 超出 ${lo}-${hi}`)
+        if (!data.modifier) for (let n = row.min; n <= row.max; n++) {
+          if (seen.has(n)) fail(`${entry.id} 的范围重叠：${n}`)
+          seen.add(n)
+        }
       }
+      if (!data.modifier && seen.size !== hi - lo + 1) fail(`${entry.id} 没有恰好覆盖骰子全部结果`)
     }
-    if (seen.size !== faces) fail(`${entry.id} 没有恰好覆盖骰子全部结果`)
   }
   const activities = data.activities as Array<Record<string, unknown>> | undefined
   for (const activity of activities ?? []) {
@@ -93,12 +104,6 @@ function diceInEntry(entry: Entry): void {
   if (hp?.formula) checkDice(`${entry.id} 的生命值公式`, hp.formula)
 }
 
-function facesOf(dice: string): number {
-  const match = /^(\d{0,2})d(\d{1,3})/.exec(dice)
-  const count = match?.[1] ? Number(match[1]) : 1
-  const faces = Number(match?.[2] ?? 0)
-  return count * faces
-}
 
 function scaleIds(packs: ConvertedPack[]): Set<string> {
   const out = new Set<string>()

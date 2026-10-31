@@ -76,6 +76,7 @@ function refMarkup(ctx: InlineContext, specType: string, parts: string[], tag = 
   const source = sourcePart(parts, 1)
   const displayAt = REF_DISPLAY_INDEX[tag] ?? 2
   const display = parts[displayAt] ? parts[displayAt] : name
+  if (tag === 'table') return display
   const target = resolve(ctx, specType, name, source)
   const stats = ctx.refStats?.get(tag) ?? { ref: 0, text: 0 }
   if (!target || !ctx.allowed.has(target.packId)) {
