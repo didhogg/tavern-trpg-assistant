@@ -3,7 +3,7 @@ import type { CoverageEntry } from './types'
 export const COVERAGE: Record<string, CoverageEntry> = {
   "cult.ENG_name": {"how":"mapped","to":"i18n.en.name","wp":"R13"},
   "cult.cultists": {"how":"mapped","to":"data.typicalMembers","wp":"R11"},
-  "cult.cultists.entry": {"how":"mapped","to":"data.cultists","wp":"R11"},
+  "cult.cultists.entry": {"how":"mapped","to":"data.typicalMembers","wp":"R11"},
   "cult.entries": {"how":"text","to":"data.text","wp":"R11"},
   "cult.entries[].ENG_name": {"how":"text","to":"i18n.en.fields.text","wp":"R13"},
   "cult.entries[].entries": {"how":"text","to":"data.text","wp":"R11"},
@@ -24,7 +24,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "cult.reprintedAs[].tag": { "how": "mapped", "to": "data.supersededBy", "wp": "R10" },
   "cult.reprintedAs[].uid": { "how": "mapped", "to": "data.supersededBy", "wp": "R10" },
   "cult.signatureSpells": {"how":"mapped","to":"data.signatureSpells","wp":"R11"},
-  "cult.signatureSpells.entry": {"how":"mapped","to":"data.signatureSpells.entry","wp":"R11"},
+  "cult.signatureSpells.entry": {"how":"mapped","to":"data.signatureSpells","wp":"R11"},
   "cult.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
   "cult.type": {"how":"mapped","to":"data.type","wp":"R11"},
 }

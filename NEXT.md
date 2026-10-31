@@ -4,11 +4,13 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-- 目标：按 `docs/handoff/D1.2a_R11_执行文档.md` 分阶段完成 R11 新类型数据、recipe/charoption 转换器与校验形状，以及必要的类型显示名登记。
-- 红线：不改界面（`typeLabels.ts`/分类名除外）；不新增依赖、不改包格式/manifest、不联网/推送/安装；不改锚点、不放宽断言；新逻辑写新文件，避免旧转换器行号漂移。
-- 验收：阶段 0–E 各自 `check`/`test:data` 通过并本地提交；最终 `build:data`、`build`、`e2e` 通过，11 包哈希稳定，R11 来源类型矩阵 `lost` 为 0，条数与文档锚点一致。
+R11 完成，下一项 R9（随机表）。
+- 目标：R11 新类型、recipe/charoption 转换器与校验形状已交付，等待规划 agent 复核。
+- 红线：不改界面（`typeLabels.ts`/分类名除外）；不新增依赖、不改包格式/manifest、不联网/推送/安装；不改锚点、不放宽断言。
+- 验收：`check`/`test:data`/`build`/`e2e` 通过，R11 来源类型矩阵 `lost` 为 0，条数与文档锚点一致。
 
 ## 已完成
+- D1.2a R11（完成待复审）：新类型 1,120 条；language 64、rule 新分类 140、deity 403、reward 79、cult 25、hazard 48、object 12、vehicle 4、monsterPart 345；recipe/charoption 仅转换器与 5+5 内存样本；矩阵 R11 lost 0；抽样核对表 0 不一致。
 - D1.2a R0 第二轮修订（检查点 1 有条件通过；R1 待开工）：
   - RW9：`outputTypes.ts`、`plannedFields.ts` 与目标字段校验接入；1,846 条 `to` 修正，`data.system.*` 0，未登记 0；同路径 529 条，抽样 20 条见报告。
   - RW10：`wp` 自动一致性校验接入，1,108 条修正；`i18n.en.*` R13、版本字段 R10、`lore` R8、表 R9、书 R12、新类型 R11、法术标签 R7/其余 R14。
@@ -96,6 +98,7 @@ M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/hand
 - 更早的未验证项（M2）：真机上内置包升级路径、1.0.1 包的真机下载。
 
 ## 待议
+- R11 范围外：已有类型的正文块转换会丢信息（`blocks.ts` 现状）：带名称的 `inset` 约 65 处、`item`/`itemSub` 带 `entries` 约 358 处、无 `type` 的命名块约 2889 处；R11 只让新类型走 `r11BlockOptions`，已有类型未改，留给 R14 文字清洁评估。
 - D1.2a R10 登记：D1.2b 导入 EFA、FRHoF、FRAiF、AU 等书时补指向它们的 `supersededBy`（清单见 R10 报告 `deferredReprints`）；`playable` 只作严格建卡模式参考；旧版默认隐藏的界面等统一数据库优化后重建库页面时做；传奇组 `_versions` 待模板应用工作包。详见 `docs/任务总纲.md` §5。
 - D1.1 的 `src/ui/library/facts.ts` 为结构化技能/语言/起装做了只读展示适配（不改布局），因为新的 `languages/proficiencies/startingEquipment` 不再是纯字符串数组；若严格执行“只改 zh.ts”，请驾驶员决定是否回退。
 - D1.1 的 `credit.structured` 目前主标注为 5etools；使用 Foundry 覆盖的条目标为 5etools-foundry。5e-bits/Open5e 仅作校验，不导入。

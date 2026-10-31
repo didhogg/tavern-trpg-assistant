@@ -1,0 +1,23 @@
+import { readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { allEntries, loadAllPacks, normalizeRefs, OLD_TYPES } from './r11-pack-helpers'
+
+function visible(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(visible)
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'refs').map(([key, item]) => [key, visible(item)]))
+  return value
+}
+
+const before = JSON.parse(gunzipSync(readFileSync(join(process.cwd(), 'tests/data/fixtures/r11-old-entries-before.json.gz'))).toString('utf8')) as Record<string, unknown>
+
+describe('R11 已有类型不变', () => {
+  it('R11 前 16 个类型的条目逐条相同（引用只按显示文字比较）', () => {
+    const current = new Map<string, unknown>()
+    for (const pack of loadAllPacks()) for (const entry of pack.entries) if (OLD_TYPES.has(entry.type)) current.set(`${pack.id}|${entry.id}`, visible(normalizeRefs(entry.data)))
+    for (const [key, data] of Object.entries(before)) expect(current.get(key), key).toEqual(visible(data))
+    const newRules = new Set(['script', 'skill', 'sense', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref'])
+    expect(allEntries().filter((entry) => !OLD_TYPES.has(entry.type) || (entry.type === 'rule' && newRules.has(String(entry.data.category)))).length).toBe(1120)
+  })
+})

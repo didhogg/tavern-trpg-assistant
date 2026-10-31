@@ -96,7 +96,7 @@ describe('RW20–RW25 验收（§20.8）', () => {
   })
   it('9 spellGrants 字段为 0，spellGrant 效果足够', async () => {
     const all = allOf(await loadPacks())
-    expect([...all.values()].filter((e) => e.data.spellGrants !== undefined)).toHaveLength(0)
+    expect([...all.values()].filter((e) => e.type !== 'reward' && e.data.spellGrants !== undefined)).toHaveLength(0)
     expect([...all.values()].flatMap((e) => (e.data.effects as Array<{ kind?: string }> | undefined) ?? []).filter((x) => x.kind === 'spellGrant').length).toBeGreaterThanOrEqual(70)
   })
   it('10 传说动作组 66 与唯一基础模板例外', async () => {

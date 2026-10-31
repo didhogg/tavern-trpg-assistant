@@ -199,7 +199,11 @@ export type ConditionData = z.infer<typeof conditionDataSchema>
 
 export const ruleDataSchema = z.looseObject({
   ...entryCommonFields,
-  category: z.enum(['variant', 'action', 'sense', 'skill']).default('variant'),
+  category: z.enum(['variant', 'action', 'sense', 'skill', 'script', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref']).default('variant'),
+  abbreviation: z.string().max(12).optional(),
+  ability: z.string().max(12).optional(),
+  appliesTo: z.string().optional(),
+  template: z.string().optional(),
   effects: effectListSchema.optional(),
   engine: z.string().max(60).optional(),
   group: z.string().max(40).optional(),

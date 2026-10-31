@@ -93,7 +93,7 @@ const PAREN = /[（(]([^）)]+)[）)]\s*$/
 export function disambiguateNames(planned: PlannedEntry[], stats: VersionStats): void {
   const groups = new Map<string, PlannedEntry[]>()
   for (const e of planned) {
-    if (e.type === 'feature' || e.type === 'lore' || e.raw._family === true) continue
+    if (e.type === 'feature' || e.type === 'lore' || e.raw._family === true || e.raw._deityConflict === true) continue
     const key = `${e.type}|${e.source}|${e.name}`
     groups.set(key, [...(groups.get(key) ?? []), e])
   }

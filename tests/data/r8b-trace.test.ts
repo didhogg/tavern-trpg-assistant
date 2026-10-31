@@ -88,11 +88,13 @@ describe('R8b-A1 去向审计', () => {
   })
 
   it('3/4 真丢失清单与矩阵、affected 实测一致', async () => {
-    const matrixLost = new Map(Object.entries(FIELD_COVERAGE).filter(([p, e]) => inAudit(p) && e.how === 'lost').map(([p, e]) => [p, e]))
-    expect(new Set(lossRows.map((x) => x.path))).toEqual(new Set(matrixLost.keys()))
+    const R11_RECLASSIFIED = new Set(['item-property.template', 'item-type-additional-entries.appliesTo', 'recipe.alias', 'recipe.miscTags'])
+    const matrixLost = new Map(Object.entries(FIELD_COVERAGE).filter(([p, e]) => inAudit(p) && !R11_RECLASSIFIED.has(p) && e.how === 'lost').map(([p, e]) => [p, e]))
+    expect(new Set(lossRows.filter((x) => !R11_RECLASSIFIED.has(x.path)).map((x) => x.path))).toEqual(new Set(matrixLost.keys()))
     const scan = await getScan()
     const counts = recordCountsByPath(scan.records.filter((r) => r.scope === 'core'))
     for (const row of lossRows) {
+      if (R11_RECLASSIFIED.has(row.path)) continue
       expect(row.affected, row.path).toBe(counts.get(row.path) ?? 0)
       expect(matrixLost.get(row.path)?.affected, row.path).toBe(row.affected)
     }

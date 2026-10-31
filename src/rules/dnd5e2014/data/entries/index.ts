@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { spellDataSchema, monsterDataSchema, monsterVariantSchema } from './spell-monster'
 import { entryCommonFields } from './base'
 import { itemDataSchema, tableDataSchema } from './item-table'
+import { languageDataSchema, deityDataSchema, rewardDataSchema, cultDataSchema, hazardDataSchema, objectDataSchema, vehicleDataSchema } from './world'
+import { monsterPartDataSchema, recipeDataSchema, charOptionDataSchema } from './parts'
 import {
   backgroundDataSchema,
   classDataSchema,
@@ -31,6 +33,16 @@ export const DND5E2014_ENTRY_TYPES = [
   'table',
   'rule',
   'lore',
+  'language',
+  'deity',
+  'reward',
+  'cult',
+  'hazard',
+  'object',
+  'vehicle',
+  'monsterPart',
+  'recipe',
+  'charoption',
 ] as const
 
 export type Dnd5e2014EntryType = (typeof DND5E2014_ENTRY_TYPES)[number]
@@ -52,6 +64,16 @@ export const entryDataByType = {
   table: tableDataSchema,
   rule: ruleDataSchema,
   lore: z.object({ ...entryCommonFields, target: z.string().min(1), variants: z.array(monsterVariantSchema).optional() }).refine((value) => Boolean((value.lore?.length ?? 0) || (value.variants?.length ?? 0)), { message: 'lore 补丁必须至少包含 lore 或 variants' }),
+  language: languageDataSchema,
+  deity: deityDataSchema,
+  reward: rewardDataSchema,
+  cult: cultDataSchema,
+  hazard: hazardDataSchema,
+  object: objectDataSchema,
+  vehicle: vehicleDataSchema,
+  monsterPart: monsterPartDataSchema,
+  recipe: recipeDataSchema,
+  charoption: charOptionDataSchema,
 } satisfies Record<Dnd5e2014EntryType, z.ZodType>
 
 export const dnd5e2014EntryDataSchema = z.union(Object.values(entryDataByType))

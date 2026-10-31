@@ -3,7 +3,7 @@ import { BOOK_SOURCES } from '../config/books'
 import { listFiles, readJson } from '../lib/io'
 import { DATA_5ETOOLS, resolveCopies, type Raw, type UnsupportedMod } from './load'
 
-export type FluffKind = 'race' | 'background' | 'class' | 'subclass' | 'monster' | 'spell' | 'feat' | 'item' | 'condition' | 'feature'
+export type FluffKind = 'race' | 'background' | 'class' | 'subclass' | 'monster' | 'spell' | 'feat' | 'item' | 'condition' | 'feature' | 'vehicle'
 
 export interface FluffRecord {
   kind: FluffKind
@@ -45,5 +45,6 @@ export async function loadFluff(sink: UnsupportedMod[]): Promise<FluffRecord[]> 
   out.push(...await loadFile('fluff-items.json', 'itemFluff', 'item', sink))
   out.push(...await loadFile('fluff-conditionsdiseases.json', 'conditionFluff', 'condition', sink))
   out.push(...await loadFile('fluff-optionalfeatures.json', 'optionalfeatureFluff', 'feature', sink))
+  out.push(...await loadFile('fluff-vehicles.json', 'vehicleFluff', 'vehicle', sink))
   return out
 }

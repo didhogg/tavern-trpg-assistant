@@ -34,4 +34,5 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "charoption.reprintedAs[].tag": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "charoption.reprintedAs[].uid": {"how":"mapped","to":"data.supersededBy","wp":"R10"},
   "charoption.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
+  "charoption.hasFluffImages": { "how": "dropped", "kind": "image", "why": "来源 hasFluffImages 只表示有配图；图片不进入输出" },
 }

@@ -12,4 +12,7 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "item-type.page": {"how":"mapped","to":"data.src.page","wp":"R11"},
   "item-type.reprintedAs": { "how": "dropped", "kind": "2024-only", "why": "item-type 的 reprintedAs（核心 30 条）目标全是 2024 新版，样本 [\"$A|XDMG\"]，不在收录范围，没有可指向的新版条目，不写 supersededBy" },
   "item-type.source": {"how":"mapped","to":"data.src.book","wp":"R11"},
+  "item-type._copy": { "how": "dropped", "kind": "internal-meta", "why": "_copy 是来源的复制指令，转换时已解析，不进入输出" },
+  "item-type._copy.abbreviation": { "how": "dropped", "kind": "internal-meta", "why": "_copy 子项随父字段处理" },
+  "item-type._copy.source": { "how": "dropped", "kind": "internal-meta", "why": "_copy 子项随父字段处理" },
 }

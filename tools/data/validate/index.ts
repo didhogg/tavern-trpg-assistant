@@ -128,7 +128,7 @@ function checkEntryRules(entry: Entry, scales: Set<string>, packId: string): voi
     if (typeof activity.formula === 'string') checkFormula(`${entry.id} 的 activity.formula`, activity.formula)
   }
   const text = JSON.stringify(data)
-  for (const match of text.matchAll(/scale\.([a-z0-9-]+)/g)) {
+  for (const match of text.matchAll(/(?<![a-z0-9-])scale\.([a-z0-9-]+)/g)) {
     if (!scales.has(match[1])) fail(`${entry.id} 引用的 scale.${match[1]} 没有定义（包 ${packId}）`)
   }
   const spellcasting = data.spellcasting as { progression?: string; slotsByLevel?: Array<{ level?: number; slots?: number[]; pact?: { count?: number; level?: number } }> } | undefined

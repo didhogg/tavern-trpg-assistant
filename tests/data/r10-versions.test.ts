@@ -34,7 +34,7 @@ describe('R10 重印标记、NPC 种族、同书同名', () => {
       by[e.type] = (by[e.type] ?? 0) + 1
       expect(all.has(target), `${e.id} → ${target}`).toBe(true)
     }
-    expect(by).toEqual({ monster: 263, race: 14, subrace: 11, rule: 1 })
+    expect(by).toEqual({ monster: 263, race: 14, subrace: 11, rule: 1, cult: 2, reward: 8 })
   })
 
   it('金样与跨包软引用', async () => {
@@ -66,7 +66,7 @@ describe('R10 重印标记、NPC 种族、同书同名', () => {
     const { all } = await packs()
     const groups = new Map<string, string[]>()
     for (const e of all.values()) {
-      if (e.type === 'feature') continue
+      if (e.type === 'feature' || e.type === 'deity') continue
       const key = `${e.type}|${(d(e).src as { book: string }).book}|${e.name}`
       groups.set(key, [...(groups.get(key) ?? []), e.id])
     }

@@ -37,7 +37,7 @@ export const WEAPON_PROPERTY: Record<string, string> = WEAPON_PROPERTY_LABELS
 export const RANGE_SHAPE: Record<string, string> = { point: '点', cone: '锥形', radius: '半径', line: '直线', hemisphere: '半球', sphere: '球形', cube: '立方', special: '特殊' }
 export const RANGE_WORD: Record<string, string> = { self: '自身', touch: '触及', sight: '视线内', unlimited: '无限', special: '特殊' }
 export const RECHARGE: Record<string, string> = RECHARGE_LABELS
-export const RULE_CATEGORY: Record<string, string> = { variant: '变体规则', action: '动作' }
+export const RULE_CATEGORY: Record<string, string> = { variant: '变体规则', action: '动作', sense: '感官', skill: '技能', script: '文字系统', itemProperty: '物品属性', itemType: '物品类型', itemTypeExtra: '物品类型附加条目', quickref: '速查' }
 
 export const tr = lookup
 /** 带「|」后缀的代码（如 AF|DMG）只取前半。 */

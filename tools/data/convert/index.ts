@@ -11,6 +11,9 @@ import { convertClass, convertFeature, convertSubclass } from './character'
 import { convertBackground, convertRace } from './character2'
 import { convertCondition, convertFeat, convertRule } from './featRule'
 import { convertTable } from './table'
+import { convertLanguage, convertDeity, convertReward, convertCult, convertHazard, convertObject, convertVehicle } from './world'
+import { convertRuleR11 } from './rulesR11'
+import { convertMonsterPart, convertRecipe, convertCharOption } from './parts'
 import { convertLore, loreForEntry } from './lore'
 import { BOOKS, BOOK_BY_SOURCE, BOOK_NAMES, PACK_BY_SOURCE, SRD_PACK_ID, SRD_VERSION, lineageFor } from '../config/books'
 import { DAMAGE_TYPE } from './common'
@@ -34,6 +37,7 @@ export interface ConversionStats {
   textOnlyActivities: number
   unmappedFoundry: Array<{ key: string; count: number; example: string }>
   interiorRequires: Array<{ packId: string; require: string }>
+  refStats: Record<string, { ref: number; text: number }>
   versions: VersionStats
 }
 
@@ -42,7 +46,7 @@ export interface ConversionResult {
   stats: ConversionStats
 }
 
-const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore'])
+const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore', 'language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart', 'recipe', 'charoption'])
 
 function structuralIds(data: Record<string, unknown>): string[] {
   const out: string[] = []
@@ -131,8 +135,6 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
   }
 }
 
-
-
 export function convertAll(data: RawData, planned: PlannedEntry[], tables: PlannedEntry[], skippedFeatures: number, skippedSubraces = 0): ConversionResult {
   const versionStats = emptyVersionStats()
   disambiguateNames(planned, versionStats)
@@ -140,8 +142,8 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   const byId = new Map(all.map((e) => [e.id, e]))
   const index: RefIndex = { byTypeName: new Map(), byTypeNameSource: new Map() }
   for (const entry of all) {
-    addRef(index, { id: entry.id, type: entry.type, name: entry.name, packId: entry.packId }, entry.source)
-    if (entry.nameEn && entry.nameEn !== entry.name) addRef(index, { id: entry.id, type: entry.type, name: entry.nameEn, packId: entry.packId }, entry.source)
+    addRef(index, { id: entry.id, type: entry.type, name: entry.name, packId: entry.packId, category: entry.context.ruleCategory }, entry.source)
+    if (entry.nameEn && entry.nameEn !== entry.name) addRef(index, { id: entry.id, type: entry.type, name: entry.nameEn, packId: entry.packId, category: entry.context.ruleCategory }, entry.source)
   }
   const featuresByOwner = new Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>()
   const subclassLevelByClass = new Map<string, number>()
@@ -208,12 +210,19 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     textOnlyActivities: 0,
     unmappedFoundry: [...unmappedFoundry].map(([key, value]) => ({ key, ...value })),
     interiorRequires: [],
+    refStats: {},
     versions: versionStats,
   }
   const converted = new Map<string, Entry>()
   for (const entry of all) {
-    const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry) }
+    const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry), refStats: new Map<string, { ref: number; text: number }>() }
     const built = convertOne(entry, ctx, inline)
+    for (const [tag, value] of inline.refStats) {
+      const current = stats.refStats[tag] ?? { ref: 0, text: 0 }
+      current.ref += value.ref
+      current.text += value.text
+      stats.refStats[tag] = current
+    }
     const data = built.data as Record<string, unknown>
     if (entry.context.nameSuffix) data.nameSuffix = entry.context.nameSuffix
     if (entry.type !== 'lore') {
@@ -368,7 +377,17 @@ function convertOne(entry: PlannedEntry, ctx: ConvertContext, inline: Parameters
     case 'status':
       return convertCondition(entry, ctx, inline)
     case 'rule':
-      return convertRule(entry, ctx, inline)
+      return entry.context.ruleCategory && ['script', 'skill', 'sense', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref'].includes(entry.context.ruleCategory) ? convertRuleR11(entry, ctx, inline) : convertRule(entry, ctx, inline)
+    case 'language': return convertLanguage(entry, ctx, inline)
+    case 'deity': return convertDeity(entry, ctx, inline)
+    case 'reward': return convertReward(entry, ctx, inline)
+    case 'cult': return convertCult(entry, ctx, inline)
+    case 'hazard': return convertHazard(entry, ctx, inline)
+    case 'object': return convertObject(entry, ctx, inline)
+    case 'vehicle': return convertVehicle(entry, ctx, inline)
+    case 'monsterPart': return convertMonsterPart(entry, ctx, inline)
+    case 'recipe': return convertRecipe(entry, ctx, inline)
+    case 'charoption': return convertCharOption(entry, ctx, inline)
     case 'table':
       return convertTable(entry, ctx, inline)
     case 'lore':

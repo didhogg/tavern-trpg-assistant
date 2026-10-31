@@ -5,6 +5,7 @@ export interface RefTarget {
   type: string
   name: string
   packId: string
+  category?: string
 }
 
 export interface RefIndex {
@@ -13,11 +14,14 @@ export interface RefIndex {
 }
 
 export function addRef(index: RefIndex, target: RefTarget, source: string): void {
-  const key = `${target.type}|${target.name}`
-  const list = index.byTypeName.get(key) ?? []
-  list.push(target)
-  index.byTypeName.set(key, list)
-  index.byTypeNameSource.set(`${key}|${source.toUpperCase()}`, target)
+  const keys = [`${target.type}|${target.name}`]
+  if (target.type === 'rule' && target.category) keys.push(`rule:${target.category}|${target.name}`)
+  for (const key of keys) {
+    const list = index.byTypeName.get(key) ?? []
+    list.push(target)
+    index.byTypeName.set(key, list)
+    index.byTypeNameSource.set(`${key}|${source.toUpperCase()}`, target)
+  }
 }
 
 export interface InlineContext {
@@ -28,6 +32,7 @@ export interface InlineContext {
   softRefs: { count: number }
   missingTags: Map<string, number>
   vars?: Record<string, string>
+  refStats?: Map<string, { ref: number; text: number }>
 }
 
 const ATK_NAMES: Record<string, string> = { mw: '近战武器攻击', rw: '远程武器攻击', ms: '近战法术攻击', rs: '远程法术攻击' }
@@ -59,7 +64,8 @@ function resolve(ctx: InlineContext, type: string, name: string, source?: string
   }
   const sameBook = ctx.index.byTypeNameSource.get(`${type}|${name}|${ctx.book}`)
   if (sameBook) return sameBook
-  return ctx.index.byTypeName.get(`${type}|${name}`)?.[0]
+  const fallback = type.startsWith('rule:') ? ctx.index.byTypeName.get(`rule|${name}`)?.[0] : undefined
+  return ctx.index.byTypeName.get(`${type}|${name}`)?.[0] ?? fallback
 }
 
 function refMarkup(ctx: InlineContext, specType: string, parts: string[], tag = ''): string {
@@ -68,10 +74,15 @@ function refMarkup(ctx: InlineContext, specType: string, parts: string[], tag = 
   const displayAt = REF_DISPLAY_INDEX[tag] ?? 2
   const display = parts[displayAt] ? parts[displayAt] : name
   const target = resolve(ctx, specType, name, source)
+  const stats = ctx.refStats?.get(tag) ?? { ref: 0, text: 0 }
   if (!target || !ctx.allowed.has(target.packId)) {
     ctx.softRefs.count++
+    stats.text++
+    ctx.refStats?.set(tag, stats)
     return display
   }
+  stats.ref++
+  ctx.refStats?.set(tag, stats)
   return `{{ref:${target.id}|${display}}}`
 }
 
@@ -86,6 +97,7 @@ const DISPLAY_INDEX: Record<string, number> = {
   language: 2,
   itemProperty: 2,
   quickref: 4,
+  recipe: 2,
 }
 
 function textValue(name: string, parts: string[]): string {
@@ -107,9 +119,17 @@ function textValue(name: string, parts: string[]): string {
 }
 
 /** 职业与子职业特性标签的显示文字在后面的位置；第三项是来源，不能当显示文字。 */
-const REF_DISPLAY_INDEX: Record<string, number> = { classFeature: 5, subclassFeature: 7 }
+const REF_DISPLAY_INDEX: Record<string, number> = { classFeature: 5, subclassFeature: 7, deity: 3, cult: 0 }
 
 function renderTag(name: string, arg: string, ctx: InlineContext): string {
+  if (name === 'unit') {
+    const parts = arg.split('|')
+    const count = renderInline(parts[0] ?? '', ctx)
+    const number = Number(count)
+    return Number.isFinite(number) && number > 1 ? (parts[2] || parts[1] || '') : (parts[1] || parts[2] || '')
+  }
+  if (name === 'm') return '未命中：'
+  if (name === 'coinflip') return arg.split('|')[0] ?? ''
   const spec = tagSpec(name, ctx.book)
   const parts = arg.split('|')
   switch (spec.kind) {

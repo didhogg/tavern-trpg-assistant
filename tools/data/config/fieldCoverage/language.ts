@@ -20,4 +20,6 @@ export const COVERAGE: Record<string, CoverageEntry> = {
   "language.srd": {"how":"mapped","to":"data.credit.license","wp":"R11"},
   "language.type": {"how":"mapped","to":"data.type","wp":"R11"},
   "language.typicalSpeakers": {"how":"mapped","to":"data.typicalSpeakers","wp":"R11"},
+  "language.fonts": { "how": "dropped", "kind": "fonts", "why": "语言字体文件不进入输出" },
+  "language.hasFluffImages": { "how": "dropped", "kind": "image", "why": "语言配图不进入输出" },
 }

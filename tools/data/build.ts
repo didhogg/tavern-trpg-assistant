@@ -5,6 +5,8 @@ import { loadRawData } from './extract/load'
 import { expandMagicVariants, mergeItemLists } from './convert/items'
 import { expandItemEntries } from './extract/load'
 import { planAll } from './convert/plan'
+import { planR11 } from './convert/planR11'
+import { loadR11Data } from './extract/r11'
 import { convertAll, type ConversionResult } from './convert'
 import { validatePacks, assertVolume } from './validate'
 import { assertFieldCoverage } from './validate/coverage'
@@ -55,7 +57,10 @@ async function main(): Promise<void> {
   console.log(`魔法变体展开：生成 ${expanded.created} 条，跳过 ${expanded.skipped} 个通用变体`)
   const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
   const plan = planAll(data, items)
-  console.log(`计划条目：${plan.entries.length}，随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
+  const r11Data = await loadR11Data()
+  const r11 = planR11(r11Data, plan.entries)
+  plan.entries.push(...r11.entries)
+  console.log(`计划条目：${plan.entries.length}（R11 ${r11.entries.length}），随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)

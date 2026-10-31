@@ -70,7 +70,7 @@ export function buildPackFile(input: BuildPackInput): Uint8Array {
   const files: Record<string, Uint8Array | string> = {
     'trpg-manifest.json': stableStringify({ format: 'trpg-pack', formatVersion: FORMAT_VERSION, pack: manifest }),
   }
-  for (const [type, list] of [...byType].sort(([a], [b]) => a.localeCompare(b))) files[`entries/${encodeURIComponent(type)}.json`] = stableStringify(list)
+  for (const [type, list] of [...byType].sort(([a], [b]) => a.localeCompare(b))) files[`entries/${encodeURIComponent(type.toLowerCase())}.json`] = stableStringify(list)
   for (const [kind, list] of [...byKind].sort(([a], [b]) => a.localeCompare(b))) files[`features/${encodeURIComponent(kind.toLowerCase())}.json`] = stableStringify(list)
   for (const name of Object.keys(adventure).sort()) files[name] = stableStringify(adventure[name])
   if (fallback.length) files['adventure/fallback.json'] = stableStringify({ items: fallback })

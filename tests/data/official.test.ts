@@ -17,6 +17,8 @@ import { textBlockSchema } from '../../src/schemas/text'
 const REPO = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 const OWNER = { ownerKey: 'char:official.png', ownerLabel: '官方包测试' }
+/** 核心范围没有数据；D1.2b 的 R16 才有 recipe/charoption。 */
+const TYPES_WITHOUT_CORE_DATA = ['recipe', 'charoption']
 
 function packPath(id: string, version: string): string {
   if (id === SRD_PACK_ID) return join(REPO, 'packs', `${id}.trpgpack`)
@@ -74,6 +76,7 @@ describe('官方包全量往返', () => {
       await a.campaign.startNewCampaign({ ...OWNER, ruleId: 'dnd5e2014', packIds: packs.map((p) => p.id), name: '官方包存档' })
       let created = 0
       for (const type of DND5E2014_ENTRY_TYPES) {
+        if (TYPES_WITHOUT_CORE_DATA.includes(type)) continue
         const rows = await a.db.entries.where('[ruleId+type]').equals(['dnd5e2014', type]).limit(20).toArray()
         expect(rows.length, type).toBeGreaterThan(0)
         for (const row of rows) {

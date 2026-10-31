@@ -86,6 +86,9 @@ export const spellGrantSchema = z.object({
   mode: z.enum(['known', 'prepared', 'alwaysPrepared', 'innate']).default('known'),
   ability: abilityKeySchema.optional(),
   uses: usesSchema.optional(),
+  castLevel: z.number().int().min(1).max(9).optional(),
+  asCantrip: z.boolean().optional(),
+  ritualOnly: z.boolean().optional(),
 })
 export type SpellGrant = z.infer<typeof spellGrantSchema>
 

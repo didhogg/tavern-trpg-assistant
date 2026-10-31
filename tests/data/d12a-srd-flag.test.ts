@@ -56,8 +56,8 @@ describe('R7 补丁二：SRD 标记与 _copy 归属', () => {
   it('K 9 个 _copy 怪物在来源包，SRD 只有 PHB/DMG/MM 且为 2,227 条', async () => {
     const packs = await loadPacks()
     const srd = packs.find((p) => p.manifest.id === SRD_PACK_ID)!
-    expect(srd.entries).toHaveLength(2227)
-    expect(srd.manifest.entryCount).toBe(2227)
+    expect(srd.entries).toHaveLength(2326)
+    expect(srd.manifest.entryCount).toBe(2326)
     expect([...new Set(srd.entries.map((e) => (e.data.src as { book?: string } | undefined)?.book))].sort()).toEqual(['DMG', 'MM', 'PHB'])
     for (const [name, expectedPack] of MOVED) {
       const entry = packs.flatMap((p) => p.entries).find((e) => e.nameEn === name)

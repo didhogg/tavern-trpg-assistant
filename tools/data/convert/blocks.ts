@@ -73,7 +73,7 @@ export function convertBlocks(input: unknown, ctx: InlineContext, options: Block
     }
     return out
   }
-  if (!isObj(input)) return []
+  if (!isObj(input)) return []; const hooked = options.extra?.(input, ctx, options); if (hooked) return hooked
   const type = str(input.type)
   const entries = input.entries
   if (type === 'entries') {

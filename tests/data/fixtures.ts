@@ -30,6 +30,16 @@ export function fixtureEntries(): Entry[] {
     base('rule.encumbrance.test', 'rule', '负重', { category: 'variant' }),
     base('table.loot-a.test', 'table', '战利品 A', { dice: 'd6', cols: ['结果'], rows: [{ min: 1, max: 3, cells: ['金币'], refs: [] }, { min: 4, max: 6, cells: ['再掷一次'], refs: [], then: { table: 'table.loot-b.test' } }] }),
     base('table.loot-b.test', 'table', '战利品 B', { dice: 'd4', cols: ['结果'], rows: [{ min: 1, max: 4, cells: ['宝石'], refs: [] }] }),
+    base('language.test.test', 'language', '测试语', { code: 'test', typicalSpeakers: [] }),
+    base('deity.test-god.test', 'deity', '测试神', { pantheon: '测试神系', domains: [] }),
+    base('reward.test-charm.test', 'reward', '测试护符', { rewardKind: 'charm' }),
+    base('cult.test-cult.test', 'cult', '测试教团', { type: 'Diabolical' }),
+    base('hazard.trap-test.test', 'hazard', '测试陷阱', { hazardKind: 'trap' }),
+    base('object.test-object.test', 'object', '测试物件', { size: ['M'], ac: 10, hp: 10, immune: [] }),
+    base('vehicle.test-ship.test', 'vehicle', '测试载具', { vehicleType: 'SHIP' }),
+    base('monsterpart.feature-test.test', 'monsterPart', '测试部件', { partKind: 'feature' }),
+    base('recipe.test-recipe.test', 'recipe', '测试配方', { diet: 'C', dishTypes: [], allergenGroups: [], tags: [], ingredients: [], equipment: [], instructions: [] }),
+    base('charoption.test-option.test', 'charoption', '测试选项', { optionType: ['SG'] }),
     base('lore.spell.fireball.test', 'lore', '火球术描述', { target: 'spell.fireball.test', lore: [{ p: '测试描述。' }] }),
   ]
 }

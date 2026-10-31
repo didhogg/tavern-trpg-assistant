@@ -16365,7 +16365,7 @@ function Fw(e) {
 			}
 		})
 	}) };
-	for (let [e, t] of [...r].sort(([e], [t]) => e.localeCompare(t))) l[`entries/${encodeURIComponent(e)}.json`] = gS(t);
+	for (let [e, t] of [...r].sort(([e], [t]) => e.localeCompare(t))) l[`entries/${encodeURIComponent(e.toLowerCase())}.json`] = gS(t);
 	for (let [e, t] of [...a].sort(([e], [t]) => e.localeCompare(t))) l[`features/${encodeURIComponent(e.toLowerCase())}.json`] = gS(t);
 	for (let e of Object.keys(s).sort()) l[e] = gS(s[e]);
 	c.length && (l["adventure/fallback.json"] = gS({ items: c }));
@@ -27996,7 +27996,10 @@ var FL = ["aria-label"], IL = /* @__PURE__ */ R({
 	hazard: "危险",
 	reward: "奖励",
 	cult: "邪教",
-	object: "物件"
+	object: "物件",
+	monsterPart: "怪物部件",
+	recipe: "配方",
+	charoption: "角色创建选项"
 }, RL = (e) => LL[e] ?? e, zL = {
 	PHB: "玩家手册",
 	DMG: "城主指南",
@@ -28451,7 +28454,14 @@ var eR = {
 	special: "特殊"
 }, xR = $L, SR = {
 	variant: "变体规则",
-	action: "动作"
+	action: "动作",
+	sense: "感官",
+	skill: "技能",
+	script: "文字系统",
+	itemProperty: "物品属性",
+	itemType: "物品类型",
+	itemTypeExtra: "物品类型附加条目",
+	quickref: "速查"
 }, CR = tR, wR = (e, t) => tR(e, String(t ?? "").split("|")[0]);
 function TR(e) {
 	let t = {

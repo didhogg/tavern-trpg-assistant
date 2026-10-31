@@ -3,7 +3,10 @@ import type { CoverageEntry } from '../config/fieldCoverage'
 import { KNOWN_EMPTY } from '../config/knownEmpty'
 
 /** 已完成并承诺兑现的工作包；每个包提交前加入。R0 为空。 */
-export const DELIVERED_WP: string[] = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R10']
+export const DELIVERED_WP: string[] = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R10', 'R11']
+
+/** 核心范围没有数据的新类型；由 R11 的 5 条内存样本测试替代兑现检查。 */
+export const TYPES_WITHOUT_CORE_DATA = ['recipe', 'charoption'] as const
 
 function values(value: unknown, path: string): unknown[] {
   if (!value || typeof value !== 'object') return []
@@ -42,6 +45,7 @@ export function checkDelivered(
   const missing: string[] = []
   for (const [path, entry] of Object.entries(coverage)) {
     if (entry.how === 'dropped' || entry.how === 'lost' || !entry.wp || !done.has(entry.wp) || knownEmpty[path]) continue
+    if (TYPES_WITHOUT_CORE_DATA.includes(path.split('.', 1)[0] as never)) continue
     if (!targetValues(entries, entry.to ?? '').some(nonEmpty)) missing.push(path)
   }
   return missing.sort()
