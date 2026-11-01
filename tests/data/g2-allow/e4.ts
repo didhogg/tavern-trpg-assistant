@@ -18,6 +18,14 @@ export const ALLOW: Allow[] = [
     expect: 10,
     reason: 'c13-summon-placeholder 5→0；c13-summon-attack-snapshot 7→2（天界灵魄临时生命值/海洋野兽选择伤害的剩余项）',
   },
+  {
+    name: 'e4-closing-kobold-resist',
+    station: 4,
+    ids: ['monster.kobold-dragonshield.mpmm'],
+    path: /^\/data\/resist(?:\/|$)/,
+    expect: 1,
+    reason: '规划者核验发现 2：MPMM 狗头人龙盾护卫 resist 里的「见下文龙之抗性」移走（resist 只放伤害代码，文字留在特性里）；c1-resist-text 1→0',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
