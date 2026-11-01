@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PHB_SKILLS } from './consumer/codes'
-import { expandPool, expandToken } from './consumer/expand'
+import { expandPool, expandSpellPool, expandToken } from './consumer/expand'
 import { inventory } from './consumer/inventory'
 import { Recorder } from './consumer/findings'
 import { lib } from './consumer/load'
@@ -16,12 +16,22 @@ describe('G2a a17 任选展开', () => {
     const spelling: string[] = []
     const noEntry: string[] = []
     const where = new Map<string, string[]>()
-    for (const r of l.rows) for (const k of ['advancement', 'proficiencies', 'languages']) if (k in r.data) for (const t of JSON.stringify(r.data[k]).match(/"((?:skill|tool|lang|weapon|armor):[^"]+)"/g) ?? []) {
+    for (const r of l.rows) for (const k of ['advancement', 'proficiencies', 'languages']) if (k in r.data) for (const t of JSON.stringify(r.data[k]).match(/"((?:skill|tool|lang|weapon|armor|spell):[^"]+)"/g) ?? []) {
       const tok = t.slice(1, -1)
       where.set(tok, [...(where.get(tok) ?? []), r.id])
     }
+    // 法术池里的 `class=@选择id`：到条目自己的 advancement 里找那个选择，把它的每个职业都代进去展开，每个都必须有法术
+    const expandWithChoices = (tok: string): ReturnType<typeof expandToken> => {
+      const ref = /@([a-z0-9-]+)/.exec(tok)?.[1]
+      if (!ref || !tok.startsWith('spell:')) return expandToken(l, tok)
+      const owners = where.get(tok) ?? []
+      const classes = owners.flatMap((id) => (JSON.parse(JSON.stringify(l.need(id).data.advancement ?? [])) as Array<{ choices?: Array<{ id?: string; pool: string[] }> }>).flatMap((a) => a.choices ?? []).filter((c) => c.id === ref).flatMap((c) => c.pool.filter((p) => p.startsWith('class:')).map((p) => p.slice(6))))
+      if (!classes.length) return { values: [], ambiguous: `${tok} 找不到选择 ${ref}` }
+      const empties = classes.filter((c) => expandSpellPool(l, tok.slice(6), tok, { [ref]: c }).values.length === 0)
+      return empties.length ? { values: [] } : { values: ['ok'] }
+    }
     for (const tok of Object.keys(inv.tokens)) {
-      const e = expandToken(l, tok)
+      const e = expandWithChoices(tok)
       if (e.ambiguous) ambiguous.push(...(where.get(tok) ?? [tok]))
       else if (e.values.length === 0) empty.push(...(where.get(tok) ?? [tok]))
       if (e.spelling) spelling.push(...(where.get(tok) ?? [tok]))

@@ -1,3 +1,4 @@
+import { featSpellChoices } from './featSpells'
 import type { Entry } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
@@ -106,7 +107,12 @@ export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(uses ? { uses } : {}),
     ...(effects.length || grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))] } : {}),
     ...(Array.isArray(raw.traitTags) ? { tags: raw.traitTags.map(String) } : {}),
-    advancement: proficiencyTrait(raw) ? [proficiencyTrait(raw)!] : [],
+    advancement: (() => {
+      const trait = proficiencyTrait(raw)
+      const spellChoices = featSpellChoices(raw, entry.id, ctx)
+      if (!spellChoices.length) return trait ? [trait] : []
+      return [trait ? { ...trait, choices: [...((trait as { choices?: unknown[] }).choices ?? []), ...spellChoices] } : { kind: 'trait', level: 1, grants: [], choices: spellChoices }]
+    })(),
   }
   if (foundryRaw) (data.credit as { structured?: { by: string; license: string } }).structured = { by: '5etools-foundry', license: 'MIT' }
   return { id: entry.id, type: 'feat', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('feat', entry.name, data, plainText(data.text as never)), data }

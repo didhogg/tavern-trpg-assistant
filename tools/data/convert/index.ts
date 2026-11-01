@@ -1,3 +1,4 @@
+import { addVariantAnchors } from './variantLists'
 import { structuralRefs } from '../../../src/rules/dnd5e2014/data/refs'
 import type { Entry, PackFeature, PackManifest } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
@@ -315,7 +316,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     }
     return { manifest, entries, features }
   })
-  pruneExpandedSpells(packs, byId)
+  pruneExpandedSpells(packs, byId); addVariantAnchors(packs)
   return { packs, stats }
 }
 

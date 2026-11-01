@@ -1,9 +1,9 @@
 {
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
-  "A": 144,
-  "B": 410,
-  "C": 584
+  "A": 139,
+  "B": 376,
+  "C": 576
  },
  "features": [
   {
@@ -84,12 +84,6 @@
   {
    "id": "feature.barbarian-persistent-rage.phb",
    "name": "持久狂暴",
-   "cls": "C",
-   "tags": []
-  },
-  {
-   "id": "feature.barbarian-primal-champion.phb",
-   "name": "原初斗士",
    "cls": "C",
    "tags": []
   },
@@ -241,14 +235,6 @@
    ]
   },
   {
-   "id": "feature.cleric-channel-divinity-turn-undead.phb",
-   "name": "引导神力：驱散不死生物",
-   "cls": "B",
-   "tags": [
-    "动作"
-   ]
-  },
-  {
    "id": "feature.cleric-channel-divinity.phb-2",
    "name": "引导神力",
    "cls": "C",
@@ -350,14 +336,6 @@
    "name": "附赠熟练项",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.cleric-life-domain-channel-divinity-preserve-life.phb",
-   "name": "引导神力：维持生命",
-   "cls": "A",
-   "tags": [
-    "生命上限"
-   ]
   },
   {
    "id": "feature.cleric-life-domain-divine-strike.phb",
@@ -926,14 +904,6 @@
    "tags": []
   },
   {
-   "id": "feature.monk-empty-body.phb",
-   "name": "空灵体",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.monk-evasion.phb",
    "name": "反射闪避",
    "cls": "B",
@@ -946,15 +916,6 @@
    "name": "额外攻击",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.monk-flurry-of-blows.phb",
-   "name": "疾风连击",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源"
-   ]
   },
   {
    "id": "feature.monk-ki-empowered-strikes.phb",
@@ -998,15 +959,6 @@
    "tags": []
   },
   {
-   "id": "feature.monk-patient-defense.phb",
-   "name": "坚强防御",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源"
-   ]
-  },
-  {
    "id": "feature.monk-perfect-self.phb",
    "name": "超凡入圣",
    "cls": "C",
@@ -1027,27 +979,10 @@
    ]
   },
   {
-   "id": "feature.monk-step-of-the-wind.phb",
-   "name": "疾步如风",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源"
-   ]
-  },
-  {
    "id": "feature.monk-stillness-of-mind.phb",
    "name": "心如止水",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.monk-stunning-strike.phb",
-   "name": "震慑拳",
-   "cls": "B",
-   "tags": [
-    "资源"
-   ]
   },
   {
    "id": "feature.monk-timeless-body.phb",
@@ -1072,15 +1007,6 @@
    "name": "散打技巧",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.monk-way-of-the-open-hand-quivering-palm.phb",
-   "name": "渗透劲",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源"
-   ]
   },
   {
    "id": "feature.monk-way-of-the-open-hand-tranquility.phb",
@@ -1594,14 +1520,6 @@
    "tags": []
   },
   {
-   "id": "feature.sorcerer-draconic-bloodline-elemental-affinity.phb",
-   "name": "元素亲和",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.sorcerer-flexible-casting.phb",
    "name": "灵活施法",
    "cls": "B",
@@ -1997,12 +1915,6 @@
    "tags": []
   },
   {
-   "id": "feature.cleric-knowledge-domain-channel-divinity-knowledge-of-the-ages.phb",
-   "name": "引导神力：岁月知识",
-   "cls": "C",
-   "tags": []
-  },
-  {
    "id": "feature.cleric-knowledge-domain-potent-spellcasting.phb",
    "name": "强力施法",
    "cls": "B",
@@ -2016,14 +1928,6 @@
    "cls": "B",
    "tags": [
     "法术"
-   ]
-  },
-  {
-   "id": "feature.cleric-light-domain-channel-divinity-radiance-of-the-dawn.phb",
-   "name": "引导神力：黎明曙光",
-   "cls": "B",
-   "tags": [
-    "动作"
    ]
   },
   {
@@ -2051,12 +1955,6 @@
   {
    "id": "feature.cleric-nature-domain-bonus-proficiency.phb",
    "name": "附赠熟练项",
-   "cls": "C",
-   "tags": []
-  },
-  {
-   "id": "feature.cleric-nature-domain-channel-divinity-charm-animals-and-plants.phb",
-   "name": "引导神力：魅惑动植物",
    "cls": "C",
    "tags": []
   },
@@ -2091,12 +1989,6 @@
    ]
   },
   {
-   "id": "feature.cleric-tempest-domain-channel-divinity-destructive-wrath.phb",
-   "name": "引导神力：毁灭狂怒",
-   "cls": "C",
-   "tags": []
-  },
-  {
    "id": "feature.cleric-tempest-domain-divine-strike.phb",
    "name": "神圣打击",
    "cls": "B",
@@ -2123,12 +2015,6 @@
    "tags": [
     "攻击结算"
    ]
-  },
-  {
-   "id": "feature.cleric-trickery-domain-channel-divinity-cloak-of-shadows.phb",
-   "name": "引导神力：幽影斗篷",
-   "cls": "C",
-   "tags": []
   },
   {
    "id": "feature.cleric-trickery-domain-divine-strike.phb",
@@ -2158,23 +2044,6 @@
    "cls": "A",
    "tags": [
     "熟练"
-   ]
-  },
-  {
-   "id": "feature.cleric-war-domain-channel-divinity-guided-strike.phb",
-   "name": "引导神力：导引打击",
-   "cls": "B",
-   "tags": [
-    "攻击结算"
-   ]
-  },
-  {
-   "id": "feature.cleric-war-domain-channel-divinity-war-gods-blessing.phb",
-   "name": "引导神力：战神祝福",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "攻击结算"
    ]
   },
   {
@@ -2557,14 +2426,6 @@
    ]
   },
   {
-   "id": "feature.monk-way-of-shadow-shadow-arts.phb",
-   "name": "暗影技艺",
-   "cls": "A",
-   "tags": [
-    "感官"
-   ]
-  },
-  {
    "id": "feature.monk-way-of-the-four-elements-disciple-of-the-elements.phb",
    "name": "四象门徒",
    "cls": "B",
@@ -2644,14 +2505,6 @@
    "tags": []
   },
   {
-   "id": "feature.paladin-oath-of-vengeance-abjure-enemy.phb",
-   "name": "破胆叱喝",
-   "cls": "B",
-   "tags": [
-    "攻击结算"
-   ]
-  },
-  {
    "id": "feature.paladin-oath-of-vengeance-channel-divinity.phb",
    "name": "引导神力",
    "cls": "C",
@@ -2684,14 +2537,6 @@
    "name": "复仇之信条",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.paladin-oath-of-vengeance-vow-of-enmity.phb",
-   "name": "仇敌誓言",
-   "cls": "B",
-   "tags": [
-    "攻击结算"
-   ]
   },
   {
    "id": "feature.ranger-beast-master-bestial-fury.phb",
@@ -2841,16 +2686,6 @@
    "name": "特性：军衔",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.sorcerer-wild-magic-bend-luck.phb",
-   "name": "扭曲幸运",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源",
-    "攻击结算"
-   ]
   },
   {
    "id": "feature.sorcerer-wild-magic-controlled-chaos.phb",
@@ -3389,24 +3224,10 @@
    "tags": []
   },
   {
-   "id": "feature.monk-way-of-the-long-death-mastery-of-death.scag",
-   "name": "握生死",
-   "cls": "C",
-   "tags": []
-  },
-  {
    "id": "feature.monk-way-of-the-long-death-touch-of-death.scag",
    "name": "往生咒",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.monk-way-of-the-long-death-touch-of-the-long-death.scag",
-   "name": "永亡触",
-   "cls": "B",
-   "tags": [
-    "动作"
-   ]
   },
   {
    "id": "feature.paladin-oath-of-the-crown-channel-divinity.scag",
@@ -3671,14 +3492,6 @@
    "cls": "A",
    "tags": [
     "熟练"
-   ]
-  },
-  {
-   "id": "feature.cleric-death-domain-channel-divinity-touch-of-death.dmg",
-   "name": "引导神力：死亡之触",
-   "cls": "B",
-   "tags": [
-    "伤害"
    ]
   },
   {
@@ -4265,12 +4078,6 @@
    ]
   },
   {
-   "id": "feature.cleric-forge-domain-channel-divinity-artisans-blessing.xge",
-   "name": "引导神力：铁匠祝福",
-   "cls": "C",
-   "tags": []
-  },
-  {
    "id": "feature.cleric-forge-domain-divine-strike.xge",
    "name": "神圣打击",
    "cls": "B",
@@ -4499,14 +4306,6 @@
    "tags": []
   },
   {
-   "id": "feature.monk-way-of-the-drunken-master-drunkards-luck.xge",
-   "name": "醉汉机运",
-   "cls": "B",
-   "tags": [
-    "攻击结算"
-   ]
-  },
-  {
    "id": "feature.monk-way-of-the-drunken-master-drunken-technique.xge",
    "name": "醉拳技巧",
    "cls": "A",
@@ -4517,12 +4316,6 @@
   {
    "id": "feature.monk-way-of-the-drunken-master-leap-to-your-feet.xge",
    "name": "鲤鱼打挺",
-   "cls": "C",
-   "tags": []
-  },
-  {
-   "id": "feature.monk-way-of-the-drunken-master-redirect-attack.xge",
-   "name": "借力打力",
    "cls": "C",
    "tags": []
   },
@@ -4563,17 +4356,6 @@
    ]
   },
   {
-   "id": "feature.monk-way-of-the-kensei-sharpen-the-blade.xge",
-   "name": "锋锐剑影",
-   "cls": "B",
-   "tags": [
-    "伤害",
-    "动作",
-    "资源",
-    "攻击结算"
-   ]
-  },
-  {
    "id": "feature.monk-way-of-the-kensei-unerring-accuracy.xge",
    "name": "精妙剑法",
    "cls": "B",
@@ -4592,16 +4374,6 @@
    ]
   },
   {
-   "id": "feature.monk-way-of-the-sun-soul-searing-arc-strike.xge",
-   "name": "热能袭",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源",
-    "法术"
-   ]
-  },
-  {
    "id": "feature.paladin-oath-of-conquest-aura-of-conquest.xge",
    "name": "征服灵光",
    "cls": "C",
@@ -4612,14 +4384,6 @@
    "name": "引导神力",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.paladin-oath-of-conquest-guided-strike.xge",
-   "name": "导引打击",
-   "cls": "B",
-   "tags": [
-    "攻击结算"
-   ]
   },
   {
    "id": "feature.paladin-oath-of-conquest-oath-spells.xge",
@@ -4656,14 +4420,6 @@
    "tags": []
   },
   {
-   "id": "feature.paladin-oath-of-redemption-emissary-of-peace.xge",
-   "name": "和平使节",
-   "cls": "A",
-   "tags": [
-    "属性值"
-   ]
-  },
-  {
    "id": "feature.paladin-oath-of-redemption-oath-spells.xge",
    "name": "圣誓法术",
    "cls": "B",
@@ -4677,14 +4433,6 @@
    "cls": "B",
    "tags": [
     "资源"
-   ]
-  },
-  {
-   "id": "feature.paladin-oath-of-redemption-rebuke-the-violent.xge",
-   "name": "叱喝暴力",
-   "cls": "B",
-   "tags": [
-    "动作"
    ]
   },
   {
@@ -4951,15 +4699,6 @@
    ]
   },
   {
-   "id": "feature.sorcerer-divine-soul-empowered-healing.xge",
-   "name": "强效治疗",
-   "cls": "B",
-   "tags": [
-    "资源",
-    "法术"
-   ]
-  },
-  {
    "id": "feature.sorcerer-divine-soul-otherworldly-wings.xge",
    "name": "异界光翼",
    "cls": "B",
@@ -4973,14 +4712,6 @@
    "cls": "A",
    "tags": [
     "感官"
-   ]
-  },
-  {
-   "id": "feature.sorcerer-shadow-magic-umbral-form.xge",
-   "name": "幽冥形态",
-   "cls": "B",
-   "tags": [
-    "动作"
    ]
   },
   {
@@ -5476,15 +5207,6 @@
    ]
   },
   {
-   "id": "feature.cleric-peace-domain-channel-divinity-balm-of-peace.tce",
-   "name": "引导神力：和平抚慰",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源"
-   ]
-  },
-  {
    "id": "feature.cleric-peace-domain-expansive-bond.tce",
    "name": "增强联结",
    "cls": "A",
@@ -5522,14 +5244,6 @@
    "cls": "A",
    "tags": [
     "熟练"
-   ]
-  },
-  {
-   "id": "feature.cleric-twilight-domain-channel-divinity-twilight-sanctuary.tce",
-   "name": "引导神力：暮光圣域",
-   "cls": "B",
-   "tags": [
-    "动作"
    ]
   },
   {
@@ -5822,23 +5536,6 @@
    ]
   },
   {
-   "id": "feature.fighter-psi-warrior-protective-field.tce",
-   "name": "庇护力场",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源"
-   ]
-  },
-  {
-   "id": "feature.fighter-psi-warrior-psionic-strike.tce",
-   "name": "灵能打击",
-   "cls": "B",
-   "tags": [
-    "资源"
-   ]
-  },
-  {
    "id": "feature.fighter-psi-warrior-telekinetic-adept.tce",
    "name": "念力精通",
    "cls": "C",
@@ -5928,23 +5625,6 @@
    ]
   },
   {
-   "id": "feature.monk-way-of-mercy-hand-of-harm.tce",
-   "name": "夺命之手",
-   "cls": "B",
-   "tags": [
-    "资源"
-   ]
-  },
-  {
-   "id": "feature.monk-way-of-mercy-hand-of-healing.tce",
-   "name": "予命之手",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源"
-   ]
-  },
-  {
    "id": "feature.monk-way-of-mercy-implements-of-mercy.tce",
    "name": "操命本事",
    "cls": "A",
@@ -5957,23 +5637,6 @@
    "name": "生死之触",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.monk-way-of-the-astral-self-arms-of-the-astral-self.tce",
-   "name": "星我之臂",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "攻击结算"
-   ]
-  },
-  {
-   "id": "feature.monk-way-of-the-astral-self-awakened-astral-self.tce",
-   "name": "星我觉醒",
-   "cls": "B",
-   "tags": [
-    "动作"
-   ]
   },
   {
    "id": "feature.monk-way-of-the-astral-self-body-of-the-astral-self.tce",
@@ -5989,15 +5652,6 @@
    "name": "你的星我形态",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.monk-way-of-the-astral-self-visage-of-the-astral-self.tce",
-   "name": "星我之容",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "攻击结算"
-   ]
   },
   {
    "id": "feature.paladin-oath-of-glory-aura-of-alacrity.tce",
@@ -6022,28 +5676,10 @@
    ]
   },
   {
-   "id": "feature.paladin-oath-of-glory-peerless-athlete.tce",
-   "name": "绝伦健将",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "资源",
-    "攻击结算"
-   ]
-  },
-  {
    "id": "feature.paladin-oath-of-glory-tenets-of-glory.tce",
    "name": "荣耀之信条",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.paladin-oath-of-the-watchers-abjure-the-extraplanar.tce",
-   "name": "驱散异域",
-   "cls": "B",
-   "tags": [
-    "动作"
-   ]
   },
   {
    "id": "feature.paladin-oath-of-the-watchers-aura-of-the-sentinel.tce",
@@ -6070,15 +5706,6 @@
    "name": "守望之信条",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.paladin-oath-of-the-watchers-watchers-will.tce",
-   "name": "守望之志",
-   "cls": "B",
-   "tags": [
-    "动作",
-    "攻击结算"
-   ]
   },
   {
    "id": "feature.ranger-fey-wanderer-dreadful-strikes.tce",
@@ -6141,14 +5768,6 @@
    "tags": [
     "资源",
     "攻击结算"
-   ]
-  },
-  {
-   "id": "feature.rogue-soulknife-psi-bolstered-knack.tce",
-   "name": "灵振诀窍",
-   "cls": "B",
-   "tags": [
-    "资源"
    ]
   },
   {

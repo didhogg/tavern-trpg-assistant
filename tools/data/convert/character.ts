@@ -11,6 +11,7 @@ import { clip, plainText, summaryOf } from '../summary/summary'
 import { spellGrants, startingEquipmentOf } from './character2'
 import { prereqToRequires } from './featRule'
 import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
+import { poolFeatureId } from '../config/pools'
 import { FEATURE_ACTIVITIES, FEATURE_EFFECTS, FEATURE_NO_USES, FEATURE_USES } from '../config/featureRules'
 import { PROFICIENCY_TRAITS } from '../config/proficiencyTraits'
 import { advancementExtras, foundryScaleValues, scaleValuesOf, spellcastingOf } from './classRules'
@@ -303,7 +304,8 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
   const effects = dedupeEffects([...(rules?.effects ?? []) as unknown as Array<Record<string, unknown>>, ...configEffects, ...spellEffects, ...skillEffects])
   const baseActivities = rules?.activities?.length ? rules.activities : activitiesFromText(raw._r9OriginalEntries ?? raw.entries, entry.name, entry.id)
   const configuredActivities = FEATURE_ACTIVITIES[entry.id] ?? []
-  const consumes = ownerType === 'optional' ? (Array.isArray(raw.consumes) ? raw.consumes : raw.consumes && typeof raw.consumes === 'object' ? [raw.consumes] : []) : []
+  // 5etools 的 consumes 出现在可选特性、职业特性、子职业特性上，三类都读（以前只读可选特性）；池名按 config/pools.ts 解析成池特性编号
+  const consumes = Array.isArray(raw.consumes) ? raw.consumes : raw.consumes && typeof raw.consumes === 'object' ? [raw.consumes] : []
   const activities = consumes.length
     ? [...baseActivities, ...configuredActivities, {
         id: `${entry.id}.consume`,
@@ -311,7 +313,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
         kind: 'utility' as const,
         text: `${process.env.TRPG_DATA_LANG === 'en' ? 'Expend' : '消耗'} ${consumes.map((c) => `${Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1)} ${String((c as Record<string, unknown>).name ?? (process.env.TRPG_DATA_LANG === 'en' ? 'resource' : '资源'))}`).join(process.env.TRPG_DATA_LANG === 'en' ? ', ' : '、')}`,
         activation: { type: 'special' as const },
-        consumption: { targets: consumes.map((c) => ({ type: 'resource' as const, value: Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1), target: String((c as Record<string, unknown>).name ?? 'resource') })) },
+        consumption: { targets: consumes.map((c) => ({ type: 'resource' as const, value: Number((c as Record<string, unknown>).amount ?? (c as Record<string, unknown>).amountMin ?? 1), target: poolFeatureId(String((c as Record<string, unknown>).ENG_name ?? ''), str(raw.className)) ?? String((c as Record<string, unknown>).name ?? 'resource') })) },
       }]
     : [...baseActivities, ...configuredActivities]
   const data: Record<string, unknown> = {

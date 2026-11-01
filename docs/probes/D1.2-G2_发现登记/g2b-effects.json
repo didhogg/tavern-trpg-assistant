@@ -4,7 +4,7 @@
   {
    "check": "b2",
    "key": "effects",
-   "value": 607
+   "value": 586
   },
   {
    "check": "b2",
@@ -14,12 +14,12 @@
   {
    "check": "b2",
    "key": "formulas",
-   "value": 66
+   "value": 65
   },
   {
    "check": "b2",
    "key": "foundryNotes",
-   "value": 85
+   "value": 61
   },
   {
    "check": "b2",
@@ -29,7 +29,7 @@
   {
    "check": "b2",
    "key": "foundryNotes.derived",
-   "value": 16
+   "value": 9
   },
   {
    "check": "b2",
@@ -66,25 +66,18 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "feature.barbarian-brutal-critical-1-die.phb 凶蛮重击(1骰)：Foundry 效果未映射：flags.dnd5e.meleeCriticalD",
-    "feature.barbarian-brutal-critical-2-dice.phb 凶蛮重击(2骰)：Foundry 效果未映射：flags.dnd5e.meleeCriticalD",
-    "feature.barbarian-brutal-critical-3-dice.phb 凶蛮重击(3骰)：Foundry 效果未映射：flags.dnd5e.meleeCriticalD",
     "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.d",
     "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.s",
-    "feature.fighter-champion-improved-critical.phb 精通重击：Foundry 效果未映射：flags.dnd5e.weaponCritical",
     "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.con.bonus",
     "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.str.bonus",
     "feature.harengon-hare-trigger.mpmm 野兔敏锐：Foundry 效果未映射：system.attributes.init.tot",
-    "feature.lizardfolk-natural-armor.vgm 天生护甲：Foundry 效果未映射：system.attributes.ac.calc",
-    "feature.sorcerer-draconic-bloodline-draconic-resilience.phb 龙族体魄：Foundry 效果未映射：system.attributes.ac.calc",
     "feature.stone-rune.tce 岩石符文：Foundry 效果未映射：system.attributes.senses.d",
-    "item.robe-of-the-archmagi.dmg 大法师法袍：Foundry 效果未映射：system.attributes.ac.calc",
     "monster.homunculus-servant.tce 人工生命仆从：Foundry 效果：奇械师的领导力（system.attributes.hp.",
     "monster.steel-defender.tce 钢铁守卫：Foundry 效果：奇械师的领导力（system.attributes.hp."
    ],
    "expected": "各特性原文",
    "note": "影响派生数值的效果被留在说明文字里：龙脉术士的龙族韧性（AC 13+敏捷）、蜥蜴人的天生护甲、魔鬼视界/石之符文（黑暗视觉）、兔人的敏捷先攻、寒霜符文（力量/体质豁免与检定）、野蛮人的残暴重击（暴击额外骰）、冠军的强化重击（暴击范围）、觉知头盔（先攻优势）",
-   "count": 15
+   "count": 8
   },
   {
    "id": "b2-formula-unsupported-variable",
@@ -137,30 +130,6 @@
    "expected": "公式引擎与格式定义",
    "note": "效果的触发条件只有文字（如“狂暴中”“未穿护甲”），程序判断不了",
    "count": 3
-  },
-  {
-   "id": "b2-zero-placeholder",
-   "check": "b2",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feat.dual-wielder.phb 双持客（ac.amount）",
-    "feat.mobile.phb 灵活移动（speed.amount）",
-    "feat.squat-nimbleness.xge 低身机敏（speed.amount）",
-    "feature.artificer-armorer-powered-steps.tce 动力步伐（speed.amount）",
-    "feature.artificer-artillerist-arcane-firearm.tce 奥术枪械（damageBonus.amount）",
-    "feature.barbarian-fast-movement.phb 快速移动（speed.amount）",
-    "feature.hill-dwarf-dwarven-toughness.phb 矮人刚毅（hpMax.perLevel）",
-    "feature.lizardfolk-natural-armor.dmg 天生护甲（ac.amount）",
-    "feature.monk-unarmored-movement.phb 无甲移动（speed.amount）",
-    "feature.rogue-scout-superior-mobility.xge 优异灵活（speed.amount）",
-    "feature.sorcerer-draconic-bloodline-dragon-wings.phb 龙翼（speed.amount）",
-    "feature.troglodyte-natural-armor.dmg 天生护甲（ac.amount）",
-    "item.gloves-of-thievery.dmg 窃贼手套（skill.amount）"
-   ],
-   "expected": "各特性/专长/物品原文（书上有具体数值）",
-   "note": "效果的数值是 0，其实是占位（Foundry 的公式没有解析出来）：亚种/专长/特性的速度加成、护甲加值、生命上限加成、技能加值等书上有具体数字",
-   "count": 13
   }
  ]
 }

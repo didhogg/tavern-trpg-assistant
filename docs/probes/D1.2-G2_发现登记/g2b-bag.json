@@ -4,7 +4,7 @@
   {
    "check": "b7",
    "key": "ammunitionBundles",
-   "value": 42
+   "value": 44
   },
   {
    "check": "b7",
@@ -19,7 +19,7 @@
   {
    "check": "b7",
    "key": "consumables",
-   "value": 42
+   "value": 119
   },
   {
    "check": "b7",
@@ -105,31 +105,60 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
+    "item.acid-vial.phb 强酸 (小瓶)",
+    "item.alchemists-fire-flask.phb 炽火胶(扁瓶装)",
+    "item.ale-gallon.phb 麦酒（加仑）",
+    "item.ale-mug.phb 麦酒（马克杯）",
+    "item.antitoxin-vial.phb 抗毒剂 (小瓶)",
+    "item.assassins-blood.dmg 刺客之血",
+    "item.basic-poison-vial.phb 基础毒药(小瓶装)",
+    "item.bead-of-force.dmg 力场珠",
+    "item.bead-of-nourishment.xge 营养珠",
+    "item.bead-of-refreshment.xge 净水珠",
+    "item.bomb.dmg 炸弹",
+    "item.burnt-othur-fumes.dmg 焦引熏烟",
+    "item.candle-of-invocation.dmg 祈神蜡烛",
+    "item.candle.phb 蜡烛",
+    "item.carrion-crawler-mucus.dmg 食腐虫粘液",
+    "item.chunk-of-meat.phb 一块肉",
+    "item.common-wine-pitcher.phb 普通红酒（壶装）",
+    "item.drow-poison.dmg 卓尔毒药",
+    "item.dust-of-disappearance.dmg 无踪粉",
+    "item.dynamite-stick.dmg 炸药(一根)",
     "item.elixir-of-health.dmg 健康灵药",
+    "item.energy-cell.dmg 能量电池",
+    "item.essence-of-ether.dmg 乙醚精",
+    "item.fine-wine-bottle.phb 优质红酒（瓶装）",
+    "item.fragmentation-grenade.dmg 破片榴弹",
+    "item.gunpowder-horn.dmg 角瓶火药",
+    "item.gunpowder-keg.dmg 小桶火药",
+    "item.holy-water-flask.phb 圣水 (扁瓶)",
+    "item.hunk-of-cheese.phb 一块奶酪",
+    "item.ink-1-ounce-bottle.phb 墨水(1盎司/瓶)",
+    "item.loaf-of-bread.phb 一条面包",
+    "item.malice.dmg 怨恨",
+    "item.midnight-tears.dmg 午夜之泪",
+    "item.modern-bullet.dmg 现代子弹",
+    "item.modern-bullets-10.dmg 现代子弹(10)",
+    "item.oil-flask.phb 燃油 (扁瓶)",
     "item.oil-of-etherealness.dmg 以太化之油",
     "item.oil-of-sharpness.dmg 锐锋之油",
     "item.oil-of-slipperiness.dmg 滑溜之油",
+    "item.oil-of-taggit.dmg 腐精之油",
+    "item.pale-tincture.dmg 苍白酊剂",
+    "item.perfume-of-bewitching.xge 迷醉香水",
+    "item.perfume-vial.phb 香水 (小瓶)",
     "item.philter-of-love.dmg 迷情媚药",
     "item.potion-of-animal-friendship.dmg 化兽为友药水",
     "item.potion-of-clairvoyance.dmg 鹰眼术药水",
     "item.potion-of-climbing.dmg 攀爬药水",
     "item.potion-of-diminution.dmg 缩小药水",
     "item.potion-of-fire-breath.dmg 火焰吐息药水",
-    "item.potion-of-flying.dmg 飞行药水",
-    "item.potion-of-gaseous-form.dmg 气化形体药水",
-    "item.potion-of-growth.dmg 成长药水",
-    "item.potion-of-heroism.dmg 英勇药水",
-    "item.potion-of-invisibility.dmg 隐形药水",
-    "item.potion-of-longevity.dmg 延寿药水",
-    "item.potion-of-mind-reading.dmg 读心药水",
-    "item.potion-of-poison.dmg 剧毒药水",
-    "item.potion-of-speed.dmg 加速药水",
-    "item.potion-of-vitality.dmg 活力药水",
-    "item.potion-of-water-breathing.dmg 水下呼吸药水"
+    "item.potion-of-flying.dmg 飞行药水"
    ],
    "expected": "DMG 各药水/油/灵药原文",
    "note": "消耗品没有行动或效果，点“使用”无法结算（治疗药水已有，其余多是持续效果或需要掷表）",
-   "count": 21
+   "count": 98
   }
  ]
 }

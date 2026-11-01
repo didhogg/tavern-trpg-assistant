@@ -7,6 +7,7 @@ import type { ConvertContext } from './context'
 import { refKey, renderInline, type InlineContext } from '../markup/inline'
 import { convertBlocks } from './blocks'
 import { foundryFeature } from './foundry'
+import { addMonsterMechanics } from './monsterMech'
 
 type Rec = Record<string, unknown>
 const isObj = (value: unknown): value is Rec => !!value && typeof value === 'object' && !Array.isArray(value)
@@ -150,7 +151,7 @@ function carryItem(plan: PlannedEntry, data: Rec, ctx: ConvertContext, inline: I
 /** 转换之后、入包之前：补上来源里的这些字段。只新增键，不改已有字段。 */
 export function carryExtras(plan: PlannedEntry, built: Entry, ctx: ConvertContext, inline: InlineContext): Entry {
   const data = built.data as Rec
-  if (plan.type === 'monster') carryMonster(plan, data, ctx, inline)
+  if (plan.type === 'monster') { carryMonster(plan, data, ctx, inline); addMonsterMechanics(plan, data, ctx) }
   else if (plan.type === 'item') carryItem(plan, data, ctx, inline)
   else if (plan.type === 'spell' && Array.isArray(plan.raw.abilityCheck)) data.abilityCheck = plan.raw.abilityCheck.map(String)
   else if (plan.type === 'rule' && Array.isArray(plan.raw.seeAlsoAction)) {

@@ -119,5 +119,11 @@
   "entry": "feature.repulsion-shield.tce",
   "reason": "奇械师注法（Infusion）斥力之盾：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
   "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
+ },
+ {
+  "finding": "a17-empty",
+  "entry": "feat.spell-sniper.phb",
+  "reason": "法术狙击手可选吟游诗人／牧师，但这两个职业的书里没有需要攻击检定的戏法，池子本来就是空的；来源如此，不是转换错误",
+  "basis": "PHB 法术狙击手专长；两个职业的戏法表"
  }
 ]

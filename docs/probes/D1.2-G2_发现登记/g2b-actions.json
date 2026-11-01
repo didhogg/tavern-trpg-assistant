@@ -14,7 +14,7 @@
   {
    "check": "b4",
    "key": "activities",
-   "value": 3329
+   "value": 3402
   },
   {
    "check": "b4",
@@ -44,62 +44,8 @@
   {
    "check": "b4",
    "key": "kind.utility",
-   "value": 176
+   "value": 249
   }
  ],
- "findings": [
-  {
-   "id": "b4-consumption-target-missing",
-   "check": "b4",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.ambush.tce 消耗：伏击 → 卓越骰",
-    "feature.bait-and-switch.tce 消耗：换位诈术 → 卓越骰",
-    "feature.banishing-arrow.xge 消耗：放逐矢 → 奥术射击",
-    "feature.beguiling-arrow.xge 消耗：欺诈矢 → 奥术射击",
-    "feature.brace.tce 消耗：警戒 → 卓越骰",
-    "feature.bursting-arrow.xge 消耗：爆裂矢 → 奥术射击",
-    "feature.careful-spell.phb 消耗：谨慎法术 → 术法点",
-    "feature.commanders-strike.phb 消耗：指挥官奇袭 → 卓越骰",
-    "feature.commanding-presence.tce 消耗：领导风范 → 卓越骰",
-    "feature.disarming-attack.phb 消耗：缴械攻击 → 卓越骰",
-    "feature.distant-spell.phb 消耗：远程法术 → 术法点",
-    "feature.distracting-strike.phb 消耗：扰乱打击 → 卓越骰",
-    "feature.empowered-spell.phb 消耗：强效法术 → 术法点",
-    "feature.enfeebling-arrow.xge 消耗：虚弱矢 → 奥术射击",
-    "feature.evasive-footwork.phb 消耗：灵巧步法 → 卓越骰",
-    "feature.extended-spell.phb 消耗：延效法术 → 术法点",
-    "feature.feinting-attack.phb 消耗：诡诈攻击 → 卓越骰",
-    "feature.goading-attack.phb 消耗：挑衅攻击 → 卓越骰",
-    "feature.grappling-strike.tce 消耗：擒拿击 → 卓越骰",
-    "feature.grasping-arrow.xge 消耗：缠绕矢 → 奥术射击",
-    "feature.heightened-spell.phb 消耗：升阶法术 → 术法点",
-    "feature.lunging-attack.phb 消耗：突刺攻击 → 卓越骰",
-    "feature.maneuvering-attack.phb 消耗：灵动攻击 → 卓越骰",
-    "feature.menacing-attack.phb 消耗：恐吓攻击 → 卓越骰",
-    "feature.parry.phb 消耗：格挡 → 卓越骰",
-    "feature.piercing-arrow.xge 消耗：穿梭矢 → 奥术射击",
-    "feature.precision-attack.phb 消耗：精准攻击 → 卓越骰",
-    "feature.pushing-attack.phb 消耗：推撞攻击 → 卓越骰",
-    "feature.quick-toss.tce 消耗：快手投掷 → 卓越骰",
-    "feature.quickened-spell.phb 消耗：瞬发法术 → 术法点",
-    "feature.rally.phb 消耗：重整旗鼓 → 卓越骰",
-    "feature.riposte.phb 消耗：反击 → 卓越骰",
-    "feature.seeking-arrow.xge 消耗：追踪矢 → 奥术射击",
-    "feature.seeking-spell.tce 消耗：追踪法术 → 术法点",
-    "feature.shadow-arrow.xge 消耗：遮影矢 → 奥术射击",
-    "feature.subtle-spell.phb 消耗：精妙法术 → 术法点",
-    "feature.sweeping-attack.phb 消耗：横扫攻击 → 卓越骰",
-    "feature.tactical-assessment.tce 消耗：战术预估 → 卓越骰",
-    "feature.transmuted-spell.tce 消耗：转化法术 → 术法点",
-    "feature.trip-attack.phb 消耗：摔绊攻击 → 卓越骰",
-    "feature.twinned-spell.phb 消耗：孪生法术 → 术法点"
-   ],
-   "expected": "项目自己的掷骰器与格式定义",
-   "note": "行动消耗的资源是中文名字（卓越骰、奥术射击等），不是特性编号，指向不到资源池；应改成 consumes: { pool: 特性编号 }",
-   "selfCheck": true,
-   "count": 41
-  }
- ]
+ "findings": []
 }

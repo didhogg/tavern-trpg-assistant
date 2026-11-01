@@ -77,7 +77,7 @@ describe('R7b 怪物特性与传奇动作', () => {
     const all = await packs()
     const d = (id: string): Record<string, unknown> => data(all.get(id))
     expect(d('monster.archmage.mm').ac).toContainEqual({ value: 15, condition: '法师护甲时', braces: true })
-    expect(d('monster.ambitious-assassin.bmt').ac).toContainEqual({ value: 16, from: '镶钉皮甲' })
+    expect(d('monster.ambitious-assassin.bmt').ac).toContainEqual({ value: 16, from: '镶钉皮甲', items: ['item.studded-leather-armor.phb'] })
     expect(JSON.stringify([d('monster.archmage.mm').resist, d('monster.elemental-spirit.tce').resist, d('monster.elemental-spirit.tce').immune])).not.toMatch(/（（|））/)
     expect((d('item.longbow.phb').weapon as { range: unknown }).range).toEqual({ normal: 150, long: 600 })
     expect((d('item.adamantine-weapon.xge').variantTemplate as { excludes: unknown }).excludes).toEqual({ net: true })

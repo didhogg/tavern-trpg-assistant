@@ -4,7 +4,7 @@
   {
    "check": "b3",
    "key": "A",
-   "value": 144
+   "value": 139
   },
   {
    "check": "b3",
@@ -14,17 +14,17 @@
   {
    "check": "b3",
    "key": "A.属性值",
-   "value": 3
+   "value": 2
   },
   {
    "check": "b3",
    "key": "A.感官",
-   "value": 7
+   "value": 6
   },
   {
    "check": "b3",
    "key": "A.抗性免疫",
-   "value": 47
+   "value": 45
   },
   {
    "check": "b3",
@@ -39,7 +39,7 @@
   {
    "check": "b3",
    "key": "A.生命上限",
-   "value": 4
+   "value": 3
   },
   {
    "check": "b3",
@@ -49,12 +49,12 @@
   {
    "check": "b3",
    "key": "B",
-   "value": 410
+   "value": 376
   },
   {
    "check": "b3",
    "key": "C",
-   "value": 584
+   "value": 576
   },
   {
    "check": "b3",
@@ -64,7 +64,7 @@
   {
    "check": "b3",
    "key": "plainMechanic",
-   "value": 1138
+   "value": 1091
   }
  ],
  "findings": [
@@ -101,7 +101,6 @@
     "feature.cleric-forge-domain-bonus-proficiency.xge 附赠熟练项：熟练",
     "feature.cleric-forge-domain-saint-of-forge-and-fire.xge 锻炉与烈焰的圣徒：抗性免疫",
     "feature.cleric-forge-domain-soul-of-the-forge.xge 锻造之魂：护甲等级、抗性免疫",
-    "feature.cleric-life-domain-channel-divinity-preserve-life.phb 引导神力：维持生命：生命上限",
     "feature.cleric-nature-domain-acolyte-of-nature.phb 自然侍僧：熟练",
     "feature.cleric-nature-domain-dampen-elements.phb 抑制元素：抗性免疫",
     "feature.cleric-order-domain-bonus-proficiencies.tce 附赠熟练：熟练",
@@ -123,11 +122,12 @@
     "feature.dragonborn-green-damage-resistance.phb 伤害抗性：抗性免疫",
     "feature.dragonborn-red-damage-resistance.phb 伤害抗性：抗性免疫",
     "feature.dragonborn-silver-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-white-damage-resistance.phb 伤害抗性：抗性免疫"
+    "feature.dragonborn-white-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.druid-circle-of-stars-full-of-stars.tce 灿若繁星：抗性免疫"
    ],
    "expected": "各特性原文（初筛，逐条确认见分诊清单）",
    "note": "影响护甲等级、速度、生命上限、熟练、抗性、感官、先攻、属性值的机制只有文字（初筛结果，含误报，需对照原书确认后结构化）",
-   "count": 144
+   "count": 139
   },
   {
    "id": "b3-B-action-in-text",
@@ -188,7 +188,7 @@
    ],
    "expected": "各特性原文",
    "note": "影响行动、伤害、资源的机制只有文字：按此前的决定在 U5.3 行动、U5.5 资源、M6 结算时细化，G2 不要求现在结构化",
-   "count": 410
+   "count": 376
   }
  ]
 }

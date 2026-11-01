@@ -48,7 +48,7 @@ function itemCategory(base: Raw, variant: Raw): string {
   if (base.type === 'T') return 'tool'
   if (base.type === 'P' || base.type === 'SC') return 'consumable'
   if (base.type === 'MNT') return 'mount'
-  if (base.type === 'VE') return 'vehicle'
+  if (base.type === 'VEH' || base.type === 'SHP' || base.type === 'AIR') return 'vehicle'
   if (base.type === 'AT' || base.type === 'GS') return 'treasure'
   return 'wondrous'
 }

@@ -37,7 +37,7 @@ describe('P4 专长与可选特性', () => {
     expect(agonizing.data.requires).toEqual({ all: [{ spell: ['spell.eldritch-blast.phb'] }] })
     expect(agonizing.data.effects).toContainEqual({ amount: 'cha.mod', kind: 'damageBonus', scope: 'spell', transfer: true })
     const trip = all.get('feature.trip-attack.phb')!
-    expect(trip.data.activities).toContainEqual(expect.objectContaining({ kind: 'utility', consumption: { targets: [expect.objectContaining({ type: 'resource', target: '卓越骰' })] } }))
+    expect(trip.data.activities).toContainEqual(expect.objectContaining({ kind: 'utility', consumption: { targets: [expect.objectContaining({ type: 'resource', target: 'feature.fighter-battle-master-combat-superiority.phb' })] } }))
   })
 
   it('专长属性提升与可选特性数量统计', async () => {

@@ -23,9 +23,26 @@ function str(value: unknown): string {
 
 function number(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string' && /^[-+]?\d+(?:\.\d+)?$/.test(value.trim())) return Number(value)
+  // Foundry 常写成 "+ 10"（符号后带空格），以前不认、再被 ?? 0 兜底成 0
+  if (typeof value === 'string' && /^[-+]?\s*\d+(?:\.\d+)?$/.test(value.trim())) return Number(value.replace(/\s+/g, ''))
   return undefined
 }
+
+/** 解析不了的值：保留成看得懂的说明，绝不写 0。 */
+function keep(key: string, value: unknown): Effect {
+  return { kind: 'note', text: `${process.env.TRPG_DATA_LANG === 'en' ? 'Foundry effect' : 'Foundry 效果'}：${key} ${typeof value === 'string' ? normalizeFoundryFormula(value.replace(/sign\(@attributes\.movement\.[a-z]+\)\s*\*\s*/gi, '')) : String(value)}` } as Effect
+}
+
+/** 数值或公式（`@scale.x.y`、`@abilities.dex.mod`…）；`sign(@attributes.movement.walk) *` 这种"有这种移动方式才加"的因子去掉。 */
+function amountOf(value: unknown): number | string | undefined {
+  const n = number(value)
+  if (n !== undefined) return n
+  if (typeof value !== 'string') return undefined
+  return safeFormula(value.replace(/sign\(@attributes\.movement\.[a-z]+\)\s*\*\s*/gi, '').replace(/^\+\s*\((.*)\)$/, '$1'))
+}
+
+/** Foundry 的护甲计算方式 → 基础公式。 */
+const AC_CALC: Record<string, string> = { unarmoredMonk: '10 + dex.mod + wis.mod', unarmoredBarb: '10 + dex.mod + con.mod', draconic: '13 + dex.mod', mage: '13 + dex.mod', unarmoredBard: '10 + dex.mod + cha.mod' }
 
 export function damageKey(value: unknown): DamageType | undefined {
   const text = str(value).trim()
@@ -87,9 +104,10 @@ function changeToEffect(change: Raw, result: FoundryRules, example: string): Eff
   if (DAMAGE_BONUS_KEYS[key]) {
     const formula = typeof value === 'string' ? safeFormula(value) : undefined
     const ability = typeof value === 'string' ? /@abilities\.(str|dex|con|int|wis|cha)\.mod/.exec(value)?.[1] : undefined
-    return { kind: 'damageBonus', amount: formula ?? (ability ? `${ability}.mod` : number(value) ?? 0), scope: DAMAGE_BONUS_KEYS[key].scope }
+    const amount = formula ?? (ability ? `${ability}.mod` : number(value))
+    return amount === undefined ? keep(key, value) : { kind: 'damageBonus', amount, scope: DAMAGE_BONUS_KEYS[key].scope }
   }
-  if (ATTACK_BONUS_KEYS[key]) return { kind: 'attackBonus', amount: typeof value === 'string' ? safeFormula(value) ?? 0 : number(value) ?? 0, scope: ATTACK_BONUS_KEYS[key].scope }
+  if (ATTACK_BONUS_KEYS[key]) { const amount = amountOf(value); return amount === undefined ? keep(key, value) : { kind: 'attackBonus', amount, scope: ATTACK_BONUS_KEYS[key].scope } }
   if (key === CHANGE_KEYS.resistance || key === CHANGE_KEYS.immunity || key === CHANGE_KEYS.vulnerability) {
     const type = damageKey(value)
     if (!type) return undefined
@@ -99,19 +117,28 @@ function changeToEffect(change: Raw, result: FoundryRules, example: string): Eff
     const condition = conditionKey(value)
     return condition ? { kind: 'conditionImmunity', conditions: [condition as never] } : undefined
   }
-  for (const [sense, path] of Object.entries(SENSE_KEYS)) if (key === path) return { kind: 'sense', sense: sense as never, range: number(value) ?? 0 }
-  for (const [move, path] of Object.entries(MOVE_KEYS)) if (key === path) return value === true ? { kind: 'speed', mode: move as never, equalsWalk: true } : { kind: 'speed', mode: move as never, amount: number(value) ?? 0, bonus: number(value) ?? undefined }
-  if (key === CHANGE_KEYS.acBonus) return { kind: 'ac', mode: 'bonus', amount: number(value) ?? 0 }
+  for (const [sense, path] of Object.entries(SENSE_KEYS)) if (key === path) { const range = number(value); return range === undefined ? keep(key, value) : { kind: 'sense', sense: sense as never, range } }
+  for (const [move, path] of Object.entries(MOVE_KEYS)) if (key === path) return value === true || /^\s*@attributes\.movement\.walk\s*$/.test(String(value)) ? { kind: 'speed', mode: move as never, equalsWalk: true } : (number(value) === undefined ? keep(key, value) : mode === 'ADD' || /^\s*[+-]/.test(String(value)) ? { kind: 'speed', mode: move as never, bonus: number(value) } : { kind: 'speed', mode: move as never, amount: number(value) })
+  if (key === CHANGE_KEYS.acBonus) return number(value) === undefined ? keep(key, value) : { kind: 'ac', mode: 'bonus', amount: number(value) }
+  if (key === 'system.attributes.ac.calc') return AC_CALC[str(value)] ? { kind: 'ac', mode: 'base', formula: AC_CALC[str(value)] } : undefined
+  if (key === 'flags.dnd5e.weaponCriticalThreshold' && number(value)) return { kind: 'critRange', min: number(value)!, scope: 'weapon' }
+  if (key === 'flags.dnd5e.meleeCriticalDamageDice' && number(value)) return { kind: 'critDice', count: number(value)!, scope: 'melee' }
+  if (key === 'system.bonuses.abilities.save' && number(value) !== undefined) return { kind: 'save', all: true, level: 'bonus', amount: number(value) }
+  const abilityBonus = /^system\.abilities\.(str|dex|con|int|wis|cha)\.bonuses\.save$/.exec(key)
+  if (abilityBonus && number(value) !== undefined) return { kind: 'save', ability: abilityBonus[1] as 'str', level: 'bonus', amount: number(value) }
+  if (key === 'system.attributes.hp.max') { const f = amountOf(value); return f === undefined ? keep(key, value) : { kind: 'hpMax', flat: f } }
+  if (key === 'system.properties' || key === 'system.attunement' || key === 'system.range' || key === 'system.range.units') return undefined
   if (key === CHANGE_KEYS.acFormula && typeof value === 'string') return { kind: 'ac', mode: 'base', formula: safeFormula(value) }
-  if (key === CHANGE_KEYS.hpPerLevel) return { kind: 'hpMax', perLevel: number(value) ?? 0 }
+  if (key === CHANGE_KEYS.hpPerLevel) { const f = amountOf(value); return f === undefined ? keep(key, value) : { kind: 'hpMax', perLevel: f } }
   if (key === CHANGE_KEYS.hpOverall) {
     if (typeof value === 'string' && /level/i.test(value)) {
       const times = /(\d+)\s*\*\s*@details\.level|@details\.level\s*\*\s*(\d+)/i.exec(value)
       return { kind: 'hpMax', perLevel: times ? Number(times[1] ?? times[2]) : 1 }
     }
-    return { kind: 'hpMax', flat: number(value) ?? 0 }
+    const f = amountOf(value)
+    return f === undefined ? keep(key, value) : { kind: 'hpMax', flat: f }
   }
-  if (key === CHANGE_KEYS.initiativeBonus) return { kind: 'initiative', bonus: number(value) ?? 0 }
+  if (key === CHANGE_KEYS.initiativeBonus) { const f = amountOf(value); return f === undefined ? keep(key, value) : { kind: 'initiative', bonus: f } }
   if (key === CHANGE_KEYS.initiativeAlert && value === true) return { kind: 'initiative', bonus: 5 }
   if (key === CHANGE_KEYS.initiativeAdvantage && value === true) return { kind: 'initiative', advantage: true }
   if (key === 'system.attributes.init.roll.mode' && number(value) === 1) return { kind: 'initiative', advantage: true }
@@ -129,17 +156,17 @@ function changeToEffect(change: Raw, result: FoundryRules, example: string): Eff
     const name = SKILL_CODES[skill[1]]
     if (!name) return undefined
     if (key.endsWith('roll.mode')) return number(value) === 1 ? { kind: 'skill', skill: name as never, level: 'advantage' } : undefined
-    return { kind: 'skill', skill: name as never, level: 'bonus', amount: number(value) ?? 0 }
+    return number(value) === undefined ? keep(key, value) : { kind: 'skill', skill: name as never, level: 'bonus', amount: number(value) }
   }
   const abilityCheck = /^system\.abilities\.(str|dex|con|int|wis|cha)\.(check|save)\.(roll\.mode|bonuses\.(?:check|save))$/.exec(key)
   if (abilityCheck) {
     const ability = abilityCheck[1] as 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
-    if (abilityCheck[2] === 'save') return number(value) === 1 ? { kind: 'save', ability, level: 'advantage' } : { kind: 'save', ability, level: 'bonus', amount: number(value) ?? 0 }
+    if (abilityCheck[2] === 'save') return number(value) === 1 ? { kind: 'save', ability, level: 'advantage' } : (number(value) === undefined ? keep(key, value) : { kind: 'save', ability, level: 'bonus', amount: number(value) })
     return number(value) === 1 ? { kind: 'advantage', on: 'check', scope: ability } : { kind: 'note', text: `${ability} 检定加值 ${String(value)}` }
   }
   if (key === 'system.attributes.concentration.roll.mode' && number(value) === 1) return { kind: 'advantage', on: 'save', scope: 'concentration' }
-  if (key === 'system.bonuses.spell.dc') return { kind: 'saveDcBonus', amount: typeof value === 'string' ? safeFormula(value) ?? 0 : number(value) ?? 0, scope: 'spell' }
-  if (key === 'system.bonuses.spell.attack') return { kind: 'spellAttackBonus', amount: typeof value === 'string' ? safeFormula(value) ?? 0 : number(value) ?? 0, scope: 'spell' }
+  if (key === 'system.bonuses.spell.dc') { const f = amountOf(value); return f === undefined ? keep(key, value) : { kind: 'saveDcBonus', amount: f, scope: 'spell' } }
+  if (key === 'system.bonuses.spell.attack') { const f = amountOf(value); return f === undefined ? keep(key, value) : { kind: 'spellAttackBonus', amount: f, scope: 'spell' } }
   if (key === 'flags.dnd5e.jackOfAllTrades') return { kind: 'note', text: '万事通：未列出的技能检定加一半熟练加值' }
   if (key === 'flags.dnd5e.observantFeat') return { kind: 'passive', skill: 'perception', bonus: 5 }
   if (key === 'flags.dnd5e.diamondSoul' || key === 'flags.dnd5e.reliableTalent' || key === 'flags.dnd5e.elvenAccuracy') return { kind: 'note', text: `Foundry 特性：${key.split('.').pop()}` }

@@ -89,7 +89,7 @@ describe('RW20–RW25 验收（§20.8）', () => {
     const all = allOf(await loadPacks())
     expect([...all.values()].filter((e) => e.type === 'race' && hasTrait(e))).toHaveLength(61)
     expect([...all.values()].filter((e) => e.type === 'subrace' && hasTrait(e))).toHaveLength(21)
-    expect([...all.values()].filter((e) => e.type === 'feat' && hasTrait(e))).toHaveLength(14)
+    expect([...all.values()].filter((e) => e.type === 'feat' && hasTrait(e))).toHaveLength(20) // 14 + 6 个带"自选法术"池的专长（G2.5 P5）
     expect(groups(all.get('race.elf.phb')!)).toContainEqual(expect.objectContaining({ grants: expect.arrayContaining(['skill:perception']) }))
     expect(groups(all.get('subrace.elf-high.phb')!).some((a) => (a.grants as string[]).includes('weapon:longsword'))).toBe(true)
     expect(groups(all.get('race.half-elf.phb')!).some((a) => (a.choices as Array<{ count: number }>).some((c) => c.count === 2))).toBe(true)

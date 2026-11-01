@@ -34,7 +34,7 @@
   {
    "check": "c1",
    "key": "apiDiffers.resist",
-   "value": 40
+   "value": 39
   },
   {
    "check": "c1",
@@ -49,11 +49,6 @@
   {
    "check": "c1",
    "key": "apiDiffers.speed-walk",
-   "value": 1
-  },
-  {
-   "check": "c1",
-   "key": "apiDiffers.vulnerable",
    "value": 1
   },
   {

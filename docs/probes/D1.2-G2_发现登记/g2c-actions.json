@@ -19,7 +19,7 @@
   {
    "check": "c4",
    "key": "legendaryCostStructured",
-   "value": 0
+   "value": 55
   },
   {
    "check": "c4",
@@ -34,7 +34,7 @@
   {
    "check": "c4",
    "key": "rechargeStructured",
-   "value": 0
+   "value": 342
   },
   {
    "check": "c4",
@@ -111,19 +111,6 @@
    "count": 51
   },
   {
-   "id": "c4-legendary-cost-text-only",
-   "check": "c4",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "55 个“花费 N 个动作”的传奇动作里 55 个没有结构化"
-   ],
-   "expected": "怪物传奇动作名称",
-   "note": "传奇动作花费的动作数只写在名字里（“振翅攻击（花费2个动作）”）；传奇动作点数是每回合共享的，自动扣点需要读到花费",
-   "selfCheck": true,
-   "count": 1
-  },
-  {
    "id": "c4-multiattack-text-only",
    "check": "c4",
    "kind": "decision",
@@ -133,19 +120,6 @@
    ],
    "expected": "各怪物多重攻击原文",
    "note": "“多重攻击”（每回合攻击几次、各用哪个攻击）只有文字；战斗自动结算需要“次数 + 每次用哪个动作”的结构，或由玩家/DM 读文字手动点击（推荐：先不结构化，从简）",
-   "selfCheck": true,
-   "count": 1
-  },
-  {
-   "id": "c4-recharge-text-only",
-   "check": "c4",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "342 个“充能 5–6”类动作里 342 个没有结构化"
-   ],
-   "expected": "怪物动作名称里的“（充能 5–6）”",
-   "note": "充能动作（龙的吐息等）的充能条件只写在动作名里，没有结构；战斗里每回合开始要掷 d6 判断是否恢复，自动结算读不到",
    "selfCheck": true,
    "count": 1
   }

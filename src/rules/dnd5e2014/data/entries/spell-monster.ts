@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { entryIdSchema } from '../../../../schemas/common'
-import { activationSchema, rangeSchema, damagePartSchema } from '../common'
+import { activationSchema, rangeSchema, damagePartSchema, usesSchema } from '../common'
 import { textBlockSchema } from '../blocks'
 import { activitySchema } from '../activities'
 import { scaleDiceSchema } from '../advancement'
@@ -57,6 +57,8 @@ const namedAction = z.looseObject({
   rechargeRoll: rechargeRollSchema.optional(),
   /** 传奇动作花费（没写 = 1）。 */
   cost: legendaryCostSchema.optional(),
+  /** 按休息恢复的次数（动作名"（短休或长休后充能）"等）。 */
+  uses: usesSchema.optional(),
 })
 
 const spellcastingSchema = z.looseObject({
@@ -94,7 +96,7 @@ export const monsterDataSchema = z.looseObject({
   size: z.array(z.enum(['T', 'S', 'M', 'L', 'H', 'G'])).min(1),
   creatureType: z.object({ type: z.string().min(1).max(40), tags: z.array(z.string()).default([]), swarm: z.boolean().optional() }),
   alignment: z.string().max(80).optional(),
-  ac: z.array(z.object({ value: z.number().int(), from: z.string().max(200).optional(), condition: z.string().max(120).optional(), braces: z.boolean().optional() })).min(1),
+  ac: z.array(z.object({ value: z.number().int(), from: z.string().max(200).optional(), condition: z.string().max(120).optional(), braces: z.boolean().optional(), items: z.array(z.string().min(1)).optional() })).min(1),
   hp: z.object({ average: z.number().int().nonnegative(), formula: z.string().max(40).optional(), special: z.string().max(300).optional() }),
   speed: z.record(z.string(), z.union([z.number(), z.boolean()])),
   abilities: z.record(z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha']), z.number().int()),

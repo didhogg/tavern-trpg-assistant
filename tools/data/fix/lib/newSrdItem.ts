@@ -18,6 +18,7 @@ export function newSrdItem(id: string, name: string, nameEn: string, page: numbe
       rarity: 'none',
       attunement: { required: false },
       tags: ['G'],
+      itemKind: 'adventuringGear',
       properties: [],
       lootTables: [],
       ...(value === undefined ? {} : { value }),

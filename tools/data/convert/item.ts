@@ -8,6 +8,7 @@ import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'
 import { dedupeEffects, foundryFeature, foundryRulesFor } from './foundry'
 import { ITEM_ACTIVITIES } from '../config/itemRules'
+import { focusTypeOf, isConsumable, itemKindOf, typeCode } from '../config/itemKinds'
 
 const RARITY = new Set(['none', 'common', 'uncommon', 'rare', 'very rare', 'legendary', 'artifact', 'varies'])
 
@@ -21,8 +22,8 @@ function categoryOf(raw: Record<string, unknown>): string {
   if (code === 'T') return 'tool'
   if (code === 'P' || code === 'SC') return 'consumable'
   if (code === 'MNT') return 'mount'
-  if (code === 'VE' || code === 'SHP') return 'vehicle'
-  if (code === 'AT' || code === 'GS') return 'treasure'
+  if (code === 'VEH' || code === 'SHP' || code === 'AIR' || code === 'SPC') return 'vehicle'
+  if (code === 'AT' || code === 'GS' || code.startsWith('$')) return 'treasure'
   if (code === 'G' || code === 'FD' || code === 'EXP') return 'gear'
   return 'wondrous'
 }
@@ -157,7 +158,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     : raw._template === true
       ? [{ p: entry.name }]
       : convertBlocks(raw.entries, inline)
-  const category = family ? 'family' : raw._template === true ? 'template' : categoryOf(raw)
+  const category = family ? 'family' : raw._template === true ? 'template' : categoryOf({ ...raw, type: typeCode(raw.type) })
   const baseId = str(base.name) ? ctx.resolveEntryId('item', str(base.name)) : undefined
   const data: Record<string, unknown> = {
     src: pageOf(entry),
@@ -176,7 +177,10 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(bonusesOf(raw) ? { bonuses: bonusesOf(raw) } : {}),
     ...(effects.length ? { effects } : {}),
     ...(activities.length ? { activities } : {}),
-    ...(category === 'consumable' ? { consumable: true } : {}),
+    ...(category === 'consumable' || (category !== 'family' && category !== 'template' && isConsumable(raw)) ? { consumable: true } : {}),
+    ...(category !== 'family' && category !== 'template' ? { itemKind: itemKindOf(raw, raw._baseItem as Record<string, unknown> | undefined) } : {}),
+    ...(focusTypeOf(raw) ? { focusType: focusTypeOf(raw) } : {}),
+    ...(Array.isArray(raw.poisonTypes) && raw.poisonTypes.length ? { poisonDelivery: raw.poisonTypes.map(String) } : {}),
     ...(contentsOf(raw, ctx) ? { contents: contentsOf(raw, ctx) } : {}),
     ...(raw.atomicPackContents === true ? { atomic: true } : {}),
     ...(raw.containerCapacity && typeof raw.containerCapacity === 'object' ? { container: raw.containerCapacity } : {}),

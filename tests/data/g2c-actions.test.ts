@@ -36,7 +36,7 @@ describe('G2c 怪物的动作：攻击、伤害、豁免、充能、多重攻击
         const acts = arr(a.activities).map(rec)
         const first = acts[0]
         if (/多重攻击/.test(name)) multiattack++
-        if (/充能|\d\s*[–-]\s*\d\)|\d\s*[–-]\s*\d）/.test(name)) { recharge++; if (acts.some((x) => rec(x.uses).recharge !== undefined || x.recharge !== undefined) || a.recharge !== undefined) rechargeStructured++ }
+        if (/充能|\d\s*[–-]\s*\d\)|\d\s*[–-]\s*\d）/.test(name)) { recharge++; if (acts.some((x) => rec(x.uses).recharge !== undefined || x.recharge !== undefined) || a.recharge !== undefined || a.rechargeRoll !== undefined || rec(a.uses).recharge !== undefined) rechargeStructured++ }
         if (/花费\s*\d+\s*个动作/.test(name)) { legendaryCost++; if (acts.some((x) => rec(rec(x.consumption).targets) !== undefined && arr(rec(x.consumption).targets).length) || a.cost !== undefined) legendaryCostStructured++ }
         for (const x of acts) {
           if (x.kind === 'attack') {

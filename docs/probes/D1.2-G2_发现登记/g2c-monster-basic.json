@@ -4,7 +4,7 @@
   {
    "check": "c1",
    "key": "checks",
-   "value": 10101
+   "value": 9799
   },
   {
    "check": "c1",
@@ -179,83 +179,19 @@
    "count": 23
   },
   {
-   "id": "c1-resist-conditional",
-   "check": "c6",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.air-elemental-myrmidon.mpmm 气元素侍从（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.air-elemental-myrmidon.mtf 气元素侍从（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.air-elemental.mm 气元素（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.alhoon.vgm 慑心魔（immune）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.alkilith.mpmm 懒惰魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.alkilith.mtf 懒惰魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.allip.mpmm 怨魂（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.allip.mtf 怨魂（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.amnizu.mpmm 安祖魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.amnizu.mtf 安祖魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.androsphinx.mm 男面斯芬克斯（immune）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.angry-sorrowsworn.mpmm 愤怒之哀恸魔（resist）：bludgeoning、piercing、slashing（处于微光光照或黑暗时）",
-    "monster.annis-hag-coven-death.vgm 妖鬼婆（集会；死亡）（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.annis-hag-coven-nature.vgm 妖鬼婆（集会；自然）（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.annis-hag-coven-prophecy.vgm 妖鬼婆（集会；预言）（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.annis-hag-coven.vgm 妖鬼婆（集会）（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.annis-hag.vgm 妖鬼婆（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.arcanaloth.mm 奥法罗斯魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.astral-dreadnought.mpmm 星界巨舰兽（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.astral-dreadnought.mtf 星界巨舰兽（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.aurnozci.bmt 奥诺茨（immune）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.autumn-eladrin.mtf 秋之雅灵（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.babau.mpmm 巴布魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.babau.vgm 巴布魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.bael.mpmm 巴艾尔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.bael.mtf 巴艾尔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.balor.mm 巴洛炎魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.banshee.mm 报丧妖（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.baphomet.mpmm 巴弗灭（immune）：bludgeoning、piercing、slashing（非魔法的）",
-    "monster.baphomet.mtf 巴弗灭（immune）：bludgeoning、piercing、slashing（非魔法的）",
-    "monster.barbed-devil.mm 猬魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.barghest.mpmm 犬魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.barghest.vgm 犬魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.bearded-devil.mm 须魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.black-abishai.mpmm 亚比莎黑龙魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.black-abishai.mtf 亚比莎黑龙魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.blue-abishai.mpmm 亚比莎蓝龙魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.blue-abishai.mtf 亚比莎蓝龙魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.bodak.mpmm 波达尸（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.bodak.vgm 波达尸（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.bone-devil.mm 骨魔（resist）：bludgeoning、piercing、slashing（非银质武器且非魔法攻击的）",
-    "monster.boneclaw.mtf 骨爪（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.booyahg-slave-of-the-fiend.vgm 布耶格，邪魔之奴（resist）：slashing（来自非银制武器的非魔法攻击）",
-    "monster.breath-drinker.bmt 饮息者（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.bronze-scout.mtf 青铜监视者（immune）：bludgeoning、piercing、slashing（非精金武器且非魔法攻击的）",
-    "monster.cadaver-collector.mpmm 掮尸者（immune）：bludgeoning、piercing、slashing（非精金武器且非魔法攻击的）",
-    "monster.cadaver-collector.mtf 掮尸者（immune）：bludgeoning、piercing、slashing（非精金武器且非魔法攻击的）",
-    "monster.cambion.mm 坎比翁（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.canoloth.mpmm 披甲罗斯魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）",
-    "monster.canoloth.mtf 披甲罗斯魔（resist）：bludgeoning、piercing、slashing（来自非魔法攻击）"
-   ],
-   "expected": "代码表与格式定义",
-   "note": "抗性/免疫/易伤写成“伤害代码、伤害代码（条件文字）”的一整串字符串（非魔法攻击、非银质武器、非精金武器、微光或黑暗中、仅限某元素位面……）：程序读不出“是哪些伤害类型、在什么条件下”，战斗里自动减伤会判错",
-   "selfCheck": true,
-   "count": 300
-  },
-  {
    "id": "c1-resist-text",
    "check": "c6",
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
     "monster.archmage-familiar.mm 大法师（魔宠）（resist）：法术伤害",
-    "monster.archmage-familiar.mm 大法师（魔宠）（resist）：非魔法的 bludgeoning、piercing、slashing（来自石肤术）",
     "monster.archmage.mm 大法师（resist）：法术伤害",
-    "monster.archmage.mm 大法师（resist）：非魔法的 bludgeoning、piercing、slashing（来自石肤术）",
     "monster.kobold-dragonshield.mpmm 狗头人龙盾护卫（resist）：见下文龙之抗性"
    ],
    "expected": "代码表与格式定义",
    "note": "抗性/免疫写成纯文字（法术伤害、见下文龙之抗性、来自石肤术）",
    "selfCheck": true,
-   "count": 5
+   "count": 3
   }
  ]
 }

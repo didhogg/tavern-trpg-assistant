@@ -3,13 +3,18 @@
  "stats": [
   {
    "check": "a17",
+   "key": "excluded-a17-empty",
+   "value": 1
+  },
+  {
+   "check": "a17",
    "key": "skill*",
    "value": 18
   },
   {
    "check": "a17",
    "key": "tokens",
-   "value": 83
+   "value": 92
   }
  ],
  "findings": []

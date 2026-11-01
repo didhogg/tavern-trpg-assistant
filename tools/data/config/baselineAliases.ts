@@ -8,6 +8,7 @@ export const BASELINE_ALIASES: Entry[] = [
       },
       "baseItem": "刺剑",
       "category": "weapon",
+      "itemKind": "meleeWeapon",
       "credit": {
         "by": "共库机翻",
         "license": "CC-BY-NC-SA-4.0",
@@ -76,6 +77,7 @@ export const BASELINE_ALIASES: Entry[] = [
         "attack": "+3"
       },
       "category": "weapon",
+      "itemKind": "meleeWeapon",
       "credit": {
         "by": "共库机翻",
         "license": "CC-BY-NC-SA-4.0",
@@ -135,6 +137,7 @@ export const BASELINE_ALIASES: Entry[] = [
       },
       "baseItem": "短剑",
       "category": "weapon",
+      "itemKind": "meleeWeapon",
       "credit": {
         "by": "共库机翻",
         "license": "CC-BY-NC-SA-4.0",
@@ -205,6 +208,7 @@ export const BASELINE_ALIASES: Entry[] = [
         "attack": "+3"
       },
       "category": "weapon",
+      "itemKind": "meleeWeapon",
       "credit": {
         "by": "共库机翻",
         "license": "CC-BY-NC-SA-4.0",

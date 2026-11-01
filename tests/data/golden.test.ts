@@ -74,7 +74,8 @@ describe('D1 §12 转换器金样', () => {
     expect(bard.skills?.from.length).toBe(18)
     expect(all.get('class.druid.phb')!.data.multiclass).toMatchObject({ proficiencies: { armor: ['light', 'medium', 'shield'] } })
     expect(all.get('monster.empyrean.mm')!.data.alignment).not.toContain('object')
-    expect(all.get('monster.lich.mm')!.data.immune).toContain('bludgeoning、piercing、slashing（来自非魔法攻击）')
+    // 带条件的免疫拆成纯代码＋immuneConditional（G2.5 P3，01 F1）
+    expect(all.get('monster.lich.mm')!.data.immuneConditional).toContainEqual({ damage: ['bludgeoning', 'piercing', 'slashing'], except: 'magical', when: '来自非魔法攻击' })
     const lich = (all.get('monster.lich.mm')!.data.spellcasting as Array<{ spells?: Record<string, { slots?: number; spells: string[] }> }>)[0]
     expect(lich.spells?.['9']).toMatchObject({ slots: 1 })
     expect(lich.spells?.['1'].spells.length).toBe(4)

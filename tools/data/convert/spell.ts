@@ -1,3 +1,4 @@
+import { recordVariant } from './variantLists'
 import type { Entry } from '../../../src/schemas/pack'
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
@@ -56,9 +57,13 @@ function classIdsOf(entry: PlannedEntry, ctx: ConvertContext): { classes: string
   const variantMap = info?.classVariant as Record<string, Record<string, unknown>> | undefined
   if (variantMap) {
     for (const [classSource, byClass] of Object.entries(variantMap)) {
-      for (const className of Object.keys(byClass ?? {})) {
+      for (const [className, info] of Object.entries(byClass ?? {})) {
         const id = ctx.classIds.get(`${className}|${classSource}`)
-        if (id) classes.add(id)
+        if (!id) continue
+        const defined = (Array.isArray((info as { definedInSources?: unknown })?.definedInSources) ? (info as { definedInSources: string[] }).definedInSources : []).map((d) => d.toUpperCase())
+        // 同一本书定义的进核心表；别的书（如 TCE 给 PHB 法术）定义的是可选扩展表，交给那本书的锚点（variantLists.ts）
+        if (!defined.length || defined.includes(entry.source.toUpperCase())) classes.add(id)
+        else for (const book of defined) recordVariant(book, id, entry.id)
       }
     }
   }

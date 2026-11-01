@@ -4,22 +4,22 @@
   {
    "check": "p0",
    "key": "entries",
-   "value": 8851
+   "value": 8859
   },
   {
    "check": "p0",
    "key": "shapes.distinct",
-   "value": 28
+   "value": 29
   },
   {
    "check": "p0",
    "key": "tokens.distinct",
-   "value": 83
+   "value": 92
   },
   {
    "check": "p0",
    "key": "tokens.total",
-   "value": 518
+   "value": 527
   },
   {
    "check": "p0",
@@ -64,7 +64,7 @@
   {
    "check": "p0",
    "key": "type.feature",
-   "value": 1858
+   "value": 1866
   },
   {
    "check": "p0",
