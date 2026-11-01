@@ -12,8 +12,18 @@ const RULES: Array<[RegExp, (m: RegExpExecArray) => string]> = [
   [new RegExp(`^(?:damage_avg__|平均伤害__)([0-9.]+)\\+${AB}$`), (m) => `${m[1]}＋${ABILITY[m[2]]}调整值`],
 ]
 
-/** 怪物制作部件里的 <$…$> 占位符（要套到具体生物上才有数值）→ 玩家看得懂的文字；不认识的占位符原样保留。 */
-export function humanizeTokens(text: string): string {
+/** 召唤物正文里 5etools 的公式变量（如「1d8 + 3 + summonSpellLevel 穿刺伤害」）→ 文字；中文正文用中文，英文正文用英文。 */
+const SUMMON_VAR = /summon(Spell|Class)Level/g
+const CJK = /[\u4e00-\u9fff]/
+function humanizeSummonVars(text: string): string {
+  if (!text.includes('summon')) return text
+  const zh = CJK.test(text)
+  return text.replace(SUMMON_VAR, (_whole, kind: string) => kind === 'Spell' ? (zh ? '法术环阶' : "the spell's level") : (zh ? '职业等级' : 'class level'))
+}
+
+/** 怪物制作部件里的 <$…$> 占位符（要套到具体生物上才有数值）与召唤物的公式变量 → 玩家看得懂的文字；不认识的占位符原样保留。 */
+export function humanizeTokens(input: string): string {
+  const text = humanizeSummonVars(input)
   if (!text.includes('<$')) return text
   // 摘要被截断时，末尾可能只剩半个占位符（「<$short_na…」）：去掉，只留省略号
   const trimmed = text.replace(/<\$[^$>]*…$/, '…')

@@ -20,4 +20,12 @@ describe('怪物部件占位符显示成人话', () => {
     const text = parseInline('命中{{hit:<$命中__力量$>}}，伤害<$damage_avg__5+str$>').map((s) => s.text).join('')
     expect(text).not.toContain('<$')
   })
+  it('召唤物正文里的公式变量换成文字（中文正文用中文，英文正文用英文）', () => {
+    expect(humanizeTokens('命中：1d8 + 4 + summonSpellLevel 穿刺伤害。')).toBe('命中：1d8 + 4 + 法术环阶 穿刺伤害。')
+    expect(humanizeTokens('命中：1d10 + 3 + summonSpellLevel光耀伤害')).toBe('命中：1d10 + 3 + 法术环阶光耀伤害')
+    expect(humanizeTokens('Hit: 1d8 + 3 + summonSpellLevel psychic damage')).toBe("Hit: 1d8 + 3 + the spell's level psychic damage")
+    expect(humanizeTokens('恢复 2d8 + summonClassLevel 点')).toBe('恢复 2d8 + 职业等级 点')
+    const text = parseInline('命中：{{roll:1d8 + 4 + summonSpellLevel|1d8 + 4 + summonSpellLevel}} 穿刺伤害').map((s) => s.text).join('')
+    expect(text).not.toContain('summonSpellLevel')
+  })
 })
