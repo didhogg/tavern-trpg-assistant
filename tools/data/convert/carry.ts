@@ -8,6 +8,7 @@ import { refKey, renderInline, type InlineContext } from '../markup/inline'
 import { convertBlocks } from './blocks'
 import { foundryFeature } from './foundry'
 import { addMonsterMechanics } from './monsterMech'
+import { addGenericUse, addOpenItemData } from './foundryOpen'
 
 type Rec = Record<string, unknown>
 const isObj = (value: unknown): value is Rec => !!value && typeof value === 'object' && !Array.isArray(value)
@@ -129,6 +130,7 @@ function carryItem(plan: PlannedEntry, data: Rec, ctx: ConvertContext, inline: I
     if (Object.keys(out).length) data.attachedSpells = out
   }
   if (raw.ability !== undefined) data.abilityGrant = renderDeep(raw.ability, inline)
+  addOpenItemData(plan, data); addGenericUse(plan, data) // G2.5 P7：Foundry 开源数据补缺（使用次数、使用动作）；消耗品兜底的"使用"动作
   const optional = ids(ctx, ['feature'], raw.optionalfeatures, { ok: 'optionalFeatures', bad: 'optionalFeaturesUnresolved' }, undefined)
   if (optional.length) data.optionalFeatures = optional
   const extra: Rec = {}

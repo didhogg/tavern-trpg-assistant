@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { Recorder } from './consumer/findings'
 import { lib } from './consumer/load'
-import { usesCarriedByRace } from './consumer/grantUses'
+import { ownerAlreadyStructured, usesCarriedByRace } from './consumer/grantUses'
 import { isPlainMechanic, triage } from './consumer/triage'
 
 const OUT = join(process.cwd(), 'docs/probes/D1.2-G2_纯文字特性分诊.json')
@@ -34,7 +34,10 @@ describe('G2b 纯文字机制特性分诊（b3）', () => {
         if (d.verdict === 'false-positive') falsePositive.add(d.id)
       }
     }
-    const by = (c: string): typeof rows => rows.filter((x) => x.cls === c && !(c === 'A' && falsePositive.has(x.id)))
+    // 种族特质：影响的数值已写在所属种族自己的结构化字段上，特质只是文字说明，不算缺陷
+    const covered = new Set(rows.filter((x) => x.cls === 'A' && ownerAlreadyStructured(l, l.need(x.id), x.tags)).map((x) => x.id))
+    rec2.stat('b3', 'A.ownerAlreadyStructured', covered.size)
+    const by = (c: string): typeof rows => rows.filter((x) => x.cls === c && !(c === 'A' && (falsePositive.has(x.id) || covered.has(x.id))))
     rec2.stat('b3', 'mechanicFeatures', all.length)
     rec2.stat('b3', 'plainMechanic', plain.length)
     rec2.stat('b3', 'A', by('A').length)

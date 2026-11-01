@@ -4,7 +4,7 @@
   {
    "check": "c13",
    "key": "attacksWithLostScaling",
-   "value": 51
+   "value": 7
   },
   {
    "check": "c13",
@@ -24,12 +24,12 @@
   {
    "check": "c13",
    "key": "placeholderAc",
-   "value": 40
+   "value": 1
   },
   {
    "check": "c13",
    "key": "placeholderHp",
-   "value": 44
+   "value": 3
   },
   {
    "check": "c13",
@@ -61,60 +61,17 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "monster.aberrant-spirit-beholderkin.tce 异怪灵魄（类眼魔）：眼波射线",
-    "monster.aberrant-spirit-slaad.tce 异怪灵魄（史拉蟾）：爪击",
-    "monster.aberrant-spirit-star-spawn.tce 异怪灵魄（星之子）：灵能猛击",
-    "monster.aberrant-spirit.tce 异怪灵魄：灵能猛击（仅星之子）",
-    "monster.aberrant-spirit.tce 异怪灵魄：爪击（仅史拉蟾）",
-    "monster.aberrant-spirit.tce 异怪灵魄：眼波射线（仅类眼魔）",
-    "monster.beast-of-the-land.tce 大地野兽：挥打",
     "monster.beast-of-the-sea.tce 海洋野兽：攫击",
-    "monster.beast-of-the-sky.tce 天空野兽：撕扯",
-    "monster.bestial-spirit-air.tce 野兽灵魄（天空）：巨锤",
-    "monster.bestial-spirit-land.tce 野兽灵魄（大地）：巨锤",
-    "monster.bestial-spirit-water.tce 野兽灵魄（海洋）：巨锤",
-    "monster.bestial-spirit.tce 野兽灵魄：巨锤",
-    "monster.celestial-spirit-avenger.tce 天界灵魄（复仇圣灵）：光耀之弓",
     "monster.celestial-spirit-defender.tce 天界灵魄（守护圣灵）：光耀之锤",
-    "monster.celestial-spirit.tce 天界灵魄：光耀之弓（仅复仇圣灵）",
     "monster.celestial-spirit.tce 天界灵魄：光耀之锤（仅守护圣灵）",
-    "monster.construct-spirit-clay.tce 构装灵魄（粘土）：猛击",
-    "monster.construct-spirit-metal.tce 构装灵魄（金属）：猛击",
-    "monster.construct-spirit-stone.tce 构装灵魄（岩石）：猛击",
-    "monster.construct-spirit.tce 构装灵魄：猛击",
-    "monster.dancing-item.tce 舞空物品：力场动能猛击",
-    "monster.elemental-spirit-air.tce 元素灵魄（气）：猛击",
-    "monster.elemental-spirit-earth.tce 元素灵魄（土）：猛击",
-    "monster.elemental-spirit-fire.tce 元素灵魄（火）：猛击",
-    "monster.elemental-spirit-water.tce 元素灵魄（水）：猛击",
-    "monster.elemental-spirit.tce 元素灵魄：猛击",
     "monster.fey-spirit-fuming.tce 妖精灵魄（愤怒）：短剑",
     "monster.fey-spirit-mirthful.tce 妖精灵魄（欢欣）：短剑",
     "monster.fey-spirit-tricksy.tce 妖精灵魄（诡诈）：短剑",
-    "monster.fey-spirit.tce 妖精灵魄：短剑",
-    "monster.fiendish-spirit-demon.tce 邪魔灵魄（恶魔）：啃咬",
-    "monster.fiendish-spirit-devil.tce 邪魔灵魄（魔鬼）：投掷烈焰",
-    "monster.fiendish-spirit-yugoloth.tce 邪魔灵魄（尤格罗斯魔）：爪击",
-    "monster.fiendish-spirit.tce 邪魔灵魄：啃咬（仅恶魔）",
-    "monster.fiendish-spirit.tce 邪魔灵魄：投掷烈焰（仅限于魔鬼）",
-    "monster.fiendish-spirit.tce 邪魔灵魄：爪击（仅尤格罗斯魔）",
-    "monster.homunculus-servant.tce 人工生命仆从：力场打击",
-    "monster.reaper-spirit.bmt 收割者灵魄：收割之镰",
-    "monster.shadow-spirit-despair.tce 暗影灵魄（绝望）：冻寒撕裂",
-    "monster.shadow-spirit-fear.tce 暗影灵魄（恐惧）：冻寒撕裂",
-    "monster.shadow-spirit-fury.tce 暗影灵魄（暴怒）：冻寒撕裂",
-    "monster.shadow-spirit.tce 暗影灵魄：冻寒撕裂",
-    "monster.steel-defender.tce 钢铁守卫：力场动能撕扯",
-    "monster.undead-spirit-ghostly.tce 亡灵灵魄（幽体）：致死之触",
-    "monster.undead-spirit-putrid.tce 亡灵灵魄（腐尸）：腐灭爪击",
-    "monster.undead-spirit-skeletal.tce 亡灵灵魄（骷髅）：暗澹箭",
-    "monster.undead-spirit.tce 亡灵灵魄：暗澹箭（仅骷髅）",
-    "monster.undead-spirit.tce 亡灵灵魄：腐灭爪击（仅腐尸）",
-    "monster.undead-spirit.tce 亡灵灵魄：致死之触（仅幽体）"
+    "monster.fey-spirit.tce 妖精灵魄：短剑"
    ],
    "expected": "TCE 召唤物动作原文",
    "note": "攻击的结构化伤害是某一环的快照（丢了 “+ summonSpellLevel” 与第二种伤害），文字里才有完整公式",
-   "count": 51
+   "count": 7
   },
   {
    "id": "c13-summon-placeholder",
@@ -122,55 +79,15 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "monster.aberrant-spirit-beholderkin.tce 异怪灵魄（类眼魔）（异怪召唤术|TCE）",
-    "monster.aberrant-spirit-slaad.tce 异怪灵魄（史拉蟾）（异怪召唤术|TCE）",
-    "monster.aberrant-spirit-star-spawn.tce 异怪灵魄（星之子）（异怪召唤术|TCE）",
-    "monster.aberrant-spirit.tce 异怪灵魄（异怪召唤术|TCE）",
-    "monster.beast-of-the-land.tce 大地野兽（游侠|PHB）",
-    "monster.beast-of-the-sea.tce 海洋野兽（游侠|PHB）",
-    "monster.beast-of-the-sky.tce 天空野兽（游侠|PHB）",
-    "monster.bestial-spirit-air.tce 野兽灵魄（天空）（野兽召唤术|TCE）",
-    "monster.bestial-spirit-land.tce 野兽灵魄（大地）（野兽召唤术|TCE）",
-    "monster.bestial-spirit-water.tce 野兽灵魄（海洋）（野兽召唤术|TCE）",
     "monster.bestial-spirit.tce 野兽灵魄（野兽召唤术|TCE）",
-    "monster.celestial-spirit-avenger.tce 天界灵魄（复仇圣灵）（天界召唤术|TCE）",
-    "monster.celestial-spirit-defender.tce 天界灵魄（守护圣灵）（天界召唤术|TCE）",
     "monster.celestial-spirit.tce 天界灵魄（天界召唤术|TCE）",
-    "monster.construct-spirit-clay.tce 构装灵魄（粘土）（构装召唤术|TCE）",
-    "monster.construct-spirit-metal.tce 构装灵魄（金属）（构装召唤术|TCE）",
-    "monster.construct-spirit-stone.tce 构装灵魄（岩石）（构装召唤术|TCE）",
-    "monster.construct-spirit.tce 构装灵魄（构装召唤术|TCE）",
-    "monster.dancing-item.tce 舞空物品（吟游诗人|PHB）",
-    "monster.elemental-spirit-air.tce 元素灵魄（气）（元素召唤术|TCE）",
-    "monster.elemental-spirit-earth.tce 元素灵魄（土）（元素召唤术|TCE）",
-    "monster.elemental-spirit-fire.tce 元素灵魄（火）（元素召唤术|TCE）",
-    "monster.elemental-spirit-water.tce 元素灵魄（水）（元素召唤术|TCE）",
-    "monster.elemental-spirit.tce 元素灵魄（元素召唤术|TCE）",
-    "monster.fey-spirit-fuming.tce 妖精灵魄（愤怒）（妖精召唤术|TCE）",
-    "monster.fey-spirit-mirthful.tce 妖精灵魄（欢欣）（妖精召唤术|TCE）",
-    "monster.fey-spirit-tricksy.tce 妖精灵魄（诡诈）（妖精召唤术|TCE）",
-    "monster.fey-spirit.tce 妖精灵魄（妖精召唤术|TCE）",
-    "monster.fiendish-spirit-demon.tce 邪魔灵魄（恶魔）（邪魔召唤术|TCE）",
-    "monster.fiendish-spirit-devil.tce 邪魔灵魄（魔鬼）（邪魔召唤术|TCE）",
-    "monster.fiendish-spirit-yugoloth.tce 邪魔灵魄（尤格罗斯魔）（邪魔召唤术|TCE）",
     "monster.fiendish-spirit.tce 邪魔灵魄（邪魔召唤术|TCE）",
-    "monster.homunculus-servant.tce 人工生命仆从（奇械师|TCE）",
     "monster.hound-of-ill-omen.xge 凶兆猎犬（术士|PHB）",
-    "monster.reaper-spirit.bmt 收割者灵魄（死神灵魄|BMT）",
-    "monster.shadow-spirit-despair.tce 暗影灵魄（绝望）（暗影衍体召唤术|TCE）",
-    "monster.shadow-spirit-fear.tce 暗影灵魄（恐惧）（暗影衍体召唤术|TCE）",
-    "monster.shadow-spirit-fury.tce 暗影灵魄（暴怒）（暗影衍体召唤术|TCE）",
-    "monster.shadow-spirit.tce 暗影灵魄（暗影衍体召唤术|TCE）",
-    "monster.steel-defender.tce 钢铁守卫（奇械师|TCE）",
-    "monster.undead-spirit-ghostly.tce 亡灵灵魄（幽体）（亡灵召唤术|TCE）",
-    "monster.undead-spirit-putrid.tce 亡灵灵魄（腐尸）（亡灵召唤术|TCE）",
-    "monster.undead-spirit-skeletal.tce 亡灵灵魄（骷髅）（亡灵召唤术|TCE）",
-    "monster.undead-spirit.tce 亡灵灵魄（亡灵召唤术|TCE）",
-    "monster.wildfire-spirit.tce 野火精魂（德鲁伊|PHB）"
+    "monster.undead-spirit.tce 亡灵灵魄（亡灵召唤术|TCE）"
    ],
    "expected": "TCE 召唤类法术与同伴原文（PHB 游侠兽伙伴、奇械师钢铁守卫等）",
    "note": "召唤物/同伴的护甲等级、生命值、攻击加值和伤害随法术环级、主人职业等级或熟练加值变化；数据里只有占位（生命值平均 0 + 文字公式、护甲等级 10 + 文字“11+法术等级”）：召唤时无法算出这只生物的数值。需要结构化成公式（如 ac: \"11 + spell.level\"、hp: \"40 + 10*(spell.level-4)\"），公式引擎要认识 spell.level 变量",
-   "count": 45
+   "count": 5
   }
  ]
 }

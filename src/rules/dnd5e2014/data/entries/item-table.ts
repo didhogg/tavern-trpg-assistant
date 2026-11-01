@@ -91,7 +91,10 @@ export const tableDataSchema = z.looseObject({
   group: z.object({ id: z.string().min(1), name: z.string().min(1) }).optional(),
   caption: z.string().max(200).optional(),
   footnotes: z.array(z.string()).optional(),
-  parent: z.object({ id: z.string().min(1) }).optional(),
+  /** 表属于哪个条目；appliesTo＝也适用的其余条目（G2.5 P4，软引用：主人所在的包没装时表仍是独立表）。 */
+  parent: z.object({ id: z.string().min(1), appliesTo: z.array(z.string().min(1)).optional() }).optional(),
+  /** 表在书里的原位置：锚点（书的 outline）、小标题路径、同一小节里的顺序（G2.5 P4，由转换器从书里读出）。 */
+  at: z.object({ anchor: z.string().optional(), heading: z.array(z.string()), order: z.number().int().positive() }).optional(),
   chapter: z.object({ book: z.string(), name: z.string().min(1).max(60) }).optional(),
   purpose: z.string().max(60).optional(),
   columns: z.array(tableColumnSchema).optional(),

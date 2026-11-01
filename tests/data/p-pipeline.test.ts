@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { lib } from './consumer/load'
 import { arr, rec } from './consumer/util'
+import { evaluateFormula } from '../../src/rules/dnd5e2014/data/formula'
 
 /**
  * G2.5 P 管线站的通用验收：扫全库，不按书写死条数。
@@ -87,5 +88,69 @@ describe('P5 法术：可选扩展列表与核心职业表分开', () => {
       }
     }
     expect(bad).toEqual([])
+  })
+})
+
+describe('P7 消耗品都有"使用"动作；带次数的物品有恢复方式', () => {
+  it('consumable 物品的 activities 或 effects 不为空', () => {
+    expect(realItems.filter((r) => r.data.consumable === true && !arr(r.data.activities).length && !arr(r.data.effects).length).map((r) => r.id)).toEqual([])
+  })
+  it('消耗物品的 itemUses 的值不是 0 或空（负数是 Foundry 的"恢复"写法，如法师法杖吸收法术、调律者之鼓）', () => {
+    const bad: string[] = []
+    for (const r of realItems) for (const a of arr(r.data.activities).map(rec)) for (const t of arr(rec(a.consumption).targets).map(rec)) if (t.type === 'itemUses' && (t.value === '' || t.value === undefined || Number(t.value) === 0)) bad.push(`${r.id} ${String(a.id)}`)
+    expect(bad).toEqual([])
+  })
+})
+
+describe('P4 表格绑定：位置与主人', () => {
+  const tables = l.of('table')
+  it('at.anchor 都在对应书条目的 outline 里；小标题路径是数组（正文开头、还没进任何小节的表为空）、顺序是正整数', () => {
+    const anchors = new Set(l.of('book').flatMap((b) => arr(b.data.outline).map((o) => String(rec(o).anchor))))
+    const bad: string[] = []
+    for (const t of tables) {
+      const at = rec(t.data.at)
+      if (t.data.at === undefined) continue
+      if ((at.anchor !== undefined && !anchors.has(String(at.anchor))) || !Array.isArray(at.heading) || !(Number(at.order) > 0)) bad.push(t.id)
+    }
+    expect(bad).toEqual([])
+  })
+  it('parent.id 与 appliesTo 都指向存在的怪物／种族／亚种／规则等条目（软引用：全装了才查）', () => {
+    const bad: string[] = []
+    for (const t of tables) {
+      const p = rec(t.data.parent)
+      if (p.id === undefined) continue
+      for (const id of [String(p.id), ...arr(p.appliesTo).map(String)]) if (!l.get(id)) bad.push(`${t.id} → ${id}`)
+    }
+    expect(bad).toEqual([])
+  })
+  it('字典里的章节：该章节下的表都有主人（VGM 的怪物章节、MTF 的种族章节、XGE 种族双亲表）', () => {
+    const sections = ['眼魔：噩梦成真', '蛇人：半蛇半人', '鬣狗人：欲壑难填', '鬼婆：黑暗姐妹', '兽人：神授之民', '巨人：撼世之人', '夺心魔：世界之灾', '狗头人：小小巨龙', '吉斯人表格', '灰矮人表格', '矮人表格', '半身人表格', '侏儒表格']
+    const orphan = tables.filter((t) => rec(t.data.at).heading !== undefined && arr(rec(t.data.at).heading).some((h) => sections.includes(String(h))) && rec(t.data.parent).id === undefined)
+    expect(orphan.map((t) => t.id)).toEqual([])
+    expect(rec(l.need('table.vgm-p8-1').data.parent).id).toBe('monster.beholder.mm')
+  })
+})
+
+describe('P3 召唤物与同伴：公式能算，且随环阶／职业等级单调增加', () => {
+  const summoned = l.of('monster').filter((m) => m.data.summon !== undefined)
+  it('至少 40 个召唤物带公式；公式严格可解析（构建已校验），在基础环阶和高两环下求值是合理整数', () => {
+    expect(summoned.length).toBeGreaterThanOrEqual(40)
+    const bad: string[] = []
+    for (const m of summoned) {
+      const s = rec(m.data.summon)
+      const at = (lv: number): Record<string, number | undefined> => {
+        const ctx = { spellLevel: lv, spellAttack: 7, prof: 4, level: lv, abilityMods: { int: 4 }, classLevels: Object.fromEntries(['ranger', 'bard', 'druid', 'artificer'].map((c) => [c, lv])) }
+        return Object.fromEntries(['ac', 'hp'].filter((k) => typeof s[k] === 'string').map((k) => [k, evaluateFormula(String(s[k]), ctx)]))
+      }
+      const base = s.by === 'spell' ? Number(s.baseLevel) : 5
+      const a = at(base), b = at(base + 2)
+      for (const k of Object.keys(a)) if (!Number.isInteger(a[k]) || !(b[k]! >= a[k]!) || !(a[k]! > 0)) bad.push(`${m.id} ${k}: ${String(a[k])} → ${String(b[k])}`)
+    }
+    expect(bad).toEqual([])
+  })
+  it('大地之灵魄式的抽查：异怪灵魄在 4 环 AC 15／HP 40，6 环 AC 17／HP 60', () => {
+    const s = rec(l.need('monster.aberrant-spirit-slaad.tce').data.summon)
+    const ev = (f: string, lv: number): number => evaluateFormula(f, { spellLevel: lv })
+    expect([ev(String(s.ac), 4), ev(String(s.hp), 4), ev(String(s.ac), 6), ev(String(s.hp), 6)]).toEqual([15, 40, 17, 60])
   })
 })

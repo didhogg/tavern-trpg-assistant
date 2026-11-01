@@ -141,21 +141,21 @@ export function spellGrants(raw: Record<string, unknown>, ctx: ConvertContext): 
     const abilityValue = typeof rec.ability === 'string' && ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(rec.ability) ? rec.ability : ability && ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(ability) ? ability : undefined
     for (const [mode, groups] of [['known', rec.known], ['innate', rec.innate]] as const) {
       if (!groups || typeof groups !== 'object') continue
-      for (const value of Object.values(groups as Record<string, unknown>)) {
+      for (const [levelKey, value] of Object.entries(groups as Record<string, unknown>)) {
         const names = Array.isArray(value) ? spellNames(value) : []
         if (!names.length) continue
         const ids = names.map((name) => ctx.resolveEntryId('spell', name)).filter((id): id is string => !!id)
-        if (ids.length) out.push({ spell: ids[0], mode, ...(abilityValue ? { ability: abilityValue } : {}), ...(mode === 'innate' ? { uses: { max: 1, recharge: 'long' } } : {}) })
+        if (ids.length) out.push({ spell: ids[0], mode, ...(abilityValue ? { ability: abilityValue } : {}), ...(mode === 'innate' ? { uses: { max: 1, recharge: 'long' } } : {}), ...unlockLevel(levelKey) })
       }
     }
     const daily = rec.innate && typeof rec.innate === 'object' ? (rec.innate as Record<string, unknown>) : undefined
-    if (daily) for (const value of Object.values(daily)) {
+    if (daily) for (const [levelKey, value] of Object.entries(daily)) {
       if (!value || typeof value !== 'object' || !('daily' in value)) continue
       const list = (value as Record<string, unknown>).daily
       if (list && typeof list === 'object') for (const names of Object.values(list as Record<string, unknown>)) {
         for (const name of spellNames(names)) {
           const id = ctx.resolveEntryId('spell', name)
-          if (id) out.push({ spell: id, mode: 'innate', ...(abilityValue ? { ability: abilityValue } : {}), uses: { max: 1, recharge: 'long' } })
+          if (id) out.push({ spell: id, mode: 'innate', ...(abilityValue ? { ability: abilityValue } : {}), uses: { max: 1, recharge: 'long' }, ...unlockLevel(levelKey) })
         }
       }
     }
@@ -170,7 +170,7 @@ export function spellGrants(raw: Record<string, unknown>, ctx: ConvertContext): 
 }
 
 
-export function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<string, unknown>> {
+export function startingEquipmentOf(raw: Record<string, unknown>, background = false): Array<Record<string, unknown>> {
   const source = raw.startingEquipment
   const groups = Array.isArray(source) ? source : source && typeof source === 'object' && Array.isArray((source as Record<string, unknown>).defaultData) ? (source as Record<string, unknown>).defaultData as unknown[] : []
   const out: Array<Record<string, unknown>> = []
@@ -178,6 +178,7 @@ export function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<
     if (typeof value === 'string') return { item: value.split('|')[0], qty: 1 }
     if (!value || typeof value !== 'object') return undefined
     const rec = value as Record<string, unknown>
+    if (typeof rec.equipmentType === 'string') return equipmentCategory(rec.equipmentType, typeof rec.quantity === 'number' ? rec.quantity : 1, background)
     const name = typeof rec.item === 'string' ? rec.item.split('|')[0] : typeof rec.special === 'string' ? rec.special : undefined
     if (!name) return undefined
     return { item: name, qty: typeof rec.quantity === 'number' ? rec.quantity : 1 }
@@ -185,7 +186,8 @@ export function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<
   for (const group of groups) {
     if (!group || typeof group !== 'object') continue
     const rec = group as Record<string, unknown>
-    const fixed = Array.isArray(rec._) ? rec._.map(item).filter((x): x is Record<string, unknown> => !!x) : []
+    const all = Array.isArray(rec._) ? rec._.map(item).filter((x): x is Record<string, unknown> => !!x) : []
+    const fixed = all.filter((x) => x.item !== undefined)
     const choice: Array<Array<Record<string, unknown>>> = []
     for (const key of Object.keys(rec).filter((k) => /^[a-z]$/.test(k)).sort()) {
       const list = rec[key]
@@ -197,6 +199,8 @@ export function startingEquipmentOf(raw: Record<string, unknown>): Array<Record<
     if (fixed.length) row.fixed = fixed
     if (choice.length) row.choice = choice
     if (Object.keys(row).length) out.push(row)
+    // 「固定给一件某一类的东西」（圣徽、德鲁伊法器、任意简易武器）：fixed 只收具体物品，类别项写成只有一个选项的 choice 块（01 D3）
+    for (const cat of all.filter((x) => x.category !== undefined)) out.push({ choice: [[cat]] })
   }
   const alternative = str((raw.startingEquipment as Record<string, unknown> | undefined)?.goldAlternative) || str(raw.goldAlternative)
   const goldMatch = /(\d+d\d+)\s*[×x*]\s*(\d+)/.exec(alternative)
@@ -258,7 +262,7 @@ export function convertRace(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(resist.length ? { resist } : {}),
     ...(immune.length ? { immune } : {}),
     ...(conditionImmune.length ? { conditionImmune } : {}),
-    ...(grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))] } : effects.length ? { effects } : {}),
+    ...(grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}), ...(g.level ? { level: g.level } : {}) }))] } : effects.length ? { effects } : {}),
     traits,
     advancement: [
       ...(proficiencyTrait(raw) ? [proficiencyTrait(raw)!] : []),
@@ -284,11 +288,38 @@ export function convertBackground(entry: PlannedEntry, ctx: ConvertContext, inli
       tools: fixedAndChoose(raw.toolProficiencies, []),
       languages: (() => { const l = langSet(raw.languageProficiencies); return { fixed: l.fixed, ...(l.choose ? { choose: { count: l.choose } } : {}) } })(),
     },
-    equipment: startingEquipmentOf(raw),
+    equipment: startingEquipmentOf(raw, true),
     ...(prereqToRequires(raw.prerequisite, ctx) ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
     ...(feature ? { feature: feature.id } : {}),
     characteristics: tables.map((t) => ({ table: t.id, label: t.name })),
     ...(proficiencyTrait(raw) ? { advancement: [proficiencyTrait(raw)!] } : {}),
   }
   return { id: entry.id, type: 'background', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary: summaryOf('background', entry.name, data, plainText(data.text as never)), data }
+}
+
+/** 5etools `innate` 的键是获得法术的角色等级（"3"＝3 级起）；1 级（或 "_"）不写 level。 */
+function unlockLevel(key: string): { level?: number } {
+  return /^\d+$/.test(key) && Number(key) > 1 ? { level: Number(key) } : {}
+}
+
+/** 5etools 起始装备里的 `{equipmentType, quantity}` → 类别项（01 D3 的记号）。 */
+const EQUIPMENT_TYPES: Record<string, { category: string; noun?: string; label?: string }> = {
+  weaponSimple: { category: 'weapon:simple', noun: '简易武器' },
+  weaponMartial: { category: 'weapon:martial', noun: '军用武器' },
+  weaponSimpleMelee: { category: 'weapon:simple-melee', noun: '简易近战武器' },
+  weaponMartialMelee: { category: 'weapon:martial-melee', noun: '军用近战武器' },
+  focusSpellcastingArcane: { category: 'focus:arcane', label: '奥术法器' },
+  focusSpellcastingDruidic: { category: 'focus:druidic', label: '德鲁伊法器' },
+  focusSpellcastingHoly: { category: 'focus:holy', label: '圣徽' },
+  instrumentMusical: { category: 'tool:anyMusicalInstrument', label: '其它乐器' },
+  toolArtisan: { category: 'tool:anyArtisansTool', label: '一套工匠工具（自选）' },
+  setGaming: { category: 'tool:anyGamingSet', label: '一套游戏用品（自选）' },
+}
+function equipmentCategory(type: string, qty: number, background: boolean): Record<string, unknown> | undefined {
+  const t = EQUIPMENT_TYPES[type]
+  if (!t) return undefined
+  const count = qty === 1 ? '一把' : qty === 2 ? '两把' : `${qty}把`
+  // 职业的乐器是"鲁特琴或其它乐器"；背景的是"一件乐器（自选）"
+  const label = background && type === 'instrumentMusical' ? '一件乐器（自选）' : t.label ?? `任意${count}${t.noun}`
+  return { category: t.category, label, qty }
 }

@@ -105,7 +105,7 @@ export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(abilityIncrease ? { abilityIncrease } : {}),
     ...(requires ? { requires } : {}),
     ...(uses ? { uses } : {}),
-    ...(effects.length || grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))] } : {}),
+    ...(effects.length || grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}), ...(g.level ? { level: g.level } : {}) }))] } : {}),
     ...(Array.isArray(raw.traitTags) ? { tags: raw.traitTags.map(String) } : {}),
     advancement: (() => {
       const trait = proficiencyTrait(raw)

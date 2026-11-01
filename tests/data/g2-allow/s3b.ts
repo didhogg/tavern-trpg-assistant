@@ -25,6 +25,8 @@ export const ALLOW: Allow[] = [
       'race.tiefling.phb',
       'subrace.elf-drow.phb',
       'subrace.tiefling-variant-devils-tongue.scag',
+      'subrace.half-elf-variant-drow-descent.scag',
+      'subrace.tiefling-variant-infernal-legacy.scag',
       'subrace.half-elf-variant-drow-descent-drow-magic.scag',
       'subrace.tiefling-variant-hellfire.scag',
       'race.aasimar.dmg',
@@ -55,7 +57,7 @@ export const ALLOW: Allow[] = [
       'race.yuan-ti.mpmm',
     ],
     path: /^\/data\/effects\/\d+\/(?:level|uses(?:\/recharge)?)$/,
-    expect: 31,
+    expect: 33,
     reason: 'a12-innate-unlock-level：31 个种族/亚种、57 处加 level＋3 处次数修正',
   },
   {

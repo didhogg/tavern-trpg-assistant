@@ -9,37 +9,18 @@
   {
    "check": "b7",
    "key": "comparedWithSource",
-   "value": 91
+   "value": 92
   },
   {
    "check": "b7",
    "key": "itemsWithCharges",
-   "value": 193
+   "value": 215
   },
   {
    "check": "b7",
    "key": "withoutRecharge",
-   "value": 7
+   "value": 0
   }
  ],
- "findings": [
-  {
-   "id": "b7-charges-no-recharge",
-   "check": "b7",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "item.figurine-of-wondrous-power-ivory-goats.dmg 异能塑像，象牙山羊",
-    "item.gem-of-brightness.dmg 光彩夺目宝石",
-    "item.ring-of-elemental-command-family.dmg 命令元素戒指（系列）",
-    "item.robe-of-stars.dmg 星辰法袍",
-    "item.scarab-of-protection.dmg 防护圣甲虫",
-    "item.talisman-of-pure-good.dmg 纯善护符",
-    "item.talisman-of-ultimate-evil.dmg 至恶护符"
-   ],
-   "expected": "DMG 各物品原文",
-   "note": "有充能但没有恢复时机（其中如星辰法袍、防护圣甲虫等书上就是“用完即止/不恢复”，需对照原书逐个确认）",
-   "count": 7
-  }
- ]
+ "findings": []
 }

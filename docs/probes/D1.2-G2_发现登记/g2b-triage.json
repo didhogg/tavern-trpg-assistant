@@ -4,7 +4,12 @@
   {
    "check": "b3",
    "key": "A",
-   "value": 139
+   "value": 79
+  },
+  {
+   "check": "b3",
+   "key": "A.ownerAlreadyStructured",
+   "value": 60
   },
   {
    "check": "b3",
@@ -19,12 +24,12 @@
   {
    "check": "b3",
    "key": "A.感官",
-   "value": 6
+   "value": 4
   },
   {
    "check": "b3",
    "key": "A.抗性免疫",
-   "value": 45
+   "value": 28
   },
   {
    "check": "b3",
@@ -34,7 +39,7 @@
   {
    "check": "b3",
    "key": "A.熟练",
-   "value": 64
+   "value": 34
   },
   {
    "check": "b3",
@@ -44,7 +49,7 @@
   {
    "check": "b3",
    "key": "A.速度",
-   "value": 18
+   "value": 7
   },
   {
    "check": "b3",
@@ -74,7 +79,6 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "feature.air-genasi-lightning-resistance.mpmm 闪电抗性：抗性免疫",
     "feature.artificer-alchemist-alchemical-savant.tce 炼金术掌握：属性值",
     "feature.artificer-alchemist-tool-proficiency.tce 工具熟练：熟练",
     "feature.artificer-armorer-tools-of-the-trade.tce 行业工具：熟练",
@@ -93,10 +97,6 @@
     "feature.bard-college-of-swords-fighting-style.xge 战斗风格：熟练",
     "feature.bard-college-of-valor-bonus-proficiencies.phb 附赠熟练：熟练",
     "feature.blind-fighting.tce 盲斗：感官",
-    "feature.bugbear-sneaky.mpmm 隐秘：熟练",
-    "feature.bugbear-sneaky.vgm 隐秘：熟练",
-    "feature.centaur-natural-affinity.mpmm 自然亲和：熟练",
-    "feature.changeling-changeling-instincts.mpmm 幻身灵本能：熟练",
     "feature.cleric-death-domain-bonus-proficiency.dmg 附赠熟练项：熟练",
     "feature.cleric-forge-domain-bonus-proficiency.xge 附赠熟练项：熟练",
     "feature.cleric-forge-domain-saint-of-forge-and-fire.xge 锻炉与烈焰的圣徒：抗性免疫",
@@ -111,23 +111,28 @@
     "feature.cleric-twilight-domain-vigilant-blessing.tce 警觉赐福：先攻被动",
     "feature.cleric-war-domain-avatar-of-battle.phb 战争化身：抗性免疫",
     "feature.cleric-war-domain-bonus-proficiencies.phb 附赠熟练：熟练",
-    "feature.custom-lineage-darkvision-variable-trait-darkvision.tce 可选特性；黑暗视觉：感官",
-    "feature.custom-lineage-variable-trait.tce 可选特征：感官",
-    "feature.dragonborn-black-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-blue-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-brass-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-bronze-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-copper-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-gold-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-green-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-red-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-silver-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.dragonborn-white-damage-resistance.phb 伤害抗性：抗性免疫",
-    "feature.druid-circle-of-stars-full-of-stars.tce 灿若繁星：抗性免疫"
+    "feature.druid-circle-of-stars-full-of-stars.tce 灿若繁星：抗性免疫",
+    "feature.druid-circle-of-the-moon-primal-strike.phb 原力蛮击：抗性免疫",
+    "feature.druid-circle-of-the-shepherd-mighty-summoner.xge 全能牧者：抗性免疫",
+    "feature.expert-sidekick-bonus-proficiencies.tce 附赠熟练：熟练",
+    "feature.expert-sidekick-sharp-mind.tce 明锐心智：熟练",
+    "feature.fighter-arcane-archer-arcane-archer-lore.xge 魔箭学识：熟练",
+    "feature.fighter-arcane-archer-magic-arrow.xge 注魔箭矢：抗性免疫",
+    "feature.fighter-fighting-style.phb 战斗风格：熟练",
+    "feature.fighter-psi-warrior-guarded-mind.tce 意念守护：抗性免疫",
+    "feature.fighter-rune-knight-bonus-proficiencies.tce 附赠熟练：熟练",
+    "feature.fighter-samurai-elegant-courtier.xge 雅臣：熟练",
+    "feature.investment-of-the-chain-master.tce 链主赋能：速度、抗性免疫",
+    "feature.lance-of-lethargy.xge 怠惰之枪：速度",
+    "feature.monk-ki-empowered-strikes.phb 真气驻拳：抗性免疫",
+    "feature.monk-way-of-mercy-implements-of-mercy.tce 操命本事：熟练",
+    "feature.monk-way-of-the-drunken-master-drunken-technique.xge 醉拳技巧：速度",
+    "feature.monk-way-of-the-kensei-one-with-the-blade.xge 人剑合一：抗性免疫",
+    "feature.monk-way-of-the-kensei-path-of-the-kensei.xge 剑圣之途：熟练"
    ],
    "expected": "各特性原文（初筛，逐条确认见分诊清单）",
    "note": "影响护甲等级、速度、生命上限、熟练、抗性、感官、先攻、属性值的机制只有文字（初筛结果，含误报，需对照原书确认后结构化）",
-   "count": 139
+   "count": 79
   },
   {
    "id": "b3-B-action-in-text",

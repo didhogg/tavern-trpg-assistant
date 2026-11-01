@@ -97,6 +97,62 @@ function attackItems(raw: Rec, data: Rec, ctx: ConvertContext, source: string): 
   })
 }
 
+
+const CN_DIGIT: Record<string, string> = { 一: '1', 二: '2', 两: '2', 三: '3', 四: '4', 五: '5', 六: '6', 七: '7', 八: '8', 九: '9' }
+const digits = (t: string): string => t.replace(/[一二两三四五六七八九]/g, (c) => CN_DIGIT[c])
+
+/** 召唤物护甲："11 + 法术环阶（天生护甲）"→ `11 + spell.level`；同伴"13+PB"→ `13 + prof`。写法对不上（如带"仅限某形态"的加成）不猜。 */
+function summonAc(text: string, bySpell: boolean): string | undefined {
+  const t = digits(text)
+  if (/仅限/.test(t)) return undefined
+  const m = bySpell ? /^\s*(\d+)\s*\+\s*法术(?:环阶|等级)/.exec(t) : /^\s*(\d+)\s*\+\s*PB/i.exec(t)
+  return m ? `${m[1]} + ${bySpell ? 'spell.level' : 'prof'}` : undefined
+}
+
+/** 召唤物生命值：法术"40 + 高于4环每环10点"、"20 + 5×每比2环高的法术等级"…→ `40 + 10 * (spell.level - 4)`；同伴"5 + 你游侠等级的五倍"→ `5 + 5 * class.ranger.level`。含"仅限"的多形态写法不猜。 */
+function summonHp(text: string, bySpell: boolean, classShort: string | undefined): string | undefined {
+  const t = digits(text)
+  if (/仅限|或/.test(t)) return undefined
+  const base = /^\s*(\d+)/.exec(t)?.[1]
+  if (!base) return undefined
+  if (bySpell) {
+    const from = /(?:每比|高于)\s*(\d)\s*环/.exec(t)?.[1]
+    if (!from) return undefined
+    const rest = [...t.replace(/^\s*\d+/, '').replace(/(?:每比|高于)\s*\d\s*环/, '').matchAll(/\d+/g)].map((m) => m[0])
+    return rest.length === 1 ? `${base} + ${rest[0]} * (spell.level - ${from})` : undefined
+  }
+  if (!classShort) return undefined
+  const times = /([1-9])\s*倍|(?:你|的).{0,6}等级的\s*([1-9])\s*倍/.exec(t)
+  const lv = `class.${classShort}.level`
+  const mult = /(\d)\s*倍/.exec(t)?.[1] ?? '1'
+  void times
+  const int = /智力调整值/.test(t)
+  if (!new RegExp(`${base}\\s*\\+`).test(t)) return undefined
+  return `${base}${int ? ' + int.mod' : ''} + ${mult === '1' ? '' : `${mult} * `}${lv}`
+}
+
+/** 召唤物／同伴随法术环阶或主人职业等级变强（01 F4）：把 5etools 里规则化的文字（护甲、生命值、攻击里的 summonSpellLevel／PB）解析成公式。 */
+function addSummon(plan: PlannedEntry, data: Rec, ctx: ConvertContext): void {
+  const raw = plan.raw as Rec
+  const bySpell = typeof raw.summonedBySpell === 'string'
+  const byClass = typeof raw.summonedByClass === 'string'
+  if (!bySpell && !byClass) return
+  const classId = byClass ? ctx.classIds.get(str(raw.summonedByClass)) : undefined
+  const classShort = classId?.split('.')[1]
+  if (byClass && !classId) return
+  const baseLevel = typeof raw.summonedBySpellLevel === 'number' ? raw.summonedBySpellLevel : undefined
+  if (bySpell && baseLevel === undefined) return
+  const acFrom = (Array.isArray(data.ac) ? (data.ac as Rec[]) : []).map((a) => str(a.from)).join('')
+  const hpText = isObj(data.hp) ? str(data.hp.special) : ''
+  const ac = summonAc(acFrom, bySpell)
+  const hp = hpText ? summonHp(hpText, bySpell, classShort) : undefined
+  const texts = JSON.stringify([data.actions, data.traits, data.bonusActions, data.reactions])
+  const attackBonus = bySpell && /命中\s*[，,]|summonSpellAttack/.test(texts) ? 'spell.attack' : undefined
+  const damageBonus = /summonSpellLevel/.test(texts) ? (bySpell ? 'spell.level' : undefined) : /\+\s*PB\b/.test(texts) && byClass ? 'prof' : undefined
+  if (!ac && !hp && !attackBonus && !damageBonus) return
+  data.summon = { by: bySpell ? 'spell' : 'class', ...(byClass ? { classId } : { baseLevel }), ...(ac ? { ac } : {}), ...(hp ? { hp } : {}), ...(attackBonus ? { attackBonus } : {}), ...(damageBonus ? { damageBonus } : {}) }
+}
+
 /** 怪物：把 5etools 原始数据里本来就结构化、以前被压成文字的机制读出来。 */
 export function addMonsterMechanics(plan: PlannedEntry, data: Rec, ctx: ConvertContext): void {
   const raw = plan.raw as Rec
@@ -110,4 +166,5 @@ export function addMonsterMechanics(plan: PlannedEntry, data: Rec, ctx: ConvertC
   })
   acItems(raw, data, ctx, plan.source)
   attackItems(raw, data, ctx, plan.source)
+  addSummon(plan, data, ctx)
 }

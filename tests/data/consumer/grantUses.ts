@@ -32,3 +32,19 @@ export function usesCarriedByRace(l: Lib, row: Row): boolean {
   const granted = new Set(grants.flatMap((e) => (Array.isArray(e.spells) ? (e.spells as string[]) : [])))
   return [...spells].every((x) => granted.has(x)) && grants.some((e) => e.uses !== undefined)
 }
+
+const OWNER_FIELDS: Record<string, string[]> = { 熟练: ['proficiencies'], 抗性免疫: ['resist', 'immune', 'conditionImmune'], 速度: ['speed'], 感官: ['darkvision', 'senses'], 属性值: ['abilityBonus'] }
+const filled = (v: unknown): boolean => v !== undefined && v !== null && v !== 0 && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v as object).length)
+
+/**
+ * 种族／亚种的特质，它影响的派生数值（熟练、抗性、速度、黑暗视觉、属性加值）已经写在所属种族（或母种族）自己的结构化字段上：
+ * 特质只是书上的文字说明，不是缺陷。分诊时不算"纯文字 A 类"。tags 是分诊给出的类别词。
+ */
+export function ownerAlreadyStructured(l: Lib, row: Row, tags: string[]): boolean {
+  const owner = rec(row.data.owner)
+  if (!['race', 'subrace'].includes(String(owner.type))) return false
+  const own = l.get(String(owner.id))
+  const parent = own?.data.parentRace ? l.get(String(own.data.parentRace)) : undefined
+  const fields = tags.flatMap((t) => OWNER_FIELDS[t] ?? [])
+  return fields.length > 0 && fields.some((f) => filled(own?.data[f]) || filled(parent?.data[f]))
+}

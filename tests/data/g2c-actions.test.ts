@@ -60,7 +60,9 @@ describe('G2c 怪物的动作：攻击、伤害、豁免、充能、多重攻击
             const inStruct = arr(x.damage).map(rec).map((p) => str(p.dice).replace(/\s/g, ''))
             if (inStruct.length) {
               textDiceChecks++
-              const missing = inStruct.filter((dd) => !inText.includes(dd))
+              // 召唤物的文字里骰子不带 {{roll}} 标记（"1d8 + 3 + summonSpellLevel"），有 summon 公式的按纯文字找
+              const plain = text.replace(/\s/g, '')
+              const missing = inStruct.filter((dd) => !inText.includes(dd) && !(d.summon !== undefined && plain.includes(dd)))
               if (missing.length) add('damage-struct-not-in-text', `${tag}：结构伤害 ${missing.join('、')} 在文字里找不到`)
             }
           }

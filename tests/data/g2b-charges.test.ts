@@ -11,7 +11,9 @@ describe('G2b 魔法物品充能', () => {
     const rec2 = new Recorder('g2b-charges')
     const items = l.of('item').filter((r) => r.data.charges !== undefined)
     rec2.stat('b7', 'itemsWithCharges', items.length)
-    const noRecharge = items.filter((r) => !rec(r.data.charges).recharge)
+    // 条目文字写明"充能耗尽就毁掉／变回普通物品"的，本来就不恢复，没有 recharge 是对的（防护圣甲虫、光彩夺目宝石、纯善／至恶护符；Foundry 开源数据对这几件同样没有恢复）
+    const consumedAway = (r: { data: Record<string, unknown> }): boolean => /(最后一发充能|充能(?:耗尽|用尽)|耗尽(?:了)?(?:所有)?充能)[^。]{0,40}(摧毁|毁灭|化为|消散|变为|变回|溶解|碎裂)/.test(JSON.stringify(r.data.text ?? ''))
+    const noRecharge = items.filter((r) => r.data.category !== 'family' && !rec(r.data.charges).recharge && !consumedAway(r))
     rec2.stat('b7', 'withoutRecharge', noRecharge.length)
     if (has5etools()) {
       const raw = new Map<string, Record<string, unknown>[]>()

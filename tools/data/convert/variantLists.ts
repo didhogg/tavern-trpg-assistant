@@ -16,7 +16,7 @@ export function recordVariant(book: string, classId: string, spellId: string): v
   lists.set(book, byClass)
 }
 
-interface PackLike { manifest: { id: string; entryCount: number }; entries: Entry[] }
+export interface PackLike { manifest: { id: string; entryCount: number }; entries: Entry[] }
 
 export function addVariantAnchors(packs: PackLike[]): number {
   const byId = new Map(packs.flatMap((p) => p.entries.map((e) => [e.id, e] as const)))

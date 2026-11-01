@@ -295,7 +295,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
   const text = plainText(convertBlocks(raw._r9OriginalEntries ?? raw.entries, inline))
   const uses = FEATURE_NO_USES.has(entry.id) ? undefined : rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text)
   const configEffects = FEATURE_EFFECTS[entry.id] ?? []
-  const spellEffects = spellGrants(raw, ctx).map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}) }))
+  const spellEffects = spellGrants(raw, ctx).map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}), ...(g.level ? { level: g.level } : {}) }))
   const skillEffects: Array<Record<string, unknown>> = []
   for (const item of Array.isArray(raw.skillProficiencies) ? raw.skillProficiencies : []) {
     if (!item || typeof item !== 'object') continue
