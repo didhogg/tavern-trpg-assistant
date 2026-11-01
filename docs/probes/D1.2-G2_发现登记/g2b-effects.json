@@ -14,7 +14,7 @@
   {
    "check": "b2",
    "key": "formulas",
-   "value": 65
+   "value": 68
   },
   {
    "check": "b2",
@@ -39,7 +39,7 @@
   {
    "check": "b2",
    "key": "scaleValues",
-   "value": 19
+   "value": 21
   }
  ],
  "findings": [

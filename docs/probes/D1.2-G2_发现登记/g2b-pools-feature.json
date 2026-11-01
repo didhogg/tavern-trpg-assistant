@@ -19,58 +19,6 @@
  ],
  "findings": [
   {
-   "id": "b5-max-feature.fighter-battle-master-combat-superiority.phb",
-   "check": "b5",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "卓越战技 15级 数据=1 书=6",
-    "卓越战技 3级 数据=1 书=4",
-    "卓越战技 7级 数据=1 书=5"
-   ],
-   "expected": "PHB 各职业特性原文（已逐个读过）",
-   "note": "资源池最大次数与 PHB 不符",
-   "count": 3
-  },
-  {
-   "id": "b5-max-feature.paladin-channel-divinity.phb",
-   "check": "b5",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "引导神力 20级 数据=2 书=1",
-    "引导神力 7级 数据=2 书=1"
-   ],
-   "expected": "PHB 各职业特性原文（已逐个读过）",
-   "note": "资源池最大次数与 PHB 不符",
-   "count": 2
-  },
-  {
-   "id": "b5-max-feature.paladin-divine-sense.phb",
-   "check": "b5",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "神圣感知 1级 数据=1 书=4"
-   ],
-   "expected": "PHB 各职业特性原文（已逐个读过）",
-   "note": "资源池最大次数与 PHB 不符",
-   "count": 1
-  },
-  {
-   "id": "b5-max-feature.wizard-school-of-divination-portent.phb",
-   "check": "b5",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "预兆 14级 数据=1 书=3",
-    "预兆 2级 数据=1 书=2"
-   ],
-   "expected": "PHB 各职业特性原文（已逐个读过）",
-   "note": "资源池最大次数与 PHB 不符",
-   "count": 2
-  },
-  {
    "id": "b5-peculiar-rest-rule",
    "check": "b5",
    "kind": "data-defect",
