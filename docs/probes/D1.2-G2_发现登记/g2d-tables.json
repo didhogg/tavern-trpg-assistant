@@ -1,0 +1,76 @@
+{
+ "group": "g2d-tables",
+ "stats": [
+  {
+   "check": "d1",
+   "key": "coverageVerified",
+   "value": 755
+  },
+  {
+   "check": "d1",
+   "key": "kind.deck",
+   "value": 16
+  },
+  {
+   "check": "d1",
+   "key": "kind.encounter",
+   "value": 47
+  },
+  {
+   "check": "d1",
+   "key": "kind.life",
+   "value": 55
+  },
+  {
+   "check": "d1",
+   "key": "kind.loot",
+   "value": 28
+  },
+  {
+   "check": "d1",
+   "key": "kind.names",
+   "value": 69
+  },
+  {
+   "check": "d1",
+   "key": "kind.ref",
+   "value": 340
+  },
+  {
+   "check": "d1",
+   "key": "kind.roll",
+   "value": 542
+  },
+  {
+   "check": "d1",
+   "key": "refsInCells",
+   "value": 4427
+  },
+  {
+   "check": "d1",
+   "key": "rows",
+   "value": 14113
+  },
+  {
+   "check": "d1",
+   "key": "skippedBecauseModifier",
+   "value": 2
+  },
+  {
+   "check": "d1",
+   "key": "tables",
+   "value": 1097
+  },
+  {
+   "check": "d1",
+   "key": "tablesWithDice",
+   "value": 757
+  },
+  {
+   "check": "d1",
+   "key": "thenLinks",
+   "value": 18
+  }
+ ],
+ "findings": []
+}

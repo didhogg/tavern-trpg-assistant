@@ -1,0 +1,165 @@
+{
+ "group": "g2d-pages",
+ "stats": [
+  {
+   "check": "d5",
+   "key": "entriesWithoutPage",
+   "value": 663
+  },
+  {
+   "check": "d5",
+   "key": "withoutPage.book",
+   "value": 14
+  },
+  {
+   "check": "d5",
+   "key": "withoutPage.lore",
+   "value": 246
+  },
+  {
+   "check": "d5",
+   "key": "withoutPage.monsterPart",
+   "value": 320
+  },
+  {
+   "check": "d5",
+   "key": "withoutPage.rule",
+   "value": 7
+  },
+  {
+   "check": "d5",
+   "key": "withoutPage.table",
+   "value": 76
+  }
+ ],
+ "findings": [
+  {
+   "id": "d5-book-chapters",
+   "check": "d5",
+   "kind": "source-defect",
+   "fixSource": "decision",
+   "entries": [
+    "book.assorted-beasts.vgm 各种野兽",
+    "book.bestiary.mtf 怪物图鉴",
+    "book.bestiary.vgm 怪物图鉴",
+    "book.credits.dmg 制作组",
+    "book.credits.mm 制作组",
+    "book.credits.mpmm 制作组",
+    "book.credits.mtf 制作组",
+    "book.credits.phb 制作组",
+    "book.credits.scag 制作组",
+    "book.credits.tce 制作组",
+    "book.credits.vgm 制作组",
+    "book.credits.xge 制作组",
+    "book.maps.mpmm 地图",
+    "book.nonplayer-characters.vgm 非玩家角色"
+   ],
+   "expected": "R12 已知：14 个缺页章（书中该章没有页码）",
+   "note": "书的章节没有页码，来源如此",
+   "count": 14
+  },
+  {
+   "id": "d5-lore-inherit",
+   "check": "d5",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "246 条背景描述补丁没有页码"
+   ],
+   "expected": "补丁的目标条目的页码",
+   "note": "背景描述补丁（lore）不是独立的书页内容，页码应取被补充条目的页码；推荐：显示时继承目标的页码，不写进补丁（从简）",
+   "count": 1
+  },
+  {
+   "id": "d5-monsterpart-page",
+   "check": "d5",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "320 个怪物部件没有页码"
+   ],
+   "expected": "DMG 第 9 章“创建怪物”",
+   "note": "怪物部件是 DMG“创建怪物数据卡”表格里的碎片，页码在表上（DMG 第 275 页起）；推荐：不补",
+   "count": 1
+  },
+  {
+   "id": "d5-rule-page",
+   "check": "d5",
+   "kind": "data-defect",
+   "fixSource": "import-5etools",
+   "entries": [
+    "rule.item-type-extra-gs.xge 赌具",
+    "rule.item-type-extra-ins.xge 乐器",
+    "rule.script-draconic.phb 龙语",
+    "rule.script-dwarvish.phb 矮人语",
+    "rule.script-elvish.phb 精灵语",
+    "rule.script-infernal.phb 炼狱语",
+    "rule.script-thorass.phb 索拉斯"
+   ],
+   "expected": "5etools 原始规则数据的 page",
+   "note": "7 条规则没有页码",
+   "count": 7
+  },
+  {
+   "id": "d5-table-page",
+   "check": "d5",
+   "kind": "data-defect",
+   "fixSource": "import-5etools",
+   "entries": [
+    "table.barbarian.phb 野蛮人·个人图腾",
+    "table.barbarian.phb-2 野蛮人·纹身",
+    "table.barbarian.phb-3 野蛮人·迷信",
+    "table.bard.phb 吟游诗人·定义工作",
+    "table.bard.phb-2 吟游诗人·乐器",
+    "table.bard.phb-3 吟游诗人·尴尬",
+    "table.cards-deck-of-many-things-13-cards-13.dmg 万象无常牌（13张牌）·牌组内容",
+    "table.cleric.phb 牧师·庙宇",
+    "table.cleric.phb-2 牧师·信物",
+    "table.cleric.phb-3 牧师·秘密",
+    "table.druid.phb 德鲁伊·珍贵物品",
+    "table.druid.phb-10 德鲁伊·山地",
+    "table.druid.phb-11 德鲁伊·沼泽",
+    "table.druid.phb-12 德鲁伊·幽暗地域",
+    "table.druid.phb-13 德鲁伊·水下",
+    "table.druid.phb-2 德鲁伊·引导形",
+    "table.druid.phb-3 德鲁伊·导师",
+    "table.druid.phb-4 德鲁伊·极地",
+    "table.druid.phb-5 德鲁伊·海岸",
+    "table.druid.phb-6 德鲁伊·荒漠",
+    "table.druid.phb-7 德鲁伊·森林",
+    "table.druid.phb-8 德鲁伊·草地",
+    "table.druid.phb-9 德鲁伊·丘陵",
+    "table.fighter.phb 战士·纹章标志",
+    "table.fighter.phb-2 战士·讲师",
+    "table.fighter.phb-3 战士·样式",
+    "table.half-red-dragon-veteran.mm 半红龙老兵·颜色",
+    "table.half-red-dragon-veteran.mm-2 半红龙老兵·体型",
+    "table.life-background-acolyte-reasons.xge 侍僧·成为侍僧的原因",
+    "table.life-background-charlatan-reasons.xge 骗子·成为骗子的原因",
+    "table.life-background-criminal-reasons.xge 罪犯·成为罪犯的原因",
+    "table.life-background-entertainer-reasons.xge 艺人·成为艺人的原因",
+    "table.life-background-folk-hero-reasons.xge 平民英雄·成为平民英雄的原因",
+    "table.life-background-guild-artisan-guild-merchant-reasons.xge 公会工匠（公会商人）·成为公会工匠（公会商人）的原因",
+    "table.life-background-hermit-reasons.xge 隐士·成为隐士的原因",
+    "table.life-background-noble-reasons.xge 贵族·成为贵族的原因",
+    "table.life-background-outlander-reasons.xge 化外之民·成为化外之民的原因",
+    "table.life-background-sage-reasons.xge 智者·成为智者的原因",
+    "table.life-background-sailor-reasons.xge 水手·成为水手的原因",
+    "table.life-background-soldier-reasons.xge 士兵·成为士兵的原因",
+    "table.life-background-urchin-reasons.xge 流浪儿·成为流浪儿的原因",
+    "table.life-class-barbarian-reasons.xge 野蛮人·成为野蛮人的原因",
+    "table.life-class-bard-reasons.xge 吟游诗人·成为吟游诗人的原因",
+    "table.life-class-cleric-reasons.xge 牧师·成为牧师的原因",
+    "table.life-class-druid-reasons.xge 德鲁伊·成为德鲁伊的原因",
+    "table.life-class-fighter-reasons.xge 战士·成为战士的原因",
+    "table.life-class-monk-reasons.xge 武僧·成为武僧的原因",
+    "table.life-class-paladin-reasons.xge 圣武士·成为圣武士的原因",
+    "table.life-class-ranger-reasons.xge 游侠·成为游侠的原因",
+    "table.life-class-rogue-reasons.xge 游荡者·成为游荡者的原因"
+   ],
+   "expected": "5etools 原始表格数据的 page",
+   "note": "76 张表没有页码；多数是各书“来源章节”里的表，5etools 原始数据里有页码时补上",
+   "count": 76
+  }
+ ]
+}

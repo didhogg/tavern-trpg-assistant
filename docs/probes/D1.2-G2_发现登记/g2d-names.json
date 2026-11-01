@@ -1,0 +1,136 @@
+{
+ "group": "g2d-names",
+ "stats": [
+  {
+   "check": "d3",
+   "key": "humanNameTables",
+   "value": 34
+  },
+  {
+   "check": "d3",
+   "key": "nameLikeTables",
+   "value": 74
+  },
+  {
+   "check": "d3",
+   "key": "namesKindTables",
+   "value": 69
+  },
+  {
+   "check": "d3",
+   "key": "raceNameTablesWithGenderInTitle",
+   "value": 46
+  },
+  {
+   "check": "d3",
+   "key": "races",
+   "value": 83
+  },
+  {
+   "check": "d3",
+   "key": "racesWithNameTables",
+   "value": 9
+  }
+ ],
+ "findings": [
+  {
+   "id": "d3-gender-in-title",
+   "check": "d3",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "性别只写在表名里（“女性”“男性”“成年女性”“男性成人”“氏族”“家庭”），没有结构化字段"
+   ],
+   "expected": "各名字表标题",
+   "note": "随机起名要“按性别取一行”时，读取器只能按表名里的“女/男”字判断；推荐：约定读取规则（表名含“女”= 女性、含“男”= 男性、其余 = 姓氏/氏族），不加字段（从简）",
+   "count": 1
+  },
+  {
+   "id": "d3-names-multi-col",
+   "check": "d3",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "table.vgm-p55-1 鬼婆姓名"
+   ],
+   "expected": "名字表",
+   "note": "名字表不是单列",
+   "count": 1
+  },
+  {
+   "id": "d3-races-without-name-table",
+   "check": "d3",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "race.aarakocra.dmg 鸟羽人",
+    "race.aarakocra.mpmm 鸟羽人",
+    "race.aasimar-necrotic-shroud.mpmm 阿斯莫; 死灵斗篷",
+    "race.aasimar-radiant-consumption.mpmm 阿斯莫; 光辉消耗",
+    "race.aasimar-radiant-soul.mpmm 阿斯莫; 光辉灵魂",
+    "race.aasimar.dmg 阿斯莫",
+    "race.aasimar.mpmm 阿斯莫",
+    "race.bugbear.mpmm 熊地精",
+    "race.bugbear.vgm 熊地精",
+    "race.bullywug.dmg 啵灵蛙",
+    "race.centaur.mpmm 人马",
+    "race.changeling.mpmm 幻身灵",
+    "race.custom-lineage-darkvision.tce 定制血统；黑暗视觉",
+    "race.custom-lineage-skill-proficiency.tce 定制血统；技能熟练",
+    "race.custom-lineage.tce 定制血统",
+    "race.deep-gnome.mpmm 地底侏儒",
+    "race.duergar.mpmm 灰矮人",
+    "race.eladrin.mpmm 雅灵",
+    "race.fairy.mpmm 仙灵",
+    "race.firbolg.mpmm 费尔伯格人",
+    "race.firbolg.vgm 费尔伯格人",
+    "race.genasi.mpmm 元素裔",
+    "race.gith.mtf 吉斯人",
+    "race.githyanki.mpmm 吉斯洋基人",
+    "race.githzerai.mpmm 吉斯泽莱人",
+    "race.gnoll.dmg 鬣狗人",
+    "race.gnome-deep.dmg 侏儒 (地底)",
+    "race.goblin.dmg 地精",
+    "race.goblin.mpmm 地精",
+    "race.goblin.vgm 地精",
+    "race.goliath.mpmm 歌利亚",
+    "race.goliath.vgm 歌利亚",
+    "race.grimlock.dmg 幽邃盲族",
+    "race.half-elf.phb 半精灵",
+    "race.harengon.mpmm 兔人",
+    "race.hobgoblin.dmg 大地精",
+    "race.hobgoblin.mpmm 大地精",
+    "race.hobgoblin.vgm 大地精",
+    "race.kenku.dmg 天狗",
+    "race.kenku.mpmm 天狗",
+    "race.kenku.vgm 天狗",
+    "race.kobold-craftiness.mpmm 狗头人; 机智",
+    "race.kobold-defiance.mpmm 狗头人; 逆反",
+    "race.kobold-draconic-sorcery.mpmm 狗头人; 龙族术法",
+    "race.kobold.dmg 狗头人",
+    "race.kobold.mpmm 狗头人",
+    "race.kobold.vgm 狗头人",
+    "race.kuo-toa.dmg 寇涛",
+    "race.lizardfolk.dmg 蜥蜴人",
+    "race.lizardfolk.mpmm 蜥蜴人"
+   ],
+   "expected": "PHB 第 2 章各种族“名字”小节（半精灵用人类或精灵的）；VGM、MPMM 各种族",
+   "note": "名字表只关联到 9 个种族（PHB 的 9 个中 8 个，外加阿斯莫）；其余 74 个种族（含 SCAG、VGM、MTF、MPMM 的种族和半精灵）没有名字表。加入人物时这些种族无法随机起名，推荐：没有名字表的种族回退到“人类”或其亲缘种族的名字表，不新增数据（从简）",
+   "count": 74
+  },
+  {
+   "id": "d3-title-unclear",
+   "check": "d3",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "table.aasimar.vgm 阿斯莫·名称",
+    "table.names-human-28.xge 人类名字·埃利乌斯",
+    "table.names-human-32.xge 人类名字·亚历山大"
+   ],
+   "expected": "各名字表标题",
+   "note": "表名读不出是男名、女名还是姓氏",
+   "count": 3
+  }
+ ]
+}

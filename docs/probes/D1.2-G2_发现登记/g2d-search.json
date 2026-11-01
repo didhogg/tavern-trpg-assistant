@@ -1,0 +1,40 @@
+{
+ "group": "g2d-search",
+ "stats": [
+  {
+   "check": "d4",
+   "key": "distinctIds",
+   "value": 8840
+  },
+  {
+   "check": "d4",
+   "key": "entries",
+   "value": 8840
+  },
+  {
+   "check": "d4",
+   "key": "findableByOwnNames",
+   "value": 8840
+  },
+  {
+   "check": "d4",
+   "key": "optionalFeaturesWithoutOwner",
+   "value": 151
+  }
+ ],
+ "findings": [
+  {
+   "id": "d4-keywords-miss-name-en",
+   "check": "d4",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.monk-ki.phb 气"
+   ],
+   "expected": "格式定义与条目库",
+   "note": "关键词里没有英文名（搜英文名搜不到）",
+   "selfCheck": true,
+   "count": 1
+  }
+ ]
+}

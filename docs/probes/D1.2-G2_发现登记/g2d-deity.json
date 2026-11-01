@@ -1,0 +1,125 @@
+{
+ "group": "g2d-deity",
+ "stats": [
+  {
+   "check": "d7",
+   "key": "clericSubclasses",
+   "value": 14
+  },
+  {
+   "check": "d7",
+   "key": "clericSubclassesWithoutDeity",
+   "value": 0
+  },
+  {
+   "check": "d7",
+   "key": "deities",
+   "value": 403
+  },
+  {
+   "check": "d7",
+   "key": "deitiesWithExtension",
+   "value": 6
+  },
+  {
+   "check": "d7",
+   "key": "distinctDomains",
+   "value": 14
+  },
+  {
+   "check": "d7",
+   "key": "domainsWithoutClericSubclass",
+   "value": 0
+  },
+  {
+   "check": "d8",
+   "key": "abilityEntryTextOnly",
+   "value": 8
+  },
+  {
+   "check": "d8",
+   "key": "cultSignatureSpellMentions",
+   "value": 36
+  },
+  {
+   "check": "d8",
+   "key": "cults",
+   "value": 25
+  },
+  {
+   "check": "d8",
+   "key": "rewards",
+   "value": 79
+  },
+  {
+   "check": "d8",
+   "key": "spellGrants",
+   "value": 19
+  }
+ ],
+ "findings": [
+  {
+   "id": "d7-deity-without-domain",
+   "check": "d7",
+   "kind": "source-defect",
+   "fixSource": "decision",
+   "entries": [
+    "deity.dendar.vgm 丹德尔",
+    "deity.merrshaulk.vgm 麦尔绍克",
+    "deity.sseth.vgm 赛斯"
+   ],
+   "expected": "SCAG、MTF 神祇表",
+   "note": "神祇没有领域（书上该神祇没有给领域）",
+   "count": 3
+  },
+  {
+   "id": "d7-domain-by-name",
+   "check": "d7",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "14 个领域名全部能按“领域名 + 领域”对上牧师子职业，但对应关系是靠名字，没有编号"
+   ],
+   "expected": "PHB 牧师（领域）、SCAG 神祇表",
+   "note": "神祇的领域是中文名（“知识”“战争”），牧师选神、选领域要按名字匹配；推荐：读取器按“领域名 + 领域”匹配即可，不加编号（14 个领域名固定）",
+   "count": 1
+  },
+  {
+   "id": "d8-cult-spells-plain",
+   "check": "d8",
+   "kind": "data-defect",
+   "fixSource": "normalize",
+   "entries": [
+    "cult.cult-of-baalzebul.mtf 巴尔泽布教派：魅影之力（2环法术）",
+    "cult.cult-of-fierna.mtf 菲尔娜教派：交友术 (戏法)",
+    "cult.cult-of-geryon.mtf 格殷永教派：激愤斩 (1级)、活力灵光 (3级)",
+    "cult.cult-of-glasya.mtf 格莱西雅教派：交友术 （戏法）",
+    "cult.cult-of-levistus.mtf 莱维斯图斯教派：剑刃防护 (戏法)",
+    "cult.cult-of-mammon.mtf 玛门教派：谭森浮碟术 (1级)",
+    "cult.cult-of-zariel.mtf 扎瑞尔教派：十字军披风（3环法术）"
+   ],
+   "expected": "MPMM 魔王教派",
+   "note": "教派的招牌法术是一整段文字，部分法术没加链接",
+   "count": 7
+  },
+  {
+   "id": "d8-reward-ability-text",
+   "check": "d8",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "reward.demonic-boon-of-baphomet.mtf 巴弗灭的恶魔恩惠：\"力量或感知属性，或两者都获得最多+4的加值\"",
+    "reward.demonic-boon-of-demogorgon.mtf 狄摩高根的恶魔恩惠：\"力量或魅力属性，或两者都获得最多+4的加值\"",
+    "reward.demonic-boon-of-fraz-urbluu.mtf 弗拉兹厄鲁的恶魔恩惠：\"感知或魅力属性，或两者都获得最多+4的加值\"",
+    "reward.demonic-boon-of-grazzt.mtf 格拉兹特的恶魔恩惠：\"对体质或魅力，或两者的加值最多可达到+4\"",
+    "reward.demonic-boon-of-juiblex.mtf 朱庇莱克斯的恶魔恩惠：\"体质属性最多获得+8的加值，智力、感知和魅力属性受到相等的减值\"",
+    "reward.demonic-boon-of-orcus.mtf 奥喀斯的恶魔恩惠：\"智力或感知属性，或两者都获得最多+4的加值\"",
+    "reward.demonic-boon-of-yeenoghu.mtf 耶诺古的恶魔恩惠：\"力量和敏捷属性最多获得+4的加值，智力和魅力属性受到相等的减值\"",
+    "reward.demonic-boon-of-zuggtmoy.mtf 祖格莫伊的恶魔恩惠：\"体质属性最多获得+4的加值，智力、感知和魅力属性受到相等的减值\""
+   ],
+   "expected": "DMG 第 7 章 恩赐与护符",
+   "note": "奖励的属性提升只有文字（“力量或感知属性，或两者都获得最多+4的加值”），没有结构；8 个，推荐：不做，玩家看文字手动加",
+   "count": 8
+  }
+ ]
+}

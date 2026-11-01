@@ -1,0 +1,246 @@
+{
+ "group": "g2d-plaintext",
+ "stats": [
+  {
+   "check": "d10",
+   "key": "entries",
+   "value": 8840
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.background",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.book",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.class",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.condition",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.cult",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.deity",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.disease",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.feat",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.feature",
+   "value": 92
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.hazard",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.item",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.language",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.lore",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.monster",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.monsterPart",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.object",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.race",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.reward",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.rule",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.spell",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.status",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.subclass",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.subrace",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.table",
+   "value": 100
+  },
+  {
+   "check": "d10",
+   "key": "factsCoverage.vehicle",
+   "value": 0
+  },
+  {
+   "check": "d10",
+   "key": "length.max",
+   "value": 142861
+  },
+  {
+   "check": "d10",
+   "key": "length.p50",
+   "value": 243
+  },
+  {
+   "check": "d10",
+   "key": "length.p95",
+   "value": 1920
+  },
+  {
+   "check": "d10",
+   "key": "onlyNameAndSummary.book",
+   "value": 1
+  },
+  {
+   "check": "d10",
+   "key": "onlyNameAndSummary.deity",
+   "value": 314
+  },
+  {
+   "check": "d10",
+   "key": "onlyNameAndSummary.language",
+   "value": 33
+  },
+  {
+   "check": "d10",
+   "key": "onlyNameAndSummary.lore",
+   "value": 42
+  },
+  {
+   "check": "d10",
+   "key": "onlyNameAndSummary.monsterPart",
+   "value": 25
+  },
+  {
+   "check": "d10",
+   "key": "over12000chars",
+   "value": 28
+  }
+ ],
+ "findings": [
+  {
+   "id": "d10-long-entries",
+   "check": "d10",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "book.a-world-of-your-own.dmg 你的世界：49634 字",
+    "book.adventure-environments.dmg 冒险环境：20355 字",
+    "book.bestiary.mpmm 怪物图鉴：73821 字",
+    "book.bestiary.mtf 怪物图鉴：36313 字",
+    "book.bestiary.vgm 怪物图鉴：51072 字",
+    "book.classes.scag 职业：20110 字",
+    "book.combat.phb 战斗：13106 字",
+    "book.creating-a-multiverse.dmg 塑造多元宇宙：36323 字",
+    "book.creating-adventures.dmg 创建冒险：17733 字",
+    "book.donjon.bmt 第十七章：城堡：13469 字",
+    "book.dungeon-masters-tools.tce 地下城主工具：28844 字",
+    "book.dungeon-masters-tools.xge 地下城主工具：33471 字",
+    "book.dungeon-masters-workshop.dmg 地下城主工坊：30104 字",
+    "book.dwarves-and-duergar.mtf 矮人和灰矮人：22435 字",
+    "book.elves.mtf 精灵：39164 字",
+    "book.equipment.phb 装备：15271 字",
+    "book.gith-and-their-endless-war.mtf 吉斯人及其无尽战争：15045 字",
+    "book.group-patrons.tce 团队赞助人：13476 字",
+    "book.halflings-and-gnomes.mtf 半身人和侏儒：21456 字",
+    "book.introduction.mm 简介：130531 字",
+    "book.monster-lore.vgm 怪物学识：117958 字",
+    "book.races-of-the-realms.scag 国度诸种族：25234 字",
+    "book.running-the-game.dmg 运作游戏：31941 字",
+    "book.the-blood-war.mtf 血战：32574 字",
+    "book.the-sword-coast-and-the-north.scag 剑湾与北地：94962 字",
+    "book.treasure.dmg 宝藏：17115 字",
+    "book.welcome-to-the-realms.scag 欢迎来到国度：55286 字",
+    "table.cards-deck-of-many-more-things.bmt 万事万象无常牌·牌组内容：142861 字"
+   ],
+   "expected": "长度分布",
+   "note": "导出超过 12,000 字的条目（书籍章节、长表）；“给 AI”按级别（摘要/全文）取用，长条目只给摘要或分段，不整条塞进提示词",
+   "count": 28
+  },
+  {
+   "id": "d10-no-facts-types",
+   "check": "d10",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "book（96 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "condition（15 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "cult（25 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "deity（403 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "disease（9 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "feat（74 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "hazard（48 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "language（64 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "lore（288 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "monsterPart（345 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "object（12 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "reward（79 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "status（2 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
+    "vehicle（4 个条目没有结构化事实，纯文字只有名字、摘要和正文）"
+   ],
+   "expected": "界面 entryFacts（src/ui/library/facts.ts）",
+   "note": "这些类型的结构化字段（神祇的万神殿/领域/象征、语言的文字与使用者、专长的前置与属性提升、危害的等级、物件的护甲与生命……）没有进“事实”，所以既不在详情页的数据行里，也不在给 AI 的文字里。推荐：给“事实”补这几类（详情页与给 AI 共用，归 G3 显示整理），G2.5 不改数据",
+   "count": 14
+  }
+ ]
+}

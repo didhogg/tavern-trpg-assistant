@@ -1,0 +1,69 @@
+{
+ "group": "g2d-lore",
+ "stats": [
+  {
+   "check": "d11",
+   "key": "overrideEntries",
+   "value": 0
+  },
+  {
+   "check": "d11",
+   "key": "packs",
+   "value": 11
+  },
+  {
+   "check": "d11",
+   "key": "packsWithDataVersion3",
+   "value": 11
+  },
+  {
+   "check": "d9",
+   "key": "lorePatches",
+   "value": 288
+  },
+  {
+   "check": "d9",
+   "key": "target.background",
+   "value": 1
+  },
+  {
+   "check": "d9",
+   "key": "target.class",
+   "value": 12
+  },
+  {
+   "check": "d9",
+   "key": "target.monster",
+   "value": 262
+  },
+  {
+   "check": "d9",
+   "key": "target.race",
+   "value": 9
+  },
+  {
+   "check": "d9",
+   "key": "target.subrace",
+   "value": 4
+  },
+  {
+   "check": "d9",
+   "key": "targetsWithMultiplePatches",
+   "value": 0
+  }
+ ],
+ "findings": [
+  {
+   "id": "d11-no-override-or-old-sample",
+   "check": "d11",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "官方 11 个包都是 dataVersion 3，没有一个修改版（override）条目，也没有老格式（dataVersion < 3）的真实样例包"
+   ],
+   "expected": "包格式说明 §1、§3.3",
+   "note": "读取器对修改版和老格式包的读法只能按规则写、没有真实数据可测；这两种路径由 G1 的安装测试（g1-install）覆盖；人物模块读取时按 §3.3 处理：先取用户启用的修改版，没有则取原版。推荐：不新增数据，这条记为已知限制",
+   "count": 1
+  }
+ ]
+}
