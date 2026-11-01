@@ -129,6 +129,14 @@ export const ALLOW: Allow[] = [
     expect: 5,
     reason: 'a16-damage-type / a16-damage-dice：5 个法术伤害类型与骰式',
   },
+  {
+    name: 's3b-eldritch-blast',
+    station: 3,
+    ids: ['spell.eldritch-blast.phb'],
+    path: /^\/data\/cantripScaling$/,
+    expect: 1,
+    reason: 'b9-cantrip-scaling-missing：魔能爆射线数成长',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

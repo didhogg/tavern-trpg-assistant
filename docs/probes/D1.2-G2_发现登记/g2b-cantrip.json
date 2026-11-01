@@ -14,22 +14,8 @@
   {
    "check": "b9",
    "key": "withScaling",
-   "value": 22
+   "value": 23
   }
  ],
- "findings": [
-  {
-   "id": "b9-cantrip-scaling-missing",
-   "check": "b9",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "spell.eldritch-blast.phb 魔能爆"
-   ],
-   "expected": "各戏法原文（5、11、17 级成长）",
-   "note": "文字写着 5/11/17 级成长，数据没有 cantripScaling（魔能爆是射线数 1/2/3/4 道，不是骰数）",
-   "selfCheck": true,
-   "count": 1
-  }
- ]
+ "findings": []
 }
