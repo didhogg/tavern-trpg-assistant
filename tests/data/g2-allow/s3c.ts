@@ -50,6 +50,14 @@ export const ALLOW: Allow[] = [
     expect: 1,
     reason: '位面掠夺者弩炮数 2→3（无登记项，按 MTF p90）',
   },
+  {
+    name: 's3c-fixed-hp',
+    station: 3,
+    ids: ['monster.animated-object-tiny.phb', 'monster.animated-object-small.phb', 'monster.animated-object-medium.phb', 'monster.animated-object-large.phb', 'monster.animated-object-huge.phb', 'monster.troll-loathsome-limb-severed-arm.mm', 'monster.troll-loathsome-limb-severed-head.mm', 'monster.troll-loathsome-limb-severed-leg.mm'],
+    path: /^\/data\/hp\/average$/,
+    expect: 8,
+    reason: 'c13-hp-special-other：8 个固定生命值怪物写 average，special 保留',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

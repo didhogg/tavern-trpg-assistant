@@ -49,19 +49,11 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "monster.animated-object-huge.phb 活化物件(巨型)：80",
-    "monster.animated-object-large.phb 活化物体(大型)：50",
-    "monster.animated-object-medium.phb 活化物体(中型)：40",
-    "monster.animated-object-small.phb 活化物体(小型)：25",
-    "monster.animated-object-tiny.phb 活化物体(微型)：20",
-    "monster.deck-defender.bmt 牌组守卫：5 + 你等级的五倍（牌组守卫拥有等同于你等级数量枚的生命骰[d8]）",
-    "monster.troll-loathsome-limb-severed-arm.mm 巨魔（扰人断肢；断臂）：10",
-    "monster.troll-loathsome-limb-severed-head.mm 巨魔（扰人断肢；断头）：10",
-    "monster.troll-loathsome-limb-severed-leg.mm 巨魔（扰人断肢；断腿）：10"
+    "monster.deck-defender.bmt 牌组守卫：5 + 你等级的五倍（牌组守卫拥有等同于你等级数量枚的生命骰[d8]）"
    ],
    "expected": "PHB 活化物件表、BMT、MM",
    "note": "生命值只有 special 文字、average 为 0：活化物件的各体型固定生命值（微型 20 … 巨型 80）、牌组守卫的按等级生命等；固定数字的应直接写 average",
-   "count": 9
+   "count": 1
   },
   {
    "id": "c13-summon-attack-snapshot",
