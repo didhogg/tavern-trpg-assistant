@@ -49,7 +49,7 @@
   {
    "check": "b3",
    "key": "B",
-   "value": 412
+   "value": 414
   },
   {
    "check": "b3",
@@ -64,7 +64,7 @@
   {
    "check": "b3",
    "key": "plainMechanic",
-   "value": 1140
+   "value": 1142
   }
  ],
  "findings": [
@@ -188,7 +188,7 @@
    ],
    "expected": "各特性原文",
    "note": "影响行动、伤害、资源的机制只有文字：按此前的决定在 U5.3 行动、U5.5 资源、M6 结算时细化，G2 不要求现在结构化",
-   "count": 412
+   "count": 414
   }
  ]
 }

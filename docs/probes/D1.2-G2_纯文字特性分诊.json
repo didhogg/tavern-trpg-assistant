@@ -2,7 +2,7 @@
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
   "A": 144,
-  "B": 412,
+  "B": 414,
   "C": 584
  },
  "features": [
@@ -6530,6 +6530,14 @@
    "tags": []
   },
   {
+   "id": "feature.firbolg-firbolg-magic.vgm",
+   "name": "费尔伯格人魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
    "id": "feature.firbolg-languages.vgm",
    "name": "语言",
    "cls": "C",
@@ -7449,6 +7457,14 @@
    "name": "飞行",
    "cls": "C",
    "tags": []
+  },
+  {
+   "id": "feature.firbolg-firbolg-magic.mpmm",
+   "name": "费尔伯格人魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
   },
   {
    "id": "feature.firbolg-powerful-build.mpmm",

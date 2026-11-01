@@ -14,22 +14,22 @@
   {
    "check": "rest",
    "key": "mentionRestWithUses",
-   "value": 312
+   "value": 310
   },
   {
    "check": "rest",
    "key": "mentionRestWithoutUses",
-   "value": 42
+   "value": 44
   },
   {
    "check": "rest",
    "key": "racialMultiSpellFeaturesWithUses",
-   "value": 29
+   "value": 27
   },
   {
    "check": "rest",
    "key": "recharge.long",
-   "value": 214
+   "value": 213
   },
   {
    "check": "rest",
@@ -39,7 +39,7 @@
   {
    "check": "rest",
    "key": "recharge.shortOrLong",
-   "value": 89
+   "value": 88
   },
   {
    "check": "rest",
@@ -54,7 +54,7 @@
   {
    "check": "rest",
    "key": "withoutUsesGeneralOrNarrative",
-   "value": 26
+   "value": 28
   }
  ],
  "findings": [
@@ -107,19 +107,6 @@
    "expected": "各种族特质原文（每个法术各自“长休恢复”）",
    "note": "种族特质提到多个法术、只有一份 uses（1 次/长休），而种族条目自己的 spellGrant 已给每个法术各带次数：特质上的 uses 多余且会少算次数，应删掉",
    "count": 27
-  },
-  {
-   "id": "rest-racial-spell-uses-no-grant",
-   "check": "rest",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.firbolg-firbolg-magic.mpmm 费尔伯格人魔法",
-    "feature.firbolg-firbolg-magic.vgm 费尔伯格人魔法"
-   ],
-   "expected": "各种族特质原文",
-   "note": "种族特质提到多个法术、只有一份 uses，所属种族也没有给这些法术的 spellGrant（地狱遗赠、卓尔魔法、灰矮人魔法等）；应拆成每个法术各带次数的 spellGrant",
-   "count": 2
   },
   {
    "id": "rest-spell-once-no-uses",

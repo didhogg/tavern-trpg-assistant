@@ -66,6 +66,14 @@ export const ALLOW: Allow[] = [
     expect: 1,
     reason: 'a12-innate-not-structured：深侏儒补 3 个天生 spellGrant',
   },
+  {
+    name: 's3b-firbolg',
+    station: 3,
+    ids: ['race.firbolg.vgm', 'race.firbolg.mpmm', 'feature.firbolg-firbolg-magic.vgm', 'feature.firbolg-firbolg-magic.mpmm'],
+    path: /^(?:\/data\/effects(?:\/\d+)?|\/data\/uses)$/,
+    expect: 4,
+    reason: 'rest-racial-spell-uses-no-grant：费尔伯格两版补 spellGrant、删特质重复 uses',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

@@ -1,0 +1,36 @@
+import type { Fix } from '../engine'
+
+export const ROWS: Fix[] = [
+  {
+    id: 'race.firbolg.vgm',
+    path: '/data/effects',
+    op: 'set',
+    before: undefined,
+    after: [
+      { kind: 'spellGrant', mode: 'innate', ability: 'wis', spells: ['spell.detect-magic.phb'], uses: { max: 1, recharge: 'shortOrLong' } },
+      { kind: 'spellGrant', mode: 'innate', ability: 'wis', spells: ['spell.disguise-self.phb'], uses: { max: 1, recharge: 'shortOrLong' } },
+    ],
+    basis: 'VGM 费尔伯格人魔法 p107：侦测魔法与易容术各短休或长休恢复，感知施法',
+  },
+  {
+    id: 'race.firbolg.mpmm',
+    path: '/data/effects/1',
+    op: 'insert',
+    after: { kind: 'spellGrant', mode: 'innate', spells: ['spell.disguise-self.phb'], uses: { max: 1, recharge: 'long' } },
+    basis: 'MPMM 费尔伯格人魔法 p15：易容术每长休一次，施法属性由玩家选择',
+  },
+  {
+    id: 'feature.firbolg-firbolg-magic.vgm',
+    path: '/data/uses',
+    op: 'delete',
+    before: { max: 1, recharge: 'shortOrLong' },
+    basis: 'VGM 费尔伯格人魔法 p107：次数已写在种族 spellGrant 上',
+  },
+  {
+    id: 'feature.firbolg-firbolg-magic.mpmm',
+    path: '/data/uses',
+    op: 'delete',
+    before: { max: 1, recharge: 'long' },
+    basis: 'MPMM 费尔伯格人魔法 p15：次数已写在种族 spellGrant 上',
+  },
+]
