@@ -81,13 +81,15 @@ describe('G2.5 g2-additive：只改放行名单里写明的地方', () => {
 
   it('每个变化的路径都被放行规则覆盖；每条规则命中的条目数正好等于 expect', () => {
     const matches = (a: Allow, id: string, type: string): boolean => (a.ids ? a.ids.includes(id) : a.type === type)
+    const ordered = [...ALLOW.filter((a) => a.ids), ...ALLOW.filter((a) => !a.ids)]
     const hits = new Map<string, Set<string>>(ALLOW.map((a) => [a.name, new Set<string>()]))
     const unexplained: string[] = []
     for (const [id, old] of Object.entries(before.entries)) {
       const cur = now.get(id)!.entry
       for (const path of changedPaths(old.entry, cur)) {
-        // 同一路径被多条规则覆盖时算给列表里的第一条（确定，不重复计数）
-        const rule = ALLOW.find((a) => matches(a, id, String(cur.type)) && a.path.test(path))
+        // 同一路径被多条规则覆盖时算给第一条（确定，不重复计数）；写了精确 ids 的规则排在按 type 的规则前面，
+        // 这样按类型的宽规则（如第 1 站的“所有法术的 upcast”）不会抢走后面子站用 ids 点名的条目
+        const rule = ordered.find((a) => matches(a, id, String(cur.type)) && a.path.test(path))
         if (rule) hits.get(rule.name)!.add(id)
         else unexplained.push(`${id} ${path}`)
       }
