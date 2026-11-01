@@ -31,6 +31,7 @@ import { alignAll } from './i18n/align'
 import { unifyNameEn } from './i18n/nameEn'
 import { validateJoins } from './validate/joins'
 import { validateG25 } from './validate/g25'
+import { runFixes } from './fix'
 import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
@@ -86,6 +87,9 @@ async function main(): Promise<void> {
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   console.log(`R15 补字段：${JSON.stringify(carryStats)}`)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
+  const fixReport = runFixes(result.packs) // G2.5：修正规则 + 逐条修正表（紧跟在文字清理之后）
+  console.log(`修正：规则 ${fixReport.rules.length} 个（命中 ${fixReport.rules.reduce((n, r) => n + r.changed, 0)} 条），逐条表 ${fixReport.rows.length} 行，新增条目 ${fixReport.added.length}`)
+  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'fix-report.json'), `${JSON.stringify(fixReport, null, 1)}\n`)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
   if (srd) for (const alias of BASELINE_ALIASES) if (!srd.entries.some((e) => e.id === alias.id)) srd.entries.push(alias)
