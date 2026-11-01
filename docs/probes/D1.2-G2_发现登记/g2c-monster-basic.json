@@ -4,7 +4,7 @@
   {
    "check": "c1",
    "key": "checks",
-   "value": 9799
+   "value": 9797
   },
   {
    "check": "c1",
@@ -184,14 +184,12 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "monster.archmage-familiar.mm 大法师（魔宠）（resist）：法术伤害",
-    "monster.archmage.mm 大法师（resist）：法术伤害",
     "monster.kobold-dragonshield.mpmm 狗头人龙盾护卫（resist）：见下文龙之抗性"
    ],
    "expected": "代码表与格式定义",
    "note": "抗性/免疫写成纯文字（法术伤害、见下文龙之抗性、来自石肤术）",
    "selfCheck": true,
-   "count": 3
+   "count": 1
   }
  ]
 }

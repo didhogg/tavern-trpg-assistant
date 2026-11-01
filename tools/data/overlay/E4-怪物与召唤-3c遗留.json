@@ -1,0 +1,120 @@
+{
+  "领域": "E4 怪物与召唤",
+  "说明": "3c 遗留：法术伤害抗性、魔能炮台生命值、牌组守卫生命值",
+  "rows": [
+    {
+      "id": "monster.archmage.mm",
+      "path": "/data/resist",
+      "op": "set",
+      "before": [
+        "法术伤害"
+      ],
+      "after": [],
+      "basis": "MM p.342 大法师：法术伤害抗性移到 resistConditional",
+      "source": "book"
+    },
+    {
+      "id": "monster.archmage.mm",
+      "path": "/data/resistConditional/1",
+      "op": "insert",
+      "after": {
+        "damage": [
+          "acid",
+          "bludgeoning",
+          "cold",
+          "fire",
+          "force",
+          "lightning",
+          "necrotic",
+          "piercing",
+          "poison",
+          "psychic",
+          "radiant",
+          "slashing",
+          "thunder"
+        ],
+        "when": "来自法术"
+      },
+      "basis": "MM p.342 大法师：对法术造成的伤害有抗性",
+      "source": "book"
+    },
+    {
+      "id": "monster.archmage-familiar.mm",
+      "path": "/data/resist",
+      "op": "set",
+      "before": [
+        "法术伤害"
+      ],
+      "after": [],
+      "basis": "MM p.342 大法师（魔宠）：法术伤害抗性移到 resistConditional",
+      "source": "book"
+    },
+    {
+      "id": "monster.archmage-familiar.mm",
+      "path": "/data/resistConditional/1",
+      "op": "insert",
+      "after": {
+        "damage": [
+          "acid",
+          "bludgeoning",
+          "cold",
+          "fire",
+          "force",
+          "lightning",
+          "necrotic",
+          "piercing",
+          "poison",
+          "psychic",
+          "radiant",
+          "slashing",
+          "thunder"
+        ],
+        "when": "来自法术"
+      },
+      "basis": "MM p.342 大法师（魔宠）：对法术造成的伤害有抗性",
+      "source": "book"
+    },
+    {
+      "id": "object.eldritch-cannon-flamethrower.tce",
+      "path": "/data/hp",
+      "op": "set",
+      "before": {
+        "special": "等于你奇械师等级的五倍"
+      },
+      "after": 15,
+      "basis": "TCE p.18 魔能炮台：生命值 = 奇械师等级 ×5；3 级取得时为 15",
+      "source": "book"
+    },
+    {
+      "id": "object.eldritch-cannon-force-ballista.tce",
+      "path": "/data/hp",
+      "op": "set",
+      "before": {
+        "special": "等于你奇械师等级的五倍"
+      },
+      "after": 15,
+      "basis": "TCE p.18 魔能炮台：生命值 = 奇械师等级 ×5；3 级取得时为 15",
+      "source": "book"
+    },
+    {
+      "id": "object.eldritch-cannon-protector.tce",
+      "path": "/data/hp",
+      "op": "set",
+      "before": {
+        "special": "等于你奇械师等级的五倍"
+      },
+      "after": 15,
+      "basis": "TCE p.18 魔能炮台：生命值 = 奇械师等级 ×5；3 级取得时为 15",
+      "source": "book"
+    },
+    {
+      "id": "monster.deck-defender.bmt",
+      "path": "/data/hp/average",
+      "op": "set",
+      "before": 0,
+      "after": 10,
+      "basis": "BMT p.49 牌组守卫：5 + 等级×5；1 级为 10",
+      "source": "book"
+    }
+  ]
+}

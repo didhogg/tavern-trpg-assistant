@@ -44,18 +44,6 @@
  ],
  "findings": [
   {
-   "id": "c13-hp-special-other",
-   "check": "c13",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.deck-defender.bmt 牌组守卫：5 + 你等级的五倍（牌组守卫拥有等同于你等级数量枚的生命骰[d8]）"
-   ],
-   "expected": "PHB 活化物件表、BMT、MM",
-   "note": "生命值只有 special 文字、average 为 0：活化物件的各体型固定生命值（微型 20 … 巨型 80）、牌组守卫的按等级生命等；固定数字的应直接写 average",
-   "count": 1
-  },
-  {
    "id": "c13-summon-attack-snapshot",
    "check": "c13",
    "kind": "data-defect",

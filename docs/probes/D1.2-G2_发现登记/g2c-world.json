@@ -89,20 +89,6 @@
  ],
  "findings": [
   {
-   "id": "c10-object-no-stats",
-   "check": "c10",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "object.eldritch-cannon-flamethrower.tce 魔能炮台, 投火机",
-    "object.eldritch-cannon-force-ballista.tce 魔能炮台, 力量弩炮",
-    "object.eldritch-cannon-protector.tce 魔能炮台, 防御者"
-   ],
-   "expected": "DMG、MM、GoS 各条目原文",
-   "note": "物件/载具缺护甲等级或生命值（星界帆船、星界快艇、位面掠夺者的载具数据在别处）",
-   "count": 3
-  },
-  {
    "id": "c7-part-action-text-only",
    "check": "c7",
    "kind": "decision",
