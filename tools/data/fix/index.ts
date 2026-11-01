@@ -33,6 +33,7 @@ import { ROWS as S3C_PASSIVE } from './rows/s3c-passive'
 import { ROWS as S3C_SPELL_LINKS } from './rows/s3c-spell-links'
 import { ROWS as S3C_OBJECT_ACTIVITIES } from './rows/s3c-object-activities'
 import { ROWS as S3C_OBJECT_IMMUNE } from './rows/s3c-object-immune'
+import { ROWS as S3C_PLANAR_RAIDER } from './rows/s3c-planar-raider'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -79,6 +80,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3c-spell-links.ts', rows: S3C_SPELL_LINKS },
   { file: 'rows/s3c-object-activities.ts', rows: S3C_OBJECT_ACTIVITIES },
   { file: 'rows/s3c-object-immune.ts', rows: S3C_OBJECT_IMMUNE },
+  { file: 'rows/s3c-planar-raider.ts', rows: S3C_PLANAR_RAIDER },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {

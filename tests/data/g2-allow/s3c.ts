@@ -42,6 +42,14 @@ export const ALLOW: Allow[] = [
     expect: 1,
     reason: 'c10-object-immune-text：通用物件免疫文字改伤害代码',
   },
+  {
+    name: 's3c-planar-raider',
+    station: 3,
+    ids: ['vehicle.planar-raider.mtf'],
+    path: /^\/data\/weapon\/\d+\/count$/,
+    expect: 1,
+    reason: '位面掠夺者弩炮数 2→3（无登记项，按 MTF p90）',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
