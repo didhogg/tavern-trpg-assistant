@@ -6,6 +6,7 @@ import { join } from 'node:path'
  * T2 登记对比：工作区的 G2 发现登记表 vs `HEAD`。
  *   npx tsx tools/g2/registry-diff.ts --groups <组,组> --allow "<发现id>=<之后的数量>,…"
  *   npx tsx tools/g2/registry-diff.ts --show          （只显示全部变化，不判定）
+ *   加 --base <提交>：改成和那个提交比（默认 HEAD）。站内巡检用：`--base <本站起点提交> --show` 看本站累计变化。
  * 规则：① --groups 以外的登记组有变化 → 失败；② 组内发现的变化只有 --allow 列出的才允许，且之后的数量必须等于给定值（0＝整项消失），
  *      其它发现变化、任何新发现 → 失败；③ 统计（stats）与说明文字的变化只打印，不失败（报告里要逐条解释）。
  */
@@ -20,9 +21,15 @@ function arg(name: string): string | undefined {
   return i >= 0 ? process.argv[i + 1] : undefined
 }
 
+function arg0(name: string): string | undefined {
+  const i = process.argv.indexOf(name)
+  return i >= 0 ? process.argv[i + 1] : undefined
+}
+const BASE = arg0('--base') ?? 'HEAD'
+
 function headOf(group: string): Registry | undefined {
   try {
-    return JSON.parse(execFileSync('git', ['show', `HEAD:${REL}/${group}.json`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 })) as Registry
+    return JSON.parse(execFileSync('git', ['show', `${BASE}:${REL}/${group}.json`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024 })) as Registry
   } catch {
     return undefined // HEAD 里没有这个组（新增的组）
   }
@@ -30,7 +37,7 @@ function headOf(group: string): Registry | undefined {
 
 const now = new Map<string, Registry>()
 for (const f of existsSync(DIR) ? readdirSync(DIR).filter((x) => x.endsWith('.json')) : []) now.set(f.slice(0, -5), JSON.parse(readFileSync(join(DIR, f), 'utf8')) as Registry)
-const headGroups = execFileSync('git', ['ls-tree', '--name-only', `HEAD:${REL}`], { encoding: 'utf8' }).split('\n').filter((x) => x.endsWith('.json')).map((x) => x.slice(0, -5))
+const headGroups = execFileSync('git', ['ls-tree', '--name-only', `${BASE}:${REL}`], { encoding: 'utf8' }).split('\n').filter((x) => x.endsWith('.json')).map((x) => x.slice(0, -5))
 const groups = [...new Set([...now.keys(), ...headGroups])].sort()
 
 const show = process.argv.includes('--show')

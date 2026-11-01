@@ -27,7 +27,7 @@ const EXCLUDE_FILE = join(process.cwd(), 'docs', 'probes', 'D1.2-G2.5_登记排�
 const KEEP = 50
 
 /** 「来源如此」：原书本来就没有这个值/本来就是这个写法，不是数据缺陷。只能由规划者加（见 00 红线）。 */
-export interface Exclusion { finding: string; entry: string; reason: string; basis: string }
+export interface Exclusion { finding: string; entry: string; /** 只排除含这段文字的那几行（条目 id 相同、但只有其中某一条发现是“来源如此”时用） */ match?: string; reason: string; basis: string }
 let exclusions: Exclusion[] | undefined
 export function loadExclusions(): Exclusion[] {
   exclusions ??= existsSync(EXCLUDE_FILE) ? (JSON.parse(readFileSync(EXCLUDE_FILE, 'utf8')) as Exclusion[]) : []
@@ -48,8 +48,8 @@ export class Recorder {
   /** entries 可以很长；登记只存排序后的前 50 个，count 存总数。同一个 id 不能登记两次。 */
   find(f: Omit<Finding, 'count' | 'entries'> & { entries: string[] }): void {
     if (this.findings.some((x) => x.id === f.id)) throw new Error(`发现 ${f.id} 重复登记`)
-    const skip = new Set(loadExclusions().filter((x) => x.finding === f.id).map((x) => x.entry))
-    const kept = [...new Set(f.entries)].filter((line) => !skip.has(line.split(' ')[0]))
+    const skips = loadExclusions().filter((x) => x.finding === f.id)
+    const kept = [...new Set(f.entries)].filter((line) => !skips.some((x) => x.entry === line.split(' ')[0] && (x.match === undefined || line.includes(x.match))))
     const excluded = new Set(f.entries).size - kept.length
     if (excluded > 0) this.stat(f.check, `excluded-${f.id}`, excluded)
     if (kept.length === 0) return // 全部是「来源如此」：这一项发现不再登记

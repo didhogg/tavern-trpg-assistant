@@ -13,6 +13,11 @@
   },
   {
    "check": "c5",
+   "key": "excluded-c5-spell-plain-name",
+   "value": 1
+  },
+  {
+   "check": "c5",
    "key": "spellMentions",
    "value": 3299
   },
@@ -107,7 +112,7 @@
    "expected": "条目库",
    "note": "施法列表里的法术是没加链接的纯文字名字（库里有这个法术）",
    "selfCheck": false,
-   "count": 126
+   "count": 125
   },
   {
    "id": "c5-spell-plain-unknown",
