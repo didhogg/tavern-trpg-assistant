@@ -85,7 +85,7 @@ describe('G2c 怪物基础与挑战等级（c1 c2 c3）', () => {
     const l = lib()
     const rec2 = new Recorder('g2c-monster-api')
     const api = apiMonsters()
-    const byName = new Map(l.of('monster').filter((m) => m.pack === 'dnd5e2014-srd' || m.pack === 'dnd5e2014-mm-1.3.0').map((m) => [fold(m.nameEn ?? ''), m]))
+    const byName = new Map(l.of('monster').filter((m) => m.pack === 'dnd5e2014-srd' || /^dnd5e2014-mm-\d+\.\d+\.\d+$/.test(m.pack)).map((m) => [fold(m.nameEn ?? ''), m]))
     const bad: Record<string, string[]> = {}
     const add = (k: string, s: string): void => { (bad[k] ??= []).push(s) }
     const missing: string[] = []

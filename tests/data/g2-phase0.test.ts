@@ -1,40 +1,14 @@
-import { createHash } from 'node:crypto'
-import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { inventory } from './consumer/inventory'
 import { lib } from './consumer/load'
 import { Recorder } from './consumer/findings'
-import { packPath } from './r9-pack-helpers'
 
-/** G2 阶段 0：开工快照（证明 G2 没改数据）、第 1 节数字重量、“任选”记号盘点。 */
-const SNAPSHOT = join(process.cwd(), 'docs/probes/D1.2-G2_快照.json')
+/** G2 阶段 0：“任选”记号盘点。（原来还有“11 个包与开工快照一致”的哈希测试：G2.5 第 1 站起数据会改，由 g2-additive 逐条放行取代；快照文件 docs/probes/D1.2-G2_快照.json 留作记录。） */
 const INVENTORY = join(process.cwd(), 'docs/probes/D1.2-G2_任选记号盘点.json')
-const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
-
-function packHashes(): Record<string, { version: string; sha256: string }> {
-  const out: Record<string, { version: string; sha256: string }> = {}
-  for (const id of [SRD_PACK_ID, ...BOOKS.map((b) => b.packId)]) {
-    const file = packPath(id)
-    out[id] = { version: /-(\d+\.\d+\.\d+)\.trpgpack$/.exec(file)?.[1] ?? 'builtin', sha256: createHash('sha256').update(readFileSync(file)).digest('hex') }
-  }
-  return out
-}
 
 describe('G2 阶段 0', () => {
-  it('11 个包与开工快照一致（G2 不改数据；G2.5 开工时本测试由 g2-additive 取代）', () => {
-    const now = packHashes()
-    if (process.env.G2_WRITE === '1') {
-      const head = execFileSync('git', ['-C', DATA_REPO, 'rev-parse', 'HEAD']).toString().trim()
-      writeFileSync(SNAPSHOT, JSON.stringify({ dataRepoCommit: head, packs: now }, null, 1) + '\n')
-    }
-    expect(existsSync(SNAPSHOT)).toBe(true)
-    const snap = JSON.parse(readFileSync(SNAPSHOT, 'utf8')) as { packs: typeof now }
-    expect(now).toEqual(snap.packs)
-  })
-
   it('条目数量与“任选”记号盘点与登记一致', () => {
     const l = lib()
     const rec = new Recorder('g2-0')
