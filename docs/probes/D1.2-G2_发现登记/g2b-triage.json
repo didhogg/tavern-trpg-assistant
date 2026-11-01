@@ -48,6 +48,11 @@
   },
   {
    "check": "b3",
+   "key": "excluded-b3-A-derived-in-text",
+   "value": 10
+  },
+  {
+   "check": "b3",
    "key": "mechanicFeatures",
    "value": 1650
   },
@@ -58,27 +63,6 @@
   }
  ],
  "findings": [
-  {
-   "id": "b3-A-derived-in-text",
-   "check": "b3",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.bard-college-of-lore-bonus-proficiencies.phb 附赠熟练：熟练",
-    "feature.cleric-nature-domain-acolyte-of-nature.phb 自然侍僧：熟练",
-    "feature.cleric-peace-domain-implement-of-peace.tce 和平执行：熟练",
-    "feature.expert-sidekick-sharp-mind.tce 明锐心智：熟练",
-    "feature.fighter-arcane-archer-arcane-archer-lore.xge 魔箭学识：熟练",
-    "feature.paladin-oath-of-the-ancients-aura-of-warding.phb 守御灵光：抗性免疫",
-    "feature.ranger-fey-wanderer-otherworldly-glamour.tce 妖冶娴都：熟练",
-    "feature.warlock-the-fiend-fiendish-resilience.phb 邪魔体魄：抗性免疫",
-    "feature.wizard-school-of-abjuration-spell-resistance.phb 法术抗性：抗性免疫",
-    "feature.wizard-school-of-transmutation-transmuters-stone.phb 变化师之石：速度、抗性免疫、感官"
-   ],
-   "expected": "各特性原文（初筛，逐条确认见分诊清单）",
-   "note": "影响护甲等级、速度、生命上限、熟练、抗性、感官、先攻、属性值的机制只有文字（初筛结果，含误报，需对照原书确认后结构化）",
-   "count": 10
-  },
   {
    "id": "b3-B-action-in-text",
    "check": "b3",

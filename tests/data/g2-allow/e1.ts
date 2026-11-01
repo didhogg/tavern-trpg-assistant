@@ -230,10 +230,10 @@ export const ALLOW: Allow[] = [
   {
     name: 'e1-6-residual-notes',
     station: 1,
-    ids: ['feature.frost-rune.tce'],
+    ids: ['feature.frost-rune.tce', 'monster.homunculus-servant.tce', 'monster.steel-defender.tce'],
     path: /^\/data\/effects(?:\/|$)/,
-    expect: 1,
-    reason: 'b2-derived-in-note 4→0：寒霜符文残留说明改中文并补常驻技能优势',
+    expect: 3,
+    reason: 'b2-derived-in-note 4→0：寒霜符文改中文，两个召唤物删残留说明',
   },
 ]
 export const ADDED: Added[] = []

@@ -45,6 +45,28 @@
       },
       "basis": "TCE p.45 寒霜符文：威吓检定优势",
       "source": "book"
+    },
+    {
+      "id": "monster.homunculus-servant.tce",
+      "path": "/data/effects/0",
+      "op": "delete",
+      "before": {
+        "kind": "note",
+        "text": "Foundry 效果：奇械师的领导力（system.attributes.hp.max ADD + @srd5e.userchar.abilities.int.mod + @srd5e.userchar.classes.artificer.levels；system.abilities.dex.bonuses.save ADD + @prof；system.skills.prc.bonuses.check ADD +(2 * @prof)；system.skills.ste.bonuses.check ADD + @prof）（默认停用）"
+      },
+      "basis": "TCE p.22 人工生命仆从：领导力公式已在 summon 数据里，删残留说明",
+      "source": "book"
+    },
+    {
+      "id": "monster.steel-defender.tce",
+      "path": "/data/effects/0",
+      "op": "delete",
+      "before": {
+        "kind": "note",
+        "text": "Foundry 效果：奇械师的领导力（system.attributes.hp.max ADD + @srd5e.userchar.abilities.int.mod + (5 * @srd5e.userchar.classes.artificer.levels)；system.abilities.dex.bonuses.save ADD + @prof；system.abilities.con.bonuses.save ADD + @prof；system.skills.ath.bonuses.check ADD + @prof；system.skills.prc.bonuses.check ADD +(2 * @prof)）（默认停用）"
+      },
+      "basis": "TCE p.19 钢铁守卫：领导力公式已在 summon 数据里，删残留说明",
+      "source": "book"
     }
   ]
 }

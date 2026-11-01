@@ -4,7 +4,7 @@
   {
    "check": "b2",
    "key": "effects",
-   "value": 663
+   "value": 661
   },
   {
    "check": "b2",
@@ -19,17 +19,17 @@
   {
    "check": "b2",
    "key": "foundryNotes",
-   "value": 50
+   "value": 48
   },
   {
    "check": "b2",
    "key": "foundryNotes.companion",
-   "value": 6
+   "value": 4
   },
   {
    "check": "b2",
    "key": "foundryNotes.derived",
-   "value": 5
+   "value": 3
   },
   {
    "check": "b2",
@@ -52,26 +52,11 @@
     "monster.beast-of-the-land.tce 大地野兽",
     "monster.beast-of-the-sea.tce 海洋野兽",
     "monster.beast-of-the-sky.tce 天空野兽",
-    "monster.homunculus-servant.tce 人工生命仆从",
-    "monster.steel-defender.tce 钢铁守卫",
     "monster.wildfire-spirit.tce 野火精魂"
    ],
    "expected": "TCE 游侠/奇械师/德鲁伊的同伴条目原文",
    "note": "同伴（野兽伙伴、钢铁守卫等）随主人职业等级变强的数值只在说明文字里；需要的话在 G2c（怪物与战斗）统一设计",
-   "count": 6
-  },
-  {
-   "id": "b2-derived-in-note",
-   "check": "b2",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.homunculus-servant.tce 人工生命仆从：Foundry 效果：奇械师的领导力（system.attributes.hp.",
-    "monster.steel-defender.tce 钢铁守卫：Foundry 效果：奇械师的领导力（system.attributes.hp."
-   ],
-   "expected": "各特性原文",
-   "note": "影响派生数值的效果被留在说明文字里：龙脉术士的龙族韧性（AC 13+敏捷）、蜥蜴人的天生护甲、魔鬼视界/石之符文（黑暗视觉）、兔人的敏捷先攻、寒霜符文（力量/体质豁免与检定）、野蛮人的残暴重击（暴击额外骰）、冠军的强化重击（暴击范围）、觉知头盔（先攻优势）",
-   "count": 2
+   "count": 4
   },
   {
    "id": "b2-infusion-notes",
