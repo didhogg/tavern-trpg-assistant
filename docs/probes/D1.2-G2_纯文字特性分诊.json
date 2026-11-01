@@ -1,7 +1,7 @@
 {
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
-  "A": 63,
+  "A": 52,
   "B": 395,
   "C": 576
  },
@@ -1514,14 +1514,6 @@
    "name": "游荡者范型",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.rogue-slippery-mind.phb",
-   "name": "圆滑心智",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
   },
   {
    "id": "feature.rogue-thief-fast-hands.phb",
@@ -4452,14 +4444,6 @@
    ]
   },
   {
-   "id": "feature.monk-way-of-the-kensei-path-of-the-kensei.xge",
-   "name": "剑圣之途",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.monk-way-of-the-kensei-unerring-accuracy.xge",
    "name": "精妙剑法",
    "cls": "B",
@@ -4559,14 +4543,6 @@
    "cls": "B",
    "tags": [
     "法术"
-   ]
-  },
-  {
-   "id": "feature.ranger-gloom-stalker-iron-mind.xge",
-   "name": "钢铁意志",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {
@@ -4751,14 +4727,6 @@
    "cls": "B",
    "tags": [
     "动作"
-   ]
-  },
-  {
-   "id": "feature.rogue-scout-survivalist.xge",
-   "name": "生存专家",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {
@@ -5484,14 +5452,6 @@
    ]
   },
   {
-   "id": "feature.expert-sidekick-bonus-proficiencies.tce",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.expert-sidekick-coordinated-strike.tce",
    "name": "协同攻击",
    "cls": "B",
@@ -5869,14 +5829,6 @@
    ]
   },
   {
-   "id": "feature.spellcaster-sidekick-bonus-proficiencies.tce",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.spellcaster-sidekick-empowered-spells.tce",
    "name": "增强法术",
    "cls": "B",
@@ -5971,14 +5923,6 @@
    ]
   },
   {
-   "id": "feature.warrior-sidekick-bonus-proficiencies.tce",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.warrior-sidekick-extra-attack-improvement.tce",
    "name": "额外攻击增效",
    "cls": "C",
@@ -6057,14 +6001,6 @@
    "cls": "A",
    "tags": [
     "属性值"
-   ]
-  },
-  {
-   "id": "feature.wizard-bladesinging-training-in-war-and-song-bladesinging.tce",
-   "name": "战歌训练 (剑咏)",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {

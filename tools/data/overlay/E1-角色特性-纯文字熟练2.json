@@ -1,0 +1,91 @@
+{
+  "领域": "E1 角色特性",
+  "说明": "纯文字 A 类：固定熟练项第二批（自选部分保持文字）",
+  "rows": [
+    {
+      "id": "feature.expert-sidekick-bonus-proficiencies.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        { "kind": "proficiency", "category": "armor", "value": "轻甲" },
+        { "kind": "proficiency", "category": "weapon", "value": "简易武器" }
+      ],
+      "basis": "TCE p.142 附赠熟练：轻甲、简易武器（豁免/技能/工具自选保持文字）",
+      "source": "book"
+    },
+    {
+      "id": "feature.ranger-gloom-stalker-iron-mind.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [{ "kind": "save", "ability": "wis", "level": "proficient" }],
+      "basis": "XGE p.41 钢铁意志：感知豁免熟练（已有则改选智力/魅力，保持文字）",
+      "source": "book"
+    },
+    {
+      "id": "feature.monk-way-of-the-kensei-path-of-the-kensei.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        { "kind": "proficiency", "category": "tool", "value": "书法工具或画家工具", "choose": { "count": 1, "from": ["书法工具", "画家工具"] } }
+      ],
+      "basis": "XGE p.34 剑圣之途：书法工具或画家工具二选一（武器选择保持文字）",
+      "source": "book"
+    },
+    {
+      "id": "feature.rogue-scout-survivalist.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        { "kind": "skill", "skill": "nature", "level": "expertise" },
+        { "kind": "skill", "skill": "survival", "level": "expertise" }
+      ],
+      "basis": "XGE p.47 生存专家：自然、求生熟练且加倍",
+      "source": "book"
+    },
+    {
+      "id": "feature.rogue-slippery-mind.phb",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [{ "kind": "save", "ability": "wis", "level": "proficient" }],
+      "basis": "PHB p.94 圆滑心智：感知豁免熟练",
+      "source": "book"
+    },
+    {
+      "id": "feature.spellcaster-sidekick-bonus-proficiencies.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        { "kind": "proficiency", "category": "armor", "value": "轻甲" },
+        { "kind": "proficiency", "category": "weapon", "value": "简易武器" }
+      ],
+      "basis": "TCE p.144 附赠熟练：轻甲、简易武器（豁免/技能自选保持文字）",
+      "source": "book"
+    },
+    {
+      "id": "feature.warrior-sidekick-bonus-proficiencies.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        { "kind": "proficiency", "category": "armor", "value": "轻甲" },
+        { "kind": "proficiency", "category": "armor", "value": "中甲" },
+        { "kind": "proficiency", "category": "armor", "value": "重甲" },
+        { "kind": "proficiency", "category": "armor", "value": "盾牌" },
+        { "kind": "proficiency", "category": "weapon", "value": "简易武器" },
+        { "kind": "proficiency", "category": "weapon", "value": "军用武器" }
+      ],
+      "basis": "TCE p.146 附赠熟练：所有护甲、盾牌、简易/军用武器（豁免/技能自选保持文字）",
+      "source": "book"
+    },
+    {
+      "id": "feature.wizard-bladesinging-training-in-war-and-song-bladesinging.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        { "kind": "proficiency", "category": "armor", "value": "轻甲" },
+        { "kind": "skill", "skill": "performance", "level": "proficient" }
+      ],
+      "basis": "TCE p.76 战歌训练：轻甲、表演（单手近战武器自选保持文字）",
+      "source": "book"
+    }
+  ]
+}

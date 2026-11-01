@@ -165,6 +165,23 @@ export const ALLOW: Allow[] = [
     expect: 17,
     reason: 'b3-A 纯文字熟练第一批：固定熟练项',
   },
+  {
+    name: 'e1-5-proficiency-2',
+    station: 1,
+    ids: [
+      'feature.expert-sidekick-bonus-proficiencies.tce',
+      'feature.ranger-gloom-stalker-iron-mind.xge',
+      'feature.monk-way-of-the-kensei-path-of-the-kensei.xge',
+      'feature.rogue-scout-survivalist.xge',
+      'feature.rogue-slippery-mind.phb',
+      'feature.spellcaster-sidekick-bonus-proficiencies.tce',
+      'feature.warrior-sidekick-bonus-proficiencies.tce',
+      'feature.wizard-bladesinging-training-in-war-and-song-bladesinging.tce',
+    ],
+    path: /^\/data\/effects$/,
+    expect: 8,
+    reason: 'b3-A 纯文字熟练第二批：固定熟练项；自选部分保持文字',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

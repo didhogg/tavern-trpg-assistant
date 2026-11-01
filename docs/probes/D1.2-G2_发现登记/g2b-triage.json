@@ -4,7 +4,12 @@
   {
    "check": "b3",
    "key": "A",
-   "value": 63
+   "value": 52
+  },
+  {
+   "check": "b3",
+   "key": "A.falsePositive",
+   "value": 3
   },
   {
    "check": "b3",
@@ -39,7 +44,7 @@
   {
    "check": "b3",
    "key": "A.熟练",
-   "value": 17
+   "value": 6
   },
   {
    "check": "b3",
@@ -69,7 +74,7 @@
   {
    "check": "b3",
    "key": "plainMechanic",
-   "value": 1094
+   "value": 1086
   }
  ],
  "findings": [
@@ -89,7 +94,6 @@
     "feature.barbarian-path-of-the-totem-warrior-bear.phb 熊：抗性免疫",
     "feature.bard-college-of-lore-bonus-proficiencies.phb 附赠熟练：熟练",
     "feature.bard-college-of-swords-blade-flourish.xge 剑舞：速度",
-    "feature.bard-college-of-swords-fighting-style.xge 战斗风格：熟练",
     "feature.blind-fighting.tce 盲斗：感官",
     "feature.cleric-forge-domain-saint-of-forge-and-fire.xge 锻炉与烈焰的圣徒：抗性免疫",
     "feature.cleric-forge-domain-soul-of-the-forge.xge 锻造之魂：护甲等级、抗性免疫",
@@ -102,37 +106,38 @@
     "feature.druid-circle-of-stars-full-of-stars.tce 灿若繁星：抗性免疫",
     "feature.druid-circle-of-the-moon-primal-strike.phb 原力蛮击：抗性免疫",
     "feature.druid-circle-of-the-shepherd-mighty-summoner.xge 全能牧者：抗性免疫",
-    "feature.expert-sidekick-bonus-proficiencies.tce 附赠熟练：熟练",
     "feature.expert-sidekick-sharp-mind.tce 明锐心智：熟练",
     "feature.fighter-arcane-archer-arcane-archer-lore.xge 魔箭学识：熟练",
     "feature.fighter-arcane-archer-magic-arrow.xge 注魔箭矢：抗性免疫",
-    "feature.fighter-fighting-style.phb 战斗风格：熟练",
     "feature.fighter-psi-warrior-guarded-mind.tce 意念守护：抗性免疫",
     "feature.investment-of-the-chain-master.tce 链主赋能：速度、抗性免疫",
     "feature.lance-of-lethargy.xge 怠惰之枪：速度",
     "feature.monk-ki-empowered-strikes.phb 真气驻拳：抗性免疫",
     "feature.monk-way-of-the-drunken-master-drunken-technique.xge 醉拳技巧：速度",
     "feature.monk-way-of-the-kensei-one-with-the-blade.xge 人剑合一：抗性免疫",
-    "feature.monk-way-of-the-kensei-path-of-the-kensei.xge 剑圣之途：熟练",
     "feature.paladin-oath-of-glory-aura-of-alacrity.tce 迅捷灵光：速度",
     "feature.paladin-oath-of-the-ancients-aura-of-warding.phb 守御灵光：抗性免疫",
     "feature.paladin-oathbreaker-supernatural-resistance.dmg 超然抗性：抗性免疫",
     "feature.ranger-beast-master-rangers-companion.phb 游侠伴侣：生命上限",
     "feature.ranger-fey-wanderer-otherworldly-glamour.tce 妖冶娴都：熟练",
     "feature.ranger-gloom-stalker-dread-ambusher.xge 恐惧伏击：速度",
-    "feature.ranger-gloom-stalker-iron-mind.xge 钢铁意志：熟练",
     "feature.ranger-gloom-stalker-umbral-sight.xge 阴影视野：感官",
-    "feature.ranger-natural-explorer.phb 自然探索者：熟练",
     "feature.rogue-scout-ambush-master.xge 伏击大师：先攻被动",
-    "feature.rogue-scout-survivalist.xge 生存专家：熟练",
-    "feature.rogue-slippery-mind.phb 圆滑心智：熟练",
     "feature.sorcerer-aberrant-mind-psychic-defenses.tce 心灵防御：抗性免疫",
     "feature.sorcerer-shadow-magic-eyes-of-the-dark.xge 幽暗之瞳：感官",
-    "feature.spellcaster-sidekick-bonus-proficiencies.tce 附赠熟练：熟练"
+    "feature.warlock-the-archfey-beguiling-defenses.phb 斗转星移：抗性免疫",
+    "feature.warlock-the-celestial-radiant-soul.xge 光耀之魂：抗性免疫",
+    "feature.warlock-the-fathomless-oceanic-soul.tce 海渊魂灵：抗性免疫",
+    "feature.warlock-the-fiend-fiendish-resilience.phb 邪魔体魄：抗性免疫",
+    "feature.warlock-the-great-old-one-thought-shield.phb 思维之盾：抗性免疫",
+    "feature.warrior-sidekick-battle-readiness.tce 备战：先攻被动",
+    "feature.wizard-bladesinging-song-of-victory.tce 胜利之歌：属性值",
+    "feature.wizard-school-of-abjuration-spell-resistance.phb 法术抗性：抗性免疫",
+    "feature.wizard-school-of-necromancy-inured-to-undeath.phb 不死适应：生命上限、抗性免疫"
    ],
    "expected": "各特性原文（初筛，逐条确认见分诊清单）",
    "note": "影响护甲等级、速度、生命上限、熟练、抗性、感官、先攻、属性值的机制只有文字（初筛结果，含误报，需对照原书确认后结构化）",
-   "count": 63
+   "count": 52
   },
   {
    "id": "b3-B-action-in-text",

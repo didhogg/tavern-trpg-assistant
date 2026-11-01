@@ -1,0 +1,17 @@
+[
+  {
+    "id": "feature.bard-college-of-swords-fighting-style.xge",
+    "verdict": "false-positive",
+    "reason": "该特性只是选择一种战斗风格；真正的熟练/效果写在被选中的战斗风格特性上，本身没有固定派生数值"
+  },
+  {
+    "id": "feature.fighter-fighting-style.phb",
+    "verdict": "false-positive",
+    "reason": "该特性只是选择一种战斗风格；真正的熟练/效果写在被选中的战斗风格特性上，本身没有固定派生数值"
+  },
+  {
+    "id": "feature.ranger-natural-explorer.phb",
+    "verdict": "false-positive",
+    "reason": "该特性不授予新的固定熟练；只在已拥有相关技能熟练时把加值翻倍，且地形与技能由玩家选择，无法写成固定 skill 效果"
+  }
+]
