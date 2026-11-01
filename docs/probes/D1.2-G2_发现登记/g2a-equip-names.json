@@ -9,29 +9,15 @@
   {
    "check": "a3",
    "key": "unresolved",
-   "value": 49
+   "value": 41
   },
   {
    "check": "a3",
    "key": "unresolved.distinct",
-   "value": 38
+   "value": 31
   }
  ],
  "findings": [
-  {
-   "id": "a3-described",
-   "check": "a3",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "background.charlatan.phb 一副标记过的扑克牌",
-    "background.charlatan.phb 一组作弊骰子",
-    "background.charlatan.phb 虚构公爵的印章戒指"
-   ],
-   "expected": "PHB 背景章（骗子、贵族）",
-   "note": "基础物品存在（骰子组、整副纸牌、玺戒），书上写的是带描述的版本；建议补条目编号并保留描述文字",
-   "count": 3
-  },
   {
    "id": "a3-free-text",
    "check": "a3",
@@ -83,22 +69,6 @@
    "expected": "PHB、SCAG 背景章（信物、信件、地图、纹身、熏香、祭袍、经轮等描述性物品）",
    "note": "物品库里没有对应物品，书上本来就是描述性文字；约定为“自由文字物品”，需加 free 标记",
    "count": 41
-  },
-  {
-   "id": "a3-missed-match",
-   "check": "a3",
-   "kind": "data-defect",
-   "fixSource": "normalize",
-   "entries": [
-    "background.cloistered-scholar.scag 折叠的羊皮纸",
-    "background.cloistered-scholar.scag 羽毛笔",
-    "background.rewarded.bmt 一瓶黑色墨水",
-    "background.rewarded.bmt 纸张",
-    "background.sage.phb 羽毛笔"
-   ],
-   "expected": "PHB 装备章物品表（纸、羊皮纸、墨水笔、墨水）",
-   "note": "起始装备里的物品书上就是物品库里的一件普通物品，只是名字对不上（漏配），应补条目编号",
-   "count": 5
   }
  ]
 }
