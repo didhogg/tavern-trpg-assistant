@@ -9,12 +9,12 @@
   {
    "check": "a3",
    "key": "unresolved",
-   "value": 41
+   "value": 38
   },
   {
    "check": "a3",
    "key": "unresolved.distinct",
-   "value": 31
+   "value": 29
   }
  ],
  "findings": [
@@ -25,7 +25,6 @@
    "fixSource": "self-structure",
    "entries": [
     "background.acolyte.phb 熏香",
-    "background.acolyte.phb 祭袍",
     "background.acolyte.phb 经轮",
     "background.charlatan.phb 装满彩色液体的塞子瓶",
     "background.city-watch.scag 你所属单位风格、标示你军衔的制服",
@@ -45,12 +44,10 @@
     "background.outlander.phb 来自你手刃的动物身上的战利品",
     "background.ruined.bmt 半空的瓶子",
     "background.sage.phb 一封去世同事信件其内载有你尚不能解答的问题",
-    "background.sage.phb 小刀",
     "background.soldier.phb 一件从某个倒下的敌人身上得到的战利品（一把匕首，毁坏的武器或是军旗碎片）",
     "background.soldier.phb 军阶徽记",
     "background.urchin.phb 你成长的城市的地图",
     "background.urchin.phb 宠物老鼠",
-    "background.urchin.phb 小刀",
     "background.urchin.phb 用来纪念你父母的信物",
     "background.uthgardt-tribe-member.scag 一组纹身，标示你对乌特加的忠诚和你部族的图腾",
     "background.uthgardt-tribe-member.scag 图腾信物",
@@ -68,7 +65,7 @@
    ],
    "expected": "PHB、SCAG 背景章（信物、信件、地图、纹身、熏香、祭袍、经轮等描述性物品）",
    "note": "物品库里没有对应物品，书上本来就是描述性文字；约定为“自由文字物品”，需加 free 标记",
-   "count": 41
+   "count": 38
   }
  ]
 }

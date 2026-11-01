@@ -8,6 +8,9 @@ import { ROWS as S3A_EQUIP } from './rows/s3a-equip'
 import { ROWS as S3A_TOOL_CHOOSE } from './rows/s3a-tool-choose'
 import { ROWS as S3A_ARTIFICER_FIREARMS } from './rows/s3a-artificer-firearms'
 import { ROWS as S3A_SUBCLASS_CASTING } from './rows/s3a-subclass-casting'
+import { ROWS as S3A_ITEMS_ADD_A } from './rows/s3a-items-add-a'
+import { ROWS as S3A_ITEMS_ADD_B } from './rows/s3a-items-add-b'
+import { ROWS as S3A_PACK_CONTENTS } from './rows/s3a-pack-contents'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -28,6 +31,9 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3a-tool-choose.ts', rows: S3A_TOOL_CHOOSE },
   { file: 'rows/s3a-artificer-firearms.ts', rows: S3A_ARTIFICER_FIREARMS },
   { file: 'rows/s3a-subclass-casting.ts', rows: S3A_SUBCLASS_CASTING },
+  { file: 'rows/s3a-items-add-a.ts', rows: S3A_ITEMS_ADD_A },
+  { file: 'rows/s3a-items-add-b.ts', rows: S3A_ITEMS_ADD_B },
+  { file: 'rows/s3a-pack-contents.ts', rows: S3A_PACK_CONTENTS },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {

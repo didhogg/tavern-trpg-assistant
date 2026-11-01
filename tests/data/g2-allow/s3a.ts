@@ -47,6 +47,25 @@ export const ALLOW: Allow[] = [
     expect: 2,
     reason: 'a4-progression-without-slots：四象武僧、先祖守护者整块删 spellcasting',
   },
+  {
+    name: 's3a-pack-contents',
+    station: 3,
+    ids: ['item.priests-pack.phb', 'item.scholars-pack.phb', 'item.burglars-pack.phb'],
+    path: /^\/data\/contents\//,
+    expect: 3,
+    reason: 'a15-contents-differ：3 个套组补内容物',
+  },
 ]
-export const ADDED: Added[] = []
+export const ADDED: Added[] = [
+  { id: 'item.alms-box.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 祭司套组' },
+  { id: 'item.block-of-incense.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 祭司套组' },
+  { id: 'item.censer.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 祭司套组' },
+  { id: 'item.vestments.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 祭司套组' },
+  { id: 'item.little-bag-of-sand.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 学者套组' },
+  { id: 'item.small-knife.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 学者套组' },
+  { id: 'item.string-10-feet.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 窃贼套组' },
+  { id: 'item.animal-feed-1-day.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p150 饲料表' },
+  { id: 'item.flask-or-tankard.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p150 冒险用品表' },
+  { id: 'item.jug-or-pitcher.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p150 冒险用品表' },
+]
 export const ALLOW_REQUIRES: AllowRequires[] = []

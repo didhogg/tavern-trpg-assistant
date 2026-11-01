@@ -24,17 +24,17 @@
   {
    "check": "b7",
    "key": "plainItems",
-   "value": 425
+   "value": 435
   },
   {
    "check": "b7",
    "key": "plainWithoutValue",
-   "value": 38
+   "value": 45
   },
   {
    "check": "b7",
    "key": "plainWithoutWeight",
-   "value": 191
+   "value": 198
   }
  ],
  "findings": [

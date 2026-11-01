@@ -22,20 +22,5 @@
    "value": 7
   }
  ],
- "findings": [
-  {
-   "id": "a15-contents-differ",
-   "check": "a15",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "item.burglars-pack.phb（Burglar's Pack）数据13种 / 书14种；缺：String (10 feet)×1",
-    "item.priests-pack.phb（Priest's Pack）数据6种 / 书10种；缺：Alms box×1、Block of incense×2、Censer×1、Vestments×1",
-    "item.scholars-pack.phb（Scholar's Pack）数据5种 / 书7种；缺：Parchment (one sheet)×10、Little bag of sand×1、Small knife×1"
-   ],
-   "expected": "5e API 套组 contents（对应 PHB 装备章“装备套组”）",
-   "note": "套组内容物或数量与书不符",
-   "count": 3
-  }
- ]
+ "findings": []
 }
