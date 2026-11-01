@@ -32,3 +32,21 @@ export interface ApiEquip {
   contents?: Array<{ item: { index: string; name: string }; quantity: number }>
 }
 export const apiEquipment = (): Record<string, ApiEquip> => JSON.parse(readFileSync(join(DIR, 'equipment.json'), 'utf8')) as Record<string, ApiEquip>
+
+export interface ApiMonsterAction { name: string; desc: string; attack_bonus?: number; damage?: Array<{ damage_type?: { index: string }; damage_dice: string }>; dc?: { dc_type: { index: string }; dc_value: number; success_type: string }; usage?: { type: string; times?: number; dice?: string; min_value?: number }; actions?: Array<{ action_name: string; count: string | number; type: string }> }
+export interface ApiMonster {
+  index: string; name: string; size: string; type: string
+  armor_class: Array<{ type: string; value: number }>
+  hit_points: number; hit_points_roll: string
+  speed: Record<string, string | boolean>
+  strength: number; dexterity: number; constitution: number; intelligence: number; wisdom: number; charisma: number
+  proficiencies: Array<{ value: number; proficiency: { index: string } }>
+  damage_vulnerabilities: string[]; damage_resistances: string[]; damage_immunities: string[]
+  condition_immunities: Array<{ index: string }>
+  senses: Record<string, string | number>
+  languages: string
+  challenge_rating: number; proficiency_bonus: number; xp: number
+  special_abilities?: ApiMonsterAction[]; actions?: ApiMonsterAction[]; legendary_actions?: ApiMonsterAction[]; reactions?: ApiMonsterAction[]
+}
+export const apiMonsters = (): Record<string, ApiMonster> => JSON.parse(readFileSync(join(DIR, 'monsters.json'), 'utf8')) as Record<string, ApiMonster>
+export const hasApiMonsters = (): boolean => existsSync(join(DIR, 'monsters.json'))

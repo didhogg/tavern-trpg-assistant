@@ -1,0 +1,57 @@
+{
+ "group": "g2c-rules",
+ "stats": [
+  {
+   "check": "c11",
+   "key": "actionRules",
+   "value": 30
+  },
+  {
+   "check": "c11",
+   "key": "quickrefRules",
+   "value": 65
+  },
+  {
+   "check": "c11",
+   "key": "rules",
+   "value": 257
+  },
+  {
+   "check": "c11",
+   "key": "rulesWithActivities",
+   "value": 10
+  },
+  {
+   "check": "c8",
+   "key": "chainedSupersession",
+   "value": 0
+  },
+  {
+   "check": "c8",
+   "key": "supersededBy",
+   "value": 299
+  },
+  {
+   "check": "c8",
+   "key": "versionGroup",
+   "value": 212
+  }
+ ],
+ "findings": [
+  {
+   "id": "c11-rule-action-text-only",
+   "check": "c11",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "rule.attack.phb 攻击",
+    "rule.cast-a-spell.phb 施展法术",
+    "rule.opportunity-attack.phb 借机攻击",
+    "rule.use-an-object.phb 使用物件"
+   ],
+   "expected": "PHB 第 9 章",
+   "note": "攻击、施展法术、借机攻击、使用物件这类动作规则没有行动结构（疾走、撤离、协助、躲藏、搜索、擒抱、推撞有）：战斗里的“动作栏”按钮要靠它们；缺的只是文字速查，推荐保持文字（从简）",
+   "count": 4
+  }
+ ]
+}

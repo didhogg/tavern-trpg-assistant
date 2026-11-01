@@ -1,0 +1,81 @@
+{
+ "group": "g2c-monster-api",
+ "stats": [
+  {
+   "check": "c1",
+   "key": "apiDiffers.ac",
+   "value": 3
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.condition-immune",
+   "value": 8
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.hp",
+   "value": 1
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.hp-roll",
+   "value": 2
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.immune",
+   "value": 12
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.passive",
+   "value": 2
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.resist",
+   "value": 40
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.skills",
+   "value": 7
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.speed-swim",
+   "value": 2
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.speed-walk",
+   "value": 1
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.vulnerable",
+   "value": 1
+  },
+  {
+   "check": "c1",
+   "key": "apiDiffers.xp-table",
+   "value": 6
+  },
+  {
+   "check": "c1",
+   "key": "apiMonsters",
+   "value": 334
+  },
+  {
+   "check": "c1",
+   "key": "checksWithApi",
+   "value": 4926
+  },
+  {
+   "check": "c1",
+   "key": "matchedWithApi",
+   "value": 314
+  }
+ ],
+ "findings": []
+}

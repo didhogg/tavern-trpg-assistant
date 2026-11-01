@@ -1,0 +1,153 @@
+{
+ "group": "g2c-actions",
+ "stats": [
+  {
+   "check": "c4",
+   "key": "attackActivities",
+   "value": 1886
+  },
+  {
+   "check": "c4",
+   "key": "attackBonusFarAboveAbilityPlusProf.reviewedLegit",
+   "value": 10
+  },
+  {
+   "check": "c4",
+   "key": "legendaryCostActions",
+   "value": 55
+  },
+  {
+   "check": "c4",
+   "key": "legendaryCostStructured",
+   "value": 0
+  },
+  {
+   "check": "c4",
+   "key": "multiattackActions",
+   "value": 677
+  },
+  {
+   "check": "c4",
+   "key": "rechargeActions",
+   "value": 342
+  },
+  {
+   "check": "c4",
+   "key": "rechargeStructured",
+   "value": 0
+  },
+  {
+   "check": "c4",
+   "key": "saveActivities",
+   "value": 946
+  },
+  {
+   "check": "c4",
+   "key": "textVsStructDiceChecks",
+   "value": 2460
+  }
+ ],
+ "findings": [
+  {
+   "id": "c4-damage-struct-not-in-text",
+   "check": "c4",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "monster.aberrant-spirit-beholderkin.tce 异怪灵魄（类眼魔）：眼波射线：结构伤害 1d8+3 在文字里找不到",
+    "monster.aberrant-spirit-slaad.tce 异怪灵魄（史拉蟾）：爪击：结构伤害 1d10+3 在文字里找不到",
+    "monster.aberrant-spirit-star-spawn.tce 异怪灵魄（星之子）：灵能猛击：结构伤害 1d8+3 在文字里找不到",
+    "monster.aberrant-spirit.tce 异怪灵魄：灵能猛击（仅星之子）：结构伤害 1d8+3 在文字里找不到",
+    "monster.aberrant-spirit.tce 异怪灵魄：爪击（仅史拉蟾）：结构伤害 1d10+3 在文字里找不到",
+    "monster.aberrant-spirit.tce 异怪灵魄：眼波射线（仅类眼魔）：结构伤害 1d8+3 在文字里找不到",
+    "monster.beast-of-the-land.tce 大地野兽：挥打：结构伤害 1d8+2 在文字里找不到",
+    "monster.beast-of-the-sea.tce 海洋野兽：攫击：结构伤害 1d6+2 在文字里找不到",
+    "monster.beast-of-the-sky.tce 天空野兽：撕扯：结构伤害 1d4+3 在文字里找不到",
+    "monster.bestial-spirit-air.tce 野兽灵魄（天空）：巨锤：结构伤害 1d8+4 在文字里找不到",
+    "monster.bestial-spirit-land.tce 野兽灵魄（大地）：巨锤：结构伤害 1d8+4 在文字里找不到",
+    "monster.bestial-spirit-water.tce 野兽灵魄（海洋）：巨锤：结构伤害 1d8+4 在文字里找不到",
+    "monster.bestial-spirit.tce 野兽灵魄：巨锤：结构伤害 1d8+4 在文字里找不到",
+    "monster.celestial-spirit-avenger.tce 天界灵魄（复仇圣灵）：光耀之弓：结构伤害 2d6+2 在文字里找不到",
+    "monster.celestial-spirit-defender.tce 天界灵魄（守护圣灵）：光耀之锤：结构伤害 1d10+3 在文字里找不到",
+    "monster.celestial-spirit.tce 天界灵魄：光耀之弓（仅复仇圣灵）：结构伤害 2d6+2 在文字里找不到",
+    "monster.celestial-spirit.tce 天界灵魄：光耀之锤（仅守护圣灵）：结构伤害 1d10+3 在文字里找不到",
+    "monster.construct-spirit-clay.tce 构装灵魄（粘土）：猛击：结构伤害 1d8+4 在文字里找不到",
+    "monster.construct-spirit-metal.tce 构装灵魄（金属）：猛击：结构伤害 1d8+4 在文字里找不到",
+    "monster.construct-spirit-stone.tce 构装灵魄（岩石）：猛击：结构伤害 1d8+4 在文字里找不到",
+    "monster.construct-spirit.tce 构装灵魄：猛击：结构伤害 1d8+4 在文字里找不到",
+    "monster.dancing-item.tce 舞空物品：力场动能猛击：结构伤害 1d10 在文字里找不到",
+    "monster.elemental-spirit-air.tce 元素灵魄（气）：猛击：结构伤害 1d10+4 在文字里找不到",
+    "monster.elemental-spirit-earth.tce 元素灵魄（土）：猛击：结构伤害 1d10+4 在文字里找不到",
+    "monster.elemental-spirit-fire.tce 元素灵魄（火）：猛击：结构伤害 1d10+4 在文字里找不到",
+    "monster.elemental-spirit-water.tce 元素灵魄（水）：猛击：结构伤害 1d10+4 在文字里找不到",
+    "monster.elemental-spirit.tce 元素灵魄：猛击：结构伤害 1d10+4 在文字里找不到",
+    "monster.fey-spirit-fuming.tce 妖精灵魄（愤怒）：短剑：结构伤害 1d6+3 在文字里找不到",
+    "monster.fey-spirit-mirthful.tce 妖精灵魄（欢欣）：短剑：结构伤害 1d6+3 在文字里找不到",
+    "monster.fey-spirit-tricksy.tce 妖精灵魄（诡诈）：短剑：结构伤害 1d6+3 在文字里找不到",
+    "monster.fey-spirit.tce 妖精灵魄：短剑：结构伤害 1d6+3 在文字里找不到",
+    "monster.fiendish-spirit-demon.tce 邪魔灵魄（恶魔）：啃咬：结构伤害 1d12+3 在文字里找不到",
+    "monster.fiendish-spirit-devil.tce 邪魔灵魄（魔鬼）：投掷烈焰：结构伤害 2d6+3 在文字里找不到",
+    "monster.fiendish-spirit-yugoloth.tce 邪魔灵魄（尤格罗斯魔）：爪击：结构伤害 1d8+3 在文字里找不到",
+    "monster.fiendish-spirit.tce 邪魔灵魄：啃咬（仅恶魔）：结构伤害 1d12+3 在文字里找不到",
+    "monster.fiendish-spirit.tce 邪魔灵魄：投掷烈焰（仅限于魔鬼）：结构伤害 2d6+3 在文字里找不到",
+    "monster.fiendish-spirit.tce 邪魔灵魄：爪击（仅尤格罗斯魔）：结构伤害 1d8+3 在文字里找不到",
+    "monster.homunculus-servant.tce 人工生命仆从：力场打击：结构伤害 1d4 在文字里找不到",
+    "monster.reaper-spirit.bmt 收割者灵魄：收割之镰：结构伤害 1d8+3 在文字里找不到",
+    "monster.shadow-spirit-despair.tce 暗影灵魄（绝望）：冻寒撕裂：结构伤害 1d12+3 在文字里找不到",
+    "monster.shadow-spirit-fear.tce 暗影灵魄（恐惧）：冻寒撕裂：结构伤害 1d12+3 在文字里找不到",
+    "monster.shadow-spirit-fury.tce 暗影灵魄（暴怒）：冻寒撕裂：结构伤害 1d12+3 在文字里找不到",
+    "monster.shadow-spirit.tce 暗影灵魄：冻寒撕裂：结构伤害 1d12+3 在文字里找不到",
+    "monster.steel-defender.tce 钢铁守卫：力场动能撕扯：结构伤害 1d8 在文字里找不到",
+    "monster.undead-spirit-ghostly.tce 亡灵灵魄（幽体）：致死之触：结构伤害 1d8+3 在文字里找不到",
+    "monster.undead-spirit-putrid.tce 亡灵灵魄（腐尸）：腐灭爪击：结构伤害 1d6+3 在文字里找不到",
+    "monster.undead-spirit-skeletal.tce 亡灵灵魄（骷髅）：暗澹箭：结构伤害 2d4+3 在文字里找不到",
+    "monster.undead-spirit.tce 亡灵灵魄：暗澹箭（仅骷髅）：结构伤害 2d4+3 在文字里找不到",
+    "monster.undead-spirit.tce 亡灵灵魄：腐灭爪击（仅腐尸）：结构伤害 1d6+3 在文字里找不到",
+    "monster.undead-spirit.tce 亡灵灵魄：致死之触（仅幽体）：结构伤害 1d8+3 在文字里找不到"
+   ],
+   "expected": "动作自己的文字（自洽检查）；熟练加值由挑战等级推出",
+   "note": "结构化伤害骰在动作文字里找不到",
+   "selfCheck": true,
+   "count": 51
+  },
+  {
+   "id": "c4-legendary-cost-text-only",
+   "check": "c4",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "55 个“花费 N 个动作”的传奇动作里 55 个没有结构化"
+   ],
+   "expected": "怪物传奇动作名称",
+   "note": "传奇动作花费的动作数只写在名字里（“振翅攻击（花费2个动作）”）；传奇动作点数是每回合共享的，自动扣点需要读到花费",
+   "selfCheck": true,
+   "count": 1
+  },
+  {
+   "id": "c4-multiattack-text-only",
+   "check": "c4",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "677 个“多重攻击”动作只有文字"
+   ],
+   "expected": "各怪物多重攻击原文",
+   "note": "“多重攻击”（每回合攻击几次、各用哪个攻击）只有文字；战斗自动结算需要“次数 + 每次用哪个动作”的结构，或由玩家/DM 读文字手动点击（推荐：先不结构化，从简）",
+   "selfCheck": true,
+   "count": 1
+  },
+  {
+   "id": "c4-recharge-text-only",
+   "check": "c4",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "342 个“充能 5–6”类动作里 342 个没有结构化"
+   ],
+   "expected": "怪物动作名称里的“（充能 5–6）”",
+   "note": "充能动作（龙的吐息等）的充能条件只写在动作名里，没有结构；战斗里每回合开始要掷 d6 判断是否恢复，自动结算读不到",
+   "selfCheck": true,
+   "count": 1
+  }
+ ]
+}

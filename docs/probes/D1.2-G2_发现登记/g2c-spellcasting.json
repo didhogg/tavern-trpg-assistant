@@ -1,0 +1,141 @@
+{
+ "group": "g2c-spellcasting",
+ "stats": [
+  {
+   "check": "c5",
+   "key": "dcChecks",
+   "value": 375
+  },
+  {
+   "check": "c5",
+   "key": "spellMentions",
+   "value": 3299
+  },
+  {
+   "check": "c5",
+   "key": "spellcastingBlocks",
+   "value": 408
+  }
+ ],
+ "findings": [
+  {
+   "id": "c5-spell-dc-off",
+   "check": "c5",
+   "kind": "source-defect",
+   "fixSource": "decision",
+   "entries": [
+    "monster.bheur-hag-coven-death.vgm 冬灵鬼婆（集会；死亡）：文字 DC 14，按 8+熟练4+cha调整值3 = 15",
+    "monster.bheur-hag-coven-nature.vgm 冬灵鬼婆（集会；自然）：文字 DC 14，按 8+熟练4+cha调整值3 = 15",
+    "monster.bheur-hag-coven-prophecy.vgm 冬灵鬼婆（集会；预言）：文字 DC 14，按 8+熟练4+cha调整值3 = 15",
+    "monster.bheur-hag-coven.vgm 冬灵鬼婆（集会）：文字 DC 14，按 8+熟练4+cha调整值3 = 15",
+    "monster.booyahg-slave-of-the-archfey.vgm 布耶格，至高妖精之奴：文字 DC 15，按 8+熟练2+cha调整值4 = 14",
+    "monster.duergar-despot.mpmm 灰矮人霸主：文字 DC 12，按 8+熟练4+int调整值2 = 14",
+    "monster.duergar-despot.mtf 灰矮人霸主：文字 DC 12，按 8+熟练4+int调整值2 = 14",
+    "monster.duergar-soulblade.mtf 灰矮人魂刃使：文字 DC 12，按 8+熟练2+wis调整值0 = 10",
+    "monster.green-hag-coven.mm 绿鬼婆（鬼婆集会）：文字 DC 12，按 8+熟练3+cha调整值2 = 13",
+    "monster.orcus.mpmm 奥喀斯：文字 DC 18，按 8+熟练8+int调整值5 = 21",
+    "monster.warlock-of-the-archfey.vgm 至高妖精魔契师：文字 DC 15，按 8+熟练2+cha调整值4 = 14",
+    "monster.yuan-ti-pit-master.vgm 蛇人深坑之主：文字 DC 13，按 8+熟练3+cha调整值3 = 14"
+   ],
+   "expected": "怪物自己的数据（自洽）",
+   "note": "怪物的法术豁免难度和 8+熟练+施法属性调整值不一致（自洽检查；怪物不一定严格按公式）",
+   "selfCheck": true,
+   "count": 12
+  },
+  {
+   "id": "c5-spell-list-text-only",
+   "check": "c5",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "monster.booyahg-caster.vgm 布耶格，施法者：施法"
+   ],
+   "expected": "条目库",
+   "note": "施法块只有文字、没有结构化的法术列表",
+   "selfCheck": false,
+   "count": 1
+  },
+  {
+   "id": "c5-spell-plain-name",
+   "check": "c5",
+   "kind": "data-defect",
+   "fixSource": "normalize",
+   "entries": [
+    "monster.abjurer.vgm 防护师：剑刃防护",
+    "monster.alhoon.vgm 慑心魔：艾伐黑触手",
+    "monster.annis-hag-coven-nature.vgm 妖鬼婆（集会；自然）：擒抱藤",
+    "monster.annis-hag-coven.vgm 妖鬼婆（集会）：致病射线",
+    "monster.arcanaloth.mm 奥法罗斯魔：谭森浮碟术",
+    "monster.arcanaloth.mm 奥法罗斯魔：魅影之力",
+    "monster.archdruid.mpmm 大德鲁伊：野兽感官",
+    "monster.archdruid.vgm 大德鲁伊：野兽感官",
+    "monster.bard.vgm 吟游诗人：交友术",
+    "monster.barlgura.mm 恶猿魔：魅影之力",
+    "monster.bheur-hag-coven-nature.vgm 冬灵鬼婆（集会；自然）：擒抱藤",
+    "monster.bheur-hag-coven.vgm 冬灵鬼婆（集会）：致病射线",
+    "monster.blackguard.vgm 黑暗卫士：致盲斩",
+    "monster.blackguard.vgm 黑暗卫士：雷鸣斩",
+    "monster.blue-abishai.mtf 亚比莎蓝龙魔：交友术",
+    "monster.blue-abishai.mtf 亚比莎蓝龙魔：繁彩球",
+    "monster.booyahg-slave-of-the-archfey.vgm 布耶格，至高妖精之奴：交友术",
+    "monster.booyahg-slave-of-the-archfey.vgm 布耶格，至高妖精之奴：魅影之力",
+    "monster.booyahg-slave-of-the-fiend.vgm 布耶格，邪魔之奴：交友术",
+    "monster.booyahg-slave-of-the-great-old-one.vgm 布耶格，旧日支配者之奴：不谐低语",
+    "monster.booyahg-slave-of-the-great-old-one.vgm 布耶格，旧日支配者之奴：哈达之臂",
+    "monster.booyahg-slave-of-the-great-old-one.vgm 布耶格，旧日支配者之奴：疯狂冠冕",
+    "monster.booyahg-slave-of-the-great-old-one.vgm 布耶格，旧日支配者之奴：秘法门",
+    "monster.booyahg-slave-of-the-great-old-one.vgm 布耶格，旧日支配者之奴：黯冰狱铠",
+    "monster.brusipha.bmt 布鲁西法：疯狂冠冕",
+    "monster.cloud-giant-smiling-one.vgm 云巨人欢笑者：塔莎狂笑术",
+    "monster.death-knight.mm 死亡骑士：元素武器",
+    "monster.death-knight.mm 死亡骑士：强令对决",
+    "monster.death-knight.mm 死亡骑士：惊惧斩",
+    "monster.death-knight.mm 死亡骑士：炽焰斩",
+    "monster.deathlock-archfey-patron.mtf 败契者（至高妖精宗主）：哈达之欲",
+    "monster.deathlock-archfey-patron.mtf 败契者（至高妖精宗主）：魅影之力",
+    "monster.deathlock-great-old-one-patron.mtf 败契者（旧日支配者宗主）：不谐低语",
+    "monster.deathlock-great-old-one-patron.mtf 败契者（旧日支配者宗主）：哈达之欲",
+    "monster.deathlock-great-old-one-patron.mtf 败契者（旧日支配者宗主）：塔莎狂笑术",
+    "monster.deathlock-great-old-one-patron.mtf 败契者（旧日支配者宗主）：魅影之力",
+    "monster.deathlock-great-old-one-patron.mtf 败契者（旧日支配者宗主）：黯冰狱铠",
+    "monster.deathlock-mastermind-archfey-patron.mtf 败契者首脑（至高妖精宗主）：哈达之欲",
+    "monster.deathlock-mastermind-archfey-patron.mtf 败契者首脑（至高妖精宗主）：魅影之力",
+    "monster.deathlock-mastermind-great-old-one-patron.mtf 败契者首脑（旧日支配者宗主）：不谐低语",
+    "monster.deathlock-mastermind-great-old-one-patron.mtf 败契者首脑（旧日支配者宗主）：哈达之欲",
+    "monster.deathlock-mastermind-great-old-one-patron.mtf 败契者首脑（旧日支配者宗主）：塔莎狂笑术",
+    "monster.deathlock-mastermind-great-old-one-patron.mtf 败契者首脑（旧日支配者宗主）：艾伐黑触手",
+    "monster.deathlock-mastermind-great-old-one-patron.mtf 败契者首脑（旧日支配者宗主）：魅影之力",
+    "monster.deathlock-mastermind.mtf 败契者首脑：哈达之臂",
+    "monster.deathlock-mastermind.mtf 败契者首脑：疯狂冠冕",
+    "monster.deathlock.mpmm 败契者：哈达之欲",
+    "monster.deathlock.mtf 败契者：哈达之欲",
+    "monster.deathlock.mtf 败契者：哈达之臂",
+    "monster.derro-savant.mtf 迪洛矮人学者：繁彩球"
+   ],
+   "expected": "条目库",
+   "note": "施法列表里的法术是没加链接的纯文字名字（库里有这个法术）",
+   "selfCheck": false,
+   "count": 126
+  },
+  {
+   "id": "c5-spell-plain-unknown",
+   "check": "c5",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "monster.black-abishai.mpmm 亚比莎黑龙魔：darkness",
+    "monster.conjurer.vgm 咒法师：匕首之云*",
+    "monster.conjurer.vgm 咒法师：艾伐黑触手*",
+    "monster.death-knight.mm 死亡骑士：湮灭波（暗蚀）",
+    "monster.diviner.vgm 预言师：拉瑞心灵联结*",
+    "monster.evoker.vgm 塑能师：毕格比之手*",
+    "monster.illusionist.vgm 幻术师：魅影之力*",
+    "monster.necromancer.vgm 死灵师：致病射线*"
+   ],
+   "expected": "条目库",
+   "note": "施法列表里的法术名在库里找不到（译名不同或不是 2014 版法术）",
+   "selfCheck": false,
+   "count": 8
+  }
+ ]
+}

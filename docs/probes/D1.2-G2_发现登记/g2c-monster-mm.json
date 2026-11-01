@@ -1,0 +1,102 @@
+{
+ "group": "g2c-monster-mm",
+ "stats": [
+  {
+   "check": "c1",
+   "key": "checksWithMMText",
+   "value": 5376
+  },
+  {
+   "check": "c1",
+   "key": "matchedWithMMText",
+   "value": 369
+  },
+  {
+   "check": "c1",
+   "key": "mismatchesExplainedByApiAgreeingWithData",
+   "value": 30
+  },
+  {
+   "check": "c1",
+   "key": "mmBlockRejected",
+   "value": 26
+  },
+  {
+   "check": "c1",
+   "key": "mmMonstersInData",
+   "value": 488
+  },
+  {
+   "check": "c1",
+   "key": "mmTextDisagrees.ability",
+   "value": 12
+  },
+  {
+   "check": "c1",
+   "key": "mmTextDisagrees.hp-formula",
+   "value": 0
+  },
+  {
+   "check": "c1",
+   "key": "mmTextDisagrees.passive",
+   "value": 2
+  },
+  {
+   "check": "c1",
+   "key": "mmTextDisagrees.saves",
+   "value": 12
+  },
+  {
+   "check": "c1",
+   "key": "mmTextDisagrees.skills",
+   "value": 16
+  },
+  {
+   "check": "c1",
+   "key": "mmTextDisagrees.speed-fly",
+   "value": 2
+  },
+  {
+   "check": "c1",
+   "key": "mmTextDisagrees.speed-walk",
+   "value": 1
+  },
+  {
+   "check": "c2",
+   "key": "crXpTableConflictsInMMText",
+   "value": 1
+  },
+  {
+   "check": "c2",
+   "key": "distinctCrInMM",
+   "value": 27
+  }
+ ],
+ "findings": [
+  {
+   "id": "c1-mm-hp-formula",
+   "check": "c1",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "monster.duergar.mm 灰矮人：数据=4d8 + 4 原文=4d8+8",
+    "monster.vine-blight.mm 枯藤怪：数据=4d8 + 4 原文=4d8+8"
+   ],
+   "expected": "怪物图鉴（MM）灰矮人、枯藤怪数据块：HP 26（4d8+8）",
+   "note": "生命骰式写 4d8+4，平均值 22 对不上写明的生命值 26；应为 4d8+8",
+   "count": 2
+  },
+  {
+   "id": "c2-xp-table-vs-mm-text",
+   "check": "c2",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "挑战等级 1：表 200，原文出现 450（原文打印错误或 OCR 错）"
+   ],
+   "expected": "DMG 第 3 章经验值表；怪物图鉴原文",
+   "note": "怪物图鉴原文（扫描文本）里个别挑战等级旁的经验值与 DMG 表不一致，是原文打印/识别错误，经验值一律按 DMG 表由挑战等级推出，数据里本来就没有 xp 字段",
+   "count": 1
+  }
+ ]
+}

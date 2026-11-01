@@ -1,0 +1,232 @@
+{
+ "group": "g2c-world",
+ "stats": [
+  {
+   "check": "c10",
+   "key": "objectsAndVehicles",
+   "value": 16
+  },
+  {
+   "check": "c10",
+   "key": "objectsWithTextOnlyActions",
+   "value": 9
+  },
+  {
+   "check": "c7",
+   "key": "monsterParts",
+   "value": 345
+  },
+  {
+   "check": "c7",
+   "key": "partKind.action",
+   "value": 89
+  },
+  {
+   "check": "c7",
+   "key": "partKind.feature",
+   "value": 25
+  },
+  {
+   "check": "c7",
+   "key": "partKind.trait",
+   "value": 231
+  },
+  {
+   "check": "c7",
+   "key": "partsNamedAfterMonster",
+   "value": 227
+  },
+  {
+   "check": "c7",
+   "key": "partsReferencingKnownMonster",
+   "value": 172
+  },
+  {
+   "check": "c7",
+   "key": "withDpr",
+   "value": 6
+  },
+  {
+   "check": "c9",
+   "key": "diseases",
+   "value": 9
+  },
+  {
+   "check": "c9",
+   "key": "hazards",
+   "value": 48
+  },
+  {
+   "check": "c9",
+   "key": "hazardsWithCountermeasures",
+   "value": 12
+  },
+  {
+   "check": "c9",
+   "key": "hazardsWithRating",
+   "value": 15
+  },
+  {
+   "check": "c9",
+   "key": "hazardsWithTrigger",
+   "value": 12
+  },
+  {
+   "check": "c9",
+   "key": "traps",
+   "value": 23
+  }
+ ],
+ "findings": [
+  {
+   "id": "c10-object-actions-text-only",
+   "check": "c10",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "object.ballista.dmg 弩炮",
+    "object.cannon.dmg 火炮",
+    "object.eldritch-cannon-flamethrower.tce 魔能炮台, 投火机",
+    "object.eldritch-cannon-force-ballista.tce 魔能炮台, 力量弩炮",
+    "object.eldritch-cannon-protector.tce 魔能炮台, 防御者",
+    "object.mangonel.dmg 投石机",
+    "object.ram.dmg 攻城槌",
+    "object.suspended-cauldron.dmg 吊挂大锅",
+    "object.trebuchet.dmg 配重投石机"
+   ],
+   "expected": "DMG、MM、GoS 各条目原文",
+   "note": "物件/载具的攻击（弩炮、投石机等）只有文字，没有结构化行动，战斗里无法一键攻击",
+   "count": 9
+  },
+  {
+   "id": "c10-object-immune-text",
+   "check": "c10",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "object.generic-object.dmg 通用物件"
+   ],
+   "expected": "DMG、MM、GoS 各条目原文",
+   "note": "物件/载具免疫写成了文字",
+   "count": 1
+  },
+  {
+   "id": "c10-object-no-stats",
+   "check": "c10",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "object.eldritch-cannon-flamethrower.tce 魔能炮台, 投火机",
+    "object.eldritch-cannon-force-ballista.tce 魔能炮台, 力量弩炮",
+    "object.eldritch-cannon-protector.tce 魔能炮台, 防御者",
+    "object.generic-object.dmg 通用物件",
+    "vehicle.astral-brig.mtf 星界帆船",
+    "vehicle.astral-skiff.mtf 星界快艇",
+    "vehicle.planar-raider.mtf 位面掠夺者"
+   ],
+   "expected": "DMG、MM、GoS 各条目原文",
+   "note": "物件/载具缺护甲等级或生命值（星界帆船、星界快艇、位面掠夺者的载具数据在别处）",
+   "count": 7
+  },
+  {
+   "id": "c7-part-action-text-only",
+   "check": "c7",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "monsterpart.action-acid-spray-ankheg.mm 酸液喷射（掘地虫）",
+    "monsterpart.action-animate-chains-chain-devil.mm 活化魔链（链魔）",
+    "monsterpart.action-beard-bearded-devil.mm 胡须（长须恶魔）",
+    "monsterpart.action-bite-cloaker.mm 咬击（斗篷怪）",
+    "monsterpart.action-bite-cockatrice.mm 啃咬（蛇鸡）",
+    "monsterpart.action-bite-death-dog.mm 咬击（死亡之犬）",
+    "monsterpart.action-bite-kraken.mm 咬击（克拉肯）",
+    "monsterpart.action-blinding-breath-dust-mephit.mm 致盲呼吸（尘魔蝠）",
+    "monsterpart.action-chain-chain-devil.mm 链条（链魔）",
+    "monsterpart.action-change-shape-couatl.mm 改变形态（羽蛇）",
+    "monsterpart.action-change-shape-oni.mm 改变形态（鬼族）",
+    "monsterpart.action-charm-succubus-incubus.mm 魅惑（魅魔/梦魇）",
+    "monsterpart.action-claw-rakshasa.mm 爪击（罗刹）",
+    "monsterpart.action-constrict-behir.mm 绞缠（青足龙蛇）",
+    "monsterpart.action-constrict-constrictor-snake.mm 缠绕（蟒蛇）",
+    "monsterpart.action-create-specter-wraith.mm 创造幽灵（幽魂）",
+    "monsterpart.action-create-whirlwind-djinni.mm 生成旋风（气巨灵）",
+    "monsterpart.action-crush-darkmantle.mm 碾压（暗幕魔兽）",
+    "monsterpart.action-darkness-aura-darkmantle.mm 黑暗灵光（暗幕魔兽）",
+    "monsterpart.action-deadly-leap-bulette.mm 致命跳跃（鲨蜥兽）",
+    "monsterpart.action-death-glare-sea-hag.mm 死亡怒视（海鬼婆）",
+    "monsterpart.action-disrupt-life-lich.mm 扰乱生命（巫妖）",
+    "monsterpart.action-draining-kiss-succubus-incubus.mm 吸能之吻（魅魔/梦魇）",
+    "monsterpart.action-dreadful-glare-mummy-lord.mm 恐怖怒视（木乃伊领主）",
+    "monsterpart.action-engulf-gelatinous-cube.mm 吞噬（凝胶立方体）",
+    "monsterpart.action-engulf-shambling-mound.mm 吞噬（蔓生怪）",
+    "monsterpart.action-enlarge-duergar.mm 增大（灰矮人）",
+    "monsterpart.action-enslave-aboleth.mm 奴役（底栖魔鱼）",
+    "monsterpart.action-ethereal-stride-nightmare.mm 以太折跃（梦魇）",
+    "monsterpart.action-etherealness-ghost.mm 幽灵形态（幽灵）",
+    "monsterpart.action-etherealness-succubus-incubus.mm 幽灵形态（魅魔/梦魇）",
+    "monsterpart.action-fetid-cloud-dretch.mm 恶臭云雾（怯魔）",
+    "monsterpart.action-fey-charm-dryad.mm 精类魅惑（树精）",
+    "monsterpart.action-fling-kraken.mm 投掷（克拉肯）",
+    "monsterpart.action-flying-sword-solar.mm 凌空剑（炽天神侍）",
+    "monsterpart.action-frightening-gaze-lich.mm 恐怖凝视（巫妖）",
+    "monsterpart.action-frightful-presence-dragon.mm 骇人威仪（龙）",
+    "monsterpart.action-frightful-presence-tarrasque.mm 骇人威仪（泰拉斯奎）",
+    "monsterpart.action-glaive-bearded-devil.mm 长柄刀（长须恶魔）",
+    "monsterpart.action-harpoon-merrow.mm 鱼叉（梅洛）",
+    "monsterpart.action-haste-clay-golem.mm 加速（粘土魔像）",
+    "monsterpart.action-heart-sight-sprite.mm 心灵视域（精灵）",
+    "monsterpart.action-horrifying-visage-ghost.mm 骇人面貌（幽灵）",
+    "monsterpart.action-horror-nimbus-nalfeshnee.mm 恐惧灵气（判魂魔）",
+    "monsterpart.action-hurl-flame-barbed-devil.mm 投掷火焰（棘刺恶魔）",
+    "monsterpart.action-illusory-appearance-sea-hag.mm 幻象外观（海巫婆）",
+    "monsterpart.action-intoxicating-touch-lamia.mm 醉人之触（拉弥亚）",
+    "monsterpart.action-invisibility-duergar.mm 隐形（灰矮人）",
+    "monsterpart.action-invisibility-quasit.mm 隐形（小恶魔）",
+    "monsterpart.action-invisibility-sprite.mm 隐形（精灵）"
+   ],
+   "expected": "DMG、MM、GoS 各条目原文",
+   "note": "怪物部件里的“动作”只有文字效应与每回合伤害估值（dpr），没有结构化行动；用于 A10 DM 工具（怪物制作）时才需要，现在当文字查阅用",
+   "count": 89
+  },
+  {
+   "id": "c9-disease-no-effects",
+   "check": "c9",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "disease.blinding-sickness.phb 失明症",
+    "disease.cackle-fever.dmg 疯笑病",
+    "disease.filth-fever.phb 腐热症",
+    "disease.flesh-rot.phb 烂肉症",
+    "disease.mindfire.phb 脑热症",
+    "disease.seizure.phb 癫痫症",
+    "disease.sewer-plague.dmg 下水道瘟疫",
+    "disease.sight-rot.dmg 腐眼症",
+    "disease.slimy-doom.phb 恶心症"
+   ],
+   "expected": "DMG、MM、GoS 各条目原文",
+   "note": "疾病的效果只有文字（不少是“检定劣势”，可映射到优势/劣势效果）",
+   "count": 9
+  },
+  {
+   "id": "c9-hazard-no-rating",
+   "check": "c9",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "hazard.trap-collapsing-roof.dmg 塌方",
+    "hazard.trap-falling-net.dmg 落网",
+    "hazard.trap-fire-breathing-statue.dmg 喷火雕像",
+    "hazard.trap-pits.dmg 陷坑",
+    "hazard.trap-poison-darts.dmg 毒镖",
+    "hazard.trap-poison-needle.dmg 毒针陷阱",
+    "hazard.trap-rolling-sphere.dmg 滚石",
+    "hazard.trap-sphere-of-annihilation.dmg 湮灭法球"
+   ],
+   "expected": "DMG、MM、GoS 各条目原文",
+   "note": "陷阱没有危险等级（轻微/危险/致命 + 等级段）：塌方、落网、喷火雕像、陷坑、毒镖、毒针陷阱、滚石、湮灭法球共 8 个；遭遇预算算不出（自然危害书上本来就没有等级，不算）",
+   "count": 8
+  }
+ ]
+}
