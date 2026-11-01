@@ -30,6 +30,26 @@ export const ALLOW: Allow[] = [
     expect: 4,
     reason: 'a3-missed-match / a3-described：8 项起始装备补 id，4 个背景条目',
   },
+  {
+    name: 's2-pool-spelling',
+    station: 2,
+    ids: [
+      'background.far-traveler.scag',
+      'background.inheritor.scag',
+      'background.knight-of-the-order.scag',
+      'background.urban-bounty-hunter.scag',
+      'background.uthgardt-tribe-member.scag',
+      'background.waterdhavian-noble.scag',
+      'subclass.cleric-forge-domain.xge',
+      'subclass.fighter-cavalier.xge',
+      'subclass.fighter-rune-knight.tce',
+      'subclass.monk-way-of-the-drunken-master.xge',
+      'subclass.rogue-assassin.phb',
+    ],
+    path: /^\/data\/advancement\//,
+    expect: 11,
+    reason: 'a17-spelling：任选记号 7 种旧写法统一成规范写法',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
