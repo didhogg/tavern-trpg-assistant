@@ -60,7 +60,7 @@ export function normalizeFoundryFormula(input: string): string {
   out = out.replace(/@scale\.([a-z0-9.-]+)/gi, (_m, id: string) => `scale.${SCALE_ALIASES[id] ?? id}`)
   out = out.replace(/@abilities\.(str|dex|con|int|wis|cha)\.mod/gi, '$1.mod')
   out = out.replace(/@abilities\.(str|dex|con|int|wis|cha)\.value/gi, '$1.score')
-  out = out.replace(/@prof/gi, 'prof')
+  out = out.replace(/@(?:attributes\.)?prof/gi, 'prof')
   out = out.replace(/@details\.level/gi, 'level')
   out = out.replace(/@classes\.([a-z0-9_-]+)\.levels/gi, 'class.$1.level')
   out = out.replace(/@level/gi, 'level')
@@ -117,8 +117,8 @@ function changeToEffect(change: Raw, result: FoundryRules, example: string): Eff
     const condition = conditionKey(value)
     return condition ? { kind: 'conditionImmunity', conditions: [condition as never] } : undefined
   }
-  for (const [sense, path] of Object.entries(SENSE_KEYS)) if (key === path) { const range = number(value); return range === undefined ? keep(key, value) : { kind: 'sense', sense: sense as never, range } }
-  for (const [move, path] of Object.entries(MOVE_KEYS)) if (key === path) return value === true || /^\s*@attributes\.movement\.walk\s*$/.test(String(value)) ? { kind: 'speed', mode: move as never, equalsWalk: true } : (number(value) === undefined ? keep(key, value) : mode === 'ADD' || /^\s*[+-]/.test(String(value)) ? { kind: 'speed', mode: move as never, bonus: number(value) } : { kind: 'speed', mode: move as never, amount: number(value) })
+  for (const [sense, path] of Object.entries(SENSE_KEYS)) if (key === path || key === path.replace('.ranges', '')) { const range = number(value); return range === undefined ? keep(key, value) : { kind: 'sense', sense: sense as never, range } }
+  for (const [move, path] of Object.entries(MOVE_KEYS)) if (key === path) return value === true || /^\s*@attributes\.movement\.walk\s*$/.test(String(value)) ? { kind: 'speed', mode: move as never, equalsWalk: true } : (number(value) === undefined ? (/scale\./.test(String(amountOf(value))) ? { kind: 'speed', mode: move as never, bonusFormula: String(amountOf(value)) } : keep(key, value)) : mode === 'ADD' || /^\s*[+-]/.test(String(value)) ? { kind: 'speed', mode: move as never, bonus: number(value) } : { kind: 'speed', mode: move as never, amount: number(value) })
   if (key === CHANGE_KEYS.acBonus) return number(value) === undefined ? keep(key, value) : { kind: 'ac', mode: 'bonus', amount: number(value) }
   if (key === 'system.attributes.ac.calc') return AC_CALC[str(value)] ? { kind: 'ac', mode: 'base', formula: AC_CALC[str(value)] } : undefined
   if (key === 'flags.dnd5e.weaponCriticalThreshold' && number(value)) return { kind: 'critRange', min: number(value)!, scope: 'weapon' }
@@ -171,7 +171,8 @@ function changeToEffect(change: Raw, result: FoundryRules, example: string): Eff
   if (key === 'flags.dnd5e.observantFeat') return { kind: 'passive', skill: 'perception', bonus: 5 }
   if (key === 'flags.dnd5e.diamondSoul' || key === 'flags.dnd5e.reliableTalent' || key === 'flags.dnd5e.elvenAccuracy') return { kind: 'note', text: `Foundry 特性：${key.split('.').pop()}` }
   if (key === 'system.attributes.movement.hover') return { kind: 'note', text: '悬浮' }
-  if (key.startsWith('system.description') || key.startsWith('system.activation')) return undefined
+  if (key.startsWith('system.description') || key.startsWith('system.activation') || key === 'system.attributes.senses.special') return undefined
+  if (key === 'system.attributes.init.total') { const f = amountOf(value); if (f !== undefined) return { kind: 'initiative', bonus: f } }
   if (mode === 'CUSTOM' && typeof value === 'string' && safeFormula(value)) return { kind: 'note', text: `${key}：${value}` }
   markUnmapped(result, key || '（空键）', example)
   return { kind: 'note', text: `${process.env.TRPG_DATA_LANG === 'en' ? 'Foundry effect not mapped: ' : 'Foundry 效果未映射：'}${key}` }

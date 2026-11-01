@@ -30,7 +30,7 @@ export const profBonus = (level: number): number => 2 + Math.floor((level - 1) /
 
 function collectScales(rows: Row[], level: number): Record<string, number> {
   const out: Record<string, number> = {}
-  for (const r of rows) for (const a of arr(r.data.advancement).map(rec)) if (a.kind === 'scaleValue' && a.type === 'number') { const v = scaleAt({ scale: rec(a.scale) as Record<string, number | string> }, level); if (typeof v === 'number') out[str(a.id)] = v }
+  for (const r of rows) for (const a of arr(r.data.advancement).map(rec)) if (a.kind === 'scaleValue' && (a.type === 'number' || a.type === 'distance')) { const v = scaleAt({ scale: rec(a.scale) as Record<string, number | string> }, level); if (typeof v === 'number') out[str(a.id)] = v }
   return out
 }
 
@@ -82,6 +82,7 @@ export function derive(l: Lib, s: SampleIn): SampleOut {
   const race = readRace(l, s.raceId, s.subraceId)
   let speed = race.walk
   for (const e of effects) if (e.kind === 'speed' && e.mode === 'walk' && typeof e.bonus === 'number') speed += e.bonus
+  for (const e of effects) if (e.kind === 'speed' && e.mode === 'walk' && typeof e.bonusFormula === 'string') speed += ev(e.bonusFormula) // 随等级的加成（武僧无甲移动）
   for (const e of effects) if (e.kind === 'speed' && e.mode === 'walk' && typeof e.amount === 'number' && e.amount > 0 && !owned.some((r) => r.type === 'condition')) speed += e.amount
 
   let initiative = mods.dex

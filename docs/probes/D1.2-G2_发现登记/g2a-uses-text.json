@@ -4,7 +4,7 @@
   {
    "check": "a18",
    "key": "entriesWithUses",
-   "value": 307
+   "value": 298
   }
  ],
  "findings": [
@@ -22,17 +22,12 @@
     "feature.bard-college-of-swords-defensive-flourish.xge 守御剑舞",
     "feature.bard-college-of-swords-mobile-flourish.xge 推击剑舞",
     "feature.bard-college-of-swords-slashing-flourish.xge 乱击剑舞",
-    "feature.bard-college-of-whispers-psychic-blades.xge 心灵之刃",
-    "feature.druid-circle-of-spores-symbiotic-entity.tce 一体共生",
-    "feature.druid-circle-of-stars-starry-form.tce 星耀形态",
-    "feature.druid-circle-of-the-moon-elemental-wild-shape.phb 元素荒野形态",
-    "feature.druid-circle-of-wildfire-summon-wildfire-spirit.tce 召唤野火精魂",
-    "feature.druid-wild-companion.tce 荒野伙伴"
+    "feature.bard-college-of-whispers-psychic-blades.xge 心灵之刃"
    ],
    "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
    "note": "特性消耗的是另一个特性的次数池（诗人激励、荒野形态、吐息武器），自己又有一份 uses，会重复计数；应删 uses、加 consumes",
    "selfCheck": true,
-   "count": 14
+   "count": 9
   },
   {
    "id": "a18-no-support-in-text",

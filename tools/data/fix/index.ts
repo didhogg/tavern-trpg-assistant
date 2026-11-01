@@ -1,3 +1,4 @@
+import { loadOverlay } from './overlay'
 import type { ConvertedPack } from '../convert'
 import { applyFixes, type FixReport, type Rule, type RowSet } from './engine'
 import { ROWS as S1_ARTIFICER_LIST } from './rows/s1-artificer-list'
@@ -88,5 +89,5 @@ export const ROW_SETS: RowSet[] = [
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {
-  return applyFixes(packs, RULES, ROW_SETS)
+  return applyFixes(packs, RULES, [...ROW_SETS, ...loadOverlay()]) // 逐条修正表（第 3 站及之前）＋补充层数据文件（E 站起）
 }

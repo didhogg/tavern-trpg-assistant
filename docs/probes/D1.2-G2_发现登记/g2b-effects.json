@@ -4,7 +4,7 @@
   {
    "check": "b2",
    "key": "effects",
-   "value": 586
+   "value": 585
   },
   {
    "check": "b2",
@@ -19,7 +19,7 @@
   {
    "check": "b2",
    "key": "foundryNotes",
-   "value": 61
+   "value": 52
   },
   {
    "check": "b2",
@@ -29,7 +29,7 @@
   {
    "check": "b2",
    "key": "foundryNotes.derived",
-   "value": 9
+   "value": 6
   },
   {
    "check": "b2",
@@ -66,18 +66,14 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.d",
-    "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.s",
     "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.con.bonus",
     "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.str.bonus",
-    "feature.harengon-hare-trigger.mpmm 野兔敏锐：Foundry 效果未映射：system.attributes.init.tot",
-    "feature.stone-rune.tce 岩石符文：Foundry 效果未映射：system.attributes.senses.d",
     "monster.homunculus-servant.tce 人工生命仆从：Foundry 效果：奇械师的领导力（system.attributes.hp.",
     "monster.steel-defender.tce 钢铁守卫：Foundry 效果：奇械师的领导力（system.attributes.hp."
    ],
    "expected": "各特性原文",
    "note": "影响派生数值的效果被留在说明文字里：龙脉术士的龙族韧性（AC 13+敏捷）、蜥蜴人的天生护甲、魔鬼视界/石之符文（黑暗视觉）、兔人的敏捷先攻、寒霜符文（力量/体质豁免与检定）、野蛮人的残暴重击（暴击额外骰）、冠军的强化重击（暴击范围）、觉知头盔（先攻优势）",
-   "count": 8
+   "count": 4
   },
   {
    "id": "b2-formula-unsupported-variable",

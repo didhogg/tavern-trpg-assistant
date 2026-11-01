@@ -293,7 +293,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ctx.unmappedFoundry?.set(key, { count: current.count + value.count, example: current.example })
   }
   const text = plainText(convertBlocks(raw._r9OriginalEntries ?? raw.entries, inline))
-  const uses = FEATURE_NO_USES.has(entry.id) ? undefined : rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text)
+  const uses = FEATURE_NO_USES.has(entry.id) || raw.consumes ? undefined : rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text) // 有 consumes 的特性消耗别的池，不再有自己的 uses（不从正文猜）
   const configEffects = FEATURE_EFFECTS[entry.id] ?? []
   const spellEffects = spellGrants(raw, ctx).map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}), ...(g.level ? { level: g.level } : {}) }))
   const skillEffects: Array<Record<string, unknown>> = []

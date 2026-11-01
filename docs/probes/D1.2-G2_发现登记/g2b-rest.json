@@ -14,12 +14,12 @@
   {
    "check": "rest",
    "key": "mentionRestWithUses",
-   "value": 283
+   "value": 279
   },
   {
    "check": "rest",
    "key": "mentionRestWithoutUses",
-   "value": 71
+   "value": 75
   },
   {
    "check": "rest",
@@ -29,7 +29,7 @@
   {
    "check": "rest",
    "key": "recharge.long",
-   "value": 188
+   "value": 184
   },
   {
    "check": "rest",
@@ -54,7 +54,7 @@
   {
    "check": "rest",
    "key": "withoutUsesGeneralOrNarrative",
-   "value": 55
+   "value": 59
   }
  ],
  "findings": [

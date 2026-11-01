@@ -45,6 +45,8 @@ const speed = effect({
   amount: z.number().optional(),
   equalsWalk: z.boolean().optional(),
   bonus: z.number().optional(),
+  /** 随等级变化的加成（如武僧无甲移动 `scale.unarmored-movement`）：新增的**可选并列字段**，不改 `bonus` 的类型，旧扩展（effect 是宽松对象）照常安装、忽略它。 */
+  bonusFormula: formulaSchema.optional(),
   multiplier: z.number().positive().optional(),
 })
 const sense = effect({ kind: z.literal('sense'), sense: z.enum(['darkvision', 'blindsight', 'tremorsense', 'truesight']), range: z.number().int().nonnegative() })

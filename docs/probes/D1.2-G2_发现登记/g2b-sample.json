@@ -12,18 +12,5 @@
    "value": 19
   }
  ],
- "findings": [
-  {
-   "id": "b1-speed",
-   "check": "b1",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "武僧5：读出 30 / 手算 40"
-   ],
-   "expected": "PHB 规则手算（每张样卡的算式写在 expected/samples.ts）",
-   "note": "速度算不对（快速移动、无甲移动的加成是 0 占位）",
-   "count": 1
-  }
- ]
+ "findings": []
 }
