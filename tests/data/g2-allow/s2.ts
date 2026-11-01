@@ -74,6 +74,14 @@ export const ALLOW: Allow[] = [
     expect: 2,
     reason: 'c12-level-label：两张经验表等级列统一成纯数字字符串（40 个单元格）',
   },
+  {
+    name: 's2-spell-links',
+    station: 2,
+    type: 'monster',
+    path: /^\/data\/spellcasting\//,
+    expect: 83,
+    reason: 'c5-spell-plain-name：83 个怪物、125 处法术名补链接；巫妖马友夫强酸箭跳过',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
