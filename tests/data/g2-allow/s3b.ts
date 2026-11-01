@@ -228,6 +228,25 @@ export const ALLOW: Allow[] = [
     expect: 12,
     reason: 'b8-upcast-no-tag-duration：12 个法术补升环结构',
   },
+  {
+    name: 's3b-upcast-other',
+    station: 3,
+    ids: [
+      'spell.animate-objects.phb',
+      'spell.armor-of-agathys.phb',
+      'spell.cordon-of-arrows.phb',
+      'spell.flame-arrows.xge',
+      'spell.globe-of-invulnerability.phb',
+      'spell.magic-missile.phb',
+      'spell.magic-weapon.phb',
+      'spell.melfs-minute-meteors.xge',
+      'spell.scorching-ray.phb',
+      'spell.shadow-blade.xge',
+    ],
+    path: /^\/data\/upcast$/,
+    expect: 10,
+    reason: 'b8-upcast-no-tag-other：10 个法术补升环结构',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
