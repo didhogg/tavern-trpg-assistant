@@ -1,6 +1,15 @@
 import type { Added, Allow, AllowRequires } from './types'
 
-/** 第 3 站 3b 种族背景法术专长 的放行规则（规则见 docs/handoff/D1.2-G2.5_执行包/00 第 7 节；每个文件不超过 400 行）。 */
-export const ALLOW: Allow[] = []
+/** 第 3 站 3b 种族、背景、法术、专长 的放行规则。 */
+export const ALLOW: Allow[] = [
+  {
+    name: 's3b-size',
+    station: 3,
+    ids: ['subrace.gnome-forest.phb', 'subrace.gnome-rock.phb', 'subrace.halfling-lightfoot.phb', 'subrace.halfling-stout.phb'],
+    path: /^\/data\/size\/0$/,
+    expect: 4,
+    reason: 'a12-size：4 个亚种体型 M→S',
+  },
+]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
