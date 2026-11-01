@@ -82,6 +82,14 @@ export const ALLOW: Allow[] = [
     expect: 27,
     reason: 'rest-racial-spell-uses-duplicate：27 个种族特质删重复 uses',
   },
+  {
+    name: 's3b-feat-requires',
+    station: 3,
+    ids: ['feat.elven-accuracy.xge', 'feat.prodigy.xge'],
+    path: /^(?:\/data\/requires(?:\/|$)|\/i18n\/en\/fields\/requires\.)/,
+    expect: 2,
+    reason: 'a14-requires-text：两个专长前置改成结构化种族名单',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
