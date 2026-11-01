@@ -54,7 +54,7 @@
   {
    "check": "b3",
    "key": "B",
-   "value": 376
+   "value": 383
   },
   {
    "check": "b3",
@@ -69,7 +69,7 @@
   {
    "check": "b3",
    "key": "plainMechanic",
-   "value": 1091
+   "value": 1098
   }
  ],
  "findings": [
@@ -186,14 +186,14 @@
     "feature.barbarian-path-of-the-totem-warrior-wolf.phb 狼：攻击结算",
     "feature.barbarian-path-of-the-totem-warrior-wolf.phb-3 狼：动作",
     "feature.barbarian-path-of-the-zealot-fanatical-focus.xge 专心炽志：攻击结算",
+    "feature.barbarian-path-of-the-zealot-rage-beyond-death.xge 怒不畏死：资源、攻击结算",
     "feature.barbarian-path-of-the-zealot-warrior-of-the-gods.xge 神之勇者：法术",
     "feature.barbarian-path-of-wild-magic-unstable-backlash.tce 无常反冲：动作、攻击结算",
-    "feature.barbarian-path-of-wild-magic-wild-surge.tce 狂野浪潮：攻击结算",
-    "feature.barbarian-reckless-attack.phb 鲁莽攻击：攻击结算"
+    "feature.barbarian-path-of-wild-magic-wild-surge.tce 狂野浪潮：攻击结算"
    ],
    "expected": "各特性原文",
    "note": "影响行动、伤害、资源的机制只有文字：按此前的决定在 U5.3 行动、U5.5 资源、M6 结算时细化，G2 不要求现在结构化",
-   "count": 376
+   "count": 383
   }
  ]
 }

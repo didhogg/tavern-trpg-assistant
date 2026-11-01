@@ -14,12 +14,12 @@
   {
    "check": "rest",
    "key": "mentionRestWithUses",
-   "value": 279
+   "value": 281
   },
   {
    "check": "rest",
    "key": "mentionRestWithoutUses",
-   "value": 75
+   "value": 73
   },
   {
    "check": "rest",
@@ -28,8 +28,13 @@
   },
   {
    "check": "rest",
+   "key": "recharge.dawn",
+   "value": 1
+  },
+  {
+   "check": "rest",
    "key": "recharge.long",
-   "value": 184
+   "value": 186
   },
   {
    "check": "rest",
@@ -39,7 +44,7 @@
   {
    "check": "rest",
    "key": "recharge.shortOrLong",
-   "value": 87
+   "value": 86
   },
   {
    "check": "rest",
@@ -49,40 +54,15 @@
   {
    "check": "rest",
    "key": "withoutUsesClassified",
-   "value": 16
+   "value": 13
   },
   {
    "check": "rest",
    "key": "withoutUsesGeneralOrNarrative",
-   "value": 59
+   "value": 60
   }
  ],
  "findings": [
-  {
-   "id": "rest-daily-no-uses",
-   "check": "rest",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.spell-refueling-ring.tce 法力恢复戒指：每天（到次日黎明）1 次：恢复 3 环或更低的一个法术位（奇械师注法：法力恢复戒指）"
-   ],
-   "expected": "TCE 法力恢复戒指原文",
-   "note": "“每天 1 次，次日黎明前不能再用”，却没有 uses（应为 1 次、黎明恢复）；“过一天”时无法恢复",
-   "count": 1
-  },
-  {
-   "id": "rest-spell-once-no-uses",
-   "check": "rest",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feat.artificer-initiate.tce 奇械学徒：一环法术 1 次/长休（免费施展）",
-    "feat.metamagic-adept.tce 超魔导师：2 点术法点（超魔法专用），长休恢复——需要一个次数池"
-   ],
-   "expected": "TCE、MPMM 各专长/特质原文",
-   "note": "“每次长休可免费施展某法术一次/恢复若干点”，却没有 uses 也没有 spellGrant；活动页长休时无法恢复。应写成带次数的 spellGrant 或次数池",
-   "count": 2
-  },
   {
    "id": "rest-tracker",
    "check": "rest",

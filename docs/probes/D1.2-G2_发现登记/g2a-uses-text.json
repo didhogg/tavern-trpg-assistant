@@ -4,7 +4,7 @@
   {
    "check": "a18",
    "key": "entriesWithUses",
-   "value": 298
+   "value": 294
   }
  ],
  "findings": [
@@ -28,24 +28,6 @@
    "note": "特性消耗的是另一个特性的次数池（诗人激励、荒野形态、吐息武器），自己又有一份 uses，会重复计数；应删 uses、加 consumes",
    "selfCheck": true,
    "count": 9
-  },
-  {
-   "id": "a18-no-support-in-text",
-   "check": "a18",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.barbarian-path-of-the-zealot-rage-beyond-death.xge 怒不畏死",
-    "feature.bard-college-of-swords-masters-flourish.xge 剑舞大师",
-    "feature.fighter-extra-attack-3.phb 额外攻击(3)",
-    "feature.fighter-extra-attack.phb 额外攻击",
-    "feature.monk-way-of-the-drunken-master-intoxicated-frenzy.xge 酣醉若狂",
-    "feature.ranger-fey-wanderer-fey-wanderer-magic.tce 妖精漫游者魔法"
-   ],
-   "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
-   "note": "uses 的恢复时机在条目文字里找不到依据（已逐个读过文字：额外攻击、怒不畏死、狂醉乱舞、妖精漫游者魔法、剑舞大师等本身没有次数限制）",
-   "selfCheck": true,
-   "count": 6
   },
   {
    "id": "a18-restores-other-pool",

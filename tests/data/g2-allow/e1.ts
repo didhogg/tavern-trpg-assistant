@@ -43,6 +43,38 @@ export const ALLOW: Allow[] = [
     expect: 1,
     reason: 'b5-max-feature.paladin-channel-divinity.phb：引导神力不随等级增加',
   },
+  {
+    name: 'e1-3-delete-uses',
+    station: 1,
+    ids: [
+      'feature.barbarian-path-of-the-zealot-rage-beyond-death.xge',
+      'feature.bard-college-of-swords-masters-flourish.xge',
+      'feature.fighter-extra-attack-3.phb',
+      'feature.fighter-extra-attack.phb',
+      'feature.monk-way-of-the-drunken-master-intoxicated-frenzy.xge',
+      'feature.ranger-fey-wanderer-fey-wanderer-magic.tce',
+      'feature.pact-of-the-tome.phb',
+    ],
+    path: /^\/data\/uses$/,
+    expect: 7,
+    reason: 'a18-no-support-in-text 6→0；书之魔契在 a18-foundry-extra-uses 里一并删除',
+  },
+  {
+    name: 'e1-3-special-resource',
+    station: 1,
+    ids: ['feature.rogue-phantom-tokens-of-the-departed.tce'],
+    path: /^\/data\/uses(?:\/|$)/,
+    expect: 1,
+    reason: 'a18-special-resource 1→0：逝者遗物改为熟练加值上限、特殊恢复',
+  },
+  {
+    name: 'e1-3-add-uses',
+    station: 1,
+    ids: ['feat.artificer-initiate.tce', 'feat.metamagic-adept.tce', 'feature.spell-refueling-ring.tce'],
+    path: /^\/data\/uses$/,
+    expect: 3,
+    reason: 'rest-spell-once-no-uses 2→0、rest-daily-no-uses 1→0',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

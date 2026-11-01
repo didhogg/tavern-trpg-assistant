@@ -2,7 +2,7 @@
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
   "A": 79,
-  "B": 376,
+  "B": 383,
   "C": 576
  },
  "features": [
@@ -667,6 +667,22 @@
    "tags": []
   },
   {
+   "id": "feature.fighter-extra-attack-3.phb",
+   "name": "额外攻击(3)",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.fighter-extra-attack.phb",
+   "name": "额外攻击",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
    "id": "feature.fighter-fighting-style.phb",
    "name": "战斗风格",
    "cls": "A",
@@ -1027,6 +1043,14 @@
   {
    "id": "feature.pact-of-the-chain.phb",
    "name": "链之魔契",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.pact-of-the-tome.phb",
+   "name": "书之魔契",
    "cls": "B",
    "tags": [
     "法术"
@@ -4032,6 +4056,15 @@
    ]
   },
   {
+   "id": "feature.barbarian-path-of-the-zealot-rage-beyond-death.xge",
+   "name": "怒不畏死",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
    "id": "feature.barbarian-path-of-the-zealot-warrior-of-the-gods.xge",
    "name": "神之勇者",
    "cls": "B",
@@ -4067,6 +4100,14 @@
    "cls": "A",
    "tags": [
     "熟练"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-swords-masters-flourish.xge",
+   "name": "剑舞大师",
+   "cls": "B",
+   "tags": [
+    "资源"
    ]
   },
   {
@@ -4311,6 +4352,14 @@
    "cls": "A",
    "tags": [
     "速度"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-drunken-master-intoxicated-frenzy.xge",
+   "name": "酣醉若狂",
+   "cls": "B",
+   "tags": [
+    "资源"
    ]
   },
   {
@@ -5713,6 +5762,14 @@
    "cls": "B",
    "tags": [
     "伤害"
+   ]
+  },
+  {
+   "id": "feature.ranger-fey-wanderer-fey-wanderer-magic.tce",
+   "name": "妖精漫游者魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
    ]
   },
   {
