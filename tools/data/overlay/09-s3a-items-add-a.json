@@ -1,0 +1,261 @@
+{
+  "领域": "s3a-items-add-a（由原代码修正表原样搬入）",
+  "rows": [],
+  "add": [
+    {
+      "pack": "dnd5e2014-srd",
+      "entry": {
+        "id": "item.alms-box.phb",
+        "type": "item",
+        "name": "施舍箱",
+        "nameEn": "Alms box",
+        "keywords": [
+          "施舍箱",
+          "Alms box"
+        ],
+        "unique": false,
+        "summary": "施舍箱｜装备·普通",
+        "i18n": {
+          "en": {
+            "name": "Alms box",
+            "fields": {}
+          }
+        },
+        "data": {
+          "src": {
+            "book": "PHB",
+            "page": 151
+          },
+          "credit": {
+            "by": "不全书",
+            "license": "GPL-3.0",
+            "machine": false,
+            "missing": [],
+            "srd": true,
+            "structured": {
+              "by": "5etools",
+              "license": "MIT"
+            }
+          },
+          "text": [],
+          "category": "gear",
+          "rarity": "none",
+          "attunement": {
+            "required": false
+          },
+          "tags": [
+            "G"
+          ],
+          "itemKind": "adventuringGear",
+          "properties": [],
+          "lootTables": []
+        }
+      },
+      "basis": "PHB 第 5 章装备套组 p151：祭司套组内容；无单独价格重量"
+    },
+    {
+      "pack": "dnd5e2014-srd",
+      "entry": {
+        "id": "item.block-of-incense.phb",
+        "type": "item",
+        "name": "香块",
+        "nameEn": "Block of incense",
+        "keywords": [
+          "香块",
+          "Block of incense"
+        ],
+        "unique": false,
+        "summary": "香块｜装备·普通",
+        "i18n": {
+          "en": {
+            "name": "Block of incense",
+            "fields": {}
+          }
+        },
+        "data": {
+          "src": {
+            "book": "PHB",
+            "page": 151
+          },
+          "credit": {
+            "by": "不全书",
+            "license": "GPL-3.0",
+            "machine": false,
+            "missing": [],
+            "srd": true,
+            "structured": {
+              "by": "5etools",
+              "license": "MIT"
+            }
+          },
+          "text": [],
+          "category": "gear",
+          "rarity": "none",
+          "attunement": {
+            "required": false
+          },
+          "tags": [
+            "G"
+          ],
+          "itemKind": "adventuringGear",
+          "properties": [],
+          "lootTables": []
+        }
+      },
+      "basis": "PHB 第 5 章装备套组 p151：祭司套组内容；无单独价格重量"
+    },
+    {
+      "pack": "dnd5e2014-srd",
+      "entry": {
+        "id": "item.censer.phb",
+        "type": "item",
+        "name": "香炉",
+        "nameEn": "Censer",
+        "keywords": [
+          "香炉",
+          "Censer"
+        ],
+        "unique": false,
+        "summary": "香炉｜装备·普通",
+        "i18n": {
+          "en": {
+            "name": "Censer",
+            "fields": {}
+          }
+        },
+        "data": {
+          "src": {
+            "book": "PHB",
+            "page": 151
+          },
+          "credit": {
+            "by": "不全书",
+            "license": "GPL-3.0",
+            "machine": false,
+            "missing": [],
+            "srd": true,
+            "structured": {
+              "by": "5etools",
+              "license": "MIT"
+            }
+          },
+          "text": [],
+          "category": "gear",
+          "rarity": "none",
+          "attunement": {
+            "required": false
+          },
+          "tags": [
+            "G"
+          ],
+          "itemKind": "adventuringGear",
+          "properties": [],
+          "lootTables": []
+        }
+      },
+      "basis": "PHB 第 5 章装备套组 p151：祭司套组内容；无单独价格重量"
+    },
+    {
+      "pack": "dnd5e2014-srd",
+      "entry": {
+        "id": "item.vestments.phb",
+        "type": "item",
+        "name": "祭袍",
+        "nameEn": "Vestments",
+        "keywords": [
+          "祭袍",
+          "Vestments"
+        ],
+        "unique": false,
+        "summary": "祭袍｜装备·普通",
+        "i18n": {
+          "en": {
+            "name": "Vestments",
+            "fields": {}
+          }
+        },
+        "data": {
+          "src": {
+            "book": "PHB",
+            "page": 151
+          },
+          "credit": {
+            "by": "不全书",
+            "license": "GPL-3.0",
+            "machine": false,
+            "missing": [],
+            "srd": true,
+            "structured": {
+              "by": "5etools",
+              "license": "MIT"
+            }
+          },
+          "text": [],
+          "category": "gear",
+          "rarity": "none",
+          "attunement": {
+            "required": false
+          },
+          "tags": [
+            "G"
+          ],
+          "itemKind": "adventuringGear",
+          "properties": [],
+          "lootTables": []
+        }
+      },
+      "basis": "PHB 第 5 章装备套组 p151：祭司套组内容；无单独价格重量"
+    },
+    {
+      "pack": "dnd5e2014-srd",
+      "entry": {
+        "id": "item.little-bag-of-sand.phb",
+        "type": "item",
+        "name": "小袋沙",
+        "nameEn": "Little bag of sand",
+        "keywords": [
+          "小袋沙",
+          "Little bag of sand"
+        ],
+        "unique": false,
+        "summary": "小袋沙｜装备·普通",
+        "i18n": {
+          "en": {
+            "name": "Little bag of sand",
+            "fields": {}
+          }
+        },
+        "data": {
+          "src": {
+            "book": "PHB",
+            "page": 151
+          },
+          "credit": {
+            "by": "不全书",
+            "license": "GPL-3.0",
+            "machine": false,
+            "missing": [],
+            "srd": true,
+            "structured": {
+              "by": "5etools",
+              "license": "MIT"
+            }
+          },
+          "text": [],
+          "category": "gear",
+          "rarity": "none",
+          "attunement": {
+            "required": false
+          },
+          "tags": [
+            "G"
+          ],
+          "itemKind": "adventuringGear",
+          "properties": [],
+          "lootTables": []
+        }
+      },
+      "basis": "PHB 第 5 章装备套组 p151：学者套组内容；无单独价格重量"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "领域": "s3a-shawm（由原代码修正表原样搬入）",
+  "rows": [
+    {
+      "id": "item.shawm.scag",
+      "path": "/data/value",
+      "op": "set",
+      "after": 200,
+      "basis": "PHB 第 5 章乐器表 p154：芦笛 shawm 2 gp＝200 铜币"
+    }
+  ],
+  "add": []
+}

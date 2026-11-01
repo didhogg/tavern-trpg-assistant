@@ -56,7 +56,8 @@ describe('G2b 资源与休息盘点：提到休息的特性', () => {
     rec2.stat('rest', 'mentionRestWithoutUses', without.length)
     const noUsesIds = new Set(without.map((r) => r.id))
     for (const table of [SPELL_ONCE, REST_TRIGGER, TRACKER, DAILY]) for (const id of Object.keys(table)) expect(noUsesIds.has(id) || l.get(id) !== undefined, `${id} 不存在`).toBe(true)
-    const pick = (t: Record<string, string>): string[] => Object.keys(t).filter((id) => noUsesIds.has(id)).map((id) => `${id} ${l.need(id).name}：${t[id]}`)
+    // 已经写了 tracker 的特性（长休重选、按目标、冷却）是有结构的，不再算缺陷
+    const pick = (t: Record<string, string>): string[] => Object.keys(t).filter((id) => noUsesIds.has(id) && l.need(id).data.tracker === undefined).map((id) => `${id} ${l.need(id).name}：${t[id]}`)
     // 免费法术的次数若已经写在自己的（或所属种族/亚种的）spellGrant.uses 上，就是有结构的——不要求特性/专长本身再带一份 uses（再带就重复计数）
     const structured = (id: string): boolean => usesViaGrant(l, l.need(id))
     const spellOnce = Object.fromEntries(Object.entries(SPELL_ONCE).filter(([id]) => !structured(id)))

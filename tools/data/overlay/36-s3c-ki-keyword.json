@@ -1,0 +1,13 @@
+{
+  "领域": "s3c-ki-keyword（由原代码修正表原样搬入）",
+  "rows": [
+    {
+      "id": "feature.monk-ki.phb",
+      "path": "/keywords/1",
+      "op": "insert",
+      "after": "Ki",
+      "basis": "PHB 武僧气 Ki：关键词补英文名"
+    }
+  ],
+  "add": []
+}

@@ -1,0 +1,48 @@
+{
+  "领域": "s3b-upcast-area（由原代码修正表原样搬入）",
+  "rows": [
+    {
+      "id": "spell.confusion.phb",
+      "path": "/data/upcast",
+      "op": "set",
+      "after": [
+        {
+          "kind": "area",
+          "add": 5,
+          "unit": "ft",
+          "step": 1
+        }
+      ],
+      "basis": "条目 higherLevel 原文"
+    },
+    {
+      "id": "spell.fog-cloud.phb",
+      "path": "/data/upcast",
+      "op": "set",
+      "after": [
+        {
+          "kind": "area",
+          "add": 20,
+          "unit": "ft",
+          "step": 1
+        }
+      ],
+      "basis": "条目 higherLevel 原文"
+    },
+    {
+      "id": "spell.mordenkainens-private-sanctum.phb",
+      "path": "/data/upcast",
+      "op": "set",
+      "after": [
+        {
+          "kind": "area",
+          "add": 100,
+          "unit": "ft",
+          "step": 1
+        }
+      ],
+      "basis": "条目 higherLevel 原文"
+    }
+  ],
+  "add": []
+}

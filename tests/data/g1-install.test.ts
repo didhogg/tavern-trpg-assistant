@@ -19,7 +19,7 @@ describe('G1 官方包通过安装校验', () => {
         if (rec.type !== 'pack') throw new Error(`${id} 应为内容包`)
         await expect(svc.install(rec, { source: id === SRD_PACK_ID ? 'builtin' : 'download' }), id).resolves.toMatchObject({ id })
       }
-      expect((await svc.list()).length).toBe(11)
+      expect((await svc.list()).length).toBe(1 + BOOKS.length)
       // 塔莎自己登记的可选特性：在数据库里能按 joins 反查到牧师
       const tce = await db.entries.get(['dnd5e2014-tce', 'feature.cleric-channel-divinity-harness-divine-power.tce'])
       expect((tce!.data.joins as Array<Record<string, unknown>>)[0]).toMatchObject({ to: 'class.cleric.phb', level: 2, as: 'optional' })

@@ -1,0 +1,38 @@
+{
+  "领域": "s3b-size（由原代码修正表原样搬入）",
+  "rows": [
+    {
+      "id": "subrace.gnome-forest.phb",
+      "path": "/data/size/0",
+      "op": "set",
+      "before": "M",
+      "after": "S",
+      "basis": "PHB 第 2 章森林侏儒：小型"
+    },
+    {
+      "id": "subrace.gnome-rock.phb",
+      "path": "/data/size/0",
+      "op": "set",
+      "before": "M",
+      "after": "S",
+      "basis": "PHB 第 2 章岩侏儒：小型"
+    },
+    {
+      "id": "subrace.halfling-lightfoot.phb",
+      "path": "/data/size/0",
+      "op": "set",
+      "before": "M",
+      "after": "S",
+      "basis": "PHB 第 2 章轻足半身人：小型"
+    },
+    {
+      "id": "subrace.halfling-stout.phb",
+      "path": "/data/size/0",
+      "op": "set",
+      "before": "M",
+      "after": "S",
+      "basis": "PHB 第 2 章强健半身人：小型"
+    }
+  ],
+  "add": []
+}

@@ -51,7 +51,7 @@ describe('R15 补进输出的字段（期望值读来源，不读转换器）', 
   it('物品 tier、wondrous 与分类标签；TCE 召唤物怪物带 Foundry 效果说明', () => {
     expect(entries.filter((e) => e.type === 'item' && (e.data as Rec).wondrous === true).length).toBeGreaterThan(300)
     const spirits = entries.filter((e) => e.type === 'monster' && (e.data as { effects?: Array<{ kind?: string; text?: string }> }).effects?.some((x) => x.kind === 'note' && String(x.text).includes('Foundry')))
-    expect(spirits.length).toBeGreaterThanOrEqual(6)
+    expect(spirits.length).toBeGreaterThan(0) // 只验证「有」，不写死条数：删冗余的派生数值说明不应让测试变红（开发规范 §12.5）
   })
 
   it('每条 dropped 的理由都不同、都带路径（R15 新登记的）', () => {
