@@ -31,6 +31,7 @@ import { ROWS as S3B_UPCAST_HEAL } from './rows/s3b-upcast-heal'
 import { ROWS as S3C_HP } from './rows/s3c-hp'
 import { ROWS as S3C_PASSIVE } from './rows/s3c-passive'
 import { ROWS as S3C_SPELL_LINKS } from './rows/s3c-spell-links'
+import { ROWS as S3C_OBJECT_ACTIVITIES } from './rows/s3c-object-activities'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -75,6 +76,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3c-hp.ts', rows: S3C_HP },
   { file: 'rows/s3c-passive.ts', rows: S3C_PASSIVE },
   { file: 'rows/s3c-spell-links.ts', rows: S3C_SPELL_LINKS },
+  { file: 'rows/s3c-object-activities.ts', rows: S3C_OBJECT_ACTIVITIES },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {

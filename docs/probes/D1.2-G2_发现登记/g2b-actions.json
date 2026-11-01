@@ -14,17 +14,17 @@
   {
    "check": "b4",
    "key": "activities",
-   "value": 3320
+   "value": 3329
   },
   {
    "check": "b4",
    "key": "damageOrHealDice",
-   "value": 2672
+   "value": 2680
   },
   {
    "check": "b4",
    "key": "kind.attack",
-   "value": 1923
+   "value": 1929
   },
   {
    "check": "b4",
@@ -39,12 +39,12 @@
   {
    "check": "b4",
    "key": "kind.save",
-   "value": 1168
+   "value": 1170
   },
   {
    "check": "b4",
    "key": "kind.utility",
-   "value": 175
+   "value": 176
   }
  ],
  "findings": [

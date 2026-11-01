@@ -14,7 +14,7 @@
   {
    "check": "c10",
    "key": "objectsWithTextOnlyActions",
-   "value": 9
+   "value": 0
   },
   {
    "check": "c7",
@@ -88,26 +88,6 @@
   }
  ],
  "findings": [
-  {
-   "id": "c10-object-actions-text-only",
-   "check": "c10",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "object.ballista.dmg 弩炮",
-    "object.cannon.dmg 火炮",
-    "object.eldritch-cannon-flamethrower.tce 魔能炮台, 投火机",
-    "object.eldritch-cannon-force-ballista.tce 魔能炮台, 力量弩炮",
-    "object.eldritch-cannon-protector.tce 魔能炮台, 防御者",
-    "object.mangonel.dmg 投石机",
-    "object.ram.dmg 攻城槌",
-    "object.suspended-cauldron.dmg 吊挂大锅",
-    "object.trebuchet.dmg 配重投石机"
-   ],
-   "expected": "DMG、MM、GoS 各条目原文",
-   "note": "物件/载具的攻击（弩炮、投石机等）只有文字，没有结构化行动，战斗里无法一键攻击",
-   "count": 9
-  },
   {
    "id": "c10-object-immune-text",
    "check": "c10",

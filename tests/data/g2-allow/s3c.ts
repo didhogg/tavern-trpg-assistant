@@ -26,6 +26,14 @@ export const ALLOW: Allow[] = [
     expect: 7,
     reason: 'c5-spell-plain-unknown：7 个怪物、8 处法术名补链接',
   },
+  {
+    name: 's3c-object-activities',
+    station: 3,
+    ids: ['object.ballista.dmg', 'object.cannon.dmg', 'object.mangonel.dmg', 'object.ram.dmg', 'object.trebuchet.dmg', 'object.eldritch-cannon-force-ballista.tce', 'object.eldritch-cannon-flamethrower.tce', 'object.suspended-cauldron.dmg', 'object.eldritch-cannon-protector.tce'],
+    path: /^\/data\/activities$/,
+    expect: 9,
+    reason: 'c10-object-actions-text-only：9 个器械补条目层 activities',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
