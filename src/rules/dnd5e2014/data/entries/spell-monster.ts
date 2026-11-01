@@ -6,6 +6,7 @@ import { activitySchema } from '../activities'
 import { scaleDiceSchema } from '../advancement'
 import { entryCommonFields } from './base'
 import { conditionalDamageSchema, consumedSchema, legendaryCostSchema, rechargeRollSchema, summonSchema, upcastSchema } from '../g25'
+import { monsterArtSchema } from './art'
 
 const common = entryCommonFields
 
@@ -124,5 +125,10 @@ export const monsterDataSchema = z.looseObject({
   mythic: z.array(namedAction).optional(),
   spellcasting: z.array(spellcastingSchema).default([]),
   variants: z.array(monsterVariantSchema).optional(),
+  /** D1.2b：默认头像与 token 的地址和裁切焦点。 */
+  art: monsterArtSchema.optional(),
+  /** D1.2b：和已有怪物同名但机制有差别时，基于哪条（id）、差在哪些机制字段（字母序）。 */
+  variantOf: z.string().min(1).optional(),
+  variantDiff: z.array(z.string().min(1)).min(1).optional(),
 })
 export type MonsterData = z.infer<typeof monsterDataSchema>

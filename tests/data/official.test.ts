@@ -18,7 +18,8 @@ const REPO = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 const OWNER = { ownerKey: 'char:official.png', ownerLabel: '官方包测试' }
 /** 核心范围没有数据；D1.2b 的 R16 才有 recipe/charoption。 */
-const TYPES_WITHOUT_CORE_DATA = ['recipe', 'charoption']
+// npc（具名 NPC 模板）只在 D1.2b 的冒险包里，核心包没有
+const TYPES_WITHOUT_CORE_DATA = ['recipe', 'charoption', 'npc']
 
 function packPath(id: string, version: string): string {
   if (id === SRD_PACK_ID) return join(REPO, 'packs', `${id}.trpgpack`)
