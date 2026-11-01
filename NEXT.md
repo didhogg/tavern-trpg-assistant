@@ -4,7 +4,7 @@
 M4 人物（一）的数据前置 D1.2 全量结构化导入（规格 `docs/handoff/D1.2_全量结构化导入_交接.md`；当前执行 D1.2a，`docs/handoff/D1.2a_执行交接.md`）；D1.1 已由规划 agent 复核并并入 D1.2；M3 代码等待驾驶员真机验收；M2 已验收。
 
 ## 当前任务
-**G2.5 第 3 站 3a（装备与职业）已完成，等规划者核验。** 6 个工作项各自一个提交；起始装备、工具自选、奇械师火器说明、两个错误施法块、10 件缺失装备与 3 个套组内容、芦笛价格都修好；目标登记项归零，联动项已解释。未推送、未发布、未安装；核验通过前不开始 3b。
+**G2.5 第 3 站 3b 进行中，卡在 3b-4，等规划者决定。** 3b-1、3b-2、3b-3a、3b-3b、3b-3c 已完成并提交；3b-4 试做后 `rest-racial-spell-uses-duplicate` 可 27→0，但 `feature-rules` 的 uses 覆盖率跌到 90.69%<95%，需要规划者决定测试/`FEATURE_NO_USES` 模型，未提交、未继续 3b-5。未推送、未发布、未安装。
 - **第 0 站已完成（本地提交 d525c2c…c567162 与收尾）**：新字段格式（`src/rules/dnd5e2014/data/g25.ts` 等）、公式变量 `spell.level`/`spell.attack`、构建期校验 `validateG25`、修正引擎（T4 `tools/data/fix/`）、`registry-diff`（T2）、`show`（T1）、读原书 PDF（T7，VGM 文字层 / MTF 扫描件 OCR）、`g2-additive`＋基线夹具（T5）、旧扩展兼容测试（T6，真跑 f4eddfe 的安装校验）、读取器新记号。**对照 VGM/MTF 原书后的修订**：7 个怪物生命骰式可改（只剩诅咒石化人原书自相矛盾）、三种星界船原书没有护甲/生命值（不补）、位面掠夺者弩炮数 2→3、布耶格施法者是随机法术（误报）、天生法术等级漏了 28 个（登记 3→31，附表 `03_附表_天生法术等级.md`）、费尔伯格/深侏儒/蛇人纯血/魔蒙提夫林的次数错误；塔莎法术表改用并列字段 `spellLists`（旧扩展会拒绝 `joins` 的新 `as` 值）。
 - **第 0 站实测**：`npm run check` 约 20 秒（36 文件、305 项）；`npm run test:data` 约 94 秒（119 文件、369 项）；`build:data` 约 30 秒；快速 e2e 库子集 `E2E_SUITE=library E2E_ENGINE=chrome E2E_VIEW=desktop E2E_SCHEME=light node tests/e2e/smoke.mjs` 约 100 秒（需先 `npm run build`）；升级场景 `E2E_SUITE=upgrade …`（同样三个环境变量）约 21 秒；均通过。11 个包哈希与 G2 开工快照一致（数据没动）。
 - **第 1 站结果**：包 1.4.0；登记 119 项（`data-defect` 81、`decision` 25、`source-defect` 13）；升环 74、材料价格 76／消耗 39、法术攻击类型 35、充能恢复量 174、奇械师法术表 95（核对过 TCE 英文原书）、子职业扩展法术、重印标记 19；83 条页码 5etools 本来没有（不编造）。详见 `docs/probes/D1.2-G2.5_报告.md`。
