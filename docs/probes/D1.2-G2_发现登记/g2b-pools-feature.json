@@ -9,7 +9,7 @@
   {
    "check": "b5",
    "key": "peculiarRestRules",
-   "value": 4
+   "value": 0
   },
   {
    "check": "b5",
@@ -17,21 +17,5 @@
    "value": 15
   }
  ],
- "findings": [
-  {
-   "id": "b5-peculiar-rest-rule",
-   "check": "b5",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.cleric-divine-intervention.phb 神圣干预：成功后 7 天内不能再用，失败则长休后可再用（冷却天数）→ tracker",
-    "feature.sorcerer-wild-magic-tides-of-chaos.phb 混沌之潮：长休恢复，或 DM 让你掷狂野魔法浪涌表时恢复 → restores（事件：狂野魔法浪涌）",
-    "feature.wizard-school-of-conjuration-benign-transposition.phb 王车易位：长休恢复，或你施展 1 环以上咒法法术时恢复 → restores（事件：施展咒法法术）",
-    "feature.wizard-school-of-enchantment-hypnotic-gaze.phb 催眠凝视：对同一生物，长休前不能再用（按目标）→ tracker: perTarget"
-   ],
-   "expected": "PHB 各特性原文（已逐个读过）",
-   "note": "写成“1 次/长休”，但书上的限制是冷却天数、按目标、或有事件触发的额外恢复；应按“资源与休息”结构的 tracker / restores 表示",
-   "count": 4
-  }
- ]
+ "findings": []
 }

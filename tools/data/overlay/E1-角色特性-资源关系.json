@@ -318,6 +318,34 @@
       "source": "book"
     },
     {
+      "id": "feature.sorcerer-wild-magic-tides-of-chaos.phb",
+      "path": "/data/restores",
+      "op": "set",
+      "after": [
+        {
+          "on": "event",
+          "event": "DM 让你掷狂野魔法浪涌表",
+          "amount": "all"
+        }
+      ],
+      "basis": "PHB p.103 混沌之潮：长休恢复，或 DM 让你掷狂野魔法浪涌表时恢复",
+      "source": "book"
+    },
+    {
+      "id": "feature.wizard-school-of-conjuration-benign-transposition.phb",
+      "path": "/data/restores",
+      "op": "set",
+      "after": [
+        {
+          "on": "event",
+          "event": "你施展一个 1 环或更高的咒法法术",
+          "amount": "all"
+        }
+      ],
+      "basis": "PHB p.116 王车易位：长休恢复，或你施展 1 环以上咒法法术时恢复",
+      "source": "book"
+    },
+    {
       "id": "feature.barbarian-relentless-rage.phb",
       "path": "/data/tracker",
       "op": "set",

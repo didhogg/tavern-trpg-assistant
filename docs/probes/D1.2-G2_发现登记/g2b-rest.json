@@ -3,6 +3,11 @@
  "stats": [
   {
    "check": "rest",
+   "key": "excluded-rest-trigger-choice",
+   "value": 1
+  },
+  {
+   "check": "rest",
    "key": "featuresAndFeats",
    "value": 1940
   },
@@ -62,37 +67,5 @@
    "value": 65
   }
  ],
- "findings": [
-  {
-   "id": "rest-tracker",
-   "check": "rest",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.cleric-knowledge-domain-channel-divinity-read-thoughts.phb 引导神力：读心：对同一生物豁免成功后，长休前不能再对它使用（按目标）",
-    "feature.warlock-the-genie-limited-wish.tce 有限祈愿术：用过后要过 1d4 次长休才能再用（冷却次数）"
-   ],
-   "expected": "各特性原文",
-   "note": "按目标或冷却次数的限制，没有记录；应用 tracker（perTarget / 冷却）",
-   "count": 2
-  },
-  {
-   "id": "rest-trigger-choice",
-   "check": "rest",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feat.cartomancer.bmt 卡牌占卜师：每次长休从职业法术列表选一个法术注入卡牌",
-    "feature.artificer-alchemist-experimental-elixir.tce 实验性灵药：每次长休制造一瓶灵药（掷表）",
-    "feature.artificer-battle-smith-steel-defender.tce 钢铁守卫：每次长休可重新创造钢铁守卫",
-    "feature.monk-way-of-the-open-hand-tranquility.phb 宁神境：每次长休获得庇护术效应，持续到下一次长休",
-    "feature.ranger-beast-master-primal-companion.tce 原初伴侣：每次长休可召唤不同的原初野兽",
-    "feature.rogue-phantom-deaths-friend.tce 死亡之友：每次长休结束若没有灵魂饰品则获得 1 个",
-    "feature.warlock-the-hexblade-hex-warrior.xge 巫咒战士：每次长休选一把武器用魅力攻击"
-   ],
-   "expected": "各特性原文",
-   "note": "特性在每次长休后才能重选或重新获得（卡牌占卜师、灵药、钢铁守卫、原初伴侣、巫咒战士、死亡之友、宁神境）；活动页长休时需要提示。应用 tracker: choice（reset: long）",
-   "count": 7
-  }
- ]
+ "findings": []
 }

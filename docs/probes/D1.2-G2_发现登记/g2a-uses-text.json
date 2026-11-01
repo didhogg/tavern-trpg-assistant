@@ -5,34 +5,12 @@
    "check": "a18",
    "key": "entriesWithUses",
    "value": 278
-  }
- ],
- "findings": [
-  {
-   "id": "a18-consumes-other-pool",
-   "check": "a18",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feat.dragon-fear.xge 龙之威怖"
-   ],
-   "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
-   "note": "特性消耗的是另一个特性的次数池（诗人激励、荒野形态、吐息武器），自己又有一份 uses，会重复计数；应删 uses、加 consumes",
-   "selfCheck": true,
-   "count": 1
   },
   {
-   "id": "a18-special-resource",
    "check": "a18",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.rogue-phantom-tokens-of-the-departed.tce 逝者遗物"
-   ],
-   "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
-   "note": "特殊资源（灵魂饰品：上限等于熟练加值，靠生物死亡获得），不是“每长休几次”",
-   "selfCheck": true,
-   "count": 1
+   "key": "excluded-a18-consumes-other-pool",
+   "value": 1
   }
- ]
+ ],
+ "findings": []
 }
