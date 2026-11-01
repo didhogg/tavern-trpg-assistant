@@ -24,19 +24,12 @@
    "kind": "source-defect",
    "fixSource": "decision",
    "entries": [
-    "monster.cloud-giant-smiling-one.vgm 云巨人欢笑者：骰式 21d12 + 128 平均 264 / 写明 262",
-    "monster.duergar.mm 灰矮人：骰式 4d8 + 4 平均 22 / 写明 26",
-    "monster.master-thief.vgm 盗贼大师：骰式 13d8 + 26 平均 84 / 写明 83",
-    "monster.shadow-mastiff-alpha.vgm 阴影獒犬首领：骰式 6d8 + 6 平均 33 / 写明 48",
-    "monster.stone-cursed.mtf 诅咒石化人：骰式 3d8 + 4 平均 17 / 写明 19",
-    "monster.ulitharid.mpmm 噬魂怪：骰式 17d10 + 14 平均 107 / 写明 127",
-    "monster.ulitharid.vgm 噬魂怪：骰式 17d10 + 14 平均 107 / 写明 127",
-    "monster.vine-blight.mm 枯藤怪：骰式 4d8 + 4 平均 22 / 写明 26"
+    "monster.stone-cursed.mtf 诅咒石化人：骰式 3d8 + 4 平均 17 / 写明 19"
    ],
    "expected": "条目自己的数据（自洽检查）；需对照 MM、MPMM 原文",
    "note": "生命骰式的平均值和写明的生命值不一致。已对照 MM、MPMM、VGM、MTF 原书逐条核对：灰矮人与枯藤怪应为 4d8+8（生命值 26）；噬魂怪两个版本应为 17d10+34（生命值 127）；云巨人欢笑者应为 21d12+126（生命值 262）；盗贼大师生命值应为 84（骰式 13d8+26 对）；阴影獒犬首领原书只写“生命值 42–54”、没有骰式（数据里的 6d8+6 抄自普通阴影獒犬）；诅咒石化人原书自己印的就是“19 (3d8 + 4)”，数据与原书一致（原书自相矛盾）",
    "selfCheck": true,
-   "count": 8
+   "count": 1
   },
   {
    "id": "c1-hp-no-formula",
@@ -85,6 +78,7 @@
     "monster.fiendish-spirit.tce 邪魔灵魄：\"50（仅限恶魔）或 40（仅限魔鬼）或 60（仅限尤格罗斯魔）+1 5 每比六环高的法术等级\"",
     "monster.homunculus-servant.tce 人工生命仆从：\"1 +你的智力调整值+你的奇械师等级（人工生命仆从拥有与你奇械师等级相同数量的D4 生命骰）\"",
     "monster.reaper-spirit.bmt 收割者灵魄：\"40 + 高于4环每环10点\"",
+    "monster.shadow-mastiff-alpha.vgm 阴影獒犬首领：\"原书：生命值 42–54（高于普通阴影獒犬）；此处取中值 48\"",
     "monster.shadow-spirit-despair.tce 暗影灵魄（绝望）：\"35 + 15 每比 3 环高的法术等级\"",
     "monster.shadow-spirit-fear.tce 暗影灵魄（恐惧）：\"35 + 15 每比 3 环高的法术等级\"",
     "monster.shadow-spirit-fury.tce 暗影灵魄（暴怒）：\"35 + 15 每比 3 环高的法术等级\"",
@@ -92,13 +86,12 @@
     "monster.steel-defender.tce 钢铁守卫：\"2 +你的智力调整值+你奇械师等级的五倍（钢铁守卫拥有与你奇械师等级相同数量的生命骰[D8]）\"",
     "monster.troll-loathsome-limb-severed-arm.mm 巨魔（扰人断肢；断臂）：\"10\"",
     "monster.troll-loathsome-limb-severed-head.mm 巨魔（扰人断肢；断头）：\"10\"",
-    "monster.troll-loathsome-limb-severed-leg.mm 巨魔（扰人断肢；断腿）：\"10\"",
-    "monster.undead-spirit-ghostly.tce 亡灵灵魄（幽体）：\"30 +10×每比3环高的法术等级\""
+    "monster.troll-loathsome-limb-severed-leg.mm 巨魔（扰人断肢；断腿）：\"10\""
    ],
    "expected": "条目自己的数据（自洽检查）；需对照 MM、MPMM 原文",
    "note": "没有生命骰式（战斗里无法掷生命）：多数是书上就只写了固定生命值，或特殊生命值（如会随条件变化）",
    "selfCheck": true,
-   "count": 54
+   "count": 55
   },
   {
    "id": "c1-passive-missing",

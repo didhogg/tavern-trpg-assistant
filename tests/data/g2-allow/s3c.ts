@@ -1,6 +1,15 @@
 import type { Added, Allow, AllowRequires } from './types'
 
-/** 第 3 站 3c 怪物与世界 的放行规则（规则见 docs/handoff/D1.2-G2.5_执行包/00 第 7 节；每个文件不超过 400 行）。 */
-export const ALLOW: Allow[] = []
+/** 第 3 站 3c 怪物与世界 的放行规则。 */
+export const ALLOW: Allow[] = [
+  {
+    name: 's3c-hp',
+    station: 3,
+    ids: ['monster.duergar.mm', 'monster.vine-blight.mm', 'monster.ulitharid.mpmm', 'monster.ulitharid.vgm', 'monster.cloud-giant-smiling-one.vgm', 'monster.master-thief.vgm', 'monster.shadow-mastiff-alpha.vgm'],
+    path: /^\/data\/hp(?:\/|$)/,
+    expect: 7,
+    reason: 'c1-mm-hp-formula / c1-hp-formula-mismatch：7 个怪物生命骰式/固定值',
+  },
+]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

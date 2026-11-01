@@ -33,11 +33,6 @@
   },
   {
    "check": "c1",
-   "key": "mmTextDisagrees.hp-formula",
-   "value": 0
-  },
-  {
-   "check": "c1",
    "key": "mmTextDisagrees.passive",
    "value": 2
   },
@@ -73,19 +68,6 @@
   }
  ],
  "findings": [
-  {
-   "id": "c1-mm-hp-formula",
-   "check": "c1",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.duergar.mm 灰矮人：数据=4d8 + 4 原文=4d8+8",
-    "monster.vine-blight.mm 枯藤怪：数据=4d8 + 4 原文=4d8+8"
-   ],
-   "expected": "怪物图鉴（MM）灰矮人、枯藤怪数据块：HP 26（4d8+8）",
-   "note": "生命骰式写 4d8+4，平均值 22 对不上写明的生命值 26；应为 4d8+8",
-   "count": 2
-  },
   {
    "id": "c2-xp-table-vs-mm-text",
    "check": "c2",
