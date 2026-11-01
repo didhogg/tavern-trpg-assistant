@@ -16,9 +16,22 @@ export function checkJoins(entry: { id: string; type: string; data: Rec }, looku
   const problems: string[] = []
   joins.forEach((j, i) => {
     const at = `${entry.id} 的 joins[${i}]`
-    if (!isObj(j) || typeof j.to !== 'string' || (j.as !== 'optional' && j.as !== 'option' && j.as !== 'member')) { problems.push(`${at}：缺少 to 或 as 不合法`); return }
+    if (!isObj(j) || typeof j.to !== 'string' || (j.as !== 'optional' && j.as !== 'option' && j.as !== 'member' && j.as !== 'spell')) { problems.push(`${at}：缺少 to 或 as 不合法`); return }
     const target = lookup(j.to)
     if (!target) { problems.push(`${at}：目标「${j.to}」不存在`); return }
+    if (j.as === 'spell') {
+      // 把法术加进职业的法术表：由扩展书里的「锚点」特性登记；被加入的职业与法术都不写任何东西
+      if (entry.type !== 'feature') problems.push(`${at}：as=spell 只能由特性登记`)
+      if (target.type !== 'class' && target.type !== 'subclass') problems.push(`${at}：目标必须是职业或子职业`)
+      if (j.level !== 0) problems.push(`${at}：as=spell 的 level 固定写 0`)
+      if (!Array.isArray(j.spells) || j.spells.length === 0) { problems.push(`${at}：as=spell 必须有 spells 数组`); return }
+      for (const id of j.spells) {
+        const spell = typeof id === 'string' ? lookup(id) : undefined
+        if (!spell) problems.push(`${at}：法术「${String(id)}」不存在`)
+        else if (spell.type !== 'spell') problems.push(`${at}：「${String(id)}」不是法术`)
+      }
+      return
+    }
     if (j.as === 'member') {
       if (target.type !== 'item' || target.data.category !== 'family') problems.push(`${at}：as=member 的目标必须是物品家族`)
       return

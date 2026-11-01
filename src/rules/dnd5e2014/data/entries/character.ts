@@ -8,6 +8,7 @@ import { effectListSchema, legacyEffectListSchema, spellGrantSchema } from '../e
 import { startingEquipmentSchema } from '../starting'
 import { abilityKeySchema as abilityEnum, languageSchema } from '../enums'
 import { entryCommonFields } from './base'
+import { consumesSchema, restoreSchema, toolChooseSchema, trackerSchema } from '../g25'
 
 const classTableSchema = z.object({
   cols: z.array(z.string()),
@@ -18,6 +19,8 @@ const proficienciesSchema = z.looseObject({
   armor: z.array(z.string()).default([]),
   weapons: z.array(z.string()).default([]),
   tools: z.array(z.string()).default([]),
+  /** 工具熟练的自选部分（`tools` 里的文字保留不动）。 */
+  toolChoose: toolChooseSchema.optional(),
   skills: z.object({ choose: z.number().int().nonnegative(), from: z.array(z.string()) }).optional(),
 })
 
@@ -86,6 +89,12 @@ export const featureDataSchema = z.looseObject({
   level: z.number().int().min(0).max(20).optional(),
   featureType: z.string().max(60).optional(),
   uses: usesSchema.optional(),
+  /** 使用这个特性时扣另一个特性的次数池（与自己的 uses 不能并存）。 */
+  consumes: consumesSchema.optional(),
+  /** 休息、先攻或事件时恢复哪个池。 */
+  restores: z.array(restoreSchema).min(1).optional(),
+  /** 不是次数、但要在休息时重置的状态。 */
+  tracker: trackerSchema.optional(),
   choices: z.array(z.object({ name: z.string().min(1), count: z.number().int().positive(), pool: z.array(z.string()).default([]) })).optional(),
   effects: effectListSchema.optional(),
   spellGrants: z.array(spellGrantSchema).optional(),
@@ -94,9 +103,11 @@ export const featureDataSchema = z.looseObject({
   joins: z.array(z.object({
     to: entryIdSchema,
     level: z.number().int().min(0).max(20).optional(),
-    as: z.enum(['optional', 'option', 'member']),
+    as: z.enum(['optional', 'option', 'member', 'spell']),
     replaces: entryIdSchema.optional(),
     pool: entryIdSchema.optional(),
+    /** as: 'spell' 时：加进目标职业法术表的法术（level 固定写 0）。 */
+    spells: z.array(entryIdSchema).min(1).optional(),
   })).optional(),
 })
 export type FeatureData = z.infer<typeof featureDataSchema>
@@ -105,6 +116,8 @@ const abilityBonusSchema = z
   .object({
     fixed: z.record(z.string(), z.number().int()).optional(),
     choose: z.object({ count: z.number().int().positive(), amount: z.number().int().positive(), from: z.array(abilityKeySchema) }).optional(),
+    /** true = 不再叠加种族本身的属性加值，以此为准（变体人类；只出现在亚种上）。 */
+    replace: z.boolean().optional(),
   })
   .refine((v) => v.fixed !== undefined || v.choose !== undefined, { message: '属性加值至少要有固定值或自选之一' })
 
@@ -175,6 +188,8 @@ export const backgroundDataSchema = z.looseObject({
   equipment: z.union([z.array(z.string()), startingEquipmentSchema]).default([]),
   gold: z.object({ dice: diceSchema, multiplier: z.number().int().positive().default(1) }).optional(),
   feature: z.string().max(120).optional(),
+  /** 人物特征（特点/理念/牵挂/缺陷）借用另一个背景的表。 */
+  characteristicsFrom: entryIdSchema.optional(),
   characteristics: z.array(z.object({ table: z.string().min(1), label: z.string().max(80) })).default([]),
 })
 export type BackgroundData = z.infer<typeof backgroundDataSchema>

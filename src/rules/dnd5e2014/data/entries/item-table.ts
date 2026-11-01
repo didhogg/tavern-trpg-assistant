@@ -4,6 +4,7 @@ import { parseDice } from '../../../dice/parse'
 import { tableColumnSchema, tableValueSchema } from '../tableValues'
 import { entryCommonFields } from './base'
 import { effectListSchema } from '../effects'
+import { priceSchema } from '../g25'
 
 export const ITEM_CATEGORIES = ['weapon', 'armor', 'shield', 'gear', 'tool', 'consumable', 'wondrous', 'ammunition', 'mount', 'vehicle', 'treasure', 'template', 'family'] as const
 
@@ -52,7 +53,7 @@ export const itemDataSchema = z.looseObject({
   rarity: z.enum(['none', 'common', 'uncommon', 'rare', 'very rare', 'legendary', 'artifact', 'varies']).default('none'),
   attunement: z.object({ required: z.boolean(), by: z.string().max(160).optional() }).default({ required: false }),
   weight: z.number().nonnegative().optional(),
-  value: z.number().int().nonnegative().optional(),
+  value: priceSchema.optional(),
   weapon: weaponSchema.optional(),
   armor: armorSchema.optional(),
   charges: chargesSchema.optional(),

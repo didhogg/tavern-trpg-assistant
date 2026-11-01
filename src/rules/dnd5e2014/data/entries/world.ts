@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { textBlockSchema } from '../blocks'
 import { effectListSchema, spellGrantSchema } from '../effects'
 import { entryCommonFields } from './base'
+import { dialectCodesSchema } from '../g25'
 
 const sizeCode = z.enum(['T', 'S', 'M', 'L', 'H', 'G', 'V'])
 
@@ -13,6 +14,8 @@ export const languageDataSchema = z.strictObject({
   scriptRule: z.string().optional(),
   typicalSpeakers: z.array(z.string().max(120)).default([]),
   dialects: z.array(z.string().max(60)).optional(),
+  /** 方言代码（`lang:aquan` 这类记号解析到本条目）。 */
+  dialectCodes: dialectCodesSchema.optional(),
 })
 
 export const deityDataSchema = z.strictObject({

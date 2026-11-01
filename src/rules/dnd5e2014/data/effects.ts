@@ -53,7 +53,21 @@ const conditionImmunity = effect({ kind: z.literal('conditionImmunity'), conditi
 const initiative = effect({ kind: z.literal('initiative'), bonus: formulaOrNumber.optional(), advantage: z.boolean().optional(), halfProficiency: z.boolean().optional() })
 const passive = effect({ kind: z.literal('passive'), skill: skillSchema, bonus: z.number() })
 const attackBonus = effect({ kind: z.enum(['attackBonus', 'damageBonus', 'saveDcBonus', 'spellAttackBonus']), amount: formulaOrNumber, scope: z.enum(['melee', 'ranged', 'spell', 'weapon', 'all']) })
-const advantage = effect({ kind: z.enum(['advantage', 'disadvantage']), on: z.enum(['attack', 'check', 'save', 'initiative']), scope: z.string().max(60).optional() })
+const advantage = effect({
+  kind: z.enum(['advantage', 'disadvantage']),
+  on: z.enum(['attack', 'check', 'save', 'initiative']),
+  scope: z.string().max(60).optional(),
+  /** true = 「别人对它」做某事时的优势/劣势（只允许 on: 'attack'）。 */
+  against: z.boolean().optional(),
+  /** 攻击者在 within 尺内命中时自动重击（只与 against 同用）。 */
+  autoCrit: z.strictObject({ within: z.number().int().positive() }).optional(),
+}).superRefine((v, ctx) => {
+  if (v.against === true && v.on !== 'attack') ctx.addIssue({ code: 'custom', message: 'against 目前只允许 on: "attack"' })
+  if (v.autoCrit !== undefined && v.against !== true) ctx.addIssue({ code: 'custom', message: 'autoCrit 只能与 against: true 同用' })
+})
+const CRIT_SCOPE = z.enum(['melee', 'ranged', 'spell', 'weapon', 'all'])
+const critRange = effect({ kind: z.literal('critRange'), min: z.number().int().min(2).max(20), scope: CRIT_SCOPE })
+const critDice = effect({ kind: z.literal('critDice'), count: z.number().int().positive(), scope: CRIT_SCOPE })
 const extraAttack = effect({ kind: z.literal('extraAttack'), count: z.number().int().positive() })
 const spellGrant = effect({
   kind: z.literal('spellGrant'),
@@ -61,6 +75,8 @@ const spellGrant = effect({
   mode: z.enum(['known', 'prepared', 'alwaysPrepared', 'innate']),
   ability: abilityKeySchema.optional(),
   uses: usesSchema.optional(),
+  /** 角色达到几级才获得这个法术（天生法术的解锁等级）。 */
+  level: z.number().int().min(1).max(20).optional(),
 })
 const carry = effect({ kind: z.literal('carry'), multiplier: z.number().positive() })
 const size = effect({ kind: z.literal('size'), value: z.enum(['T', 'S', 'M', 'L', 'H', 'G']) })
@@ -68,7 +84,7 @@ const note = effect({ kind: z.literal('note'), text: z.string().min(1) })
 
 export const effectSchema = z.discriminatedUnion('kind', [
   abilityBonus, abilitySet, skill, save, proficiency, ac, hpMax, speed, sense, damageList, conditionImmunity,
-  initiative, passive, attackBonus, advantage, extraAttack, spellGrant, carry, size, note,
+  initiative, passive, attackBonus, advantage, critRange, critDice, extraAttack, spellGrant, carry, size, note,
 ])
 export type Effect = z.infer<typeof effectSchema>
 export const effectListSchema = z.array(effectSchema).default([])

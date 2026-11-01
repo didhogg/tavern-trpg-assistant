@@ -1,9 +1,11 @@
 import { z } from 'zod'
-import { idSchema } from '../../../schemas/common'
+import { entryIdSchema, idSchema } from '../../../schemas/common'
 import { diceSchema } from './common'
 
 export const startingItemSchema = z.object({
   item: z.string().min(1),
+  /** 物品条目 id；对不上物品库的（书上本来是描述性文字的物品）不写。 */
+  id: entryIdSchema.optional(),
   qty: z.number().int().positive().default(1),
 })
 

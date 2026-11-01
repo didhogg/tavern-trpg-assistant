@@ -30,6 +30,7 @@ import { runEnglishPass } from './i18n/run'
 import { alignAll } from './i18n/align'
 import { unifyNameEn } from './i18n/nameEn'
 import { validateJoins } from './validate/joins'
+import { validateG25 } from './validate/g25'
 import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
@@ -118,6 +119,9 @@ async function main(): Promise<void> {
   const joinProblems = validateJoins(result.packs)
   console.log(`joins 问题：${joinProblems.length}`)
   if (joinProblems.length) throw new Error(`joins 校验失败 ${joinProblems.length} 条：${joinProblems.slice(0, 10).join('；')}`)
+  const g25Problems = validateG25(result.packs)
+  console.log(`G2.5 新字段问题：${g25Problems.length}`)
+  if (g25Problems.length) throw new Error(`G2.5 新字段校验失败 ${g25Problems.length} 条：${g25Problems.slice(0, 10).join('；')}`)
   const health = healthMetrics(result, data)
   assertHealth(health)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'health.json'), `${JSON.stringify(health, null, 2)}\n`)

@@ -3,6 +3,12 @@ const isObj = (v: unknown): v is Rec => !!v && typeof v === 'object' && !Array.i
 
 export interface StructuralRef { field: string; id: string }
 
+/** 起始装备块（fixed / choice）里每个物品项的 `id`。 */
+function startingIds(block: Rec, push: (id: string) => void): void {
+  const items = [...(Array.isArray(block.fixed) ? block.fixed : []), ...(Array.isArray(block.choice) ? block.choice.flat() : [])]
+  for (const item of items) if (isObj(item) && typeof item.id === 'string' && ID.test(item.id) && item.id.includes('.')) push(item.id)
+}
+
 const ID = /^[a-z]+[a-z0-9.-]*$/
 function strings(value: unknown, out: string[] = []): string[] {
   if (typeof value === 'string') { if (ID.test(value) && value.includes('.')) out.push(value) } else if (Array.isArray(value)) for (const x of value) strings(x, out)
@@ -29,7 +35,12 @@ export function structuralRefs(data: Rec, mode: 'all' | 'dependency' = 'all'): S
   if (mode === 'all') add('expandedSpells', data.expandedSpells)
   add('owner.id', isObj(data.owner) ? data.owner.id : undefined)
   for (const c of Array.isArray(data.characteristics) ? data.characteristics : []) add('characteristics[].table', isObj(c) ? c.table : undefined)
-  for (const j of Array.isArray(data.joins) ? data.joins : []) if (isObj(j)) { add('joins[].to', j.to); add('joins[].replaces', j.replaces); add('joins[].pool', j.pool) }
+  for (const j of Array.isArray(data.joins) ? data.joins : []) if (isObj(j)) { add('joins[].to', j.to); add('joins[].replaces', j.replaces); add('joins[].pool', j.pool); add('joins[].spells[]', j.spells) }
+  add('characteristicsFrom', data.characteristicsFrom)
+  if (isObj(data.consumes)) add('consumes.pool', data.consumes.pool)
+  for (const r of Array.isArray(data.restores) ? data.restores : []) if (isObj(r)) add('restores[].pool', r.pool)
+  if (isObj(data.summon)) add('summon.classId', data.summon.classId)
+  for (const key of ['startingEquipment', 'equipment']) for (const block of Array.isArray(data[key]) ? data[key] as unknown[] : []) if (isObj(block)) startingIds(block, (id) => out.push({ field: `${key}[].id`, id }))
   for (const c of Array.isArray(data.contents) ? data.contents : []) add('contents[].item', isObj(c) ? c.item : undefined)
   for (const choice of Array.isArray(data.contentsChoice) ? data.contentsChoice : []) for (const x of isObj(choice) && Array.isArray(choice.from) ? choice.from : []) add('contentsChoice[].from[].item', isObj(x) ? x.item : undefined)
   for (const step of Array.isArray(data.advancement) ? data.advancement : []) if (isObj(step)) { add('advancement[].items[]', step.items); add('advancement[].pool[]', step.pool); add('advancement[].explain', step.explain); add('advancement[].replaces', step.replaces) }

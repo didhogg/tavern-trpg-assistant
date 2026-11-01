@@ -25,6 +25,12 @@ export const requirementSchema = z
     pact: z.enum(['blade', 'chain', 'tome', 'talisman']).optional(),
     patron: z.array(entryIdSchema).optional(),
     feature: entryIdSchema.optional(),
+    /** 状态条件（效果的 when 用）：当前合法取值 rage（狂暴中）。 */
+    status: z.enum(['rage']).optional(),
+    /** 护甲条件：none = 没穿护甲（可以持盾）。 */
+    armor: z.enum(['none']).optional(),
+    /** 盾牌条件：none = 没持盾。 */
+    shield: z.enum(['none']).optional(),
     text: z.string().min(1).max(400).optional(),
   })
   .refine(
@@ -39,6 +45,9 @@ export const requirementSchema = z
       value.pact !== undefined ||
       value.patron !== undefined ||
       value.feature !== undefined ||
+      value.status !== undefined ||
+      value.armor !== undefined ||
+      value.shield !== undefined ||
       value.text !== undefined,
     '限制至少要有一个条件',
   )

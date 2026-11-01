@@ -5,6 +5,7 @@ import { textBlockSchema } from '../blocks'
 import { activitySchema } from '../activities'
 import { scaleDiceSchema } from '../advancement'
 import { entryCommonFields } from './base'
+import { conditionalDamageSchema, consumedSchema, legendaryCostSchema, rechargeRollSchema, summonSchema, upcastSchema } from '../g25'
 
 const common = entryCommonFields
 
@@ -13,7 +14,7 @@ const rangeBlockSchema = z.object({ type: z.string().max(30), amount: z.number()
 const componentsSchema = z.object({
   v: z.boolean().default(false),
   s: z.boolean().default(false),
-  m: z.object({ text: z.string().max(400), cost: z.number().nonnegative().optional(), consumed: z.boolean().optional() }).optional(),
+  m: z.object({ text: z.string().max(400), cost: z.number().nonnegative().optional(), consumed: consumedSchema.optional() }).optional(),
 })
 const durationSchema = z.object({ type: z.string().max(30), amount: z.number().nonnegative().optional(), unit: z.string().max(20).optional(), concentration: z.boolean().default(false) })
 
@@ -30,6 +31,8 @@ export const spellDataSchema = z.looseObject({
   classes: z.array(entryIdSchema).default([]),
   subclasses: z.array(entryIdSchema).default([]),
   higherLevel: z.string().max(2000).optional(),
+  /** 升环：用更高环阶的法术位施展时的追加量（higherLevel 文字保留不动）。 */
+  upcast: upcastSchema.optional(),
   cantripScaling: z.union([scaleDiceSchema, z.array(scaleDiceSchema)]).optional(),
   attack: z.enum(['mw', 'rw', 'ms', 'rs']).optional(),
   save: z.array(z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha'])).optional(),
@@ -50,6 +53,10 @@ const namedAction = z.looseObject({
   name: z.string().min(1).max(200),
   text: z.array(textBlockSchema).default([]),
   activities: z.array(activitySchema).optional(),
+  /** 充能动作：每回合开始掷 d6，点数在 [min, max] 内则恢复。 */
+  rechargeRoll: rechargeRollSchema.optional(),
+  /** 传奇动作花费（没写 = 1）。 */
+  cost: legendaryCostSchema.optional(),
 })
 
 const spellcastingSchema = z.looseObject({
@@ -101,7 +108,12 @@ export const monsterDataSchema = z.looseObject({
   resist: z.array(z.string()).default([]),
   immune: z.array(z.string()).default([]),
   vulnerable: z.array(z.string()).default([]),
+  resistConditional: conditionalDamageSchema.optional(),
+  immuneConditional: conditionalDamageSchema.optional(),
+  vulnerableConditional: conditionalDamageSchema.optional(),
   conditionImmune: z.array(z.string()).default([]),
+  /** 召唤物与同伴：随法术环阶或主人职业等级变化的公式。 */
+  summon: summonSchema.optional(),
   traits: z.array(namedAction).default([]),
   actions: z.array(namedAction).default([]),
   bonusActions: z.array(namedAction).default([]),

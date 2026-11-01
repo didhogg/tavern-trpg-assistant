@@ -21,6 +21,9 @@ export interface FormulaContext {
   classLevels?: Record<string, number>
   abilityMods?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>
   scales?: Record<string, number>
+  /** 召唤物公式：所用法术位的环阶（`spell.level`）与施法者的法术攻击加值（`spell.attack`）。 */
+  spellLevel?: number
+  spellAttack?: number
 }
 
 class FormulaFailure extends Error {
@@ -141,6 +144,8 @@ function variableValue(name: string, ctx: FormulaContext): number {
   if (name === 'level') return numberValue(name, ctx.level)
   if (name === 'prof') return numberValue(name, ctx.prof)
   if (name === 'cr') return numberValue(name, ctx.cr)
+  if (name === 'spell.level') return numberValue(name, ctx.spellLevel)
+  if (name === 'spell.attack') return numberValue(name, ctx.spellAttack)
   if (/^(str|dex|con|int|wis|cha)\.mod$/.test(name)) {
     const key = name.slice(0, 3) as 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
     return numberValue(name, ctx.abilityMods?.[key])
@@ -192,4 +197,26 @@ export function evaluateFormula(input: string, ctx: FormulaContext = {}): number
 export const formulaSchema = z.string().min(1).superRefine((value, ctx) => {
   const parsed = parseFormula(value)
   if (!parsed.ok) ctx.addIssue({ code: 'custom', message: `${parsed.error.message}（位置 ${parsed.error.position}）` })
+})
+
+const KNOWN_VARIABLE = /^(?:level|prof|cr|spell\.level|spell\.attack|(?:str|dex|con|int|wis|cha)\.mod|scale\.[A-Za-z0-9_.-]+|class\.[A-Za-z0-9_.-]+\.level)$/
+
+function variablesOf(ast: FormulaAst, out: string[] = []): string[] {
+  if (ast.kind === 'variable') out.push(ast.name)
+  else if (ast.kind === 'unary') variablesOf(ast.value, out)
+  else if (ast.kind === 'binary') { variablesOf(ast.left, out); variablesOf(ast.right, out) }
+  else if (ast.kind === 'call') for (const arg of ast.args) variablesOf(arg, out)
+  return out
+}
+
+/** 公式里用到的、引擎不认识的变量名（新字段的公式用它严格检查；旧的 `formulaSchema` 只查语法）。 */
+export function unknownVariables(input: string): string[] {
+  const parsed = parseFormula(input)
+  return parsed.ok ? [...new Set(variablesOf(parsed.ast).filter((name) => !KNOWN_VARIABLE.test(name)))] : []
+}
+
+/** 严格公式：语法正确，且只用引擎认识的变量（G 节不变量 2）。 */
+export const strictFormulaSchema = formulaSchema.superRefine((value, ctx) => {
+  const unknown = unknownVariables(value)
+  if (unknown.length) ctx.addIssue({ code: 'custom', message: `公式里有不认识的变量：${unknown.join('、')}` })
 })
