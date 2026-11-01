@@ -247,6 +247,18 @@ export const ALLOW: Allow[] = [
     expect: 10,
     reason: 'b8-upcast-no-tag-other：10 个法术补升环结构',
   },
+  {
+    name: 's3b-upcast-area',
+    station: 3,
+    ids: [
+      'spell.confusion.phb',
+      'spell.fog-cloud.phb',
+      'spell.mordenkainens-private-sanctum.phb',
+    ],
+    path: /^\/data\/upcast$/,
+    expect: 3,
+    reason: 'b8-upcast-no-tag-area：3 个法术补升环范围',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
