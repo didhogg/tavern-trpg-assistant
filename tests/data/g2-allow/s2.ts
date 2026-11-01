@@ -66,6 +66,14 @@ export const ALLOW: Allow[] = [
     expect: 1,
     reason: 'b14-scroll-labels：法术卷轴表 5 个单元格（通用语→普通，6th/7th/8th→N环）',
   },
+  {
+    name: 's2-table-level-labels',
+    station: 2,
+    ids: ['table.dmg-p82-r1', 'table.dmg-p84-r1'],
+    path: /^(?:\/data\/rows\/\d+\/cells\/0|\/i18n\/en\/fields\/rows\.\d+\.cells\.0)$/,
+    expect: 2,
+    reason: 'c12-level-label：两张经验表等级列统一成纯数字字符串（40 个单元格）',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
