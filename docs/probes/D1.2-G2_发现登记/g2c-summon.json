@@ -18,6 +18,11 @@
   },
   {
    "check": "c13",
+   "key": "excluded-c13-summon-attack-snapshot",
+   "value": 2
+  },
+  {
+   "check": "c13",
    "key": "hpSpecial",
    "value": 55
   },
@@ -42,19 +47,5 @@
    "value": 44
   }
  ],
- "findings": [
-  {
-   "id": "c13-summon-attack-snapshot",
-   "check": "c13",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.celestial-spirit-defender.tce 天界灵魄（守护圣灵）：光耀之锤",
-    "monster.celestial-spirit.tce 天界灵魄：光耀之锤（仅守护圣灵）"
-   ],
-   "expected": "TCE 召唤物动作原文",
-   "note": "攻击的结构化伤害是某一环的快照（丢了 “+ summonSpellLevel” 与第二种伤害），文字里才有完整公式",
-   "count": 2
-  }
- ]
+ "findings": []
 }

@@ -15,6 +15,11 @@
    "check": "c2",
    "key": "distinctCr",
    "value": 31
+  },
+  {
+   "check": "c6",
+   "key": "excluded-c1-resist-text",
+   "value": 1
   }
  ],
  "findings": [
@@ -177,19 +182,6 @@
    "note": "技能加值 ≠ 调整值 + 熟练或专精",
    "selfCheck": true,
    "count": 23
-  },
-  {
-   "id": "c1-resist-text",
-   "check": "c6",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.kobold-dragonshield.mpmm 狗头人龙盾护卫（resist）：见下文龙之抗性"
-   ],
-   "expected": "代码表与格式定义",
-   "note": "抗性/免疫写成纯文字（法术伤害、见下文龙之抗性、来自石肤术）",
-   "selfCheck": true,
-   "count": 1
   }
  ]
 }

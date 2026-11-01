@@ -1,129 +1,219 @@
 [
- {
-  "finding": "c13-hp-special-other",
-  "entry": "monster.avatar-of-death.dmg",
-  "reason": "生命值＝召唤者最大生命值的一半，书上本来就没有固定数；保持文字",
-  "basis": "DMG 死亡化身数据块"
- },
- {
-  "finding": "c10-object-no-stats",
-  "entry": "object.generic-object.dmg",
-  "reason": "通用物件的护甲与生命值取决于材料与体型（DMG 物件表），书上没有固定值",
-  "basis": "DMG 第 8 章 物件"
- },
- {
-  "finding": "c10-object-no-stats",
-  "entry": "vehicle.astral-brig.mtf",
-  "reason": "原书只给尺寸、速度、船员、乘客与武器，没有护甲等级和生命值；5etools 里也没有",
-  "basis": "MTF p.90（扫描件核对）"
- },
- {
-  "finding": "c10-object-no-stats",
-  "entry": "vehicle.astral-skiff.mtf",
-  "reason": "同上",
-  "basis": "MTF p.90（扫描件核对）"
- },
- {
-  "finding": "c10-object-no-stats",
-  "entry": "vehicle.planar-raider.mtf",
-  "reason": "同上",
-  "basis": "MTF p.90（扫描件核对）"
- },
- {
-  "finding": "c5-spell-list-text-only",
-  "entry": "monster.booyahg-caster.vgm",
-  "reason": "原书写的是每日一次施放一个随机确定的 1 环法师法术，没有法术名单；数据文字忠实",
-  "basis": "VGM p.42"
- },
- {
-  "finding": "d3-names-multi-col",
-  "entry": "table.vgm-p55-1",
-  "reason": "鬼婆姓名是“头衔+名字+姓氏”三列的合法多列表；读取约定：多列名字表按列拼接",
-  "basis": "VGM p.55 原表"
- },
- {
-  "finding": "a10-expanded-short",
-  "entry": "subclass.druid-circle-of-the-land.phb",
-  "reason": "该子职业在 SRD 核心包里，而扩展法术「马友夫强酸箭」在 PHB 包里：依赖只能向下（SRD 不能指向 PHB），构建按设计裁掉；装了 PHB 的玩家在子职业页看不到这一条，已记为已知限制",
-  "basis": "包依赖方向规则（docs/包格式说明.md §2）；5etools 圆环（陆地）沼泽 3 级扩展法术"
- },
- {
-  "finding": "c5-spell-plain-name",
-  "entry": "monster.lich.mm",
-  "match": "马友夫强酸箭",
-  "reason": "巫妖在 SRD 核心包里，「马友夫强酸箭」在 PHB 包里：依赖只能向下，SRD 不能指向 PHB 包的法术；保持纯文字，已知限制（同陆地德鲁伊的情况）",
-  "basis": "包依赖方向规则（docs/包格式说明.md §2）"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-collapsing-roof.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-falling-net.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-fire-breathing-statue.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-pits.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-poison-darts.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-poison-needle.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-rolling-sphere.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "c9-hazard-no-rating",
-  "entry": "hazard.trap-sphere-of-annihilation.dmg",
-  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
-  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
- },
- {
-  "finding": "b2-derived-in-note",
-  "entry": "feature.enhanced-defense.tce",
-  "reason": "奇械师注法（Infusion）增强防御：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
-  "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
- },
- {
-  "finding": "b2-derived-in-note",
-  "entry": "feature.helm-of-awareness.tce",
-  "reason": "奇械师注法（Infusion）警觉之盔：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
-  "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
- },
- {
-  "finding": "b2-derived-in-note",
-  "entry": "feature.repulsion-shield.tce",
-  "reason": "奇械师注法（Infusion）斥力之盾：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
-  "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
- },
- {
-  "finding": "a17-empty",
-  "entry": "feat.spell-sniper.phb",
-  "reason": "法术狙击手可选吟游诗人／牧师，但这两个职业的书里没有需要攻击检定的戏法，池子本来就是空的；来源如此，不是转换错误",
-  "basis": "PHB 法术狙击手专长；两个职业的戏法表"
- }
+  {
+    "finding": "c13-hp-special-other",
+    "entry": "monster.avatar-of-death.dmg",
+    "reason": "生命值＝召唤者最大生命值的一半，书上本来就没有固定数；保持文字",
+    "basis": "DMG 死亡化身数据块"
+  },
+  {
+    "finding": "c10-object-no-stats",
+    "entry": "object.generic-object.dmg",
+    "reason": "通用物件的护甲与生命值取决于材料与体型（DMG 物件表），书上没有固定值",
+    "basis": "DMG 第 8 章 物件"
+  },
+  {
+    "finding": "c10-object-no-stats",
+    "entry": "vehicle.astral-brig.mtf",
+    "reason": "原书只给尺寸、速度、船员、乘客与武器，没有护甲等级和生命值；5etools 里也没有",
+    "basis": "MTF p.90（扫描件核对）"
+  },
+  {
+    "finding": "c10-object-no-stats",
+    "entry": "vehicle.astral-skiff.mtf",
+    "reason": "同上",
+    "basis": "MTF p.90（扫描件核对）"
+  },
+  {
+    "finding": "c10-object-no-stats",
+    "entry": "vehicle.planar-raider.mtf",
+    "reason": "同上",
+    "basis": "MTF p.90（扫描件核对）"
+  },
+  {
+    "finding": "c5-spell-list-text-only",
+    "entry": "monster.booyahg-caster.vgm",
+    "reason": "原书写的是每日一次施放一个随机确定的 1 环法师法术，没有法术名单；数据文字忠实",
+    "basis": "VGM p.42"
+  },
+  {
+    "finding": "d3-names-multi-col",
+    "entry": "table.vgm-p55-1",
+    "reason": "鬼婆姓名是“头衔+名字+姓氏”三列的合法多列表；读取约定：多列名字表按列拼接",
+    "basis": "VGM p.55 原表"
+  },
+  {
+    "finding": "a10-expanded-short",
+    "entry": "subclass.druid-circle-of-the-land.phb",
+    "reason": "该子职业在 SRD 核心包里，而扩展法术「马友夫强酸箭」在 PHB 包里：依赖只能向下（SRD 不能指向 PHB），构建按设计裁掉；装了 PHB 的玩家在子职业页看不到这一条，已记为已知限制",
+    "basis": "包依赖方向规则（docs/包格式说明.md §2）；5etools 圆环（陆地）沼泽 3 级扩展法术"
+  },
+  {
+    "finding": "c5-spell-plain-name",
+    "entry": "monster.lich.mm",
+    "match": "马友夫强酸箭",
+    "reason": "巫妖在 SRD 核心包里，「马友夫强酸箭」在 PHB 包里：依赖只能向下，SRD 不能指向 PHB 包的法术；保持纯文字，已知限制（同陆地德鲁伊的情况）",
+    "basis": "包依赖方向规则（docs/包格式说明.md §2）"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-collapsing-roof.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-falling-net.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-fire-breathing-statue.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-pits.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-poison-darts.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-poison-needle.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-rolling-sphere.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "c9-hazard-no-rating",
+    "entry": "hazard.trap-sphere-of-annihilation.dmg",
+    "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+    "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+  },
+  {
+    "finding": "b2-derived-in-note",
+    "entry": "feature.enhanced-defense.tce",
+    "reason": "奇械师注法（Infusion）增强防御：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
+    "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
+  },
+  {
+    "finding": "b2-derived-in-note",
+    "entry": "feature.helm-of-awareness.tce",
+    "reason": "奇械师注法（Infusion）警觉之盔：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
+    "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
+  },
+  {
+    "finding": "b2-derived-in-note",
+    "entry": "feature.repulsion-shield.tce",
+    "reason": "奇械师注法（Infusion）斥力之盾：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
+    "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
+  },
+  {
+    "finding": "a17-empty",
+    "entry": "feat.spell-sniper.phb",
+    "reason": "法术狙击手可选吟游诗人／牧师，但这两个职业的书里没有需要攻击检定的戏法，池子本来就是空的；来源如此，不是转换错误",
+    "basis": "PHB 法术狙击手专长；两个职业的戏法表"
+  },
+  {
+    "finding": "rest-trigger-choice",
+    "entry": "feat.cartomancer.bmt",
+    "reason": "驾驶员 2026-11-02 决定不做：长休后重选法术要用 tracker，但 tracker 只能写在特性（feature）上，这是专长（feat）；为一个条目改字段形状不划算。保持文字，等有模块真要读它时再定形状",
+    "basis": "校验 tools/data/validate/g25.ts 限制 tracker 只写在特性上；E1 停手报告卡点 2；开发规范 §12.2（没有模块读它就不做）"
+  },
+  {
+    "finding": "a18-consumes-other-pool",
+    "entry": "feat.dragon-fear.xge",
+    "reason": "驾驶员 2026-11-02 决定不做：它消耗「你龙裔的吐息武器」次数，但龙裔有 11 种、各有各的吐息武器池，现有 consumes 只能指向一个池，无法写成「按你的龙裔」。保持文字，等有模块读它且定出「按龙裔」的写法时再做",
+    "basis": "E1 停手报告卡点 5（候选池不唯一）；04 协议「多个候选＝停」；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.bard-college-of-lore-bonus-proficiencies.phb",
+    "reason": "驾驶员 2026-11-02 决定不做：原文是「从若干技能里自选」，现有技能熟练效果只能写固定的一个技能，不扩字段形状（V1 没有建卡向导读它，建卡向导在 A1）。保持文字，等 A1 或 R1.1 真要读它时再定形状",
+    "basis": "E1-5 停手报告（执行 agent 读原文确认纯自选）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.cleric-nature-domain-acolyte-of-nature.phb",
+    "reason": "驾驶员 2026-11-02 决定不做：原文是「从若干技能里自选」，现有技能熟练效果只能写固定的一个技能，不扩字段形状（V1 没有建卡向导读它，建卡向导在 A1）。保持文字，等 A1 或 R1.1 真要读它时再定形状",
+    "basis": "E1-5 停手报告（执行 agent 读原文确认纯自选）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.cleric-peace-domain-implement-of-peace.tce",
+    "reason": "驾驶员 2026-11-02 决定不做：原文是「从若干技能里自选」，现有技能熟练效果只能写固定的一个技能，不扩字段形状（V1 没有建卡向导读它，建卡向导在 A1）。保持文字，等 A1 或 R1.1 真要读它时再定形状",
+    "basis": "E1-5 停手报告（执行 agent 读原文确认纯自选）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.expert-sidekick-sharp-mind.tce",
+    "reason": "驾驶员 2026-11-02 决定不做：原文是「从若干技能里自选」，现有技能熟练效果只能写固定的一个技能，不扩字段形状（V1 没有建卡向导读它，建卡向导在 A1）。保持文字，等 A1 或 R1.1 真要读它时再定形状",
+    "basis": "E1-5 停手报告（执行 agent 读原文确认纯自选）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.fighter-arcane-archer-arcane-archer-lore.xge",
+    "reason": "驾驶员 2026-11-02 决定不做：原文是「从若干技能里自选」，现有技能熟练效果只能写固定的一个技能，不扩字段形状（V1 没有建卡向导读它，建卡向导在 A1）。保持文字，等 A1 或 R1.1 真要读它时再定形状",
+    "basis": "E1-5 停手报告（执行 agent 读原文确认纯自选）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.ranger-fey-wanderer-otherworldly-glamour.tce",
+    "reason": "驾驶员 2026-11-02 决定不做：原文是「从若干技能里自选」，现有技能熟练效果只能写固定的一个技能，不扩字段形状（V1 没有建卡向导读它，建卡向导在 A1）。保持文字，等 A1 或 R1.1 真要读它时再定形状",
+    "basis": "E1-5 停手报告（执行 agent 读原文确认纯自选）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.paladin-oath-of-the-ancients-aura-of-warding.phb",
+    "reason": "驾驶员 2026-11-02 决定不做：抗性对象不是固定的伤害类型（如「法术伤害」、或每次休息后自选一种），执行 agent 读原文判断现有特性抗性效果写不出。保持文字，等有模块要读它且定出写法时再做",
+    "basis": "E1-5 停手报告（动态／条件抗性 4 条）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.warlock-the-fiend-fiendish-resilience.phb",
+    "reason": "驾驶员 2026-11-02 决定不做：抗性对象不是固定的伤害类型（如「法术伤害」、或每次休息后自选一种），执行 agent 读原文判断现有特性抗性效果写不出。保持文字，等有模块要读它且定出写法时再做",
+    "basis": "E1-5 停手报告（动态／条件抗性 4 条）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.wizard-school-of-abjuration-spell-resistance.phb",
+    "reason": "驾驶员 2026-11-02 决定不做：抗性对象不是固定的伤害类型（如「法术伤害」、或每次休息后自选一种），执行 agent 读原文判断现有特性抗性效果写不出。保持文字，等有模块要读它且定出写法时再做",
+    "basis": "E1-5 停手报告（动态／条件抗性 4 条）；开发规范 §12.2"
+  },
+  {
+    "finding": "b3-A-derived-in-text",
+    "entry": "feature.wizard-school-of-transmutation-transmuters-stone.phb",
+    "reason": "驾驶员 2026-11-02 决定不做：抗性对象不是固定的伤害类型（如「法术伤害」、或每次休息后自选一种），执行 agent 读原文判断现有特性抗性效果写不出。保持文字，等有模块要读它且定出写法时再做",
+    "basis": "E1-5 停手报告（动态／条件抗性 4 条）；开发规范 §12.2"
+  },
+  {
+    "finding": "c1-resist-text",
+    "entry": "monster.kobold-dragonshield.mpmm",
+    "reason": "驾驶员 2026-11-02 决定：狗头人龙盾护卫「龙之抗性」的伤害类型由 DM 自选或掷 d10，现有 resist 字段表达不了选择；数据保留文字。跨里程碑登记：人物模块「从模板一键填入」时遇到这类自选项让玩家当场选",
+    "basis": "MPMM 狗头人龙盾护卫「龙之抗性」；驾驶员 2026-11-02 决定"
+  },
+  {
+    "finding": "c13-summon-attack-snapshot",
+    "entry": "monster.celestial-spirit-defender.tce",
+    "reason": "驾驶员 2026-11-02 决定：天界灵魄「光耀之锤」文字里的第二颗 1d10 是给自己或他人的临时生命值，不是伤害；读取器按骰子数误判。数据不改，临时生命值结构化留到战斗模块",
+    "basis": "TCE 天界灵魄；驾驶员 2026-11-02 决定"
+  },
+  {
+    "finding": "c13-summon-attack-snapshot",
+    "entry": "monster.celestial-spirit.tce",
+    "reason": "驾驶员 2026-11-02 决定：天界灵魄「光耀之锤」文字里的第二颗 1d10 是给自己或他人的临时生命值，不是伤害；读取器按骰子数误判。数据不改，临时生命值结构化留到战斗模块",
+    "basis": "TCE 天界灵魄；驾驶员 2026-11-02 决定"
+  }
 ]
