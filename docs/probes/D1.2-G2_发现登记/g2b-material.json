@@ -1,0 +1,148 @@
+{
+ "group": "g2b-material",
+ "stats": [
+  {
+   "check": "b11",
+   "key": "materialTextMentionsGp",
+   "value": 73
+  },
+  {
+   "check": "b11",
+   "key": "sourceConsumes",
+   "value": 32
+  },
+  {
+   "check": "b11",
+   "key": "sourceConsumesOptional",
+   "value": 1
+  },
+  {
+   "check": "b11",
+   "key": "sourceCostVsTextMismatch",
+   "value": 0
+  },
+  {
+   "check": "b11",
+   "key": "sourceHasCost",
+   "value": 73
+  },
+  {
+   "check": "b11",
+   "key": "spellsWithMaterial",
+   "value": 256
+  },
+  {
+   "check": "b11",
+   "key": "srdMaterialWithoutGpButDataHasGp",
+   "value": 1
+  }
+ ],
+ "findings": [
+  {
+   "id": "b11-consumed-missing",
+   "check": "b11",
+   "kind": "data-defect",
+   "fixSource": "import-5etools",
+   "entries": [
+    "spell.arcane-lock.phb 秘法锁",
+    "spell.astral-projection.phb 星界投影",
+    "spell.awaken.phb 启蒙术",
+    "spell.ceremony.xge 典礼术",
+    "spell.clone.phb 克隆术",
+    "spell.continual-flame.phb 不灭明焰",
+    "spell.create-homunculus.xge 创造人工生命体",
+    "spell.divination.phb 预言术",
+    "spell.find-familiar.phb 寻获魔宠",
+    "spell.glyph-of-warding.phb 守卫刻文",
+    "spell.greater-restoration.phb 高等复原术",
+    "spell.hallow.phb 圣居",
+    "spell.heroes-feast.phb 英雄宴",
+    "spell.illusory-script.phb 迷幻手稿",
+    "spell.invulnerability.xge 无敌术",
+    "spell.legend-lore.phb 通晓传奇",
+    "spell.magic-circle.phb 防护法阵",
+    "spell.magic-mouth.phb 魔嘴术",
+    "spell.mighty-fortress.xge 坚固堡垒",
+    "spell.nondetection.phb 回避侦测",
+    "spell.planar-binding.phb 异界誓缚",
+    "spell.raise-dead.phb 死者复活",
+    "spell.reincarnate.phb 转生术",
+    "spell.resurrection.phb 复生术",
+    "spell.revivify.phb 回生术",
+    "spell.sequester.phb 隔离术",
+    "spell.simulacrum.phb 拟像术",
+    "spell.stoneskin.phb 石肤术",
+    "spell.symbol.phb 徽记术",
+    "spell.teleportation-circle.phb 传送法阵",
+    "spell.true-resurrection.phb 完全复生术",
+    "spell.true-seeing.phb 真知术"
+   ],
+   "expected": "5etools 原始数据 components.m.consume；材料文字（“作为耗材”）",
+   "note": "材料文字写着会被消耗，components.m.consumed 是空的",
+   "selfCheck": true,
+   "count": 32
+  },
+  {
+   "id": "b11-cost-missing",
+   "check": "b11",
+   "kind": "data-defect",
+   "fixSource": "import-5etools",
+   "entries": [
+    "spell.arcane-lock.phb 秘法锁：至少价值25gp的金粉，作为该法术的耗材",
+    "spell.astral-projection.phb 星界投影：你必须为此法术影响的每个生物准备一枚至少价值 1000gp 的红锆石jacint",
+    "spell.augury.phb 卜筮术：价值至少25 gp，有着特殊记号的细棍、骨头、或类似的标记物",
+    "spell.awaken.phb 启蒙术：一块价值至少1,000gp 的玛瑙，作为该法术的耗材。",
+    "spell.ceremony.xge 典礼术：价值 25gp 的银粉，作为该法术的耗材",
+    "spell.chromatic-orb.phb 繁彩球：一颗价值至少50gp的钻石",
+    "spell.circle-of-death.phb 死亡法阵：一颗价值至少500gp的黑珍珠碾碎而成的粉末",
+    "spell.clairvoyance.phb 鹰眼术：价值至少 100gp 的法器，选择聆听时用一个以珠宝装饰的号角，选择观察时用一颗",
+    "spell.clone.phb 克隆术：一枚至少价值 1000gp 的钻石以及被克隆生物 1 立方寸的肉，作为该法术的耗",
+    "spell.contingency.phb 触发术：一个你自己的小雕像，由象牙雕制而成，并装饰以价值至少1,500gp的珠宝",
+    "spell.continual-flame.phb 不灭明焰：价值 50gp 的红宝石粉末，作为该法术的耗材",
+    "spell.create-homunculus.xge 创造人工生命体：黏土，灰尘，曼德拉草根，以上材料作为该法术的耗材，以及价值 1000gp 的镶嵌",
+    "spell.create-undead.phb 唤起死灵：每具尸体各一个装满墓土的陶罐、一个装满苦咸水的陶罐、跟一个价值150gp的黑玛瑙",
+    "spell.dawn.xge 拂晓：价值至少 100gp 的旭日坠饰",
+    "spell.divination.phb 预言术：与你信仰相称的熏香和祭品，总共价值至少 25gp，作为该法术的耗材",
+    "spell.drawmijs-instant-summons.phb 卓姆吉瞬间召唤：一个价值1,000gp的蓝宝石",
+    "spell.find-familiar.phb 寻获魔宠：将价值 10gp 的木炭、焚香以及香草，放在黄铜盆中烧尽，作为该法术的耗材",
+    "spell.find-the-path.phb 寻路术：一套价值至少100gp的占卜工具—像是骨头、象牙棍、卡片、牙齿、或雕刻符文—以及",
+    "spell.forbiddance.phb 禁制术：少量圣水，稀有焚香，以及至少价值 1000gp 的红宝石粉末",
+    "spell.forcecage.phb 力场监牢：价值 1,500gp 的红宝石尘",
+    "spell.gate.phb 异界之门：一枚价值至少 5000gp 的钻石",
+    "spell.glyph-of-warding.phb 守卫刻文：熏香和至少价值 200gp 的钻石粉，作为该法术的耗材",
+    "spell.greater-restoration.phb 高等复原术：价值至少 100gp 的钻石粉，作为该法术的耗材",
+    "spell.guards-and-wards.phb 铜墙铁壁：燃烧的熏香，少许硫磺和油，一条打结的绳子，少量掘土巨怪的血和一把至少价值 10g",
+    "spell.hallow.phb 圣居：价值至少 1000gp 的草药、油与熏香，作为该法术的耗材",
+    "spell.heroes-feast.phb 英雄宴：一个价值至少 1000gp 的镶饰宝石的碗，作为该法术的耗材",
+    "spell.holy-aura.phb 圣洁灵光：一个价值至少 1000gp 的小圣物箱，内含一件圣遗物，例如某位圣者长袍上的一片",
+    "spell.identify.phb 鉴定术：一颗价值至少 100gp 的珍珠和一根猫头鹰羽毛",
+    "spell.illusory-script.phb 迷幻手稿：价值至少 10gp 的铅料墨水，作为该法术的耗材",
+    "spell.imprisonment.phb 禁锢术：一张写有对目标详细描述的牛皮纸或者一个与目标相似的小雕像，以及对应所选择法术版本",
+    "spell.infernal-calling.xge 地狱呼唤：一块至少价值 999gp 的红宝石",
+    "spell.invulnerability.xge 无敌术：一小块价值至少 500gp 的精金，作为该法术的耗材",
+    "spell.legend-lore.phb 通晓传奇：价值至少 250gp 的熏香，作为该法术的耗材。以及每块价值至少 50gp 的四",
+    "spell.leomunds-secret-chest.phb 李欧蒙秘藏箱：一个 3×2×2 尺，由稀有材料制成的精致箱子至少价值 5000gp；以及由同样",
+    "spell.magic-circle.phb 防护法阵：总价值至少 100gp 的圣水或银、铁粉，作为该法术的耗材",
+    "spell.magic-jar.phb 魔魂壶：价值至少500gp的一个宝石、水晶、圣物匣、或其他装饰性容器",
+    "spell.magic-mouth.phb 魔嘴术：一小块蜂窝和至少价值 10gp 的翡翠粉，作为该法术的耗材",
+    "spell.mighty-fortress.xge 坚固堡垒：一颗至少价值 500gp 的钻石，作为该法术的耗材",
+    "spell.mordenkainens-magnificent-mansion.phb 魔邓肯豪宅术：一个象牙雕刻而成的正门模型、一小块打磨过的大理石、和一根银制小汤匙，各自价值至少",
+    "spell.mordenkainens-sword.phb 魔邓肯之剑：一把白金制成，铜锌合金剑柄的宝剑模型，价值250gp",
+    "spell.nondetection.phb 回避侦测：一撮价值至少 25gp 的钻石粉末，撒在目标身上，作为该法术的耗材",
+    "spell.planar-binding.phb 异界誓缚：一枚价值至少 1000gp 的宝石，作为该法术的耗材",
+    "spell.plane-shift.phb 位面转移：一根价值至少250gp，分叉的金属棒，调谐于一个特定的存在位面",
+    "spell.programmed-illusion.phb 预置幻影：一点羊毛和价值至少 25gp 的翡翠粉末",
+    "spell.project-image.phb 投影术：一个由价值至少5gp的材料制成的一个你的小模型",
+    "spell.raise-dead.phb 死者复活：一颗至少价值 500gp 的钻石，作为该法术的耗材",
+    "spell.reincarnate.phb 转生术：价值至少 1000gp 的稀有油和软膏，作为该法术的耗材",
+    "spell.resurrection.phb 复生术：一颗至少价值 1000gp 的钻石，作为该法术的耗材",
+    "spell.revivify.phb 回生术：消耗总价值至少 300gp 的钻石",
+    "spell.scrying.phb 探知术：一个价值至少1,000gp的法器，像是水晶球、银制镜子、或一个盛装圣水的圣水盆"
+   ],
+   "expected": "5etools 原始数据 components.m.cost（铜币）；材料文字里的价值",
+   "note": "材料写着价值（如 25gp 的银粉），components.m.cost 是空的；背包扣除材料、判断买不买得起都读不到价格",
+   "selfCheck": true,
+   "count": 73
+  }
+ ]
+}

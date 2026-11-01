@@ -1,0 +1,164 @@
+{
+ "group": "g2b-effects",
+ "stats": [
+  {
+   "check": "b2",
+   "key": "effects",
+   "value": 601
+  },
+  {
+   "check": "b2",
+   "key": "formulas",
+   "value": 66
+  },
+  {
+   "check": "b2",
+   "key": "foundryNotes",
+   "value": 85
+  },
+  {
+   "check": "b2",
+   "key": "foundryNotes.companion",
+   "value": 6
+  },
+  {
+   "check": "b2",
+   "key": "foundryNotes.derived",
+   "value": 16
+  },
+  {
+   "check": "b2",
+   "key": "foundryNotes.infusion",
+   "value": 15
+  },
+  {
+   "check": "b2",
+   "key": "scaleValues",
+   "value": 19
+  }
+ ],
+ "findings": [
+  {
+   "id": "b2-companion-boost",
+   "check": "b2",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "monster.beast-of-the-land.tce 大地野兽",
+    "monster.beast-of-the-sea.tce 海洋野兽",
+    "monster.beast-of-the-sky.tce 天空野兽",
+    "monster.homunculus-servant.tce 人工生命仆从",
+    "monster.steel-defender.tce 钢铁守卫",
+    "monster.wildfire-spirit.tce 野火精魂"
+   ],
+   "expected": "TCE 游侠/奇械师/德鲁伊的同伴条目原文",
+   "note": "同伴（野兽伙伴、钢铁守卫等）随主人职业等级变强的数值只在说明文字里；需要的话在 G2c（怪物与战斗）统一设计",
+   "count": 6
+  },
+  {
+   "id": "b2-derived-in-note",
+   "check": "b2",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.barbarian-brutal-critical-1-die.phb 凶蛮重击(1骰)：Foundry 效果未映射：flags.dnd5e.meleeCriticalD",
+    "feature.barbarian-brutal-critical-2-dice.phb 凶蛮重击(2骰)：Foundry 效果未映射：flags.dnd5e.meleeCriticalD",
+    "feature.barbarian-brutal-critical-3-dice.phb 凶蛮重击(3骰)：Foundry 效果未映射：flags.dnd5e.meleeCriticalD",
+    "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.d",
+    "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.s",
+    "feature.enhanced-defense.tce 增强防御：Foundry 效果未映射：system.armor.magicalBonus",
+    "feature.fighter-champion-improved-critical.phb 精通重击：Foundry 效果未映射：flags.dnd5e.weaponCritical",
+    "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.con.bonus",
+    "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.str.bonus",
+    "feature.harengon-hare-trigger.mpmm 野兔敏锐：Foundry 效果未映射：system.attributes.init.tot",
+    "feature.helm-of-awareness.tce 警觉之盔：Foundry 效果未映射：flags.dnd5e.initiativeAdv",
+    "feature.lizardfolk-natural-armor.vgm 天生护甲：Foundry 效果未映射：system.attributes.ac.calc",
+    "feature.repulsion-shield.tce 斥力之盾：Foundry 效果未映射：system.armor.magicalBonus",
+    "feature.sorcerer-draconic-bloodline-draconic-resilience.phb 龙族体魄：Foundry 效果未映射：system.attributes.ac.calc",
+    "feature.stone-rune.tce 岩石符文：Foundry 效果未映射：system.attributes.senses.d",
+    "item.robe-of-the-archmagi.dmg 大法师法袍：Foundry 效果未映射：system.attributes.ac.calc",
+    "monster.homunculus-servant.tce 人工生命仆从：Foundry 效果：奇械师的领导力（system.attributes.hp.",
+    "monster.steel-defender.tce 钢铁守卫：Foundry 效果：奇械师的领导力（system.attributes.hp."
+   ],
+   "expected": "各特性原文",
+   "note": "影响派生数值的效果被留在说明文字里：龙脉术士的龙族韧性（AC 13+敏捷）、蜥蜴人的天生护甲、魔鬼视界/石之符文（黑暗视觉）、兔人的敏捷先攻、寒霜符文（力量/体质豁免与检定）、野蛮人的残暴重击（暴击额外骰）、冠军的强化重击（暴击范围）、觉知头盔（先攻优势）",
+   "count": 18
+  },
+  {
+   "id": "b2-formula-unsupported-variable",
+   "check": "b2",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.wizard-school-of-abjuration-arcane-ward.phb 奥术守御：2 * class.wizard.level + floor((int.score - 10) / 2)（int.score）"
+   ],
+   "expected": "公式引擎与格式定义",
+   "note": "公式用到了公式引擎不认识的变量",
+   "count": 1
+  },
+  {
+   "id": "b2-infusion-notes",
+   "check": "b2",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "feature.arcane-propulsion-armor.tce 奥能动力甲",
+    "feature.armor-of-magical-strength.tce 魔法力量护甲",
+    "feature.boots-of-the-winding-path.tce 折返之靴",
+    "feature.enhanced-arcane-focus.tce 增强奥术法器",
+    "feature.enhanced-defense.tce 增强防御",
+    "feature.enhanced-weapon.tce 增强武器",
+    "feature.helm-of-awareness.tce 警觉之盔",
+    "feature.mind-sharpener.tce 思维砥石",
+    "feature.radiant-weapon.tce 光耀武器",
+    "feature.repeating-shot.tce 连射武器",
+    "feature.replicate-magic-item.tce 仿制魔法物品",
+    "feature.repulsion-shield.tce 斥力之盾",
+    "feature.resistant-armor.tce 抗力护甲",
+    "feature.returning-weapon.tce 回力武器",
+    "feature.spell-refueling-ring.tce 法力恢复戒指"
+   ],
+   "expected": "TCE 奇械师注法（Infusions）原文",
+   "note": "奇械师注法对物品的改动（改名、加属性、加次数、加魔法加值）只留了 Foundry 字段的说明文字；注法属于“给物品加东西”的独立系统，是否结构化由驾驶员决定（人物卡的奇械师可先用文字）",
+   "count": 15
+  },
+  {
+   "id": "b2-when-text",
+   "check": "b2",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.barbarian-rage.phb 狂暴：狂暴中",
+    "feature.barbarian-unarmored-defense.phb 无甲防御：未穿护甲",
+    "feature.monk-unarmored-defense.phb 无甲防御：未穿护甲且未持盾"
+   ],
+   "expected": "公式引擎与格式定义",
+   "note": "效果的触发条件只有文字（如“狂暴中”“未穿护甲”），程序判断不了",
+   "count": 3
+  },
+  {
+   "id": "b2-zero-placeholder",
+   "check": "b2",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feat.dual-wielder.phb 双持客（ac.amount）",
+    "feat.mobile.phb 灵活移动（speed.amount）",
+    "feat.squat-nimbleness.xge 低身机敏（speed.amount）",
+    "feature.artificer-armorer-powered-steps.tce 动力步伐（speed.amount）",
+    "feature.artificer-artillerist-arcane-firearm.tce 奥术枪械（damageBonus.amount）",
+    "feature.barbarian-fast-movement.phb 快速移动（speed.amount）",
+    "feature.hill-dwarf-dwarven-toughness.phb 矮人刚毅（hpMax.perLevel）",
+    "feature.lizardfolk-natural-armor.dmg 天生护甲（ac.amount）",
+    "feature.monk-unarmored-movement.phb 无甲移动（speed.amount）",
+    "feature.rogue-scout-superior-mobility.xge 优异灵活（speed.amount）",
+    "feature.sorcerer-draconic-bloodline-dragon-wings.phb 龙翼（speed.amount）",
+    "feature.troglodyte-natural-armor.dmg 天生护甲（ac.amount）",
+    "item.gloves-of-thievery.dmg 窃贼手套（skill.amount）"
+   ],
+   "expected": "各特性/专长/物品原文（书上有具体数值）",
+   "note": "效果的数值是 0，其实是占位（Foundry 的公式没有解析出来）：亚种/专长/特性的速度加成、护甲加值、生命上限加成、技能加值等书上有具体数字",
+   "count": 13
+  }
+ ]
+}

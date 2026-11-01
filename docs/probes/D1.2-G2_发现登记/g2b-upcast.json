@@ -1,0 +1,269 @@
+{
+ "group": "g2b-upcast",
+ "stats": [
+  {
+   "check": "b8",
+   "key": "comparableWithApi",
+   "value": 32
+  },
+  {
+   "check": "b8",
+   "key": "noTag.area",
+   "value": 3
+  },
+  {
+   "check": "b8",
+   "key": "noTag.duration",
+   "value": 12
+  },
+  {
+   "check": "b8",
+   "key": "noTag.heal",
+   "value": 3
+  },
+  {
+   "check": "b8",
+   "key": "noTag.other",
+   "value": 10
+  },
+  {
+   "check": "b8",
+   "key": "noTag.summon",
+   "value": 20
+  },
+  {
+   "check": "b8",
+   "key": "noTag.targets",
+   "value": 32
+  },
+  {
+   "check": "b8",
+   "key": "spellsWithHigherLevelText",
+   "value": 154
+  },
+  {
+   "check": "b8",
+   "key": "tagMatchesApi",
+   "value": 32
+  },
+  {
+   "check": "b8",
+   "key": "taggedIn5etools",
+   "value": 74
+  },
+  {
+   "check": "b8",
+   "key": "withStructure",
+   "value": 0
+  }
+ ],
+ "findings": [
+  {
+   "id": "b8-upcast-no-structure",
+   "check": "b8",
+   "kind": "data-defect",
+   "fixSource": "import-5etools",
+   "entries": [
+    "spell.absorb-elements.xge 吸收元素",
+    "spell.aganazzars-scorcher.xge 阿迦纳萨喷火术",
+    "spell.aid.phb 援助术",
+    "spell.animal-friendship.phb 化兽为友",
+    "spell.animal-messenger.phb 动物信使",
+    "spell.animate-dead.phb 活化死尸",
+    "spell.animate-objects.phb 活化物件",
+    "spell.antagonize.bmt 敌意术",
+    "spell.armor-of-agathys.phb 黯冰狱铠",
+    "spell.arms-of-hadar.phb 哈达之臂",
+    "spell.bane.phb 灾祸术",
+    "spell.banishment.phb 放逐术",
+    "spell.bestow-curse.phb 降咒",
+    "spell.bigbys-hand.phb 毕格比之手",
+    "spell.bless.phb 祝福术",
+    "spell.blight.phb 枯萎术",
+    "spell.blindness-deafness.phb 目盲术/耳聋术",
+    "spell.bones-of-the-earth.xge 地之骨",
+    "spell.branding-smite.phb 印记斩",
+    "spell.burning-hands.phb 燃烧之手",
+    "spell.call-lightning.phb 召雷术",
+    "spell.catapult.xge 弹射术",
+    "spell.catnap.xge 假寐术",
+    "spell.cause-fear.xge 造成恐惧",
+    "spell.chain-lightning.phb 连锁闪电",
+    "spell.chaos-bolt.xge 混乱箭",
+    "spell.charm-monster.xge 魅惑怪物",
+    "spell.charm-person.phb 魅惑类人",
+    "spell.chromatic-orb.phb 繁彩球",
+    "spell.circle-of-death.phb 死亡法阵",
+    "spell.cloud-of-daggers.phb 匕首之云",
+    "spell.cloudkill.phb 死云术",
+    "spell.color-spray.phb 七彩喷射",
+    "spell.command.phb 命令术",
+    "spell.cone-of-cold.phb 寒冰锥",
+    "spell.confusion.phb 困惑术",
+    "spell.conjure-animals.phb 咒唤兽群",
+    "spell.conjure-celestial.phb 咒唤圣光",
+    "spell.conjure-elemental.phb 咒唤元素",
+    "spell.conjure-fey.phb 咒唤妖精",
+    "spell.conjure-minor-elementals.phb 咒唤微元素群",
+    "spell.conjure-woodland-beings.phb 咒唤林地卫士",
+    "spell.cordon-of-arrows.phb 警戒箭阵",
+    "spell.counterspell.phb 法术反制",
+    "spell.create-or-destroy-water.phb 造水术/枯水术",
+    "spell.create-undead.phb 唤起死灵",
+    "spell.creation.phb 造物术",
+    "spell.crown-of-stars.xge 众星冠冕",
+    "spell.cure-wounds.phb 疗伤术",
+    "spell.danse-macabre.xge 骷髅之舞"
+   ],
+   "expected": "PHB 第 11 章各法术“升环施法”；5etools 的 {@scaledamage} 标签；5e API 的 damage_at_slot_level",
+   "note": "升环效果只有文字，没有结构：火球术用 5 环施放该掷几个骰，程序算不出来",
+   "count": 154
+  },
+  {
+   "id": "b8-upcast-no-tag-area",
+   "check": "b8",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.confusion.phb 困惑术",
+    "spell.fog-cloud.phb 云雾术",
+    "spell.mordenkainens-private-sanctum.phb 魔邓肯私人密室"
+   ],
+   "expected": "PHB、XGE、TCE 各法术原文",
+   "note": "没有 5etools 标签的升环（范围变大），需要自己对照原书结构化",
+   "count": 3
+  },
+  {
+   "id": "b8-upcast-no-tag-duration",
+   "check": "b8",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.animal-messenger.phb 动物信使",
+    "spell.bestow-curse.phb 降咒",
+    "spell.dominate-beast.phb 支配野兽",
+    "spell.dominate-monster.phb 支配怪物",
+    "spell.dominate-person.phb 支配类人",
+    "spell.geas.phb 指使术",
+    "spell.hex.phb 脆弱诅咒",
+    "spell.hunters-mark.phb 猎人印记",
+    "spell.magic-circle.phb 防护法阵",
+    "spell.major-image.phb 高等幻影",
+    "spell.mass-suggestion.phb 群体暗示术",
+    "spell.planar-binding.phb 异界誓缚"
+   ],
+   "expected": "PHB、XGE、TCE 各法术原文",
+   "note": "没有 5etools 标签的升环（持续时间变长），需要自己对照原书结构化",
+   "count": 12
+  },
+  {
+   "id": "b8-upcast-no-tag-heal",
+   "check": "b8",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.aid.phb 援助术",
+    "spell.false-life.phb 虚假生命",
+    "spell.heal.phb 医疗术"
+   ],
+   "expected": "PHB、XGE、TCE 各法术原文",
+   "note": "没有 5etools 标签的升环（治疗量），需要自己对照原书结构化",
+   "count": 3
+  },
+  {
+   "id": "b8-upcast-no-tag-other",
+   "check": "b8",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.animate-objects.phb 活化物件",
+    "spell.armor-of-agathys.phb 黯冰狱铠",
+    "spell.cordon-of-arrows.phb 警戒箭阵",
+    "spell.flame-arrows.xge 烈焰箭矢",
+    "spell.globe-of-invulnerability.phb 法术无效结界",
+    "spell.magic-missile.phb 魔法飞弹",
+    "spell.magic-weapon.phb 魔化武器",
+    "spell.melfs-minute-meteors.xge 马友夫微流星",
+    "spell.scorching-ray.phb 灼热射线",
+    "spell.shadow-blade.xge 幽影刃"
+   ],
+   "expected": "PHB、XGE、TCE 各法术原文",
+   "note": "没有 5etools 标签的升环（其他，只留文字并标“不自动计算”），需要自己对照原书结构化",
+   "count": 10
+  },
+  {
+   "id": "b8-upcast-no-tag-summon",
+   "check": "b8",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.conjure-animals.phb 咒唤兽群",
+    "spell.conjure-celestial.phb 咒唤圣光",
+    "spell.conjure-elemental.phb 咒唤元素",
+    "spell.conjure-fey.phb 咒唤妖精",
+    "spell.conjure-minor-elementals.phb 咒唤微元素群",
+    "spell.conjure-woodland-beings.phb 咒唤林地卫士",
+    "spell.creation.phb 造物术",
+    "spell.infernal-calling.xge 地狱呼唤",
+    "spell.spirit-of-death.bmt 死神灵魄",
+    "spell.summon-aberration.tce 异怪召唤术",
+    "spell.summon-beast.tce 野兽召唤术",
+    "spell.summon-celestial.tce 天界召唤术",
+    "spell.summon-construct.tce 构装召唤术",
+    "spell.summon-elemental.tce 元素召唤术",
+    "spell.summon-fey.tce 妖精召唤术",
+    "spell.summon-fiend.tce 邪魔召唤术",
+    "spell.summon-greater-demon.xge 高阶恶魔召唤术",
+    "spell.summon-lesser-demons.xge 召唤次级恶魔",
+    "spell.summon-shadowspawn.tce 暗影衍体召唤术",
+    "spell.summon-undead.tce 亡灵召唤术"
+   ],
+   "expected": "PHB、XGE、TCE 各法术原文",
+   "note": "没有 5etools 标签的升环（召唤物随环级变强），需要自己对照原书结构化",
+   "count": 20
+  },
+  {
+   "id": "b8-upcast-no-tag-targets",
+   "check": "b8",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.animal-friendship.phb 化兽为友",
+    "spell.animate-dead.phb 活化死尸",
+    "spell.bane.phb 灾祸术",
+    "spell.banishment.phb 放逐术",
+    "spell.bless.phb 祝福术",
+    "spell.blindness-deafness.phb 目盲术/耳聋术",
+    "spell.bones-of-the-earth.xge 地之骨",
+    "spell.catnap.xge 假寐术",
+    "spell.cause-fear.xge 造成恐惧",
+    "spell.chain-lightning.phb 连锁闪电",
+    "spell.charm-monster.xge 魅惑怪物",
+    "spell.charm-person.phb 魅惑类人",
+    "spell.command.phb 命令术",
+    "spell.counterspell.phb 法术反制",
+    "spell.create-or-destroy-water.phb 造水术/枯水术",
+    "spell.create-undead.phb 唤起死灵",
+    "spell.crown-of-stars.xge 众星冠冕",
+    "spell.danse-macabre.xge 骷髅之舞",
+    "spell.dispel-magic.phb 解除魔法",
+    "spell.elemental-bane.xge 元素灾厄",
+    "spell.enhance-ability.phb 强化属性",
+    "spell.etherealness.phb 以太化",
+    "spell.fly.phb 飞行术",
+    "spell.heroism.phb 英雄气概",
+    "spell.hold-monster.phb 定身怪物",
+    "spell.hold-person.phb 定身类人",
+    "spell.intellect-fortress.tce 智能壁垒",
+    "spell.invisibility.phb 隐形术",
+    "spell.longstrider.phb 大步奔行",
+    "spell.modify-memory.phb 篡改记忆",
+    "spell.tashas-mind-whip.tce 塔莎心灵鞭",
+    "spell.tiny-servant.xge 迷你仆役"
+   ],
+   "expected": "PHB、XGE、TCE 各法术原文",
+   "note": "没有 5etools 标签的升环（目标/数量增加），需要自己对照原书结构化",
+   "count": 32
+  }
+ ]
+}

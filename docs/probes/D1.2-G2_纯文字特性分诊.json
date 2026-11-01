@@ -1,0 +1,8130 @@
+{
+ "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
+ "counts": {
+  "A": 144,
+  "B": 412,
+  "C": 584
+ },
+ "features": [
+  {
+   "id": "feature.acolyte-feature-shelter-of-the-faithful.phb",
+   "name": "特性：信仰庇护",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.archery.phb",
+   "name": "箭术",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-danger-sense.phb",
+   "name": "危机感应",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.barbarian-extra-attack.phb",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-feral-instinct.phb",
+   "name": "野性直觉",
+   "cls": "A",
+   "tags": [
+    "先攻被动"
+   ]
+  },
+  {
+   "id": "feature.barbarian-indomitable-might.phb",
+   "name": "不屈勇武",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-berserker-frenzy.phb",
+   "name": "狂怒",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-berserker-intimidating-presence.phb",
+   "name": "威慑之姿",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-berserker-mindless-rage.phb",
+   "name": "无我狂暴",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-berserker-retaliation.phb",
+   "name": "报偿",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-persistent-rage.phb",
+   "name": "持久狂暴",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-primal-champion.phb",
+   "name": "原初斗士",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-primal-path.phb",
+   "name": "原初道途",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-reckless-attack.phb",
+   "name": "鲁莽攻击",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.bard-bard-college-feature.phb",
+   "name": "吟游学院特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-bard-college-feature.phb-2",
+   "name": "吟游学院特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-bard-college.phb",
+   "name": "吟游诗人学院",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-bardic-inspiration-d10.phb",
+   "name": "诗人激励(d10)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-bardic-inspiration-d12.phb",
+   "name": "诗人激励(d12)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-bardic-inspiration-d8.phb",
+   "name": "诗人激励(d8)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-college-of-lore-additional-magical-secrets.phb",
+   "name": "额外魔法奥秘",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-lore-bonus-proficiencies.phb",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.bard-countercharm.phb",
+   "name": "反迷惑",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.bard-expertise.phb",
+   "name": "专精",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-expertise.phb-2",
+   "name": "专精",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-magical-secrets.phb",
+   "name": "魔法奥秘",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-magical-secrets.phb-2",
+   "name": "魔法奥秘",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-magical-secrets.phb-3",
+   "name": "魔法奥秘",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-song-of-rest-d10.phb",
+   "name": "休憩曲(d10)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-song-of-rest-d12.phb",
+   "name": "休憩曲(d12)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-song-of-rest-d6.phb",
+   "name": "休憩曲(d6)",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.bard-song-of-rest-d8.phb",
+   "name": "休憩曲(d8)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-channel-divinity-turn-undead.phb",
+   "name": "引导神力：驱散不死生物",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.cleric-channel-divinity.phb-2",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-channel-divinity.phb-3",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-destroy-undead-cr-1-2.phb",
+   "name": "摧毁不死生物（CR 1/2）",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-destroy-undead-cr-1.phb",
+   "name": "摧毁不死生物（CR 1）",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-destroy-undead-cr-2.phb",
+   "name": "摧毁不死生物 (CR 2)",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-destroy-undead-cr-3.phb",
+   "name": "摧毁不死生物 (CR 3)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-destroy-undead-cr-4.phb",
+   "name": "摧毁不死生物 (CR 4)",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-divine-domain-feature.phb",
+   "name": "领域特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-divine-domain-feature.phb-2",
+   "name": "领域特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-divine-domain-feature.phb-3",
+   "name": "领域特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-divine-domain-feature.phb-4",
+   "name": "领域特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-divine-domain.phb",
+   "name": "神圣领域",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-divine-intervention-improvement.phb",
+   "name": "神圣干预增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-life-domain-blessed-healer.phb",
+   "name": "神佑医者",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-life-domain-bonus-proficiency.phb",
+   "name": "附赠熟练项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-life-domain-channel-divinity-preserve-life.phb",
+   "name": "引导神力：维持生命",
+   "cls": "A",
+   "tags": [
+    "生命上限"
+   ]
+  },
+  {
+   "id": "feature.cleric-life-domain-divine-strike.phb",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-life-domain-supreme-healing.phb",
+   "name": "极效治疗",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.defense.phb",
+   "name": "防御",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dragonborn-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dragonborn-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dragonborn-draconic-ancestry.phb",
+   "name": "龙族血统",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dragonborn-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dragonborn-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-archdruid.phb",
+   "name": "大德鲁伊",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-beast-spells.phb",
+   "name": "兽形施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-land-bonus-cantrip.phb",
+   "name": "附赠戏法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-land-circle-spells.phb",
+   "name": "结社法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-land-lands-stride.phb",
+   "name": "大地行者",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-land-natures-sanctuary.phb",
+   "name": "自然庇护",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-land-natures-ward.phb",
+   "name": "自然之护",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-druid-circle-feature.phb",
+   "name": "德鲁伊结社特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-druid-circle-feature.phb-2",
+   "name": "德鲁伊结社特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-druid-circle-feature.phb-3",
+   "name": "德鲁伊结社特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-druid-circle.phb",
+   "name": "德鲁伊结社",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-druidic.phb",
+   "name": "德鲁伊语",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-timeless-body.phb",
+   "name": "不朽身",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-wild-shape-improvement.phb",
+   "name": "荒野形态增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-wild-shape-improvement.phb-2",
+   "name": "荒野形态增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dueling.phb",
+   "name": "对决",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.dwarf-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dwarf-darkvision.phb",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dwarf-dwarven-combat-training.phb",
+   "name": "矮人战斗训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dwarf-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dwarf-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dwarf-speed.phb",
+   "name": "速度",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dwarf-stonecunning.phb",
+   "name": "石中精妙",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dwarf-tool-proficiency.phb",
+   "name": "工具熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.eldritch-spear.phb",
+   "name": "魔能长枪",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.elf-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.elf-darkvision.phb",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.elf-fey-ancestry.phb",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.elf-keen-senses.phb",
+   "name": "敏锐感官",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.elf-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.elf-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.elf-trance.phb",
+   "name": "出神",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.eyes-of-the-rune-keeper.phb",
+   "name": "符文守护者之眼",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-action-surge-two-uses.phb",
+   "name": "动作如潮(2次)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-champion-additional-fighting-style.phb",
+   "name": "额外战斗风格",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-champion-superior-critical.phb",
+   "name": "高效重击",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.fighter-champion-survivor.phb",
+   "name": "生还者",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.fighter-extra-attack-2.phb",
+   "name": "额外攻击(2)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-fighting-style.phb",
+   "name": "战斗风格",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.fighter-indomitable-two-uses.phb",
+   "name": "不屈(2次)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-martial-archetype.phb",
+   "name": "武术范型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gaze-of-two-minds.phb",
+   "name": "共视感官",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.gnome-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gnome-darkvision.phb",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gnome-gnome-cunning.phb",
+   "name": "侏儒狡黠",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.gnome-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gnome-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.great-weapon-fighting.phb",
+   "name": "巨武器战斗",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-elf-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-elf-darkvision.phb",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-elf-fey-ancestry.phb",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.half-elf-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-elf-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-elf-skill-versatility.phb",
+   "name": "多才多艺",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.half-orc-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-orc-darkvision.phb",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-orc-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.half-orc-menacing.phb",
+   "name": "凶恶",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.half-orc-savage-attacks.phb",
+   "name": "凶蛮攻击",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.half-orc-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.halfling-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.halfling-brave.phb",
+   "name": "勇气",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.halfling-halfling-nimbleness.phb",
+   "name": "半身人灵巧",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.halfling-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.halfling-lucky.phb",
+   "name": "幸运",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.halfling-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.high-elf-cantrip.phb",
+   "name": "戏法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.high-elf-elf-weapon-training.phb",
+   "name": "精灵武器训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.high-elf-extra-language.phb",
+   "name": "额外语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.human-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.human-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.human-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lifedrinker.phb",
+   "name": "饮命者",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lightfoot-halfling-naturally-stealthy.phb",
+   "name": "天生善匿",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-empty-body.phb",
+   "name": "空灵体",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.monk-evasion.phb",
+   "name": "反射闪避",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.monk-extra-attack.phb",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-flurry-of-blows.phb",
+   "name": "疾风连击",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-ki-empowered-strikes.phb",
+   "name": "真气驻拳",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.monk-martial-arts.phb",
+   "name": "武艺",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.monk-monastic-tradition-feature.phb",
+   "name": "宗派特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-monastic-tradition-feature.phb-2",
+   "name": "宗派特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-monastic-tradition-feature.phb-3",
+   "name": "宗派特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-monastic-tradition.phb",
+   "name": "修行宗派",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-patient-defense.phb",
+   "name": "坚强防御",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-perfect-self.phb",
+   "name": "超凡入圣",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-purity-of-body.phb",
+   "name": "百病不侵",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-slow-fall.phb",
+   "name": "轻身坠",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.monk-step-of-the-wind.phb",
+   "name": "疾步如风",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-stillness-of-mind.phb",
+   "name": "心如止水",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-stunning-strike.phb",
+   "name": "震慑拳",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-timeless-body.phb",
+   "name": "不朽身",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-tongue-of-the-sun-and-moon.phb",
+   "name": "天语通",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-unarmored-movement-improvement.phb",
+   "name": "无甲移动增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-open-hand-open-hand-technique.phb",
+   "name": "散打技巧",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-open-hand-quivering-palm.phb",
+   "name": "渗透劲",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-open-hand-tranquility.phb",
+   "name": "宁神境",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.one-with-shadows.phb",
+   "name": "融身入影",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.pact-of-the-chain.phb",
+   "name": "链之魔契",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-aura-improvements.phb",
+   "name": "灵光增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-aura-of-courage.phb",
+   "name": "勇气灵光",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-aura-of-protection.phb",
+   "name": "守护灵光",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.paladin-divine-health.phb",
+   "name": "神佑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-divine-smite.phb",
+   "name": "至圣斩",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-extra-attack.phb",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-fighting-style.phb",
+   "name": "战斗风格",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-improved-divine-smite.phb",
+   "name": "精通至圣斩",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-devotion-aura-of-devotion.phb",
+   "name": "奉献灵光",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-devotion-channel-divinity.phb",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-devotion-oath-spells.phb",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-devotion-purity-of-spirit.phb",
+   "name": "纯净之魂",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-devotion-tenets-of-devotion.phb",
+   "name": "奉献之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-sacred-oath-feature.phb",
+   "name": "圣誓特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-sacred-oath-feature.phb-2",
+   "name": "圣誓特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-sacred-oath-feature.phb-3",
+   "name": "圣誓特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-sacred-oath.phb",
+   "name": "神圣誓言",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.protection.phb",
+   "name": "守护",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-extra-attack.phb",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-favored-enemy-and-natural-explorer-improvements.phb",
+   "name": "增加宿敌及偏好环境",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-favored-enemy-improvement.phb",
+   "name": "增加宿敌",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-favored-enemy.phb",
+   "name": "宿敌",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-feral-senses.phb",
+   "name": "野性感官",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-fighting-style.phb",
+   "name": "战斗风格",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-foe-slayer.phb",
+   "name": "屠灭众敌",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-hide-in-plain-sight.phb",
+   "name": "蔽于平野",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-colossus-slayer.phb",
+   "name": "巨像屠夫",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-defensive-tactics.phb",
+   "name": "防守战术",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-hunter-escape-the-horde.phb",
+   "name": "冲出重围",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-evasion.phb",
+   "name": "反射闪避",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-giant-killer.phb",
+   "name": "巨人杀手",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-horde-breaker.phb",
+   "name": "灭族者",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-hunter-hunters-prey.phb",
+   "name": "猎杀技艺",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-hunter-multiattack-defense.phb",
+   "name": "多重防御",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-hunter-multiattack.phb",
+   "name": "多重攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-hunter-stand-against-the-tide.phb",
+   "name": "逆潮而立",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-steel-will.phb",
+   "name": "钢铁意志",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-superior-hunters-defense.phb",
+   "name": "高效防守战术",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-hunter-uncanny-dodge.phb",
+   "name": "直觉闪避",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-volley.phb",
+   "name": "箭雨",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-hunter-whirlwind-attack.phb",
+   "name": "剑刃风暴",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-lands-stride.phb",
+   "name": "大地行者",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-natural-explorer-improvement.phb",
+   "name": "增加偏好环境",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-natural-explorer.phb",
+   "name": "自然探索者",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.ranger-primeval-awareness.phb",
+   "name": "原初意识",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ranger-ranger-archetype.phb",
+   "name": "游侠范型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ranger-vanish.phb",
+   "name": "无踪步",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.repelling-blast.phb",
+   "name": "斥力魔爆",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rock-gnome-artificers-lore.phb",
+   "name": "巧匠学识",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rock-gnome-tinker.phb",
+   "name": "修补匠",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.rogue-blindsense.phb",
+   "name": "听声辨位",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-cunning-action.phb",
+   "name": "灵巧动作",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-elusive.phb",
+   "name": "飘忽不定",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-evasion.phb",
+   "name": "反射闪避",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-expertise.phb",
+   "name": "专精",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-expertise.phb-2",
+   "name": "专精",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-roguish-archetype.phb",
+   "name": "游荡者范型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-slippery-mind.phb",
+   "name": "圆滑心智",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.rogue-thief-fast-hands.phb",
+   "name": "快手",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-thief-second-story-work.phb",
+   "name": "梁上君子",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.rogue-thief-supreme-sneak.phb",
+   "name": "极效潜行",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-thief-thiefs-reflexes.phb",
+   "name": "窃盗本能",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-thief-use-magic-device.phb",
+   "name": "使用魔法装置",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-thieves-cant.phb",
+   "name": "盗贼黑话",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-uncanny-dodge.phb",
+   "name": "直觉闪避",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-draconic-bloodline-dragon-ancestor.phb",
+   "name": "巨龙先祖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-draconic-bloodline-elemental-affinity.phb",
+   "name": "元素亲和",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-flexible-casting.phb",
+   "name": "灵活施法",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-font-of-magic.phb",
+   "name": "魔力泉涌",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-metamagic.phb",
+   "name": "超魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-metamagic.phb-2",
+   "name": "超魔法",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-metamagic.phb-3",
+   "name": "超魔法",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-sorcerous-origin-feature.phb",
+   "name": "术法起源特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-sorcerous-origin-feature.phb-2",
+   "name": "术法起源特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-sorcerous-origin-feature.phb-3",
+   "name": "术法起源特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-sorcerous-origin.phb",
+   "name": "术法起源",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.thirsting-blade.phb",
+   "name": "饥渴魔刃",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tiefling-age.phb",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tiefling-darkvision.phb",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tiefling-hellish-resistance.phb",
+   "name": "炼狱抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.tiefling-languages.phb",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tiefling-size.phb",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.two-weapon-fighting.phb",
+   "name": "双武器战斗",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.voice-of-the-chain-master.phb",
+   "name": "缚主之音",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-eldritch-invocations.phb",
+   "name": "魔能祈唤",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-otherworldly-patron-feature.phb",
+   "name": "异界宗主特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-otherworldly-patron-feature.phb-2",
+   "name": "异界宗主特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-otherworldly-patron-feature.phb-3",
+   "name": "异界宗主特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-otherworldly-patron.phb",
+   "name": "异界宗主",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-pact-boon.phb",
+   "name": "魔契恩泽",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-pact-magic.phb",
+   "name": "契约魔法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-fiend-dark-ones-blessing.phb",
+   "name": "黑暗赐福",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.witch-sight.phb",
+   "name": "巫术视界",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-arcane-tradition-feature.phb",
+   "name": "奥术传承特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-arcane-tradition-feature.phb-2",
+   "name": "奥术传承特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-arcane-tradition-feature.phb-3",
+   "name": "奥术传承特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-arcane-tradition.phb",
+   "name": "奥术传承",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-school-of-evocation-empowered-evocation.phb",
+   "name": "强效塑能",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-evocation-evocation-savant.phb",
+   "name": "塑能学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-evocation-potent-cantrip.phb",
+   "name": "强力戏法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-evocation-sculpt-spells.phb",
+   "name": "法术塑形",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-spell-mastery.phb",
+   "name": "法术精通",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-aspect-of-the-beast.phb",
+   "name": "兽之形",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-bear.phb",
+   "name": "熊",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-bear.phb-2",
+   "name": "熊",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-bear.phb-3",
+   "name": "熊",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-spirit-seeker.phb",
+   "name": "精魄寻者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-spirit-walker.phb",
+   "name": "精魂行者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-totem-spirit.phb",
+   "name": "图腾精魄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-totemic-attunement.phb",
+   "name": "图腾同调",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-wolf.phb",
+   "name": "狼",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-wolf.phb-2",
+   "name": "狼",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-totem-warrior-wolf.phb-3",
+   "name": "狼",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-valor-battle-magic.phb",
+   "name": "战斗魔法",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-valor-bonus-proficiencies.phb",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-valor-combat-inspiration.phb",
+   "name": "战斗激励",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-valor-extra-attack.phb",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.breath-of-winter.phb",
+   "name": "寒冬之息",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.charlatan-feature-false-identity.phb",
+   "name": "特性：虚假身份",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.clench-of-the-north-wind.phb",
+   "name": "北风之握",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-knowledge-domain-blessings-of-knowledge.phb",
+   "name": "知识祝福",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-knowledge-domain-channel-divinity-knowledge-of-the-ages.phb",
+   "name": "引导神力：岁月知识",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-knowledge-domain-potent-spellcasting.phb",
+   "name": "强力施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-light-domain-bonus-cantrip.phb",
+   "name": "附赠戏法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-light-domain-channel-divinity-radiance-of-the-dawn.phb",
+   "name": "引导神力：黎明曙光",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.cleric-light-domain-improved-flare.phb",
+   "name": "精通闪光",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-light-domain-potent-spellcasting.phb",
+   "name": "强力施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-nature-domain-acolyte-of-nature.phb",
+   "name": "自然侍僧",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-nature-domain-bonus-proficiency.phb",
+   "name": "附赠熟练项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-nature-domain-channel-divinity-charm-animals-and-plants.phb",
+   "name": "引导神力：魅惑动植物",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-nature-domain-dampen-elements.phb",
+   "name": "抑制元素",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.cleric-nature-domain-divine-strike.phb",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-nature-domain-master-of-nature.phb",
+   "name": "自然大师",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-tempest-domain-bonus-proficiencies.phb",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-tempest-domain-channel-divinity-destructive-wrath.phb",
+   "name": "引导神力：毁灭狂怒",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-tempest-domain-divine-strike.phb",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-tempest-domain-stormborn.phb",
+   "name": "风暴降生",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-tempest-domain-thunderbolt-strike.phb",
+   "name": "雷鸣打击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-trickery-domain-blessing-of-the-trickster.phb",
+   "name": "诡术祝福",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-trickery-domain-channel-divinity-cloak-of-shadows.phb",
+   "name": "引导神力：幽影斗篷",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-trickery-domain-divine-strike.phb",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-trickery-domain-improved-duplicity.phb",
+   "name": "精通分身",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-war-domain-avatar-of-battle.phb",
+   "name": "战争化身",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.cleric-war-domain-bonus-proficiencies.phb",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-war-domain-channel-divinity-guided-strike.phb",
+   "name": "引导神力：导引打击",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-war-domain-channel-divinity-war-gods-blessing.phb",
+   "name": "引导神力：战神祝福",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-war-domain-divine-strike.phb",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.criminal-feature-criminal-contact.phb",
+   "name": "特性：罪犯接头人",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-background-feature-choose-a-feature.phb",
+   "name": "特性：选择一个特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.dragonborn-black-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-blue-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-brass-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-bronze-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-copper-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-gold-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-green-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-red-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-silver-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.dragonborn-white-damage-resistance.phb",
+   "name": "伤害抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.drow-elf-drow-weapon-training.phb",
+   "name": "卓尔武器训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.drow-elf-sunlight-sensitivity.phb",
+   "name": "日照敏感",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.drow-elf-superior-darkvision.phb",
+   "name": "增强黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-circle-of-the-moon-circle-forms.phb",
+   "name": "结社形态",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-circle-of-the-moon-combat-wild-shape.phb",
+   "name": "战斗荒野形态",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-moon-primal-strike.phb",
+   "name": "原力蛮击",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-moon-thousand-forms.phb",
+   "name": "千面相",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.elemental-attunement.phb",
+   "name": "元素同调",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.entertainer-feature-by-popular-demand.phb",
+   "name": "特性：人见人爱",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.eternal-mountain-defense.phb",
+   "name": "苍山庇佑",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.fangs-of-the-fire-snake.phb",
+   "name": "火蛇利牙",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.fighter-battle-master-additional-maneuvers.phb",
+   "name": "额外战技",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-additional-maneuvers.phb-2",
+   "name": "额外战技",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-additional-maneuvers.phb-3",
+   "name": "额外战技",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-additional-superiority-die.phb",
+   "name": "额外卓越骰",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-additional-superiority-die.phb-2",
+   "name": "额外卓越骰",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-improved-combat-superiority-d10.phb",
+   "name": "精通卓越战技(d10)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-improved-combat-superiority-d12.phb",
+   "name": "精通卓越战技(d12)",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-know-your-enemy.phb",
+   "name": "料敌机先",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-maneuvers.phb",
+   "name": "战技",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-relentless.phb",
+   "name": "坚韧",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-battle-master-student-of-war.phb",
+   "name": "战争学徒",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-eldritch-knight-eldritch-strike.phb",
+   "name": "奥法打击",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.fighter-eldritch-knight-improved-war-magic.phb",
+   "name": "精通战争魔法",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.fighter-eldritch-knight-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.fighter-eldritch-knight-war-magic.phb",
+   "name": "战争魔法",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.fighter-eldritch-knight-weapon-bond.phb",
+   "name": "武器联结",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.fist-of-four-thunders.phb",
+   "name": "四雷拳",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.flames-of-the-phoenix.phb",
+   "name": "凤凰烈焰",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.folk-hero-feature-rustic-hospitality.phb",
+   "name": "特性：好客乡民",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.forest-gnome-natural-illusionist.phb",
+   "name": "天生幻术师",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.forest-gnome-speak-with-small-beasts.phb",
+   "name": "小型野兽交谈",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gong-of-the-summit.phb",
+   "name": "狮吼功",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.guild-artisan-feature-guild-membership.phb",
+   "name": "特性：公会成员",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hermit-feature-discovery.phb",
+   "name": "特性：研究发现",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.mist-stance.phb",
+   "name": "云雾势",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-shadow-cloak-of-shadows.phb",
+   "name": "幽影斗篷",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-shadow-opportunist.phb",
+   "name": "灵机一斩",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-shadow-shadow-arts.phb",
+   "name": "暗影技艺",
+   "cls": "A",
+   "tags": [
+    "感官"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-four-elements-disciple-of-the-elements.phb",
+   "name": "四象门徒",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-four-elements-elemental-disciplines.phb",
+   "name": "法门",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-four-elements-extra-elemental-discipline.phb",
+   "name": "额外法门",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-four-elements-extra-elemental-discipline.phb-2",
+   "name": "额外法门",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-four-elements-extra-elemental-discipline.phb-3",
+   "name": "额外法门",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.mountain-dwarf-dwarven-armor-training.phb",
+   "name": "矮人护甲训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.noble-feature-position-of-privilege.phb",
+   "name": "特性：特权地位",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.outlander-feature-wanderer.phb",
+   "name": "特性：漂泊者",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-ancients-aura-of-warding.phb",
+   "name": "守御灵光",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-the-ancients-channel-divinity.phb",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-ancients-oath-spells.phb",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-the-ancients-tenets-of-the-ancients.phb",
+   "name": "古贤之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-vengeance-abjure-enemy.phb",
+   "name": "破胆叱喝",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-vengeance-channel-divinity.phb",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-vengeance-oath-spells.phb",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-vengeance-relentless-avenger.phb",
+   "name": "坚韧复仇",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-vengeance-soul-of-vengeance.phb",
+   "name": "复仇之魂",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-vengeance-tenets-of-vengeance.phb",
+   "name": "复仇之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-vengeance-vow-of-enmity.phb",
+   "name": "仇敌誓言",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-beast-master-bestial-fury.phb",
+   "name": "兽性狂怒",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-beast-master-exceptional-training.phb",
+   "name": "特殊训练",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.ranger-beast-master-rangers-companion.phb",
+   "name": "游侠伴侣",
+   "cls": "A",
+   "tags": [
+    "生命上限"
+   ]
+  },
+  {
+   "id": "feature.ranger-beast-master-share-spells.phb",
+   "name": "法术共享",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ride-the-wind.phb",
+   "name": "攀云步",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.river-of-hungry-flame.phb",
+   "name": "噬焰流",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-arcane-trickster-mage-hand-legerdemain.phb",
+   "name": "法师之手诈术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-arcane-trickster-magical-ambush.phb",
+   "name": "诡术伏击",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-arcane-trickster-spellcasting.phb",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-arcane-trickster-versatile-trickster.phb",
+   "name": "万能诡术",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-assassin-assassinate.phb",
+   "name": "暗杀",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-assassin-bonus-proficiencies.phb",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.rogue-assassin-impostor.phb",
+   "name": "冒充者",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-assassin-infiltration-expertise.phb",
+   "name": "专业渗透",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rush-of-the-gale-spirits.phb",
+   "name": "风灵突进",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sage-feature-researcher.phb",
+   "name": "特性：研究员",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sailor-feature-ships-passage.phb",
+   "name": "特性：船家路子",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shape-the-flowing-river.phb",
+   "name": "身化长流",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.soldier-feature-military-rank.phb",
+   "name": "特性：军衔",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-wild-magic-bend-luck.phb",
+   "name": "扭曲幸运",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-wild-magic-controlled-chaos.phb",
+   "name": "掌控混沌",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-wild-magic-spell-bombardment.phb",
+   "name": "法术轰击",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-wild-magic-wild-magic-surge.phb",
+   "name": "狂野魔法浪涌",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sweeping-cinder-strike.phb",
+   "name": "飞炎击",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.unbroken-air.phb",
+   "name": "凝气刚拳",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.urchin-feature-city-secrets.phb",
+   "name": "特性：城中秘密",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-criminal-spy-feature-spy-contact.phb",
+   "name": "特性：罪犯接头人",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-entertainer-gladiator-feature-by-popular-demand.phb",
+   "name": "特性：人见人爱",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-guild-artisan-guild-merchant-feature-guild-membership.phb",
+   "name": "特性：公会成员",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-human-feat.phb",
+   "name": "专长",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-human-skills.phb",
+   "name": "技能",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-noble-knight-feature-retainers.phb",
+   "name": "特性：家仆",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-noble-retainers-feature-retainers.phb",
+   "name": "特性：家仆",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-sailor-pirate-feature-bad-reputation.phb",
+   "name": "特性：恶名",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-the-archfey-beguiling-defenses.phb",
+   "name": "斗转星移",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-great-old-one-create-thrall.phb",
+   "name": "创造奴仆",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-great-old-one-thought-shield.phb",
+   "name": "思维之盾",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.water-whip.phb",
+   "name": "清流鞭",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.wave-of-rolling-earth.phb",
+   "name": "滚石流",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-abjuration-abjuration-savant.phb",
+   "name": "防护学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-abjuration-improved-abjuration.phb",
+   "name": "精通防护",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-abjuration-spell-resistance.phb",
+   "name": "法术抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-conjuration-conjuration-savant.phb",
+   "name": "咒法学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-conjuration-durable-summons.phb",
+   "name": "强韧召唤",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-conjuration-focused-conjuration.phb",
+   "name": "咒法专注",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-conjuration-minor-conjuration.phb",
+   "name": "次级咒术",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-school-of-divination-divination-savant.phb",
+   "name": "预言学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-divination-expert-divination.phb",
+   "name": "预言专家",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-divination-greater-portent.phb",
+   "name": "高等预兆",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-school-of-enchantment-alter-memories.phb",
+   "name": "编演记忆",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-enchantment-enchantment-savant.phb",
+   "name": "惑控学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-enchantment-split-enchantment.phb",
+   "name": "分裂惑控",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-illusion-illusion-savant.phb",
+   "name": "幻术学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-illusion-illusory-reality.phb",
+   "name": "亦真亦幻",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-illusion-improved-minor-illusion.phb",
+   "name": "精通次级幻术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-illusion-malleable-illusions.phb",
+   "name": "易变幻象",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-necromancy-grim-harvest.phb",
+   "name": "惧怖收割",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-necromancy-inured-to-undeath.phb",
+   "name": "不死适应",
+   "cls": "A",
+   "tags": [
+    "生命上限",
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-necromancy-necromancy-savant.phb",
+   "name": "死灵学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-necromancy-undead-thralls.phb",
+   "name": "亡灵仆役",
+   "cls": "A",
+   "tags": [
+    "生命上限"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-transmutation-minor-alchemy.phb",
+   "name": "次级炼金",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-transmutation-transmutation-savant.phb",
+   "name": "变化学者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-school-of-transmutation-transmuters-stone.phb",
+   "name": "变化师之石",
+   "cls": "A",
+   "tags": [
+    "速度",
+    "抗性免疫",
+    "感官"
+   ]
+  },
+  {
+   "id": "feature.wood-elf-elf-weapon-training.phb",
+   "name": "精灵武器训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wood-elf-fleet-of-foot.phb",
+   "name": "轻捷步伐",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.wood-elf-mask-of-the-wild.phb",
+   "name": "荒野隐蔽",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-battlerager-battlerager-armor.scag",
+   "name": "战狂装甲",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-battlerager-battlerager-charge.scag",
+   "name": "战狂冲锋",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-battlerager-reckless-abandon.scag",
+   "name": "凶蛮无羁",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-battlerager-restriction-dwarves-only.scag",
+   "name": "限制——限定矮人",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-battlerager-spiked-retribution.scag",
+   "name": "钉刺反冲",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.city-watch-feature-watchers-eye.scag",
+   "name": "特性：守卫者之眼",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.clan-crafter-feature-respect-of-the-stout-folk.scag",
+   "name": "特性：矮人的尊敬",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-arcana-domain-arcane-initiate.scag",
+   "name": "奥术传承",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-arcana-domain-arcane-mastery.scag",
+   "name": "奥术精通",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-arcana-domain-potent-spellcasting.scag",
+   "name": "强力施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-arcana-domain-spell-breaker.scag",
+   "name": "破法者",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cloistered-scholar-feature-library-access.scag",
+   "name": "特性：图书馆使用权",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.courtier-feature-court-functionary.scag",
+   "name": "特性：宫廷官员",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-svirfneblin-gnome-age.scag",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-svirfneblin-gnome-alignment.scag",
+   "name": "阵营",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-svirfneblin-gnome-languages.scag",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-svirfneblin-gnome-size.scag",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-svirfneblin-gnome-stone-camouflage.scag",
+   "name": "岩地伪装",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.deep-svirfneblin-gnome-superior-darkvision.scag",
+   "name": "增强黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.faction-agent-feature-safe-haven.scag",
+   "name": "特性：避风港",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.far-traveler-feature-all-eyes-on-you.scag",
+   "name": "特性：众目焦点",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-purple-dragon-knight-banneret-bulwark.scag",
+   "name": "意志壁垒",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-purple-dragon-knight-banneret-restriction-knighthood.scag",
+   "name": "限制：限定骑士",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-purple-dragon-knight-banneret-royal-envoy.scag",
+   "name": "皇家特使",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ghostwise-halfling-silent-speech.scag",
+   "name": "无声传话",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.inheritor-feature-inheritance.scag",
+   "name": "特性：继承遗产",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.knight-of-the-order-feature-knightly-regard.scag",
+   "name": "特性：骑士的敬重",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.mercenary-veteran-feature-mercenary-life.scag",
+   "name": "特性：佣兵生涯",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-long-death-mastery-of-death.scag",
+   "name": "握生死",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-long-death-touch-of-death.scag",
+   "name": "往生咒",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-long-death-touch-of-the-long-death.scag",
+   "name": "永亡触",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-the-crown-channel-divinity.scag",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-crown-divine-allegiance.scag",
+   "name": "神圣誓忠",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-the-crown-oath-spells.scag",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-the-crown-tenets-of-the-crown.scag",
+   "name": "王冠之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-crown-unyielding-spirit.scag",
+   "name": "顽强精神",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.urban-bounty-hunter-feature-ear-to-the-ground.scag",
+   "name": "特性：耳目众多",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.uthgardt-tribe-member-feature-uthgardt-heritage.scag",
+   "name": "特性：乌斯伽之传承",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-aquatic-elf-descent-skill-versatility-half-elf-variant-feature-skill-versatility.scag",
+   "name": "变体特性; 多才多艺",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.variant-aquatic-elf-descent-swim-speed-half-elf-variant-feature-swim-speed.scag",
+   "name": "变体特性; 游泳速度",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-city-watch-investigator-feature-watchers-eye.scag",
+   "name": "特性：守卫者之眼",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-devils-tongue-tiefling-appearance.scag",
+   "name": "外貌",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-drow-descent-skill-versatility-half-elf-variant-feature-skill-versatility.scag",
+   "name": "变体特性; 多才多艺",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.variant-hellfire-tiefling-appearance.scag",
+   "name": "外貌",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-infernal-legacy-tiefling-appearance.scag",
+   "name": "外貌",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-moon-elf-or-sun-elf-descent-cantrip-half-elf-variant-feature-cantrip.scag",
+   "name": "变体特性; 戏法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.variant-moon-elf-or-sun-elf-descent-elf-weapon-training-half-elf-variant-feature-elf-weapon-training.scag",
+   "name": "变体特性; 精灵武器训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-moon-elf-or-sun-elf-descent-skill-versatility-half-elf-variant-feature-skill-versatility.scag",
+   "name": "变体特性; 多才多艺",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.variant-winged-tiefling-appearance.scag",
+   "name": "外貌",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-winged-tiefling-winged.scag",
+   "name": "飞翼",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-wood-elf-descent-elf-weapon-training-half-elf-variant-feature-elf-weapon-training.scag",
+   "name": "变体特性; 精灵武器训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-wood-elf-descent-fleet-of-foot-half-elf-variant-feature-fleet-of-foot.scag",
+   "name": "变体特性; 轻捷步伐",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.variant-wood-elf-descent-mask-of-the-wild-half-elf-variant-feature-mask-of-the-wild.scag",
+   "name": "变体特性; 荒野隐蔽",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.variant-wood-elf-descent-skill-versatility-half-elf-variant-feature-skill-versatility.scag",
+   "name": "变体特性; 多才多艺",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-undying-among-the-dead.scag",
+   "name": "历经死亡",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.waterdhavian-noble-feature-kept-in-style.scag",
+   "name": "特性：保持风度",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.aarakocra-dive-attack.dmg",
+   "name": "俯冲攻击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.aarakocra-language.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aarakocra-talons.dmg",
+   "name": "禽爪",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.aasimar-age.dmg",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-celestial-resistance.dmg",
+   "name": "天界抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-language.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-size.dmg",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bullywug-amphibious.dmg",
+   "name": "水陆两栖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bullywug-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bullywug-speak-with-frogs-and-toads.dmg",
+   "name": "蛙类交流",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bullywug-standing-leap.dmg",
+   "name": "立定跳远",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bullywug-swamp-camouflage.dmg",
+   "name": "沼泽伪装",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.cleric-death-domain-bonus-proficiency.dmg",
+   "name": "附赠熟练项",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-death-domain-channel-divinity-touch-of-death.dmg",
+   "name": "引导神力：死亡之触",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-death-domain-divine-strike.dmg",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-death-domain-improved-reaper.dmg",
+   "name": "精通收割者",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-death-domain-inescapable-destruction.dmg",
+   "name": "命定毁伤",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-death-domain-reaper.dmg",
+   "name": "收割者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.eladrin-elf-elf-weapon-training.dmg",
+   "name": "精灵武器训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gnoll-bite.dmg",
+   "name": "啃咬",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gnoll-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gnoll-rampage.dmg",
+   "name": "横行",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.gnome-deep-gnome-cunning.dmg",
+   "name": "侏儒狡黠",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.gnome-deep-innate-spellcasting.dmg",
+   "name": "天生施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.gnome-deep-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gnome-deep-stone-camouflage.dmg",
+   "name": "岩地伪装",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.gnome-deep-superior-darkvision.dmg",
+   "name": "增强黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-nimble-escape.dmg",
+   "name": "迅捷逃逸",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.grimlock-blindsight.dmg",
+   "name": "盲视",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.grimlock-keen-hearing-and-smell.dmg",
+   "name": "敏锐嗅听觉",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.grimlock-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.grimlock-stone-camouflage.dmg",
+   "name": "岩地伪装",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.hobgoblin-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-martial-advantage.dmg",
+   "name": "成军优势",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.kenku-ambusher.dmg",
+   "name": "伏击",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kenku-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kenku-mimicry.dmg",
+   "name": "拟声",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-pack-tactics.dmg",
+   "name": "集群战术",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kobold-sunlight-sensitivity.dmg",
+   "name": "日照敏感",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kuo-toa-amphibious.dmg",
+   "name": "水陆两栖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kuo-toa-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kuo-toa-otherworldly-perception.dmg",
+   "name": "超凡察觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kuo-toa-slippery.dmg",
+   "name": "滑溜",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kuo-toa-sunlight-sensitivity.dmg",
+   "name": "日照敏感",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kuo-toa-superior-darkvision.dmg",
+   "name": "增强黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-hold-breath.dmg",
+   "name": "屏息",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.merfolk-amphibious.dmg",
+   "name": "水陆两栖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.merfolk-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-aggressive.dmg",
+   "name": "好斗",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oathbreaker-aura-of-hate.dmg",
+   "name": "憎恨灵光",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.paladin-oathbreaker-channel-divinity.dmg",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oathbreaker-oathbreaker-spells.dmg",
+   "name": "破誓者法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oathbreaker-supernatural-resistance.dmg",
+   "name": "超然抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.skeleton-brittle-bones.dmg",
+   "name": "脆弱骨骼",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.skeleton-creature-type.dmg",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.skeleton-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.skeleton-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.skeleton-undead-nature.dmg",
+   "name": "不死本质",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.troglodyte-chameleon-skin.dmg",
+   "name": "变色皮肤",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.troglodyte-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.troglodyte-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.troglodyte-sunlight-sensitivity.dmg",
+   "name": "日照敏感",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.zombie-creature-type.dmg",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.zombie-darkvision.dmg",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.zombie-languages.dmg",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.zombie-undead-fortitude.dmg",
+   "name": "不死坚韧",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.zombie-undead-nature.dmg",
+   "name": "不死本质",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aspect-of-the-moon.xge",
+   "name": "月之仪态",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-ancestral-guardian-ancestral-protectors.xge",
+   "name": "先祖护卫",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-ancestral-guardian-spirit-shield.xge",
+   "name": "精魂之盾",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-ancestral-guardian-vengeful-ancestors.xge",
+   "name": "仇魂先祖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-desert.xge",
+   "name": "荒漠",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-desert.xge-2",
+   "name": "荒漠",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-desert.xge-3",
+   "name": "荒漠",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-raging-storm.xge",
+   "name": "狂怒风暴",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-sea.xge",
+   "name": "海洋",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-sea.xge-2",
+   "name": "海洋",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-sea.xge-3",
+   "name": "海洋",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-shielding-storm.xge",
+   "name": "风暴之盾",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-storm-aura.xge",
+   "name": "风暴灵光",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-storm-soul.xge",
+   "name": "风暴之魂",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-tundra.xge",
+   "name": "冻原",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-tundra.xge-2",
+   "name": "冻原",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-storm-herald-tundra.xge-3",
+   "name": "冻原",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-zealot-fanatical-focus.xge",
+   "name": "专心炽志",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-the-zealot-warrior-of-the-gods.xge",
+   "name": "神之勇者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-swords-blade-flourish.xge",
+   "name": "剑舞",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-swords-bonus-proficiencies.xge",
+   "name": "附赠熟练",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-swords-extra-attack.xge",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-college-of-swords-fighting-style.xge",
+   "name": "战斗风格",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-forge-domain-bonus-proficiency.xge",
+   "name": "附赠熟练项",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-forge-domain-channel-divinity-artisans-blessing.xge",
+   "name": "引导神力：铁匠祝福",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-forge-domain-divine-strike.xge",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-forge-domain-saint-of-forge-and-fire.xge",
+   "name": "锻炉与烈焰的圣徒",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.cleric-forge-domain-soul-of-the-forge.xge",
+   "name": "锻造之魂",
+   "cls": "A",
+   "tags": [
+    "护甲等级",
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.cleric-grave-domain-circle-of-mortality.xge",
+   "name": "生死轮回",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-grave-domain-potent-spellcasting.xge",
+   "name": "强力施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-shepherd-guardian-spirit.xge",
+   "name": "精魂守卫",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-shepherd-mighty-summoner.xge",
+   "name": "全能牧者",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-the-shepherd-speech-of-the-woods.xge",
+   "name": "林地之语",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.eldritch-smite.xge",
+   "name": "魔能斩",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.fighter-arcane-archer-additional-arcane-shot-option.xge",
+   "name": "额外奥术射击选项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-arcane-archer-additional-arcane-shot-option.xge-2",
+   "name": "额外奥术射击选项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-arcane-archer-additional-arcane-shot-option.xge-3",
+   "name": "额外奥术射击选项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-arcane-archer-additional-arcane-shot-option.xge-4",
+   "name": "额外奥术射击选项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-arcane-archer-arcane-archer-lore.xge",
+   "name": "魔箭学识",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.fighter-arcane-archer-arcane-shot-options.xge",
+   "name": "奥术射击选项",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.fighter-arcane-archer-curving-shot.xge",
+   "name": "曲线射击",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.fighter-arcane-archer-magic-arrow.xge",
+   "name": "注魔箭矢",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.fighter-cavalier-bonus-proficiency.xge",
+   "name": "附赠熟练项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-cavalier-born-to-the-saddle.xge",
+   "name": "生而为骑",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.fighter-cavalier-hold-the-line.xge",
+   "name": "坚守战线",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-cavalier-vigilant-defender.xge",
+   "name": "警戒守卫",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-samurai-bonus-proficiency.xge",
+   "name": "附赠熟练项",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-samurai-elegant-courtier.xge",
+   "name": "雅臣",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.fighter-samurai-rapid-strike.xge",
+   "name": "燕返",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.gift-of-the-ever-living-ones.xge",
+   "name": "永生者赠礼",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.grasp-of-hadar.xge",
+   "name": "哈达之攫",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.improved-pact-weapon.xge",
+   "name": "进阶契约武器",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.lance-of-lethargy.xge",
+   "name": "怠惰之枪",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.maddening-hex.xge",
+   "name": "癫狂巫咒",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-drunken-master-bonus-proficiencies.xge",
+   "name": "附赠熟练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-drunken-master-drunkards-luck.xge",
+   "name": "醉汉机运",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-drunken-master-drunken-technique.xge",
+   "name": "醉拳技巧",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-drunken-master-leap-to-your-feet.xge",
+   "name": "鲤鱼打挺",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-drunken-master-redirect-attack.xge",
+   "name": "借力打力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-drunken-master-tipsy-sway.xge",
+   "name": "酣醉若狂",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-kensei-agile-parry.xge",
+   "name": "灵巧格挡",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-kensei-kenseis-shot.xge",
+   "name": "持弓审固",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-kensei-one-with-the-blade.xge",
+   "name": "人剑合一",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-kensei-path-of-the-kensei.xge",
+   "name": "剑圣之途",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-kensei-sharpen-the-blade.xge",
+   "name": "锋锐剑影",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "动作",
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-kensei-unerring-accuracy.xge",
+   "name": "精妙剑法",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-sun-soul-radiant-sun-bolt.xge",
+   "name": "耀阳箭",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-sun-soul-searing-arc-strike.xge",
+   "name": "热能袭",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-conquest-aura-of-conquest.xge",
+   "name": "征服灵光",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-conquest-channel-divinity.xge",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-conquest-guided-strike.xge",
+   "name": "导引打击",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-conquest-oath-spells.xge",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-conquest-scornful-rebuke.xge",
+   "name": "轻蔑呵斥",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-conquest-tenets-of-conquest.xge",
+   "name": "征服之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-redemption-aura-of-the-guardian.xge",
+   "name": "护卫灵光",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-redemption-channel-divinity.xge",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-redemption-emissary-of-peace.xge",
+   "name": "和平使节",
+   "cls": "A",
+   "tags": [
+    "属性值"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-redemption-oath-spells.xge",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-redemption-protective-spirit.xge",
+   "name": "守护之魂",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-redemption-rebuke-the-violent.xge",
+   "name": "叱喝暴力",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-redemption-tenets-of-redemption.xge",
+   "name": "救赎之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-gloom-stalker-dread-ambusher.xge",
+   "name": "恐惧伏击",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.ranger-gloom-stalker-gloom-stalker-magic.xge",
+   "name": "幽域追踪者魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ranger-gloom-stalker-iron-mind.xge",
+   "name": "钢铁意志",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.ranger-gloom-stalker-shadowy-dodge.xge",
+   "name": "如影随形",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-gloom-stalker-stalkers-flurry.xge",
+   "name": "追猎如风",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-gloom-stalker-umbral-sight.xge",
+   "name": "阴影视野",
+   "cls": "A",
+   "tags": [
+    "感官"
+   ]
+  },
+  {
+   "id": "feature.ranger-horizon-walker-distant-strike.xge",
+   "name": "闪现打击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-horizon-walker-horizon-walker-magic.xge",
+   "name": "边界行者魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ranger-horizon-walker-planar-warrior.xge",
+   "name": "位面战士",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.ranger-horizon-walker-spectral-defense.xge",
+   "name": "灵体防御",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.ranger-monster-slayer-monster-slayer-magic.xge",
+   "name": "怪物杀手魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ranger-monster-slayer-slayers-counter.xge",
+   "name": "杀手反制",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-monster-slayer-supernatural-defense.xge",
+   "name": "异能防护",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.relentless-hex.xge",
+   "name": "残酷巫咒",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-inquisitive-ear-for-deceit.xge",
+   "name": "辨谎之耳",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-inquisitive-eye-for-detail.xge",
+   "name": "鉴识之眼",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.rogue-inquisitive-eye-for-weakness.xge",
+   "name": "伺隙锐瞳",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.rogue-inquisitive-insightful-fighting.xge",
+   "name": "战术洞悉",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-inquisitive-steady-eye.xge",
+   "name": "目不转睛",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-mastermind-insightful-manipulator.xge",
+   "name": "帷幄之士",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-mastermind-master-of-intrigue.xge",
+   "name": "谋陷大师",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-mastermind-master-of-tactics.xge",
+   "name": "战术大师",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.rogue-mastermind-misdirection.xge",
+   "name": "误导",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.rogue-mastermind-soul-of-deceit.xge",
+   "name": "瞒天之魂",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-scout-ambush-master.xge",
+   "name": "伏击大师",
+   "cls": "A",
+   "tags": [
+    "先攻被动"
+   ]
+  },
+  {
+   "id": "feature.rogue-scout-skirmisher.xge",
+   "name": "散兵战术",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.rogue-scout-sudden-strike.xge",
+   "name": "瞬息打击",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.rogue-scout-survivalist.xge",
+   "name": "生存专家",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.rogue-swashbuckler-elegant-maneuver.xge",
+   "name": "优雅战技",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-swashbuckler-fancy-footwork.xge",
+   "name": "梦幻舞步",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-swashbuckler-panache.xge",
+   "name": "潇洒气质",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rogue-swashbuckler-rakish-audacity.xge",
+   "name": "潇洒无畏",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-divine-soul-divine-magic.xge",
+   "name": "神圣魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-divine-soul-empowered-healing.xge",
+   "name": "强效治疗",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-divine-soul-otherworldly-wings.xge",
+   "name": "异界光翼",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-shadow-magic-eyes-of-the-dark.xge",
+   "name": "幽暗之瞳",
+   "cls": "A",
+   "tags": [
+    "感官"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-shadow-magic-umbral-form.xge",
+   "name": "幽冥形态",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-storm-sorcery-storm-guide.xge",
+   "name": "风暴导向",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-storm-sorcery-storms-fury.xge",
+   "name": "暴风狂怒",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-storm-sorcery-tempestuous-magic.xge",
+   "name": "暴风魔法",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-storm-sorcery-wind-speaker.xge",
+   "name": "风语者",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-the-celestial-bonus-cantrips.xge",
+   "name": "额外戏法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-celestial-radiant-soul.xge",
+   "name": "光耀之魂",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-hexblade-armor-of-hexes.xge",
+   "name": "巫咒盔甲",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-hexblade-hex-warrior.xge",
+   "name": "巫咒战士",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-hexblade-master-of-hexes.xge",
+   "name": "巫咒大师",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-war-magic-arcane-deflection.xge",
+   "name": "奥术偏斜",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-war-magic-durable-magic.xge",
+   "name": "耐久魔法",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-war-magic-tactical-wit.xge",
+   "name": "战术之智",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-alchemist-alchemical-savant.tce",
+   "name": "炼金术掌握",
+   "cls": "A",
+   "tags": [
+    "属性值"
+   ]
+  },
+  {
+   "id": "feature.artificer-alchemist-alchemist-spells.tce",
+   "name": "炼金师法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-alchemist-experimental-elixir.tce",
+   "name": "实验性灵药",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-alchemist-tool-proficiency.tce",
+   "name": "工具熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.artificer-armorer-arcane-armor.tce",
+   "name": "奥能装甲",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-armorer-armor-modifications.tce",
+   "name": "装甲改造",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-armorer-armorer-spells.tce",
+   "name": "装甲师法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-armorer-dampening-field.tce",
+   "name": "减震场",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.artificer-armorer-extra-attack.tce",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-armorer-infiltrator.tce",
+   "name": "渗透者",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.artificer-armorer-lightning-launcher.tce",
+   "name": "闪电发射器",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.artificer-armorer-perfected-armor.tce",
+   "name": "完美装甲",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-armorer-thunder-gauntlets.tce",
+   "name": "雷霆战拳",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.artificer-armorer-tools-of-the-trade.tce",
+   "name": "行业工具",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.artificer-artificer-specialist-feature.tce",
+   "name": "奇械师专业特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-artificer-specialist-feature.tce-2",
+   "name": "奇械师专业特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-artificer-specialist-feature.tce-3",
+   "name": "奇械师专业特性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-artificer-specialist.tce",
+   "name": "奇械师专业",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-artillerist-artillerist-spells.tce",
+   "name": "魔炮师法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-artillerist-explosive-cannon.tce",
+   "name": "高爆炮台",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-artillerist-fortified-position.tce",
+   "name": "坚固要塞",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-artillerist-tool-proficiency.tce",
+   "name": "工具熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.artificer-battle-smith-battle-ready.tce",
+   "name": "战斗准备",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.artificer-battle-smith-battle-smith-spells.tce",
+   "name": "战地匠师法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-battle-smith-extra-attack.tce",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-battle-smith-improved-defender.tce",
+   "name": "改良守卫",
+   "cls": "A",
+   "tags": [
+    "护甲等级"
+   ]
+  },
+  {
+   "id": "feature.artificer-battle-smith-steel-defender.tce",
+   "name": "钢铁守卫",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-battle-smith-tool-proficiency.tce",
+   "name": "工具熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.artificer-infusions-known.tce",
+   "name": "已知注法",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-magic-item-adept.tce",
+   "name": "魔法物品熟稔",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-magic-item-master.tce",
+   "name": "魔法物品大师",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-magic-item-savant.tce",
+   "name": "魔法物品专家",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-magical-tinkering.tce",
+   "name": "魔法工艺",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.artificer-optional-rule-firearm-proficiency.tce",
+   "name": "可选规则:枪械熟练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.artificer-soul-of-artifice.tce",
+   "name": "奇械之魂",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.artificer-spellcasting.tce",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.artificer-tool-expertise.tce",
+   "name": "工具专精",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-the-beast-form-of-the-beast.tce",
+   "name": "野兽之形",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-wild-magic-controlled-surge.tce",
+   "name": "掌控浪潮",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.barbarian-path-of-wild-magic-unstable-backlash.tce",
+   "name": "无常反冲",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.barbarian-path-of-wild-magic-wild-surge.tce",
+   "name": "狂野浪潮",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-creation-creative-crescendo.tce",
+   "name": "渐强创音",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-college-of-creation-mote-of-potential.tce",
+   "name": "潜能微尘",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-eloquence-silver-tongue.tce",
+   "name": "巧舌如簧",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bard-college-of-eloquence-unfailing-inspiration.tce",
+   "name": "不竭鼓舞",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.blessed-warrior.tce",
+   "name": "受祝福的勇士",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.blind-fighting.tce",
+   "name": "盲斗",
+   "cls": "A",
+   "tags": [
+    "感官"
+   ]
+  },
+  {
+   "id": "feature.cleric-order-domain-bonus-proficiencies.tce",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-order-domain-divine-strike.tce",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-order-domain-orders-wrath.tce",
+   "name": "秩序之怒",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-order-domain-voice-of-authority.tce",
+   "name": "权威之音",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-peace-domain-channel-divinity-balm-of-peace.tce",
+   "name": "引导神力：和平抚慰",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.cleric-peace-domain-expansive-bond.tce",
+   "name": "增强联结",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.cleric-peace-domain-implement-of-peace.tce",
+   "name": "和平执行",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-peace-domain-potent-spellcasting.tce",
+   "name": "强力施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.cleric-peace-domain-protective-bond.tce",
+   "name": "保护联结",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.cleric-twilight-domain-bonus-proficiencies.tce",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.cleric-twilight-domain-channel-divinity-twilight-sanctuary.tce",
+   "name": "引导神力：暮光圣域",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.cleric-twilight-domain-divine-strike.tce",
+   "name": "神圣打击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.cleric-twilight-domain-twilight-shroud.tce",
+   "name": "暮光守护",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.cleric-twilight-domain-vigilant-blessing.tce",
+   "name": "警觉赐福",
+   "cls": "A",
+   "tags": [
+    "先攻被动"
+   ]
+  },
+  {
+   "id": "feature.custom-lineage-creature-type.tce",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-darkvision-creature-type.tce",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-darkvision-feat.tce",
+   "name": "专长",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-darkvision-languages.tce",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-darkvision-size.tce",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-darkvision-variable-trait-darkvision.tce",
+   "name": "可选特性；黑暗视觉",
+   "cls": "A",
+   "tags": [
+    "感官"
+   ]
+  },
+  {
+   "id": "feature.custom-lineage-feat.tce",
+   "name": "专长",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-languages.tce",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-size.tce",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-skill-proficiency-creature-type.tce",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-skill-proficiency-feat.tce",
+   "name": "专长",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-skill-proficiency-languages.tce",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-skill-proficiency-size.tce",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-skill-proficiency-variable-trait-skill-proficiency.tce",
+   "name": "可选特性；技能熟练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.custom-lineage-variable-trait.tce",
+   "name": "可选特征",
+   "cls": "A",
+   "tags": [
+    "感官"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-spores-circle-spells.tce",
+   "name": "结社法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-spores-fungal-body.tce",
+   "name": "真菌之躯",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-stars-archer.tce",
+   "name": "射手座",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-stars-chalice.tce",
+   "name": "圣杯座",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-stars-dragon.tce",
+   "name": "龙",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-stars-full-of-stars.tce",
+   "name": "灿若繁星",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-stars-twinkling-constellations.tce",
+   "name": "闪耀星座",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.druid-circle-of-wildfire-circle-spells.tce",
+   "name": "结社法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druid-circle-of-wildfire-enhanced-bond.tce",
+   "name": "强化链接",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.druidic-warrior.tce",
+   "name": "德鲁伊教战士",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.expert-sidekick-bonus-proficiencies.tce",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.expert-sidekick-coordinated-strike.tce",
+   "name": "协同攻击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.expert-sidekick-cunning-action.tce",
+   "name": "灵巧动作",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.expert-sidekick-evasion.tce",
+   "name": "反射闪避",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.expert-sidekick-expertise.tce",
+   "name": "专精",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.expert-sidekick-expertise.tce-2",
+   "name": "专精",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.expert-sidekick-helpful.tce",
+   "name": "乐于助人",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.expert-sidekick-inspiring-help-improvement.tce",
+   "name": "鼓舞协助增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.expert-sidekick-inspiring-help.tce",
+   "name": "鼓舞协助",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.expert-sidekick-reliable-talent.tce",
+   "name": "可靠才能",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.expert-sidekick-sharp-mind.tce",
+   "name": "明锐心智",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.expert-sidekick-sidekick-class.tce",
+   "name": "协力者职业",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-psi-warrior-guarded-mind.tce",
+   "name": "意念守护",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.fighter-psi-warrior-protective-field.tce",
+   "name": "庇护力场",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.fighter-psi-warrior-psionic-strike.tce",
+   "name": "灵能打击",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.fighter-psi-warrior-telekinetic-adept.tce",
+   "name": "念力精通",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-psi-warrior-telekinetic-thrust.tce",
+   "name": "念力突刺",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-rune-knight-additional-rune-known.tce",
+   "name": "额外已知符文",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-rune-knight-additional-rune-known.tce-2",
+   "name": "额外已知符文",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-rune-knight-additional-rune-known.tce-3",
+   "name": "额外已知符文",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fighter-rune-knight-bonus-proficiencies.tce",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.fighter-rune-knight-great-stature.tce",
+   "name": "奇伟身躯",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.fighter-rune-knight-runic-juggernaut.tce",
+   "name": "符文主宰",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.homunculus-servant.tce",
+   "name": "人工生命仆从",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.interception.tce",
+   "name": "拦截",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.investment-of-the-chain-master.tce",
+   "name": "链主赋能",
+   "cls": "A",
+   "tags": [
+    "速度",
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-mercy-flurry-of-healing-and-harm.tce",
+   "name": "生杀予夺",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-mercy-hand-of-harm.tce",
+   "name": "夺命之手",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-mercy-hand-of-healing.tce",
+   "name": "予命之手",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-mercy-implements-of-mercy.tce",
+   "name": "操命本事",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-mercy-physicians-touch.tce",
+   "name": "生死之触",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-astral-self-arms-of-the-astral-self.tce",
+   "name": "星我之臂",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-astral-self-awakened-astral-self.tce",
+   "name": "星我觉醒",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-astral-self-body-of-the-astral-self.tce",
+   "name": "星我之躯",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.monk-way-of-the-astral-self-forms-of-your-astral-self.tce",
+   "name": "你的星我形态",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.monk-way-of-the-astral-self-visage-of-the-astral-self.tce",
+   "name": "星我之容",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-glory-aura-of-alacrity.tce",
+   "name": "迅捷灵光",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-glory-channel-divinity.tce",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-glory-oath-spells.tce",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-glory-peerless-athlete.tce",
+   "name": "绝伦健将",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-glory-tenets-of-glory.tce",
+   "name": "荣耀之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-watchers-abjure-the-extraplanar.tce",
+   "name": "驱散异域",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-the-watchers-aura-of-the-sentinel.tce",
+   "name": "哨卫灵光",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-watchers-channel-divinity.tce",
+   "name": "引导神力",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-watchers-oath-spells.tce",
+   "name": "圣誓法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.paladin-oath-of-the-watchers-tenets-of-the-watchers.tce",
+   "name": "守望之信条",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.paladin-oath-of-the-watchers-watchers-will.tce",
+   "name": "守望之志",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.ranger-fey-wanderer-dreadful-strikes.tce",
+   "name": "哀惧灵袭",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.ranger-fey-wanderer-otherworldly-glamour.tce",
+   "name": "妖冶娴都",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.ranger-swarmkeeper-gathered-swarm.tce",
+   "name": "蜂聚集群",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.ranger-swarmkeeper-mighty-swarm.tce",
+   "name": "壮大集群",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ranger-swarmkeeper-swarmkeeper-magic.tce",
+   "name": "集群守卫魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.rebuke-of-the-talisman.tce",
+   "name": "符令责斥",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.rogue-phantom-deaths-friend.tce",
+   "name": "死亡之友",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rogue-soulknife-homing-strikes.tce",
+   "name": "寻的攻击",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-soulknife-psi-bolstered-knack.tce",
+   "name": "灵振诀窍",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.rogue-soulknife-psychic-blades.tce",
+   "name": "心灵之刃",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.rogue-soulknife-psychic-teleportation.tce",
+   "name": "心灵传送",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.rogue-soulknife-soul-blades.tce",
+   "name": "灵魂之刃",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sorcerer-aberrant-mind-psionic-sorcery.tce",
+   "name": "灵能术法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-aberrant-mind-psionic-spells.tce",
+   "name": "灵能法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-aberrant-mind-psychic-defenses.tce",
+   "name": "心灵防御",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-aberrant-mind-revelation-in-flesh.tce",
+   "name": "血肉启示",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.sorcerer-clockwork-soul-clockwork-magic.tce",
+   "name": "时械魔法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.spellcaster-sidekick-bonus-proficiencies.tce",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.spellcaster-sidekick-empowered-spells.tce",
+   "name": "增强法术",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.spellcaster-sidekick-focused-casting.tce",
+   "name": "专注施法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.spellcaster-sidekick-potent-cantrips.tce",
+   "name": "强力戏法",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.spellcaster-sidekick-sidekick-class.tce",
+   "name": "协力者职业",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.spellcaster-sidekick-spellcasting.tce",
+   "name": "施法",
+   "cls": "B",
+   "tags": [
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.thrown-weapon-fighting.tce",
+   "name": "投掷武器战斗",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.unarmed-fighting.tce",
+   "name": "徒手战斗",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warlock-the-fathomless-guardian-coil.tce",
+   "name": "守卫缠绕",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-fathomless-oceanic-soul.tce",
+   "name": "海渊魂灵",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-genie-genies-wrath.tce",
+   "name": "巨灵之怒",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.warlock-the-genie-limited-wish.tce",
+   "name": "有限祈愿术",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.warrior-sidekick-battle-readiness.tce",
+   "name": "备战",
+   "cls": "A",
+   "tags": [
+    "先攻被动"
+   ]
+  },
+  {
+   "id": "feature.warrior-sidekick-bonus-proficiencies.tce",
+   "name": "附赠熟练",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.warrior-sidekick-extra-attack-improvement.tce",
+   "name": "额外攻击增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warrior-sidekick-extra-attack.tce",
+   "name": "额外攻击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warrior-sidekick-improved-critical.tce",
+   "name": "精通重击",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.warrior-sidekick-improved-defense.tce",
+   "name": "精通防御",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warrior-sidekick-martial-role.tce",
+   "name": "战斗职能",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.warrior-sidekick-second-wind-improvement.tce",
+   "name": "回气增效",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.warrior-sidekick-sidekick-class.tce",
+   "name": "协力者职业",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.wizard-bladesinging-bladesinger-styles.tce",
+   "name": "剑咏者风格",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-bladesinging-extra-attack.tce",
+   "name": "额外攻击",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-bladesinging-song-of-defense.tce",
+   "name": "守御之歌",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.wizard-bladesinging-song-of-victory.tce",
+   "name": "胜利之歌",
+   "cls": "A",
+   "tags": [
+    "属性值"
+   ]
+  },
+  {
+   "id": "feature.wizard-bladesinging-training-in-war-and-song-bladesinging.tce",
+   "name": "战歌训练 (剑咏)",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.wizard-order-of-scribes-wizardly-quill.tce",
+   "name": "法师笔",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.aasimar-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-celestial-resistance.vgm",
+   "name": "天界抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-light-bearer.vgm",
+   "name": "光辉掌者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.aasimar-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-long-limbed.vgm",
+   "name": "长肢",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-powerful-build.vgm",
+   "name": "强力构筑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-sneaky.vgm",
+   "name": "隐秘",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.bugbear-surprise-attack.vgm",
+   "name": "突袭攻击",
+   "cls": "B",
+   "tags": [
+    "伤害"
+   ]
+  },
+  {
+   "id": "feature.firbolg-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.firbolg-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.firbolg-powerful-build.vgm",
+   "name": "强力构筑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.firbolg-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.firbolg-speech-of-beast-and-leaf.vgm",
+   "name": "兽与叶之语",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.goblin-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-nimble-escape.vgm",
+   "name": "迅捷逃逸",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.goblin-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goliath-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goliath-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goliath-mountain-born.vgm",
+   "name": "生于高山",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goliath-natural-athlete.vgm",
+   "name": "运动健将",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.goliath-powerful-build.vgm",
+   "name": "强力构筑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goliath-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-martial-training.vgm",
+   "name": "战争训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kenku-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kenku-expert-forgery.vgm",
+   "name": "专家伪造",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kenku-kenku-training.vgm",
+   "name": "天狗训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kenku-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kenku-mimicry.vgm",
+   "name": "拟声",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kenku-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-pack-tactics.vgm",
+   "name": "集群战术",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kobold-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-sunlight-sensitivity.vgm",
+   "name": "日照敏感",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.lizardfolk-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-bite.vgm",
+   "name": "啃咬",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-cunning-artisan.vgm",
+   "name": "能工巧匠",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-hold-breath.vgm",
+   "name": "屏息",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-hunters-lore.vgm",
+   "name": "猎人学识",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-swim-speed.vgm",
+   "name": "游泳速度",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-aggressive.vgm",
+   "name": "好斗",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.orc-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-powerful-build.vgm",
+   "name": "强力构筑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-primal-intuition.vgm",
+   "name": "原初直觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-cats-claws.vgm",
+   "name": "猫之利爪",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-cats-talents.vgm",
+   "name": "猫之天赋",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.tabaxi-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-feline-agility.vgm",
+   "name": "猫之迅捷",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.tabaxi-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-amphibious.vgm",
+   "name": "水陆两栖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-emissary-of-the-sea.vgm",
+   "name": "海之使者",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-guardians-of-the-depths.vgm",
+   "name": "海渊守护者",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-swim-speed.vgm",
+   "name": "游泳速度",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.yuan-ti-pureblood-age.vgm",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.yuan-ti-pureblood-darkvision.vgm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.yuan-ti-pureblood-languages.vgm",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.yuan-ti-pureblood-magic-resistance.vgm",
+   "name": "魔法抗性",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.yuan-ti-pureblood-poison-immunity.vgm",
+   "name": "中毒免疫",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.yuan-ti-pureblood-size.vgm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-age.mtf",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-alignment.mtf",
+   "name": "阵营",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-languages.mtf",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-size.mtf",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-stone-camouflage.mtf",
+   "name": "岩地伪装",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.deep-gnome-superior-darkvision.mtf",
+   "name": "增强黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.duergar-dwarf-duergar-resilience.mtf",
+   "name": "灰矮人体魄",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.duergar-dwarf-languages.mtf",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.duergar-dwarf-sunlight-sensitivity.mtf",
+   "name": "日照敏感",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.duergar-dwarf-superior-darkvision.mtf",
+   "name": "增强黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gith-age.mtf",
+   "name": "年龄",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gith-languages.mtf",
+   "name": "语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.gith-size.mtf",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.githyanki-gith-alignment.mtf",
+   "name": "阵营",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.githyanki-gith-decadent-mastery.mtf",
+   "name": "业余爱好",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.githyanki-gith-martial-prodigy.mtf",
+   "name": "军事人才",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.githzerai-gith-alignment.mtf",
+   "name": "阵营",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.githzerai-gith-mental-discipline.mtf",
+   "name": "精神戒训",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.sea-elf-child-of-the-sea.mtf",
+   "name": "海洋之子",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.sea-elf-extra-language.mtf",
+   "name": "额外语言",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sea-elf-friend-of-the-sea.mtf",
+   "name": "海洋之友",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sea-elf-sea-elf-training.mtf",
+   "name": "海精灵训练",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shadar-kai-elf-necrotic-resistance.mtf",
+   "name": "暗蚀抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aarakocra-flight.mpmm",
+   "name": "飞行",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aarakocra-talons.mpmm",
+   "name": "禽爪",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-celestial-resistance.mpmm",
+   "name": "天界抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-light-bearer.mpmm",
+   "name": "光辉掌者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.aasimar-necrotic-shroud-celestial-resistance.mpmm",
+   "name": "天界抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-necrotic-shroud-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-necrotic-shroud-light-bearer.mpmm",
+   "name": "光辉掌者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.aasimar-necrotic-shroud-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-radiant-consumption-celestial-resistance.mpmm",
+   "name": "天界抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-radiant-consumption-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-radiant-consumption-light-bearer.mpmm",
+   "name": "光辉掌者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.aasimar-radiant-consumption-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-radiant-soul-celestial-resistance.mpmm",
+   "name": "天界抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-radiant-soul-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-radiant-soul-light-bearer.mpmm",
+   "name": "光辉掌者",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.aasimar-radiant-soul-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.aasimar-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.air-genasi-lightning-resistance.mpmm",
+   "name": "闪电抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.air-genasi-unending-breath.mpmm",
+   "name": "无尽气息",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-fey-ancestry.mpmm",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.bugbear-long-limbed.mpmm",
+   "name": "长肢",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-powerful-build.mpmm",
+   "name": "强力构筑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.bugbear-sneaky.mpmm",
+   "name": "隐秘",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.bugbear-surprise-attack.mpmm",
+   "name": "突袭攻击",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.centaur-charge.mpmm",
+   "name": "冲锋",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.centaur-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.centaur-equine-build.mpmm",
+   "name": "马体构造",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.centaur-hooves.mpmm",
+   "name": "蹄击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.centaur-natural-affinity.mpmm",
+   "name": "自然亲和",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.changeling-changeling-instincts.mpmm",
+   "name": "幻身灵本能",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.changeling-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.changeling-shapechanger.mpmm",
+   "name": "变形生物",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.changeling-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.deep-gnome-gnomish-magic-resistance.mpmm",
+   "name": "侏儒魔法抗性",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.duergar-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.duergar-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.duergar-dwarven-resilience.mpmm",
+   "name": "矮人体魄",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.duergar-psionic-fortitude.mpmm",
+   "name": "灵能坚韧",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.earth-genasi-earth-walk.mpmm",
+   "name": "地面行走",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.eladrin-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.eladrin-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.eladrin-fey-ancestry.mpmm",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.eladrin-keen-senses.mpmm",
+   "name": "敏锐感官",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.eladrin-trance.mpmm",
+   "name": "出神",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fairy-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.fairy-flight.mpmm",
+   "name": "飞行",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.firbolg-powerful-build.mpmm",
+   "name": "强力构筑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.firbolg-speech-of-beast-and-leaf.mpmm",
+   "name": "兽与叶之语",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.fire-genasi-fire-resistance.mpmm",
+   "name": "火焰抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.genasi-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.genasi-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.githyanki-psychic-resilience.mpmm",
+   "name": "心灵抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.githzerai-mental-discipline.mpmm",
+   "name": "精神戒训",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.githzerai-psychic-resilience.mpmm",
+   "name": "心灵抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.goblin-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.goblin-fey-ancestry.mpmm",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.goblin-nimble-escape.mpmm",
+   "name": "迅捷逃逸",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.goliath-little-giant.mpmm",
+   "name": "小型巨人",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.goliath-mountain-born.mpmm",
+   "name": "生于高山",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.harengon-leporine-senses.mpmm",
+   "name": "野兔感官",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.harengon-lucky-footwork.mpmm",
+   "name": "幸运步法",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.harengon-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.hobgoblin-fey-ancestry.mpmm",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kenku-expert-duplication.mpmm",
+   "name": "复制专家",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kenku-mimicry.mpmm",
+   "name": "拟声",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kenku-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-craftiness-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-craftiness-kobold-legacy-craftiness.mpmm",
+   "name": "狗头人遗赠 (机智)",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.kobold-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-defiance-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-defiance-kobold-legacy-defiance.mpmm",
+   "name": "狗头人遗赠 (逆反)",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.kobold-draconic-sorcery-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.kobold-draconic-sorcery-kobold-legacy-draconic-sorcery.mpmm",
+   "name": "狗头人遗产 (龙族术法)",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.kobold-kobold-legacy.mpmm",
+   "name": "狗头人遗赠",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.lizardfolk-bite.mpmm",
+   "name": "啃咬",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-hold-breath.mpmm",
+   "name": "屏息",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-natural-armor.mpmm",
+   "name": "天生护甲",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.lizardfolk-natures-intuition.mpmm",
+   "name": "自然直觉",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.lizardfolk-speed.mpmm",
+   "name": "速度",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.minotaur-goring-rush.mpmm",
+   "name": "猛抵冲撞",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.minotaur-hammering-horns.mpmm",
+   "name": "角锤",
+   "cls": "B",
+   "tags": [
+    "动作"
+   ]
+  },
+  {
+   "id": "feature.minotaur-horns.mpmm",
+   "name": "角击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.minotaur-labyrinthine-recall.mpmm",
+   "name": "迷宫追忆",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.orc-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.orc-powerful-build.mpmm",
+   "name": "强力构筑",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.satyr-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.satyr-magic-resistance.mpmm",
+   "name": "魔法抗性",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.satyr-mirthful-leaps.mpmm",
+   "name": "欢喜之跃",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.satyr-ram.mpmm",
+   "name": "顶撞",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.satyr-reveler.mpmm",
+   "name": "贪欢者",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.sea-elf-child-of-the-sea.mpmm",
+   "name": "海洋之子",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sea-elf-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sea-elf-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sea-elf-fey-ancestry.mpmm",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.sea-elf-friend-of-the-sea.mpmm",
+   "name": "海洋之友",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.sea-elf-keen-senses.mpmm",
+   "name": "敏锐感官",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.sea-elf-speed.mpmm",
+   "name": "速度",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.sea-elf-trance.mpmm",
+   "name": "出神",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shadar-kai-creature-type.mpmm",
+   "name": "生物类型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shadar-kai-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shadar-kai-fey-ancestry.mpmm",
+   "name": "妖精血统",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.shadar-kai-keen-senses.mpmm",
+   "name": "敏锐感官",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.shadar-kai-necrotic-resistance.mpmm",
+   "name": "暗蚀抗性",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shadar-kai-trance.mpmm",
+   "name": "出神",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shifter-beasthide-bestial-instincts.mpmm",
+   "name": "野兽本能",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.shifter-beasthide-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shifter-bestial-instincts.mpmm",
+   "name": "野兽本能",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.shifter-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shifter-longtooth-bestial-instincts.mpmm",
+   "name": "野兽本能",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.shifter-longtooth-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shifter-swiftstride-bestial-instincts.mpmm",
+   "name": "野兽本能",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.shifter-swiftstride-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.shifter-wildhunt-bestial-instincts.mpmm",
+   "name": "野兽本能",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.shifter-wildhunt-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-cats-claws.mpmm",
+   "name": "猫之利爪",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-cats-talent.mpmm",
+   "name": "猫之天性",
+   "cls": "A",
+   "tags": [
+    "熟练"
+   ]
+  },
+  {
+   "id": "feature.tabaxi-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-feline-agility.mpmm",
+   "name": "猫之迅捷",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.tabaxi-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tabaxi-speed.mpmm",
+   "name": "速度",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.tortle-claws.mpmm",
+   "name": "爪击",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tortle-hold-breath.mpmm",
+   "name": "屏息",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tortle-natural-armor.mpmm",
+   "name": "天生护甲",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tortle-natures-intuition.mpmm",
+   "name": "自然直觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.tortle-shell-defense.mpmm",
+   "name": "龟壳防御",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.tortle-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-amphibious.mpmm",
+   "name": "水陆两栖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-emissary-of-the-sea.mpmm",
+   "name": "海之使者",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-guardian-of-the-depths.mpmm",
+   "name": "海渊守卫",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.triton-speed.mpmm",
+   "name": "速度",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.water-genasi-acid-resistance.mpmm",
+   "name": "强酸抗性",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
+  },
+  {
+   "id": "feature.water-genasi-amphibious.mpmm",
+   "name": "水陆两栖",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.water-genasi-speed.mpmm",
+   "name": "速度",
+   "cls": "A",
+   "tags": [
+    "速度"
+   ]
+  },
+  {
+   "id": "feature.yuan-ti-darkvision.mpmm",
+   "name": "黑暗视觉",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.yuan-ti-magic-resistance.mpmm",
+   "name": "魔法抗性",
+   "cls": "B",
+   "tags": [
+    "攻击结算",
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.yuan-ti-poison-resilience.mpmm",
+   "name": "毒素抗性",
+   "cls": "B",
+   "tags": [
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.yuan-ti-serpentine-spellcasting.mpmm",
+   "name": "巨蛇法术",
+   "cls": "B",
+   "tags": [
+    "法术"
+   ]
+  },
+  {
+   "id": "feature.yuan-ti-size.mpmm",
+   "name": "体型",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.rewarded-feature-fortunes-favor.bmt",
+   "name": "特性：命运宠儿",
+   "cls": "C",
+   "tags": []
+  },
+  {
+   "id": "feature.ruined-feature-still-standing.bmt",
+   "name": "特性：百折不挠",
+   "cls": "C",
+   "tags": []
+  }
+ ]
+}

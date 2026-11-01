@@ -1,0 +1,64 @@
+{
+ "group": "g2b-spellsources",
+ "stats": [
+  {
+   "check": "b12",
+   "key": "reactionSpells",
+   "value": 6
+  },
+  {
+   "check": "b13",
+   "key": "flexibleCastingRows",
+   "value": 5
+  },
+  {
+   "check": "b14",
+   "key": "attachedSpellsCastAtFixedLevel",
+   "value": 9
+  },
+  {
+   "check": "b14",
+   "key": "itemsWithAttachedSpells",
+   "value": 206
+  },
+  {
+   "check": "b14",
+   "key": "scrollTableRows",
+   "value": 10
+  }
+ ],
+ "findings": [
+  {
+   "id": "b14-feat-spell-choice",
+   "check": "b14",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feat.fey-touched.tce 精类之触",
+    "feat.magic-initiate.phb 魔法学徒",
+    "feat.ritual-caster.phb 仪式施法者",
+    "feat.shadow-touched.tce 影界之触",
+    "feat.spell-sniper.phb 法术射手"
+   ],
+   "expected": "PHB、TCE 各专长原文",
+   "note": "专长要玩家“选职业、选 2 个戏法和 1 个法术”（或选一个学派的 1 环法术），数据里没有选项池：建卡时无法弹出选择。需要一种“从某职业法术表选 N 个某环法术”的选项池写法",
+   "count": 5
+  },
+  {
+   "id": "b14-scroll-labels",
+   "check": "b14",
+   "kind": "data-defect",
+   "fixSource": "normalize",
+   "entries": [
+    "1环 稀有度写成“通用语”（应为“普通”）",
+    "6th 环阶写成英文序数（应为“N环”）",
+    "7th 环阶写成英文序数（应为“N环”）",
+    "8th 环阶写成英文序数（应为“N环”）",
+    "戏法 稀有度写成“通用语”（应为“普通”）"
+   ],
+   "expected": "DMG 法术卷轴表",
+   "note": "法术卷轴表里把稀有度 Common 译成“通用语”（那是语言），环阶有的写成 6th/7th/8th",
+   "count": 5
+  }
+ ]
+}

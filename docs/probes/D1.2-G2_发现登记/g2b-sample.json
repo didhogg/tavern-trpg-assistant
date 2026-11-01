@@ -1,0 +1,56 @@
+{
+ "group": "g2b-sample",
+ "stats": [
+  {
+   "check": "b1",
+   "key": "checks",
+   "value": 141
+  },
+  {
+   "check": "b1",
+   "key": "samples",
+   "value": 19
+  }
+ ],
+ "findings": [
+  {
+   "id": "b1-ac",
+   "check": "b1",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "术士1：读出 12 / 手算 15",
+    "术士5：读出 12 / 手算 15"
+   ],
+   "expected": "PHB 规则手算（每张样卡的算式写在 expected/samples.ts）",
+   "note": "护甲等级算不对：无甲防御、龙族韧性等的公式或条件读不出（效果的条件只是文字，或公式没结构化）",
+   "count": 2
+  },
+  {
+   "id": "b1-hp",
+   "check": "b1",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "战士5：读出 49 / 手算 54",
+    "牧师1：读出 11 / 手算 12"
+   ],
+   "expected": "PHB 规则手算（每张样卡的算式写在 expected/samples.ts）",
+   "note": "生命值上限算不对（矮人坚韧、龙族韧性的每级加成是 0 占位等）",
+   "count": 2
+  },
+  {
+   "id": "b1-speed",
+   "check": "b1",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "武僧5：读出 30 / 手算 40",
+    "野蛮人5：读出 30 / 手算 40"
+   ],
+   "expected": "PHB 规则手算（每张样卡的算式写在 expected/samples.ts）",
+   "note": "速度算不对（快速移动、无甲移动的加成是 0 占位）",
+   "count": 2
+  }
+ ]
+}

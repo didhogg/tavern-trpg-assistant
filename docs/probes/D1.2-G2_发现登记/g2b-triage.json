@@ -1,0 +1,194 @@
+{
+ "group": "g2b-triage",
+ "stats": [
+  {
+   "check": "b3",
+   "key": "A",
+   "value": 144
+  },
+  {
+   "check": "b3",
+   "key": "A.先攻被动",
+   "value": 4
+  },
+  {
+   "check": "b3",
+   "key": "A.属性值",
+   "value": 3
+  },
+  {
+   "check": "b3",
+   "key": "A.感官",
+   "value": 7
+  },
+  {
+   "check": "b3",
+   "key": "A.抗性免疫",
+   "value": 47
+  },
+  {
+   "check": "b3",
+   "key": "A.护甲等级",
+   "value": 2
+  },
+  {
+   "check": "b3",
+   "key": "A.熟练",
+   "value": 64
+  },
+  {
+   "check": "b3",
+   "key": "A.生命上限",
+   "value": 4
+  },
+  {
+   "check": "b3",
+   "key": "A.速度",
+   "value": 18
+  },
+  {
+   "check": "b3",
+   "key": "B",
+   "value": 412
+  },
+  {
+   "check": "b3",
+   "key": "C",
+   "value": 584
+  },
+  {
+   "check": "b3",
+   "key": "mechanicFeatures",
+   "value": 1650
+  },
+  {
+   "check": "b3",
+   "key": "plainMechanic",
+   "value": 1140
+  }
+ ],
+ "findings": [
+  {
+   "id": "b3-A-derived-in-text",
+   "check": "b3",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.air-genasi-lightning-resistance.mpmm 闪电抗性：抗性免疫",
+    "feature.artificer-alchemist-alchemical-savant.tce 炼金术掌握：属性值",
+    "feature.artificer-alchemist-tool-proficiency.tce 工具熟练：熟练",
+    "feature.artificer-armorer-tools-of-the-trade.tce 行业工具：熟练",
+    "feature.artificer-artillerist-tool-proficiency.tce 工具熟练：熟练",
+    "feature.artificer-battle-smith-battle-ready.tce 战斗准备：熟练",
+    "feature.artificer-battle-smith-improved-defender.tce 改良守卫：护甲等级",
+    "feature.artificer-battle-smith-tool-proficiency.tce 工具熟练：熟练",
+    "feature.barbarian-feral-instinct.phb 野性直觉：先攻被动",
+    "feature.barbarian-path-of-the-ancestral-guardian-ancestral-protectors.xge 先祖护卫：抗性免疫",
+    "feature.barbarian-path-of-the-storm-herald-desert.xge-2 荒漠：抗性免疫",
+    "feature.barbarian-path-of-the-storm-herald-sea.xge-2 海洋：抗性免疫",
+    "feature.barbarian-path-of-the-storm-herald-tundra.xge-2 冻原：抗性免疫",
+    "feature.barbarian-path-of-the-totem-warrior-bear.phb 熊：抗性免疫",
+    "feature.bard-college-of-lore-bonus-proficiencies.phb 附赠熟练：熟练",
+    "feature.bard-college-of-swords-blade-flourish.xge 剑舞：速度",
+    "feature.bard-college-of-swords-fighting-style.xge 战斗风格：熟练",
+    "feature.bard-college-of-valor-bonus-proficiencies.phb 附赠熟练：熟练",
+    "feature.blind-fighting.tce 盲斗：感官",
+    "feature.bugbear-sneaky.mpmm 隐秘：熟练",
+    "feature.bugbear-sneaky.vgm 隐秘：熟练",
+    "feature.centaur-natural-affinity.mpmm 自然亲和：熟练",
+    "feature.changeling-changeling-instincts.mpmm 幻身灵本能：熟练",
+    "feature.cleric-death-domain-bonus-proficiency.dmg 附赠熟练项：熟练",
+    "feature.cleric-forge-domain-bonus-proficiency.xge 附赠熟练项：熟练",
+    "feature.cleric-forge-domain-saint-of-forge-and-fire.xge 锻炉与烈焰的圣徒：抗性免疫",
+    "feature.cleric-forge-domain-soul-of-the-forge.xge 锻造之魂：护甲等级、抗性免疫",
+    "feature.cleric-life-domain-channel-divinity-preserve-life.phb 引导神力：维持生命：生命上限",
+    "feature.cleric-nature-domain-acolyte-of-nature.phb 自然侍僧：熟练",
+    "feature.cleric-nature-domain-dampen-elements.phb 抑制元素：抗性免疫",
+    "feature.cleric-order-domain-bonus-proficiencies.tce 附赠熟练：熟练",
+    "feature.cleric-peace-domain-expansive-bond.tce 增强联结：抗性免疫",
+    "feature.cleric-peace-domain-implement-of-peace.tce 和平执行：熟练",
+    "feature.cleric-tempest-domain-bonus-proficiencies.phb 附赠熟练：熟练",
+    "feature.cleric-twilight-domain-bonus-proficiencies.tce 附赠熟练：熟练",
+    "feature.cleric-twilight-domain-vigilant-blessing.tce 警觉赐福：先攻被动",
+    "feature.cleric-war-domain-avatar-of-battle.phb 战争化身：抗性免疫",
+    "feature.cleric-war-domain-bonus-proficiencies.phb 附赠熟练：熟练",
+    "feature.custom-lineage-darkvision-variable-trait-darkvision.tce 可选特性；黑暗视觉：感官",
+    "feature.custom-lineage-variable-trait.tce 可选特征：感官",
+    "feature.dragonborn-black-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-blue-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-brass-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-bronze-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-copper-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-gold-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-green-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-red-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-silver-damage-resistance.phb 伤害抗性：抗性免疫",
+    "feature.dragonborn-white-damage-resistance.phb 伤害抗性：抗性免疫"
+   ],
+   "expected": "各特性原文（初筛，逐条确认见分诊清单）",
+   "note": "影响护甲等级、速度、生命上限、熟练、抗性、感官、先攻、属性值的机制只有文字（初筛结果，含误报，需对照原书确认后结构化）",
+   "count": 144
+  },
+  {
+   "id": "b3-B-action-in-text",
+   "check": "b3",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "feature.aarakocra-dive-attack.dmg 俯冲攻击：伤害",
+    "feature.aarakocra-talons.dmg 禽爪：伤害",
+    "feature.aasimar-light-bearer.mpmm 光辉掌者：法术",
+    "feature.aasimar-light-bearer.vgm 光辉掌者：法术",
+    "feature.aasimar-necrotic-shroud-light-bearer.mpmm 光辉掌者：法术",
+    "feature.aasimar-radiant-consumption-light-bearer.mpmm 光辉掌者：法术",
+    "feature.aasimar-radiant-soul-light-bearer.mpmm 光辉掌者：法术",
+    "feature.acolyte-feature-shelter-of-the-faithful.phb 特性：信仰庇护：法术",
+    "feature.archery.phb 箭术：攻击结算",
+    "feature.artificer-alchemist-alchemist-spells.tce 炼金师法术：法术",
+    "feature.artificer-alchemist-experimental-elixir.tce 实验性灵药：动作、资源、法术",
+    "feature.artificer-armorer-arcane-armor.tce 奥能装甲：动作、法术",
+    "feature.artificer-armorer-armorer-spells.tce 装甲师法术：法术",
+    "feature.artificer-armorer-dampening-field.tce 减震场：攻击结算",
+    "feature.artificer-armorer-infiltrator.tce 渗透者：伤害、攻击结算",
+    "feature.artificer-armorer-lightning-launcher.tce 闪电发射器：伤害",
+    "feature.artificer-armorer-thunder-gauntlets.tce 雷霆战拳：攻击结算",
+    "feature.artificer-artillerist-artillerist-spells.tce 魔炮师法术：法术",
+    "feature.artificer-artillerist-explosive-cannon.tce 高爆炮台：伤害、动作、法术",
+    "feature.artificer-artillerist-fortified-position.tce 坚固要塞：动作、法术",
+    "feature.artificer-battle-smith-battle-smith-spells.tce 战地匠师法术：法术",
+    "feature.artificer-battle-smith-steel-defender.tce 钢铁守卫：动作、资源、法术",
+    "feature.artificer-magic-item-savant.tce 魔法物品专家：法术",
+    "feature.artificer-magical-tinkering.tce 魔法工艺：动作",
+    "feature.artificer-soul-of-artifice.tce 奇械之魂：动作、攻击结算",
+    "feature.artificer-spellcasting.tce 施法：资源、攻击结算、法术",
+    "feature.barbarian-danger-sense.phb 危机感应：攻击结算、法术",
+    "feature.barbarian-path-of-the-ancestral-guardian-spirit-shield.xge 精魂之盾：动作",
+    "feature.barbarian-path-of-the-battlerager-battlerager-armor.scag 战狂装甲：伤害、动作、攻击结算",
+    "feature.barbarian-path-of-the-battlerager-battlerager-charge.scag 战狂冲锋：动作",
+    "feature.barbarian-path-of-the-beast-form-of-the-beast.tce 野兽之形：动作、资源、攻击结算",
+    "feature.barbarian-path-of-the-berserker-frenzy.phb 狂怒：动作",
+    "feature.barbarian-path-of-the-berserker-intimidating-presence.phb 威慑之姿：动作",
+    "feature.barbarian-path-of-the-berserker-retaliation.phb 报偿：动作",
+    "feature.barbarian-path-of-the-storm-herald-desert.xge 荒漠：伤害",
+    "feature.barbarian-path-of-the-storm-herald-desert.xge-3 荒漠：动作",
+    "feature.barbarian-path-of-the-storm-herald-sea.xge 海洋：攻击结算",
+    "feature.barbarian-path-of-the-storm-herald-sea.xge-3 海洋：动作",
+    "feature.barbarian-path-of-the-storm-herald-storm-aura.xge 风暴灵光：动作",
+    "feature.barbarian-path-of-the-totem-warrior-bear.phb-2 熊：攻击结算",
+    "feature.barbarian-path-of-the-totem-warrior-bear.phb-3 熊：攻击结算",
+    "feature.barbarian-path-of-the-totem-warrior-spirit-seeker.phb 精魄寻者：法术",
+    "feature.barbarian-path-of-the-totem-warrior-spirit-walker.phb 精魂行者：法术",
+    "feature.barbarian-path-of-the-totem-warrior-wolf.phb 狼：攻击结算",
+    "feature.barbarian-path-of-the-totem-warrior-wolf.phb-3 狼：动作",
+    "feature.barbarian-path-of-the-zealot-fanatical-focus.xge 专心炽志：攻击结算",
+    "feature.barbarian-path-of-the-zealot-warrior-of-the-gods.xge 神之勇者：法术",
+    "feature.barbarian-path-of-wild-magic-unstable-backlash.tce 无常反冲：动作、攻击结算",
+    "feature.barbarian-path-of-wild-magic-wild-surge.tce 狂野浪潮：攻击结算",
+    "feature.barbarian-reckless-attack.phb 鲁莽攻击：攻击结算"
+   ],
+   "expected": "各特性原文",
+   "note": "影响行动、伤害、资源的机制只有文字：按此前的决定在 U5.3 行动、U5.5 资源、M6 结算时细化，G2 不要求现在结构化",
+   "count": 412
+  }
+ ]
+}

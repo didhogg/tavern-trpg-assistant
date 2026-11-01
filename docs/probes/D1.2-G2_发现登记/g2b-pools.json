@@ -1,0 +1,16 @@
+{
+ "group": "g2b-pools",
+ "stats": [
+  {
+   "check": "b5",
+   "key": "checks",
+   "value": 240
+  },
+  {
+   "check": "b5",
+   "key": "pools",
+   "value": 12
+  }
+ ],
+ "findings": []
+}

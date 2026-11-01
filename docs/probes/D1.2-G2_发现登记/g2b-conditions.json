@@ -1,0 +1,70 @@
+{
+ "group": "g2b-conditions",
+ "stats": [
+  {
+   "check": "b6",
+   "key": "checks",
+   "value": 50
+  },
+  {
+   "check": "b6",
+   "key": "conditionCodesUsed",
+   "value": 15
+  },
+  {
+   "check": "b6",
+   "key": "conditions",
+   "value": 15
+  }
+ ],
+ "findings": [
+  {
+   "id": "b6-against-text-only",
+   "check": "b6",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "blinded：针对它的攻击优势",
+    "invisible：针对它的攻击劣势",
+    "paralyzed：5 尺内近战攻击自动重击",
+    "prone：近战攻击对它优势",
+    "prone：远程攻击对它劣势",
+    "restrained：针对它的攻击优势",
+    "stunned：针对它的攻击优势",
+    "unconscious：5 尺内近战攻击自动重击"
+   ],
+   "expected": "PHB 附录 A 状态",
+   "note": "“针对该生物的攻击有优势/劣势/自动重击”只有说明文字：现有效果类型只能表达“自己”的优势劣势，表达不了“别人打它”。要让掷骰自动判定，需要给优势/劣势效果加一个“针对它”的标记",
+   "count": 8
+  },
+  {
+   "id": "b6-structured-missing",
+   "check": "b6",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "petrified：毒素与疾病免疫",
+    "prone：自己攻击劣势",
+    "restrained：自己攻击劣势"
+   ],
+   "expected": "PHB 附录 A 状态",
+   "note": "这个状态的机制要点应当是结构化效果（自己的攻击/检定/豁免劣势、免疫等），数据里没有",
+   "count": 3
+  },
+  {
+   "id": "b6-text-missing",
+   "check": "b6",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "paralyzed：针对它的攻击优势",
+    "petrified：力量敏捷豁免自动失败",
+    "petrified：针对它的攻击优势",
+    "unconscious：针对它的攻击优势"
+   ],
+   "expected": "PHB 附录 A 状态",
+   "note": "这个状态的机制要点连说明文字里都没写（例：魅惑者对被魅惑者的社交检定优势、麻痹/石化/昏迷时针对它的攻击优势）",
+   "count": 4
+  }
+ ]
+}

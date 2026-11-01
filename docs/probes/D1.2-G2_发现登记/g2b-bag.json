@@ -1,0 +1,135 @@
+{
+ "group": "g2b-bag",
+ "stats": [
+  {
+   "check": "b7",
+   "key": "ammunitionBundles",
+   "value": 42
+  },
+  {
+   "check": "b7",
+   "key": "attunementRequired",
+   "value": 767
+  },
+  {
+   "check": "b7",
+   "key": "attunementWithRestriction",
+   "value": 143
+  },
+  {
+   "check": "b7",
+   "key": "consumables",
+   "value": 42
+  },
+  {
+   "check": "b7",
+   "key": "plainItems",
+   "value": 425
+  },
+  {
+   "check": "b7",
+   "key": "plainWithoutValue",
+   "value": 38
+  },
+  {
+   "check": "b7",
+   "key": "plainWithoutWeight",
+   "value": 191
+  }
+ ],
+ "findings": [
+  {
+   "id": "b7-attunement-restriction-text",
+   "check": "b7",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "item.alchemical-compendium.tce 炼金总纲：由法师",
+    "item.astral-shard.tce 星界碎晶：由术士",
+    "item.astromancy-archive.tce 星卜编集：由法师",
+    "item.atlas-of-endless-horizons.tce 寰宇图纂：由法师",
+    "item.bell-branch.tce 钟铃圣枝：需德鲁伊或魔契师同调",
+    "item.blackrazor.dmg 黑刃：需非守序阵营",
+    "item.book-of-exalted-deeds.dmg 崇善之书：由一位善良阵营的生物",
+    "item.cauldron-of-rebirth.tce 重生坩埚：需德鲁伊或魔契师同调",
+    "item.chain-mail-mind-carapace.vgm 心灵外壳链甲：由特定个人",
+    "item.crystalline-chronicle.tce 凝晶年纪：由法师",
+    "item.dark-shard-amulet.xge 黑暗碎片护符：由魔契师",
+    "item.devotees-censer.tce 奉献香炉：由牧师或圣武士",
+    "item.duplicitous-manuscript.tce 两面花言：由法师",
+    "item.dwarven-thrower.dmg 矮人飞锤：由矮人",
+    "item.elemental-essence-shard-air.tce 元素精粹碎晶（气）：由术士",
+    "item.elemental-essence-shard-earth.tce 元素精粹碎晶（土）：由术士",
+    "item.elemental-essence-shard-fire.tce 元素精粹碎晶（火）：由术士",
+    "item.elemental-essence-shard-water.tce 元素精粹碎晶（水）：由术士",
+    "item.elemental-essence-shard.tce 元素精粹碎晶：由术士",
+    "item.far-realm-shard.tce 遥远国度碎晶：由术士",
+    "item.feywild-shard.tce 妖精荒野碎晶：由术士",
+    "item.fulminating-treatise.tce 爆鸣专论：由法师",
+    "item.greater-silver-sword.mtf 高等银剑：由被具有心灵感应能力的生物",
+    "item.greatsword-holy-avenger.dmg 神圣复仇者巨剑：由圣武士",
+    "item.greatsword-mind-blade.vgm 心灵之刃巨剑：由特定个人",
+    "item.guardian-emblem.tce 守护者纹章：由牧师或圣武士",
+    "item.hat-of-wizardry.xge 巫术帽：由法师",
+    "item.heart-weavers-primer.tce 织心入门：由法师",
+    "item.holy-avenger.dmg 神圣复仇者：由圣武士",
+    "item.infernal-tack.mtf 炼狱鞍具：由邪恶阵营的生物",
+    "item.instrument-of-the-bards-anstruth-harp.dmg 吟游诗人乐器，安斯翠瑟竖琴：由吟游诗人",
+    "item.instrument-of-the-bards-canaith-mandolin.dmg 吟游诗人乐器，凯纳斯曼陀林：由吟游诗人",
+    "item.instrument-of-the-bards-cli-lyre.dmg 吟游诗人乐器，科里里拉琴：由吟游诗人",
+    "item.instrument-of-the-bards-doss-lute.dmg 吟游诗人乐器，安眠鲁特琴：由吟游诗人",
+    "item.instrument-of-the-bards-family.dmg 吟游诗人乐器（系列）：由吟游诗人",
+    "item.instrument-of-the-bards-fochlucan-bandore.dmg 吟游诗人乐器，佛克路坎三弦琴：由吟游诗人",
+    "item.instrument-of-the-bards-mac-fuirmidh-cittern.dmg 吟游诗人乐器，麦克-弗瑞米西特琴：由吟游诗人",
+    "item.instrument-of-the-bards-ollamh-harp.dmg 吟游诗人乐器，奥莱姆竖琴：由吟游诗人",
+    "item.jesters-mask.bmt 小丑面具：由吟游诗人、术士或魔契师",
+    "item.libram-of-souls-and-flesh.tce 灵肉圣契：由法师",
+    "item.longsword-holy-avenger.dmg 神圣复仇者长剑：由圣武士",
+    "item.longsword-mind-blade.vgm 心灵之刃长剑：由特定个人",
+    "item.lyre-of-building.tce 建筑里拉琴：由吟游诗人",
+    "item.mind-blade.vgm 心灵之刃：由特定个人",
+    "item.mind-carapace-armor.vgm 心灵外壳护甲：由特定个人",
+    "item.mind-lash.vgm 心灵之鞭：由夺心魔",
+    "item.moonblade.dmg 月刃：由中立善良阵营的精灵或半精灵",
+    "item.natures-mantle.tce 自然斗篷：由德鲁伊或游侠",
+    "item.necklace-of-prayer-beads.dmg 念珠项链：需牧师，德鲁伊或圣武士",
+    "item.outer-essence-shard-chaotic.tce 外界精粹碎晶（混乱）：由术士"
+   ],
+   "expected": "DMG 各物品“需要同调（由……）”",
+   "note": "“由术士、魔契师、法师同调”这类限制只是文字，程序判断不了谁能同调；若要自动提示可结构化成职业/种族/阵营列表，不做则玩家自己看文字（建议：不做，按从简原则）",
+   "count": 143
+  },
+  {
+   "id": "b7-consumable-no-activity",
+   "check": "b7",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "item.elixir-of-health.dmg 健康灵药",
+    "item.oil-of-etherealness.dmg 以太化之油",
+    "item.oil-of-sharpness.dmg 锐锋之油",
+    "item.oil-of-slipperiness.dmg 滑溜之油",
+    "item.philter-of-love.dmg 迷情媚药",
+    "item.potion-of-animal-friendship.dmg 化兽为友药水",
+    "item.potion-of-clairvoyance.dmg 鹰眼术药水",
+    "item.potion-of-climbing.dmg 攀爬药水",
+    "item.potion-of-diminution.dmg 缩小药水",
+    "item.potion-of-fire-breath.dmg 火焰吐息药水",
+    "item.potion-of-flying.dmg 飞行药水",
+    "item.potion-of-gaseous-form.dmg 气化形体药水",
+    "item.potion-of-growth.dmg 成长药水",
+    "item.potion-of-heroism.dmg 英勇药水",
+    "item.potion-of-invisibility.dmg 隐形药水",
+    "item.potion-of-longevity.dmg 延寿药水",
+    "item.potion-of-mind-reading.dmg 读心药水",
+    "item.potion-of-poison.dmg 剧毒药水",
+    "item.potion-of-speed.dmg 加速药水",
+    "item.potion-of-vitality.dmg 活力药水",
+    "item.potion-of-water-breathing.dmg 水下呼吸药水"
+   ],
+   "expected": "DMG 各药水/油/灵药原文",
+   "note": "消耗品没有行动或效果，点“使用”无法结算（治疗药水已有，其余多是持续效果或需要掷表）",
+   "count": 21
+  }
+ ]
+}
