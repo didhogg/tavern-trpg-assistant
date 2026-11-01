@@ -89,18 +89,6 @@
  ],
  "findings": [
   {
-   "id": "c10-object-immune-text",
-   "check": "c10",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "object.generic-object.dmg 通用物件"
-   ],
-   "expected": "DMG、MM、GoS 各条目原文",
-   "note": "物件/载具免疫写成了文字",
-   "count": 1
-  },
-  {
    "id": "c10-object-no-stats",
    "check": "c10",
    "kind": "data-defect",

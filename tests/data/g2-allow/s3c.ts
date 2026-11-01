@@ -34,6 +34,14 @@ export const ALLOW: Allow[] = [
     expect: 9,
     reason: 'c10-object-actions-text-only：9 个器械补条目层 activities',
   },
+  {
+    name: 's3c-object-immune',
+    station: 3,
+    ids: ['object.generic-object.dmg'],
+    path: /^(?:\/data\/immune(?:\/|$)|\/i18n\/en\/fields\/immune\.)/,
+    expect: 1,
+    reason: 'c10-object-immune-text：通用物件免疫文字改伤害代码',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
