@@ -1,0 +1,25 @@
+import type { Fix } from '../engine'
+
+export const ROWS: Fix[] = [
+  {
+    id: 'race.gnome-deep.dmg',
+    path: '/data/effects/1',
+    op: 'insert',
+    after: { kind: 'spellGrant', mode: 'innate', ability: 'int', spells: ['spell.blindness-deafness.phb'], uses: { max: 1, recharge: 'dawn' } },
+    basis: 'DMG 深侏儒天生施法 p282：每日一次目盲术/耳聋术',
+  },
+  {
+    id: 'race.gnome-deep.dmg',
+    path: '/data/effects/2',
+    op: 'insert',
+    after: { kind: 'spellGrant', mode: 'innate', ability: 'int', spells: ['spell.blur.phb'], uses: { max: 1, recharge: 'dawn' } },
+    basis: 'DMG 深侏儒天生施法 p282：每日一次朦胧术',
+  },
+  {
+    id: 'race.gnome-deep.dmg',
+    path: '/data/effects/3',
+    op: 'insert',
+    after: { kind: 'spellGrant', mode: 'innate', ability: 'int', spells: ['spell.disguise-self.phb'], uses: { max: 1, recharge: 'dawn' } },
+    basis: 'DMG 深侏儒天生施法 p282：每日一次易容术',
+  },
+]

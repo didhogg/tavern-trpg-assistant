@@ -9,21 +9,8 @@
   {
    "check": "a12",
    "key": "spellGrants",
-   "value": 137
+   "value": 140
   }
  ],
- "findings": [
-  {
-   "id": "a12-innate-not-structured",
-   "check": "a12",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.gnome-deep-innate-spellcasting.dmg 天生施法"
-   ],
-   "expected": "PHB 第 2 章、MPMM、MTF 种族特质（免费施展的法术）",
-   "note": "种族特质文字里写着免费施展某法术，但所属种族的效果里没有对应的授予法术（spellGrant），人物模块读不到",
-   "count": 1
-  }
- ]
+ "findings": []
 }

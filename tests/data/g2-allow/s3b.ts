@@ -58,6 +58,14 @@ export const ALLOW: Allow[] = [
     expect: 31,
     reason: 'a12-innate-unlock-level：31 个种族/亚种、57 处加 level＋3 处次数修正',
   },
+  {
+    name: 's3b-deep-gnome',
+    station: 3,
+    ids: ['race.gnome-deep.dmg'],
+    path: /^\/data\/effects\/\d+$/,
+    expect: 1,
+    reason: 'a12-innate-not-structured：深侏儒补 3 个天生 spellGrant',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
