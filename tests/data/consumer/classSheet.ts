@@ -68,6 +68,18 @@ export function readEquipment(row: Row, field: 'startingEquipment' | 'equipment'
   return out
 }
 
+/**
+ * 起始装备的“形状”：每个选一块的选项数，以及固定给的物品件数。
+ * 书上的“固定给一个圣徽/任意两把简易武器”这类类别固定项，`fixed` 里放不下类别项（旧扩展的格式只收具体物品），
+ * 所以写成“只有一个选项、且全是类别项”的选一块——玩家在类别里挑具体的一件。这种块按“固定项”数，不按“选一”数。
+ */
+export function equipShape(blocks: EquipBlock[]): { choices: number[]; fixed: number } {
+  const forced = (b: EquipBlock): boolean => b.kind === 'choice' && b.options.length === 1 && b.options[0].length > 0 && b.options[0].every((o) => o.category !== undefined)
+  const choices = blocks.filter((b) => b.kind === 'choice' && !forced(b)).map((b) => b.options.length)
+  const fixed = blocks.reduce((n, b) => n + (b.kind === 'fixed' ? b.options[0].length : forced(b) ? b.options[0].length : 0), 0)
+  return { choices, fixed }
+}
+
 /** 物品中文名 → 条目编号。先精确，再去掉数量括号“(20)”、全半角括号后比较。找不到返回 undefined。 */
 export function resolveItemName(l: Lib, name: string): string | undefined {
   const norm = (s: string): string => s.replace(/[（(][^）)]*[）)]/g, '').replace(/\s+/g, '')

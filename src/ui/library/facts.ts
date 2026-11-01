@@ -32,11 +32,18 @@ const list = (v: unknown, map: Record<string, string>): string => {
   return join(arr(v).map((x) => tr(map, x)))
 }
 
+/** 起始装备的一件：具体物品显示名字；类别项（任意简易武器、圣徽……）显示书上的说法 `label`。 */
+function equipItemText(item: unknown): string {
+  if (!isObj(item)) return str(item)
+  const name = typeof item.item === 'string' ? item.item : str(item.label ?? item.category)
+  return `${name}${Number(item.qty ?? 1) > 1 ? `×${item.qty}` : ''}`
+}
+
 function equipmentText(v: unknown): string {
   if (typeof v === 'string') return v
   if (!isObj(v)) return ''
-  const fixed = arr(v.fixed).map((item) => isObj(item) ? `${str(item.item)}${Number(item.qty ?? 1) > 1 ? `×${item.qty}` : ''}` : str(item))
-  const choices = arr(v.choice).map((group) => arr(group).map((item) => isObj(item) ? `${str(item.item)}${Number(item.qty ?? 1) > 1 ? `×${item.qty}` : ''}` : str(item)).join(' / ')).filter(Boolean)
+  const fixed = arr(v.fixed).map(equipItemText)
+  const choices = arr(v.choice).map((group) => arr(group).map(equipItemText).join(' / ')).filter(Boolean)
   const gold = isObj(v.gold) ? `${str(v.gold.dice)}×${Number(v.gold.multiplier ?? 1)} gp` : ''
   return join([...fixed, ...choices.map((c) => `(${c})`), gold].filter(Boolean), '，')
 }

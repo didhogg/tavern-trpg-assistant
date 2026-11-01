@@ -27934,7 +27934,7 @@ var $F = ["value"], [eI, tI] = /*#__PURE__*/ Gk("SelectRoot"), nI = /* @__PURE__
 						class: "trpg-btn trpg-btn--primary",
 						type: "button",
 						disabled: I(n).readOnly || !I(n).dirty,
-						onClick: i[0] ||= (e) => I(HH)()
+						onClick: i[0] ||= (e) => I(UH)()
 					}, M(I(n).dirty ? "保存存档" : "已是最新"), 9, wL),
 					K(EI, {
 						"default-name": `${c.value?.name ?? "存档"} 分支`,
@@ -27983,7 +27983,7 @@ var $F = ["value"], [eI, tI] = /*#__PURE__*/ Gk("SelectRoot"), nI = /* @__PURE__
 					current: e.id === c.value?.id,
 					"card-badge": I(r).scope === "all",
 					"read-only": I(n).readOnly,
-					onLoad: (t) => I(UH)(e),
+					onLoad: (t) => I(WH)(e),
 					onRename: (t) => m(() => I(r).rename(e.id, t), "改名失败"),
 					onNote: (t) => m(() => I(r).setNote(e.id, t), "保存备注失败"),
 					onExport: (t) => I(Fk)(e.id),
@@ -28007,7 +28007,7 @@ var $F = ["value"], [eI, tI] = /*#__PURE__*/ Gk("SelectRoot"), nI = /* @__PURE__
 					key: 1,
 					class: "trpg-btn trpg-btn--primary",
 					type: "button",
-					onClick: i[5] ||= (e) => I(VH)()
+					onClick: i[5] ||= (e) => I(HH)()
 				}, "＋ 新存档"))])),
 				K(tL, {
 					autos: I(r).autos,
@@ -28016,7 +28016,7 @@ var $F = ["value"], [eI, tI] = /*#__PURE__*/ Gk("SelectRoot"), nI = /* @__PURE__
 					"read-only": I(n).readOnly,
 					"rule-name": u,
 					"rule-installed": d,
-					onLoad: I(UH),
+					onLoad: I(WH),
 					onAutoAsManual: i[6] ||= (e) => m(() => I(r).autoAsManual(e.id), "另存失败"),
 					onRestore: i[7] ||= (e) => m(() => I(r).restore(e.id), "恢复失败"),
 					onPurge: i[8] ||= (e) => _(e.id, e.name),
@@ -28035,7 +28035,7 @@ var $F = ["value"], [eI, tI] = /*#__PURE__*/ Gk("SelectRoot"), nI = /* @__PURE__
 				key: e.id,
 				save: e,
 				"card-badge": "",
-				onLoad: (t) => I(UH)(e),
+				onLoad: (t) => I(WH)(e),
 				onRename: (t) => m(() => I(r).rename(e.id, t), "改名失败"),
 				onNote: (t) => m(() => I(r).setNote(e.id, t), "保存备注失败"),
 				onExport: (t) => I(Fk)(e.id),
@@ -28054,7 +28054,7 @@ var $F = ["value"], [eI, tI] = /*#__PURE__*/ Gk("SelectRoot"), nI = /* @__PURE__
 					class: "trpg-btn trpg-btn--primary",
 					type: "button",
 					disabled: I(n).readOnly,
-					onClick: i[9] ||= (e) => I(VH)()
+					onClick: i[9] ||= (e) => I(HH)()
 				}, "＋ 新存档", 8, NL)) : J("", !0),
 				G("button", {
 					class: "trpg-btn",
@@ -28708,44 +28708,47 @@ var zR = (e) => typeof e == "object" && !!e && !Array.isArray(e), BR = (e) => Ar
 	return HR(BR(e).map((e) => IR(t, e)));
 };
 function KR(e) {
+	return zR(e) ? `${typeof e.item == "string" ? e.item : VR(e.label ?? e.category)}${Number(e.qty ?? 1) > 1 ? `×${e.qty}` : ""}` : VR(e);
+}
+function qR(e) {
 	if (typeof e == "string") return e;
 	if (!zR(e)) return "";
-	let t = BR(e.fixed).map((e) => zR(e) ? `${VR(e.item)}${Number(e.qty ?? 1) > 1 ? `×${e.qty}` : ""}` : VR(e)), n = BR(e.choice).map((e) => BR(e).map((e) => zR(e) ? `${VR(e.item)}${Number(e.qty ?? 1) > 1 ? `×${e.qty}` : ""}` : VR(e)).join(" / ")).filter(Boolean), r = zR(e.gold) ? `${VR(e.gold.dice)}×${Number(e.gold.multiplier ?? 1)} gp` : "";
+	let t = BR(e.fixed).map(KR), n = BR(e.choice).map((e) => BR(e).map(KR).join(" / ")).filter(Boolean), r = zR(e.gold) ? `${VR(e.gold.dice)}×${Number(e.gold.multiplier ?? 1)} gp` : "";
 	return HR([
 		...t,
 		...n.map((e) => `(${e})`),
 		r
 	].filter(Boolean), "，");
 }
-function qR(e, t) {
+function JR(e, t) {
 	return zR(e) ? HR(Object.entries(e).map(([e, n]) => `${t[e] ?? e} ${Number(n) >= 0 ? "+" : ""}${n}`), " ") : "";
 }
-function JR(e) {
+function YR(e) {
 	if (!zR(e)) return "";
 	let t = VR(e.type), n = t === "point" ? "" : `${IR(jR, t)} `;
 	return e.amount === void 0 ? IR(MR, e.unit ?? t) : `${n}${e.amount} ${WR(e.unit)}`;
 }
-function YR(e) {
+function XR(e) {
 	return HR(BR(e).map((e) => {
 		if (!zR(e)) return "";
 		let t = VR(e.type), n = t === "instant" ? "即时" : t === "permanent" ? "直到被解除" : t === "special" ? "特殊" : e.amount === void 0 ? t : `${e.amount} ${WR(e.unit)}`;
 		return e.concentration ? `专注，至多 ${n}` : n;
 	}), "；");
 }
-function XR(e) {
+function ZR(e) {
 	return zR(e) ? HR([
 		e.v ? "V" : "",
 		e.s ? "S" : "",
 		e.m ? typeof e.m == "string" ? `M（${e.m}）` : "M" : ""
 	]) : "";
 }
-function ZR(e) {
+function QR(e) {
 	return e >= 100 ? `${e / 100} gp` : e >= 10 ? `${e / 10} sp` : `${e} cp`;
 }
-function QR(e) {
+function $R(e) {
 	return VR(e);
 }
-function $R(e) {
+function ez(e) {
 	let t = [], n = /* @__PURE__ */ new Map();
 	for (let t of BR(e)) {
 		if (!zR(t) || t.kind !== "itemGrant") continue;
@@ -28760,7 +28763,7 @@ function $R(e) {
 		parts: t
 	} : void 0;
 }
-function ez(e, t) {
+function tz(e, t) {
 	let n = BR(t).filter(zR).map((e) => ({
 		name: VR(e.name),
 		text: BR(e.text)
@@ -28770,22 +28773,22 @@ function ez(e, t) {
 		sections: n
 	} : void 0;
 }
-var tz = (e, t, n) => {
+var nz = (e, t, n) => {
 	n && e.push({
 		label: t,
 		parts: [n]
 	});
 };
-function nz(e) {
+function rz(e) {
 	let t = [];
-	if (tz(t, "生命骰", e.hitDie ? `d${e.hitDie}` : ""), tz(t, "主要属性", UR(e.primaryAbility)), tz(t, "豁免熟练", UR(e.saves)), zR(e.proficiencies)) {
+	if (nz(t, "生命骰", e.hitDie ? `d${e.hitDie}` : ""), nz(t, "主要属性", UR(e.primaryAbility)), nz(t, "豁免熟练", UR(e.saves)), zR(e.proficiencies)) {
 		let n = e.proficiencies;
-		tz(t, "护甲熟练", GR(n.armor, gR)), tz(t, "武器熟练", HR(BR(n.weapons).map(VR))), tz(t, "工具熟练", GR(n.tools, ER)), zR(n.skills) && tz(t, "技能熟练", `从 ${HR(BR(n.skills.from).map((e) => hR[VR(e)] ?? VR(e)))} 中选 ${n.skills.choose} 项`);
+		nz(t, "护甲熟练", GR(n.armor, gR)), nz(t, "武器熟练", HR(BR(n.weapons).map(VR))), nz(t, "工具熟练", GR(n.tools, ER)), zR(n.skills) && nz(t, "技能熟练", `从 ${HR(BR(n.skills.from).map((e) => hR[VR(e)] ?? VR(e)))} 中选 ${n.skills.choose} 项`);
 	}
 	if (BR(e.startingEquipment).length && t.push({
 		label: "起始装备",
-		parts: BR(e.startingEquipment).flatMap((e, t) => [t ? "\n" : "", KR(e)])
-	}), e.subclassTitle && tz(t, "子职业", `${e.subclassTitle}（${e.subclassLevel} 级选择）`), zR(e.table) && BR(e.table.rows).length) {
+		parts: BR(e.startingEquipment).flatMap((e, t) => [t ? "\n" : "", qR(e)])
+	}), e.subclassTitle && nz(t, "子职业", `${e.subclassTitle}（${e.subclassLevel} 级选择）`), zR(e.table) && BR(e.table.rows).length) {
 		let n = ["等级", ...BR(e.table.cols).map(VR)];
 		t.push({
 			label: "职业表",
@@ -28795,27 +28798,27 @@ function nz(e) {
 			}
 		});
 	}
-	let n = $R(e.advancement);
+	let n = ez(e.advancement);
 	return n && t.push(n), t;
 }
-function rz(e) {
+function iz(e) {
 	let t = [], n = zR(e.creatureType) ? IR(yR, e.creatureType.type) : "", r = VR(e.alignment).split(" ").map((e) => IR(bR, e)).join("");
-	tz(t, "类型", HR([
+	nz(t, "类型", HR([
 		BR(e.size).map((e) => IR(_R, e)).join("/"),
 		n,
 		r
-	], " · ")), tz(t, "护甲等级", HR(BR(e.ac).map((e) => zR(e) ? `${e.value}${e.from ? `（${Array.isArray(e.from) ? BR(e.from).map(VR).join("、") : VR(e.from)}）` : ""}${e.condition ? e.braces ? `（${VR(e.condition)}）` : ` ${VR(e.condition)}` : ""}` : VR(e)))), zR(e.hp) && tz(t, "生命值", `${e.hp.average}${e.hp.formula ? `（${e.hp.formula}）` : ""}`), tz(t, "速度", zR(e.speed) ? HR(Object.entries(e.speed).map(([e, t]) => `${IR(vR, e)} ${t} 尺`), "，") : ""), tz(t, "属性", zR(e.abilities) ? HR(Object.entries(mR).map(([t, n]) => `${n} ${e.abilities[t] ?? "—"}`), "  ") : ""), tz(t, "豁免", qR(e.saves, mR)), tz(t, "技能", qR(e.skills, hR)), tz(t, "伤害易伤", HR(BR(e.vulnerable).map((e) => RR(VR(e))))), tz(t, "伤害抗性", HR(BR(e.resist).map((e) => RR(VR(e))))), tz(t, "伤害免疫", HR(BR(e.immune).map((e) => RR(VR(e))))), tz(t, "状态免疫", HR(BR(e.conditionImmune).map((e) => RR(VR(e))))), tz(t, "感官", HR([...BR(e.senses).map(VR), e.passive ? `被动察觉 ${e.passive}` : ""])), tz(t, "语言", HR(BR(e.languages).map((e) => IR(TR, e)))), tz(t, "挑战等级", QR(e.cr));
+	], " · ")), nz(t, "护甲等级", HR(BR(e.ac).map((e) => zR(e) ? `${e.value}${e.from ? `（${Array.isArray(e.from) ? BR(e.from).map(VR).join("、") : VR(e.from)}）` : ""}${e.condition ? e.braces ? `（${VR(e.condition)}）` : ` ${VR(e.condition)}` : ""}` : VR(e)))), zR(e.hp) && nz(t, "生命值", `${e.hp.average}${e.hp.formula ? `（${e.hp.formula}）` : ""}`), nz(t, "速度", zR(e.speed) ? HR(Object.entries(e.speed).map(([e, t]) => `${IR(vR, e)} ${t} 尺`), "，") : ""), nz(t, "属性", zR(e.abilities) ? HR(Object.entries(mR).map(([t, n]) => `${n} ${e.abilities[t] ?? "—"}`), "  ") : ""), nz(t, "豁免", JR(e.saves, mR)), nz(t, "技能", JR(e.skills, hR)), nz(t, "伤害易伤", HR(BR(e.vulnerable).map((e) => RR(VR(e))))), nz(t, "伤害抗性", HR(BR(e.resist).map((e) => RR(VR(e))))), nz(t, "伤害免疫", HR(BR(e.immune).map((e) => RR(VR(e))))), nz(t, "状态免疫", HR(BR(e.conditionImmune).map((e) => RR(VR(e))))), nz(t, "感官", HR([...BR(e.senses).map(VR), e.passive ? `被动察觉 ${e.passive}` : ""])), nz(t, "语言", HR(BR(e.languages).map((e) => IR(TR, e)))), nz(t, "挑战等级", $R(e.cr));
 	for (let [n, r] of [
 		["特性", "traits"],
 		["动作", "actions"],
 		["附赠动作", "bonusActions"],
 		["反应", "reactions"]
 	]) {
-		let i = ez(n, e[r]);
+		let i = tz(n, e[r]);
 		i && t.push(i);
 	}
 	if (zR(e.legendary)) {
-		let n = ez("传奇动作", e.legendary.actions);
+		let n = tz("传奇动作", e.legendary.actions);
 		n && t.push(n);
 	}
 	return BR(e.attachedItems).length && t.push({
@@ -28823,9 +28826,9 @@ function rz(e) {
 		parts: BR(e.attachedItems).map(VR).flatMap((e, t) => [t ? "、" : "", { ref: e }])
 	}), t;
 }
-function iz(e) {
+function az(e) {
 	let t = [], n = Number(e.level);
-	tz(t, "环阶", `${n === 0 ? "戏法" : `${n} 环`} · ${IR(xR, e.school)}${e.ritual ? " · 仪式" : ""}`), tz(t, "施法时间", HR(BR(e.castTime).map((e) => zR(e) ? `${e.n ?? 1} ${WR(e.unit)}` : ""), "；")), tz(t, "施法距离", JR(e.range)), tz(t, "法术成分", XR(e.components)), tz(t, "持续时间", YR(e.duration));
+	nz(t, "环阶", `${n === 0 ? "戏法" : `${n} 环`} · ${IR(xR, e.school)}${e.ritual ? " · 仪式" : ""}`), nz(t, "施法时间", HR(BR(e.castTime).map((e) => zR(e) ? `${e.n ?? 1} ${WR(e.unit)}` : ""), "；")), nz(t, "施法距离", YR(e.range)), nz(t, "法术成分", ZR(e.components)), nz(t, "持续时间", XR(e.duration));
 	for (let [n, r] of [
 		["damageInflict", "造成伤害"],
 		["conditionInflict", "施加状态"],
@@ -28834,18 +28837,18 @@ function iz(e) {
 		["damageImmune", "赋予伤害免疫"],
 		["damageVulnerable", "造成伤害易伤"],
 		["affectsCreatureType", "影响的生物"]
-	]) tz(t, r, HR(BR(e[n]).map((e) => RR(VR(e)))));
-	return tz(t, "相关属性检定", UR(e.abilityCheck)), BR(e.classes).length && t.push({
+	]) nz(t, r, HR(BR(e[n]).map((e) => RR(VR(e)))));
+	return nz(t, "相关属性检定", UR(e.abilityCheck)), BR(e.classes).length && t.push({
 		label: "职业",
 		parts: BR(e.classes).flatMap((e, t) => [t ? "、" : "", { ref: VR(e) }])
 	}), t;
 }
-function az(e) {
+function oz(e) {
 	let t = [];
-	return tz(t, "属性加值", zR(e.abilityBonus) ? qR(e.abilityBonus.fixed, mR) : ""), tz(t, "体型", BR(e.size).map((e) => IR(_R, e)).join("/")), tz(t, "速度", zR(e.speed) ? HR(Object.entries(e.speed).map(([e, t]) => `${IR(vR, e)} ${t} 尺`), "，") : ""), tz(t, "黑暗视觉", e.darkvision ? `${e.darkvision} 尺` : ""), zR(e.proficiencies) ? (tz(t, "技能熟练", GR(e.proficiencies.skills, hR)), tz(t, "工具熟练", GR(e.proficiencies.tools, ER)), tz(t, "武器熟练", HR(BR(e.proficiencies.weapons).map(VR))), tz(t, "护甲熟练", GR(e.proficiencies.armor, gR))) : tz(t, "熟练项", GR(e.proficiencies, {
+	return nz(t, "属性加值", zR(e.abilityBonus) ? JR(e.abilityBonus.fixed, mR) : ""), nz(t, "体型", BR(e.size).map((e) => IR(_R, e)).join("/")), nz(t, "速度", zR(e.speed) ? HR(Object.entries(e.speed).map(([e, t]) => `${IR(vR, e)} ${t} 尺`), "，") : ""), nz(t, "黑暗视觉", e.darkvision ? `${e.darkvision} 尺` : ""), zR(e.proficiencies) ? (nz(t, "技能熟练", GR(e.proficiencies.skills, hR)), nz(t, "工具熟练", GR(e.proficiencies.tools, ER)), nz(t, "武器熟练", HR(BR(e.proficiencies.weapons).map(VR))), nz(t, "护甲熟练", GR(e.proficiencies.armor, gR))) : nz(t, "熟练项", GR(e.proficiencies, {
 		...hR,
 		...ER
-	})), tz(t, "语言", GR(e.languages, TR)), BR(e.traits).length && t.push({
+	})), nz(t, "语言", GR(e.languages, TR)), BR(e.traits).length && t.push({
 		label: "种族特质",
 		parts: BR(e.traits).flatMap((e, t) => [t ? "、" : "", { ref: VR(e) }])
 	}), e.parentRace && t.push({
@@ -28853,14 +28856,14 @@ function az(e) {
 		parts: [{ ref: VR(e.parentRace) }]
 	}), t;
 }
-function oz(e) {
+function sz(e) {
 	let t = [];
-	return zR(e.proficiencies) && (tz(t, "技能熟练", GR(e.proficiencies.skills, hR)), tz(t, "工具熟练", GR(e.proficiencies.tools, ER)), tz(t, "语言", GR(e.proficiencies.languages, TR))), typeof e.feature == "string" && t.push({
+	return zR(e.proficiencies) && (nz(t, "技能熟练", GR(e.proficiencies.skills, hR)), nz(t, "工具熟练", GR(e.proficiencies.tools, ER)), nz(t, "语言", GR(e.proficiencies.languages, TR))), typeof e.feature == "string" && t.push({
 		label: "背景特性",
 		parts: [{ ref: e.feature }]
 	}), t;
 }
-function sz(e) {
+function cz(e) {
 	return BR(e).map(VR).filter(Boolean).flatMap((e, t) => {
 		let [n, r] = e.split("#");
 		return [
@@ -28870,12 +28873,12 @@ function sz(e) {
 		];
 	});
 }
-function cz(e) {
+function lz(e) {
 	if (!zR(e)) return [];
 	let t = [];
 	BR(e.will).length && t.push({
 		label: "附带法术·随意施放",
-		parts: sz(e.will)
+		parts: cz(e.will)
 	});
 	for (let [n, r] of [
 		["daily", "每日"],
@@ -28885,38 +28888,38 @@ function cz(e) {
 		let i = e[n];
 		if (zR(i)) for (let [e, a] of Object.entries(i)) t.push({
 			label: `附带法术·${r}${n === "charges" ? ` ${e} 点` : n === "daily" ? ` ${e.replace("e", "")} 次${e.endsWith("e") ? "（每个）" : ""}` : ` ${e} 次`}`,
-			parts: sz(a)
+			parts: cz(a)
 		});
 	}
 	return BR(e.other).length && t.push({
 		label: "附带法术·其他",
-		parts: sz(e.other)
+		parts: cz(e.other)
 	}), typeof e.ability == "string" && t.push({
 		label: "附带法术·施法属性",
 		parts: [IR(mR, e.ability)]
 	}), t;
 }
-function lz(e) {
+function uz(e) {
 	return !zR(e) || !zR(e.static) ? zR(e) ? "见正文" : "" : HR(Object.entries(e.static).map(([e, t]) => `${IR(mR, e)} ${t}`), "，");
 }
-function uz(e) {
+function dz(e) {
 	let t = [];
-	return tz(t, "类别", IR(DR, e.category)), typeof e.baseItem == "string" && e.baseItem && t.push({
+	return nz(t, "类别", IR(DR, e.category)), typeof e.baseItem == "string" && e.baseItem && t.push({
 		label: "基础物品",
 		parts: [{ ref: e.baseItem }]
-	}), tz(t, "稀有度", e.rarity ? IR(OR, e.rarity) : ""), e.category === "family" && BR(e.members).length && t.push({
+	}), nz(t, "稀有度", e.rarity ? IR(OR, e.rarity) : ""), e.category === "family" && BR(e.members).length && t.push({
 		label: "成员",
 		members: BR(e.members).map(VR)
-	}), zR(e.weapon) && (tz(t, "武器类别", IR(kR, e.weapon.category)), tz(t, "伤害", HR(BR(e.weapon.damage).map((e) => zR(e) ? `${e.dice} ${IR(CR, e.type)}` : ""), "；") + (e.weapon.versatile ? `（两用 ${e.weapon.versatile}）` : "")), tz(t, "武器属性", HR(BR(e.weapon.properties).map((e) => LR(AR, e)))), zR(e.weapon.range) && e.weapon.range.normal && tz(t, "射程", `${e.weapon.range.normal}${e.weapon.range.long ? `/${e.weapon.range.long}` : ""} 尺`)), zR(e.armor) && (tz(t, "护甲类别", IR(gR, e.armor.category)), tz(t, "护甲等级", e.armor.ac === void 0 ? "" : String(e.armor.ac)), tz(t, "隐匿", e.armor.stealthDisadvantage ? "劣势" : "")), zR(e.bonuses) && tz(t, "加值", HR(Object.entries(e.bonuses).map(([e, t]) => `${{
+	}), zR(e.weapon) && (nz(t, "武器类别", IR(kR, e.weapon.category)), nz(t, "伤害", HR(BR(e.weapon.damage).map((e) => zR(e) ? `${e.dice} ${IR(CR, e.type)}` : ""), "；") + (e.weapon.versatile ? `（两用 ${e.weapon.versatile}）` : "")), nz(t, "武器属性", HR(BR(e.weapon.properties).map((e) => LR(AR, e)))), zR(e.weapon.range) && e.weapon.range.normal && nz(t, "射程", `${e.weapon.range.normal}${e.weapon.range.long ? `/${e.weapon.range.long}` : ""} 尺`)), zR(e.armor) && (nz(t, "护甲类别", IR(gR, e.armor.category)), nz(t, "护甲等级", e.armor.ac === void 0 ? "" : String(e.armor.ac)), nz(t, "隐匿", e.armor.stealthDisadvantage ? "劣势" : "")), zR(e.bonuses) && nz(t, "加值", HR(Object.entries(e.bonuses).map(([e, t]) => `${{
 		attack: "攻击",
 		damage: "伤害",
 		ac: "护甲等级",
 		save: "豁免",
 		spellAttack: "法术攻击",
 		spellDc: "法术豁免 DC"
-	}[e] ?? e} ${t}`), "，")), zR(e.charges) && tz(t, "充能", `${e.charges.max} 次，${IR(NR, e.charges.recharge)}恢复`), tz(t, "价格", typeof e.value == "number" ? ZR(e.value) : ""), tz(t, "重量", e.weight ? `${e.weight} 磅` : ""), tz(t, "同调", zR(e.attunement) && e.attunement.required ? `需要${e.attunement.by ? `（${VR(e.attunement.by)}）` : ""}` : ""), tz(t, "层级", VR(e.tier)), tz(t, "标记", e.wondrous === !0 ? "奇物" : ""), tz(t, "赋予属性值", lz(e.abilityGrant)), t.push(...cz(e.attachedSpells)), t;
+	}[e] ?? e} ${t}`), "，")), zR(e.charges) && nz(t, "充能", `${e.charges.max} 次，${IR(NR, e.charges.recharge)}恢复`), nz(t, "价格", typeof e.value == "number" ? QR(e.value) : ""), nz(t, "重量", e.weight ? `${e.weight} 磅` : ""), nz(t, "同调", zR(e.attunement) && e.attunement.required ? `需要${e.attunement.by ? `（${VR(e.attunement.by)}）` : ""}` : ""), nz(t, "层级", VR(e.tier)), nz(t, "标记", e.wondrous === !0 ? "奇物" : ""), nz(t, "赋予属性值", uz(e.abilityGrant)), t.push(...lz(e.attachedSpells)), t;
 }
-function dz(e) {
+function fz(e) {
 	let t = BR(e.cols).map(VR), n = VR(e.kind) || "roll", r = n === "ref", i = zR(e.modifier) ? `＋修正值（${VR(e.modifier.prompt)}）` : "", a = BR(e.rows).filter(zR).map((e) => {
 		let t = r ? [] : [e.min === e.max ? VR(e.min) : `${e.min}–${e.max}`], n = BR(e.cells).map((t) => `${e.indent === !0 ? "　" : ""}${VR(t)}`);
 		return [...t, ...n];
@@ -28937,29 +28940,29 @@ function dz(e) {
 		parts: [`${VR(e.chapter.book)}·${VR(e.chapter.name)}`]
 	}), o;
 }
-function fz(e) {
+function pz(e) {
 	let t = e.data;
 	switch (e.type) {
-		case "class": return nz(t);
+		case "class": return rz(t);
 		case "subclass": {
 			let e = [];
 			t.classId && e.push({
 				label: "所属职业",
 				parts: [{ ref: VR(t.classId) }]
 			});
-			let n = $R(t.advancement);
+			let n = ez(t.advancement);
 			return n && e.push(n), e;
 		}
-		case "monster": return rz(t);
-		case "spell": return iz(t);
+		case "monster": return iz(t);
+		case "spell": return az(t);
 		case "race":
-		case "subrace": return az(t);
-		case "background": return oz(t);
-		case "item": return uz(t);
-		case "table": return dz(t);
+		case "subrace": return oz(t);
+		case "background": return sz(t);
+		case "item": return dz(t);
+		case "table": return fz(t);
 		case "feature": {
 			let e = [];
-			return tz(e, "等级", t.level ? `${t.level} 级` : ""), zR(t.owner) && t.owner.id && t.owner.type !== "optional" && e.push({
+			return nz(e, "等级", t.level ? `${t.level} 级` : ""), zR(t.owner) && t.owner.id && t.owner.type !== "optional" && e.push({
 				label: "来自",
 				parts: [{ ref: VR(t.owner.id) }]
 			}), e;
@@ -28971,7 +28974,7 @@ function fz(e) {
 		default: return [];
 	}
 }
-function pz(e) {
+function mz(e) {
 	let t = /* @__PURE__ */ new Set();
 	for (let n of e) {
 		for (let e of n.parts ?? []) typeof e != "string" && t.add(e.ref);
@@ -28980,7 +28983,7 @@ function pz(e) {
 	return [...t];
 }
 // src/ui/library/tokens.ts
-var mz = {
+var hz = {
 	str: "力量",
 	dex: "敏捷",
 	con: "体质",
@@ -28993,16 +28996,16 @@ var mz = {
 	智力: "智力",
 	感知: "感知",
 	魅力: "魅力"
-}, hz = "(str|dex|con|int|wis|cha|力量|敏捷|体质|智力|感知|魅力)", gz = /<\$([^$]+)\$>/g, _z = [
+}, gz = "(str|dex|con|int|wis|cha|力量|敏捷|体质|智力|感知|魅力)", _z = /<\$([^$]+)\$>/g, vz = [
 	[/^(?:title_)?short_name$/, () => "该生物"],
-	[RegExp(`^dc_{1,2}${hz}$`), (e) => `（8＋熟练加值＋${mz[e[1]]}调整值）`],
-	[RegExp(`^(?:to_hit_{1,2}|命中__)${hz}$`), (e) => `（熟练加值＋${mz[e[1]]}调整值）`],
-	[RegExp(`^(?:damage_mod_{1,2}|伤害修正__)${hz}$`), (e) => `＋${mz[e[1]]}调整值`],
-	[RegExp(`^(?:damage_avg__|平均伤害__)([0-9.]+)\\+${hz}$`), (e) => `${e[1]}＋${mz[e[2]]}调整值`]
+	[RegExp(`^dc_{1,2}${gz}$`), (e) => `（8＋熟练加值＋${hz[e[1]]}调整值）`],
+	[RegExp(`^(?:to_hit_{1,2}|命中__)${gz}$`), (e) => `（熟练加值＋${hz[e[1]]}调整值）`],
+	[RegExp(`^(?:damage_mod_{1,2}|伤害修正__)${gz}$`), (e) => `＋${hz[e[1]]}调整值`],
+	[RegExp(`^(?:damage_avg__|平均伤害__)([0-9.]+)\\+${gz}$`), (e) => `${e[1]}＋${hz[e[2]]}调整值`]
 ];
-function vz(e) {
-	return e.includes("<$") ? e.replace(/<\$[^$>]*…$/, "…").replace(gz, (e, t) => {
-		for (let [e, n] of _z) {
+function yz(e) {
+	return e.includes("<$") ? e.replace(/<\$[^$>]*…$/, "…").replace(_z, (e, t) => {
+		for (let [e, n] of vz) {
 			let r = e.exec(t);
 			if (r) return n(r);
 		}
@@ -29010,14 +29013,14 @@ function vz(e) {
 	}) : e;
 }
 // src/ui/library/inline.ts
-function yz(e) {
+function bz(e) {
 	let t = [], n = 0;
 	for (let r of e.matchAll(new RegExp(Hy.source, "g"))) {
 		r.index > n && t.push({
 			kind: "text",
-			text: vz(e.slice(n, r.index))
+			text: yz(e.slice(n, r.index))
 		});
-		let i = r[2].replace(/\\\|/g, "|"), a = vz(r[3] ?? i);
+		let i = r[2].replace(/\\\|/g, "|"), a = yz(r[3] ?? i);
 		t.push(r[1] === "ref" ? {
 			kind: "ref",
 			id: i,
@@ -29030,20 +29033,20 @@ function yz(e) {
 	}
 	return n < e.length && t.push({
 		kind: "text",
-		text: vz(e.slice(n))
+		text: yz(e.slice(n))
 	}), t;
 }
 // src/ui/library/series.ts
-var bz = /\s([+-]\d+)$/, xz = {
+var xz = /\s([+-]\d+)$/, Sz = {
 	weapon: "武器",
 	armor: "护甲",
 	shield: "盾牌",
 	ammunition: "弹药"
 };
-function Sz(e, t) {
+function Cz(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let r of e) {
-		let e = bz.exec(r.name)?.[1] ?? "", i = r.category && xz[r.category] || "其他", a = r.baseItem && t[r.baseItem] || r.name.replace(bz, "").replace(/^.*·/, ""), o = n.get(i) ?? /* @__PURE__ */ new Map(), s = o.get(a) ?? {
+		let e = xz.exec(r.name)?.[1] ?? "", i = r.category && Sz[r.category] || "其他", a = r.baseItem && t[r.baseItem] || r.name.replace(xz, "").replace(/^.*·/, ""), o = n.get(i) ?? /* @__PURE__ */ new Map(), s = o.get(a) ?? {
 			label: a,
 			links: []
 		};
@@ -29056,7 +29059,7 @@ function Sz(e, t) {
 	for (let [t, i] of n) {
 		let n = [...i.values()].sort((e, t) => e.label.localeCompare(t.label, "zh"));
 		for (let e of n) e.links.sort((e, t) => e.text.localeCompare(t.text, "zh", { numeric: !0 }));
-		let a = n.every((t) => t.links.length === 1 && !bz.test(e.find((e) => e.id === t.links[0].id)?.name ?? ""));
+		let a = n.every((t) => t.links.length === 1 && !xz.test(e.find((e) => e.id === t.links[0].id)?.name ?? ""));
 		r.push({
 			title: t,
 			rows: a ? [{
@@ -29077,25 +29080,25 @@ function Sz(e, t) {
 	];
 	return r.sort((e, t) => i.indexOf(e.title) - i.indexOf(t.title));
 }
-var Cz;
-async function wz(e, t, n, r) {
-	if (!Cz || Cz.key !== n) {
+var wz;
+async function Tz(e, t, n, r) {
+	if (!wz || wz.key !== n) {
 		let r = /* @__PURE__ */ new Map(), i = await e.entries.where("[ruleId+type]").equals([t, "item"]).filter((e) => e.data.category === "family").toArray();
 		for (let e of i) for (let t of e.data.members ?? []) r.set(t, [...r.get(t) ?? [], {
 			id: e.entryId,
 			packId: e.packId,
 			name: e.name.replace(/（系列）$/, "")
 		}]);
-		Cz = {
+		wz = {
 			key: n,
 			map: r
 		};
 	}
-	return Cz.map.get(r) ?? [];
+	return wz.map.get(r) ?? [];
 }
-var Tz;
-async function Ez(e, t, n, r) {
-	if (!Tz || Tz.key !== n) {
+var Ez;
+async function Dz(e, t, n, r) {
+	if (!Ez || Ez.key !== n) {
 		let r = /* @__PURE__ */ new Map();
 		for (let n of await e.entries.where("[ruleId+type]").equals([t, "lore"]).toArray()) {
 			let e = n.data;
@@ -29104,110 +29107,110 @@ async function Ez(e, t, n, r) {
 				blocks: e.lore
 			}]);
 		}
-		Tz = {
+		Ez = {
 			key: n,
 			map: r
 		};
 	}
-	return [...Array.isArray(r.data.lore) ? [{ blocks: r.data.lore }] : [], ...Tz.map.get(r.entryId) ?? []].filter((e) => e.blocks.length > 0);
+	return [...Array.isArray(r.data.lore) ? [{ blocks: r.data.lore }] : [], ...Ez.map.get(r.entryId) ?? []].filter((e) => e.blocks.length > 0);
 }
 // src/ui/library/TextBlocks.vue?vue&type=script&setup=true&lang.ts
-var Dz = { class: "trpg-blocks" }, Oz = {
+var Oz = { class: "trpg-blocks" }, kz = {
 	key: 0,
 	class: "trpg-blocks__p"
-}, kz = { key: 1 }, Az = {
+}, Az = { key: 1 }, jz = {
 	key: 2,
 	class: "trpg-blocks__mark"
-}, jz = {
+}, Mz = {
 	key: 1,
 	class: "trpg-blocks__h"
-}, Mz = {
+}, Nz = {
 	key: 2,
 	class: "trpg-blocks__list"
-}, Nz = {
+}, Pz = {
 	key: 3,
 	class: "trpg-blocks__table-ref"
-}, Pz = { "aria-hidden": "true" }, Fz = {
+}, Fz = { "aria-hidden": "true" }, Iz = {
 	key: 4,
 	class: "trpg-blocks__table"
-}, Iz = { key: 0 }, Lz = {
+}, Lz = { key: 0 }, Rz = {
 	key: 5,
 	class: "trpg-blocks__quote"
-}, Rz = { key: 0 }, zz = {
+}, zz = { key: 0 }, Bz = {
 	key: 6,
 	class: "trpg-blocks__read"
-}, Bz = /* @__PURE__ */ R({
+}, Vz = /* @__PURE__ */ R({
 	__name: "TextBlocks",
 	props: { blocks: {} },
 	emits: ["ref"],
 	setup(e, { emit: t }) {
-		let n = t, r = (e) => yz(e).map((e) => e.text).join("");
+		let n = t, r = (e) => bz(e).map((e) => e.text).join("");
 		return (t, i) => {
 			let a = Ea("TextBlocks", !0);
-			return H(), U("div", Dz, [(H(!0), U(V, null, z(e.blocks, (e, t) => (H(), U(V, { key: t }, ["p" in e ? (H(), U("p", Oz, [(H(!0), U(V, null, z(I(yz)(e.p), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
+			return H(), U("div", Oz, [(H(!0), U(V, null, z(e.blocks, (e, t) => (H(), U(V, { key: t }, ["p" in e ? (H(), U("p", kz, [(H(!0), U(V, null, z(I(bz)(e.p), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
 				key: 0,
 				onOpen: (t) => n("ref", e.id)
 			}, {
 				default: L(() => [q(M(e.text), 1)]),
 				_: 2
-			}, 1032, ["onOpen"])) : e.kind === "mark" && e.mark === "em" ? (H(), U("strong", kz, M(e.text), 1)) : e.kind === "mark" ? (H(), U("span", Az, M(e.text), 1)) : (H(), U(V, { key: 3 }, [q(M(e.text), 1)], 64))], 64))), 128))])) : "h" in e ? (H(), U("section", jz, [G("h4", null, M(r(e.h)), 1), K(a, {
+			}, 1032, ["onOpen"])) : e.kind === "mark" && e.mark === "em" ? (H(), U("strong", Az, M(e.text), 1)) : e.kind === "mark" ? (H(), U("span", jz, M(e.text), 1)) : (H(), U(V, { key: 3 }, [q(M(e.text), 1)], 64))], 64))), 128))])) : "h" in e ? (H(), U("section", Mz, [G("h4", null, M(r(e.h)), 1), K(a, {
 				blocks: e.body,
 				onRef: i[0] ||= (e) => n("ref", e)
-			}, null, 8, ["blocks"])])) : "list" in e ? (H(), U("ul", Mz, [(H(!0), U(V, null, z(e.list, (e, t) => (H(), U("li", { key: t }, [(H(!0), U(V, null, z(I(yz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
+			}, null, 8, ["blocks"])])) : "list" in e ? (H(), U("ul", Nz, [(H(!0), U(V, null, z(e.list, (e, t) => (H(), U("li", { key: t }, [(H(!0), U(V, null, z(I(bz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
 				key: 0,
 				onOpen: (t) => n("ref", e.id)
 			}, {
 				default: L(() => [q(M(e.text), 1)]),
 				_: 2
-			}, 1032, ["onOpen"])) : (H(), U(V, { key: 1 }, [q(M(e.text), 1)], 64))], 64))), 128))]))), 128))])) : "tableRef" in e ? (H(), U("p", Nz, [G("span", Pz, M(/（[^）]+）$/.test(e.tableRef.label) ? "🎲" : "📋"), 1), K(YL, { onOpen: (t) => n("ref", e.tableRef.id) }, {
+			}, 1032, ["onOpen"])) : (H(), U(V, { key: 1 }, [q(M(e.text), 1)], 64))], 64))), 128))]))), 128))])) : "tableRef" in e ? (H(), U("p", Pz, [G("span", Fz, M(/（[^）]+）$/.test(e.tableRef.label) ? "🎲" : "📋"), 1), K(YL, { onOpen: (t) => n("ref", e.tableRef.id) }, {
 				default: L(() => [q(M(e.tableRef.label), 1)]),
 				_: 2
-			}, 1032, ["onOpen"])])) : "table" in e ? (H(), U("div", Fz, [G("table", null, [
-				e.table.caption ? (H(), U("caption", Iz, M(r(e.table.caption)), 1)) : J("", !0),
+			}, 1032, ["onOpen"])])) : "table" in e ? (H(), U("div", Iz, [G("table", null, [
+				e.table.caption ? (H(), U("caption", Lz, M(r(e.table.caption)), 1)) : J("", !0),
 				G("thead", null, [G("tr", null, [(H(!0), U(V, null, z(e.table.cols, (e) => (H(), U("th", { key: e }, M(r(e)), 1))), 128))])]),
-				G("tbody", null, [(H(!0), U(V, null, z(e.table.rows, (e, t) => (H(), U("tr", { key: t }, [(H(!0), U(V, null, z(e, (e, t) => (H(), U("td", { key: t }, [(H(!0), U(V, null, z(I(yz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
+				G("tbody", null, [(H(!0), U(V, null, z(e.table.rows, (e, t) => (H(), U("tr", { key: t }, [(H(!0), U(V, null, z(e, (e, t) => (H(), U("td", { key: t }, [(H(!0), U(V, null, z(I(bz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
 					key: 0,
 					onOpen: (t) => n("ref", e.id)
 				}, {
 					default: L(() => [q(M(e.text), 1)]),
 					_: 2
 				}, 1032, ["onOpen"])) : (H(), U(V, { key: 1 }, [q(M(e.text), 1)], 64))], 64))), 128))]))), 128))]))), 128))])
-			])])) : "quote" in e ? (H(), U("blockquote", Lz, [q(M(r(e.quote)), 1), e.by ? (H(), U("footer", Rz, "—— " + M(r(e.by)), 1)) : J("", !0)])) : "read" in e ? (H(), U("aside", zz, [K(a, {
+			])])) : "quote" in e ? (H(), U("blockquote", Rz, [q(M(r(e.quote)), 1), e.by ? (H(), U("footer", zz, "—— " + M(r(e.by)), 1)) : J("", !0)])) : "read" in e ? (H(), U("aside", Bz, [K(a, {
 				blocks: e.read,
 				onRef: i[1] ||= (e) => n("ref", e)
 			}, null, 8, ["blocks"])])) : J("", !0)], 64))), 128))]);
 		};
 	}
-}), Vz = {
+}), Hz = {
 	class: "trpg-facts",
 	"data-testid": "entry-facts"
-}, Hz = { class: "trpg-facts__label" }, Uz = { class: "trpg-facts__value" }, Wz = {
+}, Uz = { class: "trpg-facts__label" }, Wz = { class: "trpg-facts__value" }, Gz = {
 	key: 0,
 	class: "trpg-row__meta trpg-facts__sub"
-}, Gz = {
+}, Kz = {
 	key: 1,
 	class: "trpg-blocks__table"
-}, Kz = {
+}, qz = {
 	key: 2,
 	class: "trpg-facts__members",
 	"data-testid": "family-members"
-}, qz = {
-	key: 0,
-	class: "trpg-row__meta"
 }, Jz = {
 	key: 0,
-	class: "trpg-facts__member-label"
+	class: "trpg-row__meta"
 }, Yz = {
+	key: 0,
+	class: "trpg-facts__member-label"
+}, Xz = {
 	key: 3,
 	class: "trpg-facts__sections"
-}, Xz = /* @__PURE__ */ R({
+}, Zz = /* @__PURE__ */ R({
 	__name: "EntryFacts",
 	props: { facts: {} },
 	emits: ["ref"],
 	setup(e, { emit: t }) {
 		let n = e, r = t, i = ZT(), a = jE(), o = /* @__PURE__ */ F({});
 		async function s() {
-			let e = {}, t = new Set(pz(n.facts));
+			let e = {}, t = new Set(mz(n.facts));
 			for (let r = 0; r < 2; r++) {
 				for (let n of [...t]) {
 					if (n in e) continue;
@@ -29240,10 +29243,10 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 					category: t.category
 				}] : [];
 			});
-			return Sz(t, Object.fromEntries(t.flatMap((e) => e.baseItem && o.value[e.baseItem] ? [[e.baseItem, o.value[e.baseItem].name]] : [])));
+			return Cz(t, Object.fromEntries(t.flatMap((e) => e.baseItem && o.value[e.baseItem] ? [[e.baseItem, o.value[e.baseItem].name]] : [])));
 		}
-		return (e, t) => (H(), U("dl", Vz, [(H(!0), U(V, null, z(c.value, (e) => (H(), U(V, { key: e.label }, [G("dt", Hz, M(e.label), 1), G("dd", Uz, [
-			e.parts ? (H(!0), U(V, { key: 0 }, z(e.parts, (e, t) => (H(), U(V, { key: t }, [typeof e == "string" ? (H(!0), U(V, { key: 1 }, z(I(yz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
+		return (e, t) => (H(), U("dl", Hz, [(H(!0), U(V, null, z(c.value, (e) => (H(), U(V, { key: e.label }, [G("dt", Uz, M(e.label), 1), G("dd", Wz, [
+			e.parts ? (H(!0), U(V, { key: 0 }, z(e.parts, (e, t) => (H(), U(V, { key: t }, [typeof e == "string" ? (H(!0), U(V, { key: 1 }, z(I(bz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
 				key: 0,
 				onOpen: (t) => r("ref", e.id)
 			}, {
@@ -29252,40 +29255,40 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 			}, 1032, ["onOpen"])) : (H(), U(V, { key: 1 }, [q(M(e.text), 1)], 64))], 64))), 128)) : (H(), U(V, { key: 0 }, [K(YL, { onOpen: (t) => r("ref", e.ref) }, {
 				default: L(() => [q(M(u(e)), 1)]),
 				_: 2
-			}, 1032, ["onOpen"]), e.sub ? (H(), U("span", Wz, M(e.sub), 1)) : J("", !0)], 64))], 64))), 128)) : J("", !0),
-			e.table ? (H(), U("div", Gz, [G("table", null, [G("thead", null, [G("tr", null, [(H(!0), U(V, null, z(e.table.cols, (e) => (H(), U("th", { key: e }, M(e), 1))), 128))])]), G("tbody", null, [(H(!0), U(V, null, z(e.table.rows, (e, t) => (H(), U("tr", { key: t }, [(H(!0), U(V, null, z(e, (e, t) => (H(), U("td", { key: t }, [(H(!0), U(V, null, z(I(yz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
+			}, 1032, ["onOpen"]), e.sub ? (H(), U("span", Gz, M(e.sub), 1)) : J("", !0)], 64))], 64))), 128)) : J("", !0),
+			e.table ? (H(), U("div", Kz, [G("table", null, [G("thead", null, [G("tr", null, [(H(!0), U(V, null, z(e.table.cols, (e) => (H(), U("th", { key: e }, M(e), 1))), 128))])]), G("tbody", null, [(H(!0), U(V, null, z(e.table.rows, (e, t) => (H(), U("tr", { key: t }, [(H(!0), U(V, null, z(e, (e, t) => (H(), U("td", { key: t }, [(H(!0), U(V, null, z(I(bz)(e), (e, t) => (H(), U(V, { key: t }, [e.kind === "ref" ? (H(), W(YL, {
 				key: 0,
 				onOpen: (t) => r("ref", e.id)
 			}, {
 				default: L(() => [q(M(e.text), 1)]),
 				_: 2
 			}, 1032, ["onOpen"])) : (H(), U(V, { key: 1 }, [q(M(e.text), 1)], 64))], 64))), 128))]))), 128))]))), 128))])])])) : J("", !0),
-			e.members ? (H(), U("div", Kz, [(H(!0), U(V, null, z(d(e), (e) => (H(), U("section", { key: e.title }, [G("h4", null, [q(M(e.title), 1), e.rows.length > 1 ? (H(), U("span", qz, "（" + M(e.rows.length) + " 种）", 1)) : J("", !0)]), (H(!0), U(V, null, z(e.rows, (e, t) => (H(), U("div", {
+			e.members ? (H(), U("div", qz, [(H(!0), U(V, null, z(d(e), (e) => (H(), U("section", { key: e.title }, [G("h4", null, [q(M(e.title), 1), e.rows.length > 1 ? (H(), U("span", Jz, "（" + M(e.rows.length) + " 种）", 1)) : J("", !0)]), (H(!0), U(V, null, z(e.rows, (e, t) => (H(), U("div", {
 				key: t,
 				class: "trpg-facts__member-row"
-			}, [e.label ? (H(), U("span", Jz, M(e.label), 1)) : J("", !0), (H(!0), U(V, null, z(e.links, (e) => (H(), W(YL, {
+			}, [e.label ? (H(), U("span", Yz, M(e.label), 1)) : J("", !0), (H(!0), U(V, null, z(e.links, (e) => (H(), W(YL, {
 				key: e.id,
 				onOpen: (t) => r("ref", e.id)
 			}, {
 				default: L(() => [q(M(e.text), 1)]),
 				_: 2
 			}, 1032, ["onOpen"]))), 128))]))), 128))]))), 128))])) : J("", !0),
-			e.sections ? (H(), U("div", Yz, [(H(!0), U(V, null, z(e.sections, (e) => (H(), U("section", { key: e.name }, [G("h4", null, M(e.name), 1), K(Bz, {
+			e.sections ? (H(), U("div", Xz, [(H(!0), U(V, null, z(e.sections, (e) => (H(), U("section", { key: e.name }, [G("h4", null, M(e.name), 1), K(Vz, {
 				blocks: e.text,
 				onRef: t[0] ||= (e) => r("ref", e)
 			}, null, 8, ["blocks"])]))), 128))])) : J("", !0)
 		])], 64))), 128))]));
 	}
-}), Zz = {
+}), Qz = {
 	class: "page-stack",
 	"data-testid": "compare"
-}, Qz = {
+}, $z = {
 	key: 0,
 	class: "trpg-empty"
-}, $z = {
+}, eB = {
 	key: 1,
 	class: "trpg-compare"
-}, eB = /* @__PURE__ */ R({
+}, tB = /* @__PURE__ */ R({
 	__name: "ComparePage",
 	props: {
 		left: {},
@@ -29356,7 +29359,7 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 				right: t.right.summary || "（没有）"
 			}), e;
 		});
-		return (t, n) => (H(), U("div", Zz, [a.value.length ? (H(), U("table", $z, [G("thead", null, [G("tr", null, [
+		return (t, n) => (H(), U("div", Qz, [a.value.length ? (H(), U("table", eB, [G("thead", null, [G("tr", null, [
 			n[0] ||= G("th", null, "字段", -1),
 			G("th", null, M(e.leftLabel), 1),
 			G("th", null, M(e.rightLabel), 1)
@@ -29364,15 +29367,15 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 			G("th", null, M(e.key), 1),
 			G("td", null, M(e.left), 1),
 			G("td", null, M(e.right), 1)
-		]))), 128))])])) : (H(), U("p", Qz, "两个版本没有差异。"))]));
+		]))), 128))])])) : (H(), U("p", $z, "两个版本没有差异。"))]));
 	}
-}), tB = {
+}), nB = {
 	class: "trpg-variantbar",
 	"data-testid": "variant-bar"
-}, nB = { class: "trpg-variantbar__text" }, rB = {
+}, rB = { class: "trpg-variantbar__text" }, iB = {
 	key: 3,
 	class: "trpg-field__error"
-}, iB = { class: "trpg-variantbar__actions" }, aB = { class: "trpg-variantpick" }, oB = { class: "trpg-field__label" }, sB = { class: "trpg-radio" }, cB = ["checked"], lB = ["checked", "onChange"], uB = { class: "trpg-row__meta" }, dB = /* @__PURE__ */ R({
+}, aB = { class: "trpg-variantbar__actions" }, oB = { class: "trpg-variantpick" }, sB = { class: "trpg-field__label" }, cB = { class: "trpg-radio" }, lB = ["checked"], uB = ["checked", "onChange"], dB = { class: "trpg-row__meta" }, fB = /* @__PURE__ */ R({
 	__name: "VariantBar",
 	props: {
 		variants: {},
@@ -29396,7 +29399,7 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 			n.original && e && i.push({
 				key: "compare",
 				title: "与原版对比",
-				component: Sn(eB),
+				component: Sn(tB),
 				props: {
 					left: n.original,
 					right: e,
@@ -29405,7 +29408,7 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 				}
 			});
 		}
-		return (t, n) => (H(), U("div", tB, [G("div", nB, [s.value.hidden ? (H(), U(V, { key: 0 }, [q("⊘ 本存档中已隐藏（" + M(o.value?.sourceName) + "：" + M(o.value?.note || "这个条目不会出现在搜索与新建里") + "）", 1)], 64)) : o.value ? (H(), U(V, { key: 1 }, [q("✎ 本存档使用《" + M(o.value.sourceName) + "》的修改版", 1), c.value > 0 ? (H(), U(V, { key: 0 }, [q(" · 另有 " + M(c.value) + " 个版本", 1)], 64)) : J("", !0)], 64)) : (H(), U(V, { key: 2 }, [q("本存档使用原版 · 有 " + M(e.variants.candidates.length) + " 个修改版可选", 1)], 64)), s.value.broken ? (H(), U("span", rB, " ⚠ 修改无法显示：原版缺失")) : J("", !0)]), G("div", iB, [o.value && !s.value.hidden && e.original ? (H(), U("button", {
+		return (t, n) => (H(), U("div", nB, [G("div", rB, [s.value.hidden ? (H(), U(V, { key: 0 }, [q("⊘ 本存档中已隐藏（" + M(o.value?.sourceName) + "：" + M(o.value?.note || "这个条目不会出现在搜索与新建里") + "）", 1)], 64)) : o.value ? (H(), U(V, { key: 1 }, [q("✎ 本存档使用《" + M(o.value.sourceName) + "》的修改版", 1), c.value > 0 ? (H(), U(V, { key: 0 }, [q(" · 另有 " + M(c.value) + " 个版本", 1)], 64)) : J("", !0)], 64)) : (H(), U(V, { key: 2 }, [q("本存档使用原版 · 有 " + M(e.variants.candidates.length) + " 个修改版可选", 1)], 64)), s.value.broken ? (H(), U("span", iB, " ⚠ 修改无法显示：原版缺失")) : J("", !0)]), G("div", aB, [o.value && !s.value.hidden && e.original ? (H(), U("button", {
 			key: 0,
 			class: "trpg-btn trpg-btn--small",
 			type: "button",
@@ -29424,14 +29427,14 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 					"side-offset": 6,
 					"collision-padding": 8
 				}, {
-					default: L(() => [G("fieldset", aB, [
-						G("legend", oB, M(e.originName) + "使用哪个版本", 1),
-						G("label", sB, [G("input", {
+					default: L(() => [G("fieldset", oB, [
+						G("legend", sB, M(e.originName) + "使用哪个版本", 1),
+						G("label", cB, [G("input", {
 							type: "radio",
 							name: "variant",
 							checked: e.variants.active === I(QC),
 							onChange: n[0] ||= (e) => r("switch", I("original"))
-						}, null, 40, cB), n[2] ||= q(" 原版", -1)]),
+						}, null, 40, lB), n[2] ||= q(" 原版", -1)]),
 						(H(!0), U(V, null, z(e.variants.candidates, (t) => (H(), U("label", {
 							key: t.key,
 							class: "trpg-radio"
@@ -29440,7 +29443,7 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 							name: "variant",
 							checked: e.variants.active === t.key,
 							onChange: (e) => r("switch", t.key)
-						}, null, 40, lB), G("span", null, [q(M(t.sourceName), 1), G("span", uB, " · " + M(t.note ? `${t.note}（${u(t.key)}）` : u(t.key)), 1)])]))), 128))
+						}, null, 40, uB), G("span", null, [q(M(t.sourceName), 1), G("span", dB, " · " + M(t.note ? `${t.note}（${u(t.key)}）` : u(t.key)), 1)])]))), 128))
 					])]),
 					_: 1
 				})]),
@@ -29449,9 +29452,9 @@ var Dz = { class: "trpg-blocks" }, Oz = {
 			_: 1
 		})])]));
 	}
-}), fB;
-async function pB(e, t, n, r) {
-	if (!fB || fB.key !== n) {
+}), pB;
+async function mB(e, t, n, r) {
+	if (!pB || pB.key !== n) {
 		let r = /* @__PURE__ */ new Map(), i = await e.entries.where("[ruleId+type]").equals([t, "feature"]).filter((e) => Array.isArray(e.data.joins)).toArray();
 		for (let e of i) for (let t of e.data.joins) typeof t.to != "string" || t.as !== "optional" && t.as !== "option" && t.as !== "member" || r.set(t.to, [...r.get(t.to) ?? [], {
 			id: e.entryId,
@@ -29462,14 +29465,14 @@ async function pB(e, t, n, r) {
 			...typeof t.replaces == "string" ? { replaces: t.replaces } : {}
 		}]);
 		for (let e of r.values()) e.sort((e, t) => e.level - t.level || e.name.localeCompare(t.name, "zh"));
-		fB = {
+		pB = {
 			key: n,
 			map: r
 		};
 	}
-	return fB.map.get(r) ?? [];
+	return pB.map.get(r) ?? [];
 }
-function mB(e, t) {
+function hB(e, t) {
 	let n = e.filter((e) => e.as === "optional");
 	if (!n.length) return;
 	let r = [], i = -1;
@@ -29484,31 +29487,31 @@ function mB(e, t) {
 	};
 }
 // src/ui/library/EntryDetailPage.vue?vue&type=script&setup=true&lang.ts
-var hB = {
+var gB = {
 	key: 0,
 	class: "page-stack",
 	"data-testid": "entry-detail"
-}, gB = { class: "trpg-row__meta" }, _B = {
+}, _B = { class: "trpg-row__meta" }, vB = {
 	key: 1,
 	class: "trpg-entry__summary"
-}, vB = {
+}, yB = {
 	key: 3,
 	class: "trpg-entry__lore",
 	"data-testid": "entry-lore"
-}, yB = {
+}, bB = {
 	key: 0,
 	class: "trpg-field__hint"
-}, bB = {
+}, xB = {
 	key: 4,
 	class: "trpg-field__hint"
-}, xB = {
+}, SB = {
 	key: 1,
 	class: "trpg-empty"
-}, SB = {
+}, CB = {
 	key: 2,
 	class: "trpg-skeleton",
 	"aria-busy": "true"
-}, CB = /* @__PURE__ */ R({
+}, wB = /* @__PURE__ */ R({
 	__name: "EntryDetailPage",
 	props: {
 		packId: {},
@@ -29520,7 +29523,7 @@ var hB = {
 			if (s.value = await n.svc().db.entries.get([t.packId, t.entryId]) ?? null, c.value = !s.value, s.value) {
 				a.setTitle(`entry:${t.packId}/${t.entryId}`, s.value.name);
 				let e = n.svc().db;
-				l.value = await wz(e, s.value.ruleId, f.value, t.entryId), u.value = await pB(e, s.value.ruleId, f.value, t.entryId), d.value = await Ez(e, s.value.ruleId, f.value, s.value);
+				l.value = await Tz(e, s.value.ruleId, f.value, t.entryId), u.value = await mB(e, s.value.ruleId, f.value, t.entryId), d.value = await Dz(e, s.value.ruleId, f.value, s.value);
 			}
 		});
 		let p = Y(() => $C(t.packId, t.entryId)), m = Y(() => s.value ? dw(s.value) : null), h = Y(() => r.workspace ? tw(r.workspace.data).variants[p.value] : void 0), g = Y(() => m.value ? Tw(m.value, h.value) : null), _ = Y(() => g.value?.entry ?? m.value), v = Y(() => l.value.length ? [{
@@ -29529,9 +29532,9 @@ var hB = {
 				ref: e.id,
 				label: e.name
 			}])
-		}] : []), y = Y(() => mB(u.value, (e) => i.installedMap.get(e)?.name ?? e)), b = Y(() => {
+		}] : []), y = Y(() => hB(u.value, (e) => i.installedMap.get(e)?.name ?? e)), b = Y(() => {
 			if (!_.value) return [];
-			let e = fz(_.value), t = e.findIndex((e) => e.label === "特性"), n = y.value ? t >= 0 ? [
+			let e = pz(_.value), t = e.findIndex((e) => e.label === "特性"), n = y.value ? t >= 0 ? [
 				...e.slice(0, t + 1),
 				y.value,
 				...e.slice(t + 1)
@@ -29548,7 +29551,7 @@ var hB = {
 		}), x = Y(() => _.value?.data.text ?? []);
 		async function S(e) {
 			let t = await i.packOfEntry(e);
-			t ? RV(t, e, e) : o.info("这个条目所在的扩展包还没有安装，可在「库 → 扩展」里安装");
+			t ? zV(t, e, e) : o.info("这个条目所在的扩展包还没有安装，可在「库 → 扩展」里安装");
 		}
 		async function C(e) {
 			let t = h.value?.active;
@@ -29560,8 +29563,8 @@ var hB = {
 				console.error("[trpg-assistant] 切换版本失败", e), o.error(`切换失败：${e instanceof Error ? e.message : String(e)}`);
 			}
 		}
-		return (e, t) => _.value && m.value ? (H(), U("div", hB, [
-			h.value && h.value.candidates.length ? (H(), W(dB, {
+		return (e, t) => _.value && m.value ? (H(), U("div", gB, [
+			h.value && h.value.candidates.length ? (H(), W(fB, {
 				key: 0,
 				variants: h.value,
 				original: m.value,
@@ -29574,26 +29577,26 @@ var hB = {
 				"read-only",
 				"origin-name"
 			])) : J("", !0),
-			G("p", gB, M(I(ZL)(_.value.type)), 1),
-			_.value.summary ? (H(), U("p", _B, M(I(vz)(_.value.summary)), 1)) : J("", !0),
-			b.value.length ? (H(), W(Xz, {
+			G("p", _B, M(I(ZL)(_.value.type)), 1),
+			_.value.summary ? (H(), U("p", vB, M(I(yz)(_.value.summary)), 1)) : J("", !0),
+			b.value.length ? (H(), W(Zz, {
 				key: 2,
 				facts: b.value,
 				onRef: S
 			}, null, 8, ["facts"])) : J("", !0),
-			K(Bz, {
+			K(Vz, {
 				blocks: x.value,
 				onRef: S
 			}, null, 8, ["blocks"]),
-			d.value.length ? (H(), U("section", vB, [t[0] ||= G("h3", { class: "trpg-entry__lore-title" }, "背景描述", -1), (H(!0), U(V, null, z(d.value, (e, t) => (H(), U(V, { key: t }, [K(Bz, {
+			d.value.length ? (H(), U("section", yB, [t[0] ||= G("h3", { class: "trpg-entry__lore-title" }, "背景描述", -1), (H(!0), U(V, null, z(d.value, (e, t) => (H(), U(V, { key: t }, [K(Vz, {
 				blocks: e.blocks,
 				onRef: S
-			}, null, 8, ["blocks"]), e.packId ? (H(), U("p", yB, "背景描述出自《" + M(I(i).installedMap.get(e.packId)?.name ?? e.packId) + "》", 1)) : J("", !0)], 64))), 128))])) : J("", !0),
-			I(QL)(_.value.data, I(i).sourceNames) ? (H(), U("p", bB, M(I(QL)(_.value.data, I(i).sourceNames)), 1)) : J("", !0)
-		])) : c.value ? (H(), U("p", xB, "没有找到这个条目")) : (H(), U("div", SB));
+			}, null, 8, ["blocks"]), e.packId ? (H(), U("p", bB, "背景描述出自《" + M(I(i).installedMap.get(e.packId)?.name ?? e.packId) + "》", 1)) : J("", !0)], 64))), 128))])) : J("", !0),
+			I(QL)(_.value.data, I(i).sourceNames) ? (H(), U("p", xB, M(I(QL)(_.value.data, I(i).sourceNames)), 1)) : J("", !0)
+		])) : c.value ? (H(), U("p", SB, "没有找到这个条目")) : (H(), U("div", CB));
 	}
-}), wB = 864e5;
-async function TB(e, t, n) {
+}), TB = 864e5;
+async function EB(e, t, n) {
 	let r = await e.packs.get(n);
 	if (!r) throw new Q("E_NOT_FOUND", "没有找到这个内容包");
 	let i = (await e.saves.toArray()).filter((e) => e.deletedAt === void 0), a = (e) => Object.keys(e.snapshot.pins ?? {}), o = (e) => (e.snapshot.adventures ?? []).map((e) => e.packId);
@@ -29606,21 +29609,21 @@ async function TB(e, t, n) {
 		dependents: (await e.packs.toArray()).filter((e) => e.id !== n && e.relationships.requires.some((e) => e.id === n)).map((e) => e.name)
 	};
 }
-function EB(e) {
+function DB(e) {
 	let t = [];
 	return e.enabledIn && t.push(`${e.enabledIn} 个存档启用了它。`), e.dependents.length && t.push(`${e.dependents.map((e) => `「${e}」`).join("、")}依赖它：卸载后，它们里面指向这个包的内容会查不到（建议先卸载依赖它的包）。`), e.adventuresIn && t.push(`${e.adventuresIn} 个存档导入过它的冒险内容。`), e.pinnedIn && t.push(`${e.pinnedIn} 个存档固定了它的条目。`), t.push("存档里已经用到的内容都有副本，不受影响；没用过的条目在重新安装前查不到。"), e.pack.source === "builtin" && t.push("之后可以在库里重新安装。"), e.pack.source === "user" && t.push("这是你自己做的内容，删除后可在库回收站中保留 30 天。建议先导出为文件。"), t;
 }
-async function DB(e, t) {
+async function OB(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	for (let t of await e.packs.toArray()) for (let e of t.blobHashes) n.add(e);
 	for (let t of await e.workspaces.toArray()) KS(t.data, n);
 	for (let t of await e.saves.toArray()) KS(t.snapshot, n);
 	let r = 0;
-	for (let i of await e.blobs.toArray()) n.has(i.hash) || t - i.createdAt < wB || (await e.blobs.delete(i.hash), r++);
+	for (let i of await e.blobs.toArray()) n.has(i.hash) || t - i.createdAt < TB || (await e.blobs.delete(i.hash), r++);
 	return r;
 }
-async function OB(e, t) {
-	let n = await TB(e.db, e.rules, t);
+async function kB(e, t) {
+	let n = await EB(e.db, e.rules, t);
 	if (n.core) throw new Q("E_BUILTIN_PROTECTED", "这是规则必选的内容包，不能卸载");
 	let { pack: r } = n, i = !1;
 	return r.source === "user" && (await e.db.packTrash.put({
@@ -29629,9 +29632,9 @@ async function OB(e, t) {
 		ruleId: r.ruleId,
 		bytes: await e.packs.exportPack(r.id),
 		deletedAt: e.now()
-	}), i = !0), await e.packs.remove(t), r.source === "builtin" && await SC(e.db, t, !0), r.source === "download" && await wC(e.db, t, !0), await DB(e.db, e.now()), { trashed: i };
+	}), i = !0), await e.packs.remove(t), r.source === "builtin" && await SC(e.db, t, !0), r.source === "download" && await wC(e.db, t, !0), await OB(e.db, e.now()), { trashed: i };
 }
-async function kB(e, t, n) {
+async function AB(e, t, n) {
 	await SC(e.db, t, !1);
 	let r = await n(t), i = e.packs.recognize(r);
 	if (i.type !== "pack") throw new Q("E_BAD_CONTENT", "内置文件不是内容包");
@@ -29641,17 +29644,17 @@ async function kB(e, t, n) {
 	});
 }
 // src/ui/library/ApplyVariantsPage.vue?vue&type=script&setup=true&lang.ts
-var AB = {
+var jB = {
 	class: "page-stack",
 	"data-testid": "apply-variants"
-}, jB = { class: "trpg-confirm__message" }, MB = { class: "trpg-drawer__buttons" }, NB = { class: "trpg-list" }, PB = { class: "trpg-row__title" }, FB = { class: "trpg-row__meta" }, IB = {
+}, MB = { class: "trpg-confirm__message" }, NB = { class: "trpg-drawer__buttons" }, PB = { class: "trpg-list" }, FB = { class: "trpg-row__title" }, IB = { class: "trpg-row__meta" }, LB = {
 	key: 0,
 	class: "trpg-badge",
 	"data-tone": "warn"
-}, LB = {
+}, RB = {
 	key: 0,
 	class: "trpg-field__hint"
-}, RB = { class: "trpg-confirm__actions" }, zB = /* @__PURE__ */ R({
+}, zB = { class: "trpg-confirm__actions" }, BB = /* @__PURE__ */ R({
 	__name: "ApplyVariantsPage",
 	props: {
 		packName: {},
@@ -29662,9 +29665,9 @@ var AB = {
 	},
 	setup(e) {
 		let t = e, n = /* @__PURE__ */ fn(Object.fromEntries(t.items.map((e) => [e.variant.key, e.defaultUse]))), r = (e) => t.items.forEach((t) => n[t.variant.key] = e), i = (e) => e.variant.mode === "hide" ? "隐藏" : e.variant.mode === "patch" ? "局部修改" : "整条替换", a = t.items.filter((e) => e.conflict).length;
-		return (t, o) => (H(), U("div", AB, [
-			G("p", jB, "「" + M(e.packName) + "」修改了 " + M(e.items.length) + " 个官方条目（只在本存档生效）。", 1),
-			G("div", MB, [G("button", {
+		return (t, o) => (H(), U("div", jB, [
+			G("p", MB, "「" + M(e.packName) + "」修改了 " + M(e.items.length) + " 个官方条目（只在本存档生效）。", 1),
+			G("div", NB, [G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: o[0] ||= (e) => r(!0)
@@ -29673,7 +29676,7 @@ var AB = {
 				type: "button",
 				onClick: o[1] ||= (e) => r(!1)
 			}, "全部不用")]),
-			G("ul", NB, [(H(!0), U(V, null, z(e.items, (t) => (H(), U("li", {
+			G("ul", PB, [(H(!0), U(V, null, z(e.items, (t) => (H(), U("li", {
 				key: t.variant.key,
 				class: "trpg-row"
 			}, [
@@ -29682,18 +29685,18 @@ var AB = {
 					"onUpdate:modelValue": (e) => n[t.variant.key] = e,
 					label: e.names[t.entryKey] ?? t.entryKey
 				}, {
-					default: L(() => [G("span", PB, M(e.names[t.entryKey] ?? t.entryKey), 1)]),
+					default: L(() => [G("span", FB, M(e.names[t.entryKey] ?? t.entryKey), 1)]),
 					_: 2
 				}, 1032, [
 					"modelValue",
 					"onUpdate:modelValue",
 					"label"
 				]),
-				G("span", FB, [q(M(i(t)), 1), t.variant.note ? (H(), U(V, { key: 0 }, [q(" · " + M(t.variant.note), 1)], 64)) : J("", !0)]),
-				t.conflict ? (H(), U("span", IB, "冲突 · 正在用：" + M(e.sourceOf(t.current)), 1)) : J("", !0)
+				G("span", IB, [q(M(i(t)), 1), t.variant.note ? (H(), U(V, { key: 0 }, [q(" · " + M(t.variant.note), 1)], 64)) : J("", !0)]),
+				t.conflict ? (H(), U("span", LB, "冲突 · 正在用：" + M(e.sourceOf(t.current)), 1)) : J("", !0)
 			]))), 128))]),
-			I(a) ? (H(), U("p", LB, "冲突的条目默认保持现状；不勾选的修改版也会加入候选，之后随时可以在版本条里改用。")) : J("", !0),
-			G("div", RB, [G("button", {
+			I(a) ? (H(), U("p", RB, "冲突的条目默认保持现状；不勾选的修改版也会加入候选，之后随时可以在版本条里改用。")) : J("", !0),
+			G("div", zB, [G("button", {
 				class: "trpg-btn",
 				type: "button",
 				onClick: o[2] ||= (t) => e.onAnswer(null)
@@ -29705,26 +29708,26 @@ var AB = {
 			}, "启用")])
 		]));
 	}
-}), BB = (e) => e.replace(/[\\/:*?"<>|\s]+/g, "_");
-function VB(e, t) {
+}), VB = (e) => e.replace(/[\\/:*?"<>|\s]+/g, "_");
+function HB(e, t) {
 	console.error(`[trpg-assistant] ${e}`, t), NE().error(`${e}：${YD(t)}`);
 }
-async function HB(e) {
+async function UB(e) {
 	let t = jE(), n = NE(), r = t.catalog?.packs.find((t) => t.id === e);
 	r ? await t.install(r) && n.success(`已安装「${r.name}」`) : n.error("数据仓库里没有找到这个包，可以稍后重试");
 }
-async function UB() {
-	for (let e of jE().updates) HB(e.id);
+async function WB() {
+	for (let e of jE().updates) UB(e.id);
 }
-function WB(e) {
-	return jE().clearTask(e), HB(e);
+function GB(e) {
+	return jE().clearTask(e), UB(e);
 }
-async function GB(e) {
+async function KB(e) {
 	let t = ZT(), n = jE(), r = NE(), i = FD();
 	try {
-		let a = t.svc(), o = await TB(a.db, a.rules, e.id);
+		let a = t.svc(), o = await EB(a.db, a.rules, e.id);
 		if (o.core) return r.error("这是规则必选的内容包，不能卸载"), !1;
-		let s = EB(o);
+		let s = DB(o);
 		if (!await oO({
 			title: "卸载扩展包",
 			message: `卸载「${e.name}」？`,
@@ -29735,7 +29738,7 @@ async function GB(e) {
 		let c = await t.queue.enqueue({
 			id: `uninstall:${e.id}`,
 			label: `卸载 ${e.name}`,
-			run: () => OB({
+			run: () => kB({
 				db: a.db,
 				packs: a.packs,
 				rules: a.rules,
@@ -29744,34 +29747,34 @@ async function GB(e) {
 		});
 		return await n.refreshInstalled(), await n.runIntegrity(), i.isOpen && i.close(!0), r.success(c.trashed ? `已删除「${e.name}」，可在库回收站恢复` : `已卸载「${e.name}」`), !0;
 	} catch (e) {
-		return VB("卸载失败", e), !1;
+		return HB("卸载失败", e), !1;
 	}
 }
-async function KB(e) {
+async function qB(e) {
 	let t = ZT();
 	try {
 		let n = t.svc();
 		await t.queue.enqueue({
 			id: `restore:${e.id}`,
 			label: `恢复 ${e.name}`,
-			run: () => kB({
+			run: () => AB({
 				db: n.db,
 				packs: n.packs
 			}, e.id, Cb)
 		}), await jE().refreshInstalled(), NE().success(`已恢复「${e.name}」`);
 	} catch (e) {
-		VB("恢复失败", e);
-	}
-}
-async function qB(e) {
-	try {
-		let t = await ZT().svc().packs.exportPack(e.id), n = `${BB(e.name)}_v${e.version}.trpgpack`;
-		Dk(t, n), NE().success(`已导出「${n}」`);
-	} catch (e) {
-		VB("导出失败", e);
+		HB("恢复失败", e);
 	}
 }
 async function JB(e) {
+	try {
+		let t = await ZT().svc().packs.exportPack(e.id), n = `${VB(e.name)}_v${e.version}.trpgpack`;
+		Dk(t, n), NE().success(`已导出「${n}」`);
+	} catch (e) {
+		HB("导出失败", e);
+	}
+}
+async function YB(e) {
 	let t = ZT(), n = jE(), r = NE();
 	try {
 		let i = await t.queue.enqueue({
@@ -29783,22 +29786,22 @@ async function JB(e) {
 		let a = FD();
 		a.isOpen && a.close(!0), IE().librarySegment = "mine", r.success(`已复制为「${i.name}」`);
 	} catch (e) {
-		VB("复制失败", e);
+		HB("复制失败", e);
 	}
 }
-var YB = (e) => {
+var XB = (e) => {
 	let t = $T().workspace;
 	return t && tw(t.data).pins[e]?.entry.name || e.slice(e.indexOf("/") + 1);
 };
-async function XB(e) {
+async function ZB(e) {
 	let t = $T(), n = jE(), r = NE(), i = n.installedMap.get(e)?.name ?? e;
 	try {
 		let a = await t.inspect((t, n) => t.library.previewEnable(n, e)), o;
 		if (a.variants.length) {
-			let e = Object.fromEntries(a.variants.map((e) => [e.entryKey, YB(e.entryKey)])), n = t.workspace, r = (e) => e === "original" ? "原版" : Object.values(n ? tw(n.data).variants : {}).find((t) => t.candidates.some((t) => t.key === e))?.candidates.find((t) => t.key === e)?.sourceName ?? e, s = await ZD({
+			let e = Object.fromEntries(a.variants.map((e) => [e.entryKey, XB(e.entryKey)])), n = t.workspace, r = (e) => e === "original" ? "原版" : Object.values(n ? tw(n.data).variants : {}).find((t) => t.candidates.some((t) => t.key === e))?.candidates.find((t) => t.key === e)?.sourceName ?? e, s = await ZD({
 				key: "confirm:variants",
 				title: `启用「${i}」`,
-				component: Sn(zB),
+				component: Sn(BB),
 				props: (t) => ({
 					packName: i,
 					items: a.variants,
@@ -29813,18 +29816,18 @@ async function XB(e) {
 		let s = await t.mutate((t, n) => t.library.enable(n, e, { use: o }));
 		await n.runIntegrity();
 		let c = s.autoEnabled.map((e) => n.installedMap.get(e)?.name ?? e);
-		return r.undoable(c.length ? `已启用「${i}」，并一起启用：${c.join("、")}` : `已启用「${i}」`, () => void ZB(e, { confirm: !1 })), !0;
+		return r.undoable(c.length ? `已启用「${i}」，并一起启用：${c.join("、")}` : `已启用「${i}」`, () => void QB(e, { confirm: !1 })), !0;
 	} catch (e) {
-		return VB("启用失败", e), !1;
+		return HB("启用失败", e), !1;
 	}
 }
-async function ZB(e, t = {}) {
+async function QB(e, t = {}) {
 	let n = $T(), r = jE(), i = NE(), a = r.installedMap.get(e)?.name ?? e;
 	try {
 		let o = await n.inspect((t, n) => t.library.previewDisable(n, e));
 		if (o.dependents.length) return i.error(`『${o.dependents.map((e) => r.installedMap.get(e)?.name ?? e).join("、")}』需要它，不能停用`), !1;
 		if (t.confirm !== !1 && (o.reverted.length > 0 || o.hasState)) {
-			let e = [...o.hasState ? [`《${a}》的功能产生的数据（如声望、据点）会保留，重新启用后恢复。`] : [], ...o.reverted.map((e) => `${YB(e.entryKey)}：改回${e.to === "original" ? "原版" : "其他版本"}`)];
+			let e = [...o.hasState ? [`《${a}》的功能产生的数据（如声望、据点）会保留，重新启用后恢复。`] : [], ...o.reverted.map((e) => `${XB(e.entryKey)}：改回${e.to === "original" ? "原版" : "其他版本"}`)];
 			if (!await oO({
 				title: `停用「${a}」`,
 				message: "停用后：",
@@ -29832,37 +29835,37 @@ async function ZB(e, t = {}) {
 				confirmLabel: "停用"
 			})) return !1;
 		}
-		return await n.mutate((t, n) => t.library.disable(n, e)), await r.runIntegrity(), i.undoable(`已停用「${a}」`, () => void XB(e)), !0;
+		return await n.mutate((t, n) => t.library.disable(n, e)), await r.runIntegrity(), i.undoable(`已停用「${a}」`, () => void ZB(e)), !0;
 	} catch (e) {
-		return VB("停用失败", e), !1;
+		return HB("停用失败", e), !1;
 	}
 }
 // src/ui/library/PackActions.vue?vue&type=script&setup=true&lang.ts
-var QB = { class: "trpg-pack-actions" }, $B = ["title"], eV = ["disabled"], tV = {
+var $B = { class: "trpg-pack-actions" }, eV = ["title"], tV = ["disabled"], nV = {
 	key: 0,
 	class: "trpg-badge"
-}, nV = ["aria-valuenow", "aria-label"], rV = {
+}, rV = ["aria-valuenow", "aria-label"], iV = {
 	key: 2,
 	class: "trpg-row__meta"
-}, iV = {
+}, aV = {
 	key: 3,
 	class: "trpg-row__meta"
-}, aV = ["disabled"], oV = {
+}, oV = ["disabled"], sV = {
 	key: 0,
 	class: "trpg-badge",
 	"data-tone": "gold"
-}, sV = [
+}, cV = [
 	"aria-label",
 	"disabled",
 	"title"
-], cV = [
+], lV = [
 	"disabled",
 	"title",
 	"aria-label"
-], lV = {
+], uV = {
 	key: 1,
 	class: "trpg-badge"
-}, uV = /* @__PURE__ */ R({
+}, dV = /* @__PURE__ */ R({
 	__name: "PackActions",
 	props: { row: {} },
 	setup(e) {
@@ -29895,19 +29898,19 @@ var QB = { class: "trpg-pack-actions" }, $B = ["title"], eV = ["disabled"], tV =
 			}]
 		]);
 		function d(e) {
-			e === "dup" ? JB(t.row) : e === "export" ? qB(t.row) : e === "uninstall" && GB(t.row);
+			e === "dup" ? YB(t.row) : e === "export" ? JB(t.row) : e === "uninstall" && KB(t.row);
 		}
-		return (t, n) => (H(), U("span", QB, [a.value?.state === "failed" ? (H(), U(V, { key: 0 }, [G("span", {
+		return (t, n) => (H(), U("span", $B, [a.value?.state === "failed" ? (H(), U(V, { key: 0 }, [G("span", {
 			class: "trpg-badge",
 			"data-tone": "danger",
 			title: a.value.error
-		}, "⚠ " + M(a.value.error?.slice(0, 18)), 9, $B), G("button", {
+		}, "⚠ " + M(a.value.error?.slice(0, 18)), 9, eV), G("button", {
 			class: "trpg-btn trpg-btn--small",
 			type: "button",
 			disabled: I(i).readOnly,
-			onClick: n[0] ||= (t) => I(WB)(e.row.id)
-		}, "重试", 8, eV)], 64)) : a.value || o.value ? (H(), U(V, { key: 1 }, [
-			o.value === "waiting" && (!a.value || a.value.state === "waiting") ? (H(), U("span", tV, "等待中")) : (H(), U("span", {
+			onClick: n[0] ||= (t) => I(GB)(e.row.id)
+		}, "重试", 8, tV)], 64)) : a.value || o.value ? (H(), U(V, { key: 1 }, [
+			o.value === "waiting" && (!a.value || a.value.state === "waiting") ? (H(), U("span", nV, "等待中")) : (H(), U("span", {
 				key: 1,
 				class: "trpg-progress",
 				role: "progressbar",
@@ -29915,9 +29918,9 @@ var QB = { class: "trpg-pack-actions" }, $B = ["title"], eV = ["disabled"], tV =
 				"aria-valuemin": "0",
 				"aria-valuemax": "100",
 				"aria-label": `${e.row.name} 下载进度`
-			}, [G("span", { style: Oe({ width: `${s.value}%` }) }, null, 4)], 8, nV)),
-			a.value?.state === "downloading" ? (H(), U("span", rV, M(s.value) + "%", 1)) : J("", !0),
-			a.value?.state === "installing" ? (H(), U("span", iV, "安装中")) : J("", !0),
+			}, [G("span", { style: Oe({ width: `${s.value}%` }) }, null, 4)], 8, rV)),
+			a.value?.state === "downloading" ? (H(), U("span", iV, M(s.value) + "%", 1)) : J("", !0),
+			a.value?.state === "installing" ? (H(), U("span", aV, "安装中")) : J("", !0),
 			G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
@@ -29928,43 +29931,43 @@ var QB = { class: "trpg-pack-actions" }, $B = ["title"], eV = ["disabled"], tV =
 			class: "trpg-btn trpg-btn--small",
 			type: "button",
 			disabled: I(i).readOnly,
-			onClick: n[2] ||= (t) => I(KB)(e.row)
-		}, "恢复内置", 8, aV)) : e.row.installed ? (H(), U(V, { key: 4 }, [e.row.updateVersion ? (H(), U("button", {
+			onClick: n[2] ||= (t) => I(qB)(e.row)
+		}, "恢复内置", 8, oV)) : e.row.installed ? (H(), U(V, { key: 4 }, [e.row.updateVersion ? (H(), U("button", {
 			key: 0,
 			class: "trpg-btn trpg-btn--small trpg-btn--primary",
 			type: "button",
 			disabled: I(i).readOnly,
 			title: `更新到 v${e.row.updateVersion}`,
 			"aria-label": `更新 ${e.row.name}`,
-			onClick: n[4] ||= (t) => I(HB)(e.row.id)
-		}, "更新", 8, cV)) : (H(), U("span", lV, M(I(KL)[e.row.source] ? `${I(KL)[e.row.source]} ` : "") + "v" + M(e.row.version), 1))], 64)) : (H(), U(V, { key: 3 }, [e.row.recommended ? (H(), U("span", oV, "推荐")) : J("", !0), G("button", {
+			onClick: n[4] ||= (t) => I(UB)(e.row.id)
+		}, "更新", 8, lV)) : (H(), U("span", uV, M(I(KL)[e.row.source] ? `${I(KL)[e.row.source]} ` : "") + "v" + M(e.row.version), 1))], 64)) : (H(), U(V, { key: 3 }, [e.row.recommended ? (H(), U("span", sV, "推荐")) : J("", !0), G("button", {
 			class: "trpg-btn trpg-btn--small trpg-btn--primary",
 			type: "button",
 			"aria-label": `安装 ${e.row.name}`,
 			disabled: I(i).readOnly,
 			title: I(i).readOnly ? "只读窗口不能修改" : void 0,
-			onClick: n[3] ||= (t) => I(HB)(e.row.id)
+			onClick: n[3] ||= (t) => I(UB)(e.row.id)
 		}, [K(JE, {
 			name: "download-simple",
 			size: 14
-		}), n[5] ||= q("安装", -1)], 8, sV)], 64)), e.row.installed ? (H(), W(OI, {
+		}), n[5] ||= q("安装", -1)], 8, cV)], 64)), e.row.installed ? (H(), W(OI, {
 			key: 5,
 			label: e.row.name,
 			items: u.value,
 			onSelect: d
 		}, null, 8, ["label", "items"])) : J("", !0)]));
 	}
-}), dV = /* @__PURE__ */ R({
+}), fV = /* @__PURE__ */ R({
 	__name: "PackDetailHeader",
 	props: { packId: {} },
 	setup(e) {
 		let t = e, n = jE(), r = Y(() => qL(t.packId, n.installed, n.catalog));
-		return (e, t) => r.value ? (H(), W(uV, {
+		return (e, t) => r.value ? (H(), W(dV, {
 			key: 0,
 			row: r.value
 		}, null, 8, ["row"])) : J("", !0);
 	}
-}), fV = /* @__PURE__ */ R({
+}), pV = /* @__PURE__ */ R({
 	__name: "SelectField",
 	props: /*@__PURE__*/ Qa({
 		options: {},
@@ -30021,7 +30024,7 @@ var QB = { class: "trpg-pack-actions" }, $B = ["title"], eV = ["disabled"], tV =
 			_: 1
 		}, 8, ["modelValue"]));
 	}
-}), pV = ["aria-label"], mV = 6, hV = /* @__PURE__ */ R({
+}), mV = ["aria-label"], hV = 6, gV = /* @__PURE__ */ R({
 	__name: "VirtualList",
 	props: {
 		items: {},
@@ -30030,7 +30033,7 @@ var QB = { class: "trpg-pack-actions" }, $B = ["title"], eV = ["disabled"], tV =
 		label: {}
 	},
 	setup(e, { expose: t }) {
-		let n = e, r = /* @__PURE__ */ F(null), i = /* @__PURE__ */ F(0), a = /* @__PURE__ */ F(400), o = Y(() => Math.max(0, Math.floor(i.value / n.rowHeight) - mV)), s = Y(() => Math.min(n.items.length, Math.ceil((i.value + a.value) / n.rowHeight) + mV)), c = Y(() => n.items.slice(o.value, s.value).map((e, t) => ({
+		let n = e, r = /* @__PURE__ */ F(null), i = /* @__PURE__ */ F(0), a = /* @__PURE__ */ F(400), o = Y(() => Math.max(0, Math.floor(i.value / n.rowHeight) - hV)), s = Y(() => Math.min(n.items.length, Math.ceil((i.value + a.value) / n.rowHeight) + hV)), c = Y(() => n.items.slice(o.value, s.value).map((e, t) => ({
 			item: e,
 			index: o.value + t
 		}))), l;
@@ -30058,37 +30061,37 @@ var QB = { class: "trpg-pack-actions" }, $B = ["title"], eV = ["disabled"], tV =
 		}, [B(t.$slots, "default", {
 			item: n.item,
 			index: n.index
-		})], 4))), 128))], 4)], 40, pV));
+		})], 4))), 128))], 4)], 40, mV));
 	}
-}), gV = ["lore"];
-function _V(e) {
-	return gV.includes(e);
+}), _V = ["lore"];
+function vV(e) {
+	return _V.includes(e);
 }
 // src/ui/library/PackDetailPage.vue?vue&type=script&setup=true&lang.ts
-var vV = {
+var yV = {
 	key: 0,
 	class: "trpg-packdetail",
 	"data-testid": "pack-detail"
-}, yV = { class: "trpg-packdetail__head" }, bV = { class: "trpg-row__meta" }, xV = {
+}, bV = { class: "trpg-packdetail__head" }, xV = { class: "trpg-row__meta" }, SV = {
 	key: 0,
 	class: "trpg-packdetail__desc"
-}, SV = { class: "trpg-detail-links" }, CV = { key: 0 }, wV = { key: 1 }, TV = { key: 2 }, EV = { key: 3 }, DV = { class: "trpg-packdetail__filter" }, OV = {
+}, CV = { class: "trpg-detail-links" }, wV = { key: 0 }, TV = { key: 1 }, EV = { key: 2 }, DV = { key: 3 }, OV = { class: "trpg-packdetail__filter" }, kV = {
 	class: "trpg-field__hint",
 	"data-testid": "entry-count"
-}, kV = { class: "trpg-packdetail__list" }, AV = {
+}, AV = { class: "trpg-packdetail__list" }, jV = {
 	key: 0,
 	class: "trpg-skeleton",
 	"aria-busy": "true"
-}, jV = {
+}, MV = {
 	key: 1,
 	class: "trpg-empty"
-}, MV = { class: "trpg-entryrow" }, NV = { class: "trpg-row__meta trpg-entryrow__sum" }, PV = {
+}, NV = { class: "trpg-entryrow" }, PV = { class: "trpg-row__meta trpg-entryrow__sum" }, FV = {
 	key: 1,
 	class: "trpg-empty"
-}, FV = {
+}, IV = {
 	key: 1,
 	class: "trpg-empty"
-}, IV = /* @__PURE__ */ R({
+}, LV = /* @__PURE__ */ R({
 	__name: "PackDetailPage",
 	props: { packId: {} },
 	setup(e) {
@@ -30096,7 +30099,7 @@ var vV = {
 		async function f() {
 			if (!a.value?.installed) return;
 			let e = await n.svc().db.entries.where("packId").equals(t.packId).toArray();
-			c.value = e.filter((e) => !e.override && !_V(e.type)).map((e) => ({
+			c.value = e.filter((e) => !e.override && !vV(e.type)).map((e) => ({
 				entryId: e.entryId,
 				name: e.name,
 				nameEn: e.nameEn,
@@ -30130,27 +30133,27 @@ var vV = {
 			let e = i.workspace;
 			return !e || !a.value || e.ruleId !== a.value.ruleId ? "" : a.value.installed ? e.enabledPacks.some((e) => e.id === t.packId) ? "本存档：已启用" : "本存档：未启用" : "本存档：未安装";
 		});
-		return (t, n) => a.value ? (H(), U("div", vV, [G("div", yV, [
-			G("p", bV, M(h.value) + " · " + M(I(GL)(a.value)), 1),
-			a.value.description ? (H(), U("p", xV, M(a.value.description), 1)) : J("", !0),
-			G("ul", SV, [
-				a.value.requires.length ? (H(), U("li", CV, [n[3] ||= q("需要：", -1), (H(!0), U(V, null, z(a.value.requires, (e, t) => (H(), U(V, { key: e }, [
+		return (t, n) => a.value ? (H(), U("div", yV, [G("div", bV, [
+			G("p", xV, M(h.value) + " · " + M(I(GL)(a.value)), 1),
+			a.value.description ? (H(), U("p", SV, M(a.value.description), 1)) : J("", !0),
+			G("ul", CV, [
+				a.value.requires.length ? (H(), U("li", wV, [n[3] ||= q("需要：", -1), (H(!0), U(V, null, z(a.value.requires, (e, t) => (H(), U(V, { key: e }, [
 					t ? (H(), U(V, { key: 0 }, [q("、")], 64)) : J("", !0),
-					K(YL, { onOpen: (t) => I(LV)(e) }, {
+					K(YL, { onOpen: (t) => I(RV)(e) }, {
 						default: L(() => [q(M(o(e)), 1)]),
 						_: 2
 					}, 1032, ["onOpen"]),
 					q(" " + M(s(e) ? "✓" : "（未安装）"), 1)
 				], 64))), 128))])) : J("", !0),
-				a.value.recommends.length ? (H(), U("li", wV, [n[4] ||= q("推荐：", -1), (H(!0), U(V, null, z(a.value.recommends, (e, t) => (H(), U(V, { key: e }, [t ? (H(), U(V, { key: 0 }, [q("、")], 64)) : J("", !0), K(YL, { onOpen: (t) => I(LV)(e) }, {
+				a.value.recommends.length ? (H(), U("li", TV, [n[4] ||= q("推荐：", -1), (H(!0), U(V, null, z(a.value.recommends, (e, t) => (H(), U(V, { key: e }, [t ? (H(), U(V, { key: 0 }, [q("、")], 64)) : J("", !0), K(YL, { onOpen: (t) => I(RV)(e) }, {
 					default: L(() => [q(M(o(e)), 1)]),
 					_: 2
 				}, 1032, ["onOpen"])], 64))), 128))])) : J("", !0),
-				a.value.conflicts.length ? (H(), U("li", TV, [n[5] ||= q("冲突：", -1), (H(!0), U(V, null, z(a.value.conflicts, (e, t) => (H(), U(V, { key: e.id }, [t ? (H(), U(V, { key: 0 }, [q("、")], 64)) : J("", !0), q(M(o(e.id)), 1)], 64))), 128))])) : J("", !0),
-				g.value ? (H(), U("li", EV, M(g.value), 1)) : J("", !0)
+				a.value.conflicts.length ? (H(), U("li", EV, [n[5] ||= q("冲突：", -1), (H(!0), U(V, null, z(a.value.conflicts, (e, t) => (H(), U(V, { key: e.id }, [t ? (H(), U(V, { key: 0 }, [q("、")], 64)) : J("", !0), q(M(o(e.id)), 1)], 64))), 128))])) : J("", !0),
+				g.value ? (H(), U("li", DV, M(g.value), 1)) : J("", !0)
 			])
-		]), a.value.installed ? (H(), U(V, { key: 0 }, [G("div", DV, [
-			K(fV, {
+		]), a.value.installed ? (H(), U(V, { key: 0 }, [G("div", OV, [
+			K(pV, {
 				modelValue: u.value,
 				"onUpdate:modelValue": n[0] ||= (e) => u.value = e,
 				options: p.value,
@@ -30163,46 +30166,46 @@ var vV = {
 				placeholder: "搜索名称",
 				"aria-label": "搜索条目"
 			}, null, 512), [[pu, d.value]]),
-			G("span", OV, "共 " + M(m.value.length) + " 条", 1)
-		]), G("div", kV, [l.value ? m.value.length ? (H(), W(hV, {
+			G("span", kV, "共 " + M(m.value.length) + " 条", 1)
+		]), G("div", AV, [l.value ? m.value.length ? (H(), W(gV, {
 			key: 2,
 			items: m.value,
 			"row-height": 52,
 			"key-of": (e) => e.entryId,
 			label: "条目列表"
 		}, {
-			default: L(({ item: t }) => [G("div", MV, [K(YL, { onOpen: (n) => I(RV)(e.packId, t.entryId, t.name) }, {
+			default: L(({ item: t }) => [G("div", NV, [K(YL, { onOpen: (n) => I(zV)(e.packId, t.entryId, t.name) }, {
 				default: L(() => [q(M(t.name), 1)]),
 				_: 2
-			}, 1032, ["onOpen"]), G("span", NV, [q(M(I(ZL)(t.type)), 1), t.summary ? (H(), U(V, { key: 0 }, [q(" · " + M(I(vz)(t.summary)), 1)], 64)) : J("", !0)])])]),
+			}, 1032, ["onOpen"]), G("span", PV, [q(M(I(ZL)(t.type)), 1), t.summary ? (H(), U(V, { key: 0 }, [q(" · " + M(I(yz)(t.summary)), 1)], 64)) : J("", !0)])])]),
 			_: 1
-		}, 8, ["items", "key-of"])) : (H(), U("p", jV, [n[6] ||= q("没有符合的条目 ", -1), d.value || u.value !== "all" ? (H(), U("button", {
+		}, 8, ["items", "key-of"])) : (H(), U("p", MV, [n[6] ||= q("没有符合的条目 ", -1), d.value || u.value !== "all" ? (H(), U("button", {
 			key: 0,
 			class: "trpg-link",
 			type: "button",
 			onClick: n[2] ||= (e) => {
 				d.value = "", u.value = "all";
 			}
-		}, "清除筛选")) : J("", !0)])) : (H(), U("div", AV))])], 64)) : (H(), U("p", PV, "安装后可以查看每一条。"))])) : (H(), U("p", FV, "没有找到这个扩展包"));
+		}, "清除筛选")) : J("", !0)])) : (H(), U("div", jV))])], 64)) : (H(), U("p", FV, "安装后可以查看每一条。"))])) : (H(), U("p", IV, "没有找到这个扩展包"));
 	}
 });
 // src/ui/library/openDetail.ts
-function LV(e) {
+function RV(e) {
 	let t = jE(), n = FD(), r = qL(e, t.installed, t.catalog), i = {
 		key: `pack:${e}`,
 		title: r?.name ?? e,
-		component: Sn(IV),
-		header: Sn(dV),
+		component: Sn(LV),
+		header: Sn(fV),
 		props: { packId: e },
 		variant: "dialog"
 	};
 	n.isOpen ? n.push(i) : n.open(i);
 }
-function RV(e, t, n) {
+function zV(e, t, n) {
 	let r = FD(), i = {
 		key: `entry:${e}/${t}`,
 		title: n,
-		component: Sn(CB),
+		component: Sn(wB),
 		props: {
 			packId: e,
 			entryId: t
@@ -30212,7 +30215,7 @@ function RV(e, t, n) {
 	r.isOpen ? r.push(i) : r.open(i);
 }
 // src/ui/wizard/state.ts
-var zV = () => ({
+var BV = () => ({
 	step: 1,
 	ruleId: "",
 	packIds: [],
@@ -30222,29 +30225,29 @@ var zV = () => ({
 	nameEdited: !1,
 	packsInit: !1,
 	touched: !1
-}), $ = /* @__PURE__ */ fn(zV());
-function BV() {
-	Object.assign($, zV());
+}), $ = /* @__PURE__ */ fn(BV());
+function VV() {
+	Object.assign($, BV());
 }
 // src/ui/wizard/StepAdventure.vue?vue&type=script&setup=true&lang.ts
-var VV = { class: "page-stack" }, HV = {
+var HV = { class: "page-stack" }, UV = {
 	class: "trpg-list",
 	role: "radiogroup",
 	"aria-label": "冒险"
-}, UV = { class: "trpg-row trpg-radio" }, WV = ["checked"], GV = ["checked", "onChange"], KV = { class: "trpg-row__main" }, qV = { class: "trpg-row__meta" }, JV = /* @__PURE__ */ R({
+}, WV = { class: "trpg-row trpg-radio" }, GV = ["checked"], KV = ["checked", "onChange"], qV = { class: "trpg-row__main" }, JV = { class: "trpg-row__meta" }, YV = /* @__PURE__ */ R({
 	__name: "StepAdventure",
 	setup(e) {
 		let t = jE(), n = Y(() => WL(t.installed, t.catalog, $.ruleId).filter((e) => e.category === "adventure"));
 		function r(e) {
 			$.adventureId = e, $.touched = !0;
 		}
-		return (e, t) => (H(), U("div", VV, [t[3] ||= G("h3", { class: "trpg-step-title" }, "要不要带一个冒险模组", -1), G("div", HV, [G("label", UV, [
+		return (e, t) => (H(), U("div", HV, [t[3] ||= G("h3", { class: "trpg-step-title" }, "要不要带一个冒险模组", -1), G("div", UV, [G("label", WV, [
 			G("input", {
 				type: "radio",
 				name: "adv",
 				checked: I($).adventureId === "",
 				onChange: t[0] ||= (e) => r("")
-			}, null, 40, WV),
+			}, null, 40, GV),
 			t[1] ||= q(),
 			t[2] ||= G("span", { class: "trpg-row__title" }, "不带冒险，自由开始", -1)
 		]), (H(!0), U(V, null, z(n.value, (e) => (H(), U("label", {
@@ -30255,23 +30258,23 @@ var VV = { class: "page-stack" }, HV = {
 			name: "adv",
 			checked: I($).adventureId === e.id,
 			onChange: (t) => r(e.id)
-		}, null, 40, GV), G("span", KV, [K(YL, { onOpen: (t) => I(LV)(e.id) }, {
+		}, null, 40, KV), G("span", qV, [K(YL, { onOpen: (t) => I(RV)(e.id) }, {
 			default: L(() => [q(M(e.name), 1)]),
 			_: 2
-		}, 1032, ["onOpen"]), G("span", qV, M(e.description), 1)])]))), 128))])]));
+		}, 1032, ["onOpen"]), G("span", JV, M(e.description), 1)])]))), 128))])]));
 	}
-}), YV = { class: "trpg-field" }, XV = {
+}), XV = { class: "trpg-field" }, ZV = {
 	key: 0,
 	class: "trpg-field__error",
 	role: "alert"
-}, ZV = {
+}, QV = {
 	key: 1,
 	class: "trpg-field__error",
 	role: "alert"
-}, QV = { class: "trpg-field" }, $V = {
+}, $V = { class: "trpg-field" }, eH = {
 	class: "trpg-field__hint",
 	"data-testid": "wizard-summary"
-}, eH = /* @__PURE__ */ R({
+}, tH = /* @__PURE__ */ R({
 	__name: "StepName",
 	emits: ["submit"],
 	setup(e, { emit: t }) {
@@ -30290,7 +30293,7 @@ var VV = { class: "page-stack" }, HV = {
 			onSubmit: t[4] ||= Ou((e) => n("submit"), ["prevent"])
 		}, [
 			t[7] ||= G("h3", { class: "trpg-step-title" }, "给战役起个名字", -1),
-			G("label", YV, [
+			G("label", XV, [
 				t[5] ||= G("span", { class: "trpg-field__label" }, "战役名称", -1),
 				Pr(G("input", {
 					ref_key: "input",
@@ -30304,9 +30307,9 @@ var VV = { class: "page-stack" }, HV = {
 						I($).nameEdited = !0, I($).touched = !0;
 					}
 				}, null, 544), [[pu, I($).name]]),
-				c.value ? (H(), U("span", XV, "请输入战役名称")) : s.value ? (H(), U("span", ZV, "名称最多 " + M(I(40)) + " 个字", 1)) : J("", !0)
+				c.value ? (H(), U("span", ZV, "请输入战役名称")) : s.value ? (H(), U("span", QV, "名称最多 " + M(I(40)) + " 个字", 1)) : J("", !0)
 			]),
-			G("label", QV, [t[6] ||= G("span", { class: "trpg-field__label" }, "备注（可空）", -1), Pr(G("textarea", {
+			G("label", $V, [t[6] ||= G("span", { class: "trpg-field__label" }, "备注（可空）", -1), Pr(G("textarea", {
 				"onUpdate:modelValue": t[2] ||= (e) => I($).note = e,
 				class: "trpg-input",
 				rows: "2",
@@ -30314,26 +30317,26 @@ var VV = { class: "page-stack" }, HV = {
 				"aria-label": "备注",
 				onInput: t[3] ||= (e) => I($).touched = !0
 			}, null, 544), [[pu, I($).note]])]),
-			G("p", $V, M(l.value), 1)
+			G("p", eH, M(l.value), 1)
 		], 32));
 	}
-}), tH = { class: "page-stack" }, nH = {
+}), nH = { class: "page-stack" }, rH = {
 	key: 0,
 	class: "trpg-field__hint",
 	role: "status"
-}, rH = {
+}, iH = {
 	key: 1,
 	class: "trpg-field__hint",
 	role: "status",
 	"data-testid": "wizard-progress"
-}, iH = {
+}, aH = {
 	key: 2,
 	class: "page-stack",
 	"aria-busy": "true"
-}, aH = ["aria-label"], oH = { class: "trpg-group" }, sH = { class: "trpg-list" }, cH = ["data-testid"], lH = { class: "trpg-row__main" }, uH = { class: "trpg-row__meta" }, dH = { class: "trpg-row__end" }, fH = {
+}, oH = ["aria-label"], sH = { class: "trpg-group" }, cH = { class: "trpg-list" }, lH = ["data-testid"], uH = { class: "trpg-row__main" }, dH = { class: "trpg-row__meta" }, fH = { class: "trpg-row__end" }, pH = {
 	key: 0,
 	class: "trpg-badge"
-}, pH = ["title"], mH = ["onClick"], hH = ["aria-valuenow"], gH = /* @__PURE__ */ R({
+}, mH = ["title"], hH = ["onClick"], gH = ["aria-valuenow"], _H = /* @__PURE__ */ R({
 	__name: "StepPacks",
 	setup(e) {
 		let t = ZT(), n = jE(), r = /* @__PURE__ */ F(!1), i = Y(() => t.svc().rules.get($.ruleId)), a = Y(() => WL(n.installed, n.catalog, $.ruleId).filter((e) => e.category !== "adventure")), o = Y(() => new Set(i.value?.corePackIds ?? [])), s = Y(() => {
@@ -30390,7 +30393,7 @@ var VV = { class: "page-stack" }, HV = {
 			let r = e.filter((e) => e.state !== "failed"), i = e.filter((e) => e.state === "failed").length;
 			return r.length ? `正在准备 ${t - r.length - i + 1}/${t}` : `${i} 本未能下载 · 可以先开始，之后在库里补装`;
 		});
-		return (e, t) => (H(), U("div", tH, [
+		return (e, t) => (H(), U("div", nH, [
 			G("div", { class: "trpg-step-head" }, [t[1] ||= G("h3", { class: "trpg-step-title" }, "这场战役用哪些资料", -1), G("span", { class: "trpg-step-actions" }, [G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
@@ -30400,13 +30403,13 @@ var VV = { class: "page-stack" }, HV = {
 				type: "button",
 				onClick: p
 			}, "只留必需")])]),
-			I(n).catalogState === "error" ? (H(), U("p", nH, [q(" 没能连上数据仓库：" + M(I(n).catalogError) + "。可以先开始，之后在库里补装。 ", 1), G("button", {
+			I(n).catalogState === "error" ? (H(), U("p", rH, [q(" 没能连上数据仓库：" + M(I(n).catalogError) + "。可以先开始，之后在库里补装。 ", 1), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: t[0] ||= (e) => I(n).loadCatalog(!0)
 			}, "重试")])) : J("", !0),
-			g.value ? (H(), U("p", rH, M(g.value), 1)) : J("", !0),
-			r.value ? J("", !0) : (H(), U("div", iH, [...t[2] ||= [
+			g.value ? (H(), U("p", iH, M(g.value), 1)) : J("", !0),
+			r.value ? J("", !0) : (H(), U("div", aH, [...t[2] ||= [
 				G("div", { class: "trpg-skeleton" }, null, -1),
 				G("div", {
 					class: "trpg-skeleton",
@@ -30420,7 +30423,7 @@ var VV = { class: "page-stack" }, HV = {
 			(H(!0), U(V, null, z(r.value ? s.value : [], ([e, t]) => (H(), U("section", {
 				key: e,
 				"aria-label": e
-			}, [G("h4", oH, M(e), 1), G("ul", sH, [(H(!0), U(V, null, z(t, (e) => (H(), U("li", {
+			}, [G("h4", sH, M(e), 1), G("ul", cH, [(H(!0), U(V, null, z(t, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row",
 				"data-testid": `wizard-pack-${e.id}`
@@ -30436,62 +30439,62 @@ var VV = { class: "page-stack" }, HV = {
 					"label",
 					"onUpdate:modelValue"
 				]),
-				G("div", lH, [K(YL, { onOpen: (t) => I(LV)(e.id) }, {
+				G("div", uH, [K(YL, { onOpen: (t) => I(RV)(e.id) }, {
 					default: L(() => [q(M(e.name), 1)]),
 					_: 2
-				}, 1032, ["onOpen"]), G("div", uH, [q(M(I(GL)(e)), 1), !e.installed && !I(n).tasks[e.id] ? (H(), U(V, { key: 0 }, [q(" · 未安装 · " + M(I(qD)(e.byteSize)), 1)], 64)) : J("", !0)])]),
-				G("div", dH, [c(e.id) && I($).packIds.includes(e.id) ? (H(), U("span", fH, M(c(e.id)), 1)) : J("", !0), I(n).tasks[e.id] ? (H(), U(V, { key: 1 }, [I(n).tasks[e.id].state === "failed" ? (H(), U("span", {
+				}, 1032, ["onOpen"]), G("div", dH, [q(M(I(GL)(e)), 1), !e.installed && !I(n).tasks[e.id] ? (H(), U(V, { key: 0 }, [q(" · 未安装 · " + M(I(qD)(e.byteSize)), 1)], 64)) : J("", !0)])]),
+				G("div", fH, [c(e.id) && I($).packIds.includes(e.id) ? (H(), U("span", pH, M(c(e.id)), 1)) : J("", !0), I(n).tasks[e.id] ? (H(), U(V, { key: 1 }, [I(n).tasks[e.id].state === "failed" ? (H(), U("span", {
 					key: 0,
 					class: "trpg-badge",
 					"data-tone": "danger",
 					title: I(n).tasks[e.id].error
-				}, "⚠ 下载失败", 8, pH)) : J("", !0), I(n).tasks[e.id].state === "failed" ? (H(), U("button", {
+				}, "⚠ 下载失败", 8, mH)) : J("", !0), I(n).tasks[e.id].state === "failed" ? (H(), U("button", {
 					key: 1,
 					class: "trpg-btn trpg-btn--small",
 					type: "button",
 					onClick: (t) => m(e.id)
-				}, "重试", 8, mH)) : (H(), U("span", {
+				}, "重试", 8, hH)) : (H(), U("span", {
 					key: 2,
 					class: "trpg-progress",
 					role: "progressbar",
 					"aria-valuenow": Math.round(I(n).tasks[e.id].received / Math.max(1, I(n).tasks[e.id].total) * 100),
 					"aria-valuemin": "0",
 					"aria-valuemax": "100"
-				}, [G("span", { style: Oe({ width: `${Math.round(I(n).tasks[e.id].received / Math.max(1, I(n).tasks[e.id].total) * 100)}%` }) }, null, 4)], 8, hH))], 64)) : J("", !0)])
-			], 8, cH))), 128))])], 8, aH))), 128))
+				}, [G("span", { style: Oe({ width: `${Math.round(I(n).tasks[e.id].received / Math.max(1, I(n).tasks[e.id].total) * 100)}%` }) }, null, 4)], 8, gH))], 64)) : J("", !0)])
+			], 8, lH))), 128))])], 8, oH))), 128))
 		]));
 	}
-}), _H = { class: "page-stack" }, vH = /* @__PURE__ */ R({
+}), vH = { class: "page-stack" }, yH = /* @__PURE__ */ R({
 	__name: "InfoPage",
 	props: { lines: {} },
 	setup(e) {
-		return (t, n) => (H(), U("div", _H, [(H(!0), U(V, null, z(e.lines, (e) => (H(), U("p", {
+		return (t, n) => (H(), U("div", vH, [(H(!0), U(V, null, z(e.lines, (e) => (H(), U("p", {
 			key: e,
 			class: "trpg-info__line"
 		}, M(e), 1))), 128))]));
 	}
-}), yH = { class: "page-stack" }, bH = {
+}), bH = { class: "page-stack" }, xH = {
 	class: "trpg-rulecards",
 	role: "radiogroup",
 	"aria-label": "规则"
-}, xH = [
+}, SH = [
 	"aria-checked",
 	"aria-disabled",
 	"tabindex",
 	"data-status",
 	"onClick",
 	"onKeydown"
-], SH = {
+], CH = {
 	class: "trpg-rulecard__mark",
 	"aria-hidden": "true"
-}, CH = { class: "trpg-rulecard__body" }, wH = { class: "trpg-row__meta" }, TH = {
+}, wH = { class: "trpg-rulecard__body" }, TH = { class: "trpg-row__meta" }, EH = {
 	key: 0,
 	class: "trpg-badge"
-}, EH = {
+}, DH = {
 	key: 1,
 	class: "trpg-badge",
 	"data-tone": "warn"
-}, DH = /* @__PURE__ */ R({
+}, OH = /* @__PURE__ */ R({
 	__name: "StepRule",
 	setup(e) {
 		let t = ZT(), n = jE(), r = FD(), i = Y(() => tT(t.svc().rules, n.catalog?.rules ?? []));
@@ -30502,11 +30505,11 @@ var VV = { class: "page-stack" }, HV = {
 			r.push({
 				key: `rule:${e}`,
 				title: t,
-				component: Sn(vH),
+				component: Sn(yH),
 				props: { lines: [n] }
 			});
 		}
-		return (e, t) => (H(), U("div", yH, [t[0] ||= G("h3", { class: "trpg-step-title" }, "选择这场战役用的规则", -1), G("div", bH, [(H(!0), U(V, null, z(i.value, (e) => (H(), U("div", {
+		return (e, t) => (H(), U("div", bH, [t[0] ||= G("h3", { class: "trpg-step-title" }, "选择这场战役用的规则", -1), G("div", xH, [(H(!0), U(V, null, z(i.value, (e) => (H(), U("div", {
 			key: e.id,
 			class: "trpg-rulecard",
 			role: "radio",
@@ -30516,30 +30519,30 @@ var VV = { class: "page-stack" }, HV = {
 			"data-status": e.status,
 			onClick: (t) => a(e.id, e.status),
 			onKeydown: [Au(Ou((t) => a(e.id, e.status), ["prevent"]), ["enter"]), Au(Ou((t) => a(e.id, e.status), ["prevent"]), ["space"])]
-		}, [G("span", SH, M(I($).ruleId === e.id ? "◉" : "○"), 1), G("span", CH, [
+		}, [G("span", CH, M(I($).ruleId === e.id ? "◉" : "○"), 1), G("span", wH, [
 			K(YL, { onOpen: (t) => o(e.id, e.name, e.description) }, {
 				default: L(() => [q(M(e.name), 1)]),
 				_: 2
 			}, 1032, ["onOpen"]),
-			G("span", wH, M(e.description), 1),
-			e.status === "coming" ? (H(), U("span", TH, "即将推出")) : e.status === "installable" ? (H(), U("span", EH, "可安装")) : J("", !0)
-		])], 40, xH))), 128))])]));
+			G("span", TH, M(e.description), 1),
+			e.status === "coming" ? (H(), U("span", EH, "即将推出")) : e.status === "installable" ? (H(), U("span", DH, "可安装")) : J("", !0)
+		])], 40, SH))), 128))])]));
 	}
-}), OH = {
+}), kH = {
 	class: "trpg-wizard",
 	"data-testid": "wizard"
-}, kH = {
+}, AH = {
 	class: "trpg-steps",
 	"aria-label": "步骤"
-}, AH = ["data-state", "data-skipped"], jH = [
+}, jH = ["data-state", "data-skipped"], MH = [
 	"aria-current",
 	"disabled",
 	"title",
 	"onClick"
-], MH = { class: "trpg-steps__n" }, NH = { class: "trpg-steps__label" }, PH = {
+], NH = { class: "trpg-steps__n" }, PH = { class: "trpg-steps__label" }, FH = {
 	class: "trpg-steps__compact",
 	"aria-hidden": "true"
-}, FH = { class: "trpg-wizard__body" }, IH = { class: "trpg-wizard__foot" }, LH = ["disabled"], RH = ["disabled"], zH = /* @__PURE__ */ R({
+}, IH = { class: "trpg-wizard__body" }, LH = { class: "trpg-wizard__foot" }, RH = ["disabled"], zH = ["disabled"], BH = /* @__PURE__ */ R({
 	__name: "WizardPage",
 	setup(e) {
 		let t = ZT(), n = $T(), r = jE(), i = FD(), a = NE(), o = IE(), s = /* @__PURE__ */ F(!1), c = [
@@ -30593,8 +30596,8 @@ var VV = { class: "page-stack" }, HV = {
 				}
 			}
 		}
-		return (e, t) => (H(), U("div", OH, [
-			G("ol", kH, [(H(), U(V, null, z(c, (e) => G("li", {
+		return (e, t) => (H(), U("div", kH, [
+			G("ol", AH, [(H(), U(V, null, z(c, (e) => G("li", {
 				key: e.n,
 				"data-state": e.n === I($).step ? "current" : e.n < I($).step ? "done" : "todo",
 				"data-skipped": e.n === 3 && u.value
@@ -30604,29 +30607,29 @@ var VV = { class: "page-stack" }, HV = {
 				disabled: e.n >= I($).step || e.n === 3 && u.value,
 				title: e.n === 3 && u.value ? d.value : void 0,
 				onClick: (t) => h(e.n)
-			}, [G("span", MH, M(e.n), 1), G("span", NH, M(e.label), 1)], 8, jH)], 8, AH)), 64))]),
-			G("p", PH, M(I($).step) + "/4 · " + M(m.value), 1),
-			G("div", FH, [I($).step === 1 ? (H(), W(DH, { key: 0 })) : I($).step === 2 ? (H(), W(gH, { key: 1 })) : I($).step === 3 ? (H(), W(JV, { key: 2 })) : (H(), W(eH, {
+			}, [G("span", NH, M(e.n), 1), G("span", PH, M(e.label), 1)], 8, MH)], 8, jH)), 64))]),
+			G("p", FH, M(I($).step) + "/4 · " + M(m.value), 1),
+			G("div", IH, [I($).step === 1 ? (H(), W(OH, { key: 0 })) : I($).step === 2 ? (H(), W(_H, { key: 1 })) : I($).step === 3 ? (H(), W(YV, { key: 2 })) : (H(), W(tH, {
 				key: 3,
 				onSubmit: v
 			}))]),
-			G("footer", IH, [G("button", {
+			G("footer", LH, [G("button", {
 				class: "trpg-btn",
 				type: "button",
 				disabled: I($).step === 1 || s.value,
 				onClick: _
-			}, "上一步", 8, LH), G("button", {
+			}, "上一步", 8, RH), G("button", {
 				class: "trpg-btn trpg-btn--primary",
 				type: "button",
 				disabled: !p.value,
 				"data-testid": "wizard-next",
 				onClick: g
-			}, M(I($).step === 4 ? s.value ? "正在准备…" : "开始冒险" : "下一步"), 9, RH)])
+			}, M(I($).step === 4 ? s.value ? "正在准备…" : "开始冒险" : "下一步"), 9, zH)])
 		]));
 	}
 });
 // src/ui/saves/actions.ts
-function BH() {
+function VH() {
 	FD().open({
 		key: "saves",
 		title: "存档",
@@ -30634,12 +30637,12 @@ function BH() {
 		variant: "drawer"
 	});
 }
-function VH() {
+function HH() {
 	let e = FD();
-	BV(), e.open({
+	VV(), e.open({
 		key: "wizard",
 		title: "开始新冒险",
-		component: Sn(zH),
+		component: Sn(BH),
 		variant: "dialog",
 		guard: () => !$.touched || (oO({
 			title: "放弃这次新建？",
@@ -30652,7 +30655,7 @@ function VH() {
 		}), !1)
 	});
 }
-async function HH() {
+async function UH() {
 	let e = $T(), t = NE();
 	if (e.hasCampaign && !e.readOnly) try {
 		let n = await e.save();
@@ -30661,7 +30664,7 @@ async function HH() {
 		console.error("[trpg-assistant] 保存存档失败", e), t.error(`保存存档失败：${YD(e)}`);
 	}
 }
-async function UH(e) {
+async function WH(e) {
 	let t = $T(), n = FD(), r = NE(), i = XD();
 	if (t.readOnly) return { loaded: !1 };
 	try {
@@ -30697,10 +30700,10 @@ async function UH(e) {
 	}
 }
 // src/ui/home/HomeCampaign.vue?vue&type=script&setup=true&lang.ts
-var WH = { class: "page-stack" }, GH = ["src", "alt"], KH = { class: "trpg-banner__text" }, qH = { class: "trpg-banner__line" }, JH = ["data-dirty"], YH = { class: "trpg-overview" }, XH = { class: "trpg-cell__title" }, ZH = { class: "trpg-cell__line" }, QH = {
+var GH = { class: "page-stack" }, KH = ["src", "alt"], qH = { class: "trpg-banner__text" }, JH = { class: "trpg-banner__line" }, YH = ["data-dirty"], XH = { class: "trpg-overview" }, ZH = { class: "trpg-cell__title" }, QH = { class: "trpg-cell__line" }, $H = {
 	key: 0,
 	class: "trpg-cell__line"
-}, $H = { class: "trpg-empty trpg-empty--tight" }, eU = /* @__PURE__ */ R({
+}, eU = { class: "trpg-empty trpg-empty--tight" }, tU = /* @__PURE__ */ R({
 	__name: "HomeCampaign",
 	setup(e) {
 		let t = ZT(), n = $T(), r = jE(), i = IE(), a = /* @__PURE__ */ F(!1), o = /* @__PURE__ */ F(!1), s = Y(() => n.workspace ? t.svc().rules.get(n.workspace.ruleId) : void 0), c = Y(() => UD({
@@ -30708,7 +30711,7 @@ var WH = { class: "page-stack" }, GH = ["src", "alt"], KH = { class: "trpg-banne
 			data: n.workspace.data,
 			narrow: window.innerWidth <= 480
 		})), l = Y(() => !!c.value.src && !a.value), u = Y(() => n.currentSave?.name ?? "存档"), d = Y(() => n.dirty ? "● 有未保存到存档的改动" : n.currentSave ? `存档已保存 ${KD(n.currentSave.updatedAt)}` : ""), f = Y(() => n.workspace?.enabledPacks.length ?? 0), p = Y(() => r.catalogState === "ok" ? r.updates.length ? `${r.updates.length} 个可更新` : "已是最新" : "");
-		return ha(() => void r.loadCatalog()), (e, t) => (H(), U("div", WH, [
+		return ha(() => void r.loadCatalog()), (e, t) => (H(), U("div", GH, [
 			G("section", {
 				class: Ne(["trpg-banner", { "trpg-banner--pattern": !l.value }]),
 				"aria-label": "战役横幅"
@@ -30719,110 +30722,110 @@ var WH = { class: "page-stack" }, GH = ["src", "alt"], KH = { class: "trpg-banne
 				alt: c.value.alt,
 				onLoad: t[0] ||= (e) => o.value = !0,
 				onError: t[1] ||= (e) => a.value = !0
-			}, null, 42, GH)) : J("", !0), G("div", KH, [G("button", {
+			}, null, 42, KH)) : J("", !0), G("div", qH, [G("button", {
 				class: "trpg-banner__title",
 				type: "button",
 				"data-testid": "banner-title",
-				onClick: t[2] ||= (...e) => I(BH) && I(BH)(...e)
-			}, M(u.value), 1), G("div", qH, [G("span", null, M(s.value?.name), 1), G("button", {
+				onClick: t[2] ||= (...e) => I(VH) && I(VH)(...e)
+			}, M(u.value), 1), G("div", JH, [G("span", null, M(s.value?.name), 1), G("button", {
 				class: "trpg-banner__state",
 				type: "button",
 				"data-dirty": I(n).dirty,
-				onClick: t[3] ||= (...e) => I(BH) && I(BH)(...e)
-			}, M(d.value), 9, JH)])])], 2),
+				onClick: t[3] ||= (...e) => I(VH) && I(VH)(...e)
+			}, M(d.value), 9, YH)])])], 2),
 			t[8] ||= G("h2", { class: "trpg-group" }, "概览", -1),
-			G("div", YH, [G("button", {
+			G("div", XH, [G("button", {
 				class: "trpg-cell",
 				type: "button",
 				"data-testid": "cell-library",
 				onClick: t[4] ||= (e) => I(i).openLibrary("save")
 			}, [
-				G("span", XH, [K(JE, {
+				G("span", ZH, [K(JE, {
 					name: "books",
 					size: 18
 				}), t[6] ||= q("库", -1)]),
-				G("span", ZH, "已启用 " + M(f.value) + " 个扩展包", 1),
-				p.value ? (H(), U("span", QH, M(p.value), 1)) : J("", !0)
+				G("span", QH, "已启用 " + M(f.value) + " 个扩展包", 1),
+				p.value ? (H(), U("span", $H, M(p.value), 1)) : J("", !0)
 			])]),
 			t[9] ||= G("h2", { class: "trpg-group" }, "最近记录", -1),
-			G("p", $H, [t[7] ||= q("还没有记录，", -1), G("button", {
+			G("p", eU, [t[7] ||= q("还没有记录，", -1), G("button", {
 				class: "trpg-link",
 				type: "button",
 				onClick: t[5] ||= (e) => I(i).diceOpen = !0
 			}, "掷一次骰子试试")])
 		]));
 	}
-}), tU = { class: "page-stack" }, nU = ["disabled"], rU = { class: "trpg-hero__sub" }, iU = {
+}), nU = { class: "page-stack" }, rU = ["disabled"], iU = { class: "trpg-hero__sub" }, aU = {
 	key: 1,
 	class: "trpg-hero trpg-hero--idle",
 	"data-testid": "no-chat"
-}, aU = /* @__PURE__ */ R({
+}, oU = /* @__PURE__ */ R({
 	__name: "HomeEmpty",
 	setup(e) {
 		let t = $T(), n = ZT(), r = XD(), i = /* @__PURE__ */ F(0);
 		return ha(async () => {
 			i.value = await r.count(), await n.refreshBackup();
-		}), (e, n) => (H(), U("div", tU, [I(t).owner ? (H(), U("button", {
+		}), (e, n) => (H(), U("div", nU, [I(t).owner ? (H(), U("button", {
 			key: 0,
 			class: "trpg-hero",
 			type: "button",
 			"data-testid": "start-banner",
 			disabled: I(t).readOnly,
-			onClick: n[0] ||= (e) => I(VH)()
+			onClick: n[0] ||= (e) => I(HH)()
 		}, [
 			n[2] ||= G("span", { class: "trpg-hero__title" }, "开始一场新的冒险", -1),
-			G("span", rU, "为「" + M(I(t).owner.ownerLabel) + "」建立一个战役：选规则、资料与冒险，再起个名字。", 1),
+			G("span", iU, "为「" + M(I(t).owner.ownerLabel) + "」建立一个战役：选规则、资料与冒险，再起个名字。", 1),
 			n[3] ||= G("span", {
 				class: "trpg-hero__go",
 				"aria-hidden": "true"
 			}, "开始新冒险 →", -1)
-		], 8, nU)) : (H(), U("div", iU, [...n[4] ||= [G("span", { class: "trpg-hero__title" }, "请先在酒馆中打开一个聊天", -1)]])), I(t).owner && i.value > 0 ? (H(), U("button", {
+		], 8, rU)) : (H(), U("div", aU, [...n[4] ||= [G("span", { class: "trpg-hero__title" }, "请先在酒馆中打开一个聊天", -1)]])), I(t).owner && i.value > 0 ? (H(), U("button", {
 			key: 2,
 			class: "trpg-link",
 			type: "button",
 			"data-testid": "load-existing",
-			onClick: n[1] ||= (...e) => I(BH) && I(BH)(...e)
+			onClick: n[1] ||= (...e) => I(VH) && I(VH)(...e)
 		}, "读取已有存档（" + M(i.value) + "）", 1)) : J("", !0)]));
 	}
-}), oU = {
+}), sU = {
 	key: 0,
 	class: "trpg-field__error",
 	role: "alert"
-}, sU = {
+}, cU = {
 	key: 1,
 	class: "page-stack",
 	"aria-busy": "true"
-}, cU = /* @__PURE__ */ R({
+}, lU = /* @__PURE__ */ R({
 	__name: "HomeView",
 	setup(e) {
 		let t = ZT(), n = $T();
-		return (e, r) => I(t).bootError ? (H(), U("p", oU, "无法打开本机存储：" + M(I(t).bootError), 1)) : !I(t).booted || !I(n).ready ? (H(), U("div", sU, [...r[0] ||= [G("div", {
+		return (e, r) => I(t).bootError ? (H(), U("p", sU, "无法打开本机存储：" + M(I(t).bootError), 1)) : !I(t).booted || !I(n).ready ? (H(), U("div", cU, [...r[0] ||= [G("div", {
 			class: "trpg-skeleton",
 			style: { height: "140px" }
 		}, null, -1), G("div", {
 			class: "trpg-skeleton",
 			style: { width: "40%" }
-		}, null, -1)]])) : I(n).hasCampaign ? (H(), W(eU, { key: 3 })) : (H(), W(aU, { key: 2 }));
+		}, null, -1)]])) : I(n).hasCampaign ? (H(), W(tU, { key: 3 })) : (H(), W(oU, { key: 2 }));
 	}
-}), lU = {
+}), uU = {
 	class: "page-stack",
 	"data-testid": "ext-list"
-}, uU = { class: "trpg-toolbar" }, dU = ["aria-pressed"], fU = ["disabled"], pU = ["disabled"], mU = {
+}, dU = { class: "trpg-toolbar" }, fU = ["aria-pressed"], pU = ["disabled"], mU = ["disabled"], hU = {
 	key: 0,
 	class: "trpg-field__hint",
 	role: "status"
-}, hU = ["aria-label"], gU = { class: "trpg-group" }, _U = { class: "trpg-list" }, vU = ["data-testid"], yU = { class: "trpg-row__main" }, bU = { class: "trpg-row__meta" }, xU = {
+}, gU = ["aria-label"], _U = { class: "trpg-group" }, vU = { class: "trpg-list" }, yU = ["data-testid"], bU = { class: "trpg-row__main" }, xU = { class: "trpg-row__meta" }, SU = {
 	key: 0,
 	class: "trpg-row__meta trpg-row__warn",
 	"data-testid": "update-note"
-}, SU = { class: "trpg-row__end" }, CU = { class: "trpg-row trpg-row--series" }, wU = { class: "trpg-row__title" }, TU = ["data-testid"], EU = { class: "trpg-row__main" }, DU = { class: "trpg-row__meta" }, OU = { class: "trpg-row__meta" }, kU = {
+}, CU = { class: "trpg-row__end" }, wU = { class: "trpg-row trpg-row--series" }, TU = { class: "trpg-row__title" }, EU = ["data-testid"], DU = { class: "trpg-row__main" }, OU = { class: "trpg-row__meta" }, kU = { class: "trpg-row__meta" }, AU = {
 	key: 0,
 	class: "trpg-row__meta trpg-row__warn",
 	"data-testid": "update-note"
-}, AU = { class: "trpg-row__end" }, jU = {
+}, jU = { class: "trpg-row__end" }, MU = {
 	key: 1,
 	class: "trpg-empty"
-}, MU = /* @__PURE__ */ R({
+}, NU = /* @__PURE__ */ R({
 	__name: "ExtList",
 	props: { ruleId: {} },
 	setup(e) {
@@ -30840,14 +30843,14 @@ var WH = { class: "page-stack" }, GH = ["src", "alt"], KH = { class: "trpg-banne
 				single: r,
 				series: [...n.values()]
 			};
-		}).filter((e) => e.single.length || e.series.length)), f = UB;
+		}).filter((e) => e.single.length || e.series.length)), f = WB;
 		async function p() {
 			await n.loadCatalog(!0) && s.info(n.updates.length ? `有 ${n.updates.length} 个资料包有新版本` : "已经是最新");
 		}
 		return Wr(() => i.libraryFocusPack, async (e) => {
 			e && (await mr(), document.getElementById("trpg-assistant-root")?.shadowRoot?.querySelector(`[data-testid="ext-${e}"]`)?.scrollIntoView({ block: "center" }), i.libraryFocusPack = null);
-		}, { immediate: !0 }), (e, t) => (H(), U("div", lU, [
-			G("div", uU, [
+		}, { immediate: !0 }), (e, t) => (H(), U("div", uU, [
+			G("div", dU, [
 				c.value.length > 8 ? Pr((H(), U("input", {
 					key: 0,
 					"onUpdate:modelValue": t[0] ||= (e) => a.value = e,
@@ -30863,23 +30866,23 @@ var WH = { class: "page-stack" }, GH = ["src", "alt"], KH = { class: "trpg-banne
 					"aria-pressed": o.value,
 					"data-testid": "only-updates",
 					onClick: t[1] ||= (e) => o.value = !o.value
-				}, "有更新 " + M(l.value.length), 9, dU)) : J("", !0),
+				}, "有更新 " + M(l.value.length), 9, fU)) : J("", !0),
 				o.value && l.value.length ? (H(), U("button", {
 					key: 2,
 					class: "trpg-btn trpg-btn--small",
 					type: "button",
 					disabled: I(r).readOnly,
 					onClick: t[2] ||= (...e) => I(f) && I(f)(...e)
-				}, "全部更新", 8, fU)) : J("", !0),
+				}, "全部更新", 8, pU)) : J("", !0),
 				G("button", {
 					class: "trpg-btn trpg-btn--small",
 					type: "button",
 					"data-testid": "check-updates",
 					disabled: I(n).catalogState === "loading",
 					onClick: p
-				}, "检查更新", 8, pU)
+				}, "检查更新", 8, mU)
 			]),
-			I(n).catalogState === "error" ? (H(), U("p", mU, [q("没能连上数据仓库：" + M(I(n).catalogError) + " ", 1), G("button", {
+			I(n).catalogState === "error" ? (H(), U("p", hU, [q("没能连上数据仓库：" + M(I(n).catalogError) + " ", 1), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: t[3] ||= (e) => I(n).loadCatalog(!0)
@@ -30887,37 +30890,37 @@ var WH = { class: "page-stack" }, GH = ["src", "alt"], KH = { class: "trpg-banne
 			(H(!0), U(V, null, z(d.value, (e) => (H(), U("section", {
 				key: e.category,
 				"aria-label": e.label
-			}, [G("h3", gU, M(e.label), 1), G("ul", _U, [(H(!0), U(V, null, z(e.single, (e) => (H(), U("li", {
+			}, [G("h3", _U, M(e.label), 1), G("ul", vU, [(H(!0), U(V, null, z(e.single, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row",
 				"data-testid": `ext-${e.id}`
-			}, [G("div", yU, [
-				K(YL, { onOpen: (t) => I(LV)(e.id) }, {
+			}, [G("div", bU, [
+				K(YL, { onOpen: (t) => I(RV)(e.id) }, {
 					default: L(() => [q(M(e.name), 1)]),
 					_: 2
 				}, 1032, ["onOpen"]),
-				G("div", bU, M(I(GL)(e)), 1),
-				e.updateVersion || e.outdated ? (H(), U("div", xU, M(e.updateVersion ? `有新版本 v${e.updateVersion}` : "") + M(e.updateVersion && e.outdated ? " · " : "") + M(e.outdated ? "旧版数据，部分内容缺失，建议更新" : ""), 1)) : J("", !0)
-			]), G("div", SU, [K(uV, { row: e }, null, 8, ["row"])])], 8, vU))), 128)), (H(!0), U(V, null, z(e.series, (e) => (H(), U(V, { key: e[0].series.id }, [G("li", CU, [G("span", wU, M(e[0].series.name) + "（系列）", 1)]), (H(!0), U(V, null, z(e, (e) => (H(), U("li", {
+				G("div", xU, M(I(GL)(e)), 1),
+				e.updateVersion || e.outdated ? (H(), U("div", SU, M(e.updateVersion ? `有新版本 v${e.updateVersion}` : "") + M(e.updateVersion && e.outdated ? " · " : "") + M(e.outdated ? "旧版数据，部分内容缺失，建议更新" : ""), 1)) : J("", !0)
+			]), G("div", CU, [K(dV, { row: e }, null, 8, ["row"])])], 8, yU))), 128)), (H(!0), U(V, null, z(e.series, (e) => (H(), U(V, { key: e[0].series.id }, [G("li", wU, [G("span", TU, M(e[0].series.name) + "（系列）", 1)]), (H(!0), U(V, null, z(e, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row trpg-row--nested",
 				"data-testid": `ext-${e.id}`
-			}, [G("div", EU, [
-				G("span", DU, M(e.series.order), 1),
+			}, [G("div", DU, [
+				G("span", OU, M(e.series.order), 1),
 				t[4] ||= q(),
-				K(YL, { onOpen: (t) => I(LV)(e.id) }, {
+				K(YL, { onOpen: (t) => I(RV)(e.id) }, {
 					default: L(() => [q(M(e.name), 1)]),
 					_: 2
 				}, 1032, ["onOpen"]),
-				G("div", OU, M(I(GL)(e)), 1),
-				e.updateVersion || e.outdated ? (H(), U("div", kU, M(e.updateVersion ? `有新版本 v${e.updateVersion}` : "") + M(e.updateVersion && e.outdated ? " · " : "") + M(e.outdated ? "旧版数据，部分内容缺失，建议更新" : ""), 1)) : J("", !0)
-			]), G("div", AU, [K(uV, { row: e }, null, 8, ["row"])])], 8, TU))), 128))], 64))), 128))])], 8, hU))), 128)),
-			d.value.length ? J("", !0) : (H(), U("p", jU, M(I(n).catalogState === "loading" ? "正在读取数据仓库…" : "没有符合的扩展包"), 1))
+				G("div", kU, M(I(GL)(e)), 1),
+				e.updateVersion || e.outdated ? (H(), U("div", AU, M(e.updateVersion ? `有新版本 v${e.updateVersion}` : "") + M(e.updateVersion && e.outdated ? " · " : "") + M(e.outdated ? "旧版数据，部分内容缺失，建议更新" : ""), 1)) : J("", !0)
+			]), G("div", jU, [K(dV, { row: e }, null, 8, ["row"])])], 8, EU))), 128))], 64))), 128))])], 8, gU))), 128)),
+			d.value.length ? J("", !0) : (H(), U("p", MU, M(I(n).catalogState === "loading" ? "正在读取数据仓库…" : "没有符合的扩展包"), 1))
 		]));
 	}
 });
 // src/core/library/assets.ts
-async function NU(e, t, n) {
+async function PU(e, t, n) {
 	if (t.length > 10485760) throw new Q("E_TOO_LARGE", "图片超过 10MB，请先压缩后再选");
 	let r = IS("这张图片", t), i = vS(t);
 	try {
@@ -30934,29 +30937,29 @@ async function NU(e, t, n) {
 	return { $asset: i };
 }
 // src/ui/library/saveActions.ts
-function PU(e, t) {
+function FU(e, t) {
 	console.error(`[trpg-assistant] ${e}`, t), NE().error(`${e}：${YD(t)}`);
 }
-async function FU(e, t, n) {
+async function IU(e, t, n) {
 	let r = $T(), i = NE();
 	try {
 		await r.mutate(async (t, r) => ({ workspace: await t.library.setRuleOption(r, e, n) })), i.undoable(`「${t}」已${n ? "打开" : "关闭"}`, async () => {
 			await r.mutate(async (t, r) => ({ workspace: await t.library.setRuleOption(r, e, !n) }));
 		});
 	} catch (e) {
-		PU("设置失败", e);
+		FU("设置失败", e);
 	}
 }
-async function IU(e, t) {
+async function LU(e, t) {
 	let n = $T(), r = NE();
 	try {
 		let i = await n.mutate((t, n) => t.library.updateFeaturesSafely(n, e));
 		r.success(i.kept.length ? i.kept.map((e) => e.reason).join("；") : `「${t}」的功能定义已更新`);
 	} catch (e) {
-		PU("更新失败", e);
+		FU("更新失败", e);
 	}
 }
-async function LU(e, t, n, r) {
+async function RU(e, t, n, r) {
 	let i = $T(), a = NE(), o = i.workspace;
 	if (o) try {
 		let s = ww(o.data, e, n);
@@ -30976,35 +30979,35 @@ async function LU(e, t, n, r) {
 			await i.mutate(async (e, t) => ({ workspace: await e.campaign.updateData(t, () => u) }));
 		});
 	} catch (e) {
-		PU("修改失败", e);
+		FU("修改失败", e);
 	}
 }
-async function RU(e, t, n) {
+async function zU(e, t, n) {
 	let r = $T(), i = NE(), a = r.workspace, o = a ? tw(a.data).variants[e]?.active : void 0;
 	try {
 		await r.mutate(async (n, r) => ({ workspace: await n.library.switchVariant(r, e, t) })), i.undoable(`「${n}」已切换版本`, async () => {
 			o && await r.mutate(async (t, n) => ({ workspace: await t.library.switchVariant(n, e, o) }));
 		});
 	} catch (e) {
-		PU("切换失败", e);
+		FU("切换失败", e);
 	}
 }
-async function zU(e, t, n) {
+async function BU(e, t, n) {
 	let r = $T(), i = jE(), a = NE();
 	try {
 		await r.mutate(async (r, i) => ({ workspace: await r.library.repair(i, e, t, n) })), await i.runIntegrity(), a.success("已修复");
 	} catch (e) {
-		PU("修复失败", e);
+		FU("修复失败", e);
 	}
 }
 // src/ui/library/HealthSubpage.vue?vue&type=script&setup=true&lang.ts
-var BU = {
+var VU = {
 	class: "page-stack",
 	"data-testid": "health-page"
-}, VU = { class: "trpg-step-head" }, HU = { class: "trpg-step-title" }, UU = ["disabled"], WU = { class: "trpg-list" }, GU = { class: "trpg-row__main" }, KU = { class: "trpg-row__title" }, qU = { class: "trpg-row__meta" }, JU = { class: "trpg-row__end trpg-row__end--wrap" }, YU = ["onClick"], XU = {
+}, HU = { class: "trpg-step-head" }, UU = { class: "trpg-step-title" }, WU = ["disabled"], GU = { class: "trpg-list" }, KU = { class: "trpg-row__main" }, qU = { class: "trpg-row__title" }, JU = { class: "trpg-row__meta" }, YU = { class: "trpg-row__end trpg-row__end--wrap" }, XU = ["onClick"], ZU = {
 	key: 0,
 	class: "trpg-empty"
-}, ZU = /* @__PURE__ */ R({
+}, QU = /* @__PURE__ */ R({
 	__name: "HealthSubpage",
 	emits: ["back"],
 	setup(e) {
@@ -31029,18 +31032,18 @@ var BU = {
 			"use-original": "改用原版"
 		};
 		function u(e, t) {
-			t === "install" ? i.openLibrary("ext", e.packId) : t === "pick-image" ? (s = e, o.value?.click()) : zU(e, t);
+			t === "install" ? i.openLibrary("ext", e.packId) : t === "pick-image" ? (s = e, o.value?.click()) : BU(e, t);
 		}
 		async function d(e) {
 			let n = e.target, i = n.files?.[0];
 			if (n.value = "", i && s) try {
-				let e = await NU(t.svc().db, new Uint8Array(await i.arrayBuffer()), t.svc().now());
-				await zU(s, "pick-image", e.$asset);
+				let e = await PU(t.svc().db, new Uint8Array(await i.arrayBuffer()), t.svc().now());
+				await BU(s, "pick-image", e.$asset);
 			} catch (e) {
 				console.error("[trpg-assistant] 选择图片失败", e), r.error(`选择图片失败：${YD(e)}`);
 			}
 		}
-		return (e, t) => (H(), U("div", BU, [
+		return (e, t) => (H(), U("div", VU, [
 			G("button", {
 				class: "subpage-back",
 				type: "button",
@@ -31049,29 +31052,29 @@ var BU = {
 				name: "caret-left",
 				size: 16
 			}), t[1] ||= q("本存档", -1)]),
-			G("div", VU, [G("h2", HU, M(I(n).issues.length ? `体检：发现 ${I(n).issues.length} 处问题` : "体检：没有问题"), 1), G("button", {
+			G("div", HU, [G("h2", UU, M(I(n).issues.length ? `体检：发现 ${I(n).issues.length} 处问题` : "体检：没有问题"), 1), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: a.value,
 				onClick: c
-			}, "重新检查", 8, UU)]),
-			G("ul", WU, [(H(!0), U(V, null, z(I(n).issues, (e) => (H(), U("li", {
+			}, "重新检查", 8, WU)]),
+			G("ul", GU, [(H(!0), U(V, null, z(I(n).issues, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row",
 				"data-testid": "health-issue"
-			}, [G("div", GU, [G("span", KU, [t[2] ||= q("⚠ ", -1), e.packId && e.entryId && e.kind !== "pack-missing" ? (H(), W(YL, {
+			}, [G("div", KU, [G("span", qU, [t[2] ||= q("⚠ ", -1), e.packId && e.entryId && e.kind !== "pack-missing" ? (H(), W(YL, {
 				key: 0,
-				onOpen: (t) => I(RV)(e.packId, e.entryId, e.subject)
+				onOpen: (t) => I(zV)(e.packId, e.entryId, e.subject)
 			}, {
 				default: L(() => [q(M(e.subject), 1)]),
 				_: 2
-			}, 1032, ["onOpen"])) : (H(), U(V, { key: 1 }, [q(M(e.subject), 1)], 64))]), G("div", qU, M(e.detail), 1)]), G("div", JU, [(H(!0), U(V, null, z(e.fixes, (t) => (H(), U("button", {
+			}, 1032, ["onOpen"])) : (H(), U(V, { key: 1 }, [q(M(e.subject), 1)], 64))]), G("div", JU, M(e.detail), 1)]), G("div", YU, [(H(!0), U(V, null, z(e.fixes, (t) => (H(), U("button", {
 				key: t,
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: (n) => u(e, t)
-			}, M(l[t]), 9, YU))), 128))])]))), 128))]),
-			I(n).issues.length ? J("", !0) : (H(), U("p", XU, "存档里的引用、图片与内容都正常。")),
+			}, M(l[t]), 9, XU))), 128))])]))), 128))]),
+			I(n).issues.length ? J("", !0) : (H(), U("p", ZU, "存档里的引用、图片与内容都正常。")),
 			G("input", {
 				ref_key: "picker",
 				ref: o,
@@ -31084,14 +31087,14 @@ var BU = {
 			}, null, 544)
 		]));
 	}
-}), QU = { class: "trpg-field" }, $U = {
+}), $U = { class: "trpg-field" }, eW = {
 	key: 0,
 	class: "trpg-field"
-}, eW = { class: "trpg-field" }, tW = {
+}, tW = { class: "trpg-field" }, nW = {
 	key: 1,
 	class: "trpg-field__error",
 	role: "alert"
-}, nW = { class: "trpg-confirm__actions" }, rW = ["disabled"], iW = /* @__PURE__ */ R({
+}, rW = { class: "trpg-confirm__actions" }, iW = ["disabled"], aW = /* @__PURE__ */ R({
 	__name: "CreateMinePage",
 	props: {
 		ruleId: {},
@@ -31127,7 +31130,7 @@ var BU = {
 			class: "page-stack",
 			onSubmit: Ou(p, ["prevent"])
 		}, [
-			G("label", QU, [n[4] ||= G("span", { class: "trpg-field__label" }, "名称", -1), Pr(G("input", {
+			G("label", $U, [n[4] ||= G("span", { class: "trpg-field__label" }, "名称", -1), Pr(G("input", {
 				"onUpdate:modelValue": n[0] ||= (e) => c.value = e,
 				class: "trpg-input",
 				maxlength: "80",
@@ -31135,7 +31138,7 @@ var BU = {
 				"data-autofocus": "",
 				autocomplete: "off"
 			}, null, 512), [[pu, c.value]])]),
-			e.pack ? J("", !0) : (H(), U("div", $U, [n[5] ||= G("span", { class: "trpg-field__label" }, "分组", -1), K(lO, {
+			e.pack ? J("", !0) : (H(), U("div", eW, [n[5] ||= G("span", { class: "trpg-field__label" }, "分组", -1), K(lO, {
 				modelValue: u.value,
 				"onUpdate:modelValue": n[1] ||= (e) => u.value = e,
 				label: "分组",
@@ -31158,15 +31161,15 @@ var BU = {
 					}
 				]
 			}, null, 8, ["modelValue"])])),
-			G("label", eW, [n[6] ||= G("span", { class: "trpg-field__label" }, "简介（可空）", -1), Pr(G("textarea", {
+			G("label", tW, [n[6] ||= G("span", { class: "trpg-field__label" }, "简介（可空）", -1), Pr(G("textarea", {
 				"onUpdate:modelValue": n[2] ||= (e) => l.value = e,
 				class: "trpg-input",
 				rows: "3",
 				maxlength: "400",
 				"aria-label": "简介"
 			}, null, 512), [[pu, l.value]])]),
-			d.value ? (H(), U("p", tW, M(d.value), 1)) : J("", !0),
-			G("div", nW, [G("button", {
+			d.value ? (H(), U("p", nW, M(d.value), 1)) : J("", !0),
+			G("div", rW, [G("button", {
 				class: "trpg-btn",
 				type: "button",
 				onClick: n[3] ||= (e) => I(o).close(!0)
@@ -31174,27 +31177,27 @@ var BU = {
 				class: "trpg-btn trpg-btn--primary",
 				type: "submit",
 				disabled: f.value || !c.value.trim()
-			}, M(e.pack ? "保存" : "建立"), 9, rW)])
+			}, M(e.pack ? "保存" : "建立"), 9, iW)])
 		], 32));
 	}
-}), aW = { class: "trpg-confirm" }, oW = { class: "trpg-list" }, sW = ["onClick"], cW = { class: "trpg-confirm__actions" }, lW = /* @__PURE__ */ R({
+}), oW = { class: "trpg-confirm" }, sW = { class: "trpg-list" }, cW = ["onClick"], lW = { class: "trpg-confirm__actions" }, uW = /* @__PURE__ */ R({
 	__name: "PickPackPage",
 	props: {
 		packs: {},
 		onAnswer: { type: Function }
 	},
 	setup(e) {
-		return (t, n) => (H(), U("div", aW, [
+		return (t, n) => (H(), U("div", oW, [
 			n[1] ||= G("p", { class: "trpg-confirm__message" }, "移到哪个包？", -1),
-			G("ul", oW, [(H(!0), U(V, null, z(e.packs, (t) => (H(), U("li", {
+			G("ul", sW, [(H(!0), U(V, null, z(e.packs, (t) => (H(), U("li", {
 				key: t.id,
 				class: "trpg-row"
 			}, [G("button", {
 				class: "trpg-btn trpg-btn--quiet",
 				type: "button",
 				onClick: (n) => e.onAnswer(t.id)
-			}, M(t.name), 9, sW)]))), 128))]),
-			G("div", cW, [G("button", {
+			}, M(t.name), 9, cW)]))), 128))]),
+			G("div", lW, [G("button", {
 				class: "trpg-btn",
 				type: "button",
 				"data-autofocus": "",
@@ -31204,14 +31207,14 @@ var BU = {
 	}
 });
 // src/ui/library/mineActions.ts
-function uW(e, t) {
+function dW(e, t) {
 	console.error(`[trpg-assistant] ${e}`, t), NE().error(`${e}：${YD(t)}`);
 }
-function dW(e, t) {
+function fW(e, t) {
 	FD().open({
 		key: "mine-form",
 		title: t ? "改名与简介" : "新建我的包",
-		component: Sn(iW),
+		component: Sn(aW),
 		props: {
 			ruleId: e,
 			pack: t
@@ -31219,7 +31222,7 @@ function dW(e, t) {
 		variant: "dialog"
 	});
 }
-async function fW(e, t) {
+async function pW(e, t) {
 	let n = ZT(), r = jE(), i = NE();
 	if (!await oO({
 		title: "删除我的包",
@@ -31236,26 +31239,26 @@ async function fW(e, t) {
 			await n.svc().mine.restore(e), await r.refreshInstalled();
 		}), !0;
 	} catch (e) {
-		return uW("删除失败", e), !1;
+		return dW("删除失败", e), !1;
 	}
 }
-async function pW(e) {
+async function mW(e) {
 	let t = ZT();
 	try {
 		let n = await t.svc().mine.duplicate(e);
 		await jE().refreshInstalled(), NE().success(`已复制为「${n.name}」`);
 	} catch (e) {
-		uW("复制失败", e);
+		dW("复制失败", e);
 	}
 }
-async function mW(e, t, n) {
+async function hW(e, t, n) {
 	try {
 		Dk(await ZT().svc().packs.exportPack(e), `${t.replace(/[\\/:*?"<>|\s]+/g, "_")}_v${n}.trpgpack`), NE().success(`已导出「${t}」`);
 	} catch (e) {
-		uW("导出失败", e);
+		dW("导出失败", e);
 	}
 }
-async function hW(e, t) {
+async function gW(e, t) {
 	if (!await oO({
 		title: "彻底删除",
 		message: `「${t}」将被永久删除，无法恢复。`,
@@ -31265,22 +31268,22 @@ async function hW(e, t) {
 	try {
 		return await ZT().svc().mine.purge(e), !0;
 	} catch (e) {
-		return uW("删除失败", e), !1;
+		return dW("删除失败", e), !1;
 	}
 }
-async function gW(e) {
+async function _W(e) {
 	try {
 		let t = await ZT().svc().mine.restore(e);
 		await jE().refreshInstalled(), NE().success(`已恢复「${t.name}」`);
 	} catch (e) {
-		uW("恢复失败", e);
+		dW("恢复失败", e);
 	}
 }
-async function _W(e) {
+async function vW(e) {
 	return ZD({
 		key: "confirm:pick-pack",
 		title: "移到…",
-		component: Sn(lW),
+		component: Sn(uW),
 		props: (t) => ({
 			packs: e,
 			onAnswer: t
@@ -31288,17 +31291,17 @@ async function _W(e) {
 	}, null);
 }
 // src/ui/library/MineSubpage.vue?vue&type=script&setup=true&lang.ts
-var vW = {
+var yW = {
 	key: 0,
 	class: "trpg-minesub",
 	"data-testid": "mine-sub"
-}, yW = { class: "trpg-step-head" }, bW = { class: "trpg-step-title" }, xW = { class: "trpg-row__meta" }, SW = { class: "trpg-packdetail__filter" }, CW = { class: "trpg-field__hint" }, wW = { class: "trpg-minesub__list" }, TW = {
+}, bW = { class: "trpg-step-head" }, xW = { class: "trpg-step-title" }, SW = { class: "trpg-row__meta" }, CW = { class: "trpg-packdetail__filter" }, wW = { class: "trpg-field__hint" }, TW = { class: "trpg-minesub__list" }, EW = {
 	key: 0,
 	class: "trpg-empty"
-}, EW = { class: "trpg-entryrow" }, DW = { class: "trpg-row__meta trpg-entryrow__sum" }, OW = {
+}, DW = { class: "trpg-entryrow" }, OW = { class: "trpg-row__meta trpg-entryrow__sum" }, kW = {
 	key: 1,
 	class: "trpg-empty"
-}, kW = /* @__PURE__ */ R({
+}, AW = /* @__PURE__ */ R({
 	__name: "MineSubpage",
 	props: { packId: {} },
 	emits: ["back"],
@@ -31306,7 +31309,7 @@ var vW = {
 		let n = e, r = t, i = ZT(), a = jE(), o = $T(), s = NE(), c = /* @__PURE__ */ En([]), l = /* @__PURE__ */ F("all"), u = /* @__PURE__ */ F(""), d = Y(() => a.installedMap.get(n.packId));
 		async function f() {
 			let e = await i.svc().mine.entries(n.packId);
-			c.value = e.filter((e) => !_V(e.type)).map((e) => ({
+			c.value = e.filter((e) => !vV(e.type)).map((e) => ({
 				entryId: e.entryId,
 				name: e.name,
 				type: e.type,
@@ -31338,7 +31341,7 @@ var vW = {
 		async function _(e, t) {
 			if (e === "copy") await g(() => i.svc().mine.copyEntry(n.packId, t.entryId), "复制失败");
 			else if (e === "move") {
-				let e = await _W(h.value.map((e) => ({
+				let e = await vW(h.value.map((e) => ({
 					id: e.id,
 					name: e.name
 				})));
@@ -31356,13 +31359,13 @@ var vW = {
 		}
 		async function v(e) {
 			let t = d.value;
-			t && (e === "rename" ? dW(t.ruleId, {
+			t && (e === "rename" ? fW(t.ruleId, {
 				id: t.id,
 				name: t.name,
 				description: t.description
-			}) : e === "dup" ? await pW(t.id) : e === "export" ? await mW(t.id, t.name, t.version) : e === "delete" && await fW(t.id, t.name) && r("back"));
+			}) : e === "dup" ? await mW(t.id) : e === "export" ? await hW(t.id, t.name, t.version) : e === "delete" && await pW(t.id, t.name) && r("back"));
 		}
-		return (t, n) => d.value ? (H(), U("div", vW, [
+		return (t, n) => d.value ? (H(), U("div", yW, [
 			G("button", {
 				class: "subpage-back",
 				type: "button",
@@ -31371,7 +31374,7 @@ var vW = {
 				name: "caret-left",
 				size: 16
 			}), n[3] ||= q("我的", -1)]),
-			G("div", yW, [G("h2", bW, [q(M(d.value.name) + " ", 1), G("span", xW, "v" + M(d.value.version), 1)]), K(OI, {
+			G("div", bW, [G("h2", xW, [q(M(d.value.name) + " ", 1), G("span", SW, "v" + M(d.value.version), 1)]), K(OI, {
 				label: d.value.name,
 				items: [
 					{
@@ -31394,8 +31397,8 @@ var vW = {
 				],
 				onSelect: v
 			}, null, 8, ["label"])]),
-			G("div", SW, [
-				K(fV, {
+			G("div", CW, [
+				K(pV, {
 					modelValue: l.value,
 					"onUpdate:modelValue": n[1] ||= (e) => l.value = e,
 					options: p.value,
@@ -31408,9 +31411,9 @@ var vW = {
 					placeholder: "搜索名称",
 					"aria-label": "搜索条目"
 				}, null, 512), [[pu, u.value]]),
-				G("span", CW, "共 " + M(m.value.length) + " 条", 1)
+				G("span", wW, "共 " + M(m.value.length) + " 条", 1)
 			]),
-			G("div", wW, [m.value.length ? (H(), W(hV, {
+			G("div", TW, [m.value.length ? (H(), W(gV, {
 				key: 1,
 				items: m.value,
 				"row-height": 52,
@@ -31418,10 +31421,10 @@ var vW = {
 				label: "条目列表"
 			}, {
 				default: L(({ item: t }) => [
-					G("div", EW, [K(YL, { onOpen: (n) => I(RV)(e.packId, t.entryId, t.name) }, {
+					G("div", DW, [K(YL, { onOpen: (n) => I(zV)(e.packId, t.entryId, t.name) }, {
 						default: L(() => [q(M(t.name), 1)]),
 						_: 2
-					}, 1032, ["onOpen"]), G("span", DW, M(I(ZL)(t.type)), 1)]),
+					}, 1032, ["onOpen"]), G("span", OW, M(I(ZL)(t.type)), 1)]),
 					n[4] ||= G("button", {
 						class: "trpg-btn trpg-btn--small",
 						type: "button",
@@ -31457,23 +31460,23 @@ var vW = {
 					])
 				]),
 				_: 1
-			}, 8, ["items", "key-of"])) : (H(), U("p", TW, "还没有条目"))]),
+			}, 8, ["items", "key-of"])) : (H(), U("p", EW, "还没有条目"))]),
 			n[5] ||= G("p", { class: "trpg-field__hint" }, "条目编辑器随后续版本提供；现在可以复制、移动、删除条目。", -1)
-		])) : (H(), U("p", OW, "没有找到这个包"));
+		])) : (H(), U("p", kW, "没有找到这个包"));
 	}
-}), AW = {
+}), jW = {
 	class: "page-stack",
 	"data-testid": "mine-tab"
-}, jW = { class: "trpg-toolbar" }, MW = ["disabled"], NW = {
+}, MW = { class: "trpg-toolbar" }, NW = ["disabled"], PW = {
 	key: 0,
 	class: "trpg-list"
-}, PW = ["data-testid"], FW = { class: "trpg-row__main" }, IW = { class: "trpg-row__meta" }, LW = { class: "trpg-row__end" }, RW = ["onClick"], zW = {
+}, FW = ["data-testid"], IW = { class: "trpg-row__main" }, LW = { class: "trpg-row__meta" }, RW = { class: "trpg-row__end" }, zW = ["onClick"], BW = {
 	key: 1,
 	class: "trpg-empty"
-}, BW = {
+}, VW = {
 	key: 2,
 	"aria-label": "库回收站"
-}, VW = { class: "trpg-group" }, HW = { class: "trpg-list" }, UW = { class: "trpg-row__main" }, WW = { class: "trpg-row__title" }, GW = { class: "trpg-row__meta" }, KW = { class: "trpg-row__end" }, qW = ["onClick"], JW = ["onClick"], YW = /* @__PURE__ */ R({
+}, HW = { class: "trpg-group" }, UW = { class: "trpg-list" }, WW = { class: "trpg-row__main" }, GW = { class: "trpg-row__title" }, KW = { class: "trpg-row__meta" }, qW = { class: "trpg-row__end" }, JW = ["onClick"], YW = ["onClick"], XW = /* @__PURE__ */ R({
 	__name: "MineTab",
 	props: { ruleId: {} },
 	emits: ["edit"],
@@ -31485,32 +31488,32 @@ var vW = {
 		ha(s);
 		let c = (e) => Math.max(0, Math.floor((n.svc().now() - e) / 864e5));
 		async function l(e, n) {
-			e === "rename" ? dW(t.ruleId, {
+			e === "rename" ? fW(t.ruleId, {
 				id: n.id,
 				name: n.name,
 				description: n.description
-			}) : e === "dup" ? await pW(n.id) : e === "export" ? await mW(n.id, n.name, n.version) : e === "delete" && await fW(n.id, n.name) && await s();
+			}) : e === "dup" ? await mW(n.id) : e === "export" ? await hW(n.id, n.name, n.version) : e === "delete" && await pW(n.id, n.name) && await s();
 		}
-		return (t, n) => (H(), U("div", AW, [
-			G("div", jW, [G("button", {
+		return (t, n) => (H(), U("div", jW, [
+			G("div", MW, [G("button", {
 				class: "trpg-btn trpg-btn--primary",
 				type: "button",
 				disabled: I(i).readOnly,
 				"data-testid": "mine-new",
-				onClick: n[0] ||= (t) => I(dW)(e.ruleId)
-			}, "＋ 新建", 8, MW)]),
-			o.value.length ? (H(), U("ul", NW, [(H(!0), U(V, null, z(o.value, (e) => (H(), U("li", {
+				onClick: n[0] ||= (t) => I(fW)(e.ruleId)
+			}, "＋ 新建", 8, NW)]),
+			o.value.length ? (H(), U("ul", PW, [(H(!0), U(V, null, z(o.value, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row",
 				"data-testid": `mine-row-${e.name}`
-			}, [G("div", FW, [K(YL, { onOpen: (t) => I(LV)(e.id) }, {
+			}, [G("div", IW, [K(YL, { onOpen: (t) => I(RV)(e.id) }, {
 				default: L(() => [q(M(e.name), 1)]),
 				_: 2
-			}, 1032, ["onOpen"]), G("div", IW, M(I(GL)(e) || "还没有内容") + " · v" + M(e.version), 1)]), G("div", LW, [G("button", {
+			}, 1032, ["onOpen"]), G("div", LW, M(I(GL)(e) || "还没有内容") + " · v" + M(e.version), 1)]), G("div", RW, [G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: (n) => t.$emit("edit", e.id)
-			}, "编辑 ›", 8, RW), K(OI, {
+			}, "编辑 ›", 8, zW), K(OI, {
 				label: e.name,
 				items: [
 					{
@@ -31539,28 +31542,28 @@ var vW = {
 				"label",
 				"items",
 				"onSelect"
-			])])], 8, PW))), 128))])) : (H(), U("div", zW, [...n[1] ||= [G("p", null, "你在存档里做的人物、物品、地点、房规，可以通过『存到我的库』留在这里，所有存档都能用。", -1)]])),
-			a.value.length ? (H(), U("section", BW, [G("h3", VW, "库回收站（" + M(a.value.length) + "）", 1), G("ul", HW, [(H(!0), U(V, null, z(a.value, (e) => (H(), U("li", {
+			])])], 8, FW))), 128))])) : (H(), U("div", BW, [...n[1] ||= [G("p", null, "你在存档里做的人物、物品、地点、房规，可以通过『存到我的库』留在这里，所有存档都能用。", -1)]])),
+			a.value.length ? (H(), U("section", VW, [G("h3", HW, "库回收站（" + M(a.value.length) + "）", 1), G("ul", UW, [(H(!0), U(V, null, z(a.value, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row"
-			}, [G("div", UW, [G("span", WW, M(e.name), 1), G("div", GW, M(c(e.deletedAt)) + " 天前删除 · " + M(Math.max(0, I(30) - c(e.deletedAt))) + " 天后清除 · " + M(I(GD)(e.deletedAt)), 1)]), G("div", KW, [G("button", {
+			}, [G("div", WW, [G("span", GW, M(e.name), 1), G("div", KW, M(c(e.deletedAt)) + " 天前删除 · " + M(Math.max(0, I(30) - c(e.deletedAt))) + " 天后清除 · " + M(I(GD)(e.deletedAt)), 1)]), G("div", qW, [G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
-				onClick: (t) => I(gW)(e.id).then(s)
-			}, "恢复", 8, qW), G("button", {
+				onClick: (t) => I(_W)(e.id).then(s)
+			}, "恢复", 8, JW), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
-				onClick: (t) => I(hW)(e.id, e.name).then(s)
-			}, "彻底删除", 8, JW)])]))), 128))])])) : J("", !0)
+				onClick: (t) => I(gW)(e.id, e.name).then(s)
+			}, "彻底删除", 8, YW)])]))), 128))])])) : J("", !0)
 		]));
 	}
-}), XW = ["title"], ZW = [
+}), ZW = ["title"], QW = [
 	"aria-checked",
 	"aria-label",
 	"aria-description",
 	"disabled",
 	"data-on"
-], QW = /* @__PURE__ */ R({
+], $W = /* @__PURE__ */ R({
 	__name: "Switch",
 	props: /*@__PURE__*/ Qa({
 		label: {},
@@ -31596,15 +31599,15 @@ var vW = {
 			disabled: e.disabled,
 			"data-on": t.value,
 			onClick: n
-		}, [...i[0] ||= [G("span", { class: "trpg-switch__thumb" }, null, -1)]], 8, ZW)], 8, XW));
+		}, [...i[0] ||= [G("span", { class: "trpg-switch__thumb" }, null, -1)]], 8, QW)], 8, ZW));
 	}
-}), $W = { class: "page-stack" }, eG = {
+}), eG = { class: "page-stack" }, tG = {
 	key: 1,
 	class: "trpg-info__line"
-}, tG = {
+}, nG = {
 	key: 2,
 	class: "trpg-info__line"
-}, nG = { class: "trpg-field__hint" }, rG = /* @__PURE__ */ R({
+}, rG = { class: "trpg-field__hint" }, iG = /* @__PURE__ */ R({
 	__name: "OptionDetailPage",
 	props: {
 		summary: {},
@@ -31623,43 +31626,43 @@ var vW = {
 				return console.warn("[trpg-assistant] 规则选项说明不是正文块", e), null;
 			}
 		});
-		return (t, r) => (H(), U("div", $W, [n.value?.length ? (H(), W(Bz, {
+		return (t, r) => (H(), U("div", eG, [n.value?.length ? (H(), W(Vz, {
 			key: 0,
 			blocks: n.value
-		}, null, 8, ["blocks"])) : e.text && !n.value ? (H(), U("p", eG, M(e.text), 1)) : (H(), U("p", tG, M(e.summary || "这个选项在数据里没有更多说明。"), 1)), G("p", nG, [q("来源：" + M(e.source), 1), e.implemented ? J("", !0) : (H(), U(V, { key: 0 }, [q(" · 仅说明：结算不会自动应用。")], 64))])]));
+		}, null, 8, ["blocks"])) : e.text && !n.value ? (H(), U("p", tG, M(e.text), 1)) : (H(), U("p", nG, M(e.summary || "这个选项在数据里没有更多说明。"), 1)), G("p", rG, [q("来源：" + M(e.source), 1), e.implemented ? J("", !0) : (H(), U(V, { key: 0 }, [q(" · 仅说明：结算不会自动应用。")], 64))])]));
 	}
-}), iG = {
+}), aG = {
 	class: "page-stack",
 	"data-testid": "save-tab"
-}, aG = {
+}, oG = {
 	key: 0,
 	class: "trpg-issuerow",
 	role: "status",
 	"data-testid": "update-banner"
-}, oG = ["disabled"], sG = {
+}, sG = ["disabled"], cG = {
 	key: 1,
 	class: "trpg-issuerow",
 	role: "status"
-}, cG = { "aria-label": "资料" }, lG = { class: "trpg-list" }, uG = ["data-testid"], dG = { class: "trpg-row__main" }, fG = {
+}, lG = { "aria-label": "资料" }, uG = { class: "trpg-list" }, dG = ["data-testid"], fG = { class: "trpg-row__main" }, pG = {
 	key: 1,
 	class: "trpg-row__title"
-}, pG = {
-	key: 2,
-	class: "trpg-row__meta"
 }, mG = {
-	key: 3,
+	key: 2,
 	class: "trpg-row__meta"
 }, hG = {
+	key: 3,
+	class: "trpg-row__meta"
+}, gG = {
 	key: 4,
 	class: "trpg-row__meta"
-}, gG = { class: "trpg-row__end" }, _G = ["onClick"], vG = ["disabled", "onClick"], yG = {
+}, _G = { class: "trpg-row__end" }, vG = ["onClick"], yG = ["disabled", "onClick"], bG = {
 	key: 2,
 	"aria-label": "规则选项"
-}, bG = { class: "trpg-list" }, xG = ["data-testid"], SG = { class: "trpg-row__main" }, CG = { class: "trpg-row__meta" }, wG = { class: "trpg-row__end" }, TG = {
+}, xG = { class: "trpg-list" }, SG = ["data-testid"], CG = { class: "trpg-row__main" }, wG = { class: "trpg-row__meta" }, TG = { class: "trpg-row__end" }, EG = {
 	key: 3,
 	class: "trpg-row trpg-variantrow",
 	"aria-label": "修改版"
-}, EG = { class: "trpg-row__main" }, DG = { class: "trpg-row__meta" }, OG = /* @__PURE__ */ R({
+}, DG = { class: "trpg-row__main" }, OG = { class: "trpg-row__meta" }, kG = /* @__PURE__ */ R({
 	__name: "SaveTab",
 	emits: ["sub"],
 	setup(e) {
@@ -31705,13 +31708,13 @@ var vW = {
 			return `发现 ${e.length} 处问题：${e.slice(0, 2).map((e) => `「${e.subject}」${e.kind === "asset-missing" ? "图片缺失" : e.kind === "pack-missing" ? "缺失" : "需要处理"}`).join(" · ")}`;
 		});
 		function _(e, t) {
-			t ? XB(e.id) : ZB(e.id);
+			t ? ZB(e.id) : QB(e.id);
 		}
 		function v(e) {
 			let t = {
 				key: `option:${e.key}`,
 				title: e.name,
-				component: Sn(rG),
+				component: Sn(iG),
 				props: {
 					summary: e.summary,
 					text: e.text,
@@ -31724,42 +31727,42 @@ var vW = {
 				variant: "dialog"
 			});
 		}
-		return (e, t) => (H(), U("div", iG, [
-			I(r).updates.length ? (H(), U("div", aG, [G("span", null, "⬆ 有 " + M(I(r).updates.length) + " 个资料包有新版本（" + M(I(r).updates.map((e) => e.version).filter((e, t, n) => n.indexOf(e) === t).join("、")) + "）", 1), G("button", {
+		return (e, t) => (H(), U("div", aG, [
+			I(r).updates.length ? (H(), U("div", oG, [G("span", null, "⬆ 有 " + M(I(r).updates.length) + " 个资料包有新版本（" + M(I(r).updates.map((e) => e.version).filter((e, t, n) => n.indexOf(e) === t).join("、")) + "）", 1), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				"data-testid": "update-all",
 				disabled: I(n).readOnly,
-				onClick: t[0] ||= (...e) => I(UB) && I(UB)(...e)
-			}, "全部更新", 8, oG)])) : J("", !0),
-			I(r).issues.length ? (H(), U("div", sG, [G("span", null, "⚠ " + M(g.value), 1), G("button", {
+				onClick: t[0] ||= (...e) => I(WB) && I(WB)(...e)
+			}, "全部更新", 8, sG)])) : J("", !0),
+			I(r).issues.length ? (H(), U("div", cG, [G("span", null, "⚠ " + M(g.value), 1), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				"data-testid": "go-health",
 				onClick: t[1] ||= (t) => e.$emit("sub", "health")
 			}, "去处理 ›")])) : J("", !0),
-			G("section", cG, [t[3] ||= G("h3", { class: "trpg-group" }, "资料", -1), G("ul", lG, [(H(!0), U(V, null, z(u.value, (e) => (H(), U("li", {
+			G("section", lG, [t[3] ||= G("h3", { class: "trpg-group" }, "资料", -1), G("ul", uG, [(H(!0), U(V, null, z(u.value, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row",
 				"data-testid": `save-pack-${e.id}`
-			}, [G("div", dG, [e.missing ? (H(), U("span", fG, M(e.name), 1)) : (H(), W(YL, {
+			}, [G("div", fG, [e.missing ? (H(), U("span", pG, M(e.name), 1)) : (H(), W(YL, {
 				key: 0,
-				onOpen: (t) => I(LV)(e.id)
+				onOpen: (t) => I(RV)(e.id)
 			}, {
 				default: L(() => [q(M(e.name), 1)]),
 				_: 2
-			}, 1032, ["onOpen"])), e.missing ? (H(), U("div", pG, "未安装 · 已用到的条目照常可用")) : I(r).featureUpdateCounts.get(e.id) ? (H(), U("div", mG, "有新版功能定义 " + M(I(r).featureUpdateCounts.get(e.id)) + " 个", 1)) : d(e.id) ? (H(), U("div", hG, M(d(e.id)), 1)) : J("", !0)]), G("div", gG, [e.missing ? (H(), U("button", {
+			}, 1032, ["onOpen"])), e.missing ? (H(), U("div", mG, "未安装 · 已用到的条目照常可用")) : I(r).featureUpdateCounts.get(e.id) ? (H(), U("div", hG, "有新版功能定义 " + M(I(r).featureUpdateCounts.get(e.id)) + " 个", 1)) : d(e.id) ? (H(), U("div", gG, M(d(e.id)), 1)) : J("", !0)]), G("div", _G, [e.missing ? (H(), U("button", {
 				key: 0,
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				onClick: (t) => I(a).openLibrary("ext", e.id)
-			}, "去安装", 8, _G)) : (H(), U(V, { key: 1 }, [I(r).featureUpdateCounts.get(e.id) ? (H(), U("button", {
+			}, "去安装", 8, vG)) : (H(), U(V, { key: 1 }, [I(r).featureUpdateCounts.get(e.id) ? (H(), U("button", {
 				key: 0,
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: I(n).readOnly,
-				onClick: (t) => I(IU)(e.id, e.name)
-			}, "更新", 8, vG)) : J("", !0), K(QW, {
+				onClick: (t) => I(LU)(e.id, e.name)
+			}, "更新", 8, yG)) : J("", !0), K($W, {
 				"model-value": c.value.has(e.id),
 				label: `启用 ${e.name}`,
 				disabled: I(n).readOnly || !!d(e.id) && (c.value.has(e.id) || d(e.id).startsWith("与")),
@@ -31771,26 +31774,26 @@ var vW = {
 				"disabled",
 				"locked-reason",
 				"onUpdate:modelValue"
-			])], 64))])], 8, uG))), 128))])]),
-			f.value.length ? (H(), U("section", yG, [t[4] ||= G("h3", { class: "trpg-group" }, "规则选项", -1), G("ul", bG, [(H(!0), U(V, null, z(f.value, (e) => (H(), U("li", {
+			])], 64))])], 8, dG))), 128))])]),
+			f.value.length ? (H(), U("section", bG, [t[4] ||= G("h3", { class: "trpg-group" }, "规则选项", -1), G("ul", xG, [(H(!0), U(V, null, z(f.value, (e) => (H(), U("li", {
 				key: e.key,
 				class: "trpg-row",
 				"data-testid": `option-${e.name}`
-			}, [G("div", SG, [K(YL, { onOpen: (t) => v(e) }, {
+			}, [G("div", CG, [K(YL, { onOpen: (t) => v(e) }, {
 				default: L(() => [q(M(e.name), 1)]),
 				_: 2
-			}, 1032, ["onOpen"]), G("div", CG, [q(M(p(e.packId)), 1), e.implemented ? J("", !0) : (H(), U(V, { key: 0 }, [q(" · 仅说明")], 64))])]), G("div", wG, [K(QW, {
+			}, 1032, ["onOpen"]), G("div", wG, [q(M(p(e.packId)), 1), e.implemented ? J("", !0) : (H(), U(V, { key: 0 }, [q(" · 仅说明")], 64))])]), G("div", TG, [K($W, {
 				"model-value": e.on,
 				label: e.name,
 				disabled: I(n).readOnly,
-				"onUpdate:modelValue": (t) => I(FU)(e.key, e.name, t)
+				"onUpdate:modelValue": (t) => I(IU)(e.key, e.name, t)
 			}, null, 8, [
 				"model-value",
 				"label",
 				"disabled",
 				"onUpdate:modelValue"
-			])])], 8, xG))), 128))])])) : J("", !0),
-			m.value.length ? (H(), U("section", TG, [G("div", EG, [t[5] ||= G("span", { class: "trpg-row__title" }, "修改版", -1), G("div", DG, [q("本存档有 " + M(m.value.length) + " 个条目用了修改版", 1), h.value ? (H(), U(V, { key: 0 }, [q(" · 冲突 " + M(h.value), 1)], 64)) : J("", !0)])]), G("button", {
+			])])], 8, SG))), 128))])])) : J("", !0),
+			m.value.length ? (H(), U("section", EG, [G("div", DG, [t[5] ||= G("span", { class: "trpg-row__title" }, "修改版", -1), G("div", OG, [q("本存档有 " + M(m.value.length) + " 个条目用了修改版", 1), h.value ? (H(), U(V, { key: 0 }, [q(" · 冲突 " + M(h.value), 1)], 64)) : J("", !0)])]), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				"data-testid": "go-variants",
@@ -31798,19 +31801,19 @@ var vW = {
 			}, "管理 ›")])) : J("", !0)
 		]));
 	}
-}), kG = {
+}), AG = {
 	class: "page-stack",
 	"data-testid": "variants-page"
-}, AG = { class: "trpg-list" }, jG = { class: "trpg-row__main" }, MG = { class: "trpg-row__title" }, NG = { class: "trpg-row__meta" }, PG = {
+}, jG = { class: "trpg-list" }, MG = { class: "trpg-row__main" }, NG = { class: "trpg-row__title" }, PG = { class: "trpg-row__meta" }, FG = {
 	key: 0,
 	class: "trpg-row__end"
-}, FG = ["disabled", "onClick"], IG = ["disabled", "onClick"], LG = { class: "trpg-toolbar" }, RG = { class: "trpg-list" }, zG = ["data-testid"], BG = { class: "trpg-row__main" }, VG = { class: "trpg-row__meta" }, HG = {
+}, IG = ["disabled", "onClick"], LG = ["disabled", "onClick"], RG = { class: "trpg-toolbar" }, zG = { class: "trpg-list" }, BG = ["data-testid"], VG = { class: "trpg-row__main" }, HG = { class: "trpg-row__meta" }, UG = {
 	key: 0,
 	class: "trpg-field__error"
-}, UG = ["onClick"], WG = { class: "trpg-row__end trpg-row__end--select" }, GG = {
+}, WG = ["onClick"], GG = { class: "trpg-row__end trpg-row__end--select" }, KG = {
 	key: 0,
 	class: "trpg-empty"
-}, KG = /* @__PURE__ */ R({
+}, qG = /* @__PURE__ */ R({
 	__name: "VariantsSubpage",
 	emits: ["back"],
 	setup(e) {
@@ -31854,7 +31857,7 @@ var vW = {
 			value: e.key,
 			label: e.sourceName
 		}))], m = (e) => r.openLibrary("ext", e.slice(0, e.indexOf("/")));
-		return (e, n) => (H(), U("div", kG, [
+		return (e, n) => (H(), U("div", AG, [
 			G("button", {
 				class: "subpage-back",
 				type: "button",
@@ -31864,21 +31867,21 @@ var vW = {
 				size: 16
 			}), n[3] ||= q("本存档", -1)]),
 			n[5] ||= G("h2", { class: "trpg-group trpg-group--first" }, "来源", -1),
-			G("ul", AG, [(H(!0), U(V, null, z(l.value, (e) => (H(), U("li", {
+			G("ul", jG, [(H(!0), U(V, null, z(l.value, (e) => (H(), U("li", {
 				key: e.id,
 				class: "trpg-row"
-			}, [G("div", jG, [G("span", MG, M(e.name), 1), G("div", NG, [q(M(e.total) + " 处", 1), e.id === "house" ? J("", !0) : (H(), U(V, { key: 0 }, [q(" · 使用中 " + M(e.used), 1)], 64))])]), e.id === "house" ? J("", !0) : (H(), U("div", PG, [G("button", {
+			}, [G("div", MG, [G("span", NG, M(e.name), 1), G("div", PG, [q(M(e.total) + " 处", 1), e.id === "house" ? J("", !0) : (H(), U(V, { key: 0 }, [q(" · 使用中 " + M(e.used), 1)], 64))])]), e.id === "house" ? J("", !0) : (H(), U("div", FG, [G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: I(t).readOnly,
-				onClick: (t) => I(LU)(I(Cw)(e.id), e.name, !0, s)
-			}, "全部使用", 8, FG), G("button", {
+				onClick: (t) => I(RU)(I(Cw)(e.id), e.name, !0, s)
+			}, "全部使用", 8, IG), G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				disabled: I(t).readOnly,
-				onClick: (t) => I(LU)(I(Cw)(e.id), e.name, !1, s)
-			}, "全部不用", 8, IG)]))]))), 128))]),
-			G("div", LG, [K(lO, {
+				onClick: (t) => I(RU)(I(Cw)(e.id), e.name, !1, s)
+			}, "全部不用", 8, LG)]))]))), 128))]),
+			G("div", RG, [K(lO, {
 				modelValue: i.value,
 				"onUpdate:modelValue": n[1] ||= (e) => i.value = e,
 				label: "筛选",
@@ -31908,47 +31911,47 @@ var vW = {
 				placeholder: "搜索条目",
 				"aria-label": "搜索条目"
 			}, null, 512)), [[pu, a.value]]) : J("", !0)]),
-			G("ul", RG, [(H(!0), U(V, null, z(f.value, (e) => (H(), U("li", {
+			G("ul", zG, [(H(!0), U(V, null, z(f.value, (e) => (H(), U("li", {
 				key: e.key,
 				class: "trpg-row",
 				"data-testid": `variant-${e.name}`
-			}, [G("div", BG, [
-				K(YL, { onOpen: (t) => I(RV)(e.key.slice(0, e.key.indexOf("/")), e.key.slice(e.key.indexOf("/") + 1), e.name) }, {
+			}, [G("div", VG, [
+				K(YL, { onOpen: (t) => I(zV)(e.key.slice(0, e.key.indexOf("/")), e.key.slice(e.key.indexOf("/") + 1), e.name) }, {
 					default: L(() => [q(M(e.name), 1)]),
 					_: 2
 				}, 1032, ["onOpen"]),
-				G("div", VG, [q(M(e.type), 1), e.slotCandidates.length > 1 ? (H(), U(V, { key: 0 }, [q(" · 另有 " + M(e.slotCandidates.length - 1) + " 个版本", 1)], 64)) : J("", !0)]),
-				e.broken ? (H(), U("div", HG, [n[4] ||= q("⚠ 修改无法显示：原版缺失 ", -1), G("button", {
+				G("div", HG, [q(M(e.type), 1), e.slotCandidates.length > 1 ? (H(), U(V, { key: 0 }, [q(" · 另有 " + M(e.slotCandidates.length - 1) + " 个版本", 1)], 64)) : J("", !0)]),
+				e.broken ? (H(), U("div", UG, [n[4] ||= q("⚠ 修改无法显示：原版缺失 ", -1), G("button", {
 					class: "trpg-link",
 					type: "button",
 					onClick: (t) => m(e.key)
-				}, "去安装", 8, UG)])) : J("", !0)
-			]), G("div", WG, [K(fV, {
+				}, "去安装", 8, WG)])) : J("", !0)
+			]), G("div", GG, [K(pV, {
 				"model-value": e.active,
 				options: p(e),
 				label: `${e.name} 使用的版本`,
-				"onUpdate:modelValue": (t) => I(RU)(e.key, t ?? I("original"), e.name)
+				"onUpdate:modelValue": (t) => I(zU)(e.key, t ?? I("original"), e.name)
 			}, null, 8, [
 				"model-value",
 				"options",
 				"label",
 				"onUpdate:modelValue"
-			])])], 8, zG))), 128))]),
-			f.value.length ? J("", !0) : (H(), U("p", GG, "没有符合的条目"))
+			])])], 8, BG))), 128))]),
+			f.value.length ? J("", !0) : (H(), U("p", KG, "没有符合的条目"))
 		]));
 	}
-}), qG = {
+}), JG = {
 	key: 0,
 	class: "trpg-skeleton",
 	"aria-busy": "true"
-}, JG = {
+}, YG = {
 	key: 1,
 	class: "page-stack",
 	"data-testid": "library"
-}, YG = { class: "trpg-toolbar trpg-toolbar--between" }, XG = { class: "trpg-toolbar__end" }, ZG = {
+}, XG = { class: "trpg-toolbar trpg-toolbar--between" }, ZG = { class: "trpg-toolbar__end" }, QG = {
 	class: "trpg-row__meta",
 	"data-testid": "library-rule"
-}, QG = ["disabled"], $G = /* @__PURE__ */ R({
+}, $G = ["disabled"], eK = /* @__PURE__ */ R({
 	__name: "LibraryView",
 	setup(e) {
 		let t = ZT(), n = $T(), r = jE(), i = IE(), a = /* @__PURE__ */ F(null), o = /* @__PURE__ */ F(null);
@@ -31977,23 +31980,23 @@ var vW = {
 			let t = e.target, n = t.files?.[0];
 			t.value = "", n && bk(n);
 		}
-		return (e, r) => I(t).booted ? (H(), U("div", JG, [o.value ? o.value.kind === "variants" ? (H(), W(KG, {
+		return (e, r) => I(t).booted ? (H(), U("div", YG, [o.value ? o.value.kind === "variants" ? (H(), W(qG, {
 			key: 1,
 			onBack: r[4] ||= (e) => o.value = null
-		})) : o.value.kind === "health" ? (H(), W(ZU, {
+		})) : o.value.kind === "health" ? (H(), W(QU, {
 			key: 2,
 			onBack: r[5] ||= (e) => o.value = null
-		})) : (H(), W(kW, {
+		})) : (H(), W(AW, {
 			key: 3,
 			"pack-id": o.value.packId,
 			onBack: r[6] ||= (e) => o.value = null
-		}, null, 8, ["pack-id"])) : (H(), U(V, { key: 0 }, [G("div", YG, [K(lO, {
+		}, null, 8, ["pack-id"])) : (H(), U(V, { key: 0 }, [G("div", XG, [K(lO, {
 			modelValue: f.value,
 			"onUpdate:modelValue": r[0] ||= (e) => f.value = e,
 			label: "库分段",
 			options: d.value
-		}, null, 8, ["modelValue", "options"]), G("span", XG, [
-			G("span", ZG, M(l.value), 1),
+		}, null, 8, ["modelValue", "options"]), G("span", ZG, [
+			G("span", QG, M(l.value), 1),
 			G("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
@@ -32002,7 +32005,7 @@ var vW = {
 			}, [K(JE, {
 				name: "download-simple",
 				size: 14
-			}), r[7] ||= q("导入文件", -1)], 8, QG),
+			}), r[7] ||= q("导入文件", -1)], 8, $G),
 			G("input", {
 				ref_key: "picker",
 				ref: a,
@@ -32013,24 +32016,24 @@ var vW = {
 				"aria-hidden": "true",
 				onChange: p
 			}, null, 544)
-		])]), f.value === "save" && u.value ? (H(), W(OG, {
+		])]), f.value === "save" && u.value ? (H(), W(kG, {
 			key: 0,
 			onSub: r[2] ||= (e) => o.value = { kind: e }
-		})) : f.value === "ext" ? (H(), W(MU, {
+		})) : f.value === "ext" ? (H(), W(NU, {
 			key: 1,
 			"rule-id": c.value
-		}, null, 8, ["rule-id"])) : f.value === "mine" ? (H(), W(YW, {
+		}, null, 8, ["rule-id"])) : f.value === "mine" ? (H(), W(XW, {
 			key: 2,
 			"rule-id": c.value,
 			onEdit: r[3] ||= (e) => o.value = {
 				kind: "mine",
 				packId: e
 			}
-		}, null, 8, ["rule-id"])) : J("", !0)], 64))])) : (H(), U("div", qG));
+		}, null, 8, ["rule-id"])) : J("", !0)], 64))])) : (H(), U("div", JG));
 	}
-}), eK = /* @__PURE__ */ fn({});
-function tK(e, t, n, r, i) {
-	eK[e] = {
+}), tK = /* @__PURE__ */ fn({});
+function nK(e, t, n, r, i) {
+	tK[e] = {
 		id: e,
 		title: t,
 		status: n,
@@ -32039,29 +32042,29 @@ function tK(e, t, n, r, i) {
 		at: (/* @__PURE__ */ new Date()).toISOString()
 	};
 }
-async function nK(e, t, n) {
+async function rK(e, t, n) {
 	try {
 		await n();
 	} catch (n) {
-		console.error(`[trpg-assistant] 探针 ${e} 出错`, n), tK(e, t, "error", n instanceof Error ? n.message : String(n));
+		console.error(`[trpg-assistant] 探针 ${e} 出错`, n), nK(e, t, "error", n instanceof Error ? n.message : String(n));
 	}
 }
-function rK(e) {
+function iK(e) {
 	return {
 		generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
 		env: e,
-		results: Object.values(eK)
+		results: Object.values(tK)
 	};
 }
 // src/probes/envProbe.ts
-var iK = "env", aK = "宿主与设备环境";
-function oK() {
+var aK = "env", oK = "宿主与设备环境";
+function sK() {
 	let e = document.createElement("div");
 	e.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top)", document.body.appendChild(e);
 	let t = getComputedStyle(e).paddingTop;
 	return e.remove(), t;
 }
-async function sK(e) {
+async function cK(e) {
 	let t = { present: !1 };
 	if (window.__TAURITAVERN__) try {
 		let e = await m();
@@ -32085,7 +32088,7 @@ async function sK(e) {
 			dpr: window.devicePixelRatio
 		},
 		coarsePointer: window.matchMedia("(pointer: coarse)").matches,
-		safeAreaTop: oK(),
+		safeAreaTop: sK(),
 		contextKeys: Object.keys(e).sort(),
 		libsKeys: Object.keys(window.SillyTavern?.libs ?? {}).sort(),
 		hasSetExtensionPrompt: typeof e.setExtensionPrompt == "function",
@@ -32094,14 +32097,14 @@ async function sK(e) {
 		tauri: t
 	};
 }
-function cK(e) {
-	let t = () => nK(iK, aK, async () => {
-		let t = await sK(e), n = t.tauri;
-		tK(iK, aK, "info", n.present ? "检测到 TauriTavern 宿主" : "未检测到 TauriTavern（普通 SillyTavern）", t);
+function lK(e) {
+	let t = () => rK(aK, oK, async () => {
+		let t = await cK(e), n = t.tauri;
+		nK(aK, oK, "info", n.present ? "检测到 TauriTavern 宿主" : "未检测到 TauriTavern（普通 SillyTavern）", t);
 	});
 	return {
-		id: iK,
-		title: aK,
+		id: aK,
+		title: oK,
 		hint: "自动检测。",
 		actions: [{
 			label: "重新检测",
@@ -32111,7 +32114,7 @@ function cK(e) {
 	};
 }
 // src/probes/eventsProbe.ts
-var lK = "events", uK = "聊天事件", dK = [
+var uK = "events", dK = "聊天事件", fK = [
 	["CHAT_CHANGED", "chat_id_changed"],
 	["MESSAGE_SENT", "message_sent"],
 	["MESSAGE_RECEIVED", "message_received"],
@@ -32121,24 +32124,24 @@ var lK = "events", uK = "聊天事件", dK = [
 	["GENERATION_STARTED", "generation_started"],
 	["GENERATION_ENDED", "generation_ended"]
 ];
-function fK(e) {
+function pK(e) {
 	let t = {}, n = [], r = () => {
-		let e = dK.map(([e]) => e).filter((e) => !t[e]);
-		tK(lK, uK, "info", e.length ? `尚未观察到：${e.join("、")}` : "全部事件都已观察到", {
+		let e = fK.map(([e]) => e).filter((e) => !t[e]);
+		nK(uK, dK, "info", e.length ? `尚未观察到：${e.join("、")}` : "全部事件都已观察到", {
 			counts: t,
 			recent: n.slice(-30)
 		});
 	};
 	return {
-		id: lK,
-		title: uK,
+		id: uK,
+		title: dK,
 		hint: "依次做：发送消息、等回复、切换回复（左右箭头）、编辑一条消息、删除一条消息、切换聊天，观察事件是否都能收到。",
 		actions: [{
 			label: "刷新",
 			run: r
 		}],
 		start: () => {
-			for (let [i, a] of dK) g(e, h(e, i, a), (...e) => {
+			for (let [i, a] of fK) g(e, h(e, i, a), (...e) => {
 				t[i] = (t[i] ?? 0) + 1, n.push({
 					at: (/* @__PURE__ */ new Date()).toISOString(),
 					event: i,
@@ -32150,8 +32153,8 @@ function fK(e) {
 	};
 }
 // src/probes/identityProbe.ts
-var pK = "identity", mK = "角色卡 / 群组 / 聊天标识";
-function hK(e) {
+var mK = "identity", hK = "角色卡 / 群组 / 聊天标识";
+function gK(e) {
 	let t = e.characterId === void 0 ? void 0 : e.characters?.[Number(e.characterId)];
 	return {
 		characterId: e.characterId ?? null,
@@ -32164,9 +32167,9 @@ function hK(e) {
 		user: e.name1 ?? null
 	};
 }
-function gK(e) {
+function _K(e) {
 	let t = [], n = () => {
-		let n = hK(e), r = JSON.stringify([
+		let n = gK(e), r = JSON.stringify([
 			n.characterId,
 			n.groupId,
 			n.chatId
@@ -32174,14 +32177,14 @@ function gK(e) {
 		t.some((e) => e.key === r) || t.push({
 			key: r,
 			...n
-		}), tK(pK, mK, "info", `当前：${n.groupId ? "群组聊天" : n.characterId === null ? "没有打开聊天" : "角色卡聊天"}；已观察 ${t.length} 种上下文`, {
+		}), nK(mK, hK, "info", `当前：${n.groupId ? "群组聊天" : n.characterId === null ? "没有打开聊天" : "角色卡聊天"}；已观察 ${t.length} 种上下文`, {
 			current: n,
 			observed: t
 		});
 	};
 	return {
-		id: pK,
-		title: mK,
+		id: mK,
+		title: hK,
 		hint: "在角色卡聊天、群组聊天、未打开聊天三种状态之间切换，观察标识是否都能取到。",
 		actions: [{
 			label: "刷新",
@@ -32193,10 +32196,10 @@ function gK(e) {
 	};
 }
 // src/core/selftest.ts
-function _K(e, t) {
+function vK(e, t) {
 	if (!e) throw Error(t);
 }
-function vK(e, t, n) {
+function yK(e, t, n) {
 	return Array.from({ length: e }, (e, r) => ({
 		id: `${n}${r + 1}`,
 		type: t,
@@ -32207,7 +32210,7 @@ function vK(e, t, n) {
 		data: { n: r + 1 }
 	}));
 }
-async function yK(e) {
+async function bK(e) {
 	let t = [], n = gT({
 		dbName: `tavern-trpg-assistant-selftest-${yb()}`,
 		appVersion: "99.0.0"
@@ -32255,33 +32258,33 @@ async function yK(e) {
 				conflicts: []
 			}
 		},
-		entries: [...vK(5, "spell", "sp"), ...r],
+		entries: [...yK(5, "spell", "sp"), ...r],
 		blobs: /* @__PURE__ */ new Map([[vS(l), {
 			bytes: l,
 			mime: "image/png"
 		}]])
 	});
 	try {
-		await s("运行环境", async () => (_K(typeof indexedDB < "u", "没有 IndexedDB"), _K(typeof structuredClone == "function", "没有 structuredClone"), _K(typeof crypto?.getRandomValues == "function", "没有 crypto.getRandomValues"), _K(typeof BroadcastChannel < "u", "没有 BroadcastChannel（多窗口只读不可用）"), `secureContext=${String(globalThis.isSecureContext)}`)), await s("生成并识别内容包（zip 压缩与解压）", async () => {
+		await s("运行环境", async () => (vK(typeof indexedDB < "u", "没有 IndexedDB"), vK(typeof structuredClone == "function", "没有 structuredClone"), vK(typeof crypto?.getRandomValues == "function", "没有 crypto.getRandomValues"), vK(typeof BroadcastChannel < "u", "没有 BroadcastChannel（多窗口只读不可用）"), `secureContext=${String(globalThis.isSecureContext)}`)), await s("生成并识别内容包（zip 压缩与解压）", async () => {
 			let e = n.packs.recognize(u("selftest-core", "rules"));
-			return _K(e.type === "pack" && e.manifest.entryCount === 5, "识别结果不对"), `${e.type === "pack" ? e.byteSize : 0} 字节`;
+			return vK(e.type === "pack" && e.manifest.entryCount === 5, "识别结果不对"), `${e.type === "pack" ? e.byteSize : 0} 字节`;
 		}), await s("安装内置包与模组（模组依赖核心包）", async () => {
-			_K(await n.packs.installBuiltin(u("dnd5e2014-srd", "rules")) === "installed", "内置包未安装");
+			vK(await n.packs.installBuiltin(u("dnd5e2014-srd", "rules")) === "installed", "内置包未安装");
 			let e = n.packs.recognize(u("selftest-module", "adventure", "1.0.0", [c]));
-			_K(e.type === "pack", "不是内容包"), await n.packs.install(e, { source: "import" }), _K((await n.packs.list()).length === 2, "安装数量不对");
+			vK(e.type === "pack", "不是内容包"), await n.packs.install(e, { source: "import" }), vK((await n.packs.list()).length === 2, "安装数量不对");
 		}), await s("重复导入同一个包：要求先选择覆盖；选择后升级", async () => {
 			let e = n.packs.recognize(u("selftest-module", "adventure", "1.1.0", [c]));
-			_K(e.type === "pack", "不是内容包");
+			vK(e.type === "pack", "不是内容包");
 			let t = !1;
 			try {
 				await n.packs.install(e, { source: "import" });
 			} catch {
 				t = !0;
 			}
-			_K(t, "没有要求选择覆盖"), await n.packs.install(e, {
+			vK(t, "没有要求选择覆盖"), await n.packs.install(e, {
 				source: "import",
 				resolution: "overwrite"
-			}), _K((await n.db.packs.get("selftest-module"))?.version === "1.1.0", "覆盖后版本不对");
+			}), vK((await n.db.packs.get("selftest-module"))?.version === "1.1.0", "覆盖后版本不对");
 		}), await s("新存档、修改、保存、分支", async () => {
 			let e = await n.campaign.startNewCampaign({
 				...r,
@@ -32289,18 +32292,18 @@ async function yK(e) {
 				packIds: ["selftest-module"],
 				name: "自检存档"
 			});
-			_K(!n.campaign.isDirty(e.workspace), "新存档不应有未保存改动");
+			vK(!n.campaign.isDirty(e.workspace), "新存档不应有未保存改动");
 			let t = await n.campaign.updateData(r.ownerKey, (e) => ({
 				...e,
 				gold: 10
 			}));
-			_K(n.campaign.isDirty(t), "修改后应为未保存"), _K((await n.campaign.saveCurrent(r.ownerKey)).changed, "保存应写入"), _K((await n.campaign.branch(r.ownerKey)).save.branchedFrom === e.save.id, "分支来源不对");
+			vK(n.campaign.isDirty(t), "修改后应为未保存"), vK((await n.campaign.saveCurrent(r.ownerKey)).changed, "保存应写入"), vK((await n.campaign.branch(r.ownerKey)).save.branchedFrom === e.save.id, "分支来源不对");
 		}), await s("读取存档（写自动存档）与模板副本", async () => {
 			let e = (await n.campaign.listManual({
 				ownerKey: r.ownerKey,
 				ruleId: "dnd5e2014"
 			}, "card")).find((e) => e.name === "自检存档");
-			_K(e, "找不到第一个存档"), await n.campaign.loadSave(r, e.id), _K((await n.campaign.listAuto(r.ownerKey, "dnd5e2014")).length === 1, "没有写自动存档");
+			vK(e, "找不到第一个存档"), await n.campaign.loadSave(r, e.id), vK((await n.campaign.listAuto(r.ownerKey, "dnd5e2014")).length === 1, "没有写自动存档");
 			let t = await n.campaign.materialize(r.ownerKey, {
 				packId: "selftest-module",
 				entryId: "tom"
@@ -32308,7 +32311,7 @@ async function yK(e) {
 				packId: "selftest-module",
 				entryId: "tom"
 			});
-			_K(t.created && !i.created, "唯一条目应只有一份"), _K((await n.campaign.materialize(r.ownerKey, {
+			vK(t.created && !i.created, "唯一条目应只有一份"), vK((await n.campaign.materialize(r.ownerKey, {
 				packId: "selftest-module",
 				entryId: "sp1"
 			}, 3)).instances.map((e) => e.label).join("") === "ABC", "批量编号不对");
@@ -32317,7 +32320,7 @@ async function yK(e) {
 				ownerKey: r.ownerKey,
 				ruleId: "dnd5e2014"
 			}, "card")).filter((e) => e.name !== "自检存档");
-			await n.campaign.deleteSave(e.id), _K((await n.campaign.listDeleted("dnd5e2014")).length === 1, "最近删除应有 1 个"), await n.campaign.restoreSave(e.id), await n.campaign.deleteSave(e.id), _K(await n.campaign.purgeSaves([e.id]) === 1, "彻底删除失败");
+			await n.campaign.deleteSave(e.id), vK((await n.campaign.listDeleted("dnd5e2014")).length === 1, "最近删除应有 1 个"), await n.campaign.restoreSave(e.id), await n.campaign.deleteSave(e.id), vK(await n.campaign.purgeSaves([e.id]) === 1, "彻底删除失败");
 		}), await s("导出存档并导入到另一张卡", async () => {
 			await n.campaign.saveCurrent(r.ownerKey);
 			let e = (await n.campaign.getWorkspace(r.ownerKey)).currentSaveId, { bytes: t } = await Ek({
@@ -32329,9 +32332,9 @@ async function yK(e) {
 				type: "save",
 				saveId: e
 			}, { includePacks: !0 }), o = n.packs.recognize(t);
-			_K(o.type === "save" && o.attachedPacks.size === 1, "导出文件内容不对");
+			vK(o.type === "save" && o.attachedPacks.size === 1, "导出文件内容不对");
 			let s = qO(o, a);
-			return _K((await XO({
+			return vK((await XO({
 				db: n.db,
 				campaign: n.campaign,
 				now: n.now,
@@ -32347,7 +32350,7 @@ async function yK(e) {
 				now: n.now,
 				appVersion: "99.0.0"
 			}, { type: "backup" }, { includePacks: !1 }), t = n.packs.recognize(e);
-			_K(t.type === "backup" && t.workspaces.length === 1 && t.saves.length >= 3, "备份内容不对"), await n.campaign.updateData(r.ownerKey, (e) => ({
+			vK(t.type === "backup" && t.workspaces.length === 1 && t.saves.length >= 3, "备份内容不对"), await n.campaign.updateData(r.ownerKey, (e) => ({
 				...e,
 				gold: 999
 			})), await XO({
@@ -32359,9 +32362,9 @@ async function yK(e) {
 				owner: r,
 				selectedIds: [],
 				mode: "overwrite"
-			}), _K((await n.campaign.getWorkspace(r.ownerKey))?.data.gold === 10, "覆盖恢复后数据不对"), _K((await n.campaign.listAuto(r.ownerKey, "dnd5e2014")).some((e) => e.autoReason === "恢复备份前"), "没有\"恢复备份前\"自动存档");
+			}), vK((await n.campaign.getWorkspace(r.ownerKey))?.data.gold === 10, "覆盖恢复后数据不对"), vK((await n.campaign.listAuto(r.ownerKey, "dnd5e2014")).some((e) => e.autoReason === "恢复备份前"), "没有\"恢复备份前\"自动存档");
 		}), await s("删除内容包", async () => {
-			await n.packs.uninstall("selftest-module"), _K(await n.db.entries.where("packId").equals("selftest-module").count() === 0, "条目未清除");
+			await n.packs.uninstall("selftest-module"), vK(await n.db.entries.where("packId").equals("selftest-module").count() === 0, "条目未清除");
 		});
 	} finally {
 		n.db.close(), await n.db.delete();
@@ -32369,32 +32372,32 @@ async function yK(e) {
 	return t;
 }
 // src/probes/m1Probe.ts
-var bK = "m1", xK = "M1 数据层自检";
-function SK() {
+var xK = "m1", SK = "M1 数据层自检";
+function CK() {
 	return {
-		id: bK,
-		title: xK,
+		id: xK,
+		title: SK,
 		hint: "在独立的临时数据库里走完：安装内容包 → 新存档 → 保存 → 分支 → 读取 → 副本 → 删除与恢复 → 导出导入 → 备份恢复。只用合成数据，结束后自动删除，不影响你的真实数据。",
 		actions: [{
 			label: "运行 M1 数据层自检",
-			run: () => nK(bK, xK, async () => {
-				tK(bK, xK, "waiting", "正在运行…");
-				let e = await yK((e) => tK(bK, xK, "waiting", `已完成 ${e.name}`)), t = e.find((e) => !e.ok);
-				tK(bK, xK, t ? "fail" : "pass", t ? `未通过：${t.name} — ${t.detail ?? ""}` : `全部通过（${e.length}/10 步）`, e.map((e) => `${e.ok ? "✓" : "✗"} ${e.name}${e.detail ? ` — ${e.detail}` : ""}`));
+			run: () => rK(xK, SK, async () => {
+				nK(xK, SK, "waiting", "正在运行…");
+				let e = await bK((e) => nK(xK, SK, "waiting", `已完成 ${e.name}`)), t = e.find((e) => !e.ok);
+				nK(xK, SK, t ? "fail" : "pass", t ? `未通过：${t.name} — ${t.detail ?? ""}` : `全部通过（${e.length}/10 步）`, e.map((e) => `${e.ok ? "✓" : "✗"} ${e.name}${e.detail ? ` — ${e.detail}` : ""}`));
 			})
 		}]
 	};
 }
 // src/core/m2selftest.ts
-function CK(e) {
+function wK(e) {
 	let t = e.data.src, n = e.data.credit;
 	return `出自《${t?.book ?? "未知"}》第 ${t?.page ?? 0} 页 · 中文：${n?.by ?? "未知"}（${n?.license ?? "未知"}）`;
 }
-var wK = () => Cb("dnd5e2014-srd");
-function TK() {
+var TK = () => Cb("dnd5e2014-srd");
+function EK() {
 	return XT({ catalogUrl: "https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json" });
 }
-async function EK(e) {
+async function DK(e) {
 	let t = [], n = gT({
 		dbName: `tavern-trpg-assistant-m2-${yb()}`,
 		appVersion: "99.0.0"
@@ -32418,13 +32421,13 @@ async function EK(e) {
 	}, o = [];
 	try {
 		await a("安装内置 SRD 包", async () => {
-			let e = await n.packs.installBuiltin(await wK()), t = await n.db.packs.get("dnd5e2014-srd");
+			let e = await n.packs.installBuiltin(await TK()), t = await n.db.packs.get("dnd5e2014-srd");
 			if (!t) throw Error("内置 SRD 包未安装");
 			return o.push(t), `${e}；${t.entryCount} 条，${(t.byteSize / 1024).toFixed(1)} KB`;
 		}), await a("从数据仓库下载一个书籍包", async () => {
 			let e;
 			try {
-				e = await hC({ url: TK() });
+				e = await hC({ url: EK() });
 			} catch (e) {
 				return {
 					skipped: !0,
@@ -32436,7 +32439,7 @@ async function EK(e) {
 				skipped: !0,
 				detail: "跳过：目录中没有可下载的书籍包"
 			};
-			let r = await gC(t, { catalogUrl: TK() }), i = n.packs.recognize(r);
+			let r = await gC(t, { catalogUrl: EK() }), i = n.packs.recognize(r);
 			if (i.type !== "pack") throw Error("下载的不是内容包");
 			let a = await n.packs.install(i, { source: "download" });
 			return o.push(a), `${a.name} v${a.version}；${(r.length / 1024).toFixed(1)} KB，校验值一致`;
@@ -32453,7 +32456,7 @@ async function EK(e) {
 				}
 				if (r.length >= 5) break;
 			}
-			return { detail: [t, ...r.map((e, t) => `${t + 1}. ${e.name}｜${e.summary}｜${CK(e)}`)].join("\n") };
+			return { detail: [t, ...r.map((e, t) => `${t + 1}. ${e.name}｜${e.summary}｜${wK(e)}`)].join("\n") };
 		}), await a("人物规则数据抽样", async () => {
 			let e = await n.db.entries.toArray(), t = (t) => e.find((e) => e.entryId === t), r = t("class.wizard.phb"), i = t("class.barbarian.phb"), a = t("subrace.dwarf-mountain.phb"), o = t("feat.tough.phb"), s = t("condition.poisoned.phb");
 			if (!r || !i || !a || !o || !s) throw Error("抽样条目缺失（需要 SRD + 玩家手册）");
@@ -32498,7 +32501,7 @@ async function EK(e) {
 		}), await a("依赖与卸载顺序", async () => {
 			let e;
 			try {
-				e = await hC({ url: TK() });
+				e = await hC({ url: EK() });
 			} catch (e) {
 				return {
 					skipped: !0,
@@ -32512,7 +32515,7 @@ async function EK(e) {
 			let t = [];
 			for (let r of e.packs) {
 				if (r.id === "dnd5e2014-srd") continue;
-				let e = n.packs.recognize(await gC(r, { catalogUrl: TK() }));
+				let e = n.packs.recognize(await gC(r, { catalogUrl: EK() }));
 				if (e.type !== "pack") throw Error(`${r.id} 下载的不是内容包`);
 				t.push({
 					catalog: r,
@@ -32539,7 +32542,7 @@ async function EK(e) {
 					resolution: "overwrite"
 				}), c.push(`安装 ✓ ${e.rec.manifest.name}`);
 			}
-			for (let e of [...i].reverse()) await OB({
+			for (let e of [...i].reverse()) await kB({
 				db: n.db,
 				packs: n.packs,
 				rules: n.rules,
@@ -32557,25 +32560,25 @@ async function EK(e) {
 	return t;
 }
 // src/probes/m2Probe.ts
-var DK = "m2", OK = "M2 数据自检";
-function kK() {
+var OK = "m2", kK = "M2 数据自检";
+function AK() {
 	return {
-		id: DK,
-		title: OK,
+		id: OK,
+		title: kK,
 		hint: "在临时数据库里安装内置 SRD 包、从数据仓库下载一个书籍包、显示条数与抽样来源、对每种数据做一次往返，按依赖层级安装和卸载全部书籍包，最后清理测试数据库。数据仓库尚未发布时下载一步会跳过；只用临时库，不影响真实数据。",
 		actions: [{
 			label: "运行 M2 数据自检",
-			run: () => nK(DK, OK, async () => {
-				tK(DK, OK, "waiting", "正在运行…");
-				let e = await EK((e) => tK(DK, OK, "waiting", `已完成 ${e.name}`)), t = e.find((e) => !e.ok), n = e.filter((e) => e.skipped).length;
-				tK(DK, OK, t ? "fail" : "pass", t ? `未通过：${t.name} — ${t.detail ?? ""}` : `全部通过（${e.length}/7 步${n ? `，${n} 步跳过` : ""}）`, e.map((e) => `${e.ok ? e.skipped ? "↷" : "✓" : "✗"} ${e.name}${e.detail ? ` — ${e.detail}` : ""}`));
+			run: () => rK(OK, kK, async () => {
+				nK(OK, kK, "waiting", "正在运行…");
+				let e = await DK((e) => nK(OK, kK, "waiting", `已完成 ${e.name}`)), t = e.find((e) => !e.ok), n = e.filter((e) => e.skipped).length;
+				nK(OK, kK, t ? "fail" : "pass", t ? `未通过：${t.name} — ${t.detail ?? ""}` : `全部通过（${e.length}/7 步${n ? `，${n} 步跳过` : ""}）`, e.map((e) => `${e.ok ? e.skipped ? "↷" : "✓" : "✗"} ${e.name}${e.detail ? ` — ${e.detail}` : ""}`));
 			})
 		}]
 	};
 }
 // src/probes/promptScan.ts
-var AK = "TRPG-PROBE-COMMENT", jK = "TRPG-PROBE-INJECT";
-function MK(e) {
+var jK = "TRPG-PROBE-COMMENT", MK = "TRPG-PROBE-INJECT";
+function NK(e) {
 	if (typeof e == "string") return e;
 	try {
 		return JSON.stringify(e) ?? "";
@@ -32583,41 +32586,41 @@ function MK(e) {
 		return console.error("[trpg-assistant] 请求内容无法序列化", e), "";
 	}
 }
-function NK(e, t) {
+function PK(e, t) {
 	let n = e.indexOf(t);
 	if (!(n < 0)) return e.slice(Math.max(0, n - 6), n + t.length + 12);
 }
-function PK(e, t) {
+function FK(e, t) {
 	let n = e?.chat;
 	if (Array.isArray(n)) for (let e = 0; e < n.length; e++) {
 		let r = n[e];
-		if ((typeof r?.content == "string" ? r.content : MK(r?.content)).includes(t)) return {
+		if ((typeof r?.content == "string" ? r.content : NK(r?.content)).includes(t)) return {
 			role: String(r.role ?? "?"),
 			indexFromEnd: n.length - 1 - e
 		};
 	}
 }
-function FK(e) {
-	let t = MK(e);
+function IK(e) {
+	let t = NK(e);
 	return {
 		length: t.length,
-		comment: t.includes(AK),
+		comment: t.includes(jK),
 		commentIntact: t.includes("<!--TRPG-PROBE-COMMENT") && t.includes("-->"),
-		inject: t.includes(jK),
-		commentSnippet: NK(t, AK),
-		injectSnippet: NK(t, jK),
-		injectAt: PK(e, jK)
+		inject: t.includes(MK),
+		commentSnippet: PK(t, jK),
+		injectSnippet: PK(t, MK),
+		injectAt: FK(e, MK)
 	};
 }
 // src/probes/llmLogAudit.ts
-function IK(e) {
+function LK(e) {
 	if (e && typeof e == "object") {
 		let t = e;
 		return t.id ?? t.key ?? t.logId ?? t.name;
 	}
 	return e;
 }
-async function LK() {
+async function RK() {
 	let e = (await m())?.api?.dev?.llmApiLogs;
 	if (!e?.index || !e.getRaw) return {
 		status: "info",
@@ -32638,33 +32641,33 @@ async function LK() {
 		summary: "请求日志为空（可能未开启记录，或还没有发过请求）",
 		detail: a
 	};
-	let o = FK(await e.getRaw(IK(r)));
-	return a.scan = o, a.markers = [AK, jK], {
+	let o = IK(await e.getRaw(LK(r)));
+	return a.scan = o, a.markers = [jK, MK], {
 		status: "info",
 		summary: `最近一次请求原文：${o.comment ? `含注释标记${o.commentIntact ? "（符号完整）" : "（符号被改）"}` : "无注释标记"}；${o.inject ? "含注入标记" : "无注入标记"}`,
 		detail: a
 	};
 }
 // src/probes/promptProbes.ts
-var RK = "comment", zK = "注释是否进入发给 AI 的请求", BK = "inject", VK = "提示词注入是否生效", HK = "input", UK = "写入与读取输入框", WK = "tavern-trpg-assistant_probe", GK = 1, KK = 0;
-function qK(e) {
+var zK = "comment", BK = "注释是否进入发给 AI 的请求", VK = "inject", HK = "提示词注入是否生效", UK = "input", WK = "写入与读取输入框", GK = "tavern-trpg-assistant_probe", KK = 1, qK = 0;
+function JK(e) {
 	return e?.dryRun === !0;
 }
-function JK(e) {
+function YK(e) {
 	let t = !1, n = !1, r = "", i = [], a = {}, o = (e) => (t) => {
 		i.push({
 			event: e,
-			dryRun: qK(t),
-			...FK(t)
+			dryRun: JK(t),
+			...IK(t)
 		});
 	}, s = () => {
 		let e = i.filter((e) => !e.dryRun);
 		if (r !== "quiet") {
-			if (!e.length) t && tK(RK, zK, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）"), n && tK(BK, VK, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）");
+			if (!e.length) t && nK(zK, BK, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）"), n && nK(VK, HK, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）");
 			else {
 				if (t) {
 					let n = e.find((e) => e.comment), i = e.some((e) => e.commentIntact);
-					tK(RK, zK, n && i ? "pass" : "fail", n ? i ? "注释原样进入了请求（<!-- --> 完整保留）" : "标记文字进入了请求，但 <!-- --> 符号被改动或删除" : "请求中没有找到注释内容（注释被删除）", {
+					nK(zK, BK, n && i ? "pass" : "fail", n ? i ? "注释原样进入了请求（<!-- --> 完整保留）" : "标记文字进入了请求，但 <!-- --> 符号被改动或删除" : "请求中没有找到注释内容（注释被删除）", {
 						runType: r,
 						captures: e,
 						message: a
@@ -32672,7 +32675,7 @@ function JK(e) {
 				}
 				if (n) {
 					let t = e.find((e) => e.inject);
-					tK(BK, VK, t ? "pass" : "fail", t ? `注入文本进入了请求${t.injectAt ? `（${t.injectAt.role} 消息，距末尾 ${t.injectAt.indexFromEnd} 条）` : ""}` : "请求中没有找到注入文本", {
+					nK(VK, HK, t ? "pass" : "fail", t ? `注入文本进入了请求${t.injectAt ? `（${t.injectAt.role} 消息，距末尾 ${t.injectAt.indexFromEnd} 条）` : ""}` : "请求中没有找到注入文本", {
 						runType: r,
 						captures: e
 					}), n = !1, c();
@@ -32680,8 +32683,8 @@ function JK(e) {
 			}
 		}
 	}, c = () => {
-		let t = e.extension_prompt_types?.IN_CHAT ?? GK, n = e.extension_prompt_roles?.SYSTEM ?? KK;
-		e.setExtensionPrompt?.(WK, "", t, 0, !1, n);
+		let t = e.extension_prompt_types?.IN_CHAT ?? KK, n = e.extension_prompt_roles?.SYSTEM ?? qK;
+		e.setExtensionPrompt?.(GK, "", t, 0, !1, n);
 	}, l = () => {
 		let t = h(e, "CHAT_COMPLETION_PROMPT_READY", "chat_completion_prompt_ready"), n = h(e, "GENERATE_AFTER_COMBINE_PROMPTS", "generate_after_combine_prompts"), c = h(e, "GENERATE_AFTER_DATA", "generate_after_data");
 		g(e, t, o(t)), g(e, n, o(n)), g(e, c, o(c)), g(e, h(e, "GENERATION_STARTED", "generation_started"), (e, t, n) => {
@@ -32690,30 +32693,30 @@ function JK(e) {
 		let l = () => s();
 		g(e, h(e, "GENERATION_ENDED", "generation_ended"), l), g(e, h(e, "GENERATION_STOPPED", "generation_stopped"), l), g(e, h(e, "MESSAGE_SENT", "message_sent"), (t) => {
 			let n = e.chat[Number(t)];
-			a.storedInChat = !!n?.mes?.includes(AK);
+			a.storedInChat = !!n?.mes?.includes(jK);
 		}), g(e, h(e, "USER_MESSAGE_RENDERED", "user_message_rendered"), (e) => {
 			let t = document.querySelector(`.mes[mesid="${Number(e)}"] .mes_text`);
-			t && (a.visibleTextHasMarker = !!t.textContent?.includes(AK), a.htmlHasComment = t.innerHTML.includes(`<!--${AK}`));
+			t && (a.visibleTextHasMarker = !!t.textContent?.includes(jK), a.htmlHasComment = t.innerHTML.includes(`<!--${jK}`));
 		});
 	}, u = {
-		id: RK,
-		title: zK,
+		id: zK,
+		title: BK,
 		hint: "点「写入测试注释」后，自己发送这条消息（需要已连接模型）。发送完成后自动判定；楼层里应看不到注释文字。",
 		actions: [{
 			label: "写入测试注释到输入框",
-			run: () => nK(RK, zK, () => {
+			run: () => rK(zK, BK, () => {
 				let e = f();
 				if (!e) throw Error("找不到输入框");
-				let n = `<!--${AK} 探针-->`;
-				_(e, e.value ? `${e.value}\n${n}` : `测试 ${n}`), t = !0, tK(RK, zK, "waiting", "已写入。请发送这条消息，等 AI 回复结束后自动判定");
+				let n = `<!--${jK} 探针-->`;
+				_(e, e.value ? `${e.value}\n${n}` : `测试 ${n}`), t = !0, nK(zK, BK, "waiting", "已写入。请发送这条消息，等 AI 回复结束后自动判定");
 			})
 		}]
 	};
 	u.actions.push({
 		label: "从 TauriTavern 请求日志核对",
-		run: () => nK(RK, zK, async () => {
-			let e = await LK();
-			tK(RK, zK, e.status, e.summary, {
+		run: () => rK(zK, BK, async () => {
+			let e = await RK();
+			nK(zK, BK, e.status, e.summary, {
 				runType: r,
 				audit: e.detail,
 				message: a
@@ -32721,29 +32724,29 @@ function JK(e) {
 		})
 	});
 	let d = {
-		id: BK,
-		title: VK,
+		id: VK,
+		title: HK,
 		hint: "点「注入探针」后发送任意消息。可以和上一项同一次发送完成判定。测完请点「清除注入」。",
 		actions: [{
 			label: "注入探针",
-			run: () => nK(BK, VK, () => {
+			run: () => rK(VK, HK, () => {
 				if (!e.setExtensionPrompt) throw Error("宿主没有 setExtensionPrompt");
-				let t = e.extension_prompt_types?.IN_CHAT ?? GK, r = e.extension_prompt_roles?.SYSTEM ?? KK;
-				e.setExtensionPrompt(WK, `[${jK}] 这是探针注入文本`, t, 0, !1, r), n = !0, tK(BK, VK, "waiting", "已注入（IN_CHAT，深度 0）。请发送一条消息，判定后会自动清除", { enumsFromContext: !!e.extension_prompt_types });
+				let t = e.extension_prompt_types?.IN_CHAT ?? KK, r = e.extension_prompt_roles?.SYSTEM ?? qK;
+				e.setExtensionPrompt(GK, `[${MK}] 这是探针注入文本`, t, 0, !1, r), n = !0, nK(VK, HK, "waiting", "已注入（IN_CHAT，深度 0）。请发送一条消息，判定后会自动清除", { enumsFromContext: !!e.extension_prompt_types });
 			})
 		}, {
 			label: "清除注入",
-			run: () => nK(BK, VK, () => {
-				c(), n = !1, tK(BK, VK, "idle", "已清除注入");
+			run: () => rK(VK, HK, () => {
+				c(), n = !1, nK(VK, HK, "idle", "已清除注入");
 			})
 		}]
 	}, p = {
-		id: HK,
-		title: UK,
+		id: UK,
+		title: WK,
 		hint: "自动写入一段文字、读回校验，然后恢复原内容（不会发送）。",
 		actions: [{
 			label: "运行输入框测试",
-			run: () => nK(HK, UK, () => {
+			run: () => rK(UK, WK, () => {
 				let e = f();
 				if (!e) throw Error("找不到输入框");
 				let t = e.value, n = `${t}[TRPG-PROBE-INPUT]`;
@@ -32751,7 +32754,7 @@ function JK(e) {
 				let r = e.value;
 				_(e, t);
 				let i = e.value === t;
-				tK(HK, UK, r === n && i ? "pass" : "fail", r === n ? i ? "写入、读回、恢复都正常" : "写入正常，但恢复失败" : "写入后读回的内容不一致", {
+				nK(UK, WK, r === n && i ? "pass" : "fail", r === n ? i ? "写入、读回、恢复都正常" : "写入正常，但恢复失败" : "写入后读回的内容不一致", {
 					readBackMatches: r === n,
 					restored: i
 				});
@@ -32768,33 +32771,33 @@ function JK(e) {
 	];
 }
 // src/probes/storageProbe.ts
-var YK = "storage", XK = "本地存储与持久性", ZK = `${u}-m0`, QK = 4194304;
-function $K() {
+var XK = "storage", ZK = "本地存储与持久性", QK = `${u}-m0`, $K = 4194304;
+function eq() {
 	return new Promise((e, t) => {
-		let n = indexedDB.open(ZK, 1);
+		let n = indexedDB.open(QK, 1);
 		n.onupgradeneeded = () => n.result.createObjectStore("kv"), n.onsuccess = () => e(n.result), n.onerror = () => t(n.error);
 	});
 }
-function eq(e, t, n) {
+function tq(e, t, n) {
 	return new Promise((r, i) => {
 		let a = n(e.transaction("kv", t).objectStore("kv"));
 		a.onsuccess = () => r(a.result), a.onerror = () => i(a.error);
 	});
 }
-function tq(e) {
-	let t = () => nK(YK, XK, async () => {
-		let t = await $K(), n = await eq(t, "readonly", (e) => e.get("boot")), r = (/* @__PURE__ */ new Date()).toISOString(), i = {
+function nq(e) {
+	let t = () => rK(XK, ZK, async () => {
+		let t = await eq(), n = await tq(t, "readonly", (e) => e.get("boot")), r = (/* @__PURE__ */ new Date()).toISOString(), i = {
 			count: (n?.count ?? 0) + 1,
 			firstAt: n?.firstAt ?? r,
 			lastAt: r
 		};
-		await eq(t, "readwrite", (e) => e.put(i, "boot"));
-		let a = !!await eq(t, "readonly", (e) => e.get("blob"));
-		a || await eq(t, "readwrite", (e) => e.put(new Uint8Array(QK), "blob"));
-		let o = await eq(t, "readonly", (e) => e.get("blob"));
+		await tq(t, "readwrite", (e) => e.put(i, "boot"));
+		let a = !!await tq(t, "readonly", (e) => e.get("blob"));
+		a || await tq(t, "readwrite", (e) => e.put(new Uint8Array($K), "blob"));
+		let o = await tq(t, "readonly", (e) => e.get("blob"));
 		t.close();
 		let s = await navigator.storage?.persisted?.() ?? null, c = await navigator.storage?.estimate?.() ?? null, l = e.extensionSettings[u] ??= {}, d = Number(l.probeBootCount ?? 0);
-		l.probeBootCount = d + 1, e.saveSettingsDebounced(), tK(YK, XK, "info", `IndexedDB 第 ${i.count} 次启动读写正常；刷新页面后次数应增加`, {
+		l.probeBootCount = d + 1, e.saveSettingsDebounced(), nK(XK, ZK, "info", `IndexedDB 第 ${i.count} 次启动读写正常；刷新页面后次数应增加`, {
 			idb: {
 				bootCount: i.count,
 				firstAt: i.firstAt,
@@ -32814,8 +32817,8 @@ function tq(e) {
 		});
 	});
 	return {
-		id: YK,
-		title: XK,
+		id: XK,
+		title: ZK,
 		hint: "每次启动自动读写 IndexedDB（含 4MB 数据）与扩展设置。完全退出再打开应用后，启动次数应继续累加，4MB 数据应已存在。",
 		actions: [{
 			label: "重新检测",
@@ -32825,22 +32828,22 @@ function tq(e) {
 	};
 }
 // src/probes/tauriProbe.ts
-var nq = "tauri", rq = "TauriTavern 扩展接口", iq = `${u}-m0`, aq = "/scripts/tauritavern/layout-kit.js", oq = [
+var rq = "tauri", iq = "TauriTavern 扩展接口", aq = `${u}-m0`, oq = "/scripts/tauritavern/layout-kit.js", sq = [
 	"current",
 	"getCurrent",
 	"active",
 	"handle",
 	"currentChat"
 ];
-function sq(e, t) {
+function cq(e, t) {
 	if (typeof e == "function") return "function";
 	if (typeof e != "object" || !e) return typeof e;
 	if (t <= 0) return "object";
 	let n = {};
-	for (let r of Object.keys(e)) n[r] = sq(e[r], t - 1);
+	for (let r of Object.keys(e)) n[r] = cq(e[r], t - 1);
 	return n;
 }
-async function cq(e, t) {
+async function lq(e, t) {
 	try {
 		return {
 			ok: !0,
@@ -32853,7 +32856,7 @@ async function cq(e, t) {
 		};
 	}
 }
-function lq(e) {
+function uq(e) {
 	if (Array.isArray(e)) {
 		let t = e[0];
 		return {
@@ -32870,30 +32873,30 @@ function lq(e) {
 		length: typeof e == "string" ? e.length : null
 	};
 }
-function uq(e) {
+function dq(e) {
 	let t = e;
 	return t.ok ? {
 		ok: !0,
-		shape: lq(t.value)
+		shape: uq(t.value)
 	} : t;
 }
-async function dq(e) {
+async function fq(e) {
 	if (typeof e.searchMessages == "function" || e.store) return {
 		handle: e,
 		via: "api.chat 本身"
 	};
 	let t = e.current;
 	if (t && typeof t.handle == "function") {
-		let e = await cq("api.chat.current.handle()", () => t.handle.call(t));
+		let e = await lq("api.chat.current.handle()", () => t.handle.call(t));
 		if (e.ok && e.value && typeof e.value == "object") return {
 			handle: e.value,
 			via: "api.chat.current.handle()"
 		};
 	}
-	for (let t of oq) {
+	for (let t of sq) {
 		let n = e[t];
 		if (typeof n == "function") {
-			let r = await cq(`api.chat.${t}()`, () => n.call(e)), i = r.value;
+			let r = await lq(`api.chat.${t}()`, () => n.call(e)), i = r.value;
 			if (r.ok && i && typeof i == "object") return {
 				handle: i,
 				via: `api.chat.${t}()`
@@ -32908,60 +32911,60 @@ async function dq(e) {
 		via: null
 	};
 }
-function fq() {
-	let e = () => nK(nq, rq, async () => {
+function pq() {
+	let e = () => rK(rq, iq, async () => {
 		if (!window.__TAURITAVERN__) {
-			tK(nq, rq, "info", "不是 TauriTavern，跳过（扩展将使用酒馆通用能力）");
+			nK(rq, iq, "info", "不是 TauriTavern，跳过（扩展将使用酒馆通用能力）");
 			return;
 		}
-		let e = (await m())?.api ?? {}, t = e.chat ?? {}, n = { apiShape: sq(e, 3) };
-		n.layoutKitExports = await cq("layout-kit 导入", () => import(
+		let e = (await m())?.api ?? {}, t = e.chat ?? {}, n = { apiShape: cq(e, 3) };
+		n.layoutKitExports = await lq("layout-kit 导入", () => import(
 			/* @vite-ignore */
-			aq
+			oq
 ).then((e) => Object.keys(e)));
-		let { handle: r, via: i } = await dq(t);
+		let { handle: r, via: i } = await fq(t);
 		if (n.handleVia = i, r) {
 			let e = r;
-			n.handleShape = sq(r, 2), e.searchMessages && (n.searchMessages = uq(await cq("searchMessages", () => e.searchMessages({
+			n.handleShape = cq(r, 2), e.searchMessages && (n.searchMessages = dq(await lq("searchMessages", () => e.searchMessages({
 				query: "你",
 				limit: 3
 			}))));
 			let t = e.locate?.findLastMessage;
-			if (t && (n.findLastMessage = uq(await cq("findLastMessage", () => t.call(e.locate, {
+			if (t && (n.findLastMessage = dq(await lq("findLastMessage", () => t.call(e.locate, {
 				role: "user",
 				scanLimit: 50
 			})))), e.store?.setJson && e.store.getJson) {
 				let t = { at: (/* @__PURE__ */ new Date()).toISOString() };
-				n.storeSet = await cq("store.setJson", () => e.store.setJson({
-					namespace: iq,
+				n.storeSet = await lq("store.setJson", () => e.store.setJson({
+					namespace: aq,
 					key: "probe",
 					value: t
-				})), n.storeGet = await cq("store.getJson", () => e.store.getJson({
-					namespace: iq,
+				})), n.storeGet = await lq("store.getJson", () => e.store.getJson({
+					namespace: aq,
 					key: "probe"
-				})), e.store.listKeys && (n.storeKeys = await cq("store.listKeys", () => e.store.listKeys({ namespace: iq }))), e.store.deleteJson && (n.storeDelete = await cq("store.deleteJson", () => e.store.deleteJson({
-					namespace: iq,
+				})), e.store.listKeys && (n.storeKeys = await lq("store.listKeys", () => e.store.listKeys({ namespace: aq }))), e.store.deleteJson && (n.storeDelete = await lq("store.deleteJson", () => e.store.deleteJson({
+					namespace: aq,
 					key: "probe"
 				})));
 			}
-			e.metadata?.get && (n.metadata = uq(await cq("metadata.get", () => e.metadata.get()))), typeof e.stableId == "function" && (n.stableId = uq(await cq("stableId", () => e.stableId.call(e)))), typeof e.summary == "function" && (n.summary = uq(await cq("summary", () => e.summary.call(e))));
+			e.metadata?.get && (n.metadata = dq(await lq("metadata.get", () => e.metadata.get()))), typeof e.stableId == "function" && (n.stableId = dq(await lq("stableId", () => e.stableId.call(e)))), typeof e.summary == "function" && (n.summary = dq(await lq("summary", () => e.summary.call(e))));
 		}
 		let a = e.extension?.store;
 		if (a?.setJson && a.getJson) {
 			let e = { at: (/* @__PURE__ */ new Date()).toISOString() }, t = {
-				namespace: iq,
+				namespace: aq,
 				key: "probe"
 			};
-			n.extStoreSet = await cq("extension.store.setJson", () => a.setJson({
+			n.extStoreSet = await lq("extension.store.setJson", () => a.setJson({
 				...t,
 				value: e
-			})), n.extStoreGet = await cq("extension.store.getJson", () => a.getJson(t)), a.listKeys && (n.extStoreKeys = await cq("extension.store.listKeys", () => a.listKeys({ namespace: iq }))), a.deleteJson && (n.extStoreDelete = await cq("extension.store.deleteJson", () => a.deleteJson(t)));
+			})), n.extStoreGet = await lq("extension.store.getJson", () => a.getJson(t)), a.listKeys && (n.extStoreKeys = await lq("extension.store.listKeys", () => a.listKeys({ namespace: aq }))), a.deleteJson && (n.extStoreDelete = await lq("extension.store.deleteJson", () => a.deleteJson(t)));
 		}
-		tK(nq, rq, "info", r ? `找到 handle（${i}）；各接口调用结果见详情` : "没有找到获取 handle 的方式；接口结构见详情", n);
+		nK(rq, iq, "info", r ? `找到 handle（${i}）；各接口调用结果见详情` : "没有找到获取 handle 的方式；接口结构见详情", n);
 	});
 	return {
-		id: nq,
-		title: rq,
+		id: rq,
+		title: iq,
 		hint: "仅 TauriTavern 有效。请分别在「已打开聊天」和「未打开聊天」两种状态下点「重新检测」各测一次。",
 		actions: [{
 			label: "重新检测",
@@ -32971,29 +32974,29 @@ function fq() {
 	};
 }
 // src/probes/index.ts
-function pq(e) {
+function mq(e) {
 	return [
-		SK(),
-		kK(),
-		cK(e),
-		...JK(e),
-		tq(e),
-		gK(e),
-		fK(e),
-		fq()
+		CK(),
+		AK(),
+		lK(e),
+		...YK(e),
+		nq(e),
+		_K(e),
+		pK(e),
+		pq()
 	];
 }
 // src/ui/kit/Combobox.vue?vue&type=script&setup=true&lang.ts
-var mq = {
+var hq = {
 	class: "trpg-combo__count",
 	role: "status"
-}, hq = {
-	key: 0,
-	class: "trpg-row__meta"
 }, gq = {
 	key: 0,
+	class: "trpg-row__meta"
+}, _q = {
+	key: 0,
 	class: "trpg-badge"
-}, _q = 200, vq = /* @__PURE__ */ R({
+}, vq = 200, yq = /* @__PURE__ */ R({
 	__name: "Combobox",
 	props: /*@__PURE__*/ Qa({
 		options: {},
@@ -33008,7 +33011,7 @@ var mq = {
 		let t = e, n = xo(e, "modelValue"), r = Lr("portalTarget", void 0), i = /* @__PURE__ */ F(""), a = Y(() => {
 			let e = i.value.trim().toLowerCase();
 			return e ? t.options.filter((t) => t.label.toLowerCase().includes(e) || (t.en ?? "").toLowerCase().includes(e)) : t.options;
-		}), o = Y(() => a.value.slice(0, _q)), s = Y(() => t.options.find((e) => e.value === n.value));
+		}), o = Y(() => a.value.slice(0, vq)), s = Y(() => t.options.find((e) => e.value === n.value));
 		return (t, c) => (H(), W(I(YP), {
 			modelValue: n.value,
 			"onUpdate:modelValue": c[1] ||= (e) => n.value = e,
@@ -33045,7 +33048,7 @@ var mq = {
 					"side-offset": 4,
 					"collision-padding": 8
 				}, {
-					default: L(() => [G("div", mq, [q("共 " + M(a.value.length) + " 条", 1), a.value.length > _q ? (H(), U(V, { key: 0 }, [q("，只显示前 " + M(_q) + " 条，继续输入可缩小范围")], 64)) : J("", !0)]), K(I(lF), { class: "trpg-select-viewport" }, {
+					default: L(() => [G("div", hq, [q("共 " + M(a.value.length) + " 条", 1), a.value.length > vq ? (H(), U(V, { key: 0 }, [q("，只显示前 " + M(vq) + " 条，继续输入可缩小范围")], 64)) : J("", !0)]), K(I(lF), { class: "trpg-select-viewport" }, {
 						default: L(() => [K(I(tF), { class: "trpg-combo__empty" }, {
 							default: L(() => [...c[2] ||= [q("没有符合的条目", -1)]]),
 							_: 1
@@ -33054,7 +33057,7 @@ var mq = {
 							value: e.value,
 							class: "trpg-select-item"
 						}, {
-							default: L(() => [G("span", null, [q(M(e.label), 1), e.en ? (H(), U("span", hq, " · " + M(e.en), 1)) : J("", !0)]), e.badge ? (H(), U("span", gq, M(e.badge), 1)) : J("", !0)]),
+							default: L(() => [G("span", null, [q(M(e.label), 1), e.en ? (H(), U("span", gq, " · " + M(e.en), 1)) : J("", !0)]), e.badge ? (H(), U("span", _q, M(e.badge), 1)) : J("", !0)]),
 							_: 2
 						}, 1032, ["value"]))), 128))]),
 						_: 1
@@ -33066,7 +33069,7 @@ var mq = {
 			_: 1
 		}, 8, ["modelValue"]));
 	}
-}), yq = { class: "trpg-pill trpg-tag" }, bq = ["aria-label"], xq = /* @__PURE__ */ R({
+}), bq = { class: "trpg-pill trpg-tag" }, xq = ["aria-label"], Sq = /* @__PURE__ */ R({
 	__name: "TagPill",
 	props: {
 		label: {},
@@ -33074,14 +33077,14 @@ var mq = {
 	},
 	emits: ["remove"],
 	setup(e) {
-		return (t, n) => (H(), U("span", yq, [G("span", null, M(e.label), 1), G("button", {
+		return (t, n) => (H(), U("span", bq, [G("span", null, M(e.label), 1), G("button", {
 			class: "trpg-tag__x",
 			type: "button",
 			"aria-label": `移除${e.owner ? `${e.owner}的` : ""}『${e.label}』标签`,
 			onClick: n[0] ||= (e) => t.$emit("remove")
-		}, "×", 8, bq)]));
+		}, "×", 8, xq)]));
 	}
-}), Sq = ["data-testid"], Cq = { class: "trpg-list" }, wq = /* @__PURE__ */ R({
+}), Cq = ["data-testid"], wq = { class: "trpg-list" }, Tq = /* @__PURE__ */ R({
 	__name: "LabModalPage",
 	props: { level: {} },
 	setup(e) {
@@ -33090,7 +33093,7 @@ var mq = {
 			n.push({
 				key: `lab:${t.level + 1}`,
 				title: `第 ${t.level + 1} 页`,
-				component: Sn(wq),
+				component: Sn(Tq),
 				props: { level: t.level + 1 }
 			});
 		}
@@ -33113,7 +33116,7 @@ var mq = {
 				}),
 				n[1] ||= q("前进一页。", -1)
 			]),
-			G("ul", Cq, [(H(), U(V, null, z(30, (e) => G("li", {
+			G("ul", wq, [(H(), U(V, null, z(30, (e) => G("li", {
 				key: e,
 				class: "trpg-row"
 			}, [G("span", null, "演示行 " + M(e), 1)])), 64))]),
@@ -33122,18 +33125,18 @@ var mq = {
 				type: "button",
 				onClick: i
 			}, "弹窗内确认")
-		], 8, Sq));
+		], 8, Cq));
 	}
-}), Tq = { class: "probe" }, Eq = { class: "lab" }, Dq = { class: "lab__row" }, Oq = {
+}), Eq = { class: "probe" }, Dq = { class: "lab" }, Oq = { class: "lab__row" }, kq = {
 	class: "probe__hint",
 	"data-testid": "select-model"
-}, kq = { class: "lab__row" }, Aq = { class: "trpg-check" }, jq = { class: "lab__row" }, Mq = {
+}, Aq = { class: "lab__row" }, jq = { class: "trpg-check" }, Mq = { class: "lab__row" }, Nq = {
 	class: "probe__hint",
 	"data-testid": "combo-model"
-}, Nq = { class: "probe__actions" }, Pq = { class: "lab__row" }, Fq = { class: "trpg-row" }, Iq = { class: "trpg-row__main" }, Lq = { "data-testid": "switch-state" }, Rq = {
+}, Pq = { class: "probe__actions" }, Fq = { class: "lab__row" }, Iq = { class: "trpg-row" }, Lq = { class: "trpg-row__main" }, Rq = { "data-testid": "switch-state" }, zq = {
 	class: "probe__hint",
 	"data-testid": "menu-pick"
-}, zq = { class: "probe__actions" }, Bq = { class: "probe__head" }, Vq = { class: "probe__title" }, Hq = ["data-status"], Uq = { class: "probe__hint" }, Wq = { class: "probe__actions" }, Gq = ["onClick"], Kq = ["onClick"], qq = /* @__PURE__ */ R({
+}, Bq = { class: "probe__actions" }, Vq = { class: "probe__head" }, Hq = { class: "probe__title" }, Uq = ["data-status"], Wq = { class: "probe__hint" }, Gq = { class: "probe__actions" }, Kq = ["onClick"], qq = ["onClick"], Jq = /* @__PURE__ */ R({
 	__name: "UiLab",
 	setup(e) {
 		let t = [
@@ -33172,7 +33175,7 @@ var mq = {
 			f.open({
 				key: "lab:1",
 				title: "演示弹窗",
-				component: Sn(wq),
+				component: Sn(Tq),
 				props: { level: 1 }
 			});
 		}
@@ -33186,13 +33189,13 @@ var mq = {
 			p.info(e ? "已确认" : "已取消");
 		}
 		function g(e, t, n) {
-			tK(e, t, n, n === "pass" ? "人工确认：通过" : "人工确认：不通过");
+			nK(e, t, n, n === "pass" ? "人工确认：通过" : "人工确认：不通过");
 		}
-		return (e, f) => (H(), U("section", Tq, [
+		return (e, f) => (H(), U("section", Eq, [
 			f[15] ||= G("h3", { class: "probe__title" }, "界面实测（需要你目测后点结果）", -1),
-			G("div", Eq, [
-				G("div", Dq, [
-					K(fV, {
+			G("div", Dq, [
+				G("div", Oq, [
+					K(pV, {
 						modelValue: n.value,
 						"onUpdate:modelValue": f[0] ||= (e) => n.value = e,
 						label: "测试下拉（8 项）",
@@ -33210,8 +33213,8 @@ var mq = {
 						],
 						placeholder: "下拉测试：选择环阶"
 					}, null, 8, ["modelValue"]),
-					G("p", Oq, "下拉当前值：" + M(n.value || "未选") + " / " + M(r.value || "未选"), 1),
-					K(fV, {
+					G("p", kq, "下拉当前值：" + M(n.value || "未选") + " / " + M(r.value || "未选"), 1),
+					K(pV, {
 						modelValue: r.value,
 						"onUpdate:modelValue": f[1] ||= (e) => r.value = e,
 						label: "测试下拉（3 项）",
@@ -33223,7 +33226,7 @@ var mq = {
 						placeholder: "下拉测试：选择颜色"
 					}, null, 8, ["modelValue"])
 				]),
-				G("div", kq, [
+				G("div", Aq, [
 					K(lO, {
 						modelValue: i.value,
 						"onUpdate:modelValue": f[2] ||= (e) => i.value = e,
@@ -33243,7 +33246,7 @@ var mq = {
 							}
 						]
 					}, null, 8, ["modelValue"]),
-					G("label", Aq, [Pr(G("input", {
+					G("label", jq, [Pr(G("input", {
 						"onUpdate:modelValue": f[3] ||= (e) => a.value = e,
 						type: "checkbox"
 					}, null, 512), [[mu, a.value]]), f[11] ||= q(" 勾选框测试", -1)]),
@@ -33254,26 +33257,26 @@ var mq = {
 						placeholder: "输入测试：中文 / English"
 					}, null, 512), [[pu, o.value]])
 				]),
-				G("div", jq, [
-					K(vq, {
+				G("div", Mq, [
+					K(yq, {
 						modelValue: c.value,
 						"onUpdate:modelValue": f[5] ||= (e) => c.value = e,
 						options: I(l),
 						label: "可搜索下拉演示",
 						placeholder: "搜索 300 条法术"
 					}, null, 8, ["modelValue", "options"]),
-					G("p", Mq, "可搜索下拉当前值：" + M(c.value || "未选"), 1),
-					G("div", Nq, [(H(!0), U(V, null, z(u.value, (e) => (H(), W(xq, {
+					G("p", Nq, "可搜索下拉当前值：" + M(c.value || "未选"), 1),
+					G("div", Pq, [(H(!0), U(V, null, z(u.value, (e) => (H(), W(Sq, {
 						key: e,
 						label: e,
 						owner: "盖尔",
 						onRemove: (t) => u.value = u.value.filter((t) => t !== e)
 					}, null, 8, ["label", "onRemove"]))), 128))])
 				]),
-				G("div", Pq, [
-					G("div", Fq, [
-						G("span", Iq, [f[12] ||= q("开关演示：", -1), G("span", Lq, M(s.value ? "开" : "关"), 1)]),
-						K(QW, {
+				G("div", Fq, [
+					G("div", Iq, [
+						G("span", Lq, [f[12] ||= q("开关演示：", -1), G("span", Rq, M(s.value ? "开" : "关"), 1)]),
+						K($W, {
 							modelValue: s.value,
 							"onUpdate:modelValue": f[6] ||= (e) => s.value = e,
 							label: "演示开关"
@@ -33300,12 +33303,12 @@ var mq = {
 							onSelect: f[7] ||= (e) => d.value = e
 						})
 					]),
-					G("p", Rq, "菜单选择：" + M(d.value || "无"), 1),
+					G("p", zq, "菜单选择：" + M(d.value || "无"), 1),
 					G("p", null, [f[14] ||= q("下划线术语：", -1), K(YL, { onOpen: m }, {
 						default: L(() => [...f[13] ||= [q("点我打开演示弹窗", -1)]]),
 						_: 1
 					})]),
-					G("div", zq, [
+					G("div", Bq, [
 						G("button", {
 							class: "trpg-btn",
 							type: "button",
@@ -33335,33 +33338,33 @@ var mq = {
 				key: e.id,
 				class: "probe"
 			}, [
-				G("div", Bq, [G("h4", Vq, M(e.title), 1), G("span", {
+				G("div", Vq, [G("h4", Hq, M(e.title), 1), G("span", {
 					class: "trpg-badge",
-					"data-status": I(eK)[e.id]?.status ?? "idle"
-				}, M(I(eK)[e.id]?.status ?? "待测"), 9, Hq)]),
-				G("p", Uq, M(e.how), 1),
-				G("div", Wq, [G("button", {
+					"data-status": I(tK)[e.id]?.status ?? "idle"
+				}, M(I(tK)[e.id]?.status ?? "待测"), 9, Uq)]),
+				G("p", Wq, M(e.how), 1),
+				G("div", Gq, [G("button", {
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => g(e.id, e.title, "pass")
-				}, "通过", 8, Gq), G("button", {
+				}, "通过", 8, Kq), G("button", {
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => g(e.id, e.title, "fail")
-				}, "不通过", 8, Kq)])
+				}, "不通过", 8, qq)])
 			])), 64))
 		]));
 	}
-}), Jq = { class: "probe__head" }, Yq = { class: "probe__title" }, Xq = ["data-status"], Zq = { class: "probe__hint" }, Qq = {
+}), Yq = { class: "probe__head" }, Xq = { class: "probe__title" }, Zq = ["data-status"], Qq = { class: "probe__hint" }, $q = {
 	key: 0,
 	class: "probe__summary"
-}, $q = { class: "probe__actions" }, eJ = ["onClick"], tJ = { key: 1 }, nJ = { class: "report-bar" }, rJ = { role: "status" }, iJ = /* @__PURE__ */ R({
+}, eJ = { class: "probe__actions" }, tJ = ["onClick"], nJ = { key: 1 }, rJ = { class: "report-bar" }, iJ = { role: "status" }, aJ = /* @__PURE__ */ R({
 	__name: "ProbeList",
 	props: { ctx: {} },
 	setup(e) {
-		let t = e.ctx, n = pq(t), r = /* @__PURE__ */ F("");
+		let t = e.ctx, n = mq(t), r = /* @__PURE__ */ F("");
 		async function i() {
-			return JSON.stringify(rK(await sK(t)), null, 2);
+			return JSON.stringify(iK(await cK(t)), null, 2);
 		}
 		async function a() {
 			let e = await i();
@@ -33381,22 +33384,22 @@ var mq = {
 				key: e.id,
 				class: "probe"
 			}, [
-				G("div", Jq, [G("h3", Yq, M(e.title), 1), G("span", {
+				G("div", Yq, [G("h3", Xq, M(e.title), 1), G("span", {
 					class: "trpg-badge",
-					"data-status": I(eK)[e.id]?.status ?? "idle"
-				}, M(I(eK)[e.id]?.status ?? "待测"), 9, Xq)]),
-				G("p", Zq, M(e.hint), 1),
-				I(eK)[e.id] ? (H(), U("p", Qq, M(I(eK)[e.id].summary), 1)) : J("", !0),
-				G("div", $q, [(H(!0), U(V, null, z(e.actions, (e) => (H(), U("button", {
+					"data-status": I(tK)[e.id]?.status ?? "idle"
+				}, M(I(tK)[e.id]?.status ?? "待测"), 9, Zq)]),
+				G("p", Qq, M(e.hint), 1),
+				I(tK)[e.id] ? (H(), U("p", $q, M(I(tK)[e.id].summary), 1)) : J("", !0),
+				G("div", eJ, [(H(!0), U(V, null, z(e.actions, (e) => (H(), U("button", {
 					key: e.label,
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => e.run()
-				}, M(e.label), 9, eJ))), 128))]),
-				I(eK)[e.id]?.detail === void 0 ? J("", !0) : (H(), U("details", tJ, [t[2] ||= G("summary", null, "详情", -1), G("pre", null, M(JSON.stringify(I(eK)[e.id].detail, null, 2)), 1)]))
+				}, M(e.label), 9, tJ))), 128))]),
+				I(tK)[e.id]?.detail === void 0 ? J("", !0) : (H(), U("details", nJ, [t[2] ||= G("summary", null, "详情", -1), G("pre", null, M(JSON.stringify(I(tK)[e.id].detail, null, 2)), 1)]))
 			]))), 128)),
-			K(qq),
-			G("div", nJ, [
+			K(Jq),
+			G("div", rJ, [
 				G("button", {
 					class: "trpg-btn trpg-btn--primary",
 					type: "button",
@@ -33407,24 +33410,24 @@ var mq = {
 					type: "button",
 					onClick: t[1] ||= (e) => o()
 				}, "保存报告到扩展设置"),
-				G("span", rJ, M(r.value), 1)
+				G("span", iJ, M(r.value), 1)
 			])
 		]));
 	}
-}), aJ = {
+}), oJ = {
 	key: 0,
 	class: "page-stack"
-}, oJ = { class: "trpg-list" }, sJ = {
+}, sJ = { class: "trpg-list" }, cJ = {
 	key: 0,
 	class: "trpg-row"
-}, cJ = { class: "trpg-row" }, lJ = { class: "trpg-row" }, uJ = { class: "trpg-row__main" }, dJ = { class: "trpg-row__meta" }, fJ = { key: 1 }, pJ = {
+}, lJ = { class: "trpg-row" }, uJ = { class: "trpg-row" }, dJ = { class: "trpg-row__main" }, fJ = { class: "trpg-row__meta" }, pJ = { key: 1 }, mJ = {
 	key: 0,
 	class: "trpg-diag",
 	"data-testid": "diagnostics"
-}, mJ = {
+}, hJ = {
 	key: 1,
 	class: "page-stack"
-}, hJ = { class: "trpg-group" }, gJ = /* @__PURE__ */ R({
+}, gJ = { class: "trpg-group" }, _J = /* @__PURE__ */ R({
 	__name: "SettingsView",
 	setup(e) {
 		let t = Lr("stCtx"), n = /* @__PURE__ */ F(null), r = ZT(), i = NE();
@@ -33436,8 +33439,8 @@ var mq = {
 				console.error("[trpg-assistant] 保存设置失败", e), i.error("保存设置失败");
 			}
 		}
-		return (e, i) => n.value === null ? (H(), U("div", aJ, [G("ul", oJ, [
-			I(r).settings ? (H(), U("li", sJ, [i[4] ||= G("div", { class: "trpg-row__main" }, [G("div", { class: "trpg-row__title" }, "启用扩展包时，对官方条目的修改"), G("div", { class: "trpg-row__meta" }, "启用扩展包（含导入冒险）时，它带来的修改默认应用还是不应用；之后随时可以逐条改")], -1), K(lO, {
+		return (e, i) => n.value === null ? (H(), U("div", oJ, [G("ul", sJ, [
+			I(r).settings ? (H(), U("li", cJ, [i[4] ||= G("div", { class: "trpg-row__main" }, [G("div", { class: "trpg-row__title" }, "启用扩展包时，对官方条目的修改"), G("div", { class: "trpg-row__meta" }, "启用扩展包（含导入冒险）时，它带来的修改默认应用还是不应用；之后随时可以逐条改")], -1), K(lO, {
 				"model-value": I(r).settings.variantDefault,
 				label: "官方条目修改的默认",
 				options: [{
@@ -33449,7 +33452,7 @@ var mq = {
 				}],
 				"onUpdate:modelValue": i[0] ||= (e) => a(e ?? "apply")
 			}, null, 8, ["model-value"])])) : J("", !0),
-			G("li", cJ, [i[6] ||= G("div", { class: "trpg-row__main" }, [G("div", { class: "trpg-row__title" }, "诊断"), G("div", { class: "trpg-row__meta" }, "自检与兼容性测试，遇到问题时用来收集信息")], -1), G("button", {
+			G("li", lJ, [i[6] ||= G("div", { class: "trpg-row__main" }, [G("div", { class: "trpg-row__title" }, "诊断"), G("div", { class: "trpg-row__meta" }, "自检与兼容性测试，遇到问题时用来收集信息")], -1), G("button", {
 				class: "trpg-btn",
 				type: "button",
 				onClick: i[1] ||= (e) => n.value = "diag"
@@ -33457,7 +33460,7 @@ var mq = {
 				name: "caret-right",
 				size: 14
 			})])]),
-			G("li", lJ, [G("div", uJ, [i[7] ||= G("div", { class: "trpg-row__title" }, "关于", -1), G("div", dJ, "版本 " + M(I(hT)) + " · 开源许可与致谢", 1)]), G("button", {
+			G("li", uJ, [G("div", dJ, [i[7] ||= G("div", { class: "trpg-row__title" }, "关于", -1), G("div", fJ, "版本 " + M(I(hT)) + " · 开源许可与致谢", 1)]), G("button", {
 				class: "trpg-btn",
 				type: "button",
 				onClick: i[2] ||= (e) => n.value = "about"
@@ -33465,23 +33468,23 @@ var mq = {
 				name: "caret-right",
 				size: 14
 			})])])
-		])])) : (H(), U("div", fJ, [G("button", {
+		])])) : (H(), U("div", pJ, [G("button", {
 			class: "subpage-back",
 			type: "button",
 			onClick: i[3] ||= (e) => n.value = null
 		}, [K(JE, {
 			name: "caret-left",
 			size: 16
-		}), i[9] ||= q("设置", -1)]), n.value === "diag" ? (H(), U("div", pJ, [I(t) ? (H(), W(iJ, {
+		}), i[9] ||= q("设置", -1)]), n.value === "diag" ? (H(), U("div", mJ, [I(t) ? (H(), W(aJ, {
 			key: 0,
 			ctx: I(t)
-		}, null, 8, ["ctx"])) : J("", !0)])) : (H(), U("div", mJ, [
-			G("h2", hJ, "TRPG 跑团助手 " + M(I(hT)), 1),
+		}, null, 8, ["ctx"])) : J("", !0)])) : (H(), U("div", hJ, [
+			G("h2", gJ, "TRPG 跑团助手 " + M(I(hT)), 1),
 			i[10] ||= G("p", { class: "page-intro" }, "代码以 AGPL-3.0 许可发布，源码在 GitHub：didhogg/tavern-trpg-assistant。", -1),
 			i[11] ||= G("p", { class: "page-intro" }, "界面图标：Phosphor Icons（MIT）。规则数据的来源与许可见各条目的出处标注与随包附带的数据声明。", -1)
 		]))]));
 	}
-}), _J = { class: "trpg-head__chips" }, vJ = { class: "trpg-chip__name" }, yJ = /* @__PURE__ */ R({
+}), vJ = { class: "trpg-head__chips" }, yJ = { class: "trpg-chip__name" }, bJ = /* @__PURE__ */ R({
 	__name: "HeaderChips",
 	props: { layout: {} },
 	setup(e) {
@@ -33493,18 +33496,18 @@ var mq = {
 			label: "收起助手"
 		}]), c = Y(() => r.currentSave?.name ?? "存档");
 		function l(e) {
-			e === "saves" ? BH() : a.windowOpen = !1;
+			e === "saves" ? VH() : a.windowOpen = !1;
 		}
 		let u = () => i.info("另一个窗口正在使用这份数据，这里只能查看");
-		return (e, n) => (H(), U("div", _J, [o.value ? (H(), U(V, { key: 0 }, [
+		return (e, n) => (H(), U("div", vJ, [o.value ? (H(), U(V, { key: 0 }, [
 			t.layout === "narrow" ? J("", !0) : (H(), U("button", {
 				key: 0,
 				class: "trpg-pill trpg-chip",
 				type: "button",
 				"data-testid": "save-chip",
 				"aria-haspopup": "dialog",
-				onClick: n[0] ||= (...e) => I(BH) && I(BH)(...e)
-			}, [G("span", vJ, M(c.value), 1), K(JE, {
+				onClick: n[0] ||= (...e) => I(VH) && I(VH)(...e)
+			}, [G("span", yJ, M(c.value), 1), K(JE, {
 				name: "caret-down",
 				size: 14
 			})])),
@@ -33513,7 +33516,7 @@ var mq = {
 				class: "trpg-btn trpg-btn--small trpg-btn--primary",
 				type: "button",
 				"data-testid": "save-button",
-				onClick: n[1] ||= (e) => I(HH)()
+				onClick: n[1] ||= (e) => I(UH)()
 			}, "● 保存存档")) : J("", !0),
 			I(r).readOnly ? (H(), U("button", {
 				key: 2,
@@ -33529,8 +33532,8 @@ var mq = {
 			onSelect: l
 		}, null, 8, ["items"])) : J("", !0)]));
 	}
-}), bJ = "trpg-assistant:window";
-function xJ(e, t, n) {
+}), xJ = "trpg-assistant:window";
+function SJ(e, t, n) {
 	let r = Math.min(Math.max(e.w, 360), Math.max(360, t)), i = Math.min(Math.max(e.h, 480), Math.max(480, n));
 	return {
 		w: r,
@@ -33539,18 +33542,18 @@ function xJ(e, t, n) {
 		y: Math.min(Math.max(e.y, 0), Math.max(0, n - i))
 	};
 }
-function SJ(e, t) {
+function CJ(e, t) {
 	let n = Math.min(960, e - 32), r = Math.min(640, t - 32);
-	return xJ({
+	return SJ({
 		w: n,
 		h: r,
 		x: Math.round((e - n) / 2),
 		y: Math.round((t - r) / 2)
 	}, e, t);
 }
-function CJ(e, t) {
+function wJ(e, t) {
 	try {
-		let n = localStorage.getItem(bJ);
+		let n = localStorage.getItem(xJ);
 		if (n) {
 			let r = JSON.parse(n);
 			if ([
@@ -33558,44 +33561,44 @@ function CJ(e, t) {
 				r.y,
 				r.w,
 				r.h
-			].every(Number.isFinite)) return xJ(r, e, t);
+			].every(Number.isFinite)) return SJ(r, e, t);
 		}
 	} catch (e) {
 		console.warn("[trpg-assistant] 读取窗口位置失败", e);
 	}
-	return SJ(e, t);
+	return CJ(e, t);
 }
-function wJ(e) {
+function TJ(e) {
 	try {
-		localStorage.setItem(bJ, JSON.stringify(e));
+		localStorage.setItem(xJ, JSON.stringify(e));
 	} catch (e) {
 		console.warn("[trpg-assistant] 保存窗口位置失败", e);
 	}
 }
 // src/ui/shell/MainWindow.vue?vue&type=script&setup=true&lang.ts
-var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
+var EJ = ["data-layout", "data-fullscreen"], DJ = ["inert"], OJ = {
 	key: 0,
 	class: "trpg-side",
 	"aria-label": "主导航"
-}, OJ = {
+}, kJ = {
 	key: 0,
 	class: "trpg-side__name"
-}, kJ = { class: "trpg-side__list" }, AJ = [
+}, AJ = { class: "trpg-side__list" }, jJ = [
 	"aria-current",
 	"title",
 	"onClick"
-], jJ = { key: 0 }, MJ = { class: "trpg-side__list trpg-side__bottom" }, NJ = [
+], MJ = { key: 0 }, NJ = { class: "trpg-side__list trpg-side__bottom" }, PJ = [
 	"aria-current",
 	"title",
 	"onClick"
-], PJ = { key: 0 }, FJ = { class: "trpg-main" }, IJ = { class: "trpg-head__title" }, LJ = { class: "trpg-body" }, RJ = {
+], FJ = { key: 0 }, IJ = { class: "trpg-main" }, LJ = { class: "trpg-head__title" }, RJ = { class: "trpg-body" }, zJ = {
 	class: "trpg-content",
 	tabindex: "-1"
-}, zJ = ["aria-pressed"], BJ = {
+}, BJ = ["aria-pressed"], VJ = {
 	key: 0,
 	class: "trpg-tabs",
 	"aria-label": "主导航"
-}, VJ = ["aria-current", "onClick"], HJ = /* @__PURE__ */ R({
+}, HJ = ["aria-current", "onClick"], UJ = /* @__PURE__ */ R({
 	__name: "MainWindow",
 	setup(e) {
 		let t = IE(), n = FD(), r = [
@@ -33617,10 +33620,10 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				bottom: !0
 			}
 		], i = {
-			home: cU,
-			library: $G,
-			settings: gJ
-		}, a = /* @__PURE__ */ F(window.innerWidth), o = /* @__PURE__ */ F(window.innerHeight), s = /* @__PURE__ */ F(CJ(a.value, o.value)), c = /* @__PURE__ */ F(null), l = /* @__PURE__ */ F(s.value.w), u = Y(() => a.value <= 480), d = Y(() => l.value >= 720 ? "wide" : l.value > 480 ? "mid" : "narrow"), f = Y(() => u.value ? {} : {
+			home: lU,
+			library: eK,
+			settings: _J
+		}, a = /* @__PURE__ */ F(window.innerWidth), o = /* @__PURE__ */ F(window.innerHeight), s = /* @__PURE__ */ F(wJ(a.value, o.value)), c = /* @__PURE__ */ F(null), l = /* @__PURE__ */ F(s.value.w), u = Y(() => a.value <= 480), d = Y(() => l.value >= 720 ? "wide" : l.value > 480 ? "mid" : "narrow"), f = Y(() => u.value ? {} : {
 			left: `${s.value.x}px`,
 			top: `${s.value.y}px`,
 			width: `${s.value.w}px`,
@@ -33643,7 +33646,7 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				w: s.value.w,
 				h: s.value.h
 			}),
-			onEnd: () => wJ(s.value)
+			onEnd: () => TJ(s.value)
 		});
 		function _(e) {
 			u.value || g.onPointerDown(e);
@@ -33658,15 +33661,15 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 					h: Math.min(Math.max(i.h + e.clientY - r, 480), Math.max(480, o.value - i.y))
 				};
 			}, l = () => {
-				t.removeEventListener("pointermove", c), t.removeEventListener("pointerup", l), t.removeEventListener("pointercancel", l), wJ(s.value);
+				t.removeEventListener("pointermove", c), t.removeEventListener("pointerup", l), t.removeEventListener("pointercancel", l), TJ(s.value);
 			};
 			t.addEventListener("pointermove", c), t.addEventListener("pointerup", l), t.addEventListener("pointercancel", l);
 		}
 		function y() {
-			a.value = window.innerWidth, o.value = window.innerHeight, s.value = xJ(s.value, a.value, o.value);
+			a.value = window.innerWidth, o.value = window.innerHeight, s.value = SJ(s.value, a.value, o.value);
 		}
 		function b(e) {
-			(e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s" && (e.preventDefault(), HH());
+			(e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s" && (e.preventDefault(), UH());
 		}
 		let x;
 		return ha(() => {
@@ -33690,7 +33693,7 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 			G("div", {
 				class: "trpg-shell",
 				inert: I(n).isOpen
-			}, [d.value === "narrow" ? J("", !0) : (H(), U("nav", DJ, [
+			}, [d.value === "narrow" ? J("", !0) : (H(), U("nav", OJ, [
 				G("div", {
 					class: "trpg-side__brand",
 					title: "拖动窗口",
@@ -33698,8 +33701,8 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				}, [K(JE, {
 					name: "dice-five",
 					size: 22
-				}), d.value === "wide" ? (H(), U("span", OJ, "TRPG 跑团助手")) : J("", !0)], 32),
-				G("ul", kJ, [(H(!0), U(V, null, z(m.value, (e) => (H(), U("li", { key: e.id }, [G("button", {
+				}), d.value === "wide" ? (H(), U("span", kJ, "TRPG 跑团助手")) : J("", !0)], 32),
+				G("ul", AJ, [(H(!0), U(V, null, z(m.value, (e) => (H(), U("li", { key: e.id }, [G("button", {
 					class: "trpg-nav",
 					type: "button",
 					"aria-current": I(t).page === e.id ? "page" : void 0,
@@ -33708,8 +33711,8 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				}, [K(JE, {
 					name: e.icon,
 					size: 20
-				}, null, 8, ["name"]), d.value === "wide" ? (H(), U("span", jJ, M(e.label), 1)) : J("", !0)], 8, AJ)]))), 128))]),
-				G("ul", MJ, [(H(!0), U(V, null, z(h.value, (e) => (H(), U("li", { key: e.id }, [G("button", {
+				}, null, 8, ["name"]), d.value === "wide" ? (H(), U("span", MJ, M(e.label), 1)) : J("", !0)], 8, jJ)]))), 128))]),
+				G("ul", NJ, [(H(!0), U(V, null, z(h.value, (e) => (H(), U("li", { key: e.id }, [G("button", {
 					class: "trpg-nav",
 					type: "button",
 					"aria-current": I(t).page === e.id ? "page" : void 0,
@@ -33718,15 +33721,15 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				}, [K(JE, {
 					name: e.icon,
 					size: 20
-				}, null, 8, ["name"]), d.value === "wide" ? (H(), U("span", PJ, M(e.label), 1)) : J("", !0)], 8, NJ)]))), 128))])
-			])), G("div", FJ, [
+				}, null, 8, ["name"]), d.value === "wide" ? (H(), U("span", FJ, M(e.label), 1)) : J("", !0)], 8, PJ)]))), 128))])
+			])), G("div", IJ, [
 				G("header", {
 					class: "trpg-head",
 					title: "拖动窗口",
 					onPointerdown: _
 				}, [
-					G("h1", IJ, M(p.value), 1),
-					K(yJ, { layout: d.value }, null, 8, ["layout"]),
+					G("h1", LJ, M(p.value), 1),
+					K(bJ, { layout: d.value }, null, 8, ["layout"]),
 					d.value === "narrow" ? J("", !0) : (H(), U("button", {
 						key: 0,
 						class: "trpg-icon-btn",
@@ -33738,7 +33741,7 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 						size: 18
 					})]))
 				], 32),
-				G("div", LJ, [G("main", RJ, [(H(), W(Oa(i[I(t).page])))]), G("button", {
+				G("div", RJ, [G("main", zJ, [(H(), W(Oa(i[I(t).page])))]), G("button", {
 					class: "trpg-dice-btn",
 					type: "button",
 					"aria-label": "掷骰",
@@ -33747,8 +33750,8 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				}, [K(JE, {
 					name: "dice-five",
 					size: 28
-				})], 8, zJ)]),
-				d.value === "narrow" ? (H(), U("nav", BJ, [(H(), U(V, null, z(r, (e) => G("button", {
+				})], 8, BJ)]),
+				d.value === "narrow" ? (H(), U("nav", VJ, [(H(), U(V, null, z(r, (e) => G("button", {
 					key: e.id,
 					class: "trpg-tab",
 					type: "button",
@@ -33757,8 +33760,8 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				}, [K(JE, {
 					name: e.icon,
 					size: 22
-				}, null, 8, ["name"]), G("span", null, M(e.label), 1)], 8, VJ)), 64))])) : J("", !0)
-			])], 8, EJ),
+				}, null, 8, ["name"]), G("span", null, M(e.label), 1)], 8, HJ)), 64))])) : J("", !0)
+			])], 8, DJ),
 			K(VD),
 			u.value ? J("", !0) : (H(), U("div", {
 				key: 0,
@@ -33766,9 +33769,9 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 				"aria-hidden": "true",
 				onPointerdown: v
 			}, null, 32))
-		], 44, TJ));
+		], 44, EJ));
 	}
-}), UJ = { class: "trpg-root" }, WJ = /* @__PURE__ */ R({
+}), WJ = { class: "trpg-root" }, GJ = /* @__PURE__ */ R({
 	__name: "App",
 	props: {
 		ctx: {},
@@ -33778,42 +33781,42 @@ var TJ = ["data-layout", "data-fullscreen"], EJ = ["inert"], DJ = {
 		let t = e;
 		Ir("portalTarget", t.portalTarget), Ir("stCtx", t.ctx);
 		let n = IE();
-		return (e, t) => (H(), U("div", UJ, [
+		return (e, t) => (H(), U("div", WJ, [
 			K(PD),
-			I(n).windowOpen ? (H(), W(HJ, { key: 0 })) : J("", !0),
+			I(n).windowOpen ? (H(), W(UJ, { key: 0 })) : J("", !0),
 			K(jD),
 			K(BE)
 		]));
 	}
-}), GJ = ".trpg-btn{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);min-height:36px;color:var(--ink);font:inherit;cursor:pointer;white-space:nowrap;justify-content:center;align-items:center;gap:6px;padding:4px 14px;display:inline-flex}.trpg-btn:hover:not(:disabled){border-color:var(--primary)}.trpg-btn:disabled{opacity:.5;cursor:not-allowed}.trpg-btn--primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-btn--danger{background:var(--danger);color:#fffcf6;border-color:var(--danger)}.trpg-btn--quiet{background:0 0;border-color:#0000}.trpg-btn--small{min-height:30px;padding:2px 10px;font-size:13px}.trpg-icon-btn{border-radius:var(--radius-sm);min-width:36px;min-height:36px;color:inherit;cursor:pointer;background:0 0;border:1px solid #0000;justify-content:center;align-items:center;display:inline-flex}.trpg-icon-btn:hover{border-color:currentColor}.trpg-input{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);padding:4px 10px}.trpg-input:disabled{opacity:.6}textarea.trpg-input{resize:vertical;min-height:72px}.trpg-field{gap:4px;display:grid}.trpg-field__label{color:var(--ink-2);font-size:13px}.trpg-field__hint{color:var(--ink-2);font-size:12.5px}.trpg-field__error{color:var(--danger);font-size:12.5px}.trpg-select-trigger{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);cursor:pointer;justify-content:space-between;align-items:center;gap:8px;padding:4px 10px;display:inline-flex}.trpg-select-content,.trpg-menu{min-width:var(--reka-select-trigger-width,160px);background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:var(--shadow-float);z-index:100003;color:var(--ink)}.trpg-select-content{max-height:min(8 * 36px, var(--reka-select-content-available-height));overflow:hidden}.trpg-select-viewport{max-height:inherit;padding:4px;overflow-y:auto}.trpg-select-item,.trpg-menu__item{border-radius:var(--radius-xs);cursor:pointer;min-height:40px;color:var(--ink);justify-content:space-between;align-items:center;gap:12px;padding:4px 10px;display:flex}.trpg-menu{min-width:168px;padding:4px}.trpg-select-item[data-highlighted],.trpg-menu__item[data-highlighted]{background:var(--panel);outline:none}.trpg-select-item[data-state=checked]{color:var(--primary);font-weight:600}.trpg-menu__item--danger{color:var(--danger)}.trpg-menu__item[data-disabled]{opacity:.5;cursor:not-allowed}.trpg-menu__reason{color:var(--ink-2);font-size:12px}.trpg-seg{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);display:inline-flex;overflow:hidden}.trpg-seg button{min-height:34px;color:var(--ink);background:0 0;border:0;padding:2px 14px}.trpg-seg button+button{border-left:1px solid var(--line)}.trpg-seg button[aria-pressed=true]{background:var(--primary);color:var(--primary-ink)}.trpg-badge{border-radius:var(--radius-xs);background:var(--panel);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap;padding:0 8px;font-size:12px;font-weight:600;line-height:20px;display:inline-block}.trpg-badge[data-tone=gold]{color:var(--ink);border-color:var(--gold);background:color-mix(in srgb, var(--gold) 28%, transparent)}.trpg-badge[data-tone=ok],.trpg-badge[data-status=pass]{color:var(--ok);border-color:var(--ok)}.trpg-badge[data-tone=danger],.trpg-badge[data-status=fail],.trpg-badge[data-status=error]{color:var(--danger);border-color:var(--danger)}.trpg-badge[data-tone=warn],.trpg-badge[data-status=waiting]{color:var(--unsaved);border-color:var(--unsaved)}.trpg-badge[data-tone=gold]{color:var(--gold);border-color:var(--gold)}.trpg-pill{border:1px solid var(--line);background:var(--card);border-radius:999px;align-items:center;gap:4px;min-height:30px;padding:0 12px;display:inline-flex}.trpg-switch-wrap{color:var(--ink-2);align-items:center;gap:6px;min-height:44px;display:inline-flex}.trpg-switch{border:2px solid var(--line);background:0 0;border-radius:999px;width:42px;height:24px;padding:0;transition:background .16s,border-color .16s;position:relative}.trpg-switch__thumb{background:var(--ink-2);border-radius:50%;width:16px;height:16px;transition:transform .16s,background .16s;position:absolute;top:2px;left:2px}.trpg-switch[data-on=true]{background:var(--primary);border-color:var(--primary)}.trpg-switch[data-on=true] .trpg-switch__thumb{background:var(--primary-ink);transform:translate(18px)}.trpg-switch:disabled{opacity:.55;cursor:not-allowed}.trpg-check{cursor:pointer;align-items:center;gap:8px;min-height:36px;display:inline-flex}.trpg-check[data-disabled=true]{opacity:.6;cursor:not-allowed}.trpg-check input{width:18px;height:18px;accent-color:var(--primary);flex:none;margin:0}.trpg-term{color:var(--ink);text-align:left;text-underline-offset:4px;cursor:pointer;background:0 0;border:0;padding:0;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-decoration-thickness:1.5px;display:inline}.trpg-term:hover,.trpg-term:focus-visible{text-decoration-style:solid;-webkit-text-decoration-color:var(--gold);text-decoration-color:var(--gold)}.trpg-list{margin:0;padding:0;list-style:none}.trpg-row{border-bottom:1px solid var(--line);align-items:center;gap:12px;min-height:52px;padding:6px 4px;display:flex}.trpg-row__main{flex:1;min-width:0}.trpg-row__title{overflow-wrap:anywhere;font-weight:600}.trpg-row__meta{color:var(--ink-2);font-size:12.5px}.trpg-row__end{flex:none;align-items:center;gap:8px;display:flex}.trpg-group{font-family:var(--font-serif);color:var(--ink-2);margin:16px 0 4px;font-size:15px}.trpg-skeleton{background:linear-gradient(90deg, var(--panel), var(--line), var(--panel));opacity:.6;border-radius:4px;height:14px}.trpg-empty{text-align:center;color:var(--ink-2);padding:24px 8px}.trpg-progress{background:var(--panel);border-radius:3px;width:120px;height:6px;overflow:hidden}.trpg-progress>span{background:var(--primary);height:100%;transition:width .2s;display:block}.trpg-icon{vertical-align:-3px;flex:none}.trpg-toasts{left:50%;bottom:max(16px, env(safe-area-inset-bottom));z-index:100005;gap:8px;width:min(92vw,420px);display:grid;position:fixed;transform:translate(-50%)}.trpg-toast{border-radius:var(--radius-sm);background:var(--chrome);color:var(--chrome-ink);border-left:4px solid var(--gold);box-shadow:var(--shadow-float);align-items:center;gap:10px;padding:10px 12px;display:flex}.trpg-toast[data-kind=error]{border-left-color:var(--danger)}.trpg-toast[data-kind=success]{border-left-color:var(--ok)}.trpg-toast__text{flex:1}.trpg-toast button{color:var(--gold);background:0 0;border:0;min-height:32px;padding:0 8px;font-weight:600}@media (width<=480px){.trpg-toasts{bottom:calc(64px + env(safe-area-inset-bottom))}}.trpg-toast-enter-from,.trpg-toast-leave-to{opacity:0;transform:translateY(8px)}.trpg-toast-enter-active,.trpg-toast-leave-active{transition:opacity .16s,transform .16s}.trpg-modal-root{display:contents}.trpg-modal{background:var(--scrim);z-index:20;justify-content:center;align-items:center;padding:16px;display:flex;position:absolute;inset:0}.trpg-modal__card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:min(640px,100%);height:min(80%,640px);box-shadow:var(--shadow-float);flex-direction:column;animation:.16s ease-out trpg-pop;display:flex;overflow:hidden}.trpg-modal[data-variant=drawer]{justify-content:flex-end;padding:0}.trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:0;width:min(440px,100%);height:100%;animation:.2s ease-out trpg-slide}.trpg-modal[data-variant=confirm] .trpg-modal__card{width:min(440px,100%);height:auto;max-height:90%}.trpg-modal[data-variant=confirm] .trpg-modal__page{position:relative}.trpg-modal__head{border-bottom:1px solid var(--line);background:var(--panel);flex:none;align-items:center;gap:8px;min-height:52px;padding:4px 8px 4px 16px;display:flex}.trpg-modal__title{min-width:0;font-family:var(--font-serif);text-overflow:ellipsis;white-space:nowrap;flex:1;margin:0;font-size:17px;overflow:hidden}.trpg-modal__back{border-radius:var(--radius-sm);max-width:40%;min-height:36px;color:var(--primary);white-space:nowrap;background:0 0;border:0;align-items:center;gap:2px;margin-left:-8px;padding:0 8px;display:inline-flex}.trpg-modal__back span{text-overflow:ellipsis;overflow:hidden}.trpg-modal__back:hover{background:var(--card)}.trpg-modal__pages{flex:1;min-height:0;position:relative}.trpg-modal__page{padding:16px;transition:opacity .16s,transform .16s,visibility;position:absolute;inset:0;overflow:auto}.trpg-modal__page.is-under{opacity:0;visibility:hidden;transition:opacity .16s,transform .16s,visibility 0s .16s;transform:translate(-24px)}.trpg-page-enter-from,.trpg-page-leave-to{opacity:0;transform:translate(24px)}.trpg-page-enter-active,.trpg-page-leave-active{transition:opacity .16s,transform .16s}.trpg-modal[data-variant=confirm] .trpg-page-leave-active{position:absolute;inset:0}@keyframes trpg-pop{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}@keyframes trpg-slide{0%{opacity:0;transform:translate(32px)}to{opacity:1;transform:none}}.trpg-confirm{gap:12px;display:grid}.trpg-confirm__message{margin:0}.trpg-confirm__details{color:var(--ink-2);margin:0;padding-left:18px}.trpg-confirm__actions{justify-content:flex-end;gap:8px;margin-top:4px;display:flex}.trpg-window[data-layout=narrow] .trpg-modal{background:var(--paper);align-items:stretch;padding:0}.trpg-window[data-layout=narrow] .trpg-modal__card{border:0;border-radius:0;width:100%;height:100%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm]{background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm] .trpg-modal__card{border-radius:var(--radius) var(--radius) 0 0;height:auto}.trpg-window[data-layout=narrow] .trpg-confirm__actions{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions .trpg-btn{min-height:44px}.trpg-window[data-layout=narrow] .trpg-modal__head{background:var(--chrome);min-height:48px;color:var(--chrome-ink);border-bottom:0}.trpg-window[data-layout=narrow] .trpg-modal__back{color:var(--gold)}.trpg-window[data-layout=narrow] .trpg-modal__back,.trpg-window[data-layout=narrow] .trpg-modal__close{min-width:44px;min-height:44px}.trpg-drawer{align-content:start;gap:14px;min-height:100%;display:grid}.trpg-drawer__current{border-bottom:1px solid var(--line);gap:8px;padding-bottom:12px;display:grid}.trpg-drawer__name{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__title{font-family:var(--font-serif);overflow-wrap:anywhere;font-size:20px;font-weight:600}.trpg-drawer__buttons{flex-wrap:wrap;gap:8px;display:flex}.trpg-drawer__filter{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__filter .trpg-input{flex:1;min-width:140px}.trpg-drawer__bottom{border-top:1px solid var(--line);background:var(--paper);justify-content:space-between;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-warn{color:var(--unsaved)}.trpg-saves{margin:0;padding:0;list-style:none}.trpg-save{border-bottom:1px solid var(--line);align-items:flex-start;gap:8px;padding:10px 4px;display:flex}.trpg-save[data-current=true]{background:color-mix(in srgb, var(--gold) 14%, transparent)}.trpg-save__main{flex:1;gap:2px;min-width:0;display:grid}.trpg-save__top{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.trpg-save__name{overflow-wrap:anywhere;font-weight:600}.trpg-save__time{color:var(--ink-2);margin-left:auto;font-size:12.5px}.trpg-save__rename{flex:1;min-height:32px}.trpg-save__noteedit{gap:6px;display:grid}.trpg-save__noteactions{justify-content:flex-end;gap:6px;display:flex}.trpg-folds{gap:6px;display:grid}.trpg-folds__tabs{flex-wrap:wrap;gap:4px;display:flex}.trpg-popover{z-index:100003;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);width:min(320px,92vw);box-shadow:var(--shadow-float);padding:12px}.trpg-confirm__actions--stack{flex-wrap:wrap;justify-content:flex-end}.trpg-import__ok{color:var(--ok);margin:0;font-weight:600}.trpg-compare{border-collapse:collapse;width:100%;font-size:13px}.trpg-compare th,.trpg-compare td{border-bottom:1px solid var(--line);text-align:left;padding:4px 8px;font-weight:400}.trpg-compare thead th{color:var(--ink-2)}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack .trpg-btn{min-height:44px}.trpg-wizard{flex-direction:column;min-height:100%;display:flex}.trpg-wizard__body{flex:1;padding:8px 0 16px}.trpg-wizard__foot{border-top:1px solid var(--line);background:var(--paper);justify-content:flex-end;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-steps{gap:4px;margin:0;padding:0;list-style:none;display:flex}.trpg-steps li{flex:1}.trpg-steps button{border:0;border-bottom:2px solid var(--line);width:100%;min-height:36px;color:var(--ink-2);background:0 0;justify-content:center;align-items:center;gap:6px;padding:0 6px;display:flex}.trpg-steps button:disabled{cursor:default}.trpg-steps li[data-state=current] button{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}.trpg-steps li[data-state=done] button{color:var(--ink);border-bottom-color:var(--gold);cursor:pointer}.trpg-steps li[data-skipped=true] button{opacity:.45}.trpg-steps__n{border:1px solid;border-radius:50%;place-items:center;width:20px;height:20px;font-size:12px;display:inline-grid}.trpg-steps__compact{color:var(--ink-2);margin:0;font-size:13px;display:none}.trpg-window[data-layout=narrow] .trpg-steps{display:none}.trpg-window[data-layout=narrow] .trpg-steps__compact{display:block}.trpg-step-title{font-family:var(--font-serif);margin:0;font-size:17px}.trpg-step-head{flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;display:flex}.trpg-step-actions{gap:6px;display:inline-flex}.trpg-rulecards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;display:grid}.trpg-rulecard{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-card);cursor:pointer;gap:10px;padding:14px;display:flex}.trpg-rulecard[aria-checked=true]{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary), var(--shadow-card)}.trpg-rulecard[data-status=coming]{opacity:.55;cursor:default}.trpg-rulecard__mark{color:var(--primary);font-size:18px;line-height:1.3}.trpg-rulecard__body{justify-items:start;gap:4px;display:grid}.trpg-radio{cursor:pointer}.trpg-radio input{width:18px;height:18px;accent-color:var(--primary)}.trpg-detail-links{gap:6px;margin:0;padding:0;list-style:none;display:grid}.trpg-info__line{margin:0}.trpg-vlist{height:100%;min-height:160px;position:relative;overflow-y:auto}.trpg-vlist__space{position:relative}.trpg-vlist__row{border-bottom:1px solid var(--line);align-items:center;gap:10px;padding:0 4px;display:flex;position:absolute;left:0;right:0}.trpg-blocks{gap:8px;display:grid}.trpg-blocks__p{margin:0}.trpg-blocks__h h4{font-family:var(--font-serif);margin:8px 0 4px;font-size:15px}.trpg-blocks__list{margin:0;padding-left:20px}.trpg-blocks__table{overflow-x:auto}.trpg-blocks__table table{border-collapse:collapse;min-width:100%;font-size:13px}.trpg-blocks__table th,.trpg-blocks__table td{border:1px solid var(--line);text-align:left;padding:4px 8px}.trpg-blocks__table caption{text-align:left;padding:4px 0;font-weight:600}.trpg-blocks__quote{border-left:3px solid var(--gold);color:var(--ink-2);margin:0;padding-left:12px}.trpg-blocks__read{background:var(--panel);border-radius:var(--radius-sm);padding:8px 12px}.trpg-blocks__mark{color:var(--primary)}.trpg-variantbar{border:1px solid var(--gold);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--gold) 12%, transparent);flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;display:flex}.trpg-variantbar__text{flex:1;min-width:200px}.trpg-variantbar__actions{gap:6px;display:flex}.trpg-variantpick{border:0;gap:6px;margin:0;padding:0;display:grid}.trpg-variantpick .trpg-radio{align-items:flex-start;gap:8px;min-height:36px;display:flex}.trpg-pack-actions{align-items:center;gap:6px;display:inline-flex}.trpg-packdetail{flex-direction:column;gap:10px;height:100%;display:flex}.trpg-packdetail__desc{margin:0}.trpg-packdetail__filter{grid-template-columns:minmax(140px,200px) 1fr auto;align-items:center;gap:8px;display:grid}.trpg-packdetail__list{flex:1;min-height:200px}.trpg-entryrow{flex:1;align-items:baseline;gap:10px;min-width:0;display:flex}.trpg-entryrow .trpg-term{white-space:nowrap;flex:none}.trpg-entryrow__sum{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.trpg-entry__summary{color:var(--ink-2);margin:0}.trpg-entry__lore{gap:6px;display:grid}.trpg-entry__lore-title{font-family:var(--font-serif);margin:8px 0 0;font-size:15px}.trpg-window[data-layout=narrow] .trpg-packdetail__filter{grid-template-columns:1fr}.trpg-modal__page:has(.trpg-packdetail){flex-direction:column;display:flex;overflow:hidden}.trpg-toolbar{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-toolbar__search{flex:1;min-width:160px;max-width:280px}.trpg-pill[aria-pressed=true]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-row--series{background:var(--panel);min-height:36px}.trpg-row--nested{padding-left:20px}.trpg-packdetail{flex:1;min-height:0}.trpg-issuerow{border:1px solid var(--unsaved);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--unsaved) 12%, transparent);justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}.trpg-variantrow{margin-top:8px}.trpg-group--first{margin-top:0}.trpg-row__end--select{width:180px}.trpg-row__end--wrap{flex-wrap:wrap;justify-content:flex-end}.trpg-toolbar--between{justify-content:space-between}.trpg-toolbar__end{align-items:center;gap:10px;display:inline-flex}.trpg-minesub{flex-direction:column;gap:10px;height:100%;min-height:420px;display:flex}.trpg-minesub__list{flex:1;min-height:220px}.trpg-drawer[data-dragging=true]:after{content:\"松开以导入\";z-index:5;border:2px dashed var(--primary);border-radius:var(--radius);background:color-mix(in srgb, var(--paper) 88%, transparent);color:var(--primary);place-items:center;font-weight:600;display:grid;position:absolute;inset:0}.trpg-drawer{position:relative}.trpg-combo__anchor{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);align-items:center;display:flex}.trpg-combo__input{min-width:0;min-height:36px;color:var(--ink);background:0 0;border:0;flex:1;padding:4px 10px}.trpg-combo__input:focus-visible{outline:none}.trpg-combo__anchor:focus-within{outline:2px solid var(--primary);outline-offset:1px}.trpg-combo__content{width:var(--reka-combobox-trigger-width);min-width:260px}.trpg-combo__count{border-bottom:1px solid var(--line);color:var(--ink-2);padding:6px 10px;font-size:12.5px}.trpg-combo__empty{color:var(--ink-2);padding:12px 10px}.trpg-tag{gap:2px;padding-right:2px}.trpg-tag__x{min-width:28px;min-height:28px;color:var(--ink-2);background:0 0;border:0;border-radius:999px;font-size:16px;line-height:1}.trpg-tag__x:hover{color:var(--danger)}.trpg-facts{grid-template-columns:max-content 1fr;gap:6px 14px;margin:0;display:grid}.trpg-facts__label{color:var(--ink-2);white-space:nowrap;padding-top:1px;font-size:13px}.trpg-facts__value{white-space:pre-line;overflow-wrap:anywhere;margin:0}.trpg-facts__sections,.trpg-facts__members{white-space:normal;gap:8px;display:grid}.trpg-facts__members h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-row__warn{color:var(--accent,#b45309)}.trpg-facts__sub{margin-left:4px;font-size:12px}.trpg-facts__member-row{flex-wrap:wrap;align-items:baseline;gap:2px 14px;display:flex}.trpg-facts__member-label{min-width:4.5em;font-weight:600}.trpg-facts__sections h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-window[data-layout=narrow] .trpg-facts{grid-template-columns:1fr;gap:2px}.trpg-window[data-layout=narrow] .trpg-facts__value{margin-bottom:8px}", KJ = ".probe{border-bottom:1px solid var(--line);padding:10px 0}.probe__head{justify-content:space-between;align-items:center;gap:8px;display:flex}.probe__title{font-family:var(--font-serif);margin:0;font-size:15px}.probe__hint{color:var(--ink-2);margin:4px 0;font-size:12.5px}.probe__summary{margin:4px 0}.probe__actions{flex-wrap:wrap;gap:6px;margin-top:6px;display:flex}.probe pre{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);white-space:pre-wrap;word-break:break-all;max-height:200px;margin:6px 0 0;padding:8px;font-size:11.5px;overflow:auto}.probe summary{cursor:pointer;color:var(--ink-2);font-size:12.5px}.lab{background:var(--panel);border-radius:var(--radius);gap:10px;margin-top:8px;padding:10px;display:grid}.lab__row{gap:6px;display:grid}.report-bar{flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;display:flex}", qJ = ".trpg-root{z-index:100000;width:0;height:0;position:fixed;top:0;left:0}.trpg-ball{border:2px solid var(--gold);background:var(--chrome);width:48px;height:48px;color:var(--chrome-ink);cursor:grab;touch-action:none;border-radius:50%;place-items:center;padding:0;display:grid;position:fixed;box-shadow:0 2px 8px #00000059}.trpg-window{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-float);color:var(--ink);position:fixed;overflow:hidden}.trpg-window[data-fullscreen=true]{border:0;border-radius:0;height:100dvh;inset:0}.trpg-shell{width:100%;height:100%;display:flex}.trpg-window[data-layout=narrow] .trpg-shell{padding-bottom:env(safe-area-inset-bottom);background:var(--paper);flex-direction:column}.trpg-window[data-fullscreen=true] .trpg-shell{padding-top:env(safe-area-inset-top);background:var(--chrome)}.trpg-side{background:var(--chrome);width:176px;color:var(--chrome-ink);flex-direction:column;flex:none;display:flex}.trpg-window[data-layout=mid] .trpg-side{width:56px}.trpg-side__brand{cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;height:52px;font-family:var(--font-serif);border-bottom:1px solid var(--chrome-hover);color:var(--gold);align-items:center;gap:10px;padding:0 16px;font-size:16px;display:flex}.trpg-window[data-layout=mid] .trpg-side__brand{justify-content:center;padding:0}.trpg-side__list{gap:4px;margin:0;padding:8px;list-style:none;display:grid}.trpg-side__bottom{margin-top:auto}.trpg-nav{border-radius:var(--radius-sm);width:100%;min-height:44px;color:var(--chrome-ink);text-align:left;background:0 0;border:0;align-items:center;gap:12px;padding:0 12px;display:flex}.trpg-window[data-layout=mid] .trpg-nav{justify-content:center;padding:0}.trpg-nav:hover{background:var(--chrome-hover)}.trpg-nav[aria-current=page]{background:var(--chrome-hover);box-shadow:inset 3px 0 0 var(--gold)}.trpg-nav:focus-visible,.trpg-tab:focus-visible,.trpg-side__brand:focus-visible{outline-color:var(--gold)}.trpg-main{background:var(--paper);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-head{border-bottom:1px solid var(--line);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:12px;height:52px;padding:0 12px 0 20px;display:flex}.trpg-head__title{font-family:var(--font-serif);flex:1;margin:0;font-size:19px;font-weight:600}.trpg-head__chips{align-items:center;gap:8px;display:flex}.trpg-content{outline:none;flex:1;min-height:0;padding:16px 20px 88px;position:relative;overflow:auto}.trpg-window[data-layout=narrow] .trpg-head{background:var(--chrome);height:48px;color:var(--chrome-ink);border-bottom:0;padding:0 8px 0 16px}.trpg-window[data-fullscreen=true] .trpg-head{cursor:default}.trpg-window[data-layout=narrow] .trpg-content{padding:12px 16px 88px}.trpg-tabs{background:var(--chrome);height:56px;color:var(--chrome-ink);flex:none;display:flex}.trpg-tab{min-width:64px;color:var(--chrome-ink);background:0 0;border:0;flex-direction:column;flex:1;justify-content:center;align-items:center;gap:2px;font-size:12px;display:flex}.trpg-tab[aria-current=page]{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}.trpg-resize{cursor:nwse-resize;touch-action:none;z-index:30;background:linear-gradient(135deg, transparent 50%, var(--line) 50%, var(--line) 58%, transparent 58%, transparent 70%, var(--line) 70%, var(--line) 78%, transparent 78%);width:22px;height:22px;position:absolute;bottom:0;right:0}.page-stack{gap:16px;display:grid}.page-intro{color:var(--ink-2);margin:0}.subpage-back{border-radius:var(--radius-sm);min-height:36px;color:var(--primary);background:0 0;border:0;align-items:center;gap:2px;margin:0 0 8px -8px;padding:0 8px;display:inline-flex}.subpage-back:hover{background:var(--panel)}.trpg-body{flex:1;min-height:0;display:flex;position:relative}.trpg-body .trpg-content{flex:1}.trpg-dice-btn{z-index:6;border:2px solid var(--gold);background:var(--primary);width:52px;height:52px;color:var(--primary-ink);box-shadow:var(--shadow-float);border-radius:50%;place-items:center;padding:0;display:grid;position:absolute;bottom:20px;right:20px}.trpg-dice-btn[aria-pressed=true]{box-shadow:0 0 0 3px var(--gold), var(--shadow-float)}.trpg-window[data-layout=narrow] .trpg-dice-btn{bottom:16px;right:16px}.trpg-dice{z-index:10;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:360px;max-height:calc(100dvh - 16px);box-shadow:var(--shadow-float);flex-direction:column;display:flex;position:fixed;overflow:hidden}.trpg-dice[data-narrow=true]{max-height:calc(100dvh - 76px)}.trpg-dice__head{background:var(--chrome);min-height:44px;color:var(--chrome-ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:8px;padding:0 6px 0 14px;display:flex}.trpg-dice__title{font-family:var(--font-serif);flex:1;font-size:16px}.trpg-dice__body{gap:14px;padding:14px 12px;display:grid;overflow-y:auto}.trpg-dice__lbl{color:var(--ink-2);justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;font-size:12.5px;display:flex}.trpg-dice__row{align-items:center;gap:8px;display:flex}.trpg-dice__formula{min-height:44px;font-family:var(--font-serif);letter-spacing:.02em;font-size:20px}.trpg-dice__formula[aria-invalid=true]{border-color:var(--danger)}.trpg-dice__err{min-height:18px;margin-top:4px}.trpg-dice__faces{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;display:grid}.trpg-dice__face{min-width:0;position:relative}.trpg-dice__die{border:1px solid var(--line);background:var(--card);width:100%;min-height:58px;color:var(--ink);border-radius:8px;align-content:center;justify-items:center;gap:2px;padding:4px 0 3px;font-size:12px;display:grid;position:relative}.trpg-dice__die:hover{border-color:var(--primary)}.trpg-dice__die[data-n]:not([data-n=\"0\"]){border-color:var(--primary);background:var(--panel)}.trpg-dice__die .trpg-die{width:28px;height:28px}.trpg-dice__cnt{background:var(--primary);min-width:20px;height:20px;color:var(--primary-ink);font-variant-numeric:tabular-nums;border-radius:10px;padding:0 5px;font-size:12px;line-height:20px;position:absolute;top:-6px;right:-4px}.trpg-dice__minus{border:1px solid var(--line);background:var(--card);width:22px;height:22px;color:var(--ink);border-radius:50%;padding:0;font-size:14px;line-height:18px;position:absolute;top:-8px;left:-6px}.trpg-dice__minus:after{content:\"\";position:absolute;inset:-10px}.trpg-die polygon,.trpg-die .trpg-die__body{fill:var(--card);stroke:var(--ink-2);stroke-width:3px;stroke-linejoin:round}.trpg-die .trpg-die__facet{fill:none;stroke:var(--line);stroke-width:2px;stroke-linejoin:round}.trpg-die text{fill:var(--ink);font-family:var(--font-serif);font-weight:600}.trpg-dice__die .trpg-die polygon,.trpg-dice__die .trpg-die .trpg-die__body{fill:none}.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die polygon,.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die .trpg-die__body{stroke:var(--primary)}.trpg-dice__adjust{flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;display:flex}.trpg-dice__step{align-items:center;gap:4px;display:inline-flex}.trpg-dice__step button{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:40px;height:40px;color:var(--ink);font-size:18px}.trpg-dice__step output{text-align:center;font-variant-numeric:tabular-nums;min-width:2.6em;font-weight:600}.trpg-dice__small{color:var(--ink-2);font-size:12px}.trpg-dice__step .trpg-dice__small{margin-right:4px}.trpg-dice .trpg-seg button{min-height:40px}.trpg-seg.is-off{opacity:.45}.trpg-seg.is-off button{cursor:not-allowed}.trpg-dice__roll{width:100%;min-height:54px;font-family:var(--font-serif);letter-spacing:.3em;text-indent:.3em;font-size:19px}.trpg-dice__result{border:1px solid var(--line);background:var(--card);border-radius:10px;justify-items:center;gap:8px;padding:14px 12px 12px;display:grid}.trpg-dice__hero{width:124px;height:124px}.trpg-dice__hero .trpg-die{width:100%;height:100%;overflow:visible}.trpg-dice__hero.is-rolling .trpg-die{animation:.46s ease-in-out trpg-tumble}.trpg-dice__hero.is-nat20 .trpg-die polygon,.trpg-dice__hero.is-nat20 .trpg-die .trpg-die__body{stroke:var(--gold);stroke-width:5px;fill:color-mix(in srgb, var(--gold) 22%, var(--card))}.trpg-dice__hero.is-nat1 .trpg-die polygon,.trpg-dice__hero.is-nat1 .trpg-die .trpg-die__body{stroke:var(--danger);stroke-width:5px;fill:color-mix(in srgb, var(--danger) 18%, var(--card))}.trpg-dice__line{min-height:22px;color:var(--ink-2);text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.trpg-dice__minis{flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:36px;display:flex}.trpg-dice__mini{width:38px;height:38px}.trpg-dice__mini.is-dim{opacity:.35}.trpg-dice__mini .trpg-die{width:100%;height:100%}.trpg-dice__const{background:var(--panel);border:1px solid var(--line);font-variant-numeric:tabular-nums;border-radius:15px;place-items:center;min-width:38px;height:30px;padding:0 8px;font-weight:600;display:inline-grid}.trpg-dice__send{grid-template-columns:1.5fr 1fr;gap:8px;width:100%;display:grid}.trpg-dice__send .trpg-input{grid-column:1/-1}.trpg-dice__send .trpg-btn{min-height:44px}.trpg-dice__recent{border:1px solid var(--line);width:100%;min-height:44px;color:var(--ink-2);text-align:left;background:0 0;border-radius:8px;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;display:flex}.trpg-dice__recent b{color:var(--ink);font-family:var(--font-serif);font-size:16px}.trpg-dice__list{max-height:180px;margin:4px 0 0;padding:0;list-style:none;overflow-y:auto}.trpg-dice__list button{border:0;border-bottom:1px solid var(--line);text-align:left;background:0 0;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:4px 10px;display:flex}.trpg-dice__list button:hover{background:var(--panel)}.trpg-dice__list b{min-width:2em;font-family:var(--font-serif);font-size:17px}.trpg-dice__list span{overflow-wrap:anywhere;min-width:0;color:var(--ink-2);flex:1;font-size:13px}.trpg-dice__list time{color:var(--ink-2);font-size:12px}.trpg-dice__clear{justify-content:flex-end;display:flex}@keyframes trpg-tumble{0%{transform:rotate(0)scale(1)}45%{transform:rotate(200deg)scale(.88)}to{transform:rotate(360deg)scale(1)}}.trpg-hero{border-radius:var(--radius);background:var(--primary);width:100%;min-height:170px;color:var(--primary-ink);text-align:left;box-shadow:var(--shadow-card);border:0;align-content:end;gap:8px;padding:22px 24px;transition:transform .12s,box-shadow .12s;display:grid}button.trpg-hero:hover:not(:disabled){box-shadow:var(--shadow-float);transform:translateY(-1px)}button.trpg-hero:active{transform:none}button.trpg-hero:disabled{opacity:.6;cursor:not-allowed}.trpg-hero--idle{background:var(--panel);color:var(--ink-2)}.trpg-hero__title{font-family:var(--font-serif);font-size:26px;font-weight:600}.trpg-hero__sub{opacity:.9}.trpg-hero__go{justify-self:end;font-weight:600}.trpg-window[data-layout=narrow] .trpg-hero{min-height:140px;padding:18px}.trpg-link{color:var(--primary);background:0 0;border:0;justify-self:start;min-height:36px;padding:0;text-decoration:underline}.trpg-banner{border-radius:var(--radius);background:var(--chrome);color:#f4ecdd;height:200px;position:relative;overflow:hidden}.trpg-banner--pattern{background:repeating-linear-gradient(45deg, var(--chrome) 0 14px, color-mix(in srgb, var(--chrome) 88%, var(--gold)) 14px 28px)}.trpg-banner__img{object-fit:cover;object-position:70% 50%;opacity:0;width:100%;height:100%;transition:opacity .24s;position:absolute;inset:0}.trpg-banner__img.is-loaded{opacity:1}.trpg-banner__text{background:linear-gradient(#0000,#2b211cbf);gap:2px;padding:40px 20px 14px;display:grid;position:absolute;inset:auto 0 0}.trpg-banner__title{color:inherit;font-family:var(--font-serif);text-align:left;background:0 0;border:0;justify-self:start;padding:0;font-size:26px;font-weight:600}.trpg-banner__line{flex-wrap:wrap;align-items:center;gap:10px;font-size:14px;display:flex}.trpg-banner__state{color:inherit;background:0 0;border:0;padding:0}.trpg-banner__state[data-dirty=true]{color:#f3b45a}.trpg-window[data-layout=narrow] .trpg-banner{height:140px}.trpg-overview{grid-template-columns:repeat(4,1fr);gap:12px;display:grid}.trpg-window[data-layout=mid] .trpg-overview,.trpg-window[data-layout=narrow] .trpg-overview{grid-template-columns:repeat(2,1fr)}.trpg-cell{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);min-height:88px;box-shadow:var(--shadow-card);text-align:left;align-content:start;gap:4px;padding:12px 14px;transition:transform .12s,border-color .12s;display:grid}.trpg-cell:hover{border-color:var(--primary);transform:translateY(-1px)}.trpg-cell:active{transform:none}.trpg-cell__title{align-items:center;gap:6px;font-weight:600;display:flex}.trpg-cell__line{color:var(--ink-2);font-size:13px}.trpg-empty--tight{text-align:left;padding:8px 0}.trpg-chip{max-width:260px}.trpg-chip__name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-badge--button{cursor:pointer}", JJ = ":host{all:initial;pointer-events:inherit;--paper:#f4ecdd;--panel:#eee5d3;--card:#fffcf6;--line:#cbbca3;--ink:#2b211c;--ink-2:#6c6255;--primary:#7a2e26;--primary-ink:#fffcf6;--gold:#b8954a;--danger:#a3352b;--unsaved:#d9892b;--chrome:#2b211c;--chrome-ink:#f1ebdc;--chrome-hover:#3a2d26;--ok:#3f7a3a;--scrim:#2b211c73;--radius:10px;--radius-sm:6px;--radius-xs:4px;--shadow-card:0 1px 2px #2b211c14, 0 2px 8px #2b211c0f;--shadow-float:0 8px 28px #00000047;--font-serif:\"Songti SC\", \"Noto Serif SC\", Georgia, serif;--font-sans:\"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;font-family:var(--font-sans);color:var(--ink);font-size:14px;line-height:1.5}@media (prefers-color-scheme:dark){:host{--paper:#20231f;--panel:#2b3029;--card:#181c18;--line:#515849;--ink:#f1ebdc;--ink-2:#bcbbaa;--primary:#e6bf73;--primary-ink:#20231f;--gold:#e6bf73;--danger:#e07a6e;--unsaved:#e8a13a;--chrome:#121411;--chrome-ink:#f1ebdc;--chrome-hover:#232720;--ok:#8cc47f;--scrim:#0000008c}}*,:before,:after{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:2px solid var(--primary);outline-offset:2px}.trpg-sr-only{clip:rect(0 0 0 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}@media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}", YJ = "trpg-assistant-root";
-function XJ(e) {
-	if (document.getElementById(YJ)) return null;
+}), KJ = ".trpg-btn{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);min-height:36px;color:var(--ink);font:inherit;cursor:pointer;white-space:nowrap;justify-content:center;align-items:center;gap:6px;padding:4px 14px;display:inline-flex}.trpg-btn:hover:not(:disabled){border-color:var(--primary)}.trpg-btn:disabled{opacity:.5;cursor:not-allowed}.trpg-btn--primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-btn--danger{background:var(--danger);color:#fffcf6;border-color:var(--danger)}.trpg-btn--quiet{background:0 0;border-color:#0000}.trpg-btn--small{min-height:30px;padding:2px 10px;font-size:13px}.trpg-icon-btn{border-radius:var(--radius-sm);min-width:36px;min-height:36px;color:inherit;cursor:pointer;background:0 0;border:1px solid #0000;justify-content:center;align-items:center;display:inline-flex}.trpg-icon-btn:hover{border-color:currentColor}.trpg-input{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);padding:4px 10px}.trpg-input:disabled{opacity:.6}textarea.trpg-input{resize:vertical;min-height:72px}.trpg-field{gap:4px;display:grid}.trpg-field__label{color:var(--ink-2);font-size:13px}.trpg-field__hint{color:var(--ink-2);font-size:12.5px}.trpg-field__error{color:var(--danger);font-size:12.5px}.trpg-select-trigger{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);cursor:pointer;justify-content:space-between;align-items:center;gap:8px;padding:4px 10px;display:inline-flex}.trpg-select-content,.trpg-menu{min-width:var(--reka-select-trigger-width,160px);background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:var(--shadow-float);z-index:100003;color:var(--ink)}.trpg-select-content{max-height:min(8 * 36px, var(--reka-select-content-available-height));overflow:hidden}.trpg-select-viewport{max-height:inherit;padding:4px;overflow-y:auto}.trpg-select-item,.trpg-menu__item{border-radius:var(--radius-xs);cursor:pointer;min-height:40px;color:var(--ink);justify-content:space-between;align-items:center;gap:12px;padding:4px 10px;display:flex}.trpg-menu{min-width:168px;padding:4px}.trpg-select-item[data-highlighted],.trpg-menu__item[data-highlighted]{background:var(--panel);outline:none}.trpg-select-item[data-state=checked]{color:var(--primary);font-weight:600}.trpg-menu__item--danger{color:var(--danger)}.trpg-menu__item[data-disabled]{opacity:.5;cursor:not-allowed}.trpg-menu__reason{color:var(--ink-2);font-size:12px}.trpg-seg{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);display:inline-flex;overflow:hidden}.trpg-seg button{min-height:34px;color:var(--ink);background:0 0;border:0;padding:2px 14px}.trpg-seg button+button{border-left:1px solid var(--line)}.trpg-seg button[aria-pressed=true]{background:var(--primary);color:var(--primary-ink)}.trpg-badge{border-radius:var(--radius-xs);background:var(--panel);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap;padding:0 8px;font-size:12px;font-weight:600;line-height:20px;display:inline-block}.trpg-badge[data-tone=gold]{color:var(--ink);border-color:var(--gold);background:color-mix(in srgb, var(--gold) 28%, transparent)}.trpg-badge[data-tone=ok],.trpg-badge[data-status=pass]{color:var(--ok);border-color:var(--ok)}.trpg-badge[data-tone=danger],.trpg-badge[data-status=fail],.trpg-badge[data-status=error]{color:var(--danger);border-color:var(--danger)}.trpg-badge[data-tone=warn],.trpg-badge[data-status=waiting]{color:var(--unsaved);border-color:var(--unsaved)}.trpg-badge[data-tone=gold]{color:var(--gold);border-color:var(--gold)}.trpg-pill{border:1px solid var(--line);background:var(--card);border-radius:999px;align-items:center;gap:4px;min-height:30px;padding:0 12px;display:inline-flex}.trpg-switch-wrap{color:var(--ink-2);align-items:center;gap:6px;min-height:44px;display:inline-flex}.trpg-switch{border:2px solid var(--line);background:0 0;border-radius:999px;width:42px;height:24px;padding:0;transition:background .16s,border-color .16s;position:relative}.trpg-switch__thumb{background:var(--ink-2);border-radius:50%;width:16px;height:16px;transition:transform .16s,background .16s;position:absolute;top:2px;left:2px}.trpg-switch[data-on=true]{background:var(--primary);border-color:var(--primary)}.trpg-switch[data-on=true] .trpg-switch__thumb{background:var(--primary-ink);transform:translate(18px)}.trpg-switch:disabled{opacity:.55;cursor:not-allowed}.trpg-check{cursor:pointer;align-items:center;gap:8px;min-height:36px;display:inline-flex}.trpg-check[data-disabled=true]{opacity:.6;cursor:not-allowed}.trpg-check input{width:18px;height:18px;accent-color:var(--primary);flex:none;margin:0}.trpg-term{color:var(--ink);text-align:left;text-underline-offset:4px;cursor:pointer;background:0 0;border:0;padding:0;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-decoration-thickness:1.5px;display:inline}.trpg-term:hover,.trpg-term:focus-visible{text-decoration-style:solid;-webkit-text-decoration-color:var(--gold);text-decoration-color:var(--gold)}.trpg-list{margin:0;padding:0;list-style:none}.trpg-row{border-bottom:1px solid var(--line);align-items:center;gap:12px;min-height:52px;padding:6px 4px;display:flex}.trpg-row__main{flex:1;min-width:0}.trpg-row__title{overflow-wrap:anywhere;font-weight:600}.trpg-row__meta{color:var(--ink-2);font-size:12.5px}.trpg-row__end{flex:none;align-items:center;gap:8px;display:flex}.trpg-group{font-family:var(--font-serif);color:var(--ink-2);margin:16px 0 4px;font-size:15px}.trpg-skeleton{background:linear-gradient(90deg, var(--panel), var(--line), var(--panel));opacity:.6;border-radius:4px;height:14px}.trpg-empty{text-align:center;color:var(--ink-2);padding:24px 8px}.trpg-progress{background:var(--panel);border-radius:3px;width:120px;height:6px;overflow:hidden}.trpg-progress>span{background:var(--primary);height:100%;transition:width .2s;display:block}.trpg-icon{vertical-align:-3px;flex:none}.trpg-toasts{left:50%;bottom:max(16px, env(safe-area-inset-bottom));z-index:100005;gap:8px;width:min(92vw,420px);display:grid;position:fixed;transform:translate(-50%)}.trpg-toast{border-radius:var(--radius-sm);background:var(--chrome);color:var(--chrome-ink);border-left:4px solid var(--gold);box-shadow:var(--shadow-float);align-items:center;gap:10px;padding:10px 12px;display:flex}.trpg-toast[data-kind=error]{border-left-color:var(--danger)}.trpg-toast[data-kind=success]{border-left-color:var(--ok)}.trpg-toast__text{flex:1}.trpg-toast button{color:var(--gold);background:0 0;border:0;min-height:32px;padding:0 8px;font-weight:600}@media (width<=480px){.trpg-toasts{bottom:calc(64px + env(safe-area-inset-bottom))}}.trpg-toast-enter-from,.trpg-toast-leave-to{opacity:0;transform:translateY(8px)}.trpg-toast-enter-active,.trpg-toast-leave-active{transition:opacity .16s,transform .16s}.trpg-modal-root{display:contents}.trpg-modal{background:var(--scrim);z-index:20;justify-content:center;align-items:center;padding:16px;display:flex;position:absolute;inset:0}.trpg-modal__card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:min(640px,100%);height:min(80%,640px);box-shadow:var(--shadow-float);flex-direction:column;animation:.16s ease-out trpg-pop;display:flex;overflow:hidden}.trpg-modal[data-variant=drawer]{justify-content:flex-end;padding:0}.trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:0;width:min(440px,100%);height:100%;animation:.2s ease-out trpg-slide}.trpg-modal[data-variant=confirm] .trpg-modal__card{width:min(440px,100%);height:auto;max-height:90%}.trpg-modal[data-variant=confirm] .trpg-modal__page{position:relative}.trpg-modal__head{border-bottom:1px solid var(--line);background:var(--panel);flex:none;align-items:center;gap:8px;min-height:52px;padding:4px 8px 4px 16px;display:flex}.trpg-modal__title{min-width:0;font-family:var(--font-serif);text-overflow:ellipsis;white-space:nowrap;flex:1;margin:0;font-size:17px;overflow:hidden}.trpg-modal__back{border-radius:var(--radius-sm);max-width:40%;min-height:36px;color:var(--primary);white-space:nowrap;background:0 0;border:0;align-items:center;gap:2px;margin-left:-8px;padding:0 8px;display:inline-flex}.trpg-modal__back span{text-overflow:ellipsis;overflow:hidden}.trpg-modal__back:hover{background:var(--card)}.trpg-modal__pages{flex:1;min-height:0;position:relative}.trpg-modal__page{padding:16px;transition:opacity .16s,transform .16s,visibility;position:absolute;inset:0;overflow:auto}.trpg-modal__page.is-under{opacity:0;visibility:hidden;transition:opacity .16s,transform .16s,visibility 0s .16s;transform:translate(-24px)}.trpg-page-enter-from,.trpg-page-leave-to{opacity:0;transform:translate(24px)}.trpg-page-enter-active,.trpg-page-leave-active{transition:opacity .16s,transform .16s}.trpg-modal[data-variant=confirm] .trpg-page-leave-active{position:absolute;inset:0}@keyframes trpg-pop{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}@keyframes trpg-slide{0%{opacity:0;transform:translate(32px)}to{opacity:1;transform:none}}.trpg-confirm{gap:12px;display:grid}.trpg-confirm__message{margin:0}.trpg-confirm__details{color:var(--ink-2);margin:0;padding-left:18px}.trpg-confirm__actions{justify-content:flex-end;gap:8px;margin-top:4px;display:flex}.trpg-window[data-layout=narrow] .trpg-modal{background:var(--paper);align-items:stretch;padding:0}.trpg-window[data-layout=narrow] .trpg-modal__card{border:0;border-radius:0;width:100%;height:100%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm]{background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm] .trpg-modal__card{border-radius:var(--radius) var(--radius) 0 0;height:auto}.trpg-window[data-layout=narrow] .trpg-confirm__actions{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions .trpg-btn{min-height:44px}.trpg-window[data-layout=narrow] .trpg-modal__head{background:var(--chrome);min-height:48px;color:var(--chrome-ink);border-bottom:0}.trpg-window[data-layout=narrow] .trpg-modal__back{color:var(--gold)}.trpg-window[data-layout=narrow] .trpg-modal__back,.trpg-window[data-layout=narrow] .trpg-modal__close{min-width:44px;min-height:44px}.trpg-drawer{align-content:start;gap:14px;min-height:100%;display:grid}.trpg-drawer__current{border-bottom:1px solid var(--line);gap:8px;padding-bottom:12px;display:grid}.trpg-drawer__name{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__title{font-family:var(--font-serif);overflow-wrap:anywhere;font-size:20px;font-weight:600}.trpg-drawer__buttons{flex-wrap:wrap;gap:8px;display:flex}.trpg-drawer__filter{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__filter .trpg-input{flex:1;min-width:140px}.trpg-drawer__bottom{border-top:1px solid var(--line);background:var(--paper);justify-content:space-between;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-warn{color:var(--unsaved)}.trpg-saves{margin:0;padding:0;list-style:none}.trpg-save{border-bottom:1px solid var(--line);align-items:flex-start;gap:8px;padding:10px 4px;display:flex}.trpg-save[data-current=true]{background:color-mix(in srgb, var(--gold) 14%, transparent)}.trpg-save__main{flex:1;gap:2px;min-width:0;display:grid}.trpg-save__top{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.trpg-save__name{overflow-wrap:anywhere;font-weight:600}.trpg-save__time{color:var(--ink-2);margin-left:auto;font-size:12.5px}.trpg-save__rename{flex:1;min-height:32px}.trpg-save__noteedit{gap:6px;display:grid}.trpg-save__noteactions{justify-content:flex-end;gap:6px;display:flex}.trpg-folds{gap:6px;display:grid}.trpg-folds__tabs{flex-wrap:wrap;gap:4px;display:flex}.trpg-popover{z-index:100003;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);width:min(320px,92vw);box-shadow:var(--shadow-float);padding:12px}.trpg-confirm__actions--stack{flex-wrap:wrap;justify-content:flex-end}.trpg-import__ok{color:var(--ok);margin:0;font-weight:600}.trpg-compare{border-collapse:collapse;width:100%;font-size:13px}.trpg-compare th,.trpg-compare td{border-bottom:1px solid var(--line);text-align:left;padding:4px 8px;font-weight:400}.trpg-compare thead th{color:var(--ink-2)}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack .trpg-btn{min-height:44px}.trpg-wizard{flex-direction:column;min-height:100%;display:flex}.trpg-wizard__body{flex:1;padding:8px 0 16px}.trpg-wizard__foot{border-top:1px solid var(--line);background:var(--paper);justify-content:flex-end;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-steps{gap:4px;margin:0;padding:0;list-style:none;display:flex}.trpg-steps li{flex:1}.trpg-steps button{border:0;border-bottom:2px solid var(--line);width:100%;min-height:36px;color:var(--ink-2);background:0 0;justify-content:center;align-items:center;gap:6px;padding:0 6px;display:flex}.trpg-steps button:disabled{cursor:default}.trpg-steps li[data-state=current] button{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}.trpg-steps li[data-state=done] button{color:var(--ink);border-bottom-color:var(--gold);cursor:pointer}.trpg-steps li[data-skipped=true] button{opacity:.45}.trpg-steps__n{border:1px solid;border-radius:50%;place-items:center;width:20px;height:20px;font-size:12px;display:inline-grid}.trpg-steps__compact{color:var(--ink-2);margin:0;font-size:13px;display:none}.trpg-window[data-layout=narrow] .trpg-steps{display:none}.trpg-window[data-layout=narrow] .trpg-steps__compact{display:block}.trpg-step-title{font-family:var(--font-serif);margin:0;font-size:17px}.trpg-step-head{flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;display:flex}.trpg-step-actions{gap:6px;display:inline-flex}.trpg-rulecards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;display:grid}.trpg-rulecard{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-card);cursor:pointer;gap:10px;padding:14px;display:flex}.trpg-rulecard[aria-checked=true]{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary), var(--shadow-card)}.trpg-rulecard[data-status=coming]{opacity:.55;cursor:default}.trpg-rulecard__mark{color:var(--primary);font-size:18px;line-height:1.3}.trpg-rulecard__body{justify-items:start;gap:4px;display:grid}.trpg-radio{cursor:pointer}.trpg-radio input{width:18px;height:18px;accent-color:var(--primary)}.trpg-detail-links{gap:6px;margin:0;padding:0;list-style:none;display:grid}.trpg-info__line{margin:0}.trpg-vlist{height:100%;min-height:160px;position:relative;overflow-y:auto}.trpg-vlist__space{position:relative}.trpg-vlist__row{border-bottom:1px solid var(--line);align-items:center;gap:10px;padding:0 4px;display:flex;position:absolute;left:0;right:0}.trpg-blocks{gap:8px;display:grid}.trpg-blocks__p{margin:0}.trpg-blocks__h h4{font-family:var(--font-serif);margin:8px 0 4px;font-size:15px}.trpg-blocks__list{margin:0;padding-left:20px}.trpg-blocks__table{overflow-x:auto}.trpg-blocks__table table{border-collapse:collapse;min-width:100%;font-size:13px}.trpg-blocks__table th,.trpg-blocks__table td{border:1px solid var(--line);text-align:left;padding:4px 8px}.trpg-blocks__table caption{text-align:left;padding:4px 0;font-weight:600}.trpg-blocks__quote{border-left:3px solid var(--gold);color:var(--ink-2);margin:0;padding-left:12px}.trpg-blocks__read{background:var(--panel);border-radius:var(--radius-sm);padding:8px 12px}.trpg-blocks__mark{color:var(--primary)}.trpg-variantbar{border:1px solid var(--gold);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--gold) 12%, transparent);flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;display:flex}.trpg-variantbar__text{flex:1;min-width:200px}.trpg-variantbar__actions{gap:6px;display:flex}.trpg-variantpick{border:0;gap:6px;margin:0;padding:0;display:grid}.trpg-variantpick .trpg-radio{align-items:flex-start;gap:8px;min-height:36px;display:flex}.trpg-pack-actions{align-items:center;gap:6px;display:inline-flex}.trpg-packdetail{flex-direction:column;gap:10px;height:100%;display:flex}.trpg-packdetail__desc{margin:0}.trpg-packdetail__filter{grid-template-columns:minmax(140px,200px) 1fr auto;align-items:center;gap:8px;display:grid}.trpg-packdetail__list{flex:1;min-height:200px}.trpg-entryrow{flex:1;align-items:baseline;gap:10px;min-width:0;display:flex}.trpg-entryrow .trpg-term{white-space:nowrap;flex:none}.trpg-entryrow__sum{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.trpg-entry__summary{color:var(--ink-2);margin:0}.trpg-entry__lore{gap:6px;display:grid}.trpg-entry__lore-title{font-family:var(--font-serif);margin:8px 0 0;font-size:15px}.trpg-window[data-layout=narrow] .trpg-packdetail__filter{grid-template-columns:1fr}.trpg-modal__page:has(.trpg-packdetail){flex-direction:column;display:flex;overflow:hidden}.trpg-toolbar{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-toolbar__search{flex:1;min-width:160px;max-width:280px}.trpg-pill[aria-pressed=true]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-row--series{background:var(--panel);min-height:36px}.trpg-row--nested{padding-left:20px}.trpg-packdetail{flex:1;min-height:0}.trpg-issuerow{border:1px solid var(--unsaved);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--unsaved) 12%, transparent);justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}.trpg-variantrow{margin-top:8px}.trpg-group--first{margin-top:0}.trpg-row__end--select{width:180px}.trpg-row__end--wrap{flex-wrap:wrap;justify-content:flex-end}.trpg-toolbar--between{justify-content:space-between}.trpg-toolbar__end{align-items:center;gap:10px;display:inline-flex}.trpg-minesub{flex-direction:column;gap:10px;height:100%;min-height:420px;display:flex}.trpg-minesub__list{flex:1;min-height:220px}.trpg-drawer[data-dragging=true]:after{content:\"松开以导入\";z-index:5;border:2px dashed var(--primary);border-radius:var(--radius);background:color-mix(in srgb, var(--paper) 88%, transparent);color:var(--primary);place-items:center;font-weight:600;display:grid;position:absolute;inset:0}.trpg-drawer{position:relative}.trpg-combo__anchor{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);align-items:center;display:flex}.trpg-combo__input{min-width:0;min-height:36px;color:var(--ink);background:0 0;border:0;flex:1;padding:4px 10px}.trpg-combo__input:focus-visible{outline:none}.trpg-combo__anchor:focus-within{outline:2px solid var(--primary);outline-offset:1px}.trpg-combo__content{width:var(--reka-combobox-trigger-width);min-width:260px}.trpg-combo__count{border-bottom:1px solid var(--line);color:var(--ink-2);padding:6px 10px;font-size:12.5px}.trpg-combo__empty{color:var(--ink-2);padding:12px 10px}.trpg-tag{gap:2px;padding-right:2px}.trpg-tag__x{min-width:28px;min-height:28px;color:var(--ink-2);background:0 0;border:0;border-radius:999px;font-size:16px;line-height:1}.trpg-tag__x:hover{color:var(--danger)}.trpg-facts{grid-template-columns:max-content 1fr;gap:6px 14px;margin:0;display:grid}.trpg-facts__label{color:var(--ink-2);white-space:nowrap;padding-top:1px;font-size:13px}.trpg-facts__value{white-space:pre-line;overflow-wrap:anywhere;margin:0}.trpg-facts__sections,.trpg-facts__members{white-space:normal;gap:8px;display:grid}.trpg-facts__members h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-row__warn{color:var(--accent,#b45309)}.trpg-facts__sub{margin-left:4px;font-size:12px}.trpg-facts__member-row{flex-wrap:wrap;align-items:baseline;gap:2px 14px;display:flex}.trpg-facts__member-label{min-width:4.5em;font-weight:600}.trpg-facts__sections h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-window[data-layout=narrow] .trpg-facts{grid-template-columns:1fr;gap:2px}.trpg-window[data-layout=narrow] .trpg-facts__value{margin-bottom:8px}", qJ = ".probe{border-bottom:1px solid var(--line);padding:10px 0}.probe__head{justify-content:space-between;align-items:center;gap:8px;display:flex}.probe__title{font-family:var(--font-serif);margin:0;font-size:15px}.probe__hint{color:var(--ink-2);margin:4px 0;font-size:12.5px}.probe__summary{margin:4px 0}.probe__actions{flex-wrap:wrap;gap:6px;margin-top:6px;display:flex}.probe pre{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);white-space:pre-wrap;word-break:break-all;max-height:200px;margin:6px 0 0;padding:8px;font-size:11.5px;overflow:auto}.probe summary{cursor:pointer;color:var(--ink-2);font-size:12.5px}.lab{background:var(--panel);border-radius:var(--radius);gap:10px;margin-top:8px;padding:10px;display:grid}.lab__row{gap:6px;display:grid}.report-bar{flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;display:flex}", JJ = ".trpg-root{z-index:100000;width:0;height:0;position:fixed;top:0;left:0}.trpg-ball{border:2px solid var(--gold);background:var(--chrome);width:48px;height:48px;color:var(--chrome-ink);cursor:grab;touch-action:none;border-radius:50%;place-items:center;padding:0;display:grid;position:fixed;box-shadow:0 2px 8px #00000059}.trpg-window{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-float);color:var(--ink);position:fixed;overflow:hidden}.trpg-window[data-fullscreen=true]{border:0;border-radius:0;height:100dvh;inset:0}.trpg-shell{width:100%;height:100%;display:flex}.trpg-window[data-layout=narrow] .trpg-shell{padding-bottom:env(safe-area-inset-bottom);background:var(--paper);flex-direction:column}.trpg-window[data-fullscreen=true] .trpg-shell{padding-top:env(safe-area-inset-top);background:var(--chrome)}.trpg-side{background:var(--chrome);width:176px;color:var(--chrome-ink);flex-direction:column;flex:none;display:flex}.trpg-window[data-layout=mid] .trpg-side{width:56px}.trpg-side__brand{cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;height:52px;font-family:var(--font-serif);border-bottom:1px solid var(--chrome-hover);color:var(--gold);align-items:center;gap:10px;padding:0 16px;font-size:16px;display:flex}.trpg-window[data-layout=mid] .trpg-side__brand{justify-content:center;padding:0}.trpg-side__list{gap:4px;margin:0;padding:8px;list-style:none;display:grid}.trpg-side__bottom{margin-top:auto}.trpg-nav{border-radius:var(--radius-sm);width:100%;min-height:44px;color:var(--chrome-ink);text-align:left;background:0 0;border:0;align-items:center;gap:12px;padding:0 12px;display:flex}.trpg-window[data-layout=mid] .trpg-nav{justify-content:center;padding:0}.trpg-nav:hover{background:var(--chrome-hover)}.trpg-nav[aria-current=page]{background:var(--chrome-hover);box-shadow:inset 3px 0 0 var(--gold)}.trpg-nav:focus-visible,.trpg-tab:focus-visible,.trpg-side__brand:focus-visible{outline-color:var(--gold)}.trpg-main{background:var(--paper);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-head{border-bottom:1px solid var(--line);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:12px;height:52px;padding:0 12px 0 20px;display:flex}.trpg-head__title{font-family:var(--font-serif);flex:1;margin:0;font-size:19px;font-weight:600}.trpg-head__chips{align-items:center;gap:8px;display:flex}.trpg-content{outline:none;flex:1;min-height:0;padding:16px 20px 88px;position:relative;overflow:auto}.trpg-window[data-layout=narrow] .trpg-head{background:var(--chrome);height:48px;color:var(--chrome-ink);border-bottom:0;padding:0 8px 0 16px}.trpg-window[data-fullscreen=true] .trpg-head{cursor:default}.trpg-window[data-layout=narrow] .trpg-content{padding:12px 16px 88px}.trpg-tabs{background:var(--chrome);height:56px;color:var(--chrome-ink);flex:none;display:flex}.trpg-tab{min-width:64px;color:var(--chrome-ink);background:0 0;border:0;flex-direction:column;flex:1;justify-content:center;align-items:center;gap:2px;font-size:12px;display:flex}.trpg-tab[aria-current=page]{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}.trpg-resize{cursor:nwse-resize;touch-action:none;z-index:30;background:linear-gradient(135deg, transparent 50%, var(--line) 50%, var(--line) 58%, transparent 58%, transparent 70%, var(--line) 70%, var(--line) 78%, transparent 78%);width:22px;height:22px;position:absolute;bottom:0;right:0}.page-stack{gap:16px;display:grid}.page-intro{color:var(--ink-2);margin:0}.subpage-back{border-radius:var(--radius-sm);min-height:36px;color:var(--primary);background:0 0;border:0;align-items:center;gap:2px;margin:0 0 8px -8px;padding:0 8px;display:inline-flex}.subpage-back:hover{background:var(--panel)}.trpg-body{flex:1;min-height:0;display:flex;position:relative}.trpg-body .trpg-content{flex:1}.trpg-dice-btn{z-index:6;border:2px solid var(--gold);background:var(--primary);width:52px;height:52px;color:var(--primary-ink);box-shadow:var(--shadow-float);border-radius:50%;place-items:center;padding:0;display:grid;position:absolute;bottom:20px;right:20px}.trpg-dice-btn[aria-pressed=true]{box-shadow:0 0 0 3px var(--gold), var(--shadow-float)}.trpg-window[data-layout=narrow] .trpg-dice-btn{bottom:16px;right:16px}.trpg-dice{z-index:10;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:360px;max-height:calc(100dvh - 16px);box-shadow:var(--shadow-float);flex-direction:column;display:flex;position:fixed;overflow:hidden}.trpg-dice[data-narrow=true]{max-height:calc(100dvh - 76px)}.trpg-dice__head{background:var(--chrome);min-height:44px;color:var(--chrome-ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:8px;padding:0 6px 0 14px;display:flex}.trpg-dice__title{font-family:var(--font-serif);flex:1;font-size:16px}.trpg-dice__body{gap:14px;padding:14px 12px;display:grid;overflow-y:auto}.trpg-dice__lbl{color:var(--ink-2);justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;font-size:12.5px;display:flex}.trpg-dice__row{align-items:center;gap:8px;display:flex}.trpg-dice__formula{min-height:44px;font-family:var(--font-serif);letter-spacing:.02em;font-size:20px}.trpg-dice__formula[aria-invalid=true]{border-color:var(--danger)}.trpg-dice__err{min-height:18px;margin-top:4px}.trpg-dice__faces{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;display:grid}.trpg-dice__face{min-width:0;position:relative}.trpg-dice__die{border:1px solid var(--line);background:var(--card);width:100%;min-height:58px;color:var(--ink);border-radius:8px;align-content:center;justify-items:center;gap:2px;padding:4px 0 3px;font-size:12px;display:grid;position:relative}.trpg-dice__die:hover{border-color:var(--primary)}.trpg-dice__die[data-n]:not([data-n=\"0\"]){border-color:var(--primary);background:var(--panel)}.trpg-dice__die .trpg-die{width:28px;height:28px}.trpg-dice__cnt{background:var(--primary);min-width:20px;height:20px;color:var(--primary-ink);font-variant-numeric:tabular-nums;border-radius:10px;padding:0 5px;font-size:12px;line-height:20px;position:absolute;top:-6px;right:-4px}.trpg-dice__minus{border:1px solid var(--line);background:var(--card);width:22px;height:22px;color:var(--ink);border-radius:50%;padding:0;font-size:14px;line-height:18px;position:absolute;top:-8px;left:-6px}.trpg-dice__minus:after{content:\"\";position:absolute;inset:-10px}.trpg-die polygon,.trpg-die .trpg-die__body{fill:var(--card);stroke:var(--ink-2);stroke-width:3px;stroke-linejoin:round}.trpg-die .trpg-die__facet{fill:none;stroke:var(--line);stroke-width:2px;stroke-linejoin:round}.trpg-die text{fill:var(--ink);font-family:var(--font-serif);font-weight:600}.trpg-dice__die .trpg-die polygon,.trpg-dice__die .trpg-die .trpg-die__body{fill:none}.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die polygon,.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die .trpg-die__body{stroke:var(--primary)}.trpg-dice__adjust{flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;display:flex}.trpg-dice__step{align-items:center;gap:4px;display:inline-flex}.trpg-dice__step button{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:40px;height:40px;color:var(--ink);font-size:18px}.trpg-dice__step output{text-align:center;font-variant-numeric:tabular-nums;min-width:2.6em;font-weight:600}.trpg-dice__small{color:var(--ink-2);font-size:12px}.trpg-dice__step .trpg-dice__small{margin-right:4px}.trpg-dice .trpg-seg button{min-height:40px}.trpg-seg.is-off{opacity:.45}.trpg-seg.is-off button{cursor:not-allowed}.trpg-dice__roll{width:100%;min-height:54px;font-family:var(--font-serif);letter-spacing:.3em;text-indent:.3em;font-size:19px}.trpg-dice__result{border:1px solid var(--line);background:var(--card);border-radius:10px;justify-items:center;gap:8px;padding:14px 12px 12px;display:grid}.trpg-dice__hero{width:124px;height:124px}.trpg-dice__hero .trpg-die{width:100%;height:100%;overflow:visible}.trpg-dice__hero.is-rolling .trpg-die{animation:.46s ease-in-out trpg-tumble}.trpg-dice__hero.is-nat20 .trpg-die polygon,.trpg-dice__hero.is-nat20 .trpg-die .trpg-die__body{stroke:var(--gold);stroke-width:5px;fill:color-mix(in srgb, var(--gold) 22%, var(--card))}.trpg-dice__hero.is-nat1 .trpg-die polygon,.trpg-dice__hero.is-nat1 .trpg-die .trpg-die__body{stroke:var(--danger);stroke-width:5px;fill:color-mix(in srgb, var(--danger) 18%, var(--card))}.trpg-dice__line{min-height:22px;color:var(--ink-2);text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.trpg-dice__minis{flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:36px;display:flex}.trpg-dice__mini{width:38px;height:38px}.trpg-dice__mini.is-dim{opacity:.35}.trpg-dice__mini .trpg-die{width:100%;height:100%}.trpg-dice__const{background:var(--panel);border:1px solid var(--line);font-variant-numeric:tabular-nums;border-radius:15px;place-items:center;min-width:38px;height:30px;padding:0 8px;font-weight:600;display:inline-grid}.trpg-dice__send{grid-template-columns:1.5fr 1fr;gap:8px;width:100%;display:grid}.trpg-dice__send .trpg-input{grid-column:1/-1}.trpg-dice__send .trpg-btn{min-height:44px}.trpg-dice__recent{border:1px solid var(--line);width:100%;min-height:44px;color:var(--ink-2);text-align:left;background:0 0;border-radius:8px;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;display:flex}.trpg-dice__recent b{color:var(--ink);font-family:var(--font-serif);font-size:16px}.trpg-dice__list{max-height:180px;margin:4px 0 0;padding:0;list-style:none;overflow-y:auto}.trpg-dice__list button{border:0;border-bottom:1px solid var(--line);text-align:left;background:0 0;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:4px 10px;display:flex}.trpg-dice__list button:hover{background:var(--panel)}.trpg-dice__list b{min-width:2em;font-family:var(--font-serif);font-size:17px}.trpg-dice__list span{overflow-wrap:anywhere;min-width:0;color:var(--ink-2);flex:1;font-size:13px}.trpg-dice__list time{color:var(--ink-2);font-size:12px}.trpg-dice__clear{justify-content:flex-end;display:flex}@keyframes trpg-tumble{0%{transform:rotate(0)scale(1)}45%{transform:rotate(200deg)scale(.88)}to{transform:rotate(360deg)scale(1)}}.trpg-hero{border-radius:var(--radius);background:var(--primary);width:100%;min-height:170px;color:var(--primary-ink);text-align:left;box-shadow:var(--shadow-card);border:0;align-content:end;gap:8px;padding:22px 24px;transition:transform .12s,box-shadow .12s;display:grid}button.trpg-hero:hover:not(:disabled){box-shadow:var(--shadow-float);transform:translateY(-1px)}button.trpg-hero:active{transform:none}button.trpg-hero:disabled{opacity:.6;cursor:not-allowed}.trpg-hero--idle{background:var(--panel);color:var(--ink-2)}.trpg-hero__title{font-family:var(--font-serif);font-size:26px;font-weight:600}.trpg-hero__sub{opacity:.9}.trpg-hero__go{justify-self:end;font-weight:600}.trpg-window[data-layout=narrow] .trpg-hero{min-height:140px;padding:18px}.trpg-link{color:var(--primary);background:0 0;border:0;justify-self:start;min-height:36px;padding:0;text-decoration:underline}.trpg-banner{border-radius:var(--radius);background:var(--chrome);color:#f4ecdd;height:200px;position:relative;overflow:hidden}.trpg-banner--pattern{background:repeating-linear-gradient(45deg, var(--chrome) 0 14px, color-mix(in srgb, var(--chrome) 88%, var(--gold)) 14px 28px)}.trpg-banner__img{object-fit:cover;object-position:70% 50%;opacity:0;width:100%;height:100%;transition:opacity .24s;position:absolute;inset:0}.trpg-banner__img.is-loaded{opacity:1}.trpg-banner__text{background:linear-gradient(#0000,#2b211cbf);gap:2px;padding:40px 20px 14px;display:grid;position:absolute;inset:auto 0 0}.trpg-banner__title{color:inherit;font-family:var(--font-serif);text-align:left;background:0 0;border:0;justify-self:start;padding:0;font-size:26px;font-weight:600}.trpg-banner__line{flex-wrap:wrap;align-items:center;gap:10px;font-size:14px;display:flex}.trpg-banner__state{color:inherit;background:0 0;border:0;padding:0}.trpg-banner__state[data-dirty=true]{color:#f3b45a}.trpg-window[data-layout=narrow] .trpg-banner{height:140px}.trpg-overview{grid-template-columns:repeat(4,1fr);gap:12px;display:grid}.trpg-window[data-layout=mid] .trpg-overview,.trpg-window[data-layout=narrow] .trpg-overview{grid-template-columns:repeat(2,1fr)}.trpg-cell{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);min-height:88px;box-shadow:var(--shadow-card);text-align:left;align-content:start;gap:4px;padding:12px 14px;transition:transform .12s,border-color .12s;display:grid}.trpg-cell:hover{border-color:var(--primary);transform:translateY(-1px)}.trpg-cell:active{transform:none}.trpg-cell__title{align-items:center;gap:6px;font-weight:600;display:flex}.trpg-cell__line{color:var(--ink-2);font-size:13px}.trpg-empty--tight{text-align:left;padding:8px 0}.trpg-chip{max-width:260px}.trpg-chip__name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-badge--button{cursor:pointer}", YJ = ":host{all:initial;pointer-events:inherit;--paper:#f4ecdd;--panel:#eee5d3;--card:#fffcf6;--line:#cbbca3;--ink:#2b211c;--ink-2:#6c6255;--primary:#7a2e26;--primary-ink:#fffcf6;--gold:#b8954a;--danger:#a3352b;--unsaved:#d9892b;--chrome:#2b211c;--chrome-ink:#f1ebdc;--chrome-hover:#3a2d26;--ok:#3f7a3a;--scrim:#2b211c73;--radius:10px;--radius-sm:6px;--radius-xs:4px;--shadow-card:0 1px 2px #2b211c14, 0 2px 8px #2b211c0f;--shadow-float:0 8px 28px #00000047;--font-serif:\"Songti SC\", \"Noto Serif SC\", Georgia, serif;--font-sans:\"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;font-family:var(--font-sans);color:var(--ink);font-size:14px;line-height:1.5}@media (prefers-color-scheme:dark){:host{--paper:#20231f;--panel:#2b3029;--card:#181c18;--line:#515849;--ink:#f1ebdc;--ink-2:#bcbbaa;--primary:#e6bf73;--primary-ink:#20231f;--gold:#e6bf73;--danger:#e07a6e;--unsaved:#e8a13a;--chrome:#121411;--chrome-ink:#f1ebdc;--chrome-hover:#232720;--ok:#8cc47f;--scrim:#0000008c}}*,:before,:after{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:2px solid var(--primary);outline-offset:2px}.trpg-sr-only{clip:rect(0 0 0 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}@media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}", XJ = "trpg-assistant-root";
+function ZJ(e) {
+	if (document.getElementById(XJ)) return null;
 	let t = document.createElement("div");
-	t.id = YJ;
+	t.id = XJ;
 	let n = t.attachShadow({ mode: "open" }), r = document.createElement("style");
 	r.textContent = [
+		YJ,
 		JJ,
-		qJ,
-		GJ,
-		KJ
+		KJ,
+		qJ
 	].join("\n");
 	let i = document.createElement("div");
 	i.className = "trpg-portal";
 	let a = document.createElement("div");
 	n.append(r, a, i), document.body.appendChild(t);
 	let o = PT();
-	return Ru(WJ, {
+	return Ru(GJ, {
 		ctx: e,
 		portalTarget: i
 	}).use(o).mount(a), o;
 }
 // src/main.ts
-async function ZJ() {
+async function QJ() {
 	if (window.__trpgAssistantBooted) return;
 	window.__trpgAssistantBooted = !0, await p();
-	let e = d(), t = XJ(e);
+	let e = d(), t = ZJ(e);
 	t && await PE(e, t);
 }
-ZJ().catch((e) => {
+QJ().catch((e) => {
 	window.__trpgAssistantBooted = !1, console.error("[trpg-assistant] 启动失败", e);
 });

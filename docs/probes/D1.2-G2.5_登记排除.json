@@ -53,5 +53,71 @@
   "match": "马友夫强酸箭",
   "reason": "巫妖在 SRD 核心包里，「马友夫强酸箭」在 PHB 包里：依赖只能向下，SRD 不能指向 PHB 包的法术；保持纯文字，已知限制（同陆地德鲁伊的情况）",
   "basis": "包依赖方向规则（docs/包格式说明.md §2）"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-collapsing-roof.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-falling-net.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-fire-breathing-statue.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-pits.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-poison-darts.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-poison-needle.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-rolling-sphere.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "c9-hazard-no-rating",
+  "entry": "hazard.trap-sphere-of-annihilation.dmg",
+  "reason": "DMG 示例陷阱只给触发、豁免 DC 与伤害，不标适用等级段和危险程度（阻碍/危险/致命）；5etools 也没有这一项。要补只能按 DC 与伤害表自行推断，推断结果不是书上的话，不写",
+  "basis": "DMG 第 5 章「陷阱范例」p.122–123（逐条读过，无等级标注）；5etools trapshazards.json 同"
+ },
+ {
+  "finding": "b2-derived-in-note",
+  "entry": "feature.enhanced-defense.tce",
+  "reason": "奇械师注法（Infusion）增强防御：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
+  "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
+ },
+ {
+  "finding": "b2-derived-in-note",
+  "entry": "feature.helm-of-awareness.tce",
+  "reason": "奇械师注法（Infusion）警觉之盔：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
+  "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
+ },
+ {
+  "finding": "b2-derived-in-note",
+  "entry": "feature.repulsion-shield.tce",
+  "reason": "奇械师注法（Infusion）斥力之盾：效果加在被注入的**物品**上（护甲/头盔/盾牌），不是角色自己的特性；若把它写成特性效果，角色没注入物品也会白拿加值。注法系统是否结构化、怎么结构化已登记为决定项 b2-infusion-notes，等驾驶员定，这里不动",
+  "basis": "TCE 第 2 章 奇械师注法；决定项 b2-infusion-notes（15 个注法特性）"
  }
 ]

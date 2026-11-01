@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CLASS_EXPECT } from './consumer/expected/classes'
 import { SLOT_TABLE, PACT } from './consumer/expected/slots'
-import { asiLevels, englishOf, readEquipment, readGrants, readProficiencies, readSpellcasting, resolveItemName } from './consumer/classSheet'
+import { asiLevels, englishOf, equipShape, readEquipment, readGrants, readProficiencies, readSpellcasting, resolveItemName } from './consumer/classSheet'
 import { Recorder } from './consumer/findings'
 import { expandToken } from './consumer/expand'
 import { lib } from './consumer/load'
@@ -31,8 +31,7 @@ describe('G2a 职业：熟练、技能、起始装备（a1 a2 a3）', () => {
       eq('skillFrom', x.skillFrom === 'any' ? prof.skillFrom.length === 18 : sameSet(prof.skillFrom, x.skillFrom))
       eq('subclassLevel', c.data.subclassLevel === x.subclassLevel)
       const eqp = readEquipment(c, 'startingEquipment')
-      const choices = eqp.filter((b) => b.kind === 'choice').map((b) => b.options.length)
-      const fixed = eqp.filter((b) => b.kind === 'fixed').reduce((n, b) => n + b.options[0].length, 0)
+      const { choices, fixed } = equipShape(eqp)
       eq('equipChoices', JSON.stringify(choices) === JSON.stringify(x.equipChoices))
       eq('equipFixed', fixed === x.equipFixed)
     }

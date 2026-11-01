@@ -58,6 +58,11 @@
   },
   {
    "check": "c9",
+   "key": "excluded-c9-hazard-no-rating",
+   "value": 8
+  },
+  {
+   "check": "c9",
    "key": "hazards",
    "value": 48
   },
@@ -209,25 +214,6 @@
    "expected": "DMG、MM、GoS 各条目原文",
    "note": "疾病的效果只有文字（不少是“检定劣势”，可映射到优势/劣势效果）",
    "count": 9
-  },
-  {
-   "id": "c9-hazard-no-rating",
-   "check": "c9",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "hazard.trap-collapsing-roof.dmg 塌方",
-    "hazard.trap-falling-net.dmg 落网",
-    "hazard.trap-fire-breathing-statue.dmg 喷火雕像",
-    "hazard.trap-pits.dmg 陷坑",
-    "hazard.trap-poison-darts.dmg 毒镖",
-    "hazard.trap-poison-needle.dmg 毒针陷阱",
-    "hazard.trap-rolling-sphere.dmg 滚石",
-    "hazard.trap-sphere-of-annihilation.dmg 湮灭法球"
-   ],
-   "expected": "DMG、MM、GoS 各条目原文",
-   "note": "陷阱没有危险等级（轻微/危险/致命 + 等级段）：塌方、落网、喷火雕像、陷坑、毒镖、毒针陷阱、滚石、湮灭法球共 8 个；遭遇预算算不出（自然危害书上本来就没有等级，不算）",
-   "count": 8
   }
  ]
 }

@@ -42,7 +42,8 @@ describe('G2c 怪物部件、危害、疾病、物件、载具（c7 c9 c10）', 
     rec2.stat('c10', 'objectsAndVehicles', objs.length)
     const noStats = objs.filter((o) => typeof o.data.ac !== 'number' || typeof o.data.hp !== 'number')
     const badImmune = objs.filter((o) => strs(o.data.immune).some((x) => !DAMAGE.includes(x)))
-    const withActionsNoAct = objs.filter((o) => arr(o.data.actions).length && !arr(o.data.actions).map(rec).some((a) => arr(a.activities).length))
+    // 结构化的攻击可以写在条目层 activities（object 的 actions 是正文块，放不下），也可以挂在某个 action 上
+    const withActionsNoAct = objs.filter((o) => arr(o.data.actions).length && !arr(o.data.activities).length && !arr(o.data.actions).map(rec).some((a) => arr(a.activities).length))
     rec2.stat('c10', 'objectsWithTextOnlyActions', withActionsNoAct.length)
     for (const [id, arrx] of Object.entries({
       'c7-part-action-text-only': noAct.map((p) => `${p.id} ${p.name}`),

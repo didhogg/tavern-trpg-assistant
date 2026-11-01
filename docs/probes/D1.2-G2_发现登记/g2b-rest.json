@@ -128,15 +128,11 @@
    "fixSource": "self-structure",
    "entries": [
     "feat.artificer-initiate.tce 奇械学徒：一环法术 1 次/长休（免费施展）",
-    "feat.fey-touched.tce 精类之触：两个法术各 1 次/长休",
-    "feat.metamagic-adept.tce 超魔导师：2 点术法点（超魔法专用），长休恢复——需要一个次数池",
-    "feat.shadow-touched.tce 影界之触：两个法术各 1 次/长休",
-    "feat.telepathic.tce 心灵感应：侦测思想 1 次/长休",
-    "feature.yuan-ti-serpentine-spellcasting.mpmm 巨蛇法术：暗示术 1 次/长休"
+    "feat.metamagic-adept.tce 超魔导师：2 点术法点（超魔法专用），长休恢复——需要一个次数池"
    ],
    "expected": "TCE、MPMM 各专长/特质原文",
    "note": "“每次长休可免费施展某法术一次/恢复若干点”，却没有 uses 也没有 spellGrant；活动页长休时无法恢复。应写成带次数的 spellGrant 或次数池",
-   "count": 6
+   "count": 2
   },
   {
    "id": "rest-tracker",

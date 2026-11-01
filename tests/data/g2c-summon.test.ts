@@ -34,7 +34,7 @@ describe('G2c 召唤与同伴（c13，并入 G2b 决定 3：同伴随主人等�
     rec2.stat('c13', 'attacksWithLostScaling', lost.length)
     rec2.find({ id: 'c13-summon-placeholder', check: 'c13', kind: 'data-defect', fixSource: 'self-structure', entries: [...bySpell, ...byClass].map((m) => `${m.id} ${m.name}（${rec(m.data.extra).summonedBySpell ?? rec(m.data.extra).summonedByClass}）`), expected: 'TCE 召唤类法术与同伴原文（PHB 游侠兽伙伴、奇械师钢铁守卫等）', note: '召唤物/同伴的护甲等级、生命值、攻击加值和伤害随法术环级、主人职业等级或熟练加值变化；数据里只有占位（生命值平均 0 + 文字公式、护甲等级 10 + 文字“11+法术等级”）：召唤时无法算出这只生物的数值。需要结构化成公式（如 ac: "11 + spell.level"、hp: "40 + 10*(spell.level-4)"），公式引擎要认识 spell.level 变量' })
     rec2.find({ id: 'c13-summon-attack-snapshot', check: 'c13', kind: 'data-defect', fixSource: 'self-structure', entries: lost, expected: 'TCE 召唤物动作原文', note: '攻击的结构化伤害是某一环的快照（丢了 “+ summonSpellLevel” 与第二种伤害），文字里才有完整公式' })
-    rec2.find({ id: 'c13-hp-special-other', check: 'c13', kind: 'data-defect', fixSource: 'self-structure', entries: hpSpecial.filter((m) => !bySpell.includes(m) && !byClass.includes(m)).map((m) => `${m.id} ${m.name}：${str(rec(m.data.hp).special)}`), expected: 'PHB 活化物件表、BMT、MM', note: '生命值只有 special 文字、average 为 0：活化物件的各体型固定生命值（微型 20 … 巨型 80）、牌组守卫的按等级生命等；固定数字的应直接写 average' })
+    rec2.find({ id: 'c13-hp-special-other', check: 'c13', kind: 'data-defect', fixSource: 'self-structure', entries: hpSpecial.filter((m) => !bySpell.includes(m) && !byClass.includes(m) && rec(m.data.hp).average === 0).map((m) => `${m.id} ${m.name}：${str(rec(m.data.hp).special)}`), expected: 'PHB 活化物件表、BMT、MM', note: '生命值只有 special 文字、average 为 0：活化物件的各体型固定生命值（微型 20 … 巨型 80）、牌组守卫的按等级生命等；固定数字的应直接写 average' })
     expect(rec2.settle()).toEqual([])
   })
 })

@@ -8,6 +8,11 @@
   },
   {
    "check": "b2",
+   "key": "excluded-b2-derived-in-note",
+   "value": 3
+  },
+  {
+   "check": "b2",
    "key": "formulas",
    "value": 66
   },
@@ -66,14 +71,11 @@
     "feature.barbarian-brutal-critical-3-dice.phb 凶蛮重击(3骰)：Foundry 效果未映射：flags.dnd5e.meleeCriticalD",
     "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.d",
     "feature.devils-sight.phb 魔鬼视界：Foundry 效果未映射：system.attributes.senses.s",
-    "feature.enhanced-defense.tce 增强防御：Foundry 效果未映射：system.armor.magicalBonus",
     "feature.fighter-champion-improved-critical.phb 精通重击：Foundry 效果未映射：flags.dnd5e.weaponCritical",
     "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.con.bonus",
     "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.str.bonus",
     "feature.harengon-hare-trigger.mpmm 野兔敏锐：Foundry 效果未映射：system.attributes.init.tot",
-    "feature.helm-of-awareness.tce 警觉之盔：Foundry 效果未映射：flags.dnd5e.initiativeAdv",
     "feature.lizardfolk-natural-armor.vgm 天生护甲：Foundry 效果未映射：system.attributes.ac.calc",
-    "feature.repulsion-shield.tce 斥力之盾：Foundry 效果未映射：system.armor.magicalBonus",
     "feature.sorcerer-draconic-bloodline-draconic-resilience.phb 龙族体魄：Foundry 效果未映射：system.attributes.ac.calc",
     "feature.stone-rune.tce 岩石符文：Foundry 效果未映射：system.attributes.senses.d",
     "item.robe-of-the-archmagi.dmg 大法师法袍：Foundry 效果未映射：system.attributes.ac.calc",
@@ -82,7 +84,7 @@
    ],
    "expected": "各特性原文",
    "note": "影响派生数值的效果被留在说明文字里：龙脉术士的龙族韧性（AC 13+敏捷）、蜥蜴人的天生护甲、魔鬼视界/石之符文（黑暗视觉）、兔人的敏捷先攻、寒霜符文（力量/体质豁免与检定）、野蛮人的残暴重击（暴击额外骰）、冠军的强化重击（暴击范围）、觉知头盔（先攻优势）",
-   "count": 18
+   "count": 15
   },
   {
    "id": "b2-formula-unsupported-variable",
