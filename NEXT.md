@@ -5,6 +5,7 @@ D1.2 数据阶段的最后一步 G2.5 E 站（做完即结束 G2.5）；之后�
 
 ## 当前任务
 **次序（驾驶员 2026-11-01 定，见 `docs/任务总纲.md` §2"当前执行次序"）：G2.5 E 站一次做完即结束 G2.5 → M8 地图（先与驾驶员定稿 `docs/units/U8_地图.md`）→ G3 → D1.2b → M4…M7 → M9 → M10。执行中不新增站、子站或计划；E 站做不了的当场定为决定项或"不做"。**
+**规划者核验（2026-11-01）：有条件通过**，见 `docs/probes/D1.2-G2.5_规划者核验.md`；条件是本机干净工作区重跑 test:data、两次 build:data 比哈希、快速 e2e 与升级场景。另有 4 个发现（脏工作区、resist 里的文字、单元测试依赖本机数据、可见文字露出 summonSpellLevel）。
 **G2.5 E 站 E1～E5 已完成，等规划者核验。** 所有目标登记项已归零或进排除表：E1 角色特性、E2 状态、E3 物品抽查、E4 怪物与召唤、E5 表格；`check` 36/305、`test:data` 121/394、快速 e2e library 95/upgrade 13 全过。数据已分站提交（数据仓库 `0a3cec8`、`f6268dd`、`b0f35cb`）。未推送、未发布、未安装。跨里程碑：人物模块「从模板一键填入」遇到龙之抗性这类自选项时，让玩家当场选。
 - **第 0 站已完成（本地提交 d525c2c…c567162 与收尾）**：新字段格式（`src/rules/dnd5e2014/data/g25.ts` 等）、公式变量 `spell.level`/`spell.attack`、构建期校验 `validateG25`、修正引擎（T4 `tools/data/fix/`）、`registry-diff`（T2）、`show`（T1）、读原书 PDF（T7，VGM 文字层 / MTF 扫描件 OCR）、`g2-additive`＋基线夹具（T5）、旧扩展兼容测试（T6，真跑 f4eddfe 的安装校验）、读取器新记号。**对照 VGM/MTF 原书后的修订**：7 个怪物生命骰式可改（只剩诅咒石化人原书自相矛盾）、三种星界船原书没有护甲/生命值（不补）、位面掠夺者弩炮数 2→3、布耶格施法者是随机法术（误报）、天生法术等级漏了 28 个（登记 3→31，附表 `03_附表_天生法术等级.md`）、费尔伯格/深侏儒/蛇人纯血/魔蒙提夫林的次数错误；塔莎法术表改用并列字段 `spellLists`（旧扩展会拒绝 `joins` 的新 `as` 值）。
 - **第 0 站实测**：`npm run check` 约 20 秒（36 文件、305 项）；`npm run test:data` 约 94 秒（119 文件、369 项）；`build:data` 约 30 秒；快速 e2e 库子集 `E2E_SUITE=library E2E_ENGINE=chrome E2E_VIEW=desktop E2E_SCHEME=light node tests/e2e/smoke.mjs` 约 100 秒（需先 `npm run build`）；升级场景 `E2E_SUITE=upgrade …`（同样三个环境变量）约 21 秒；均通过。11 个包哈希与 G2 开工快照一致（数据没动）。
