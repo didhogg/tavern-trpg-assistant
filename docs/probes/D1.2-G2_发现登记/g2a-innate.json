@@ -24,48 +24,6 @@
    "expected": "PHB 第 2 章、MPMM、MTF 种族特质（免费施展的法术）",
    "note": "种族特质文字里写着免费施展某法术，但所属种族的效果里没有对应的授予法术（spellGrant），人物模块读不到",
    "count": 1
-  },
-  {
-   "id": "a12-innate-unlock-level",
-   "check": "a12",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.aarakocra-wind-caller.mpmm 呼风者",
-    "feature.aasimar-celestial-legacy.dmg 天界遗赠",
-    "feature.air-genasi-mingle-with-the-wind.mpmm 融入清风",
-    "feature.baalzebul-tiefling-legacy-of-maladomini.mtf 马拉多米尼之遗赠",
-    "feature.deep-gnome-gift-of-the-svirfneblin.mpmm 斯涅布力赠礼",
-    "feature.dispater-tiefling-legacy-of-dis.mtf 迪斯之遗赠",
-    "feature.drow-elf-drow-magic.phb 卓尔魔法",
-    "feature.duergar-duergar-magic.mpmm 灰矮人魔法",
-    "feature.duergar-dwarf-duergar-magic.mtf 灰矮人魔法",
-    "feature.earth-genasi-merge-with-stone.mpmm 混入大地",
-    "feature.fairy-fairy-magic.mpmm 仙灵魔法",
-    "feature.fierna-tiefling-legacy-of-phlegethos.mtf 弗莱格索斯之遗赠",
-    "feature.fire-genasi-reach-to-the-blaze.mpmm 烈焰之触",
-    "feature.githyanki-gith-githyanki-psionics.mtf 吉斯洋基灵能",
-    "feature.githyanki-githyanki-psionics.mpmm 吉斯洋基灵能",
-    "feature.githzerai-gith-githzerai-psionics.mtf 吉斯泽莱灵能",
-    "feature.githzerai-githzerai-psionics.mpmm 吉斯泽莱灵能",
-    "feature.glasya-tiefling-legacy-of-malbolge.mtf 马尔伯吉之遗赠",
-    "feature.levistus-tiefling-legacy-of-stygia.mtf 斯泰吉亚之遗赠",
-    "feature.mammon-tiefling-legacy-of-minauros.mtf 弥瑙洛斯之遗赠",
-    "feature.mephistopheles-tiefling-legacy-of-cania.mtf 卡尼亚之遗赠",
-    "feature.tiefling-infernal-legacy.phb 地狱遗赠",
-    "feature.triton-control-air-and-water.mpmm 控风操水",
-    "feature.triton-control-air-and-water.vgm 控风操水",
-    "feature.variant-devils-tongue-tiefling-devils-tongue.scag 魔鬼之舌",
-    "feature.variant-drow-descent-drow-magic-half-elf-variant-feature-drow-magic.scag 变体特性; 卓尔魔法",
-    "feature.variant-hellfire-tiefling-hellfire.scag 地狱火",
-    "feature.water-genasi-call-to-the-wave.mpmm 呼唤波浪",
-    "feature.yuan-ti-pureblood-innate-spellcasting.vgm 天生施法",
-    "feature.yuan-ti-serpentine-spellcasting.mpmm 巨蛇法术",
-    "feature.zariel-tiefling-legacy-of-avernus.mtf 阿弗纳斯之遗赠"
-   ],
-   "expected": "PHB 第 2 章（提夫林：3 级、5 级获得法术）、MPMM 同类种族",
-   "note": "天生法术有解锁等级（如“达到 3 级后”），授予法术的结构里没有等级字段，人物模块无法判断何时可用",
-   "count": 31
   }
  ]
 }
