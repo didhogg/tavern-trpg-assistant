@@ -22,7 +22,8 @@ export const ALLOW: Allow[] = [
     name: 'e4-closing-kobold-resist',
     station: 4,
     ids: ['monster.kobold-dragonshield.mpmm'],
-    path: /^\/data\/resist(?:\/|$)/,
+    // 中文 resist 清空后，构建对齐时英文那一份（i18n.en.fields.resist.N）也随之去掉，两处一起放行
+    path: /^(?:\/data\/resist(?:\/|$)|\/i18n\/en\/fields\/resist\.\d+$)/,
     expect: 1,
     reason: '规划者核验发现 2：MPMM 狗头人龙盾护卫 resist 里的「见下文龙之抗性」移走（resist 只放伤害代码，文字留在特性里）；c1-resist-text 1→0',
   },
