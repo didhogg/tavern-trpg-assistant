@@ -121,6 +121,14 @@ export const ALLOW: Allow[] = [
     expect: 5,
     reason: 'a17-no-entry：5 个背景的载具熟练记号换成固定代码',
   },
+  {
+    name: 's3b-spell-damage',
+    station: 3,
+    ids: ['spell.delayed-blast-fireball.phb', 'spell.flame-strike.phb', 'spell.guardian-of-faith.phb', 'spell.ice-storm.phb', 'spell.meteor-swarm.phb'],
+    path: /^\/data\/damage(?:\/|$)/,
+    expect: 5,
+    reason: 'a16-damage-type / a16-damage-dice：5 个法术伤害类型与骰式',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

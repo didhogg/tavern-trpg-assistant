@@ -4,7 +4,7 @@
   {
    "check": "a16",
    "key": "checks",
-   "value": 2795
+   "value": 2800
   },
   {
    "check": "a16",
@@ -78,34 +78,6 @@
    "expected": "5e API（SRD 法术，对应 PHB 第 11 章）",
    "note": "数据里没有结构化的区域（球形/柱形/锥形等的大小只在文字里）",
    "count": 74
-  },
-  {
-   "id": "a16-damage-dice",
-   "check": "a16",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "spell.ice-storm.phb（Ice Storm） 数据=2d8 SRD=4d6"
-   ],
-   "expected": "5e API（SRD 法术，对应 PHB 第 11 章）",
-   "note": "伤害骰式不符",
-   "count": 1
-  },
-  {
-   "id": "a16-damage-type",
-   "check": "a16",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "spell.delayed-blast-fireball.phb（Delayed Blast Fireball） SRD 有 fire",
-    "spell.flame-strike.phb（Flame Strike） SRD 有 radiant",
-    "spell.guardian-of-faith.phb（Guardian of Faith） SRD 有 radiant",
-    "spell.ice-storm.phb（Ice Storm） SRD 有 bludgeoning",
-    "spell.meteor-swarm.phb（Meteor Swarm） SRD 有 bludgeoning"
-   ],
-   "expected": "5e API（SRD 法术，对应 PHB 第 11 章）",
-   "note": "伤害类型不符",
-   "count": 5
   }
  ]
 }
