@@ -46,6 +46,7 @@ export function fixtureEntries(): Entry[] {
     base('monsterpart.feature-test.test', 'monsterPart', '测试部件', { partKind: 'feature' }),
     base('recipe.test-recipe.test', 'recipe', '测试配方', { diet: 'C', dishTypes: [], allergenGroups: [], tags: [], ingredients: [], equipment: [], instructions: [] }),
     base('charoption.test-option.test', 'charoption', '测试选项', { optionType: ['SG'] }),
+    base('npc.test-captain.test', 'npc', '测试队长', { statblock: 'monster.goblin.test', adventure: 'TEST', at: { chapter: '第一章' }, confidence: 'high' }, { unique: true }),
     base('lore.spell.fireball.test', 'lore', '火球术描述', { target: 'spell.fireball.test', lore: [{ p: '测试描述。' }] }),
   ]
 }
