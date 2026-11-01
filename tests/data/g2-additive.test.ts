@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PACK_VERSION } from '../../tools/data/config/bookPolicy'
 import { ADDED, ALLOW, ALLOW_REQUIRES, type Allow } from './g2-allow'
+import { attribute } from './g2-allow/match'
 import { loadG2Before } from './g2-snapshot'
 import { loadAllPacks } from './r9-pack-helpers'
 import { manifestOf } from './g1-snapshot'
@@ -36,6 +37,23 @@ describe('changedPaths（变化路径算法）', () => {
     expect(changedPaths({ l: [1, 2] }, { l: [1, 9, 2] })).toEqual(['/l/1', '/l/2'])
     expect(changedPaths({ e: [{ k: 1 }] }, { e: [{ k: 1, level: 3 }] })).toEqual(['/e/0/level'])
     expect(changedPaths({ a: [1] }, { a: { x: 1 } })).toEqual(['/a'])
+  })
+})
+
+describe('放行规则归属（attribute）', () => {
+  const rule = (name: string, o: Partial<Allow>): Allow => ({ name, station: 0, path: /^\/data\/x$/, expect: 1, reason: 't', ...o })
+  it('ids 规则各自都算，不互相抢', () => {
+    const a = rule('a', { ids: ['e1'] }), b = rule('b', { ids: ['e1', 'e2'] })
+    expect(attribute([a, b], 'e1', 'spell', '/data/x').map((r) => r.name)).toEqual(['a', 'b'])
+  })
+  it('ids 规则优先于 type 规则；type 规则只在没有 ids 规则管它时算第一条', () => {
+    const wide1 = rule('wide1', { type: 'spell' }), wide2 = rule('wide2', { type: 'spell' }), exact = rule('exact', { ids: ['e1'] })
+    expect(attribute([wide1, wide2, exact], 'e1', 'spell', '/data/x').map((r) => r.name)).toEqual(['exact'])
+    expect(attribute([wide1, wide2, exact], 'e9', 'spell', '/data/x').map((r) => r.name)).toEqual(['wide1'])
+  })
+  it('路径或类型对不上 = 没有放行', () => {
+    expect(attribute([rule('a', { ids: ['e1'] })], 'e1', 'spell', '/data/y')).toEqual([])
+    expect(attribute([rule('w', { type: 'item' })], 'e1', 'spell', '/data/x')).toEqual([])
   })
 })
 
@@ -80,17 +98,14 @@ describe('G2.5 g2-additive：只改放行名单里写明的地方', () => {
   })
 
   it('每个变化的路径都被放行规则覆盖；每条规则命中的条目数正好等于 expect', () => {
-    const matches = (a: Allow, id: string, type: string): boolean => (a.ids ? a.ids.includes(id) : a.type === type)
-    const ordered = [...ALLOW.filter((a) => a.ids), ...ALLOW.filter((a) => !a.ids)]
     const hits = new Map<string, Set<string>>(ALLOW.map((a) => [a.name, new Set<string>()]))
     const unexplained: string[] = []
     for (const [id, old] of Object.entries(before.entries)) {
       const cur = now.get(id)!.entry
       for (const path of changedPaths(old.entry, cur)) {
-        // 同一路径被多条规则覆盖时算给第一条（确定，不重复计数）；写了精确 ids 的规则排在按 type 的规则前面，
-        // 这样按类型的宽规则（如第 1 站的“所有法术的 upcast”）不会抢走后面子站用 ids 点名的条目
-        const rule = ordered.find((a) => matches(a, id, String(cur.type)) && a.path.test(path))
-        if (rule) hits.get(rule.name)!.add(id)
+        // 归属规则见 g2-allow/match.ts：ids 规则各自都算，按 type 的宽规则只在没有 ids 规则管它时才算（且只算第一条）
+        const rules = attribute(ALLOW, id, String(cur.type), path)
+        if (rules.length) for (const rule of rules) hits.get(rule.name)!.add(id)
         else unexplained.push(`${id} ${path}`)
       }
     }
