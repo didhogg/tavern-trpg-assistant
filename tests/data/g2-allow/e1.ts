@@ -204,6 +204,29 @@ export const ALLOW: Allow[] = [
     expect: 13,
     reason: 'b3-A 纯文字抗性第一批：固定抗性/免疫',
   },
+  {
+    name: 'e1-5-speed-sense-initiative',
+    station: 1,
+    ids: [
+      'feature.barbarian-feral-instinct.phb',
+      'feature.blind-fighting.tce',
+      'feature.paladin-oath-of-glory-aura-of-alacrity.tce',
+      'feature.ranger-gloom-stalker-umbral-sight.xge',
+      'feature.sorcerer-shadow-magic-eyes-of-the-dark.xge',
+      'feature.rogue-scout-ambush-master.xge',
+      'feature.warrior-sidekick-battle-readiness.tce',
+      'feature.wizard-bladesinging-song-of-victory.tce',
+      'feature.ranger-gloom-stalker-dread-ambusher.xge',
+      'feature.bard-college-of-swords-blade-flourish.xge',
+      'feature.monk-way-of-the-drunken-master-drunken-technique.xge',
+      'feature.cleric-war-domain-avatar-of-battle.phb',
+      'feature.druid-circle-of-stars-full-of-stars.tce',
+      'feature.paladin-oathbreaker-supernatural-resistance.dmg',
+    ],
+    path: /^\/data\/effects$/,
+    expect: 14,
+    reason: 'b3-A 纯文字速度/感官/先攻/伤害加值',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

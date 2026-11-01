@@ -13,5 +13,80 @@
     "id": "feature.ranger-natural-explorer.phb",
     "verdict": "false-positive",
     "reason": "该特性不授予新的固定熟练；只在已拥有相关技能熟练时把加值翻倍，且地形与技能由玩家选择，无法写成固定 skill 效果"
+  },
+  {
+    "id": "feature.barbarian-path-of-the-ancestral-guardian-ancestral-protectors.xge",
+    "verdict": "false-positive",
+    "reason": "先祖护卫给的是精魂战士目标的抗性，不是本角色自身固定抗性"
+  },
+  {
+    "id": "feature.cleric-nature-domain-dampen-elements.phb",
+    "verdict": "false-positive",
+    "reason": "抑制元素是反应动作临时给抗性，不是常驻派生数值"
+  },
+  {
+    "id": "feature.cleric-peace-domain-expansive-bond.tce",
+    "verdict": "false-positive",
+    "reason": "增强联结只在保护联结替人承伤时视为有抗性，不是自身固定抗性"
+  },
+  {
+    "id": "feature.druid-circle-of-the-moon-primal-strike.phb",
+    "verdict": "false-positive",
+    "reason": "原力蛮击是让攻击视为魔法以克服抗性，不是自身获得抗性"
+  },
+  {
+    "id": "feature.druid-circle-of-the-shepherd-mighty-summoner.xge",
+    "verdict": "false-positive",
+    "reason": "全能牧者增强的是召唤物，不是本角色自身派生数值"
+  },
+  {
+    "id": "feature.fighter-arcane-archer-magic-arrow.xge",
+    "verdict": "false-positive",
+    "reason": "注魔箭矢让箭矢克服抗性，不是自身获得抗性"
+  },
+  {
+    "id": "feature.investment-of-the-chain-master.tce",
+    "verdict": "false-positive",
+    "reason": "链主赋能增强的是魔宠，不是本角色自身派生数值"
+  },
+  {
+    "id": "feature.lance-of-lethargy.xge",
+    "verdict": "false-positive",
+    "reason": "怠惰之枪降低目标速度，不是自身速度"
+  },
+  {
+    "id": "feature.monk-ki-empowered-strikes.phb",
+    "verdict": "false-positive",
+    "reason": "真气驻拳让徒手打击克服抗性，不是自身获得抗性"
+  },
+  {
+    "id": "feature.monk-way-of-the-kensei-one-with-the-blade.xge",
+    "verdict": "false-positive",
+    "reason": "人剑合一让剑圣武器攻击视为魔法，不是自身获得抗性"
+  },
+  {
+    "id": "feature.ranger-beast-master-rangers-companion.phb",
+    "verdict": "false-positive",
+    "reason": "游侠伴侣的生命上限是伙伴的，不是游侠自身"
+  },
+  {
+    "id": "feature.wizard-school-of-necromancy-undead-thralls.phb",
+    "verdict": "false-positive",
+    "reason": "亡灵仆役增强的是召唤的不死生物，不是本角色自身"
+  },
+  {
+    "id": "feature.artificer-alchemist-alchemical-savant.tce",
+    "verdict": "false-positive",
+    "reason": "炼金术掌握是一次治疗/伤害掷骰的加值，不是固定属性值"
+  },
+  {
+    "id": "feature.artificer-battle-smith-improved-defender.tce",
+    "verdict": "false-positive",
+    "reason": "改良守卫增强的是钢铁守卫，不是本角色自身 AC"
+  },
+  {
+    "id": "feature.cleric-twilight-domain-vigilant-blessing.tce",
+    "verdict": "false-positive",
+    "reason": "警觉赐福是用动作给一个生物下次先攻优势，不是自身常驻先攻"
   }
 ]

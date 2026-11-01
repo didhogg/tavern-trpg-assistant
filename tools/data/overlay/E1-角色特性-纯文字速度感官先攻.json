@@ -1,0 +1,219 @@
+{
+  "领域": "E1 角色特性",
+  "说明": "纯文字 A 类：固定速度/感官/先攻/伤害加值",
+  "rows": [
+    {
+      "id": "feature.barbarian-feral-instinct.phb",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "initiative",
+          "advantage": true
+        }
+      ],
+      "basis": "PHB p.49 野性直觉：先攻检定优势",
+      "source": "book"
+    },
+    {
+      "id": "feature.blind-fighting.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "sense",
+          "sense": "blindsight",
+          "range": 10
+        }
+      ],
+      "basis": "TCE p.78 盲斗：10 尺盲视",
+      "source": "book"
+    },
+    {
+      "id": "feature.paladin-oath-of-glory-aura-of-alacrity.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "speed",
+          "mode": "walk",
+          "bonus": 10
+        }
+      ],
+      "basis": "TCE p.57 迅捷灵光：步行速度 +10 尺",
+      "source": "book"
+    },
+    {
+      "id": "feature.ranger-gloom-stalker-umbral-sight.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "sense",
+          "sense": "darkvision",
+          "range": 60
+        }
+      ],
+      "basis": "XGE p.42 阴影视野：60 尺黑暗视觉（已有则 +30，保持文字）",
+      "source": "book"
+    },
+    {
+      "id": "feature.sorcerer-shadow-magic-eyes-of-the-dark.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "sense",
+          "sense": "darkvision",
+          "range": 120
+        }
+      ],
+      "basis": "XGE p.51 幽暗之瞳：120 尺黑暗视觉",
+      "source": "book"
+    },
+    {
+      "id": "feature.rogue-scout-ambush-master.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "initiative",
+          "advantage": true
+        }
+      ],
+      "basis": "XGE p.47 伏击大师：先攻检定优势",
+      "source": "book"
+    },
+    {
+      "id": "feature.warrior-sidekick-battle-readiness.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "initiative",
+          "advantage": true
+        }
+      ],
+      "basis": "TCE p.146 备战：先攻检定优势",
+      "source": "book"
+    },
+    {
+      "id": "feature.wizard-bladesinging-song-of-victory.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "damageBonus",
+          "amount": "int.mod",
+          "scope": "melee",
+          "condition": "剑歌激活期间"
+        }
+      ],
+      "basis": "TCE p.77 胜利之歌：剑歌期间近战武器伤害加智力调整值",
+      "source": "book"
+    },
+    {
+      "id": "feature.ranger-gloom-stalker-dread-ambusher.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "initiative",
+          "bonus": "wis.mod"
+        },
+        {
+          "kind": "speed",
+          "mode": "walk",
+          "bonus": 10,
+          "condition": "战斗第一回合"
+        }
+      ],
+      "basis": "XGE p.42 恐惧伏击：先攻加感知调整值；第一回合步行速度 +10 尺",
+      "source": "book"
+    },
+    {
+      "id": "feature.bard-college-of-swords-blade-flourish.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "speed",
+          "mode": "walk",
+          "bonus": 10,
+          "condition": "执行攻击动作时，直到该回合结束"
+        }
+      ],
+      "basis": "XGE p.15 剑舞：攻击动作时步行速度 +10 尺直到回合结束",
+      "source": "book"
+    },
+    {
+      "id": "feature.monk-way-of-the-drunken-master-drunken-technique.xge",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "speed",
+          "mode": "walk",
+          "bonus": 10,
+          "condition": "使用疾风连击时，直到当前回合结束"
+        }
+      ],
+      "basis": "XGE p.33 醉拳技巧：疾风连击时步行速度 +10 尺直到回合结束",
+      "source": "book"
+    },
+    {
+      "id": "feature.cleric-war-domain-avatar-of-battle.phb",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "resistance",
+          "damage": [
+            "bludgeoning",
+            "piercing",
+            "slashing"
+          ],
+          "condition": "非魔法攻击"
+        }
+      ],
+      "basis": "PHB p.63 战争化身：非魔法攻击的钝击/穿刺/挥砍抗性",
+      "source": "book"
+    },
+    {
+      "id": "feature.druid-circle-of-stars-full-of-stars.tce",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "resistance",
+          "damage": [
+            "bludgeoning",
+            "piercing",
+            "slashing"
+          ],
+          "condition": "处于星耀形态时"
+        }
+      ],
+      "basis": "TCE p.38 灿若繁星：星耀形态下钝击/穿刺/挥砍抗性",
+      "source": "book"
+    },
+    {
+      "id": "feature.paladin-oathbreaker-supernatural-resistance.dmg",
+      "path": "/data/effects",
+      "op": "set",
+      "after": [
+        {
+          "kind": "resistance",
+          "damage": [
+            "bludgeoning",
+            "piercing",
+            "slashing"
+          ],
+          "condition": "非魔法武器"
+        }
+      ],
+      "basis": "DMG p.97 超然抗性：非魔法武器的钝击/穿刺/挥砍抗性",
+      "source": "book"
+    }
+  ]
+}

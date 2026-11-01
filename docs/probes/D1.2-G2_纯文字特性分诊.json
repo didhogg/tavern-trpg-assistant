@@ -1,7 +1,7 @@
 {
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
-  "A": 39,
+  "A": 10,
   "B": 395,
   "C": 576
  },
@@ -36,14 +36,6 @@
    "name": "额外攻击",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.barbarian-feral-instinct.phb",
-   "name": "野性直觉",
-   "cls": "A",
-   "tags": [
-    "先攻被动"
-   ]
   },
   {
    "id": "feature.barbarian-indomitable-might.phb",
@@ -2073,14 +2065,6 @@
    "tags": []
   },
   {
-   "id": "feature.cleric-war-domain-avatar-of-battle.phb",
-   "name": "战争化身",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.cleric-war-domain-divine-strike.phb",
    "name": "神圣打击",
    "cls": "B",
@@ -3797,14 +3781,6 @@
    ]
   },
   {
-   "id": "feature.paladin-oathbreaker-supernatural-resistance.dmg",
-   "name": "超然抗性",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.skeleton-brittle-bones.dmg",
    "name": "脆弱骨骼",
    "cls": "C",
@@ -4024,14 +4000,6 @@
    "tags": [
     "动作",
     "资源"
-   ]
-  },
-  {
-   "id": "feature.bard-college-of-swords-blade-flourish.xge",
-   "name": "剑舞",
-   "cls": "A",
-   "tags": [
-    "速度"
    ]
   },
   {
@@ -4320,14 +4288,6 @@
    "tags": []
   },
   {
-   "id": "feature.monk-way-of-the-drunken-master-drunken-technique.xge",
-   "name": "醉拳技巧",
-   "cls": "A",
-   "tags": [
-    "速度"
-   ]
-  },
-  {
    "id": "feature.monk-way-of-the-drunken-master-intoxicated-frenzy.xge",
    "name": "酣醉若狂",
    "cls": "B",
@@ -4456,14 +4416,6 @@
    "tags": []
   },
   {
-   "id": "feature.ranger-gloom-stalker-dread-ambusher.xge",
-   "name": "恐惧伏击",
-   "cls": "A",
-   "tags": [
-    "速度"
-   ]
-  },
-  {
    "id": "feature.ranger-gloom-stalker-gloom-stalker-magic.xge",
    "name": "幽域追踪者魔法",
    "cls": "B",
@@ -4485,14 +4437,6 @@
    "name": "追猎如风",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.ranger-gloom-stalker-umbral-sight.xge",
-   "name": "阴影视野",
-   "cls": "A",
-   "tags": [
-    "感官"
-   ]
   },
   {
    "id": "feature.ranger-horizon-walker-distant-strike.xge",
@@ -4632,14 +4576,6 @@
    "tags": []
   },
   {
-   "id": "feature.rogue-scout-ambush-master.xge",
-   "name": "伏击大师",
-   "cls": "A",
-   "tags": [
-    "先攻被动"
-   ]
-  },
-  {
    "id": "feature.rogue-scout-skirmisher.xge",
    "name": "散兵战术",
    "cls": "B",
@@ -4702,14 +4638,6 @@
    "cls": "B",
    "tags": [
     "动作"
-   ]
-  },
-  {
-   "id": "feature.sorcerer-shadow-magic-eyes-of-the-dark.xge",
-   "name": "幽暗之瞳",
-   "cls": "A",
-   "tags": [
-    "感官"
    ]
   },
   {
@@ -5108,14 +5036,6 @@
    ]
   },
   {
-   "id": "feature.blind-fighting.tce",
-   "name": "盲斗",
-   "cls": "A",
-   "tags": [
-    "感官"
-   ]
-  },
-  {
    "id": "feature.cleric-order-domain-divine-strike.tce",
    "name": "神圣打击",
    "cls": "B",
@@ -5331,14 +5251,6 @@
    ]
   },
   {
-   "id": "feature.druid-circle-of-stars-full-of-stars.tce",
-   "name": "灿若繁星",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.druid-circle-of-stars-twinkling-constellations.tce",
    "name": "闪耀星座",
    "cls": "C",
@@ -5546,14 +5458,6 @@
    "name": "你的星我形态",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.paladin-oath-of-glory-aura-of-alacrity.tce",
-   "name": "迅捷灵光",
-   "cls": "A",
-   "tags": [
-    "速度"
-   ]
   },
   {
    "id": "feature.paladin-oath-of-glory-channel-divinity.tce",
@@ -5809,14 +5713,6 @@
    ]
   },
   {
-   "id": "feature.warrior-sidekick-battle-readiness.tce",
-   "name": "备战",
-   "cls": "A",
-   "tags": [
-    "先攻被动"
-   ]
-  },
-  {
    "id": "feature.warrior-sidekick-extra-attack-improvement.tce",
    "name": "额外攻击增效",
    "cls": "C",
@@ -5887,14 +5783,6 @@
     "动作",
     "资源",
     "法术"
-   ]
-  },
-  {
-   "id": "feature.wizard-bladesinging-song-of-victory.tce",
-   "name": "胜利之歌",
-   "cls": "A",
-   "tags": [
-    "属性值"
    ]
   },
   {

@@ -4,12 +4,12 @@
   {
    "check": "b3",
    "key": "A",
-   "value": 39
+   "value": 10
   },
   {
    "check": "b3",
    "key": "A.falsePositive",
-   "value": 3
+   "value": 18
   },
   {
    "check": "b3",
@@ -18,28 +18,13 @@
   },
   {
    "check": "b3",
-   "key": "A.先攻被动",
-   "value": 4
-  },
-  {
-   "check": "b3",
-   "key": "A.属性值",
-   "value": 2
-  },
-  {
-   "check": "b3",
    "key": "A.感官",
-   "value": 4
+   "value": 1
   },
   {
    "check": "b3",
    "key": "A.抗性免疫",
-   "value": 16
-  },
-  {
-   "check": "b3",
-   "key": "A.护甲等级",
-   "value": 1
+   "value": 4
   },
   {
    "check": "b3",
@@ -48,13 +33,8 @@
   },
   {
    "check": "b3",
-   "key": "A.生命上限",
-   "value": 2
-  },
-  {
-   "check": "b3",
    "key": "A.速度",
-   "value": 7
+   "value": 1
   },
   {
    "check": "b3",
@@ -74,7 +54,7 @@
   {
    "check": "b3",
    "key": "plainMechanic",
-   "value": 1073
+   "value": 1059
   }
  ],
  "findings": [
@@ -84,49 +64,20 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "feature.artificer-alchemist-alchemical-savant.tce 炼金术掌握：属性值",
-    "feature.artificer-battle-smith-improved-defender.tce 改良守卫：护甲等级",
-    "feature.barbarian-feral-instinct.phb 野性直觉：先攻被动",
-    "feature.barbarian-path-of-the-ancestral-guardian-ancestral-protectors.xge 先祖护卫：抗性免疫",
     "feature.bard-college-of-lore-bonus-proficiencies.phb 附赠熟练：熟练",
-    "feature.bard-college-of-swords-blade-flourish.xge 剑舞：速度",
-    "feature.blind-fighting.tce 盲斗：感官",
     "feature.cleric-nature-domain-acolyte-of-nature.phb 自然侍僧：熟练",
-    "feature.cleric-nature-domain-dampen-elements.phb 抑制元素：抗性免疫",
-    "feature.cleric-peace-domain-expansive-bond.tce 增强联结：抗性免疫",
     "feature.cleric-peace-domain-implement-of-peace.tce 和平执行：熟练",
-    "feature.cleric-twilight-domain-vigilant-blessing.tce 警觉赐福：先攻被动",
-    "feature.cleric-war-domain-avatar-of-battle.phb 战争化身：抗性免疫",
-    "feature.druid-circle-of-stars-full-of-stars.tce 灿若繁星：抗性免疫",
-    "feature.druid-circle-of-the-moon-primal-strike.phb 原力蛮击：抗性免疫",
-    "feature.druid-circle-of-the-shepherd-mighty-summoner.xge 全能牧者：抗性免疫",
     "feature.expert-sidekick-sharp-mind.tce 明锐心智：熟练",
     "feature.fighter-arcane-archer-arcane-archer-lore.xge 魔箭学识：熟练",
-    "feature.fighter-arcane-archer-magic-arrow.xge 注魔箭矢：抗性免疫",
-    "feature.investment-of-the-chain-master.tce 链主赋能：速度、抗性免疫",
-    "feature.lance-of-lethargy.xge 怠惰之枪：速度",
-    "feature.monk-ki-empowered-strikes.phb 真气驻拳：抗性免疫",
-    "feature.monk-way-of-the-drunken-master-drunken-technique.xge 醉拳技巧：速度",
-    "feature.monk-way-of-the-kensei-one-with-the-blade.xge 人剑合一：抗性免疫",
-    "feature.paladin-oath-of-glory-aura-of-alacrity.tce 迅捷灵光：速度",
     "feature.paladin-oath-of-the-ancients-aura-of-warding.phb 守御灵光：抗性免疫",
-    "feature.paladin-oathbreaker-supernatural-resistance.dmg 超然抗性：抗性免疫",
-    "feature.ranger-beast-master-rangers-companion.phb 游侠伴侣：生命上限",
     "feature.ranger-fey-wanderer-otherworldly-glamour.tce 妖冶娴都：熟练",
-    "feature.ranger-gloom-stalker-dread-ambusher.xge 恐惧伏击：速度",
-    "feature.ranger-gloom-stalker-umbral-sight.xge 阴影视野：感官",
-    "feature.rogue-scout-ambush-master.xge 伏击大师：先攻被动",
-    "feature.sorcerer-shadow-magic-eyes-of-the-dark.xge 幽暗之瞳：感官",
     "feature.warlock-the-fiend-fiendish-resilience.phb 邪魔体魄：抗性免疫",
-    "feature.warrior-sidekick-battle-readiness.tce 备战：先攻被动",
-    "feature.wizard-bladesinging-song-of-victory.tce 胜利之歌：属性值",
     "feature.wizard-school-of-abjuration-spell-resistance.phb 法术抗性：抗性免疫",
-    "feature.wizard-school-of-necromancy-undead-thralls.phb 亡灵仆役：生命上限",
     "feature.wizard-school-of-transmutation-transmuters-stone.phb 变化师之石：速度、抗性免疫、感官"
    ],
    "expected": "各特性原文（初筛，逐条确认见分诊清单）",
    "note": "影响护甲等级、速度、生命上限、熟练、抗性、感官、先攻、属性值的机制只有文字（初筛结果，含误报，需对照原书确认后结构化）",
-   "count": 39
+   "count": 10
   },
   {
    "id": "b3-B-action-in-text",
