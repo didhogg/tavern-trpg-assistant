@@ -1,0 +1,61 @@
+{
+ "group": "g2a-item",
+ "stats": [
+  {
+   "check": "a15",
+   "key": "apiItems",
+   "value": 237
+  },
+  {
+   "check": "a15",
+   "key": "checks",
+   "value": 667
+  },
+  {
+   "check": "a15",
+   "key": "matched",
+   "value": 227
+  },
+  {
+   "check": "a15",
+   "key": "unmatched",
+   "value": 10
+  }
+ ],
+ "findings": [
+  {
+   "id": "a15-unmatched",
+   "check": "a15",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "Alms box",
+    "Animal Feed (1 day)",
+    "Block of incense",
+    "Censer",
+    "Flask or tankard",
+    "Jug or pitcher",
+    "Little bag of sand",
+    "Small knife",
+    "String (10 feet)",
+    "Vestments"
+   ],
+   "expected": "5e API 装备目录（对应 PHB 装备章与套组内容）",
+   "note": "SRD 装备在库里没有对应的物品条目（牧师套组与学者套组里的香炉、祭袍、沙袋、小刀等；还有饲料、酒壶等）；套组内容物因此缺项（见 a15-contents-differ）",
+   "count": 10
+  },
+  {
+   "id": "a15-value",
+   "check": "a15",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "item.shawm.scag（Shawm）",
+    "item.sling-bullet.phb（Sling bullet）"
+   ],
+   "expected": "5e API（SRD 装备，对应 PHB 装备章表格）",
+   "note": "价格（铜币）与 SRD 不符",
+   "count": 2
+  }
+ ]
+}

@@ -1,0 +1,151 @@
+{
+ "group": "g2-0",
+ "stats": [
+  {
+   "check": "p0",
+   "key": "entries",
+   "value": 8840
+  },
+  {
+   "check": "p0",
+   "key": "shapes.distinct",
+   "value": 28
+  },
+  {
+   "check": "p0",
+   "key": "tokens.distinct",
+   "value": 87
+  },
+  {
+   "check": "p0",
+   "key": "tokens.total",
+   "value": 500
+  },
+  {
+   "check": "p0",
+   "key": "type.background",
+   "value": 35
+  },
+  {
+   "check": "p0",
+   "key": "type.book",
+   "value": 96
+  },
+  {
+   "check": "p0",
+   "key": "type.class",
+   "value": 16
+  },
+  {
+   "check": "p0",
+   "key": "type.condition",
+   "value": 15
+  },
+  {
+   "check": "p0",
+   "key": "type.cult",
+   "value": 25
+  },
+  {
+   "check": "p0",
+   "key": "type.deity",
+   "value": 403
+  },
+  {
+   "check": "p0",
+   "key": "type.disease",
+   "value": 9
+  },
+  {
+   "check": "p0",
+   "key": "type.feat",
+   "value": 74
+  },
+  {
+   "check": "p0",
+   "key": "type.feature",
+   "value": 1857
+  },
+  {
+   "check": "p0",
+   "key": "type.hazard",
+   "value": 48
+  },
+  {
+   "check": "p0",
+   "key": "type.item",
+   "value": 2186
+  },
+  {
+   "check": "p0",
+   "key": "type.language",
+   "value": 64
+  },
+  {
+   "check": "p0",
+   "key": "type.lore",
+   "value": 288
+  },
+  {
+   "check": "p0",
+   "key": "type.monster",
+   "value": 1191
+  },
+  {
+   "check": "p0",
+   "key": "type.monsterPart",
+   "value": 345
+  },
+  {
+   "check": "p0",
+   "key": "type.object",
+   "value": 12
+  },
+  {
+   "check": "p0",
+   "key": "type.race",
+   "value": 83
+  },
+  {
+   "check": "p0",
+   "key": "type.reward",
+   "value": 79
+  },
+  {
+   "check": "p0",
+   "key": "type.rule",
+   "value": 257
+  },
+  {
+   "check": "p0",
+   "key": "type.spell",
+   "value": 480
+  },
+  {
+   "check": "p0",
+   "key": "type.status",
+   "value": 2
+  },
+  {
+   "check": "p0",
+   "key": "type.subclass",
+   "value": 109
+  },
+  {
+   "check": "p0",
+   "key": "type.subrace",
+   "value": 65
+  },
+  {
+   "check": "p0",
+   "key": "type.table",
+   "value": 1097
+  },
+  {
+   "check": "p0",
+   "key": "type.vehicle",
+   "value": 4
+  }
+ ],
+ "findings": []
+}

@@ -1,0 +1,99 @@
+{
+ "group": "g2a-artificer-list",
+ "stats": [
+  {
+   "check": "a16b",
+   "key": "artificerListFoundInLibrary",
+   "value": 80
+  },
+  {
+   "check": "a16b",
+   "key": "artificerListInSource",
+   "value": 85
+  },
+  {
+   "check": "a16b",
+   "key": "artificerSpellsInData",
+   "value": 7
+  }
+ ],
+ "findings": [
+  {
+   "id": "a16b-artificer-short",
+   "check": "a16b",
+   "kind": "data-defect",
+   "fixSource": "import-5etools",
+   "entries": [
+    "spell.acid-splash.phb",
+    "spell.aid.phb",
+    "spell.alarm.phb",
+    "spell.alter-self.phb",
+    "spell.animate-objects.phb",
+    "spell.arcane-eye.phb",
+    "spell.arcane-lock.phb",
+    "spell.bigbys-hand.phb",
+    "spell.blink.phb",
+    "spell.blur.phb",
+    "spell.continual-flame.phb",
+    "spell.create-food-and-water.phb",
+    "spell.creation.phb",
+    "spell.cure-wounds.phb",
+    "spell.dancing-lights.phb",
+    "spell.darkvision.phb",
+    "spell.detect-magic.phb",
+    "spell.disguise-self.phb",
+    "spell.dispel-magic.phb",
+    "spell.elemental-weapon.phb",
+    "spell.enhance-ability.phb",
+    "spell.enlarge-reduce.phb",
+    "spell.expeditious-retreat.phb",
+    "spell.fabricate.phb",
+    "spell.faerie-fire.phb",
+    "spell.false-life.phb",
+    "spell.feather-fall.phb",
+    "spell.fire-bolt.phb",
+    "spell.fly.phb",
+    "spell.freedom-of-movement.phb",
+    "spell.glyph-of-warding.phb",
+    "spell.grease.phb",
+    "spell.greater-restoration.phb",
+    "spell.guidance.phb",
+    "spell.haste.phb",
+    "spell.heat-metal.phb",
+    "spell.identify.phb",
+    "spell.invisibility.phb",
+    "spell.jump.phb",
+    "spell.leomunds-secret-chest.phb",
+    "spell.lesser-restoration.phb",
+    "spell.levitate.phb",
+    "spell.light.phb",
+    "spell.longstrider.phb",
+    "spell.mage-hand.phb",
+    "spell.magic-mouth.phb",
+    "spell.magic-weapon.phb",
+    "spell.mending.phb",
+    "spell.message.phb",
+    "spell.mordenkainens-faithful-hound.phb"
+   ],
+   "expected": "5etools 生成数据 gendata-spell-source-lookup（TCE 奇械师法术表）；TCE 第 2 章奇械师法术列表",
+   "note": "奇械师的法术表缺大半：PHB 的法术包不能指向塔莎里的奇械师，所以只留下塔莎自己的 7 个；应由奇械师条目自己列出全部法术",
+   "count": 73
+  },
+  {
+   "id": "a16b-artificer-source-not-in-library",
+   "check": "a16b",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "创造法驱魔舵",
+    "动力短行",
+    "涡旋翘曲",
+    "空气泡泡",
+    "链接符文"
+   ],
+   "expected": "5etools 奇械师列表",
+   "note": "奇械师列表里的法术出自我们没收录的书（或名字对不上），库里没有",
+   "count": 5
+  }
+ ]
+}

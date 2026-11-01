@@ -1,0 +1,11 @@
+{
+ "group": "g2a-race-all",
+ "stats": [
+  {
+   "check": "a12",
+   "key": "rows",
+   "value": 148
+  }
+ ],
+ "findings": []
+}

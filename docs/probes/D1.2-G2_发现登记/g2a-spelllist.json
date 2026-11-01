@@ -1,0 +1,93 @@
+{
+ "group": "g2a-spelllist",
+ "stats": [
+  {
+   "check": "a16b",
+   "key": "extraFromOptionalLists",
+   "value": 65
+  },
+  {
+   "check": "a16b",
+   "key": "extraTotal",
+   "value": 65
+  },
+  {
+   "check": "a16b",
+   "key": "phbEntries",
+   "value": 845
+  },
+  {
+   "check": "a16b",
+   "key": "phbEntriesNotInLibrary",
+   "value": 0
+  },
+  {
+   "check": "a16b",
+   "key": "phbListedSpells",
+   "value": 361
+  }
+ ],
+ "findings": [
+  {
+   "id": "a16b-optional-baked-in",
+   "check": "a16b",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.aid.phb 多 bard",
+    "spell.aid.phb 多 ranger",
+    "spell.antipathy-sympathy.phb 多 bard",
+    "spell.augury.phb 多 druid",
+    "spell.augury.phb 多 wizard",
+    "spell.aura-of-life.phb 多 cleric",
+    "spell.aura-of-purity.phb 多 cleric",
+    "spell.aura-of-vitality.phb 多 cleric",
+    "spell.aura-of-vitality.phb 多 druid",
+    "spell.bigbys-hand.phb 多 sorcerer",
+    "spell.color-spray.phb 多 bard",
+    "spell.command.phb 多 bard",
+    "spell.cone-of-cold.phb 多 druid",
+    "spell.continual-flame.phb 多 druid",
+    "spell.demiplane.phb 多 sorcerer",
+    "spell.divination.phb 多 druid",
+    "spell.divination.phb 多 wizard",
+    "spell.dominate-beast.phb 多 ranger",
+    "spell.elemental-weapon.phb 多 druid",
+    "spell.elemental-weapon.phb 多 ranger",
+    "spell.enhance-ability.phb 多 ranger",
+    "spell.enhance-ability.phb 多 wizard",
+    "spell.enlarge-reduce.phb 多 bard",
+    "spell.enlarge-reduce.phb 多 druid",
+    "spell.entangle.phb 多 ranger",
+    "spell.fire-shield.phb 多 druid",
+    "spell.fire-shield.phb 多 sorcerer",
+    "spell.flame-blade.phb 多 sorcerer",
+    "spell.flaming-sphere.phb 多 sorcerer",
+    "spell.flesh-to-stone.phb 多 druid",
+    "spell.flesh-to-stone.phb 多 sorcerer",
+    "spell.gate.phb 多 warlock",
+    "spell.gentle-repose.phb 多 paladin",
+    "spell.grease.phb 多 sorcerer",
+    "spell.greater-restoration.phb 多 ranger",
+    "spell.gust-of-wind.phb 多 ranger",
+    "spell.heroes-feast.phb 多 bard",
+    "spell.incendiary-cloud.phb 多 druid",
+    "spell.magic-weapon.phb 多 ranger",
+    "spell.magic-weapon.phb 多 sorcerer",
+    "spell.mass-healing-word.phb 多 bard",
+    "spell.meld-into-stone.phb 多 ranger",
+    "spell.mirror-image.phb 多 bard",
+    "spell.mislead.phb 多 warlock",
+    "spell.otilukes-freezing-sphere.phb 多 sorcerer",
+    "spell.phantasmal-killer.phb 多 bard",
+    "spell.planar-binding.phb 多 warlock",
+    "spell.power-word-heal.phb 多 cleric",
+    "spell.prayer-of-healing.phb 多 paladin",
+    "spell.prismatic-spray.phb 多 bard"
+   ],
+   "expected": "5etools 原始数据 classVariant（塔莎、福图等书的可选扩展法术列表）",
+   "note": "可选扩展列表（塔莎的“扩展法术列表”等）被直接写进了 PHB 法术的职业里，核心列表与可选扩展混在一起；应改为由扩展书用 joins 的 as:\"spell\" 登记",
+   "count": 65
+  }
+ ]
+}

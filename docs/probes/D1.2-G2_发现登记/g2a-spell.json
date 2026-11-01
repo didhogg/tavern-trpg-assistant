@@ -1,0 +1,111 @@
+{
+ "group": "g2a-spell",
+ "stats": [
+  {
+   "check": "a16",
+   "key": "checks",
+   "value": 2795
+  },
+  {
+   "check": "a16",
+   "key": "matched",
+   "value": 319
+  },
+  {
+   "check": "a16",
+   "key": "srdSpells",
+   "value": 319
+  }
+ ],
+ "findings": [
+  {
+   "id": "a16-area-missing",
+   "check": "a16",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.alarm.phb（Alarm） SRD=cube 20",
+    "spell.antipathy-sympathy.phb（Antipathy/Sympathy） SRD=cube 200",
+    "spell.arcane-eye.phb（Arcane Eye） SRD=sphere 30",
+    "spell.blade-barrier.phb（Blade Barrier） SRD=line 100",
+    "spell.call-lightning.phb（Call Lightning） SRD=sphere 5",
+    "spell.calm-emotions.phb（Calm Emotions） SRD=sphere 20",
+    "spell.circle-of-death.phb（Circle of Death） SRD=sphere 60",
+    "spell.cloudkill.phb（Cloudkill） SRD=sphere 20",
+    "spell.confusion.phb（Confusion） SRD=sphere 10",
+    "spell.conjure-elemental.phb（Conjure Elemental） SRD=cube 10",
+    "spell.control-water.phb（Control Water） SRD=cube 100",
+    "spell.create-or-destroy-water.phb（Create or Destroy Water） SRD=cube 30",
+    "spell.creation.phb（Creation） SRD=cube 5",
+    "spell.darkness.phb（Darkness） SRD=sphere 15",
+    "spell.daylight.phb（Daylight） SRD=sphere 60",
+    "spell.delayed-blast-fireball.phb（Delayed Blast Fireball） SRD=sphere 20",
+    "spell.detect-evil-and-good.phb（Detect Evil and Good） SRD=sphere 30",
+    "spell.detect-magic.phb（Detect Magic） SRD=sphere 30",
+    "spell.detect-poison-and-disease.phb（Detect Poison and Disease） SRD=sphere 30",
+    "spell.disintegrate.phb（Disintegrate） SRD=cube 10",
+    "spell.earthquake.phb（Earthquake） SRD=sphere 100",
+    "spell.entangle.phb（Entangle） SRD=cube 20",
+    "spell.evards-black-tentacles.phb（Black Tentacles） SRD=cube 20",
+    "spell.faerie-fire.phb（Faerie Fire） SRD=cube 20",
+    "spell.fire-shield.phb（Fire Shield） SRD=sphere 5",
+    "spell.fire-storm.phb（Fire Storm） SRD=cube 100",
+    "spell.fireball.phb（Fireball） SRD=sphere 20",
+    "spell.flame-strike.phb（Flame Strike） SRD=cylinder 40",
+    "spell.fog-cloud.phb（Fog Cloud） SRD=sphere 20",
+    "spell.forbiddance.phb（Forbiddance） SRD=cube 40000",
+    "spell.forcecage.phb（Forcecage） SRD=cube 20",
+    "spell.grease.phb（Grease） SRD=cube 10",
+    "spell.guardian-of-faith.phb（Guardian of Faith） SRD=cylinder 10",
+    "spell.guards-and-wards.phb（Guards and Wards） SRD=cube 2500",
+    "spell.hallow.phb（Hallow） SRD=sphere 60",
+    "spell.hallucinatory-terrain.phb（Hallucinatory Terrain） SRD=cube 150",
+    "spell.holy-aura.phb（Holy Aura） SRD=sphere 30",
+    "spell.ice-storm.phb（Ice Storm） SRD=cylinder 20",
+    "spell.incendiary-cloud.phb（Incendiary Cloud） SRD=sphere 20",
+    "spell.insect-plague.phb（Insect Plague） SRD=sphere 20",
+    "spell.magic-circle.phb（Magic Circle） SRD=cylinder 10",
+    "spell.mass-cure-wounds.phb（Mass Cure Wounds） SRD=sphere 30",
+    "spell.meteor-swarm.phb（Meteor Swarm） SRD=sphere 40",
+    "spell.mirage-arcane.phb（Mirage Arcane） SRD=cube 5280",
+    "spell.moonbeam.phb（Moonbeam） SRD=cylinder 5",
+    "spell.mordenkainens-magnificent-mansion.phb（Magnificent Mansion） SRD=cube 5",
+    "spell.mordenkainens-private-sanctum.phb（Private Sanctum） SRD=cube 100",
+    "spell.move-earth.phb（Move Earth） SRD=cone 40",
+    "spell.otilukes-freezing-sphere.phb（Freezing Sphere） SRD=sphere 60",
+    "spell.prismatic-wall.phb（Prismatic Wall） SRD=line 90"
+   ],
+   "expected": "5e API（SRD 法术，对应 PHB 第 11 章）",
+   "note": "数据里没有结构化的区域（球形/柱形/锥形等的大小只在文字里）",
+   "count": 74
+  },
+  {
+   "id": "a16-damage-dice",
+   "check": "a16",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.ice-storm.phb（Ice Storm） 数据=2d8 SRD=4d6"
+   ],
+   "expected": "5e API（SRD 法术，对应 PHB 第 11 章）",
+   "note": "伤害骰式不符",
+   "count": 1
+  },
+  {
+   "id": "a16-damage-type",
+   "check": "a16",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "spell.delayed-blast-fireball.phb（Delayed Blast Fireball） SRD 有 fire",
+    "spell.flame-strike.phb（Flame Strike） SRD 有 radiant",
+    "spell.guardian-of-faith.phb（Guardian of Faith） SRD 有 radiant",
+    "spell.ice-storm.phb（Ice Storm） SRD 有 bludgeoning",
+    "spell.meteor-swarm.phb（Meteor Swarm） SRD 有 bludgeoning"
+   ],
+   "expected": "5e API（SRD 法术，对应 PHB 第 11 章）",
+   "note": "伤害类型不符",
+   "count": 5
+  }
+ ]
+}

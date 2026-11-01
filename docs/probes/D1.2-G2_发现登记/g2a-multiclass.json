@@ -1,0 +1,24 @@
+{
+ "group": "g2a-multiclass",
+ "stats": [
+  {
+   "check": "a8",
+   "key": "classes",
+   "value": 13
+  }
+ ],
+ "findings": [
+  {
+   "id": "a8-requires-or",
+   "check": "a8",
+   "kind": "data-defect",
+   "fixSource": "decision",
+   "entries": [
+    "class.fighter.phb"
+   ],
+   "expected": "PHB 第 6 章“兼职”（先决条件表、兼职熟练表）、TCE 奇械师",
+   "note": "战士兼职要求“力量 13 或 敏捷 13”写成了一个对象里的两个属性，没有约定它表示“或”；人物模块按“且”读会错判",
+   "count": 1
+  }
+ ]
+}

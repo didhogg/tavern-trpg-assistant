@@ -1,0 +1,72 @@
+{
+ "group": "g2a-subclass-spells",
+ "stats": [
+  {
+   "check": "a10",
+   "key": "comparedSubclasses",
+   "value": 42
+  },
+  {
+   "check": "a10",
+   "key": "missingSpellsExistingInLibrary",
+   "value": 37
+  },
+  {
+   "check": "a10",
+   "key": "missingSpellsNotInLibrary",
+   "value": 0
+  },
+  {
+   "check": "a10",
+   "key": "shortLevels",
+   "value": 34
+  }
+ ],
+ "findings": [
+  {
+   "id": "a10-expanded-short",
+   "check": "a10",
+   "kind": "data-defect",
+   "fixSource": "import-5etools",
+   "entries": [
+    "subclass.artificer-alchemist.tce 3级 缺：致病射线",
+    "subclass.artificer-alchemist.tce 5级 缺：马友夫强酸箭",
+    "subclass.artificer-battle-smith.tce 13级 缺：净化灵光",
+    "subclass.artificer-battle-smith.tce 17级 缺：放逐斩",
+    "subclass.artificer-battle-smith.tce 9级 缺：活力灵光、箭如雨下",
+    "subclass.cleric-arcana-domain.scag 3级 缺：涅斯图魔法灵光",
+    "subclass.cleric-arcana-domain.scag 7级 缺：李欧蒙秘藏箱",
+    "subclass.cleric-death-domain.dmg 1级 缺：致病射线",
+    "subclass.cleric-forge-domain.xge 1级 缺：炽焰斩",
+    "subclass.cleric-forge-domain.xge 5级 缺：元素武器",
+    "subclass.cleric-peace-domain.tce 7级 缺：净化灵光、欧提路克弹力法球",
+    "subclass.cleric-peace-domain.tce 9级 缺：拉瑞心灵联结",
+    "subclass.cleric-twilight-domain.tce 5级 缺：活力灵光、李欧蒙小屋",
+    "subclass.cleric-twilight-domain.tce 7级 缺：生命灵光",
+    "subclass.cleric-twilight-domain.tce 9级 缺：原力法阵",
+    "subclass.druid-circle-of-the-land.phb 3级 缺：马友夫强酸箭",
+    "subclass.druid-circle-of-wildfire.tce 7级 缺：生命灵光",
+    "subclass.paladin-oath-of-conquest.xge 3级 缺：黯冰狱铠",
+    "subclass.paladin-oath-of-redemption.xge 13级 缺：欧提路克弹力法球",
+    "subclass.paladin-oath-of-the-crown.scag 17级 缺：原力法阵",
+    "subclass.paladin-oath-of-the-crown.scag 3级 缺：强令对决",
+    "subclass.paladin-oath-of-the-crown.scag 9级 缺：活力灵光",
+    "subclass.paladin-oath-of-the-watchers.tce 13级 缺：净化灵光",
+    "subclass.paladin-oathbreaker.dmg 5级 缺：疯狂冠冕",
+    "subclass.warlock-the-fathomless.tce 4级 缺：元素召唤术",
+    "subclass.warlock-the-fathomless.tce 5级 缺：毕格比之手",
+    "subclass.warlock-the-genie.tce 2级 缺：魅影之力",
+    "subclass.warlock-the-hexblade.xge 1级 缺：激愤斩",
+    "subclass.warlock-the-hexblade.xge 3级 缺：元素武器",
+    "subclass.warlock-the-hexblade.xge 4级 缺：惊惧斩",
+    "subclass.warlock-the-hexblade.xge 5级 缺：放逐斩",
+    "subclass.warlock-the-undying.scag 1级 缺：致病射线",
+    "subclass.warlock-the-undying.scag 3级 缺：假死术",
+    "subclass.warlock-the-undying.scag 4级 缺：生命灵光"
+   ],
+   "expected": "5etools 原始数据 additionalSpells（领域/誓言/扩展法术，与 PHB 每级 2 个一致）",
+   "note": "某级扩展法术比原始数据少：缺的法术在库里都有条目（见统计 missingSpellsExistingInLibrary），是转换时没挂上；影响领域法术、誓言法术、魔契师扩展法术表",
+   "count": 34
+  }
+ ]
+}

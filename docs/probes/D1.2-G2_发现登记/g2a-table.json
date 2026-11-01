@@ -1,0 +1,29 @@
+{
+ "group": "g2a-table",
+ "stats": [
+  {
+   "check": "a6",
+   "key": "checks",
+   "value": 91
+  },
+  {
+   "check": "a6",
+   "key": "warlock.slotLevel.forms",
+   "value": 2
+  }
+ ],
+ "findings": [
+  {
+   "id": "a6-warlock-slot-level-format",
+   "check": "a6",
+   "kind": "data-defect",
+   "fixSource": "normalize",
+   "entries": [
+    "class.warlock.phb"
+   ],
+   "expected": "PHB 魔契师职业表（统一写“N 环”）",
+   "note": "魔契师职业表“法术位环阶”列的写法不统一：N环、Nth",
+   "count": 1
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "group": "g2a-joins",
+ "stats": [
+  {
+   "check": "a11",
+   "key": "expectedOptional",
+   "value": 45
+  },
+  {
+   "check": "a11",
+   "key": "joins.option",
+   "value": 6
+  },
+  {
+   "check": "a11",
+   "key": "joins.optional",
+   "value": 45
+  },
+  {
+   "check": "a11",
+   "key": "totemLevels",
+   "value": 3
+  }
+ ],
+ "findings": []
+}

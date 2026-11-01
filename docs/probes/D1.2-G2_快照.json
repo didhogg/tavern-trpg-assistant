@@ -1,0 +1,49 @@
+{
+ "dataRepoCommit": "d61044e023b10989e56b3cb59633e3c5ee15c051",
+ "packs": {
+  "dnd5e2014-srd": {
+   "version": "builtin",
+   "sha256": "144caf3c50ccc3cac2a950df9db82b416723b538d26fee321724b3b3b6145ad3"
+  },
+  "dnd5e2014-phb": {
+   "version": "1.3.0",
+   "sha256": "456766bb6653d72c95d6f9270267c9ebf3a9abfe59693d8302747cfd9f929a4f"
+  },
+  "dnd5e2014-scag": {
+   "version": "1.3.0",
+   "sha256": "3db8c025cf89e50ea8595ba39f180b173ceae9544999564b890edbfb5c3a1f3b"
+  },
+  "dnd5e2014-dmg": {
+   "version": "1.3.0",
+   "sha256": "6292285cc68cfbebd6cc349f62d9a1b1f7fc65e068a4ad2359a6f0ddb4291fbe"
+  },
+  "dnd5e2014-mm": {
+   "version": "1.3.0",
+   "sha256": "1f57bed9cb3554d1d395a86441585f808489444de94a829c0c2f71178db79b0f"
+  },
+  "dnd5e2014-xge": {
+   "version": "1.3.0",
+   "sha256": "f8c83418dadb7922abafbdb6ec7cec79c8501d5cd6b034a41c450f2eea7674eb"
+  },
+  "dnd5e2014-tce": {
+   "version": "1.3.0",
+   "sha256": "5879e083a878fca7e6c5667f8839bf500a4c3c84c4364a89f736a59ba6f4b4dd"
+  },
+  "dnd5e2014-vgm": {
+   "version": "1.3.0",
+   "sha256": "674b2d8e8d0bbb64fadccdfe1c644a908796d48a67942f12519308c00481fa88"
+  },
+  "dnd5e2014-mtf": {
+   "version": "1.3.0",
+   "sha256": "89d3e9a86991d537bf94506596894924bc4fdfb681f8a79378fd0df9c98f47a0"
+  },
+  "dnd5e2014-mpmm": {
+   "version": "1.3.0",
+   "sha256": "ff8df4c3cb7f420e0ab88ef6e0f1b8c4e9a88a715714b75235380a30a3e04dc6"
+  },
+  "dnd5e2014-bmt": {
+   "version": "1.3.0",
+   "sha256": "91f61879e3d6a5c198b6a643da4d7a9498196602da83232ee9e727e656c6549a"
+  }
+ }
+}

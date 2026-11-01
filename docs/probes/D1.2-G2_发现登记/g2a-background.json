@@ -1,0 +1,39 @@
+{
+ "group": "g2a-background",
+ "stats": [
+  {
+   "check": "a13",
+   "key": "backgrounds",
+   "value": 35
+  },
+  {
+   "check": "a13",
+   "key": "checks",
+   "value": 126
+  }
+ ],
+ "findings": [
+  {
+   "id": "a13-no-characteristics",
+   "check": "a13",
+   "kind": "source-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "background.city-watch.scag",
+    "background.clan-crafter.scag",
+    "background.cloistered-scholar.scag",
+    "background.courtier.scag",
+    "background.faction-agent.scag",
+    "background.knight-of-the-order.scag",
+    "background.mercenary-veteran.scag",
+    "background.urban-bounty-hunter.scag",
+    "background.uthgardt-tribe-member.scag",
+    "background.variant-city-watch-investigator.scag",
+    "background.waterdhavian-noble.scag"
+   ],
+   "expected": "SCAG 第 4 章（城市守卫等写“使用士兵背景的特征表”，其余背景有自己的表）、BMT",
+   "note": "这些背景没有结构化的特征表引用：多数在书上就是一句话“使用玩家手册某背景的特征表”（只有文字，读不出指向哪几张表）",
+   "count": 11
+  }
+ ]
+}

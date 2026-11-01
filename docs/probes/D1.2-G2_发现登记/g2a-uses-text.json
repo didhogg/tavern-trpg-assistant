@@ -1,0 +1,75 @@
+{
+ "group": "g2a-uses-text",
+ "stats": [
+  {
+   "check": "a18",
+   "key": "entriesWithUses",
+   "value": 336
+  }
+ ],
+ "findings": [
+  {
+   "id": "a18-consumes-other-pool",
+   "check": "a18",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feat.dragon-fear.xge 龙之威怖",
+    "feature.bard-college-of-creation-animating-performance.tce 活化表演",
+    "feature.bard-college-of-eloquence-infectious-inspiration.tce 传播鼓舞",
+    "feature.bard-college-of-eloquence-unsettling-words.tce 扰神之词",
+    "feature.bard-college-of-glamour-mantle-of-inspiration.xge 灵感织衣",
+    "feature.bard-college-of-lore-cutting-words.phb 语出惊人",
+    "feature.bard-college-of-lore-peerless-skill.phb 超凡技艺",
+    "feature.bard-college-of-swords-defensive-flourish.xge 守御剑舞",
+    "feature.bard-college-of-swords-masters-flourish.xge 剑舞大师",
+    "feature.bard-college-of-swords-mobile-flourish.xge 推击剑舞",
+    "feature.bard-college-of-swords-slashing-flourish.xge 乱击剑舞",
+    "feature.bard-college-of-whispers-psychic-blades.xge 心灵之刃",
+    "feature.bard-font-of-inspiration.phb 激励之源",
+    "feature.bard-superior-inspiration.phb 先发激励",
+    "feature.dragonborn-black-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-blue-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-brass-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-bronze-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-copper-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-gold-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-green-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-red-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-silver-breath-weapon.phb 吐息武器",
+    "feature.dragonborn-white-breath-weapon.phb 吐息武器",
+    "feature.druid-circle-of-spores-symbiotic-entity.tce 一体共生",
+    "feature.druid-circle-of-stars-starry-form.tce 星耀形态",
+    "feature.druid-circle-of-the-moon-elemental-wild-shape.phb 元素荒野形态",
+    "feature.druid-circle-of-wildfire-summon-wildfire-spirit.tce 召唤野火精魂",
+    "feature.druid-wild-companion.tce 荒野伙伴",
+    "feature.druid-wild-shape.phb 荒野形态",
+    "feature.fighter-arcane-archer-ever-ready-shot.xge 有箭无患",
+    "feature.fighter-samurai-tireless-spirit.xge 不懈",
+    "feature.rogue-phantom-tokens-of-the-departed.tce 逝者遗物"
+   ],
+   "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
+   "note": "特性消耗的是另一个特性的次数池（诗人激励、荒野形态、吐息武器等），自己又有一份 uses，会重复计数；应删除或改成“消耗某池”",
+   "selfCheck": true,
+   "count": 34
+  },
+  {
+   "id": "a18-no-support-in-text",
+   "check": "a18",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.barbarian-path-of-the-zealot-rage-beyond-death.xge 怒不畏死",
+    "feature.fighter-extra-attack-3.phb 额外攻击(3)",
+    "feature.fighter-extra-attack.phb 额外攻击",
+    "feature.monk-way-of-the-drunken-master-intoxicated-frenzy.xge 酣醉若狂",
+    "feature.ranger-fey-wanderer-fey-wanderer-magic.tce 妖精漫游者魔法"
+   ],
+   "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
+   "note": "uses 的恢复时机在条目文字里找不到依据（已逐个读过文字：额外攻击、书之魔契、怒不畏死、狂醉乱舞、妖精漫游者魔法等本身没有次数限制）",
+   "selfCheck": true,
+   "count": 5
+  }
+ ]
+}

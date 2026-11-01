@@ -1,0 +1,75 @@
+{
+ "group": "g2a-pools",
+ "stats": [
+  {
+   "check": "a17",
+   "key": "skill*",
+   "value": 18
+  },
+  {
+   "check": "a17",
+   "key": "tokens",
+   "value": 87
+  }
+ ],
+ "findings": [
+  {
+   "id": "a17-ambiguous",
+   "check": "a17",
+   "kind": "decision",
+   "fixSource": "decision",
+   "entries": [
+    "race.bullywug.dmg",
+    "race.gith.mtf",
+    "race.troglodyte.dmg"
+   ],
+   "expected": "规则本身",
+   "note": "lang:other 含义不明，读取器无法展开（吉斯人、穴蜥人、啵灵蛙）；需约定",
+   "count": 3
+  },
+  {
+   "id": "a17-no-entry",
+   "check": "a17",
+   "kind": "data-defect",
+   "fixSource": "decision",
+   "entries": [
+    "background.folk-hero.phb",
+    "background.mercenary-veteran.scag",
+    "background.sailor.phb",
+    "background.soldier.phb",
+    "background.variant-sailor-pirate.phb",
+    "race.aarakocra.dmg",
+    "race.gnome-deep.dmg",
+    "race.kenku.dmg",
+    "race.kenku.vgm",
+    "race.merfolk.dmg",
+    "subrace.elf-sea.mtf"
+   ],
+   "expected": "PHB 语言表（原初语方言）、PHB 第 5 章（载具熟练）",
+   "note": "记号指向没有条目的东西：lang:aquan/auran/terran（原初语方言）与 tool:vehicles（载具熟练）；读取器只能给代码，是否补条目待定",
+   "count": 11
+  },
+  {
+   "id": "a17-spelling",
+   "check": "a17",
+   "kind": "data-defect",
+   "fixSource": "normalize",
+   "entries": [
+    "background.far-traveler.scag",
+    "background.inheritor.scag",
+    "background.knight-of-the-order.scag",
+    "background.urban-bounty-hunter.scag",
+    "background.uthgardt-tribe-member.scag",
+    "background.waterdhavian-noble.scag",
+    "subclass.cleric-forge-domain.xge",
+    "subclass.fighter-cavalier.xge",
+    "subclass.fighter-rune-knight.tce",
+    "subclass.monk-way-of-the-drunken-master.xge",
+    "subclass.rogue-assassin.phb"
+   ],
+   "expected": "写法应统一",
+   "note": "同一个意思有多种写法（animal-handling 与 animal handling、smiths-tools 与 smith's tools、gaming set 与 anyGamingSet 等），读取器靠别名表才认得出",
+   "count": 11
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "group": "g2a-feat",
+ "stats": [
+  {
+   "check": "a14",
+   "key": "feats",
+   "value": 74
+  },
+  {
+   "check": "a14",
+   "key": "phbFeats",
+   "value": 42
+  }
+ ],
+ "findings": [
+  {
+   "id": "a14-requires-text",
+   "check": "a14",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feat.elven-accuracy.xge",
+    "feat.prodigy.xge"
+   ],
+   "expected": "5etools 原始前置条件（种族列表）、XGE 专长小节",
+   "note": "种族前置只写成纯文字“race.xxx 或 race.yyy”，程序读不出；应写成 race 列表放进 any",
+   "count": 2
+  }
+ ]
+}

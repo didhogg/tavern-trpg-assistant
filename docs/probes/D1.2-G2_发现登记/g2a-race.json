@@ -1,0 +1,39 @@
+{
+ "group": "g2a-race",
+ "stats": [
+  {
+   "check": "a12",
+   "key": "checks",
+   "value": 208
+  }
+ ],
+ "findings": [
+  {
+   "id": "a12-abilities",
+   "check": "a12",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "race.human.phb + subrace.human-variant.phb"
+   ],
+   "expected": "PHB 第 2 章种族（逐项）",
+   "note": "变体人类是“替换”人类的属性加值（两项自选 +1，没有其他加值），而不是叠加；数据里没有表达“替换”，读取器按“亚种加到种族上”读就会读成 全属性 +1 再加两项自选",
+   "count": 1
+  },
+  {
+   "id": "a12-size",
+   "check": "a12",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "race.gnome.phb + subrace.gnome-forest.phb",
+    "race.gnome.phb + subrace.gnome-rock.phb",
+    "race.halfling.phb + subrace.halfling-lightfoot.phb",
+    "race.halfling.phb + subrace.halfling-stout.phb"
+   ],
+   "expected": "PHB 第 2 章种族（逐项）",
+   "note": "亚种的体型与书不符（侏儒、半身人的亚种写成了中型，而种族是小型；读取器按“亚种覆盖种族”读就会读错）",
+   "count": 4
+  }
+ ]
+}

@@ -1,0 +1,104 @@
+{
+ "group": "g2a-equip-names",
+ "stats": [
+  {
+   "check": "a3",
+   "key": "items",
+   "value": 234
+  },
+  {
+   "check": "a3",
+   "key": "unresolved",
+   "value": 49
+  },
+  {
+   "check": "a3",
+   "key": "unresolved.distinct",
+   "value": 38
+  }
+ ],
+ "findings": [
+  {
+   "id": "a3-described",
+   "check": "a3",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "background.charlatan.phb 一副标记过的扑克牌",
+    "background.charlatan.phb 一组作弊骰子",
+    "background.charlatan.phb 虚构公爵的印章戒指"
+   ],
+   "expected": "PHB 背景章（骗子、贵族）",
+   "note": "基础物品存在（骰子组、整副纸牌、玺戒），书上写的是带描述的版本；建议补条目编号并保留描述文字",
+   "count": 3
+  },
+  {
+   "id": "a3-free-text",
+   "check": "a3",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "background.acolyte.phb 熏香",
+    "background.acolyte.phb 祭袍",
+    "background.acolyte.phb 经轮",
+    "background.charlatan.phb 装满彩色液体的塞子瓶",
+    "background.city-watch.scag 你所属单位风格、标示你军衔的制服",
+    "background.clan-crafter.scag 用来标示出你是从哪个宗族学习何种手工技艺的作者徽记",
+    "background.cloistered-scholar.scag 小折刀",
+    "background.entertainer.phb 倾慕者的信物（情书、一缕头发或者饰品）",
+    "background.faction-agent.scag 一份你们组织文件的手抄本（或一份你们组织使用的密文本）",
+    "background.faction-agent.scag 你所属组织的徽章或标志",
+    "background.far-traveler.scag 一件你故乡工艺风格的小型珠宝",
+    "background.far-traveler.scag 来自你家乡的绘制粗糙的地图，描绘了你在费伦的位置",
+    "background.guild-artisan.phb 来自你公会的介绍信",
+    "background.inheritor.scag 你的继承遗产",
+    "background.knight-of-the-order.scag 一枚图章、一面旗帜或一枚印信，代表你在骑士团中的地位或阶位",
+    "background.mercenary-veteran.scag 对应你军阶的勋章",
+    "background.noble.phb 家系族谱",
+    "background.noble.phb 钱包",
+    "background.outlander.phb 来自你手刃的动物身上的战利品",
+    "background.ruined.bmt 半空的瓶子",
+    "background.sage.phb 一封去世同事信件其内载有你尚不能解答的问题",
+    "background.sage.phb 小刀",
+    "background.soldier.phb 一件从某个倒下的敌人身上得到的战利品（一把匕首，毁坏的武器或是军旗碎片）",
+    "background.soldier.phb 军阶徽记",
+    "background.urchin.phb 你成长的城市的地图",
+    "background.urchin.phb 宠物老鼠",
+    "background.urchin.phb 小刀",
+    "background.urchin.phb 用来纪念你父母的信物",
+    "background.uthgardt-tribe-member.scag 一组纹身，标示你对乌特加的忠诚和你部族的图腾",
+    "background.uthgardt-tribe-member.scag 图腾信物",
+    "background.variant-city-watch-investigator.scag 你所属单位风格、标示你军衔的制服",
+    "background.variant-entertainer-gladiator.phb 倾慕者的信物（情书、一缕头发或者饰品）",
+    "background.variant-guild-artisan-guild-merchant.phb 来自你公会的介绍信",
+    "background.variant-noble-knight.phb 家系族谱",
+    "background.variant-noble-knight.phb 钱包",
+    "background.variant-noble-retainers.phb 家系族谱",
+    "background.variant-noble-retainers.phb 钱包",
+    "background.waterdhavian-noble.scag 一皮囊上等兹沙酒或红酒",
+    "background.waterdhavian-noble.scag 家系族谱",
+    "background.waterdhavian-noble.scag 胸针",
+    "background.waterdhavian-noble.scag 钱包"
+   ],
+   "expected": "PHB、SCAG 背景章（信物、信件、地图、纹身、熏香、祭袍、经轮等描述性物品）",
+   "note": "物品库里没有对应物品，书上本来就是描述性文字；约定为“自由文字物品”，需加 free 标记",
+   "count": 41
+  },
+  {
+   "id": "a3-missed-match",
+   "check": "a3",
+   "kind": "data-defect",
+   "fixSource": "normalize",
+   "entries": [
+    "background.cloistered-scholar.scag 折叠的羊皮纸",
+    "background.cloistered-scholar.scag 羽毛笔",
+    "background.rewarded.bmt 一瓶黑色墨水",
+    "background.rewarded.bmt 纸张",
+    "background.sage.phb 羽毛笔"
+   ],
+   "expected": "PHB 装备章物品表（纸、羊皮纸、墨水笔、墨水）",
+   "note": "起始装备里的物品书上就是物品库里的一件普通物品，只是名字对不上（漏配），应补条目编号",
+   "count": 5
+  }
+ ]
+}

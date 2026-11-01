@@ -1,0 +1,11 @@
+{
+ "group": "g2a-asi",
+ "stats": [
+  {
+   "check": "a7",
+   "key": "classes",
+   "value": 13
+  }
+ ],
+ "findings": []
+}

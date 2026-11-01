@@ -1,0 +1,16 @@
+{
+ "group": "g2a-subclass",
+ "stats": [
+  {
+   "check": "a10",
+   "key": "expandedSpells",
+   "value": 475
+  },
+  {
+   "check": "a10",
+   "key": "subclasses",
+   "value": 109
+  }
+ ],
+ "findings": []
+}

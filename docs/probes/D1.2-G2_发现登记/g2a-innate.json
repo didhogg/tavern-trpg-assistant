@@ -1,0 +1,43 @@
+{
+ "group": "g2a-innate",
+ "stats": [
+  {
+   "check": "a12",
+   "key": "racialFreeCastFeatures",
+   "value": 11
+  },
+  {
+   "check": "a12",
+   "key": "spellGrants",
+   "value": 137
+  }
+ ],
+ "findings": [
+  {
+   "id": "a12-innate-not-structured",
+   "check": "a12",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.gnome-deep-innate-spellcasting.dmg 天生施法"
+   ],
+   "expected": "PHB 第 2 章、MPMM、MTF 种族特质（免费施展的法术）",
+   "note": "种族特质文字里写着免费施展某法术，但所属种族的效果里没有对应的授予法术（spellGrant），人物模块读不到",
+   "count": 1
+  },
+  {
+   "id": "a12-innate-unlock-level",
+   "check": "a12",
+   "kind": "data-defect",
+   "fixSource": "self-structure",
+   "entries": [
+    "feature.drow-elf-drow-magic.phb 卓尔魔法",
+    "feature.duergar-dwarf-duergar-magic.mtf 灰矮人魔法",
+    "feature.tiefling-infernal-legacy.phb 地狱遗赠"
+   ],
+   "expected": "PHB 第 2 章（提夫林：3 级、5 级获得法术）、MPMM 同类种族",
+   "note": "天生法术有解锁等级（如“达到 3 级后”），授予法术的结构里没有等级字段，人物模块无法判断何时可用",
+   "count": 3
+  }
+ ]
+}

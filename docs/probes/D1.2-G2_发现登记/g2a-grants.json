@@ -1,0 +1,21 @@
+{
+ "group": "g2a-grants",
+ "stats": [
+  {
+   "check": "a9",
+   "key": "grantedItems",
+   "value": 1573
+  },
+  {
+   "check": "a9",
+   "key": "levelMismatch.explained",
+   "value": 7
+  },
+  {
+   "check": "a9",
+   "key": "levelMismatch.unexplained",
+   "value": 0
+  }
+ ],
+ "findings": []
+}
