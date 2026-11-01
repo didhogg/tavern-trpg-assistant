@@ -18,6 +18,14 @@ export const ALLOW: Allow[] = [
     expect: 2,
     reason: 'c1-passive-missing：两个人造伙伴补被动察觉与 TCE 的 +PB 技能基线',
   },
+  {
+    name: 's3c-spell-links',
+    station: 3,
+    ids: ['monster.black-abishai.mpmm', 'monster.conjurer.vgm', 'monster.diviner.vgm', 'monster.evoker.vgm', 'monster.illusionist.vgm', 'monster.necromancer.vgm', 'monster.death-knight.mm'],
+    path: /^(?:\/data\/spellcasting\/|\/i18n\/en\/fields\/spellcasting\.)/,
+    expect: 7,
+    reason: 'c5-spell-plain-unknown：7 个怪物、8 处法术名补链接',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

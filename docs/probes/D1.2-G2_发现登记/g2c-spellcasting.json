@@ -51,26 +51,6 @@
    "note": "怪物的法术豁免难度和 8+熟练+施法属性调整值不一致（自洽检查；怪物不一定严格按公式）",
    "selfCheck": true,
    "count": 12
-  },
-  {
-   "id": "c5-spell-plain-unknown",
-   "check": "c5",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.black-abishai.mpmm 亚比莎黑龙魔：darkness",
-    "monster.conjurer.vgm 咒法师：匕首之云*",
-    "monster.conjurer.vgm 咒法师：艾伐黑触手*",
-    "monster.death-knight.mm 死亡骑士：湮灭波（暗蚀）",
-    "monster.diviner.vgm 预言师：拉瑞心灵联结*",
-    "monster.evoker.vgm 塑能师：毕格比之手*",
-    "monster.illusionist.vgm 幻术师：魅影之力*",
-    "monster.necromancer.vgm 死灵师：致病射线*"
-   ],
-   "expected": "条目库",
-   "note": "施法列表里的法术名在库里找不到（译名不同或不是 2014 版法术）",
-   "selfCheck": false,
-   "count": 8
   }
  ]
 }
