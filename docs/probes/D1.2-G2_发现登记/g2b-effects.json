@@ -76,18 +76,6 @@
    "count": 4
   },
   {
-   "id": "b2-formula-unsupported-variable",
-   "check": "b2",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.wizard-school-of-abjuration-arcane-ward.phb 奥术守御：2 * class.wizard.level + floor((int.score - 10) / 2)（int.score）"
-   ],
-   "expected": "公式引擎与格式定义",
-   "note": "公式用到了公式引擎不认识的变量",
-   "count": 1
-  },
-  {
    "id": "b2-infusion-notes",
    "check": "b2",
    "kind": "decision",
@@ -112,20 +100,6 @@
    "expected": "TCE 奇械师注法（Infusions）原文",
    "note": "奇械师注法对物品的改动（改名、加属性、加次数、加魔法加值）只留了 Foundry 字段的说明文字；注法属于“给物品加东西”的独立系统，是否结构化由驾驶员决定（人物卡的奇械师可先用文字）",
    "count": 15
-  },
-  {
-   "id": "b2-when-text",
-   "check": "b2",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.barbarian-rage.phb 狂暴：狂暴中",
-    "feature.barbarian-unarmored-defense.phb 无甲防御：未穿护甲",
-    "feature.monk-unarmored-defense.phb 无甲防御：未穿护甲且未持盾"
-   ],
-   "expected": "公式引擎与格式定义",
-   "note": "效果的触发条件只有文字（如“狂暴中”“未穿护甲”），程序判断不了",
-   "count": 3
   }
  ]
 }
