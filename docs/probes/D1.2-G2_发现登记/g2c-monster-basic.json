@@ -94,20 +94,6 @@
    "count": 55
   },
   {
-   "id": "c1-passive-missing",
-   "check": "c1",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.homunculus-servant.tce 人工生命仆从",
-    "monster.steel-defender.tce 钢铁守卫"
-   ],
-   "expected": "代码表与格式定义",
-   "note": "没有被动察觉",
-   "selfCheck": true,
-   "count": 2
-  },
-  {
    "id": "c1-passive-off",
    "check": "c1",
    "kind": "source-defect",
@@ -187,15 +173,13 @@
     "monster.green-hag-coven.mm 绿鬼婆（鬼婆集会）：deception 加值 4，调整值 2，熟练 3（差 -1）",
     "monster.green-hag-coven.mm 绿鬼婆（鬼婆集会）：perception 加值 4，调整值 2，熟练 3（差 -1）",
     "monster.green-hag-coven.mm 绿鬼婆（鬼婆集会）：stealth 加值 3，调整值 1，熟练 3（差 -1）",
-    "monster.homunculus-servant.tce 人工生命仆从：stealth 加值 2，调整值 2，熟练 2（差 -2）",
     "monster.mighty-servant-of-leuk-o.tce 琉克欧的非凡机仆：perception 加值 9，调整值 2，熟练 2（差 5）",
-    "monster.steel-defender.tce 钢铁守卫：athletics 加值 2，调整值 2，熟练 2（差 -2）",
     "monster.xvart-warlock-of-raxivort.mpmm 法特怪·莱兹爱渥魔契师：stealth 加值 3，调整值 2，熟练 2（差 -1）"
    ],
    "expected": "条目自己的数据（自洽检查）；需对照 MM、MPMM 原文",
    "note": "技能加值 ≠ 调整值 + 熟练或专精",
    "selfCheck": true,
-   "count": 25
+   "count": 23
   },
   {
    "id": "c1-resist-conditional",

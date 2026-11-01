@@ -10,6 +10,14 @@ export const ALLOW: Allow[] = [
     expect: 7,
     reason: 'c1-mm-hp-formula / c1-hp-formula-mismatch：7 个怪物生命骰式/固定值',
   },
+  {
+    name: 's3c-passive',
+    station: 3,
+    ids: ['monster.homunculus-servant.tce', 'monster.steel-defender.tce'],
+    path: /^\/data\/(?:passive|skills\/)/,
+    expect: 2,
+    reason: 'c1-passive-missing：两个人造伙伴补被动察觉与 TCE 的 +PB 技能基线',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

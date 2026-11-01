@@ -1,0 +1,10 @@
+import type { Fix } from '../engine'
+
+export const ROWS: Fix[] = [
+  { id: 'monster.homunculus-servant.tce', path: '/data/passive', op: 'set', before: undefined, after: 14, basis: 'TCE 人工生命仆从 p22：Senses 被动察觉 10 + PB×2；按 PB2 写 14' },
+  { id: 'monster.homunculus-servant.tce', path: '/data/skills/perception', op: 'set', before: 2, after: 4, basis: 'TCE 人工生命仆从 p22：Perception +0 plus PB×2；按 PB2 写 +4' },
+  { id: 'monster.homunculus-servant.tce', path: '/data/skills/stealth', op: 'set', before: 2, after: 4, basis: 'TCE 人工生命仆从 p22：Stealth +2 plus PB；按 PB2 写 +4' },
+  { id: 'monster.steel-defender.tce', path: '/data/passive', op: 'set', before: undefined, after: 14, basis: 'TCE 钢铁守卫 p19：Senses 被动察觉 10 + PB×2；按 PB2 写 14' },
+  { id: 'monster.steel-defender.tce', path: '/data/skills/perception', op: 'set', before: 2, after: 4, basis: 'TCE 钢铁守卫 p19：Perception +0 plus PB×2；按 PB2 写 +4' },
+  { id: 'monster.steel-defender.tce', path: '/data/skills/athletics', op: 'set', before: 2, after: 4, basis: 'TCE 钢铁守卫 p19：Athletics +2 plus PB；按 PB2 写 +4' },
+]
