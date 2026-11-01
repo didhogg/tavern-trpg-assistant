@@ -4,6 +4,7 @@ import { ROWS as S1_ARTIFICER_LIST } from './rows/s1-artificer-list'
 import { ROWS as S2_STARTING_EQUIPMENT } from './rows/s2-starting-equipment'
 import { ROWS as S2_SCROLL_LABELS } from './rows/s2-scroll-labels'
 import { ROWS as S2_LANG_OTHER } from './rows/s2-lang-other'
+import { ROWS as S3A_EQUIP } from './rows/s3a-equip'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -20,6 +21,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s2-starting-equipment.ts', rows: S2_STARTING_EQUIPMENT },
   { file: 'rows/s2-scroll-labels.ts', rows: S2_SCROLL_LABELS },
   { file: 'rows/s2-lang-other.ts', rows: S2_LANG_OTHER },
+  { file: 'rows/s3a-equip.ts', rows: S3A_EQUIP },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {

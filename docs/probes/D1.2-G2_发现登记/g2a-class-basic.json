@@ -33,44 +33,6 @@
    "expected": "PHB 吟游诗人/武僧、TCE 奇械师的熟练项",
    "note": "“自选 N 种乐器/工匠工具”这类工具选择只有文字，没有结构（类别 + 数量）；是否给它加结构由驾驶员决定",
    "count": 3
-  },
-  {
-   "id": "a1-equipChoices",
-   "check": "a3",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "class.barbarian.phb",
-    "class.bard.phb",
-    "class.cleric.phb",
-    "class.druid.phb",
-    "class.fighter.phb",
-    "class.monk.phb",
-    "class.paladin.phb",
-    "class.ranger.phb",
-    "class.sorcerer.phb",
-    "class.warlock.phb",
-    "class.wizard.phb"
-   ],
-   "expected": "PHB 各职业“装备/熟练项”小节、TCE 第 2 章",
-   "note": "起始装备二选一/三选一的选项数少于书上的（“任意简易/军用武器”“其它乐器”“法器”等类别选项整条丢失）",
-   "count": 11
-  },
-  {
-   "id": "a1-equipFixed",
-   "check": "a3",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "class.artificer.tce",
-    "class.cleric.phb",
-    "class.druid.phb",
-    "class.paladin.phb",
-    "class.warlock.phb"
-   ],
-   "expected": "PHB 各职业“装备/熟练项”小节、TCE 第 2 章",
-   "note": "起始装备固定给的物品比书上少（如圣徽、德鲁伊法器、任意简易武器）",
-   "count": 5
   }
  ]
 }
