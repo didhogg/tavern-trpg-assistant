@@ -53,8 +53,11 @@ describe('G2.5 新记号能展开', () => {
     expect(school).toContain('spell.shield.phb')
     expect(school).toContain('spell.detect-magic.phb')
     expect(school).not.toContain('spell.magic-missile.phb')
-    // 法术的 attack 字段第 1 站才导入（现在库里一个都没有）：在那之前 attack=true 必须明确报错，不能悄悄给空池
-    expect(() => expandSpellPool(l, 'class=any,level=0,attack=true', 'x')).toThrow('第 1 站导入 spellAttack')
+    // attack=true：只要需要攻击检定的法术（attack 字段第 1 站从 5etools 导入，并已与 5e API 核对）
+    const atk = expandSpellPool(l, 'class=any,level=0,attack=true', 'x').values
+    expect(atk).toContain('spell.fire-bolt.phb')
+    expect(atk).toContain('spell.vicious-mockery.phb'.replace('vicious-mockery', 'shocking-grasp'))
+    expect(atk).not.toContain('spell.light.phb')
     expect(expandSpellPool(l, 'class=@pick,level=1', 'x').ambiguous).toContain('@pick'.slice(1))
     expect(expandSpellPool(l, 'class=@pick,level=1', 'x', { pick: 'cleric' }).values).toContain('spell.bless.phb')
     for (const bad of ['level=1', 'class=wizard', 'class=wizard,level=1,school=magic', 'class=wizard,level=1,foo=1', 'class=wizard,level=1,ritual=false', 'class=nobody,level=1']) expect(() => expandSpellPool(l, bad, `spell:${bad}`), bad).toThrow(ShapeError)

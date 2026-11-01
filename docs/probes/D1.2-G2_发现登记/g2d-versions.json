@@ -13,18 +13,8 @@
   },
   {
    "check": "d6",
-   "key": "ambiguous.monster:mpmm+vgm",
-   "value": 19
-  },
-  {
-   "check": "d6",
-   "key": "ambiguous.race:dmg+mpmm",
-   "value": 1
-  },
-  {
-   "check": "d6",
    "key": "ambiguous.race:dmg+mpmm+vgm",
-   "value": 7
+   "value": 1
   },
   {
    "check": "d6",
@@ -34,7 +24,7 @@
   {
    "check": "d6",
    "key": "sameNameWithoutOldMarker",
-   "value": 30
+   "value": 4
   },
   {
    "check": "d6",
@@ -51,43 +41,17 @@
   {
    "id": "d6-same-name-no-marker",
    "check": "d6",
-   "kind": "data-defect",
-   "fixSource": "import-5etools",
+   "kind": "source-defect",
+   "fixSource": "decision",
    "entries": [
     "item 万象无常牌：item.deck-of-many-things.dmg / item.deck-of-many-things.bmt",
     "item 乐器（系列）：item.musical-instrument-family.phb / item.musical-instrument-family.scag",
     "item 芦笛：item.shawm.phb / item.shawm.scag",
-    "monster 格龙蛙人精英战士（橙色）：monster.grung-elite-warrior-orange.vgm / monster.grung-elite-warrior-orange.mpmm",
-    "monster 格龙蛙人精英战士（紫色）：monster.grung-elite-warrior-purple.vgm / monster.grung-elite-warrior-purple.mpmm",
-    "monster 格龙蛙人精英战士（红）：monster.grung-elite-warrior-red.vgm / monster.grung-elite-warrior-red.mpmm",
-    "monster 格龙蛙人精英战士（绿色）：monster.grung-elite-warrior-green.vgm / monster.grung-elite-warrior-green.mpmm",
-    "monster 格龙蛙人精英战士（蓝色）：monster.grung-elite-warrior-blue.vgm / monster.grung-elite-warrior-blue.mpmm",
-    "monster 格龙蛙人精英战士（金色）：monster.grung-elite-warrior-gold.vgm / monster.grung-elite-warrior-gold.mpmm",
-    "monster 格龙蛙人蛮荒祭司（橙色）：monster.grung-wildling-orange.vgm / monster.grung-wildling-orange.mpmm",
-    "monster 格龙蛙人蛮荒祭司（紫色）：monster.grung-wildling-purple.vgm / monster.grung-wildling-purple.mpmm",
-    "monster 格龙蛙人蛮荒祭司（红）：monster.grung-wildling-red.vgm / monster.grung-wildling-red.mpmm",
-    "monster 格龙蛙人蛮荒祭司（绿）：monster.grung-wildling-green.vgm / monster.grung-wildling-green.mpmm",
-    "monster 格龙蛙人蛮荒祭司（蓝）：monster.grung-wildling-blue.vgm / monster.grung-wildling-blue.mpmm",
-    "monster 格龙蛙人蛮荒祭司（金色）：monster.grung-wildling-gold.vgm / monster.grung-wildling-gold.mpmm",
-    "monster 格龙蛙人（橙色）：monster.grung-orange.vgm / monster.grung-orange.mpmm",
-    "monster 格龙蛙人（紫色）：monster.grung-purple.vgm / monster.grung-purple.mpmm",
-    "monster 格龙蛙人（红）：monster.grung-red.vgm / monster.grung-red.mpmm",
-    "monster 格龙蛙人（绿色）：monster.grung-green.vgm / monster.grung-green.mpmm",
-    "monster 格龙蛙人（蓝）：monster.grung-blue.vgm / monster.grung-blue.mpmm",
-    "monster 格龙蛙人（金色）：monster.grung-gold.vgm / monster.grung-gold.mpmm",
-    "monster 阴影獒犬首领：monster.shadow-mastiff-alpha.vgm / monster.shadow-mastiff-alpha.mpmm",
-    "race 兽人：race.orc.dmg / race.orc.vgm / race.orc.mpmm",
-    "race 地精：race.goblin.dmg / race.goblin.vgm / race.goblin.mpmm",
-    "race 大地精：race.hobgoblin.dmg / race.hobgoblin.vgm / race.hobgoblin.mpmm",
-    "race 天狗：race.kenku.dmg / race.kenku.vgm / race.kenku.mpmm",
-    "race 狗头人：race.kobold.dmg / race.kobold.vgm / race.kobold.mpmm",
-    "race 蜥蜴人：race.lizardfolk.dmg / race.lizardfolk.vgm / race.lizardfolk.mpmm",
-    "race 阿斯莫：race.aasimar.dmg / race.aasimar.vgm / race.aasimar.mpmm",
-    "race 鸟羽人：race.aarakocra.dmg / race.aarakocra.mpmm"
+    "race 阿斯莫：race.aasimar.dmg / race.aasimar.vgm / race.aasimar.mpmm"
    ],
    "expected": "5etools 原始数据 reprintedAs（后出版本取代前一版）",
-   "note": "同类型同名、都没有标旧版：全库搜索与选择器默认隐藏旧版时，这几对会同时出现（例：格龙蛙人 VGM 与 MPMM、万象无常牌 DMG 与 BMT）；MPMM 重印了 VGM/MTF 的怪物和种族，5etools 原始数据里 VGM 的 143 个怪物有 124 个带“重印为”，应据此把前一版标 supersededBy；物品的几对（芦笛等）原始数据没有标记，需手工核对",
-   "count": 30
+   "note": "同类型同名、都没有标旧版。第 1 站导入 5etools 的重印标记后（版本记录按同名版本对应：格龙蛙人各色、阴影獒犬首领等 19 对；DMG 的不可玩 NPC 种族不算冲突）只剩 4 组：万象无常牌 DMG/BMT、芦笛与乐器系列 PHB/SCAG、阿斯莫 DMG/VGM/MPMM——5etools 对它们没有互相的重印标记（都只指向 2024 版），不猜；选择器会同时列出，玩家按书名角标区分",
+   "count": 4
   }
  ]
 }

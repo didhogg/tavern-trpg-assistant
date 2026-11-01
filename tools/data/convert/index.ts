@@ -108,10 +108,7 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
   const equipment = data.equipment as { fixed?: Array<{ item?: string }>; choose?: { from?: Array<{ item?: string }> } } | undefined
   if (equipment?.fixed) equipment.fixed = equipment.fixed.filter((x) => typeof x.item !== 'string' || ok(x.item))
   if (equipment?.choose?.from) equipment.choose.from = equipment.choose.from.filter((x) => typeof x.item !== 'string' || ok(x.item))
-  const expanded = data.expandedSpells as Array<{ spells?: string[] }> | undefined
-  if (Array.isArray(expanded)) {
-    for (const group of expanded) if (Array.isArray(group.spells)) group.spells = group.spells.filter(ok)
-  }
+  // expandedSpells（领域/誓言/扩展法术）是软引用：按「本包声明的依赖」裁剪，在包清单算出来之后统一做（见 pruneExpandedSpells）；这里不按条目自己的硬引用裁，否则 PHB 里的法术会被误剪掉
   const rows = data.rows as Array<{ refs?: string[]; then?: { table?: string } }> | undefined
   if (Array.isArray(rows)) {
     for (const row of rows) {
@@ -318,7 +315,22 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
     }
     return { manifest, entries, features }
   })
+  pruneExpandedSpells(packs, byId)
   return { packs, stats }
+}
+
+/** 子职业的扩展法术只保留「在本包或本包依赖（含传递依赖）及 SRD 里」的法术；依赖方向不变（软引用不参与推导依赖）。 */
+function pruneExpandedSpells(packs: ConvertedPack[], byId: Map<string, PlannedEntry>): void {
+  const requires = new Map(packs.map((p) => [p.manifest.id, p.manifest.relationships.requires.map((r) => r.id)]))
+  for (const pack of packs) {
+    const reach = new Set<string>([pack.manifest.id, SRD_PACK_ID])
+    const visit = (id: string): void => { for (const d of requires.get(id) ?? []) if (!reach.has(d)) { reach.add(d); visit(d) } }
+    visit(pack.manifest.id)
+    for (const entry of pack.entries) {
+      const groups = (entry.data as { expandedSpells?: Array<{ spells?: string[] }> }).expandedSpells
+      if (Array.isArray(groups)) for (const group of groups) if (Array.isArray(group.spells)) group.spells = group.spells.filter((id) => reach.has(byId.get(id)?.packId ?? ''))
+    }
+  }
 }
 
 

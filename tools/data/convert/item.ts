@@ -172,7 +172,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(typeof raw.value === 'number' ? { value: Math.round(raw.value) } : typeof base.value === 'number' ? { value: Math.round(base.value) } : {}),
     ...(weaponOf(raw) ? { weapon: weaponOf(raw) } : {}),
     ...(armorOf(raw) ? { armor: armorOf(raw) } : {}),
-    ...(chargesOf(raw) ? { charges: chargesOf(raw) } : {}),
+    ...(chargesOf(raw) ? { charges: { ...chargesOf(raw), ...rechargeAmountOf(raw) } } : {}),
     ...(bonusesOf(raw) ? { bonuses: bonusesOf(raw) } : {}),
     ...(effects.length ? { effects } : {}),
     ...(activities.length ? { activities } : {}),
@@ -191,4 +191,10 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
   const displayName = family ? `${entry.name}${process.env.TRPG_DATA_LANG === 'en' ? ' (Family)' : '（系列）'}` : entry.name
   const displayNameEn = family ? `${entry.nameEn} (Family)` : entry.nameEn
   return { id: entry.id, type: 'item', name: displayName, nameEn: displayNameEn, keywords: keywordsOf(entry), unique, summary: summaryOf('item', displayName, data, plainText(text)), data }
+}
+
+/** 每次恢复多少（G2.5 第 1 站）：5etools 的 rechargeAmount（`{@dice 1d6 + 1}` 或 `3`）去掉标签后原样保存，如 `1d6 + 1`。放在文件末尾，避免挪动前面被去向审计引用的代码行。 */
+function rechargeAmountOf(raw: Record<string, unknown>): { rechargeAmount?: string } {
+  const amount = str(raw.rechargeAmount).replace(/\{@dice ([^}|]+)(?:\|[^}]*)?\}/g, '$1').trim()
+  return amount ? { rechargeAmount: amount } : {}
 }

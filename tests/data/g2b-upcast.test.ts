@@ -23,7 +23,7 @@ describe('G2b 升环施法（b8）', () => {
     rec2.stat('b8', 'spellsWithHigherLevelText', withText.length)
     const structured = withText.filter((s) => s.data.upcast !== undefined || s.data.scaling !== undefined || s.data.higherLevelScaling !== undefined)
     rec2.stat('b8', 'withStructure', structured.length)
-    rec2.find({ id: 'b8-upcast-no-structure', check: 'b8', kind: 'data-defect', fixSource: 'import-5etools', entries: withText.map((s) => `${s.id} ${s.name}`), expected: 'PHB 第 11 章各法术“升环施法”；5etools 的 {@scaledamage} 标签；5e API 的 damage_at_slot_level', note: '升环效果只有文字，没有结构：火球术用 5 环施放该掷几个骰，程序算不出来' })
+    rec2.find({ id: 'b8-upcast-no-structure', check: 'b8', kind: 'data-defect', fixSource: 'import-5etools', entries: withText.filter((s) => !structured.includes(s)).map((s) => `${s.id} ${s.name}`), expected: 'PHB 第 11 章各法术“升环施法”；5etools 的 {@scaledamage} 标签；5e API 的 damage_at_slot_level', note: '升环效果只有文字，没有结构：火球术用 5 环施放该掷几个骰，程序算不出来' })
     if (has5etools()) {
       // 从 5etools 原始法术里读标签
       const raw = new Map<string, Record<string, unknown>>()
@@ -39,7 +39,8 @@ describe('G2b 升环施法（b8）', () => {
         const r = raw.get(fold(s.nameEn ?? ''))
         const text = flat(r?.entriesHigherLevel)
         const tags = [...text.matchAll(TAG)]
-        if (!tags.length) { noTag.push(s.id); continue }
+        // 没有 5etools 标签的：已经手工写了 upcast 的（第 3 站 3b-10）不再算
+        if (!tags.length) { if (!structured.includes(s)) noTag.push(s.id); continue }
         tagged++
         const a = apiByName.get(fold(s.nameEn ?? ''))
         if (!a?.damage) continue

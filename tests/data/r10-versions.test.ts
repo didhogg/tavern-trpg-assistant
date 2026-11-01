@@ -34,7 +34,7 @@ describe('R10 重印标记、NPC 种族、同书同名', () => {
       by[e.type] = (by[e.type] ?? 0) + 1
       expect(all.has(target), `${e.id} → ${target}`).toBe(true)
     }
-    expect(by).toEqual({ monster: 263, race: 14, subrace: 11, rule: 1, cult: 2, reward: 8 })
+    expect(by).toEqual({ monster: 282, race: 14, subrace: 11, rule: 1, cult: 2, reward: 8 })
   })
 
   it('金样与跨包软引用', async () => {

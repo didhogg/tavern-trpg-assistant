@@ -57,13 +57,19 @@ export function resolveSupersededBy(planned: PlannedEntry[], converted: Map<stri
     const built = converted.get(entry.id)
     if (!built || entry.type === 'feature' || entry.type === 'lore') continue
     const inRange: Array<{ id: string; source: string; target: string }> = []
-    for (const target of reprintTargets(entry.raw)) {
+    // 版本记录（龙裔颜色、格龙蛙人颜色……）不继承基础记录的 reprintedAs：基础记录写了重印，
+    // 版本就按"目标书里同名的版本"一一对应（找不到同名的就不标，不猜）
+    const own = reprintTargets(entry.raw)
+    const versionOf = entry.raw._versionOf as { name?: string; source?: string } | undefined
+    const base = own.length === 0 && versionOf ? byKey.get(`${entry.type}|${String(versionOf.source)}|${String(versionOf.name)}`)?.[0] : undefined
+    const targets = base ? reprintTargets(base.raw).map((t) => ({ name: entry.name, sources: t.sources })) : own
+    for (const target of targets) {
       for (const source of target.sources) {
         const label = `${target.name}|${source}`
         if (BOOK_SOURCES.has(source)) {
           const hit = (TARGET_TYPES[entry.type] ?? [entry.type]).flatMap((type) => byKey.get(`${type}|${source}|${target.name}`) ?? [])[0]
           if (hit) inRange.push({ id: hit.id, source, target: label })
-          else stats.unresolvedReprints.push({ entry: entry.id, target: label })
+          else if (!base) stats.unresolvedReprints.push({ entry: entry.id, target: label }) // 版本继承来的目标找不到同名版本时不报（本来就没标过）
         } else if (!SOURCE_2024.has(source)) {
           stats.deferredReprints.push({ entry: entry.id, source, target: label })
         }

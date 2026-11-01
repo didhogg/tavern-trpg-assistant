@@ -138,13 +138,13 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
     school: SCHOOL[str(raw.school)] ?? 'evocation',
     castTime: [{ n: Number(time?.number ?? 1), unit: TIME_UNIT[str(time?.unit)] ?? 'action', ...(str(time?.condition) ? { condition: renderInline(str(time?.condition), inline) } : {}) }],
     range: rangeOf(raw),
-    components: { v: components.v === true, s: components.s === true, ...(m ? { m: { text: renderInline(str(m.text), inline) } } : {}) },
+    components: { v: components.v === true, s: components.s === true, ...(m ? { m: { text: renderInline(str(m.text), inline), ...(typeof m.cost === 'number' ? { cost: m.cost } : {}), ...(m.consume === true ? { consumed: true } : m.consume === 'optional' ? { consumed: 'optional' } : {}) } } : {}) },
     duration: durations,
     ritual: (raw.meta as Record<string, unknown> | undefined)?.ritual === true,
     classes: classes.classes,
     subclasses: classes.subclasses,
     ...(Array.isArray(raw.entriesHigherLevel) ? { higherLevel: plainText(convertBlocks(raw.entriesHigherLevel, inline)).slice(0, 2000) } : {}),
-    ...(raw.scalingLevelDice ? { cantripScaling: raw.scalingLevelDice } : {}),
+    ...(raw.scalingLevelDice ? { cantripScaling: raw.scalingLevelDice } : {}), ...importedSpellFields(raw, entry.name, inline),
     ...(Array.isArray(raw.miscTags) || Array.isArray(raw.areaTags) ? { tags: [...strList(raw.miscTags), ...strList(raw.areaTags)] } : {}),
     ...Object.fromEntries(['damageInflict', 'conditionInflict', 'conditionImmune', 'damageResist', 'damageImmune', 'damageVulnerable', 'affectsCreatureType'].filter((key) => Array.isArray(raw[key])).map((key) => [key, strList(raw[key])])),
     ...(saveCodes.length ? { save: saveCodes } : {}),
@@ -154,3 +154,15 @@ export function convertSpell(entry: PlannedEntry, ctx: ConvertContext, inline: I
   const summary = summaryOf('spell', entry.name, data, plainText(text))
   return { id: entry.id, type: 'spell', name: entry.name, nameEn: entry.nameEn, keywords: keywordsOf(entry), unique: false, summary, data }
 }
+
+/**
+ * G2.5 第 1 站从 5etools 导入的法术字段：升环 upcast、攻击类型 attack（M→ms、R→rs）。
+ * 放在文件末尾、并和 cantripScaling 写在同一行，避免挪动前面被「去向审计」引用的代码行号。
+ */
+function importedSpellFields(raw: Record<string, unknown>, name: string, inline: InlineContext): Record<string, unknown> {
+  const higherText = Array.isArray(raw.entriesHigherLevel) ? plainText(convertBlocks(raw.entriesHigherLevel, inline)).slice(0, 2000) : undefined
+  const upcast = upcastFromRaw(raw, name, higherText)
+  const attack = Array.isArray(raw.spellAttack) ? String(raw.spellAttack[0]) : ''
+  return { ...(upcast ? { upcast } : {}), ...(attack === 'M' || attack === 'R' ? { attack: attack === 'M' ? 'ms' : 'rs' } : {}) }
+}
+import { upcastFromRaw } from './spellUpcast'

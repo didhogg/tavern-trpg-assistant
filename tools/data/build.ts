@@ -32,6 +32,7 @@ import { unifyNameEn } from './i18n/nameEn'
 import { validateJoins } from './validate/joins'
 import { validateG25 } from './validate/g25'
 import { runFixes } from './fix'
+import { upcastStats } from './convert/spellUpcast'
 import { validateI18n } from './i18n/validate'
 import { writeI18nReport } from './i18n/report'
 import { cleanEntries, lastCleanReport } from './clean'
@@ -86,6 +87,7 @@ async function main(): Promise<void> {
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   console.log(`R15 补字段：${JSON.stringify(carryStats)}`)
+  console.log(`升环导入：带标签的法术 ${upcastStats.spellsWithTag}，自动结构化 ${upcastStats.imported}，只留文字 note ${upcastStats.noted}，认不出的标签 ${upcastStats.unresolved.length}${upcastStats.unresolved.length ? `：${upcastStats.unresolved.join('；')}` : ''}`)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
   const fixReport = runFixes(result.packs) // G2.5：修正规则 + 逐条修正表（紧跟在文字清理之后）
   console.log(`修正：规则 ${fixReport.rules.length} 个（命中 ${fixReport.rules.reduce((n, r) => n + r.changed, 0)} 条），逐条表 ${fixReport.rows.length} 行，新增条目 ${fixReport.added.length}`)

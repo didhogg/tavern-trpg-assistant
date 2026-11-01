@@ -85,8 +85,8 @@
   {
    "id": "d5-rule-page",
    "check": "d5",
-   "kind": "data-defect",
-   "fixSource": "import-5etools",
+   "kind": "source-defect",
+   "fixSource": "decision",
    "entries": [
     "rule.item-type-extra-gs.xge 赌具",
     "rule.item-type-extra-ins.xge 乐器",
@@ -97,14 +97,14 @@
     "rule.script-thorass.phb 索拉斯"
    ],
    "expected": "5etools 原始规则数据的 page",
-   "note": "7 条规则没有页码",
+   "note": "7 条规则（4 种文字书写系统、XGE 的赌具/乐器补充）没有页码。第 1 站核对：5etools 的 languageScript、itemTypeAdditionalEntries 记录里就没有 page 字段；保持来源如此",
    "count": 7
   },
   {
    "id": "d5-table-page",
    "check": "d5",
-   "kind": "data-defect",
-   "fixSource": "import-5etools",
+   "kind": "source-defect",
+   "fixSource": "decision",
    "entries": [
     "table.barbarian.phb 野蛮人·个人图腾",
     "table.barbarian.phb-2 野蛮人·纹身",
@@ -158,7 +158,7 @@
     "table.life-class-rogue-reasons.xge 游荡者·成为游荡者的原因"
    ],
    "expected": "5etools 原始表格数据的 page",
-   "note": "76 张表没有页码；多数是各书“来源章节”里的表，5etools 原始数据里有页码时补上",
+   "note": "76 张表没有页码。第 1 站核对：这些表来自职业/出身的 fluff 与各书章节，5etools 原始数据里就没有页码（中译 PHB 文本的页码是 PDF 序号，不是印刷页码，不能用）；不编造页码，保持来源如此",
    "count": 76
   }
  ]

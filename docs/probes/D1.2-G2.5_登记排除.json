@@ -40,5 +40,11 @@
   "entry": "table.vgm-p55-1",
   "reason": "鬼婆姓名是“头衔+名字+姓氏”三列的合法多列表；读取约定：多列名字表按列拼接",
   "basis": "VGM p.55 原表"
+ },
+ {
+  "finding": "a10-expanded-short",
+  "entry": "subclass.druid-circle-of-the-land.phb",
+  "reason": "该子职业在 SRD 核心包里，而扩展法术「马友夫强酸箭」在 PHB 包里：依赖只能向下（SRD 不能指向 PHB），构建按设计裁掉；装了 PHB 的玩家在子职业页看不到这一条，已记为已知限制",
+  "basis": "包依赖方向规则（docs/包格式说明.md §2）；5etools 圆环（陆地）沼泽 3 级扩展法术"
  }
 ]

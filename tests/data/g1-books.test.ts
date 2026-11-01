@@ -4,11 +4,13 @@ import { describe, expect, it } from 'vitest'
 import { BOOKS, BOOK_NAMES, packIdOf } from '../../tools/data/config/books'
 import { BOOK_POLICY } from '../../tools/data/config/bookPolicy'
 import { loadAllPacks } from './r9-pack-helpers'
-import { loadG1Before, manifestOf } from './g1-snapshot'
+import { manifestOf } from './g1-snapshot'
+import { loadG2Before } from './g2-snapshot'
 
 /** G1：书目不写死——书目由政策表 + books.json 生成，依赖由引用推导，书名跟着包走。 */
 describe('G1 书目由政策表生成', () => {
-  const before = loadG1Before()
+  // 开工快照：G1 的基线夹具已随 G2.5 退役，改用 G2 开工基线（包名称、lineage、依赖与 G1 完成时相同）
+  const before = loadG2Before()
 
   it('生成的 10 本书与开工快照一致：包编号、名称、英文名、层级、lineage', () => {
     expect(BOOKS.map((b) => b.packId)).toEqual(['phb', 'scag', 'dmg', 'mm', 'xge', 'tce', 'vgm', 'mtf', 'mpmm', 'bmt'].map((c) => `dnd5e2014-${c}`))

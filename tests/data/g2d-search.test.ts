@@ -53,7 +53,8 @@ describe('G2d 搜索与筛选字段（d4 d5 d6）', () => {
         case 'feature':
           // 可选特性（魔能祈唤、战斗风格、战技、元素之道……）不属于某个职业，靠 featureType/optionKind 筛选；其他特性必须有所属条目
           if (d.optional === true && d.owner === undefined) { if (!str(d.featureType) && !arr(d.optionKind).length) add('optional-feature-no-kind', tag); optionalNoOwner++ }
-          else if (!l.get(str(rec(d.owner).id))) add('feature-owner', tag)
+          // 锚点特性（带 spellLists：把法术登记进职业法术表，塔莎的奇械师/可选法术表）是不属于任何职业的登记条目，不需要所属条目
+          else if (d.spellLists === undefined && !l.get(str(rec(d.owner).id))) add('feature-owner', tag)
           break
         case 'subclass':
           if (l.get(str(d.classId))?.type !== 'class') add('subclass-class', tag)
@@ -96,8 +97,8 @@ describe('G2d 搜索与筛选字段（d4 d5 d6）', () => {
     rec2.find({ id: 'd5-lore-inherit', check: 'd5', kind: 'decision', fixSource: 'decision', entries: [`${lore.length} 条背景描述补丁没有页码`], expected: '补丁的目标条目的页码', note: '背景描述补丁（lore）不是独立的书页内容，页码应取被补充条目的页码；推荐：显示时继承目标的页码，不写进补丁（从简）' })
     rec2.find({ id: 'd5-monsterpart-page', check: 'd5', kind: 'decision', fixSource: 'decision', entries: [`${parts.length} 个怪物部件没有页码`], expected: 'DMG 第 9 章“创建怪物”', note: '怪物部件是 DMG“创建怪物数据卡”表格里的碎片，页码在表上（DMG 第 275 页起）；推荐：不补' })
     rec2.find({ id: 'd5-book-chapters', check: 'd5', kind: 'source-defect', fixSource: 'decision', entries: books, expected: 'R12 已知：14 个缺页章（书中该章没有页码）', note: '书的章节没有页码，来源如此' })
-    if (tables.length) rec2.find({ id: 'd5-table-page', check: 'd5', kind: 'data-defect', fixSource: 'import-5etools', entries: tables, expected: '5etools 原始表格数据的 page', note: '76 张表没有页码；多数是各书“来源章节”里的表，5etools 原始数据里有页码时补上' })
-    if (rules.length) rec2.find({ id: 'd5-rule-page', check: 'd5', kind: 'data-defect', fixSource: 'import-5etools', entries: rules, expected: '5etools 原始规则数据的 page', note: '7 条规则没有页码' })
+    if (tables.length) rec2.find({ id: 'd5-table-page', check: 'd5', kind: 'source-defect', fixSource: 'decision', entries: tables, expected: '5etools 原始表格数据的 page', note: '76 张表没有页码。第 1 站核对：这些表来自职业/出身的 fluff 与各书章节，5etools 原始数据里就没有页码（中译 PHB 文本的页码是 PDF 序号，不是印刷页码，不能用）；不编造页码，保持来源如此' })
+    if (rules.length) rec2.find({ id: 'd5-rule-page', check: 'd5', kind: 'source-defect', fixSource: 'decision', entries: rules, expected: '5etools 原始规则数据的 page', note: '7 条规则（4 种文字书写系统、XGE 的赌具/乐器补充）没有页码。第 1 站核对：5etools 的 languageScript、itemTypeAdditionalEntries 记录里就没有 page 字段；保持来源如此' })
     expect(rec2.settle()).toEqual([])
   })
 
@@ -114,13 +115,14 @@ describe('G2d 搜索与筛选字段（d4 d5 d6）', () => {
     // 同名同类型、都没标旧版：选择器默认隐藏旧版时，这些会同时出现
     const byName = new Map<string, typeof l.rows>()
     for (const r of l.rows) if (SELECTABLE.includes(r.type)) { const k = `${r.type}|${r.name}`; byName.set(k, [...(byName.get(k) ?? []), r]) }
-    const ambiguous = [...byName.values()].filter((v) => v.length > 1 && v.filter((x) => x.data.supersededBy === undefined).length > 1)
+    // 不可玩的（DMG 的 NPC 种族，playable:false）选择器本来就不列，不算和玩家版本同时出现
+    const ambiguous = [...byName.values()].filter((v) => v.length > 1 && v.filter((x) => x.data.supersededBy === undefined && x.data.playable !== false).length > 1)
     rec2.stat('d6', 'sameNameGroups', [...byName.values()].filter((v) => v.length > 1).length)
     rec2.stat('d6', 'sameNameWithoutOldMarker', ambiguous.length)
     const bySource = new Map<string, number>()
     for (const v of ambiguous) { const k = `${v[0].type}:${v.map((x) => x.id.split('.').pop()).sort().join('+')}`; bySource.set(k, (bySource.get(k) ?? 0) + 1) }
     for (const [k, n] of bySource) rec2.stat('d6', `ambiguous.${k}`, n)
-    rec2.find({ id: 'd6-same-name-no-marker', check: 'd6', kind: 'data-defect', fixSource: 'import-5etools', entries: ambiguous.map((v) => `${v[0].type} ${v[0].name}：${v.map((x) => x.id).join(' / ')}`), expected: '5etools 原始数据 reprintedAs（后出版本取代前一版）', note: '同类型同名、都没有标旧版：全库搜索与选择器默认隐藏旧版时，这几对会同时出现（例：格龙蛙人 VGM 与 MPMM、万象无常牌 DMG 与 BMT）；MPMM 重印了 VGM/MTF 的怪物和种族，5etools 原始数据里 VGM 的 143 个怪物有 124 个带“重印为”，应据此把前一版标 supersededBy；物品的几对（芦笛等）原始数据没有标记，需手工核对' })
+    rec2.find({ id: 'd6-same-name-no-marker', check: 'd6', kind: 'source-defect', fixSource: 'decision', entries: ambiguous.map((v) => `${v[0].type} ${v[0].name}：${v.map((x) => x.id).join(' / ')}`), expected: '5etools 原始数据 reprintedAs（后出版本取代前一版）', note: '同类型同名、都没有标旧版。第 1 站导入 5etools 的重印标记后（版本记录按同名版本对应：格龙蛙人各色、阴影獒犬首领等 19 对；DMG 的不可玩 NPC 种族不算冲突）只剩 4 组：万象无常牌 DMG/BMT、芦笛与乐器系列 PHB/SCAG、阿斯莫 DMG/VGM/MPMM——5etools 对它们没有互相的重印标记（都只指向 2024 版），不猜；选择器会同时列出，玩家按书名角标区分' })
     expect(rec2.settle()).toEqual([])
   })
 })

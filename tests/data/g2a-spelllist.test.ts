@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Recorder } from './consumer/findings'
+import { classSpellIds } from './consumer/expand'
 import { lib } from './consumer/load'
 import { hasPhbText, phbSpellLists } from './consumer/phbLists'
 import { has5etools, raw5e } from './consumer/ref5etools'
@@ -67,12 +68,14 @@ describe('G2a 职业法术表（a16b）', () => {
     const want: string[] = []
     const notInLib: string[] = []
     for (const bucket of Object.values(lookup)) for (const [cnName, info] of Object.entries(rec(bucket))) {
-      if (!rec(rec(rec(info).class).TCE)['奇械师']) continue
+      // XGE 里定义、塔莎奇械师也能用的法术，5etools 记在 classVariant 里（第 1 站核对 TCE 英文原书发现：只看 class 会漏 15 个）
+      if (!rec(rec(rec(info).class).TCE)['奇械师'] && !rec(rec(rec(info).classVariant).TCE)['奇械师']) continue
       const sp = byCn.get(cnName)
       if (sp) want.push(sp.id)
       else notInLib.push(cnName)
     }
-    const have = new Set(l.of('spell').filter((s) => strs(s.data.classes).includes('class.artificer.tce')).map((s) => s.id))
+    // 奇械师的法术表 ＝ 法术自己 classes 里写了奇械师的 ＋ 塔莎包里锚点特性 spellLists 登记的（PHB、XGE 的法术不能指向塔莎里的职业）
+    const have = classSpellIds(l, 'artificer')
     rec2.stat('a16b', 'artificerListInSource', want.length + notInLib.length)
     rec2.stat('a16b', 'artificerListFoundInLibrary', want.length)
     rec2.stat('a16b', 'artificerSpellsInData', have.size)

@@ -4,6 +4,7 @@ import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
 import { CLASS_PRIMARY } from '../config/books'
 import { creditFor, keywordsOf, pageOf, str } from './common'
+import { refKey } from '../markup/inline'
 import { convertBlocks } from './blocks'
 import { activitiesFromText } from './activities'
 import { clip, plainText, summaryOf } from '../summary/summary'
@@ -119,7 +120,12 @@ function expandedSpells(raw: Record<string, unknown>, ctx: ConvertContext): Arra
         const numeric = Number(key.replace(/^s/, ''))
         if (!Number.isFinite(numeric)) continue
         const level = numeric
-        const ids = spells.map((name) => ctx.resolveEntryId('spell', String(name))).filter((id): id is string => !!id)
+        // 法术名可以带来源（"元素召唤术|tce"）：按来源书精确找；不带来源的按名字找
+        const resolve = (name: string): string | undefined => {
+          const [plain, source] = name.split('|')
+          return source ? ctx.index.byTypeNameSource.get(refKey(`spell|${plain}|${source.toUpperCase()}`))?.id ?? ctx.resolveEntryId('spell', plain) : ctx.resolveEntryId('spell', plain)
+        }
+        const ids = spells.map((name) => resolve(String(name))).filter((id): id is string => !!id)
         if (ids.length) out.set(level, [...(out.get(level) ?? []), ...ids])
       }
     }
