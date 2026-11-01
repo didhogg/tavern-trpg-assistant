@@ -8,11 +8,6 @@
   },
   {
    "check": "b8",
-   "key": "noTag.heal",
-   "value": 3
-  },
-  {
-   "check": "b8",
    "key": "spellsWithHigherLevelText",
    "value": 154
   },
@@ -29,37 +24,8 @@
   {
    "check": "b8",
    "key": "withStructure",
-   "value": 151
+   "value": 154
   }
  ],
- "findings": [
-  {
-   "id": "b8-upcast-no-structure",
-   "check": "b8",
-   "kind": "data-defect",
-   "fixSource": "import-5etools",
-   "entries": [
-    "spell.aid.phb 援助术",
-    "spell.false-life.phb 虚假生命",
-    "spell.heal.phb 医疗术"
-   ],
-   "expected": "PHB 第 11 章各法术“升环施法”；5etools 的 {@scaledamage} 标签；5e API 的 damage_at_slot_level",
-   "note": "升环效果只有文字，没有结构：火球术用 5 环施放该掷几个骰，程序算不出来",
-   "count": 3
-  },
-  {
-   "id": "b8-upcast-no-tag-heal",
-   "check": "b8",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "spell.aid.phb 援助术",
-    "spell.false-life.phb 虚假生命",
-    "spell.heal.phb 医疗术"
-   ],
-   "expected": "PHB、XGE、TCE 各法术原文",
-   "note": "没有 5etools 标签的升环（治疗量），需要自己对照原书结构化",
-   "count": 3
-  }
- ]
+ "findings": []
 }

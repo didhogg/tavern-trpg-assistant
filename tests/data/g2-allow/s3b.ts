@@ -259,6 +259,18 @@ export const ALLOW: Allow[] = [
     expect: 3,
     reason: 'b8-upcast-no-tag-area：3 个法术补升环范围',
   },
+  {
+    name: 's3b-upcast-heal',
+    station: 3,
+    ids: [
+      'spell.aid.phb',
+      'spell.false-life.phb',
+      'spell.heal.phb',
+    ],
+    path: /^\/data\/upcast$/,
+    expect: 3,
+    reason: 'b8-upcast-no-tag-heal：3 个法术补升环治疗/生命上限',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

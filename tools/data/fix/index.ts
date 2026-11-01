@@ -27,6 +27,7 @@ import { ROWS as S3B_UPCAST_SUMMON } from './rows/s3b-upcast-summon'
 import { ROWS as S3B_UPCAST_DURATION } from './rows/s3b-upcast-duration'
 import { ROWS as S3B_UPCAST_OTHER } from './rows/s3b-upcast-other'
 import { ROWS as S3B_UPCAST_AREA } from './rows/s3b-upcast-area'
+import { ROWS as S3B_UPCAST_HEAL } from './rows/s3b-upcast-heal'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -67,6 +68,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3b-upcast-duration.ts', rows: S3B_UPCAST_DURATION },
   { file: 'rows/s3b-upcast-other.ts', rows: S3B_UPCAST_OTHER },
   { file: 'rows/s3b-upcast-area.ts', rows: S3B_UPCAST_AREA },
+  { file: 'rows/s3b-upcast-heal.ts', rows: S3B_UPCAST_HEAL },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {
