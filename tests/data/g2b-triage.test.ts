@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { Recorder } from './consumer/findings'
 import { lib } from './consumer/load'
+import { usesCarriedByRace } from './consumer/grantUses'
 import { isPlainMechanic, triage } from './consumer/triage'
 
 const OUT = join(process.cwd(), 'docs/probes/D1.2-G2_纯文字特性分诊.json')
@@ -15,7 +16,8 @@ describe('G2b 纯文字机制特性分诊（b3）', () => {
     const l = lib()
     const rec2 = new Recorder('g2b-triage')
     const all = l.of('feature').filter((r) => r.data.role === 'mechanic')
-    const plain = all.filter(isPlainMechanic)
+    // 次数由所属种族/亚种的 spellGrant.uses 承担的特质，不算“纯文字”
+    const plain = all.filter((r) => isPlainMechanic(r) && !usesCarriedByRace(l, r))
     const rows = plain.map((r) => ({ id: r.id, name: r.name, ...triage(r) }))
     const falsePositive = new Set<string>()
     if (existsSync(DISPOSITION)) {

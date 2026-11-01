@@ -23,6 +23,17 @@ async function load(): Promise<Entry[]> {
 const marker = /(使用|施展|消耗).{0,20}(\d+次|次数|长休|短休)|(完成|经过|直到).{0,8}(短休|长休).{0,20}(再次|恢复|重获|使用|施展)|每(次)?(长休|短休)|充能/
 const text = (e: Entry): string => JSON.stringify(e.data.text ?? '')
 
+function carriedByRace(e: Entry, byId: Map<string, Entry>): boolean {
+  const owner = (e.data.owner ?? {}) as { type?: string; id?: string }
+  if (owner.type !== 'race' && owner.type !== 'subrace') return false
+  const spells = new Set([...JSON.stringify(e.data.text ?? '').matchAll(/ref:(spell\.[a-z0-9.-]+)/g)].map((m) => m[1]))
+  if (spells.size < 2) return false
+  const chain = [owner.id ?? '', String(byId.get(owner.id ?? '')?.data.parentRace ?? '')]
+  const grants = chain.flatMap((id) => ((byId.get(id)?.data.effects as Array<Record<string, unknown>> | undefined) ?? []).filter((x) => x.kind === 'spellGrant'))
+  const granted = new Set(grants.flatMap((x) => (Array.isArray(x.spells) ? (x.spells as string[]) : [])))
+  return [...spells].every((x) => granted.has(x)) && grants.some((x) => x.uses !== undefined)
+}
+
 function collectScaleIds(entries: Entry[]): Set<string> {
   const out = new Set<string>()
   for (const entry of entries) for (const item of (entry.data.advancement as Array<Record<string, unknown>> | undefined) ?? []) {
@@ -44,8 +55,10 @@ describe('P5 特性使用次数、效果与行动', () => {
   it('明确次数/恢复语言的使用次数覆盖率 ≥95%', async () => {
     const entries = await load()
     const features = entries.filter((e) => e.type === 'feature')
+    const byId = new Map(entries.map((e) => [e.id, e]))
     const candidates = features.filter((e) => marker.test(text(e)) && !FEATURE_NO_USES.has(e.id))
-    const covered = candidates.filter((e) => e.data.uses)
+    // 种族特质提到多个法术、次数由所属种族/亚种的 spellGrant.uses 承担的，不要求特质自己再带 uses（口径与 g2b-rest 的 rest-racial-spell-uses-duplicate 一致，见 consumer/grantUses.ts）
+    const covered = candidates.filter((e) => e.data.uses || carriedByRace(e, byId))
     expect(candidates.length).toBeGreaterThan(250)
     expect(covered.length / candidates.length).toBeGreaterThanOrEqual(0.95)
   })

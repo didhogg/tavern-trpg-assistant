@@ -2,7 +2,7 @@
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
   "A": 144,
-  "B": 414,
+  "B": 410,
   "C": 584
  },
  "features": [
@@ -3751,14 +3751,6 @@
    ]
   },
   {
-   "id": "feature.gnome-deep-innate-spellcasting.dmg",
-   "name": "天生施法",
-   "cls": "B",
-   "tags": [
-    "法术"
-   ]
-  },
-  {
    "id": "feature.gnome-deep-languages.dmg",
    "name": "语言",
    "cls": "C",
@@ -6530,14 +6522,6 @@
    "tags": []
   },
   {
-   "id": "feature.firbolg-firbolg-magic.vgm",
-   "name": "费尔伯格人魔法",
-   "cls": "B",
-   "tags": [
-    "法术"
-   ]
-  },
-  {
    "id": "feature.firbolg-languages.vgm",
    "name": "语言",
    "cls": "C",
@@ -7459,14 +7443,6 @@
    "tags": []
   },
   {
-   "id": "feature.firbolg-firbolg-magic.mpmm",
-   "name": "费尔伯格人魔法",
-   "cls": "B",
-   "tags": [
-    "法术"
-   ]
-  },
-  {
    "id": "feature.firbolg-powerful-build.mpmm",
    "name": "强力构筑",
    "cls": "C",
@@ -8114,14 +8090,6 @@
    "cls": "B",
    "tags": [
     "攻击结算"
-   ]
-  },
-  {
-   "id": "feature.yuan-ti-serpentine-spellcasting.mpmm",
-   "name": "巨蛇法术",
-   "cls": "B",
-   "tags": [
-    "法术"
    ]
   },
   {

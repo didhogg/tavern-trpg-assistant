@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Recorder } from './consumer/findings'
 import { lib } from './consumer/load'
+import { usesViaGrant } from './consumer/grantUses'
 import { arr, rec } from './consumer/util'
 
 function textOf(v: unknown): string {
@@ -57,8 +58,7 @@ describe('G2b 资源与休息盘点：提到休息的特性', () => {
     for (const table of [SPELL_ONCE, REST_TRIGGER, TRACKER, DAILY]) for (const id of Object.keys(table)) expect(noUsesIds.has(id) || l.get(id) !== undefined, `${id} 不存在`).toBe(true)
     const pick = (t: Record<string, string>): string[] => Object.keys(t).filter((id) => noUsesIds.has(id)).map((id) => `${id} ${l.need(id).name}：${t[id]}`)
     // 免费法术的次数若已经写在自己的（或所属种族/亚种的）spellGrant.uses 上，就是有结构的——不要求特性/专长本身再带一份 uses（再带就重复计数）
-    const grantUses = (r: { data: Record<string, unknown> }): boolean => arr(r.data.effects).map(rec).some((e) => e.kind === 'spellGrant' && e.uses !== undefined)
-    const structured = (id: string): boolean => { const r = l.need(id); const o = rec(r.data.owner).id; const owner = typeof o === 'string' ? l.get(o) : undefined; return grantUses(r) || (owner !== undefined && grantUses(owner)) }
+    const structured = (id: string): boolean => usesViaGrant(l, l.need(id))
     const spellOnce = Object.fromEntries(Object.entries(SPELL_ONCE).filter(([id]) => !structured(id)))
     rec2.find({ id: 'rest-spell-once-no-uses', check: 'rest', kind: 'data-defect', fixSource: 'self-structure', entries: pick(spellOnce), expected: 'TCE、MPMM 各专长/特质原文', note: '“每次长休可免费施展某法术一次/恢复若干点”，却没有 uses 也没有 spellGrant；活动页长休时无法恢复。应写成带次数的 spellGrant 或次数池' })
     rec2.find({ id: 'rest-trigger-choice', check: 'rest', kind: 'data-defect', fixSource: 'self-structure', entries: pick(REST_TRIGGER), expected: '各特性原文', note: '特性在每次长休后才能重选或重新获得（卡牌占卜师、灵药、钢铁守卫、原初伴侣、巫咒战士、死亡之友、宁神境）；活动页长休时需要提示。应用 tracker: choice（reset: long）' })
