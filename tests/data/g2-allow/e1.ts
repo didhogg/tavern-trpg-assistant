@@ -182,6 +182,28 @@ export const ALLOW: Allow[] = [
     expect: 8,
     reason: 'b3-A 纯文字熟练第二批：固定熟练项；自选部分保持文字',
   },
+  {
+    name: 'e1-5-resistance-1',
+    station: 1,
+    ids: [
+      'feature.barbarian-path-of-the-storm-herald-desert.xge-2',
+      'feature.barbarian-path-of-the-storm-herald-sea.xge-2',
+      'feature.barbarian-path-of-the-storm-herald-tundra.xge-2',
+      'feature.barbarian-path-of-the-totem-warrior-bear.phb',
+      'feature.cleric-forge-domain-saint-of-forge-and-fire.xge',
+      'feature.cleric-forge-domain-soul-of-the-forge.xge',
+      'feature.fighter-psi-warrior-guarded-mind.tce',
+      'feature.sorcerer-aberrant-mind-psychic-defenses.tce',
+      'feature.warlock-the-archfey-beguiling-defenses.phb',
+      'feature.warlock-the-celestial-radiant-soul.xge',
+      'feature.warlock-the-fathomless-oceanic-soul.tce',
+      'feature.warlock-the-great-old-one-thought-shield.phb',
+      'feature.wizard-school-of-necromancy-inured-to-undeath.phb',
+    ],
+    path: /^\/data\/effects$/,
+    expect: 13,
+    reason: 'b3-A 纯文字抗性第一批：固定抗性/免疫',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

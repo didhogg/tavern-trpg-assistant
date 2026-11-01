@@ -1,7 +1,7 @@
 {
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
-  "A": 52,
+  "A": 39,
   "B": 395,
   "C": 576
  },
@@ -1845,14 +1845,6 @@
    "tags": []
   },
   {
-   "id": "feature.barbarian-path-of-the-totem-warrior-bear.phb",
-   "name": "熊",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.barbarian-path-of-the-totem-warrior-bear.phb-2",
    "name": "熊",
    "cls": "B",
@@ -2815,27 +2807,11 @@
    "tags": []
   },
   {
-   "id": "feature.warlock-the-archfey-beguiling-defenses.phb",
-   "name": "斗转星移",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.warlock-the-great-old-one-create-thrall.phb",
    "name": "创造奴仆",
    "cls": "B",
    "tags": [
     "法术"
-   ]
-  },
-  {
-   "id": "feature.warlock-the-great-old-one-thought-shield.phb",
-   "name": "思维之盾",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
    ]
   },
   {
@@ -2997,15 +2973,6 @@
    "tags": [
     "资源",
     "法术"
-   ]
-  },
-  {
-   "id": "feature.wizard-school-of-necromancy-inured-to-undeath.phb",
-   "name": "不死适应",
-   "cls": "A",
-   "tags": [
-    "生命上限",
-    "抗性免疫"
    ]
   },
   {
@@ -3964,14 +3931,6 @@
    ]
   },
   {
-   "id": "feature.barbarian-path-of-the-storm-herald-desert.xge-2",
-   "name": "荒漠",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.barbarian-path-of-the-storm-herald-desert.xge-3",
    "name": "荒漠",
    "cls": "B",
@@ -3991,14 +3950,6 @@
    "cls": "B",
    "tags": [
     "攻击结算"
-   ]
-  },
-  {
-   "id": "feature.barbarian-path-of-the-storm-herald-sea.xge-2",
-   "name": "海洋",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
    ]
   },
   {
@@ -4034,14 +3985,6 @@
    "name": "冻原",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.barbarian-path-of-the-storm-herald-tundra.xge-2",
-   "name": "冻原",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
   },
   {
    "id": "feature.barbarian-path-of-the-storm-herald-tundra.xge-3",
@@ -4163,23 +4106,6 @@
    "cls": "B",
    "tags": [
     "伤害"
-   ]
-  },
-  {
-   "id": "feature.cleric-forge-domain-saint-of-forge-and-fire.xge",
-   "name": "锻炉与烈焰的圣徒",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
-   "id": "feature.cleric-forge-domain-soul-of-the-forge.xge",
-   "name": "锻造之魂",
-   "cls": "A",
-   "tags": [
-    "护甲等级",
-    "抗性免疫"
    ]
   },
   {
@@ -4825,14 +4751,6 @@
    "cls": "B",
    "tags": [
     "法术"
-   ]
-  },
-  {
-   "id": "feature.warlock-the-celestial-radiant-soul.xge",
-   "name": "光耀之魂",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
    ]
   },
   {
@@ -5528,14 +5446,6 @@
    "tags": []
   },
   {
-   "id": "feature.fighter-psi-warrior-guarded-mind.tce",
-   "name": "意念守护",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.fighter-psi-warrior-telekinetic-adept.tce",
    "name": "念力精通",
    "cls": "C",
@@ -5804,14 +5714,6 @@
    ]
   },
   {
-   "id": "feature.sorcerer-aberrant-mind-psychic-defenses.tce",
-   "name": "心灵防御",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
-   ]
-  },
-  {
    "id": "feature.sorcerer-aberrant-mind-revelation-in-flesh.tce",
    "name": "血肉启示",
    "cls": "B",
@@ -5887,14 +5789,6 @@
    "tags": [
     "伤害",
     "动作"
-   ]
-  },
-  {
-   "id": "feature.warlock-the-fathomless-oceanic-soul.tce",
-   "name": "海渊魂灵",
-   "cls": "A",
-   "tags": [
-    "抗性免疫"
    ]
   },
   {

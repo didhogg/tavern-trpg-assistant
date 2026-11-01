@@ -4,7 +4,7 @@
   {
    "check": "b3",
    "key": "A",
-   "value": 52
+   "value": 39
   },
   {
    "check": "b3",
@@ -34,12 +34,12 @@
   {
    "check": "b3",
    "key": "A.抗性免疫",
-   "value": 29
+   "value": 16
   },
   {
    "check": "b3",
    "key": "A.护甲等级",
-   "value": 2
+   "value": 1
   },
   {
    "check": "b3",
@@ -49,7 +49,7 @@
   {
    "check": "b3",
    "key": "A.生命上限",
-   "value": 3
+   "value": 2
   },
   {
    "check": "b3",
@@ -74,7 +74,7 @@
   {
    "check": "b3",
    "key": "plainMechanic",
-   "value": 1086
+   "value": 1073
   }
  ],
  "findings": [
@@ -88,15 +88,9 @@
     "feature.artificer-battle-smith-improved-defender.tce 改良守卫：护甲等级",
     "feature.barbarian-feral-instinct.phb 野性直觉：先攻被动",
     "feature.barbarian-path-of-the-ancestral-guardian-ancestral-protectors.xge 先祖护卫：抗性免疫",
-    "feature.barbarian-path-of-the-storm-herald-desert.xge-2 荒漠：抗性免疫",
-    "feature.barbarian-path-of-the-storm-herald-sea.xge-2 海洋：抗性免疫",
-    "feature.barbarian-path-of-the-storm-herald-tundra.xge-2 冻原：抗性免疫",
-    "feature.barbarian-path-of-the-totem-warrior-bear.phb 熊：抗性免疫",
     "feature.bard-college-of-lore-bonus-proficiencies.phb 附赠熟练：熟练",
     "feature.bard-college-of-swords-blade-flourish.xge 剑舞：速度",
     "feature.blind-fighting.tce 盲斗：感官",
-    "feature.cleric-forge-domain-saint-of-forge-and-fire.xge 锻炉与烈焰的圣徒：抗性免疫",
-    "feature.cleric-forge-domain-soul-of-the-forge.xge 锻造之魂：护甲等级、抗性免疫",
     "feature.cleric-nature-domain-acolyte-of-nature.phb 自然侍僧：熟练",
     "feature.cleric-nature-domain-dampen-elements.phb 抑制元素：抗性免疫",
     "feature.cleric-peace-domain-expansive-bond.tce 增强联结：抗性免疫",
@@ -109,7 +103,6 @@
     "feature.expert-sidekick-sharp-mind.tce 明锐心智：熟练",
     "feature.fighter-arcane-archer-arcane-archer-lore.xge 魔箭学识：熟练",
     "feature.fighter-arcane-archer-magic-arrow.xge 注魔箭矢：抗性免疫",
-    "feature.fighter-psi-warrior-guarded-mind.tce 意念守护：抗性免疫",
     "feature.investment-of-the-chain-master.tce 链主赋能：速度、抗性免疫",
     "feature.lance-of-lethargy.xge 怠惰之枪：速度",
     "feature.monk-ki-empowered-strikes.phb 真气驻拳：抗性免疫",
@@ -123,21 +116,17 @@
     "feature.ranger-gloom-stalker-dread-ambusher.xge 恐惧伏击：速度",
     "feature.ranger-gloom-stalker-umbral-sight.xge 阴影视野：感官",
     "feature.rogue-scout-ambush-master.xge 伏击大师：先攻被动",
-    "feature.sorcerer-aberrant-mind-psychic-defenses.tce 心灵防御：抗性免疫",
     "feature.sorcerer-shadow-magic-eyes-of-the-dark.xge 幽暗之瞳：感官",
-    "feature.warlock-the-archfey-beguiling-defenses.phb 斗转星移：抗性免疫",
-    "feature.warlock-the-celestial-radiant-soul.xge 光耀之魂：抗性免疫",
-    "feature.warlock-the-fathomless-oceanic-soul.tce 海渊魂灵：抗性免疫",
     "feature.warlock-the-fiend-fiendish-resilience.phb 邪魔体魄：抗性免疫",
-    "feature.warlock-the-great-old-one-thought-shield.phb 思维之盾：抗性免疫",
     "feature.warrior-sidekick-battle-readiness.tce 备战：先攻被动",
     "feature.wizard-bladesinging-song-of-victory.tce 胜利之歌：属性值",
     "feature.wizard-school-of-abjuration-spell-resistance.phb 法术抗性：抗性免疫",
-    "feature.wizard-school-of-necromancy-inured-to-undeath.phb 不死适应：生命上限、抗性免疫"
+    "feature.wizard-school-of-necromancy-undead-thralls.phb 亡灵仆役：生命上限",
+    "feature.wizard-school-of-transmutation-transmuters-stone.phb 变化师之石：速度、抗性免疫、感官"
    ],
    "expected": "各特性原文（初筛，逐条确认见分诊清单）",
    "note": "影响护甲等级、速度、生命上限、熟练、抗性、感官、先攻、属性值的机制只有文字（初筛结果，含误报，需对照原书确认后结构化）",
-   "count": 52
+   "count": 39
   },
   {
    "id": "b3-B-action-in-text",
