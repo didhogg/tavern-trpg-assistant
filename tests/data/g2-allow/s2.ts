@@ -50,6 +50,14 @@ export const ALLOW: Allow[] = [
     expect: 11,
     reason: 'a17-spelling：任选记号 7 种旧写法统一成规范写法',
   },
+  {
+    name: 's2-warlock-slot-level',
+    station: 2,
+    ids: ['class.warlock.phb'],
+    path: /^(?:\/data\/table\/rows\/\d+\/values\/3|\/i18n\/en\/fields\/table\.rows\.\d+\.values\.3)$/,
+    expect: 1,
+    reason: 'a6-warlock-slot-level-format：魔契师职业表法术位环阶列统一成 N环',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
