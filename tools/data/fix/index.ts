@@ -2,6 +2,7 @@ import type { ConvertedPack } from '../convert'
 import { applyFixes, type FixReport, type Rule, type RowSet } from './engine'
 import { ROWS as S1_ARTIFICER_LIST } from './rows/s1-artificer-list'
 import { ROWS as S2_STARTING_EQUIPMENT } from './rows/s2-starting-equipment'
+import { ROWS as S2_SCROLL_LABELS } from './rows/s2-scroll-labels'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 
@@ -13,6 +14,7 @@ export const RULES: Rule[] = [S2_POOL_SPELLING, S2_WARLOCK_SLOT_LEVEL]
 export const ROW_SETS: RowSet[] = [
   { file: 'rows/s1-artificer-list.ts', rows: S1_ARTIFICER_LIST },
   { file: 'rows/s2-starting-equipment.ts', rows: S2_STARTING_EQUIPMENT },
+  { file: 'rows/s2-scroll-labels.ts', rows: S2_SCROLL_LABELS },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {

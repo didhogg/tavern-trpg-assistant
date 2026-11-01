@@ -58,6 +58,14 @@ export const ALLOW: Allow[] = [
     expect: 1,
     reason: 'a6-warlock-slot-level-format：魔契师职业表法术位环阶列统一成 N环',
   },
+  {
+    name: 's2-scroll-labels',
+    station: 2,
+    ids: ['table.dmg-p139-r1'],
+    path: /^(?:\/data\/rows\/\d+\/cells\/\d+|\/i18n\/en\/fields\/rows\.\d+\.cells\.\d+)$/,
+    expect: 1,
+    reason: 'b14-scroll-labels：法术卷轴表 5 个单元格（通用语→普通，6th/7th/8th→N环）',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
