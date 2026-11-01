@@ -15,7 +15,7 @@
 ## P1 Foundry 映射（`tools/data/convert/foundry.ts` 等）
 
 - **根因（已查实）**：①`number()` 的正则 `^[-+]?\d+` 不认 `"+ 10"`（符号后带空格），失败后被 `?? 0` 兜底成 0；②`+(sign(@attributes.movement.walk) * @scale.monk.unarmored-movement)` 这类含 `@scale.<职业>.<id>` 的公式没解析；③护甲计算 `ac.calc`、感官、先攻、`bonuses.save/check`、暴击标记（`meleeCriticalDamageDice`、`weaponCriticalThreshold`）、`magicalBonus` 没有映射，只留一条"Foundry 效果：…"的说明（36 个条目）；④活动 `consumption.targets[].target` 的 uid（如"吟游诗人激励|吟游诗人|XPHB|1"）没换成我们的特性编号。
-- **做法**：①`number()` 容忍符号后的空格；②`@scale.<职业>.<id>` → `scale.<id>`，`sign(@…)` 当作 1（原本有该移动方式才加，数据里取并入本模式的写法；若不能无损表达，**不写 0，写成说明并进登记**）；③补齐上述键的映射到既有效果种类（不新增 kind；对不上的保留说明）；④uid 解析：按"名称|职业|书|等级"到我们的特性编号。**取消所有 `?? 0` 兜底**：解析失败一律保留为说明文字并进登记，绝不写 0。
+- **做法**：①`number()` 容忍符号后的空格；②`@scale.<职业>.<id>` → `scale.<id>`，`sign(@…)` 当作 1（原本有该移动方式才加，数据里取并入本模式的写法；若不能无损表达，**不写 0，写成说明并进登记**）；③补齐上述键的映射到既有效果种类（不新增 kind；对不上的保留说明）；④uid 解析：按"名称|职业|书|等级"到我们的特性编号。⑤**把 `consumes` 读全**：5etools 的 `consumes`（池名＋数量）出现在职业特性 24、子职业特性 115、可选特性 79 个条目上，转换器只处理了可选特性；改为三类都读，并把池名（引导神力、卓越骰、术法点、Ki、功力、奥术射击、灵能骰、荒野形态）解析成池特性编号（一个池名在多个职业／书里时，按同一职业与同一版本匹配）。**取消所有 `?? 0` 兜底**：解析失败一律保留为说明文字并进登记，绝不写 0。
 - **通用测试**：全库没有数值为 0 的 `speed`／`ac`／`hpMax` 效果（除"速度变 0"的状态）；没有以"Foundry"开头的说明里含已映射的键；所有活动消耗目标都能解析到存在的条目。
 - **预期消掉**：`b2-zero-placeholder`、`b1-ac/hp/speed`、`b4-consumption-target-missing`、`b2-derived-in-note`（含暴击 4 个，原 4-5）。
 
@@ -51,6 +51,17 @@
 - **清单**：①天生法术解锁等级（读 `additionalSpells[].innate` 的等级键）；②起始装备类别项（读 `startingEquipment.defaultData` 的 `equipmentType`／`focus*`）；③第 2 站的 6 条规则（怪物法术名补链接、教派链接、池拼写、表等级标签、邪术师法术位、卷轴标签）。
 - **做法**：转换器照原始数据直接生成与现在**逐字相同**的结果；然后从 `tools/data/fix/index.ts` 退役对应的修正表与规则（它们的"现状值"断言会在转换器修好后自动报冲突，用来清点不漏）；`g2-additive` 的放行从逐条 `ids` 改成整类规则。
 - **验收**：重建前后数据**逐条 diff 为空**（脚本对比 11 个包）；`check`、`test:data`、`g2-oldext` 全过。
+- **补充层（驾驶员 2026-11-01 提出：这是真正的数据库，不能是只有 agent 才能嵌入维护的数据）**：原始数据和公开来源都没有的内容（E 站做的），一律写成**声明式补充层数据文件**，不是 TS 代码里的修正行：`tools/data/overlay/<领域>.json`，每行 `{ id, path, op, after, basis（书名＋页码）, source }`，随数据仓库版本化；构建时在管线之后应用（沿用现有 `before` 断言作保险）；任何人（不只是 agent）可以读、改、导出。P6 顺便把现有 `rows/*.ts` 的逐条行转成同一格式。`E` 站交付的就是这些文件。
+
+## P7 新数据源接入：Foundry dnd5e 开源数据（驾驶员 2026-11-01 要求"先查好有没有数据可以直接导入"）
+
+- **数据源**：`foundryvtt/dnd5e` 仓库 `packs/_source`（YAML，SRD 5.1 的 2014 内容与 SRD 5.2 的 2024 内容）。规划者已整库拉取核对，覆盖率见台账第三节。
+- **做法**：写 `tools/data/fetch/foundry-dnd5e.ts`（固定提交哈希，拉到 `reference/foundry-dnd5e-open/`，不入库，哈希写进配置，和 5etools 副本同样处理）；新增读取层按**英文名归一**连接我们的条目，**只用 2014 的包（`items`、`classfeatures`、`races`、`spells`、`monsters`）作为数据来源，2024 的包只做交叉核对**（两版规则可能不同）。
+- **接入内容**：①物品：`uses.max`、`uses.recovery`（period／type／formula）补全或核对 `charges`；`cast` 活动的 `itemUses` 花费与 `attachedSpells.charges` 交叉核对；消耗品（74／119）的活动；固有每日次数（速度之靴、魔术袋等，33 件）→ `charges`＋活动；②SRD 职业特性：`consumption.targets`（如 Cutting Words → `feat:bardic-inspiration`）解析成我们的特性编号写 `consumes`／`restores`，`uses.recovery` 对应休息类型。
+- **原则**：5etools 已有的值优先；Foundry 只补缺；**两者数值不一致不静默覆盖，进登记交规划者**。每个来自 Foundry 的字段在 `credit.structured` 里标来源与许可。
+- **许可核对（动手前先做）**：确认 `foundryvtt/dnd5e` 数据部分的许可（SRD 内容为 CC-BY-4.0 且需署名）并把署名写进包的 `credit`；不确定就停，问驾驶员。
+- **通用测试**：每个来自 Foundry 的 `charges.max` 与 5etools 的 `charges` 一致；每个解析出的消耗目标指向存在的特性。
+- **覆盖率实测写进报告**：接入后"消耗品活动"、"每日次数"、"资源关系"各剩多少，E 站名单据此重算（`E_逐条站.md` 的数字是接入前的）。
 
 ## P 站完成后
 
