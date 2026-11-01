@@ -19,20 +19,6 @@
    "expected": "TCE 英文版第 2 章（奇械师只有简易武器；火器熟练是条件性的）",
    "note": "武器熟练的类别与书不符",
    "count": 1
-  },
-  {
-   "id": "a2-tool-choice-prose",
-   "check": "a2",
-   "kind": "decision",
-   "fixSource": "decision",
-   "entries": [
-    "class.artificer.tce",
-    "class.bard.phb",
-    "class.monk.phb"
-   ],
-   "expected": "PHB 吟游诗人/武僧、TCE 奇械师的熟练项",
-   "note": "“自选 N 种乐器/工匠工具”这类工具选择只有文字，没有结构（类别 + 数量）；是否给它加结构由驾驶员决定",
-   "count": 3
   }
  ]
 }

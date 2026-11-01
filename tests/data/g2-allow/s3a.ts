@@ -23,6 +23,14 @@ export const ALLOW: Allow[] = [
     expect: 12,
     reason: 'a1-equipChoices / a1-equipFixed：12 个职业补类别选项与固定类别项',
   },
+  {
+    name: 's3a-tool-choose',
+    station: 3,
+    ids: ['class.bard.phb', 'class.monk.phb', 'class.artificer.tce'],
+    path: /^\/data\/(?:multiclass\/)?proficiencies\/toolChoose$/,
+    expect: 3,
+    reason: 'a2-tool-choice-prose：3 个职业加结构化 toolChoose（吟游诗人另含多职业）',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
