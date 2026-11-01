@@ -9,6 +9,8 @@ export interface ClassProf {
   toolIds: string[]
   /** 工具里含“自选 N 种”之类选择的文字项——只能当文字，读不成结构 */
   toolProse: string[]
+  /** 工具熟练的自选部分的结构（proficiencies.toolChoose）；没有就只有文字 */
+  toolChoose?: { count: number; from: string[] }
   skillChoose: number
   skillFrom: string[]
 }
@@ -30,6 +32,11 @@ export function readProficiencies(c: Row, root: unknown = c.data.proficiencies):
     else if (/\{\{ref:/.test(t) || /选|任/.test(t)) out.toolProse.push(t)
     else throw new ShapeError(`${c.id} 工具熟练里有不认识的写法：${t}`)
   }
+  if (p.toolChoose !== undefined) {
+    const tc = rec(p.toolChoose)
+    shape(typeof tc.count === 'number' && tc.count > 0 && strs(tc.from).length > 0, `${c.id} toolChoose 形状不对`)
+    out.toolChoose = { count: tc.count, from: strs(tc.from) }
+  }
   if (p.skills !== undefined) {
     const s = rec(p.skills)
     shape(typeof s.choose === 'number' && Array.isArray(s.from), `${c.id} 技能选项形状不对`)
@@ -39,7 +46,7 @@ export function readProficiencies(c: Row, root: unknown = c.data.proficiencies):
   return out
 }
 
-export interface EquipOption { name?: string; qty: number; category?: string }
+export interface EquipOption { name?: string; qty: number; category?: string; /** 物品条目 id；没有 = 自由文字物品（书上本来是描述性文字） */ id?: string }
 export interface EquipBlock { kind: 'fixed' | 'choice' | 'gold'; options: EquipOption[][]; gold?: { dice: string; multiplier: number } }
 
 export function readEquipment(row: Row, field: 'startingEquipment' | 'equipment'): EquipBlock[] {
@@ -49,7 +56,7 @@ export function readEquipment(row: Row, field: 'startingEquipment' | 'equipment'
     const o = rec(b)
     const items = (list: unknown): EquipOption[] => arr(list).map((i) => {
       const it = rec(i)
-      if (typeof it.item === 'string') return { name: it.item, qty: typeof it.qty === 'number' ? it.qty : 1 }
+      if (typeof it.item === 'string') return { name: it.item, qty: typeof it.qty === 'number' ? it.qty : 1, ...(typeof it.id === 'string' ? { id: it.id } : {}) }
       if (typeof it.category === 'string') return { category: it.category, qty: typeof it.qty === 'number' ? it.qty : 1 }
       throw new ShapeError(`${row.id} ${field} 的物品形状不认识`)
     })

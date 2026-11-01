@@ -26,6 +26,8 @@ describe('G2b 状态与专注（b6）', () => {
         checks++
         const structured = it.s ? tokens.some((t) => t.startsWith(it.s!)) : false
         const inText = it.n ? it.n.test(notes) : false
+        // “针对它的攻击……”：有 against 效果（优势/劣势在攻击上，需要时带 autoCrit）就算已结构化
+        if (it.against && it.ak && eff.some((e) => e.kind === it.ak && e.on === 'attack' && e.against === true && (!it.crit || rec(e.autoCrit).within !== undefined))) continue
         if (it.s && !structured) structMissing.push(`${name}：${it.k}`)
         else if (it.n && !inText) textMissing.push(`${name}：${it.k}`)
         else if (it.against && inText) againstTextOnly.push(`${name}：${it.k}`)

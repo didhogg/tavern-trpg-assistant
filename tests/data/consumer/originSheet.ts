@@ -6,6 +6,8 @@ import { arr, rec, ShapeError, shape, str, strs, uniq } from './util'
 export interface RaceSheet {
   abilities: Record<string, number>
   abilityChoose?: [number, number]
+  /** 亚种的属性加值是“替换”（变体人类）：不再叠加种族本身的加值 */
+  abilityReplace?: boolean
   size: string[]
   walk: number
   speeds: Record<string, number>
@@ -25,6 +27,7 @@ function oneRace(r: Row): RaceSheet {
   const ab = rec(d.abilityBonus)
   const out: RaceSheet = { abilities: {}, size: strs(d.size), walk: 0, speeds: {}, darkvision: 0, langFixed: [], langChoose: 0, skillsFixed: [], skillChoose: 0, weaponsFixed: [], armorFixed: [], toolsFixed: [], toolChoose: 0 }
   for (const [k, v] of Object.entries(rec(ab.fixed))) out.abilities[k] = Number(v)
+  if (ab.replace === true) out.abilityReplace = true
   if (ab.choose !== undefined) { const c = rec(ab.choose); shape(typeof c.amount === 'number' && typeof c.count === 'number', `${r.id} 自选属性加值形状不对`); out.abilityChoose = [c.amount, c.count] }
   for (const [k, v] of Object.entries(rec(d.speed))) { if (typeof v === 'number') out.speeds[k] = v; else shape(typeof v === 'boolean', `${r.id} 速度 ${k} 形状不对`) }
   out.walk = out.speeds.walk ?? 0
@@ -49,11 +52,13 @@ export function readRace(l: Lib, id: string, subraceId?: string): RaceSheet {
   const sub = l.need(subraceId)
   shape(str(sub.data.parentRace) === id, `${subraceId} 的 parentRace 不是 ${id}`)
   const s = oneRace(sub)
-  const abilities = { ...base.abilities }
+  // replace: true（变体人类）= 以亚种自己的属性加值为准，不叠加种族本身的
+  shape(!s.abilityReplace || sub.type === 'subrace', `${subraceId} 的 abilityBonus.replace 只能出现在亚种上`)
+  const abilities = s.abilityReplace ? {} : { ...base.abilities }
   for (const [k, v] of Object.entries(s.abilities)) abilities[k] = (abilities[k] ?? 0) + v
   return {
     abilities,
-    abilityChoose: s.abilityChoose ?? base.abilityChoose,
+    abilityChoose: s.abilityChoose ?? (s.abilityReplace ? undefined : base.abilityChoose),
     size: s.size.length ? s.size : base.size,
     walk: s.walk || base.walk,
     speeds: { ...base.speeds, ...s.speeds },

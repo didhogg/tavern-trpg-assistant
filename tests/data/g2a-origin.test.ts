@@ -46,7 +46,10 @@ describe('G2a 背景（a13）', () => {
     const NOTE: Record<string, string> = { skills: '背景技能与书不符', toolsFixed: '背景固定工具与书不符', toolChoose: '背景自选工具与书不符', langChoose: '背景自选语言数与书不符', 'grants-vs-proficiencies': '背景的 proficiencies 与 advancement 两种写法不一致', 'table-missing': '特征表不存在', 'table-rows': '特征表行数与书不符（特点 d8、理念/牵挂/缺陷 d6）' }
     for (const [k, ids] of Object.entries(bad)) rec2.find({ id: `a13-${k}`, check: 'a13', kind: 'data-defect', fixSource: 'self-structure', entries: ids, expected: 'PHB 第 4 章背景', note: NOTE[k] ?? k })
     // 全部背景：没有特征表、也不是自定义背景的（剑湾背景只写了“使用某某背景的特征表”文字）
-    const noTables = l.of('background').filter((b) => arr(b.data.characteristics).length === 0 && b.id !== 'background.custom-background.phb')
+    // 借用别的背景的特征表（characteristicsFrom）也算有；借用的必须是真实存在、且自己有表的背景
+    const brokenFrom = l.of('background').filter((b) => b.data.characteristicsFrom !== undefined && (l.get(str(b.data.characteristicsFrom))?.type !== 'background' || arr(l.get(str(b.data.characteristicsFrom))?.data.characteristics).length === 0))
+    if (brokenFrom.length) rec2.find({ id: 'a13-from-broken', check: 'a13', kind: 'data-defect', fixSource: 'self-structure', entries: brokenFrom.map((b) => `${b.id} ${b.name}`), expected: 'SCAG 第 4 章各背景“使用某某背景的特征表”', note: 'characteristicsFrom 指向的背景不存在，或那个背景自己没有特征表' })
+    const noTables = l.of('background').filter((b) => arr(b.data.characteristics).length === 0 && b.data.characteristicsFrom === undefined && b.id !== 'background.custom-background.phb')
     rec2.stat('a13', 'backgrounds', l.of('background').length)
     rec2.find({ id: 'a13-no-characteristics', check: 'a13', kind: 'source-defect', fixSource: 'self-structure', entries: noTables.map((b) => b.id), expected: 'SCAG 第 4 章（城市守卫等写“使用士兵背景的特征表”，其余背景有自己的表）、BMT', note: '这些背景没有结构化的特征表引用：多数在书上就是一句话“使用玩家手册某背景的特征表”（只有文字，读不出指向哪几张表）' })
     expect(rec2.settle()).toEqual([])

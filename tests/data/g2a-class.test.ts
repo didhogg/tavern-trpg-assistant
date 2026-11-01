@@ -5,6 +5,7 @@ import { CLASS_EXPECT } from './consumer/expected/classes'
 import { SLOT_TABLE, PACT } from './consumer/expected/slots'
 import { asiLevels, englishOf, readEquipment, readGrants, readProficiencies, readSpellcasting, resolveItemName } from './consumer/classSheet'
 import { Recorder } from './consumer/findings'
+import { expandToken } from './consumer/expand'
 import { lib } from './consumer/load'
 import { fold, sameSet, sorted } from './consumer/util'
 
@@ -37,7 +38,8 @@ describe('G2a 职业：熟练、技能、起始装备（a1 a2 a3）', () => {
     }
     rec.stat('a1-a3', 'checks', checks)
     // 书上本来就是“自选…”的工具熟练（吟游诗人 3 种乐器、武僧 1 种工匠工具或乐器、奇械师 1 种工匠工具）：数据里只能是文字，读不成结构
-    const prose = Object.keys(CLASS_EXPECT).filter((id) => readProficiencies(l.need(id)).toolProse.length > 0)
+    // 有结构（toolChoose）的不再算“只有文字”
+    const prose = Object.keys(CLASS_EXPECT).filter((id) => { const p = readProficiencies(l.need(id)); return p.toolProse.length > 0 && !p.toolChoose })
     rec.find({ id: 'a2-tool-choice-prose', check: 'a2', kind: 'decision', fixSource: 'decision', entries: prose, expected: 'PHB 吟游诗人/武僧、TCE 奇械师的熟练项', note: '“自选 N 种乐器/工匠工具”这类工具选择只有文字，没有结构（类别 + 数量）；是否给它加结构由驾驶员决定' })
     const NOTE: Record<string, string> = {
       weaponCats: '武器熟练的类别与书不符',
@@ -62,9 +64,12 @@ describe('G2a 职业：熟练、技能、起始装备（a1 a2 a3）', () => {
     for (const [type, field] of [['class', 'startingEquipment'], ['background', 'equipment']] as const) {
       for (const r of l.of(type)) {
         for (const b of readEquipment(r, field)) for (const opts of b.options) for (const o of opts) {
+          // 类别记号（任意简易武器、法器……）必须能展开成至少一件物品；不认识的记号 expandToken 会直接抛错
+          if (o.category) expect(expandToken(l, o.category).values.length, `${r.id} 的类别记号 ${o.category}`).toBeGreaterThan(0)
           if (!o.name) continue
           total++
-          if (!resolveItemName(l, o.name)) unresolved.push({ name: o.name, where: r.id })
+          // 带条目 id 的：id 必须是真实的物品；没带的才按名字找（没有 id = 自由文字物品）
+          if (o.id !== undefined ? l.get(o.id)?.type !== 'item' : !resolveItemName(l, o.name)) unresolved.push({ name: o.name, where: r.id })
         }
       }
     }
