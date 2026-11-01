@@ -85,24 +85,6 @@
    "count": 1
   },
   {
-   "id": "d8-cult-spells-plain",
-   "check": "d8",
-   "kind": "data-defect",
-   "fixSource": "normalize",
-   "entries": [
-    "cult.cult-of-baalzebul.mtf 巴尔泽布教派：魅影之力（2环法术）",
-    "cult.cult-of-fierna.mtf 菲尔娜教派：交友术 (戏法)",
-    "cult.cult-of-geryon.mtf 格殷永教派：激愤斩 (1级)、活力灵光 (3级)",
-    "cult.cult-of-glasya.mtf 格莱西雅教派：交友术 （戏法）",
-    "cult.cult-of-levistus.mtf 莱维斯图斯教派：剑刃防护 (戏法)",
-    "cult.cult-of-mammon.mtf 玛门教派：谭森浮碟术 (1级)",
-    "cult.cult-of-zariel.mtf 扎瑞尔教派：十字军披风（3环法术）"
-   ],
-   "expected": "MPMM 魔王教派",
-   "note": "教派的招牌法术是一整段文字，部分法术没加链接",
-   "count": 7
-  },
-  {
    "id": "d8-reward-ability-text",
    "check": "d8",
    "kind": "decision",

@@ -82,6 +82,22 @@ export const ALLOW: Allow[] = [
     expect: 83,
     reason: 'c5-spell-plain-name：83 个怪物、125 处法术名补链接；巫妖马友夫强酸箭跳过',
   },
+  {
+    name: 's2-cult-links',
+    station: 2,
+    ids: [
+      'cult.cult-of-baalzebul.mtf',
+      'cult.cult-of-fierna.mtf',
+      'cult.cult-of-geryon.mtf',
+      'cult.cult-of-glasya.mtf',
+      'cult.cult-of-levistus.mtf',
+      'cult.cult-of-mammon.mtf',
+      'cult.cult-of-zariel.mtf',
+    ],
+    path: /^\/data\/signatureSpells$/,
+    expect: 7,
+    reason: 'd8-cult-spells-plain：7 个教派招牌法术补链接，括号说明保留在 }} 后',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
