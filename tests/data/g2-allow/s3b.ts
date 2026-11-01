@@ -207,6 +207,27 @@ export const ALLOW: Allow[] = [
     expect: 20,
     reason: 'b8-upcast-no-tag-summon：20 个召唤法术补升环结构（复杂项 note）',
   },
+  {
+    name: 's3b-upcast-duration',
+    station: 3,
+    ids: [
+      'spell.animal-messenger.phb',
+      'spell.bestow-curse.phb',
+      'spell.dominate-beast.phb',
+      'spell.dominate-monster.phb',
+      'spell.dominate-person.phb',
+      'spell.geas.phb',
+      'spell.hex.phb',
+      'spell.hunters-mark.phb',
+      'spell.magic-circle.phb',
+      'spell.major-image.phb',
+      'spell.mass-suggestion.phb',
+      'spell.planar-binding.phb',
+    ],
+    path: /^\/data\/upcast$/,
+    expect: 12,
+    reason: 'b8-upcast-no-tag-duration：12 个法术补升环结构',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

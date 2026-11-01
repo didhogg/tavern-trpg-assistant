@@ -13,11 +13,6 @@
   },
   {
    "check": "b8",
-   "key": "noTag.duration",
-   "value": 12
-  },
-  {
-   "check": "b8",
    "key": "noTag.heal",
    "value": 3
   },
@@ -44,7 +39,7 @@
   {
    "check": "b8",
    "key": "withStructure",
-   "value": 126
+   "value": 138
   }
  ],
  "findings": [
@@ -55,37 +50,25 @@
    "fixSource": "import-5etools",
    "entries": [
     "spell.aid.phb 援助术",
-    "spell.animal-messenger.phb 动物信使",
     "spell.animate-objects.phb 活化物件",
     "spell.armor-of-agathys.phb 黯冰狱铠",
-    "spell.bestow-curse.phb 降咒",
     "spell.confusion.phb 困惑术",
     "spell.cordon-of-arrows.phb 警戒箭阵",
-    "spell.dominate-beast.phb 支配野兽",
-    "spell.dominate-monster.phb 支配怪物",
-    "spell.dominate-person.phb 支配类人",
     "spell.false-life.phb 虚假生命",
     "spell.flame-arrows.xge 烈焰箭矢",
     "spell.fog-cloud.phb 云雾术",
-    "spell.geas.phb 指使术",
     "spell.globe-of-invulnerability.phb 法术无效结界",
     "spell.heal.phb 医疗术",
-    "spell.hex.phb 脆弱诅咒",
-    "spell.hunters-mark.phb 猎人印记",
-    "spell.magic-circle.phb 防护法阵",
     "spell.magic-missile.phb 魔法飞弹",
     "spell.magic-weapon.phb 魔化武器",
-    "spell.major-image.phb 高等幻影",
-    "spell.mass-suggestion.phb 群体暗示术",
     "spell.melfs-minute-meteors.xge 马友夫微流星",
     "spell.mordenkainens-private-sanctum.phb 魔邓肯私人密室",
-    "spell.planar-binding.phb 异界誓缚",
     "spell.scorching-ray.phb 灼热射线",
     "spell.shadow-blade.xge 幽影刃"
    ],
    "expected": "PHB 第 11 章各法术“升环施法”；5etools 的 {@scaledamage} 标签；5e API 的 damage_at_slot_level",
    "note": "升环效果只有文字，没有结构：火球术用 5 环施放该掷几个骰，程序算不出来",
-   "count": 28
+   "count": 16
   },
   {
    "id": "b8-upcast-no-tag-area",
@@ -100,29 +83,6 @@
    "expected": "PHB、XGE、TCE 各法术原文",
    "note": "没有 5etools 标签的升环（范围变大），需要自己对照原书结构化",
    "count": 3
-  },
-  {
-   "id": "b8-upcast-no-tag-duration",
-   "check": "b8",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "spell.animal-messenger.phb 动物信使",
-    "spell.bestow-curse.phb 降咒",
-    "spell.dominate-beast.phb 支配野兽",
-    "spell.dominate-monster.phb 支配怪物",
-    "spell.dominate-person.phb 支配类人",
-    "spell.geas.phb 指使术",
-    "spell.hex.phb 脆弱诅咒",
-    "spell.hunters-mark.phb 猎人印记",
-    "spell.magic-circle.phb 防护法阵",
-    "spell.major-image.phb 高等幻影",
-    "spell.mass-suggestion.phb 群体暗示术",
-    "spell.planar-binding.phb 异界誓缚"
-   ],
-   "expected": "PHB、XGE、TCE 各法术原文",
-   "note": "没有 5etools 标签的升环（持续时间变长），需要自己对照原书结构化",
-   "count": 12
   },
   {
    "id": "b8-upcast-no-tag-heal",
