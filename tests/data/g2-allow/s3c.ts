@@ -58,6 +58,14 @@ export const ALLOW: Allow[] = [
     expect: 8,
     reason: 'c13-hp-special-other：8 个固定生命值怪物写 average，special 保留',
   },
+  {
+    name: 's3c-ki-keyword',
+    station: 3,
+    ids: ['feature.monk-ki.phb'],
+    path: /^\/keywords\//,
+    expect: 1,
+    reason: 'd4-keywords-miss-name-en：气补英文名 Ki',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

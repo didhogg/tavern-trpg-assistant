@@ -35,6 +35,7 @@ import { ROWS as S3C_OBJECT_ACTIVITIES } from './rows/s3c-object-activities'
 import { ROWS as S3C_OBJECT_IMMUNE } from './rows/s3c-object-immune'
 import { ROWS as S3C_PLANAR_RAIDER } from './rows/s3c-planar-raider'
 import { ROWS as S3C_FIXED_HP } from './rows/s3c-fixed-hp'
+import { ROWS as S3C_KI_KEYWORD } from './rows/s3c-ki-keyword'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -83,6 +84,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3c-object-immune.ts', rows: S3C_OBJECT_IMMUNE },
   { file: 'rows/s3c-planar-raider.ts', rows: S3C_PLANAR_RAIDER },
   { file: 'rows/s3c-fixed-hp.ts', rows: S3C_FIXED_HP },
+  { file: 'rows/s3c-ki-keyword.ts', rows: S3C_KI_KEYWORD },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {
