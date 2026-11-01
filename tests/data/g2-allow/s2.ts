@@ -98,6 +98,14 @@ export const ALLOW: Allow[] = [
     expect: 7,
     reason: 'd8-cult-spells-plain：7 个教派招牌法术补链接，括号说明保留在 }} 后',
   },
+  {
+    name: 's2-lang-other',
+    station: 2,
+    ids: ['race.bullywug.dmg', 'race.troglodyte.dmg', 'race.gith.mtf'],
+    path: /^\/data\/advancement\//,
+    expect: 3,
+    reason: 'a17-ambiguous：3 个种族的 lang:other 换成各自语言代码',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

@@ -9,24 +9,10 @@
   {
    "check": "a17",
    "key": "tokens",
-   "value": 80
+   "value": 82
   }
  ],
  "findings": [
-  {
-   "id": "a17-ambiguous",
-   "check": "a17",
-   "kind": "decision",
-   "fixSource": "decision",
-   "entries": [
-    "race.bullywug.dmg",
-    "race.gith.mtf",
-    "race.troglodyte.dmg"
-   ],
-   "expected": "规则本身",
-   "note": "lang:other 含义不明，读取器无法展开（吉斯人、穴蜥人、啵灵蛙）；需约定",
-   "count": 3
-  },
   {
    "id": "a17-no-entry",
    "check": "a17",

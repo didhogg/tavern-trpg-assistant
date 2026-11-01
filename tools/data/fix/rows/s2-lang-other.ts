@@ -1,0 +1,28 @@
+import type { Fix } from '../engine'
+
+export const ROWS: Fix[] = [
+  {
+    id: 'race.bullywug.dmg',
+    path: '/data/advancement/0/grants/0',
+    op: 'set',
+    before: 'lang:other',
+    after: 'lang:bullywug',
+    basis: '啵灵蛙种族特质：可说、读、写啵灵蛙语；语言条目 language.bullywug.mm code=bullywug',
+  },
+  {
+    id: 'race.troglodyte.dmg',
+    path: '/data/advancement/0/grants/0',
+    op: 'set',
+    before: 'lang:other',
+    after: 'lang:troglodyte',
+    basis: '穴蜥人种族特质：可说、读、写穴蜥人语；语言条目 language.troglodyte.mm code=troglodyte',
+  },
+  {
+    id: 'race.gith.mtf',
+    path: '/data/advancement/0/grants/1',
+    op: 'set',
+    before: 'lang:other',
+    after: 'lang:gith',
+    basis: '吉斯人种族特质：可说、读、写吉斯语；语言条目 language.gith.mm code=gith',
+  },
+]
