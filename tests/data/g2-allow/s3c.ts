@@ -14,7 +14,7 @@ export const ALLOW: Allow[] = [
     name: 's3c-passive',
     station: 3,
     ids: ['monster.homunculus-servant.tce', 'monster.steel-defender.tce'],
-    path: /^\/data\/(?:passive|skills\/)/,
+    path: /^\/data\/(?:passive|skills\/|saves\/)/,
     expect: 2,
     reason: 'c1-passive-missing：两个人造伙伴补被动察觉与 TCE 的 +PB 技能基线',
   },

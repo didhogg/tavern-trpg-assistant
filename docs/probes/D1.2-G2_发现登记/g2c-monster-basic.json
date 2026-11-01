@@ -133,18 +133,15 @@
     "monster.demilich-trap-soul.mm 半巫妖（囚魂）：con 加值 6，调整值 0，应加熟练 7（差 -1）",
     "monster.demilich-trap-soul.mm 半巫妖（囚魂）：int 加值 11，调整值 5，应加熟练 7（差 -1）",
     "monster.demilich-trap-soul.mm 半巫妖（囚魂）：wis 加值 9，调整值 3，应加熟练 7（差 -1）",
-    "monster.homunculus-servant.tce 人工生命仆从：dex 加值 2，调整值 2，应加熟练 2（差 -2）",
     "monster.mighty-servant-of-leuk-o.tce 琉克欧的非凡机仆：cha 加值 7，调整值 0，应加熟练 2（差 5）",
     "monster.mighty-servant-of-leuk-o.tce 琉克欧的非凡机仆：wis 加值 9，调整值 2，应加熟练 2（差 5）",
     "monster.sacred-statue.mpmm 圣灵塑像：wis 加值 8，调整值 4，应加熟练 2（差 2）",
-    "monster.sacred-statue.mtf 圣灵塑像：wis 加值 8，调整值 4，应加熟练 2（差 2）",
-    "monster.steel-defender.tce 钢铁守卫：con 加值 2，调整值 2，应加熟练 2（差 -2）",
-    "monster.steel-defender.tce 钢铁守卫：dex 加值 1，调整值 1，应加熟练 2（差 -2）"
+    "monster.sacred-statue.mtf 圣灵塑像：wis 加值 8，调整值 4，应加熟练 2（差 2）"
    ],
    "expected": "条目自己的数据（自洽检查）；需对照 MM、MPMM 原文",
    "note": "豁免加值 ≠ 调整值 + 熟练（自洽检查；怪物不一定严格按表，但差值多说明可能抄错）",
    "selfCheck": true,
-   "count": 15
+   "count": 12
   },
   {
    "id": "c1-skill-bonus-off",
