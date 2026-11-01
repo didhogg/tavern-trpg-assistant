@@ -23,12 +23,13 @@ describe('G2a 使用次数 uses 审计（a18）', () => {
     const bad: Record<string, string[]> = {}
     const add = (k: string, id: string): void => { (bad[k] ??= []).push(id) }
     // 人工核对（逐个读过条目文字）：这些 uses 是合理的，不算问题
-    // 奥术回想“每日一次”且在短休时恢复法术位；幸运专长 3 点/长休；招牌法术 2 个/短休或长休
-    const LEGIT = new Set(['feature.wizard-arcane-recovery.phb', 'feat.lucky.phb', 'feature.wizard-signature-spells.phb'])
+    // 奥术回想“每日一次”且在短休时恢复法术位；幸运专长 3 点/长休；招牌法术 2 个/短休或长休；荒野形态是德鲁伊的次数池本身（2 次/短休或长休）
+    const LEGIT = new Set(['feature.wizard-arcane-recovery.phb', 'feat.lucky.phb', 'feature.wizard-signature-spells.phb', 'feature.druid-wild-shape.phb'])
     // 文字里写的是“消耗/花费某某的使用次数”：这类特性消耗的是另一个特性的次数池，自己不该再有一份 uses
     const CONSUMES_OTHER = /(消耗|花费|使用)[^。]{0,22}(诗人激励|吟游激励|荒野形态|荒野形特性态|荒野变形|吐息武器|能力使用次数|斗战之魂|奥术射击)/
     for (const r of withUses) {
-      if (LEGIT.has(r.id)) continue
+      // 龙裔各色“吐息武器”特性本身就是那个次数池（短休或长休恢复 1 次），文字里的“使用吐息武器”不是在消耗别的池
+      if (LEGIT.has(r.id) || /breath-weapon/.test(r.id)) continue
       const u = rec(r.data.uses)
       const t = textOf(r.data.text)
       const mentionsLong = /长休/.test(t)
