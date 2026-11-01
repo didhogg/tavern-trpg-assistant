@@ -22,6 +22,7 @@ import { ROWS as S3B_BACKGROUNDS } from './rows/s3b-backgrounds'
 import { ROWS as S3B_DIALECTS_VEHICLES } from './rows/s3b-dialects-vehicles'
 import { ROWS as S3B_SPELL_DAMAGE } from './rows/s3b-spell-damage'
 import { ROWS as S3B_ELDRITCH_BLAST } from './rows/s3b-eldritch-blast'
+import { ROWS as S3B_UPCAST_TARGETS } from './rows/s3b-upcast-targets'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -57,6 +58,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3b-dialects-vehicles.ts', rows: S3B_DIALECTS_VEHICLES },
   { file: 'rows/s3b-spell-damage.ts', rows: S3B_SPELL_DAMAGE },
   { file: 'rows/s3b-eldritch-blast.ts', rows: S3B_ELDRITCH_BLAST },
+  { file: 'rows/s3b-upcast-targets.ts', rows: S3B_UPCAST_TARGETS },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {
