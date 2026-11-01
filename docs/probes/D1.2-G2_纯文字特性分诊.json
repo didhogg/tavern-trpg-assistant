@@ -1,7 +1,7 @@
 {
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
-  "A": 80,
+  "A": 63,
   "B": 395,
   "C": 576
  },
@@ -1936,14 +1936,6 @@
    ]
   },
   {
-   "id": "feature.bard-college-of-valor-bonus-proficiencies.phb",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.bard-college-of-valor-combat-inspiration.phb",
    "name": "战斗激励",
    "cls": "B",
@@ -2055,14 +2047,6 @@
    "tags": []
   },
   {
-   "id": "feature.cleric-tempest-domain-bonus-proficiencies.phb",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.cleric-tempest-domain-divine-strike.phb",
    "name": "神圣打击",
    "cls": "B",
@@ -2110,14 +2094,6 @@
    "cls": "A",
    "tags": [
     "抗性免疫"
-   ]
-  },
-  {
-   "id": "feature.cleric-war-domain-bonus-proficiencies.phb",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {
@@ -2702,14 +2678,6 @@
    "cls": "B",
    "tags": [
     "攻击结算"
-   ]
-  },
-  {
-   "id": "feature.rogue-assassin-bonus-proficiencies.phb",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {
@@ -3561,14 +3529,6 @@
    ]
   },
   {
-   "id": "feature.cleric-death-domain-bonus-proficiency.dmg",
-   "name": "附赠熟练项",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.cleric-death-domain-divine-strike.dmg",
    "name": "神圣打击",
    "cls": "B",
@@ -4206,14 +4166,6 @@
    ]
   },
   {
-   "id": "feature.cleric-forge-domain-bonus-proficiency.xge",
-   "name": "附赠熟练项",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.cleric-forge-domain-divine-strike.xge",
    "name": "神圣打击",
    "cls": "B",
@@ -4385,14 +4337,6 @@
    "name": "附赠熟练项",
    "cls": "C",
    "tags": []
-  },
-  {
-   "id": "feature.fighter-samurai-elegant-courtier.xge",
-   "name": "雅臣",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
   },
   {
    "id": "feature.fighter-samurai-rapid-strike.xge",
@@ -4933,14 +4877,6 @@
    ]
   },
   {
-   "id": "feature.warlock-the-hexblade-hex-warrior.xge",
-   "name": "巫咒战士",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.warlock-the-hexblade-master-of-hexes.xge",
    "name": "巫咒大师",
    "cls": "C",
@@ -4995,14 +4931,6 @@
     "动作",
     "资源",
     "法术"
-   ]
-  },
-  {
-   "id": "feature.artificer-alchemist-tool-proficiency.tce",
-   "name": "工具熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {
@@ -5074,14 +5002,6 @@
    ]
   },
   {
-   "id": "feature.artificer-armorer-tools-of-the-trade.tce",
-   "name": "行业工具",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.artificer-artificer-specialist-feature.tce",
    "name": "奇械师专业特性",
    "cls": "C",
@@ -5133,22 +5053,6 @@
    ]
   },
   {
-   "id": "feature.artificer-artillerist-tool-proficiency.tce",
-   "name": "工具熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
-   "id": "feature.artificer-battle-smith-battle-ready.tce",
-   "name": "战斗准备",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.artificer-battle-smith-battle-smith-spells.tce",
    "name": "战地匠师法术",
    "cls": "B",
@@ -5178,14 +5082,6 @@
     "动作",
     "资源",
     "法术"
-   ]
-  },
-  {
-   "id": "feature.artificer-battle-smith-tool-proficiency.tce",
-   "name": "工具熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {
@@ -5334,14 +5230,6 @@
    ]
   },
   {
-   "id": "feature.cleric-order-domain-bonus-proficiencies.tce",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.cleric-order-domain-divine-strike.tce",
    "name": "神圣打击",
    "cls": "B",
@@ -5396,14 +5284,6 @@
    "cls": "B",
    "tags": [
     "动作"
-   ]
-  },
-  {
-   "id": "feature.cleric-twilight-domain-bonus-proficiencies.tce",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {
@@ -5726,14 +5606,6 @@
    "tags": []
   },
   {
-   "id": "feature.fighter-rune-knight-bonus-proficiencies.tce",
-   "name": "附赠熟练",
-   "cls": "A",
-   "tags": [
-    "熟练"
-   ]
-  },
-  {
    "id": "feature.fighter-rune-knight-great-stature.tce",
    "name": "奇伟身躯",
    "cls": "B",
@@ -5782,14 +5654,6 @@
    "cls": "B",
    "tags": [
     "资源"
-   ]
-  },
-  {
-   "id": "feature.monk-way-of-mercy-implements-of-mercy.tce",
-   "name": "操命本事",
-   "cls": "A",
-   "tags": [
-    "熟练"
    ]
   },
   {

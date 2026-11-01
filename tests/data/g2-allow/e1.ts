@@ -139,6 +139,32 @@ export const ALLOW: Allow[] = [
     expect: 10,
     reason: 'b5-peculiar-rest-rule 4→0、rest-tracker 2→0、rest-trigger-choice 7→1（卡牌占卜师是 feat，tracker 只能写特性）',
   },
+  {
+    name: 'e1-5-proficiency-1',
+    station: 1,
+    ids: [
+      'feature.artificer-alchemist-tool-proficiency.tce',
+      'feature.artificer-armorer-tools-of-the-trade.tce',
+      'feature.artificer-artillerist-tool-proficiency.tce',
+      'feature.artificer-battle-smith-battle-ready.tce',
+      'feature.artificer-battle-smith-tool-proficiency.tce',
+      'feature.bard-college-of-valor-bonus-proficiencies.phb',
+      'feature.cleric-death-domain-bonus-proficiency.dmg',
+      'feature.cleric-forge-domain-bonus-proficiency.xge',
+      'feature.cleric-order-domain-bonus-proficiencies.tce',
+      'feature.cleric-tempest-domain-bonus-proficiencies.phb',
+      'feature.cleric-twilight-domain-bonus-proficiencies.tce',
+      'feature.cleric-war-domain-bonus-proficiencies.phb',
+      'feature.fighter-rune-knight-bonus-proficiencies.tce',
+      'feature.fighter-samurai-elegant-courtier.xge',
+      'feature.monk-way-of-mercy-implements-of-mercy.tce',
+      'feature.rogue-assassin-bonus-proficiencies.phb',
+      'feature.warlock-the-hexblade-hex-warrior.xge',
+    ],
+    path: /^\/data\/effects$/,
+    expect: 17,
+    reason: 'b3-A 纯文字熟练第一批：固定熟练项',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
