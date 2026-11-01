@@ -13,6 +13,7 @@ import { ROWS as S3A_ITEMS_ADD_B } from './rows/s3a-items-add-b'
 import { ROWS as S3A_PACK_CONTENTS } from './rows/s3a-pack-contents'
 import { ROWS as S3A_SHAWM } from './rows/s3a-shawm'
 import { ROWS as S3B_SIZE } from './rows/s3b-size'
+import { ROWS as S3B_HUMAN_VARIANT } from './rows/s3b-human-variant'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -38,6 +39,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3a-pack-contents.ts', rows: S3A_PACK_CONTENTS },
   { file: 'rows/s3a-shawm.ts', rows: S3A_SHAWM },
   { file: 'rows/s3b-size.ts', rows: S3B_SIZE },
+  { file: 'rows/s3b-human-variant.ts', rows: S3B_HUMAN_VARIANT },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {

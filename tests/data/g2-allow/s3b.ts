@@ -10,6 +10,14 @@ export const ALLOW: Allow[] = [
     expect: 4,
     reason: 'a12-size：4 个亚种体型 M→S',
   },
+  {
+    name: 's3b-human-variant',
+    station: 3,
+    ids: ['subrace.human-variant.phb'],
+    path: /^\/data\/abilityBonus\/replace$/,
+    expect: 1,
+    reason: 'a12-abilities：变体人类属性加值 replace=true',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

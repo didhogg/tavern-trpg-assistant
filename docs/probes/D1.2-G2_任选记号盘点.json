@@ -110,7 +110,7 @@
   "subclass:advancement {count,kind,level,pool}": 18,
   "subclass:advancement.choices {count,pool}": 4,
   "subrace:abilityBonus {choose,fixed} choose={amount,count,from}": 4,
-  "subrace:abilityBonus {choose} choose={amount,count,from}": 1,
+  "subrace:abilityBonus {choose,replace} choose={amount,count,from}": 1,
   "subrace:advancement {choices,grants,kind,level}": 21,
   "subrace:advancement.choices {count,pool}": 10,
   "subrace:languages {choose,fixed}": 1,
