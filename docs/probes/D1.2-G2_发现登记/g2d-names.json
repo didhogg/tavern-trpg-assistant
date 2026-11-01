@@ -3,6 +3,11 @@
  "stats": [
   {
    "check": "d3",
+   "key": "excluded-d3-names-multi-col",
+   "value": 1
+  },
+  {
+   "check": "d3",
    "key": "humanNameTables",
    "value": 34
   },
@@ -43,18 +48,6 @@
    ],
    "expected": "各名字表标题",
    "note": "随机起名要“按性别取一行”时，读取器只能按表名里的“女/男”字判断；推荐：约定读取规则（表名含“女”= 女性、含“男”= 男性、其余 = 姓氏/氏族），不加字段（从简）",
-   "count": 1
-  },
-  {
-   "id": "d3-names-multi-col",
-   "check": "d3",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "table.vgm-p55-1 鬼婆姓名"
-   ],
-   "expected": "名字表",
-   "note": "名字表不是单列",
    "count": 1
   },
   {

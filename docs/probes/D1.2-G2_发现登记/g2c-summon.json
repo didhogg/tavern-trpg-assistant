@@ -13,6 +13,11 @@
   },
   {
    "check": "c13",
+   "key": "excluded-c13-hp-special-other",
+   "value": 1
+  },
+  {
+   "check": "c13",
    "key": "hpSpecial",
    "value": 54
   },
@@ -49,7 +54,6 @@
     "monster.animated-object-medium.phb 活化物体(中型)：40",
     "monster.animated-object-small.phb 活化物体(小型)：25",
     "monster.animated-object-tiny.phb 活化物体(微型)：20",
-    "monster.avatar-of-death.dmg 死亡化身：其召唤者最大生命值的一半",
     "monster.deck-defender.bmt 牌组守卫：5 + 你等级的五倍（牌组守卫拥有等同于你等级数量枚的生命骰[d8]）",
     "monster.troll-loathsome-limb-severed-arm.mm 巨魔（扰人断肢；断臂）：10",
     "monster.troll-loathsome-limb-severed-head.mm 巨魔（扰人断肢；断头）：10",
@@ -57,7 +61,7 @@
    ],
    "expected": "PHB 活化物件表、BMT、MM",
    "note": "生命值只有 special 文字、average 为 0：活化物件的各体型固定生命值（微型 20 … 巨型 80）、牌组守卫的按等级生命等；固定数字的应直接写 average",
-   "count": 10
+   "count": 9
   },
   {
    "id": "c13-summon-attack-snapshot",

@@ -1,0 +1,44 @@
+[
+ {
+  "finding": "c13-hp-special-other",
+  "entry": "monster.avatar-of-death.dmg",
+  "reason": "生命值＝召唤者最大生命值的一半，书上本来就没有固定数；保持文字",
+  "basis": "DMG 死亡化身数据块"
+ },
+ {
+  "finding": "c10-object-no-stats",
+  "entry": "object.generic-object.dmg",
+  "reason": "通用物件的护甲与生命值取决于材料与体型（DMG 物件表），书上没有固定值",
+  "basis": "DMG 第 8 章 物件"
+ },
+ {
+  "finding": "c10-object-no-stats",
+  "entry": "vehicle.astral-brig.mtf",
+  "reason": "原书只给尺寸、速度、船员、乘客与武器，没有护甲等级和生命值；5etools 里也没有",
+  "basis": "MTF p.90（扫描件核对）"
+ },
+ {
+  "finding": "c10-object-no-stats",
+  "entry": "vehicle.astral-skiff.mtf",
+  "reason": "同上",
+  "basis": "MTF p.90（扫描件核对）"
+ },
+ {
+  "finding": "c10-object-no-stats",
+  "entry": "vehicle.planar-raider.mtf",
+  "reason": "同上",
+  "basis": "MTF p.90（扫描件核对）"
+ },
+ {
+  "finding": "c5-spell-list-text-only",
+  "entry": "monster.booyahg-caster.vgm",
+  "reason": "原书写的是每日一次施放一个随机确定的 1 环法师法术，没有法术名单；数据文字忠实",
+  "basis": "VGM p.42"
+ },
+ {
+  "finding": "d3-names-multi-col",
+  "entry": "table.vgm-p55-1",
+  "reason": "鬼婆姓名是“头衔+名字+姓氏”三列的合法多列表；读取约定：多列名字表按列拼接",
+  "basis": "VGM p.55 原表"
+ }
+]

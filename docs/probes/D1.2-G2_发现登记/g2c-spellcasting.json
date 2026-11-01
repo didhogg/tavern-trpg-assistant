@@ -8,6 +8,11 @@
   },
   {
    "check": "c5",
+   "key": "excluded-c5-spell-list-text-only",
+   "value": 1
+  },
+  {
+   "check": "c5",
    "key": "spellMentions",
    "value": 3299
   },
@@ -41,19 +46,6 @@
    "note": "怪物的法术豁免难度和 8+熟练+施法属性调整值不一致（自洽检查；怪物不一定严格按公式）",
    "selfCheck": true,
    "count": 12
-  },
-  {
-   "id": "c5-spell-list-text-only",
-   "check": "c5",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.booyahg-caster.vgm 布耶格，施法者：施法"
-   ],
-   "expected": "条目库",
-   "note": "施法块只有文字、没有结构化的法术列表",
-   "selfCheck": false,
-   "count": 1
   },
   {
    "id": "c5-spell-plain-name",

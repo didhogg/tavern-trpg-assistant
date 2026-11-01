@@ -22,13 +22,25 @@ export interface Stat { check: string; key: string; value: number }
 export interface Registry { group: string; stats: Stat[]; findings: Finding[] }
 
 const DIR = join(process.cwd(), 'docs', 'probes', 'D1.2-G2_发现登记')
+const FULL_DIR = join(process.cwd(), 'tools', 'data', 'out', 'g2-full')
+const EXCLUDE_FILE = join(process.cwd(), 'docs', 'probes', 'D1.2-G2.5_登记排除.json')
 const KEEP = 50
+
+/** 「来源如此」：原书本来就没有这个值/本来就是这个写法，不是数据缺陷。只能由规划者加（见 00 红线）。 */
+export interface Exclusion { finding: string; entry: string; reason: string; basis: string }
+let exclusions: Exclusion[] | undefined
+export function loadExclusions(): Exclusion[] {
+  exclusions ??= existsSync(EXCLUDE_FILE) ? (JSON.parse(readFileSync(EXCLUDE_FILE, 'utf8')) as Exclusion[]) : []
+  return exclusions
+}
 
 const file = (group: string): string => join(DIR, `${group}.json`)
 
 export class Recorder {
   readonly stats: Stat[] = []
   readonly findings: Finding[] = []
+  /** T3：每项发现的完整条目清单（登记只存前 50 个）；G2_WRITE=1 时写到 tools/data/out/g2-full/<组>.json（不入库）。 */
+  private readonly full: Array<{ id: string; count: number; entries: string[] }> = []
   constructor(readonly group: string) {}
 
   stat(check: string, key: string, value: number): void { this.stats.push({ check, key, value }) }
@@ -36,7 +48,13 @@ export class Recorder {
   /** entries 可以很长；登记只存排序后的前 50 个，count 存总数。同一个 id 不能登记两次。 */
   find(f: Omit<Finding, 'count' | 'entries'> & { entries: string[] }): void {
     if (this.findings.some((x) => x.id === f.id)) throw new Error(`发现 ${f.id} 重复登记`)
-    const all = [...new Set(f.entries)].sort()
+    const skip = new Set(loadExclusions().filter((x) => x.finding === f.id).map((x) => x.entry))
+    const kept = [...new Set(f.entries)].filter((line) => !skip.has(line.split(' ')[0]))
+    const excluded = new Set(f.entries).size - kept.length
+    if (excluded > 0) this.stat(f.check, `excluded-${f.id}`, excluded)
+    if (kept.length === 0) return // 全部是「来源如此」：这一项发现不再登记
+    const all = kept.sort()
+    this.full.push({ id: f.id, count: all.length, entries: all })
     this.findings.push({ ...f, count: all.length, entries: all.slice(0, KEEP) })
   }
 
@@ -55,6 +73,8 @@ export class Recorder {
     if (process.env.G2_WRITE === '1') {
       mkdirSync(DIR, { recursive: true })
       writeFileSync(file(this.group), JSON.stringify(now, null, 1) + '\n')
+      mkdirSync(FULL_DIR, { recursive: true })
+      writeFileSync(join(FULL_DIR, `${this.group}.json`), JSON.stringify({ group: this.group, findings: this.full }, null, 1) + '\n')
       return []
     }
     if (!existsSync(file(this.group))) return [`缺少登记表 ${this.group}.json；先用 G2_WRITE=1 生成`]
