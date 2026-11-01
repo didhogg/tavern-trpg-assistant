@@ -1,0 +1,60 @@
+# G2.5 执行包 · P 管线站（规划者做，不交给执行 agent）
+
+> 驾驶员 2026-11-01 重排：**数据问题先修转换器管线、重建，再逐条补原始数据里真没有的**。依据与逐项结论见 `docs/probes/D1.2-G2.5_根因与数据源台账.md`。P 站做完，D1.2b 导入的 40 本书直接受益。
+> 执行 agent 在 P 站期间**暂停**（工作区保持干净）。P 站完成后规划者写 E 站交接文本，驾驶员说"继续"才开 E 站。
+
+## 总则
+
+1. **一轮改完、只重建一次**：P1–P6 都改完转换器与配置后统一重建；中途可以局部构建自测，但对外的哈希、登记基线只在最后重定一次。
+2. **验收用通用数据测试，不按书写死条数**：每条管线规则配一个扫全库的数据测试（"所有 X 都满足 Y"），这样 D1.2b 的新书自动被同一条测试检查。
+3. **逐字对比**：P6 迁移的验收是"迁移前后数据**逐条 diff 为空**"（用脚本对比重建前后的 11 个包），不是看测试绿。
+4. **旧扩展兼容**：新字段全可选，`dataVersion` 不变；`g2-oldext` 全过。
+5. **放行（`g2-additive`）**：整类变化用按类型的规则（通则：整类条目都改才用 `type:`），点名的小批量仍用 `ids`；`tests/data/g2-allow/match.ts` 的归属规则已支持。
+6. **每个 P 项独立提交**，提交说明写：根因、改了哪个文件的哪一段、受影响条目数、通用测试名。
+
+## P1 Foundry 映射（`tools/data/convert/foundry.ts` 等）
+
+- **根因（已查实）**：①`number()` 的正则 `^[-+]?\d+` 不认 `"+ 10"`（符号后带空格），失败后被 `?? 0` 兜底成 0；②`+(sign(@attributes.movement.walk) * @scale.monk.unarmored-movement)` 这类含 `@scale.<职业>.<id>` 的公式没解析；③护甲计算 `ac.calc`、感官、先攻、`bonuses.save/check`、暴击标记（`meleeCriticalDamageDice`、`weaponCriticalThreshold`）、`magicalBonus` 没有映射，只留一条"Foundry 效果：…"的说明（36 个条目）；④活动 `consumption.targets[].target` 的 uid（如"吟游诗人激励|吟游诗人|XPHB|1"）没换成我们的特性编号。
+- **做法**：①`number()` 容忍符号后的空格；②`@scale.<职业>.<id>` → `scale.<id>`，`sign(@…)` 当作 1（原本有该移动方式才加，数据里取并入本模式的写法；若不能无损表达，**不写 0，写成说明并进登记**）；③补齐上述键的映射到既有效果种类（不新增 kind；对不上的保留说明）；④uid 解析：按"名称|职业|书|等级"到我们的特性编号。**取消所有 `?? 0` 兜底**：解析失败一律保留为说明文字并进登记，绝不写 0。
+- **通用测试**：全库没有数值为 0 的 `speed`／`ac`／`hpMax` 效果（除"速度变 0"的状态）；没有以"Foundry"开头的说明里含已映射的键；所有活动消耗目标都能解析到存在的条目。
+- **预期消掉**：`b2-zero-placeholder`、`b1-ac/hp/speed`、`b4-consumption-target-missing`、`b2-derived-in-note`（含暴击 4 个，原 4-5）。
+
+## P2 物品（原 3g-0）
+
+- **根因（已查实）**：①`categoryOf` 三个 bug（类型代码带 `|来源` 后缀、`VE` 笔误、`$` 系列缺规则）→ 139 件掉进"奇物"；②5etools 的原始标记（`CNS`、`staff`、`poison`、`tattoo`、`scfType`…）都在 `extra`／`facets` 里，没翻译成标准字段；③读取器误报：4 件"耗尽毁灭"的物品没有 `recharge` 是正确的；种族特质（拥有者种族已有结构化的 `resist`／`proficiencies`／`speed`…）被分诊成"纯文字 A 类"（60 个）。
+- **做法**：见 `03_第3站_结构化.md` 的 3g-0 第 1–4 条（修 `category` 139 件、声明式类型表 `itemKind`、`consumable` 以 `CNS` 为准且弹药不标、`focusType`／`poisonDelivery`）。**充能花费不再要生成器**：5etools 的 `attachedSpells.charges`（花费 → 法术）、`daily`、`limited`、`will` 已原样带进数据（`charges` 映射 121 件），消费方直接读；写进 `01_字段规格.md` F10 的"消费方读法"。
+- **Foundry 重印活动（候选，不入 `activities`）**：对 2014 条目通过 `reprintedAs` 找 XDMG 的 Foundry 活动，**只**放进 `extra.foundryActivities`（现有机制）供 E3 核对，不直接成为数据。
+- **读取器修正**：`b7-charges-no-recharge` 不再把"文字写明耗尽毁灭"的物品当缺陷；`b3` 分诊里拥有者是种族／亚种、且该种族条目已有对应结构化字段（`resist`／`proficiencies`／`speed`／`darkvision`／`senses`／`abilityBonus`）的特质不算 A 类。
+- **通用测试**：每件真实物品都有 `itemKind`；`consumable` 物品恰为 `CNS` 标记集合；`category` 与类型代码一致。
+- **预期消掉**：`b7-charges-no-recharge` 误报 4 件、`b3-A-derived-in-text` 种族 60 个；新增登记 `i1-item-no-kind`（→0）、`i3-daily-use-text-only`（交 E3）、`i2-charge-cost-non-spell`（78 件非法术充能，决定项）。
+
+## P3 怪物（原 3e-0、4-7、4-8、4-9）
+
+- **根因（已查实）**：①AC 的 `from` 原始是 `{@item 板甲|phb}` 标签，被压成文字（3e）；②原始 `resist`／`immune`／`vulnerable` 是对象 `{resist:[代码], note:"来自非魔法攻击", cond:true}`，被拼成文字（300 个）；③`{@recharge N}` 标签（170 个动作）和传奇动作名"（花费 N 个动作）"（26 个）可机械读；④召唤物的 AC／生命值在原始数据里是**规则化的文字**：AC 写法 36/37 是"N + 法术环阶"，生命值只有约 17 种写法（法术环阶 11 种、职业等级倍数 6 种）；Foundry 的 `summon` 活动只有 `profiles`，没有公式；攻击里的"+ 法术环阶"在文字里（51 个快照）。
+- **做法**：①`ac[].items`、攻击 `item`（`01` F8）；②`resistConditional`／`immuneConditional`／`vulnerableConditional`（`01` F1，`except` 映射表只用 04 的 4-7 那张）；③`rechargeRoll`（`01` F2）、传奇 `cost`（`01` F3）；④`summon` 公式（`01` F4）：约 6 条解析规则，写不进规则的混合写法（"N 或 N …"）**不猜**，登记交 E4。
+- **通用测试**：所有 `ac[].items` 指向存在的物品；`resist` 对象数 = `resistConditional` 项数；名字含"充能 N"的动作都有 `rechargeRoll` 且一致，反之亦然；传奇动作同理；所有 `summon` 公式能解析、`baseLevel` 求值与条目原占位值一致；攻击公式和文字一致。
+- **预期消掉**：`c1-resist-conditional` 300、`c4-recharge-text-only`、`c4-legendary-cost-text-only`、`c13-summon-placeholder` 45 中能解析的、`c13-summon-attack-snapshot` 51、`c4-damage-struct-not-in-text` 51。
+
+## P4 表格（原 3f-0）
+
+- 见 `03_第3站_结构化.md` 的 3f-0：转换器记 `at`（书里原位置）、字典 `tools/data/config/tableOwners.ts`、`parent.appliesTo`、软引用校验。**根因**：表放在书籍章节下，5etools／Foundry 都没有表与条目的绑定，只能用章节标题当线索（查证见台账）。
+- **通用测试**：字典命中的章节里的表都有 `parent`；`at.anchor` 存在于书的 `outline`。
+
+## P5 法术与专长
+
+- **根因（已查实）**：①`spell.ts` 用 `classVariant` 时把可选列表（塔莎）混进核心职业列表（65 处）；原始 `gendata-spell-source-lookup.json` 里 `class` 与 `classVariant` 是分开的键；②原始专长 `additionalSpells[].…choose:"level=1|class=…|school=…"` 就是结构化的法术池查询（5 个专长）。
+- **做法**：①核心列表只用 `class`；`classVariant` 按（书、职业）生成锚点特性 `feature.<职业>-additional-spells.<书>` 的 `spellLists`（锚点写法照 `tools/data/fix/rows/s1-artificer-list.ts`）；②`choose` 串 → 专长的法术池记号（`01` E3）。
+- **通用测试**：PHB 法术的 `classes` 里不含任何 `classVariant` 来源；每个锚点指向存在的职业与法术；专长池记号都能被 `expandToken` 展开。
+
+## P6 迁移（把"已逐条修过"的转换器病根迁回管线）
+
+- **清单**：①天生法术解锁等级（读 `additionalSpells[].innate` 的等级键）；②起始装备类别项（读 `startingEquipment.defaultData` 的 `equipmentType`／`focus*`）；③第 2 站的 6 条规则（怪物法术名补链接、教派链接、池拼写、表等级标签、邪术师法术位、卷轴标签）。
+- **做法**：转换器照原始数据直接生成与现在**逐字相同**的结果；然后从 `tools/data/fix/index.ts` 退役对应的修正表与规则（它们的"现状值"断言会在转换器修好后自动报冲突，用来清点不漏）；`g2-additive` 的放行从逐条 `ids` 改成整类规则。
+- **验收**：重建前后数据**逐条 diff 为空**（脚本对比 11 个包）；`check`、`test:data`、`g2-oldext` 全过。
+
+## P 站完成后
+
+1. 两次构建哈希相同；11 个新哈希写进 `冻结记录.md` §9（E 站起点）。
+2. 登记表重定基线，列出每个登记项的变化（对照台账的"预期消掉"）。
+3. `check`、`test:data`、`g2-additive`、`g2-oldext`、快速 e2e（库子集、升级场景）全过。
+4. 写 `执行agent交接文本_E站.md`，驾驶员说"继续"，执行 agent 开 E 站。
