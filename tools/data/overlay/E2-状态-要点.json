@@ -1,0 +1,74 @@
+{
+  "领域": "E2 状态",
+  "说明": "状态要点：自身攻击劣势、毒素免疫、说明文字",
+  "rows": [
+    {
+      "id": "condition.prone.phb",
+      "path": "/data/effects/1",
+      "op": "insert",
+      "after": {
+        "kind": "disadvantage",
+        "on": "attack"
+      },
+      "basis": "PHB p.292 倒地：自己的攻击检定具有劣势",
+      "source": "book"
+    },
+    {
+      "id": "condition.restrained.phb",
+      "path": "/data/effects/3",
+      "op": "insert",
+      "after": {
+        "kind": "disadvantage",
+        "on": "attack"
+      },
+      "basis": "PHB p.292 束缚：自己的攻击检定具有劣势",
+      "source": "book"
+    },
+    {
+      "id": "condition.petrified.phb",
+      "path": "/data/effects/3",
+      "op": "insert",
+      "after": {
+        "kind": "immunity",
+        "damage": [
+          "poison"
+        ]
+      },
+      "basis": "PHB p.291 石化：毒素免疫",
+      "source": "book"
+    },
+    {
+      "id": "condition.petrified.phb",
+      "path": "/data/effects/4",
+      "op": "insert",
+      "after": {
+        "kind": "note",
+        "text": "力量与敏捷豁免自动失败；攻击石化者的攻击检定具有优势；免疫毒素与疾病"
+      },
+      "basis": "PHB p.291 石化：力量/敏捷豁免自动失败，攻击者有优势，免疫毒素与疾病",
+      "source": "book"
+    },
+    {
+      "id": "condition.paralyzed.phb",
+      "path": "/data/effects/2",
+      "op": "insert",
+      "after": {
+        "kind": "note",
+        "text": "攻击麻痹者的攻击检定具有优势"
+      },
+      "basis": "PHB p.291 麻痹：攻击者有优势",
+      "source": "book"
+    },
+    {
+      "id": "condition.unconscious.phb",
+      "path": "/data/effects/2",
+      "op": "insert",
+      "after": {
+        "kind": "note",
+        "text": "攻击昏迷者的攻击检定具有优势"
+      },
+      "basis": "PHB p.292 昏迷：攻击者有优势",
+      "source": "book"
+    }
+  ]
+}
