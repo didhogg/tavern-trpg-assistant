@@ -26,12 +26,11 @@
     "feature.fighter-extra-attack.phb 额外攻击",
     "feature.pact-of-the-tome.phb 书之魔契",
     "feature.sorcerer-sorcerous-restoration.phb 术法复苏",
-    "feature.tiefling-infernal-legacy.phb 地狱遗赠",
     "feature.warlock-the-fiend-fiendish-resilience.phb 邪魔体魄"
    ],
    "expected": "Foundry dnd5e SRD 特性（同名特性没有使用次数）；需对照 PHB 原文确认",
    "note": "数据给了使用次数，Foundry 的同名特性没有，且已人工读过条目文字：这些特性本身没有次数限制，或消耗别的特性的次数池（额外攻击、书之魔契、术法复苏、地狱遗赠〔两个法术各一次却只有一份 uses〕、邪魔体魄、激励之源等）",
-   "count": 9
+   "count": 8
   },
   {
    "id": "a18-foundry-missing-uses",

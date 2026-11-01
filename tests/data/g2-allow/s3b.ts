@@ -74,6 +74,14 @@ export const ALLOW: Allow[] = [
     expect: 4,
     reason: 'rest-racial-spell-uses-no-grant：费尔伯格两版补 spellGrant、删特质重复 uses',
   },
+  {
+    name: 's3b-racial-uses-dup',
+    station: 3,
+    type: 'feature',
+    path: /^\/data\/uses$/,
+    expect: 27,
+    reason: 'rest-racial-spell-uses-duplicate：27 个种族特质删重复 uses',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
