@@ -28,11 +28,6 @@
   },
   {
    "check": "b8",
-   "key": "noTag.summon",
-   "value": 20
-  },
-  {
-   "check": "b8",
    "key": "spellsWithHigherLevelText",
    "value": 154
   },
@@ -49,7 +44,7 @@
   {
    "check": "b8",
    "key": "withStructure",
-   "value": 106
+   "value": 126
   }
  ],
  "findings": [
@@ -65,14 +60,7 @@
     "spell.armor-of-agathys.phb 黯冰狱铠",
     "spell.bestow-curse.phb 降咒",
     "spell.confusion.phb 困惑术",
-    "spell.conjure-animals.phb 咒唤兽群",
-    "spell.conjure-celestial.phb 咒唤圣光",
-    "spell.conjure-elemental.phb 咒唤元素",
-    "spell.conjure-fey.phb 咒唤妖精",
-    "spell.conjure-minor-elementals.phb 咒唤微元素群",
-    "spell.conjure-woodland-beings.phb 咒唤林地卫士",
     "spell.cordon-of-arrows.phb 警戒箭阵",
-    "spell.creation.phb 造物术",
     "spell.dominate-beast.phb 支配野兽",
     "spell.dominate-monster.phb 支配怪物",
     "spell.dominate-person.phb 支配类人",
@@ -84,7 +72,6 @@
     "spell.heal.phb 医疗术",
     "spell.hex.phb 脆弱诅咒",
     "spell.hunters-mark.phb 猎人印记",
-    "spell.infernal-calling.xge 地狱呼唤",
     "spell.magic-circle.phb 防护法阵",
     "spell.magic-missile.phb 魔法飞弹",
     "spell.magic-weapon.phb 魔化武器",
@@ -94,23 +81,11 @@
     "spell.mordenkainens-private-sanctum.phb 魔邓肯私人密室",
     "spell.planar-binding.phb 异界誓缚",
     "spell.scorching-ray.phb 灼热射线",
-    "spell.shadow-blade.xge 幽影刃",
-    "spell.spirit-of-death.bmt 死神灵魄",
-    "spell.summon-aberration.tce 异怪召唤术",
-    "spell.summon-beast.tce 野兽召唤术",
-    "spell.summon-celestial.tce 天界召唤术",
-    "spell.summon-construct.tce 构装召唤术",
-    "spell.summon-elemental.tce 元素召唤术",
-    "spell.summon-fey.tce 妖精召唤术",
-    "spell.summon-fiend.tce 邪魔召唤术",
-    "spell.summon-greater-demon.xge 高阶恶魔召唤术",
-    "spell.summon-lesser-demons.xge 召唤次级恶魔",
-    "spell.summon-shadowspawn.tce 暗影衍体召唤术",
-    "spell.summon-undead.tce 亡灵召唤术"
+    "spell.shadow-blade.xge 幽影刃"
    ],
    "expected": "PHB 第 11 章各法术“升环施法”；5etools 的 {@scaledamage} 标签；5e API 的 damage_at_slot_level",
    "note": "升环效果只有文字，没有结构：火球术用 5 环施放该掷几个骰，程序算不出来",
-   "count": 48
+   "count": 28
   },
   {
    "id": "b8-upcast-no-tag-area",
@@ -183,37 +158,6 @@
    "expected": "PHB、XGE、TCE 各法术原文",
    "note": "没有 5etools 标签的升环（其他，只留文字并标“不自动计算”），需要自己对照原书结构化",
    "count": 10
-  },
-  {
-   "id": "b8-upcast-no-tag-summon",
-   "check": "b8",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "spell.conjure-animals.phb 咒唤兽群",
-    "spell.conjure-celestial.phb 咒唤圣光",
-    "spell.conjure-elemental.phb 咒唤元素",
-    "spell.conjure-fey.phb 咒唤妖精",
-    "spell.conjure-minor-elementals.phb 咒唤微元素群",
-    "spell.conjure-woodland-beings.phb 咒唤林地卫士",
-    "spell.creation.phb 造物术",
-    "spell.infernal-calling.xge 地狱呼唤",
-    "spell.spirit-of-death.bmt 死神灵魄",
-    "spell.summon-aberration.tce 异怪召唤术",
-    "spell.summon-beast.tce 野兽召唤术",
-    "spell.summon-celestial.tce 天界召唤术",
-    "spell.summon-construct.tce 构装召唤术",
-    "spell.summon-elemental.tce 元素召唤术",
-    "spell.summon-fey.tce 妖精召唤术",
-    "spell.summon-fiend.tce 邪魔召唤术",
-    "spell.summon-greater-demon.xge 高阶恶魔召唤术",
-    "spell.summon-lesser-demons.xge 召唤次级恶魔",
-    "spell.summon-shadowspawn.tce 暗影衍体召唤术",
-    "spell.summon-undead.tce 亡灵召唤术"
-   ],
-   "expected": "PHB、XGE、TCE 各法术原文",
-   "note": "没有 5etools 标签的升环（召唤物随环级变强），需要自己对照原书结构化",
-   "count": 20
   }
  ]
 }
