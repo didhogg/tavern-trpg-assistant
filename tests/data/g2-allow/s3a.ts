@@ -55,6 +55,14 @@ export const ALLOW: Allow[] = [
     expect: 3,
     reason: 'a15-contents-differ：3 个套组补内容物',
   },
+  {
+    name: 's3a-shawm',
+    station: 3,
+    ids: ['item.shawm.scag'],
+    path: /^\/data\/value$/,
+    expect: 1,
+    reason: 'a15-value：芦笛 shawm 补 2 gp＝200 铜币',
+  },
 ]
 export const ADDED: Added[] = [
   { id: 'item.alms-box.phb', pack: 'dnd5e2014-srd', station: 3, basis: 'PHB p151 祭司套组' },

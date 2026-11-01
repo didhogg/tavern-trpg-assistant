@@ -11,6 +11,7 @@ import { ROWS as S3A_SUBCLASS_CASTING } from './rows/s3a-subclass-casting'
 import { ROWS as S3A_ITEMS_ADD_A } from './rows/s3a-items-add-a'
 import { ROWS as S3A_ITEMS_ADD_B } from './rows/s3a-items-add-b'
 import { ROWS as S3A_PACK_CONTENTS } from './rows/s3a-pack-contents'
+import { ROWS as S3A_SHAWM } from './rows/s3a-shawm'
 import { RULE as S2_POOL_SPELLING } from './rules/s2-pool-spelling'
 import { RULE as S2_WARLOCK_SLOT_LEVEL } from './rules/s2-warlock-slot-level'
 import { RULE as S2_TABLE_LEVEL_LABELS } from './rules/s2-table-level-labels'
@@ -34,6 +35,7 @@ export const ROW_SETS: RowSet[] = [
   { file: 'rows/s3a-items-add-a.ts', rows: S3A_ITEMS_ADD_A },
   { file: 'rows/s3a-items-add-b.ts', rows: S3A_ITEMS_ADD_B },
   { file: 'rows/s3a-pack-contents.ts', rows: S3A_PACK_CONTENTS },
+  { file: 'rows/s3a-shawm.ts', rows: S3A_SHAWM },
 ]
 
 export function runFixes(packs: ConvertedPack[]): FixReport {
