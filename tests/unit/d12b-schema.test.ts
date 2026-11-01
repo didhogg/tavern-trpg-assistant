@@ -14,7 +14,12 @@ describe('D1.2b 字段：怪物 art、具名 NPC', () => {
     expect(monsterArtSchema.safeParse({ portrait: { ...portrait, method: 'token-match', score: 0.87 } }).success).toBe(true)
     expect(monsterArtSchema.safeParse({ portrait: { ...portrait, score: 0.87 } }).success).toBe(false)
     expect(monsterArtSchema.safeParse({ portrait: { ...portrait, focus: { x: 1.2, y: 0.3, size: 0.4 } } }).success).toBe(false)
-    expect(monsterArtSchema.safeParse({ token: { url: 'http://example.test/t.webp' } }).success).toBe(false)
+    // 本地上传的图片（图片仓库）与 http 地址都可以；data:、javascript: 之类不行
+    expect(monsterArtSchema.safeParse({ portrait: { ...portrait, url: { $asset: 'abc123' } } }).success).toBe(true)
+    expect(monsterArtSchema.safeParse({ token: { url: { $asset: 'abc123' } } }).success).toBe(true)
+    expect(monsterArtSchema.safeParse({ token: { url: 'http://192.168.1.5/t.png' } }).success).toBe(true)
+    expect(monsterArtSchema.safeParse({ token: { url: 'data:image/png;base64,AAAA' } }).success).toBe(false)
+    expect(monsterArtSchema.safeParse({ token: { url: 'javascript:alert(1)' } }).success).toBe(false)
   })
 
   it('npc 是已登记的条目类型，必须有属性块引用、冒险来源、出处与置信度', () => {
