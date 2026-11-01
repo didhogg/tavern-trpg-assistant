@@ -31,6 +31,14 @@ export const ALLOW: Allow[] = [
     expect: 3,
     reason: 'a2-tool-choice-prose：3 个职业加结构化 toolChoose（吟游诗人另含多职业）',
   },
+  {
+    name: 's3a-artificer-firearms',
+    station: 3,
+    ids: ['class.artificer.tce'],
+    path: /^\/data\/text\//,
+    expect: 1,
+    reason: 'a1-weaponCats 决定项：奇械师火器熟练的条件说明补文字，不改结构',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
