@@ -169,7 +169,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     rarity: rarityOf(raw),
     attunement: attunementOf(raw),
     ...(typeof raw.weight === 'number' ? { weight: raw.weight } : typeof base.weight === 'number' ? { weight: base.weight } : {}),
-    ...(typeof raw.value === 'number' ? { value: Math.round(raw.value) } : typeof base.value === 'number' ? { value: Math.round(base.value) } : {}),
+    ...(typeof raw.value === 'number' ? { value: Math.round(raw.value * 10) / 10 } : typeof base.value === 'number' ? { value: Math.round(base.value * 10) / 10 } : {}),
     ...(weaponOf(raw) ? { weapon: weaponOf(raw) } : {}),
     ...(armorOf(raw) ? { armor: armorOf(raw) } : {}),
     ...(chargesOf(raw) ? { charges: { ...chargesOf(raw), ...rechargeAmountOf(raw) } } : {}),

@@ -50,12 +50,11 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "item.shawm.scag（Shawm）",
-    "item.sling-bullet.phb（Sling bullet）"
+    "item.shawm.scag（Shawm）"
    ],
    "expected": "5e API（SRD 装备，对应 PHB 装备章表格）",
    "note": "价格（铜币）与 SRD 不符",
-   "count": 2
+   "count": 1
   }
  ]
 }
