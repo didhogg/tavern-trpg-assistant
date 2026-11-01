@@ -14,12 +14,12 @@
   {
    "check": "p0",
    "key": "tokens.distinct",
-   "value": 85
+   "value": 83
   },
   {
    "check": "p0",
    "key": "tokens.total",
-   "value": 523
+   "value": 518
   },
   {
    "check": "p0",

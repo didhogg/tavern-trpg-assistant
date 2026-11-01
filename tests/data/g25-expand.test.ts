@@ -38,8 +38,9 @@ describe('G2.5 新记号能展开', () => {
     expect(expandToken(l, 'code:vehicles-water').values).toEqual(['code:vehicles-water'])
     expect(() => expandToken(l, 'code:vehicles-air')).toThrow(ShapeError)
     expect(expandToken(l, 'lang:other').ambiguous).toContain('被禁止')
-    // 原初语方言：现在数据里还没有 dialectCodes（第 3 站 3b-7 才加），所以仍是 noEntry；加了之后读取器解析到原初语条目
-    expect(expandToken(l, 'lang:aquan').noEntry).toBeDefined()
+    // 3b-7 已给原初语条目加 dialectCodes，方言解析到原初语条目，不再 noEntry
+    expect(expandToken(l, 'lang:aquan').noEntry).toBeUndefined()
+    expect(expandToken(l, 'lang:aquan').values).toEqual(['lang:aquan'])
   })
   it('法术池：职业、环阶、学派、仪式、攻击各条件起作用；@选择 要给结果才展开', () => {
     expect(classSpellIds(l, 'wizard').size).toBeGreaterThan(100)

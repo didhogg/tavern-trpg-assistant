@@ -105,6 +105,22 @@ export const ALLOW: Allow[] = [
     expect: 12,
     reason: 'a13-no-characteristics：12 个背景加 characteristicsFrom；乌斯伽/深水贵族补建议特征标题',
   },
+  {
+    name: 's3b-dialect-codes',
+    station: 3,
+    ids: ['language.primordial.phb'],
+    path: /^\/data\/dialectCodes$/,
+    expect: 1,
+    reason: 'a17-no-entry：原初语条目加 dialectCodes',
+  },
+  {
+    name: 's3b-vehicle-codes',
+    station: 3,
+    ids: ['background.folk-hero.phb', 'background.mercenary-veteran.scag', 'background.soldier.phb', 'background.sailor.phb', 'background.variant-sailor-pirate.phb'],
+    path: /^\/data\/advancement\//,
+    expect: 5,
+    reason: 'a17-no-entry：5 个背景的载具熟练记号换成固定代码',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

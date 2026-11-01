@@ -9,31 +9,8 @@
   {
    "check": "a17",
    "key": "tokens",
-   "value": 85
+   "value": 83
   }
  ],
- "findings": [
-  {
-   "id": "a17-no-entry",
-   "check": "a17",
-   "kind": "data-defect",
-   "fixSource": "decision",
-   "entries": [
-    "background.folk-hero.phb",
-    "background.mercenary-veteran.scag",
-    "background.sailor.phb",
-    "background.soldier.phb",
-    "background.variant-sailor-pirate.phb",
-    "race.aarakocra.dmg",
-    "race.gnome-deep.dmg",
-    "race.kenku.dmg",
-    "race.kenku.vgm",
-    "race.merfolk.dmg",
-    "subrace.elf-sea.mtf"
-   ],
-   "expected": "PHB 语言表（原初语方言）、PHB 第 5 章（载具熟练）",
-   "note": "记号指向没有条目的东西：lang:aquan/auran/terran（原初语方言）与 tool:vehicles（载具熟练）；读取器只能给代码，是否补条目待定",
-   "count": 11
-  }
- ]
+ "findings": []
 }
