@@ -104,19 +104,21 @@ describe('G2.5 新字段：法术（C）', () => {
     expect(ok(consumedSchema, 'maybe')).toBe(false)
     expect(ok(spellDataSchema, { ...spell, components: { v: true, s: true, m: { text: '一颗钻石', cost: 50000, consumed: 'optional' } } })).toBe(true)
   })
-  it('joins as:spell：目标是职业、level 固定 0、spells 必须是已存在的法术', () => {
+  it('spellLists：目标是职业、spells 必须是已存在的法术、只能由特性登记；joins 的 as 仍只认三个值', () => {
     const entries = new Map<string, { type: string; data: Record<string, unknown> }>([
       ['class.ranger.phb', { type: 'class', data: {} }], ['spell.aid.phb', { type: 'spell', data: {} }], ['item.rope.phb', { type: 'item', data: {} }],
     ])
     const lookup = (id: string) => entries.get(id)
-    const anchor = (joins: unknown[], type = 'feature') => checkJoins({ id: 'feature.ranger-additional-spells.tce', type, data: { joins } }, lookup)
-    expect(anchor([{ to: 'class.ranger.phb', level: 0, as: 'spell', spells: ['spell.aid.phb'] }])).toEqual([])
-    expect(anchor([{ to: 'class.ranger.phb', level: 1, as: 'spell', spells: ['spell.aid.phb'] }]).join()).toContain('固定写 0')
-    expect(anchor([{ to: 'class.ranger.phb', level: 0, as: 'spell', spells: ['spell.nope.phb'] }]).join()).toContain('不存在')
-    expect(anchor([{ to: 'class.ranger.phb', level: 0, as: 'spell', spells: ['item.rope.phb'] }]).join()).toContain('不是法术')
-    expect(anchor([{ to: 'class.ranger.phb', level: 0, as: 'spell' }]).join()).toContain('spells')
-    expect(anchor([{ to: 'item.rope.phb', level: 0, as: 'spell', spells: ['spell.aid.phb'] }]).join()).toContain('职业')
-    expect(anchor([{ to: 'class.ranger.phb', level: 0, as: 'spell', spells: ['spell.aid.phb'] }], 'spell').join()).toContain('特性')
+    const anchor = (spellLists: unknown[], type = 'feature') => checkJoins({ id: 'feature.ranger-additional-spells.tce', type, data: { spellLists } }, lookup)
+    expect(anchor([{ to: 'class.ranger.phb', spells: ['spell.aid.phb'] }])).toEqual([])
+    expect(anchor([{ to: 'class.ranger.phb', spells: ['spell.nope.phb'] }]).join()).toContain('不存在')
+    expect(anchor([{ to: 'class.ranger.phb', spells: ['item.rope.phb'] }]).join()).toContain('不是法术')
+    expect(anchor([{ to: 'class.ranger.phb' }]).join()).toContain('spells')
+    expect(anchor([{ to: 'item.rope.phb', spells: ['spell.aid.phb'] }]).join()).toContain('职业')
+    expect(anchor([{ to: 'class.ranger.phb', spells: ['spell.aid.phb'] }], 'spell').join()).toContain('特性')
+    expect(checkJoins({ id: 'feature.x.tce', type: 'feature', data: { joins: [{ to: 'class.ranger.phb', level: 0, as: 'spell', spells: ['spell.aid.phb'] }] } }, lookup).join()).toContain('as 不合法')
+    expect(ok(featureDataSchema, { ...COMMON, name: '锚点', spellLists: [{ to: 'class.ranger.phb', spells: ['spell.aid.phb'] }] })).toBe(true)
+    expect(ok(featureDataSchema, { ...COMMON, name: '锚点', spellLists: [{ to: 'class.ranger.phb', spells: [] }] })).toBe(false)
   })
 })
 
@@ -139,12 +141,12 @@ describe('G2.5 新字段：物品与装备（D）与背景（E）', () => {
       consumes: { pool: 'feature.bard-bardic-inspiration.phb' },
       restores: [{ pool: 'spellSlots', on: 'long', amount: 'all' }, { pool: 'feature.p.phb', on: 'short', amount: 1 }],
       summon: { by: 'class', classId: 'class.ranger.phb', hp: '5 + class.ranger.level' },
-      joins: [{ to: 'class.ranger.phb', level: 0, as: 'spell', spells: ['spell.aid.phb'] }],
+      spellLists: [{ to: 'class.ranger.phb', spells: ['spell.aid.phb'] }],
     })
     const got = refs.map((r) => `${r.field}=${r.id}`).sort()
     expect(got).toEqual([
       'characteristicsFrom=background.soldier.phb', 'consumes.pool=feature.bard-bardic-inspiration.phb', 'equipment[].id=item.ink-pen.phb', 'equipment[].id=item.shortsword.phb',
-      'joins[].spells[]=spell.aid.phb', 'joins[].to=class.ranger.phb', 'restores[].pool=feature.p.phb', 'summon.classId=class.ranger.phb',
+      'restores[].pool=feature.p.phb', 'spellLists[].spells[]=spell.aid.phb', 'spellLists[].to=class.ranger.phb', 'summon.classId=class.ranger.phb',
     ].sort())
   })
   it('语言方言代码', () => {

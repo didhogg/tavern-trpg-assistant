@@ -8,7 +8,7 @@ import { effectListSchema, legacyEffectListSchema, spellGrantSchema } from '../e
 import { startingEquipmentSchema } from '../starting'
 import { abilityKeySchema as abilityEnum, languageSchema } from '../enums'
 import { entryCommonFields } from './base'
-import { consumesSchema, restoreSchema, toolChooseSchema, trackerSchema } from '../g25'
+import { consumesSchema, restoreSchema, spellListsSchema, toolChooseSchema, trackerSchema } from '../g25'
 
 const classTableSchema = z.object({
   cols: z.array(z.string()),
@@ -103,12 +103,12 @@ export const featureDataSchema = z.looseObject({
   joins: z.array(z.object({
     to: entryIdSchema,
     level: z.number().int().min(0).max(20).optional(),
-    as: z.enum(['optional', 'option', 'member', 'spell']),
+    as: z.enum(['optional', 'option', 'member']),
     replaces: entryIdSchema.optional(),
     pool: entryIdSchema.optional(),
-    /** as: 'spell' 时：加进目标职业法术表的法术（level 固定写 0）。 */
-    spells: z.array(entryIdSchema).min(1).optional(),
   })).optional(),
+  /** 「把法术加进某职业的法术表」：由扩展书里的锚点特性登记（塔莎的可选法术）。不放进 joins：旧扩展对 joins 的 as 只认三个值，会拒装整个包。 */
+  spellLists: spellListsSchema.optional(),
 })
 export type FeatureData = z.infer<typeof featureDataSchema>
 

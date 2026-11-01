@@ -35,7 +35,8 @@ export function structuralRefs(data: Rec, mode: 'all' | 'dependency' = 'all'): S
   if (mode === 'all') add('expandedSpells', data.expandedSpells)
   add('owner.id', isObj(data.owner) ? data.owner.id : undefined)
   for (const c of Array.isArray(data.characteristics) ? data.characteristics : []) add('characteristics[].table', isObj(c) ? c.table : undefined)
-  for (const j of Array.isArray(data.joins) ? data.joins : []) if (isObj(j)) { add('joins[].to', j.to); add('joins[].replaces', j.replaces); add('joins[].pool', j.pool); add('joins[].spells[]', j.spells) }
+  for (const j of Array.isArray(data.joins) ? data.joins : []) if (isObj(j)) { add('joins[].to', j.to); add('joins[].replaces', j.replaces); add('joins[].pool', j.pool) }
+  for (const l of Array.isArray(data.spellLists) ? data.spellLists : []) if (isObj(l)) { add('spellLists[].to', l.to); add('spellLists[].spells[]', l.spells) }
   add('characteristicsFrom', data.characteristicsFrom)
   if (isObj(data.consumes)) add('consumes.pool', data.consumes.pool)
   for (const r of Array.isArray(data.restores) ? data.restores : []) if (isObj(r)) add('restores[].pool', r.pool)

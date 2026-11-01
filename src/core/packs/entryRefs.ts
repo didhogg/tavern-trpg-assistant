@@ -27,6 +27,8 @@ export async function assertEntryRefs(db: TrpgDatabase, rules: RuleRegistry, rec
   for (const [packId, entryId] of (await db.entries.where('ruleId').equals(rec.manifest.ruleId).primaryKeys()) as Array<[string, string]>) if (packId !== rec.manifest.id) owners.set(entryId, packId)
   const needed = new Set<string>()
   for (const e of rec.entries) for (const j of Array.isArray(e.data.joins) ? (e.data.joins as Array<Record<string, unknown>>) : []) for (const k of ['to', 'replaces', 'pool']) if (typeof j[k] === 'string') needed.add(j[k] as string)
+  // 法术表登记（spellLists）：目标职业与法术可能在别的已安装的包里，要取到类型才能检查
+  for (const e of rec.entries) for (const l of Array.isArray(e.data.spellLists) ? (e.data.spellLists as Array<Record<string, unknown>>) : []) for (const id of [l.to, ...(Array.isArray(l.spells) ? l.spells : [])]) if (typeof id === 'string') needed.add(id)
   const loaded = new Map<string, { type: string; data: Record<string, unknown>; packId: string }>()
   for (const id of needed) {
     const packId = owners.get(id)

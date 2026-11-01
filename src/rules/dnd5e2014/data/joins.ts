@@ -10,28 +10,16 @@ export type JoinLookup = (id: string) => JoinTarget | undefined
  * 返回问题列表，空数组表示合规。
  */
 export function checkJoins(entry: { id: string; type: string; data: Rec }, lookup: JoinLookup): string[] {
+  const listProblems = checkSpellLists(entry, lookup)
   const joins = entry.data.joins
-  if (joins === undefined) return []
+  if (joins === undefined) return listProblems
   if (!Array.isArray(joins)) return [`${entry.id}：joins 必须是数组`]
-  const problems: string[] = []
+  const problems: string[] = [...listProblems]
   joins.forEach((j, i) => {
     const at = `${entry.id} 的 joins[${i}]`
-    if (!isObj(j) || typeof j.to !== 'string' || (j.as !== 'optional' && j.as !== 'option' && j.as !== 'member' && j.as !== 'spell')) { problems.push(`${at}：缺少 to 或 as 不合法`); return }
+    if (!isObj(j) || typeof j.to !== 'string' || (j.as !== 'optional' && j.as !== 'option' && j.as !== 'member')) { problems.push(`${at}：缺少 to 或 as 不合法`); return }
     const target = lookup(j.to)
     if (!target) { problems.push(`${at}：目标「${j.to}」不存在`); return }
-    if (j.as === 'spell') {
-      // 把法术加进职业的法术表：由扩展书里的「锚点」特性登记；被加入的职业与法术都不写任何东西
-      if (entry.type !== 'feature') problems.push(`${at}：as=spell 只能由特性登记`)
-      if (target.type !== 'class' && target.type !== 'subclass') problems.push(`${at}：目标必须是职业或子职业`)
-      if (j.level !== 0) problems.push(`${at}：as=spell 的 level 固定写 0`)
-      if (!Array.isArray(j.spells) || j.spells.length === 0) { problems.push(`${at}：as=spell 必须有 spells 数组`); return }
-      for (const id of j.spells) {
-        const spell = typeof id === 'string' ? lookup(id) : undefined
-        if (!spell) problems.push(`${at}：法术「${String(id)}」不存在`)
-        else if (spell.type !== 'spell') problems.push(`${at}：「${String(id)}」不是法术`)
-      }
-      return
-    }
     if (j.as === 'member') {
       if (target.type !== 'item' || target.data.category !== 'family') problems.push(`${at}：as=member 的目标必须是物品家族`)
       return
@@ -55,6 +43,31 @@ export function checkJoins(entry: { id: string; type: string; data: Rec }, looku
     else if (pools.length > 1) {
       const hit = typeof j.pool === 'string' ? pools.filter((p) => Array.isArray(p.pool) && p.pool.includes(j.pool)) : []
       if (hit.length !== 1) problems.push(`${at}：目标在 ${level} 级有 ${pools.length} 个选择池，必须用 pool 唯一指明`)
+    }
+  })
+  return problems
+}
+
+/**
+ * 「把法术加进职业的法术表」（spellLists）：只能由特性登记；每项的 to 必须是职业（或子职业），spells 里每个都必须是已存在的法术。
+ * 与 joins 同一个检查入口（构建与安装共用）。
+ */
+export function checkSpellLists(entry: { id: string; type: string; data: Rec }, lookup: JoinLookup): string[] {
+  const lists = entry.data.spellLists
+  if (lists === undefined) return []
+  if (!Array.isArray(lists)) return [`${entry.id}：spellLists 必须是数组`]
+  const problems: string[] = []
+  if (entry.type !== 'feature') problems.push(`${entry.id}：spellLists 只能由特性登记`)
+  lists.forEach((item, i) => {
+    const at = `${entry.id} 的 spellLists[${i}]`
+    if (!isObj(item) || typeof item.to !== 'string' || !Array.isArray(item.spells) || item.spells.length === 0) { problems.push(`${at}：缺少 to 或 spells`); return }
+    const target = lookup(item.to)
+    if (!target) problems.push(`${at}：目标「${item.to}」不存在`)
+    else if (target.type !== 'class' && target.type !== 'subclass') problems.push(`${at}：目标必须是职业或子职业`)
+    for (const id of item.spells) {
+      const spell = typeof id === 'string' ? lookup(id) : undefined
+      if (!spell) problems.push(`${at}：法术「${String(id)}」不存在`)
+      else if (spell.type !== 'spell') problems.push(`${at}：「${String(id)}」不是法术`)
     }
   })
   return problems

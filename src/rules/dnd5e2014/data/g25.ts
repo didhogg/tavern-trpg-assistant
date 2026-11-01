@@ -101,5 +101,8 @@ export const summonSchema = z
     if (v.ac === undefined && v.hp === undefined && v.attackBonus === undefined && v.damageBonus === undefined) ctx.addIssue({ code: 'custom', message: 'summon 至少要有一个公式' })
   })
 
+/** C4 把法术加进某职业的法术表（扩展书里的锚点特性上）：被加入的职业与法术都不写任何东西。 */
+export const spellListsSchema = z.array(z.strictObject({ to: entryIdSchema, spells: z.array(entryIdSchema).min(1) })).min(1)
+
 /** 语言条目的方言代码（原初语的水/风/火/土）；与原有的 `dialects`（名字数组）并列，原字段不动。 */
 export const dialectCodesSchema = z.array(z.strictObject({ code: idSchema, name: z.string().min(1).max(40) })).min(1)
