@@ -227,6 +227,14 @@ export const ALLOW: Allow[] = [
     expect: 14,
     reason: 'b3-A 纯文字速度/感官/先攻/伤害加值',
   },
+  {
+    name: 'e1-6-residual-notes',
+    station: 1,
+    ids: ['feature.frost-rune.tce'],
+    path: /^\/data\/effects(?:\/|$)/,
+    expect: 1,
+    reason: 'b2-derived-in-note 4→0：寒霜符文残留说明改中文并补常驻技能优势',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

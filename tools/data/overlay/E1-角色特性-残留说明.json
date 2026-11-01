@@ -1,0 +1,50 @@
+{
+  "领域": "E1 角色特性",
+  "说明": "把残留的 Foundry 说明改成中文说明；寒霜符文补常驻技能优势",
+  "rows": [
+    {
+      "id": "feature.frost-rune.tce",
+      "path": "/data/effects/1/text",
+      "op": "set",
+      "before": "Foundry 效果未映射：system.abilities.con.bonuses.check",
+      "after": "激活后 10 分钟：体质检定 +2（豁免已结构化）",
+      "basis": "TCE p.45 寒霜符文：激活后 10 分钟力量/体质检定与豁免 +2；豁免已结构化，检定保留中文说明",
+      "source": "book"
+    },
+    {
+      "id": "feature.frost-rune.tce",
+      "path": "/data/effects/3/text",
+      "op": "set",
+      "before": "Foundry 效果未映射：system.abilities.str.bonuses.check",
+      "after": "激活后 10 分钟：力量检定 +2（豁免已结构化）",
+      "basis": "TCE p.45 寒霜符文：激活后 10 分钟力量/体质检定与豁免 +2；豁免已结构化，检定保留中文说明",
+      "source": "book"
+    },
+    {
+      "id": "feature.frost-rune.tce",
+      "path": "/data/effects/4",
+      "op": "insert",
+      "after": {
+        "kind": "skill",
+        "skill": "animal handling",
+        "level": "advantage",
+        "transfer": true
+      },
+      "basis": "TCE p.45 寒霜符文：驯兽检定优势",
+      "source": "book"
+    },
+    {
+      "id": "feature.frost-rune.tce",
+      "path": "/data/effects/5",
+      "op": "insert",
+      "after": {
+        "kind": "skill",
+        "skill": "intimidation",
+        "level": "advantage",
+        "transfer": true
+      },
+      "basis": "TCE p.45 寒霜符文：威吓检定优势",
+      "source": "book"
+    }
+  ]
+}

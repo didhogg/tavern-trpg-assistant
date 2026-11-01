@@ -4,7 +4,7 @@
   {
    "check": "b2",
    "key": "effects",
-   "value": 661
+   "value": 663
   },
   {
    "check": "b2",
@@ -19,7 +19,7 @@
   {
    "check": "b2",
    "key": "foundryNotes",
-   "value": 52
+   "value": 50
   },
   {
    "check": "b2",
@@ -29,7 +29,7 @@
   {
    "check": "b2",
    "key": "foundryNotes.derived",
-   "value": 6
+   "value": 5
   },
   {
    "check": "b2",
@@ -66,14 +66,12 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.con.bonus",
-    "feature.frost-rune.tce 寒霜符文：Foundry 效果未映射：system.abilities.str.bonus",
     "monster.homunculus-servant.tce 人工生命仆从：Foundry 效果：奇械师的领导力（system.attributes.hp.",
     "monster.steel-defender.tce 钢铁守卫：Foundry 效果：奇械师的领导力（system.attributes.hp."
    ],
    "expected": "各特性原文",
    "note": "影响派生数值的效果被留在说明文字里：龙脉术士的龙族韧性（AC 13+敏捷）、蜥蜴人的天生护甲、魔鬼视界/石之符文（黑暗视觉）、兔人的敏捷先攻、寒霜符文（力量/体质豁免与检定）、野蛮人的残暴重击（暴击额外骰）、冠军的强化重击（暴击范围）、觉知头盔（先攻优势）",
-   "count": 4
+   "count": 2
   },
   {
    "id": "b2-infusion-notes",
