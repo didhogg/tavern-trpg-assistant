@@ -41,7 +41,7 @@ export const ROWS: Fix[] = [
     path: '/data/startingEquipment/3',
     op: 'insert',
     after: { choice: [[simple('任意两把简易武器', 2)]] },
-    basis: 'TCE 奇械师“装备”小节 p9：any two simple weapons of your choice',
+    basis: 'TCE 奇械师“装备”小节 p9：任意两把简易武器',
   },
 
   {
@@ -134,7 +134,7 @@ export const ROWS: Fix[] = [
     path: '/data/startingEquipment/1/choice/1',
     op: 'insert',
     after: [simpleMelee('任意两把简易近战武器', 2)],
-    basis: 'PHB 英文原文 p89：two simple melee weapons；中译 v1.72 漏了“近战”',
+    basis: 'PHB 游侠“装备”小节 p89：任意两把简易**近战**武器（英文原文；中译 v1.72 漏了“近战”）',
   },
   {
     id: 'class.sorcerer.phb',
