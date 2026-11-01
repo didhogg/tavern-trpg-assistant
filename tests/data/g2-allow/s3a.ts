@@ -39,6 +39,14 @@ export const ALLOW: Allow[] = [
     expect: 1,
     reason: 'a1-weaponCats 决定项：奇械师火器熟练的条件说明补文字，不改结构',
   },
+  {
+    name: 's3a-subclass-casting',
+    station: 3,
+    ids: ['subclass.monk-way-of-the-four-elements.phb', 'subclass.barbarian-path-of-the-ancestral-guardian.xge'],
+    path: /^\/data\/spellcasting(?:\/|$)/,
+    expect: 2,
+    reason: 'a4-progression-without-slots：四象武僧、先祖守护者整块删 spellcasting',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

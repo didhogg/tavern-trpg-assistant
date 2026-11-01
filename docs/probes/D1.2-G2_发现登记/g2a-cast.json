@@ -7,19 +7,5 @@
    "value": 39
   }
  ],
- "findings": [
-  {
-   "id": "a4-progression-without-slots",
-   "check": "a4",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "subclass.barbarian-path-of-the-ancestral-guardian.xge progression=full",
-    "subclass.monk-way-of-the-four-elements.phb progression=full"
-   ],
-   "expected": "PHB 四象武僧（用气点施放元素戏法与法术，不按施法者法术位）、XGE 先祖守护者（没有施法）",
-   "note": "子职业带 spellcasting.progression=full，但没有法术位表；人物模块会误判成全施法者。先祖守护者本来就没有施法",
-   "count": 2
-  }
- ]
+ "findings": []
 }
