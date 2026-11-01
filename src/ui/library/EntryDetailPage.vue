@@ -62,6 +62,7 @@ const facts = computed(() => {
   return [...withOptional.slice(0, 1), ...seriesFact.value, ...withOptional.slice(1), ...(shown.value.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : [])]
 })
 const blocks = computed(() => ((shown.value?.data.text as TextBlock[] | undefined) ?? []))
+const npcIntro = computed(() => (shown.value?.type === 'npc' ? ((shown.value.data.intro as TextBlock[] | undefined) ?? []) : []))
 
 /** 点开关联术语：条目在已装的包里就打开，否则提示。 */
 async function onRef(id: string): Promise<void> {
@@ -90,6 +91,7 @@ async function onSwitch(variantKey: string): Promise<void> {
     <p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p>
     <p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p>
     <EntryFacts v-if="facts.length" :facts="facts" @ref="onRef" />
+    <TextBlocks v-if="npcIntro.length" :blocks="npcIntro" @ref="onRef" />
     <TextBlocks :blocks="blocks" @ref="onRef" />
     <section v-if="lore.length" class="trpg-entry__lore" data-testid="entry-lore">
       <h3 class="trpg-entry__lore-title">背景描述</h3>

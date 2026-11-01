@@ -44,13 +44,12 @@ export interface ConversionStats {
   refStats: Record<string, { ref: number; text: number }>
   versions: VersionStats
 }
-
 export interface ConversionResult {
   packs: ConvertedPack[]
   stats: ConversionStats
 }
 
-const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore', 'language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart', 'recipe', 'charoption', 'book'])
+const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore', 'language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart', 'recipe', 'charoption', 'book', 'npc'])
 
 const structuralIds = (data: Record<string, unknown>): string[] => structuralRefs(data, 'dependency').map((r) => r.id)
 
@@ -300,6 +299,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
       name: book?.name ?? 'SRD 基础规则',
       nameEn: book?.nameEn ?? 'Systems Reference Document',
       version: book?.version ?? SRD_VERSION,
+      ...(book?.minAppVersion ? { minAppVersion: book.minAppVersion } : {}),
       license: licenseOf(entries),
       attribution: attributionOf(entries),
       description: book ? `${book.name}（D&D 5e 2014）的条目、随机表与规则选项。` : 'D&D 5e（2014）SRD 基础规则：带 srd 标记的条目、随机表与规则选项。',

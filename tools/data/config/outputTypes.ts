@@ -12,7 +12,7 @@ export const OUTPUT_TYPE_BY_SOURCE: Record<string, string> = {
   'legendary-group-template': 'monster', 'life-background': 'table', 'life-class': 'table', 'life-trinket': 'table',
   'magic-item': 'table', 'magic-variant': 'item', 'makebrew-creature-action': 'monsterPart',
   'makebrew-creature-trait': 'monsterPart', monster: 'monster', 'monster-fluff': 'monster',
-  'monster-template': 'monster', 'monster-feature': 'monsterPart', name: 'table', object: 'object',
+  'monster-template': 'monster', 'monster-feature': 'monsterPart', name: 'table', npc: 'npc', object: 'object',
   'object-fluff': 'object', 'optional-feature': 'feature', 'optional-feature-fluff': 'feature', race: 'race',
   'race-feature': 'feature', 'race-fluff': 'race', recipe: 'recipe', 'recipe-fluff': 'recipe',
   'reduced-item-property': 'rule', 'reduced-item-type': 'rule', reward: 'reward', 'reward-fluff': 'reward',

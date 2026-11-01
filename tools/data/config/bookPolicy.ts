@@ -9,16 +9,20 @@
  */
 export interface BookPolicy {
   source: string
+  /** book＝三档书；adventure＝冒险（只有怪物与 NPC）。默认 book。 */
+  kind?: 'book' | 'adventure'
   tier: 1 | 2 | 3
   recommended: boolean
   order: number
   requires?: string[]
   name?: string
   nameEn?: string
+  /** 含 npc 条目的包写 0.3.0；核心 11 个包不写。 */
+  minAppVersion?: string
 }
 
 /** 当前所有包的版本：内容变了就升版本，设备上已装的才会更新。 */
-export const PACK_VERSION = '1.4.1'
+export const PACK_VERSION = '1.5.0'
 
 export const BOOK_POLICY: BookPolicy[] = [
   { source: 'PHB', tier: 1, recommended: true, order: 1, nameEn: "Player's Handbook" },

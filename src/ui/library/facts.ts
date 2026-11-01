@@ -141,6 +141,16 @@ function classFacts(d: Obj): Fact[] {
   return out
 }
 
+function npcFacts(d: Obj): Fact[] {
+  const out: Fact[] = []
+  if (d.statblock) out.push({ label: '使用属性块', parts: [{ ref: str(d.statblock) }] })
+  const at = isObj(d.at) ? d.at : undefined
+  if (at) add(out, '出处', [str(at.chapter), str(at.heading)].filter(Boolean).join(' · '))
+  if (d.adventure) add(out, '冒险', str(d.adventure))
+  if (d.confidence) add(out, '置信度', d.confidence === 'high' ? '高' : '中')
+  return out
+}
+
 function monsterFacts(d: Obj): Fact[] {
   const out: Fact[] = []
   const type = isObj(d.creatureType) ? tr(CREATURE, d.creatureType.type) : ''
@@ -294,6 +304,7 @@ export function entryFacts(entry: Pick<Entry, 'type' | 'data'>): Fact[] {
       return out
     }
     case 'monster': return monsterFacts(d)
+    case 'npc': return npcFacts(d)
     case 'spell': return spellFacts(d)
     case 'race':
     case 'subrace': return raceFacts(d)

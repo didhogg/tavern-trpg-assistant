@@ -10,9 +10,11 @@ export interface BookConfig {
   name: string
   nameEn: string
   group: string
+  kind: 'book' | 'adventure'
   tier: 1 | 2 | 3
   version: string
   recommended: boolean
+  minAppVersion?: string
   /** 除条目引用推出的依赖之外，要求先装的书（来源代号）；见 bookPolicy.ts。 */
   requires: string[]
   /** 依赖层级，SRD 为 0。 */
@@ -23,13 +25,15 @@ export const SRD_PACK_ID = 'dnd5e2014-srd'
 export const SRD_VERSION = PACK_VERSION
 
 const TIER_GROUP = { 1: '官方扩展 · 一档', 2: '官方扩展 · 二档', 3: '设定与扩展书 · 三档' } as const
+const ADVENTURE_GROUP = '冒险 · 怪物与 NPC'
 
 interface BooksJsonEntry { source: string; name: string; ENG_name?: string; published?: string }
-const booksJson = (): Map<string, BooksJsonEntry> => {
-  const file = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data', 'books.json')
-  const list = (JSON.parse(readFileSync(file, 'utf8')) as { book: BooksJsonEntry[] }).book
+const jsonMap = (file: string, key: 'book' | 'adventure'): Map<string, BooksJsonEntry> => {
+  const list = (JSON.parse(readFileSync(file, 'utf8')) as Record<string, BooksJsonEntry[]>)[key]
   return new Map(list.map((b) => [b.source, b]))
 }
+const booksJson = (): Map<string, BooksJsonEntry> => jsonMap(join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data', 'books.json'), 'book')
+const adventuresJson = (): Map<string, BooksJsonEntry> => jsonMap(join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data', 'adventures.json'), 'adventure')
 
 /** 2024 规则版及之后出版的书（来源代号）：不收录，也不允许出现在展示文字里。 */
 export const RETIRED_SOURCES = new Set([...booksJson().values()].filter((b) => (b.published ?? '') >= '2024-09-17').map((b) => b.source))
@@ -39,11 +43,13 @@ export const packIdOf = (source: string): string => `dnd5e2014-${source.toLowerC
 
 /** 由政策表 + 来源的 books.json 生成；导出的名字与形状不变，所有引用点照旧。 */
 function buildBooks(): BookConfig[] {
-  const json = booksJson()
+  const books = booksJson()
+  const adventures = adventuresJson()
   return [...BOOK_POLICY].sort((a, b) => a.order - b.order).map((p) => {
-    const src = json.get(p.source)
-    if (!src) throw new Error(`政策表里的 ${p.source} 不在 books.json 里`)
-    return { source: p.source, packId: packIdOf(p.source), name: p.name ?? src.name, nameEn: p.nameEn ?? src.ENG_name ?? src.name, group: TIER_GROUP[p.tier], tier: p.tier, version: PACK_VERSION, recommended: p.recommended, requires: p.requires ?? [], layer: p.order }
+    const kind = p.kind ?? 'book'
+    const src = (kind === 'adventure' ? adventures : books).get(p.source)
+    if (!src) throw new Error(`政策表里的 ${p.source} 不在 ${kind === 'adventure' ? 'adventures.json' : 'books.json'} 里`)
+    return { source: p.source, packId: packIdOf(p.source), name: p.name ?? src.name, nameEn: p.nameEn ?? src.ENG_name ?? src.name, group: kind === 'adventure' ? ADVENTURE_GROUP : TIER_GROUP[p.tier], kind, tier: p.tier, version: PACK_VERSION, recommended: p.recommended, minAppVersion: p.minAppVersion, requires: p.requires ?? [], layer: p.order }
   })
 }
 
