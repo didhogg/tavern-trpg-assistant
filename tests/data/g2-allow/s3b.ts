@@ -90,6 +90,21 @@ export const ALLOW: Allow[] = [
     expect: 2,
     reason: 'a14-requires-text：两个专长前置改成结构化种族名单',
   },
+  {
+    name: 's3b-backgrounds',
+    station: 3,
+    ids: [
+      'background.city-watch.scag', 'background.variant-city-watch-investigator.scag',
+      'background.knight-of-the-order.scag', 'background.mercenary-veteran.scag',
+      'background.clan-crafter.scag', 'background.courtier.scag',
+      'background.cloistered-scholar.scag', 'background.faction-agent.scag',
+      'background.urban-bounty-hunter.scag', 'background.uthgardt-tribe-member.scag',
+      'background.waterdhavian-noble.scag', 'background.inheritor.scag',
+    ],
+    path: /^(?:\/data\/characteristicsFrom|\/data\/text\/)/,
+    expect: 12,
+    reason: 'a13-no-characteristics：12 个背景加 characteristicsFrom；乌斯伽/深水贵族补建议特征标题',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []
