@@ -4,7 +4,7 @@
   {
    "check": "c13",
    "key": "attacksWithLostScaling",
-   "value": 7
+   "value": 2
   },
   {
    "check": "c13",
@@ -24,12 +24,12 @@
   {
    "check": "c13",
    "key": "placeholderAc",
-   "value": 1
+   "value": 0
   },
   {
    "check": "c13",
    "key": "placeholderHp",
-   "value": 3
+   "value": 0
   },
   {
    "check": "c13",
@@ -49,33 +49,12 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "monster.beast-of-the-sea.tce 海洋野兽：攫击",
     "monster.celestial-spirit-defender.tce 天界灵魄（守护圣灵）：光耀之锤",
-    "monster.celestial-spirit.tce 天界灵魄：光耀之锤（仅守护圣灵）",
-    "monster.fey-spirit-fuming.tce 妖精灵魄（愤怒）：短剑",
-    "monster.fey-spirit-mirthful.tce 妖精灵魄（欢欣）：短剑",
-    "monster.fey-spirit-tricksy.tce 妖精灵魄（诡诈）：短剑",
-    "monster.fey-spirit.tce 妖精灵魄：短剑"
+    "monster.celestial-spirit.tce 天界灵魄：光耀之锤（仅守护圣灵）"
    ],
    "expected": "TCE 召唤物动作原文",
    "note": "攻击的结构化伤害是某一环的快照（丢了 “+ summonSpellLevel” 与第二种伤害），文字里才有完整公式",
-   "count": 7
-  },
-  {
-   "id": "c13-summon-placeholder",
-   "check": "c13",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "monster.bestial-spirit.tce 野兽灵魄（野兽召唤术|TCE）",
-    "monster.celestial-spirit.tce 天界灵魄（天界召唤术|TCE）",
-    "monster.fiendish-spirit.tce 邪魔灵魄（邪魔召唤术|TCE）",
-    "monster.hound-of-ill-omen.xge 凶兆猎犬（术士|PHB）",
-    "monster.undead-spirit.tce 亡灵灵魄（亡灵召唤术|TCE）"
-   ],
-   "expected": "TCE 召唤类法术与同伴原文（PHB 游侠兽伙伴、奇械师钢铁守卫等）",
-   "note": "召唤物/同伴的护甲等级、生命值、攻击加值和伤害随法术环级、主人职业等级或熟练加值变化；数据里只有占位（生命值平均 0 + 文字公式、护甲等级 10 + 文字“11+法术等级”）：召唤时无法算出这只生物的数值。需要结构化成公式（如 ac: \"11 + spell.level\"、hp: \"40 + 10*(spell.level-4)\"），公式引擎要认识 spell.level 变量",
-   "count": 5
+   "count": 2
   }
  ]
 }
