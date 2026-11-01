@@ -10,6 +10,14 @@ export const ALLOW: Allow[] = [
     expect: 5,
     reason: 'b6-structured-missing 3→0、b6-text-missing 4→0；b6-against-text-only 预计升到 11',
   },
+  {
+    name: 'e2-2-against-autocrit',
+    station: 2,
+    ids: ['condition.blinded.phb', 'condition.invisible.phb', 'condition.prone.phb', 'condition.restrained.phb', 'condition.stunned.phb', 'condition.paralyzed.phb', 'condition.petrified.phb', 'condition.unconscious.phb'],
+    path: /^\/data\/effects(?:\/|$)/,
+    expect: 8,
+    reason: 'b6-against-text-only 11→0：针对它的攻击优势/劣势/自动重击',
+  },
 ]
 export const ADDED: Added[] = []
 export const ALLOW_REQUIRES: AllowRequires[] = []

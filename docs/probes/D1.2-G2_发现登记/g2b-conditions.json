@@ -17,28 +17,5 @@
    "value": 15
   }
  ],
- "findings": [
-  {
-   "id": "b6-against-text-only",
-   "check": "b6",
-   "kind": "decision",
-   "fixSource": "decision",
-   "entries": [
-    "blinded：针对它的攻击优势",
-    "invisible：针对它的攻击劣势",
-    "paralyzed：5 尺内近战攻击自动重击",
-    "paralyzed：针对它的攻击优势",
-    "petrified：针对它的攻击优势",
-    "prone：近战攻击对它优势",
-    "prone：远程攻击对它劣势",
-    "restrained：针对它的攻击优势",
-    "stunned：针对它的攻击优势",
-    "unconscious：5 尺内近战攻击自动重击",
-    "unconscious：针对它的攻击优势"
-   ],
-   "expected": "PHB 附录 A 状态",
-   "note": "“针对该生物的攻击有优势/劣势/自动重击”只有说明文字：现有效果类型只能表达“自己”的优势劣势，表达不了“别人打它”。要让掷骰自动判定，需要给优势/劣势效果加一个“针对它”的标记",
-   "count": 11
-  }
- ]
+ "findings": []
 }

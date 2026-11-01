@@ -1,0 +1,78 @@
+{
+  "领域": "E2 状态",
+  "说明": "状态里“针对它的攻击”优势/劣势/自动重击",
+  "rows": [
+    {
+      "id": "condition.blinded.phb",
+      "path": "/data/effects/2",
+      "op": "insert",
+      "after": { "kind": "advantage", "on": "attack", "against": true },
+      "basis": "PHB p.290 目盲：攻击目盲者的攻击检定具有优势",
+      "source": "book"
+    },
+    {
+      "id": "condition.invisible.phb",
+      "path": "/data/effects/3",
+      "op": "insert",
+      "after": { "kind": "disadvantage", "on": "attack", "against": true },
+      "basis": "PHB p.291 隐形：看不见隐形者的攻击具有劣势",
+      "source": "book"
+    },
+    {
+      "id": "condition.prone.phb",
+      "path": "/data/effects/2",
+      "op": "insert",
+      "after": { "kind": "advantage", "on": "attack", "against": true, "scope": "5 尺内近战" },
+      "basis": "PHB p.292 倒地：5 尺内近战攻击有优势",
+      "source": "book"
+    },
+    {
+      "id": "condition.prone.phb",
+      "path": "/data/effects/3",
+      "op": "insert",
+      "after": { "kind": "disadvantage", "on": "attack", "against": true, "scope": "远程" },
+      "basis": "PHB p.292 倒地：远程攻击有劣势",
+      "source": "book"
+    },
+    {
+      "id": "condition.restrained.phb",
+      "path": "/data/effects/4",
+      "op": "insert",
+      "after": { "kind": "advantage", "on": "attack", "against": true },
+      "basis": "PHB p.292 束缚：攻击束缚者的攻击检定具有优势",
+      "source": "book"
+    },
+    {
+      "id": "condition.stunned.phb",
+      "path": "/data/effects/2",
+      "op": "insert",
+      "after": { "kind": "advantage", "on": "attack", "against": true },
+      "basis": "PHB p.292 震慑：攻击震慑者的攻击检定具有优势",
+      "source": "book"
+    },
+    {
+      "id": "condition.paralyzed.phb",
+      "path": "/data/effects/3",
+      "op": "insert",
+      "after": { "kind": "advantage", "on": "attack", "against": true, "autoCrit": { "within": 5 } },
+      "basis": "PHB p.291 麻痹：攻击者有优势，5 尺内近战自动重击",
+      "source": "book"
+    },
+    {
+      "id": "condition.petrified.phb",
+      "path": "/data/effects/5",
+      "op": "insert",
+      "after": { "kind": "advantage", "on": "attack", "against": true },
+      "basis": "PHB p.291 石化：攻击石化者的攻击检定具有优势",
+      "source": "book"
+    },
+    {
+      "id": "condition.unconscious.phb",
+      "path": "/data/effects/3",
+      "op": "insert",
+      "after": { "kind": "advantage", "on": "attack", "against": true, "autoCrit": { "within": 5 } },
+      "basis": "PHB p.292 昏迷：攻击者有优势，5 尺内近战自动重击",
+      "source": "book"
+    }
+  ]
+}
