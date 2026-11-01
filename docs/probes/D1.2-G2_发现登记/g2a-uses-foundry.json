@@ -14,23 +14,6 @@
  ],
  "findings": [
   {
-   "id": "a18-foundry-extra-uses",
-   "check": "a18",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.bard-college-of-lore-cutting-words.phb 语出惊人",
-    "feature.bard-college-of-lore-peerless-skill.phb 超凡技艺",
-    "feature.bard-font-of-inspiration.phb 激励之源",
-    "feature.bard-superior-inspiration.phb 先发激励",
-    "feature.sorcerer-sorcerous-restoration.phb 术法复苏",
-    "feature.warlock-the-fiend-fiendish-resilience.phb 邪魔体魄"
-   ],
-   "expected": "Foundry dnd5e SRD 特性（同名特性没有使用次数）；需对照 PHB 原文确认",
-   "note": "数据给了使用次数，Foundry 的同名特性没有，且已人工读过条目文字：这些特性本身没有次数限制，或消耗别的特性的次数池（额外攻击、书之魔契、术法复苏、地狱遗赠〔两个法术各一次却只有一份 uses〕、邪魔体魄、激励之源等）",
-   "count": 6
-  },
-  {
    "id": "a18-foundry-missing-uses",
    "check": "a18",
    "kind": "data-defect",
@@ -41,19 +24,6 @@
    "expected": "Foundry dnd5e SRD 特性（并需对照 PHB 原文确认）",
    "note": "Foundry 的 SRD 特性有使用次数，数据里同名特性没有 uses",
    "count": 1
-  },
-  {
-   "id": "a18-needs-ruling",
-   "check": "a18",
-   "kind": "decision",
-   "fixSource": "decision",
-   "entries": [
-    "feature.barbarian-relentless-rage.phb 坚韧狂暴",
-    "feature.chains-of-carceri.phb 卡瑟利之链"
-   ],
-   "expected": "PHB 原文（坚韧狂暴：DC 递增，休息后重置；卡瑟利之链：对同一生物长休后才能再用）",
-   "note": "这两个特性的限制不是“每长休几次”：用 uses 表示会失真，需裁定写法",
-   "count": 2
   }
  ]
 }

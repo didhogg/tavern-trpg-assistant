@@ -1,8 +1,8 @@
 {
  "note": "关键词初筛；A 类需逐条对照原书确认后再结构化",
  "counts": {
-  "A": 79,
-  "B": 383,
+  "A": 80,
+  "B": 395,
   "C": 576
  },
  "features": [
@@ -154,6 +154,24 @@
    ]
   },
   {
+   "id": "feature.bard-college-of-lore-cutting-words.phb",
+   "name": "语出惊人",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源",
+    "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-lore-peerless-skill.phb",
+   "name": "超凡技艺",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
    "id": "feature.bard-countercharm.phb",
    "name": "反迷惑",
    "cls": "B",
@@ -173,6 +191,14 @@
    "name": "专精",
    "cls": "C",
    "tags": []
+  },
+  {
+   "id": "feature.bard-font-of-inspiration.phb",
+   "name": "激励之源",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
   },
   {
    "id": "feature.bard-magical-secrets.phb",
@@ -232,6 +258,14 @@
     "资源",
     "攻击结算",
     "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-superior-inspiration.phb",
+   "name": "先发激励",
+   "cls": "B",
+   "tags": [
+    "资源"
    ]
   },
   {
@@ -1604,6 +1638,14 @@
    "tags": []
   },
   {
+   "id": "feature.sorcerer-sorcerous-restoration.phb",
+   "name": "术法复苏",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
    "id": "feature.sorcerer-spellcasting.phb",
    "name": "施法",
    "cls": "B",
@@ -1714,6 +1756,14 @@
    "name": "黑暗赐福",
    "cls": "C",
    "tags": []
+  },
+  {
+   "id": "feature.warlock-the-fiend-fiendish-resilience.phb",
+   "name": "邪魔体魄",
+   "cls": "A",
+   "tags": [
+    "抗性免疫"
+   ]
   },
   {
    "id": "feature.witch-sight.phb",
@@ -4073,6 +4123,15 @@
    ]
   },
   {
+   "id": "feature.bard-college-of-glamour-mantle-of-inspiration.xge",
+   "name": "灵感织衣",
+   "cls": "B",
+   "tags": [
+    "动作",
+    "资源"
+   ]
+  },
+  {
    "id": "feature.bard-college-of-swords-blade-flourish.xge",
    "name": "剑舞",
    "cls": "A",
@@ -4086,6 +4145,15 @@
    "cls": "B",
    "tags": [
     "法术"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-swords-defensive-flourish.xge",
+   "name": "守御剑舞",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "资源"
    ]
   },
   {
@@ -4107,6 +4175,33 @@
    "name": "剑舞大师",
    "cls": "B",
    "tags": [
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-swords-mobile-flourish.xge",
+   "name": "推击剑舞",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-swords-slashing-flourish.xge",
+   "name": "乱击剑舞",
+   "cls": "B",
+   "tags": [
+    "伤害",
+    "资源"
+   ]
+  },
+  {
+   "id": "feature.bard-college-of-whispers-psychic-blades.xge",
+   "name": "心灵之刃",
+   "cls": "B",
+   "tags": [
+    "伤害",
     "资源"
    ]
   },
@@ -4244,6 +4339,14 @@
    ]
   },
   {
+   "id": "feature.fighter-arcane-archer-ever-ready-shot.xge",
+   "name": "有箭无患",
+   "cls": "B",
+   "tags": [
+    "资源"
+   ]
+  },
+  {
    "id": "feature.fighter-arcane-archer-magic-arrow.xge",
    "name": "注魔箭矢",
    "cls": "A",
@@ -4297,6 +4400,14 @@
    "cls": "B",
    "tags": [
     "攻击结算"
+   ]
+  },
+  {
+   "id": "feature.fighter-samurai-tireless-spirit.xge",
+   "name": "不懈",
+   "cls": "B",
+   "tags": [
+    "资源"
    ]
   },
   {

@@ -4,7 +4,7 @@
   {
    "check": "a18",
    "key": "entriesWithUses",
-   "value": 294
+   "value": 278
   }
  ],
  "findings": [
@@ -14,36 +14,12 @@
    "kind": "data-defect",
    "fixSource": "self-structure",
    "entries": [
-    "feat.dragon-fear.xge 龙之威怖",
-    "feature.bard-college-of-eloquence-unsettling-words.tce 扰神之词",
-    "feature.bard-college-of-glamour-mantle-of-inspiration.xge 灵感织衣",
-    "feature.bard-college-of-lore-cutting-words.phb 语出惊人",
-    "feature.bard-college-of-lore-peerless-skill.phb 超凡技艺",
-    "feature.bard-college-of-swords-defensive-flourish.xge 守御剑舞",
-    "feature.bard-college-of-swords-mobile-flourish.xge 推击剑舞",
-    "feature.bard-college-of-swords-slashing-flourish.xge 乱击剑舞",
-    "feature.bard-college-of-whispers-psychic-blades.xge 心灵之刃"
+    "feat.dragon-fear.xge 龙之威怖"
    ],
    "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
    "note": "特性消耗的是另一个特性的次数池（诗人激励、荒野形态、吐息武器），自己又有一份 uses，会重复计数；应删 uses、加 consumes",
    "selfCheck": true,
-   "count": 9
-  },
-  {
-   "id": "a18-restores-other-pool",
-   "check": "a18",
-   "kind": "data-defect",
-   "fixSource": "self-structure",
-   "entries": [
-    "feature.bard-font-of-inspiration.phb 激励之源",
-    "feature.bard-superior-inspiration.phb 先发激励",
-    "feature.fighter-arcane-archer-ever-ready-shot.xge 有箭无患",
-    "feature.fighter-samurai-tireless-spirit.xge 不懈"
-   ],
-   "expected": "条目自己的文字（自洽检查）；已人工逐个核对",
-   "note": "特性是给另一个池恢复次数（激励之源、先发激励、有箭无患、不懈），却被写成自己的 uses；应删 uses、加 restores",
-   "selfCheck": true,
-   "count": 4
+   "count": 1
   },
   {
    "id": "a18-special-resource",

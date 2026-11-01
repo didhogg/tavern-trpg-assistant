@@ -14,12 +14,12 @@
   {
    "check": "rest",
    "key": "mentionRestWithUses",
-   "value": 281
+   "value": 276
   },
   {
    "check": "rest",
    "key": "mentionRestWithoutUses",
-   "value": 73
+   "value": 78
   },
   {
    "check": "rest",
@@ -34,17 +34,17 @@
   {
    "check": "rest",
    "key": "recharge.long",
-   "value": 186
+   "value": 184
   },
   {
    "check": "rest",
    "key": "recharge.short",
-   "value": 2
+   "value": 1
   },
   {
    "check": "rest",
    "key": "recharge.shortOrLong",
-   "value": 86
+   "value": 84
   },
   {
    "check": "rest",
@@ -59,7 +59,7 @@
   {
    "check": "rest",
    "key": "withoutUsesGeneralOrNarrative",
-   "value": 60
+   "value": 65
   }
  ],
  "findings": [
