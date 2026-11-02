@@ -19730,12 +19730,12 @@ function jO() {
 	return e.register(AO), e;
 }
 // src/core/services.ts
-var MO = "0.4.0";
+var MO = "0.5.0";
 function NO(e = {}) {
 	let t = e.now ?? Date.now, n = e.rules ?? jO(), r = new ew(e.dbName ?? "tavern-trpg-assistant"), i = new oT(r, {
 		rules: n,
 		now: t,
-		appVersion: e.appVersion ?? "0.4.0"
+		appVersion: e.appVersion ?? "0.5.0"
 	}), a = new _T(r, {
 		rules: n,
 		now: t,
