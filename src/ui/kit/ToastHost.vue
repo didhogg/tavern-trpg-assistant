@@ -18,6 +18,7 @@ const store = useToastStore()
     >
       <span class="trpg-toast__text">{{ t.message }}</span>
       <button v-if="t.undo" type="button" @click="store.runUndo(t.id)">撤销</button>
+      <button v-for="(a, i) in t.actions ?? []" :key="i" type="button" @click="store.runAction(t.id, a)">{{ a.label }}</button>
     </div>
   </TransitionGroup>
 </template>

@@ -20,7 +20,7 @@ export function extraFacts(type: string, d: Obj): Fact[] {
     case 'feat': case 'condition': case 'disease': case 'status':
       add('前置', str(d.prerequisite)); add('效果', join(arr(d.effects).map(str))); break
     case 'hazard': case 'object': case 'vehicle': case 'monsterPart':
-      add('类型', str(d.type)); add('等级', str(d.level)); add('护甲等级', str(d.ac)); add('生命值', isObj(d.hp) ? `${str(d.hp.average)}${d.hp.formula ? `（${str(d.hp.formula)}）` : ''}` : str(d.hp)); add('速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${k} ${v} 尺`)) : str(d.speed)); add('属性', isObj(d.abilities) ? join(Object.entries(d.abilities).map(([k, v]) => `${k} ${v}`)) : ''); add('来源', join(arr(d.attachedItems).map(str))); break
+      add('类型', str(d.type)); add('等级', str(d.level)); add('护甲等级', str(d.ac)); add('生命值', isObj(d.hp) ? `${str(d.hp.average)}${d.hp.formula ? `（${str(d.hp.formula)}）` : ''}` : str(d.hp)); add('速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => isObj(v) ? (typeof v.amount === 'number' ? `${k} ${v.amount} 尺` : '') : `${k} ${v} 尺`)) : str(d.speed)); add('属性', isObj(d.abilities) ? join(Object.entries(d.abilities).map(([k, v]) => `${k} ${v}`)) : ''); add('来源', join(arr(d.attachedItems).map(str))); break
     case 'cult': case 'reward': case 'charoption':
       add('类型', str(d.type)); add('先决条件', str(d.prerequisite)); add('效果', join(arr(d.effects).map(str))); add('可选特性', str(d.optionKind)); break
     case 'rule':
