@@ -24,7 +24,7 @@
   {
    "check": "d10",
    "key": "factsCoverage.condition",
-   "value": 0
+   "value": 100
   },
   {
    "check": "d10",
@@ -39,12 +39,12 @@
   {
    "check": "d10",
    "key": "factsCoverage.disease",
-   "value": 0
+   "value": 100
   },
   {
    "check": "d10",
    "key": "factsCoverage.feat",
-   "value": 0
+   "value": 69
   },
   {
    "check": "d10",
@@ -54,7 +54,7 @@
   {
    "check": "d10",
    "key": "factsCoverage.hazard",
-   "value": 0
+   "value": 100
   },
   {
    "check": "d10",
@@ -64,7 +64,7 @@
   {
    "check": "d10",
    "key": "factsCoverage.language",
-   "value": 63
+   "value": 100
   },
   {
    "check": "d10",
@@ -79,12 +79,12 @@
   {
    "check": "d10",
    "key": "factsCoverage.monsterPart",
-   "value": 5
+   "value": 100
   },
   {
    "check": "d10",
    "key": "factsCoverage.object",
-   "value": 92
+   "value": 100
   },
   {
    "check": "d10",
@@ -109,7 +109,7 @@
   {
    "check": "d10",
    "key": "factsCoverage.status",
-   "value": 0
+   "value": 100
   },
   {
    "check": "d10",
@@ -129,7 +129,7 @@
   {
    "check": "d10",
    "key": "factsCoverage.vehicle",
-   "value": 25
+   "value": 100
   },
   {
    "check": "d10",
@@ -139,12 +139,12 @@
   {
    "check": "d10",
    "key": "length.p50",
-   "value": 243
+   "value": 245
   },
   {
    "check": "d10",
    "key": "length.p95",
-   "value": 1910
+   "value": 1911
   },
   {
    "check": "d10",
@@ -153,18 +153,8 @@
   },
   {
    "check": "d10",
-   "key": "onlyNameAndSummary.language",
-   "value": 24
-  },
-  {
-   "check": "d10",
    "key": "onlyNameAndSummary.lore",
    "value": 42
-  },
-  {
-   "check": "d10",
-   "key": "onlyNameAndSummary.monsterPart",
-   "value": 8
   },
   {
    "check": "d10",
@@ -219,16 +209,11 @@
    "fixSource": "decision",
    "entries": [
     "book（96 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
-    "condition（15 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
-    "disease（9 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
-    "feat（74 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
-    "hazard（48 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
-    "lore（288 个条目没有结构化事实，纯文字只有名字、摘要和正文）",
-    "status（2 个条目没有结构化事实，纯文字只有名字、摘要和正文）"
+    "lore（288 个条目没有结构化事实，纯文字只有名字、摘要和正文）"
    ],
    "expected": "界面 entryFacts（src/ui/library/facts.ts）",
    "note": "这些类型的结构化字段（神祇的万神殿/领域/象征、语言的文字与使用者、专长的前置与属性提升、危害的等级、物件的护甲与生命……）没有进“事实”，所以既不在详情页的数据行里，也不在给 AI 的文字里。推荐：给“事实”补这几类（详情页与给 AI 共用，归 G3 显示整理），G2.5 不改数据",
-   "count": 7
+   "count": 2
   }
  ]
 }
