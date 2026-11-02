@@ -185,7 +185,7 @@ export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline:
     senses: names(raw.senses, inline),
     ...(typeof raw.passive === 'number' ? { passive: raw.passive } : {}),
     languages: names(raw.languages, inline),
-    cr: crOf(raw),
+    ...(raw.cr !== undefined ? { cr: crOf(raw) } : {}),
     ...(typeof raw.xp === 'number' ? { xp: raw.xp } : {}),
     resist: names(raw.resist, inline),
     immune: names(raw.immune, inline),

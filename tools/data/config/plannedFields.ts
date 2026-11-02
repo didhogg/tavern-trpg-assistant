@@ -20,6 +20,12 @@ export const PLANNED_FIELDS: Record<string, string | PlannedField> = {
   // §5.4 怪物子结构
   'monster.environment': '§5.4', 'monster.damageTags': '§5.4', 'monster.miscTags': '§5.4',
   'monster.variant': '§5.4', 'monster.attachedItems': '§5.4', 'monster.legendaryGroup': '§5.4',
+  // 任务一 §3.1：人物与怪物共用属性块；即使 zod 已覆盖，也保留在构建登记表里供覆盖矩阵查名。
+  'monster.classes': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.race': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.subrace': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.background': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.inventory': { spec: '任务一 §3.1', origin: 'task-one' },
   // §5.5 随机表
   'table.kind': '§5.5', 'table.parent': '§5.5', 'table.chapter': '§5.5', 'table.tableRef': '§5.5',
   // §5.6 新类型
