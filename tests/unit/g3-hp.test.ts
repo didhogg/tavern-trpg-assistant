@@ -5,9 +5,9 @@ describe('怪物生命值整理（G3 §12.6）', () => {
   it('有固定值时原样保留', () => {
     expect(normalizeHp(7, '2d6', '')).toEqual({ average: 7, formula: '2d6' })
   })
-  it('纯数字放在 special 里时改成固定值', () => {
-    expect(normalizeHp(0, '', '58')).toEqual({ average: 58 })
-    expect(normalizeHp(0, '', ' 10 ')).toEqual({ average: 10 })
+  it('纯数字放在 special 里时补固定值、保留 special', () => {
+    expect(normalizeHp(0, '', '58')).toEqual({ average: 58, special: '58' })
+    expect(normalizeHp(0, '', ' 10 ')).toEqual({ average: 10, special: ' 10 ' })
   })
   it('原书没给时写「原书未给出」', () => {
     expect(normalizeHp(0, '', '')).toEqual({ average: 0, special: HP_NOT_GIVEN })
