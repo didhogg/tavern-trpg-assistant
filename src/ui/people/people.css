@@ -147,12 +147,12 @@
 }
 .trpg-modal__card:has(.trpg-template) { width: min(1100px, 92%); height: 86%; }
 /* TemplateFilter.vue */
-.trpg-template-filter { display: grid; gap: 10px; position: absolute; top: 84px; left: 16px; right: 16px; bottom: 16px; z-index: 3; overflow: auto; padding: 12px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-float); }
+.trpg-template-filter { display: grid; gap: 6px; position: absolute; top: 84px; left: 16px; right: 16px; bottom: 16px; z-index: 3; overflow: auto; padding: 8px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-float); }
 .trpg-template-filter__row { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
 .trpg-template-filter__row > .trpg-field__label { width: 64px; flex: none; padding-top: 8px; }
 .trpg-template-filter__sources { flex: 1; min-width: 220px; display: grid; gap: 4px; }
-.trpg-template-filter__source-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; max-height: 78px; overflow: auto; }
+.trpg-template-filter__source-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; max-height: 60px; overflow: auto; }
 .trpg-template-filter__source-list .trpg-check { min-height: 30px; font-size: 13px; }
 .trpg-template-filter__checks { display: flex; flex-wrap: wrap; gap: 2px 12px; flex: 1; }
-.trpg-template-filter__checks .trpg-check { min-height: 30px; font-size: 13px; }
+.trpg-template-filter__checks .trpg-check { min-height: 26px; font-size: 12.5px; }
 .trpg-template-filter__foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 0 2px; position: sticky; bottom: -12px; background: var(--card); }
