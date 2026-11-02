@@ -11,11 +11,16 @@ function rollTerm(term: DiceTerm, rng: () => number): number {
   return term.sign * sum
 }
 
+/** 只掷一个骰式，不查表；单元格里的 `{{roll:…}}` 也用它。 */
+export function rollExpression(formula: string, rng: () => number, modifier = 0): number {
+  const parsed = parseDice(formula)
+  return (parsed.ok ? parsed.terms.reduce((n, t) => n + rollTerm(t, rng), 0) : 0) + modifier
+}
+
 /** 按 `min ≤ total ≤ max` 命中一行；没有命中返回 rowIndex: null，不抛错。 */
 export function rollTable(table: TableDataLike, rng: () => number, modifier = 0): TableRoll {
   const formula = table.dice ?? '1'
-  const parsed = parseDice(formula)
-  const total = (parsed.ok ? parsed.terms.reduce((n, t) => n + rollTerm(t, rng), 0) : 0) + modifier
+  const total = rollExpression(formula, rng, modifier)
   const index = table.rows.findIndex((r) => (r.min === undefined || total >= r.min) && (r.max === undefined || total <= r.max))
   const row = index >= 0 ? table.rows[index] : undefined
   return {

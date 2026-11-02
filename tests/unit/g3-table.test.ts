@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { rollTable, tableCopyText } from '../../src/rules/dice/table'
+import { rollExpression, rollTable, tableCopyText } from '../../src/rules/dice/table'
 
 const table = { dice: '1d6', rows: [{ min: 1, max: 2, cells: ['甲'] }, { min: 3, max: 6, cells: ['乙', '丙'], then: { table: 'table.next' } }] }
 
@@ -8,6 +8,10 @@ describe('G3 掷表', () => {
     expect(rollTable(table, () => 0).rowIndex).toBe(0)
     expect(rollTable(table, () => 0.99).rowIndex).toBe(1)
     expect(rollTable(table, () => 0.5).text).toBe('乙／丙')
+  })
+  it('骰式单独掷（单元格 {{roll}}）', () => {
+    expect(rollExpression('1d12', () => 0)).toBe(1)
+    expect(rollExpression('2d6+1', () => 0.99)).toBe(13)
   })
   it('没命中不抛错', () => {
     expect(rollTable({ dice: '1d6', rows: [{ min: 7, max: 8, cells: ['x'] }] }, () => 0).rowIndex).toBeNull()

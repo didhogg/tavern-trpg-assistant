@@ -21,7 +21,7 @@ function onLoad(e: Event): void { const img = e.target as HTMLImageElement; if (
 </script>
 
 <template>
-  <span class="trpg-avatar" :style="dims" :aria-label="label" :role="art?.portrait || art?.token ? 'button' : undefined" @click="emit('open')">
+  <span class="trpg-avatar" :style="dims" :aria-label="label" :role="art?.portrait ? 'button' : undefined" @click="art?.portrait && emit('open')">
     <svg v-if="!url || failed || !loaded" viewBox="0 0 512 512" aria-hidden="true"><g v-html="icon" /></svg>
     <img v-else :src="url" :alt="label" loading="lazy" decoding="async" referrerpolicy="no-referrer" :style="{ width: style.width + 'px', left: style.left + 'px', top: style.top + 'px', opacity: loaded ? 1 : 0 }" @load="onLoad" @error="failed = true" />
   </span>

@@ -12,6 +12,8 @@ export async function tablesOf(db: TrpgDatabase, ruleId: string, signature: stri
   }
   return cache.rows.filter((t) => {
     const p = t.data.parent as { id?: string; appliesTo?: string[] } | undefined
-    return p?.id === targetId || (Array.isArray(p?.appliesTo) && p.appliesTo.includes(targetId))
+    if (p?.id === targetId || (Array.isArray(p?.appliesTo) && p.appliesTo.includes(targetId))) return true
+    // 参考表按行主人：没有 parent 的身高/体重、神系表，每一行的 refs 就是它的主人。
+    return (Array.isArray(t.data.rows) ? t.data.rows : []).some((r) => typeof r === 'object' && r !== null && Array.isArray((r as { refs?: unknown }).refs) && ((r as { refs: unknown[] }).refs).includes(targetId))
   }).sort((a, b) => a.id.localeCompare(b.id, 'en'))
 }
