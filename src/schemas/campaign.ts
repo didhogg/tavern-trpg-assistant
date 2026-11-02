@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { idSchema, semverSchema, timestampSchema } from './common'
 import { packListItemSchema } from './pack'
+import { peopleDataSchema } from './people'
 
 export const instanceSchema = z.object({
   id: z.string().min(1),
@@ -12,8 +13,8 @@ export const instanceSchema = z.object({
 })
 export type Instance = z.infer<typeof instanceSchema>
 
-/** 其他单元各自拥有的键原样保留；本单元只定义 `instances`。 */
-export const workspaceDataSchema = z.looseObject({ instances: z.array(instanceSchema).default([]) })
+/** 其他单元各自拥有的键原样保留；本单元负责 `instances`，U6 补 `people`、`tags`、`party`。 */
+export const workspaceDataSchema = z.looseObject({ instances: z.array(instanceSchema).default([]), ...peopleDataSchema.shape })
 export type WorkspaceData = z.infer<typeof workspaceDataSchema>
 
 export const enabledPackSchema = z.object({ id: idSchema, version: semverSchema })
