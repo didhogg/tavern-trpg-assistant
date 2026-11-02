@@ -8,7 +8,7 @@ import PackActions from './PackActions.vue'
 import { updateAllPacks } from './actions'
 import { useToastStore } from '../../stores/toast'
 import { openPackDetail } from './openDetail'
-import { buildPackRows, CATEGORY_LABEL, CATEGORY_ORDER, contributesLabel, type PackRow } from './rows'
+import { buildPackRows, contributesLabel, type PackRow } from './rows'
 
 const props = defineProps<{ ruleId: string }>()
 const library = useLibraryStore()
@@ -16,6 +16,8 @@ const campaign = useCampaignStore()
 const ui = useUiStore()
 const query = ref('')
 const onlyUpdates = ref(false)
+const closed = ref<Set<string>>(new Set())
+let initialized = false
 
 const toast = useToastStore()
 onMounted(() => void library.loadCatalog())
@@ -26,19 +28,28 @@ const shown = computed(() => {
   const q = query.value.trim().toLowerCase()
   return rows.value.filter((r) => (!onlyUpdates.value || r.updateVersion) && (!q || r.name.toLowerCase().includes(q) || (r.nameEn ?? '').toLowerCase().includes(q)))
 })
-// 同一分类内：已安装的在前，再列可安装的；同系列的归在系列名下，按 order 编号
-const groups = computed(() =>
-  CATEGORY_ORDER.map((c) => {
-    const list = shown.value.filter((r) => r.category === c).sort((a, b) => Number(b.installed) - Number(a.installed) || (a.series?.order ?? 0) - (b.series?.order ?? 0) || a.name.localeCompare(b.name, 'zh'))
+// 按数据仓库的 group 分组；同一组内已安装的在前，再列可安装的；同系列的归在系列名下，按 order 编号
+const groups = computed(() => {
+  const map = new Map<string, PackRow[]>()
+  const label = (r: PackRow): string => (r.source === 'builtin' ? '内置' : (r.group ?? '其他'))
+  for (const r of shown.value) map.set(label(r), [...(map.get(label(r)) ?? []), r])
+  const catalogOrder = (g: string): number => library.catalog?.packs.findIndex((p) => p.group === g) ?? -1
+  const order = (g: string): number => (g === '内置' ? -2 : g === '其他' ? 9999 : catalogOrder(g))
+  return [...map].sort((a, b) => order(a[0]) - order(b[0])).map(([key, rows]) => {
+    const list = rows.sort((a, b) => Number(b.installed) - Number(a.installed) || (a.series?.order ?? 0) - (b.series?.order ?? 0) || a.name.localeCompare(b.name, 'zh'))
     const bySeries = new Map<string, PackRow[]>()
     const single: PackRow[] = []
     for (const r of list) {
       if (r.series) bySeries.set(r.series.id, [...(bySeries.get(r.series.id) ?? []), r])
       else single.push(r)
     }
-    return { category: c, label: CATEGORY_LABEL[c], single, series: [...bySeries.values()] }
-  }).filter((g) => g.single.length || g.series.length),
-)
+    return { key, label: key, single, series: [...bySeries.values()] }
+  }).filter((g) => g.single.length || g.series.length)
+})
+const isOpen = (key: string): boolean => !!query.value.trim() || !closed.value.has(key)
+function toggleGroup(key: string): void { const next = new Set(closed.value); if (next.has(key)) next.delete(key); else next.add(key); closed.value = next }
+watch(groups, (gs) => { if (initialized || !gs.length) return; initialized = true; closed.value = new Set(gs.filter((g) => !g.single.some((r) => r.installed || r.recommended) && !g.series.some((s) => s.some((r) => r.installed || r.recommended))).map((g) => g.key)) }, { immediate: true })
+
 
 const updateAll = updateAllPacks
 
@@ -66,9 +77,9 @@ watch(() => ui.libraryFocusPack, async (id) => {
       <button class="trpg-btn trpg-btn--small" type="button" data-testid="check-updates" :disabled="library.catalogState === 'loading'" @click="checkUpdates">检查更新</button>
     </div>
     <p v-if="library.catalogState === 'error'" class="trpg-field__hint" role="status">没能连上数据仓库：{{ library.catalogError }} <button class="trpg-btn trpg-btn--small" type="button" @click="library.loadCatalog(true)">重试</button></p>
-    <section v-for="g in groups" :key="g.category" :aria-label="g.label">
-      <h3 class="trpg-group">{{ g.label }}</h3>
-      <ul class="trpg-list">
+    <section v-for="g in groups" :key="g.key" :aria-label="g.label">
+      <h3 class="trpg-group"><button class="trpg-link" type="button" :aria-expanded="isOpen(g.key)" @click="toggleGroup(g.key)">{{ isOpen(g.key) ? '▾' : '▸' }} {{ g.label }} · {{ g.single.length + g.series.reduce((n, s) => n + s.length, 0) }} 个</button></h3>
+      <ul v-if="isOpen(g.key)" class="trpg-list">
         <li v-for="r in g.single" :key="r.id" class="trpg-row" :data-testid="`ext-${r.id}`">
           <div class="trpg-row__main"><Term @open="openPackDetail(r.id)">{{ r.name }}</Term><div class="trpg-row__meta">{{ contributesLabel(r) }}</div><div v-if="r.updateVersion || r.outdated" class="trpg-row__meta trpg-row__warn" data-testid="update-note">{{ r.updateVersion ? `有新版本 v${r.updateVersion}` : '' }}{{ r.updateVersion && r.outdated ? ' · ' : '' }}{{ r.outdated ? '旧版数据，部分内容缺失，建议更新' : '' }}</div></div>
           <div class="trpg-row__end"><PackActions :row="r" /></div>

@@ -2,6 +2,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { countOf, heroSides, DICE_FACES, type RollMode } from '../../rules/dice'
 import { useDiceStore } from '../../stores/dice'
+import { useLibraryStore } from '../../stores/library'
+import { openEntry } from '../library/openDetail'
 import { useUiStore } from '../../stores/ui'
 import DieIcon from '../kit/DieIcon.vue'
 import Icon from '../kit/Icon.vue'
@@ -10,6 +12,7 @@ import { useDrag, type Point } from './useDrag'
 
 const ui = useUiStore()
 const dice = useDiceStore()
+const library = useLibraryStore()
 const MODES: Array<{ value: RollMode; label: string }> = [{ value: 'adv', label: '优势' }, { value: 'normal', label: '普通' }, { value: 'dis', label: '劣势' }]
 const REDUCE = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -98,6 +101,11 @@ const fillLabel = computed(() => (dice.fillState === 'done' ? '已填入 ✓' : 
 const timeText = (at: number) => new Date(at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 const hint = computed(() => (dice.canMode ? '' : '优势劣势只对单个 1d20 有效'))
 const onFormula = (e: Event): void => dice.setText((e.target as HTMLInputElement).value)
+async function openRecord(rec: typeof dice.history[number]): Promise<void> {
+  if (!rec.table) { dice.loadRecord(rec); return }
+  const packId = await library.packOfEntry(rec.table.id)
+  if (packId) openEntry(packId, rec.table.id, rec.table.name)
+}
 </script>
 
 <template>
@@ -174,8 +182,9 @@ const onFormula = (e: Event): void => dice.setText((e.target as HTMLInputElement
         <template v-if="recentOpen">
           <ul v-if="visibleHistory.length" class="trpg-dice__list">
             <li v-for="rec in visibleHistory" :key="rec.id">
-              <button type="button" :aria-label="`载入骰式 ${rec.formula}`" @click="dice.loadRecord(rec)">
-                <b>{{ rec.total }}</b><span>{{ rec.formula }}<template v-if="rec.note"> · {{ rec.note }}</template></span><time>{{ timeText(rec.at) }}</time>
+              <button type="button" :aria-label="rec.table ? `打开表 ${rec.table.name}` : `载入骰式 ${rec.formula}`" @click="openRecord(rec)">
+                <template v-if="rec.table"><b>{{ rec.table.name }}</b><span>{{ rec.table.result }}</span></template>
+                <template v-else><b>{{ rec.total }}</b><span>{{ rec.formula }}<template v-if="rec.note"> · {{ rec.note }}</template></span></template><time>{{ timeText(rec.at) }}</time>
               </button>
             </li>
           </ul>

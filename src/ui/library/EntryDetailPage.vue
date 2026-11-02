@@ -19,6 +19,10 @@ import VariantBar from './VariantBar.vue'
 import { humanizeTokens } from './tokens'
 import { familiesOf, loreOf, type FamilyRef, type LoreSource } from './series'
 import { joinersOf, optionalFeaturesFact, type Joiner } from './joins'
+import { variantsOf, variantsFact } from './variants'
+import { tablesOf, type RelatedTable } from './tables'
+import TableEntry from './TableEntry.vue'
+import RelatedTables from './RelatedTables.vue'
 
 const props = defineProps<{ packId: string; entryId: string }>()
 const app = useAppStore()
@@ -30,6 +34,8 @@ const stored = shallowRef<StoredEntry | null>(null)
 const missing = ref(false)
 const families = ref<FamilyRef[]>([])
 const joiners = ref<Joiner[]>([])
+const variants = ref<string[]>([])
+const tables = ref<RelatedTable[]>([])
 const lore = ref<LoreSource[]>([])
 /** 已装包的组合：装、卸包后，系列与背景描述的缓存据此失效。 */
 const signature = computed(() => library.installed.map((p) => `${p.id}@${p.version}`).join('|'))
@@ -42,6 +48,8 @@ onMounted(async () => {
     const db = app.svc().db
     families.value = await familiesOf(db, stored.value.ruleId, signature.value, props.entryId)
     joiners.value = await joinersOf(db, stored.value.ruleId, signature.value, props.entryId)
+    variants.value = await variantsOf(db, stored.value.ruleId, signature.value, props.entryId)
+    tables.value = await tablesOf(db, stored.value.ruleId, signature.value, props.entryId)
     lore.value = await loreOf(db, stored.value.ruleId, signature.value, stored.value)
   }
 })
@@ -53,16 +61,19 @@ const resolved = computed(() => (original.value ? resolveVariant(original.value,
 const shown = computed(() => resolved.value?.entry ?? original.value)
 const seriesFact = computed(() => (families.value.length ? [{ label: '系列', parts: families.value.flatMap((f, i) => [...(i ? ['、'] : []), { ref: f.id, label: f.name }]) }] : []))
 const optionalFact = computed(() => optionalFeaturesFact(joiners.value, (packId) => library.installedMap.get(packId)?.name ?? packId))
+const variantFact = computed(() => variantsFact(variants.value))
 const facts = computed(() => {
   if (!shown.value) return []
   const base = entryFacts(shown.value)
   // 「可选特性」紧跟在「特性」后面；没有「特性」行时放在最后
   const at = base.findIndex((f) => f.label === '特性')
   const withOptional = optionalFact.value ? (at >= 0 ? [...base.slice(0, at + 1), optionalFact.value, ...base.slice(at + 1)] : [...base, optionalFact.value]) : base
-  return [...withOptional.slice(0, 1), ...seriesFact.value, ...withOptional.slice(1), ...(shown.value.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : [])]
+  return [...withOptional.slice(0, 1), ...seriesFact.value, ...(variantFact.value ? [variantFact.value] : []), ...withOptional.slice(1), ...(shown.value.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : [])]
 })
 const blocks = computed(() => ((shown.value?.data.text as TextBlock[] | undefined) ?? []))
 const npcIntro = computed(() => (shown.value?.type === 'npc' ? ((shown.value.data.intro as TextBlock[] | undefined) ?? []) : []))
+
+
 
 /** 点开关联术语：条目在已装的包里就打开，否则提示。 */
 async function onRef(id: string): Promise<void> {
@@ -70,6 +81,8 @@ async function onRef(id: string): Promise<void> {
   if (packId) openEntry(packId, id, id)
   else toast.info('这个条目所在的扩展包还没有安装，可在「库 → 扩展」里安装')
 }
+
+
 
 async function onSwitch(variantKey: string): Promise<void> {
   const before = slot.value?.active
@@ -90,9 +103,12 @@ async function onSwitch(variantKey: string): Promise<void> {
     <VariantBar v-if="slot && slot.candidates.length" :variants="slot" :original="original" :read-only="campaign.readOnly" :origin-name="original.name" @switch="onSwitch" />
     <p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p>
     <p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p>
-    <EntryFacts v-if="facts.length" :facts="facts" @ref="onRef" />
+
+    <TableEntry v-if="shown.type === 'table'" :entry="shown" @ref="onRef" />
+    <EntryFacts v-else-if="facts.length" :facts="facts" @ref="onRef" />
     <TextBlocks v-if="npcIntro.length" :blocks="npcIntro" @ref="onRef" />
     <TextBlocks :blocks="blocks" @ref="onRef" />
+    <RelatedTables v-if="tables.length" :tables="tables" :target-id="props.entryId" @open="onRef" @ref="onRef" />
     <section v-if="lore.length" class="trpg-entry__lore" data-testid="entry-lore">
       <h3 class="trpg-entry__lore-title">背景描述</h3>
       <template v-for="(src, i) in lore" :key="i">

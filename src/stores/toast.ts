@@ -3,11 +3,13 @@ import { ref } from 'vue'
 
 export type ToastKind = 'success' | 'info' | 'undo' | 'error' | 'status'
 
+export interface ToastAction { label: string; run: () => void | Promise<void> }
 export interface Toast {
   id: number
   kind: ToastKind
   message: string
   undo?: () => void | Promise<void>
+  actions?: ToastAction[]
 }
 
 /** 停留时间（毫秒）：开发规范 §5.4。 */
@@ -39,9 +41,10 @@ export const useToastStore = defineStore('toast', () => {
     timers.set(id, timer)
   }
 
-  function push(kind: ToastKind, message: string, undo?: () => void | Promise<void>): number {
+  function push(kind: ToastKind, message: string, undoOrOptions?: (() => void | Promise<void>) | { undo?: () => void | Promise<void>; actions?: ToastAction[] }): number {
     const id = nextId++
-    toasts.value = [...toasts.value, { id, kind, message, undo }]
+    const options = typeof undoOrOptions === 'function' ? { undo: undoOrOptions } : (undoOrOptions ?? {})
+    toasts.value = [...toasts.value, { id, kind, message, ...options }]
     while (toasts.value.length > MAX_TOASTS) dismiss(toasts.value[0].id)
     start(id, TOAST_MS[kind])
     return id
@@ -70,8 +73,9 @@ export const useToastStore = defineStore('toast', () => {
   const success = (message: string) => push('success', message)
   const info = (message: string) => push('info', message)
   const status = (message: string) => push('status', message)
-  const undoable = (message: string, undo: () => void | Promise<void>) => push('undo', message, undo)
+  const undoable = (message: string, undo: () => void | Promise<void>) => push('undo', message, { undo })
+  async function runAction(id: number, action: ToastAction): Promise<void> { dismiss(id); await action.run() }
   const error = (message: string) => push('error', message)
 
-  return { toasts, push, dismiss, pause, resume, runUndo, success, info, status, undoable, error }
+  return { toasts, push, dismiss, pause, resume, runUndo, runAction, success, info, status, undoable, error }
 })

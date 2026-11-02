@@ -12,8 +12,9 @@ import { contributesLabel, findRow, SOURCE_LABEL } from './rows'
 import { isHiddenType } from '../../core/library/hiddenTypes'
 import { typeLabel } from './typeLabels'
 import { humanizeTokens } from './tokens'
+import { ITEM_KIND_GROUPS, itemKindGroup } from './itemKinds'
 
-interface Lite { entryId: string; name: string; nameEn?: string; type: string; summary: string }
+interface Lite { entryId: string; name: string; nameEn?: string; type: string; summary: string; itemKind?: string; consumable?: boolean }
 
 const props = defineProps<{ packId: string }>()
 const app = useAppStore()
@@ -26,6 +27,7 @@ const installedOf = (id: string) => library.installedMap.has(id)
 const all = shallowRef<Lite[]>([])
 const loaded = ref(false)
 const category = ref('all')
+const kind = ref('all')
 const query = ref('')
 
 async function load(): Promise<void> {
@@ -33,7 +35,7 @@ async function load(): Promise<void> {
   const rows = await app.svc().db.entries.where('packId').equals(props.packId).toArray()
   all.value = rows
     .filter((r) => !r.override && !isHiddenType(r.type))
-    .map((r) => ({ entryId: r.entryId, name: r.name, nameEn: r.nameEn, type: r.type, summary: r.summary }))
+    .map((r) => ({ entryId: r.entryId, name: r.name, nameEn: r.nameEn, type: r.type, summary: r.summary, itemKind: typeof r.data.itemKind === 'string' ? r.data.itemKind : undefined, consumable: r.data.consumable === true }))
     .sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name, 'zh'))
   loaded.value = true
 }
@@ -45,9 +47,22 @@ const categories = computed(() => {
   for (const e of all.value) counts[e.type] = (counts[e.type] ?? 0) + 1
   return [{ value: 'all', label: '全部' }, ...Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([t, n]) => ({ value: t, label: `${typeLabel(t)}（${n}）` }))]
 })
+const kindOptions = computed(() => {
+  if (category.value !== 'item') return []
+  const items = all.value.filter((e) => e.type === 'item')
+  const counts = new Map<string, number>()
+  for (const e of items) { const k = e.consumable ? 'consumable' : itemKindGroup(e.itemKind); counts.set(k, (counts.get(k) ?? 0) + 1) }
+  return [{ value: 'all', label: '全部' }, ...ITEM_KIND_GROUPS.filter((g) => (counts.get(g.key) ?? 0) > 0).map((g) => ({ value: g.key, label: `${g.label}（${counts.get(g.key)}）` })), ...(counts.get('consumable') ? [{ value: 'consumable', label: `消耗品（${counts.get('consumable')}）` }] : [])]
+})
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
-  return all.value.filter((e) => (category.value === 'all' || e.type === category.value) && (!q || e.name.toLowerCase().includes(q) || (e.nameEn ?? '').toLowerCase().includes(q)))
+  return all.value.filter((e) => {
+    if (category.value !== 'all' && e.type !== category.value) return false
+    if (category.value === 'item' && kind.value !== 'all') {
+      if (kind.value === 'consumable' ? e.consumable !== true : itemKindGroup(e.itemKind) !== kind.value || e.consumable) return false
+    }
+    return !q || e.name.toLowerCase().includes(q) || (e.nameEn ?? '').toLowerCase().includes(q)
+  })
 })
 const meta = computed(() => {
   const r = row.value
@@ -77,12 +92,13 @@ const enabledText = computed(() => {
     <template v-if="row.installed">
       <div class="trpg-packdetail__filter">
         <SelectField v-model="category" :options="categories" label="类别" />
+        <SelectField v-if="category === 'item'" v-model="kind" :options="kindOptions" label="种类" />
         <input v-model="query" class="trpg-input" type="search" placeholder="搜索名称" aria-label="搜索条目" />
         <span class="trpg-field__hint" data-testid="entry-count">共 {{ filtered.length }} 条</span>
       </div>
       <div class="trpg-packdetail__list">
         <div v-if="!loaded" class="trpg-skeleton" aria-busy="true" />
-        <p v-else-if="!filtered.length" class="trpg-empty">没有符合的条目 <button v-if="query || category !== 'all'" class="trpg-link" type="button" @click="query = ''; category = 'all'">清除筛选</button></p>
+        <p v-else-if="!filtered.length" class="trpg-empty">没有符合的条目 <button v-if="query || category !== 'all'" class="trpg-link" type="button" @click="query = ''; category = 'all'; kind = 'all'">清除筛选</button></p>
         <VirtualList v-else :items="filtered" :row-height="52" :key-of="(e) => e.entryId" label="条目列表">
           <template #default="{ item }">
             <div class="trpg-entryrow">

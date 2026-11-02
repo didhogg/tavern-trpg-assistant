@@ -12,5 +12,6 @@
 | sharp | 开发期头像解码、缩放、灰度（`art:focus`） | Apache-2.0 |
 | @techstark/opencv-js | 开发期 token 模板匹配（`art:focus`） | Apache-2.0 |
 | smartcrop-sharp | 开发期头像画面重心裁切（`art:focus`） | MIT |
+| game-icons.net | 生物类型图标（`src/ui/kit/creatureIcons.ts`） | CC BY 3.0；作者：Lorc（beast-eye、flat-paw-print、flat-star、gear-hammer、dragon-head、flame-tunnel、fairy、daemon-skull、monster-grasp、goo-skull、flamed-leaf、crowned-skull、uncertainty）、Delapouite（giant、person） |
 
 数据内容的来源与许可见 `packs/DATA-NOTICE.md` 与各条目的 `credit`。

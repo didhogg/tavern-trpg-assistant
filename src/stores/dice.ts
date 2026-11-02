@@ -19,6 +19,7 @@ export interface RollRecord {
   total: number
   line: string
   natural?: 20 | 1
+  table?: { id: string; name: string; result: string }
 }
 
 export const HISTORY_MAX = 20
@@ -157,6 +158,12 @@ export const useDiceStore = defineStore('dice', () => {
     persist()
   }
 
+  /** 掷表记录：最近里显示「表名：结果」，点开由界面处理。 */
+  function recordTable(id: string, name: string, result: string): RollRecord {
+    const rec: RollRecord = { id: nextId++, at: Date.now(), note: '', expression: result, formula: result, mode: 'normal', total: 0, line: `${name}：${result}`, table: { id, name, result } }
+    history.value = [rec, ...history.value].slice(0, HISTORY_MAX); persist(); return rec
+  }
+
   function clearHistory(): void {
     history.value = []
     persist()
@@ -182,6 +189,6 @@ export const useDiceStore = defineStore('dice', () => {
 
   return {
     text, mode, note, history, last, lastResult, fillState, copied, error, builder, canMode, canRoll,
-    setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, roll, loadRecord, clearHistory, fill, copy, commentOf,
+    setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, roll, recordTable, loadRecord, clearHistory, fill, copy, commentOf,
   }
 })
