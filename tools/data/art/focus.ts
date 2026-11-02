@@ -69,6 +69,7 @@ async function gray(buffer: Buffer, long: number): Promise<{ data: Buffer; w: nu
 }
 
 interface Focus { sha256: string; w: number; h: number; x: number; y: number; size: number; method: 'token-match' | 'smartcrop'; score?: number; token?: string; error?: string }
+type TokenStatus = 200 | string
 
 async function matchToken(cv: any, portrait: Buffer, token: Buffer): Promise<{ score: number; x: number; y: number; size: number } | undefined> {
   const p = await gray(portrait, 768)
@@ -147,8 +148,11 @@ async function main(): Promise<void> {
   const all = art.filter((m) => m.portrait)
   const limit = Number(process.env.ART_LIMIT ?? 0)
   const offset = Number(process.env.ART_OFFSET ?? 0)
-  let existing: Record<string, Focus> = {}
-  try { existing = JSON.parse(readFileSync(FOCUS, 'utf8')) as Record<string, Focus> } catch { existing = {} }
+  let existingRaw: Record<string, unknown> = {}
+  try { existingRaw = JSON.parse(readFileSync(FOCUS, 'utf8')) as Record<string, unknown> } catch { existingRaw = {} }
+  const existingTokens: Record<string, TokenStatus> = (existingRaw.tokens as Record<string, TokenStatus> | undefined) ?? {}
+  delete existingRaw.tokens
+  const existing = existingRaw as Record<string, Focus>
   const withPortrait = all.filter((m) => !existing[m.portrait!]).slice(offset, limit || undefined)
   console.log(`怪物 ${art.length}，有立绘 ${all.length}，已缓存焦点 ${Object.keys(existing).length}，本轮 ${withPortrait.length}`)
   const cv = await import('@techstark/opencv-js').then((m) => m.default ?? m)
@@ -170,12 +174,26 @@ async function main(): Promise<void> {
     })
     writeFileSync(FOCUS, stable(out as Record<string, unknown>))
   }
+  const tokenUrls = [...new Set(art.map((m) => m.token).filter((x): x is string => !!x))]
+  const tokenLimit = Number(process.env.ART_TOKEN_LIMIT ?? 0)
+  const probe = tokenUrls.slice(0, tokenLimit || undefined)
+  const tokens: Record<string, TokenStatus> = { ...existingTokens }
+  for (let start = 0; start < probe.length; start += 50) {
+    const chunk = probe.slice(start, start + 50)
+    const statuses = await mapLimit(chunk, 4, async (url) => { try { await download(url); return 200 as const } catch (e) { return e instanceof Error ? e.message : String(e) } })
+    chunk.forEach((url, i) => { tokens[url] = statuses[i] })
+    writeFileSync(FOCUS, stable({ ...out, tokens } as Record<string, unknown>))
+    console.log(`token 探测 ${Math.min(start + 50, probe.length)}/${probe.length}`)
+  }
+  writeFileSync(FOCUS, stable({ ...out, tokens } as Record<string, unknown>))
   const allResults = Object.values(out)
   const scores = allResults.filter((r) => r.method === 'token-match' && r.score !== undefined).map((r) => r.score!)
   const matched = scores.length
   const smart = allResults.filter((r) => r.method === 'smartcrop' && !r.error).length
   const errors = allResults.filter((r) => r.error).length
-  console.log(`完成：有立绘 ${all.length}，token-match ${matched}，smartcrop ${smart}，错误 ${errors}`)
+  const tokenErrors = Object.entries(tokens).filter(([, v]) => v !== 200)
+  console.log(`完成：有立绘 ${all.length}，token-match ${matched}，smartcrop ${smart}，错误 ${errors}，token 不可达 ${tokenErrors.length}`)
+  if (tokenErrors.length) console.log(`token 不可达：${tokenErrors.slice(0, 10).map(([u, e]) => `${u} (${e})`).join('；')}`)
   if (scores.length) console.log(`token 分数 min ${Math.min(...scores).toFixed(3)} / p50 ${scores.sort((a,b)=>a-b)[Math.floor(scores.length/2)].toFixed(3)} / max ${Math.max(...scores).toFixed(3)}`)
   if (sheet) writeSheet(art, out)
 }

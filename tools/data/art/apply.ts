@@ -4,8 +4,9 @@ import { collectArt } from './focus'
 
 type Raw = Record<string, unknown>
 export interface FocusEntry { x: number; y: number; size: number; method: 'token-match' | 'smartcrop'; score?: number; error?: string }
+export type FocusFile = Record<string, FocusEntry | Record<string, unknown>> & { tokens?: Record<string, 200 | string> }
 
-export function artById(data: { monsters: Raw[]; fluff?: Array<{ kind: string; raw: Raw }> }, planned: PlannedEntry[], focus: Record<string, FocusEntry>): Map<string, Raw> {
+export function artById(data: { monsters: Raw[]; fluff?: Array<{ kind: string; raw: Raw }> }, planned: PlannedEntry[], focus: Record<string, unknown>): Map<string, Raw> {
   const byKey = new Map<string, ReturnType<typeof collectArt>[number]>()
   for (const a of collectArt(data)) byKey.set(`${a.source}|${a.nameEn}`, a)
   const out = new Map<string, Raw>()
@@ -14,9 +15,10 @@ export function artById(data: { monsters: Raw[]; fluff?: Array<{ kind: string; r
     const a = byKey.get(`${e.source}|${e.nameEn}`)
     if (!a) continue
     const art: Raw = {}
-    const f = a.portrait ? focus[a.portrait] : undefined
+    const f = a.portrait ? focus[a.portrait] as FocusEntry | undefined : undefined
     if (a.portrait && f && !f.error) art.portrait = { url: a.portrait, focus: { x: f.x, y: f.y, size: Math.min(1, f.size) }, method: f.method, ...(f.score !== undefined ? { score: f.score } : {}) }
-    if (a.token) art.token = { url: a.token }
+    const tokens = focus.tokens as Record<string, 200 | string> | undefined
+    if (a.token && tokens?.[a.token] === 200) art.token = { url: a.token }
     if (art.portrait || art.token) out.set(e.id, art)
   }
   return out

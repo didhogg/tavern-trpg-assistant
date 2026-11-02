@@ -30,7 +30,7 @@ export function structuralRefs(data: Rec, mode: 'all' | 'dependency' = 'all'): S
   const out: StructuralRef[] = []
   const add = (field: string, value: unknown): void => { for (const id of strings(value)) out.push({ field, id }) }
   // 这些字段的值是条目编号（或编号数组）：只取字符串，不往对象里钻（怪物的 traits 是对象列表，里面的 id 是行动编号，不是条目引用）
-  for (const key of ['variantOf', 'baseItem', 'target', 'classId', 'parentRace', 'feature', 'traits', 'members']) for (const id of Array.isArray(data[key]) ? data[key] as unknown[] : [data[key]]) if (typeof id === 'string' && ID.test(id) && id.includes('.')) out.push({ field: key, id })
+  for (const key of ['variantOf', 'statblock', 'baseItem', 'target', 'classId', 'parentRace', 'feature', 'traits', 'members']) for (const id of Array.isArray(data[key]) ? data[key] as unknown[] : [data[key]]) if (typeof id === 'string' && ID.test(id) && id.includes('.')) out.push({ field: key, id })
   // 展开法术与表格行里的引用是「软」的：目标不在依赖里时构建把它们剪掉，不算依赖
   if (mode === 'all') add('expandedSpells', data.expandedSpells)
   add('owner.id', isObj(data.owner) ? data.owner.id : undefined)

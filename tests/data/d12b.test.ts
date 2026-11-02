@@ -40,3 +40,39 @@ describe('D1.2b 怪物与 NPC 数据规则', () => {
     }
   })
 })
+
+import { readFileSync } from 'node:fs'
+import { unzipSync, strFromU8 } from 'fflate'
+import { packPath } from './r11-pack-helpers'
+
+describe('D1.2b 结构引用依赖', () => {
+  it('每个包的 variantOf / npc.statblock 目标包都在传递依赖里', () => {
+    const packs = loadAllPacks(true)
+    const packOf = new Map<string, string>()
+    for (const p of packs) for (const e of p.entries) packOf.set(e.id, p.id)
+    const req = new Map<string, string[]>()
+    for (const p of packs) {
+      const files = unzipSync(new Uint8Array(readFileSync(packPath(p.id))))
+      const mf = JSON.parse(strFromU8(files['trpg-manifest.json'])) as { pack: { relationships?: { requires?: Array<{ id: string }> } } }
+      req.set(p.id, (mf.pack.relationships?.requires ?? []).map((r) => r.id))
+    }
+    const allowed = (id: string): Set<string> => {
+      const out = new Set([id, 'dnd5e2014-srd'])
+      const visit = (x: string): void => { for (const d of req.get(x) ?? []) if (!out.has(d)) { out.add(d); visit(d) } }
+      visit(id)
+      return out
+    }
+    for (const p of packs) {
+      const deps = allowed(p.id)
+      for (const e of p.entries) {
+        for (const field of ['variantOf', 'statblock'] as const) {
+          const target = (e.data as Record<string, unknown>)[field]
+          if (typeof target !== 'string') continue
+          const targetPack = packOf.get(target)
+          expect(targetPack, `${e.id}.${field} 目标不存在`).toBeTruthy()
+          expect(deps.has(targetPack!), `${e.id}.${field} -> ${targetPack} 不在 ${p.id} 依赖里`).toBe(true)
+        }
+      }
+    }
+  })
+})

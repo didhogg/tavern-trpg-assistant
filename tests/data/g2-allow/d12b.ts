@@ -7,7 +7,7 @@ export const ALLOW: Allow[] = [
     station: 6,
     type: 'monster',
     path: /^\/data\/art(?:\/|$)/,
-    expect: 1122,
+    expect: 996,
     reason: 'D1.2b §5.1：核心 11 包怪物新增头像/token 地址与焦点',
   },
 ]
