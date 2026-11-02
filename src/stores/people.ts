@@ -21,6 +21,8 @@ export interface PeopleViewOptions {
   tagIds?: string[]
   sortKey: SortKey
   sortDir: SortDir
+  classNames?: Record<string, string>
+  raceNames?: Record<string, string>
 }
 
 /** 人物数据的唯一写入口；所有写入经 campaign.updateData 落盘。 */
@@ -205,7 +207,7 @@ export const usePeopleStore = defineStore('people', () => {
   }
 
   function view(options: PeopleViewOptions): Person[] {
-    return sortPeople(filterPeople(people.value, { categoryId: options.categoryId, search: options.search, tagIds: options.tagIds, tagNames: tagNames.value }), { key: options.sortKey, dir: options.sortDir })
+    return sortPeople(filterPeople(people.value, { categoryId: options.categoryId, search: options.search, tagIds: options.tagIds, tagNames: tagNames.value, classNames: options.classNames, raceNames: options.raceNames }), { key: options.sortKey, dir: options.sortDir })
   }
 
   function rowOf(id: string): Person | undefined {
