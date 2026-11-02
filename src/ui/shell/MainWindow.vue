@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useModalStore } from '../../stores/modal'
+import { useCampaignStore } from '../../stores/campaign'
 import { PAGE_TITLES, useUiStore, type PageId } from '../../stores/ui'
 import Icon from '../kit/Icon.vue'
 import ModalHost from '../kit/ModalHost.vue'
 import HomeView from '../views/HomeView.vue'
 import LibraryView from '../views/LibraryView.vue'
+import PeoplePage from '../people/PeoplePage.vue'
 import SettingsView from '../views/SettingsView.vue'
 import { saveNow } from '../saves/actions'
 import HeaderChips from './HeaderChips.vue'
@@ -14,12 +16,14 @@ import { useDrag, type Point } from './useDrag'
 
 const ui = useUiStore()
 const modal = useModalStore()
-const NAV: Array<{ id: PageId; label: string; icon: string; bottom?: boolean }> = [
+const campaign = useCampaignStore()
+const NAV = computed<Array<{ id: PageId; label: string; icon: string; bottom?: boolean }>>(() => [
   { id: 'home', label: '首页', icon: 'house' },
+  ...(campaign.hasCampaign ? [{ id: 'people' as const, label: '人物', icon: 'users' }] : []),
   { id: 'library', label: '库', icon: 'books', bottom: true },
   { id: 'settings', label: '设置', icon: 'gear', bottom: true },
-]
-const VIEWS = { home: HomeView, library: LibraryView, settings: SettingsView }
+])
+const VIEWS = { home: HomeView, people: PeoplePage, library: LibraryView, settings: SettingsView }
 
 const vw = ref(window.innerWidth)
 const vh = ref(window.innerHeight)
@@ -31,8 +35,8 @@ const fullscreen = computed(() => vw.value <= 480)
 const layout = computed(() => (innerW.value >= 720 ? 'wide' : innerW.value > 480 ? 'mid' : 'narrow'))
 const style = computed(() => (fullscreen.value ? {} : { left: `${rect.value.x}px`, top: `${rect.value.y}px`, width: `${rect.value.w}px`, height: `${rect.value.h}px` }))
 const title = computed(() => PAGE_TITLES[ui.page])
-const topNav = computed(() => NAV.filter((n) => !n.bottom))
-const bottomNav = computed(() => NAV.filter((n) => n.bottom))
+const topNav = computed(() => NAV.value.filter((n) => !n.bottom))
+const bottomNav = computed(() => NAV.value.filter((n) => n.bottom))
 
 const pos = computed<Point>({
   get: () => ({ x: rect.value.x, y: rect.value.y }),

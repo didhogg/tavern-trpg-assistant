@@ -1,5 +1,6 @@
 import { PEOPLE_CATEGORY_LABELS, type Person } from '../../schemas/people'
 import { crValue } from './list'
+import { CREATURE } from '../library/zh'
 
 export interface RowSummary {
   line2: string
@@ -13,7 +14,7 @@ export interface RowLabels {
   races?: Record<string, string>
 }
 
-function formatCr(value: number): string {
+export function formatCr(value: number): string {
   if (value === 0.125) return '1/8'
   if (value === 0.25) return '1/4'
   if (value === 0.5) return '1/2'
@@ -29,7 +30,7 @@ export function rowSummary(person: Person, labels: RowLabels = {}, includeCatego
     parts.push(classes.map((c) => `${labels.classes?.[c.class] ?? c.class} ${c.level}`).join(' ・ '))
     if (block.race) parts.push(labels.races?.[block.race] ?? block.race)
   } else {
-    if (block.creatureType?.type) parts.push(block.creatureType.type)
+    if (block.creatureType?.type) parts.push(CREATURE[block.creatureType.type] ?? block.creatureType.type)
     const cr = crValue(block.cr)
     if (cr !== undefined) parts.push(`挑战 ${formatCr(cr)}`)
   }

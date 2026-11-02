@@ -10,6 +10,8 @@ export interface FilterOptions {
   tagIds?: string[]
   /** 标签 id → 名称，用于搜索标签名。 */
   tagNames?: Record<string, string>
+  classNames?: Record<string, string>
+  raceNames?: Record<string, string>
 }
 
 export function filterPeople(people: Person[], options: FilterOptions): Person[] {
@@ -25,8 +27,8 @@ export function filterPeople(people: Person[], options: FilterOptions): Person[]
       person.name,
       person.nameEn ?? '',
       person.block.creatureType?.type ?? '',
-      person.block.race ?? '',
-      ...(person.block.classes ?? []).flatMap((c) => [c.class, c.subclass ?? '']),
+      person.block.race ? (options.raceNames?.[person.block.race] ?? person.block.race) : '',
+      ...(person.block.classes ?? []).flatMap((c) => [c.class, c.subclass ?? '', options.classNames?.[c.class] ?? '', c.subclass ? (options.classNames?.[c.subclass] ?? '') : '']),
       ...person.tags.map((id) => options.tagNames?.[id] ?? ''),
     ].join(' ').toLowerCase()
     return text.includes(q)
