@@ -83,6 +83,7 @@ export const TAGS: Record<string, TagSpec> = {
   s: { kind: 'text' },
   cult: { kind: 'ref', refType: 'cult' },
   footnote: { kind: 'text' },
+  skillCheck: { kind: 'text' },
 }
 
 export function tagSpec(name: string, context: string): TagSpec {

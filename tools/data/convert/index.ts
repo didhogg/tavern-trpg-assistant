@@ -23,13 +23,11 @@ import { BOOKS, BOOK_BY_SOURCE, BOOK_NAMES, PACK_BY_SOURCE, SRD_PACK_ID, SRD_VER
 import { DAMAGE_TYPE } from './common'
 import type { RawData } from '../extract/load'
 import { assignVersionGroups, disambiguateNames, emptyVersionStats, markNpcRaces, resolveFromVariant, resolveSupersededBy, type VersionStats } from './versions'
-
 export interface ConvertedPack {
   manifest: PackManifest
   entries: Entry[]
   features: PackFeature[]
 }
-
 export interface ConversionStats {
   softRefs: number
   prunedRefs: number
@@ -48,11 +46,8 @@ export interface ConversionResult {
   packs: ConvertedPack[]
   stats: ConversionStats
 }
-
 const ALL_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'disease', 'status', 'rule', 'table', 'lore', 'language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart', 'recipe', 'charoption', 'book', 'npc'])
-
 const structuralIds = (data: Record<string, unknown>): string[] => structuralRefs(data, 'dependency').map((r) => r.id)
-
 function pruneRefs(value: unknown, allowed: Set<string>, planned: Map<string, PlannedEntry>, count: { n: number }): unknown {
   if (typeof value === 'string') {
     return value.replace(/\{\{ref:([^|}]+)(?:\|([^}]*))?\}\}/g, (whole, id: string, display: string | undefined) => {
@@ -70,7 +65,6 @@ function pruneRefs(value: unknown, allowed: Set<string>, planned: Map<string, Pl
   }
   return value
 }
-
 function requiresFor(entry: PlannedEntry, data: Record<string, unknown>, planned: Map<string, PlannedEntry>): Set<string> {
   const packs = new Set<string>()
   if (entry.packId === SRD_PACK_ID) return packs
@@ -123,9 +117,15 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   const all = [...planned, ...tables]
   const byId = new Map(all.map((e) => [e.id, e]))
   const index: RefIndex = { byTypeName: new Map(), byTypeNameSource: new Map() }
+  const corePackIds = new Set([SRD_PACK_ID, ...BOOKS.filter((b) => b.layer <= 10).map((b) => b.packId)])
+  const coreIndex: RefIndex = { byTypeName: new Map(), byTypeNameSource: new Map() }
   for (const entry of all) {
     addRef(index, { id: entry.id, type: entry.type, name: entry.name, packId: entry.packId, category: entry.context.ruleCategory }, entry.source)
     if (entry.nameEn && entry.nameEn !== entry.name) addRef(index, { id: entry.id, type: entry.type, name: entry.nameEn, packId: entry.packId, category: entry.context.ruleCategory }, entry.source)
+    if (corePackIds.has(entry.packId)) {
+      addRef(coreIndex, { id: entry.id, type: entry.type, name: entry.name, packId: entry.packId, category: entry.context.ruleCategory }, entry.source)
+      if (entry.nameEn && entry.nameEn !== entry.name) addRef(coreIndex, { id: entry.id, type: entry.type, name: entry.nameEn, packId: entry.packId, category: entry.context.ruleCategory }, entry.source)
+    }
   }
   const featuresByOwner = new Map<string, Array<{ id: string; name: string; level: number; raw: Record<string, unknown> }>>()
   const subclassLevelByClass = new Map<string, number>()
@@ -198,7 +198,7 @@ export function convertAll(data: RawData, planned: PlannedEntry[], tables: Plann
   }
   const converted = new Map<string, Entry>()
   for (const entry of all) {
-    const inline = { index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry), refStats: new Map<string, { ref: number; text: number }>(), ...(process.env.TRPG_DATA_LANG === 'en' ? { lang: 'en' as const } : {}) }
+    const inline = { index: corePackIds.has(entry.packId) ? coreIndex : index, book: entry.source, ownPack: entry.packId, allowed: allowedAll, softRefs: { count: 0 }, missingTags: new Map(), vars: placeholders(entry), refStats: new Map<string, { ref: number; text: number }>(), ...(process.env.TRPG_DATA_LANG === 'en' ? { lang: 'en' as const } : {}) }
     const built = carryExtras(entry, convertOne(entry, ctx, inline), ctx, inline)
     for (const [tag, value] of inline.refStats) {
       const current = stats.refStats[tag] ?? { ref: 0, text: 0 }

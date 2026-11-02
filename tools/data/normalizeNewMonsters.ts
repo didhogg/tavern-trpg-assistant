@@ -11,6 +11,8 @@ const toText = (v: unknown): unknown => {
   return v
 }
 
+const stripTags = (v: string): string => v.replace(/\{@(\w+) ([^}|]+)(?:\|([^}]+))?\}/g, (_m, _tag: string, a: string, b?: string) => b || a)
+
 const walkAtk = (v: unknown): unknown => {
   if (typeof v === 'string') return v.replace(/@atk m\b/g, '@atk mw').replace(/@atk r\b/g, '@atk rw')
   if (Array.isArray(v)) return v.map(walkAtk)
@@ -23,6 +25,18 @@ export function normalizeNewMonsters(data: RawData, coreSources: Set<string>): v
   for (const m of data.monsters) {
     if (coreSources.has(String(m.source))) continue
     for (const key of ['trait', 'action', 'bonus', 'reaction', 'legendary', 'mythic']) if (Array.isArray(m[key])) m[key] = walkAtk(m[key])
-    if (Array.isArray(m.spellcasting)) m.spellcasting = m.spellcasting.map((s) => toText(s))
+    if (m.hp && typeof m.hp === 'object') {
+      const hp = m.hp as Record<string, unknown>
+      if (typeof hp.special === 'string') hp.special = stripTags(hp.special)
+      if (typeof hp.formula === 'string' && /^\d+d1$/.test(hp.formula)) hp.formula = hp.formula.replace(/d1$/, '')
+    }
+    if (Array.isArray(m.spellcasting)) m.spellcasting = m.spellcasting.map((s) => {
+      const out = toText(s) as Record<string, unknown>
+      if (out && typeof out === 'object' && typeof out.ability === 'string' && !['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(out.ability)) {
+        const text = JSON.stringify(out.headerEntries ?? '')
+        out.ability = text.includes('魅力') ? 'cha' : text.includes('智力') ? 'int' : text.includes('感知') ? 'wis' : text.includes('体质') ? 'con' : text.includes('敏捷') ? 'dex' : text.includes('力量') ? 'str' : 'cha'
+      }
+      return out
+    })
   }
 }

@@ -25,7 +25,7 @@ export function loadPack(id: string): { id: string; entries: Entry[] } {
 }
 
 export function loadAllPacks(includeNew = false): Array<{ id: string; entries: Entry[] }> {
-  return [SRD_PACK_ID, ...BOOKS.map((book) => book.packId)].filter((id) => includeNew || CORE_PACK_IDS.has(id)).map(loadPack)
+  return [SRD_PACK_ID, ...BOOKS.map((book) => book.packId)].filter((id) => includeNew || CORE_PACK_IDS.has(id)).filter((id) => !includeNew || existsSync(packPath(id))).map(loadPack)
 }
 
 export function allEntries(packs = loadAllPacks()): Entry[] {

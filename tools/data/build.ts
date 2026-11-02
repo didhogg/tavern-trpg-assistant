@@ -41,7 +41,7 @@ import { carryStats } from './convert/carry'
 import { latinLog } from './clean/rules/latin'
 import { writeCleanReport } from './clean/report'
 import { checkPublished, type Published } from './version'
-import { dedupeMonsters } from './dedupe'
+import { dedupeMonsters, rewriteAliases } from './dedupe'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 
@@ -89,14 +89,16 @@ async function main(): Promise<void> {
   const r11 = planR11(r11Data, plan.entries)
   plan.entries.push(...r11.entries)
   plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
-  console.log('DEBUG PSA entries', plan.entries.filter((e) => e.source === 'PSA').map((e) => `${e.type}:${e.packId}:${e.id}`).slice(0, 10), 'tables', plan.tables.filter((t) => t.source === 'PSA').length)
   const r9 = planR9(plan, { includeRef: true, replace: true }, data.legendaryGroups.filter((g) => coreSources.has(String(g.source))), new Set(r11.entries.map((e) => e.id)))
   plan.tables = r9.tables
   const books = await loadBookData()
   const r12 = planR12({ books, fluff: data.fluff ?? [], r9, existing: plan.entries, options: { embeds: true, tables: true } })
   plan.entries.push(...r12.entries)
   plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
-  plan.entries.push(...newMonsters)
+  // 英文名具名 NPC 怪物留给批 4：批 4 会从冒险正文取中文名并建 npc 模板；先跳过可避免 D6 缺中文名。
+  const deferredNpcMonsters = newMonsters.filter((e) => e.type === 'monster' && !corePackIds.has(e.packId) && (e.raw.isNpc === true || e.raw.isNamedCreature === true) && !/[\u4e00-\u9fff]/.test(e.name))
+  if (deferredNpcMonsters.length) console.log(`英文名具名 NPC 怪物延后批 4：${deferredNpcMonsters.length}（${deferredNpcMonsters.slice(0, 8).map((e) => e.id).join('、')}…）`)
+  plan.entries.push(...newMonsters.filter((e) => !deferredNpcMonsters.includes(e)))
   // D1.2b：新来源只导入 monster/npc；核心 11 包保持原有全部类型。
   plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId) || e.type === 'monster' || e.type === 'npc')
   plan.tables = plan.tables.filter((t) => corePackIds.has(t.packId))
@@ -130,6 +132,7 @@ async function main(): Promise<void> {
   }
   const english = runEnglishPass()
   const aligned = alignAll(allConverted, english, plan.tables.map((table) => table.id))
+  rewriteAliases(result.packs, dedupe.aliases)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'i18n.json'), `${JSON.stringify({ stats: aligned.stats, misses: aligned.misses, unmatchedEnglish: aligned.unmatchedEnglish }, null, 1)}\n`)
   console.log(`英文条目 ${english.entries.length}，已加 i18n：${Object.values(aligned.stats).reduce((n, s) => n + s.withEnglish, 0)}/${allConverted.length}`)
   const i18nErrors = validateI18n(allConverted)

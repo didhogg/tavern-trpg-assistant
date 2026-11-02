@@ -11,6 +11,7 @@ export interface DedupeStats {
   C: number
   D: number
   sameNameDifferent: number
+  aliases: Record<string, string>
   bySource: Record<string, { A: number; B: number; C: number; D: number; sameNameDifferent: number }>
 }
 
@@ -70,8 +71,9 @@ const sizeOf = (e: Entry): string => json((e.data as Record<string, unknown>).si
 const typeOf = (e: Entry): string => json((e.data as Record<string, unknown>).creatureType)
 
 export function dedupeMonsters(packs: ConvertedPack[], corePackIds: Set<string>): DedupeStats {
-  const stats: DedupeStats = { A: 0, B: 0, C: 0, D: 0, sameNameDifferent: 0, bySource: {} }
+  const stats: DedupeStats = { A: 0, B: 0, C: 0, D: 0, sameNameDifferent: 0, aliases: {}, bySource: {} }
   const seen = new Map<string, Entry[]>()
+  const alias = new Map<string, string>()
   const addSeen = (e: Entry): void => {
     const key = nameOf(e)
     seen.set(key, [...(seen.get(key) ?? []), e])
@@ -105,8 +107,8 @@ export function dedupeMonsters(packs: ConvertedPack[], corePackIds: Set<string>)
       }
       const same = json(clean(best.data)) === json(clean(entry.data))
       const mechSame = json(mechanism(best.data as Record<string, unknown>)) === json(mechanism(entry.data as Record<string, unknown>))
-      if (same) { stats.A++; stat(pack.manifest.id).A++; continue }
-      if (mechSame) { stats.B++; stat(pack.manifest.id).B++; continue }
+      if (same) { alias.set(entry.id, best.id); stats.A++; stat(pack.manifest.id).A++; continue }
+      if (mechSame) { alias.set(entry.id, best.id); stats.B++; stat(pack.manifest.id).B++; continue }
       const different = typeOf(best) !== typeOf(entry) || sizeOf(best) !== sizeOf(entry) || Math.abs(crValue(best) - crValue(entry)) >= 3
       if (different) {
         stats.sameNameDifferent++
@@ -134,5 +136,41 @@ export function dedupeMonsters(packs: ConvertedPack[], corePackIds: Set<string>)
     }
     pack.entries = keep
   }
+  stats.aliases = Object.fromEntries(alias)
+  rewriteAliases(packs, stats.aliases)
   return stats
 }
+
+/** A/B 被跳过后的引用改指向幸存条目；供英文 i18n 对齐后再跑一次。 */
+export function rewriteAliases(packs: ConvertedPack[], aliases: Record<string, string>): void {
+  const alias = new Map(Object.entries(aliases))
+  if (!alias.size) return
+  const rewrite = (value: unknown): unknown => {
+    if (typeof value === 'string') {
+      if (alias.has(value)) return alias.get(value)!
+      return value.replace(/\{\{ref:([^|}]+)(\|[^}]*)?\}\}/g, (whole, id: string, display: string | undefined) => alias.has(id) ? `{{ref:${alias.get(id)}${display ?? ''}}}` : whole)
+    }
+    if (Array.isArray(value)) return value.map(rewrite)
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, rewrite(v)]))
+    return value
+  }
+  for (const pack of packs) {
+    const used = new Set<string>()
+    for (const entry of pack.entries) {
+      const before = JSON.stringify([entry.data, entry.i18n])
+      entry.data = rewrite(entry.data) as typeof entry.data
+      entry.i18n = rewrite(entry.i18n) as typeof entry.i18n
+      const after = JSON.stringify([entry.data, entry.i18n])
+      if (before === after) continue
+      for (const survivor of alias.values()) if (after.includes(survivor) || after.includes(`{{ref:${survivor}`)) used.add(survivor)
+    }
+    for (const survivor of used) {
+      const targetPack = packs.find((p) => p.entries.some((e) => e.id === survivor))
+      if (!targetPack || targetPack.manifest.id === pack.manifest.id) continue
+      const requires = pack.manifest.relationships.requires
+      if (!requires.some((r) => r.id === targetPack.manifest.id)) requires.push({ id: targetPack.manifest.id })
+      requires.sort((a, b) => a.id.localeCompare(b.id))
+    }
+  }
+}
+

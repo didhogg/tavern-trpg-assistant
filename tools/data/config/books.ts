@@ -48,8 +48,8 @@ function buildBooks(): BookConfig[] {
   return [...BOOK_POLICY].sort((a, b) => a.order - b.order).map((p) => {
     const kind = p.kind ?? 'book'
     const src = (kind === 'adventure' ? adventures : books).get(p.source)
-    if (!src) throw new Error(`政策表里的 ${p.source} 不在 ${kind === 'adventure' ? 'adventures.json' : 'books.json'} 里`)
-    return { source: p.source, packId: packIdOf(p.source), name: p.name ?? src.name, nameEn: p.nameEn ?? src.ENG_name ?? src.name, group: kind === 'adventure' ? ADVENTURE_GROUP : TIER_GROUP[p.tier], kind, tier: p.tier, version: PACK_VERSION, recommended: p.recommended, minAppVersion: p.minAppVersion, requires: p.requires ?? [], layer: p.order }
+    if (!src && !p.name) throw new Error(`政策表里的 ${p.source} 不在 ${kind === 'adventure' ? 'adventures.json' : 'books.json'} 里`)
+    return { source: p.source, packId: packIdOf(p.source), name: p.name ?? src!.name, nameEn: p.nameEn ?? src?.ENG_name ?? src?.name ?? p.name!, group: kind === 'adventure' ? ADVENTURE_GROUP : TIER_GROUP[p.tier], kind, tier: p.tier, version: PACK_VERSION, recommended: p.recommended, minAppVersion: p.minAppVersion, requires: p.requires ?? [], layer: p.order }
   })
 }
 
