@@ -1,6 +1,7 @@
 import type { TextBlock } from '../../../src/schemas/text'
 import type { Dnd5e2014EntryType } from '../../../src/rules/dnd5e2014/data/entries'
 import { DAMAGE_LABELS } from '../../../src/rules/dnd5e2014/data/enums'
+import { ALIGNMENT } from '../../../src/ui/library/zh'
 
 const SCHOOL: Record<string, string> = {
   abjuration: '防护',
@@ -15,7 +16,7 @@ const SCHOOL: Record<string, string> = {
 
 const DAMAGE_CN = (code: string): string => DAMAGE_LABELS[code] ?? code
 const SIZE: Record<string, string> = { T: '微型', S: '小型', M: '中型', L: '大型', H: '巨型', G: '超巨型' }
-const ITEM_CATEGORY: Record<string, string> = { weapon: '武器', armor: '护甲', shield: '盾牌', gear: '装备', tool: '工具', consumable: '消耗品', wondrous: '奇物', ammunition: '弹药', mount: '坐骑', vehicle: '载具', treasure: '宝藏' }
+const ITEM_CATEGORY: Record<string, string> = { weapon: '武器', armor: '护甲', shield: '盾牌', gear: '装备', tool: '工具', consumable: '消耗品', wondrous: '奇物', ammunition: '弹药', mount: '坐骑', vehicle: '载具', treasure: '宝藏', template: '物品模板', family: '物品家族' }
 const RARITY: Record<string, string> = { none: '普通', common: '常见', uncommon: '罕见', rare: '稀有', 'very rare': '极稀有', legendary: '传奇', artifact: '神器', varies: '多变' }
 const CREATURE_TYPE: Record<string, string> = { dragon: '龙类', humanoid: '类人', beast: '野兽', monstrosity: '怪物', undead: '亡灵', fiend: '邪魔', celestial: '天界生物', fey: '妖精', construct: '构装', elemental: '元素', giant: '巨人', ooze: '泥怪', plant: '植物', aberration: '异怪' }
 const ABILITY: Record<string, string> = { str: '力量', dex: '敏捷', con: '体质', int: '智力', wis: '感知', cha: '魅力' }
@@ -53,6 +54,18 @@ function damageText(parts: Array<{ dice: string; type: string }> | undefined): s
   return (parts ?? []).map((p) => `${p.dice}${p.type ? ` ${DAMAGE_CN(p.type)}` : ''}`).join('+')
 }
 
+export function crText(value: unknown): string {
+  const n = typeof value === 'number' ? value : Number(String(value ?? ''))
+  if (!Number.isFinite(n)) return String(value ?? '')
+  if (n === 0.125) return '1/8'
+  if (n === 0.25) return '1/4'
+  if (n === 0.5) return '1/2'
+  return String(n)
+}
+function alignmentText(value: unknown): string {
+  const raw = Array.isArray(value) ? value.join(' ') : String(value ?? '')
+  return raw.split(/\s+/).filter(Boolean).map((x) => ALIGNMENT[x] ?? x).join('')
+}
 export function summaryOf(type: Dnd5e2014EntryType | string, name: string, data: Record<string, unknown>, text: string): string {
   const first = firstSentence(text)
   switch (type) {
@@ -68,23 +81,25 @@ export function summaryOf(type: Dnd5e2014EntryType | string, name: string, data:
     }
     case 'monster': {
       const ct = data.creatureType as { type?: string; swarm?: boolean } | undefined
-      const sizes = Array.isArray(data.size) ? data.size.map((s) => SIZE[String(s)] ?? s).join('') : ''
-      const cr = typeof data.cr === 'object' && data.cr ? (data.cr as { value: number }).value : data.cr
-      const ac = Array.isArray(data.ac) && data.ac[0] ? (data.ac[0] as { value: number }).value : ''
+      const sizes = Array.isArray(data.size) ? data.size.map((s) => SIZE[String(s)] ?? s).join('或') : ''
+      const cr = crText(typeof data.cr === 'object' && data.cr ? (data.cr as { value: number }).value : data.cr)
+      const ac = [...new Set((Array.isArray(data.ac) ? data.ac : []).map((x) => (x as { value?: number }).value).filter((x): x is number => typeof x === 'number'))].join('/')
       const hp = (data.hp as { average?: number } | undefined)?.average ?? ''
+      const align = alignmentText(data.alignment)
       const actions = (Array.isArray(data.actions) ? data.actions : []) as Array<{ name: string; activities?: Array<{ kind: string; bonus?: number; damage?: Array<{ dice: string }> }> }>
       const attack = actions.find((a) => a.activities?.some((x) => x.kind === 'attack'))
       const attackAct = attack?.activities?.find((a) => a.kind === 'attack')
       const action = attack && attackAct ? `${attack.name}${attackAct.bonus !== undefined ? `+${attackAct.bonus}` : ''}${attackAct.damage?.length ? ` ${attackAct.damage.map((d) => d.dice).join('+')}` : ''}` : actions[0]?.name ?? ''
-      return clip([name, `${sizes}${ct?.swarm ? '群体' : ''}${CREATURE_TYPE[String(ct?.type ?? '')] ?? ct?.type ?? ''}`, `CR${cr}`, `AC${ac} HP${hp}`, action].filter(Boolean).join('｜'))
+      return clip([name, `${sizes}${ct?.swarm ? '群体' : ''}${CREATURE_TYPE[String(ct?.type ?? '')] ?? ct?.type ?? ''}${align ? `·${align}` : ''}`, `CR${cr}`, `AC${ac} HP${hp}`, action].filter(Boolean).join('｜'))
     }
     case 'item': {
-      const rarity = RARITY[String(data.rarity ?? '')] ?? String(data.rarity ?? '')
+      const rawRarity = String(data.rarity ?? '')
+      const rarity = RARITY[rawRarity] ?? rawRarity
       const category = ITEM_CATEGORY[String(data.category ?? '')] ?? String(data.category ?? '')
       const weapon = data.weapon as { damage?: Array<{ dice: string; type: string }> } | undefined
       const armor = data.armor as { ac?: number } | undefined
       const detail = weapon ? damageText(weapon.damage) : armor ? `AC${armor.ac}` : ''
-      return clip([name, `${category}${rarity && rarity !== 'none' ? `·${rarity}` : ''}`, detail].filter(Boolean).join('｜'))
+      return clip([name, `${category}${rawRarity && rawRarity !== 'none' ? `·${rarity}` : ''}`, detail].filter(Boolean).join('｜'))
     }
     case 'class':
       return clip([name, `${data.hitDie}生命骰`, data.subclassTitle].filter(Boolean).join('｜'))
