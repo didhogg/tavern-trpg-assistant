@@ -19,6 +19,7 @@ import VariantBar from './VariantBar.vue'
 import { humanizeTokens } from './tokens'
 import { familiesOf, loreOf, type FamilyRef, type LoreSource } from './series'
 import { joinersOf, optionalFeaturesFact, type Joiner } from './joins'
+import { variantsOf, variantsFact } from './variants'
 
 const props = defineProps<{ packId: string; entryId: string }>()
 const app = useAppStore()
@@ -30,6 +31,7 @@ const stored = shallowRef<StoredEntry | null>(null)
 const missing = ref(false)
 const families = ref<FamilyRef[]>([])
 const joiners = ref<Joiner[]>([])
+const variants = ref<string[]>([])
 const lore = ref<LoreSource[]>([])
 /** 已装包的组合：装、卸包后，系列与背景描述的缓存据此失效。 */
 const signature = computed(() => library.installed.map((p) => `${p.id}@${p.version}`).join('|'))
@@ -42,6 +44,7 @@ onMounted(async () => {
     const db = app.svc().db
     families.value = await familiesOf(db, stored.value.ruleId, signature.value, props.entryId)
     joiners.value = await joinersOf(db, stored.value.ruleId, signature.value, props.entryId)
+    variants.value = await variantsOf(db, stored.value.ruleId, signature.value, props.entryId)
     lore.value = await loreOf(db, stored.value.ruleId, signature.value, stored.value)
   }
 })
@@ -53,13 +56,14 @@ const resolved = computed(() => (original.value ? resolveVariant(original.value,
 const shown = computed(() => resolved.value?.entry ?? original.value)
 const seriesFact = computed(() => (families.value.length ? [{ label: '系列', parts: families.value.flatMap((f, i) => [...(i ? ['、'] : []), { ref: f.id, label: f.name }]) }] : []))
 const optionalFact = computed(() => optionalFeaturesFact(joiners.value, (packId) => library.installedMap.get(packId)?.name ?? packId))
+const variantFact = computed(() => variantsFact(variants.value))
 const facts = computed(() => {
   if (!shown.value) return []
   const base = entryFacts(shown.value)
   // 「可选特性」紧跟在「特性」后面；没有「特性」行时放在最后
   const at = base.findIndex((f) => f.label === '特性')
   const withOptional = optionalFact.value ? (at >= 0 ? [...base.slice(0, at + 1), optionalFact.value, ...base.slice(at + 1)] : [...base, optionalFact.value]) : base
-  return [...withOptional.slice(0, 1), ...seriesFact.value, ...withOptional.slice(1), ...(shown.value.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : [])]
+  return [...withOptional.slice(0, 1), ...seriesFact.value, ...(variantFact.value ? [variantFact.value] : []), ...withOptional.slice(1), ...(shown.value.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : [])]
 })
 const blocks = computed(() => ((shown.value?.data.text as TextBlock[] | undefined) ?? []))
 const npcIntro = computed(() => (shown.value?.type === 'npc' ? ((shown.value.data.intro as TextBlock[] | undefined) ?? []) : []))
