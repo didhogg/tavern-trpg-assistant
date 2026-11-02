@@ -26,6 +26,8 @@ import { copyText } from '../../host/clipboard'
 import { appendToInput } from '../../host/input'
 import { useDiceStore } from '../../stores/dice'
 import EntityAvatar from '../kit/EntityAvatar.vue'
+import ImagePage from './ImagePage.vue'
+import { markRaw } from 'vue'
 import type { MonsterArt } from '../../rules/dnd5e2014/data/entries/art'
 
 const props = defineProps<{ packId: string; entryId: string }>()
@@ -41,8 +43,9 @@ const joiners = ref<Joiner[]>([])
 const variants = ref<string[]>([])
 const tables = ref<RelatedTable[]>([])
 const dice = useDiceStore()
-const avatarArt = computed<MonsterArt | undefined>(() => shown.value?.type === 'monster' ? ((shown.value.data.art as MonsterArt | undefined) ?? undefined) : undefined)
-const avatarType = computed(() => shown.value?.type === 'monster' ? String((shown.value.data.creatureType as { type?: string } | undefined)?.type ?? '') : '')
+const statblock = shallowRef<StoredEntry | null>(null)
+const avatarArt = computed<MonsterArt | undefined>(() => shown.value?.type === 'monster' ? ((shown.value.data.art as MonsterArt | undefined) ?? undefined) : shown.value?.type === 'npc' ? ((statblock.value?.data.art as MonsterArt | undefined) ?? undefined) : undefined)
+const avatarType = computed(() => shown.value?.type === 'monster' ? String((shown.value.data.creatureType as { type?: string } | undefined)?.type ?? '') : shown.value?.type === 'npc' ? String((statblock.value?.data.creatureType as { type?: string } | undefined)?.type ?? '') : '')
 const lore = ref<LoreSource[]>([])
 /** 已装包的组合：装、卸包后，系列与背景描述的缓存据此失效。 */
 const signature = computed(() => library.installed.map((p) => `${p.id}@${p.version}`).join('|'))
@@ -57,6 +60,7 @@ onMounted(async () => {
     joiners.value = await joinersOf(db, stored.value.ruleId, signature.value, props.entryId)
     variants.value = await variantsOf(db, stored.value.ruleId, signature.value, props.entryId)
     tables.value = await tablesOf(db, stored.value.ruleId, signature.value, props.entryId)
+    if (stored.value.type === 'npc') { const sb = String(stored.value.data.statblock ?? ''); if (sb) statblock.value = (await db.entries.where('entryId').equals(sb).first()) ?? null }
     lore.value = await loreOf(db, stored.value.ruleId, signature.value, stored.value)
   }
 })
@@ -113,6 +117,8 @@ async function onRef(id: string): Promise<void> {
   else toast.info('这个条目所在的扩展包还没有安装，可在「库 → 扩展」里安装')
 }
 
+function openImage(): void { if (!avatarArt.value?.portrait && !avatarArt.value?.token) return; modal.push({ key: `image:${props.packId}/${props.entryId}`, title: shown.value?.name ?? '图片', component: markRaw(ImagePage), props: { label: shown.value?.name ?? '', art: avatarArt.value } }) }
+
 async function onSwitch(variantKey: string): Promise<void> {
   const before = slot.value?.active
   try {
@@ -130,13 +136,14 @@ async function onSwitch(variantKey: string): Promise<void> {
 <template>
   <div v-if="shown && original" class="page-stack" data-testid="entry-detail">
     <VariantBar v-if="slot && slot.candidates.length" :variants="slot" :original="original" :read-only="campaign.readOnly" :origin-name="original.name" @switch="onSwitch" />
-    <div v-if="shown.type === 'monster'" class="trpg-entry__head"><EntityAvatar :art="avatarArt" :creature-type="avatarType" :size="96" :label="shown.name" /><div><p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p><p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p></div></div>
+    <div v-if="shown.type === 'monster' || shown.type === 'npc'" class="trpg-entry__head"><button class="trpg-avatar-button" type="button" :disabled="!avatarArt?.portrait && !avatarArt?.token" @click="openImage"><EntityAvatar :art="avatarArt" :creature-type="avatarType" :size="96" :label="shown.name" /></button><div><p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p><p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p></div></div>
     <template v-else><p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p><p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p></template>
 
 <style scoped>
 .trpg-entry__head { display: flex; align-items: center; gap: 12px; }
 .trpg-entry__head .trpg-entry__summary { margin: 4px 0 0; }
 @media (max-width: 480px) { .trpg-entry__head { gap: 8px; } }
+.trpg-avatar-button { border: 0; padding: 0; background: transparent; }
 </style>
     <EntryFacts v-if="facts.length" :facts="facts" @ref="onRef" />
     <TextBlocks v-if="npcIntro.length" :blocks="npcIntro" @ref="onRef" />

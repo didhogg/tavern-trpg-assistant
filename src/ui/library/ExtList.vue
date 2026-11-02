@@ -16,6 +16,8 @@ const campaign = useCampaignStore()
 const ui = useUiStore()
 const query = ref('')
 const onlyUpdates = ref(false)
+const closed = ref<Set<string>>(new Set())
+let initialized = false
 
 const toast = useToastStore()
 onMounted(() => void library.loadCatalog())
@@ -39,6 +41,10 @@ const groups = computed(() =>
     return { category: c, label: CATEGORY_LABEL[c], single, series: [...bySeries.values()] }
   }).filter((g) => g.single.length || g.series.length),
 )
+const isOpen = (key: string): boolean => !!query.value.trim() || !closed.value.has(key)
+function toggleGroup(key: string): void { const next = new Set(closed.value); if (next.has(key)) next.delete(key); else next.add(key); closed.value = next }
+watch(groups, (gs) => { if (initialized || !gs.length) return; initialized = true; closed.value = new Set(gs.filter((g) => !g.single.some((r) => r.installed) && !g.series.some((s) => s.some((r) => r.installed))).map((g) => g.category)) }, { immediate: true })
+
 
 const updateAll = updateAllPacks
 
@@ -67,8 +73,8 @@ watch(() => ui.libraryFocusPack, async (id) => {
     </div>
     <p v-if="library.catalogState === 'error'" class="trpg-field__hint" role="status">没能连上数据仓库：{{ library.catalogError }} <button class="trpg-btn trpg-btn--small" type="button" @click="library.loadCatalog(true)">重试</button></p>
     <section v-for="g in groups" :key="g.category" :aria-label="g.label">
-      <h3 class="trpg-group">{{ g.label }}</h3>
-      <ul class="trpg-list">
+      <h3 class="trpg-group"><button class="trpg-link" type="button" :aria-expanded="isOpen(g.category)" @click="toggleGroup(g.category)">{{ isOpen(g.category) ? '▾' : '▸' }} {{ g.label }} · {{ g.single.length + g.series.reduce((n, s) => n + s.length, 0) }} 个</button></h3>
+      <ul v-if="isOpen(g.category)" class="trpg-list">
         <li v-for="r in g.single" :key="r.id" class="trpg-row" :data-testid="`ext-${r.id}`">
           <div class="trpg-row__main"><Term @open="openPackDetail(r.id)">{{ r.name }}</Term><div class="trpg-row__meta">{{ contributesLabel(r) }}</div><div v-if="r.updateVersion || r.outdated" class="trpg-row__meta trpg-row__warn" data-testid="update-note">{{ r.updateVersion ? `有新版本 v${r.updateVersion}` : '' }}{{ r.updateVersion && r.outdated ? ' · ' : '' }}{{ r.outdated ? '旧版数据，部分内容缺失，建议更新' : '' }}</div></div>
           <div class="trpg-row__end"><PackActions :row="r" /></div>
