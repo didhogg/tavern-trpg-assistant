@@ -30,7 +30,7 @@ export function mediaUrl(path: string): string {
 
 /** 怪物隐式 token 地址：img/bestiary/tokens/<source>/<ENG_name>.webp。 */
 export function implicitTokenUrl(source: string, nameEn: string): string {
-  return mediaUrl(`bestiary/tokens/${source}/${encodeURIComponent(toAscii(nameEn))}.webp`)
+  return mediaUrl(`bestiary/tokens/${source}/${toAscii(nameEn)}.webp`)
 }
 
 export interface TokenLike {

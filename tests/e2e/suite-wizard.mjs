@@ -25,8 +25,10 @@ export async function wizardSuite(page, label, { width }) {
   // 推荐包在后台下载安装
   await page.waitForFunction(() => {
     const root = document.getElementById('trpg-assistant-root').shadowRoot
-    const metas = [...root.querySelectorAll('.trpg-wizard .trpg-row__meta')].map((e) => e.textContent)
-    return metas.length >= 10 && !metas.some((t) => t.includes('未安装')) && !root.querySelector('[data-testid=wizard-progress]') && !root.querySelector('.trpg-progress')
+    const rows = [...root.querySelectorAll('.trpg-wizard .trpg-row')]
+    const picked = rows.filter((row) => row.querySelector('input[type=checkbox]')?.checked)
+    const metas = picked.map((row) => row.querySelector('.trpg-row__meta')?.textContent ?? '')
+    return picked.length >= 10 && !metas.some((t) => t.includes('未安装')) && !root.querySelector('[data-testid=wizard-progress]') && !root.querySelector('.trpg-progress')
   }, null, { timeout: 90000 })
   const failed = await page.getByText('下载失败').count()
   const checked = await page.locator('.trpg-wizard input[type=checkbox]:checked').count()

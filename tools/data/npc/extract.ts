@@ -11,7 +11,8 @@ const HAN = /[\u3400-\u9fff]/
 const strip = (v: string): string => v.replace(/\{@(\w+) ([^}|]+)(?:\|([^}]+))?\}/g, (_m, _t: string, a: string, b?: string) => b || a)
 const H_PAT = /(?:uses?|using) the \{@creature ([^}|]+)[^}]*\} stat|has the statistics of (?:a|an) \{@creature ([^}|]+)|is (?:a|an) \{@creature ([^}|]+)/i
 const COMMON = new Set('Area Room Chapter Part Level Appendix Encounter Treasure Development Roleplaying Background Introduction Conclusion Aftermath Statistics Creature Guardian Sentry'.split(' '))
-const NON_NPC = new Set(['Scufflecup', 'Castle Djaynai', 'The Platinum Rooms', "Ignis's Children", "Zalto's Prisoner", 'Giant Beavers', 'Hostel Visitors'])
+const NON_NPC = new Set(['Scufflecup', 'Castle Djaynai', 'The Platinum Rooms', "Ignis's Children", "Zalto's Prisoner", 'Giant Beavers', 'Hostel Visitors', 'Brightguard', 'Hellrider', 'Solamnia', 'Speaking Stones'])
+const M_STOP = new Set(['They', 'He', 'She', 'It', 'Each', 'Both', 'These', 'Those', 'This', 'That', 'The', 'A', 'An', 'You', 'We', 'I', 'Characters', 'Players', 'Creatures', 'Creature', 'Anyone', 'Someone', 'Nothing', 'Everyone'])
 
 function proper(name: string): boolean {
   if (!name || /[:\d]/.test(name) || NON_NPC.has(name)) return false
@@ -121,6 +122,65 @@ export function extractNpcs(monsters: PlannedEntry[], sources: string[]): Planne
         }
       }
       for (const [k, v] of Object.entries(node)) if (k !== 'entries' || Array.isArray(v)) walk(v, [...path, k], nextAnc)
+    }
+    walk(en, [], [])
+  }
+  // M 档：named {@creature Name} + stat、Name (use the X stat)、句首 Name uses the X stat。
+  const mPat = /named \{@creature ([^}|]+)|([A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){0,3})\s*\((?:use|uses|using) the \{@creature ([^}|]+)[^}]*\} stat|(?:^|[.!?] )([A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){0,3}) (?:uses|use|using) the \{@creature ([^}|]+)[^}]*\} stat/g
+  for (const source of sources) {
+    const enFile = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data-bak', 'adventure', `adventure-${source.toLowerCase()}.json`)
+    const zhFile = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data', 'adventure', `adventure-${source.toLowerCase()}.json`)
+    const en = load(enFile); const zh = load(zhFile)
+    if (!en) continue
+    const walk = (node: unknown, path: Array<string | number>, ancestors: Array<{ name: string; page: number }>): void => {
+      if (Array.isArray(node)) { node.forEach((x, i) => walk(x, [...path, i], ancestors)); return }
+      if (isObj(node)) {
+        const page = typeof node.page === 'number' ? node.page : ancestors.at(-1)?.page ?? 0
+        const next = typeof node.name === 'string' && node.name ? [...ancestors, { name: node.name, page }] : ancestors
+        for (const [k, v] of Object.entries(node)) if (k !== 'entries' || Array.isArray(v)) walk(v, [...path, k], next)
+        return
+      }
+      if (typeof node !== 'string') return
+      for (const m of node.matchAll(mPat)) {
+        const name = (m[1] || m[2] || m[4] || '').trim()
+        const creature = (m[3] || m[5] || '').split('|')[0].trim()
+        if (!name || !proper(name) || M_STOP.has(name.split(/\s+/)[0]) || monsterNames.has(name.toLowerCase())) continue
+        const target = byName.get(creature.toLowerCase())
+        if (!target) continue
+        const id = `npc.${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${source.toLowerCase()}`
+        if (seen.has(id)) continue
+        seen.add(id)
+        const zhNode = atPath(zh, path)
+        const zhText = typeof zhNode === 'string' ? strip(zhNode) : ''
+        const enText = strip(node)
+        const chapter = [...ancestors].reverse().find((a) => a.name)?.name ?? source
+        const introText = zhText || enText
+        const missing = ['zh', ...(introText ? [] : ['intro'])]
+        out.push({
+          key: `npc|${source}|${name}`,
+          type: 'npc',
+          raw: {
+            statblock: target.id,
+            adventure: source,
+            at: { chapter, heading: name },
+            ...(introText ? { intro: [{ p: introText.slice(0, 600) }] } : {}),
+            confidence: 'medium',
+            summary: `具名 NPC · 使用「${target.name}」的数据`,
+            credit: { by: '不全书', license: 'GPL-3.0', machine: false, missing, srd: false, structured: { by: '本项目', license: 'CC-BY-NC-SA-4.0' } },
+            i18n: { en: { name, fields: enText ? { intro: [{ p: enText.slice(0, 600) }] } : {} } },
+          },
+          source,
+          packId: PACK_BY_SOURCE.get(source)!,
+          srd: false,
+          name,
+          nameEn: name,
+          page: 0,
+          id,
+          missingName: false,
+          missingPage: false,
+          context: { adventure: source },
+        })
+      }
     }
     walk(en, [], [])
   }

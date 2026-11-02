@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { readJson, REPO_ROOT, writeBytes, writeText, sha256 } from './lib/io'
 import { createSnapshot, changedFiles, loadSnapshot, saveSnapshot } from './snapshot'
@@ -43,6 +44,7 @@ import { writeCleanReport } from './clean/report'
 import { checkPublished, type Published } from './version'
 import { dedupeMonsters, rewriteAliases } from './dedupe'
 import { extractNpcs } from './npc/extract'
+import { artById, applyArt } from './art/apply'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 
@@ -109,6 +111,9 @@ async function main(): Promise<void> {
   console.log(`载具 fluff 挂上：${attachVehicleFluff(data.fluff ?? [], r11.entries, plan.unmatchedFluff)}`)
   console.log(`计划条目：${plan.entries.length}（R11 ${r11.entries.length}），随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
+  let focus: Record<string, any> = {}
+  try { focus = JSON.parse(readFileSync(join(REPO_ROOT, 'tools', 'data', 'art', 'focus.json'), 'utf8')) as Record<string, any> } catch { focus = {} }
+  const art = artById(data, plan.entries, focus)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   for (const pack of result.packs) if (pack.entries.some((e) => e.type === 'npc')) pack.manifest.minAppVersion = '0.3.0'
   for (const pack of result.packs) for (const e of pack.entries) if (englishNameIds.has(e.id)) { const credit = e.data.credit as { missing?: string[] } | undefined; if (credit) { credit.missing = [...new Set([...(credit.missing ?? []), 'zh'])] } }
@@ -117,6 +122,8 @@ async function main(): Promise<void> {
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
   const dedupe = dedupeMonsters(result.packs, corePackIds)
   result.packs = result.packs.filter((p) => corePackIds.has(p.manifest.id) || p.entries.length > 0)
+  const artCount = applyArt(result.packs, art)
+  console.log(`art：${artCount} 个怪物`)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'dedupe.json'), `${JSON.stringify(dedupe, null, 1)}\n`)
   console.log(`去重：A ${dedupe.A}，B ${dedupe.B}，C ${dedupe.C}，D ${dedupe.D}，同名异物 ${dedupe.sameNameDifferent}`)
   const fixReport = runFixes(result.packs.filter((p) => corePackIds.has(p.manifest.id))) // G2.5 修正只作用于核心 11 包；新来源走自己的转换

@@ -5,15 +5,16 @@ D1.2 数据阶段：G2.5 E 站收尾（核验 4 个发现已修，等本机干�
 
 ## 当前任务
 **G2.5 E 站已收尾（2026-11-01）**：本机干净工作区补交 `4a64c5a`、合入规划者修复，check 306、test:data 394、两次构建哈希相同、e2e library 95 / upgrade 13 全过；已推送（扩展 `3eba2cc`、数据 `c2ff3c7`，包 1.4.1、扩展 0.2.1），jsDelivr 已刷新。
-**下一步：D1.2b 怪物与 NPC 导入**——执行文档 `docs/handoff/D1.2b_怪物与NPC导入_执行文档.md`、交接文本 `docs/handoff/D1.2b_执行agent交接文本.md`，待驾驶员审阅后交给执行 agent。规划者已预先把 `tests/data/g2-additive.test.ts` 的比较范围限定为核心 11 个包（新包不在 G2.5「只增不删」范围）。G3 显示整理按任务总纲 §2 排在 D1.2b 之前，驾驶员可决定先后。
+**D1.2b 怪物与 NPC 导入已补做**——执行文档 `docs/handoff/D1.2b_怪物与NPC导入_执行文档.md`、交接文本 `docs/handoff/D1.2b_执行agent交接文本.md`；结果见本文件下方与 `docs/probes/D1.2b_报告.md`，待规划者核验。规划者已预先把 `tests/data/g2-additive.test.ts` 的比较范围限定为核心 11 个包（新包不在 G2.5「只增不删」范围）。G3 显示整理按任务总纲 §2 排在 D1.2b 之前，驾驶员可决定先后。
 
-## D1.2b 执行结果（2026-11-02，未推送）
-- 扩展 `d12b` 最新 `2246244`；数据仓库 `70ab0ac`；包 1.5.0，扩展 0.3.0；核心 11 包只升版本，新增 25 个三档书怪物包与 50 个冒险怪物包（NRH-AWoL 去重后无包）。
-- 批 0–4 已本地提交：`18336f8`、`af96e29`、`84d43b8`、`2f8865d`、`2246244`。批 4 只完成 H 档（3 条），M 档 0 条、未做 M 抽检。
-- 批 5 头像未做：`sharp`、`@techstark/opencv-js`、`smartcrop-sharp` 未安装；按“不安装”约束停当前项，`art` 一律未写，`g2-allow/d12b.ts` 未建。
-- 批 6 验证：`check` 37/308、`test:data` 395/395、`build:data` 两次哈希相同、核心 1.4.1→1.5.0 `entry_diffs 0`、`g2-additive` 0、`g2-oldext` 通过；`npm run build` 通过。
-- 快速 e2e：`upgrade` 通过；`library` 在开局向导等待“全部推荐包装好”超时（新包默认不推荐，向导列表出现未安装的新包；不是数据哈希问题）。
-- 待驾驶员决定：是否允许安装头像依赖继续批 5；M 档是否接受 0；`library` e2e 是否由规划者按新包范围修正。
+## D1.2b 执行结果（2026-11-02，已补做，待推送）
+- 扩展 `d12b` 分支、数据 `d12b` 分支；包 1.5.0、扩展 0.3.0。核心 11 包只多 `art` 与版本号；新增 25 个三档书怪物包与 50 个冒险怪物包（NRH-AWoL 去重后无包）。
+- `_mod` 补全 `addSkills`、`addSpells`、`replaceSpells`、`removeSpells`、`appendIfNotExistsArr`（另补 `_` 数组里的 `setProp`）；未知模式 0；单元测试 5 条；核心 0 差异。
+- 批 5 头像：2188 张立绘，token-match 2107、smartcrop 81、错误 0；3683 个怪物有 art（只有 token 1497、都没有 190）；阈值 0.80；`focus.json` 与抽查页已生成；`g2-allow/d12b.ts` 放行核心 1122 个怪物。
+- NPC：H 3 条、M 18 条（总计 21）；M 抽检 18/18；英文 `{@creature}` 30834 次，带竖线 24782 次；句式前 50 进报告。
+- 验证：`check` 38/313、`test:data` 395/395、`build:data` 两次哈希相同、核心只有 art/版本变化、`g2-additive` 0、`g2-oldext` 通过、`npm run build` 通过。
+- 快速 e2e：`upgrade` 通过；`library` 用核心-only catalog（范围限定，10 个包）95 项通过。
+- **待议（归 G3）**：开局向导一次列出 25 个三档书＋50 个冒险包（共 76 个不推荐新包），列表过长；本次不改界面。
 
 **次序（驾驶员 2026-11-01 定，见 `docs/任务总纲.md` §2"当前执行次序"）：G2.5 E 站一次做完即结束 G2.5 → M8 地图（先与驾驶员定稿 `docs/units/U8_地图.md`）→ G3 → D1.2b → M4…M7 → M9 → M10。执行中不新增站、子站或计划；E 站做不了的当场定为决定项或"不做"。**
 **E 站收尾（规划者，2026-11-01）**：核验 4 个发现已修——①验证须在干净工作区（写进任务总纲 §3 第 4 条）；②MPMM 狗头人龙盾护卫 `resist` 的文字移走（补充层 `E4-怪物与召唤-收尾.json`、放行 `e4-closing-kobold-resist`、排除项与登记同步），包升 1.4.1；③`_mod` 纯函数移到 `tools/data/extract/mods.ts`，`check` 不再依赖本机 `reference/`（云端 36/306 通过）；④召唤物正文 `summonSpellLevel` 显示为「法术环阶」（英文正文为 the spell's level），扩展升 0.2.1；升级场景 e2e 的版本号改为读构建配置。**等本机**：干净工作区重跑 405649d → 合入本分支 → `build:data`（1.4.1）→ test:data／e2e → 推送两个仓库。

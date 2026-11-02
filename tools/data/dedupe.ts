@@ -12,6 +12,7 @@ export interface DedupeStats {
   D: number
   sameNameDifferent: number
   aliases: Record<string, string>
+  sameNameDifferentIds: string[]
   bySource: Record<string, { A: number; B: number; C: number; D: number; sameNameDifferent: number }>
 }
 
@@ -71,7 +72,7 @@ const sizeOf = (e: Entry): string => json((e.data as Record<string, unknown>).si
 const typeOf = (e: Entry): string => json((e.data as Record<string, unknown>).creatureType)
 
 export function dedupeMonsters(packs: ConvertedPack[], corePackIds: Set<string>): DedupeStats {
-  const stats: DedupeStats = { A: 0, B: 0, C: 0, D: 0, sameNameDifferent: 0, aliases: {}, bySource: {} }
+  const stats: DedupeStats = { A: 0, B: 0, C: 0, D: 0, sameNameDifferent: 0, aliases: {}, sameNameDifferentIds: [], bySource: {} }
   const seen = new Map<string, Entry[]>()
   const alias = new Map<string, string>()
   const addSeen = (e: Entry): void => {
@@ -112,6 +113,7 @@ export function dedupeMonsters(packs: ConvertedPack[], corePackIds: Set<string>)
       const different = typeOf(best) !== typeOf(entry) || sizeOf(best) !== sizeOf(entry) || Math.abs(crValue(best) - crValue(entry)) >= 3
       if (different) {
         stats.sameNameDifferent++
+        stats.sameNameDifferentIds.push(entry.id)
         stats.D++
         stat(pack.manifest.id).sameNameDifferent++
         stat(pack.manifest.id).D++

@@ -9,5 +9,8 @@
 | Foundry dnd5e 6.1.0 | 2014 SRD 结构化字段的交叉校验与部分 uses/effects/activities；只取不带 24 的目录 | 系统代码 MIT；SRD 5.1 内容 CC BY 4.0 |
 | 5e-bits/5e-database | 2014 法术位/职业资源值的公开 API 对照，不导入 | MIT（底层 SRD OGL 1.0a） |
 | Open5e | 公开 SRD 数据对照，不导入 | 修改版 MIT（SRD OGL 1.0a） |
+| sharp | 开发期头像解码、缩放、灰度（`art:focus`） | Apache-2.0 |
+| @techstark/opencv-js | 开发期 token 模板匹配（`art:focus`） | Apache-2.0 |
+| smartcrop-sharp | 开发期头像画面重心裁切（`art:focus`） | MIT |
 
 数据内容的来源与许可见 `packs/DATA-NOTICE.md` 与各条目的 `credit`。
