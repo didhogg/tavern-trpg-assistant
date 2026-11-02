@@ -7,7 +7,7 @@ export const ALLOW: Allow[] = [
     station: 8,
     type: 'monster',
     path: /^\/data\/inventory(?:\/|$)/,
-    expect: 421,
+    expect: 423,
     reason: '任务一 §3.2：怪物把 ac[].items 与 attachedItems 汇总进与人物共用的 inventory',
   },
 ]

@@ -28,6 +28,12 @@ export interface InventoryStats {
 export const inventoryStats: InventoryStats = { monsters: 0, refs: 0, names: 0, acRefs: 0, acNames: 0, attachedRefs: 0, attachedNames: 0, backfilledAcItems: 0 }
 
 const CATALOG = join(process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data', 'catalog.json')
+
+/** 来源里只写中文、没有物品编号的护甲/衣物；按原文写进 inventory，宁可不猜编号也不丢装备。 */
+const PLAIN_ARMOR = new Set([
+  '板甲', '破损的链甲', '损坏的板甲', '破损的皮甲', '残破护甲', '拼凑护甲',
+  '骸骨甲胄', '残破具装', '巴尔的板甲', '龙鳞裙', '装甲板', '蓬松的衬衫',
+])
 let catalogReach: Map<string, Set<string>> | undefined
 
 /** 依赖闭包只取构建前数据仓库里已经存在的依赖；背包不会凭空新增包依赖。 */
@@ -78,6 +84,18 @@ function displayName(raw: string, fallback: string): string {
   const parts = raw.split('|')
   const named = parts[2] || parts[0] || fallback
   return named.replace(/^\{@item\s+/, '').replace(/[{}]/g, '').trim() || fallback
+}
+
+function plainSegments(from: unknown): string[] {
+  const text = str(from)
+  if (!text || includesTag(text)) return []
+  return text.split('、').map((part) => part.trim()).filter(Boolean)
+}
+
+function uniquePlainItem(ctx: ConvertContext, name: string): { id: string; packId: string } | undefined {
+  const hits = [...(ctx.index.byTypeName.get(`item|${name}`) ?? []), ...(ctx.index.byTypeName.get(`base-item|${name}`) ?? [])]
+  const unique = [...new Map(hits.map((h) => [h.id, h])).values()]
+  return unique.length === 1 ? unique[0] : undefined
 }
 
 function itemTagNames(raw: Rec, resolve: (uid: string) => string | undefined): Map<string, string> {
@@ -143,7 +161,20 @@ export function addInventory(plan: { packId: string; raw: Rec }, data: Rec, ctx:
       if (pack && itemPackAllowed(plan.packId, pack)) put(out, id, name, true, true)
       else putName(out, name, true)
     }
+    // 来源里对不上编号的 {@item …}：按标签显示名写进背包，不能丢。
+    for (const from of Array.isArray((rawAc[i] as Rec)?.from) ? ((rawAc[i] as Rec).from as unknown[]) : []) {
+      for (const match of str(from).matchAll(/\{@item ([^}|]+)(?:\|([^}|]*))?(?:\|([^}|]*))?[^}]*\}/g)) {
+        const id = resolve(`${match[1]}|${match[2] ?? ''}`)
+        if (!id) putName(out, (match[3] || match[1]).trim(), true)
+      }
+      for (const name of plainSegments(from)) if (PLAIN_ARMOR.has(name) && !uniquePlainItem(ctx, name)) putName(out, name, true)
+    }
   })
+  // 来源里对不上编号的 attachedItems：同样按原文写进背包。
+  const rawAttached = Array.isArray((raw as Rec).attachedItems) ? ((raw as Rec).attachedItems as unknown[]) : []
+  for (const uid of rawAttached) {
+    if (!resolve(str(uid))) putName(out, displayName(str(uid), str(uid).split('|')[0] || str(uid)), false)
+  }
   for (const id of Array.isArray(data.attachedItems) ? data.attachedItems : []) {
     if (typeof id !== 'string') continue
     const name = attNames.get(id) ?? id
@@ -157,25 +188,26 @@ export function addInventory(plan: { packId: string; raw: Rec }, data: Rec, ctx:
   }
 }
 
-/** 来源 `ac[].from` 是纯文字护甲名时，按名称唯一对上物品才补 `ac[].items`；不新增包依赖。 */
+/** 来源 `ac[].from` 是纯文字护甲名时，按「、」拆开逐段匹配；只补能唯一对上且不新增依赖的物品。 */
 export function backfillAcItems(plan: { packId: string; raw: Rec }, data: Rec, ctx: ConvertContext): void {
   const rawAc = Array.isArray(plan.raw.ac) ? plan.raw.ac : []
   const dataAc = Array.isArray(data.ac) ? data.ac : []
   if (rawAc.length !== dataAc.length) return
   rawAc.forEach((raw, i) => {
-    if (!isObj(raw) || !isObj(dataAc[i]) || Array.isArray((dataAc[i] as Rec).items)) return
+    if (!isObj(raw) || !isObj(dataAc[i])) return
+    const target = dataAc[i] as Rec
+    const ids = new Set<string>(Array.isArray(target.items) ? (target.items as unknown[]).filter((id): id is string => typeof id === 'string') : [])
+    let changed = false
     for (const from of Array.isArray(raw.from) ? raw.from : []) {
-      const name = str(from).trim()
-      if (!name || includesTag(name)) continue
-      const hits = [...(ctx.index.byTypeName.get(`item|${name}`) ?? []), ...(ctx.index.byTypeName.get(`base-item|${name}`) ?? [])]
-      const unique = [...new Map(hits.map((h) => [h.id, h])).values()]
-      if (unique.length !== 1) continue
-      const target = unique[0]
-      if (!itemPackAllowed(plan.packId, target.packId)) continue
-      ;(dataAc[i] as Rec).items = [target.id]
-      inventoryStats.backfilledAcItems++
-      break
+      for (const name of plainSegments(from)) {
+        const hit = uniquePlainItem(ctx, name)
+        if (!hit || !itemPackAllowed(plan.packId, hit.packId) || ids.has(hit.id)) continue
+        ids.add(hit.id)
+        changed = true
+        inventoryStats.backfilledAcItems++
+      }
     }
+    if (changed) target.items = [...ids]
   })
 }
 

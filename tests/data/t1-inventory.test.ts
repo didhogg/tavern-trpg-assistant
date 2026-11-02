@@ -47,17 +47,31 @@ describe('任务一：怪物 inventory 与包依赖', () => {
         } else names++
       }
     }
-    expect(monsters).toBe(1670)
-    expect(refs).toBe(3089)
-    expect(names).toBe(17)
+    expect(monsters).toBe(1699)
+    expect(refs).toBe(3090)
+    expect(names).toBe(124)
   })
 
-  it('第 2 条第 4 项补上的纯文字护甲名：WDMM 的佐拉克与 MGELFT 的丹克伍德矮人', () => {
+  it('纯文字护甲名补上的 ac[].items：佐拉克、丹克伍德矮人与德莫特 2 阶段', () => {
     for (const id of ['monster.zorak-lightdrinker.wdmm', 'monster.dankwood-duergar.mgelft']) {
       const entry = all.find((e) => e.id === id)
       expect(entry, id).toBeDefined()
       expect((entry!.data as { ac: Array<{ items?: string[] }> }).ac[0].items).toEqual(['item.plate-armor.phb'])
     }
+    const dermot = all.find((e) => e.id === 'monster.dermot-wurder-tier-2.crcotn')!
+    expect((dermot.data as { ac: Array<{ items?: string[] }> }).ac[0].items).toEqual(['item.shield.phb', 'item.plate-armor.phb'])
+  })
+
+  it('对不上编号的装备按原文写进 inventory，不丢装备', () => {
+    const expectName = (id: string, name: string): void => {
+      const entry = all.find((e) => e.id === id)!
+      const inventory = (entry.data as { inventory?: Array<{ name?: string }> }).inventory ?? []
+      expect(inventory.some((item) => item.name === name), `${id} 缺 ${name}`).toBe(true)
+    }
+    expectName('monster.knight-of-the-order.cos', '破损的链甲')
+    expectName('monster.firegaunt.bgg', '损坏的板甲')
+    expectName('monster.gnome-ceremorph.idrotf', '激光手枪')
+    expectName('monster.orcus.mpmm', '奥喀斯之杖')
   })
 
   it('inventory 的引用不会让原有包依赖变宽', () => {
