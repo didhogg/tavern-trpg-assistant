@@ -8,6 +8,7 @@ import { convertBlocks } from './blocks'
 import { inlinePlainText, renderInline } from '../markup/inline'
 import { activitiesFromText } from './activities'
 import { convertVariants } from './variants'
+import { normalizeHp } from './hp'
 import { plainText, summaryOf } from '../summary/summary'
 import type { InlineContext } from '../markup/inline'; import { pickLegendaryGroup } from './legendaryGroupPick'
 
@@ -209,7 +210,7 @@ function hpOf(raw: Record<string, unknown>): { average: number; formula?: string
   const hp = (raw.hp ?? {}) as Record<string, unknown>
   const formula = str(hp.formula)
   const special = str(hp.special)
-  return { average: Number(hp.average ?? 0), ...(formula ? { formula } : {}), ...(special ? { special } : {}) }
+  return normalizeHp(Number(hp.average ?? 0), formula, special)
 }
 
 function crOf(raw: Record<string, unknown>): number | { value: number; lair?: number; coven?: number } {
