@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { readdir } from 'node:fs/promises'
-import { BOOK_SOURCES } from '../config/books'
+import { CORE_BOOKS } from '../config/books'
 import { readJson } from '../lib/io'
 import { DATA_5ETOOLS } from '../extract/load'
 import { excludedReason } from '../config/excludedFiles'
@@ -36,7 +36,7 @@ export interface ScanResult {
 }
 
 const CUTOFF = '2024-09-17'
-const CORE_SOURCES = new Set([...BOOK_SOURCES, 'SRD'])
+const CORE_SOURCES = new Set([...CORE_BOOKS.map((b) => b.source), 'SRD'])
 
 interface Catalog { dates: Map<string, string>; adventures: Set<string> }
 

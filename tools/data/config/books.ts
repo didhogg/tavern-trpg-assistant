@@ -56,6 +56,8 @@ function buildBooks(): BookConfig[] {
 export const BOOKS: BookConfig[] = buildBooks()
 
 export const BOOK_BY_SOURCE = new Map(BOOKS.map((b) => [b.source, b]))
+export const CORE_BOOKS = BOOKS.filter((b) => b.tier <= 2)
+export const CORE_PACK_IDS = new Set(['dnd5e2014-srd', ...CORE_BOOKS.map((b) => b.packId)])
 export const BOOK_SOURCES = new Set(BOOKS.map((b) => b.source))
 export const PACK_BY_SOURCE = new Map(BOOKS.map((b) => [b.source, b.packId]))
 

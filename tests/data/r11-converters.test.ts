@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { BOOKS } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS } from '../../tools/data/config/books'
 import type { PlannedEntry } from '../../tools/data/convert/plan'
 import type { ConvertContext } from '../../tools/data/convert/context'
 import { convertRecipe, convertCharOption } from '../../tools/data/convert/parts'

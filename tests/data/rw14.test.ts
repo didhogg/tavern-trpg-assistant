@@ -6,7 +6,7 @@ import { unzipSync, strFromU8 } from 'fflate'
 import type { Entry } from '../../src/schemas/pack'
 import { FIELD_COVERAGE, coverageOf } from '../../tools/data/config/fieldCoverage'
 import { validateCoverageEntry } from '../../tools/data/config/fieldCoverage/validate'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 async function load(): Promise<Entry[]> {

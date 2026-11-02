@@ -82,6 +82,7 @@ export const TAGS: Record<string, TagSpec> = {
   trap: { kind: 'ref', refType: 'hazard' },
   s: { kind: 'text' },
   cult: { kind: 'ref', refType: 'cult' },
+  footnote: { kind: 'text' },
 }
 
 export function tagSpec(name: string, context: string): TagSpec {

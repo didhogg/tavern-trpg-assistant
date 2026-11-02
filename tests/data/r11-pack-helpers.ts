@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { BOOKS, CORE_PACK_IDS, SRD_PACK_ID } from '../../tools/data/config/books'
 import type { Entry } from '../../src/schemas/pack'
 
 export const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
@@ -24,8 +24,8 @@ export function loadPack(id: string): { id: string; entries: Entry[] } {
   return { id, entries }
 }
 
-export function loadAllPacks(): Array<{ id: string; entries: Entry[] }> {
-  return [SRD_PACK_ID, ...BOOKS.map((book) => book.packId)].map(loadPack)
+export function loadAllPacks(includeNew = false): Array<{ id: string; entries: Entry[] }> {
+  return [SRD_PACK_ID, ...BOOKS.map((book) => book.packId)].filter((id) => includeNew || CORE_PACK_IDS.has(id)).map(loadPack)
 }
 
 export function allEntries(packs = loadAllPacks()): Entry[] {

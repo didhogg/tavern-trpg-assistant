@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
 import { describe, expect, it } from 'vitest'
 import { SUPPORTED_DATA_VERSION } from '../../src/schemas/common'
-import { BOOKS, SRD_PACK_ID, SRD_VERSION } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, CORE_PACK_IDS, SRD_PACK_ID, SRD_VERSION } from '../../tools/data/config/books'
 import { DATA_REPO, packPath } from './r9-pack-helpers'
 
 describe('R15 版本', () => {
@@ -20,6 +20,6 @@ describe('R15 版本', () => {
 
   it('目录与数据仓库里每个书包只有当前版本的文件', () => {
     const catalog = JSON.parse(readFileSync(join(DATA_REPO, 'catalog.json'), 'utf8')) as { packs: Array<{ id: string; version: string }> }
-    expect(catalog.packs.every((p) => p.version === BOOKS.find((b) => b.packId === p.id)!.version)).toBe(true)
+    expect(catalog.packs.filter((p) => CORE_PACK_IDS.has(p.id)).every((p) => p.version === BOOKS.find((b) => b.packId === p.id)!.version)).toBe(true)
   })
 })

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { BOOKS } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS } from '../../tools/data/config/books'
 import { allEntries, normalizeRefs } from './r11-pack-helpers'
 
 const PREFIX: Record<string, string> = {

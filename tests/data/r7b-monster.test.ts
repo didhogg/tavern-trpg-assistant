@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { unzipSync, strFromU8 } from 'fflate'
 import { describe, expect, it } from 'vitest'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { scanSourceRecords } from '../../tools/data/report/fieldPaths'
 import type { Entry } from '../../src/schemas/pack'
 

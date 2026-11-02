@@ -3,14 +3,14 @@ import { join } from 'node:path'
 import type { Raw } from '../extract/load'
 import { DATA_5ETOOLS } from '../extract/load'
 import { addEnglishNames } from '../lib/io'
-import { BOOK_SOURCES } from '../config/books'
+import { BOOKS } from '../config/books'
 import type { PlanResult, PlannedEntry } from './plan'
 import { nestedOfRows } from './r9Nested'
 import { cellText, isObj, normRaw, parseLabel, rangeOf, refCell, refRows, slug, str, zero } from './r9lib'
 import type { R9Candidate, R9Row } from './r9Types'
 
 const EN = process.env.TRPG_DATA_LANG === 'en'
-const CORE = new Set([...BOOK_SOURCES])
+const CORE = new Set(BOOKS.filter((b) => b.layer <= 10).map((b) => b.source))
 const BODY_TYPES = new Set(['spell', 'monster', 'item', 'class', 'subclass', 'feature', 'race', 'subrace', 'background', 'feat', 'condition', 'rule', 'lore', 'object', 'hazard', 'vehicle'])
 // R11 新增类型里的表多是对书本章节表的转抄：与书本表重复时让书本表当幸存者，保住它们已有的编号
 const RACE_PARENT: Record<string, string> = { 龙裔: 'dragonborn', 矮人: 'dwarf', 精灵: 'elf', 侏儒: 'gnome', 半兽人: 'half-orc', 半身人: 'halfling', 人类: 'human', 提夫林: 'tiefling', Dragonborn: 'dragonborn', Dwarf: 'dwarf', Elf: 'elf', Gnome: 'gnome', 'Half-Orc': 'half-orc', Halfling: 'halfling', Human: 'human', Tiefling: 'tiefling' }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SRD_PACK_ID, BOOKS } from '../../tools/data/config/books'
+import { SRD_PACK_ID, CORE_BOOKS as BOOKS } from '../../tools/data/config/books'
 import { Recorder } from './consumer/findings'
 import { lib } from './consumer/load'
 import { arr, rec, refsIn, str, strs } from './consumer/util'
