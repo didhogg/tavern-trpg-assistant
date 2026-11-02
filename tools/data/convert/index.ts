@@ -15,6 +15,7 @@ import { convertCondition, convertFeat, convertRule } from './featRule'
 import { convertTable } from './table'
 import { convertTableR9 } from './tableR9'
 import { convertBook } from './bookR12'
+import { convertNpc } from '../npc/convert'
 import { convertLanguage, convertDeity, convertReward, convertCult, convertHazard, convertObject, convertVehicle } from './world'
 import { convertRuleR11 } from './rulesR11'
 import { convertMonsterPart, convertRecipe, convertCharOption } from './parts'
@@ -110,7 +111,6 @@ function pruneStructural(data: Record<string, unknown>, allowed: Set<string>, pl
     }
   }
 }
-
 export function convertAll(data: RawData, planned: PlannedEntry[], tables: PlannedEntry[], skippedFeatures: number, skippedSubraces = 0): ConversionResult {
   const versionStats = emptyVersionStats()
   disambiguateNames(planned, versionStats)
@@ -388,7 +388,7 @@ function convertOne(entry: PlannedEntry, ctx: ConvertContext, inline: Parameters
     case 'vehicle': return convertVehicle(entry, ctx, inline)
     case 'monsterPart': return convertMonsterPart(entry, ctx, inline)
     case 'recipe': return convertRecipe(entry, ctx, inline)
-    case 'charoption': return convertCharOption(entry, ctx, inline); case 'book': return convertBook(entry, ctx, inline)
+    case 'charoption': return convertCharOption(entry, ctx, inline); case 'book': return convertBook(entry, ctx, inline); case 'npc': return convertNpc(entry, ctx, inline)
     case 'table': return entry.raw.__r9 ? convertTableR9(entry, ctx, inline) : convertTable(entry, ctx, inline)
     case 'lore':
       return convertLore(entry, ctx, inline)

@@ -42,6 +42,7 @@ import { latinLog } from './clean/rules/latin'
 import { writeCleanReport } from './clean/report'
 import { checkPublished, type Published } from './version'
 import { dedupeMonsters, rewriteAliases } from './dedupe'
+import { extractNpcs } from './npc/extract'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 
@@ -95,10 +96,12 @@ async function main(): Promise<void> {
   const r12 = planR12({ books, fluff: data.fluff ?? [], r9, existing: plan.entries, options: { embeds: true, tables: true } })
   plan.entries.push(...r12.entries)
   plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
-  // 英文名具名 NPC 怪物留给批 4：批 4 会从冒险正文取中文名并建 npc 模板；先跳过可避免 D6 缺中文名。
-  const deferredNpcMonsters = newMonsters.filter((e) => e.type === 'monster' && !corePackIds.has(e.packId) && (e.raw.isNpc === true || e.raw.isNamedCreature === true) && !/[\u4e00-\u9fff]/.test(e.name))
-  if (deferredNpcMonsters.length) console.log(`英文名具名 NPC 怪物延后批 4：${deferredNpcMonsters.length}（${deferredNpcMonsters.slice(0, 8).map((e) => e.id).join('、')}…）`)
-  plan.entries.push(...newMonsters.filter((e) => !deferredNpcMonsters.includes(e)))
+  const englishNameIds = new Set<string>()
+  for (const e of newMonsters) if (e.type === 'monster' && e.missingName) { e.missingName = false; englishNameIds.add(e.id) }
+  plan.entries.push(...newMonsters)
+  const npcs = extractNpcs(plan.entries, BOOKS.filter((b) => b.kind === 'adventure').map((b) => b.source))
+  plan.entries.push(...npcs)
+  console.log(`具名 NPC：${npcs.length}`)
   // D1.2b：新来源只导入 monster/npc；核心 11 包保持原有全部类型。
   plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId) || e.type === 'monster' || e.type === 'npc')
   plan.tables = plan.tables.filter((t) => corePackIds.has(t.packId))
@@ -107,6 +110,8 @@ async function main(): Promise<void> {
   console.log(`计划条目：${plan.entries.length}（R11 ${r11.entries.length}），随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
+  for (const pack of result.packs) if (pack.entries.some((e) => e.type === 'npc')) pack.manifest.minAppVersion = '0.3.0'
+  for (const pack of result.packs) for (const e of pack.entries) if (englishNameIds.has(e.id)) { const credit = e.data.credit as { missing?: string[] } | undefined; if (credit) { credit.missing = [...new Set([...(credit.missing ?? []), 'zh'])] } }
   console.log(`R15 补字段：${JSON.stringify(carryStats)}`)
   console.log(`升环导入：带标签的法术 ${upcastStats.spellsWithTag}，自动结构化 ${upcastStats.imported}，只留文字 note ${upcastStats.noted}，认不出的标签 ${upcastStats.unresolved.length}${upcastStats.unresolved.length ? `：${upcastStats.unresolved.join('；')}` : ''}`)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
