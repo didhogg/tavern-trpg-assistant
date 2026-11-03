@@ -116,6 +116,7 @@ export async function peopleSuite(page, label) {
   await page.getByTestId('people-select').click()
   await page.locator('[data-testid^="people-row-"]').filter({ hasText: '地精 2' }).first().locator('input[type=checkbox]').check()
   await page.locator('[data-testid^="people-row-"]').filter({ hasText: '地精 3' }).first().locator('input[type=checkbox]').check()
+  check(`[${label}] 敌人分类的多选栏有「送到队伍」「送到NPC」两个去向，没有「送到敌人」`, (await page.getByRole('button', { name: '送到队伍' }).count()) === 1 && (await page.getByRole('button', { name: '送到NPC' }).count()) === 1 && (await page.getByRole('button', { name: '送到敌人' }).count()) === 0, await page.getByTestId('people-selection-bar').innerText())
   check(`[${label}] 多选栏显示已选 2 人`, (await page.getByTestId('people-selection-bar').innerText()).includes('已选 2 人'))
   await page.getByRole('button', { name: '送到NPC' }).click()
   await page.getByRole('button', { name: '完成', exact: true }).click()

@@ -62,13 +62,15 @@ const shown = computed(() => resolved.value?.entry ?? original.value)
 const seriesFact = computed(() => (families.value.length ? [{ label: '系列', parts: families.value.flatMap((f, i) => [...(i ? ['、'] : []), { ref: f.id, label: f.name }]) }] : []))
 const optionalFact = computed(() => optionalFeaturesFact(joiners.value, (packId) => library.installedMap.get(packId)?.name ?? packId))
 const variantFact = computed(() => variantsFact(variants.value))
+/** 英文名放在资料信息的最上面。 */
+const nameFact = computed(() => (shown.value?.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : []))
 const facts = computed(() => {
   if (!shown.value) return []
   const base = entryFacts(shown.value)
   // 「可选特性」紧跟在「特性」后面；没有「特性」行时放在最后
   const at = base.findIndex((f) => f.label === '特性')
   const withOptional = optionalFact.value ? (at >= 0 ? [...base.slice(0, at + 1), optionalFact.value, ...base.slice(at + 1)] : [...base, optionalFact.value]) : base
-  return [...withOptional.slice(0, 1), ...seriesFact.value, ...(variantFact.value ? [variantFact.value] : []), ...withOptional.slice(1), ...(shown.value.nameEn ? [{ label: '英文名', parts: [shown.value.nameEn] }] : [])]
+  return [...nameFact.value, ...withOptional.slice(0, 1), ...seriesFact.value, ...(variantFact.value ? [variantFact.value] : []), ...withOptional.slice(1)]
 })
 const blocks = computed(() => ((shown.value?.data.text as TextBlock[] | undefined) ?? []))
 const npcIntro = computed(() => (shown.value?.type === 'npc' ? ((shown.value.data.intro as TextBlock[] | undefined) ?? []) : []))
@@ -106,6 +108,7 @@ async function onSwitch(variantKey: string): Promise<void> {
       <p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p>
     </template>
 
+    <EntryFacts v-if="shown.type === 'table' && nameFact.length" :facts="nameFact" @ref="onRef" />
     <TableEntry v-if="shown.type === 'table'" :entry="shown" @ref="onRef" />
     <EntryFacts v-else-if="facts.length" :facts="facts" @ref="onRef" />
     <TextBlocks v-if="npcIntro.length" :blocks="npcIntro" @ref="onRef" />
