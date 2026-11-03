@@ -13,7 +13,6 @@ const menu = () => [
 <template>
   <header class="trpg-people__head">
     <div class="trpg-people__head-title">
-      <h2>人物</h2>
       <span class="trpg-row__meta">共 {{ total }} 人</span>
     </div>
     <div class="trpg-people__head-actions">
@@ -27,7 +26,6 @@ const menu = () => [
 <style scoped>
 .trpg-people__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; }
 .trpg-people__head-title { display: flex; align-items: baseline; gap: 10px; }
-.trpg-people__head-title h2 { margin: 0; font-family: var(--font-serif); font-size: 18px; font-weight: 600; }
 .trpg-people__head-actions { display: flex; align-items: center; gap: 6px; }
 @media (max-width: 480px) { .trpg-people__new-label { display: none; } .trpg-people__head-actions { gap: 2px; } }
 </style>

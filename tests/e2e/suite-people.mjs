@@ -21,7 +21,21 @@ export async function peopleSuite(page, label) {
   await page.getByTestId('people-page').waitFor()
   check(`[${label}] 保存后列表出现新人物`, (await row(page, '测试勇者').count()) === 1)
 
+  // 5. 排序与当前分类离开页面再回来仍保留
+  await page.getByTestId('people-category-npc').click()
+  await page.getByRole('combobox', { name: '排序' }).click()
+  await page.getByRole('option', { name: '名称' }).click()
+  await settle(page, 200)
+  await gotoPage(page, '首页')
+  await gotoPage(page, '人物')
+  await page.getByTestId('people-page').waitFor()
+  check(`[${label}] 分类与排序重开后恢复`, (await page.getByTestId('people-category-npc').getAttribute('aria-selected')) === 'true' && (await page.getByRole('combobox', { name: '排序' }).innerText()).includes('名称'))
+  await page.getByTestId('people-category-all').click()
+  await page.getByRole('combobox', { name: '排序' }).click()
+  await page.getByRole('option', { name: '修改时间' }).click()
+
   // 2. 模板：看资料卡、数量 3、加入列表、弹窗不关
+  await page.getByTestId('people-category-all').click()
   await page.getByTestId('people-template').click()
   await page.getByTestId('template-picker').waitFor()
   await page.getByRole('button', { name: /^筛选/ }).click()
@@ -38,9 +52,10 @@ export async function peopleSuite(page, label) {
   await page.getByTestId('tpl-add').click()
   await page.getByText(/已加入 地精、地精 2、地精 3/).waitFor()
   check(`[${label}] 模板加入后弹窗不关`, await page.getByTestId('template-picker').isVisible())
-  await page.getByRole('button', { name: '关闭模板' }).click()
+  await page.getByRole('button', { name: '关闭', exact: true }).click()
   await settle(page, 250)
-  await page.getByTestId('people-category-enemy').click()
+  check(`[${label}] 加入后关闭模板自动切到敌人分类`, (await page.getByTestId('people-category-enemy').getAttribute('aria-selected')) === 'true')
+  check(`[${label}] 加入后新行高亮`, ((await page.locator('[data-testid^="people-row-"]').filter({ hasText: '地精' }).first().getAttribute('class')) ?? '').includes('is-highlight'))
   check(`[${label}] 敌人分类有地精、地精 2、地精 3 且生命 7/7`, (await page.locator('[data-testid^="people-row-"]').filter({ hasText: '地精' }).count()) === 3 && (await page.locator('[data-testid^="people-row-"]').filter({ hasText: '地精' }).first().innerText()).includes('7/7'))
 
   // 3. 模板「编辑后加入」→ 临时人物卡已填名字，保存后数值来自模板
@@ -157,7 +172,7 @@ export async function peopleSuite(page, label) {
   await page.getByRole('checkbox', { name: /未分组/ }).check()
   await page.getByRole('button', { name: /完成，显示/ }).click()
   check(`[${label}] 存入我的库后模板能按未分组筛到`, (await page.getByText('测试勇者').count()) >= 1)
-  await page.getByRole('button', { name: '关闭模板' }).click()
+  await page.getByRole('button', { name: '关闭', exact: true }).click()
   await clearToasts(page)
   await row(page, '测试勇者').getByRole('button', { name: /的更多操作/ }).click()
   await page.getByRole('menuitem', { name: '存入我的库...' }).click()

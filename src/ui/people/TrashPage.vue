@@ -50,12 +50,11 @@ function purge(): void {
 <template>
   <div class="trpg-trash" data-testid="trash-page">
     <div class="trpg-trash__head">
-      <span class="trpg-row__meta">共 {{ rows.length }} 人</span>
       <Checkbox :model-value="allSelected" :indeterminate="someSelected" label="全选" @update:model-value="toggleAll">全选 {{ rows.length }} 人</Checkbox>
       <span class="trpg-field__hint">已选 {{ selected.size }} 人</span>
       <span class="trpg-trash__actions">
-        <button class="trpg-btn trpg-btn--small" type="button" :disabled="!selected.size || campaign.readOnly" @click="restore([...selected])">恢复所选</button>
-        <button class="trpg-btn trpg-btn--small trpg-btn--danger" type="button" :disabled="!selected.size || campaign.readOnly" @click="confirming = true">彻底删除所选</button>
+        <button class="trpg-btn trpg-btn--small" type="button" :disabled="!selected.size || campaign.readOnly" @click="restore([...selected])">{{ selected.size ? `恢复 ${selected.size} 人` : '恢复所选' }}</button>
+        <button class="trpg-btn trpg-btn--small trpg-btn--danger" type="button" :disabled="!selected.size || campaign.readOnly" @click="confirming = true">{{ selected.size ? `彻底删除 ${selected.size} 人` : '彻底删除所选' }}</button>
       </span>
     </div>
     <div v-if="confirming" class="trpg-inline-confirm" role="alert">

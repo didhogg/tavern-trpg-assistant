@@ -47,9 +47,9 @@ function toggle(value: string[], id: string): string[] { return value.includes(i
         <span class="trpg-field__hint">官方书和我的包都在这里，可多选。</span>
       </div>
     </div>
-    <div class="trpg-template-filter__row"><span class="trpg-field__label">挑战等级</span><SelectField :model-value="String(crMin)" :options="crOptions" label="最低挑战等级" @update:model-value="(v) => emit('update:crMin', Number(v))" /><span>到</span><SelectField :model-value="String(crMax)" :options="crOptions" label="最高挑战等级" @update:model-value="(v) => emit('update:crMax', Number(v))" /></div>
-    <div class="trpg-template-filter__row"><span class="trpg-field__label">生物类型</span><div class="trpg-template-filter__checks"><label v-for="t in types" :key="t.id" class="trpg-check"><input type="checkbox" :checked="creatureTypes.includes(t.id)" @change="emit('update:creatureTypes', toggle(creatureTypes, t.id))" />{{ t.label }}</label></div></div>
-    <div class="trpg-template-filter__row"><span class="trpg-field__label">体型</span><div class="trpg-template-filter__checks"><label v-for="s in sizeOptions" :key="s.id" class="trpg-check"><input type="checkbox" :checked="sizes.includes(s.id)" @change="emit('update:sizes', toggle(sizes, s.id))" />{{ s.label }}</label></div></div>
+    <div class="trpg-template-filter__row"><span class="trpg-field__label">挑战等级</span><span class="trpg-template-filter__cr"><SelectField :model-value="String(crMin)" :options="crOptions" label="最低挑战等级" @update:model-value="(v) => emit('update:crMin', Number(v))" /></span><span>到</span><span class="trpg-template-filter__cr"><SelectField :model-value="String(crMax)" :options="crOptions" label="最高挑战等级" @update:model-value="(v) => emit('update:crMax', Number(v))" /></span></div>
+    <div class="trpg-template-filter__row"><span class="trpg-field__label">生物类型</span><div class="trpg-template-filter__checks"><button v-for="t in types" :key="t.id" class="trpg-pill trpg-template-filter__pill" type="button" :aria-pressed="creatureTypes.includes(t.id)" @click="emit('update:creatureTypes', toggle(creatureTypes, t.id))">{{ t.label }}</button></div></div>
+    <div class="trpg-template-filter__row"><span class="trpg-field__label">体型</span><div class="trpg-template-filter__checks"><button v-for="s in sizeOptions" :key="s.id" class="trpg-pill trpg-template-filter__pill" type="button" :aria-pressed="sizes.includes(s.id)" @click="emit('update:sizes', toggle(sizes, s.id))">{{ s.label }}</button></div></div>
     <div class="trpg-template-filter__foot"><button class="trpg-btn trpg-btn--quiet" type="button" @click="emit('clear')">清除</button><button class="trpg-btn trpg-btn--primary" type="button" @click="emit('done')">完成，显示 {{ resultCount }} 条</button></div>
   </div>
 </template>
@@ -59,9 +59,11 @@ function toggle(value: string[], id: string): string[] { return value.includes(i
 .trpg-template-filter__row { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
 .trpg-template-filter__row > .trpg-field__label { width: 64px; flex: none; padding-top: 8px; }
 .trpg-template-filter__sources { flex: 1; min-width: 220px; display: grid; gap: 4px; }
-.trpg-template-filter__source-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 2px 12px; max-height: 60px; overflow: auto; }
-.trpg-template-filter__source-list .trpg-check { min-height: 30px; font-size: 13px; }
+.trpg-template-filter__source-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 0 8px; }
+.trpg-template-filter__source-list .trpg-check { min-height: 24px; font-size: 12.5px; }
+.trpg-template-filter__cr { width: 86px; flex: none; }
 .trpg-template-filter__checks { display: flex; flex-wrap: wrap; gap: 2px 12px; flex: 1; }
 .trpg-template-filter__checks .trpg-check { min-height: 26px; font-size: 12.5px; }
+.trpg-template-filter__pill { min-height: 24px; padding: 0 9px; font-size: 12px; cursor: pointer; }
 .trpg-template-filter__foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 0 2px; position: sticky; bottom: -12px; background: var(--card); }
 </style>

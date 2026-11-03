@@ -40,18 +40,34 @@ const sortDir = ref<SortDir>('desc')
 const selecting = ref(false)
 const selected = ref(new Set<string>())
 const card = shallowRef<{ person?: Person; draft?: Person; from?: string } | null>(null)
+const pendingAdd = ref<{ id: string; categoryId: PeopleCategoryId } | null>(null)
 const highlight = ref('')
 const classNames = ref<Record<string, string>>({})
 const raceNames = ref<Record<string, string>>({})
+const entryNames = ref<Record<string, string>>({})
 let scrollTop = 0
 let highlightTimer: ReturnType<typeof setTimeout> | undefined
 let unregister: (() => void) | undefined
+const VIEW_KEY = (): string => `trpg-people-view:${campaign.owner?.ownerKey ?? 'none'}`
+function loadView(): void {
+  try {
+    const raw = localStorage.getItem(VIEW_KEY())
+    if (!raw) return
+    const saved = JSON.parse(raw) as { category?: CategoryFilter; sortKey?: SortKey; sortDir?: SortDir }
+    if (saved.category === 'all' || saved.category === 'party' || saved.category === 'npc' || saved.category === 'enemy') category.value = saved.category
+    if (saved.sortKey === 'touched' || saved.sortKey === 'created' || saved.sortKey === 'name' || saved.sortKey === 'level') sortKey.value = saved.sortKey
+    if (saved.sortDir === 'asc' || saved.sortDir === 'desc') sortDir.value = saved.sortDir
+  } catch (error) { console.warn('[trpg-assistant] 读取人物页视图设置失败', error) }
+}
+function saveView(): void {
+  try { localStorage.setItem(VIEW_KEY(), JSON.stringify({ category: category.value, sortKey: sortKey.value, sortDir: sortDir.value })) } catch (error) { console.warn('[trpg-assistant] 保存人物页视图设置失败', error) }
+}
 
 const visible = computed(() => people.view({ categoryId: category.value, search: search.value, tagIds: tagIds.value, sortKey: sortKey.value, sortDir: sortDir.value, classNames: classNames.value, raceNames: raceNames.value }))
 const allSelected = computed(() => visible.value.length > 0 && visible.value.every((p) => selected.value.has(p.id)))
 const someSelected = computed(() => selected.value.size > 0 && !allSelected.value)
 const hasFilter = computed(() => !!search.value.trim() || tagIds.value.length > 0)
-const rows = computed(() => visible.value.map((person) => ({ person, summary: rowSummary(person, { classes: classNames.value, races: raceNames.value }, category.value === 'all') })))
+const rows = computed(() => visible.value.map((person) => ({ person, summary: rowSummary(person, { classes: classNames.value, races: raceNames.value, sourceNames: entryNames.value }, category.value === 'all') })))
 const destinationLabel = (id: PeopleCategoryId): string => id === 'party' ? '队伍' : id === 'npc' ? 'NPC' : '敌人'
 const highlightRow = (id: string): void => {
   highlight.value = id
@@ -59,6 +75,7 @@ const highlightRow = (id: string): void => {
   highlightTimer = setTimeout(() => { highlight.value = '' }, 1300)
 }
 onMounted(async () => {
+  loadView()
   const shadow = root.value?.getRootNode()
   if (shadow instanceof ShadowRoot && !shadow.querySelector('style[data-u6-people]')) {
     const style = document.createElement('style')
@@ -75,8 +92,11 @@ onMounted(async () => {
       if (entry.type === 'class' || entry.type === 'subclass') classes[entry.entryId] = entry.name
       if (entry.type === 'race' || entry.type === 'subrace') races[entry.entryId] = entry.name
     }
+    const names: Record<string, string> = {}
+    for (const entry of entries) names[entry.entryId] = entry.name
     classNames.value = classes
     raceNames.value = races
+    entryNames.value = names
   } catch (error) {
     console.error('[trpg-assistant] 读取职业/种族名称失败', error)
   }
@@ -88,6 +108,7 @@ onBeforeUnmount(() => {
   if (highlightTimer) clearTimeout(highlightTimer)
 })
 watch([category, search, tagIds], () => { if (selecting.value) selected.value = new Set() })
+watch([category, sortKey, sortDir], saveView)
 watch(() => campaign.hasCampaign, (has) => { if (!has) card.value = null })
 
 function openCard(input: PersonCardInput): void {
@@ -118,8 +139,19 @@ function onNew(): void {
   openPersonCard({ draft: emptyPerson({ name: '', categoryId, now: Date.now() }) })
 }
 function onTemplate(): void {
-  modal.open({ key: 'people-template', title: '模板', component: markRaw(TemplatePicker), props: { mode: 'add', onEditAdd: (draft: Person, from: string) => openPersonCard({ draft, from }) }, variant: 'dialog' })
+  pendingAdd.value = null
+  modal.open({ key: 'people-template', title: '模板', component: markRaw(TemplatePicker), props: { mode: 'add', onAdded: (added: Person[], categoryId: PeopleCategoryId) => { const last = added[added.length - 1]; if (last) pendingAdd.value = { id: last.id, categoryId } }, onEditAdd: (draft: Person, from: string) => openPersonCard({ draft, from }) }, variant: 'dialog' })
 }
+function scrollToPerson(id: string): void {
+  nextTick(() => { root.value?.querySelector<HTMLElement>(`[data-testid="people-row-${id}"]`)?.scrollIntoView({ block: 'nearest' }); highlightRow(id) })
+}
+watch(() => modal.isOpen, (open) => {
+  if (open || !pendingAdd.value) return
+  const pending = pendingAdd.value
+  pendingAdd.value = null
+  category.value = pending.categoryId
+  scrollToPerson(pending.id)
+})
 function onPageMenu(key: string): void {
   if (key === 'tags') modal.open({ key: 'people-tag-manage', title: '标签管理', component: markRaw(TagManagePage), variant: 'dialog' })
   else if (key === 'trash') modal.open({ key: 'people-trash', title: '回收站', component: markRaw(TrashPage), variant: 'dialog' })
@@ -244,5 +276,5 @@ function emptyText(): string {
 .trpg-people { min-height: 100%; display: flex; flex-direction: column; }
 .trpg-people__no-campaign { display: grid; justify-items: center; gap: 12px; padding: 48px 12px; color: var(--ink-2); }
 .trpg-people__rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow-card); overflow: hidden; }
-.trpg-people__list { min-height: 0; }
+.trpg-people__list { min-height: 0; padding-bottom: 72px; }
 </style>
