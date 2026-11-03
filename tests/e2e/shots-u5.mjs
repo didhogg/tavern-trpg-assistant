@@ -161,12 +161,7 @@ async function main() {
       // 库模式：保存一张卡到未分组，再从库里打开
       await state('21-库模式', async () => {
         await openPerson(page, '盖尔')
-        await page.locator('.trpg-card-top .trpg-more').click()
-        await page.getByRole('menuitem', { name: '存入我的库...' }).click()
-        await page.getByTestId('save-to-library').waitFor()
-        await page.getByTestId('save-to-library-submit').click()
-        await page.getByText(/已存到《/).waitFor()
-        await page.waitForFunction(() => !document.getElementById('trpg-assistant-root')?.shadowRoot?.querySelector('.trpg-toast'), null, { timeout: 15000 }).catch(() => undefined)
+        await callStore(page, 'people', (s, a) => s.saveToLibrary(a.id, { name: '盖尔' }), { id: ids.galeId })
         await page.getByTestId('person-card-back').click()
         await page.locator('.trpg-window nav').getByRole('button', { name: '库', exact: true }).click()
         await page.getByRole('button', { name: '我的', exact: true }).click()

@@ -39,7 +39,7 @@ function custom(): void {
   <PopoverRoot v-model:open="open">
     <PopoverTrigger class="trpg-effect-add" type="button" :disabled="readOnly"><Icon name="plus" :size="14" />添加其他效果</PopoverTrigger>
     <PopoverPortal :to="portalTarget">
-      <PopoverContent class="trpg-add-effect" side="bottom" :side-offset="6" :collision-padding="8">
+      <PopoverContent class="trpg-add-effect" side="bottom" :side-offset="6" :collision-padding="{ top: 16, right: 16, bottom: 64, left: 16 }">
         <div class="trpg-add-effect__head"><strong>添加效果</strong><button class="trpg-icon-btn" type="button" aria-label="关闭添加效果" @click="open = false"><Icon name="x" :size="16" /></button></div>
         <input v-model="query" class="trpg-input" type="search" placeholder="搜状态、法术效果…" aria-label="搜索效果" />
         <p v-if="!query.trim()" class="trpg-field__hint">法术效果：从库里搜（输入法术名）</p>

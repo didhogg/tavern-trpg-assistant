@@ -240,7 +240,7 @@
 @container (max-width: 480px) {
   .trpg-card-top { min-height: 48px; padding-inline: 8px; gap: 4px; }
   .trpg-card-top__action-text { display: none; }
-  .trpg-card-top .trpg-card-help, .trpg-card-top.has-context .trpg-more { display: none; }
+  .trpg-card-top .trpg-more, .trpg-card-top.has-context .trpg-card-help { display: none; }
   .trpg-card-library-note { display: block; margin: 0; padding: 6px 12px; border-bottom: 1px solid var(--line); background: var(--panel); color: var(--ink-2); font-size: 12px; line-height: 16px; }
   .trpg-card-top.has-context .trpg-card-top__context-full { display: none; }
   .trpg-card-top.has-context .trpg-card-top__context-short { display: inline; }
@@ -258,6 +258,8 @@
   .trpg-recrop__preview { width: 96px; height: 120px; }
 }
 @media (max-width: 480px) {
+  .trpg-add-effect { padding: 10px; gap: 6px; }
+  .trpg-add-effect .trpg-effect-candidate { min-height: 28px; padding: 0 8px; font-size: 12px; }
   .trpg-recrop__layout { grid-template-columns: minmax(0, 1fr); }
   .trpg-recrop__stage { width: min(100%, 240px); margin-inline: auto; }
   .trpg-recrop__side { grid-template-columns: 96px minmax(0, 1fr); align-items: center; }
