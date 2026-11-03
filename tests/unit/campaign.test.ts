@@ -102,9 +102,9 @@ describe('未保存判定与保存', () => {
 
   it('存档摘要来自各单元登记的贡献函数', async () => {
     await withDb(async (db) => {
-      const { campaign } = await setup(db, { summaryContributors: [(d) => ({ partyNames: (d.party as string[] | undefined) ?? [], partyCount: ((d.party as string[] | undefined) ?? []).length }), () => ({ location: '龙骨洞', round: 2 })] })
+      const { campaign } = await setup(db, { summaryContributors: [(d) => ({ partyNames: (d.partyNames as string[] | undefined) ?? [], partyCount: ((d.partyNames as string[] | undefined) ?? []).length }), () => ({ location: '龙骨洞', round: 2 })] })
       await campaign.startNewCampaign(NEW)
-      await campaign.updateData(OWNER.ownerKey, (d) => ({ ...d, party: ['盖尔', '邦妮'] }))
+      await campaign.updateData(OWNER.ownerKey, (d) => ({ ...d, partyNames: ['盖尔', '邦妮'] }))
       const { workspace } = await campaign.saveCurrent(OWNER.ownerKey)
       expect((await campaign.getSave(workspace.currentSaveId!))?.summary).toEqual({ partyNames: ['盖尔', '邦妮'], partyCount: 2, location: '龙骨洞', round: 2 })
     })

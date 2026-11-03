@@ -22,7 +22,7 @@ export interface BookPolicy {
 }
 
 /** 当前所有包的版本：内容变了就升版本，设备上已装的才会更新。 */
-export const PACK_VERSION = '1.5.1'
+export const PACK_VERSION = '1.6.0'
 
 export const BOOK_POLICY: BookPolicy[] = [
   { source: 'PHB', tier: 1, recommended: true, order: 1, nameEn: "Player's Handbook" },

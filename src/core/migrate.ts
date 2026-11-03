@@ -5,8 +5,24 @@ export type Migration = (record: Record<string, unknown>) => Record<string, unkn
 /** 键为"从哪个版本升级"，值把记录升到下一版。 */
 export type MigrationTable = Record<RecordKind, Record<number, Migration>>
 
-/** 当前没有历史版本；将来结构变更时在此登记迁移并提升 SCHEMA_VERSIONS。 */
-export const MIGRATIONS: MigrationTable = { workspace: {}, save: {}, pack: {} }
+/** U6：只补 people / tags / party 三个键；旧数据其余键原样保留。 */
+function addPeopleFields(data: unknown): unknown {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data
+  const rec = data as Record<string, unknown>
+  return {
+    ...rec,
+    people: Array.isArray(rec.people) ? rec.people : [],
+    tags: Array.isArray(rec.tags) ? rec.tags : [],
+    party: rec.party && typeof rec.party === 'object' && !Array.isArray(rec.party) ? rec.party : { name: '' },
+  }
+}
+
+/** 结构变更的迁移登记；键是「从哪个版本升级」。 */
+export const MIGRATIONS: MigrationTable = {
+  workspace: { 1: (record) => ({ ...record, data: addPeopleFields(record.data) }) },
+  save: { 1: (record) => ({ ...record, snapshot: addPeopleFields(record.snapshot) }) },
+  pack: {},
+}
 
 export interface MigrateOptions {
   current?: number

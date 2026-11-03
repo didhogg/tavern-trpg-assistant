@@ -91,8 +91,39 @@ export const monsterVariantSchema = z.looseObject({
 
 export type MonsterVariant = z.infer<typeof monsterVariantSchema>
 
+/** 人物职业与等级；怪物不会填写，人物卡与怪物共用同一个属性块。 */
+export const monsterClassSchema = z.object({
+  class: entryIdSchema,
+  subclass: entryIdSchema.optional(),
+  level: z.number().int().min(1).max(20),
+})
+export type MonsterClass = z.infer<typeof monsterClassSchema>
+
+/** 人物与怪物共用的背包项；`ref` 与 `name` 至少有一个。 */
+export const monsterInventorySchema = z.object({
+  ref: entryIdSchema.optional(),
+  name: z.string().min(1).max(80).optional(),
+  qty: z.number().int().min(1).default(1),
+  equipped: z.boolean().optional(),
+  attuned: z.boolean().optional(),
+  container: z.number().int().nonnegative().optional(),
+  chargesUsed: z.number().int().nonnegative().optional(),
+}).refine((item) => item.ref !== undefined || item.name !== undefined, {
+  message: '背包项至少要有 ref 或 name',
+  path: ['ref'],
+})
+export type MonsterInventoryItem = z.infer<typeof monsterInventorySchema>
+
 export const monsterDataSchema = z.looseObject({
   ...common,
+  /** 人物：职业与等级（可多职业）。 */
+  classes: z.array(monsterClassSchema).optional(),
+  /** 人物：种族、亚种族、背景条目编号。 */
+  race: entryIdSchema.optional(),
+  subrace: entryIdSchema.optional(),
+  background: entryIdSchema.optional(),
+  /** 人物与怪物共用的背包；怪物只填护甲、盾牌与携带物。 */
+  inventory: z.array(monsterInventorySchema).optional(),
   attachedItems: z.array(z.string()).optional(),
   size: z.array(z.enum(['T', 'S', 'M', 'L', 'H', 'G'])).min(1),
   creatureType: z.object({ type: z.string().min(1).max(40), tags: z.array(z.string()).default([]), swarm: z.boolean().optional() }),
@@ -106,7 +137,8 @@ export const monsterDataSchema = z.looseObject({
   senses: z.array(z.string().max(80)).default([]),
   passive: z.number().int().nonnegative().optional(),
   languages: z.array(z.string().max(120)).default([]),
-  cr: z.union([z.number(), z.object({ value: z.number(), lair: z.number().optional(), coven: z.number().optional() })]),
+  /** 挑战等级；人物没有挑战等级时不填。 */
+  cr: z.union([z.number(), z.object({ value: z.number(), lair: z.number().optional(), coven: z.number().optional() })]).optional(),
   xp: z.number().int().nonnegative().optional(),
   resist: z.array(z.string()).default([]),
   immune: z.array(z.string()).default([]),

@@ -1,6 +1,7 @@
 import type { PlannedEntry } from './plan'
 import type { ConvertContext } from './context'
 import { resolveUid } from './carry'
+import { addInventory, backfillAcItems } from './inventory'
 
 type Rec = Record<string, unknown>
 const isObj = (v: unknown): v is Rec => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -165,6 +166,8 @@ export function addMonsterMechanics(plan: PlannedEntry, data: Rec, ctx: ConvertC
     if (cost !== undefined && cost > 1) action.cost = cost
   })
   acItems(raw, data, ctx, plan.source)
+  backfillAcItems(plan, data, ctx)
   attackItems(raw, data, ctx, plan.source)
+  addInventory(plan, data, ctx, (uid) => resolveUid(ctx, ['item'], uid, plan.source))
   addSummon(plan, data, ctx)
 }

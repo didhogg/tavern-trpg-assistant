@@ -82,7 +82,8 @@ export function summaryOf(type: Dnd5e2014EntryType | string, name: string, data:
     case 'monster': {
       const ct = data.creatureType as { type?: string; swarm?: boolean } | undefined
       const sizes = Array.isArray(data.size) ? data.size.map((s) => SIZE[String(s)] ?? s).join('或') : ''
-      const cr = crText(typeof data.cr === 'object' && data.cr ? (data.cr as { value: number }).value : data.cr)
+      const crValue = typeof data.cr === 'object' && data.cr ? (data.cr as { value?: number }).value : data.cr
+      const cr = crValue === undefined ? '' : crText(crValue)
       const ac = [...new Set((Array.isArray(data.ac) ? data.ac : []).map((x) => (x as { value?: number }).value).filter((x): x is number => typeof x === 'number'))].join('/')
       const hp = (data.hp as { average?: number } | undefined)?.average ?? ''
       const align = alignmentText(data.alignment)
@@ -90,7 +91,7 @@ export function summaryOf(type: Dnd5e2014EntryType | string, name: string, data:
       const attack = actions.find((a) => a.activities?.some((x) => x.kind === 'attack'))
       const attackAct = attack?.activities?.find((a) => a.kind === 'attack')
       const action = attack && attackAct ? `${attack.name}${attackAct.bonus !== undefined ? `+${attackAct.bonus}` : ''}${attackAct.damage?.length ? ` ${attackAct.damage.map((d) => d.dice).join('+')}` : ''}` : actions[0]?.name ?? ''
-      return clip([name, `${sizes}${ct?.swarm ? '群体' : ''}${CREATURE_TYPE[String(ct?.type ?? '')] ?? ct?.type ?? ''}${align ? `·${align}` : ''}`, `CR${cr}`, `AC${ac} HP${hp}`, action].filter(Boolean).join('｜'))
+      return clip([name, `${sizes}${ct?.swarm ? '群体' : ''}${CREATURE_TYPE[String(ct?.type ?? '')] ?? ct?.type ?? ''}${align ? `·${align}` : ''}`, cr ? `CR${cr}` : '', `AC${ac} HP${hp}`, action].filter(Boolean).join('｜'))
     }
     case 'item': {
       const rawRarity = String(data.rarity ?? '')

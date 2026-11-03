@@ -16,7 +16,7 @@ export interface DedupeStats {
   bySource: Record<string, { A: number; B: number; C: number; D: number; sameNameDifferent: number }>
 }
 
-const SKIP_KEYS = new Set(['src', 'credit', 'lore', 'art', 'tags', 'facets', 'extra', 'variants', 'variantOf', 'variantDiff', 'supersededBy', 'versionGroup', 'playable', 'nameSuffix'])
+const SKIP_KEYS = new Set(['src', 'credit', 'lore', 'art', 'tags', 'facets', 'extra', 'variants', 'variantOf', 'variantDiff', 'inventory', 'supersededBy', 'versionGroup', 'playable', 'nameSuffix'])
 const ACTION_KEYS = new Set(['traits', 'actions', 'bonusActions', 'reactions', 'legendary', 'mythic'])
 
 function clean(value: unknown, dropText = false): unknown {

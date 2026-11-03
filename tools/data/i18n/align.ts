@@ -15,7 +15,7 @@ export const SKIP_KEYS = new Set(['credit', 'src', 'anchor', 'order', 'ordinal',
  * 由中文正文推导出来或在配置里手写的结构字段（活动、效果、升级）：英文原版里没有对应的数据，
  * 不对齐，也不计入应对齐字段，另外单独计数写进报告。
  */
-export const DERIVED_KEYS = new Set(['activities', 'effects', 'advancement', 'keyValue'])
+export const DERIVED_KEYS = new Set(['activities', 'effects', 'advancement', 'keyValue', 'inventory'])
 
 interface Ctx {
   entry: Entry

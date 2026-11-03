@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const SCHEMA_VERSIONS = { workspace: 1, save: 1, pack: 2 } as const
+export const SCHEMA_VERSIONS = { workspace: 2, save: 2, pack: 2 } as const
 export type RecordKind = keyof typeof SCHEMA_VERSIONS
 
 /** 文件格式版本：.trpgpack / .trpgsave 共用，变更时递增。 */

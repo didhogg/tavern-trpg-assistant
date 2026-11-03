@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useLibraryStore } from '../../stores/library'
 import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import { errorText } from '../format'
 import Segmented from '../kit/Segmented.vue'
+import { defaultMinePackId } from '../../core/library/mine'
 
-const props = defineProps<{ ruleId: string; pack?: { id: string; name: string; description: string } }>()
+const props = defineProps<{ ruleId: string; pack?: { id: string; name: string; description: string }; onDone?: (packId: string) => void }>()
 const emit = defineEmits<{ done: [] }>()
 const app = useAppStore()
 const library = useLibraryStore()
@@ -17,6 +18,7 @@ const name = ref(props.pack?.name ?? '')
 const description = ref(props.pack?.description ?? '')
 const category = ref('rules')
 const error = ref('')
+const isDefault = computed(() => props.pack?.id === defaultMinePackId(props.ruleId))
 const working = ref(false)
 
 async function submit(): Promise<void> {
@@ -25,9 +27,11 @@ async function submit(): Promise<void> {
   try {
     if (props.pack) {
       await app.svc().mine.rename(props.pack.id, { name: name.value, description: description.value })
+      props.onDone?.(props.pack.id)
       toast.success('已保存')
     } else {
       const created = await app.svc().mine.create({ ruleId: props.ruleId, name: name.value, category: category.value as 'rules', description: description.value })
+      props.onDone?.(created.id)
       toast.success(`已建立「${created.name}」`)
     }
     await library.refreshInstalled()
@@ -43,7 +47,7 @@ async function submit(): Promise<void> {
 
 <template>
   <form class="page-stack" @submit.prevent="submit">
-    <label class="trpg-field"><span class="trpg-field__label">名称</span><input v-model="name" class="trpg-input" maxlength="80" aria-label="名称" data-autofocus autocomplete="off" /></label>
+    <label class="trpg-field"><span class="trpg-field__label">名称</span><input v-model="name" class="trpg-input" maxlength="80" aria-label="名称" data-autofocus autocomplete="off" :readonly="isDefault" :title="isDefault ? '默认包不能改名' : undefined" /></label>
     <div v-if="!pack" class="trpg-field"><span class="trpg-field__label">分组</span><Segmented v-model="category" label="分组" :options="[{ value: 'rules', label: '资料与规则' }, { value: 'setting', label: '设定' }, { value: 'toolkit', label: '工具' }, { value: 'adventure', label: '冒险' }]" /></div>
     <label class="trpg-field"><span class="trpg-field__label">简介（可空）</span><textarea v-model="description" class="trpg-input" rows="3" maxlength="400" aria-label="简介" /></label>
     <p v-if="error" class="trpg-field__error" role="alert">{{ error }}</p>
