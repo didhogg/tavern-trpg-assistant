@@ -36201,8 +36201,8 @@ var RZ = ["aria-label", "role"], zZ = {
 					"temp"
 				]))]),
 				B("span", rQ, "AC " + k(e.summary.ac ?? ""), 1),
-				e.partyMode ? (L(), R("span", iQ, "被动察觉 " + k(i() ?? ""), 1)) : U("", !0),
-				e.partyMode ? (L(), R("span", aQ, "速度 " + k(a() === void 0 ? "" : `${a()} 尺`), 1)) : U("", !0)
+				e.partyMode ? (L(), R("span", iQ, k(i() === void 0 ? "" : `被动察觉 ${i()}`), 1)) : U("", !0),
+				e.partyMode ? (L(), R("span", aQ, k(a() === void 0 ? "" : `速度 ${a()} 尺`), 1)) : U("", !0)
 			]),
 			e.selecting ? U("", !0) : (L(), R("div", oQ, [B("span", {
 				"data-testid": `people-row-more-${e.person.id}`,
@@ -36214,7 +36214,7 @@ var RZ = ["aria-label", "role"], zZ = {
 			}, null, 8, ["label", "items"])], 8, sQ)]))
 		], 42, KZ));
 	}
-}), [["__scopeId", "data-v-b2aa9296"]]), lQ = {
+}), [["__scopeId", "data-v-660ae98a"]]), lQ = {
 	class: "trpg-people__selection",
 	"data-testid": "people-selection-bar"
 }, uQ = { class: "trpg-field__hint" }, dQ = ["disabled", "onClick"], fQ = ["disabled"], pQ = ["disabled"], mQ = ["disabled"], hQ = /*#__PURE__*/ iB(/* @__PURE__ */ P({
