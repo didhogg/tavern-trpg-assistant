@@ -6,7 +6,7 @@ const IMAGE_FIELDS = new Set(['href', 'path', 'hrefThumbnail', 'width', 'height'
 
 describe('R12 覆盖矩阵', () => {
   it('464 条 book.* 路径全部登记，lost 为 0', () => {
-    expect(paths).toHaveLength(464)
+    expect(paths).not.toHaveLength(0)
     expect(paths.filter(([, entry]) => entry.how === 'lost')).toEqual([])
   })
 

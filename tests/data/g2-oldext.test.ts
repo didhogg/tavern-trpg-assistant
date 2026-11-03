@@ -63,6 +63,6 @@ describe('G2.5 旧扩展 0.2.0 仍能识别并安装全部 11 个新包', () => 
       const problems = check.checkPackEntries({ packId: rec.manifest.id, entries: rec.entries, reach, lookup: (id) => owners.get(id) })
       expect(problems.slice(0, 5), `${rec.manifest.id}（dataVersion ${rec.manifest.dataVersion}）`).toEqual([])
     }
-    expect(recognized.length).toBe(11)
+    expect(recognized.length).toBe(1 + BOOKS.length)
   }, 240_000)
 })

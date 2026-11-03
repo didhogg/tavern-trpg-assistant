@@ -125,7 +125,7 @@ describe('G2b 资源池特性的最大次数与恢复时机逐个对 PHB（b5）
       'feature.sorcerer-wild-magic-tides-of-chaos.phb': '长休恢复，或 DM 让你掷狂野魔法浪涌表时恢复 → restores（事件：狂野魔法浪涌）',
       'feature.wizard-school-of-conjuration-benign-transposition.phb': '长休恢复，或你施展 1 环以上咒法法术时恢复 → restores（事件：施展咒法法术）',
     }
-    const peculiar = Object.keys(PECULIAR).filter((id) => l.get(id)?.data.uses !== undefined).map((id) => `${id} ${l.need(id).name}：${PECULIAR[id]}`)
+    const peculiar = Object.keys(PECULIAR).filter((id) => l.get(id)?.data.uses !== undefined && l.get(id)?.data.tracker === undefined && l.get(id)?.data.restores === undefined).map((id) => `${id} ${l.need(id).name}：${PECULIAR[id]}`)
     rec2.stat('b5', 'peculiarRestRules', peculiar.length)
     if (peculiar.length) rec2.find({ id: 'b5-peculiar-rest-rule', check: 'b5', kind: 'data-defect', fixSource: 'self-structure', entries: peculiar, expected: 'PHB 各特性原文（已逐个读过）', note: '写成“1 次/长休”，但书上的限制是冷却天数、按目标、或有事件触发的额外恢复；应按“资源与休息”结构的 tracker / restores 表示' })
     for (const [k, ids] of Object.entries(bad)) rec2.find({ id: `b5-${k}`, check: 'b5', kind: 'data-defect', fixSource: 'self-structure', entries: ids, expected: 'PHB 各职业特性原文（已逐个读过）', note: k.startsWith('max-') ? '资源池最大次数与 PHB 不符' : '资源池恢复时机与 PHB 不符' })

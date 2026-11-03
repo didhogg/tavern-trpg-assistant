@@ -47,7 +47,7 @@ describe('G2a 使用次数 uses 审计（a18）', () => {
       if (NO_LIMIT.has(r.id)) { add('no-support-in-text', label); continue }
       if (CONSUMES.has(r.id)) { add('consumes-other-pool', label); continue }
       if (RESTORES.has(r.id)) { add('restores-other-pool', label); continue }
-      if (SPECIAL.has(r.id)) { add('special-resource', label); continue }
+      if (SPECIAL.has(r.id)) { if (u.recharge !== 'special') add('special-resource', label); continue } // 已写成 recharge:'special' 的 uses 就是有结构的
       // 初筛命中、但还没人工核对过的：单独列出，提醒核对
       if (CONSUMES_OTHER.test(t) || /重获一次使用次数|获得一次使用次数/.test(t)) { add('unreviewed-pool-mention', label); continue }
       if (u.recharge === 'long' && !mentionsLong) add('no-support-in-text', label)

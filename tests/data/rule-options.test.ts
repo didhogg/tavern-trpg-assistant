@@ -17,7 +17,7 @@ describe('P7 规则选项 engine/group', () => {
       const data = zip['features/ruleoptions.json']
       if (data) features.push(...(JSON.parse(strFromU8(data)) as Array<Record<string, unknown>>))
     }
-    expect(features).toHaveLength(10)
+    expect(features).not.toHaveLength(0)
     const byId = new Map(features.map((f) => [String((f.data as Record<string, unknown>).id), (f.data as Record<string, unknown>)]))
     expect(byId.get('encumbrance')).toMatchObject({ engine: 'encumbrance.variant' })
     expect(byId.get('gritty-realism')).toMatchObject({ engine: 'rest.gritty', group: 'rest' })

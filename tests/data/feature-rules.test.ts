@@ -58,7 +58,8 @@ describe('P5 特性使用次数、效果与行动', () => {
     const byId = new Map(entries.map((e) => [e.id, e]))
     const candidates = features.filter((e) => marker.test(text(e)) && !FEATURE_NO_USES.has(e.id))
     // 种族特质提到多个法术、次数由所属种族/亚种的 spellGrant.uses 承担的，不要求特质自己再带 uses（口径与 g2b-rest 的 rest-racial-spell-uses-duplicate 一致，见 consumer/grantUses.ts）
-    const covered = candidates.filter((e) => e.data.uses || carriedByRace(e, byId))
+    // 次数也可以由 consumes（消耗别的池）、restores（给别的池恢复）、tracker（按目标/冷却/长休重选）这三种新结构表达，不一定是自己的 uses
+    const covered = candidates.filter((e) => e.data.uses || e.data.consumes !== undefined || e.data.restores !== undefined || e.data.tracker !== undefined || carriedByRace(e, byId))
     expect(candidates.length).toBeGreaterThan(250)
     expect(covered.length / candidates.length).toBeGreaterThanOrEqual(0.95)
   })

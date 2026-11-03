@@ -1,5 +1,0 @@
-import type { Fix } from '../engine'
-
-export const ROWS: Fix[] = [
-  { id: 'vehicle.planar-raider.mtf', path: '/data/weapon/0/count', op: 'set', before: 2, after: 3, basis: 'MTF p90：位面掠夺者配备三架弩炮和一架投石机' },
-]
