@@ -2,10 +2,22 @@ import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import { appendToInput } from '../host/input'
 import { copyText } from '../host/clipboard'
+import { useUiStore } from './ui'
 import {
   addDie, builderText, canUseMode, commentFromLine, cryptoRng, diceTotal, lineText, readBuilder, removeDie, rollDice, stepMod,
   type Builder, type Rng, type RollMode, type RollResult,
 } from '../rules/dice'
+
+export interface DicePrefill {
+  /** 要填进骰盘的骰式，如 `1d20+6`、`1d6+2`。 */
+  expression: string
+  /** 说明，如「盖尔 洞悉检定」。 */
+  note?: string
+  object?: string
+  type?: 'check' | 'save' | 'skill' | 'initiative' | 'attack' | 'damage'
+  item?: string
+  bonus?: number
+}
 
 export interface RollRecord {
   id: number
@@ -126,6 +138,15 @@ export const useDiceStore = defineStore('dice', () => {
     persist()
   }
 
+  /** 人物详情页的钩子：填好骰式与说明并打开骰盘，不自动掷（U5 §1.7）。 */
+  function prefill(payload: DicePrefill): void {
+    text.value = payload.expression
+    note.value = payload.note ?? [payload.object, payload.item].filter(Boolean).join(' ')
+    mode.value = 'normal'
+    persist()
+    useUiStore().diceOpen = true
+  }
+
   /** 掷骰：唯一会出结果的动作。骰式不合法或没有骰子时返回 null。 */
   function roll(): RollRecord | null {
     if (!canRoll.value) return null
@@ -189,6 +210,6 @@ export const useDiceStore = defineStore('dice', () => {
 
   return {
     text, mode, note, history, last, lastResult, fillState, copied, error, builder, canMode, canRoll,
-    setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, roll, recordTable, loadRecord, clearHistory, fill, copy, commentOf,
+    setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, prefill, roll, recordTable, loadRecord, clearHistory, fill, copy, commentOf,
   }
 })

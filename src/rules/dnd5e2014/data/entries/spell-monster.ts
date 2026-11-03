@@ -7,6 +7,7 @@ import { scaleDiceSchema } from '../advancement'
 import { entryCommonFields } from './base'
 import { conditionalDamageSchema, consumedSchema, legendaryCostSchema, rechargeRollSchema, summonSchema, upcastSchema } from '../g25'
 import { monsterArtSchema } from './art'
+import { adjustSchema, overridesSchema, proficienciesSchema } from './sheet'
 
 const common = entryCommonFields
 
@@ -132,6 +133,13 @@ export const monsterDataSchema = z.looseObject({
   hp: z.object({ average: z.number().int().nonnegative(), formula: z.string().max(40).optional(), special: z.string().max(300).optional() }),
   speed: z.record(z.string(), z.union([z.number(), z.boolean()])),
   abilities: z.record(z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha']), z.number().int()),
+  /** 人物卡：其他（手动）列；未写 = 0。 */
+  abilityOther: z.record(z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha']), z.number().int().min(-20).max(20)).optional(),
+  /** 人物卡：成长 / 专长列；UNIT4 写，概览带只读。 */
+  abilityGrowth: z.record(z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha']), z.number().int()).optional(),
+  overrides: overridesSchema.optional(),
+  adjust: adjustSchema.optional(),
+  proficiencies: proficienciesSchema.optional(),
   saves: z.record(z.string(), z.number().int()).optional(),
   skills: z.record(z.string(), z.number().int()).optional(),
   senses: z.array(z.string().max(80)).default([]),

@@ -22,7 +22,7 @@ import CategoryBar from './CategoryBar.vue'
 import PartyBar from './PartyBar.vue'
 import PeopleHeader from './PeopleHeader.vue'
 import PeopleToolbar from './PeopleToolbar.vue'
-import PersonCardStub from './PersonCardStub.vue'
+import PersonCard from './card/PersonCard.vue'
 import PersonRow from './PersonRow.vue'
 import SelectionBar from './SelectionBar.vue'
 import TagEditor from './TagEditor.vue'
@@ -286,7 +286,7 @@ function emptyText(): string {
       <p>先开一个战役，人物会保存在这个战役里。</p>
       <button class="trpg-btn trpg-btn--primary" type="button" :disabled="campaign.readOnly" @click="openWizard()">去开局向导</button>
     </div>
-    <PersonCardStub v-else-if="card" :person="card.person" :draft="card.draft" :from="card.from" @back="closeCard" @saved="onSaved" />
+    <PersonCard v-else-if="card" :person="card.person" :draft="card.draft" :from="card.from" @back="closeCard" @saved="onSaved" />
     <template v-else>
       <div class="trpg-people__top">
         <CategoryBar v-model="category" :counts="people.counts" />

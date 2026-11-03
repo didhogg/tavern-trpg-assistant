@@ -31,6 +31,17 @@ export const personEffectSchema = z.object({
 })
 export type PersonEffect = z.infer<typeof personEffectSchema>
 
+export const avatarCropSchema = z.object({
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+  w: z.number().positive().max(1),
+  h: z.number().positive().max(1),
+}).refine((crop) => crop.x + crop.w <= 1 && crop.y + crop.h <= 1, { message: '截取框必须在原图内' })
+export type AvatarCrop = z.infer<typeof avatarCropSchema>
+
+export const avatarSourceSchema = z.object({ asset: assetRefSchema, crop: avatarCropSchema })
+export type AvatarSource = z.infer<typeof avatarSourceSchema>
+
 export const personSourceRefSchema = z.object({ packId: idSchema, version: z.string().min(1).max(20), entryId: z.string().min(1).max(200) })
 export type PersonSourceRef = z.infer<typeof personSourceRefSchema>
 
@@ -42,6 +53,8 @@ export const personSchema = z.object({
   name: z.string().min(1).max(PERSON_NAME_MAX),
   nameEn: z.string().max(80).optional(),
   avatar: z.union([z.string(), assetRefSchema]).optional(),
+  /** 原图与 4:5 截取框；只用于身份抽屉里的重新截取。 */
+  avatarSource: avatarSourceSchema.optional(),
   categoryId: peopleCategorySchema,
   tags: z.array(z.string().min(1)).default([]),
   pinned: z.boolean().default(false),
@@ -50,6 +63,16 @@ export const personSchema = z.object({
   serial: z.number().int().min(2).optional(),
   hp: personHpSchema,
   effects: z.array(personEffectSchema).default([]),
+  /** 当场状态；旧数据未写 = 没有灵感。 */
+  inspiration: z.boolean().optional(),
+  /** 当场状态；0–6 级。 */
+  exhaustion: z.number().int().min(0).max(6).optional(),
+  /** 当场状态：每个骰型已用颗数。 */
+  hitDiceUsed: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  /** 当场状态：1–9 环与契约位已用数。 */
+  slotsUsed: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  /** 当场状态：资源条目编号 → 已用数。 */
+  resourcesUsed: z.record(z.string(), z.number().int().nonnegative()).optional(),
   block: monsterDataSchema,
   libraryRef: personLibraryRefSchema.optional(),
   giveAi: z.enum(['auto', 'nameOnly', 'full', 'none']).default('auto'),

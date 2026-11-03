@@ -7,13 +7,37 @@ import { uuid } from '../core/ids'
 import { TrpgError } from '../core/errors'
 import type { Entry } from '../schemas/pack'
 import type { WorkspaceData } from '../schemas/campaign'
-import { personSchema, type PeopleCategoryId, type Person, type Tag } from '../schemas/people'
+import { personHpSchema, personSchema, type AvatarSource, type PeopleCategoryId, type Person, type PersonEffect, type PersonHp, type Tag } from '../schemas/people'
+import { DRAFT_WRITE_KEYS, LIVE_WRITE_KEYS } from '../schemas/peopleWrites'
 import { toEntry } from '../core/library/pins'
 import { monsterDataSchema, type MonsterData } from '../rules/dnd5e2014/data/entries/spell-monster'
 import { nextNames, serialOfName } from '../ui/people/naming'
 import { personFromEntry, toLibraryEntry } from '../ui/people/fromEntry'
 import { filterPeople, sortPeople, type CategoryFilter, type SortDir, type SortKey } from '../ui/people/list'
 import type { StoreMode, StoreResult } from '../core/library/mine'
+
+export interface LivePatch {
+  hp?: Partial<Omit<PersonHp, 'deathSaves'>> & { deathSaves?: Partial<PersonHp['deathSaves']> }
+  inspiration?: boolean
+  exhaustion?: number
+  hitDiceUsed?: Record<string, number>
+  slotsUsed?: Record<string, number>
+  resourcesUsed?: Record<string, number>
+  effects?: PersonEffect[]
+}
+
+export interface DraftPatch {
+  name?: string
+  nameEn?: string
+  avatar?: Person['avatar']
+  avatarSource?: AvatarSource
+  block?: MonsterData
+}
+
+export interface PreparedAvatar {
+  avatar: NonNullable<Person['avatar']>
+  avatarSource: AvatarSource
+}
 
 export interface PeopleViewOptions {
   categoryId: CategoryFilter
@@ -75,6 +99,46 @@ export const usePeopleStore = defineStore('people', () => {
     const next = personSchema.parse({ ...person, ...patch, name: patch.name === undefined ? person.name : assertName(patch.name), touchedAt: now() })
     replace(id, next)
     return next
+  }
+
+  function assertKeys(patch: object, allowed: readonly string[], action: string): void {
+    for (const key of Object.keys(patch)) if (!allowed.includes(key)) throw new TrpgError('E_BAD_PATCH', `${action} 不能写 ${key}`)
+  }
+
+  /** 当场状态：只写 HP、灵感、力竭、生命骰、法术位、资源与效果。 */
+  function setLive(id: string, patch: LivePatch): Person {
+    assertKeys(patch, LIVE_WRITE_KEYS, '当场状态')
+    const person = find(id)
+    const next: Person = { ...person }
+    if ('hp' in patch) next.hp = personHpSchema.parse({ ...person.hp, ...patch.hp, deathSaves: { ...person.hp.deathSaves, ...patch.hp?.deathSaves } })
+    if ('inspiration' in patch) next.inspiration = patch.inspiration
+    if ('exhaustion' in patch) next.exhaustion = patch.exhaustion
+    if ('hitDiceUsed' in patch) next.hitDiceUsed = patch.hitDiceUsed
+    if ('slotsUsed' in patch) next.slotsUsed = patch.slotsUsed
+    if ('resourcesUsed' in patch) next.resourcesUsed = patch.resourcesUsed
+    if ('effects' in patch) next.effects = patch.effects ?? []
+    replace(id, next)
+    return next
+  }
+
+  /** 设定类：只写人物卡草稿里的名字、头像、身份与属性块。 */
+  function saveDraft(id: string, patch: DraftPatch): Person {
+    assertKeys(patch, DRAFT_WRITE_KEYS, '设定')
+    const person = find(id)
+    const picked: Record<string, unknown> = {}
+    for (const key of DRAFT_WRITE_KEYS) if (key in patch) picked[key] = (patch as Record<string, unknown>)[key]
+    const next = personSchema.parse({
+      ...person,
+      ...picked,
+      name: patch.name === undefined ? person.name : assertName(patch.name),
+      touchedAt: now(),
+    })
+    replace(id, next)
+    return next
+  }
+
+  function autoAssignAvatar(id: string, input: PreparedAvatar): Person {
+    return saveDraft(id, { avatar: input.avatar, avatarSource: input.avatarSource })
   }
 
   async function blockOf(entry: Entry, packId: string): Promise<MonsterData> {
@@ -214,5 +278,5 @@ export const usePeopleStore = defineStore('people', () => {
     return people.value.find((p) => p.id === id)
   }
 
-  return { people, tags, partyName, trashed, tagNames, counts, create, save, addFromEntry, duplicate, move, setPinned, applyTags, createTag, renameTag, deleteTag, renameParty, trash, restore, purge, touch, saveToLibrary, view, rowOf }
+  return { people, tags, partyName, trashed, tagNames, counts, create, save, setLive, saveDraft, autoAssignAvatar, addFromEntry, duplicate, move, setPinned, applyTags, createTag, renameTag, deleteTag, renameParty, trash, restore, purge, touch, saveToLibrary, view, rowOf }
 })

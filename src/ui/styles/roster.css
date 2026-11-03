@@ -96,9 +96,9 @@
 .trpg-emptystate .trpg-btn { color: var(--ink); }
 
 /* ---------- 弹窗通用样式：标题栏衬线 20/700；内容放在 --card 卡片里 ---------- */
-.trpg-modal__head { background: var(--paper); }
+.trpg-modal__head { background: var(--paper); color: var(--ink); }
 .trpg-modal__title { font-size: 20px; font-weight: 700; }
-.trpg-window[data-layout='narrow'] .trpg-modal__head { background: var(--chrome); }
+.trpg-window[data-layout='narrow'] .trpg-modal__head { background: var(--chrome); color: var(--chrome-ink); }
 .trpg-dialog { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .trpg-dialog__foot { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
 .trpg-dialog__foot .trpg-btn { min-height: 40px; border-radius: 10px; }

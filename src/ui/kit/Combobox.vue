@@ -16,7 +16,7 @@ export interface ComboOption {
 }
 
 /** 可搜索下拉（大量条目）：边输边筛，每行显示中文名、英文名与徽章；↑↓ 移动、Enter 选择、Esc 关闭；显示结果数。 */
-const props = defineProps<{ options: ComboOption[]; label: string; placeholder?: string }>()
+const props = defineProps<{ options: ComboOption[]; label: string; placeholder?: string; disabled?: boolean }>()
 const model = defineModel<string>()
 const portalTarget = inject<HTMLElement | undefined>('portalTarget', undefined)
 const query = ref('')
@@ -29,13 +29,14 @@ const filtered = computed(() => {
 })
 const shown = computed(() => filtered.value.slice(0, MAX_SHOWN))
 const selected = computed(() => props.options.find((o) => o.value === model.value))
+const display = (value: string): string => props.options.find((o) => o.value === value)?.label ?? ''
 </script>
 
 <template>
-  <ComboboxRoot v-model="model" ignore-filter open-on-click class="trpg-combo">
+  <ComboboxRoot v-model="model" :disabled="disabled" ignore-filter open-on-click class="trpg-combo">
     <ComboboxAnchor class="trpg-combo__anchor">
-      <ComboboxInput v-model="query" class="trpg-combo__input" :aria-label="label" :placeholder="selected?.label ?? placeholder ?? '搜索…'" />
-      <ComboboxTrigger class="trpg-icon-btn trpg-combo__trigger" aria-label="展开列表"><Icon name="caret-down" :size="14" /></ComboboxTrigger>
+      <ComboboxInput v-model="query" class="trpg-combo__input" :display-value="display" :disabled="disabled" :aria-label="label" :placeholder="selected?.label ?? placeholder ?? '搜索…'" />
+      <ComboboxTrigger class="trpg-icon-btn trpg-combo__trigger" :disabled="disabled" aria-label="展开列表"><Icon name="caret-down" :size="14" /></ComboboxTrigger>
     </ComboboxAnchor>
     <ComboboxPortal :to="portalTarget">
       <ComboboxContent class="trpg-select-content trpg-combo__content" position="popper" :side-offset="4" :collision-padding="8">

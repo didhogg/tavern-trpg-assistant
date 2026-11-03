@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, markRaw, onMounted, ref, shallowRef, watch } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useLibraryStore } from '../../stores/library'
+import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import { errorText } from '../format'
 import Checkbox from '../kit/Checkbox.vue'
@@ -17,6 +18,7 @@ import { openEntry } from './openDetail'
 import { typeLabel } from './typeLabels'
 import { isHiddenType } from '../../core/library/hiddenTypes'
 import { defaultMinePackId } from '../../core/library/mine'
+import LibraryCardHost from '../people/card/LibraryCardHost.vue'
 
 interface Lite { entryId: string; name: string; type: string; summary: string }
 const props = defineProps<{ packId: string }>()
@@ -24,6 +26,7 @@ const emit = defineEmits<{ back: [] }>()
 const app = useAppStore()
 const library = useLibraryStore()
 const campaign = useCampaignStore()
+const modal = useModalStore()
 const toast = useToastStore()
 const all = shallowRef<Lite[]>([])
 const category = ref('all')
@@ -42,6 +45,10 @@ async function load(): Promise<void> {
   all.value = rows.filter((r) => !isHiddenType(r.type)).map((r) => ({ entryId: r.entryId, name: r.name, type: r.type, summary: r.summary })).sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name, 'zh'))
 }
 onMounted(load)
+function openCard(item: Lite): void {
+  if (item.type !== 'monster') return
+  modal.open({ key: `library-card-${props.packId}-${item.entryId}`, title: item.name, component: markRaw(LibraryCardHost), props: { packId: props.packId, entryId: item.entryId }, variant: 'dialog', bare: true })
+}
 
 const categories = computed(() => {
   const counts: Record<string, number> = {}
@@ -214,7 +221,8 @@ async function onPackMenu(key: string): Promise<void> {
             <span v-if="renaming === item.entryId && renameError" class="trpg-field__error" data-testid="mine-rename-error" role="alert">{{ renameError }}</span>
           </div>
           <template v-if="!selecting">
-            <button class="trpg-btn trpg-btn--small" type="button" disabled title="条目编辑器随后续版本提供">编辑</button>
+            <button v-if="item.type === 'monster'" class="trpg-btn trpg-btn--small" type="button" @click="openCard(item)">打开 ›</button>
+            <button v-else class="trpg-btn trpg-btn--small" type="button" disabled title="条目编辑器随后续版本提供">编辑</button>
             <MoreMenu :label="item.name" :items="[{ key: 'rename', label: '改名', disabled: campaign.readOnly }, { key: 'move', label: '移到…', disabled: !otherPacks.length || campaign.readOnly, reason: '没有别的我的包' }, { key: 'copy', label: '复制', disabled: campaign.readOnly }, { key: 'delete', label: '删除', danger: true, disabled: campaign.readOnly }]" @select="onEntryMenu($event, item)" />
           </template>
         </template>

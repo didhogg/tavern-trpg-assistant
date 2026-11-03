@@ -122,8 +122,17 @@ function onKeydown(event: KeyboardEvent): void {
 <template>
   <div ref="rootEl" class="trpg-modal-root">
     <div v-if="modal.isOpen" class="trpg-modal" :data-variant="modal.variant" @click.self="modal.requestClose()" @keydown.stop="onKeydown">
-      <section ref="cardEl" class="trpg-modal__card" role="dialog" aria-modal="true" :aria-labelledby="titleId" tabindex="-1">
-        <header class="trpg-modal__head">
+      <section
+        ref="cardEl"
+        class="trpg-modal__card"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
+        :data-sized="modal.variant === 'drawer' && modal.top?.width ? 'true' : undefined"
+        :style="modal.variant === 'drawer' && modal.top?.width ? { '--trpg-drawer-width': `${modal.top.width}px` } : undefined"
+        tabindex="-1"
+      >
+        <header v-if="!modal.top?.bare" class="trpg-modal__head">
           <button v-if="modal.depth > 1" class="trpg-modal__back" type="button" :aria-label="`返回：${backLabel}`" @click="modal.pop()">
             <Icon name="caret-left" :size="16" /><span>{{ backLabel }}</span>
           </button>

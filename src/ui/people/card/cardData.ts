@@ -1,0 +1,133 @@
+import type { Entry, StoredEntry } from '../../../schemas/pack'
+import type { Person } from '../../../schemas/people'
+import { useAppStore } from '../../../stores/app'
+import { backgroundDataSchema, classDataSchema, raceDataSchema, type BackgroundData, type ClassData, type RaceData } from '../../../rules/dnd5e2014/data/entries/character'
+import { CONDITION_LABELS, type ConditionKey } from '../../../rules/dnd5e2014/data/enums'
+
+export interface CardEntry {
+  packId: string
+  entry: Entry
+  badge: string
+}
+
+export interface CardOption {
+  value: string
+  label: string
+  en?: string
+  badge?: string
+}
+
+export interface CardData {
+  entries: Map<string, CardEntry>
+  classes: Map<string, ClassData>
+  classLabels: Record<string, string>
+  races: CardEntry[]
+  subraces: CardEntry[]
+  backgrounds: CardEntry[]
+  conditions: Array<{ key: ConditionKey; name: string; ref?: string }>
+  spells: CardEntry[]
+  raceOf: (id?: string) => RaceData | undefined
+  backgroundOf: (id?: string) => BackgroundData | undefined
+  classOf: (id?: string) => ClassData | undefined
+  nameOf: (id?: string) => string
+  raceOptions: CardOption[]
+  subraceOptions: (raceId?: string) => CardOption[]
+  backgroundOptions: CardOption[]
+  spellDuration: (entry?: Entry) => string
+  effectSummary: (ref?: string) => string
+}
+
+const TYPES = ['class', 'subclass', 'race', 'subrace', 'background', 'condition', 'spell'] as const
+
+function entryView(row: StoredEntry, packs: Map<string, string>): CardEntry {
+  const { packId, entryId, ruleId: _ruleId, type, name, nameEn, keywords, unique, summary, data, image, override: _override, i18n } = row
+  return { packId, badge: packs.get(packId) ?? '', entry: { id: entryId, type, name, nameEn, keywords, unique, summary, data, image, i18n } }
+}
+
+function optionOf(row: CardEntry): CardOption {
+  return { value: row.entry.id, label: row.entry.name, en: row.entry.nameEn, badge: row.badge }
+}
+
+function durationText(entry?: Entry): string {
+  const raw = entry?.data.duration
+  if (!Array.isArray(raw)) return ''
+  const parts = raw.flatMap((item) => {
+    if (!item || typeof item !== 'object') return []
+    const value = item as { type?: unknown; amount?: unknown; unit?: unknown; concentration?: unknown }
+    const unit = value.unit === 'minute' ? '分钟' : value.unit === 'hour' ? '小时' : value.unit === 'round' ? '轮' : ''
+    let text = value.type === 'instant' ? '立即' : value.type === 'permanent' ? '永久' : value.type === 'special' ? '特殊' : `${String(value.amount ?? '')}${unit}`.trim()
+    if (value.concentration) text += ' · 专注'
+    return text ? [text] : []
+  })
+  return parts.join('、')
+}
+
+/** 载入人物卡需要的已启用条目；只读，不改库。 */
+export async function loadCardData(_person: Person, enabledPackIds: string[], ruleId: string): Promise<CardData> {
+  const db = useAppStore().svc().db
+  const packs = new Map((await db.packs.toArray()).map((pack) => [pack.id, pack.name]))
+  const enabled = new Set(enabledPackIds)
+  const rows = (await db.entries.where('[ruleId+type]').anyOf(TYPES.map((type) => [ruleId, type])).toArray()) as StoredEntry[]
+  const allowed = rows.filter((row) => !enabled.size || enabled.has(row.packId))
+  const all = allowed.map((row) => entryView(row, packs))
+  const entries = new Map(all.map((row) => [row.entry.id, row]))
+  const classes = new Map<string, ClassData>()
+  const classLabels: Record<string, string> = {}
+  for (const row of all) {
+    if (row.entry.type === 'class' || row.entry.type === 'subclass') classLabels[row.entry.id] = row.entry.name
+    if (row.entry.type !== 'class') continue
+    const parsed = classDataSchema.safeParse(row.entry.data)
+    if (parsed.success) classes.set(row.entry.id, parsed.data as ClassData)
+  }
+  const races = all.filter((row) => row.entry.type === 'race')
+  const subraces = all.filter((row) => row.entry.type === 'subrace')
+  const backgrounds = all.filter((row) => row.entry.type === 'background')
+  const spells = all.filter((row) => row.entry.type === 'spell')
+  const conditionEntries = all.filter((row) => row.entry.type === 'condition')
+  const byName = new Map(conditionEntries.map((row) => [row.entry.name, row.entry.id]))
+  const conditions = (Object.entries(CONDITION_LABELS) as Array<[string, string]>)
+    .filter(([key]) => key !== 'exhaustion')
+    .map(([key, name]) => ({ key: key as ConditionKey, name, ref: byName.get(name) }))
+  const cachedRaces = new Map<string, RaceData | undefined>()
+  const cachedBackgrounds = new Map<string, BackgroundData | undefined>()
+  const cacheRace = (id?: string): RaceData | undefined => {
+    if (!id) return undefined
+    if (cachedRaces.has(id)) return cachedRaces.get(id)
+    const row = entries.get(id)
+    const parsed = row ? raceDataSchema.safeParse(row.entry.data) : undefined
+    const value = parsed?.success ? parsed.data as RaceData : undefined
+    cachedRaces.set(id, value)
+    return value
+  }
+  const raceOf = (id?: string): RaceData | undefined => cacheRace(id)
+  const backgroundOf = (id?: string): BackgroundData | undefined => {
+    if (!id) return undefined
+    if (cachedBackgrounds.has(id)) return cachedBackgrounds.get(id)
+    const row = entries.get(id)
+    const parsed = row ? backgroundDataSchema.safeParse(row.entry.data) : undefined
+    const value = parsed?.success ? parsed.data as BackgroundData : undefined
+    cachedBackgrounds.set(id, value)
+    return value
+  }
+  const classOf = (id?: string): ClassData | undefined => (id ? classes.get(id) : undefined)
+  const nameOf = (id?: string): string => (id ? classLabels[id] ?? entries.get(id)?.entry.name ?? id : '')
+  return {
+    entries,
+    classes,
+    classLabels,
+    races,
+    subraces,
+    backgrounds,
+    conditions,
+    spells,
+    raceOf,
+    backgroundOf,
+    classOf,
+    nameOf,
+    raceOptions: races.map(optionOf),
+    subraceOptions: (raceId?: string) => subraces.filter((row) => !raceId || row.entry.data.parentRace === raceId).map(optionOf),
+    backgroundOptions: backgrounds.map(optionOf),
+    spellDuration: durationText,
+    effectSummary: (ref?: string) => (ref ? entries.get(ref)?.entry.summary ?? '' : ''),
+  }
+}

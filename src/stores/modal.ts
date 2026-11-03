@@ -13,6 +13,10 @@ export interface ModalPage {
   header?: Component
   /** 弹窗外观，只看栈底页。 */
   variant?: ModalVariant
+  /** 抽屉宽度（px）；不写 = 440。窗口更窄时取 100%，≤480 铺满。 */
+  width?: number
+  /** 页面自带完整外壳（例如人物卡）时不显示宿主标题栏。 */
+  bare?: boolean
   /** 用户用 ✕、遮罩或 Esc 关闭栈底页之前调用；返回 false 表示拦截（页面自行显示确认页）。 */
   guard?: () => boolean
   /** 页面离开栈（返回或关闭）时调用。 */
