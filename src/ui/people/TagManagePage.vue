@@ -5,6 +5,7 @@ import { useModalStore } from '../../stores/modal'
 import { usePeopleStore } from '../../stores/people'
 import { useToastStore } from '../../stores/toast'
 import { errorText } from '../format'
+import EmptyState from '../kit/EmptyState.vue'
 
 const campaign = useCampaignStore()
 const modal = useModalStore()
@@ -45,13 +46,13 @@ function remove(id: string): void {
 </script>
 
 <template>
-  <div class="trpg-tag-manage" data-testid="tag-manage">
+  <div class="trpg-tag-manage trpg-dialog" data-testid="tag-manage">
     <div class="trpg-tag-manage__new">
       <input v-model="newName" class="trpg-input" maxlength="24" placeholder="新标签" aria-label="新标签" :disabled="campaign.readOnly" @keydown.enter.prevent="create" />
       <button class="trpg-btn" type="button" :disabled="campaign.readOnly || !newName.trim()" @click="create">新建</button>
     </div>
     <p v-if="newError" class="trpg-field__error" role="alert">{{ newError }}</p>
-    <div v-if="!people.tags.length" class="trpg-empty">还没有标签</div>
+    <EmptyState v-if="!people.tags.length" icon="tag" text="还没有标签" />
     <ul v-else class="trpg-tag-manage__list">
       <li v-for="tag in people.tags" :key="tag.id" class="trpg-tag-manage__row">
         <template v-if="renameId === tag.id">
@@ -61,11 +62,11 @@ function remove(id: string): void {
           <span v-if="renameError" class="trpg-field__error" role="alert">{{ renameError }}</span>
         </template>
         <template v-else>
-          <span class="trpg-tag-manage__name">{{ tag.name }}</span>
-          <span class="trpg-row__meta">{{ counts[tag.id] ?? 0 }} 人</span>
+          <span class="trpg-tag-manage__name"><span class="trpg-pill trpg-tag-manage__pill">{{ tag.name }}</span></span>
+          <span class="trpg-tag-manage__count">{{ counts[tag.id] ?? 0 }} 人</span>
           <span class="trpg-tag-manage__actions">
             <button class="trpg-btn trpg-btn--small" type="button" :disabled="campaign.readOnly" @click="startRename(tag.id, tag.name)">改名</button>
-            <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="campaign.readOnly" @click="deleteId = tag.id">删除</button>
+            <button class="trpg-btn trpg-btn--small trpg-btn--dangertext" type="button" :disabled="campaign.readOnly" @click="deleteId = tag.id">删除</button>
           </span>
         </template>
       </li>
@@ -75,18 +76,6 @@ function remove(id: string): void {
       <button class="trpg-btn trpg-btn--small" type="button" @click="deleteId = null">取消</button>
       <button class="trpg-btn trpg-btn--small trpg-btn--danger" type="button" @click="remove(deleteId!)">删除</button>
     </div>
-    <div class="trpg-tag-manage__foot"><button class="trpg-btn" type="button" @click="modal.requestClose()">关闭</button></div>
+    <div class="trpg-dialog__foot"><button class="trpg-btn" type="button" @click="modal.requestClose()">关闭</button></div>
   </div>
 </template>
-
-<style scoped>
-.trpg-tag-manage { display: grid; gap: 8px; }
-.trpg-tag-manage__new { display: flex; gap: 8px; }
-.trpg-tag-manage__new .trpg-input { flex: 1; }
-.trpg-tag-manage__list { list-style: none; margin: 0; padding: 0; display: grid; }
-.trpg-tag-manage__row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 44px; border-bottom: 1px solid var(--line); }
-.trpg-tag-manage__name { flex: 1; font-weight: 600; }
-.trpg-tag-manage__actions { display: flex; gap: 2px; }
-.trpg-tag-manage__foot { display: flex; justify-content: flex-end; }
-.trpg-inline-confirm { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 10px; border-left: 3px solid var(--danger); background: var(--panel); }
-</style>

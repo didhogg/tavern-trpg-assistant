@@ -3,8 +3,9 @@ import { ref } from 'vue'
 import { useCampaignStore } from '../../stores/campaign'
 import { usePeopleStore } from '../../stores/people'
 import { errorText } from '../format'
+import Icon from '../kit/Icon.vue'
 
-const props = defineProps<{ name: string; count: number }>()
+const props = defineProps<{ name: string; count: number; avgHp?: number }>()
 const campaign = useCampaignStore()
 const people = usePeopleStore()
 const editing = ref(false)
@@ -21,6 +22,7 @@ function save(): void {
 
 <template>
   <div class="trpg-partybar">
+    <Icon name="users-three" :size="20" class="trpg-partybar__icon" />
     <template v-if="editing">
       <input v-model="value" class="trpg-input trpg-partybar__input" maxlength="40" aria-label="队伍名" data-autofocus @keydown.enter.prevent="save" @keydown.esc.prevent="editing = false" />
       <button class="trpg-btn trpg-btn--small" type="button" @click="save">保存</button>
@@ -28,15 +30,10 @@ function save(): void {
     </template>
     <template v-else>
       <strong class="trpg-partybar__name" data-testid="people-party-name">{{ name || '队伍' }}</strong>
-      <button class="trpg-btn trpg-btn--quiet trpg-btn--small" type="button" :disabled="campaign.readOnly" @click="start">改名</button>
-      <span class="trpg-row__meta">{{ count }} 人</span>
+      <button class="trpg-icon-btn trpg-partybar__edit" type="button" aria-label="改名" title="改名" :disabled="campaign.readOnly" @click="start"><Icon name="pencil-simple" :size="16" /></button>
+      <span class="trpg-partybar__count">{{ count }} 人</span>
     </template>
+    <span v-if="avgHp !== undefined" class="trpg-partybar__avg">队伍平均生命 {{ avgHp }}%</span>
     <span v-if="error" class="trpg-field__error" role="alert">{{ error }}</span>
   </div>
 </template>
-
-<style scoped>
-.trpg-partybar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 2px 0 10px; }
-.trpg-partybar__name { font-family: var(--font-serif); font-size: 16px; }
-.trpg-partybar__input { width: 220px; min-height: 32px; }
-</style>

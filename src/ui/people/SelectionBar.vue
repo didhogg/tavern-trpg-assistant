@@ -23,9 +23,3 @@ const destinations = computed(() => {
     <button class="trpg-btn trpg-btn--small" type="button" @click="emit('done')">完成</button>
   </div>
 </template>
-
-<style scoped>
-.trpg-people__selection { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-height: 44px; padding: 4px 8px; background: var(--panel); }
-.trpg-people__selection .trpg-field__hint { margin-right: auto; }
-@media (max-width: 480px) { .trpg-people__selection { gap: 4px; } .trpg-people__selection .trpg-btn { padding-left: 8px; padding-right: 8px; } }
-</style>

@@ -24,7 +24,7 @@ import { tablesOf, type RelatedTable } from './tables'
 import TableEntry from './TableEntry.vue'
 import RelatedTables from './RelatedTables.vue'
 
-const props = defineProps<{ packId: string; entryId: string }>()
+const props = defineProps<{ packId: string; entryId: string; /** 模板弹窗用：自带的类型与摘要行不显示（摘要头已经写了）。 */ compact?: boolean }>()
 const app = useAppStore()
 const campaign = useCampaignStore()
 const library = useLibraryStore()
@@ -101,8 +101,10 @@ async function onSwitch(variantKey: string): Promise<void> {
 <template>
   <div v-if="shown && original" class="page-stack" data-testid="entry-detail">
     <VariantBar v-if="slot && slot.candidates.length" :variants="slot" :original="original" :read-only="campaign.readOnly" :origin-name="original.name" @switch="onSwitch" />
-    <p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p>
-    <p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p>
+    <template v-if="!compact">
+      <p class="trpg-row__meta">{{ typeLabel(shown.type) }}</p>
+      <p v-if="shown.summary" class="trpg-entry__summary">{{ humanizeTokens(shown.summary) }}</p>
+    </template>
 
     <TableEntry v-if="shown.type === 'table'" :entry="shown" @ref="onRef" />
     <EntryFacts v-else-if="facts.length" :facts="facts" @ref="onRef" />
