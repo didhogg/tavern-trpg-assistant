@@ -31,7 +31,7 @@
   border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--shadow-card); cursor: pointer;
 }
 .trpg-person:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.trpg-person.is-selected { background: color-mix(in srgb, var(--primary) 6%, var(--card)); box-shadow: inset 3px 0 0 var(--primary), var(--shadow-card); }
+.trpg-person.is-selected, .trpg-person.is-selected:hover:not(:active) { background: color-mix(in srgb, var(--primary) 6%, var(--card)); box-shadow: inset 3px 0 0 var(--primary), var(--shadow-card); }
 .trpg-person.is-highlight::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: color-mix(in srgb, var(--gold) 20%, transparent); pointer-events: none; animation: person-fade 1.2s ease forwards; }
 @keyframes person-fade { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .trpg-person.is-highlight::after { animation: none; opacity: 0; } }

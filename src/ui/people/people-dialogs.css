@@ -95,7 +95,8 @@
   display: flex; align-items: center; gap: 12px; width: 100%; height: 72px; padding: 6px 12px 6px 6px;
   border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); text-align: left; box-shadow: var(--shadow-card);
 }
-.trpg-tplcard.is-selected { background: color-mix(in srgb, var(--primary) 6%, var(--card)); box-shadow: inset 3px 0 0 var(--primary), var(--shadow-card); }
+/* 选中：整圈 2px 主色框线 + 淡底；悬停、按下都不改变它（后面的规则比 roster.css 里的悬停规则更具体） */
+.trpg-tplcard.is-selected, .trpg-tplcard.is-selected:hover:not(:active) { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 9%, var(--card)); box-shadow: 0 0 0 1px var(--primary), var(--shadow-card); }
 .trpg-tplcard__main { display: grid; flex: 1; gap: 4px; min-width: 0; }
 .trpg-tplcard__name { overflow: hidden; font-family: var(--font-serif); font-size: 16px; font-weight: 700; line-height: 22px; text-overflow: ellipsis; white-space: nowrap; }
 .trpg-tplcard__en { margin-left: 6px; font-family: var(--font-sans); font-size: 12px; font-weight: 400; color: var(--ink-2); }

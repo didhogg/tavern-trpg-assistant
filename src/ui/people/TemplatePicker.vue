@@ -24,7 +24,7 @@ import TemplateFilter from './TemplateFilter.vue'
 import TemplateFoot from './TemplateFoot.vue'
 import TemplateSummary from './TemplateSummary.vue'
 
-const props = defineProps<{ mode?: 'add' | 'apply'; onEditAdd?: (draft: Person, from: string) => void; onApply?: (block: MonsterData, name: string) => void; onAdded?: (persons: Person[], categoryId: PeopleCategoryId) => void }>()
+const props = defineProps<{ mode?: 'add' | 'apply'; /** 打开弹窗时人物页停在哪个分类：「放进」默认用它。 */ pageCategory?: 'all' | 'party' | 'npc' | 'enemy'; onEditAdd?: (draft: Person, from: string) => void; onApply?: (block: MonsterData, name: string) => void; onAdded?: (persons: Person[], categoryId: PeopleCategoryId) => void }>()
 const app = useAppStore()
 const campaign = useCampaignStore()
 const library = useLibraryStore()
@@ -45,7 +45,8 @@ const sizes = ref<string[]>([])
 const showFilters = ref(false)
 const selectedId = ref('')
 const detailOpen = ref(false)
-const category = ref<'party' | 'npc' | 'enemy'>('enemy')
+// 「放进」：打开时跟着人物页当前分类（全部 → 敌人）；用户在弹窗里改过就一直记着，换哪个模板都不变
+const category = ref<'party' | 'npc' | 'enemy'>(props.pageCategory && props.pageCategory !== 'all' ? props.pageCategory : 'enemy')
 const count = ref(1)
 const width = ref(window.innerWidth)
 const narrow = computed(() => width.value < 1024)
@@ -92,7 +93,6 @@ const activeFilters = computed(() => sourcePacks.value.length + (crMin.value > 0
 const typeOptions = computed(() => [{ value: 'all', label: '全部', icon: 'list', count: countOf('all') }, { value: 'monster', label: '怪物', icon: 'skull', count: countOf('monster') }, { value: 'npc', label: '具名 NPC', icon: 'user', count: countOf('npc') }])
 function choose(row: TemplateRow): void {
   selectedId.value = row.entry.id
-  category.value = row.entry.type === 'npc' ? 'npc' : 'enemy'
   if (narrow.value) detailOpen.value = true
 }
 function clearFilters(): void { sourcePacks.value = []; crMin.value = 0; crMax.value = 30; creatureTypes.value = []; sizes.value = [] }
@@ -133,7 +133,7 @@ function apply(): void {
       <div class="trpg-template__body">
         <div class="trpg-template__list">
           <div v-if="loading" class="trpg-skeleton" aria-busy="true" />
-          <EmptyState v-else-if="!filtered.length" icon="magnifying-glass" text="没有符合的模板" />
+          <EmptyState v-else-if="!filtered.length" icon="magnifying-glass" :text="type === 'npc' && !search && !activeFilters ? '当前启用的书里没有具名 NPC。具名 NPC 只在部分冒险书里有，装上并启用后会出现；筛选里把范围改成「全部已安装」也可看。' : '没有符合的模板'" />
           <VirtualList v-else class="trpg-template__vlist" :items="filtered" :row-height="78" :key-of="(r) => r.entry.id" label="模板列表">
             <template #default="{ item }">
               <TemplateCard :row="item" :selected="selectedId === item.entry.id" @pick="choose(item)" />
@@ -145,7 +145,7 @@ function apply(): void {
           <template v-else>
             <div class="trpg-template__scroll">
               <TemplateSummary :row="selected" />
-              <EntryDetailPage :pack-id="selected.packId" :entry-id="selected.entry.id" compact />
+              <EntryDetailPage :key="`${selected.packId}/${selected.entry.id}`" :pack-id="selected.packId" :entry-id="selected.entry.id" compact />
             </div>
             <p v-if="!selected.block" class="trpg-field__error trpg-template__warn">它的数值所在的书没有安装。</p>
             <TemplateFoot v-model:category="category" v-model:count="count" :mode="mode" :can-use="!!selected.block" @edit-add="editAdd" @add="add" @apply="apply" />
@@ -157,7 +157,7 @@ function apply(): void {
       <button class="trpg-btn trpg-btn--quiet trpg-template__back" type="button" @click="detailOpen = false"><Icon name="caret-left" :size="16" />模板</button>
       <div v-if="selected" class="trpg-template__scroll">
         <TemplateSummary :row="selected" />
-        <EntryDetailPage :pack-id="selected.packId" :entry-id="selected.entry.id" compact />
+        <EntryDetailPage :key="`${selected.packId}/${selected.entry.id}`" :pack-id="selected.packId" :entry-id="selected.entry.id" compact />
       </div>
       <template v-if="selected">
         <p v-if="!selected.block" class="trpg-field__error trpg-template__warn">它的数值所在的书没有安装。</p>

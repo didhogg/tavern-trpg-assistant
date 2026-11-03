@@ -171,7 +171,7 @@ function onNew(): void {
 }
 function onTemplate(): void {
   pendingAdd.value = null
-  modal.open({ key: 'people-template', title: '模板', component: markRaw(TemplatePicker), header: markRaw(TemplateHeadHint), props: { mode: 'add', onAdded: (added: Person[], categoryId: PeopleCategoryId) => { const last = added[added.length - 1]; if (last) pendingAdd.value = { id: last.id, categoryId } }, onEditAdd: (draft: Person, from: string) => openPersonCard({ draft, from }) }, variant: 'dialog' })
+  modal.open({ key: 'people-template', title: '模板', component: markRaw(TemplatePicker), header: markRaw(TemplateHeadHint), props: { mode: 'add', pageCategory: category.value, onAdded: (added: Person[], categoryId: PeopleCategoryId) => { const last = added[added.length - 1]; if (last) pendingAdd.value = { id: last.id, categoryId } }, onEditAdd: (draft: Person, from: string) => openPersonCard({ draft, from }) }, variant: 'dialog' })
 }
 function scrollToPerson(id: string): void {
   nextTick(() => { root.value?.querySelector<HTMLElement>(`[data-testid="people-row-${id}"]`)?.scrollIntoView({ block: 'nearest' }); highlightRow(id) })
