@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { markRaw } from 'vue'
 import peopleCss from './people.css?inline'
+import dialogsCss from './people-dialogs.css?inline'
 import type { Person, PeopleCategoryId } from '../../schemas/people'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
@@ -11,8 +12,12 @@ import { useToastStore } from '../../stores/toast'
 import { openWizard } from '../saves/actions'
 import { emptyPerson } from './fromEntry'
 import { openPersonCard, registerPersonCard, type PersonCardInput } from './openPersonCard'
+import { personIdentity } from './identity'
+import { buildLabels, sharedLabels } from './labels'
 import { rowSummary } from './rows'
 import type { CategoryFilter, SortDir, SortKey } from './list'
+import EmptyState from '../kit/EmptyState.vue'
+import Icon from '../kit/Icon.vue'
 import CategoryBar from './CategoryBar.vue'
 import PartyBar from './PartyBar.vue'
 import PeopleHeader from './PeopleHeader.vue'
@@ -22,6 +27,7 @@ import PersonRow from './PersonRow.vue'
 import SelectionBar from './SelectionBar.vue'
 import TagEditor from './TagEditor.vue'
 import TagManagePage from './TagManagePage.vue'
+import TemplateHeadHint from './TemplateHeadHint.vue'
 import TemplatePicker from './TemplatePicker.vue'
 import TrashPage from './TrashPage.vue'
 import SaveToLibrary from './SaveToLibrary.vue'
@@ -42,6 +48,11 @@ const selected = ref(new Set<string>())
 const card = shallowRef<{ person?: Person; draft?: Person; from?: string } | null>(null)
 const pendingAdd = ref<{ id: string; categoryId: PeopleCategoryId } | null>(null)
 const highlight = ref('')
+const pageWidth = ref(1000)
+let sizeObserver: ResizeObserver | undefined
+/** 内容区实际宽度：窗口大小、侧栏宽度都会影响，所以按页面自己的宽度决定卡片怎么排。 */
+const tight = computed(() => pageWidth.value <= 700)
+const stacked = computed(() => pageWidth.value <= 480 || (category.value === 'party' && pageWidth.value <= 720))
 const classNames = ref<Record<string, string>>({})
 const raceNames = ref<Record<string, string>>({})
 const entryNames = ref<Record<string, string>>({})
@@ -67,7 +78,21 @@ const visible = computed(() => people.view({ categoryId: category.value, search:
 const allSelected = computed(() => visible.value.length > 0 && visible.value.every((p) => selected.value.has(p.id)))
 const someSelected = computed(() => selected.value.size > 0 && !allSelected.value)
 const hasFilter = computed(() => !!search.value.trim() || tagIds.value.length > 0)
-const rows = computed(() => visible.value.map((person) => ({ person, summary: rowSummary(person, { classes: classNames.value, races: raceNames.value, sourceNames: entryNames.value }, category.value === 'all') })))
+const rowLabels = computed(() => ({ classes: classNames.value, races: raceNames.value, sourceNames: entryNames.value }))
+const rows = computed(() => visible.value.map((person) => ({ person, summary: rowSummary(person, rowLabels.value, category.value === 'all'), identity: personIdentity(person, rowLabels.value, category.value === 'all') })))
+/** 队伍平均生命：所有队伍成员 当前/上限 之和；没有上限的不计，全都没有就不显示。 */
+const partyAvgHp = computed(() => {
+  let current = 0
+  let max = 0
+  for (const person of people.people) {
+    if (person.categoryId !== 'party' || person.trashedAt !== undefined) continue
+    const hp = rowSummary(person).hp
+    if (hp.max === null || hp.max <= 0) continue
+    current += Math.min(hp.current ?? hp.max, hp.max)
+    max += hp.max
+  }
+  return max > 0 ? Math.round((current / max) * 100) : undefined
+})
 const destinationLabel = (id: PeopleCategoryId): string => id === 'party' ? '队伍' : id === 'npc' ? 'NPC' : '敌人'
 const highlightRow = (id: string): void => {
   highlight.value = id
@@ -76,11 +101,15 @@ const highlightRow = (id: string): void => {
 }
 onMounted(async () => {
   loadView()
+  if (root.value && typeof ResizeObserver !== 'undefined') {
+    sizeObserver = new ResizeObserver((entries) => { pageWidth.value = entries[0]?.contentRect.width ?? pageWidth.value })
+    sizeObserver.observe(root.value)
+  }
   const shadow = root.value?.getRootNode()
   if (shadow instanceof ShadowRoot && !shadow.querySelector('style[data-u6-people]')) {
     const style = document.createElement('style')
     style.dataset.u6People = ''
-    style.textContent = peopleCss
+    style.textContent = `${peopleCss}\n${dialogsCss}`
     shadow.append(style)
   }
   unregister = registerPersonCard(openCard)
@@ -97,12 +126,14 @@ onMounted(async () => {
     classNames.value = classes
     raceNames.value = races
     entryNames.value = names
+    sharedLabels.value = buildLabels(entries)
   } catch (error) {
     console.error('[trpg-assistant] 读取职业/种族名称失败', error)
   }
   window.addEventListener('keydown', onWindowKey)
 })
 onBeforeUnmount(() => {
+  sizeObserver?.disconnect()
   unregister?.()
   window.removeEventListener('keydown', onWindowKey)
   if (highlightTimer) clearTimeout(highlightTimer)
@@ -140,7 +171,7 @@ function onNew(): void {
 }
 function onTemplate(): void {
   pendingAdd.value = null
-  modal.open({ key: 'people-template', title: '模板', component: markRaw(TemplatePicker), props: { mode: 'add', onAdded: (added: Person[], categoryId: PeopleCategoryId) => { const last = added[added.length - 1]; if (last) pendingAdd.value = { id: last.id, categoryId } }, onEditAdd: (draft: Person, from: string) => openPersonCard({ draft, from }) }, variant: 'dialog' })
+  modal.open({ key: 'people-template', title: '模板', component: markRaw(TemplatePicker), header: markRaw(TemplateHeadHint), props: { mode: 'add', onAdded: (added: Person[], categoryId: PeopleCategoryId) => { const last = added[added.length - 1]; if (last) pendingAdd.value = { id: last.id, categoryId } }, onEditAdd: (draft: Person, from: string) => openPersonCard({ draft, from }) }, variant: 'dialog' })
 }
 function scrollToPerson(id: string): void {
   nextTick(() => { root.value?.querySelector<HTMLElement>(`[data-testid="people-row-${id}"]`)?.scrollIntoView({ block: 'nearest' }); highlightRow(id) })
@@ -250,31 +281,29 @@ function emptyText(): string {
 </script>
 
 <template>
-  <div ref="root" class="trpg-people" data-testid="people-page" tabindex="-1">
+  <div ref="root" class="trpg-people" :class="{ 'is-tight': tight }" data-testid="people-page" tabindex="-1">
     <div v-if="!campaign.hasCampaign" class="trpg-people__no-campaign">
       <p>先开一个战役，人物会保存在这个战役里。</p>
       <button class="trpg-btn trpg-btn--primary" type="button" :disabled="campaign.readOnly" @click="openWizard()">去开局向导</button>
     </div>
     <PersonCardStub v-else-if="card" :person="card.person" :draft="card.draft" :from="card.from" @back="closeCard" @saved="onSaved" />
     <template v-else>
-      <PeopleHeader :total="people.counts.all" :trash-count="people.trashed.length" :read-only="campaign.readOnly" @template="onTemplate" @create="onNew" @menu="onPageMenu" />
-      <CategoryBar v-model="category" :counts="people.counts" />
-      <PartyBar v-if="category === 'party'" :name="people.partyName" :count="people.counts.party" />
-      <PeopleToolbar v-if="!selecting" :search="search" :sort-key="sortKey" :sort-dir="sortDir" :tags="people.tags" :selected-tag-ids="tagIds" :count="visible.length" @update:search="search = $event" @update:sort-key="sortKey = $event" @update:sort-dir="sortDir = $event" @add-tag="toggleTag" @remove-tag="removeTag" @clear="clearFilters" @select="startSelect" />
+      <div class="trpg-people__top">
+        <CategoryBar v-model="category" :counts="people.counts" />
+        <PeopleHeader :trash-count="people.trashed.length" :read-only="campaign.readOnly" @template="onTemplate" @create="onNew" @menu="onPageMenu" />
+      </div>
+      <PartyBar v-if="category === 'party'" :name="people.partyName" :count="people.counts.party" :avg-hp="partyAvgHp" />
+      <PeopleToolbar v-if="!selecting" :search="search" :sort-key="sortKey" :sort-dir="sortDir" :tags="people.tags" :selected-tag-ids="tagIds" :count="visible.length" :total="people.counts[category]" @update:search="search = $event" @update:sort-key="sortKey = $event" @update:sort-dir="sortDir = $event" @add-tag="toggleTag" @remove-tag="removeTag" @clear="clearFilters" @select="startSelect" />
       <SelectionBar v-else :count="selected.size" :total="visible.length" :all-selected="allSelected" :some-selected="someSelected" :category="category" @toggle-all="toggleAll" @move="moveSelected" @add-tag="openTagEditor('add')" @remove-tag="openTagEditor('remove')" @remove="deleteSelected" @done="finishSelect" />
       <div class="trpg-people__list">
-        <p v-if="!visible.length" class="trpg-empty">{{ emptyText() }} <button v-if="hasFilter" class="trpg-link" type="button" @click="clearFilters">清除条件</button><button v-else-if="!campaign.readOnly" class="trpg-link" type="button" @click="onNew">＋ 新建</button></p>
+        <EmptyState v-if="!visible.length" :icon="hasFilter ? 'magnifying-glass' : 'users-three'" :text="emptyText()" data-testid="people-empty">
+          <button v-if="hasFilter" class="trpg-btn" type="button" @click="clearFilters">清除条件</button>
+          <button v-else-if="!campaign.readOnly" class="trpg-btn" type="button" @click="onNew"><Icon name="plus" :size="16" />新建</button>
+        </EmptyState>
         <ul v-else class="trpg-people__rows" role="list" aria-label="人物列表">
-          <PersonRow v-for="row in rows" :key="row.person.id" :person="row.person" :summary="row.summary" :tags="people.tags" :selecting="selecting" :selected="selected.has(row.person.id)" :party-mode="category === 'party'" :highlighted="highlight === row.person.id" :menu-items="rowMenu(row.person)" @open="onRowOpen(row.person)" @toggle="(v) => toggleSelected(row.person.id, v)" @tag="toggleTag" @menu="(key) => onRowMenu(row.person, key)" />
+          <PersonRow v-for="row in rows" :key="row.person.id" :person="row.person" :summary="row.summary" :identity="row.identity" :tags="people.tags" :selecting="selecting" :selected="selected.has(row.person.id)" :party-mode="category === 'party'" :stacked="stacked" :highlighted="highlight === row.person.id" :menu-items="rowMenu(row.person)" @open="onRowOpen(row.person)" @toggle="(v) => toggleSelected(row.person.id, v)" @tag="toggleTag" @menu="(key) => onRowMenu(row.person, key)" />
         </ul>
       </div>
     </template>
   </div>
 </template>
-
-<style scoped>
-.trpg-people { min-height: 100%; display: flex; flex-direction: column; }
-.trpg-people__no-campaign { display: grid; justify-items: center; gap: 12px; padding: 48px 12px; color: var(--ink-2); }
-.trpg-people__rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow-card); overflow: hidden; }
-.trpg-people__list { min-height: 0; padding-bottom: 72px; }
-</style>

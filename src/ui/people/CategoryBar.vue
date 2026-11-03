@@ -1,28 +1,16 @@
 <script setup lang="ts">
 import type { CategoryFilter } from './list'
 import type { PeopleCategoryId } from '../../schemas/people'
+import CategoryTabs, { type TabOption } from '../kit/CategoryTabs.vue'
 
-defineProps<{ counts: Record<'all' | PeopleCategoryId, number>; modelValue: CategoryFilter }>()
+const props = defineProps<{ counts: Record<'all' | PeopleCategoryId, number>; modelValue: CategoryFilter }>()
 const emit = defineEmits<{ 'update:modelValue': [value: CategoryFilter] }>()
-const items: Array<{ id: CategoryFilter; label: string }> = [
-  { id: 'all', label: '全部' }, { id: 'party', label: '队伍' }, { id: 'npc', label: 'NPC' }, { id: 'enemy', label: '敌人' },
+const items: Array<{ id: CategoryFilter; label: string; icon: string }> = [
+  { id: 'party', label: '队伍', icon: 'users-three' }, { id: 'npc', label: 'NPC', icon: 'user' }, { id: 'enemy', label: '敌人', icon: 'skull' }, { id: 'all', label: '全部', icon: 'list' },
 ]
+const options = (): TabOption[] => items.map((i) => ({ value: i.id, label: i.label, icon: i.icon, count: props.counts[i.id], testid: `people-category-${i.id}` }))
 </script>
 
 <template>
-  <div class="trpg-people__cats" role="tablist" aria-label="人物分类">
-    <button v-for="item in items" :key="item.id" class="trpg-people__cat" type="button" role="tab" :aria-selected="modelValue === item.id" :data-testid="`people-category-${item.id}`" @click="emit('update:modelValue', item.id)">
-      {{ item.label }} <span>{{ counts[item.id] }}</span>
-    </button>
-  </div>
+  <CategoryTabs class="trpg-people__cats" :model-value="modelValue" :options="options()" label="人物分类" @update:model-value="(v) => emit('update:modelValue', v as CategoryFilter)" />
 </template>
-
-<style scoped>
-.trpg-people__cats { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 12px; }
-.trpg-people__cat { min-height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
-.trpg-people__cat span { font-size: 12px; margin-left: 4px; }
-.trpg-people__cat:hover { background: var(--panel); }
-.trpg-people__cat[aria-selected='true'] { background: var(--primary); color: var(--primary-ink); }
-.trpg-people__cat:active { transform: scale(0.97); }
-@media (prefers-reduced-motion: reduce) { .trpg-people__cat:active { transform: none; } }
-</style>

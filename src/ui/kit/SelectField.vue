@@ -7,7 +7,7 @@ import Icon from './Icon.vue'
 
 type Option = string | { value: string; label: string }
 
-const props = defineProps<{ options: Option[]; placeholder?: string; label: string }>()
+const props = defineProps<{ options: Option[]; placeholder?: string; label: string; prefix?: string }>()
 const model = defineModel<string>()
 const portalTarget = inject<HTMLElement | undefined>('portalTarget', undefined)
 const normalized = computed(() => props.options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o)))
@@ -16,7 +16,7 @@ const normalized = computed(() => props.options.map((o) => (typeof o === 'string
 <template>
   <SelectRoot v-model="model">
     <SelectTrigger class="trpg-select-trigger" :aria-label="label">
-      <SelectValue :placeholder="placeholder ?? '请选择'" />
+      <span class="trpg-select-trigger__text"><span v-if="prefix" class="trpg-select-trigger__prefix">{{ prefix }}</span><SelectValue :placeholder="placeholder ?? '请选择'" /></span>
       <Icon name="caret-down" :size="14" />
     </SelectTrigger>
     <SelectPortal :to="portalTarget">

@@ -11,16 +11,18 @@ import { useModalStore } from '../../stores/modal'
 import { usePeopleStore } from '../../stores/people'
 import { useToastStore } from '../../stores/toast'
 import { personFromEntry } from './fromEntry'
-import { crValue } from './list'
-import { formatCr } from './rows'
 import { queryTemplates, type TemplateRow } from './templates'
-import { CREATURE, SIZE } from '../library/zh'
 import EntryDetailPage from '../library/EntryDetailPage.vue'
 import Icon from '../kit/Icon.vue'
 import SelectField from '../kit/SelectField.vue'
-import Segmented from '../kit/Segmented.vue'
+import CategoryTabs from '../kit/CategoryTabs.vue'
+import EmptyState from '../kit/EmptyState.vue'
+import SearchField from '../kit/SearchField.vue'
 import VirtualList from '../kit/VirtualList.vue'
+import TemplateCard from './TemplateCard.vue'
 import TemplateFilter from './TemplateFilter.vue'
+import TemplateFoot from './TemplateFoot.vue'
+import TemplateSummary from './TemplateSummary.vue'
 
 const props = defineProps<{ mode?: 'add' | 'apply'; onEditAdd?: (draft: Person, from: string) => void; onApply?: (block: MonsterData, name: string) => void; onAdded?: (persons: Person[], categoryId: PeopleCategoryId) => void }>()
 const app = useAppStore()
@@ -87,21 +89,13 @@ const sourceOptions = computed(() => {
 const filtered = computed(() => queryTemplates(scopedRows.value, { type: type.value, search: search.value, sourcePacks: sourcePacks.value, crMin: crMin.value, crMax: crMax.value, creatureTypes: creatureTypes.value, sizes: sizes.value, sort: sort.value }))
 const selected = computed(() => filtered.value.find((r) => r.entry.id === selectedId.value) ?? rows.value.find((r) => r.entry.id === selectedId.value) ?? null)
 const activeFilters = computed(() => sourcePacks.value.length + (crMin.value > 0 || crMax.value < 30 ? 1 : 0) + creatureTypes.value.length + sizes.value.length)
-const typeOptions = computed(() => [{ value: 'all', label: `全部 ${countOf('all')}` }, { value: 'monster', label: `怪物 ${countOf('monster')}` }, { value: 'npc', label: `具名 NPC ${countOf('npc')}` }])
-const metaOf = (row: TemplateRow): string => {
-  if (!row.block) return `${row.entry.type === 'npc' ? '具名 NPC' : '怪物'} ・ 数值未安装`
-  const cr = crValue(row.block.cr)
-  const size = (row.block.size ?? []).map((s) => SIZE[s] ?? s).join('')
-  const creature = CREATURE[row.block.creatureType.type] ?? row.block.creatureType.type
-  return [row.entry.type === 'npc' ? '具名 NPC' : '怪物', cr !== undefined ? `挑战 ${formatCr(cr)}` : '', size + creature, row.packName].filter(Boolean).join(' ・ ')
-}
+const typeOptions = computed(() => [{ value: 'all', label: '全部', icon: 'list', count: countOf('all') }, { value: 'monster', label: '怪物', icon: 'skull', count: countOf('monster') }, { value: 'npc', label: '具名 NPC', icon: 'user', count: countOf('npc') }])
 function choose(row: TemplateRow): void {
   selectedId.value = row.entry.id
   category.value = row.entry.type === 'npc' ? 'npc' : 'enemy'
   if (narrow.value) detailOpen.value = true
 }
 function clearFilters(): void { sourcePacks.value = []; crMin.value = 0; crMax.value = 30; creatureTypes.value = []; sizes.value = [] }
-function step(delta: number): void { count.value = Math.max(1, Math.min(30, count.value + delta)) }
 function normalizedCount(): number { return Math.max(1, Math.min(30, Math.floor(count.value) || 1)) }
 async function add(): Promise<void> {
   if (!selected.value?.block) return
@@ -124,90 +118,51 @@ function apply(): void {
 </script>
 
 <template>
-  <div class="trpg-template" data-testid="template-picker">
+  <div class="trpg-template" :class="{ 'is-stack': narrow }" data-testid="template-picker">
     <template v-if="!(narrow && detailOpen)">
-      <div class="trpg-template__head">
-        <Segmented v-model="type" :options="typeOptions" label="模板类型" />
-        <span class="trpg-field__hint">选一个，看清楚再加入</span>
-      </div>
-      <div class="trpg-template__tools">
-        <div class="trpg-template__search">
-          <Icon name="magnifying-glass" :size="16" />
-          <input v-model="search" class="trpg-input" type="search" placeholder="搜名字、英文名" aria-label="搜模板名字" />
-          <button v-if="search" class="trpg-template__clear" type="button" aria-label="清除模板搜索" @click="search = ''">×</button>
-        </div>
-        <button class="trpg-btn trpg-btn--small" type="button" data-testid="template-filter-toggle" @click="showFilters = !showFilters">筛选 {{ activeFilters || '' }}</button>
-        <span class="trpg-template__sort"><SelectField v-model="sort" :options="[{ value: 'name', label: '名称' }, { value: 'cr', label: '挑战等级' }]" label="模板排序" /></span>
-        <span class="trpg-field__hint">共 {{ filtered.length }} 条</span>
-        <button v-if="search || activeFilters" class="trpg-btn trpg-btn--quiet" type="button" @click="search = ''; clearFilters()">清除</button>
+      <CategoryTabs v-model="type" class="trpg-template__tabs" :options="typeOptions" label="模板类型" />
+      <div class="trpg-template__toolwrap">
+      <div class="trpg-toolrow trpg-template__tools">
+        <SearchField v-model="search" label="搜模板名字" placeholder="搜名字、英文名" clear-label="清除模板搜索" />
+        <button class="trpg-btn" type="button" data-testid="template-filter-toggle" :aria-expanded="showFilters" @click="showFilters = !showFilters">筛选<span v-if="activeFilters" class="trpg-template__badge">{{ activeFilters }}</span></button>
+        <span class="trpg-template__sort"><SelectField v-model="sort" :options="[{ value: 'name', label: '名称' }, { value: 'cr', label: '挑战等级' }]" label="模板排序" prefix="排序：" /></span>
+        <span class="trpg-toolrow__count">共 {{ filtered.length }} 条<template v-if="search || activeFilters"> ・ <button class="trpg-template__clearall" type="button" @click="search = ''; clearFilters()">清除</button></template></span>
       </div>
       <TemplateFilter v-if="showFilters" :scope="scope" :sources="sourceOptions" :source-packs="sourcePacks" :cr-min="crMin" :cr-max="crMax" :creature-types="creatureTypes" :sizes="sizes" :active-count="activeFilters" :result-count="filtered.length" @update:scope="scope = $event" @update:source-packs="sourcePacks = $event" @update:cr-min="crMin = $event" @update:cr-max="crMax = $event" @update:creature-types="creatureTypes = $event" @update:sizes="sizes = $event" @clear="clearFilters" @done="showFilters = false" />
+      </div>
       <div class="trpg-template__body">
         <div class="trpg-template__list">
           <div v-if="loading" class="trpg-skeleton" aria-busy="true" />
-          <p v-else-if="!filtered.length" class="trpg-empty">没有符合的模板</p>
-          <VirtualList v-else :items="filtered" :row-height="56" :key-of="(r) => r.entry.id" label="模板列表">
+          <EmptyState v-else-if="!filtered.length" icon="magnifying-glass" text="没有符合的模板" />
+          <VirtualList v-else class="trpg-template__vlist" :items="filtered" :row-height="78" :key-of="(r) => r.entry.id" label="模板列表">
             <template #default="{ item }">
-              <button class="trpg-template__row" :class="{ 'is-selected': selectedId === item.entry.id }" type="button" :data-testid="`tpl-row-${item.entry.id}`" @click="choose(item)">
-                <span class="trpg-template__row-name">{{ item.entry.name }}<span v-if="item.entry.nameEn" class="trpg-template__row-en">{{ item.entry.nameEn }}</span></span>
-                <span class="trpg-template__row-meta">{{ metaOf(item) }}</span>
-              </button>
+              <TemplateCard :row="item" :selected="selectedId === item.entry.id" @pick="choose(item)" />
             </template>
           </VirtualList>
         </div>
         <div v-if="!narrow" class="trpg-template__preview">
-          <p v-if="!selected" class="trpg-empty">选一条看资料卡</p>
-          <EntryDetailPage v-else :pack-id="selected.packId" :entry-id="selected.entry.id" />
+          <EmptyState v-if="!selected" icon="skull" text="选一条看资料卡" />
+          <template v-else>
+            <div class="trpg-template__scroll">
+              <TemplateSummary :row="selected" />
+              <EntryDetailPage :pack-id="selected.packId" :entry-id="selected.entry.id" compact />
+            </div>
+            <p v-if="!selected.block" class="trpg-field__error trpg-template__warn">它的数值所在的书没有安装。</p>
+            <TemplateFoot v-model:category="category" v-model:count="count" :mode="mode" :can-use="!!selected.block" @edit-add="editAdd" @add="add" @apply="apply" />
+          </template>
         </div>
       </div>
     </template>
     <div v-else class="trpg-template__detailpage">
-      <button class="trpg-btn trpg-btn--quiet" type="button" @click="detailOpen = false"><Icon name="caret-left" :size="14" />模板</button>
-      <h3>{{ selected?.entry.name }}</h3>
-      <div v-if="selected" class="trpg-template__detailbody"><EntryDetailPage :pack-id="selected.packId" :entry-id="selected.entry.id" /></div>
+      <button class="trpg-btn trpg-btn--quiet trpg-template__back" type="button" @click="detailOpen = false"><Icon name="caret-left" :size="16" />模板</button>
+      <div v-if="selected" class="trpg-template__scroll">
+        <TemplateSummary :row="selected" />
+        <EntryDetailPage :pack-id="selected.packId" :entry-id="selected.entry.id" compact />
+      </div>
+      <template v-if="selected">
+        <p v-if="!selected.block" class="trpg-field__error trpg-template__warn">它的数值所在的书没有安装。</p>
+        <TemplateFoot v-model:category="category" v-model:count="count" :mode="mode" :can-use="!!selected.block" @edit-add="editAdd" @add="add" @apply="apply" />
+      </template>
     </div>
-    <div v-if="selected && (!narrow || detailOpen)" class="trpg-template__foot">
-      <button class="trpg-btn" type="button" data-testid="tpl-edit-add" :disabled="!selected.block" @click="editAdd">编辑后加入</button>
-      <label class="trpg-field trpg-template__cat"><span class="trpg-field__label">放进</span><SelectField v-model="category" :options="[{ value: 'party', label: '队伍' }, { value: 'npc', label: 'NPC' }, { value: 'enemy', label: '敌人' }]" label="放进分类" data-testid="tpl-category" /></label>
-      <span class="trpg-template__count"><button type="button" :disabled="count <= 1" @click="step(-1)">−</button><input v-model.number="count" type="number" min="1" max="30" aria-label="数量" data-testid="tpl-count" @blur="count = normalizedCount()" /><button type="button" :disabled="count >= 30" @click="step(1)">＋</button></span>
-      <button v-if="mode === 'apply'" class="trpg-btn trpg-btn--primary" type="button" data-testid="tpl-apply" @click="apply">套用到人物</button>
-      <button v-else class="trpg-btn trpg-btn--primary" type="button" data-testid="tpl-add" :disabled="!selected.block" @click="add">加入列表</button>
-    </div>
-    <p v-if="selected && !selected.block" class="trpg-field__error">它的数值所在的书没有安装。</p>
   </div>
 </template>
-
-<style scoped>
-.trpg-template { display: flex; flex-direction: column; gap: 8px; min-height: 0; height: 100%; }
-.trpg-template__head, .trpg-template__tools { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
-.trpg-template__search { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 180px; max-width: 360px; position: relative; color: var(--ink-2); }
-.trpg-template__search .trpg-input { padding-left: 28px; padding-right: 28px; }
-.trpg-template__search > .trpg-icon { position: absolute; left: 9px; pointer-events: none; }
-.trpg-template__clear { position: absolute; right: 2px; width: 26px; height: 26px; border: 0; background: transparent; color: var(--ink-2); font-size: 18px; cursor: pointer; }
-.trpg-template__sort { width: 130px; flex: none; }
-.trpg-template__body { display: grid; grid-template-columns: minmax(280px, 400px) 1fr; gap: 12px; min-height: 0; flex: 1; }
-.trpg-template__list { min-height: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
-.trpg-template__preview { min-height: 0; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); padding: 12px; }
-.trpg-template__row { display: grid; gap: 2px; width: 100%; min-height: 56px; padding: 8px 10px; border: 0; border-left: 3px solid transparent; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
-.trpg-template__row.is-selected { background: color-mix(in srgb, var(--primary) 8%, transparent); border-left-color: var(--primary); }
-.trpg-template__row-name { font-size: 14px; font-weight: 500; }
-.trpg-template__row-en { margin-left: 6px; color: var(--ink-2); font-size: 12px; font-weight: 400; }
-.trpg-template__row-meta { font-size: 12px; color: var(--ink-2); }
-.trpg-template__detailpage { min-height: 0; overflow: auto; display: grid; align-content: start; gap: 4px; }
-.trpg-template__detailpage h3 { margin: 0 0 4px; font-family: var(--font-serif); font-size: 19px; }
-.trpg-template__detailbody { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); padding: 12px; }
-.trpg-template__foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--line); }
-.trpg-template__cat { display: flex; align-items: center; gap: 6px; }
-.trpg-template__cat .trpg-field__label { white-space: nowrap; }
-.trpg-template__count { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
-.trpg-template__count button { min-width: 32px; min-height: 32px; border: 0; background: var(--card); color: var(--ink); }
-.trpg-template__count input { width: 48px; height: 32px; border: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line); background: var(--card); color: var(--ink); text-align: center; }
-@media (max-width: 1023px) {
-  .trpg-template__head, .trpg-template__tools { flex-wrap: wrap; }
-  .trpg-template__body { display: block; overflow: auto; }
-  .trpg-template__list { min-height: 320px; }
-  .trpg-template__preview { display: none; }
-  .trpg-template__foot { position: sticky; bottom: 0; background: var(--card); }
-}
-:global(.trpg-modal__card:has(.trpg-template)) { width: min(1100px, 92%); height: 86%; }
-</style>
