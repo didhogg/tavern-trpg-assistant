@@ -9,7 +9,7 @@ export interface BookData {
   chapters: Raw[]
 }
 
-const SOURCES = BOOKS.map((b) => b.source)
+const SOURCES = BOOKS.filter((b) => b.layer <= 10).map((b) => b.source)
 
 export async function loadBookData(): Promise<BookData[]> {
   const index = await readJson<{ book: Raw[] }>(join(DATA_5ETOOLS, 'books.json'))

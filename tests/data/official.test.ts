@@ -7,7 +7,7 @@ import { sha256Hex } from '../../src/core/hash'
 import { exportSaves } from '../../src/core/transfer/exporter'
 import { importSaves } from '../../src/core/transfer/importer'
 import type { RecognizedSaveFile } from '../../src/core/packs/recognize'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { DND5E2014_ENTRY_TYPES } from '../../src/rules/dnd5e2014/data/entries'
 import { uuid } from '../../src/core/ids'
 import { z } from 'zod'
@@ -18,7 +18,8 @@ const REPO = process.cwd()
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 const OWNER = { ownerKey: 'char:official.png', ownerLabel: '官方包测试' }
 /** 核心范围没有数据；D1.2b 的 R16 才有 recipe/charoption。 */
-const TYPES_WITHOUT_CORE_DATA = ['recipe', 'charoption']
+// npc（具名 NPC 模板）只在 D1.2b 的冒险包里，核心包没有
+const TYPES_WITHOUT_CORE_DATA = ['recipe', 'charoption', 'npc']
 
 function packPath(id: string, version: string): string {
   if (id === SRD_PACK_ID) return join(REPO, 'packs', `${id}.trpgpack`)

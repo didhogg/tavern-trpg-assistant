@@ -199,12 +199,6 @@
     "basis": "E1-5 停手报告（动态／条件抗性 4 条）；开发规范 §12.2"
   },
   {
-    "finding": "c1-resist-text",
-    "entry": "monster.kobold-dragonshield.mpmm",
-    "reason": "驾驶员 2026-11-02 决定：狗头人龙盾护卫「龙之抗性」的伤害类型由 DM 自选或掷 d10，现有 resist 字段表达不了选择；数据保留文字。跨里程碑登记：人物模块「从模板一键填入」时遇到这类自选项让玩家当场选",
-    "basis": "MPMM 狗头人龙盾护卫「龙之抗性」；驾驶员 2026-11-02 决定"
-  },
-  {
     "finding": "c13-summon-attack-snapshot",
     "entry": "monster.celestial-spirit-defender.tce",
     "reason": "驾驶员 2026-11-02 决定：天界灵魄「光耀之锤」文字里的第二颗 1d10 是给自己或他人的临时生命值，不是伤害；读取器按骰子数误判。数据不改，临时生命值结构化留到战斗模块",

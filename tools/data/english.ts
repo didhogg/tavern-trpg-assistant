@@ -10,22 +10,34 @@ import { loadBookData } from './extract/books'
 import { planR12 } from './convert/planR12'
 import { loadR11Data } from './extract/r11'
 import { convertAll } from './convert'
+import { BOOKS, SRD_PACK_ID } from './config/books'
 import { cleanEntries } from './clean'
+import { normalizeNewMonsters } from './normalizeNewMonsters'
 
 async function main(): Promise<void> {
   const out = process.argv[2]
   if (!out) throw new Error('缺少输出文件路径参数')
   if (process.env.TRPG_DATA_DIR !== 'data-bak' || process.env.TRPG_DATA_LANG !== 'en') throw new Error('英文那一遍必须在 TRPG_DATA_DIR=data-bak、TRPG_DATA_LANG=en 下运行')
   const data = await loadRawData()
+  normalizeNewMonsters(data, new Set(BOOKS.filter((b) => b.layer <= 10).map((b) => b.source)))
   const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants, foundryVariants: data.foundryVariants })
   const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
+  const corePackIds = new Set([SRD_PACK_ID, ...BOOKS.filter((b) => b.layer <= 10).map((b) => b.packId)])
   const plan = planAll(data, items)
+  const coreIds = new Set(plan.entries.filter((e) => corePackIds.has(e.packId)).map((e) => e.id))
+  plan.entries = plan.entries.filter((e) => !(e.type === 'feature' && e.context.ownerId?.startsWith('subclass.') && !coreIds.has(e.context.ownerId)))
+  const newMonsters = plan.entries.filter((e) => !corePackIds.has(e.packId) && (e.type === 'monster' || e.type === 'npc'))
+  plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
+  plan.tables = plan.tables.filter((t) => corePackIds.has(t.packId))
   const r11 = planR11(await loadR11Data(), plan.entries)
   plan.entries.push(...r11.entries)
-  const r9 = planR9(plan, { includeRef: true, replace: true }, data.legendaryGroups, new Set(r11.entries.map((e) => e.id)))
+  plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
+  const r9 = planR9(plan, { includeRef: true, replace: true }, data.legendaryGroups.filter((g) => corePackIds.has(`dnd5e2014-${String(g.source).toLowerCase()}`) || BOOKS.filter((b) => b.layer <= 10).some((b) => b.source === String(g.source))), new Set(r11.entries.map((e) => e.id)))
   plan.tables = r9.tables
   const r12 = planR12({ books: await loadBookData(), fluff: data.fluff ?? [], r9, existing: plan.entries, options: { embeds: true, tables: true } })
   plan.entries.push(...r12.entries)
+  plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
+  plan.entries.push(...newMonsters)
   attachVehicleFluff(data.fluff ?? [], r11.entries, plan.unmatchedFluff)
   const result = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
   cleanEntries(result.packs.flatMap((pack) => pack.entries))

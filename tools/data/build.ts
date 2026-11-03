@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { readJson, REPO_ROOT, writeBytes, writeText, sha256 } from './lib/io'
 import { createSnapshot, changedFiles, loadSnapshot, saveSnapshot } from './snapshot'
 import { loadRawData } from './extract/load'
+import { normalizeNewMonsters } from './normalizeNewMonsters'
 import { expandMagicVariants, mergeItemLists } from './convert/items'
 import { expandItemEntries } from './extract/load'
 import { planAll } from './convert/plan'
@@ -20,7 +22,7 @@ import { assertHealth, healthMetrics } from './validate/health'
 import { assertDelivered } from './validate/delivered'
 import { FIELD_COVERAGE } from './config/fieldCoverage'
 import { buildPackFile } from '../../src/core/packs/file'
-import { BOOKS, BOOK_SOURCES, SRD_PACK_ID } from './config/books'
+import { BOOKS, SRD_PACK_ID } from './config/books'
 import { writeReport } from './report/report'
 import { writeChecklist } from './report/checklist'
 import { writeCharacterReport } from './report/characterReport'
@@ -40,6 +42,9 @@ import { carryStats } from './convert/carry'
 import { latinLog } from './clean/rules/latin'
 import { writeCleanReport } from './clean/report'
 import { checkPublished, type Published } from './version'
+import { dedupeMonsters, rewriteAliases } from './dedupe'
+import { extractNpcs } from './npc/extract'
+import { artById, applyArt } from './art/apply'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 
@@ -65,31 +70,63 @@ async function main(): Promise<void> {
   await assertFieldCoverage()
   console.log('读取参考数据…')
   const data = await loadRawData()
-  const coreUnsupported = data.unsupportedMods.filter((x) => BOOK_SOURCES.has(x.source))
-  console.log(`未知 _mod 模式：${coreUnsupported.length}${coreUnsupported.length ? `（${coreUnsupported.map((x) => `${x.name}/${x.mode}`).join('；')}）` : ''}`)
+  const coreSources = new Set(BOOKS.filter((b) => b.layer <= 10).map((b) => b.source))
+  normalizeNewMonsters(data, coreSources)
+  const coreUnsupported = data.unsupportedMods.filter((x) => coreSources.has(x.source))
+  const newUnsupported = data.unsupportedMods.filter((x) => !coreSources.has(x.source))
+  console.log(`未知 _mod 模式：核心 ${coreUnsupported.length}，新来源 ${newUnsupported.length}${newUnsupported.length ? `（${newUnsupported.map((x) => `${x.source}/${x.name}/${x.mode}`).join('；')}）` : ''}`)
   if (coreUnsupported.length) throw new Error(`核心书出现未知 _mod 模式：${coreUnsupported.map((x) => `${x.name}/${x.mode}`).join('；')}`)
   console.log(`法术 ${data.spells.length}，怪物 ${data.monsters.length}，物品 ${data.items.length}，基础物品 ${data.baseItems.length}`)
   const expanded = expandMagicVariants({ items: data.items, baseItems: data.baseItems, magicVariants: data.magicVariants, foundryVariants: data.foundryVariants })
   console.log(`魔法变体展开：生成 ${expanded.created} 条，跳过 ${expanded.skipped} 个通用变体`)
   const items = expandItemEntries(mergeItemLists(data.items, data.baseItems, expanded.items), data.itemEntryTemplates)
+  const corePackIds = new Set([SRD_PACK_ID, ...BOOKS.filter((b) => b.layer <= 10).map((b) => b.packId)])
   const plan = planAll(data, items)
+  // D1.2b：新来源只导入 monster/npc。先把新怪物暂存起来，R9/R11/R12 只看核心 11 包，避免新来源的图片表格进入核心表流程。
+  const coreIds = new Set(plan.entries.filter((e) => corePackIds.has(e.packId)).map((e) => e.id))
+  plan.entries = plan.entries.filter((e) => !(e.type === 'feature' && e.context.ownerId?.startsWith('subclass.') && !coreIds.has(e.context.ownerId)))
+  const newMonsters = plan.entries.filter((e) => !corePackIds.has(e.packId) && (e.type === 'monster' || e.type === 'npc'))
+  plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
+  plan.tables = plan.tables.filter((t) => corePackIds.has(t.packId))
   const r11Data = await loadR11Data()
   const r11 = planR11(r11Data, plan.entries)
   plan.entries.push(...r11.entries)
-  const r9 = planR9(plan, { includeRef: true, replace: true }, data.legendaryGroups, new Set(r11.entries.map((e) => e.id)))
+  plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
+  const r9 = planR9(plan, { includeRef: true, replace: true }, data.legendaryGroups.filter((g) => coreSources.has(String(g.source))), new Set(r11.entries.map((e) => e.id)))
   plan.tables = r9.tables
   const books = await loadBookData()
   const r12 = planR12({ books, fluff: data.fluff ?? [], r9, existing: plan.entries, options: { embeds: true, tables: true } })
   plan.entries.push(...r12.entries)
+  plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId))
+  const englishNameIds = new Set<string>()
+  for (const e of newMonsters) if (e.type === 'monster' && e.missingName) { e.missingName = false; englishNameIds.add(e.id) }
+  plan.entries.push(...newMonsters)
+  const npcs = extractNpcs(plan.entries, BOOKS.filter((b) => b.kind === 'adventure').map((b) => b.source))
+  plan.entries.push(...npcs)
+  console.log(`具名 NPC：${npcs.length}`)
+  // D1.2b：新来源只导入 monster/npc；核心 11 包保持原有全部类型。
+  plan.entries = plan.entries.filter((e) => corePackIds.has(e.packId) || e.type === 'monster' || e.type === 'npc')
+  plan.tables = plan.tables.filter((t) => corePackIds.has(t.packId))
   console.log(`书籍章节：${r12.stats.chapters}（R12）`)
   console.log(`载具 fluff 挂上：${attachVehicleFluff(data.fluff ?? [], r11.entries, plan.unmatchedFluff)}`)
   console.log(`计划条目：${plan.entries.length}（R11 ${r11.entries.length}），随机表：${plan.tables.length}，跳过特性：${plan.skippedFeatures}，未挂 fluff：${plan.unmatchedFluff.length}`)
   for (const item of plan.unmatchedFluff.slice(0, 30)) console.log(`UNMATCHED ${item.kind} ${item.name} ${item.source} ${item.reason}`)
+  let focus: Record<string, any> = {}
+  try { focus = JSON.parse(readFileSync(join(REPO_ROOT, 'tools', 'data', 'art', 'focus.json'), 'utf8')) as Record<string, any> } catch { focus = {} }
+  const art = artById(data, plan.entries, focus)
   const result: ConversionResult = convertAll(data, plan.entries, plan.tables, plan.skippedFeatures, plan.skippedSubraces)
+  for (const pack of result.packs) if (pack.entries.some((e) => e.type === 'npc')) pack.manifest.minAppVersion = '0.3.0'
+  for (const pack of result.packs) for (const e of pack.entries) if (englishNameIds.has(e.id)) { const credit = e.data.credit as { missing?: string[] } | undefined; if (credit) { credit.missing = [...new Set([...(credit.missing ?? []), 'zh'])] } }
   console.log(`R15 补字段：${JSON.stringify(carryStats)}`)
   console.log(`升环导入：带标签的法术 ${upcastStats.spellsWithTag}，自动结构化 ${upcastStats.imported}，只留文字 note ${upcastStats.noted}，认不出的标签 ${upcastStats.unresolved.length}${upcastStats.unresolved.length ? `：${upcastStats.unresolved.join('；')}` : ''}`)
   cleanEntries(result.packs.flatMap((p) => p.entries)) // R14：文字清理，在校验与分包之前
-  const fixReport = runFixes(result.packs) // G2.5：修正规则 + 逐条修正表（紧跟在文字清理之后）
+  const dedupe = dedupeMonsters(result.packs, corePackIds)
+  result.packs = result.packs.filter((p) => corePackIds.has(p.manifest.id) || p.entries.length > 0)
+  const artCount = applyArt(result.packs, art)
+  console.log(`art：${artCount} 个怪物`)
+  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'dedupe.json'), `${JSON.stringify(dedupe, null, 1)}\n`)
+  console.log(`去重：A ${dedupe.A}，B ${dedupe.B}，C ${dedupe.C}，D ${dedupe.D}，同名异物 ${dedupe.sameNameDifferent}`)
+  const fixReport = runFixes(result.packs.filter((p) => corePackIds.has(p.manifest.id))) // G2.5 修正只作用于核心 11 包；新来源走自己的转换
   console.log(`修正：规则 ${fixReport.rules.length} 个（命中 ${fixReport.rules.reduce((n, r) => n + r.changed, 0)} 条），逐条表 ${fixReport.rows.length} 行，新增条目 ${fixReport.added.length}`)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'fix-report.json'), `${JSON.stringify(fixReport, null, 1)}\n`)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
@@ -107,6 +144,7 @@ async function main(): Promise<void> {
   }
   const english = runEnglishPass()
   const aligned = alignAll(allConverted, english, plan.tables.map((table) => table.id))
+  rewriteAliases(result.packs, dedupe.aliases)
   await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'i18n.json'), `${JSON.stringify({ stats: aligned.stats, misses: aligned.misses, unmatchedEnglish: aligned.unmatchedEnglish }, null, 1)}\n`)
   console.log(`英文条目 ${english.entries.length}，已加 i18n：${Object.values(aligned.stats).reduce((n, s) => n + s.withEnglish, 0)}/${allConverted.length}`)
   const i18nErrors = validateI18n(allConverted)
@@ -142,7 +180,13 @@ async function main(): Promise<void> {
     outputs.set(pack.manifest.id, { bytes, sha256: sha256(bytes) })
   }
   const volumes = [...outputs].map(([id, out]) => ({ id, bytes: out.bytes.length }))
-  assertVolume(volumes)
+  assertVolume(volumes.filter((v) => corePackIds.has(v.id)))
+  for (const v of volumes) {
+    if (corePackIds.has(v.id)) continue
+    const book = BOOKS.find((b) => b.packId === v.id)
+    const limit = book?.kind === 'adventure' ? 6 : 3
+    if (v.bytes > limit * 1024 * 1024) throw new Error(`${v.id} 压缩后 ${(v.bytes / 1024 / 1024).toFixed(2)}MB，超过 ${limit}MB`)
+  }
   const version = checkPublished(
     result.packs.filter((p) => outputs.has(p.manifest.id)).map((p) => ({ id: p.manifest.id, version: p.manifest.version, sha256: outputs.get(p.manifest.id)!.sha256 })),
     published,

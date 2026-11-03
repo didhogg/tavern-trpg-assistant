@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyMods } from '../../tools/data/extract/load'
+import { applyMods } from '../../tools/data/extract/mods'
 
 describe('5etools _mod 解析', () => {
   it('prependArr 支持单个对象和数组，setProp 整体替换', () => {

@@ -16,7 +16,7 @@ export async function writeDataRepo(repo: string, packs: ConvertedPack[], output
   const catalog = {
     formatVersion: 1,
     rules: [],
-    packs: BOOKS.map((book) => {
+    packs: BOOKS.filter((book) => packs.some((p) => p.manifest.id === book.packId)).map((book) => {
       const pack = packs.find((p) => p.manifest.id === book.packId)!
       const out = outputs.get(book.packId)!
       const typeCounts: Record<string, number> = {}

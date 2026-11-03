@@ -16,6 +16,9 @@ import { makeEntries, makePack, makeRegistry, PNG } from '../helpers/fixtures'
 import { sha256Hex } from '../../src/core/hash'
 
 let db: TrpgDatabase
+const validBase = { src: { book: 'PHB', page: 1 }, credit: { by: '本项目', license: 'CC-BY-NC-SA-4.0' } }
+const monsterEntry = (id: string, name: string): Entry => ({ id, type: 'monster', name, keywords: [], unique: false, summary: '', data: { ...validBase, size: ['S'], creatureType: { type: 'beast', tags: [] }, ac: [{ value: 10 }], hp: { average: 5 }, speed: { walk: 30 }, abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 } } })
+const spellEntry = (id: string, name: string): Entry => ({ id, type: 'spell', name, keywords: [], unique: false, summary: '', data: { ...validBase, level: 0, school: 'evocation', castTime: [{ n: 1, unit: 'action' }], range: { type: 'point', amount: 30, unit: 'feet' }, components: {}, duration: [{ type: 'instant' }] } })
 let h: Harness
 let lib: LibraryService
 let mine: MyLibrary
@@ -229,7 +232,7 @@ describe('我的库', () => {
   it('每次保存条目版本号末位加 1；删除、移动、复制都同样；结构不合法的拒绝', async () => {
     const a = await mine.create({ ruleId: 'dnd5e2014', name: '甲' })
     const b = await mine.create({ ruleId: 'dnd5e2014', name: '乙' })
-    const entry: Entry = { id: 'rat', type: 'monster', name: '影鼠', keywords: [], unique: false, summary: '', data: { hp: 5 } }
+    const entry: Entry = monsterEntry('rat', '影鼠')
     expect((await mine.saveEntry(a.id, entry)).version).toBe('1.0.1')
     expect((await mine.saveEntry(a.id, { ...entry, summary: '改' })).version).toBe('1.0.2')
     const copy = await mine.copyEntry(a.id, 'rat')
@@ -243,18 +246,18 @@ describe('我的库', () => {
   })
 
   it('不是我的包不能直接编辑；复制为我的包后可以，且新 lineage、记下来源', async () => {
-    await expect(mine.saveEntry('storm-isle', makeEntries(1)[0])).rejects.toMatchObject({ code: 'E_NOT_MINE' })
+    await expect(mine.saveEntry('storm-isle', spellEntry('x', '法术'))).rejects.toMatchObject({ code: 'E_NOT_MINE' })
     const copy = await mine.duplicate('storm-isle')
     expect(copy.name).toBe('包-storm-isle'.length ? `${(await db.packs.get('storm-isle'))!.name}（我的）` : '')
     expect(copy.lineage).not.toBe((await db.packs.get('storm-isle'))!.lineage)
     expect((copy as unknown as { derivedFrom: { id: string } }).derivedFrom.id).toBe('storm-isle')
     expect(copy.entryCount).toBe(2)
-    expect((await mine.saveEntry(copy.id, { ...makeEntries(1)[0], id: 'new' })).entryCount).toBe(3)
+    expect((await mine.saveEntry(copy.id, spellEntry('new', '新法术'))).entryCount).toBe(3)
   })
 
   it('删除进库回收站（保留完整内容），恢复后条目都在；彻底删除后找不回', async () => {
     const p = await mine.create({ ruleId: 'dnd5e2014', name: '甲' })
-    await mine.saveEntry(p.id, makeEntries(1)[0])
+    await mine.saveEntry(p.id, spellEntry('x', '法术'))
     await mine.remove(p.id)
     expect(await db.packs.get(p.id)).toBeUndefined()
     expect(await mine.trash()).toHaveLength(1)
@@ -269,7 +272,7 @@ describe('我的库', () => {
 
   it('导出得到普通扩展包：lineage 不变，别人装上是只读的', async () => {
     const p = await mine.create({ ruleId: 'dnd5e2014', name: '甲' })
-    await mine.saveEntry(p.id, makeEntries(1)[0])
+    await mine.saveEntry(p.id, spellEntry('x', '法术'))
     const rec = h.packs.recognize(await h.packs.exportPack(p.id))
     if (rec.type !== 'pack') throw new Error()
     expect(rec.manifest.lineage).toBe(p.lineage)

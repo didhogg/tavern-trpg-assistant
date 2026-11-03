@@ -59,7 +59,8 @@ describe('放行规则归属（attribute）', () => {
 
 describe('G2.5 g2-additive：只改放行名单里写明的地方', () => {
   const before = loadG2Before()
-  const packs = loadAllPacks()
+  // 只比 G2 基线里已有的包（核心 11 个）；D1.2b 起新增的书籍包与冒险包不在 G2.5 的「只增不删」范围内（新包里的条目由 D1.2b 自己的测试管）
+  const packs = loadAllPacks().filter((p) => p.id in before.packs)
   const now = new Map(packs.flatMap((p) => p.entries.map((e) => [e.id, { pack: p.id, entry: e as unknown as Rec }] as const)))
   const added = new Map(ADDED.map((a) => [a.id, a]))
 

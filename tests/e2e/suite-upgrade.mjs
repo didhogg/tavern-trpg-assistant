@@ -1,11 +1,14 @@
 // G1：升级场景——模拟真实设备：新扩展 + 已装旧版书（数据仓库提交 a6a22e5 的 1.0.x 包）+ 旧目录 → 目录更新后检查更新 → 全部更新 → 内容出现。
 // 只用 E2E_SUITE=upgrade 单独跑（它会把书装成旧版，不能和别的套件混在同一个页面里）。
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import { check, clearToasts, gotoPage, settle } from './helpers.mjs'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 const OLD_COMMIT = 'a6a22e5'
+/** 新版本号跟着构建配置走，不写死（每次升包不用改测试）。 */
+const NEW_VERSION = /PACK_VERSION = '([^']+)'/.exec(readFileSync(new URL('../../tools/data/config/bookPolicy.ts', import.meta.url), 'utf8'))[1]
 const git = (...args) => execFileSync('git', ['-C', DATA_REPO, ...args], { maxBuffer: 1 << 28 })
 
 /** 旧目录与旧包文件：从数据仓库的 git 历史里读出，地址改到本地模拟路径。 */
@@ -100,26 +103,26 @@ export async function upgradeSuite(page, label) {
   await page.getByText(/个资料包有新版本/).first().waitFor({ timeout: 20000 })
   check(`[${label}] 检查更新：提示「有 N 个资料包有新版本」`, true)
   const note = await tceRow().getByTestId('update-note').innerText()
-  check(`[${label}] 列表里塔莎标注「有新版本 v1.4.0」与「旧版数据」`, note.includes('有新版本 v1.4.0') && note.includes('旧版数据'), note)
+  check(`[${label}] 列表里塔莎标注「有新版本 v${NEW_VERSION}」与「旧版数据」`, note.includes(`有新版本 v${NEW_VERSION}`) && note.includes('旧版数据'), note)
   await gotoPage(page, '库')
   await page.getByRole('button', { name: '本存档', exact: true }).click()
   await page.getByTestId('update-banner').waitFor({ timeout: 10000 })
   const banner = await page.getByTestId('update-banner').innerText()
   check(`[${label}] 「本存档」页顶部有更新提示条：有 10 个资料包有新版本`, banner.includes('有 10 个资料包有新版本'), banner)
 
-  // ③ 全部更新：等塔莎变成 v1.4.0
+  // ③ 全部更新：等塔莎变成新版本
   await page.getByTestId('update-all').click()
   await page.waitForFunction(() => {
     const row = document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid="save-pack-dnd5e2014-tce"], [data-testid="ext-dnd5e2014-tce"]')
     return !!row
   }, null, { timeout: 10000 })
   await ext()
-  await page.waitForFunction(() => {
+  await page.waitForFunction((version) => {
     const row = document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid="ext-dnd5e2014-tce"]')
-    return !!row && row.textContent.includes('v1.4.0')
-  }, null, { timeout: 180000 })
+    return !!row && row.textContent.includes(`v${version}`)
+  }, NEW_VERSION, { timeout: 180000 })
   await page.waitForFunction(() => !document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid="update-note"]'), null, { timeout: 180000 })
-  check(`[${label}] 全部更新：塔莎是 v1.4.0，所有包的更新标注消失`, (await tceRow().innerText()).includes('v1.4.0') && (await page.getByTestId('update-note').count()) === 0)
+  check(`[${label}] 全部更新：塔莎是 v${NEW_VERSION}，所有包的更新标注消失`, (await tceRow().innerText()).includes(`v${NEW_VERSION}`) && (await page.getByTestId('update-note').count()) === 0)
 
   // ④ 更新后：牧师页出现塔莎登记的可选特性；底栖魔鱼出现背景描述
   const newCleric = await openEntry(page, 'dnd5e2014-srd', '牧师')

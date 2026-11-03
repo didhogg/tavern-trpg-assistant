@@ -20,6 +20,12 @@ export const PLANNED_FIELDS: Record<string, string | PlannedField> = {
   // §5.4 怪物子结构
   'monster.environment': '§5.4', 'monster.damageTags': '§5.4', 'monster.miscTags': '§5.4',
   'monster.variant': '§5.4', 'monster.attachedItems': '§5.4', 'monster.legendaryGroup': '§5.4',
+  // 任务一 §3.1：人物与怪物共用属性块；即使 zod 已覆盖，也保留在构建登记表里供覆盖矩阵查名。
+  'monster.classes': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.race': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.subrace': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.background': { spec: '任务一 §3.1', origin: 'task-one' },
+  'monster.inventory': { spec: '任务一 §3.1', origin: 'task-one' },
   // §5.5 随机表
   'table.kind': '§5.5', 'table.parent': '§5.5', 'table.chapter': '§5.5', 'table.tableRef': '§5.5',
   // §5.6 新类型
@@ -50,6 +56,16 @@ export const PLANNED_FIELDS: Record<string, string | PlannedField> = {
   'spell.versionGroup': '§5.2',
   'spell.playable': '§5.2',
   'spell.nameSuffix': '§5.2',
+  'monster.art': '§5.1',
+  'monster.variantOf': '§5.2',
+  'monster.variantDiff': '§5.2',
+  'npc.statblock': '§5.3',
+  'npc.adventure': '§5.3',
+  'npc.at': '§5.3',
+  'npc.intro': '§5.3',
+  'npc.confidence': '§5.3',
+  'npc.src': '§5.3',
+  'npc.credit': '§5.3',
   'monster.versionGroup': '§5.2',
   'monster.playable': '§5.2',
   'monster.nameSuffix': '§5.2',

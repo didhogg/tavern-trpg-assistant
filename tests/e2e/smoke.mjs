@@ -16,6 +16,9 @@ import { shellSuite } from './suite-shell.mjs'
 import { displaySuite } from './suite-display.mjs'
 import { upgradeSetup, upgradeSuite } from './suite-upgrade.mjs'
 import { wizardSuite } from './suite-wizard.mjs'
+import { g3TableSuite } from './suite-g3-tables.mjs'
+import { fullCatalogSuite } from './suite-fullcatalog.mjs'
+import { peopleSuite } from './suite-people.mjs'
 
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const engines = [
@@ -54,8 +57,10 @@ try {
         const ctx = { width, height, engine, viewLabel, scheme, url, fixture }
         if (!only || only === 'shell') await shellSuite(page, label, ctx)
         if (!only || only === 'dice') await diceSuite(page, label, ctx)
-        if (!only || only === 'wizard' || only === 'saves' || only === 'library' || only === 'display') await wizardSuite(page, label, ctx)
+        if (!only || only === 'people' || only === 'wizard' || only === 'saves' || only === 'library' || only === 'display') await wizardSuite(page, label, ctx)
         if (only === 'upgrade') await upgradeSuite(page, label, ctx)
+        if (only === 'fullcatalog') await fullCatalogSuite(page, label)
+        if (only === 'people') await peopleSuite(page, label, ctx)
         if (!only || only === 'saves') await savesSuite(page, label, ctx)
         if (!only || only === 'library') {
           await librarySuite(page, label, ctx)
@@ -65,6 +70,7 @@ try {
         }
         if (!only || only === 'library' || only === 'display') {
           await displaySuite(page, label, ctx)
+          if (only === 'library') await g3TableSuite(page, label)
         }
         if (scheme === 'light' && (!only || only === 'probes')) await probeSuite(page, label, ctx)
         await page.screenshot({ path: join(root, `docs/reviews/M3-${engine}-${viewLabel}-${scheme}.png`) })

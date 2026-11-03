@@ -8,8 +8,9 @@ import { convertBlocks } from './blocks'
 import { inlinePlainText, renderInline } from '../markup/inline'
 import { activitiesFromText } from './activities'
 import { convertVariants } from './variants'
+import { normalizeHp } from './hp'
 import { plainText, summaryOf } from '../summary/summary'
-import type { InlineContext } from '../markup/inline'
+import type { InlineContext } from '../markup/inline'; import { pickLegendaryGroup } from './legendaryGroupPick'
 
 function tagText(tag: unknown): string {
   if (tag && typeof tag === 'object') {
@@ -162,7 +163,7 @@ function spellcastingOf(raw: Record<string, unknown>, inline: InlineContext): Ar
 export function convertMonster(entry: PlannedEntry, ctx: ConvertContext, inline: InlineContext): Entry {
   const raw = entry.raw
   const groupRef = raw.legendaryGroup as Record<string, unknown> | undefined
-  const group = groupRef ? (ctx.legendaryGroups.find((g) => String(g.name) === String(groupRef.name) && String(g.source) === String(groupRef.source)) ?? ctx.legendaryGroups.find((g) => String(g.name) === String(groupRef.name) || String(g.ENG_name) === String(groupRef.ENG_name))) : undefined
+  const group = pickLegendaryGroup(raw, groupRef, ctx.legendaryGroups) // 原按 name / ENG_name / source 查找在 helper
   const text = convertBlocks(raw.entries, inline)
   const variants = convertVariants(raw._variants, inline)
   const actions = namedActions(raw.action, inline, entry)
@@ -209,7 +210,7 @@ function hpOf(raw: Record<string, unknown>): { average: number; formula?: string
   const hp = (raw.hp ?? {}) as Record<string, unknown>
   const formula = str(hp.formula)
   const special = str(hp.special)
-  return { average: Number(hp.average ?? 0), ...(formula ? { formula } : {}), ...(special ? { special } : {}) }
+  return normalizeHp(Number(hp.average ?? 0), formula, special)
 }
 
 function crOf(raw: Record<string, unknown>): number | { value: number; lair?: number; coven?: number } {

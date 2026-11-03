@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { loadAllPacks, packPath } from './r9-pack-helpers'
 
 /**

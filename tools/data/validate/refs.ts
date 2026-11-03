@@ -46,7 +46,7 @@ export async function checkReferences(packs: ConvertedPack[]): Promise<RefResult
     for (const entry of pack.entries) {
       const d = entry.data as Record<string, unknown>
       const fields: Array<[string, unknown]> = [
-        ['variantOf', d.variantOf], ['baseItem', d.baseItem], ['target', d.target],
+        ['variantOf', d.variantOf], ['statblock', d.statblock], ['baseItem', d.baseItem], ['target', d.target],
         ['owner.id', (d.owner as Record<string, unknown> | undefined)?.id], ['classId', d.classId], ['parentRace', d.parentRace],
         ['feature', d.feature],
         ['expandedSpells', d.expandedSpells],

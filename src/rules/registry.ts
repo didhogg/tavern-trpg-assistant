@@ -1,3 +1,5 @@
+import type { ZodType } from 'zod'
+
 export interface RuleBanner {
   wide: string
   narrow: string
@@ -18,6 +20,8 @@ export interface RuleDefinition {
   defaultBanner?: RuleBanner
   /** 安装前检查一个包里条目之间的引用（返回问题列表，空表示合规）；官方包与自制包同一套规则。 */
   checkPack?: (input: { packId: string; entries: Array<{ id: string; type: string; data: Record<string, unknown> }>; lookup: (id: string) => { type: string; data: Record<string, unknown>; packId: string } | undefined; reach: Set<string> }) => string[]
+  /** 按条目类型取 data 的校验器；用于「存入我的库」等写入前的类型校验。 */
+  entryDataSchema?: (type: string) => ZodType | undefined
 }
 
 export class RuleRegistry {

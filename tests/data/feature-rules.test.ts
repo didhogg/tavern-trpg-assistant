@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { unzipSync, strFromU8 } from 'fflate'
 import type { Entry } from '../../src/schemas/pack'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { FEATURE_NO_USES } from '../../tools/data/config/featureRules'
 import { parseFormula } from '../../src/rules/dnd5e2014/data/formula'
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { TrpgDatabase } from '../../src/core/db'
 import { uuid } from '../../src/core/ids'
 import { PackService } from '../../src/core/packs/installer'
-import { BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { makeRegistry } from '../helpers/fixtures'
 import { packPath } from './r9-pack-helpers'
 

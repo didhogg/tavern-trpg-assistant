@@ -1,7 +1,8 @@
 import { join } from 'node:path'
 import { readJson } from '../lib/io'
 import { DATA_5ETOOLS } from './load'
-import { BOOK_SOURCES } from '../config/books'
+import { CORE_BOOKS } from '../config/books'
+const CORE_SOURCES = new Set(CORE_BOOKS.map((b) => b.source))
 import { resolveCopies, type Raw } from './load'
 
 export interface R11Data {
@@ -32,7 +33,7 @@ function isObj(value: unknown): value is Raw {
 }
 
 function core(list: unknown[]): Raw[] {
-  return list.filter(isObj).filter((item) => BOOK_SOURCES.has(String(item.source)))
+  return list.filter(isObj).filter((item) => CORE_BOOKS.some((b) => b.source === String(item.source)))
 }
 
 async function array(file: string, key: string): Promise<Raw[]> {
@@ -60,7 +61,7 @@ async function quickrefs(): Promise<Raw[]> {
   collectSections((screen.data as Record<string, unknown>)?.['bookref-dmscreen'], sections)
   const seen = new Set<string>()
   return sections.filter((section) => {
-    if (typeof section.source !== 'string' || typeof section.page !== 'number' || !BOOK_SOURCES.has(section.source)) return false
+    if (typeof section.source !== 'string' || typeof section.page !== 'number' || !CORE_SOURCES.has(section.source)) return false
     const key = `${String(section.ENG_name)}|${section.source}|${section.page}`
     if (seen.has(key)) return false
     seen.add(key)

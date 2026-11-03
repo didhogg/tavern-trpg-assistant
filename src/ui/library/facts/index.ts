@@ -1,5 +1,5 @@
-import type { Entry } from '../../schemas/pack'
-import type { TextBlock } from '../../schemas/text'
+import type { Entry } from '../../../schemas/pack'
+import type { TextBlock } from '../../../schemas/text'
 
 /** 条目的结构化数据 → 可读的「事实」列表（资料卡 U11 之前的通用展示）。 */
 export type Part = string | { ref: string; /** 显示名（覆盖条目自己的名字，如去掉「（系列）」） */ label?: string; /** 名字后面的灰色小字，如条目所在的包名 */ sub?: string }
@@ -18,7 +18,8 @@ const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 const str = (v: unknown): string => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '')
 
-import { ABILITY, ALIGNMENT, ARMOR_CATEGORY, CREATURE, DAMAGE, ITEM_CATEGORY, LANGUAGE, MOVE, RANGE_SHAPE, RANGE_WORD, RARITY, RECHARGE, RULE_CATEGORY, SCHOOL, SIZE, SKILL, TABLE_KIND, TOOL, UNIT, WEAPON_CATEGORY, WEAPON_PROPERTY, tr, trCode, trWords } from './zh'
+import { ABILITY, ALIGNMENT, ARMOR_CATEGORY, CREATURE, DAMAGE, ITEM_CATEGORY, LANGUAGE, MOVE, RANGE_SHAPE, RANGE_WORD, RARITY, RECHARGE, RULE_CATEGORY, SCHOOL, SIZE, SKILL, TABLE_KIND, TOOL, UNIT, WEAPON_CATEGORY, WEAPON_PROPERTY, tr, trCode, trWords } from '../zh'
+import { extraFacts, factsToText } from './extra'
 
 const join = (items: string[], sep = '、'): string => items.filter(Boolean).join(sep)
 const abilityList = (v: unknown): string => list(v, ABILITY)
@@ -39,13 +40,20 @@ function equipItemText(item: unknown): string {
   return `${name}${Number(item.qty ?? 1) > 1 ? `×${item.qty}` : ''}`
 }
 
-function equipmentText(v: unknown): string {
-  if (typeof v === 'string') return v
-  if (!isObj(v)) return ''
-  const fixed = arr(v.fixed).map(equipItemText)
-  const choices = arr(v.choice).map((group) => arr(group).map(equipItemText).join(' / ')).filter(Boolean)
-  const gold = isObj(v.gold) ? `${str(v.gold.dice)}×${Number(v.gold.multiplier ?? 1)} gp` : ''
-  return join([...fixed, ...choices.map((c) => `(${c})`), gold].filter(Boolean), '，')
+export function equipmentFacts(v: unknown): Fact[] {
+  const groups = Array.isArray(v) ? v : [v]
+  const out: Fact[] = []
+  for (const g of groups) {
+    if (typeof g === 'string') { add(out, '起始装备', g); continue }
+    if (!isObj(g)) continue
+    const fixed = arr(g.fixed).map(equipItemText)
+    const choices = arr(g.choice).map((group) => arr(group).map(equipItemText).join(' / ')).filter(Boolean)
+    const gold = isObj(g.gold) ? `${str(g.gold.dice)}×${Number(g.gold.multiplier ?? 1)} gp` : ''
+    if (fixed.length) add(out, '起始装备', fixed.join('、'))
+    if (choices.length) add(out, '任选其一', choices.map((c) => `（${c}）`).join(''))
+    if (gold) add(out, '或改用金币', gold)
+  }
+  return out
 }
 
 function bonusMap(v: unknown, labels: Record<string, string>): string {
@@ -130,7 +138,7 @@ function classFacts(d: Obj): Fact[] {
     add(out, '工具熟练', list(p.tools, TOOL))
     if (isObj(p.skills)) add(out, '技能熟练', `从 ${join(arr(p.skills.from).map((s) => SKILL[str(s)] ?? str(s)))} 中选 ${p.skills.choose} 项`)
   }
-  if (arr(d.startingEquipment).length) out.push({ label: '起始装备', parts: arr(d.startingEquipment).flatMap((s, i) => [i ? '\n' : '', equipmentText(s)]) })
+  if (arr(d.startingEquipment).length) out.push(...equipmentFacts(d.startingEquipment))
   if (d.subclassTitle) add(out, '子职业', `${d.subclassTitle}（${d.subclassLevel} 级选择）`)
   if (isObj(d.table) && arr(d.table.rows).length) {
     const cols = ['等级', ...arr(d.table.cols).map(str)]
@@ -141,11 +149,23 @@ function classFacts(d: Obj): Fact[] {
   return out
 }
 
+function npcFacts(d: Obj): Fact[] {
+  const out: Fact[] = []
+  if (d.statblock) out.push({ label: '使用属性块', parts: [{ ref: str(d.statblock) }] })
+  const at = isObj(d.at) ? d.at : undefined
+  if (at) add(out, '出处', [str(at.chapter), str(at.heading)].filter(Boolean).join(' · '))
+  if (d.adventure) add(out, '冒险', str(d.adventure))
+  if (d.confidence) add(out, '置信度', d.confidence === 'high' ? '高' : '中')
+  return out
+}
+
 function monsterFacts(d: Obj): Fact[] {
   const out: Fact[] = []
   const type = isObj(d.creatureType) ? tr(CREATURE, d.creatureType.type) : ''
   const align = str(d.alignment).split(' ').map((c) => tr(ALIGNMENT, c)).join('')
   add(out, '类型', join([arr(d.size).map((x) => tr(SIZE, x)).join('/'), type, align], ' · '))
+  if (typeof d.variantOf === 'string' && d.variantOf) out.push({ label: '变体', parts: [`基于`, { ref: d.variantOf }] })
+  if (arr(d.variantDiff).length) add(out, '不同之处', arr(d.variantDiff).map((k) => ({ ac: '护甲等级', hp: '生命值', cr: '挑战等级', actions: '动作', abilities: '属性值', alignment: '阵营', speed: '速度', traits: '特性', saves: '豁免', skills: '技能', senses: '感官', languages: '语言', spellcasting: '施法', legendary: '传奇动作', immune: '伤害免疫', resist: '伤害抗性', conditionImmune: '状态免疫', attachedItems: '携带物品', passive: '被动察觉' } as Record<string, string>)[str(k)] ?? str(k)).join('、'))
   add(out, '护甲等级', join(arr(d.ac).map((a) => (isObj(a) ? `${a.value}${a.from ? `（${Array.isArray(a.from) ? arr(a.from).map(str).join('、') : str(a.from)}）` : ''}${a.condition ? (a.braces ? `（${str(a.condition)}）` : ` ${str(a.condition)}`) : ''}` : str(a)))))
   if (isObj(d.hp)) add(out, '生命值', `${d.hp.average}${d.hp.formula ? `（${d.hp.formula}）` : ''}`)
   add(out, '速度', isObj(d.speed) ? join(Object.entries(d.speed).map(([k, v]) => `${tr(MOVE, k)} ${v} 尺`), '，') : '')
@@ -257,6 +277,9 @@ function itemFacts(d: Obj): Fact[] {
   add(out, '价格', typeof d.value === 'number' ? money(d.value) : '')
   add(out, '重量', d.weight ? `${d.weight} 磅` : '')
   add(out, '同调', isObj(d.attunement) && d.attunement.required ? `需要${d.attunement.by ? `（${str(d.attunement.by)}）` : ''}` : '')
+  if (d.consumable === true) add(out, '使用方式', '一次性')
+  else if (isObj(d.charges)) add(out, '使用方式', `${d.charges.max} 次充能，${tr(RECHARGE, d.charges.recharge)}恢复`)
+  else if (isObj(d.uses)) add(out, '使用方式', `${str(d.uses.max ?? d.uses.count ?? '')} 次`)
   add(out, '层级', str(d.tier))
   add(out, '标记', d.wondrous === true ? '奇物' : '')
   add(out, '赋予属性值', abilityGrantText(d.abilityGrant))
@@ -294,6 +317,7 @@ export function entryFacts(entry: Pick<Entry, 'type' | 'data'>): Fact[] {
       return out
     }
     case 'monster': return monsterFacts(d)
+    case 'npc': return npcFacts(d)
     case 'spell': return spellFacts(d)
     case 'race':
     case 'subrace': return raceFacts(d)
@@ -307,9 +331,11 @@ export function entryFacts(entry: Pick<Entry, 'type' | 'data'>): Fact[] {
       return out
     }
     case 'rule': return isObj(d) && d.category ? [{ label: '类别', parts: [tr(RULE_CATEGORY, d.category)] }] : []
-    default: return []
+    default: return extraFacts(entry.type, d)
   }
 }
+
+export { factsToText }
 
 export function collectRefs(facts: Fact[]): string[] {
   const ids = new Set<string>()

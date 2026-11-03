@@ -4,7 +4,7 @@
   {
    "check": "c1",
    "key": "checks",
-   "value": 9797
+   "value": 9796
   },
   {
    "check": "c1",
@@ -15,11 +15,6 @@
    "check": "c2",
    "key": "distinctCr",
    "value": 31
-  },
-  {
-   "check": "c6",
-   "key": "excluded-c1-resist-text",
-   "value": 1
   }
  ],
  "findings": [

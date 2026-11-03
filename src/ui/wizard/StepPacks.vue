@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { CatalogPack } from '../../schemas/pack'
 import { useAppStore } from '../../stores/app'
 import { useLibraryStore } from '../../stores/library'
@@ -13,6 +13,9 @@ import { wizard } from './state'
 const app = useAppStore()
 const library = useLibraryStore()
 const ready = ref(false)
+const query = ref('')
+const closed = ref<Set<string>>(new Set())
+let initialized = false
 const rule = computed(() => app.svc().rules.get(wizard.ruleId))
 const rows = computed(() => buildPackRows(library.installed, library.catalog, wizard.ruleId).filter((r) => r.category !== 'adventure'))
 const core = computed(() => new Set(rule.value?.corePackIds ?? []))
@@ -26,6 +29,16 @@ const groups = computed(() => {
   const order = (g: string) => (g === '内置' ? -2 : g === '我的' ? 9999 : g === '其他' ? 9998 : catalogOrder(g))
   return [...map].sort((a, b) => order(a[0]) - order(b[0]))
 })
+const visibleGroups = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  return groups.value.map(([g, list]) => [g, q ? list.filter((r) => r.name.toLowerCase().includes(q) || (r.nameEn ?? '').toLowerCase().includes(q)) : list] as const).filter(([, list]) => list.length > 0)
+})
+const isOpen = (g: string): boolean => !!query.value.trim() || !closed.value.has(g)
+function toggleGroup(g: string): void { const next = new Set(closed.value); if (next.has(g)) next.delete(g); else next.add(g); closed.value = next }
+function selectedCount(list: readonly PackRow[]): number { return list.filter((r) => wizard.packIds.includes(r.id)).length }
+function selectGroup(list: readonly PackRow[]): void { wizard.touched = true; for (const row of list) if (!wizard.packIds.includes(row.id)) toggle(row as PackRow, true) }
+watch(groups, (gs) => { if (initialized || !gs.length) return; initialized = true; closed.value = new Set(gs.filter(([, list]) => !list.some((r) => r.recommended || r.installed)).map(([g]) => g)) }, { immediate: true })
+
 
 function lockedBy(id: string): string | undefined {
   if (core.value.has(id)) return '必需'
@@ -110,10 +123,11 @@ const progress = computed(() => {
       <button class="trpg-btn trpg-btn--small" type="button" @click="library.loadCatalog(true)">重试</button>
     </p>
     <p v-if="progress" class="trpg-field__hint" role="status" data-testid="wizard-progress">{{ progress }}</p>
+    <input v-if="rows.length > 20" v-model="query" class="trpg-input" type="search" placeholder="搜索资料包" aria-label="搜索资料包" data-testid="wizard-pack-search" />
     <div v-if="!ready" class="page-stack" aria-busy="true"><div class="trpg-skeleton" /><div class="trpg-skeleton" style="width: 70%" /><div class="trpg-skeleton" style="width: 55%" /></div>
-    <section v-for="[group, list] in ready ? groups : []" :key="group" :aria-label="group">
-      <h4 class="trpg-group">{{ group }}</h4>
-      <ul class="trpg-list">
+    <section v-for="[group, list] in ready ? visibleGroups : []" :key="group" :aria-label="group">
+      <h4 class="trpg-group"><button class="trpg-link" type="button" :aria-expanded="isOpen(group)" @click="toggleGroup(group)">{{ isOpen(group) ? '▾' : '▸' }} {{ group }} · {{ list.length }} 个 · 已选 {{ selectedCount(list) }}</button> <button class="trpg-btn trpg-btn--small" type="button" @click="selectGroup(list)">全选本组</button></h4>
+      <ul v-if="isOpen(group)" class="trpg-list">
         <li v-for="r in list" :key="r.id" class="trpg-row" :data-testid="`wizard-pack-${r.id}`">
           <Checkbox :model-value="wizard.packIds.includes(r.id)" :disabled="!!lockedBy(r.id) && wizard.packIds.includes(r.id)" :label="r.name" @update:model-value="toggle(r, $event)" />
           <div class="trpg-row__main">

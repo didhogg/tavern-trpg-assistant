@@ -15,8 +15,8 @@ function fail(message: string, error: unknown): void {
   useToastStore().error(`${message}：${errorText(error)}`)
 }
 
-export function openCreateMine(ruleId: string, pack?: { id: string; name: string; description: string }): void {
-  useModalStore().open({ key: 'mine-form', title: pack ? '改名与简介' : '新建我的包', component: markRaw(CreateMinePage), props: { ruleId, pack }, variant: 'dialog' })
+export function openCreateMine(ruleId: string, pack?: { id: string; name: string; description: string }, onDone?: (packId: string) => void): void {
+  useModalStore().open({ key: 'mine-form', title: pack ? '改名与简介' : '新建我的包', component: markRaw(CreateMinePage), props: { ruleId, pack, onDone }, variant: 'dialog' })
 }
 
 export async function deleteMineFlow(id: string, name: string): Promise<boolean> {

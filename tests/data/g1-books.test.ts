@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { BOOKS, BOOK_NAMES, packIdOf } from '../../tools/data/config/books'
+import { CORE_BOOKS as BOOKS, BOOK_NAMES, packIdOf } from '../../tools/data/config/books'
 import { BOOK_POLICY } from '../../tools/data/config/bookPolicy'
 import { loadAllPacks } from './r9-pack-helpers'
 import { manifestOf } from './g1-snapshot'
