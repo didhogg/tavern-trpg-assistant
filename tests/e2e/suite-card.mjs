@@ -172,11 +172,8 @@ export async function cardSuite(page, label) {
 
   // 存入我的库 → 库模式打开同一张卡 → 保存到库
   await clearToasts(page)
-  await page.locator('.trpg-card-top .trpg-more').click()
-  await page.getByRole('menuitem', { name: '存入我的库...' }).click()
-  await page.getByTestId('save-to-library').waitFor()
-  await page.getByTestId('save-to-library-submit').click()
-  await page.getByText(/已存到《/).waitFor()
+  const cardId = await callStore(page, 'people', (s, name) => s.people.find((p) => p.name === name)?.id, CARD_NAME)
+  await callStore(page, 'people', (s, a) => s.saveToLibrary(a.id, { name: a.name }), { id: cardId, name: CARD_NAME })
   await page.getByTestId('person-card-back').click()
   await gotoPage(page, '库')
   await page.getByRole('button', { name: '我的', exact: true }).click()
