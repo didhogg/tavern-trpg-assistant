@@ -50,8 +50,8 @@ const tagName = (id: string): string => props.tags.find((t) => t.id === id)?.nam
     <div class="trpg-person__vitals">
       <span class="trpg-person__hp-col"><HpBar v-if="summary.hp.max !== null" :current="summary.hp.current" :max="summary.hp.max" :temp="summary.hp.temp" /></span>
       <span class="trpg-person__ac">AC {{ summary.ac ?? '' }}</span>
-      <span v-if="partyMode" class="trpg-person__party-col">被动察觉 {{ passive() ?? '' }}</span>
-      <span v-if="partyMode" class="trpg-person__party-col">速度 {{ speed() !== undefined ? `${speed()} 尺` : '' }}</span>
+      <span v-if="partyMode" class="trpg-person__party-col">{{ passive() !== undefined ? `被动察觉 ${passive()}` : '' }}</span>
+      <span v-if="partyMode" class="trpg-person__party-col">{{ speed() !== undefined ? `速度 ${speed()} 尺` : '' }}</span>
     </div>
     <div v-if="!selecting" class="trpg-person__end">
       <span :data-testid="`people-row-more-${person.id}`" @click.stop>
