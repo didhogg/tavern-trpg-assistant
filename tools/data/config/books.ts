@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { sha256Hex } from '../../../src/core/hash'
-import { REPO_ROOT } from '../lib/io'
+import { REF_5ETOOLS } from '../lib/io'
 import { BOOK_POLICY, PACK_VERSION } from './bookPolicy'
 
 export interface BookConfig {
@@ -32,8 +32,8 @@ const jsonMap = (file: string, key: 'book' | 'adventure'): Map<string, BooksJson
   const list = (JSON.parse(readFileSync(file, 'utf8')) as Record<string, BooksJsonEntry[]>)[key]
   return new Map(list.map((b) => [b.source, b]))
 }
-const booksJson = (): Map<string, BooksJsonEntry> => jsonMap(join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data', 'books.json'), 'book')
-const adventuresJson = (): Map<string, BooksJsonEntry> => jsonMap(join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data', 'adventures.json'), 'adventure')
+const booksJson = (): Map<string, BooksJsonEntry> => jsonMap(join(REF_5ETOOLS, process.env.TRPG_DATA_DIR ?? 'data', 'books.json'), 'book')
+const adventuresJson = (): Map<string, BooksJsonEntry> => jsonMap(join(REF_5ETOOLS, process.env.TRPG_DATA_DIR ?? 'data', 'adventures.json'), 'adventure')
 
 /** 2024 规则版及之后出版的书（来源代号）：不收录，也不允许出现在展示文字里。 */
 export const RETIRED_SOURCES = new Set([...booksJson().values()].filter((b) => (b.published ?? '') >= '2024-09-17').map((b) => b.source))

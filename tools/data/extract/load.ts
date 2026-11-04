@@ -2,13 +2,13 @@ import { applyVariantSeries } from '../convert/series'
 import { expandVersions } from './versions'
 import { join } from 'node:path'
 import { BOOK_SOURCES } from '../config/books'
-import { listFiles, readJson, REPO_ROOT } from '../lib/io'
+import { REF_5ETOOLS, REF_DND_DATA, listFiles, readJson } from '../lib/io'
 import { loadFluff, type FluffRecord } from './fluff'
 import { applyMods, isObj, resolveCopies, type UnsupportedMod } from './mods'
 
 // R13：英文那一遍用环境变量 TRPG_DATA_DIR=data-bak 把数据目录换成英文原版
-export const DATA_5ETOOLS = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', process.env.TRPG_DATA_DIR ?? 'data')
-export const DATA_FALLBACK = join(REPO_ROOT, 'reference', 'dnd-data-main（数据库）', 'data')
+export const DATA_5ETOOLS = join(REF_5ETOOLS, process.env.TRPG_DATA_DIR ?? 'data')
+export const DATA_FALLBACK = join(REF_DND_DATA, 'data')
 
 export type Raw = Record<string, unknown>
 

@@ -8,6 +8,7 @@ import { convertVehicle } from '../../tools/data/convert/world'
 import { vehicleDataSchema } from '../../src/rules/dnd5e2014/data/entries/world'
 import { loadR11Data } from '../../tools/data/extract/r11'
 import type { InlineContext } from '../../tools/data/markup/inline'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 const CORE = new Set(BOOKS.map((book) => book.source))
 
@@ -89,7 +90,7 @@ describe('R11 配方与角色创建选项转换器', () => {
 
   it('D1.2b SPELLJAMMER 载具取 2 条内存转换并通过 zod', async () => {
     const data = await loadR11Data()
-    const raw = JSON.parse((await import('node:fs')).readFileSync(join(process.cwd(), 'reference', '5etools-cn-main（数据库）', 'data', 'vehicles.json'), 'utf8')) as { vehicle: Array<Record<string, unknown>> }
+    const raw = JSON.parse((await import('node:fs')).readFileSync(join(REF_5ETOOLS, 'data', 'vehicles.json'), 'utf8')) as { vehicle: Array<Record<string, unknown>> }
     const samples = raw.vehicle.filter((item) => item.vehicleType === 'SPELLJAMMER').slice(0, 2)
     expect(samples).toHaveLength(2)
     for (const item of samples) {

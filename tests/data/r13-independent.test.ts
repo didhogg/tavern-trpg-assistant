@@ -4,9 +4,10 @@ import { describe, expect, it } from 'vitest'
 import { CORE_BOOKS as BOOKS, SRD_PACK_ID } from '../../tools/data/config/books'
 import { allEntries, packPath } from './r9-pack-helpers'
 import type { Entry } from '../../src/schemas/pack'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 type Raw = Record<string, unknown>
-const EN_DIR = join(process.cwd(), 'reference/5etools-cn-main（数据库）/data-bak')
+const EN_DIR = join(REF_5ETOOLS, 'data-bak')
 const readEn = (file: string): Raw => JSON.parse(readFileSync(join(EN_DIR, file), 'utf8')) as Raw
 const i18nOf = (entry: Entry): { name: string; summary?: string; fields: Record<string, unknown> } | undefined => (entry as { i18n?: { en: { name: string; summary?: string; fields: Record<string, unknown> } } }).i18n?.en
 const plain = (text: string): string => text.replace(/\{@\w+ ([^{}|]*)[^{}]*\}/g, '$1')

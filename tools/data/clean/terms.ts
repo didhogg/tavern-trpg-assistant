@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { BOOK_SOURCES } from '../config/books'
 import { TERMS_EXTRA } from '../config/termsExtra'
 import { DATA_5ETOOLS } from '../extract/load'
-import { REPO_ROOT } from '../lib/io'
+import { REF_5ETOOLS } from '../lib/io'
 
 export interface TermDict {
   /** 英文（小写）→ 中文 */
@@ -15,7 +15,7 @@ export interface TermDict {
   stats: { parser: number; data: number; extra: number }
 }
 
-const PARSER_JS = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'js', 'parser.js')
+const PARSER_JS = join(REF_5ETOOLS, 'js', 'parser.js')
 const LATIN = /^[A-Za-z][A-Za-z' -]*$/
 const HAN = /[㐀-鿿]/
 /** 中文译名必须是干净的中文：不含拉丁字母、标签记号（{ } | @ < >）或空白。 */

@@ -1,7 +1,7 @@
 /**
  * 5etools-cn 的图片地址规则。
  *
- * 来源（本机 reference/5etools-cn-main（数据库））：
+ * 来源（仓库外参考资料 5etools-cn-main）：
  * - index.html:14、22：站点 canonical / og:url 是 https://5e.kiwee.top/
  * - js/utils.js:6：DEPLOYED_IMG_ROOT = "/img/"
  * - js/render.js:115：getMediaUrl() 把媒体目录与路径拼起来；有 baseMediaUrls 时用 base + path

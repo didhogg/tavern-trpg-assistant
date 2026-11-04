@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { allEntries } from './r9-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 type Raw = Record<string, unknown>
 const isObj = (v: unknown): v is Raw => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -9,7 +10,7 @@ const CORE = new Set(['PHB', 'SCAG', 'MM', 'VGM', 'MTF', 'DMG', 'XGE', 'TCE', 'M
 
 /** 独立读来源：核心书里「行里套着子表」的表。 */
 function sourceNested(): Array<{ parent: string; min: number; max: number; table: Raw }> {
-  const file = JSON.parse(readFileSync(join(process.cwd(), 'reference/5etools-cn-main（数据库）/data/generated/gendata-tables.json'), 'utf8')) as { table?: Raw[]; tableGroup?: Array<{ tables?: Raw[]; source?: string; name?: string }> }
+  const file = JSON.parse(readFileSync(join(REF_5ETOOLS, 'data/generated/gendata-tables.json'), 'utf8')) as { table?: Raw[]; tableGroup?: Array<{ tables?: Raw[]; source?: string; name?: string }> }
   const out: Array<{ parent: string; min: number; max: number; table: Raw }> = []
   const scan = (table: Raw, name: string, source: string): void => {
     if (!CORE.has(source)) return

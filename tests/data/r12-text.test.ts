@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { loadAllPacks } from './r9-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 const SOURCES = ['PHB', 'SCAG', 'MM', 'VGM', 'MTF', 'DMG', 'XGE', 'TCE', 'MPMM', 'BMT']
 const WHITELIST = new Set(['entries', 'section', 'inset', 'insetReadaloud', 'statblock', 'table', 'tableGroup', 'list', 'item', 'itemSub', 'quote', 'image', 'internal', 'gallery', 'square', 'none', 'abilityGeneric', 'inlineBlock', 'cell', 'row'])
@@ -21,7 +22,7 @@ function sourceStats(): { quoteFrom: number; abilityGeneric: string[]; types: Se
     for (const item of Object.values(value)) if (item && typeof item === 'object') walk(item)
   }
   for (const source of SOURCES) {
-    const file = JSON.parse(readFileSync(join(process.cwd(), 'reference/5etools-cn-main（数据库）/data/book', `book-${source.toLowerCase()}.json`), 'utf8')) as { bookData: Array<{ data: Array<Record<string, unknown>> }> }
+    const file = JSON.parse(readFileSync(join(REF_5ETOOLS, 'data/book', `book-${source.toLowerCase()}.json`), 'utf8')) as { bookData: Array<{ data: Array<Record<string, unknown>> }> }
     for (const chapter of file.bookData[0].data) walk(chapter.entries)
   }
   return { quoteFrom, abilityGeneric, types }

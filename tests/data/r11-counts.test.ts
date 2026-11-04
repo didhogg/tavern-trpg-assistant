@@ -3,8 +3,9 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CORE_BOOKS as BOOKS } from '../../tools/data/config/books'
 import { allEntries } from './r11-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
-const DATA = join(process.cwd(), 'reference', '5etools-cn-main（数据库）', 'data')
+const DATA = join(REF_5ETOOLS, 'data')
 const CORE = new Set(BOOKS.map((book) => book.source))
 
 function json(file: string): Record<string, unknown> {

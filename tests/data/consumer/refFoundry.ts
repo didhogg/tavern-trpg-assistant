@@ -1,8 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { REF_FOUNDRY_SYSTEM } from '../../../tools/data/lib/io'
 
 /** 本地核对材料：Foundry dnd5e 系统的 SRD 数据（packs/_source）。不存在时 hasFoundry() 为 false。 */
-const ROOT = join(process.cwd(), 'reference', 'dnd5e-6.1.x（开源VTT）', 'packs', '_source')
+const ROOT = join(REF_FOUNDRY_SYSTEM, 'packs', '_source')
 export const hasFoundry = (): boolean => existsSync(join(ROOT, 'classfeatures'))
 
 export interface FoundryUses { name: string; file: string; max?: string; periods: string[] }

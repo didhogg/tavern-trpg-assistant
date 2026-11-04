@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { loadAllPacks } from './r9-pack-helpers'
 import type { TextBlock } from '../../src/schemas/text'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 const reference = JSON.parse(readFileSync(join(process.cwd(), 'docs/probes/D1.2a_R12_参考小节目录.json'), 'utf8')) as Record<string, Array<Record<string, unknown>>>
 const SOURCES = ['PHB', 'SCAG', 'MM', 'VGM', 'MTF', 'DMG', 'XGE', 'TCE', 'MPMM', 'BMT']
@@ -15,8 +16,8 @@ function plainTitle(input: string): string {
 }
 
 function independent(source: string): Record<string, Array<Record<string, unknown>>> {
-  const data = JSON.parse(readFileSync(join(process.cwd(), 'reference/5etools-cn-main（数据库）/data/book', `book-${source.toLowerCase()}.json`), 'utf8')) as { bookData: Array<{ data: Array<Record<string, unknown>> }> }
-  const books = JSON.parse(readFileSync(join(process.cwd(), 'reference/5etools-cn-main（数据库）/data/books.json'), 'utf8')) as { book: Array<{ source: string; contents: Array<Record<string, unknown>> }> }
+  const data = JSON.parse(readFileSync(join(REF_5ETOOLS, 'data/book', `book-${source.toLowerCase()}.json`), 'utf8')) as { bookData: Array<{ data: Array<Record<string, unknown>> }> }
+  const books = JSON.parse(readFileSync(join(REF_5ETOOLS, 'data/books.json'), 'utf8')) as { book: Array<{ source: string; contents: Array<Record<string, unknown>> }> }
   const contents = books.book.find((book) => book.source === source)!.contents
   const out: Record<string, Array<Record<string, unknown>>> = {}
   for (const [order, chapter] of data.bookData[0].data.entries()) {

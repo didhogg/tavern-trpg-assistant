@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fold } from './util'
+import { REFERENCE_ROOT } from '../../../tools/data/lib/io'
 
 /** 从 PHB 中译文本解析第 11 章的各职业法术列表（法术名取英文名，忽略大小写与标点）。文件不存在返回 undefined。 */
-const FILE = join(process.cwd(), 'reference', '龙与地下城官方资料', 'txt', '5eDnD_玩家手册PHB_中译v1.72版.txt')
+const FILE = join(REFERENCE_ROOT, '龙与地下城官方资料', 'txt', '5eDnD_玩家手册PHB_中译v1.72版.txt')
 const CLASS: Array<[RegExp, string]> = [[/^吟游诗人法术/, 'bard'], [/^牧师法术/, 'cleric'], [/^德鲁伊法术/, 'druid'], [/^圣武士法术/, 'paladin'], [/^游侠法术/, 'ranger'], [/^术士法术/, 'sorcerer'], [/^(魔契师|邪术师)法术/, 'warlock'], [/^法师法术/, 'wizard']]
 
 export const hasPhbText = (): boolean => existsSync(FILE)

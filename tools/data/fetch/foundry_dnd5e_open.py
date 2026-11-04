@@ -1,4 +1,4 @@
-"""取 Foundry dnd5e 系统本体的开源数据（SRD 5.1／5.2 内容，物品、职业特性等），转成 JSON 放到 reference/foundry-dnd5e-open/（不入库，和 5etools 副本同样处理）。
+"""取 Foundry dnd5e 系统本体的开源数据（SRD 5.1／5.2 内容，物品、职业特性等），转成 JSON 放到缓存目录 ~/.cache/tavern-trpg/foundry-dnd5e-open/（仓库外；也不写进参考资料文件夹）。
 
   python3 -I tools/data/fetch/foundry_dnd5e_open.py            # 已有副本就直接转换；没有就按固定提交克隆
 来源：https://github.com/foundryvtt/dnd5e （代码 MIT；数据条目的 system.source.license 为 CC-BY-4.0，署名见各包 credit）。
@@ -9,7 +9,7 @@ import yaml
 
 COMMIT = '0a247dd7d88d4646930ac140d73363282d25b24e'
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-OUT = os.path.join(ROOT, 'reference', 'foundry-dnd5e-open')
+OUT = os.path.join(os.environ.get('TRPG_CACHE') or os.path.join(os.path.expanduser('~'), '.cache', 'tavern-trpg'), 'foundry-dnd5e-open')  # 缓存在仓库外，也不写进参考资料文件夹
 REPO = os.path.join(OUT, 'repo')
 PACKS = {'items': 'items', 'classfeatures': 'classfeatures'}  # 只取 2014 规则的两个包；2024 的包不用（规则可能不同）
 

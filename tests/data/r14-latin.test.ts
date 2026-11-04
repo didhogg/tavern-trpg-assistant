@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { LATIN_ALLOW } from '../../tools/data/config/latinAllow'
 import { loadTerms } from '../../tools/data/clean/terms'
 import { allEntries } from './r9-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 const entries = allEntries()
 const byId = new Map(entries.map((e) => [e.id, e]))
@@ -37,7 +38,7 @@ describe('R14 规则 4：汉字后紧跟的英文（D1）', () => {
 })
 
 describe('R14 术语词典', () => {
-  const parser = readFileSync(join(process.cwd(), 'reference/5etools-cn-main（数据库）/js/parser.js'), 'utf8')
+  const parser = readFileSync(join(REF_5ETOOLS, 'js/parser.js'), 'utf8')
   const terms = loadTerms()
 
   it('机制类词汇与 parser.js 原文逐个一致', () => {

@@ -7,8 +7,9 @@ import { hazardDataSchema } from '../../src/rules/dnd5e2014/data/entries/world'
 import { monsterPartDataSchema } from '../../src/rules/dnd5e2014/data/entries/parts'
 import { MONSTER_PART_TOKENS, assertMonsterPartTokens, tokenPatternOf } from '../../tools/data/config/monsterPartTokens'
 import { allEntries, R11_TYPES } from './r11-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
-const DATA = join(process.cwd(), 'reference', '5etools-cn-main（数据库）', 'data')
+const DATA = join(REF_5ETOOLS, 'data')
 
 function sourceTokens(): Set<string> {
   const files = ['monsterfeatures.json', 'makebrew-creature.json']

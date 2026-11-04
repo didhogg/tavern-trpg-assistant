@@ -2,10 +2,11 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { PlannedEntry } from './plan'
 import { durationOfOpen, type EntryDuration } from './duration'
+import { CACHE_ROOT } from '../lib/io'
 
 /**
  * Foundry dnd5e 系统本体的开源数据（SRD 内容，2014 规则）作为第二个结构化来源（G2.5 P7）。
- * 取数：tools/data/fetch/foundry_dnd5e_open.py（固定提交，转成 JSON 放 reference/foundry-dnd5e-open/）。
+ * 取数：tools/data/fetch/foundry_dnd5e_open.py（固定提交，转成 JSON 放缓存目录 foundry-dnd5e-open/，不放进参考资料文件夹）。
  * 原则：5etools 已有的值优先；这里只补缺（物品的使用次数／恢复、消耗品与带次数物品的使用动作）。
  * 数据条目的许可：CC-BY-4.0（SRD 5.1 署名），写进 credit.structured。
  */
@@ -19,8 +20,8 @@ let index: Map<string, Rec> | undefined
 function items(): Map<string, Rec> {
   if (index) return index
   index = new Map()
-  const file = join(process.cwd(), 'reference', 'foundry-dnd5e-open', 'items.json')
-  if (!existsSync(file)) { console.warn('未找到 reference/foundry-dnd5e-open/items.json：跳过 Foundry 开源数据（先运行 tools/data/fetch/foundry_dnd5e_open.py）'); return index }
+  const file = join(CACHE_ROOT, 'foundry-dnd5e-open', 'items.json')
+  if (!existsSync(file)) { console.warn('未找到 Foundry 开源数据缓存（~/.cache/tavern-trpg/foundry-dnd5e-open/items.json，或 TRPG_CACHE 指定的位置）：跳过 Foundry 开源数据（先运行 tools/data/fetch/foundry_dnd5e_open.py）'); return index }
   for (const e of (JSON.parse(readFileSync(file, 'utf8')) as { entries: Rec[] }).entries) if (!index.has(norm(str(e.name)))) index.set(norm(str(e.name)), e)
   return index
 }
@@ -115,7 +116,7 @@ function classFeatures(): Map<string, Rec> {
   if (classIndex) return classIndex
   classIndex = new Map()
   nameIndex = new Map()
-  const file = join(process.cwd(), 'reference', 'foundry-dnd5e-open', 'classfeatures.json')
+  const file = join(CACHE_ROOT, 'foundry-dnd5e-open', 'classfeatures.json')
   if (!existsSync(file)) return classIndex
   for (const e of (JSON.parse(readFileSync(file, 'utf8')) as { entries: Rec[] }).entries) {
     const sys = isObj(e.system) ? e.system : {}

@@ -2,11 +2,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { allEntries } from './r9-pack-helpers'
+import { REF_5ETOOLS, REF_FOUNDRY_SYSTEM } from '../../tools/data/lib/io'
 
 const ROOT = process.cwd()
 const reference = JSON.parse(readFileSync(join(ROOT, 'docs/probes/D1.2a_R9_关键表数值.json'), 'utf8')) as { tables: Array<{ purpose: string; id: string; columns: unknown[]; rows: Array<Record<string, unknown>> }> }
-const foundry = readFileSync(join(ROOT, 'reference/dnd5e-6.1.x（开源VTT）/module/config.mjs'), 'utf8')
-const parser = readFileSync(join(ROOT, 'reference/5etools-cn-main（数据库）/js/parser.js'), 'utf8')
+const foundry = readFileSync(join(REF_FOUNDRY_SYSTEM, 'module/config.mjs'), 'utf8')
+const parser = readFileSync(join(REF_5ETOOLS, 'js/parser.js'), 'utf8')
 
 function arr(name: string): number[] {
   const match = new RegExp(`${name} = \\[([\\s\\S]*?)\\];`).exec(foundry)

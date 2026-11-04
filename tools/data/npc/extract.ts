@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { REPO_ROOT } from '../lib/io'
+import { REF_5ETOOLS } from '../lib/io'
 import { PACK_BY_SOURCE } from '../config/books'
 import type { PlannedEntry } from '../convert/plan'
 
@@ -57,8 +57,8 @@ export function extractNpcs(monsters: PlannedEntry[], sources: string[]): Planne
   const out: PlannedEntry[] = []
   const seen = new Set<string>()
   for (const source of sources) {
-    const enFile = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data-bak', 'adventure', `adventure-${source.toLowerCase()}.json`)
-    const zhFile = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data', 'adventure', `adventure-${source.toLowerCase()}.json`)
+    const enFile = join(REF_5ETOOLS, 'data-bak', 'adventure', `adventure-${source.toLowerCase()}.json`)
+    const zhFile = join(REF_5ETOOLS, 'data', 'adventure', `adventure-${source.toLowerCase()}.json`)
     const en = load(enFile); const zh = load(zhFile)
     if (!en) continue
     const walk = (node: unknown, path: Array<string | number>, ancestors: Array<{ path: Array<string | number>; name: string; page: number }>): void => {
@@ -128,8 +128,8 @@ export function extractNpcs(monsters: PlannedEntry[], sources: string[]): Planne
   // M 档：named {@creature Name} + stat、Name (use the X stat)、句首 Name uses the X stat。
   const mPat = /named \{@creature ([^}|]+)|([A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){0,3})\s*\((?:use|uses|using) the \{@creature ([^}|]+)[^}]*\} stat|(?:^|[.!?] )([A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){0,3}) (?:uses|use|using) the \{@creature ([^}|]+)[^}]*\} stat/g
   for (const source of sources) {
-    const enFile = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data-bak', 'adventure', `adventure-${source.toLowerCase()}.json`)
-    const zhFile = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data', 'adventure', `adventure-${source.toLowerCase()}.json`)
+    const enFile = join(REF_5ETOOLS, 'data-bak', 'adventure', `adventure-${source.toLowerCase()}.json`)
+    const zhFile = join(REF_5ETOOLS, 'data', 'adventure', `adventure-${source.toLowerCase()}.json`)
     const en = load(enFile); const zh = load(zhFile)
     if (!en) continue
     const walk = (node: unknown, path: Array<string | number>, ancestors: Array<{ name: string; page: number }>): void => {

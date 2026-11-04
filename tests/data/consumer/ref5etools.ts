@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { arr, rec, str } from './util'
+import { REF_5ETOOLS } from '../../../tools/data/lib/io'
 
 /** 本地核对材料：5etools 原始数据（不是构建输出）。不存在时返回 undefined，对应测试跳过。 */
-const DIR = join(process.cwd(), 'reference', '5etools-cn-main（数据库）', 'data')
+const DIR = join(REF_5ETOOLS, 'data')
 export const has5etools = (): boolean => existsSync(join(DIR, 'class', 'class-cleric.json'))
 export const raw5e = (rel: string): unknown => JSON.parse(readFileSync(join(DIR, rel), 'utf8'))
 

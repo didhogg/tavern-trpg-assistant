@@ -2,12 +2,13 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { loadAllPacks } from './r9-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 type Raw = Record<string, unknown>
 const obj = (v: unknown): v is Raw => !!v && typeof v === 'object' && !Array.isArray(v)
 
 function sourceChapters(source: string): Raw[] {
-  const file = JSON.parse(readFileSync(join(process.cwd(), 'reference/5etools-cn-main（数据库）/data/book', `book-${source.toLowerCase()}.json`), 'utf8')) as { bookData: Array<{ data: Raw[] }> }
+  const file = JSON.parse(readFileSync(join(REF_5ETOOLS, 'data/book', `book-${source.toLowerCase()}.json`), 'utf8')) as { bookData: Array<{ data: Raw[] }> }
   return file.bookData[0].data
 }
 

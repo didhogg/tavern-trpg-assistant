@@ -118,8 +118,9 @@ describe('G2a 使用次数 uses 审计（a18）', () => {
 
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { REF_FOUNDRY_SYSTEM } from '../../tools/data/lib/io'
 function foundryAllNames(): string[] {
-  const root = join(process.cwd(), 'reference', 'dnd5e-6.1.x（开源VTT）', 'packs', '_source')
+  const root = join(REF_FOUNDRY_SYSTEM, 'packs', '_source')
   const out: string[] = []
   const walk = (d: string): void => {
     for (const n of readdirSync(d)) {

@@ -3,12 +3,13 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { FIELD_COVERAGE } from '../../tools/data/config/fieldCoverage'
 import { allEntries } from './r9-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 type Rec = Record<string, unknown>
 const entries = allEntries()
 const byId = new Map(entries.map((e) => [e.id, e]))
 const data = (id: string): Rec => byId.get(id)!.data as Rec
-const SRC = join(process.cwd(), 'reference/5etools-cn-main（数据库）/data')
+const SRC = join(REF_5ETOOLS, 'data')
 const read = (file: string): Rec => JSON.parse(readFileSync(join(SRC, file), 'utf8')) as Rec
 
 describe('R15 补进输出的字段（期望值读来源，不读转换器）', () => {

@@ -3,12 +3,13 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { CORE_BOOKS as BOOKS } from '../../tools/data/config/books'
 import { allEntries, normalizeRefs } from './r11-pack-helpers'
+import { REF_5ETOOLS } from '../../tools/data/lib/io'
 
 const PREFIX: Record<string, string> = {
   script: 'script', skill: 'skill', sense: 'sense', itemProperty: 'item-property', itemType: 'item-type', itemTypeExtra: 'item-type-extra', quickref: 'quickref',
 }
 const NEW_TYPES = new Set(['language', 'deity', 'reward', 'cult', 'hazard', 'object', 'vehicle', 'monsterPart'])
-const DATA = join(process.cwd(), 'reference', '5etools-cn-main（数据库）', 'data')
+const DATA = join(REF_5ETOOLS, 'data')
 const CORE = new Set(BOOKS.map((book) => book.source))
 
 function isR11(entry: { type: string; data: Record<string, unknown> }): boolean {

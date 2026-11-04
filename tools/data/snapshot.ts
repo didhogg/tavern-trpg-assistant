@@ -1,8 +1,8 @@
 import { join } from 'node:path'
-import { listFiles, readJson, rel, REPO_ROOT, sha256File, writeText } from './lib/io'
+import { listFiles, readJson, REF_5ETOOLS, REF_DND_DATA, rel, REPO_ROOT, sha256File, writeText } from './lib/io'
 
-const DATA_5ETOOLS = join(REPO_ROOT, 'reference', '5etools-cn-main（数据库）', 'data')
-const DATA_FALLBACK = join(REPO_ROOT, 'reference', 'dnd-data-main（数据库）', 'data')
+const DATA_5ETOOLS = join(REF_5ETOOLS, 'data')
+const DATA_FALLBACK = join(REF_DND_DATA, 'data')
 
 export interface Snapshot {
   formatVersion: 1
