@@ -92,7 +92,7 @@ export function convertBlocks(input: unknown, ctx: InlineContext, options: Block
   }
   if (type === 'list') {
     const items = Array.isArray(input.items) ? input.items : []
-    return [{ list: items.map((item) => listText(item, ctx)).filter(Boolean) }]
+    return ((l) => (str(input.name) ? [{ h: renderInline(str(input.name), ctx), body: [l] }] : [l]))({ list: items.map((item) => listText(item, ctx)).filter(Boolean) }) // 列表自己带标题（致谢里的「5et汉化」等）时保留标题；单行写法保持行号不变
   }
   if (type === 'table') {
     const cols = Array.isArray(input.colLabels) ? input.colLabels.map((c) => renderInline(str(c), ctx)) : []

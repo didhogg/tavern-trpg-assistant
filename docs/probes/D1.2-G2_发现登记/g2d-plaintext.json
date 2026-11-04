@@ -4,7 +4,7 @@
   {
    "check": "d10",
    "key": "entries",
-   "value": 8859
+   "value": 8871
   },
   {
    "check": "d10",
@@ -139,12 +139,12 @@
   {
    "check": "d10",
    "key": "length.p50",
-   "value": 245
+   "value": 246
   },
   {
    "check": "d10",
    "key": "length.p95",
-   "value": 1911
+   "value": 1910
   },
   {
    "check": "d10",
@@ -174,7 +174,7 @@
     "book.bestiary.mpmm 怪物图鉴：73821 字",
     "book.bestiary.mtf 怪物图鉴：36313 字",
     "book.bestiary.vgm 怪物图鉴：51072 字",
-    "book.classes.scag 职业：20110 字",
+    "book.classes.scag 职业：20129 字",
     "book.combat.phb 战斗：13106 字",
     "book.creating-a-multiverse.dmg 塑造多元宇宙：36323 字",
     "book.creating-adventures.dmg 创建冒险：17733 字",
@@ -187,15 +187,15 @@
     "book.equipment.phb 装备：15271 字",
     "book.gith-and-their-endless-war.mtf 吉斯人及其无尽战争：15045 字",
     "book.group-patrons.tce 团队赞助人：13476 字",
-    "book.halflings-and-gnomes.mtf 半身人和侏儒：21456 字",
+    "book.halflings-and-gnomes.mtf 半身人和侏儒：21454 字",
     "book.introduction.mm 简介：130531 字",
     "book.monster-lore.vgm 怪物学识：117958 字",
     "book.races-of-the-realms.scag 国度诸种族：25234 字",
     "book.running-the-game.dmg 运作游戏：31941 字",
-    "book.the-blood-war.mtf 血战：32574 字",
-    "book.the-sword-coast-and-the-north.scag 剑湾与北地：94962 字",
+    "book.the-blood-war.mtf 血战：32572 字",
+    "book.the-sword-coast-and-the-north.scag 剑湾与北地：94998 字",
     "book.treasure.dmg 宝藏：17115 字",
-    "book.welcome-to-the-realms.scag 欢迎来到国度：55286 字",
+    "book.welcome-to-the-realms.scag 欢迎来到国度：55318 字",
     "table.cards-deck-of-many-more-things.bmt 万事万象无常牌·牌组内容：142861 字"
    ],
    "expected": "长度分布",

@@ -4,7 +4,7 @@
   {
    "check": "d5",
    "key": "entriesWithoutPage",
-   "value": 663
+   "value": 675
   },
   {
    "check": "d5",
@@ -24,7 +24,7 @@
   {
    "check": "d5",
    "key": "withoutPage.rule",
-   "value": 7
+   "value": 19
   },
   {
    "check": "d5",
@@ -88,6 +88,18 @@
    "kind": "source-defect",
    "fixSource": "decision",
    "entries": [
+    "rule.glossary-ability.phb 名称表：属性",
+    "rule.glossary-alignment.phb 名称表：阵营",
+    "rule.glossary-armor-category.phb 名称表：护甲类别",
+    "rule.glossary-creature-type.phb 名称表：生物类型",
+    "rule.glossary-damage-type.phb 名称表：伤害类型",
+    "rule.glossary-movement.phb 名称表：移动方式",
+    "rule.glossary-rarity.phb 名称表：稀有度",
+    "rule.glossary-size.phb 名称表：体型",
+    "rule.glossary-spell-school.phb 名称表：法术学派",
+    "rule.glossary-tool.phb 名称表：工具",
+    "rule.glossary-weapon-category.phb 名称表：武器类别",
+    "rule.glossary-weapon-property.phb 名称表：武器特性",
     "rule.item-type-extra-gs.xge 赌具",
     "rule.item-type-extra-ins.xge 乐器",
     "rule.script-draconic.phb 龙语",
@@ -98,7 +110,7 @@
    ],
    "expected": "5etools 原始规则数据的 page",
    "note": "7 条规则（4 种文字书写系统、XGE 的赌具/乐器补充）没有页码。第 1 站核对：5etools 的 languageScript、itemTypeAdditionalEntries 记录里就没有 page 字段；保持来源如此",
-   "count": 7
+   "count": 19
   },
   {
    "id": "d5-table-page",

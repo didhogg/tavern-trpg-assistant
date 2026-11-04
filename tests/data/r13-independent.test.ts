@@ -46,8 +46,8 @@ describe('R13 英文对照：独立读 data-bak 核对', () => {
     expect([...byId.values()].filter((e) => e.type === 'feature' && i18nOf(e)?.name === 'Second Wind').length).toBeGreaterThan(0)
   })
 
-  it('除 4 个基线别名外，所有条目都有英文版', () => {
-    const missing = entries.filter((entry) => !i18nOf(entry)).map((entry) => entry.id).sort()
+  it('除 4 个基线别名与转换器生成的名称表（category=glossary，英文名在条目自己的 nameEn / terms 里）外，所有条目都有英文版', () => {
+    const missing = entries.filter((entry) => !i18nOf(entry) && entry.data.category !== 'glossary').map((entry) => entry.id).sort()
     expect(missing).toEqual(['item.rapier-sword-of-sharpness.dmg', 'item.rapier-vorpal-sword.dmg', 'item.shortsword-sword-of-sharpness.dmg', 'item.shortsword-vorpal-sword.dmg'])
     expect(entries.length).toBeGreaterThan(8800) // 不再写死总数
   })
@@ -94,7 +94,8 @@ describe('R13 英文对照：独立读 data-bak 核对', () => {
 
   it('每种类型的英文条数：与中文条数相同（别名除外）', () => {
     const byType = new Map<string, { cn: number; en: number }>()
-    for (const entry of entries) { const row = byType.get(entry.type) ?? { cn: 0, en: 0 }; row.cn++; if (i18nOf(entry)) row.en++; byType.set(entry.type, row) }
+    for (const entry of entries) { if (entry.data.category === 'glossary') continue // 名称表是转换器生成的，不在英文原版里
+      const row = byType.get(entry.type) ?? { cn: 0, en: 0 }; row.cn++; if (i18nOf(entry)) row.en++; byType.set(entry.type, row) }
     for (const [type, row] of byType) expect(row.en, type).toBe(type === 'item' ? row.cn - 4 : row.cn)
   })
 

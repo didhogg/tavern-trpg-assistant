@@ -2250,7 +2250,7 @@
   },
   {
    "id": "table.acolyte.phb",
-   "name": "侍僧·特点",
+   "name": "侍僧·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": true,
@@ -2335,7 +2335,7 @@
   },
   {
    "id": "table.charlatan.phb-2",
-   "name": "骗子·特点",
+   "name": "骗子·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -2428,7 +2428,7 @@
   },
   {
    "id": "table.criminal.phb-2",
-   "name": "罪犯·特点",
+   "name": "罪犯·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -2553,7 +2553,7 @@
   },
   {
    "id": "table.entertainer.phb-2",
-   "name": "艺人·特点",
+   "name": "艺人·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -2670,7 +2670,7 @@
   },
   {
    "id": "table.far-traveler.scag-2",
-   "name": "远行者·特点",
+   "name": "远行者·性格特点",
    "kind": "roll",
    "source": "SCAG",
    "srd": false,
@@ -2755,7 +2755,7 @@
   },
   {
    "id": "table.folk-hero.phb-2",
-   "name": "平民英雄·特点",
+   "name": "平民英雄·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -2848,7 +2848,7 @@
   },
   {
    "id": "table.guild-artisan.phb-2",
-   "name": "公会工匠·特点",
+   "name": "公会工匠·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -2965,7 +2965,7 @@
   },
   {
    "id": "table.hermit.phb-2",
-   "name": "隐士·特点",
+   "name": "隐士·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -3058,7 +3058,7 @@
   },
   {
    "id": "table.noble.phb",
-   "name": "贵族·特点",
+   "name": "贵族·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -3203,7 +3203,7 @@
   },
   {
    "id": "table.outlander.phb-2",
-   "name": "化外之民·特点",
+   "name": "化外之民·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -3271,7 +3271,7 @@
   },
   {
    "id": "table.rewarded.bmt",
-   "name": "受宠者·特点",
+   "name": "受宠者·性格特点",
    "kind": "roll",
    "source": "BMT",
    "srd": false,
@@ -3305,7 +3305,7 @@
   },
   {
    "id": "table.ruined.bmt",
-   "name": "受难者·特点",
+   "name": "受难者·性格特点",
    "kind": "roll",
    "source": "BMT",
    "srd": false,
@@ -3356,7 +3356,7 @@
   },
   {
    "id": "table.sage.phb-2",
-   "name": "智者·特点",
+   "name": "智者·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -3424,7 +3424,7 @@
   },
   {
    "id": "table.sailor.phb",
-   "name": "水手·特点",
+   "name": "水手·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -3541,7 +3541,7 @@
   },
   {
    "id": "table.soldier.phb-2",
-   "name": "士兵·特点",
+   "name": "士兵·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,
@@ -3609,7 +3609,7 @@
   },
   {
    "id": "table.urchin.phb",
-   "name": "流浪儿·特点",
+   "name": "流浪儿·性格特点",
    "kind": "roll",
    "source": "PHB",
    "srd": false,

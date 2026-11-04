@@ -25,7 +25,8 @@ for (const list of Object.values(levels)) list.sort((a, b) => Number(a.level) - 
 mkdirSync(OUT, { recursive: true })
 const write = (name: string, value: unknown): void => writeFileSync(join(OUT, name), `${JSON.stringify(value)}\n`)
 write('classes.json', { classes, levels })
-write('spells.json', byIndex(read('Spells')))
+// 治疗类法术在新版 5e-database 里没有 damage 字段、只有 heal_at_slot_level；核对测试按"有 damage 数组"才比，补成空数组以保持核对材料的形状一致
+write('spells.json', byIndex(read('Spells').map((r) => ('damage' in r ? r : { ...r, damage: [] }))))
 write('equipment.json', byIndex(read('Equipment')))
 write('monsters.json', byIndex(read('Monsters')))
 console.log(`已生成：${OUT}（职业 ${Object.keys(classes).length}、逐级表 ${Object.values(levels).reduce((n, l) => n + l.length, 0)} 行、法术 ${read('Spells').length}、装备 ${read('Equipment').length}、怪物 ${read('Monsters').length}）`)

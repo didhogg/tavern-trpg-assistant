@@ -106,7 +106,7 @@ export function termsFromRuleEntries(entries: RuleLike[]): { weaponProperty: Row
 function entryOf(kind: string, zh: string, en: string, rows: Row[]): GlossaryEntry {
   return {
     id: `rule.glossary-${kind}.phb`, type: 'rule', name: `名称表：${zh}`, nameEn: `Glossary: ${en}`,
-    keywords: [`${zh}名称表`, `Glossary ${en}`], unique: false,
+    keywords: [`名称表：${zh}`, `Glossary: ${en}`], unique: false, // 关键词里要有条目自己的中文名与英文名（搜索约定）
     summary: `名称表：${zh}｜${rows.slice(0, 6).map((r) => r.name).join('、')}${rows.length > 6 ? '…' : ''}（共 ${rows.length} 项）`,
     data: {
       category: 'glossary', glossary: kind, terms: rows,
