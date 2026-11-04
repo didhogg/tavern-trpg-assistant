@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { readJson, REPO_ROOT, writeBytes, writeText, sha256 } from './lib/io'
+import { readJson, REFERENCE_ROOT, REPO_ROOT, writeBytes, writeText, sha256 } from './lib/io'
+import { outArg, resolveOutDir } from './lib/outDir'
 import { createSnapshot, changedFiles, loadSnapshot, saveSnapshot } from './snapshot'
 import { loadRawData } from './extract/load'
 import { normalizeNewMonsters } from './normalizeNewMonsters'
@@ -53,9 +54,19 @@ async function main(): Promise<void> {
   const updateSnapshot = args.has('--update-snapshot')
   const packArg = process.argv.indexOf('--pack')
   const only = process.argv.find((a) => a.startsWith('--pack='))?.slice(7) ?? (packArg >= 0 ? process.argv[packArg + 1] : undefined)
+  // 试跑模式：--out <目录>。所有输出（包、目录页、报告、中间文件）只写到该目录；不碰 packs/、数据仓库、published.json、snapshot.json；
+  // 输入文件变了也照常构建（只列出来），版本号检查降为警告。用于"先看差异再决定要不要换"。
+  const rawOut = outArg(process.argv.slice(2))
+  const OUT = rawOut === undefined ? undefined : resolveOutDir(rawOut, { 助手仓库: REPO_ROOT, 数据仓库: DATA_REPO, 参考资料夹: REFERENCE_ROOT })
+  const WORK = OUT ? join(OUT, 'work') : join(REPO_ROOT, 'tools', 'data', 'out')
+  const REPORT_ROOT = OUT ? join(OUT, 'reports') : REPO_ROOT
   const current = await createSnapshot()
   const saved = await loadSnapshot()
-  if (updateSnapshot || !saved) {
+  if (OUT) {
+    const changed = saved ? changedFiles(saved, current) : []
+    await writeText(join(OUT, 'input-diff.txt'), `${changed.join('\n')}\n`)
+    console.log(`试跑模式：输出目录 ${OUT}；输入文件与快照不同的有 ${changed.length} 个（清单见 input-diff.txt）`)
+  } else if (updateSnapshot || !saved) {
     await saveSnapshot(current)
     console.log(`已记录输入快照（${Object.keys(current.files).length} 个文件）`)
   } else {
@@ -124,12 +135,12 @@ async function main(): Promise<void> {
   result.packs = result.packs.filter((p) => corePackIds.has(p.manifest.id) || p.entries.length > 0)
   const artCount = applyArt(result.packs, art)
   console.log(`art：${artCount} 个怪物`)
-  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'dedupe.json'), `${JSON.stringify(dedupe, null, 1)}\n`)
+  await writeText(join(WORK, 'dedupe.json'), `${JSON.stringify(dedupe, null, 1)}\n`)
   console.log(`去重：A ${dedupe.A}，B ${dedupe.B}，C ${dedupe.C}，D ${dedupe.D}，同名异物 ${dedupe.sameNameDifferent}`)
   const fixReport = runFixes(result.packs.filter((p) => corePackIds.has(p.manifest.id))) // G2.5 修正只作用于核心 11 包；新来源走自己的转换
   console.log(`修正：规则 ${fixReport.rules.length} 个（命中 ${fixReport.rules.reduce((n, r) => n + r.changed, 0)} 条），逐条表 ${fixReport.rows.length} 行，新增条目 ${fixReport.added.length}`)
-  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'fix-report.json'), `${JSON.stringify(fixReport, null, 1)}\n`)
-  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
+  await writeText(join(WORK, 'fix-report.json'), `${JSON.stringify(fixReport, null, 1)}\n`)
+  await writeText(join(WORK, 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
   if (srd) for (const alias of BASELINE_ALIASES) if (!srd.entries.some((e) => e.id === alias.id)) srd.entries.push(alias)
   const allConverted = result.packs.flatMap((p) => p.entries)
@@ -145,7 +156,7 @@ async function main(): Promise<void> {
   const english = runEnglishPass()
   const aligned = alignAll(allConverted, english, plan.tables.map((table) => table.id))
   rewriteAliases(result.packs, dedupe.aliases)
-  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'i18n.json'), `${JSON.stringify({ stats: aligned.stats, misses: aligned.misses, unmatchedEnglish: aligned.unmatchedEnglish }, null, 1)}\n`)
+  await writeText(join(WORK, 'i18n.json'), `${JSON.stringify({ stats: aligned.stats, misses: aligned.misses, unmatchedEnglish: aligned.unmatchedEnglish }, null, 1)}\n`)
   console.log(`英文条目 ${english.entries.length}，已加 i18n：${Object.values(aligned.stats).reduce((n, s) => n + s.withEnglish, 0)}/${allConverted.length}`)
   const i18nErrors = validateI18n(allConverted)
   if (i18nErrors.length) throw new Error(`英文对照校验失败 ${i18nErrors.length} 条：${i18nErrors.slice(0, 10).join('；')}`)
@@ -168,7 +179,7 @@ async function main(): Promise<void> {
   if (g25Problems.length) throw new Error(`G2.5 新字段校验失败 ${g25Problems.length} 条：${g25Problems.slice(0, 10).join('；')}`)
   const health = healthMetrics(result, data)
   assertHealth(health)
-  await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'health.json'), `${JSON.stringify(health, null, 2)}\n`)
+  await writeText(join(WORK, 'health.json'), `${JSON.stringify(health, null, 2)}\n`)
   console.log('体检报数：' + health.map((h) => `${h.id}=${h.count ?? 'pending'}`).join(' '))
   console.log(`转换完成：${result.packs.length} 个包`)
 
@@ -191,27 +202,29 @@ async function main(): Promise<void> {
     result.packs.filter((p) => outputs.has(p.manifest.id)).map((p) => ({ id: p.manifest.id, version: p.manifest.version, sha256: outputs.get(p.manifest.id)!.sha256 })),
     published,
   )
-  if (version.errors.length) {
+  if (version.errors.length && !OUT) {
     console.error(version.errors.join('\n'))
     process.exitCode = 1
     return
   }
+  if (OUT) for (const error of version.errors) console.warn(`（试跑，降为警告）${error}`)
   for (const warning of version.warnings) console.warn(`警告：${warning}`)
 
   for (const [id, out] of outputs) {
     const pack = result.packs.find((p) => p.manifest.id === id)!
-    if (id === SRD_PACK_ID) await writeBytes(join(REPO_ROOT, 'packs', `${id}.trpgpack`), out.bytes)
+    if (OUT) await writeBytes(join(OUT, 'packs', `${id}-${pack.manifest.version}.trpgpack`), out.bytes)
+    else if (id === SRD_PACK_ID) await writeBytes(join(REPO_ROOT, 'packs', `${id}.trpgpack`), out.bytes)
     else await writeBytes(join(DATA_REPO, 'packs', 'dnd5e2014', `${id}-${pack.manifest.version}.trpgpack`), out.bytes)
   }
   if (!only) {
-    await writeDataRepo(DATA_REPO, result.packs, outputs)
-    await writeText(join(REPO_ROOT, 'tools', 'data', 'out', 'report.json'), `${JSON.stringify(reportOf(result, outputs, data), null, 2)}\n`)
-    await writeReport(REPO_ROOT, result, outputs, data)
-    await writeChecklist(REPO_ROOT, result)
-    await writeCharacterReport(REPO_ROOT, result)
-    await writeChecklist11(REPO_ROOT, result)
-    await writeI18nReport(REPO_ROOT, aligned, english.entries.length, outputs)
-    await writeCleanReport(REPO_ROOT, lastCleanReport()!, health, outputs)
+    await writeDataRepo(OUT ? join(OUT, 'data-repo') : DATA_REPO, result.packs, outputs)
+    await writeText(join(WORK, 'report.json'), `${JSON.stringify(reportOf(result, outputs, data), null, 2)}\n`)
+    await writeReport(REPORT_ROOT, result, outputs, data)
+    await writeChecklist(REPORT_ROOT, result)
+    await writeCharacterReport(REPORT_ROOT, result)
+    await writeChecklist11(REPORT_ROOT, result)
+    await writeI18nReport(REPORT_ROOT, aligned, english.entries.length, outputs)
+    await writeCleanReport(REPORT_ROOT, lastCleanReport()!, health, outputs)
   }
   for (const [id, out] of outputs) console.log(`${id.padEnd(24)} ${(out.bytes.length / 1024).toFixed(1)} KB  ${out.sha256}`)
   console.log(`合计 ${(volumes.reduce((n, v) => n + v.bytes, 0) / 1024 / 1024).toFixed(2)} MB`)
