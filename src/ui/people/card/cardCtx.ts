@@ -10,6 +10,8 @@ export interface CardCtx {
   data: CardData
   readOnly: boolean
   derived: () => PersonDerived
+  /** 用另一份 block 现算（弹窗里的暂存预览）。 */
+  derivedWith: (block: MonsterData) => PersonDerived
   commitDraft: (patch: Partial<Person>, fields: string[]) => void
   commitBlock: (block: MonsterData) => void
   commitLive: (patch: LivePatch) => void

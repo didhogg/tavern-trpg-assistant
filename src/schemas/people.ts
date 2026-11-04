@@ -88,6 +88,8 @@ export const personSchema = z.object({
   hitDiceOverride: z.record(z.string(), z.number().int().nonnegative()).optional(),
   /** 升级掷骰记录：总等级（从 2 起）→ 该级掷出的骰面点数；生命增量 = max(1, 点数 + 体质调整值)。 */
   hpRolls: z.record(z.string(), z.number().int().min(1)).optional(),
+  /** 升级时选过的属性值提升：级数 → 两个属性（相同 = +2，不同 = 各 +1）；降级时据此还原 abilityGrowth。 */
+  asiLog: z.record(z.string(), z.array(z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha'])).length(2)).optional(),
   /** 当场状态；0–6 级。 */
   exhaustion: z.number().int().min(0).max(6).optional(),
   /** 当场状态：每个骰型已用颗数。 */

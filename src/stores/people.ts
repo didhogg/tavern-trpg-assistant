@@ -35,6 +35,7 @@ export interface DraftPatch {
   hpAdj?: Person['hpAdj']
   hitDiceOverride?: Person['hitDiceOverride']
   hpRolls?: Person['hpRolls']
+  asiLog?: Person['asiLog']
 }
 
 export interface PreparedAvatar {

@@ -7,6 +7,7 @@ import { useAppStore } from '../../../stores/app'
 import { useModalStore } from '../../../stores/modal'
 import Icon from '../../kit/Icon.vue'
 import { cropImageToBytes } from './autoCrop'
+import DialogFrame from './dialogs/DialogFrame.vue'
 import { useAssetUrl } from './useAssetUrl'
 
 const props = defineProps<{
@@ -21,7 +22,11 @@ const image = ref<HTMLImageElement | null>(null)
 const stage = ref<HTMLElement | null>(null)
 const preview = ref<HTMLCanvasElement | null>(null)
 const natural = ref<{ w: number; h: number } | null>(null)
+const initial = { ...props.avatarSource.crop }
 const crop = ref<AvatarCrop>({ ...props.avatarSource.crop })
+/** 缩放百分比：相对打开时的截取框；截取框越小 = 放得越大。 */
+const zoomPercent = computed(() => Math.round((initial.w / crop.value.w) * 100))
+function restore(): void { crop.value = { ...initial }; void nextTick(draw) }
 const error = ref('')
 const drag = ref<{ kind: 'move' | 'nw' | 'ne' | 'sw' | 'se'; x: number; y: number; before: AvatarCrop } | null>(null)
 const aspect = computed(() => (natural.value ? (natural.value.w / natural.value.h) * (5 / 4) : 1.25))
@@ -137,24 +142,25 @@ onBeforeUnmount(() => window.removeEventListener('pointermove', move))
 </script>
 
 <template>
-  <div class="trpg-recrop" data-testid="recrop-page">
-    <p v-if="!sourceUrl" class="trpg-field__error">原图已不在，请重新上传。</p>
-    <div v-else class="trpg-recrop__layout">
-      <div ref="stage" class="trpg-recrop__stage" tabindex="0" aria-label="拖动截取框；方向键移动，Shift 加速" @keydown="nudge">
-        <img ref="image" :src="sourceUrl" alt="" @load="loaded" />
-        <div class="trpg-recrop__shade" />
-        <div class="trpg-recrop__box" :style="{ left: `${crop.x * 100}%`, top: `${crop.y * 100}%`, width: `${crop.w * 100}%`, height: `${crop.h * 100}%` }" @pointerdown="down($event, 'move')">
-          <span v-for="corner in ['nw', 'ne', 'sw', 'se']" :key="corner" class="trpg-recrop__handle" :class="`is-${corner}`" @pointerdown="down($event, corner as 'nw' | 'ne' | 'sw' | 'se')" />
+  <DialogFrame note="拖动截取框移动，拖四角缩放">
+    <div class="trpg-recrop" data-testid="recrop-page">
+      <p v-if="!sourceUrl" class="trpg-field__error">原图已不在，请重新上传。</p>
+      <div v-else class="trpg-recrop__layout">
+        <div ref="stage" class="trpg-recrop__stage" tabindex="0" aria-label="截取框" @keydown="nudge">
+          <img ref="image" :src="sourceUrl" alt="" @load="loaded" />
+          <div class="trpg-recrop__shade" />
+          <div class="trpg-recrop__box" :style="{ left: `${crop.x * 100}%`, top: `${crop.y * 100}%`, width: `${crop.w * 100}%`, height: `${crop.h * 100}%` }" @pointerdown="down($event, 'move')">
+            <span v-for="corner in ['nw', 'ne', 'sw', 'se']" :key="corner" class="trpg-recrop__handle" :class="`is-${corner}`" @pointerdown="down($event, corner as 'nw' | 'ne' | 'sw' | 'se')" />
+          </div>
+        </div>
+        <div class="trpg-recrop__side">
+          <span class="trpg-field__label">预览</span>
+          <canvas ref="preview" class="trpg-recrop__preview" width="96" height="120" aria-label="头像预览" />
         </div>
       </div>
-      <div class="trpg-recrop__side">
-        <span class="trpg-field__label">预览</span>
-        <canvas ref="preview" class="trpg-recrop__preview" aria-label="头像预览" />
-        <label class="trpg-recrop__zoom"><span>缩放</span><div class="trpg-recrop__zoom-row"><button class="trpg-icon-btn" type="button" aria-label="缩小截取框" @click="stepZoom(-5)"><Icon name="minus" :size="16" /></button><input v-model.number="zoom" type="range" min="0" max="100" aria-label="缩放截取框" /><button class="trpg-icon-btn" type="button" aria-label="放大截取框" @click="stepZoom(5)"><Icon name="plus" :size="16" /></button></div></label>
-      </div>
+      <div v-if="sourceUrl" class="trpg-recrop__zoom"><span class="trpg-field__label">缩放</span><div class="trpg-recrop__zoom-row"><button class="trpg-icon-btn" type="button" aria-label="缩小截取框" @click="stepZoom(-5)"><Icon name="minus" :size="16" /></button><input v-model.number="zoom" type="range" min="0" max="100" aria-label="缩放截取框" /><button class="trpg-icon-btn" type="button" aria-label="放大截取框" @click="stepZoom(5)"><Icon name="plus" :size="16" /></button><b class="trpg-recrop__pct">{{ zoomPercent }}%</b><button class="trpg-btn trpg-btn--quiet trpg-btn--small" type="button" data-testid="recrop-restore" @click="restore"><Icon name="arrow-counter-clockwise" :size="16" />还原</button></div></div>
+      <p v-if="error" class="trpg-field__error" role="alert">{{ error }}</p>
     </div>
-    <p class="trpg-field__hint">拖动截取框移动，拖四角缩放；方向键移动 2%，Shift + 方向键 10%。</p>
-    <p v-if="error" class="trpg-field__error" role="alert">{{ error }}</p>
-    <div class="trpg-recrop__actions"><button class="trpg-btn" type="button" @click="modal.pop()">取消</button><button class="trpg-btn trpg-btn--primary" type="button" :disabled="readOnly || !sourceUrl" @click="apply">使用这个截取</button></div>
-  </div>
+    <template #actions><button class="trpg-btn" type="button" @click="modal.pop()">取消</button><button class="trpg-btn trpg-btn--primary" type="button" :disabled="readOnly || !sourceUrl" @click="apply">使用这个截取</button></template>
+  </DialogFrame>
 </template>

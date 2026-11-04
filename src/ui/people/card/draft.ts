@@ -46,6 +46,7 @@ export function draftPatchOf(draft: Person, fields: string[]): DraftPatch {
     else if (key === 'hpAdj') patch.hpAdj = draft.hpAdj
     else if (key === 'hitDiceOverride') patch.hitDiceOverride = draft.hitDiceOverride
     else if (key === 'hpRolls') patch.hpRolls = draft.hpRolls
+    else if (key === 'asiLog') patch.asiLog = draft.asiLog
   }
   return patch
 }

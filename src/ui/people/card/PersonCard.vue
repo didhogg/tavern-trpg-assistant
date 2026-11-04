@@ -2,7 +2,7 @@
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 import type { Person, PersonEffect } from '../../../schemas/people'
 import type { MonsterData } from '../../../rules/dnd5e2014/data/entries/spell-monster'
-import { ABILITY_LABELS, type AbilityKey, type SkillKey } from '../../../rules/dnd5e2014/data/enums'
+import type { AbilityKey, SkillKey } from '../../../rules/dnd5e2014/data/enums'
 import type { DeriveContext } from '../../../rules/dnd5e2014/derive'
 import { derivePerson, xpOf } from '../../../rules/dnd5e2014/derive'
 import { formatCr } from '../rows'
@@ -162,6 +162,7 @@ const ctx = reactive({
   get data(): CardData { return cardData.value as CardData },
   get readOnly(): boolean { return readOnly.value },
   derived: () => derived.value!,
+  derivedWith: (block: MonsterData) => derivePerson({ ...model, block }, context.value!),
   commitDraft, commitBlock, commitLive, commitMany,
   toast: { success: (t: string) => toast.success(t), error: (t: string) => toast.error(t), info: (t: string) => toast.info(t) },
 }) as unknown as CardCtx

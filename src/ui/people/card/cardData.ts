@@ -39,7 +39,7 @@ export interface CardData {
 
 const TYPES = ['class', 'subclass', 'race', 'subrace', 'background', 'condition', 'spell'] as const
 
-function entryView(row: StoredEntry, packs: Map<string, string>): CardEntry {
+export function entryView(row: StoredEntry, packs: Map<string, string>): CardEntry {
   const { packId, entryId, ruleId: _ruleId, type, name, nameEn, keywords, unique, summary, data, image, override: _override, i18n } = row
   return { packId, badge: packs.get(packId) ?? '', entry: { id: entryId, type, name, nameEn, keywords, unique, summary, data, image, i18n } }
 }
@@ -168,4 +168,15 @@ export async function loadArchiveCandidates(ruleId: string, enabledPackIds: stri
   tools.push({ key: 'vehicles (land)', label: '陆地载具', group: '载具' }, { key: 'vehicles (water)', label: '水上载具', group: '载具' })
   const by = (a: Candidate, b: Candidate): number => a.group.localeCompare(b.group, 'zh') || a.label.localeCompare(b.label, 'zh')
   return { languages: languages.sort(by), weapons: weapons.sort(by), tools: tools.sort(by) }
+}
+
+export type EffectKind = 'condition' | 'disease' | 'spell' | 'other'
+/** 添加效果弹窗的候选：状态、专注 / 突袭、疾病、计时型法术、特性 / 物品 / 环境（其他）。只读，不改库。 */
+export async function loadEffectEntries(ruleId: string, enabledPackIds: string[]): Promise<CardEntry[]> {
+  const db = useAppStore().svc().db
+  const packs = new Map((await db.packs.toArray()).map((pack) => [pack.id, pack.name]))
+  const enabled = new Set(enabledPackIds)
+  const types = ['condition', 'status', 'disease', 'spell', 'feature', 'item', 'hazard']
+  const rows = (await db.entries.where('[ruleId+type]').anyOf(types.map((type) => [ruleId, type])).toArray()) as StoredEntry[]
+  return rows.filter((row) => !enabled.size || enabled.has(row.packId)).map((row) => entryView(row, packs))
 }
