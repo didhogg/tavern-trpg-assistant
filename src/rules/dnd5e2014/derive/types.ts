@@ -98,6 +98,12 @@ export interface SpellSlotsResult {
   sources: string[]
 }
 
+export interface SpellcastingResult {
+  ability?: AbilityKey
+  dc?: number
+  attack?: number
+}
+
 export interface PersonDerived {
   level: number | null
   proficiency: DerivedNumber
@@ -110,6 +116,7 @@ export interface PersonDerived {
   hp: HpResult
   speed: SpeedResult
   spellSlots: SpellSlotsResult | null
+  spellcasting: SpellcastingResult | null
 }
 
 export type DerivePerson = Pick<Person, 'block' | 'hp' | 'hitDiceUsed' | 'slotsUsed'> & Partial<Pick<Person, 'hpAdj' | 'hitDiceOverride' | 'hpRolls'>>

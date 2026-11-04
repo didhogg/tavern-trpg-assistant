@@ -1,9 +1,9 @@
 <script setup lang="ts">
 const tabs = [
   { id: 'actions', label: '行动与技能' },
+  { id: 'spells', label: '法术' },
   { id: 'classes', label: '职业与特性' },
   { id: 'inventory', label: '背包' },
-  { id: 'spells', label: '法术' },
   { id: 'story', label: '背景故事' },
 ] as const
 const model = defineModel<string>({ default: 'actions' })

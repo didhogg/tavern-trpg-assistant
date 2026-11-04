@@ -1,4 +1,5 @@
-import type { DeriveContext, DerivePerson, SpellSlotsResult } from './types'
+import type { AbilityKey } from '../data/enums'
+import type { AbilityResult, DeriveContext, DerivePerson, DerivedNumber, SpellSlotsResult, SpellcastingResult } from './types'
 
 /** PHB p113 全施法者法术位表；兼职时用它查总施法等级。 */
 const FULL_CASTER: number[][] = [
@@ -49,7 +50,7 @@ function rowsFrom(numbers: number[], used: Record<string, number>): SpellSlotsRe
 /** U5 §6.9：单职业直接读 slotsByLevel；多职业按书上的兼职施法等级表；契约位单列。 */
 export function deriveSpellSlots(person: DerivePerson, ctx: DeriveContext): SpellSlotsResult | null {
   const classes = ctx.classes.filter((row) => row.level > 0)
-  if (!classes.length) return null
+  if (!classes.length) return monsterSlots(person)
   if (classes.length === 1) {
     const row = classes[0]
     const entry = row.entry
@@ -74,4 +75,33 @@ export function deriveSpellSlots(person: DerivePerson, ctx: DeriveContext): Spel
     }
   }
   return rows.length ? { rows, sources: [`兼职施法等级 ${levels.full}；契约 ${levels.pact}`] } : null
+}
+
+/** 敌人（没有职业）：读属性块 `spellcasting[].spells[环阶].slots`（U5R §7.1）；多块施法按环阶取最大。 */
+function monsterSlots(person: DerivePerson): SpellSlotsResult | null {
+  const max = new Map<number, number>()
+  for (const block of person.block.spellcasting ?? []) {
+    for (const [level, row] of Object.entries(block.spells ?? {})) {
+      const n = Number(level)
+      if (Number.isInteger(n) && n >= 1 && n <= 9 && (row.slots ?? 0) > 0) max.set(n, Math.max(max.get(n) ?? 0, row.slots!))
+    }
+  }
+  if (!max.size) return null
+  const used = person.slotsUsed ?? {}
+  const rows = [...max.entries()].sort((a, b) => a[0] - b[0]).map(([level, slots]) => ({ key: String(level), level, max: slots, used: used[String(level)] ?? 0 }))
+  return { rows, sources: ['属性块施法'] }
+}
+
+/** 法术豁免 DC = 8 + 熟练加值 + 施法属性调整值；法术攻击 = 熟练加值 + 施法属性调整值（PHB 各职业「施法」）。敌人读属性块的 dc / attack。 */
+export function deriveSpellcasting(person: DerivePerson, ctx: DeriveContext, abilities: Record<AbilityKey, AbilityResult>, prof: DerivedNumber): SpellcastingResult | null {
+  const row = ctx.classes.find((c) => c.level > 0 && c.entry?.spellcasting)
+  if (row?.entry?.spellcasting) {
+    const ability = row.entry.spellcasting.ability
+    const mod = abilities[ability].modifier
+    if (mod === null || prof.value === null) return null
+    return { ability, dc: 8 + prof.value + mod, attack: prof.value + mod }
+  }
+  const block = person.block.spellcasting?.find((b) => b.dc !== undefined || b.attack !== undefined)
+  if (block) return { ability: block.ability as AbilityKey | undefined, dc: block.dc, attack: block.attack }
+  return null
 }

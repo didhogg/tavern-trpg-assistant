@@ -43,6 +43,9 @@ export function draftPatchOf(draft: Person, fields: string[]): DraftPatch {
     else if (key === 'avatar') patch.avatar = draft.avatar
     else if (key === 'avatarSource') patch.avatarSource = draft.avatarSource
     else if (key === 'block') patch.block = draft.block
+    else if (key === 'hpAdj') patch.hpAdj = draft.hpAdj
+    else if (key === 'hitDiceOverride') patch.hitDiceOverride = draft.hitDiceOverride
+    else if (key === 'hpRolls') patch.hpRolls = draft.hpRolls
   }
   return patch
 }

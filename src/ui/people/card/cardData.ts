@@ -131,3 +131,41 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
     effectSummary: (ref?: string) => (ref ? entries.get(ref)?.entry.summary ?? '' : ''),
   }
 }
+
+export interface Candidate { key: string; label: string; en?: string; group: string; ref?: string; code?: string }
+export interface ArchiveCandidates {
+  languages: Candidate[]
+  weapons: Candidate[]
+  tools: Candidate[]
+}
+const LANGUAGE_GROUP: Record<string, string> = { standard: '标准语言', exotic: '特种语言', secret: '秘密语言' }
+const TOOL_KIND: Record<string, string> = { artisanTool: '工匠工具', tool: '其他工具', gamingSet: '游戏套组', instrument: '乐器' }
+const WEAPON_GROUP: Record<string, string> = { simple: '简易武器', martial: '军用武器' }
+
+/** 档案「可添加」的候选：语言（按 type 分组，其他书籍按书折叠）、基础武器、基础工具（rarity 为 none 的才算基础物品）。只读，不改库。 */
+export async function loadArchiveCandidates(ruleId: string, enabledPackIds: string[]): Promise<ArchiveCandidates> {
+  const db = useAppStore().svc().db
+  const packs = new Map((await db.packs.toArray()).map((pack) => [pack.id, pack.name]))
+  const enabled = new Set(enabledPackIds)
+  const rows = (await db.entries.where('[ruleId+type]').anyOf([[ruleId, 'language'], [ruleId, 'item']]).toArray()) as StoredEntry[]
+  const allowed = rows.filter((row) => !enabled.size || enabled.has(row.packId))
+  const languages: Candidate[] = []
+  const weapons: Candidate[] = []
+  const tools: Candidate[] = []
+  for (const row of allowed) {
+    const data = row.data as Record<string, unknown>
+    if (row.type === 'language') {
+      const type = typeof data.type === 'string' ? data.type : ''
+      languages.push({ key: typeof data.code === 'string' ? data.code : row.entryId, label: row.name, en: row.nameEn, ref: row.entryId, group: LANGUAGE_GROUP[type] ?? `其他书籍 · ${packs.get(row.packId) ?? row.packId}` })
+      continue
+    }
+    if (data.rarity !== 'none') continue
+    const weapon = data.weapon as { category?: string } | undefined
+    if (weapon?.category && WEAPON_GROUP[weapon.category]) weapons.push({ key: row.entryId, label: row.name, en: row.nameEn, ref: row.entryId, group: WEAPON_GROUP[weapon.category]! })
+    const kind = typeof data.itemKind === 'string' ? data.itemKind : ''
+    if (TOOL_KIND[kind] && !row.name.includes('系列')) tools.push({ key: row.entryId, label: row.name, en: row.nameEn, ref: row.entryId, group: TOOL_KIND[kind]! })
+  }
+  tools.push({ key: 'vehicles (land)', label: '陆地载具', group: '载具' }, { key: 'vehicles (water)', label: '水上载具', group: '载具' })
+  const by = (a: Candidate, b: Candidate): number => a.group.localeCompare(b.group, 'zh') || a.label.localeCompare(b.label, 'zh')
+  return { languages: languages.sort(by), weapons: weapons.sort(by), tools: tools.sort(by) }
+}

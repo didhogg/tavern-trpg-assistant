@@ -32,6 +32,9 @@ export interface DraftPatch {
   avatar?: Person['avatar']
   avatarSource?: AvatarSource
   block?: MonsterData
+  hpAdj?: Person['hpAdj']
+  hitDiceOverride?: Person['hitDiceOverride']
+  hpRolls?: Person['hpRolls']
 }
 
 export interface PreparedAvatar {

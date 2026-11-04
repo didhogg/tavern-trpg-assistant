@@ -1,15 +1,16 @@
 import type { DeriveContext, DerivePerson, PersonDerived } from './types'
 import { deriveAbilities, deriveInitiative, derivePassives, deriveSaves, deriveSkills, proficiencyFor, totalLevel } from './abilities'
 import { deriveAc, deriveHp, deriveSpeed } from './combat'
-import { deriveSpellSlots } from './spells'
+import { deriveSpellSlots, deriveSpellcasting } from './spells'
 
 export * from './types'
 export { abilityModifier, crProficiency, crValue, deriveAbilities, deriveInitiative, derivePassives, deriveSaves, deriveSkills, proficiencyFor, totalLevel } from './abilities'
 export { deriveAc, deriveHp, deriveSpeed } from './combat'
-export { deriveSpellSlots } from './spells'
+export { deriveSpellSlots, deriveSpellcasting } from './spells'
 export * from './grants'
 export * from './levels'
 export * from './rolls'
+export * from './cr'
 
 /** 一次算完概览带需要的全部派生数值；UNIT3 的抽屉复用同一组函数。 */
 export function derivePerson(person: DerivePerson, ctx: DeriveContext): PersonDerived {
@@ -29,6 +30,7 @@ export function derivePerson(person: DerivePerson, ctx: DeriveContext): PersonDe
     hp: deriveHp(person, ctx, abilities),
     speed: deriveSpeed(person, ctx),
     spellSlots: deriveSpellSlots(person, ctx),
+    spellcasting: deriveSpellcasting(person, ctx, abilities, proficiency),
   }
 }
 

@@ -1,36 +1,20 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue'
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
+import { computed } from 'vue'
 import type { PersonEffect } from '../../../schemas/people'
-import { useLibraryStore } from '../../../stores/library'
 import Icon from '../../kit/Icon.vue'
-import { openEntry } from '../../library/openDetail'
+import HoverTip from '../../kit/HoverTip.vue'
+import { durationText } from './effectText'
 
-const props = defineProps<{ effect: PersonEffect; summary?: string; readOnly: boolean }>()
-const emit = defineEmits<{ remove: [] }>()
-const portalTarget = inject<HTMLElement | undefined>('portalTarget', undefined)
-const library = useLibraryStore()
-const open = ref(false)
-async function look(): Promise<void> {
-  if (!props.effect.ref) return
-  const packId = await library.packOfEntry(props.effect.ref)
-  if (packId) { open.value = false; openEntry(packId, props.effect.ref, props.effect.name) }
-}
+const props = defineProps<{ effect: PersonEffect; readOnly: boolean; showCategory?: boolean }>()
+const emit = defineEmits<{ open: []; remove: [] }>()
+const CATEGORY: Record<PersonEffect['category'], string> = { condition: '状态', status: '状态', disease: '疾病', spell: '法术', other: '其他' }
+const duration = computed(() => durationText(props.effect.duration))
+const tip = computed(() => [props.effect.name, `类别：${CATEGORY[props.effect.category]}`, duration.value ? `时长：${duration.value}` : '', props.effect.concentration ? '专注' : '', props.effect.addedAt ? `加入：${new Date(props.effect.addedAt).toLocaleString('zh-CN', { hour12: false })}` : ''].filter(Boolean))
 </script>
 
 <template>
-  <span class="trpg-effect-pill">
-    <PopoverRoot v-model:open="open">
-      <PopoverTrigger class="trpg-effect-pill__name" :aria-label="`查看效果 ${effect.name}`">{{ effect.name }}</PopoverTrigger>
-      <PopoverPortal :to="portalTarget">
-        <PopoverContent class="trpg-effect-pop" side="top" :side-offset="6" :collision-padding="8">
-          <div class="trpg-effect-pop__head"><strong>{{ effect.name }}</strong><button class="trpg-icon-btn" type="button" aria-label="关闭效果说明" @click="open = false"><Icon name="x" :size="16" /></button></div>
-          <p v-if="effect.duration" class="trpg-effect-pop__meta">时长 {{ effect.duration }}</p>
-          <p class="trpg-effect-pop__text">{{ effect.note || summary || '没有更多说明。' }}</p>
-          <button v-if="effect.ref" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="look">看资料</button>
-        </PopoverContent>
-      </PopoverPortal>
-    </PopoverRoot>
-    <button class="trpg-effect-pill__x" type="button" :disabled="readOnly" :aria-label="`移除效果 ${effect.name}`" @click="emit('remove')"><Icon name="x" :size="12" /></button>
+  <span class="trpg-pill trpg-effect-pill">
+    <HoverTip :lines="tip"><button class="trpg-effect-pill__name" type="button" :aria-label="`查看资料：${effect.name}`" @click="emit('open')">{{ effect.name }}<span v-if="showCategory && effect.category === 'other'" class="trpg-effect-pill__small">其他</span><span v-if="duration" class="trpg-effect-pill__small">{{ duration }}</span><span v-if="effect.concentration" class="trpg-effect-pill__small is-focus">专注</span></button></HoverTip>
+    <button class="trpg-effect-pill__x" type="button" :disabled="readOnly" :aria-label="`移除 ${effect.name}`" @click="emit('remove')"><Icon name="x" :size="16" /></button>
   </span>
 </template>
