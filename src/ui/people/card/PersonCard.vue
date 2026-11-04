@@ -27,6 +27,7 @@ import type { HpEditPayload } from './HpEditor.vue'
 import CardTopbar from './CardTopbar.vue'
 import IdentityBlock, { type ClassRowView } from './IdentityBlock.vue'
 import VitalsBlock from './VitalsBlock.vue'
+import { openEntry } from '../../library/openDetail'
 import ReadoutBlock from './ReadoutBlock.vue'
 import AbilityCards from './AbilityCards.vue'
 import SlotsRow from './SlotsRow.vue'
@@ -241,6 +242,9 @@ function onSkill(skill: SkillKey, ability: AbilityKey): void { dice.openRoll({ a
 function onInitiative(): void { dice.openRoll({ actorId: actor(), kind: 'initiative', ability: 'dex' }) }
 function onPassive(skill: 'perception' | 'insight' | 'investigation'): void { dice.openRoll({ actorId: actor(), kind: 'passive', skill, ability: skill === 'perception' || skill === 'insight' ? 'wis' : 'int' }) }
 function onFree(expression: string, note: string): void { dice.openRoll({ actorId: actor(), kind: 'free', expression, note: `${model.name} ${note}` }) }
+const exhaustionEntry = computed(() => (cardData.value ? [...cardData.value.entries.values()].find((e) => e.entry.type === 'condition' && (e.entry.nameEn ?? '').toLowerCase() === 'exhaustion') : undefined))
+/** 点「力竭」：打开库里力竭条目的资料片。 */
+function openExhaustion(): void { const e = exhaustionEntry.value; if (e) openEntry(e.packId, e.entry.id, e.entry.name) }
 function onHitDie(sides: number): void {
   const con = derived.value?.abilities.con.modifier ?? 0
   onFree(`1d${sides}${con ? (con > 0 ? `+${con}` : `${con}`) : ''}`, '生命骰')
@@ -302,7 +306,7 @@ onBeforeUnmount(() => {
         <div class="trpg-card-a" data-testid="person-card-a">
           <div ref="identityEl" class="trpg-card-identity-card">
             <IdentityBlock :person="model" :avatar-url="avatarUrl" :classes="classRows" :race-name="raceName" :background-name="backgroundName" :alignment-label="alignmentLabel" :cr-text="crText" :xp-text="xpText" :show-cr-badges="showCrBadges" :read-only="readOnly" @identity="dialogs.openIdentity($event)" @class-open="dialogs.openClass($event)" @entry-open="dialogs.openRaceOrBackground($event)" @avatar="avatarPicker?.click()" @template="openTemplate" @inspiration="commitLive({ inspiration: !model.inspiration })" />
-            <VitalsBlock :person="model" :hp="derived.hp" :auto="autoHp" :read-only="readOnly" :exhaustion-text="cardData?.exhaustionText ?? []" @live="commitLive" @commit="commitHpEdit" @placeholder="placeholder" @hit-die="onHitDie" />
+            <VitalsBlock :person="model" :hp="derived.hp" :auto="autoHp" :read-only="readOnly" :exhaustion-text="cardData?.exhaustionText ?? []" :condition-ref="exhaustionEntry?.entry.id" @exhaustion-info="openExhaustion" @live="commitLive" @commit="commitHpEdit" @placeholder="placeholder" @hit-die="onHitDie" />
           </div>
         </div>
         <div class="trpg-card-right">

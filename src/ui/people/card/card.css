@@ -99,6 +99,9 @@
 .trpg-card-vitals__hint { color: var(--ink-2); font-size: 12px; }
 .trpg-linkbtn { padding: 0; border: 0; background: transparent; text-align: left; }
 .trpg-linkbtn:hover:not(:disabled) { color: var(--primary); text-decoration: underline; }
+/* 「力竭」：常驻下划线，点开库里力竭条目的资料片 */
+.trpg-exhaustion__link:not(:disabled) { text-decoration: underline; text-decoration-color: var(--ink-3); text-underline-offset: 4px; cursor: pointer; }
+.trpg-exhaustion__link:hover:not(:disabled) { text-decoration-color: var(--primary); }
 .trpg-diecap { display: inline-flex; align-items: center; gap: 2px; margin-right: 8px; }
 .trpg-diecap__name { margin-right: 4px; color: var(--ink); font-size: 13px; font-weight: 600; }
 .trpg-dot { position: relative; width: 20px; height: 20px; flex: none; padding: 0; border: 2px solid color-mix(in srgb, var(--ink-2) 60%, transparent); border-radius: 50%; background: transparent; margin: 0 4px; }

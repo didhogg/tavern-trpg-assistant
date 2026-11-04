@@ -141,6 +141,11 @@ export async function cardSuite(page, label) {
   check(`[${label}] 生命骰点击变已用`, (await page.getByRole('button', { name: /生命骰 d6 第 1 颗/ }).getAttribute('aria-label')).includes('已用'))
   await page.getByRole('button', { name: '增加一级力竭' }).click()
   check(`[${label}] 力竭步进，行内只有当前级的一句话`, (await page.getByTestId('person-card-exhaustion').innerText()).includes('1 / 6') && (await page.getByTestId('person-card-vitals').innerText()).includes('属性检定具有劣势'))
+  await page.getByTestId('person-card-exhaustion-info').click()
+  await page.waitForSelector('.trpg-modal .trpg-library-card, .trpg-modal [data-testid="entry-detail"], .trpg-modal .trpg-entry', { timeout: 8000 }).catch(() => undefined)
+  const exModal = await page.locator('.trpg-modal').innerText()
+  check(`[${label}] 点「力竭」打开库里力竭条目的资料片（英文名 Exhaustion）；悬停提示已去掉`, exModal.includes('力竭') && exModal.includes('Exhaustion'))
+  await page.locator('.trpg-modal__close').click()
   await page.getByRole('button', { name: '减少一级力竭' }).click()
 
   // ── 状态与效果：添加、资料、移除 ───────────────────────────────────

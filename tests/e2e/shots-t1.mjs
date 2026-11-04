@@ -138,7 +138,8 @@ async function main() {
       await state('02-感官-黑暗视觉', async () => { await pill('黑暗视觉').click() }, closeModal)
       await state('03-语言-精灵语', async () => { await pill('精灵语').click() }, closeModal)
       await state('04-抗性-火焰（库里没有单条资料）', async () => { await pill('火焰').click() }, closeModal)
-      await state('05-力竭悬停', async () => { await openPerson(page, '盖尔'); await page.getByTestId('person-card-exhaustion').hover() }, async () => { await page.mouse.move(2, 2) })
+      await state('05-力竭（下划线链接）', async () => { await openPerson(page, '盖尔') }, null)
+      await state('05b-力竭资料片', async () => { await page.getByTestId('person-card-exhaustion-info').click(); await wait(page, 400) }, closeModal)
       await state('06-读数弹窗-规则入口', async () => { await page.getByTestId('person-card-readout-edit').click(); await wait(page, 300) }, closeModal)
     }
   } finally {

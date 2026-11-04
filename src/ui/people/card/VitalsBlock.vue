@@ -8,8 +8,8 @@ import HoverTip from '../../kit/HoverTip.vue'
 import HpEditor, { type HpEditPayload } from './HpEditor.vue'
 import { partLines } from './format'
 
-const props = defineProps<{ person: Person; hp: HpResult; auto: HpResult; readOnly: boolean; /** 力竭每级的说明：读库里的力竭表；没安装就是空的（只显示级数）。 */ exhaustionText?: Array<{ level: number; text: string }> }>()
-const emit = defineEmits<{ live: [patch: LivePatch]; commit: [payload: HpEditPayload]; placeholder: [kind: 'rest']; hitDie: [sides: number] }>()
+const props = defineProps<{ person: Person; hp: HpResult; auto: HpResult; readOnly: boolean; /** 力竭每级的说明：读库里的力竭表；没安装就是空的（只显示级数）。 */ exhaustionText?: Array<{ level: number; text: string }>; /** 库里力竭条目的编号：有就能点「力竭」看资料；没安装就是灰的。 */ conditionRef?: string }>()
+const emit = defineEmits<{ live: [patch: LivePatch]; commit: [payload: HpEditPayload]; placeholder: [kind: 'rest']; hitDie: [sides: number]; exhaustionInfo: [] }>()
 const editing = ref(false)
 const editor = ref<InstanceType<typeof HpEditor> | null>(null)
 const max = computed(() => props.hp.value)
@@ -24,7 +24,6 @@ const death = computed(() => props.person.hp.deathSaves)
 const level = computed(() => props.person.exhaustion ?? 0)
 const textOf = (lv: number): string => props.exhaustionText?.find((row) => row.level === lv)?.text ?? ''
 const exhaustionNow = computed(() => (level.value === 0 ? '无影响' : `${level.value} 级${textOf(level.value) ? ` · ${textOf(level.value)}` : ''}`))
-const exhaustionAll = computed(() => (level.value === 0 ? ['无力竭'] : Array.from({ length: level.value }, (_, i) => `${i + 1} 级${textOf(i + 1) ? `：${textOf(i + 1)}` : ''}`)))
 const hpLines = computed(() => partLines(props.hp.parts, max.value, '', true))
 
 function setDeath(kind: 'success' | 'fail', n: number): void {
@@ -86,9 +85,9 @@ function commit(payload: HpEditPayload): void { emit('commit', payload) }
       <span v-else class="trpg-card-vitals__hint">选职业后出现</span>
     </div>
     <div class="trpg-card-vitals__line trpg-exhaustion">
-      <span class="trpg-card-vitals__label">力竭</span>
+      <button class="trpg-card-vitals__label trpg-linkbtn trpg-exhaustion__link" type="button" :disabled="!conditionRef" data-testid="person-card-exhaustion-info" @click="emit('exhaustionInfo')">力竭</button>
       <button class="trpg-icon-btn trpg-exhaustion__step" type="button" aria-label="减少一级力竭" :disabled="readOnly || level <= 0" @click="stepExhaustion(-1)"><Icon name="minus" :size="16" /></button>
-      <HoverTip :lines="exhaustionAll"><span class="trpg-exhaustion__value" data-testid="person-card-exhaustion" tabindex="0">{{ level }} / 6</span></HoverTip>
+      <span class="trpg-exhaustion__value" data-testid="person-card-exhaustion">{{ level }} / 6</span>
       <button class="trpg-icon-btn trpg-exhaustion__step" type="button" aria-label="增加一级力竭" :disabled="readOnly || level >= 6" @click="stepExhaustion(1)"><Icon name="plus" :size="16" /></button>
       <span class="trpg-exhaustion__text">{{ exhaustionNow }}</span>
     </div>
