@@ -157,7 +157,7 @@ async function main() {
       await state('16-骰盘-检定-结果', async () => { await page.getByTestId('roll-random-dc').click(); await page.getByTestId('roll-go').click(); await wait(page, 700) }, null)
       await state('17-骰盘-豁免', async () => { await closeTray(); await page.getByRole('button', { name: /智力豁免/ }).click(); await page.getByTestId('roll-panel-save').waitFor(); await wait(page, 400) }, null)
       await state('18-骰盘-被动', async () => { await closeTray(); await page.getByTestId('person-card-passive-perception').click(); await page.getByTestId('roll-panel-check').waitFor(); await wait(page, 400) }, null)
-      await state('19-骰盘-对抗', async () => { await page.getByTestId('dc-contest').click(); await wait(page, 300) }, null)
+      await state('19-骰盘-对抗', async () => { await page.getByTestId('roll-passive').uncheck(); await page.getByTestId('dc-contest').click(); await wait(page, 300) }, null)
       await state('20-骰盘-自由', async () => { await page.getByTestId('dice-tab-free').click(); await wait(page, 300) }, null, async () => { await closeTray() })
       await state('21-生命编辑-添加修正', async () => { await openPerson(page, '盖尔'); await page.getByTestId('person-card-hp-edit').click(); await page.getByTestId('person-card-hp-adj-add').click(); await wait(page, 300) }, null, async () => { await page.getByTestId('person-card-hp-done').click() })
       await state('14-帮助', async () => { await openPerson(page, '盖尔'); await page.getByTestId('person-card-help').click(); await wait(page, 200) }, null, async () => { await closeModal(); await back(page) })

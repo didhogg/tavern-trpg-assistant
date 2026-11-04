@@ -1,10 +1,11 @@
 /* U5R 人物详情外壳：只用 tokens.css 的变量；组件按所在容器宽折叠（container query）。 */
 .trpg-library-card { min-height: 100%; }
-.trpg-library-card .trpg-person-card { min-height: 100%; }
-.trpg-person-card { container-type: inline-size; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; min-height: 100%; background: var(--paper); color: var(--ink); }
+.trpg-library-card .trpg-person-card { min-height: 100%; --stick: 0px; }
+.trpg-window[data-layout='narrow'] .trpg-person-card { --stick: 12px; }
+.trpg-person-card { --stick: 16px; container-type: inline-size; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; min-height: 100%; background: var(--paper); color: var(--ink); }
 
 /* 顶栏：三组 + 竖分隔线 */
-.trpg-card-top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 52px; padding: 0 12px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.trpg-card-top { position: sticky; top: calc(-1 * var(--stick)); z-index: 5; display: flex; align-items: center; gap: 4px; min-height: 52px; padding: 0 12px; background: var(--paper); border-bottom: 1px solid var(--line); }
 .trpg-card-top__group { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .trpg-card-top__nav { flex: 1; }
 .trpg-card-top__sep { flex: none; width: 1px; height: 22px; margin: 0 4px; background: var(--line); }
@@ -19,7 +20,7 @@
 .trpg-card-top__hint { padding: 3px 10px; border-radius: 8px; background: color-mix(in srgb, var(--gold) 16%, var(--card)); color: var(--ink); font-size: 12.5px; white-space: nowrap; }
 .trpg-card-top__save { min-height: 36px; }
 .trpg-card-library-note { display: none; }
-.trpg-mini-bar { position: sticky; top: 52px; z-index: 4; display: flex; justify-content: center; align-items: center; gap: 10px; min-height: 36px; border: 0; border-bottom: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 13px; font-weight: 600; }
+.trpg-mini-bar { position: sticky; top: calc(52px - var(--stick)); z-index: 4; display: flex; justify-content: center; align-items: center; gap: 10px; min-height: 36px; border: 0; border-bottom: 1px solid var(--line); background: var(--panel); color: var(--ink); font-size: 13px; font-weight: 600; }
 .trpg-mini-bar span { color: var(--ink-2); }
 
 /* 页面网格 */
@@ -30,8 +31,8 @@
 .trpg-card-s { grid-area: s; }
 .trpg-card-t { grid-area: t; }
 .trpg-card-d { grid-area: d; }
-.trpg-card-e { grid-area: e; position: sticky; top: 52px; z-index: 3; }
-.trpg-person-card:has(.trpg-mini-bar) .trpg-card-e { top: 88px; }
+.trpg-card-e { grid-area: e; position: sticky; top: calc(52px - var(--stick)); z-index: 3; }
+.trpg-person-card:has(.trpg-mini-bar) .trpg-card-e { top: calc(88px - var(--stick)); }
 .trpg-card-f { grid-area: f; }
 .trpg-card-identity-card, .trpg-card-readout, .trpg-card-abilities, .trpg-card-slots, .trpg-card-status, .trpg-archive-card {
   background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-card); padding: 16px; min-width: 0;
@@ -255,9 +256,9 @@
   .trpg-card-library-note { display: block; margin: 0; padding: 6px 12px; border-bottom: 1px solid var(--line); background: var(--panel); color: var(--ink-2); font-size: 12px; line-height: 16px; }
   .trpg-card-top.has-context .trpg-card-top__context-full { display: none; }
   .trpg-card-top.has-context .trpg-card-top__context-short { display: inline; }
-  .trpg-mini-bar { top: 48px; }
-  .trpg-person-card:has(.trpg-mini-bar) .trpg-card-e { top: 84px; }
-  .trpg-card-e { top: 48px; }
+  .trpg-mini-bar { top: calc(48px - var(--stick)); }
+  .trpg-person-card:has(.trpg-mini-bar) .trpg-card-e { top: calc(84px - var(--stick)); }
+  .trpg-card-e { top: calc(48px - var(--stick)); }
   .trpg-card-page { padding: 12px 12px calc(96px + env(safe-area-inset-bottom, 0px)); }
   .trpg-card-avatar__touch { display: grid; position: absolute; left: -4px; bottom: -4px; place-items: center; width: 26px; height: 26px; border: 1px solid var(--frame); border-radius: 50%; background: var(--card); color: var(--ink); }
   .trpg-card-identity__name-en { display: none; }

@@ -54,7 +54,7 @@ function apply(): void {
   skill.value = r.kind === 'check' || r.kind === 'passive' ? r.skill ?? '' : ''
   dcMode.value = 'fixed'
   dc.value = r.kind === 'passive' ? (r.dc ?? randomDc()) : r.kind === 'death-save' ? 10 : dc.value
-  setTimeout(() => dcInput.value?.focus(), 60)
+  setTimeout(() => dcInput.value?.focus({ preventScroll: true }), 60)
 }
 
 const person = computed(() => tray.find(actorId.value))
