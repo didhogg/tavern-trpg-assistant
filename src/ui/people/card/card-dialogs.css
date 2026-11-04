@@ -20,7 +20,7 @@
 .trpg-dlg { container-type: inline-size; display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--card); }
 .trpg-dlg__body { position: relative; flex: 1; min-height: 0; overflow: auto; padding: 16px 20px; display: grid; gap: 14px; align-content: start; }
 .trpg-dlg__foot { display: flex; align-items: center; gap: 12px; flex: none; min-height: 60px; padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)) 20px; border-top: 1px solid var(--line); background: var(--card); }
-.trpg-dlg__note { flex: 1; min-width: 0; margin: 0; color: var(--ink-2); font-size: 12px; line-height: 16px; }
+.trpg-dlg__note { flex: 1; min-width: 0; margin: 0; color: color-mix(in srgb, var(--ink) 78%, var(--card)); font-size: 12.5px; line-height: 17px; }
 .trpg-dlg__actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .trpg-dlg__actions .trpg-btn { min-height: 40px; }
 .trpg-dlg h3 { margin: 0; font: 700 15px var(--font-serif); }
@@ -195,3 +195,7 @@
 .trpg-dlg input[type='radio']:checked::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--primary); }
 .trpg-dlg input[type='radio']:focus-visible, .trpg-dlg input[type='checkbox']:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .trpg-lv__list { display: grid; gap: 4px; margin: 0; padding-left: 20px; font-size: 14px; line-height: 22px; }
+
+.trpg-fx__sheet .trpg-info__row { grid-template-columns: 43px minmax(0, 1fr); } /* 与资料页里「英文名 / 类型」的标签列同宽，值对齐 */
+.trpg-fx__sheet h3 small { margin-left: 8px; }
+@container (max-width: 720px) { .trpg-ab__row > span[data-label]::before { font-size: 12px; line-height: 16px; } }

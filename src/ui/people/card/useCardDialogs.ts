@@ -33,7 +33,7 @@ export function useCardDialogs(ctx: CardCtx, openPage: OpenPage, avatar: AvatarO
   }
   function openIdentity(tab?: string): void {
     const wide = tab === 'race' || tab === 'class' || tab === 'background' || tab === 'levels'
-    openPage(page('identity', '身份', IdentityDialog, wide ? 980 : 760, { ctx, tab, avatarUrl: avatar.url, onUpload: (f: File) => void avatar.uploadAvatar(f), onRecrop: openRecrop, onClear: () => avatar.clearAvatar() }, 640))
+    openPage(page('identity', '身份', IdentityDialog, wide ? 980 : 760, { ctx, tab, avatarUrl: avatar.url, onUpload: (f: File) => void avatar.uploadAvatar(f), onRecrop: openRecrop, onClear: () => avatar.clearAvatar() }, 580))
   }
   async function peek(id: string | undefined, title: string, actions: Array<{ label: string; run: () => void }>): Promise<void> {
     if (!id) return

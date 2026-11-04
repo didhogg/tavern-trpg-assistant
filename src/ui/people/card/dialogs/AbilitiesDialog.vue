@@ -100,7 +100,7 @@ function restoreSave(m: (typeof missing.value)[number]): void { restored.value =
     <section class="trpg-ab__table-wrap">
       <h3>计算表</h3>
       <div class="trpg-ab__table" role="table" aria-label="属性计算表">
-        <div class="trpg-ab__row trpg-ab__row--head" role="row"><span>属性</span><span>基础</span><span>种族/背景</span><span>成长/专长</span><span>装备/魔法物品</span><span>其他（手动）</span><span>最终</span><span>调整值</span><span>豁免</span></div>
+        <div class="trpg-ab__row trpg-ab__row--head" role="row"><span>属性</span><span>基础</span><span>种族/背景</span><span>成长/专长</span><span>装备</span><span>其他（手动）</span><span>最终</span><span>调整值</span><span>豁免</span></div>
         <div v-for="k in ABILITY_KEYS" :key="k" class="trpg-ab__row" :class="{ 'is-placed': isPlaced(k) }" role="row" :data-testid="`ab-row-${k}`" @click="clickRow(k)">
           <span class="trpg-ab__name" data-label="">{{ ABILITY_LABELS[k] }}</span>
           <span data-label="基础"><template v-if="method === 'buy'"><button class="trpg-icon-btn trpg-ab__step" type="button" :disabled="ro" :aria-label="`${ABILITY_LABELS[k]}基础 减一`" @click.stop="step(k, -1)"><Icon name="minus" :size="16" /></button><b>{{ stage.base[k] ?? 8 }}</b><button class="trpg-icon-btn trpg-ab__step" type="button" :disabled="ro || !canBuyUp(stage.base, k)" :aria-label="`${ABILITY_LABELS[k]}基础 加一`" @click.stop="step(k, 1)"><Icon name="plus" :size="16" /></button></template><input v-else class="trpg-input trpg-input--sm trpg-adj__num" type="number" :value="stage.base[k] ?? ''" :disabled="ro" :aria-label="`${ABILITY_LABELS[k]}基础值`" @click.stop @change="typeBase(k, $event)" /></span>

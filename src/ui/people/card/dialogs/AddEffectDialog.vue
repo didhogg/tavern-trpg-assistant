@@ -71,7 +71,7 @@ const subOf = (r: CardEntry): string => (tab.value === 'other' ? OTHER_SUB[r.ent
         </div>
         <template v-else-if="current">
           <h3>{{ current.entry.name }}<small v-if="current.entry.nameEn"> {{ current.entry.nameEn }}</small></h3>
-          <dl class="trpg-info__rows"><div class="trpg-info__row"><dt>类别</dt><dd>{{ EFFECT_TABS.find((t) => t.key === tab)?.label }}</dd></div><div class="trpg-info__row"><dt>来源</dt><dd>{{ current.badge }}</dd></div><div v-if="effectFromEntry(current.entry, 0, 0).duration" class="trpg-info__row"><dt>时长</dt><dd>{{ durationText(effectFromEntry(current.entry, 0, 0).duration) }}{{ effectFromEntry(current.entry, 0, 0).concentration ? ' · 专注' : '' }}</dd></div></dl>
+          <dl class="trpg-info__rows"><div class="trpg-info__row"><dt>来源</dt><dd>{{ current.badge }}</dd></div><div v-if="effectFromEntry(current.entry, 0, 0).duration" class="trpg-info__row"><dt>时长</dt><dd>{{ durationText(effectFromEntry(current.entry, 0, 0).duration) }}{{ effectFromEntry(current.entry, 0, 0).concentration ? ' · 专注' : '' }}</dd></div></dl>
           <EntryDetailPage :pack-id="current.packId" :entry-id="current.entry.id" compact no-tables />
         </template>
         <p v-else class="trpg-card-empty">在左边选一个，这里显示资料。</p>
