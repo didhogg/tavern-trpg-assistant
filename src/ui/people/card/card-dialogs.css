@@ -185,3 +185,4 @@
 .trpg-dlg input[type='checkbox']:checked::after { content: ''; position: absolute; left: 6px; top: 2px; width: 6px; height: 11px; border: solid var(--primary-ink); border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .trpg-dlg input[type='checkbox']:disabled { opacity: 0.45; cursor: not-allowed; }
 .trpg-dlg input[type='radio'] { accent-color: var(--primary); }
+.trpg-lv__list { display: grid; gap: 4px; margin: 0; padding-left: 20px; font-size: 14px; line-height: 22px; }

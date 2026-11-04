@@ -235,3 +235,8 @@ button.trpg-hero:disabled { opacity: 0.6; cursor: not-allowed; }
 .trpg-rp input[type='checkbox'] { appearance: none; position: relative; flex: none; width: 22px; height: 22px; margin: 0; border: 1.5px solid var(--line); border-radius: 6px; background: var(--card); cursor: pointer; }
 .trpg-rp input[type='checkbox']:checked { background: var(--primary); border-color: var(--primary); }
 .trpg-rp input[type='checkbox']:checked::after { content: ''; position: absolute; left: 6px; top: 2px; width: 6px; height: 11px; border: solid var(--primary-ink); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.trpg-rp__act { display: flex; align-items: center; gap: 12px; }
+.trpg-rp__act .trpg-rp__formula { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.trpg-rp__act .trpg-rp__roll { width: auto; flex: none; min-width: 140px; padding: 0 22px; }
+.trpg-rp__result { height: 92px; }
+.trpg-rp__sec h4 { color: var(--ink); font-size: 13px; }

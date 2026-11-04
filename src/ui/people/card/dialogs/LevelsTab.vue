@@ -82,12 +82,12 @@ function apply(): void {
           </div>
         </li>
 </ul>
-        <p class="trpg-lv__sum">熟练加值 {{ signed(proficiencyAt(from)) }} → {{ signed(diff.proficiency) }}<template v-if="featureNames.length"> 新特性：{{ featureNames.join('、') }}</template><template v-if="diff.slots"> 法术位：{{ diff.slots.map((n, i) => (n ? `${i + 1}环 ${n}` : '')).filter(Boolean).join(' · ') }}</template></p>
+        <ul class="trpg-lv__list"><li>熟练加值：{{ signed(proficiencyAt(from)) }} → {{ signed(diff.proficiency) }}</li><li v-if="featureNames.length">新特性：{{ featureNames.join('、') }}</li><li v-if="diff.slots">法术位：{{ diff.slots.map((n, i) => (n ? `${i + 1}环 ${n}` : '')).filter(Boolean).join(' · ') }}</li></ul>
       </template>
       <template v-else-if="diff">
         <h3>降到 {{ target }} 级会失去</h3>
         <ul class="trpg-lv__steps"><li v-for="s in diff.steps" :key="s.level" class="trpg-lv__step-row"><b>{{ s.level }} 级</b><span>生命上限按每级累计重算{{ ctx.person.hpRolls?.[s.level] ? `（记录的掷骰 ${ctx.person.hpRolls[s.level]} 一并去掉）` : '' }}</span></li></ul>
-        <p class="trpg-lv__sum">熟练加值 {{ signed(proficiencyAt(from)) }} → {{ signed(diff.proficiency) }}<template v-if="featureNames.length"> 失去特性：{{ featureNames.join('、') }}</template></p>
+        <ul class="trpg-lv__list"><li>熟练加值：{{ signed(proficiencyAt(from)) }} → {{ signed(diff.proficiency) }}</li><li v-if="featureNames.length">失去特性：{{ featureNames.join('、') }}</li></ul>
         <label v-if="diff.asiLevels.length" class="trpg-flow__row"><input v-model="removeOnDown" type="checkbox" class="trpg-ab__check" data-testid="levels-remove-asi" />移除这些等级带来的属性提升（默认勾选）</label>
         <p class="trpg-dlg__small">生命骰已用数会压到新总数，当前生命会压到新上限。</p>
       </template>

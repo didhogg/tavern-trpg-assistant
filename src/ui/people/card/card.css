@@ -57,7 +57,7 @@
 .trpg-card-avatar__level { position: absolute; right: -8px; bottom: -8px; display: grid; place-items: center; width: 28px; height: 28px; transform: rotate(45deg); border: 1.5px solid var(--paper); border-radius: 5px; background: var(--primary); color: var(--primary-ink); }
 .trpg-card-avatar__level b { transform: rotate(-45deg); font-weight: 700; font-size: 13px; }
 .trpg-card-identity__name { display: flex; align-items: baseline; gap: 8px; min-width: 0; max-width: 100%; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; }
-.trpg-card-identity__name-cn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 26px/32px var(--font-serif); }
+.trpg-card-identity__name-cn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 30px/36px var(--font-serif); }
 .trpg-card-identity__name-en { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); font: 400 14px/32px var(--font-sans); }
 .trpg-card-identity__badges { display: flex; gap: 8px; flex-wrap: wrap; }
 .trpg-card-identity__classrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; max-width: 100%; }
@@ -84,7 +84,7 @@
 .trpg-card-vitals { margin-top: auto; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--line) 40%, transparent); display: grid; gap: 8px; }
 .trpg-card-vitals .trpg-card-head { margin-bottom: 0; }
 .trpg-card-vitals__numbers { display: flex; align-items: baseline; gap: 6px; min-height: 42px; }
-.trpg-card-vitals__current { font: 700 32px/38px var(--font-serif); }
+.trpg-card-vitals__current { font: 700 40px/46px var(--font-serif); }
 .trpg-card-vitals__slash, .trpg-card-vitals__max { color: var(--ink-2); font: 600 20px var(--font-serif); }
 .trpg-card-vitals__auto { margin: 0; color: var(--ink-2); font-size: 12px; line-height: 16px; }
 .trpg-hpbar { display: flex; gap: 2px; height: 10px; overflow: hidden; border-radius: 5px; background: var(--hp-track); }
