@@ -1,0 +1,85 @@
+{
+ "领域": "U5R2-D4 时长核对（2024 借用被保护拦下的 14 条中，原文明确写了时长的 6 条）",
+ "说明": "驾驶员 2026-11-04 批准：这 14 条的 2014 正文与 2024 记录时长不同，逐条读 2014 原文，原文明确写了时长的写入（取原文的值，不取 2024 的值）；原文没有单一时长的 8 条不写（自然庇护、元素同调、矮人王圣斧、黑刃、崇善之书、维克那法眼、烟雾榴弹、凯斯之剑）。",
+ "rows": [
+  {
+   "id": "feature.barbarian-path-of-the-berserker-intimidating-presence.phb",
+   "path": "/data/duration",
+   "op": "set",
+   "after": {
+    "type": "timed",
+    "amount": 1,
+    "unit": "round",
+    "concentration": false
+   },
+   "basis": "PHB p49 威慑之姿：「陷入恐慌，并持续至你的下回合结束」＝ 1 轮（与 2024 记录一致；官方中文文本核对）",
+   "source": "book"
+  },
+  {
+   "id": "feature.paladin-oath-of-devotion-sacred-weapon.phb",
+   "path": "/data/duration",
+   "op": "set",
+   "after": {
+    "type": "timed",
+    "amount": 1,
+    "unit": "minute",
+    "concentration": false
+   },
+   "basis": "PHB p85 神圣武器：「随后1分钟内」（2024 版是 10 分钟，两版规则不同，取 2014 原文；官方中文文本核对）",
+   "source": "book"
+  },
+  {
+   "id": "feature.cleric-trickery-domain-blessing-of-the-trickster.phb",
+   "path": "/data/duration",
+   "op": "set",
+   "after": {
+    "type": "timed",
+    "amount": 1,
+    "unit": "hour",
+    "concentration": false
+   },
+   "basis": "PHB p62 诡术祝福：「该祝福持续1小时或直至你再次使用该特性为止」（2024 记录是 1 轮，不同，取 2014 原文；官方中文文本核对）",
+   "source": "book"
+  },
+  {
+   "id": "item.potion-of-invulnerability.dmg",
+   "path": "/data/duration",
+   "op": "set",
+   "after": {
+    "type": "timed",
+    "amount": 1,
+    "unit": "minute",
+    "concentration": false
+   },
+   "basis": "DMG p188 坚不可摧药水：「饮用此药水后，你获得对所有伤害的抗性，持续1分钟」（2024 记录是 10 分钟，不同，取 2014 原文；官方中文文本核对）",
+   "source": "book"
+  },
+  {
+   "id": "feature.paladin-oath-of-glory-peerless-athlete.tce",
+   "path": "/data/duration",
+   "op": "set",
+   "after": {
+    "type": "timed",
+    "amount": 10,
+    "unit": "minute",
+    "concentration": false
+   },
+   "basis": "TCE p53 绝伦健将：「接下来的10分钟内」（包内 5etools 中译原文；本地 TCE 文本与 SCAG 重复，无法独立核对）",
+   "source": "book"
+  },
+  {
+   "id": "feature.paladin-oath-of-glory-living-legend.tce",
+   "path": "/data/duration",
+   "op": "set",
+   "after": {
+    "type": "timed",
+    "amount": 1,
+    "unit": "minute",
+    "concentration": false
+   },
+   "basis": "TCE p53 现世传说：「获得以下增益，持续1分钟」（包内 5etools 中译原文；本地 TCE 文本与 SCAG 重复，无法独立核对）",
+   "source": "book"
+  }
+ ],
+ "add": []
+}
