@@ -167,7 +167,7 @@ const chips = [5, 10, 15, 20, 25, 30]
       <section v-if="!isDeath" class="trpg-rp__sec"><h4>掷法</h4>
         <div class="trpg-seg" role="group" aria-label="手动掷法"><button v-for="m in MODES" :key="m.v" type="button" :aria-pressed="manual === m.v" :data-testid="`roll-mode-${m.v}`" @click="manual = m.v">{{ m.t }}</button></div>
         <ul class="trpg-rp__rows"><li v-for="s in modeSources" :key="s.id" class="trpg-rp__row"><Icon :name="s.kind === 'adv' ? 'arrow-right' : 'arrow-counter-clockwise'" :size="16" /><span>{{ s.kind === 'adv' ? '优势' : '劣势' }}：{{ s.label }}</span><button class="trpg-icon-btn" type="button" :aria-label="`忽略 ${s.label}`" @click="ignoredSrc = new Set([...ignoredSrc, s.id])"><Icon name="x" :size="16" /></button></li></ul>
-        <p class="trpg-rp__final" data-testid="roll-final-mode">最终：{{ modeText }}<span class="trpg-rp__hint">（优势与劣势同时有，不论各有几个都互相抵消，p173）</span></p>
+        <p class="trpg-rp__final" data-testid="roll-final-mode" title="优势与劣势同时有，不论各有几个都互相抵消（p173）">最终：{{ modeText }}</p>
       </section>
       <section class="trpg-rp__sec"><h4>难度 / 对手</h4>
         <div class="trpg-seg" role="group" aria-label="难度类型"><button type="button" :aria-pressed="dcMode === 'fixed'" @click="dcMode = 'fixed'">固定 DC</button><button v-if="kind === 'check' && !passive" type="button" :aria-pressed="dcMode === 'contest'" data-testid="dc-contest" @click="dcMode = 'contest'">对抗</button><button type="button" :aria-pressed="dcMode === 'none'" @click="dcMode = 'none'">不设</button></div>
@@ -189,9 +189,10 @@ const chips = [5, 10, 15, 20, 25, 30]
       </section>
     </div>
     <footer class="trpg-rp__foot">
-      <div class="trpg-rp__result" aria-live="polite" data-testid="roll-result">
+      <p class="trpg-rp__dcline">难度：{{ dcMode === 'fixed' ? `DC ${dc}` : dcMode === 'contest' ? '对抗' : '不设' }}　掷法：{{ modeText }}</p>
+      <div class="trpg-rp__result" :class="{ 'is-empty': !outcome }" aria-live="polite" data-testid="roll-result">
         <template v-if="outcome"><b class="trpg-rp__total" data-testid="roll-total">{{ outcome.total }}</b><div class="trpg-rp__verdict"><span v-if="outcome.verdict" :class="`is-${outcome.verdict.kind}`" data-testid="roll-verdict">{{ outcome.verdict.text }}</span><small>{{ outcome.line }}<template v-if="outcome.natural"> · 天然 {{ outcome.natural }}</template></small><small v-if="outcome.hint">{{ outcome.hint }}</small></div></template>
-        <span v-else class="trpg-rp__hint">掷出后，结果显示在这里</span>
+        <span v-else class="trpg-rp__hint">{{ passive && kind === 'check' ? '点「对比 DC」得出结果' : '掷出后，结果显示在这里' }}</span>
       </div>
       <div class="trpg-rp__act"><p class="trpg-rp__formula" data-testid="roll-formula">{{ passive && kind === 'check' ? `被动 ${passiveNow}` : expr }}</p><button class="trpg-btn trpg-btn--primary trpg-rp__roll" type="button" :disabled="!canRoll" data-testid="roll-go" @click="go"><Icon name="dice-five" :size="24" />{{ passive && kind === 'check' ? '对比 DC' : '掷骰' }}</button></div>
     </footer>

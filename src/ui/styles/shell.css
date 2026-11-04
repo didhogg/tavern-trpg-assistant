@@ -240,3 +240,9 @@ button.trpg-hero:disabled { opacity: 0.6; cursor: not-allowed; }
 .trpg-rp__act .trpg-rp__roll { width: auto; flex: none; min-width: 140px; padding: 0 22px; }
 .trpg-rp__result { height: 92px; }
 .trpg-rp__sec h4 { color: var(--ink); font-size: 13px; }
+.trpg-rp__body { padding-bottom: 20px; }
+.trpg-input.trpg-rp__dcnum { appearance: textfield; -moz-appearance: textfield; box-shadow: none; }
+.trpg-rp__dcnum::-webkit-inner-spin-button, .trpg-rp__dcnum::-webkit-outer-spin-button { appearance: none; margin: 0; }
+.trpg-rp__roll { letter-spacing: 0.08em; }
+.trpg-rp__result.is-empty { height: 44px; }
+.trpg-rp__dcline { margin: 0; color: var(--ink-2); font-size: 12.5px; }
