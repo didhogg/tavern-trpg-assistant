@@ -226,6 +226,10 @@ export const ruleDataSchema = z.looseObject({
   category: z.enum(['variant', 'action', 'sense', 'skill', 'script', 'itemProperty', 'itemType', 'itemTypeExtra', 'quickref', 'glossary']).default('variant'),
   /** 名称表（category = glossary）：代码 → 中文名，界面显示用；由转换器从 5etools 的 parser.js 等输出，不手写。 */
   glossary: z.string().max(40).optional(),
+  /** 标准数组（读自书上的文字，overlay 核对写入）。 */
+  standardArray: z.array(z.number().int().min(1).max(30)).length(6).optional(),
+  /** 购点法的总点数（读自书上的文字，overlay 核对写入）。 */
+  pointBuyBudget: z.number().int().positive().optional(),
   terms: z.array(z.object({ code: z.string().min(1).max(60), name: z.string().min(1).max(60), nameEn: z.string().max(80).optional(), abbr: z.string().max(12).optional() })).optional(),
   abbreviation: z.string().max(12).optional(),
   ability: z.string().max(12).optional(),

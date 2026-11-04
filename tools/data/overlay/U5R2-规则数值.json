@@ -1,0 +1,30 @@
+{
+ "领域": "U5R2-T2 规则数值（标准数组、购点总点数）",
+ "说明": "这两个数在库里只写在正文里（没有结构化字段）。驾驶员 2026-11-04 同意按\"少数特殊情况核对后写入 overlay\"处理：读 PHB 原文核对后写成结构化字段，界面读它，不再在代码里写数。仅 PHB 包（非 SRD）里有这两条规则，没装 PHB 的战役没有标准数组 / 购点预算选项。",
+ "rows": [
+  {
+   "id": "rule.quickref-step-by-step-characters.phb",
+   "path": "/data/standardArray",
+   "op": "set",
+   "after": [
+    15,
+    14,
+    13,
+    12,
+    10,
+    8
+   ],
+   "basis": "PHB 步骤 3「确定属性值」：「你还可以使用以下数值作替代：15、14、13、12、10、8」（该条目正文原句）",
+   "source": "book"
+  },
+  {
+   "id": "rule.customizing-ability-scores.phb",
+   "path": "/data/pointBuyBudget",
+   "op": "set",
+   "after": 27,
+   "basis": "PHB p13 自定义属性值（变体）：「你获得总计27点可花费的点数用于兑换各属性值」（该条目正文原句）",
+   "source": "book"
+  }
+ ],
+ "add": []
+}

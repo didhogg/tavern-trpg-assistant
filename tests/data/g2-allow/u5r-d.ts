@@ -34,6 +34,22 @@ export const ALLOW: Allow[] = [
     expect: data.duration.overlay.length,
     reason: 'D4 两版规则不同的条目读 2014 原文核对后写入 overlay（tools/data/overlay/U5R2-时长核对.json，带书页出处）',
   },
+  {
+    name: 'u5r-d8-condition-notes',
+    station: 5,
+    ids: ['condition.charmed.phb', 'condition.exhaustion.phb'],
+    path: /^\/data\/effects\/\d+\/text$/,
+    expect: 2,
+    reason: 'D8 状态要点里漏译的英文词（charmed 的 targeting、exhaustion 的 levels）改成中文（tools/data/config/conditionEffects.ts）',
+  },
+  {
+    name: 'u5r-d8-rule-numbers',
+    station: 5,
+    ids: ['rule.quickref-step-by-step-characters.phb', 'rule.customizing-ability-scores.phb'],
+    path: /^\/data\/(?:standardArray|pointBuyBudget)$/,
+    expect: 2,
+    reason: 'D8/T2 标准数组、购点总点数：读 PHB 原文核对后写入 overlay（tools/data/overlay/U5R2-规则数值.json），界面读它而不是在代码里写数',
+  },
 ]
 export const ADDED: Added[] = data.added.map((id) => ({ id, pack: 'dnd5e2014-srd', station: 5, basis: 'D5 名称表：转换器从 parser.js 与已转换的规则条目生成（tools/data/convert/glossary.ts）' }))
 export const ALLOW_REQUIRES: AllowRequires[] = []

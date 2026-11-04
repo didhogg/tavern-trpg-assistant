@@ -8,9 +8,9 @@ const speedZero: Effect = { kind: 'speed', mode: 'walk', amount: 0 }
 
 export const CONDITION_EFFECTS: Record<string, Effect[]> = {
   'condition.blinded.phb': [disadvantage('attack'), note('攻击目盲者的攻击检定具有优势；依赖视觉的属性检定自动失败')],
-  'condition.charmed.phb': [note('不能攻击魅惑者，也不能以有害能力或魔法效果 targeting 魅惑者；魅惑者对社交检定具有优势')],
+  'condition.charmed.phb': [note('不能攻击魅惑者，也不能以魅惑者为目标施展有害能力或魔法效果；魅惑者对社交检定具有优势')],
   'condition.deafened.phb': [note('不能听见声音，依赖听觉的属性检定自动失败')],
-  'condition.exhaustion.phb': [note('力竭效果按等级见 levels')],
+  'condition.exhaustion.phb': [note('力竭效果按等级逐级累计，见等级表')],
   'condition.frightened.phb': [disadvantage('check'), disadvantage('attack'), note('只要恐惧源在视线内，就不能自愿靠近')],
   'condition.grappled.phb': [speedZero, note('速度变为 0，不能从擒抱者身边移动')],
   'condition.incapacitated.phb': [note('不能执行动作或反应')],
