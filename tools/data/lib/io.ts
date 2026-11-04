@@ -10,6 +10,8 @@ export const REFERENCE_ROOT = process.env.TRPG_REFERENCE ?? '/Users/xxx/DND- ref
 export const REF_5ETOOLS = join(REFERENCE_ROOT, '5etools-cn-main')
 export const REF_DND_DATA = join(REFERENCE_ROOT, 'dnd-data-main')
 export const REF_FOUNDRY_SYSTEM = join(REFERENCE_ROOT, 'dnd5e-6.1.x')
+/** 官方书籍的中文文本（PDF 转出的 txt，核对用，只读）。 */
+export const OFFICIAL_TEXT_ROOT = process.env.TRPG_OFFICIAL_TEXT ?? '/Users/xxx/Downloads/龙与地下城官方资料'
 /** 联网生成的缓存（Foundry 开源数据）放在仓库外、也不放进参考资料文件夹。 */
 export const CACHE_ROOT = process.env.TRPG_CACHE ?? join(process.env.HOME ?? '', '.cache', 'tavern-trpg')
 /** 输入快照里的文件名沿用旧写法（reference/…（数据库）），换了存放位置也不会让快照误报。 */

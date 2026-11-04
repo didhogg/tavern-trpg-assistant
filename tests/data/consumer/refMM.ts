@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fold } from './util'
-import { REFERENCE_ROOT } from '../../../tools/data/lib/io'
+import { OFFICIAL_TEXT_ROOT } from '../../../tools/data/lib/io'
 
 /** 本地核对材料：怪物图鉴中译文本（PDF 抽出的文字）。把每个怪物的数据块解析成结构。文件不存在时 hasMM() 为 false。 */
-const FILE = join(REFERENCE_ROOT, '龙与地下城官方资料', 'txt', '龙与地下城 第五版 怪物图鉴 (wizard rpg) (z-library.sk, 1lib.sk, z-lib.sk).txt')
+const FILE = join(OFFICIAL_TEXT_ROOT, 'txt', '龙与地下城 第五版 怪物图鉴 (wizard rpg) (z-library.sk, 1lib.sk, z-lib.sk).txt')
 export const hasMM = (): boolean => existsSync(FILE)
 
 export interface MMMonster {

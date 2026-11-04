@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { REFERENCE_ROOT } from '../../../tools/data/lib/io'
+import { CACHE_ROOT } from '../../../tools/data/lib/io'
 
-/** 本地核对材料：D&D 5e API 的 SRD 职业逐级表。文件不存在（没下载）时返回 undefined，对应测试跳过。 */
-const DIR = join(REFERENCE_ROOT, 'dnd5eapi-SRD法术（核对用）')
+/** 本地核对材料：D&D 5e API 的 SRD 汇总，由 tools/data/fetch/api_summary.ts 从参考资料生成（在缓存目录）。文件不存在时对应测试跳过。 */
+const DIR = join(CACHE_ROOT, 'dnd5eapi')
 
 export interface ApiLevel {
   level: number
