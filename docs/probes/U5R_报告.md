@@ -25,3 +25,10 @@
 - 数据仓库 `tavern-trpg-data` 本批**无变化**（SRD 包随扩展仓库；其他书包没有这 5 个法术）。
 - **未做**：特性 / 物品 / 疾病 / 环境的 `data.duration`：来源（5etools）里这几类没有可结构化读出的时长，逐条补需要读书；`duration` schema 未加（没有数据可放）。写进「规格疑问」，等驾驶员定要不要逐条补。
 - 构建会顺带重写 `docs/probes/D1*` 旧报告与 `catalog.json` 时间戳，已还原，不入提交。
+
+## 批 1：逻辑层（完成）
+- 人物效果结构化 schema + workspace/save v3 迁移（带单测）；`hpAdj`、`hitDiceOverride`、`hpRolls`（记录掷出的点数；增量 = max(1, 点数 + 体质)）。
+- 派生函数返回 `parts`（求和 = value；覆盖时其余行标 `overridden`）：属性、豁免、技能、先攻、被动、熟练加值、AC、生命、速度。
+- 纯函数：`grants.ts`（`grantsOf` / `grantChoices` / `assignGrants` / `staleSources` / `removeStale` / `restorable` / 点数池 `poolPlace` `poolReturn`）、`levels.ts`（`levelDiff`）、`rolls.ts`（`rollSources`、优势劣势抵消、DC / 对抗 / 被动、随机 DC 1–25）。依据：读真实 SRD 条目（法师、矮人、侍僧）测，不用编的数据。
+- `useDiceStore().openRoll(payload)` + `tab` / `request` / `requestSeq`；旧 `prefill` 转调。
+- 数据核对（读代码与真实条目）：race/background 的熟练在 `proficiencies` 与 `languages`（数组或 `{fixed, choose}` 两种写法都兼容）；class 的豁免在 `saves`、护甲是类别键、武器是「简易 / 军用」或 `{{ref:…}}`；怪物块 `ac[]`、`hp.formula` 已有。**规格与数据不一致处**：规格 §10 写「技能熟练分配」未提「职业技能是任选 N」——按数据做成补选（`grantChoices`）。
