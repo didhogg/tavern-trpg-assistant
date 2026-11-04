@@ -1,6 +1,7 @@
 import type { Entry, StoredEntry } from '../../../schemas/pack'
 import type { Person } from '../../../schemas/people'
 import { useAppStore } from '../../../stores/app'
+import { useLibraryStore } from '../../../stores/library'
 import { backgroundDataSchema, classDataSchema, raceDataSchema, type BackgroundData, type ClassData, type RaceData } from '../../../rules/dnd5e2014/data/entries/character'
 import { CONDITION_LABELS, type ConditionKey } from '../../../rules/dnd5e2014/data/enums'
 
@@ -179,4 +180,17 @@ export async function loadEffectEntries(ruleId: string, enabledPackIds: string[]
   const types = ['condition', 'status', 'disease', 'spell', 'feature', 'item', 'hazard']
   const rows = (await db.entries.where('[ruleId+type]').anyOf(types.map((type) => [ruleId, type])).toArray()) as StoredEntry[]
   return rows.filter((row) => !enabled.size || enabled.has(row.packId)).map((row) => entryView(row, packs))
+}
+
+/** 按条目编号查中文名（特性等没有预载的类型）；找不到的保持原编号，不丢。 */
+export async function namesOf(ids: string[]): Promise<Record<string, string>> {
+  const app = useAppStore()
+  const library = useLibraryStore()
+  const out: Record<string, string> = {}
+  for (const id of ids) {
+    const packId = await library.packOfEntry(id)
+    const row = packId ? await app.svc().db.entries.get([packId, id]) : undefined
+    if (row) out[id] = row.name
+  }
+  return out
 }

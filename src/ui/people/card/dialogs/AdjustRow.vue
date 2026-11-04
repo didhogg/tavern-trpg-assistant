@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 /** 项目卡里「手动调整 + 覆盖」两个能填的控件（只读的东西是纯文字，不画框；U5R §1.3）。 */
-const props = defineProps<{ adjust: number; override: number | null; unit?: string; label: string; readOnly: boolean; showAdjust?: boolean }>()
+const props = withDefaults(defineProps<{ adjust: number; override: number | null; unit?: string; label: string; readOnly: boolean; showAdjust?: boolean }>(), { showAdjust: true, unit: '' })
 const emit = defineEmits<{ adjust: [value: number]; override: [value: number | null] }>()
 const on = computed(() => props.override !== null)
 const num = (e: Event): number => Number((e.target as HTMLInputElement).value)

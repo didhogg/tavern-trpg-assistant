@@ -72,6 +72,7 @@ function info(k: SkillKey): void {
     </div>
     <p class="trpg-sk__hint"><Icon name="dice-five" :size="16" />点右边数字去骰盘，点左边图标切换熟练度</p>
     <section v-if="missing.length" class="trpg-arch__sec" data-testid="skills-restorable"><h3>可恢复的自动项</h3><div class="trpg-arch__pills"><button v-for="m in missing" :key="m.grant.key" class="trpg-pill trpg-arch__restore" type="button" :disabled="ro" @click="restore(m)">{{ m.grant.label }}<Icon name="arrow-counter-clockwise" :size="16" /></button><button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" @click="restoreAll">按来源重新分配</button></div></section>
+    <p class="trpg-ab__hint">「清除手动修正」会清空 {{ overrides }} 项覆盖，熟练图标不动</p>
     <ul class="trpg-skills trpg-skills--dlg">
       <li v-for="r in rows" :key="r.key" class="trpg-skdlg">
         <HoverTip :lines="[r.res.level === 'none' ? '无熟练' : '点击切换熟练等级', ...partLines(r.res.parts, r.res.value)]"><button class="trpg-skdlg__mark" type="button" :disabled="ro" :aria-label="`${r.label}：切换熟练等级`" :data-testid="`skill-cycle-${r.key}`" @click="cycle(r.key)"><span class="trpg-skill__mark" :class="`is-${mark(r.res.level)}`" /></button></HoverTip>
@@ -81,7 +82,6 @@ function info(k: SkillKey): void {
       </li>
     </ul>
     <template #actions>
-      <span class="trpg-sk__clear">会清空 {{ overrides }} 项覆盖，熟练图标不动</span>
       <button class="trpg-btn" type="button" :aria-pressed="overrideView" data-testid="skills-override" @click="overrideView = !overrideView">覆盖</button>
       <button class="trpg-btn" type="button" :disabled="!overrides || ro" data-testid="skills-clear" @click="clear">清除手动修正</button>
       <button class="trpg-btn trpg-btn--primary" type="button" @click="modal.requestClose()">完成</button>

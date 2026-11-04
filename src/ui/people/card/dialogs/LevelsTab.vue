@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from '../../../../rules/dnd5e2014/data/enums'
 import { levelDiff, proficiencyAt } from '../../../../rules/dnd5e2014/derive'
 import { cryptoRng } from '../../../../rules/dice'
@@ -7,6 +7,7 @@ import { useModalStore } from '../../../../stores/modal'
 import Icon from '../../../kit/Icon.vue'
 import SelectField from '../../../kit/SelectField.vue'
 import type { CardCtx } from '../cardCtx'
+import { namesOf } from '../cardData'
 import { applyLevels } from '../flowOps'
 import { signed } from '../format'
 import DialogFrame from './DialogFrame.vue'
@@ -26,7 +27,9 @@ const con = computed(() => props.ctx.derived().abilities.con.modifier ?? 0)
 const diff = computed(() => (entry.value ? levelDiff(entry.value, from.value, target.value, con.value) : null))
 const subclassAt = computed(() => entry.value?.subclassLevel ?? 99)
 const abOptions = ABILITY_KEYS.map((k) => ({ value: k, label: ABILITY_LABELS[k] }))
-const featureNames = computed(() => (diff.value?.features ?? []).map((id) => props.ctx.data.nameOf(id) || id))
+const names = ref<Record<string, string>>({})
+watch(() => diff.value?.features.join('|'), async () => { const ids = diff.value?.features ?? []; if (ids.length) names.value = { ...names.value, ...(await namesOf(ids)) } }, { immediate: true })
+const featureNames = computed(() => (diff.value?.features ?? []).map((id) => names.value[id] ?? props.ctx.data.nameOf(id)).filter((n) => n && !n.startsWith('feature.')))
 const dirty = computed(() => target.value !== from.value)
 function step(d: number): void { target.value = Math.max(1, Math.min(20, target.value + d)) }
 function rollFor(level: number): void { if (entry.value) { rolls.value = { ...rolls.value, [level]: 1 + Math.floor(cryptoRng() * entry.value.hitDie) }; mode.value = { ...mode.value, [level]: 'roll' } } }

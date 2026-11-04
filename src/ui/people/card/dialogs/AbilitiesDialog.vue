@@ -84,7 +84,7 @@ function restoreSave(m: (typeof missing.value)[number]): void { restored.value =
 </script>
 
 <template>
-  <DialogFrame note="放入的点数点「保存并写入属性点」才写进属性">
+  <DialogFrame note="点「保存并写入属性点」才写进属性">
     <section class="trpg-ab__gen">
       <h3>生成基础值</h3>
       <Segmented :model-value="method" :options="methods" label="生成方式" @update:model-value="setMethod" />
@@ -113,12 +113,12 @@ function restoreSave(m: (typeof missing.value)[number]): void { restored.value =
           <span data-label="豁免"><input type="checkbox" class="trpg-ab__check" :checked="stage.saves[k] || !!restored[k]" :disabled="ro" :aria-label="`${ABILITY_LABELS[k]}豁免熟练`" @click.stop @change="toggleSave(k)" /></span>
         </div>
       </div>
+      <p class="trpg-ab__hint">会清空 {{ counts.other }} 项「其他」和 {{ counts.override }} 项覆盖，基础值不动（点「清除手动修正」）</p>
       <p class="trpg-ab__hint">最终 = 基础 + 种族/背景 + 成长/专长 + 装备/魔法物品 + 其他。灰字在别的页面里改，这里只读</p>
       <p v-if="clearedNote" class="trpg-ab__ok" role="status">已清空，点「保存并写入属性点」生效</p>
       <div v-if="missing.length" class="trpg-arch__sec"><h3>可恢复的自动项</h3><div class="trpg-arch__pills"><button v-for="m in missing" :key="m.grant.key" class="trpg-pill trpg-arch__restore" type="button" @click="restoreSave(m)">{{ m.grant.label }}<Icon name="arrow-counter-clockwise" :size="16" /></button></div></div>
     </section>
     <template #actions>
-      <span class="trpg-sk__clear">会清空 {{ counts.other }} 项「其他」和 {{ counts.override }} 项覆盖，基础值不动</span>
       <button class="trpg-btn" type="button" :aria-pressed="overrideView" data-testid="ab-override" @click="overrideView = !overrideView">覆盖</button>
       <button class="trpg-btn" type="button" :disabled="ro || (counts.other === 0 && counts.override === 0)" data-testid="ab-clear" @click="clearAll">清除手动修正</button>
       <button class="trpg-btn" type="button" @click="modal.requestClose()">取消</button>
