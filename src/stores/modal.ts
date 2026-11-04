@@ -13,7 +13,7 @@ export interface ModalPage {
   header?: Component
   /** 弹窗外观，只看栈底页。 */
   variant?: ModalVariant
-  /** 抽屉宽度（px）；不写 = 440。窗口更窄时取 100%，≤480 铺满。 */
+  /** 抽屉宽度（px；不写 = 440）；`dialog` 变体写了就是居中弹窗的宽（U5R：窄屏变底部整页）。窗口更窄时取 100%。 */
   width?: number
   /** 页面自带完整外壳（例如人物卡）时不显示宿主标题栏。 */
   bare?: boolean

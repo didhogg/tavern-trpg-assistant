@@ -128,8 +128,8 @@ function onKeydown(event: KeyboardEvent): void {
         role="dialog"
         aria-modal="true"
         :aria-labelledby="titleId"
-        :data-sized="modal.variant === 'drawer' && modal.top?.width ? 'true' : undefined"
-        :style="modal.variant === 'drawer' && modal.top?.width ? { '--trpg-drawer-width': `${modal.top.width}px` } : undefined"
+        :data-sized="modal.variant !== 'confirm' && modal.top?.width ? 'true' : undefined"
+        :style="modal.variant !== 'confirm' && modal.top?.width ? { '--trpg-drawer-width': `${modal.top.width}px` } : undefined"
         tabindex="-1"
       >
         <header v-if="!modal.top?.bare" class="trpg-modal__head">
