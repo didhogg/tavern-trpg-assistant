@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { listFiles, readJson, REF_5ETOOLS, REF_DND_DATA, rel, REPO_ROOT, sha256File, writeText } from './lib/io'
+import { listFiles, readJson, REF_5ETOOLS, REF_5ETOOLS_EN, REF_DND_DATA, rel, REPO_ROOT, sha256File, writeText } from './lib/io'
 
 const DATA_5ETOOLS = join(REF_5ETOOLS, 'data')
 const DATA_FALLBACK = join(REF_DND_DATA, 'data')
@@ -40,6 +40,7 @@ export async function snapshotFiles(): Promise<string[]> {
     files.push(join(DATA_5ETOOLS, name))
   }
   await add(DATA_FALLBACK, (n) => n.endsWith('.json'))
+  files.push(join(REF_5ETOOLS, 'js', 'parser.js'), join(REF_5ETOOLS_EN, 'js', 'parser.js')) // 名称表（D5）的来源
   return files.sort()
 }
 

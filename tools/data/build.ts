@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { readJson, REFERENCE_ROOT, REPO_ROOT, writeBytes, writeText, sha256 } from './lib/io'
+import { readJson, REFERENCE_ROOT, REF_5ETOOLS, REF_5ETOOLS_EN, REPO_ROOT, writeBytes, writeText, sha256 } from './lib/io'
 import { outArg, resolveOutDir } from './lib/outDir'
 import { createSnapshot, changedFiles, loadSnapshot, saveSnapshot } from './snapshot'
 import { loadRawData } from './extract/load'
@@ -47,6 +47,7 @@ import { dedupeMonsters, rewriteAliases } from './dedupe'
 import { extractNpcs } from './npc/extract'
 import { artById, applyArt } from './art/apply'
 import { applyBorrowedDurations, writeBorrowReport } from './convert/borrow2024'
+import { buildGlossary } from './convert/glossary'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 
@@ -146,6 +147,13 @@ async function main(): Promise<void> {
   console.log(`借时长（2024→2014）：成功 ${borrow.borrowed.length}，没借 ${borrow.skipped.length}（${['unusable', 'conflict', 'ambiguous', 'none', 'differs'].map((k) => `${k} ${borrow.skipped.filter((x) => x.reason === k).length}`).join('，')}）`)
   await writeText(join(WORK, 'borrow-2024.json'), `${JSON.stringify(borrow, null, 1)}\n`)
   await writeText(join(WORK, 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
+  // D5：名称表（代码 → 中文名）由转换器从 parser.js 与本次已转换的规则条目生成，放进 SRD 包；界面不再靠手写表翻译
+  const glossaryHost = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
+  if (glossaryHost) {
+    const glossary = buildGlossary(readFileSync(join(REF_5ETOOLS, 'js', 'parser.js'), 'utf8'), readFileSync(join(REF_5ETOOLS_EN, 'js', 'parser.js'), 'utf8'), result.packs.flatMap((p) => p.entries).filter((e) => e.type === 'rule') as Array<{ id: string; name: string; nameEn?: string; data: Record<string, unknown> }>)
+    glossaryHost.entries.push(...(glossary as unknown as typeof glossaryHost.entries))
+    console.log(`名称表：${glossary.length} 张（${glossary.map((g) => `${String(g.data.glossary)} ${(g.data.terms as unknown[]).length}`).join('，')}）`)
+  }
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
   if (srd) for (const alias of BASELINE_ALIASES) if (!srd.entries.some((e) => e.id === alias.id)) srd.entries.push(alias)
   const allConverted = result.packs.flatMap((p) => p.entries)
