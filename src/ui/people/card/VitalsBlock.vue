@@ -60,12 +60,14 @@ function commit(payload: HpEditPayload): void { emit('commit', payload) }
     </header>
     <HpEditor v-if="editing" ref="editor" :person="person" :hp="hp" :auto="auto" @commit="commit" @done="editing = false" />
     <template v-else>
-      <HoverTip :lines="hpLines"><div class="trpg-card-vitals__numbers">
+      <HoverTip :lines="hpLines">
+<div class="trpg-card-vitals__numbers">
         <span class="trpg-card-vitals__current" data-testid="person-card-hp-current" aria-live="polite">{{ max === null ? '' : currentValue }}</span>
         <span v-if="max !== null" class="trpg-card-vitals__slash">/</span>
         <span class="trpg-card-vitals__max">{{ max ?? '' }}</span>
         <span v-if="person.hp.temp > 0" class="trpg-badge-gold trpg-badge-gold--sm">临时 {{ person.hp.temp }}</span>
-      </div></HoverTip>
+      </div>
+</HoverTip>
       <p v-if="max === null" class="trpg-card-vitals__auto">选了职业后自动算上限，也可以点 ✎ 手填。</p>
     </template>
     <div class="trpg-hpbar" :class="{ 'is-empty': max === null, 'is-low': bar.low }" aria-hidden="true"><span class="trpg-hpbar__part is-hp" :style="{ width: `${bar.hp}%` }" /><span class="trpg-hpbar__part is-temp" :style="{ width: `${bar.temp}%` }" /></div>

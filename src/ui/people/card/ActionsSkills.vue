@@ -36,7 +36,8 @@ function mark(level: keyof typeof LEVEL): string { return level === 'none' ? 'ri
     <section class="trpg-actskills__actions" data-testid="person-card-actions">
       <header class="trpg-card-head"><h2>行动</h2></header>
       <ul v-if="actions.length" class="trpg-actlist">
-        <li v-for="a in actions" :key="a.id" class="trpg-actlist__row"><span class="trpg-actlist__name">{{ a.name }}</span>
+        <li v-for="a in actions" :key="a.id" class="trpg-actlist__row">
+<span class="trpg-actlist__name">{{ a.name }}</span>
           <button v-if="a.hit !== undefined" class="trpg-boxbtn" type="button" :aria-label="`${a.name} 命中 ${signed(a.hit)}，填入骰盘`" @click="emit('free', `1d20${signed(a.hit)}`, `${a.name} 命中`)">{{ signed(a.hit) }}</button>
           <button v-if="a.damage" class="trpg-boxbtn trpg-boxbtn--wide" type="button" :aria-label="`${a.name} 伤害 ${a.damage}，填入骰盘`" @click="emit('free', a.damage, `${a.name} 伤害`)">{{ a.damage }}</button>
         </li>
@@ -46,9 +47,12 @@ function mark(level: keyof typeof LEVEL): string { return level === 'none' ? 'ri
     <section class="trpg-actskills__skills" data-testid="person-card-skills">
       <header class="trpg-card-head"><h2>技能</h2><div class="trpg-card-head__actions"><Segmented v-model="filter" class="trpg-actskills__filter" :options="filters" label="技能筛选" /><button class="trpg-icon-btn" type="button" :disabled="readOnly" aria-label="编辑技能" data-testid="person-card-skills-edit" @click="emit('editSkills')"><Icon name="pencil-simple" :size="20" /></button></div></header>
       <ul class="trpg-skills is-wide">
-        <li v-for="r in shown" :key="r.key"><button class="trpg-skill" :class="{ 'is-none': r.res.level === 'none' }" type="button" :disabled="r.res.value === null" :data-testid="`person-card-skill-${r.key}`" @click="emit('skill', r.key)">
+        <li v-for="r in shown" :key="r.key">
+<button class="trpg-skill" :class="{ 'is-none': r.res.level === 'none' }" type="button" :disabled="r.res.value === null" :data-testid="`person-card-skill-${r.key}`" @click="emit('skill', r.key)">
           <HoverTip :lines="[LEVEL[r.res.level], ...partLines(r.res.parts, r.res.value)]"><span class="trpg-skill__mark" :class="`is-${mark(r.res.level)}`" aria-hidden="true" /></HoverTip>
-          <span class="trpg-skill__name"><b>{{ r.label }}</b><small>{{ r.ability }}</small></span><span class="trpg-skill__value">{{ signed(r.res.value) }}</span></button></li>
+          <span class="trpg-skill__name"><b>{{ r.label }}</b><small>{{ r.ability }}</small></span><span class="trpg-skill__value">{{ signed(r.res.value) }}</span>
+</button>
+</li>
       </ul>
       <ul class="trpg-skills is-narrow">
         <li v-for="r in profOnly" :key="r.key"><button class="trpg-skill" type="button" :disabled="r.res.value === null" @click="emit('skill', r.key)"><span class="trpg-skill__mark" :class="`is-${mark(r.res.level)}`" aria-hidden="true" /><span class="trpg-skill__name"><b>{{ r.label }}</b><small>{{ r.ability }}</small></span><span class="trpg-skill__value">{{ signed(r.res.value) }}</span></button></li>

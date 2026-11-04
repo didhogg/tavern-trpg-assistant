@@ -93,9 +93,9 @@ function restoreSave(m: (typeof missing.value)[number]): void { restored.value =
         <p class="trpg-ab__hint">点池里的数字，再点下面的属性行放入；放入后再点一次退回</p>
         <div class="trpg-ab__pool" role="group" aria-label="点数池"><button v-for="(n, i) in pool.pool" :key="i" class="trpg-ab__num" :class="{ 'is-selected': selected === i, 'is-used': used.has(i) }" type="button" :aria-pressed="selected === i" :aria-label="used.has(i) ? `${n}（已放入，点一下退回）` : `${n}`" :data-testid="`ab-pool-${i}`" @click="pick(i)">{{ n }}</button><span v-if="method === 'roll' && !rolled.length" class="trpg-card-empty">先点「一键掷 6 组点数」</span></div>
         <button v-if="method === 'roll' && rolled.length" class="trpg-linkbtn trpg-ab__detail" type="button" @click="showDetail = !showDetail"><Icon :name="showDetail ? 'caret-down' : 'caret-right'" :size="16" />点数明细</button>
-        <p v-if="showDetail" class="trpg-ab__hint">{{ rolled.map((r) => `${r.total}（${r.dice.filter((x, i) => !(x === r.dropped && r.dice.indexOf(x) === i)).join('+')}，弃 ${r.dropped}）`).join('　|　') }}</p>
+        <p v-if="showDetail" class="trpg-ab__hint">{{ rolled.map((r) => `${r.total}（${r.dice.filter((x, i) => !(x === r.dropped && r.dice.indexOf(x) === i)).join('+')}，弃 ${r.dropped}）`).join(' | ') }}</p>
       </template>
-      <template v-else><p class="trpg-ab__hint">剩余 {{ BUY_BUDGET - buySp }} 点　已花 {{ buySp }} / {{ BUY_BUDGET }}</p><p class="trpg-ab__hint">成本　{{ Object.entries(BUY_COST).map(([s, c]) => `${s}=${c}`).join('　') }}</p></template>
+      <template v-else><p class="trpg-ab__hint">剩余 {{ BUY_BUDGET - buySp }} 点 已花 {{ buySp }} / {{ BUY_BUDGET }}</p><p class="trpg-ab__hint">成本 {{ Object.entries(BUY_COST).map(([s, c]) => `${s}=${c}`).join(' ') }}</p></template>
     </section>
     <section class="trpg-ab__table-wrap">
       <h3>计算表</h3>

@@ -63,7 +63,8 @@ const subOf = (r: CardEntry): string => (tab.value === 'other' ? OTHER_SUB[r.ent
       </ul>
       <section class="trpg-fx__sheet" aria-label="资料片">
         <button class="trpg-btn trpg-btn--quiet trpg-btn--small trpg-fx__back" type="button" @click="showDetail = false"><Icon name="caret-left" :size="16" />回到列表</button>
-        <div v-if="isCustom" class="trpg-fx__form"><h3>自定义效果</h3>
+        <div v-if="isCustom" class="trpg-fx__form">
+<h3>自定义效果</h3>
           <label class="trpg-field"><span class="trpg-field__label">名称</span><input v-model="custom.name" class="trpg-input" maxlength="80" aria-label="效果名称" /></label>
           <label class="trpg-field"><span class="trpg-field__label">时长（写文字，如 1 分钟）</span><input v-model="custom.duration" class="trpg-input" maxlength="40" aria-label="效果时长" /></label>
           <label class="trpg-field"><span class="trpg-field__label">说明</span><textarea v-model="custom.note" class="trpg-input" maxlength="400" aria-label="效果说明" /></label>

@@ -59,12 +59,15 @@ function info(k: SkillKey): void {
   <DialogFrame note="改动进入草稿，点右上「保存」后生效">
     <div class="trpg-sk__head">
       <ul class="trpg-sk__legend"><li v-for="[m, t] in LEGEND" :key="m"><span class="trpg-skill__mark" :class="`is-${m}`" aria-hidden="true" />{{ t }}</li></ul>
-      <PopoverRoot v-model:open="settings"><PopoverTrigger class="trpg-icon-btn" aria-label="技能怎么显示" data-testid="skills-settings"><Icon name="gear" :size="20" /></PopoverTrigger>
-        <PopoverPortal :to="portalTarget"><PopoverContent class="trpg-sk__pop" align="end" :side-offset="6" :collision-padding="8">
+      <PopoverRoot v-model:open="settings">
+<PopoverTrigger class="trpg-icon-btn" aria-label="技能怎么显示" data-testid="skills-settings"><Icon name="gear" :size="20" /></PopoverTrigger>
+        <PopoverPortal :to="portalTarget">
+<PopoverContent class="trpg-sk__pop" align="end" :side-offset="6" :collision-padding="8">
           <strong>技能怎么显示</strong>
           <label class="trpg-sk__opt"><input v-model="onlyProf" type="checkbox" />只看有熟练的</label>
           <fieldset class="trpg-sk__order"><legend>排序</legend><label><input v-model="order" type="radio" value="default" />默认顺序</label><label><input v-model="order" type="radio" value="ability" />按属性分组</label><label><input v-model="order" type="radio" value="value" />按加值从高到低</label></fieldset>
-        </PopoverContent></PopoverPortal>
+        </PopoverContent>
+</PopoverPortal>
       </PopoverRoot>
     </div>
     <p class="trpg-sk__hint"><Icon name="dice-five" :size="16" />点右边数字去骰盘，点左边图标切换熟练度</p>

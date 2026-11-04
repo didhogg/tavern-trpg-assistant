@@ -110,7 +110,6 @@ const abilitiesUnconfigured = computed(() => {
   return base.length === 0 && !b.abilityOther && !b.overrides?.abilities && !b.abilityGrowth
 })
 const blank = computed(() => !model.block.race && !(model.block.classes ?? []).length && abilitiesUnconfigured.value && model.block.cr === undefined)
-const templateName = computed(() => props.from ?? model.name)
 const menuItems = computed<MenuItem[]>(() => cardMenuItems(model, personId.value, readOnly.value, !!props.libraryMode))
 
 function applyLive(patch: LivePatch): void {
@@ -162,11 +161,11 @@ const ctx = reactive({
   get data(): CardData { return cardData.value as CardData },
   get readOnly(): boolean { return readOnly.value },
   derived: () => derived.value!,
-  derivedWith: (block: MonsterData) => derivePerson({ ...model, block }, context.value!),
+  derivedWith: (block: MonsterData, extra?: Partial<Person>) => derivePerson({ ...model, ...extra, block }, contextOf({ ...model, block }) ?? context.value!),
   commitDraft, commitBlock, commitLive, commitMany,
   toast: { success: (t: string) => toast.success(t), error: (t: string) => toast.error(t), info: (t: string) => toast.info(t) },
 }) as unknown as CardCtx
-const dialogs = useCardDialogs(ctx, openPage, { uploadAvatar: (file: File) => uploadAvatar(file), clearAvatar: () => clearAvatar() })
+const dialogs = useCardDialogs(ctx, openPage, { uploadAvatar: (file: File) => uploadAvatar(file), clearAvatar: () => clearAvatar(), url: () => avatarUrl.value })
 
 function undoOnce(): void {
   const action = undo.value[undo.value.length - 1]
@@ -295,7 +294,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="root" class="trpg-person-card" data-testid="person-card">
-    <CardTopbar :name="model.name" :context="libraryMode ? `库里的「${model.name}」` : ''" :context-hint="libraryMode ? '改了不影响已经加进战役的人' : ''" :context-short="libraryMode ? `库·${model.name}` : ''" :back-label="libraryMode ? '我的资料' : '人物'" :dirty-count="dirtyCount" :can-undo="canUndo" :can-save="canSave" :read-only="readOnly" :library-mode="!!libraryMode" :show-name="showMini" :menu-items="menuItems" @help="dialogs.openHelp(blank)" :blank="blank" :view="view" @back="emit('back')" @undo="undoOnce" @save="save" @menu="onMenu" @view="view = $event" />
+    <CardTopbar :name="model.name" :context="libraryMode ? `库里的「${model.name}」` : ''" :context-hint="libraryMode ? '改了不影响已经加进战役的人' : ''" :context-short="libraryMode ? `库·${model.name}` : ''" :back-label="libraryMode ? '我的资料' : '人物'" :dirty-count="dirtyCount" :can-undo="canUndo" :can-save="canSave" :read-only="readOnly" :library-mode="!!libraryMode" :show-name="showMini" :menu-items="menuItems" :blank="blank" :view="view" @help="dialogs.openHelp(blank)" @back="emit('back')" @undo="undoOnce" @save="save" @menu="onMenu" @view="view = $event" />
     <p v-if="libraryMode" class="trpg-card-library-note">库里的「{{ model.name }}」 · 改了不影响已经加进战役的人</p>
     <button v-if="showMini" class="trpg-mini-bar" type="button" @click="scrollIdentity">{{ model.name }} · {{ model.hp.current ?? derived?.hp.value ?? '' }}/{{ derived?.hp.value ?? '' }} · AC {{ derived?.ac.value ?? '' }}</button>
     <main class="trpg-card-page">

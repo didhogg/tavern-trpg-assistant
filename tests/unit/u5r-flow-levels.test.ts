@@ -65,9 +65,22 @@ describe('U5R 种族流程：选用 / 分配 / 更换', () => {
   })
 })
 
+describe('U5R 种族带来的防御与感官', () => {
+  it('矮人：毒素抗性 + 黑暗视觉 60 尺可分配；更换成精灵后旧抗性被移除，感官保留较大者', () => {
+    const b = blank()
+    const plan = planFlow(b, src, { kind: 'race', id: 'race.dwarf.phb', assign: true })
+    const ids = plan.extras.map((x) => x.extra.id)
+    expect(ids).toEqual(expect.arrayContaining(['x:resist:poison', 'x:senses:darkvision']))
+    const dwarf = applyFlow(b, src, { kind: 'race', id: 'race.dwarf.phb', assign: true, selected: ids })
+    expect(dwarf.resist).toEqual(['poison']); expect(dwarf.senses).toEqual(['黑暗视觉 60 尺'])
+    const elf = applyFlow(dwarf, src, { kind: 'race', id: 'race.elf.phb', assign: true, selected: planFlow(dwarf, src, { kind: 'race', id: 'race.elf.phb', assign: true }).extras.map((x) => x.extra.id) })
+    expect(elf.resist).toEqual([]); expect(elf.senses).toEqual(['黑暗视觉 60 尺'])
+  })
+})
+
 describe('U5R 等级管理写入', () => {
   const wizard = src.classOf('class.wizard.phb')!
-  const person = (o: object = {}) => ({ block: blank({ classes: [{ class: 'class.wizard.phb', level: 3 }], abilities: { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 } }), hp: { current: 20, temp: 0, deathSaves: { success: 0, fail: 0 } }, ...o }) as never
+  const person = (o: object = {}): never => ({ block: blank({ classes: [{ class: 'class.wizard.phb', level: 3 }], abilities: { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 } }), hp: { current: 20, temp: 0, deathSaves: { success: 0, fail: 0 } }, ...o }) as never
   it('升级：等级、掷骰记录、属性提升（相同 +2、不同各 +1）、超 20 不加', () => {
     const r = applyLevels(person(), wizard, { to: 4, rolls: { 4: 6 }, asi: { 4: ['int', 'int'] }, finals: { int: 19 } })
     expect(r.block.classes?.[0]?.level).toBe(4); expect(r.hpRolls).toEqual({ '4': 6 })
@@ -89,8 +102,8 @@ describe('U5R 等级管理写入', () => {
   it('生命：写入的掷骰进入派生函数（取记录值）', () => {
     const r = applyLevels(person(), wizard, { to: 4, rolls: { 4: 6 } })
     const ctx = { classes: [{ id: 'c', entry: wizard, level: 4 }], equipmentEffects: [] }
-    const avg = derivePerson({ ...person(), block: r.block } as never, ctx).hp.value!
-    const rolled = derivePerson({ ...person(), block: r.block, hpRolls: r.hpRolls } as never, ctx).hp.value!
+    const avg = derivePerson({ ...(person() as object), block: r.block } as never, ctx).hp.value!
+    const rolled = derivePerson({ ...(person() as object), block: r.block, hpRolls: r.hpRolls } as never, ctx).hp.value!
     expect(rolled - avg).toBe(6 - 4)
     expect(levelDiff(wizard, 3, 4, 2).steps[0]?.level).toBe(4)
   })

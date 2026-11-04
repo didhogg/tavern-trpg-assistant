@@ -4,6 +4,8 @@ import type { AbilityKey } from '../../../rules/dnd5e2014/data/enums'
 import { ABILITY_KEYS } from '../../../rules/dnd5e2014/data/enums'
 import { assignGrants, grantsOf, removeStale, sourceTag, staleSources, type Grant, type GrantPicks, type Stale } from '../../../rules/dnd5e2014/derive'
 import type { Person } from '../../../schemas/people'
+import { CONDITION_LABELS, DAMAGE_LABELS } from '../../../rules/dnd5e2014/data/enums'
+import { SENSES, addListItem, addSense, removeItem, senseRows, setSenseRange, type SenseKey } from './archiveOps'
 
 /** 种族 / 职业 / 背景的「选择 → 补选 → 分配」写入，以及单职业升降级的写入（U5R §10.2、§10.3）。纯函数；界面与 e2e 只调这里。 */
 export interface EntrySource { raceOf: (id?: string) => RaceData | undefined; backgroundOf: (id?: string) => BackgroundData | undefined; classOf: (id?: string) => ClassData | undefined; nameOf: (id?: string) => string }
@@ -12,6 +14,17 @@ export interface FlowInput { kind: FlowKind; id: string; subId?: string; picks?:
 const clone = (b: MonsterData): MonsterData => JSON.parse(JSON.stringify(b)) as MonsterData
 export const grantId = (g: Grant): string => `${g.category}:${g.key}`
 
+/** 种族 / 亚种族带来的防御与感官（块里没有来源，更换时按旧条目的列表移除）。 */
+export interface Extra { id: string; group: 'resist' | 'immune' | 'condition' | 'senses'; key: string; label: string; range?: number }
+export function extrasOf(entry: RaceData | undefined): Extra[] {
+  if (!entry) return []
+  const out: Extra[] = []
+  const list = (group: 'resist' | 'immune' | 'condition', values: string[] | undefined, labels: Record<string, string>): void => { for (const v of values ?? []) out.push({ id: `x:${group}:${v}`, group, key: v, label: labels[v] ?? v }) }
+  list('resist', entry.resist, DAMAGE_LABELS); list('immune', entry.immune, DAMAGE_LABELS); list('condition', entry.conditionImmune, CONDITION_LABELS)
+  for (const sense of entry.senses ?? []) { const meta = SENSES.find((x) => x.key === sense.type); if (meta) out.push({ id: `x:senses:${sense.type}`, group: 'senses', key: sense.type, label: `${meta.label} ${sense.range} 尺`, range: sense.range }) }
+  return out
+}
+
 /** 当前（旧）选择带来的来源标签，用来「移除旧来源内容」。 */
 export function oldSources(block: MonsterData, kind: FlowKind): string[] {
   if (kind === 'race') return [block.race ? sourceTag('race', block.race) : '', block.subrace ? sourceTag('subrace', block.subrace) : ''].filter(Boolean)
@@ -19,7 +32,7 @@ export function oldSources(block: MonsterData, kind: FlowKind): string[] {
   return (block.classes ?? []).map((c) => sourceTag('class', c.class))
 }
 
-export interface FlowPlan { remove: Array<{ from: string; stale: Stale[] }>; write: Array<{ grant: Grant; from: string }> }
+export interface FlowPlan { remove: Array<{ from: string; stale: Stale[] }>; write: Array<{ grant: Grant; from: string }>; extras: Array<{ extra: Extra; from: string }>; removeExtras: Extra[] }
 /** 分配页要显示的内容：要移除的（旧来源）与要写入的（新来源，已展开补选）。 */
 export function planFlow(block: MonsterData, src: EntrySource, input: FlowInput): FlowPlan {
   const remove = oldSources(block, input.kind).map((from) => ({ from, stale: staleSources(block.proficiencies, from) })).filter((r) => r.stale.length)
@@ -29,7 +42,12 @@ export function planFlow(block: MonsterData, src: EntrySource, input: FlowInput)
     if (input.subId) write.push(...grantsOf('subrace', src.raceOf(input.subId), input.picks).map((grant) => ({ grant, from: sourceTag('subrace', input.subId!) })))
   } else if (input.kind === 'class') write.push(...grantsOf('class', src.classOf(input.id), input.picks).map((grant) => ({ grant, from: sourceTag('class', input.id) })))
   else write.push(...grantsOf('background', src.backgroundOf(input.id), input.picks).map((grant) => ({ grant, from: sourceTag('background', input.id) })))
-  return { remove, write }
+  const raceIds = (kind: FlowKind, b: MonsterData): Array<string | undefined> => (kind === 'race' ? [b.race, b.subrace] : [])
+  const extras: FlowPlan['extras'] = input.kind === 'race'
+    ? [...extrasOf(src.raceOf(input.id)).map((extra) => ({ extra, from: sourceTag('race', input.id) })), ...extrasOf(input.subId ? src.raceOf(input.subId) : undefined).map((extra) => ({ extra, from: sourceTag('subrace', input.subId!) }))]
+    : []
+  const removeExtras = raceIds(input.kind, block).flatMap((id) => extrasOf(src.raceOf(id)))
+  return { remove, write, extras, removeExtras }
 }
 
 export function applyFlow(block: MonsterData, src: EntrySource, input: FlowInput): MonsterData {
@@ -47,7 +65,13 @@ export function applyFlow(block: MonsterData, src: EntrySource, input: FlowInput
     const level = next.classes?.[0]?.level ?? 1
     next.classes = [{ class: input.id, level }] as MonsterData['classes']
   }
+  if (input.assign && input.removeOld !== false) next = dropExtras(next, plan.removeExtras)
   if (input.assign) {
+    for (const x of plan.extras) {
+      if (!selectedOnly.has(x.extra.id)) continue
+      if (x.extra.group === 'senses') { const row = senseRows(next).find((r) => r.key === x.extra.key); next = row ? ((row.range ?? 0) < (x.extra.range ?? 0) ? setSenseRange(next, row.index, x.extra.range ?? 0) : next) : addSense(next, x.extra.key as SenseKey, x.extra.range ?? 60) }
+      else next = addListItem(next, x.extra.group, x.extra.key)
+    }
     let prof = next.proficiencies
     const by = new Map<string, Grant[]>()
     for (const w of plan.write) if (selectedOnly.has(grantId(w.grant))) by.set(w.from, [...(by.get(w.from) ?? []), w.grant])
@@ -55,6 +79,12 @@ export function applyFlow(block: MonsterData, src: EntrySource, input: FlowInput
     next.proficiencies = prof
   }
   if (next.proficiencies && Object.keys(next.proficiencies).length === 0) delete next.proficiencies
+  return next
+}
+
+function dropExtras(block: MonsterData, extras: Extra[]): MonsterData {
+  let next = block
+  for (const x of extras) next = removeItem(next, x.group, x.group === 'senses' ? x.key : x.key)
   return next
 }
 

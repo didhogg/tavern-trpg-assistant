@@ -36,7 +36,8 @@ const passives = computed(() => {
       <HoverTip :lines="speedLines"><button class="trpg-readout-cell" type="button" data-testid="person-card-speed" @click="emit('open', 'speed')"><span class="trpg-readout-cell__label">速度</span><span class="trpg-readout-cell__value">{{ speedText }}</span><span class="trpg-readout-cell__detail">{{ speedDetail }}</span></button></HoverTip>
       <HoverTip :lines="partLines(derived.proficiency.parts, derived.proficiency.value)"><button class="trpg-readout-cell" type="button" data-testid="person-card-proficiency" @click="emit('open', 'defense')"><span class="trpg-readout-cell__label">熟练</span><span class="trpg-readout-cell__value">{{ signed(derived.proficiency.value) }}</span><span class="trpg-readout-cell__detail">{{ crText || (level ? `${level} 级` : '') }}</span></button></HoverTip>
     </div>
-    <div v-if="passives.length" class="trpg-card-readout__passive"><span class="trpg-card-readout__passive-label">被动</span>
+    <div v-if="passives.length" class="trpg-card-readout__passive">
+<span class="trpg-card-readout__passive-label">被动</span>
       <HoverTip v-for="row in passives" :key="row.key" :lines="row.lines"><button class="trpg-passive" type="button" :aria-label="`被动${row.label} ${row.value}，交给骰盘`" :data-testid="`person-card-passive-${row.key}`" @click="emit('passive', row.key)"><span>{{ row.label }}</span><b>{{ row.value }}</b></button></HoverTip>
     </div>
   </section>
