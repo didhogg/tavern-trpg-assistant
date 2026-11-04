@@ -58,7 +58,7 @@ try {
         const ctx = { width, height, engine, viewLabel, scheme, url, fixture }
         if (!only || only === 'shell') await shellSuite(page, label, ctx)
         if (!only || only === 'dice') await diceSuite(page, label, ctx)
-        if (!only || only === 'people' || only === 'card' || only === 'wizard' || only === 'saves' || only === 'library' || only === 'display') await wizardSuite(page, label, ctx)
+        if (!only || only === 'people' || only === 'wizard' || only === 'saves' || only === 'library' || only === 'display') await wizardSuite(page, label, ctx)
         if (only === 'upgrade') await upgradeSuite(page, label, ctx)
         if (only === 'fullcatalog') await fullCatalogSuite(page, label)
         if (only === 'people') await peopleSuite(page, label, ctx)

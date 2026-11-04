@@ -19,7 +19,7 @@ import type { MenuItem } from '../../kit/MoreMenu.vue'
 import { cardMenuItems } from './cardMenu'
 import { cropAvatarFile } from './autoCrop'
 import { useAssetUrl } from './useAssetUrl'
-import { loadCardData, type CardData } from './cardData'
+import { deriveContextOf, loadCardData, type CardData } from './cardData'
 import { clonePerson, dirtyFields, draftPatchOf, livePatchOf, pushUndo, type UndoAction } from './draft'
 import type { CardCtx } from './cardCtx'
 import { useCardDialogs } from './useCardDialogs'
@@ -76,15 +76,7 @@ const dirtyCount = computed(() => (!personId.value ? Math.max(1, dirty.value.len
 const canSave = computed(() => !!model.name.trim() && !campaign.readOnly)
 const canUndo = computed(() => undo.value.length > 0)
 const readOnly = computed(() => campaign.readOnly)
-function contextOf(person: Person): DeriveContext | null {
-  const data = cardData.value
-  if (!data) return null
-  return {
-    race: data.raceOf(person.block.race), subrace: data.raceOf(person.block.subrace), background: data.backgroundOf(person.block.background),
-    classes: (person.block.classes ?? []).map((row) => ({ id: row.class, entry: data.classOf(row.class), level: row.level })),
-    equipmentEffects: person.effects.flatMap((e) => e.effects ?? []),
-  }
-}
+function contextOf(person: Person): DeriveContext | null { return cardData.value ? deriveContextOf(person, cardData.value) : null }
 const context = computed(() => contextOf(model))
 const derived = computed(() => (context.value ? derivePerson(model, context.value) : null))
 /** 去掉上限覆盖、手动修正、生命骰覆盖后的「自动」生命（编辑态的明细与「全部恢复自动」依据）。 */
@@ -167,13 +159,20 @@ const ctx = reactive({
 }) as unknown as CardCtx
 const dialogs = useCardDialogs(ctx, openPage, { uploadAvatar: (file: File) => uploadAvatar(file), clearAvatar: () => clearAvatar(), url: () => avatarUrl.value })
 
+/** 整体还原：连 before 里没有的键（如撤销前新增的 hpAdj）也要去掉。 */
+function restoreModel(before: Person): void {
+  const copy = clonePerson(before) as unknown as Record<string, unknown>
+  const target = model as unknown as Record<string, unknown>
+  for (const key of Object.keys(target)) if (!(key in copy)) delete target[key]
+  Object.assign(target, copy)
+}
 function undoOnce(): void {
   const action = undo.value[undo.value.length - 1]
   if (!action) return
   undo.value = undo.value.slice(0, -1)
   if (action.kind === 'draft') {
     try { if (action.liveBefore && personId.value && !props.libraryMode) people.setLive(personId.value, action.liveBefore) } catch (error) { toast.error(`没能撤销：${errorText(error)}`) }
-    Object.assign(model, clonePerson(action.before))
+    restoreModel(action.before)
     return
   }
   try {
@@ -315,7 +314,7 @@ onBeforeUnmount(() => {
         <ArchiveCards class="trpg-card-d" :person="model" :name-of="(id) => cardData?.nameOf(id) ?? id ?? ''" :read-only="readOnly" @edit="(card, group) => dialogs.openArchive(card, group)" @item="dialogs.openArchiveItem($event)" />
         <PageTabs v-model="page" class="trpg-card-e" />
         <section class="trpg-card-f">
-          <ActionsSkills v-if="page === 'actions'" :person="model" :derived="derived" :read-only="readOnly" @skill="(s) => onSkill(s, derived!.skills[s].ability)" @all-skills="dice.openRoll({ actorId: actor(), kind: 'check', ability: 'str', skill: undefined })" @edit-skills="dialogs.openSkills()" @free="onFree" />
+          <ActionsSkills v-if="page === 'actions'" :person="model" :derived="derived" :read-only="readOnly" @skill="(s) => onSkill(s, derived!.skills[s].ability)" @all-skills="dice.openRoll({ actorId: actor(), kind: 'check' })" @edit-skills="dialogs.openSkills()" @free="onFree" />
           <EmptyState v-else icon="books" text="本分页尚未开放" data-testid="person-card-placeholder" />
         </section>
       </div>

@@ -5,6 +5,7 @@ import { useDiceStore } from '../../stores/dice'
 import { useLibraryStore } from '../../stores/library'
 import { openEntry } from '../library/openDetail'
 import { useUiStore } from '../../stores/ui'
+import RollPanel from './tray/RollPanel.vue'
 import DieIcon from '../kit/DieIcon.vue'
 import Icon from '../kit/Icon.vue'
 import { loadPoint, savePoint } from './storage'
@@ -14,6 +15,7 @@ const ui = useUiStore()
 const dice = useDiceStore()
 const library = useLibraryStore()
 const MODES: Array<{ value: RollMode; label: string }> = [{ value: 'adv', label: '优势' }, { value: 'normal', label: '普通' }, { value: 'dis', label: '劣势' }]
+const TABS = [{ key: 'check', label: '检定' }, { key: 'save', label: '豁免' }, { key: 'free', label: '自由' }] as const
 const REDUCE = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const el = ref<HTMLElement | null>(null)
@@ -109,13 +111,19 @@ async function openRecord(rec: typeof dice.history[number]): Promise<void> {
 </script>
 
 <template>
-  <aside v-if="ui.diceOpen" ref="el" class="trpg-dice" :style="style" :data-narrow="narrow" role="dialog" aria-label="掷骰" aria-modal="false">
+  <aside v-if="ui.diceOpen" ref="el" class="trpg-dice" :style="style" :data-narrow="narrow" :data-tab="dice.tab" role="dialog" aria-label="掷骰" aria-modal="false">
     <header class="trpg-dice__head" @pointerdown="drag.onPointerDown">
       <Icon name="dice-five" :size="20" />
       <span class="trpg-dice__title">掷骰</span>
       <button class="trpg-icon-btn" type="button" aria-label="关闭掷骰" @click="ui.diceOpen = false"><Icon name="x" :size="18" /></button>
     </header>
-    <div class="trpg-dice__body">
+    <div class="trpg-dice__shell">
+    <div class="trpg-dice__tabs" role="tablist" aria-label="骰盘标签" aria-orientation="vertical">
+      <button v-for="t in TABS" :key="t.key" class="trpg-dice__tab" type="button" role="tab" :aria-selected="dice.tab === t.key" :data-testid="`dice-tab-${t.key}`" @click="dice.setTab(t.key)">{{ t.label }}</button>
+    </div>
+    <div class="trpg-dice__main">
+    <RollPanel v-if="dice.tab !== 'free'" :key="dice.tab" :kind="dice.tab" />
+    <div v-else class="trpg-dice__body">
       <div>
         <div class="trpg-dice__lbl"><label for="trpg-dice-formula">骰式</label><span>点下面的骰子加进骰式，也可以直接写</span></div>
         <div class="trpg-dice__row">
@@ -191,6 +199,8 @@ async function openRecord(rec: typeof dice.history[number]): Promise<void> {
           <div v-if="visibleHistory.length" class="trpg-dice__clear"><button class="trpg-btn trpg-btn--quiet trpg-btn--small" type="button" @click="dice.clearHistory()">清空记录</button></div>
         </template>
       </section>
+    </div>
+    </div>
     </div>
   </aside>
 </template>

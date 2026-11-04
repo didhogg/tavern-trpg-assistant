@@ -4,6 +4,8 @@ import { useAppStore } from '../../../stores/app'
 import { useLibraryStore } from '../../../stores/library'
 import { backgroundDataSchema, classDataSchema, raceDataSchema, type BackgroundData, type ClassData, type RaceData } from '../../../rules/dnd5e2014/data/entries/character'
 import { CONDITION_LABELS, type ConditionKey } from '../../../rules/dnd5e2014/data/enums'
+import type { Effect } from '../../../rules/dnd5e2014/data/effects'
+import type { DeriveContext } from '../../../rules/dnd5e2014/derive'
 
 export interface CardEntry {
   packId: string
@@ -35,6 +37,8 @@ export interface CardData {
   subraceOptions: (raceId?: string) => CardOption[]
   backgroundOptions: CardOption[]
   spellDuration: (entry?: Entry) => string
+  /** 力竭 1–6 级的结构化效果（读条件条目；骰盘用）。 */
+  exhaustionLevels: Array<{ level: number; effects: Effect[] }>
   effectSummary: (ref?: string) => string
 }
 
@@ -129,6 +133,7 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
     subraceOptions: (raceId?: string) => subraces.filter((row) => !raceId || row.entry.data.parentRace === raceId).map(optionOf),
     backgroundOptions: backgrounds.map(optionOf),
     spellDuration: durationText,
+    exhaustionLevels: ((conditionEntries.find((r) => r.entry.id.startsWith('condition.exhaustion'))?.entry.data.levels ?? []) as Array<{ level: number; effects: Effect[] }>).filter((l) => l && typeof l.level === 'number' && Array.isArray(l.effects)),
     effectSummary: (ref?: string) => (ref ? entries.get(ref)?.entry.summary ?? '' : ''),
   }
 }
@@ -193,4 +198,13 @@ export async function namesOf(ids: string[]): Promise<Record<string, string>> {
     if (row) out[id] = row.name
   }
   return out
+}
+
+/** 一个人物的派生上下文（人物卡与骰盘共用）。 */
+export function deriveContextOf(person: Person, data: CardData): DeriveContext {
+  return {
+    race: data.raceOf(person.block.race), subrace: data.raceOf(person.block.subrace), background: data.backgroundOf(person.block.background),
+    classes: (person.block.classes ?? []).map((row) => ({ id: row.class, entry: data.classOf(row.class), level: row.level })),
+    equipmentEffects: person.effects.flatMap((e) => e.effects ?? []),
+  }
 }

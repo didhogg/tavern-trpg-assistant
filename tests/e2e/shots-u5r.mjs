@@ -152,6 +152,13 @@ async function main() {
       await state('11-技能弹窗', async () => { await openPerson(page, '盖尔'); await page.getByTestId('person-card-skills-edit').click(); await wait(page, 300) }, null, async () => { await closeModal() })
       await state('12-档案-熟练弹窗', async () => { await openPerson(page, '档案人'); await page.getByTestId('person-card-archive-edit-proficiency').click(); await wait(page, 400) }, null, async () => { await closeModal() })
       await state('13-添加效果', async () => { await openPerson(page, '盖尔'); await page.getByTestId('person-card-effect-add').click(); await wait(page, 600) }, null, async () => { await closeModal() })
+      const closeTray = async () => { await page.getByRole('button', { name: '关闭掷骰' }).click(); await wait(page, 150) }
+      await state('15-骰盘-检定', async () => { await openPerson(page, '盖尔'); await page.getByRole('button', { name: /敏捷检定/ }).click(); await page.getByTestId('roll-panel-check').waitFor(); await wait(page, 500) }, null)
+      await state('16-骰盘-检定-结果', async () => { await page.getByTestId('roll-random-dc').click(); await page.getByTestId('roll-go').click(); await wait(page, 700) }, null)
+      await state('17-骰盘-豁免', async () => { await closeTray(); await page.getByRole('button', { name: /智力豁免/ }).click(); await page.getByTestId('roll-panel-save').waitFor(); await wait(page, 400) }, null)
+      await state('18-骰盘-被动', async () => { await closeTray(); await page.getByTestId('person-card-passive-perception').click(); await page.getByTestId('roll-panel-check').waitFor(); await wait(page, 400) }, null)
+      await state('19-骰盘-对抗', async () => { await page.getByTestId('dc-contest').click(); await wait(page, 300) }, null)
+      await state('20-骰盘-自由', async () => { await page.getByTestId('dice-tab-free').click(); await wait(page, 300) }, null, async () => { await closeTray() })
       await state('14-帮助', async () => { await openPerson(page, '盖尔'); await page.getByTestId('person-card-help').click(); await wait(page, 200) }, null, async () => { await closeModal(); await back(page) })
       await context.close()
       console.log(`✓ ${tag}`)

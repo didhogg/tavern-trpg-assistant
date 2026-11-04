@@ -84,6 +84,8 @@ export function rollSources(input: RollInput): RollSources {
   for (const { source, effect } of effects) {
     if (effect.kind === 'rollBonus' && effect.on === on && matchesScope(effect.scope, ability, skill)) {
       rows.push({ label: effect.label ?? source, dice: effect.dice, amount: effect.amount, source, consumedOnUse: effect.consumedOnUse, auto: true })
+    } else if (effect.kind === 'note' && effect.text.includes('自动失败') && ((kind === 'save' && effect.text.includes('豁免')) || (kind === 'check' && effect.text.includes('属性检定')))) {
+      notes.push(`${source}：${effect.text}`)
     } else if (effect.kind === 'advantage' && !effect.against && (effect.on === on || (kind === 'initiative' && effect.on === 'initiative'))) {
       adv.push(source)
     } else if (effect.kind === 'disadvantage' && !effect.against && (effect.on === on || (kind === 'initiative' && effect.on === 'initiative'))) {
@@ -111,4 +113,13 @@ export const RANDOM_DC_MIN = 1
 export const RANDOM_DC_MAX = 25
 export function randomDc(rand: () => number = Math.random): number {
   return RANDOM_DC_MIN + Math.min(RANDOM_DC_MAX - RANDOM_DC_MIN, Math.floor(rand() * (RANDOM_DC_MAX - RANDOM_DC_MIN + 1)))
+}
+
+/** 力竭 N 级的累计效果（读条件条目的 exhaustion levels；1 级起检定劣势、3 级起攻击与豁免劣势：PHB p291）。 */
+export function exhaustionEffects(levels: Array<{ level: number; effects: Effect[] }>, current: number): SourcedEffect[] {
+  return levels.filter((l) => l.level <= current).flatMap((l) => l.effects.map((effect) => ({ source: `力竭 ${l.level} 级`, effect })))
+}
+/** 人物身上所有结构化来源：效果快照 + 力竭。 */
+export function effectSourcesOf(effects: Array<{ name: string; effects?: Effect[] }>, exhaustion: number, levels: Array<{ level: number; effects: Effect[] }>): SourcedEffect[] {
+  return [...effects.flatMap((e) => (e.effects ?? []).map((effect) => ({ source: e.name, effect }))), ...exhaustionEffects(levels, exhaustion)]
 }

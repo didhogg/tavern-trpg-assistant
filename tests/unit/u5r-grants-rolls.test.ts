@@ -166,3 +166,28 @@ describe('U5R rollSources 与判定', () => {
     for (let i = 0; i < 500; i++) { const n = randomDc(); expect(Number.isInteger(n) && n >= 1 && n <= 25).toBe(true) }
   })
 })
+
+describe('U5R 力竭与自动失败提示', () => {
+  const levels = [
+    { level: 1, effects: [{ kind: 'disadvantage', on: 'check' }] },
+    { level: 2, effects: [{ kind: 'speed', mode: 'walk', multiplier: 0.5 }] },
+    { level: 3, effects: [{ kind: 'disadvantage', on: 'attack' }, { kind: 'disadvantage', on: 'save' }] },
+  ] as never
+  const person = { hp: { current: null, temp: 0, deathSaves: { success: 0, fail: 0 } }, block: { abilities: { str: 10, dex: 14, con: 12, int: 16, wis: 12, cha: 10 } } } as never
+  const d = derivePerson(person, { classes: [], equipmentEffects: [] })
+  it('力竭累计：1 级检定劣势；3 级起豁免也劣势；2 级的速度不进掷法', async () => {
+    const { effectSourcesOf } = await import('../../src/rules/dnd5e2014/derive')
+    const e1 = effectSourcesOf([], 1, levels)
+    expect(rollSources({ kind: 'check', ability: 'str', derived: d, effects: e1 }).dis).toEqual(['力竭 1 级'])
+    expect(rollSources({ kind: 'save', ability: 'str', derived: d, effects: e1 }).dis).toEqual([])
+    const e3 = effectSourcesOf([], 3, levels)
+    expect(rollSources({ kind: 'save', ability: 'str', derived: d, effects: e3 }).dis).toEqual(['力竭 3 级'])
+  })
+  it('自动失败只做提示行，不进掷法也不拦截', () => {
+    const fx: Effect = { kind: 'note', text: '不能行动或说话；力量与敏捷豁免自动失败' }
+    const r = rollSources({ kind: 'save', ability: 'str', derived: d, effects: [{ source: '麻痹', effect: fx }] })
+    expect(r.notes).toEqual(['麻痹：不能行动或说话；力量与敏捷豁免自动失败'])
+    expect(r.mode).toBe('normal')
+    expect(rollSources({ kind: 'check', ability: 'str', derived: d, effects: [{ source: '麻痹', effect: fx }] }).notes).toEqual([])
+  })
+})

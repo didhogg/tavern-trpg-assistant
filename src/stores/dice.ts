@@ -206,6 +206,25 @@ export const useDiceStore = defineStore('dice', () => {
     return rec
   }
 
+  /** 检定 / 豁免标签用：按给定骰式与掷法直接掷，不动「自由」标签里的骰式文字；记录进同一份「最近」。 */
+  function rollWith(expression: string, mode: RollMode, label: string): { rec: RollRecord; result: RollResult } | null {
+    try {
+      const result = rollDice(expression, { rng, mode })
+      const rec: RollRecord = { id: nextId++, at: Date.now(), note: label.trim(), expression: result.expression, formula: result.expression, mode, total: result.total, line: lineText(result), ...(result.natural ? { natural: result.natural } : {}) }
+      last.value = rec
+      lastResult.value = result
+      history.value = [rec, ...history.value].slice(0, HISTORY_MAX)
+      fillState.value = 'idle'
+      copied.value = false
+      note.value = label
+      persist()
+      return { rec, result }
+    } catch (err) {
+      console.warn('[trpg-assistant] 掷骰失败', err)
+      return null
+    }
+  }
+
   /** 点「最近」里的一行：把那次的骰式与掷法载入回来，不掷骰。 */
   function loadRecord(rec: RollRecord): void {
     text.value = rec.formula
@@ -244,6 +263,6 @@ export const useDiceStore = defineStore('dice', () => {
 
   return {
     text, mode, note, history, last, lastResult, fillState, copied, error, builder, canMode, canRoll,
-    request, tab, requestSeq, openRoll, setTab, setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, prefill, roll, recordTable, loadRecord, clearHistory, fill, copy, commentOf,
+    request, tab, requestSeq, openRoll, setTab, rollWith, setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, prefill, roll, recordTable, loadRecord, clearHistory, fill, copy, commentOf,
   }
 })
