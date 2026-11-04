@@ -9,6 +9,15 @@
 .trpg-modal__card:has(.trpg-tag-editor) .trpg-modal__page,
 .trpg-modal__card:has(.trpg-tag-manage) .trpg-modal__page,
 .trpg-modal__card:has(.trpg-trash) .trpg-modal__page { position: relative; inset: auto; overflow: auto; }
+/* 小弹窗高度跟内容、最高 80%：页面区要参与 flex 收缩，内容超出时页面自己滚动（回收站人多时以前滚不动） */
+.trpg-modal__card:has(.trpg-save-lib) .trpg-modal__pages,
+.trpg-modal__card:has(.trpg-tag-editor) .trpg-modal__pages,
+.trpg-modal__card:has(.trpg-tag-manage) .trpg-modal__pages,
+.trpg-modal__card:has(.trpg-trash) .trpg-modal__pages { display: flex; flex-direction: column; min-height: 0; }
+.trpg-modal__card:has(.trpg-save-lib) .trpg-modal__page,
+.trpg-modal__card:has(.trpg-tag-editor) .trpg-modal__page,
+.trpg-modal__card:has(.trpg-tag-manage) .trpg-modal__page,
+.trpg-modal__card:has(.trpg-trash) .trpg-modal__page { flex: 1 1 auto; min-height: 0; }
 .trpg-modal__card:has(.trpg-template) { width: min(1100px, 92%); height: 86%; }
 .trpg-modal__head:has(.trpg-modal__sub) .trpg-modal__title { flex: none; }
 .trpg-modal__sub { flex: 1; min-width: 0; margin-left: 4px; overflow: hidden; font-size: 13px; color: var(--ink-2); text-overflow: ellipsis; white-space: nowrap; }

@@ -41,7 +41,7 @@ const display = (value: string): string => props.options.find((o) => o.value ===
     <ComboboxPortal :to="portalTarget">
       <ComboboxContent class="trpg-select-content trpg-combo__content" position="popper" :side-offset="4" :collision-padding="8">
         <div class="trpg-combo__count" role="status">共 {{ filtered.length }} 条<template v-if="filtered.length > MAX_SHOWN">，只显示前 {{ MAX_SHOWN }} 条，继续输入可缩小范围</template></div>
-        <ComboboxViewport class="trpg-select-viewport">
+        <ComboboxViewport class="trpg-select-viewport" @mousedown.prevent>
           <ComboboxEmpty class="trpg-combo__empty">没有符合的条目</ComboboxEmpty>
           <ComboboxItem v-for="o in shown" :key="o.value" :value="o.value" class="trpg-select-item">
             <span>{{ o.label }}<span v-if="o.en" class="trpg-row__meta"> · {{ o.en }}</span></span>

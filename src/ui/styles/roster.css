@@ -5,14 +5,16 @@
 .trpg-btn, .trpg-icon-btn, .trpg-tabs2__tab, .trpg-person, .trpg-tplcard {
   transition: transform 160ms cubic-bezier(0, 0, 0.2, 1), box-shadow 160ms cubic-bezier(0, 0, 0.2, 1);
 }
-.trpg-btn:active:not(:disabled), .trpg-icon-btn:active:not(:disabled), .trpg-tabs2__tab:active, .trpg-person:active, .trpg-tplcard:active {
+.trpg-btn:active:not(:disabled), .trpg-icon-btn:active:not(:disabled), .trpg-tabs2__tab:active, .trpg-tplcard:active {
   transform: scale(0.97); transition-duration: 80ms;
 }
-.trpg-person:hover:not(:active), .trpg-tplcard:hover:not(:active) { transform: translateY(-1px); box-shadow: var(--shadow-card-hover); }
+.trpg-tplcard:hover:not(:active) { transform: translateY(-1px); box-shadow: var(--shadow-card-hover); }
+/* 人物行：不缩放、不上浮——按下时整行缩小会把里面的「…」按钮从指针下挪开，点不中（只留阴影变化，行内按钮可靠点击） */
+.trpg-person:hover { box-shadow: var(--shadow-card-hover); }
 @media (prefers-reduced-motion: reduce) {
   .trpg-btn, .trpg-icon-btn, .trpg-tabs2__tab, .trpg-person, .trpg-tplcard { transition: none; }
-  .trpg-btn:active:not(:disabled), .trpg-icon-btn:active:not(:disabled), .trpg-tabs2__tab:active, .trpg-person:active, .trpg-tplcard:active,
-  .trpg-person:hover:not(:active), .trpg-tplcard:hover:not(:active) { transform: none; }
+  .trpg-btn:active:not(:disabled), .trpg-icon-btn:active:not(:disabled), .trpg-tabs2__tab:active, .trpg-tplcard:active,
+  .trpg-tplcard:hover:not(:active) { transform: none; }
 }
 
 /* ---------- 头像框：外框 1px、内框 2px 金边、中间一圈纸色缝；右下角类型徽章 ---------- */
