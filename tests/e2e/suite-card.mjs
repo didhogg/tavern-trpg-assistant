@@ -56,6 +56,7 @@ export async function cardSuite(page, label) {
   await page.getByTestId('person-card-name-open').click()
   await page.getByTestId('identity-core').waitFor()
   check(`[${label}] 身份弹窗只有一个模态，且有五个标签`, (await modalCount(page)) === 1 && (await modalOf(page).getByRole('tab').count()) === 5)
+  await settle(page, 500)
   const box = await modalOf(page).boundingBox()
   const vp = page.viewportSize()
   check(`[${label}] ${narrow ? '手机：弹窗是贴底的整页' : '宽屏：弹窗居中，不是侧拉'}`, narrow ? Math.abs(box.y + box.height - vp.height) < 6 : Math.abs(box.x + box.width / 2 - vp.width / 2) < vp.width * 0.2 && box.x > 150)

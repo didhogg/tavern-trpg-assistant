@@ -67,7 +67,11 @@ function addAdj(): void {
 }
 function resetAuto(): void { cap.value = ''; adj.value = []; diceOverride.value = {} }
 const canReset = computed(() => cap.value.trim() !== '' || adj.value.length > 0 || Object.values(diceOverride.value).some((v) => v.trim() !== ''))
+/** WebKit 点按钮不聚焦、影子 DOM 里 relatedTarget 会指到外层：点在表单内部时一律不算「离开」。 */
+let insideTap = false
+function press(): void { insideTap = true; setTimeout(() => { insideTap = false }, 400) }
 function blur(event: FocusEvent): void {
+  if (insideTap) return
   const next = event.relatedTarget as Node | null
   if (next && !form.value?.contains(next)) commit()
 }
@@ -76,7 +80,7 @@ defineExpose({ commit })
 </script>
 
 <template>
-  <form ref="form" class="trpg-hpedit" data-testid="person-card-hp-editor" @focusout="blur" @submit.prevent="commit">
+  <form ref="form" class="trpg-hpedit" data-testid="person-card-hp-editor" @pointerdown.capture="press" @focusout="blur" @submit.prevent="commit">
     <div class="trpg-hpedit__inputs">
       <label class="trpg-hpedit__field"><span>当前</span><input v-model="current" class="trpg-input" inputmode="numeric" aria-label="当前生命" data-testid="person-card-hp-current-input" @keydown.enter.prevent="commit" /></label>
       <label class="trpg-hpedit__field"><span>上限</span><input v-model="cap" class="trpg-input" inputmode="numeric" :placeholder="autoMax === null ? '' : String(autoMax)" aria-label="生命上限" data-testid="person-card-hp-max-input" @keydown.enter.prevent="commit" /></label>

@@ -41578,18 +41578,25 @@ var F4 = { class: "trpg-card-top__group trpg-card-top__nav" }, I4 = ["aria-label
 		function b() {
 			s.value = "", l.value = [], u.value = {};
 		}
-		let x = W(() => s.value.trim() !== "" || l.value.length > 0 || Object.values(u.value).some((e) => e.trim() !== ""));
-		function S(e) {
+		let x = W(() => s.value.trim() !== "" || l.value.length > 0 || Object.values(u.value).some((e) => e.trim() !== "")), S = !1;
+		function C() {
+			S = !0, setTimeout(() => {
+				S = !1;
+			}, 400);
+		}
+		function w(e) {
+			if (S) return;
 			let t = e.relatedTarget;
 			t && !a.value?.contains(t) && v();
 		}
-		let C = W(() => r.hp.parts.filter((e) => e.kind !== "override"));
+		let T = W(() => r.hp.parts.filter((e) => e.kind !== "override"));
 		return t({ commit: v }), (t, n) => (L(), R("form", {
 			ref_key: "form",
 			ref: a,
 			class: "trpg-hpedit",
 			"data-testid": "person-card-hp-editor",
-			onFocusout: S,
+			onPointerdownCapture: C,
+			onFocusout: w,
 			onSubmit: Tu(v, ["prevent"])
 		}, [
 			B("div", b3, [
@@ -41641,7 +41648,7 @@ var F4 = { class: "trpg-card-top__group trpg-card-top__nav" }, I4 = ["aria-label
 				})], 8, k3)]))), 128)),
 				!e.auto.parts.length && !l.value.length ? (L(), R("li", A3, "没有职业：上限只能手填。")) : U("", !0)
 			]),
-			C.value.length === 0 && e.auto.parts.length === 0 ? (L(), R("p", j3, "选了职业后这里会列出每一级怎么算。")) : U("", !0),
+			T.value.length === 0 && e.auto.parts.length === 0 ? (L(), R("p", j3, "选了职业后这里会列出每一级怎么算。")) : U("", !0),
 			d.value ? (L(), R("div", N3, [
 				Rr(B("input", {
 					"onUpdate:modelValue": n[4] ||= (e) => f.value.label = e,
