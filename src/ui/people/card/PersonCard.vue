@@ -94,7 +94,7 @@ const raceName = computed(() => [model.block.subrace, model.block.race].map((id)
 const backgroundName = computed(() => (model.block.background ? cardData.value?.nameOf(model.block.background) ?? '' : ''))
 const cr = computed(() => { const v = model.block.cr; return typeof v === 'number' ? v : v && typeof v === 'object' ? v.value : undefined })
 const crText = computed(() => (cr.value === undefined ? '' : `挑战 ${formatCr(cr.value)}`))
-const xp = computed(() => xpOf(cr.value, model.block.xp))
+const xp = computed(() => xpOf(cr.value, model.block.xp, cardData.value?.tables.xpByCr))
 const xpText = computed(() => (xp.value === undefined ? '' : `${xp.value} 经验`))
 const showCrBadges = computed(() => view.value === 'enemy' && cr.value !== undefined)
 const abilitiesUnconfigured = computed(() => {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { ABILITY_KEYS, ABILITY_LABELS, type AbilityKey } from '../../../../rules/dnd5e2014/data/enums'
-import { levelDiff, proficiencyAt } from '../../../../rules/dnd5e2014/derive'
+import { levelDiff } from '../../../../rules/dnd5e2014/derive'
 import { cryptoRng } from '../../../../rules/dice'
 import { useModalStore } from '../../../../stores/modal'
 import Icon from '../../../kit/Icon.vue'
@@ -24,7 +24,9 @@ const asi = ref<Record<number, [AbilityKey | '', AbilityKey | '']>>({})
 const removeOnDown = ref(true)
 const ro = computed(() => props.ctx.readOnly)
 const con = computed(() => props.ctx.derived().abilities.con.modifier ?? 0)
-const diff = computed(() => (entry.value ? levelDiff(entry.value, from.value, target.value, con.value) : null))
+const diff = computed(() => (entry.value ? levelDiff(entry.value, from.value, target.value, con.value, props.ctx.data.tables) : null))
+/** 当前等级的熟练加值（读库里的升级表）；读不到就是破折号。 */
+const profText = (level: number): string => { const v = props.ctx.data.tables.profByLevel[Math.max(1, Math.min(20, level)) - 1]; return v === undefined ? '—' : signed(v) }
 const subclassAt = computed(() => entry.value?.subclassLevel ?? 99)
 const abOptions = ABILITY_KEYS.map((k) => ({ value: k, label: ABILITY_LABELS[k] }))
 const names = ref<Record<string, string>>({})
@@ -82,12 +84,12 @@ function apply(): void {
           </div>
         </li>
 </ul>
-        <ul class="trpg-lv__list"><li>熟练加值：{{ signed(proficiencyAt(from)) }} → {{ signed(diff.proficiency) }}</li><li v-if="featureNames.length">新特性：{{ featureNames.join('、') }}</li><li v-if="diff.slots">法术位：{{ diff.slots.map((n, i) => (n ? `${i + 1}环 ${n}` : '')).filter(Boolean).join(' · ') }}</li></ul>
+        <ul class="trpg-lv__list"><li>熟练加值：{{ profText(from) }} → {{ diff.proficiency === null ? '—' : signed(diff.proficiency) }}</li><li v-if="featureNames.length">新特性：{{ featureNames.join('、') }}</li><li v-if="diff.slots">法术位：{{ diff.slots.map((n, i) => (n ? `${i + 1}环 ${n}` : '')).filter(Boolean).join(' · ') }}</li></ul>
       </template>
       <template v-else-if="diff">
         <h3>降到 {{ target }} 级会失去</h3>
         <ul class="trpg-lv__steps"><li v-for="s in diff.steps" :key="s.level" class="trpg-lv__step-row"><b>{{ s.level }} 级</b><span>生命上限按每级累计重算{{ ctx.person.hpRolls?.[s.level] ? `（记录的掷骰 ${ctx.person.hpRolls[s.level]} 一并去掉）` : '' }}</span></li></ul>
-        <ul class="trpg-lv__list"><li>熟练加值：{{ signed(proficiencyAt(from)) }} → {{ signed(diff.proficiency) }}</li><li v-if="featureNames.length">失去特性：{{ featureNames.join('、') }}</li></ul>
+        <ul class="trpg-lv__list"><li>熟练加值：{{ profText(from) }} → {{ diff.proficiency === null ? '—' : signed(diff.proficiency) }}</li><li v-if="featureNames.length">失去特性：{{ featureNames.join('、') }}</li></ul>
         <label v-if="diff.asiLevels.length" class="trpg-flow__row"><input v-model="removeOnDown" type="checkbox" class="trpg-ab__check" data-testid="levels-remove-asi" />移除这些等级带来的属性提升（默认勾选）</label>
         <p class="trpg-dlg__small">生命骰已用数会压到新总数，当前生命会压到新上限。</p>
       </template>

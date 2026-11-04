@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { derivePerson } from '../../src/rules/dnd5e2014/derive'
 import { sumParts, type DeriveContext, type DerivePerson } from '../../src/rules/dnd5e2014/derive/types'
 import { ABILITY_KEYS } from '../../src/rules/dnd5e2014/data/enums'
+import { loadTablesFromSrd } from './helpers-sense'
+const srdTables = loadTablesFromSrd()
 
 const wizard = { hitDie: 6 } as never
 function person(over: Record<string, unknown> = {}, block: Record<string, unknown> = {}): DerivePerson {
@@ -11,7 +13,7 @@ function person(over: Record<string, unknown> = {}, block: Record<string, unknow
     ...over,
   } as unknown as DerivePerson
 }
-const ctx = (level = 3): DeriveContext => ({ classes: [{ id: 'class.wizard', entry: wizard, level }], equipmentEffects: [] })
+const ctx = (level = 3): DeriveContext => ({ classes: [{ id: 'class.wizard', entry: wizard, level }], equipmentEffects: [], tables: srdTables })
 
 describe('U5R 派生 parts', () => {
   it('每个派生数字：parts 之和 = value（无覆盖时）', () => {

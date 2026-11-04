@@ -7,6 +7,7 @@ import { CONDITION_LABELS, type ConditionKey } from '../../../rules/dnd5e2014/da
 import type { Effect } from '../../../rules/dnd5e2014/data/effects'
 import type { DeriveContext } from '../../../rules/dnd5e2014/derive'
 import { senseDefsFrom, setSenseDefs } from './senseDefs'
+import { emptyTables, fullCasterSlotsOf, hasColumns, parseBuyCosts, parseProfByCr, parseProfByLevel, parseXpTable, type RuleTables, type TableLike } from '../../../rules/dnd5e2014/derive/tables'
 
 export interface CardEntry {
   packId: string
@@ -45,6 +46,8 @@ export interface CardData {
   exhaustionText: Array<{ level: number; text: string }>
   /** 按类型取已启用包里的条目（语言、规则、物品……不在上面预载的类型里的）；同一类型只查一次。 */
   entriesOfType: (type: string) => Promise<CardEntry[]>
+  /** 规则数值表（经验、熟练加值、购点、标准数组、法术位）：全部读已启用的包；读不到的项为空，界面不显示。 */
+  tables: RuleTables
 }
 
 /** 条目正文（块数组）里第一个 `tableRef` 的表编号。 */
@@ -95,6 +98,30 @@ function durationText(entry?: Entry): string {
   return parts.join('、')
 }
 
+/** 购点花费表的编号（PHB 第 13 页「属性值花费」表）；表里没有列键可认，只能认编号。 */
+const BUY_COST_TABLE = 'table.phb-p13-r1'
+
+/** 从已启用的包读出规则数值表：按列键认表（cr+xp / level+proficiencyBonus / cr+proficiencyBonus）。 */
+async function loadRuleTables(db: ReturnType<ReturnType<typeof useAppStore>['svc']>['db'], ruleId: string, enabled: Set<string>, rules: Entry[], classes: Map<string, ClassData>): Promise<RuleTables> {
+  const out = emptyTables()
+  const rows = (await db.entries.where('[ruleId+type]').equals([ruleId, 'table']).toArray()) as StoredEntry[]
+  for (const row of rows) {
+    if (enabled.size && !enabled.has(row.packId)) continue
+    const data = row.data as unknown as TableLike
+    if (row.entryId === BUY_COST_TABLE && !Object.keys(out.buyCost).length) out.buyCost = parseBuyCosts(data)
+    else if (hasColumns(data, 'cr', 'xp') && !Object.keys(out.xpByCr).length) out.xpByCr = parseXpTable(data)
+    else if (hasColumns(data, 'cr', 'proficiencyBonus') && !Object.keys(out.profByCr).length) out.profByCr = parseProfByCr(data)
+    else if (hasColumns(data, 'level', 'proficiencyBonus') && !out.profByLevel.length) out.profByLevel = parseProfByLevel(data)
+  }
+  for (const rule of rules) {
+    const d = rule.data as { standardArray?: number[]; pointBuyBudget?: number }
+    if (!out.standardArray && d.standardArray) out.standardArray = d.standardArray
+    if (out.buyBudget === undefined && d.pointBuyBudget) out.buyBudget = d.pointBuyBudget
+  }
+  out.fullCasterSlots = fullCasterSlotsOf(classes.values())
+  return out
+}
+
 /** 载入人物卡需要的已启用条目；只读，不改库。 */
 export async function loadCardData(_person: Person, enabledPackIds: string[], ruleId: string): Promise<CardData> {
   const db = useAppStore().svc().db
@@ -126,6 +153,7 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
   const tableId = tableRefOf(exhaustionEntry?.entry.data.text)
   const tableRow = exhaustionEntry && tableId ? await db.entries.get([exhaustionEntry.packId, tableId]) : undefined
   const exhaustionText = exhaustionRows((tableRow?.data as { rows?: unknown } | undefined)?.rows)
+  const tables = await loadRuleTables(db, ruleId, enabled, all.filter((row) => row.entry.type === 'rule').map((row) => row.entry), classes)
   const typeCache = new Map<string, Promise<CardEntry[]>>()
   const entriesOfType = (type: string): Promise<CardEntry[]> => {
     if (!typeCache.has(type)) typeCache.set(type, db.entries.where('[ruleId+type]').equals([ruleId, type]).toArray().then((list) => (list as StoredEntry[]).filter((row) => !enabled.size || enabled.has(row.packId)).map((row) => entryView(row, packs))))
@@ -175,6 +203,7 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
     effectSummary: (ref?: string) => (ref ? entries.get(ref)?.entry.summary ?? '' : ''),
     exhaustionText,
     entriesOfType,
+    tables,
   }
 }
 
@@ -246,5 +275,6 @@ export function deriveContextOf(person: Person, data: CardData): DeriveContext {
     race: data.raceOf(person.block.race), subrace: data.raceOf(person.block.subrace), background: data.backgroundOf(person.block.background),
     classes: (person.block.classes ?? []).map((row) => ({ id: row.class, entry: data.classOf(row.class), level: row.level })),
     equipmentEffects: person.effects.flatMap((e) => e.effects ?? []),
+    tables: data.tables,
   }
 }

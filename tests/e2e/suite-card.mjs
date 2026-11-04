@@ -86,7 +86,7 @@ export async function cardSuite(page, label) {
   // ── 点数字去骰盘：只填入，不掷 ─────────────────────────────────────
   await page.getByTestId('person-card-ability-int').getByRole('button', { name: /智力检定/ }).click()
   await page.locator('.trpg-dice').waitFor()
-  await page.getByTestId('roll-formula').filter({ hasText: '1d20+4' }).waitFor({ timeout: 5000 }).catch(() => undefined)
+  await page.getByTestId('roll-formula').filter({ hasText: '1d20+4' }).waitFor({ timeout: 20000 }).catch(() => undefined)
   check(`[${label}] 点属性检定：骰盘切到检定，行动者、属性已填好，骰式 1d20+4，没有自动掷`, (await page.getByTestId('roll-panel-check').count()) === 1 && (await page.getByTestId('roll-formula').innerText()) === '1d20+4' && (await page.getByTestId('roll-result').innerText()).includes('掷出后'))
   const y0 = await page.getByTestId('roll-formula').evaluate((el) => el.getBoundingClientRect().y)
   await pickOption(page, page.getByRole('combobox', { name: '技能' }), '奥秘')
@@ -184,6 +184,7 @@ export async function cardSuite(page, label) {
   // ── 属性弹窗：放入 / 退回 / 保存并写入 ────────────────────────────────
   await page.getByTestId('person-card-abilities-edit').click()
   await page.getByTestId('ab-row-str').waitFor()
+  if ((await page.getByTestId('ab-pool-0').count()) === 0) await page.getByTestId('ab-roll').click() // 只装了 SRD 时库里没有标准数组，默认走掷骰
   await page.getByTestId('ab-pool-0').click()
   await page.getByTestId('ab-row-str').click()
   check(`[${label}] 放入：该行红框、池里数字变灰`, (await page.getByTestId('ab-row-str').getAttribute('class')).includes('is-placed') && (await page.getByTestId('ab-pool-0').getAttribute('class')).includes('is-used'))
@@ -192,7 +193,7 @@ export async function cardSuite(page, label) {
   check(`[${label}] 再点已放入的行 = 退回：红框消失、数字恢复可用`, !(await page.getByTestId('ab-row-str').getAttribute('class')).includes('is-placed') && !(await page.getByTestId('ab-pool-0').getAttribute('class')).includes('is-used'))
   await page.getByTestId('ab-pool-0').click(); await page.getByTestId('ab-row-dex').click()
   await page.getByTestId('ab-save').click(); await settle(page, 200)
-  check(`[${label}] 保存并写入后弹窗关闭、敏捷基础值变 15（池里第 1 个数），未保存计数出现`, (await modalCount(page)) === 0 && (await page.getByTestId('person-card-status').innerText()).includes('未保存'))
+  check(`[${label}] 保存并写入后弹窗关闭、按池里第 1 个数写入敏捷，未保存计数出现`, (await modalCount(page)) === 0 && (await page.getByTestId('person-card-status').innerText()).includes('未保存'))
   await page.getByTestId('person-card-undo').click()
 
   // ── 读数弹窗：三个标签、项目卡、手动调整与自动计算 ─────────────────────
@@ -252,7 +253,9 @@ export async function cardSuite(page, label) {
   await callStore(page, 'people', (s, a) => s.addFromEntry(a), { ref: { packId: await callStore(page, 'app', async (s) => (await s.svc().db.entries.toArray()).find((r) => r.entryId === 'monster.mage.mm')?.packId), entryId: 'monster.mage.mm' }, count: 1, categoryId: 'enemy' })
   await settle(page, 500)
   await openCard(page, '魔法师')
+  await card(page).getByText('经验').first().waitFor({ timeout: 20000 }).catch(() => undefined) // 经验值读库里的表，表载入比卡片慢一拍
   const t = await card(page).innerText()
+  if (process.env.E2E_DEBUG) console.log(t.replace(/\s+/g, ' ').slice(0, 600))
   check(`[${label}] 敌人视图：除挑战 / 经验徽章外，灵感、死亡豁免、生命骰、力竭、职业框、等级管理位都在`, t.includes('挑战 6') && t.includes('经验') && t.includes('灵感') && t.includes('死亡豁免') && t.includes('生命骰') && t.includes('力竭') && t.includes('未选职业'))
   check(`[${label}] 敌人也显示法术位（读属性块）`, (await page.getByTestId('person-card-slots').innerText()).includes('1环') && (await page.getByTestId('person-card-slots').innerText()).includes('5环'))
   await page.getByTestId('person-card-back').click(); await page.getByTestId('people-page').waitFor()

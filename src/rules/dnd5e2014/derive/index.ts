@@ -4,7 +4,7 @@ import { deriveAc, deriveHp, deriveSpeed } from './combat'
 import { deriveSpellSlots, deriveSpellcasting } from './spells'
 
 export * from './types'
-export { abilityModifier, crProficiency, crValue, deriveAbilities, deriveInitiative, derivePassives, deriveSaves, deriveSkills, proficiencyFor, totalLevel } from './abilities'
+export { abilityModifier, crValue, deriveAbilities, deriveInitiative, derivePassives, deriveSaves, deriveSkills, proficiencyFor, totalLevel } from './abilities'
 export { deriveAc, deriveHp, deriveSpeed } from './combat'
 export { deriveSpellSlots, deriveSpellcasting } from './spells'
 export * from './grants'
@@ -35,3 +35,5 @@ export function derivePerson(person: DerivePerson, ctx: DeriveContext): PersonDe
 }
 
 export { derivePerson as derive }
+
+export * from './tables'

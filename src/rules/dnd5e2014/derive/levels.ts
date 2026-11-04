@@ -1,4 +1,5 @@
 import type { ClassData } from '../data/entries/character'
+import type { RuleTables } from './tables'
 
 /** 单职业升降级的差集（U5R §10.4；PHB p15、p163）。纯函数；多职业留给 UNIT4。 */
 export interface LevelStep {
@@ -20,12 +21,12 @@ export interface LevelDiff {
   /** 目标等级的法术位（数据没有就 null）。 */
   slots: number[] | null
   pact: { count: number; level: number } | null
-  proficiency: number
+  /** 目标等级的熟练加值（读库里的升级表；读不到就是 null）。 */
+  proficiency: number | null
 }
 
-export function proficiencyAt(level: number): number { return 2 + Math.floor((Math.max(1, Math.min(20, level)) - 1) / 4) }
-
-export function levelDiff(entry: ClassData, from: number, to: number, con: number): LevelDiff {
+/** tables：规则数值表（熟练加值读「角色升级」表）；没有就是 null。 */
+export function levelDiff(entry: ClassData, from: number, to: number, con: number, tables?: RuleTables): LevelDiff {
   const lo = Math.min(from, to)
   const hi = Math.max(from, to)
   const levels: number[] = []
@@ -41,7 +42,7 @@ export function levelDiff(entry: ClassData, from: number, to: number, con: numbe
   const row = entry.spellcasting?.slotsByLevel?.[to - 1]
   const slots = row && 'slots' in row ? row.slots : null
   const pact = row && 'pact' in row ? row.pact : null
-  return { from, to, direction: to > from ? 'up' : to < from ? 'down' : 'same', steps, features, asiLevels, slots, pact, proficiency: proficiencyAt(to) }
+  return { from, to, direction: to > from ? 'up' : to < from ? 'down' : 'same', steps, features, asiLevels, slots, pact, proficiency: tables?.profByLevel[Math.max(1, Math.min(20, to)) - 1] ?? null }
 }
 
 /** 升级所得生命 = 掷出的点数（没掷则平均）+ 体质，至少 1。 */

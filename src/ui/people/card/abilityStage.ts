@@ -40,20 +40,22 @@ export const manualCounts = (stage: Stage): { other: number; override: number } 
 /** [清除手动修正]：清空「其他」和覆盖，基础值不动；不立刻写。 */
 export const clearManual = (stage: Stage): Stage => ({ ...stage, other: {}, override: {}, cleared: true })
 
-// 购点（PHB p13）：27 点，每项 8–15，成本表如下
-export const BUY_COST: Record<number, number> = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 }
-export const BUY_BUDGET = 27
-export const buyCost = (score: number): number | null => BUY_COST[score] ?? null
-export function buySpent(base: Rec): number { return ABILITY_KEYS.reduce((n, k) => n + (buyCost(base[k] ?? -1) ?? 0), 0) }
-export function canBuyUp(base: Rec, key: AbilityKey): boolean {
-  const cur = base[key] ?? 8
-  if (cur >= 15) return false
-  return buySpent(base) - (buyCost(cur) ?? 0) + (buyCost(cur + 1) ?? 0) <= BUY_BUDGET
+// 购点：成本表与总点数读库（`BuyRules`，见 cardData.tables）；代码里不写数
+export interface BuyRules { costs: Record<number, number>; budget: number }
+export const buyCost = (score: number, costs: Record<number, number>): number | null => costs[score] ?? null
+const range = (costs: Record<number, number>): { min: number; max: number } => { const s = Object.keys(costs).map(Number); return { min: Math.min(...s), max: Math.max(...s) } }
+export function buySpent(base: Rec, costs: Record<number, number>): number { return ABILITY_KEYS.reduce((n, k) => n + (buyCost(base[k] ?? -1, costs) ?? 0), 0) }
+export function canBuyUp(base: Rec, key: AbilityKey, rules: BuyRules): boolean {
+  const { min, max } = range(rules.costs)
+  const cur = base[key] ?? min
+  if (cur >= max) return false
+  return buySpent(base, rules.costs) - (buyCost(cur, rules.costs) ?? 0) + (buyCost(cur + 1, rules.costs) ?? 0) <= rules.budget
 }
-export function buyStep(base: Rec, key: AbilityKey, delta: 1 | -1): Rec {
-  const cur = Math.min(15, Math.max(8, base[key] ?? 8))
-  if (delta === 1 && !canBuyUp({ ...base, [key]: cur }, key)) return { ...base, [key]: cur }
-  return { ...base, [key]: Math.min(15, Math.max(8, cur + delta)) }
+export function buyStep(base: Rec, key: AbilityKey, delta: 1 | -1, rules: BuyRules): Rec {
+  const { min, max } = range(rules.costs)
+  const cur = Math.min(max, Math.max(min, base[key] ?? min))
+  if (delta === 1 && !canBuyUp({ ...base, [key]: cur }, key, rules)) return { ...base, [key]: cur }
+  return { ...base, [key]: Math.min(max, Math.max(min, cur + delta)) }
 }
 
 /** 4d6 去最低：每组四颗 d6，去掉最低一颗，余下三颗相加。 */

@@ -209,7 +209,6 @@ export interface PoolState {
   /** 属性 → 占用的池序号。 */
   placed: Partial<Record<AbilityKey, number>>
 }
-export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8]
 
 export function poolUsed(state: PoolState): Set<number> { return new Set(Object.values(state.placed)) }
 /** 把池里第 index 个数放进某属性；该数已被别的属性占用时先让出来；该属性原有的数回池。 */

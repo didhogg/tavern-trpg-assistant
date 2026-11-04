@@ -1,11 +1,5 @@
-/** 挑战等级 → 经验值（DMG 第 3 章 / MM 附录；`docs/模块数据约定.md` §16）。键：1/8=0.125、1/4=0.25、1/2=0.5。 */
-export const XP_BY_CR: Record<string, number> = {
-  '0': 10, '0.125': 25, '0.25': 50, '0.5': 100, '1': 200, '2': 450, '3': 700, '4': 1100, '5': 1800, '6': 2300, '7': 2900, '8': 3900, '9': 5000, '10': 5900,
-  '11': 7200, '12': 8400, '13': 10000, '14': 11500, '15': 13000, '16': 15000, '17': 18000, '18': 20000, '19': 22000, '20': 25000, '21': 33000, '22': 41000,
-  '23': 50000, '24': 62000, '25': 75000, '26': 90000, '27': 105000, '28': 120000, '29': 135000, '30': 155000,
-}
-/** 数据有 xp 字段取它；否则按挑战等级查表；表里没有就 undefined（界面不显示该徽章）。 */
-export function xpOf(cr: number | undefined, xp?: number): number | undefined {
+/** 数据有 xp 字段取它；否则按挑战等级查库里的经验值表（xpByCr）；表里没有就 undefined（界面不显示该徽章）。 */
+export function xpOf(cr: number | undefined, xp?: number, xpByCr?: Record<string, number>): number | undefined {
   if (xp !== undefined) return xp
-  return cr === undefined ? undefined : XP_BY_CR[String(cr)]
+  return cr === undefined ? undefined : xpByCr?.[String(cr)]
 }

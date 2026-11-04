@@ -1,5 +1,6 @@
 import { ABILITY_KEYS, SKILLS, type AbilityKey, type SkillKey } from '../data/enums'
 import { withOverride, type DeriveContext, type DerivePerson, type AbilityResult, type DerivedNumber, type SaveResult, type SkillResult, type SkillLevel, type Part } from './types'
+import { crKey } from './tables'
 
 const LEVEL_RANK: Record<SkillLevel, number> = { none: 0, half: 1, proficient: 2, expertise: 3 }
 const PASSIVE_KEYS = ['perception', 'investigation', 'insight'] as const
@@ -18,12 +19,6 @@ export function crValue(person: DerivePerson): number | null {
   return cr && typeof cr === 'object' ? cr.value : null
 }
 
-/** PHB p15 表：挑战等级 0–4 为 +2，之后每 4 级一档。 */
-export function crProficiency(cr: number): number {
-  if (cr <= 4) return 2
-  return 2 + Math.ceil((Math.min(30, cr) - 4) / 4)
-}
-
 export function proficiencyFor(person: DerivePerson, ctx: DeriveContext): DerivedNumber {
   const level = totalLevel(ctx)
   const cr = crValue(person)
@@ -31,13 +26,12 @@ export function proficiencyFor(person: DerivePerson, ctx: DeriveContext): Derive
   const sources: string[] = []
   let parts: Part[] = []
   if (level > 0) {
-    value = 2 + Math.floor((level - 1) / 4)
-    sources.push(`${level} 级：2 + ⌊(${level}−1)÷4⌋ = ${value}`)
-    parts.push({ label: `${level} 级`, amount: value, kind: 'base' })
+    // 熟练加值读库里的「角色升级」表；没有这张表就读不到（显示为空），不用公式替代
+    value = ctx.tables?.profByLevel[Math.min(20, level) - 1] ?? null
+    if (value !== null) { sources.push(`${level} 级：${value}`); parts.push({ label: `${level} 级`, amount: value, kind: 'base' }) }
   } else if (cr !== null) {
-    value = crProficiency(cr)
-    sources.push(`挑战 ${cr}：${value}`)
-    parts.push({ label: `挑战 ${cr}`, amount: value, kind: 'base' })
+    value = ctx.tables?.profByCr[crKey(cr)] ?? null
+    if (value !== null) { sources.push(`挑战 ${cr}：${value}`); parts.push({ label: `挑战 ${cr}`, amount: value, kind: 'base' }) }
   } else {
     value = null
   }

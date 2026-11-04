@@ -29,15 +29,17 @@ describe('U5R 属性暂存', () => {
     const n = applyStage(b, c)
     expect(n.abilities).toEqual({ str: 14 }); expect(n.abilityOther).toBeUndefined(); expect(n.overrides).toBeUndefined()
   })
-  it('购点：成本表、27 点上限、范围 8–15', () => {
-    expect([8, 9, 10, 11, 12, 13, 14, 15].map((n) => buyCost(n))).toEqual([0, 1, 2, 3, 4, 5, 7, 9])
-    expect(buyCost(7)).toBeNull()
+  it('购点：成本表与总点数由调用方传入（此处用测试夹具），范围取自成本表', () => {
+    const costs: Record<number, number> = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 } // 夹具；真实数值读库里的表
+    const rules = { costs, budget: 27 }
+    expect([8, 9, 10, 11, 12, 13, 14, 15].map((n) => buyCost(n, costs))).toEqual([0, 1, 2, 3, 4, 5, 7, 9])
+    expect(buyCost(7, costs)).toBeNull()
     const base = { str: 15, dex: 15, con: 15, int: 8, wis: 8, cha: 8 }
-    expect(buySpent(base)).toBe(27)
-    expect(canBuyUp(base, 'int')).toBe(false)
-    expect(buyStep(base, 'int', 1).int).toBe(8)
-    expect(buyStep({ str: 8 }, 'str', -1).str).toBe(8)
-    expect(buyStep({ str: 10 }, 'str', 1).str).toBe(11)
+    expect(buySpent(base, costs)).toBe(27)
+    expect(canBuyUp(base, 'int', rules)).toBe(false)
+    expect(buyStep(base, 'int', 1, rules).int).toBe(8)
+    expect(buyStep({ str: 8 }, 'str', -1, rules).str).toBe(8)
+    expect(buyStep({ str: 10 }, 'str', 1, rules).str).toBe(11)
   })
   it('4d6 去最低：总分 = 余下三颗之和', () => {
     const seq = [0.0, 0.5, 0.999, 0.2] // 1, 4, 6, 2

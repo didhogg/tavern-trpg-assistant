@@ -1,30 +1,6 @@
 import type { AbilityKey } from '../data/enums'
 import type { AbilityResult, DeriveContext, DerivePerson, DerivedNumber, SpellSlotsResult, SpellcastingResult } from './types'
 
-/** PHB p113 全施法者法术位表；兼职时用它查总施法等级。 */
-const FULL_CASTER: number[][] = [
-  [2, 0, 0, 0, 0, 0, 0, 0, 0],
-  [3, 0, 0, 0, 0, 0, 0, 0, 0],
-  [4, 2, 0, 0, 0, 0, 0, 0, 0],
-  [4, 3, 0, 0, 0, 0, 0, 0, 0],
-  [4, 3, 2, 0, 0, 0, 0, 0, 0],
-  [4, 3, 3, 0, 0, 0, 0, 0, 0],
-  [4, 3, 3, 1, 0, 0, 0, 0, 0],
-  [4, 3, 3, 2, 0, 0, 0, 0, 0],
-  [4, 3, 3, 3, 1, 0, 0, 0, 0],
-  [4, 3, 3, 3, 2, 0, 0, 0, 0],
-  [4, 3, 3, 3, 2, 1, 0, 0, 0],
-  [4, 3, 3, 3, 2, 1, 0, 0, 0],
-  [4, 3, 3, 3, 2, 1, 1, 0, 0],
-  [4, 3, 3, 3, 2, 1, 1, 0, 0],
-  [4, 3, 3, 3, 2, 1, 1, 1, 0],
-  [4, 3, 3, 3, 2, 1, 1, 1, 0],
-  [4, 3, 3, 3, 2, 1, 1, 1, 1],
-  [4, 3, 3, 3, 3, 1, 1, 1, 1],
-  [4, 3, 3, 3, 3, 2, 1, 1, 1],
-  [4, 3, 3, 3, 3, 2, 2, 1, 1],
-]
-
 function casterLevels(ctx: DeriveContext): { full: number; pact: number; hasCaster: boolean } {
   let full = 0
   let pact = 0
@@ -47,7 +23,7 @@ function rowsFrom(numbers: number[], used: Record<string, number>): SpellSlotsRe
   return numbers.map((max, index) => ({ key: String(index + 1), level: index + 1, max, used: used[String(index + 1)] ?? 0 })).filter((row) => row.max > 0)
 }
 
-/** U5 §6.9：单职业直接读 slotsByLevel；多职业按书上的兼职施法等级表；契约位单列。 */
+/** U5 §6.9：单职业直接读 slotsByLevel；多职业按兼职施法等级查全施法者法术位表（读库）；契约位单列。 */
 export function deriveSpellSlots(person: DerivePerson, ctx: DeriveContext): SpellSlotsResult | null {
   const classes = ctx.classes.filter((row) => row.level > 0)
   if (!classes.length) return monsterSlots(person)
@@ -66,7 +42,7 @@ export function deriveSpellSlots(person: DerivePerson, ctx: DeriveContext): Spel
   const levels = casterLevels(ctx)
   if (!levels.hasCaster) return null
   const rows: SpellSlotsResult['rows'] = []
-  if (levels.full > 0) rows.push(...rowsFrom(FULL_CASTER[levels.full - 1], person.slotsUsed ?? {}))
+  if (levels.full > 0) { const full = ctx.tables?.fullCasterSlots?.[levels.full - 1]; if (full) rows.push(...rowsFrom(full, person.slotsUsed ?? {})) } // 兼职施法：查全施法者法术位表（读库里的职业条目），读不到就没有这一部分
   const pactRow = classes.find((row) => row.entry?.spellcasting?.progression === 'pact')
   if (levels.pact > 0) {
     const table = pactRow?.entry?.spellcasting?.slotsByLevel?.[levels.pact - 1]

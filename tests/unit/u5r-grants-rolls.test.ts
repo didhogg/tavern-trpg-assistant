@@ -3,11 +3,13 @@ import { strFromU8, unzipSync } from 'fflate'
 import { describe, expect, it } from 'vitest'
 import {
   assignGrants, contestOutcome, grantChoices, grantsOf, levelDiff, meetsDc, passiveValue, poolComplete, poolPlace, poolReturn, poolValue,
-  randomDc, removeStale, resolveMode, restorable, rollSources, sourceTag, staleSources, STANDARD_ARRAY, derivePerson,
+  randomDc, removeStale, resolveMode, restorable, rollSources, sourceTag, staleSources, derivePerson,
 } from '../../src/rules/dnd5e2014/derive'
 import type { Effect } from '../../src/rules/dnd5e2014/data/effects'
 import type { BackgroundData, ClassData, RaceData } from '../../src/rules/dnd5e2014/data/entries/character'
 import type { PoolState } from '../../src/rules/dnd5e2014/derive'
+import { loadTablesFromSrd } from './helpers-sense'
+const srdTables = loadTablesFromSrd()
 
 const zip = unzipSync(new Uint8Array(readFileSync('packs/dnd5e2014-srd.trpgpack')))
 function entry<T>(type: string, id: string): { data: T } {
@@ -75,7 +77,7 @@ describe('U5R grantsOf / 补选 / 写入 / 移除 / 可恢复（读真实 SRD �
 
 describe('U5R poolAssign 放入 / 退回', () => {
   it('放入后该属性有值、池里该数被占用；再点退回；同一个数放到别处会让出', () => {
-    let s: PoolState = { pool: STANDARD_ARRAY, placed: {} }
+    let s: PoolState = { pool: [15, 14, 13, 12, 10, 8], placed: {} }
     s = poolPlace(s, 'str', 0)
     expect(poolValue(s, 'str')).toBe(15)
     s = poolPlace(s, 'dex', 0)
@@ -89,7 +91,7 @@ describe('U5R poolAssign 放入 / 退回', () => {
 
 describe('U5R levelDiff', () => {
   it('升级：生命平均 + 体质、特性与属性提升级、法术位', () => {
-    const d = levelDiff(wizard, 3, 5, 2)
+    const d = levelDiff(wizard, 3, 5, 2, srdTables)
     expect(d.direction).toBe('up')
     expect(d.steps.map((s) => s.level)).toEqual([4, 5])
     expect(d.steps[0]!.gainAverage).toBe(Math.floor(wizard.hitDie / 2) + 1 + 2)
@@ -98,7 +100,7 @@ describe('U5R levelDiff', () => {
     expect(d.proficiency).toBe(3)
   })
   it('降级：反向；同级不变', () => {
-    const d = levelDiff(wizard, 5, 3, 0)
+    const d = levelDiff(wizard, 5, 3, 0, srdTables)
     expect(d.direction).toBe('down')
     expect(d.asiLevels).toEqual([4])
     expect(levelDiff(wizard, 3, 3, 0).steps).toEqual([])
@@ -110,7 +112,7 @@ describe('U5R rollSources 与判定', () => {
     hp: { current: null, temp: 0, deathSaves: { success: 0, fail: 0 } },
     block: { abilities: { str: 10, dex: 14, con: 12, int: 16, wis: 12, cha: 10 }, proficiencies: { saves: [{ ability: 'int', sources: [] }], skills: [{ skill: 'arcana', level: 'proficient', sources: [] }] } },
   } as never
-  const derived = derivePerson(person, { classes: [{ id: 'c', entry: wizard, level: 3 }], equipmentEffects: [] })
+  const derived = derivePerson(person, { classes: [{ id: 'c', entry: wizard, level: 3 }], equipmentEffects: [], tables: srdTables })
   const bless: Effect[] = [
     { kind: 'rollBonus', on: 'save', dice: '1d4', label: '祝福术' },
     { kind: 'rollBonus', on: 'attack', dice: '1d4', label: '祝福术' },
@@ -148,7 +150,7 @@ describe('U5R rollSources 与判定', () => {
     expect(rollSources({ kind: 'check', ability: 'int', derived, effects: wrap([against]) }).adv).toEqual([])
   })
   it('缺数据给出原因而不是 0', () => {
-    const empty = derivePerson({ hp: { current: null, temp: 0, deathSaves: { success: 0, fail: 0 } }, block: {} } as never, { classes: [], equipmentEffects: [] })
+    const empty = derivePerson({ hp: { current: null, temp: 0, deathSaves: { success: 0, fail: 0 } }, block: {} } as never, { classes: [], equipmentEffects: [], tables: srdTables })
     expect(rollSources({ kind: 'save', ability: 'dex', derived: empty, effects: [] }).failure).toBeTruthy()
   })
   it('DC：总值 ≥ DC 通过，不看天然 20 / 1；对抗平局局面不变；被动 ±5', () => {
@@ -174,7 +176,7 @@ describe('U5R 力竭与自动失败提示', () => {
     { level: 3, effects: [{ kind: 'disadvantage', on: 'attack' }, { kind: 'disadvantage', on: 'save' }] },
   ] as never
   const person = { hp: { current: null, temp: 0, deathSaves: { success: 0, fail: 0 } }, block: { abilities: { str: 10, dex: 14, con: 12, int: 16, wis: 12, cha: 10 } } } as never
-  const d = derivePerson(person, { classes: [], equipmentEffects: [] })
+  const d = derivePerson(person, { classes: [], equipmentEffects: [], tables: srdTables })
   it('力竭累计：1 级检定劣势；3 级起豁免也劣势；2 级的速度不进掷法', async () => {
     const { effectSourcesOf } = await import('../../src/rules/dnd5e2014/derive')
     const e1 = effectSourcesOf([], 1, levels)

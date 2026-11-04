@@ -2,6 +2,7 @@ import type { Person } from '../../../schemas/people'
 import type { AbilityKey, SkillKey } from '../data/enums'
 import type { Effect } from '../data/effects'
 import type { BackgroundData, ClassData, RaceData } from '../data/entries/character'
+import type { RuleTables } from './tables'
 
 /** 解析器读库后交给派生函数的上下文；读不到的条目为 undefined（U5 §6）。 */
 export interface DeriveContext {
@@ -11,6 +12,8 @@ export interface DeriveContext {
   classes: Array<{ id?: string; entry?: ClassData; level: number }>
   /** UNIT5 起由背包提供；UNIT2 恒为空数组。 */
   equipmentEffects: Effect[]
+  /** 规则数值表（经验、熟练加值、法术位……）：读库里的表；没有就是空，派生函数读不到的显示为空。 */
+  tables?: RuleTables
 }
 
 /** 来源明细（U5R §13）：除 override 行外，amount 之和 = value；有覆盖时其余行标 overridden。 */
