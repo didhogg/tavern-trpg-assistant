@@ -1,0 +1,22 @@
+{
+  "领域": "U5R 法术加值效果（祝福术、神导术、抗御术、信仰护盾、树肤术）",
+  "说明": "把法术正文里的加值变成结构化 effects：rollBonus（检定 / 豁免 / 攻击的额外骰或固定值）与 ac。骰盘「③ 加值与骰式」的自动行只读这些结构化数据。其余只有文字的法术保持文字，由用户在骰盘用「自定义加值」填。",
+  "rows": [
+    { "id": "spell.bless.phb", "path": "/data/effects", "op": "set", "after": [
+      { "kind": "rollBonus", "on": "attack", "dice": "1d4", "label": "祝福术" },
+      { "kind": "rollBonus", "on": "save", "dice": "1d4", "label": "祝福术" }
+    ], "basis": "PHB p.219 祝福术：受术目标进行攻击检定或豁免检定时可额外掷 d4 加在结果上", "source": "book" },
+    { "id": "spell.guidance.phb", "path": "/data/effects", "op": "set", "after": [
+      { "kind": "rollBonus", "on": "check", "dice": "1d4", "consumedOnUse": true, "label": "神导术" }
+    ], "basis": "PHB p.248 神导术：一次属性检定额外掷 d4，法术随后终止", "source": "book" },
+    { "id": "spell.resistance.phb", "path": "/data/effects", "op": "set", "after": [
+      { "kind": "rollBonus", "on": "save", "dice": "1d4", "consumedOnUse": true, "label": "抗御术" }
+    ], "basis": "PHB p.272 抗御术：一次豁免检定额外掷 d4，法术随后终止", "source": "book" },
+    { "id": "spell.shield-of-faith.phb", "path": "/data/effects", "op": "set", "after": [
+      { "kind": "ac", "mode": "bonus", "amount": 2 }
+    ], "basis": "PHB p.275 信仰护盾：目标 AC 获得 +2 加值", "source": "book" },
+    { "id": "spell.barkskin.phb", "path": "/data/effects", "op": "set", "after": [
+      { "kind": "ac", "mode": "floor", "amount": 16 }
+    ], "basis": "PHB p.217 树肤术：目标 AC 不会降至 16 以下", "source": "book" }
+  ]
+}

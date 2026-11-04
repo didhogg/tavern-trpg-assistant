@@ -1,3 +1,4 @@
+import { effectListSchema } from '../effects'
 import { z } from 'zod'
 import { entryIdSchema } from '../../../../schemas/common'
 import { activationSchema, rangeSchema, damagePartSchema, usesSchema } from '../common'
@@ -48,6 +49,8 @@ export const spellDataSchema = z.looseObject({
   damageImmune: z.array(z.string()).optional(),
   damageVulnerable: z.array(z.string()).optional(),
   affectsCreatureType: z.array(z.string()).optional(),
+  /** 施法后目标得到的结构化效果（祝福术 rollBonus 等）；没有结构的法术不写，只留正文。 */
+  effects: effectListSchema.optional(),
 })
 export type SpellData = z.infer<typeof spellDataSchema>
 
