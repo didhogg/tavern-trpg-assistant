@@ -7,6 +7,9 @@ export * from './types'
 export { abilityModifier, crProficiency, crValue, deriveAbilities, deriveInitiative, derivePassives, deriveSaves, deriveSkills, proficiencyFor, totalLevel } from './abilities'
 export { deriveAc, deriveHp, deriveSpeed } from './combat'
 export { deriveSpellSlots } from './spells'
+export * from './grants'
+export * from './levels'
+export * from './rolls'
 
 /** 一次算完概览带需要的全部派生数值；UNIT3 的抽屉复用同一组函数。 */
 export function derivePerson(person: DerivePerson, ctx: DeriveContext): PersonDerived {
