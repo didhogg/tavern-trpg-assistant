@@ -46,7 +46,7 @@ describe('U5 §7.3 改 A 不动 B', () => {
         : i % 6 === 2 ? { exhaustion: i % 7 }
         : i % 6 === 3 ? { hitDiceUsed: { '6': i % 3 } }
         : i % 6 === 4 ? { slotsUsed: { '1': i % 5, pact: i % 2 } }
-        : { effects: [{ name: `效果${i}` }] }
+        : { effects: [{ id: `fx-${i}`, category: 'other' as const, name: `效果${i}`, concentration: false, addedAt: 0 }] }
       people.setLive(p.id, patch)
       const after = people.rowOf(p.id)!
       const changed = changedKeys(before as unknown as Record<string, unknown>, after as unknown as Record<string, unknown>)
@@ -59,7 +59,7 @@ describe('U5 §7.3 改 A 不动 B', () => {
 
   it('设定类只写登记字段与 touchedAt；当场状态、分类、标签、置顶不动', () => {
     const people = usePeopleStore()
-    const p = people.create({ ...emptyPerson({ name: '盖尔', categoryId: 'party', now: 1 }), tags: ['tag-a'], pinned: true, hp: { current: 3, temp: 2, deathSaves: { success: 1, fail: 0 } }, effects: [{ name: '祝福' }] })
+    const p = people.create({ ...emptyPerson({ name: '盖尔', categoryId: 'party', now: 1 }), tags: ['tag-a'], pinned: true, hp: { current: 3, temp: 2, deathSaves: { success: 1, fail: 0 } }, effects: [{ id: 'fx-1', category: 'spell', name: '祝福', concentration: false, addedAt: 0 }] })
     const before = clone(people.rowOf(p.id)!)
     for (let i = 0; i < 120; i++) {
       const block = clone(before.block)

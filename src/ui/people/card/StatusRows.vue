@@ -36,7 +36,7 @@ function stepExhaustion(delta: number): void {
   emit('live', { exhaustion: Math.max(0, Math.min(6, level.value + delta)) })
 }
 function addEffect(effect: EffectChoice): void {
-  emit('live', { effects: [...props.person.effects, { name: effect.name, ref: effect.ref, duration: effect.duration }] })
+  emit('live', { effects: [...props.person.effects, { id: `fx-${Date.now().toString(36)}-${props.person.effects.length}`, category: 'other', name: effect.name, ref: effect.ref, concentration: false, note: effect.duration, addedAt: Date.now() }] })
 }
 function removeEffect(index: number): void {
   emit('live', { effects: props.person.effects.filter((_, i) => i !== index) })

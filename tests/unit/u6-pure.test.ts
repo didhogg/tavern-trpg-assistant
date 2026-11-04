@@ -57,7 +57,7 @@ describe('U6 模板生成与存库', () => {
     expect(p.block).not.toBe(entry.data)
   })
   it('存库条目是合法 monster，且去掉当场状态', () => {
-    const p = person('a', '盖尔', 'party', { hp: { current: 2, temp: 3, deathSaves: { success: 1, fail: 0 } }, effects: [{ name: '祝福' }] })
+    const p = person('a', '盖尔', 'party', { hp: { current: 2, temp: 3, deathSaves: { success: 1, fail: 0 } }, effects: [{ id: 'fx-1', category: 'spell', name: '祝福', concentration: false, addedAt: 0 }] })
     const lib = toLibraryEntry(p, { name: '查看用' })
     expect(lib).toMatchObject({ type: 'monster', name: '查看用' })
     expect((lib.data as { inventory?: unknown }).inventory).toBeUndefined()
@@ -77,7 +77,7 @@ describe('U6 模板查询与行摘要', () => {
     expect(queryTemplates(rows, { creatureTypes: ['humanoid'], sort: 'cr' }).map((r) => r.entry.id)).toEqual(['boss', 'goblin', 'npc'])
   })
   it('行摘要写职业/种族、生命、AC 与效果，全部模式可加分类名', () => {
-    const p = person('a', '盖尔', 'party', { tags: [], block: block({ race: 'race.human.phb', classes: [{ class: 'class.wizard.phb', level: 3 }], hp: { average: 18 }, ac: [{ value: 12 }] }), hp: { current: 12, temp: 0, deathSaves: { success: 0, fail: 0 } }, effects: [{ name: '祝福' }] })
+    const p = person('a', '盖尔', 'party', { tags: [], block: block({ race: 'race.human.phb', classes: [{ class: 'class.wizard.phb', level: 3 }], hp: { average: 18 }, ac: [{ value: 12 }] }), hp: { current: 12, temp: 0, deathSaves: { success: 0, fail: 0 } }, effects: [{ id: 'fx-1', category: 'spell', name: '祝福', concentration: false, addedAt: 0 }] })
     const s = rowSummary(p, { classes: { 'class.wizard.phb': '法师' }, races: { 'race.human.phb': '人类' } }, true)
     expect(s.line2).toBe('法师 3 ・ 人类 ・ 队伍')
     expect(s).toMatchObject({ hp: { current: 12, max: 18 }, ac: 12, effects: ['祝福'] })

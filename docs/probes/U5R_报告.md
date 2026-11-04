@@ -12,3 +12,7 @@
 
 ## 进度
 - 批 0：效果数据审计完成（见 `U5R_效果数据审计.md`）。其余核对项随批 1 追加。
+
+## 已改动的旧测试（逐条）
+1. `tests/unit/u6-migration.test.ts`：两处 `schemaVersion` 断言从写死的 `2` 改为 `SCHEMA_VERSIONS.*`（workspace/save 结构版本因效果结构化升到 3，断言意图不变：迁移后版本 = 当前版本）。
+2. `tests/unit/u5-write.test.ts`、`u6-pure.test.ts`：人物效果夹具补齐新必填字段（`id / category / concentration / addedAt`），断言不变。

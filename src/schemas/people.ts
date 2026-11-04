@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { assetRefSchema } from './text'
 import { idSchema, timestampSchema } from './common'
+import { effectSchema } from '../rules/dnd5e2014/data/effects'
 import { monsterDataSchema } from '../rules/dnd5e2014/data/entries/spell-monster'
 
 /** 固定三类；分类本身不存表，也不允许改名、删除或自建。 */
@@ -23,11 +24,27 @@ export const personHpSchema = z.object({
 })
 export type PersonHp = z.infer<typeof personHpSchema>
 
+export const EFFECT_CATEGORIES = ['condition', 'status', 'disease', 'spell', 'other'] as const
+export const effectCategorySchema = z.enum(EFFECT_CATEGORIES)
+export type PersonEffectCategory = z.infer<typeof effectCategorySchema>
+
+/** U5R §12.4：人物效果 = 类别 + 时长 + 是否专注 + 加入时的结构化 effects 快照。 */
 export const personEffectSchema = z.object({
-  name: z.string().min(1).max(80),
+  id: z.string().min(1).max(80),
   ref: z.string().min(1).max(200).optional(),
+  category: effectCategorySchema.default('other'),
+  name: z.string().min(1).max(80),
+  nameEn: z.string().max(80).optional(),
+  duration: z.object({
+    type: z.string().max(30),
+    amount: z.number().nonnegative().optional(),
+    unit: z.string().max(20).optional(),
+    concentration: z.boolean().default(false),
+  }).optional(),
+  concentration: z.boolean().default(false),
+  effects: z.array(effectSchema).optional(),
   note: z.string().max(400).optional(),
-  duration: z.string().max(80).optional(),
+  addedAt: timestampSchema.default(0),
 })
 export type PersonEffect = z.infer<typeof personEffectSchema>
 
@@ -65,6 +82,12 @@ export const personSchema = z.object({
   effects: z.array(personEffectSchema).default([]),
   /** 当场状态；旧数据未写 = 没有灵感。 */
   inspiration: z.boolean().optional(),
+  /** 生命上限的来源修正（U5R §4）。 */
+  hpAdj: z.array(z.object({ label: z.string().min(1).max(40), flat: z.number().int().optional(), perLevel: z.number().int().optional(), source: z.string().max(60).optional() })).optional(),
+  /** 生命骰数量覆盖：骰面 → 颗数。 */
+  hitDiceOverride: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  /** 升级掷骰记录：级数 → 该级所得生命。 */
+  hpRolls: z.record(z.string(), z.number().int().nonnegative()).optional(),
   /** 当场状态；0–6 级。 */
   exhaustion: z.number().int().min(0).max(6).optional(),
   /** 当场状态：每个骰型已用颗数。 */
