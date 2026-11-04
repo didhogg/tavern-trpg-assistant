@@ -8,7 +8,7 @@ import HoverTip from '../../kit/HoverTip.vue'
 import HpEditor, { type HpEditPayload } from './HpEditor.vue'
 import { partLines } from './format'
 
-const props = defineProps<{ person: Person; hp: HpResult; auto: HpResult; readOnly: boolean }>()
+const props = defineProps<{ person: Person; hp: HpResult; auto: HpResult; readOnly: boolean; /** 力竭每级的说明：读库里的力竭表；没安装就是空的（只显示级数）。 */ exhaustionText?: Array<{ level: number; text: string }> }>()
 const emit = defineEmits<{ live: [patch: LivePatch]; commit: [payload: HpEditPayload]; placeholder: [kind: 'rest']; hitDie: [sides: number] }>()
 const editing = ref(false)
 const editor = ref<InstanceType<typeof HpEditor> | null>(null)
@@ -20,11 +20,11 @@ const bar = computed(() => {
   return { hp: (cur / max.value) * 100, temp: Math.min(100, (Math.max(0, props.person.hp.temp) / max.value) * 100), low: cur / max.value < 0.25 }
 })
 const death = computed(() => props.person.hp.deathSaves)
-// PHB p291 力竭表（只写说明，不自动改任何数字）
-const EXHAUSTION = ['属性检定具有劣势', '速度减半', '攻击检定和豁免检定具有劣势', '生命值上限减半', '速度降为 0', '死亡']
+// 力竭每一级的说明来自库里的力竭表（只写说明，不自动改任何数字）；库里没有就只显示级数
 const level = computed(() => props.person.exhaustion ?? 0)
-const exhaustionNow = computed(() => (level.value === 0 ? '无影响' : `${level.value} 级 · ${EXHAUSTION[level.value - 1]}`))
-const exhaustionAll = computed(() => (level.value === 0 ? ['没有力竭。', '力竭累计：每一级都叠加前面的影响（只写说明，不改任何数字）。'] : [...EXHAUSTION.slice(0, level.value).map((t, i) => `${i + 1} 级：${t}`), '累计生效，只写说明，不改任何数字']))
+const textOf = (lv: number): string => props.exhaustionText?.find((row) => row.level === lv)?.text ?? ''
+const exhaustionNow = computed(() => (level.value === 0 ? '无影响' : `${level.value} 级${textOf(level.value) ? ` · ${textOf(level.value)}` : ''}`))
+const exhaustionAll = computed(() => (level.value === 0 ? ['无力竭'] : Array.from({ length: level.value }, (_, i) => `${i + 1} 级${textOf(i + 1) ? `：${textOf(i + 1)}` : ''}`)))
 const hpLines = computed(() => partLines(props.hp.parts, max.value, '', true))
 
 function setDeath(kind: 'success' | 'fail', n: number): void {

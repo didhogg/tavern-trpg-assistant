@@ -1,11 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeAll } from 'vitest'
 import { addListItem, addProficiency, addSense, removeItem, senseRows, setSenseRange, setToolLevel } from '../../src/ui/people/card/archiveOps'
 import { archiveOf } from '../../src/ui/people/card/archive'
 import type { MonsterData } from '../../src/rules/dnd5e2014/data/entries/spell-monster'
 import type { Person } from '../../src/schemas/people'
+import { loadSenseDefsFromSrd } from './helpers-sense'
 
 const block = (over: Partial<MonsterData> = {}): MonsterData => ({ senses: [], languages: [], resist: [], immune: [], vulnerable: [], conditionImmune: [], ...over }) as MonsterData
 const person = (b: MonsterData): Person => ({ id: 'p', name: '甲', categoryId: 'party', tags: [], pinned: false, hp: { current: null, temp: 0, deathSaves: { success: 0, fail: 0 } }, effects: [], block: b, giveAi: 'auto', createdAt: 0, touchedAt: 0 }) as Person
+
+beforeAll(() => loadSenseDefsFromSrd())
 
 describe('U5R 档案写入', () => {
   it('抗性 / 免疫 / 状态免疫：加一次只出现一次，移除后不见', () => {

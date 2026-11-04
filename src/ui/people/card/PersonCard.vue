@@ -302,7 +302,7 @@ onBeforeUnmount(() => {
         <div class="trpg-card-a" data-testid="person-card-a">
           <div ref="identityEl" class="trpg-card-identity-card">
             <IdentityBlock :person="model" :avatar-url="avatarUrl" :classes="classRows" :race-name="raceName" :background-name="backgroundName" :alignment-label="alignmentLabel" :cr-text="crText" :xp-text="xpText" :show-cr-badges="showCrBadges" :read-only="readOnly" @identity="dialogs.openIdentity($event)" @class-open="dialogs.openClass($event)" @entry-open="dialogs.openRaceOrBackground($event)" @avatar="avatarPicker?.click()" @template="openTemplate" @inspiration="commitLive({ inspiration: !model.inspiration })" />
-            <VitalsBlock :person="model" :hp="derived.hp" :auto="autoHp" :read-only="readOnly" @live="commitLive" @commit="commitHpEdit" @placeholder="placeholder" @hit-die="onHitDie" />
+            <VitalsBlock :person="model" :hp="derived.hp" :auto="autoHp" :read-only="readOnly" :exhaustion-text="cardData?.exhaustionText ?? []" @live="commitLive" @commit="commitHpEdit" @placeholder="placeholder" @hit-die="onHitDie" />
           </div>
         </div>
         <div class="trpg-card-right">

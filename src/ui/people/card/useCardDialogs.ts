@@ -3,7 +3,8 @@ import type { PersonEffect } from '../../../schemas/people'
 import { useModalStore, type ModalPage } from '../../../stores/modal'
 import type { ArchiveCardKey, ArchiveGroupKey, ArchiveItem } from './archive'
 import type { CardCtx } from './cardCtx'
-import { infoOfArchive, type InfoModel } from './info'
+import { archiveInfoModel } from './archiveRefs'
+import type { InfoModel } from './info'
 import RecropPage from './RecropPage.vue'
 import AbilitiesDialog from './dialogs/AbilitiesDialog.vue'
 import AddEffectDialog from './dialogs/AddEffectDialog.vue'
@@ -15,7 +16,6 @@ import InfoDialog from './dialogs/InfoDialog.vue'
 import ReadoutDialog from './dialogs/ReadoutDialog.vue'
 import SkillsDialog from './dialogs/SkillsDialog.vue'
 import { removeItem } from './archiveOps'
-import { CATEGORY_NOTE } from './info'
 import { durationText } from './effectText'
 
 type OpenPage = (page: ModalPage) => void
@@ -49,16 +49,17 @@ export function useCardDialogs(ctx: CardCtx, openPage: OpenPage, avatar: AvatarO
   const openAbilities = (): void => openPage(page('abilities', '属性', AbilitiesDialog, 760, { ctx }))
   const openSkills = (): void => openPage(page('skills', '技能', SkillsDialog, 720, { ctx }))
   const openArchive = (card: ArchiveCardKey, tab?: ArchiveGroupKey): void => openPage(page(`archive-${card}`, { defense: '防御', senses: '感官', proficiency: '熟练' }[card], ArchiveDialog, 640, { ctx, card, tab }))
-  function openArchiveItem(item: ArchiveItem): void {
+  async function openArchiveItem(item: ArchiveItem): Promise<void> {
     const key = item.id.slice(item.group.length + 1)
-    openPage(page(`info-${item.id}`, item.label, InfoDialog, 520, { model: infoOfArchive(item, item.source !== '模板' && !ctx.readOnly), onRemove: () => ctx.commitBlock(removeItem(ctx.person.block, item.group, key)) }))
+    const model = await archiveInfoModel(item, item.source !== '模板' && !ctx.readOnly, ctx.data)
+    openPage(page(`info-${item.id}`, item.label, InfoDialog, 520, { model, onRemove: () => ctx.commitBlock(removeItem(ctx.person.block, item.group, key)) }, 420))
   }
   const openAddEffect = (): void => openPage(page('add-effect', '添加状态与效果', AddEffectDialog, 940, { ctx }))
   function openEffectInfo(effect: PersonEffect): void {
     const rows: InfoModel['rows'] = [{ label: '类别', value: ({ condition: '状态', status: '状态', disease: '疾病', spell: '法术效果', other: '其他' })[effect.category] }]
     const d = durationText(effect.duration); if (d) rows.push({ label: '时长', value: `${d}${effect.concentration ? ' · 专注' : ''}` })
     rows.push({ label: '加入时间', value: new Date(effect.addedAt || Date.now()).toLocaleString('zh-CN', { hour12: false }) })
-    const model: InfoModel = { title: effect.name, titleEn: effect.nameEn, rows, ref: effect.ref, body: [effect.note || CATEGORY_NOTE.condition], removable: true }
+    const model: InfoModel = { title: effect.name, titleEn: effect.nameEn, rows, ref: effect.ref, ...(effect.note ? { note: effect.note } : {}), removable: true }
     openPage(page(`effect-${effect.id}`, effect.name, InfoDialog, 520, { model, onRemove: () => ctx.commitLive({ effects: ctx.person.effects.filter((e) => e.id !== effect.id) }) }))
   }
   const openHelp = (blank: boolean): void => openPage(page('help', '这页怎么用', HelpDialog, 520, { blank }))

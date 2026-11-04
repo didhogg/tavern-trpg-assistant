@@ -6,6 +6,7 @@ import { backgroundDataSchema, classDataSchema, raceDataSchema, type BackgroundD
 import { CONDITION_LABELS, type ConditionKey } from '../../../rules/dnd5e2014/data/enums'
 import type { Effect } from '../../../rules/dnd5e2014/data/effects'
 import type { DeriveContext } from '../../../rules/dnd5e2014/derive'
+import { senseDefsFrom, setSenseDefs } from './senseDefs'
 
 export interface CardEntry {
   packId: string
@@ -40,9 +41,36 @@ export interface CardData {
   /** 力竭 1–6 级的结构化效果（读条件条目；骰盘用）。 */
   exhaustionLevels: Array<{ level: number; effects: Effect[] }>
   effectSummary: (ref?: string) => string
+  /** 力竭每一级的说明文字：读条件条目正文里引用的力竭表（`tableRef`）；没有安装就是空数组。 */
+  exhaustionText: Array<{ level: number; text: string }>
+  /** 按类型取已启用包里的条目（语言、规则、物品……不在上面预载的类型里的）；同一类型只查一次。 */
+  entriesOfType: (type: string) => Promise<CardEntry[]>
 }
 
-const TYPES = ['class', 'subclass', 'race', 'subrace', 'background', 'condition', 'spell'] as const
+/** 条目正文（块数组）里第一个 `tableRef` 的表编号。 */
+export function tableRefOf(text: unknown): string | undefined {
+  if (Array.isArray(text)) { for (const item of text) { const hit = tableRefOf(item); if (hit) return hit } return undefined }
+  if (!text || typeof text !== 'object') return undefined
+  const rec = text as Record<string, unknown>
+  const ref = rec.tableRef
+  if (ref && typeof ref === 'object' && typeof (ref as { id?: unknown }).id === 'string') return (ref as { id: string }).id
+  for (const value of Object.values(rec)) { const hit = tableRefOf(value); if (hit) return hit }
+  return undefined
+}
+
+/** 力竭表（两列：等级、效应）→ 逐级文字。读不出来的行跳过。 */
+export function exhaustionRows(rows: unknown): Array<{ level: number; text: string }> {
+  if (!Array.isArray(rows)) return []
+  return rows.flatMap((row) => {
+    const cells = (row as { cells?: unknown })?.cells
+    if (!Array.isArray(cells) || cells.length < 2) return []
+    const level = Number(String(cells[0]).trim())
+    const text = String(cells[1]).trim()
+    return Number.isInteger(level) && level >= 1 && text ? [{ level, text }] : []
+  })
+}
+
+const TYPES = ['class', 'subclass', 'race', 'subrace', 'background', 'condition', 'spell', 'rule', 'language'] as const
 
 export function entryView(row: StoredEntry, packs: Map<string, string>): CardEntry {
   const { packId, entryId, ruleId: _ruleId, type, name, nameEn, keywords, unique, summary, data, image, override: _override, i18n } = row
@@ -84,6 +112,7 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
     const parsed = classDataSchema.safeParse(row.entry.data)
     if (parsed.success) classes.set(row.entry.id, parsed.data as ClassData)
   }
+  setSenseDefs(senseDefsFrom(all.filter((row) => row.entry.type === 'rule').map((row) => row.entry)))
   const races = all.filter((row) => row.entry.type === 'race')
   const subraces = all.filter((row) => row.entry.type === 'subrace')
   const backgrounds = all.filter((row) => row.entry.type === 'background')
@@ -93,6 +122,15 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
   const conditions = (Object.entries(CONDITION_LABELS) as Array<[string, string]>)
     .filter(([key]) => key !== 'exhaustion')
     .map(([key, name]) => ({ key: key as ConditionKey, name, ref: byName.get(name) }))
+  const exhaustionEntry = conditionEntries.find((row) => row.entry.nameEn?.toLowerCase() === 'exhaustion')
+  const tableId = tableRefOf(exhaustionEntry?.entry.data.text)
+  const tableRow = exhaustionEntry && tableId ? await db.entries.get([exhaustionEntry.packId, tableId]) : undefined
+  const exhaustionText = exhaustionRows((tableRow?.data as { rows?: unknown } | undefined)?.rows)
+  const typeCache = new Map<string, Promise<CardEntry[]>>()
+  const entriesOfType = (type: string): Promise<CardEntry[]> => {
+    if (!typeCache.has(type)) typeCache.set(type, db.entries.where('[ruleId+type]').equals([ruleId, type]).toArray().then((list) => (list as StoredEntry[]).filter((row) => !enabled.size || enabled.has(row.packId)).map((row) => entryView(row, packs))))
+    return typeCache.get(type)!
+  }
   const cachedRaces = new Map<string, RaceData | undefined>()
   const cachedBackgrounds = new Map<string, BackgroundData | undefined>()
   const cacheRace = (id?: string): RaceData | undefined => {
@@ -135,6 +173,8 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
     spellDuration: durationText,
     exhaustionLevels: ((conditionEntries.find((r) => r.entry.id.startsWith('condition.exhaustion'))?.entry.data.levels ?? []) as Array<{ level: number; effects: Effect[] }>).filter((l) => l && typeof l.level === 'number' && Array.isArray(l.effects)),
     effectSummary: (ref?: string) => (ref ? entries.get(ref)?.entry.summary ?? '' : ''),
+    exhaustionText,
+    entriesOfType,
   }
 }
 

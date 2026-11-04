@@ -10,6 +10,7 @@ import type { Part } from '../../../../rules/dnd5e2014/derive'
 import type { CardCtx } from '../cardCtx'
 import { signed } from '../format'
 import { EXTRA_SPEEDS, addSpeedMode, adjustOf, canReset, overrideOf, removeSpeedMode, resetKey, setAdjust, setHover, setOverride, setSpeedBase, type ReadoutKey } from '../readoutOps'
+import RuleLink from '../../../library/RuleLink.vue'
 import AdjustRow from './AdjustRow.vue'
 import DialogFrame from './DialogFrame.vue'
 
@@ -45,10 +46,10 @@ const key = (kind: 'ac' | 'initiative' | 'proficiency'): ReadoutKey => ({ kind }
         <AdjustRow label="AC" :adjust="adjustOf(block, key('ac'))" :override="overrideOf(block, key('ac'))" :read-only="ro" @adjust="write(setAdjust(block, key('ac'), $event))" @override="write(setOverride(block, key('ac'), $event))" />
       </ItemCard>
       <ul v-if="acAlts.length" class="trpg-rd__alts"><li v-for="(a, i) in acAlts" :key="i">备选 AC {{ a.value }}<template v-if="a.from">（{{ a.from }}）</template><template v-if="a.condition"> · {{ a.condition }}</template></li></ul>
-      <ItemCard title="先攻" :value="signed(d.initiative.value)" :auto="autoText(d.initiative.parts, key('initiative'))" hint="先攻是一次敏捷检定（p177）" :sources="lines(d.initiative.parts)" :can-reset="canReset(block, key('initiative'))" :read-only="ro" @reset="write(resetKey(block, key('initiative')))">
+      <ItemCard title="先攻" :value="signed(d.initiative.value)" :auto="autoText(d.initiative.parts, key('initiative'))" rule="The Order of Combat" :sources="lines(d.initiative.parts)" :can-reset="canReset(block, key('initiative'))" :read-only="ro" @reset="write(resetKey(block, key('initiative')))">
         <AdjustRow label="先攻" :adjust="adjustOf(block, key('initiative'))" :override="overrideOf(block, key('initiative'))" :read-only="ro" @adjust="write(setAdjust(block, key('initiative'), $event))" @override="write(setOverride(block, key('initiative'), $event))" />
       </ItemCard>
-      <ItemCard title="熟练加值" :value="signed(d.proficiency.value)" :auto="autoText(d.proficiency.parts, key('proficiency'))" hint="取总等级，不是某个职业的等级（p163）" :sources="lines(d.proficiency.parts)" :can-reset="canReset(block, key('proficiency'))" :read-only="ro" @reset="write(resetKey(block, key('proficiency')))">
+      <ItemCard title="熟练加值" :value="signed(d.proficiency.value)" :auto="autoText(d.proficiency.parts, key('proficiency'))" rule="Proficiency Bonus" :sources="lines(d.proficiency.parts)" :can-reset="canReset(block, key('proficiency'))" :read-only="ro" @reset="write(resetKey(block, key('proficiency')))">
         <AdjustRow label="熟练加值" :adjust="adjustOf(block, key('proficiency'))" :override="overrideOf(block, key('proficiency'))" :read-only="ro" @adjust="write(setAdjust(block, key('proficiency'), $event))" @override="write(setOverride(block, key('proficiency'), $event))" />
       </ItemCard>
     </template>
@@ -70,7 +71,7 @@ const key = (kind: 'ac' | 'initiative' | 'proficiency'): ReadoutKey => ({ kind }
         <AdjustRow :label="p.label" :adjust="adjustOf(block, { kind: 'passive', skill: p.k })" :override="overrideOf(block, { kind: 'passive', skill: p.k })" :read-only="ro" @adjust="write(setAdjust(block, { kind: 'passive', skill: p.k }, $event))" @override="write(setOverride(block, { kind: 'passive', skill: p.k }, $event))" />
         <button class="trpg-btn trpg-btn--small" type="button" :data-testid="`passive-dice-${p.k}`" @click="toDice(p.k)"><Icon name="dice-five" :size="16" />去骰盘比一比</button>
       </ItemCard>
-      <p class="trpg-rd__note"><Icon name="info" :size="16" />被动 = 10 + 该技能总值；有优势 +5、有劣势 −5（p175），只在骰盘比对时用，不写进这里</p>
+      <p class="trpg-rd__note"><Icon name="info" :size="16" />被动值只在骰盘比对时用，不写进这里。<RuleLink name-en="Ability Checks" /></p>
     </template>
     <template #actions><button class="trpg-btn trpg-btn--primary" type="button" @click="modal.requestClose()">完成</button></template>
   </DialogFrame>

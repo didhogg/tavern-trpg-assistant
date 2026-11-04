@@ -1,4 +1,5 @@
 import type { Person } from '../../../schemas/people'
+import { senseDefs } from './senseDefs'
 import { ARMOR_LABELS, CONDITION_LABELS, DAMAGE_LABELS, LANGUAGE_LABELS, TOOL_LABELS, WEAPON_CATEGORY_LABELS } from '../../../rules/dnd5e2014/data/enums'
 
 /** 档案三卡的数据模型（U5R §8）：纯函数，界面与单测共用。 */
@@ -11,9 +12,8 @@ type Src = Array<{ kind: string; from?: string }> | undefined
 export const ARCHIVE_VISIBLE = 3
 export const CARD_OF_GROUP: Record<ArchiveGroupKey, ArchiveCardKey> = { resist: 'defense', immune: 'defense', vulnerable: 'defense', condition: 'defense', senses: 'senses', languages: 'proficiency', weapons: 'proficiency', armor: 'proficiency', tools: 'proficiency' }
 
-const SENSE_NAMES: Record<string, string> = { darkvision: '黑暗视觉', blindsight: '盲视', tremorsense: '震颤感知', truesight: '真实视觉' }
 export function senseLabel(text: string): string {
-  return text.replace(/^(\w+)\s+(\d+)\s*(?:ft\.?|feet)?/i, (_, key: string, range: string) => `${SENSE_NAMES[key.toLowerCase()] ?? key} ${range} 尺`)
+  return text.replace(/^(\w+)\s+(\d+)\s*(?:ft\.?|feet)?/i, (_, key: string, range: string) => `${senseDefs().find((d) => d.key === key.toLowerCase())?.label ?? key} ${range} 尺`)
 }
 
 export function sourceText(sources: Src, nameOf: (id?: string) => string, template: boolean): string {

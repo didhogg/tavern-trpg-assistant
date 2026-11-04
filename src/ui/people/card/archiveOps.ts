@@ -2,6 +2,7 @@ import type { MonsterData } from '../../../rules/dnd5e2014/data/entries/spell-mo
 import type { Proficiencies } from '../../../rules/dnd5e2014/data/entries/sheet'
 import { assignGrants, type Grant } from '../../../rules/dnd5e2014/derive'
 import type { ArchiveGroupKey } from './archive'
+import { senseDefs } from './senseDefs'
 
 /** 档案管理弹窗的写入（对 block 的纯函数，返回新 block；U5R §10.6）。 */
 const clone = (block: MonsterData): MonsterData => JSON.parse(JSON.stringify(block)) as MonsterData
@@ -9,24 +10,19 @@ type ListKey = 'resist' | 'immune' | 'vulnerable' | 'conditionImmune'
 const LIST: Partial<Record<ArchiveGroupKey, ListKey>> = { resist: 'resist', immune: 'immune', vulnerable: 'vulnerable', condition: 'conditionImmune' }
 const PROF: Partial<Record<ArchiveGroupKey, keyof Proficiencies>> = { languages: 'languages', weapons: 'weapons', armor: 'armor', tools: 'tools' }
 
-export const SENSES = [
-  { key: 'darkvision', label: '黑暗视觉', note: '范围内的黑暗视为微光，只能看灰度（p183）' },
-  { key: 'blindsight', label: '盲视', note: '不靠视力也能感知半径内的环境' },
-  { key: 'tremorsense', label: '震颤感知', note: '能感知接触同一表面的生物的位置' },
-  { key: 'truesight', label: '真实视觉', note: '看透普通或魔法黑暗、隐形、变形等' },
-] as const
-export type SenseKey = (typeof SENSES)[number]['key']
+/** 感官的编号（darkvision……）；名称与说明来自库（senseDefs.ts），这里不手写。 */
+export type SenseKey = string
 
 export interface SenseRow { index: number; key: SenseKey | null; label: string; range: number | null }
 /** `block.senses` 是文字（「黑暗视觉 60 尺」或「darkvision 60 ft.」）；读出种类与距离，读不出的原样保留只读。 */
 export function senseRows(block: MonsterData): SenseRow[] {
   return (block.senses ?? []).map((text, index) => {
-    const found = SENSES.find((s) => text.includes(s.label) || text.toLowerCase().includes(s.key))
+    const found = senseDefs().find((s) => text.includes(s.label) || text.toLowerCase().includes(s.key))
     const range = /(\d+)/.exec(text)
     return { index, key: found?.key ?? null, label: found?.label ?? text, range: range ? Number(range[1]) : null }
   })
 }
-export const senseText = (key: SenseKey, range: number): string => `${SENSES.find((s) => s.key === key)!.label} ${range} 尺`
+export const senseText = (key: SenseKey, range: number): string => `${senseDefs().find((s) => s.key === key)?.label ?? key} ${range} 尺`
 
 export function addSense(block: MonsterData, key: SenseKey, range = 60): MonsterData {
   if (senseRows(block).some((r) => r.key === key)) return block

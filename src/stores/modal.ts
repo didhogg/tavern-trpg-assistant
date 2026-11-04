@@ -108,5 +108,12 @@ export const useModalStore = defineStore('modal', () => {
     stack.value = stack.value.map((p) => (p.key === key ? { ...p, title } : p))
   }
 
-  return { stack, direction, isOpen, top, depth, variant, open, push, pop, popToRoot, close, requestClose, escape, setTitle }
+  /** 改栈顶页的高度上限（居中弹窗按内容定高用）；页面对象是浅层响应，换一个新对象才会更新。 */
+  function setTopHeight(height: number): void {
+    const page = stack.value[stack.value.length - 1]
+    if (!page || page.height === height) return
+    stack.value = [...stack.value.slice(0, -1), { ...page, height }]
+  }
+
+  return { stack, direction, isOpen, top, depth, variant, open, push, pop, popToRoot, close, requestClose, escape, setTitle, setTopHeight }
 })

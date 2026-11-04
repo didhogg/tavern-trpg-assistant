@@ -10,6 +10,7 @@ import SelectField from '../../kit/SelectField.vue'
 import AddEffectDialog from '../../people/card/dialogs/AddEffectDialog.vue'
 import { buildFormula, judgeContest, judgeDc, judgePassive, parseCustom, rowKey, type CustomRow, type Verdict } from './rollModel'
 import { useTrayData } from './useTrayData'
+import RuleLink from '../../library/RuleLink.vue'
 
 const props = defineProps<{ kind: 'check' | 'save' }>()
 const dice = useDiceStore()
@@ -160,7 +161,7 @@ const chips = [5, 10, 15, 20, 25, 30]
         <ul class="trpg-rp__rows">
           <li v-for="r in (isDeath ? [] : autoRows)" :key="rowKey(r)" class="trpg-rp__row" :class="{ 'is-off': ignored.has(rowKey(r)) }" :title="`来源：${r.source}`"><span>{{ r.label }}</span><b>{{ r.dice ? `+${r.dice}` : (r.amount ?? 0) >= 0 ? `+${r.amount}` : `−${Math.abs(r.amount ?? 0)}` }}</b><button v-if="r.dice || r.source !== r.label" class="trpg-icon-btn" type="button" :aria-label="`忽略 ${r.label}`" @click="ignored = new Set(ignored.has(rowKey(r)) ? [...ignored].filter((k) => k !== rowKey(r)) : [...ignored, rowKey(r)])"><Icon name="x" :size="16" /></button></li>
           <li v-for="c in custom" :key="c.id" class="trpg-rp__row"><span>{{ c.label }}</span><b>{{ c.text.replace('-', '−') }}</b><button class="trpg-icon-btn" type="button" :aria-label="`删除 ${c.label}`" @click="custom = custom.filter((x) => x.id !== c.id)"><Icon name="x" :size="16" /></button></li>
-          <li v-if="isDeath" class="trpg-rp__row"><span class="trpg-rp__hint">死亡豁免不加任何加值，也不受优势劣势影响，DC 固定 10（p197）</span></li>
+          <li v-if="isDeath" class="trpg-rp__row"><RuleLink name-en="Damage and Healing" /></li>
         </ul>
         <p v-if="rs?.failure && !isDeath" class="trpg-rp__warn">{{ rs.failure }}</p>
         <p v-for="n in rs?.notes ?? []" :key="n" class="trpg-rp__warn" role="status">{{ n }}</p>
@@ -171,7 +172,7 @@ const chips = [5, 10, 15, 20, 25, 30]
 <h4>掷法</h4>
         <div class="trpg-seg" role="group" aria-label="手动掷法"><button v-for="m in MODES" :key="m.v" type="button" :aria-pressed="manual === m.v" :data-testid="`roll-mode-${m.v}`" @click="manual = m.v">{{ m.t }}</button></div>
         <ul class="trpg-rp__rows"><li v-for="s in modeSources" :key="s.id" class="trpg-rp__row"><Icon :name="s.kind === 'adv' ? 'arrow-right' : 'arrow-counter-clockwise'" :size="16" /><span>{{ s.kind === 'adv' ? '优势' : '劣势' }}：{{ s.label }}</span><button class="trpg-icon-btn" type="button" :aria-label="`忽略 ${s.label}`" @click="ignoredSrc = new Set([...ignoredSrc, s.id])"><Icon name="x" :size="16" /></button></li></ul>
-        <p class="trpg-rp__final" data-testid="roll-final-mode" title="优势与劣势同时有，不论各有几个都互相抵消（p173）">最终：{{ modeText }}</p>
+        <p class="trpg-rp__final" data-testid="roll-final-mode">最终：{{ modeText }} <RuleLink name-en="Advantage and Disadvantage" icon /></p>
       </section>
       <section class="trpg-rp__sec">
 <h4>难度 / 对手</h4>

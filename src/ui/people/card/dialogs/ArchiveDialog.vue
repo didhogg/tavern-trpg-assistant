@@ -9,11 +9,12 @@ import Segmented from '../../../kit/Segmented.vue'
 import HoverTip from '../../../kit/HoverTip.vue'
 import type { BrowserTab } from '../../../kit/BrowserTabs.vue'
 import { CARD_OF_GROUP, archiveOf, type ArchiveCardKey, type ArchiveGroupKey, type ArchiveItem } from '../archive'
-import { SENSES, addListItem, addProficiency, addSense, removeItem, senseRows, setSenseRange, setToolLevel, type SenseKey } from '../archiveOps'
+import { addListItem, addProficiency, addSense, removeItem, senseRows, setSenseRange, setToolLevel, type SenseKey } from '../archiveOps'
 import { loadArchiveCandidates, type ArchiveCandidates, type Candidate } from '../cardData'
 import type { CardCtx } from '../cardCtx'
 import { expectedGrants } from '../expected'
-import { infoOfArchive } from '../info'
+import { archiveInfoModel } from '../archiveRefs'
+import { senseDefs } from '../senseDefs'
 import InfoDialog from './InfoDialog.vue'
 import DialogFrame from './DialogFrame.vue'
 
@@ -59,6 +60,7 @@ const showSearch = computed(() => available.value.length > 8)
 const shown = computed(() => filtered.value.slice(0, 50))
 const grouped = computed(() => { const m = new Map<string, Candidate[]>(); for (const c of shown.value) m.set(c.group, [...(m.get(c.group) ?? []), c]); return [...m.entries()] })
 const sensesRows = computed(() => senseRows(props.ctx.person.block))
+const senseOptions = computed(() => senseDefs())
 
 const expected = computed(() => expectedGrants(props.ctx.person, props.ctx.data))
 const category = computed(() => (tab.value === 'languages' || tab.value === 'weapons' || tab.value === 'armor' || tab.value === 'tools' ? tab.value : null))
@@ -98,8 +100,9 @@ function restoreAll(): void {
 }
 function level(item: ArchiveItem, value: string | undefined): void { commit(setToolLevel(props.ctx.person.block, keyOf(item), value === 'expertise' ? 'expertise' : 'proficient')) }
 const toolLevel = (item: ArchiveItem): string => (props.ctx.person.block.proficiencies?.tools ?? []).find((r) => String(r.ref ?? r.name) === keyOf(item))?.level ?? 'proficient'
-function open(item: ArchiveItem): void {
-  modal.push({ key: `info:${item.id}`, title: item.label, component: markRaw(InfoDialog), variant: 'dialog', width: 520, props: { model: infoOfArchive(item, item.source !== '模板' && !readOnly.value), onRemove: () => remove(item) } })
+async function open(item: ArchiveItem): Promise<void> {
+  const model = await archiveInfoModel(item, item.source !== '模板' && !readOnly.value, props.ctx.data)
+  modal.push({ key: `info:${item.id}`, title: item.label, component: markRaw(InfoDialog), variant: 'dialog', width: 520, height: 420, props: { model, onRemove: () => remove(item) } })
 }
 const removable = (item: ArchiveItem): boolean => item.source !== '模板' && !readOnly.value
 function more(): void { props.ctx.toast.info('这个面板之后再做。') }
@@ -127,8 +130,8 @@ function more(): void { props.ctx.toast.info('这个面板之后再做。') }
     <section class="trpg-arch__sec">
       <div class="trpg-arch__addhead"><h3>可添加</h3><button v-if="category" class="trpg-btn trpg-btn--small" type="button" :disabled="readOnly || !missing.length" data-testid="archive-reassign" @click="restoreAll"><Icon name="arrow-counter-clockwise" :size="16" />{{ missing.length ? '按来源重新分配' : '没有缺的' }}</button></div>
       <template v-if="tab === 'senses'">
-        <ul class="trpg-arch__senses"><li v-for="s in SENSES.filter((x) => !sensesRows.some((r) => r.key === x.key))" :key="s.key"><button class="trpg-pill" type="button" :disabled="readOnly" @click="addSenseOf(s.key)">{{ s.label }}</button><span class="trpg-arch__note">{{ s.note }}</span></li></ul>
-        <p v-if="SENSES.every((x) => sensesRows.some((r) => r.key === x.key))" class="trpg-card-empty">四种感官都已添加。</p>
+        <ul class="trpg-arch__senses"><li v-for="s in senseOptions.filter((x) => !sensesRows.some((r) => r.key === x.key))" :key="s.key"><button class="trpg-pill" type="button" :disabled="readOnly" @click="addSenseOf(s.key)">{{ s.label }}</button><span class="trpg-arch__note">{{ s.note }}</span></li></ul>
+        <p v-if="senseOptions.length > 0 && senseOptions.every((x) => sensesRows.some((r) => r.key === x.key))" class="trpg-card-empty">感官都已添加。</p>
       </template>
       <template v-else>
         <div v-if="showSearch" class="trpg-arch__search"><input v-model="search" class="trpg-input" type="search" :placeholder="`搜${TAB_LABEL[tab]}…`" :aria-label="`搜索${TAB_LABEL[tab]}`" /><span class="trpg-arch__count">共 {{ filtered.length }} 条</span><button v-if="search" class="trpg-btn trpg-btn--quiet trpg-btn--small" type="button" @click="search = ''">清除</button></div>

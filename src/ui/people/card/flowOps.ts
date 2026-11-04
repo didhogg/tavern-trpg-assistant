@@ -5,7 +5,8 @@ import { ABILITY_KEYS } from '../../../rules/dnd5e2014/data/enums'
 import { assignGrants, grantsOf, removeStale, sourceTag, staleSources, type Grant, type GrantPicks, type Stale } from '../../../rules/dnd5e2014/derive'
 import type { Person } from '../../../schemas/people'
 import { CONDITION_LABELS, DAMAGE_LABELS } from '../../../rules/dnd5e2014/data/enums'
-import { SENSES, addListItem, addSense, removeItem, senseRows, setSenseRange, type SenseKey } from './archiveOps'
+import { senseDefs } from './senseDefs'
+import { addListItem, addSense, removeItem, senseRows, setSenseRange, type SenseKey } from './archiveOps'
 
 /** 种族 / 职业 / 背景的「选择 → 补选 → 分配」写入，以及单职业升降级的写入（U5R §10.2、§10.3）。纯函数；界面与 e2e 只调这里。 */
 export interface EntrySource { raceOf: (id?: string) => RaceData | undefined; backgroundOf: (id?: string) => BackgroundData | undefined; classOf: (id?: string) => ClassData | undefined; nameOf: (id?: string) => string }
@@ -21,7 +22,7 @@ export function extrasOf(entry: RaceData | undefined): Extra[] {
   const out: Extra[] = []
   const list = (group: 'resist' | 'immune' | 'condition', values: string[] | undefined, labels: Record<string, string>): void => { for (const v of values ?? []) out.push({ id: `x:${group}:${v}`, group, key: v, label: labels[v] ?? v }) }
   list('resist', entry.resist, DAMAGE_LABELS); list('immune', entry.immune, DAMAGE_LABELS); list('condition', entry.conditionImmune, CONDITION_LABELS)
-  for (const sense of entry.senses ?? []) { const meta = SENSES.find((x) => x.key === sense.type); if (meta) out.push({ id: `x:senses:${sense.type}`, group: 'senses', key: sense.type, label: `${meta.label} ${sense.range} 尺`, range: sense.range }) }
+  for (const sense of entry.senses ?? []) { const meta = senseDefs().find((x) => x.key === sense.type); if (meta) out.push({ id: `x:senses:${sense.type}`, group: 'senses', key: sense.type, label: `${meta.label} ${sense.range} 尺`, range: sense.range }) }
   return out
 }
 

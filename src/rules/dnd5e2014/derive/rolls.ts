@@ -74,7 +74,6 @@ export function rollSources(input: RollInput): RollSources {
   } else if (kind === 'initiative') {
     if (derived.initiative.value === null) failure = '缺少敏捷，无法自动算先攻'
     else push(derived.initiative.parts)
-    notes.push('先攻是敏捷检定（PHB p177）')
   } else {
     const res = derived.abilities[ability]
     if (res.modifier === null) failure = '缺少属性值，无法自动算'

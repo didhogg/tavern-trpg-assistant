@@ -11,7 +11,6 @@ import type { CardCtx } from '../cardCtx'
 import { expectedGrants } from '../expected'
 import { partLines, signed } from '../format'
 import { clearSkillOverrides, cycleSkill, overrideCount, setSkillOverride } from '../skillOps'
-import { CATEGORY_NOTE } from '../info'
 import InfoDialog from './InfoDialog.vue'
 import DialogFrame from './DialogFrame.vue'
 
@@ -46,12 +45,17 @@ function clear(): void { if (overrides.value) props.ctx.commitBlock(clearSkillOv
 function restore(grant: (typeof missing.value)[number]): void { props.ctx.commitBlock({ ...block.value, proficiencies: assignGrants(block.value.proficiencies, [grant.grant], grant.from) }) }
 function restoreAll(): void { let p = block.value.proficiencies; for (const m of missing.value) p = assignGrants(p, [m.grant], m.from); props.ctx.commitBlock({ ...block.value, proficiencies: p }) }
 function toDice(k: SkillKey): void { modal.close(true); dice.openRoll({ actorId: props.ctx.person.id, kind: 'check', ability: SKILLS[k].ability, skill: k }) }
+/** 技能在库里的规则条目（`rule`，category = skill），按英文名对应。 */
+function skillRef(k: string): string | undefined {
+  const fold = (v: string): string => v.toLowerCase().replace(/[^a-z0-9]/g, '')
+  return [...props.ctx.data.entries.values()].find((e) => e.entry.type === 'rule' && e.entry.data.category === 'skill' && fold(e.entry.nameEn ?? '') === fold(k))?.entry.id
+}
 function info(k: SkillKey): void {
   const r = d.value.skills[k]
   if (r.level === 'none') return
   const from = (block.value.proficiencies?.skills ?? []).find((s) => s.skill === k)?.sources ?? []
   const source = from.length ? from.map((s) => (s.kind === 'auto' ? `来自 ${props.ctx.data.nameOf((s.from ?? '').split(':').slice(1).join(':')) || '自动分配'}` : s.kind === 'template' ? '模板' : '手动添加')).join('；') : (block.value.skills?.[k] !== undefined ? '模板（写死总值）' : '手动添加')
-  modal.push({ key: `info:skill:${k}`, title: SKILLS[k].label, component: markRaw(InfoDialog), variant: 'dialog', width: 520, props: { model: { title: SKILLS[k].label, rows: [{ label: '类别', value: `技能 · ${ABILITY_LABELS[SKILLS[k].ability]}` }, { label: '熟练等级', value: ({ half: '半熟练', proficient: '熟练', expertise: '专精', none: '无' } as Record<string, string>)[r.level]! }, { label: '获得方式', value: source }], body: [CATEGORY_NOTE.tools.replace('工具熟练：做相关检定时加熟练加值，专精加两倍（玩家手册 p154）。', '技能熟练：做该技能的检定时加熟练加值，专精加两倍；半熟练加一半（玩家手册 p174）。')], removable: false } } })
+  modal.push({ key: `info:skill:${k}`, title: SKILLS[k].label, component: markRaw(InfoDialog), variant: 'dialog', width: 520, props: { model: { title: SKILLS[k].label, rows: [{ label: '类别', value: `技能 · ${ABILITY_LABELS[SKILLS[k].ability]}` }, { label: '熟练等级', value: ({ half: '半熟练', proficient: '熟练', expertise: '专精', none: '无' } as Record<string, string>)[r.level]! }, { label: '获得方式', value: source }], ref: skillRef(k), removable: false } } })
 }
 </script>
 

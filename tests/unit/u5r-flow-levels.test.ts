@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { strFromU8, unzipSync } from 'fflate'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeAll } from 'vitest'
 import { applyFlow, applyLevels, oldSources, planFlow, grantId, type EntrySource } from '../../src/ui/people/card/flowOps'
 import { derivePerson, levelDiff } from '../../src/rules/dnd5e2014/derive'
 import type { BackgroundData, ClassData, RaceData } from '../../src/rules/dnd5e2014/data/entries/character'
 import type { MonsterData } from '../../src/rules/dnd5e2014/data/entries/spell-monster'
+import { loadSenseDefsFromSrd } from './helpers-sense'
 
 const zip = unzipSync(new Uint8Array(readFileSync('packs/dnd5e2014-srd.trpgpack')))
 const list = (t: string): Array<{ id: string; name: string; data: unknown }> => JSON.parse(strFromU8(zip[`entries/${t}.json`]!))
@@ -17,6 +18,8 @@ const src: EntrySource = {
 }
 const blank = (o: object = {}): MonsterData => ({ speed: {}, senses: [], languages: [], ...o }) as unknown as MonsterData
 const sel = (b: MonsterData, kind: 'race' | 'class' | 'background', id: string) => planFlow(b, src, { kind, id, assign: true }).write.map((w) => grantId(w.grant))
+
+beforeAll(() => loadSenseDefsFromSrd())
 
 describe('U5R 种族流程：选用 / 分配 / 更换', () => {
   it('只选用，先不分配：只写 block.race，不写熟练', () => {

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import HoverTip from './HoverTip.vue'
 import Icon from './Icon.vue'
+import RuleLink from '../library/RuleLink.vue'
 
 /**
  * 项目卡（U5R §1.3）：名称 + 最终值 →「来源与算法」只读灰字 → 手动调整 / 覆盖（能填的才画框）→ 自动计算。
  * 手动调整、覆盖由父级用插槽放进来；本组件只管排版与「自动计算」按钮。
  */
-defineProps<{ title: string; value: string; auto?: string; sources: Array<{ label: string; value: string; note?: string; overridden?: boolean }>; canReset: boolean; readOnly?: boolean; hint?: string }>()
+defineProps<{ title: string; value: string; auto?: string; sources: Array<{ label: string; value: string; note?: string; overridden?: boolean }>; canReset: boolean; readOnly?: boolean; /** 库里对应规则的英文名（如 "Proficiency Bonus"）：有就在标题旁显示指向库的小按钮。 */ rule?: string }>()
 defineEmits<{ reset: [] }>()
 </script>
 
@@ -14,7 +14,7 @@ defineEmits<{ reset: [] }>()
   <section class="trpg-item" :aria-label="title">
     <header class="trpg-item__head">
       <h3 class="trpg-item__title">{{ title }}</h3>
-      <HoverTip v-if="hint" :text="hint"><span class="trpg-item__hint" tabindex="0" role="img" :aria-label="hint"><Icon name="info" :size="16" /></span></HoverTip>
+      <RuleLink v-if="rule" :name-en="rule" icon />
       <span class="trpg-item__value">{{ value }}</span>
     </header>
     <p v-if="auto" class="trpg-item__auto">自动 {{ auto }}</p>
