@@ -57,6 +57,8 @@ export interface RawData {
   foundryItems: Raw[]
   foundryVariants: Raw[]
   foundryActions: Raw[]
+  /** 2024 版（XPHB/XDMG/XMM）的 foundry 记录：不进条目，只用来给同名 2014 条目借时长（见 convert/borrow2024.ts）。 */
+  foundry2024?: Raw[]
   unsupportedMods: UnsupportedMod[]
   fluff?: FluffRecord[]
 }
@@ -174,6 +176,20 @@ async function loadFoundry(path: string, key: string): Promise<Raw[]> {
   return list.filter(isObj).filter((item) => BOOK_SOURCES.has(String(item.source)))
 }
 
+const SOURCES_2024 = new Set(['XPHB', 'XDMG', 'XMM'])
+/** 2024 来源的 foundry 记录（loadFoundry 会把它们当作"不在收录范围"滤掉）；每条带 `_foundryKind` 记下它原来在哪个数组。 */
+async function loadFoundry2024(): Promise<Raw[]> {
+  const out: Raw[] = []
+  for (const [path, keys] of [['foundry-items.json', ['item', 'magicvariant']], ['class/foundry.json', ['classFeature', 'subclassFeature']], ['foundry-feats.json', ['feat']], ['foundry-races.json', ['raceFeature']], ['foundry-optionalfeatures.json', ['optionalfeature']]] as const) {
+    const raw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, path))
+    for (const key of keys) {
+      const list = raw[key]
+      if (Array.isArray(list)) for (const item of list.filter(isObj)) if (SOURCES_2024.has(String(item.source))) out.push({ ...item, _foundryKind: key })
+    }
+  }
+  return out
+}
+
 async function loadRawDataBase(): Promise<RawData> {
   const unsupportedMods: UnsupportedMod[] = []
   const booksRaw = await readJson<Record<string, unknown>>(join(DATA_5ETOOLS, 'books.json'))
@@ -214,6 +230,7 @@ async function loadRawDataBase(): Promise<RawData> {
     foundryItems: await loadFoundry('foundry-items.json', 'item'),
     foundryVariants: await loadFoundry('foundry-items.json', 'magicvariant'),
     foundryActions: await loadFoundry('foundry-actions.json', 'action'),
+    foundry2024: await loadFoundry2024(),
     fluff: await loadFluff(unsupportedMods),
     unsupportedMods,
   }

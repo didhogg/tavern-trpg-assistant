@@ -46,6 +46,7 @@ import { checkPublished, type Published } from './version'
 import { dedupeMonsters, rewriteAliases } from './dedupe'
 import { extractNpcs } from './npc/extract'
 import { artById, applyArt } from './art/apply'
+import { applyBorrowedDurations, writeBorrowReport } from './convert/borrow2024'
 
 const DATA_REPO = process.env.TRPG_DATA_REPO ?? '/Users/xxx/tavern-trpg-data'
 
@@ -140,6 +141,10 @@ async function main(): Promise<void> {
   const fixReport = runFixes(result.packs.filter((p) => corePackIds.has(p.manifest.id))) // G2.5 修正只作用于核心 11 包；新来源走自己的转换
   console.log(`修正：规则 ${fixReport.rules.length} 个（命中 ${fixReport.rules.reduce((n, r) => n + r.changed, 0)} 条），逐条表 ${fixReport.rows.length} 行，新增条目 ${fixReport.added.length}`)
   await writeText(join(WORK, 'fix-report.json'), `${JSON.stringify(fixReport, null, 1)}\n`)
+  // D4：2024 版 foundry 记录里的时长借给同名 2014 条目（只借 duration、只借给还没有的；借不了的列出来）
+  const borrow = applyBorrowedDurations(result.packs, data.foundry2024 ?? [])
+  console.log(`借时长（2024→2014）：成功 ${borrow.borrowed.length}，没借 ${borrow.skipped.length}（${['unusable', 'conflict', 'ambiguous', 'none', 'differs'].map((k) => `${k} ${borrow.skipped.filter((x) => x.reason === k).length}`).join('，')}）`)
+  await writeText(join(WORK, 'borrow-2024.json'), `${JSON.stringify(borrow, null, 1)}\n`)
   await writeText(join(WORK, 'clean.json'), `${JSON.stringify({ ...lastCleanReport(), latin: latinLog }, null, 1)}\n`)
   const srd = result.packs.find((p) => p.manifest.id === SRD_PACK_ID)
   if (srd) for (const alias of BASELINE_ALIASES) if (!srd.entries.some((e) => e.id === alias.id)) srd.entries.push(alias)
@@ -225,6 +230,7 @@ async function main(): Promise<void> {
     await writeChecklist11(REPORT_ROOT, result)
     await writeI18nReport(REPORT_ROOT, aligned, english.entries.length, outputs)
     await writeCleanReport(REPORT_ROOT, lastCleanReport()!, health, outputs)
+    await writeBorrowReport(REPORT_ROOT, borrow)
   }
   for (const [id, out] of outputs) console.log(`${id.padEnd(24)} ${(out.bytes.length / 1024).toFixed(1)} KB  ${out.sha256}`)
   console.log(`合计 ${(volumes.reduce((n, v) => n + v.bytes, 0) / 1024 / 1024).toFixed(2)} MB`)

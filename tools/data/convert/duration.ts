@@ -13,7 +13,7 @@ const UNIT: Record<string, EntryDuration['unit']> = {
 }
 const SECONDS: Array<[number, NonNullable<EntryDuration['unit']>]> = [[86400, 'day'], [3600, 'hour'], [60, 'minute'], [6, 'round']]
 
-function fromActivity(du: Rec): EntryDuration | undefined {
+export function fromActivity(du: Rec): EntryDuration | undefined {
   const units = typeof du.units === 'string' ? du.units : ''
   const concentration = du.concentration === true
   if (units === '永续' || units === 'perm') return { type: 'permanent', concentration }
@@ -23,7 +23,7 @@ function fromActivity(du: Rec): EntryDuration | undefined {
   return unit && raw && raw > 0 ? { type: 'timed', amount: raw, unit, concentration } : undefined // 公式（如"等于等级的一半"）读不成固定数就不写
 }
 
-function fromEffect(du: Rec): EntryDuration | undefined {
+export function fromEffect(du: Rec): EntryDuration | undefined {
   if (typeof du.seconds === 'number' && du.seconds > 0) {
     const hit = SECONDS.find(([s]) => du.seconds as number >= s && (du.seconds as number) % s === 0)
     return hit ? { type: 'timed', amount: (du.seconds as number) / hit[0], unit: hit[1], concentration: false } : undefined
