@@ -15,5 +15,8 @@ SillyTavern / TauriTavern 前端扩展（Vue 3 + TypeScript）：手动管理 TR
 - 不写空 catch；单文件 ≤400 行；控件按 `docs/开发规范.md` §5.3。
 - 数据错了只改 `tools/data/overlay/*.json`，不写代码修正；测试不写死条目数量（`docs/开发规范.md` §12.5）。
 - 完成须有证据（`docs/开发规范.md` §8）；真机验收只能由驾驶员给出。
-- 收尾更新 `NEXT.md` 并本地提交；推送、发布、安装、删除用户数据须单独授权。
+- **只在两个文件夹里工作**：`tavern-trpg-assistant`（助手）与 `tavern-trpg-data`（数据），直接在 `main` 上做；不开任务分支、不开 `git worktree` 副本夹（`docs/handoff/` 里旧交接文本的 `git worktree add`、`ln -s reference` 步骤作废）。
+- **一个任务一个本地提交**；做坏了用 `git revert` 回退（细则见 `docs/开发规范.md` §9）。
+- `reference/` 只放指向仓库外资料夹的链接，不入 Git；Git 操作前后确认它还在，丢了就 `sh tools/setup-reference.sh`。
+- 收尾更新 `NEXT.md` 并本地提交；推送、打标签、发布、安装、删除用户数据须单独授权。
 - 面向驾驶员的说明用中文大白话，先说结果再说依据。
