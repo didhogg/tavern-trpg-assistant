@@ -82,11 +82,23 @@ const spellGrant = effect({
 })
 const carry = effect({ kind: z.literal('carry'), multiplier: z.number().positive() })
 const size = effect({ kind: z.literal('size'), value: z.enum(['T', 'S', 'M', 'L', 'H', 'G']) })
+/** 检定 / 豁免 / 攻击的额外加值（祝福术 +1d4、神导术 +1d4）；新增可选种类，旧扩展照常安装并忽略。amount 与 dice 至少有一个。 */
+const rollBonus = effect({
+  kind: z.literal('rollBonus'),
+  on: z.enum(['check', 'save', 'attack']),
+  dice: z.string().regex(/^\d+d\d+$/).optional(),
+  amount: z.number().int().optional(),
+  scope: z.string().max(40).optional(),
+  consumedOnUse: z.boolean().optional(),
+  label: z.string().max(40).optional(),
+}).superRefine((v, ctx) => {
+  if (v.dice === undefined && v.amount === undefined) ctx.addIssue({ code: 'custom', message: 'rollBonus 需要 dice 或 amount' })
+})
 const note = effect({ kind: z.literal('note'), text: z.string().min(1) })
 
 export const effectSchema = z.discriminatedUnion('kind', [
   abilityBonus, abilitySet, skill, save, proficiency, ac, hpMax, speed, sense, damageList, conditionImmunity,
-  initiative, passive, attackBonus, advantage, critRange, critDice, extraAttack, spellGrant, carry, size, note,
+  initiative, passive, attackBonus, advantage, critRange, critDice, extraAttack, spellGrant, carry, size, rollBonus, note,
 ])
 export type Effect = z.infer<typeof effectSchema>
 export const effectListSchema = z.array(effectSchema).default([])

@@ -86,8 +86,8 @@ export const personSchema = z.object({
   hpAdj: z.array(z.object({ label: z.string().min(1).max(40), flat: z.number().int().optional(), perLevel: z.number().int().optional(), source: z.string().max(60).optional() })).optional(),
   /** 生命骰数量覆盖：骰面 → 颗数。 */
   hitDiceOverride: z.record(z.string(), z.number().int().nonnegative()).optional(),
-  /** 升级掷骰记录：级数 → 该级所得生命。 */
-  hpRolls: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  /** 升级掷骰记录：总等级（从 2 起）→ 该级掷出的骰面点数；生命增量 = max(1, 点数 + 体质调整值)。 */
+  hpRolls: z.record(z.string(), z.number().int().min(1)).optional(),
   /** 当场状态；0–6 级。 */
   exhaustion: z.number().int().min(0).max(6).optional(),
   /** 当场状态：每个骰型已用颗数。 */

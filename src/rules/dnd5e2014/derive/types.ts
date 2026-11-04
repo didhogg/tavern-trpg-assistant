@@ -13,9 +13,29 @@ export interface DeriveContext {
   equipmentEffects: Effect[]
 }
 
+/** 来源明细（U5R §13）：除 override 行外，amount 之和 = value；有覆盖时其余行标 overridden。 */
+export interface Part {
+  label: string
+  amount: number
+  kind: 'base' | 'add' | 'cap' | 'override'
+  /** 被覆盖盖住、不计入 value。 */
+  overridden?: boolean
+}
+
 export interface DerivedNumber {
   value: number | null
   sources: string[]
+  parts: Part[]
+}
+
+/** 有覆盖时：其余行标 overridden，再追加 override 行。 */
+export function withOverride(parts: Part[], override: number | null | undefined): Part[] {
+  if (override === null || override === undefined) return parts
+  return [...parts.map((row) => ({ ...row, overridden: true })), { label: '覆盖', amount: override, kind: 'override' as const }]
+}
+export function sumParts(parts: Part[]): number {
+  const over = parts.find((row) => row.kind === 'override')
+  return over ? over.amount : parts.reduce((n, row) => n + (row.overridden ? 0 : row.amount), 0)
 }
 
 export interface AbilityResult extends DerivedNumber {
@@ -58,6 +78,8 @@ export interface HpResult extends DerivedNumber {
 
 export interface SpeedResult {
   walk: number | null
+  /** 各移动方式的来源明细。 */
+  parts: Partial<Record<'walk' | 'fly' | 'swim' | 'climb' | 'burrow', Part[]>>
   /** 其他移动方式；没有这个方式就不出现。 */
   others: Partial<Record<'fly' | 'swim' | 'climb' | 'burrow', number>>
   sources: string[]
@@ -90,4 +112,4 @@ export interface PersonDerived {
   spellSlots: SpellSlotsResult | null
 }
 
-export type DerivePerson = Pick<Person, 'block' | 'hp' | 'hitDiceUsed' | 'slotsUsed'>
+export type DerivePerson = Pick<Person, 'block' | 'hp' | 'hitDiceUsed' | 'slotsUsed'> & Partial<Pick<Person, 'hpAdj' | 'hitDiceOverride' | 'hpRolls'>>
