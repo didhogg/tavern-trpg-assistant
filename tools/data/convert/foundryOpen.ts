@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { PlannedEntry } from './plan'
+import { durationOfOpen, type EntryDuration } from './duration'
 
 /**
  * Foundry dnd5e 系统本体的开源数据（SRD 内容，2014 规则）作为第二个结构化来源（G2.5 P7）。
@@ -90,6 +91,7 @@ export function addOpenItemData(plan: PlannedEntry, data: Rec): boolean {
     const out = acts.map((a, i) => activity(a, `${plan.id}.${i}`, str(plan.name))).filter((x): x is Rec => !!x)
     if (out.length) { data.activities = out; used = true }
   }
+  if (data.duration === undefined) { const d = durationOfOpen(f.system); if (d) { data.duration = d; used = true } }
   if (used) data.extra = { ...(isObj(data.extra) ? data.extra : {}), foundryOpen: true } // 记下用过 Foundry 开源数据（署名随包的 attribution）
   return used
 }
@@ -104,4 +106,35 @@ export function addGenericUse(plan: PlannedEntry, data: Rec): void {
   const level = num(plan.raw.spellScrollLevel)
   const text = level !== undefined ? (level === 0 ? '施展卷轴上的戏法；用后卷轴消失' : `施展卷轴上的${level}环法术；用后卷轴消失`) : `使用${str(plan.name)}（效果见物品说明）`
   data.activities = [{ id: `${plan.id}.use`, name: `使用：${str(plan.name)}`, kind: 'utility', text, activation: { type: 'action' }, consumption: { targets: [{ type: 'itemUses', value: 1 }] } }]
+}
+
+let classIndex: Map<string, Rec> | undefined
+let nameIndex: Map<string, Rec[]> | undefined
+/** 开源数据的职业特性（2014 规则）：按「职业 + 等级 + 英文名」索引；requirements 写作 "Barbarian 1"。 */
+function classFeatures(): Map<string, Rec> {
+  if (classIndex) return classIndex
+  classIndex = new Map()
+  nameIndex = new Map()
+  const file = join(process.cwd(), 'reference', 'foundry-dnd5e-open', 'classfeatures.json')
+  if (!existsSync(file)) return classIndex
+  for (const e of (JSON.parse(readFileSync(file, 'utf8')) as { entries: Rec[] }).entries) {
+    const sys = isObj(e.system) ? e.system : {}
+    nameIndex.set(norm(str(e.name)), [...(nameIndex.get(norm(str(e.name))) ?? []), e])
+    const m = /^([A-Za-z ]+?)\s+(\d+)$/.exec(str(sys.requirements).trim())
+    if (m) { const key = `${norm(m[1])}|${m[2]}|${norm(str(e.name))}`; if (!classIndex.has(key)) classIndex.set(key, e) }
+  }
+  return classIndex
+}
+
+/**
+ * 职业／子职业／可选特性的时长（来源：Foundry 开源数据，2014 规则）。
+ * 先按「职业 + 等级 + 英文名」对；对不上（子职业、邪术师祈请等 requirements 不是职业加等级）再按英文名对，**英文名在开源数据里只有一条才用**，重名的不猜。
+ */
+export function openFeatureDuration(nameEn: string, classSlug: string | undefined, level: unknown): EntryDuration | undefined {
+  classFeatures()
+  const lv = typeof level === 'number' ? level : undefined
+  const exact = classSlug && lv !== undefined ? classIndex?.get(`${norm(classSlug)}|${lv}|${norm(nameEn)}`) : undefined
+  const named = nameIndex?.get(norm(nameEn))
+  const f = exact ?? (named?.length === 1 ? named[0] : undefined)
+  return f && isObj(f.system) ? durationOfOpen(f.system) : undefined
 }

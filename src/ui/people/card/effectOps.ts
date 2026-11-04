@@ -45,7 +45,8 @@ export function effectFromEntry(entry: Entry, now: number, seq: number): PersonE
   }
 }
 export function customEffect(name: string, durationText: string, note: string, now: number, seq: number): PersonEffect {
-  return { id: `fx-${now.toString(36)}-${seq}`, category: 'other', name: name.trim(), concentration: false, ...(note.trim() ? { note: note.trim().slice(0, 400) } : {}), ...(durationText.trim() ? { duration: { type: 'special', concentration: false } } : {}), addedAt: now }
+  const merged = [durationText.trim() ? `时长：${durationText.trim()}` : '', note.trim()].filter(Boolean).join('；') // 自定义时长是文字，不丢：和备注并在一起
+  return { id: `fx-${now.toString(36)}-${seq}`, category: 'other', name: name.trim(), concentration: false, ...(merged ? { note: merged.slice(0, 400) } : {}), ...(durationText.trim() ? { duration: { type: 'special', concentration: false } } : {}), addedAt: now }
 }
 /** 同时只能专注一个（p203）：加入带专注的效果时，若已有专注，返回它的名字（只提示，不自动移除）。 */
 export function concentrationConflict(current: PersonEffect[], adding: PersonEffect): string | undefined {

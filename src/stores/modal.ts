@@ -15,6 +15,8 @@ export interface ModalPage {
   variant?: ModalVariant
   /** 抽屉宽度（px；不写 = 440）；`dialog` 变体写了就是居中弹窗的宽（U5R：窄屏变底部整页）。窗口更窄时取 100%。 */
   width?: number
+  /** 居中弹窗的高度上限（px），不写用默认 800；内容少的弹窗写小一点，别留大片空白。 */
+  height?: number
   /** 页面自带完整外壳（例如人物卡）时不显示宿主标题栏。 */
   bare?: boolean
   /** 用户用 ✕、遮罩或 Esc 关闭栈底页之前调用；返回 false 表示拦截（页面自行显示确认页）。 */

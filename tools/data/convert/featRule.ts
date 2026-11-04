@@ -104,7 +104,7 @@ export function convertFeat(entry: PlannedEntry, ctx: ConvertContext, inline: In
     text: convertBlocks(raw.entries, inline),
     ...(abilityIncrease ? { abilityIncrease } : {}),
     ...(requires ? { requires } : {}),
-    ...(uses ? { uses } : {}),
+    ...(uses ? { uses } : {}), ...(rules?.duration ? { duration: rules.duration } : {}),
     ...(effects.length || grants.length ? { effects: [...effects, ...grants.map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}), ...(g.level ? { level: g.level } : {}) }))] } : {}),
     ...(Array.isArray(raw.traitTags) ? { tags: raw.traitTags.map(String) } : {}),
     advancement: (() => {

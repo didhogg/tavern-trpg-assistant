@@ -24,7 +24,7 @@ interface AvatarOps { uploadAvatar: (file: File) => Promise<void>; clearAvatar: 
 /** 人物详情的全部弹窗入口（U5R §10）：都是居中弹窗（手机底部整页），没有侧拉。 */
 export function useCardDialogs(ctx: CardCtx, openPage: OpenPage, avatar: AvatarOps & { url?: () => string | undefined }) {
   const modal = useModalStore()
-  const page = (key: string, title: string, component: unknown, width: number, props: Record<string, unknown>): ModalPage => ({ key: `${key}:${ctx.person.id}`, title, component: markRaw(component as never), variant: 'dialog', width, props })
+  const page = (key: string, title: string, component: unknown, width: number, props: Record<string, unknown>, height?: number): ModalPage => ({ key: `${key}:${ctx.person.id}`, title, component: markRaw(component as never), variant: 'dialog', width, ...(height ? { height } : {}), props })
 
   function openRecrop(): void {
     const source = ctx.person.avatarSource
@@ -33,7 +33,7 @@ export function useCardDialogs(ctx: CardCtx, openPage: OpenPage, avatar: AvatarO
   }
   function openIdentity(tab?: string): void {
     const wide = tab === 'race' || tab === 'class' || tab === 'background' || tab === 'levels'
-    openPage(page('identity', '身份', IdentityDialog, wide ? 980 : 760, { ctx, tab, avatarUrl: avatar.url, onUpload: (f: File) => void avatar.uploadAvatar(f), onRecrop: openRecrop, onClear: () => avatar.clearAvatar() }))
+    openPage(page('identity', '身份', IdentityDialog, wide ? 980 : 760, { ctx, tab, avatarUrl: avatar.url, onUpload: (f: File) => void avatar.uploadAvatar(f), onRecrop: openRecrop, onClear: () => avatar.clearAvatar() }, 640))
   }
   async function peek(id: string | undefined, title: string, actions: Array<{ label: string; run: () => void }>): Promise<void> {
     if (!id) return

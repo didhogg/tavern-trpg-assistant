@@ -83,7 +83,7 @@ defineExpose({ commit })
   <form ref="form" class="trpg-hpedit" data-testid="person-card-hp-editor" @pointerdown.capture="press" @focusout="blur" @submit.prevent="commit">
     <div class="trpg-hpedit__inputs">
       <label class="trpg-hpedit__field"><span>当前</span><input v-model="current" class="trpg-input" inputmode="numeric" aria-label="当前生命" data-testid="person-card-hp-current-input" @keydown.enter.prevent="commit" /></label>
-      <label class="trpg-hpedit__field"><span>上限</span><input v-model="cap" class="trpg-input" inputmode="numeric" :placeholder="autoMax === null ? '' : String(autoMax)" aria-label="生命上限" data-testid="person-card-hp-max-input" @keydown.enter.prevent="commit" /></label>
+      <label class="trpg-hpedit__field"><span>上限（空 = 自动）</span><input v-model="cap" class="trpg-input" inputmode="numeric" :placeholder="autoMax === null ? '' : String(autoMax)" aria-label="生命上限" data-testid="person-card-hp-max-input" @keydown.enter.prevent="commit" /></label>
       <label class="trpg-hpedit__field"><span>临时</span><input v-model="temp" class="trpg-input" inputmode="numeric" aria-label="临时生命" data-testid="person-card-hp-temp-input" @keydown.enter.prevent="commit" /></label>
     </div>
     <p v-if="cap.trim() !== '' && Number(cap) !== autoMax" class="trpg-hpedit__note">现在是手填的 {{ cap }}，自动值 {{ autoMax ?? '算不出' }}。清空上限框即回到自动。</p>

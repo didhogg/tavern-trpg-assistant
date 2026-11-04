@@ -78,8 +78,8 @@
 .trpg-ab__gen { display: grid; gap: 10px; }
 .trpg-ab__hint { margin: 0; color: var(--ink-2); font-size: 13px; line-height: 20px; }
 .trpg-ab__ok { margin: 0; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--gold) 16%, var(--card)); font-size: 13px; }
-.trpg-ab__pool { display: flex; flex-wrap: wrap; gap: 10px; min-height: 48px; align-items: center; }
-.trpg-ab__num { min-width: 52px; min-height: 44px; border: 1.5px solid var(--frame); border-radius: 10px; background: var(--card); font: 700 20px var(--font-serif); transition: opacity 120ms; }
+.trpg-ab__pool { display: flex; flex-wrap: wrap; gap: 8px; min-height: 48px; align-items: center; }
+.trpg-ab__num { min-width: 46px; min-height: 44px; border: 1.5px solid var(--frame); border-radius: 10px; background: var(--card); font: 700 20px var(--font-serif); transition: opacity 120ms; }
 .trpg-ab__num.is-selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--card)); box-shadow: 0 0 0 2px var(--primary); }
 .trpg-ab__num.is-used { opacity: 0.45; border-style: dashed; }
 .trpg-ab__detail { justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
@@ -97,9 +97,13 @@
 .trpg-ab__check { width: 22px; height: 22px; accent-color: var(--primary); }
 @container (max-width: 720px) {
   .trpg-ab__row--head { display: none; }
-  .trpg-ab__row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px; border: 1px solid var(--line); }
-  .trpg-ab__name { grid-column: 1 / -1; }
-  .trpg-ab__row > span[data-label]::before { content: attr(data-label); display: block; color: var(--ink-2); font-size: 11px; line-height: 14px; }
+  /* 窄屏每个属性压成 3 行：[名称 · 最终 · 调整值] / [基础 · 种族 · 成长 · 装备] / [其他 · 豁免]（用 order 调顺序，DOM 顺序不变） */
+  .trpg-ab__row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 8px; padding: 8px 10px; min-height: 0; border: 1px solid var(--line); }
+  .trpg-ab__name { grid-column: 1 / 3; }
+  .trpg-ab__row > :nth-child(7), .trpg-ab__row > :nth-child(8) { order: 1; }
+  .trpg-ab__row > :nth-child(2), .trpg-ab__row > :nth-child(3), .trpg-ab__row > :nth-child(4), .trpg-ab__row > :nth-child(5) { order: 2; }
+  .trpg-ab__row > :nth-child(6), .trpg-ab__row > :nth-child(9) { order: 3; grid-column: span 2; }
+  .trpg-ab__row span[data-label]::before { content: attr(data-label); display: block; color: var(--ink-2); font-size: 11px; line-height: 14px; }
   .trpg-ab__ro { text-align: left; }
 }
 .trpg-fx__search { display: flex; align-items: center; gap: 8px; }
@@ -107,8 +111,8 @@
 .trpg-fx__split { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 14px; min-height: 280px; }
 .trpg-fx__list { display: grid; align-content: start; gap: 2px; margin: 0; padding: 0; list-style: none; max-height: 52vh; overflow: auto; }
 .trpg-fx__item { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; text-align: left; }
-.trpg-fx__item:hover { background: var(--panel); }
-.trpg-fx__item.is-on { background: color-mix(in srgb, var(--primary) 10%, var(--card)); font-weight: 700; }
+.trpg-fx__item:hover { background: color-mix(in srgb, var(--panel) 45%, var(--card)); }
+.trpg-fx__item.is-on { background: color-mix(in srgb, var(--primary) 12%, var(--card)); box-shadow: inset 3px 0 0 var(--primary); font-weight: 700; }
 .trpg-fx__name { flex: 1; min-width: 0; }
 .trpg-fx__name small, .trpg-fx__sub { margin-left: 6px; color: var(--ink-2); font-size: 12px; font-weight: 400; }
 .trpg-fx__on { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-size: 12px; }
@@ -184,5 +188,10 @@
 .trpg-dlg input[type='checkbox']:checked { background: var(--primary); border-color: var(--primary); }
 .trpg-dlg input[type='checkbox']:checked::after { content: ''; position: absolute; left: 6px; top: 2px; width: 6px; height: 11px; border: solid var(--primary-ink); border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .trpg-dlg input[type='checkbox']:disabled { opacity: 0.45; cursor: not-allowed; }
-.trpg-dlg input[type='radio'] { accent-color: var(--primary); }
+/* 单选框：与勾选框同一套（22×22 圆、选中酒红圆点），深浅色通用 */
+.trpg-dlg input[type='radio'] { appearance: none; position: relative; flex: none; width: 22px; height: 22px; margin: 0; border: 1.5px solid var(--line); border-radius: 50%; background: var(--card); cursor: pointer; }
+.trpg-dlg input[type='radio']::before { content: ''; position: absolute; inset: -11px; }
+.trpg-dlg input[type='radio']:checked { border-color: var(--primary); }
+.trpg-dlg input[type='radio']:checked::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--primary); }
+.trpg-dlg input[type='radio']:focus-visible, .trpg-dlg input[type='checkbox']:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .trpg-lv__list { display: grid; gap: 4px; margin: 0; padding-left: 20px; font-size: 14px; line-height: 22px; }

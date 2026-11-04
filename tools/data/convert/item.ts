@@ -176,7 +176,7 @@ export function convertItem(entry: PlannedEntry, ctx: ConvertContext, inline: In
     ...(chargesOf(raw) ? { charges: { ...chargesOf(raw), ...rechargeAmountOf(raw) } } : {}),
     ...(bonusesOf(raw) ? { bonuses: bonusesOf(raw) } : {}),
     ...(effects.length ? { effects } : {}),
-    ...(activities.length ? { activities } : {}),
+    ...(activities.length ? { activities } : {}), ...(rules?.duration ? { duration: rules.duration } : {}),
     ...(category === 'consumable' || (category !== 'family' && category !== 'template' && isConsumable(raw)) ? { consumable: true } : {}),
     ...(category !== 'family' && category !== 'template' ? { itemKind: itemKindOf(raw, raw._baseItem as Record<string, unknown> | undefined) } : {}),
     ...(focusTypeOf(raw) ? { focusType: focusTypeOf(raw) } : {}),

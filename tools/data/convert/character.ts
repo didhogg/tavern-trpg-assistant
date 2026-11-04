@@ -10,7 +10,7 @@ import { activitiesFromText } from './activities'
 import { clip, plainText, summaryOf } from '../summary/summary'
 import { spellGrants, startingEquipmentOf } from './character2'
 import { prereqToRequires } from './featRule'
-import { dedupeEffects, foundryFeature, foundryRulesFor, usesFromText } from './foundry'
+import { dedupeEffects, foundryFeature, foundryRulesFor, openFeatureDuration, usesFromText } from './foundry'
 import { poolFeatureId } from '../config/pools'
 import { FEATURE_ACTIVITIES, FEATURE_EFFECTS, FEATURE_NO_USES, FEATURE_USES } from '../config/featureRules'
 import { PROFICIENCY_TRAITS } from '../config/proficiencyTraits'
@@ -294,7 +294,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
   }
   const text = plainText(convertBlocks(raw._r9OriginalEntries ?? raw.entries, inline))
   const uses = FEATURE_NO_USES.has(entry.id) || raw.consumes ? undefined : rules?.uses ?? FEATURE_USES[entry.id] ?? usesFromText(text) // 有 consumes 的特性消耗别的池，不再有自己的 uses（不从正文猜）
-  const configEffects = FEATURE_EFFECTS[entry.id] ?? []
+  const featureDuration = rules?.duration ?? (['XPHB', 'XDMG', 'XMM'].includes(entry.source) ? undefined : openFeatureDuration(entry.nameEn, ownerType === 'class' ? /^class\.([a-z0-9-]+)\./.exec(entry.context.ownerId ?? '')?.[1] : undefined, raw.level)); const configEffects = FEATURE_EFFECTS[entry.id] ?? []
   const spellEffects = spellGrants(raw, ctx).map((g) => ({ kind: 'spellGrant', spells: [g.spell], mode: g.mode, ...(g.ability ? { ability: g.ability } : {}), ...(g.uses ? { uses: g.uses } : {}), ...(g.level ? { level: g.level } : {}) }))
   const skillEffects: Array<Record<string, unknown>> = []
   for (const item of Array.isArray(raw.skillProficiencies) ? raw.skillProficiencies : []) {
@@ -325,7 +325,7 @@ export function convertFeature(entry: PlannedEntry, ctx: ConvertContext, inline:
     ...(typeof raw.level === 'number' ? { level: raw.level } : {}),
     ...(featureType(raw) ? { featureType: featureType(raw) } : {}),
     role: (() => { if (ownerType !== 'subclass') return roleOf(entry.name); const siblings = ctx.featuresByOwner.get(entry.context.ownerId ?? '') ?? []; const min = Math.min(...siblings.filter((f) => f.level > 0).map((f) => f.level)); const subName = ctx.subclassNames.get(entry.context.ownerId ?? ''); const intro = siblings.find((f) => f.level === min && (f.name === subName || f.name === str(raw.subclassShortName))); return intro?.id === entry.id ? 'intro' : roleOf(entry.name) })(),
-    ...(uses ? { uses } : {}),
+    ...(uses ? { uses } : {}), ...(featureDuration ? { duration: featureDuration } : {}),
     ...(effects.length ? { effects } : {}),
     ...(raw.prerequisite ? { requires: prereqToRequires(raw.prerequisite, ctx) } : {}),
     ...(choicesOf(raw) ? { choices: choicesOf(raw) } : {}),

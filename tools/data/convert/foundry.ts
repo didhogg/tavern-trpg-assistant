@@ -77,9 +77,9 @@ function asList(value: unknown): unknown[] {
 }
 
 function effectBase(effect: Raw): Record<string, unknown> {
-  const duration = effect.duration && typeof effect.duration === 'object' ? (effect.duration as Raw) : undefined
+  // 特效的时长（秒／轮数）不再逐条挂在效果上，而是整理成条目时长，见 duration.ts
+  // 以前这里读 units/value；5etools 的特效没有这两个字段，写出来是空的
   return {
-    ...(duration ? { duration: { type: str(duration.units) || undefined, amount: number(duration.value), concentration: duration.concentration === true } } : {}),
     ...(effect.transfer === true ? { transfer: true } : {}),
   }
 }
@@ -87,7 +87,7 @@ function effectBase(effect: Raw): Record<string, unknown> {
 export interface FoundryRules {
   uses?: Uses
   effects?: Effect[]
-  activities?: Activity[]
+  activities?: Activity[]; duration?: EntryDuration
   unmapped: Map<string, { count: number; example: string }>
 }
 
@@ -318,8 +318,8 @@ export function foundryRulesFor(raw: Raw): FoundryRules {
   const result: FoundryRules = { unmapped: new Map() }
   const uses = foundryUses(raw)
   const activities = foundryActivities(raw, str(raw.name) || 'feature')
-  const effects = effectsOf(raw)
-  return { ...(uses ? { uses } : {}), ...(effects.length ? { effects } : {}), ...(activities.length ? { activities } : {}), unmapped: result.unmapped }
+  const effects = effectsOf(raw); const duration = durationOfFoundry(raw)
+  return { ...(uses ? { uses } : {}), ...(duration ? { duration } : {}), ...(effects.length ? { effects } : {}), ...(activities.length ? { activities } : {}), unmapped: result.unmapped }
 }
 
 export function foundryFeature(ctx: {
@@ -351,3 +351,5 @@ export function dedupeEffects(effects: Array<Record<string, unknown>>): Array<Re
 }
 
 export { SKILLS }
+export { openFeatureDuration } from './foundryOpen'
+import { durationOfFoundry, type EntryDuration } from './duration'

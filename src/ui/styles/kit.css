@@ -150,7 +150,7 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-modal__card:has(.trpg-library-card) .trpg-modal__page { padding: 0; }
 /* U5R：居中弹窗（人物详情的管理 / 选择 / 资料）。高度固定，切标签不跳；内容区自己滚动，底栏固定 */
 .trpg-modal[data-variant='dialog'] .trpg-modal__card[data-sized='true'] {
-  width: min(var(--trpg-drawer-width, 640px), 100%); height: min(86%, 800px); border-radius: 16px; background: var(--card);
+  width: min(var(--trpg-drawer-width, 640px), 100%); height: min(86%, var(--trpg-dlg-h, 800px)); border-radius: 16px; background: var(--card);
 }
 .trpg-modal[data-variant='dialog'] .trpg-modal__card[data-sized='true'] .trpg-modal__page { padding: 0; display: flex; flex-direction: column; overflow: hidden; }
 .trpg-modal__head {
@@ -377,7 +377,7 @@ textarea.trpg-input { min-height: 72px; resize: vertical; }
 .trpg-btabs__tab:hover:not(:disabled) { background: var(--card); }
 .trpg-btabs__tab[aria-selected='true'] { background: var(--card); border-color: var(--line); color: var(--ink); font-weight: 700; padding-bottom: 1px; }
 .trpg-btabs__tab:disabled { opacity: 0.45; cursor: not-allowed; }
-.trpg-btabs__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--panel); font-size: 12px; font-weight: 600; }
+.trpg-btabs__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 12%, transparent); font-size: 12px; font-weight: 600; }
 .trpg-item { display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
 .trpg-item__head { display: flex; align-items: baseline; gap: 8px; }
 .trpg-item__title { flex: 1; min-width: 0; margin: 0; font: 700 17px/1.3 var(--font-serif); }

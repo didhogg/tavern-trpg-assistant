@@ -73,10 +73,10 @@ function commit(payload: HpEditPayload): void { emit('commit', payload) }
     <div class="trpg-hpbar" :class="{ 'is-empty': max === null, 'is-low': bar.low }" aria-hidden="true"><span class="trpg-hpbar__part is-hp" :style="{ width: `${bar.hp}%` }" /><span class="trpg-hpbar__part is-temp" :style="{ width: `${bar.temp}%` }" /></div>
     <div class="trpg-card-vitals__line" aria-live="polite">
       <span class="trpg-card-vitals__label">死亡豁免</span>
-      <span class="trpg-card-vitals__word">成功</span>
-      <button v-for="n in 3" :key="`s${n}`" class="trpg-dot trpg-dot--ok" :class="{ 'is-on': saved('success', n) }" type="button" :aria-label="`死亡豁免成功 ${n} 次`" :aria-pressed="saved('success', n)" :disabled="readOnly" @click="setDeath('success', n)" />
-      <span class="trpg-card-vitals__word">失败</span>
-      <button v-for="n in 3" :key="`f${n}`" class="trpg-dot trpg-dot--fail" :class="{ 'is-on': saved('fail', n) }" type="button" :aria-label="`死亡豁免失败 ${n} 次`" :aria-pressed="saved('fail', n)" :disabled="readOnly" @click="setDeath('fail', n)" />
+      <span class="trpg-card-vitals__grp"><span class="trpg-card-vitals__word">成功</span>
+      <button v-for="n in 3" :key="`s${n}`" class="trpg-dot trpg-dot--ok" :class="{ 'is-on': saved('success', n) }" type="button" :aria-label="`死亡豁免成功 ${n} 次`" :aria-pressed="saved('success', n)" :disabled="readOnly" @click="setDeath('success', n)" /></span>
+      <span class="trpg-card-vitals__grp"><span class="trpg-card-vitals__word">失败</span>
+      <button v-for="n in 3" :key="`f${n}`" class="trpg-dot trpg-dot--fail" :class="{ 'is-on': saved('fail', n) }" type="button" :aria-label="`死亡豁免失败 ${n} 次`" :aria-pressed="saved('fail', n)" :disabled="readOnly" @click="setDeath('fail', n)" /></span>
     </div>
     <div class="trpg-card-vitals__line trpg-card-vitals__dice">
       <button class="trpg-card-vitals__label trpg-linkbtn" type="button" :disabled="readOnly || !hp.dice.length" data-testid="person-card-hitdie-roll" @click="emit('hitDie', hp.dice[0]!.sides)">生命骰</button>

@@ -24,7 +24,7 @@ import { tablesOf, type RelatedTable } from './tables'
 import TableEntry from './TableEntry.vue'
 import RelatedTables from './RelatedTables.vue'
 
-const props = defineProps<{ packId: string; entryId: string; /** 模板弹窗用：自带的类型与摘要行不显示（摘要头已经写了）。 */ compact?: boolean }>()
+const props = defineProps<{ packId: string; entryId: string; /** 模板弹窗用：自带的类型与摘要行不显示（摘要头已经写了）。 */ compact?: boolean; /** 选效果等只看一条说明的地方：不带「相关表格」（那里会把正文里提到它的无关表也列出来）。 */ noTables?: boolean }>()
 const app = useAppStore()
 const campaign = useCampaignStore()
 const library = useLibraryStore()
@@ -113,7 +113,7 @@ async function onSwitch(variantKey: string): Promise<void> {
     <EntryFacts v-else-if="facts.length" :facts="facts" @ref="onRef" />
     <TextBlocks v-if="npcIntro.length" :blocks="npcIntro" @ref="onRef" />
     <TextBlocks :blocks="blocks" @ref="onRef" />
-    <RelatedTables v-if="tables.length" :tables="tables" :target-id="props.entryId" @open="onRef" @ref="onRef" />
+    <RelatedTables v-if="tables.length && !noTables" :tables="tables" :target-id="props.entryId" @open="onRef" @ref="onRef" />
     <section v-if="lore.length" class="trpg-entry__lore" data-testid="entry-lore">
       <h3 class="trpg-entry__lore-title">背景描述</h3>
       <template v-for="(src, i) in lore" :key="i">

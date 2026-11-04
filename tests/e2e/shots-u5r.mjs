@@ -122,7 +122,7 @@ async function main() {
       await page.addInitScript(() => localStorage.setItem('trpg-assistant:window', JSON.stringify({ x: 0, y: 0, w: window.innerWidth, h: window.innerHeight })))
       page.on('pageerror', (e) => console.error('pageerror', e.message))
       await setup(page, url)
-      const ids = await seed(page)
+      await seed(page)
       const state = async (name, prepare, top = 0, cleanup) => {
         if (only && !name.includes(only)) return
         await prepare()
@@ -154,7 +154,7 @@ async function main() {
       await state('13-添加效果', async () => { await openPerson(page, '盖尔'); await page.getByTestId('person-card-effect-add').click(); await wait(page, 600) }, null, async () => { await closeModal() })
       const closeTray = async () => { await page.getByRole('button', { name: '关闭掷骰' }).click(); await wait(page, 150) }
       await state('15-骰盘-检定', async () => { await openPerson(page, '盖尔'); await page.getByRole('button', { name: /敏捷检定/ }).click(); await page.getByTestId('roll-panel-check').waitFor(); await wait(page, 500) }, null)
-      await state('16-骰盘-检定-结果', async () => { await page.getByTestId('roll-random-dc').click(); await page.getByTestId('roll-go').click(); await wait(page, 700) }, null)
+      await state('16-骰盘-检定-结果', async () => { await page.getByTestId('roll-random-dc').click(); await page.getByTestId('roll-go').click(); await wait(page, 700); await page.locator('.trpg-rp__body').evaluate((b) => { b.scrollTop = b.scrollHeight }); await wait(page, 200); if (process.env.SHOT_DEBUG) console.log(JSON.stringify(await page.locator('.trpg-rp__body').evaluate((b) => { const root = b.getRootNode(); const f = root.querySelector('.trpg-rp__foot'); const chip = [...root.querySelectorAll('.trpg-rp__chip')].pop(); const r = (e) => e && (({ top, bottom }) => ({ top, bottom }))(e.getBoundingClientRect()); return { body: r(b), foot: r(f), chip: r(chip), sh: b.scrollHeight, ch: b.clientHeight, st: b.scrollTop, pb: getComputedStyle(b).paddingBottom } }))) }, null)
       await state('17-骰盘-豁免', async () => { await closeTray(); await page.getByRole('button', { name: /智力豁免/ }).click(); await page.getByTestId('roll-panel-save').waitFor(); await wait(page, 400) }, null)
       await state('18-骰盘-被动', async () => { await closeTray(); await page.getByTestId('person-card-passive-perception').click(); await page.getByTestId('roll-panel-check').waitFor(); await wait(page, 400) }, null)
       await state('19-骰盘-对抗', async () => { await page.getByTestId('roll-passive').uncheck(); await page.getByTestId('dc-contest').click(); await wait(page, 300) }, null)

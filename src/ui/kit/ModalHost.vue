@@ -129,7 +129,7 @@ function onKeydown(event: KeyboardEvent): void {
         aria-modal="true"
         :aria-labelledby="titleId"
         :data-sized="modal.variant !== 'confirm' && modal.top?.width ? 'true' : undefined"
-        :style="modal.variant !== 'confirm' && modal.top?.width ? { '--trpg-drawer-width': `${modal.top.width}px` } : undefined"
+        :style="modal.variant !== 'confirm' && modal.top?.width ? { '--trpg-drawer-width': `${modal.top.width}px`, ...(modal.top.height ? { '--trpg-dlg-h': `${modal.top.height}px` } : {}) } : undefined"
         tabindex="-1"
       >
         <header v-if="!modal.top?.bare" class="trpg-modal__head">
