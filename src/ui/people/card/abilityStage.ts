@@ -2,6 +2,13 @@ import { ABILITY_KEYS, type AbilityKey } from '../../../rules/dnd5e2014/data/enu
 import type { MonsterData } from '../../../rules/dnd5e2014/data/entries/spell-monster'
 import type { Rng } from '../../../rules/dice'
 
+/**
+ * 标准数组与购点总点数：界面自带的功能，不依赖任何数据包（驾驶员 2026-11-05 明确授权，属于"不手写数据"规则的唯一例外，仅这两项）。
+ * 购点的花费表仍然读库（table.phb-p13-r1，在 SRD 包里）。
+ */
+export const STANDARD_ARRAY: readonly number[] = [15, 14, 13, 12, 10, 8]
+export const POINT_BUY_BUDGET = 27
+
 /** 属性弹窗的「暂存」（U5R §10.4）：放入的点数、其他、覆盖、豁免勾选都先在这里，点「保存并写入属性点」才一次写入草稿。纯函数。 */
 type Rec = Partial<Record<AbilityKey, number>>
 export interface Stage { base: Rec; other: Rec; override: Rec; saves: Record<AbilityKey, boolean>; cleared: boolean }

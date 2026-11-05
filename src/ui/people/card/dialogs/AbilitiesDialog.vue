@@ -6,9 +6,10 @@ import { cryptoRng } from '../../../../rules/dice'
 import { useModalStore } from '../../../../stores/modal'
 import Icon from '../../../kit/Icon.vue'
 import Segmented from '../../../kit/Segmented.vue'
+import Stepper from '../../../kit/Stepper.vue'
 import HoverTip from '../../../kit/HoverTip.vue'
 import type { CardCtx } from '../cardCtx'
-import { applyStage, buySpent, buyStep, canBuyUp, clearManual, initStage, manualCounts, roll4d6, stageDirty, type Stage } from '../abilityStage'
+import { applyStage, buySpent, POINT_BUY_BUDGET, STANDARD_ARRAY, buyStep, canBuyUp, clearManual, initStage, manualCounts, roll4d6, stageDirty, type Stage } from '../abilityStage'
 import { signed } from '../format'
 import { expectedGrants } from '../expected'
 import { assignGrants, restorable } from '../../../../rules/dnd5e2014/derive'
@@ -19,11 +20,11 @@ const modal = useModalStore()
 const stage = ref<Stage>(initStage(props.ctx.person.block))
 const rolled = ref<Array<{ total: number; dice: number[]; dropped: number }>>([])
 const tables = computed(() => props.ctx.data.tables)
-/** 标准数组、购点成本与总点数都读库；库里没有对应规则就不提供这种生成方式。 */
-const standardArray = computed(() => tables.value.standardArray ?? [])
-const buyRules = computed(() => (Object.keys(tables.value.buyCost).length && tables.value.buyBudget ? { costs: tables.value.buyCost, budget: tables.value.buyBudget } : undefined))
+/** 标准数组与购点总点数是界面自带的（驾驶员授权），一直可用；购点的花费表读库（SRD 包里就有）。 */
+const standardArray = computed(() => [...STANDARD_ARRAY])
+const buyRules = computed(() => (Object.keys(tables.value.buyCost).length ? { costs: tables.value.buyCost, budget: POINT_BUY_BUDGET } : undefined))
 /** 默认方式：库里有标准数组就用它，否则用掷骰（掷骰不依赖库里的数）。 */
-const method = ref<'standard' | 'roll' | 'buy'>(standardArray.value.length ? 'standard' : 'roll')
+const method = ref<'standard' | 'roll' | 'buy'>('standard')
 const pool = ref<PoolState>({ pool: [...standardArray.value], placed: {} })
 const selected = ref<number | null>(null)
 const overrideView = ref(false)
@@ -35,9 +36,14 @@ const d = computed(() => props.ctx.derivedWith(staged.value))
 const dirty = computed(() => stageDirty(props.ctx.person.block, stage.value) || Object.keys(restored.value).length > 0)
 const counts = computed(() => manualCounts(stage.value))
 const used = computed(() => poolUsed(pool.value))
-const methods = computed(() => [...(standardArray.value.length ? [{ value: 'standard', label: '标准数组' }] : []), { value: 'roll', label: '4d6 去最低' }, ...(buyRules.value ? [{ value: 'buy', label: '购点' }] : [])])
+const methods = computed(() => [
+  { value: 'standard', label: '标准数组' },
+  { value: 'roll', label: '4d6 去最低' },
+  { value: 'buy', label: '购点', disabled: !buyRules.value, hint: '库里没有购点花费表' },
+])
 
 function setMethod(m: string | undefined): void {
+  if (methods.value.find((x) => x.value === m)?.disabled) return
   method.value = m === 'roll' ? 'roll' : m === 'buy' ? 'buy' : 'standard'
   selected.value = null
   pool.value = { pool: method.value === 'roll' ? rolled.value.map((r) => r.total) : [...standardArray.value], placed: {} }
@@ -93,6 +99,7 @@ function restoreSave(m: (typeof missing.value)[number]): void { restored.value =
     <section class="trpg-ab__gen">
       <h3>生成基础值</h3>
       <Segmented :model-value="method" :options="methods" label="生成方式" @update:model-value="setMethod" />
+      <p v-if="!buyRules" class="trpg-ab__hint" data-testid="ab-missing-note">购点：库里没有购点花费表，暂时不能用。</p>
       <template v-if="method !== 'buy'">
         <button v-if="method === 'roll'" class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ab-roll" @click="rollAll"><Icon name="dice-five" :size="16" />一键掷 6 组点数</button>
         <p class="trpg-ab__hint">点池里的数字，再点下面的属性行放入；放入后再点一次退回</p>
@@ -100,7 +107,10 @@ function restoreSave(m: (typeof missing.value)[number]): void { restored.value =
         <button v-if="method === 'roll' && rolled.length" class="trpg-linkbtn trpg-ab__detail" type="button" @click="showDetail = !showDetail"><Icon :name="showDetail ? 'caret-down' : 'caret-right'" :size="16" />点数明细</button>
         <p v-if="showDetail" class="trpg-ab__hint">{{ rolled.map((r) => `${r.total}（${r.dice.filter((x, i) => !(x === r.dropped && r.dice.indexOf(x) === i)).join('+')}，弃 ${r.dropped}）`).join(' | ') }}</p>
       </template>
-      <template v-else><p class="trpg-ab__hint">剩余 {{ (buyRules?.budget ?? 0) - buySp }} 点 已花 {{ buySp }} / {{ buyRules?.budget ?? 0 }}</p><p class="trpg-ab__hint">成本 {{ Object.entries(buyRules?.costs ?? {}).map(([s, c]) => `${s}=${c}`).join(' ') }}</p></template>
+      <template v-else>
+        <div class="trpg-ab__buy" data-testid="ab-buy-sum"><span>剩余 <b>{{ (buyRules?.budget ?? 0) - buySp }}</b> 点</span><span class="trpg-ab__hint">已花 {{ buySp }} / {{ buyRules?.budget ?? 0 }}</span></div>
+        <dl class="trpg-ab__costs" aria-label="购点成本"><div v-for="[sc, c] in Object.entries(buyRules?.costs ?? {})" :key="sc"><dt>{{ sc }}</dt><dd>{{ c }} 点</dd></div></dl>
+      </template>
     </section>
     <section class="trpg-ab__table-wrap">
       <h3>计算表</h3>
@@ -108,7 +118,7 @@ function restoreSave(m: (typeof missing.value)[number]): void { restored.value =
         <div class="trpg-ab__row trpg-ab__row--head" role="row"><span>属性</span><span>基础</span><span>种族/背景</span><span>成长/专长</span><span>装备</span><span>其他（手动）</span><span>最终</span><span>调整值</span><span>豁免</span></div>
         <div v-for="k in ABILITY_KEYS" :key="k" class="trpg-ab__row" :class="{ 'is-placed': isPlaced(k) }" role="row" :data-testid="`ab-row-${k}`" @click="clickRow(k)">
           <span class="trpg-ab__name" data-label="">{{ ABILITY_LABELS[k] }}</span>
-          <span data-label="基础"><template v-if="method === 'buy'"><button class="trpg-icon-btn trpg-ab__step" type="button" :disabled="ro" :aria-label="`${ABILITY_LABELS[k]}基础 减一`" @click.stop="step(k, -1)"><Icon name="minus" :size="16" /></button><b>{{ stage.base[k] ?? 8 }}</b><button class="trpg-icon-btn trpg-ab__step" type="button" :disabled="ro || !buyRules || !canBuyUp(stage.base, k, buyRules)" :aria-label="`${ABILITY_LABELS[k]}基础 加一`" @click.stop="step(k, 1)"><Icon name="plus" :size="16" /></button></template><input v-else class="trpg-input trpg-input--sm trpg-adj__num" type="number" :value="stage.base[k] ?? ''" :disabled="ro" :aria-label="`${ABILITY_LABELS[k]}基础值`" @click.stop @change="typeBase(k, $event)" /></span>
+          <span data-label="基础"><Stepper v-if="method === 'buy'" :value="stage.base[k] ?? 8" :minus-label="`${ABILITY_LABELS[k]}基础 减一`" :plus-label="`${ABILITY_LABELS[k]}基础 加一`" :minus-disabled="ro" :plus-disabled="ro || !buyRules || !canBuyUp(stage.base, k, buyRules)" @minus="step(k, -1)" @plus="step(k, 1)" /><input v-else class="trpg-input trpg-input--sm trpg-adj__num" type="number" :value="stage.base[k] ?? ''" :disabled="ro" :aria-label="`${ABILITY_LABELS[k]}基础值`" @click.stop @change="typeBase(k, $event)" /></span>
           <HoverTip :lines="cellLines(k, 'racial')"><span class="trpg-ab__ro" data-label="种族/背景">{{ signed(d.abilities[k].racial) }}</span></HoverTip>
           <span class="trpg-ab__ro" data-label="成长/专长">{{ signed(d.abilities[k].growth) }}</span>
           <span class="trpg-ab__ro" data-label="装备/魔法物品">{{ signed(d.abilities[k].equipment) }}</span>

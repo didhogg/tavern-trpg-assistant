@@ -102,7 +102,7 @@ function durationText(entry?: Entry): string {
 const BUY_COST_TABLE = 'table.phb-p13-r1'
 
 /** 从已启用的包读出规则数值表：按列键认表（cr+xp / level+proficiencyBonus / cr+proficiencyBonus）。 */
-async function loadRuleTables(db: ReturnType<ReturnType<typeof useAppStore>['svc']>['db'], ruleId: string, enabled: Set<string>, rules: Entry[], classes: Map<string, ClassData>): Promise<RuleTables> {
+async function loadRuleTables(db: ReturnType<ReturnType<typeof useAppStore>['svc']>['db'], ruleId: string, enabled: Set<string>, classes: Map<string, ClassData>): Promise<RuleTables> {
   const out = emptyTables()
   const rows = (await db.entries.where('[ruleId+type]').equals([ruleId, 'table']).toArray()) as StoredEntry[]
   for (const row of rows) {
@@ -112,11 +112,6 @@ async function loadRuleTables(db: ReturnType<ReturnType<typeof useAppStore>['svc
     else if (hasColumns(data, 'cr', 'xp') && !Object.keys(out.xpByCr).length) out.xpByCr = parseXpTable(data)
     else if (hasColumns(data, 'cr', 'proficiencyBonus') && !Object.keys(out.profByCr).length) out.profByCr = parseProfByCr(data)
     else if (hasColumns(data, 'level', 'proficiencyBonus') && !out.profByLevel.length) out.profByLevel = parseProfByLevel(data)
-  }
-  for (const rule of rules) {
-    const d = rule.data as { standardArray?: number[]; pointBuyBudget?: number }
-    if (!out.standardArray && d.standardArray) out.standardArray = d.standardArray
-    if (out.buyBudget === undefined && d.pointBuyBudget) out.buyBudget = d.pointBuyBudget
   }
   out.fullCasterSlots = fullCasterSlotsOf(classes.values())
   return out
@@ -153,7 +148,7 @@ export async function loadCardData(_person: Person, enabledPackIds: string[], ru
   const tableId = tableRefOf(exhaustionEntry?.entry.data.text)
   const tableRow = exhaustionEntry && tableId ? await db.entries.get([exhaustionEntry.packId, tableId]) : undefined
   const exhaustionText = exhaustionRows((tableRow?.data as { rows?: unknown } | undefined)?.rows)
-  const tables = await loadRuleTables(db, ruleId, enabled, all.filter((row) => row.entry.type === 'rule').map((row) => row.entry), classes)
+  const tables = await loadRuleTables(db, ruleId, enabled, classes)
   const typeCache = new Map<string, Promise<CardEntry[]>>()
   const entriesOfType = (type: string): Promise<CardEntry[]> => {
     if (!typeCache.has(type)) typeCache.set(type, db.entries.where('[ruleId+type]').equals([ruleId, type]).toArray().then((list) => (list as StoredEntry[]).filter((row) => !enabled.size || enabled.has(row.packId)).map((row) => entryView(row, packs))))

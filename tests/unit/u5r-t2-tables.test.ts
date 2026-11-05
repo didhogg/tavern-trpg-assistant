@@ -25,11 +25,12 @@ describe('U5R2 T2 数值表读库', () => {
     expect(xpOf(1, undefined, { '1': 200 })).toBe(200)
     expect(xpOf(1)).toBeUndefined()
   })
-  it('防回退：源码里不再有手写的经验表、标准数组、购点表、法术位表', () => {
+  it('防回退：源码里不再有手写的经验表、购点花费表、法术位表（标准数组与购点总点数是授权例外）', () => {
     const files: string[] = []
     const walk = (d: string): void => { for (const n of readdirSync(d)) { const p = join(d, n); if (statSync(p).isDirectory()) walk(p); else if (/\.(ts|vue)$/.test(n)) files.push(p) } }
     walk(join(process.cwd(), 'src'))
-    const bad = /\b(XP_BY_CR|STANDARD_ARRAY|BUY_COST|BUY_BUDGET|FULL_CASTER|crProficiency|proficiencyAt)\b/
+    // 标准数组、购点总点数（STANDARD_ARRAY / POINT_BUY_BUDGET）是驾驶员 2026-11-05 授权的界面自带功能，不在扫描范围
+    const bad = /\b(XP_BY_CR|BUY_COST|BUY_BUDGET|FULL_CASTER|crProficiency|proficiencyAt)\b/
     expect(files.filter((f) => bad.test(readFileSync(f, 'utf8')))).toEqual([])
   })
 })

@@ -93,7 +93,13 @@
 .trpg-ab__ro { color: var(--ink-2); font-size: 14px; text-align: center; }
 .trpg-ab__final { font: 700 18px var(--font-serif); }
 .trpg-ab__final small { color: var(--ink-2); font: 400 12px var(--font-sans); }
-.trpg-ab__step { min-width: 36px; min-height: 36px; border: 1px solid var(--line); }
+.trpg-ab__buy { display: flex; align-items: baseline; gap: 14px; }
+.trpg-ab__buy > span:first-child { font-size: 15px; }
+.trpg-ab__buy b { font: 700 24px/1 var(--font-serif); color: var(--primary); }
+.trpg-ab__costs { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 4px 10px; margin: 0; max-width: 520px; }
+.trpg-ab__costs > div { display: flex; justify-content: space-between; padding: 3px 10px; border-radius: 8px; background: var(--panel); font-size: 13px; }
+.trpg-ab__costs dt { font-weight: 600; }
+.trpg-ab__costs dd { margin: 0; color: var(--ink-2); }
 .trpg-ab__check { width: 22px; height: 22px; accent-color: var(--primary); }
 @container (max-width: 720px) {
   .trpg-ab__row--head { display: none; }

@@ -14,10 +14,6 @@ export interface RuleTables {
   profByCr: Record<string, number>
   /** 属性值 → 购点花费。 */
   buyCost: Record<number, number>
-  /** 购点总点数（读自规则条目正文，overlay 核对写入）。 */
-  buyBudget?: number
-  /** 标准数组（同上）。 */
-  standardArray?: number[]
   /** 全施法者 1–20 级的 1–9 环法术位（取任一全施法职业的法术位表）。 */
   fullCasterSlots?: number[][]
 }

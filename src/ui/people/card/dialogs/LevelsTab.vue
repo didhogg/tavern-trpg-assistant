@@ -6,6 +6,7 @@ import { cryptoRng } from '../../../../rules/dice'
 import { useModalStore } from '../../../../stores/modal'
 import Icon from '../../../kit/Icon.vue'
 import SelectField from '../../../kit/SelectField.vue'
+import Stepper from '../../../kit/Stepper.vue'
 import type { CardCtx } from '../cardCtx'
 import { namesOf } from '../cardData'
 import { applyLevels } from '../flowOps'
@@ -59,7 +60,7 @@ function apply(): void {
     <template v-else>
       <header class="trpg-lv__head">
         <h3>{{ ctx.data.nameOf(row.class) }} {{ from }} 级 → {{ target }} 级</h3>
-        <div class="trpg-lv__step"><button class="trpg-icon-btn trpg-ab__step" type="button" :disabled="ro || target <= 1" aria-label="目标等级减一" data-testid="levels-minus" @click="step(-1)"><Icon name="minus" :size="16" /></button><b data-testid="levels-target">{{ target }}</b><button class="trpg-icon-btn trpg-ab__step" type="button" :disabled="ro || target >= 20" aria-label="目标等级加一" data-testid="levels-plus" @click="step(1)"><Icon name="plus" :size="16" /></button></div>
+        <Stepper class="trpg-lv__step" :value="target" minus-label="目标等级减一" plus-label="目标等级加一" :minus-disabled="ro || target <= 1" :plus-disabled="ro || target >= 20" minus-testid="levels-minus" plus-testid="levels-plus" value-testid="levels-target" @minus="step(-1)" @plus="step(1)" />
       </header>
       <p v-if="diff && diff.direction === 'same'" class="trpg-card-empty">用 [−] [+] 选目标等级。</p>
       <template v-else-if="diff && diff.direction === 'up'">

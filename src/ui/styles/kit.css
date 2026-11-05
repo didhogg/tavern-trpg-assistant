@@ -393,3 +393,11 @@ button.trpg-rulelink.trpg-item__hint:hover { color: var(--primary); background: 
 .trpg-item__num { font-variant-numeric: tabular-nums; }
 .trpg-item__note { font-size: 12px; }
 .trpg-item__edit { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+
+/* 数字加减：圆形小按钮 + 居中大数字（按钮 28px，点击区靠外围留白保证可点） */
+.trpg-stepper { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.trpg-stepper__btn { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink); cursor: pointer; }
+.trpg-stepper__btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.trpg-stepper__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.trpg-stepper__val { min-width: 2ch; text-align: center; font: 700 20px/1 var(--font-serif); font-variant-numeric: tabular-nums; }
+.trpg-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
