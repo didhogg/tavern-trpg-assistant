@@ -122,3 +122,142 @@
 - 背景个性表、起始装备、种族列表去重这几项，要等对应小 UNIT 开工前打开真实界面逐个点过才知道。
 - D-14 的 20 项登记疑点，有的可能是我解析登记路径的写法造成的假阳性。
 - D-8、D-9、D-12 的形状与可行性都没细查。
+
+
+---
+
+# 第三部分：参考数据库数据形状详细对照（驾驶员 2026-11-05 要求"详细参考参考数据库的数据形状"）
+
+> 这一部分把仓库外参考资料里每个有结构化人物数据的库，逐个摸了一遍形状，再回头对我们的包。参考资料目录只读，没写、没移动。
+> 结果：补了 6 条新缺陷（D-16 到 D-21），并更正前面两处说法（见 §3.5）。
+
+## 3.1 参考库一览：谁有什么
+
+| 参考库 | 内容 | 对 UNIT3 的价值 |
+|---|---|---|
+| `5etools-cn-main/data`（中文版，转换器输入） | 职业、子职业、种族、背景、专长、可选特性、条件、语言的完整数据（不限 SRD） | **主数据源**；字段是"最细"的形状 |
+| `5etools-src-main`（英文原版 5etools 网站源码） | 同上（英文）；`data/class` 等；无单独的 schema 文件 | 对照英文名；形状同上 |
+| `dnd5e-6.1.x`（Foundry dnd5e 系统 6.1，源码＋开放数据） | `module/data/advancement/*.mjs` 是升级项的**权威数据模型**；`packs/_source` 是 SRD 数据（yml） | **形状最完整**（升级项、选择、替换、选定内容存放）；数据只有 SRD |
+| `5e-database-main`（SRD API 数据，`src/2014/schemas/*.ts` 是严格 schema） | 职业、等级、特性、种族、特质、子职业、背景、专长、熟练项 | 形状参考（成长数值、特性内选择）；数据只有 SRD |
+| `5e-srd-api-main`、`5e-database-main 2` | 同一项目的 API 与另一份拷贝 | 无新增形状 |
+| `dnd5-srd-master` | 早期 SRD JSON（`classes.json`、`levels.json`、`features.json`…） | 与 5e-database 同源，无新增 |
+| `dnd-data-main/data` | 背景、职业、物品、怪物、种族、法术：只有 `name/description/properties/publisher/book`，正文型 | **没用**：基本是文字，没有结构化的升级或选择 |
+| `open5e-staging`、`Open-VTT-main`、`atlas-vtt-main`、`Beyond20-master`、`DND_Calculator-main`、`DND5e_chm-main`、`wiki-dnd-parser-master`、`huijiwiki-tools-main`、`5eDataParser-master`、`foundryvtt-master`、`5etools-img-main` | 应用代码、解析器、地图、图片、发行说明 | 不是人物数据源；没有可对照的结构化数据 |
+
+## 3.2 Foundry dnd5e 的升级数据模型（权威形状）
+
+```
+ 升级项（advancement）按类型，每条自带 level（HitPoints、Trait、ItemGrant、ItemChoice、ScaleValue、
+ AbilityScoreImprovement、Subclass、Size、ModifyItem）：
+
+ ItemChoice.configuration          choices:{ "<级>":{count:本级新增数, replacement:本级可替换} }
+                                   pool:[{uuid}]            候选清单（或用 restriction 按类型筛）
+                                   restriction:{type,subtype,level,list[],school[]}
+                                   type:"feat"｜"spell"｜…    spell:{ability[],method,prepared,uses{max,per}}
+ ItemChoice.value（选定内容）       added:{级:{id:uuid}}  replaced:{级:{level,original,replacement}}
+ AbilityScoreImprovement.config    points（本级点数）· cap（单项上限，默认 2）· fixed{} · locked[]
+                                   max · recommendation
+ AbilityScoreImprovement.value     type:"asi"｜"feat"  assignments:{属性:增量}  feat:{级:专长}
+ Trait.config                      grants[] · choices:[{count,pool[]}] · mode · allowReplacements
+ Trait.value                       chosen[]
+ Subclass.value                    document · uuid（选定的子职业）
+ 职业条目 class：hd{denomination,spent,additional} · levels · primaryAbility{value[],all}
+                 · spellcasting(progression,ability,preparation) ；子职业：classIdentifier · spellcasting
+ 专长 feat：prerequisites{items[],level,repeatable} · requirements(文字) · type{value,subtype}
+ 种族 race：movement · senses · type（生物类型）；背景：advancement＋startingEquipment
+```
+
+**对我们的启发（数据与人物存放两方面）**
+1. **"选定内容"挂在升级项自己的 value 里**：每级"选了哪个选项、替换了哪个"、属性提升是"加属性"还是"选专长"、选了哪个子职业，都有固定位置。我们的人物只存了熟练项、`abilityGrowth`、`asiLog`（只有两个属性），**没有选专长、选选项、替换**的位置（D-20）。
+2. **每级数量是"新增"**（Foundry）而我们是"累计"（沿用 5etools）；两种都行，向导算差值即可，不必改数据。
+3. **"可替换"是数据里的一个布尔**（`replacement`），我们没有；"升级时替换已知法术或祈唤"规则靠它。
+4. **属性提升有 `cap`（单项上限 2）、可锁定属性、可推荐专长**；我们 `abilityScoreImprovement` 有 `points/fixed/max`，缺 `locked`、`recommendation`（不重要）。
+
+## 3.3 5e-database 的形状（SRD）
+
+```
+ 等级 Level.class_specific（每级成长数值，按职业）：
+   野蛮人 rage_count · rage_damage_bonus · brutal_critical_dice
+   吟游诗人 bardic_inspiration_die · song_of_rest_die · magical_secrets_max_5/7/9
+   牧师 channel_divinity_charges · destroy_undead_cr
+   德鲁伊 wild_shape_max_cr · wild_shape_fly · wild_shape_swim
+   战士 action_surges · extra_attacks · indomitable_uses
+   武僧 ki_points · martial_arts{dice} · unarmored_movement
+   圣武士 aura_range（子职业 aura_range）      游侠 favored_enemies · favored_terrain
+   游荡者 sneak_attack{dice}                   术士 sorcery_points · metamagic_known · creating_spell_slots[]
+   魔契师 invocations_known · mystic_arcanum_level_6..9     法师 arcane_recovery_levels
+ 等级 Level 其余：ability_score_bonuses(本级是否有属性提升) · prof_bonus · features[] · spellcasting{cantrips_known,spells_known,spell_slots_level_1..9}
+ 特性 Feature.feature_specific：invocations[] · expertise_options{choose,from} · subfeature_options{choose,from}
+                                · terrain_type_options · enemy_type_options        ← 特性内部的选择
+ 特性 prerequisites：[{type:"level"｜"feature"｜"spell",level,feature,spell}]
+ 种族 ability_bonuses[] · ability_bonus_options{choose,from} · starting_proficiencies · starting_proficiency_options
+      · language_options · size/size_description · traits[] · subraces[]
+ 特质 Trait.trait_specific：breath_weapon{area_of_effect,usage,dc,damage[{damage_type,damage_at_character_level{级:骰}}]}
+                            · damage_type · spell_options{choose} · subtrait_options{choose}
+ 子职业 spells[{prerequisites[{type,level/feature}],spell}]（带等级门槛的扩展法术）
+ 背景 starting_proficiencies · language_options · starting_equipment[_options] · feature{name,desc}
+      · personality_traits/ideals/bonds/flaws（ChoiceSchema：从表里选）
+ 专长 prerequisites[{ability_score,minimum_score}]
+ 职业 multi_classing{prerequisites[{ability_score,minimum_score}],prerequisite_options,proficiencies,proficiency_choices}
+```
+
+## 3.4 5etools（我们的源）里我们要注意的形状
+
+```
+ 种族 ability:[{str:2}｜{choose:{from[],count}}]（可多组方案）  speed:数字｜{walk,fly,swim,climb:true}
+      languageProficiencies:[{common:true,choose:{from[],count}｜anyStandard:N}]
+      skillProficiencies:[{choose:{from[],count}}] · toolProficiencies:[{any:N｜anyMusicalInstrument:N}]
+      weaponProficiencies:[{choose:{fromFilter,count}}｜{武器:true}] · feats:[{any:1}｜{anyFromCategory}]
+      resist:["fire"｜{choose:{from[]}}] · creatureTypes · darkvision
+      additionalSpells:[{ability:"cha"｜{choose:[int,wis,cha]}, known:{"1":[法术#c | {_:[{choose:"level=0|class=法师"}]}]},
+                          innate:{"3":{daily:{"1":[法术]}}}, expanded:{…}}]
+ 职业 classFeatures:["名|职业||等级",{classFeature:…,gainSubclassFeature:true}] · optionalfeatureProgression
+      · classTableGroups（逐级表） · multiclassing{requirements,proficienciesGained} · startingProficiencies
+ 子职业 subclassFeatures[] · optionalfeatureProgression · additionalSpells · subclassTableGroups
+```
+
+## 3.5 对照后更正前面的两处说法
+
+1. 我之前说"宿敌、天生探索者、玄奥秘法这类特性内选择没有结构化来源"——**不对**：5e-database 的 `enemy_type_options`、`terrain_type_options`、`expertise_options` 有（SRD 范围）；Foundry 有玄奥秘法的"选法术"类 ItemChoice。5etools（我们的源）确实没有，所以对我们的包而言"来源（5etools）里没有，但参考库里有，可以评估补"。
+2. 我之前说"种族天生法术已结构化、只缺 1 个（魔幻科波尔特）"——**不完整**：见 D-16、D-6 扩充。
+
+## 3.6 对照出的新增数据缺陷
+
+| 编号 | 缺陷 | 影响 | 对应数据线 | 把握 |
+|---|---|---|---|---|
+| D-6（扩充） | 种族天生法术里"选一个法术"（`{choose:"level=0|class=法师"}`）整条丢失：**高等精灵**（`subrace.elf-high.phb`，包里只有一条文字特性，没有 `spellGrant`）、**半精灵变体（月/日精灵血统）**（SCAG）、**魔幻科波尔特**（MPMM，选术士戏法）。核心书内共 3 个 | 3 | DF-2 | 高（源里是明确的筛选字符串；形状可参考 Foundry 的 `ItemChoice type:spell`） |
+| D-16 | 种族天生法术的"施法属性由玩家自选（智力／感知／魅力）"丢失：源是 `ability:{choose:[int,wis,cha]}`，包里 `spellGrant.ability` 为空。包里至少 17 个种族/亚种（MPMM 的 Aarakocra、Aasimar 及其变体、Deep Gnome、Duergar、Fairy、Firbolg、Githyanki、Githzerai、Triton、Yuan-ti、Genasi…），源数据里共 25 个含此写法（其中部分在非核心书） | 17 | DF-2 | 高（目标：加一个"可选属性列表"字段，如 `abilityChoose:["int","wis","cha"]`，向导选种族时让玩家选） |
+| D-17 | 龙裔吐息：伤害随等级（2d6/3d6/4d6/5d6）、类型/范围/豁免随龙种，现在只有一条文字 `note`；5e-database 有结构化 `breath_weapon{area_of_effect,dc,damage_at_character_level}` | 龙裔种族（PHB）1 个＋各色亚种 10 个 | DF-4 | 评估（可用已有的 `scaleValue` 表达等级骰，类型与范围放亚种） |
+| D-18 | **职业逐级成长数值缺失**：5e-database 的 `class_specific` 里这些包里没有结构化——额外攻击次数（战士 2/3/4、野蛮人、武僧、圣武士、游侠 2 次；现在 `额外攻击` 特性只有文字）、野蛮暴击骰（9／13／17 级）、摧毁亡灵 CR（牧师）、荒野变身最大 CR 与飞行/游泳（德鲁伊）、宿敌数与天生探索者数（游侠）、奥术回复等级（法师）、魔法奥秘上限（吟游诗人）、术士"创造法术位"成本。我们的职业 `scaleValue` 全库只有 19 条（狂暴次数/伤害、吟游诗人激励、休憩之歌、引导神力、动作如潮、不屈、回气、武艺、气点、无甲移动、偷袭、术法点、已知祈唤） | 12 个职业，约 15 个成长列 | DF-4 | 高（5etools 职业逐级表 `classTableGroups` 有数值列的，转换器 `CLASS_SCALE_COLUMNS` 只配了一部分；其余在正文里，需评估） |
+| D-19 | 特性内部的选择：宿敌类型（`enemy_type_options`）、天生探索者地形（`terrain_type_options`）、专精可选技能（`expertise_options`）、种族特质内的子选项（龙族先祖 `subtrait_options`）。5etools 没有结构化，5e-database 有 | 游侠、吟游诗人、游荡者、龙裔等 | DF-3 | 待评估（来源在参考库，只覆盖 SRD） |
+| D-20 | 人物里没有"选定内容"的存放位置：选的专长、选的选项（战斗风格、祈唤、战技…）、每级的替换、选的子职业以外的选择、选的法术。Foundry 的做法是挂在升级项的 `value` 上（`added`、`replaced`、`assignments`、`feat`、`chosen`） | 全部升级选择 | 界面线 S5 的前置设计（不是包数据） | 高（已核实代码：只有熟练项、`abilityGrowth`、`asiLog`） |
+| D-21 | `choose` 的候选池丢失：`race.hobgoblin.vgm`（源是按筛选条件选 2 个武器：`type=军用武器|miscellaneous=平凡的`）和 `race.githyanki.mpmm`（工具选择，源 `{any:…}`）的 `choose.from` 为空；另有 23 个背景的 `languages.choose` 没有 `from`（语义是"任选标准语言"，不算缺陷，但没显式标 any） | 2＋23 | DF-2 | 中 |
+
+## 3.7 一页对照：参考库形状 vs 我们的包
+
+```
+                         Foundry                5e-database            5etools(源)            我们的包
+ 升级选择槽              ItemChoice choices     feature_specific       optionalfeatureProgr.  itemChoice(累计count)
+                         {级:{count新增}}        .subfeature_options                           子职业层缺 6 个 (D-1)
+ 选择→容器特性           advancement 的 title    选择挂在容器特性上      名字相同               explain 缺 (D-2)
+ 选定内容存放            advancement.value      —                       —                      人物没有 (D-20)
+ 本级可替换              replacement:bool       —                       —                      无（规则动作）
+ 属性提升                points/cap/fixed       ability_score_bonuses   classFeature 名         abilityScoreImprovement ✔
+ 子职业                  Subclass               subclasses/levels      gainSubclassFeature     subclass + explain ✔
+ 职业逐级成长数值        ScaleValue             class_specific(~35 项)  classTableGroups       scaleValue 仅 19 条 (D-18)
+ 种族属性加成            ASI fixed+points       ability_bonuses+options ability[…choose]       abilityBonus+flexibleAbility ✔
+ 种族天生法术            ItemGrant 法术          —                       additionalSpells       spellGrant ✔ 但丢选法术、丢自选属性 (D-6、D-16)
+ 龙裔吐息                Activity                trait_specific.         文字                   note 文字 (D-17)
+                                                 breath_weapon
+ 特性内选择(宿敌等)      —                       enemy_type_options 等   文字                   文字 (D-19)
+ 专长前置                prerequisites          prerequisites           prerequisite           requires{all/any} ✔(最细)
+ 兼职                    —                       multi_classing          multiclassing          multiclass ✔（界面没用 U-3）
+ 背景个性表              —                       personality_traits…     正文表                  characteristics ✔
+ 选法术类选择            ItemChoice type:spell   —                       —                      无 (D-9)
+```
+
+## 3.8 本部分的诚实声明
+- `5etools-src-main` 没有单独的 JSON schema 文件，所以"5etools 形状"是我读数据（`races.json` 等）归纳的，不是官方 schema。
+- Foundry 和 5e-database 的结论只对 SRD 内容成立。
+- D-18 里"约 15 个成长列"是对照 5e-database 的 `class_specific` 键数得出，5etools 逐级表里有没有对应列、能否机器读，尚未逐个核对（DF-4 评估时核）。
+- D-6、D-16 的计数，核心书内是我逐个比对 5etools 与包得出（高等精灵、半精灵变体、魔幻科波尔特共 3 条；17 条自选属性）；亚种的名字对不上的部分没有逐个核对，可能有遗漏。
