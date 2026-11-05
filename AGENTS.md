@@ -15,7 +15,7 @@ SillyTavern / TauriTavern 前端扩展（Vue 3 + TypeScript）：手动管理 TR
 - 只做 `NEXT.md` 指定范围；范围外写进 `NEXT.md` 的"等驾驶员定"。
 - 状态只经 store；规则是纯函数；数据只在内容包；结构变更必带迁移。
 - 不写空 catch；单文件 ≤400 行；控件按 `docs/开发规范.md` §5.3；测试不写死条目数量（§12.6）。
-- 只在 `tavern-trpg-assistant` 与 `tavern-trpg-data` 两个仓库的 `main` 上工作；不开分支、不开 `git worktree`。
+- 只在 `tavern-trpg-assistant`、`tavern-trpg-data` 两个仓库的 `main` 上工作，外加 `/Users/xxx/tavern-trpg-data-next`（D2 新库输出，本机文件夹，不建仓库）；不开分支、不开 `git worktree`。
 - 一个任务一个本地提交；做坏了用 `git revert` 回退（§9）。
 - 参考资料只在仓库外 `/Users/xxx/DND- reference（DO NO DELETE！）`，只读；任何命令不得写入、移动或删除它；仓库里不放 `reference/`。
 - 推送、打标签、发布、安装、删除用户数据须单独授权。
