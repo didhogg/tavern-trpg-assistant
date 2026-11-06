@@ -1,0 +1,65 @@
+{
+  "codeSets": {
+    "cn": {
+      "repo": "tjliqy/5etools-cn",
+      "commit": "774a320e4a92d71d100673bc0df965661d9e8c1b",
+      "version": "2.39.0-cn.3",
+      "lang": "zh"
+    },
+    "en": {
+      "repo": "5etools-mirror-3/5etools-src",
+      "commit": "8790755429c346d20020eed7826d312d484c393f",
+      "version": "2.39.0",
+      "lang": "en"
+    }
+  },
+  "sources": [
+    {
+      "id": "cn-official",
+      "kind": "official",
+      "lang": "zh",
+      "codeSet": "cn",
+      "pair": "en-official",
+      "fileList": "https://api.github.com/repos/{repo}/git/trees/{commit}?recursive=1",
+      "mirrors": [
+        "https://cdn.jsdelivr.net/gh/{repo}@{commit}/",
+        "https://raw.githubusercontent.com/{repo}/{commit}/",
+        "https://5e.kiwee.top/"
+      ]
+    },
+    {
+      "id": "en-official",
+      "kind": "official",
+      "lang": "en",
+      "codeSet": "en",
+      "pair": "cn-official",
+      "fileList": "https://api.github.com/repos/{repo}/git/trees/{commit}?recursive=1",
+      "mirrors": [
+        "https://cdn.jsdelivr.net/gh/{repo}@{commit}/",
+        "https://raw.githubusercontent.com/{repo}/{commit}/"
+      ]
+    },
+    {
+      "id": "cn-brew",
+      "kind": "brew",
+      "lang": "zh",
+      "codeSet": "cn",
+      "repo": "tjliqy/homebrew-deploy",
+      "mirrors": [
+        "https://homebrew.kiwee.top/",
+        "https://cdn.jsdelivr.net/gh/tjliqy/homebrew-deploy@master/"
+      ]
+    },
+    {
+      "id": "en-brew",
+      "kind": "brew",
+      "lang": "en",
+      "codeSet": "en",
+      "repo": "TheGiddyLimit/homebrew",
+      "mirrors": [
+        "https://raw.githubusercontent.com/TheGiddyLimit/homebrew/master/",
+        "https://cdn.jsdelivr.net/gh/TheGiddyLimit/homebrew@master/"
+      ]
+    }
+  ]
+}

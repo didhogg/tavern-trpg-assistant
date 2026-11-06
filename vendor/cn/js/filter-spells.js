@@ -1,0 +1,796 @@
+"use strict";
+
+class VariantClassFilter extends Filter {
+	constructor (opts) {
+		super({
+			header: "Optional/Variant Class",
+			cnHeader: "可选／变体职业",
+			nests: {},
+			groupFn: it => it.group,
+			...opts,
+		});
+
+		this._parent = null;
+	}
+
+	set parent (multiFilterClasses) { this._parent = multiFilterClasses; }
+
+	handleVariantSplit (isVariantSplit) {
+		this.__wrpFilter.vee.toggle(isVariantSplit);
+	}
+}
+
+class MultiFilterClasses extends MultiFilter {
+	constructor (opts) {
+		super({header: "Classes", cnHeader: "职业", mode: "or", filters: [opts.classFilter, opts.subclassFilter, opts.variantClassFilter], ...opts});
+
+		this._classFilter = opts.classFilter;
+		this._subclassFilter = opts.subclassFilter;
+		this._variantClassFilter = opts.variantClassFilter;
+
+		this._variantClassFilter.parent = this;
+	}
+
+	get classFilter_ () { return this._classFilter; }
+	get isVariantSplit () { return this._meta.isVariantSplit; }
+
+	render (opts) {
+		const out = super.render(opts);
+
+		const hkVariantSplit = () => this._variantClassFilter.handleVariantSplit(this._meta.isVariantSplit);
+		this._addHook("meta", "isVariantSplit", hkVariantSplit);
+		hkVariantSplit();
+
+		return out;
+	}
+
+	_getHeaderControls_addExtraStateBtns (opts, wrpStateBtnsOuter) {
+		const btnToggleVariantSplit = ComponentUiUtil.getBtnBool(
+			this,
+			"isVariantSplit",
+			{
+				ele: veE({tag: "button", clazz: "ve-btn ve-btn-default ve-btn-xs", txt: I18nUtil.get("common.filter.include_variants")}),
+				isInverted: true,
+				stateName: "meta",
+				stateProp: "_meta",
+				title: `是否将“可选／变体职业”法术列表纳入“职业”筛选。`,
+			},
+		);
+
+		veE({
+			tag: "div",
+			clazz: `ve-btn-group ve-w-100 ve-flex-v-center ve-mobile-sm__m-1 ve-mobile-sm__mb-2`,
+			children: [
+				btnToggleVariantSplit,
+			],
+		}).vee.prependTo(wrpStateBtnsOuter);
+	}
+
+	getDefaultMeta () {
+		// Key order is important, as @filter tags depend on it
+		return {
+			...MultiFilterClasses._DEFAULT_META,
+		};
+	}
+}
+MultiFilterClasses._DEFAULT_META = {
+	isVariantSplit: false,
+};
+
+class PageFilterSpells extends PageFilterBase {
+	// toss these into the "Tags" section to save screen space
+	static _META_ADD_CONC = "专注";
+	static _META_ADD_V = "声音";
+	static _META_ADD_S = "姿势";
+	static _META_ADD_M = "材料";
+	static _META_ADD_R = "版税";
+	static _META_ADD_M_COST = "价值材料";
+	static _META_ADD_M_CONSUMED = "消耗材料";
+	static _META_ADD_M_CONSUMED_OPTIONAL = "可选消耗材料";
+
+	static F_RNG_POINT = "点";
+	static F_RNG_SELF_AREA = "自身 (区域)";
+	static F_RNG_SELF = "自身";
+	static F_RNG_TOUCH = "触碰";
+	static F_RNG_SPECIAL = "特殊";
+
+	static _META_FILTER_BASE_ITEMS = [
+		this._META_ADD_CONC,
+		this._META_ADD_V,
+		this._META_ADD_S,
+		this._META_ADD_M,
+		this._META_ADD_R,
+		this._META_ADD_M_COST,
+		this._META_ADD_M_CONSUMED,
+		this._META_ADD_M_CONSUMED_OPTIONAL,
+		...Object.keys(Parser.SP_MISC_TAG_TO_FULL),
+	];
+
+	static INCHES_PER_FOOT = 12;
+	static FEET_PER_YARD = 3;
+	static FEET_PER_MILE = 5280;
+	static _DUR_INSTANT = "instant";
+	static _DUR_1_ROUND = "1_round";
+	static _DUR_1_MINUTE = "1_minute";
+	static _DUR_10_MINUTES = "10_minutes";
+	static _DUR_1_HOUR = "1_hour";
+	static _DUR_8_HOURS = "8_hours";
+	static _DUR_24_HOURS = "24_hours";
+	static _DUR_PERMANENT = "permanent";
+	static _DUR_SPECIAL = "special";
+
+	// region static
+	static sortSpells (a, b, o) {
+		switch (o.sortBy) {
+			case "time": return SortUtil.ascSort(a.values.normalisedTime, b.values.normalisedTime) || SortUtil.compareListNames(a, b);
+			case "range": return SortUtil.ascSort(a.values.normalisedRange, b.values.normalisedRange) || SortUtil.compareListNames(a, b);
+		}
+		return SortUtil.listSort(a, b, o);
+	}
+
+	static sortMetaFilter (a, b) {
+		const ixA = PageFilterSpells._META_FILTER_BASE_ITEMS.indexOf(a.item);
+		const ixB = PageFilterSpells._META_FILTER_BASE_ITEMS.indexOf(b.item);
+
+		if (~ixA && ~ixB) return ixA - ixB;
+		if (~ixA) return -1;
+		if (~ixB) return 1;
+		return SortUtil.ascSortLower(a, b);
+	}
+
+	static getFilterAbilitySave (ability) { return `${Parser.attFullToCn(ability)}豁免`; }
+	static getFilterAbilityCheck (ability) { return `${ability}检定`; }
+
+	static _mutMetaFilterObj (s) {
+		this._mutateForFilters_commonMisc(s);
+
+		const out = s._fMisc;
+		if (s.meta) {
+			Object.entries(s.meta)
+				.filter(([_, v]) => v)
+				.sort(SortUtil.ascSort)
+				.forEach(([k]) => out.push(k.toTitleCase()));
+		}
+		if (s.duration.filter(d => d.concentration).length) {
+			out.push(PageFilterSpells._META_ADD_CONC);
+			s._isConc = true;
+		} else s._isConc = false;
+		if (s.components && s.components.v) out.push(PageFilterSpells._META_ADD_V);
+		if (s.components && s.components.s) out.push(PageFilterSpells._META_ADD_S);
+		if (s.components && s.components.m) out.push(PageFilterSpells._META_ADD_M);
+		if (s.components && s.components.r) out.push(PageFilterSpells._META_ADD_R);
+		if (s.components && s.components.m && s.components.m.cost) out.push(PageFilterSpells._META_ADD_M_COST);
+		if (s.components && s.components.m && s.components.m.consume) {
+			if (s.components.m.consume === "optional") out.push(PageFilterSpells._META_ADD_M_CONSUMED_OPTIONAL);
+			else out.push(PageFilterSpells._META_ADD_M_CONSUMED);
+		}
+		if (s.miscTags) out.push(...s.miscTags);
+		if ((!s.miscTags || (s.miscTags && !s.miscTags.includes("PRM"))) && s.duration.filter(it => it.type === "permanent").length) out.push("PRM");
+		if ((!s.miscTags || (s.miscTags && !s.miscTags.includes("SCL"))) && s.entriesHigherLevel) out.push("SCL");
+		return out;
+	}
+
+	static getFilterDuration (spell) {
+		const fDur = spell.duration[0] || {type: "special"};
+		switch (fDur.type) {
+			case "instant": return this._DUR_INSTANT;
+			case "timed": {
+				if (!fDur.duration) return this._DUR_SPECIAL;
+				switch (fDur.duration.type) {
+					case "turn":
+					case "round": return this._DUR_1_ROUND;
+
+					case "minute": {
+						const amt = fDur.duration.amount || 0;
+						if (amt <= 1) return this._DUR_1_MINUTE;
+						if (amt <= 10) return this._DUR_10_MINUTES;
+						if (amt <= 60) return this._DUR_1_HOUR;
+						if (amt <= 8 * 60) return this._DUR_8_HOURS;
+						return this._DUR_24_HOURS;
+					}
+
+					case "hour": {
+						const amt = fDur.duration.amount || 0;
+						if (amt <= 1) return this._DUR_1_HOUR;
+						if (amt <= 8) return this._DUR_8_HOURS;
+						return this._DUR_24_HOURS;
+					}
+
+					case "day":
+					case "week":
+					case "month":
+					case "year": return this._DUR_24_HOURS;
+					default: return this._DUR_SPECIAL;
+				}
+			}
+			case "permanent": return this._DUR_PERMANENT;
+			case "special":
+			default: return this._DUR_SPECIAL;
+		}
+	}
+
+	static getFilterDurationDisplay (dur) {
+		switch (dur) {
+			case this._DUR_INSTANT: return I18nUtil.get("page.spells.instant");
+			case this._DUR_1_ROUND: return `1 ${I18nUtil.get("common.round")}`;
+			case this._DUR_1_MINUTE: return `1 ${I18nUtil.get("common.minute")}`;
+			case this._DUR_10_MINUTES: return `10 ${I18nUtil.get("common.minutes")}`;
+			case this._DUR_1_HOUR: return `1 ${I18nUtil.get("common.hour")}`;
+			case this._DUR_8_HOURS: return `8 ${I18nUtil.get("common.hours")}`;
+			case this._DUR_24_HOURS: return `24+ ${I18nUtil.get("common.hours")}`;
+			case this._DUR_PERMANENT: return I18nUtil.get("page.spells.permanent");
+			case this._DUR_SPECIAL:
+			default: return I18nUtil.get("page.spells.special");
+		}
+	}
+
+	static getNormalisedTime (time) {
+		const firstTime = time[0];
+		const enUnit = Parser.spTimeUnitToEn(firstTime.unit);
+		let multiplier = 1;
+		let offset = 0;
+		switch (enUnit) {
+			case Parser.SP_TM_B_ACTION: offset = 1; break;
+			case Parser.SP_TM_REACTION: offset = 2; break;
+			case Parser.SP_TM_ROUND: multiplier = 6; break;
+			case Parser.SP_TM_MINS: multiplier = 60; break;
+			case Parser.SP_TM_HRS: multiplier = 3600; break;
+			case Parser.SP_TM_SPECIAL: multiplier = 1_000_000; break; // Arbitrary large number
+		}
+		if (time.length > 1) offset += 0.5;
+		return (multiplier * firstTime.number) + offset;
+	}
+
+	static getNormalisedRange (range) {
+		const state = {
+			multiplier: 1,
+			distance: 0,
+			offset: 0,
+		};
+
+		switch (range.type) {
+			case Parser.RNG_SPECIAL: return 1000000000;
+			case Parser.RNG_POINT: this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_LINE: state.offset = 1; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_CONE: state.offset = 2; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_EMANATION: state.offset = 3; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_RADIUS: state.offset = 4; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_HEMISPHERE: state.offset = 5; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_SPHERE: state.offset = 6; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_CYLINDER: state.offset = 7; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+			case Parser.RNG_CUBE: state.offset = 8; this._getNormalisedRange_getAdjustedForDistance({range, state}); break;
+		}
+
+		// value in inches, to allow greater granularity
+		return (state.multiplier * state.distance) + state.offset;
+	}
+
+	static _getNormalisedRange_getAdjustedForDistance ({range, state}) {
+		const dist = range.distance;
+		switch (dist.type) {
+			case Parser.UNT_FEET: state.multiplier = PageFilterSpells.INCHES_PER_FOOT; state.distance = dist.amount; break;
+			case Parser.UNT_YARDS: state.multiplier = PageFilterSpells.INCHES_PER_FOOT * PageFilterSpells.FEET_PER_YARD; state.distance = dist.amount; break;
+			case Parser.UNT_MILES: state.multiplier = PageFilterSpells.INCHES_PER_FOOT * PageFilterSpells.FEET_PER_MILE; state.distance = dist.amount; break;
+			case Parser.RNG_SELF: state.distance = 0; break;
+			case Parser.RNG_TOUCH: state.distance = 1; break;
+			case Parser.RNG_SIGHT: state.multiplier = PageFilterSpells.INCHES_PER_FOOT * PageFilterSpells.FEET_PER_MILE; state.distance = 12; break; // assume sight range of person ~100 ft. above the ground
+			case Parser.RNG_UNLIMITED_SAME_PLANE: state.distance = 900000000; break; // from BolS (homebrew)
+			case Parser.RNG_UNLIMITED: state.distance = 900000001; break;
+			default: {
+				// it's prerelease/homebrew?
+				this._getNormalisedRange_getAdjustedForDistance_prereleaseBrew({range, state, brewUtil: PrereleaseUtil})
+					|| this._getNormalisedRange_getAdjustedForDistance_prereleaseBrew({range, state, brewUtil: BrewUtil2});
+			}
+		}
+	}
+
+	static _getNormalisedRange_getAdjustedForDistance_prereleaseBrew ({range, state, brewUtil}) {
+		const dist = range.distance;
+		const fromBrew = brewUtil.getMetaLookup("spellDistanceUnits")?.[dist.type];
+		if (!fromBrew) return false;
+
+		const ftPerUnit = fromBrew.feetPerUnit;
+		if (ftPerUnit != null) {
+			state.multiplier = PageFilterSpells.INCHES_PER_FOOT * ftPerUnit;
+			state.distance = dist.amount;
+		} else {
+			state.distance = 910000000; // default to max distance, to have them displayed at the bottom
+		}
+
+		return true;
+	}
+
+	static getRangeType (range) {
+		switch (range.type) {
+			case Parser.RNG_SPECIAL: return PageFilterSpells.F_RNG_SPECIAL;
+			case Parser.RNG_POINT:
+				switch (range.distance.type) {
+					case Parser.RNG_SELF: return PageFilterSpells.F_RNG_SELF;
+					case Parser.RNG_TOUCH: return PageFilterSpells.F_RNG_TOUCH;
+					default: return PageFilterSpells.F_RNG_POINT;
+				}
+			case Parser.RNG_LINE:
+			case Parser.RNG_CONE:
+			case Parser.RNG_EMANATION:
+			case Parser.RNG_RADIUS:
+			case Parser.RNG_HEMISPHERE:
+			case Parser.RNG_SPHERE:
+			case Parser.RNG_CYLINDER:
+			case Parser.RNG_CUBE:
+				return PageFilterSpells.F_RNG_SELF_AREA;
+		}
+	}
+
+	static getTblTimeStr (time) {
+		return (time.number === 1 && Parser.SP_TIME_SINGLETONS.includes(time.unit))
+			? `${Parser.spTimeUnitToFull(time.unit)}`
+			: `${time.number ? `${time.number} ` : ""}${Parser.spTimeUnitToShort(time.unit).uppercaseFirst()}`;
+	}
+
+	static getTblLevelStr (spell) { return `${Parser.spLevelToFull(spell.level)}${spell.meta && spell.meta.ritual ? " (仪式)" : ""}${spell.meta && spell.meta.technomagic ? " (tec.)" : ""}`; }
+
+	static getRaceFilterItem (r) {
+		const addSuffix = (
+			r.source === Parser.SRC_DMG
+			|| SourceUtil.isNonstandardSource(r.source || Parser.SRC_PHB)
+			|| (typeof PrereleaseUtil !== "undefined" && PrereleaseUtil.hasSourceJson(r.source || Parser.SRC_PHB))
+			|| (typeof BrewUtil2 !== "undefined" && BrewUtil2.hasSourceJson(r.source || Parser.SRC_PHB))
+		) && !r.name.includes(Parser.sourceJsonToAbv(r.source));
+		const name = `${r.name}${addSuffix ? ` (${Parser.sourceJsonToAbv(r.source)})` : ""}`;
+		const opts = {
+			item: name,
+			group: SourceUtil.getFilterGroup(r.source || Parser.SRC_PHB),
+		};
+		if (r.baseName) opts.nest = r.baseName;
+		else opts.nest = "(无亚种)";
+		return new FilterItem(opts).getSerialized();
+	}
+	// endregion
+
+	constructor (opts) {
+		super(opts);
+
+		this._classFilter = new Filter({
+			header: "Class",
+			cnHeader: "职业",
+			groupFn: it => it.group,
+		});
+		this._subclassFilter = new Filter({
+			header: "Subclass",
+			cnHeader: "子职",
+			nests: {},
+			groupFn: it => it.group,
+		});
+		this._levelFilter = new Filter({
+			header: "Level",
+			cnHeader: "环阶",
+			items: [
+				0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+			],
+			displayFn: (lvl) => Parser.spLevelToFullLevelText(lvl, {isPluralCantrips: false, is2letters: true}),
+		});
+		this._variantClassFilter = new VariantClassFilter();
+		this._classAndSubclassFilter = new MultiFilterClasses({
+			classFilter: this._classFilter,
+			subclassFilter: this._subclassFilter,
+			variantClassFilter: this._variantClassFilter,
+		});
+		this._raceFilter = new Filter({
+			cnHeader: "种族",
+			header: "Species",
+			nests: {},
+			groupFn: it => it.group,
+		});
+		this._backgroundFilter = new SearchableFilter({header: "Background", cnHeader: "背景"});
+		this._featFilter = new SearchableFilter({header: "Feat", cnHeader: "专长"});
+		this._optionalfeaturesFilter = new SearchableFilter({header: "Other Option/Feature", cnHeader: "其他选项/特性"});
+		this._miscFilter = new Filter({
+			header: "Components & Miscellaneous",
+			cnHeader: "构材＆杂项",
+			items: [...PageFilterSpells._META_FILTER_BASE_ITEMS, "Ritual", "传奇", "重印", "有图片", "有Token"],
+			itemSortFn: PageFilterSpells.sortMetaFilter,
+			isMiscFilter: true,
+			displayFn: it => it === "Ritual" ? "仪式" : Parser.spMiscTagToFull(it),
+			deselFn: PageFilterBase.defaultMiscellaneousDeselFn.bind(PageFilterBase),
+		});
+		this._groupFilter = new Filter({header: "Group", cnHeader: "分组"});
+		this._schoolFilter = new Filter({
+			header: "School",
+			cnHeader: "学派",
+			items: [...Parser.SKL_ABVS],
+			displayFn: Parser.spSchoolAbvToFull,
+			itemSortFn: (a, b) => SortUtil.ascSortLower(Parser.spSchoolAbvToFull(a.item), Parser.spSchoolAbvToFull(b.item)),
+		});
+		this._subSchoolFilter = new Filter({
+			cnHeader: "子学派",
+			header: "Subschool",
+			items: [],
+			displayFn: it => Parser.spSchoolAbvToFull(it).toTitleCase(),
+			itemSortFn: (a, b) => SortUtil.ascSortLower(Parser.spSchoolAbvToFull(a.item), Parser.spSchoolAbvToFull(b.item)),
+		});
+		this._damageFilter = new Filter({
+			cnHeader: "伤害类型",
+			header: "Damage Type",
+			items: MiscUtil.copy(Parser.DMG_TYPES.map(t => Parser.dmgTypeToEn(t))),
+			displayFn: Parser.dmgTypeToCn,
+		});
+		this._conditionFilter = new Filter({
+			cnHeader: "造成状态",
+			header: "Conditions Inflicted",
+			items: Parser.CONDITIONS.map(it => Parser.conditionToEn(it)),
+			displayFn: uid => Parser._parse_bToA(Parser.CONTITION_TO_EN, uid.split("|")[0]),
+		});
+		this._spellAttackFilter = new Filter({
+			cnHeader: "法术攻击",
+			header: "Spell Attack",
+			items: ["M", "R", "O"],
+			displayFn: Parser.spAttackTypeToFull,
+			itemSortFn: null,
+		});
+		this._saveFilter = new Filter({
+			cnHeader: "豁免",
+			header: "Saving Throw",
+			items: ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"],
+			displayFn: PageFilterSpells.getFilterAbilitySave,
+			itemSortFn: null,
+		});
+		this._checkFilter = new Filter({
+			cnHeader: "属性检定",
+			header: "Ability Check",
+			items: ["力量", "敏捷", "体质", "智力", "感知", "魅力"],
+			displayFn: PageFilterSpells.getFilterAbilityCheck,
+			itemSortFn: null,
+		});
+		this._timeFilter = new Filter({
+			cnHeader: "施法时间",
+			header: "Cast Time",
+			items: [
+				Parser.SP_TM_ACTION,
+				Parser.SP_TM_B_ACTION,
+				Parser.SP_TM_REACTION,
+				Parser.SP_TM_ROUND,
+				Parser.SP_TM_MINS,
+				Parser.SP_TM_HRS,
+				Parser.SP_TM_SPECIAL,
+			],
+			displayFn: Parser.spTimeUnitToFull,
+			itemSortFn: null,
+		});
+		this._durationFilter = new RangeFilter({
+			cnHeader: "持续时间",
+			header: "Duration",
+			isLabelled: true,
+			labelSortFn: null,
+			labels: [
+				PageFilterSpells._DUR_INSTANT,
+				PageFilterSpells._DUR_1_ROUND,
+				PageFilterSpells._DUR_1_MINUTE,
+				PageFilterSpells._DUR_10_MINUTES,
+				PageFilterSpells._DUR_1_HOUR,
+				PageFilterSpells._DUR_8_HOURS,
+				PageFilterSpells._DUR_24_HOURS,
+				PageFilterSpells._DUR_PERMANENT,
+				PageFilterSpells._DUR_SPECIAL,
+			],
+			labelDisplayFn: PageFilterSpells.getFilterDurationDisplay.bind(PageFilterSpells),
+		});
+		this._rangeFilter = new Filter({
+			cnHeader: "范围",
+			header: "Range",
+			items: [
+				PageFilterSpells.F_RNG_SELF,
+				PageFilterSpells.F_RNG_TOUCH,
+				PageFilterSpells.F_RNG_POINT,
+				PageFilterSpells.F_RNG_SELF_AREA,
+				PageFilterSpells.F_RNG_SPECIAL,
+			],
+			itemSortFn: null,
+		});
+		this._areaTypeFilter = new Filter({
+			cnHeader: "区域类型",
+			header: "Area Style",
+			items: ["ST", "MT", "R", "N", "C", "Y", "H", "E", "L", "S", "Q", "W"],
+			displayFn: Parser.spAreaTypeToFull,
+			itemSortFn: null,
+		});
+		this._affectsCreatureTypeFilter = new Filter({
+			cnHeader: "受术种族",
+			header: "Affects Creature Types",
+			items: Parser.MON_TYPES.map(mon => Parser.MON_TYPE_TO_PLURAL[mon] || mon),
+			displayFn: StrUtil.toTitleCase.bind(StrUtil),
+		});
+	}
+
+	static mutateForFilters (s) {
+		Renderer.spell.initBrewSources(s);
+
+		// used for sorting
+		s._normalisedTime = PageFilterSpells.getNormalisedTime(s.time);
+		s._normalisedRange = PageFilterSpells.getNormalisedRange(s.range);
+
+		// used for filtering
+		this._mutateForFilters_commonSources(s);
+		s._fConditionInflict = s.conditionInflict?.map(uid => {
+			const [condition, ...rest] = uid.split("|");
+			return [Parser.conditionToEn(condition), ...rest].join("|");
+		});
+		PageFilterSpells._mutMetaFilterObj(s);
+		s._fClasses = Renderer.spell.getCombinedClasses(s, "fromClassList").map(c => {
+			return this._getClassFilterItem({
+				className: c.name,
+				definedInSource: c.definedInSource,
+				classSource: c.source,
+				isVariantClass: false,
+			});
+		});
+		s._fSubclasses = Renderer.spell.getCombinedClasses(s, "fromSubclass")
+			.map(c => {
+				return this._getSubclassFilterItem({
+					className: c.class.name,
+					classSource: c.class.source,
+					subclassName: c.subclass.name,
+					subclassShortName: c.subclass.shortName,
+					subclassSource: c.subclass.source,
+					subSubclassName: c.subclass.subSubclass,
+				});
+			});
+		s._fVariantClasses = Renderer.spell.getCombinedClasses(s, "fromClassListVariant").map(c => {
+			return this._getClassFilterItem({
+				className: c.name,
+				definedInSource: c.definedInSource,
+				classSource: c.source,
+				isVariantClass: true,
+			});
+		});
+		s._fClassesAndVariantClasses = [
+			...s._fClasses,
+			...s._fVariantClasses
+				.map(it => (it.definedInSource && !SourceUtil.isNonstandardSource(it.definedInSource)) ? new FilterItem({item: it.equivalentClassName}).getSerialized() : null)
+				.filter(Boolean)
+				.filter(it => !s._fClasses.some(itCls => itCls.item === it.item)),
+		];
+		s._fRaces = Renderer.spell.getCombinedGeneric(s, {propSpell: "races", prop: "race"}).map(PageFilterSpells.getRaceFilterItem);
+		s._fBackgrounds = Renderer.spell.getCombinedGeneric(s, {propSpell: "backgrounds", prop: "background"}).map(it => it.name);
+		s._fFeats = Renderer.spell.getCombinedGeneric(s, {propSpell: "feats", prop: "feat"}).map(it => it.name);
+		s._fOptionalfeatures = Renderer.spell.getCombinedGeneric(s, {propSpell: "optionalfeatures", prop: "optionalfeature"}).map(it => it.name);
+		s._fGroups = Renderer.spell.getCombinedGeneric(s, {propSpell: "groups"}).map(it => it.name);
+		s._fTimeType = s.time.map(t => t.unit);
+		s._fDurationType = PageFilterSpells.getFilterDuration(s);
+		s._fRangeType = PageFilterSpells.getRangeType(s.range);
+
+		s._fAreaTags = [...(s.areaTags || [])];
+		if (s.range.type === "line" && !s._fAreaTags.includes("L")) s._fAreaTags.push("L");
+		if (s.range.type === "emanation" && !s._fAreaTags.includes("E")) s._fAreaTags.push("E");
+
+		s._fAffectsCreatureType = s.affectsCreatureType || [...Parser.MON_TYPES];
+	}
+
+	static unmutateForFilters (s) {
+		Renderer.spell.uninitBrewSources(s);
+
+		delete s._normalisedTime;
+		delete s._normalisedRange;
+
+		Object.keys(s)
+			.filter(it => it.startsWith("_f"))
+			.forEach(it => delete s[it]);
+	}
+
+	addToFilters (s, isExcluded) {
+		if (isExcluded) return;
+
+		if (s.level > 9) this._levelFilter.addItem(s.level);
+		this._groupFilter.addItem(s._fGroups);
+		this._schoolFilter.addItem(s.school);
+		this._sourceFilter.addItem(s._fSources);
+		this._miscFilter.addItem(s._fMisc);
+		this._backgroundFilter.addItem(s._fBackgrounds);
+		this._featFilter.addItem(s._fFeats);
+		this._optionalfeaturesFilter.addItem(s._fOptionalfeatures);
+		s._fClasses.forEach(c => this._classFilter.addItem(c));
+		s._fSubclasses.forEach(sc => {
+			this._subclassFilter.addNest(sc.nest, {isHidden: true});
+			this._subclassFilter.addItem(sc);
+		});
+		s._fRaces.forEach(r => {
+			if (r.nest) this._raceFilter.addNest(r.nest, {isHidden: true});
+			this._raceFilter.addItem(r);
+		});
+		s._fVariantClasses.forEach(c => {
+			this._variantClassFilter.addNest(c.nest, {isHidden: true});
+			this._variantClassFilter.addItem(c);
+		});
+		this._subSchoolFilter.addItem(s.subschools);
+		this._conditionFilter.addItem(s._fConditionInflict);
+		this._affectsCreatureTypeFilter.addItem(s.affectsCreatureType);
+	}
+
+	async _pPopulateBoxOptions (opts) {
+		await SourceUtil.pInitSubclassReprintLookup();
+
+		opts.filters = [
+			this._sourceFilter,
+			this._levelFilter,
+			this._classAndSubclassFilter,
+			this._raceFilter,
+			this._backgroundFilter,
+			this._featFilter,
+			this._optionalfeaturesFilter,
+			this._miscFilter,
+			this._groupFilter,
+			this._schoolFilter,
+			this._subSchoolFilter,
+			this._damageFilter,
+			this._conditionFilter,
+			this._spellAttackFilter,
+			this._saveFilter,
+			this._checkFilter,
+			this._timeFilter,
+			this._durationFilter,
+			this._rangeFilter,
+			this._areaTypeFilter,
+			this._affectsCreatureTypeFilter,
+		];
+	}
+
+	toDisplay (values, s) {
+		return this._filterBox.toDisplay(
+			values,
+			s._fSources,
+			s.level,
+			[
+				this._classAndSubclassFilter.isVariantSplit ? s._fClasses : s._fClassesAndVariantClasses,
+				s._fSubclasses,
+				this._classAndSubclassFilter.isVariantSplit ? s._fVariantClasses : null,
+			],
+			s._fRaces,
+			s._fBackgrounds,
+			s._fFeats,
+			s._fOptionalfeatures,
+			s._fMisc,
+			s._fGroups,
+			s.school,
+			s.subschools,
+			s.damageInflict,
+			s._fConditionInflict,
+			s.spellAttack,
+			s.savingThrow,
+			s.abilityCheck,
+			s._fTimeType,
+			s._fDurationType,
+			s._fRangeType,
+			s._fAreaTags,
+			s._fAffectsCreatureType,
+		);
+	}
+}
+
+globalThis.PageFilterSpells = PageFilterSpells;
+
+class ModalFilterSpells extends ModalFilterBase {
+	/**
+	 * @param opts
+	 * @param opts.namespace
+	 * @param [opts.isRadio]
+	 * @param [opts.allData]
+	 */
+	constructor (opts) {
+		opts = opts || {};
+		super({
+			...opts,
+			modalTitle: `法术`,
+			pageFilter: new PageFilterSpells(),
+			fnSort: PageFilterSpells.sortSpells,
+			previewButtonHandler: new ListUiPreviewButtonHandlerStatsFluff({page: UrlUtil.PG_SPELLS}),
+		});
+	}
+
+	_getColumnHeaders () {
+		const btnMeta = [
+			{sort: "name", text: "名称", width: "3"},
+			{sort: "level", text: "环阶", width: "1-5"},
+			{sort: "time", text: "时间", width: "2"},
+			{sort: "school", text: "学派", width: "1"},
+			{sort: "concentration", text: "C.", title: "专注", width: "0-5"},
+			{sort: "range", text: "范围", width: "2"},
+			{sort: "source", text: "来源", width: "1"},
+		];
+		return ModalFilterBase._getFilterColumnHeaders(btnMeta);
+	}
+
+	async _pInit () {
+		if (typeof PrereleaseUtil !== "undefined") Renderer.spell.populatePrereleaseLookup(await PrereleaseUtil.pGetBrewProcessed());
+		if (typeof BrewUtil2 !== "undefined") Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed());
+	}
+
+	async _pLoadAllData () {
+		return [
+			...(await DataLoader.pCacheAndGetAllSite(UrlUtil.PG_SPELLS)),
+			...((await PrereleaseUtil.pGetBrewProcessed()).spell || []),
+			...((await BrewUtil2.pGetBrewProcessed()).spell || []),
+		];
+	}
+
+	_getListItem (pageFilter, spell, spI) {
+		const eleRow = document.createElement("div");
+		eleRow.className = "ve-px-0 ve-w-100 ve-flex-col ve-no-shrink";
+
+		const hash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](spell);
+		const ENG_hash = UrlUtil.URL_TO_ENG_HASH_BUILDER[UrlUtil.PG_SPELLS](spell);
+		const source = Parser.sourceJsonToAbv(spell.source);
+		const levelText = PageFilterSpells.getTblLevelStr(spell);
+		const time = PageFilterSpells.getTblTimeStr(spell.time[0]);
+		const school = Parser.spSchoolAndSubschoolsAbvsShort(spell.school, spell.subschools);
+		const schoolClassName = Parser.spSchoolAbvToStyleClass(spell.school);
+		const concentration = spell._isConc ? "×" : "";
+		const range = Parser.spRangeToFull(spell.range, {isDisplaySelfArea: true});
+
+		eleRow.innerHTML = `<div class="ve-w-100 ve-flex-vh-center ve-lst__row-border veapp__list-row ve-no-select ve-lst__wrp-cells">
+			<div class="ve-col-0-5 ve-pl-0 ve-flex-vh-center">${this._isRadio ? `<input type="radio" name="radio" class="ve-no-events">` : `<input type="checkbox" class="ve-no-events">`}</div>
+
+			<div class="ve-col-0-5 ve-px-1 ve-flex-vh-center">
+				<div class="ve-ui-list__btn-inline ve-px-2 ve-no-select" title="切换预览（按 Shift 切换信息预览）">[+]</div>
+			</div>
+
+			<div class="ve-col-3 ve-px-1 ${spell._versionBase_isVersion ? "ve-italic" : ""} ${this._getNameStyle()}">${spell._versionBase_isVersion ? `<span class="ve-px-3"></span>` : ""}${spell.name}</div>
+			<div class="ve-col-1-5 ve-px-1 ve-text-center">${levelText}</div>
+			<div class="ve-col-2 ve-px-1 ve-text-center">${time}</div>
+			<div class="ve-col-1 ve-px-1 ${schoolClassName} ve-text-center" title="${Parser.spSchoolAndSubschoolsAbvsToFull(spell.school, spell.subschools)}" ${Parser.spSchoolAbvToStyle(spell.school)}>${school}</div>
+			<div class="ve-col-0-5 ve-px-1 ve-text-center" title="专注">${concentration}</div>
+			<div class="ve-col-2 ve-px-1 ve-text-right">${range}</div>
+			<div class="ve-col-1 ve-pl-1 ve-pr-0 ve-flex-h-center ${Parser.sourceJsonToSourceClassname(spell.source)}" title="${Parser.sourceJsonToFull(spell.source)}">${source}${Parser.sourceJsonToMarkerHtml(spell.source, {isList: true})}</div>
+		</div>`;
+
+		const btnShowHidePreview = eleRow.firstElementChild.children[1].firstElementChild;
+
+		const listItem = new ListItem({
+			id: spI,
+			ele: eleRow,
+			name: spell.name,
+			values: {
+				source,
+				sourceJson: spell.source,
+				...ListItem.getCommonValues(spell),
+				level: spell.level,
+				time,
+				school: Parser.spSchoolAbvToFull(spell.school),
+				classes: Parser.spClassesToFull(spell, {isTextOnly: true}),
+				concentration,
+				normalisedTime: spell._normalisedTime,
+				normalisedRange: spell._normalisedRange,
+				ENG_name: spell.ENG_name,
+				ENG_hash,
+			},
+			data: {
+				hash,
+				page: spell.page,
+				cbSel: eleRow.firstElementChild.firstElementChild.firstElementChild,
+				btnShowHidePreview,
+			},
+		});
+
+		this._previewButtonHandler.bindPreviewButton({entity: spell, listItem, btnShowHidePreview});
+
+		return listItem;
+	}
+}
+
+globalThis.ModalFilterSpells = ModalFilterSpells;
+
+class ListSyntaxSpells extends ListUiUtil.ListSyntax {
+	static _INDEXABLE_PROPS_ENTRIES = [
+		"entries",
+		"entriesHigherLevel",
+	];
+
+	_getSearchCacheStats (entity) {
+		const ptrOut = {_: super._getSearchCacheStats(entity)};
+		if (typeof entity.components?.m === "string") ptrOut._ += `${entity.components.m} -- `;
+		if (typeof entity.components?.m?.text === "string") ptrOut._ += `${entity.components.m.text} -- `;
+		return ptrOut._;
+	}
+}
+
+globalThis.ListSyntaxSpells = ListSyntaxSpells;
+
+globalThis.PageFilterSpells = PageFilterSpells;

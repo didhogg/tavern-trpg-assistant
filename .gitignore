@@ -4,3 +4,4 @@ node_modules/
 *.log
 .oil-ui/
 tools/data/out/
+work/
