@@ -237,7 +237,12 @@ export function applyMods(base: Raw, mod: Raw, sink?: UnsupportedMod[]): Raw {
 /** 处理 5etools 的 _copy / _mod 继承；srd/basicRules 不继承基础记录。 */
 export function resolveCopies(list: Raw[], sink?: UnsupportedMod[]): Raw[] {
   const byKey = new Map<string, Raw>()
-  for (const item of list) byKey.set(`${String(item.source)}|${String(item.name)}`, item)
+  for (const item of list) {
+    const key = `${String(item.source)}|${String(item.name)}`
+    const prev = byKey.get(key)
+    // 同名同来源可能同时有“基础记录”和“_copy 记录”；解析时优先拿不带 _copy 的基础记录。
+    if (!prev || (prev._copy && !item._copy)) byKey.set(key, item)
+  }
   return list.map((item) => {
     const copy = item._copy
     if (!isObj(copy)) return item
