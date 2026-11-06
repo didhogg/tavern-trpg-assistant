@@ -1,13 +1,13 @@
 // src/library/runtime/frame/early.ts
 (() => {
-	let e = "trpg-library", t = globalThis, n = [];
-	t.__trpgFrameErrors = n, addEventListener("error", (e) => {
-		n.push(`${e.message} @ ${e.filename}:${e.lineno}`);
+	let e = "trpg-library", t = new URLSearchParams(location.search).get("frame") ?? "", n = globalThis, r = [];
+	n.__trpgFrameErrors = r, addEventListener("error", (e) => {
+		r.push(`${e.message} @ ${e.filename}:${e.lineno}`);
 	}), addEventListener("unhandledrejection", (e) => {
 		let t = e.reason;
-		n.push(`unhandledrejection: ${t?.stack ?? String(e.reason)}`);
+		r.push(`unhandledrejection: ${t?.stack ?? String(e.reason)}`);
 	});
-	function r() {
+	function i() {
 		let e = /* @__PURE__ */ new Map();
 		return {
 			get length() {
@@ -25,34 +25,35 @@
 		};
 	}
 	for (let e of ["localStorage", "sessionStorage"]) {
-		let t = r();
+		let t = i();
 		Object.defineProperty(window, e, {
 			configurable: !0,
 			get: () => t
 		});
 	}
-	let i = 1, a = /* @__PURE__ */ new Map();
+	let a = 1, o = /* @__PURE__ */ new Map();
 	addEventListener("message", (t) => {
 		let n = t.data;
 		if (t.source !== parent || !n || n.channel !== e || n.type !== "response") return;
-		let r = a.get(n.id);
-		r && (a.delete(n.id), n.ok ? r.resolve(n.value) : r.reject(Error(n.error)));
+		let r = o.get(n.id);
+		r && (o.delete(n.id), n.ok ? r.resolve(n.value) : r.reject(Error(n.error)));
 	});
-	function o(t) {
-		return new Promise((n, r) => {
-			let o = i++;
-			a.set(o, {
-				resolve: n,
-				reject: r
+	function s(n) {
+		return new Promise((r, i) => {
+			let s = a++;
+			o.set(s, {
+				resolve: r,
+				reject: i
 			}), parent.postMessage({
 				channel: e,
 				type: "request",
-				id: o,
-				...t
+				frame: t,
+				id: s,
+				...n
 			}, location.origin);
 		});
 	}
-	function s(e, t) {
+	function c(e, t) {
 		let n;
 		Object.defineProperty(globalThis, e, {
 			configurable: !0,
@@ -63,53 +64,53 @@
 			}
 		});
 	}
-	let c = new URL(".", location.href);
-	function l(e) {
-		let t = new URL(e, c);
-		return t.origin !== c.origin || !t.pathname.startsWith(c.pathname) ? null : decodeURIComponent(t.pathname.slice(c.pathname.length));
+	let l = new URL(".", location.href);
+	function u(e) {
+		let t = new URL(e, l);
+		return t.origin !== l.origin || !t.pathname.startsWith(l.pathname) ? null : decodeURIComponent(t.pathname.slice(l.pathname.length));
 	}
-	let u = /* @__PURE__ */ new Map();
-	function d(e) {
-		let t = u.get(e);
-		return t || (t = o({
+	let d = /* @__PURE__ */ new Map();
+	function f(e) {
+		let t = d.get(e);
+		return t || (t = s({
 			op: "file",
 			path: e
 		}).then((t) => {
 			if (typeof t != "string") throw Error(`文件不存在：${e}`);
 			return t;
-		}), t.catch(() => u.delete(e)), u.set(e, t)), t;
+		}), t.catch(() => d.delete(e)), d.set(e, t)), t;
 	}
-	s("DataUtil", (e) => {
+	c("DataUtil", (e) => {
 		let t = e.loadJSON.bind(e), n = e.loadRawJSON.bind(e), r = /* @__PURE__ */ new Map();
 		e.loadJSON = (n, ...i) => {
-			let a = l(n);
+			let a = u(n);
 			if (a === null) return t(n, ...i);
 			let o = r.get(n);
 			return o || (o = (async () => {
-				let t = JSON.parse(await d(a));
+				let t = JSON.parse(await f(a));
 				return await e.pDoMetaMerge(n, t, { isSkipMetaMergeCache: !0 }), t;
 			})(), o.catch(() => r.delete(n)), r.set(n, o)), o;
 		}, e.loadRawJSON = async (e, ...t) => {
-			let r = l(e);
-			return r === null ? n(e, ...t) : JSON.parse(await d(r));
+			let r = u(e);
+			return r === null ? n(e, ...t) : JSON.parse(await f(r));
 		};
 	});
-	let f = {
-		getItem: (e) => o({
+	let p = {
+		getItem: (e) => s({
 			op: "kv-get",
 			key: e
 		}),
-		setItem: (e, t) => o({
+		setItem: (e, t) => s({
 			op: "kv-set",
 			key: e,
 			value: t
 		}),
-		removeItem: (e) => o({
+		removeItem: (e) => s({
 			op: "kv-remove",
 			key: e
 		})
 	};
-	s("StorageUtil", (e) => {
-		e._getAsyncStorage = async () => f;
+	c("StorageUtil", (e) => {
+		e._getAsyncStorage = async () => p;
 	});
 })();

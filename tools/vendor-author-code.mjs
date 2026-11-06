@@ -14,6 +14,15 @@ const registry = JSON.parse(await readFile(join(root, 'src/library/sources.json'
 const workDir = join(root, 'work/vendor-src')
 const LIST_PAGE = 'js/listpage.js'
 const COPIED_DIRS = ['js', 'lib']
+// 作者发布网站时会跑的一步（.github/workflows/pages.yml、main.yml）：把 js/utils.js 的 IS_DEPLOYED 设成发布标签。
+// 原样运行作者的脚本；脚本用 GNU sed 的写法，Mac 上用 Homebrew 的 gnu-sed（驾驶员 2026-11-06 选 A1 并授权安装）。
+const DEPLOY_FLAG = '.github/set-deployed-flag.sh'
+
+function runAuthorDeployFlag(dir, tag) {
+  git(dir, 'checkout', '-q', '--', 'js/utils.js')
+  const gnubin = `${execFileSync('brew', ['--prefix', 'gnu-sed'], { encoding: 'utf8' }).trim()}/libexec/gnubin`
+  execFileSync('bash', [DEPLOY_FLAG, tag], { cwd: dir, stdio: 'inherit', env: { ...process.env, PATH: `${gnubin}:${process.env.PATH}` } })
+}
 
 function git(cwd, ...args) {
   return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim()
@@ -21,12 +30,16 @@ function git(cwd, ...args) {
 
 async function checkout(id, { repo, commit }) {
   const dir = join(workDir, id)
-  if (existsSync(join(dir, '.git')) && git(dir, 'rev-parse', 'HEAD') === commit) return dir
+  const sparse = [...COPIED_DIRS.map((d) => `/${d}/`), '/*.html', '/LICENSE*', `/${DEPLOY_FLAG}`]
+  if (existsSync(join(dir, '.git')) && git(dir, 'rev-parse', 'HEAD') === commit) {
+    git(dir, 'sparse-checkout', 'set', '--no-cone', ...sparse)
+    return dir
+  }
   await rm(dir, { recursive: true, force: true })
   await mkdir(dir, { recursive: true })
   git(dir, 'init', '-q')
   git(dir, 'remote', 'add', 'origin', `https://github.com/${repo}.git`)
-  git(dir, 'sparse-checkout', 'set', '--no-cone', ...COPIED_DIRS.map((d) => `/${d}/`), '/*.html', '/LICENSE*')
+  git(dir, 'sparse-checkout', 'set', '--no-cone', ...sparse)
   git(dir, 'fetch', '-q', '--depth', '1', '--filter=blob:none', 'origin', commit)
   git(dir, 'checkout', '-q', 'FETCH_HEAD')
   if (git(dir, 'rev-parse', 'HEAD') !== commit) throw new Error(`${id}: 取到的提交与登记不符`)
@@ -71,6 +84,9 @@ async function listFiles(dir) {
 
 for (const [id, set] of Object.entries(registry.codeSets)) {
   const src = await checkout(id, set)
+  const tag = `v${set.version}`
+  runAuthorDeployFlag(src, tag)
+  if (!(await readFile(join(src, 'js/utils.js'), 'utf8')).includes(`globalThis.IS_DEPLOYED="${tag}"`)) throw new Error(`${id}: 作者发布脚本没有生效`)
   const pages = await pageScripts(src)
   const scripts = commonScripts(pages)
   const out = join(root, 'vendor', id)
@@ -102,6 +118,7 @@ for (const [id, set] of Object.entries(registry.codeSets)) {
     codeSet: id, repo: set.repo, commit: set.commit, version: set.version,
     scriptsFrom: `所有加载 ${LIST_PAGE} 的作者列表页（${pages.length} 个）都加载的 js/、lib/ 脚本`,
     skeletonFrom: pages[0].page,
+    deployStep: `已按作者发布流程运行 ${DEPLOY_FLAG} ${tag}`,
     scripts: scripts.map((s) => s.src), bytes, files,
   }
   await writeFile(join(out, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)

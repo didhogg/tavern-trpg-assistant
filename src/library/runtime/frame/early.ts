@@ -7,6 +7,7 @@
 // 这是普通脚本（不是模块），不能 import；传话格式与 ../protocol.ts 保持一致。包在函数里，不在作者的全局环境里多出变量。
 ;(() => {
   const CHANNEL = 'trpg-library'
+  const FRAME = new URLSearchParams(location.search).get('frame') ?? ''
   const g = globalThis as Record<string, unknown>
 
   const errors: string[] = []
@@ -52,7 +53,7 @@
     return new Promise((resolve, reject) => {
       const id = nextId++
       pending.set(id, { resolve, reject })
-      parent.postMessage({ channel: CHANNEL, type: 'request', id, ...body }, location.origin)
+      parent.postMessage({ channel: CHANNEL, type: 'request', frame: FRAME, id, ...body }, location.origin)
     })
   }
 

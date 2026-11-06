@@ -5,6 +5,7 @@
   "version": "2.39.0-cn.3",
   "scriptsFrom": "所有加载 js/listpage.js 的作者列表页（27 个）都加载的 js/、lib/ 脚本",
   "skeletonFrom": "actions.html",
+  "deployStep": "已按作者发布流程运行 .github/set-deployed-flag.sh v2.39.0-cn.3",
   "scripts": [
     "js/styleswitch.js",
     "js/locale-data.js",
@@ -38,7 +39,7 @@
     "lib/lunr.stemmer.support.min.js",
     "lib/lunr.zh.min.js"
   ],
-  "bytes": 8455972,
+  "bytes": 8455975,
   "files": {
     "LICENSE.md": "7e31e464387de40832323e5c3328ca587e52f8bf27c70f2527bd10414acac6d1",
     "js/actions.js": "af80fda1b5b92c02568515398bc91eb78d024f830a97b90a83ba6281d9896ec3",
@@ -448,7 +449,7 @@
     "js/utils-ui.js": "dd5cbcb4e7b78219493a9224a978a81be5a9cc91b73493457f3cc6f66c34e848",
     "js/utils-ui/utils-ui-panzoom.js": "a8f732199f1318df81899e8aa3278dad7528f80e512c277d4fddcc01a548b46e",
     "js/utils-ui/utils-ui-sourcebuilder.js": "f237ac07f5375015d093ea77abab6f4f2cae26fd0bbede1a09517f1880893a42",
-    "js/utils.js": "e4e8ae957924c6c17de7b9ecf60883a18f158b86fc4b094b30769b440574753b",
+    "js/utils.js": "25fea0825b7d7a7a0da0df2db2d9458cfc1fd92c6c6b788ca45a5ebaa56c2837",
     "js/utils/utils-additionalspells.js": "8686804119b0bb940bca8bdf1dac1a678ce283467f2d4af971f79a8bae2e6c3c",
     "js/utils/utils-entity-background.js": "8848010c5abb072e0001351af956018c9eab15e3afb320f48a1283c5bcbc15b2",
     "js/utils/utils-entity-creature.js": "70abf95ec4b84e1c3b7cceca5362c623af3d830144c4f01846c4093adfb242e6",

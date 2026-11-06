@@ -5,6 +5,7 @@
   "version": "2.39.0",
   "scriptsFrom": "所有加载 js/listpage.js 的作者列表页（27 个）都加载的 js/、lib/ 脚本",
   "skeletonFrom": "actions.html",
+  "deployStep": "已按作者发布流程运行 .github/set-deployed-flag.sh v2.39.0",
   "scripts": [
     "js/styleswitch.js",
     "js/navigation.js",
@@ -30,7 +31,7 @@
     "js/list2.js",
     "lib/elasticlunr.js"
   ],
-  "bytes": 8032319,
+  "bytes": 8032317,
   "files": {
     "LICENSE.md": "316d356d3f7150b0eff4999b7ff99533e86273c32bf7230e29b803eaccab5158",
     "js/actions.js": "86f52dd18f0d8e331b5e3428cd91a8a704edc6463cdcd19ebfc5b7bffd56912b",
@@ -434,7 +435,7 @@
     "js/utils-ui.js": "0530ba4e4d180f139bb6c383595c957216cac82a08be8380f9ab5534c7710961",
     "js/utils-ui/utils-ui-panzoom.js": "a8f732199f1318df81899e8aa3278dad7528f80e512c277d4fddcc01a548b46e",
     "js/utils-ui/utils-ui-sourcebuilder.js": "ac8d278ce36807d308e8f99ab1d93d1750625aa0b5a927f87e0702d268d5bff3",
-    "js/utils.js": "06df4edef6739498e420709b5c2e31599f723d12310a4c61bd90e9b33acf96d2",
+    "js/utils.js": "d9001e7d9fc21b75db45a61b3300c0f1641f481531854044d74245af365d3cc8",
     "js/utils/utils-additionalspells.js": "828197045ea0a9aee2e158c2cf936b9e89a8fd297f37bbb45b4ce87237bf0d55",
     "js/utils/utils-entity-background.js": "8848010c5abb072e0001351af956018c9eab15e3afb320f48a1283c5bcbc15b2",
     "js/utils/utils-entity-creature.js": "70abf95ec4b84e1c3b7cceca5362c623af3d830144c4f01846c4093adfb242e6",
