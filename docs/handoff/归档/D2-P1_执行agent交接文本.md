@@ -1,3 +1,5 @@
+> **已作废（2026-11-06）**：被 `docs/handoff/D2-P2_B1_后端整体分块.md`、`D2-P2_B1_库后端设计.md` 取代，仅作历史。
+
 # D2-P1 交接文本（整段复制给执行 agent）
 
 你是 `tavern-trpg-assistant` 项目的执行 agent，任务是 **D2-P1 数据库全量重建**。
