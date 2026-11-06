@@ -153,8 +153,9 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
         }
         try {
           onProgress?.({ stage: 'parse-prop', done: 0, total: 0, item: prop })
-          const { items, hashes } = await frame.call('parseProp', prop)
-          await db.derived.put({ key: parsedKey(source.id, prop), fingerprint: commit, value: { items, hashes }, savedAt: Date.now() })
+          const parsed = await frame.call('parseProp', prop)
+          const { items, hashes } = parsed
+          await db.derived.put({ key: parsedKey(source.id, prop), fingerprint: commit, value: parsed, savedAt: Date.now() })
           report.parse.props[prop] = { count: items.length, noHash: hashes.filter((h) => h === null).length }
           parsedHashes[prop] = new Set(hashes.filter((h): h is string => h !== null))
         } catch (e) {

@@ -1,6 +1,7 @@
 // 小窗里插件能叫作者程序做的事。每一件都只是转调作者自己的函数，结果原样交回，不挑字段。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
-const A = globalThis as any
+import { A, engHashOf, hasEngHashTable, hashOf, init, sourceOf } from './author'
+import { detail, excludedFlags, search, searchSettings } from './read-commands'
 
 export interface LoaderInfo {
   props: string[]
@@ -10,18 +11,7 @@ export interface LoaderInfo {
   index?: string
 }
 
-let initialised: Promise<void> | null = null
-
-/** 作者页面启动时做的初始化（B0 已验证的顺序）。 */
-export function init(): Promise<void> {
-  initialised ??= (async () => {
-    A.Renderer.get().setBaseUrl('')
-    await A.PrereleaseUtil.pInit()
-    await A.BrewUtil2.pInit()
-    await A.ExcludeUtil.pInitialise()
-  })()
-  return initialised
-}
+export { init }
 
 /** 作者的加载器登记表（DataLoader._DATA_TYPE_LOADER_LIST），去重后按登记顺序列出。 */
 export async function loaders(): Promise<LoaderInfo[]> {
@@ -38,20 +28,26 @@ export async function loaders(): Promise<LoaderInfo[]> {
   return out
 }
 
-function hashOf(prop: string, ent: any): string | null {
-  const builder = A.UrlUtil.URL_TO_HASH_BUILDER[prop] ?? A.UrlUtil.URL_TO_HASH_BUILDER[A.DataLoader.getPropPage(prop)]
-  try {
-    return builder ? builder(ent) : null
-  } catch {
-    return null
-  }
+export interface ParsedProp {
+  items: unknown[]
+  /** 作者编号，与 items 一一对应。 */
+  hashes: Array<string | null>
+  /** 来源（作者 SourceUtil.getEntitySource），与 items 一一对应。 */
+  sources: Array<string | null>
+  /** 英文站编号（中文程序的 URL_TO_ENG_HASH_BUILDER）；英文程序没有这张表时为 null。 */
+  engHashes: Array<string | null> | null
 }
 
-/** 整类取一类（作者的 pCacheAndGetAllSite），连同作者编号一起交回。 */
-export async function parseProp(prop: string): Promise<{ items: unknown[]; hashes: Array<string | null> }> {
+/** 整类取一类（作者的 pCacheAndGetAllSite），连同作者编号、来源、英文编号一起交回。 */
+export async function parseProp(prop: string): Promise<ParsedProp> {
   await init()
   const items: any[] = (await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []
-  return { items, hashes: items.map((it) => hashOf(prop, it)) }
+  return {
+    items,
+    hashes: items.map((it) => hashOf(prop, it)),
+    sources: items.map((it) => sourceOf(it)),
+    engHashes: hasEngHashTable() ? items.map((it) => engHashOf(prop, it)) : null,
+  }
 }
 
 /** 书或冒险的书目（作者的 books.json / adventures.json）：编号、来源、作者编号。 */
@@ -96,5 +92,5 @@ export async function isExcluded(hash: string, prop: string, source: string): Pr
   return A.ExcludeUtil.isExcluded(hash, prop, source, { isNoCount: true })
 }
 
-export const COMMANDS = { init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded }
+export const COMMANDS = { init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchSettings }
 export type CommandName = keyof typeof COMMANDS

@@ -5,7 +5,94 @@ function r() {
 		t.Renderer.get().setBaseUrl(""), await t.PrereleaseUtil.pInit(), await t.BrewUtil2.pInit(), await t.ExcludeUtil.pInitialise();
 	})(), n;
 }
-async function i() {
+function i(e, n) {
+	return e ? e[n] ?? e[t.DataLoader.getPropPage(n)] ?? null : null;
+}
+function a(e, n) {
+	let r = i(t.UrlUtil.URL_TO_HASH_BUILDER, e);
+	try {
+		return r ? r(n) : null;
+	} catch {
+		return null;
+	}
+}
+function o(e, n) {
+	let r = i(t.UrlUtil.URL_TO_ENG_HASH_BUILDER, e);
+	try {
+		return r ? r(n) : null;
+	} catch {
+		return null;
+	}
+}
+function s() {
+	return !!t.UrlUtil.URL_TO_ENG_HASH_BUILDER;
+}
+function c(e) {
+	return t.SourceUtil.getEntitySource(e) ?? null;
+}
+// src/library/runtime/frame/read-commands.ts
+function l(e, n, r) {
+	let i = c(n);
+	return i ? t.DataLoader.getPropPage(e) === t.UrlUtil.PG_ITEMS && t.Renderer.item.isExcluded(n, { hash: r }) ? !0 : t.ExcludeUtil.isExcluded(r ?? "", n.__prop ?? e, i, { isNoCount: !0 }) : !1;
+}
+async function u(e) {
+	if (await r(), !t.ExcludeUtil.getList().length) return {
+		hashes: [],
+		excluded: null
+	};
+	let n = await t.DataLoader.pCacheAndGetAllSite(e) ?? [], i = n.map((t) => a(e, t));
+	return {
+		hashes: i,
+		excluded: n.map((t, n) => l(e, t, i[n]))
+	};
+}
+async function d(e, n, i) {
+	await r();
+	let a = i ? await t.DataLoader.pCacheAndGet(e, i, n) : await t.DataLoader.pCacheAndGetHash(e, n);
+	if (!a) return null;
+	let s = null, u = null;
+	try {
+		s = await t.Renderer.utils.pGetProxyFluff({
+			entity: a,
+			prop: e
+		}) ?? null;
+	} catch (e) {
+		u = e instanceof Error ? e.message : String(e);
+	}
+	return {
+		item: a,
+		hash: n,
+		source: c(a),
+		excluded: l(e, a, n),
+		fluff: s,
+		fluffError: u,
+		engHash: o(e, a)
+	};
+}
+async function f(e) {
+	return await r(), (await t.OmnisearchBacking.pGetResults(t.CleanUtil.getCleanString(e))).map((e) => ({
+		score: e.score,
+		prop: t.Parser.pageCategoryToProp(e.doc.c),
+		doc: e.doc
+	}));
+}
+async function p() {
+	return (await import(
+		/* @vite-ignore */
+		new URL("js/omnisearch/omnisearch-state.js", location.href).href
+)).OmnisearchState;
+}
+async function m(e = {}) {
+	await r();
+	let t = await p();
+	for (let [n, r] of Object.entries(e)) {
+		if (!(n in t._DEFAULT_STATE)) throw Error(`作者的搜索设置里没有这一项：${n}`);
+		n === "partneredMode" ? t.setPartneredMode(r) : t[n] = r;
+	}
+	return t._getComp().toObject();
+}
+// src/library/runtime/frame/commands.ts
+async function h() {
 	let e = /* @__PURE__ */ new Set(), n = [];
 	for (let r of t.DataLoader._DATA_TYPE_LOADER_LIST) {
 		if (e.has(r)) continue;
@@ -24,33 +111,27 @@ async function i() {
 	}
 	return n;
 }
-function a(e, n) {
-	let r = t.UrlUtil.URL_TO_HASH_BUILDER[e] ?? t.UrlUtil.URL_TO_HASH_BUILDER[t.DataLoader.getPropPage(e)];
-	try {
-		return r ? r(n) : null;
-	} catch {
-		return null;
-	}
-}
-async function o(e) {
+async function g(e) {
 	await r();
 	let n = await t.DataLoader.pCacheAndGetAllSite(e) ?? [];
 	return {
 		items: n,
-		hashes: n.map((t) => a(e, t))
+		hashes: n.map((t) => a(e, t)),
+		sources: n.map((e) => c(e)),
+		engHashes: s() ? n.map((t) => o(e, t)) : null
 	};
 }
-async function s(e, n, i) {
+async function _(e, n, i) {
 	return await r(), ((await t.DataUtil.loadJSON(`data/${e}`))[n] ?? []).map((e) => ({
 		id: e.id,
 		source: t.SourceUtil.getEntitySource(e),
 		hash: t.UrlUtil.URL_TO_HASH_BUILDER[i](e)
 	}));
 }
-async function c(e, n, i) {
+async function v(e, n, i) {
 	return await r(), t.DataLoader.pCacheAndGet(e, n, i, { isRequired: !0 });
 }
-async function l() {
+async function y() {
 	await r();
 	let e = {};
 	for (let n of ["search/index.json", "search/index-item.json"]) {
@@ -62,7 +143,7 @@ async function l() {
 	}
 	return e;
 }
-async function u(e, n) {
+async function b(e, n) {
 	await r();
 	let i = t.ExcludeUtil.getList().filter((t) => t.hash !== "*" || t.category !== "*" || String(t.source).toLowerCase() !== e.toLowerCase()), a = n ? [...i, {
 		displayName: e,
@@ -73,19 +154,23 @@ async function u(e, n) {
 	}] : i;
 	return await t.ExcludeUtil.pSetList(a), await t.ExcludeUtil._pSave(), t.ExcludeUtil.getList();
 }
-async function d(e, n, i) {
+async function x(e, n, i) {
 	return await r(), t.ExcludeUtil.isExcluded(e, n, i, { isNoCount: !0 });
 }
-var f = {
+var S = {
 	init: r,
-	loaders: i,
-	parseProp: o,
-	corpusList: s,
-	parseCorpus: c,
-	searchIndexHashes: l,
-	setSourceExcluded: u,
-	isExcluded: d
-}, p = [
+	loaders: h,
+	parseProp: g,
+	corpusList: _,
+	parseCorpus: v,
+	searchIndexHashes: y,
+	setSourceExcluded: b,
+	isExcluded: x,
+	excludedFlags: u,
+	detail: d,
+	search: f,
+	searchSettings: m
+}, C = [
 	"DataLoader",
 	"DataUtil",
 	"BrewUtil2",
@@ -98,17 +183,17 @@ var f = {
 	"Hist",
 	"Parser",
 	"SourceUtil"
-], m = globalThis, h = new URLSearchParams(location.search).get("frame") ?? "";
+], w = globalThis, T = new URLSearchParams(location.search).get("frame") ?? "";
 addEventListener("message", (t) => {
 	let n = t.data;
 	if (t.source !== parent || !n || n.channel !== "trpg-library" || n.type !== "call") return;
 	let r = (t) => parent.postMessage({
 		channel: e,
 		type: "result",
-		frame: h,
+		frame: T,
 		id: n.id,
 		...t
-	}, location.origin), i = f[n.fn];
+	}, location.origin), i = S[n.fn];
 	i ? i(...n.args).then((e) => r({
 		ok: !0,
 		value: e
@@ -120,13 +205,13 @@ addEventListener("message", (t) => {
 		error: `小窗没有这个指令：${n.fn}`
 	});
 });
-var g = {
+var E = {
 	channel: e,
 	type: "ready",
-	frame: h,
+	frame: T,
 	codeSet: new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "",
-	authorVersion: typeof m.VERSION_NUMBER == "string" ? m.VERSION_NUMBER : null,
-	present: Object.fromEntries(p.map((e) => [e, m[e] !== void 0])),
-	errors: [...m.__trpgFrameErrors ?? []]
+	authorVersion: typeof w.VERSION_NUMBER == "string" ? w.VERSION_NUMBER : null,
+	present: Object.fromEntries(C.map((e) => [e, w[e] !== void 0])),
+	errors: [...w.__trpgFrameErrors ?? []]
 };
-parent.postMessage(g, location.origin);
+parent.postMessage(E, location.origin);

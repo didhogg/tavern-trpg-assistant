@@ -109,3 +109,9 @@ export async function callFrame(codeSet: string, fn: string, ...args: unknown[])
   if (!f) throw new Error(`没有打开的小窗：${codeSet}`)
   return (f.call as (fn: string, ...a: unknown[]) => Promise<unknown>)(fn, ...args)
 }
+
+// ---- B2-4 / B2-5 ----
+import { LibraryService } from '../../../src/library/service'
+
+/** 库服务（界面将来的唯一入口）。安装会另开小窗，所以安装后要 service.reset()。 */
+export const service = new LibraryService({ db, openFrame: openLocalFrame })
