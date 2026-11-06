@@ -7,7 +7,7 @@
   - T3 作废（2026-11-06）：源清单由手写扫描器生成（按文件名判断内容，有已知误判），产物已移到 `/Users/xxx/tavern-trpg-data-next/_作废-手写脚本产物/`。7 个源的登记（官方中文、官方英文 2.40.0、2014 站、自制英文/中文、试玩稿）作为 S1 成果保留在 `_upstream/inventory/` 总表里。作者 wiki/文档原文：`_upstream/author-docs/`。
   - T4：「当前数据源」指针等 `src/` 部分保留；比对工具、清单对账工具已删除（手写脚本）。报告 `docs/handoff/D2-P1_T4_换源报告.md` 仅作历史。
   - 范围边界：**仓库里不再有任何手写的导入/转换/普查脚本**（2026-11-06 驾驶员命令删除，`tools/` 只剩被忽略的旧产物 `tools/data/out`，待驾驶员定是否删）。以后导入只用作者自己的工具；确需胶水代码，先在 B1 设计稿里给驾驶员看，经停点 C 批准再写。旧 `tools/data`、`tools/db` 可从 git 历史找回，不再运行。
-- **P2 阶段 S（摸清数据形状）**：S1 ✔（总表 `/Users/xxx/tavern-trpg-data-next/_upstream/inventory/上游功能与数据总表.md`）；**S2/S3 作废重做**（原因：普查脚本是手写的；旧产物在 `_作废-手写脚本产物/`，备份脚本在 `/Users/xxx/tavern-trpg-backup/tools-db-shape-20261106/`）。重做方法：作者 schema 原文 + 作者的校验入口（`npm run test:json`、5etools-utils 的 `test-json-ua`、`test-json-brew`）+ 一次性（用完即删）调用作者加载器看展开后形状；报告 = 工具输出 + 大白话解读。**等驾驶员在停点 B 确认**。
+- **P2 阶段 S（摸清数据形状）**：S1 ✔（总表 `/Users/xxx/tavern-trpg-data-next/_upstream/inventory/上游功能与数据总表.md`）；**S2/S3 已用作者工具重做（2026-11-06）**：产物在 `/Users/xxx/tavern-trpg-data-next/report/`（作者 schema 原文、作者校验器对各源的输出、`说明.md`）；旧手写版在 `_作废-手写脚本产物/`，旧脚本备份在 `/Users/xxx/tavern-trpg-backup/tools-db-shape-20261106/`。结论：官方现行站/2014 站/试玩稿通过作者校验；自制英文 65 处、中文 287 处不通过；展开后数据 8/8 类别因加载器加的 `__prop` 不符合作者 schema（完整新增字段清单未取得，留 B1）。官方中文 fork 未用作者校验器跑。可读化 schema 的现成工具待驾驶员批准安装。**等驾驶员在停点 B 确认**。
 - 之后：P2【库】后端（一次整体设计并做完：B0 调查 → B1 设计稿 → B2 实现 → B3 对账）→ P2 前端逐个小 UNIT → P2 完成后推送 → P3a 人物详情 S1–S12 → P3b UNIT4–8 → P3c 骰盘标签页。
 
 ## 红线
