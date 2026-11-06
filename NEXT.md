@@ -4,9 +4,10 @@
 - P0 整理归档与执行守则：✔ 2026-11-05。
 - **当前：D2-P1 5etools 直读数据源（T1–T4）**
   - T1/T2 ✔：现有库直接装 5etools 原样数据；后端读取器覆盖法术/怪物/物品/职业/种族/背景/专长/升级/表；报告 `docs/handoff/D2-P1_T1-T2_验证报告.md`。
-  - T3 ✔ 2026-11-06（T4 期间追加 5etools-2014-src，S1 期间追加试玩稿 unearthed-arcana 并合并作者官方来源清单）：全量源清单 + 校验，现为 7 个源、3,756 个 JSON、290,645 条记录、1,861 个来源 ID（英文上游已改指向 2.40.0）；报告 `docs/handoff/D2-P1_T3_源清单与校验报告.md`（数字以 T4 报告为准），输出 `/Users/xxx/tavern-trpg-data-next/source-manifest/`，T3 原清单备份在 `/Users/xxx/tavern-trpg-backup/source-manifest-T3-before-2014src/`、`.../source-manifest-T3-before-UA/`。作者 wiki/文档原文：`/Users/xxx/tavern-trpg-data-next/_upstream/author-docs/`。
-  - T4 ✔ 2026-11-06（只换源）：设置里新增「当前数据源」指针（默认旧库，读不到清单自动退回）、源清单读取与自检、新旧比对工具 `npm run db:diff`、清单对账 `npm run db:source:check`；报告 `docs/handoff/D2-P1_T4_换源报告.md`。已本地提交（T1+T2 `cb6a6fe`、T3 `a46d609`、T4 `1dff1d2`，未推送）；S1 期间追加的试玩稿源与作者来源清单合并在其后，**未提交**，等驾驶员说提交。
-  - 范围边界：T3/T4 不生成自定义包、不覆盖旧库、不推送。旧 `docs/handoff/D2-P1_数据库全量重建_执行文档.md` 和 `tools/db/build.ts` 是另一条全量转换线，不是本轮 T3/T4 的入口。
+  - T3 作废（2026-11-06）：源清单由手写扫描器生成（按文件名判断内容，有已知误判），产物已移到 `/Users/xxx/tavern-trpg-data-next/_作废-手写脚本产物/`。7 个源的登记（官方中文、官方英文 2.40.0、2014 站、自制英文/中文、试玩稿）作为 S1 成果保留在 `_upstream/inventory/` 总表里。作者 wiki/文档原文：`_upstream/author-docs/`。
+  - T4：「当前数据源」指针等 `src/` 部分保留；比对工具、清单对账工具已删除（手写脚本）。报告 `docs/handoff/D2-P1_T4_换源报告.md` 仅作历史。
+  - 范围边界：**仓库里不再有任何手写的导入/转换/普查脚本**（2026-11-06 驾驶员命令删除，`tools/` 只剩被忽略的旧产物 `tools/data/out`，待驾驶员定是否删）。以后导入只用作者自己的工具；确需胶水代码，先在 B1 设计稿里给驾驶员看，经停点 C 批准再写。旧 `tools/data`、`tools/db` 可从 git 历史找回，不再运行。
+- **P2 阶段 S（摸清数据形状）**：S1 ✔（总表 `/Users/xxx/tavern-trpg-data-next/_upstream/inventory/上游功能与数据总表.md`）；**S2/S3 作废重做**（原因：普查脚本是手写的；旧产物在 `_作废-手写脚本产物/`，备份脚本在 `/Users/xxx/tavern-trpg-backup/tools-db-shape-20261106/`）。重做方法：作者 schema 原文 + 作者的校验入口（`npm run test:json`、5etools-utils 的 `test-json-ua`、`test-json-brew`）+ 一次性（用完即删）调用作者加载器看展开后形状；报告 = 工具输出 + 大白话解读。**等驾驶员在停点 B 确认**。
 - 之后：P2【库】后端（一次整体设计并做完：B0 调查 → B1 设计稿 → B2 实现 → B3 对账）→ P2 前端逐个小 UNIT → P2 完成后推送 → P3a 人物详情 S1–S12 → P3b UNIT4–8 → P3c 骰盘标签页。
 
 ## 红线

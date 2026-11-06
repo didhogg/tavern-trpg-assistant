@@ -11,17 +11,9 @@
     "lint": "eslint src tests",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "e2e": "npm run build:data && npm run build && node tests/e2e/smoke.mjs",
-    "build:data": "tsx tools/data/build.ts",
-    "publish:data": "tsx tools/data/publish.ts",
-    "test:data": "vitest run --config vitest.data.config.ts",
+    "e2e": "npm run build && node tests/e2e/smoke.mjs",
     "shots": "node tests/e2e/screenshots.mjs",
-    "keys": "node tests/e2e/keyboard.mjs",
-    "art:focus": "tsx tools/data/art/focus.ts",
-    "db:build": "tsx tools/db/build.ts",
-    "db:diff": "tsx tools/db/compare/index.ts",
-    "db:source": "tsx tools/db/source/index.ts",
-    "db:source:check": "tsx tools/db/source/check.ts"
+    "keys": "node tests/e2e/keyboard.mjs"
   },
   "dependencies": {
     "@noble/hashes": "^2.4.0",
