@@ -69,6 +69,11 @@ export const settingsSchema = z.object({
   reminderDays: z.number().int().positive().default(7),
   reminderSaves: z.number().int().positive().default(10),
   catalogUrl: z.string().default('https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json'),
+  /** 当前数据源：legacy＝旧数据仓库（上面的 catalogUrl）；upstream＝5etools 上游源清单（见 core/source/pointer）。默认旧库，读不到清单时自动退回旧库。 */
+  dataSource: z.enum(['legacy', 'upstream']).default('legacy'),
+  /** 源清单 manifest.json 的地址与备用地址；留空表示未配置。 */
+  sourceManifestUrl: z.string().default(''),
+  sourceManifestFallbackUrl: z.string().default(''),
   /** 启用扩展包（含导入冒险）时，对官方条目的修改默认应用还是不应用（L1 §2.5）。 */
   variantDefault: z.enum(['apply', 'skip']).default('apply'),
 })

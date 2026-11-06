@@ -11168,6 +11168,9 @@ var $b = Hv("kind", [
 	reminderDays: J().int().positive().default(7),
 	reminderSaves: J().int().positive().default(10),
 	catalogUrl: q().default("https://cdn.jsdelivr.net/gh/didhogg/tavern-trpg-data@main/catalog.json"),
+	dataSource: Z(["legacy", "upstream"]).default("legacy"),
+	sourceManifestUrl: q().default(""),
+	sourceManifestFallbackUrl: q().default(""),
 	variantDefault: Z(["apply", "skip"]).default("apply")
 }), cS = X({
 	lastExportAt: hy.nullable().default(null),
