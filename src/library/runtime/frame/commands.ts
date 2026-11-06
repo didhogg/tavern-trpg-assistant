@@ -1,6 +1,7 @@
 // 小窗里插件能叫作者程序做的事。每一件都只是转调作者自己的函数，结果原样交回，不挑字段。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init, sourceOf } from './author'
+import { brewAddFiles, brewAddUrl, brewCatalog, brewDelete, brewInstalled, brewPull, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch } from './english-commands'
 import { detail, excludedFlags, search, searchSettings } from './read-commands'
 
@@ -90,5 +91,11 @@ export async function isExcluded(hash: string, prop: string, source: string): Pr
   return A.ExcludeUtil.isExcluded(hash, prop, source, { isNoCount: true })
 }
 
-export const COMMANDS = { init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchSettings, englishLocators, englishMatch }
+/** 这个小窗开起来以后作者抛出的全部错误（early.ts 收集，原文）。 */
+export async function frameErrors(): Promise<string[]> {
+  return [...(A.__trpgFrameErrors as string[])]
+}
+
+export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchSettings, englishLocators, englishMatch,
+  brewCatalog, brewInstalled, brewAddUrl, brewAddFiles, brewDelete, brewPull, parseBrewProp }
 export type CommandName = keyof typeof COMMANDS

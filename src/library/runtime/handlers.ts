@@ -1,4 +1,4 @@
-// 把小窗的要求接到本地库：文件 → 对应官方源的原始文件；存储 → kv 表（按作者程序那一套分开）。
+// 把小窗的要求接到本地库：文件 → 对应官方源的原始文件；存储 → kv 表（按作者程序那一套分开；同步存储另一个范围）。
 import type { LibraryDatabase } from '../db'
 import type { FileProvider } from '../files'
 import { officialSourceOf } from '../sources'
@@ -19,5 +19,9 @@ export function libraryHandlers({ codeSet, db, files, allowNetwork }: HandlerOpt
     kvGet: async (key) => (await db.kv.get([codeSet, key]))?.value ?? null,
     kvSet: async (key, value) => { await db.kv.put({ scope: codeSet, key, value }) },
     kvRemove: async (key) => { await db.kv.delete([codeSet, key]) },
+    // 作者同步存储（localStorage）单独一个范围，和异步存储分开
+    localSnapshot: async () => Object.fromEntries((await db.kv.where('scope').equals(`${codeSet}:local`).toArray()).map((r) => [r.key, r.value as string])),
+    localSet: async (key, value) => { await db.kv.put({ scope: `${codeSet}:local`, key, value }) },
+    localRemove: async (key) => { await db.kv.delete([`${codeSet}:local`, key]) },
   }
 }

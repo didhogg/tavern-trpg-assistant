@@ -15,13 +15,13 @@ function isExcludedEntity(prop: string, ent: any, hash: string | null): boolean 
 }
 
 /**
- * 整类的屏蔽标记，附编号；插件按编号对到库里的解析结果上（作者缓存里的先后顺序取决于先加载了哪本书）。
+ * 整类的屏蔽标记（官方 site 或已装自制 brew），附编号；插件按编号对到库里的解析结果上（作者缓存里的先后顺序取决于先加载了哪本书）。
  * 屏蔽表为空时不展开，直接回答"都没屏蔽"（excluded: null）。
  */
-export async function excludedFlags(prop: string): Promise<{ hashes: Array<string | null>; excluded: boolean[] | null }> {
+export async function excludedFlags(prop: string, scope: 'site' | 'brew' = 'site'): Promise<{ hashes: Array<string | null>; excluded: boolean[] | null }> {
   await init()
   if (!A.ExcludeUtil.getList().length) return { hashes: [], excluded: null }
-  const items: any[] = (await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []
+  const items: any[] = (await (scope === 'brew' ? A.DataLoader.pCacheAndGetAllBrew(prop) : A.DataLoader.pCacheAndGetAllSite(prop))) ?? []
   const hashes = items.map((it) => hashOf(prop, it))
   return { hashes, excluded: items.map((it, i) => isExcludedEntity(prop, it, hashes[i])) }
 }

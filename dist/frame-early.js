@@ -7,53 +7,71 @@
 		let t = e.reason;
 		r.push(`unhandledrejection: ${t?.stack ?? String(e.reason)}`);
 	});
-	function i() {
-		let e = /* @__PURE__ */ new Map();
+	let i = {};
+	window.name.startsWith("trpg-local:") && (i = JSON.parse(window.name.slice(11)), window.name = "");
+	function a(e, t) {
+		let n = new Map(Object.entries(e)), i = (e) => {
+			t && l(e).catch((e) => r.push(`同步存储没存进插件：${String(e)}`));
+		};
 		return {
 			get length() {
-				return e.size;
+				return n.size;
 			},
-			key: (t) => [...e.keys()][t] ?? null,
-			getItem: (t) => e.has(t) ? e.get(t) : null,
-			setItem: (t, n) => {
-				e.set(String(t), String(n));
+			key: (e) => [...n.keys()][e] ?? null,
+			getItem: (e) => n.has(e) ? n.get(e) : null,
+			setItem: (e, t) => {
+				n.set(String(e), String(t)), i({
+					op: "local-set",
+					key: String(e),
+					value: String(t)
+				});
 			},
-			removeItem: (t) => {
-				e.delete(String(t));
+			removeItem: (e) => {
+				n.delete(String(e)), i({
+					op: "local-remove",
+					key: String(e)
+				});
 			},
-			clear: () => e.clear()
+			clear: () => {
+				for (let e of n.keys()) i({
+					op: "local-remove",
+					key: e
+				});
+				n.clear();
+			}
 		};
 	}
-	for (let e of ["localStorage", "sessionStorage"]) {
-		let t = i();
-		Object.defineProperty(window, e, {
-			configurable: !0,
-			get: () => t
-		});
-	}
-	let a = 1, o = /* @__PURE__ */ new Map();
+	let o = {
+		localStorage: a(i, !0),
+		sessionStorage: a({}, !1)
+	};
+	for (let [e, t] of Object.entries(o)) Object.defineProperty(window, e, {
+		configurable: !0,
+		get: () => t
+	});
+	let s = 1, c = /* @__PURE__ */ new Map();
 	addEventListener("message", (t) => {
 		let n = t.data;
 		if (t.source !== parent || !n || n.channel !== e || n.type !== "response") return;
-		let r = o.get(n.id);
-		r && (o.delete(n.id), n.ok ? r.resolve(n.value) : r.reject(Error(n.error)));
+		let r = c.get(n.id);
+		r && (c.delete(n.id), n.ok ? r.resolve(n.value) : r.reject(Error(n.error)));
 	});
-	function s(n) {
+	function l(n) {
 		return new Promise((r, i) => {
-			let s = a++;
-			o.set(s, {
+			let a = s++;
+			c.set(a, {
 				resolve: r,
 				reject: i
 			}), parent.postMessage({
 				channel: e,
 				type: "request",
 				frame: t,
-				id: s,
+				id: a,
 				...n
 			}, location.origin);
 		});
 	}
-	function c(e, t) {
+	function u(e, t) {
 		let n;
 		Object.defineProperty(globalThis, e, {
 			configurable: !0,
@@ -64,53 +82,53 @@
 			}
 		});
 	}
-	let l = new URL(".", location.href);
-	function u(e) {
-		let t = new URL(e, l);
-		return t.origin !== l.origin || !t.pathname.startsWith(l.pathname) ? null : decodeURIComponent(t.pathname.slice(l.pathname.length));
-	}
-	let d = /* @__PURE__ */ new Map();
+	let d = new URL(".", location.href);
 	function f(e) {
-		let t = d.get(e);
-		return t || (t = s({
+		let t = new URL(e, d);
+		return t.origin !== d.origin || !t.pathname.startsWith(d.pathname) ? null : decodeURIComponent(t.pathname.slice(d.pathname.length));
+	}
+	let p = /* @__PURE__ */ new Map();
+	function m(e) {
+		let t = p.get(e);
+		return t || (t = l({
 			op: "file",
 			path: e
 		}).then((t) => {
 			if (typeof t != "string") throw Error(`文件不存在：${e}`);
 			return t;
-		}), t.catch(() => d.delete(e)), d.set(e, t)), t;
+		}), t.catch(() => p.delete(e)), p.set(e, t)), t;
 	}
-	c("DataUtil", (e) => {
+	u("DataUtil", (e) => {
 		let t = e.loadJSON.bind(e), n = e.loadRawJSON.bind(e), r = /* @__PURE__ */ new Map();
 		e.loadJSON = (n, ...i) => {
-			let a = u(n);
+			let a = f(n);
 			if (a === null) return t(n, ...i);
 			let o = r.get(n);
 			return o || (o = (async () => {
-				let t = JSON.parse(await f(a));
+				let t = JSON.parse(await m(a));
 				return await e.pDoMetaMerge(n, t, { isSkipMetaMergeCache: !0 }), t;
 			})(), o.catch(() => r.delete(n)), r.set(n, o)), o;
 		}, e.loadRawJSON = async (e, ...t) => {
-			let r = u(e);
-			return r === null ? n(e, ...t) : JSON.parse(await f(r));
+			let r = f(e);
+			return r === null ? n(e, ...t) : JSON.parse(await m(r));
 		};
 	});
-	let p = {
-		getItem: (e) => s({
+	let h = {
+		getItem: (e) => l({
 			op: "kv-get",
 			key: e
 		}),
-		setItem: (e, t) => s({
+		setItem: (e, t) => l({
 			op: "kv-set",
 			key: e,
 			value: t
 		}),
-		removeItem: (e) => s({
+		removeItem: (e) => l({
 			op: "kv-remove",
 			key: e
 		})
 	};
-	c("StorageUtil", (e) => {
-		e._getAsyncStorage = async () => p;
+	u("StorageUtil", (e) => {
+		e._getAsyncStorage = async () => h;
 	});
 })();

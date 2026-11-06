@@ -23,6 +23,9 @@ export type FrameRequestBody =
   | { op: 'kv-get'; key: string }
   | { op: 'kv-set'; key: string; value: unknown }
   | { op: 'kv-remove'; key: string }
+  /** 作者的同步存储（localStorage）写了一项 / 删了一项：插件存进库，下次开小窗时经 iframe 的 name 交回。 */
+  | { op: 'local-set'; key: string; value: string }
+  | { op: 'local-remove'; key: string }
 
 export type FrameRequest = { channel: typeof CHANNEL; type: 'request'; frame: string; id: number } & FrameRequestBody
 
@@ -60,6 +63,9 @@ export type FrameMessage = FrameReady | FrameRequest | FrameResponse | FrameCall
 
 /** 小窗地址里的暗号。 */
 export const FRAME_PARAM = 'frame'
+
+/** iframe 的 name 以它开头时，后面是作者同步存储（localStorage）上次存下的内容（JSON），小窗启动时读出。 */
+export const LOCAL_SNAPSHOT_PREFIX = 'trpg-local:'
 
 export function isFrameMessage(data: unknown): data is FrameMessage {
   return typeof data === 'object' && data !== null && (data as { channel?: unknown }).channel === CHANNEL

@@ -1,12 +1,14 @@
 // 【库】的数据接口：类别、查询、详情（含英文）、搜索、按书开关（D2-P2 B1 设计 §8.3、§8.6、§8.7、§9）。
 // 只交作者对象和作者搜索结果，不挑字段、不改名。凡是要理解字段含义的判断（屏蔽、背景描述、英文编号、
 // 搜索匹配与排序）都在小窗里由作者函数做；插件这边只读库、对编号、按来源分组。
+import { parseBrew, type BrewParseReport } from './brew'
 import type { LibraryDatabase } from './db'
 import type { InstallReport } from './install'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { Detail, SearchHit } from './runtime/frame/read-commands'
 import type { EnglishMatch } from './runtime/frame/english-commands'
+import type { BrewEntry, WithErrors } from './runtime/frame/brew-commands'
 import type { AuthorFrame } from './runtime/host'
 import { commitOf, getSource, type SourceEntry } from './sources'
 
@@ -105,14 +107,20 @@ export class LibraryService {
 
   private async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
     const rec = await this.opts.db.derived.get(parsedKey(sourceId, prop))
+    // 自制只存有内容的类别：解析记录在、这一类没出错，就是"这一类没有条目"
+    if (!rec && getSource(sourceId).kind === 'brew') {
+      const report = await this.opts.db.derived.get(`audit:${sourceId}`)
+      const errors = (report?.value as BrewParseReport | undefined)?.parse.errors ?? []
+      if (report && !errors.some((e) => e.prop === prop)) return { items: [], hashes: [], sources: [] }
+    }
     if (!rec) throw new Error(`${sourceId} 没有这一类的解析结果：${prop}（未安装，或这一类解析失败，见体检）`)
     return rec.value as ParsedProp
   }
 
-  private async report(sourceId: string): Promise<InstallReport> {
+  private async report(sourceId: string): Promise<{ parse: Pick<InstallReport['parse'], 'props'> }> {
     const rec = await this.opts.db.derived.get(`audit:${sourceId}`)
     if (!rec) throw new Error(`${sourceId} 还没安装`)
-    return rec.value as InstallReport
+    return rec.value as InstallReport | BrewParseReport
   }
 
   /** 全量解析出来的类别和条数（数解析结果，不写死）。 */
@@ -124,7 +132,8 @@ export class LibraryService {
   /** 按类别（、来源）取作者对象。默认去掉被屏蔽的；includeExcluded 时一并返回并带标记。 */
   async query(sourceId: string, prop: string, { source, includeExcluded = false }: { source?: string; includeExcluded?: boolean } = {}): Promise<QueryRow[]> {
     const p = await this.parsed(sourceId, prop)
-    const flags = await (await this.frame(getSource(sourceId).codeSet)).call('excludedFlags', prop)
+    const src = getSource(sourceId)
+    const flags = await (await this.frame(src.codeSet)).call('excludedFlags', prop, src.kind === 'brew' ? 'brew' : 'site')
     // 按编号对齐（作者缓存里的先后顺序取决于先加载了哪本书，不能按位置对）
     const excludedOf = flags.excluded ? alignByHash(prop, p.hashes, flags.hashes, flags.excluded) : null
     const want = source?.toLowerCase()
@@ -226,6 +235,58 @@ export class LibraryService {
   /** 按书开关：改作者屏蔽表里"整本书"一行（经这套程序唯一的小窗，查询、搜索立即生效）。 */
   async setBookExcluded(sourceId: string, book: string, excluded: boolean): Promise<void> {
     await (await this.frame(getSource(sourceId).codeSet)).call('setSourceExcluded', book, excluded)
+  }
+
+  // ---- 自制（源登记表里 kind = brew 的源；作者包管理器在对应那套程序的小窗里）----
+
+  private brewSource(sourceId: string): SourceEntry {
+    const s = getSource(sourceId)
+    if (s.kind !== 'brew') throw new Error(`${sourceId} 不是自制源`)
+    return s
+  }
+
+  /** 自制书目：作者读自制仓库目录文件得出的列表（原样）。 */
+  async brewCatalog(sourceId: string): Promise<WithErrors<unknown[] | null>> {
+    return (await this.frame(this.brewSource(sourceId).codeSet)).call('brewCatalog')
+  }
+
+  /** 已装的自制包。 */
+  async brewInstalled(sourceId: string): Promise<BrewEntry[]> {
+    return (await this.frame(this.brewSource(sourceId).codeSet)).call('brewInstalled')
+  }
+
+  /** 装、导入、删、更新之后：关掉旧小窗（作者缓存和搜索索引是旧的），用新小窗重解析自制内容。 */
+  private async afterBrewChange(s: SourceEntry): Promise<BrewParseReport> {
+    this.reset()
+    return parseBrew({ source: s, db: this.opts.db, openFrame: () => this.opts.openFrame(s.codeSet) })
+  }
+
+  /** 按网址装（作者自动追装依赖）。 */
+  async brewAddUrl(sourceId: string, url: string): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport }> {
+    const s = this.brewSource(sourceId)
+    const r = await (await this.frame(s.codeSet)).call('brewAddUrl', url)
+    return { ...r, parse: await this.afterBrewChange(s) }
+  }
+
+  /** 导入本地文件（文件名 + 原文）。 */
+  async brewImport(sourceId: string, files: Array<{ name: string; text: string }>) {
+    const s = this.brewSource(sourceId)
+    const r = await (await this.frame(s.codeSet)).call('brewAddFiles', files)
+    return { ...r, parse: await this.afterBrewChange(s) }
+  }
+
+  /** 删（按作者包头里的本地编号）。 */
+  async brewDelete(sourceId: string, docIdLocals: string[]): Promise<WithErrors<number> & { parse: BrewParseReport }> {
+    const s = this.brewSource(sourceId)
+    const r = await (await this.frame(s.codeSet)).call('brewDelete', docIdLocals)
+    return { ...r, parse: await this.afterBrewChange(s) }
+  }
+
+  /** 更新（作者：有新版的直接换）。不给编号就是全部；没有更新的不重解析。 */
+  async brewPull(sourceId: string, docIdLocals: string[] | null = null): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null }> {
+    const s = this.brewSource(sourceId)
+    const r = await (await this.frame(s.codeSet)).call('brewPull', docIdLocals)
+    return { ...r, parse: r.value.length ? await this.afterBrewChange(s) : null }
   }
 
   /** 中英配对覆盖率：中文解析结果的每一条，看作者做法配上了没有、英文解析结果里有没有那一条；没配上的按原因列清单，存进体检。 */

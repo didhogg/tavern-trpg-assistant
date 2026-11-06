@@ -1,6 +1,6 @@
 // 插件这一侧：开一个隐藏小窗让作者程序原样运行，并回答小窗的要求（D2-P2 B1 设计 §7 A）。
 import type { CommandName, COMMANDS } from './frame/commands'
-import { CHANNEL, FRAME_PARAM, isFrameMessage, type FrameCall, type FrameMessage, type FrameReady, type FrameRequest, type FrameResponse } from './protocol'
+import { CHANNEL, FRAME_PARAM, LOCAL_SNAPSHOT_PREFIX, isFrameMessage, type FrameCall, type FrameMessage, type FrameReady, type FrameRequest, type FrameResponse } from './protocol'
 
 /** 小窗要东西时插件怎么回答。文件不存在回答 null。 */
 export interface FrameHandlers {
@@ -8,6 +8,10 @@ export interface FrameHandlers {
   kvGet(key: string): Promise<unknown>
   kvSet(key: string, value: unknown): Promise<void>
   kvRemove(key: string): Promise<void>
+  /** 作者同步存储（localStorage）上次存下的全部内容；开小窗前取出交给小窗。 */
+  localSnapshot(): Promise<Record<string, string>>
+  localSet(key: string, value: string): Promise<void>
+  localRemove(key: string): Promise<void>
 }
 
 export interface AuthorFrame {
@@ -40,11 +44,15 @@ async function answer(handlers: FrameHandlers, req: FrameRequest): Promise<unkno
     case 'kv-get': return handlers.kvGet(req.key)
     case 'kv-set': return handlers.kvSet(req.key, req.value)
     case 'kv-remove': return handlers.kvRemove(req.key)
+    case 'local-set': return handlers.localSet(req.key, req.value)
+    case 'local-remove': return handlers.localRemove(req.key)
   }
 }
 
-export function startAuthorFrame({ codeSet, pluginRoot, container, handlers, timeoutMs = 60_000 }: StartOptions): Promise<AuthorFrame> {
+export async function startAuthorFrame({ codeSet, pluginRoot, container, handlers, timeoutMs = 60_000 }: StartOptions): Promise<AuthorFrame> {
   const frame = document.createElement('iframe')
+  // 作者同步存储上次的内容经 name 交给小窗（小窗里 early.ts 在作者脚本之前读出，读完清掉 name）
+  frame.name = LOCAL_SNAPSHOT_PREFIX + JSON.stringify(await handlers.localSnapshot())
   frame.dataset.trpgAuthorFrame = codeSet
   frame.setAttribute('aria-hidden', 'true')
   frame.tabIndex = -1

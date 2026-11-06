@@ -1,5 +1,5 @@
 // 小窗里最先运行（在作者脚本之前），做三件事（D2-P2 B1 设计 §7 A）：
-// ① 隔离：小窗里的 localStorage / sessionStorage 换成只在内存里的，作者程序不会写进酒馆自己的浏览器存储；
+// ① 隔离：小窗里的 localStorage / sessionStorage 换成插件管的，作者程序不会写进酒馆自己的浏览器存储（localStorage 存进插件库）；
 // ② 取数出口：作者一定义 DataUtil，就照作者自己的 PatchLoadJson 写法换掉 loadJSON / loadRawJSON，
 //    小窗目录下的相对路径（data/…、search/…）改成向插件要原文；其他地址仍走作者原来的出口；
 // ③ 存储口子：作者一定义 StorageUtil，就照作者自己的 StorageUtilMemory 写法换掉 _getAsyncStorage，
@@ -20,20 +20,39 @@
     errors.push(`unhandledrejection: ${reason?.stack ?? String(e.reason)}`)
   })
 
-  // ① 隔离
-  function memoryStorage(): Storage {
-    const map = new Map<string, string>()
+  // ① 隔离：localStorage 换成内存版，内容从插件来、写入存回插件（作者的同步存储存着已装自制包清单、搜索设置等）；
+  //    sessionStorage 只在内存。iframe 的 name 带着上次存下的内容（../protocol.ts LOCAL_SNAPSHOT_PREFIX）。
+  const LOCAL_PREFIX = 'trpg-local:'
+  let localInit: Record<string, string> = {}
+  if (window.name.startsWith(LOCAL_PREFIX)) {
+    localInit = JSON.parse(window.name.slice(LOCAL_PREFIX.length)) as Record<string, string>
+    window.name = ''
+  }
+  function memoryStorage(init: Record<string, string>, persist: boolean): Storage {
+    const map = new Map<string, string>(Object.entries(init))
+    const save = (body: Record<string, unknown>): void => {
+      if (persist) request(body).catch((e: unknown) => errors.push(`同步存储没存进插件：${String(e)}`))
+    }
     return {
       get length() { return map.size },
       key: (i: number) => [...map.keys()][i] ?? null,
       getItem: (k: string) => (map.has(k) ? map.get(k)! : null),
-      setItem: (k: string, v: string) => { map.set(String(k), String(v)) },
-      removeItem: (k: string) => { map.delete(String(k)) },
-      clear: () => map.clear(),
+      setItem: (k: string, v: string) => {
+        map.set(String(k), String(v))
+        save({ op: 'local-set', key: String(k), value: String(v) })
+      },
+      removeItem: (k: string) => {
+        map.delete(String(k))
+        save({ op: 'local-remove', key: String(k) })
+      },
+      clear: () => {
+        for (const k of map.keys()) save({ op: 'local-remove', key: k })
+        map.clear()
+      },
     }
   }
-  for (const name of ['localStorage', 'sessionStorage']) {
-    const storage = memoryStorage()
+  const storages = { localStorage: memoryStorage(localInit, true), sessionStorage: memoryStorage({}, false) }
+  for (const [name, storage] of Object.entries(storages)) {
     Object.defineProperty(window, name, { configurable: true, get: () => storage })
   }
 
