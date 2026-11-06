@@ -41,6 +41,29 @@ export async function brewInstalled(): Promise<BrewEntry[]> {
   return (await A.BrewUtil2.pGetBrew()).map(entryOf)
 }
 
+export interface StoredBrew {
+  /** 存在作者的哪个包管理器里：自制（BrewUtil2）或试玩稿（PrereleaseUtil）。 */
+  kind: 'brew' | 'prerelease'
+  head: Record<string, unknown>
+  /** 包里声明的来源（_meta.sources[].json）。 */
+  sources: string[]
+  /** 作者 pGetBrew 是否交出它（作者会滤掉没有来源的包：utils-brew-base.js 第 313 行）。 */
+  shown: boolean
+}
+
+/** 体检用：作者两个包管理器里存着的全部包（作者 _pGetBrewRaw），以及哪些被作者滤掉、不会显示。 */
+export async function brewStorage(): Promise<StoredBrew[]> {
+  await init()
+  const out: StoredBrew[] = []
+  for (const [kind, util] of [['brew', A.BrewUtil2], ['prerelease', A.PrereleaseUtil]] as const) {
+    const shown = new Set((await util.pGetBrew()).map((b: any) => b.head.docIdLocal))
+    for (const b of (await util._pGetBrewRaw()) ?? []) {
+      out.push({ kind, head: b.head, sources: (b.body?._meta?.sources ?? []).map((src: any) => src?.json).filter(Boolean), shown: shown.has(b.head.docIdLocal) })
+    }
+  }
+  return out
+}
+
 /** 按网址装（作者 pAddBrewFromUrl：自动追装声明的依赖）。value 是这次加进来的包（含依赖）。 */
 export async function brewAddUrl(url: string): Promise<WithErrors<BrewEntry[]>> {
   const r = await withErrors<any[]>(() => A.BrewUtil2.pAddBrewFromUrl(url))

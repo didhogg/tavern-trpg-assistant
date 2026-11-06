@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 export const root = fileURLToPath(new URL('../../../', import.meta.url))
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8' }
 
-export async function startStatic() {
+export async function startStatic({ port = 0 } = {}) {
   const requests = []
   const server = createServer(async (req, res) => {
     const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname))
@@ -23,6 +23,6 @@ export async function startStatic() {
       res.writeHead(404).end()
     }
   })
-  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  await new Promise((r) => server.listen(port, '127.0.0.1', r))
   return { server, requests, url: `http://127.0.0.1:${server.address().port}/` }
 }

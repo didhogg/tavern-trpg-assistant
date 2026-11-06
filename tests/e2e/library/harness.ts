@@ -3,7 +3,7 @@ import { LibraryDatabase } from '../../../src/library/db'
 import { FileProvider } from '../../../src/library/files'
 import { libraryHandlers } from '../../../src/library/runtime/handlers'
 import { startAuthorFrame, type AuthorFrame } from '../../../src/library/runtime/host'
-import { getSource } from '../../../src/library/sources'
+import { commitOf, getSource } from '../../../src/library/sources'
 
 const db = new LibraryDatabase()
 const files = new FileProvider({ db })
@@ -115,3 +115,82 @@ import { LibraryService } from '../../../src/library/service'
 
 /** 库服务（界面将来的唯一入口）。安装会另开小窗，所以安装后要 service.reset()。 */
 export const service = new LibraryService({ db, openFrame: openLocalFrame })
+
+// ---- B2-8a 审计第 3、4 层 ----
+import { compareLayers, isFoundryFile, recordSchemaOf, type AuditLayers34Report, type ParsedRecord, type RawRecord, type SchemaInfo } from './audit-layers34'
+
+/** 读本地原始文件 + 全量解析结果，交给 compareLayers；报告存进库（体检会读到）。 */
+export async function auditLayers34(sourceId: string, schema: SchemaInfo): Promise<AuditLayers34Report> {
+  const source = getSource(sourceId)
+  const f = await openLocalFrame(source.codeSet)
+  try {
+    const loaders = await f.call('loaders')
+    const corpusProps = new Set(loaders.filter((l) => l.kind === 'corpus').flatMap((l) => l.props))
+    const loaderProps = new Set(loaders.flatMap((l) => l.props))
+    const notCategory: Record<string, string[]> = {}
+    const noSchemaFile: Record<string, string[]> = {}
+    const foundry: Record<string, number> = {}
+    const corpusRaw: Record<string, number> = {}
+    const raws: RawRecord[] = []
+    const files = await db.files.where('source').equals(sourceId).toArray()
+    for (const file of files) {
+      if (!file.path.startsWith('data/') || !file.path.endsWith('.json')) continue
+      const json = JSON.parse(file.text) as Record<string, unknown>
+      for (const [key, value] of Object.entries(json)) {
+        if (!Array.isArray(value)) continue
+        if (isFoundryFile(file.path)) { foundry[file.path] = (foundry[file.path] ?? 0) + value.length; continue }
+        const { schema: recSchema, fallback } = recordSchemaOf(schema, file.path, key)
+        // 结构定义里没有、但作者加载器登记了这一类（例 data/generated/gendata-tables.json 的 tableGroup）：照样比，字段判断不了
+        if (!recSchema && !loaderProps.has(key)) { (notCategory[key] ??= []).push(file.path); continue }
+        if (fallback) (noSchemaFile[file.path] ??= []).push(key)
+        if (corpusProps.has(key)) { corpusRaw[key] = (corpusRaw[key] ?? 0) + value.length; continue }
+        const hashes = await f.call('rawHashes', key, value)
+        value.forEach((rec, i) => raws.push({ prop: key, file: file.path, hash: hashes[i], rec: rec as Record<string, unknown>, schema: recSchema }))
+      }
+    }
+    const parseds: ParsedRecord[] = []
+    const parsedProps = new Set<string>()
+    for (const rec of await db.derived.where('key').startsWith(`parsed:${sourceId}:`).toArray()) {
+      if (rec.key.includes(':corpus:')) continue
+      const prop = rec.key.slice(`parsed:${sourceId}:`.length)
+      parsedProps.add(prop)
+      const { items, hashes } = rec.value as { items: Array<Record<string, unknown>>; hashes: Array<string | null> }
+      items.forEach((item, i) => parseds.push({ prop, hash: hashes[i], item }))
+    }
+    const report: AuditLayers34Report = {
+      source: sourceId,
+      schemaVersion: schema.version,
+      notCategory,
+      noSchemaFile,
+      foundry,
+      notChecked: Object.entries(corpusRaw).map(([prop, raw]) => ({ prop, raw, reason: '书、冒险：作者按本取正文，第 2 层已逐本解析' })),
+      ...compareLayers(raws, parseds, schema, loaders.map((l) => l.props), parsedProps),
+    }
+    await db.derived.put({ key: `audit:layers34:${sourceId}`, fingerprint: `${commitOf(source)}+schema@${schema.version}`, value: report, savedAt: Date.now() })
+    return report
+  } finally {
+    f.close()
+  }
+}
+
+/** 诊断用：某个编号在原始文件和解析结果里各是什么（查可疑清单的根因）。 */
+export async function auditProbe(sourceId: string, prop: string, hash: string) {
+  const source = getSource(sourceId)
+  const f = await openLocalFrame(source.codeSet)
+  try {
+    const raws: Array<{ file: string; key: string; rec: unknown }> = []
+    for (const file of await db.files.where('source').equals(sourceId).toArray()) {
+      if (!file.path.startsWith('data/') || !file.path.endsWith('.json')) continue
+      for (const [key, value] of Object.entries(JSON.parse(file.text) as Record<string, unknown>)) {
+        if (!Array.isArray(value)) continue
+        const hashes = await f.call('rawHashes', prop, value)
+        hashes.forEach((h, i) => { if (h === hash) raws.push({ file: file.path, key, rec: value[i] }) })
+      }
+    }
+    const rec = await db.derived.get(parsedKey(sourceId, prop))
+    const { items, hashes } = (rec?.value ?? { items: [], hashes: [] }) as { items: unknown[]; hashes: Array<string | null> }
+    return { raws, parsed: items.filter((_, i) => hashes[i] === hash) }
+  } finally {
+    f.close()
+  }
+}

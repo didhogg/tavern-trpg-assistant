@@ -3,6 +3,7 @@
 // 搜索匹配与排序）都在小窗里由作者函数做；插件这边只读库、对编号、按来源分组。
 import { parseBrew, type BrewParseReport } from './brew'
 import type { LibraryDatabase } from './db'
+import { healthItemsOf, healthReport, type HealthReport, type Layers34Summary, type StoredReport } from './health'
 import type { InstallReport } from './install'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
@@ -10,7 +11,7 @@ import type { Detail, SearchHit } from './runtime/frame/read-commands'
 import type { EnglishMatch } from './runtime/frame/english-commands'
 import type { BrewEntry, WithErrors } from './runtime/frame/brew-commands'
 import type { AuthorFrame } from './runtime/host'
-import { commitOf, getSource, type SourceEntry } from './sources'
+import { commitOf, getSource, SOURCES, type SourceEntry } from './sources'
 
 export interface QueryRow {
   hash: string | null
@@ -322,5 +323,45 @@ export class LibraryService {
     }
     await this.opts.db.derived.put({ key: `audit:english:${s.id}`, fingerprint: `${commitOf(s)}+${commitOf(getSource(pairs.pair))}`, value: out, savedAt: Date.now() })
     return out
+  }
+
+  // ---- 体检 ----
+
+  private async stored<T>(key: string, fingerprint: (fp: string) => boolean): Promise<StoredReport<T> | undefined> {
+    const rec = await this.opts.db.derived.get(key)
+    return rec ? { value: rec.value as T, stale: !fingerprint(rec.fingerprint) } : undefined
+  }
+
+  /** 体检：源登记表里每个源的各份报告汇成一份（第 9 节）。自制会现场问作者包管理器存了哪些包。 */
+  async health(): Promise<HealthReport> {
+    const items = []
+    for (const source of SOURCES) {
+      const commit = commitOf(source)
+      const set = await this.opts.db.sets.get(source.id)
+      const pairCommit = source.pair ? commitOf(getSource(source.pair)) : ''
+      const input: Parameters<typeof healthItemsOf>[0] = {
+        source,
+        installed: set?.status === 'installed',
+        install: source.kind === 'official' ? await this.stored<InstallReport>(`audit:${source.id}`, (fp) => fp === commit) : undefined,
+        brew: source.kind === 'brew' ? await this.stored<BrewParseReport>(`audit:${source.id}`, () => true) : undefined,
+        english: await this.stored<EnglishCoverage>(`audit:english:${source.id}`, (fp) => fp === `${commit}+${pairCommit}`),
+        layers34: await this.stored<Layers34Summary>(`audit:layers34:${source.id}`, (fp) => fp.startsWith(`${commit}+`)),
+      }
+      if (source.kind === 'brew') {
+        input.brewStorage = await (await this.frame(source.codeSet)).call('brewStorage')
+        input.brewSourceCounts = await this.brewSourceCounts(source.id)
+      }
+      items.push(...healthItemsOf(input))
+    }
+    return healthReport(items)
+  }
+
+  /** 自制解析结果里每个来源有几条（来源是解析时作者 SourceUtil.getEntitySource 给的，见 brew-commands.ts parseBrewProp）。 */
+  private async brewSourceCounts(sourceId: string): Promise<Record<string, number>> {
+    const counts: Record<string, number> = {}
+    for (const rec of await this.opts.db.derived.where('key').startsWith(`parsed:${sourceId}:`).toArray()) {
+      for (const src of (rec.value as ParsedProp).sources) if (src) counts[src.toLowerCase()] = (counts[src.toLowerCase()] ?? 0) + 1
+    }
+    return counts
   }
 }

@@ -1,7 +1,7 @@
 // 小窗里插件能叫作者程序做的事。每一件都只是转调作者自己的函数，结果原样交回，不挑字段。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init, sourceOf } from './author'
-import { brewAddFiles, brewAddUrl, brewCatalog, brewDelete, brewInstalled, brewPull, parseBrewProp } from './brew-commands'
+import { brewAddFiles, brewAddUrl, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch } from './english-commands'
 import { detail, excludedFlags, search, searchSettings } from './read-commands'
 
@@ -91,11 +91,17 @@ export async function isExcluded(hash: string, prop: string, source: string): Pr
   return A.ExcludeUtil.isExcluded(hash, prop, source, { isNoCount: true })
 }
 
+/** 审计第 3 层：对原始记录（不经加载器）直接用作者编号规则算编号（D2-P2 B1 设计 §11）。算不出来为 null。 */
+export async function rawHashes(prop: string, records: unknown[]): Promise<Array<string | null>> {
+  await init()
+  return records.map((r) => hashOf(prop, r))
+}
+
 /** 这个小窗开起来以后作者抛出的全部错误（early.ts 收集，原文）。 */
 export async function frameErrors(): Promise<string[]> {
   return [...(A.__trpgFrameErrors as string[])]
 }
 
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchSettings, englishLocators, englishMatch,
-  brewCatalog, brewInstalled, brewAddUrl, brewAddFiles, brewDelete, brewPull, parseBrewProp }
+  brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddFiles, brewDelete, brewPull, parseBrewProp, rawHashes }
 export type CommandName = keyof typeof COMMANDS
