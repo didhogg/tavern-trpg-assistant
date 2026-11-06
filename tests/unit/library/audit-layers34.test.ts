@@ -99,3 +99,22 @@ describe('从作者结构定义读类别、字段、解析标记', () => {
     expect(s.byProp.item.open).toBe(false)
   })
 })
+
+describe('作者规则登记', () => {
+  it('命中的差异单独计数，不进 D 和可疑；条件看作者打的来历字段和语言', async () => {
+    const { AUTHOR_RULES } = await import('../../e2e/library/audit-author-rules')
+    const raws = [raw('subrace', 'r1', { name: 'Sub' }, 'data/races.json'), raw('spell', 's1', { name: 'A', translator: 'x' })]
+    const parseds = [
+      { prop: 'item', hash: 'v1', item: { name: 'V', _variantName: '+1' } },
+      { prop: 'item', hash: 'v2', item: { name: 'W' } },
+      { prop: 'spell', hash: 's1', item: { name: 'A' } },
+    ]
+    const groups = [['spell'], ['race', 'subrace'], ['item']]
+    const cn = compareLayers(raws, parseds, schema, groups, new Set(['spell', 'item']), AUTHOR_RULES, 'cn')
+    expect(cn.layer3.subrace.authorRules).toEqual({ 'subrace-merged': 1 })
+    expect(cn.layer3.item).toMatchObject({ authorRules: { 'specific-variants': 1 }, d: { parsedOnly: 1 } })
+    expect(cn.layer4.spell).toMatchObject({ authorRule: 1, authorRules: { 'cn-translator': 1 }, suspicious: {} })
+    const en = compareLayers(raws, parseds, schema, groups, new Set(['spell', 'item']), AUTHOR_RULES, 'en')
+    expect(en.layer4.spell.suspicious).toHaveProperty('removed:translator')
+  })
+})

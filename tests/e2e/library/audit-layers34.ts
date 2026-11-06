@@ -1,8 +1,11 @@
 // 审计第 3、4 层（D2-P2 B1 设计 §11）：验证程序，不随插件发布，不处理数据，只出报告。
 // 只读四样东西：作者结构定义（schemaInfo，tools/audit/schema-info.mjs 从 5etools-utils 读出）、作者编号规则（小窗里算）、
+// 作者规则登记（audit-author-rules.ts）命中的差异单独计数。
 // 本地原始文件（= GitHub 锁定版本，第 1 层已证）、全量解析结果。不含我们自己写的字段名单。
 //   第 3 层 不漏：原始每条用作者编号规则算编号，去解析结果里找 → A 对上 / B 原始有解析无 / C 解析有原始无 / D 解释不了
 //   第 4 层 只有解析处不同：A 桶每一对逐字段比；只允许 ① 结构定义里没有的字段（加载器加的）② 原始记录带解析标记
+
+import { findRule, type AuthorRule } from './audit-author-rules'
 
 export interface RecordSchema { fields: string[]; markers: string[]; open: boolean }
 
@@ -67,6 +70,8 @@ export interface Layer3Prop {
   bMarked: Record<string, number>
   /** D：解释不了的。 */
   d: { rawOnly: number; parsedOnly: number; rawNoHash: number; samples: string[] }
+  /** 作者规则登记命中（规则编号 → 条数），不算进 D。 */
+  authorRules: Record<string, number>
   /** 解析有原始无的条目上，结构定义里没有的字段（看它们是不是加载器生成的）：字段 → 条数。 */
   parsedOnlyRuntime: Record<string, number>
 }
@@ -79,6 +84,9 @@ export interface Layer4Prop {
   runtimeFields: Record<string, number>
   /** 原始记录带解析标记（允许不同）。 */
   marked: number
+  /** 差异全部被作者规则登记解释的对数；规则编号 → 命中的差异个数。 */
+  authorRule: number
+  authorRules: Record<string, number>
   /** 这一类没有结构定义，只多了字段、判断不了是不是加载器加的（例 data/generated/gendata-tables.json 的 tableGroup）。 */
   noSchema: number
   /** 同一编号原始或解析后不止一条，无法一一配对。 */
@@ -103,7 +111,7 @@ export interface AuditLayers34Report {
   notLoaded: Record<string, number>
   layer3: Record<string, Layer3Prop>
   layer4: Record<string, Layer4Prop>
-  totals: { raw: number; a: number; crossProp: number; bMarked: number; dRaw: number; dParsed: number; pairs: number; identical: number; runtimeOnly: number; marked: number; noSchema: number; ambiguous: number; suspicious: number }
+  totals: { raw: number; a: number; crossProp: number; bMarked: number; authorRule3: number; dRaw: number; dParsed: number; pairs: number; identical: number; runtimeOnly: number; marked: number; authorRule4: number; noSchema: number; ambiguous: number; suspicious: number }
 }
 
 /** 不看键顺序的深比较（解析结果经过结构化克隆，键顺序可能和原文不同）。 */
@@ -151,7 +159,7 @@ export function comparePair(raw: Record<string, unknown>, parsed: Record<string,
 }
 
 /** 第 3、4 层的比对本身（纯函数，单元测试直接测它）。 */
-export function compareLayers(raws: RawRecord[], parseds: ParsedRecord[], schema: SchemaInfo, loaderGroups: string[][], parsedProps: Set<string>): Pick<AuditLayers34Report, 'notLoaded' | 'layer3' | 'layer4' | 'totals'> {
+export function compareLayers(raws: RawRecord[], parseds: ParsedRecord[], schema: SchemaInfo, loaderGroups: string[][], parsedProps: Set<string>, rules: AuthorRule[] = [], codeSet = ''): Pick<AuditLayers34Report, 'notLoaded' | 'layer3' | 'layer4' | 'totals'> {
   const loaderProps = new Set(loaderGroups.flat())
   // 换类别只认同一个作者加载器里的类别（例 baseitem、magicvariant、itemGroup → item；race、subrace），
   // 还要求名字相同：编号规则不同类别可能撞号（例 itemType 与 itemProperty、物品与物品背景描述）
@@ -159,8 +167,8 @@ export function compareLayers(raws: RawRecord[], parseds: ParsedRecord[], schema
   const layer3: Record<string, Layer3Prop> = {}
   const layer4: Record<string, Layer4Prop> = {}
   const notLoaded: Record<string, number> = {}
-  const l3 = (prop: string): Layer3Prop => (layer3[prop] ??= { raw: 0, parsed: 0, a: 0, crossProp: {}, bMarked: {}, d: { rawOnly: 0, parsedOnly: 0, rawNoHash: 0, samples: [] }, parsedOnlyRuntime: {} })
-  const l4 = (prop: string): Layer4Prop => (layer4[prop] ??= { pairs: 0, identical: 0, runtimeOnly: 0, runtimeFields: {}, marked: 0, noSchema: 0, ambiguous: 0, ambiguousSamples: [], suspicious: {} })
+  const l3 = (prop: string): Layer3Prop => (layer3[prop] ??= { raw: 0, parsed: 0, a: 0, crossProp: {}, bMarked: {}, d: { rawOnly: 0, parsedOnly: 0, rawNoHash: 0, samples: [] }, authorRules: {}, parsedOnlyRuntime: {} })
+  const l4 = (prop: string): Layer4Prop => (layer4[prop] ??= { pairs: 0, identical: 0, runtimeOnly: 0, runtimeFields: {}, marked: 0, authorRule: 0, authorRules: {}, noSchema: 0, ambiguous: 0, ambiguousSamples: [], suspicious: {} })
   const dSample = (t: Layer3Prop, s: string) => { if (t.d.samples.length < SAMPLES) t.d.samples.push(s) }
 
   const parsedByKey = groupBy(parseds.filter((p) => p.hash !== null), (p) => `${p.prop}\u0000${p.hash}`)
@@ -182,7 +190,13 @@ export function compareLayers(raws: RawRecord[], parseds: ParsedRecord[], schema
     else if (r.kind === 'runtimeOnly') t.runtimeOnly++
     else if (r.kind === 'noSchema') t.noSchema++
     for (const f of r.runtime) t.runtimeFields[f] = (t.runtimeFields[f] ?? 0) + 1
-    for (const d of r.diffs) {
+    const left = r.diffs.filter((d) => {
+      const rule = findRule(rules, { layer: 4, prop, match: d, codeSet, raw: rawList[0].rec, parsed: parsedList[0].item })
+      if (rule) t.authorRules[rule.id] = (t.authorRules[rule.id] ?? 0) + 1
+      return !rule
+    })
+    if (r.kind === 'suspicious' && !left.length) t.authorRule++
+    for (const d of left) {
       const g = (t.suspicious[d] ??= { count: 0, samples: [] })
       g.count++
       if (g.samples.length < SAMPLES) g.samples.push(`${rawList[0].hash} (${rawList[0].file})`)
@@ -212,6 +226,8 @@ export function compareLayers(raws: RawRecord[], parseds: ParsedRecord[], schema
       }
       const marker = r.schema?.markers.find((m) => m in r.rec)
       if (marker) { t.bMarked[marker] = (t.bMarked[marker] ?? 0) + 1; continue }
+      const rule = findRule(rules, { layer: 3, prop, match: 'rawOnly', codeSet, raw: r.rec })
+      if (rule) { t.authorRules[rule.id] = (t.authorRules[rule.id] ?? 0) + 1; continue }
       t.d.rawOnly++
       dSample(t, `原始有解析无 ${r.hash} (${r.file})`)
     }
@@ -225,6 +241,8 @@ export function compareLayers(raws: RawRecord[], parseds: ParsedRecord[], schema
       if (rawByKey.has(`${prop}\u0000${p.hash}`)) continue
       const other = rawByHash.get(p.hash)?.filter((r) => r.prop !== prop && sameLoader(r.prop, prop) && r.rec.name === p.item.name)
       if (other?.length) { const k = `←${other[0].prop}`; t.crossProp[k] = (t.crossProp[k] ?? 0) + 1; continue }
+      const rule = findRule(rules, { layer: 3, prop, match: 'parsedOnly', codeSet, parsed: p.item })
+      if (rule) { t.authorRules[rule.id] = (t.authorRules[rule.id] ?? 0) + 1; continue }
       t.d.parsedOnly++
       dSample(t, `解析有原始无 ${p.hash}`)
       const allowed = new Set(schema.byProp[prop]?.fields ?? [])
@@ -238,15 +256,17 @@ export function compareLayers(raws: RawRecord[], parseds: ParsedRecord[], schema
     a: sum(layer3, (t) => t.a),
     crossProp: sum(layer3, (t) => Object.entries(t.crossProp).filter(([k]) => k.startsWith('→')).reduce((n, [, v]) => n + v, 0)),
     bMarked: sum(layer3, (t) => sum(t.bMarked, (n) => n)),
+    authorRule3: sum(layer3, (t) => sum(t.authorRules, (n) => n)),
     dRaw: sum(layer3, (t) => t.d.rawOnly + t.d.rawNoHash),
     dParsed: sum(layer3, (t) => t.d.parsedOnly),
     pairs: sum(layer4, (t) => t.pairs),
     identical: sum(layer4, (t) => t.identical),
     runtimeOnly: sum(layer4, (t) => t.runtimeOnly),
     marked: sum(layer4, (t) => t.marked),
+    authorRule4: sum(layer4, (t) => t.authorRule),
     noSchema: sum(layer4, (t) => t.noSchema),
     ambiguous: sum(layer4, (t) => t.ambiguous),
-    suspicious: sum(layer4, (t) => t.pairs - t.identical - t.runtimeOnly - t.marked - t.noSchema - t.ambiguous),
+    suspicious: sum(layer4, (t) => t.pairs - t.identical - t.runtimeOnly - t.marked - t.authorRule - t.noSchema - t.ambiguous),
   }
   return { notLoaded, layer3, layer4, totals }
 }

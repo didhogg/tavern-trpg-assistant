@@ -118,6 +118,7 @@ export const service = new LibraryService({ db, openFrame: openLocalFrame })
 
 // ---- B2-8a 审计第 3、4 层 ----
 import { compareLayers, isFoundryFile, recordSchemaOf, type AuditLayers34Report, type ParsedRecord, type RawRecord, type SchemaInfo } from './audit-layers34'
+import { AUTHOR_RULES } from './audit-author-rules'
 
 /** 读本地原始文件 + 全量解析结果，交给 compareLayers；报告存进库（体检会读到）。 */
 export async function auditLayers34(sourceId: string, schema: SchemaInfo): Promise<AuditLayers34Report> {
@@ -164,7 +165,7 @@ export async function auditLayers34(sourceId: string, schema: SchemaInfo): Promi
       noSchemaFile,
       foundry,
       notChecked: Object.entries(corpusRaw).map(([prop, raw]) => ({ prop, raw, reason: '书、冒险：作者按本取正文，第 2 层已逐本解析' })),
-      ...compareLayers(raws, parseds, schema, loaders.map((l) => l.props), parsedProps),
+      ...compareLayers(raws, parseds, schema, loaders.map((l) => l.props), parsedProps, AUTHOR_RULES, source.codeSet),
     }
     await db.derived.put({ key: `audit:layers34:${sourceId}`, fingerprint: `${commitOf(source)}+schema@${schema.version}`, value: report, savedAt: Date.now() })
     return report
