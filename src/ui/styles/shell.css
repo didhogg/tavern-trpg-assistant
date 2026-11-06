@@ -182,16 +182,8 @@ button.trpg-hero:disabled { opacity: 0.6; cursor: not-allowed; }
 .trpg-dice__shell { display: flex; flex: 1; min-height: 0; }
 .trpg-dice__main { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
 .trpg-dice__main > .trpg-dice__body { overflow-y: auto; }
-.trpg-dice__tabs { display: flex; flex-direction: column; gap: 4px; flex: none; width: 44px; padding-top: 12px; background: var(--panel); border-right: 1px solid var(--line); }
-.trpg-dice__tab { min-height: 56px; padding: 0; white-space: nowrap; border: 0; border-radius: 8px 0 0 8px; background: transparent; color: var(--ink-2); font-size: 15px; font-weight: 500; }
-.trpg-dice__tab[aria-selected='true'] { width: 48px; margin-left: -4px; background: var(--card); color: var(--primary); font-weight: 700; box-shadow: -1px 0 0 var(--line); }
-.trpg-dice[data-tab='check'], .trpg-dice[data-tab='save'] { width: 520px; height: min(90vh, 820px); }
 .trpg-dice[data-narrow='true'] { max-height: calc(100dvh - 76px); }
-.trpg-dice[data-narrow='true'][data-tab='check'], .trpg-dice[data-narrow='true'][data-tab='save'] { width: 92vw; height: min(88dvh, 820px); }
 .trpg-dice[data-narrow='true'] .trpg-dice__shell { flex-direction: column; }
-.trpg-dice[data-narrow='true'] .trpg-dice__tabs { flex-direction: row; width: auto; padding: 8px 8px 0; border-right: 0; border-bottom: 1px solid var(--line); }
-.trpg-dice[data-narrow='true'] .trpg-dice__tab { min-height: 40px; padding: 0 18px; border-radius: 10px 10px 0 0; letter-spacing: 0; }
-.trpg-dice[data-narrow='true'] .trpg-dice__tab[aria-selected='true'] { width: auto; margin: 0 0 -1px; box-shadow: none; border: 1px solid var(--line); border-bottom: 0; }
 .trpg-rp { display: flex; flex-direction: column; flex: 1; min-height: 0; background: var(--card); }
 .trpg-rp__body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 14px; display: grid; gap: 8px; align-content: start; }
 .trpg-rp .trpg-seg { width: fit-content; max-width: 100%; }

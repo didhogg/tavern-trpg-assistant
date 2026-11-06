@@ -2,21 +2,15 @@
 import { computed, onMounted, ref } from 'vue'
 import { SAVE_NAME_MAX } from '../../schemas/campaign'
 import { useAppStore } from '../../stores/app'
-import { useLibraryStore } from '../../stores/library'
 import { wizard } from './state'
 
 const emit = defineEmits<{ submit: [] }>()
 const app = useAppStore()
-const library = useLibraryStore()
 const input = ref<HTMLInputElement | null>(null)
 const rule = computed(() => app.svc().rules.get(wizard.ruleId))
 const tooLong = computed(() => wizard.name.trim().length > SAVE_NAME_MAX)
 const empty = computed(() => wizard.name.trim().length === 0)
-const summary = computed(() => {
-  const n = wizard.packIds.length
-  const adventure = wizard.adventureId ? `《${library.installedMap.get(wizard.adventureId)?.name ?? wizard.adventureId}》` : '不带冒险'
-  return `将建立：${rule.value?.name ?? ''} · 资料 ${n} 本 · ${adventure}`
-})
+const summary = computed(() => `将建立：${rule.value?.name ?? ''}`)
 
 onMounted(() => {
   if (!wizard.nameEdited || !wizard.name) {

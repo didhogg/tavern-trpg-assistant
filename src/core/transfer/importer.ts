@@ -1,9 +1,9 @@
 import type { TrpgDatabase } from '../db'
 import { uuid as defaultUuid } from '../ids'
-import type { RecognizedSaveFile } from '../packs/recognize'
-import { sniffImageMime } from '../packs/images'
+import { sniffImageMime } from '../files/images'
 import type { CampaignService, Owner } from '../saves/campaign'
 import { settingsSchema, type SaveSlot } from '../../schemas/campaign'
+import type { RecognizedSaveFile } from './saveFile'
 
 export interface ImportItem {
   save: SaveSlot
@@ -15,11 +15,6 @@ export interface ImportItem {
 /** 导入窗口的存档列表：所属规则未安装的存档不可选。 */
 export function describeSaveFile(rec: RecognizedSaveFile, hasRule: (ruleId: string) => boolean): ImportItem[] {
   return rec.saves.map((save) => (hasRule(save.ruleId) ? { save, selectable: true } : { save, selectable: false, reason: '规则未安装' }))
-}
-
-/** 文件中附带的内容包（交给 PackService 逐个识别与安装，冲突时由界面询问）。 */
-export function attachedPackFiles(rec: RecognizedSaveFile): Array<{ name: string; bytes: Uint8Array }> {
-  return [...rec.attachedPacks].map(([name, bytes]) => ({ name, bytes }))
 }
 
 export interface ImportDeps {
@@ -58,7 +53,7 @@ export async function importSaves(deps: ImportDeps, rec: RecognizedSaveFile, opt
   const selected = new Set(opts.selectedIds)
   let imported = 0
 
-  return db.transaction('rw', [db.saves, db.workspaces, db.meta, db.packs, db.blobs], async () => {
+  return db.transaction('rw', [db.saves, db.workspaces, db.meta, db.blobs], async () => {
     const createdAt = deps.now()
     for (const [hash, bytes] of rec.blobs) {
       if (await db.blobs.get(hash)) continue

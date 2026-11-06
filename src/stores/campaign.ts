@@ -82,7 +82,7 @@ export const useCampaignStore = defineStore('campaign', () => {
     timer = setTimeout(() => void flush(), PERSIST_DELAY)
   }
 
-  async function startNew(input: { ruleId: string; packIds: string[]; name: string; note?: string }): Promise<SaveSlot> {
+  async function startNew(input: { ruleId: string; name: string; note?: string }): Promise<SaveSlot> {
     guardWrite()
     if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '请先在酒馆中打开一个聊天')
     await flush()
@@ -133,14 +133,5 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result
   }
 
-  async function setPackEnabled(packId: string, enabled: boolean): Promise<string[]> {
-    guardWrite()
-    if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
-    await flush()
-    const result = await svc().campaign.setPackEnabled(owner.value.ownerKey, packId, enabled)
-    adopt(result.workspace)
-    return result.autoEnabled
-  }
-
-  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, save, branch, load, setPackEnabled }
+  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, save, branch, load }
 })

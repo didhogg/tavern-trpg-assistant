@@ -4,15 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createServices, type Services } from '../../src/core/services'
 import { useCampaignStore } from '../../src/stores/campaign'
 import { OWNER } from '../helpers/harness'
-import { makeClock, makeEntries, makePack } from '../helpers/fixtures'
+import { makeClock } from '../helpers/fixtures'
 import { uuid } from '../../src/core/ids'
 
 let services: Services
 
 beforeEach(async () => {
   setActivePinia(createPinia())
-  services = createServices({ dbName: `store-${uuid()}`, now: makeClock(), appVersion: '1.0.0' })
-  await services.packs.installBuiltin(makePack({ id: 'dnd5e2014-srd', name: '核心规则' }, makeEntries(2)))
+  services = createServices({ dbName: `store-${uuid()}`, now: makeClock() })
 })
 
 afterEach(async () => {
@@ -28,14 +27,14 @@ describe('campaign store', () => {
     await store.init(services, null)
     expect(store.ready).toBe(true)
     expect(store.hasCampaign).toBe(false)
-    await expect(store.startNew({ ruleId: 'dnd5e2014', packIds: [], name: 'x' })).rejects.toThrow('请先在酒馆中打开一个聊天')
+    await expect(store.startNew({ ruleId: 'dnd5e2014', name: 'x' })).rejects.toThrow('请先在酒馆中打开一个聊天')
     expect(() => store.updateData((d) => d)).toThrow('还没有当前战役')
   })
 
   it('新存档 → 修改（内存立即变、存储延迟写）→ 保存；未保存状态随之变化', async () => {
     const store = useCampaignStore()
     await store.init(services, OWNER)
-    await store.startNew({ ruleId: 'dnd5e2014', packIds: [], name: '龙金劫-2' })
+    await store.startNew({ ruleId: 'dnd5e2014', name: '龙金劫-2' })
     expect(store.hasCampaign && store.dirty).toBe(false)
     vi.useFakeTimers()
     store.updateData((d) => ({ ...d, gold: 3 }))
@@ -53,7 +52,7 @@ describe('campaign store', () => {
   it('保存、分支、读取前会先把内存中的改动写入存储（不丢改动）', async () => {
     const store = useCampaignStore()
     await store.init(services, OWNER)
-    const first = await store.startNew({ ruleId: 'dnd5e2014', packIds: [], name: 'A' })
+    const first = await store.startNew({ ruleId: 'dnd5e2014', name: 'A' })
     store.updateData((d) => ({ ...d, n: 1 }))
     await store.branch('B')
     expect((await services.campaign.getSave(first.id))?.snapshot.n).toBeUndefined()
@@ -67,7 +66,7 @@ describe('campaign store', () => {
   it('重新初始化时恢复已有的当前数据', async () => {
     const first = useCampaignStore()
     await first.init(services, OWNER)
-    await first.startNew({ ruleId: 'dnd5e2014', packIds: [], name: 'A' })
+    await first.startNew({ ruleId: 'dnd5e2014', name: 'A' })
     first.updateData((d) => ({ ...d, k: 'v' }))
     await first.flush()
     setActivePinia(createPinia())
@@ -80,7 +79,7 @@ describe('campaign store', () => {
   it('只读窗口：所有写操作被拒绝，且不会写入存储', async () => {
     const store = useCampaignStore()
     await store.init(services, OWNER)
-    await store.startNew({ ruleId: 'dnd5e2014', packIds: [], name: 'A' })
+    await store.startNew({ ruleId: 'dnd5e2014', name: 'A' })
     store.readOnly = true
     expect(() => store.updateData((d) => ({ ...d, x: 1 }))).toThrow('此窗口为只读')
     await expect(store.save()).rejects.toThrow('此窗口为只读')

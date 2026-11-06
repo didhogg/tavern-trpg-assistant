@@ -7,13 +7,13 @@ export const AUTO_SAVE_KEEP = 3
 
 export type SummaryContributor = (data: WorkspaceData) => Partial<SaveSummary>
 
-/** 未保存判定用的哈希：覆盖游戏数据与启用的内容包 id（不含版本，内容包更新不算改动）。 */
-export function snapshotHash(data: WorkspaceData, enabledPacks: Array<{ id: string }>): string {
-  return hashValue({ d: data, p: enabledPacks.map((p) => p.id).sort() })
+/** 未保存判定用的哈希：覆盖游戏数据。 */
+export function snapshotHash(data: WorkspaceData): string {
+  return hashValue({ d: data })
 }
 
-export function isDirty(ws: Pick<Workspace, 'data' | 'enabledPacks' | 'savedHash'>): boolean {
-  return ws.savedHash !== snapshotHash(ws.data, ws.enabledPacks)
+export function isDirty(ws: Pick<Workspace, 'data' | 'savedHash'>): boolean {
+  return ws.savedHash !== snapshotHash(ws.data)
 }
 
 export function summarize(data: WorkspaceData, contributors: SummaryContributor[]): SaveSummary {

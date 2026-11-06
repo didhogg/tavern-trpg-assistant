@@ -1,12 +1,8 @@
 import type { TrpgDatabase } from '../db'
 import { TrpgError } from '../errors'
 import { uuid as defaultUuid } from '../ids'
-import { materializeInstances, type MaterializeResult } from '../instances'
-import { enableFeatures } from '../library/features'
-import { disablePack, enablePack } from '../packs/enablement'
 import { SCHEMA_VERSIONS } from '../../schemas/common'
-import { backupStateSchema, type AutoReason, type EnabledPack, type SaveSlot, type Workspace, type WorkspaceData } from '../../schemas/campaign'
-import type { InstalledPack } from '../../schemas/pack'
+import { backupStateSchema, type AutoReason, type SaveSlot, type Workspace, type WorkspaceData } from '../../schemas/campaign'
 import type { RuleRegistry } from '../../rules/registry'
 import { AUTO_SAVE_KEEP, byRecent, cleanName, isDirty, readSave, readWorkspace, snapshotHash, summarize, uniqueName, type SummaryContributor } from './helpers'
 
@@ -24,7 +20,6 @@ export interface Owner {
 
 export interface NewCampaignInput extends Owner {
   ruleId: string
-  packIds: string[]
   name: string
   note?: string
 }
@@ -83,31 +78,20 @@ export class CampaignService {
     return rows.map(readSave).filter((s) => s.ruleId !== ruleId && s.kind === 'manual' && s.deletedAt === undefined).sort(byRecent)
   }
 
-  /** 存档引用了、但当前未安装的内容包。 */
-  async missingPacks(ws: Workspace): Promise<EnabledPack[]> {
-    const installed = new Set((await this.db.packs.toArray()).map((p) => p.id))
-    return ws.enabledPacks.filter((p) => !installed.has(p.id))
-  }
-
   // ---------- 新存档 / 保存 / 分支 ----------
 
   async startNewCampaign(input: NewCampaignInput): Promise<{ workspace: Workspace; save: SaveSlot }> {
-    const rule = this.requireRule(input.ruleId)
+    this.requireRule(input.ruleId)
     const name = cleanName(input.name)
-    const installed = await this.installedMap()
-    let enabled: EnabledPack[] = []
-    for (const id of [...rule.corePackIds, ...input.packIds]) enabled = enablePack(enabled, id, installed, rule).enabledPacks
-    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta, this.db.packs], async () => {
+    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta], async () => {
       const existing = await this.getWorkspace(input.ownerKey)
       if (existing) await this.writeAutoSave(existing, '新存档前')
-      let data: WorkspaceData = { instances: [] }
-      for (const e of enabled) data = enableFeatures(data, installed.get(e.id)!, this.deps.now())
+      const data: WorkspaceData = {}
       const ws: Workspace = {
         ownerKey: input.ownerKey,
         ownerLabel: input.ownerLabel,
         ruleId: input.ruleId,
         currentSaveId: null,
-        enabledPacks: enabled,
         data,
         savedHash: '',
         schemaVersion: SCHEMA_VERSIONS.workspace,
@@ -125,12 +109,12 @@ export class CampaignService {
 
   /** 保存到当前存档；没有改动时返回 changed=false 且不写入。 */
   async saveCurrent(ownerKey: string): Promise<{ changed: boolean; workspace: Workspace }> {
-    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta, this.db.packs], async () => {
+    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta], async () => {
       const ws = await this.requireWorkspace(ownerKey)
       if (!isDirty(ws)) return { changed: false, workspace: ws }
       const current = ws.currentSaveId ? await this.getSave(ws.currentSaveId) : null
       const fresh = await this.buildSave(ws, { id: current?.id ?? this.uuid(), name: current?.name ?? '存档', note: current?.note ?? '', kind: 'manual' })
-      const save: SaveSlot = current ? { ...current, snapshot: fresh.snapshot, packs: fresh.packs, summary: fresh.summary, hash: fresh.hash, updatedAt: fresh.updatedAt } : fresh
+      const save: SaveSlot = current ? { ...current, snapshot: fresh.snapshot, summary: fresh.summary, hash: fresh.hash, updatedAt: fresh.updatedAt } : fresh
       const next: Workspace = { ...ws, currentSaveId: save.id, savedHash: save.hash, updatedAt: save.updatedAt }
       await this.db.saves.put(save)
       await this.db.workspaces.put(next)
@@ -141,7 +125,7 @@ export class CampaignService {
 
   /** 用当前数据（含未保存改动）新建一个存档并切换过去；原存档保持上次保存的样子。 */
   async branch(ownerKey: string, name?: string): Promise<{ workspace: Workspace; save: SaveSlot }> {
-    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta, this.db.packs], async () => {
+    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta], async () => {
       const ws = await this.requireWorkspace(ownerKey)
       const origin = ws.currentSaveId ? await this.getSave(ws.currentSaveId) : null
       const taken = await this.manualNames(ws.ownerKey, ws.ruleId)
@@ -165,7 +149,7 @@ export class CampaignService {
     const source = await this.getSave(saveId)
     if (!source || source.deletedAt !== undefined) throw new TrpgError('E_NOT_FOUND', '没有找到这个存档')
     this.requireRule(source.ruleId)
-    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta, this.db.packs], async () => {
+    return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta], async () => {
       const current = await this.getWorkspace(owner.ownerKey)
       const switching = !!current && current.ruleId !== source.ruleId
       if (switching && !opts.allowRuleSwitch) throw new TrpgError('E_RULE_SWITCH_REQUIRED', '这个存档属于其他规则，需要确认切换规则')
@@ -177,13 +161,11 @@ export class CampaignService {
         target = { ...source, id: this.uuid(), ownerKey: owner.ownerKey, ownerLabel: owner.ownerLabel, name: uniqueName(`${source.name}（来自 ${source.ownerLabel}）`, taken), branchedFrom: undefined, createdAt: now, updatedAt: now }
         await this.db.saves.put(target)
       }
-      const installed = await this.installedMap()
       const ws: Workspace = {
         ownerKey: owner.ownerKey,
         ownerLabel: owner.ownerLabel,
         ruleId: target.ruleId,
         currentSaveId: target.id,
-        enabledPacks: target.packs.map((p) => ({ id: p.id, version: installed.get(p.id)?.version ?? p.version })),
         data: structuredClone(target.snapshot),
         savedHash: target.hash,
         schemaVersion: SCHEMA_VERSIONS.workspace,
@@ -263,33 +245,6 @@ export class CampaignService {
     return next
   }
 
-  async setPackEnabled(ownerKey: string, packId: string, enabled: boolean): Promise<{ workspace: Workspace; autoEnabled: string[] }> {
-    const ws = await this.requireWorkspace(ownerKey)
-    const rule = this.requireRule(ws.ruleId)
-    const installed = await this.installedMap()
-    let packs: EnabledPack[]
-    let autoEnabled: string[] = []
-    if (enabled) ({ enabledPacks: packs, autoEnabled } = enablePack(ws.enabledPacks, packId, installed, rule))
-    else packs = disablePack(ws.enabledPacks, packId, installed, rule)
-    const next = { ...ws, enabledPacks: packs, updatedAt: this.deps.now() }
-    await this.db.workspaces.put(next)
-    return { workspace: next, autoEnabled }
-  }
-
-  /** 从内容包条目生成副本并写入当前数据（U2 §3.18）。 */
-  async materialize(ownerKey: string, ref: { packId: string; entryId: string }, count = 1): Promise<MaterializeResult & { workspace: Workspace }> {
-    const ws = await this.requireWorkspace(ownerKey)
-    const enabled = ws.enabledPacks.find((p) => p.id === ref.packId)
-    if (!enabled) throw new TrpgError('E_PACK_DISABLED', '该内容包已停用，不能再从它新建')
-    const pack = await this.db.packs.get(ref.packId)
-    const entry = await this.db.entries.get([ref.packId, ref.entryId])
-    if (!pack || !entry) throw new TrpgError('E_NOT_FOUND', '没有找到这个条目')
-    const result = materializeInstances(ws.data, entry, pack.version, count, this.uuid)
-    const next = { ...ws, data: result.data, updatedAt: this.deps.now() }
-    if (result.created) await this.db.workspaces.put(next)
-    return { ...result, workspace: next }
-  }
-
   // ---------- 内部 ----------
 
   /** 导入、恢复备份等流程复用：写自动存档并按"每卡每规则保留 3 个"滚动。 */
@@ -307,7 +262,6 @@ export class CampaignService {
   }
 
   async buildSave(ws: Workspace, f: { id: string; name: string; note: string; kind: 'manual' | 'auto'; autoReason?: AutoReason; branchedFrom?: string }): Promise<SaveSlot> {
-    const installed = await this.installedMap()
     const now = this.deps.now()
     return {
       id: f.id,
@@ -322,9 +276,8 @@ export class CampaignService {
       createdAt: now,
       updatedAt: now,
       summary: summarize(ws.data, this.deps.summaryContributors ?? []),
-      packs: ws.enabledPacks.map((p) => ({ id: p.id, version: p.version, name: installed.get(p.id)?.name ?? p.id })),
       snapshot: structuredClone(ws.data),
-      hash: snapshotHash(ws.data, ws.enabledPacks),
+      hash: snapshotHash(ws.data),
       schemaVersion: SCHEMA_VERSIONS.save,
     }
   }
@@ -360,7 +313,4 @@ export class CampaignService {
     return rule
   }
 
-  private async installedMap(): Promise<Map<string, InstalledPack>> {
-    return new Map((await this.db.packs.toArray()).map((p) => [p.id, p]))
-  }
 }

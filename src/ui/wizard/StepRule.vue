@@ -2,16 +2,14 @@
 import { computed, markRaw } from 'vue'
 import { buildRuleCards } from '../../rules/registry'
 import { useAppStore } from '../../stores/app'
-import { useLibraryStore } from '../../stores/library'
 import { useModalStore } from '../../stores/modal'
 import InfoPage from '../kit/InfoPage.vue'
 import Term from '../kit/Term.vue'
 import { wizard } from './state'
 
 const app = useAppStore()
-const library = useLibraryStore()
 const modal = useModalStore()
-const cards = computed(() => buildRuleCards(app.svc().rules, library.catalog?.rules ?? []))
+const cards = computed(() => buildRuleCards(app.svc().rules))
 
 function choose(id: string, status: string): void {
   if (status !== 'installed') return

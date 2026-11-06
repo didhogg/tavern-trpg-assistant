@@ -17,12 +17,12 @@ async function layoutTests(page, label, { width, height }) {
   if (narrow) {
     check(`[${label}] 窄屏窗口铺满视口`, Math.round(box.width) === width && Math.round(box.height) === height, JSON.stringify(box))
     check(`[${label}] 窄屏底部标签栏 56px，标题栏 48px`, Math.round((await page.locator('.trpg-tabs').boundingBox()).height) === 56 && Math.round((await page.locator('.trpg-head').boundingBox()).height) === 48)
-    check(`[${label}] 窄屏只有首页、库、设置三个标签`, (await page.locator('.trpg-tab').count()) === 3)
+    check(`[${label}] 窄屏只有首页、设置两个标签`, (await page.locator('.trpg-tab').count()) === 2)
     const tabs = await page.locator('.trpg-tab').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))
     check(`[${label}] 标签按钮触控高度 ≥44px`, tabs.every((h) => h >= 44), JSON.stringify(tabs))
   } else {
     check(`[${label}] 宽屏默认窗口 960×640`, Math.round(box.width) === 960 && Math.round(box.height) === 640, JSON.stringify(box))
-    check(`[${label}] 宽屏侧栏 176px，只有首页、库、设置`, Math.round((await page.locator('.trpg-side').boundingBox()).width) === 176 && (await page.locator('.trpg-nav').count()) === 3)
+    check(`[${label}] 宽屏侧栏 176px，只有首页、设置`, Math.round((await page.locator('.trpg-side').boundingBox()).width) === 176 && (await page.locator('.trpg-nav').count()) === 2)
     const navs = await page.locator('.trpg-nav').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))
     check(`[${label}] 侧栏按钮触控高度 ≥44px`, navs.every((h) => h >= 44), JSON.stringify(navs))
     // 缩放到中宽

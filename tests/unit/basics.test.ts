@@ -61,16 +61,9 @@ describe('migrate', () => {
   })
 })
 
-describe('M2 枚举与内置包', () => {
-  it('autoReason 含「改动模组前」；source 含 user', async () => {
+describe('枚举', () => {
+  it('autoReason 含「改动模组前」', async () => {
     const { autoReasonSchema } = await import('../../src/schemas/campaign')
-    const { packSourceSchema } = await import('../../src/schemas/pack')
     expect(autoReasonSchema.options).toContain('改动模组前')
-    expect(packSourceSchema.options).toContain('user')
-  })
-  it('D&D 5e（2014）的核心包与内置包都是 SRD', async () => {
-    const { dnd5e2014 } = await import('../../src/rules/dnd5e2014')
-    expect(dnd5e2014.corePackIds).toEqual(['dnd5e2014-srd'])
-    expect(dnd5e2014.builtinPacks).toEqual(['dnd5e2014-srd'])
   })
 })

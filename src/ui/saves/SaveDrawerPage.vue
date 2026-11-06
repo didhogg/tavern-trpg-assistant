@@ -152,7 +152,7 @@ async function onFile(event: Event): Promise<void> {
     <footer class="trpg-drawer__bottom">
       <button v-if="campaign.hasCampaign && saves.manual.length" class="trpg-btn trpg-btn--primary" type="button" :disabled="campaign.readOnly" @click="openWizard()">＋ 新存档</button>
       <button class="trpg-btn" type="button" :disabled="campaign.readOnly" @click="picker?.click()">导入存档文件</button>
-      <input ref="picker" class="trpg-sr-only" type="file" accept=".trpgsave,.trpgpack,.zip" tabindex="-1" aria-hidden="true" @change="onFile" />
+      <input ref="picker" class="trpg-sr-only" type="file" accept=".trpgsave,.zip" tabindex="-1" aria-hidden="true" @change="onFile" />
     </footer>
   </div>
 </template>

@@ -1,5 +1,3 @@
-import type { ZodType } from 'zod'
-
 export interface RuleBanner {
   wide: string
   narrow: string
@@ -12,16 +10,8 @@ export interface RuleDefinition {
   name: string
   nameShort: string
   description: string
-  /** 核心包：始终启用且不可停用。 */
-  corePackIds: string[]
-  /** 随扩展分发、启动时安装的内置包（L1 §3.3）；未提供时等于 corePackIds。 */
-  builtinPacks?: string[]
   /** 首页默认战役横幅；未提供时使用纹样底图。 */
   defaultBanner?: RuleBanner
-  /** 安装前检查一个包里条目之间的引用（返回问题列表，空表示合规）；官方包与自制包同一套规则。 */
-  checkPack?: (input: { packId: string; entries: Array<{ id: string; type: string; data: Record<string, unknown> }>; lookup: (id: string) => { type: string; data: Record<string, unknown>; packId: string } | undefined; reach: Set<string> }) => string[]
-  /** 按条目类型取 data 的校验器；用于「存入我的库」等写入前的类型校验。 */
-  entryDataSchema?: (type: string) => ZodType | undefined
 }
 
 export class RuleRegistry {
@@ -55,18 +45,13 @@ export interface RuleCard {
   status: RuleCardStatus
 }
 
-/** 规则卡：已安装的规则来自注册表，其余来自数据仓库目录。 */
-export function buildRuleCards(
-  registry: RuleRegistry,
-  catalogRules: Array<{ id: string; name: string; nameShort: string; description: string; status: 'installable' | 'coming' }> = [],
-): RuleCard[] {
-  const installed: RuleCard[] = registry.list().map((r) => ({
+/** 规则卡：来自注册表。 */
+export function buildRuleCards(registry: RuleRegistry): RuleCard[] {
+  return registry.list().map((r) => ({
     id: r.id,
     name: r.name,
     nameShort: r.nameShort,
     description: r.description,
     status: 'installed',
   }))
-  const others: RuleCard[] = catalogRules.filter((r) => !registry.has(r.id)).map((r) => ({ ...r }))
-  return [...installed, ...others]
 }

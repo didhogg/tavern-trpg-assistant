@@ -6,20 +6,9 @@ import { check, failures } from './helpers.mjs'
 import { startServer, root } from './server.mjs'
 import { probeSuite } from './suite-probes.mjs'
 import { diceSuite } from './suite-dice.mjs'
-import { execFileSync } from 'node:child_process'
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { savesSuite } from './suite-saves.mjs'
-import { librarySuite } from './suite-library.mjs'
-import { healthSuite, mineSuite, variantsSuite } from './suite-library2.mjs'
 import { shellSuite } from './suite-shell.mjs'
-import { displaySuite } from './suite-display.mjs'
-import { upgradeSetup, upgradeSuite } from './suite-upgrade.mjs'
 import { wizardSuite } from './suite-wizard.mjs'
-import { g3TableSuite } from './suite-g3-tables.mjs'
-import { fullCatalogSuite } from './suite-fullcatalog.mjs'
-import { peopleSuite } from './suite-people.mjs'
-import { cardSuite } from './suite-card.mjs'
 
 const chrome = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const engines = [
@@ -28,9 +17,6 @@ const engines = [
 ]
 const views = [['desktop', 1440, 900], ['narrow', 390, 780]]
 const only = process.env.E2E_SUITE
-const fixtureDir = mkdtempSync(join(tmpdir(), 'trpg-e2e-'))
-execFileSync('npx', ['tsx', join(root, 'tests/e2e/make-fixtures.ts'), fixtureDir], { stdio: 'inherit' })
-const fixture = join(fixtureDir, 'variants.trpgpack')
 const { server, url } = await startServer()
 
 try {
@@ -46,34 +32,18 @@ try {
         const page = await context.newPage()
         const errors = []
         page.on('pageerror', (e) => errors.push(e.message))
-        // 断网测试会故意让下载失败，这类日志不算脚本错误
-        page.on('console', (m) => m.type() === 'error' && !/net::ERR_FAILED|安装失败：dnd5e2014-scag/.test(m.text()) && errors.push(m.text()))
-        if (only === 'upgrade') await upgradeSetup(page) // 目录与包文件给旧版
+        page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
         await page.goto(url)
         await page.waitForSelector('#trpg-assistant-root', { state: 'attached' })
         check(`[${label}] 扩展挂载`, true)
         await page.locator('.trpg-ball').click()
         await page.waitForSelector('.trpg-window')
         check(`[${label}] 点击悬浮球打开窗口`, await page.locator('.trpg-window').isVisible())
-        const ctx = { width, height, engine, viewLabel, scheme, url, fixture }
+        const ctx = { width, height, engine, viewLabel, scheme, url }
         if (!only || only === 'shell') await shellSuite(page, label, ctx)
         if (!only || only === 'dice') await diceSuite(page, label, ctx)
-        if (!only || only === 'people' || only === 'wizard' || only === 'saves' || only === 'library' || only === 'display') await wizardSuite(page, label, ctx)
-        if (only === 'upgrade') await upgradeSuite(page, label, ctx)
-        if (only === 'fullcatalog') await fullCatalogSuite(page, label)
-        if (only === 'people') await peopleSuite(page, label, ctx)
-        if (only === 'card') await cardSuite(page, label, ctx)
+        if (!only || only === 'wizard' || only === 'saves') await wizardSuite(page, label, ctx)
         if (!only || only === 'saves') await savesSuite(page, label, ctx)
-        if (!only || only === 'library') {
-          await librarySuite(page, label, ctx)
-          await mineSuite(page, label, ctx)
-          await healthSuite(page, label, ctx)
-          await variantsSuite(page, label, ctx)
-        }
-        if (!only || only === 'library' || only === 'display') {
-          await displaySuite(page, label, ctx)
-          if (only === 'library') await g3TableSuite(page, label)
-        }
         if (scheme === 'light' && (!only || only === 'probes')) await probeSuite(page, label, ctx)
         await page.screenshot({ path: join(root, `docs/reviews/M3-${engine}-${viewLabel}-${scheme}.png`) })
         check(`[${label}] 页面无脚本错误`, errors.length === 0, errors.join(' | '))

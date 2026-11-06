@@ -1,70 +1,71 @@
 import Dexie from 'dexie'
-import { afterEach, describe, expect, it } from 'vitest'
-import { TrpgDatabase, migrationHooks } from '../../src/core/db'
-import { sha256Hex } from '../../src/core/hash'
-import { PNG } from '../helpers/fixtures'
+import { describe, expect, it } from 'vitest'
+import { TrpgDatabase } from '../../src/core/db'
+import { TrpgError } from '../../src/core/errors'
 import { uuid } from '../../src/core/ids'
+import { migrateRecord } from '../../src/core/migrate'
+import { PNG } from '../helpers/fixtures'
 
-function legacySchema(db: Dexie): void {
-  db.version(1).stores({
-    packs: 'id, ruleId, kind, name',
+/** 旧格式时代（第 2 版）的用户数据库：旧扩展包四张表 + 战役、存档、图片、设置。 */
+async function seedV2(name: string): Promise<void> {
+  const db = new Dexie(name)
+  db.version(2).stores({
+    packs: 'id, ruleId, category, name',
     entries: '[packId+entryId], packId, [ruleId+type]',
     searchIndex: 'packId',
-    assets: '[packId+path], packId',
+    blobs: 'hash',
     workspaces: 'ownerKey, ruleId',
     saves: 'id, [ownerKey+ruleId], ruleId, kind, deletedAt',
+    packTrash: 'id',
     meta: 'key',
   })
-}
-
-async function seedV1(name: string, image = PNG): Promise<void> {
-  const db = new Dexie(name)
-  legacySchema(db)
   await db.open()
-  await db.table('packs').put({ id: 'old-pack', ruleId: 'dnd5e2014', kind: 'module', name: '旧包', version: '1.0.0', entryCount: 1, typeCounts: {}, dependsOn: [{ id: 'dnd5e2014-srd' }], source: 'import', byteSize: 1, sha256: 'h', installedAt: 1, schemaVersion: 1 })
-  await db.table('entries').put({ packId: 'old-pack', entryId: 'old-entry', ruleId: 'dnd5e2014', type: 'item', name: '旧条目', keywords: [], unique: false, summary: '', data: {}, image: 'art/a.png' })
-  await db.table('assets').put({ packId: 'old-pack', path: 'art/a.png', bytes: image })
+  await db.table('packs').put({ id: 'dnd5e2014-srd', ruleId: 'dnd5e2014', category: 'rules', name: 'SRD' })
+  await db.table('entries').put({ packId: 'dnd5e2014-srd', entryId: 'e1', ruleId: 'dnd5e2014', type: 'spell', name: '火球术' })
+  await db.table('blobs').put({ hash: 'h', bytes: PNG, mime: 'image/png', size: PNG.length, createdAt: 1 })
+  await db.table('workspaces').put({ ownerKey: 'char:a', ruleId: 'dnd5e2014', enabledPacks: [{ id: 'dnd5e2014-srd' }], data: { people: [] } })
+  await db.table('saves').put({ id: 's1', ownerKey: 'char:a', ruleId: 'dnd5e2014', kind: 'manual', packs: [] })
+  await db.table('meta').put({ key: 'settings', value: { reminderDays: 3 } })
   db.close()
 }
 
-afterEach(() => {
-  delete migrationHooks.beforeMigrationWrite
-})
-
-describe('数据库第 1 版 → 第 2 版', () => {
-  it('迁移清单字段、图片按哈希进入 blobs，并删除 assets 表', async () => {
+describe('用户数据库第 3 版：旧格式退役（B2-9）', () => {
+  it('删掉旧扩展包四张表；旧战役、存档、图片清空；设置保留', async () => {
     const name = `migrate-${uuid()}`
-    await seedV1(name)
+    await seedV2(name)
     const db = new TrpgDatabase(name)
     await db.open()
-    expect(db.verno).toBe(2)
-    const pack = await db.packs.get('old-pack')
-    expect(pack).toMatchObject({ category: 'adventure', relationships: { requires: [{ id: 'dnd5e2014-srd' }] } })
-    expect(pack?.blobHashes).toEqual([sha256Hex(PNG)])
-    expect((await db.blobs.get(sha256Hex(PNG)))?.bytes).toEqual(PNG)
-    expect((await db.entries.get(['old-pack', 'old-entry']))?.image).toEqual({ $asset: sha256Hex(PNG) })
-    expect(db.tables.map((t) => t.name)).not.toContain('assets')
-    expect(db.tables.map((t) => t.name)).toContain('packTrash')
+    expect(db.verno).toBe(3)
+    expect(db.tables.map((t) => t.name).sort()).toEqual(['blobs', 'meta', 'saves', 'workspaces'])
+    expect(await db.workspaces.count()).toBe(0)
+    expect(await db.saves.count()).toBe(0)
+    expect(await db.blobs.count()).toBe(0)
+    expect(await db.getMeta('settings')).toEqual({ reminderDays: 3 })
     db.close()
     await db.delete()
   })
 
-  it('迁移失败时保持第 1 版数据不变', async () => {
-    const name = `migrate-fail-${uuid()}`
-    await seedV1(name)
-    migrationHooks.beforeMigrationWrite = () => {
-      throw new Error('迁移中途失败')
-    }
-    const db = new TrpgDatabase(name)
-    await expect(db.open()).rejects.toThrow('迁移中途失败')
+  it('新装用户直接是第 3 版、四张表', async () => {
+    const db = new TrpgDatabase(`fresh-${uuid()}`)
+    await db.open()
+    expect(db.verno).toBe(3)
+    expect(db.tables.map((t) => t.name).sort()).toEqual(['blobs', 'meta', 'saves', 'workspaces'])
     db.close()
-    const legacy = new Dexie(name)
-    legacySchema(legacy)
-    await legacy.open()
-    expect(legacy.verno).toBe(1)
-    expect(await legacy.table('assets').count()).toBe(1)
-    expect((await legacy.table('packs').get('old-pack')).kind).toBe('module')
-    legacy.close()
-    await Dexie.delete(name)
+    await db.delete()
+  })
+})
+
+describe('旧版本的战役与存档记录', () => {
+  it('第 4 版以前（旧格式时代）的记录明确拒绝，不迁移', () => {
+    for (const kind of ['save', 'workspace'] as const) {
+      try {
+        migrateRecord(kind, { schemaVersion: 3 })
+        throw new Error('应当拒绝')
+      } catch (e) {
+        expect(e).toBeInstanceOf(TrpgError)
+        expect((e as TrpgError).code).toBe('E_OLD_DATA')
+      }
+    }
+    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 4, x: 1 })
   })
 })

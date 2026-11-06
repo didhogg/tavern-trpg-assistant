@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TrpgError } from '../../src/core/errors'
 import { backupStateSchema } from '../../src/schemas/campaign'
-import { OTHER_OWNER, OWNER, installExtra, setup } from '../helpers/harness'
+import { OTHER_OWNER, OWNER, setup } from '../helpers/harness'
 import { withDb } from '../helpers/fixtures'
 
 async function code(promise: Promise<unknown>): Promise<string> {
@@ -14,30 +14,26 @@ async function code(promise: Promise<unknown>): Promise<string> {
   throw new Error('应当抛出错误')
 }
 
-const NEW = { ...OWNER, ruleId: 'dnd5e2014', packIds: [] as string[], name: '龙金劫-2' }
+const NEW = { ...OWNER, ruleId: 'dnd5e2014', name: '龙金劫-2' }
 
 describe('新存档', () => {
-  it('建立当前数据与第一个存档，核心包自动启用，且没有未保存改动', async () => {
+  it('建立当前数据与第一个存档，且没有未保存改动', async () => {
     await withDb(async (db) => {
       const { campaign } = await setup(db)
       const { workspace, save } = await campaign.startNewCampaign({ ...NEW, note: '开荒' })
       expect(workspace.currentSaveId).toBe(save.id)
-      expect(workspace.enabledPacks.map((p) => p.id)).toEqual(['dnd5e2014-srd'])
       expect(save).toMatchObject({ name: '龙金劫-2', note: '开荒', kind: 'manual', ownerKey: OWNER.ownerKey, ruleId: 'dnd5e2014' })
       expect(campaign.isDirty(workspace)).toBe(false)
       expect(await campaign.getWorkspace(OWNER.ownerKey)).toEqual(workspace)
     })
   })
 
-  it('选择模组时自动带上依赖；名称校验；规则与内容包校验', async () => {
+  it('名称校验；规则校验', async () => {
     await withDb(async (db) => {
       const h = await setup(db)
-      const { workspace } = await h.campaign.startNewCampaign({ ...NEW, packIds: ['storm-isle'] })
-      expect(workspace.enabledPacks.map((p) => p.id)).toEqual(['dnd5e2014-srd', 'storm-isle'])
       expect(await code(h.campaign.startNewCampaign({ ...NEW, name: '   ' }))).toBe('E_BAD_NAME')
       expect(await code(h.campaign.startNewCampaign({ ...NEW, name: 'x'.repeat(41) }))).toBe('E_BAD_NAME')
       expect(await code(h.campaign.startNewCampaign({ ...NEW, ruleId: 'coc7' }))).toBe('E_RULE_MISSING')
-      expect(await code(h.campaign.startNewCampaign({ ...NEW, packIds: ['不存在'] }))).toBe('E_DEP_MISSING')
     })
   })
 
@@ -70,22 +66,6 @@ describe('未保存判定与保存', () => {
       const slot = await campaign.getSave(saved.workspace.currentSaveId!)
       expect(slot?.snapshot.gold).toBe(10)
       expect((await campaign.listManual({ ownerKey: OWNER.ownerKey, ruleId: 'dnd5e2014' }, 'card')).length).toBe(1)
-    })
-  })
-
-  it('启用或停用内容包算改动；内容包版本更新不算改动，也不改写已启用版本', async () => {
-    await withDb(async (db) => {
-      const h = await setup(db)
-      await h.campaign.startNewCampaign(NEW)
-      const { workspace } = await h.campaign.setPackEnabled(OWNER.ownerKey, 'storm-isle', true)
-      expect(h.campaign.isDirty(workspace)).toBe(true)
-      await h.campaign.saveCurrent(OWNER.ownerKey)
-      const rec = h.packs.recognize((await import('../helpers/fixtures')).makePack({ id: 'storm-isle', category: 'adventure', name: '风暴岛', version: '1.1.0', relationships: { requires: [{ id: 'dnd5e2014-srd' }], recommends: [], conflicts: [] } }))
-      if (rec.type !== 'pack') throw new Error()
-      await h.packs.install(rec, { source: 'download' })
-      const after = await h.campaign.getWorkspace(OWNER.ownerKey)
-      expect(after?.enabledPacks.find((p) => p.id === 'storm-isle')?.version).toBe('1.0.0')
-      expect(h.campaign.isDirty(after!)).toBe(false)
     })
   })
 
@@ -195,7 +175,7 @@ describe('读取存档', () => {
   it('其他规则：未确认拒绝；确认后以"切换规则前"写自动存档并整体切换', async () => {
     await withDb(async (db) => {
       const h = await setup(db)
-      h.campaign['deps'].rules.register({ id: 'coc7', name: '克苏鲁的呼唤 7 版', nameShort: 'CoC 7', description: '', corePackIds: [] })
+      h.campaign['deps'].rules.register({ id: 'coc7', name: '克苏鲁的呼唤 7 版', nameShort: 'CoC 7', description: '' })
       const coc = await h.campaign.startNewCampaign({ ...NEW, ruleId: 'coc7', name: '黑暗边境', ...OTHER_OWNER })
       await h.campaign.startNewCampaign(NEW)
       expect(await code(h.campaign.loadSave(OWNER, coc.save.id))).toBe('E_RULE_SWITCH_REQUIRED')
@@ -213,18 +193,6 @@ describe('读取存档', () => {
       await d.saves.put({ ...save, id: 'x', ruleId: 'unknown-rule' })
       expect(await code(campaign.loadSave(OWNER, 'x'))).toBe('E_RULE_MISSING')
       expect(await code(campaign.loadSave(OWNER, 'nope'))).toBe('E_NOT_FOUND')
-    })
-  })
-
-  it('引用了未安装的内容包：副本照常可用，缺失内容包可被查出', async () => {
-    await withDb(async (db) => {
-      const h = await setup(db)
-      await installExtra(h, 'xge')
-      const { save } = await h.campaign.startNewCampaign({ ...NEW, packIds: ['xge'] })
-      await h.packs.uninstall('xge')
-      const ws = await h.campaign.loadSave(OWNER, save.id)
-      expect(ws.enabledPacks.map((p) => p.id)).toContain('xge')
-      expect((await h.campaign.missingPacks(ws)).map((p) => p.id)).toEqual(['xge'])
     })
   })
 
@@ -288,92 +256,6 @@ describe('删除、恢复、彻底删除', () => {
       expect(manual).toMatchObject({ kind: 'manual' })
       expect(manual.name).toMatch(/^自动存档 · \d+月\d+日 \d{2}:\d{2}$/)
       expect(await campaign.getSave(auto.id)).not.toBeNull()
-    })
-  })
-})
-
-describe('启用与停用内容包', () => {
-  it('核心包锁定；被依赖的包不能停用；启用模组自动带上依赖；缺依赖与跨规则报错', async () => {
-    await withDb(async (db) => {
-      const h = await setup(db)
-      await installExtra(h, 'xge')
-      await h.campaign.startNewCampaign(NEW)
-      expect(await code(h.campaign.setPackEnabled(OWNER.ownerKey, 'dnd5e2014-srd', false))).toBe('E_CORE_LOCKED')
-      const on = await h.campaign.setPackEnabled(OWNER.ownerKey, 'storm-isle', true)
-      expect(on.autoEnabled).toEqual([])
-      expect(await code(h.campaign.setPackEnabled(OWNER.ownerKey, 'dnd5e2014-srd', false))).toBe('E_CORE_LOCKED')
-      const off = await h.campaign.setPackEnabled(OWNER.ownerKey, 'storm-isle', false)
-      expect(off.workspace.enabledPacks.map((p) => p.id)).toEqual(['dnd5e2014-srd'])
-      await installExtra(h, 'needs-xge', { category: 'adventure', relationships: { requires: [{ id: 'xge' }], recommends: [], conflicts: [] } })
-      const auto = await h.campaign.setPackEnabled(OWNER.ownerKey, 'needs-xge', true)
-      expect(auto.autoEnabled).toEqual(['xge'])
-      expect(await code(h.campaign.setPackEnabled(OWNER.ownerKey, 'xge', false))).toBe('E_REQUIRED_BY')
-      h.campaign['deps'].rules.register({ id: 'coc7', name: 'CoC', nameShort: 'CoC', description: '', corePackIds: [] })
-      await installExtra(h, 'coc-pack', { ruleId: 'coc7' })
-      expect(await code(h.campaign.setPackEnabled(OWNER.ownerKey, 'coc-pack', true))).toBe('E_RULE_MISMATCH')
-      expect(await code(h.campaign.setPackEnabled(OWNER.ownerKey, 'nonexistent', true))).toBe('E_DEP_MISSING')
-    })
-  })
-})
-
-describe('模板副本机制', () => {
-  async function started(db: Parameters<Parameters<typeof withDb>[0]>[0]) {
-    const h = await setup(db)
-    await h.campaign.startNewCampaign({ ...NEW, packIds: ['storm-isle'] })
-    return h
-  }
-
-  it('唯一条目反复生成返回同一副本；普通条目每次新建', async () => {
-    await withDb(async (db) => {
-      const h = await started(db)
-      const a = await h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'tom' })
-      const b = await h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'tom' })
-      expect([a.created, b.created]).toEqual([true, false])
-      expect(b.instances[0].id).toBe(a.instances[0].id)
-      const c = await h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'kobold' })
-      const d = await h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'kobold' })
-      expect(c.instances[0].id).not.toBe(d.instances[0].id)
-      expect(d.workspace.data.instances).toHaveLength(3)
-      expect(c.instances[0]).toMatchObject({ type: 'monster', name: '狗头人', sourceRef: { packId: 'storm-isle', version: '1.0.0', entryId: 'kobold' } })
-      expect(c.instances[0].label).toBeUndefined()
-    })
-  })
-
-  it('批量新建按 A、B、C… 编号', async () => {
-    await withDb(async (db) => {
-      const h = await started(db)
-      const r = await h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'kobold' }, 4)
-      expect(r.instances.map((i) => i.label)).toEqual(['A', 'B', 'C', 'D'])
-      const many = await h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'kobold' }, 28)
-      expect(many.instances[26].label).toBe('AA')
-      expect(many.workspace.data.instances).toHaveLength(32)
-    })
-  })
-
-  it('副本是深拷贝，修改副本不影响内容包；内容包停用、覆盖、删除后副本不变；存档快照含全部副本', async () => {
-    await withDb(async (db) => {
-      const h = await started(db)
-      const r = await h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'kobold' })
-      const inst = r.instances[0]
-      ;(inst.data.tags as string[]).push('改过')
-      const stored = await db.entries.get(['storm-isle', 'kobold'])
-      expect(stored?.data.tags).toEqual(['a'])
-      const saved = await h.campaign.saveCurrent(OWNER.ownerKey)
-      expect((await h.campaign.getSave(saved.workspace.currentSaveId!))?.snapshot.instances).toHaveLength(1)
-      await h.campaign.setPackEnabled(OWNER.ownerKey, 'storm-isle', false)
-      await h.packs.uninstall('storm-isle')
-      const ws = await h.campaign.getWorkspace(OWNER.ownerKey)
-      expect(ws?.data.instances).toHaveLength(1)
-      expect(ws?.data.instances[0].name).toBe('狗头人')
-    })
-  })
-
-  it('内容包已停用或条目不存在时拒绝', async () => {
-    await withDb(async (db) => {
-      const h = await started(db)
-      expect(await code(h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'nope' }))).toBe('E_NOT_FOUND')
-      await h.campaign.setPackEnabled(OWNER.ownerKey, 'storm-isle', false)
-      expect(await code(h.campaign.materialize(OWNER.ownerKey, { packId: 'storm-isle', entryId: 'tom' }))).toBe('E_PACK_DISABLED')
     })
   })
 })

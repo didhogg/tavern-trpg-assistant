@@ -11,6 +11,6 @@ export function callStore(page, id, fn, arg) {
   )
 }
 
-/** 往当前战役里加一个实例，让它变成「有未保存改动」。 */
-export const makeDirty = (page, name = '测试怪') =>
-  callStore(page, 'campaign', (s, n) => { s.updateData((d) => ({ ...d, instances: [...d.instances, { id: `x-${Date.now()}`, type: 'monster', name: n, data: {} }] })) }, name)
+/** 往当前战役数据里写一个测试键，让它变成「有未保存改动」。 */
+export const makeDirty = (page, name = '测试改动') =>
+  callStore(page, 'campaign', (s, n) => { s.updateData((d) => ({ ...d, testMark: `${n}-${Date.now()}` })) }, name)

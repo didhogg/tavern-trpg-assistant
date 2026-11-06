@@ -11,9 +11,7 @@
     "lint": "eslint src tests",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "e2e": "npm run build && node tests/e2e/smoke.mjs",
-    "shots": "node tests/e2e/screenshots.mjs",
-    "keys": "node tests/e2e/keyboard.mjs"
+    "e2e": "npm run build && node tests/e2e/smoke.mjs"
   },
   "dependencies": {
     "@noble/hashes": "^2.4.0",

@@ -2,10 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { countOf, heroSides, DICE_FACES, type RollMode } from '../../rules/dice'
 import { useDiceStore } from '../../stores/dice'
-import { useLibraryStore } from '../../stores/library'
-import { openEntry } from '../library/openDetail'
 import { useUiStore } from '../../stores/ui'
-import RollPanel from './tray/RollPanel.vue'
 import DieIcon from '../kit/DieIcon.vue'
 import Icon from '../kit/Icon.vue'
 import { loadPoint, savePoint } from './storage'
@@ -13,9 +10,7 @@ import { useDrag, type Point } from './useDrag'
 
 const ui = useUiStore()
 const dice = useDiceStore()
-const library = useLibraryStore()
 const MODES: Array<{ value: RollMode; label: string }> = [{ value: 'adv', label: '优势' }, { value: 'normal', label: '普通' }, { value: 'dis', label: '劣势' }]
-const TABS = [{ key: 'check', label: '检定' }, { key: 'save', label: '豁免' }, { key: 'free', label: '自由' }] as const
 const REDUCE = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const el = ref<HTMLElement | null>(null)
@@ -103,27 +98,19 @@ const fillLabel = computed(() => (dice.fillState === 'done' ? '已填入 ✓' : 
 const timeText = (at: number) => new Date(at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 const hint = computed(() => (dice.canMode ? '' : '优势劣势只对单个 1d20 有效'))
 const onFormula = (e: Event): void => dice.setText((e.target as HTMLInputElement).value)
-async function openRecord(rec: typeof dice.history[number]): Promise<void> {
-  if (!rec.table) { dice.loadRecord(rec); return }
-  const packId = await library.packOfEntry(rec.table.id)
-  if (packId) openEntry(packId, rec.table.id, rec.table.name)
-}
+const openRecord = (rec: typeof dice.history[number]): void => dice.loadRecord(rec)
 </script>
 
 <template>
-  <aside v-if="ui.diceOpen" ref="el" class="trpg-dice" :style="style" :data-narrow="narrow" :data-tab="dice.tab" role="dialog" aria-label="掷骰" aria-modal="false">
+  <aside v-if="ui.diceOpen" ref="el" class="trpg-dice" :style="style" :data-narrow="narrow" role="dialog" aria-label="掷骰" aria-modal="false">
     <header class="trpg-dice__head" @pointerdown="drag.onPointerDown">
       <Icon name="dice-five" :size="20" />
       <span class="trpg-dice__title">掷骰</span>
       <button class="trpg-icon-btn" type="button" aria-label="关闭掷骰" @click="ui.diceOpen = false"><Icon name="x" :size="18" /></button>
     </header>
     <div class="trpg-dice__shell">
-    <div class="trpg-dice__tabs" role="tablist" aria-label="骰盘标签" aria-orientation="vertical">
-      <button v-for="t in TABS" :key="t.key" class="trpg-dice__tab" type="button" role="tab" :aria-selected="dice.tab === t.key" :data-testid="`dice-tab-${t.key}`" @click="dice.setTab(t.key)">{{ t.label }}</button>
-    </div>
     <div class="trpg-dice__main">
-    <RollPanel v-if="dice.tab !== 'free'" :key="dice.tab" :kind="dice.tab" />
-    <div v-else class="trpg-dice__body">
+    <div class="trpg-dice__body">
       <div>
         <div class="trpg-dice__lbl"><label for="trpg-dice-formula">骰式</label><span>点下面的骰子加进骰式，也可以直接写</span></div>
         <div class="trpg-dice__row">
@@ -190,9 +177,8 @@ async function openRecord(rec: typeof dice.history[number]): Promise<void> {
         <template v-if="recentOpen">
           <ul v-if="visibleHistory.length" class="trpg-dice__list">
             <li v-for="rec in visibleHistory" :key="rec.id">
-              <button type="button" :aria-label="rec.table ? `打开表 ${rec.table.name}` : `载入骰式 ${rec.formula}`" @click="openRecord(rec)">
-                <template v-if="rec.table"><b>{{ rec.table.name }}</b><span>{{ rec.table.result }}</span></template>
-                <template v-else><b>{{ rec.total }}</b><span>{{ rec.formula }}<template v-if="rec.note"> · {{ rec.note }}</template></span></template><time>{{ timeText(rec.at) }}</time>
+              <button type="button" :aria-label="`载入骰式 ${rec.formula}`" @click="openRecord(rec)">
+                <b>{{ rec.total }}</b><span>{{ rec.formula }}<template v-if="rec.note"> · {{ rec.note }}</template></span><time>{{ timeText(rec.at) }}</time>
               </button>
             </li>
           </ul>

@@ -1,4 +1,4 @@
-// 设置 › 诊断：M0–M2 探针、下拉控件与样式隔离（原冒烟测试内容）。
+// 设置 › 诊断：探针、下拉控件与样式隔离（原冒烟测试内容）。M1、M2 自检测的是旧扩展包，B2-9 随旧格式删除。
 import { check, clickCenter, bodyPointerEvents, openDiagnostics, settle } from './helpers.mjs'
 
 const modelText = (page) => page.getByTestId('select-model').innerText()
@@ -51,18 +51,6 @@ async function selectTests(page, label) {
 export async function probeSuite(page, label, { width, height }) {
   await openDiagnostics(page)
   const diag = page.getByTestId('diagnostics')
-
-  // M1 数据层自检：在真实浏览器内核（含 WebKit）里跑完存储、压缩、哈希、事务的主路径
-  await page.getByRole('button', { name: '运行 M1 数据层自检' }).click()
-  await page.getByText(/全部通过（\d+\/\d+ 步）|未通过：/).first().waitFor({ timeout: 60000 })
-  const m1 = await diag.innerText()
-  check(`[${label}] M1 数据层自检全部通过`, /全部通过（10\/10 步）/.test(m1), (m1.match(/未通过：[^\n]*/) ?? [''])[0])
-
-  const m2Section = page.locator('section.probe').filter({ hasText: 'M2 数据自检' })
-  await page.getByRole('button', { name: '运行 M2 数据自检' }).click()
-  await m2Section.locator('.probe__summary').filter({ hasText: /全部通过|未通过/ }).waitFor({ timeout: 120000 })
-  const m2 = await m2Section.innerText()
-  check(`[${label}] M2 数据自检全部通过（含本地数据仓库下载）`, /全部通过（7\/7 步/.test(m2), (m2.match(/未通过：[^\n]*/) ?? [''])[0])
 
   await page.getByRole('button', { name: '写入测试注释到输入框' }).click()
   await page.getByRole('button', { name: '注入探针' }).click()
