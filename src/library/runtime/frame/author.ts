@@ -31,18 +31,15 @@ export function hashOf(prop: string, ent: any): string | null {
   }
 }
 
-/** 英文站编号（中文站的 URL_TO_ENG_HASH_BUILDER；英文程序没有这张表）。算不出来返回 null，进配对清单。 */
-export function engHashOf(prop: string, ent: any): string | null {
-  const builder = builderOf(A.UrlUtil.URL_TO_ENG_HASH_BUILDER, prop)
-  try {
-    return builder ? builder(ent) : null
-  } catch {
-    return null
-  }
-}
-
-export function hasEngHashTable(): boolean {
-  return !!A.UrlUtil.URL_TO_ENG_HASH_BUILDER
+/**
+ * "跳转英文源站"按钮用的英文站编号：照中文站 UrlUtil.autoEncodeEngHash（没有英文名不算；utils.js 第 3640 行），
+ * 按条目所在页面算（作者用当前页面的编号函数）。只用来拼跳转链接（listpage.js 第 2110 行），不用来配对中英条目。
+ */
+export function engSiteHashOf(prop: string, ent: any): string | null {
+  const table = A.UrlUtil.URL_TO_ENG_HASH_BUILDER
+  const page = A.DataLoader.getPropPage(prop)
+  if (!table || !ent?.ENG_name || !table[page]) return null
+  return table[page](ent)
 }
 
 /** 条目的来源（作者的 SourceUtil.getEntitySource）。 */

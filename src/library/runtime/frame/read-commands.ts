@@ -1,6 +1,6 @@
 // 小窗里：查询、详情、搜索用到的作者函数（D2-P2 B1 设计 §8.6、§8.7）。只转调作者函数，结果原样交回。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
-import { A, engHashOf, hashOf, init, sourceOf } from './author'
+import { A, engSiteHashOf, hashOf, init, sourceOf } from './author'
 
 /**
  * 一条是否被屏蔽：照作者列表页的写法（listpage.js 第 1379 行 ExcludeUtil.isExcluded(hash, __prop, source)）；
@@ -34,8 +34,8 @@ export interface Detail {
   /** 背景描述（作者 Renderer.utils.pGetProxyFluff，按类别分派）；没有为 null。 */
   fluff: unknown
   fluffError: string | null
-  /** 英文站编号（只有中文程序算得出）。 */
-  engHash: string | null
+  /** "跳转英文源站"用的编号（中文程序、条目有英文名时才有）。不用于配对，配对见 english-commands.ts。 */
+  engSiteHash: string | null
 }
 
 /** 按编号取一条（作者 pCacheAndGet；不给来源时用 pCacheAndGetHash 从编号里解出来源）+ 背景描述。 */
@@ -50,7 +50,7 @@ export async function detail(prop: string, hash: string, source?: string | null)
   } catch (e) {
     fluffError = e instanceof Error ? e.message : String(e)
   }
-  return { item, hash, source: sourceOf(item), excluded: isExcludedEntity(prop, item, hash), fluff, fluffError, engHash: engHashOf(prop, item) }
+  return { item, hash, source: sourceOf(item), excluded: isExcludedEntity(prop, item, hash), fluff, fluffError, engSiteHash: engSiteHashOf(prop, item) }
 }
 
 export interface SearchHit {

@@ -6,6 +6,7 @@ import type { InstallReport } from './install'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { Detail, SearchHit } from './runtime/frame/read-commands'
+import type { EnglishMatch } from './runtime/frame/english-commands'
 import type { AuthorFrame } from './runtime/host'
 import { commitOf, getSource, type SourceEntry } from './sources'
 
@@ -17,21 +18,39 @@ export interface QueryRow {
 }
 
 export type English =
-  | { status: 'found'; hash: string; item: unknown; fluff: unknown }
-  | { status: 'not-installed' | 'not-found'; hash: string }
+  | { status: 'found'; hash: string; via: EnglishMatch['via']; item: unknown; fluff: unknown }
+  /** 英文没装；作者的配对没找到这一条；配到了但英文那边按编号取不到。 */
+  | { status: 'not-installed' | 'not-paired' }
+  | { status: 'not-found'; hash: string }
 
 export interface DetailResult extends Detail {
-  /** 中文条目的英文对象；英文条目、或作者算不出英文编号时为 null。 */
+  /** 中文条目的英文对象；没有登记配对语言的源为 null。 */
   english: English | null
 }
+
+/** 作者做法（getEnglishEntity）配出来的中英编号对照。 */
+export interface EnglishPairs {
+  source: string
+  pair: string
+  /** 类别 → 中文编号 → { 英文编号, 怎么找到的 } */
+  pairs: Record<string, Record<string, { enHash: string; enSource: string | null; via: EnglishMatch['via'] }>>
+  /** 作者的定位找不到英文记录的（含读文件出错）。 */
+  unmatched: Array<{ prop: string; hash: string; error?: string }>
+  via: Record<string, number>
+  located: number
+}
+
+/** 没配上的原因：不在作者索引里（作者的配对只覆盖索引里的条目）；索引里有但英文没找到；找到了但英文解析结果里没有这个编号。 */
+export type UnpairedReason = 'not-in-index' | 'no-english-record' | 'english-not-in-parsed'
 
 export interface EnglishCoverage {
   source: string
   pair: string
-  props: Record<string, { total: number; paired: number; noEngHash: number; unpaired: number }>
-  /** 中文程序没有英文编号规则、或英文那套没有这一类的类别。 */
-  skipped: Array<{ prop: string; reason: string }>
-  unpaired: Array<{ prop: string; hash: string | null; engHash: string | null }>
+  props: Record<string, { total: number; paired: number; nameMismatch: number } & Partial<Record<UnpairedReason, number>>>
+  via: Record<string, number>
+  unpaired: Array<{ prop: string; hash: string | null; reason: UnpairedReason; enHash?: string }>
+  /** 自动核对（只列不改）：配上的中英两条里，中文条目的 ENG_name 和英文条目的 name 不一样。 */
+  nameMismatch: Array<{ prop: string; hash: string; enHash: string; via: EnglishMatch['via']; engName: unknown; enName: unknown }>
 }
 
 export interface LibraryServiceOptions {
@@ -62,6 +81,7 @@ function alignByHash(prop: string, stored: Array<string | null>, live: Array<str
 
 export class LibraryService {
   private readonly frames = new Map<string, Promise<AuthorFrame>>()
+  private readonly pairsCache = new Map<string, Promise<EnglishPairs>>()
 
   constructor(private readonly opts: LibraryServiceOptions) {}
 
@@ -80,6 +100,7 @@ export class LibraryService {
   reset(): void {
     for (const p of this.frames.values()) p.then((f) => f.close(), (e: unknown) => console.warn('[trpg-library] 小窗本来就没开成', e))
     this.frames.clear()
+    this.pairsCache.clear()
   }
 
   private async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
@@ -129,15 +150,67 @@ export class LibraryService {
     const s = getSource(sourceId)
     const d = await (await this.frame(s.codeSet)).call('detail', prop, hash, source ?? null)
     if (!d) return null
-    return { ...d, english: d.engHash ? await this.english(s, prop, d.engHash, d.source) : null }
+    return { ...d, english: await this.english(s, prop, hash) }
   }
 
-  private async english(s: SourceEntry, prop: string, engHash: string, source: string | null): Promise<English | null> {
+  private async english(s: SourceEntry, prop: string, hash: string): Promise<English | null> {
     if (!s.pair) return null
     const pair = getSource(s.pair)
-    if ((await this.opts.db.sets.get(pair.id))?.status !== 'installed') return { status: 'not-installed', hash: engHash }
-    const d = await (await this.frame(pair.codeSet)).call('detail', prop, engHash, source)
-    return d ? { status: 'found', hash: engHash, item: d.item, fluff: d.fluff } : { status: 'not-found', hash: engHash }
+    if (!(await this.bothInstalled(s, pair))) return { status: 'not-installed' }
+    const hit = (await this.englishPairs(s.id)).pairs[prop]?.[hash]
+    if (!hit) return { status: 'not-paired' }
+    const d = await (await this.frame(pair.codeSet)).call('detail', prop, hit.enHash, hit.enSource)
+    return d ? { status: 'found', hash: hit.enHash, via: hit.via, item: d.item, fluff: d.fluff } : { status: 'not-found', hash: hit.enHash }
+  }
+
+  private async bothInstalled(a: SourceEntry, b: SourceEntry): Promise<boolean> {
+    const [x, y] = await Promise.all([this.opts.db.sets.get(a.id), this.opts.db.sets.get(b.id)])
+    return x?.status === 'installed' && y?.status === 'installed'
+  }
+
+  /**
+   * 中英配对表（作者做法，见 runtime/frame/english-commands.ts）。按两边版本存进库，版本不变就直接用。
+   * 配对要建索引，作者的 postLoad 可能改动小窗里缓存的数据，所以另开两个小窗、用完关掉，不用查询那个。
+   */
+  englishPairs(sourceId: string): Promise<EnglishPairs> {
+    let p = this.pairsCache.get(sourceId)
+    if (!p) {
+      p = this.buildEnglishPairs(sourceId)
+      p.catch(() => this.pairsCache.delete(sourceId))
+      this.pairsCache.set(sourceId, p)
+    }
+    return p
+  }
+
+  private async buildEnglishPairs(sourceId: string): Promise<EnglishPairs> {
+    const s = getSource(sourceId)
+    if (!s.pair) throw new Error(`${sourceId} 没有登记配对的另一种语言`)
+    const pair = getSource(s.pair)
+    if (!(await this.bothInstalled(s, pair))) throw new Error(`${s.id} 或 ${pair.id} 还没安装，不能配对`)
+    const key = `english:${s.id}`
+    const fingerprint = `${commitOf(s)}+${commitOf(pair)}`
+    const saved = await this.opts.db.derived.get(key)
+    if (saved?.fingerprint === fingerprint) return saved.value as EnglishPairs
+    const cnFrame = await this.opts.openFrame(s.codeSet)
+    const enFrame = await this.opts.openFrame(pair.codeSet).catch((e: unknown) => { cnFrame.close(); throw e })
+    try {
+      const docs = await cnFrame.call('englishLocators')
+      const matches = await enFrame.call('englishMatch', docs)
+      const out: EnglishPairs = { source: s.id, pair: pair.id, pairs: {}, unmatched: [], via: {}, located: docs.length }
+      for (const m of matches) {
+        if (!m.enHash) {
+          out.unmatched.push({ prop: m.prop, hash: m.hash, ...(m.error ? { error: m.error } : {}) })
+          continue
+        }
+        ;(out.pairs[m.prop] ??= {})[m.hash] = { enHash: m.enHash, enSource: m.enSource, via: m.via }
+        out.via[m.via ?? 'none'] = (out.via[m.via ?? 'none'] ?? 0) + 1
+      }
+      await this.opts.db.derived.put({ key, fingerprint, value: out, savedAt: Date.now() })
+      return out
+    } finally {
+      cnFrame.close()
+      enFrame.close()
+    }
   }
 
   /** 作者搜索器的结果原样（按作者得分排序，已按作者的搜索设置去掉被屏蔽的等）。 */
@@ -155,34 +228,38 @@ export class LibraryService {
     await (await this.frame(getSource(sourceId).codeSet)).call('setSourceExcluded', book, excluded)
   }
 
-  /** 中英配对覆盖率：中文每一类的英文编号，到英文解析结果里找；没配上的列清单，存进体检。 */
+  /** 中英配对覆盖率：中文解析结果的每一条，看作者做法配上了没有、英文解析结果里有没有那一条；没配上的按原因列清单，存进体检。 */
   async englishCoverage(sourceId: string): Promise<EnglishCoverage> {
     const s = getSource(sourceId)
-    if (!s.pair) throw new Error(`${sourceId} 没有登记配对的另一种语言`)
-    const out: EnglishCoverage = { source: s.id, pair: s.pair, props: {}, skipped: [], unpaired: [] }
+    const pairs = await this.englishPairs(s.id)
+    const unmatched = new Set(pairs.unmatched.map((u) => `${u.prop}\u0000${u.hash}`))
+    const out: EnglishCoverage = { source: s.id, pair: pairs.pair, props: {}, via: pairs.via, unpaired: [], nameMismatch: [] }
     for (const prop of Object.keys((await this.report(s.id)).parse.props)) {
       const cn = await this.parsed(s.id, prop)
-      if (!cn.engHashes) {
-        out.skipped.push({ prop, reason: '这套程序没有英文编号规则' })
-        continue
-      }
-      const enRec = await this.opts.db.derived.get(parsedKey(s.pair, prop))
-      if (!enRec) {
-        out.skipped.push({ prop, reason: '英文那套没有这一类的解析结果' })
-        continue
-      }
-      const en = new Set((enRec.value as ParsedProp).hashes)
-      const row = (out.props[prop] = { total: cn.items.length, paired: 0, noEngHash: 0, unpaired: 0 })
-      cn.engHashes.forEach((engHash, i) => {
-        if (engHash && en.has(engHash)) row.paired++
-        else {
-          if (!engHash) row.noEngHash++
-          row.unpaired++
-          out.unpaired.push({ prop, hash: cn.hashes[i], engHash })
+      const enRec = await this.opts.db.derived.get(parsedKey(pairs.pair, prop))
+      const enParsed = enRec ? (enRec.value as ParsedProp) : null
+      const en = new Map((enParsed?.hashes ?? []).map((h, i) => [h, i]))
+      const row: EnglishCoverage['props'][string] = (out.props[prop] = { total: cn.items.length, paired: 0, nameMismatch: 0 })
+      cn.hashes.forEach((hash, i) => {
+        const hit = hash ? pairs.pairs[prop]?.[hash] : undefined
+        let reason: UnpairedReason | null = null
+        if (!hit) reason = hash && unmatched.has(`${prop}\u0000${hash}`) ? 'no-english-record' : 'not-in-index'
+        else if (!en.has(hit.enHash)) reason = 'english-not-in-parsed'
+        if (!reason) {
+          row.paired++
+          const engName = (cn.items[i] as { ENG_name?: unknown }).ENG_name
+          const enName = (enParsed!.items[en.get(hit!.enHash)!] as { name?: unknown }).name
+          if (engName !== undefined && engName !== enName) {
+            row.nameMismatch++
+            out.nameMismatch.push({ prop, hash: hash!, enHash: hit!.enHash, via: hit!.via, engName, enName })
+          }
+          return
         }
+        row[reason] = (row[reason] ?? 0) + 1
+        out.unpaired.push({ prop, hash, reason, ...(hit ? { enHash: hit.enHash } : {}) })
       })
     }
-    await this.opts.db.derived.put({ key: `audit:english:${s.id}`, fingerprint: `${commitOf(s)}+${commitOf(getSource(s.pair))}`, value: out, savedAt: Date.now() })
+    await this.opts.db.derived.put({ key: `audit:english:${s.id}`, fingerprint: `${commitOf(s)}+${commitOf(getSource(pairs.pair))}`, value: out, savedAt: Date.now() })
     return out
   }
 }

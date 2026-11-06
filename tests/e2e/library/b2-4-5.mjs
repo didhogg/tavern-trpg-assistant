@@ -79,10 +79,10 @@ async function checks(page, cfg, full) {
     out.searchCn = { count: hits.length, top: hits.slice(0, 8).map((x) => `${x.prop} ${x.doc.u} ${x.doc.cn ?? ''}/${x.doc.n} ${x.score?.toFixed?.(2)}`), found: !!fb }
     if (!fb) return out
     const d = await timed('detail spell', () => s.detail('cn-official', 'spell', fb.doc.u, fb.doc.s))
-    out.detail = { hash: d?.hash, name: d?.item?.name, indexCn: fb.doc.cn, engHash: d?.engHash, english: d?.english?.status, engName: d?.english?.item?.name, indexEn: fb.doc.n, excluded: d?.excluded }
+    out.detail = { hash: d?.hash, name: d?.item?.name, indexCn: fb.doc.cn, engHash: d?.english?.hash, via: d?.english?.via, english: d?.english?.status, engName: d?.english?.item?.name, indexEn: fb.doc.n, excluded: d?.excluded }
     out.searchEnInCn = (await timed('search en term in cn', () => s.search('cn-official', TERM_EN))).some((x) => x.doc.u === fb.doc.u)
     const hitsEn = await timed('search en', () => s.search('en-official', TERM_EN))
-    out.searchEn = { count: hitsEn.length, hasEngHash: hitsEn.some((x) => x.doc.u === d?.engHash) }
+    out.searchEn = { count: hitsEn.length, hasEngHash: hitsEn.some((x) => x.doc.u === d?.english?.hash) }
     if (!full) return out
 
     // 背景描述：作者字段 hasFluff 为真的第一条（作者文档 §10：同名同来源自动关联）
@@ -119,14 +119,15 @@ async function checks(page, cfg, full) {
     await s.setBookExcluded('cn-official', BOOK, false)
     out.on = { spellInBook: (await s.query('cn-official', 'spell', { source: BOOK })).length, searchInBook: (await s.search('cn-official', TERM_CN)).filter((x) => x.doc.s === BOOK).length }
 
+    const pairs = await timed('english pairs (author getEnglishEntity)', () => s.englishPairs('cn-official'))
     const cov = await timed('english coverage', () => s.englishCoverage('cn-official'))
-    const sum = Object.values(cov.props).reduce((a, p) => ({ total: a.total + p.total, paired: a.paired + p.paired, noEngHash: a.noEngHash + p.noEngHash }), { total: 0, paired: 0, noEngHash: 0 })
+    const sum = { total: 0, paired: 0 }
+    for (const p of Object.values(cov.props)) for (const [k, v] of Object.entries(p)) sum[k] = (sum[k] ?? 0) + v
     const byProp = {}
-    for (const u of cov.unpaired) if ((byProp[u.prop] ??= []).length < 4) byProp[u.prop].push(u)
-    // 每类没配上的样例，再附英文那套同一类的前几个编号，好比对两边编号的写法
-    const enSamples = {}
-    for (const prop of Object.keys(byProp)) enSamples[prop] = (await s.query('en-official', prop)).slice(0, 3).map((r) => r.hash)
-    out.coverage = { ...sum, props: cov.props, skipped: cov.skipped, unpairedSamples: byProp, enSamples }
+    for (const u of cov.unpaired) if ((byProp[u.prop] ??= []).length < 3) byProp[u.prop].push(u)
+    const mismatchVia = {}
+    for (const m of cov.nameMismatch) mismatchVia[m.via] = (mismatchVia[m.via] ?? 0) + 1
+    out.coverage = { ...sum, via: cov.via, located: pairs.located, unmatchedInIndex: pairs.unmatched.length, mismatchVia, mismatchSamples: cov.nameMismatch.slice(0, 12), props: cov.props, unpairedSamples: byProp }
     return out
   }, { ...cfg, full })
 }
@@ -175,7 +176,7 @@ for (const [name, type, options] of engines) {
   r.passed = !r.fatal1 && !r.fatal2 && Object.values(r.verdict).every(Boolean)
   results.push(r)
   await writeFile(`${work}/b2-4-5-${name}.json`, JSON.stringify(r, null, 2))
-  console.log(JSON.stringify({ engine: name, passed: r.passed, verdict: r.verdict, fatal: [r.fatal1, r.fatal2].filter(Boolean).map((x) => x.split('\n').slice(0, 4)), install: r.install, online: o && { ...o, coverage: o.coverage && { total: o.coverage.total, paired: o.coverage.paired, noEngHash: o.coverage.noEngHash, skipped: o.coverage.skipped.length } }, offline: f && { query: f.query, found: f.searchCn.found, english: f.detail?.english, ms: f.ms }, offlineExternal: r.offlineExternal, errors: [...(r.errors1 ?? []), ...(r.errors2 ?? [])] }, null, 1))
+  console.log(JSON.stringify({ engine: name, passed: r.passed, verdict: r.verdict, fatal: [r.fatal1, r.fatal2].filter(Boolean).map((x) => x.split('\n').slice(0, 4)), install: r.install, online: o && { ...o, coverage: o.coverage && { ...o.coverage, props: undefined, unpairedSamples: undefined } }, offline: f && { query: f.query, found: f.searchCn.found, english: f.detail?.english, ms: f.ms }, offlineExternal: r.offlineExternal, errors: [...(r.errors1 ?? []), ...(r.errors2 ?? [])] }, null, 1))
 }
 server.close()
 if (!results.length || results.some((r) => !r.passed)) process.exitCode = 1

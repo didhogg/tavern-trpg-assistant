@@ -1,6 +1,7 @@
 // 小窗里插件能叫作者程序做的事。每一件都只是转调作者自己的函数，结果原样交回，不挑字段。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
-import { A, engHashOf, hasEngHashTable, hashOf, init, sourceOf } from './author'
+import { A, hashOf, init, sourceOf } from './author'
+import { englishLocators, englishMatch } from './english-commands'
 import { detail, excludedFlags, search, searchSettings } from './read-commands'
 
 export interface LoaderInfo {
@@ -34,11 +35,9 @@ export interface ParsedProp {
   hashes: Array<string | null>
   /** 来源（作者 SourceUtil.getEntitySource），与 items 一一对应。 */
   sources: Array<string | null>
-  /** 英文站编号（中文程序的 URL_TO_ENG_HASH_BUILDER）；英文程序没有这张表时为 null。 */
-  engHashes: Array<string | null> | null
 }
 
-/** 整类取一类（作者的 pCacheAndGetAllSite），连同作者编号、来源、英文编号一起交回。 */
+/** 整类取一类（作者的 pCacheAndGetAllSite），连同作者编号、来源一起交回。 */
 export async function parseProp(prop: string): Promise<ParsedProp> {
   await init()
   const items: any[] = (await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []
@@ -46,7 +45,6 @@ export async function parseProp(prop: string): Promise<ParsedProp> {
     items,
     hashes: items.map((it) => hashOf(prop, it)),
     sources: items.map((it) => sourceOf(it)),
-    engHashes: hasEngHashTable() ? items.map((it) => engHashOf(prop, it)) : null,
   }
 }
 
@@ -92,5 +90,5 @@ export async function isExcluded(hash: string, prop: string, source: string): Pr
   return A.ExcludeUtil.isExcluded(hash, prop, source, { isNoCount: true })
 }
 
-export const COMMANDS = { init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchSettings }
+export const COMMANDS = { init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchSettings, englishLocators, englishMatch }
 export type CommandName = keyof typeof COMMANDS
