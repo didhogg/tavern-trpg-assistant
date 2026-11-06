@@ -6,7 +6,7 @@ const code = (s: string): string => `\`${s}\``
 const list = (xs: string[], max = 25): string => xs.length ? xs.slice(0, max).map((x) => `- ${code(x)}`).join('\n') + (xs.length > max ? `\n- ……共 ${n(xs.length)} 个，完整清单见 validation.json` : '') : '无'
 
 type ManifestLike = {
-  sources: Array<{ key: string; kind: string; edition: string; declared: boolean; languages: Record<string, { records: number; files: number }> }>
+  sources: Array<{ key: string; kind: string; edition: string; declared: boolean; listedBy?: string[]; languages: Record<string, { records: number; files: number }> }>
   repos: Array<{ id: string; label: string; kind: string; lang: string; fileCount: number; jsonCount: number; contentRecords: number; sourceIds: number; bytesJson: number; snapshotHash: string; revision: string | null }>
   translations: {
     officialCnEn: { primaryIds: number; secondaryIds: number; paired: number; onlyPrimary: string[]; onlySecondary: string[] }
@@ -20,6 +20,8 @@ type ManifestLike = {
 export function writeHumanReport(manifest: ManifestLike, v: Validation): string {
   const official = manifest.sources.filter((s) => s.kind === 'official')
   const homebrew = manifest.sources.filter((s) => s.kind === 'homebrew')
+  const prerelease = manifest.sources.filter((s) => s.kind === 'prerelease')
+  const al = v.authorSourceList
   const rows = manifest.repos.map((r) => `| ${r.label} | ${r.kind} / ${r.lang} | ${n(r.jsonCount)} | ${n(r.contentRecords)} | ${n(r.sourceIds)} | ${MB(r.bytesJson)} |`)
   const tr = manifest.translations
   const topDup = v.duplicateRecords.groups.slice(0, 10).map((g) => `| ${g.count} | ${g.key} | ${g.locations.join('<br>')} |`)
@@ -66,8 +68,13 @@ ${rows.join('\n')}
 |---|---:|---:|---:|---:|---:|
 | 官方 | ${n(official.length)} | ${n(official.filter((s) => s.edition === '2014').length)} | ${n(official.filter((s) => s.edition === '2024').length)} | ${n(official.filter((s) => s.edition === 'unknown').length)} | ${n(official.filter((s) => s.edition === 'mixed').length)} |
 | 自制 | ${n(homebrew.length)} | ${n(homebrew.filter((s) => s.edition === '2014').length)} | ${n(homebrew.filter((s) => s.edition === '2024').length)} | ${n(homebrew.filter((s) => s.edition === 'unknown').length)} | ${n(homebrew.filter((s) => s.edition === 'mixed').length)} |
+| 试玩稿 | ${n(prerelease.length)} | ${n(prerelease.filter((s) => s.edition === '2014').length)} | ${n(prerelease.filter((s) => s.edition === '2024').length)} | ${n(prerelease.filter((s) => s.edition === 'unknown').length)} | ${n(prerelease.filter((s) => s.edition === 'mixed').length)} |
 
-版本分布：官方 ${editions(v.editions.official)}；自制 ${editions(v.editions.homebrew)}。
+版本分布：官方 ${editions(v.editions.official)}；自制 ${editions(v.editions.homebrew)}；试玩稿 ${editions(v.editions.prerelease)}。
+
+### 2.1 作者的官方来源清单（取并集）
+
+${al ? `作者在 5etools-utils 里自己列了一份官方来源清单（${al.file}，提交 ${al.revision?.slice(0, 12) ?? '无'}），共 ${n(al.total)} 个。与我们从数据里扫出的官方来源取**并集**：两边都有 ${n(al.matched)} 个；只在作者清单里 ${n(al.authorOnly.length)} 个（${al.authorOnly.map(code).join('、') || '无'}，已补进来源表，标 listedBy=author-schema，没有记录和文件）；只在数据里 ${n(al.dataOnly.length)} 个（${al.dataOnly.map(code).join('、') || '无'}，保持 listedBy=data）。` : '没有找到作者的官方来源清单文件，未合并。'}
 
 - 未知版本不猜，清单见 \`validation.json\` 的 \`editions.unknown\`。
 - 同一来源同时出现 2014 和 2024 的，标为“混合”，清单见 \`editions.mixed\`；T4 分库时不得把它硬塞进一边。
@@ -90,7 +97,7 @@ ${remoteRow('英文自制', v.remoteIndexes.homebrewEn)}
 ${remoteRow('中文自制', v.remoteIndexes.homebrewZh)}
 
 - 本清单扫的是本地参考快照；远程 head 可能更新。远程多出来的来源 ID 不自动导入，T4 要用同一份清单/同一个提交，不能一边用本地清单、一边拉远程最新。
-- 远程多出的 ID 清单在 validation.json 的 remoteIndexes.*.remoteOnly。本轮的英文远程比本地多 11 个来源，中文远程与本地一致。
+- 远程多出的 ID 清单在 validation.json 的 remoteIndexes.*.remoteOnly。本轮英文远程比本地多 ${n(v.remoteIndexes.homebrewEn?.remoteOnly.length ?? 0)} 个来源，中文远程比本地多 ${n(v.remoteIndexes.homebrewZh?.remoteOnly.length ?? 0)} 个（读不到则为 0）。
 
 ## 4. 校验结果
 

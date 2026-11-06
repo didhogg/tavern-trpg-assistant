@@ -12,7 +12,7 @@ const count = z.number().int().nonnegative()
 const repoSchema = z.looseObject({
   id: z.string().min(1),
   label: z.string(),
-  kind: z.enum(['official', 'homebrew']),
+  kind: z.enum(['official', 'homebrew', 'prerelease']),
   lang: z.enum(['zh', 'en']),
   role: z.string(),
   repoUrl: z.string(),
@@ -29,7 +29,7 @@ const repoSchema = z.looseObject({
 const sourceSchema = z.looseObject({
   key: z.string().min(1),
   id: z.string().min(1),
-  kind: z.enum(['official', 'homebrew']),
+  kind: z.enum(['official', 'homebrew', 'prerelease']),
   name: z.string().nullish(),
   nameEn: z.string().nullish(),
   edition: z.enum(['2014', '2024', 'unknown', 'mixed']),

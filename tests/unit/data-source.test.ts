@@ -33,6 +33,18 @@ const asFetch = (fn: (url: string) => Promise<Response>): typeof fetch => fn as 
 const upstream = { dataSource: 'upstream' as const, sourceManifestUrl: 'https://m.test/manifest.json', sourceManifestFallbackUrl: '' }
 
 describe('数据源指针（T4）', () => {
+  it('清单里的试玩稿（prerelease）类型仓库与来源能被读取并建索引', () => {
+    const raw = makeManifest()
+    const ua = { id: 'prerelease-ua', label: 'ua', kind: 'prerelease', lang: 'en', role: 'primary', repoUrl: 'https://example.test/ua', branch: 'master', baseUrl: 'https://raw.example.test/ua/', fallbackBaseUrl: 'https://cdn.example.test/ua/', revision: null, snapshotHash: 'abc', jsonCount: 1, contentRecords: 5, metaRecords: 0 }
+    ;(raw.repos as unknown[]).push(ua)
+    ;(raw.sources as unknown[]).push({ key: 'prerelease:UA2020Feats', id: 'UA2020Feats', kind: 'prerelease', name: 'UA2020Feats', nameEn: 'UA2020Feats', edition: '2014', declared: true, listedBy: ['data'] })
+    ;(raw.files as unknown[]).push({ repo: 'prerelease-ua', path: 'feat/UA2020Feats.json', kind: 'content', bytes: 10, sha256: 'x', sourceIds: ['UA2020Feats'], contentRecords: 5, url: 'u', fallbackUrl: 'f' })
+    raw.recordIndex = { file: 'records.jsonl.gz', count: 17, sha256: 'z' }
+    const m = manifestSchema.parse(raw)
+    expect(reconcileManifest(m)).toEqual([])
+    expect(buildSourceIndex(m).filesBySource.get('prerelease:UA2020Feats')?.length).toBe(1)
+  })
+
   it('旧库模式：不联网，也不碰任何清单', async () => {
     const fetchFn = vi.fn()
     const active = await resolveDataSource({ dataSource: 'legacy', sourceManifestUrl: 'https://m.test/x', sourceManifestFallbackUrl: '' }, { fetchFn: fetchFn as unknown as typeof fetch })

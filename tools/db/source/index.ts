@@ -5,6 +5,7 @@ import { gzipSync } from 'node:zlib'
 import { OUT_ROOT } from '../lib/paths'
 import { stableStringify } from '../../../src/core/hash'
 import { REPOS, ensureClonedRepos, repoRevision } from './repos'
+import { mergeAuthorSourceList } from './authorList'
 import { scanRepo } from './scanRepo'
 import { loadCatalog, editionFromDate, editionFromHomebrew, pairCoverage } from './catalog'
 import type { Lang, MetaSource, RecordRow, RepoScan, SourceEntry, SourceKind, Validation } from './types'
@@ -67,8 +68,8 @@ function mainSync(): { scans: RepoScan[]; aggs: Map<string, Agg>; rows: string[]
     if (!a) { a = makeAgg(kind, id); aggs.set(key, a) }
     return a
   }
-  const mergeMeta = (repoId: string, lang: Lang, meta: MetaSource, fileEdition: string | null): void => {
-    const a = agg('homebrew', meta.id)
+  const mergeMeta = (repoId: string, lang: Lang, kind: SourceKind, meta: MetaSource, fileEdition: string | null): void => {
+    const a = agg(kind, meta.id)
     a.declared = true
     if (meta.full) a.names[lang] = a.names[lang] ?? meta.full
     a.abbreviation = a.abbreviation ?? meta.abbreviation ?? null
@@ -122,7 +123,7 @@ function mainSync(): { scans: RepoScan[]; aggs: Map<string, Agg>; rows: string[]
 
   for (const config of REPOS) {
     const scan = scanRepo(config, (repo, file, recordRows, jsonScan) => {
-      for (const meta of jsonScan.metaSources) mergeMeta(repo.id, repo.lang, meta, jsonScan.fileEdition)
+      for (const meta of jsonScan.metaSources) mergeMeta(repo.id, repo.lang, repo.kind, meta, jsonScan.fileEdition)
       for (const row of recordRows) addRow(repo, file.path, row)
       for (const id of jsonScan.sourceIds) {
         const a = agg(repo.kind, id)
@@ -185,6 +186,7 @@ function finalizeSources(aggs: Map<string, Agg>, scans: RepoScan[]): SourceEntry
       key: aggKey(a.kind, a.id), id: a.id, kind: a.kind, name: a.names.zh ?? a.names.en ?? a.id, nameEn: a.names.en ?? null,
       abbreviation: a.abbreviation, published: a.published, edition: a.edition, declared: a.declared,
       license: a.license, url: a.url, version: a.version, authors: [...a.authors].sort(), convertedBy: [...a.convertedBy].sort(),
+      listedBy: ['data'],
       languages: Object.fromEntries((['zh', 'en'] as Lang[]).filter((l) => a.langs[l]).map((l) => {
         const la = a.langs[l]!
         return [l, { records: la.records, contentRecords: la.records, files: la.files.size, categories: Object.fromEntries([...la.categories].sort(([x], [y]) => x.localeCompare(y))) }]
@@ -227,7 +229,8 @@ async function probe(url: string, repo: string): Promise<Validation['fetchProbes
 
 async function main(): Promise<void> {
   const { scans, aggs, rows, stats } = mainSync()
-  const sources = finalizeSources(aggs, scans)
+  const merged = mergeAuthorSourceList(finalizeSources(aggs, scans))
+  const sources = merged?.sources ?? finalizeSources(aggs, scans)
   const manifestDir = OUT
   mkdirSync(manifestDir, { recursive: true })
 
@@ -307,7 +310,8 @@ async function main(): Promise<void> {
     files,
     lookups,
     translations,
-    editions: { official: byKind('official'), homebrew: byKind('homebrew') },
+    editions: { official: byKind('official'), homebrew: byKind('homebrew'), prerelease: byKind('prerelease') },
+    authorSourceList: merged ? { file: merged.info.file, revision: merged.info.revision, total: merged.info.total } : null,
     recordIndex: { file: 'records.jsonl.gz', count: rows.length, bytes: recordsBuf.byteLength, sha256: recordsHash },
   }
   const manifestHash = sha(Buffer.from(stableStringify(manifest), 'utf8'))
@@ -344,7 +348,7 @@ async function main(): Promise<void> {
     sourceMetadataConflicts: stats.metaConflicts,
     indexMismatches,
     editions: {
-      official: byKind('official'), homebrew: byKind('homebrew'),
+      official: byKind('official'), homebrew: byKind('homebrew'), prerelease: byKind('prerelease'),
       unknown: sources.filter((s) => s.edition === 'unknown').map((s) => s.key).sort(),
       mixed: sources.filter((s) => s.edition === 'mixed').map((s) => s.key).sort(),
     },
@@ -354,6 +358,7 @@ async function main(): Promise<void> {
       homebrewZh: compareIndex(homebrewZh.config.baseUrl + homebrewZh.config.probePath, new Set(Object.keys(homebrewZh.indexSources)), await readRemoteIndex(homebrewZh.config.baseUrl + homebrewZh.config.probePath)),
     },
     fetchProbes: probes,
+    authorSourceList: merged?.info ?? null,
     manifestHash,
     recordsHash,
   }

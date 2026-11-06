@@ -1,6 +1,7 @@
 /** T3 源清单：这里只描述“源文件与来源”，不描述 DND 字段、书单或界面。 */
 export type Lang = 'zh' | 'en'
-export type SourceKind = 'official' | 'homebrew'
+/** official=WotC 官方出版；homebrew=自制；prerelease=试玩稿（Unearthed Arcana，作者 wiki 里单列的 Prerelease）。 */
+export type SourceKind = 'official' | 'homebrew' | 'prerelease'
 export type FileKind = 'content' | 'lookup' | 'index' | 'other' | 'error'
 
 export interface RepoConfig {
@@ -123,6 +124,8 @@ export interface SourceEntry {
   authors: string[]
   convertedBy: string[]
   languages: Partial<Record<Lang, SourceLanguageInfo>>
+  /** 这个来源 ID 由谁登记：data=我们扫描的数据/书目录里出现；author-schema=作者 5etools-utils 的 sources-5etools.json 官方来源清单。两者取并集。 */
+  listedBy: Array<'data' | 'author-schema'>
 }
 
 export interface PairCoverage {
@@ -190,6 +193,7 @@ export interface Validation {
   editions: {
     official: Record<string, number>
     homebrew: Record<string, number>
+    prerelease: Record<string, number>
     unknown: string[]
     mixed: string[]
   }
@@ -208,6 +212,7 @@ export interface Validation {
     ms: number
     error: string | null
   }>
+  authorSourceList: { file: string; revision: string | null; total: number; matched: number; authorOnly: string[]; dataOnly: string[] } | null
   manifestHash: string
   recordsHash: string | null
 }

@@ -4,8 +4,8 @@
 - P0 整理归档与执行守则：✔ 2026-11-05。
 - **当前：D2-P1 5etools 直读数据源（T1–T4）**
   - T1/T2 ✔：现有库直接装 5etools 原样数据；后端读取器覆盖法术/怪物/物品/职业/种族/背景/专长/升级/表；报告 `docs/handoff/D2-P1_T1-T2_验证报告.md`。
-  - T3 ✔ 2026-11-06（T4 期间追加第 6 个源 5etools-2014-src）：全量源清单 + 校验，现为 6 个源、3,613 个 JSON、285,408 条记录、1,748 个来源 ID；报告 `docs/handoff/D2-P1_T3_源清单与校验报告.md`（数字以 T4 报告为准），输出 `/Users/xxx/tavern-trpg-data-next/source-manifest/`，T3 原清单备份在 `/Users/xxx/tavern-trpg-backup/source-manifest-T3-before-2014src/`。
-  - T4 ✔ 2026-11-06（只换源）：设置里新增「当前数据源」指针（默认旧库，读不到清单自动退回）、源清单读取与自检、新旧比对工具 `npm run db:diff`、清单对账 `npm run db:source:check`；报告 `docs/handoff/D2-P1_T4_换源报告.md`。**未提交**，等驾驶员说提交。
+  - T3 ✔ 2026-11-06（T4 期间追加 5etools-2014-src，S1 期间追加试玩稿 unearthed-arcana 并合并作者官方来源清单）：全量源清单 + 校验，现为 7 个源、3,756 个 JSON、290,645 条记录、1,861 个来源 ID（英文上游已改指向 2.40.0）；报告 `docs/handoff/D2-P1_T3_源清单与校验报告.md`（数字以 T4 报告为准），输出 `/Users/xxx/tavern-trpg-data-next/source-manifest/`，T3 原清单备份在 `/Users/xxx/tavern-trpg-backup/source-manifest-T3-before-2014src/`、`.../source-manifest-T3-before-UA/`。作者 wiki/文档原文：`/Users/xxx/tavern-trpg-data-next/_upstream/author-docs/`。
+  - T4 ✔ 2026-11-06（只换源）：设置里新增「当前数据源」指针（默认旧库，读不到清单自动退回）、源清单读取与自检、新旧比对工具 `npm run db:diff`、清单对账 `npm run db:source:check`；报告 `docs/handoff/D2-P1_T4_换源报告.md`。已本地提交（T1+T2 `cb6a6fe`、T3 `a46d609`、T4 `1dff1d2`，未推送）；S1 期间追加的试玩稿源与作者来源清单合并在其后，**未提交**，等驾驶员说提交。
   - 范围边界：T3/T4 不生成自定义包、不覆盖旧库、不推送。旧 `docs/handoff/D2-P1_数据库全量重建_执行文档.md` 和 `tools/db/build.ts` 是另一条全量转换线，不是本轮 T3/T4 的入口。
 - 之后：P2【库】后端（一次整体设计并做完：B0 调查 → B1 设计稿 → B2 实现 → B3 对账）→ P2 前端逐个小 UNIT → P2 完成后推送 → P3a 人物详情 S1–S12 → P3b UNIT4–8 → P3c 骰盘标签页。
 
