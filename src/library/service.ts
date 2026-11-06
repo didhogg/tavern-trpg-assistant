@@ -11,7 +11,7 @@ import type { Detail, SearchHit } from './runtime/frame/read-commands'
 import type { EnglishMatch } from './runtime/frame/english-commands'
 import type { BrewEntry, WithErrors } from './runtime/frame/brew-commands'
 import type { AuthorFrame } from './runtime/host'
-import { commitOf, getSource, SOURCES, type SourceEntry } from './sources'
+import { commitOf, getSource, officialSourceOf, SOURCES, type SourceEntry } from './sources'
 
 export interface QueryRow {
   hash: string | null
@@ -347,7 +347,10 @@ export class LibraryService {
         english: await this.stored<EnglishCoverage>(`audit:english:${source.id}`, (fp) => fp === `${commit}+${pairCommit}`),
         layers34: await this.stored<Layers34Summary>(`audit:layers34:${source.id}`, (fp) => fp.startsWith(`${commit}+`)),
       }
-      if (source.kind === 'brew') {
+      // 作者程序启动要读这套官方数据：没装就开不了小窗，自制这几项跳过（体检里注明）
+      if (source.kind === 'brew' && (await this.opts.db.sets.get(officialSourceOf(source.codeSet).id))?.status !== 'installed') {
+        input.officialMissing = officialSourceOf(source.codeSet).id
+      } else if (source.kind === 'brew') {
         input.brewStorage = await (await this.frame(source.codeSet)).call('brewStorage')
         input.brewSourceCounts = await this.brewSourceCounts(source.id)
       }

@@ -57,6 +57,8 @@ export interface HealthInput {
   brewStorage?: StoredBrew[]
   /** 自制：解析结果里每个来源有几条（来源按作者 SourceUtil.getEntitySource，小写）。 */
   brewSourceCounts?: Record<string, number>
+  /** 自制：这套作者程序对应的官方数据还没装，作者程序开不起来，自制检查跳过。 */
+  officialMissing?: string
 }
 
 const DETAILS = 50
@@ -118,6 +120,7 @@ function brewItems(input: HealthInput): HealthItem[] {
       item(id, 'not-run', okOr(r.parse.notRun, 'info'), '没有解析的（附原因）', r.parse.notRun, s),
     )
   }
+  if (input.officialMissing) out.push(item(id, 'brew-skipped', 'info', `${input.officialMissing} 还没安装，作者程序开不起来，自制的检查跳过`, []))
   if (input.brewStorage) {
     const hidden = input.brewStorage.filter((b) => !b.shown)
     out.push(item(id, 'brew-hidden', okOr(hidden, 'warn'), '存进了作者包管理器、但作者不显示也不加载的包（作者规则：没有来源 _meta.sources 的包被滤掉）', hidden))

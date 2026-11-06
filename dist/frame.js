@@ -1,5 +1,6 @@
-// src/library/runtime/protocol.ts
-var e = "trpg-library", t = globalThis, n = null;
+import { t as e } from "./protocol-03CO7Rhf.js";
+// src/library/runtime/frame/author.ts
+var t = globalThis, n = null;
 function r() {
 	return n ??= (async () => {
 		t.Renderer.get().setBaseUrl(""), await t.PrereleaseUtil.pInit(), await t.BrewUtil2.pInit(), await t.ExcludeUtil.pInitialise();
@@ -366,13 +367,13 @@ addEventListener("message", (t) => {
 		error: `小窗没有这个指令：${n.fn}`
 	});
 });
-var z = {
+var z = new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "", B = {
 	channel: e,
 	type: "ready",
 	frame: R,
-	codeSet: new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "",
+	codeSet: z,
 	authorVersion: typeof L.VERSION_NUMBER == "string" ? L.VERSION_NUMBER : null,
 	present: Object.fromEntries(I.map((e) => [e, L[e] !== void 0])),
 	errors: [...L.__trpgFrameErrors ?? []]
 };
-parent.postMessage(z, location.origin);
+parent.postMessage(B, location.origin);

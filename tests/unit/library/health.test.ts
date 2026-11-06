@@ -67,6 +67,11 @@ describe('体检：各份报告汇成统一格式', () => {
     expect(items.map((i) => [i.check, i.level])).toEqual([['brew-hidden', 'ok'], ['brew-empty', 'ok']])
   })
 
+  it('自制：对应的官方数据没装时跳过并注明', () => {
+    const items = healthItemsOf({ source: getSource('en-brew'), installed: false, officialMissing: 'en-official' })
+    expect(items.map((i) => [i.check, i.level])).toEqual([['brew-skipped', 'info']])
+  })
+
   it('汇总按级别计数', () => {
     const r = healthReport(healthItemsOf({ source: getSource('cn-official'), installed: true, install: { value: install(), stale: false } }), 5)
     expect(r.at).toBe(5)
