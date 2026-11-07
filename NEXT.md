@@ -20,7 +20,7 @@
     - **实现蓝图（路线 B，驾驶员 2026-11-07 定）**：`docs/handoff/D2-P3-2_结算内核实现蓝图.md`。结算小窗里官方 foundry.mjs、dnd5e 6.1.0 与 Plutonium 原样运行；不用 midi-qol 一套。测量与补测见 `docs/handoff/D2-P3-2_路线测量.md`。a→e 已按蓝图连续执行完，各段遇蓝图 §6 情况才停。
     - **a 段完成（2026-11-07）**：`docs/handoff/D2-P3-2_a_接手进度.md`。官方 foundry.mjs + dnd5e + Plutonium 在结算小窗原样运行；插件真实接线下对象、场景、骰子、重放、隔离均与官方 0 差异，转换只剩单列的 Entrap 1 条；Plutonium 读的 5etools 数据由【库】回答（驾驶员定 A）。手机加载未测。
     - **b 段完成（2026-11-07）**：穿/脱、同调、使用物品扣次数、短休/长休/黎明恢复；Chrome/WebKit 各 3,083 场景 0 差异，session/dice/convert 回归 0 差异。见交接进度表。
-    - **c 段完成（2026-11-07）**：开战/先攻、回合/轮次、施法扣法术位、受伤专注检定与中断、状态加/移除；Chrome/WebKit 各 3,095 场景 0 差异，session/dice/convert 回归 0（convert 仅 Entrap 单列）。
+    - **c 段完成（2026-11-07）**：开战/先攻、回合/轮次、施法扣法术位、受伤专注检定与中断、状态加/移除、Warlock 契约法术位；Chrome/WebKit 各 3,096 场景 0 差异，session/dice/convert 回归 0（convert 仅 Entrap 单列）。
     - **d 段完成（2026-11-07）**：Plutonium 公开导入器全量 4,124 只怪物，Chrome/WebKit 0 错误/0 差异；12 攻击、3 传奇、5 施法样本 0 差异；5etools 写值与 dnd5e 算值差异只列出。见 `monsters-*.json`。
     - **e 段完成（2026-11-07）**：12 个角色逐级升级步骤/应用 0 差异；全量 17 职业、301 种族、101 背景列建卡步骤 0 报错/0 差异。见 `build-*.json`。
     - **P3-3 保存后端 ✔（2026-11-07）**：M1 存档加可选 kernel 段（规则、选书、引用、选择、状态、数据版本、修订、撤销）；`KernelSaveService` 绑定规则、预览/按修订号写入/撤销、读档前检查缺书，不删数据；结构版本升 5，带迁移。见 `docs/handoff/D2-P3-3-4_保存后端与完整链路.md`。

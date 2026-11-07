@@ -77,6 +77,12 @@ function combatScenarios(actors) {
     out.push(['concentrationCheck', caster._id, 5, points(4)])
     out.push(['concentration', caster._id])
   }
+  const warlock = chars.find(a => (a.items ?? []).some(i => i.type === 'class' && i.name === 'Warlock'))
+  const pactSpell = warlock && (warlock.items ?? []).find(i => i.type === 'spell' && Number(i.system.level) > 0
+    && (i.system.method === 'pact' || i.system.preparation?.mode === 'pact') && Object.values(i.system.activities ?? {}).length)
+  if (warlock && pactSpell) {
+    out.push(['cast', warlock._id, pactSpell._id, Object.values(pactSpell.system.activities)[0]._id, points(8)])
+  }
   out.push(['condition', chars[0]._id, 'prone', true])
   out.push(['condition', chars[0]._id, 'prone', false])
   out.push(['combatNext', points(1)])
