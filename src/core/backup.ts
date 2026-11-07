@@ -7,19 +7,29 @@ export interface ReminderStatus {
   kind: 'never' | 'ok' | 'due'
   daysSince: number | null
   savesSince: number
+  /** 后端估算的完整备份大小（字节）；界面以后可显示。 */
+  estimatedBytes?: number
   /** 抽屉中显示的文字。 */
   text: string
 }
 
-export function reminderStatus(state: BackupState, settings: Settings, now: number): ReminderStatus {
+function sizeText(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
+export function reminderStatus(state: BackupState, settings: Settings, now: number, estimatedBytes?: number): ReminderStatus {
+  const size = estimatedBytes === undefined ? '' : ` · 约 ${sizeText(estimatedBytes)}`
   if (state.lastExportAt === null) {
-    return { kind: 'never', daysSince: null, savesSince: state.savesSinceExport, text: '还没有导出过备份' }
+    return { kind: 'never', daysSince: null, savesSince: state.savesSinceExport, ...(estimatedBytes === undefined ? {} : { estimatedBytes }), text: `还没有导出过备份${size}` }
   }
   const daysSince = Math.max(0, Math.floor((now - state.lastExportAt) / DAY))
   const due = daysSince >= settings.reminderDays || state.savesSinceExport >= settings.reminderSaves
   const when = daysSince === 0 ? '今天' : `${daysSince} 天前`
-  const text = due ? `建议导出备份 · 上次完整备份：${when}，之后保存 ${state.savesSinceExport} 次` : `上次完整备份：${when} · 之后保存 ${state.savesSinceExport} 次`
-  return { kind: due ? 'due' : 'ok', daysSince, savesSince: state.savesSinceExport, text }
+  const base = due ? `建议导出备份 · 上次完整备份：${when}，之后保存 ${state.savesSinceExport} 次` : `上次完整备份：${when} · 之后保存 ${state.savesSinceExport} 次`
+  const text = base + size
+  return { kind: due ? 'due' : 'ok', daysSince, savesSince: state.savesSinceExport, ...(estimatedBytes === undefined ? {} : { estimatedBytes }), text }
 }
 
 export async function loadBackupState(db: TrpgDatabase): Promise<BackupState> {

@@ -4,10 +4,10 @@ import type { TrpgDatabase } from '../db'
 import { TrpgError } from '../errors'
 import type { CampaignService } from './campaign'
 import type { RuleRegistry } from '../../rules/registry'
-import type { Workspace } from '../../schemas/campaign'
+import type { SaveSlot, Workspace } from '../../schemas/campaign'
 import {
   kernelActorSchema, kernelCampaignSchema, kernelLibrarySchema,
-  type KernelActor, type KernelCampaign, type KernelChange, type KernelDataVersion, type KernelLibrary,
+  type KernelActor, type KernelCampaign, type KernelChange, type KernelDataVersion, type KernelLibrary, type KernelOverride,
 } from '../../schemas/kernel'
 
 /** 引用检查结果：和 P3-1 的 FetchResult 形状一致，但 core 不依赖 library 运行时。 */
@@ -25,8 +25,10 @@ export interface KernelSaveDeps {
   rules: RuleRegistry
   now: () => number
   checkRefs: KernelRefChecker
-  /** 当前装的数据版本；给了就报告版本是否变了。 */
-  currentVersion?: () => KernelDataVersion
+  /** 当前装的数据版本；给了就报告版本是否变了。可异步读【库】。 */
+  currentVersion?: () => KernelDataVersion | Promise<KernelDataVersion>
+  /** 当前实际生效的房规覆盖；给了就报告覆盖是否变了。 */
+  currentOverrides?: () => Promise<KernelOverride[]>
 }
 
 export interface KernelMissing {
@@ -44,6 +46,17 @@ export interface KernelCheck {
   checked: number
   dataVersion: KernelDataVersion | null
   dataVersionChanged: boolean
+  dataVersionChanges: {
+    official: { before: string; after: string } | null
+    brews: Array<{ id: string; before: string | null; after: string | null; change: 'added' | 'removed' | 'changed' }>
+  }
+  overridesChanged: boolean
+  overrideChanges: Array<{
+    target: KernelOverride['target']
+    change: 'added' | 'removed' | 'changed'
+    before: string | null
+    after: string | null
+  }>
 }
 
 export interface KernelPreviewRow {
@@ -160,11 +173,14 @@ export class KernelSaveService {
     return next
   }
 
-  /** 读档前检查：规则装没装、引用还在不在；结果只报告，不改存档。 */
+  /** 读档前检查：规则装没装、引用还在不在、版本/覆盖哪里变了；结果只报告，不改存档。 */
   async check(ownerKey: string): Promise<KernelCheck> {
     const ws = await this.workspace(ownerKey)
     const kernel = this.parse(ws.data.kernel)
-    if (!kernel) return { bound: false, rule: null, ruleMissing: false, missing: [], checked: 0, dataVersion: null, dataVersionChanged: false }
+    if (!kernel) {
+      return { bound: false, rule: null, ruleMissing: false, missing: [], checked: 0, dataVersion: null, dataVersionChanged: false,
+        dataVersionChanges: { official: null, brews: [] }, overridesChanged: false, overrideChanges: [] }
+    }
     const ruleMissing = !this.deps.rules.get(kernel.rule)
     const library = kernelLibrarySchema.parse(ws.data.library ?? kernel.library)
     const rows: Array<{ actorId: string; actorName: string; ref: KernelActor['refs'][number] }> = []
@@ -176,12 +192,67 @@ export class KernelSaveService {
       const row = rows[index]
       missing.push({ ...row, ref: { ...row.ref, label: row.ref.label }, reason: result.reason ?? 'missing' })
     })
-    const current = this.deps.currentVersion?.()
+
+    const current = this.deps.currentVersion ? await this.deps.currentVersion() : undefined
+    const dataVersionChanges = {
+      official: current && current.official !== kernel.dataVersion.official
+        ? { before: kernel.dataVersion.official, after: current.official } : null,
+      brews: [] as KernelCheck['dataVersionChanges']['brews'],
+    }
+    if (current) {
+      const ids = new Set([...Object.keys(kernel.dataVersion.brews), ...Object.keys(current.brews)])
+      for (const id of [...ids].sort()) {
+        const before = kernel.dataVersion.brews[id] ?? null
+        const after = current.brews[id] ?? null
+        if (before === after) continue
+        dataVersionChanges.brews.push({ id, before, after, change: before === null ? 'added' : after === null ? 'removed' : 'changed' })
+      }
+    }
+
+    const currentOverrides = this.deps.currentOverrides ? await this.deps.currentOverrides() : undefined
+    const overrideChanges: KernelCheck['overrideChanges'] = []
+    if (currentOverrides) {
+      const key = (ref: KernelOverride['target']): string => `${ref.set}|${ref.prop}|${ref.hash}`
+      const before = new Map(kernel.overrides.map((item) => [key(item.target), item]))
+      const after = new Map(currentOverrides.map((item) => [key(item.target), item]))
+      for (const target of new Set([...before.keys(), ...after.keys()])) {
+        const old = before.get(target)
+        const next = after.get(target)
+        if (!old && next) overrideChanges.push({ target: next.target, change: 'added', before: null, after: next.digest })
+        else if (old && !next) overrideChanges.push({ target: old.target, change: 'removed', before: old.digest, after: null })
+        else if (old && next && (old.digest !== next.digest || key(old.house) !== key(next.house))) {
+          overrideChanges.push({ target: next.target, change: 'changed', before: old.digest, after: next.digest })
+        }
+      }
+    }
+
     return {
       bound: true, rule: kernel.rule, ruleMissing, missing, checked: rows.length,
       dataVersion: kernel.dataVersion,
-      dataVersionChanged: !!current && JSON.stringify(current) !== JSON.stringify(kernel.dataVersion),
+      dataVersionChanged: !!current && (dataVersionChanges.official !== null || dataVersionChanges.brews.length > 0),
+      dataVersionChanges,
+      overridesChanged: overrideChanges.length > 0,
+      overrideChanges,
     }
+  }
+
+  /** 恢复原样：保留存档里记录的版本与覆盖，只交回现状，不写数据。 */
+  async keepSaved(ownerKey: string): Promise<KernelCampaign> {
+    const kernel = await this.read(ownerKey)
+    if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
+    return kernel
+  }
+
+  /** 采用现在的：把当前数据版本/覆盖写进战役，再走 M1 branch 存成新分支；旧存档不变。 */
+  async adoptCurrent(ownerKey: string, current: { dataVersion?: KernelDataVersion; overrides?: KernelOverride[] } = {}): Promise<{ kernel: KernelCampaign; save: SaveSlot }> {
+    const kernel = await this.read(ownerKey)
+    if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
+    const dataVersion = current.dataVersion ?? (this.deps.currentVersion ? await this.deps.currentVersion() : kernel.dataVersion)
+    const overrides = current.overrides ?? (this.deps.currentOverrides ? await this.deps.currentOverrides() : kernel.overrides)
+    const next: KernelCampaign = { ...kernel, dataVersion, overrides, revision: kernel.revision + 1 }
+    await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, kernel: next }))
+    const { save } = await this.deps.campaign.branch(ownerKey, '采用现在的')
+    return { kernel: next, save }
   }
 
   /** 预览变更计划：每行交回改前/改后的状态；不写任何数据。 */

@@ -16,6 +16,10 @@ export const saveFileManifestSchema = z.object({
   appVersion: z.string(),
   exportedAt: z.string(),
   ruleIds: z.array(z.string()),
+  /** 存档引用的作者条目（给"导入时缺的资料"用）；旧文件没有这一项。 */
+  dependencies: z.array(z.object({ set: z.string(), prop: z.string(), hash: z.string(), rule: z.string().optional() })).default([]),
+  /** 每个存档的规则与数据版本指纹；旧文件没有这一项。 */
+  kernelVersions: z.array(z.object({ saveId: z.string(), rule: z.string(), official: z.string(), brews: z.record(z.string(), z.string()) })).default([]),
 })
 export type SaveFileManifest = z.infer<typeof saveFileManifestSchema>
 
@@ -26,6 +30,8 @@ export interface RecognizedSaveFile {
   workspaces: Workspace[]
   settings?: Settings
   blobs: Map<string, Uint8Array>
+  /** 完整备份里的【库】文件：brew/…、scopes.json、house-rules.json。 */
+  libraryFiles: Record<string, string>
 }
 
 function badContent(detail: string): TrpgError {
@@ -64,7 +70,7 @@ export function readSaveFile(bytes: Uint8Array): RecognizedSaveFile {
   if (head.format === 'trpg-pack') throw new TrpgError('E_UNKNOWN_FORMAT', '这是旧版的扩展包文件（.trpgpack），新版已不再使用；自制内容请用【库】导入作者格式的文件')
   if (head.format !== 'trpg-save' && head.format !== 'trpg-backup') throw new TrpgError('E_UNKNOWN_FORMAT', '无法识别：未知的文件类型')
   if (typeof head.formatVersion !== 'number' || head.formatVersion > FORMAT_VERSION) throw new TrpgError('E_NEWER_FORMAT', '这个文件由更新版本的扩展创建，请先更新扩展')
-  if (head.formatVersion < FORMAT_VERSION) throw new TrpgError('E_OLD_DATA', '这是旧版扩展导出的存档（旧扩展包格式），新版不再读取')
+  if (head.formatVersion < 3) throw new TrpgError('E_OLD_DATA', '这是旧版扩展导出的存档（旧扩展包格式），新版不再读取')
   const parsed = saveFileManifestSchema.safeParse(raw)
   if (!parsed.success) throw badContent(`说明文件的 ${field(parsed.error.issues[0])} 不合法`)
   const saves = parseRecords(files, 'saves/', 'save', saveSlotSchema)
@@ -85,5 +91,9 @@ export function readSaveFile(bytes: Uint8Array): RecognizedSaveFile {
     assertImage(hash, content)
     blobs.set(hash, content)
   }
-  return { type: parsed.data.format === 'trpg-backup' ? 'backup' : 'save', manifest: parsed.data, saves, workspaces, settings, blobs }
+  const libraryFiles: Record<string, string> = {}
+  for (const name of Object.keys(files).filter((n) => n.startsWith('library/') && !n.endsWith('/'))) {
+    libraryFiles[name.slice('library/'.length)] = strFromU8(files[name])
+  }
+  return { type: parsed.data.format === 'trpg-backup' ? 'backup' : 'save', manifest: parsed.data, saves, workspaces, settings, blobs, libraryFiles }
 }

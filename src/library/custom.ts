@@ -122,6 +122,67 @@ export class CustomLibrary {
     return (await this.frame(codeSet)).call('brewExport', docIdLocal)
   }
 
+  /** 完整备份：自制（作者格式原样）+ 范围设置 + 房规链接；官方数据不进备份。 */
+  async exportBackup(): Promise<Record<string, string>> {
+    const files: Record<string, string> = {}
+    for (const codeSet of ['cn', 'en']) {
+      const set = SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)
+      if (!set) continue
+      for (const entry of await this.lib.brewInstalled(set.id)) {
+        const docId = String(entry.head.docIdLocal ?? entry.head.docId ?? '')
+        if (!docId) continue
+        const exported = await this.exportBrew(codeSet, docId)
+        if (!exported) continue
+        files[`brew/${codeSet}/${exported.filename ?? `${docId}.json`}`] = JSON.stringify(exported.body)
+      }
+    }
+    files['scopes.json'] = JSON.stringify(await this.exportScopes())
+    files['house-rules.json'] = JSON.stringify(await this.manage.houseRules())
+    return files
+  }
+
+  /** 完整备份恢复：先按作者包管理器导入自制，再恢复范围设置与房规链接。 */
+  async importBackup(files: Record<string, string>): Promise<{ brews: number; scopes: number; houseRules: number; errors: string[] }> {
+    const errors: string[] = []
+    let brews = 0
+    let scopes = 0
+    let houseRules = 0
+    for (const [path, text] of Object.entries(files)) {
+      if (!path.startsWith('brew/')) continue
+      const [, codeSet, ...rest] = path.split('/')
+      const set = SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)
+      if (!set) { errors.push(`不认识的自制来源：${codeSet}`); continue }
+      try {
+        const result = await this.lib.brewImport(set.id, [{ name: rest.join('/'), text }])
+        brews += result.value?.added?.length ?? 0
+        errors.push(...result.errors)
+      } catch (error) {
+        errors.push(`${path}: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+    const scopesRaw = files['scopes.json']
+    if (scopesRaw) {
+      try {
+        const parsed = JSON.parse(scopesRaw) as ScopeConfig
+        const restored = await this.importScopes(parsed)
+        scopes = restored.scopes + restored.assignments
+      } catch (error) {
+        errors.push(`scopes.json: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+    const houseRaw = files['house-rules.json']
+    if (houseRaw) {
+      try {
+        const links = JSON.parse(houseRaw) as Array<{ house: EntryRef; target: EntryRef }>
+        for (const link of links) { await this.manage.linkHouseRule(link); houseRules++ }
+      } catch (error) {
+        errors.push(`house-rules.json: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
+    this.scoped.reset()
+    return { brews, scopes, houseRules, errors }
+  }
+
   /** 范围设置单独一个文件（可带可不带）：自建范围 + 归类。只给 units 就只导这些。 */
   async exportScopes(units?: string[]): Promise<ScopeConfig> {
     const all = await this.manage.assignments()

@@ -39,7 +39,7 @@ describe('导出与导入单个存档', () => {
       const items = describeSaveFile(rec, importDeps(h).hasRule)
       expect(items.every((i) => i.selectable)).toBe(true)
       const r1 = await importSaves(importDeps(h), rec, { owner: OTHER_OWNER, selectedIds: [original.id] })
-      expect(r1).toEqual({ imported: 1, skipped: 0 })
+      expect(r1).toMatchObject({ imported: 1, skipped: 0, dependencies: 0, missing: [], library: null })
       const r2 = await importSaves(importDeps(h), rec, { owner: OTHER_OWNER, selectedIds: [original.id] })
       expect(r2.imported).toBe(1)
       const theirs = await h.campaign.listManual({ ownerKey: OTHER_OWNER.ownerKey, ruleId: 'dnd5e2014' }, 'card')
@@ -193,6 +193,8 @@ describe('备份提醒', () => {
     expect(reminderStatus(state({ lastExportAt: now - day, savesSinceExport: 10 }), settings, now)).toMatchObject({ kind: 'due' })
     expect(reminderStatus(state({ lastExportAt: now - 12 * day }), settings, now).text).toContain('建议导出备份')
     expect(reminderStatus(state({ lastExportAt: now }), settings, now).text).toContain('今天')
+    expect(reminderStatus(state({ lastExportAt: now }), settings, now, 2048)).toMatchObject({ estimatedBytes: 2048 })
+    expect(reminderStatus(state({ lastExportAt: now }), settings, now, 2048).text).toContain('约 2 KB')
   })
 
   it('导出完整备份后清零；持久存储只申请一次', async () => {

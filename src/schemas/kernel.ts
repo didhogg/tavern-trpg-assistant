@@ -55,11 +55,19 @@ export const kernelUndoSchema = z.object({
 })
 export type KernelUndo = z.infer<typeof kernelUndoSchema>
 
+export const kernelOverrideSchema = z.object({
+  target: kernelRefSchema,
+  house: kernelRefSchema,
+  digest: z.string(),
+})
+export type KernelOverride = z.infer<typeof kernelOverrideSchema>
+
 export const kernelCampaignSchema = z.object({
   rule: z.string().min(1),
   kernelVersion: z.number().int().nonnegative(),
   library: kernelLibrarySchema,
   dataVersion: kernelVersionSchema.default({ official: '', brews: {} }),
+  overrides: z.array(kernelOverrideSchema).default([]),
   actors: z.array(kernelActorSchema).default([]),
   revision: z.number().int().nonnegative().default(0),
   undo: z.array(kernelUndoSchema).default([]),

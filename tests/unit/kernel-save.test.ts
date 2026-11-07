@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { KernelSaveService, type KernelRefChecker } from '../../src/core/saves/kernel'
 import { defaultCampaignLibrary, entryUnit } from '../../src/library/scopes'
 import { kernelCampaignSchema, type KernelCampaign, type KernelChange } from '../../src/schemas/kernel'
+import { SCHEMA_VERSIONS } from '../../src/schemas/common'
 import { RuleRegistry } from '../../src/rules/registry'
 import { TrpgError } from '../../src/core/errors'
 import { OWNER, setup } from '../helpers/harness'
@@ -123,6 +124,62 @@ describe('P3-3 存档内核段', () => {
       expect(check.dataVersionChanged).toBe(true)
       expect(check.dataVersion).toEqual({ official: '1.0', brews: {} })
       expect((await kernel.read(OWNER.ownerKey))?.actors[0].refs).toHaveLength(1)
+    })
+  })
+
+  it('版本/覆盖差异逐项列出；保留原样不写；采用现在的走 branch', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      const { save } = await service.startNewCampaign(NEW)
+      const checker: KernelRefChecker = async (refs) => refs.map((ref) => ({ ok: true, ref }))
+      const base = campaign()
+      const override = {
+        target: { kind: 'entry', ...REF },
+        house: { kind: 'houserule', set: 'cn-brew', prop: 'spell', hash: 'house-1' },
+        digest: 'digest-1',
+      }
+      const bound = { ...base, overrides: [override], dataVersion: { official: '1.0', brews: { 'brew-a': 'a1' } } }
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker })
+      await kernel.bind(OWNER.ownerKey, bound)
+      await service.saveCurrent(OWNER.ownerKey)
+      const changed = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker,
+        currentVersion: () => ({ official: '2.0', brews: { 'brew-a': 'a2', 'brew-b': 'b1' } }),
+        currentOverrides: async () => [{ ...override, digest: 'digest-2' }] })
+      const check = await changed.check(OWNER.ownerKey)
+      expect(check.dataVersionChanged).toBe(true)
+      expect(check.dataVersionChanges.official).toEqual({ before: '1.0', after: '2.0' })
+      expect(check.dataVersionChanges.brews).toEqual([
+        { id: 'brew-a', before: 'a1', after: 'a2', change: 'changed' },
+        { id: 'brew-b', before: null, after: 'b1', change: 'added' },
+      ])
+      expect(check.overridesChanged).toBe(true)
+      expect(check.overrideChanges).toMatchObject([{ change: 'changed', before: 'digest-1', after: 'digest-2' }])
+      const kept = await changed.keepSaved(OWNER.ownerKey)
+      expect(kept.overrides[0].digest).toBe('digest-1')
+      const adopted = await changed.adoptCurrent(OWNER.ownerKey)
+      expect(adopted.kernel.revision).toBe(1)
+      expect(adopted.kernel.dataVersion.official).toBe('2.0')
+      expect(adopted.kernel.overrides[0].digest).toBe('digest-2')
+      expect(adopted.save.branchedFrom).toBe(save.id)
+      expect(adopted.save.snapshot.kernel).toMatchObject({ dataVersion: { official: '2.0' } })
+    })
+  })
+
+  it('存档结构太新 / 规则没装：不覆盖当前战役，原文件保留', async () => {
+    await withDb(async (db) => {
+      const { campaign: service } = await setup(db)
+      const { save } = await service.startNewCampaign(NEW)
+      const before = await service.getWorkspace(OWNER.ownerKey)
+      await db.saves.put({ ...save, schemaVersion: SCHEMA_VERSIONS.save + 1 })
+      expect(await code(service.loadSave(OWNER, save.id))).toBe('E_NEWER_DATA')
+      expect(await db.saves.get(save.id)).toBeTruthy()
+      expect((await service.getWorkspace(OWNER.ownerKey))?.currentSaveId).toBe(before?.currentSaveId)
+
+      const other = { ...save, id: 'save-coc7', ruleId: 'coc7' }
+      await db.saves.put(other)
+      expect(await code(service.loadSave(OWNER, 'save-coc7'))).toBe('E_RULE_MISSING')
+      expect(await db.saves.get('save-coc7')).toBeTruthy()
+      expect((await service.getWorkspace(OWNER.ownerKey))?.currentSaveId).toBe(before?.currentSaveId)
     })
   })
 })

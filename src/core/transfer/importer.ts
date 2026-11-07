@@ -4,6 +4,7 @@ import { sniffImageMime } from '../files/images'
 import type { CampaignService, Owner } from '../saves/campaign'
 import { settingsSchema, type SaveSlot } from '../../schemas/campaign'
 import type { RecognizedSaveFile } from './saveFile'
+import type { BackupLibraryAdapter } from './exporter'
 
 export interface ImportItem {
   save: SaveSlot
@@ -22,12 +23,22 @@ export interface ImportDeps {
   campaign: CampaignService
   now: () => number
   hasRule: (ruleId: string) => boolean
+  /** 可选：问【库】这些作者条目还在不在；不给就只报依赖数量，不冒充"都齐"。 */
+  checkRefs?: (refs: Array<{ set: string; prop: string; hash: string }>) => Promise<Array<{ ok: boolean; ref: { set: string; prop: string; hash: string }; reason?: string }>>
+  /** 可选：完整备份的【库】恢复（自制/范围/房规）。 */
+  library?: BackupLibraryAdapter
   uuid?: () => string
 }
 
 export interface ImportResult {
   imported: number
   skipped: number
+  dependencies: number
+  missing: Array<{ ref: { set: string; prop: string; hash: string }; reason: string }>
+  /** 没提供 checkRefs 时为 true：依赖清单没有核对。 */
+  dependenciesUnchecked: boolean
+  /** 完整备份的【库】恢复结果；单个存档为 null。 */
+  library: { brews: number; scopes: number; houseRules: number; errors: string[] } | null
 }
 
 function importedName(name: string, taken: Set<string>): string {
@@ -52,6 +63,13 @@ export async function importSaves(deps: ImportDeps, rec: RecognizedSaveFile, opt
   const usable = rec.saves.filter((s) => deps.hasRule(s.ruleId))
   const selected = new Set(opts.selectedIds)
   let imported = 0
+  const dependencies = rec.manifest.dependencies ?? []
+  // 完整备份：先恢复【库】（自制/范围/房规），再恢复存档；官方数据不进备份，下面按依赖清单报缺。
+  const library = rec.type === 'backup' && deps.library && Object.keys(rec.libraryFiles).length
+    ? await deps.library.importFiles(rec.libraryFiles) : null
+  const checked = deps.checkRefs ? await deps.checkRefs(dependencies) : []
+  const missing = checked.filter((row) => !row.ok).map((row) => ({ ref: row.ref, reason: row.reason ?? 'missing' }))
+  const dependenciesUnchecked = !deps.checkRefs
 
   return db.transaction('rw', [db.saves, db.workspaces, db.meta, db.blobs], async () => {
     const createdAt = deps.now()
@@ -67,7 +85,7 @@ export async function importSaves(deps: ImportDeps, rec: RecognizedSaveFile, opt
         await db.saves.put({ ...rest, id: makeId(), ownerKey: opts.owner.ownerKey, ownerLabel: opts.owner.ownerLabel, kind: 'manual', name: importedName(save.name, taken), createdAt: now, updatedAt: now })
         imported++
       }
-      return { imported, skipped: rec.saves.length - imported }
+      return { imported, skipped: rec.saves.length - imported, dependencies: dependencies.length, missing, dependenciesUnchecked, library }
     }
 
     const overwrite = opts.mode === 'overwrite'
@@ -93,6 +111,6 @@ export async function importSaves(deps: ImportDeps, rec: RecognizedSaveFile, opt
       const [ownerKey, ruleId] = pair.split('\u0000')
       await campaign.pruneAutoSaves(ownerKey, ruleId)
     }
-    return { imported, skipped: rec.saves.length - imported }
+    return { imported, skipped: rec.saves.length - imported, dependencies: dependencies.length, missing, dependenciesUnchecked, library }
   })
 }

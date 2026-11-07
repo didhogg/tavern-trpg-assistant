@@ -14,6 +14,8 @@ import {
 } from './scopes'
 import { SOURCES, type SourceEntry } from './sources'
 import { chooseVersion, type Alternative, type Chosen } from './versions'
+import { hashValue } from '../core/hash'
+import type { KernelOverride } from '../schemas/kernel'
 
 export interface VersionInfo extends Chosen {
   /** 有几个备选（不含原件）。 */
@@ -141,6 +143,21 @@ export class ScopedLibrary {
   /** 房规条目本身不单独出现在列表里（挂在原条目下当备选）。 */
   private async houseUnits(): Promise<Set<string>> {
     return new Set((await this.manage.houseRules()).map((l) => refKey(l.house)))
+  }
+
+  /** 本战役当前实际生效的房规覆盖：目标编号 → 房规条目（带内容指纹）。 */
+  async activeOverrides(): Promise<KernelOverride[]> {
+    const out: KernelOverride[] = []
+    for (const link of await this.manage.houseRules()) {
+      const stored = await this.lib.storedItem(link.house.set, link.house.prop, link.house.hash)
+      if (!stored) continue
+      out.push({
+        target: { kind: 'entry', ...link.target },
+        house: { kind: 'houserule', ...link.house },
+        digest: hashValue(stored.item),
+      })
+    }
+    return out
   }
 
   /** 按战役查一类：只交本战役看得到的，条目是生效版本。 */
