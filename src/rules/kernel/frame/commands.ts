@@ -9,6 +9,7 @@ import { unsupportedFor, type UnsupportedItem } from './writings'
 import { createItemCommands } from './commands-items'
 import { createCombatCommands } from './commands-combat'
 import { createMonsterCommands } from './commands-monsters'
+import { createLevelCommands } from './commands-level'
 
 /**
  * 五种结果状态（上位设计 §3.5）：
@@ -123,6 +124,8 @@ const ITEM_COMMANDS = createItemCommands(operate, actor)
 const COMBAT_COMMANDS = createCombatCommands(operate, actor)
 /** d 段怪物命令：完整导入走 Plutonium 公开 API。 */
 const MONSTER_COMMANDS = createMonsterCommands(operate)
+/** e 段建卡升级命令：只接线 dnd5e AdvancementManager。 */
+const LEVEL_COMMANDS = createLevelCommands(operate, actor)
 
 // ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
 const AUTHOR_CLASSES = ['Config', 'ConfigConsts', 'VetoolsLinks', 'Vetools', 'SideDataInterfaces', 'Dnd5eUtil', 'UtilDamageTypes', 'ImplementationRegistryImportList',
@@ -158,6 +161,7 @@ export const KERNEL_COMMANDS = {
   ...ITEM_COMMANDS,
   ...COMBAT_COMMANDS,
   ...MONSTER_COMMANDS,
+  ...LEVEL_COMMANDS,
   /**
    * 掷一个骰式：同一串点数得到同一结果。kind 选 dnd5e 的掷骰类（d20 = D20Roll，damage = DamageRoll，basic = BasicRoll），
    * options 原样交给它（优势、精灵精准、半身人幸运、最低值、暴击等）；不给 kind 用 Foundry 的 Roll。
@@ -189,14 +193,8 @@ export const KERNEL_COMMANDS = {
     const damage = await activity.rollDamage({}, NO_DIALOG, NO_MESSAGE)
     return { attack: attack?.map(rollSummary) ?? null, damage: damage?.map(rollSummary) ?? null }
   }, [actorId]),
-  /** 升级待选项：dnd5e 成长管理器不弹窗算出的步骤（蓝图 §3.4）。 */
-  levelUpSteps: (actorId: string, classId: string, delta = 1) => {
-    const Manager = g.dnd5e.applications.advancement.AdvancementManager
-    const manager = Manager.forLevelChange(actor(actorId), classId, delta)
-    return { status: manager.steps.length ? 'pending' : 'complete', steps: manager.steps.map((s: any) => ({ type: s.type, level: s.level ?? null,
-      advancement: s.advancement ? { type: s.advancement.constructor.typeName ?? s.advancement.type, id: s.advancement.id, title: s.advancement.title } : null })) }
-  },
-  /** 出处：dnd5e 自带的效果归属（任意数值路径）。 */  attribution: (actorId: string, paths: string[]) => Object.fromEntries(paths.map(path =>
+  /** 出处：dnd5e 自带的效果归属（任意数值路径）。 */
+  attribution: (actorId: string, paths: string[]) => Object.fromEntries(paths.map(path =>
     [path, (actor(actorId)._prepareActiveEffectAttributions(path) ?? []).map((a: any) => ({ label: a.label, mode: a.mode, value: a.value }))])),
   /** 未支持检测（蓝图 §3.6，登记表见 writings.ts）：全部角色/怪物。 */
   unsupported: () => g.game.actors.contents.flatMap((a: any) => unsupportedFor(a)),

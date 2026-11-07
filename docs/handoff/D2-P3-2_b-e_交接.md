@@ -118,6 +118,8 @@ node tools/vendor-kernel-data.mjs                             # 资料包 + 录�
 - c 段未覆盖：12 个现成角色里没有兼职/术士契约，这两类法术位未用真实角色验证；带 duration 的回合到期没有单独的简单法术样本，已用“专注中断→效果删除”验证到期路径；结束战斗按官方确认弹窗返回 `pending`，自动测试没有强制确认。
 - d 段方式：完整怪物导入走 Plutonium 公开 API `game.modules.get('plutonium').api.importer.creature.pImportEntry(entry, { isTemp: true })`；全量用临时 Actor 验证（不把 4,124 只都常驻世界），抽样 12 只真实放进世界跑攻击，3 只传奇、5 只施法。AC 只在真实 Actor 样本比对；临时 Actor 的装备未自动穿上，AC 不作为全量比对项。
 - d 段新录的 Plutonium 自有文件（vendor/foundry/modules/plutonium/data/）：`bestiary/foundry-integration-token-subjects.json`、`ddb-importer/generic-monster-features.json`、`ddb-importer/named-monster-features.json`、`ddb-importer/items.json`、`dnd-star/items.json`。以后 Plutonium 再读新文件，按交接 §3 重录。
+- e 段已接：官方 `AdvancementManager.forLevelChange / forNewItem` 列步骤；`levelUpApply` 按“第一个可选项”登记表补 HitPoints（平均）、ItemGrant（全部非可选）、Subclass（同职业第一个 SRD 子职业）、Trait（按 pool 取第一个）、AbilityScoreImprovement（力量等第一项 +2 或固定值）、Size、ScaleValue，再交官方管理器应用。
+- e 段未覆盖：ItemChoice 等需要具体物品池的进阶没有默认选择（无样本触发）；只验证了 1→2 级，多级连续升级未逐一跑；Plutonium 建卡计算（种族/背景/起始装备/前置条件的 Charactermancer 部分）没有另起一套，当前只走 dnd5e 进阶；起始装备/购点属于建卡界面和 P3-4 链路，未在本段验证。
 
 ## 8. 进度表（每段结束更新这一节）
 
@@ -127,7 +129,7 @@ node tools/vendor-kernel-data.mjs                             # 资料包 + 录�
 | b 物品装备 | ✔ 2026-11-07 | 本段提交 | 穿/脱、同调、使用次数、短休/长休/黎明恢复；Chrome/WebKit 各 3,083 场景 0 差异；session/dice/convert 回归 0 差异 |
 | c 战斗 | ✔ 2026-11-07 | 本段提交 | 开战/先攻、回合/轮次、施法扣法术位、受伤专注检定、状态加/移除；Chrome/WebKit 各 3,095 场景 0 差异；session/dice/convert 回归 0（convert 仅 Entrap 单列） |
 | d 怪物 NPC | ✔ 2026-11-07 | 本段提交 | Plutonium 公开导入器全量 4,124 只，两浏览器 0 错误/0 差异；12 攻击、3 传奇、5 施法样本 0 差异；5etools 写值与 dnd5e 算值差异只列出（save 50、hp 71、passive 25、skill 31、ac 2） |
-| e 建卡升级 | 未开始 | | |
+| e 建卡升级 | ✔ 2026-11-07 | 本段提交 | 12 个角色逐级升级步骤/应用 0 差异；全量 17 职业、301 种族、101 背景列建卡步骤 0 报错/0 差异（背景本身无成长记录，步骤为空） |
 
 ## 9. 上一位 agent 的教训（务必避免）
 
