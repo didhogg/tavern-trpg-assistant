@@ -66,6 +66,6 @@ describe('旧版本的战役与存档记录', () => {
         expect((e as TrpgError).code).toBe('E_OLD_DATA')
       }
     }
-    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 4, x: 1 })
+    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 5, x: 1 })
   })
 })

@@ -206,3 +206,19 @@ export const scoped = new ScopedLibrary(service, db)
 export const custom = new CustomLibrary(service, scoped, db)
 export const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openLocalFrame(codeSet) })
 export { defaultCampaignLibrary }
+
+// ---- P3-3 / P3-4：用户存档 + 结算内核段，引用检查直接问上面的【库】 ----
+import { TrpgDatabase } from '../../../src/core/db'
+import { CampaignService } from '../../../src/core/saves/campaign'
+import { KernelSaveService } from '../../../src/core/saves/kernel'
+import { scopedRefChecker } from '../../../src/library/kernel-check'
+import { RuleRegistry } from '../../../src/rules/registry'
+import { dnd5e2014 } from '../../../src/rules/dnd5e2014'
+import { entryUnit } from '../../../src/library/scopes'
+
+export const userDb = new TrpgDatabase('p3-3-4-e2e')
+export const rules = new RuleRegistry()
+rules.register(dnd5e2014)
+export const campaign = new CampaignService(userDb, { rules, now: () => Date.now() })
+export const kernelSave = new KernelSaveService({ db: userDb, campaign, rules, now: () => Date.now(), checkRefs: scopedRefChecker(scoped) })
+export { entryUnit }

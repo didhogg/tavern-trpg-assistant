@@ -7,8 +7,10 @@ export type MigrationTable = Record<RecordKind, Record<number, Migration>>
 
 /** 结构变更的迁移登记；键是「从哪个版本升级」。 */
 export const MIGRATIONS: MigrationTable = {
-  workspace: {},
-  save: {},
+  // 第 5 版（P3-3）：workspace / save 增加可选的 kernel 段（规则、选书、引用、选择、状态、修订、撤销）。
+  // 旧记录没有这个段就是"还没绑定结算内核"，不补造人物数据；读的时候按空处理。
+  workspace: { 4: (record) => record },
+  save: { 4: (record) => record },
 }
 
 /**

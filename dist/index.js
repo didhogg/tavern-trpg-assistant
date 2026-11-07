@@ -8968,8 +8968,8 @@ function yy(e, t) {
 }
 // src/schemas/common.ts
 var by = {
-	workspace: 4,
-	save: 4
+	workspace: 5,
+	save: 5
 }, xy = av().regex(/^[a-z0-9][a-z0-9-]*$/, "必须是小写字母、数字与短横线").max(64);
 av().regex(/^\d+\.\d+\.\d+$/, "必须是 x.y.z 形式的版本号");
 var Sy = jv().int().nonnegative(), Cy = Wv({}), wy = Uv({
@@ -13676,8 +13676,8 @@ function Pb(e) {
 }
 // src/core/migrate.ts
 var Fb = {
-	workspace: {},
-	save: {}
+	workspace: { 4: (e) => e },
+	save: { 4: (e) => e }
 }, Ib = "这个存档由更新版本的扩展创建，请先更新扩展";
 function Lb(e, t, n = {}) {
 	let r = n.current ?? by[e], i = n.migrations ?? Fb[e], a = Number(t.schemaVersion);
