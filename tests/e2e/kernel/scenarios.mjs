@@ -58,6 +58,34 @@ function itemScenarios(actor) {
   return out
 }
 
+/** c 段：从现成角色/怪物里取真实法术与战斗参与者，生成开战、施法、专注、状态、回合场景。 */
+function combatScenarios(actors) {
+  const chars = actors.filter(a => a.type === 'character')
+  const monsters = actors.filter(a => a.type === 'npc')
+  if (chars.length < 2 || !monsters.length) return []
+  const concentrationSpell = i => (i.system.properties ?? []).includes('concentration') || i.system.duration?.concentration
+  const caster = chars.find(a => (a.items ?? []).some(i => i.type === 'spell' && Number(i.system.level) > 0
+    && concentrationSpell(i) && Object.values(i.system.activities ?? {}).length))
+  const spell = caster && (caster.items ?? []).find(i => i.type === 'spell' && Number(i.system.level) > 0
+    && concentrationSpell(i) && Object.values(i.system.activities ?? {}).length)
+  const out = [['combatStart', [chars[0]._id, chars[1]._id, monsters[0]._id], points(12)]]
+  if (caster && spell) {
+    const activity = Object.values(spell.system.activities)[0]
+    out.push(['cast', caster._id, spell._id, activity._id, points(8)])
+    out.push(['concentration', caster._id])
+    out.push(['damage', caster._id, [{ value: 5, type: 'slashing' }], points(4), {}])
+    out.push(['concentrationCheck', caster._id, 5, points(4)])
+    out.push(['concentration', caster._id])
+  }
+  out.push(['condition', chars[0]._id, 'prone', true])
+  out.push(['condition', chars[0]._id, 'prone', false])
+  out.push(['combatNext', points(1)])
+  out.push(['combatNext', points(1)])
+  out.push(['combatNext', points(1)])
+  out.push(['combatEnd'])
+  return out
+}
+
 export function scenarioList(actors) {
   const list = []
   for (const a of actors) {
@@ -74,6 +102,7 @@ export function scenarioList(actors) {
     list.push(['save', id, 'wis', []]) // 故意不给骰点：应得“缺骰点”
     list.push(...itemScenarios(a))
   }
+  list.push(...combatScenarios(actors))
   list.push(['unsupported'])
   return list
 }

@@ -13,7 +13,7 @@ function usesState(uses: any): any {
   return { value: uses.value ?? null, max: uses.max ?? null, spent: uses.spent ?? null }
 }
 
-function itemState(item: any): any {
+export function itemState(item: any): any {
   return {
     id: item.id,
     name: item.name,
