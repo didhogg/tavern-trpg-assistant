@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { countOf, heroSides, DICE_FACES, type RollMode } from '../../rules/dice'
+import { countOf, heroSides, DICE_FACES, type Builder, type RollMode } from '../../rules/dice'
 import { useDiceStore } from '../../stores/dice'
 import { useUiStore } from '../../stores/ui'
 import DieIcon from '../kit/DieIcon.vue'
@@ -8,6 +8,7 @@ import Icon from '../kit/Icon.vue'
 import { loadPoint, savePoint } from './storage'
 import { useDrag, type Point } from './useDrag'
 
+const maxSides = (b: Builder): number => b.dice.reduce((m, d) => Math.max(m, d.sides), 0)
 const ui = useUiStore()
 const dice = useDiceStore()
 const MODES: Array<{ value: RollMode; label: string }> = [{ value: 'adv', label: '优势' }, { value: 'normal', label: '普通' }, { value: 'dis', label: '劣势' }]
@@ -52,44 +53,40 @@ const shownId = ref<number | null>(null)
 const tumble = ref(20)
 let timer: ReturnType<typeof setInterval> | undefined
 
-function roll(): void {
+async function roll(): Promise<void> {
   if (rolling.value || !dice.canRoll) return
-  const rec = dice.roll()
-  if (!rec) return
-  if (REDUCE) {
-    shownId.value = rec.id
-    return
-  }
-  const sides = heroSides(dice.builder)
+  // 一点下去骰子就开始转；作者骰子程序在小窗里掷，交回结果后再落定（至少转 460ms）
+  const previous = shownId.value
+  const sides = heroSides(maxSides(dice.builder))
+  const started = Date.now()
   rolling.value = true
   shownId.value = null
-  tumble.value = Math.ceil(Math.random() * sides)
-  timer = setInterval(() => (tumble.value = Math.ceil(Math.random() * sides)), 70)
-  setTimeout(() => {
+  if (!REDUCE) {
+    tumble.value = Math.ceil(Math.random() * sides)
+    timer = setInterval(() => (tumble.value = Math.ceil(Math.random() * sides)), 70)
+  }
+  const rec = await dice.roll()
+  const finish = (): void => {
     clearInterval(timer)
     rolling.value = false
-    shownId.value = rec.id
-  }, 460)
+    shownId.value = rec ? rec.id : previous
+  }
+  if (!rec || REDUCE) finish()
+  else setTimeout(finish, Math.max(0, 460 - (Date.now() - started)))
 }
 
 const shown = computed(() => (dice.last && dice.lastResult && shownId.value === dice.last.id ? { rec: dice.last, result: dice.lastResult } : null))
 const heroKind = computed(() => {
-  if (!shown.value || rolling.value) return heroSides(dice.builder)
-  const sides = shown.value.result.terms.map((t) => (t.term.kind === 'dice' ? t.term.sides : 0))
-  return heroSides({ dice: [{ count: 1, sides: Math.max(0, ...sides), sign: 1 }], mod: 0 })
+  if (!shown.value || rolling.value) return heroSides(maxSides(dice.builder))
+  return heroSides(Math.max(0, ...shown.value.result.dice.map((d) => d.sides)))
 })
 const visibleHistory = computed(() => dice.history.filter((h) => !(rolling.value && h.id === dice.last?.id)))
 type Mini = { key: string; kind: 'const'; value: number } | { key: string; kind: 'die'; sides: number; value: number; dim: boolean }
 const minis = computed<Mini[]>(() => {
   if (!shown.value) return []
   const out: Mini[] = []
-  for (const t of shown.value.result.terms) {
-    if (t.term.kind === 'const') out.push({ key: `c${out.length}`, kind: 'const', value: t.subtotal })
-    else {
-      const sides = t.term.sides
-      t.rolls.forEach((v, i) => out.push({ key: `${sides}-${out.length}-${i}`, kind: 'die', sides, value: v, dim: t.kept !== undefined && t.kept !== i }))
-    }
-  }
+  shown.value.result.dice.forEach((d, i) => out.push({ key: `${d.sides}-${i}`, kind: 'die', sides: d.sides, value: d.value, dim: d.dim }))
+  if (shown.value.result.mod) out.push({ key: 'c', kind: 'const', value: shown.value.result.mod })
   return out
 })
 const bonusText = (n: number): string => `${n > 0 ? '+' : '−'}${Math.abs(n)}`

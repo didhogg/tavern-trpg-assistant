@@ -46,7 +46,12 @@ try {
         if (!only || only === 'saves') await savesSuite(page, label, ctx)
         if (scheme === 'light' && (!only || only === 'probes')) await probeSuite(page, label, ctx)
         await page.screenshot({ path: join(root, `docs/reviews/M3-${engine}-${viewLabel}-${scheme}.png`) })
-        check(`[${label}] 页面无脚本错误`, errors.length === 0, errors.join(' | '))
+        // 已知现象（驾驶员 2026-11-07 定单列）：模拟酒馆没装【库】，作者小窗里的作者导航程序读不到这个作者数据文件；
+        // 骰子不受影响。只放行这一个文件，其余报错一律算失败。
+        const known = (e) => /文件不存在：data\/generated\/gendata-nav-adventure-book-index\.json/.test(e)
+        const known404 = errors.filter(known)
+        if (known404.length) console.log(`NOTE  [${label}] 未装【库】时作者导航读不到 gendata-nav-adventure-book-index.json（${known404.length} 条，单列）`)
+        check(`[${label}] 页面无脚本错误`, errors.filter((e) => !known(e)).length === 0, errors.filter((e) => !known(e)).join(' | '))
         await context.close()
       }
     }

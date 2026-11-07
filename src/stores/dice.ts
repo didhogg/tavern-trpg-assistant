@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import { appendToInput } from '../host/input'
 import { copyText } from '../host/clipboard'
+import { authorDice, type DiceBackend } from '../library/runtime/dice'
 import {
-  addDie, builderText, canUseMode, commentFromLine, cryptoRng, diceTotal, lineText, readBuilder, removeDie, rollDice, stepMod,
-  type Builder, type Rng, type RollMode, type RollResult,
+  EMPTY_BUILDER, addDie, authorFormula, builderText, canUseMode, commentFromLine, diceTotal, lineText, mergeGroups, removeDie, resultOf, stepMod,
+  type Builder, type RollMode, type RollResult,
 } from '../rules/dice'
 
 export interface RollRecord {
@@ -23,7 +24,6 @@ export interface RollRecord {
 
 export const HISTORY_MAX = 20
 const KEY = 'trpg-assistant:dice'
-const EMPTY: Builder = { dice: [], mod: 0 }
 
 interface Saved { history: RollRecord[]; text: string; mode: RollMode; note: string }
 
@@ -47,15 +47,23 @@ function load(owner: string | null): Saved {
   }
 }
 
+/** 作者读骰式的结果：读不了（附原因）、能拆成按钮（builder），或作者其他写法（builder 为 null，照样能掷）。 */
+type Read = { ok: true; builder: Builder | null } | { ok: false; error: string }
+
 /**
  * 自由掷骰（基本蓝图 §2.1.1 基础版）：骰式是唯一的真相。
  * 点骰子、加减值、优势劣势都只是在改骰式文字，只有 roll() 会出结果。
+ * 骰式读取与掷骰都交给作者骰子程序（上位设计 §3.7），这里不解析、不出随机数。
  * 不改 HP、不扣资源、不写战役日志。
  */
 export const useDiceStore = defineStore('dice', () => {
   let owner: string | null = null
-  let rng: Rng = cryptoRng
+  let backend: DiceBackend = authorDice
+  /** 测试用：固定的已掷点数（按掷骰顺序消耗）；null 时由作者程序自己掷。 */
+  let points: number[] | null = null
   let nextId = 1
+  let readSeq = 0
+  let reading: Promise<void> = Promise.resolve()
   let fillTimer: ReturnType<typeof setTimeout> | undefined
 
   const saved = load(null)
@@ -67,11 +75,35 @@ export const useDiceStore = defineStore('dice', () => {
   const lastResult = shallowRef<RollResult | null>(null)
   const fillState = ref<'idle' | 'done' | 'failed'>('idle')
   const copied = ref(false)
-  const read = computed(() => readBuilder(text.value))
-  const error = computed(() => (read.value.ok ? '' : read.value.error))
-  const builder = computed<Builder>(() => (read.value.ok ? read.value.builder : EMPTY))
-  const canMode = computed(() => canUseMode(builder.value))
-  const canRoll = computed(() => read.value.ok && diceTotal(builder.value) > 0)
+  const read = shallowRef<Read>({ ok: true, builder: EMPTY_BUILDER })
+  /** 作者还没读完当前骰式。 */
+  const pending = ref(false)
+  const rollError = ref('')
+  const error = computed(() => (read.value.ok ? rollError.value : read.value.error))
+  const builder = computed<Builder>(() => (read.value.ok && read.value.builder) || EMPTY_BUILDER)
+  const canMode = computed(() => read.value.ok && !!read.value.builder && canUseMode(read.value.builder))
+  const canRoll = computed(() => read.value.ok && (read.value.builder ? diceTotal(read.value.builder) > 0 : true))
+
+  /** 骰式文字变了：交给作者读（只认最后一次）。 */
+  function refresh(): void {
+    const seq = ++readSeq
+    const value = text.value
+    pending.value = true
+    rollError.value = ''
+    reading = backend.read(value).then(
+      (r) => {
+        if (seq !== readSeq) return
+        read.value = !r.ok ? { ok: false, error: `骰式看不懂：${r.error}` } : r.simple ? { ok: true, builder: mergeGroups(r.dice, r.mod) } : { ok: true, builder: null }
+      },
+      (err: unknown) => {
+        if (seq !== readSeq) return
+        console.error('[trpg-assistant] 作者骰子程序读骰式失败', err)
+        read.value = { ok: false, error: `骰子程序没有响应：${err instanceof Error ? err.message : String(err)}` }
+      },
+    ).finally(() => {
+      if (seq === readSeq) pending.value = false
+    })
+  }
 
   function persist(): void {
     try {
@@ -91,25 +123,44 @@ export const useDiceStore = defineStore('dice', () => {
     note.value = s.note
     last.value = null
     lastResult.value = null
+    refresh()
   }
 
-  /** 测试用：注入固定随机数；传 null 恢复真随机。 */
-  const setRng = (next: Rng | null): void => {
-    rng = next ?? cryptoRng
+  /** 测试用：固定已掷点数；传 null 恢复由作者程序掷。 */
+  const setPoints = (next: number[] | null): void => {
+    points = next
+  }
+  /** 测试用：换骰子后端；传 null 恢复作者骰子程序。 */
+  const setBackend = (next: DiceBackend | null): void => {
+    backend = next ?? authorDice
+    refresh()
   }
 
-  function edit(next: string): void {
+  /** 改骰式文字。按钮改的骰式是从已知的各组骰子排出来的，先直接用；作者读完再确认。 */
+  function edit(next: string, known?: Builder): void {
     text.value = next
     persist()
+    refresh()
+    if (known) read.value = { ok: true, builder: known }
   }
 
-  const addOne = (sides: number): void => edit(addDie(text.value, sides))
-  const removeOne = (sides: number): void => edit(removeDie(text.value, sides))
-  const step = (delta: number): void => edit(stepMod(text.value, delta))
+  /** 按钮改骰式：用作者刚读出的各组骰子；手写的其他写法加骰子时接在后面，减骰子和调加值不动它。 */
+  const byButton = (change: (b: Builder) => Builder, other?: () => string): void => {
+    const base = read.value.ok ? read.value.builder : EMPTY_BUILDER
+    if (base) {
+      const next = change(base)
+      edit(builderText(next), next)
+    } else if (other) edit(other())
+  }
+  const addOne = (sides: number): void => byButton((b) => addDie(b, sides), () => `${text.value.trim()} + 1d${sides}`)
+  const removeOne = (sides: number): void => byButton((b) => removeDie(b, sides))
+  const step = (delta: number): void => byButton((b) => stepMod(b, delta))
   const clear = (): void => {
     text.value = ''
     mode.value = 'normal'
     persist()
+    refresh()
+    read.value = { ok: true, builder: EMPTY_BUILDER }
   }
   /** 直接改骰式文字（打字）：不改写文字本身，读不出来时显示原因。 */
   const setText = (value: string): void => edit(value)
@@ -124,17 +175,34 @@ export const useDiceStore = defineStore('dice', () => {
     persist()
   }
 
-  /** 掷骰：唯一会出结果的动作。骰式不合法或没有骰子时返回 null。 */
-  function roll(): RollRecord | null {
-    if (!canRoll.value) return null
+  /** 掷骰：唯一会出结果的动作，交给作者骰子程序掷。骰式不合法、没有骰子或作者掷不了时返回 null（原因在 error）。 */
+  async function roll(): Promise<RollRecord | null> {
+    await reading
+    if (!canRoll.value || !read.value.ok) return null
     const effective: RollMode = canMode.value ? mode.value : 'normal'
-    const result = rollDice(text.value, { rng, mode: effective })
+    const b = read.value.builder
+    const plan = b ? authorFormula(b, effective) : { formula: text.value, groups: null }
+    const formulaText = b ? builderText(b) : text.value.trim()
+    let rolled
+    try {
+      rolled = await backend.roll(plan.formula, points ?? undefined)
+    } catch (err) {
+      console.error('[trpg-assistant] 作者骰子程序掷骰失败', err)
+      rollError.value = `骰子程序没有响应：${err instanceof Error ? err.message : String(err)}`
+      return null
+    }
+    if (rolled.status !== 'complete') {
+      rollError.value = rolled.status === 'missing' ? `已给的骰点不够，还要一颗 d${rolled.missing.dice.max}` : rolled.status === 'unsupported' ? rolled.reason : `掷骰出错：${rolled.error}`
+      return null
+    }
+    rollError.value = ''
+    const result: RollResult = resultOf({ formula: plan.formula, groups: plan.groups, mod: b?.mod ?? 0, mode: effective }, rolled)
     const rec: RollRecord = {
       id: nextId++,
       at: Date.now(),
       note: note.value.trim(),
       expression: result.expression,
-      formula: builderText(builder.value),
+      formula: formulaText,
       mode: effective,
       total: result.total,
       line: lineText(result),
@@ -154,6 +222,7 @@ export const useDiceStore = defineStore('dice', () => {
     text.value = rec.formula
     mode.value = rec.mode
     persist()
+    refresh()
   }
 
   function clearHistory(): void {
@@ -180,7 +249,7 @@ export const useDiceStore = defineStore('dice', () => {
   }
 
   return {
-    text, mode, note, history, last, lastResult, fillState, copied, error, builder, canMode, canRoll,
-    setOwner, setRng, addOne, removeOne, step, clear, setText, setMode, setNote, roll, loadRecord, clearHistory, fill, copy, commentOf,
+    text, mode, note, history, last, lastResult, fillState, copied, error, builder, canMode, canRoll, pending,
+    setOwner, setPoints, setBackend, addOne, removeOne, step, clear, setText, setMode, setNote, roll, loadRecord, clearHistory, fill, copy, commentOf,
   }
 })

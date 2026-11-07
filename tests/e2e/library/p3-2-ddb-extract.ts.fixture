@@ -1,0 +1,67 @@
+// @vitest-environment jsdom
+// 在 work/ 的 DDB 复制件 tests/_export 下运行；不进入插件。
+import fs from 'node:fs'
+import path from 'node:path'
+import * as Enrichers from '../../src/parser/enrichers/_module'
+import { makeDdbCharacterData } from '../_fixtures/ddb/factories'
+import { installActivityConfigStubs } from '../_fixtures/ddb/stubs'
+
+const target = path.resolve(import.meta.dirname, '../../../../p3-2-measurement')
+const factories: Record<string, any> = {
+  classFeature: Enrichers.DDBClassFeatureEnricher, subclassFeature: Enrichers.DDBClassFeatureEnricher,
+  feat: Enrichers.DDBFeatEnricher, raceFeature: Enrichers.DDBSpeciesTraitEnricher,
+  spell: Enrichers.DDBSpellEnricher, item: Enrichers.DDBItemEnricher,
+  background: Enrichers.DDBBackgroundEnricher, monsterFeature: Enrichers.DDBMonsterFeatureEnricher,
+}
+const safe = (value: any) => {
+  const seen = new WeakSet()
+  return JSON.parse(JSON.stringify(value, (_k, v) => {
+    if (typeof v === 'function') return '[FUNCTION_REQUIRES_EXECUTION]'
+    if (v && typeof v === 'object') { if (seen.has(v)) return '[CIRCULAR]'; seen.add(v) }
+    return v
+  }) ?? 'null')
+}
+describe('2014 source hints via the author factory', () => {
+  beforeAll(async () => {
+    installActivityConfigStubs()
+    const setupErrors: string[] = []
+    try {
+      const { API_BASE } = await import('../../src/api')
+      ;(globalThis as any).DDBImporter = API_BASE
+    } catch (e) { setupErrors.push(String((e as Error).stack)) }
+    fs.writeFileSync(path.join(target, 'ddb-environment.json'), JSON.stringify({ environment: 'jsdom', officialApiLoaded: !!(globalThis as any).DDBImporter, setupErrors }, null, 2))
+  })
+  it('records every eligible entry, lookup failure and getter failure', async () => {
+    const corpus = JSON.parse(fs.readFileSync(path.join(target, 'corpus-chrome.json'), 'utf8'))
+    const rows: any[] = []
+    for (const [kind, Factory] of Object.entries(factories)) for (const ent of corpus[kind] ?? []) {
+      const owner = ent.className ?? ent.raceName ?? ent.monsterName ?? null
+      const row: any = { kind, name: ent.name, owner, source: ent.source }
+      // 作者输入保留全部；规则归属差异在报告中单列，不用查找成功掩盖版本混合。
+      const f = new Factory({})
+      const data = { name: ent.name, type: 'feat', system: { description: { value: '', chat: '' }, source: { rules: '2014' }, properties: [], activities: {} }, flags: { ddbimporter: {} }, effects: [] }
+      const ddbParser: any = { originalName: ent.name, is2014: true, isAction: false, data,
+        klass: ent.className,
+        species: kind === 'raceFeature' ? { fullRaceName: owner, baseRaceName: owner, groupName: owner } : undefined,
+        ddbData: makeDdbCharacterData({ character: { actions: { class: [], race: [], feat: [], item: [], background: [] } } }),
+      }
+      try {
+        await f.load({ ddbParser, document: data, is2014: true, monster: { name: ent.monsterName ?? ent.name } })
+        const en = f.loadedEnricher
+        row.found = !!en
+        if (en) {
+          row.enricher = en.constructor.name; row.hints = {}; row.errors = {}
+          const getters = new Set<string>()
+          for (let p = Object.getPrototypeOf(en); p && p !== Object.prototype; p = Object.getPrototypeOf(p)) for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(p))) if (descriptor.get && !key.startsWith('_')) getters.add(key)
+          for (const key of getters) {
+            try { const value = en[key]; if (value != null) row.hints[key] = safe(value) }
+            catch (e) { row.errors[key] = String((e as Error).message) }
+          }
+        }
+      } catch (e) { row.error = String((e as Error).message) }
+      rows.push(row)
+    }
+    fs.writeFileSync(path.join(target, 'ddb-hints.json'), JSON.stringify(rows, null, 1))
+    expect(rows.length).toBe(Object.keys(factories).reduce((n, kind) => n + (corpus[kind]?.length ?? 0), 0))
+  }, 600000)
+})

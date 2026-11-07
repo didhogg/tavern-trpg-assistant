@@ -1,4 +1,3 @@
-export { parseDice, termsToText, MAX_DICE_COUNT, MAX_DICE_SIDES, MAX_TERMS, type DiceTerm, type ParseResult } from './parse'
-export { rollDice, cryptoRng, type Rng, type RollMode, type RollOptions, type RollResult, type RolledTerm } from './roll'
-export { commentFromLine, commentText, detailText, lineText } from './format'
-export { DICE_FACES, addDie, builderText, canUseMode, countOf, diceTotal, heroSides, readBuilder, removeDie, stepMod, type Builder, type DiceGroup } from './builder'
+// 骰盘的按钮与排版小工具；骰式读取与掷骰在作者骰子程序（src/library/runtime/dice.ts）。
+export { commentFromLine, lineText, resultOf, type AuthorRoll, type RollMode, type RollResult } from './format'
+export { DICE_FACES, EMPTY_BUILDER, MAX_DICE_COUNT, addDie, authorFormula, builderText, canUseMode, countOf, diceTotal, heroSides, mergeGroups, removeDie, stepMod, type Builder, type DiceGroup } from './builder'

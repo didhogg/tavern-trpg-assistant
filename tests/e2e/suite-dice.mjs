@@ -3,6 +3,12 @@ import { check, gotoPage, settle } from './helpers.mjs'
 import { callStore } from './store.mjs'
 
 const num = (text) => Number(text.trim())
+/** 骰式交给作者骰子程序读（在作者小窗里，要等它回话）：等它读完再看界面。 */
+const read = (page) => page.waitForFunction(() => {
+  const root = document.getElementById('trpg-assistant-root').shadowRoot
+  const app = [...root.children].map((c) => c.__vue_app__).find(Boolean)
+  return app.config.globalProperties.$pinia._s.get('dice').pending === false
+})
 
 export async function diceSuite(page, label, { width, height }) {
   const narrow = width <= 480
@@ -49,6 +55,7 @@ export async function diceSuite(page, label, { width, height }) {
   for (let i = 0; i < 5; i++) await tray.getByRole('button', { name: '加 1' }).click()
   check(`[${label}] 加减值调到 +5，骰式同步为 … + 5`, (await tray.getByTestId('dice-mod').innerText()) === '+5' && (await formula.inputValue()) === '1d6 + 1d20 + 5', await formula.inputValue())
   await formula.fill('1d20+3')
+  await read(page)
   check(`[${label}] 手写骰式后，加减值显示跟着变为 +3`, (await tray.getByTestId('dice-mod').innerText()) === '+3')
 
   // 掷骰
@@ -67,6 +74,7 @@ export async function diceSuite(page, label, { width, height }) {
   check(`[${label}] 劣势：明细标明取低`, /取低 \d+\/\d+/.test(await line.innerText()), await line.innerText())
   await tray.getByRole('button', { name: '普通', exact: true }).click()
   await formula.fill('2d6+3')
+  await read(page)
   check(`[${label}] 骰式不是单个 1d20 时，优势劣势灰掉并说明原因`, (await tray.getByRole('button', { name: '优势', exact: true }).isDisabled()) && (await tray.getByTestId('dice-hint').innerText()).includes('只对单个 1d20'))
   await formula.press('Enter')
   await page.waitForFunction(() => !document.getElementById('trpg-assistant-root').shadowRoot.querySelector('.trpg-dice__hero.is-rolling'))
@@ -75,19 +83,20 @@ export async function diceSuite(page, label, { width, height }) {
 
   // 不合法的骰式
   await formula.fill('abc')
+  await read(page)
   check(`[${label}] 骰式看不懂时就近提示原因，「掷骰」不可点，上次结果保留`, (await tray.getByRole('alert').innerText()).includes('骰式看不懂') && (await rollBtn.isDisabled()) && num(await total.innerText()) === t2)
   await tray.getByRole('button', { name: '清空' }).click()
   check(`[${label}] 清空：骰式为空，提示消失`, (await formula.inputValue()) === '' && (await tray.getByRole('alert').innerText()) === '')
 
   // 天然 20 / 天然 1
-  await callStore(page, 'dice', (s) => { s.setRng(() => 0.9999) })
+  await callStore(page, 'dice', (s) => { s.setPoints([20]) })
   await formula.fill('1d20')
   await rollNow()
   check(`[${label}] 天然 20：骰子金色并有文字「天然 20」`, (await tray.locator('.trpg-dice__hero.is-nat20').count()) === 1 && (await tray.getByText('天然 20').count()) === 1)
-  await callStore(page, 'dice', (s) => { s.setRng(() => 0) })
+  await callStore(page, 'dice', (s) => { s.setPoints([1]) })
   await rollNow()
   check(`[${label}] 天然 1：骰子红色并有文字「天然 1」`, (await tray.locator('.trpg-dice__hero.is-nat1').count()) === 1 && (await tray.getByText('天然 1').count()) === 1)
-  await callStore(page, 'dice', (s) => { s.setRng(null) })
+  await callStore(page, 'dice', (s) => { s.setPoints(null) })
 
   // 填入输入框：保留原文、不发送；说明在结果卡里
   await formula.fill('1d20+5')

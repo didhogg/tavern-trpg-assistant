@@ -1,70 +1,62 @@
-import { MAX_DICE_COUNT, parseDice, type DiceTerm } from './parse'
+// 骰盘的骰子按钮 ↔ 骰式文字。骰式怎么读、怎么掷都归作者骰子程序（src/library/runtime/dice.ts）；
+// 这里只把作者读出的“若干组骰子 + 加值”排成文字，以及按钮的加一颗、减一颗、调加值。
+import type { RollMode } from './format'
 
-/** 掷骰窗里可以点的骰子。 */
+/** 骰盘里可以点的骰子。 */
 export const DICE_FACES = [4, 6, 8, 10, 12, 20, 100] as const
+/** 按钮一次最多加到的颗数（只限按钮；手写骰式由作者程序决定能不能掷）。 */
+export const MAX_DICE_COUNT = 100
 
 export interface DiceGroup { count: number; sides: number; sign: 1 | -1 }
 export interface Builder { dice: DiceGroup[]; mod: number }
 
-const EMPTY: Builder = { dice: [], mod: 0 }
+export const EMPTY_BUILDER: Builder = { dice: [], mod: 0 }
 
-/** 骰式文字 → 构建器：同面数同符号的骰子合并，常数合并成一个加减值。空文字是合法的空骰式。 */
-export function readBuilder(text: string): { ok: true; builder: Builder } | { ok: false; error: string } {
-  if (!text.trim()) return { ok: true, builder: EMPTY }
-  const parsed = parseDice(text)
-  if (!parsed.ok) return parsed
-  return { ok: true, builder: fromTerms(parsed.terms) }
-}
-
-function fromTerms(terms: DiceTerm[]): Builder {
+/** 作者读出的各组骰子：同面数同符号的合并。 */
+export function mergeGroups(groups: DiceGroup[], mod: number): Builder {
   const dice: DiceGroup[] = []
-  let mod = 0
-  for (const t of terms) {
-    if (t.kind === 'const') mod += t.sign * t.value
-    else {
-      const same = dice.find((d) => d.sides === t.sides && d.sign === t.sign)
-      if (same) same.count += t.count
-      else dice.push({ count: t.count, sides: t.sides, sign: t.sign })
-    }
+  for (const g of groups) {
+    const same = dice.find((d) => d.sides === g.sides && d.sign === g.sign)
+    if (same) same.count += g.count
+    else dice.push({ ...g })
   }
   return { dice, mod }
 }
 
+const ordered = (b: Builder): DiceGroup[] => [...b.dice].sort((x, y) => (y.sign - x.sign) || x.sides - y.sides)
+
 /** 构建器 → 骰式文字：加号的骰子按面数从小到大，减号的骰子在后，加减值在最后，如 `2d6 + 1d20 + 5`。 */
 export function builderText(b: Builder): string {
-  const ordered = [...b.dice].sort((x, y) => (y.sign - x.sign) || x.sides - y.sides)
-  const parts = ordered.map((d, i) => `${i === 0 ? (d.sign === -1 ? '-' : '') : d.sign === -1 ? '- ' : '+ '}${d.count}d${d.sides}`)
+  const parts = ordered(b).map((d, i) => `${i === 0 ? (d.sign === -1 ? '-' : '') : d.sign === -1 ? '- ' : '+ '}${d.count}d${d.sides}`)
   let text = parts.join(' ')
   if (b.mod) text += `${text ? ' ' : ''}${b.mod > 0 ? (text ? '+ ' : '+') : '- '}${Math.abs(b.mod)}`
   return text
 }
 
-function edit(text: string, change: (b: Builder) => Builder): string {
-  const read = readBuilder(text)
-  return builderText(change(read.ok ? read.builder : EMPTY))
+/** 交给作者掷的骰式与各组顺序。优势 / 劣势用作者写法：唯一的 1d20 写成 2d20kh1 / 2d20kl1。 */
+export function authorFormula(b: Builder, mode: RollMode): { formula: string; groups: Array<DiceGroup & { pair: boolean }> } {
+  const groups = ordered(b).map((d) => ({ ...d, pair: mode !== 'normal' && d.sides === 20 && d.count === 1 && d.sign === 1 }))
+  const parts = groups.map((d, i) => `${d.sign === -1 ? '-' : i === 0 ? '' : '+'}${d.pair ? `2d20${mode === 'adv' ? 'kh1' : 'kl1'}` : `${d.count}d${d.sides}`}`)
+  const formula = parts.join('') + (b.mod ? `${b.mod > 0 ? (parts.length ? '+' : '') : '-'}${Math.abs(b.mod)}` : '')
+  return { formula, groups }
 }
 
 /** 点一下骰子：该面数的骰子多一颗（超过上限时不再增加）。 */
-export function addDie(text: string, sides: number): string {
-  return edit(text, (b) => {
-    const dice = b.dice.map((d) => ({ ...d }))
-    const same = dice.find((d) => d.sides === sides && d.sign === 1)
-    if (same) same.count = Math.min(MAX_DICE_COUNT, same.count + 1)
-    else dice.push({ count: 1, sides, sign: 1 })
-    return { ...b, dice }
-  })
+export function addDie(b: Builder, sides: number): Builder {
+  const dice = b.dice.map((d) => ({ ...d }))
+  const same = dice.find((d) => d.sides === sides && d.sign === 1)
+  if (same) same.count = Math.min(MAX_DICE_COUNT, same.count + 1)
+  else dice.push({ count: 1, sides, sign: 1 })
+  return { ...b, dice }
 }
 
-export function removeDie(text: string, sides: number): string {
-  return edit(text, (b) => ({
-    ...b,
-    dice: b.dice.map((d) => (d.sides === sides && d.sign === 1 ? { ...d, count: d.count - 1 } : { ...d })).filter((d) => d.count > 0),
-  }))
+export function removeDie(b: Builder, sides: number): Builder {
+  return { ...b, dice: b.dice.map((d) => (d.sides === sides && d.sign === 1 ? { ...d, count: d.count - 1 } : { ...d })).filter((d) => d.count > 0) }
 }
 
 /** 加减值加减 delta（限制在 min..max）。 */
-export function stepMod(text: string, delta: number, min = -20, max = 30): string {
-  return edit(text, (b) => ({ ...b, mod: Math.min(max, Math.max(min, b.mod + delta)) }))
+export function stepMod(b: Builder, delta: number, min = -20, max = 30): Builder {
+  return { ...b, mod: Math.min(max, Math.max(min, b.mod + delta)) }
 }
 
 /** 某个面数的骰子现在有几颗（只数加号的）。 */
@@ -82,8 +74,8 @@ export function diceTotal(b: Builder): number {
   return b.dice.reduce((n, d) => n + d.count, 0)
 }
 
-/** 结果卡里大骰子的形状：取骰式里面数最大的骰子，落到最近的一种。 */
-export function heroSides(b: Builder): number {
-  const max = b.dice.reduce((m, d) => Math.max(m, d.sides), 0) || 20
+/** 结果卡里大骰子的形状：取面数最大的骰子，落到最近的一种。 */
+export function heroSides(maxSides: number): number {
+  const max = maxSides || 20
   return DICE_FACES.find((f) => max <= f) ?? 100
 }
