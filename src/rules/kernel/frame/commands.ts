@@ -6,6 +6,7 @@
 const g = globalThis as any
 
 import { unsupportedFor, type UnsupportedItem } from './writings'
+import { createItemCommands } from './commands-items'
 
 /**
  * 五种结果状态（上位设计 §3.5）：
@@ -114,6 +115,9 @@ async function operate(points: number[], run: () => Promise<any>, actors: string
     missing: outcome.needs ? { dice: outcome.needs } : null, pending: outcome.input ? { input: outcome.input } : null, unsupported }
 }
 
+/** b 段物品命令：只接线官方入口，结果格式复用上面的 operate。 */
+const ITEM_COMMANDS = createItemCommands(operate, actor)
+
 // ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
 const AUTHOR_CLASSES = ['Config', 'ConfigConsts', 'VetoolsLinks', 'Vetools', 'SideDataInterfaces', 'Dnd5eUtil', 'UtilDamageTypes', 'ImplementationRegistryImportList',
   'DataConverterClassSubclassFeature', 'DataConverterFeat', 'DataConverterOptionalfeature', 'DataConverterRaceFeature', 'DataConverterSpell', 'DataConverterItem',
@@ -145,6 +149,7 @@ const CONVERT_TIMEOUT_MS = 15_000
 const NO_MESSAGE = { create: false }
 
 export const KERNEL_COMMANDS = {
+  ...ITEM_COMMANDS,
   /**
    * 掷一个骰式：同一串点数得到同一结果。kind 选 dnd5e 的掷骰类（d20 = D20Roll，damage = DamageRoll，basic = BasicRoll），
    * options 原样交给它（优势、精灵精准、半身人幸运、最低值、暴击等）；不给 kind 用 Foundry 的 Roll。

@@ -27,7 +27,12 @@ export const kernelInputFor = async input => ({
  * Plutonium 可缺的后端接口 404 及其浏览器 404 提示；小窗 0×0 时官方的“窗口尺寸不足”（只影响界面）。
  */
 export const unexpectedErrors = errors => errors.filter(e => !e.endsWith('/vendor/foundry/api/plutonium') && !e.startsWith('console: Failed to load resource: the server responded with a status of 404')
-  && !e.startsWith('console: Foundry Virtual Tabletop requires usable window dimensions'))
+  && !e.startsWith('console: Foundry Virtual Tabletop requires usable window dimensions')
+  // 无画布结算小窗：活动要放测量模板时官方会报这个（只影响地图摆放）；使用/消耗结果仍照常返回。
+  && !e.startsWith('console: Error: Failed to place measured template')
+  && !e.startsWith('console: Failed to place measured template')
+  // 官方活动需要配置窗/选择窗时，界面空类按设计抛“需玩家输入”，结果状态是 pending，不是失败。
+  && !e.includes('KERNEL_NEEDS_INPUT'))
 
 /** 小窗实际读到的模块自带文件（modules/<id>/…）：vendor 工具据此把 Plutonium 用到的自家数据原样存进 vendor/foundry/（同决定 8 的录制做法）。 */
 export const moduleFilesRead = new Set()
