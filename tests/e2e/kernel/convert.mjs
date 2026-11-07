@@ -72,7 +72,8 @@ for (const [name, engine, launch] of [
   } finally {
     if (result.differences.length) process.exitCode = 1
     await save(`convert-${name}.json`, result)
-    await save(`module-files-convert-${name}.json`, [...moduleFilesRead].sort())
+    // 只有参考模式才录“小窗实际读到的模块文件”；插件模式清单为空，写出去会冲掉参考录制。
+    if (process.env.KERNEL_FILES === 'reference') await save(`module-files-convert-${name}.json`, [...moduleFilesRead].sort())
     console.log(JSON.stringify({ engine: name, ms: result.ms, differences: result.differences.length, sample: result.differences.slice(0, 2), failure: result.failure?.slice(0, 500) }, null, 1))
     await browser.close()
   }

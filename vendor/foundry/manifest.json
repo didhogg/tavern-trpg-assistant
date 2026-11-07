@@ -166,10 +166,27 @@
   },
   "moduleFiles": [
    "modules/plutonium/data/bestiary/foundry-integration-token-subjects.json",
+   "modules/plutonium/data/ddb-importer/backgrounds.json",
+   "modules/plutonium/data/ddb-importer/class-features.json",
+   "modules/plutonium/data/ddb-importer/classes.json",
+   "modules/plutonium/data/ddb-importer/feats.json",
+   "modules/plutonium/data/ddb-importer/general.json",
    "modules/plutonium/data/ddb-importer/generic-monster-features.json",
    "modules/plutonium/data/ddb-importer/items.json",
    "modules/plutonium/data/ddb-importer/named-monster-features.json",
-   "modules/plutonium/data/dnd-star/items.json"
+   "modules/plutonium/data/ddb-importer/races.json",
+   "modules/plutonium/data/ddb-importer/spells.json",
+   "modules/plutonium/data/dnd-star/classfeatures.json",
+   "modules/plutonium/data/dnd-star/feats.json",
+   "modules/plutonium/data/dnd-star/items.json",
+   "modules/plutonium/data/dnd-star/optionalfeatures.json",
+   "modules/plutonium/data/dnd-star/spells.json",
+   "modules/plutonium/data/dnd-star/subclasses.json",
+   "modules/plutonium/data/dnd-star/subclassfeatures.json",
+   "modules/plutonium/data/icon-class.json",
+   "modules/plutonium/data/icon-feat.json",
+   "modules/plutonium/data/icon-spell.json",
+   "modules/plutonium/data/icon-subclass.json"
   ],
   "recordedFrom": [
    "module-files-candidate-chrome.json",

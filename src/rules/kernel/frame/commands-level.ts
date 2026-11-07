@@ -106,6 +106,24 @@ async function firstChoice(flow: any): Promise<any> {
   return undefined
 }
 
+function stepSummary(step: any): any {
+  if (!step) return null
+  const flow = step.flow
+  const advancement = flow?.advancement
+  return {
+    type: step.type,
+    level: step.level ?? null,
+    automatic: Boolean(step.automatic),
+    error: step.error?.message ?? null,
+    advancement: advancement ? {
+      type: advancement.constructor?.typeName ?? advancement.type,
+      id: advancement.id ?? null,
+      title: advancement.title ?? null,
+      level: flow.level ?? null,
+    } : null,
+  }
+}
+
 export function createLevelCommands(operate: Operate, actor: ActorGetter) {
   return {
     /** 升级待选项：官方管理器算出的步骤 + 每步是否自动、自动值、所属进阶。 */
@@ -135,7 +153,14 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
         setTimeout(() => { g.Hooks.off(hook); resolve(false) }, 2_000)
       })
       await manager.render()
-      await completed
+      const finished = await completed
+      if (!finished) {
+        return {
+          kernelStatus: 'pending',
+          reason: manager.step ? 'awaiting-choice' : 'advancement-manager-not-complete',
+          step: stepSummary(manager.step),
+        }
+      }
       return actorLevel(a)
     }, [actorId]),
 

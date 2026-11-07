@@ -73,7 +73,8 @@ for (const [name, engine, launch] of [
     process.exitCode = 1
   } finally {
     await save(`candidate-${name}.json`, result)
-    await save(`module-files-candidate-${name}.json`, [...moduleFilesRead].sort())
+    // 只有参考模式才录“小窗实际读到的模块文件”；插件模式清单为空，写出去会冲掉参考录制。
+    if (process.env.KERNEL_FILES === 'reference') await save(`module-files-candidate-${name}.json`, [...moduleFilesRead].sort())
     console.log(JSON.stringify({ engine: name, status: result.status, bootMs: result.bootMs, actors: result.actors, boot: result.boot?.status,
       differing: result.differences?.length, scenarios: result.scenarioCount, scenarioStatus: result.scenarioStatus, scenarioDiffs: result.scenarioDifferences?.length, scenarioSample: result.scenarioDifferences?.slice(0, 2), sample: result.differences?.[0]?.diff?.slice(0, 3), failure: result.failure?.slice(0, 600), errors: errors.slice(0, 8) }, null, 1))
     await browser.close()
