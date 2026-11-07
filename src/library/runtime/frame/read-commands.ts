@@ -61,11 +61,21 @@ export interface SearchHit {
   doc: Record<string, unknown>
 }
 
-/** 作者搜索器（OmnisearchBacking.pGetResults），关键词先过作者自己的清理（CleanUtil.getCleanString，同作者搜索框）。 */
-export async function search(term: string): Promise<SearchHit[]> {
+/**
+ * 作者搜索器（OmnisearchBacking.pGetResults），关键词先过作者自己的清理（CleanUtil.getCleanString，同作者搜索框）。
+ * showLegacy 不为 null 时，这一次临时改作者的"显示旧版"设置（作者默认藏旧版来源，omnisearch-backing.js 第 175 行），用完改回。
+ */
+export async function search(term: string, showLegacy: boolean | null = null): Promise<SearchHit[]> {
   await init()
-  const results: any[] = await A.OmnisearchBacking.pGetResults(A.CleanUtil.getCleanString(term))
-  return results.map((r) => ({ score: r.score, prop: A.Parser.pageCategoryToProp(r.doc.c), doc: r.doc }))
+  const S = showLegacy === null ? null : await omnisearchState()
+  const before = S?.isShowLegacy
+  if (S) S.isShowLegacy = showLegacy
+  try {
+    const results: any[] = await A.OmnisearchBacking.pGetResults(A.CleanUtil.getCleanString(term))
+    return results.map((r) => ({ score: r.score, prop: A.Parser.pageCategoryToProp(r.doc.c), doc: r.doc }))
+  } finally {
+    if (S) S.isShowLegacy = before
+  }
 }
 
 /** 作者的搜索设置类只在作者模块里，没挂到全局；按作者模块的同一地址导入，拿到的是同一个类。 */

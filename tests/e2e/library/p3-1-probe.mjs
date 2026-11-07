@@ -140,8 +140,7 @@ async function probeInFrame({ BREWS, CONVERT_TEXT }) {
     AttachedItemTag.init({ items })
     await TagCondition.pInit({ conditionsBrew: brew.condition })
     InstrumentBaseItemTag.init({ items: itemsNoGroups })
-    let converterJson = null
-    try { converterJson = !!(await W.DataUtil.loadJSON(`${W.Renderer.get().baseUrl}data/converter.json`)) } catch (e) { converterJson = String(e) }
+    const converterJson = await W.DataUtil.loadJSON(`${W.Renderer.get().baseUrl}data/converter.json`).then((j) => !!j, (e) => String(e))
     return { spells: spells.length, items: items.length, converterJson }
   })
   await tryIt('converter', async () => {

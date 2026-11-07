@@ -4,6 +4,7 @@ import { A, hashOf, init, sourceOf } from './author'
 import { brewAddFiles, brewAddUrl, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch } from './english-commands'
 import { detail, excludedFlags, search, searchSettings } from './read-commands'
+import { brewDocIndex, brewExport, brewItemsByHash, corpusFile, brewRaw, converters, convertText, editableAddDependencies, editableDoc, editableEnsureSource, editablePut, editableRemove, editionOf, entryTemplate, fluffOf, sourceNames } from './edit-commands'
 
 export interface LoaderInfo {
   props: string[]
@@ -103,5 +104,6 @@ export async function frameErrors(): Promise<string[]> {
 }
 
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchSettings, englishLocators, englishMatch,
-  brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddFiles, brewDelete, brewPull, parseBrewProp, rawHashes }
+  brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddFiles, brewDelete, brewPull, parseBrewProp, rawHashes,
+  editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate }
 export type CommandName = keyof typeof COMMANDS

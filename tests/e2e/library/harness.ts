@@ -48,8 +48,8 @@ export async function kvDump() {
 import { installOfficial, parsedKey } from '../../../src/library/install'
 import { precachePlan } from '../../../src/library/plan'
 
-function openLocalFrame(codeSet: string) {
-  return startAuthorFrame({ codeSet, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false }) })
+function openLocalFrame(codeSet: string, kvScope?: string) {
+  return startAuthorFrame({ codeSet, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false, kvScope }) })
 }
 
 export async function install(sourceId: string) {
@@ -195,3 +195,14 @@ export async function auditProbe(sourceId: string, prop: string, hash: string) {
     f.close()
   }
 }
+
+// ---- P3-1 按战役看【库】、自定义库、下载任务 ----
+import { ScopedLibrary } from '../../../src/library/scoped'
+import { CustomLibrary } from '../../../src/library/custom'
+import { DownloadTasks } from '../../../src/library/tasks'
+import { defaultCampaignLibrary } from '../../../src/library/scopes'
+
+export const scoped = new ScopedLibrary(service, db)
+export const custom = new CustomLibrary(service, scoped, db)
+export const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openLocalFrame(codeSet) })
+export { defaultCampaignLibrary }

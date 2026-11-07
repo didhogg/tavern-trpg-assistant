@@ -12,7 +12,7 @@ export type HealthLevel = 'ok' | 'info' | 'warn' | 'error'
 
 export interface HealthItem {
   source: string
-  /** 检查项：download、mirror、parse、no-hash、not-run、index、english、english-name、layer3、layer4、brew-parse、brew-author-errors、brew-hidden、brew-empty、not-installed。 */
+  /** 检查项：download、mirror、parse、no-hash、not-run、index、english、english-name、layer3、layer4、brew-parse、brew-author-errors、brew-alternatives、brew-alternatives-errors、brew-hidden、brew-empty、not-installed。 */
   check: string
   /** 第 11 节审计的第几层（有的话）。 */
   layer?: number
@@ -119,6 +119,10 @@ function brewItems(input: HealthInput): HealthItem[] {
       item(id, 'brew-author-errors', okOr(r.parse.authorErrors, 'warn'), '解析时作者报的错（自制内容本身的问题，例如引用了找不到的条目）', r.parse.authorErrors, s),
       item(id, 'not-run', okOr(r.parse.notRun, 'info'), '没有解析的（附原因）', r.parse.notRun, s),
     )
+    // P3-1 同编号挂备选：挂了几条是正常信息；取备选对象失败的要看
+    const alt = r.alternatives ?? { targets: 0, errors: [] }
+    out.push(item(id, 'brew-alternatives', 'info', `和官方或先装的包同编号、挂成备选的条目：${alt.targets} 条（原件照常生效，用户选了才换）`, [], { count: alt.targets, ...s }))
+    if (alt.errors.length) out.push(item(id, 'brew-alternatives-errors', 'warn', '同编号的条目，取备选版本失败的', alt.errors, s))
   }
   if (input.officialMissing) out.push(item(id, 'brew-skipped', 'info', `${input.officialMissing} 还没安装，作者程序开不起来，自制的检查跳过`, []))
   if (input.brewStorage) {

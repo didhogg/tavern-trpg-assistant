@@ -25699,13 +25699,14 @@ var CF = "tavern-trpg-library", wF = class extends By {
 	kv;
 	sets;
 	derived;
+	manage;
 	constructor(e = CF) {
 		super(e), this.version(1).stores({
 			files: "[source+path], source",
 			kv: "[scope+key], scope",
 			sets: "id",
 			derived: "key"
-		});
+		}), this.version(2).stores({ manage: "[kind+key], kind" });
 	}
 }, TF = /* @__PURE__ */ Uint32Array.from([
 	1732584193,
@@ -25970,14 +25971,14 @@ async function JF(e, t, n) {
 function YF(e, t, n) {
 	return n ? `parsed:${e}:corpus:${t}:${n}` : `parsed:${e}:${t}`;
 }
-async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, concurrency: a = 6 }) {
-	let o = Date.now(), s = BF(e), c = await KF(), l = await n.fileList(e), u = GF(l), d = {
+async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, concurrency: a = 6, signal: o }) {
+	let s = Date.now(), c = BF(e), l = await KF(), u = await n.fileList(e), d = GF(u), f = {
 		source: e.id,
-		commit: s,
-		storage: c,
+		commit: c,
+		storage: l,
 		plan: {
-			files: u.files.length,
-			bytes: u.bytes
+			files: d.files.length,
+			bytes: d.bytes
 		},
 		download: {
 			fetched: 0,
@@ -25997,46 +25998,49 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 		},
 		index: {},
 		ms: 0
-	}, f = (n, r = {}) => t.sets.put({
+	}, p = (n, r = {}) => t.sets.put({
 		id: e.id,
-		commit: s,
+		commit: c,
 		status: n,
-		plan: d.plan,
+		plan: f.plan,
 		updatedAt: Date.now(),
 		...r
 	});
-	await f("downloading");
-	let p = 0;
-	await JF(u.files, a, async (t) => {
-		try {
-			await n.local(e, t) === null ? (await n.get(e, t, { allowNetwork: !0 }), d.download.fetched++) : d.download.reused++;
-		} catch (e) {
-			d.download.failed.push({
-				path: t,
-				error: qF(e)
+	await p("downloading");
+	let m = 0;
+	if (await JF(d.files, a, async (t) => {
+		if (!o?.aborted) {
+			try {
+				await n.local(e, t) === null ? (await n.get(e, t, { allowNetwork: !0 }), f.download.fetched++) : f.download.reused++;
+			} catch (e) {
+				f.download.failed.push({
+					path: t,
+					error: qF(e)
+				});
+			}
+			i?.({
+				stage: "download",
+				done: ++m,
+				total: d.files.length,
+				item: t
 			});
 		}
-		i?.({
-			stage: "download",
-			done: ++p,
-			total: u.files.length,
-			item: t
-		});
-	}), i?.({
+	}), o?.aborted) return f.cancelled = !0, f.ms = Date.now() - s, await p("cancelled", { ms: f.ms }), f;
+	i?.({
 		stage: "mirror",
 		done: 0,
-		total: u.files.length
+		total: d.files.length
 	});
-	for (let n of u.files) {
+	for (let n of d.files) {
 		let r = await t.files.get([e.id, n]);
-		d.mirror.checked++, !r || r.commit !== s ? d.mirror.missing.push(n) : (r.gitSha !== l[n].sha || r.size !== l[n].size) && d.mirror.mismatched.push(n);
+		f.mirror.checked++, !r || r.commit !== c ? f.mirror.missing.push(n) : (r.gitSha !== u[n].sha || r.size !== u[n].size) && f.mirror.mismatched.push(n);
 	}
-	await f("parsing"), i?.({
+	await p("parsing"), i?.({
 		stage: "open-frame",
 		done: 0,
 		total: 0
 	});
-	let m = await r();
+	let h = await r();
 	try {
 		let n = {};
 		try {
@@ -26044,9 +26048,9 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 				stage: "author-init",
 				done: 0,
 				total: 0
-			}), await m.call("init");
+			}), await h.call("init");
 		} catch (e) {
-			throw d.parse.errors.push({
+			throw f.parse.errors.push({
 				prop: "(作者程序初始化)",
 				error: qF(e)
 			}), e;
@@ -26056,7 +26060,7 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 			done: 0,
 			total: 0
 		});
-		let r = await m.call("loaders"), a = 0;
+		let r = await h.call("loaders"), a = 0;
 		for (let o of r) if (i?.({
 			stage: "parse",
 			done: a++,
@@ -26065,29 +26069,29 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 		}), o.kind === "corpus") {
 			let n = o.props[0];
 			if (o.props.includes("adventureData")) {
-				d.parse.notRun.push({
+				f.parse.notRun.push({
 					props: o.props,
 					reason: "冒险正文按需下载（作者离线规则），用到哪本再解析哪本"
 				});
 				continue;
 			}
-			let r = d.parse.corpora[n] = {
+			let r = f.parse.corpora[n] = {
 				count: 0,
 				failed: []
 			};
 			try {
-				for (let a of await m.call("corpusList", o.index, n, o.page)) try {
+				for (let a of await h.call("corpusList", o.index, n, o.page)) try {
 					i?.({
 						stage: "parse-corpus",
 						done: r.count,
 						total: 0,
 						item: a.id
 					});
-					let c = await m.call("parseCorpus", o.page, a.source, a.hash);
+					let s = await h.call("parseCorpus", o.page, a.source, a.hash);
 					await t.derived.put({
 						key: YF(e.id, n, a.id),
-						fingerprint: s,
-						value: c,
+						fingerprint: c,
+						value: s,
 						savedAt: Date.now()
 					}), r.count++;
 				} catch (e) {
@@ -26097,12 +26101,12 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 					});
 				}
 			} catch (e) {
-				d.parse.errors.push({
+				f.parse.errors.push({
 					prop: n,
 					error: qF(e)
 				});
 			}
-		} else for (let r of o.props) if (r.startsWith("raw_")) d.parse.notRun.push({
+		} else for (let r of o.props) if (r.startsWith("raw_")) f.parse.notRun.push({
 			props: [r],
 			reason: "作者加载器的中间草稿层（raw_ 前缀），不是最终输出"
 		});
@@ -26113,18 +26117,18 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 				total: 0,
 				item: r
 			});
-			let a = await m.call("parseProp", r), { items: o, hashes: c } = a;
+			let a = await h.call("parseProp", r), { items: o, hashes: s } = a;
 			await t.derived.put({
 				key: YF(e.id, r),
-				fingerprint: s,
+				fingerprint: c,
 				value: a,
 				savedAt: Date.now()
-			}), d.parse.props[r] = {
+			}), f.parse.props[r] = {
 				count: o.length,
-				noHash: c.filter((e) => e === null).length
-			}, n[r] = new Set(c.filter((e) => e !== null));
+				noHash: s.filter((e) => e === null).length
+			}, n[r] = new Set(s.filter((e) => e !== null));
 		} catch (e) {
-			d.parse.errors.push({
+			f.parse.errors.push({
 				prop: r,
 				error: qF(e)
 			});
@@ -26135,10 +26139,10 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 				done: 0,
 				total: 0
 			});
-			let e = await m.call("searchIndexHashes");
+			let e = await h.call("searchIndexHashes");
 			for (let t of /* @__PURE__ */ new Set([...Object.keys(e), ...Object.keys(n)])) {
 				let r = n[t] ?? /* @__PURE__ */ new Set(), i = new Set(e[t] ?? []), a = [...r].filter((e) => !i.has(e)), o = [...i].filter((e) => !r.has(e));
-				d.index[t] = {
+				f.index[t] = {
 					parsed: r.size,
 					index: i.size,
 					onlyParsed: a.length,
@@ -26148,58 +26152,58 @@ async function XF({ source: e, db: t, files: n, openFrame: r, onProgress: i, con
 				};
 			}
 		} catch (e) {
-			d.parse.errors.push({
+			f.parse.errors.push({
 				prop: "(search index)",
 				error: qF(e)
 			});
 		}
 	} catch (e) {
-		d.parse.errors.length || d.parse.errors.push({
+		f.parse.errors.length || f.parse.errors.push({
 			prop: "(解析)",
 			error: qF(e)
 		});
 	} finally {
-		m.close();
+		h.close();
 	}
 	i?.({
 		stage: "save",
 		done: 0,
 		total: 0
-	}), d.ms = Date.now() - o;
-	let h = !d.download.failed.length && !d.mirror.missing.length && !d.mirror.mismatched.length && !d.parse.errors.length && Object.values(d.parse.corpora).every((e) => !e.failed.length);
+	}), f.ms = Date.now() - s;
+	let g = !f.download.failed.length && !f.mirror.missing.length && !f.mirror.mismatched.length && !f.parse.errors.length && Object.values(f.parse.corpora).every((e) => !e.failed.length);
 	return await t.derived.put({
 		key: `audit:${e.id}`,
-		fingerprint: s,
-		value: d,
+		fingerprint: c,
+		value: f,
 		savedAt: Date.now()
-	}), await f(h ? "installed" : "failed", { ms: d.ms }), d;
+	}), await p(g ? "installed" : "failed", { ms: f.ms }), f;
 }
 // src/library/runtime/handlers.ts
-function ZF({ codeSet: e, db: t, files: n, allowNetwork: r }) {
-	let i = IF(e);
+function ZF({ codeSet: e, db: t, files: n, allowNetwork: r, kvScope: i = e }) {
+	let a = IF(e);
 	return {
-		file: (e) => n.get(i, e, { allowNetwork: r() }),
-		kvGet: async (n) => (await t.kv.get([e, n]))?.value ?? null,
-		kvSet: async (n, r) => {
+		file: (e) => n.get(a, e, { allowNetwork: r() }),
+		kvGet: async (e) => (await t.kv.get([i, e]))?.value ?? null,
+		kvSet: async (e, n) => {
 			await t.kv.put({
-				scope: e,
-				key: n,
-				value: r
+				scope: i,
+				key: e,
+				value: n
 			});
 		},
-		kvRemove: async (n) => {
-			await t.kv.delete([e, n]);
+		kvRemove: async (e) => {
+			await t.kv.delete([i, e]);
 		},
-		localSnapshot: async () => Object.fromEntries((await t.kv.where("scope").equals(`${e}:local`).toArray()).map((e) => [e.key, e.value])),
-		localSet: async (n, r) => {
+		localSnapshot: async () => Object.fromEntries((await t.kv.where("scope").equals(`${i}:local`).toArray()).map((e) => [e.key, e.value])),
+		localSet: async (e, n) => {
 			await t.kv.put({
-				scope: `${e}:local`,
-				key: n,
-				value: r
+				scope: `${i}:local`,
+				key: e,
+				value: n
 			});
 		},
-		localRemove: async (n) => {
-			await t.kv.delete([`${e}:local`, n]);
+		localRemove: async (e) => {
+			await t.kv.delete([`${i}:local`, e]);
 		}
 	};
 }
@@ -26288,10 +26292,173 @@ async function eI({ codeSet: i, pluginRoot: a, container: o, handlers: s, timeou
 		addEventListener("message", r), l.src = u.href, o.append(l);
 	});
 }
+var tI = {
+	scopes: [{
+		id: "5e2014",
+		name: "5e 2014",
+		edition: "classic"
+	}, {
+		id: "5e2024",
+		name: "5e 2024",
+		edition: "one"
+	}],
+	rules: { dnd5e2014: {
+		defaultScopes: ["5e2014"],
+		showLegacy: !0,
+		style: "classic"
+	} }
+};
+tI.scopes, tI.rules;
+var nI = (e) => `${e.set}|${e.prop}|${e.hash}`;
+// src/library/versions.ts
+function rI(e, t) {
+	let n = [...t].sort((e, t) => e.timeAdded - t.timeAdded || e.order - t.order), r = /* @__PURE__ */ new Map();
+	for (let e of n) for (let [t, n] of Object.entries(e.props)) for (let i of new Set(n)) {
+		if (!i) continue;
+		let n = `${t}\u0000${i}`, a = r.get(n);
+		a ? a.push(e.docIdLocal) : r.set(n, [e.docIdLocal]);
+	}
+	let i = [];
+	for (let [t, n] of r) {
+		let [r, a] = t.split("\0");
+		e[r]?.has(a) ? i.push({
+			prop: r,
+			hash: a,
+			base: { kind: "official" },
+			others: n
+		}) : n.length > 1 && i.push({
+			prop: r,
+			hash: a,
+			base: {
+				kind: "doc",
+				docIdLocal: n[0]
+			},
+			others: n.slice(1)
+		});
+	}
+	return i;
+}
+// src/library/alternatives.ts
+var iI = "HOMEBREW_2_STORAGE", aI = (e) => `alts:${e}`;
+function oI(e, t) {
+	let n = new Set(Object.values(e.body._meta?.dependencies ?? {}).flat().map((e) => e.toLowerCase()));
+	return [...t.filter((t) => t !== e && (t.body._meta?.sources ?? []).some((e) => e.json && n.has(e.json.toLowerCase()))), e];
+}
+async function sI(e, t, n) {
+	let { db: r, source: i } = e, a = `${i.codeSet}:iso:${t.at(-1).head.docIdLocal}`, o = await r.kv.where("scope").equals(i.codeSet).toArray();
+	await r.kv.bulkPut(o.map((e) => ({
+		...e,
+		scope: a,
+		value: e.key === iI ? t : e.value
+	}))), o.some((e) => e.key === iI) || await r.kv.put({
+		scope: a,
+		key: iI,
+		value: t
+	});
+	let s = await e.openFrameIn(a);
+	try {
+		return await s.call("brewItemsByHash", n);
+	} finally {
+		s.close(), await r.kv.where("scope").anyOf(a, `${a}:local`).delete();
+	}
+}
+async function cI(e) {
+	let { source: t, db: n, frame: r } = e, i = IF(t.codeSet), a = await r.call("brewDocIndex"), o = {}, s = /* @__PURE__ */ new Map();
+	for (let e of new Set(a.flatMap((e) => Object.keys(e.props)))) {
+		let t = await n.derived.get(YF(i.id, e));
+		t && (s.set(e, t.value), o[e] = new Set(t.value.hashes.filter((e) => !!e)));
+	}
+	let c = rI(o, a), l = {
+		source: t.id,
+		targets: {},
+		errors: []
+	};
+	if (!c.length) return await n.derived.put({
+		key: aI(t.id),
+		fingerprint: "brew",
+		value: l,
+		savedAt: Date.now()
+	}), l;
+	let u = (await n.kv.get([t.codeSet, iI]))?.value ?? [], d = new Map(u.map((e) => [e.head.docIdLocal, e])), f = /* @__PURE__ */ new Map(), p = (e, t, n) => (f.get(e) ?? f.set(e, []).get(e)).push({
+		prop: t,
+		hash: n
+	});
+	for (let e of c) {
+		for (let t of e.others) p(t, e.prop, e.hash);
+		e.base.kind === "doc" && p(e.base.docIdLocal, e.prop, e.hash);
+	}
+	let m = /* @__PURE__ */ new Map();
+	for (let [t, n] of f) {
+		let r = d.get(t);
+		if (r) try {
+			m.set(t, await sI(e, oI(r, u), n));
+		} catch (e) {
+			for (let r of n) l.errors.push({
+				docIdLocal: t,
+				...r,
+				error: e instanceof Error ? e.message : String(e)
+			});
+		}
+		else for (let e of n) l.errors.push({
+			docIdLocal: t,
+			...e,
+			error: "作者存储里找不到这个包"
+		});
+	}
+	let h = (e) => d.get(e)?.head.filename ?? null, g = /* @__PURE__ */ new Map();
+	for (let e of c) {
+		let r = `${e.prop}|${e.hash}`, a = {
+			set: e.base.kind === "official" ? i.id : t.id,
+			prop: e.prop,
+			hash: e.hash
+		}, o = [];
+		for (let t of e.others) {
+			let n = m.get(t)?.[r];
+			n === void 0 ? m.has(t) && l.errors.push({
+				docIdLocal: t,
+				prop: e.prop,
+				hash: e.hash,
+				error: "隔离解析后作者没有交出这一条"
+			}) : o.push({
+				altId: `doc:${t}`,
+				kind: "collision",
+				filename: h(t),
+				item: n
+			});
+		}
+		let c = g.get(e.prop) ?? (await n.derived.get(YF(t.id, e.prop)))?.value;
+		c && g.set(e.prop, c);
+		let u = c ? c.hashes.indexOf(e.hash) : -1, d = s.get(e.prop), f = e.base.kind === "official" ? d?.sources[d.hashes.indexOf(e.hash)] ?? null : c?.sources[u] ?? null;
+		if (l.targets[nI(a)] = {
+			target: a,
+			source: f,
+			base: e.base.kind === "official" ? "official" : e.base.docIdLocal,
+			alts: o
+		}, !(!c || u < 0)) {
+			if (e.base.kind === "official") c.items.splice(u, 1), c.hashes.splice(u, 1), c.sources.splice(u, 1);
+			else {
+				let t = m.get(e.base.docIdLocal)?.[r];
+				t !== void 0 && (c.items[u] = t);
+			}
+		}
+	}
+	for (let [e, r] of g) await n.derived.put({
+		key: YF(t.id, e),
+		fingerprint: "brew",
+		value: r,
+		savedAt: Date.now()
+	});
+	return await n.derived.put({
+		key: aI(t.id),
+		fingerprint: "brew",
+		value: l,
+		savedAt: Date.now()
+	}), l;
+}
 // src/library/brew.ts
-var tI = (e) => e instanceof Error ? e.message : String(e);
-async function nI({ source: e, db: t, openFrame: n }) {
-	let r = Date.now(), i = {
+var lI = (e) => e instanceof Error ? e.message : String(e);
+async function uI({ source: e, db: t, openFrame: n, openFrameIn: r }) {
+	let i = Date.now(), a = {
 		source: e.id,
 		installed: [],
 		parse: {
@@ -26300,60 +26467,74 @@ async function nI({ source: e, db: t, openFrame: n }) {
 			errors: [],
 			authorErrors: []
 		},
+		alternatives: {
+			targets: 0,
+			errors: []
+		},
 		ms: 0
 	};
 	await t.derived.where("key").startsWith(`parsed:${e.id}:`).delete();
-	let a = await n();
+	let o = await n();
 	try {
-		i.installed = (await a.call("brewInstalled")).map((e) => e.head);
-		for (let n of await a.call("loaders")) if (n.kind === "corpus") i.parse.notRun.push({
+		a.installed = (await o.call("brewInstalled")).map((e) => e.head);
+		for (let n of await o.call("loaders")) if (n.kind === "corpus") a.parse.notRun.push({
 			props: n.props,
 			reason: "自制里的书和冒险正文按本取，用到再解析（B2-7 未做）"
 		});
 		else for (let r of n.props) if (!r.startsWith("raw_")) try {
-			let n = await a.call("parseBrewProp", r);
+			let n = await o.call("parseBrewProp", r);
 			if (!n.items.length) continue;
 			await t.derived.put({
 				key: YF(e.id, r),
 				fingerprint: "brew",
 				value: n,
 				savedAt: Date.now()
-			}), i.parse.props[r] = {
+			}), a.parse.props[r] = {
 				count: n.items.length,
 				noHash: n.hashes.filter((e) => e === null).length
 			};
 		} catch (e) {
-			i.parse.errors.push({
+			a.parse.errors.push({
 				prop: r,
-				error: tI(e)
+				error: lI(e)
 			});
 		}
-		i.parse.authorErrors = await a.call("frameErrors");
+		a.parse.authorErrors = await o.call("frameErrors");
+		let n = await cI({
+			source: e,
+			db: t,
+			frame: o,
+			openFrameIn: r
+		});
+		a.alternatives = {
+			targets: Object.keys(n.targets).length,
+			errors: n.errors
+		};
 	} finally {
-		a.close();
+		o.close();
 	}
-	return i.ms = Date.now() - r, await t.derived.put({
+	return a.ms = Date.now() - i, await t.derived.put({
 		key: `audit:${e.id}`,
 		fingerprint: "brew",
-		value: i,
+		value: a,
 		savedAt: Date.now()
-	}), i;
+	}), a;
 }
 // src/library/health.ts
-var rI = 50;
-function iI(e, t, n, r, i, a = {}) {
+var dI = 50;
+function fI(e, t, n, r, i, a = {}) {
 	return {
 		source: e,
 		check: t,
 		level: n,
 		title: r,
 		count: i.length,
-		details: i.slice(0, rI),
+		details: i.slice(0, dI),
 		...a
 	};
 }
-var aI = (e, t) => e.length ? t : "ok";
-function oI(e, { value: t, stale: n }) {
+var pI = (e, t) => e.length ? t : "ok";
+function mI(e, { value: t, stale: n }) {
 	let r = n ? { stale: n } : {}, i = Object.entries(t.parse.corpora).flatMap(([e, t]) => t.failed.map((t) => ({
 		prop: e,
 		...t
@@ -26366,11 +26547,11 @@ function oI(e, { value: t, stale: n }) {
 		...t
 	}));
 	return [
-		iI(e, "download", aI(t.download.failed, "error"), "下载失败的文件", t.download.failed, {
+		fI(e, "download", pI(t.download.failed, "error"), "下载失败的文件", t.download.failed, {
 			layer: 1,
 			...r
 		}),
-		iI(e, "mirror", aI([...t.mirror.missing, ...t.mirror.mismatched], "error"), `本地和云端对不上的文件（核对了 ${t.mirror.checked} 个）`, [...t.mirror.missing.map((e) => ({
+		fI(e, "mirror", pI([...t.mirror.missing, ...t.mirror.mismatched], "error"), `本地和云端对不上的文件（核对了 ${t.mirror.checked} 个）`, [...t.mirror.missing.map((e) => ({
 			path: e,
 			problem: "missing"
 		})), ...t.mirror.mismatched.map((e) => ({
@@ -26380,31 +26561,31 @@ function oI(e, { value: t, stale: n }) {
 			layer: 1,
 			...r
 		}),
-		iI(e, "parse", aI([...t.parse.errors, ...i], "error"), `作者加载器解析出错的类别或书（解析了 ${Object.keys(t.parse.props).length} 类）`, [...t.parse.errors, ...i], {
+		fI(e, "parse", pI([...t.parse.errors, ...i], "error"), `作者加载器解析出错的类别或书（解析了 ${Object.keys(t.parse.props).length} 类）`, [...t.parse.errors, ...i], {
 			layer: 2,
 			...r
 		}),
-		iI(e, "no-hash", aI(a, "warn"), "作者编号规则算不出编号的条目（按类别）", a, {
+		fI(e, "no-hash", pI(a, "warn"), "作者编号规则算不出编号的条目（按类别）", a, {
 			layer: 2,
 			...r
 		}),
-		iI(e, "not-run", aI(t.parse.notRun, "info"), "没有整类解析的（作者规则，附原因）", t.parse.notRun, {
+		fI(e, "not-run", pI(t.parse.notRun, "info"), "没有整类解析的（作者规则，附原因）", t.parse.notRun, {
 			layer: 2,
 			...r
 		}),
-		iI(e, "index", aI(o, "info"), "解析结果和作者搜索索引的差异（辅助参考，不当作漏解析的证明）", o, {
+		fI(e, "index", pI(o, "info"), "解析结果和作者搜索索引的差异（辅助参考，不当作漏解析的证明）", o, {
 			layer: 5,
 			...r
 		})
 	];
 }
-function sI(e, { value: t, stale: n }) {
+function hI(e, { value: t, stale: n }) {
 	let r = n ? { stale: n } : {}, i = {};
 	for (let e of t.unpaired) i[e.reason] = (i[e.reason] ?? 0) + 1;
 	let a = Object.values(t.props).reduce((e, t) => e + t.total, 0), o = Object.values(t.props).reduce((e, t) => e + t.paired, 0);
-	return [iI(e, "english", aI(t.unpaired, "info"), `没配上英文的条目（${o}/${a} 配上；按原因：${Object.entries(i).map(([e, t]) => `${e} ${t}`).join("、") || "无"}）`, t.unpaired, r), iI(e, "english-name", aI(t.nameMismatch, "warn"), "配上的中英两条里，中文的英文名和英文条目名字不一样（只列不改）", t.nameMismatch, r)];
+	return [fI(e, "english", pI(t.unpaired, "info"), `没配上英文的条目（${o}/${a} 配上；按原因：${Object.entries(i).map(([e, t]) => `${e} ${t}`).join("、") || "无"}）`, t.unpaired, r), fI(e, "english-name", pI(t.nameMismatch, "warn"), "配上的中英两条里，中文的英文名和英文条目名字不一样（只列不改）", t.nameMismatch, r)];
 }
-function cI(e, { value: t, stale: n }) {
+function gI(e, { value: t, stale: n }) {
 	let r = { ...n ? { stale: n } : {} }, i = Object.entries(t.layer3).filter(([, e]) => e.d.rawOnly + e.d.parsedOnly + e.d.rawNoHash).map(([e, t]) => ({
 		prop: e,
 		rawOnly: t.d.rawOnly,
@@ -26417,43 +26598,51 @@ function cI(e, { value: t, stale: n }) {
 		count: n.count,
 		samples: n.samples
 	})));
-	return [iI(e, "layer3", aI(i, "warn"), `审计第 3 层（不漏）：原始和解析后对不上、又没有解析标记能解释的（按类别；结构定义 ${t.schemaVersion}）`, i, {
+	return [fI(e, "layer3", pI(i, "warn"), `审计第 3 层（不漏）：原始和解析后对不上、又没有解析标记能解释的（按类别；结构定义 ${t.schemaVersion}）`, i, {
 		layer: 3,
 		...r
-	}), iI(e, "layer4", aI(a, "warn"), "审计第 4 层（只有解析处不同）：解析前后不一样、又不是加载器加的字段或带解析标记的（按类别、字段）", a, {
+	}), fI(e, "layer4", pI(a, "warn"), "审计第 4 层（只有解析处不同）：解析前后不一样、又不是加载器加的字段或带解析标记的（按类别、字段）", a, {
 		layer: 4,
 		...r
 	})];
 }
-function lI(e) {
+function _I(e) {
 	let t = e.source.id, n = [];
 	if (e.brew) {
 		let { value: r, stale: i } = e.brew, a = i ? { stale: i } : {};
-		n.push(iI(t, "brew-parse", aI(r.parse.errors, "error"), `自制内容解析出错的类别（已装 ${r.installed.length} 个包）`, r.parse.errors, {
+		n.push(fI(t, "brew-parse", pI(r.parse.errors, "error"), `自制内容解析出错的类别（已装 ${r.installed.length} 个包）`, r.parse.errors, {
 			layer: 2,
 			...a
-		}), iI(t, "brew-author-errors", aI(r.parse.authorErrors, "warn"), "解析时作者报的错（自制内容本身的问题，例如引用了找不到的条目）", r.parse.authorErrors, a), iI(t, "not-run", aI(r.parse.notRun, "info"), "没有解析的（附原因）", r.parse.notRun, a));
+		}), fI(t, "brew-author-errors", pI(r.parse.authorErrors, "warn"), "解析时作者报的错（自制内容本身的问题，例如引用了找不到的条目）", r.parse.authorErrors, a), fI(t, "not-run", pI(r.parse.notRun, "info"), "没有解析的（附原因）", r.parse.notRun, a));
+		let o = r.alternatives ?? {
+			targets: 0,
+			errors: []
+		};
+		n.push(fI(t, "brew-alternatives", "info", `和官方或先装的包同编号、挂成备选的条目：${o.targets} 条（原件照常生效，用户选了才换）`, [], {
+			count: o.targets,
+			...a
+		})), o.errors.length && n.push(fI(t, "brew-alternatives-errors", "warn", "同编号的条目，取备选版本失败的", o.errors, a));
 	}
-	if (e.officialMissing && n.push(iI(t, "brew-skipped", "info", `${e.officialMissing} 还没安装，作者程序开不起来，自制的检查跳过`, [])), e.brewStorage) {
+	if (e.officialMissing && n.push(fI(t, "brew-skipped", "info", `${e.officialMissing} 还没安装，作者程序开不起来，自制的检查跳过`, [])), e.brewStorage) {
 		let r = e.brewStorage.filter((e) => !e.shown);
-		n.push(iI(t, "brew-hidden", aI(r, "warn"), "存进了作者包管理器、但作者不显示也不加载的包（作者规则：没有来源 _meta.sources 的包被滤掉）", r));
+		n.push(fI(t, "brew-hidden", pI(r, "warn"), "存进了作者包管理器、但作者不显示也不加载的包（作者规则：没有来源 _meta.sources 的包被滤掉）", r));
 	}
 	if (e.brewStorage && e.brewSourceCounts) {
 		let r = e.brewSourceCounts, i = e.brewStorage.filter((e) => e.shown && e.sources.every((e) => !r[e.toLowerCase()])).map((e) => ({
 			...e.head,
 			sources: e.sources
 		}));
-		n.push(iI(t, "brew-empty", aI(i, "warn"), "显示了、但它声明的来源一条内容都没解析出来的包", i));
+		n.push(fI(t, "brew-empty", pI(i, "warn"), "显示了、但它声明的来源一条内容都没解析出来的包", i));
 	}
 	return n;
 }
-function uI(e) {
+function vI(e) {
 	let t = e.source.id;
-	if (!e.installed && e.source.kind === "official") return [iI(t, "not-installed", "info", "还没安装", [])];
+	if (!e.installed && e.source.kind === "official") return [fI(t, "not-installed", "info", "还没安装", [])];
 	let n = [];
-	return e.install && n.push(...oI(t, e.install)), e.english ? n.push(...sI(t, e.english)) : e.source.pair && e.installed && n.push(iI(t, "english", "info", "还没算中英配对覆盖率", [])), e.layers34 ? n.push(...cI(t, e.layers34)) : e.source.kind === "official" && n.push(iI(t, "layer3", "info", "审计第 3、4 层只在验证程序里跑（要用作者结构定义 5etools-utils，不随插件发布），这里没有结果", [], { layer: 3 })), e.source.kind === "brew" && n.push(...lI(e)), n;
+	return e.install && n.push(...mI(t, e.install)), e.english ? n.push(...hI(t, e.english)) : e.source.pair && e.installed && n.push(fI(t, "english", "info", "还没算中英配对覆盖率", [])), e.layers34 ? n.push(...gI(t, e.layers34)) : e.source.kind === "official" && n.push(fI(t, "layer3", "info", "审计第 3、4 层只在验证程序里跑（要用作者结构定义 5etools-utils，不随插件发布），这里没有结果", [], { layer: 3 })), e.source.kind === "brew" && n.push(..._I(e)), n;
 }
-function dI(e, t = Date.now()) {
+function yI(e, t = Date.now()) {
 	let n = {
 		ok: 0,
 		info: 0,
@@ -26468,7 +26657,7 @@ function dI(e, t = Date.now()) {
 	};
 }
 // src/library/service.ts
-function fI(e, t, n, r) {
+function bI(e, t, n, r) {
 	let i = /* @__PURE__ */ new Map();
 	n.forEach((e, t) => {
 		let n = i.get(e);
@@ -26478,12 +26667,15 @@ function fI(e, t, n, r) {
 	if (n.length !== t.length || o.length || s.length) throw Error(`作者程序现场展开的「${e}」和库里存的解析结果对不上：现场 ${n.length} 条、库里 ${t.length} 条；库里有现场没有：${o.slice(0, 3).join("、") || "无"}；现场有库里没有：${s.slice(0, 3).join("、") || "无"}`);
 	return a;
 }
-var pI = class {
+var xI = class {
 	opts;
 	frames = /* @__PURE__ */ new Map();
 	pairsCache = /* @__PURE__ */ new Map();
 	constructor(e) {
 		this.opts = e;
+	}
+	frameOf(e) {
+		return this.frame(e);
 	}
 	frame(e) {
 		let t = this.frames.get(e);
@@ -26516,7 +26708,7 @@ var pI = class {
 		return Object.fromEntries(Object.entries(t.parse.props).map(([e, t]) => [e, t.count]));
 	}
 	async query(e, t, { source: n, includeExcluded: r = !1 } = {}) {
-		let i = await this.parsed(e, t), a = FF(e), o = await (await this.frame(a.codeSet)).call("excludedFlags", t, a.kind === "brew" ? "brew" : "site"), s = o.excluded ? fI(t, i.hashes, o.hashes, o.excluded) : null, c = n?.toLowerCase(), l = [];
+		let i = await this.parsed(e, t), a = FF(e), o = await (await this.frame(a.codeSet)).call("excludedFlags", t, a.kind === "brew" ? "brew" : "site"), s = o.excluded ? bI(t, i.hashes, o.hashes, o.excluded) : null, c = n?.toLowerCase(), l = [];
 		return i.items.forEach((e, t) => {
 			let n = s?.[t] ?? !1;
 			n && !r || c !== void 0 && i.sources[t]?.toLowerCase() !== c || l.push({
@@ -26532,12 +26724,33 @@ var pI = class {
 		if (!r) throw Error(`${e} 没有这本的全文：${t} ${n}`);
 		return r.value;
 	}
-	async detail(e, t, n, r) {
-		let i = FF(e), a = await (await this.frame(i.codeSet)).call("detail", t, n, r ?? null);
-		return a ? {
-			...a,
-			english: await this.english(i, t, n)
+	async storedItem(e, t, n) {
+		let r = await this.parsed(e, t).catch(() => null), i = r ? r.hashes.indexOf(n) : -1;
+		return r && i >= 0 ? {
+			item: r.items[i],
+			source: r.sources[i]
 		} : null;
+	}
+	async detail(e, t, n, r) {
+		let i = FF(e), a = await this.frame(i.codeSet), o = await a.call("detail", t, n, r ?? null), s = await this.storedItem(e, t, n);
+		if (!o && !s) return null;
+		if (s) {
+			let e = await a.call("fluffOf", t, s.item);
+			return {
+				item: s.item,
+				hash: n,
+				source: s.source,
+				excluded: o?.excluded ?? !1,
+				fluff: e.fluff,
+				fluffError: e.fluffError,
+				engSiteHash: o?.engSiteHash ?? null,
+				english: await this.english(i, t, n)
+			};
+		}
+		return {
+			...o,
+			english: await this.english(i, t, n)
+		};
 	}
 	async english(e, t, n) {
 		if (!e.pair) return null;
@@ -26603,8 +26816,8 @@ var pI = class {
 			o.close(), s.close();
 		}
 	}
-	async search(e, t) {
-		return (await this.frame(FF(e).codeSet)).call("search", t);
+	async search(e, t, { showLegacy: n } = {}) {
+		return (await this.frame(FF(e).codeSet)).call("search", t, n ?? null);
 	}
 	async searchSettings(e, t = {}) {
 		return (await this.frame(FF(e).codeSet)).call("searchSettings", t);
@@ -26623,11 +26836,18 @@ var pI = class {
 	async brewInstalled(e) {
 		return (await this.frame(this.brewSource(e).codeSet)).call("brewInstalled");
 	}
+	openFrameIn(e, t) {
+		return this.opts.openFrame(e, t);
+	}
+	reparseBrew(e) {
+		return this.afterBrewChange(this.brewSource(e));
+	}
 	async afterBrewChange(e) {
-		return this.reset(), nI({
+		return this.reset(), uI({
 			source: e,
 			db: this.opts.db,
-			openFrame: () => this.opts.openFrame(e.codeSet)
+			openFrame: () => this.opts.openFrame(e.codeSet),
+			openFrameIn: (t) => this.opts.openFrame(e.codeSet, t)
 		});
 	}
 	async brewAddUrl(e, t) {
@@ -26719,56 +26939,57 @@ var pI = class {
 				english: await this.stored(`audit:english:${t.id}`, (e) => e === `${n}+${i}`),
 				layers34: await this.stored(`audit:layers34:${t.id}`, (e) => e.startsWith(`${n}+`))
 			};
-			t.kind === "brew" && (await this.opts.db.sets.get(IF(t.codeSet).id))?.status !== "installed" ? a.officialMissing = IF(t.codeSet).id : t.kind === "brew" && (a.brewStorage = await (await this.frame(t.codeSet)).call("brewStorage"), a.brewSourceCounts = await this.brewSourceCounts(t.id)), e.push(...uI(a));
+			t.kind === "brew" && (await this.opts.db.sets.get(IF(t.codeSet).id))?.status !== "installed" ? a.officialMissing = IF(t.codeSet).id : t.kind === "brew" && (a.brewStorage = await (await this.frame(t.codeSet)).call("brewStorage"), a.brewSourceCounts = await this.brewSourceCounts(t.id)), e.push(...vI(a));
 		}
-		return dI(e);
+		return yI(e);
 	}
 	async brewSourceCounts(e) {
 		let t = {};
 		for (let n of await this.opts.db.derived.where("key").startsWith(`parsed:${e}:`).toArray()) for (let e of n.value.sources) e && (t[e.toLowerCase()] = (t[e.toLowerCase()] ?? 0) + 1);
 		return t;
 	}
-}, mI = "library-b3", hI = "【库】真机验证（B3）", gI = () => new URL("../", "" + import.meta.url), _I = null;
-function vI() {
-	if (_I) return _I;
+}, SI = "library-b3", CI = "【库】真机验证（B3）", wI = () => new URL("../", "" + import.meta.url), TI = null;
+function EI() {
+	if (TI) return TI;
 	let e = new wF(), t = new VF({ db: e });
-	return _I = {
+	return TI = {
 		db: e,
 		files: t,
-		service: new pI({
+		service: new xI({
 			db: e,
-			openFrame: (n) => eI({
+			openFrame: (n, r) => eI({
 				codeSet: n,
-				pluginRoot: gI(),
+				pluginRoot: wI(),
 				container: document.body,
 				handlers: ZF({
 					codeSet: n,
 					db: e,
 					files: t,
-					allowNetwork: () => !1
+					allowNetwork: () => !1,
+					kvScope: r
 				})
 			})
 		})
-	}, _I;
+	}, TI;
 }
-function yI() {
+function DI() {
 	return {
-		id: mI,
-		title: hI,
+		id: SI,
+		title: CI,
 		hint: "依次点：①装中文官方（联网，几分钟）②体检 ③查一本书 ④关掉网络、刷新页面后再点\"查一本书\"（断网读取）⑤存储空间。英文原文要英文官方也装上，这里不装，显示 not-installed 是正常的。",
 		actions: [
 			{
 				label: "①装中文官方",
-				run: () => cF(mI, hI, async () => {
-					let { db: e, files: t, service: n } = vI(), r = FF("cn-official");
-					sF(mI, hI, "waiting", "正在下载并解析中文官方数据（约几分钟，请保持页面打开）…");
+				run: () => cF(SI, CI, async () => {
+					let { db: e, files: t, service: n } = EI(), r = FF("cn-official");
+					sF(SI, CI, "waiting", "正在下载并解析中文官方数据（约几分钟，请保持页面打开）…");
 					let i = await XF({
 						source: r,
 						db: e,
 						files: t,
 						openFrame: () => eI({
 							codeSet: r.codeSet,
-							pluginRoot: gI(),
+							pluginRoot: wI(),
 							container: document.body,
 							handlers: ZF({
 								codeSet: r.codeSet,
@@ -26777,11 +26998,11 @@ function yI() {
 								allowNetwork: () => !1
 							})
 						}),
-						onProgress: (e) => sF(mI, hI, "waiting", `安装中：${e.stage} ${e.done}/${e.total} ${e.item ?? ""}`)
+						onProgress: (e) => sF(SI, CI, "waiting", `安装中：${e.stage} ${e.done}/${e.total} ${e.item ?? ""}`)
 					});
 					n.reset();
 					let a = !i.download.failed.length && !i.mirror.missing.length && !i.mirror.mismatched.length && !i.parse.errors.length;
-					sF(mI, hI, a ? "pass" : "fail", `安装${a ? "成功" : "有问题"}：${i.plan.files} 个文件，解析 ${Object.keys(i.parse.props).length} 类，用时 ${Math.round(i.ms / 1e3)} 秒`, {
+					sF(SI, CI, a ? "pass" : "fail", `安装${a ? "成功" : "有问题"}：${i.plan.files} 个文件，解析 ${Object.keys(i.parse.props).length} 类，用时 ${Math.round(i.ms / 1e3)} 秒`, {
 						download: {
 							fetched: i.download.fetched,
 							reused: i.download.reused,
@@ -26799,9 +27020,9 @@ function yI() {
 			},
 			{
 				label: "②体检",
-				run: () => cF(mI, hI, async () => {
-					let e = await vI().service.health();
-					sF(mI, hI, e.items.filter((e) => e.level === "error").length ? "fail" : "pass", `体检：ok ${e.summary.ok} · info ${e.summary.info} · warn ${e.summary.warn} · error ${e.summary.error}`, e.items.map((e) => ({
+				run: () => cF(SI, CI, async () => {
+					let e = await EI().service.health();
+					sF(SI, CI, e.items.filter((e) => e.level === "error").length ? "fail" : "pass", `体检：ok ${e.summary.ok} · info ${e.summary.info} · warn ${e.summary.warn} · error ${e.summary.error}`, e.items.map((e) => ({
 						source: e.source,
 						check: e.check,
 						level: e.level,
@@ -26812,9 +27033,9 @@ function yI() {
 			},
 			{
 				label: "③查一本书（断网时即断网读取）",
-				run: () => cF(mI, hI, async () => {
-					let { service: e } = vI(), t = await e.query("cn-official", "spell", { source: "XPHB" }), n = t.find((e) => e.item.ENG_name === "Fireball"), r = n?.hash ? await e.detail("cn-official", "spell", n.hash, "XPHB") : null, i = await e.search("cn-official", "火球");
-					sF(mI, hI, t.length && r ? "pass" : "fail", `XPHB 法术 ${t.length} 条；火球术详情${r ? "取到" : "没取到"}；英文原文：${r?.english?.status ?? "无"}；搜索"火球" ${i.length} 条；当前${navigator.onLine ? "联网" : "断网"}`, {
+				run: () => cF(SI, CI, async () => {
+					let { service: e } = EI(), t = await e.query("cn-official", "spell", { source: "XPHB" }), n = t.find((e) => e.item.ENG_name === "Fireball"), r = n?.hash ? await e.detail("cn-official", "spell", n.hash, "XPHB") : null, i = await e.search("cn-official", "火球");
+					sF(SI, CI, t.length && r ? "pass" : "fail", `XPHB 法术 ${t.length} 条；火球术详情${r ? "取到" : "没取到"}；英文原文：${r?.english?.status ?? "无"}；搜索"火球" ${i.length} 条；当前${navigator.onLine ? "联网" : "断网"}`, {
 						fireball: r?.item,
 						english: r?.english,
 						searchTop: i.slice(0, 5).map((e) => e.doc)
@@ -26823,17 +27044,17 @@ function yI() {
 			},
 			{
 				label: "⑤存储空间",
-				run: () => cF(mI, hI, async () => {
+				run: () => cF(SI, CI, async () => {
 					let e = await KF(), t = (e) => e === null ? "未知" : `${Math.round(e / 1048576)}MB`;
-					sF(mI, hI, "info", `存储：已用 ${t(e.usage)} / 可用上限 ${t(e.quota)}；持久存储 ${e.persisted === null ? "未知" : e.persisted ? "已授予" : "未授予"}`, e);
+					sF(SI, CI, "info", `存储：已用 ${t(e.usage)} / 可用上限 ${t(e.quota)}；持久存储 ${e.persisted === null ? "未知" : e.persisted ? "已授予" : "未授予"}`, e);
 				})
 			}
 		]
 	};
 }
 // src/probes/promptScan.ts
-var bI = "TRPG-PROBE-COMMENT", xI = "TRPG-PROBE-INJECT";
-function SI(e) {
+var OI = "TRPG-PROBE-COMMENT", kI = "TRPG-PROBE-INJECT";
+function AI(e) {
 	if (typeof e == "string") return e;
 	try {
 		return JSON.stringify(e) ?? "";
@@ -26841,41 +27062,41 @@ function SI(e) {
 		return console.error("[trpg-assistant] 请求内容无法序列化", e), "";
 	}
 }
-function CI(e, t) {
+function jI(e, t) {
 	let n = e.indexOf(t);
 	if (!(n < 0)) return e.slice(Math.max(0, n - 6), n + t.length + 12);
 }
-function wI(e, t) {
+function MI(e, t) {
 	let n = e?.chat;
 	if (Array.isArray(n)) for (let e = 0; e < n.length; e++) {
 		let r = n[e];
-		if ((typeof r?.content == "string" ? r.content : SI(r?.content)).includes(t)) return {
+		if ((typeof r?.content == "string" ? r.content : AI(r?.content)).includes(t)) return {
 			role: String(r.role ?? "?"),
 			indexFromEnd: n.length - 1 - e
 		};
 	}
 }
-function TI(e) {
-	let t = SI(e);
+function NI(e) {
+	let t = AI(e);
 	return {
 		length: t.length,
-		comment: t.includes(bI),
+		comment: t.includes(OI),
 		commentIntact: t.includes("<!--TRPG-PROBE-COMMENT") && t.includes("-->"),
-		inject: t.includes(xI),
-		commentSnippet: CI(t, bI),
-		injectSnippet: CI(t, xI),
-		injectAt: wI(e, xI)
+		inject: t.includes(kI),
+		commentSnippet: jI(t, OI),
+		injectSnippet: jI(t, kI),
+		injectAt: MI(e, kI)
 	};
 }
 // src/probes/llmLogAudit.ts
-function EI(e) {
+function PI(e) {
 	if (e && typeof e == "object") {
 		let t = e;
 		return t.id ?? t.key ?? t.logId ?? t.name;
 	}
 	return e;
 }
-async function DI() {
+async function FI() {
 	let e = (await v())?.api?.dev?.llmApiLogs;
 	if (!e?.index || !e.getRaw) return {
 		status: "info",
@@ -26896,33 +27117,33 @@ async function DI() {
 		summary: "请求日志为空（可能未开启记录，或还没有发过请求）",
 		detail: a
 	};
-	let o = TI(await e.getRaw(EI(r)));
-	return a.scan = o, a.markers = [bI, xI], {
+	let o = NI(await e.getRaw(PI(r)));
+	return a.scan = o, a.markers = [OI, kI], {
 		status: "info",
 		summary: `最近一次请求原文：${o.comment ? `含注释标记${o.commentIntact ? "（符号完整）" : "（符号被改）"}` : "无注释标记"}；${o.inject ? "含注入标记" : "无注入标记"}`,
 		detail: a
 	};
 }
 // src/probes/promptProbes.ts
-var OI = "comment", kI = "注释是否进入发给 AI 的请求", AI = "inject", jI = "提示词注入是否生效", MI = "input", NI = "写入与读取输入框", PI = "tavern-trpg-assistant_probe", FI = 1, II = 0;
-function LI(e) {
+var II = "comment", LI = "注释是否进入发给 AI 的请求", RI = "inject", zI = "提示词注入是否生效", BI = "input", VI = "写入与读取输入框", HI = "tavern-trpg-assistant_probe", UI = 1, WI = 0;
+function GI(e) {
 	return e?.dryRun === !0;
 }
-function RI(e) {
+function KI(e) {
 	let t = !1, n = !1, r = "", i = [], a = {}, o = (e) => (t) => {
 		i.push({
 			event: e,
-			dryRun: LI(t),
-			...TI(t)
+			dryRun: GI(t),
+			...NI(t)
 		});
 	}, s = () => {
 		let e = i.filter((e) => !e.dryRun);
 		if (r !== "quiet") {
-			if (!e.length) t && sF(OI, kI, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）"), n && sF(AI, jI, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）");
+			if (!e.length) t && sF(II, LI, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）"), n && sF(RI, zI, "waiting", "这次生成没有捕获到请求事件（模型已连接吗？）");
 			else {
 				if (t) {
 					let n = e.find((e) => e.comment), i = e.some((e) => e.commentIntact);
-					sF(OI, kI, n && i ? "pass" : "fail", n ? i ? "注释原样进入了请求（<!-- --> 完整保留）" : "标记文字进入了请求，但 <!-- --> 符号被改动或删除" : "请求中没有找到注释内容（注释被删除）", {
+					sF(II, LI, n && i ? "pass" : "fail", n ? i ? "注释原样进入了请求（<!-- --> 完整保留）" : "标记文字进入了请求，但 <!-- --> 符号被改动或删除" : "请求中没有找到注释内容（注释被删除）", {
 						runType: r,
 						captures: e,
 						message: a
@@ -26930,7 +27151,7 @@ function RI(e) {
 				}
 				if (n) {
 					let t = e.find((e) => e.inject);
-					sF(AI, jI, t ? "pass" : "fail", t ? `注入文本进入了请求${t.injectAt ? `（${t.injectAt.role} 消息，距末尾 ${t.injectAt.indexFromEnd} 条）` : ""}` : "请求中没有找到注入文本", {
+					sF(RI, zI, t ? "pass" : "fail", t ? `注入文本进入了请求${t.injectAt ? `（${t.injectAt.role} 消息，距末尾 ${t.injectAt.indexFromEnd} 条）` : ""}` : "请求中没有找到注入文本", {
 						runType: r,
 						captures: e
 					}), n = !1, c();
@@ -26938,8 +27159,8 @@ function RI(e) {
 			}
 		}
 	}, c = () => {
-		let t = e.extension_prompt_types?.IN_CHAT ?? FI, n = e.extension_prompt_roles?.SYSTEM ?? II;
-		e.setExtensionPrompt?.(PI, "", t, 0, !1, n);
+		let t = e.extension_prompt_types?.IN_CHAT ?? UI, n = e.extension_prompt_roles?.SYSTEM ?? WI;
+		e.setExtensionPrompt?.(HI, "", t, 0, !1, n);
 	}, l = () => {
 		let t = y(e, "CHAT_COMPLETION_PROMPT_READY", "chat_completion_prompt_ready"), n = y(e, "GENERATE_AFTER_COMBINE_PROMPTS", "generate_after_combine_prompts"), c = y(e, "GENERATE_AFTER_DATA", "generate_after_data");
 		b(e, t, o(t)), b(e, n, o(n)), b(e, c, o(c)), b(e, y(e, "GENERATION_STARTED", "generation_started"), (e, t, n) => {
@@ -26948,30 +27169,30 @@ function RI(e) {
 		let l = () => s();
 		b(e, y(e, "GENERATION_ENDED", "generation_ended"), l), b(e, y(e, "GENERATION_STOPPED", "generation_stopped"), l), b(e, y(e, "MESSAGE_SENT", "message_sent"), (t) => {
 			let n = e.chat[Number(t)];
-			a.storedInChat = !!n?.mes?.includes(bI);
+			a.storedInChat = !!n?.mes?.includes(OI);
 		}), b(e, y(e, "USER_MESSAGE_RENDERED", "user_message_rendered"), (e) => {
 			let t = document.querySelector(`.mes[mesid="${Number(e)}"] .mes_text`);
-			t && (a.visibleTextHasMarker = !!t.textContent?.includes(bI), a.htmlHasComment = t.innerHTML.includes(`<!--${bI}`));
+			t && (a.visibleTextHasMarker = !!t.textContent?.includes(OI), a.htmlHasComment = t.innerHTML.includes(`<!--${OI}`));
 		});
 	}, u = {
-		id: OI,
-		title: kI,
+		id: II,
+		title: LI,
 		hint: "点「写入测试注释」后，自己发送这条消息（需要已连接模型）。发送完成后自动判定；楼层里应看不到注释文字。",
 		actions: [{
 			label: "写入测试注释到输入框",
-			run: () => cF(OI, kI, () => {
+			run: () => cF(II, LI, () => {
 				let e = g();
 				if (!e) throw Error("找不到输入框");
-				let n = `<!--${bI} 探针-->`;
-				x(e, e.value ? `${e.value}\n${n}` : `测试 ${n}`), t = !0, sF(OI, kI, "waiting", "已写入。请发送这条消息，等 AI 回复结束后自动判定");
+				let n = `<!--${OI} 探针-->`;
+				x(e, e.value ? `${e.value}\n${n}` : `测试 ${n}`), t = !0, sF(II, LI, "waiting", "已写入。请发送这条消息，等 AI 回复结束后自动判定");
 			})
 		}]
 	};
 	u.actions.push({
 		label: "从 TauriTavern 请求日志核对",
-		run: () => cF(OI, kI, async () => {
-			let e = await DI();
-			sF(OI, kI, e.status, e.summary, {
+		run: () => cF(II, LI, async () => {
+			let e = await FI();
+			sF(II, LI, e.status, e.summary, {
 				runType: r,
 				audit: e.detail,
 				message: a
@@ -26979,29 +27200,29 @@ function RI(e) {
 		})
 	});
 	let d = {
-		id: AI,
-		title: jI,
+		id: RI,
+		title: zI,
 		hint: "点「注入探针」后发送任意消息。可以和上一项同一次发送完成判定。测完请点「清除注入」。",
 		actions: [{
 			label: "注入探针",
-			run: () => cF(AI, jI, () => {
+			run: () => cF(RI, zI, () => {
 				if (!e.setExtensionPrompt) throw Error("宿主没有 setExtensionPrompt");
-				let t = e.extension_prompt_types?.IN_CHAT ?? FI, r = e.extension_prompt_roles?.SYSTEM ?? II;
-				e.setExtensionPrompt(PI, `[${xI}] 这是探针注入文本`, t, 0, !1, r), n = !0, sF(AI, jI, "waiting", "已注入（IN_CHAT，深度 0）。请发送一条消息，判定后会自动清除", { enumsFromContext: !!e.extension_prompt_types });
+				let t = e.extension_prompt_types?.IN_CHAT ?? UI, r = e.extension_prompt_roles?.SYSTEM ?? WI;
+				e.setExtensionPrompt(HI, `[${kI}] 这是探针注入文本`, t, 0, !1, r), n = !0, sF(RI, zI, "waiting", "已注入（IN_CHAT，深度 0）。请发送一条消息，判定后会自动清除", { enumsFromContext: !!e.extension_prompt_types });
 			})
 		}, {
 			label: "清除注入",
-			run: () => cF(AI, jI, () => {
-				c(), n = !1, sF(AI, jI, "idle", "已清除注入");
+			run: () => cF(RI, zI, () => {
+				c(), n = !1, sF(RI, zI, "idle", "已清除注入");
 			})
 		}]
 	}, f = {
-		id: MI,
-		title: NI,
+		id: BI,
+		title: VI,
 		hint: "自动写入一段文字、读回校验，然后恢复原内容（不会发送）。",
 		actions: [{
 			label: "运行输入框测试",
-			run: () => cF(MI, NI, () => {
+			run: () => cF(BI, VI, () => {
 				let e = g();
 				if (!e) throw Error("找不到输入框");
 				let t = e.value, n = `${t}[TRPG-PROBE-INPUT]`;
@@ -27009,7 +27230,7 @@ function RI(e) {
 				let r = e.value;
 				x(e, t);
 				let i = e.value === t;
-				sF(MI, NI, r === n && i ? "pass" : "fail", r === n ? i ? "写入、读回、恢复都正常" : "写入正常，但恢复失败" : "写入后读回的内容不一致", {
+				sF(BI, VI, r === n && i ? "pass" : "fail", r === n ? i ? "写入、读回、恢复都正常" : "写入正常，但恢复失败" : "写入后读回的内容不一致", {
 					readBackMatches: r === n,
 					restored: i
 				});
@@ -27026,33 +27247,33 @@ function RI(e) {
 	];
 }
 // src/probes/storageProbe.ts
-var zI = "storage", BI = "本地存储与持久性", VI = `${m}-m0`, HI = 4194304;
-function UI() {
+var qI = "storage", JI = "本地存储与持久性", YI = `${m}-m0`, XI = 4194304;
+function ZI() {
 	return new Promise((e, t) => {
-		let n = indexedDB.open(VI, 1);
+		let n = indexedDB.open(YI, 1);
 		n.onupgradeneeded = () => n.result.createObjectStore("kv"), n.onsuccess = () => e(n.result), n.onerror = () => t(n.error);
 	});
 }
-function WI(e, t, n) {
+function QI(e, t, n) {
 	return new Promise((r, i) => {
 		let a = n(e.transaction("kv", t).objectStore("kv"));
 		a.onsuccess = () => r(a.result), a.onerror = () => i(a.error);
 	});
 }
-function GI(e) {
-	let t = () => cF(zI, BI, async () => {
-		let t = await UI(), n = await WI(t, "readonly", (e) => e.get("boot")), r = (/* @__PURE__ */ new Date()).toISOString(), i = {
+function $I(e) {
+	let t = () => cF(qI, JI, async () => {
+		let t = await ZI(), n = await QI(t, "readonly", (e) => e.get("boot")), r = (/* @__PURE__ */ new Date()).toISOString(), i = {
 			count: (n?.count ?? 0) + 1,
 			firstAt: n?.firstAt ?? r,
 			lastAt: r
 		};
-		await WI(t, "readwrite", (e) => e.put(i, "boot"));
-		let a = !!await WI(t, "readonly", (e) => e.get("blob"));
-		a || await WI(t, "readwrite", (e) => e.put(new Uint8Array(HI), "blob"));
-		let o = await WI(t, "readonly", (e) => e.get("blob"));
+		await QI(t, "readwrite", (e) => e.put(i, "boot"));
+		let a = !!await QI(t, "readonly", (e) => e.get("blob"));
+		a || await QI(t, "readwrite", (e) => e.put(new Uint8Array(XI), "blob"));
+		let o = await QI(t, "readonly", (e) => e.get("blob"));
 		t.close();
 		let s = await navigator.storage?.persisted?.() ?? null, c = await navigator.storage?.estimate?.() ?? null, l = e.extensionSettings[m] ??= {}, u = Number(l.probeBootCount ?? 0);
-		l.probeBootCount = u + 1, e.saveSettingsDebounced(), sF(zI, BI, "info", `IndexedDB 第 ${i.count} 次启动读写正常；刷新页面后次数应增加`, {
+		l.probeBootCount = u + 1, e.saveSettingsDebounced(), sF(qI, JI, "info", `IndexedDB 第 ${i.count} 次启动读写正常；刷新页面后次数应增加`, {
 			idb: {
 				bootCount: i.count,
 				firstAt: i.firstAt,
@@ -27072,8 +27293,8 @@ function GI(e) {
 		});
 	});
 	return {
-		id: zI,
-		title: BI,
+		id: qI,
+		title: JI,
 		hint: "每次启动自动读写 IndexedDB（含 4MB 数据）与扩展设置。完全退出再打开应用后，启动次数应继续累加，4MB 数据应已存在。",
 		actions: [{
 			label: "重新检测",
@@ -27083,22 +27304,22 @@ function GI(e) {
 	};
 }
 // src/probes/tauriProbe.ts
-var KI = "tauri", qI = "TauriTavern 扩展接口", JI = `${m}-m0`, YI = "/scripts/tauritavern/layout-kit.js", XI = [
+var eL = "tauri", tL = "TauriTavern 扩展接口", nL = `${m}-m0`, rL = "/scripts/tauritavern/layout-kit.js", iL = [
 	"current",
 	"getCurrent",
 	"active",
 	"handle",
 	"currentChat"
 ];
-function ZI(e, t) {
+function aL(e, t) {
 	if (typeof e == "function") return "function";
 	if (typeof e != "object" || !e) return typeof e;
 	if (t <= 0) return "object";
 	let n = {};
-	for (let r of Object.keys(e)) n[r] = ZI(e[r], t - 1);
+	for (let r of Object.keys(e)) n[r] = aL(e[r], t - 1);
 	return n;
 }
-async function QI(e, t) {
+async function oL(e, t) {
 	try {
 		return {
 			ok: !0,
@@ -27111,7 +27332,7 @@ async function QI(e, t) {
 		};
 	}
 }
-function $I(e) {
+function sL(e) {
 	if (Array.isArray(e)) {
 		let t = e[0];
 		return {
@@ -27128,30 +27349,30 @@ function $I(e) {
 		length: typeof e == "string" ? e.length : null
 	};
 }
-function eL(e) {
+function cL(e) {
 	let t = e;
 	return t.ok ? {
 		ok: !0,
-		shape: $I(t.value)
+		shape: sL(t.value)
 	} : t;
 }
-async function tL(e) {
+async function lL(e) {
 	if (typeof e.searchMessages == "function" || e.store) return {
 		handle: e,
 		via: "api.chat 本身"
 	};
 	let t = e.current;
 	if (t && typeof t.handle == "function") {
-		let e = await QI("api.chat.current.handle()", () => t.handle.call(t));
+		let e = await oL("api.chat.current.handle()", () => t.handle.call(t));
 		if (e.ok && e.value && typeof e.value == "object") return {
 			handle: e.value,
 			via: "api.chat.current.handle()"
 		};
 	}
-	for (let t of XI) {
+	for (let t of iL) {
 		let n = e[t];
 		if (typeof n == "function") {
-			let r = await QI(`api.chat.${t}()`, () => n.call(e)), i = r.value;
+			let r = await oL(`api.chat.${t}()`, () => n.call(e)), i = r.value;
 			if (r.ok && i && typeof i == "object") return {
 				handle: i,
 				via: `api.chat.${t}()`
@@ -27166,60 +27387,60 @@ async function tL(e) {
 		via: null
 	};
 }
-function nL() {
-	let e = () => cF(KI, qI, async () => {
+function uL() {
+	let e = () => cF(eL, tL, async () => {
 		if (!window.__TAURITAVERN__) {
-			sF(KI, qI, "info", "不是 TauriTavern，跳过（扩展将使用酒馆通用能力）");
+			sF(eL, tL, "info", "不是 TauriTavern，跳过（扩展将使用酒馆通用能力）");
 			return;
 		}
-		let e = (await v())?.api ?? {}, t = e.chat ?? {}, n = { apiShape: ZI(e, 3) };
-		n.layoutKitExports = await QI("layout-kit 导入", () => import(
+		let e = (await v())?.api ?? {}, t = e.chat ?? {}, n = { apiShape: aL(e, 3) };
+		n.layoutKitExports = await oL("layout-kit 导入", () => import(
 			/* @vite-ignore */
-			YI
+			rL
 ).then((e) => Object.keys(e)));
-		let { handle: r, via: i } = await tL(t);
+		let { handle: r, via: i } = await lL(t);
 		if (n.handleVia = i, r) {
 			let e = r;
-			n.handleShape = ZI(r, 2), e.searchMessages && (n.searchMessages = eL(await QI("searchMessages", () => e.searchMessages({
+			n.handleShape = aL(r, 2), e.searchMessages && (n.searchMessages = cL(await oL("searchMessages", () => e.searchMessages({
 				query: "你",
 				limit: 3
 			}))));
 			let t = e.locate?.findLastMessage;
-			if (t && (n.findLastMessage = eL(await QI("findLastMessage", () => t.call(e.locate, {
+			if (t && (n.findLastMessage = cL(await oL("findLastMessage", () => t.call(e.locate, {
 				role: "user",
 				scanLimit: 50
 			})))), e.store?.setJson && e.store.getJson) {
 				let t = { at: (/* @__PURE__ */ new Date()).toISOString() };
-				n.storeSet = await QI("store.setJson", () => e.store.setJson({
-					namespace: JI,
+				n.storeSet = await oL("store.setJson", () => e.store.setJson({
+					namespace: nL,
 					key: "probe",
 					value: t
-				})), n.storeGet = await QI("store.getJson", () => e.store.getJson({
-					namespace: JI,
+				})), n.storeGet = await oL("store.getJson", () => e.store.getJson({
+					namespace: nL,
 					key: "probe"
-				})), e.store.listKeys && (n.storeKeys = await QI("store.listKeys", () => e.store.listKeys({ namespace: JI }))), e.store.deleteJson && (n.storeDelete = await QI("store.deleteJson", () => e.store.deleteJson({
-					namespace: JI,
+				})), e.store.listKeys && (n.storeKeys = await oL("store.listKeys", () => e.store.listKeys({ namespace: nL }))), e.store.deleteJson && (n.storeDelete = await oL("store.deleteJson", () => e.store.deleteJson({
+					namespace: nL,
 					key: "probe"
 				})));
 			}
-			e.metadata?.get && (n.metadata = eL(await QI("metadata.get", () => e.metadata.get()))), typeof e.stableId == "function" && (n.stableId = eL(await QI("stableId", () => e.stableId.call(e)))), typeof e.summary == "function" && (n.summary = eL(await QI("summary", () => e.summary.call(e))));
+			e.metadata?.get && (n.metadata = cL(await oL("metadata.get", () => e.metadata.get()))), typeof e.stableId == "function" && (n.stableId = cL(await oL("stableId", () => e.stableId.call(e)))), typeof e.summary == "function" && (n.summary = cL(await oL("summary", () => e.summary.call(e))));
 		}
 		let a = e.extension?.store;
 		if (a?.setJson && a.getJson) {
 			let e = { at: (/* @__PURE__ */ new Date()).toISOString() }, t = {
-				namespace: JI,
+				namespace: nL,
 				key: "probe"
 			};
-			n.extStoreSet = await QI("extension.store.setJson", () => a.setJson({
+			n.extStoreSet = await oL("extension.store.setJson", () => a.setJson({
 				...t,
 				value: e
-			})), n.extStoreGet = await QI("extension.store.getJson", () => a.getJson(t)), a.listKeys && (n.extStoreKeys = await QI("extension.store.listKeys", () => a.listKeys({ namespace: JI }))), a.deleteJson && (n.extStoreDelete = await QI("extension.store.deleteJson", () => a.deleteJson(t)));
+			})), n.extStoreGet = await oL("extension.store.getJson", () => a.getJson(t)), a.listKeys && (n.extStoreKeys = await oL("extension.store.listKeys", () => a.listKeys({ namespace: nL }))), a.deleteJson && (n.extStoreDelete = await oL("extension.store.deleteJson", () => a.deleteJson(t)));
 		}
-		sF(KI, qI, "info", r ? `找到 handle（${i}）；各接口调用结果见详情` : "没有找到获取 handle 的方式；接口结构见详情", n);
+		sF(eL, tL, "info", r ? `找到 handle（${i}）；各接口调用结果见详情` : "没有找到获取 handle 的方式；接口结构见详情", n);
 	});
 	return {
-		id: KI,
-		title: qI,
+		id: eL,
+		title: tL,
 		hint: "仅 TauriTavern 有效。请分别在「已打开聊天」和「未打开聊天」两种状态下点「重新检测」各测一次。",
 		actions: [{
 			label: "重新检测",
@@ -27229,22 +27450,22 @@ function nL() {
 	};
 }
 // src/probes/index.ts
-function rL(e) {
+function dL(e) {
 	return [
-		yI(),
+		DI(),
 		mF(e),
-		...RI(e),
-		GI(e),
+		...KI(e),
+		$I(e),
 		SF(e),
 		vF(e),
-		nL()
+		uL()
 	];
 }
 // src/ui/kit/SelectField.vue?vue&type=script&setup=true&lang.ts
-var iL = { class: "trpg-select-trigger__text" }, aL = {
+var fL = { class: "trpg-select-trigger__text" }, pL = {
 	key: 0,
 	class: "trpg-select-trigger__prefix"
-}, oL = /* @__PURE__ */ H({
+}, mL = /* @__PURE__ */ H({
 	__name: "SelectField",
 	props: /*@__PURE__*/ $a({
 		options: {},
@@ -27272,7 +27493,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 				disabled: e.disabled,
 				"aria-label": e.label
 			}, {
-				default: B(() => [J("span", iL, [e.prefix ? (G(), K("span", aL, F(e.prefix), 1)) : X("", !0), Y(z(HM), { placeholder: e.placeholder ?? "请选择" }, null, 8, ["placeholder"])]), Y(kS, {
+				default: B(() => [J("span", fL, [e.prefix ? (G(), K("span", pL, F(e.prefix), 1)) : X("", !0), Y(z(HM), { placeholder: e.placeholder ?? "请选择" }, null, 8, ["placeholder"])]), Y(kS, {
 					name: "caret-down",
 					size: 14
 				})]),
@@ -27305,16 +27526,16 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 			_: 1
 		}, 8, ["modelValue", "disabled"]));
 	}
-}), sL = {
+}), hL = {
 	class: "trpg-combo__count",
 	role: "status"
-}, cL = {
+}, gL = {
 	key: 0,
 	class: "trpg-row__meta"
-}, lL = {
+}, _L = {
 	key: 0,
 	class: "trpg-badge"
-}, uL = 200, dL = /* @__PURE__ */ H({
+}, vL = 200, yL = /* @__PURE__ */ H({
 	__name: "Combobox",
 	props: /*@__PURE__*/ $a({
 		options: {},
@@ -27330,7 +27551,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 		let t = e, n = So(e, "modelValue"), r = Rr("portalTarget", void 0), i = /* @__PURE__ */ R(""), a = Z(() => {
 			let e = i.value.trim().toLowerCase();
 			return e ? t.options.filter((t) => t.label.toLowerCase().includes(e) || (t.en ?? "").toLowerCase().includes(e)) : t.options;
-		}), o = Z(() => a.value.slice(0, uL)), s = Z(() => t.options.find((e) => e.value === n.value)), c = (e) => t.options.find((t) => t.value === e)?.label ?? "";
+		}), o = Z(() => a.value.slice(0, vL)), s = Z(() => t.options.find((e) => e.value === n.value)), c = (e) => t.options.find((t) => t.value === e)?.label ?? "";
 		return (t, l) => (G(), q(z(gj), {
 			modelValue: n.value,
 			"onUpdate:modelValue": l[2] ||= (e) => n.value = e,
@@ -27372,7 +27593,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 					"side-offset": 4,
 					"collision-padding": 8
 				}, {
-					default: B(() => [J("div", sL, [Hs("共 " + F(a.value.length) + " 条", 1), a.value.length > uL ? (G(), K(W, { key: 0 }, [Hs("，只显示前 " + F(uL) + " 条，继续输入可缩小范围")], 64)) : X("", !0)]), Y(z(Aj), {
+					default: B(() => [J("div", hL, [Hs("共 " + F(a.value.length) + " 条", 1), a.value.length > vL ? (G(), K(W, { key: 0 }, [Hs("，只显示前 " + F(vL) + " 条，继续输入可缩小范围")], 64)) : X("", !0)]), Y(z(Aj), {
 						class: "trpg-select-viewport",
 						onMousedown: l[1] ||= Au(() => {}, ["prevent"])
 					}, {
@@ -27384,7 +27605,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 							value: e.value,
 							class: "trpg-select-item"
 						}, {
-							default: B(() => [J("span", null, [Hs(F(e.label), 1), e.en ? (G(), K("span", cL, " · " + F(e.en), 1)) : X("", !0)]), e.badge ? (G(), K("span", lL, F(e.badge), 1)) : X("", !0)]),
+							default: B(() => [J("span", null, [Hs(F(e.label), 1), e.en ? (G(), K("span", gL, " · " + F(e.en), 1)) : X("", !0)]), e.badge ? (G(), K("span", _L, F(e.badge), 1)) : X("", !0)]),
 							_: 2
 						}, 1032, ["value"]))), 128))]),
 						_: 1
@@ -27396,13 +27617,13 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 			_: 1
 		}, 8, ["modelValue", "disabled"]));
 	}
-}), fL = ["title"], pL = [
+}), bL = ["title"], xL = [
 	"aria-checked",
 	"aria-label",
 	"aria-description",
 	"disabled",
 	"data-on"
-], mL = /* @__PURE__ */ H({
+], SL = /* @__PURE__ */ H({
 	__name: "Switch",
 	props: /*@__PURE__*/ $a({
 		label: {},
@@ -27438,9 +27659,9 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 			disabled: e.disabled,
 			"data-on": t.value,
 			onClick: n
-		}, [...i[0] ||= [J("span", { class: "trpg-switch__thumb" }, null, -1)]], 8, pL)], 8, fL));
+		}, [...i[0] ||= [J("span", { class: "trpg-switch__thumb" }, null, -1)]], 8, xL)], 8, bL));
 	}
-}), hL = { class: "trpg-pill trpg-tag" }, gL = ["aria-label"], _L = /* @__PURE__ */ H({
+}), CL = { class: "trpg-pill trpg-tag" }, wL = ["aria-label"], TL = /* @__PURE__ */ H({
 	__name: "TagPill",
 	props: {
 		label: {},
@@ -27448,14 +27669,14 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 	},
 	emits: ["remove"],
 	setup(e) {
-		return (t, n) => (G(), K("span", hL, [J("span", null, F(e.label), 1), J("button", {
+		return (t, n) => (G(), K("span", CL, [J("span", null, F(e.label), 1), J("button", {
 			class: "trpg-tag__x",
 			type: "button",
 			"aria-label": `移除${e.owner ? `${e.owner}的` : ""}『${e.label}』标签`,
 			onClick: n[0] ||= (e) => t.$emit("remove")
-		}, "×", 8, gL)]));
+		}, "×", 8, wL)]));
 	}
-}), vL = ["data-testid"], yL = { class: "trpg-list" }, bL = /* @__PURE__ */ H({
+}), EL = ["data-testid"], DL = { class: "trpg-list" }, OL = /* @__PURE__ */ H({
 	__name: "LabModalPage",
 	props: { level: {} },
 	setup(e) {
@@ -27464,7 +27685,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 			n.push({
 				key: `lab:${t.level + 1}`,
 				title: `第 ${t.level + 1} 页`,
-				component: Cn(bL),
+				component: Cn(OL),
 				props: { level: t.level + 1 }
 			});
 		}
@@ -27487,7 +27708,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 				}),
 				n[1] ||= Hs("前进一页。", -1)
 			]),
-			J("ul", yL, [(G(), K(W, null, Ma(30, (e) => J("li", {
+			J("ul", DL, [(G(), K(W, null, Ma(30, (e) => J("li", {
 				key: e,
 				class: "trpg-row"
 			}, [J("span", null, "演示行 " + F(e), 1)])), 64))]),
@@ -27496,18 +27717,18 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 				type: "button",
 				onClick: i
 			}, "弹窗内确认")
-		], 8, vL));
+		], 8, EL));
 	}
-}), xL = { class: "probe" }, SL = { class: "lab" }, CL = { class: "lab__row" }, wL = {
+}), kL = { class: "probe" }, AL = { class: "lab" }, jL = { class: "lab__row" }, ML = {
 	class: "probe__hint",
 	"data-testid": "select-model"
-}, TL = { class: "lab__row" }, EL = { class: "trpg-check" }, DL = { class: "lab__row" }, OL = {
+}, NL = { class: "lab__row" }, PL = { class: "trpg-check" }, FL = { class: "lab__row" }, IL = {
 	class: "probe__hint",
 	"data-testid": "combo-model"
-}, kL = { class: "probe__actions" }, AL = { class: "lab__row" }, jL = { class: "trpg-row" }, ML = { class: "trpg-row__main" }, NL = { "data-testid": "switch-state" }, PL = {
+}, LL = { class: "probe__actions" }, RL = { class: "lab__row" }, zL = { class: "trpg-row" }, BL = { class: "trpg-row__main" }, VL = { "data-testid": "switch-state" }, HL = {
 	class: "probe__hint",
 	"data-testid": "menu-pick"
-}, FL = { class: "probe__actions" }, IL = { class: "probe__head" }, LL = { class: "probe__title" }, RL = ["data-status"], zL = { class: "probe__hint" }, BL = { class: "probe__actions" }, VL = ["onClick"], HL = ["onClick"], UL = /* @__PURE__ */ H({
+}, UL = { class: "probe__actions" }, WL = { class: "probe__head" }, GL = { class: "probe__title" }, KL = ["data-status"], qL = { class: "probe__hint" }, JL = { class: "probe__actions" }, YL = ["onClick"], XL = ["onClick"], ZL = /* @__PURE__ */ H({
 	__name: "UiLab",
 	setup(e) {
 		let t = [
@@ -27546,7 +27767,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 			f.open({
 				key: "lab:1",
 				title: "演示弹窗",
-				component: Cn(bL),
+				component: Cn(OL),
 				props: { level: 1 }
 			});
 		}
@@ -27562,11 +27783,11 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 		function g(e, t, n) {
 			sF(e, t, n, n === "pass" ? "人工确认：通过" : "人工确认：不通过");
 		}
-		return (e, f) => (G(), K("section", xL, [
+		return (e, f) => (G(), K("section", kL, [
 			f[15] ||= J("h3", { class: "probe__title" }, "界面实测（需要你目测后点结果）", -1),
-			J("div", SL, [
-				J("div", CL, [
-					Y(oL, {
+			J("div", AL, [
+				J("div", jL, [
+					Y(mL, {
 						modelValue: n.value,
 						"onUpdate:modelValue": f[0] ||= (e) => n.value = e,
 						label: "测试下拉（8 项）",
@@ -27584,8 +27805,8 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 						],
 						placeholder: "下拉测试：选择环阶"
 					}, null, 8, ["modelValue"]),
-					J("p", wL, "下拉当前值：" + F(n.value || "未选") + " / " + F(r.value || "未选"), 1),
-					Y(oL, {
+					J("p", ML, "下拉当前值：" + F(n.value || "未选") + " / " + F(r.value || "未选"), 1),
+					Y(mL, {
 						modelValue: r.value,
 						"onUpdate:modelValue": f[1] ||= (e) => r.value = e,
 						label: "测试下拉（3 项）",
@@ -27597,7 +27818,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 						placeholder: "下拉测试：选择颜色"
 					}, null, 8, ["modelValue"])
 				]),
-				J("div", TL, [
+				J("div", NL, [
 					Y(qC, {
 						modelValue: i.value,
 						"onUpdate:modelValue": f[2] ||= (e) => i.value = e,
@@ -27617,7 +27838,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 							}
 						]
 					}, null, 8, ["modelValue"]),
-					J("label", EL, [Fr(J("input", {
+					J("label", PL, [Fr(J("input", {
 						"onUpdate:modelValue": f[3] ||= (e) => a.value = e,
 						type: "checkbox"
 					}, null, 512), [[gu, a.value]]), f[11] ||= Hs(" 勾选框测试", -1)]),
@@ -27628,26 +27849,26 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 						placeholder: "输入测试：中文 / English"
 					}, null, 512), [[hu, o.value]])
 				]),
-				J("div", DL, [
-					Y(dL, {
+				J("div", FL, [
+					Y(yL, {
 						modelValue: c.value,
 						"onUpdate:modelValue": f[5] ||= (e) => c.value = e,
 						options: z(l),
 						label: "可搜索下拉演示",
 						placeholder: "搜索 300 条法术"
 					}, null, 8, ["modelValue", "options"]),
-					J("p", OL, "可搜索下拉当前值：" + F(c.value || "未选"), 1),
-					J("div", kL, [(G(!0), K(W, null, Ma(u.value, (e) => (G(), q(_L, {
+					J("p", IL, "可搜索下拉当前值：" + F(c.value || "未选"), 1),
+					J("div", LL, [(G(!0), K(W, null, Ma(u.value, (e) => (G(), q(TL, {
 						key: e,
 						label: e,
 						owner: "盖尔",
 						onRemove: (t) => u.value = u.value.filter((t) => t !== e)
 					}, null, 8, ["label", "onRemove"]))), 128))])
 				]),
-				J("div", AL, [
-					J("div", jL, [
-						J("span", ML, [f[12] ||= Hs("开关演示：", -1), J("span", NL, F(s.value ? "开" : "关"), 1)]),
-						Y(mL, {
+				J("div", RL, [
+					J("div", zL, [
+						J("span", BL, [f[12] ||= Hs("开关演示：", -1), J("span", VL, F(s.value ? "开" : "关"), 1)]),
+						Y(SL, {
 							modelValue: s.value,
 							"onUpdate:modelValue": f[6] ||= (e) => s.value = e,
 							label: "演示开关"
@@ -27674,12 +27895,12 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 							onSelect: f[7] ||= (e) => d.value = e
 						})
 					]),
-					J("p", PL, "菜单选择：" + F(d.value || "无"), 1),
+					J("p", HL, "菜单选择：" + F(d.value || "无"), 1),
 					J("p", null, [f[14] ||= Hs("下划线术语：", -1), Y(yP, { onOpen: m }, {
 						default: B(() => [...f[13] ||= [Hs("点我打开演示弹窗", -1)]]),
 						_: 1
 					})]),
-					J("div", FL, [
+					J("div", UL, [
 						J("button", {
 							class: "trpg-btn",
 							type: "button",
@@ -27709,31 +27930,31 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 				key: e.id,
 				class: "probe"
 			}, [
-				J("div", IL, [J("h4", LL, F(e.title), 1), J("span", {
+				J("div", WL, [J("h4", GL, F(e.title), 1), J("span", {
 					class: "trpg-badge",
 					"data-status": z(oF)[e.id]?.status ?? "idle"
-				}, F(z(oF)[e.id]?.status ?? "待测"), 9, RL)]),
-				J("p", zL, F(e.how), 1),
-				J("div", BL, [J("button", {
+				}, F(z(oF)[e.id]?.status ?? "待测"), 9, KL)]),
+				J("p", qL, F(e.how), 1),
+				J("div", JL, [J("button", {
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => g(e.id, e.title, "pass")
-				}, "通过", 8, VL), J("button", {
+				}, "通过", 8, YL), J("button", {
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => g(e.id, e.title, "fail")
-				}, "不通过", 8, HL)])
+				}, "不通过", 8, XL)])
 			])), 64))
 		]));
 	}
-}), WL = { class: "probe__head" }, GL = { class: "probe__title" }, KL = ["data-status"], qL = { class: "probe__hint" }, JL = {
+}), QL = { class: "probe__head" }, $L = { class: "probe__title" }, eR = ["data-status"], tR = { class: "probe__hint" }, nR = {
 	key: 0,
 	class: "probe__summary"
-}, YL = { class: "probe__actions" }, XL = ["onClick"], ZL = { key: 1 }, QL = { class: "report-bar" }, $L = { role: "status" }, eR = /* @__PURE__ */ H({
+}, rR = { class: "probe__actions" }, iR = ["onClick"], aR = { key: 1 }, oR = { class: "report-bar" }, sR = { role: "status" }, cR = /* @__PURE__ */ H({
 	__name: "ProbeList",
 	props: { ctx: {} },
 	setup(e) {
-		let t = e.ctx, n = rL(t), r = /* @__PURE__ */ R("");
+		let t = e.ctx, n = dL(t), r = /* @__PURE__ */ R("");
 		async function i() {
 			return JSON.stringify(lF(await pF(t)), null, 2);
 		}
@@ -27755,22 +27976,22 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 				key: e.id,
 				class: "probe"
 			}, [
-				J("div", WL, [J("h3", GL, F(e.title), 1), J("span", {
+				J("div", QL, [J("h3", $L, F(e.title), 1), J("span", {
 					class: "trpg-badge",
 					"data-status": z(oF)[e.id]?.status ?? "idle"
-				}, F(z(oF)[e.id]?.status ?? "待测"), 9, KL)]),
-				J("p", qL, F(e.hint), 1),
-				z(oF)[e.id] ? (G(), K("p", JL, F(z(oF)[e.id].summary), 1)) : X("", !0),
-				J("div", YL, [(G(!0), K(W, null, Ma(e.actions, (e) => (G(), K("button", {
+				}, F(z(oF)[e.id]?.status ?? "待测"), 9, eR)]),
+				J("p", tR, F(e.hint), 1),
+				z(oF)[e.id] ? (G(), K("p", nR, F(z(oF)[e.id].summary), 1)) : X("", !0),
+				J("div", rR, [(G(!0), K(W, null, Ma(e.actions, (e) => (G(), K("button", {
 					key: e.label,
 					class: "trpg-btn",
 					type: "button",
 					onClick: (t) => e.run()
-				}, F(e.label), 9, XL))), 128))]),
-				z(oF)[e.id]?.detail === void 0 ? X("", !0) : (G(), K("details", ZL, [t[2] ||= J("summary", null, "详情", -1), J("pre", null, F(JSON.stringify(z(oF)[e.id].detail, null, 2)), 1)]))
+				}, F(e.label), 9, iR))), 128))]),
+				z(oF)[e.id]?.detail === void 0 ? X("", !0) : (G(), K("details", aR, [t[2] ||= J("summary", null, "详情", -1), J("pre", null, F(JSON.stringify(z(oF)[e.id].detail, null, 2)), 1)]))
 			]))), 128)),
-			Y(UL),
-			J("div", QL, [
+			Y(ZL),
+			J("div", oR, [
 				J("button", {
 					class: "trpg-btn trpg-btn--primary",
 					type: "button",
@@ -27781,55 +28002,55 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 					type: "button",
 					onClick: t[1] ||= (e) => o()
 				}, "保存报告到扩展设置"),
-				J("span", $L, F(r.value), 1)
+				J("span", sR, F(r.value), 1)
 			])
 		]));
 	}
-}), tR = {
+}), lR = {
 	key: 0,
 	class: "page-stack"
-}, nR = { class: "trpg-list" }, rR = { class: "trpg-row" }, iR = { class: "trpg-row" }, aR = { class: "trpg-row__main" }, oR = { class: "trpg-row__meta" }, sR = { key: 1 }, cR = {
+}, uR = { class: "trpg-list" }, dR = { class: "trpg-row" }, fR = { class: "trpg-row" }, pR = { class: "trpg-row__main" }, mR = { class: "trpg-row__meta" }, hR = { key: 1 }, gR = {
 	key: 0,
 	class: "trpg-diag",
 	"data-testid": "diagnostics"
-}, lR = {
+}, _R = {
 	key: 1,
 	class: "page-stack"
-}, uR = { class: "trpg-group" }, dR = /* @__PURE__ */ H({
+}, vR = { class: "trpg-group" }, yR = /* @__PURE__ */ H({
 	__name: "SettingsView",
 	setup(e) {
 		let t = Rr("stCtx"), n = /* @__PURE__ */ R(null), r = Mx();
-		return ha(() => void (r.booted && r.refreshSettings().catch((e) => console.error("[trpg-assistant] 读取设置失败", e)))), (e, r) => n.value === null ? (G(), K("div", tR, [J("ul", nR, [J("li", rR, [r[4] ||= J("div", { class: "trpg-row__main" }, [J("div", { class: "trpg-row__title" }, "诊断"), J("div", { class: "trpg-row__meta" }, "自检与兼容性测试，遇到问题时用来收集信息")], -1), J("button", {
+		return ha(() => void (r.booted && r.refreshSettings().catch((e) => console.error("[trpg-assistant] 读取设置失败", e)))), (e, r) => n.value === null ? (G(), K("div", lR, [J("ul", uR, [J("li", dR, [r[4] ||= J("div", { class: "trpg-row__main" }, [J("div", { class: "trpg-row__title" }, "诊断"), J("div", { class: "trpg-row__meta" }, "自检与兼容性测试，遇到问题时用来收集信息")], -1), J("button", {
 			class: "trpg-btn",
 			type: "button",
 			onClick: r[0] ||= (e) => n.value = "diag"
 		}, [r[3] ||= Hs("打开", -1), Y(kS, {
 			name: "caret-right",
 			size: 14
-		})])]), J("li", iR, [J("div", aR, [r[5] ||= J("div", { class: "trpg-row__title" }, "关于", -1), J("div", oR, "版本 " + F(z(Qb)) + " · 开源许可与致谢", 1)]), J("button", {
+		})])]), J("li", fR, [J("div", pR, [r[5] ||= J("div", { class: "trpg-row__title" }, "关于", -1), J("div", mR, "版本 " + F(z(Qb)) + " · 开源许可与致谢", 1)]), J("button", {
 			class: "trpg-btn",
 			type: "button",
 			onClick: r[1] ||= (e) => n.value = "about"
 		}, [r[6] ||= Hs("打开", -1), Y(kS, {
 			name: "caret-right",
 			size: 14
-		})])])])])) : (G(), K("div", sR, [J("button", {
+		})])])])])) : (G(), K("div", hR, [J("button", {
 			class: "subpage-back",
 			type: "button",
 			onClick: r[2] ||= (e) => n.value = null
 		}, [Y(kS, {
 			name: "caret-left",
 			size: 16
-		}), r[7] ||= Hs("设置", -1)]), n.value === "diag" ? (G(), K("div", cR, [z(t) ? (G(), q(eR, {
+		}), r[7] ||= Hs("设置", -1)]), n.value === "diag" ? (G(), K("div", gR, [z(t) ? (G(), q(cR, {
 			key: 0,
 			ctx: z(t)
-		}, null, 8, ["ctx"])) : X("", !0)])) : (G(), K("div", lR, [
-			J("h2", uR, "TRPG 跑团助手 " + F(z(Qb)), 1),
+		}, null, 8, ["ctx"])) : X("", !0)])) : (G(), K("div", _R, [
+			J("h2", vR, "TRPG 跑团助手 " + F(z(Qb)), 1),
 			r[8] ||= J("p", { class: "page-intro" }, "代码以 AGPL-3.0 许可发布，源码在 GitHub：didhogg/tavern-trpg-assistant。", -1),
 			r[9] ||= J("p", { class: "page-intro" }, "界面图标：Phosphor Icons（MIT）。规则数据的来源与许可见各条目的出处标注与随包附带的数据声明。", -1)
 		]))]));
 	}
-}), fR = { class: "trpg-head__chips" }, pR = { class: "trpg-chip__name" }, mR = /* @__PURE__ */ H({
+}), bR = { class: "trpg-head__chips" }, xR = { class: "trpg-chip__name" }, SR = /* @__PURE__ */ H({
 	__name: "HeaderChips",
 	props: { layout: {} },
 	setup(e) {
@@ -27844,7 +28065,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 			e === "saves" ? VP() : a.windowOpen = !1;
 		}
 		let u = () => i.info("另一个窗口正在使用这份数据，这里只能查看");
-		return (e, n) => (G(), K("div", fR, [o.value ? (G(), K(W, { key: 0 }, [
+		return (e, n) => (G(), K("div", bR, [o.value ? (G(), K(W, { key: 0 }, [
 			t.layout === "narrow" ? X("", !0) : (G(), K("button", {
 				key: 0,
 				class: "trpg-pill trpg-chip",
@@ -27852,7 +28073,7 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 				"data-testid": "save-chip",
 				"aria-haspopup": "dialog",
 				onClick: n[0] ||= (...e) => z(VP) && z(VP)(...e)
-			}, [J("span", pR, F(c.value), 1), Y(kS, {
+			}, [J("span", xR, F(c.value), 1), Y(kS, {
 				name: "caret-down",
 				size: 14
 			})])),
@@ -27877,8 +28098,8 @@ var iL = { class: "trpg-select-trigger__text" }, aL = {
 			onSelect: l
 		}, null, 8, ["items"])) : X("", !0)]));
 	}
-}), hR = "trpg-assistant:window";
-function gR(e, t, n) {
+}), CR = "trpg-assistant:window";
+function wR(e, t, n) {
 	let r = Math.min(Math.max(e.w, 360), Math.max(360, t)), i = Math.min(Math.max(e.h, 480), Math.max(480, n));
 	return {
 		w: r,
@@ -27887,18 +28108,18 @@ function gR(e, t, n) {
 		y: Math.min(Math.max(e.y, 0), Math.max(0, n - i))
 	};
 }
-function _R(e, t) {
+function TR(e, t) {
 	let n = Math.min(960, e - 32), r = Math.min(640, t - 32);
-	return gR({
+	return wR({
 		w: n,
 		h: r,
 		x: Math.round((e - n) / 2),
 		y: Math.round((t - r) / 2)
 	}, e, t);
 }
-function vR(e, t) {
+function ER(e, t) {
 	try {
-		let n = localStorage.getItem(hR);
+		let n = localStorage.getItem(CR);
 		if (n) {
 			let r = JSON.parse(n);
 			if ([
@@ -27906,44 +28127,44 @@ function vR(e, t) {
 				r.y,
 				r.w,
 				r.h
-			].every(Number.isFinite)) return gR(r, e, t);
+			].every(Number.isFinite)) return wR(r, e, t);
 		}
 	} catch (e) {
 		console.warn("[trpg-assistant] 读取窗口位置失败", e);
 	}
-	return _R(e, t);
+	return TR(e, t);
 }
-function yR(e) {
+function DR(e) {
 	try {
-		localStorage.setItem(hR, JSON.stringify(e));
+		localStorage.setItem(CR, JSON.stringify(e));
 	} catch (e) {
 		console.warn("[trpg-assistant] 保存窗口位置失败", e);
 	}
 }
 // src/ui/shell/MainWindow.vue?vue&type=script&setup=true&lang.ts
-var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
+var OR = ["data-layout", "data-fullscreen"], kR = ["inert"], AR = {
 	key: 0,
 	class: "trpg-side",
 	"aria-label": "主导航"
-}, CR = {
+}, jR = {
 	key: 0,
 	class: "trpg-side__name"
-}, wR = { class: "trpg-side__list" }, TR = [
+}, MR = { class: "trpg-side__list" }, NR = [
 	"aria-current",
 	"title",
 	"onClick"
-], ER = { key: 0 }, DR = { class: "trpg-side__list trpg-side__bottom" }, OR = [
+], PR = { key: 0 }, FR = { class: "trpg-side__list trpg-side__bottom" }, IR = [
 	"aria-current",
 	"title",
 	"onClick"
-], kR = { key: 0 }, AR = { class: "trpg-main" }, jR = { class: "trpg-head__title" }, MR = { class: "trpg-body" }, NR = {
+], LR = { key: 0 }, RR = { class: "trpg-main" }, zR = { class: "trpg-head__title" }, BR = { class: "trpg-body" }, VR = {
 	class: "trpg-content",
 	tabindex: "-1"
-}, PR = ["aria-pressed"], FR = {
+}, HR = ["aria-pressed"], UR = {
 	key: 0,
 	class: "trpg-tabs",
 	"aria-label": "主导航"
-}, IR = ["aria-current", "onClick"], LR = /* @__PURE__ */ H({
+}, WR = ["aria-current", "onClick"], GR = /* @__PURE__ */ H({
 	__name: "MainWindow",
 	setup(e) {
 		let t = gS(), n = vC(), r = Z(() => [{
@@ -27957,8 +28178,8 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 			bottom: !0
 		}]), i = {
 			home: aF,
-			settings: dR
-		}, a = /* @__PURE__ */ R(window.innerWidth), o = /* @__PURE__ */ R(window.innerHeight), s = /* @__PURE__ */ R(vR(a.value, o.value)), c = /* @__PURE__ */ R(null), l = /* @__PURE__ */ R(s.value.w), u = Z(() => a.value <= 480), d = Z(() => l.value >= 720 ? "wide" : l.value > 480 ? "mid" : "narrow"), f = Z(() => u.value ? {} : {
+			settings: yR
+		}, a = /* @__PURE__ */ R(window.innerWidth), o = /* @__PURE__ */ R(window.innerHeight), s = /* @__PURE__ */ R(ER(a.value, o.value)), c = /* @__PURE__ */ R(null), l = /* @__PURE__ */ R(s.value.w), u = Z(() => a.value <= 480), d = Z(() => l.value >= 720 ? "wide" : l.value > 480 ? "mid" : "narrow"), f = Z(() => u.value ? {} : {
 			left: `${s.value.x}px`,
 			top: `${s.value.y}px`,
 			width: `${s.value.w}px`,
@@ -27981,7 +28202,7 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 				w: s.value.w,
 				h: s.value.h
 			}),
-			onEnd: () => yR(s.value)
+			onEnd: () => DR(s.value)
 		});
 		function _(e) {
 			u.value || g.onPointerDown(e);
@@ -27996,12 +28217,12 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 					h: Math.min(Math.max(i.h + e.clientY - r, 480), Math.max(480, o.value - i.y))
 				};
 			}, l = () => {
-				t.removeEventListener("pointermove", c), t.removeEventListener("pointerup", l), t.removeEventListener("pointercancel", l), yR(s.value);
+				t.removeEventListener("pointermove", c), t.removeEventListener("pointerup", l), t.removeEventListener("pointercancel", l), DR(s.value);
 			};
 			t.addEventListener("pointermove", c), t.addEventListener("pointerup", l), t.addEventListener("pointercancel", l);
 		}
 		function y() {
-			a.value = window.innerWidth, o.value = window.innerHeight, s.value = gR(s.value, a.value, o.value);
+			a.value = window.innerWidth, o.value = window.innerHeight, s.value = wR(s.value, a.value, o.value);
 		}
 		function b(e) {
 			(e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s" && (e.preventDefault(), UP());
@@ -28028,7 +28249,7 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 			J("div", {
 				class: "trpg-shell",
 				inert: z(n).isOpen
-			}, [d.value === "narrow" ? X("", !0) : (G(), K("nav", SR, [
+			}, [d.value === "narrow" ? X("", !0) : (G(), K("nav", AR, [
 				J("div", {
 					class: "trpg-side__brand",
 					title: "拖动窗口",
@@ -28036,8 +28257,8 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 				}, [Y(kS, {
 					name: "dice-five",
 					size: 22
-				}), d.value === "wide" ? (G(), K("span", CR, "TRPG 跑团助手")) : X("", !0)], 32),
-				J("ul", wR, [(G(!0), K(W, null, Ma(m.value, (e) => (G(), K("li", { key: e.id }, [J("button", {
+				}), d.value === "wide" ? (G(), K("span", jR, "TRPG 跑团助手")) : X("", !0)], 32),
+				J("ul", MR, [(G(!0), K(W, null, Ma(m.value, (e) => (G(), K("li", { key: e.id }, [J("button", {
 					class: "trpg-nav",
 					type: "button",
 					"aria-current": z(t).page === e.id ? "page" : void 0,
@@ -28046,8 +28267,8 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 				}, [Y(kS, {
 					name: e.icon,
 					size: 20
-				}, null, 8, ["name"]), d.value === "wide" ? (G(), K("span", ER, F(e.label), 1)) : X("", !0)], 8, TR)]))), 128))]),
-				J("ul", DR, [(G(!0), K(W, null, Ma(h.value, (e) => (G(), K("li", { key: e.id }, [J("button", {
+				}, null, 8, ["name"]), d.value === "wide" ? (G(), K("span", PR, F(e.label), 1)) : X("", !0)], 8, NR)]))), 128))]),
+				J("ul", FR, [(G(!0), K(W, null, Ma(h.value, (e) => (G(), K("li", { key: e.id }, [J("button", {
 					class: "trpg-nav",
 					type: "button",
 					"aria-current": z(t).page === e.id ? "page" : void 0,
@@ -28056,15 +28277,15 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 				}, [Y(kS, {
 					name: e.icon,
 					size: 20
-				}, null, 8, ["name"]), d.value === "wide" ? (G(), K("span", kR, F(e.label), 1)) : X("", !0)], 8, OR)]))), 128))])
-			])), J("div", AR, [
+				}, null, 8, ["name"]), d.value === "wide" ? (G(), K("span", LR, F(e.label), 1)) : X("", !0)], 8, IR)]))), 128))])
+			])), J("div", RR, [
 				J("header", {
 					class: "trpg-head",
 					title: "拖动窗口",
 					onPointerdown: _
 				}, [
-					J("h1", jR, F(p.value), 1),
-					Y(mR, { layout: d.value }, null, 8, ["layout"]),
+					J("h1", zR, F(p.value), 1),
+					Y(SR, { layout: d.value }, null, 8, ["layout"]),
 					d.value === "narrow" ? X("", !0) : (G(), K("button", {
 						key: 0,
 						class: "trpg-icon-btn",
@@ -28076,7 +28297,7 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 						size: 18
 					})]))
 				], 32),
-				J("div", MR, [J("main", NR, [(G(), q(Oa(i[z(t).page])))]), J("button", {
+				J("div", BR, [J("main", VR, [(G(), q(Oa(i[z(t).page])))]), J("button", {
 					class: "trpg-dice-btn",
 					type: "button",
 					"aria-label": "掷骰",
@@ -28085,8 +28306,8 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 				}, [Y(kS, {
 					name: "dice-five",
 					size: 28
-				})], 8, PR)]),
-				d.value === "narrow" ? (G(), K("nav", FR, [(G(!0), K(W, null, Ma(r.value, (e) => (G(), K("button", {
+				})], 8, HR)]),
+				d.value === "narrow" ? (G(), K("nav", UR, [(G(!0), K(W, null, Ma(r.value, (e) => (G(), K("button", {
 					key: e.id,
 					class: "trpg-tab",
 					type: "button",
@@ -28095,8 +28316,8 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 				}, [Y(kS, {
 					name: e.icon,
 					size: 22
-				}, null, 8, ["name"]), J("span", null, F(e.label), 1)], 8, IR))), 128))])) : X("", !0)
-			])], 8, xR),
+				}, null, 8, ["name"]), J("span", null, F(e.label), 1)], 8, WR))), 128))])) : X("", !0)
+			])], 8, kR),
 			Y(TC),
 			u.value ? X("", !0) : (G(), K("div", {
 				key: 0,
@@ -28104,9 +28325,9 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 				"aria-hidden": "true",
 				onPointerdown: v
 			}, null, 32))
-		], 44, bR));
+		], 44, OR));
 	}
-}), RR = { class: "trpg-root" }, zR = /* @__PURE__ */ H({
+}), KR = { class: "trpg-root" }, qR = /* @__PURE__ */ H({
 	__name: "App",
 	props: {
 		ctx: {},
@@ -28116,43 +28337,43 @@ var bR = ["data-layout", "data-fullscreen"], xR = ["inert"], SR = {
 		let t = e;
 		Lr("portalTarget", t.portalTarget), Lr("stCtx", t.ctx);
 		let n = gS();
-		return (e, t) => (G(), K("div", RR, [
+		return (e, t) => (G(), K("div", KR, [
 			Y(_C),
-			z(n).windowOpen ? (G(), q(LR, { key: 0 })) : X("", !0),
+			z(n).windowOpen ? (G(), q(GR, { key: 0 })) : X("", !0),
 			Y(mC),
 			Y(xS)
 		]));
 	}
-}), BR = ".trpg-btn{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);min-height:36px;color:var(--ink);font:inherit;cursor:pointer;white-space:nowrap;justify-content:center;align-items:center;gap:6px;padding:4px 14px;display:inline-flex}.trpg-btn:hover:not(:disabled){border-color:var(--primary)}.trpg-btn:disabled{opacity:.5;cursor:not-allowed}.trpg-btn--primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-btn--danger{background:var(--danger);color:#fffcf6;border-color:var(--danger)}.trpg-btn--quiet{background:0 0;border-color:#0000}.trpg-btn--small{min-height:30px;padding:2px 10px;font-size:13px}.trpg-icon-btn{border-radius:var(--radius-sm);min-width:36px;min-height:36px;color:inherit;cursor:pointer;background:0 0;border:1px solid #0000;justify-content:center;align-items:center;display:inline-flex}.trpg-icon-btn:hover{border-color:currentColor}.trpg-input{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);padding:4px 10px}.trpg-input:disabled{opacity:.6}textarea.trpg-input{resize:vertical;min-height:72px}.trpg-field{gap:4px;display:grid}.trpg-field__label{color:var(--ink-2);font-size:13px}.trpg-field__hint{color:var(--ink-2);font-size:12.5px}.trpg-field__error{color:var(--danger);font-size:12.5px}.trpg-select-trigger{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);cursor:pointer;justify-content:space-between;align-items:center;gap:8px;padding:4px 10px;display:inline-flex}.trpg-select-content,.trpg-menu{min-width:var(--reka-select-trigger-width,160px);background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:var(--shadow-float);z-index:100003;color:var(--ink)}.trpg-select-content{max-height:min(8 * 36px, var(--reka-select-content-available-height));overflow:hidden}.trpg-select-viewport{max-height:inherit;padding:4px;overflow-y:auto}.trpg-select-item,.trpg-menu__item{border-radius:var(--radius-xs);cursor:pointer;min-height:40px;color:var(--ink);justify-content:space-between;align-items:center;gap:12px;padding:4px 10px;display:flex}.trpg-menu{min-width:168px;padding:4px}.trpg-select-item[data-highlighted],.trpg-menu__item[data-highlighted]{background:var(--panel);outline:none}.trpg-select-item[data-state=checked]{color:var(--primary);font-weight:600}.trpg-menu__item--danger{color:var(--danger)}.trpg-menu__item[data-disabled]{opacity:.5;cursor:not-allowed}.trpg-menu__reason{color:var(--ink-2);font-size:12px}.trpg-seg{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);display:inline-flex;overflow:hidden}.trpg-seg button{min-height:34px;color:var(--ink);background:0 0;border:0;padding:2px 14px}.trpg-seg button+button{border-left:1px solid var(--line)}.trpg-seg button[aria-pressed=true]{background:var(--primary);color:var(--primary-ink)}.trpg-badge{border-radius:var(--radius-xs);background:var(--panel);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap;padding:0 8px;font-size:12px;font-weight:600;line-height:20px;display:inline-block}.trpg-badge[data-tone=gold]{color:var(--ink);border-color:var(--gold);background:color-mix(in srgb, var(--gold) 28%, transparent)}.trpg-badge[data-tone=ok],.trpg-badge[data-status=pass]{color:var(--ok);border-color:var(--ok)}.trpg-badge[data-tone=danger],.trpg-badge[data-status=fail],.trpg-badge[data-status=error]{color:var(--danger);border-color:var(--danger)}.trpg-badge[data-tone=warn],.trpg-badge[data-status=waiting]{color:var(--unsaved);border-color:var(--unsaved)}.trpg-badge[data-tone=gold]{color:var(--gold);border-color:var(--gold)}.trpg-pill{border:1px solid var(--line);background:var(--card);border-radius:999px;align-items:center;gap:4px;min-height:30px;padding:0 12px;display:inline-flex}.trpg-switch-wrap{color:var(--ink-2);align-items:center;gap:6px;min-height:44px;display:inline-flex}.trpg-switch{border:2px solid var(--line);background:0 0;border-radius:999px;width:42px;height:24px;padding:0;transition:background .16s,border-color .16s;position:relative}.trpg-switch__thumb{background:var(--ink-2);border-radius:50%;width:16px;height:16px;transition:transform .16s,background .16s;position:absolute;top:2px;left:2px}.trpg-switch[data-on=true]{background:var(--primary);border-color:var(--primary)}.trpg-switch[data-on=true] .trpg-switch__thumb{background:var(--primary-ink);transform:translate(18px)}.trpg-switch:disabled{opacity:.55;cursor:not-allowed}.trpg-check{cursor:pointer;align-items:center;gap:8px;min-height:36px;display:inline-flex}.trpg-check[data-disabled=true]{opacity:.6;cursor:not-allowed}.trpg-check input{width:18px;height:18px;accent-color:var(--primary);flex:none;margin:0}.trpg-term{color:var(--ink);text-align:left;text-underline-offset:4px;cursor:pointer;background:0 0;border:0;padding:0;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-decoration-thickness:1.5px;display:inline}.trpg-term:hover,.trpg-term:focus-visible{text-decoration-style:solid;-webkit-text-decoration-color:var(--gold);text-decoration-color:var(--gold)}.trpg-list{margin:0;padding:0;list-style:none}.trpg-row{border-bottom:1px solid var(--line);align-items:center;gap:12px;min-height:52px;padding:6px 4px;display:flex}.trpg-row__main{flex:1;min-width:0}.trpg-row__title{overflow-wrap:anywhere;font-weight:600}.trpg-row__meta{color:var(--ink-2);font-size:12.5px}.trpg-row__end{flex:none;align-items:center;gap:8px;display:flex}.trpg-group{font-family:var(--font-serif);color:var(--ink-2);margin:16px 0 4px;font-size:15px}.trpg-skeleton{background:linear-gradient(90deg, var(--panel), var(--line), var(--panel));opacity:.6;border-radius:4px;height:14px}.trpg-empty{text-align:center;color:var(--ink-2);padding:24px 8px}.trpg-progress{background:var(--panel);border-radius:3px;width:120px;height:6px;overflow:hidden}.trpg-progress>span{background:var(--primary);height:100%;transition:width .2s;display:block}.trpg-icon{vertical-align:-3px;flex:none}.trpg-toasts{left:50%;bottom:max(16px, env(safe-area-inset-bottom));z-index:100005;gap:8px;width:min(92vw,420px);display:grid;position:fixed;transform:translate(-50%)}.trpg-toast{border-radius:var(--radius-sm);background:var(--chrome);color:var(--chrome-ink);border-left:4px solid var(--gold);box-shadow:var(--shadow-float);align-items:center;gap:10px;padding:10px 12px;display:flex}.trpg-toast[data-kind=error]{border-left-color:var(--danger)}.trpg-toast[data-kind=success]{border-left-color:var(--ok)}.trpg-toast__text{flex:1}.trpg-toast button{color:var(--gold);background:0 0;border:0;min-height:32px;padding:0 8px;font-weight:600}@media (width<=480px){.trpg-toasts{bottom:calc(64px + env(safe-area-inset-bottom))}}.trpg-toast-enter-from,.trpg-toast-leave-to{opacity:0;transform:translateY(8px)}.trpg-toast-enter-active,.trpg-toast-leave-active{transition:opacity .16s,transform .16s}.trpg-modal-root{display:contents}.trpg-modal{background:var(--scrim);z-index:20;justify-content:center;align-items:center;padding:16px;display:flex;position:absolute;inset:0}.trpg-modal__card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:min(640px,100%);height:min(80%,640px);box-shadow:var(--shadow-float);flex-direction:column;animation:.16s ease-out trpg-pop;display:flex;overflow:hidden}.trpg-modal[data-variant=drawer]{justify-content:flex-end;padding:0}.trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:0;width:min(440px,100%);height:100%;animation:.2s ease-out trpg-slide}.trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true]{width:min(var(--trpg-drawer-width,440px), 100%)}.trpg-modal[data-variant=confirm] .trpg-modal__card{width:min(440px,100%);height:auto;max-height:90%}.trpg-modal[data-variant=confirm] .trpg-modal__page{position:relative}.trpg-modal__card:has(.trpg-library-card){width:min(1180px,100%);height:92%}.trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true]{width:min(var(--trpg-drawer-width,640px), 100%);height:min(86%, var(--trpg-dlg-h,800px));background:var(--card);border-radius:16px}.trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__page{flex-direction:column;padding:0;display:flex;overflow:hidden}.trpg-modal__head{border-bottom:1px solid var(--line);background:var(--panel);flex:none;align-items:center;gap:8px;min-height:52px;padding:4px 8px 4px 16px;display:flex}.trpg-modal__title{min-width:0;font-family:var(--font-serif);text-overflow:ellipsis;white-space:nowrap;flex:1;margin:0;font-size:17px;overflow:hidden}.trpg-modal__back{border-radius:var(--radius-sm);max-width:40%;min-height:36px;color:var(--primary);white-space:nowrap;background:0 0;border:0;align-items:center;gap:2px;margin-left:-8px;padding:0 8px;display:inline-flex}.trpg-modal__back span{text-overflow:ellipsis;overflow:hidden}.trpg-modal__back:hover{background:var(--card)}.trpg-modal__pages{flex:1;min-height:0;position:relative}.trpg-modal__page{padding:16px;transition:opacity .16s,transform .16s,visibility;position:absolute;inset:0;overflow:auto}.trpg-modal__page.is-under{opacity:0;visibility:hidden;transition:opacity .16s,transform .16s,visibility 0s .16s;transform:translate(-24px)}.trpg-page-enter-from,.trpg-page-leave-to{opacity:0;transform:translate(24px)}.trpg-page-enter-active,.trpg-page-leave-active{transition:opacity .16s,transform .16s}.trpg-modal[data-variant=confirm] .trpg-page-leave-active{position:absolute;inset:0}@keyframes trpg-pop{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}@keyframes trpg-slide{0%{opacity:0;transform:translate(32px)}to{opacity:1;transform:none}}.trpg-confirm{gap:12px;display:grid}.trpg-confirm__message{margin:0}.trpg-confirm__details{color:var(--ink-2);margin:0;padding-left:18px}.trpg-confirm__actions{justify-content:flex-end;gap:8px;margin-top:4px;display:flex}.trpg-window[data-layout=narrow] .trpg-modal{background:var(--paper);align-items:stretch;padding:0}.trpg-window[data-layout=narrow] .trpg-modal__card{border:0;border-radius:0;width:100%;height:100%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer]:has(.trpg-modal__card[data-sized=true]){background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true]{border:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0;width:100%;height:92%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true] .trpg-modal__head{background:var(--panel);min-height:56px;color:var(--ink);padding-top:10px;position:relative}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true] .trpg-modal__head:before{content:\"\";background:var(--line);border-radius:2px;width:36px;height:4px;position:absolute;top:6px;left:50%;transform:translate(-50%)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true] .trpg-modal__back{color:var(--primary)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog]:has(.trpg-modal__card[data-sized=true]){background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true]{border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;height:92%;animation:.2s ease-out trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__head{background:var(--card);min-height:56px;color:var(--ink);border-bottom:1px solid var(--line);padding-top:10px;position:relative}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__head:before{content:\"\";background:var(--line);border-radius:2px;width:36px;height:4px;position:absolute;top:6px;left:50%;transform:translate(-50%)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__back{color:var(--primary)}@keyframes trpg-sheet{0%{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm]{background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm] .trpg-modal__card{border-radius:var(--radius) var(--radius) 0 0;height:auto}.trpg-window[data-layout=narrow] .trpg-confirm__actions{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions .trpg-btn{min-height:44px}.trpg-window[data-layout=narrow] .trpg-modal__card:has(.trpg-library-card){width:min(1180px,100%);height:92%}.trpg-modal__card:has(.trpg-library-card) .trpg-modal__page{padding:0}.trpg-modal__head{background:var(--chrome);min-height:48px;color:var(--chrome-ink);border-bottom:0}.trpg-window[data-layout=narrow] .trpg-modal__back{color:var(--gold)}.trpg-window[data-layout=narrow] .trpg-modal__back,.trpg-window[data-layout=narrow] .trpg-modal__close{min-width:44px;min-height:44px}.trpg-drawer{align-content:start;gap:14px;min-height:100%;display:grid}.trpg-drawer__current{border-bottom:1px solid var(--line);gap:8px;padding-bottom:12px;display:grid}.trpg-drawer__name{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__title{font-family:var(--font-serif);overflow-wrap:anywhere;font-size:20px;font-weight:600}.trpg-drawer__buttons{flex-wrap:wrap;gap:8px;display:flex}.trpg-drawer__filter{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__filter .trpg-input{flex:1;min-width:140px}.trpg-drawer__bottom{border-top:1px solid var(--line);background:var(--paper);justify-content:space-between;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-warn{color:var(--unsaved)}.trpg-saves{margin:0;padding:0;list-style:none}.trpg-save{border-bottom:1px solid var(--line);align-items:flex-start;gap:8px;padding:10px 4px;display:flex}.trpg-save[data-current=true]{background:color-mix(in srgb, var(--gold) 14%, transparent)}.trpg-save__main{flex:1;gap:2px;min-width:0;display:grid}.trpg-save__top{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.trpg-save__name{overflow-wrap:anywhere;font-weight:600}.trpg-save__time{color:var(--ink-2);margin-left:auto;font-size:12.5px}.trpg-save__rename{flex:1;min-height:32px}.trpg-save__noteedit{gap:6px;display:grid}.trpg-save__noteactions{justify-content:flex-end;gap:6px;display:flex}.trpg-folds{gap:6px;display:grid}.trpg-folds__tabs{flex-wrap:wrap;gap:4px;display:flex}.trpg-popover{z-index:100003;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);width:min(320px,92vw);box-shadow:var(--shadow-float);padding:12px}.trpg-confirm__actions--stack{flex-wrap:wrap;justify-content:flex-end}.trpg-import__ok{color:var(--ok);margin:0;font-weight:600}.trpg-compare{border-collapse:collapse;width:100%;font-size:13px}.trpg-compare th,.trpg-compare td{border-bottom:1px solid var(--line);text-align:left;padding:4px 8px;font-weight:400}.trpg-compare thead th{color:var(--ink-2)}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack .trpg-btn{min-height:44px}.trpg-wizard{flex-direction:column;min-height:100%;display:flex}.trpg-wizard__body{flex:1;padding:8px 0 16px}.trpg-wizard__foot{border-top:1px solid var(--line);background:var(--paper);justify-content:flex-end;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-steps{gap:4px;margin:0;padding:0;list-style:none;display:flex}.trpg-steps li{flex:1}.trpg-steps button{border:0;border-bottom:2px solid var(--line);width:100%;min-height:36px;color:var(--ink-2);background:0 0;justify-content:center;align-items:center;gap:6px;padding:0 6px;display:flex}.trpg-steps button:disabled{cursor:default}.trpg-steps li[data-state=current] button{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}.trpg-steps li[data-state=done] button{color:var(--ink);border-bottom-color:var(--gold);cursor:pointer}.trpg-steps li[data-skipped=true] button{opacity:.45}.trpg-steps__n{border:1px solid;border-radius:50%;place-items:center;width:20px;height:20px;font-size:12px;display:inline-grid}.trpg-steps__compact{color:var(--ink-2);margin:0;font-size:13px;display:none}.trpg-window[data-layout=narrow] .trpg-steps{display:none}.trpg-window[data-layout=narrow] .trpg-steps__compact{display:block}.trpg-step-title{font-family:var(--font-serif);margin:0;font-size:17px}.trpg-step-head{flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;display:flex}.trpg-step-actions{gap:6px;display:inline-flex}.trpg-rulecards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;display:grid}.trpg-rulecard{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-card);cursor:pointer;gap:10px;padding:14px;display:flex}.trpg-rulecard[aria-checked=true]{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary), var(--shadow-card)}.trpg-rulecard[data-status=coming]{opacity:.55;cursor:default}.trpg-rulecard__mark{color:var(--primary);font-size:18px;line-height:1.3}.trpg-rulecard__body{justify-items:start;gap:4px;display:grid}.trpg-radio{cursor:pointer}.trpg-radio input{width:18px;height:18px;accent-color:var(--primary)}.trpg-detail-links{gap:6px;margin:0;padding:0;list-style:none;display:grid}.trpg-info__line{margin:0}.trpg-vlist{height:100%;min-height:160px;position:relative;overflow-y:auto}.trpg-vlist__space{position:relative}.trpg-vlist__row{border-bottom:1px solid var(--line);align-items:center;gap:10px;padding:0 4px;display:flex;position:absolute;left:0;right:0}.trpg-blocks{gap:8px;display:grid}.trpg-blocks__p{margin:0}.trpg-blocks__h h4{font-family:var(--font-serif);margin:8px 0 4px;font-size:15px}.trpg-blocks__list{margin:0;padding-left:20px}.trpg-blocks__table{overflow-x:auto}.trpg-blocks__table table{border-collapse:collapse;min-width:100%;font-size:13px}.trpg-blocks__table th,.trpg-blocks__table td{border:1px solid var(--line);text-align:left;padding:4px 8px}.trpg-blocks__table caption{text-align:left;padding:4px 0;font-weight:600}.trpg-blocks__quote{border-left:3px solid var(--gold);color:var(--ink-2);margin:0;padding-left:12px}.trpg-blocks__read{background:var(--panel);border-radius:var(--radius-sm);padding:8px 12px}.trpg-blocks__mark{color:var(--primary)}.trpg-variantbar{border:1px solid var(--gold);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--gold) 12%, transparent);flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;display:flex}.trpg-variantbar__text{flex:1;min-width:200px}.trpg-variantbar__actions{gap:6px;display:flex}.trpg-variantpick{border:0;gap:6px;margin:0;padding:0;display:grid}.trpg-variantpick .trpg-radio{align-items:flex-start;gap:8px;min-height:36px;display:flex}.trpg-pack-actions{align-items:center;gap:6px;display:inline-flex}.trpg-packdetail{flex-direction:column;gap:10px;height:100%;display:flex}.trpg-packdetail__desc{margin:0}.trpg-packdetail__filter{grid-template-columns:minmax(140px,200px) 1fr auto;align-items:center;gap:8px;display:grid}.trpg-packdetail__list{flex:1;min-height:200px}.trpg-entryrow{flex:1;align-items:baseline;gap:10px;min-width:0;display:flex}.trpg-entryrow .trpg-term{white-space:nowrap;flex:none}.trpg-entryrow__sum{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.trpg-entry__summary{color:var(--ink-2);margin:0}.trpg-entry__lore{gap:6px;display:grid}.trpg-entry__lore-title{font-family:var(--font-serif);margin:8px 0 0;font-size:15px}.trpg-window[data-layout=narrow] .trpg-packdetail__filter{grid-template-columns:1fr}.trpg-modal__page:has(.trpg-packdetail){flex-direction:column;display:flex;overflow:hidden}.trpg-toolbar{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-toolbar__search{flex:1;min-width:160px;max-width:280px}.trpg-pill[aria-pressed=true]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-row--series{background:var(--panel);min-height:36px}.trpg-row--nested{padding-left:20px}.trpg-packdetail{flex:1;min-height:0}.trpg-issuerow{border:1px solid var(--unsaved);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--unsaved) 12%, transparent);justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}.trpg-variantrow{margin-top:8px}.trpg-group--first{margin-top:0}.trpg-row__end--select{width:180px}.trpg-row__end--wrap{flex-wrap:wrap;justify-content:flex-end}.trpg-toolbar--between{justify-content:space-between}.trpg-toolbar__end{align-items:center;gap:10px;display:inline-flex}.trpg-minesub{flex-direction:column;gap:10px;height:100%;min-height:420px;display:flex}.trpg-minesub__list{flex:1;min-height:220px}.trpg-drawer[data-dragging=true]:after{content:\"松开以导入\";z-index:5;border:2px dashed var(--primary);border-radius:var(--radius);background:color-mix(in srgb, var(--paper) 88%, transparent);color:var(--primary);place-items:center;font-weight:600;display:grid;position:absolute;inset:0}.trpg-drawer{position:relative}.trpg-combo__anchor{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);align-items:center;display:flex}.trpg-combo__input{min-width:0;min-height:36px;color:var(--ink);background:0 0;border:0;flex:1;padding:4px 10px}.trpg-combo__input:focus-visible{outline:none}.trpg-combo__anchor:focus-within{outline:2px solid var(--primary);outline-offset:1px}.trpg-combo__content{width:var(--reka-combobox-trigger-width);min-width:260px}.trpg-combo__count{border-bottom:1px solid var(--line);color:var(--ink-2);padding:6px 10px;font-size:12.5px}.trpg-combo__empty{color:var(--ink-2);padding:12px 10px}.trpg-tag{gap:2px;padding-right:2px}.trpg-tag__x{min-width:28px;min-height:28px;color:var(--ink-2);background:0 0;border:0;border-radius:999px;font-size:16px;line-height:1}.trpg-tag__x:hover{color:var(--danger)}.trpg-facts{grid-template-columns:max-content 1fr;gap:6px 14px;margin:0;display:grid}.trpg-facts__label{color:var(--ink-2);white-space:nowrap;padding-top:1px;font-size:13px}.trpg-facts__value{white-space:pre-line;overflow-wrap:anywhere;margin:0}.trpg-facts__sections,.trpg-facts__members{white-space:normal;gap:8px;display:grid}.trpg-facts__members h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-row__warn{color:var(--accent,#b45309)}.trpg-facts__sub{margin-left:4px;font-size:12px}.trpg-facts__member-row{flex-wrap:wrap;align-items:baseline;gap:2px 14px;display:flex}.trpg-facts__member-label{min-width:4.5em;font-weight:600}.trpg-facts__sections h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-window[data-layout=narrow] .trpg-facts{grid-template-columns:1fr;gap:2px}.trpg-window[data-layout=narrow] .trpg-facts__value{margin-bottom:8px}.trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__head{background:var(--card);min-height:52px;color:var(--ink);border-bottom:1px solid var(--line)}.trpg-tip{max-width:100%;display:inline-flex;position:relative}.trpg-tip.is-inline{display:inline}.trpg-tip__bubble{z-index:60;background:var(--ink);max-width:260px;color:var(--paper);text-align:left;white-space:pre-line;pointer-events:none;box-shadow:var(--shadow-float);border-radius:9px;gap:1px;padding:8px 11px;font-size:12.5px;line-height:1.5;animation:.12s ease-out trpg-tip;display:grid;position:fixed}.trpg-tip__line{font-variant-numeric:tabular-nums;display:block}@keyframes trpg-tip{0%{opacity:0}to{opacity:1}}.trpg-btabs{background:var(--panel);border-bottom:1px solid var(--line);scrollbar-width:none;flex:none;gap:2px;padding:8px 14px 0;display:flex;overflow-x:auto}.trpg-btabs::-webkit-scrollbar{display:none}.trpg-btabs__tab{min-height:40px;color:var(--ink-2);white-space:nowrap;background:0 0;border:1px solid #0000;border-bottom:0;border-radius:10px 10px 0 0;flex:none;align-items:center;gap:6px;margin-bottom:-1px;padding:0 16px;font-size:14px;font-weight:500;display:inline-flex}.trpg-btabs__tab:hover:not(:disabled){background:var(--card)}.trpg-btabs__tab[aria-selected=true]{background:var(--card);border-color:var(--line);color:var(--ink);padding-bottom:1px;font-weight:700}.trpg-btabs__tab:disabled{opacity:.45;cursor:not-allowed}.trpg-btabs__count{background:color-mix(in srgb, var(--ink) 12%, transparent);border-radius:999px;place-items:center;min-width:20px;height:20px;padding:0 6px;font-size:12px;font-weight:600;display:inline-grid}.trpg-item{border:1px solid var(--line);background:var(--card);border-radius:12px;gap:8px;padding:14px 16px;display:grid}.trpg-item__head{align-items:baseline;gap:8px;display:flex}.trpg-item__title{min-width:0;font:700 17px/1.3 var(--font-serif);flex:1;margin:0}.trpg-item__hint{min-width:24px;min-height:24px;color:var(--ink-2);place-items:center;display:inline-grid}button.trpg-rulelink.trpg-item__hint{appearance:none;cursor:pointer;background:0 0;border:0;border-radius:6px;padding:0}button.trpg-rulelink.trpg-item__hint:hover{color:var(--primary);background:var(--panel)}.trpg-item__value{font:700 24px/1 var(--font-serif);font-variant-numeric:tabular-nums}.trpg-item__auto{color:var(--ink-2);text-align:right;margin:0;font-size:12px}.trpg-item__sources{color:var(--ink-2);gap:2px;margin:0;padding:0;font-size:13px;list-style:none;display:grid}.trpg-item__sources li{align-items:baseline;gap:10px;min-width:0;display:flex}.trpg-item__sources li.is-overridden{opacity:.6;text-decoration:line-through}.trpg-item__label{flex:1;min-width:0}.trpg-item__num{font-variant-numeric:tabular-nums}.trpg-item__note{font-size:12px}.trpg-item__edit{flex-wrap:wrap;align-items:center;gap:10px 16px;display:flex}.trpg-stepper{justify-content:center;align-items:center;gap:10px;display:inline-flex}.trpg-stepper__btn{border:1px solid var(--line);background:var(--card);width:28px;height:28px;color:var(--ink);cursor:pointer;border-radius:50%;place-items:center;padding:0;display:inline-grid}.trpg-stepper__btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}.trpg-stepper__btn:disabled{opacity:.35;cursor:not-allowed}.trpg-stepper__val{text-align:center;min-width:2ch;font:700 20px/1 var(--font-serif);font-variant-numeric:tabular-nums}.trpg-seg button:disabled{opacity:.4;cursor:not-allowed}", VR = ".probe{border-bottom:1px solid var(--line);padding:10px 0}.probe__head{justify-content:space-between;align-items:center;gap:8px;display:flex}.probe__title{font-family:var(--font-serif);margin:0;font-size:15px}.probe__hint{color:var(--ink-2);margin:4px 0;font-size:12.5px}.probe__summary{margin:4px 0}.probe__actions{flex-wrap:wrap;gap:6px;margin-top:6px;display:flex}.probe pre{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);white-space:pre-wrap;word-break:break-all;max-height:200px;margin:6px 0 0;padding:8px;font-size:11.5px;overflow:auto}.probe summary{cursor:pointer;color:var(--ink-2);font-size:12.5px}.lab{background:var(--panel);border-radius:var(--radius);gap:10px;margin-top:8px;padding:10px;display:grid}.lab__row{gap:6px;display:grid}.report-bar{flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;display:flex}", HR = ".trpg-btn,.trpg-icon-btn,.trpg-tabs2__tab,.trpg-person,.trpg-tplcard{transition:transform .16s cubic-bezier(0,0,.2,1),box-shadow .16s cubic-bezier(0,0,.2,1)}.trpg-btn:active:not(:disabled),.trpg-icon-btn:active:not(:disabled),.trpg-tabs2__tab:active,.trpg-tplcard:active{transition-duration:80ms;transform:scale(.97)}.trpg-tplcard:hover:not(:active){box-shadow:var(--shadow-card-hover);transform:translateY(-1px)}.trpg-person:hover{box-shadow:var(--shadow-card-hover)}@media (prefers-reduced-motion:reduce){.trpg-btn,.trpg-icon-btn,.trpg-tabs2__tab,.trpg-person,.trpg-tplcard{transition:none}.trpg-btn:active:not(:disabled),.trpg-icon-btn:active:not(:disabled),.trpg-tabs2__tab:active,.trpg-tplcard:active,.trpg-tplcard:hover:not(:active){transform:none}}.trpg-frame{width:var(--fw,72px);height:var(--fh,90px);border:1px solid var(--frame);background:var(--paper);border-radius:8px;flex:none;padding:1px;display:inline-block;position:relative}.trpg-frame__gold{border:2px solid var(--gold);background:var(--paper);border-radius:6px;width:100%;height:100%;padding:2px;display:block}.trpg-frame__pic{background:linear-gradient(180deg, var(--panel), var(--card));border-radius:3px;justify-content:center;align-items:center;width:100%;height:100%;display:flex;overflow:hidden}.trpg-frame__img{object-fit:cover;width:100%;height:100%;display:block}.trpg-frame__ph{width:var(--ficon,36px);height:var(--ficon,36px);fill:currentColor;color:color-mix(in srgb, var(--ink-2) 60%, transparent)}.trpg-frame__badge{border:1px solid var(--frame);background:var(--card);width:22px;height:22px;color:var(--ink);border-radius:50%;place-items:center;display:grid;position:absolute;bottom:-5px;right:-5px}.trpg-stat{text-align:center;font-variant-numeric:tabular-nums;display:block}.trpg-stat__label{width:100%;color:var(--ink-2);font-size:12px;line-height:16px;display:inline-block}.trpg-stat__sp{white-space:pre;font-size:0}.trpg-stat__value{font-family:var(--font-serif);color:var(--ink);font-size:24px;font-weight:700;line-height:30px;display:inline-block}.trpg-stat--md .trpg-stat__value{font-size:20px;font-weight:600;line-height:26px}.trpg-stat__unit{font-family:var(--font-sans);color:var(--ink-2);font-size:14px;font-weight:400}.trpg-hpm{font-variant-numeric:tabular-nums;width:100%;display:block}.trpg-hpm__top{align-items:baseline;gap:8px;margin-bottom:4px;display:flex}.trpg-hpm__top .trpg-stat__label{text-align:left;white-space:nowrap;flex:1 0 auto;width:auto}.trpg-hpm__num{font-family:var(--font-serif);color:var(--ink);white-space:nowrap;font-size:18px;font-weight:600;line-height:24px}.trpg-hpm__num b{font-weight:600}.trpg-hpm__num i{color:var(--ink-2);margin:0 3px;font-size:14px;font-style:normal}.trpg-hpm__num span{color:var(--ink-2);font-size:14px}.trpg-hpm__track{background:var(--hp-track);border-radius:4px;width:100%;height:8px;display:block;position:relative;overflow:hidden}.trpg-hpm__fill{background:var(--hp);border-radius:4px;position:absolute;inset:0 auto 0 0}.trpg-hpm__temp{background:var(--gold);position:absolute;top:0;bottom:0}.trpg-tabs2{background:var(--panel);scrollbar-width:none;border-radius:14px;gap:4px;max-width:100%;padding:4px;display:inline-flex;overflow-x:auto}.trpg-tabs2::-webkit-scrollbar{display:none}.trpg-tabs2__tab{height:44px;color:var(--ink);white-space:nowrap;background:0 0;border:0;border-radius:10px;flex:none;justify-content:center;align-items:center;gap:8px;padding:0 16px;font-size:15px;font-weight:600;display:inline-flex}.trpg-tabs2__tab:hover:not([aria-selected=true]){background:color-mix(in srgb, var(--card) 60%, transparent)}.trpg-tabs2__tab[aria-selected=true]{background:var(--primary);color:var(--primary-ink)}.trpg-tabs2__count{background:var(--card);min-width:22px;color:var(--ink-2);text-align:center;font-variant-numeric:tabular-nums;border-radius:999px;padding:0 7px;font-size:12px;font-weight:600;line-height:20px;display:inline-block}.trpg-tabs2__tab[aria-selected=true] .trpg-tabs2__count{background:color-mix(in srgb, var(--primary-ink) 22%, transparent);color:var(--primary-ink)}.trpg-search{min-width:0;color:var(--ink-2);flex:160px;align-items:center;display:flex;position:relative}.trpg-search>.trpg-icon{pointer-events:none;position:absolute;left:13px}.trpg-search__input{border:1px solid var(--line);background:var(--card);width:100%;height:40px;color:var(--ink);border-radius:10px;padding:0 36px 0 38px}.trpg-search__input::placeholder{color:var(--ink-2)}.trpg-search__input::-webkit-search-cancel-button{appearance:none;display:none}.trpg-search__input:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);outline:none}.trpg-search__clear{width:28px;height:28px;color:var(--ink-2);background:0 0;border:0;border-radius:50%;place-items:center;display:grid;position:absolute;right:6px}.trpg-search__clear:hover{background:var(--panel)}.trpg-search__clear:after{content:\"\";position:absolute;inset:-8px}.trpg-toolrow{flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;display:flex}.trpg-toolrow .trpg-btn,.trpg-toolrow .trpg-select-trigger,.trpg-toolrow .trpg-combo__anchor{border-radius:10px;height:40px;min-height:40px}.trpg-toolrow .trpg-btn{padding:0 14px}.trpg-toolrow .trpg-btn--square{width:40px;padding:0}.trpg-toolrow__tag{flex:none;width:104px;min-width:0}.trpg-toolrow__sort{flex:none;width:164px;min-width:0}.trpg-toolrow__count{color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:auto;font-size:13px}.trpg-select-trigger__text{white-space:nowrap;align-items:baseline;gap:2px;min-width:0;display:inline-flex;overflow:hidden}.trpg-select-trigger__prefix{color:var(--ink-2)}.trpg-toolrow__tag .trpg-combo__input::placeholder{color:var(--ink);opacity:1}.trpg-combo__anchor{border-radius:10px}.trpg-pill.trpg-tag{border-color:var(--line);background:var(--panel);min-height:26px;color:var(--ink);padding:0 2px 0 10px;font-size:12px}.trpg-tag__x{width:24px;min-width:24px;min-height:24px;position:relative}.trpg-tag__x:after{content:\"\";position:absolute;inset:-4px}.trpg-emptystate{color:color-mix(in srgb, var(--ink-2) 50%, transparent);text-align:center;justify-items:center;gap:12px;padding:48px 16px;display:grid}.trpg-emptystate__text{color:var(--ink-2);margin:0;font-size:15px}.trpg-emptystate .trpg-btn{color:var(--ink)}.trpg-modal__head{background:var(--paper);color:var(--ink)}.trpg-modal__title{font-size:20px;font-weight:700}.trpg-window[data-layout=narrow] .trpg-modal__head{background:var(--chrome);color:var(--chrome-ink)}.trpg-dialog{border:1px solid var(--line);background:var(--card);border-radius:12px;gap:12px;padding:16px;display:grid}.trpg-dialog__foot{justify-content:flex-end;gap:8px;padding-top:4px;display:flex}.trpg-dialog__foot .trpg-btn,.trpg-dialog .trpg-input,.trpg-dialog .trpg-select-trigger{border-radius:10px;min-height:40px}.trpg-btn--danger{color:var(--primary-ink)}.trpg-inline-confirm{border-left:3px solid var(--danger);background:var(--panel);border-radius:0 10px 10px 0;flex-wrap:wrap;align-items:center;gap:8px;min-height:44px;padding:8px 12px;display:flex}.trpg-inline-confirm>span:first-child{flex:200px}.trpg-mini{align-items:center;gap:12px;min-width:0;display:flex}.trpg-mini__main{flex:1;min-width:0}.trpg-mini__name{font-family:var(--font-serif);text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;display:block;overflow:hidden}.trpg-mini__sub{color:var(--ink-2);text-overflow:ellipsis;white-space:nowrap;font-size:13px;display:block;overflow:hidden}.trpg-mini__sub .is-strong{color:var(--ink);font-weight:600}@media (prefers-color-scheme:dark){.trpg-check input{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}}", UR = ".trpg-root{z-index:100000;width:0;height:0;position:fixed;top:0;left:0}.trpg-ball{border:2px solid var(--gold);background:var(--chrome);width:48px;height:48px;color:var(--chrome-ink);cursor:grab;touch-action:none;border-radius:50%;place-items:center;padding:0;display:grid;position:fixed;box-shadow:0 2px 8px #00000059}.trpg-window{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-float);color:var(--ink);position:fixed;overflow:hidden}.trpg-window[data-fullscreen=true]{border:0;border-radius:0;height:100dvh;inset:0}.trpg-shell{width:100%;height:100%;display:flex}.trpg-window[data-layout=narrow] .trpg-shell{padding-bottom:env(safe-area-inset-bottom);background:var(--paper);flex-direction:column}.trpg-window[data-fullscreen=true] .trpg-shell{padding-top:env(safe-area-inset-top);background:var(--chrome)}.trpg-side{background:var(--chrome);width:176px;color:var(--chrome-ink);flex-direction:column;flex:none;display:flex}.trpg-window[data-layout=mid] .trpg-side{width:56px}.trpg-side__brand{cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;height:52px;font-family:var(--font-serif);border-bottom:1px solid var(--chrome-hover);color:var(--gold);align-items:center;gap:10px;padding:0 16px;font-size:16px;display:flex}.trpg-window[data-layout=mid] .trpg-side__brand{justify-content:center;padding:0}.trpg-side__list{gap:4px;margin:0;padding:8px;list-style:none;display:grid}.trpg-side__bottom{margin-top:auto}.trpg-nav{border-radius:var(--radius-sm);width:100%;min-height:44px;color:var(--chrome-ink);text-align:left;background:0 0;border:0;align-items:center;gap:12px;padding:0 12px;display:flex}.trpg-window[data-layout=mid] .trpg-nav{justify-content:center;padding:0}.trpg-nav:hover{background:var(--chrome-hover)}.trpg-nav[aria-current=page]{background:var(--chrome-hover);box-shadow:inset 3px 0 0 var(--gold)}.trpg-nav:focus-visible,.trpg-tab:focus-visible,.trpg-side__brand:focus-visible{outline-color:var(--gold)}.trpg-main{background:var(--paper);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-head{border-bottom:1px solid var(--line);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:12px;height:52px;padding:0 12px 0 20px;display:flex}.trpg-head__title{font-family:var(--font-serif);flex:1;margin:0;font-size:19px;font-weight:600}.trpg-head__chips{align-items:center;gap:8px;display:flex}.trpg-content{outline:none;flex:1;min-height:0;padding:16px 20px 88px;position:relative;overflow:auto}.trpg-window[data-layout=narrow] .trpg-head{background:var(--chrome);height:48px;color:var(--chrome-ink);border-bottom:0;padding:0 8px 0 16px}.trpg-window[data-fullscreen=true] .trpg-head{cursor:default}.trpg-window[data-layout=narrow] .trpg-content{padding:12px 16px 88px}.trpg-tabs{background:var(--chrome);height:56px;color:var(--chrome-ink);flex:none;display:flex}.trpg-tab{min-width:64px;color:var(--chrome-ink);background:0 0;border:0;flex-direction:column;flex:1;justify-content:center;align-items:center;gap:2px;font-size:12px;display:flex}.trpg-tab[aria-current=page]{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}.trpg-resize{cursor:nwse-resize;touch-action:none;z-index:30;background:linear-gradient(135deg, transparent 50%, var(--line) 50%, var(--line) 58%, transparent 58%, transparent 70%, var(--line) 70%, var(--line) 78%, transparent 78%);width:22px;height:22px;position:absolute;bottom:0;right:0}.page-stack{gap:16px;display:grid}.page-intro{color:var(--ink-2);margin:0}.subpage-back{border-radius:var(--radius-sm);min-height:36px;color:var(--primary);background:0 0;border:0;align-items:center;gap:2px;margin:0 0 8px -8px;padding:0 8px;display:inline-flex}.subpage-back:hover{background:var(--panel)}.trpg-body{flex:1;min-height:0;display:flex;position:relative}.trpg-body .trpg-content{flex:1}.trpg-dice-btn{z-index:6;border:2px solid var(--gold);background:var(--primary);width:52px;height:52px;color:var(--primary-ink);box-shadow:var(--shadow-float);border-radius:50%;place-items:center;padding:0;display:grid;position:absolute;bottom:20px;right:20px}.trpg-dice-btn[aria-pressed=true]{box-shadow:0 0 0 3px var(--gold), var(--shadow-float)}.trpg-window[data-layout=narrow] .trpg-dice-btn{bottom:16px;right:16px}.trpg-dice{z-index:30;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:360px;max-height:calc(100dvh - 16px);box-shadow:var(--shadow-float);flex-direction:column;display:flex;position:fixed;overflow:hidden}.trpg-dice__head{background:var(--chrome);min-height:44px;color:var(--chrome-ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:8px;padding:0 6px 0 14px;display:flex}.trpg-dice__title{font-family:var(--font-serif);flex:1;font-size:16px}.trpg-dice__body{gap:14px;padding:14px 12px;display:grid;overflow-y:auto}.trpg-dice__lbl{color:var(--ink-2);justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;font-size:12.5px;display:flex}.trpg-dice__row{align-items:center;gap:8px;display:flex}.trpg-dice__formula{min-height:44px;font-family:var(--font-serif);letter-spacing:.02em;font-size:20px}.trpg-dice__formula[aria-invalid=true]{border-color:var(--danger)}.trpg-dice__err{min-height:18px;margin-top:4px}.trpg-dice__faces{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;display:grid}.trpg-dice__face{min-width:0;position:relative}.trpg-dice__die{border:1px solid var(--line);background:var(--card);width:100%;min-height:58px;color:var(--ink);border-radius:8px;align-content:center;justify-items:center;gap:2px;padding:4px 0 3px;font-size:12px;display:grid;position:relative}.trpg-dice__die:hover{border-color:var(--primary)}.trpg-dice__die[data-n]:not([data-n=\"0\"]){border-color:var(--primary);background:var(--panel)}.trpg-dice__die .trpg-die{width:28px;height:28px}.trpg-dice__cnt{background:var(--primary);min-width:20px;height:20px;color:var(--primary-ink);font-variant-numeric:tabular-nums;border-radius:10px;padding:0 5px;font-size:12px;line-height:20px;position:absolute;top:-6px;right:-4px}.trpg-dice__minus{border:1px solid var(--line);background:var(--card);width:22px;height:22px;color:var(--ink);border-radius:50%;padding:0;font-size:14px;line-height:18px;position:absolute;top:-8px;left:-6px}.trpg-dice__minus:after{content:\"\";position:absolute;inset:-10px}.trpg-die polygon,.trpg-die .trpg-die__body{fill:var(--card);stroke:var(--ink-2);stroke-width:3px;stroke-linejoin:round}.trpg-die .trpg-die__facet{fill:none;stroke:var(--line);stroke-width:2px;stroke-linejoin:round}.trpg-die text{fill:var(--ink);font-family:var(--font-serif);font-weight:600}.trpg-dice__die .trpg-die polygon,.trpg-dice__die .trpg-die .trpg-die__body{fill:none}.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die polygon,.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die .trpg-die__body{stroke:var(--primary)}.trpg-dice__adjust{flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;display:flex}.trpg-dice__step{align-items:center;gap:4px;display:inline-flex}.trpg-dice__step button{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:40px;height:40px;color:var(--ink);font-size:18px}.trpg-dice__step output{text-align:center;font-variant-numeric:tabular-nums;min-width:2.6em;font-weight:600}.trpg-dice__small{color:var(--ink-2);font-size:12px}.trpg-dice__step .trpg-dice__small{margin-right:4px}.trpg-dice .trpg-seg button{min-height:40px}.trpg-seg.is-off{opacity:.45}.trpg-seg.is-off button{cursor:not-allowed}.trpg-dice__roll{width:100%;min-height:54px;font-family:var(--font-serif);letter-spacing:.3em;text-indent:.3em;font-size:19px}.trpg-dice__result{border:1px solid var(--line);background:var(--card);border-radius:10px;justify-items:center;gap:8px;padding:14px 12px 12px;display:grid}.trpg-dice__hero{width:124px;height:124px}.trpg-dice__hero .trpg-die{width:100%;height:100%;overflow:visible}.trpg-dice__hero.is-rolling .trpg-die{animation:.46s ease-in-out trpg-tumble}.trpg-dice__hero.is-nat20 .trpg-die polygon,.trpg-dice__hero.is-nat20 .trpg-die .trpg-die__body{stroke:var(--gold);stroke-width:5px;fill:color-mix(in srgb, var(--gold) 22%, var(--card))}.trpg-dice__hero.is-nat1 .trpg-die polygon,.trpg-dice__hero.is-nat1 .trpg-die .trpg-die__body{stroke:var(--danger);stroke-width:5px;fill:color-mix(in srgb, var(--danger) 18%, var(--card))}.trpg-dice__line{min-height:22px;color:var(--ink-2);text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.trpg-dice__minis{flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:36px;display:flex}.trpg-dice__mini{width:38px;height:38px}.trpg-dice__mini.is-dim{opacity:.35}.trpg-dice__mini .trpg-die{width:100%;height:100%}.trpg-dice__const{background:var(--panel);border:1px solid var(--line);font-variant-numeric:tabular-nums;border-radius:15px;place-items:center;min-width:38px;height:30px;padding:0 8px;font-weight:600;display:inline-grid}.trpg-dice__send{grid-template-columns:1.5fr 1fr;gap:8px;width:100%;display:grid}.trpg-dice__send .trpg-input{grid-column:1/-1}.trpg-dice__send .trpg-btn{min-height:44px}.trpg-dice__recent{border:1px solid var(--line);width:100%;min-height:44px;color:var(--ink-2);text-align:left;background:0 0;border-radius:8px;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;display:flex}.trpg-dice__recent b{color:var(--ink);font-family:var(--font-serif);font-size:16px}.trpg-dice__list{max-height:180px;margin:4px 0 0;padding:0;list-style:none;overflow-y:auto}.trpg-dice__list button{border:0;border-bottom:1px solid var(--line);text-align:left;background:0 0;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:4px 10px;display:flex}.trpg-dice__list button:hover{background:var(--panel)}.trpg-dice__list b{min-width:2em;font-family:var(--font-serif);font-size:17px}.trpg-dice__list span{overflow-wrap:anywhere;min-width:0;color:var(--ink-2);flex:1;font-size:13px}.trpg-dice__list time{color:var(--ink-2);font-size:12px}.trpg-dice__clear{justify-content:flex-end;display:flex}@keyframes trpg-tumble{0%{transform:rotate(0)scale(1)}45%{transform:rotate(200deg)scale(.88)}to{transform:rotate(360deg)scale(1)}}.trpg-hero{border-radius:var(--radius);background:var(--primary);width:100%;min-height:170px;color:var(--primary-ink);text-align:left;box-shadow:var(--shadow-card);border:0;align-content:end;gap:8px;padding:22px 24px;transition:transform .12s,box-shadow .12s;display:grid}button.trpg-hero:hover:not(:disabled){box-shadow:var(--shadow-float);transform:translateY(-1px)}button.trpg-hero:active{transform:none}button.trpg-hero:disabled{opacity:.6;cursor:not-allowed}.trpg-hero--idle{background:var(--panel);color:var(--ink-2)}.trpg-hero__title{font-family:var(--font-serif);font-size:26px;font-weight:600}.trpg-hero__sub{opacity:.9}.trpg-hero__go{justify-self:end;font-weight:600}.trpg-window[data-layout=narrow] .trpg-hero{min-height:140px;padding:18px}.trpg-link{color:var(--primary);background:0 0;border:0;justify-self:start;min-height:36px;padding:0;text-decoration:underline}.trpg-banner{border-radius:var(--radius);background:var(--chrome);color:#f4ecdd;height:200px;position:relative;overflow:hidden}.trpg-banner--pattern{background:repeating-linear-gradient(45deg, var(--chrome) 0 14px, color-mix(in srgb, var(--chrome) 88%, var(--gold)) 14px 28px)}.trpg-banner__img{object-fit:cover;object-position:70% 50%;opacity:0;width:100%;height:100%;transition:opacity .24s;position:absolute;inset:0}.trpg-banner__img.is-loaded{opacity:1}.trpg-banner__text{background:linear-gradient(#0000,#2b211cbf);gap:2px;padding:40px 20px 14px;display:grid;position:absolute;inset:auto 0 0}.trpg-banner__title{color:inherit;font-family:var(--font-serif);text-align:left;background:0 0;border:0;justify-self:start;padding:0;font-size:26px;font-weight:600}.trpg-banner__line{flex-wrap:wrap;align-items:center;gap:10px;font-size:14px;display:flex}.trpg-banner__state{color:inherit;background:0 0;border:0;padding:0}.trpg-banner__state[data-dirty=true]{color:#f3b45a}.trpg-window[data-layout=narrow] .trpg-banner{height:140px}.trpg-overview{grid-template-columns:repeat(4,1fr);gap:12px;display:grid}.trpg-window[data-layout=mid] .trpg-overview,.trpg-window[data-layout=narrow] .trpg-overview{grid-template-columns:repeat(2,1fr)}.trpg-cell{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);min-height:88px;box-shadow:var(--shadow-card);text-align:left;align-content:start;gap:4px;padding:12px 14px;transition:transform .12s,border-color .12s;display:grid}.trpg-cell:hover{border-color:var(--primary);transform:translateY(-1px)}.trpg-cell:active{transform:none}.trpg-cell__title{align-items:center;gap:6px;font-weight:600;display:flex}.trpg-cell__line{color:var(--ink-2);font-size:13px}.trpg-empty--tight{text-align:left;padding:8px 0}.trpg-chip{max-width:260px}.trpg-chip__name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-badge--button{cursor:pointer}.trpg-dice__shell{flex:1;min-height:0;display:flex}.trpg-dice__main{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-dice__main>.trpg-dice__body{overflow-y:auto}.trpg-dice[data-narrow=true]{max-height:calc(100dvh - 76px)}.trpg-dice[data-narrow=true] .trpg-dice__shell{flex-direction:column}.trpg-rp{background:var(--card);flex-direction:column;flex:1;min-height:0;display:flex}.trpg-rp__body{flex:1;align-content:start;gap:8px;min-height:0;padding:8px 14px;display:grid;overflow-y:auto}.trpg-rp .trpg-seg{width:fit-content;max-width:100%}.trpg-rp .trpg-seg button{min-height:32px;padding:2px 12px}.trpg-rp__sec{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);gap:6px;padding-bottom:8px;display:grid}.trpg-rp__sec:last-child{border-bottom:0}.trpg-rp__sec h4{color:var(--ink-2);margin:0;font-size:12px;font-weight:600}.trpg-rp__title{font:700 17px/1.3 var(--font-serif);margin:0}.trpg-rp__pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.trpg-rp__rows{gap:0;margin:0;padding:0;list-style:none;display:grid}.trpg-rp__row{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);align-items:center;gap:8px;min-height:30px;font-size:14px;display:flex}.trpg-rp__row:last-child{border-bottom:0}.trpg-rp__row>span{flex:1;min-width:0}.trpg-rp__row b{font-variant-numeric:tabular-nums}.trpg-rp__row.is-off{opacity:.4;text-decoration:line-through}.trpg-rp__hint{color:var(--ink-2);font-size:12px;font-weight:400}.trpg-rp__warn{background:color-mix(in srgb, var(--gold) 16%, var(--card));border-radius:8px;margin:0;padding:6px 10px;font-size:13px}.trpg-rp__addrow{gap:4px;display:flex}.trpg-rp__form{grid-template-columns:1fr 1fr auto;align-items:center;gap:6px;display:grid}.trpg-rp__form .trpg-field__error{grid-column:1/-1}.trpg-rp__passive{color:var(--ink-2);align-items:center;gap:8px;font-size:13px;display:flex}.trpg-rp__dc{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-input.trpg-rp__dcnum{text-align:center;width:72px;min-height:44px;font:700 22px var(--font-serif);flex:none}.trpg-rp__round{border:1px solid var(--line);background:var(--card);border-radius:50%;place-items:center;width:34px;height:34px;padding:0;display:inline-grid}.trpg-rp__chips{flex-wrap:wrap;gap:6px;width:100%;display:flex}.trpg-rp__chip{border:1px solid var(--line);background:var(--card);font-variant-numeric:tabular-nums;border-radius:8px;width:40px;height:34px;padding:0}.trpg-rp__chip[aria-pressed=true]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-rp__contest{gap:8px;display:grid}.trpg-rp__final{margin:0;font-size:14px;font-weight:600}.trpg-rp__final .trpg-rp__hint{margin-top:2px;display:block}.trpg-rp__foot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--card);flex:none;gap:8px;display:grid}.trpg-rp__formula{margin:0;font:700 15px ui-monospace,SF Mono,Menlo,monospace}.trpg-rp__result{border:1px dashed var(--line);border-radius:10px;align-items:center;gap:14px;height:104px;padding:0 14px;display:flex;overflow:hidden}.trpg-rp__total{border:2px solid var(--frame);min-width:64px;height:64px;font:700 28px var(--font-serif);border-radius:14px;place-items:center;padding:0 6px;display:inline-grid}.trpg-rp__verdict{gap:2px;min-width:0;display:grid}.trpg-rp__verdict span{font:700 15px var(--font-serif)}.trpg-rp__verdict .is-pass,.trpg-rp__verdict .is-win{color:var(--primary)}.trpg-rp__verdict .is-fail,.trpg-rp__verdict .is-lose{color:var(--danger)}.trpg-rp__verdict small{color:var(--ink-2);overflow-wrap:anywhere;font-size:12.5px}.trpg-rp__roll{width:100%;min-height:46px;font:700 17px var(--font-serif);letter-spacing:.2em}.trpg-rp input[type=checkbox]{appearance:none;border:1.5px solid var(--line);background:var(--card);cursor:pointer;border-radius:6px;flex:none;width:22px;height:22px;margin:0;position:relative}.trpg-rp input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}.trpg-rp input[type=checkbox]:checked:after{content:\"\";border:solid var(--primary-ink);border-width:0 2px 2px 0;width:6px;height:11px;position:absolute;top:2px;left:6px;transform:rotate(45deg)}.trpg-rp__act{align-items:center;gap:12px;display:flex}.trpg-rp__act .trpg-rp__formula{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-rp__act .trpg-rp__roll{flex:none;width:auto;min-width:140px;padding:0 22px}.trpg-rp__result{height:92px}.trpg-rp__sec h4{color:var(--ink);font-size:13px}.trpg-rp__body{padding-bottom:20px}.trpg-input.trpg-rp__dcnum{appearance:textfield;box-shadow:none}.trpg-rp__dcnum::-webkit-inner-spin-button{appearance:none;margin:0}.trpg-rp__dcnum::-webkit-outer-spin-button{appearance:none;margin:0}.trpg-rp__roll{letter-spacing:.08em}.trpg-rp__result.is-empty{height:44px}.trpg-rp__dcline{color:var(--ink-2);margin:0;font-size:12.5px}", WR = ":host{all:initial;pointer-events:inherit;--paper:#f4ecdd;--panel:#eee5d3;--card:#fffcf6;--line:#cbbca3;--ink:#2b211c;--ink-2:#6c6255;--primary:#7a2e26;--primary-ink:#fffcf6;--gold:#b8954a;--danger:#a3352b;--unsaved:#d9892b;--chrome:#2b211c;--chrome-ink:#f1ebdc;--chrome-hover:#3a2d26;--ok:#3f7a3a;--scrim:#2b211c73;--radius:10px;--radius-sm:6px;--radius-xs:4px;--shadow-card:0 1px 2px #2b211c14, 0 2px 8px #2b211c0f;--shadow-float:0 8px 28px #00000047;--hp:#8c2f2a;--hp-track:color-mix(in srgb, var(--line) 55%, var(--card));--frame:color-mix(in srgb, var(--ink) 75%, var(--gold));--shadow-card-hover:0 2px 4px #2b211c1a, 0 6px 16px #2b211c1a;--font-serif:\"Songti SC\", \"Noto Serif SC\", Georgia, serif;--font-sans:\"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;font-family:var(--font-sans);color:var(--ink);font-size:14px;line-height:1.5}@media (prefers-color-scheme:dark){:host{--paper:#20231f;--panel:#2b3029;--card:#181c18;--line:#515849;--ink:#f1ebdc;--ink-2:#bcbbaa;--primary:#e6bf73;--primary-ink:#20231f;--gold:#e6bf73;--danger:#e07a6e;--unsaved:#e8a13a;--chrome:#121411;--chrome-ink:#f1ebdc;--chrome-hover:#232720;--ok:#8cc47f;--scrim:#0000008c;--hp:#c8574c;--frame:color-mix(in srgb, var(--gold) 60%, var(--chrome))}}*,:before,:after{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:2px solid var(--primary);outline-offset:2px}.trpg-sr-only{clip:rect(0 0 0 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}@media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}", GR = "trpg-assistant-root";
-function KR(e) {
-	if (document.getElementById(GR)) return null;
+}), JR = ".trpg-btn{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);min-height:36px;color:var(--ink);font:inherit;cursor:pointer;white-space:nowrap;justify-content:center;align-items:center;gap:6px;padding:4px 14px;display:inline-flex}.trpg-btn:hover:not(:disabled){border-color:var(--primary)}.trpg-btn:disabled{opacity:.5;cursor:not-allowed}.trpg-btn--primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-btn--danger{background:var(--danger);color:#fffcf6;border-color:var(--danger)}.trpg-btn--quiet{background:0 0;border-color:#0000}.trpg-btn--small{min-height:30px;padding:2px 10px;font-size:13px}.trpg-icon-btn{border-radius:var(--radius-sm);min-width:36px;min-height:36px;color:inherit;cursor:pointer;background:0 0;border:1px solid #0000;justify-content:center;align-items:center;display:inline-flex}.trpg-icon-btn:hover{border-color:currentColor}.trpg-input{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);padding:4px 10px}.trpg-input:disabled{opacity:.6}textarea.trpg-input{resize:vertical;min-height:72px}.trpg-field{gap:4px;display:grid}.trpg-field__label{color:var(--ink-2);font-size:13px}.trpg-field__hint{color:var(--ink-2);font-size:12.5px}.trpg-field__error{color:var(--danger);font-size:12.5px}.trpg-select-trigger{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:100%;min-height:36px;color:var(--ink);cursor:pointer;justify-content:space-between;align-items:center;gap:8px;padding:4px 10px;display:inline-flex}.trpg-select-content,.trpg-menu{min-width:var(--reka-select-trigger-width,160px);background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);box-shadow:var(--shadow-float);z-index:100003;color:var(--ink)}.trpg-select-content{max-height:min(8 * 36px, var(--reka-select-content-available-height));overflow:hidden}.trpg-select-viewport{max-height:inherit;padding:4px;overflow-y:auto}.trpg-select-item,.trpg-menu__item{border-radius:var(--radius-xs);cursor:pointer;min-height:40px;color:var(--ink);justify-content:space-between;align-items:center;gap:12px;padding:4px 10px;display:flex}.trpg-menu{min-width:168px;padding:4px}.trpg-select-item[data-highlighted],.trpg-menu__item[data-highlighted]{background:var(--panel);outline:none}.trpg-select-item[data-state=checked]{color:var(--primary);font-weight:600}.trpg-menu__item--danger{color:var(--danger)}.trpg-menu__item[data-disabled]{opacity:.5;cursor:not-allowed}.trpg-menu__reason{color:var(--ink-2);font-size:12px}.trpg-seg{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);display:inline-flex;overflow:hidden}.trpg-seg button{min-height:34px;color:var(--ink);background:0 0;border:0;padding:2px 14px}.trpg-seg button+button{border-left:1px solid var(--line)}.trpg-seg button[aria-pressed=true]{background:var(--primary);color:var(--primary-ink)}.trpg-badge{border-radius:var(--radius-xs);background:var(--panel);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap;padding:0 8px;font-size:12px;font-weight:600;line-height:20px;display:inline-block}.trpg-badge[data-tone=gold]{color:var(--ink);border-color:var(--gold);background:color-mix(in srgb, var(--gold) 28%, transparent)}.trpg-badge[data-tone=ok],.trpg-badge[data-status=pass]{color:var(--ok);border-color:var(--ok)}.trpg-badge[data-tone=danger],.trpg-badge[data-status=fail],.trpg-badge[data-status=error]{color:var(--danger);border-color:var(--danger)}.trpg-badge[data-tone=warn],.trpg-badge[data-status=waiting]{color:var(--unsaved);border-color:var(--unsaved)}.trpg-badge[data-tone=gold]{color:var(--gold);border-color:var(--gold)}.trpg-pill{border:1px solid var(--line);background:var(--card);border-radius:999px;align-items:center;gap:4px;min-height:30px;padding:0 12px;display:inline-flex}.trpg-switch-wrap{color:var(--ink-2);align-items:center;gap:6px;min-height:44px;display:inline-flex}.trpg-switch{border:2px solid var(--line);background:0 0;border-radius:999px;width:42px;height:24px;padding:0;transition:background .16s,border-color .16s;position:relative}.trpg-switch__thumb{background:var(--ink-2);border-radius:50%;width:16px;height:16px;transition:transform .16s,background .16s;position:absolute;top:2px;left:2px}.trpg-switch[data-on=true]{background:var(--primary);border-color:var(--primary)}.trpg-switch[data-on=true] .trpg-switch__thumb{background:var(--primary-ink);transform:translate(18px)}.trpg-switch:disabled{opacity:.55;cursor:not-allowed}.trpg-check{cursor:pointer;align-items:center;gap:8px;min-height:36px;display:inline-flex}.trpg-check[data-disabled=true]{opacity:.6;cursor:not-allowed}.trpg-check input{width:18px;height:18px;accent-color:var(--primary);flex:none;margin:0}.trpg-term{color:var(--ink);text-align:left;text-underline-offset:4px;cursor:pointer;background:0 0;border:0;padding:0;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-decoration-thickness:1.5px;display:inline}.trpg-term:hover,.trpg-term:focus-visible{text-decoration-style:solid;-webkit-text-decoration-color:var(--gold);text-decoration-color:var(--gold)}.trpg-list{margin:0;padding:0;list-style:none}.trpg-row{border-bottom:1px solid var(--line);align-items:center;gap:12px;min-height:52px;padding:6px 4px;display:flex}.trpg-row__main{flex:1;min-width:0}.trpg-row__title{overflow-wrap:anywhere;font-weight:600}.trpg-row__meta{color:var(--ink-2);font-size:12.5px}.trpg-row__end{flex:none;align-items:center;gap:8px;display:flex}.trpg-group{font-family:var(--font-serif);color:var(--ink-2);margin:16px 0 4px;font-size:15px}.trpg-skeleton{background:linear-gradient(90deg, var(--panel), var(--line), var(--panel));opacity:.6;border-radius:4px;height:14px}.trpg-empty{text-align:center;color:var(--ink-2);padding:24px 8px}.trpg-progress{background:var(--panel);border-radius:3px;width:120px;height:6px;overflow:hidden}.trpg-progress>span{background:var(--primary);height:100%;transition:width .2s;display:block}.trpg-icon{vertical-align:-3px;flex:none}.trpg-toasts{left:50%;bottom:max(16px, env(safe-area-inset-bottom));z-index:100005;gap:8px;width:min(92vw,420px);display:grid;position:fixed;transform:translate(-50%)}.trpg-toast{border-radius:var(--radius-sm);background:var(--chrome);color:var(--chrome-ink);border-left:4px solid var(--gold);box-shadow:var(--shadow-float);align-items:center;gap:10px;padding:10px 12px;display:flex}.trpg-toast[data-kind=error]{border-left-color:var(--danger)}.trpg-toast[data-kind=success]{border-left-color:var(--ok)}.trpg-toast__text{flex:1}.trpg-toast button{color:var(--gold);background:0 0;border:0;min-height:32px;padding:0 8px;font-weight:600}@media (width<=480px){.trpg-toasts{bottom:calc(64px + env(safe-area-inset-bottom))}}.trpg-toast-enter-from,.trpg-toast-leave-to{opacity:0;transform:translateY(8px)}.trpg-toast-enter-active,.trpg-toast-leave-active{transition:opacity .16s,transform .16s}.trpg-modal-root{display:contents}.trpg-modal{background:var(--scrim);z-index:20;justify-content:center;align-items:center;padding:16px;display:flex;position:absolute;inset:0}.trpg-modal__card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:min(640px,100%);height:min(80%,640px);box-shadow:var(--shadow-float);flex-direction:column;animation:.16s ease-out trpg-pop;display:flex;overflow:hidden}.trpg-modal[data-variant=drawer]{justify-content:flex-end;padding:0}.trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:0;width:min(440px,100%);height:100%;animation:.2s ease-out trpg-slide}.trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true]{width:min(var(--trpg-drawer-width,440px), 100%)}.trpg-modal[data-variant=confirm] .trpg-modal__card{width:min(440px,100%);height:auto;max-height:90%}.trpg-modal[data-variant=confirm] .trpg-modal__page{position:relative}.trpg-modal__card:has(.trpg-library-card){width:min(1180px,100%);height:92%}.trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true]{width:min(var(--trpg-drawer-width,640px), 100%);height:min(86%, var(--trpg-dlg-h,800px));background:var(--card);border-radius:16px}.trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__page{flex-direction:column;padding:0;display:flex;overflow:hidden}.trpg-modal__head{border-bottom:1px solid var(--line);background:var(--panel);flex:none;align-items:center;gap:8px;min-height:52px;padding:4px 8px 4px 16px;display:flex}.trpg-modal__title{min-width:0;font-family:var(--font-serif);text-overflow:ellipsis;white-space:nowrap;flex:1;margin:0;font-size:17px;overflow:hidden}.trpg-modal__back{border-radius:var(--radius-sm);max-width:40%;min-height:36px;color:var(--primary);white-space:nowrap;background:0 0;border:0;align-items:center;gap:2px;margin-left:-8px;padding:0 8px;display:inline-flex}.trpg-modal__back span{text-overflow:ellipsis;overflow:hidden}.trpg-modal__back:hover{background:var(--card)}.trpg-modal__pages{flex:1;min-height:0;position:relative}.trpg-modal__page{padding:16px;transition:opacity .16s,transform .16s,visibility;position:absolute;inset:0;overflow:auto}.trpg-modal__page.is-under{opacity:0;visibility:hidden;transition:opacity .16s,transform .16s,visibility 0s .16s;transform:translate(-24px)}.trpg-page-enter-from,.trpg-page-leave-to{opacity:0;transform:translate(24px)}.trpg-page-enter-active,.trpg-page-leave-active{transition:opacity .16s,transform .16s}.trpg-modal[data-variant=confirm] .trpg-page-leave-active{position:absolute;inset:0}@keyframes trpg-pop{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}@keyframes trpg-slide{0%{opacity:0;transform:translate(32px)}to{opacity:1;transform:none}}.trpg-confirm{gap:12px;display:grid}.trpg-confirm__message{margin:0}.trpg-confirm__details{color:var(--ink-2);margin:0;padding-left:18px}.trpg-confirm__actions{justify-content:flex-end;gap:8px;margin-top:4px;display:flex}.trpg-window[data-layout=narrow] .trpg-modal{background:var(--paper);align-items:stretch;padding:0}.trpg-window[data-layout=narrow] .trpg-modal__card{border:0;border-radius:0;width:100%;height:100%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer]:has(.trpg-modal__card[data-sized=true]){background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true]{border:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0;width:100%;height:92%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true] .trpg-modal__head{background:var(--panel);min-height:56px;color:var(--ink);padding-top:10px;position:relative}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true] .trpg-modal__head:before{content:\"\";background:var(--line);border-radius:2px;width:36px;height:4px;position:absolute;top:6px;left:50%;transform:translate(-50%)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card[data-sized=true] .trpg-modal__back{color:var(--primary)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog]:has(.trpg-modal__card[data-sized=true]){background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true]{border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;height:92%;animation:.2s ease-out trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__head{background:var(--card);min-height:56px;color:var(--ink);border-bottom:1px solid var(--line);padding-top:10px;position:relative}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__head:before{content:\"\";background:var(--line);border-radius:2px;width:36px;height:4px;position:absolute;top:6px;left:50%;transform:translate(-50%)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__back{color:var(--primary)}@keyframes trpg-sheet{0%{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm]{background:var(--scrim);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm] .trpg-modal__card{border-radius:var(--radius) var(--radius) 0 0;height:auto}.trpg-window[data-layout=narrow] .trpg-confirm__actions{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions .trpg-btn{min-height:44px}.trpg-window[data-layout=narrow] .trpg-modal__card:has(.trpg-library-card){width:min(1180px,100%);height:92%}.trpg-modal__card:has(.trpg-library-card) .trpg-modal__page{padding:0}.trpg-modal__head{background:var(--chrome);min-height:48px;color:var(--chrome-ink);border-bottom:0}.trpg-window[data-layout=narrow] .trpg-modal__back{color:var(--gold)}.trpg-window[data-layout=narrow] .trpg-modal__back,.trpg-window[data-layout=narrow] .trpg-modal__close{min-width:44px;min-height:44px}.trpg-drawer{align-content:start;gap:14px;min-height:100%;display:grid}.trpg-drawer__current{border-bottom:1px solid var(--line);gap:8px;padding-bottom:12px;display:grid}.trpg-drawer__name{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__title{font-family:var(--font-serif);overflow-wrap:anywhere;font-size:20px;font-weight:600}.trpg-drawer__buttons{flex-wrap:wrap;gap:8px;display:flex}.trpg-drawer__filter{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-drawer__filter .trpg-input{flex:1;min-width:140px}.trpg-drawer__bottom{border-top:1px solid var(--line);background:var(--paper);justify-content:space-between;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-warn{color:var(--unsaved)}.trpg-saves{margin:0;padding:0;list-style:none}.trpg-save{border-bottom:1px solid var(--line);align-items:flex-start;gap:8px;padding:10px 4px;display:flex}.trpg-save[data-current=true]{background:color-mix(in srgb, var(--gold) 14%, transparent)}.trpg-save__main{flex:1;gap:2px;min-width:0;display:grid}.trpg-save__top{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.trpg-save__name{overflow-wrap:anywhere;font-weight:600}.trpg-save__time{color:var(--ink-2);margin-left:auto;font-size:12.5px}.trpg-save__rename{flex:1;min-height:32px}.trpg-save__noteedit{gap:6px;display:grid}.trpg-save__noteactions{justify-content:flex-end;gap:6px;display:flex}.trpg-folds{gap:6px;display:grid}.trpg-folds__tabs{flex-wrap:wrap;gap:4px;display:flex}.trpg-popover{z-index:100003;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);width:min(320px,92vw);box-shadow:var(--shadow-float);padding:12px}.trpg-confirm__actions--stack{flex-wrap:wrap;justify-content:flex-end}.trpg-import__ok{color:var(--ok);margin:0;font-weight:600}.trpg-compare{border-collapse:collapse;width:100%;font-size:13px}.trpg-compare th,.trpg-compare td{border-bottom:1px solid var(--line);text-align:left;padding:4px 8px;font-weight:400}.trpg-compare thead th{color:var(--ink-2)}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions--stack .trpg-btn{min-height:44px}.trpg-wizard{flex-direction:column;min-height:100%;display:flex}.trpg-wizard__body{flex:1;padding:8px 0 16px}.trpg-wizard__foot{border-top:1px solid var(--line);background:var(--paper);justify-content:flex-end;gap:8px;margin:0 -16px -16px;padding:12px 16px;display:flex;position:sticky;bottom:-16px}.trpg-steps{gap:4px;margin:0;padding:0;list-style:none;display:flex}.trpg-steps li{flex:1}.trpg-steps button{border:0;border-bottom:2px solid var(--line);width:100%;min-height:36px;color:var(--ink-2);background:0 0;justify-content:center;align-items:center;gap:6px;padding:0 6px;display:flex}.trpg-steps button:disabled{cursor:default}.trpg-steps li[data-state=current] button{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}.trpg-steps li[data-state=done] button{color:var(--ink);border-bottom-color:var(--gold);cursor:pointer}.trpg-steps li[data-skipped=true] button{opacity:.45}.trpg-steps__n{border:1px solid;border-radius:50%;place-items:center;width:20px;height:20px;font-size:12px;display:inline-grid}.trpg-steps__compact{color:var(--ink-2);margin:0;font-size:13px;display:none}.trpg-window[data-layout=narrow] .trpg-steps{display:none}.trpg-window[data-layout=narrow] .trpg-steps__compact{display:block}.trpg-step-title{font-family:var(--font-serif);margin:0;font-size:17px}.trpg-step-head{flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;display:flex}.trpg-step-actions{gap:6px;display:inline-flex}.trpg-rulecards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;display:grid}.trpg-rulecard{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow-card);cursor:pointer;gap:10px;padding:14px;display:flex}.trpg-rulecard[aria-checked=true]{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary), var(--shadow-card)}.trpg-rulecard[data-status=coming]{opacity:.55;cursor:default}.trpg-rulecard__mark{color:var(--primary);font-size:18px;line-height:1.3}.trpg-rulecard__body{justify-items:start;gap:4px;display:grid}.trpg-radio{cursor:pointer}.trpg-radio input{width:18px;height:18px;accent-color:var(--primary)}.trpg-detail-links{gap:6px;margin:0;padding:0;list-style:none;display:grid}.trpg-info__line{margin:0}.trpg-vlist{height:100%;min-height:160px;position:relative;overflow-y:auto}.trpg-vlist__space{position:relative}.trpg-vlist__row{border-bottom:1px solid var(--line);align-items:center;gap:10px;padding:0 4px;display:flex;position:absolute;left:0;right:0}.trpg-blocks{gap:8px;display:grid}.trpg-blocks__p{margin:0}.trpg-blocks__h h4{font-family:var(--font-serif);margin:8px 0 4px;font-size:15px}.trpg-blocks__list{margin:0;padding-left:20px}.trpg-blocks__table{overflow-x:auto}.trpg-blocks__table table{border-collapse:collapse;min-width:100%;font-size:13px}.trpg-blocks__table th,.trpg-blocks__table td{border:1px solid var(--line);text-align:left;padding:4px 8px}.trpg-blocks__table caption{text-align:left;padding:4px 0;font-weight:600}.trpg-blocks__quote{border-left:3px solid var(--gold);color:var(--ink-2);margin:0;padding-left:12px}.trpg-blocks__read{background:var(--panel);border-radius:var(--radius-sm);padding:8px 12px}.trpg-blocks__mark{color:var(--primary)}.trpg-variantbar{border:1px solid var(--gold);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--gold) 12%, transparent);flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;display:flex}.trpg-variantbar__text{flex:1;min-width:200px}.trpg-variantbar__actions{gap:6px;display:flex}.trpg-variantpick{border:0;gap:6px;margin:0;padding:0;display:grid}.trpg-variantpick .trpg-radio{align-items:flex-start;gap:8px;min-height:36px;display:flex}.trpg-pack-actions{align-items:center;gap:6px;display:inline-flex}.trpg-packdetail{flex-direction:column;gap:10px;height:100%;display:flex}.trpg-packdetail__desc{margin:0}.trpg-packdetail__filter{grid-template-columns:minmax(140px,200px) 1fr auto;align-items:center;gap:8px;display:grid}.trpg-packdetail__list{flex:1;min-height:200px}.trpg-entryrow{flex:1;align-items:baseline;gap:10px;min-width:0;display:flex}.trpg-entryrow .trpg-term{white-space:nowrap;flex:none}.trpg-entryrow__sum{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.trpg-entry__summary{color:var(--ink-2);margin:0}.trpg-entry__lore{gap:6px;display:grid}.trpg-entry__lore-title{font-family:var(--font-serif);margin:8px 0 0;font-size:15px}.trpg-window[data-layout=narrow] .trpg-packdetail__filter{grid-template-columns:1fr}.trpg-modal__page:has(.trpg-packdetail){flex-direction:column;display:flex;overflow:hidden}.trpg-toolbar{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-toolbar__search{flex:1;min-width:160px;max-width:280px}.trpg-pill[aria-pressed=true]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-row--series{background:var(--panel);min-height:36px}.trpg-row--nested{padding-left:20px}.trpg-packdetail{flex:1;min-height:0}.trpg-issuerow{border:1px solid var(--unsaved);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--unsaved) 12%, transparent);justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;display:flex}.trpg-variantrow{margin-top:8px}.trpg-group--first{margin-top:0}.trpg-row__end--select{width:180px}.trpg-row__end--wrap{flex-wrap:wrap;justify-content:flex-end}.trpg-toolbar--between{justify-content:space-between}.trpg-toolbar__end{align-items:center;gap:10px;display:inline-flex}.trpg-minesub{flex-direction:column;gap:10px;height:100%;min-height:420px;display:flex}.trpg-minesub__list{flex:1;min-height:220px}.trpg-drawer[data-dragging=true]:after{content:\"松开以导入\";z-index:5;border:2px dashed var(--primary);border-radius:var(--radius);background:color-mix(in srgb, var(--paper) 88%, transparent);color:var(--primary);place-items:center;font-weight:600;display:grid;position:absolute;inset:0}.trpg-drawer{position:relative}.trpg-combo__anchor{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);align-items:center;display:flex}.trpg-combo__input{min-width:0;min-height:36px;color:var(--ink);background:0 0;border:0;flex:1;padding:4px 10px}.trpg-combo__input:focus-visible{outline:none}.trpg-combo__anchor:focus-within{outline:2px solid var(--primary);outline-offset:1px}.trpg-combo__content{width:var(--reka-combobox-trigger-width);min-width:260px}.trpg-combo__count{border-bottom:1px solid var(--line);color:var(--ink-2);padding:6px 10px;font-size:12.5px}.trpg-combo__empty{color:var(--ink-2);padding:12px 10px}.trpg-tag{gap:2px;padding-right:2px}.trpg-tag__x{min-width:28px;min-height:28px;color:var(--ink-2);background:0 0;border:0;border-radius:999px;font-size:16px;line-height:1}.trpg-tag__x:hover{color:var(--danger)}.trpg-facts{grid-template-columns:max-content 1fr;gap:6px 14px;margin:0;display:grid}.trpg-facts__label{color:var(--ink-2);white-space:nowrap;padding-top:1px;font-size:13px}.trpg-facts__value{white-space:pre-line;overflow-wrap:anywhere;margin:0}.trpg-facts__sections,.trpg-facts__members{white-space:normal;gap:8px;display:grid}.trpg-facts__members h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-row__warn{color:var(--accent,#b45309)}.trpg-facts__sub{margin-left:4px;font-size:12px}.trpg-facts__member-row{flex-wrap:wrap;align-items:baseline;gap:2px 14px;display:flex}.trpg-facts__member-label{min-width:4.5em;font-weight:600}.trpg-facts__sections h4{font-family:var(--font-serif);margin:0 0 2px;font-size:14px}.trpg-window[data-layout=narrow] .trpg-facts{grid-template-columns:1fr;gap:2px}.trpg-window[data-layout=narrow] .trpg-facts__value{margin-bottom:8px}.trpg-modal[data-variant=dialog] .trpg-modal__card[data-sized=true] .trpg-modal__head{background:var(--card);min-height:52px;color:var(--ink);border-bottom:1px solid var(--line)}.trpg-tip{max-width:100%;display:inline-flex;position:relative}.trpg-tip.is-inline{display:inline}.trpg-tip__bubble{z-index:60;background:var(--ink);max-width:260px;color:var(--paper);text-align:left;white-space:pre-line;pointer-events:none;box-shadow:var(--shadow-float);border-radius:9px;gap:1px;padding:8px 11px;font-size:12.5px;line-height:1.5;animation:.12s ease-out trpg-tip;display:grid;position:fixed}.trpg-tip__line{font-variant-numeric:tabular-nums;display:block}@keyframes trpg-tip{0%{opacity:0}to{opacity:1}}.trpg-btabs{background:var(--panel);border-bottom:1px solid var(--line);scrollbar-width:none;flex:none;gap:2px;padding:8px 14px 0;display:flex;overflow-x:auto}.trpg-btabs::-webkit-scrollbar{display:none}.trpg-btabs__tab{min-height:40px;color:var(--ink-2);white-space:nowrap;background:0 0;border:1px solid #0000;border-bottom:0;border-radius:10px 10px 0 0;flex:none;align-items:center;gap:6px;margin-bottom:-1px;padding:0 16px;font-size:14px;font-weight:500;display:inline-flex}.trpg-btabs__tab:hover:not(:disabled){background:var(--card)}.trpg-btabs__tab[aria-selected=true]{background:var(--card);border-color:var(--line);color:var(--ink);padding-bottom:1px;font-weight:700}.trpg-btabs__tab:disabled{opacity:.45;cursor:not-allowed}.trpg-btabs__count{background:color-mix(in srgb, var(--ink) 12%, transparent);border-radius:999px;place-items:center;min-width:20px;height:20px;padding:0 6px;font-size:12px;font-weight:600;display:inline-grid}.trpg-item{border:1px solid var(--line);background:var(--card);border-radius:12px;gap:8px;padding:14px 16px;display:grid}.trpg-item__head{align-items:baseline;gap:8px;display:flex}.trpg-item__title{min-width:0;font:700 17px/1.3 var(--font-serif);flex:1;margin:0}.trpg-item__hint{min-width:24px;min-height:24px;color:var(--ink-2);place-items:center;display:inline-grid}button.trpg-rulelink.trpg-item__hint{appearance:none;cursor:pointer;background:0 0;border:0;border-radius:6px;padding:0}button.trpg-rulelink.trpg-item__hint:hover{color:var(--primary);background:var(--panel)}.trpg-item__value{font:700 24px/1 var(--font-serif);font-variant-numeric:tabular-nums}.trpg-item__auto{color:var(--ink-2);text-align:right;margin:0;font-size:12px}.trpg-item__sources{color:var(--ink-2);gap:2px;margin:0;padding:0;font-size:13px;list-style:none;display:grid}.trpg-item__sources li{align-items:baseline;gap:10px;min-width:0;display:flex}.trpg-item__sources li.is-overridden{opacity:.6;text-decoration:line-through}.trpg-item__label{flex:1;min-width:0}.trpg-item__num{font-variant-numeric:tabular-nums}.trpg-item__note{font-size:12px}.trpg-item__edit{flex-wrap:wrap;align-items:center;gap:10px 16px;display:flex}.trpg-stepper{justify-content:center;align-items:center;gap:10px;display:inline-flex}.trpg-stepper__btn{border:1px solid var(--line);background:var(--card);width:28px;height:28px;color:var(--ink);cursor:pointer;border-radius:50%;place-items:center;padding:0;display:inline-grid}.trpg-stepper__btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}.trpg-stepper__btn:disabled{opacity:.35;cursor:not-allowed}.trpg-stepper__val{text-align:center;min-width:2ch;font:700 20px/1 var(--font-serif);font-variant-numeric:tabular-nums}.trpg-seg button:disabled{opacity:.4;cursor:not-allowed}", YR = ".probe{border-bottom:1px solid var(--line);padding:10px 0}.probe__head{justify-content:space-between;align-items:center;gap:8px;display:flex}.probe__title{font-family:var(--font-serif);margin:0;font-size:15px}.probe__hint{color:var(--ink-2);margin:4px 0;font-size:12.5px}.probe__summary{margin:4px 0}.probe__actions{flex-wrap:wrap;gap:6px;margin-top:6px;display:flex}.probe pre{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);white-space:pre-wrap;word-break:break-all;max-height:200px;margin:6px 0 0;padding:8px;font-size:11.5px;overflow:auto}.probe summary{cursor:pointer;color:var(--ink-2);font-size:12.5px}.lab{background:var(--panel);border-radius:var(--radius);gap:10px;margin-top:8px;padding:10px;display:grid}.lab__row{gap:6px;display:grid}.report-bar{flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;display:flex}", XR = ".trpg-btn,.trpg-icon-btn,.trpg-tabs2__tab,.trpg-person,.trpg-tplcard{transition:transform .16s cubic-bezier(0,0,.2,1),box-shadow .16s cubic-bezier(0,0,.2,1)}.trpg-btn:active:not(:disabled),.trpg-icon-btn:active:not(:disabled),.trpg-tabs2__tab:active,.trpg-tplcard:active{transition-duration:80ms;transform:scale(.97)}.trpg-tplcard:hover:not(:active){box-shadow:var(--shadow-card-hover);transform:translateY(-1px)}.trpg-person:hover{box-shadow:var(--shadow-card-hover)}@media (prefers-reduced-motion:reduce){.trpg-btn,.trpg-icon-btn,.trpg-tabs2__tab,.trpg-person,.trpg-tplcard{transition:none}.trpg-btn:active:not(:disabled),.trpg-icon-btn:active:not(:disabled),.trpg-tabs2__tab:active,.trpg-tplcard:active,.trpg-tplcard:hover:not(:active){transform:none}}.trpg-frame{width:var(--fw,72px);height:var(--fh,90px);border:1px solid var(--frame);background:var(--paper);border-radius:8px;flex:none;padding:1px;display:inline-block;position:relative}.trpg-frame__gold{border:2px solid var(--gold);background:var(--paper);border-radius:6px;width:100%;height:100%;padding:2px;display:block}.trpg-frame__pic{background:linear-gradient(180deg, var(--panel), var(--card));border-radius:3px;justify-content:center;align-items:center;width:100%;height:100%;display:flex;overflow:hidden}.trpg-frame__img{object-fit:cover;width:100%;height:100%;display:block}.trpg-frame__ph{width:var(--ficon,36px);height:var(--ficon,36px);fill:currentColor;color:color-mix(in srgb, var(--ink-2) 60%, transparent)}.trpg-frame__badge{border:1px solid var(--frame);background:var(--card);width:22px;height:22px;color:var(--ink);border-radius:50%;place-items:center;display:grid;position:absolute;bottom:-5px;right:-5px}.trpg-stat{text-align:center;font-variant-numeric:tabular-nums;display:block}.trpg-stat__label{width:100%;color:var(--ink-2);font-size:12px;line-height:16px;display:inline-block}.trpg-stat__sp{white-space:pre;font-size:0}.trpg-stat__value{font-family:var(--font-serif);color:var(--ink);font-size:24px;font-weight:700;line-height:30px;display:inline-block}.trpg-stat--md .trpg-stat__value{font-size:20px;font-weight:600;line-height:26px}.trpg-stat__unit{font-family:var(--font-sans);color:var(--ink-2);font-size:14px;font-weight:400}.trpg-hpm{font-variant-numeric:tabular-nums;width:100%;display:block}.trpg-hpm__top{align-items:baseline;gap:8px;margin-bottom:4px;display:flex}.trpg-hpm__top .trpg-stat__label{text-align:left;white-space:nowrap;flex:1 0 auto;width:auto}.trpg-hpm__num{font-family:var(--font-serif);color:var(--ink);white-space:nowrap;font-size:18px;font-weight:600;line-height:24px}.trpg-hpm__num b{font-weight:600}.trpg-hpm__num i{color:var(--ink-2);margin:0 3px;font-size:14px;font-style:normal}.trpg-hpm__num span{color:var(--ink-2);font-size:14px}.trpg-hpm__track{background:var(--hp-track);border-radius:4px;width:100%;height:8px;display:block;position:relative;overflow:hidden}.trpg-hpm__fill{background:var(--hp);border-radius:4px;position:absolute;inset:0 auto 0 0}.trpg-hpm__temp{background:var(--gold);position:absolute;top:0;bottom:0}.trpg-tabs2{background:var(--panel);scrollbar-width:none;border-radius:14px;gap:4px;max-width:100%;padding:4px;display:inline-flex;overflow-x:auto}.trpg-tabs2::-webkit-scrollbar{display:none}.trpg-tabs2__tab{height:44px;color:var(--ink);white-space:nowrap;background:0 0;border:0;border-radius:10px;flex:none;justify-content:center;align-items:center;gap:8px;padding:0 16px;font-size:15px;font-weight:600;display:inline-flex}.trpg-tabs2__tab:hover:not([aria-selected=true]){background:color-mix(in srgb, var(--card) 60%, transparent)}.trpg-tabs2__tab[aria-selected=true]{background:var(--primary);color:var(--primary-ink)}.trpg-tabs2__count{background:var(--card);min-width:22px;color:var(--ink-2);text-align:center;font-variant-numeric:tabular-nums;border-radius:999px;padding:0 7px;font-size:12px;font-weight:600;line-height:20px;display:inline-block}.trpg-tabs2__tab[aria-selected=true] .trpg-tabs2__count{background:color-mix(in srgb, var(--primary-ink) 22%, transparent);color:var(--primary-ink)}.trpg-search{min-width:0;color:var(--ink-2);flex:160px;align-items:center;display:flex;position:relative}.trpg-search>.trpg-icon{pointer-events:none;position:absolute;left:13px}.trpg-search__input{border:1px solid var(--line);background:var(--card);width:100%;height:40px;color:var(--ink);border-radius:10px;padding:0 36px 0 38px}.trpg-search__input::placeholder{color:var(--ink-2)}.trpg-search__input::-webkit-search-cancel-button{appearance:none;display:none}.trpg-search__input:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);outline:none}.trpg-search__clear{width:28px;height:28px;color:var(--ink-2);background:0 0;border:0;border-radius:50%;place-items:center;display:grid;position:absolute;right:6px}.trpg-search__clear:hover{background:var(--panel)}.trpg-search__clear:after{content:\"\";position:absolute;inset:-8px}.trpg-toolrow{flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px;display:flex}.trpg-toolrow .trpg-btn,.trpg-toolrow .trpg-select-trigger,.trpg-toolrow .trpg-combo__anchor{border-radius:10px;height:40px;min-height:40px}.trpg-toolrow .trpg-btn{padding:0 14px}.trpg-toolrow .trpg-btn--square{width:40px;padding:0}.trpg-toolrow__tag{flex:none;width:104px;min-width:0}.trpg-toolrow__sort{flex:none;width:164px;min-width:0}.trpg-toolrow__count{color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:auto;font-size:13px}.trpg-select-trigger__text{white-space:nowrap;align-items:baseline;gap:2px;min-width:0;display:inline-flex;overflow:hidden}.trpg-select-trigger__prefix{color:var(--ink-2)}.trpg-toolrow__tag .trpg-combo__input::placeholder{color:var(--ink);opacity:1}.trpg-combo__anchor{border-radius:10px}.trpg-pill.trpg-tag{border-color:var(--line);background:var(--panel);min-height:26px;color:var(--ink);padding:0 2px 0 10px;font-size:12px}.trpg-tag__x{width:24px;min-width:24px;min-height:24px;position:relative}.trpg-tag__x:after{content:\"\";position:absolute;inset:-4px}.trpg-emptystate{color:color-mix(in srgb, var(--ink-2) 50%, transparent);text-align:center;justify-items:center;gap:12px;padding:48px 16px;display:grid}.trpg-emptystate__text{color:var(--ink-2);margin:0;font-size:15px}.trpg-emptystate .trpg-btn{color:var(--ink)}.trpg-modal__head{background:var(--paper);color:var(--ink)}.trpg-modal__title{font-size:20px;font-weight:700}.trpg-window[data-layout=narrow] .trpg-modal__head{background:var(--chrome);color:var(--chrome-ink)}.trpg-dialog{border:1px solid var(--line);background:var(--card);border-radius:12px;gap:12px;padding:16px;display:grid}.trpg-dialog__foot{justify-content:flex-end;gap:8px;padding-top:4px;display:flex}.trpg-dialog__foot .trpg-btn,.trpg-dialog .trpg-input,.trpg-dialog .trpg-select-trigger{border-radius:10px;min-height:40px}.trpg-btn--danger{color:var(--primary-ink)}.trpg-inline-confirm{border-left:3px solid var(--danger);background:var(--panel);border-radius:0 10px 10px 0;flex-wrap:wrap;align-items:center;gap:8px;min-height:44px;padding:8px 12px;display:flex}.trpg-inline-confirm>span:first-child{flex:200px}.trpg-mini{align-items:center;gap:12px;min-width:0;display:flex}.trpg-mini__main{flex:1;min-width:0}.trpg-mini__name{font-family:var(--font-serif);text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:700;display:block;overflow:hidden}.trpg-mini__sub{color:var(--ink-2);text-overflow:ellipsis;white-space:nowrap;font-size:13px;display:block;overflow:hidden}.trpg-mini__sub .is-strong{color:var(--ink);font-weight:600}@media (prefers-color-scheme:dark){.trpg-check input{--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}}", ZR = ".trpg-root{z-index:100000;width:0;height:0;position:fixed;top:0;left:0}.trpg-ball{border:2px solid var(--gold);background:var(--chrome);width:48px;height:48px;color:var(--chrome-ink);cursor:grab;touch-action:none;border-radius:50%;place-items:center;padding:0;display:grid;position:fixed;box-shadow:0 2px 8px #00000059}.trpg-window{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-float);color:var(--ink);position:fixed;overflow:hidden}.trpg-window[data-fullscreen=true]{border:0;border-radius:0;height:100dvh;inset:0}.trpg-shell{width:100%;height:100%;display:flex}.trpg-window[data-layout=narrow] .trpg-shell{padding-bottom:env(safe-area-inset-bottom);background:var(--paper);flex-direction:column}.trpg-window[data-fullscreen=true] .trpg-shell{padding-top:env(safe-area-inset-top);background:var(--chrome)}.trpg-side{background:var(--chrome);width:176px;color:var(--chrome-ink);flex-direction:column;flex:none;display:flex}.trpg-window[data-layout=mid] .trpg-side{width:56px}.trpg-side__brand{cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;height:52px;font-family:var(--font-serif);border-bottom:1px solid var(--chrome-hover);color:var(--gold);align-items:center;gap:10px;padding:0 16px;font-size:16px;display:flex}.trpg-window[data-layout=mid] .trpg-side__brand{justify-content:center;padding:0}.trpg-side__list{gap:4px;margin:0;padding:8px;list-style:none;display:grid}.trpg-side__bottom{margin-top:auto}.trpg-nav{border-radius:var(--radius-sm);width:100%;min-height:44px;color:var(--chrome-ink);text-align:left;background:0 0;border:0;align-items:center;gap:12px;padding:0 12px;display:flex}.trpg-window[data-layout=mid] .trpg-nav{justify-content:center;padding:0}.trpg-nav:hover{background:var(--chrome-hover)}.trpg-nav[aria-current=page]{background:var(--chrome-hover);box-shadow:inset 3px 0 0 var(--gold)}.trpg-nav:focus-visible,.trpg-tab:focus-visible,.trpg-side__brand:focus-visible{outline-color:var(--gold)}.trpg-main{background:var(--paper);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-head{border-bottom:1px solid var(--line);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:12px;height:52px;padding:0 12px 0 20px;display:flex}.trpg-head__title{font-family:var(--font-serif);flex:1;margin:0;font-size:19px;font-weight:600}.trpg-head__chips{align-items:center;gap:8px;display:flex}.trpg-content{outline:none;flex:1;min-height:0;padding:16px 20px 88px;position:relative;overflow:auto}.trpg-window[data-layout=narrow] .trpg-head{background:var(--chrome);height:48px;color:var(--chrome-ink);border-bottom:0;padding:0 8px 0 16px}.trpg-window[data-fullscreen=true] .trpg-head{cursor:default}.trpg-window[data-layout=narrow] .trpg-content{padding:12px 16px 88px}.trpg-tabs{background:var(--chrome);height:56px;color:var(--chrome-ink);flex:none;display:flex}.trpg-tab{min-width:64px;color:var(--chrome-ink);background:0 0;border:0;flex-direction:column;flex:1;justify-content:center;align-items:center;gap:2px;font-size:12px;display:flex}.trpg-tab[aria-current=page]{color:var(--gold);box-shadow:inset 0 3px 0 var(--gold)}.trpg-resize{cursor:nwse-resize;touch-action:none;z-index:30;background:linear-gradient(135deg, transparent 50%, var(--line) 50%, var(--line) 58%, transparent 58%, transparent 70%, var(--line) 70%, var(--line) 78%, transparent 78%);width:22px;height:22px;position:absolute;bottom:0;right:0}.page-stack{gap:16px;display:grid}.page-intro{color:var(--ink-2);margin:0}.subpage-back{border-radius:var(--radius-sm);min-height:36px;color:var(--primary);background:0 0;border:0;align-items:center;gap:2px;margin:0 0 8px -8px;padding:0 8px;display:inline-flex}.subpage-back:hover{background:var(--panel)}.trpg-body{flex:1;min-height:0;display:flex;position:relative}.trpg-body .trpg-content{flex:1}.trpg-dice-btn{z-index:6;border:2px solid var(--gold);background:var(--primary);width:52px;height:52px;color:var(--primary-ink);box-shadow:var(--shadow-float);border-radius:50%;place-items:center;padding:0;display:grid;position:absolute;bottom:20px;right:20px}.trpg-dice-btn[aria-pressed=true]{box-shadow:0 0 0 3px var(--gold), var(--shadow-float)}.trpg-window[data-layout=narrow] .trpg-dice-btn{bottom:16px;right:16px}.trpg-dice{z-index:30;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);width:360px;max-height:calc(100dvh - 16px);box-shadow:var(--shadow-float);flex-direction:column;display:flex;position:fixed;overflow:hidden}.trpg-dice__head{background:var(--chrome);min-height:44px;color:var(--chrome-ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:8px;padding:0 6px 0 14px;display:flex}.trpg-dice__title{font-family:var(--font-serif);flex:1;font-size:16px}.trpg-dice__body{gap:14px;padding:14px 12px;display:grid;overflow-y:auto}.trpg-dice__lbl{color:var(--ink-2);justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;font-size:12.5px;display:flex}.trpg-dice__row{align-items:center;gap:8px;display:flex}.trpg-dice__formula{min-height:44px;font-family:var(--font-serif);letter-spacing:.02em;font-size:20px}.trpg-dice__formula[aria-invalid=true]{border-color:var(--danger)}.trpg-dice__err{min-height:18px;margin-top:4px}.trpg-dice__faces{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;display:grid}.trpg-dice__face{min-width:0;position:relative}.trpg-dice__die{border:1px solid var(--line);background:var(--card);width:100%;min-height:58px;color:var(--ink);border-radius:8px;align-content:center;justify-items:center;gap:2px;padding:4px 0 3px;font-size:12px;display:grid;position:relative}.trpg-dice__die:hover{border-color:var(--primary)}.trpg-dice__die[data-n]:not([data-n=\"0\"]){border-color:var(--primary);background:var(--panel)}.trpg-dice__die .trpg-die{width:28px;height:28px}.trpg-dice__cnt{background:var(--primary);min-width:20px;height:20px;color:var(--primary-ink);font-variant-numeric:tabular-nums;border-radius:10px;padding:0 5px;font-size:12px;line-height:20px;position:absolute;top:-6px;right:-4px}.trpg-dice__minus{border:1px solid var(--line);background:var(--card);width:22px;height:22px;color:var(--ink);border-radius:50%;padding:0;font-size:14px;line-height:18px;position:absolute;top:-8px;left:-6px}.trpg-dice__minus:after{content:\"\";position:absolute;inset:-10px}.trpg-die polygon,.trpg-die .trpg-die__body{fill:var(--card);stroke:var(--ink-2);stroke-width:3px;stroke-linejoin:round}.trpg-die .trpg-die__facet{fill:none;stroke:var(--line);stroke-width:2px;stroke-linejoin:round}.trpg-die text{fill:var(--ink);font-family:var(--font-serif);font-weight:600}.trpg-dice__die .trpg-die polygon,.trpg-dice__die .trpg-die .trpg-die__body{fill:none}.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die polygon,.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die .trpg-die__body{stroke:var(--primary)}.trpg-dice__adjust{flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;display:flex}.trpg-dice__step{align-items:center;gap:4px;display:inline-flex}.trpg-dice__step button{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card);width:40px;height:40px;color:var(--ink);font-size:18px}.trpg-dice__step output{text-align:center;font-variant-numeric:tabular-nums;min-width:2.6em;font-weight:600}.trpg-dice__small{color:var(--ink-2);font-size:12px}.trpg-dice__step .trpg-dice__small{margin-right:4px}.trpg-dice .trpg-seg button{min-height:40px}.trpg-seg.is-off{opacity:.45}.trpg-seg.is-off button{cursor:not-allowed}.trpg-dice__roll{width:100%;min-height:54px;font-family:var(--font-serif);letter-spacing:.3em;text-indent:.3em;font-size:19px}.trpg-dice__result{border:1px solid var(--line);background:var(--card);border-radius:10px;justify-items:center;gap:8px;padding:14px 12px 12px;display:grid}.trpg-dice__hero{width:124px;height:124px}.trpg-dice__hero .trpg-die{width:100%;height:100%;overflow:visible}.trpg-dice__hero.is-rolling .trpg-die{animation:.46s ease-in-out trpg-tumble}.trpg-dice__hero.is-nat20 .trpg-die polygon,.trpg-dice__hero.is-nat20 .trpg-die .trpg-die__body{stroke:var(--gold);stroke-width:5px;fill:color-mix(in srgb, var(--gold) 22%, var(--card))}.trpg-dice__hero.is-nat1 .trpg-die polygon,.trpg-dice__hero.is-nat1 .trpg-die .trpg-die__body{stroke:var(--danger);stroke-width:5px;fill:color-mix(in srgb, var(--danger) 18%, var(--card))}.trpg-dice__line{min-height:22px;color:var(--ink-2);text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.trpg-dice__minis{flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:36px;display:flex}.trpg-dice__mini{width:38px;height:38px}.trpg-dice__mini.is-dim{opacity:.35}.trpg-dice__mini .trpg-die{width:100%;height:100%}.trpg-dice__const{background:var(--panel);border:1px solid var(--line);font-variant-numeric:tabular-nums;border-radius:15px;place-items:center;min-width:38px;height:30px;padding:0 8px;font-weight:600;display:inline-grid}.trpg-dice__send{grid-template-columns:1.5fr 1fr;gap:8px;width:100%;display:grid}.trpg-dice__send .trpg-input{grid-column:1/-1}.trpg-dice__send .trpg-btn{min-height:44px}.trpg-dice__recent{border:1px solid var(--line);width:100%;min-height:44px;color:var(--ink-2);text-align:left;background:0 0;border-radius:8px;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;display:flex}.trpg-dice__recent b{color:var(--ink);font-family:var(--font-serif);font-size:16px}.trpg-dice__list{max-height:180px;margin:4px 0 0;padding:0;list-style:none;overflow-y:auto}.trpg-dice__list button{border:0;border-bottom:1px solid var(--line);text-align:left;background:0 0;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:4px 10px;display:flex}.trpg-dice__list button:hover{background:var(--panel)}.trpg-dice__list b{min-width:2em;font-family:var(--font-serif);font-size:17px}.trpg-dice__list span{overflow-wrap:anywhere;min-width:0;color:var(--ink-2);flex:1;font-size:13px}.trpg-dice__list time{color:var(--ink-2);font-size:12px}.trpg-dice__clear{justify-content:flex-end;display:flex}@keyframes trpg-tumble{0%{transform:rotate(0)scale(1)}45%{transform:rotate(200deg)scale(.88)}to{transform:rotate(360deg)scale(1)}}.trpg-hero{border-radius:var(--radius);background:var(--primary);width:100%;min-height:170px;color:var(--primary-ink);text-align:left;box-shadow:var(--shadow-card);border:0;align-content:end;gap:8px;padding:22px 24px;transition:transform .12s,box-shadow .12s;display:grid}button.trpg-hero:hover:not(:disabled){box-shadow:var(--shadow-float);transform:translateY(-1px)}button.trpg-hero:active{transform:none}button.trpg-hero:disabled{opacity:.6;cursor:not-allowed}.trpg-hero--idle{background:var(--panel);color:var(--ink-2)}.trpg-hero__title{font-family:var(--font-serif);font-size:26px;font-weight:600}.trpg-hero__sub{opacity:.9}.trpg-hero__go{justify-self:end;font-weight:600}.trpg-window[data-layout=narrow] .trpg-hero{min-height:140px;padding:18px}.trpg-link{color:var(--primary);background:0 0;border:0;justify-self:start;min-height:36px;padding:0;text-decoration:underline}.trpg-banner{border-radius:var(--radius);background:var(--chrome);color:#f4ecdd;height:200px;position:relative;overflow:hidden}.trpg-banner--pattern{background:repeating-linear-gradient(45deg, var(--chrome) 0 14px, color-mix(in srgb, var(--chrome) 88%, var(--gold)) 14px 28px)}.trpg-banner__img{object-fit:cover;object-position:70% 50%;opacity:0;width:100%;height:100%;transition:opacity .24s;position:absolute;inset:0}.trpg-banner__img.is-loaded{opacity:1}.trpg-banner__text{background:linear-gradient(#0000,#2b211cbf);gap:2px;padding:40px 20px 14px;display:grid;position:absolute;inset:auto 0 0}.trpg-banner__title{color:inherit;font-family:var(--font-serif);text-align:left;background:0 0;border:0;justify-self:start;padding:0;font-size:26px;font-weight:600}.trpg-banner__line{flex-wrap:wrap;align-items:center;gap:10px;font-size:14px;display:flex}.trpg-banner__state{color:inherit;background:0 0;border:0;padding:0}.trpg-banner__state[data-dirty=true]{color:#f3b45a}.trpg-window[data-layout=narrow] .trpg-banner{height:140px}.trpg-overview{grid-template-columns:repeat(4,1fr);gap:12px;display:grid}.trpg-window[data-layout=mid] .trpg-overview,.trpg-window[data-layout=narrow] .trpg-overview{grid-template-columns:repeat(2,1fr)}.trpg-cell{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);min-height:88px;box-shadow:var(--shadow-card);text-align:left;align-content:start;gap:4px;padding:12px 14px;transition:transform .12s,border-color .12s;display:grid}.trpg-cell:hover{border-color:var(--primary);transform:translateY(-1px)}.trpg-cell:active{transform:none}.trpg-cell__title{align-items:center;gap:6px;font-weight:600;display:flex}.trpg-cell__line{color:var(--ink-2);font-size:13px}.trpg-empty--tight{text-align:left;padding:8px 0}.trpg-chip{max-width:260px}.trpg-chip__name{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-badge--button{cursor:pointer}.trpg-dice__shell{flex:1;min-height:0;display:flex}.trpg-dice__main{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-dice__main>.trpg-dice__body{overflow-y:auto}.trpg-dice[data-narrow=true]{max-height:calc(100dvh - 76px)}.trpg-dice[data-narrow=true] .trpg-dice__shell{flex-direction:column}.trpg-rp{background:var(--card);flex-direction:column;flex:1;min-height:0;display:flex}.trpg-rp__body{flex:1;align-content:start;gap:8px;min-height:0;padding:8px 14px;display:grid;overflow-y:auto}.trpg-rp .trpg-seg{width:fit-content;max-width:100%}.trpg-rp .trpg-seg button{min-height:32px;padding:2px 12px}.trpg-rp__sec{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);gap:6px;padding-bottom:8px;display:grid}.trpg-rp__sec:last-child{border-bottom:0}.trpg-rp__sec h4{color:var(--ink-2);margin:0;font-size:12px;font-weight:600}.trpg-rp__title{font:700 17px/1.3 var(--font-serif);margin:0}.trpg-rp__pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.trpg-rp__rows{gap:0;margin:0;padding:0;list-style:none;display:grid}.trpg-rp__row{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);align-items:center;gap:8px;min-height:30px;font-size:14px;display:flex}.trpg-rp__row:last-child{border-bottom:0}.trpg-rp__row>span{flex:1;min-width:0}.trpg-rp__row b{font-variant-numeric:tabular-nums}.trpg-rp__row.is-off{opacity:.4;text-decoration:line-through}.trpg-rp__hint{color:var(--ink-2);font-size:12px;font-weight:400}.trpg-rp__warn{background:color-mix(in srgb, var(--gold) 16%, var(--card));border-radius:8px;margin:0;padding:6px 10px;font-size:13px}.trpg-rp__addrow{gap:4px;display:flex}.trpg-rp__form{grid-template-columns:1fr 1fr auto;align-items:center;gap:6px;display:grid}.trpg-rp__form .trpg-field__error{grid-column:1/-1}.trpg-rp__passive{color:var(--ink-2);align-items:center;gap:8px;font-size:13px;display:flex}.trpg-rp__dc{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-input.trpg-rp__dcnum{text-align:center;width:72px;min-height:44px;font:700 22px var(--font-serif);flex:none}.trpg-rp__round{border:1px solid var(--line);background:var(--card);border-radius:50%;place-items:center;width:34px;height:34px;padding:0;display:inline-grid}.trpg-rp__chips{flex-wrap:wrap;gap:6px;width:100%;display:flex}.trpg-rp__chip{border:1px solid var(--line);background:var(--card);font-variant-numeric:tabular-nums;border-radius:8px;width:40px;height:34px;padding:0}.trpg-rp__chip[aria-pressed=true]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}.trpg-rp__contest{gap:8px;display:grid}.trpg-rp__final{margin:0;font-size:14px;font-weight:600}.trpg-rp__final .trpg-rp__hint{margin-top:2px;display:block}.trpg-rp__foot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--card);flex:none;gap:8px;display:grid}.trpg-rp__formula{margin:0;font:700 15px ui-monospace,SF Mono,Menlo,monospace}.trpg-rp__result{border:1px dashed var(--line);border-radius:10px;align-items:center;gap:14px;height:104px;padding:0 14px;display:flex;overflow:hidden}.trpg-rp__total{border:2px solid var(--frame);min-width:64px;height:64px;font:700 28px var(--font-serif);border-radius:14px;place-items:center;padding:0 6px;display:inline-grid}.trpg-rp__verdict{gap:2px;min-width:0;display:grid}.trpg-rp__verdict span{font:700 15px var(--font-serif)}.trpg-rp__verdict .is-pass,.trpg-rp__verdict .is-win{color:var(--primary)}.trpg-rp__verdict .is-fail,.trpg-rp__verdict .is-lose{color:var(--danger)}.trpg-rp__verdict small{color:var(--ink-2);overflow-wrap:anywhere;font-size:12.5px}.trpg-rp__roll{width:100%;min-height:46px;font:700 17px var(--font-serif);letter-spacing:.2em}.trpg-rp input[type=checkbox]{appearance:none;border:1.5px solid var(--line);background:var(--card);cursor:pointer;border-radius:6px;flex:none;width:22px;height:22px;margin:0;position:relative}.trpg-rp input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}.trpg-rp input[type=checkbox]:checked:after{content:\"\";border:solid var(--primary-ink);border-width:0 2px 2px 0;width:6px;height:11px;position:absolute;top:2px;left:6px;transform:rotate(45deg)}.trpg-rp__act{align-items:center;gap:12px;display:flex}.trpg-rp__act .trpg-rp__formula{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-rp__act .trpg-rp__roll{flex:none;width:auto;min-width:140px;padding:0 22px}.trpg-rp__result{height:92px}.trpg-rp__sec h4{color:var(--ink);font-size:13px}.trpg-rp__body{padding-bottom:20px}.trpg-input.trpg-rp__dcnum{appearance:textfield;box-shadow:none}.trpg-rp__dcnum::-webkit-inner-spin-button{appearance:none;margin:0}.trpg-rp__dcnum::-webkit-outer-spin-button{appearance:none;margin:0}.trpg-rp__roll{letter-spacing:.08em}.trpg-rp__result.is-empty{height:44px}.trpg-rp__dcline{color:var(--ink-2);margin:0;font-size:12.5px}", QR = ":host{all:initial;pointer-events:inherit;--paper:#f4ecdd;--panel:#eee5d3;--card:#fffcf6;--line:#cbbca3;--ink:#2b211c;--ink-2:#6c6255;--primary:#7a2e26;--primary-ink:#fffcf6;--gold:#b8954a;--danger:#a3352b;--unsaved:#d9892b;--chrome:#2b211c;--chrome-ink:#f1ebdc;--chrome-hover:#3a2d26;--ok:#3f7a3a;--scrim:#2b211c73;--radius:10px;--radius-sm:6px;--radius-xs:4px;--shadow-card:0 1px 2px #2b211c14, 0 2px 8px #2b211c0f;--shadow-float:0 8px 28px #00000047;--hp:#8c2f2a;--hp-track:color-mix(in srgb, var(--line) 55%, var(--card));--frame:color-mix(in srgb, var(--ink) 75%, var(--gold));--shadow-card-hover:0 2px 4px #2b211c1a, 0 6px 16px #2b211c1a;--font-serif:\"Songti SC\", \"Noto Serif SC\", Georgia, serif;--font-sans:\"PingFang SC\", \"Microsoft YaHei\", system-ui, sans-serif;font-family:var(--font-sans);color:var(--ink);font-size:14px;line-height:1.5}@media (prefers-color-scheme:dark){:host{--paper:#20231f;--panel:#2b3029;--card:#181c18;--line:#515849;--ink:#f1ebdc;--ink-2:#bcbbaa;--primary:#e6bf73;--primary-ink:#20231f;--gold:#e6bf73;--danger:#e07a6e;--unsaved:#e8a13a;--chrome:#121411;--chrome-ink:#f1ebdc;--chrome-hover:#232720;--ok:#8cc47f;--scrim:#0000008c;--hp:#c8574c;--frame:color-mix(in srgb, var(--gold) 60%, var(--chrome))}}*,:before,:after{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:2px solid var(--primary);outline-offset:2px}.trpg-sr-only{clip:rect(0 0 0 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}@media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}", $R = "trpg-assistant-root";
+function ez(e) {
+	if (document.getElementById($R)) return null;
 	let t = document.createElement("div");
-	t.id = GR;
+	t.id = $R;
 	let n = t.attachShadow({ mode: "open" }), r = document.createElement("style");
 	r.textContent = [
-		WR,
-		UR,
-		BR,
-		HR,
-		VR
+		QR,
+		ZR,
+		JR,
+		XR,
+		YR
 	].join("\n");
 	let i = document.createElement("div");
 	i.className = "trpg-portal";
 	let a = document.createElement("div");
 	n.append(r, a, i), document.body.appendChild(t);
 	let o = _x();
-	return Bu(zR, {
+	return Bu(qR, {
 		ctx: e,
 		portalTarget: i
 	}).use(o).mount(a), o;
 }
 // src/main.ts
-async function qR() {
+async function tz() {
 	if (window.__trpgAssistantBooted) return;
 	window.__trpgAssistantBooted = !0, await _();
-	let e = h(), t = KR(e);
+	let e = h(), t = ez(e);
 	t && await mS(e, t);
 }
-qR().catch((e) => {
+tz().catch((e) => {
 	window.__trpgAssistantBooted = !1, console.error("[trpg-assistant] 启动失败", e);
 });

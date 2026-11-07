@@ -1,6 +1,7 @@
 // 自制内容的解析（D2-P2 B1 设计 §8.4：装、删、更新自制之后"重开小窗 → 重跑解析"）。
 // 和官方的全量解析一样：按作者加载器登记表逐类调作者加载器（读已装自制用 pCacheAndGetAllBrew），结果原样存进库。
 // 作者网站的做法也是改了自制就整页重新加载。
+import { buildAlternatives, type AltIndex } from './alternatives'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
 import type { AuthorFrame } from './runtime/host'
@@ -17,15 +18,17 @@ export interface BrewParseReport {
     /** 解析期间作者自己报的错误原文（例：自制内容引用了找不到的条目）。内容问题归自制作者，原样交给体检。 */
     authorErrors: string[]
   }
+  /** 同编号挂备选（P3-1）：挂了几条、取备选失败的。 */
+  alternatives: { targets: number; errors: AltIndex['errors'] }
   ms: number
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 
 /** 用一个新开的小窗重解析这套程序已装的全部自制内容；旧的解析结果先清掉（自制少了的类别不留旧数据）。 */
-export async function parseBrew({ source, db, openFrame }: { source: SourceEntry; db: LibraryDatabase; openFrame: () => Promise<AuthorFrame> }): Promise<BrewParseReport> {
+export async function parseBrew({ source, db, openFrame, openFrameIn }: { source: SourceEntry; db: LibraryDatabase; openFrame: () => Promise<AuthorFrame>; openFrameIn: (kvScope: string) => Promise<AuthorFrame> }): Promise<BrewParseReport> {
   const t0 = Date.now()
-  const report: BrewParseReport = { source: source.id, installed: [], parse: { props: {}, notRun: [], errors: [], authorErrors: [] }, ms: 0 }
+  const report: BrewParseReport = { source: source.id, installed: [], parse: { props: {}, notRun: [], errors: [], authorErrors: [] }, alternatives: { targets: 0, errors: [] }, ms: 0 }
   await db.derived.where('key').startsWith(`parsed:${source.id}:`).delete()
   const frame = await openFrame()
   try {
@@ -48,6 +51,8 @@ export async function parseBrew({ source, db, openFrame }: { source: SourceEntry
       }
     }
     report.parse.authorErrors = await frame.call('frameErrors')
+    const alts = await buildAlternatives({ source, db, frame, openFrameIn })
+    report.alternatives = { targets: Object.keys(alts.targets).length, errors: alts.errors }
   } finally {
     frame.close()
   }

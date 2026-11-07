@@ -1,0 +1,6 @@
+{
+  "sources": {
+    "house": { "json": "TRPGHOUSE", "full": "我的房规", "abbreviation": "房规" },
+    "mine": { "json": "TRPGMINE", "full": "我的资料", "abbreviation": "我的" }
+  }
+}

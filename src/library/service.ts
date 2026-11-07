@@ -7,59 +7,18 @@ import { healthItemsOf, healthReport, type HealthReport, type Layers34Summary, t
 import type { InstallReport } from './install'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
-import type { Detail, SearchHit } from './runtime/frame/read-commands'
-import type { EnglishMatch } from './runtime/frame/english-commands'
+import type { SearchHit } from './runtime/frame/read-commands'
+import type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
 import type { BrewEntry, WithErrors } from './runtime/frame/brew-commands'
 import type { AuthorFrame } from './runtime/host'
 import { commitOf, getSource, officialSourceOf, SOURCES, type SourceEntry } from './sources'
 
-export interface QueryRow {
-  hash: string | null
-  source: string | null
-  excluded: boolean
-  item: unknown
-}
-
-export type English =
-  | { status: 'found'; hash: string; via: EnglishMatch['via']; item: unknown; fluff: unknown }
-  /** 英文没装；作者的配对没找到这一条；配到了但英文那边按编号取不到。 */
-  | { status: 'not-installed' | 'not-paired' }
-  | { status: 'not-found'; hash: string }
-
-export interface DetailResult extends Detail {
-  /** 中文条目的英文对象；没有登记配对语言的源为 null。 */
-  english: English | null
-}
-
-/** 作者做法（getEnglishEntity）配出来的中英编号对照。 */
-export interface EnglishPairs {
-  source: string
-  pair: string
-  /** 类别 → 中文编号 → { 英文编号, 怎么找到的 } */
-  pairs: Record<string, Record<string, { enHash: string; enSource: string | null; via: EnglishMatch['via'] }>>
-  /** 作者的定位找不到英文记录的（含读文件出错）。 */
-  unmatched: Array<{ prop: string; hash: string; error?: string }>
-  via: Record<string, number>
-  located: number
-}
-
-/** 没配上的原因：不在作者索引里（作者的配对只覆盖索引里的条目）；索引里有但英文没找到；找到了但英文解析结果里没有这个编号。 */
-export type UnpairedReason = 'not-in-index' | 'no-english-record' | 'english-not-in-parsed'
-
-export interface EnglishCoverage {
-  source: string
-  pair: string
-  props: Record<string, { total: number; paired: number; nameMismatch: number } & Partial<Record<UnpairedReason, number>>>
-  via: Record<string, number>
-  unpaired: Array<{ prop: string; hash: string | null; reason: UnpairedReason; enHash?: string }>
-  /** 自动核对（只列不改）：配上的中英两条里，中文条目的 ENG_name 和英文条目的 name 不一样。 */
-  nameMismatch: Array<{ prop: string; hash: string; enHash: string; via: EnglishMatch['via']; engName: unknown; enName: unknown }>
-}
+export type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
 
 export interface LibraryServiceOptions {
   db: LibraryDatabase
-  /** 开一个只读本地的作者小窗。 */
-  openFrame: (codeSet: string) => Promise<AuthorFrame>
+  /** 开一个只读本地的作者小窗；kvScope 给了就用那个作者存储范围（隔离解析用）。 */
+  openFrame: (codeSet: string, kvScope?: string) => Promise<AuthorFrame>
 }
 
 /**
@@ -89,6 +48,10 @@ export class LibraryService {
   constructor(private readonly opts: LibraryServiceOptions) {}
 
   /** 每套作者程序只开一个小窗，屏蔽表、搜索索引都在这个小窗里，开关书也经它改，状态才一致。 */
+  frameOf(codeSet: string): Promise<AuthorFrame> {
+    return this.frame(codeSet)
+  }
+
   private frame(codeSet: string): Promise<AuthorFrame> {
     let p = this.frames.get(codeSet)
     if (!p) {
@@ -106,7 +69,7 @@ export class LibraryService {
     this.pairsCache.clear()
   }
 
-  private async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
+  async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
     const rec = await this.opts.db.derived.get(parsedKey(sourceId, prop))
     // 自制只存有内容的类别：解析记录在、这一类没出错，就是"这一类没有条目"
     if (!rec && getSource(sourceId).kind === 'brew') {
@@ -155,15 +118,32 @@ export class LibraryService {
     return rec.value
   }
 
-  /** 一条的详情：作者对象 + 背景描述 + 英文对象。source 可省（作者从编号里解出）。 */
-  async detail(sourceId: string, prop: string, hash: string, source?: string | null): Promise<DetailResult | null> {
-    const s = getSource(sourceId)
-    const d = await (await this.frame(s.codeSet)).call('detail', prop, hash, source ?? null)
-    if (!d) return null
-    return { ...d, english: await this.english(s, prop, hash) }
+  /** 库里存的解析结果中按编号找一条（不经作者缓存）。 */
+  async storedItem(sourceId: string, prop: string, hash: string): Promise<{ item: unknown; source: string | null } | null> {
+    const p = await this.parsed(sourceId, prop).catch(() => null)
+    const i = p ? p.hashes.indexOf(hash) : -1
+    return p && i >= 0 ? { item: p.items[i], source: p.sources[i] } : null
   }
 
-  private async english(s: SourceEntry, prop: string, hash: string): Promise<English | null> {
+  /**
+   * 一条的详情：作者对象 + 背景描述 + 英文对象。source 可省（作者从编号里解出）。
+   * 条目对象取库里这个数据集自己的解析结果：作者缓存里同编号的自制会顶掉官方（P3-1 探路实测），不能直接用缓存里的；
+   * 库里没有这一条时才用作者缓存。背景描述按交出去的那个对象问作者。
+   */
+  async detail(sourceId: string, prop: string, hash: string, source?: string | null): Promise<DetailResult | null> {
+    const s = getSource(sourceId)
+    const frame = await this.frame(s.codeSet)
+    const d = await frame.call('detail', prop, hash, source ?? null)
+    const stored = await this.storedItem(sourceId, prop, hash)
+    if (!d && !stored) return null
+    if (stored) {
+      const f = await frame.call('fluffOf', prop, stored.item)
+      return { item: stored.item, hash, source: stored.source, excluded: d?.excluded ?? false, fluff: f.fluff, fluffError: f.fluffError, engSiteHash: d?.engSiteHash ?? null, english: await this.english(s, prop, hash) }
+    }
+    return { ...d!, english: await this.english(s, prop, hash) }
+  }
+
+  async english(s: SourceEntry, prop: string, hash: string): Promise<English | null> {
     if (!s.pair) return null
     const pair = getSource(s.pair)
     if (!(await this.bothInstalled(s, pair))) return { status: 'not-installed' }
@@ -223,9 +203,9 @@ export class LibraryService {
     }
   }
 
-  /** 作者搜索器的结果原样（按作者得分排序，已按作者的搜索设置去掉被屏蔽的等）。 */
-  async search(sourceId: string, term: string): Promise<SearchHit[]> {
-    return (await this.frame(getSource(sourceId).codeSet)).call('search', term)
+  /** 作者搜索器的结果原样（按作者得分排序，已按作者的搜索设置去掉被屏蔽的等）。showLegacy：这一次显示旧版来源（2014 战役用）。 */
+  async search(sourceId: string, term: string, { showLegacy }: { showLegacy?: boolean } = {}): Promise<SearchHit[]> {
+    return (await this.frame(getSource(sourceId).codeSet)).call('search', term, showLegacy ?? null)
   }
 
   /** 读或改作者的搜索设置。 */
@@ -256,10 +236,20 @@ export class LibraryService {
     return (await this.frame(this.brewSource(sourceId).codeSet)).call('brewInstalled')
   }
 
+  /** 在指定作者存储范围里开一个小窗（隔离解析、导入预览用；用完由调用方关）。 */
+  openFrameIn(codeSet: string, kvScope: string): Promise<AuthorFrame> {
+    return this.opts.openFrame(codeSet, kvScope)
+  }
+
+  /** 自制改过以后（含可编辑自制）重解析。 */
+  reparseBrew(sourceId: string): Promise<BrewParseReport> {
+    return this.afterBrewChange(this.brewSource(sourceId))
+  }
+
   /** 装、导入、删、更新之后：关掉旧小窗（作者缓存和搜索索引是旧的），用新小窗重解析自制内容。 */
   private async afterBrewChange(s: SourceEntry): Promise<BrewParseReport> {
     this.reset()
-    return parseBrew({ source: s, db: this.opts.db, openFrame: () => this.opts.openFrame(s.codeSet) })
+    return parseBrew({ source: s, db: this.opts.db, openFrame: () => this.opts.openFrame(s.codeSet), openFrameIn: (scope) => this.opts.openFrame(s.codeSet, scope) })
   }
 
   /** 按网址装（作者自动追装依赖）。 */

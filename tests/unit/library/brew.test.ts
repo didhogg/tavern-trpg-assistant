@@ -54,12 +54,15 @@ describe('parseBrew', () => {
         brewInstalled: () => [{ head: { docIdLocal: 'a', filename: 'x.json' }, meta: {} }],
         loaders: () => [{ props: ['spell', 'spellFluff'], page: 'spells.html', kind: 'site' }, { props: ['raw_class', 'class'], page: 'classes.html', kind: 'site' }, { props: ['book', 'bookData'], page: 'book.html', kind: 'corpus', index: 'books.json' }],
         frameErrors: () => ['Error: 无法加载 8 个条目的引用！'],
+        brewDocIndex: () => [{ docIdLocal: 'a', filename: 'x.json', timeAdded: 1, order: 1, isEditable: false, sources: ['X'], props: { spell: ['s_x'] } }],
         parseBrewProp: (prop) => {
           if (prop === 'class') throw new Error('作者加载器报错')
           return prop === 'spell' ? { items: [{}], hashes: ['s_x'], sources: ['X'] } : { items: [], hashes: [], sources: [] }
         },
       }, () => { closed = true }),
+      openFrameIn: async () => { throw new Error('没有同编号，不该开隔离小窗') },
     })
+    expect(report.alternatives).toEqual({ targets: 0, errors: [] })
     expect(report.parse.props).toEqual({ spell: { count: 1, noHash: 0 } })
     expect(report.parse.errors).toEqual([{ prop: 'class', error: '作者加载器报错' }])
     expect(report.parse.notRun.map((n) => n.props)).toEqual([['book', 'bookData']])

@@ -1,0 +1,9 @@
+{
+  "scopes": [
+    { "id": "5e2014", "name": "5e 2014", "edition": "classic" },
+    { "id": "5e2024", "name": "5e 2024", "edition": "one" }
+  ],
+  "rules": {
+    "dnd5e2014": { "defaultScopes": ["5e2014"], "showLegacy": true, "style": "classic" }
+  }
+}

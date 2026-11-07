@@ -22,7 +22,7 @@ function library() {
   if (lib) return lib
   const db = new LibraryDatabase()
   const files = new FileProvider({ db })
-  const openFrame = (codeSet: string) => startAuthorFrame({ codeSet, pluginRoot: pluginRoot(), container: document.body, handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false }) })
+  const openFrame = (codeSet: string, kvScope?: string) => startAuthorFrame({ codeSet, pluginRoot: pluginRoot(), container: document.body, handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false, kvScope }) })
   lib = { db, files, service: new LibraryService({ db, openFrame }) }
   return lib
 }

@@ -39,6 +39,8 @@ export interface InstallReport {
   }
   /** 第 5 层（辅助）：作者搜索索引对账。 */
   index: Record<string, { parsed: number; index: number; onlyParsed: number; onlyIndex: number; samplesOnlyParsed: string[]; samplesOnlyIndex: string[] }>
+  /** 用户取消了（下载到一半停下；已下载的文件留着，再装就是续传）。 */
+  cancelled?: boolean
   ms: number
 }
 
@@ -50,6 +52,8 @@ export interface InstallOptions {
   openFrame: () => Promise<AuthorFrame>
   onProgress?: (p: { stage: string; done: number; total: number; item?: string }) => void
   concurrency?: number
+  /** 取消：下载阶段每个文件前检查；取消后不解析，安装记录标 cancelled。 */
+  signal?: AbortSignal
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
@@ -65,7 +69,7 @@ export function parsedKey(sourceId: string, prop: string, corpusId?: string): st
   return corpusId ? `parsed:${sourceId}:corpus:${prop}:${corpusId}` : `parsed:${sourceId}:${prop}`
 }
 
-export async function installOfficial({ source, db, files, openFrame, onProgress, concurrency = 6 }: InstallOptions): Promise<InstallReport> {
+export async function installOfficial({ source, db, files, openFrame, onProgress, concurrency = 6, signal }: InstallOptions): Promise<InstallReport> {
   const t0 = Date.now()
   const commit = commitOf(source)
   const storage = await storageEstimate()
@@ -82,6 +86,7 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
   await setRecord('downloading')
   let done = 0
   await pool(plan.files, concurrency, async (path) => {
+    if (signal?.aborted) return
     try {
       const had = await files.local(source, path)
       if (had === null) {
@@ -93,6 +98,13 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
     }
     onProgress?.({ stage: 'download', done: ++done, total: plan.files.length, item: path })
   })
+
+  if (signal?.aborted) {
+    report.cancelled = true
+    report.ms = Date.now() - t0
+    await setRecord('cancelled', { ms: report.ms })
+    return report
+  }
 
   // 第 1 层：镜像
   onProgress?.({ stage: 'mirror', done: 0, total: plan.files.length })

@@ -88,7 +88,7 @@ async function installBoth() {
 describe('LibraryService.detail', () => {
   it('英文没装：返回 not-installed，不开配对用的小窗', async () => {
     const opened: string[] = []
-    const svc = new LibraryService({ db, openFrame: async (codeSet) => { opened.push(codeSet); return fakeFrame({ detail: (_p, hash) => detailOf(hash as string) }) } })
+    const svc = new LibraryService({ db, openFrame: async (codeSet) => { opened.push(codeSet); return fakeFrame({ detail: (_p, hash) => detailOf(hash as string), fluffOf: () => ({ fluff: null, fluffError: null }) }) } })
     const d = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
     expect(d?.english).toEqual({ status: 'not-installed' })
     expect(opened).toEqual(['cn'])
@@ -103,12 +103,27 @@ describe('LibraryService.detail', () => {
         detail: (prop, hash) => { asked.push([codeSet, prop, hash]); return detailOf(hash as string) },
         englishLocators: cnLocators,
         englishMatch: enMatches,
+        fluffOf: () => ({ fluff: null, fluffError: null }),
       }),
     })
     const a = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
     expect(a?.english).toEqual({ status: 'found', hash: 'ea_xphb', via: 'name', item: { hash: 'ea_xphb' }, fluff: null })
     expect(asked).toContainEqual(['en', 'spell', 'ea_xphb'])
     expect((await svc.detail('cn-official', 'spell', 'c_xphb', 'XPHB'))?.english).toEqual({ status: 'not-paired' })
+  })
+})
+
+describe('LibraryService.detail 不用作者缓存里的条目', () => {
+  it('作者缓存被同编号的自制顶掉时，详情仍交库里存的原件；背景描述按交出去的对象问作者', async () => {
+    const fluffAsked: unknown[] = []
+    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({
+      detail: (_p, hash) => ({ ...detailOf(hash as string), item: { name: '自制补丁版' } }),
+      fluffOf: (_p, item) => { fluffAsked.push(item); return { fluff: { from: 'author' }, fluffError: null } },
+    }) })
+    const d = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
+    expect(d?.item).toEqual(spells.items[0])
+    expect(fluffAsked).toEqual([spells.items[0]])
+    expect(d?.fluff).toEqual({ from: 'author' })
   })
 })
 
