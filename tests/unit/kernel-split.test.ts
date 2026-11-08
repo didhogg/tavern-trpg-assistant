@@ -55,7 +55,7 @@ describe('P3-3b 拆分：引用 / 选择 / 状态差别', () => {
       { id: 'adv1', type: 'AbilityScoreImprovement', level: 0, data: { type: 'asi', assignments: { str: 2 } } },
     ])
     expect(split.state.actor).toEqual({ system: { attributes: { hp: { value: 2 } } } })
-    expect(split.state.items.weapon1).toMatchObject({ system: { equipped: false } })
+    expect(split.state.items['ref:item|battleaxe_phb']).toMatchObject({ system: { equipped: false } })
     expect(split.state.itemAdded).toHaveLength(1)
     expect(split.state.effectAdded).toHaveLength(1)
     expect(applyActorState(rebuilt, split.state)).toEqual(current)
@@ -68,7 +68,7 @@ describe('P3-3b 拆分：引用 / 选择 / 状态差别', () => {
     items.splice(1, 1)
     items.push({ _id: 'new1', name: '新物品', type: 'loot', flags: {}, system: {} })
     const split = splitActor({ id: 'actor1', name: 'x', data: current }, { id: 'actor1', name: 'x', data: rebuilt }, mapRef, {})
-    expect(split.state.itemRemoved).toEqual(['class1'])
+    expect(split.state.itemRemoved).toEqual(['ref:class|barbarian_phb'])
     expect(split.state.itemAdded.map((i) => i._id)).toEqual(['new1'])
     expect(applyActorState(rebuilt, split.state)).toEqual(current)
   })

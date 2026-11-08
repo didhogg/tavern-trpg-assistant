@@ -10,6 +10,7 @@ import { createItemCommands } from './commands-items'
 import { createCombatCommands } from './commands-combat'
 import { createMonsterCommands } from './commands-monsters'
 import { createLevelCommands } from './commands-level'
+import { createAddCommands } from './commands-add'
 import { createBatchCommands } from './commands-batch'
 
 /**
@@ -129,6 +130,7 @@ const COMBAT_COMMANDS = createCombatCommands(operate, actor)
 const MONSTER_COMMANDS = createMonsterCommands(operate)
 /** e 段建卡升级命令：只接线 dnd5e AdvancementManager。 */
 const LEVEL_COMMANDS = createLevelCommands(operate, actor)
+const ADD_COMMANDS = createAddCommands(operate, actor)
 const BATCH_COMMANDS = createBatchCommands(operate)
 
 // ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
@@ -166,6 +168,7 @@ export const KERNEL_COMMANDS = {
   ...COMBAT_COMMANDS,
   ...MONSTER_COMMANDS,
   ...LEVEL_COMMANDS,
+  ...ADD_COMMANDS,
   ...BATCH_COMMANDS,
   /**
    * 掷一个骰式：同一串点数得到同一结果。kind 选 dnd5e 的掷骰类（d20 = D20Roll，damage = DamageRoll，basic = BasicRoll），

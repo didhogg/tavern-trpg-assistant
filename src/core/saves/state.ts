@@ -9,6 +9,27 @@ export interface KernelActorStateLike {
   effectRemoved: string[]
 }
 
+/** 作者条目的长期身份：作者类别 + 作者编号。dnd5e 物品 ID 重建会变，不能当身份。 */
+export function stateKeyOfFlags(flags: { propDroppable?: unknown; hash?: unknown } | null | undefined): string | null {
+  return flags?.propDroppable && flags.hash ? `ref:${String(flags.propDroppable)}|${String(flags.hash)}` : null
+}
+
+export function stateKeyOfRef(ref: { kind?: unknown; hash?: unknown } | null | undefined): string | null {
+  return ref?.kind && ref.hash ? `ref:${String(ref.kind)}|${String(ref.hash)}` : null
+}
+
+/** 按状态键找物品：新存档是 ref:类别|作者编号，旧存档是物品 ID。 */
+export function itemMatchesStateKey(item: Record<string, unknown>, key: string): boolean {
+  if (item._id === key) return true
+  if (!key.startsWith('ref:')) return false
+  const f = isObject(item.flags) && isObject(item.flags.plutonium) ? item.flags.plutonium : null
+  return stateKeyOfFlags(f as { propDroppable?: unknown; hash?: unknown }) === key
+}
+
+export function itemForStateKey(items: Array<Record<string, unknown>>, key: string): Record<string, unknown> | null {
+  return items.find((item) => itemMatchesStateKey(item, key)) ?? null
+}
+
 export const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
 export const clone = <T>(value: T): T => structuredClone(value)
 
@@ -48,17 +69,16 @@ export function applyActorState(rebuilt: Record<string, unknown>, state: KernelA
   const items = Array.isArray(out.items) ? out.items as Record<string, unknown>[] : []
   const effects = Array.isArray(out.effects) ? out.effects as Record<string, unknown>[] : []
   const itemMap = new Map(items.filter((item) => typeof item._id === 'string').map((item) => [item._id as string, item]))
-  for (const [id, d] of Object.entries(state.items)) {
-    const item = itemMap.get(id)
-    if (!item) throw new Error(`状态差别指向的物品在重建结果里不存在：${id}`)
+  for (const [key, d] of Object.entries(state.items)) {
+    const item = itemForStateKey(items, key)
+    if (!item) throw new Error(`状态差别指向的物品在重建结果里不存在：${key}`)
     mergeDiff(item, d)
   }
   for (const item of state.itemAdded) {
     const id = item._id
     if (typeof id !== 'string' || !itemMap.has(id)) { items.push(clone(item)); if (typeof id === 'string') itemMap.set(id, item) }
   }
-  const removed = new Set(state.itemRemoved)
-  out.items = items.filter((item) => typeof item._id !== 'string' || !removed.has(item._id))
+  out.items = items.filter((item) => !state.itemRemoved.some((key) => itemMatchesStateKey(item, key)))
   const effectMap = new Map(effects.filter((effect) => typeof effect._id === 'string').map((effect) => [effect._id as string, effect]))
   for (const [id, d] of Object.entries(state.effects)) {
     const effect = effectMap.get(id)

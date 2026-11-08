@@ -66,10 +66,10 @@ describe('旧版本的战役与存档记录', () => {
         expect((e as TrpgError).code).toBe('E_OLD_DATA')
       }
     }
-    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 7, x: 1 })
+    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 8, x: 1 })
   })
 
-  it('第 5→7 版：旧人物的整份内容原样保留，标旧格式，不丢不猜', () => {
+  it('第 5→8 版：旧人物的整份内容原样保留，标旧格式，不丢不猜', () => {
     const state = { actor: { system: { attributes: { hp: { value: 7 } } } }, items: [{ _id: 'i1', name: 'Cleric' }], effects: [] }
     const raw = {
       schemaVersion: 5,
@@ -82,7 +82,7 @@ describe('旧版本的战役与存档记录', () => {
       },
     }
     const out = migrateRecord('save', raw)
-    expect(out.schemaVersion).toBe(7)
+    expect(out.schemaVersion).toBe(8)
     const kernel = (out.snapshot as Record<string, unknown>).kernel as Record<string, unknown>
     const actor = (kernel.actors as Array<Record<string, unknown>>)[0]
     expect(kernel.legacy).toBe(true)
@@ -90,5 +90,23 @@ describe('旧版本的战役与存档记录', () => {
     expect(actor.legacyState).toEqual(state)
     expect(actor.state).toEqual({})
     expect(actor.seed).toBe('旧角色')
+  })
+
+  it('第 7→8 版：状态物品键从物品 ID 迁到作者引用键', () => {
+    const raw = {
+      schemaVersion: 7,
+      snapshot: { kernel: {
+        rule: 'dnd5e2014', kernelVersion: 1, library: { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: [], exclude: [], choices: {} },
+        actors: [{ id: 'a1', name: '甲', seed: '甲', refs: [{ kind: 'item', set: 'cn-official', prop: 'item', hash: 'h', itemId: 'kernel1' }], choices: {},
+          state: { actor: {}, items: { kernel1: { system: { quantity: 2 } } }, effects: {}, itemAdded: [], itemRemoved: ['kernel1'], effectAdded: [], effectRemoved: [] } }],
+      } },
+    }
+    const out = migrateRecord('save', raw)
+    const snapshot = out.snapshot as Record<string, unknown>
+    const kernel = snapshot.kernel as Record<string, unknown>
+    const actor = (kernel.actors as Array<Record<string, unknown>>)[0]
+    const state = actor.state as Record<string, unknown>
+    expect(state.items).toEqual({ 'ref:item|h': { system: { quantity: 2 } } })
+    expect(state.itemRemoved).toEqual(['ref:item|h'])
   })
 })

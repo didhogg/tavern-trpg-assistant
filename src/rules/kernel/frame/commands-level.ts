@@ -6,9 +6,10 @@ import type { KernelActorStateLike } from '../../../core/saves/state'
 import { applyStateToActor } from './actor-state'
 import { freshSeed, reseedKernel } from './seed'
 import { importEntry, importerMeta, importerProps } from './importer'
+import { restoreRecordedChoices } from './commands-restore'
 
 const g = globalThis as any
-function Manager(): any {
+export function Manager(): any {
   const cls = g.dnd5e?.applications?.advancement?.AdvancementManager
   if (!cls) throw Error('dnd5e AdvancementManager is not available')
   return cls
@@ -18,7 +19,7 @@ function managerFor(actor: any, classId: string, delta: number, options: any = {
   return Manager().forLevelChange(actor, classId, delta, options)
 }
 
-function actorLevel(actor: any): any {
+export function actorLevel(actor: any): any {
   return {
     level: actor.system.details?.level ?? null,
     hp: actor.system.attributes?.hp?.toObject?.() ?? actor.system.attributes?.hp ?? null,
@@ -32,7 +33,7 @@ function actorLevel(actor: any): any {
   }
 }
 
-function cleanItem(item: any): any {
+export function cleanItem(item: any): any {
   const data = item?.toObject ? item.toObject() : structuredClone(item)
   for (const key of ['_id', '_key', 'folder', 'sort', 'ownership', '_stats']) delete data[key]
   return data
@@ -118,7 +119,7 @@ async function firstChoice(flow: any): Promise<any> {
  * 注意：不能把 forward 步骤标成 automatic——dnd5e 的连续自动循环只用第一步的自动值，
  * 后面的步骤会拿到错的数据（曾导致技能选择落空）。只覆盖 getAutomaticApplicationValue，让管理器逐步取值。
  */
-async function applyManager(manager: any, values: any[] | undefined, { strict = false } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
+export async function applyManager(manager: any, values: any[] | undefined, { strict = false } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
   if (!manager.steps.length) return { finished: true }
   for (const step of manager.steps) {
     if (step.automatic || !step.flow) continue
@@ -222,7 +223,7 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
   return { actor: created }
 }
 
-export interface BuildRow { prop: string; entry: any; refKey: string; data?: any }
+export interface BuildRow { prop: string; entry: any; refKey: string; itemId?: string; data?: any }
 export interface BuildPlan {
   name: string
   items: BuildRow[]
@@ -235,8 +236,8 @@ export interface BuildPlan {
 export interface RebuildPlan {
   name: string
   /** 顶层条目（种族/背景/职业/其他有作者编号的东西），按人物里的顺序。 */
-  items: Array<{ prop: string; entry: any; refKey: string; data?: any }>
-  equipment: Array<{ prop: string; entry: any; refKey: string; data?: any }>
+  items: Array<{ prop: string; entry: any; refKey: string; itemId?: string; data?: any }>
+  equipment: Array<{ prop: string; entry: any; refKey: string; itemId?: string; data?: any }>
   /** refKey → 官方 Advancement#reverse 记下的恢复数据。 */
   choices: Record<string, any[] | undefined>
   state?: KernelActorStateLike
@@ -320,7 +321,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     buildCharacter: (plan: BuildPlan) => operate([], async () => {
       const seed = plan.seed ?? freshSeed()
       const items = []
-      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
+      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
       const equipment = []
       for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
       const built = await buildActor(plan.name, items, equipment, plan.choices ?? {}, { strict: false, seed })
@@ -348,13 +349,14 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       const seed = plan.seed?.trim() || plan.name
       reseedKernel(seed)
       const items = []
-      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
+      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
       const equipment = []
-      for (const row of plan.equipment) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
+      for (const row of plan.equipment) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
       const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true, seed })
       if (built.pending) return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
       const base = built.actor.toObject()
       await applyStateToActor(built.actor, plan.state)
+      if ([...built.actor.items].filter((item: any) => item.type === 'class').length > 1) await restoreRecordedChoices(built.actor, plan.choices, [...plan.items, ...plan.equipment])
       return { id: built.actor.id, seed, ...actorLevel(built.actor), data: built.actor.toObject(), base }
     }),
   }

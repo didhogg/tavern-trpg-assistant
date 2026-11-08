@@ -139,6 +139,27 @@ export class KernelRuntime {
     return { status: 'complete', id: result.result.id, seed: result.result.seed }
   }
 
+  /** 给已有人物加条目；调用方只交引用。 */
+  async addToActor(ownerKey: string, actorId: string, refs: EntryRef[]): Promise<{ status: string; result?: any; error?: string; detail?: unknown }> {
+    const o = await this.get(ownerKey)
+    const rows = await this.entries(ownerKey, refs)
+    if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
+    const result = await o.session.call('addToActor', actorId, rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry })))
+    if (result.status !== 'complete') return { status: result.status, error: result.error ?? `加条目状态：${result.status}`, detail: result }
+    const base = o.bases.get(actorId)
+    if (base && Array.isArray(result.result?.added) && Array.isArray((base as any).items)) {
+      const current = await actorData(o.session, actorId)
+      const byId = new Map(((current?.items ?? []) as any[]).map((item: any) => [item._id, item]))
+      for (const item of result.result.added) {
+        const actual = byId.get(item._id) ?? item
+        const index = (base as any).items.findIndex((row: any) => row._id === actual._id)
+        if (index >= 0) (base as any).items[index] = actual
+        else (base as any).items.push(actual)
+      }
+    }
+    return { status: 'complete', result: result.result }
+  }
+
   /** T5：批量建怪物/NPC/载具/物件；单个也走这里。换算结果由会话缓存读写。 */
   async createActors(ownerKey: string, refs: EntryRef[]): Promise<{ status: string; actors?: any[]; error?: string; detail?: unknown }> {
     const o = await this.get(ownerKey)

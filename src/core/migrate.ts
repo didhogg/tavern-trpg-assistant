@@ -35,12 +35,35 @@ function kernelV7(record: Record<string, unknown>, holderKey: 'data' | 'snapshot
   return { ...record, [holderKey]: { ...holder, kernel: { ...kernel, actors } } }
 }
 
+/** 7→8（T4）：状态差别里的物品 ID 改成作者引用键；旧存档用 refs.itemId 对照。 */
+function kernelV8(record: Record<string, unknown>, holderKey: 'data' | 'snapshot'): Record<string, unknown> {
+  const holder = isObject(record[holderKey]) ? record[holderKey] as Record<string, unknown> : null
+  const kernel = holder && isObject(holder.kernel) ? holder.kernel as Record<string, unknown> : null
+  if (!holder || !kernel || !Array.isArray(kernel.actors)) return record
+  const actors = kernel.actors.map((actor) => {
+    if (!isObject(actor) || !isObject(actor.state) || !Array.isArray(actor.refs)) return actor
+    const map = new Map<string, string>()
+    for (const ref of actor.refs) {
+      if (!isObject(ref) || typeof ref.itemId !== 'string') continue
+      if (typeof ref.kind === 'string' && typeof ref.hash === 'string') map.set(ref.itemId, `ref:${ref.kind}|${ref.hash}`)
+    }
+    if (!map.size) return actor
+    const state = actor.state as Record<string, unknown>
+    const items = isObject(state.items) ? state.items : {}
+    const nextItems: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(items)) nextItems[map.get(key) ?? key] = value
+    const removed = Array.isArray(state.itemRemoved) ? state.itemRemoved.map((key) => typeof key === 'string' ? (map.get(key) ?? key) : key) : state.itemRemoved
+    return { ...actor, state: { ...state, items: nextItems, itemRemoved: removed } }
+  })
+  return { ...record, [holderKey]: { ...holder, kernel: { ...kernel, actors } } }
+}
+
 /** 结构变更的迁移登记；键是「从哪个版本升级」。 */
 export const MIGRATIONS: MigrationTable = {
   // 第 5 版（P3-3）：workspace / save 增加可选的 kernel 段（规则、选书、引用、选择、状态、修订、撤销）。
   // 第 6 版（P3-3b）：人物改为引用/选择/状态差别；旧格式整份内容保留到 legacyState，标 legacy。
-  workspace: { 4: (record) => record, 5: (record) => kernelV6(record, 'data'), 6: (record) => kernelV7(record, 'data') },
-  save: { 4: (record) => record, 5: (record) => kernelV6(record, 'snapshot'), 6: (record) => kernelV7(record, 'snapshot') },
+  workspace: { 4: (record) => record, 5: (record) => kernelV6(record, 'data'), 6: (record) => kernelV7(record, 'data'), 7: (record) => kernelV8(record, 'data') },
+  save: { 4: (record) => record, 5: (record) => kernelV6(record, 'snapshot'), 6: (record) => kernelV7(record, 'snapshot'), 7: (record) => kernelV8(record, 'snapshot') },
 }
 
 /**

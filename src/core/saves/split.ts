@@ -1,7 +1,7 @@
 // P3-3b 第 ② 步：把“完整人物 + 重建基准”拆成存档要的三样东西（引用/选择/状态差别），
 // 以及把这三样叠回重建出来的人物。纯函数，不碰数据库、不碰小窗。
 import { kernelActorStateSchema, type KernelActor, type KernelActorState, type KernelCampaign, type KernelChange, type KernelCombat, type KernelRef } from '../../schemas/kernel'
-import { clone, isObject, jsonDiff, mergeDiff } from './state'
+import { clone, isObject, jsonDiff, mergeDiff, stateKeyOfFlags, stateKeyOfRef } from './state'
 
 export { applyActorState, jsonDiff } from './state'
 
@@ -74,15 +74,30 @@ export function splitActor(current: KernelActorData, rebuilt: KernelActorData, m
   const base = rebuilt.data
   const state: KernelActorState = kernelActorStateSchema.parse({})
   state.actor = diff(stripCollections(base), stripCollections(data))
+  const refs = refsOf(data, mapRef)
+  const keyById = new Map<string, string>()
+  for (const ref of refs) if (ref.itemId) { const key = stateKeyOfRef(ref); if (key) keyById.set(ref.itemId, key) }
   const baseItems = byId(base.items)
   const currentItems = byId(data.items)
   for (const [id, item] of currentItems) {
     const before = baseItems.get(id)
-    if (!before) { state.itemAdded.push(clone(item)); continue }
+    const flags = isObject(item.flags) && isObject(item.flags.plutonium) ? item.flags.plutonium as KernelRefFlags : null
+    const key = stateKeyOfFlags(flags) ?? keyById.get(id) ?? id
+    if (!before) {
+      // 有作者引用的新增物品：重建时按 refs 重新建出来，不把整份内容塞进 state。
+      if (!key.startsWith('ref:')) state.itemAdded.push(clone(item))
+      continue
+    }
     const d = diff(before, item)
-    if (Object.keys(d).length) state.items[id] = d
+    if (Object.keys(d).length) state.items[key] = d
   }
-  for (const id of baseItems.keys()) if (!currentItems.has(id)) state.itemRemoved.push(id)
+  for (const [id, item] of baseItems) {
+    if (currentItems.has(id)) continue
+    const flags = isObject(item.flags) && isObject(item.flags.plutonium) ? item.flags.plutonium as KernelRefFlags : null
+    const direct = stateKeyOfFlags(flags)
+    const ref = flags ? mapRef(flags) : null
+    state.itemRemoved.push(direct ?? stateKeyOfRef(ref) ?? id)
+  }
   const baseEffects = byId(base.effects)
   const currentEffects = byId(data.effects)
   for (const [id, effect] of currentEffects) {
@@ -92,7 +107,6 @@ export function splitActor(current: KernelActorData, rebuilt: KernelActorData, m
     if (Object.keys(d).length) state.effects[id] = d
   }
   for (const id of baseEffects.keys()) if (!currentEffects.has(id)) state.effectRemoved.push(id)
-  const refs = refsOf(data, mapRef)
   return { refs, choices, state }
 }
 
