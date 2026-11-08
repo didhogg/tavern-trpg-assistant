@@ -32,9 +32,9 @@ try {
     const version = await h.dataVersion()
     const cache = new h.KernelCache(h.libraryDb)
     await h.libraryDb.derived.where('key').startsWith('kc:').delete()
-    const mk = async () => {
+    const mk = async (versionFn = h.dataVersion) => {
       const raw = (await h.startKernelSession(input)).session
-      return { raw, session: h.wrapKernelSession(raw, cache, input.cacheKey, h.dataVersion) }
+      return { raw, session: h.wrapKernelSession(raw, cache, input.cacheKey, versionFn) }
     }
     const k1 = await mk()
     const measure = async (fn) => { const t = performance.now(); const v = await fn(); return { ms: Math.round(performance.now() - t), v } }
@@ -58,8 +58,13 @@ try {
     const originalKey = await h.kernelImportKey({ base: input.cacheKey, dataVersion: version, kind: 'build', prop: plan.weapon.ref.prop, entry: plan.weapon.entry })
     const changedVersion = await h.kernelImportKey({ base: input.cacheKey, dataVersion: { ...version, official: 'changed' }, kind: 'build', prop: plan.weapon.ref.prop, entry: plan.weapon.entry })
     const changedEntry = await h.kernelImportKey({ base: input.cacheKey, dataVersion: version, kind: 'build', prop: plan.weapon.ref.prop, entry: { ...plan.weapon.entry, name: 'changed' } })
+    const keysBeforeChanged = (await h.libraryDb.derived.where('key').startsWith('kc:').toArray()).length
+    const changed = await mk(async () => ({ ...version, official: 'changed' }))
+    const changedWeapon = await measure(() => changed.session.call('importForBuild', plan.weapon.ref.prop, plan.weapon.entry))
+    changed.raw.close()
     const keys = await h.libraryDb.derived.where('key').startsWith('kc:').toArray()
     return {
+      changedVersion: { ms: changedWeapon.ms, status: changedWeapon.v.status, cacheRowsAdded: keys.length - keysBeforeChanged },
       ms: { weapon1: weapon1.ms, weapon2: weapon2.ms, weapon3: weapon3.ms, spell1: spell1.ms, spell2: spell2.ms, monster1: monster1.ms, monster2: monster2.ms, monster3: monster3.ms },
       same: { weapon: same(weapon1.v.result, weapon2.v.result) && same(weapon1.v.result, weapon3.v.result), spell: same(spell1.v.result, spell2.v.result), monster: same(m1, m2) && same(m1, m3) },
       cacheRows: keys.length,
