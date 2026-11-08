@@ -20,37 +20,60 @@ async function run(page) {
   await openKernel(page, input, errors)
   const out = await page.evaluate(async points => {
     const actors = await globalThis.__kernel.call('preparedActors')
-    const hero = actors.find(a => a.name.startsWith('Akra')).source
+    const template = actors.find(a => a.name.startsWith('Akra')).source
     const monster = actors.find(a => a.name === 'Goblin').source
-    const cls = hero.items.find(i => i.type === 'class')
-    const equipped = hero.items.find(i => i.type === 'equipment' && i.system?.type?.value === 'medium')
-    const spell = hero.items.find(i => i.type === 'spell' && i.system.level > 0 && i.name === 'Detect Poison and Disease')
-    const activity = spell && Object.values(spell.system.activities ?? {})[0]
-    const before = { heroHp: hero.system.attributes.hp.value, monsterHp: monster.system.attributes.hp.value,
-      level: hero.system.details.level, spellSlot: hero.system.spells?.spell1?.value ?? null }
-    const levelUp = await globalThis.__kernel.call('levelUpApply', hero._id, cls._id, 1)
-    const equipOff = equipped ? await globalThis.__kernel.call('equip', hero._id, equipped._id, false) : null
-    const equipOn = equipped ? await globalThis.__kernel.call('equip', hero._id, equipped._id, true) : null
-    const equip = equipOff ? { status: equipOff.status, result: equipOn?.result ?? equipOff.result,
-      changes: [...(equipOff.changes ?? []), ...(equipOn?.changes ?? [])], sources: { ...(equipOff.sources ?? {}), ...(equipOn?.sources ?? {}) } } : null
-    const cast = spell ? await globalThis.__kernel.call('cast', hero._id, spell._id, activity._id, points) : null
-    const damage = await globalThis.__kernel.call('damage', monster._id, [{ value: 5, type: 'slashing' }], [], {})
+    const kindItems = template.items.filter(i => ['race', 'background', 'class'].includes(i.type))
+    const weaponTemplate = template.items.find(i => i.type === 'weapon' && Object.values(i.system?.activities ?? {}).some(a => a.type === 'attack'))
+    const spell = template.items.find(i => i.type === 'spell' && i.system.level > 0
+      && Object.values(i.system.activities ?? {}).some(a => !a.target?.template?.type))
+    const activity = spell && Object.values(spell.system.activities).find(a => !a.target?.template?.type)
+    const before = { monsterHp: monster.system.attributes.hp.value, level: template.system.details.level }
+
+    // 建卡：空白人物 → 种族/背景/职业 → 起始武器；全部走官方 AdvancementManager。
+    const build = await globalThis.__kernel.call('buildCharacter', 'P3-4 新角色', kindItems, weaponTemplate ? [weaponTemplate] : [])
+    const built = build.result ?? {}
+    const heroId = built.id
+    const weapon = (built.weapons ?? []).find(w => w.activities.some(a => a.type === 'attack'))
+    if (!heroId || !weapon) throw new Error(`buildCharacter did not produce an armed actor: ${JSON.stringify(build).slice(0, 500)}`)
+
+    // 开战：掷先攻；若怪物先动，推进到英雄回合。
+    const combat = await globalThis.__kernel.call('combatStart', [heroId, monster._id], [20, 1])
+    let turn = combat
+    for (let i = 0; i < 4 && turn.result?.current !== heroId && turn.status === 'complete'; i++) {
+      turn = await globalThis.__kernel.call('combatNext', [3])
+    }
+
+    // 英雄攻击怪物：攻击检定 → 伤害总点数 → 对怪物 applyDamage（不再写死 5 点）。
+    const attack = await globalThis.__kernel.call('attack', heroId, weapon.id, [20, 4, 4, 4, 4, 4, 4, 4])
+    const damageTotal = attack.result?.damage?.[0]?.total ?? 0
+    const damageType = weapon.damageType ?? 'slashing'
+    const fight = damageTotal > 0
+      ? await globalThis.__kernel.call('damage', monster._id, [{ value: damageTotal, type: damageType }], [], {})
+      : { status: 'error', error: 'attack produced no damage', changes: [] }
+    const afterTurn = await globalThis.__kernel.call('combatNext', [3])
+
+    // 施法：用模板角色的无范围模板法术，验证法术位/专注（不影响建卡角色）。
+    const cast = spell ? await globalThis.__kernel.call('cast', template._id, spell._id, activity._id, points, { create: { measuredTemplate: false } }) : null
     const unsupported = await globalThis.__kernel.call('unsupported')
     const unsupportedRows = Array.isArray(unsupported) ? unsupported : (unsupported.result ?? [])
     return {
-      ids: { hero: hero._id, monster: monster._id, class: cls._id, equip: equipped?._id ?? null, spell: spell?._id ?? null },
-      names: { hero: hero.name, monster: monster.name, spell: spell?.name ?? null },
+      ids: { hero: heroId, monster: monster._id, weapon: weapon.id, spell: spell?._id ?? null },
+      names: { hero: built.name ?? 'P3-4 新角色', monster: monster.name, weapon: weapon.name, spell: spell?.name ?? null },
       before,
-      levelUp: { status: levelUp.status, result: levelUp.result, changes: levelUp.changes, sources: levelUp.sources },
-      equip: equip ? { status: equip.status, result: equip.result, changes: equip.changes, sources: equip.sources } : null,
+      build: { status: build.status, result: built, changes: build.changes, sources: build.sources },
+      combat: { status: combat.status, result: combat.result, changes: combat.changes },
+      turn: { status: turn.status, result: turn.result, changes: turn.changes },
+      attack: { status: attack.status, result: attack.result, changes: attack.changes },
+      fight: { status: fight.status, result: fight.result, changes: fight.changes },
+      afterTurn: { status: afterTurn.status, result: afterTurn.result, changes: afterTurn.changes },
       cast: cast ? { status: cast.status, result: cast.result, changes: cast.changes, sources: cast.sources } : null,
-      damage: { status: damage.status, result: damage.result, changes: damage.changes, sources: damage.sources },
-      unsupported: { count: unsupportedRows.length, sample: unsupportedRows.slice(0, 3) },
+      unsupported: { count: unsupportedRows.length, sample: unsupportedRows.slice(0, 5) },
       provenance: {
-        levelUp: { before: before.level, after: levelUp.result?.level ?? null },
-        equip: { item: equipped?.name ?? null, after: equipOn?.result?.item?.equipped ?? null },
-        cast: { before: before.spellSlot, after: cast?.result?.slots?.spell1?.value ?? null },
-        damage: { before: before.monsterHp, after: damage.result?.hp?.value ?? null, amount: 5, type: 'slashing' },
+        build: { level: built.level ?? null, hp: built.hp?.value ?? null },
+        attack: { total: attack.result?.attack?.[0]?.total ?? null, damage: damageTotal, type: damageType },
+        fight: { before: before.monsterHp, after: fight.result?.hp?.value ?? null },
+        turn: { round: afterTurn.result?.round ?? null, current: afterTurn.result?.current ?? null },
+        cast: { before: template.system.spells?.spell1?.value ?? null, after: cast?.result?.slots?.spell1?.value ?? null },
       },
     }
   }, points)
@@ -71,11 +94,14 @@ for (const [name, engine, launch] of [
     const replay = await (await browser.newContext()).newPage()
     result.replay = await run(replay)
     await replay.close()
-    const keys = ['levelUp', 'equip', 'cast', 'damage']
+    const keys = ['build', 'combat', 'turn', 'attack', 'fight', 'afterTurn', 'cast']
     result.replayDiffs = keys.flatMap(key => result.first[key] && result.replay[key]
       ? differences(normalize(result.first[key]), normalize(result.replay[key]), key).map(d => ({ key, ...d })) : [])
-    result.passed = result.first.levelUp.status === 'complete'
-      && result.first.damage.status === 'complete'
+    result.passed = result.first.build.status === 'complete'
+      && result.first.combat.status === 'complete'
+      && result.first.turn.status === 'complete'
+      && result.first.fight.status === 'complete'
+      && result.first.provenance.fight.after < result.first.provenance.fight.before
       && result.replayDiffs.length === 0
   } catch (error) {
     result.failure = error.stack ?? String(error)
@@ -83,8 +109,10 @@ for (const [name, engine, launch] of [
   } finally {
     if (!result.passed) process.exitCode = 1
     await save(`p3-4-kernel-${name}.json`, result)
-    console.log(JSON.stringify({ engine: name, passed: result.passed, ids: result.first?.ids, levelUp: result.first?.levelUp?.status,
-      cast: result.first?.cast?.status, damage: result.first?.damage?.status, replayDiffs: result.replayDiffs?.length,
+    console.log(JSON.stringify({ engine: name, passed: result.passed, ids: result.first?.ids,
+      build: result.first?.build?.status, combat: result.first?.combat?.status, turn: result.first?.turn?.status,
+      attack: result.first?.attack?.status, fight: result.first?.fight?.status, cast: result.first?.cast?.status,
+      provenance: result.first?.provenance, replayDiffs: result.replayDiffs?.length,
       unsupported: result.first?.unsupported?.count, failure: result.failure?.slice(0, 400) }, null, 1))
     await browser.close()
   }

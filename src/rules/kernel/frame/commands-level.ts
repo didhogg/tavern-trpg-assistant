@@ -21,7 +21,39 @@ function actorLevel(actor: any): any {
     hp: actor.system.attributes?.hp?.toObject?.() ?? actor.system.attributes?.hp ?? null,
     items: actor.items?.size ?? null,
     classes: actor.items?.contents?.filter((i: any) => i.type === 'class').map((i: any) => ({ id: i.id, name: i.name, levels: i.system.levels ?? null })) ?? [],
+    weapons: actor.items?.contents?.filter((i: any) => i.type === 'weapon').map((i: any) => ({
+      id: i.id, name: i.name,
+      activities: [...(i.system.activities ?? [])].map((a: any) => ({ id: a.id, type: a.type })),
+      damageType: i.system.damage?.base?.types?.[0] ?? null,
+    })) ?? [],
   }
+}
+
+function cleanItem(item: any): any {
+  const data = item?.toObject ? item.toObject() : structuredClone(item)
+  for (const key of ['_id', '_key', 'folder', 'sort', 'ownership', '_stats']) delete data[key]
+  return data
+}
+
+async function applyManager(manager: any): Promise<boolean> {
+  if (!manager.steps.length) return true
+  for (const step of manager.steps) {
+    if (step.automatic || !step.flow) continue
+    const value = await firstChoice(step.flow)
+    if (value === undefined) continue
+    step.flow.getAutomaticApplicationValue = async () => value
+    step.automatic = true
+  }
+  const completed = new Promise<boolean>(resolve => {
+    const hook = g.Hooks.on('dnd5e.advancementManagerComplete', (finished: any) => {
+      if (finished !== manager) return
+      g.Hooks.off(hook)
+      resolve(true)
+    })
+    setTimeout(() => { g.Hooks.off(hook); resolve(false) }, 2_000)
+  })
+  await manager.render()
+  return completed
 }
 
 async function describeSteps(manager: any): Promise<any[]> {
@@ -67,6 +99,12 @@ async function firstChoice(flow: any): Promise<any> {
     const items = (advancement.configuration?.items ?? []).filter((item: any) => !item.optional)
     return { ability: advancement.configuration?.spell?.ability?.[0] ?? null,
       selected: (items.length ? items : advancement.configuration?.items ?? []).map((item: any) => item.uuid) }
+  }
+
+  if (type === 'ItemChoice') {
+    const count = advancement.configuration?.choices?.[flow.level]?.count ?? 1
+    const pool = (advancement.configuration?.pool ?? []).map((item: any) => item.uuid)
+    return { selected: pool.slice(0, count) }
   }
 
   if (type === 'Subclass') {
@@ -137,23 +175,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     levelUpApply: (actorId: string, classId: string, delta = 1) => operate([], async () => {
       const a = actor(actorId)
       const manager = managerFor(a, classId, delta, { automaticApplication: true })
-      for (const step of manager.steps) {
-        if (step.automatic || !step.flow) continue
-        const value = await firstChoice(step.flow)
-        if (value === undefined) continue
-        step.flow.getAutomaticApplicationValue = async () => value
-        step.automatic = true
-      }
-      const completed = new Promise<boolean>(resolve => {
-        const hook = g.Hooks.on('dnd5e.advancementManagerComplete', (finished: any) => {
-          if (finished !== manager) return
-          g.Hooks.off(hook)
-          resolve(true)
-        })
-        setTimeout(() => { g.Hooks.off(hook); resolve(false) }, 2_000)
-      })
-      await manager.render()
-      const finished = await completed
+      const finished = await applyManager(manager)
       if (!finished) {
         return {
           kernelStatus: 'pending',
@@ -163,6 +185,21 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       }
       return actorLevel(a)
     }, [actorId]),
+
+    /** 用结算内核建一张新卡：空白人物 → 种族/背景/职业（官方 forNewItem）→ 起始武器。 */
+    buildCharacter: (name: string, items: any[], equipment: any[] = []) => operate([], async () => {
+      const ActorClass = g.CONFIG.Actor.documentClass
+      const created = await ActorClass.create({ name, type: 'character', system: { details: { level: 1 } } })
+      for (const item of items) {
+        const manager = Manager().forNewItem(created, cleanItem(item), { automaticApplication: true })
+        const finished = await applyManager(manager)
+        if (!finished) {
+          return { kernelStatus: 'pending', reason: 'build-step-not-complete', step: stepSummary(manager.step), built: actorLevel(created) }
+        }
+      }
+      if (equipment.length) await created.createEmbeddedDocuments('Item', equipment.map(cleanItem))
+      return { id: created.id, ...actorLevel(created) }
+    }),
 
     /** 建卡待选项：把作者转出的种族/背景/职业条目放进一个空白 1 级人物，列官方成长步骤（不改世界）。 */
     buildSteps: (itemData: any) => operate([], async () => {

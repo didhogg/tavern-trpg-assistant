@@ -38,11 +38,13 @@ async function run(page, kernel) {
     const dedupeRefs = new Set(q.map(r => `${r.ref.set}|${r.ref.prop}|${r.ref.hash}`))
     const excluded = { ...library, exclude: ['src:phb'] }
     const q2 = await h.scoped.query(excluded, 'spell', { source: 'PHB' })
+    await h.scoped.manage.addScope({ id: 'p34', name: 'P3-4 scope' })
+    await h.scoped.manage.setAssignment('src:p34-test', { scopes: ['p34'], global: false })
     const scopesExport = await h.custom.exportScopes()
     const scopesRestored = await h.custom.importScopes(scopesExport)
     const navIndexInstalled = await h.hasSourceFile('cn-official', 'data/generated/gendata-nav-adventure-book-index.json')
-    const heroState = { actor: { _id: kernel.ids.hero, system: { attributes: { hp: { value: kernel.before.heroHp }, spells: { spell1: { value: 2 } } } } }, items: [], effects: [] }
-    const monsterState = { actor: { _id: kernel.ids.monster, system: { attributes: { hp: { value: kernel.before.monsterHp } } } }, items: [], effects: [] }
+    const heroState = { actor: null, items: [], effects: [] }
+    const monsterState = { actor: { _id: kernel.ids.monster, system: { attributes: { hp: { value: kernel.provenance.fight.before } } } }, items: [], effects: [] }
     const bound = await h.kernelSave.bind(owner.ownerKey, {
       rule: 'dnd5e2014', kernelVersion: 1, library,
       dataVersion: { official: 'old-official', brews: {} },
@@ -55,7 +57,7 @@ async function run(page, kernel) {
       ],
       revision: 0, undo: [],
     })
-    const allChanges = [...kernel.levelUp.changes, ...(kernel.equip?.changes ?? []), ...(kernel.cast?.changes ?? []), ...kernel.damage.changes]
+    const allChanges = [...kernel.build.changes, ...kernel.combat.changes, ...kernel.turn.changes, ...kernel.attack.changes, ...kernel.fight.changes]
     const preview = await h.kernelSave.preview(owner.ownerKey, allChanges)
     const applied = await h.kernelSave.apply(owner.ownerKey, allChanges, preview.revision)
     const afterApply = await h.kernelSave.read(owner.ownerKey)
@@ -63,11 +65,17 @@ async function run(page, kernel) {
     const monsterAfter = afterApply.actors.find(a => a.id === kernel.ids.monster)
     const appliedState = {
       heroHp: heroAfter?.state.actor?.system?.attributes?.hp?.value ?? null,
+      heroLevel: (heroAfter?.state.items ?? []).filter(i => i.type === 'class').reduce((n, i) => n + (i.system?.levels ?? 0), 0) || null,
       monsterHp: monsterAfter?.state.actor?.system?.attributes?.hp?.value ?? null,
-      spell1: heroAfter?.state.actor?.system?.spells?.spell1?.value ?? null,
     }
+    // 撤销：回到建卡/战斗前；再重新写入，继续存档/读档。
+    const undone = await h.kernelSave.undo(owner.ownerKey, applied.kernel.revision)
+    const undoneHero = undone?.kernel.actors.find(a => a.id === kernel.ids.hero)
+    const undoneMonster = undone?.kernel.actors.find(a => a.id === kernel.ids.monster)
+    const undoRestored = undoneMonster?.state.actor?.system?.attributes?.hp?.value === kernel.provenance.fight.before
+      && undoneHero?.state.actor == null
+    const reapplied = await h.kernelSave.apply(owner.ownerKey, allChanges, undone?.kernel.revision ?? applied.kernel.revision)
     await h.campaign.saveCurrent(owner.ownerKey)
-
     // §4 新加：版本/覆盖差异（真实【库】当前版本 + 新建房规覆盖）
     const house = await h.custom.createHouseRule(library, ref, { mod: { entries: { mode: 'appendArr', items: 'P3-4 房规' } } })
     const checkChanged = await h.kernelSave.check(owner.ownerKey)
@@ -89,8 +97,8 @@ async function run(page, kernel) {
     const loaded = await h.kernelSave.read(owner.ownerKey)
     const loadedState = {
       heroHp: loaded.actors.find(a => a.id === kernel.ids.hero)?.state.actor?.system?.attributes?.hp?.value ?? null,
+      heroLevel: (loaded.actors.find(a => a.id === kernel.ids.hero)?.state.items ?? []).filter(i => i.type === 'class').reduce((n, i) => n + (i.system?.levels ?? 0), 0) || null,
       monsterHp: loaded.actors.find(a => a.id === kernel.ids.monster)?.state.actor?.system?.attributes?.hp?.value ?? null,
-      spell1: loaded.actors.find(a => a.id === kernel.ids.hero)?.state.actor?.system?.spells?.spell1?.value ?? null,
     }
     const checkLoaded = await h.kernelSave.check(owner.ownerKey)
 
@@ -117,9 +125,12 @@ async function run(page, kernel) {
       dedupe: { rows: q.length, unique: dedupeRefs.size, otherCampaignRows: q2.length },
       scopes: { exported: scopesExport.format, restored: scopesRestored },
       navIndexInstalled,
+      expected: { heroHp: kernel.provenance.build.hp, heroLevel: kernel.provenance.build.level, monsterHp: kernel.provenance.fight.after },
       changes: allChanges.length,
       previewRows: preview.rows.length,
       appliedRevision: applied.kernel.revision,
+      undo: { revision: undone?.kernel.revision ?? null, restored: undoRestored },
+      reappliedRevision: reapplied.kernel.revision,
       appliedState,
       checkChanged,
       checkBefore,
@@ -137,13 +148,15 @@ async function run(page, kernel) {
 }
 
 const verdict = o => ({
-  applied: o.changes > 0 && o.previewRows === o.changes && o.appliedRevision === 1 && o.appliedState.monsterHp === 2 && o.appliedState.spell1 === 1,
+  applied: o.changes > 0 && o.previewRows === o.changes && o.appliedRevision === 1 && o.reappliedRevision === 3
+    && o.appliedState.heroHp === o.expected.heroHp && o.appliedState.heroLevel === o.expected.heroLevel && o.appliedState.monsterHp === o.expected.monsterHp,
+  undo: o.undo?.revision === 2 && o.undo?.restored,
   dedupe: o.dedupe.rows > 0 && o.dedupe.unique === o.dedupe.rows && o.dedupe.otherCampaignRows === 0,
-  scopes: o.scopes.exported === 'trpg-library-scopes' && o.scopes.restored.scopes >= 0 && o.scopes.restored.assignments >= 0,
+  scopes: o.scopes.exported === 'trpg-library-scopes' && o.scopes.restored.scopes > 0 && o.scopes.restored.assignments > 0,
   changed: o.checkBefore.dataVersionChanged && o.checkBefore.overridesChanged,
   closed: o.closed.missing.length >= 1 && o.closed.missing.every(m => m.reason === 'excluded') && o.closed.refsSurvive,
   open: o.open === 0,
-  loaded: o.loadedState.monsterHp === 2 && o.loadedState.spell1 === 1 && o.checkLoaded === 0,
+  loaded: o.loadedState.monsterHp === o.expected.monsterHp && o.loadedState.heroHp === o.expected.heroHp && o.loadedState.heroLevel === o.expected.heroLevel && o.checkLoaded === 0,
   stale: o.stale === 'E_REVISION_CONFLICT' && o.staleUnchanged,
   backup: o.backup.libraryFiles >= 3 && o.restored.library?.brews > 0 && o.restored.library?.houseRules > 0 && o.restored.workspace && o.restored.missing === 0,
 })
