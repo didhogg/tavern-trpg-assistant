@@ -66,10 +66,10 @@ describe('旧版本的战役与存档记录', () => {
         expect((e as TrpgError).code).toBe('E_OLD_DATA')
       }
     }
-    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 6, x: 1 })
+    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 7, x: 1 })
   })
 
-  it('第 5→6 版：旧人物的整份内容原样保留，标旧格式，不丢不猜', () => {
+  it('第 5→7 版：旧人物的整份内容原样保留，标旧格式，不丢不猜', () => {
     const state = { actor: { system: { attributes: { hp: { value: 7 } } } }, items: [{ _id: 'i1', name: 'Cleric' }], effects: [] }
     const raw = {
       schemaVersion: 5,
@@ -82,12 +82,13 @@ describe('旧版本的战役与存档记录', () => {
       },
     }
     const out = migrateRecord('save', raw)
-    expect(out.schemaVersion).toBe(6)
+    expect(out.schemaVersion).toBe(7)
     const kernel = (out.snapshot as Record<string, unknown>).kernel as Record<string, unknown>
     const actor = (kernel.actors as Array<Record<string, unknown>>)[0]
     expect(kernel.legacy).toBe(true)
     expect(actor.legacy).toBe(true)
     expect(actor.legacyState).toEqual(state)
     expect(actor.state).toEqual({})
+    expect(actor.seed).toBe('旧角色')
   })
 })

@@ -262,7 +262,7 @@ describe('P3-3 存档内核段', () => {
         mapRef: (ownerKey) => { mapped.push(ownerKey); return () => null },
         compactActors: async (ownerKey, ids) => {
           asked.push([ownerKey, ids])
-          return ids.map((id) => ({ id, name: '测试角色', refs: [{ kind: 'spell', ...REF, label: '火球术' }], choices: {},
+          return ids.map((id) => ({ id, name: '测试角色', seed: '测试角色', refs: [{ kind: 'spell', ...REF, label: '火球术' }], choices: {},
             state: { actor: { system: { attributes: { hp: { value: 4 } } } }, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] } }))
         } })
       await kernel.bind(OWNER.ownerKey, campaign())

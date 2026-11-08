@@ -30,7 +30,7 @@ async function run(page) {
     const before = { monsterHp: monster.system.attributes.hp.value, level: template.system.details.level }
 
     // 建卡：空白人物 → 种族/背景/职业 → 起始武器；全部走官方 AdvancementManager。
-    const build = await globalThis.__kernel.call('buildCharacter', 'P3-4 新角色', kindItems, weaponTemplate ? [weaponTemplate] : [])
+    const build = await globalThis.__kernel.call('buildCharacter', { name: 'P3-4 新角色', items: kindItems.map(i => ({ prop: i.type, refKey: i._id, entry: i, data: i })), equipment: weaponTemplate ? [{ prop: 'item', refKey: weaponTemplate._id, entry: weaponTemplate, data: weaponTemplate }] : [] })
     const built = build.result ?? {}
     const heroId = built.id
     const weapon = (built.weapons ?? []).find(w => w.activities.some(a => a.type === 'attack'))
