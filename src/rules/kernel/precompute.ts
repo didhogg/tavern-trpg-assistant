@@ -150,7 +150,10 @@ export class KernelPrecompute {
       for (const row of rows) {
         if (limit && out.length >= limit) break
         const item = row.item as { name?: unknown } | null
-        out.push({ prop, entry: await entryOf(this.opts, library, row.ref, row.item, row.version.altId), name: String(item?.name ?? row.ref.hash) })
+        // 作者条目里有一类只有属性缩写、没有 name 的元数据（例如 itemProperty）；它们不是 Actor/Item 文档。
+        // 作者导入器对它们会返回无文档；这里按内容的真实形状跳过，不写类别名单。
+        if (typeof item?.name !== 'string' || !item.name) continue
+        out.push({ prop, entry: await entryOf(this.opts, library, row.ref, row.item, row.version.altId), name: item.name })
       }
       if (limit && out.length >= limit) break
     }
