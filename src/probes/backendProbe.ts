@@ -52,9 +52,10 @@ async function chain(): Promise<void> {
   steps.push({ step: '结算内核启动耗时', ms: bootMs, ok: true })
 
   const imported = await timed(steps, '导入条目（Plutonium）', async () => {
+    await session.call('setSeed', '真机英雄')
     const out: unknown[] = []
     for (const row of [...picked.build, ...picked.equipment]) {
-      const r = await session.call('importForBuild', row.ref.prop, row.entry)
+      const r = await session.call('importForBuild', row.ref.prop, row.entry, '真机英雄')
       if (r.status !== 'complete') throw new Error(`导入 ${row.label} 失败：${r.error ?? r.status}`)
       out.push(r.result)
     }

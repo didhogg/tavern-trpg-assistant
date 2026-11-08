@@ -5,7 +5,7 @@
 import { CHANNEL, FRAME_PARAM, type FrameCall, type FrameReady, type FrameResult } from '../../../library/runtime/protocol'
 import { assembleWorld, type KernelInput } from './world'
 import { createServer, type ChangeRecord } from './server'
-import { installSeededCrypto } from './random'
+import { reseedKernel } from './seed'
 import { KERNEL_COMMANDS } from './commands'
 
 const g = globalThis as any
@@ -41,14 +41,13 @@ async function readPack(id: string): Promise<any[]> {
   return JSON.parse(text)
 }
 
-const reseed = installSeededCrypto(globalThis)
 let kernel: { changes: ChangeRecord[]; calls: any[]; steps: string[] } | undefined
 
 async function boot(input: KernelInput): Promise<unknown> {
   if (kernel) throw Error('Kernel is already booted')
   const steps: string[] = []
   const { foundry, Hooks } = g
-  reseed(input.seed ?? 'kernel')
+  reseedKernel(input.seed ?? 'kernel')
   // 版本信息必须先建：包对象构造时就要判断可用性。
   g.release = new foundry.config.ReleaseData(input.release)
   const data = assembleWorld(input)

@@ -114,6 +114,7 @@ export async function rebuildActor(opts: {
     .map((e) => ({ prop: e.ref.prop, entry: e.entry, refKey: refKey(e.ref) }))
   const result = await opts.session.call('rebuildCharacter', {
     name: opts.actor.name,
+    seed: opts.actor.name,
     items,
     equipment,
     choices: opts.actor.choices as Record<string, unknown[] | undefined>,

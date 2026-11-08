@@ -102,18 +102,19 @@ try {
     }
     const call = (fn, ...args) => k.call(fn, ...args).then((r) => ({ status: r.status, result: r.result, error: r.error }))
     const imp = {}
+    await call('setSeed', '测速英雄')
     await measure('导入 建卡三件（种族/背景/职业）', async () => {
-      imp.race = (await call('importForBuild', 'race', plan.heroPlan.race.entry)).result
-      imp.background = (await call('importForBuild', 'background', plan.heroPlan.background.entry)).result
-      imp.class = (await call('importForBuild', 'class', plan.heroPlan.class.entry)).result
+      imp.race = (await call('importForBuild', 'race', plan.heroPlan.race.entry, '测速英雄')).result
+      imp.background = (await call('importForBuild', 'background', plan.heroPlan.background.entry, '测速英雄')).result
+      imp.class = (await call('importForBuild', 'class', plan.heroPlan.class.entry, '测速英雄')).result
       return 'complete'
     })
-    await measure('导入 武器（第一件）', async () => (imp.weapon0 = (await call('importForBuild', 'item', plan.heroPlan.weapon.entry)).result) && 'complete')
-    await measure('导入 武器（第二件）', async () => (imp.weapon1 = (await call('importForBuild', 'item', plan.heroPlan.weapon.entry)).result) && 'complete')
-    await measure('导入 法术（第一件）', async () => (imp.spell0 = (await call('importForBuild', 'spell', plan.heroPlan.spell.entry)).result) && 'complete')
-    await measure('导入 法术（第二件）', async () => (imp.spell1 = (await call('importForBuild', 'spell', plan.heroPlan.spell.entry)).result) && 'complete')
-    if (plan.magic0) await measure('导入 魔法物品（第一件）', async () => (imp.magic0 = (await call('importForBuild', 'item', plan.magic0.entry)).result) && 'complete')
-    if (plan.magic1) await measure('导入 魔法物品（第二件）', async () => (imp.magic1 = (await call('importForBuild', 'item', plan.magic1.entry)).result) && 'complete')
+    await measure('导入 武器（第一件）', async () => (imp.weapon0 = (await call('importForBuild', 'item', plan.heroPlan.weapon.entry, '测速英雄')).result) && 'complete')
+    await measure('导入 武器（第二件）', async () => (imp.weapon1 = (await call('importForBuild', 'item', plan.heroPlan.weapon.entry, '测速英雄')).result) && 'complete')
+    await measure('导入 法术（第一件）', async () => (imp.spell0 = (await call('importForBuild', 'spell', plan.heroPlan.spell.entry, '测速英雄')).result) && 'complete')
+    await measure('导入 法术（第二件）', async () => (imp.spell1 = (await call('importForBuild', 'spell', plan.heroPlan.spell.entry, '测速英雄')).result) && 'complete')
+    if (plan.magic0) await measure('导入 魔法物品（第一件）', async () => (imp.magic0 = (await call('importForBuild', 'item', plan.magic0.entry, '测速英雄')).result) && 'complete')
+    if (plan.magic1) await measure('导入 魔法物品（第二件）', async () => (imp.magic1 = (await call('importForBuild', 'item', plan.magic1.entry, '测速英雄')).result) && 'complete')
     const monster0 = await measure('导入 怪物（第一只）', async () => {
       imp.monster0 = (await call('importMonsterActor', plan.monster.entry)).result
       return imp.monster0 ? 'complete' : 'error'
@@ -198,8 +199,9 @@ try {
     const call = (k, fn, ...args) => k.call(fn, ...args).then((r) => ({ status: r.status, result: r.result, error: r.error }))
     const k1 = (await h.startKernelSession(input)).session
     const imp = {}
+    await call(k1, 'setSeed', '重建基线英雄')
     for (const key of ['race', 'background', 'class', 'weapon', 'spell']) {
-      imp[key] = (await call(k1, 'importForBuild', plan.heroPlan[key].ref.prop, plan.heroPlan[key].entry)).result
+      imp[key] = (await call(k1, 'importForBuild', plan.heroPlan[key].ref.prop, plan.heroPlan[key].entry, '重建基线英雄')).result
     }
     const built = await call(k1, 'buildCharacter', '重建基线英雄', [imp.race, imp.background, imp.class], [imp.weapon, imp.spell])
     const id = built.result?.id

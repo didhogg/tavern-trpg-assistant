@@ -4,8 +4,11 @@
 import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
 import { applyStateToActor } from './actor-state'
+import { reseedKernel } from './seed'
 
 const g = globalThis as any
+/** 作者导入器第一次用时初始化会消耗随机数；每个类别先空跑一次，之后真导入才从人物种子开始。 */
+const warmedImports = new Set<string>()
 
 function Manager(): any {
   const cls = g.dnd5e?.applications?.advancement?.AdvancementManager
@@ -199,7 +202,8 @@ async function describeSteps(manager: any): Promise<any[]> {
 }
 
 /** 建一张新卡：空白人物 → 种族/背景/职业（官方 forNewItem）→ 装备；没有成长步骤的顶层条目也显式放进人物。 */
-async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false } = {}): Promise<any> {
+async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed }: { strict?: boolean; seed?: string } = {}): Promise<any> {
+  if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
   const created = await ActorClass.create({ name, type: 'character', system: { details: { level: 1 } } })
   for (const raw of items) {
@@ -237,11 +241,24 @@ const UNCHOSEN_PROFICIENCIES: Record<string, string[]> = {
   // 不传已选就会被 dnd5e 当成全给。等人物界面把玩家选的那一种传进来再登记。
 }
 
-async function importEntry(prop: string, entry: any): Promise<any> {
+async function importEntry(prop: string, entry: any, seed?: string): Promise<any> {
   const api = g.game.modules.get('plutonium')?.api
   if (!api?.importer) throw Error('Plutonium importer is not available')
+  // 作者导入器第一次用时自己会初始化（会消耗随机数）；先初始化，再按人物重设种子，
+  // 这样同一条目排在哪次导入前后，生成的编号都从同一个种子开始。
   const importer = await api.importer.pGetImporter({ prop })
   if (!importer) throw Error(`No Plutonium importer for ${prop}`)
+  if (seed !== undefined && !warmedImports.has(prop)) {
+    warmedImports.add(prop)
+    reseedKernel(`warmup:${prop}`)
+    try {
+      await importer.pImportEntry(structuredClone(entry), new api.importer.ImportOpts({ isTemp: true }), structuredClone(UNCHOSEN_PROFICIENCIES))
+    } catch (e) {
+      console.warn('[trpg-kernel] 导入器预热失败，继续真导入', e)
+    }
+    reseedKernel(seed)
+  }
+  if (seed !== undefined) reseedKernel(seed)
   const opts = new api.importer.ImportOpts({ isTemp: true })
   const summary = prop === 'class' && importer.pImportEntryClass
     ? await importer.pImportEntryClass(entry, opts)
@@ -259,6 +276,8 @@ export interface RebuildPlan {
   /** refKey → 官方 Advancement#reverse 记下的恢复数据。 */
   choices: Record<string, any[] | undefined>
   state?: KernelActorStateLike
+  /** 这个人物自己的种子；不给就用名字。 */
+  seed?: string
 }
 
 export function createLevelCommands(operate: Operate, actor: ActorGetter) {
@@ -314,9 +333,12 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       return out
     }, [actorId]),
 
+    /** 建卡前按人物标识重设随机源；建卡流程在导入条目之前调用。 */
+    setSeed: (seed: string) => operate([], async () => { reseedKernel(seed); return true }),
+
     /** 用结算内核建一张新卡；choices 按 refKey 给出官方 reverse 的恢复数据。 */
     buildCharacter: (name: string, items: any[], equipment: any[] = [], choices: Record<string, any[] | undefined> = {}) => operate([], async () => {
-      const built = await buildActor(name, items, equipment, choices, { strict: false })
+      const built = await buildActor(name, items, equipment, choices, { strict: false, seed: name })
       if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', step: built.step, built: built.built }
       return { id: built.actor.id, ...actorLevel(built.actor) }
     }),
@@ -331,15 +353,17 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     }),
 
     /** 按作者条目导入成 dnd5e 物品数据（不进世界）；新建卡与读档重建共用这一个入口。 */
-    importForBuild: (prop: string, entry: any) => operate([], async () => importEntry(prop, entry)),
+    importForBuild: (prop: string, entry: any, seed?: string) => operate([], async () => importEntry(prop, entry, seed)),
 
     /** P3-3b 重建：按引用导入作者条目 → 按记下的选择建卡 → 叠状态差别。 */
     rebuildCharacter: (plan: RebuildPlan) => operate([], async () => {
+      const seed = plan.seed ?? plan.name
+      reseedKernel(seed)
       const items = []
-      for (const row of plan.items) items.push({ data: await importEntry(row.prop, row.entry), refKey: row.refKey })
+      for (const row of plan.items) items.push({ data: await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
       const equipment = []
-      for (const row of plan.equipment) equipment.push({ data: await importEntry(row.prop, row.entry), refKey: row.refKey })
-      const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true })
+      for (const row of plan.equipment) equipment.push({ data: await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
+      const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true, seed })
       if (built.pending) return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
       const base = built.actor.toObject()
       await applyStateToActor(built.actor, plan.state)

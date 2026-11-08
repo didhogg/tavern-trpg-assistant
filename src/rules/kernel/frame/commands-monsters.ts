@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 import type { Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
+import { reseedKernel } from './seed'
 import { applyStateToActor } from './actor-state'
 
 const g = globalThis as any
@@ -79,6 +80,10 @@ async function importOne(entry: any): Promise<any> {
   }
 }
 
+function seedForMonster(entry: any): void {
+  reseedKernel(`monster:${String(entry?.name ?? '')}|${String(entry?.source ?? '')}`)
+}
+
 export function createMonsterCommands(operate: Operate) {
   return {
     /** 完整怪物导入（临时 Actor，不进世界）：全量验证用。 */
@@ -100,6 +105,7 @@ export function createMonsterCommands(operate: Operate) {
 
     /** P3-3b 重建怪物：按作者条目重新导入 → 建 Actor → 叠状态差别。 */
     rebuildMonster: (plan: { entry: any; name: string; state?: KernelActorStateLike }) => operate([], async () => {
+      seedForMonster(plan.entry)
       const { summary, doc } = await importTemp(plan.entry)
       if (!doc) throw Error(`Importer returned no document for ${plan.entry?.name ?? 'monster'}`)
       const data = doc.toObject()
@@ -115,6 +121,7 @@ export function createMonsterCommands(operate: Operate) {
 
     /** 完整怪物导入并放进世界（抽样做动作/施法/传奇动作用）；返回新 Actor 的 id 与摘要。 */
     importMonsterActor: (entry: any) => operate([], async () => {
+      seedForMonster(entry)
       const { summary, doc } = await importTemp(entry)
       if (!doc) throw Error(`Importer returned no document for ${entry.name}`)
       const data = doc.toObject()

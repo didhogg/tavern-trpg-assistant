@@ -52,8 +52,9 @@ for (const [name, type, options] of engines) {
     // 在结算小窗里导入英文对照条目，拿 dnd5e 物品数据；再走正式 buildCharacter。
     const imported = await page.evaluate(async plan => {
       const out = {}
+      await globalThis.__k.call('setSeed', 'P3-3b 全链路')
       for (const [key, row] of Object.entries(plan)) {
-        const imported = await globalThis.__k.call('importForBuild', row.ref.prop, row.entry)
+        const imported = await globalThis.__k.call('importForBuild', row.ref.prop, row.entry, 'P3-3b 全链路')
         if (imported.status !== 'complete' || !imported.result) throw new Error(`import failed for ${key}: ${imported.error ?? imported.status}`)
         out[key] = imported.result
       }

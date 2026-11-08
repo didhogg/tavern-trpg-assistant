@@ -78,8 +78,9 @@ for (const [name, type, options] of engines) {
     // ---- 导入英文对照，正式建卡 ----
     const imported = await page.evaluate(async plan => {
       const out = {}
+      await globalThis.__k.call('setSeed', 'P3-4 新角色')
       for (const [key, row] of Object.entries(plan)) {
-        const imported = await globalThis.__k.call('importForBuild', row.ref.prop, row.entry)
+        const imported = await globalThis.__k.call('importForBuild', row.ref.prop, row.entry, 'P3-4 新角色')
         if (imported.status !== 'complete' || !imported.result) throw new Error(`import failed for ${key}: ${imported.error ?? imported.status}`)
         out[key] = imported.result
       }
