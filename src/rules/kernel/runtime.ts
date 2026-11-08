@@ -9,7 +9,10 @@ import type { CampaignLibrary } from '../../library/scopes'
 import type { KernelActor } from '../../schemas/kernel'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
-import { sha256Hex } from '../../core/hash'
+import { hashValue, sha256Hex } from '../../core/hash'
+import { KernelCache, wrapKernelSession } from './cache'
+import type { LibraryDatabase } from '../../library/db'
+import type { KernelDataVersion } from '../../schemas/kernel'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
 
 /** Foundry 世界编号只能用字母、数字、短横线、下划线；战役的 ownerKey 形如 char:角色卡.png，按它算一个稳定编号。 */
@@ -27,6 +30,8 @@ export interface KernelRuntimeDeps {
   campaignOf: (ownerKey: string) => Promise<{ rule: string; library: CampaignLibrary; title: string }>
   fetchImpl?: typeof fetch
   timeoutMs?: number
+  /** 换算缓存（S3）：本地可丢副本；不给就不缓存。 */
+  cache?: { db: LibraryDatabase; dataVersion: () => Promise<KernelDataVersion> }
 }
 
 interface Open {
@@ -60,7 +65,10 @@ export class KernelRuntime {
       })
       const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
       const boot = await session.boot(input)
-      return { session, rule: campaign.rule, bases: new Map(), boot, bootMs: Math.round(performance.now() - started) }
+      const wrapped = this.deps.cache
+        ? wrapKernelSession(session, new KernelCache(this.deps.cache.db), input.cacheKey ?? hashValue(input), this.deps.cache.dataVersion)
+        : session
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), boot, bootMs: Math.round(performance.now() - started) }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => this.open.delete(ownerKey))

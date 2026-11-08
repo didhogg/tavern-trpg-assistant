@@ -271,8 +271,8 @@ async function importEntry(prop: string, entry: any, seed?: string): Promise<any
 export interface RebuildPlan {
   name: string
   /** 顶层条目（种族/背景/职业/其他有作者编号的东西），按人物里的顺序。 */
-  items: Array<{ prop: string; entry: any; refKey: string }>
-  equipment: Array<{ prop: string; entry: any; refKey: string }>
+  items: Array<{ prop: string; entry: any; refKey: string; data?: any }>
+  equipment: Array<{ prop: string; entry: any; refKey: string; data?: any }>
   /** refKey → 官方 Advancement#reverse 记下的恢复数据。 */
   choices: Record<string, any[] | undefined>
   state?: KernelActorStateLike
@@ -360,9 +360,9 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       const seed = plan.seed ?? plan.name
       reseedKernel(seed)
       const items = []
-      for (const row of plan.items) items.push({ data: await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
+      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
       const equipment = []
-      for (const row of plan.equipment) equipment.push({ data: await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
+      for (const row of plan.equipment) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
       const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true, seed })
       if (built.pending) return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
       const base = built.actor.toObject()

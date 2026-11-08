@@ -71,7 +71,7 @@ export function createBackend(opts: BackendOptions): Backend {
   // 结算内核要知道本战役的规则与选书；内核存档写入要结算内核拆人物。两者互相用，经闭包接上。
   let kernelSave: KernelSaveService | null = null
   const kernel = new KernelRuntime({
-    pluginRoot, files, scoped, container,
+    pluginRoot, files, scoped, container, cache: { db, dataVersion },
     campaignOf: async (ownerKey) => {
       const ws = await opts.campaign.getWorkspace(ownerKey)
       if (!ws) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')

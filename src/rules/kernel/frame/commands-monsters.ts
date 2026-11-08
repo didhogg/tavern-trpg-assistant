@@ -104,11 +104,17 @@ export function createMonsterCommands(operate: Operate) {
     }),
 
     /** P3-3b 重建怪物：按作者条目重新导入 → 建 Actor → 叠状态差别。 */
-    rebuildMonster: (plan: { entry: any; name: string; state?: KernelActorStateLike }) => operate([], async () => {
+    rebuildMonster: (plan: { entry: any; name: string; state?: KernelActorStateLike; data?: any }) => operate([], async () => {
       seedForMonster(plan.entry)
-      const { summary, doc } = await importTemp(plan.entry)
-      if (!doc) throw Error(`Importer returned no document for ${plan.entry?.name ?? 'monster'}`)
-      const data = doc.toObject()
+      let data: any
+      let status = 'complete'
+      if (plan.data) data = structuredClone(plan.data)
+      else {
+        const imported = await importTemp(plan.entry)
+        if (!imported.doc) throw Error(`Importer returned no document for ${plan.entry?.name ?? 'monster'}`)
+        data = imported.doc.toObject()
+        status = statusText(imported.summary.status)
+      }
       delete data._id
       for (const item of data.items ?? []) delete item._id
       for (const effect of data.effects ?? []) delete effect._id
@@ -116,7 +122,26 @@ export function createMonsterCommands(operate: Operate) {
       const created = await ActorClass.create({ ...data, name: plan.name })
       const base = created.toObject()
       await applyStateToActor(created, plan.state)
-      return { status: statusText(summary.status), id: created.id, ...actorSummary(created), data: created.toObject(), base }
+      return { status, id: created.id, ...actorSummary(created), data: created.toObject(), base }
+    }),
+
+    /** 怪物导入结果（不建 Actor）：给换算缓存存。 */
+    importMonsterData: (entry: any) => operate([], async () => {
+      seedForMonster(entry)
+      const { summary, doc } = await importTemp(entry)
+      if (!doc) throw Error(`Importer returned no document for ${entry?.name ?? 'monster'}`)
+      return { status: statusText(summary.status), data: doc.toObject() }
+    }),
+
+    /** 用存好的怪物数据建 Actor（缓存命中时走这条）。 */
+    createActorFromData: (raw: any) => operate([], async () => {
+      const data = structuredClone(raw)
+      delete data._id
+      for (const item of data.items ?? []) delete item._id
+      for (const effect of data.effects ?? []) delete effect._id
+      const ActorClass = g.CONFIG.Actor.documentClass
+      const created = await ActorClass.create(data)
+      return { status: 'complete', id: created.id, ...actorSummary(created) }
     }),
 
     /** 完整怪物导入并放进世界（抽样做动作/施法/传奇动作用）；返回新 Actor 的 id 与摘要。 */

@@ -1,6 +1,8 @@
 // 结算小窗的启动输入（蓝图 §3.1）：系统、模块、版本信息全部从插件自带的 vendor/foundry/ 读，
 // 由录制工具生成的 manifest.json 说了算（用哪个系统、启用哪些模块），这里不写死名单。
 import type { KernelInput } from './frame/world'
+import { hashValue } from '../../core/hash'
+import { PLUGIN_VERSION } from '../../version'
 
 interface VendorManifest {
   release: KernelInput['release']
@@ -51,11 +53,14 @@ export async function kernelInput(opts: {
   const systemId = manifest.system.split(' ')[0]
   const system = await readJson<unknown>(opts.pluginRoot, `systems/${systemId}/system.json`, fetchImpl)
   const modules = await Promise.all(Object.keys(manifest.modules).map((id) => readJson<unknown>(opts.pluginRoot, `modules/${id}/module.json`, fetchImpl)))
+  const allSettings = { ...KERNEL_MODE_SETTINGS, ...settings }
+  const cacheKey = hashValue({ plugin: PLUGIN_VERSION, release: manifest.release, system: manifest.system, modules: manifest.modules, settings: allSettings, rule: opts.rule })
   return {
     system, modules, release: manifest.release,
     world: opts.world,
     userId: 'kernelGM00000000', worldTime: 0, language: 'en.core',
-    settings: { ...KERNEL_MODE_SETTINGS, ...settings },
+    settings: allSettings,
+    cacheKey,
     documents: { actors: [] },
   }
 }

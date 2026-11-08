@@ -16,6 +16,8 @@ export interface KernelInput {
   seed?: string
   /** 规则版本等世界设置（键 → 值）。 */
   settings: Record<string, unknown>
+  /** 内核输入摘要（换算缓存的钥匙之一）。 */
+  cacheKey?: string
   documents: { actors?: any[]; items?: any[]; folders?: any[]; combats?: any[]; scenes?: any[]; journal?: any[]; tables?: any[]; macros?: any[] }
 }
 
