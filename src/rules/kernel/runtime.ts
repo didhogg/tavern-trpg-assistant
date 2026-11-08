@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- 内核命令结果原样转交 */
 // P3 收尾：结算内核接进插件服务入口。一个战役一个结算小窗（世界互不相见），按需打开、复用、关闭。
 // 每个人物记住“重建基准”（刚建好或刚重建、还没叠状态的样子），存档时用它把小窗里的人物拆回
 // 引用 / 选择 / 状态差别（官方 Advancement#reverse 记选择）。界面只经服务入口用这里，不直接碰小窗。
@@ -136,6 +137,22 @@ export class KernelRuntime {
     const data = await actorData(o.session, result.result.id)
     if (data) o.bases.set(result.result.id, data)
     return { status: 'complete', id: result.result.id, seed: result.result.seed }
+  }
+
+  /** T5：批量建怪物/NPC/载具/物件；单个也走这里。换算结果由会话缓存读写。 */
+  async createActors(ownerKey: string, refs: EntryRef[]): Promise<{ status: string; actors?: any[]; error?: string; detail?: unknown }> {
+    const o = await this.get(ownerKey)
+    const rows = await this.entries(ownerKey, refs)
+    if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
+    const prepared = []
+    for (const row of rows.rows) {
+      const imported = await o.session.call('importForBuild', row.ref.prop, row.entry)
+      if (imported.status !== 'complete' || !imported.result) return { status: imported.status, error: imported.error ?? `换算状态：${imported.status}`, detail: imported }
+      prepared.push({ prop: row.ref.prop, entry: row.entry, data: imported.result })
+    }
+    const result = await o.session.call('createActorsBatch', prepared)
+    if (result.status !== 'complete') return { status: result.status, error: result.error ?? `批量建状态：${result.status}`, detail: result }
+    return { status: 'complete', actors: result.result }
   }
 
   /** 引用 → 【库】条目（中文战役交英文对照），给建卡/加条目/批量建共用。 */

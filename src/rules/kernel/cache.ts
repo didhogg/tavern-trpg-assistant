@@ -80,7 +80,7 @@ export function wrapKernelSession(session: KernelSession, cache: KernelCache, ba
   const call = async (fn: string, ...args: any[]): Promise<any> => {
     if (fn === 'importForBuild') {
       const [prop, entry] = args
-      const key = await kernelImportKey({ base, dataVersion: await dataVersion(), kind: 'build', prop, entry })
+      const key = await kernelImportKey({ base, dataVersion: await dataVersion(), kind: prop === 'monster' ? 'monster' : 'build', prop, entry })
       const cached = await cache.get(key)
       if (cached !== null) return hit(cached)
       const result = await raw(fn, ...args)
