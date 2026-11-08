@@ -5,11 +5,9 @@ import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
 import { applyStateToActor } from './actor-state'
 import { reseedKernel } from './seed'
+import { importEntry, importerMeta, importerProps } from './importer'
 
 const g = globalThis as any
-/** 作者导入器第一次用时初始化会消耗随机数；每个类别先空跑一次，之后真导入才从人物种子开始。 */
-const warmedImports = new Set<string>()
-
 function Manager(): any {
   const cls = g.dnd5e?.applications?.advancement?.AdvancementManager
   if (!cls) throw Error('dnd5e AdvancementManager is not available')
@@ -224,50 +222,6 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
   return { actor: created }
 }
 
-/** 结算小窗里把作者条目导入成 dnd5e 物品（临时文档，不进世界）。 */
-/**
- * Plutonium 生成种族/背景等的通用成长（UtilAdvancementsEntry.getGenericAdvancements）时，
- * 只有拿到这些“已选”项才会生成对应成长；不给就整条略过（背景技能、语言、抗性因此丢失）。
- * 这里一律给空数组 = “玩家还没选”：Plutonium 照作者条目生成完整成长，选择交给 dnd5e 成长流程。
- * 键名与形状取自作者源码；作者新增一种时在这里登记一行。
- */
-const UNCHOSEN_PROFICIENCIES: Record<string, string[]> = {
-  skillsChosenFvtt: [],
-  languagesChosenFvtt: [],
-  armorProficienciesChosenFvtt: [],
-  weaponProficienciesChosenFvtt: [],
-  toolProficienciesChosenFvtt: [],
-  // 不登记 resistChosenFvtt：作者把“选一种抗性”（如龙裔血统）全部写进 grants，靠自己界面传入已选那一种；
-  // 不传已选就会被 dnd5e 当成全给。等人物界面把玩家选的那一种传进来再登记。
-}
-
-async function importEntry(prop: string, entry: any, seed?: string): Promise<any> {
-  const api = g.game.modules.get('plutonium')?.api
-  if (!api?.importer) throw Error('Plutonium importer is not available')
-  // 作者导入器第一次用时自己会初始化（会消耗随机数）；先初始化，再按人物重设种子，
-  // 这样同一条目排在哪次导入前后，生成的编号都从同一个种子开始。
-  const importer = await api.importer.pGetImporter({ prop })
-  if (!importer) throw Error(`No Plutonium importer for ${prop}`)
-  if (seed !== undefined && !warmedImports.has(prop)) {
-    warmedImports.add(prop)
-    reseedKernel(`warmup:${prop}`)
-    try {
-      await importer.pImportEntry(structuredClone(entry), new api.importer.ImportOpts({ isTemp: true }), structuredClone(UNCHOSEN_PROFICIENCIES))
-    } catch (e) {
-      console.warn('[trpg-kernel] 导入器预热失败，继续真导入', e)
-    }
-    reseedKernel(seed)
-  }
-  if (seed !== undefined) reseedKernel(seed)
-  const opts = new api.importer.ImportOpts({ isTemp: true })
-  const summary = prop === 'class' && importer.pImportEntryClass
-    ? await importer.pImportEntryClass(entry, opts)
-    : await importer.pImportEntry(entry, opts, structuredClone(UNCHOSEN_PROFICIENCIES))
-  const doc = summary?.imported?.[0]?.document ?? null
-  if (!doc) throw Error(`Plutonium import failed for ${entry?.name ?? prop}`)
-  return doc.toObject ? doc.toObject() : doc
-}
-
 export interface RebuildPlan {
   name: string
   /** 顶层条目（种族/背景/职业/其他有作者编号的东西），按人物里的顺序。 */
@@ -365,16 +319,19 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     }),
 
     /** 按作者条目导入成 dnd5e 物品数据（不进世界）；新建卡与读档重建共用这一个入口。 */
-    importForBuild: (prop: string, entry: any, seed?: string) => operate([], async () => importEntry(prop, entry, seed)),
+    importForBuild: (prop: string, entry: any, _seed?: string) => operate([], async () => importEntry(prop, entry)),
+    /** T2：作者登记表里真的有导入器的类别。 */
+    importerProps,
+    importerMeta,
 
     /** P3-3b 重建：按引用导入作者条目 → 按记下的选择建卡 → 叠状态差别。 */
     rebuildCharacter: (plan: RebuildPlan) => operate([], async () => {
       const seed = plan.seed ?? plan.name
       reseedKernel(seed)
       const items = []
-      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
+      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
       const equipment = []
-      for (const row of plan.equipment) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry, seed), refKey: row.refKey })
+      for (const row of plan.equipment) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
       const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true, seed })
       if (built.pending) return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
       const base = built.actor.toObject()

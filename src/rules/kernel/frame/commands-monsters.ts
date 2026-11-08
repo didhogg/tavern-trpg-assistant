@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 import type { Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
-import { reseedKernel } from './seed'
+import { importEntry } from './importer'
 import { applyStateToActor } from './actor-state'
 
 const g = globalThis as any
@@ -57,31 +57,9 @@ function actorSummary(doc: any): any {
   }
 }
 
-async function importTemp(entry: any): Promise<any> {
-  const api = g.game.modules.get('plutonium')?.api
-  if (!api?.importer?.creature?.pImportEntry) throw Error('Plutonium creature importer is not available')
-  const summary = await api.importer.creature.pImportEntry(entry, { isTemp: true })
-  const doc = summary.imported?.[0]?.document ?? null
-  return { summary, doc }
-}
-
-/** ImportSummary.status 是 Symbol，不能经 postMessage 结构化克隆；只把它变成可读文本。 */
-function statusText(status: any): any {
-  if (typeof status !== 'symbol') return status
-  return status.description ?? String(status)
-}
-
 async function importOne(entry: any): Promise<any> {
-  const { summary, doc } = await importTemp(entry)
-  return {
-    status: statusText(summary.status),
-    entity: { name: entry.name, source: entry.source },
-    ...(doc ? actorSummary(doc) : { error: 'Importer returned no document' }),
-  }
-}
-
-function seedForMonster(entry: any): void {
-  reseedKernel(`monster:${String(entry?.name ?? '')}|${String(entry?.source ?? '')}`)
+  const doc = await importEntry('monster', entry)
+  return { status: 'complete', entity: { name: entry.name, source: entry.source }, ...actorSummary(doc) }
 }
 
 export function createMonsterCommands(operate: Operate) {
@@ -105,16 +83,10 @@ export function createMonsterCommands(operate: Operate) {
 
     /** P3-3b 重建怪物：按作者条目重新导入 → 建 Actor → 叠状态差别。 */
     rebuildMonster: (plan: { entry: any; name: string; state?: KernelActorStateLike; data?: any }) => operate([], async () => {
-      seedForMonster(plan.entry)
       let data: any
-      let status = 'complete'
+      const status = 'complete'
       if (plan.data) data = structuredClone(plan.data)
-      else {
-        const imported = await importTemp(plan.entry)
-        if (!imported.doc) throw Error(`Importer returned no document for ${plan.entry?.name ?? 'monster'}`)
-        data = imported.doc.toObject()
-        status = statusText(imported.summary.status)
-      }
+      else data = await importEntry('monster', plan.entry)
       delete data._id
       for (const item of data.items ?? []) delete item._id
       for (const effect of data.effects ?? []) delete effect._id
@@ -127,10 +99,7 @@ export function createMonsterCommands(operate: Operate) {
 
     /** 怪物导入结果（不建 Actor）：给换算缓存存。 */
     importMonsterData: (entry: any) => operate([], async () => {
-      seedForMonster(entry)
-      const { summary, doc } = await importTemp(entry)
-      if (!doc) throw Error(`Importer returned no document for ${entry?.name ?? 'monster'}`)
-      return { status: statusText(summary.status), data: doc.toObject() }
+      return { status: 'complete', data: await importEntry('monster', entry) }
     }),
 
     /** 用存好的怪物数据建 Actor（缓存命中时走这条）。 */
@@ -146,16 +115,13 @@ export function createMonsterCommands(operate: Operate) {
 
     /** 完整怪物导入并放进世界（抽样做动作/施法/传奇动作用）；返回新 Actor 的 id 与摘要。 */
     importMonsterActor: (entry: any) => operate([], async () => {
-      seedForMonster(entry)
-      const { summary, doc } = await importTemp(entry)
-      if (!doc) throw Error(`Importer returned no document for ${entry.name}`)
-      const data = doc.toObject()
+      const data = await importEntry('monster', entry)
       delete data._id
       for (const item of data.items ?? []) delete item._id
       for (const effect of data.effects ?? []) delete effect._id
       const ActorClass = g.CONFIG.Actor.documentClass
       const created = await ActorClass.create(data)
-      return { status: statusText(summary.status), id: created.id, ...actorSummary(created) }
+      return { status: 'complete', id: created.id, ...actorSummary(created) }
     }),
   }
 }
