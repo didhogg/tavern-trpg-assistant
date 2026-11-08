@@ -246,6 +246,7 @@ export { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor }
 export { kernelInput } from '../../../src/rules/kernel/input'
 export { KernelCache, wrapKernelSession, kernelImportKey, kernelBaseKey } from '../../../src/rules/kernel/cache'
 export { KernelRuntime } from '../../../src/rules/kernel/runtime'
+export { KernelPrecompute } from '../../../src/rules/kernel/precompute'
 
 export async function startKernelSession(input: unknown): Promise<{ session: KernelSession; status: unknown }> {
   const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files), timeoutMs: 180_000 })

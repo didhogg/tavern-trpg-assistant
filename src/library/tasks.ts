@@ -11,14 +11,17 @@ export type TaskStatus = 'running' | 'done' | 'failed' | 'cancelled'
 
 export interface TaskState {
   id: string
-  kind: 'official' | 'adventure'
+  kind: 'official' | 'adventure' | 'precompute'
   set: string
   /** 冒险编号（kind = adventure）。 */
   item: string | null
   status: TaskStatus
   progress: { stage: string; done: number; total: number; item?: string }
   error: string | null
-  result: InstallReport | { path: string; parsed: boolean } | null
+  result: InstallReport | { path: string; parsed: boolean } | unknown | null
+  /** 官方数据装完后接着跑的换算段结果（T2）。 */
+  convert?: unknown
+  convertError?: string
 }
 
 export interface TaskOptions {
@@ -26,6 +29,8 @@ export interface TaskOptions {
   files: FileProvider
   /** 开一个只读本地的作者小窗。 */
   openFrame: (codeSet: string) => Promise<AuthorFrame>
+  /** T2：下载任务里的换算段；后端接结算内核，库层只报进度。 */
+  precompute?: (setId: string, signal: AbortSignal, onProgress: (p: TaskState['progress']) => void) => Promise<unknown>
   onChange?: (t: TaskState) => void
 }
 
@@ -89,7 +94,20 @@ export class DownloadTasks {
     return this.start('official', setId, null, async (state, signal) => {
       const r = await installOfficial({ source, db: this.opts.db, files: this.opts.files, openFrame: () => this.opts.openFrame(source.codeSet), signal, onProgress: (p) => this.progress(state, p) })
       if (!r.cancelled && r.download.failed.length) throw new Error(`有 ${r.download.failed.length} 个文件没下载下来：${r.download.failed[0].path}`)
+      if (!r.cancelled && this.opts.precompute) {
+        try { state.convert = await this.opts.precompute(setId, signal, (p) => this.progress(state, p)) }
+        catch (e) { state.convertError = msg(e) }
+      }
       return r
+    })
+  }
+
+  /** 单独重跑换算（结算内核指纹变了时；界面 P5 再接）。 */
+  startPrecompute(setId: string): string {
+    return this.start('precompute', setId, null, async (state, signal) => {
+      if (!this.opts.precompute) throw new Error('没有接换算后端')
+      state.convert = await this.opts.precompute(setId, signal, (p) => this.progress(state, p))
+      return state.convert
     })
   }
 

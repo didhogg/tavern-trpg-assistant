@@ -23,6 +23,8 @@ export interface BrewParseReport {
   alternatives: { targets: number; errors: AltIndex['errors'] }
   /** 改完自制后重算的离线缓存（配图描述、屏蔽标记）。 */
   precompute?: PrecomputeReport
+  /** T2 换算段失败原因（不冒充作者解析错误）。 */
+  precomputeError?: string
   ms: number
 }
 

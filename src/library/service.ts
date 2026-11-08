@@ -20,6 +20,8 @@ export interface LibraryServiceOptions {
   db: LibraryDatabase
   /** 开一个只读本地的作者小窗；kvScope 给了就用那个作者存储范围（隔离解析用）。 */
   openFrame: (codeSet: string, kvScope?: string) => Promise<AuthorFrame>
+  /** 自制 / 房规变了之后接着换算（T2）；回调由后端接，库层不认识结算内核。 */
+  onDataChanged?: (codeSet: string) => Promise<void>
 }
 
 export class LibraryService {
@@ -266,6 +268,7 @@ export class LibraryService {
     // 搜索索引里含自制；自制变了，官方那套的搜索缓存作废，下一次搜索重算。
     await invalidatePrecompute(this.opts.db, officialSourceOf(s.codeSet).id, ['search'])
     this.searchLoaded.delete(s.codeSet)
+    try { await this.opts.onDataChanged?.(s.codeSet) } catch (error) { report.precomputeError = error instanceof Error ? error.message : String(error) }
     return report
   }
 

@@ -4,6 +4,7 @@
 import type { LibraryDatabase } from '../../library/db'
 import type { KernelDataVersion } from '../../schemas/kernel'
 import { hashValue } from '../../core/hash'
+import { gzipText, gunzipText } from '../../core/compress'
 import type { KernelSession } from './host'
 
 export interface KernelCacheBase {
@@ -18,19 +19,24 @@ export class KernelCache {
 
   async get(key: string): Promise<unknown | null> {
     const rec = await this.db.derived.get(`kc:${key}`)
-    const value = rec?.value as { data?: unknown } | undefined
-    return value && 'data' in value ? value.data ?? null : null
+    const value = rec?.value as { data?: unknown; z?: Uint8Array } | undefined
+    if (!value) return null
+    if (value.z) return JSON.parse(await gunzipText(value.z))
+    return 'data' in value ? value.data ?? null : null
   }
 
-  async put(key: string, data: unknown): Promise<void> {
-    await this.db.derived.put({ key: `kc:${key}`, fingerprint: key, value: { data, savedAt: Date.now() }, savedAt: Date.now() })
+  async put(key: string, data: unknown): Promise<{ raw: number; compressed: number }> {
+    const text = JSON.stringify(data)
+    const z = await gzipText(text)
+    await this.db.derived.put({ key: `kc:${key}`, fingerprint: key, value: { z, raw: text.length, savedAt: Date.now() }, savedAt: Date.now() })
+    return { raw: text.length, compressed: z.byteLength }
   }
 }
 
 export async function kernelBaseKey(opts: {
   base: string
   dataVersion: KernelDataVersion
-  actor: { id?: string; name?: string; refs: unknown; choices: unknown }
+  actor: { id?: string; name?: string; seed?: string; refs: unknown; choices: unknown }
 }): Promise<string> {
   return hashValue({
     base: opts.base,
@@ -38,6 +44,7 @@ export async function kernelBaseKey(opts: {
     kind: 'base',
     id: opts.actor.id ?? null,
     name: opts.actor.name ?? null,
+    seed: opts.actor.seed ?? null,
     refs: opts.actor.refs,
     choices: opts.actor.choices,
   })
@@ -71,29 +78,6 @@ const hit = (data: unknown): any => ({
 export function wrapKernelSession(session: KernelSession, cache: KernelCache, base: string, dataVersion: () => Promise<KernelDataVersion>): KernelSession {
   const raw = session.call as unknown as (fn: string, ...args: any[]) => Promise<any>
   const call = async (fn: string, ...args: any[]): Promise<any> => {
-    if (fn === 'rebuildCharacter') {
-      const plan = args[0] as { seed?: string; name: string; items: any[]; equipment: any[] }
-      const seed = plan.seed ?? plan.name
-      const enrich = async (rows: any[]) => Promise.all(rows.map(async (row) => {
-        const key = await kernelImportKey({ base, dataVersion: await dataVersion(), kind: 'build', prop: row.prop, entry: row.entry })
-        const cached = await cache.get(key)
-        if (cached !== null) return { ...row, data: cached }
-        const imported = await raw('importForBuild', row.prop, row.entry, seed)
-        if (imported.status === 'complete' && imported.result) await cache.put(key, imported.result)
-        return imported.status === 'complete' && imported.result ? { ...row, data: imported.result } : row
-      }))
-      return raw('rebuildCharacter', { ...plan, items: await enrich(plan.items), equipment: await enrich(plan.equipment) })
-    }
-    if (fn === 'rebuildMonster') {
-      const plan = args[0] as { entry: unknown }
-      const key = await kernelImportKey({ base, dataVersion: await dataVersion(), kind: 'monster', prop: 'monster', entry: plan.entry })
-      const cached = await cache.get(key)
-      if (cached !== null) return raw('rebuildMonster', { ...plan, data: cached })
-      const data = await raw('importMonsterData', plan.entry)
-      if (data.status !== 'complete' || !data.result?.data) return data
-      await cache.put(key, data.result.data)
-      return raw('rebuildMonster', { ...plan, data: data.result.data })
-    }
     if (fn === 'importForBuild') {
       const [prop, entry] = args
       const key = await kernelImportKey({ base, dataVersion: await dataVersion(), kind: 'build', prop, entry })

@@ -17,6 +17,8 @@ import { LibraryService } from '../library/service'
 import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
+import { KernelPrecompute } from '../rules/kernel/precompute'
+import { getSource } from '../library/sources'
 import { TrpgError } from './errors'
 
 export interface LibraryBackend {
@@ -26,6 +28,7 @@ export interface LibraryBackend {
   scoped: ScopedLibrary
   custom: CustomLibrary
   tasks: DownloadTasks
+  precompute: KernelPrecompute
   /** 当前装的数据版本记号（存档保存时现取）。 */
   dataVersion: () => ReturnType<ReturnType<typeof libraryDataVersion>>
 }
@@ -62,11 +65,20 @@ export function createBackend(opts: BackendOptions): Backend {
     codeSet, pluginRoot, container: container(),
     handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false, kvScope }),
   })
-  const service = new LibraryService({ db, openFrame })
+  let precompute: KernelPrecompute | null = null
+  const runPrecompute = async (codeSets: string[], signal?: AbortSignal, onProgress?: (p: { stage: string; done: number; total: number; item?: string }) => void) => {
+    if (!precompute) return null
+    const rows = []
+    for (const codeSet of [...new Set(codeSets)]) rows.push(await precompute.run({ codeSet, signal, onProgress }))
+    return rows
+  }
+  const service = new LibraryService({ db, openFrame, onDataChanged: async (codeSet) => { if (precompute) await precompute.run({ codeSet }) } })
   const scoped = new ScopedLibrary(service, db)
   const custom = new CustomLibrary(service, scoped, db)
-  const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet) })
+  const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet),
+    precompute: (setId, signal, onProgress) => runPrecompute([getSource(setId).codeSet, 'cn', 'en'], signal, onProgress) })
   const dataVersion = libraryDataVersion(db, service)
+  precompute = new KernelPrecompute({ pluginRoot, files, scoped, db, dataVersion, container })
 
   // 结算内核要知道本战役的规则与选书；内核存档写入要结算内核拆人物。两者互相用，经闭包接上。
   let kernelSave: KernelSaveService | null = null
@@ -91,5 +103,5 @@ export function createBackend(opts: BackendOptions): Backend {
     undoLimit: async () => (await loadSettings(opts.db)).undoLimit,
   })
 
-  return { library: { db, files, service, scoped, custom, tasks, dataVersion }, kernel, kernelSave }
+  return { library: { db, files, service, scoped, custom, tasks, precompute, dataVersion }, kernel, kernelSave }
 }

@@ -2,7 +2,7 @@
 // 由录制工具生成的 manifest.json 说了算（用哪个系统、启用哪些模块），这里不写死名单。
 import type { KernelInput } from './frame/world'
 import { hashValue } from '../../core/hash'
-import { PLUGIN_VERSION } from '../../version'
+import { sha256Hex } from '../../core/hash'
 
 interface VendorManifest {
   release: KernelInput['release']
@@ -56,7 +56,8 @@ export async function kernelInput(opts: {
   const system = await readJson<unknown>(opts.pluginRoot, `systems/${systemId}/system.json`, fetchImpl)
   const modules = await Promise.all(Object.keys(manifest.modules).map((id) => readJson<unknown>(opts.pluginRoot, `modules/${id}/module.json`, fetchImpl)))
   const allSettings = { ...KERNEL_MODE_SETTINGS, ...settings }
-  const cacheKey = hashValue({ plugin: PLUGIN_VERSION, release: manifest.release, system: manifest.system, modules: manifest.modules, settings: allSettings, rule: opts.rule })
+  const frame = await (await fetchImpl(new URL('dist/kernel-frame.js', opts.pluginRoot))).text()
+  const cacheKey = hashValue({ release: manifest.release, system: manifest.system, modules: manifest.modules, settings: allSettings, rule: opts.rule, frame: sha256Hex(frame) })
   return {
     system, modules, release: manifest.release,
     world: opts.world,
