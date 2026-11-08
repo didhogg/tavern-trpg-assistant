@@ -6,7 +6,7 @@ import { startAuthorFrame, type AuthorFrame } from '../../../src/library/runtime
 import { commitOf, getSource } from '../../../src/library/sources'
 
 const db = new LibraryDatabase()
-const files = new FileProvider({ db })
+export const files = new FileProvider({ db })
 const frames: AuthorFrame[] = []
 
 export async function startFrames(codeSets: string[], { allowNetwork }: { allowNetwork: boolean }) {
@@ -244,7 +244,8 @@ import { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor } fr
 
 export { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor }
 export { kernelInput } from '../../../src/rules/kernel/input'
-export { KernelCache, wrapKernelSession, kernelImportKey } from '../../../src/rules/kernel/cache'
+export { KernelCache, wrapKernelSession, kernelImportKey, kernelBaseKey } from '../../../src/rules/kernel/cache'
+export { KernelRuntime } from '../../../src/rules/kernel/runtime'
 
 export async function startKernelSession(input: unknown): Promise<{ session: KernelSession; status: unknown }> {
   const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files), timeoutMs: 180_000 })

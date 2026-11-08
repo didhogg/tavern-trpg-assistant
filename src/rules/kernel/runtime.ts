@@ -10,7 +10,7 @@ import type { KernelActor } from '../../schemas/kernel'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
 import { hashValue, sha256Hex } from '../../core/hash'
-import { KernelCache, wrapKernelSession } from './cache'
+import { KernelCache, kernelBaseKey, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
 import type { KernelDataVersion } from '../../schemas/kernel'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
@@ -40,6 +40,9 @@ interface Open {
   bases: Map<string, Record<string, unknown>>
   boot: unknown
   bootMs: number
+  cache: KernelCache | null
+  cacheBase: string
+  dataVersion: () => Promise<KernelDataVersion>
 }
 
 export class KernelRuntime {
@@ -65,10 +68,10 @@ export class KernelRuntime {
       })
       const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
       const boot = await session.boot(input)
-      const wrapped = this.deps.cache
-        ? wrapKernelSession(session, new KernelCache(this.deps.cache.db), input.cacheKey ?? hashValue(input), this.deps.cache.dataVersion)
-        : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), boot, bootMs: Math.round(performance.now() - started) }
+      const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
+      const cacheBase = input.cacheKey ?? hashValue(input)
+      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, this.deps.cache!.dataVersion) : session
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, dataVersion: this.deps.cache?.dataVersion ?? (async () => ({ official: '', brews: {} })) }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => this.open.delete(ownerKey))
@@ -92,15 +95,59 @@ export class KernelRuntime {
     o.bases.set(actorId, data)
   }
 
-  /** 按存档里的引用 / 选择 / 状态把人物重建进小窗，并记住它的重建基准。 */
+  /** 按存档里的引用 / 选择 / 状态把一个人物重建进小窗（内部走批量入口）。 */
   async rebuild(ownerKey: string, actor: KernelActor, library?: CampaignLibrary): Promise<RebuildResult> {
+    return (await this.rebuildMany(ownerKey, [actor], library))[0]
+  }
+
+  /**
+   * 读档：人物重建基准全部命中时，一次 createDocuments 批量建（保留编号），再叠状态差别；
+   * 某个没命中，只给这个人物重新换算（S2 保证编号一致）并把基准存回缓存。
+   */
+  async rebuildMany(ownerKey: string, actors: KernelActor[], library?: CampaignLibrary): Promise<RebuildResult[]> {
     const o = await this.get(ownerKey)
-    const result = await rebuildActor({ lib: this.deps.scoped, session: o.session, library: library ?? await this.library(ownerKey), actor })
-    if (result.status === 'complete') {
-      if (!result.id || !result.base) throw new Error(`重建 ${actor.name} 没有交回人物编号或重建基准`)
-      o.bases.set(result.id, result.base)
+    const lib = library ?? await this.library(ownerKey)
+    const version = o.cache ? await o.dataVersion() : null
+    const results: RebuildResult[] = new Array(actors.length)
+    const hits: Array<{ index: number; base: Record<string, unknown> }> = []
+    const misses: number[] = []
+    if (o.cache && version) {
+      for (let i = 0; i < actors.length; i++) {
+        const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor: actors[i] })
+        const base = await o.cache.get(key) as Record<string, unknown> | null
+        if (base) hits.push({ index: i, base }); else misses.push(i)
+      }
+    } else {
+      for (let i = 0; i < actors.length; i++) misses.push(i)
     }
-    return result
+    if (hits.length) {
+      const call = await o.session.call('createActorsFromBase', hits.map((h) => ({ base: h.base, state: actors[h.index].state })))
+      const list = (call.result ?? []) as Array<{ id?: string; data?: Record<string, unknown>; base?: Record<string, unknown> }>
+      if (call.status !== 'complete' || list.length !== hits.length) {
+        for (const h of hits) results[h.index] = { status: 'error', error: call.error ?? `批量重建状态：${call.status}`, detail: call }
+      } else {
+        hits.forEach((h, j) => {
+          const row = list[j]
+          if (!row?.id || !row.data) { results[h.index] = { status: 'error', error: '批量重建没有交回人物数据' }; return }
+          results[h.index] = { status: 'complete', id: row.id, data: row.data, base: row.base ?? h.base }
+          o.bases.set(row.id, row.base ?? h.base)
+        })
+      }
+    }
+    for (const index of misses) {
+      const actor = actors[index]
+      const result = await rebuildActor({ lib: this.deps.scoped, session: o.session, library: lib, actor })
+      results[index] = result
+      if (result.status === 'complete') {
+        if (!result.id || !result.base) throw new Error(`重建 ${actor.name} 没有交回人物编号或重建基准`)
+        o.bases.set(result.id, result.base)
+        if (o.cache && version) {
+          const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor })
+          await o.cache.put(key, result.base)
+        }
+      }
+    }
+    return results
   }
 
   /** 本战役现在的选书（每次现读，关书/开书后立刻生效）。 */
@@ -126,7 +173,13 @@ export class KernelRuntime {
       const captured = await o.session.call('captureChoices', id)
       if (captured.status !== 'complete') throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
       const name = typeof current.name === 'string' ? current.name : id
-      out.push(await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, current, base, choices: captured.result ?? {} }))
+      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, current, base, choices: captured.result ?? {} })
+      if (o.cache) {
+        const version = await o.dataVersion()
+        const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor: compact })
+        await o.cache.put(key, base)
+      }
+      out.push(compact)
     }
     return out
   }

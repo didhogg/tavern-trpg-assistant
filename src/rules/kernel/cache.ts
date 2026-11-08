@@ -27,6 +27,22 @@ export class KernelCache {
   }
 }
 
+export async function kernelBaseKey(opts: {
+  base: string
+  dataVersion: KernelDataVersion
+  actor: { id?: string; name?: string; refs: unknown; choices: unknown }
+}): Promise<string> {
+  return hashValue({
+    base: opts.base,
+    dataVersion: opts.dataVersion,
+    kind: 'base',
+    id: opts.actor.id ?? null,
+    name: opts.actor.name ?? null,
+    refs: opts.actor.refs,
+    choices: opts.actor.choices,
+  })
+}
+
 export async function kernelImportKey(opts: {
   base: string
   dataVersion: KernelDataVersion

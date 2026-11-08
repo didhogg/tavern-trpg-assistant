@@ -333,6 +333,18 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       return out
     }, [actorId]),
 
+    /** 读档全部命中缓存：一次 createDocuments 批量建（保留编号），再逐个叠状态差别。 */
+    createActorsFromBase: (rows: Array<{ base: any; state?: KernelActorStateLike }>) => operate([], async () => {
+      const ActorClass = g.CONFIG.Actor.documentClass
+      const created = await ActorClass.createDocuments(rows.map((row) => structuredClone(row.base)), { keepId: true })
+      const out = []
+      for (let i = 0; i < created.length; i++) {
+        await applyStateToActor(created[i], rows[i].state)
+        out.push({ id: created[i].id, ...actorLevel(created[i]), data: created[i].toObject(), base: rows[i].base })
+      }
+      return out
+    }),
+
     /** 建卡前按人物标识重设随机源；建卡流程在导入条目之前调用。 */
     setSeed: (seed: string) => operate([], async () => { reseedKernel(seed); return true }),
 
