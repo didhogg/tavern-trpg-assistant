@@ -5,8 +5,7 @@ import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
 import { applyStateToActor } from './actor-state'
 import { freshSeed, reseedKernel } from './seed'
-import { importEntry, importerMeta, importerProps } from './importer'
-import { remapStateIds, restoreRecordedChoices } from './commands-restore'
+import { importEntry, importerMeta, importerProps, stampConsumableSource } from './importer'
 
 const g = globalThis as any
 export function Manager(): any {
@@ -200,6 +199,18 @@ async function describeSteps(manager: any): Promise<any[]> {
   return steps
 }
 
+/** 重建时按存档 refs 的顺序排物品；只改显示顺序，不改内容。 */
+async function sortActorItems(actor: any, rows: Array<{ itemId?: string; order?: number; entry?: any }>): Promise<void> {
+  const updates = []
+  for (const row of rows) {
+    if (typeof row.order !== 'number') continue
+    const item = (row.itemId ? actor.items.get(row.itemId) : null)
+      ?? [...actor.items].find((it: any) => it.name === row.entry?.name && (!row.entry?.type || it.type === row.entry.type))
+    if (item) updates.push({ _id: item.id, sort: row.order })
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments('Item', updates)
+}
+
 /** 建一张新卡：空白人物 → 种族/背景/职业（官方 forNewItem）→ 装备；没有成长步骤的顶层条目也显式放进人物。 */
 async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed }: { strict?: boolean; seed?: string } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
@@ -208,6 +219,8 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
   for (const raw of items) {
     const source = raw?.data ?? raw
     const data = cleanItem(source)
+    if (raw?.itemId) data._id = raw.itemId
+    stampConsumableSource(data)
     // Plutonium 导入时会预先写好部分成长选择（如职业豁免）；dnd5e 看到“已选”就不再加到人物身上。
     // 用 dnd5e 自己清理“人物做过的选择”的官方入口（物品拖出人物时同样调用），让成长从头走。
     g.CONFIG.Item.dataModels[data.type]?.resetData?.(data.system)
@@ -217,10 +230,55 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
     if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created) }
     const exists = created.items.contents.some((i: any) => i.type === data.type
       && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
-    if (!exists) await created.createEmbeddedDocuments('Item', [markStandardDragDrop(cleanItem(data))])
+    if (!exists) await created.createEmbeddedDocuments('Item', [markStandardDragDrop(cleanItem(data))], { keepId: true })
   }
-  if (equipment.length) await created.createEmbeddedDocuments('Item', equipment.map(item => { const data = cleanItem(item?.data ?? item); return markStandardDragDrop(data) }))
+  if (equipment.length) await created.createEmbeddedDocuments('Item', equipment.map(item => { const data = cleanItem(item?.data ?? item); if (item?.itemId) data._id = item.itemId; stampConsumableSource(data); return markStandardDragDrop(data) }), { keepId: true })
+  await sortActorItems(created, [...items, ...equipment])
   return { actor: created }
+}
+
+/** 对管理器没有恢复到的进阶选择，用官方 Advancement#restore 再补一次（幂等：值已相同就跳过）。 */
+async function restoreRecordedChoices(actor: any, choices: Record<string, any[] | undefined>, planRows: Array<{ refKey?: string; entry?: any }> = []): Promise<void> {
+  for (const item of actor.items) {
+    const f = item.flags?.plutonium
+    if (!f?.propDroppable || !f.source || !f.hash) continue
+    const planRow = planRows.find((row) => row.entry?.name === item.name)
+    const rows = (planRow?.refKey ? choices[planRow.refKey] : undefined) ?? choices[`${f.propDroppable}|${f.source}|${f.hash}`] ?? []
+    for (const row of rows) {
+      const adv = item.advancement?.byId?.[row.id]
+      if (!adv?.restore) continue
+      const current = item.toObject().system?.advancement?.[row.id]?.value ?? adv.value?.toObject?.() ?? adv.value
+      if (JSON.stringify(current) === JSON.stringify(row.data)) continue
+      await item.update({ [`system.advancement.${row.id}.value`]: row.data })
+    }
+  }
+}
+
+function flagsOf(item: any): string | null {
+  const f = item?.flags?.plutonium
+  return f?.propDroppable && f.source && f.hash ? `${f.propDroppable}|${f.source}|${f.hash}` : null
+}
+
+/** 重建时导入器/管理器可能给物品换新 id；按作者编号把存档里的状态键改到新 id。 */
+function remapStateIds(state: any, actor: any, rows: Array<{ itemId?: string; entry: any }>): void {
+  if (!state || typeof state !== 'object') return
+  const map = new Map<string, string>()
+  for (const row of rows) {
+    if (!row.itemId) continue
+    const flags = flagsOf(row.entry)
+    const target = (flags ? [...actor.items].find((item: any) => flagsOf(item) === flags) : null)
+      ?? [...actor.items].find((item: any) => item.name === row.entry?.name)
+    if (target && target.id !== row.itemId) map.set(row.itemId, target.id)
+  }
+  for (const bucket of ['items', 'effects'] as const) {
+    const source = state[bucket]
+    if (!source || typeof source !== 'object') continue
+    const next: any = {}
+    for (const [key, value] of Object.entries(source)) next[map.get(key) ?? key] = value
+    state[bucket] = next
+  }
+  if (Array.isArray(state.itemRemoved)) state.itemRemoved = state.itemRemoved.map((id: string) => map.get(id) ?? id)
+  if (Array.isArray(state.effectRemoved)) state.effectRemoved = state.effectRemoved.map((id: string) => map.get(id) ?? id)
 }
 
 export interface BuildRow { prop: string; entry: any; refKey: string; itemId?: string; order?: number; data?: any }
@@ -357,7 +415,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       const base = built.actor.toObject()
       remapStateIds(plan.state, built.actor, [...plan.items, ...plan.equipment])
       await applyStateToActor(built.actor, plan.state)
-      if ([...built.actor.items].filter((item: any) => item.type === 'class').length > 1) await restoreRecordedChoices(built.actor, plan.choices, [...plan.items, ...plan.equipment])
+      await restoreRecordedChoices(built.actor, plan.choices, [...plan.items, ...plan.equipment])
       return { id: built.actor.id, seed, ...actorLevel(built.actor), data: built.actor.toObject(), base }
     }),
   }

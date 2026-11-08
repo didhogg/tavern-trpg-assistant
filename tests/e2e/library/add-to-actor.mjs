@@ -29,14 +29,13 @@ try {
           delete item.sort
           delete item._id
           if (item.system?.sourceItem) delete item.system.sourceItem
-          if (item.flags?.core?.sourceId) delete item.flags.core
-          if (item.flags?.dnd5e?.sourceId) delete item.flags.dnd5e
           if (item.flags?.dnd5e && Object.keys(item.flags.dnd5e).length === 0) delete item.flags.dnd5e
           return item
         }).sort((a, b) => `${a.name}|${a.type}`.localeCompare(`${b.name}|${b.type}`))
       }
       return out
     }
+    const same = (a, b) => JSON.stringify(normalize(a)) === JSON.stringify(normalize(b))
     const diff = (a, b, path = '', out = []) => {
       if (out.length > 20 || JSON.stringify(a) === JSON.stringify(b)) return out
       if (a && b && typeof a === 'object' && typeof b === 'object' && Array.isArray(a) === Array.isArray(b)) for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diff(a[k], b[k], path ? `${path}.${k}` : k, out)
