@@ -157,22 +157,6 @@ export class KernelRuntime {
     return { status: 'complete', result: result.result }
   }
 
-  /** T5：批量建怪物/NPC/载具/物件；单个也走这里。换算结果由会话缓存读写。 */
-  async createActors(ownerKey: string, refs: EntryRef[]): Promise<{ status: string; actors?: any[]; error?: string; detail?: unknown }> {
-    const o = await this.get(ownerKey)
-    const rows = await this.entries(ownerKey, refs)
-    if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
-    const prepared = await Promise.all(rows.rows.map(async (row) => {
-      const imported = await o.session.call('importForBuild', row.ref.prop, row.entry)
-      if (imported.status !== 'complete' || !imported.result) throw Object.assign(new Error(imported.error ?? `换算状态：${imported.status}`), { detail: imported })
-      return { prop: row.ref.prop, entry: row.entry, data: imported.result }
-    })).catch((error: any) => error)
-    if (!Array.isArray(prepared)) return { status: 'error', error: prepared.message, detail: prepared.detail }
-    const result = await o.session.call('createActorsBatch', prepared)
-    if (result.status !== 'complete') return { status: result.status, error: result.error ?? `批量建状态：${result.status}`, detail: result }
-    return { status: 'complete', actors: result.result }
-  }
-
   /** 引用 → 【库】条目（中文战役交英文对照），给建卡/加条目/批量建共用。 */
   private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown }> } | { status: 'missing' | 'error'; error: string; rows: [] }> {
     const lib = await this.library(ownerKey)

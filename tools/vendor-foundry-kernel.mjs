@@ -2,7 +2,7 @@
 // 清单不手抄：跑一次演示站官方完整启动（dnd5e + libWrapper + Plutonium），录下实际取过的每个文件，原样保存，
 // 目录与 Foundry 服务器一致（scripts/、lang/、tours/、systems/dnd5e/、modules/<id>/），小窗用相对路径取。
 // 资料包与 5etools 条目不进 vendor：小窗运行时向插件要（【库】）。
-import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { chromium } from 'playwright-core'
 import { assets, root, systemRoot } from '../tests/e2e/kernel/assets.mjs'
@@ -52,31 +52,6 @@ try {
   await writeFile(join(out, 'systems/dnd5e/dnd5e.js'), input.compiled.outputFiles[0].text)
   await cp(join(systemRoot, 'system.json'), join(out, 'systems/dnd5e/system.json'))
   for (const l of JSON.parse(await readFile(join(systemRoot, 'system.json'), 'utf8')).languages) await cp(join(systemRoot, l.path), join(out, 'systems/dnd5e', l.path))
-  // T5：Plutonium 原包 data/ 里【库】英文官方没有提供的文件全部带上（按目录比对，不逐个点名）。
-  // 这些是作者导入器自己的补充表（例如载具/物件的 token subjects），【库】没有对应文件时它会向插件要。
-  const registry = JSON.parse(await readFile(join(root, 'src/library/sources.json'), 'utf8'))
-  const en = registry.sources.find((it) => it.id === 'en-official')
-  const enSet = registry.codeSets.en
-  const listUrl = en.fileList.replaceAll('{repo}', enSet.repo).replaceAll('{commit}', enSet.commit)
-  const tree = await (await fetch(listUrl, { headers: { 'user-agent': 'trpg-assistant-vendor' } })).json()
-  if (!Array.isArray(tree.tree)) throw Error(`读不到英文官方文件清单：${listUrl}`)
-  const provided = new Set(tree.tree.filter((it) => it.type === 'blob').map((it) => it.path))
-  const plutoniumData = join(input.moduleRoots.plutonium, 'data')
-  let dataFiles = 0
-  let dataBytes = 0
-  const walk = async (dir) => {
-    for (const entry of await readdir(dir, { withFileTypes: true })) {
-      const file = join(dir, entry.name)
-      if (entry.isDirectory()) { await walk(file); continue }
-      const rel = relative(plutoniumData, file).split(sep).join('/')
-      if (provided.has(rel)) continue
-      const dest = join(out, 'modules/plutonium/data', rel)
-      await mkdir(dirname(dest), { recursive: true })
-      await cp(file, dest)
-      saved.push(relative(out, dest)); dataFiles++; dataBytes += (await stat(file)).size
-    }
-  }
-  await walk(plutoniumData)
   for (const [id, dir] of Object.entries(input.moduleRoots)) {
     const manifest = JSON.parse(await readFile(join(dir, 'module.json'), 'utf8'))
     await mkdir(join(out, 'modules', id), { recursive: true })
@@ -103,5 +78,4 @@ try {
     files: saved.sort(), note: 'Recorded from one official headless boot by tools/vendor-foundry-kernel.mjs; do not edit by hand.',
   }, null, 2) + '\n')
   console.log(`vendor/foundry: ${saved.length} recorded files, ${classic.length} classic scripts, ${templates.length} templates`)
-  console.log(`Plutonium data not provided by library: ${dataFiles} files, ${(dataBytes / 1048576).toFixed(1)} MB`)
 } finally { await browser.close() }
