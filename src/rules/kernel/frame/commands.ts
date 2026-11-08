@@ -11,6 +11,7 @@ import { createCombatCommands } from './commands-combat'
 import { createMonsterCommands } from './commands-monsters'
 import { createLevelCommands } from './commands-level'
 import { createAddCommands } from './commands-add'
+import { createBatchCommands } from './commands-batch'
 
 /**
  * 五种结果状态（上位设计 §3.5）：
@@ -131,6 +132,8 @@ const MONSTER_COMMANDS = createMonsterCommands(operate)
 const LEVEL_COMMANDS = createLevelCommands(operate, actor)
 /** T4：给已有人物加条目（dnd5e 官方拖放流程）。 */
 const ADD_COMMANDS = createAddCommands(operate, actor)
+/** T5：怪物/NPC/载具/物件统一批量建。 */
+const BATCH_COMMANDS = createBatchCommands(operate)
 
 // ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
 const AUTHOR_CLASSES = ['Config', 'ConfigConsts', 'VetoolsLinks', 'Vetools', 'SideDataInterfaces', 'Dnd5eUtil', 'UtilDamageTypes', 'ImplementationRegistryImportList',
@@ -168,6 +171,7 @@ export const KERNEL_COMMANDS = {
   ...MONSTER_COMMANDS,
   ...LEVEL_COMMANDS,
   ...ADD_COMMANDS,
+  ...BATCH_COMMANDS,
   /**
    * 掷一个骰式：同一串点数得到同一结果。kind 选 dnd5e 的掷骰类（d20 = D20Roll，damage = DamageRoll，basic = BasicRoll），
    * options 原样交给它（优势、精灵精准、半身人幸运、最低值、暴击等）；不给 kind 用 Foundry 的 Roll。
