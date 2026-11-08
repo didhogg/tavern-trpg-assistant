@@ -4,10 +4,9 @@
 import { join } from 'node:path'
 import { writeFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, kernelInputFor, work } from './chain-common.mjs'
+import { buildAll, engines, work } from './chain-common.mjs'
 
 await buildAll()
-const input = await kernelInputFor('perf-user', 'perf-user')
 const PORT = 47337
 const [, type, options] = engines[process.env.ENGINE === 'webkit' ? 1 : 0]
 const { server, url } = await startStatic({ port: PORT })
@@ -43,7 +42,7 @@ async function freshPage() {
 try {
   // ---- 第一页：装库 / 准备真实条目 / 结算内核操作 / 存档 / 读档规模 ----
   const first = await freshPage()
-  const prepared = await first.evaluate(async (input) => {
+  const prepared = await first.evaluate(async () => {
     const h = await import('/work/e2e-lib/harness.js')
     for (const id of ['cn-official', 'en-official']) {
       const audit = await h.offlineAudit(id)
@@ -70,6 +69,7 @@ try {
     const magic0 = await take('item', 'DMG', (it) => !!it.rarity && it.rarity !== 'none')
     const magic1 = await take('item', 'DMG', (it) => !!it.rarity && it.rarity !== 'none', 1)
     const monster1 = await take('monster', 'MM', () => true, 1)
+    const input = await h.kernelInput({ pluginRoot: new URL('/', location.href), rule: 'dnd5e2014', world: { id: 'perf-user', title: 'perf-user' } })
     const t0 = performance.now()
     const { session, status } = await h.startKernelSession(input)
     const bootMs = Math.round(performance.now() - t0)
@@ -79,13 +79,14 @@ try {
     return {
       bootMs,
       boot: { system: status.system, rules: status.rules, api: status.plutoniumApi },
+      input,
       heroPlan: { race: heroPlan.race, background: heroPlan.background, class: heroPlan.class, weapon: heroPlan.weapon, spell: heroPlan.spell },
       monster: { ref: monster.ref, label: monster.label, entry: monster.entry },
       monster1: monster1 && { ref: monster1.ref, label: monster1.label, entry: monster1.entry },
       magic0: magic0 && { ref: magic0.ref, label: magic0.label, entry: magic0.entry },
       magic1: magic1 && { ref: magic1.ref, label: magic1.label, entry: magic1.entry },
     }
-  }, input)
+  })
   push('结算内核开机', prepared.bootMs, prepared.boot.api === 'object' ? 'ok' : 'error')
 
   const ops = await first.evaluate(async (plan) => {
@@ -229,7 +230,7 @@ try {
     const t = performance.now()
     const r = await h.rebuildActor({ lib: h.scoped, session: k2, library, actor: compact })
     return { ms: Math.round(performance.now() - t), status: r.status, error: r.error, missing: r.missing }
-  }, [input, prepared])
+  }, [prepared.input, prepared])
   push('按引用重建 1 人（当前读档路径）', rebuild.ms, rebuild.status)
   await cleanPage.close()
 
