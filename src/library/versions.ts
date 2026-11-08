@@ -2,6 +2,7 @@
 // 同编号的条目（两个自制包撞编号、自制包写了官方编号）和自己写的房规，都挂在原条目下当"备选"；
 // 原件照常生效，用户选了才换。选择分三层：本战役 > 当前规则 > 全局；都没选 = 原件。
 // 这里只有纯逻辑：找同编号、按选择定生效版本。条目对象由【库】交来，不改。
+import type { EntryRef } from './scopes'
 
 export interface DocIndex {
   docIdLocal: string
@@ -54,6 +55,8 @@ export interface Alternative {
   kind: 'collision' | 'houserule'
   /** 来自哪个包（文件名；可编辑自制为 null）。 */
   filename: string | null
+  /** 这一条在库里的位置；详情用它读预计算的配图描述。 */
+  ref?: EntryRef
   item: unknown
 }
 

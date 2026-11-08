@@ -59,6 +59,9 @@ describe('parseBrew', () => {
           if (prop === 'class') throw new Error('作者加载器报错')
           return prop === 'spell' ? { items: [{}], hashes: ['s_x'], sources: ['X'] } : { items: [], hashes: [], sources: [] }
         },
+        excludeList: () => [],
+        fluffOfMany: () => ({ s_x: { fluff: null, fluffError: null, engSiteHash: null } }),
+        excludedFlags: () => ({ hashes: ['s_x'], excluded: [false] }),
       }, () => { closed = true }),
       openFrameIn: async () => { throw new Error('没有同编号，不该开隔离小窗') },
     })
@@ -68,7 +71,7 @@ describe('parseBrew', () => {
     expect(report.parse.notRun.map((n) => n.props)).toEqual([['book', 'bookData']])
     expect(report.parse.authorErrors).toEqual(['Error: 无法加载 8 个条目的引用！'])
     // 自制里没有的类别：查询返回空，不报错；解析出错的类别照样报错
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludedFlags: () => ({ hashes: [], excluded: null }) }) })
+    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludeList: () => [], excludedFlags: () => ({ hashes: [], excluded: null }) }) })
     expect(await svc.query('cn-brew', 'feat')).toEqual([])
     await expect(svc.query('cn-brew', 'class')).rejects.toThrow('没有这一类的解析结果')
     expect(report.installed).toEqual([{ docIdLocal: 'a', filename: 'x.json' }])

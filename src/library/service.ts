@@ -2,12 +2,13 @@
 // 只交作者对象和作者搜索结果，不挑字段、不改名。凡是要理解字段含义的判断（屏蔽、背景描述、英文编号、
 // 搜索匹配与排序）都在小窗里由作者函数做；插件这边只读库、对编号、按来源分组。
 import { parseBrew, type BrewParseReport } from './brew'
+import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import { healthItemsOf, healthReport, type HealthReport, type Layers34Summary, type StoredReport } from './health'
 import type { InstallReport } from './install'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
-import type { SearchHit } from './runtime/frame/read-commands'
+import type { SearchHit, SearchIndexDump } from './runtime/frame/read-commands'
 import type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
 import type { BrewEntry, WithErrors } from './runtime/frame/brew-commands'
 import type { AuthorFrame } from './runtime/host'
@@ -21,29 +22,10 @@ export interface LibraryServiceOptions {
   openFrame: (codeSet: string, kvScope?: string) => Promise<AuthorFrame>
 }
 
-/**
- * 把作者现场给的"编号 → 是否屏蔽"按编号对到库里存的顺序上。
- * 两边编号集合（含重复次数）必须相同，否则说明库里的解析结果过期了，报错不猜。
- */
-function alignByHash(prop: string, stored: Array<string | null>, live: Array<string | null>, excluded: boolean[]): boolean[] {
-  const byHash = new Map<string | null, boolean[]>()
-  live.forEach((h, i) => {
-    const list = byHash.get(h)
-    if (list) list.push(excluded[i])
-    else byHash.set(h, [excluded[i]])
-  })
-  const out = stored.map((h) => byHash.get(h)?.shift())
-  const missing = stored.filter((_, i) => out[i] === undefined)
-  const extra = [...byHash.entries()].filter(([, v]) => v.length).map(([h]) => h)
-  if (live.length !== stored.length || missing.length || extra.length) {
-    throw new Error(`作者程序现场展开的「${prop}」和库里存的解析结果对不上：现场 ${live.length} 条、库里 ${stored.length} 条；库里有现场没有：${missing.slice(0, 3).join('、') || '无'}；现场有库里没有：${extra.slice(0, 3).join('、') || '无'}`)
-  }
-  return out as boolean[]
-}
-
 export class LibraryService {
   private readonly frames = new Map<string, Promise<AuthorFrame>>()
   private readonly pairsCache = new Map<string, Promise<EnglishPairs>>()
+  private readonly searchLoaded = new Map<string, string>()
 
   constructor(private readonly opts: LibraryServiceOptions) {}
 
@@ -67,6 +49,20 @@ export class LibraryService {
     for (const p of this.frames.values()) p.then((f) => f.close(), (e: unknown) => console.warn('[trpg-library] 小窗本来就没开成', e))
     this.frames.clear()
     this.pairsCache.clear()
+    this.searchLoaded.clear()
+  }
+
+  /** 手动把整套资料一次算好存库（装书 / 迁移后用；平时看资料走缓存）。 */
+  async precompute(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean } = {}): Promise<PrecomputeReport> {
+    const source = getSource(sourceId)
+    const frame = await this.frame(source.codeSet)
+    return precomputeSource({ source, db: this.opts.db, frame, prop: opts.prop, fluff: opts.fluff ?? true, excluded: opts.excluded ?? true, search: opts.search ?? source.kind === 'official' })
+  }
+
+  /** 缓存缺了/资料变了才开小窗补算；平时看资料、查询只读库。 */
+  private async ensure(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean }): Promise<void> {
+    const source = getSource(sourceId)
+    await ensurePrecomputed({ source, db: this.opts.db, openFrame: (cs) => this.opts.openFrame(cs), ...opts })
   }
 
   async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
@@ -95,15 +91,14 @@ export class LibraryService {
 
   /** 按类别（、来源）取作者对象。默认去掉被屏蔽的；includeExcluded 时一并返回并带标记。 */
   async query(sourceId: string, prop: string, { source, includeExcluded = false }: { source?: string; includeExcluded?: boolean } = {}): Promise<QueryRow[]> {
+    await this.ensure(sourceId, { prop, excluded: true })
     const p = await this.parsed(sourceId, prop)
-    const src = getSource(sourceId)
-    const flags = await (await this.frame(src.codeSet)).call('excludedFlags', prop, src.kind === 'brew' ? 'brew' : 'site')
-    // 按编号对齐（作者缓存里的先后顺序取决于先加载了哪本书，不能按位置对）
-    const excludedOf = flags.excluded ? alignByHash(prop, p.hashes, flags.hashes, flags.excluded) : null
+    const excludedOf = await cachedExcluded(this.opts.db, sourceId, prop)
+    if (excludedOf && p.hashes.some((h) => h && excludedOf[h] === undefined)) throw new Error(`缓存里的「${prop}」屏蔽表和解析结果对不上，不猜`)
     const want = source?.toLowerCase()
     const rows: QueryRow[] = []
     p.items.forEach((item, i) => {
-      const excluded = excludedOf?.[i] ?? false
+      const excluded = excludedOf?.[p.hashes[i] ?? ''] ?? false
       if (excluded && !includeExcluded) return
       if (want !== undefined && p.sources[i]?.toLowerCase() !== want) return
       rows.push({ hash: p.hashes[i], source: p.sources[i], excluded, item })
@@ -130,17 +125,18 @@ export class LibraryService {
    * 条目对象取库里这个数据集自己的解析结果：作者缓存里同编号的自制会顶掉官方（P3-1 探路实测），不能直接用缓存里的；
    * 库里没有这一条时才用作者缓存。背景描述按交出去的那个对象问作者。
    */
-  async detail(sourceId: string, prop: string, hash: string, source?: string | null): Promise<DetailResult | null> {
-    const s = getSource(sourceId)
-    const frame = await this.frame(s.codeSet)
-    const d = await frame.call('detail', prop, hash, source ?? null)
+  async detail(sourceId: string, prop: string, hash: string, _source?: string | null): Promise<DetailResult | null> {
+    await this.ensure(sourceId, { prop, fluff: true, excluded: true })
     const stored = await this.storedItem(sourceId, prop, hash)
-    if (!d && !stored) return null
-    if (stored) {
-      const f = await frame.call('fluffOf', prop, stored.item)
-      return { item: stored.item, hash, source: stored.source, excluded: d?.excluded ?? false, fluff: f.fluff, fluffError: f.fluffError, engSiteHash: d?.engSiteHash ?? null, english: await this.english(s, prop, hash) }
-    }
-    return { ...d!, english: await this.english(s, prop, hash) }
+    if (!stored) return null
+    const f = await cachedFluff(this.opts.db, sourceId, prop, hash)
+    const excluded = await cachedExcluded(this.opts.db, sourceId, prop)
+    return { item: stored.item, hash, source: stored.source, excluded: excluded?.[hash] ?? false, fluff: f?.fluff ?? null, fluffError: f?.fluffError ?? null, engSiteHash: f?.engSiteHash ?? null, english: await this.english(getSource(sourceId), prop, hash) }
+  }
+
+  /** 预计算的配图描述；没有这一条就返回 null（详情共用）。 */
+  async fluff(sourceId: string, prop: string, hash: string) {
+    return cachedFluff(this.opts.db, sourceId, prop, hash)
   }
 
   async english(s: SourceEntry, prop: string, hash: string): Promise<English | null> {
@@ -149,8 +145,10 @@ export class LibraryService {
     if (!(await this.bothInstalled(s, pair))) return { status: 'not-installed' }
     const hit = (await this.englishPairs(s.id)).pairs[prop]?.[hash]
     if (!hit) return { status: 'not-paired' }
-    const d = await (await this.frame(pair.codeSet)).call('detail', prop, hit.enHash, hit.enSource)
-    return d ? { status: 'found', hash: hit.enHash, via: hit.via, item: d.item, fluff: d.fluff } : { status: 'not-found', hash: hit.enHash }
+    const stored = await this.storedItem(pair.id, prop, hit.enHash)
+    if (!stored) return { status: 'not-found', hash: hit.enHash }
+    const f = await cachedFluff(this.opts.db, pair.id, prop, hit.enHash)
+    return { status: 'found', hash: hit.enHash, via: hit.via, item: stored.item, fluff: f?.fluff ?? null }
   }
 
   private async bothInstalled(a: SourceEntry, b: SourceEntry): Promise<boolean> {
@@ -205,7 +203,18 @@ export class LibraryService {
 
   /** 作者搜索器的结果原样（按作者得分排序，已按作者的搜索设置去掉被屏蔽的等）。showLegacy：这一次显示旧版来源（2014 战役用）。 */
   async search(sourceId: string, term: string, { showLegacy }: { showLegacy?: boolean } = {}): Promise<SearchHit[]> {
-    return (await this.frame(getSource(sourceId).codeSet)).call('search', term, showLegacy ?? null)
+    await this.ensure(sourceId, { search: true })
+    const s = getSource(sourceId)
+    const frame = await this.frame(s.codeSet)
+    const rec = await searchIndexOf(this.opts.db, sourceId)
+    if (rec) {
+      const fingerprint = `${String(rec.base ?? '')}|${String(rec.exclude ?? '')}|${String(rec.manage ?? '')}`
+      if (this.searchLoaded.get(s.codeSet) !== fingerprint) {
+        await frame.call('searchIndexLoad', rec as unknown as SearchIndexDump)
+        this.searchLoaded.set(s.codeSet, fingerprint)
+      }
+    }
+    return frame.call('search', term, showLegacy ?? null)
   }
 
   /** 读或改作者的搜索设置。 */
@@ -215,7 +224,11 @@ export class LibraryService {
 
   /** 按书开关：改作者屏蔽表里"整本书"一行（经这套程序唯一的小窗，查询、搜索立即生效）。 */
   async setBookExcluded(sourceId: string, book: string, excluded: boolean): Promise<void> {
-    await (await this.frame(getSource(sourceId).codeSet)).call('setSourceExcluded', book, excluded)
+    const s = getSource(sourceId)
+    await (await this.frame(s.codeSet)).call('setSourceExcluded', book, excluded)
+    await invalidatePrecompute(this.opts.db, sourceId, ['excluded'])
+    await invalidatePrecompute(this.opts.db, officialSourceOf(s.codeSet).id, ['search'])
+    this.searchLoaded.delete(s.codeSet)
   }
 
   // ---- 自制（源登记表里 kind = brew 的源；作者包管理器在对应那套程序的小窗里）----
@@ -249,7 +262,11 @@ export class LibraryService {
   /** 装、导入、删、更新之后：关掉旧小窗（作者缓存和搜索索引是旧的），用新小窗重解析自制内容。 */
   private async afterBrewChange(s: SourceEntry): Promise<BrewParseReport> {
     this.reset()
-    return parseBrew({ source: s, db: this.opts.db, openFrame: () => this.opts.openFrame(s.codeSet), openFrameIn: (scope) => this.opts.openFrame(s.codeSet, scope) })
+    const report = await parseBrew({ source: s, db: this.opts.db, openFrame: () => this.opts.openFrame(s.codeSet), openFrameIn: (scope) => this.opts.openFrame(s.codeSet, scope) })
+    // 搜索索引里含自制；自制变了，官方那套的搜索缓存作废，下一次搜索重算。
+    await invalidatePrecompute(this.opts.db, officialSourceOf(s.codeSet).id, ['search'])
+    this.searchLoaded.delete(s.codeSet)
+    return report
   }
 
   /** 按网址装（作者自动追装依赖）。 */

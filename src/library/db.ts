@@ -67,5 +67,7 @@ export class LibraryDatabase extends Dexie {
     })
     // P3-1：加管理表（只加表，原有数据不动）
     this.version(2).stores({ manage: '[kind+key], kind' })
+    // S1：派生表加预计算缓存键（pre:）；升版本时清掉旧缓存，第一次看资料按需重建。
+    this.version(3).stores({}).upgrade((tx) => tx.table('derived').where('key').startsWith('pre:').delete())
   }
 }

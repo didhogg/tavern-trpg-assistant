@@ -6,6 +6,7 @@ import type { FileProvider } from './files'
 import type { AuthorFrame } from './runtime/host'
 import { precachePlan } from './plan'
 import { commitOf, type SourceEntry } from './sources'
+import { precomputeSource, type PrecomputeReport } from './cache'
 
 export interface StorageEstimate {
   persisted: boolean | null
@@ -39,6 +40,8 @@ export interface InstallReport {
   }
   /** 第 5 层（辅助）：作者搜索索引对账。 */
   index: Record<string, { parsed: number; index: number; onlyParsed: number; onlyIndex: number; samplesOnlyParsed: string[]; samplesOnlyIndex: string[] }>
+  /** 装完作者数据后算好的离线缓存（配图描述、屏蔽标记、搜索索引）。 */
+  precompute?: PrecomputeReport
   /** 用户取消了（下载到一半停下；已下载的文件留着，再装就是续传）。 */
   cancelled?: boolean
   ms: number
@@ -189,6 +192,14 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
       }
     } catch (e) {
       report.parse.errors.push({ prop: '(search index)', error: msg(e) })
+    }
+
+    // 第 6 层：把看资料 / 搜索要用的东西一次算好存库（S1）。
+    try {
+      onProgress?.({ stage: 'precompute', done: 0, total: 0 })
+      report.precompute = await precomputeSource({ source, db, frame, fluff: true, excluded: true, search: true })
+    } catch (e) {
+      report.parse.errors.push({ prop: '(预计算缓存)', error: msg(e) })
     }
   } catch (e) {
     if (!report.parse.errors.length) report.parse.errors.push({ prop: '(解析)', error: msg(e) })

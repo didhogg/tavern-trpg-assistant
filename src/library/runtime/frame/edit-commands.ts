@@ -1,7 +1,7 @@
 // 小窗里：P3-1 用到的作者入口（D2-P3 整体设计 §2.1、§2.3–§2.5）。只转调作者函数，结果原样交回。
 // 版本判断、来源名、单包编号、可编辑自制、文字转条目、新条目模板、自制导出、背景描述。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
-import { A, hashOf, init } from './author'
+import { A, engSiteHashOf, hashOf, init } from './author'
 
 const mod = (path: string): Promise<any> => import(/* @vite-ignore */ new URL(`js/${path}`, location.href).href)
 
@@ -93,6 +93,32 @@ export async function fluffOf(prop: string, item: any): Promise<{ fluff: unknown
   } catch (e) {
     return { fluff: null, fluffError: e instanceof Error ? e.message : String(e) }
   }
+}
+
+/** 整类一次取配图描述：装书/改自制时存进库，看资料时不再开小窗。 */
+export async function fluffOfMany(prop: string, items: any[]): Promise<Record<string, { fluff: unknown; fluffError: string | null; engSiteHash: string | null }>> {
+  await init()
+  const out: Record<string, { fluff: unknown; fluffError: string | null; engSiteHash: string | null }> = {}
+  for (const item of items) {
+    const hash = hashOf(prop, item)
+    if (!hash) continue
+    try {
+      out[hash] = {
+        fluff: (await A.Renderer.utils.pGetProxyFluff({ entity: item, prop })) ?? null,
+        fluffError: null,
+        engSiteHash: engSiteHashOf(prop, item),
+      }
+    } catch (e) {
+      out[hash] = { fluff: null, fluffError: e instanceof Error ? e.message : String(e), engSiteHash: null }
+    }
+  }
+  return out
+}
+
+/** 作者屏蔽表原文（开关书、装书时算缓存指纹用）。 */
+export async function excludeList(): Promise<unknown[]> {
+  await init()
+  return A.ExcludeUtil.getList()
 }
 
 // ---- 可编辑自制（作者 utils-brew-impl-brew.js 第 58–135 行）----

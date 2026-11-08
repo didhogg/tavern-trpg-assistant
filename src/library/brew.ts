@@ -2,6 +2,7 @@
 // 和官方的全量解析一样：按作者加载器登记表逐类调作者加载器（读已装自制用 pCacheAndGetAllBrew），结果原样存进库。
 // 作者网站的做法也是改了自制就整页重新加载。
 import { buildAlternatives, type AltIndex } from './alternatives'
+import { invalidatePrecompute, precomputeSource, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
 import type { AuthorFrame } from './runtime/host'
@@ -20,6 +21,8 @@ export interface BrewParseReport {
   }
   /** 同编号挂备选（P3-1）：挂了几条、取备选失败的。 */
   alternatives: { targets: number; errors: AltIndex['errors'] }
+  /** 改完自制后重算的离线缓存（配图描述、屏蔽标记）。 */
+  precompute?: PrecomputeReport
   ms: number
 }
 
@@ -30,6 +33,7 @@ export async function parseBrew({ source, db, openFrame, openFrameIn }: { source
   const t0 = Date.now()
   const report: BrewParseReport = { source: source.id, installed: [], parse: { props: {}, notRun: [], errors: [], authorErrors: [] }, alternatives: { targets: 0, errors: [] }, ms: 0 }
   await db.derived.where('key').startsWith(`parsed:${source.id}:`).delete()
+  await invalidatePrecompute(db, source.id, ['fluff', 'excluded'])
   const frame = await openFrame()
   try {
     report.installed = (await frame.call('brewInstalled')).map((b) => b.head)
@@ -53,6 +57,11 @@ export async function parseBrew({ source, db, openFrame, openFrameIn }: { source
     report.parse.authorErrors = await frame.call('frameErrors')
     const alts = await buildAlternatives({ source, db, frame, openFrameIn })
     report.alternatives = { targets: Object.keys(alts.targets).length, errors: alts.errors }
+    try {
+      report.precompute = await precomputeSource({ source, db, frame, fluff: true, excluded: true, search: false })
+    } catch (e) {
+      report.parse.errors.push({ prop: '(预计算缓存)', error: msg(e) })
+    }
   } finally {
     frame.close()
   }

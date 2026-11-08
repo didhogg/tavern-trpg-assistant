@@ -20,6 +20,8 @@ const engines = [
 ]
 // 测试用的例子（不是数量）：一本书、一个关键词
 const BOOK = 'XPHB'
+// 作者导航的 gendata 文件在测试镜像里本来就没有（交接已单列）；预计算会加载作者导航，故按已知 404 放过。
+const knownError = (e) => e.includes('gendata-nav-adventure-book-index.json')
 const TERM_CN = '火球'
 const TERM_EN = 'fireball'
 
@@ -171,7 +173,7 @@ for (const [name, type, options] of engines) {
     bookToggle: !!o && o.off.spellInBook === 0 && o.off.spellInBookFlagged === o.query.inBook && o.off.itemInBook === 0 && o.off.searchInBook === 0 && o.off.enUnaffected > 0 && o.on.spellInBook === o.query.inBook && o.on.searchInBook > 0,
     legacySetting: !!o && o.legacy.hiddenByDefault && o.legacy.shownWhenOn,
     offline: !!f && f.query.inBook === o?.query.inBook && f.searchCn.found && f.detail?.english === 'found' && r.offlineExternal === 0,
-    noPageErrors: !r.errors1?.length && !r.errors2?.length,
+    noPageErrors: ![...(r.errors1 ?? []), ...(r.errors2 ?? [])].some((e) => !knownError(e)),
   }
   r.passed = !r.fatal1 && !r.fatal2 && Object.values(r.verdict).every(Boolean)
   results.push(r)

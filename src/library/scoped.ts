@@ -117,7 +117,7 @@ export class ScopedLibrary {
     for (const link of await this.manage.houseRules()) {
       if (refKey(link.target) !== refKey(ref)) continue
       const house = await this.lib.storedItem(link.house.set, link.house.prop, link.house.hash)
-      if (house) out.push({ altId: `house:${link.house.hash}`, kind: 'houserule', filename: null, item: house.item })
+      if (house) out.push({ altId: `house:${link.house.hash}`, kind: 'houserule', filename: null, ref: link.house, item: house.item })
     }
     return out
   }
@@ -214,7 +214,9 @@ export class ScopedLibrary {
     const alts = await this.alternativesOf(ref, await this.alts(c.codeSet))
     const { chosen, item } = this.version(c, refKey(ref), alts, await this.choicesFor(c))
     const effective = item ?? d.item
-    const fluff = item === undefined ? { fluff: d.fluff, fluffError: d.fluffError } : await (await this.lib.frameOf(c.codeSet)).call('fluffOf', ref.prop, effective)
+    const alt = item === undefined ? null : alts.find((a) => a.item === effective)
+    const cached = alt?.ref ? await this.lib.fluff(alt.ref.set, alt.ref.prop, alt.ref.hash) : null
+    const fluff = item === undefined ? { fluff: d.fluff, fluffError: d.fluffError } : { fluff: cached?.fluff ?? null, fluffError: cached?.fluffError ?? null }
     return { ...d, ...fluff, ref, reason: v.reason, item: effective, base: d.item, version: chosen, alternatives: alts, english: item === undefined ? d.english : null }
   }
 

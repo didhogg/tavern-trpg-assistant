@@ -96,3 +96,36 @@ export async function searchSettings(patch: Record<string, unknown> = {}): Promi
   }
   return S._getComp().toObject()
 }
+
+/** 作者搜索器建好的索引 + 顺带状态，装书时存库；刷新后 searchIndexLoad 接回，不重建。 */
+export interface SearchIndexDump {
+  json: string
+  maxId: number | null
+  categoryCounts: Record<string, number>
+  adventureBookLookup: Record<string, number>
+}
+
+export async function searchIndexDump(): Promise<SearchIndexDump> {
+  await init()
+  const B = A.OmnisearchBacking
+  await B._pInit()
+  return {
+    json: JSON.stringify(B._searchIndex.toJSON()),
+    maxId: B._maxId ?? null,
+    categoryCounts: B._CATEGORY_COUNTS ?? {},
+    adventureBookLookup: B._adventureBookLookup ?? {},
+  }
+}
+
+/** 把存好的索引接回作者搜索器：只设置作者自己的静态状态，不改作者文件。 */
+export async function searchIndexLoad(dump: SearchIndexDump): Promise<boolean> {
+  await init()
+  const B = A.OmnisearchBacking
+  B._searchIndex = A.elasticlunr.Index.load(JSON.parse(dump.json))
+  B._maxId = dump.maxId
+  B._CATEGORY_COUNTS = dump.categoryCounts
+  B._adventureBookLookup = dump.adventureBookLookup
+  B._pLoadSearch = Promise.resolve()
+  B._initReInCategory()
+  return true
+}

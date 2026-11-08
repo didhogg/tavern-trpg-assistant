@@ -118,7 +118,7 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
         if (items.has(id)) out.errors.push({ docIdLocal: id, prop: c.prop, hash: c.hash, error: '隔离解析后作者没有交出这一条' })
         continue
       }
-      alts.push({ altId: `doc:${id}`, kind: 'collision', filename: filenameOf(id), item })
+      alts.push({ altId: `doc:${id}`, kind: 'collision', filename: filenameOf(id), ref: { set: source.id, prop: c.prop, hash: c.hash }, item })
     }
     // 自制解析结果里同编号的那条：官方是原件 → 去掉；先装的包是原件 → 换成先装的那条
     const p = brewParsed.get(c.prop) ?? ((await db.derived.get(parsedKey(source.id, c.prop)))?.value as ParsedProp | undefined)

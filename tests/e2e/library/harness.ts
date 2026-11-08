@@ -52,6 +52,8 @@ function openLocalFrame(codeSet: string, kvScope?: string) {
   return startAuthorFrame({ codeSet, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false, kvScope }) })
 }
 
+export { openLocalFrame as openAuthorFrame }
+
 export async function install(sourceId: string) {
   const source = getSource(sourceId)
   return installOfficial({ source, db, files, openFrame: () => openLocalFrame(source.codeSet), onProgress: (p) => console.log(`[progress] ${sourceId} ${p.stage} ${p.done}/${p.total} ${p.item ?? ''}`) })
@@ -120,6 +122,7 @@ import { LibraryService } from '../../../src/library/service'
 
 /** 库服务（界面将来的唯一入口）。安装会另开小窗，所以安装后要 service.reset()。 */
 export const service = new LibraryService({ db, openFrame: openLocalFrame })
+export const libraryDb = db
 
 // ---- B2-8a 审计第 3、4 层 ----
 import { compareLayers, isFoundryFile, recordSchemaOf, type AuditLayers34Report, type ParsedRecord, type RawRecord, type SchemaInfo } from './audit-layers34'

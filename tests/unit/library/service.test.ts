@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { LibraryDatabase } from '../../../src/library/db'
 import { parsedKey } from '../../../src/library/install'
 import { LibraryService } from '../../../src/library/service'
+import { baseFingerprint, manageFingerprint } from '../../../src/library/cache'
+import { getSource } from '../../../src/library/sources'
 import type { AuthorFrame } from '../../../src/library/runtime/host'
 
 // 假小窗：只回答这几条指令，用来测插件这边自己做的事（按来源分组、屏蔽标记、编号核对、英文配对计数）。
@@ -29,6 +31,14 @@ const spells = {
 }
 
 let db: LibraryDatabase
+async function seedSpellCache({ excluded = null as Record<string, boolean> | null, fluff = {} as Record<string, unknown> } = {}): Promise<void> {
+  const source = getSource('cn-official')
+  const base = await baseFingerprint(source, db)
+  const manage = await manageFingerprint(db)
+  await db.derived.put({ key: 'pre:cn-official:excluded:spell', fingerprint: `${base}|seed|${manage}`, value: { excluded, base, exclude: 'seed', manage }, savedAt: 0 })
+  await db.derived.put({ key: 'pre:cn-official:fluff:spell', fingerprint: base, value: fluff, savedAt: 0 })
+}
+
 beforeEach(async () => {
   db = new LibraryDatabase(`test-service-${Math.random()}`)
   await db.derived.put({ key: parsedKey('cn-official', 'spell'), fingerprint: 'x', value: spells, savedAt: 0 })
@@ -37,39 +47,56 @@ beforeEach(async () => {
 afterEach(async () => { await db.delete() })
 
 describe('LibraryService.query', () => {
-  it('屏蔽表为空：全部返回；按来源取只留这本书（不分大小写）', async () => {
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludedFlags: () => ({ hashes: [], excluded: null }) }) })
+  it('缓存命中：只读库，不开小窗；按来源取只留这本书（不分大小写）', async () => {
+    await seedSpellCache()
+    let opened = 0
+    const svc = new LibraryService({ db, openFrame: async () => { opened++; return fakeFrame({}) } })
     expect((await svc.query('cn-official', 'spell')).map((r) => r.hash)).toEqual(spells.hashes)
     expect((await svc.query('cn-official', 'spell', { source: 'xphb' })).map((r) => r.hash)).toEqual(['a_xphb', 'c_xphb'])
+    expect(opened).toBe(0)
   })
 
-  it('有屏蔽：默认去掉；includeExcluded 时带标记一并返回', async () => {
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludedFlags: () => ({ hashes: spells.hashes, excluded: [true, false, true] }) }) })
+  it('缓存里的屏蔽标记：默认去掉；includeExcluded 时带标记一并返回', async () => {
+    await seedSpellCache({ excluded: { a_xphb: true, b_phb: false, c_xphb: true } })
+    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}) })
     expect((await svc.query('cn-official', 'spell')).map((r) => r.hash)).toEqual(['b_phb'])
     expect((await svc.query('cn-official', 'spell', { includeExcluded: true })).map((r) => [r.hash, r.excluded])).toEqual([['a_xphb', true], ['b_phb', false], ['c_xphb', true]])
   })
 
-  it('作者现场的先后顺序和库里不同：按编号对齐', async () => {
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludedFlags: () => ({ hashes: ['c_xphb', 'a_xphb', 'b_phb'], excluded: [true, false, false] }) }) })
+  it('缓存按编号取，不按作者现场的先后顺序', async () => {
+    await seedSpellCache({ excluded: { c_xphb: true, a_xphb: false, b_phb: false } })
+    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}) })
     expect((await svc.query('cn-official', 'spell', { includeExcluded: true })).map((r) => [r.hash, r.excluded])).toEqual([['a_xphb', false], ['b_phb', false], ['c_xphb', true]])
   })
 
-  it('作者现场展开的编号和库里存的对不上：报错，不猜', async () => {
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludedFlags: () => ({ hashes: ['a_xphb', 'b_phb'], excluded: [false, false] }) }) })
+  it('缓存里的编号和库里存的对不上：报错，不猜', async () => {
+    await seedSpellCache({ excluded: { a_xphb: false, b_phb: false } })
+    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}) })
     await expect(svc.query('cn-official', 'spell')).rejects.toThrow('对不上')
   })
 
-  it('同一套程序只开一个小窗', async () => {
+  it('缓存缺了：按作者屏蔽表现算一次并存库，下一次只读库', async () => {
     let opened = 0
-    const svc = new LibraryService({ db, openFrame: async () => { opened++; return fakeFrame({ excludedFlags: () => ({ hashes: [], excluded: null }) }) } })
-    await Promise.all([svc.query('cn-official', 'spell'), svc.query('cn-official', 'spell')])
+    const svc = new LibraryService({ db, openFrame: async () => { opened++; return fakeFrame({
+      excludeList: () => [],
+      excludedFlags: () => ({ hashes: spells.hashes, excluded: [true, false, true] }),
+    }) } })
+    expect((await svc.query('cn-official', 'spell')).map((r) => r.hash)).toEqual(['b_phb'])
     expect(opened).toBe(1)
+    expect((await db.derived.get('pre:cn-official:excluded:spell'))?.value).toMatchObject({ excluded: { a_xphb: true, b_phb: false, c_xphb: true } })
+    expect((await svc.query('cn-official', 'spell', { includeExcluded: true })).map((r) => r.hash)).toEqual(spells.hashes)
+    expect(opened).toBe(1)
+  })
+
+  it('补算缓存时作者现场编号和库里存的对不上：报错，不猜', async () => {
+    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({
+      excludeList: () => [],
+      excludedFlags: () => ({ hashes: ['a_xphb', 'b_phb'], excluded: [false, false] }),
+    }) })
+    await expect(svc.query('cn-official', 'spell')).rejects.toThrow('对不上')
   })
 })
 
-const detailOf = (hash: string) => ({ item: { hash }, hash, source: 'XPHB', excluded: false, fluff: null, fluffError: null, engSiteHash: null })
-
-// 作者做法配对的假答案：a、c 在作者索引里，a 找到英文 ea_xphb（按名字），c 找不到；b 不在索引里
 const cnLocators = () => [
   { prop: 'spell', hash: 'a_xphb', file: 'data/spells/spells-xphb.json', locator: {} },
   { prop: 'spell', hash: 'c_xphb', file: 'data/spells/spells-xphb.json', locator: {} },
@@ -86,44 +113,46 @@ async function installBoth() {
 }
 
 describe('LibraryService.detail', () => {
-  it('英文没装：返回 not-installed，不开配对用的小窗', async () => {
+  it('英文没装：返回 not-installed，不开任何小窗', async () => {
+    await seedSpellCache({ fluff: { a_xphb: { fluff: { from: 'cache' }, fluffError: null, engSiteHash: null } } })
     const opened: string[] = []
-    const svc = new LibraryService({ db, openFrame: async (codeSet) => { opened.push(codeSet); return fakeFrame({ detail: (_p, hash) => detailOf(hash as string), fluffOf: () => ({ fluff: null, fluffError: null }) }) } })
+    const svc = new LibraryService({ db, openFrame: async (codeSet) => { opened.push(codeSet); return fakeFrame({}) } })
     const d = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
     expect(d?.english).toEqual({ status: 'not-installed' })
-    expect(opened).toEqual(['cn'])
+    expect(opened).toEqual([])
   })
 
-  it('配上的：用作者做法找到的英文编号去英文小窗取；没配上的：not-paired', async () => {
+  it('配上的：用作者配对表找到英文编号，英文对象读库；没配上的：not-paired', async () => {
     await installBoth()
+    await seedSpellCache({ fluff: { a_xphb: { fluff: { from: 'cn' }, fluffError: null, engSiteHash: null } } })
+    const enSource = getSource('en-official')
+    await db.derived.put({ key: 'pre:en-official:fluff:spell', fingerprint: await baseFingerprint(enSource, db), value: { ea_xphb: { fluff: { from: 'en' }, fluffError: null, engSiteHash: null } }, savedAt: 0 })
     const asked: unknown[] = []
     const svc = new LibraryService({
       db,
-      openFrame: async (codeSet) => fakeFrame({
-        detail: (prop, hash) => { asked.push([codeSet, prop, hash]); return detailOf(hash as string) },
+      openFrame: async () => fakeFrame({
+        detail: (prop, hash) => { asked.push([prop, hash]); return null },
         englishLocators: cnLocators,
         englishMatch: enMatches,
-        fluffOf: () => ({ fluff: null, fluffError: null }),
       }),
     })
     const a = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
-    expect(a?.english).toEqual({ status: 'found', hash: 'ea_xphb', via: 'name', item: { hash: 'ea_xphb' }, fluff: null })
-    expect(asked).toContainEqual(['en', 'spell', 'ea_xphb'])
+    expect(a?.english).toEqual({ status: 'found', hash: 'ea_xphb', via: 'name', item: {}, fluff: { from: 'en' } })
+    expect(asked).toEqual([])
     expect((await svc.detail('cn-official', 'spell', 'c_xphb', 'XPHB'))?.english).toEqual({ status: 'not-paired' })
   })
 })
 
-describe('LibraryService.detail 不用作者缓存里的条目', () => {
-  it('作者缓存被同编号的自制顶掉时，详情仍交库里存的原件；背景描述按交出去的对象问作者', async () => {
-    const fluffAsked: unknown[] = []
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({
-      detail: (_p, hash) => ({ ...detailOf(hash as string), item: { name: '自制补丁版' } }),
-      fluffOf: (_p, item) => { fluffAsked.push(item); return { fluff: { from: 'author' }, fluffError: null } },
-    }) })
+describe('LibraryService.detail 只读预计算缓存', () => {
+  it('详情交库里存的原件和预计算配图描述，不碰作者缓存的同编号自制', async () => {
+    await seedSpellCache({ fluff: { a_xphb: { fluff: { from: 'cache' }, fluffError: null, engSiteHash: 'ea_xphb' } } })
+    const calls: string[] = []
+    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}, calls) })
     const d = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
     expect(d?.item).toEqual(spells.items[0])
-    expect(fluffAsked).toEqual([spells.items[0]])
-    expect(d?.fluff).toEqual({ from: 'author' })
+    expect(d?.fluff).toEqual({ from: 'cache' })
+    expect(d?.engSiteHash).toBe('ea_xphb')
+    expect(calls).toEqual([])
   })
 })
 
