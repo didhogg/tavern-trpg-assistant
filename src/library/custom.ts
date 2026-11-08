@@ -126,6 +126,9 @@ export class CustomLibrary {
   async exportBackup(): Promise<Record<string, string>> {
     const files: Record<string, string> = {}
     for (const codeSet of ['cn', 'en']) {
+      const official = SOURCES.find((s) => s.kind === 'official' && s.codeSet === codeSet)
+      // 没装这套官方数据时，作者小窗读不到生成文件（例如 gendata-nav…）；跳过，不把缺文件当成备份错误。
+      if (!official || (await this.db.sets.get(official.id))?.status !== 'installed') continue
       const set = SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)
       if (!set) continue
       for (const entry of await this.lib.brewInstalled(set.id)) {

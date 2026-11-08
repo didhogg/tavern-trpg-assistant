@@ -103,6 +103,11 @@ export async function offlineAudit(sourceId: string) {
   return { planFiles: plan.files.length, ok, bad: bad.slice(0, 10), parsedKeys, set: await db.sets.get(sourceId) }
 }
 
+/** 某个源文件是否在【库】镜像里（用来查作者导航生成文件的来源）。 */
+export async function hasSourceFile(sourceId: string, path: string): Promise<boolean> {
+  return !!(await db.files.get([sourceId, path]))
+}
+
 /** 诊断用：经传话通道叫最近打开的某个小窗做一件事。 */
 export async function callFrame(codeSet: string, fn: string, ...args: unknown[]) {
   const f = [...frames].reverse().find((x) => x.codeSet === codeSet)
@@ -211,14 +216,34 @@ export { defaultCampaignLibrary }
 import { TrpgDatabase } from '../../../src/core/db'
 import { CampaignService } from '../../../src/core/saves/campaign'
 import { KernelSaveService } from '../../../src/core/saves/kernel'
-import { scopedRefChecker } from '../../../src/library/kernel-check'
+import { scopedRefChecker, scopedCurrentOverrides } from '../../../src/library/kernel-check'
 import { RuleRegistry } from '../../../src/rules/registry'
 import { dnd5e2014 } from '../../../src/rules/dnd5e2014'
 import { entryUnit } from '../../../src/library/scopes'
+import { exportSaves, estimateExport } from '../../../src/core/transfer/exporter'
+import { importSaves } from '../../../src/core/transfer/importer'
+import { readSaveFile } from '../../../src/core/transfer/saveFile'
 
 export const userDb = new TrpgDatabase('p3-3-4-e2e')
 export const rules = new RuleRegistry()
 rules.register(dnd5e2014)
 export const campaign = new CampaignService(userDb, { rules, now: () => Date.now() })
-export const kernelSave = new KernelSaveService({ db: userDb, campaign, rules, now: () => Date.now(), checkRefs: scopedRefChecker(scoped) })
-export { entryUnit }
+export async function dataVersion() {
+  const official = await db.sets.get('cn-official')
+  const brews: Record<string, string> = {}
+  for (const codeSet of ['cn', 'en']) {
+    const official = await db.sets.get(`${codeSet}-official`)
+    if (official?.status !== 'installed') continue
+    const setId = `${codeSet}-brew`
+    const installed = await service.brewInstalled(setId).catch(() => [])
+    for (const entry of installed) {
+      const key = `${setId}:${String(entry.head.docIdLocal ?? entry.head.filename ?? '')}`
+      brews[key] = String(entry.head.checksum ?? entry.head.version ?? entry.head.dateAdded ?? entry.head.filename ?? '')
+    }
+  }
+  return { official: String(official?.commit ?? official?.updatedAt ?? ''), brews }
+}
+export const kernelSave = new KernelSaveService({ db: userDb, campaign, rules, now: () => Date.now(),
+  checkRefs: scopedRefChecker(scoped), currentVersion: dataVersion, currentOverrides: scopedCurrentOverrides(scoped) })
+export const backupLibrary = { exportFiles: () => custom.exportBackup(), importFiles: (files: Record<string, string>) => custom.importBackup(files) }
+export { entryUnit, exportSaves, importSaves, estimateExport, readSaveFile }
