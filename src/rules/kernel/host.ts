@@ -9,7 +9,7 @@
 import type { FileProvider } from '../../library/files'
 import { startAuthorFrame, type AuthorFrame, type FrameHandlers } from '../../library/runtime/host'
 import { officialSourceOf } from '../../library/sources'
-import type { KERNEL_COMMANDS, KernelCommandName } from './frame/commands'
+import type { KERNEL_COMMANDS } from './frame/commands'
 import type { KernelInput } from './frame/world'
 
 export type { KernelInput }
@@ -51,14 +51,18 @@ export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch }: { plugin
   }
 }
 
-type Commands = typeof KERNEL_COMMANDS & { boot(input: KernelInput): unknown; status(): unknown }
+type Commands = typeof KERNEL_COMMANDS & {
+  boot(input: KernelInput): unknown
+  status(): unknown
+  preparedActors(): Array<{ source: Record<string, unknown> }>
+}
 
 export interface KernelSession {
   frame: AuthorFrame
   /** 启动世界（官方 Game.initialize，见 frame/main.ts）。 */
   boot(input: KernelInput): Promise<unknown>
   /** 结算命令（frame/commands.ts），结果原样交回。 */
-  call<K extends KernelCommandName>(fn: K, ...args: Parameters<Commands[K]>): Promise<Awaited<ReturnType<Commands[K]>>>
+  call<K extends keyof Commands>(fn: K, ...args: Parameters<Commands[K]>): Promise<Awaited<ReturnType<Commands[K]>>>
   close(): void
 }
 

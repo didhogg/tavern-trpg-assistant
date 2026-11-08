@@ -4,7 +4,7 @@ import { altsKey, type AltIndex, type AltRecord } from './alternatives'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
 import { ManageStore, type ChoiceLevel } from './manage'
-import type { DetailResult, English, LibraryService, QueryRow } from './service'
+import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } from './service'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { EditionInfo } from './runtime/frame/edit-commands'
 import type { SearchHit } from './runtime/frame/read-commands'
@@ -12,7 +12,7 @@ import {
   autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, refKey, ruleScopes, sourceUnit, viewOf,
   type Assignment, type CampaignLibrary, type EntryRef, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
-import { SOURCES, type SourceEntry } from './sources'
+import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
 import { chooseVersion, type Alternative, type Chosen } from './versions'
 import { hashValue } from '../core/hash'
 import type { KernelOverride } from '../schemas/kernel'
@@ -186,6 +186,18 @@ export class ScopedLibrary {
       }
     }
     return rows
+  }
+
+  /** 按编号取英文对照原件（中文条目喂 Plutonium 用）；英文源或没配对时返回 null。 */
+  async englishOf(ref: EntryRef): Promise<English | null> {
+    const set = SOURCES.find((s) => s.id === ref.set)
+    if (!set) return null
+    return this.lib.english(set, ref.prop, ref.hash)
+  }
+
+  /** 中英配对表（作者做法）；英文源或没装英文时抛错，调用方自行处理。 */
+  async englishPairs(codeSet: string): Promise<EnglishPairs> {
+    return this.lib.englishPairs(officialSourceOf(codeSet).id)
   }
 
   /** 按战役取一条详情：生效版本 + 原件 + 全部备选 + 背景描述 + 英文（原件生效时）。看不到的返回 null 和原因。 */

@@ -5,12 +5,33 @@ export type Migration = (record: Record<string, unknown>) => Record<string, unkn
 /** 键为"从哪个版本升级"，值把记录升到下一版。 */
 export type MigrationTable = Record<RecordKind, Record<number, Migration>>
 
+const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
+
+/** 5→6：旧存档里的人物还是整份条目全文。原样保留到 legacyState，标旧格式；不丢、不猜。 */
+function kernelV6(record: Record<string, unknown>, holderKey: 'data' | 'snapshot'): Record<string, unknown> {
+  const holder = isObject(record[holderKey]) ? record[holderKey] as Record<string, unknown> : null
+  const kernel = holder && isObject(holder.kernel) ? holder.kernel as Record<string, unknown> : null
+  if (!holder || !kernel) return record
+  const actors = Array.isArray(kernel.actors) ? kernel.actors : []
+  let legacy = kernel.legacy === true
+  const nextActors = actors.map((actor) => {
+    if (!isObject(actor)) return actor
+    const state = actor.state
+    if (!isObject(state)) return actor
+    const full = Array.isArray(state.items) || Array.isArray(state.effects) || Array.isArray(state.actor)
+    if (!full) return actor
+    legacy = true
+    return { ...actor, state: {}, legacy: true, legacyState: state }
+  })
+  return { ...record, [holderKey]: { ...holder, kernel: { ...kernel, actors: nextActors, legacy } } }
+}
+
 /** 结构变更的迁移登记；键是「从哪个版本升级」。 */
 export const MIGRATIONS: MigrationTable = {
   // 第 5 版（P3-3）：workspace / save 增加可选的 kernel 段（规则、选书、引用、选择、状态、修订、撤销）。
-  // 旧记录没有这个段就是"还没绑定结算内核"，不补造人物数据；读的时候按空处理。
-  workspace: { 4: (record) => record },
-  save: { 4: (record) => record },
+  // 第 6 版（P3-3b）：人物改为引用/选择/状态差别；旧格式整份内容保留到 legacyState，标 legacy。
+  workspace: { 4: (record) => record, 5: (record) => kernelV6(record, 'data') },
+  save: { 4: (record) => record, 5: (record) => kernelV6(record, 'snapshot') },
 }
 
 /**

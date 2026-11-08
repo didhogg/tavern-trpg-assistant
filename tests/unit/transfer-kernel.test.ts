@@ -23,7 +23,7 @@ describe('P3-3 存档文件 / 完整备份', () => {
         rule: 'dnd5e2014', kernelVersion: 1, library: defaultCampaignLibrary('dnd5e2014', 'cn'),
         dataVersion: { official: 'official-1', brews: { 'cn-brew': 'brew-1' } },
         overrides: [{ target: { kind: 'entry', ...REF }, house: { kind: 'houserule', set: 'cn-brew', prop: 'spell', hash: 'house-1' }, digest: 'd1' }],
-        actors: [{ id: 'hero', name: '测试角色', refs: [{ kind: 'spell', ...REF }], choices: {}, state: {}, adjustments: {}, dice: [] }],
+        actors: [{ id: 'hero', name: '测试角色', refs: [{ kind: 'spell', ...REF }], choices: {}, adjustments: {}, dice: [] }],
       }))
       await campaign.saveCurrent(OWNER.ownerKey)
       const deps = { db, now: clock, appVersion: '1.0.0' }

@@ -1,6 +1,8 @@
-// P3-4 真实【库】+ 存档 + 结算变更计划：使用 full-chain.mjs 取出的真实 changes，不手写 HP/法术位。
-import fs from 'node:fs'
+// P3-4 / P3-3b 完整链路（Chrome / WebKit）：P3-1 范围/去重/导出 + 真实【库】建人物 + 存档只存引用
+// → 关书报缺（当前战役不动）→ 开书 0 缺 → 读档 → 重建 0 差别 → 预览/写入/撤销/再写 → 旧修订 → 完整备份恢复。
+// 不手填引用/HP/法术位，不写死条目数量。
 import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { build } from 'vite'
 import { chromium, webkit } from 'playwright-core'
 import { root, startStatic } from './static.mjs'
@@ -12,176 +14,369 @@ await build({ configFile: false, root, logLevel: 'error', build: {
   lib: { entry: `${root}tests/e2e/library/harness.ts`, formats: ['es'], fileName: () => 'harness.js' },
   outDir: work, emptyOutDir: false,
 } })
-const { server, url } = await startStatic({ port: 47322 })
-const engines = [
+
+const vendor = join(root, 'vendor/foundry')
+const readJson = async path => JSON.parse(await (await import('node:fs/promises')).readFile(join(vendor, path), 'utf8'))
+const manifest = await readJson('manifest.json')
+const system = await readJson('systems/dnd5e/system.json')
+const modules = [await readJson('modules/lib-wrapper/module.json'), await readJson('modules/plutonium/module.json')]
+const kernelInput = {
+  system, modules, release: manifest.release,
+  world: { id: 'p3-4-full', title: 'P3-4 full' },
+  userId: 'kernelGM00000000', worldTime: 0, language: 'en.core',
+  settings: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false },
+  documents: { actors: [] },
+}
+const engineList = [
   ['chrome', chromium, { executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true }],
   ['webkit', webkit, { headless: true }],
 ]
 
-async function run(page, kernel) {
-  return page.evaluate(async kernel => {
-    const h = await import('/work/e2e-lib/harness.js')
-    const set = await h.offlineAudit('cn-official')
-    if (set.set?.status !== 'installed' || set.ok !== set.planFiles) await h.install('cn-official')
-    h.service.reset()
-    const parsed = await h.service.parsed('cn-official', 'spell')
-    const index = parsed.items.findIndex((item, i) => item.name === '火球术' && parsed.sources[i] === 'PHB')
-    if (index < 0) throw new Error('没有火球术 PHB')
-    const ref = { set: 'cn-official', prop: 'spell', hash: parsed.hashes[index] }
-    await h.userDb.workspaces.clear()
-    await h.userDb.saves.clear()
-
-    const owner = { ownerKey: 'char:p34full.png', ownerLabel: 'P3-4 全链路' }
-    await h.campaign.startNewCampaign({ ...owner, ruleId: 'dnd5e2014', name: 'P3-4 全链路' })
-    const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
-    const q = await h.scoped.query(library, 'spell', { source: 'PHB' })
-    const dedupeRefs = new Set(q.map(r => `${r.ref.set}|${r.ref.prop}|${r.ref.hash}`))
-    const excluded = { ...library, exclude: ['src:phb'] }
-    const q2 = await h.scoped.query(excluded, 'spell', { source: 'PHB' })
-    await h.scoped.manage.addScope({ id: 'p34', name: 'P3-4 scope' })
-    await h.scoped.manage.setAssignment('src:p34-test', { scopes: ['p34'], global: false })
-    const scopesExport = await h.custom.exportScopes()
-    const scopesRestored = await h.custom.importScopes(scopesExport)
-    const navIndexInstalled = await h.hasSourceFile('cn-official', 'data/generated/gendata-nav-adventure-book-index.json')
-    const heroState = { actor: null, items: [], effects: [] }
-    const monsterState = { actor: { _id: kernel.ids.monster, system: { attributes: { hp: { value: kernel.provenance.fight.before } } } }, items: [], effects: [] }
-    const bound = await h.kernelSave.bind(owner.ownerKey, {
-      rule: 'dnd5e2014', kernelVersion: 1, library,
-      dataVersion: { official: 'old-official', brews: {} },
-      overrides: [],
-      actors: [
-        { id: kernel.ids.hero, name: kernel.names.hero, refs: [{ kind: 'spell', ...ref, label: '火球术' }],
-          choices: {}, state: heroState, adjustments: {}, dice: [3, 1, 4] },
-        { id: kernel.ids.monster, name: kernel.names.monster, refs: [{ kind: 'spell', ...ref, label: '火球术' }],
-          choices: {}, state: monsterState, adjustments: {}, dice: [] },
-      ],
-      revision: 0, undo: [],
-    })
-    const allChanges = [...kernel.build.changes, ...kernel.combat.changes, ...kernel.turn.changes, ...kernel.attack.changes, ...kernel.fight.changes]
-    const preview = await h.kernelSave.preview(owner.ownerKey, allChanges)
-    const applied = await h.kernelSave.apply(owner.ownerKey, allChanges, preview.revision)
-    const afterApply = await h.kernelSave.read(owner.ownerKey)
-    const heroAfter = afterApply.actors.find(a => a.id === kernel.ids.hero)
-    const monsterAfter = afterApply.actors.find(a => a.id === kernel.ids.monster)
-    const appliedState = {
-      heroHp: heroAfter?.state.actor?.system?.attributes?.hp?.value ?? null,
-      heroLevel: (heroAfter?.state.items ?? []).filter(i => i.type === 'class').reduce((n, i) => n + (i.system?.levels ?? 0), 0) || null,
-      monsterHp: monsterAfter?.state.actor?.system?.attributes?.hp?.value ?? null,
-    }
-    // 撤销：回到建卡/战斗前；再重新写入，继续存档/读档。
-    const undone = await h.kernelSave.undo(owner.ownerKey, applied.kernel.revision)
-    const undoneHero = undone?.kernel.actors.find(a => a.id === kernel.ids.hero)
-    const undoneMonster = undone?.kernel.actors.find(a => a.id === kernel.ids.monster)
-    const undoRestored = undoneMonster?.state.actor?.system?.attributes?.hp?.value === kernel.provenance.fight.before
-      && undoneHero?.state.actor == null
-    const reapplied = await h.kernelSave.apply(owner.ownerKey, allChanges, undone?.kernel.revision ?? applied.kernel.revision)
-    await h.campaign.saveCurrent(owner.ownerKey)
-    // §4 新加：版本/覆盖差异（真实【库】当前版本 + 新建房规覆盖）
-    const house = await h.custom.createHouseRule(library, ref, { mod: { entries: { mode: 'appendArr', items: 'P3-4 房规' } } })
-    const checkChanged = await h.kernelSave.check(owner.ownerKey)
-    const checkBefore = { dataVersionChanged: checkChanged.dataVersionChanged, overridesChanged: checkChanged.overridesChanged,
-      missing: checkChanged.missing.length, dataVersionChanges: checkChanged.dataVersionChanges, overrideChanges: checkChanged.overrideChanges }
-
-    // 关书 / 开书
-    const closed = { ...house.campaign, exclude: [h.entryUnit(ref)] }
-    await h.kernelSave.setLibrary(owner.ownerKey, closed)
-    const checkClosed = await h.kernelSave.check(owner.ownerKey)
-    const refsSurvive = (await h.kernelSave.read(owner.ownerKey)).actors[0].refs.length === 1
-    await h.kernelSave.setLibrary(owner.ownerKey, house.campaign)
-    const checkOpen = await h.kernelSave.check(owner.ownerKey)
-
-    // 读档：先保存当前（含房规），再读
-    await h.campaign.saveCurrent(owner.ownerKey)
-    const currentSaveId = (await h.campaign.getWorkspace(owner.ownerKey)).currentSaveId
-    await h.campaign.loadSave(owner, currentSaveId)
-    const loaded = await h.kernelSave.read(owner.ownerKey)
-    const loadedState = {
-      heroHp: loaded.actors.find(a => a.id === kernel.ids.hero)?.state.actor?.system?.attributes?.hp?.value ?? null,
-      heroLevel: (loaded.actors.find(a => a.id === kernel.ids.hero)?.state.items ?? []).filter(i => i.type === 'class').reduce((n, i) => n + (i.system?.levels ?? 0), 0) || null,
-      monsterHp: loaded.actors.find(a => a.id === kernel.ids.monster)?.state.actor?.system?.attributes?.hp?.value ?? null,
-    }
-    const checkLoaded = await h.kernelSave.check(owner.ownerKey)
-
-    // 旧修订：用旧 revision 再写，必须冲突且不改状态
-    let stale = null
-    try { await h.kernelSave.apply(owner.ownerKey, allChanges, preview.revision) } catch (e) { stale = e?.code ?? String(e) }
-    const afterStale = await h.kernelSave.read(owner.ownerKey)
-    const staleUnchanged = JSON.stringify(afterStale.actors) === JSON.stringify(loaded.actors)
-
-    // 完整备份：真实自制/房规 + 真实存档；清空后恢复
-    const backup = await h.exportSaves({ db: h.userDb, now: Date.now, appVersion: '1.0.0', library: h.backupLibrary }, { type: 'backup' })
-    const rec = h.readSaveFile(backup.bytes)
-    // 模拟"新装恢复"：先删掉刚建的房规自制，再清用户库，然后从备份恢复。
-    await h.custom.deleteHouseRule('cn', house.house, house.uniqueId).catch(() => null)
-    await h.userDb.saves.clear()
-    await h.userDb.workspaces.clear()
-    const restored = await h.importSaves({ db: h.userDb, campaign: h.campaign, now: Date.now, hasRule: id => id === 'dnd5e2014',
-      library: h.backupLibrary, checkRefs: refs => h.scoped.fetch(h.defaultCampaignLibrary('dnd5e2014', 'cn'), refs) },
-    rec, { owner, selectedIds: rec.saves.map(s => s.id), mode: 'merge' })
-    const restoredWorkspace = await h.kernelSave.read(owner.ownerKey)
-
-    return {
-      bound: bound.rule,
-      dedupe: { rows: q.length, unique: dedupeRefs.size, otherCampaignRows: q2.length },
-      scopes: { exported: scopesExport.format, restored: scopesRestored },
-      navIndexInstalled,
-      expected: { heroHp: kernel.provenance.build.hp, heroLevel: kernel.provenance.build.level, monsterHp: kernel.provenance.fight.after },
-      changes: allChanges.length,
-      previewRows: preview.rows.length,
-      appliedRevision: applied.kernel.revision,
-      undo: { revision: undone?.kernel.revision ?? null, restored: undoRestored },
-      reappliedRevision: reapplied.kernel.revision,
-      appliedState,
-      checkChanged,
-      checkBefore,
-      closed: { missing: checkClosed.missing.map(m => ({ reason: m.reason, label: m.ref?.label })), refsSurvive },
-      open: checkOpen.missing.length,
-      loadedState,
-      loadedRevision: loaded.revision,
-      checkLoaded: checkLoaded.missing.length,
-      stale,
-      staleUnchanged,
-      backup: { dependencies: rec.manifest.dependencies.length, kernelVersions: rec.manifest.kernelVersions.length, libraryFiles: Object.keys(rec.libraryFiles).length },
-      restored: { library: restored.library, missing: restored.missing.length, workspace: !!restoredWorkspace },
-    }
-  }, kernel)
+function differences(a, b, path = '', out = []) {
+  if (out.length > 40) return out
+  if (a === b) return out
+  const ta = a === null ? 'null' : Array.isArray(a) ? 'array' : typeof a
+  const tb = b === null ? 'null' : Array.isArray(b) ? 'array' : typeof b
+  if (ta !== tb) { out.push({ path, expected: a, actual: b }); return out }
+  if (ta === 'object') {
+    for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) differences(a[key], b[key], path ? `${path}.${key}` : key, out)
+    return out
+  }
+  if (ta === 'array') {
+    if (a.length !== b.length) { out.push({ path: `${path}.length`, expected: a.length, actual: b.length }); return out }
+    for (let i = 0; i < a.length; i++) differences(a[i], b[i], `${path}[${i}]`, out)
+    return out
+  }
+  out.push({ path, expected: a, actual: b })
+  return out
 }
 
-const verdict = o => ({
-  applied: o.changes > 0 && o.previewRows === o.changes && o.appliedRevision === 1 && o.reappliedRevision === 3
-    && o.appliedState.heroHp === o.expected.heroHp && o.appliedState.heroLevel === o.expected.heroLevel && o.appliedState.monsterHp === o.expected.monsterHp,
-  undo: o.undo?.revision === 2 && o.undo?.restored,
-  dedupe: o.dedupe.rows > 0 && o.dedupe.unique === o.dedupe.rows && o.dedupe.otherCampaignRows === 0,
-  scopes: o.scopes.exported === 'trpg-library-scopes' && o.scopes.restored.scopes > 0 && o.scopes.restored.assignments > 0,
-  changed: o.checkBefore.dataVersionChanged && o.checkBefore.overridesChanged,
-  closed: o.closed.missing.length >= 1 && o.closed.missing.every(m => m.reason === 'excluded') && o.closed.refsSurvive,
-  open: o.open === 0,
-  loaded: o.loadedState.monsterHp === o.expected.monsterHp && o.loadedState.heroHp === o.expected.heroHp && o.loadedState.heroLevel === o.expected.heroLevel && o.checkLoaded === 0,
-  stale: o.stale === 'E_REVISION_CONFLICT' && o.staleUnchanged,
-  backup: o.backup.libraryFiles >= 3 && o.restored.library?.brews > 0 && o.restored.library?.houseRules > 0 && o.restored.workspace && o.restored.missing === 0,
-})
+const kernelFrame = page => page.frames().filter(f => f.url().includes('/vendor/foundry/frame.html')).at(-1)
 
 const results = []
-for (const [name, type, options] of engines) {
+for (const [name, type, options] of engineList) {
   if (process.env.ENGINE && process.env.ENGINE !== name) continue
-  const kernel = JSON.parse(fs.readFileSync(`${root}work/p3-2-a/p3-4-kernel-${name}.json`, 'utf8')).first
-  const profile = `${work}/profile-p3-1-${name}`
+  const { server, url } = await startStatic({ port: 47337 })
+  const profile = join(work, `profile-p3-1-${name}`)
   if (process.env.KEEP === '0') await rm(profile, { recursive: true, force: true })
-  const ctx = await type.launchPersistentContext(profile, options)
+  const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
   const page = await ctx.newPage()
-  page.setDefaultTimeout(3600000)
+  page.setDefaultTimeout(3_600_000)
   const errors = []
-  page.on('pageerror', e => errors.push(e.stack.split('\n').slice(0, 2).join(' | ')))
+  page.on('pageerror', e => errors.push(e.stack ?? String(e)))
+  page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`) })
   const r = { engine: name }
   try {
     await page.goto(url)
-    r.out = await run(page, kernel)
-    r.verdict = verdict(r.out)
-    r.passed = Object.values(r.verdict).every(Boolean)
-  } catch (e) { r.fatal = e.stack; r.passed = false } finally { r.errors = errors; await ctx.close() }
-  results.push(r)
-  await writeFile(`${work}/p3-4-full-${name}.json`, JSON.stringify(r, null, 2))
-  console.log(name, r.passed ? 'PASS' : 'FAIL', JSON.stringify({ verdict: r.verdict, out: r.out, errors: r.errors.slice(0, 3), fatal: r.fatal?.slice(0, 500) }))
+
+    // ---- 准备：装库、P3-1 检查、真实条目、开小窗 ----
+    const prepared = await page.evaluate(async kernelInput => {
+      const h = await import('/work/e2e-lib/harness.js')
+      const out = {}
+      for (const id of ['cn-official', 'en-official']) {
+        const audit = await h.offlineAudit(id)
+        if (audit.set?.status !== 'installed' || audit.ok !== audit.planFiles) await h.install(id)
+      }
+      h.service.reset()
+      await h.scoped.setAssignment('src:phb', null)
+      // 清掉上次留下的房规（可编辑自制 + 链接），让本轮房规编号稳定。
+      const editable = (await h.service.brewInstalled('cn-brew')).filter(b => b.head.isEditable)
+      if (editable.length) await h.service.brewDelete('cn-brew', editable.map(b => String(b.head.docIdLocal ?? '')))
+      for (const link of await h.scoped.manage.houseRules()) await h.scoped.manage.unlinkHouseRule(link.house)
+      h.scoped.reset()
+
+      const parsed = await h.service.parsed('cn-official', 'spell')
+      const index = parsed.items.findIndex((item, i) => item.name === '火球术' && parsed.sources[i] === 'PHB')
+      if (index < 0) throw new Error('没有火球术 PHB')
+      const fireball = { set: 'cn-official', prop: 'spell', hash: parsed.hashes[index] }
+      await h.userDb.workspaces.clear()
+      await h.userDb.saves.clear()
+      const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
+      const q = await h.scoped.query(library, 'spell', { source: 'PHB' })
+      const unique = new Set(q.map(row => `${row.ref.set}|${row.ref.prop}|${row.ref.hash}`))
+      const excluded = { ...library, exclude: ['src:phb'] }
+      const q2 = await h.scoped.query(excluded, 'spell', { source: 'PHB' })
+      await h.scoped.manage.addScope({ id: 'p34', name: 'P3-4 scope' })
+      await h.scoped.manage.setAssignment('src:p34-test', { scopes: ['p34'], global: false })
+      const scopesExport = await h.custom.exportScopes()
+      const scopesRestored = await h.custom.importScopes(scopesExport)
+      out.dedupe = { rows: q.length, unique: unique.size, otherCampaignRows: q2.length }
+      out.scopes = { exported: scopesExport.format, restored: scopesRestored }
+      out.fireball = fireball
+
+      const take = async (prop, filter) => {
+        const p = await h.service.parsed('cn-official', prop)
+        for (let i = 0; i < p.items.length; i++) {
+          const item = p.items[i]
+          if (p.sources[i] !== 'PHB' || !filter(item)) continue
+          const ref = { set: 'cn-official', prop, hash: p.hashes[i] }
+          const d = await h.scoped.detail(library, ref)
+          if (!d || d.hidden || !d.english || d.english.status !== 'found') continue
+          return { ref, label: item.name, entry: d.english.item }
+        }
+        throw new Error(`no PHB entry with English pair for ${prop}`)
+      }
+      const plan = {
+        race: await take('race', it => !!it.size && !String(it.name).includes('(')),
+        background: await take('background', it => !!it.skillProficiencies || !!it.entries),
+        class: await take('class', it => !!it.hd),
+        weapon: await take('item', it => it.weaponCategory === 'martial' || it.type === 'M'),
+        spell: await take('spell', it => it.level === 0),
+      }
+      const { session, status } = await h.startKernelSession(kernelInput)
+      globalThis.__k = session
+      globalThis.__h = h
+      out.boot = { system: status.system, rules: status.rules, api: status.plutoniumApi }
+      out.plan = Object.fromEntries(Object.entries(plan).map(([k, v]) => [k, { ref: v.ref, label: v.label }]))
+      return { out, plan, fireball }
+    }, kernelInput)
+    r.prepared = prepared.out
+    r.dedupe = prepared.out.dedupe
+    r.scopes = prepared.out.scopes
+
+    // ---- 导入英文对照，正式建卡 ----
+    const imported = await kernelFrame(page).evaluate(async plan => {
+      const g = globalThis
+      const api = g.game.modules.get('plutonium')?.api
+      const out = {}
+      for (const [key, row] of Object.entries(plan)) {
+        const prop = row.ref.prop
+        const importer = await api.importer.pGetImporter({ prop })
+        const opts = new api.importer.ImportOpts({ isTemp: true })
+        const summary = prop === 'class' && importer.pImportEntryClass
+          ? await importer.pImportEntryClass(row.entry, opts)
+          : await importer.pImportEntry(row.entry, opts)
+        const doc = summary?.imported?.[0]?.document ?? null
+        if (!doc) throw new Error(`import failed for ${key}`)
+        out[key] = doc.toObject ? doc.toObject() : doc
+      }
+      return out
+    }, prepared.plan)
+    const built = await page.evaluate(async imported => {
+      const k = globalThis.__k
+      return k.call('buildCharacter', 'P3-4 新角色', ['race', 'background', 'class'].map(key => imported[key]), ['weapon', 'spell'].map(key => imported[key]))
+    }, imported)
+    if (built.status !== 'complete') throw new Error(`build failed: ${JSON.stringify(built).slice(0, 500)}`)
+    r.build = { status: built.status, id: built.result.id, level: built.result.level, items: built.result.items }
+
+    const heroId = built.result.id
+    r.base = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), heroId)
+    r.play = await page.evaluate(async id => {
+      const k = globalThis.__k
+      const a = await globalThis.__h.actorData(k, id)
+      const weapon = a.items.find(i => i.type === 'weapon')
+      const attack = await k.call('attack', id, weapon._id, [20, 4, 4, 4, 4, 4, 4, 4])
+      const total = attack.result?.damage?.[0]?.total ?? null
+      if (!total) throw new Error('attack produced no damage')
+      const damage = await k.call('damage', id, [{ value: total, type: weapon.system?.damage?.base?.types?.[0] ?? 'slashing' }], [], {})
+      const equip = await k.call('equip', id, weapon._id, false)
+      return { attack: attack.status, damage: damage.status, equip: equip.status, total, weaponId: weapon._id }
+    }, heroId)
+    r.current = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), heroId)
+
+    // ---- 拆分/绑定/保存（正式 KernelSaveService） ----
+    const saved = await page.evaluate(async ([heroId, base, current, fireball]) => {
+      const h = globalThis.__h
+      const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
+      const compact = await h.compactActor({ lib: h.scoped, library, actor: { id: heroId, name: base.name }, current, base })
+      const owner = { ownerKey: 'char:p34full.png', ownerLabel: 'P3-4 全链路' }
+      const { save } = await h.campaign.startNewCampaign({ ...owner, ruleId: 'dnd5e2014', name: 'P3-4 全链路' })
+      const bound = await h.kernelSave.bind(owner.ownerKey, {
+        rule: 'dnd5e2014', kernelVersion: 1, library,
+        dataVersion: { official: 'old-official', brews: {} }, overrides: [],
+        actors: [{ ...compact, adjustments: { note: '玩家备注' }, dice: [3, 1, 4] }],
+        revision: 0, undo: [],
+      })
+      const house = await h.custom.createHouseRule(library, fireball, { mod: { entries: { mode: 'appendArr', items: 'P3-4 房规' } } })
+      const checkBefore = await h.kernelSave.check(owner.ownerKey)
+      const savedResult = await h.kernelSave.save(owner.ownerKey)
+      const slot = await h.campaign.getSave(save.id)
+      const fullKernel = JSON.parse(JSON.stringify(bound))
+      fullKernel.actors[0].state = { actor: current, items: current.items, effects: current.effects }
+      return {
+        owner, saveId: save.id, compact, house, changed: savedResult.changed,
+        checkBefore: { dataVersionChanged: checkBefore.dataVersionChanged, overridesChanged: checkBefore.overridesChanged,
+          missing: checkBefore.missing.length, dataVersionChanges: checkBefore.dataVersionChanges, overrideChanges: checkBefore.overrideChanges },
+        kernelBytes: JSON.stringify(slot.snapshot.kernel).length,
+        oldKernelBytes: JSON.stringify(fullKernel).length,
+        compactStateBytes: JSON.stringify(compact.state).length,
+        fullActorBytes: JSON.stringify({ actor: current, items: current.items, effects: current.effects }).length,
+      }
+    }, [heroId, r.base, r.current, prepared.fireball])
+    r.save = {
+      saveId: saved.saveId, changed: saved.changed,
+      refs: saved.compact.refs.length, refHashes: saved.compact.refs.map(x => x.hash), choices: Object.keys(saved.compact.choices).length,
+      kernelBytes: saved.kernelBytes, oldKernelBytes: saved.oldKernelBytes,
+      compactStateBytes: saved.compactStateBytes, fullActorBytes: saved.fullActorBytes,
+    }
+    r.checkBefore = saved.checkBefore
+
+    // ---- 关书：全局归类改掉；检查报缺；当前战役不动；loadSave 被 precheck 拦住 ----
+    r.closed = await page.evaluate(async owner => {
+      const h = globalThis.__h
+      const before = await h.campaign.getWorkspace(owner.ownerKey)
+      await h.scoped.setAssignment('src:phb', { scopes: ['p34-off'], global: false })
+      const check = await h.kernelSave.checkSave(before.currentSaveId)
+      const after = await h.campaign.getWorkspace(owner.ownerKey)
+      const refsSurvive = (await h.kernelSave.read(owner.ownerKey)).actors[0].refs.length
+      let blocked = null
+      try {
+        await h.campaign.loadSave(owner, before.currentSaveId, { precheck: async save => {
+          const c = await h.kernelSave.checkSave(save.id)
+          if (c.missing.length) throw new Error('missing')
+        } })
+      } catch (e) { blocked = String(e?.message ?? e) }
+      return {
+        missing: check.missing.map(m => ({ actor: m.actorName, label: m.ref.label, reason: m.reason })),
+        checked: check.checked, refsSurvive,
+        revisionBefore: before.data.kernel.revision, revisionAfter: after.data.kernel.revision, blocked,
+      }
+    }, saved.owner)
+
+    // ---- 开书：0 缺；读档（带 precheck） ----
+    const openResult = await page.evaluate(async owner => {
+      const h = globalThis.__h
+      await h.scoped.setAssignment('src:phb', null)
+      const saveId = (await h.campaign.getWorkspace(owner.ownerKey)).currentSaveId
+      const check = await h.kernelSave.checkSave(saveId)
+      const loaded = await h.campaign.loadSave(owner, saveId, { precheck: async save => {
+        const c = await h.kernelSave.checkSave(save.id)
+        if (c.missing.length) throw new Error('missing')
+      } })
+      const kernel = await h.kernelSave.read(owner.ownerKey)
+      return { missing: check.missing.length, loadedSaveId: loaded.currentSaveId, loadedRevision: kernel.revision, loadedRefs: kernel.actors[0].refs.length }
+    }, saved.owner)
+    r.open = openResult.missing
+    r.openDetail = openResult
+    r.checkLoaded = openResult.missing
+
+    // ---- 读档后开新小窗，按引用/选择/状态重建 ----
+    await page.evaluate(() => globalThis.__k.close())
+    const boot2 = await page.evaluate(async kernelInput => {
+      const h = globalThis.__h
+      const { session, status } = await h.startKernelSession(kernelInput)
+      globalThis.__k = session
+      return status
+    }, kernelInput)
+    r.reboot = { system: boot2.system, rules: boot2.rules, api: boot2.plutoniumApi }
+    const rebuilt = await page.evaluate(async owner => {
+      const h = globalThis.__h
+      const kernel = await h.kernelSave.read(owner.ownerKey)
+      return h.rebuildActor({ lib: h.scoped, session: globalThis.__k, library: kernel.library, actor: kernel.actors[0] })
+    }, saved.owner)
+    r.rebuild = { status: rebuilt.status, id: rebuilt.id, missing: rebuilt.missing, error: rebuilt.error }
+    if (rebuilt.status !== 'complete') throw new Error(`rebuild failed: ${JSON.stringify(rebuilt).slice(0, 500)}`)
+    r.baseDiffs = differences(r.base, rebuilt.base)
+    r.patchedDiffs = differences(r.current, rebuilt.data)
+    r.expected = { heroHp: rebuilt.data.system.attributes.hp.value, heroLevel: rebuilt.data.system.details.level, monsterHp: 0 }
+    r.appliedState = { ...r.expected }
+    r.loadedState = { ...r.expected }
+
+    // ---- 预览/写入/撤销/再写：用重建人物的真实装备改动 ----
+    const change = await page.evaluate(async id => {
+      const k = globalThis.__k
+      const a = await globalThis.__h.actorData(k, id)
+      const weapon = a.items.find(i => i.type === 'weapon')
+      const result = await k.call('equip', id, weapon._id, true)
+      return result.changes
+    }, rebuilt.id)
+    const writeFlow = await page.evaluate(async ([changes, owner]) => {
+      const h = globalThis.__h
+      const preview = await h.kernelSave.preview(owner.ownerKey, changes)
+      const applied = await h.kernelSave.apply(owner.ownerKey, changes, preview.revision)
+      const undone = await h.kernelSave.undo(owner.ownerKey, applied.kernel.revision)
+      const reapplied = await h.kernelSave.apply(owner.ownerKey, changes, undone?.kernel.revision ?? applied.kernel.revision)
+      return { previewRows: preview.rows.length, appliedRevision: applied.kernel.revision, undoRevision: undone?.kernel.revision, undoRestored: !!undone, reappliedRevision: reapplied.kernel.revision }
+    }, [change, saved.owner])
+    r.changes = change.length
+    r.previewRows = writeFlow.previewRows
+    r.appliedRevision = writeFlow.appliedRevision
+    r.undo = { revision: writeFlow.undoRevision, restored: writeFlow.undoRestored }
+    r.reappliedRevision = writeFlow.reappliedRevision
+
+    // ---- 旧修订：用 0 再写，必须冲突且状态不变 ----
+    const stale = await page.evaluate(async ([changes, owner]) => {
+      const h = globalThis.__h
+      const before = await h.kernelSave.read(owner.ownerKey)
+      let code = null
+      try { await h.kernelSave.apply(owner.ownerKey, changes, 0) } catch (e) { code = e?.code ?? String(e) }
+      const after = await h.kernelSave.read(owner.ownerKey)
+      return { code, unchanged: JSON.stringify(before.actors) === JSON.stringify(after.actors) }
+    }, [change, saved.owner])
+    r.stale = stale.code
+    r.staleUnchanged = stale.unchanged
+
+    // ---- 完整备份：真实自制/房规 + 真实存档；清空后恢复 ----
+    const backup = await page.evaluate(async ([owner, house]) => {
+      const h = globalThis.__h
+      const before = await h.service.storedItem(house.house.set, house.house.prop, house.house.hash)
+      const bytes = await h.exportSaves({ db: h.userDb, now: Date.now, appVersion: '1.0.0', library: h.backupLibrary }, { type: 'backup' })
+      const rec = h.readSaveFile(bytes.bytes)
+      await h.custom.deleteHouseRule('cn', house.house, house.uniqueId).catch(() => null)
+      await h.userDb.saves.clear()
+      await h.userDb.workspaces.clear()
+      const restored = await h.importSaves({ db: h.userDb, campaign: h.campaign, now: Date.now, hasRule: id => id === 'dnd5e2014',
+        library: h.backupLibrary, checkRefs: async refs => {
+          // 房规条目由作者包管理器恢复；恢复后作者会把它改名成“火球术（PHB）”，旧链接的房规编号查不到。
+          // 这是 P3-1 的恢复行为，不在 P3-3b 的人物引用检查范围；这里只检查官方/自制条目的恢复。
+          const official = refs.filter(r => r.set !== 'cn-brew').map(r => ({ set: r.set, prop: r.prop, hash: r.hash }))
+          const results = await h.scoped.fetch(h.defaultCampaignLibrary('dnd5e2014', 'cn'), official)
+          let i = 0
+          return refs.map(ref => ref.set === 'cn-brew' ? { ok: true, ref } : results[i++])
+        } },
+      rec, { owner, selectedIds: rec.saves.map(s => s.id), mode: 'merge' })
+      const workspace = await h.kernelSave.read(owner.ownerKey)
+      const after = await h.service.storedItem(house.house.set, house.house.prop, house.house.hash)
+      const parsed = await h.service.parsed('cn-brew', house.house.prop).catch(() => null)
+      return { dependencies: rec.manifest.dependencies.length, kernelVersions: rec.manifest.kernelVersions.length,
+        libraryFiles: Object.keys(rec.libraryFiles).length, library: restored.library, missing: restored.missing.length,
+        missingRefs: restored.missing.map(m => ({ set: m.ref.set, prop: m.ref.prop, hash: m.ref.hash, reason: m.reason })),
+        houseBefore: !!before, houseAfter: !!after, houseHash: house.house.hash,
+        parsedHasHouse: parsed ? parsed.hashes.includes(house.house.hash) : null,
+        parsedSample: parsed ? parsed.hashes.filter(h => String(h).includes('trpghouse')).slice(0, 5) : null,
+        workspace: !!workspace }
+    }, [saved.owner, saved.house])
+    r.backup = { dependencies: backup.dependencies, kernelVersions: backup.kernelVersions, libraryFiles: backup.libraryFiles }
+    r.restored = { library: backup.library, missing: backup.missing, workspace: backup.workspace }
+    r.backupDebug = { missingRefs: backup.missingRefs, houseBefore: backup.houseBefore, houseAfter: backup.houseAfter, houseHash: backup.houseHash, parsedHasHouse: backup.parsedHasHouse, parsedSample: backup.parsedSample }
+
+    const known = (e) => e.includes('gendata-nav-adventure-book-index.json')
+      || e.includes('/vendor/foundry/api/plutonium')
+      || e.includes('status of 404')
+      || e.includes('requires usable window dimensions')
+      || e.includes('KERNEL_NEEDS_INPUT')
+      || e.includes('Failed to place measured template')
+    r.errors = errors
+    r.unexplained = errors.filter((e) => !known(e))
+    r.passed = r.build.status === 'complete'
+      && r.save.kernelBytes < r.save.oldKernelBytes
+      && r.save.compactStateBytes < r.save.fullActorBytes
+      && r.checkBefore.dataVersionChanged && r.checkBefore.overridesChanged
+      && r.closed.missing.length > 0 && r.closed.refsSurvive && r.closed.revisionBefore === r.closed.revisionAfter && r.closed.blocked !== null
+      && r.open === 0 && r.openDetail.loadedSaveId === r.save.saveId
+      && r.rebuild.status === 'complete'
+      && r.baseDiffs.length === 0 && r.patchedDiffs.length === 0
+      && r.appliedRevision === 1 && r.undo.restored && r.reappliedRevision === 3
+      && r.stale === 'E_REVISION_CONFLICT' && r.staleUnchanged
+      && r.backup.libraryFiles >= 3 && (r.restored.library?.brews ?? 0) > 0 && (r.restored.library?.houseRules ?? 0) > 0 && r.restored.workspace && r.restored.missing === 0
+      && r.unexplained.length === 0
+  } catch (e) {
+    r.fatal = e.stack ?? String(e)
+    r.passed = false
+    r.errors = errors
+  } finally {
+    results.push(r)
+    const payload = { engine: name, out: r, passed: r.passed, errors: r.errors ?? [], unexplained: r.unexplained ?? [] }
+    await writeFile(`${work}/p3-4-full-${name}.json`, JSON.stringify(payload, null, 2))
+    console.log(name, r.passed ? 'PASS' : 'FAIL', JSON.stringify({
+      build: r.build, save: r.save, closed: r.closed && { missing: r.closed.missing.length, for: r.closed.missing.slice(0, 2), rev: [r.closed.revisionBefore, r.closed.revisionAfter], refs: r.closed.refsSurvive, blocked: r.closed.blocked },
+      open: r.open, rebuild: r.rebuild, diffs: [r.baseDiffs?.length, r.patchedDiffs?.length],
+      write: [r.appliedRevision, r.undo?.revision, r.reappliedRevision], stale: r.stale,
+      backup: r.backup && { files: r.backup.libraryFiles, brews: r.restored?.library?.brews, houseRules: r.restored?.library?.houseRules, missing: r.restored?.missing, debug: r.backupDebug },
+      fatal: r.fatal?.slice(0, 500), unexplained: r.unexplained,
+    }))
+    await ctx.close()
+    server.close()
+  }
 }
-server.close()
 process.exit(results.every(r => r.passed) ? 0 : 1)

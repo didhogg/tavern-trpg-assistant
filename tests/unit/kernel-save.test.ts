@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { KernelSaveService, type KernelRefChecker } from '../../src/core/saves/kernel'
 import { defaultCampaignLibrary, entryUnit } from '../../src/library/scopes'
-import { kernelCampaignSchema, type KernelCampaign, type KernelChange } from '../../src/schemas/kernel'
+import { kernelCampaignSchema, type KernelActorState, type KernelCampaign, type KernelChange } from '../../src/schemas/kernel'
 import { SCHEMA_VERSIONS } from '../../src/schemas/common'
 import { RuleRegistry } from '../../src/rules/registry'
 import { TrpgError } from '../../src/core/errors'
@@ -21,7 +21,7 @@ function campaign(): KernelCampaign {
       id: 'actor1', name: '测试角色',
       refs: [{ kind: 'spell', ...REF, label: '火球术' }],
       choices: { prepared: ['fireball'] },
-      state: { actor: { system: { attributes: { hp: { value: 10 } } } }, items: [], effects: [] },
+      state: { actor: { system: { attributes: { hp: { value: 10 } } } }, items: {}, effects: {} },
       adjustments: { note: '玩家自己的备注' },
       dice: [3, 1],
     }],
@@ -98,7 +98,7 @@ describe('P3-3 存档内核段', () => {
         data: { system: { attributes: { hp: { value: 5 } } } } }
       const preview = await kernel.preview(OWNER.ownerKey, [change])
       expect(preview.rows[0]).toMatchObject({ actorId: 'actor1', actorName: '测试角色' })
-      expect(hp({ ...campaign(), actors: [{ ...campaign().actors[0], state: preview.rows[0].before as Record<string, unknown> }] })).toBe(10)
+      expect(hp({ ...campaign(), actors: [{ ...campaign().actors[0], state: preview.rows[0].before as KernelActorState }] })).toBe(10)
 
       const applied = await kernel.apply(OWNER.ownerKey, [change], preview.revision)
       expect(applied.kernel.revision).toBe(1)
@@ -180,6 +180,74 @@ describe('P3-3 存档内核段', () => {
       expect(await code(service.loadSave(OWNER, 'save-coc7'))).toBe('E_RULE_MISSING')
       expect(await db.saves.get('save-coc7')).toBeTruthy()
       expect((await service.getWorkspace(OWNER.ownerKey))?.currentSaveId).toBe(before?.currentSaveId)
+    })
+  })
+
+  it('保存前现取版本记号与覆盖', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      const { save } = await service.startNewCampaign(NEW)
+      const checker: KernelRefChecker = async (refs) => refs.map((ref) => ({ ok: true, ref }))
+      const kernel = new KernelSaveService({
+        db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker,
+        currentVersion: () => ({ official: '2.0', brews: { 'brew-b': 'b2' } }),
+        currentOverrides: async () => [{ target: { kind: 'entry', ...REF }, house: { kind: 'houserule', set: 'cn-brew', prop: 'spell', hash: 'h2' }, digest: 'd2' }],
+      })
+      await kernel.bind(OWNER.ownerKey, campaign())
+      await service.saveCurrent(OWNER.ownerKey)
+      expect(((await service.getSave(save.id))?.snapshot.kernel as KernelCampaign).dataVersion.official).toBe('1.0')
+      const result = await kernel.save(OWNER.ownerKey)
+      expect(result.changed).toBe(true)
+      const saved = (await service.getSave(save.id))?.snapshot.kernel as KernelCampaign
+      expect(saved.dataVersion).toEqual({ official: '2.0', brews: { 'brew-b': 'b2' } })
+      expect(saved.overrides).toMatchObject([{ digest: 'd2' }])
+    })
+  })
+
+  it('读档前检查存档槽：只看存档，不动当前战役；precheck 抛错不自动存档/切换', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      const { save } = await service.startNewCampaign(NEW)
+      const checker: KernelRefChecker = async (refs, library) => refs.map((ref) => {
+        if (library.exclude.includes(entryUnit(ref))) return { ok: false, ref, reason: 'excluded' }
+        return { ok: true, ref }
+      })
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker })
+      await kernel.bind(OWNER.ownerKey, campaign())
+      await kernel.save(OWNER.ownerKey)
+
+      const closed = defaultCampaignLibrary('dnd5e2014', 'en')
+      closed.exclude = [entryUnit(REF)]
+      await kernel.setLibrary(OWNER.ownerKey, closed)
+      expect((await kernel.check(OWNER.ownerKey)).missing.length).toBeGreaterThan(0)
+      expect((await kernel.checkSave(save.id)).missing).toEqual([])
+
+      const raw = await db.saves.get(save.id)
+      if (!raw) throw new Error('存档不见了')
+      await db.saves.put({ ...raw, snapshot: { ...raw.snapshot, library: closed } })
+      expect((await kernel.checkSave(save.id)).missing.length).toBeGreaterThan(0)
+
+      const before = await service.getWorkspace(OWNER.ownerKey)
+      const count = await db.saves.count()
+      await expect(service.loadSave(OWNER, save.id, { precheck: async () => { throw new TrpgError('E_NOT_FOUND', '玩家取消') } })).rejects.toBeInstanceOf(TrpgError)
+      expect(await db.saves.count()).toBe(count)
+      expect((await service.getWorkspace(OWNER.ownerKey))?.savedHash).toBe(before?.savedHash)
+    })
+  })
+
+  it('撤销上限由设置决定，不写死', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      await service.startNewCampaign(NEW)
+      const checker: KernelRefChecker = async (refs) => refs.map((ref) => ({ ok: true, ref }))
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker, undoLimit: () => 2 })
+      await kernel.bind(OWNER.ownerKey, campaign())
+      const change: KernelChange = { action: 'update', type: 'Actor', pack: null, parentUuid: 'Actor.actor1',
+        data: { system: { attributes: { hp: { value: 5 } } } } }
+      let revision = 0
+      for (let i = 0; i < 3; i++) revision = (await kernel.apply(OWNER.ownerKey, [change], revision)).kernel.revision
+      expect((await kernel.read(OWNER.ownerKey))?.undo).toHaveLength(2)
+      expect(revision).toBe(3)
     })
   })
 })

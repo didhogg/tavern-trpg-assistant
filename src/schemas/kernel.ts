@@ -8,6 +8,8 @@ export const kernelRefSchema = z.object({
   hash: z.string().min(1),
   label: z.string().optional(),
   author: z.string().optional(),
+  /** 这件东西在当前人物里的物品编号；只用于把改动对应回引用，不是作者编号。 */
+  itemId: z.string().optional(),
 })
 export type KernelRef = z.infer<typeof kernelRefSchema>
 
@@ -21,14 +23,32 @@ export const kernelLibrarySchema = z.object({
 })
 export type KernelLibrary = z.infer<typeof kernelLibrarySchema>
 
+export const kernelActorStateSchema = z.object({
+  /** 人物本身的差别（对比重建出来的基准人物）。 */
+  actor: z.record(z.string(), z.unknown()).default({}),
+  /** 每件物品的差别：物品编号 → 差别。 */
+  items: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
+  /** 每个效果的差别：效果编号 → 差别。 */
+  effects: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
+  /** 重建时不存在的物品/效果（玩着玩着新加的东西），原样保留。 */
+  itemAdded: z.array(z.record(z.string(), z.unknown())).default([]),
+  itemRemoved: z.array(z.string()).default([]),
+  effectAdded: z.array(z.record(z.string(), z.unknown())).default([]),
+  effectRemoved: z.array(z.string()).default([]),
+})
+export type KernelActorState = z.infer<typeof kernelActorStateSchema>
+
 export const kernelActorSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   refs: z.array(kernelRefSchema).default([]),
   choices: z.record(z.string(), z.unknown()).default({}),
-  state: z.record(z.string(), z.unknown()).default({}),
+  state: kernelActorStateSchema.default({ actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }),
   adjustments: z.record(z.string(), z.unknown()).default({}),
   dice: z.array(z.number().int()).default([]),
+  /** 旧格式（整份条目全文）原样保留；不丢、不猜。 */
+  legacy: z.boolean().default(false),
+  legacyState: z.record(z.string(), z.unknown()).optional(),
 })
 export type KernelActor = z.infer<typeof kernelActorSchema>
 
@@ -52,6 +72,8 @@ export const kernelUndoSchema = z.object({
   revision: z.number().int().nonnegative(),
   actorIds: z.array(z.string()),
   before: z.record(z.string(), z.unknown()),
+  /** 这次改动前的战役战斗（没有战斗改动时为空）。 */
+  combatBefore: z.record(z.string(), z.unknown()).optional(),
 })
 export type KernelUndo = z.infer<typeof kernelUndoSchema>
 
@@ -62,6 +84,27 @@ export const kernelOverrideSchema = z.object({
 })
 export type KernelOverride = z.infer<typeof kernelOverrideSchema>
 
+export const kernelCombatantSchema = z.object({
+  id: z.string().min(1),
+  actorId: z.string().min(1),
+  name: z.string().optional(),
+  initiative: z.number().nullable().default(null),
+  defeated: z.boolean().default(false),
+  hidden: z.boolean().default(false),
+})
+export type KernelCombatant = z.infer<typeof kernelCombatantSchema>
+
+/** 战役层只存一份战斗：没有归属人物的战斗改动放这里，最少必要，不扩展战斗功能。 */
+export const kernelCombatSchema = z.object({
+  id: z.string().nullable().default(null),
+  name: z.string().default(''),
+  round: z.number().int().nonnegative().default(0),
+  turn: z.number().int().nullable().default(null),
+  active: z.boolean().default(false),
+  combatants: z.array(kernelCombatantSchema).default([]),
+})
+export type KernelCombat = z.infer<typeof kernelCombatSchema>
+
 export const kernelCampaignSchema = z.object({
   rule: z.string().min(1),
   kernelVersion: z.number().int().nonnegative(),
@@ -69,7 +112,10 @@ export const kernelCampaignSchema = z.object({
   dataVersion: kernelVersionSchema.default({ official: '', brews: {} }),
   overrides: z.array(kernelOverrideSchema).default([]),
   actors: z.array(kernelActorSchema).default([]),
+  combat: kernelCombatSchema.default({ id: null, name: '', round: 0, turn: null, active: false, combatants: [] }),
   revision: z.number().int().nonnegative().default(0),
   undo: z.array(kernelUndoSchema).default([]),
+  /** 整个存档的内核段是旧格式（只有整份内容，没有引用/选择/状态差别）。 */
+  legacy: z.boolean().default(false),
 })
 export type KernelCampaign = z.infer<typeof kernelCampaignSchema>

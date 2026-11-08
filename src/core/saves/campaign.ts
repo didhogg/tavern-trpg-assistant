@@ -144,11 +144,13 @@ export class CampaignService {
   /**
    * 读取存档（调用方已处理"保存存档后读取 / 不保存存档"的选择）：
    * 先为当前数据写自动存档；其他卡的存档先复制为本卡的新存档；其他规则须 allowRuleSwitch。
+   * precheck 在写自动存档/切换前运行；它抛错（例如玩家取消或读前检查有缺）时当前战役不动。
    */
-  async loadSave(owner: Owner, saveId: string, opts: { allowRuleSwitch?: boolean } = {}): Promise<Workspace> {
+  async loadSave(owner: Owner, saveId: string, opts: { allowRuleSwitch?: boolean; precheck?: (save: SaveSlot) => Promise<void> } = {}): Promise<Workspace> {
     const source = await this.getSave(saveId)
     if (!source || source.deletedAt !== undefined) throw new TrpgError('E_NOT_FOUND', '没有找到这个存档')
     this.requireRule(source.ruleId)
+    if (opts.precheck) await opts.precheck(source)
     return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta], async () => {
       const current = await this.getWorkspace(owner.ownerKey)
       const switching = !!current && current.ruleId !== source.ruleId

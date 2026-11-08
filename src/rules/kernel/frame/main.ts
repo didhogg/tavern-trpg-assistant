@@ -74,6 +74,8 @@ async function boot(input: KernelInput): Promise<unknown> {
     async initializeCanvas(): Promise<void> { steps.push('omit canvas') }
   }
   g.game = new KernelGame('game', data, socket)
+  // 结算小窗不要新手引导/欢迎场景：那是界面，而且会向服务器取我们没带的默认场景。
+  if (g.game.nue) g.game.nue.initialize = () => undefined
   // 官方声明的 client 设置，放客户端存储才生效。
   g.game.settings.storage.get('client').setItem('core.noCanvas', 'true')
   await loadClassic(`systems/${data.system.id}/dnd5e.js`)

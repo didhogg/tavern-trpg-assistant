@@ -12,9 +12,9 @@ const MONSTER = { set: 'en-official', prop: 'monster', hash: 'goblin-mm' }
 
 function state(hp: number, slot: number): Record<string, unknown> {
   return {
-    actor: { _id: 'hero', system: { attributes: { hp: { value: hp } }, spells: { spell1: { value: slot } } } },
-    items: [{ _id: 'item-class', name: 'Cleric', type: 'class' }],
-    effects: [],
+    actor: { system: { attributes: { hp: { value: hp } }, spells: { spell1: { value: slot } } } },
+    items: {},
+    effects: {},
   }
 }
 
@@ -28,7 +28,7 @@ function campaign() {
       { id: 'hero', name: '埃拉娜', refs: [{ kind: 'class', ...HERO, label: '牧师' }, { kind: 'spell', ...SPELL, label: '火球术' }],
         choices: { prepared: ['fireball-phb'] }, state: state(10, 2), adjustments: { name: '埃拉娜' }, dice: [3, 1, 4] },
       { id: 'monster', name: '地精', refs: [{ kind: 'monster', ...MONSTER, label: '地精' }],
-        choices: {}, state: { actor: { _id: 'monster', system: { attributes: { hp: { value: 7 } } } }, items: [], effects: [] }, adjustments: {}, dice: [] },
+        choices: {}, state: { actor: { system: { attributes: { hp: { value: 7 } } } }, items: {}, effects: {} }, adjustments: {}, dice: [] },
     ],
     revision: 0,
     undo: [],

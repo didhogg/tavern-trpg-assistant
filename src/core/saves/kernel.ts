@@ -1,14 +1,18 @@
-// P3-3：在 M1 存档上增加结算内核段。只存引用、选择、状态与版本；读档检查缺什么，不删数据；
-// 变更计划先预览，确认后按修订号写入，可撤销。
+// P3-3b：在 M1 存档上增加结算内核段。人物只存引用/选择/状态差别；战斗在战役层只存一份；
+// 变更计划先预览，确认后按修订号写入，可撤销；读档检查缺什么，不删数据。
 import type { TrpgDatabase } from '../db'
 import { TrpgError } from '../errors'
 import type { CampaignService } from './campaign'
 import type { RuleRegistry } from '../../rules/registry'
 import type { SaveSlot, Workspace } from '../../schemas/campaign'
 import {
-  kernelActorSchema, kernelCampaignSchema, kernelLibrarySchema,
+  kernelCombatSchema, kernelCampaignSchema, kernelLibrarySchema,
   type KernelActor, type KernelCampaign, type KernelChange, type KernelDataVersion, type KernelLibrary, type KernelOverride,
 } from '../../schemas/kernel'
+import {
+  actorIdOf, applyActorChanges, applyCombatChange, isCombatChange, type KernelRefMapper,
+} from './split'
+import { clone, isObject } from './state'
 
 /** 引用检查结果：和 P3-1 的 FetchResult 形状一致，但 core 不依赖 library 运行时。 */
 export interface KernelRefResult {
@@ -18,6 +22,9 @@ export interface KernelRefResult {
 }
 
 export type KernelRefChecker = (refs: Array<{ set: string; prop: string; hash: string }>, library: KernelLibrary) => Promise<KernelRefResult[]>
+
+/** 只交回人物段，不碰 adjustments/dice/legacy。 */
+export type KernelActorCompact = Pick<KernelActor, 'id' | 'name' | 'refs' | 'choices' | 'state'>
 
 export interface KernelSaveDeps {
   db: TrpgDatabase
@@ -29,6 +36,12 @@ export interface KernelSaveDeps {
   currentVersion?: () => KernelDataVersion | Promise<KernelDataVersion>
   /** 当前实际生效的房规覆盖；给了就报告覆盖是否变了。 */
   currentOverrides?: () => Promise<KernelOverride[]>
+  /** 作者编号 → 本战役【库】条目；不给出就用 unknown 占位（读档时会报缺）。 */
+  mapRef?: KernelRefMapper
+  /** 把当前小窗里的完整人物重新拆成引用/选择/状态差别；给了就用它，没给就按改动叠。 */
+  compactActors?: (ids: string[]) => Promise<KernelActorCompact[]>
+  /** 撤销上限由设置决定；不给出时用默认值。 */
+  undoLimit?: () => number | Promise<number>
 }
 
 export interface KernelMissing {
@@ -67,73 +80,16 @@ export interface KernelPreviewRow {
   after: unknown
 }
 
-const UNDO_LIMIT = 50
-
-const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
-
-function clone<T>(value: T): T {
-  return structuredClone(value)
-}
-
-function merge(base: unknown, patch: unknown): unknown {
-  if (!isObject(patch)) return clone(patch)
-  const out: Record<string, unknown> = isObject(base) ? { ...base } : {}
-  for (const [key, value] of Object.entries(patch)) out[key] = isObject(value) && isObject(out[key]) ? merge(out[key], value) : clone(value)
-  return out
-}
-
-function actorIdOf(change: KernelChange): string | null {
-  if (change.parentUuid?.startsWith('Actor.')) return change.parentUuid.slice('Actor.'.length)
-  if (change.type === 'Actor' && isObject(change.data)) {
-    const id = change.data._id
-    return typeof id === 'string' ? id : null
-  }
-  return null
-}
-
-function applyToCollection(list: unknown[], change: KernelChange): unknown[] {
-  const data = change.data
-  const id = isObject(data) && typeof data._id === 'string' ? data._id : null
-  if (change.action === 'delete') {
-    const ids = Array.isArray(data) ? data.filter((item): item is string => typeof item === 'string')
-      : id ? [id] : []
-    return list.filter((item) => !isObject(item) || !ids.includes(String(item._id)))
-  }
-  if (change.action === 'create') return [...list, clone(data)]
-  if (!id) return list
-  const index = list.findIndex((item) => isObject(item) && item._id === id)
-  if (index < 0) return [...list, clone(data)]
-  const next = [...list]
-  next[index] = merge(next[index], data)
-  return next
-}
-
-/** 把一条内核变更计划应用到一个人的状态上；返回新状态，不改原对象。 */
-export function applyKernelChange(state: Record<string, unknown>, change: KernelChange): Record<string, unknown> {
-  const next = clone(state)
-  if (change.type === 'Actor') {
-    if (change.action === 'delete') next.actor = null
-    else next.actor = merge(next.actor, change.data)
-    return next
-  }
-  if (change.type === 'Item') {
-    next.items = applyToCollection(Array.isArray(next.items) ? next.items : [], change)
-    return next
-  }
-  if (change.type === 'ActiveEffect') {
-    next.effects = applyToCollection(Array.isArray(next.effects) ? next.effects : [], change)
-    return next
-  }
-  if (change.type === 'Combat') {
-    next.combat = change.action === 'delete' ? null : merge(next.combat, change.data)
-    return next
-  }
-  next.other = applyToCollection(Array.isArray(next.other) ? next.other : [], change)
-  return next
-}
+const DEFAULT_UNDO_LIMIT = 50
 
 export class KernelSaveService {
   constructor(private readonly deps: KernelSaveDeps) {}
+
+  private refMapper(): KernelRefMapper {
+    return this.deps.mapRef ?? ((flags) => flags.propDroppable && flags.source && flags.hash
+      ? { kind: flags.propDroppable, set: 'unknown', prop: flags.propDroppable, hash: flags.hash, label: flags.label }
+      : null)
+  }
 
   private async workspace(ownerKey: string): Promise<Workspace> {
     const ws = await this.deps.campaign.getWorkspace(ownerKey)
@@ -173,16 +129,33 @@ export class KernelSaveService {
     return next
   }
 
-  /** 读档前检查：规则装没装、引用还在不在、版本/覆盖哪里变了；结果只报告，不改存档。 */
+  private unboundCheck(): KernelCheck {
+    return { bound: false, rule: null, ruleMissing: false, missing: [], checked: 0, dataVersion: null, dataVersionChanged: false,
+      dataVersionChanges: { official: null, brews: [] }, overridesChanged: false, overrideChanges: [] }
+  }
+
+  /** 读当前战役的前检查：规则装没装、引用还在不在、版本/覆盖哪里变了；只报告，不改存档。 */
   async check(ownerKey: string): Promise<KernelCheck> {
     const ws = await this.workspace(ownerKey)
     const kernel = this.parse(ws.data.kernel)
-    if (!kernel) {
-      return { bound: false, rule: null, ruleMissing: false, missing: [], checked: 0, dataVersion: null, dataVersionChanged: false,
-        dataVersionChanges: { official: null, brews: [] }, overridesChanged: false, overrideChanges: [] }
-    }
-    const ruleMissing = !this.deps.rules.get(kernel.rule)
+    if (!kernel) return this.unboundCheck()
     const library = kernelLibrarySchema.parse(ws.data.library ?? kernel.library)
+    return this.checkKernel(kernel, library)
+  }
+
+  /** 读档前检查存档槽：只看要读的那份存档，不动当前战役。 */
+  async checkSave(saveId: string): Promise<KernelCheck> {
+    const save = await this.deps.campaign.getSave(saveId)
+    if (!save || save.deletedAt !== undefined) throw new TrpgError('E_NOT_FOUND', '没有找到这个存档')
+    const snapshot = save.snapshot as Record<string, unknown>
+    const kernel = this.parse(snapshot.kernel)
+    if (!kernel) return this.unboundCheck()
+    const library = kernelLibrarySchema.parse(snapshot.library ?? kernel.library)
+    return this.checkKernel(kernel, library)
+  }
+
+  private async checkKernel(kernel: KernelCampaign, library: KernelLibrary): Promise<KernelCheck> {
+    const ruleMissing = !this.deps.rules.get(kernel.rule)
     const rows: Array<{ actorId: string; actorName: string; ref: KernelActor['refs'][number] }> = []
     for (const actor of kernel.actors) for (const ref of actor.refs) rows.push({ actorId: actor.id, actorName: actor.name, ref })
     const results = rows.length ? await this.deps.checkRefs(rows.map((r) => r.ref), library) : []
@@ -255,47 +228,82 @@ export class KernelSaveService {
     return { kernel: next, save }
   }
 
-  /** 预览变更计划：每行交回改前/改后的状态；不写任何数据。 */
+  /** 保存：事务外现取版本记号与覆盖，再走 M1 的短事务保存；版本没变时不会凭空产生“已保存”。 */
+  async save(ownerKey: string): Promise<{ changed: boolean; workspace: Workspace }> {
+    const kernel = await this.read(ownerKey)
+    if (kernel) {
+      const dataVersion = this.deps.currentVersion ? await this.deps.currentVersion() : kernel.dataVersion
+      const overrides = this.deps.currentOverrides ? await this.deps.currentOverrides() : kernel.overrides
+      if (JSON.stringify(dataVersion) !== JSON.stringify(kernel.dataVersion) || JSON.stringify(overrides) !== JSON.stringify(kernel.overrides)) {
+        const next: KernelCampaign = { ...kernel, dataVersion, overrides }
+        await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, kernel: next }))
+      }
+    }
+    return this.deps.campaign.saveCurrent(ownerKey)
+  }
+
+  /** 预览变更计划：每行交回改前/改后的精简段；不写任何数据。 */
   async preview(ownerKey: string, changes: KernelChange[]): Promise<{ revision: number; rows: KernelPreviewRow[] }> {
     const kernel = await this.read(ownerKey)
     if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
+    const mapper = this.refMapper()
     const rows = changes.map((change) => {
       const actorId = actorIdOf(change)
       const actor = kernel.actors.find((item) => item.id === actorId) ?? null
-      const before = actor ? clone(actor.state) : null
-      const after = actor ? applyKernelChange(actor.state, change) : null
+      const before = isCombatChange(change) ? clone(kernel.combat) : actor ? clone(actor.state) : null
+      const after = isCombatChange(change)
+        ? applyCombatChange(kernel.combat, change)
+        : actor ? applyActorChanges(actor, [change], mapper).state : null
       return { actorId, actorName: actor?.name ?? null, change, before, after }
     })
     return { revision: kernel.revision, rows }
   }
 
-  /** 确认写入：先比对修订号；写成功后修订号 +1，并记一条撤销记录。 */
+  /** 确认写入：先在事务外取当前人物的精简段，再短事务比对修订号、写、记撤销。 */
   async apply(ownerKey: string, changes: KernelChange[], expectedRevision: number): Promise<{ workspace: Workspace; kernel: KernelCampaign }> {
+    const kernelBefore = await this.read(ownerKey)
+    if (!kernelBefore) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
+    const ids = [...new Set(changes.map(actorIdOf).filter((id): id is string => !!id))]
+    const compact = this.deps.compactActors && ids.length ? await this.deps.compactActors(ids) : []
+    const compactById = new Map(compact.map((actor) => [actor.id, actor]))
+    const limit = this.deps.undoLimit ? await this.deps.undoLimit() : DEFAULT_UNDO_LIMIT
     return this.deps.db.transaction('rw', this.deps.db.workspaces, async () => {
       const ws = await this.deps.db.workspaces.get(ownerKey)
       if (!ws) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
       const kernel = this.parse(ws.data.kernel)
       if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
       if (kernel.revision !== expectedRevision) throw new TrpgError('E_REVISION_CONFLICT', '存档已被其他窗口修改，请重新预览')
-      const affected = new Set<string>()
       const before: Record<string, unknown> = {}
-      const nextActors = kernel.actors.map((actor) => ({ ...actor, state: clone(actor.state) }))
+      const nextActors = kernel.actors.map((actor) => clone(actor))
+      let combat = clone(kernel.combat)
+      let combatTouched = false
       for (const change of changes) {
+        if (isCombatChange(change)) { combat = applyCombatChange(combat, change); combatTouched = true; continue }
         const actorId = actorIdOf(change)
         if (!actorId) continue
-        const actor = nextActors.find((item) => item.id === actorId)
-        if (!actor) continue
-        if (!affected.has(actorId)) {
-          affected.add(actorId)
-          before[actorId] = clone(actor.state)
+        const index = nextActors.findIndex((actor) => actor.id === actorId)
+        if (index < 0) continue
+        if (!(actorId in before)) before[actorId] = clone(nextActors[index])
+        const nextCompact = compactById.get(actorId)
+        if (nextCompact) {
+          const old = nextActors[index]
+          nextActors[index] = {
+            ...old, ...clone(nextCompact),
+            adjustments: old.adjustments, dice: old.dice, legacy: old.legacy, legacyState: old.legacyState,
+          }
+        } else {
+          nextActors[index] = applyActorChanges(nextActors[index], [change], this.refMapper())
         }
-        actor.state = applyKernelChange(actor.state, change)
       }
       const next: KernelCampaign = {
         ...kernel,
         actors: nextActors,
+        combat,
         revision: kernel.revision + 1,
-        undo: [...kernel.undo, { at: this.deps.now(), revision: kernel.revision, actorIds: [...affected], before }].slice(-UNDO_LIMIT),
+        undo: [...kernel.undo, {
+          at: this.deps.now(), revision: kernel.revision, actorIds: Object.keys(before), before,
+          ...(combatTouched ? { combatBefore: clone(kernel.combat) as unknown as Record<string, unknown> } : {}),
+        }].slice(-limit),
       }
       const workspace: Workspace = { ...ws, data: { ...ws.data, kernel: next }, updatedAt: this.deps.now() }
       await this.deps.db.workspaces.put(workspace)
@@ -303,7 +311,7 @@ export class KernelSaveService {
     })
   }
 
-  /** 撤销最近一次写入：同样比对修订号，反向恢复受影响人物的状态。 */
+  /** 撤销最近一次写入：同样比对修订号，恢复受影响人物与战役战斗。 */
   async undo(ownerKey: string, expectedRevision: number): Promise<{ workspace: Workspace; kernel: KernelCampaign } | null> {
     return this.deps.db.transaction('rw', this.deps.db.workspaces, async () => {
       const ws = await this.deps.db.workspaces.get(ownerKey)
@@ -313,15 +321,17 @@ export class KernelSaveService {
       if (kernel.revision !== expectedRevision) throw new TrpgError('E_REVISION_CONFLICT', '存档已被其他窗口修改，请重新读取')
       const last = kernel.undo.at(-1)
       if (!last) return null
-      const nextActors = kernel.actors.map((actor) => last.actorIds.includes(actor.id)
-        ? { ...actor, state: clone((last.before[actor.id] ?? actor.state) as Record<string, unknown>) }
-        : { ...actor, state: clone(actor.state) })
-      const next: KernelCampaign = { ...kernel, actors: nextActors, revision: kernel.revision + 1, undo: kernel.undo.slice(0, -1) }
+      const nextActors = kernel.actors.map((actor) => {
+        if (!last.actorIds.includes(actor.id)) return clone(actor)
+        const saved = last.before[actor.id]
+        if (isObject(saved) && 'refs' in saved && 'state' in saved) return clone(saved) as unknown as KernelActor
+        return { ...clone(actor), state: (saved as KernelActor['state']) ?? actor.state }
+      })
+      const combat = last.combatBefore ? kernelCombatSchema.parse(last.combatBefore) : kernel.combat
+      const next: KernelCampaign = { ...kernel, actors: nextActors, combat, revision: kernel.revision + 1, undo: kernel.undo.slice(0, -1) }
       const workspace: Workspace = { ...ws, data: { ...ws.data, kernel: next }, updatedAt: this.deps.now() }
       await this.deps.db.workspaces.put(workspace)
       return { workspace, kernel: next }
     })
   }
 }
-
-export { kernelActorSchema }
