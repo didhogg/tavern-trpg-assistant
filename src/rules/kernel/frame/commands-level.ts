@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
+import { applyStateToActor } from './actor-state'
 
 const g = globalThis as any
 
@@ -50,6 +51,22 @@ function refKeyOf(data: any): string | null {
   return f?.propDroppable && f.source && f.hash ? `${f.propDroppable}|${f.source}|${f.hash}` : null
 }
 
+/** 管理器完成后，把条目自己记下的 Trait 选择再走一遍官方 apply；不手写选择值。 */
+async function applyRecordedTraits(item: any): Promise<void> {
+  for (const advancement of Object.values(item.advancement?.byId ?? {}) as any[]) {
+    const type = advancement.constructor?.typeName ?? advancement.type
+    if (type !== 'Trait') continue
+    const chosen = [...((advancement.value?.chosen ?? []) as Iterable<string>)]
+    if (!chosen.length) continue
+    const levelLimit = item.actor?.system.details?.level ?? 1
+    for (const level of advancement.levels ?? []) {
+      if (level > levelLimit && level !== 0) continue
+      await advancement.apply(level, { chosen })
+    }
+  }
+  await item.actor?.reset?.()
+}
+
 /** 没有现成自动值时的固定规则：取第一个可选项。 */
 async function firstChoice(flow: any): Promise<any> {
   const advancement = flow.advancement
@@ -80,9 +97,10 @@ async function firstChoice(flow: any): Promise<any> {
   }
 
   if (type === 'Trait') {
+    const existing = new Set(advancement.value?.chosen ?? [])
     const automatic = await advancement.automaticApplicationValue?.(flow.level)
-    if (automatic !== false) return automatic
-    const chosen = new Set(advancement.value?.chosen ?? [])
+    if (automatic !== false) return { chosen: [...new Set([...existing, ...(automatic.chosen ?? [])])] }
+    const chosen = new Set(existing)
     for (const choice of advancement.configuration?.choices ?? []) {
       let count = choice.count ?? 1
       for (const key of choice.pool ?? []) {
@@ -107,36 +125,23 @@ async function firstChoice(flow: any): Promise<any> {
   return undefined
 }
 
-/** 存档记下的 system.advancement[].value → 官方 apply 需要的数据。 */
-function recordedChoice(flow: any, value: any): any {
-  if (value === undefined) return undefined
-  const advancement = flow.advancement
-  const type = advancement.constructor?.typeName ?? advancement.type
-  const level = flow.level
-  if (type === 'HitPoints') return { [level]: value?.[level] ?? 'avg' }
-  if (type === 'ItemGrant' || type === 'ItemChoice') {
-    const added = value?.added?.[level] ?? {}
-    const selected = Object.keys(added)
-    if (!selected.length) return undefined
-    return { ability: value?.ability ?? advancement.configuration?.spell?.ability?.[0] ?? null, selected }
-  }
-  if (type === 'Subclass') return value?.uuid ? { uuid: value.uuid } : undefined
-  if (type === 'Trait') return { chosen: value?.chosen ?? [] }
-  if (type === 'AbilityScoreImprovement') return { ...value }
-  if (type === 'Size') return { size: value?.size ?? 'med' }
-  if (type === 'ScaleValue') return {}
-  return undefined
-}
-
-/** 每步优先用记下的选择；没有记录才走“第一个可选项”。 */
-async function applyManager(manager: any, values: any[] | undefined): Promise<boolean> {
-  if (!manager.steps.length) return true
+/** 每步优先用官方 reverse 记下的恢复数据；重建时缺记录就 pending，不填默认值。 */
+async function applyManager(manager: any, values: any[] | undefined, { strict = false } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
+  if (!manager.steps.length) return { finished: true }
   for (const step of manager.steps) {
     if (step.automatic || !step.flow) continue
     const advancement = step.flow.advancement
-    const type = advancement.constructor?.typeName ?? advancement.type
-    const recorded = values?.find((v: any) => v.id === advancement.id || (v.type === type && v.level === step.flow.level))
-    const value = recorded ? recordedChoice(step.flow, recorded.value) : await firstChoice(step.flow)
+    const recorded = values?.find((v: any) => v.id === advancement.id && v.level === step.flow.level)
+      ?? values?.find((v: any) => v.id === advancement.id && values.filter((x: any) => x.id === advancement.id).length === 1)
+    if (recorded) {
+      if (recorded.error) return { finished: false, step: { ...stepSummary(step), error: recorded.error } }
+      step.type = 'restore'
+      step.flow.retainedData = recorded.data
+      step.automatic = true
+      continue
+    }
+    if (strict) return { finished: false, step: stepSummary(step) }
+    const value = await firstChoice(step.flow)
     if (value === undefined) continue
     step.flow.getAutomaticApplicationValue = async () => value
     step.automatic = true
@@ -150,7 +155,8 @@ async function applyManager(manager: any, values: any[] | undefined): Promise<bo
     setTimeout(() => { g.Hooks.off(hook); resolve(false) }, 3_000)
   })
   await manager.render()
-  return completed
+  const ok = await completed
+  return ok ? { finished: true } : { finished: false, step: stepSummary(manager.step) }
 }
 
 function stepSummary(step: any): any {
@@ -203,7 +209,7 @@ async function describeSteps(manager: any): Promise<any[]> {
 }
 
 /** 建一张新卡：空白人物 → 种族/背景/职业（官方 forNewItem）→ 装备；没有成长步骤的顶层条目也显式放进人物。 */
-async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}): Promise<any> {
+async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false } = {}): Promise<any> {
   const ActorClass = g.CONFIG.Actor.documentClass
   const created = await ActorClass.create({ name, type: 'character', system: { details: { level: 1 } } })
   for (const raw of items) {
@@ -211,11 +217,14 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
     const data = cleanItem(source)
     const key = raw?.refKey ?? refKeyOf(data)
     const manager = Manager().forNewItem(created, data, { automaticApplication: true })
-    const finished = await applyManager(manager, key ? choices[key] : undefined)
-    if (!finished) return { pending: true, step: stepSummary(manager.step), built: actorLevel(created) }
+    const outcome = await applyManager(manager, key ? choices[key] : undefined, { strict })
+    if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created) }
     const exists = created.items.contents.some((i: any) => i.type === data.type
       && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
     if (!exists) await created.createEmbeddedDocuments('Item', [markStandardDragDrop(cleanItem(data))])
+    const createdItem = created.items.contents.find((i: any) => i.type === data.type
+      && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
+    if (createdItem) await applyRecordedTraits(createdItem)
   }
   if (equipment.length) await created.createEmbeddedDocuments('Item', equipment.map(item => markStandardDragDrop(cleanItem(item?.data ?? item))))
   return { actor: created }
@@ -236,34 +245,12 @@ async function importEntry(prop: string, entry: any): Promise<any> {
   return doc.toObject ? doc.toObject() : doc
 }
 
-/** 把存档里的状态差别叠回重建出来的人物文档。 */
-async function applyStateToActor(actor: any, state: KernelActorStateLike | undefined): Promise<void> {
-  if (!state) return
-  if (state.actor && Object.keys(state.actor).length) await actor.update(state.actor)
-  for (const [id, diff] of Object.entries(state.items ?? {})) {
-    const item = actor.items.get(id)
-    if (item) await item.update(diff)
-  }
-  for (const item of state.itemAdded ?? []) {
-    if (!actor.items.get(item._id)) await actor.createEmbeddedDocuments('Item', [item], { keepId: true })
-  }
-  for (const id of state.itemRemoved ?? []) await actor.deleteEmbeddedDocuments('Item', [id])
-  for (const [id, diff] of Object.entries(state.effects ?? {})) {
-    const effect = actor.effects.get(id)
-    if (effect) await effect.update(diff)
-  }
-  for (const effect of state.effectAdded ?? []) {
-    if (!actor.effects.get(effect._id)) await actor.createEmbeddedDocuments('ActiveEffect', [effect], { keepId: true })
-  }
-  for (const id of state.effectRemoved ?? []) await actor.deleteEmbeddedDocuments('ActiveEffect', [id])
-}
-
 export interface RebuildPlan {
   name: string
   /** 顶层条目（种族/背景/职业/其他有作者编号的东西），按人物里的顺序。 */
   items: Array<{ prop: string; entry: any; refKey: string }>
   equipment: Array<{ prop: string; entry: any; refKey: string }>
-  /** refKey → system.advancement[].value 的数组。 */
+  /** refKey → 官方 Advancement#reverse 记下的恢复数据。 */
   choices: Record<string, any[] | undefined>
   state?: KernelActorStateLike
 }
@@ -281,20 +268,51 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     levelUpApply: (actorId: string, classId: string, delta = 1) => operate([], async () => {
       const a = actor(actorId)
       const manager = managerFor(a, classId, delta, { automaticApplication: true })
-      const finished = await applyManager(manager, undefined)
-      if (!finished) {
+      const outcome = await applyManager(manager, undefined)
+      if (!outcome.finished) {
         return {
           kernelStatus: 'pending',
           reason: manager.step ? 'awaiting-choice' : 'advancement-manager-not-complete',
-          step: stepSummary(manager.step),
+          step: outcome.step,
         }
       }
       return actorLevel(a)
     }, [actorId]),
 
-    /** 用结算内核建一张新卡；choices 按 refKey 给出记下的成长选择。 */
+    /** 用官方 Advancement#reverse 记下人物身上每个进阶的选择（在克隆人物上做，不动现场）。 */
+    captureChoices: (actorId: string) => operate([], async () => {
+      const source = actor(actorId)
+      const clone = source.clone()
+      const level = clone.system.details?.level ?? 1
+      const out: Record<string, any[]> = {}
+      const items = Array.from(clone.items) as any[]
+      for (const item of items) {
+        const flags = item.flags?.plutonium
+        if (!flags?.propDroppable || !flags.source || !flags.hash) continue
+        const key = `${flags.propDroppable}|${flags.source}|${flags.hash}`
+        const rows = []
+        for (const advancement of Object.values(item.advancement?.byId ?? {}) as any[]) {
+          for (const advLevel of (advancement.levels ?? [])) {
+            if (advLevel > level && advLevel !== 0) continue
+            const type = advancement.constructor?.typeName ?? advancement.type
+            try {
+              const reversed = await advancement.reverse(advLevel)
+              const fallback = type === 'Trait' ? (advancement.value?.toObject?.() ?? advancement.value ?? {}) : type === 'ScaleValue' ? {} : undefined
+              const data = reversed === undefined || reversed === null ? fallback : reversed
+              if (data !== undefined) rows.push({ id: advancement.id, type, level: advLevel, data })
+            } catch (error) {
+              rows.push({ id: advancement.id, type, level: advLevel, error: error instanceof Error ? error.message : String(error) })
+            }
+          }
+        }
+        if (rows.length) out[key] = rows
+      }
+      return out
+    }, [actorId]),
+
+    /** 用结算内核建一张新卡；choices 按 refKey 给出官方 reverse 的恢复数据。 */
     buildCharacter: (name: string, items: any[], equipment: any[] = [], choices: Record<string, any[] | undefined> = {}) => operate([], async () => {
-      const built = await buildActor(name, items, equipment, choices)
+      const built = await buildActor(name, items, equipment, choices, { strict: false })
       if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', step: built.step, built: built.built }
       return { id: built.actor.id, ...actorLevel(built.actor) }
     }),
@@ -314,7 +332,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       for (const row of plan.items) items.push({ data: await importEntry(row.prop, row.entry), refKey: row.refKey })
       const equipment = []
       for (const row of plan.equipment) equipment.push({ data: await importEntry(row.prop, row.entry), refKey: row.refKey })
-      const built = await buildActor(plan.name, items, equipment, plan.choices)
+      const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true })
       if (built.pending) return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
       const base = built.actor.toObject()
       await applyStateToActor(built.actor, plan.state)

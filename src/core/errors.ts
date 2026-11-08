@@ -7,6 +7,7 @@ export type ErrorCode =
   | 'E_AUTO_NOT_DELETABLE' | 'E_BAD_NAME'
   | 'E_NO_WORKSPACE' | 'E_READ_ONLY' | 'E_NETWORK' | 'E_HTTP' | 'E_CANCELLED'
   | 'E_BAD_KERNEL' | 'E_NO_KERNEL' | 'E_REVISION_CONFLICT'
+  | 'E_NO_REF_MAPPER' | 'E_NO_COMPACTOR'
   | 'E_TOO_LARGE'
  
 

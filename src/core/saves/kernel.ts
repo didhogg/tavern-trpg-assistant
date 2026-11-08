@@ -86,9 +86,10 @@ export class KernelSaveService {
   constructor(private readonly deps: KernelSaveDeps) {}
 
   private refMapper(): KernelRefMapper {
-    return this.deps.mapRef ?? ((flags) => flags.propDroppable && flags.source && flags.hash
-      ? { kind: flags.propDroppable, set: 'unknown', prop: flags.propDroppable, hash: flags.hash, label: flags.label }
-      : null)
+    if (!this.deps.mapRef) {
+      return () => { throw new TrpgError('E_NO_REF_MAPPER', '没有提供作者编号到【库】条目的对照') }
+    }
+    return this.deps.mapRef
   }
 
   private async workspace(ownerKey: string): Promise<Workspace> {
@@ -285,6 +286,7 @@ export class KernelSaveService {
         if (index < 0) continue
         if (!(actorId in before)) before[actorId] = clone(nextActors[index])
         const nextCompact = compactById.get(actorId)
+        if (this.deps.compactActors && !nextCompact) throw new TrpgError('E_NO_COMPACTOR', `没有拿到人物 ${actorId} 的重建结果`)
         if (nextCompact) {
           const old = nextActors[index]
           nextActors[index] = {

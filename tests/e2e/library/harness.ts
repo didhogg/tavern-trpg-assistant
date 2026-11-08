@@ -250,9 +250,9 @@ export { entryUnit, exportSaves, importSaves, estimateExport, readSaveFile }
 
 // ---- P3-3b：在【库】测试页里开真实结算小窗，并按引用/选择/状态重建人物 ----
 import { libraryData, startKernel, type KernelSession } from '../../../src/rules/kernel/host'
-import { actorData, compactActor, refMapperFor, rebuildActor } from '../../../src/rules/kernel/rebuild'
+import { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor } from '../../../src/rules/kernel/rebuild'
 
-export { actorData, compactActor, refMapperFor, rebuildActor }
+export { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor }
 
 export async function startKernelSession(input: unknown): Promise<{ session: KernelSession; status: unknown }> {
   const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files), timeoutMs: 180_000 })

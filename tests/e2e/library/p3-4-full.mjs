@@ -79,9 +79,10 @@ for (const [name, type, options] of engineList) {
       }
       h.service.reset()
       await h.scoped.setAssignment('src:phb', null)
-      // 清掉上次留下的房规（可编辑自制 + 链接），让本轮房规编号稳定。
-      const editable = (await h.service.brewInstalled('cn-brew')).filter(b => b.head.isEditable)
-      if (editable.length) await h.service.brewDelete('cn-brew', editable.map(b => String(b.head.docIdLocal ?? '')))
+      await h.scoped.setAssignment('src:mm', null)
+      // 清掉上次留下的自制/房规（包括备份恢复后变成非 editable 的），让本轮编号稳定。
+      const brews = await h.service.brewInstalled('cn-brew')
+      if (brews.length) await h.service.brewDelete('cn-brew', brews.map(b => String(b.head.docIdLocal ?? '')))
       for (const link of await h.scoped.manage.houseRules()) await h.scoped.manage.unlinkHouseRule(link.house)
       h.scoped.reset()
 
@@ -123,12 +124,29 @@ for (const [name, type, options] of engineList) {
         weapon: await take('item', it => it.weaponCategory === 'martial' || it.type === 'M'),
         spell: await take('spell', it => it.level === 0),
       }
+      const monster = await (async () => {
+        const p = await h.service.parsed('cn-official', 'monster')
+        let fallback = null
+        for (let i = 0; i < p.items.length; i++) {
+          const item = p.items[i]
+          if (p.sources[i] !== 'MM' || !item.name) continue
+          const ref = { set: 'cn-official', prop: 'monster', hash: p.hashes[i] }
+          const d = await h.scoped.detail(library, ref)
+          if (!d || d.hidden || !d.english || d.english.status !== 'found') continue
+          const row = { ref, label: item.name, entry: d.english.item }
+          if (item.name === 'Goblin') return row
+          fallback ??= row
+        }
+        if (!fallback) throw new Error('no MM monster with English pair')
+        return fallback
+      })()
       const { session, status } = await h.startKernelSession(kernelInput)
       globalThis.__k = session
       globalThis.__h = h
       out.boot = { system: status.system, rules: status.rules, api: status.plutoniumApi }
       out.plan = Object.fromEntries(Object.entries(plan).map(([k, v]) => [k, { ref: v.ref, label: v.label }]))
-      return { out, plan, fireball }
+      out.planMonster = { ref: monster.ref, label: monster.label }
+      return { out, plan, monster, fireball }
     }, kernelInput)
     r.prepared = prepared.out
     r.dedupe = prepared.out.dedupe
@@ -173,18 +191,50 @@ for (const [name, type, options] of engineList) {
       return { attack: attack.status, damage: damage.status, equip: equip.status, total, weaponId: weapon._id }
     }, heroId)
     r.current = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), heroId)
+    r.basePrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), heroId)
+    r.currentPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), heroId)
+
+    // ---- 真实【库】怪物：导入 → 英雄攻击 → 伤害落到怪物 ----
+    const monster = await page.evaluate(async entry => {
+      const k = globalThis.__k
+      const result = await k.call('importMonsterActor', entry)
+      const data = await globalThis.__h.actorData(k, result.result?.id)
+      return { status: result.status, id: result.result?.id, data, summary: result.result }
+    }, prepared.monster.entry)
+    if (monster.status !== 'complete' || !monster.id) throw new Error(`monster import failed: ${JSON.stringify(monster).slice(0, 600)}`)
+    r.monsterBase = monster.data
+    r.monsterBasePrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), monster.id)
+    r.playMonster = await page.evaluate(async ([heroId, monsterId]) => {
+      const k = globalThis.__k
+      const a = await globalThis.__h.actorData(k, heroId)
+      const weapon = a.items.find(i => i.type === 'weapon')
+      const attack = await k.call('attack', heroId, weapon._id, [20, 4, 4, 4, 4, 4, 4, 4])
+      const total = attack.result?.damage?.[0]?.total ?? null
+      if (!total) throw new Error('attack produced no damage')
+      const damage = await k.call('damage', monsterId, [{ value: total, type: weapon.system?.damage?.base?.types?.[0] ?? 'slashing' }], [], {})
+      return { attack: attack.status, damage: damage.status, total }
+    }, [heroId, monster.id])
+    r.monsterCurrent = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), monster.id)
+    r.monsterCurrentPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), monster.id)
 
     // ---- 拆分/绑定/保存（正式 KernelSaveService） ----
-    const saved = await page.evaluate(async ([heroId, base, current, fireball]) => {
+    const saved = await page.evaluate(async ([heroId, base, current, fireball, monsterId, monsterBase, monsterCurrent]) => {
       const h = globalThis.__h
       const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
-      const compact = await h.compactActor({ lib: h.scoped, library, actor: { id: heroId, name: base.name }, current, base })
+      const captured = await globalThis.__k.call('captureChoices', heroId)
+      const choices = captured.result ?? {}
+      const compact = await h.compactActor({ lib: h.scoped, library, actor: { id: heroId, name: base.name }, current, base, choices })
+      const capturedMonster = await globalThis.__k.call('captureChoices', monsterId)
+      const compactMonster = await h.compactActor({
+        lib: h.scoped, library, actor: { id: monsterId, name: monsterBase.name },
+        current: monsterCurrent, base: monsterBase, choices: capturedMonster.result ?? {},
+      })
       const owner = { ownerKey: 'char:p34full.png', ownerLabel: 'P3-4 全链路' }
       const { save } = await h.campaign.startNewCampaign({ ...owner, ruleId: 'dnd5e2014', name: 'P3-4 全链路' })
       const bound = await h.kernelSave.bind(owner.ownerKey, {
         rule: 'dnd5e2014', kernelVersion: 1, library,
         dataVersion: { official: 'old-official', brews: {} }, overrides: [],
-        actors: [{ ...compact, adjustments: { note: '玩家备注' }, dice: [3, 1, 4] }],
+        actors: [{ ...compact, adjustments: { note: '玩家备注' }, dice: [3, 1, 4] }, compactMonster],
         revision: 0, undo: [],
       })
       const house = await h.custom.createHouseRule(library, fireball, { mod: { entries: { mode: 'appendArr', items: 'P3-4 房规' } } })
@@ -193,19 +243,24 @@ for (const [name, type, options] of engineList) {
       const slot = await h.campaign.getSave(save.id)
       const fullKernel = JSON.parse(JSON.stringify(bound))
       fullKernel.actors[0].state = { actor: current, items: current.items, effects: current.effects }
+      fullKernel.actors[1].state = { actor: monsterCurrent, items: monsterCurrent.items, effects: monsterCurrent.effects }
       return {
-        owner, saveId: save.id, compact, house, changed: savedResult.changed,
+        owner, saveId: save.id, compact, compactMonster, house, changed: savedResult.changed,
         checkBefore: { dataVersionChanged: checkBefore.dataVersionChanged, overridesChanged: checkBefore.overridesChanged,
           missing: checkBefore.missing.length, dataVersionChanges: checkBefore.dataVersionChanges, overrideChanges: checkBefore.overrideChanges },
         kernelBytes: JSON.stringify(slot.snapshot.kernel).length,
         oldKernelBytes: JSON.stringify(fullKernel).length,
-        compactStateBytes: JSON.stringify(compact.state).length,
-        fullActorBytes: JSON.stringify({ actor: current, items: current.items, effects: current.effects }).length,
+        compactStateBytes: JSON.stringify(compact.state).length + JSON.stringify(compactMonster.state).length,
+        fullActorBytes: JSON.stringify({ actor: current, items: current.items, effects: current.effects }).length
+          + JSON.stringify({ actor: monsterCurrent, items: monsterCurrent.items, effects: monsterCurrent.effects }).length,
       }
-    }, [heroId, r.base, r.current, prepared.fireball])
+    }, [heroId, r.base, r.current, prepared.fireball, monster.id, r.monsterBase, r.monsterCurrent])
     r.save = {
       saveId: saved.saveId, changed: saved.changed,
-      refs: saved.compact.refs.length, refHashes: saved.compact.refs.map(x => x.hash), choices: Object.keys(saved.compact.choices).length,
+      refs: saved.compact.refs.length + saved.compactMonster.refs.length,
+      refHashes: [...saved.compact.refs.map(x => x.hash), ...saved.compactMonster.refs.map(x => x.hash)],
+      monsterRefs: saved.compactMonster.refs.length,
+      choices: Object.keys(saved.compact.choices).length,
       kernelBytes: saved.kernelBytes, oldKernelBytes: saved.oldKernelBytes,
       compactStateBytes: saved.compactStateBytes, fullActorBytes: saved.fullActorBytes,
     }
@@ -216,9 +271,17 @@ for (const [name, type, options] of engineList) {
       const h = globalThis.__h
       const before = await h.campaign.getWorkspace(owner.ownerKey)
       await h.scoped.setAssignment('src:phb', { scopes: ['p34-off'], global: false })
+      await h.scoped.setAssignment('src:mm', { scopes: ['p34-off'], global: false })
       const check = await h.kernelSave.checkSave(before.currentSaveId)
       const after = await h.campaign.getWorkspace(owner.ownerKey)
-      const refsSurvive = (await h.kernelSave.read(owner.ownerKey)).actors[0].refs.length
+      const refsSurvive = (await h.kernelSave.read(owner.ownerKey)).actors.reduce((n, actor) => n + actor.refs.length, 0)
+      const closedLibrary = { ...h.defaultCampaignLibrary('dnd5e2014', 'cn'), exclude: ['src:phb', 'src:mm'] }
+      const stored = await h.kernelSave.read(owner.ownerKey)
+      const rebuilds = []
+      for (const actor of stored.actors) {
+        const rebuilt = await h.rebuildActor({ lib: h.scoped, session: globalThis.__k, library: closedLibrary, actor })
+        rebuilds.push({ status: rebuilt.status, missing: rebuilt.missing?.length ?? 0 })
+      }
       let blocked = null
       try {
         await h.campaign.loadSave(owner, before.currentSaveId, { precheck: async save => {
@@ -229,6 +292,7 @@ for (const [name, type, options] of engineList) {
       return {
         missing: check.missing.map(m => ({ actor: m.actorName, label: m.ref.label, reason: m.reason })),
         checked: check.checked, refsSurvive,
+        rebuilds,
         revisionBefore: before.data.kernel.revision, revisionAfter: after.data.kernel.revision, blocked,
       }
     }, saved.owner)
@@ -237,6 +301,7 @@ for (const [name, type, options] of engineList) {
     const openResult = await page.evaluate(async owner => {
       const h = globalThis.__h
       await h.scoped.setAssignment('src:phb', null)
+      await h.scoped.setAssignment('src:mm', null)
       const saveId = (await h.campaign.getWorkspace(owner.ownerKey)).currentSaveId
       const check = await h.kernelSave.checkSave(saveId)
       const loaded = await h.campaign.loadSave(owner, saveId, { precheck: async save => {
@@ -244,7 +309,7 @@ for (const [name, type, options] of engineList) {
         if (c.missing.length) throw new Error('missing')
       } })
       const kernel = await h.kernelSave.read(owner.ownerKey)
-      return { missing: check.missing.length, loadedSaveId: loaded.currentSaveId, loadedRevision: kernel.revision, loadedRefs: kernel.actors[0].refs.length }
+      return { missing: check.missing.length, loadedSaveId: loaded.currentSaveId, loadedRevision: kernel.revision, loadedRefs: kernel.actors.reduce((n, actor) => n + actor.refs.length, 0) }
     }, saved.owner)
     r.open = openResult.missing
     r.openDetail = openResult
@@ -264,13 +329,34 @@ for (const [name, type, options] of engineList) {
       const kernel = await h.kernelSave.read(owner.ownerKey)
       return h.rebuildActor({ lib: h.scoped, session: globalThis.__k, library: kernel.library, actor: kernel.actors[0] })
     }, saved.owner)
-    r.rebuild = { status: rebuilt.status, id: rebuilt.id, missing: rebuilt.missing, error: rebuilt.error }
+    r.rebuild = { status: rebuilt.status, id: rebuilt.id, missing: rebuilt.missing, error: rebuilt.error, detail: rebuilt.detail }
     if (rebuilt.status !== 'complete') throw new Error(`rebuild failed: ${JSON.stringify(rebuilt).slice(0, 500)}`)
+    const rebuiltMonster = await page.evaluate(async owner => {
+      const h = globalThis.__h
+      const kernel = await h.kernelSave.read(owner.ownerKey)
+      return h.rebuildActor({ lib: h.scoped, session: globalThis.__k, library: kernel.library, actor: kernel.actors[1] })
+    }, saved.owner)
+    r.rebuildMonster = { status: rebuiltMonster.status, id: rebuiltMonster.id, missing: rebuiltMonster.missing, error: rebuiltMonster.error, detail: rebuiltMonster.detail }
+    if (rebuiltMonster.status !== 'complete') throw new Error(`monster rebuild failed: ${JSON.stringify(rebuiltMonster).slice(0, 500)}`)
     r.baseDiffs = differences(r.base, rebuilt.base)
     r.patchedDiffs = differences(r.current, rebuilt.data)
-    r.expected = { heroHp: rebuilt.data.system.attributes.hp.value, heroLevel: rebuilt.data.system.details.level, monsterHp: 0 }
-    r.appliedState = { ...r.expected }
-    r.loadedState = { ...r.expected }
+    r.monsterBaseDiffs = differences(r.monsterBase, rebuiltMonster.base)
+    r.monsterPatchedDiffs = differences(r.monsterCurrent, rebuiltMonster.data)
+    r.rebuiltPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), rebuilt.id)
+    r.rebuiltMonsterPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), rebuiltMonster.id)
+    r.preparedDiffs = differences(r.currentPrepared, r.rebuiltPrepared)
+    r.monsterPreparedDiffs = differences(r.monsterCurrentPrepared, r.rebuiltMonsterPrepared)
+    const levelOf = data => (data.items ?? []).filter(i => i.type === 'class').reduce((n, i) => n + (i.system?.levels ?? 0), 0) || data.system?.details?.level || 1
+    r.expected = {
+      heroHp: r.current.system.attributes.hp.value,
+      heroLevel: levelOf(r.current),
+      monsterHp: r.monsterCurrent.system.attributes.hp.value,
+    }
+    r.loadedState = {
+      heroHp: r.rebuiltPrepared.attributes.hp.value,
+      heroLevel: levelOf(rebuilt.data),
+      monsterHp: r.rebuiltMonsterPrepared.attributes.hp.value,
+    }
 
     // ---- 预览/写入/撤销/再写：用重建人物的真实装备改动 ----
     const change = await page.evaluate(async id => {
@@ -293,6 +379,14 @@ for (const [name, type, options] of engineList) {
     r.appliedRevision = writeFlow.appliedRevision
     r.undo = { revision: writeFlow.undoRevision, restored: writeFlow.undoRestored }
     r.reappliedRevision = writeFlow.reappliedRevision
+    r.appliedState = await page.evaluate(async ([heroId, monsterId]) => {
+      const h = globalThis.__h
+      const k = globalThis.__k
+      const hero = await h.actorData(k, heroId)
+      const mon = await h.actorData(k, monsterId)
+      const level = data => (data.items ?? []).filter(i => i.type === 'class').reduce((n, i) => n + (i.system?.levels ?? 0), 0) || data.system?.details?.level || 1
+      return { heroHp: hero.system.attributes.hp.value, heroLevel: level(hero), monsterHp: mon.system.attributes.hp.value }
+    }, [rebuilt.id, rebuiltMonster.id])
 
     // ---- 旧修订：用 0 再写，必须冲突且状态不变 ----
     const stale = await page.evaluate(async ([changes, owner]) => {
@@ -316,14 +410,7 @@ for (const [name, type, options] of engineList) {
       await h.userDb.saves.clear()
       await h.userDb.workspaces.clear()
       const restored = await h.importSaves({ db: h.userDb, campaign: h.campaign, now: Date.now, hasRule: id => id === 'dnd5e2014',
-        library: h.backupLibrary, checkRefs: async refs => {
-          // 房规条目由作者包管理器恢复；恢复后作者会把它改名成“火球术（PHB）”，旧链接的房规编号查不到。
-          // 这是 P3-1 的恢复行为，不在 P3-3b 的人物引用检查范围；这里只检查官方/自制条目的恢复。
-          const official = refs.filter(r => r.set !== 'cn-brew').map(r => ({ set: r.set, prop: r.prop, hash: r.hash }))
-          const results = await h.scoped.fetch(h.defaultCampaignLibrary('dnd5e2014', 'cn'), official)
-          let i = 0
-          return refs.map(ref => ref.set === 'cn-brew' ? { ok: true, ref } : results[i++])
-        } },
+        library: h.backupLibrary, checkRefs: refs => h.scoped.fetch(h.defaultCampaignLibrary('dnd5e2014', 'cn'), refs) },
       rec, { owner, selectedIds: rec.saves.map(s => s.id), mode: 'merge' })
       const workspace = await h.kernelSave.read(owner.ownerKey)
       const after = await h.service.storedItem(house.house.set, house.house.prop, house.house.hash)
@@ -352,10 +439,19 @@ for (const [name, type, options] of engineList) {
       && r.save.kernelBytes < r.save.oldKernelBytes
       && r.save.compactStateBytes < r.save.fullActorBytes
       && r.checkBefore.dataVersionChanged && r.checkBefore.overridesChanged
-      && r.closed.missing.length > 0 && r.closed.refsSurvive && r.closed.revisionBefore === r.closed.revisionAfter && r.closed.blocked !== null
-      && r.open === 0 && r.openDetail.loadedSaveId === r.save.saveId
-      && r.rebuild.status === 'complete'
+      && r.closed.missing.length > 0 && r.closed.missing.length === r.save.refs
+      && r.closed.refsSurvive === r.save.refs
+      && r.closed.rebuilds.every(x => x.status === 'missing' && x.missing > 0)
+      && r.closed.revisionBefore === r.closed.revisionAfter && r.closed.blocked !== null
+      && r.open === 0 && r.openDetail.loadedSaveId === r.save.saveId && r.openDetail.loadedRefs === r.save.refs
+      && r.rebuild.status === 'complete' && r.rebuildMonster.status === 'complete'
       && r.baseDiffs.length === 0 && r.patchedDiffs.length === 0
+      && r.monsterBaseDiffs.length === 0 && r.monsterPatchedDiffs.length === 0
+      && r.preparedDiffs.length === 0 && r.monsterPreparedDiffs.length === 0
+      && r.appliedState.heroHp === r.expected.heroHp && r.appliedState.heroLevel === r.expected.heroLevel
+      && r.appliedState.monsterHp === r.expected.monsterHp
+      && r.loadedState.heroHp === r.expected.heroHp && r.loadedState.heroLevel === r.expected.heroLevel
+      && r.loadedState.monsterHp === r.expected.monsterHp
       && r.appliedRevision === 1 && r.undo.restored && r.reappliedRevision === 3
       && r.stale === 'E_REVISION_CONFLICT' && r.staleUnchanged
       && r.backup.libraryFiles >= 3 && (r.restored.library?.brews ?? 0) > 0 && (r.restored.library?.houseRules ?? 0) > 0 && r.restored.workspace && r.restored.missing === 0
@@ -370,7 +466,10 @@ for (const [name, type, options] of engineList) {
     await writeFile(`${work}/p3-4-full-${name}.json`, JSON.stringify(payload, null, 2))
     console.log(name, r.passed ? 'PASS' : 'FAIL', JSON.stringify({
       build: r.build, save: r.save, closed: r.closed && { missing: r.closed.missing.length, for: r.closed.missing.slice(0, 2), rev: [r.closed.revisionBefore, r.closed.revisionAfter], refs: r.closed.refsSurvive, blocked: r.closed.blocked },
-      open: r.open, rebuild: r.rebuild, diffs: [r.baseDiffs?.length, r.patchedDiffs?.length],
+      open: r.open, rebuild: r.rebuild, rebuildMonster: r.rebuildMonster,
+      diffs: [r.baseDiffs?.length, r.patchedDiffs?.length, r.monsterBaseDiffs?.length, r.monsterPatchedDiffs?.length, r.preparedDiffs?.length, r.monsterPreparedDiffs?.length],
+      hp: { expected: r.expected, applied: r.appliedState, loaded: r.loadedState },
+      monsterHp: [r.monsterBase?.system?.attributes?.hp?.value, r.monsterCurrent?.system?.attributes?.hp?.value],
       write: [r.appliedRevision, r.undo?.revision, r.reappliedRevision], stale: r.stale,
       backup: r.backup && { files: r.backup.libraryFiles, brews: r.restored?.library?.brews, houseRules: r.restored?.library?.houseRules, missing: r.restored?.missing, debug: r.backupDebug },
       fatal: r.fatal?.slice(0, 500), unexplained: r.unexplained,

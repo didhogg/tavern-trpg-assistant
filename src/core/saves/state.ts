@@ -16,7 +16,9 @@ export function emptyActorState(): KernelActorStateLike {
   return { actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }
 }
 
-/** Foundry diffObject 的 JSON 等价物：对象逐键比，数组整体比，删除的键写成 `-=键`。 */
+/** Foundry diffObject 的 JSON 等价物：对象逐键比，数组整体比，删除的键写成 `-=键`。
+ *  splitActor 在插件/core 侧运行（不在结算小窗里），不能直接调用 foundry.utils.diffObject；
+ *  这里按它的对象/数组/删除键语义实现，并用单元测试保证“拆开再叠回”逐项相等。 */
 export function jsonDiff(base: unknown, current: unknown): Record<string, unknown> {
   if (isObject(base) && isObject(current)) {
     const out: Record<string, unknown> = {}

@@ -188,6 +188,11 @@ export class ScopedLibrary {
     return rows
   }
 
+  /** 按编号取【库】解析结果里的那一条（高效版本，不建作者详情）。 */
+  async storedItem(ref: EntryRef): Promise<{ item: unknown; source: string | null } | null> {
+    return this.lib.storedItem(ref.set, ref.prop, ref.hash)
+  }
+
   /** 按编号取英文对照原件（中文条目喂 Plutonium 用）；英文源或没配对时返回 null。 */
   async englishOf(ref: EntryRef): Promise<English | null> {
     const set = SOURCES.find((s) => s.id === ref.set)

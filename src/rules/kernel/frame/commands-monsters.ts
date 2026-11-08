@@ -1,6 +1,8 @@
 // d 段：怪物 NPC。完整怪物导入只调 Plutonium 公开导入器；动作/施法/传奇动作仍走 dnd5e 官方入口。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 import type { Operate } from './commands-items'
+import type { KernelActorStateLike } from '../../../core/saves/state'
+import { applyStateToActor } from './actor-state'
 
 const g = globalThis as any
 
@@ -94,6 +96,21 @@ export function createMonsterCommands(operate: Operate) {
         }
       }
       return rows
+    }),
+
+    /** P3-3b 重建怪物：按作者条目重新导入 → 建 Actor → 叠状态差别。 */
+    rebuildMonster: (plan: { entry: any; name: string; state?: KernelActorStateLike }) => operate([], async () => {
+      const { summary, doc } = await importTemp(plan.entry)
+      if (!doc) throw Error(`Importer returned no document for ${plan.entry?.name ?? 'monster'}`)
+      const data = doc.toObject()
+      delete data._id
+      for (const item of data.items ?? []) delete item._id
+      for (const effect of data.effects ?? []) delete effect._id
+      const ActorClass = g.CONFIG.Actor.documentClass
+      const created = await ActorClass.create({ ...data, name: plan.name })
+      const base = created.toObject()
+      await applyStateToActor(created, plan.state)
+      return { status: statusText(summary.status), id: created.id, ...actorSummary(created), data: created.toObject(), base }
     }),
 
     /** 完整怪物导入并放进世界（抽样做动作/施法/传奇动作用）；返回新 Actor 的 id 与摘要。 */

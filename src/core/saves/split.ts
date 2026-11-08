@@ -45,6 +45,12 @@ const stripCollections = (data: Record<string, unknown>): Record<string, unknown
 }
 
 function refsOf(data: Record<string, unknown>, mapRef: KernelRefMapper): KernelRef[] {
+  const actorFlags = isObject(data.flags) && isObject(data.flags.plutonium) ? data.flags.plutonium as KernelRefFlags : null
+  if (actorFlags?.source && actorFlags?.hash && (actorFlags.page === 'bestiary.html' || actorFlags.propDroppable === 'creature' || data.type !== 'character')) {
+    const ref = mapRef({ ...actorFlags, propDroppable: 'creature' })
+    if (!ref) throw new Error(`无法把作者编号对应到【库】条目：${actorFlags.source}/${actorFlags.hash}`)
+    return [{ ...ref, label: ref.label ?? (typeof data.name === 'string' ? data.name : undefined) }]
+  }
   const out: KernelRef[] = []
   if (!Array.isArray(data.items)) return out
   for (const item of data.items) {
@@ -52,33 +58,14 @@ function refsOf(data: Record<string, unknown>, mapRef: KernelRefMapper): KernelR
     const flags = isObject(item.flags) && isObject(item.flags.plutonium) ? item.flags.plutonium as KernelRefFlags : null
     if (!flags) continue
     const ref = mapRef(flags)
-    if (!ref) continue
+    if (!ref) throw new Error(`无法把作者编号对应到【库】条目：${flags.source}/${flags.hash}`)
     out.push({ ...ref, itemId: item._id, label: ref.label ?? (typeof item.name === 'string' ? item.name : undefined) })
   }
   return out
 }
 
-function choicesOf(data: Record<string, unknown>, refs: KernelRef[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  if (!Array.isArray(data.items)) return out
-  const refByItem = new Map(refs.filter((ref) => ref.itemId).map((ref) => [ref.itemId!, ref]))
-  for (const item of data.items) {
-    if (!isObject(item) || typeof item._id !== 'string') continue
-    const ref = refByItem.get(item._id)
-    if (!ref) continue
-    const advancement = isObject(item.system) && isObject(item.system.advancement) ? item.system.advancement : null
-    if (!advancement) continue
-    const values = Object.values(advancement)
-      .filter((a): a is Record<string, unknown> => isObject(a))
-      .filter((a) => isObject(a.value) && Object.keys(a.value).length > 0)
-      .map((a) => ({ id: a._id, type: a.type, level: a.level, value: a.value }))
-    if (values.length) out[refKey(ref)] = values
-  }
-  return out
-}
-
-/** 完整人物 + 重建基准 → 引用 / 选择 / 状态差别。 */
-export function splitActor(current: KernelActorData, rebuilt: KernelActorData, mapRef: KernelRefMapper, diff: KernelDiff = jsonDiff): {
+/** 完整人物 + 重建基准 → 引用 / 选择 / 状态差别。choices 来自官方 Advancement#reverse。 */
+export function splitActor(current: KernelActorData, rebuilt: KernelActorData, mapRef: KernelRefMapper, choices: Record<string, unknown>, diff: KernelDiff = jsonDiff): {
   refs: KernelRef[]
   choices: Record<string, unknown>
   state: KernelActorState
@@ -106,7 +93,7 @@ export function splitActor(current: KernelActorData, rebuilt: KernelActorData, m
   }
   for (const id of baseEffects.keys()) if (!currentEffects.has(id)) state.effectRemoved.push(id)
   const refs = refsOf(data, mapRef)
-  return { refs, choices: choicesOf(data, refs), state }
+  return { refs, choices, state }
 }
 
 // ---------- 战斗：战役层只存一份 ----------
@@ -204,7 +191,7 @@ export function applyActorChange(actor: KernelActor, change: KernelChange, mapRe
   const data = isObject(change.data) ? change.data : {}
   if (change.type === 'Actor') {
     if (change.action === 'delete') { state.actor = { __deleted: true }; return next }
-    if (change.action === 'create') { next.name = typeof data.name === 'string' ? data.name : next.name; return next }
+    if (change.action === 'create') throw new Error('没有 compactActors：不能把 Actor.create 直接塞进存档')
     merge(state.actor, data)
     return next
   }
@@ -218,18 +205,20 @@ export function applyActorChange(actor: KernelActor, change: KernelChange, mapRe
     if (change.action === 'create') {
       const flags = isObject(data.flags) && isObject(data.flags.plutonium) ? data.flags.plutonium as KernelRefFlags : null
       const ref = flags ? mapRef(flags) : null
-      if (ref && id) next.refs.push({ ...ref, itemId: id, label: ref.label ?? (typeof data.name === 'string' ? data.name : undefined) })
-      else if (id) state.itemAdded.push(clone(data))
-      const choices = choicesOf({ items: [data] }, ref && id ? [{ ...ref, itemId: id }] : [])
-      Object.assign(next.choices, choices)
+      if (isObject(data.system) && isObject(data.system.advancement) && Object.values(data.system.advancement).some((a) => isObject(a) && isObject(a.value) && Object.keys(a.value).length)) {
+        throw new Error('没有 compactActors：不能从 Item.create 推回成长选择')
+      }
+      if (!ref || !id) throw new Error('没有 compactActors：不能把没有作者编号的物品整份存进存档')
+      next.refs.push({ ...ref, itemId: id, label: ref.label ?? (typeof data.name === 'string' ? data.name : undefined) })
       return next
     }
     if (!id) return next
     const patch = clone(data)
     delete patch._id
+    if (isObject(patch.system) && isObject(patch.system.advancement)) {
+      throw new Error('没有 compactActors：不能从物品更新推回成长选择')
+    }
     state.items[id] = state.items[id] ? { ...state.items[id], ...patch } : patch
-    const ref = next.refs.find((r) => r.itemId === id)
-    if (ref) Object.assign(next.choices, choicesOf({ items: [{ ...data, _id: id, system: { advancement: data.system && isObject(data.system) ? data.system.advancement : undefined } }] }, [ref]))
     return next
   }
   if (change.type === 'ActiveEffect') {

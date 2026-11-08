@@ -54,7 +54,7 @@ export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch }: { plugin
 type Commands = typeof KERNEL_COMMANDS & {
   boot(input: KernelInput): unknown
   status(): unknown
-  preparedActors(): Array<{ source: Record<string, unknown> }>
+  preparedActors(): Array<{ source: Record<string, unknown>; system: Record<string, unknown> }>
 }
 
 export interface KernelSession {

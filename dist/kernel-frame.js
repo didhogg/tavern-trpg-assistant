@@ -552,8 +552,26 @@ function ae(e, t) {
 		concentration: (n) => e([], async () => g(t(n)), [n])
 	};
 }
+// src/rules/kernel/frame/actor-state.ts
+async function v(e, t) {
+	if (t) {
+		t.actor && Object.keys(t.actor).length && await e.update(t.actor);
+		for (let [n, r] of Object.entries(t.items ?? {})) {
+			let t = e.items.get(n);
+			t && await t.update(r);
+		}
+		for (let n of t.itemAdded ?? []) e.items.get(n._id) || await e.createEmbeddedDocuments("Item", [n], { keepId: !0 });
+		for (let n of t.itemRemoved ?? []) await e.deleteEmbeddedDocuments("Item", [n]);
+		for (let [n, r] of Object.entries(t.effects ?? {})) {
+			let t = e.effects.get(n);
+			t && await t.update(r);
+		}
+		for (let n of t.effectAdded ?? []) e.effects.get(n._id) || await e.createEmbeddedDocuments("ActiveEffect", [n], { keepId: !0 });
+		for (let n of t.effectRemoved ?? []) await e.deleteEmbeddedDocuments("ActiveEffect", [n]);
+	}
+}
 // src/rules/kernel/frame/commands-monsters.ts
-var v = globalThis;
+var y = globalThis;
 function oe(e) {
 	return Object.fromEntries(Object.entries(e.abilities ?? {}).map(([e, t]) => [e, {
 		value: t.value ?? null,
@@ -588,7 +606,7 @@ function le(e) {
 		} : null
 	};
 }
-function y(e) {
+function b(e) {
 	let t = e.toObject ? e.toObject() : e, n = e.system ?? t.system ?? {}, r = e.items?.contents ?? e.items ?? t.items ?? [];
 	return {
 		name: e.name ?? t.name,
@@ -615,8 +633,8 @@ function y(e) {
 		validation: e.validationFailures ?? []
 	};
 }
-async function b(e) {
-	let t = v.game.modules.get("plutonium")?.api;
+async function x(e) {
+	let t = y.game.modules.get("plutonium")?.api;
 	if (!t?.importer?.creature?.pImportEntry) throw Error("Plutonium creature importer is not available");
 	let n = await t.importer.creature.pImportEntry(e, { isTemp: !0 });
 	return {
@@ -624,27 +642,27 @@ async function b(e) {
 		doc: n.imported?.[0]?.document ?? null
 	};
 }
-function x(e) {
+function S(e) {
 	return typeof e == "symbol" ? e.description ?? String(e) : e;
 }
-async function S(e) {
-	let { summary: t, doc: n } = await b(e);
+async function C(e) {
+	let { summary: t, doc: n } = await x(e);
 	return {
-		status: x(t.status),
+		status: S(t.status),
 		entity: {
 			name: e.name,
 			source: e.source
 		},
-		...n ? y(n) : { error: "Importer returned no document" }
+		...n ? b(n) : { error: "Importer returned no document" }
 	};
 }
 function ue(e) {
 	return {
-		importMonster: (t) => e([], async () => S(t)),
+		importMonster: (t) => e([], async () => C(t)),
 		importMonsters: (t) => e([], async () => {
 			let e = [];
 			for (let n of t) try {
-				e.push(await S(n));
+				e.push(await C(n));
 			} catch (t) {
 				e.push({
 					status: "error",
@@ -657,33 +675,52 @@ function ue(e) {
 			}
 			return e;
 		}),
+		rebuildMonster: (t) => e([], async () => {
+			let { summary: e, doc: n } = await x(t.entry);
+			if (!n) throw Error(`Importer returned no document for ${t.entry?.name ?? "monster"}`);
+			let r = n.toObject();
+			delete r._id;
+			for (let e of r.items ?? []) delete e._id;
+			for (let e of r.effects ?? []) delete e._id;
+			let i = await y.CONFIG.Actor.documentClass.create({
+				...r,
+				name: t.name
+			}), a = i.toObject();
+			return await v(i, t.state), {
+				status: S(e.status),
+				id: i.id,
+				...b(i),
+				data: i.toObject(),
+				base: a
+			};
+		}),
 		importMonsterActor: (t) => e([], async () => {
-			let { summary: e, doc: n } = await b(t);
+			let { summary: e, doc: n } = await x(t);
 			if (!n) throw Error(`Importer returned no document for ${t.name}`);
 			let r = n.toObject();
 			delete r._id;
 			for (let e of r.items ?? []) delete e._id;
 			for (let e of r.effects ?? []) delete e._id;
-			let i = await v.CONFIG.Actor.documentClass.create(r);
+			let i = await y.CONFIG.Actor.documentClass.create(r);
 			return {
-				status: x(e.status),
+				status: S(e.status),
 				id: i.id,
-				...y(i)
+				...b(i)
 			};
 		})
 	};
 }
 // src/rules/kernel/frame/commands-level.ts
-var C = globalThis;
-function w() {
-	let e = C.dnd5e?.applications?.advancement?.AdvancementManager;
+var w = globalThis;
+function T() {
+	let e = w.dnd5e?.applications?.advancement?.AdvancementManager;
 	if (!e) throw Error("dnd5e AdvancementManager is not available");
 	return e;
 }
-function T(e, t, n, r = {}) {
-	return w().forLevelChange(e, t, n, r);
+function E(e, t, n, r = {}) {
+	return T().forLevelChange(e, t, n, r);
 }
-function E(e) {
+function D(e) {
 	return {
 		level: e.system.details?.level ?? null,
 		hp: e.system.attributes?.hp?.toObject?.() ?? e.system.attributes?.hp ?? null,
@@ -704,7 +741,7 @@ function E(e) {
 		})) ?? []
 	};
 }
-function D(e) {
+function O(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	for (let e of [
 		"_id",
@@ -716,7 +753,7 @@ function D(e) {
 	]) delete t[e];
 	return t;
 }
-function O(e) {
+function k(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	return t.flags ??= {}, t.flags.plutonium ??= {}, t.flags.plutonium.isStandardDragDrop = !0, t;
 }
@@ -725,6 +762,16 @@ function de(e) {
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
 async function fe(e) {
+	for (let t of Object.values(e.advancement?.byId ?? {})) {
+		if ((t.constructor?.typeName ?? t.type) !== "Trait") continue;
+		let n = [...t.value?.chosen ?? []];
+		if (!n.length) continue;
+		let r = e.actor?.system.details?.level ?? 1;
+		for (let e of t.levels ?? []) e > r && e !== 0 || await t.apply(e, { chosen: n });
+	}
+	await e.actor?.reset?.();
+}
+async function pe(e) {
 	let t = e.advancement, n = t.constructor?.typeName ?? t.type;
 	if (n === "HitPoints") return { [e.level]: "avg" };
 	if (n === "ItemGrant") {
@@ -741,20 +788,20 @@ async function fe(e) {
 		return { selected: (t.configuration?.pool ?? []).map((e) => e.uuid).slice(0, n) };
 	}
 	if (n === "Subclass") {
-		let e = C.game.packs.get("dnd5e.subclasses");
+		let e = w.game.packs.get("dnd5e.subclasses");
 		if (!e) return;
 		let n = (await e.getIndex({ fields: ["system.classIdentifier", "type"] })).contents?.find((e) => e.type === "subclass" && e.system?.classIdentifier === t.item?.system?.identifier);
 		return n ? `Compendium.${e.metadata.id}.Item.${n._id}` : void 0;
 	}
 	if (n === "Trait") {
-		let n = await t.automaticApplicationValue?.(e.level);
-		if (n !== !1) return n;
-		let r = new Set(t.value?.chosen ?? []);
+		let n = new Set(t.value?.chosen ?? []), r = await t.automaticApplicationValue?.(e.level);
+		if (r !== !1) return { chosen: [.../* @__PURE__ */ new Set([...n, ...r.chosen ?? []])] };
+		let i = new Set(n);
 		for (let e of t.configuration?.choices ?? []) {
 			let t = e.count ?? 1;
-			for (let n of e.pool ?? []) if (!r.has(n) && (r.add(n), --t <= 0)) break;
+			for (let n of e.pool ?? []) if (!i.has(n) && (i.add(n), --t <= 0)) break;
 		}
-		return { chosen: [...r] };
+		return { chosen: [...i] };
 	}
 	if (n === "AbilityScoreImprovement") {
 		let n = Object.entries(t.configuration?.fixed ?? {}).filter(([, e]) => e);
@@ -771,39 +818,41 @@ async function fe(e) {
 	if (n === "Size") return { size: t.configuration?.sizes?.first?.() ?? "med" };
 	if (n === "ScaleValue") return {};
 }
-function k(e, t) {
-	if (t === void 0) return;
-	let n = e.advancement, r = n.constructor?.typeName ?? n.type, i = e.level;
-	if (r === "HitPoints") return { [i]: t?.[i] ?? "avg" };
-	if (r === "ItemGrant" || r === "ItemChoice") {
-		let e = t?.added?.[i] ?? {}, r = Object.keys(e);
-		return r.length ? {
-			ability: t?.ability ?? n.configuration?.spell?.ability?.[0] ?? null,
-			selected: r
-		} : void 0;
+async function A(e, t, { strict: n = !1 } = {}) {
+	if (!e.steps.length) return { finished: !0 };
+	for (let r of e.steps) {
+		if (r.automatic || !r.flow) continue;
+		let e = r.flow.advancement, i = t?.find((t) => t.id === e.id && t.level === r.flow.level) ?? t?.find((n) => n.id === e.id && t.filter((t) => t.id === e.id).length === 1);
+		if (i) {
+			if (i.error) return {
+				finished: !1,
+				step: {
+					...j(r),
+					error: i.error
+				}
+			};
+			r.type = "restore", r.flow.retainedData = i.data, r.automatic = !0;
+			continue;
+		}
+		if (n) return {
+			finished: !1,
+			step: j(r)
+		};
+		let a = await pe(r.flow);
+		a !== void 0 && (r.flow.getAutomaticApplicationValue = async () => a, r.automatic = !0);
 	}
-	if (r === "Subclass") return t?.uuid ? { uuid: t.uuid } : void 0;
-	if (r === "Trait") return { chosen: t?.chosen ?? [] };
-	if (r === "AbilityScoreImprovement") return { ...t };
-	if (r === "Size") return { size: t?.size ?? "med" };
-	if (r === "ScaleValue") return {};
-}
-async function A(e, t) {
-	if (!e.steps.length) return !0;
-	for (let n of e.steps) {
-		if (n.automatic || !n.flow) continue;
-		let e = n.flow.advancement, r = e.constructor?.typeName ?? e.type, i = t?.find((t) => t.id === e.id || t.type === r && t.level === n.flow.level), a = i ? k(n.flow, i.value) : await fe(n.flow);
-		a !== void 0 && (n.flow.getAutomaticApplicationValue = async () => a, n.automatic = !0);
-	}
-	let n = new Promise((t) => {
-		let n = C.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
-			r === e && (C.Hooks.off(n), t(!0));
+	let r = new Promise((t) => {
+		let n = w.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
+			r === e && (w.Hooks.off(n), t(!0));
 		});
 		setTimeout(() => {
-			C.Hooks.off(n), t(!1);
+			w.Hooks.off(n), t(!1);
 		}, 3e3);
 	});
-	return await e.render(), n;
+	return await e.render(), await r ? { finished: !0 } : {
+		finished: !1,
+		step: j(e.step)
+	};
 }
 function j(e) {
 	if (!e) return null;
@@ -848,25 +897,27 @@ async function M(e) {
 	}
 	return t;
 }
-async function N(e, t, n, r = {}) {
-	let i = await C.CONFIG.Actor.documentClass.create({
+async function N(e, t, n, r = {}, { strict: i = !1 } = {}) {
+	let a = await w.CONFIG.Actor.documentClass.create({
 		name: e,
 		type: "character",
 		system: { details: { level: 1 } }
 	});
 	for (let e of t) {
-		let t = D(e?.data ?? e), n = e?.refKey ?? de(t), a = w().forNewItem(i, t, { automaticApplication: !0 });
-		if (!await A(a, n ? r[n] : void 0)) return {
+		let t = O(e?.data ?? e), n = e?.refKey ?? de(t), o = await A(T().forNewItem(a, t, { automaticApplication: !0 }), n ? r[n] : void 0, { strict: i });
+		if (!o.finished) return {
 			pending: !0,
-			step: j(a.step),
-			built: E(i)
+			step: o.step,
+			built: D(a)
 		};
-		i.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await i.createEmbeddedDocuments("Item", [O(D(t))]);
+		a.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await a.createEmbeddedDocuments("Item", [k(O(t))]);
+		let s = a.items.contents.find((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash);
+		s && await fe(s);
 	}
-	return n.length && await i.createEmbeddedDocuments("Item", n.map((e) => O(D(e?.data ?? e)))), { actor: i };
+	return n.length && await a.createEmbeddedDocuments("Item", n.map((e) => k(O(e?.data ?? e)))), { actor: a };
 }
 async function P(e, t) {
-	let n = C.game.modules.get("plutonium")?.api;
+	let n = w.game.modules.get("plutonium")?.api;
 	if (!n?.importer) throw Error("Plutonium importer is not available");
 	let r = await n.importer.pGetImporter({ prop: e });
 	if (!r) throw Error(`No Plutonium importer for ${e}`);
@@ -874,42 +925,55 @@ async function P(e, t) {
 	if (!a) throw Error(`Plutonium import failed for ${t?.name ?? e}`);
 	return a.toObject ? a.toObject() : a;
 }
-async function pe(e, t) {
-	if (t) {
-		t.actor && Object.keys(t.actor).length && await e.update(t.actor);
-		for (let [n, r] of Object.entries(t.items ?? {})) {
-			let t = e.items.get(n);
-			t && await t.update(r);
-		}
-		for (let n of t.itemAdded ?? []) e.items.get(n._id) || await e.createEmbeddedDocuments("Item", [n], { keepId: !0 });
-		for (let n of t.itemRemoved ?? []) await e.deleteEmbeddedDocuments("Item", [n]);
-		for (let [n, r] of Object.entries(t.effects ?? {})) {
-			let t = e.effects.get(n);
-			t && await t.update(r);
-		}
-		for (let n of t.effectAdded ?? []) e.effects.get(n._id) || await e.createEmbeddedDocuments("ActiveEffect", [n], { keepId: !0 });
-		for (let n of t.effectRemoved ?? []) await e.deleteEmbeddedDocuments("ActiveEffect", [n]);
-	}
-}
 function me(e, t) {
 	return {
 		levelUpSteps: (n, r, i = 1) => e([], async () => {
-			let e = await M(T(t(n), r, i));
+			let e = await M(E(t(n), r, i));
 			return {
 				status: e.length ? "pending" : "complete",
 				steps: e
 			};
 		}, [n]),
 		levelUpApply: (n, r, i = 1) => e([], async () => {
-			let e = t(n), a = T(e, r, i, { automaticApplication: !0 });
-			return await A(a, void 0) ? E(e) : {
+			let e = t(n), a = E(e, r, i, { automaticApplication: !0 }), o = await A(a, void 0);
+			return o.finished ? D(e) : {
 				kernelStatus: "pending",
 				reason: a.step ? "awaiting-choice" : "advancement-manager-not-complete",
-				step: j(a.step)
+				step: o.step
 			};
 		}, [n]),
+		captureChoices: (n) => e([], async () => {
+			let e = t(n).clone(), r = e.system.details?.level ?? 1, i = {}, a = Array.from(e.items);
+			for (let e of a) {
+				let t = e.flags?.plutonium;
+				if (!t?.propDroppable || !t.source || !t.hash) continue;
+				let n = `${t.propDroppable}|${t.source}|${t.hash}`, a = [];
+				for (let t of Object.values(e.advancement?.byId ?? {})) for (let e of t.levels ?? []) {
+					if (e > r && e !== 0) continue;
+					let n = t.constructor?.typeName ?? t.type;
+					try {
+						let r = await t.reverse(e), i = n === "Trait" ? t.value?.toObject?.() ?? t.value ?? {} : n === "ScaleValue" ? {} : void 0, o = r ?? i;
+						o !== void 0 && a.push({
+							id: t.id,
+							type: n,
+							level: e,
+							data: o
+						});
+					} catch (r) {
+						a.push({
+							id: t.id,
+							type: n,
+							level: e,
+							error: r instanceof Error ? r.message : String(r)
+						});
+					}
+				}
+				a.length && (i[n] = a);
+			}
+			return i;
+		}, [n]),
 		buildCharacter: (t, n, r = [], i = {}) => e([], async () => {
-			let e = await N(t, n, r, i);
+			let e = await N(t, n, r, i, { strict: !1 });
 			return e.pending ? {
 				kernelStatus: "pending",
 				reason: "build-step-not-complete",
@@ -917,15 +981,15 @@ function me(e, t) {
 				built: e.built
 			} : {
 				id: e.actor.id,
-				...E(e.actor)
+				...D(e.actor)
 			};
 		}),
 		buildSteps: (t) => e([], async () => {
-			let e = C.CONFIG.Actor.documentClass, n = new e({
+			let e = w.CONFIG.Actor.documentClass, n = new e({
 				name: "Build preview",
 				type: "character",
 				system: { details: { level: 1 } }
-			}), r = await M(w().forNewItem(n, t));
+			}), r = await M(T().forNewItem(n, t));
 			return {
 				status: r.length ? "pending" : "complete",
 				steps: r
@@ -942,7 +1006,7 @@ function me(e, t) {
 				data: await P(e.prop, e.entry),
 				refKey: e.refKey
 			});
-			let r = await N(t.name, e, n, t.choices);
+			let r = await N(t.name, e, n, t.choices, { strict: !0 });
 			if (r.pending) return {
 				kernelStatus: "pending",
 				reason: "rebuild-step-not-complete",
@@ -950,9 +1014,9 @@ function me(e, t) {
 				built: r.built
 			};
 			let i = r.actor.toObject();
-			return await pe(r.actor, t.state), {
+			return await v(r.actor, t.state), {
 				id: r.actor.id,
-				...E(r.actor),
+				...D(r.actor),
 				data: r.actor.toObject(),
 				base: i
 			};
@@ -1218,11 +1282,11 @@ var U = { configure: !1 }, W = 15e3, G = { create: !1 }, we = {
 		}
 		return s;
 	}
-}, K = globalThis, q = new URLSearchParams(location.search).get("frame") ?? "", J = K.__trpgFrameErrors ?? [], Y = 1, X = /* @__PURE__ */ new Map();
-function Te(t) {
+}, K = globalThis, q = new URLSearchParams(location.search).get("frame") ?? "", J = K.__trpgFrameErrors ?? [], Te = 1, Y = /* @__PURE__ */ new Map();
+function Ee(t) {
 	return new Promise((n, r) => {
-		let i = 1e6 + Y++;
-		X.set(i, {
+		let i = 1e6 + Te++;
+		Y.set(i, {
 			resolve: n,
 			reject: r
 		}), parent.postMessage({
@@ -1236,28 +1300,28 @@ function Te(t) {
 }
 addEventListener("message", (e) => {
 	let t = e.data;
-	if (e.source !== parent || t?.channel !== "trpg-library" || t.type !== "response" || !X.has(t.id)) return;
-	let n = X.get(t.id);
-	X.delete(t.id), t.ok ? n.resolve(t.value) : n.reject(Error(t.error));
+	if (e.source !== parent || t?.channel !== "trpg-library" || t.type !== "response" || !Y.has(t.id)) return;
+	let n = Y.get(t.id);
+	Y.delete(t.id), t.ok ? n.resolve(t.value) : n.reject(Error(t.error));
 });
-async function Ee(e) {
+async function De(e) {
 	let t = await fetch(new URL(e, location.href));
 	if (!t.ok) throw Error(`${t.status}: ${e}`);
 	return t.text();
 }
-async function De(e) {
-	let t = await Te({
+async function Oe(e) {
+	let t = await Ee({
 		op: "file",
 		path: `packs/${e}.json`
 	});
 	if (typeof t != "string") throw Error(`Pack is not available: ${e}`);
 	return JSON.parse(t);
 }
-var Oe = s(globalThis), Z;
+var X = s(globalThis), Z;
 async function ke(e) {
 	if (Z) throw Error("Kernel is already booted");
 	let t = [], { foundry: n, Hooks: i } = K;
-	Oe(e.seed ?? "kernel"), K.release = new n.config.ReleaseData(e.release);
+	X(e.seed ?? "kernel"), K.release = new n.config.ReleaseData(e.release);
 	let o = r(e);
 	K.packages = {
 		System: new n.utils.Collection([[o.system.id, new n.packages.System(o.system)]]),
@@ -1271,8 +1335,8 @@ async function ke(e) {
 		...a(s, {
 			userId: e.userId,
 			worldTime: e.worldTime,
-			readPack: De,
-			readText: Ee
+			readPack: Oe,
+			readText: De
 		}),
 		steps: t
 	};

@@ -45,11 +45,14 @@ describe('P3-3b 拆分：引用 / 选择 / 状态差别', () => {
     items.push({ _id: 'loot1', name: '玩家捡到的备注物品', type: 'loot', flags: {}, system: {} })
     ;(current.effects as Array<Record<string, unknown>>).push({ _id: 'bloodied', name: 'Bloodied', flags: {}, system: {} })
 
-    const split = splitActor({ id: 'actor1', name: '测试角色', data: current }, { id: 'actor1', name: '测试角色', data: rebuilt }, mapRef)
+    const choices = {
+      'cn-official|race|dragonborn_phb': [{ id: 'adv1', type: 'AbilityScoreImprovement', level: 0, data: { type: 'asi', assignments: { str: 2 } } }],
+    }
+    const split = splitActor({ id: 'actor1', name: '测试角色', data: current }, { id: 'actor1', name: '测试角色', data: rebuilt }, mapRef, choices)
     expect(split.refs.map((r) => r.hash)).toEqual(['dragonborn_phb', 'barbarian_phb', 'battleaxe_phb'])
     expect(split.refs.every((r) => r.set === 'cn-official' && r.itemId)).toBe(true)
     expect(split.choices[refKey(split.refs[0])]).toEqual([
-      { id: 'adv1', type: 'AbilityScoreImprovement', level: 0, value: { type: 'asi', assignments: { str: 2 } } },
+      { id: 'adv1', type: 'AbilityScoreImprovement', level: 0, data: { type: 'asi', assignments: { str: 2 } } },
     ])
     expect(split.state.actor).toEqual({ system: { attributes: { hp: { value: 2 } } } })
     expect(split.state.items.weapon1).toMatchObject({ system: { equipped: false } })
@@ -64,7 +67,7 @@ describe('P3-3b 拆分：引用 / 选择 / 状态差别', () => {
     const items = current.items as Array<Record<string, unknown>>
     items.splice(1, 1)
     items.push({ _id: 'new1', name: '新物品', type: 'loot', flags: {}, system: {} })
-    const split = splitActor({ id: 'actor1', name: 'x', data: current }, { id: 'actor1', name: 'x', data: rebuilt }, mapRef)
+    const split = splitActor({ id: 'actor1', name: 'x', data: current }, { id: 'actor1', name: 'x', data: rebuilt }, mapRef, {})
     expect(split.state.itemRemoved).toEqual(['class1'])
     expect(split.state.itemAdded.map((i) => i._id)).toEqual(['new1'])
     expect(applyActorState(rebuilt, split.state)).toEqual(current)
