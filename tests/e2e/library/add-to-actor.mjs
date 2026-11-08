@@ -85,13 +85,14 @@ try {
       build: { status: built.status, seed: built.seed }, add: { first: add1.status, second: add2.status, stacked: add1.result?.stacked, added: add1.result?.added?.length },
       levelUp: { status: up.status, level: up.result?.level, classes }, classAdded: { name: classAdded.name, levels: classAdded.system?.levels },
       hot: { status: hotResult.status, diffs: hotDiff.length, sample: hotDiff.slice(0, 4) }, cold: { status: coldResult.status, error: coldResult.error, detail: coldResult.detail, diffs: coldDiff.length, sample: coldDiff.slice(0, 4) },
-      choices: Object.keys(compacts[0].choices), choiceIds: Object.entries(compacts[0].choices).map(([k,rows])=>[k,rows.map(r=>[r.id,r.type,r.level])]), refs: compacts[0].refs.map(r=>[r.label,r.itemId]), stateItemKeys: Object.keys(compacts[0].state.items ?? {}), items: current.items.length, potion: potionItem ? { name: potionItem.name, qty: potionItem.system?.quantity } : null,
+      stateKeys: Object.keys(compacts[0].state.items ?? {}), refLabels: compacts[0].refs.map((r) => r.label), choices: Object.keys(compacts[0].choices), choiceIds: Object.entries(compacts[0].choices).map(([k,rows])=>[k,rows.map(r=>[r.id,r.type,r.level])]), refs: compacts[0].refs.map(r=>[r.label,r.itemId]), stateItemKeys: Object.keys(compacts[0].state.items ?? {}), items: current.items.length, potion: potionItem ? { name: potionItem.name, qty: potionItem.system?.quantity } : null,
     }
   })
   const known = (e) => e.includes('gendata-nav-adventure-book-index.json') || e.includes('requires usable window dimensions') || e.includes('Failed to load resource: the server responded with a status of 404') || e.includes('api/plutonium')
   const payload = { engine: process.env.ENGINE ?? 'chrome', port: PORT, ...r, errors, unexplained: errors.filter((e) => !known(e)) }
   await writeFile(`${work}/add-to-actor-${payload.engine}.json`, JSON.stringify(payload, null, 2))
-  const ok = r.add.first === 'complete' && r.add.second === 'complete' && r.levelUp.status === 'complete' && r.hot.status === 'complete' && r.hot.diffs === 0 && r.cold.status === 'complete' && r.cold.diffs === 0 && !payload.unexplained.length
-  console.log(JSON.stringify({ ok, ...r, unexplained: payload.unexplained.length }, null, 1))
+  const refState = r.stateKeys.every((key) => key.startsWith('ref:'))
+  const ok = refState && r.add.first === 'complete' && r.add.second === 'complete' && r.levelUp.status === 'complete' && r.hot.status === 'complete' && r.hot.diffs === 0 && r.cold.status === 'complete' && r.cold.diffs === 0 && !payload.unexplained.length
+  console.log(JSON.stringify({ ok, refState, ...r, unexplained: payload.unexplained.length }, null, 1))
   process.exitCode = ok ? 0 : 1
 } finally { await ctx.close(); server.close() }
