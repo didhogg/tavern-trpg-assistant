@@ -29,6 +29,7 @@ export interface RebuildResult {
   /** 没叠状态差别的重建基准（同一批编号）。 */
   base?: Record<string, unknown>
   missing?: RebuildMissing[]
+  seed?: string
   error?: string
   /** 失败时的原始命令结果，供排查。 */
   detail?: unknown
@@ -104,9 +105,9 @@ export async function rebuildActor(opts: {
     if (entries.length !== 1) return { status: 'error', error: '怪物人物同时带其他顶层条目，无法判断怎么重建' }
     const result = await opts.session.call('rebuildMonster', { entry: monsters[0].entry, name: opts.actor.name, state: opts.actor.state })
     if (result.status === 'pending') return { status: 'pending', error: '重建怪物需要玩家选择' }
-    const payload = result.result as { id?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
+    const payload = result.result as { id?: string; seed?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
     if (result.status !== 'complete' || !payload?.data) return { status: 'error', error: result.error ?? `重建状态：${result.status}`, detail: result }
-    return { status: 'complete', id: payload.id, data: payload.data, base: payload.base }
+    return { status: 'complete', id: payload.id, data: payload.data, base: payload.base, seed: payload.seed }
   }
   const items = entries.filter((e) => BUILD_ITEM_PROPS.has(e.ref.prop))
     .map((e) => ({ prop: e.ref.prop, entry: e.entry, refKey: refKey(e.ref) }))
@@ -114,14 +115,14 @@ export async function rebuildActor(opts: {
     .map((e) => ({ prop: e.ref.prop, entry: e.entry, refKey: refKey(e.ref) }))
   const result = await opts.session.call('rebuildCharacter', {
     name: opts.actor.name,
-    seed: opts.actor.name,
+    seed: opts.actor.seed || opts.actor.name,
     items,
     equipment,
     choices: opts.actor.choices as Record<string, unknown[] | undefined>,
     state: opts.actor.state,
   })
   if (result.status === 'pending') return { status: 'pending', error: '重建需要玩家选择' }
-  const payload = result.result as { id?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
+  const payload = result.result as { id?: string; seed?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
   if (result.status !== 'complete' || !payload?.data) return { status: 'error', error: result.error ?? `重建状态：${result.status}`, detail: result }
   return { status: 'complete', id: payload.id, data: payload.data, base: payload.base }
 }
@@ -131,6 +132,7 @@ export async function compactActor(opts: {
   lib: ScopedLibrary
   library: CampaignLibrary
   actor: Pick<KernelActor, 'id' | 'name'>
+  seed?: string
   current: Record<string, unknown>
   base: Record<string, unknown>
   choices: Record<string, unknown>
@@ -164,5 +166,5 @@ export async function compactActor(opts: {
     if (!mapped) throw new Error(`选择记录没有对应的引用：${key}`)
     choices[mapped] = value
   }
-  return { id: opts.actor.id, name: opts.actor.name, ...split, choices }
+  return { id: opts.actor.id, name: opts.actor.name, seed: opts.seed ?? opts.actor.name, ...split, choices }
 }

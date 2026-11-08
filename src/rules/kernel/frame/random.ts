@@ -2,6 +2,8 @@
 // 换成确定序列后同一份输入每次得到同样的编号，变更计划才稳定（蓝图 §3.2 同输入同结果）。只在隔离小窗与对照环境里安装。
 // 掷骰不走这里：骰点由插件喂入。
 
+let nativeFill: ((array: ArrayBufferView) => ArrayBufferView) | null = null
+
 function hash(seed: string): number {
   let h = 2166136261
   for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619)
@@ -10,6 +12,7 @@ function hash(seed: string): number {
 
 /** 安装确定随机源；返回重设种子的函数（每次启动世界前按输入重设）。 */
 export function installSeededCrypto(target: { crypto: Crypto }): (seed: string) => void {
+  nativeFill = target.crypto.getRandomValues.bind(target.crypto) as (array: ArrayBufferView) => ArrayBufferView
   let state = 0
   const next = (): number => {
     // mulberry32
@@ -30,4 +33,12 @@ export function installSeededCrypto(target: { crypto: Crypto }): (seed: string) 
   }
   Object.defineProperty(target.crypto, 'getRandomValues', { value: fill, configurable: true, writable: true })
   return seed => { state = hash(seed) }
+}
+
+/** 新人物种子：用未替换的原生随机源生成一次；它本身不参与“同输入同结果”的确定序列。 */
+export function freshSeed(): string {
+  const a = new Uint32Array(4)
+  if (nativeFill) nativeFill(a)
+  else crypto.getRandomValues(a)
+  return Array.from(a, (n) => n.toString(16).padStart(8, '0')).join('')
 }

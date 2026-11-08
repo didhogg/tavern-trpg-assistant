@@ -36,10 +36,8 @@ try {
     let firstSettlementMs = null
     let firstSettlementStatus
     try {
-      await session.call('setSeed', 'S5 英雄')
-      const imported = {}
-      for (const key of ['race', 'background', 'class', 'weapon', 'spell']) imported[key] = (await session.call('importForBuild', plan[key].ref.prop, plan[key].entry, 'S5 英雄')).result
-      const built = await session.call('buildCharacter', 'S5 英雄', [imported.race, imported.background, imported.class], [imported.weapon, imported.spell])
+      const row = (key) => ({ prop: plan[key].ref.prop, refKey: `${plan[key].ref.set}|${plan[key].ref.prop}|${plan[key].ref.hash}`, entry: plan[key].entry })
+      const built = await session.call('buildCharacter', { name: 'S5 英雄', items: ['race', 'background', 'class'].map(row), equipment: ['weapon', 'spell'].map(row) })
       const heroId = built.result.id
       const hero = await h.actorData(session, heroId)
       const weapon = hero.items.find((i) => i.type === 'weapon')

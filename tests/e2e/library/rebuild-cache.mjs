@@ -49,13 +49,13 @@ try {
     const names = ['S4 甲', 'S4 乙', 'S4 丙', 'S4 丁', 'S4 戊']
     const ids = []
     for (const name of names) {
-      await session.call('setSeed', name)
-      const imported = {}
-      for (const key of ['race', 'background', 'class', 'weapon', 'spell']) imported[key] = (await session.call('importForBuild', plan[key].ref.prop, plan[key].entry, name)).result
-      const built = await session.call('buildCharacter', name, [imported.race, imported.background, imported.class], [imported.weapon, imported.spell])
-      if (built.status !== 'complete') throw new Error(`build ${name}: ${built.error ?? built.status}`)
-      ids.push(built.result.id)
-      await rt1.remember(owner.ownerKey, built.result.id)
+      const built = await rt1.buildCharacter(owner.ownerKey, {
+        name,
+        items: ['race', 'background', 'class'].map((key) => plan[key].ref),
+        equipment: ['weapon', 'spell'].map((key) => plan[key].ref),
+      })
+      if (built.status !== 'complete' || !built.id) throw new Error(`build ${name}: ${built.error ?? built.status}`)
+      ids.push(built.id)
     }
     // 第一个人扣 3 点血：存档基准是扣血前，状态差别要叠回去。
     await session.call('damage', ids[0], [{ value: 3, type: 'slashing' }], [], {})

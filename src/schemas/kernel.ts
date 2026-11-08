@@ -41,6 +41,8 @@ export type KernelActorState = z.infer<typeof kernelActorStateSchema>
 export const kernelActorSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
+  /** 建卡时内核生成的种子；读档用它重建。旧存档迁移时用名字。 */
+  seed: z.string().default(''),
   refs: z.array(kernelRefSchema).default([]),
   choices: z.record(z.string(), z.unknown()).default({}),
   state: kernelActorStateSchema.default({ actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }),

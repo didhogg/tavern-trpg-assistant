@@ -52,16 +52,20 @@ async function chain(): Promise<void> {
   steps.push({ step: '结算内核启动耗时', ms: bootMs, ok: true })
 
   const imported = await timed(steps, '导入条目（Plutonium）', async () => {
-    await session.call('setSeed', '真机英雄')
     const out: unknown[] = []
     for (const row of [...picked.build, ...picked.equipment]) {
-      const r = await session.call('importForBuild', row.ref.prop, row.entry, '真机英雄')
+      const r = await session.call('importForBuild', row.ref.prop, row.entry)
       if (r.status !== 'complete') throw new Error(`导入 ${row.label} 失败：${r.error ?? r.status}`)
       out.push(r.result)
     }
     return out
   })
-  const built = await timed(steps, '建英雄（dnd5e 成长流程）', () => session.call('buildCharacter', '真机英雄', imported.slice(0, 3), imported.slice(3)),
+  const keyOf = (r: { set: string; prop: string; hash: string }) => `${r.set}|${r.prop}|${r.hash}`
+  const rows = [
+    ...picked.build.map((row: { ref: { set: string; prop: string; hash: string }; entry: unknown }, i: number) => ({ prop: row.ref.prop, refKey: keyOf(row.ref), entry: row.entry, data: imported[i] })),
+    ...picked.equipment.map((row: { ref: { set: string; prop: string; hash: string }; entry: unknown }, i: number) => ({ prop: row.ref.prop, refKey: keyOf(row.ref), entry: row.entry, data: imported[picked.build.length + i] })),
+  ]
+  const built = await timed(steps, '建英雄（dnd5e 成长流程）', () => session.call('buildCharacter', { name: '真机英雄', items: rows.slice(0, 3), equipment: rows.slice(3) }),
     (r) => r.status === 'complete', (r) => ({ status: r.status, level: r.result?.level }))
   const heroId = built.result.id as string
   await kernel.remember(OWNER.ownerKey, heroId)

@@ -24,7 +24,7 @@ export interface KernelRefResult {
 export type KernelRefChecker = (refs: Array<{ set: string; prop: string; hash: string }>, library: KernelLibrary) => Promise<KernelRefResult[]>
 
 /** 只交回人物段，不碰 adjustments/dice/legacy。 */
-export type KernelActorCompact = Pick<KernelActor, 'id' | 'name' | 'refs' | 'choices' | 'state'>
+export type KernelActorCompact = Pick<KernelActor, 'id' | 'name' | 'seed' | 'refs' | 'choices' | 'state'>
 
 export interface KernelSaveDeps {
   db: TrpgDatabase

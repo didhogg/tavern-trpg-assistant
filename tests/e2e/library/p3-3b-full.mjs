@@ -49,23 +49,18 @@ for (const [name, type, options] of engines) {
     r.planMonster = { ref: prepared.monster.ref, label: prepared.monster.label }
     r.boot = prepared.boot
 
-    // 在结算小窗里导入英文对照条目，拿 dnd5e 物品数据；再走正式 buildCharacter。
-    const imported = await page.evaluate(async plan => {
-      const out = {}
-      await globalThis.__k.call('setSeed', 'P3-3b 全链路')
-      for (const [key, row] of Object.entries(plan)) {
-        const imported = await globalThis.__k.call('importForBuild', row.ref.prop, row.entry, 'P3-3b 全链路')
-        if (imported.status !== 'complete' || !imported.result) throw new Error(`import failed for ${key}: ${imported.error ?? imported.status}`)
-        out[key] = imported.result
-      }
-      return out
-    }, prepared.plan)
-
-    const built = await page.evaluate(async imported => {
+    // 新命令“建人物”：调用方只交条目与选择；内核生成人物种子，导入/建卡在同一个命令里完成。
+    const built = await page.evaluate(async plan => {
       const k = globalThis.__k
-      return k.call('buildCharacter', 'P3-3b 全链路', ['race', 'background', 'class'].map(key => imported[key]), ['weapon', 'spell'].map(key => imported[key]))
-    }, imported)
-    r.build = { status: built.status, id: built.result?.id, level: built.result?.level, items: built.result?.items, error: built.error }
+      const keys = ['race', 'background', 'class']
+      const equipment = ['weapon', 'spell']
+      return k.call('buildCharacter', {
+        name: 'P3-3b 全链路',
+        items: keys.map(key => ({ prop: plan[key].ref.prop, refKey: `${plan[key].ref.set}|${plan[key].ref.prop}|${plan[key].ref.hash}`, entry: plan[key].entry })),
+        equipment: equipment.map(key => ({ prop: plan[key].ref.prop, refKey: `${plan[key].ref.set}|${plan[key].ref.prop}|${plan[key].ref.hash}`, entry: plan[key].entry })),
+      })
+    }, prepared.plan)
+    r.build = { status: built.status, id: built.result?.id, seed: built.result?.seed, level: built.result?.level, items: built.result?.items, error: built.error }
     if (built.status !== 'complete') throw new Error(`build failed: ${JSON.stringify(built).slice(0, 500)}`)
     const heroId = built.result.id
 
@@ -95,13 +90,13 @@ for (const [name, type, options] of engines) {
     r.monsterCurrentPrepared = monster.currentPrepared
 
     // 拆分 + 绑定 + 保存（正式代码）。
-    const saved = await page.evaluate(async ([heroId, base, current, monsterId, monsterBase, monsterCurrent]) => {
+    const saved = await page.evaluate(async ([heroId, base, current, heroSeed, monsterId, monsterBase, monsterCurrent]) => {
       const h = globalThis.__h
       const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
       const actor = { id: heroId, name: base.name }
       const captured = await globalThis.__k.call('captureChoices', heroId)
       const choices = captured.result ?? {}
-      const compact = await h.compactActor({ lib: h.scoped, library, actor, current, base, choices })
+      const compact = await h.compactActor({ lib: h.scoped, library, actor, seed: heroSeed, current, base, choices })
       const capturedMonster = await globalThis.__k.call('captureChoices', monsterId)
       const compactMonster = await h.compactActor({
         lib: h.scoped, library, actor: { id: monsterId, name: monsterBase.name },
@@ -132,7 +127,7 @@ for (const [name, type, options] of engines) {
           + JSON.stringify({ actor: monsterCurrent, items: monsterCurrent.items, effects: monsterCurrent.effects }).length,
         savedVersion: slot.snapshot.kernel.dataVersion,
       }
-    }, [heroId, r.base, r.current, monster.id, r.monsterBase, r.monsterCurrent])
+    }, [heroId, r.base, r.current, built.result.seed, monster.id, r.monsterBase, r.monsterCurrent])
     r.save = {
       saveId: saved.saveId, changed: saved.changed, boundRevision: saved.boundRevision,
       capture: saved.capture,

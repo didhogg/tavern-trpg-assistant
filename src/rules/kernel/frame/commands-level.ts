@@ -4,7 +4,7 @@
 import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
 import { applyStateToActor } from './actor-state'
-import { reseedKernel } from './seed'
+import { freshSeed, reseedKernel } from './seed'
 import { importEntry, importerMeta, importerProps } from './importer'
 
 const g = globalThis as any
@@ -222,6 +222,16 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
   return { actor: created }
 }
 
+export interface BuildRow { prop: string; entry: any; refKey: string; data?: any }
+export interface BuildPlan {
+  name: string
+  items: BuildRow[]
+  equipment?: BuildRow[]
+  choices?: Record<string, any[] | undefined>
+  /** 读档用：存档里记下的人物种子；新建卡不传，内核自己生成。 */
+  seed?: string
+}
+
 export interface RebuildPlan {
   name: string
   /** 顶层条目（种族/背景/职业/其他有作者编号的东西），按人物里的顺序。 */
@@ -287,6 +297,13 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       return out
     }, [actorId]),
 
+    /** 测试/界面改人物名；编号和种子不动。 */
+    renameActor: (actorId: string, name: string) => operate([], async () => {
+      const a = actor(actorId)
+      await a.update({ name, 'prototypeToken.name': name })
+      return actorLevel(a)
+    }, [actorId]),
+
     /** 读档全部命中缓存：一次 createDocuments 批量建（保留编号），再逐个叠状态差别。 */
     createActorsFromBase: (rows: Array<{ base: any; state?: KernelActorStateLike }>) => operate([], async () => {
       const ActorClass = g.CONFIG.Actor.documentClass
@@ -299,14 +316,16 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       return out
     }),
 
-    /** 建卡前按人物标识重设随机源；建卡流程在导入条目之前调用。 */
-    setSeed: (seed: string) => operate([], async () => { reseedKernel(seed); return true }),
-
-    /** 用结算内核建一张新卡；choices 按 refKey 给出官方 reverse 的恢复数据。 */
-    buildCharacter: (name: string, items: any[], equipment: any[] = [], choices: Record<string, any[] | undefined> = {}) => operate([], async () => {
-      const built = await buildActor(name, items, equipment, choices, { strict: false, seed: name })
-      if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', step: built.step, built: built.built }
-      return { id: built.actor.id, ...actorLevel(built.actor) }
+    /** 用结算内核建一张新卡：调用方只交条目和选择；内核生成人物种子并交回，读档用它。 */
+    buildCharacter: (plan: BuildPlan) => operate([], async () => {
+      const seed = plan.seed ?? freshSeed()
+      const items = []
+      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
+      const equipment = []
+      for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
+      const built = await buildActor(plan.name, items, equipment, plan.choices ?? {}, { strict: false, seed })
+      if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }
+      return { id: built.actor.id, seed, ...actorLevel(built.actor) }
     }),
 
     /** 建卡待选项：把作者转出的种族/背景/职业条目放进一个空白 1 级人物，列官方成长步骤（不改世界）。 */
@@ -318,15 +337,15 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       return { status: steps.length ? 'pending' : 'complete', steps }
     }),
 
-    /** 按作者条目导入成 dnd5e 物品数据（不进世界）；新建卡与读档重建共用这一个入口。 */
-    importForBuild: (prop: string, entry: any, _seed?: string) => operate([], async () => importEntry(prop, entry)),
+    /** 按作者条目导入成 dnd5e 物品数据（不进世界）；T5/探针用。 */
+    importForBuild: (prop: string, entry: any) => operate([], async () => importEntry(prop, entry)),
     /** T2：作者登记表里真的有导入器的类别。 */
     importerProps,
     importerMeta,
 
     /** P3-3b 重建：按引用导入作者条目 → 按记下的选择建卡 → 叠状态差别。 */
     rebuildCharacter: (plan: RebuildPlan) => operate([], async () => {
-      const seed = plan.seed ?? plan.name
+      const seed = plan.seed?.trim() || plan.name
       reseedKernel(seed)
       const items = []
       for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
@@ -336,7 +355,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       if (built.pending) return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
       const base = built.actor.toObject()
       await applyStateToActor(built.actor, plan.state)
-      return { id: built.actor.id, ...actorLevel(built.actor), data: built.actor.toObject(), base }
+      return { id: built.actor.id, seed, ...actorLevel(built.actor), data: built.actor.toObject(), base }
     }),
   }
 }

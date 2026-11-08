@@ -22,10 +22,11 @@ export async function importEntry(prop: string, entry: any): Promise<any> {
   const importer = await api.importer.pGetImporter({ prop })
   if (!importer) throw Error(`No Plutonium importer for ${prop}`)
   reseedKernel(entrySeed(prop, entry))
+  const ent = structuredClone(entry)
   const opts = new api.importer.ImportOpts({ isTemp: true })
   const summary = prop === 'class' && importer.pImportEntryClass
-    ? await importer.pImportEntryClass(entry, opts)
-    : await importer.pImportEntry(entry, opts, structuredClone(UNCHOSEN_PROFICIENCIES))
+    ? await importer.pImportEntryClass(ent, opts)
+    : await importer.pImportEntry(ent, opts, structuredClone(UNCHOSEN_PROFICIENCIES))
   const doc = summary?.imported?.[0]?.document ?? null
   if (!doc) throw Error(`Plutonium import failed for ${entry?.name ?? prop}`)
   return doc.toObject ? doc.toObject() : doc

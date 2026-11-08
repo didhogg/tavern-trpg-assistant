@@ -26,12 +26,21 @@ function kernelV6(record: Record<string, unknown>, holderKey: 'data' | 'snapshot
   return { ...record, [holderKey]: { ...holder, kernel: { ...kernel, actors: nextActors, legacy } } }
 }
 
+/** 6→7（T3）：人物种子记进存档；旧存档没有种子，按建卡旧规则用名字。 */
+function kernelV7(record: Record<string, unknown>, holderKey: 'data' | 'snapshot'): Record<string, unknown> {
+  const holder = isObject(record[holderKey]) ? record[holderKey] as Record<string, unknown> : null
+  const kernel = holder && isObject(holder.kernel) ? holder.kernel as Record<string, unknown> : null
+  if (!holder || !kernel || !Array.isArray(kernel.actors)) return record
+  const actors = kernel.actors.map((actor) => isObject(actor) ? { ...actor, seed: typeof actor.seed === 'string' && actor.seed ? actor.seed : String(actor.name ?? actor.id ?? '') } : actor)
+  return { ...record, [holderKey]: { ...holder, kernel: { ...kernel, actors } } }
+}
+
 /** 结构变更的迁移登记；键是「从哪个版本升级」。 */
 export const MIGRATIONS: MigrationTable = {
   // 第 5 版（P3-3）：workspace / save 增加可选的 kernel 段（规则、选书、引用、选择、状态、修订、撤销）。
   // 第 6 版（P3-3b）：人物改为引用/选择/状态差别；旧格式整份内容保留到 legacyState，标 legacy。
-  workspace: { 4: (record) => record, 5: (record) => kernelV6(record, 'data') },
-  save: { 4: (record) => record, 5: (record) => kernelV6(record, 'snapshot') },
+  workspace: { 4: (record) => record, 5: (record) => kernelV6(record, 'data'), 6: (record) => kernelV7(record, 'data') },
+  save: { 4: (record) => record, 5: (record) => kernelV6(record, 'snapshot'), 6: (record) => kernelV7(record, 'snapshot') },
 }
 
 /**

@@ -113,10 +113,11 @@ async function operate(points: number[], run: () => Promise<any>, actors: string
   // 失败原因交错误说明本身（上位设计 §3.5）；堆栈另放，只供排查（各浏览器格式不同，也含代码地址）
   catch (error) { return { status: 'error', error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack ?? null : null, changes } }
   const unsupported: UnsupportedItem[] = actors.flatMap(id => unsupportedFor(actor(id)))
-  const status: KernelStatus = outcome.needs ? 'missing' : outcome.input ? 'pending' : (outcome.kernelStatus ?? (unsupported.length ? 'unsupported' : 'complete'))
-  return { status, result: outcome.value ?? null, sources: sourcesFor(changes), changes, diceUsed: outcome.used,
+  const value = outcome.value
+  const status: KernelStatus = outcome.needs ? 'missing' : outcome.input ? 'pending' : (value?.kernelStatus ?? (unsupported.length ? 'unsupported' : 'complete'))
+  return { status, result: value ?? null, sources: sourcesFor(changes), changes, diceUsed: outcome.used,
     missing: outcome.needs ? { dice: outcome.needs } : outcome.missing ?? null,
-    pending: outcome.input ? { input: outcome.input } : outcome.pending ?? null, unsupported }
+    pending: outcome.input ? { input: outcome.input } : value?.pending ?? null, unsupported }
 }
 
 /** b 段物品命令：只接线官方入口，结果格式复用上面的 operate。 */

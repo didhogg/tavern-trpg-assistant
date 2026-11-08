@@ -7,6 +7,9 @@ import type { FileProvider } from '../../library/files'
 import type { ScopedLibrary } from '../../library/scoped'
 import type { CampaignLibrary } from '../../library/scopes'
 import type { KernelActor } from '../../schemas/kernel'
+import type { EntryRef } from '../../library/scopes'
+import { getSource } from '../../library/sources'
+import { refKey } from '../../core/saves/split'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
 import { hashValue, sha256Hex } from '../../core/hash'
@@ -18,6 +21,10 @@ import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult
 /** Foundry 世界编号只能用字母、数字、短横线、下划线；战役的 ownerKey 形如 char:角色卡.png，按它算一个稳定编号。 */
 export function worldIdOf(ownerKey: string): string {
   return `trpg-${sha256Hex(ownerKey).slice(0, 16)}`
+}
+
+function getOfficialLang(codeSet: string): boolean {
+  return getSource(codeSet === 'cn' ? 'cn-official' : 'en-official').lang === 'zh'
 }
 
 export interface KernelRuntimeDeps {
@@ -40,6 +47,7 @@ interface Open {
   session: KernelSession
   rule: string
   bases: Map<string, Record<string, unknown>>
+  seeds: Map<string, string>
   boot: unknown
   bootMs: number
   cache: KernelCache | null
@@ -73,7 +81,7 @@ export class KernelRuntime {
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
       const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, this.deps.cache!.dataVersion) : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, dataVersion: this.deps.cache?.dataVersion ?? (async () => ({ official: '', brews: {} })) }
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, dataVersion: this.deps.cache?.dataVersion ?? (async () => ({ official: '', brews: {} })) }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => this.open.delete(ownerKey))
@@ -112,6 +120,42 @@ export class KernelRuntime {
     const data = await actorData(o.session, actorId)
     if (!data) throw new Error(`结算小窗里没有这个人物：${actorId}`)
     o.bases.set(actorId, data)
+  }
+
+  /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
+  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]> }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown }> {
+    const o = await this.get(ownerKey)
+    const rows = await this.entries(ownerKey, [...plan.items, ...(plan.equipment ?? [])])
+    if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
+    const byKey = new Map(rows.rows.map((row) => [refKey(row.ref), row]))
+    const items = plan.items.map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
+    const equipment = (plan.equipment ?? []).map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
+    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {} })
+    if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? `建卡状态：${result.status}`, detail: result }
+    o.seeds.set(result.result.id, result.result.seed)
+    const data = await actorData(o.session, result.result.id)
+    if (data) o.bases.set(result.result.id, data)
+    return { status: 'complete', id: result.result.id, seed: result.result.seed }
+  }
+
+  /** 引用 → 【库】条目（中文战役交英文对照），给建卡/加条目/批量建共用。 */
+  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown }> } | { status: 'missing' | 'error'; error: string; rows: [] }> {
+    const lib = await this.library(ownerKey)
+    const fetched = await this.deps.scoped.fetch(lib, refs)
+    const zh = getOfficialLang(lib.codeSet)
+    const rows = []
+    for (let i = 0; i < refs.length; i++) {
+      const got = fetched[i]
+      if (!got.ok) return { status: 'missing', error: `取不到 ${refs[i].hash}：${got.reason}`, rows: [] }
+      let entry: unknown = got.item
+      if (zh) {
+        const en = await this.deps.scoped.englishOf(got.ref as EntryRef)
+        if (en?.status !== 'found') return { status: 'missing', error: `没有英文对照：${refs[i].hash}`, rows: [] }
+        entry = en.item
+      }
+      rows.push({ ref: refs[i], entry })
+    }
+    return { status: 'complete', rows }
   }
 
   /** 按存档里的引用 / 选择 / 状态把一个人物重建进小窗（内部走批量入口）。 */
@@ -160,6 +204,7 @@ export class KernelRuntime {
       if (result.status === 'complete') {
         if (!result.id || !result.base) throw new Error(`重建 ${actor.name} 没有交回人物编号或重建基准`)
         o.bases.set(result.id, result.base)
+        o.seeds.set(result.id, result.seed ?? actor.seed ?? actor.name)
         if (o.cache && version) {
           const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor })
           await o.cache.put(key, result.base)
@@ -192,7 +237,7 @@ export class KernelRuntime {
       const captured = await o.session.call('captureChoices', id)
       if (captured.status !== 'complete') throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
       const name = typeof current.name === 'string' ? current.name : id
-      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, current, base, choices: captured.result ?? {} })
+      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: captured.result ?? {} })
       if (o.cache) {
         const version = await o.dataVersion()
         const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor: compact })
