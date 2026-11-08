@@ -49,7 +49,7 @@ try {
     const rt = new h.KernelRuntime({ pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
       cache: { db: h.libraryDb, dataVersion: h.dataVersion }, campaignOf: async () => ({ rule: 'dnd5e2014', library, title: owner.ownerLabel }) })
     const sample = await rt.createActors(owner.ownerKey, [normal, caster, legend, vehicle, object].filter(Boolean).map((x) => x.ref))
-    const ten = monsterRows.slice(0, 10).map((x) => x.ref)
+    const ten = monsterRows.filter((x) => !x.item.spellcasting && !x.item.legendary).slice(0, 10).map((x) => x.ref)
     const t = performance.now()
     const tenResult = await rt.createActors(owner.ownerKey, ten)
     const tenMs = Math.round(performance.now() - t)
