@@ -26,7 +26,9 @@ const RULE_SETTINGS: Record<string, Record<string, unknown>> = {
  */
 const KERNEL_MODE_SETTINGS: Record<string, unknown> = {
   'plutonium.config': {
-    import: { isSkipCompendiumImageFetch: true },
+    // 结算小窗离线自足：不加载作者站点的 prerelease/homebrew 索引（会去 GitHub，断网报错）。
+    // 放在 import 组里让作者自己的配置迁移搬到 dataSources；直接写 dataSources 会被默认值盖掉。
+    import: { isSkipCompendiumImageFetch: true, isNoPrereleaseBrewIndexes: true },
     importCreature: { isUseTokenImageAsPortrait: true },
     importVehicle: { isUseTokenImageAsPortrait: true },
     importObject: { isUseTokenImageAsPortrait: true },
