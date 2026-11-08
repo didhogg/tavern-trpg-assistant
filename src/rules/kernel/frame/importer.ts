@@ -24,30 +24,15 @@ export async function importEntry(prop: string, entry: any): Promise<any> {
   reseedKernel(entrySeed(prop, entry))
   const ent = structuredClone(entry)
   const opts = new api.importer.ImportOpts({ isTemp: true })
-  const summary = (prop === 'monster' || prop === 'creature') && api.importer.creature?.pImportEntry
-    ? await api.importer.creature.pImportEntry(ent, opts)
-    : prop === 'class' && importer.pImportEntryClass
-      ? await importer.pImportEntryClass(ent, opts)
-      : await importer.pImportEntry(ent, opts, structuredClone(UNCHOSEN_PROFICIENCIES))
+  const summary = prop === 'class' && importer.pImportEntryClass
+    ? await importer.pImportEntryClass(ent, opts)
+    : await importer.pImportEntry(ent, opts, structuredClone(UNCHOSEN_PROFICIENCIES))
   const doc = summary?.imported?.[0]?.document ?? null
   if (!doc) throw Error(`Plutonium import failed for ${entry?.name ?? prop}`)
   return doc.toObject ? doc.toObject() : doc
 }
 
 /** 同一入口的交回数据版本：T2 预计算、T4 加条目、T5 批量建都用它。 */
-/** 给可叠消耗品补上作者条目身份，官方 _onDropStackConsumables 用同一个 sourceId 识别同一条。 */
-export function stampConsumableSource(item: any): void {
-  if (item?.type !== 'consumable') return
-  const f = item.flags?.plutonium
-  if (!f?.propDroppable || !f.source || !f.hash) return
-  const sourceId = `Compendium.${f.propDroppable}.${f.source}.${f.hash}`
-  item.flags ??= {}
-  item.flags.core ??= {}
-  item.flags.core.sourceId ??= sourceId
-  item.flags.dnd5e ??= {}
-  item.flags.dnd5e.sourceId ??= sourceId
-}
-
 export async function importEntryData(prop: string, entry: any): Promise<any> {
   return importEntry(prop, entry)
 }
