@@ -17602,11 +17602,7 @@ function CC(e) {
 		db: r,
 		files: i,
 		openFrame: (e) => a(e),
-		precompute: (e, t, n) => s([
-			Cx(e).codeSet,
-			"cn",
-			"en"
-		], t, n)
+		precompute: (e, t, n) => s([Cx(e).codeSet], t, n)
 	}), f = Mx(r, c);
 	o = new xC({
 		pluginRoot: t,

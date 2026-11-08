@@ -76,7 +76,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const scoped = new ScopedLibrary(service, db)
   const custom = new CustomLibrary(service, scoped, db)
   const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet),
-    precompute: (setId, signal, onProgress) => runPrecompute([getSource(setId).codeSet, 'cn', 'en'], signal, onProgress) })
+    precompute: (setId, signal, onProgress) => runPrecompute([getSource(setId).codeSet], signal, onProgress) })
   const dataVersion = libraryDataVersion(db, service)
   precompute = new KernelPrecompute({ pluginRoot, files, scoped, db, dataVersion, container })
 
