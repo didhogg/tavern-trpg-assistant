@@ -15,10 +15,10 @@ function differences(a, b, path = '', out = []) {
   return out
 }
 
-async function run(page) {
+async function run(page, seed = null) {
   const errors = []
   await openKernel(page, input, errors)
-  const out = await page.evaluate(async points => {
+  const out = await page.evaluate(async ([points, seed]) => {
     const actors = await globalThis.__kernel.call('preparedActors')
     const template = actors.find(a => a.name.startsWith('Akra')).source
     const monster = actors.find(a => a.name === 'Goblin').source
@@ -30,7 +30,7 @@ async function run(page) {
     const before = { monsterHp: monster.system.attributes.hp.value, level: template.system.details.level }
 
     // 建卡：空白人物 → 种族/背景/职业 → 起始武器；全部走官方 AdvancementManager。
-    const build = await globalThis.__kernel.call('buildCharacter', { name: 'P3-4 新角色', items: kindItems.map(i => ({ prop: i.type, refKey: i._id, entry: i, data: i })), equipment: weaponTemplate ? [{ prop: 'item', refKey: weaponTemplate._id, entry: weaponTemplate, data: weaponTemplate }] : [] })
+    const build = await globalThis.__kernel.call('buildCharacter', { name: 'P3-4 新角色', seed, items: kindItems.map(i => ({ prop: i.type, refKey: i._id, entry: i, data: i })), equipment: weaponTemplate ? [{ prop: 'item', refKey: weaponTemplate._id, entry: weaponTemplate, data: weaponTemplate }] : [] })
     const built = build.result ?? {}
     const heroId = built.id
     const weapon = (built.weapons ?? []).find(w => w.activities.some(a => a.type === 'attack'))
@@ -76,7 +76,7 @@ async function run(page) {
         cast: { before: template.system.spells?.spell1?.value ?? null, after: cast?.result?.slots?.spell1?.value ?? null },
       },
     }
-  }, points)
+  }, [points, seed])
   return { ...out, errors }
 }
 
@@ -92,7 +92,7 @@ for (const [name, engine, launch] of [
     result.first = await run(page)
     await page.close()
     const replay = await (await browser.newContext()).newPage()
-    result.replay = await run(replay)
+    result.replay = await run(replay, result.first.build?.result?.seed ?? null)
     await replay.close()
     const keys = ['build', 'combat', 'turn', 'attack', 'fight', 'afterTurn', 'cast']
     result.replayDiffs = keys.flatMap(key => result.first[key] && result.replay[key]
