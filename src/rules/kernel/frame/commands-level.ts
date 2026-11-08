@@ -51,20 +51,9 @@ function refKeyOf(data: any): string | null {
   return f?.propDroppable && f.source && f.hash ? `${f.propDroppable}|${f.source}|${f.hash}` : null
 }
 
-/** 管理器完成后，把条目自己记下的 Trait 选择再走一遍官方 apply；不手写选择值。 */
-async function applyRecordedTraits(item: any): Promise<void> {
-  for (const advancement of Object.values(item.advancement?.byId ?? {}) as any[]) {
-    const type = advancement.constructor?.typeName ?? advancement.type
-    if (type !== 'Trait') continue
-    const chosen = [...((advancement.value?.chosen ?? []) as Iterable<string>)]
-    if (!chosen.length) continue
-    const levelLimit = item.actor?.system.details?.level ?? 1
-    for (const level of advancement.levels ?? []) {
-      if (level > levelLimit && level !== 0) continue
-      await advancement.apply(level, { chosen })
-    }
-  }
-  await item.actor?.reset?.()
+/** 官方 reverse 的返回值可能是数据模型或带 Set；转成能存进存档（JSON）的样子，内容不变。 */
+function storable(data: any): any {
+  return JSON.parse(JSON.stringify(data, (_key, value) => value instanceof Set ? [...value] : value))
 }
 
 /** 没有现成自动值时的固定规则：取第一个可选项。 */
@@ -125,14 +114,18 @@ async function firstChoice(flow: any): Promise<any> {
   return undefined
 }
 
-/** 每步优先用官方 reverse 记下的恢复数据；重建时缺记录就 pending，不填默认值。 */
+/**
+ * 每步优先用官方 reverse 记下的恢复数据（按 dnd5e 自己合成 restore 步骤的写法）。
+ * 没有记录的步骤：官方能自动定的交给官方；要玩家选的，新建卡取第一个可选项，重建时 pending。
+ * 注意：不能把 forward 步骤标成 automatic——dnd5e 的连续自动循环只用第一步的自动值，
+ * 后面的步骤会拿到错的数据（曾导致技能选择落空）。只覆盖 getAutomaticApplicationValue，让管理器逐步取值。
+ */
 async function applyManager(manager: any, values: any[] | undefined, { strict = false } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
   if (!manager.steps.length) return { finished: true }
   for (const step of manager.steps) {
     if (step.automatic || !step.flow) continue
     const advancement = step.flow.advancement
     const recorded = values?.find((v: any) => v.id === advancement.id && v.level === step.flow.level)
-      ?? values?.find((v: any) => v.id === advancement.id && values.filter((x: any) => x.id === advancement.id).length === 1)
     if (recorded) {
       if (recorded.error) return { finished: false, step: { ...stepSummary(step), error: recorded.error } }
       step.type = 'restore'
@@ -140,11 +133,11 @@ async function applyManager(manager: any, values: any[] | undefined, { strict = 
       step.automatic = true
       continue
     }
+    if (await step.flow.getAutomaticApplicationValue() !== false) continue
     if (strict) return { finished: false, step: stepSummary(step) }
     const value = await firstChoice(step.flow)
     if (value === undefined) continue
     step.flow.getAutomaticApplicationValue = async () => value
-    step.automatic = true
   }
   const completed = new Promise<boolean>(resolve => {
     const hook = g.Hooks.on('dnd5e.advancementManagerComplete', (finished: any) => {
@@ -215,6 +208,9 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
   for (const raw of items) {
     const source = raw?.data ?? raw
     const data = cleanItem(source)
+    // Plutonium 导入时会预先写好部分成长选择（如职业豁免）；dnd5e 看到“已选”就不再加到人物身上。
+    // 用 dnd5e 自己清理“人物做过的选择”的官方入口（物品拖出人物时同样调用），让成长从头走。
+    g.CONFIG.Item.dataModels[data.type]?.resetData?.(data.system)
     const key = raw?.refKey ?? refKeyOf(data)
     const manager = Manager().forNewItem(created, data, { automaticApplication: true })
     const outcome = await applyManager(manager, key ? choices[key] : undefined, { strict })
@@ -222,9 +218,6 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
     const exists = created.items.contents.some((i: any) => i.type === data.type
       && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
     if (!exists) await created.createEmbeddedDocuments('Item', [markStandardDragDrop(cleanItem(data))])
-    const createdItem = created.items.contents.find((i: any) => i.type === data.type
-      && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
-    if (createdItem) await applyRecordedTraits(createdItem)
   }
   if (equipment.length) await created.createEmbeddedDocuments('Item', equipment.map(item => markStandardDragDrop(cleanItem(item?.data ?? item))))
   return { actor: created }
@@ -297,9 +290,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
             const type = advancement.constructor?.typeName ?? advancement.type
             try {
               const reversed = await advancement.reverse(advLevel)
-              const fallback = type === 'Trait' ? (advancement.value?.toObject?.() ?? advancement.value ?? {}) : type === 'ScaleValue' ? {} : undefined
-              const data = reversed === undefined || reversed === null ? fallback : reversed
-              if (data !== undefined) rows.push({ id: advancement.id, type, level: advLevel, data })
+              if (reversed !== undefined && reversed !== null) rows.push({ id: advancement.id, type, level: advLevel, data: storable(reversed) })
             } catch (error) {
               rows.push({ id: advancement.id, type, level: advLevel, error: error instanceof Error ? error.message : String(error) })
             }

@@ -558,13 +558,15 @@ async function v(e, t) {
 		t.actor && Object.keys(t.actor).length && await e.update(t.actor);
 		for (let [n, r] of Object.entries(t.items ?? {})) {
 			let t = e.items.get(n);
-			t && await t.update(r);
+			if (!t) throw Error(`状态差别指向的物品在重建结果里不存在：${n}`);
+			await t.update(r);
 		}
 		for (let n of t.itemAdded ?? []) e.items.get(n._id) || await e.createEmbeddedDocuments("Item", [n], { keepId: !0 });
 		for (let n of t.itemRemoved ?? []) await e.deleteEmbeddedDocuments("Item", [n]);
 		for (let [n, r] of Object.entries(t.effects ?? {})) {
 			let t = e.effects.get(n);
-			t && await t.update(r);
+			if (!t) throw Error(`状态差别指向的效果在重建结果里不存在：${n}`);
+			await t.update(r);
 		}
 		for (let n of t.effectAdded ?? []) e.effects.get(n._id) || await e.createEmbeddedDocuments("ActiveEffect", [n], { keepId: !0 });
 		for (let n of t.effectRemoved ?? []) await e.deleteEmbeddedDocuments("ActiveEffect", [n]);
@@ -761,15 +763,8 @@ function de(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-async function fe(e) {
-	for (let t of Object.values(e.advancement?.byId ?? {})) {
-		if ((t.constructor?.typeName ?? t.type) !== "Trait") continue;
-		let n = [...t.value?.chosen ?? []];
-		if (!n.length) continue;
-		let r = e.actor?.system.details?.level ?? 1;
-		for (let e of t.levels ?? []) e > r && e !== 0 || await t.apply(e, { chosen: n });
-	}
-	await e.actor?.reset?.();
+function fe(e) {
+	return JSON.parse(JSON.stringify(e, (e, t) => t instanceof Set ? [...t] : t));
 }
 async function pe(e) {
 	let t = e.advancement, n = t.constructor?.typeName ?? t.type;
@@ -822,7 +817,7 @@ async function A(e, t, { strict: n = !1 } = {}) {
 	if (!e.steps.length) return { finished: !0 };
 	for (let r of e.steps) {
 		if (r.automatic || !r.flow) continue;
-		let e = r.flow.advancement, i = t?.find((t) => t.id === e.id && t.level === r.flow.level) ?? t?.find((n) => n.id === e.id && t.filter((t) => t.id === e.id).length === 1);
+		let e = r.flow.advancement, i = t?.find((t) => t.id === e.id && t.level === r.flow.level);
 		if (i) {
 			if (i.error) return {
 				finished: !1,
@@ -834,12 +829,13 @@ async function A(e, t, { strict: n = !1 } = {}) {
 			r.type = "restore", r.flow.retainedData = i.data, r.automatic = !0;
 			continue;
 		}
+		if (await r.flow.getAutomaticApplicationValue() !== !1) continue;
 		if (n) return {
 			finished: !1,
 			step: j(r)
 		};
 		let a = await pe(r.flow);
-		a !== void 0 && (r.flow.getAutomaticApplicationValue = async () => a, r.automatic = !0);
+		a !== void 0 && (r.flow.getAutomaticApplicationValue = async () => a);
 	}
 	let r = new Promise((t) => {
 		let n = w.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
@@ -904,15 +900,15 @@ async function N(e, t, n, r = {}, { strict: i = !1 } = {}) {
 		system: { details: { level: 1 } }
 	});
 	for (let e of t) {
-		let t = O(e?.data ?? e), n = e?.refKey ?? de(t), o = await A(T().forNewItem(a, t, { automaticApplication: !0 }), n ? r[n] : void 0, { strict: i });
+		let t = O(e?.data ?? e);
+		w.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
+		let n = e?.refKey ?? de(t), o = await A(T().forNewItem(a, t, { automaticApplication: !0 }), n ? r[n] : void 0, { strict: i });
 		if (!o.finished) return {
 			pending: !0,
 			step: o.step,
 			built: D(a)
 		};
 		a.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await a.createEmbeddedDocuments("Item", [k(O(t))]);
-		let s = a.items.contents.find((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash);
-		s && await fe(s);
 	}
 	return n.length && await a.createEmbeddedDocuments("Item", n.map((e) => k(O(e?.data ?? e)))), { actor: a };
 }
@@ -952,12 +948,12 @@ function me(e, t) {
 					if (e > r && e !== 0) continue;
 					let n = t.constructor?.typeName ?? t.type;
 					try {
-						let r = await t.reverse(e), i = n === "Trait" ? t.value?.toObject?.() ?? t.value ?? {} : n === "ScaleValue" ? {} : void 0, o = r ?? i;
-						o !== void 0 && a.push({
+						let r = await t.reverse(e);
+						r != null && a.push({
 							id: t.id,
 							type: n,
 							level: e,
-							data: o
+							data: fe(r)
 						});
 					} catch (r) {
 						a.push({

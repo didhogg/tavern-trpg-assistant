@@ -2,60 +2,13 @@
 // 真实【库】条目 → 结算小窗建卡 → 打一场 → 拆成引用/选择/状态差别 → 存
 // → 关书（全局归类改掉）→ 读前检查报缺、当前战役不动 → 开书 → 读档 → 重建人物逐项比 0 差别。
 // 不手填引用/HP/法术位，不写死条目数量；人物全部用【库】真实条目建。
-import { mkdir, writeFile } from 'node:fs/promises'
+import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { build } from 'vite'
-import { chromium, webkit } from 'playwright-core'
-import { root, startStatic } from './static.mjs'
+import { startStatic } from './static.mjs'
+import { buildAll, choiceSteps, differences, engines, fightMonster, kernelFrame, kernelInputFor, knownError, work } from './chain-common.mjs'
 
-const work = `${root}work/e2e-lib`
-await mkdir(work, { recursive: true })
-await build({ configFile: `${root}vite.config.ts`, root, logLevel: 'error' })
-await build({ configFile: false, root, logLevel: 'error', build: {
-  lib: { entry: `${root}tests/e2e/library/harness.ts`, formats: ['es'], fileName: () => 'harness.js' },
-  outDir: work, emptyOutDir: false,
-} })
-
-const vendor = join(root, 'vendor/foundry')
-const readJson = async path => JSON.parse(await (await import('node:fs/promises')).readFile(join(vendor, path), 'utf8'))
-const manifest = await readJson('manifest.json')
-const system = await readJson('systems/dnd5e/system.json')
-const modules = [await readJson('modules/lib-wrapper/module.json'), await readJson('modules/plutonium/module.json')]
-const kernelInput = {
-  system, modules, release: manifest.release,
-  world: { id: 'p3-3b-full', title: 'P3-3b full' },
-  userId: 'kernelGM00000000', worldTime: 0, language: 'en.core',
-  settings: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false },
-  documents: { actors: [] },
-}
-
-function differences(a, b, path = '', out = []) {
-  if (out.length > 40) return out
-  if (a === b) return out
-  const ta = a === null ? 'null' : Array.isArray(a) ? 'array' : typeof a
-  const tb = b === null ? 'null' : Array.isArray(b) ? 'array' : typeof b
-  if (ta !== tb) { out.push({ path, expected: a, actual: b }); return out }
-  if (ta === 'object') {
-    for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) differences(a[key], b[key], path ? `${path}.${key}` : key, out)
-    return out
-  }
-  if (ta === 'array') {
-    if (a.length !== b.length) { out.push({ path: `${path}.length`, expected: a.length, actual: b.length }); return out }
-    for (let i = 0; i < a.length; i++) differences(a[i], b[i], `${path}[${i}]`, out)
-    return out
-  }
-  out.push({ path, expected: a, actual: b })
-  return out
-}
-
-function kernelFrame(page) {
-  return page.frames().filter(f => f.url().includes('/vendor/foundry/frame.html')).at(-1)
-}
-
-const engines = [
-  ['chrome', chromium, { executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true }],
-  ['webkit', webkit, { headless: true }],
-]
+await buildAll()
+const kernelInput = await kernelInputFor('p3-3b-full', 'P3-3b full')
 
 const results = []
 for (const [name, type, options] of engines) {
@@ -81,41 +34,7 @@ for (const [name, type, options] of engines) {
       await h.scoped.setAssignment('src:phb', null)
       await h.scoped.setAssignment('src:mm', null)
       const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
-      const take = async (prop, filter) => {
-        const p = await h.service.parsed('cn-official', prop)
-        for (let i = 0; i < p.items.length; i++) {
-          const item = p.items[i]
-          if (p.sources[i] !== 'PHB' || !filter(item)) continue
-          const ref = { set: 'cn-official', prop, hash: p.hashes[i] }
-          const d = await h.scoped.detail(library, ref)
-          if (!d || d.hidden || !d.english || d.english.status !== 'found') continue
-          return { ref, label: item.name, entry: d.english.item }
-        }
-        throw new Error(`no PHB entry with English pair for ${prop}`)
-      }
-      const plan = {
-        race: await take('race', it => !!it.size && !String(it.name).includes('(')),
-        background: await take('background', it => !!it.skillProficiencies || !!it.entries),
-        class: await take('class', heroClass === 'cleric' ? it => it.name === '牧师' : it => !!it.hd),
-        weapon: await take('item', it => it.weaponCategory === 'martial' || it.type === 'M'),
-        spell: await take('spell', it => it.level === 0),
-      }
-      const monster = await (async () => {
-        const p = await h.service.parsed('cn-official', 'monster')
-        let fallback = null
-        for (let i = 0; i < p.items.length; i++) {
-          const item = p.items[i]
-          if (p.sources[i] !== 'MM' || !item.name) continue
-          const ref = { set: 'cn-official', prop: 'monster', hash: p.hashes[i] }
-          const d = await h.scoped.detail(library, ref)
-          if (!d || d.hidden || !d.english || d.english.status !== 'found') continue
-          const row = { ref, label: item.name, entry: d.english.item }
-          if (item.name === 'Goblin') return row
-          fallback ??= row
-        }
-        if (!fallback) throw new Error('no MM monster with English pair')
-        return fallback
-      })()
+      const { plan, monster } = await h.pickChainEntries(library, heroClass)
       const { session, status } = await h.startKernelSession(kernelInput)
       globalThis.__k = session
       globalThis.__h = h
@@ -158,6 +77,7 @@ for (const [name, type, options] of engines) {
 
     r.base = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), heroId)
     r.basePrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), heroId)
+    r.choiceSteps = choiceSteps(r.base)
     r.play = await page.evaluate(async id => {
       const k = globalThis.__k
       const a = await globalThis.__h.actorData(k, id)
@@ -173,27 +93,12 @@ for (const [name, type, options] of engines) {
     r.currentPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), heroId)
 
     // 真实【库】怪物：导入 → 英雄攻击 → 伤害落到怪物。
-    const monster = await page.evaluate(async entry => {
-      const k = globalThis.__k
-      const result = await k.call('importMonsterActor', entry)
-      const data = await globalThis.__h.actorData(k, result.result?.id)
-      return { status: result.status, id: result.result?.id, data, summary: result.result }
-    }, prepared.monster.entry)
-    if (monster.status !== 'complete' || !monster.id) throw new Error(`monster import failed: ${JSON.stringify(monster).slice(0, 600)}`)
-    r.monsterBase = monster.data
-    r.monsterBasePrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), monster.id)
-    r.playMonster = await page.evaluate(async ([heroId, monsterId]) => {
-      const k = globalThis.__k
-      const a = await globalThis.__h.actorData(k, heroId)
-      const weapon = a.items.find(i => i.type === 'weapon')
-      const attack = await k.call('attack', heroId, weapon._id, [20, 4, 4, 4, 4, 4, 4, 4])
-      const total = attack.result?.damage?.[0]?.total ?? null
-      if (!total) throw new Error('attack produced no damage')
-      const damage = await k.call('damage', monsterId, [{ value: total, type: weapon.system?.damage?.base?.types?.[0] ?? 'slashing' }], [], {})
-      return { attack: attack.status, damage: damage.status, total }
-    }, [heroId, monster.id])
-    r.monsterCurrent = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), monster.id)
-    r.monsterCurrentPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), monster.id)
+    const monster = await fightMonster(page, prepared.monster.entry, heroId)
+    r.monsterBase = monster.base
+    r.monsterBasePrepared = monster.basePrepared
+    r.playMonster = monster.play
+    r.monsterCurrent = monster.current
+    r.monsterCurrentPrepared = monster.currentPrepared
 
     // 拆分 + 绑定 + 保存（正式代码）。
     const saved = await page.evaluate(async ([heroId, base, current, monsterId, monsterBase, monsterCurrent]) => {
@@ -328,15 +233,10 @@ for (const [name, type, options] of engines) {
     r.monsterPatchedDiffs = differences(r.monsterCurrent, rebuiltMonster.data)
     r.preparedDiffs = differences(r.currentPrepared, r.rebuiltPrepared)
     r.monsterPreparedDiffs = differences(r.monsterCurrentPrepared, r.rebuiltMonsterPrepared)
-    const known = (e) => e.includes('gendata-nav-adventure-book-index.json')
-      || e.includes('/vendor/foundry/api/plutonium')
-      || e.includes('status of 404')
-      || e.includes('requires usable window dimensions')
-      || e.includes('KERNEL_NEEDS_INPUT')
-      || e.includes('Failed to place measured template')
     r.errors = errors
-    r.unexplained = errors.filter((e) => !known(e))
+    r.unexplained = errors.filter((e) => !knownError(e))
     r.passed = r.build.status === 'complete'
+      && r.choiceSteps.every(x => x.chosen.length > 0)
       && r.save.kernelBytes < r.save.oldKernelBytes
       && r.save.compactStateBytes < r.save.fullActorBytes
       && r.closed.missing.length > 0
@@ -357,7 +257,7 @@ for (const [name, type, options] of engines) {
     results.push(r)
     await writeFile(`${work}/p3-3b-full-${name}.json`, JSON.stringify(r, null, 2))
     console.log(name, r.passed ? 'PASS' : 'FAIL', JSON.stringify({
-      build: r.build, save: r.save, closed: r.closed && { missing: r.closed.missing.length, for: r.closed.missing.slice(0, 2), rev: [r.closed.revisionBefore, r.closed.revisionAfter], refs: r.closed.refsSurvive, blocked: r.closed.blocked },
+      build: r.build, choiceSteps: r.choiceSteps, save: r.save, closed: r.closed && { missing: r.closed.missing.length, for: r.closed.missing.slice(0, 2), rev: [r.closed.revisionBefore, r.closed.revisionAfter], refs: r.closed.refsSurvive, blocked: r.closed.blocked },
       open: r.open, rebuild: r.rebuild, rebuildMonster: r.rebuildMonster,
       diffs: [r.baseDiffs?.length, r.patchedDiffs?.length, r.monsterBaseDiffs?.length, r.monsterPatchedDiffs?.length, r.preparedDiffs?.length, r.monsterPreparedDiffs?.length],
       playMonster: r.playMonster, monsterHp: [r.monsterBase?.system?.attributes?.hp?.value, r.monsterCurrent?.system?.attributes?.hp?.value],

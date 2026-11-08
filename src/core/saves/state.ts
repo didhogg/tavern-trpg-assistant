@@ -50,7 +50,8 @@ export function applyActorState(rebuilt: Record<string, unknown>, state: KernelA
   const itemMap = new Map(items.filter((item) => typeof item._id === 'string').map((item) => [item._id as string, item]))
   for (const [id, d] of Object.entries(state.items)) {
     const item = itemMap.get(id)
-    if (item) mergeDiff(item, d)
+    if (!item) throw new Error(`状态差别指向的物品在重建结果里不存在：${id}`)
+    mergeDiff(item, d)
   }
   for (const item of state.itemAdded) {
     const id = item._id
@@ -61,7 +62,8 @@ export function applyActorState(rebuilt: Record<string, unknown>, state: KernelA
   const effectMap = new Map(effects.filter((effect) => typeof effect._id === 'string').map((effect) => [effect._id as string, effect]))
   for (const [id, d] of Object.entries(state.effects)) {
     const effect = effectMap.get(id)
-    if (effect) mergeDiff(effect, d)
+    if (!effect) throw new Error(`状态差别指向的效果在重建结果里不存在：${id}`)
+    mergeDiff(effect, d)
   }
   for (const effect of state.effectAdded) {
     const id = effect._id

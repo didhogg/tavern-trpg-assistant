@@ -1,60 +1,16 @@
 // P3-4 / P3-3b 完整链路（Chrome / WebKit）：P3-1 范围/去重/导出 + 真实【库】建人物 + 存档只存引用
 // → 关书报缺（当前战役不动）→ 开书 0 缺 → 读档 → 重建 0 差别 → 预览/写入/撤销/再写 → 旧修订 → 完整备份恢复。
 // 不手填引用/HP/法术位，不写死条目数量。
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { build } from 'vite'
-import { chromium, webkit } from 'playwright-core'
-import { root, startStatic } from './static.mjs'
+import { startStatic } from './static.mjs'
+import { buildAll, choiceSteps, differences, engines, fightMonster, kernelFrame, kernelInputFor, knownError, work } from './chain-common.mjs'
 
-const work = `${root}work/e2e-lib`
-await mkdir(work, { recursive: true })
-await build({ configFile: `${root}vite.config.ts`, root, logLevel: 'error' })
-await build({ configFile: false, root, logLevel: 'error', build: {
-  lib: { entry: `${root}tests/e2e/library/harness.ts`, formats: ['es'], fileName: () => 'harness.js' },
-  outDir: work, emptyOutDir: false,
-} })
-
-const vendor = join(root, 'vendor/foundry')
-const readJson = async path => JSON.parse(await (await import('node:fs/promises')).readFile(join(vendor, path), 'utf8'))
-const manifest = await readJson('manifest.json')
-const system = await readJson('systems/dnd5e/system.json')
-const modules = [await readJson('modules/lib-wrapper/module.json'), await readJson('modules/plutonium/module.json')]
-const kernelInput = {
-  system, modules, release: manifest.release,
-  world: { id: 'p3-4-full', title: 'P3-4 full' },
-  userId: 'kernelGM00000000', worldTime: 0, language: 'en.core',
-  settings: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false },
-  documents: { actors: [] },
-}
-const engineList = [
-  ['chrome', chromium, { executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true }],
-  ['webkit', webkit, { headless: true }],
-]
-
-function differences(a, b, path = '', out = []) {
-  if (out.length > 40) return out
-  if (a === b) return out
-  const ta = a === null ? 'null' : Array.isArray(a) ? 'array' : typeof a
-  const tb = b === null ? 'null' : Array.isArray(b) ? 'array' : typeof b
-  if (ta !== tb) { out.push({ path, expected: a, actual: b }); return out }
-  if (ta === 'object') {
-    for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) differences(a[key], b[key], path ? `${path}.${key}` : key, out)
-    return out
-  }
-  if (ta === 'array') {
-    if (a.length !== b.length) { out.push({ path: `${path}.length`, expected: a.length, actual: b.length }); return out }
-    for (let i = 0; i < a.length; i++) differences(a[i], b[i], `${path}[${i}]`, out)
-    return out
-  }
-  out.push({ path, expected: a, actual: b })
-  return out
-}
-
-const kernelFrame = page => page.frames().filter(f => f.url().includes('/vendor/foundry/frame.html')).at(-1)
+await buildAll()
+const kernelInput = await kernelInputFor('p3-4-full', 'P3-4 full')
 
 const results = []
-for (const [name, type, options] of engineList) {
+for (const [name, type, options] of engines) {
   if (process.env.ENGINE && process.env.ENGINE !== name) continue
   const { server, url } = await startStatic({ port: 47337 })
   const profile = join(work, `profile-p3-1-${name}`)
@@ -105,41 +61,7 @@ for (const [name, type, options] of engineList) {
       out.scopes = { exported: scopesExport.format, restored: scopesRestored }
       out.fireball = fireball
 
-      const take = async (prop, filter) => {
-        const p = await h.service.parsed('cn-official', prop)
-        for (let i = 0; i < p.items.length; i++) {
-          const item = p.items[i]
-          if (p.sources[i] !== 'PHB' || !filter(item)) continue
-          const ref = { set: 'cn-official', prop, hash: p.hashes[i] }
-          const d = await h.scoped.detail(library, ref)
-          if (!d || d.hidden || !d.english || d.english.status !== 'found') continue
-          return { ref, label: item.name, entry: d.english.item }
-        }
-        throw new Error(`no PHB entry with English pair for ${prop}`)
-      }
-      const plan = {
-        race: await take('race', it => !!it.size && !String(it.name).includes('(')),
-        background: await take('background', it => !!it.skillProficiencies || !!it.entries),
-        class: await take('class', it => !!it.hd),
-        weapon: await take('item', it => it.weaponCategory === 'martial' || it.type === 'M'),
-        spell: await take('spell', it => it.level === 0),
-      }
-      const monster = await (async () => {
-        const p = await h.service.parsed('cn-official', 'monster')
-        let fallback = null
-        for (let i = 0; i < p.items.length; i++) {
-          const item = p.items[i]
-          if (p.sources[i] !== 'MM' || !item.name) continue
-          const ref = { set: 'cn-official', prop: 'monster', hash: p.hashes[i] }
-          const d = await h.scoped.detail(library, ref)
-          if (!d || d.hidden || !d.english || d.english.status !== 'found') continue
-          const row = { ref, label: item.name, entry: d.english.item }
-          if (item.name === 'Goblin') return row
-          fallback ??= row
-        }
-        if (!fallback) throw new Error('no MM monster with English pair')
-        return fallback
-      })()
+      const { plan, monster } = await h.pickChainEntries(library)
       const { session, status } = await h.startKernelSession(kernelInput)
       globalThis.__k = session
       globalThis.__h = h
@@ -179,6 +101,7 @@ for (const [name, type, options] of engineList) {
 
     const heroId = built.result.id
     r.base = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), heroId)
+    r.choiceSteps = choiceSteps(r.base)
     r.play = await page.evaluate(async id => {
       const k = globalThis.__k
       const a = await globalThis.__h.actorData(k, id)
@@ -195,27 +118,12 @@ for (const [name, type, options] of engineList) {
     r.currentPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), heroId)
 
     // ---- 真实【库】怪物：导入 → 英雄攻击 → 伤害落到怪物 ----
-    const monster = await page.evaluate(async entry => {
-      const k = globalThis.__k
-      const result = await k.call('importMonsterActor', entry)
-      const data = await globalThis.__h.actorData(k, result.result?.id)
-      return { status: result.status, id: result.result?.id, data, summary: result.result }
-    }, prepared.monster.entry)
-    if (monster.status !== 'complete' || !monster.id) throw new Error(`monster import failed: ${JSON.stringify(monster).slice(0, 600)}`)
-    r.monsterBase = monster.data
-    r.monsterBasePrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), monster.id)
-    r.playMonster = await page.evaluate(async ([heroId, monsterId]) => {
-      const k = globalThis.__k
-      const a = await globalThis.__h.actorData(k, heroId)
-      const weapon = a.items.find(i => i.type === 'weapon')
-      const attack = await k.call('attack', heroId, weapon._id, [20, 4, 4, 4, 4, 4, 4, 4])
-      const total = attack.result?.damage?.[0]?.total ?? null
-      if (!total) throw new Error('attack produced no damage')
-      const damage = await k.call('damage', monsterId, [{ value: total, type: weapon.system?.damage?.base?.types?.[0] ?? 'slashing' }], [], {})
-      return { attack: attack.status, damage: damage.status, total }
-    }, [heroId, monster.id])
-    r.monsterCurrent = await page.evaluate(async id => globalThis.__h.actorData(globalThis.__k, id), monster.id)
-    r.monsterCurrentPrepared = await page.evaluate(async id => globalThis.__h.actorPrepared(globalThis.__k, id), monster.id)
+    const monster = await fightMonster(page, prepared.monster.entry, heroId)
+    r.monsterBase = monster.base
+    r.monsterBasePrepared = monster.basePrepared
+    r.playMonster = monster.play
+    r.monsterCurrent = monster.current
+    r.monsterCurrentPrepared = monster.currentPrepared
 
     // ---- 拆分/绑定/保存（正式 KernelSaveService） ----
     const saved = await page.evaluate(async ([heroId, base, current, fireball, monsterId, monsterBase, monsterCurrent]) => {
@@ -427,15 +335,10 @@ for (const [name, type, options] of engineList) {
     r.restored = { library: backup.library, missing: backup.missing, workspace: backup.workspace }
     r.backupDebug = { missingRefs: backup.missingRefs, houseBefore: backup.houseBefore, houseAfter: backup.houseAfter, houseHash: backup.houseHash, parsedHasHouse: backup.parsedHasHouse, parsedSample: backup.parsedSample }
 
-    const known = (e) => e.includes('gendata-nav-adventure-book-index.json')
-      || e.includes('/vendor/foundry/api/plutonium')
-      || e.includes('status of 404')
-      || e.includes('requires usable window dimensions')
-      || e.includes('KERNEL_NEEDS_INPUT')
-      || e.includes('Failed to place measured template')
     r.errors = errors
-    r.unexplained = errors.filter((e) => !known(e))
+    r.unexplained = errors.filter((e) => !knownError(e))
     r.passed = r.build.status === 'complete'
+      && r.choiceSteps.every(x => x.chosen.length > 0)
       && r.save.kernelBytes < r.save.oldKernelBytes
       && r.save.compactStateBytes < r.save.fullActorBytes
       && r.checkBefore.dataVersionChanged && r.checkBefore.overridesChanged

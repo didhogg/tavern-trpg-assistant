@@ -259,3 +259,33 @@ export async function startKernelSession(input: unknown): Promise<{ session: Ker
   const status = await session.boot(input as never)
   return { session, status }
 }
+
+// ---- P3-3b / P3-4 完整链路共用：从【库】挑真实条目（带英文对照，喂 Plutonium 用） ----
+type ChainRow = { ref: { set: string; prop: string; hash: string }; label: string; entry: unknown }
+
+async function takeEntry(library: ReturnType<typeof defaultCampaignLibrary>, prop: string, book: string, filter: (item: Record<string, unknown>) => boolean): Promise<ChainRow> {
+  const p = await service.parsed('cn-official', prop)
+  for (let i = 0; i < p.items.length; i++) {
+    const item = p.items[i] as Record<string, unknown>
+    const hash = p.hashes[i]
+    if (!hash || p.sources[i] !== book || !filter(item)) continue
+    const ref = { set: 'cn-official', prop, hash }
+    const d = await scoped.detail(library, ref)
+    if (!d || 'hidden' in d || !d.english || d.english.status !== 'found') continue
+    return { ref, label: String(item.name), entry: d.english.item }
+  }
+  throw new Error(`no ${book} entry with English pair for ${prop}`)
+}
+
+/** 英雄的种族/背景/职业/武器/戏法 + 一只怪物；heroClass='cleric' 换牧师（含 ItemGrant/Subclass）。 */
+export async function pickChainEntries(library: ReturnType<typeof defaultCampaignLibrary>, heroClass = ''): Promise<{ plan: Record<string, ChainRow>; monster: ChainRow }> {
+  const plan = {
+    race: await takeEntry(library, 'race', 'PHB', it => !!it.size && !String(it.name).includes('(')),
+    background: await takeEntry(library, 'background', 'PHB', it => !!it.skillProficiencies || !!it.entries),
+    class: await takeEntry(library, 'class', 'PHB', heroClass === 'cleric' ? it => it.name === '牧师' : it => !!it.hd),
+    weapon: await takeEntry(library, 'item', 'PHB', it => it.weaponCategory === 'martial' || it.type === 'M'),
+    spell: await takeEntry(library, 'spell', 'PHB', it => it.level === 0),
+  }
+  const monster = await takeEntry(library, 'monster', 'MM', it => !!it.name)
+  return { plan, monster }
+}
