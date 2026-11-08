@@ -55,8 +55,6 @@ export function differences(a, b, path = '', out = []) {
   return out
 }
 
-export const kernelFrame = page => page.frames().filter(f => f.url().includes('/vendor/foundry/frame.html')).at(-1)
-
 /** 只放过交接文档已单列的报错，其余一律算 unexplained。 */
 export const knownError = e => e.includes('gendata-nav-adventure-book-index.json')
   || e.includes('/vendor/foundry/api/plutonium')
@@ -65,11 +63,14 @@ export const knownError = e => e.includes('gendata-nav-adventure-book-index.json
   || e.includes('KERNEL_NEEDS_INPUT')
   || e.includes('Failed to place measured template')
 
-/** 英雄要玩家选的特性（如“技能选 2 个”）建卡后必须真选上，否则“选择能读回”没被测到。 */
+/**
+ * 英雄身上每条熟练/语言/抗性类成长（固定给的和要玩家选的）建卡后都必须真落到人物上，
+ * 否则“选择能读回”“背景技能”这类缺口会在存档前后一起缺、比对仍是 0 差别。
+ */
 export function choiceSteps(actor) {
   const level = actor.system?.details?.level ?? 1
   return actor.items.flatMap(item => Object.values(item.system?.advancement ?? {})
-    .filter(a => a.type === 'Trait' && (a.configuration?.choices ?? []).length && (a.level ?? 0) <= level)
+    .filter(a => a.type === 'Trait' && ((a.configuration?.choices ?? []).length || (a.configuration?.grants ?? []).length) && (a.level ?? 0) <= level)
     .map(a => ({ item: item.name, title: a.title ?? a.name ?? a._id, chosen: a.value?.chosen ?? [] })))
 }
 

@@ -5,7 +5,7 @@
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { startStatic } from './static.mjs'
-import { buildAll, choiceSteps, differences, engines, fightMonster, kernelFrame, kernelInputFor, knownError, work } from './chain-common.mjs'
+import { buildAll, choiceSteps, differences, engines, fightMonster, kernelInputFor, knownError, work } from './chain-common.mjs'
 
 await buildAll()
 const kernelInput = await kernelInputFor('p3-3b-full', 'P3-3b full')
@@ -17,7 +17,8 @@ for (const [name, type, options] of engines) {
   const profile = join(work, `profile-p3-1-${name}`)
   const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
   const page = await ctx.newPage()
-  page.setDefaultTimeout(3_600_000)
+  // 每一步最多等 15 分钟（首次装库最慢）；卡住就报出卡在哪一步，不让整轮挂一小时。
+  page.setDefaultTimeout(900_000)
   const errors = []
   page.on('pageerror', e => errors.push(e.stack ?? String(e)))
   page.on('console', m => { if (m.type() === 'error') errors.push(`console: ${m.text()}`) })
@@ -49,20 +50,12 @@ for (const [name, type, options] of engines) {
     r.boot = prepared.boot
 
     // 在结算小窗里导入英文对照条目，拿 dnd5e 物品数据；再走正式 buildCharacter。
-    const imported = await kernelFrame(page).evaluate(async plan => {
-      const g = globalThis
-      const api = g.game.modules.get('plutonium')?.api
+    const imported = await page.evaluate(async plan => {
       const out = {}
       for (const [key, row] of Object.entries(plan)) {
-        const prop = row.ref.prop
-        const importer = await api.importer.pGetImporter({ prop })
-        const opts = new api.importer.ImportOpts({ isTemp: true })
-        const summary = prop === 'class' && importer.pImportEntryClass
-          ? await importer.pImportEntryClass(row.entry, opts)
-          : await importer.pImportEntry(row.entry, opts)
-        const doc = summary?.imported?.[0]?.document ?? null
-        if (!doc) throw new Error(`import failed for ${key}`)
-        out[key] = doc.toObject ? doc.toObject() : doc
+        const imported = await globalThis.__k.call('importForBuild', row.ref.prop, row.entry)
+        if (imported.status !== 'complete' || !imported.result) throw new Error(`import failed for ${key}: ${imported.error ?? imported.status}`)
+        out[key] = imported.result
       }
       return out
     }, prepared.plan)

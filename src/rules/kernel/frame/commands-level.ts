@@ -86,17 +86,14 @@ async function firstChoice(flow: any): Promise<any> {
   }
 
   if (type === 'Trait') {
-    const existing = new Set(advancement.value?.chosen ?? [])
     const automatic = await advancement.automaticApplicationValue?.(flow.level)
-    if (automatic !== false) return { chosen: [...new Set([...existing, ...(automatic.chosen ?? [])])] }
-    const chosen = new Set(existing)
-    for (const choice of advancement.configuration?.choices ?? []) {
-      let count = choice.count ?? 1
-      for (const key of choice.pool ?? []) {
-        if (chosen.has(key)) continue
-        chosen.add(key)
-        if (--count <= 0) break
-      }
+    if (automatic !== false) return automatic
+    // 官方 unfulfilledChoices：每个待选位还能选哪些（已排除人物身上已有的熟练/语言）；每位取第一个。
+    const { available } = await advancement.unfulfilledChoices()
+    const chosen = new Set<string>()
+    for (const slot of available) {
+      const key = [...slot.choices.asSet()].find((k: string) => !chosen.has(k))
+      if (key) chosen.add(key)
     }
     return { chosen: [...chosen] }
   }
@@ -224,6 +221,22 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
 }
 
 /** 结算小窗里把作者条目导入成 dnd5e 物品（临时文档，不进世界）。 */
+/**
+ * Plutonium 生成种族/背景等的通用成长（UtilAdvancementsEntry.getGenericAdvancements）时，
+ * 只有拿到这些“已选”项才会生成对应成长；不给就整条略过（背景技能、语言、抗性因此丢失）。
+ * 这里一律给空数组 = “玩家还没选”：Plutonium 照作者条目生成完整成长，选择交给 dnd5e 成长流程。
+ * 键名与形状取自作者源码；作者新增一种时在这里登记一行。
+ */
+const UNCHOSEN_PROFICIENCIES: Record<string, string[]> = {
+  skillsChosenFvtt: [],
+  languagesChosenFvtt: [],
+  armorProficienciesChosenFvtt: [],
+  weaponProficienciesChosenFvtt: [],
+  toolProficienciesChosenFvtt: [],
+  // 不登记 resistChosenFvtt：作者把“选一种抗性”（如龙裔血统）全部写进 grants，靠自己界面传入已选那一种；
+  // 不传已选就会被 dnd5e 当成全给。等人物界面把玩家选的那一种传进来再登记。
+}
+
 async function importEntry(prop: string, entry: any): Promise<any> {
   const api = g.game.modules.get('plutonium')?.api
   if (!api?.importer) throw Error('Plutonium importer is not available')
@@ -232,7 +245,7 @@ async function importEntry(prop: string, entry: any): Promise<any> {
   const opts = new api.importer.ImportOpts({ isTemp: true })
   const summary = prop === 'class' && importer.pImportEntryClass
     ? await importer.pImportEntryClass(entry, opts)
-    : await importer.pImportEntry(entry, opts)
+    : await importer.pImportEntry(entry, opts, structuredClone(UNCHOSEN_PROFICIENCIES))
   const doc = summary?.imported?.[0]?.document ?? null
   if (!doc) throw Error(`Plutonium import failed for ${entry?.name ?? prop}`)
   return doc.toObject ? doc.toObject() : doc
@@ -316,6 +329,9 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       const steps = await describeSteps(manager)
       return { status: steps.length ? 'pending' : 'complete', steps }
     }),
+
+    /** 按作者条目导入成 dnd5e 物品数据（不进世界）；新建卡与读档重建共用这一个入口。 */
+    importForBuild: (prop: string, entry: any) => operate([], async () => importEntry(prop, entry)),
 
     /** P3-3b 重建：按引用导入作者条目 → 按记下的选择建卡 → 叠状态差别。 */
     rebuildCharacter: (plan: RebuildPlan) => operate([], async () => {
