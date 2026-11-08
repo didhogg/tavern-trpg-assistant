@@ -240,6 +240,7 @@ import { libraryData, startKernel, type KernelSession } from '../../../src/rules
 import { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor } from '../../../src/rules/kernel/rebuild'
 
 export { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor }
+export { kernelInput } from '../../../src/rules/kernel/input'
 
 export async function startKernelSession(input: unknown): Promise<{ session: KernelSession; status: unknown }> {
   const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files), timeoutMs: 180_000 })
