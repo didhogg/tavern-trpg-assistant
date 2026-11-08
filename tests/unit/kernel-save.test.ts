@@ -250,4 +250,39 @@ describe('P3-3 存档内核段', () => {
       expect(revision).toBe(3)
     })
   })
+
+  it('写入时按战役拿结算小窗拆好的人物（compactActors / mapRef 收到 ownerKey）', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      await service.startNewCampaign(NEW)
+      const checker: KernelRefChecker = async (refs) => refs.map((ref) => ({ ok: true, ref }))
+      const asked: Array<[string, string[]]> = []
+      const mapped: string[] = []
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker,
+        mapRef: (ownerKey) => { mapped.push(ownerKey); return () => null },
+        compactActors: async (ownerKey, ids) => {
+          asked.push([ownerKey, ids])
+          return ids.map((id) => ({ id, name: '测试角色', refs: [{ kind: 'spell', ...REF, label: '火球术' }], choices: {},
+            state: { actor: { system: { attributes: { hp: { value: 4 } } } }, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] } }))
+        } })
+      await kernel.bind(OWNER.ownerKey, campaign())
+      const change: KernelChange = { action: 'update', type: 'Actor', pack: null, parentUuid: 'Actor.actor1',
+        data: { system: { attributes: { hp: { value: 4 } } } } }
+      const written = await kernel.apply(OWNER.ownerKey, [change], 0)
+      expect(asked).toEqual([[OWNER.ownerKey, ['actor1']]])
+      expect(mapped).toEqual([OWNER.ownerKey])
+      expect(hp(written.kernel)).toBe(4)
+      expect(written.kernel.actors[0].adjustments).toEqual({ note: '玩家自己的备注' })
+    })
+  })
+})
+
+describe('结算内核世界编号', () => {
+  it('ownerKey 带冒号和点也能变成 Foundry 认的编号，同一个战役每次一样', async () => {
+    const { worldIdOf } = await import('../../src/rules/kernel/runtime')
+    const id = worldIdOf('char:龙金劫.png')
+    expect(id).toMatch(/^[A-Za-z0-9_-]+$/)
+    expect(worldIdOf('char:龙金劫.png')).toBe(id)
+    expect(worldIdOf('group:7')).not.toBe(id)
+  })
 })

@@ -10,7 +10,11 @@ await mkdir(work, { recursive: true })
 const { server, url } = await startServer()
 const engines = [['chrome', chromium, { executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true }], ['webkit', webkit, { headless: true }]]
 const section = (page) => page.locator('section.probe').filter({ hasText: '【库】真机验证' })
-const summary = (page) => section(page).locator('.probe__summary').innerText().catch(() => '')
+// 还没点过按钮时页面上没有结果这一行；先数一下再读，免得 innerText 一直等元素出现
+const summary = async (page) => {
+  const el = section(page).locator('.probe__summary')
+  return (await el.count()) ? el.innerText() : ''
+}
 const press = async (page, name, wait = 900000) => {
   const before = await summary(page)
   await section(page).getByRole('button', { name }).click()
@@ -34,6 +38,8 @@ async function open(type, options, profile, online) {
   await openDiagnostics(page)
   return { ctx, page, errors }
 }
+// 已单列（a 段驾驶员定）：插件启动时骰盘的作者小窗读作者导航索引，【库】还没装时读不到
+const known = (e) => e.includes('gendata-nav-adventure-book-index.json')
 const results = []
 for (const [name, type, options] of engines) {
   if (process.env.ENGINE && process.env.ENGINE !== name) continue
@@ -51,7 +57,7 @@ for (const [name, type, options] of engines) {
     r.offlineBook = await press(s.page, /③查一本书/)
     r.space = await press(s.page, '⑤存储空间')
   } finally { r.errors2 = s.errors; await s.ctx.close() }
-  r.passed = /安装成功/.test(r.install) && /error 0/.test(r.health) && /火球术详情取到/.test(r.book) && /火球术详情取到/.test(r.offlineBook) && !r.errors1.length && !r.errors2.length
+  r.passed = /安装成功/.test(r.install) && /error 0/.test(r.health) && /火球术详情取到/.test(r.book) && /火球术详情取到/.test(r.offlineBook) && !r.errors1.filter((e) => !known(e)).length && !r.errors2.filter((e) => !known(e)).length
   results.push(r)
   console.log(JSON.stringify(r, null, 1))
 }

@@ -1,4 +1,5 @@
 import type { StContext } from '../host/types'
+import { createBackendProbe } from './backendProbe'
 import { createEnvProbe } from './envProbe'
 import { createEventsProbe } from './eventsProbe'
 import { createIdentityProbe } from './identityProbe'
@@ -11,6 +12,7 @@ import type { ProbeModule } from './types'
 export function createProbes(ctx: StContext): ProbeModule[] {
   return [
     createLibraryProbe(),
+    createBackendProbe(),
     createEnvProbe(ctx),
     ...createPromptProbes(ctx),
     createStorageProbe(ctx),

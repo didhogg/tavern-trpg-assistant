@@ -36,10 +36,10 @@ export interface KernelSaveDeps {
   currentVersion?: () => KernelDataVersion | Promise<KernelDataVersion>
   /** 当前实际生效的房规覆盖；给了就报告覆盖是否变了。 */
   currentOverrides?: () => Promise<KernelOverride[]>
-  /** 作者编号 → 本战役【库】条目；不给出就用 unknown 占位（读档时会报缺）。 */
-  mapRef?: KernelRefMapper
-  /** 把当前小窗里的完整人物重新拆成引用/选择/状态差别；给了就用它，没给就按改动叠。 */
-  compactActors?: (ids: string[]) => Promise<KernelActorCompact[]>
+  /** 作者编号 → 本战役【库】条目（按战役的选书）；不给出时遇到要对照的改动直接报错。 */
+  mapRef?: (ownerKey: string) => KernelRefMapper | Promise<KernelRefMapper>
+  /** 把本战役结算小窗里的完整人物重新拆成引用/选择/状态差别；给了就用它，没给就按改动叠。 */
+  compactActors?: (ownerKey: string, ids: string[]) => Promise<KernelActorCompact[]>
   /** 撤销上限由设置决定；不给出时用默认值。 */
   undoLimit?: () => number | Promise<number>
 }
@@ -85,11 +85,11 @@ const DEFAULT_UNDO_LIMIT = 50
 export class KernelSaveService {
   constructor(private readonly deps: KernelSaveDeps) {}
 
-  private refMapper(): KernelRefMapper {
+  private async refMapper(ownerKey: string): Promise<KernelRefMapper> {
     if (!this.deps.mapRef) {
       return () => { throw new TrpgError('E_NO_REF_MAPPER', '没有提供作者编号到【库】条目的对照') }
     }
-    return this.deps.mapRef
+    return this.deps.mapRef(ownerKey)
   }
 
   private async workspace(ownerKey: string): Promise<Workspace> {
@@ -247,7 +247,7 @@ export class KernelSaveService {
   async preview(ownerKey: string, changes: KernelChange[]): Promise<{ revision: number; rows: KernelPreviewRow[] }> {
     const kernel = await this.read(ownerKey)
     if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-    const mapper = this.refMapper()
+    const mapper = await this.refMapper(ownerKey)
     const rows = changes.map((change) => {
       const actorId = actorIdOf(change)
       const actor = kernel.actors.find((item) => item.id === actorId) ?? null
@@ -265,7 +265,9 @@ export class KernelSaveService {
     const kernelBefore = await this.read(ownerKey)
     if (!kernelBefore) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
     const ids = [...new Set(changes.map(actorIdOf).filter((id): id is string => !!id))]
-    const compact = this.deps.compactActors && ids.length ? await this.deps.compactActors(ids) : []
+    const compact = this.deps.compactActors && ids.length ? await this.deps.compactActors(ownerKey, ids) : []
+    // 事务里不能等别的异步（Dexie 会提前提交），对照表先在事务外取好
+    const mapper = await this.refMapper(ownerKey)
     const compactById = new Map(compact.map((actor) => [actor.id, actor]))
     const limit = this.deps.undoLimit ? await this.deps.undoLimit() : DEFAULT_UNDO_LIMIT
     return this.deps.db.transaction('rw', this.deps.db.workspaces, async () => {
@@ -294,7 +296,7 @@ export class KernelSaveService {
             adjustments: old.adjustments, dice: old.dice, legacy: old.legacy, legacyState: old.legacyState,
           }
         } else {
-          nextActors[index] = applyActorChanges(nextActors[index], [change], this.refMapper())
+          nextActors[index] = applyActorChanges(nextActors[index], [change], mapper)
         }
       }
       const next: KernelCampaign = {

@@ -5,7 +5,8 @@ import { extname, join, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const root = fileURLToPath(new URL('../../', import.meta.url))
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8' }
+// 和【库】测试服务（library/static.mjs）同一张表：结算内核的 foundry.mjs 必须按脚本发，否则浏览器拒绝加载
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8' }
 
 export async function startServer() {
   const server = createServer(async (req, res) => {

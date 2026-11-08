@@ -216,7 +216,7 @@ export { defaultCampaignLibrary }
 import { TrpgDatabase } from '../../../src/core/db'
 import { CampaignService } from '../../../src/core/saves/campaign'
 import { KernelSaveService } from '../../../src/core/saves/kernel'
-import { scopedRefChecker, scopedCurrentOverrides } from '../../../src/library/kernel-check'
+import { libraryDataVersion, scopedRefChecker, scopedCurrentOverrides } from '../../../src/library/kernel-check'
 import { RuleRegistry } from '../../../src/rules/registry'
 import { dnd5e2014 } from '../../../src/rules/dnd5e2014'
 import { entryUnit } from '../../../src/library/scopes'
@@ -228,21 +228,8 @@ export const userDb = new TrpgDatabase('p3-3-4-e2e')
 export const rules = new RuleRegistry()
 rules.register(dnd5e2014)
 export const campaign = new CampaignService(userDb, { rules, now: () => Date.now() })
-export async function dataVersion() {
-  const official = await db.sets.get('cn-official')
-  const brews: Record<string, string> = {}
-  for (const codeSet of ['cn', 'en']) {
-    const official = await db.sets.get(`${codeSet}-official`)
-    if (official?.status !== 'installed') continue
-    const setId = `${codeSet}-brew`
-    const installed = await service.brewInstalled(setId).catch(() => [])
-    for (const entry of installed) {
-      const key = `${setId}:${String(entry.head.docIdLocal ?? entry.head.filename ?? '')}`
-      brews[key] = String(entry.head.checksum ?? entry.head.version ?? entry.head.dateAdded ?? entry.head.filename ?? '')
-    }
-  }
-  return { official: String(official?.commit ?? official?.updatedAt ?? ''), brews }
-}
+/** 当前装的数据版本记号：用正式代码（src/library/kernel-check.ts），测试不另写一份。 */
+export const dataVersion = libraryDataVersion(db, service)
 export const kernelSave = new KernelSaveService({ db: userDb, campaign, rules, now: () => Date.now(),
   checkRefs: scopedRefChecker(scoped), currentVersion: dataVersion, currentOverrides: scopedCurrentOverrides(scoped) })
 export const backupLibrary = { exportFiles: () => custom.exportBackup(), importFiles: (files: Record<string, string>) => custom.importBackup(files) }
