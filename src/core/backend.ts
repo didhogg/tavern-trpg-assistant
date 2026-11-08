@@ -72,6 +72,7 @@ export function createBackend(opts: BackendOptions): Backend {
   let kernelSave: KernelSaveService | null = null
   const kernel = new KernelRuntime({
     pluginRoot, files, scoped, container, cache: { db, dataVersion },
+    hasKernel: async (ownerKey) => !!(kernelSave && await kernelSave.read(ownerKey)),
     campaignOf: async (ownerKey) => {
       const ws = await opts.campaign.getWorkspace(ownerKey)
       if (!ws) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')

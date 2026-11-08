@@ -32,6 +32,8 @@ export interface KernelRuntimeDeps {
   timeoutMs?: number
   /** 换算缓存（S3）：本地可丢副本；不给就不缓存。 */
   cache?: { db: LibraryDatabase; dataVersion: () => Promise<KernelDataVersion> }
+  /** 这个战役有没有绑定结算内核（S5 进入战役时判断）。 */
+  hasKernel?: (ownerKey: string) => Promise<boolean>
 }
 
 interface Open {
@@ -76,6 +78,23 @@ export class KernelRuntime {
     this.open.set(ownerKey, opening)
     opening.catch(() => this.open.delete(ownerKey))
     return opening
+  }
+
+  /** 进入战役（S5）：有绑定才开机；同一时刻只保留这一个战役的小窗。 */
+  async enter(ownerKey: string): Promise<void> {
+    if (this.deps.hasKernel && !(await this.deps.hasKernel(ownerKey))) {
+      await this.closeAllExcept(null)
+      return
+    }
+    await this.closeAllExcept(ownerKey)
+    await this.get(ownerKey)
+  }
+
+  /** 关掉除 keep 外的所有战役小窗。 */
+  async closeAllExcept(keep: string | null): Promise<void> {
+    for (const ownerKey of [...this.open.keys()]) {
+      if (ownerKey !== keep) await this.close(ownerKey)
+    }
   }
 
   /** 关掉本战役的小窗（切换聊天、读档前）；记住的基准一起丢掉。 */

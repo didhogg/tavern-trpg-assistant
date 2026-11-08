@@ -37,6 +37,30 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
     () => void campaign.refreshCurrentSave().catch((error: unknown) => console.error('[trpg-assistant] 读取当前存档信息失败', error)),
     { immediate: true },
   )
+  // S5：进入有结算内核的战役后开小窗；切换聊天/读档时关旧开新；没有战役/未绑定不开。
+  let kernelSeq = 0
+  const reconcileKernel = (): void => {
+    const ownerKey = campaign.owner?.ownerKey ?? null
+    const bound = !!campaign.workspace?.data?.kernel
+    const seq = ++kernelSeq
+    void (async () => {
+      const services = app.svc()
+      if (!ownerKey || !bound || campaign.readOnly) {
+        await services.backend.kernel.closeAllExcept(null)
+        return
+      }
+      await services.backend.kernel.enter(ownerKey)
+      if (seq !== kernelSeq) return
+    })().catch((error: unknown) => {
+      console.error('[trpg-assistant] 结算内核启动失败', error)
+      toast.error(`结算内核启动失败：${error instanceof Error ? error.message : String(error)}`)
+    })
+  }
+  reconcileKernel()
+  const stopKernel = watch(
+    () => [campaign.owner?.ownerKey ?? '', !!campaign.workspace?.data?.kernel, campaign.readOnly],
+    () => reconcileKernel(),
+  )
   const stop = watch(
     () => campaign.readOnly,
     (readOnly) => {
@@ -55,6 +79,8 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
   return () => {
     stop()
     stopSave()
+    stopKernel()
     off()
+    if (campaign.owner) void app.svc().backend.kernel.closeAllExcept(null)
   }
 }
