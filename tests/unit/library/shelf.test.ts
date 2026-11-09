@@ -14,6 +14,7 @@ const REC: DirectoryRecord = {
     { id: 'ZZ', name: '未知组', source: 'ZZ', group: 'not-in-table' },
   ],
   adventures: [{ id: 'LMoP', name: '失落矿坑', source: 'LMoP', group: 'supplement', published: '2014-07-15', level: { start: 1, end: 5 }, storyline: '新手包' }],
+  adventureFiles: { LMoP: 'data/adventure/adventure-lmop.json' }, adventureProp: 'adventure', errors: { books: null, adventures: null },
 }
 const named = (r: Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'alternatives'>): CatalogRow =>
   ({ ...r, name: r.source, abv: r.source, edition: null, membership: { scopes: [], basis: 'none' } as never, view: { visible: true, reason: 'scope' }, alternatives: 0 })
@@ -44,57 +45,83 @@ describe('书架', () => {
   })
 })
 
-function fakeFrame(opts: { fail?: boolean } = {}) {
+function fakeFrame(opts: { booksError?: string; adventuresError?: string; failAll?: boolean } = {}) {
   const closed: string[] = []
-  const calls: string[] = []
   const frame = {
-    failures: opts.fail ? ['所有下载地址都取不到'] : [] as string[],
+    failures: opts.failAll ? ['所有下载地址都取不到'] : [] as string[],
     close: () => { closed.push('x') },
     call: async (fn: string) => {
-      calls.push(fn)
-      if (opts.fail) throw new Error('文件不存在：data/books.json')
       if (fn === 'loaders') return [{ kind: 'corpus', index: 'books.json', props: ['book', 'bookData'], page: 'book' }, { kind: 'corpus', index: 'adventures.json', props: ['adventure', 'adventureData'], page: 'adventure' }, { kind: 'site', props: ['spell'], page: 'spells' }]
-      return { groups: GROUPS, sources: {}, corpora: [{ prop: 'book', items: REC.books }, { prop: 'adventure', items: REC.adventures }] }
+      if (opts.failAll) throw new Error('文件不存在：data/generated/gendata-tag-redirects.json')
+      return { groups: GROUPS, sources: {}, corpora: [
+        { prop: 'book', items: opts.booksError ? [] : REC.books, files: [], error: opts.booksError ?? null },
+        { prop: 'adventure', items: opts.adventuresError ? [] : REC.adventures, files: opts.adventuresError ? [] : ['data/adventure/adventure-lmop.json'], error: opts.adventuresError ?? null },
+      ] }
     },
   }
-  return { frame: frame as never, closed, calls }
+  return { frame: frame as never, closed }
+}
+
+const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
+  const db = new LibraryDatabase(`dir-${Math.random()}`)
+  try { await run(db) } finally { db.close(); await db.delete() }
 }
 
 describe('BookDirectory', () => {
-  it('没装：开联网一次性小窗读完就关；结果存缓存，第二次不再开小窗', async () => {
-    const db = new LibraryDatabase(`dir-${Math.random()}`)
-    try {
-      const net = fakeFrame()
-      let opened = 0
-      const dir = new BookDirectory({ db, localFrame: async () => { throw new Error('不该用本地小窗') }, networkFrame: async () => { opened++; return net.frame } })
-      const a = await dir.get('cn')
-      expect(a.books).toHaveLength(3)
-      expect(a.adventures).toHaveLength(1)
-      expect(net.closed).toHaveLength(1)
-      await dir.get('cn')
-      expect(opened).toBe(1)
-    } finally { db.close(); await db.delete() }
-  })
+  it('没装：开联网一次性小窗读完就关；带冒险文件路径；结果存缓存，第二次不再开小窗；peek 只看缓存', () => withDb(async (db) => {
+    const net = fakeFrame()
+    let opened = 0
+    const dir = new BookDirectory({ db, localFrame: async () => { throw new Error('不该用本地小窗') }, networkFrame: async () => { opened++; return net.frame } })
+    expect(await dir.peek('cn')).toBeNull()
+    const a = await dir.get('cn')
+    expect(a.books).toHaveLength(3)
+    expect(a.adventureFiles).toEqual({ LMoP: 'data/adventure/adventure-lmop.json' })
+    expect(a.adventureProp).toBe('adventure')
+    expect(a.errors).toEqual({ books: null, adventures: null })
+    expect(net.closed).toHaveLength(1)
+    await dir.get('cn')
+    expect(opened).toBe(1)
+    expect((await dir.peek('cn'))?.books).toHaveLength(3)
+  }))
 
-  it('已装好：用本地小窗，不联网、不关它', async () => {
-    const db = new LibraryDatabase(`dir-${Math.random()}`)
-    try {
-      await db.sets.put({ id: 'cn-official', commit: 'x', status: 'installed', plan: { files: 0, bytes: 0 }, updatedAt: 1 } as never)
-      const local = fakeFrame()
-      const dir = new BookDirectory({ db, localFrame: async () => local.frame, networkFrame: async () => { throw new Error('不该联网') } })
-      expect((await dir.get('cn')).books).toHaveLength(3)
-      expect(local.closed).toHaveLength(0)
-    } finally { db.close(); await db.delete() }
-  })
+  it('已装好：用本地小窗，不联网、不关它', () => withDb(async (db) => {
+    await db.sets.put({ id: 'cn-official', commit: 'x', status: 'installed', plan: { files: 0, bytes: 0 }, updatedAt: 1 } as never)
+    const local = fakeFrame()
+    const dir = new BookDirectory({ db, localFrame: async () => local.frame, networkFrame: async () => { throw new Error('不该联网') } })
+    expect((await dir.get('cn')).books).toHaveLength(3)
+    expect(local.closed).toHaveLength(0)
+  }))
 
-  it('联网取不到：抛出写明原因的错误，小窗照样关，不写缓存', async () => {
-    const db = new LibraryDatabase(`dir-${Math.random()}`)
-    try {
-      const net = fakeFrame({ fail: true })
-      const dir = new BookDirectory({ db, localFrame: async () => net.frame, networkFrame: async () => net.frame })
-      await expect(dir.get('cn')).rejects.toThrow(/官方书目（cn）取不到.*文件不存在.*所有下载地址都取不到/)
-      expect(net.closed).toHaveLength(1)
-      expect(await db.derived.toArray()).toEqual([])
-    } finally { db.close(); await db.delete() }
-  })
+  it('冒险目录取不到：书目照常交回，只记冒险的错误；不写缓存（重试会重新联网）', () => withDb(async (db) => {
+    const net = fakeFrame({ adventuresError: '文件不存在：data/adventures.json' })
+    const dir = new BookDirectory({ db, localFrame: async () => net.frame, networkFrame: async () => net.frame })
+    const r = await dir.get('cn')
+    expect(r.books).toHaveLength(3)
+    expect(r.adventures).toEqual([])
+    expect(r.errors.books).toBeNull()
+    expect(r.errors.adventures).toMatch(/官方冒险目录（cn）取不到.*adventures\.json/)
+    expect(await db.derived.toArray()).toEqual([])
+  }))
+
+  it('书目取不到：只记书目的错误（向导据此挡[下一步]）；冒险目录照常', () => withDb(async (db) => {
+    const net = fakeFrame({ booksError: '文件不存在：data/books.json' })
+    const dir = new BookDirectory({ db, localFrame: async () => net.frame, networkFrame: async () => net.frame })
+    const r = await dir.get('cn')
+    expect(r.books).toEqual([])
+    expect(r.errors.books).toMatch(/官方书目（cn）取不到.*books\.json/)
+    expect(r.adventures).toHaveLength(1)
+    expect(r.errors.adventures).toBeNull()
+  }))
+
+  it('小窗整个起不来 / 联网全失败：两个目录都记错误，写明原因，小窗照样关，不抛错', () => withDb(async (db) => {
+    const net = fakeFrame({ failAll: true })
+    const dir = new BookDirectory({ db, localFrame: async () => net.frame, networkFrame: async () => net.frame })
+    const r = await dir.get('cn')
+    expect(r.errors.books).toMatch(/官方书目（cn）取不到.*文件不存在.*所有下载地址都取不到/)
+    expect(r.errors.adventures).toMatch(/官方冒险目录（cn）取不到/)
+    expect(net.closed).toHaveLength(1)
+    expect(await db.derived.toArray()).toEqual([])
+    const down = new BookDirectory({ db, localFrame: async () => net.frame, networkFrame: async () => { throw new Error('开不了小窗') } })
+    expect((await down.get('en')).errors.books).toMatch(/官方书目（en）取不到：开不了小窗/)
+  }))
 })

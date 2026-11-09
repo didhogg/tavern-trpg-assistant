@@ -5,6 +5,8 @@
 // 资料没装好时建的战役，数据版本记号是空的；下载完后若战役还没被动过（未改动、没人物），自动补上现在的版本记号并重存一次，
 // 免得第一次读档就提示“资料换过版本”。
 import type { LibraryDatabase } from '../library/db'
+import type { BookDirectory } from '../library/directory'
+import { DownloadEstimator, type DownloadEstimate, type EstimateOptions } from '../library/download-estimate'
 import type { FileProvider } from '../library/files'
 import { precachePlan } from '../library/plan'
 import type { DownloadTasks, TaskState } from '../library/tasks'
@@ -15,6 +17,7 @@ import { SOURCES, officialSourceOf } from '../library/sources'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelDataVersion } from '../schemas/kernel'
 import type { Workspace, SaveSlot } from '../schemas/campaign'
 import type { RuleRegistry } from '../rules/registry'
+import type { CorePackStatus } from '../rules/kernel/core-pack'
 import { TrpgError } from './errors'
 import type { CampaignService, Owner } from './saves/campaign'
 import { cleanName } from './saves/helpers'
@@ -27,9 +30,12 @@ export interface StartCampaignDeps {
   campaign: CampaignService
   kernelSave: KernelSaveService
   rules: RuleRegistry
+  /** 随插件自带的核心 SRD 资料包还在不在（rules/kernel/core-pack.ts）。 */
+  corePacks: () => Promise<CorePackStatus>
   library: {
     db: LibraryDatabase
     files: FileProvider
+    directory: BookDirectory
     scoped: ScopedLibrary
     tasks: DownloadTasks
     dataVersion: () => Promise<KernelDataVersion>
@@ -64,8 +70,14 @@ export interface WizardOptions {
   data: DataSetState[]
   /** 书目与冒险，按作者的分组表排好（核心 / 官方出版物 / 设定集…）；没装官方数据也能列，每行 downloaded 标有没有下。 */
   shelf: ShelfGroup[]
-  /** 书目取不到（联网失败等）的原因；有值时 shelf 为空，向导显示原因和重试，不卡住。 */
+  /** 唯一的资料阻断点：随插件自带的核心 SRD 资料包缺了（用户删了 / 装坏了），[下一步]不可点，显示原因和[重试]；开局也会被拒绝。 */
+  blockingError: string | null
+  /** 书目文件取不到的原因（联网问题等）：不挡，和 adventureError 一起统一提示"当前拉取不到书目，请之后再去库里添加"。 */
   shelfError: string | null
+  /** 冒险目录取不到的原因：同上，不挡。 */
+  adventureError: string | null
+  /** 书目或冒险目录任何一个没取到：界面据此显示统一提示（文案归界面）。 */
+  catalogUnavailable: boolean
   library: CampaignLibrary
 }
 
@@ -120,6 +132,15 @@ export class CampaignStarter {
   }
 
   /**
+   * 向导要写的"总下载约 xx MB"：资料（所选语言 + 结算内核要的英文，已装好的不算）+ 所选冒险。
+   * 规则用作者离线设计的现成两条（plan.ts），与真正下载同一份计划。network = false 只看缓存，没算出来的是 null（界面写"正在计算下载文件大小"）。
+   */
+  estimateDownload(input: { codeSet: string; adventures?: Array<{ set: string; id: string }> }, opts?: EstimateOptions): Promise<DownloadEstimate> {
+    const { db, files, directory } = this.deps.library
+    return new DownloadEstimator({ db, files, directory }).estimate({ sets: this.neededSets(input.codeSet), adventures: input.adventures }, opts)
+  }
+
+  /**
    * 各套官方资料的状态与大小（只读，不联网；首页 / 侧栏 / 向导都用它）。
    * 刷新页面后任务列表会清空，"装了一半"靠库里记的状态认出来（status = incomplete），界面据此提示并给"继续"。
    */
@@ -137,14 +158,21 @@ export class CampaignStarter {
     return out
   }
 
+  private coreMessage(core: CorePackStatus): string {
+    const shown = core.missing.slice(0, 3).join('、') + (core.missing.length > 3 ? ` 等 ${core.missing.length} 个` : '')
+    return `随插件自带的核心 SRD 规则资料不完整（缺 ${shown}），不能创建战役。请重新安装插件后重试。`
+  }
+
   async wizardOptions(ruleId: string, codeSet: string, choice: LibraryChoice = {}): Promise<WizardOptions> {
     const rule = this.deps.rules.get(ruleId)
     if (!rule) throw new TrpgError('E_RULE_MISSING', `没有这套规则：${ruleId}`)
     const library = this.libraryOf(ruleId, codeSet, choice)
     const { scoped } = this.deps.library
-    let shelf: ShelfGroup[] = []
-    let shelfError: string | null = null
-    try { shelf = await scoped.shelf(library) } catch (e) { shelfError = msg(e) }
+    const r = await scoped.shelf(library).catch((e: unknown) => ({ groups: [] as ShelfGroup[], booksError: msg(e), adventuresError: null as string | null }))
+    const shelf = r.groups
+    const shelfError = r.booksError
+    const adventureError = r.adventuresError
+    const core = await this.deps.corePacks()
     const data = await this.dataStatus() // 书目步骤会顺带缓存文件清单，所以放在它后面才有下载大小
     return {
       rule: { id: rule.id, name: rule.name },
@@ -152,7 +180,10 @@ export class CampaignStarter {
       defaultScopes: [...ruleScopes(ruleId).defaultScopes],
       data,
       shelf,
+      blockingError: core.ok ? null : this.coreMessage(core),
       shelfError,
+      adventureError,
+      catalogUnavailable: !!(shelfError || adventureError),
       library,
     }
   }
@@ -162,6 +193,8 @@ export class CampaignStarter {
     const { scoped, tasks, dataVersion } = this.deps.library
     if (!rules.has(input.ruleId)) throw new TrpgError('E_RULE_MISSING', `没有这套规则：${input.ruleId}`)
     const name = cleanName(input.name)
+    const core = await this.deps.corePacks()
+    if (!core.ok) throw new TrpgError('E_CORE_MISSING', this.coreMessage(core))
     const needed = this.neededSets(input.codeSet) // 先验：资料语言没登记会在这里抛，不会留下半个战役
     const library = this.libraryOf(input.ruleId, input.codeSet, input.library)
 

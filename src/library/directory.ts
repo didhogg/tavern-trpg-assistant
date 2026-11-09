@@ -2,6 +2,7 @@
 // 做法：开一个允许联网的一次性小窗，让作者程序自己读书目文件（文件名来自作者加载器登记表）；
 // 它按需取到的文件（书目、导航索引、初始化要读的小文件）照常存进本地仓，所以只下载几百 KB；
 // 整理好的书目按“数据集 + 锁定版本”存进派生物，下次（含断网）直接用。已装好的数据集不联网，用现成小窗读本地文件。
+// 书目文件和冒险文件各自独立：哪个取不到就只记哪个的错误（record.errors），不抛错、不写缓存（重试会重新联网）。
 import type { LibraryDatabase } from './db'
 import type { DirectoryData } from './runtime/frame/directory-commands'
 import type { AuthorFrame } from './runtime/host'
@@ -13,6 +14,12 @@ export interface DirectoryRecord extends Omit<DirectoryData, 'corpora'> {
   /** books.json 的 book / adventures.json 的 adventure，条目原样（作者字段不挑不改）。 */
   books: any[] // eslint-disable-line @typescript-eslint/no-explicit-any -- 作者条目没有类型
   adventures: any[] // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** 冒险编号 → 正文文件路径（作者加载器给的拼法）；下载大小估算与下载共用。 */
+  adventureFiles: Record<string, string>
+  /** 冒险的类别名（作者加载器登记表的 props[0]），查"这本冒险下载了没有"用。 */
+  adventureProp: string
+  /** 哪个目录文件取不到及原因；null = 正常。 */
+  errors: { books: string | null; adventures: string | null }
 }
 
 export interface DirectoryOptions {
@@ -24,11 +31,24 @@ export interface DirectoryOptions {
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
+const KEY_VERSION = 'v2'
 
 export class BookDirectory {
   private readonly inflight = new Map<string, Promise<DirectoryRecord>>()
 
   constructor(private readonly opts: DirectoryOptions) {}
+
+  private keyOf(codeSet: string): { key: string; commit: string; sourceId: string } {
+    const source = officialSourceOf(codeSet)
+    const commit = commitOf(source)
+    return { key: `directory:${KEY_VERSION}:${source.id}@${commit}`, commit, sourceId: source.id }
+  }
+
+  /** 只看缓存，不联网、不开小窗。 */
+  async peek(codeSet: string): Promise<DirectoryRecord | null> {
+    const saved = await this.opts.db.derived.get(this.keyOf(codeSet).key)
+    return saved ? (saved.value as DirectoryRecord) : null
+  }
 
   get(codeSet: string): Promise<DirectoryRecord> {
     let p = this.inflight.get(codeSet)
@@ -41,29 +61,43 @@ export class BookDirectory {
   }
 
   private async load(codeSet: string): Promise<DirectoryRecord> {
-    const source = officialSourceOf(codeSet)
-    const commit = commitOf(source)
-    const key = `directory:${source.id}@${commit}`
+    const { key, commit, sourceId } = this.keyOf(codeSet)
     const saved = await this.opts.db.derived.get(key)
     if (saved) return saved.value as DirectoryRecord
 
-    const installed = (await this.opts.db.sets.get(source.id))?.status === 'installed'
-    const frame = installed ? await this.opts.localFrame(codeSet) : await this.opts.networkFrame(codeSet, `directory:${codeSet}`)
+    const failed = (why: string): DirectoryRecord => ({
+      codeSet, commit, groups: [], sources: {}, books: [], adventures: [], adventureFiles: {}, adventureProp: '',
+      errors: { books: `官方书目（${codeSet}）取不到：${why}`, adventures: `官方冒险目录（${codeSet}）取不到：${why}` },
+    })
+    const installed = (await this.opts.db.sets.get(sourceId))?.status === 'installed'
+    let frame: AuthorFrame
+    try {
+      frame = installed ? await this.opts.localFrame(codeSet) : await this.opts.networkFrame(codeSet, `directory:${codeSet}`)
+    } catch (e) {
+      return failed(msg(e))
+    }
     try {
       const corpus = (await frame.call('loaders')).filter((l) => l.kind === 'corpus' && l.index)
       const specs = corpus.map((l) => ({ index: l.index as string, prop: l.props[0] }))
       const data = await frame.call('directory', specs)
-      const pick = (marker: string): any[] => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const find = (marker: string): { items: any[]; files: string[]; error: string | null; prop: string } => { // eslint-disable-line @typescript-eslint/no-explicit-any
         const at = corpus.findIndex((l) => l.props.includes(marker))
-        return at < 0 ? [] : data.corpora[at].items
+        if (at < 0) return { items: [], files: [], error: `作者加载器登记表里没有 ${marker}`, prop: '' }
+        return { ...data.corpora[at], prop: corpus[at].props[0] }
       }
-      const record: DirectoryRecord = { codeSet, commit, groups: data.groups, sources: data.sources, books: pick('bookData'), adventures: pick('adventureData') }
-      if (!record.books.length && !record.adventures.length) throw new Error('书目文件里没有书也没有冒险')
-      await this.opts.db.derived.put({ key, fingerprint: commit, value: record, savedAt: Date.now() })
+      const books = find('bookData')
+      const adventures = find('adventureData')
+      const record: DirectoryRecord = {
+        codeSet, commit, groups: data.groups, sources: data.sources, books: books.items, adventures: adventures.items,
+        adventureFiles: Object.fromEntries(adventures.items.map((it, i) => [String(it.id), adventures.files[i]])),
+        adventureProp: adventures.prop,
+        errors: { books: books.error ? `官方书目（${codeSet}）取不到：${books.error}` : null, adventures: adventures.error ? `官方冒险目录（${codeSet}）取不到：${adventures.error}` : null },
+      }
+      if (!record.errors.books && !record.errors.adventures) await this.opts.db.derived.put({ key, fingerprint: commit, value: record, savedAt: Date.now() })
       return record
     } catch (e) {
       const why = frame.failures.length ? `${msg(e)}（${frame.failures[0]}）` : msg(e)
-      throw new Error(`官方书目（${codeSet}）取不到：${why}`, { cause: e })
+      return failed(why)
     } finally {
       if (!installed) frame.close()
     }

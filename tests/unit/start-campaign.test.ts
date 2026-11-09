@@ -35,7 +35,8 @@ function fakeLibrary() {
     library: {
       db: { sets: { get: async (id: string) => (installed.has(id) ? { id, status: 'installed' } : recorded.has(id) ? { id, status: recorded.get(id) } : undefined) } },
       files: { cachedFileList: async (s: { id: string }) => lists.get(s.id) ?? null },
-      scoped: { activeOverrides: async () => [], scopes: async () => [], shelf: async () => [] },
+      directory: {},
+      scoped: { activeOverrides: async () => [], scopes: async () => [], shelf: async () => ({ groups: [], booksError: null, adventuresError: null }) },
       tasks,
       dataVersion: async () => ({ official: installed.size ? 'v1' : '', brews: {} }),
     },
@@ -45,11 +46,12 @@ function fakeLibrary() {
 const INPUT = { ...OWNER, ruleId: 'dnd5e2014', name: '失落矿坑', codeSet: 'cn' }
 
 async function build(db: Parameters<typeof setup>[0]) {
+  const core = { status: { ok: true, system: 'dnd5e', total: 23, missing: [] as string[] } }
   const { campaign, clock } = await setup(db)
   const fake = fakeLibrary()
   const lib = fake.library as never as ConstructorParameters<typeof CampaignStarter>[0]['library']
   const kernelSave = new KernelSaveService({ db, campaign, rules: makeRegistry(), now: clock, checkRefs: async (refs) => refs.map((ref) => ({ ok: true, ref })), currentVersion: fake.library.dataVersion, currentOverrides: async () => [] })
-  return { campaign, kernelSave, fake, starter: new CampaignStarter({ campaign, kernelSave, rules: makeRegistry(), library: lib }) }
+  return { campaign, kernelSave, fake, core, starter: new CampaignStarter({ campaign, kernelSave, rules: makeRegistry(), corePacks: async () => core.status, library: lib }) }
 }
 
 describe('startCampaign', () => {
@@ -112,6 +114,9 @@ describe('wizardOptions', () => {
       expect(o.data.every((d) => !d.installed)).toBe(true)
       expect(o.shelf).toEqual([])
       expect(o.shelfError).toBeNull()
+      expect(o.adventureError).toBeNull()
+      expect(o.blockingError).toBeNull()
+      expect(o.catalogUnavailable).toBe(false)
       fake.installed.add('cn-official')
       expect((await starter.wizardOptions('dnd5e2014', 'cn')).data.find((d) => d.codeSet === 'cn')?.installed).toBe(true)
     })
@@ -156,6 +161,32 @@ describe('dataStatus（BE-8）', () => {
       fake.recorded.set('cn-official', 'cancelled')
       const o = await starter.wizardOptions('dnd5e2014', 'cn')
       expect(o.data.find((x) => x.setId === 'cn-official')).toMatchObject({ status: 'incomplete', recordStatus: 'cancelled' })
+    })
+  })
+})
+
+describe('唯一的资料阻断点：随插件自带的核心 SRD 资料包', () => {
+  it('缺了：向导给出原因、开局被拒绝且什么都不建；补回后恢复', async () => {
+    await withDb(async (db) => {
+      const { campaign, core, starter } = await build(db)
+      core.status = { ok: false, system: 'dnd5e', total: 23, missing: ['packs/dnd5e.classes.json', 'packs/dnd5e.spells.json', 'packs/dnd5e.items.json', 'packs/dnd5e.races.json'] }
+      const o = await starter.wizardOptions('dnd5e2014', 'cn')
+      expect(o.blockingError).toMatch(/核心 SRD.*packs\/dnd5e\.classes\.json.*等 4 个/)
+      await expect(starter.startCampaign(INPUT)).rejects.toMatchObject({ code: 'E_CORE_MISSING' })
+      expect(await campaign.getWorkspace(OWNER.ownerKey)).toBeNull()
+      core.status = { ok: true, system: 'dnd5e', total: 23, missing: [] }
+      expect((await starter.wizardOptions('dnd5e2014', 'cn')).blockingError).toBeNull()
+    })
+  })
+
+  it('书目 / 冒险目录取不到只是提示，不挡：blockingError 仍为空', async () => {
+    await withDb(async (db) => {
+      const { fake, starter } = await build(db)
+      fake.library.scoped.shelf = (async () => ({ groups: [], booksError: '官方书目（cn）取不到：断网', adventuresError: '官方冒险目录（cn）取不到：断网' })) as never
+      const o = await starter.wizardOptions('dnd5e2014', 'cn')
+      expect(o).toMatchObject({ blockingError: null, catalogUnavailable: true })
+      expect(o.shelfError).toMatch(/官方书目/)
+      expect(o.adventureError).toMatch(/官方冒险目录/)
     })
   })
 })

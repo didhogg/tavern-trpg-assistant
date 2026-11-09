@@ -12,7 +12,7 @@ const { server, url } = await startStatic({ port: 47338 })
 const report = { engine: ENGINE, checks: [], timings: {} }
 const check = (name, ok, detail) => { report.checks.push({ name, ok: !!ok, detail }); if (!ok) console.log('FAIL', name, JSON.stringify(detail)) }
 
-async function boot(profile, { online }) {
+async function boot(profile, { online, block = [], gone = [] }) {
   const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
   const page = await ctx.newPage()
   page.setDefaultTimeout(120000)
@@ -21,6 +21,8 @@ async function boot(profile, { online }) {
   page.on('pageerror', (e) => pageErrors.push(String(e.message ?? e).slice(0, 160)))
   page.on('request', (r) => { if (!r.url().startsWith(url)) external.push(r.url()) })
   if (!online) await page.route((u) => !u.href.startsWith(url), (route) => route.abort())
+  if (gone.length) await page.route((u) => gone.some((g) => u.href.endsWith(g)), (route) => route.fulfill({ status: 404, body: '' }))
+  if (online && block.length) await page.route((u) => !u.href.startsWith(url) && block.some((b) => u.href.endsWith(b)), (route) => route.abort())
   await page.goto(url)
   await page.waitForFunction(() => { const h = document.querySelector('#trpg-assistant-root'); const app = [...(h?.shadowRoot?.children ?? [])].map((c) => c.__vue_app__).find(Boolean); return app?.config.globalProperties.$pinia._s.get('app')?.booted })
   return { ctx, page, external, pageErrors }
@@ -35,7 +37,7 @@ const wizard = (page, codeSet) => page.evaluate(async (cs) => {
   const lib = backend.library.db
   const rows = o.shelf.flatMap((g) => [...g.books, ...g.adventures])
   return {
-    ms, shelfError: o.shelfError, groups: o.shelf.map((g) => [g.group, g.name, g.books.length, g.adventures.length]),
+    ms, shelfError: o.shelfError, adventureError: o.adventureError, blockingError: o.blockingError, catalogUnavailable: o.catalogUnavailable, groups: o.shelf.map((g) => [g.group, g.name, g.books.length, g.adventures.length]),
     books: rows.filter((r) => r.kind === 'book').length, adventures: rows.filter((r) => r.kind === 'adventure').length,
     noShelf: rows.filter((r) => !r.shelf).length, anyDownloaded: rows.some((r) => r.downloaded),
     phb: rows.find((r) => r.kind === 'book' && r.source === 'PHB') ? { group: rows.find((r) => r.kind === 'book' && r.source === 'PHB').shelf.group, name: rows.find((r) => r.kind === 'book' && r.source === 'PHB').name, visible: rows.find((r) => r.kind === 'book' && r.source === 'PHB').view.visible } : null,
@@ -56,7 +58,7 @@ try {
     const r = await wizard(s.page, cs)
     report.timings[`${cs}-first`] = r.ms
     report[cs] = r
-    check(`${cs}：没有错误`, r.shelfError === null, r.shelfError)
+    check(`${cs}：没有错误，也不挡下一步（核心 SRD 资料包都在）`, r.shelfError === null && r.blockingError === null && r.catalogUnavailable === false, { e: r.shelfError, b: r.blockingError })
     check(`${cs}：有书有冒险（数量来自作者书目，不写死）`, r.books > 0 && r.adventures > 0, { books: r.books, adventures: r.adventures })
     check(`${cs}：每行都带作者书目字段`, r.noShelf === 0, r.noShelf)
     check(`${cs}：官方数据没装、没有一行标已下载`, r.sets === 0 && !r.anyDownloaded && r.data.every(([, i]) => !i), { sets: r.sets, data: r.data })
@@ -84,6 +86,27 @@ try {
   const again = await wizard(s.page, 'cn')
   report.timings['cn-cached'] = again.ms
   check('第二次走缓存，不再联网', again.ms < report.timings['cn-first'] && again.books === report.cn.books, { first: report.timings['cn-first'], again: again.ms })
+  // B2 下载大小预估：同一份计划（作者预载规则）；先只看缓存，再联网补英文清单
+  const est = await s.page.evaluate(async () => {
+    const host = document.querySelector('#trpg-assistant-root')
+    const app = [...(host.shadowRoot.children)].map((c) => c.__vue_app__).find(Boolean)
+    const backend = app.config.globalProperties.$pinia._s.get('app').svc().backend
+    const pick = [{ set: 'cn-official', id: 'LMoP' }]
+    const dataStatus = (await backend.starter.dataStatus()).find((d) => d.setId === 'cn-official')
+    const t = performance.now()
+    const cachedOnly = await backend.starter.estimateDownload({ codeSet: 'cn', adventures: pick }, { network: false })
+    const cachedMs = Math.round(performance.now() - t)
+    const t2 = performance.now()
+    const full = await backend.starter.estimateDownload({ codeSet: 'cn', adventures: pick })
+    const fullMs = Math.round(performance.now() - t2)
+    const none = await backend.starter.estimateDownload({ codeSet: 'cn' })
+    return { cn: dataStatus.downloadBytes, cachedOnly, full, none, cachedMs, fullMs }
+  })
+  report.estimate = { cn: est.cn, cachedMs: est.cachedMs, fullMs: est.fullMs, full: { data: est.full.data.bytes, adv: est.full.adventures.bytes, total: est.full.totalBytes } }
+  check('B2 估算：中文资料字节数 = 已有的 dataStatus.downloadBytes（同一份计划）', est.full.data.sets[0].bytes === est.cn && est.cn > 10_000_000, { cn: est.cn, set: est.full.data.sets[0] })
+  check('B2 估算：中英书目都列过（清单已缓存）时，只看缓存也能算出，结果和联网时一样', JSON.stringify(est.cachedOnly.data) === JSON.stringify(est.full.data) && est.cachedOnly.computing === false, { cached: est.cachedOnly.data.bytes, full: est.full.data.bytes })
+  check('B2 估算：英文资料有数，总数 = 资料 + 冒险；失落矿坑只有几百 KB', est.full.data.sets[1].bytes > 10_000_000 && est.full.computing === false && est.full.adventures.bytes > 50_000 && est.full.adventures.bytes < 3_000_000 && est.full.totalBytes === est.full.data.bytes + est.full.adventures.bytes, { total: est.full.totalBytes, adv: est.full.adventures })
+  check('B2 估算：不选冒险时冒险为 0；资料不随书的勾选变化', est.none.adventures.bytes === 0 && est.none.data.bytes === est.full.data.bytes, { none: est.none.adventures, data: est.none.data.bytes })
   await s.ctx.close()
   // 3) 同一个库，断网重开：照样列出
   s = await boot(profile, { online: false })
@@ -98,8 +121,44 @@ try {
   s = await boot(fresh, { online: false })
   const none = await wizard(s.page, 'cn')
   report.timings['fresh-offline'] = none.ms
-  check('空库断网：返回原因而不是卡住或抛出', typeof none.shelfError === 'string' && none.shelfError.includes('官方书目') && none.groups.length === 0 && none.ms < 60000, { err: none.shelfError, ms: none.ms })
+  check('空库断网：返回原因而不是卡住或抛出；核心资料包随插件自带，所以仍不挡下一步', typeof none.shelfError === 'string' && none.shelfError.includes('官方书目') && none.blockingError === null && none.groups.length === 0 && none.ms < 60000, { err: none.shelfError, block: none.blockingError, ms: none.ms })
   await s.ctx.close()
+  // B3：冒险目录取不到 → 只记冒险的错误，书目照常；书目取不到 → 记书目的错误（向导据此挡[下一步]），冒险照常
+  for (const [name, blockEnd, want] of [['adv', 'data/adventures.json', 'adventures'], ['books', 'data/books.json', 'books']]) {
+    const prof = join(work, `profile-book-shelf-${name}-${ENGINE}`)
+    await rm(prof, { recursive: true, force: true })
+    s = await boot(prof, { online: true, block: [blockEnd] })
+    if (want === 'adventures') {
+      const blank = await s.page.evaluate(async () => {
+        const host = document.querySelector('#trpg-assistant-root')
+        const app = [...(host.shadowRoot.children)].map((c) => c.__vue_app__).find(Boolean)
+        const e = await app.config.globalProperties.$pinia._s.get('app').svc().backend.starter.estimateDownload({ codeSet: 'cn', adventures: [{ set: 'cn-official', id: 'LMoP' }] }, { network: false })
+        return { total: e.totalBytes, computing: e.computing, data: e.data.sets.map((x) => x.bytes), adv: e.adventures.bytes }
+      })
+      check('B2 估算：全新空库不联网时是"正在计算"（没有数、不发起联网请求）', blank.total === null && blank.computing === true && blank.data.every((x) => x === null) && s.external.length === 0, { blank, ext: s.external.length })
+    }
+    const r = await wizard(s.page, 'cn')
+    if (want === 'adventures') check('B3 冒险目录取不到：书目照常、只有冒险错误、不挡下一步', r.shelfError === null && typeof r.adventureError === 'string' && r.blockingError === null && r.catalogUnavailable === true && r.books > 0 && r.adventures === 0, { shelfError: r.shelfError, adv: r.adventureError, block: r.blockingError, books: r.books, advN: r.adventures })
+    else check('B3 书目取不到：有原因、不挡下一步（界面统一提示去库里添加）；冒险目录照常', typeof r.shelfError === 'string' && r.shelfError.includes('官方书目') && r.blockingError === null && r.catalogUnavailable === true && r.adventureError === null && r.adventures > 0, { shelfError: r.shelfError, adv: r.adventureError, block: r.blockingError, advN: r.adventures })
+    await s.ctx.close()
+  }
+  // 唯一的阻断点：随插件自带的核心 SRD 资料包缺了（模拟用户删了一个）→ 向导给原因、开局被后端拒绝；其余照常
+  {
+    const prof = join(work, `profile-book-shelf-core-${ENGINE}`)
+    await rm(prof, { recursive: true, force: true })
+    s = await boot(prof, { online: true, gone: ['/vendor/foundry/packs/dnd5e.classes.json'] })
+    const r = await wizard(s.page, 'cn')
+    const start = await s.page.evaluate(async () => {
+      const host = document.querySelector('#trpg-assistant-root')
+      const app = [...(host.shadowRoot.children)].map((c) => c.__vue_app__).find(Boolean)
+      const backend = app.config.globalProperties.$pinia._s.get('app').svc().backend
+      try { await backend.starter.startCampaign({ ownerKey: 'char:核心包测试.png', ownerLabel: '核心包测试', ruleId: 'dnd5e2014', name: '不该建成', codeSet: 'cn' }); return { ok: true } }
+      catch (e) { return { ok: false, code: e.code, message: e.message } }
+    })
+    check('核心 SRD 资料包缺一个：向导给出原因（写明缺哪个）且是唯一的阻断', typeof r.blockingError === 'string' && r.blockingError.includes('dnd5e.classes.json') && r.books > 0, { block: r.blockingError, books: r.books })
+    check('核心 SRD 资料包缺一个：开局被后端拒绝（E_CORE_MISSING），不建战役', start.ok === false && start.code === 'E_CORE_MISSING', start)
+    await s.ctx.close()
+  }
 } finally {
   server.close()
 }

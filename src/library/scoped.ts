@@ -16,6 +16,7 @@ import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
 import { chooseVersion, type Alternative, type Chosen } from './versions'
 import { hashValue } from '../core/hash'
 import type { BookDirectory } from './directory'
+import type { DirectoryRecord } from './directory'
 import { attachShelf, directoryRows, groupShelf, type ShelfGroup, type ShelfInfo } from './shelf'
 import type { KernelOverride } from '../schemas/kernel'
 
@@ -278,7 +279,7 @@ export class ScopedLibrary {
    * 书目行。默认只列已装好的数据集；remote = true 时没装的官方数据集也列（读作者书目文件，必要时只联网取那几个小文件），
    * 并给每行带上作者书目字段 shelf。联网取不到时抛错，由调用方显示原因。
    */
-  async catalog(c: CampaignLibrary, { remote = false }: { remote?: boolean } = {}): Promise<CatalogRow[]> {
+  async catalog(c: CampaignLibrary, { remote = false, record }: { remote?: boolean; record?: DirectoryRecord } = {}): Promise<CatalogRow[]> {
     if (remote && !this.directory) throw new Error('没有接书目入口')
     const assigns = await this.manage.assignments()
     const altMap = await this.alts(c.codeSet)
@@ -288,7 +289,7 @@ export class ScopedLibrary {
     const known: Record<string, { full: string; abv: string; edition: EditionInfo }> = {}
     for (const set of this.setsOf(c.codeSet)) {
       const isInstalled = await this.installed(set)
-      const rec = remote && set.kind === 'official' ? await this.directory!.get(c.codeSet) : null
+      const rec = remote && set.kind === 'official' ? (record ?? await this.directory!.get(c.codeSet)) : null
       if (rec) Object.assign(known, rec.sources)
       if (!isInstalled) {
         if (rec) for (const r of directoryRows(set.id, rec)) rows.push({ ...r, alternatives: altBySource.get(r.source.toLowerCase()) ?? 0 })
@@ -318,10 +319,14 @@ export class ScopedLibrary {
     })
   }
 
-  /** 书架：书目行按作者的分组表排好（BE-7）。没装官方数据也能列；联网取不到时抛错。 */
-  async shelf(c: CampaignLibrary): Promise<ShelfGroup[]> {
-    const rows = await this.catalog(c, { remote: true })
-    return groupShelf(rows, (await this.directory!.get(c.codeSet)).groups)
+  /**
+   * 书架：书目行按作者的分组表排好（BE-7）。没装官方数据也能列。
+   * 书目文件、冒险目录各自独立：哪个取不到只在它的 error 里写原因，另一个照常交回（不抛错）。
+   */
+  async shelf(c: CampaignLibrary): Promise<{ groups: ShelfGroup[]; booksError: string | null; adventuresError: string | null }> {
+    const record = await this.directory!.get(c.codeSet)
+    const rows = await this.catalog(c, { remote: true, record })
+    return { groups: groupShelf(rows, record.groups), booksError: record.errors.books, adventuresError: record.errors.adventures }
   }
 
   /** 每个来源在这个数据集里有几条（数解析结果；按解析报告的保存时间缓存，重装、改自制后自动重数）。 */

@@ -20,6 +20,8 @@ export interface CampaignNode {
 
 export interface OtherCampaign {
   root: CampaignNode
+  /** 这个战役里所有手动存档（含根），每个带 parentId，最近更新在前；卡片展开后读取、管理用。 */
+  members: CampaignNode[]
   saves: number
   updatedAt: number
   /** 是不是当前这张角色卡自己的另一个战役。 */
@@ -84,7 +86,7 @@ export function campaignViewOf(rows: SaveSlot[], at: { ownerKey: string; ruleId:
     if (rootId === rootSave?.id) continue
     const root = byId.get(rootId) as SaveSlot
     if (root.ruleId !== at.ruleId) continue
-    others.push({ root: nodeOf(root, null), saves: list.length, updatedAt: Math.max(...list.map((s) => s.updatedAt)), sameCard: root.ownerKey === at.ownerKey })
+    others.push({ root: nodeOf(root, null), members: [...list].sort(byRecent).map((m) => nodeOf(m, parentOf(m))), saves: list.length, updatedAt: Math.max(...list.map((s) => s.updatedAt)), sameCard: root.ownerKey === at.ownerKey })
   }
   others.sort((a, b) => b.updatedAt - a.updatedAt)
 

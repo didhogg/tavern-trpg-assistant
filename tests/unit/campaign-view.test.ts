@@ -35,6 +35,7 @@ describe('getCampaignView', () => {
       expect(view.counts.deleted).toBe(1)
       // 甲战役的根现在是孤零零的另一棵树
       expect(view.otherCampaigns.map((c) => c.root.id)).toEqual([first.save.id])
+      expect(view.otherCampaigns[0].members.map((m) => m.id)).toEqual([first.save.id]) // 孤立出来的根自己是这棵树的唯一成员
       await campaign.restoreSave(b1.save.id)
       view = await campaign.getCampaignView(OWNER.ownerKey, 'dnd5e2014')
       expect(view.root?.id).toBe(first.save.id)
@@ -51,6 +52,9 @@ describe('getCampaignView', () => {
       const c = await campaign.startNewCampaign({ ...OWNER, ruleId: 'dnd5e2014', name: '丙' })
       const view = await campaign.getCampaignView(OWNER.ownerKey, 'dnd5e2014')
       expect(view.name).toBe('丙')
+      // 其他战役带自己的存档列表（卡片展开后读取、管理）
+      const other = view.otherCampaigns.find((o) => o.root.id === a.save.id)
+      expect(other?.members.map((m) => m.id)).toEqual([a.save.id])
       expect(view.otherCampaigns.map((o) => [o.root.id, o.sameCard]).sort()).toEqual([[a.save.id, true], [b.save.id, false]].sort())
       expect(view.counts).toMatchObject({ thisCard: 2, allCards: 3, auto: 1 })
       const none = await campaign.getCampaignView('char:不存在.png', 'dnd5e2014')
