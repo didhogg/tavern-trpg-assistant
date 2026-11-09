@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>向导 ④ 摘要块的各种写法 · P4 线框</title><link rel="stylesheet" href="../wireframe.css"><style>
+.wf-board { padding: 28px 32px 40px; background: #fafafa; min-width: 1100px; }
+.wf-board h1 { margin: 0 0 4px; font-size: 24px; } .wf-board .wf-meta { margin: 0 0 18px; color: #555; }
+.wf-row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+.wf-cap { font-size: 12px; color: #444; margin-bottom: 6px; font-weight: 600; }
+.wf-notes { margin-top: 22px; display: grid; gap: 16px; max-width: 1500px; }
+.wf-notes table { border-collapse: collapse; width: 100%; font-size: 13px; background: #fff; }
+.wf-notes th, .wf-notes td { border: 1px solid #bbb; padding: 6px 10px; text-align: left; vertical-align: top; }
+.wf-notes th { background: #e9e9e9; }
+.wf-facts { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 13px; max-width: 1500px; }
+.wf-facts dt { font-weight: 700; } .wf-facts dd { margin: 0; }
+</style></head><body><div class="wf-board">
+<h1>向导 ④ 摘要块的各种写法</h1><p class="wf-meta">向导 · 灰度线框（只表达结构、层级、密度、控件位置；颜色、字体留给 Gate 4）</p>
+<div class="wf-row"><div style="display:flex;gap:26px;flex-wrap:wrap;background:#fff;border:1.5px solid #999;border-radius:10px;padding:24px;max-width:1300px">
+        <div style="display:grid;gap:6px;width:560px"><b>① 选了冒险 · 已有当前战役</b><div class="trpg-summary"><b><i class="wf-pin">1</i>将建立战役：D&amp;D 2014·11月9日</b><span>D&amp;D 5e（2014） · 资料（约 150 MB 需下载） · 冒险（约 0.4 MB 需下载）</span><span class="trpg-field__hint">当前战役「失落矿坑」会先自动存档。</span></div></div>
+        <div style="display:grid;gap:6px;width:560px"><b>② 没选冒险 · 已有当前战役</b><div class="trpg-summary"><b>将建立战役：D&amp;D 2014·11月9日</b><span>D&amp;D 5e（2014） · 资料（约 150 MB 需下载） · 冒险（未选择）</span><span class="trpg-field__hint">当前战役「失落矿坑」会先自动存档。</span></div></div>
+        <div style="display:grid;gap:6px;width:560px"><b>③ 没选冒险 · 没有当前战役（首次使用）</b><div class="trpg-summary"><b>将建立战役：D&amp;D 2014·11月9日</b><span>D&amp;D 5e（2014） · 资料（约 150 MB 需下载） · 冒险（未选择）</span></div></div>
+        <div style="display:grid;gap:6px;width:560px"><b>④ 资料已装好（再开第二场战役）</b><div class="trpg-summary"><b>将建立战役：D&amp;D 2014·11月9日</b><span>D&amp;D 5e（2014） · 资料（已就绪） · 冒险（未选择）</span><span class="trpg-field__hint">当前战役「失落矿坑」会先自动存档。</span></div></div>
+        <div style="display:grid;gap:6px;width:560px"><b>⑤ 大小还没算出来</b><div class="trpg-summary"><b>将建立战役：D&amp;D 2014·11月9日</b><span>D&amp;D 5e（2014） · 资料（正在计算下载文件大小…） · 冒险（正在计算下载文件大小…）</span><span class="trpg-field__hint">当前战役「失落矿坑」会先自动存档。</span></div></div></div></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>F1</dd><dt>用户目标</dt><dd>把摘要块所有写法列在一起，确认格式统一、没有死状态</dd><dt>主动作</dt><dd>（只读对照）</dd><dt>模式栈</dt><dd>Preview · Progressive Disclosure</dd><dt>法则核对</dt><dd>Consistency（同一格式）· Postel（算不出时说明在算，不留空）</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端</th></tr></thead><tbody><tr><td>1</td><td>大小的写法</td><td>需要下载 → "约 xx MB 需下载"；官方资料已装好 → "已就绪"；没选冒险 → "未选择"；还没算出 → "正在计算下载文件大小…"</td><td>【有】estimateDownload / dataStatus</td></tr><tr><td>2</td><td>"自动存档"那一行</td><td>只有已经有当前战役时才出现；写"当前战役「…」会先自动存档"</td><td>【接】startCampaign</td></tr><tr><td>3</td><td>不在摘要里出现的东西</td><td>开局失败的红字、"跳过"字样、下载进度——都没有</td><td>决定</td></tr></tbody></table></div></div><script>document.querySelectorAll('[data-scrolled]').forEach((e)=>{e.scrollTop=e.scrollHeight})</script></body></html>

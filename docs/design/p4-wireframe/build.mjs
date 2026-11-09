@@ -22,7 +22,7 @@ function board(s) {
   const frames = s.board ? s.board() : (s.frames ?? DEFAULT_FRAMES).map((k) => frameHtml(k, s)).join('')
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>${esc(s.title)} · P4 线框</title><link rel="stylesheet" href="../wireframe.css"><style>${PAGE_CSS}</style></head><body><div class="wf-board">
 <h1>${esc(s.title)}</h1><p class="wf-meta">${esc(s.group)} · 灰度线框（只表达结构、层级、密度、控件位置；颜色、字体留给 Gate 4）</p>
-<div class="wf-row">${frames}</div><div class="wf-notes">${facts(s)}${notes(s)}</div></div></body></html>`
+<div class="wf-row">${frames}</div><div class="wf-notes">${facts(s)}${notes(s)}</div></div><script>document.querySelectorAll('[data-scrolled]').forEach((e)=>{e.scrollTop=e.scrollHeight})</script></body></html>`
 }
 
 function index() {

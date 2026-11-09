@@ -8,6 +8,7 @@ export const FRAMES = {
   mid: { w: 700, h: 720, win: { w: 600, h: 640, x: 50, y: 40 }, layout: 'mid', label: '悬浮窗被拖到 600 宽 · 中布局（只做外壳演示）' },
 }
 export const DEFAULT_FRAMES = ['1440', '900', '390']
+export const HOST_BAR = 36 // 酒馆自己的顶部栏高度（线框占位；真实高度待真机核对）
 
 const NAV = [
   { id: 'home', label: '首页', glyph: '⌂' },
@@ -15,19 +16,21 @@ const NAV = [
   { id: 'settings', label: '设置', glyph: '⚙', bottom: true },
 ]
 
+/** 库标签上的小环 + 紧挨着的数字；没有任务也没有失败时返回 null（只显示普通图标）。 */
+function libMark(n, lib) {
+  if (n.id !== 'library' || !lib || lib.state === 'none') return null
+  return `<span class="trpg-libmark" data-hover="${lib.hover ? 'true' : 'false'}"><span style="position:relative;display:inline-grid;place-items:center;width:30px;height:30px">${ring(lib.state, { size: 30, pct: lib.pct, glyph: false })}<span style="position:absolute;inset:0;display:grid;place-items:center;font-size:14px">${n.glyph}</span></span>${lib.count ? `<b class="trpg-count">${lib.count}</b>` : ''}</span>`
+}
+
 function navButton(n, L, page, libRing, n_) {
   const showLabel = L === 'wide'
-  const icon = n.id === 'library' && libRing && libRing.state !== 'none'
-    ? `<span style="position:relative;display:inline-grid;place-items:center;width:30px;height:30px">${ring(libRing.state, { size: 30, pct: libRing.pct, glyph: false })}<span style="position:absolute;inset:0;display:grid;place-items:center;font-size:14px">${n.glyph}</span></span>`
-    : `<span style="font-size:18px;width:30px;text-align:center">${n.glyph}</span>`
+  const icon = libMark(n, libRing) ?? `<span style="font-size:18px;width:30px;text-align:center">${n.glyph}</span>`
   const cur = page === n.id ? ' aria-current="page"' : ''
   return `<button class="trpg-nav" type="button"${cur} title="${n.label}">${n_ ?? ''}${icon}${showLabel ? `<span>${n.label}</span>` : ''}</button>`
 }
 
 function tabButton(n, page, libRing) {
-  const icon = n.id === 'library' && libRing && libRing.state !== 'none'
-    ? `<span style="position:relative;display:inline-grid;place-items:center;width:30px;height:30px">${ring(libRing.state, { size: 30, pct: libRing.pct, glyph: false })}<span style="position:absolute;inset:0;display:grid;place-items:center;font-size:14px">${n.glyph}</span></span>`
-    : `<span style="font-size:20px;height:30px;display:grid;place-items:center">${n.glyph}</span>`
+  const icon = libMark(n, libRing) ?? `<span style="font-size:20px;height:30px;display:grid;place-items:center">${n.glyph}</span>`
   return `<button class="trpg-tab" type="button"${page === n.id ? ' aria-current="page"' : ''}>${icon}<span>${n.label}</span></button>`
 }
 
@@ -56,10 +59,10 @@ export function windowHtml(L, s) {
     </nav>`
   const tabs = L === 'narrow' ? `<nav class="trpg-tabs" aria-label="主导航">${NAV.map((n) => tabButton(n, page, s.lib)).join('')}</nav>` : ''
   const close = L === 'narrow' ? '' : `<button class="trpg-icon-btn" type="button" aria-label="收起助手">✕</button>`
-  return `${s.toast ? s.toast : ''}<div class="trpg-shell"${s.overlay ? ' aria-hidden="true"' : ''}>${side}
+  return `<div class="trpg-shell"${s.overlay ? ' aria-hidden="true"' : ''}>${side}
     <div class="trpg-main">
       <header class="trpg-head"><h1 class="trpg-head__title">${title}</h1>${chips(L, s.header)}${close}</header>
-      <div class="trpg-body"><main class="trpg-content">${s.content}</main>${s.pointer ?? ''}<button class="trpg-dice-btn" type="button" aria-label="掷骰">⚄</button></div>
+      <div class="trpg-body"><main class="trpg-content">${s.content}</main>${s.pointer ?? ''}<button class="trpg-dice-btn" type="button" aria-label="掷骰">${s.pins?.dice ? `<i class="wf-pin wf-pin--abs" style="left:-6px;top:-6px">${s.pins.dice}</i>` : ''}⚄</button></div>
       ${tabs}
     </div></div>${s.pop ?? ''}${s.overlay ?? ''}`
 }
@@ -68,10 +71,13 @@ export function frameHtml(key, screen) {
   const f = FRAMES[key]
   const s = screen.render(f.layout)
   const win = f.full
-    ? `<section class="trpg-window" data-layout="${f.layout}" data-fullscreen="true">${windowHtml(f.layout, s)}</section>`
+    ? `<section class="trpg-window" data-layout="${f.layout}" data-fullscreen="true" style="top:${HOST_BAR}px">${windowHtml(f.layout, s)}</section>`
     : `<section class="trpg-window" data-layout="${f.layout}" data-fullscreen="false" style="left:${f.win.x}px;top:${f.win.y}px;width:${f.win.w}px;height:${f.win.h}px">${windowHtml(f.layout, s)}</section>`
   const chat = '<div class="wf-host__chat">' + '<i></i>'.repeat(14) + '</div><div class="wf-host__input">酒馆输入框（宿主，不属于插件）</div>'
-  return `<figure class="wf-frame" style="margin:0"><figcaption class="wf-cap">${f.label}</figcaption><div class="wf-host" style="width:${f.w}px;height:${f.h}px">${f.full ? '' : chat}${win}</div></figure>`
+  const bar = `<div class="wf-host__bar"><span>☰</span><span>酒馆顶部栏（宿主，不属于插件）</span></div>`
+  // 提示条属于宿主层：在酒馆顶部栏下方、插件窗口之上，窗口收起时也看得到
+  const toasts = s.toast ? `<div class="trpg-toasts" aria-live="polite">${s.toast}</div>` : ''
+  return `<figure class="wf-frame" style="margin:0"><figcaption class="wf-cap">${f.label}</figcaption><div class="wf-host" style="width:${f.w}px;height:${f.h}px">${f.full ? '' : chat}${bar}${win}${toasts}</div></figure>`
 }
 
 export const PAGE_CSS = `

@@ -41,3 +41,8 @@ export const field = (label, control, { hint = '', err = '' } = {}) =>
   `<div class="trpg-field"><label class="trpg-field__label">${label}</label>${control}${err ? `<span class="trpg-field__err">⚠ ${err}</span>` : ''}${hint ? `<span class="trpg-field__hint">${hint}</span>` : ''}</div>`
 export const input = (value, { invalid = false, placeholder = '' } = {}) =>
   `<div class="trpg-input"${invalid ? ' aria-invalid="true"' : ''}>${value || `<span style="color:#9a9a9a">${placeholder}</span>`}</div>`
+
+/** 读取中：简约圆圈 + 文字（超过 1 秒才显示）。 */
+export const loading = (text = '正在读取中…') => `<div class="trpg-loading" role="status"><span class="trpg-spinner" aria-hidden="true"></span><span>${text}</span></div>`
+/** 浅灰说明文字（次级文字色，不是进度、不是错误）。 */
+export const hint = (text, n = null) => `<p class="trpg-hint">${n ? pin(n) : ''}${text}</p>`

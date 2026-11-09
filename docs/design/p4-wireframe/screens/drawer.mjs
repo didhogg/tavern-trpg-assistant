@@ -5,26 +5,32 @@ const CAMP = { name: '失落矿坑', save: '存档 2' }
 const BEHIND = `<div class="page-stack"><button class="trpg-banner" type="button"><span class="trpg-banner__title">失落矿坑</span><span class="trpg-banner__line"><span>存档 2</span><span>D&amp;D 5e（2014）</span><span class="trpg-banner__state" data-dirty="true">● 有未保存到存档的改动</span></span></button></div>`
 const HEADER = { campaign: CAMP, dirty: true }
 
-const row = ({ name, meta, note = '', depth = 0, current = false, actions = true, tag = '' }) => `<li data-depth="${depth}" data-current="${current}">
-  <div class="trpg-saves__top"><b>${name}</b>${current ? badge('当前') : ''}${tag ? badge(tag) : ''}${actions && !current ? `${btn('读取', { small: true })}<button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button>` : ''}</div>
-  <div class="trpg-saves__meta">${meta}</div>${note ? `<div class="trpg-saves__meta">备注：${note}</div>` : ''}</li>`
+/** 存档行：左对齐、不缩进、不退行；当前存档用圆角高亮外框（在卡片里面，不碰卡片边线）。 */
+const row = ({ name, meta, current = false, actions = true }) => `<li data-current="${current}">
+  <div class="trpg-saves__top"><b>${name}</b>${current ? badge('当前') : ''}${actions && !current ? btn('读取', { small: true }) : ''}${actions ? '<button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button>' : ''}</div>
+  <div class="trpg-saves__meta">${meta}</div></li>`
+/** 战役卡片：卡头 = 战役名 + ⋯ + 一行说明，没有[读取]；卡内是这个战役的所有存档。其他战役默认折叠。 */
+const camp = ({ name, sub, rows = '', open = false, n = null }) => `<details class="trpg-camp"${open ? ' open' : ''}><summary><span class="trpg-camp__chev" aria-hidden="true"></span><span class="trpg-camp__name"><span>${n ? pin(n) : ''}${name}</span><small>${sub}</small></span><span class="trpg-icon-btn" aria-label="更多">⋯</span></summary>${rows ? `<ul class="trpg-saves">${rows}</ul>` : ''}</details>`
 const fold = (title, count, inner = '', open = false) => `<details class="trpg-fold"${open ? ' open' : ''}><summary>${title}<small>${count}</small></summary>${inner}</details>`
 const drawer = (title, body, back = null) => modal('drawer', modalHead(title, back), `<div class="trpg-drawer">${body}</div>`)
 
 const main = () => `
   <section class="trpg-drawer__current">
-    <div><span class="trpg-drawer__title">${pin(1)}失落矿坑</span><span class="trpg-drawer__sub">　当前存档：存档 2　<span class="trpg-badge" data-tone="warn">● 有未保存到存档的改动</span></span></div>
-    <div class="trpg-drawer__buttons">${btn('保存存档', { primary: true, n: 2 })}${btn('分支存档')}${btn('导出…')}<span class="trpg-field__hint" style="align-self:center">上次备份 12 天前 · 建议导出</span></div>
+    <div><span class="trpg-drawer__title">${pin(1)}当前存档：存档 2</span>　<span class="trpg-badge" data-tone="warn">● 有未保存到存档的改动</span></div>
+    <div class="trpg-drawer__buttons">${btn('保存存档', { primary: true, n: 2 })}${btn('新建分支存档')}${btn('导出…')}<span class="trpg-field__hint" style="align-self:center">上次备份 12 天前 · 建议导出</span></div>
   </section>
   <div class="trpg-drawer__body">
-    <h3 class="trpg-group" style="margin:0">${pin(3)}这场战役的存档</h3>
-    <ul class="trpg-saves">
-      ${row({ name: '失落矿坑', meta: '11月2日 20:10 · D&amp;D 5e（2014）· 手动 · 战役起点', actions: true })}
-      ${row({ name: '存档 1', meta: '11月5日 22:30 · 手动 · 来自「失落矿坑」', depth: 1 })}
-      ${row({ name: '存档 2', meta: '11月9日 14:02 · 手动 · 来自「存档 1」', depth: 2, current: true })}
-      ${row({ name: '先打地精', meta: '11月6日 21:05 · 手动 · 来自「失落矿坑」', depth: 1 })}
-    </ul>
-    ${fold(`${pin(4)}其他战役`, 2)}${fold('自动存档', 3)}${fold('最近删除', 1)}${fold('其他规则', 0)}
+    <h3 class="trpg-group" style="margin:0">当前战役</h3>
+    ${camp({ name: '失落矿坑', sub: '11月2日 20:10 · D&amp;D 5e（2014）· 4 个存档', open: true, n: 3, rows: [
+      row({ name: '战役起点', meta: '11月2日 20:10 · 手动' }),
+      row({ name: '存档 1', meta: '11月5日 22:30 · 手动 · 来自「战役起点」' }),
+      row({ name: '存档 2', meta: '11月9日 14:02 · 手动 · 来自「存档 1」', current: true }),
+      row({ name: '先打地精', meta: '11月6日 21:05 · 手动 · 来自「战役起点」' }),
+    ].join('') })}
+    <h3 class="trpg-group" style="margin:6px 0 0">${pin(4)}其他战役（2）</h3>
+    ${camp({ name: '龙金劫', sub: '10月28日 · D&amp;D 5e（2014）· 3 个存档' })}
+    ${camp({ name: '幽灵之夜', sub: '10月20日 · D&amp;D 5e（2014）· 1 个存档' })}
+    ${fold('自动存档', 3)}${fold('最近删除', 1)}${fold('其他规则', 0)}
   </div>
   <footer class="trpg-drawer__bottom">${btn('＋ 新建战役', { n: 5 })}${btn('导入存档')}</footer>`
 
@@ -34,18 +40,29 @@ export const screens = [
   {
     id: 'drawer-main', group: '存档抽屉', title: '存档抽屉（有战役）', flow: 'F3 / F4',
     goal: '一处看清当前战役、它的存档树、别的战役和被删的存档；保存、分支、读取、导出、导入', primary: '保存存档 / 读取某个存档',
-    patterns: 'Titled Sections · Collapsible Panels · Two-level tree（缩进 + 连线）· Prominent Done', laws: 'Common Region（分区用框）· Uniform Connectedness（父子用缩进和左线）· Miller（六区默认只展开两区）· Fitts（底部抽屉按钮 ≥44px）',
+    patterns: 'Titled Sections · Collapsible Panels（每个战役一张可折叠卡片）· Prominent Done', laws: 'Common Region（一场战役 = 一张卡片，存档都在卡里）· Proximity（卡头和它的存档靠在一起）· Miller（只展开当前战役）· Fitts（底部抽屉按钮 ≥44px）',
     frames: ['1440', '900', '390', 'mid'],
-    diff: '宽 / 中：右侧抽屉 440 宽（中布局最大 100%）；窄屏：底部抽屉，高 88%，顶部有拖拽条，按钮 ≥44px；抽屉内部内容一样，只是更长，纵向滚动。',
+    diff: '宽 / 中：右侧抽屉 440 宽（中布局最大 100%）；窄屏：底部抽屉，高 88%，顶部有拖拽条，按钮 ≥44px；抽屉内部内容一样，只是更长，纵向滚动。其他战役的卡片都折叠，点开才看到它的存档。',
     notes: [
-      [1, '当前战役块', '战役名（根存档名）+ 当前存档名 + 保存状态', '【接】getCampaignView.name / current'],
-      [2, '[保存存档]（主）[分支存档][导出…]', '有改动才可点；无改动显示"已是最新"；分支 → 小弹层改名；导出 → 抽屉内换页', '【有】campaign.branch；【接】kernelSave.save'],
-      [3, '这场战役的存档（树）', '分支缩进挂在父存档下；每行：名称 · 更新时间 · 规则 · 手动/自动 · 父存档 · 备注；[读取]→ 读取确认页；⋯ → 改名 / 备注 / 导出 / 删除', '【接】getCampaignView.branches / parentId'],
-      [4, '其他战役（折叠）', '同卡的另一场、别的卡的战役，按战役根分组；读取别的卡的存档会复制成本卡新存档', '【接】getCampaignView.otherCampaigns'],
+      [1, '当前存档条', '当前存档名 + 保存状态；没有当前战役时整块不出现', '【接】getCampaignView.current'],
+      [2, '[保存存档]（主）[新建分支存档][导出…]', '有改动才可点；无改动显示"已是最新"；新建分支存档 → 小弹层起名；导出 → 抽屉内换页。页头的[保存]和这里的[保存存档]都保留', '【有】campaign.branch；【接】kernelSave.save'],
+      [3, '战役卡片（当前战役，默认展开）', '一场战役一张卡：卡头是战役名 + ⋯ + 一行说明（日期 · 规则 · 存档数），卡头没有[读取]；卡内是这场战役的所有存档，每行左对齐、不缩进，父子关系用文字"来自「…」"表达；当前存档用圆角高亮外框，在卡片里面、不压卡片边线；[读取]→ 读取确认页；行上的 ⋯ → 改名 / 备注 / 导出 / 删除（当前存档的删除不可点）。第一行"战役起点"是界面上的叫法，存的名字仍是战役名（做法 A）', '【接】getCampaignView.branches / parentId'],
+      [4, '其他战役（卡片，默认折叠）', '头部：战役名 · 日期 · 存档数，点开才看到存档；同卡的另一场、别的卡的战役都在这里；读取别的卡的存档会复制成本卡新存档。卡头 ⋯ 的内容待驾驶员定（现在后端只能改战役名）', '【接】getCampaignView.otherCampaigns'],
       [5, '[新建战役]（仅有战役时出现）', '→ 开局向导；没战役时首页横幅才是入口，不重复放', '【有】'],
       [6, '折叠区：自动存档 / 最近删除 / 其他规则', '自动存档只有[读取][存为手动存档]，不能单独删；最近删除有[恢复][彻底删除]', '【有】listAuto / listDeleted / listOtherRules'],
     ],
     render: () => ({ header: HEADER, content: BEHIND, overlay: drawer('存档', main()) }),
+  },
+  {
+    id: 'drawer-main-scrolled', group: '存档抽屉', title: '存档抽屉（向下滚动后：其他战役与折叠区）', flow: 'F4',
+    goal: '看到别的战役（折叠成卡片）和三个折叠区', primary: '点开某张卡片看它的存档',
+    patterns: 'Collapsible Panels', laws: 'Miller（别的战役默认折叠，只露出战役名 · 日期 · 存档数）· Common Region',
+    diff: '同上。上一屏装不下的部分，滚动抽屉主体就能看到；底部的[新建战役][导入存档]固定不动。',
+    notes: [
+      [4, '其他战役（折叠的卡片）', '每张卡：战役名 · 日期 · 存档数 · ⋯；点开才看到它的存档（和当前战役那张卡一样的行）；读取别的卡的存档会复制成本卡新存档', '【接】getCampaignView.otherCampaigns'],
+      [6, '自动存档 / 最近删除 / 其他规则', '折叠区，默认收起', '【有】listAuto / listDeleted / listOtherRules'],
+    ],
+    render: () => ({ header: HEADER, content: BEHIND, overlay: drawer('存档', main(), null).replace('trpg-drawer__body', 'trpg-drawer__body" data-scrolled="1') }),
   },
   {
     id: 'drawer-nocampaign', group: '存档抽屉', title: '存档抽屉（还没有战役：读取已有存档）', flow: 'F4',
@@ -54,13 +71,14 @@ export const screens = [
     diff: '同上。',
     notes: [
       [1, '没有"当前战役"块', '没战役，所以没有保存 / 分支', '【有】'],
-      [2, '其他战役默认展开', '按战役根分组；每组：战役名 · 存档数 · 最近更新；展开看树', '【接】getCampaignView.otherCampaigns'],
+      [2, '战役卡片（第一张展开，其余折叠）', '没有当前战役，所以全是别的战役；卡头没有[读取]，点开卡看存档再读取', '【接】getCampaignView.otherCampaigns'],
       [3, '底部只有[导入存档]', '不放[新建战役]（首页横幅是唯一入口）', 'Gate 2 §14.2'],
       [4, '为什么没有"空抽屉"', '没有存档时首页不显示"读取已有存档"，也没有页头芯片，所以进不到空抽屉；之前 Gate 2 写的"空抽屉"状态不会出现', '更正 §14.7'],
     ],
-    render: () => ({ content: `<div class="page-stack"><button class="trpg-hero" type="button"><span class="trpg-hero__title">开始一场新的冒险</span><span class="trpg-hero__sub">为「卡宾斯·哈林顿」建立一个战役：选规则、资料与冒险，再起个名字。</span><span class="trpg-hero__go">开始新冒险 →</span></button><div><button class="trpg-link" type="button">读取已有存档（3）</button></div></div>`,
-      overlay: drawer('存档', `<div class="trpg-drawer__body"><h3 class="trpg-group" style="margin:0">${pin(2)}其他战役 · D&amp;D 5e（2014）</h3>
-        <ul class="trpg-saves">${row({ name: '龙金劫', meta: '3 个存档 · 最近 10月28日 · 来自「卡宾斯·哈林顿」' })}${row({ name: '失落矿坑', meta: '2 个存档 · 最近 11月5日' })}</ul>
+    render: () => ({ content: `<div class="page-stack"><button class="trpg-hero" type="button"><span class="trpg-hero__title">开始一场新的冒险</span><span class="trpg-hero__sub">为「卡宾斯·哈林顿」建立一个战役：选规则、资料与冒险，再起个名字。</span><span class="trpg-hero__go">开始新冒险 →</span></button><button class="trpg-linkcard" type="button"><span class="trpg-linkcard__icon" aria-hidden="true">↺</span><span class="trpg-linkcard__text"><b>读取已有存档</b><small>接着玩以前的战役</small></span><span class="trpg-linkcard__go">3 个存档 ▸</span></button></div>`,
+      overlay: drawer('存档', `<div class="trpg-drawer__body"><h3 class="trpg-group" style="margin:0">${pin(2)}战役（2）</h3>
+        ${camp({ name: '龙金劫', sub: '10月28日 · D&amp;D 5e（2014）· 3 个存档', open: true, rows: [row({ name: '战役起点', meta: '10月20日 19:30 · 手动' }), row({ name: '存档 1', meta: '10月25日 21:00 · 手动 · 来自「战役起点」' }), row({ name: '存档 2', meta: '10月28日 22:10 · 手动 · 来自「存档 1」' })].join('') })}
+        ${camp({ name: '失落矿坑', sub: '11月5日 · D&amp;D 5e（2014）· 2 个存档' })}
         ${fold('自动存档', 3)}${fold('最近删除', 0)}</div><footer class="trpg-drawer__bottom">${btn('导入存档', { n: 3 })}</footer>`) }),
   },
   {
