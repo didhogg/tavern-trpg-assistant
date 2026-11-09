@@ -2,17 +2,17 @@
  "resolved": {
   "a": {
    "light": {
-    "surface": "#fcfbf7",
-    "bg": "#f8f0df",
-    "bgSide": "#f0e4d0",
-    "bgSunk": "#f8f0df",
-    "bgHover": "#e7ddca",
-    "line": "#e2d0b6",
+    "surface": "#fefdfc",
+    "bg": "#fdf8f0",
+    "bgSide": "#f8f0df",
+    "bgSunk": "#fdf8f0",
+    "bgHover": "#f0e9da",
+    "line": "#e7ddca",
     "text": "#3e332e",
     "text2": "#815e46",
     "lineCtrl": "#ad7f58",
     "side": "#3e332e",
-    "sideInk": "#f8f0df",
+    "sideInk": "#fdf8f0",
     "sideInk2": "#dcbc9f",
     "sideHover": "#4d433e",
     "sideActive": "#5d534f",
@@ -21,13 +21,13 @@
     "primaryHover": "#d13415",
     "primaryPressed": "#912d1b",
     "primaryText": "#b43118",
-    "primaryTint": "#f0e4d0",
-    "primaryTintLine": "#dbc09e",
+    "primaryTint": "#f8f0df",
+    "primaryTintLine": "#e4d0b4",
     "heroBg": "#3e332e",
     "heroInk": "#fefdfc",
     "heroInk2": "#e4cdb7",
     "dangerText": "#ce2c31",
-    "dangerBg": "#fcfbf7",
+    "dangerBg": "#fefdfc",
     "dangerLine": "#e5484d",
     "successText": "#2a7e3b",
     "successBg": "#f5fbf5",
@@ -38,7 +38,7 @@
     "accentText": "#8b530c",
     "onAccent": "#4f3422",
     "onPrimary": "#ffffff",
-    "disabledBg": "#f8f0df",
+    "disabledBg": "#fdf8f0",
     "disabledText": "#ad7f58",
     "focus": "#b43118"
    },
@@ -93,7 +93,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "正文 / 纸色底",
-     "ratio": 10.78,
+     "ratio": 11.56,
      "ok": true
     },
     {
@@ -101,7 +101,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "次要文字 / 纸色底",
-     "ratio": 5.11,
+     "ratio": 5.48,
      "ok": true
     },
     {
@@ -109,7 +109,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "正文 / 卡片",
-     "ratio": 11.81,
+     "ratio": 12.03,
      "ok": true
     },
     {
@@ -117,7 +117,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "次要文字 / 卡片",
-     "ratio": 5.6,
+     "ratio": 5.71,
      "ok": true
     },
     {
@@ -125,7 +125,7 @@
      "bg": "bgSide",
      "min": 4.5,
      "note": "正文 / 侧栏",
-     "ratio": 9.73,
+     "ratio": 10.78,
      "ok": true
     },
     {
@@ -133,7 +133,7 @@
      "bg": "bgSide",
      "min": 4.5,
      "note": "次要文字 / 侧栏",
-     "ratio": 4.61,
+     "ratio": 5.11,
      "ok": true
     },
     {
@@ -141,7 +141,7 @@
      "bg": "bgSunk",
      "min": 4.5,
      "note": "浅灰说明 / 嵌套块",
-     "ratio": 5.11,
+     "ratio": 5.48,
      "ok": true
     },
     {
@@ -149,7 +149,7 @@
      "bg": "bgHover",
      "min": 4.5,
      "note": "正文 / 悬停底",
-     "ratio": 9.08,
+     "ratio": 10.11,
      "ok": true
     },
     {
@@ -157,7 +157,7 @@
      "bg": "side",
      "min": 4.5,
      "note": "边栏文字",
-     "ratio": 10.78,
+     "ratio": 11.56,
      "ok": true
     },
     {
@@ -173,7 +173,7 @@
      "bg": "sideActive",
      "min": 4.5,
      "note": "边栏选中项文字",
-     "ratio": 6.58,
+     "ratio": 7.05,
      "ok": true
     },
     {
@@ -205,7 +205,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "红 / 琥珀标题与链接 / 纸色底",
-     "ratio": 5.46,
+     "ratio": 5.85,
      "ok": true
     },
     {
@@ -213,7 +213,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "红 / 琥珀标题与链接 / 卡片",
-     "ratio": 5.98,
+     "ratio": 6.09,
      "ok": true
     },
     {
@@ -221,7 +221,7 @@
      "bg": "primaryTint",
      "min": 4.5,
      "note": "选中态文字 / 选中底",
-     "ratio": 4.93,
+     "ratio": 5.46,
      "ok": true
     },
     {
@@ -229,7 +229,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "琥珀文字 / 纸色底",
-     "ratio": 5.54,
+     "ratio": 5.95,
      "ok": true
     },
     {
@@ -269,7 +269,7 @@
      "bg": "dangerBg",
      "min": 4.5,
      "note": "错误文字",
-     "ratio": 5.03,
+     "ratio": 5.13,
      "ok": true
     },
     {
@@ -293,7 +293,7 @@
      "bg": "surface",
      "min": 3,
      "note": "输入框 / 控件边线（非文字 3:1）",
-     "ratio": 3.41,
+     "ratio": 3.47,
      "ok": true
     },
     {
@@ -301,7 +301,7 @@
      "bg": "bg",
      "min": 3,
      "note": "控件边线 / 纸色底（非文字 3:1）",
-     "ratio": 3.11,
+     "ratio": 3.34,
      "ok": true
     },
     {
@@ -309,7 +309,7 @@
      "bg": "disabledBg",
      "min": 2.2,
      "note": "禁用文字仍可辨认（下限 2.2:1，不是 AA）",
-     "ratio": 3.11,
+     "ratio": 3.34,
      "ok": true
     },
     {
@@ -317,7 +317,7 @@
      "bg": "bg",
      "min": 0,
      "note": "琥珀点缀 / 纸色底（只做小点缀，不承载信息）",
-     "ratio": 1.51,
+     "ratio": 1.62,
      "ok": true,
      "info": true
     },
@@ -326,7 +326,7 @@
      "bg": "bg",
      "min": 0,
      "note": "主按钮 / 纸色底（按钮有文字标签，边界不是唯一识别信息）",
-     "ratio": 5.46,
+     "ratio": 5.85,
      "ok": true,
      "info": true
     }

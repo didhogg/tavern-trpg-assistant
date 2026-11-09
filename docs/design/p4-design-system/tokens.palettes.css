@@ -1,17 +1,17 @@
 /* 自动生成：node docs/design/p4-design-system/palettes.mjs ；不要手改 */
 /* 候选 A：A · 暖奶油米 · 番茄红（Radix Colors：gold + orange（底，内插）/ brown（文字）/ tomato（主色）/ red / grass / amber） */
 .ds-root[data-palette='a'], :host([data-palette='a']) {
-  --surface: #fcfbf7;
-  --bg: #f8f0df;
-  --bg-side: #f0e4d0;
-  --bg-sunk: #f8f0df;
-  --bg-hover: #e7ddca;
-  --line: #e2d0b6;
+  --surface: #fefdfc;
+  --bg: #fdf8f0;
+  --bg-side: #f8f0df;
+  --bg-sunk: #fdf8f0;
+  --bg-hover: #f0e9da;
+  --line: #e7ddca;
   --text: #3e332e;
   --text2: #815e46;
   --line-ctrl: #ad7f58;
   --side: #3e332e;
-  --side-ink: #f8f0df;
+  --side-ink: #fdf8f0;
   --side-ink2: #dcbc9f;
   --side-hover: #4d433e;
   --side-active: #5d534f;
@@ -20,13 +20,13 @@
   --primary-hover: #d13415;
   --primary-pressed: #912d1b;
   --primary-text: #b43118;
-  --primary-tint: #f0e4d0;
-  --primary-tint-line: #dbc09e;
+  --primary-tint: #f8f0df;
+  --primary-tint-line: #e4d0b4;
   --hero-bg: #3e332e;
   --hero-ink: #fefdfc;
   --hero-ink2: #e4cdb7;
   --danger-text: #ce2c31;
-  --danger-bg: #fcfbf7;
+  --danger-bg: #fefdfc;
   --danger-line: #e5484d;
   --success-text: #2a7e3b;
   --success-bg: #f5fbf5;
@@ -37,7 +37,7 @@
   --accent-text: #8b530c;
   --on-accent: #4f3422;
   --on-primary: #ffffff;
-  --disabled-bg: #f8f0df;
+  --disabled-bg: #fdf8f0;
   --disabled-text: #ad7f58;
   --focus: #b43118;
 }

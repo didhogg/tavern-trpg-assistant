@@ -46,12 +46,12 @@ export const CANDIDATES = {
     feel: '偏暖的淡奶油米色（接近参考图的纸色），边栏是暖深灰；主色是偏橙的番茄红；点缀是柔和的烛光琥珀，只做小面积。',
     risk: '主色（番茄红）和错误色（正红）相近，所以错误永远带 ⚠ 图标 + 文字 + 红边框，不靠颜色单独表达；没有任何粉色底。底色是内插值，不是色阶原值。',
     light: {
-      surface: cream(2, 1, 0.5), bg: cream(3, 3, 0.45), bgSide: cream(4, 4, 0.3), bgSunk: cream(3, 3, 0.45), bgHover: cream(5, 4, 0.2), line: cream(6, 5, 0.25),
+      surface: cream(1, 1, 0.5), bg: cream(2, 2, 0.5), bgSide: cream(3, 3, 0.45), bgSunk: cream(2, 2, 0.5), bgHover: cream(4, 3, 0.3), line: cream(5, 4, 0.2),
       text: 'r:brown.12', text2: 'r:brown.11', lineCtrl: 'r:brown.9',
-      side: 'r:brown.12', sideInk: cream(3, 3, 0.45), sideInk2: 'r:brown.7', sideHover: 'm:r:brown.12|r:brown.1|0.08', sideActive: 'm:r:brown.12|r:brown.1|0.16', sideLine: 'm:r:brown.12|r:brown.1|0.14',
-      ...ladder('tomato'), primaryText: 'm:r:tomato.11|r:tomato.12|0.25', primaryTint: cream(4, 4, 0.3), primaryTintLine: cream(7, 6, 0.3),
+      side: 'r:brown.12', sideInk: cream(2, 2, 0.5), sideInk2: 'r:brown.7', sideHover: 'm:r:brown.12|r:brown.1|0.08', sideActive: 'm:r:brown.12|r:brown.1|0.16', sideLine: 'm:r:brown.12|r:brown.1|0.14',
+      ...ladder('tomato'), primaryText: 'm:r:tomato.11|r:tomato.12|0.25', primaryTint: cream(3, 3, 0.45), primaryTintLine: cream(6, 5, 0.3),
       heroBg: 'r:brown.12', heroInk: 'r:brown.1', heroInk2: 'r:brown.6',
-      dangerText: 'r:red.11', dangerBg: cream(2, 1, 0.5), dangerLine: 'r:red.9',
+      dangerText: 'r:red.11', dangerBg: cream(1, 1, 0.5), dangerLine: 'r:red.9',
       successText: 'r:grass.11', successBg: 'r:grass.2', warnText: 'r:amber.12', warnBg: 'r:amber.2',
     },
     dark: {
