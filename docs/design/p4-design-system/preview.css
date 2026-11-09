@@ -1,0 +1,22 @@
+/* 仅预览页用（dsp-*），不要复制进插件 */
+.dsp { margin-top: 56px; padding-top: 28px; border-top: 3px solid #1a1a1a; }
+.dsp-h2 { margin: 0 0 4px; font-size: 26px; padding: 0; border: 0; } .dsp-h3 { margin: 28px 0 8px; font-size: 18px; padding: 0; border: 0; } .dsp-lead { max-width: 980px; color: #555; }
+.dsp-sw-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
+.dsp-sw { display: grid; gap: 2px; font-size: 12px; } .dsp-sw i { display: block; height: 44px; border-radius: 6px; border: 1px solid rgb(0 0 0 / 14%); } .dsp-sw b { font-weight: 600; } .dsp-sw code { color: #666; font-size: 11px; }
+.dsp-cand { display: grid; gap: 10px; padding: 16px; border: 1.5px solid #bbb; border-radius: 12px; margin-bottom: 14px; background: #fff; }
+.dsp-cand[data-rec='true'] { border-color: #1a1a1a; box-shadow: 0 0 0 2px #1a1a1a; }
+.dsp-cand h4 { margin: 0; font-size: 17px; } .dsp-cand p { margin: 0; font-size: 13px; color: #444; max-width: 1000px; } .dsp-cand small { color: #777; }
+.dsp-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .dsp-mode { padding: 12px; border-radius: 10px; background: var(--bg); color: var(--text); }
+.dsp-mode > b { display: block; margin-bottom: 8px; font-size: 12px; color: var(--text2); }
+.dsp-bar { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 10px 14px; margin: 14px 0; background: #fff; border: 1.5px solid #1a1a1a; border-radius: 10px; font-size: 14px; }
+.dsp-bar label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.dsp-box { padding: 18px; border-radius: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--line); }
+.dsp-type { display: grid; gap: 6px; } .dsp-type div { display: flex; gap: 14px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 4px; } .dsp-type code { flex: none; width: 150px; color: var(--text2); font-size: 12px; }
+.dsp-tiles { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; } .dsp-tile { display: grid; gap: 4px; justify-items: center; font-size: 12px; color: var(--text2); } .dsp-tile i { display: block; background: var(--surface); border: 1px solid var(--line-ctrl); }
+.dsp-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .dsp-ic { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); font-size: 12px; } .dsp-ic span { color: var(--text2); }
+.dsp-states { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; align-items: start; } .dsp-states > div { display: grid; gap: 6px; justify-items: start; font-size: 12px; color: var(--text2); }
+.is-hover.trpg-btn--primary { background: var(--primary-hover); } .is-hover:not(.trpg-btn--primary) { background: var(--bg-hover); } .is-pressed.trpg-btn--primary { background: var(--primary-pressed); } .is-focus { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus); }
+.dsp-example { margin: 10px 0 24px; overflow: auto; padding: 24px; border-radius: 12px; background: var(--bg-sunk); border: 1px solid var(--line); } .dsp-example h4 { margin: 0 0 10px; color: var(--text); }
+.dsp-table { border-collapse: collapse; font-size: 12px; background: #fff; } .dsp-table td, .dsp-table th { border: 1px solid #ccc; padding: 3px 8px; text-align: left; } .dsp-ok { color: #1a7f37; } .dsp-bad { color: #b3261e; font-weight: 700; }
+.dsp-art .far { fill: color-mix(in srgb, var(--hero-ink) 9%, var(--hero-bg)); } .dsp-art .mid { fill: color-mix(in srgb, var(--hero-ink) 14%, var(--hero-bg)); } .dsp-art .near { fill: color-mix(in srgb, var(--hero-ink) 20%, var(--hero-bg)); }
+.dsp-art .castle { fill: color-mix(in srgb, var(--hero-ink) 28%, var(--hero-bg)); } .dsp-art .lit { fill: var(--accent); } .dsp-art .moon { fill: var(--accent); opacity: 0.85; }

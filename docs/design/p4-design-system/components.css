@@ -1,0 +1,152 @@
+/* P4 设计系统 · 组件样式。类名沿用插件现有界面（trpg-*）和灰度线框，复制时 DOM 不用改，只换样式。
+   规则：只读 tokens.css / tokens.palettes.css 里的变量；不写死色值；状态 = 默认 / 悬停 / 按下 / 聚焦 / 禁用 / 选中 / 当前 / 加载 / 错误 / 成功。 */
+.ds-root *, .ds-root *::before, .ds-root *::after { box-sizing: border-box; }
+.ds-root :where(button) { font: inherit; color: inherit; cursor: pointer; }
+.ds-root :where(h1, h2, h3, h4, p, ul, ol) { margin: 0; padding: 0; border: 0; font: inherit; }
+.ds-root :focus-visible { outline: none; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus); border-radius: var(--r-sm); }
+.trpg-icon { flex: none; display: inline-block; vertical-align: -0.2em; }
+@media (prefers-reduced-motion: reduce) { .ds-root *, .ds-root *::before, .ds-root *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+/* ── 窗口外壳 ── */
+.trpg-window { position: relative; width: var(--window-w); height: var(--window-h); max-width: 100%; display: flex; background: var(--bg); border: var(--border) solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-3); overflow: hidden; color: var(--text); }
+.trpg-shell { display: flex; flex: 1; min-width: 0; }
+.trpg-side { flex: none; width: var(--side-w); background: var(--bg-side); border-right: var(--border) solid var(--line); display: flex; flex-direction: column; padding-bottom: var(--sp-2); }
+.trpg-side__brand { height: var(--head-h); display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-4); font-weight: var(--fw-semibold); }
+.trpg-brandmark { width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--primary); color: var(--on-primary); display: grid; place-items: center; }
+.trpg-side__list { list-style: none; margin: 0; padding: var(--sp-2); display: grid; gap: 2px; }
+.trpg-side__bottom { margin-top: auto; }
+.trpg-nav { width: 100%; min-height: var(--hit); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3); border: 0; border-radius: var(--r-sm); background: transparent; color: var(--text2); text-align: left; transition: background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
+.trpg-nav:hover { background: var(--bg-hover); color: var(--text); }
+.trpg-nav:active { background: var(--primary-tint-line); }
+.trpg-nav[aria-current='page'] { background: var(--primary-tint); color: var(--primary-text); font-weight: var(--fw-semibold); box-shadow: inset 3px 0 0 var(--primary); }
+.trpg-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.trpg-head { flex: none; height: var(--head-h); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-4); background: var(--surface); border-bottom: var(--border) solid var(--line); }
+.trpg-head__title { margin: 0; flex: 1; font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.trpg-head__chips { display: flex; align-items: center; gap: var(--sp-2); }
+.trpg-body { position: relative; flex: 1; min-height: 0; }
+.trpg-content { height: 100%; overflow: auto; padding: var(--sp-4); }
+.trpg-content[data-flush='true'] { padding: 0; }
+.trpg-dice-btn { position: absolute; right: var(--sp-4); bottom: var(--sp-4); width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; box-shadow: var(--shadow-2); transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-std); }
+.trpg-dice-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.trpg-dice-btn:active { background: var(--primary-pressed); transform: translateY(0); }
+
+/* ── 按钮 / 标签 / 链接 / 术语 ── */
+.trpg-btn { min-height: var(--hit); padding: 0 var(--sp-4); display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); color: var(--text); font-weight: var(--fw-medium); white-space: nowrap; transition: background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std), transform var(--dur-press) var(--ease-out); }
+.trpg-btn:hover { background: var(--bg-hover); }
+.trpg-btn:active { transform: translateY(1px); }
+.trpg-btn--primary { background: var(--primary); border-color: transparent; color: var(--on-primary); font-weight: var(--fw-semibold); }
+.trpg-btn--primary:hover { background: var(--primary-hover); }
+.trpg-btn--primary:active { background: var(--primary-pressed); }
+.trpg-btn--danger { color: var(--danger-text); border-color: var(--danger-line); background: var(--danger-bg); }
+.trpg-btn--small { min-height: 28px; padding: 0 var(--sp-3); font-size: var(--fs-sm); }
+.trpg-btn:disabled, .trpg-btn[disabled] { background: var(--disabled-bg); border-color: var(--line); color: var(--disabled-text); cursor: not-allowed; transform: none; }
+.trpg-btn--primary:disabled { background: var(--line); color: var(--text2); }
+.trpg-icon-btn { width: var(--hit); height: var(--hit); display: inline-grid; place-items: center; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--text2); transition: background var(--dur-fast) var(--ease-std); }
+.trpg-icon-btn:hover { background: var(--bg-hover); color: var(--text); }
+.trpg-pill { display: inline-flex; align-items: center; gap: var(--sp-1); padding: 4px var(--sp-3); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-pill); background: var(--surface); font-size: var(--fs-sm); }
+.trpg-pill b { font-weight: var(--fw-semibold); } .trpg-pill span { color: var(--text2); }
+.trpg-badge, .trpg-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px var(--sp-2); border-radius: var(--r-xs); background: var(--bg-side); color: var(--text2); font-size: var(--fs-xs); line-height: 1.6; }
+.trpg-badge[data-tone='primary'], .trpg-tag[data-tone='primary'] { background: var(--primary-tint); color: var(--primary-text); }
+.trpg-badge[data-tone='warn'] { background: var(--warn-bg); color: var(--warn-text); }
+.trpg-badge[data-tone='success'] { background: var(--success-bg); color: var(--success-text); }
+.trpg-link { background: none; border: 0; padding: 0; color: var(--primary-text); font: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.trpg-link--hl { display: inline-flex; align-items: center; gap: var(--sp-2); padding: 6px var(--sp-3); border-radius: var(--r-sm); background: var(--primary-tint); text-decoration: none; font-weight: var(--fw-semibold); transition: background var(--dur-fast) var(--ease-std); }
+.trpg-link--hl:hover { background: var(--primary-tint-line); }
+.trpg-term { font-family: var(--font-serif); font-weight: var(--fw-semibold); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; text-decoration-color: var(--text3); }
+.trpg-hint { margin: 0 0 var(--sp-3); font-size: var(--fs-sm); color: var(--text2); line-height: var(--lh-body); }
+.trpg-group { margin: var(--sp-4) 0 var(--sp-2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text2); }
+
+/* ── 表单 ── */
+.trpg-field { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-4); }
+.trpg-field__label { font-weight: var(--fw-semibold); }
+.trpg-field__hint { font-size: var(--fs-xs); color: var(--text2); }
+.trpg-field__err { font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--danger-text); display: inline-flex; gap: 4px; align-items: center; }
+.trpg-input { width: 100%; min-height: var(--hit); padding: 0 var(--sp-3); display: flex; align-items: center; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); color: var(--text); transition: border-color var(--dur-fast) var(--ease-std), box-shadow var(--dur-fast) var(--ease-std); }
+.trpg-input:hover { border-color: var(--text2); }
+.trpg-input[aria-invalid='true'] { border-color: var(--danger-text); background: var(--danger-bg); }
+.trpg-check { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.trpg-check__box { width: 18px; height: 18px; flex: none; display: grid; place-items: center; border: var(--border-strong) solid var(--line-ctrl); border-radius: var(--r-xs); background: var(--surface); color: transparent; transition: background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std); }
+.trpg-check[data-on='true'] .trpg-check__box { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+/* 灰色勾：这一项已经在【库】里下载好（只是状态，不是选择；仍可点掉） */
+.trpg-check[data-dl='true'] .trpg-check__box { background: var(--text3); border-color: var(--text3); color: var(--surface); }
+.trpg-check[data-dl='true'] { color: var(--text2); }
+.trpg-dl { display: inline-flex; align-items: center; gap: 3px; margin-left: var(--sp-2); padding: 0 var(--sp-2); border-radius: var(--r-xs); background: var(--bg-side); color: var(--text2); font-size: var(--fs-xs); }
+.trpg-switch { position: relative; display: inline-block; width: 40px; height: 22px; border-radius: var(--r-pill); background: var(--line-ctrl); transition: background var(--dur-fast) var(--ease-std); flex: none; }
+.trpg-switch::before { content: ''; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-1); transition: transform var(--dur-fast) var(--ease-out); }
+.trpg-switch[data-on='true'] { background: var(--primary); } .trpg-switch[data-on='true']::before { transform: translateX(18px); }
+.trpg-stepper { display: inline-flex; align-items: stretch; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); overflow: hidden; }
+.trpg-stepper > * { min-width: 34px; display: grid; place-items: center; padding: 0 var(--sp-2); min-height: 34px; }
+.trpg-stepper b { min-width: 64px; font-weight: var(--fw-semibold); border-inline: var(--border) solid var(--line); }
+.trpg-ctrl { display: inline-flex; align-items: center; gap: var(--sp-3); } .trpg-ctrl--off .trpg-stepper { opacity: 0.5; background: var(--disabled-bg); }
+
+/* ── 首页 ── */
+.page-stack { display: grid; gap: var(--sp-4); align-content: start; }
+.trpg-hero { position: relative; overflow: hidden; display: grid; gap: var(--sp-1); width: 100%; min-height: 168px; padding: var(--sp-6); border: 0; border-radius: var(--r-lg); background: var(--hero-bg); color: var(--hero-ink); text-align: left; align-content: end; box-shadow: var(--shadow-2); transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); }
+.trpg-hero:hover { box-shadow: var(--shadow-3); transform: translateY(-1px); }
+.trpg-hero__art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.trpg-hero__title, .trpg-hero__sub, .trpg-hero__go { position: relative; }
+.trpg-hero__title { font-size: var(--fs-3xl); font-weight: var(--fw-bold); line-height: var(--lh-tight); }
+.trpg-hero__sub { color: var(--hero-ink2); max-width: 30em; }
+.trpg-hero__go { margin-top: var(--sp-3); justify-self: start; display: inline-flex; align-items: center; gap: var(--sp-2); padding: 7px var(--sp-4); border-radius: var(--r-sm); background: var(--accent); color: var(--on-accent); font-weight: var(--fw-semibold); }
+.trpg-linkcard { display: grid; grid-template-columns: auto 1fr auto; gap: var(--sp-3); align-items: center; width: 100%; padding: var(--sp-3) var(--sp-4); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); text-align: left; box-shadow: var(--shadow-1); transition: border-color var(--dur-fast) var(--ease-std), background var(--dur-fast) var(--ease-std); }
+.trpg-linkcard:hover { background: var(--bg-hover); border-color: var(--line-ctrl); }
+.trpg-linkcard__icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--primary-tint); color: var(--primary-text); }
+.trpg-linkcard__text { display: grid; } .trpg-linkcard__text b { font-weight: var(--fw-semibold); } .trpg-linkcard__text small { color: var(--text2); font-size: var(--fs-xs); }
+.trpg-linkcard__go { color: var(--text2); display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-sm); }
+.trpg-empty { display: grid; gap: var(--sp-2); justify-items: start; padding: var(--sp-4); border: var(--border) dashed var(--line-ctrl); border-radius: var(--r-md); background: var(--bg-sunk); color: var(--text2); }
+.trpg-loading { display: flex; gap: var(--sp-3); align-items: center; justify-content: center; padding: 32px var(--sp-3); color: var(--text2); }
+.trpg-spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--primary); animation: trpg-spin var(--dur-spin) linear infinite; }
+@keyframes trpg-spin { to { transform: rotate(360deg); } }
+
+/* ── 弹窗 / 向导 ── */
+.trpg-modal { position: absolute; inset: 0; z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: var(--sp-5); background: color-mix(in srgb, var(--text) 46%, transparent); animation: trpg-fade var(--dur-base) var(--ease-out); }
+.trpg-modal__card { width: min(640px, 100%); height: min(560px, 100%); display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-3); animation: trpg-rise var(--dur-slow) var(--ease-out); overflow: hidden; }
+@keyframes trpg-fade { from { opacity: 0; } } @keyframes trpg-rise { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
+.trpg-modal__head { flex: none; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-5); border-bottom: var(--border) solid var(--line); }
+.trpg-modal__title { margin: 0; flex: 1; font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.trpg-modal__page { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: var(--sp-4) var(--sp-5) var(--sp-5); }
+.trpg-wizard { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.trpg-steps { list-style: none; margin: 0 0 var(--sp-4); padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); }
+.trpg-steps li { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: 3px solid var(--line); color: var(--text2); }
+.trpg-steps li[data-state='done'] { border-color: var(--primary-tint-line); color: var(--text); }
+.trpg-steps li[data-state='current'] { border-color: var(--primary); color: var(--text); font-weight: var(--fw-semibold); }
+.trpg-steps__n { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; border: var(--border-strong) solid currentColor; font-size: var(--fs-xs); flex: none; }
+.trpg-steps li[data-state='current'] .trpg-steps__n { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.trpg-steps li[data-state='done'] .trpg-steps__n { background: var(--primary-tint); border-color: var(--primary-tint-line); color: var(--primary-text); }
+.trpg-wizard__title { margin: 0 0 var(--sp-3); font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.trpg-wizard__body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+.trpg-field--grow { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-bottom: 0; }
+.trpg-wizard__foot { flex: none; display: flex; justify-content: flex-end; gap: var(--sp-3); padding-top: var(--sp-4); margin-top: var(--sp-3); border-top: var(--border) solid var(--line); }
+.trpg-shelf { flex: 1; min-height: 140px; overflow: auto; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-md); background: var(--surface); }
+.trpg-shelf__group { border-bottom: var(--border) solid var(--line); } .trpg-shelf__group:last-child { border-bottom: 0; }
+.trpg-shelf__sum { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); font-weight: var(--fw-semibold); background: var(--bg-sunk); cursor: pointer; list-style: none; }
+.trpg-shelf__sum::-webkit-details-marker { display: none; }
+.trpg-shelf__sum small { margin-left: auto; font-weight: var(--fw-regular); color: var(--text2); }
+.trpg-shelf__row { display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3); min-height: 40px; border-top: var(--border) solid var(--line); transition: background var(--dur-fast) var(--ease-std); }
+.trpg-shelf__row:hover { background: var(--bg-hover); }
+.trpg-shelf__row small { margin-left: auto; color: var(--text2); white-space: nowrap; }
+.trpg-summary { display: grid; gap: var(--sp-1); margin-top: var(--sp-4); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--bg-sunk); border: var(--border) solid var(--line); }
+.trpg-summary b { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+
+/* ── 设置 / 存档 ── */
+.trpg-menu { display: grid; }
+.trpg-menu__row { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--sp-3); align-items: center; width: 100%; min-height: 60px; padding: var(--sp-3) var(--sp-5); border: 0; border-bottom: var(--border) solid var(--line); background: transparent; text-align: left; transition: background var(--dur-fast) var(--ease-std); }
+.trpg-menu__row:last-child { border-bottom: 0; } .trpg-menu__row:hover { background: var(--bg-hover); }
+.trpg-menu__row b { font-weight: var(--fw-semibold); } .trpg-menu__row small { color: var(--text2); } .trpg-menu__row > span { grid-row: 1 / span 2; grid-column: 2; color: var(--text2); }
+.trpg-camp { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); box-shadow: var(--shadow-1); }
+.trpg-saves { list-style: none; margin: 0; padding: 0 var(--sp-2) var(--sp-2); display: grid; gap: 4px; }
+.trpg-saves li { padding: var(--sp-2) var(--sp-3); border: 2px solid transparent; border-radius: var(--r-sm); }
+.trpg-saves li[data-current='true'] { border-color: var(--primary); background: var(--primary-tint); }
+
+/* ── 提示条 / 悬停小窗 / 进度环 ── */
+.trpg-toasts { position: absolute; left: 0; right: 0; top: 44px; z-index: var(--z-toast); display: grid; justify-items: center; gap: var(--sp-2); pointer-events: none; padding: 0 var(--sp-3); }
+.trpg-toast { pointer-events: auto; display: flex; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-4); border-radius: var(--r-md); background: var(--hero-bg); color: var(--hero-ink); box-shadow: var(--shadow-2); animation: trpg-drop var(--dur-base) var(--ease-out); }
+.trpg-toast[data-kind='error'] { background: var(--danger-bg); color: var(--danger-text); box-shadow: var(--shadow-2), inset 0 0 0 1px var(--danger-line); }
+.trpg-toast small { color: var(--hero-ink2); } .trpg-toast[data-kind='error'] small { color: var(--danger-text); opacity: 0.8; }
+@keyframes trpg-drop { from { opacity: 0; transform: translateY(-8px); } }
+.trpg-pop { position: absolute; z-index: var(--z-pop); width: 272px; padding: var(--sp-2) var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-1); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); box-shadow: var(--shadow-2); animation: trpg-fade var(--dur-fast) var(--ease-out); }
+.trpg-pop h3 { margin: 0; font-size: var(--fs-sm); color: var(--text2); font-weight: var(--fw-semibold); }
+.trpg-pop__row { display: grid; grid-template-columns: 1fr auto; gap: 0 var(--sp-3); padding-top: var(--sp-1); border-top: var(--border) solid var(--line); } .trpg-pop__row:first-of-type { border-top: 0; }
+.trpg-ring { display: inline-grid; place-items: center; } .trpg-ring svg { display: block; }
+.trpg-ring [data-part='track'] { stroke: var(--line-ctrl); } .trpg-ring [data-part='arc'] { stroke: var(--primary); transition: stroke-dasharray var(--dur-ring) var(--ease-std); }
+.trpg-libmark { display: inline-flex; align-items: center; gap: 4px; } .trpg-count { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--primary-text); }
