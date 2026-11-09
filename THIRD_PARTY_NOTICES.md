@@ -14,6 +14,12 @@
 | smartcrop-sharp | 开发期头像画面重心裁切（`art:focus`） | MIT |
 | game-icons.net | 生物类型图标（`src/ui/kit/creatureIcons.ts`） | CC BY 3.0；作者：Lorc（beast-eye、flat-paw-print、flat-star、gear-hammer、dragon-head、flame-tunnel、fairy、daemon-skull、monster-grasp、goo-skull、flamed-leaf、crowned-skull、uncertainty）、Delapouite（giant、person） |
 | js-yaml | 开发期把 dnd5e 作者 YAML 资料包原样转 JSON（`tools/vendor-kernel-data.mjs`） | MIT |
+| ajv 8.18.0 | 自制 JSON 结构校验：开发期把作者结构定义预编译成独立校验器（`tools/build-brew-validator.mjs`，P5 B-12），产物 `vendor/brew-schema/validator.js` 里带着它的两个运行时小函数 | MIT |
+| esbuild 0.28.2 | 开发期把上面的校验器压缩打包成单个文件 | MIT |
+| fast-uri 3.1.0 | 同上，开发期 ajv 解析结构文件之间的相对引用；固定在 3.1.0（3.1.9 起解析相对引用的结果变了，编译会失败） | BSD-3-Clause |
+| json-source-map 0.6.1 | 同上，运行时给校验错误标出原文行列（作者的校验器用的也是它） | MIT |
+| 5etools-utils 0.17.24 的 `schema/brew`（`vendor/brew-schema/schema/`，由 `tools/vendor-brew-schema.mjs` 原样取自 npm） | 作者的自制数据结构定义，校验自制 JSON 用 | MIT（包的 package.json 声明；包内无单独许可文件） |
+| plutonium-scenes 的 `test/schema/shared.json`（`vendor/brew-schema/remote/`） | 上面结构定义里唯一的外部引用（作者测试器联网取，这里随插件带一份，约 7 KB） | 该仓库未声明许可（GitHub 查不到许可证）；随插件带属驾驶员判断承担的风险，与结构定义同属 5etools 生态 |
 
 ## 结算小窗随插件带的原件（`vendor/foundry/`，P3-2）
 

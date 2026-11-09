@@ -1,6 +1,7 @@
 // 自定义库（D2-P3 整体设计 §2.3、§2.5、§2.6）：写新条目、房规、文字转条目、新条目模板、导出、导入预览。
 // 条目内容全部走作者的可编辑自制（作者格式）；插件只记"房规 → 目标"的链接和范围设置。
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
+import { validateBrewJson, type BrewValidation, type SchemaIssue } from './brew-validate'
 import { findCollisions, type DocIndex } from './versions'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
@@ -52,6 +53,21 @@ export class CustomLibrary {
     return this.lib.reparseBrew(brewSetOf(codeSet).id)
   }
 
+  /** JSON 结构校验（作者的自制结构定义）：传原文错误带行列，传对象只有路径。目前只有 kind: 'brew'。 */
+  validate(input: string | unknown, _opts: { kind: 'brew' } = { kind: 'brew' }): Promise<BrewValidation> {
+    return validateBrewJson(input)
+  }
+
+  /** 单条条目在写入前的结构检查：套上"我的资料"的来源信息，只留这一条自己的错（来源信息等外壳的错不算）。 */
+  async validateEntry(prop: string, ent: Record<string, unknown>): Promise<SchemaIssue[]> {
+    const wrapper = {
+      _meta: { sources: [{ json: CUSTOM.mine.json, abbreviation: CUSTOM.mine.abbreviation, full: CUSTOM.mine.full, authors: ['-'], convertedBy: ['-'], version: '1.0.0' }], dateAdded: 0, dateLastModified: 0, edition: 'classic' },
+      [prop]: [{ source: CUSTOM.mine.json, ...ent }],
+    }
+    const mine = (await validateBrewJson(wrapper)).issues
+    return mine.filter((i) => i.path.startsWith(`/${prop}/0`))
+  }
+
   /** 作者新条目模板（法术、怪物、传奇组有作者构建器；别的类别 null）。 */
   async template(codeSet: string, prop: string): Promise<Record<string, unknown> | null> {
     return (await this.frame(codeSet)).call('entryTemplate', prop)
@@ -72,7 +88,8 @@ export class CustomLibrary {
     const f = await this.frame(codeSet)
     await f.call('editableEnsureSource', CUSTOM.mine)
     const saved = await f.call('editablePut', prop, { source: CUSTOM.mine.json, ...ent })
-    return { ...saved, parse: await this.after(codeSet) }
+    // 结构问题只提示不拦截（作者的编辑器已经按结构引导；有疑问由界面决定是否提醒）
+    return { ...saved, parse: await this.after(codeSet), issues: await this.validateEntry(prop, ent) }
   }
 
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {
@@ -232,6 +249,7 @@ export class CustomLibrary {
         alternatives: collisions.map((c) => ({ prop: c.prop, hash: c.hash, base: c.base.kind === 'official' ? 'official' : c.base.docIdLocal })),
         notJson: added.value.notJson,
         authorErrors: added.errors,
+        structure: await Promise.all(files.map(async (file) => ({ name: file.name, ...(await validateBrewJson(file.text)) }))),
       }
     } finally {
       f.close()

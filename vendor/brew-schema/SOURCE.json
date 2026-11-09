@@ -1,0 +1,7 @@
+{
+  "package": "5etools-utils",
+  "version": "0.17.24",
+  "license": "MIT",
+  "remote": "https://raw.githubusercontent.com/TheGiddyLimit/plutonium-scenes/main/test/schema/shared.json",
+  "fetched": "2026-11-09"
+}

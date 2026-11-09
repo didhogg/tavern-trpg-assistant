@@ -155,6 +155,16 @@ const result = await page.evaluate(async () => {
   // 第二次读走缓存
   const t1 = performance.now(); await lib.service.query('cn-official', 'embeddedTable', {}); r.b09_cachedMs = Math.round(performance.now() - t1)
   const bySrc = await lib.service.query('cn-official', 'embeddedTable', { source: 'PHB' }); r.b09_phb = bySrc.length
+  // ---- B-12 JSON 结构校验（打包后的预编译校验器，不用 eval） ----
+  const fixed = JSON.parse(brewText); fixed._meta.edition = 'classic'
+  const t12 = performance.now()
+  const vGood = await lib.custom.validate(JSON.stringify(fixed, null, 1), { kind: 'brew' })
+  const firstMs = Math.round(performance.now() - t12)
+  const t13 = performance.now(); await lib.custom.validate(fixed, { kind: 'brew' }); const againMs = Math.round(performance.now() - t13)
+  const vBad = await lib.custom.validate(brewText, { kind: 'brew' })
+  const pre = await lib.custom.previewImport('cn', [{ name: 'p5-test.json', text: brewText }, { name: 'p5-fixed.json', text: JSON.stringify(fixed) }])
+  const entryBad = await lib.custom.validateEntry('spell', { name: 'x', level: 'bad' })
+  r.b12 = { good: vGood.ok, firstMs, againMs, bad: vBad.issues.map((i) => ({ path: i.path, text: i.text, line: i.line })), preview: pre.structure.map((x) => ({ name: x.name, ok: x.ok, issues: x.issues.map((i) => i.text) })), entryBad: entryBad.map((i) => i.path + ' ' + i.text) }
   // ---- B-08 删前影响预览（先于删除） ----
   const imp1 = await backend.removalImpact({ kind: 'brew', setId: 'cn-brew', docIdLocals: [mine.docIdLocal] })
   const imp2 = await backend.removalImpact({ kind: 'official', setId: 'cn-official' })

@@ -1,0 +1,15 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "book.json",
+	"version": "1.3.0",
+	"type": "object",
+	"properties": {
+		"bookData": {
+			"$ref": "../corpus-shared.json#/$defs/wrappedAdventureBookDataArray"
+		}
+	},
+	"required": [
+		"bookData"
+	],
+	"additionalProperties": false
+}

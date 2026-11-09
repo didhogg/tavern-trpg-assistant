@@ -11,6 +11,7 @@ import { libraryDataVersion, scopedCurrentOverrides, scopedRefChecker } from '..
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
 import { BrewPacks } from '../library/brew-packs'
+import { configureBrewValidator } from '../library/brew-validate'
 import { uninstallOfficial, type UninstallReport } from '../library/uninstall'
 import { impactOfRemoval, type RemovalImpact, type RemovalTarget } from './removal-impact'
 import { Counterparts } from '../library/counterpart'
@@ -95,6 +96,7 @@ const defaultPluginRoot = (): URL => new URL('../', import.meta.url)
 
 export function createBackend(opts: BackendOptions): Backend {
   const pluginRoot = opts.pluginRoot ?? defaultPluginRoot()
+  configureBrewValidator(pluginRoot)
   const container = opts.container ?? (() => document.body)
 
   const db = new LibraryDatabase(opts.libraryDbName)
