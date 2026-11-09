@@ -4,6 +4,7 @@ import { uuid as defaultUuid } from '../ids'
 import { SCHEMA_VERSIONS } from '../../schemas/common'
 import { backupStateSchema, type AutoReason, type SaveSlot, type Workspace, type WorkspaceData } from '../../schemas/campaign'
 import type { RuleRegistry } from '../../rules/registry'
+import { campaignViewOf, type CampaignView } from './view'
 import { AUTO_SAVE_KEEP, byRecent, cleanName, isDirty, readSave, readWorkspace, snapshotHash, summarize, uniqueName, type SummaryContributor } from './helpers'
 
 export interface CampaignDeps {
@@ -22,6 +23,8 @@ export interface NewCampaignInput extends Owner {
   ruleId: string
   name: string
   note?: string
+  /** 开局时就写进当前数据和第一个存档的内容（例如绑好的结算内核段）；不给就是空的。 */
+  initialData?: WorkspaceData
 }
 
 /** 当前数据与存档的全部业务规则（U2 §3）。界面只经它读写，不直接访问存储。 */
@@ -78,6 +81,13 @@ export class CampaignService {
     return rows.map(readSave).filter((s) => s.ruleId !== ruleId && s.kind === 'manual' && s.deletedAt === undefined).sort(byRecent)
   }
 
+  /** 战役视图（只读）：战役名、当前存档、分支树、其他战役、各处数量。规则见 view.ts。 */
+  async getCampaignView(ownerKey: string, ruleId: string): Promise<CampaignView> {
+    const rows = (await this.db.saves.toArray()).map(readSave)
+    const ws = await this.db.workspaces.get(ownerKey)
+    return campaignViewOf(rows, { ownerKey, ruleId, currentSaveId: ws && ws.ruleId === ruleId ? ws.currentSaveId : null })
+  }
+
   // ---------- 新存档 / 保存 / 分支 ----------
 
   async startNewCampaign(input: NewCampaignInput): Promise<{ workspace: Workspace; save: SaveSlot }> {
@@ -86,7 +96,7 @@ export class CampaignService {
     return this.db.transaction('rw', [this.db.workspaces, this.db.saves, this.db.meta], async () => {
       const existing = await this.getWorkspace(input.ownerKey)
       if (existing) await this.writeAutoSave(existing, '新存档前')
-      const data: WorkspaceData = {}
+      const data: WorkspaceData = input.initialData ? structuredClone(input.initialData) : {}
       const ws: Workspace = {
         ownerKey: input.ownerKey,
         ownerLabel: input.ownerLabel,

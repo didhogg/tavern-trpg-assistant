@@ -21,6 +21,7 @@ import { KernelPrecompute } from '../rules/kernel/precompute'
 import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
 import { getSource } from '../library/sources'
 import { TrpgError } from './errors'
+import { CampaignStarter } from './start-campaign'
 
 export interface LibraryBackend {
   db: LibraryDatabase
@@ -40,6 +41,8 @@ export interface Backend {
   library: LibraryBackend
   kernel: KernelRuntime
   kernelSave: KernelSaveService
+  /** 开局向导：wizardOptions / startCampaign（缺的资料和冒险在【库】后台下载）。 */
+  starter: CampaignStarter
 }
 
 export interface BackendOptions {
@@ -107,5 +110,7 @@ export function createBackend(opts: BackendOptions): Backend {
     undoLimit: async () => (await loadSettings(opts.db)).undoLimit,
   })
 
-  return { library: { db, files, service, scoped, custom, tasks, precompute, precomputeQueue: queue, dataVersion }, kernel, kernelSave }
+  const library: LibraryBackend = { db, files, service, scoped, custom, tasks, precompute, precomputeQueue: queue, dataVersion }
+  const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, library })
+  return { library, kernel, kernelSave, starter }
 }
