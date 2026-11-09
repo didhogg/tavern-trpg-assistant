@@ -16,6 +16,7 @@ import { chooseVersion, type Alternative, type Chosen } from './versions'
 import { hashValue } from '../core/hash'
 import type { BookDirectory } from './directory'
 import type { DirectoryRecord } from './directory'
+import { BrewPacks, brewShelfInfo } from './brew-packs'
 import { DocumentStore } from './documents'
 import { EntryLinks, type Located, type ResolvedTag } from './entry-links'
 import { scopedSearch, type ScopedSearchHit } from './scoped-search'
@@ -303,9 +304,11 @@ export class ScopedLibrary {
         if (rec) for (const r of directoryRows(set.id, rec)) rows.push({ ...r, alternatives: altBySource.get(r.source.toLowerCase()) ?? 0 })
         continue
       }
+      // 自制来源：作者书目里没有，名称 / 作者 / 日期取自包自带的来源信息（B-11）
+      const brewInfo = set.kind === 'brew' ? await new BrewPacks(this.lib).sourceInfoMap(set.id) : null
       for (const [source, count] of Object.entries(await this.sourceCounts(set.id))) {
         const row = { kind: 'book' as const, set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0 }
-        rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
+        rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : brewInfo ? { ...row, shelf: brewShelfInfo(source, brewInfo.get(source.toLowerCase())) } : row)
       }
       if (set.kind === 'official') {
         for (const a of await this.adventures(set)) {

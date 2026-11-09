@@ -60,10 +60,27 @@ export class BookDirectory {
     return p
   }
 
-  private async load(codeSet: string): Promise<DirectoryRecord> {
+  /**
+   * 重新取书目（库页「一键更新」，P5 B-14）：不看缓存、重新读作者书目文件并覆盖缓存；
+   * 取失败（断网、地址不通）时保留旧的，不把书架变成空的。返回现在有效的那份。
+   */
+  async refresh(codeSet: string): Promise<DirectoryRecord> {
+    const old = await this.peek(codeSet)
+    this.inflight.delete(codeSet)
+    const p = this.load(codeSet, true)
+    this.inflight.set(codeSet, p)
+    try {
+      const fresh = await p
+      return (fresh.errors.books || fresh.errors.adventures) && old ? old : fresh
+    } finally {
+      this.inflight.delete(codeSet)
+    }
+  }
+
+  private async load(codeSet: string, force = false): Promise<DirectoryRecord> {
     const { key, commit, sourceId } = this.keyOf(codeSet)
     const saved = await this.opts.db.derived.get(key)
-    if (saved) return saved.value as DirectoryRecord
+    if (saved && !force) return saved.value as DirectoryRecord
 
     const failed = (why: string): DirectoryRecord => ({
       codeSet, commit, groups: [], sources: {}, books: [], adventures: [], adventureFiles: {}, adventureProp: '',

@@ -36,6 +36,15 @@ export class FileProvider {
     return p
   }
 
+  /** 重新取云端文件清单并覆盖缓存（P5 B-14）；取失败时原缓存不动，错误抛给调用方。 */
+  async refreshFileList(source: SourceEntry): Promise<FileList> {
+    const key = `filelist:${source.id}@${commitOf(source)}`
+    const list = await fetchFileList(fileListUrl(source), this.fetchImpl)
+    await this.db.derived.put({ key, fingerprint: commitOf(source), value: list, savedAt: Date.now() })
+    this.lists.set(key, Promise.resolve(list))
+    return list
+  }
+
   /** 已缓存的云端文件清单；没取过就是 null（不联网）。 */
   async cachedFileList(source: SourceEntry): Promise<FileList | null> {
     const saved = await this.db.derived.get(`filelist:${source.id}@${commitOf(source)}`)

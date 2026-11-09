@@ -123,6 +123,21 @@ const result = await page.evaluate(async () => {
     for (const x of rows) { const y = await lib.counterparts.counterpart({ set: 'cn-official', prop, hash: x.hash }); const k = `${prop}:${y.status}${y.sharedBy ? '+shared' : ''}`; dist[k] = (dist[k] || 0) + 1 }
   }
   r.b10_dist = dist
+  // ---- B-11 / B-14 ----
+  r.b11_before = (await lib.brewPacks.list('cn-brew')).length
+  const brewText = JSON.stringify({ _meta: { sources: [{ json: 'P5Test', abbreviation: 'P5', full: 'P5 测试包', authors: ['测试者'], convertedBy: ['测试者'], version: '1.0.0', dateReleased: '2024-05-06' }], dateAdded: 1, dateLastModified: 1 }, spell: [{ name: '测试术', source: 'P5Test', level: 1, school: 'V', time: [{ number: 1, unit: 'action' }], range: { type: 'point', distance: { type: 'self' } }, components: { v: true }, duration: [{ type: 'instant' }], entries: ['x'] }] })
+  const imp = await lib.service.brewImport('cn-brew', [{ name: 'p5-test.json', text: brewText }])
+  lib.scoped.reset()
+  const packs = await lib.brewPacks.list('cn-brew')
+  const mine = packs.find((p) => p.sources.includes('P5Test'))
+  r.b11_pack = mine && { origin: mine.origin, sources: mine.sources, props: mine.props, entryCount: mine.entryCount, author: mine.sourceInfo[0]?.authors, date: mine.sourceInfo[0]?.dateReleased }
+  const rows = await lib.scoped.catalog(c)
+  const brewRow = rows.find((x) => x.set === 'cn-brew' && x.source === 'P5Test')
+  r.b11_row = brewRow && { name: brewRow.name, count: brewRow.count, shelf: brewRow.shelf && { group: brewRow.shelf.group, author: brewRow.shelf.author, published: brewRow.shelf.published } }
+  r.b11_importErrors = imp.errors
+  const dir1 = await lib.directory.get('cn')
+  const dir2 = await lib.directory.refresh('cn')
+  r.b14 = { before: dir1.books.length, after: dir2.books.length, errors: dir2.errors, adv: dir2.adventures.length }
   return r
 })
 await writeFile(`${work}/p5-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))
