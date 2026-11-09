@@ -15,13 +15,14 @@ function flagsOf(item: any): string | null {
 export function createAddCommands(operate: Operate, actor: ActorGetter) {
   return {
     /** 给已有人物加一组条目；兼职、子职业、专长、装备、法术、消耗品都走这里。 */
-    addToActor: (actorId: string, rows: Array<{ prop: string; entry: any; refKey?: string; choices?: any[] }>) => operate([], async () => {
+    addToActor: (actorId: string, rows: Array<{ prop: string; entry: any; refKey?: string; choices?: any[]; data?: any }>) => operate([], async () => {
       const a = actor(actorId)
       const sheet = a.sheet
       if (!sheet?._onDropSingleItem) throw Error(`人物 ${actorId} 没有官方人物表单实例`)
       const added: any[] = []
       for (const row of rows) {
-        const data = cleanItem(await importEntry(row.prop, row.entry))
+        // 外层缓存层（cache.ts）通常已给好换算结果；没给才现场换算
+        const data = cleanItem(row.data ? structuredClone(row.data) : await importEntry(row.prop, row.entry))
         const before = new Set(a.items.map((item: any) => item.id))
         const manager = Manager().forNewItem(a, data, { automaticApplication: true })
         if (manager.steps.length) {

@@ -18,6 +18,7 @@ import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
 import { KernelPrecompute } from '../rules/kernel/precompute'
+import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
 import { getSource } from '../library/sources'
 import { TrpgError } from './errors'
 
@@ -29,6 +30,8 @@ export interface LibraryBackend {
   custom: CustomLibrary
   tasks: DownloadTasks
   precompute: KernelPrecompute
+  /** 改自制 / 房规后的后台补换算。 */
+  precomputeQueue: PrecomputeQueue
   /** 当前装的数据版本记号（存档保存时现取）。 */
   dataVersion: () => ReturnType<ReturnType<typeof libraryDataVersion>>
 }
@@ -72,7 +75,8 @@ export function createBackend(opts: BackendOptions): Backend {
     for (const codeSet of [...new Set(codeSets)]) rows.push(await precompute.run({ codeSet, signal, onProgress }))
     return rows
   }
-  const service = new LibraryService({ db, openFrame, onDataChanged: async (codeSet) => { if (precompute) await precompute.run({ codeSet }) } })
+  const queue = new PrecomputeQueue(async (codeSet) => precompute?.run({ codeSet }) ?? null)
+  const service = new LibraryService({ db, openFrame, onDataChanged: async (codeSet) => queue.trigger(codeSet) })
   const scoped = new ScopedLibrary(service, db)
   const custom = new CustomLibrary(service, scoped, db)
   const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet),
@@ -103,5 +107,5 @@ export function createBackend(opts: BackendOptions): Backend {
     undoLimit: async () => (await loadSettings(opts.db)).undoLimit,
   })
 
-  return { library: { db, files, service, scoped, custom, tasks, precompute, dataVersion }, kernel, kernelSave }
+  return { library: { db, files, service, scoped, custom, tasks, precompute, precomputeQueue: queue, dataVersion }, kernel, kernelSave }
 }

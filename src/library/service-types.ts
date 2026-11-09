@@ -1,4 +1,5 @@
 // 【库】服务交出去的数据形状（插件自己的查询结果外壳；作者对象原样放在 item 里）。
+import type { GeneratedPairReport } from './english-generated'
 import type { Detail } from './runtime/frame/read-commands'
 import type { EnglishMatch } from './runtime/frame/english-commands'
 
@@ -30,6 +31,8 @@ export interface EnglishPairs {
   unmatched: Array<{ prop: string; hash: string; error?: string }>
   via: Record<string, number>
   located: number
+  /** 生成条目（版本 / 亚种 / 魔法变体）按母条目补的配对情况，按类别。 */
+  generated?: Record<string, GeneratedPairReport>
 }
 
 /** 没配上的原因：不在作者索引里（作者的配对只覆盖索引里的条目）；索引里有但英文没找到；找到了但英文解析结果里没有这个编号。 */

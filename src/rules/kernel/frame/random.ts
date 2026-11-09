@@ -3,6 +3,12 @@
 // 掷骰不走这里：骰点由插件喂入。
 
 let nativeFill: ((array: ArrayBufferView) => ArrayBufferView) | null = null
+let withSeedImpl: (<R>(seed: string, fn: () => Promise<R>) => Promise<R>) | null = null
+
+/** 在按 seed 定的另一条确定序列上跑一段异步代码，跑完恢复主序列（结算命令按顺序执行，中间不插别的命令）。没装确定随机源时原样跑。 */
+export function withSeed<R>(seed: string, fn: () => Promise<R>): Promise<R> {
+  return withSeedImpl ? withSeedImpl(seed, fn) : fn()
+}
 
 function hash(seed: string): number {
   let h = 2166136261
@@ -32,6 +38,15 @@ export function installSeededCrypto(target: { crypto: Crypto }): (seed: string) 
     return array
   }
   Object.defineProperty(target.crypto, 'getRandomValues', { value: fill, configurable: true, writable: true })
+  withSeedImpl = async (seed, fn) => {
+    const main = state
+    state = hash(seed)
+    try {
+      return await fn()
+    } finally {
+      state = main
+    }
+  }
   return seed => { state = hash(seed) }
 }
 

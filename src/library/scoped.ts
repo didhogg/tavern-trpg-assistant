@@ -194,10 +194,10 @@ export class ScopedLibrary {
   }
 
   /** 按编号取英文对照原件（中文条目喂 Plutonium 用）；英文源或没配对时返回 null。 */
-  async englishOf(ref: EntryRef): Promise<English | null> {
+  async englishOf(ref: EntryRef, opts: { fluff?: boolean } = {}): Promise<English | null> {
     const set = SOURCES.find((s) => s.id === ref.set)
     if (!set) return null
-    return this.lib.english(set, ref.prop, ref.hash)
+    return this.lib.english(set, ref.prop, ref.hash, opts)
   }
 
   /** 中英配对表（作者做法）；英文源或没装英文时抛错，调用方自行处理。 */

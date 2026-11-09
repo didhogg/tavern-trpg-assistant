@@ -245,6 +245,7 @@ import { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor } fr
 export { actorData, actorPrepared, compactActor, refMapperFor, rebuildActor }
 export { kernelInput } from '../../../src/rules/kernel/input'
 export { KernelCache, wrapKernelSession, kernelImportKey, kernelBaseKey } from '../../../src/rules/kernel/cache'
+export { kernelEntryOf } from '../../../src/rules/kernel/entry'
 export { KernelRuntime } from '../../../src/rules/kernel/runtime'
 export { KernelPrecompute } from '../../../src/rules/kernel/precompute'
 

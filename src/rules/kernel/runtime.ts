@@ -9,7 +9,6 @@ import type { ScopedLibrary } from '../../library/scoped'
 import type { CampaignLibrary } from '../../library/scopes'
 import type { KernelActor } from '../../schemas/kernel'
 import type { EntryRef } from '../../library/scopes'
-import { getSource } from '../../library/sources'
 import { refKey } from '../../core/saves/split'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
@@ -18,14 +17,11 @@ import { KernelCache, kernelBaseKey, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
 import type { KernelDataVersion } from '../../schemas/kernel'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
+import { kernelEntryOf } from './entry'
 
 /** Foundry 世界编号只能用字母、数字、短横线、下划线；战役的 ownerKey 形如 char:角色卡.png，按它算一个稳定编号。 */
 export function worldIdOf(ownerKey: string): string {
   return `trpg-${sha256Hex(ownerKey).slice(0, 16)}`
-}
-
-function getOfficialLang(codeSet: string): boolean {
-  return getSource(codeSet === 'cn' ? 'cn-official' : 'en-official').lang === 'zh'
 }
 
 export interface KernelRuntimeDeps {
@@ -81,7 +77,7 @@ export class KernelRuntime {
       const boot = await session.boot(input)
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
-      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, this.deps.cache!.dataVersion) : session
+      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, this.deps.cache!.dataVersion, campaign.rule) : session
       return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, dataVersion: this.deps.cache?.dataVersion ?? (async () => ({ official: '', brews: {} })) }
     })()
     this.open.set(ownerKey, opening)
@@ -124,7 +120,7 @@ export class KernelRuntime {
   }
 
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
-  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]> }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown }> {
+  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]> }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, [...plan.items, ...(plan.equipment ?? [])])
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
@@ -136,11 +132,11 @@ export class KernelRuntime {
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)
     if (data) o.bases.set(result.result.id, data)
-    return { status: 'complete', id: result.result.id, seed: result.result.seed }
+    return { status: 'complete', id: result.result.id, seed: result.result.seed, noEnglish: rows.noEnglish }
   }
 
   /** 给已有人物加条目；调用方只交引用。 */
-  async addToActor(ownerKey: string, actorId: string, refs: EntryRef[]): Promise<{ status: string; result?: any; error?: string; detail?: unknown }> {
+  async addToActor(ownerKey: string, actorId: string, refs: EntryRef[]): Promise<{ status: string; result?: any; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, refs)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
@@ -157,11 +153,11 @@ export class KernelRuntime {
         else (base as any).items.push(actual)
       }
     }
-    return { status: 'complete', result: result.result }
+    return { status: 'complete', result: result.result, noEnglish: rows.noEnglish }
   }
 
   /** T5：批量建怪物/NPC/载具/物件；单个也走这里。换算结果由会话缓存读写。 */
-  async createActors(ownerKey: string, refs: EntryRef[]): Promise<{ status: string; actors?: any[]; error?: string; detail?: unknown }> {
+  async createActors(ownerKey: string, refs: EntryRef[]): Promise<{ status: string; actors?: any[]; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, refs)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
@@ -173,27 +169,23 @@ export class KernelRuntime {
     }
     const result = await o.session.call('createActorsBatch', prepared)
     if (result.status !== 'complete') return { status: result.status, error: result.error ?? `批量建状态：${result.status}`, detail: result }
-    return { status: 'complete', actors: result.result }
+    return { status: 'complete', actors: result.result, noEnglish: rows.noEnglish }
   }
 
   /** 引用 → 【库】条目（中文战役交英文对照），给建卡/加条目/批量建共用。 */
-  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown }> } | { status: 'missing' | 'error'; error: string; rows: [] }> {
+  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
     const lib = await this.library(ownerKey)
     const fetched = await this.deps.scoped.fetch(lib, refs)
-    const zh = getOfficialLang(lib.codeSet)
     const rows = []
+    const noEnglish: EntryRef[] = []
     for (let i = 0; i < refs.length; i++) {
       const got = fetched[i]
-      if (!got.ok) return { status: 'missing', error: `取不到 ${refs[i].hash}：${got.reason}`, rows: [] }
-      let entry: unknown = got.item
-      if (zh) {
-        const en = await this.deps.scoped.englishOf(got.ref as EntryRef)
-        if (en?.status !== 'found') return { status: 'missing', error: `没有英文对照：${refs[i].hash}`, rows: [] }
-        entry = en.item
-      }
-      rows.push({ ref: refs[i], entry })
+      if (!got.ok) return { status: 'missing', error: `取不到 ${refs[i].hash}：${got.reason}`, rows: [], noEnglish: [] }
+      const k = await kernelEntryOf(this.deps.scoped, lib.codeSet, got.ref as EntryRef, got.item, got.version.altId)
+      if (k.noEnglish) noEnglish.push(refs[i])
+      rows.push({ ref: refs[i], entry: k.entry })
     }
-    return { status: 'complete', rows }
+    return { status: 'complete', rows, noEnglish }
   }
 
   /** 按存档里的引用 / 选择 / 状态把一个人物重建进小窗（内部走批量入口）。 */
@@ -245,7 +237,7 @@ export class KernelRuntime {
         o.seeds.set(result.id, result.seed ?? actor.seed ?? actor.name)
         if (o.cache && version) {
           const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor })
-          await o.cache.put(key, result.base)
+          await o.cache.put(key, result.base, { rule: o.rule, base: o.cacheBase, official: version.official })
         }
       }
     }
@@ -279,7 +271,7 @@ export class KernelRuntime {
       if (o.cache) {
         const version = await o.dataVersion()
         const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor: compact })
-        await o.cache.put(key, base)
+        await o.cache.put(key, base, { rule: o.rule, base: o.cacheBase, official: version.official })
       }
       out.push(compact)
     }

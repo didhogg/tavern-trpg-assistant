@@ -1,6 +1,8 @@
 // 【库】的数据接口：类别、查询、详情（含英文）、搜索、按书开关（D2-P2 B1 设计 §8.3、§8.6、§8.7、§9）。
 // 只交作者对象和作者搜索结果，不挑字段、不改名。凡是要理解字段含义的判断（屏蔽、背景描述、英文编号、
 // 搜索匹配与排序）都在小窗里由作者函数做；插件这边只读库、对编号、按来源分组。
+import { addGeneratedPairs } from './english-generated'
+import { ParsedMemo } from './parsed-memo'
 import { parseBrew, type BrewParseReport } from './brew'
 import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
@@ -28,8 +30,11 @@ export class LibraryService {
   private readonly frames = new Map<string, Promise<AuthorFrame>>()
   private readonly pairsCache = new Map<string, Promise<EnglishPairs>>()
   private readonly searchLoaded = new Map<string, string>()
+  private readonly parsedMemo: ParsedMemo
 
-  constructor(private readonly opts: LibraryServiceOptions) {}
+  constructor(private readonly opts: LibraryServiceOptions) {
+    this.parsedMemo = new ParsedMemo(opts.db)
+  }
 
   /** 每套作者程序只开一个小窗，屏蔽表、搜索索引都在这个小窗里，开关书也经它改，状态才一致。 */
   frameOf(codeSet: string): Promise<AuthorFrame> {
@@ -68,7 +73,8 @@ export class LibraryService {
   }
 
   async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
-    const rec = await this.opts.db.derived.get(parsedKey(sourceId, prop))
+    const value = await this.parsedMemo.get(parsedKey(sourceId, prop))
+    const rec = value === undefined ? undefined : { value }
     // 自制只存有内容的类别：解析记录在、这一类没出错，就是"这一类没有条目"
     if (!rec && getSource(sourceId).kind === 'brew') {
       const report = await this.opts.db.derived.get(`audit:${sourceId}`)
@@ -141,7 +147,8 @@ export class LibraryService {
     return cachedFluff(this.opts.db, sourceId, prop, hash)
   }
 
-  async english(s: SourceEntry, prop: string, hash: string): Promise<English | null> {
+  /** fluff：false 时不读配图描述（结算内核换算用不着；读一次要把这一类的配图描述整张读出来）。 */
+  async english(s: SourceEntry, prop: string, hash: string, { fluff = true }: { fluff?: boolean } = {}): Promise<English | null> {
     if (!s.pair) return null
     const pair = getSource(s.pair)
     if (!(await this.bothInstalled(s, pair))) return { status: 'not-installed' }
@@ -149,7 +156,7 @@ export class LibraryService {
     if (!hit) return { status: 'not-paired' }
     const stored = await this.storedItem(pair.id, prop, hit.enHash)
     if (!stored) return { status: 'not-found', hash: hit.enHash }
-    const f = await cachedFluff(this.opts.db, pair.id, prop, hit.enHash)
+    const f = fluff ? await cachedFluff(this.opts.db, pair.id, prop, hit.enHash) : null
     return { status: 'found', hash: hit.enHash, via: hit.via, item: stored.item, fluff: f?.fluff ?? null }
   }
 
@@ -178,7 +185,8 @@ export class LibraryService {
     const pair = getSource(s.pair)
     if (!(await this.bothInstalled(s, pair))) throw new Error(`${s.id} 或 ${pair.id} 还没安装，不能配对`)
     const key = `english:${s.id}`
-    const fingerprint = `${commitOf(s)}+${commitOf(pair)}`
+    // +gen：配对表含生成条目（english-generated.ts）；旧表没有，换个记号让它重建一次。
+    const fingerprint = `${commitOf(s)}+${commitOf(pair)}+gen4`
     const saved = await this.opts.db.derived.get(key)
     if (saved?.fingerprint === fingerprint) return saved.value as EnglishPairs
     const cnFrame = await this.opts.openFrame(s.codeSet)
@@ -195,6 +203,14 @@ export class LibraryService {
         ;(out.pairs[m.prop] ??= {})[m.hash] = { enHash: m.enHash, enSource: m.enSource, via: m.via }
         out.via[m.via ?? 'none'] = (out.via[m.via ?? 'none'] ?? 0) + 1
       }
+      // 作者加载器生成的条目（版本 / 亚种 / 魔法变体）按母条目补配对
+      out.generated = await addGeneratedPairs(out.pairs, {
+        // 冒险 / 书正文这类不按条目解析，没有解析结果，也就没有生成条目
+        parsed: (side, prop) => this.parsed(side === 'cn' ? s.id : pair.id, prop).catch(() => null),
+        templates: () => cnFrame.call('variantTemplateNames'),
+        versions: (side, props) => (side === 'cn' ? cnFrame : enFrame).call('versionOrder', props),
+      })
+      out.via.generated = Object.values(out.generated).reduce((n, r) => n + r.paired, 0)
       await this.opts.db.derived.put({ key, fingerprint, value: out, savedAt: Date.now() })
       return out
     } finally {

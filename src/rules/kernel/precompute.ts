@@ -3,12 +3,13 @@
 import type { FileProvider } from '../../library/files'
 import type { LibraryDatabase } from '../../library/db'
 import type { ScopedLibrary } from '../../library/scoped'
-import { defaultCampaignLibrary, type CampaignLibrary, type EntryRef } from '../../library/scopes'
-import { getSource, officialSourceOf, SOURCES } from '../../library/sources'
+import { defaultCampaignLibrary } from '../../library/scopes'
+import { getSource, SOURCES } from '../../library/sources'
 import type { KernelDataVersion } from '../../schemas/kernel'
 import { KernelCache, kernelImportKey } from './cache'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
+import { kernelEntryOf } from './entry'
 
 export interface PrecomputeProgress { stage: string; done: number; total: number; item?: string }
 export interface PrecomputeReport {
@@ -22,6 +23,10 @@ export interface PrecomputeReport {
   converted: number
   cached: number
   failed: Array<{ prop: string; name: string; error: string }>
+  /** 交的是中文条目（房规 / 备选生效，或没有英文对照；蓝图“中文战役”：直接交中文、标“无英文对照”）。照样换算，列出来。 */
+  noEnglish: Array<{ prop: string; name: string; reason: string }>
+  /** 完整换算后清掉的旧行（结算内核或官方数据换过之前的）。 */
+  swept: number
   rawBytes: number
   compressedBytes: number
   ms: number
@@ -44,15 +49,6 @@ export interface PrecomputeOptions {
 interface Candidate { prop: string; entry: unknown; name: string }
 
 const msg = (e: unknown): string => e instanceof Error ? e.message : String(e)
-
-/** 条目交给 Plutonium 的实际对象：中文官方用英文对照；自制 / 房规用生效条目本身。 */
-async function entryOf(opts: PrecomputeOptions, library: CampaignLibrary, ref: EntryRef, item: unknown, altId: string): Promise<unknown> {
-  if (altId === 'base' && officialSourceOf(library.codeSet).lang === 'zh') {
-    const en = await opts.scoped.englishOf(ref)
-    if (en?.status === 'found') return en.item
-  }
-  return item
-}
 
 export class KernelPrecompute {
   constructor(private readonly opts: PrecomputeOptions) {}
@@ -81,10 +77,10 @@ export class KernelPrecompute {
     const input = await this.input(codeSet)
     const fingerprint = input.cacheKey ?? ''
     const version = await this.opts.dataVersion()
-    const base: Omit<PrecomputeReport, 'skippedReason' | 'total' | 'done' | 'converted' | 'cached' | 'failed' | 'rawBytes' | 'compressedBytes' | 'ms' | 'cancelled' | 'complete'> = {
+    const base: Omit<PrecomputeReport, 'skippedReason' | 'total' | 'done' | 'converted' | 'cached' | 'failed' | 'noEnglish' | 'swept' | 'rawBytes' | 'compressedBytes' | 'ms' | 'cancelled' | 'complete'> = {
       codeSet, rule: this.rule(), kernelFingerprint: fingerprint, dataVersion: version,
     }
-    const skip = (reason: string): PrecomputeReport => ({ ...base, skippedReason: reason, total: 0, done: 0, converted: 0, cached: 0, failed: [], rawBytes: 0, compressedBytes: 0, ms: Date.now() - started, cancelled: false, complete: false })
+    const skip = (reason: string): PrecomputeReport => ({ ...base, skippedReason: reason, total: 0, done: 0, converted: 0, cached: 0, failed: [], noEnglish: [], swept: 0, rawBytes: 0, compressedBytes: 0, ms: Date.now() - started, cancelled: false, complete: false })
     const en = SOURCES.find((s) => s.kind === 'official' && s.codeSet === 'en')
     const own = SOURCES.find((s) => s.kind === 'official' && s.codeSet === codeSet)
     if (!own || (await this.opts.db.sets.get(own.id))?.status !== 'installed') return skip(`${own?.id ?? codeSet} 还没装好`)
@@ -96,10 +92,12 @@ export class KernelPrecompute {
     const failed: PrecomputeReport['failed'] = []
     try {
       await session.boot(input)
-      const candidates = await this.candidates(session, codeSet, signal, limit)
+      const noEnglish: PrecomputeReport['noEnglish'] = []
+      const candidates = await this.candidates(session, codeSet, noEnglish, signal, limit)
       total = candidates.length
       onProgress?.({ stage: 'convert', done: 0, total })
       const cache = new KernelCache(this.opts.db)
+      const scope = { rule: this.rule(), base: fingerprint, official: version.official }
       for (const row of candidates) {
         if (signal?.aborted) { cancelled = true; break }
         const key = await kernelImportKey({ base: fingerprint, dataVersion: version, kind: row.prop === 'monster' ? 'monster' : 'build', prop: row.prop, entry: row.entry })
@@ -107,7 +105,7 @@ export class KernelPrecompute {
         try {
           const result = await session.call('importForBuild', row.prop, row.entry)
           if (result.status !== 'complete' || !result.result) throw Error(result.error ?? `换算状态：${result.status}`)
-          const size = await cache.put(key, result.result)
+          const size = await cache.put(key, result.result, scope)
           rawBytes += size.raw; compressedBytes += size.compressed; converted++
         } catch (e) {
           failed.push({ prop: row.prop, name: row.name, error: msg(e) })
@@ -116,8 +114,10 @@ export class KernelPrecompute {
         if (done % 10 === 0) onProgress?.({ stage: 'convert', done, total, item: row.prop })
       }
       const complete = !cancelled && failed.length === 0 && done === total
+      // 只在完整跑完后清：中途取消时旧行可能还有人在用（下次接着换）
+      const swept = complete && !limit ? await cache.sweep(scope) : 0
       await this.opts.db.derived.put({ key: this.markerKey(codeSet), fingerprint, value: { kernelFingerprint: fingerprint, dataVersion: version, total, done, complete, at: Date.now() }, savedAt: Date.now() })
-      return { ...base, skippedReason: null, total, done, converted, cached, failed, rawBytes, compressedBytes, ms: Date.now() - started, cancelled, complete }
+      return { ...base, skippedReason: null, total, done, converted, cached, failed, noEnglish, swept, rawBytes, compressedBytes, ms: Date.now() - started, cancelled, complete }
     } finally {
       session.close()
     }
@@ -129,7 +129,7 @@ export class KernelPrecompute {
   }
 
   /** 从已解析数据的类别 + 本战役可见条目里收集；类别由作者登记表确认，不写类别清单。 */
-  private async candidates(session: KernelSession, codeSet: string, signal?: AbortSignal, limit?: number): Promise<Candidate[]> {
+  private async candidates(session: KernelSession, codeSet: string, noEnglish: PrecomputeReport['noEnglish'], signal?: AbortSignal, limit?: number): Promise<Candidate[]> {
     const props = new Set<string>()
     for (const source of SOURCES.filter((s) => s.codeSet === codeSet)) {
       await this.opts.db.derived.where('key').startsWith(`parsed:${source.id}:`).each((rec) => {
@@ -153,7 +153,19 @@ export class KernelPrecompute {
         // 作者条目里有一类只有属性缩写、没有 name 的元数据（例如 itemProperty）；它们不是 Actor/Item 文档。
         // 作者导入器对它们会返回无文档；这里按内容的真实形状跳过，不写类别名单。
         if (typeof item?.name !== 'string' || !item.name) continue
-        out.push({ prop, entry: await entryOf(this.opts, library, row.ref, row.item, row.version.altId), name: item.name })
+        const k = await kernelEntryOf(this.opts.scoped, library.codeSet, row.ref, row.item, row.version.altId)
+        if (k.noEnglish) noEnglish.push({ prop, name: item.name, reason: k.reason ?? 'english-missing' })
+        out.push({ prop, entry: k.entry, name: item.name })
+        // 有备选（房规、撞编号的包）：每个备选版本也换好——哪个战役选它都即时；原件已在上面
+        if (row.version.count > 0) {
+          const d = await this.opts.scoped.detail(library, row.ref)
+          for (const alt of d && !('hidden' in d) ? d.alternatives : []) {
+            if (alt.item === row.item) continue
+            const a = await kernelEntryOf(this.opts.scoped, library.codeSet, row.ref, alt.item, alt.altId)
+            if (a.noEnglish) noEnglish.push({ prop, name: item.name, reason: a.reason ?? 'alternative' })
+            out.push({ prop, entry: a.entry, name: item.name })
+          }
+        }
       }
       if (limit && out.length >= limit) break
     }

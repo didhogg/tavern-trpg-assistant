@@ -1,6 +1,7 @@
 // P3-3b 第 ③ 步：把存档人物（引用 + 选择 + 状态差别）重建小窗里的完整人物；
 // 以及把当前完整人物 + 重建基准拆回存档要的三样东西。
 // 只做接线；导入/建卡/叠状态全部走结算小窗里的作者入口（frame/commands-level.ts）。
+import { kernelEntryOf } from './entry'
 import type { KernelActorCompact } from '../../core/saves/kernel'
 import { refKey, splitActor, type KernelRefMapper } from '../../core/saves/split'
 import type { EntryRef, CampaignLibrary } from '../../library/scopes'
@@ -30,6 +31,8 @@ export interface RebuildResult {
   base?: Record<string, unknown>
   missing?: RebuildMissing[]
   seed?: string
+  /** 交的是中文条目的引用（房规 / 备选生效，或没有英文对照），出处标“无英文对照”。 */
+  noEnglish?: KernelRef[]
   error?: string
   /** 失败时的原始命令结果，供排查。 */
   detail?: unknown
@@ -86,18 +89,14 @@ export async function rebuildActor(opts: {
   const fetched = await opts.lib.fetch(opts.library, refs.map((ref) => ({ set: ref.set, prop: ref.prop, hash: ref.hash })))
   const missing: RebuildMissing[] = []
   const entries: Array<{ ref: KernelRef; entry: unknown }> = []
-  const zh = officialSourceOf(opts.library.codeSet).lang === 'zh'
+  const noEnglish: KernelRef[] = []
   for (let i = 0; i < refs.length; i++) {
     const ref = refs[i]
     const result = fetched[i]
     if (!result.ok) { missing.push({ ref, reason: result.reason }); continue }
-    let entry: unknown = result.item
-    if (zh) {
-      const english = await opts.lib.englishOf(result.ref as EntryRef)
-      if (english?.status !== 'found') { missing.push({ ref, reason: english?.status ?? 'english-missing' }); continue }
-      entry = english.item
-    }
-    entries.push({ ref, entry })
+    const k = await kernelEntryOf(opts.lib, opts.library.codeSet, result.ref as EntryRef, result.item, result.version.altId)
+    if (k.noEnglish) noEnglish.push(ref)
+    entries.push({ ref, entry: k.entry })
   }
   if (missing.length) return { status: 'missing', missing }
   const monsters = entries.filter((e) => e.ref.prop === 'monster' || e.ref.kind === 'creature')
@@ -107,7 +106,7 @@ export async function rebuildActor(opts: {
     if (result.status === 'pending') return { status: 'pending', error: '重建怪物需要玩家选择' }
     const payload = result.result as { id?: string; seed?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
     if (result.status !== 'complete' || !payload?.data) return { status: 'error', error: result.error ?? `重建状态：${result.status}`, detail: result }
-    return { status: 'complete', id: payload.id, data: payload.data, base: payload.base, seed: payload.seed }
+    return { status: 'complete', id: payload.id, data: payload.data, base: payload.base, seed: payload.seed, noEnglish }
   }
   const items = entries.filter((e) => BUILD_ITEM_PROPS.has(e.ref.prop))
     .map((e) => ({ prop: e.ref.prop, entry: e.entry, refKey: refKey(e.ref) }))
@@ -124,7 +123,7 @@ export async function rebuildActor(opts: {
   if (result.status === 'pending') return { status: 'pending', error: '重建需要玩家选择' }
   const payload = result.result as { id?: string; seed?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
   if (result.status !== 'complete' || !payload?.data) return { status: 'error', error: result.error ?? `重建状态：${result.status}`, detail: result }
-  return { status: 'complete', id: payload.id, data: payload.data, base: payload.base }
+  return { status: 'complete', id: payload.id, data: payload.data, base: payload.base, noEnglish }
 }
 
 /** 当前完整人物 + 重建基准 + 官方 reverse 选择 → 存档要的引用/选择/状态差别。 */

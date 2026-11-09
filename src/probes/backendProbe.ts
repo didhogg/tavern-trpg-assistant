@@ -5,6 +5,7 @@
 import { storageEstimate } from '../library/install'
 import { defaultCampaignLibrary } from '../library/scopes'
 import { kernelCampaignSchema } from '../schemas/kernel'
+import type { EntryRef } from '../library/scopes'
 import { differences, pickChain } from './backendChain'
 import { probeServices } from './services'
 import { guard, setResult } from './store'
@@ -51,26 +52,14 @@ async function chain(): Promise<void> {
   const { session, bootMs } = await timed(steps, '打开结算内核（官方 Foundry + dnd5e + Plutonium）', () => kernel.session(OWNER.ownerKey), () => true, (v) => ({ bootMs: v.bootMs }))
   steps.push({ step: '结算内核启动耗时', ms: bootMs, ok: true })
 
-  const imported = await timed(steps, '导入条目（Plutonium）', async () => {
-    const out: unknown[] = []
-    for (const row of [...picked.build, ...picked.equipment]) {
-      const r = await session.call('importForBuild', row.ref.prop, row.entry)
-      if (r.status !== 'complete') throw new Error(`导入 ${row.label} 失败：${r.error ?? r.status}`)
-      out.push(r.result)
-    }
-    return out
-  })
-  const keyOf = (r: { set: string; prop: string; hash: string }) => `${r.set}|${r.prop}|${r.hash}`
-  const rows = [
-    ...picked.build.map((row: { ref: { set: string; prop: string; hash: string }; entry: unknown }, i: number) => ({ prop: row.ref.prop, refKey: keyOf(row.ref), entry: row.entry, data: imported[i] })),
-    ...picked.equipment.map((row: { ref: { set: string; prop: string; hash: string }; entry: unknown }, i: number) => ({ prop: row.ref.prop, refKey: keyOf(row.ref), entry: row.entry, data: imported[picked.build.length + i] })),
-  ]
-  const built = await timed(steps, '建英雄（dnd5e 成长流程）', () => session.call('buildCharacter', { name: '真机英雄', items: rows.slice(0, 3), equipment: rows.slice(3) }),
-    (r) => r.status === 'complete', (r) => ({ status: r.status, level: r.result?.level }))
-  const heroId = built.result.id as string
-  await kernel.remember(OWNER.ownerKey, heroId)
-  const monster = await timed(steps, '导入怪物', () => session.call('importMonsterActor', picked.monster.entry), (r) => r.status === 'complete')
-  const monsterId = monster.result.id as string
+  // 走正式入口：只交引用；换算结果由会话缓存层取（装资料时已预换算），建卡走 dnd5e 成长流程
+  const built = await timed(steps, '建英雄（正式入口：引用 → 预换算结果 → dnd5e 成长流程）',
+    () => kernel.buildCharacter(OWNER.ownerKey, { name: '真机英雄', items: picked.build.map((r: { ref: EntryRef }) => r.ref), equipment: picked.equipment.map((r: { ref: EntryRef }) => r.ref) }),
+    (r) => r.status === 'complete' && !!r.id, (r) => ({ status: r.status, error: r.error }))
+  const heroId = built.id as string
+  const monster = await timed(steps, '加怪物（正式入口：批量建）', () => kernel.createActors(OWNER.ownerKey, [picked.monster.ref]),
+    (r) => r.status === 'complete' && !!r.actors?.[0]?.id, (r) => ({ status: r.status, error: r.error }))
+  const monsterId = monster.actors![0].id as string
   await kernel.remember(OWNER.ownerKey, monsterId)
 
   await timed(steps, '人物写进存档（只存引用）', async () => {

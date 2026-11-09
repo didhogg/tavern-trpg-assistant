@@ -56,7 +56,8 @@ export interface EnglishMatch {
   /** 英文那条的来源（作者 SourceUtil.getEntitySource）；按编号取英文条目时要用。 */
   enSource: string | null
   /** 找到的方式（getEnglishEntity 的四步之一）。 */
-  via: 'name' | 'name-any-array' | 'position' | 'source-page' | null
+  /** generated：作者加载器生成的条目，按母条目配（library/english-generated.ts），不是 getEnglishEntity 的一步。 */
+  via: 'name' | 'name-any-array' | 'position' | 'source-page' | 'generated' | null
   error?: string
 }
 
@@ -97,6 +98,36 @@ export async function englishMatch(docs: LocatedDoc[]): Promise<EnglishMatch[]> 
     else if ((jsonObj = sourcePageMatches[locator.ixSourcePage])) via = 'source-page'
     // ↑ 原样取自 getEnglishEntity
     out.push({ prop: doc.prop, hash: doc.hash, enHash: jsonObj ? hashOf(locator.prop, jsonObj) : null, enSource: jsonObj ? sourceOf(jsonObj) : null, via })
+  }
+  return out
+}
+
+/**
+ * 魔法变体模板的英文名：作者 DataUtil.item.loadRawJSON 交出的原始 magicvariant，中文那边每条带作者写的 ENG_name。
+ * 来源取模板的 inherits.source（生成条目上 genericVariant.source 就是它）。给 library/english-generated.ts 配生成的魔法变体用。
+ */
+export async function variantTemplateNames(): Promise<Array<{ name: string; eng: string | null; source: string | null }>> {
+  await init()
+  const raw = await A.DataUtil.item.loadRawJSON()
+  return ((raw?.magicvariant ?? []) as any[]).map((v) => ({ name: v.name, eng: v.ENG_name ?? null, source: v.inherits?.source ?? v.source ?? null }))
+}
+
+/**
+ * 作者 DataUtil.generic.getVersions 的展开顺序：类别 → 母条目编号 → 版本编号（按作者顺序）。
+ * 中英两边原始文件结构相同（版本同一份 2.39.0），第 i 个版本就是同一个；名字各按各的语言排过序，不能拿解析结果的顺序配。
+ */
+export async function versionOrder(props: string[]): Promise<Record<string, Record<string, string[]>>> {
+  await init()
+  const out: Record<string, Record<string, string[]>> = {}
+  for (const prop of props) {
+    const items: any[] = (await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []
+    for (const it of items) {
+      if (!it?._versions?.length) continue
+      const mother = hashOf(prop, it)
+      if (!mother) continue
+      const versions: any[] = A.DataUtil.generic.getVersions(it)
+      ;(out[prop] ??= {})[mother] = versions.map((v) => hashOf(prop, v)).filter((h): h is string => !!h)
+    }
   }
   return out
 }
