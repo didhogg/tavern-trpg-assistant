@@ -1,6 +1,7 @@
 // 条目之间的"定位"（P5 B-05）：给 类别 + 作者编号，找出它在哪个包里（官方 / 自制 / 书与冒险全文 / 文档）。
 // 搜索命中分流（B-01）和术语跳转（B-04）都用它。只读库，不改任何东西。
 import { DocumentStore } from './documents'
+import type { TagMeta } from './runtime/frame/tag-commands'
 import type { LibraryService } from './service'
 import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
 
@@ -33,6 +34,20 @@ export function parseDocumentHash(hash: string, documentIds: Iterable<string>): 
     return { id, chapter, header }
   }
   return null
+}
+
+/** 一个链接标签解析的结果：作者说它指向谁，以及在库里能不能找到。 */
+export interface ResolvedTag {
+  tag: string
+  name: string
+  displayText: string
+  source: string | null
+  /** 作者的页面与类别候选；真正找到的类别在 located 里。 */
+  page: string
+  hash: string
+  /** 书 / 冒险标签带的章节与小节。 */
+  part?: { chapter: number | null; section: string | null }
+  located: Located | null
 }
 
 export class EntryLinks {
@@ -91,5 +106,21 @@ export class EntryLinks {
       if (stored) return { kind: 'entry', set: set.id, prop, hash, source: stored.source, id: null }
     }
     return null
+  }
+
+  /**
+   * 链接标签 → 条目（所有类别同一个入口）：问作者标签指向哪个页面 / 编号（getTagMeta），
+   * 再按作者页面对应的每个类别在库里找所在的包；条目 / 书 / 文档都能找。
+   * 作者不认识的标签返回 null；认识但库里没有（没装、被删）时 located 为 null。
+   */
+  async resolveTag(codeSet: string, tag: string, text: string): Promise<ResolvedTag | null> {
+    const meta: TagMeta | null = await (await this.lib.frameOf(codeSet)).call('tagMeta', tag, text)
+    if (!meta) return null
+    let located: Located | null = null
+    for (const prop of [...meta.props, 'document']) {
+      located = await this.locate(codeSet, prop, meta.hash)
+      if (located) break
+    }
+    return { tag: meta.tag, name: meta.name, displayText: meta.displayText, source: meta.source, page: meta.page, hash: meta.hash, ...(meta.part ? { part: meta.part } : {}), located }
   }
 }

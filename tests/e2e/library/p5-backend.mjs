@@ -46,6 +46,21 @@ const result = await page.evaluate(async () => {
     doc: await loc('document', 'bookref-quick,4,%e8%b7%b3%e8%b7%83'),
     none: await loc('spell', 'no_such_entry'),
   }
+  // ---- B-04 ----
+  const tag = async (name, text) => { const x = await lib.scoped.resolveTag(c, name, text); return x && { name: x.name, displayText: x.displayText, source: x.source, located: x.located && { kind: x.located.kind, set: x.located.set, prop: x.located.prop }, view: x.view } }
+  r.b04 = {
+    spell: await tag('@spell', '火球术|PHB'),
+    creature: await tag('@creature', '地精|MM'),
+    condition: await tag('@condition', '倒地'),
+    table: await tag('@table', '魔法物品表A'),
+    book: await tag('@book', '玩家手册|PHB|2'),
+    adventure: await tag('@adventure', '失落矿坑|LMoP'),
+    classFeature: await tag('@classFeature', '施法|法师|PHB|1'),
+    subclass: await tag('@subclass', '炼金师|奇械师|TCE|TCE'),
+    quickref: await tag('@quickref', '跳跃|PHB|4'),
+    dice: await tag('@dice', '1d6'),
+    missing: await tag('@spell', '没有这个法术|PHB'),
+  }
   return r
 })
 await writeFile(`${work}/p5-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))

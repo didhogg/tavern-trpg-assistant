@@ -140,3 +140,31 @@ describe('scopedSearch：命中的包不再靠猜（B-01）', () => {
     expect(out[2].target).toMatchObject({ id: 'bookref-quick', chapter: 4, header: '跳跃' })
   })
 })
+
+describe('EntryLinks.resolveTag：标签 → 条目（B-04）', () => {
+  function libWithTag(meta: unknown, stored: Record<string, { item: unknown; source: string | null }> = {}): LibraryService {
+    const base = fakeLib(stored, [])
+    const frame = { call: async (fn: string) => (fn === 'tagMeta' ? meta : fn === 'loaders' ? [] : []) }
+    return { ...base, frameOf: async () => frame } as unknown as LibraryService
+  }
+
+  it('作者给的每个类别候选都试，找到就交；找不到 located 为 null', async () => {
+    // 职业页对应职业与子职业两个类别：编号是子职业的写法，所以第二个候选才找到
+    const lib = libWithTag({ tag: '@subclass', name: '炼金师', displayText: '炼金师', source: 'TCE', page: 'classes.html', hash: 'a_tce,state:sub_b_tce=b1', props: ['class', 'subclass'] }, { 'cn-official|subclass|a_tce,state:sub_b_tce=b1': { item: {}, source: 'TCE' } })
+    const links = new EntryLinks(lib, new DocumentStore(db))
+    expect((await links.resolveTag('cn', '@subclass', 'x'))?.located).toMatchObject({ prop: 'subclass', set: 'cn-official' })
+    const none = await new EntryLinks(libWithTag({ tag: '@spell', name: 'x', displayText: 'x', source: 'PHB', page: 'spells.html', hash: 'x_phb', props: ['spell'] }), new DocumentStore(db)).resolveTag('cn', '@spell', 'x|PHB')
+    expect(none).toMatchObject({ name: 'x', located: null })
+  })
+
+  it('速查标签的编号是文档编号：不用类别，按文档认', async () => {
+    await seedFile('data/generated/bookref-quick.json', quickFile)
+    const lib = libWithTag({ tag: '@quickref', name: '跳跃', displayText: '跳跃', source: 'PHB', page: 'quickreference.html', hash: 'bookref-quick,4,%e8%b7%b3%e8%b7%83', props: ['reference', 'referenceData'] })
+    const r = await new EntryLinks(lib, new DocumentStore(db)).resolveTag('cn', '@quickref', '跳跃|PHB|4')
+    expect(r?.located).toMatchObject({ kind: 'document', id: 'bookref-quick' })
+  })
+
+  it('作者不认识的标签（骰子标签等）返回 null', async () => {
+    expect(await new EntryLinks(libWithTag(null), new DocumentStore(db)).resolveTag('cn', '@dice', '1d6')).toBeNull()
+  })
+})

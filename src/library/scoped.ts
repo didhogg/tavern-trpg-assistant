@@ -17,7 +17,7 @@ import { hashValue } from '../core/hash'
 import type { BookDirectory } from './directory'
 import type { DirectoryRecord } from './directory'
 import { DocumentStore } from './documents'
-import { EntryLinks, type Located } from './entry-links'
+import { EntryLinks, type Located, type ResolvedTag } from './entry-links'
 import { scopedSearch, type ScopedSearchHit } from './scoped-search'
 import { attachShelf, directoryRows, groupShelf, type ShelfGroup, type ShelfInfo } from './shelf'
 import type { KernelOverride } from '../schemas/kernel'
@@ -272,6 +272,14 @@ export class ScopedLibrary {
     const v: { visible: boolean; reason: ViewReason } = at.kind === 'document' ? { visible: true, reason: 'global' } : await this.viewFor(c, ref, at.source)
     const alternatives = at.kind === 'entry' ? (await this.alternativesOf(ref, await this.alts(c.codeSet))).length : 0
     return { ...at, ref, visible: v.visible, reason: v.reason, alternatives }
+  }
+
+  /** 链接标签 → 条目，并说明本战役看不看得到（术语跳转用）。 */
+  async resolveTag(c: CampaignLibrary, tag: string, text: string): Promise<(ResolvedTag & { view: { visible: boolean; reason: ViewReason; alternatives: number } | null }) | null> {
+    const r = await this.links.resolveTag(c.codeSet, tag, text)
+    if (!r) return null
+    const at = r.located && (await this.locate(c, r.located.prop, r.located.hash))
+    return { ...r, view: at ? { visible: at.visible, reason: at.reason, alternatives: at.alternatives } : null }
   }
 
   /** 书目：本套程序已装的每本书 / 每个自制来源 / 每本冒险，各自的归属、在不在本战役、条数、备选数。 */
