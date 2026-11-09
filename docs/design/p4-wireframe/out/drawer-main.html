@@ -1,0 +1,138 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>存档抽屉（有战役） · P4 线框</title><link rel="stylesheet" href="../wireframe.css"><style>
+.wf-board { padding: 28px 32px 40px; background: #fafafa; min-width: 1100px; }
+.wf-board h1 { margin: 0 0 4px; font-size: 24px; } .wf-board .wf-meta { margin: 0 0 18px; color: #555; }
+.wf-row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+.wf-cap { font-size: 12px; color: #444; margin-bottom: 6px; font-weight: 600; }
+.wf-notes { margin-top: 22px; display: grid; gap: 16px; max-width: 1500px; }
+.wf-notes table { border-collapse: collapse; width: 100%; font-size: 13px; background: #fff; }
+.wf-notes th, .wf-notes td { border: 1px solid #bbb; padding: 6px 10px; text-align: left; vertical-align: top; }
+.wf-notes th { background: #e9e9e9; }
+.wf-facts { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 13px; max-width: 1500px; }
+.wf-facts dt { font-weight: 700; } .wf-facts dd { margin: 0; }
+</style></head><body><div class="wf-board">
+<h1>存档抽屉（有战役）</h1><p class="wf-meta">存档抽屉 · 灰度线框（只表达结构、层级、密度、控件位置；颜色、字体留给 Gate 4）</p>
+<div class="wf-row"><figure class="wf-frame" style="margin:0"><figcaption class="wf-cap">视口 1440 · 悬浮窗 960×640 · 宽布局</figcaption><div class="wf-host" style="width:1440px;height:900px"><div class="wf-host__chat"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="wf-host__input">酒馆输入框（宿主，不属于插件）</div><section class="trpg-window" data-layout="wide" data-fullscreen="false" style="left:240px;top:130px;width:960px;height:640px"><div class="trpg-shell" aria-hidden="true"><nav class="trpg-side" aria-label="主导航">
+      <div class="trpg-side__brand"><span style="font-size:20px">⚄</span><span>TRPG 跑团助手</span></div>
+      <ul class="trpg-side__list"><li><button class="trpg-nav" type="button" aria-current="page" title="首页"><span style="font-size:18px;width:30px;text-align:center">⌂</span><span>首页</span></button></li></ul>
+      <ul class="trpg-side__list trpg-side__bottom"><li><button class="trpg-nav" type="button" title="库"><span style="font-size:18px;width:30px;text-align:center">▤</span><span>库</span></button></li><li><button class="trpg-nav" type="button" title="设置"><span style="font-size:18px;width:30px;text-align:center">⚙</span><span>设置</span></button></li></ul>
+    </nav>
+    <div class="trpg-main">
+      <header class="trpg-head"><h1 class="trpg-head__title">首页</h1><div class="trpg-head__chips"><button class="trpg-pill trpg-chip" type="button"><span class="trpg-chip__camp">失落矿坑</span> <span class="trpg-chip__save">/ 存档 2</span> ▾</button><button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button">保存</button></div><button class="trpg-icon-btn" type="button" aria-label="收起助手">✕</button></header>
+      <div class="trpg-body"><main class="trpg-content"><div class="page-stack"><button class="trpg-banner" type="button"><span class="trpg-banner__title">失落矿坑</span><span class="trpg-banner__line"><span>存档 2</span><span>D&amp;D 5e（2014）</span><span class="trpg-banner__state" data-dirty="true">● 有未保存到存档的改动</span></span></button></div></main><button class="trpg-dice-btn" type="button" aria-label="掷骰">⚄</button></div>
+      
+    </div></div><div class="trpg-modal" data-variant="drawer"><section class="trpg-modal__card" role="dialog" aria-modal="true"><i class="trpg-sheet-grip"></i><header class="trpg-modal__head"><h2 class="trpg-modal__title">存档</h2><button class="trpg-icon-btn" type="button" aria-label="关闭">✕</button></header><div class="trpg-modal__pages"><div class="trpg-modal__page"><div class="trpg-drawer">
+  <section class="trpg-drawer__current">
+    <div><span class="trpg-drawer__title"><i class="wf-pin">1</i>失落矿坑</span><span class="trpg-drawer__sub">　当前存档：存档 2　<span class="trpg-badge" data-tone="warn">● 有未保存到存档的改动</span></span></div>
+    <div class="trpg-drawer__buttons"><button class="trpg-btn trpg-btn--primary" type="button"><i class="wf-pin">2</i>保存存档</button><button class="trpg-btn" type="button">分支存档</button><button class="trpg-btn" type="button">导出…</button><span class="trpg-field__hint" style="align-self:center">上次备份 12 天前 · 建议导出</span></div>
+  </section>
+  <div class="trpg-drawer__body">
+    <h3 class="trpg-group" style="margin:0"><i class="wf-pin">3</i>这场战役的存档</h3>
+    <ul class="trpg-saves">
+      <li data-depth="0" data-current="false">
+  <div class="trpg-saves__top"><b>失落矿坑</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月2日 20:10 · D&amp;D 5e（2014）· 手动 · 战役起点</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>存档 1</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月5日 22:30 · 手动 · 来自「失落矿坑」</div></li>
+      <li data-depth="2" data-current="true">
+  <div class="trpg-saves__top"><b>存档 2</b><span class="trpg-badge">当前</span></div>
+  <div class="trpg-saves__meta">11月9日 14:02 · 手动 · 来自「存档 1」</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>先打地精</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月6日 21:05 · 手动 · 来自「失落矿坑」</div></li>
+    </ul>
+    <details class="trpg-fold"><summary><i class="wf-pin">4</i>其他战役<small>2</small></summary></details><details class="trpg-fold"><summary>自动存档<small>3</small></summary></details><details class="trpg-fold"><summary>最近删除<small>1</small></summary></details><details class="trpg-fold"><summary>其他规则<small>0</small></summary></details>
+  </div>
+  <footer class="trpg-drawer__bottom"><button class="trpg-btn" type="button"><i class="wf-pin">5</i>＋ 新建战役</button><button class="trpg-btn" type="button">导入存档</button></footer></div></div></div></section></div></section></div></figure><figure class="wf-frame" style="margin:0"><figcaption class="wf-cap">视口 900 · 悬浮窗 868×640 · 宽布局</figcaption><div class="wf-host" style="width:900px;height:760px"><div class="wf-host__chat"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="wf-host__input">酒馆输入框（宿主，不属于插件）</div><section class="trpg-window" data-layout="wide" data-fullscreen="false" style="left:16px;top:40px;width:868px;height:640px"><div class="trpg-shell" aria-hidden="true"><nav class="trpg-side" aria-label="主导航">
+      <div class="trpg-side__brand"><span style="font-size:20px">⚄</span><span>TRPG 跑团助手</span></div>
+      <ul class="trpg-side__list"><li><button class="trpg-nav" type="button" aria-current="page" title="首页"><span style="font-size:18px;width:30px;text-align:center">⌂</span><span>首页</span></button></li></ul>
+      <ul class="trpg-side__list trpg-side__bottom"><li><button class="trpg-nav" type="button" title="库"><span style="font-size:18px;width:30px;text-align:center">▤</span><span>库</span></button></li><li><button class="trpg-nav" type="button" title="设置"><span style="font-size:18px;width:30px;text-align:center">⚙</span><span>设置</span></button></li></ul>
+    </nav>
+    <div class="trpg-main">
+      <header class="trpg-head"><h1 class="trpg-head__title">首页</h1><div class="trpg-head__chips"><button class="trpg-pill trpg-chip" type="button"><span class="trpg-chip__camp">失落矿坑</span> <span class="trpg-chip__save">/ 存档 2</span> ▾</button><button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button">保存</button></div><button class="trpg-icon-btn" type="button" aria-label="收起助手">✕</button></header>
+      <div class="trpg-body"><main class="trpg-content"><div class="page-stack"><button class="trpg-banner" type="button"><span class="trpg-banner__title">失落矿坑</span><span class="trpg-banner__line"><span>存档 2</span><span>D&amp;D 5e（2014）</span><span class="trpg-banner__state" data-dirty="true">● 有未保存到存档的改动</span></span></button></div></main><button class="trpg-dice-btn" type="button" aria-label="掷骰">⚄</button></div>
+      
+    </div></div><div class="trpg-modal" data-variant="drawer"><section class="trpg-modal__card" role="dialog" aria-modal="true"><i class="trpg-sheet-grip"></i><header class="trpg-modal__head"><h2 class="trpg-modal__title">存档</h2><button class="trpg-icon-btn" type="button" aria-label="关闭">✕</button></header><div class="trpg-modal__pages"><div class="trpg-modal__page"><div class="trpg-drawer">
+  <section class="trpg-drawer__current">
+    <div><span class="trpg-drawer__title"><i class="wf-pin">1</i>失落矿坑</span><span class="trpg-drawer__sub">　当前存档：存档 2　<span class="trpg-badge" data-tone="warn">● 有未保存到存档的改动</span></span></div>
+    <div class="trpg-drawer__buttons"><button class="trpg-btn trpg-btn--primary" type="button"><i class="wf-pin">2</i>保存存档</button><button class="trpg-btn" type="button">分支存档</button><button class="trpg-btn" type="button">导出…</button><span class="trpg-field__hint" style="align-self:center">上次备份 12 天前 · 建议导出</span></div>
+  </section>
+  <div class="trpg-drawer__body">
+    <h3 class="trpg-group" style="margin:0"><i class="wf-pin">3</i>这场战役的存档</h3>
+    <ul class="trpg-saves">
+      <li data-depth="0" data-current="false">
+  <div class="trpg-saves__top"><b>失落矿坑</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月2日 20:10 · D&amp;D 5e（2014）· 手动 · 战役起点</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>存档 1</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月5日 22:30 · 手动 · 来自「失落矿坑」</div></li>
+      <li data-depth="2" data-current="true">
+  <div class="trpg-saves__top"><b>存档 2</b><span class="trpg-badge">当前</span></div>
+  <div class="trpg-saves__meta">11月9日 14:02 · 手动 · 来自「存档 1」</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>先打地精</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月6日 21:05 · 手动 · 来自「失落矿坑」</div></li>
+    </ul>
+    <details class="trpg-fold"><summary><i class="wf-pin">4</i>其他战役<small>2</small></summary></details><details class="trpg-fold"><summary>自动存档<small>3</small></summary></details><details class="trpg-fold"><summary>最近删除<small>1</small></summary></details><details class="trpg-fold"><summary>其他规则<small>0</small></summary></details>
+  </div>
+  <footer class="trpg-drawer__bottom"><button class="trpg-btn" type="button"><i class="wf-pin">5</i>＋ 新建战役</button><button class="trpg-btn" type="button">导入存档</button></footer></div></div></div></section></div></section></div></figure><figure class="wf-frame" style="margin:0"><figcaption class="wf-cap">视口 390 · 全屏 · 窄布局（底部标签栏）</figcaption><div class="wf-host" style="width:390px;height:844px"><section class="trpg-window" data-layout="narrow" data-fullscreen="true"><div class="trpg-shell" aria-hidden="true">
+    <div class="trpg-main">
+      <header class="trpg-head"><h1 class="trpg-head__title">首页</h1><div class="trpg-head__chips"><button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button">保存</button><button class="trpg-icon-btn" type="button" aria-label="助手菜单">⋯</button></div></header>
+      <div class="trpg-body"><main class="trpg-content"><div class="page-stack"><button class="trpg-banner" type="button"><span class="trpg-banner__title">失落矿坑</span><span class="trpg-banner__line"><span>存档 2</span><span>D&amp;D 5e（2014）</span><span class="trpg-banner__state" data-dirty="true">● 有未保存到存档的改动</span></span></button></div></main><button class="trpg-dice-btn" type="button" aria-label="掷骰">⚄</button></div>
+      <nav class="trpg-tabs" aria-label="主导航"><button class="trpg-tab" type="button" aria-current="page"><span style="font-size:20px;height:30px;display:grid;place-items:center">⌂</span><span>首页</span></button><button class="trpg-tab" type="button"><span style="font-size:20px;height:30px;display:grid;place-items:center">▤</span><span>库</span></button><button class="trpg-tab" type="button"><span style="font-size:20px;height:30px;display:grid;place-items:center">⚙</span><span>设置</span></button></nav>
+    </div></div><div class="trpg-modal" data-variant="drawer"><section class="trpg-modal__card" role="dialog" aria-modal="true"><i class="trpg-sheet-grip"></i><header class="trpg-modal__head"><h2 class="trpg-modal__title">存档</h2><button class="trpg-icon-btn" type="button" aria-label="关闭">✕</button></header><div class="trpg-modal__pages"><div class="trpg-modal__page"><div class="trpg-drawer">
+  <section class="trpg-drawer__current">
+    <div><span class="trpg-drawer__title"><i class="wf-pin">1</i>失落矿坑</span><span class="trpg-drawer__sub">　当前存档：存档 2　<span class="trpg-badge" data-tone="warn">● 有未保存到存档的改动</span></span></div>
+    <div class="trpg-drawer__buttons"><button class="trpg-btn trpg-btn--primary" type="button"><i class="wf-pin">2</i>保存存档</button><button class="trpg-btn" type="button">分支存档</button><button class="trpg-btn" type="button">导出…</button><span class="trpg-field__hint" style="align-self:center">上次备份 12 天前 · 建议导出</span></div>
+  </section>
+  <div class="trpg-drawer__body">
+    <h3 class="trpg-group" style="margin:0"><i class="wf-pin">3</i>这场战役的存档</h3>
+    <ul class="trpg-saves">
+      <li data-depth="0" data-current="false">
+  <div class="trpg-saves__top"><b>失落矿坑</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月2日 20:10 · D&amp;D 5e（2014）· 手动 · 战役起点</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>存档 1</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月5日 22:30 · 手动 · 来自「失落矿坑」</div></li>
+      <li data-depth="2" data-current="true">
+  <div class="trpg-saves__top"><b>存档 2</b><span class="trpg-badge">当前</span></div>
+  <div class="trpg-saves__meta">11月9日 14:02 · 手动 · 来自「存档 1」</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>先打地精</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月6日 21:05 · 手动 · 来自「失落矿坑」</div></li>
+    </ul>
+    <details class="trpg-fold"><summary><i class="wf-pin">4</i>其他战役<small>2</small></summary></details><details class="trpg-fold"><summary>自动存档<small>3</small></summary></details><details class="trpg-fold"><summary>最近删除<small>1</small></summary></details><details class="trpg-fold"><summary>其他规则<small>0</small></summary></details>
+  </div>
+  <footer class="trpg-drawer__bottom"><button class="trpg-btn" type="button"><i class="wf-pin">5</i>＋ 新建战役</button><button class="trpg-btn" type="button">导入存档</button></footer></div></div></div></section></div></section></div></figure><figure class="wf-frame" style="margin:0"><figcaption class="wf-cap">悬浮窗被拖到 600 宽 · 中布局（只做外壳演示）</figcaption><div class="wf-host" style="width:700px;height:720px"><div class="wf-host__chat"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="wf-host__input">酒馆输入框（宿主，不属于插件）</div><section class="trpg-window" data-layout="mid" data-fullscreen="false" style="left:50px;top:40px;width:600px;height:640px"><div class="trpg-shell" aria-hidden="true"><nav class="trpg-side" aria-label="主导航">
+      <div class="trpg-side__brand"><span style="font-size:20px">⚄</span></div>
+      <ul class="trpg-side__list"><li><button class="trpg-nav" type="button" aria-current="page" title="首页"><span style="font-size:18px;width:30px;text-align:center">⌂</span></button></li></ul>
+      <ul class="trpg-side__list trpg-side__bottom"><li><button class="trpg-nav" type="button" title="库"><span style="font-size:18px;width:30px;text-align:center">▤</span></button></li><li><button class="trpg-nav" type="button" title="设置"><span style="font-size:18px;width:30px;text-align:center">⚙</span></button></li></ul>
+    </nav>
+    <div class="trpg-main">
+      <header class="trpg-head"><h1 class="trpg-head__title">首页</h1><div class="trpg-head__chips"><button class="trpg-pill trpg-chip" type="button"><span class="trpg-chip__camp">失落矿坑</span> <span class="trpg-chip__save">/ 存档 2</span> ▾</button><button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button">保存</button></div><button class="trpg-icon-btn" type="button" aria-label="收起助手">✕</button></header>
+      <div class="trpg-body"><main class="trpg-content"><div class="page-stack"><button class="trpg-banner" type="button"><span class="trpg-banner__title">失落矿坑</span><span class="trpg-banner__line"><span>存档 2</span><span>D&amp;D 5e（2014）</span><span class="trpg-banner__state" data-dirty="true">● 有未保存到存档的改动</span></span></button></div></main><button class="trpg-dice-btn" type="button" aria-label="掷骰">⚄</button></div>
+      
+    </div></div><div class="trpg-modal" data-variant="drawer"><section class="trpg-modal__card" role="dialog" aria-modal="true"><i class="trpg-sheet-grip"></i><header class="trpg-modal__head"><h2 class="trpg-modal__title">存档</h2><button class="trpg-icon-btn" type="button" aria-label="关闭">✕</button></header><div class="trpg-modal__pages"><div class="trpg-modal__page"><div class="trpg-drawer">
+  <section class="trpg-drawer__current">
+    <div><span class="trpg-drawer__title"><i class="wf-pin">1</i>失落矿坑</span><span class="trpg-drawer__sub">　当前存档：存档 2　<span class="trpg-badge" data-tone="warn">● 有未保存到存档的改动</span></span></div>
+    <div class="trpg-drawer__buttons"><button class="trpg-btn trpg-btn--primary" type="button"><i class="wf-pin">2</i>保存存档</button><button class="trpg-btn" type="button">分支存档</button><button class="trpg-btn" type="button">导出…</button><span class="trpg-field__hint" style="align-self:center">上次备份 12 天前 · 建议导出</span></div>
+  </section>
+  <div class="trpg-drawer__body">
+    <h3 class="trpg-group" style="margin:0"><i class="wf-pin">3</i>这场战役的存档</h3>
+    <ul class="trpg-saves">
+      <li data-depth="0" data-current="false">
+  <div class="trpg-saves__top"><b>失落矿坑</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月2日 20:10 · D&amp;D 5e（2014）· 手动 · 战役起点</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>存档 1</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月5日 22:30 · 手动 · 来自「失落矿坑」</div></li>
+      <li data-depth="2" data-current="true">
+  <div class="trpg-saves__top"><b>存档 2</b><span class="trpg-badge">当前</span></div>
+  <div class="trpg-saves__meta">11月9日 14:02 · 手动 · 来自「存档 1」</div></li>
+      <li data-depth="1" data-current="false">
+  <div class="trpg-saves__top"><b>先打地精</b><button class="trpg-btn trpg-btn--small" type="button">读取</button><button class="trpg-icon-btn" type="button" aria-label="更多">⋯</button></div>
+  <div class="trpg-saves__meta">11月6日 21:05 · 手动 · 来自「失落矿坑」</div></li>
+    </ul>
+    <details class="trpg-fold"><summary><i class="wf-pin">4</i>其他战役<small>2</small></summary></details><details class="trpg-fold"><summary>自动存档<small>3</small></summary></details><details class="trpg-fold"><summary>最近删除<small>1</small></summary></details><details class="trpg-fold"><summary>其他规则<small>0</small></summary></details>
+  </div>
+  <footer class="trpg-drawer__bottom"><button class="trpg-btn" type="button"><i class="wf-pin">5</i>＋ 新建战役</button><button class="trpg-btn" type="button">导入存档</button></footer></div></div></div></section></div></section></div></figure></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>F3 / F4</dd><dt>用户目标</dt><dd>一处看清当前战役、它的存档树、别的战役和被删的存档；保存、分支、读取、导出、导入</dd><dt>主动作</dt><dd>保存存档 / 读取某个存档</dd><dt>模式栈</dt><dd>Titled Sections · Collapsible Panels · Two-level tree（缩进 + 连线）· Prominent Done</dd><dt>法则核对</dt><dd>Common Region（分区用框）· Uniform Connectedness（父子用缩进和左线）· Miller（六区默认只展开两区）· Fitts（底部抽屉按钮 ≥44px）</dd><dt>宽度差异</dt><dd>宽 / 中：右侧抽屉 440 宽（中布局最大 100%）；窄屏：底部抽屉，高 88%，顶部有拖拽条，按钮 ≥44px；抽屉内部内容一样，只是更长，纵向滚动。</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端</th></tr></thead><tbody><tr><td>1</td><td>当前战役块</td><td>战役名（根存档名）+ 当前存档名 + 保存状态</td><td>【接】getCampaignView.name / current</td></tr><tr><td>2</td><td>[保存存档]（主）[分支存档][导出…]</td><td>有改动才可点；无改动显示"已是最新"；分支 → 小弹层改名；导出 → 抽屉内换页</td><td>【有】campaign.branch；【接】kernelSave.save</td></tr><tr><td>3</td><td>这场战役的存档（树）</td><td>分支缩进挂在父存档下；每行：名称 · 更新时间 · 规则 · 手动/自动 · 父存档 · 备注；[读取]→ 读取确认页；⋯ → 改名 / 备注 / 导出 / 删除</td><td>【接】getCampaignView.branches / parentId</td></tr><tr><td>4</td><td>其他战役（折叠）</td><td>同卡的另一场、别的卡的战役，按战役根分组；读取别的卡的存档会复制成本卡新存档</td><td>【接】getCampaignView.otherCampaigns</td></tr><tr><td>5</td><td>[新建战役]（仅有战役时出现）</td><td>→ 开局向导；没战役时首页横幅才是入口，不重复放</td><td>【有】</td></tr><tr><td>6</td><td>折叠区：自动存档 / 最近删除 / 其他规则</td><td>自动存档只有[读取][存为手动存档]，不能单独删；最近删除有[恢复][彻底删除]</td><td>【有】listAuto / listDeleted / listOtherRules</td></tr></tbody></table></div></div></body></html>

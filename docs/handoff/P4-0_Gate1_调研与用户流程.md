@@ -1125,7 +1125,7 @@ Pattern: Wizard + Progress Indicator + Prominent Done + Cancelability
  ③ 其他战役(折叠):同卡另一场、别的卡,按战役根分组  otherCampaigns【有】
  ④ 自动存档(折叠)  ⑤ 最近删除(折叠)  ⑥ 其他规则(折叠)
  底部:[新建战役](仅有战役时) [导入存档]
- 空抽屉(一个存档都没有):写"还没有存档;回到首页点「开始一场新的冒险」",并保留[导入存档]
+ （更正，Gate 3 画线框时发现：没有"空抽屉"。没有存档时首页没有"读取已有存档"入口，也没有页头芯片，进不到抽屉；有战役就至少有一个存档。）
 ```
 读取（合并成一页确认，Tesler：系统做检查，用户只做一次决定）
 ```
@@ -1196,7 +1196,7 @@ Pattern: Wizard + Progress Indicator + Prominent Done + Cancelability
 | 向导④名字不合法 | 就地写原因 | 通过 |
 | 开局失败 | 向导不关，保留内容 | 通过 |
 | 下载失败/取消/中断（含刷新后） | 库浮层[继续][取消]；环常驻警示色 | 通过（BE-8 已补） |
-| 抽屉无存档 | 指向首页横幅，保留[导入存档] | 通过 |
+| 抽屉无存档 | 不存在这种状态（没有入口能打开空抽屉） | 通过（Gate 3 更正） |
 | 读取确认 | 取消 + 读取；不能读的写原因 | 通过 |
 | 当前存档不可删 | 写明原因和替代操作 | 通过 |
 | 库标签 | 点击弹资料安装详情浮层 | 通过（采纳推荐方案） |
@@ -1241,3 +1241,19 @@ Pattern: Wizard + Progress Indicator + Prominent Done + Cancelability
 | P4-0b | 开局入口 `starter.startCampaign / wizardOptions`、战役视图 `campaign.getCampaignView` | `src/core/start-campaign.ts`、`src/core/saves/view.ts` |
 | BE-7 | 书架：没装官方数据也能按作者分组列书目与冒险 | `src/library/directory.ts`、`shelf.ts` |
 | BE-8 | `starter.dataStatus()`：每套官方资料的状态（none / running / incomplete / installed）与下载大小；`wizardOptions.data[]` 同样带上 | `src/core/start-campaign.ts`、`src/library/files.ts` |
+
+---
+
+## 15. Gate 3：灰度线框（2026-11-09，待驾驶员确认）
+
+线框在 `docs/design/p4-wireframe/`：`index.html` 总览、`out/<屏>.html` 大图与标注、`shots/<屏>.png` 截图、`README.md` 说明复制进插件的办法。29 屏 × 三宽度（1440 / 900 / 390，外壳和抽屉另加 600 中布局）。
+
+画线框时发现并已改进（都是流程/布局问题，不是配色）：
+1. 窄屏首页空态页头必须有 ⋯ 菜单，否则没有关闭入口（现有代码一直有）。
+2. 向导②宽屏下"资料状态 + 环"被书架挤出弹窗 → 顺序改为"范围 → 资料状态 → 书架"，书架自己滚动。
+3. 存档抽屉六个区在 640 高窗口放不下 → 压紧行高，列表区可滚动；默认只展开前两区。
+4. 读取确认窄屏按钮纵向、[读取]在上。
+5. 没有"空抽屉"状态（见 §14.7 更正）。
+6. 进度环底轨要比侧栏底色深，否则看不见；警示 / 完成用角标（!、✓）而不是盖在图标上。
+
+线框不含：颜色、字体、图标、动效（Gate 4）；骰盘内部；库页面。
