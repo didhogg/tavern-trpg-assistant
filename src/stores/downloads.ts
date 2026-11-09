@@ -6,7 +6,7 @@ import { useToastStore } from './toast'
 /** 作者阶段归并成三段（环 = 到了第几步，不是精确百分比）：下载文件 → 整理资料 → 准备结算。没登记的阶段算"整理资料"。 */
 export const STAGE_GROUPS: Array<{ label: string; stages: string[] }> = [
   { label: '下载文件', stages: ['start', 'download', 'mirror'] },
-  { label: '整理资料', stages: ['open-frame', 'author-init', 'loaders', 'parse', 'parse-corpus', 'parse-prop', 'index', 'precompute', 'save'] },
+  { label: '整理资料', stages: ['open-frame', 'author-init', 'loaders', 'parse', 'parse-corpus', 'parse-prop', 'documents', 'index', 'precompute', 'save'] },
   { label: '准备结算', stages: ['open-kernel', 'convert'] },
 ]
 const groupIndex = (stage: string): number => {

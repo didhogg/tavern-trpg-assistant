@@ -10,6 +10,8 @@ import { FileProvider } from '../library/files'
 import { libraryDataVersion, scopedCurrentOverrides, scopedRefChecker } from '../library/kernel-check'
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
+import { DocumentStore } from '../library/documents'
+import { EntryLinks } from '../library/entry-links'
 import { ScopedLibrary } from '../library/scoped'
 import { defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
 import type { BackupLibraryAdapter } from './transfer/exporter'
@@ -33,6 +35,10 @@ export interface LibraryBackend {
   files: FileProvider
   service: LibraryService
   scoped: ScopedLibrary
+  /** 文档类数据（规则速查、城主屏参考）：作者当小册子读（P5 B-02）。 */
+  documents: DocumentStore
+  /** 按（类别、作者编号）找条目在哪个包、术语跳转（P5 B-04、B-05）。 */
+  links: EntryLinks
   custom: CustomLibrary
   tasks: DownloadTasks
   /** 官方书目（没装也能列）。 */
@@ -96,7 +102,9 @@ export function createBackend(opts: BackendOptions): Backend {
     db, localFrame: (codeSet) => service.frameOf(codeSet),
     networkFrame: (codeSet, kvScope) => startAuthorFrame({ codeSet, pluginRoot, container: container(), handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => true, kvScope }) }),
   })
-  const scoped = new ScopedLibrary(service, db, directory)
+  const documents = new DocumentStore(db)
+  const links = new EntryLinks(service, documents)
+  const scoped = new ScopedLibrary(service, db, directory, links)
   const custom = new CustomLibrary(service, scoped, db)
   const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet),
     precompute: (setId, signal, onProgress) => runPrecompute([getSource(setId).codeSet], signal, onProgress) })
@@ -127,7 +135,7 @@ export function createBackend(opts: BackendOptions): Backend {
   })
 
   const prefetch = new CatalogPrefetch({ files, directory, codeSets: DEFAULT_PREFETCH_CODE_SETS })
-  const library: LibraryBackend = { db, files, service, scoped, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { db, files, service, scoped, documents, links, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

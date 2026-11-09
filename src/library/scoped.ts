@@ -7,9 +7,8 @@ import { ManageStore, type ChoiceLevel } from './manage'
 import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } from './service'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { EditionInfo } from './runtime/frame/edit-commands'
-import type { SearchHit } from './runtime/frame/read-commands'
 import {
-  autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, refKey, ruleScopes, sourceUnit, viewOf,
+  autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, refKey, sourceUnit, viewOf,
   type Assignment, type CampaignLibrary, type EntryRef, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
 import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
@@ -17,6 +16,9 @@ import { chooseVersion, type Alternative, type Chosen } from './versions'
 import { hashValue } from '../core/hash'
 import type { BookDirectory } from './directory'
 import type { DirectoryRecord } from './directory'
+import { DocumentStore } from './documents'
+import { EntryLinks, type Located } from './entry-links'
+import { scopedSearch, type ScopedSearchHit } from './scoped-search'
 import { attachShelf, directoryRows, groupShelf, type ShelfGroup, type ShelfInfo } from './shelf'
 import type { KernelOverride } from '../schemas/kernel'
 
@@ -74,7 +76,7 @@ export class ScopedLibrary {
   readonly manage: ManageStore
   private readonly editionCache = new Map<string, EditionInfo>()
 
-  constructor(private readonly lib: LibraryService, private readonly db: LibraryDatabase, private readonly directory?: BookDirectory) {
+  constructor(private readonly lib: LibraryService, private readonly db: LibraryDatabase, private readonly directory?: BookDirectory, readonly links: EntryLinks = new EntryLinks(lib, new DocumentStore(db))) {
     this.manage = new ManageStore(db)
   }
 
@@ -105,6 +107,7 @@ export class ScopedLibrary {
   /** 装、删自制或改归类后调用：清掉缓存的作者判断（自制来源的版本取决于已装的包）。 */
   reset(): void {
     this.editionCache.clear()
+    this.links.reset()
   }
 
   private async alts(codeSet: string): Promise<Map<string, AltRecord>> {
@@ -253,25 +256,22 @@ export class ScopedLibrary {
     return out
   }
 
-  /** 按战役搜索：作者搜索器（本规则要显示旧版时临时打开），结果只留本战役看得到的。 */
-  async search(c: CampaignLibrary, term: string): Promise<Array<SearchHit & { ref: EntryRef; reason: ViewReason }>> {
-    const official = this.setsOf(c.codeSet).find((s) => s.kind === 'official')
-    const brew = this.setsOf(c.codeSet).find((s) => s.kind === 'brew')
-    if (!official || !(await this.installed(official))) return []
-    const hits = await this.lib.search(official.id, term, { showLegacy: ruleScopes(c.rule).showLegacy })
-    const assigns = await this.manage.assignments()
-    const house = await this.houseUnits()
-    const out: Array<SearchHit & { ref: EntryRef; reason: ViewReason }> = []
-    for (const h of hits) {
-      const hash = String(h.doc.u ?? '')
-      const source = typeof h.doc.s === 'string' ? h.doc.s : null
-      const inOfficial = await this.lib.storedItem(official.id, h.prop, hash)
-      const ref = { set: inOfficial || !brew ? official.id : brew.id, prop: h.prop, hash }
-      if (house.has(refKey(ref))) continue
-      const v = await this.viewFor(c, ref, source, assigns)
-      if (v.visible) out.push({ ...h, ref, reason: v.reason })
-    }
-    return out
+  /** 按战役搜索：命中按种类分流（条目 / 书与冒险 / 文档），每条带 target；结果只留本战役看得到的。 */
+  search(c: CampaignLibrary, term: string): Promise<ScopedSearchHit[]> {
+    return scopedSearch({
+      lib: this.lib, links: this.links, sets: this.setsOf(c.codeSet), installed: (s) => this.installed(s),
+      viewFor: (cc, ref, source, assigns) => this.viewFor(cc, ref, source, assigns), assignments: () => this.manage.assignments(), houseUnits: () => this.houseUnits(),
+    }, c, term)
+  }
+
+  /** 按（类别、作者编号）找条目在哪个包，并说明本战役看不看得到（跨包跳转用）。 */
+  async locate(c: CampaignLibrary, prop: string, hash: string): Promise<(Located & { ref: EntryRef; visible: boolean; reason: ViewReason; alternatives: number }) | null> {
+    const at = await this.links.locate(c.codeSet, prop, hash)
+    if (!at) return null
+    const ref: EntryRef = { set: at.set, prop: at.prop, hash: at.hash }
+    const v: { visible: boolean; reason: ViewReason } = at.kind === 'document' ? { visible: true, reason: 'global' } : await this.viewFor(c, ref, at.source)
+    const alternatives = at.kind === 'entry' ? (await this.alternativesOf(ref, await this.alts(c.codeSet))).length : 0
+    return { ...at, ref, visible: v.visible, reason: v.reason, alternatives }
   }
 
   /** 书目：本套程序已装的每本书 / 每个自制来源 / 每本冒险，各自的归属、在不在本战役、条数、备选数。 */
