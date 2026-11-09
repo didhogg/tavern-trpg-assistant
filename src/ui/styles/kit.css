@@ -53,7 +53,8 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .trpg-check[data-on='true'] .trpg-check__box { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .trpg-check[data-dl='true'] .trpg-check__box { background: var(--text3); border-color: var(--text3); color: var(--surface); }
 .trpg-check[data-dl='true'] { color: var(--text2); }
-.trpg-check[data-disabled='true'] { opacity: 0.75; cursor: not-allowed; }
+.trpg-check[data-disabled='true'] { cursor: not-allowed; }
+.trpg-check[data-disabled='true']:not([data-dl='true']) { opacity: 0.75; }
 .trpg-check input:focus-visible ~ .trpg-check__box { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus); }
 .trpg-dl { display: inline-flex; align-items: center; gap: 3px; margin-left: var(--sp-2); padding: 0 var(--sp-2); border-radius: var(--r-xs); background: var(--bg-side); color: var(--text2); font-size: var(--fs-xs); }
 .trpg-switch-wrap { display: inline-flex; align-items: center; gap: 6px; color: var(--text2); min-height: var(--hit-touch); }

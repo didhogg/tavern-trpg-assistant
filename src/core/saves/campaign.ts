@@ -156,7 +156,7 @@ export class CampaignService {
    * 先为当前数据写自动存档；其他卡的存档先复制为本卡的新存档；其他规则须 allowRuleSwitch。
    * precheck 在写自动存档/切换前运行；它抛错（例如玩家取消或读前检查有缺）时当前战役不动。
    */
-  async loadSave(owner: Owner, saveId: string, opts: { allowRuleSwitch?: boolean; precheck?: (save: SaveSlot) => Promise<void> } = {}): Promise<Workspace> {
+  async loadSave(owner: Owner, saveId: string, opts: { allowRuleSwitch?: boolean; precheck?: (save: SaveSlot) => Promise<void>; skipAutoSave?: boolean } = {}): Promise<Workspace> {
     const source = await this.getSave(saveId)
     if (!source || source.deletedAt !== undefined) throw new TrpgError('E_NOT_FOUND', '没有找到这个存档')
     this.requireRule(source.ruleId)
@@ -165,7 +165,8 @@ export class CampaignService {
       const current = await this.getWorkspace(owner.ownerKey)
       const switching = !!current && current.ruleId !== source.ruleId
       if (switching && !opts.allowRuleSwitch) throw new TrpgError('E_RULE_SWITCH_REQUIRED', '这个存档属于其他规则，需要确认切换规则')
-      if (current) await this.writeAutoSave(current, switching ? '切换规则前' : '读档前')
+      // 玩家在读取确认页勾了「不自动备份当前存档」才跳过；默认读档前一定先存一份
+      if (current && !opts.skipAutoSave) await this.writeAutoSave(current, switching ? '切换规则前' : '读档前')
       let target = source
       if (source.ownerKey !== owner.ownerKey) {
         const taken = await this.manualNames(owner.ownerKey, source.ruleId)

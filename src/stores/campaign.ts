@@ -132,7 +132,7 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result.save
   }
 
-  async function load(saveId: string, opts: { allowRuleSwitch?: boolean; precheck?: (save: SaveSlot) => Promise<void> } = {}): Promise<void> {
+  async function load(saveId: string, opts: { allowRuleSwitch?: boolean; precheck?: (save: SaveSlot) => Promise<void>; skipAutoSave?: boolean } = {}): Promise<void> {
     guardWrite()
     if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '请先在酒馆中打开一个聊天')
     await flush()

@@ -17,11 +17,8 @@ export interface WizardState {
   nameEdited: boolean
   /** 用户改过的范围；null = 用规则的默认范围。 */
   scopes: string[] | null
-  /** 用户明确勾选 / 取消的书（来源编号单元）。 */
-  include: string[]
-  exclude: string[]
-  /** 书目行的本地勾选覆盖（来源 → 是否看得到），范围变化重取后清空。 */
-  seen: Record<string, boolean>
+  /** 用户明确勾选 / 取消的书（来源 → 勾没勾）；没动过的按默认：已下载的恒勾、核心组勾、其余不勾。 */
+  picked: Record<string, boolean>
   adventures: AdventurePick[]
   /** 书目 / 冒险目录正在读取。 */
   loading: boolean
@@ -33,7 +30,7 @@ export interface WizardState {
   netTried: boolean
 }
 
-const fresh = (): WizardState => ({ step: 1, ruleId: '', name: '', note: '', nameEdited: false, scopes: null, include: [], exclude: [], seen: {}, adventures: [], loading: false, showLoading: false, estimating: false, netTried: false })
+const fresh = (): WizardState => ({ step: 1, ruleId: '', name: '', note: '', nameEdited: false, scopes: null, picked: {}, adventures: [], loading: false, showLoading: false, estimating: false, netTried: false })
 
 export const wizard = reactive<WizardState>(fresh())
 /** 向导每一步要的东西（后端给）；shallow：整份换，不深度监听。 */

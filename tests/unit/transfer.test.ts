@@ -197,6 +197,12 @@ describe('备份提醒', () => {
     expect(reminderStatus(state({ lastExportAt: now }), settings, now, 2048).text).toContain('约 2 KB')
   })
 
+  it('设置：「不自动备份当前存档」默认关，旧设置缺这个字段也能读', () => {
+    expect(settingsSchema.parse({}).skipAutoSaveOnLoad).toBe(false)
+    expect(settingsSchema.parse({ reminderDays: 3 }).skipAutoSaveOnLoad).toBe(false)
+    expect(settingsSchema.parse({ skipAutoSaveOnLoad: true }).skipAutoSaveOnLoad).toBe(true)
+  })
+
   it('提醒项设为 0 表示不提醒：天数、次数各自独立，两项都 0 永不提醒', () => {
     const old = state({ lastExportAt: now - 30 * day, savesSinceExport: 99 })
     expect(reminderStatus(old, settingsSchema.parse({}), now).kind).toBe('due')

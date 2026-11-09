@@ -143,6 +143,16 @@ describe('读取存档', () => {
     })
   })
 
+  it('读取时勾了「不自动备份当前存档」：不写自动存档，其余照常', async () => {
+    await withDb(async (db) => {
+      const { h, first } = await twoSaves(db)
+      await h.campaign.updateData(OWNER.ownerKey, (d) => ({ ...d, gold: 99 }))
+      const ws = await h.campaign.loadSave(OWNER, first.save.id, { skipAutoSave: true })
+      expect(ws.data.gold).toBe(1)
+      expect(await h.campaign.listAuto(OWNER.ownerKey, 'dnd5e2014')).toHaveLength(0)
+    })
+  })
+
   it('自动存档每卡每规则只保留最新 3 个', async () => {
     await withDb(async (db) => {
       const { h, first } = await twoSaves(db)

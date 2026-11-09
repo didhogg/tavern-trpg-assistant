@@ -2,8 +2,8 @@
 
 /* ── 首页 ── */
 .trpg-hero, .trpg-banner { position: relative; overflow: hidden; display: grid; gap: var(--sp-1); width: 100%; min-height: 168px; padding: var(--sp-6); border: 0; border-radius: var(--r-lg); background: var(--hero-bg); color: var(--hero-ink); text-align: left; align-content: end; box-shadow: var(--shadow-2); transition: box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); }
-button.trpg-hero:hover:not(:disabled), button.trpg-banner:hover { box-shadow: var(--shadow-3); transform: translateY(-1px); }
-button.trpg-hero:active:not(:disabled), button.trpg-banner:active { transform: none; }
+button.trpg-hero:hover:not(:disabled) { box-shadow: var(--shadow-3); transform: translateY(-1px); }
+button.trpg-hero:active:not(:disabled) { transform: none; }
 .trpg-window[data-layout='narrow'] .trpg-hero, .trpg-window[data-layout='narrow'] .trpg-banner { min-height: 140px; padding: var(--sp-5) var(--sp-4); }
 .trpg-hero--idle { background: var(--bg-side); color: var(--text); box-shadow: none; }
 .trpg-hero--idle .trpg-hero__sub { color: var(--text2); }
@@ -16,11 +16,16 @@ button.trpg-hero:active:not(:disabled), button.trpg-banner:active { transform: n
 .trpg-window[data-layout='narrow'] .trpg-hero__title, .trpg-window[data-layout='narrow'] .trpg-banner__title { font-size: var(--fs-2xl); }
 .trpg-hero__sub { color: var(--hero-ink2); max-width: 30em; }
 .trpg-hero__go { margin-top: var(--sp-3); justify-self: start; display: inline-flex; align-items: center; gap: var(--sp-2); padding: 7px var(--sp-4); border-radius: var(--r-sm); background: var(--primary-hover); color: var(--on-primary); font-weight: var(--fw-semibold); }
-.trpg-banner__photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-slow) var(--ease-std); }
-.trpg-banner__photo.is-loaded { opacity: 0.5; }
+.trpg-banner { align-content: space-between; gap: var(--sp-3); }
+.trpg-banner__main { position: relative; display: grid; gap: var(--sp-1); padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
+.trpg-banner__main:focus-visible { box-shadow: 0 0 0 2px var(--hero-bg), 0 0 0 4px var(--accent); }
+.trpg-banner__foot { position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.trpg-banner__new { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: var(--hit); padding: 0 var(--sp-4); border: 0; border-radius: var(--r-sm); background: var(--primary-hover); color: var(--on-primary); font-weight: var(--fw-semibold); transition: background var(--dur-fast) var(--ease-std); }
+.trpg-banner__new:hover:not(:disabled) { background: var(--primary); }
+.trpg-banner__new:disabled { background: var(--line); color: var(--text2); cursor: not-allowed; }
 .trpg-banner__line { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); color: var(--hero-ink2); }
 .trpg-banner__state[data-dirty='true'] { color: var(--accent); font-weight: var(--fw-semibold); }
-.trpg-banner__go { justify-self: end; display: inline-flex; align-items: center; gap: 2px; margin-top: var(--sp-2); font-size: var(--fs-sm); color: var(--hero-ink2); }
+.trpg-banner__go { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: 0; background: transparent; font-size: var(--fs-sm); color: var(--hero-ink2); }
 .trpg-linkcard { display: grid; grid-template-columns: auto 1fr auto; gap: var(--sp-3); align-items: center; width: 100%; min-height: var(--hit-touch); padding: var(--sp-3) var(--sp-4); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--text); text-align: left; box-shadow: var(--shadow-1); transition: border-color var(--dur-fast) var(--ease-std), background var(--dur-fast) var(--ease-std); }
 .trpg-linkcard:hover { background: var(--bg-hover); border-color: var(--line-ctrl); }
 .trpg-linkcard__icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--primary-tint); color: var(--primary-text); }

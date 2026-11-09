@@ -53,6 +53,8 @@ export const settingsSchema = z.object({
   reminderDays: z.number().int().nonnegative().default(7),
   /** 导出后保存多少次就提醒；0 = 不按保存次数提醒。 */
   reminderSaves: z.number().int().nonnegative().default(10),
+  /** 读取存档前不自动备份当前存档（读取确认页的勾选，记住）；默认关 = 照常先存一份。 */
+  skipAutoSaveOnLoad: z.boolean().default(false),
   /** 结算撤销最多保留多少条；0 或负数不合法。 */
   undoLimit: z.number().int().min(1).max(500).default(50),
 })

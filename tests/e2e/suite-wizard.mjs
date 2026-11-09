@@ -79,6 +79,14 @@ export async function wizardSuite(page, label, { width }) {
   check(`[${label}] 提示条「已开始「测试战役」」`, await page.getByText('已开始「测试战役」').isVisible())
   check(`[${label}] 最近记录：说明文字 + 高亮的「掷一次骰子试试」，没有箭头`, (await page.getByTestId('dice-hint').isVisible()) && /还没有记录/.test(await page.locator('.trpg-empty').innerText()))
 
+  // 横幅上的「创建新战役」：打开同一个向导
+  check(`[${label}] 战役横幅上有「创建新战役」按钮，战役横幅没有被图片盖住（只有占位插画）`, (await page.getByTestId('banner-new').isVisible()) && (await page.locator('.trpg-banner img').count()) === 0)
+  await page.getByTestId('banner-new').click()
+  await page.getByTestId('wizard').waitFor()
+  check(`[${label}] 点「创建新战役」：打开向导（从第①步开始）`, (await modalCount(page)) === 1 && (await stepsOf(page).nth(0).getAttribute('data-state')) === 'current')
+  await page.locator('.trpg-modal__close').click()
+  await settle(page)
+
   // 库标签的小环：断网时下载失败 → 虚线环 + 角标 !，悬停出小窗，只列失败项
   await page.getByTestId('lib-ring').waitFor({ timeout: 60000 })
   await page.waitForFunction(() => document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid=lib-ring]')?.getAttribute('data-state') === 'warn', null, { timeout: 60000 })

@@ -28,6 +28,7 @@ const check = shallowRef<KernelCheck | null>(null)
 const checkError = ref('')
 const working = ref(false)
 const saveFirst = ref(true)
+const skipAuto = computed(() => app.settings?.skipAutoSaveOnLoad ?? false)
 const adopt = ref(false)
 
 const rules = computed(() => app.svc().rules)
@@ -48,7 +49,17 @@ const versionLines = computed(() => {
 const changed = computed(() => !!check.value && (check.value.dataVersionChanged || check.value.overridesChanged))
 const MISSING_REASON: Record<string, string> = { 'not-installed': '资料没装', 'not-found': '资料里没有这一条', excluded: '这本书被排除了', 'out-of-scope': '不在这场战役的范围里', unclassified: '还没有归类' }
 
+async function setSkipAuto(on: boolean): Promise<void> {
+  try {
+    await app.updateSettings({ skipAutoSaveOnLoad: on })
+  } catch (error) {
+    console.error('[trpg-assistant] 保存设置失败', error)
+    toast.error(`保存设置失败：${errorText(error)}`)
+  }
+}
+
 onMounted(async () => {
+  if (!app.settings) await app.refreshSettings().catch((e) => console.error('[trpg-assistant] 读取设置失败', e))
   try {
     check.value = await app.svc().backend.kernelSave.checkSave(props.save.id)
   } catch (error) {
@@ -62,7 +73,7 @@ async function doLoad(): Promise<void> {
   working.value = true
   try {
     if (showDirty.value && saveFirst.value) await campaign.save()
-    await campaign.load(props.save.id, { allowRuleSwitch: switching.value || !campaign.hasCampaign })
+    await campaign.load(props.save.id, { allowRuleSwitch: switching.value || !campaign.hasCampaign, skipAutoSave: skipAuto.value })
     if (changed.value && adopt.value) await campaign.adoptCurrentData()
     await saves.refresh()
     const missing = check.value?.missing.length ?? 0
@@ -82,14 +93,19 @@ async function doLoad(): Promise<void> {
     <div class="trpg-drawer__body">
       <p v-if="!check && !checkError" class="trpg-loading" role="status"><span class="trpg-spinner" aria-hidden="true" />正在检查这个存档…</p>
       <div class="trpg-checks">
-        <div data-testid="load-lead"><b>读取「{{ save.name }}」</b><span>当前战役会换成这个存档的样子。读取前，当前内容会先自动存一份，随时能找回。</span></div>
+        <div data-testid="load-lead">
+          <b>读取「{{ save.name }}」</b>
+          <span>当前战役会换成这个存档的样子。{{ skipAuto ? '读取前不会自动备份当前内容。' : '读取前，当前内容会先自动存一份，随时能找回。' }}</span>
+          <Checkbox :model-value="skipAuto" data-testid="load-skip-auto" @update:model-value="setSkipAuto">不自动备份当前存档</Checkbox>
+          <span class="trpg-field__hint">勾上后会记住，以后读取都不再自动备份；当前未保存的内容读取后无法找回。</span>
+        </div>
         <div v-if="checkError"><b><Icon name="warning" :size="16" />没能检查这个存档</b><span>{{ checkError }}</span><span class="trpg-field__hint">仍可尝试读取；读取失败时当前战役不会被改动。</span></div>
         <div v-if="ruleBlocked" data-kind="block" data-testid="load-blocked"><b><Icon name="warning" :size="16" />暂时不能读取</b><span>这个存档属于「{{ ruleName(save.ruleId) }}」，这台设备还没有这套规则。</span><span class="trpg-field__hint">存档原文件保持不动，装好这套规则后再来读取。你仍然可以导出它。</span></div>
         <div v-if="showDirty" data-testid="load-dirty">
           <b>当前有未保存的改动</b>
           <Checkbox :model-value="saveFirst" @update:model-value="saveFirst = true">先保存「{{ campaign.currentSave?.name ?? '当前存档' }}」再读取</Checkbox>
           <Checkbox :model-value="!saveFirst" @update:model-value="saveFirst = false">不保存，直接读取</Checkbox>
-          <span class="trpg-field__hint">无论选哪个，当前内容都会先自动存一份。</span>
+          <span class="trpg-field__hint">{{ skipAuto ? '没有自动备份：选「不保存」会丢掉当前未保存的改动。' : '无论选哪个，当前内容都会先自动存一份。' }}</span>
         </div>
         <div v-if="switching && !ruleBlocked"><b>这个存档属于其他规则</b><span>「{{ save.name }}」使用 {{ ruleName(save.ruleId) }}。读取后，整个助手会切换为该规则的界面与资料；当前的「{{ campaign.currentSave?.name ?? '存档' }}」会先写入自动存档。</span></div>
         <div v-if="otherCard"><b>这个存档属于其他角色卡「{{ save.ownerLabel }}」</b><span>读取时会复制成这张卡的新存档「{{ save.name }}（来自 {{ save.ownerLabel }}）」，成为一个独立战役。</span></div>
