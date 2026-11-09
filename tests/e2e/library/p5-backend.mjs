@@ -105,6 +105,24 @@ const result = await page.evaluate(async () => {
     tokenNoToken: await lib.images.token('cn', 'spell', { name: 'x' }),
     cnName: monsterCn.name, cnEng: monsterCn.ENG_name,
   }
+  // ---- B-10 中英对应 ----
+  const cnSpell = (await lib.service.query('cn-official', 'spell', { source: 'PHB' })).find((x) => x.item.ENG_name === 'Fireball')
+  const cp = async (set, prop, hash) => { const x = await lib.counterparts.counterpart({ set, prop, hash }); return { status: x.status, n: x.refs.length, reason: x.reason, sharedBy: x.sharedBy, first: x.refs[0]?.hash ?? null } }
+  const enFire = await lib.counterparts.counterpart({ set: 'cn-official', prop: 'spell', hash: cnSpell.hash })
+  r.b10 = {
+    cn2en: await cp('cn-official', 'spell', cnSpell.hash),
+    en2cn: await cp('en-official', 'spell', enFire.refs[0].hash),
+    ambiguous: await cp('en-official', 'subclass', 'artificer_tce,state:sub_alchemist_tce=b1'),
+    shared: await cp('cn-official', 'subclass', '%e5%a5%87%e6%a2%b0%e5%b8%88_efa,state:sub_%e7%82%bc%e9%87%91%e5%b8%88_tce=b1'),
+    none: await cp('cn-official', 'spell', 'not_exist'),
+  }
+  // 全量：中文每一条都问一遍，数各种状态（不写死数字，只看分布）
+  const dist = {}
+  for (const prop of ['spell', 'monster', 'subclass', 'classFeature', 'item']) {
+    const rows = await lib.service.query('cn-official', prop, {})
+    for (const x of rows) { const y = await lib.counterparts.counterpart({ set: 'cn-official', prop, hash: x.hash }); const k = `${prop}:${y.status}${y.sharedBy ? '+shared' : ''}`; dist[k] = (dist[k] || 0) + 1 }
+  }
+  r.b10_dist = dist
   return r
 })
 await writeFile(`${work}/p5-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))
