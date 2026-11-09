@@ -95,6 +95,16 @@ const result = await page.evaluate(async () => {
   }
   const siege = find('围攻之中; 丧尸围攻遭遇', 'VRGR')
   r.b06_siege = { choose: (await frame.call('tableRoll', siege, {})).status, pick: await frame.call('tableRoll', siege, { formulaIndex: 1 }).then((x) => ({ status: x.status, max: x.prompts?.[0]?.max })), done: await frame.call('tableRoll', siege, { formulaIndex: 0, promptValues: [2], points: [6] }).then((x) => ({ status: x.status, total: x.rolls?.[0]?.total, row: x.rolls?.[0]?.rowIndex })) }
+  // ---- B-03 图片 ----
+  const monsterCn = (await lib.service.query('cn-official', 'monster', { source: 'MM' }))[0].item
+  const monsterEn = (await lib.service.query('en-official', 'monster', { source: 'MM' })).find((x) => x.item.name === 'Aarakocra')?.item
+  r.b03 = {
+    urls: lib.images.urls('cn-official', { type: 'internal', path: 'bestiary/MM/Aarakocra.webp' }),
+    tokenCn: await lib.images.token('cn', 'monster', monsterCn),
+    tokenEn: monsterEn ? await lib.images.token('en', 'monster', monsterEn) : 'no en monster',
+    tokenNoToken: await lib.images.token('cn', 'spell', { name: 'x' }),
+    cnName: monsterCn.name, cnEng: monsterCn.ENG_name,
+  }
   return r
 })
 await writeFile(`${work}/p5-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))

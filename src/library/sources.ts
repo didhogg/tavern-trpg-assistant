@@ -17,6 +17,8 @@ export interface SourceEntry {
   repo?: string
   fileList?: string
   mirrors: string[]
+  /** 图片根地址（作者图片仓库的镜像，按顺序试；条目里只有相对路径）。图片不入库，用到才取（P5 B-03）。 */
+  imageRoots?: string[]
 }
 
 export const CODE_SETS = registry.codeSets as Record<string, CodeSet>

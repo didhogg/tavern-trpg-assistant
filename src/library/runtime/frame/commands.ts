@@ -8,6 +8,7 @@ import { directory } from './directory-commands'
 import { diceRead, diceRoll, diceStats, diceTag } from './dice-commands'
 import { tableRoll, tableRow } from './table-roll-commands'
 import { tagMeta } from './tag-commands'
+import { tokenPath } from './image-commands'
 import { brewDocIndex, brewExport, brewItemsByHash, corpusFile, brewRaw, converters, convertText, editableAddDependencies, editableDoc, editableEnsureSource, editablePut, editableRemove, editionOf, entryTemplate, excludeList, fluffOf, fluffOfMany, sourceNames } from './edit-commands'
 
 export interface LoaderInfo {
@@ -110,5 +111,5 @@ export async function frameErrors(): Promise<string[]> {
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddFiles, brewDelete, brewPull, parseBrewProp, rawHashes,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, directory }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tokenPath, directory }
 export type CommandName = keyof typeof COMMANDS

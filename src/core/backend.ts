@@ -11,6 +11,7 @@ import { libraryDataVersion, scopedCurrentOverrides, scopedRefChecker } from '..
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
 import { DocumentStore } from '../library/documents'
+import { imageUrls, type ImageHref } from '../library/images'
 import { EntryLinks } from '../library/entry-links'
 import { ScopedLibrary } from '../library/scoped'
 import { defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
@@ -35,6 +36,8 @@ export interface LibraryBackend {
   files: FileProvider
   service: LibraryService
   scoped: ScopedLibrary
+  /** 图片候选地址与头像（P5 B-03）：条目里只有相对路径，按数据源登记的图片根拼；界面点开才取、缓存在浏览器。 */
+  images: { urls: (sourceId: string, href: ImageHref) => string[]; token: (codeSet: string, prop: string, ent: unknown) => Promise<string | null> }
   /** 文档类数据（规则速查、城主屏参考）：作者当小册子读（P5 B-02）。 */
   documents: DocumentStore
   /** 按（类别、作者编号）找条目在哪个包、术语跳转（P5 B-04、B-05）。 */
@@ -135,7 +138,11 @@ export function createBackend(opts: BackendOptions): Backend {
   })
 
   const prefetch = new CatalogPrefetch({ files, directory, codeSets: DEFAULT_PREFETCH_CODE_SETS })
-  const library: LibraryBackend = { db, files, service, scoped, documents, links, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const images: LibraryBackend['images'] = {
+    urls: imageUrls,
+    token: async (codeSet, prop, ent) => (await service.frameOf(codeSet)).call('tokenPath', prop, ent),
+  }
+  const library: LibraryBackend = { db, files, service, scoped, documents, links, images, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

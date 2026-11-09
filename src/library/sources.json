@@ -25,6 +25,11 @@
         "https://cdn.jsdelivr.net/gh/{repo}@{commit}/",
         "https://raw.githubusercontent.com/{repo}/{commit}/",
         "https://5e.kiwee.top/"
+      ],
+      "imageRoots": [
+        "https://raw.githubusercontent.com/5etools-mirror-3/5etools-img/main/",
+        "https://cdn.jsdelivr.net/gh/5etools-mirror-3/5etools-img@main/",
+        "https://5e.kiwee.top/img/"
       ]
     },
     {
@@ -37,6 +42,10 @@
       "mirrors": [
         "https://cdn.jsdelivr.net/gh/{repo}@{commit}/",
         "https://raw.githubusercontent.com/{repo}/{commit}/"
+      ],
+      "imageRoots": [
+        "https://raw.githubusercontent.com/5etools-mirror-3/5etools-img/main/",
+        "https://cdn.jsdelivr.net/gh/5etools-mirror-3/5etools-img@main/"
       ]
     },
     {
