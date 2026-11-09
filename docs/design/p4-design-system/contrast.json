@@ -2,85 +2,85 @@
  "resolved": {
   "a": {
    "light": {
-    "surface": "#faf9f2",
-    "bg": "#f2f0e7",
-    "bgSide": "#eae6db",
-    "bgSunk": "#f2f0e7",
-    "bgHover": "#e1dccf",
-    "line": "#d8d0bf",
-    "text": "#3b352b",
-    "text2": "#71624b",
-    "lineCtrl": "#978365",
-    "side": "#3b352b",
-    "sideInk": "#f2f0e7",
-    "sideInk2": "#cbc0aa",
-    "sideHover": "#4b453c",
-    "sideActive": "#5a554c",
-    "sideLine": "#565148",
+    "surface": "#fcfbf7",
+    "bg": "#f8f0df",
+    "bgSide": "#f0e4d0",
+    "bgSunk": "#f8f0df",
+    "bgHover": "#e7ddca",
+    "line": "#e2d0b6",
+    "text": "#3e332e",
+    "text2": "#815e46",
+    "lineCtrl": "#ad7f58",
+    "side": "#3e332e",
+    "sideInk": "#f8f0df",
+    "sideInk2": "#dcbc9f",
+    "sideHover": "#4d433e",
+    "sideActive": "#5d534f",
+    "sideLine": "#594f4b",
     "primary": "#b43118",
     "primaryHover": "#d13415",
     "primaryPressed": "#912d1b",
     "primaryText": "#b43118",
-    "primaryTint": "#eae6db",
-    "primaryTintLine": "#cbc0aa",
-    "heroBg": "#3b352b",
-    "heroInk": "#fdfdfc",
-    "heroInk2": "#d8d0bf",
+    "primaryTint": "#f0e4d0",
+    "primaryTintLine": "#dbc09e",
+    "heroBg": "#3e332e",
+    "heroInk": "#fefdfc",
+    "heroInk2": "#e4cdb7",
     "dangerText": "#ce2c31",
-    "dangerBg": "#faf9f2",
+    "dangerBg": "#fcfbf7",
     "dangerLine": "#e5484d",
     "successText": "#2a7e3b",
     "successBg": "#f5fbf5",
     "warnText": "#4f3422",
     "warnBg": "#fefbe9",
-    "text3": "#978365",
+    "text3": "#ad7f58",
     "accent": "#e9c162",
     "accentText": "#8b530c",
     "onAccent": "#4f3422",
     "onPrimary": "#ffffff",
-    "disabledBg": "#f2f0e7",
-    "disabledText": "#978365",
+    "disabledBg": "#f8f0df",
+    "disabledText": "#ad7f58",
     "focus": "#b43118"
    },
    "dark": {
-    "surface": "#38352e",
-    "bg": "#2d2b26",
-    "bgSide": "#24231f",
-    "bgSunk": "#24231f",
-    "bgHover": "#444039",
-    "line": "#544f46",
-    "text": "#e8e2d9",
-    "text2": "#cbb99f",
-    "lineCtrl": "#978365",
-    "side": "#24231f",
-    "sideInk": "#e8e2d9",
-    "sideInk2": "#cbb99f",
-    "sideHover": "#2d2b26",
-    "sideActive": "#38352e",
-    "sideLine": "#38352e",
+    "surface": "#3b332b",
+    "bg": "#302a24",
+    "bgSide": "#26221e",
+    "bgSunk": "#26221e",
+    "bgHover": "#493e34",
+    "line": "#5b4d40",
+    "text": "#f2e1ca",
+    "text2": "#dbb594",
+    "lineCtrl": "#ad7f58",
+    "side": "#26221e",
+    "sideInk": "#f2e1ca",
+    "sideInk2": "#dbb594",
+    "sideHover": "#302a24",
+    "sideActive": "#3b332b",
+    "sideLine": "#3b332b",
     "primary": "#d13415",
     "primaryHover": "#d73c1d",
     "primaryPressed": "#b43118",
     "primaryText": "#f67c60",
-    "primaryTint": "#2d2b26",
-    "primaryTintLine": "#696256",
-    "heroBg": "#1b1a17",
-    "heroInk": "#e8e2d9",
-    "heroInk2": "#cbb99f",
+    "primaryTint": "#302a24",
+    "primaryTintLine": "#73614e",
+    "heroBg": "#1c1917",
+    "heroInk": "#f2e1ca",
+    "heroInk2": "#dbb594",
     "dangerText": "#ec5d5e",
-    "dangerBg": "#24231f",
+    "dangerBg": "#26221e",
     "dangerLine": "#e5484d",
     "successText": "#5fbf71",
-    "successBg": "#24231f",
-    "warnText": "#e5c25b",
-    "warnBg": "#24231f",
-    "text3": "#978365",
+    "successBg": "#26221e",
+    "warnText": "#edc055",
+    "warnBg": "#26221e",
+    "text3": "#ad7f58",
     "accent": "#e9c162",
-    "accentText": "#cbb99f",
+    "accentText": "#dbb594",
     "onAccent": "#4f3422",
     "onPrimary": "#ffffff",
-    "disabledBg": "#24231f",
-    "disabledText": "#978365",
+    "disabledBg": "#26221e",
+    "disabledText": "#ad7f58",
     "focus": "#f67c60"
    }
   }
@@ -93,7 +93,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "正文 / 纸色底",
-     "ratio": 10.63,
+     "ratio": 10.78,
      "ok": true
     },
     {
@@ -101,7 +101,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "次要文字 / 纸色底",
-     "ratio": 5.18,
+     "ratio": 5.11,
      "ok": true
     },
     {
@@ -109,7 +109,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "正文 / 卡片",
-     "ratio": 11.5,
+     "ratio": 11.81,
      "ok": true
     },
     {
@@ -133,7 +133,7 @@
      "bg": "bgSide",
      "min": 4.5,
      "note": "次要文字 / 侧栏",
-     "ratio": 4.74,
+     "ratio": 4.61,
      "ok": true
     },
     {
@@ -141,7 +141,7 @@
      "bg": "bgSunk",
      "min": 4.5,
      "note": "浅灰说明 / 嵌套块",
-     "ratio": 5.18,
+     "ratio": 5.11,
      "ok": true
     },
     {
@@ -149,7 +149,7 @@
      "bg": "bgHover",
      "min": 4.5,
      "note": "正文 / 悬停底",
-     "ratio": 8.87,
+     "ratio": 9.08,
      "ok": true
     },
     {
@@ -157,7 +157,7 @@
      "bg": "side",
      "min": 4.5,
      "note": "边栏文字",
-     "ratio": 10.63,
+     "ratio": 10.78,
      "ok": true
     },
     {
@@ -165,7 +165,7 @@
      "bg": "side",
      "min": 4.5,
      "note": "边栏次要文字",
-     "ratio": 6.74,
+     "ratio": 6.83,
      "ok": true
     },
     {
@@ -173,7 +173,7 @@
      "bg": "sideActive",
      "min": 4.5,
      "note": "边栏选中项文字",
-     "ratio": 6.48,
+     "ratio": 6.58,
      "ok": true
     },
     {
@@ -205,7 +205,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "红 / 琥珀标题与链接 / 纸色底",
-     "ratio": 5.42,
+     "ratio": 5.46,
      "ok": true
     },
     {
@@ -213,7 +213,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "红 / 琥珀标题与链接 / 卡片",
-     "ratio": 5.86,
+     "ratio": 5.98,
      "ok": true
     },
     {
@@ -221,7 +221,7 @@
      "bg": "primaryTint",
      "min": 4.5,
      "note": "选中态文字 / 选中底",
-     "ratio": 4.96,
+     "ratio": 4.93,
      "ok": true
     },
     {
@@ -229,7 +229,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "琥珀文字 / 纸色底",
-     "ratio": 5.51,
+     "ratio": 5.54,
      "ok": true
     },
     {
@@ -245,7 +245,7 @@
      "bg": "heroBg",
      "min": 4.5,
      "note": "首页横幅文字",
-     "ratio": 11.93,
+     "ratio": 12.03,
      "ok": true
     },
     {
@@ -253,7 +253,7 @@
      "bg": "heroBg",
      "min": 4.5,
      "note": "首页横幅次要文字",
-     "ratio": 7.92,
+     "ratio": 7.98,
      "ok": true
     },
     {
@@ -261,7 +261,7 @@
      "bg": "heroBg",
      "min": 3,
      "note": "横幅上的琥珀点缀（3:1）",
-     "ratio": 7.09,
+     "ratio": 7.14,
      "ok": true
     },
     {
@@ -269,7 +269,7 @@
      "bg": "dangerBg",
      "min": 4.5,
      "note": "错误文字",
-     "ratio": 4.94,
+     "ratio": 5.03,
      "ok": true
     },
     {
@@ -293,7 +293,7 @@
      "bg": "surface",
      "min": 3,
      "note": "输入框 / 控件边线（非文字 3:1）",
-     "ratio": 3.46,
+     "ratio": 3.41,
      "ok": true
     },
     {
@@ -301,7 +301,7 @@
      "bg": "bg",
      "min": 3,
      "note": "控件边线 / 纸色底（非文字 3:1）",
-     "ratio": 3.2,
+     "ratio": 3.11,
      "ok": true
     },
     {
@@ -309,7 +309,7 @@
      "bg": "disabledBg",
      "min": 2.2,
      "note": "禁用文字仍可辨认（下限 2.2:1，不是 AA）",
-     "ratio": 3.2,
+     "ratio": 3.11,
      "ok": true
     },
     {
@@ -317,7 +317,7 @@
      "bg": "bg",
      "min": 0,
      "note": "琥珀点缀 / 纸色底（只做小点缀，不承载信息）",
-     "ratio": 1.5,
+     "ratio": 1.51,
      "ok": true,
      "info": true
     },
@@ -326,7 +326,7 @@
      "bg": "bg",
      "min": 0,
      "note": "主按钮 / 纸色底（按钮有文字标签，边界不是唯一识别信息）",
-     "ratio": 5.42,
+     "ratio": 5.46,
      "ok": true,
      "info": true
     }
@@ -337,7 +337,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "正文 / 纸色底",
-     "ratio": 10.98,
+     "ratio": 11.06,
      "ok": true
     },
     {
@@ -345,7 +345,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "次要文字 / 纸色底",
-     "ratio": 7.39,
+     "ratio": 7.45,
      "ok": true
     },
     {
@@ -353,7 +353,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "正文 / 卡片",
-     "ratio": 9.5,
+     "ratio": 9.68,
      "ok": true
     },
     {
@@ -361,7 +361,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "次要文字 / 卡片",
-     "ratio": 6.4,
+     "ratio": 6.52,
      "ok": true
     },
     {
@@ -369,7 +369,7 @@
      "bg": "bgSide",
      "min": 4.5,
      "note": "正文 / 侧栏",
-     "ratio": 12.22,
+     "ratio": 12.33,
      "ok": true
     },
     {
@@ -377,7 +377,7 @@
      "bg": "bgSide",
      "min": 4.5,
      "note": "次要文字 / 侧栏",
-     "ratio": 8.22,
+     "ratio": 8.31,
      "ok": true
     },
     {
@@ -385,7 +385,7 @@
      "bg": "bgSunk",
      "min": 4.5,
      "note": "浅灰说明 / 嵌套块",
-     "ratio": 8.22,
+     "ratio": 8.31,
      "ok": true
     },
     {
@@ -393,7 +393,7 @@
      "bg": "bgHover",
      "min": 4.5,
      "note": "正文 / 悬停底",
-     "ratio": 8,
+     "ratio": 8.11,
      "ok": true
     },
     {
@@ -401,7 +401,7 @@
      "bg": "side",
      "min": 4.5,
      "note": "边栏文字",
-     "ratio": 12.22,
+     "ratio": 12.33,
      "ok": true
     },
     {
@@ -409,7 +409,7 @@
      "bg": "side",
      "min": 4.5,
      "note": "边栏次要文字",
-     "ratio": 8.22,
+     "ratio": 8.31,
      "ok": true
     },
     {
@@ -417,7 +417,7 @@
      "bg": "sideActive",
      "min": 4.5,
      "note": "边栏选中项文字",
-     "ratio": 9.5,
+     "ratio": 9.68,
      "ok": true
     },
     {
@@ -449,7 +449,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "红 / 琥珀标题与链接 / 纸色底",
-     "ratio": 5.37,
+     "ratio": 5.38,
      "ok": true
     },
     {
@@ -457,7 +457,7 @@
      "bg": "surface",
      "min": 4.5,
      "note": "红 / 琥珀标题与链接 / 卡片",
-     "ratio": 4.64,
+     "ratio": 4.7,
      "ok": true
     },
     {
@@ -465,7 +465,7 @@
      "bg": "primaryTint",
      "min": 4.5,
      "note": "选中态文字 / 选中底",
-     "ratio": 5.37,
+     "ratio": 5.38,
      "ok": true
     },
     {
@@ -473,7 +473,7 @@
      "bg": "bg",
      "min": 4.5,
      "note": "琥珀文字 / 纸色底",
-     "ratio": 7.39,
+     "ratio": 7.45,
      "ok": true
     },
     {
@@ -489,7 +489,7 @@
      "bg": "heroBg",
      "min": 4.5,
      "note": "首页横幅文字",
-     "ratio": 13.52,
+     "ratio": 13.66,
      "ok": true
     },
     {
@@ -497,7 +497,7 @@
      "bg": "heroBg",
      "min": 4.5,
      "note": "首页横幅次要文字",
-     "ratio": 9.1,
+     "ratio": 9.2,
      "ok": true
     },
     {
@@ -505,7 +505,7 @@
      "bg": "heroBg",
      "min": 3,
      "note": "横幅上的琥珀点缀（3:1）",
-     "ratio": 10.17,
+     "ratio": 10.22,
      "ok": true
     },
     {
@@ -513,7 +513,7 @@
      "bg": "dangerBg",
      "min": 4.5,
      "note": "错误文字",
-     "ratio": 4.71,
+     "ratio": 4.73,
      "ok": true
     },
     {
@@ -521,7 +521,7 @@
      "bg": "successBg",
      "min": 4.5,
      "note": "成功文字",
-     "ratio": 6.87,
+     "ratio": 6.9,
      "ok": true
     },
     {
@@ -529,7 +529,7 @@
      "bg": "warnBg",
      "min": 4.5,
      "note": "提醒文字",
-     "ratio": 9.14,
+     "ratio": 9.23,
      "ok": true
     },
     {
@@ -537,7 +537,7 @@
      "bg": "surface",
      "min": 3,
      "note": "输入框 / 控件边线（非文字 3:1）",
-     "ratio": 3.35,
+     "ratio": 3.51,
      "ok": true
     },
     {
@@ -545,7 +545,7 @@
      "bg": "bg",
      "min": 3,
      "note": "控件边线 / 纸色底（非文字 3:1）",
-     "ratio": 3.87,
+     "ratio": 4.02,
      "ok": true
     },
     {
@@ -553,7 +553,7 @@
      "bg": "disabledBg",
      "min": 2.2,
      "note": "禁用文字仍可辨认（下限 2.2:1，不是 AA）",
-     "ratio": 4.31,
+     "ratio": 4.48,
      "ok": true
     },
     {
@@ -561,7 +561,7 @@
      "bg": "bg",
      "min": 0,
      "note": "琥珀点缀 / 纸色底（只做小点缀，不承载信息）",
-     "ratio": 8.26,
+     "ratio": 8.28,
      "ok": true,
      "info": true
     },

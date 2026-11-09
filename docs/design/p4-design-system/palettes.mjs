@@ -37,39 +37,42 @@ const ladderDark = (s) => ({ primary: `r:${s}.11`, primaryHover: `m:r:${s}.11|r:
 
 // 层次（和参考图一致）：surface = 卡片 / 输入框 / 弹层（最亮）；bg = 内容区"纸色"；bgSide = 嵌套块 / 栏目底；side = 边栏（暖深灰，两种模式都是深色）；bgSunk = 卡片里再嵌的块；bgHover = 悬停
 // 驾驶员 2026-11-09 选定 A，并要求：不要浅粉色（错误底、选中底）、点缀黄不要太突兀、深色不要近乎全黑（改暖深灰）、边栏用暖深灰。B、C 已删除（在 git 历史里 7fdd763）。
+// 奶油米（第三版）：驾驶员要"偏暖淡奶油米色"，不要偏橄榄绿。做法：Radix gold（米色）和 orange（暖橙）同阶内插，得到接近参考图纸色的暖奶油；深色同理用 gold-dark 和 brown-dark 对半内插（暖深灰，不偏橄榄也不偏巧克力棕）。内插只在这些底色上用，文档标明。
+const cream = (g, o, t) => `m:r:gold.${g}|r:orange.${o}|${t}`
+const dk = (n) => `m:r:gold-dark.${n}|r:brown-dark.${n}|0.5`
 export const CANDIDATES = {
   a: {
-    name: 'A · 奶油米（偏橄榄）· 番茄红', source: 'Radix Colors：gold（底 / 暖深灰）/ tomato（主色）/ red / grass / amber',
-    feel: '安静的奶油米色，略带橄榄的灰调；边栏是暖深灰；主色是偏橙的番茄红；点缀是柔和的烛光琥珀，只做小面积。',
-    risk: '主色（番茄红）和错误色（正红）相近，所以错误永远带 ⚠ 图标 + 文字 + 红边框，错误文字不靠颜色单独表达；没有任何粉色底。',
+    name: 'A · 暖奶油米 · 番茄红', source: 'Radix Colors：gold + orange（底，内插）/ brown（文字）/ tomato（主色）/ red / grass / amber',
+    feel: '偏暖的淡奶油米色（接近参考图的纸色），边栏是暖深灰；主色是偏橙的番茄红；点缀是柔和的烛光琥珀，只做小面积。',
+    risk: '主色（番茄红）和错误色（正红）相近，所以错误永远带 ⚠ 图标 + 文字 + 红边框，不靠颜色单独表达；没有任何粉色底。底色是内插值，不是色阶原值。',
     light: {
-      surface: 'r:gold.2', bg: 'r:gold.3', bgSide: 'r:gold.4', bgSunk: 'r:gold.3', bgHover: 'r:gold.5', line: 'r:gold.6',
-      text: 'r:gold.12', text2: 'r:gold.11', lineCtrl: 'r:gold.9',
-      side: 'r:gold.12', sideInk: 'r:gold.3', sideInk2: 'r:gold.7', sideHover: 'm:r:gold.12|r:gold.1|0.08', sideActive: 'm:r:gold.12|r:gold.1|0.16', sideLine: 'm:r:gold.12|r:gold.1|0.14',
-      ...ladder('tomato'), primaryText: 'm:r:tomato.11|r:tomato.12|0.25', primaryTint: 'r:gold.4', primaryTintLine: 'r:gold.7',
-      heroBg: 'r:gold.12', heroInk: 'r:gold.1', heroInk2: 'r:gold.6',
-      dangerText: 'r:red.11', dangerBg: 'r:gold.2', dangerLine: 'r:red.9',
+      surface: cream(2, 1, 0.5), bg: cream(3, 3, 0.45), bgSide: cream(4, 4, 0.3), bgSunk: cream(3, 3, 0.45), bgHover: cream(5, 4, 0.2), line: cream(6, 5, 0.25),
+      text: 'r:brown.12', text2: 'r:brown.11', lineCtrl: 'r:brown.9',
+      side: 'r:brown.12', sideInk: cream(3, 3, 0.45), sideInk2: 'r:brown.7', sideHover: 'm:r:brown.12|r:brown.1|0.08', sideActive: 'm:r:brown.12|r:brown.1|0.16', sideLine: 'm:r:brown.12|r:brown.1|0.14',
+      ...ladder('tomato'), primaryText: 'm:r:tomato.11|r:tomato.12|0.25', primaryTint: cream(4, 4, 0.3), primaryTintLine: cream(7, 6, 0.3),
+      heroBg: 'r:brown.12', heroInk: 'r:brown.1', heroInk2: 'r:brown.6',
+      dangerText: 'r:red.11', dangerBg: cream(2, 1, 0.5), dangerLine: 'r:red.9',
       successText: 'r:grass.11', successBg: 'r:grass.2', warnText: 'r:amber.12', warnBg: 'r:amber.2',
     },
     dark: {
-      surface: 'r:gold-dark.5', bg: 'r:gold-dark.4', bgSide: 'r:gold-dark.3', bgSunk: 'r:gold-dark.3', bgHover: 'r:gold-dark.6', line: 'r:gold-dark.7',
-      text: 'r:gold-dark.12', text2: 'r:gold-dark.11', lineCtrl: 'r:gold-dark.9',
-      side: 'r:gold-dark.3', sideInk: 'r:gold-dark.12', sideInk2: 'r:gold-dark.11', sideHover: 'r:gold-dark.4', sideActive: 'r:gold-dark.5', sideLine: 'r:gold-dark.5',
-      ...ladderDark('tomato'), primaryText: 'm:r:tomato-dark.10|r:tomato-dark.11|0.5', primaryTint: 'r:gold-dark.4', primaryTintLine: 'r:gold-dark.8',
-      heroBg: 'r:gold-dark.2', heroInk: 'r:gold-dark.12', heroInk2: 'r:gold-dark.11',
-      dangerText: 'r:red-dark.10', dangerBg: 'r:gold-dark.3', dangerLine: 'r:red-dark.9',
-      successText: 'm:r:grass-dark.10|r:grass-dark.11|0.4', successBg: 'r:gold-dark.3', warnText: 'm:r:amber-dark.11|r:gold-dark.11|0.5', warnBg: 'r:gold-dark.3',
+      surface: dk(5), bg: dk(4), bgSide: dk(3), bgSunk: dk(3), bgHover: dk(6), line: dk(7),
+      text: 'r:brown-dark.12', text2: 'r:brown-dark.11', lineCtrl: 'r:brown-dark.9',
+      side: dk(3), sideInk: 'r:brown-dark.12', sideInk2: 'r:brown-dark.11', sideHover: dk(4), sideActive: dk(5), sideLine: dk(5),
+      ...ladderDark('tomato'), primaryText: 'm:r:tomato-dark.10|r:tomato-dark.11|0.5', primaryTint: dk(4), primaryTintLine: dk(8),
+      heroBg: dk(2), heroInk: 'r:brown-dark.12', heroInk2: 'r:brown-dark.11',
+      dangerText: 'r:red-dark.10', dangerBg: dk(3), dangerLine: 'r:red-dark.9',
+      successText: 'm:r:grass-dark.10|r:grass-dark.11|0.4', successBg: dk(3), warnText: 'm:r:amber-dark.11|r:brown-dark.11|0.5', warnBg: dk(3),
     },
   },
 }
 
 // 点缀色（极小面积，不做大块按钮）：柔和的烛光琥珀，不用亮黄
 const ACCENT = { a: { light: 'r:amber.7', dark: 'r:amber.7' } }
-const ACCENT_TEXT = { a: { light: 'm:r:amber.11|r:amber.12|0.35', dark: 'r:gold-dark.11' } }
+const ACCENT_TEXT = { a: { light: 'm:r:amber.11|r:amber.12|0.35', dark: 'r:brown-dark.11' } }
 
 function modeMap(id, mode) {
   const m = { ...CANDIDATES[id][mode] }
-  m.text3 = m.lineCtrl // 占位 / 禁用文字复用同一个灰（交叉复用：浅色的边线灰 gold.9 = 深色的边线灰 gold-dark.9，同一个 #978365）
+  m.text3 = m.lineCtrl // 占位 / 禁用文字复用同一个灰（交叉复用：浅色的边线灰 brown.9 = 深色的边线灰 brown-dark.9，同一个 #ad7f58）
   m.accent = ACCENT[id][mode]
   m.accentText = ACCENT_TEXT[id][mode]
   m.onAccent = 'r:amber.12'
