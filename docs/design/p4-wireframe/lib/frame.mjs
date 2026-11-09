@@ -62,7 +62,7 @@ export function windowHtml(L, s) {
   return `<div class="trpg-shell"${s.overlay ? ' aria-hidden="true"' : ''}>${side}
     <div class="trpg-main">
       <header class="trpg-head"><h1 class="trpg-head__title">${title}</h1>${chips(L, s.header)}${close}</header>
-      <div class="trpg-body"><main class="trpg-content">${s.content}</main>${s.pointer ?? ''}<button class="trpg-dice-btn" type="button" aria-label="掷骰">${s.pins?.dice ? `<i class="wf-pin wf-pin--abs" style="left:-6px;top:-6px">${s.pins.dice}</i>` : ''}⚄</button></div>
+      <div class="trpg-body"><main class="trpg-content"${s.flush ? ' data-flush="true"' : ''}>${s.content}</main>${s.pointer ?? ''}<button class="trpg-dice-btn" type="button" aria-label="掷骰">${s.pins?.dice ? `<i class="wf-pin wf-pin--abs" style="left:-6px;top:-6px">${s.pins.dice}</i>` : ''}⚄</button></div>
       ${tabs}
     </div></div>${s.pop ?? ''}${s.overlay ?? ''}`
 }

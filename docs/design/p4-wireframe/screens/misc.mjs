@@ -1,5 +1,5 @@
 // 库标签与进度环、设置、提示条（Gate 2 §14.5、§14.10）。库页面本身 P4 不碰，只做进度环和"资料安装详情"浮层。
-import { pin, btn, badge, ring, toast } from '../lib/ui.mjs'
+import { pin, btn, badge, ring, toast, sw } from '../lib/ui.mjs'
 
 const CAMP = { name: '失落矿坑', save: '存档 2' }
 const home = (extra = '') => `<div class="page-stack"><button class="trpg-banner" type="button"><span class="trpg-banner__title">失落矿坑</span><span class="trpg-banner__line"><span>存档 2</span><span>D&amp;D 5e（2014）</span><span class="trpg-banner__state" data-dirty="false">存档已保存 14:02</span></span></button>${extra}</div>`
@@ -60,33 +60,35 @@ export const screens = [
   {
     id: 'settings', group: '设置', title: '设置页（三个栏目）', flow: 'F7',
     goal: '找到备份相关设置；进诊断；看关于', primary: '（进入栏目）',
-    patterns: 'Settings Editor · 一级下钻（Drilldown）', laws: 'Hick（只有三个入口）· Chunking（备份的三项并成一个栏目）· Jakob（设置页的惯用下钻）',
-    diff: '窄屏：栏目行整行 ≥64px 高；其余一样。',
+    patterns: 'Settings Editor · 一级下钻（Drilldown）· 平铺列表（无边框，淡色细线分隔）', laws: 'Hick（只有三个入口）· Chunking（备份的三项并成一个栏目）· Jakob（设置页的惯用下钻）· Common Region（行宽和窗口内容区同宽，对齐外壳边框）',
+    diff: '窄屏：栏目行整行 ≥68px 高；其余一样。',
     notes: [
-      [1, '"备份与撤销 ▸"', '点进去看到三项（见下一屏）：备份提醒天数、备份提醒存档数、撤销记录上限', '【有】updateSettings / settingsSchema'],
+      [1, '"备份与撤销 ▸"', '栏目是平铺的整行：左右铺满窗口内容区（和外壳边框对齐），没有边框和圆角，栏目之间只用淡色细线隔开。点进去看到三项（见下一屏）', '【有】updateSettings / settingsSchema'],
       [2, '"诊断 ▸"', '→ 诊断页（运行检查 → 结果 / 错误 → [返回设置]），内容不改', '【有】'],
       [3, '"关于 ▸"', '→ 版本、许可、致谢', '【有】'],
       [4, '栏目名', '"撤销记录上限"其实是结算撤销，不是备份；和备份放一起只是为了设置页只有一个栏目，所以叫"备份与撤销"（待驾驶员确认名字）', '待定'],
     ],
-    render: () => ({ page: 'settings', header: { campaign: CAMP, dirty: false }, content: `<div class="trpg-menu">
+    render: () => ({ page: 'settings', flush: true, header: { campaign: CAMP, dirty: false }, content: `<div class="trpg-menu">
       ${settingsRow(1, '备份与撤销', '备份提醒、撤销记录上限')}
       ${settingsRow(2, '诊断', '检查插件和资料有没有问题')}
       ${settingsRow(3, '关于', '版本 0.6.0 · 许可 · 致谢')}</div>` }),
   },
   {
     id: 'settings-backup', group: '设置', title: '设置 · 备份与撤销（点进去后）', flow: 'F7',
-    goal: '调三个数字', primary: '（改数字即保存）',
-    patterns: 'Settings Editor · Forgiving Format · Input Hints', laws: 'Postel（越界就地提示、自动夹到范围）· Tesler（默认值系统给）',
-    diff: '窄屏：数字控件放在说明下方整行。',
+    goal: '调备份提醒和撤销上限；不想被提醒就能关掉', primary: '（改动即保存）',
+    patterns: 'Settings Editor · Forgiving Format · Input Hints · Switch（开 / 关）', laws: 'Postel（越界就地提示、自动夹到范围）· Tesler（默认值系统给）· Hick（每行一个设置）',
+    diff: '窄屏：控件换到说明下方整行。',
     notes: [
       [1, '"‹ 设置"', '返回设置首页', '【有】'],
-      [2, '三个数字', '提醒天数（默认 7）· 提醒存档数（默认 10）· 撤销上限（默认 50，1–500）；改完立即保存，提示"已保存"（宿主层提示条）', '【有】updateSettings'],
-      [3, '越界提示', '输入框下就近写范围；不允许保存非法值', '【有】schema'],
+      [2, '备份提醒：按天数（开关 + 数字）', '开着时显示"− 7 天 ＋"；关掉时数字变虚线灰、写"不提醒"。距离上次完整备份超过这些天，抽屉里才提醒导出', '【缺】现有 reminderDays 只能是正整数，没有"关"；需要后端小改动 BE-10，已请示驾驶员，批准前线框只是示意'],
+      [3, '备份提醒：按保存次数（这里画成关闭状态）', '同上；关闭 = 不按保存次数提醒', '【缺】同上（reminderSaves）'],
+      [4, '撤销记录上限', '"− 50 条 ＋"（1–500），没有"关"（它是结算撤销，不是提醒）；越界就地写原因', '【有】updateSettings'],
+      [5, '行宽', '三行都铺满内容区，无边框，淡色细线隔开，和外壳边框对齐', '决定'],
     ],
-    render: () => ({ page: 'settings', title: '设置', header: { campaign: CAMP, dirty: false }, content: `<button class="trpg-back" type="button">${pin(1)}‹ 设置</button><h2 class="trpg-wizard__title">备份与撤销</h2><div class="trpg-settings">
-      <div class="trpg-settings__row"><b>${pin(2)}备份提醒：多少天没导出</b><span class="trpg-stepper"><span>−</span><b>7 天</b><span>＋</span></span><span class="trpg-field__hint">距离上次完整备份超过这么多天，抽屉里会提醒你导出。</span></div>
-      <div class="trpg-settings__row"><b>备份提醒：多少次保存</b><span class="trpg-stepper"><span>−</span><b>10 次</b><span>＋</span></span><span class="trpg-field__hint">上次备份之后保存这么多次，也会提醒。</span></div>
-      <div class="trpg-settings__row"><b>撤销记录上限</b><span class="trpg-stepper"><span>−</span><b>50 条</b><span>＋</span></span><span class="trpg-field__hint">${pin(3)}结算撤销最多保留多少条（1–500）。<span class="trpg-field__err">⚠ 超出范围时在这里写原因</span></span></div></div>` }),
+    render: () => ({ page: 'settings', title: '设置', flush: true, header: { campaign: CAMP, dirty: false }, content: `<button class="trpg-back" type="button">${pin(1)}‹ 设置</button><h2 class="trpg-pagehead">备份与撤销</h2><div class="trpg-settings">
+      <div class="trpg-settings__row"><b>${pin(2)}备份提醒：多少天没导出</b><span class="trpg-ctrl">${sw(true)}<span class="trpg-stepper"><span>−</span><b>7 天</b><span>＋</span></span></span><span class="trpg-field__hint">距离上次完整备份超过这么多天，抽屉里会提醒你导出。</span></div>
+      <div class="trpg-settings__row"><b>${pin(3)}备份提醒：多少次保存</b><span class="trpg-ctrl trpg-ctrl--off">${sw(false)}<span class="trpg-stepper"><span>−</span><b>不提醒</b><span>＋</span></span></span><span class="trpg-field__hint">上次备份之后保存这么多次才提醒；关掉就不按次数提醒。</span></div>
+      <div class="trpg-settings__row"><b>${pin(4)}撤销记录上限</b><span class="trpg-stepper"><span>−</span><b>50 条</b><span>＋</span></span><span class="trpg-field__hint">结算撤销最多保留多少条（1–500）。<span class="trpg-field__err">⚠ 超出范围时在这里写原因</span></span></div></div>` }),
   },
   {
     id: 'toasts', group: '提示条与其他', title: '提示条：酒馆顶部栏下方（宿主层）', flow: 'F3 / F5',

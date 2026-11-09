@@ -5,7 +5,8 @@ export const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<
 export const btn = (label, { primary = false, disabled = false, small = false, danger = false, n = null } = {}) =>
   `<button class="trpg-btn${primary ? ' trpg-btn--primary' : ''}${small ? ' trpg-btn--small' : ''}${danger ? ' trpg-btn--danger' : ''}"${disabled ? ' disabled' : ''} type="button">${n ? pin(n) : ''}${label}</button>`
 export const badge = (label, tone = '') => `<span class="trpg-badge"${tone ? ` data-tone="${tone}"` : ''}>${label}</span>`
-export const check = (label, on = true) => `<span class="trpg-check" data-on="${on}">${label}</span>`
+export const check = (label, on = true, { dl = false } = {}) => `<span class="trpg-check" data-on="${on}"${dl ? ' data-dl="true"' : ''}>${label}</span>`
+export const sw = (on) => `<span class="trpg-switch" data-on="${on}" role="switch" aria-checked="${on}"></span>`
 
 /**
  * 资料安装进度环（同一个小组件：侧栏库标签里 30px，向导里 56px）。

@@ -21,8 +21,10 @@ const foot = ({ prev = true, next = '下一步', nextDisabled = false, nextPin =
 const wiz = (step, body, f, opts) => modal('dialog', modalHead('开始新冒险'), `<div class="trpg-wizard">${steps(step, opts)}<div class="trpg-wizard__body">${body}</div>${foot(f)}</div>`)
 
 const shelfGroup = (name, count, rows, open = false) => `<details class="trpg-shelf__group"${open ? ' open' : ''}><summary class="trpg-shelf__sum">${name}<small>${count}</small></summary>${rows.join('')}</details>`
-const bookRow = (name, date, on = true) => `<div class="trpg-shelf__row">${check(name, on)}<small>${date}</small></div>`
-const advRow = (name, lvl, story, on = false) => `<div class="trpg-shelf__row">${check(name, on)}<small>等级 ${lvl} · ${story}</small></div>`
+// dl = 这本已经在【库】里下载好：灰色勾 +"已下载"（来自 shelf 行的 downloaded）；仍可点掉，只影响这场战役看得到哪些书
+const dlTag = '<span class="trpg-dl">已下载</span>'
+const bookRow = (name, date, on = true, dl = false) => `<div class="trpg-shelf__row">${check(name + (dl ? dlTag : ''), on, { dl })}<small>${date}</small></div>`
+const advRow = (name, lvl, story, on = false, dl = false) => `<div class="trpg-shelf__row">${check(name + (dl ? dlTag : ''), on, { dl })}<small>等级 ${lvl} · ${story}</small></div>`
 
 // ── 下载大小说明（浅灰、放在"资料"标题下面；不是进度，向导里不下载） ──
 const SIZE_OK = '总下载约 150 MB'
@@ -32,19 +34,22 @@ const NO_BOOKS = '当前拉取不到书目，请之后再去库里添加'
 
 const scopeBlock = (n) => `<div class="trpg-field"><span class="trpg-field__label">${n ? pin(n) : ''}范围</span><div style="display:flex;gap:18px;flex-wrap:wrap">${check('2014', true)}${check('2024', false)}</div><span class="trpg-field__hint">2014 战役默认只含 2014 版来源</span></div>`
 
-const shelfBlock = (n, mode) => {
+const BOOKS = (dl) => [
+  shelfGroup('核心', 6, [bookRow('玩家手册', '2014-08-19', true, dl), bookRow('怪物图鉴', '2014-09-30', true, dl), bookRow('地下城主指南', '2014-12-09', true, dl)], true),
+  shelfGroup('官方出版物', 11, [bookRow('瓦罗的怪物指南', '2016-11-15', true, dl), bookRow('姗娜莎的万事指南', '2017-11-21', true, dl), bookRow('塔莎的万象坩埚', '2020-11-17', true, dl), bookRow('（示例）书名 7', '2018-05-29', true, dl), bookRow('（示例）书名 8', '2019-03-19', true, dl)], true),
+  shelfGroup('设定集', 15, []), shelfGroup('扩展包', 13, []),
+].join('')
+const shelfBlock = (n, mode, dl = false) => {
   const label = `<span class="trpg-field__label">${mode !== 'none' && n ? pin(n) : ''}书架</span>`
-  if (mode === 'loading') return `<div class="trpg-field">${label}${loading('正在读取中…')}</div>`
+  if (mode === 'loading') return `<div class="trpg-field trpg-field--grow">${label}${loading('正在读取中…')}</div>`
   if (mode === 'none') return `<div class="trpg-field">${label}${hint(NO_BOOKS, n)}</div>`
-  return `<div class="trpg-field">${label}<span class="trpg-field__hint">勾选的是这场战役里看得到哪些书；官方资料是整套下载的。</span><div class="trpg-shelf">
-    ${shelfGroup('核心', 6, [bookRow('玩家手册', '2014-08-19'), bookRow('怪物图鉴', '2014-09-30'), bookRow('地下城主指南', '2014-12-09')], true)}
-    ${shelfGroup('官方出版物', 11, [])}${shelfGroup('设定集', 15, [])}${shelfGroup('扩展包', 13, [])}</div></div>`
+  return `<div class="trpg-field trpg-field--grow">${label}<span class="trpg-field__hint">勾选的是这场战役里看得到哪些书；官方资料是整套下载的。灰色勾 = 已经在【库】里下载好。</span><div class="trpg-shelf">${BOOKS(dl)}</div></div>`
 }
 
 const blockBox = (text, sub, n) => `<div class="trpg-empty" style="border-style:double;border-width:3px;margin-bottom:12px">${n ? pin(n) : ''}<span><b>${text}</b></span><span class="trpg-field__hint">${sub}</span>${btn('重试', { small: true })}</div>`
 
-const step2 = ({ size = SIZE_OK, shelf = 'ok', block = false, pins = { hint: 1, scope: 2, shelf: 3 } } = {}) =>
-  `<h3 class="trpg-wizard__title">选择资料</h3>${block ? blockBox('⚠ 开局失败：核心 SRD 规则（示例：玩家手册）没有装好。', '它随插件自带，可能被删除或损坏；请重新安装插件后重试。', pins.block) : ''}${dlHint(size, pins.hint)}${scopeBlock(pins.scope)}${shelfBlock(pins.shelf, shelf)}`
+const step2 = ({ size = SIZE_OK, shelf = 'ok', block = false, installed = false, pins = { hint: 1, scope: 2, shelf: 3 } } = {}) =>
+  `<h3 class="trpg-wizard__title">选择资料</h3>${block ? blockBox('⚠ 开局失败：核心 SRD 规则（示例：玩家手册）没有装好。', '它随插件自带，可能被删除或损坏；请重新安装插件后重试。', pins.block) : ''}${installed ? hint('官方资料已经在【库】里装好，不需要再下载。', pins.hint) : dlHint(size, pins.hint)}${scopeBlock(pins.scope)}${shelfBlock(pins.shelf, shelf, installed)}`
 
 // ── 摘要块（第④步，无论有没有冒险都显示，格式统一） ──
 const summary = ({ name = 'D&amp;D 2014·11月9日', data = '约 150 MB 需下载', adv = '约 0.4 MB 需下载', current = '失落矿坑', n = null } = {}) =>
@@ -61,7 +66,7 @@ export const screens = [
       [2, '规则卡', '现在只有一个规则，自动选中仍停在本步', '【有】RuleRegistry'],
       [3, '规则名术语（点划线）', '悬停 / 长按显示一句简介，不是链接（详情页是 P5）', '统一高亮'],
       [4, '[下一步]', '→ 第②步；第①步没有[上一步]（原图里的上一步是假按钮，隐藏）', '【有】'],
-      [5, '右上 ✕ / Esc / 点遮罩', '没动过选择 → 直接关；动过 → 弹窗内换页"放弃这次新建？"', '【有】'],
+      [5, '右上 ✕ / Esc / 点遮罩', '直接关闭、回到首页，不弹"放弃确认"页（已选的内容不保存）', '决定（驾驶员 2026-11-09）'],
     ],
     render: () => ({
       content: BEHIND(), overlay: wiz(1, `<h3 class="trpg-wizard__title">选择这场战役用的规则</h3><div class="trpg-rulecard"><span class="trpg-radio"></span><div>${pin(2)}<span class="trpg-term">D&amp;D 5e（2014）</span>${pin(3)}<div class="trpg-field__hint">龙与地下城第五版（2014 规则），核心规则含玩家手册、地下城主指南与怪物图鉴</div></div></div>`, { prev: false, nextPin: 4 }, { pinAt: 1 }),
@@ -79,6 +84,18 @@ export const screens = [
       [4, '"上次没装完"提示', '不在向导里显示，归 P5 库页', '决定'],
     ],
     render: () => ({ content: BEHIND(), overlay: wiz(2, step2(), {}, {}) }),
+  },
+  {
+    id: 'wizard-2-installed', group: '向导', title: '向导 ② 资料（官方资料已装好：灰色勾）', flow: 'F1',
+    goal: '再开第二场战役时，一眼看出哪些已经在【库】里', primary: '下一步',
+    patterns: 'Checklist · Status in place', laws: 'Zeigarnik（已完成的事用弱化的勾表达）· Consistency（不新增状态词，只用勾的深浅）',
+    diff: '同左。',
+    notes: [
+      [1, '浅灰说明换一句', '"官方资料已经在【库】里装好，不需要再下载。"（不再写大小）', '【有】dataStatus.status = ready'],
+      [2, '灰色勾 +"已下载"', '官方资料是整套下载的，装好后每本书的行都是 downloaded = true；仍可点掉勾，只影响这场战役看得到哪些书', '【有】CatalogRow.downloaded；是否允许点掉待驾驶员确认'],
+      [3, '书架贴到底部', '列表撑满剩余高度，不留空白', '决定'],
+    ],
+    render: () => ({ content: BEHIND(), overlay: wiz(2, step2({ installed: true, pins: { hint: 1, scope: null, shelf: 2 } }), {}, {}) }),
   },
   {
     id: 'wizard-2-loading', group: '向导', title: '向导 ② 资料（读取书目中）', flow: 'F1',
@@ -119,16 +136,29 @@ export const screens = [
   {
     id: 'wizard-3-adv', group: '向导', title: '向导 ③ 冒险', flow: 'F1',
     goal: '可选：挑一本冒险，战役创建完成后在后台下载正文', primary: '下一步（可什么都不选）',
-    patterns: 'Collapsible Panels · Checklist', laws: 'Hick（默认一个不选）· Miller（按作者分组折叠）',
-    diff: '同上。',
+    patterns: 'Collapsible Panels · Checklist', laws: 'Hick（默认一个不选）· Miller（按作者分组折叠）· Common Region（列表贴到底部边框，不留空白）',
+    diff: '同上。列表区撑满弹窗剩余高度，内容多就在框里滚动。',
     notes: [
-      [1, '冒险列表（按作者分组）', '每行：名称 · 等级范围 · 故事线；默认全不选；选中的冒险大小会计入第④步摘要', '【有】shelf 里 kind = adventure；estimateDownload.adventures'],
+      [1, '冒险列表（按作者分组，贴到底部边框）', '每行：名称 · 等级范围 · 故事线；默认全不选；选中的冒险大小会计入第④步摘要。列表撑满剩余高度，内容多在框里滚，不再露出一大段空白', '【有】shelf 里 kind = adventure；estimateDownload.adventures'],
       [2, '说明一行', '"选中的冒险会在战役创建完成后，和资料一起在后台下载。"', '【有】'],
+      [3, '灰色勾 +"已下载"', '这个冒险已经在【库】里下载好了（行的 downloaded = true）：显示灰色勾，不会再下载，也不计入下载大小', '【有】CatalogRow.downloaded'],
     ],
     render: () => ({
-      content: BEHIND(), overlay: wiz(3, `<h3 class="trpg-wizard__title">带上一本冒险？（可选）</h3>${hint('选中的冒险会在战役创建完成后，和资料一起在后台下载。', 2)}<div class="trpg-shelf">${pin(1)}
-        ${shelfGroup('官方出版物', 59, [advRow('凡戴尔的失落矿坑', '1–5', '新手包', true), advRow('龙与地下城：龙之女王的宝藏', '1–15', '龙之女王'), advRow('冰风谷：冰封之地', '1–12', '冰风谷')], true)}
+      content: BEHIND(), overlay: wiz(3, `<h3 class="trpg-wizard__title">带上一本冒险？（可选）</h3>${hint('选中的冒险会在战役创建完成后，和资料一起在后台下载。', 2)}<div class="trpg-shelf">
+        ${shelfGroup(pin(1) + '官方出版物', 59, [advRow(pin(3) + '凡戴尔的失落矿坑', '1–5', '新手包', true, true), advRow('龙与地下城：龙之女王的宝藏', '1–15', '龙之女王'), advRow('冰风谷：冰封之地', '1–12', '冰风谷'), advRow('（示例）冒险 4', '1–10', '（示例）'), advRow('（示例）冒险 5', '5–15', '（示例）'), advRow('（示例）冒险 6', '1–20', '（示例）'), advRow('（示例）冒险 7', '3–10', '（示例）'), advRow('（示例）冒险 8', '1–8', '（示例）')], true)}
         ${shelfGroup('扩展包', 43, [])}</div>`, {}, {}),
+    }),
+  },
+  {
+    id: 'wizard-3-loading', group: '向导', title: '向导 ③ 冒险（读取冒险目录中）', flow: 'F1',
+    goal: '冒险目录读取慢时和资料一样有读取中提示', primary: '（等待）',
+    patterns: 'Spinners and Loading Indicators（圆圈 + 文字）', laws: 'Doherty（>1 秒必须有进度提示）· Consistency（和资料步骤同一种读取中）',
+    diff: '同上。',
+    notes: [
+      [1, '读取中：简约圆圈 + "正在读取中…"', '和第②步书架完全一样；超过 1 秒才出现；读不到时变成统一的一句"当前拉取不到书目…"（下一屏）', '【有】'],
+    ],
+    render: () => ({
+      content: BEHIND(), overlay: wiz(3, `<h3 class="trpg-wizard__title">带上一本冒险？（可选）</h3>${hint('选中的冒险会在战役创建完成后，和资料一起在后台下载。')}<div class="trpg-field trpg-field--grow">${pin(1)}${loading('正在读取中…')}</div>`, {}, {}),
     }),
   },
   {
@@ -190,19 +220,6 @@ export const screens = [
     ],
     render: () => ({
       content: BEHIND(), overlay: wiz(4, `<h3 class="trpg-wizard__title">给这场战役起个名字</h3>${field(`${pin(1)}战役名称`, input('', { invalid: true, placeholder: '' }), { err: '请输入战役名称（1–40 字）' })}${field('备注（可空）', input('周五晚的跑团'))}${summary({ name: '（未命名）', n: 2 })}`, { next: '开始冒险', nextDisabled: true }, {}),
-    }),
-  },
-  {
-    id: 'wizard-discard', group: '向导', title: '向导 · 放弃确认', flow: 'F1',
-    goal: '选过内容后关闭，防止误关丢掉已填的东西', primary: '继续填写（安全选项）',
-    patterns: 'Modal Panel（弹窗内换页，不叠第二个弹窗）· Escape Hatch · Safe Exploration', laws: 'Hick（两个按钮）· Von Restorff（破坏性按钮用双线框，位置在次要侧）',
-    diff: '窄屏两个按钮纵向排列，[继续填写]在上。',
-    notes: [
-      [1, '换页标题"放弃这次新建？"', '"‹ 开始新冒险"返回 = 继续填写', '【有】askConfirm'],
-      [2, '[继续填写]（默认焦点） / [放弃]', '放弃 → 关闭向导，已填内容丢弃', '【有】'],
-    ],
-    render: () => ({
-      content: BEHIND(), overlay: modal('dialog', modalHead('放弃这次新建？', '开始新冒险'), `<p>已经选好的内容不会保存。</p><div class="trpg-wizard__foot" style="margin-top:auto">${btn('放弃', { danger: true, n: 2 })}${btn('继续填写', { primary: true })}</div>`),
     }),
   },
 ]
