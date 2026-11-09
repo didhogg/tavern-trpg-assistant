@@ -36,6 +36,12 @@ export class FileProvider {
     return p
   }
 
+  /** 已缓存的云端文件清单；没取过就是 null（不联网）。 */
+  async cachedFileList(source: SourceEntry): Promise<FileList | null> {
+    const saved = await this.db.derived.get(`filelist:${source.id}@${commitOf(source)}`)
+    return saved ? (saved.value as FileList) : null
+  }
+
   async local(source: SourceEntry, path: string): Promise<string | null> {
     const rec = await this.db.files.get([source.id, path])
     return rec && rec.commit === commitOf(source) ? rec.text : null

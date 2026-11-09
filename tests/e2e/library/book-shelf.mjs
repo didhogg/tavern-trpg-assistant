@@ -41,6 +41,7 @@ const wizard = (page, codeSet) => page.evaluate(async (cs) => {
     phb: rows.find((r) => r.kind === 'book' && r.source === 'PHB') ? { group: rows.find((r) => r.kind === 'book' && r.source === 'PHB').shelf.group, name: rows.find((r) => r.kind === 'book' && r.source === 'PHB').name, visible: rows.find((r) => r.kind === 'book' && r.source === 'PHB').view.visible } : null,
     lmop: (() => { const r = rows.find((x) => x.kind === 'adventure' && x.id === 'LMoP'); return r ? { name: r.name, level: r.shelf.level, storyline: r.shelf.storyline } : null })(),
     data: o.data.map((d) => [d.setId, d.installed]),
+    dataFull: o.data.map((d) => ({ setId: d.setId, status: d.status, recordStatus: d.recordStatus, bytes: d.downloadBytes })),
     files: (await lib.files.toArray()).map((f) => [f.source, f.path, f.size]),
     sets: await lib.sets.count(),
   }
@@ -62,6 +63,21 @@ try {
     check(`${cs}：只取了几个小文件（< 3MB）`, r.files.reduce((n, f) => n + f[2], 0) < 3_000_000 && r.files.length <= 12, r.files)
     check(`${cs}：玩家手册在核心组；失落矿坑有等级和故事线`, r.phb?.group === 'core' && r.lmop?.level && r.lmop.storyline, { phb: r.phb, lmop: r.lmop })
   }
+  // BE-8：没装时状态是 none，下载大小来自书目步骤顺带缓存的文件清单
+  const cnData = report.cn.dataFull.find((d) => d.setId === 'cn-official')
+  check('BE-8 没装：状态 none，下载大小有数（几十 MB 量级）', cnData.status === 'none' && cnData.bytes > 10_000_000 && cnData.bytes < 500_000_000, cnData)
+  // 模拟“刷新页面后装了一半”：库里记着 downloading、没有任务在跑
+  const half = await s.page.evaluate(async () => {
+    const host = document.querySelector('#trpg-assistant-root')
+    const app = [...(host.shadowRoot.children)].map((c) => c.__vue_app__).find(Boolean)
+    const backend = app.config.globalProperties.$pinia._s.get('app').svc().backend
+    await backend.library.db.sets.put({ id: 'cn-official', commit: 'x', status: 'downloading', plan: { files: 0, bytes: 0 }, updatedAt: Date.now() })
+    const mid = (await backend.starter.dataStatus()).find((d) => d.setId === 'cn-official')
+    await backend.library.db.sets.delete('cn-official')
+    const after = (await backend.starter.dataStatus()).find((d) => d.setId === 'cn-official')
+    return { mid: { status: mid.status, installed: mid.installed, recordStatus: mid.recordStatus }, after: after.status }
+  })
+  check('BE-8 装了一半（库里记着 downloading、没有任务）：状态 incomplete；清掉记录后回到 none', half.mid.status === 'incomplete' && !half.mid.installed && half.after === 'none', half)
   const order = report.cn.groups.map((g) => g[0])
   check('分组顺序是作者分组表顺序（核心在前）', order[0] === 'core' && order.indexOf('supplement') < order.indexOf('homebrew') || !order.includes('homebrew'), order)
   // 2) 同一页再取：走缓存

@@ -5,6 +5,8 @@
 // 资料没装好时建的战役，数据版本记号是空的；下载完后若战役还没被动过（未改动、没人物），自动补上现在的版本记号并重存一次，
 // 免得第一次读档就提示“资料换过版本”。
 import type { LibraryDatabase } from '../library/db'
+import type { FileProvider } from '../library/files'
+import { precachePlan } from '../library/plan'
 import type { DownloadTasks, TaskState } from '../library/tasks'
 import type { ScopedLibrary } from '../library/scoped'
 import type { ShelfGroup } from '../library/shelf'
@@ -27,6 +29,7 @@ export interface StartCampaignDeps {
   rules: RuleRegistry
   library: {
     db: LibraryDatabase
+    files: FileProvider
     scoped: ScopedLibrary
     tasks: DownloadTasks
     dataVersion: () => Promise<KernelDataVersion>
@@ -36,11 +39,19 @@ export interface StartCampaignDeps {
 /** 向导里用户能改的选书设置（其余由规则默认）。 */
 export type LibraryChoice = Partial<Pick<CampaignLibrary, 'scopes' | 'include' | 'exclude' | 'choices'>>
 
+/** none 没装过；running 正在装（有任务在跑）；incomplete 装了一半（下载 / 解析中断、被取消或失败，没有任务在跑，要"继续"）；installed 已装好。 */
+export type DataStatus = 'none' | 'running' | 'incomplete' | 'installed'
+
 export interface DataSetState {
   codeSet: string
   lang: string
   setId: string
   installed: boolean
+  status: DataStatus
+  /** 库里记的原始状态（downloading / parsing / cancelled / failed / installed），没记过为 null。 */
+  recordStatus: string | null
+  /** 整套要下载的字节数（作者预载规则算出的文件清单）；清单还没取过（没联过网）时为 null。 */
+  downloadBytes: number | null
   /** 正在下载这套资料的任务（没有就是 null）。 */
   task: TaskState | null
 }
@@ -108,18 +119,33 @@ export class CampaignStarter {
     return this.deps.library.tasks.list().find((t) => t.kind === 'official' && t.set === setId && t.status === 'running') ?? null
   }
 
+  /**
+   * 各套官方资料的状态与大小（只读，不联网；首页 / 侧栏 / 向导都用它）。
+   * 刷新页面后任务列表会清空，"装了一半"靠库里记的状态认出来（status = incomplete），界面据此提示并给"继续"。
+   */
+  async dataStatus(): Promise<DataSetState[]> {
+    const { db, files } = this.deps.library
+    const out: DataSetState[] = []
+    for (const s of SOURCES.filter((it) => it.kind === 'official')) {
+      const record = await db.sets.get(s.id)
+      const recordStatus = record ? String(record.status) : null
+      const task = this.runningTask(s.id)
+      const status: DataStatus = recordStatus === 'installed' ? 'installed' : task ? 'running' : recordStatus ? 'incomplete' : 'none'
+      const list = await files.cachedFileList(s)
+      out.push({ codeSet: s.codeSet, lang: s.lang, setId: s.id, installed: recordStatus === 'installed', status, recordStatus, downloadBytes: list ? precachePlan(list).bytes : null, task })
+    }
+    return out
+  }
+
   async wizardOptions(ruleId: string, codeSet: string, choice: LibraryChoice = {}): Promise<WizardOptions> {
     const rule = this.deps.rules.get(ruleId)
     if (!rule) throw new TrpgError('E_RULE_MISSING', `没有这套规则：${ruleId}`)
     const library = this.libraryOf(ruleId, codeSet, choice)
     const { scoped } = this.deps.library
-    const data: DataSetState[] = []
-    for (const s of SOURCES.filter((it) => it.kind === 'official')) {
-      data.push({ codeSet: s.codeSet, lang: s.lang, setId: s.id, installed: await this.installed(s.id), task: this.runningTask(s.id) })
-    }
     let shelf: ShelfGroup[] = []
     let shelfError: string | null = null
     try { shelf = await scoped.shelf(library) } catch (e) { shelfError = msg(e) }
+    const data = await this.dataStatus() // 书目步骤会顺带缓存文件清单，所以放在它后面才有下载大小
     return {
       rule: { id: rule.id, name: rule.name },
       scopes: await scoped.scopes(),

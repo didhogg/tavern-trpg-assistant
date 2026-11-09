@@ -10,6 +10,9 @@ import { makeRegistry, withDb } from '../helpers/fixtures'
 /** 假的【库】：下载任务由测试放行；装好后数据版本记号才有值。 */
 function fakeLibrary() {
   const installed = new Set<string>()
+  const recorded = new Map<string, string>() // 库里记的非 installed 状态（downloading / cancelled / failed …）
+  const lists = new Map<string, Record<string, { sha: string; size: number }>>()
+  const running = new Set<string>() // 有任务在跑的数据集
   const pending = new Map<string, (s: TaskState['status']) => void>()
   const started: string[] = []
   const states = new Map<string, TaskState>()
@@ -22,15 +25,16 @@ function fakeLibrary() {
   }
   const waiters = new Map<string, Promise<TaskState>>()
   const tasks = {
-    list: () => [...states.values()],
+    list: () => [...states.values(), ...[...running].map((set) => ({ id: `r-${set}`, kind: 'official', set, item: null, status: 'running', progress: { stage: 'download', done: 1, total: 2 }, error: null, result: null }))],
     startOfficial: (set: string) => { const id = begin('official', set, null); waiters.set(id, new Promise((ok) => pending.set(id, (st) => { const s = states.get(id) as TaskState; s.status = st; if (st === 'done') installed.add(set); ok({ ...s }) }))); return id },
     startAdventure: (set: string, item: string) => { const id = begin('adventure', set, item); waiters.set(id, Promise.resolve({ ...(states.get(id) as TaskState), status: 'done' })); return id },
     wait: (id: string) => waiters.get(id) as Promise<TaskState>,
   }
   return {
-    installed, pending, started,
+    installed, pending, started, recorded, lists, running,
     library: {
-      db: { sets: { get: async (id: string) => (installed.has(id) ? { id, status: 'installed' } : undefined) } },
+      db: { sets: { get: async (id: string) => (installed.has(id) ? { id, status: 'installed' } : recorded.has(id) ? { id, status: recorded.get(id) } : undefined) } },
+      files: { cachedFileList: async (s: { id: string }) => lists.get(s.id) ?? null },
       scoped: { activeOverrides: async () => [], scopes: async () => [], shelf: async () => [] },
       tasks,
       dataVersion: async () => ({ official: installed.size ? 'v1' : '', brews: {} }),
@@ -110,6 +114,48 @@ describe('wizardOptions', () => {
       expect(o.shelfError).toBeNull()
       fake.installed.add('cn-official')
       expect((await starter.wizardOptions('dnd5e2014', 'cn')).data.find((d) => d.codeSet === 'cn')?.installed).toBe(true)
+    })
+  })
+})
+
+describe('dataStatus（BE-8）', () => {
+  it('没装 / 正在装 / 装了一半（刷新后任务没了）/ 已装好，各自认得出', async () => {
+    await withDb(async (db) => {
+      const { fake, starter } = await build(db)
+      const by = async () => Object.fromEntries((await starter.dataStatus()).map((d) => [d.setId, d]))
+      let d = await by()
+      expect(d['cn-official']).toMatchObject({ status: 'none', installed: false, recordStatus: null, downloadBytes: null, task: null })
+
+      fake.running.add('cn-official')                       // 有任务在跑
+      expect((await by())['cn-official']).toMatchObject({ status: 'running', task: { set: 'cn-official' } })
+      fake.running.clear()
+
+      for (const raw of ['downloading', 'parsing', 'cancelled', 'failed']) { // 没有任务在跑，库里却记着没装完
+        fake.recorded.set('cn-official', raw)
+        d = await by()
+        expect(d['cn-official']).toMatchObject({ status: 'incomplete', installed: false, recordStatus: raw, task: null })
+      }
+      fake.installed.add('en-official')
+      expect((await by())['en-official']).toMatchObject({ status: 'installed', installed: true, recordStatus: 'installed' })
+    })
+  })
+
+  it('下载大小来自已缓存的文件清单，按作者预载规则算（冒险正文不计）；没缓存是 null，不联网', async () => {
+    await withDb(async (db) => {
+      const { fake, starter } = await build(db)
+      fake.lists.set('cn-official', { 'data/books.json': { sha: 'a', size: 100 }, 'data/spells/spells-phb.json': { sha: 'b', size: 250 }, 'data/adventure/adventure-lmop.json': { sha: 'c', size: 9999 }, 'js/utils.js': { sha: 'd', size: 7 } })
+      const d = Object.fromEntries((await starter.dataStatus()).map((x) => [x.setId, x]))
+      expect(d['cn-official'].downloadBytes).toBe(350)
+      expect(d['en-official'].downloadBytes).toBeNull()
+    })
+  })
+
+  it('wizardOptions 带上这些状态', async () => {
+    await withDb(async (db) => {
+      const { fake, starter } = await build(db)
+      fake.recorded.set('cn-official', 'cancelled')
+      const o = await starter.wizardOptions('dnd5e2014', 'cn')
+      expect(o.data.find((x) => x.setId === 'cn-official')).toMatchObject({ status: 'incomplete', recordStatus: 'cancelled' })
     })
   })
 })
