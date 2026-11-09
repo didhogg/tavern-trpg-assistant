@@ -203,6 +203,14 @@ describe('备份提醒', () => {
     expect(settingsSchema.parse({ skipAutoSaveOnLoad: true }).skipAutoSaveOnLoad).toBe(true)
   })
 
+  it('设置：【库】偏好有默认值，旧设置缺这一组也能读；只改一项不影响别的（P5 B-13）', () => {
+    expect(settingsSchema.parse({}).library).toEqual({ groupBy: 'group', collapsed: [], skipImportPreview: false, skipRemovePrompt: false, lang: 'cn' })
+    expect(settingsSchema.parse({ reminderDays: 3 }).library.lang).toBe('cn')
+    const s = settingsSchema.parse({ library: { skipRemovePrompt: true, collapsed: ['homebrew'] } })
+    expect(s.library).toMatchObject({ skipRemovePrompt: true, collapsed: ['homebrew'], groupBy: 'group', skipImportPreview: false })
+    expect(() => settingsSchema.parse({ library: { groupBy: '' } })).toThrow()
+  })
+
   it('提醒项设为 0 表示不提醒：天数、次数各自独立，两项都 0 永不提醒', () => {
     const old = state({ lastExportAt: now - 30 * day, savesSinceExport: 99 })
     expect(reminderStatus(old, settingsSchema.parse({}), now).kind).toBe('due')

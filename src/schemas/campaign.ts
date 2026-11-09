@@ -48,6 +48,21 @@ export const saveSlotSchema = z.object({
 })
 export type SaveSlot = z.infer<typeof saveSlotSchema>
 
+/** 【库】页面的偏好（P5 B-13）：分类方式、折叠状态、两个"总是…"开关、资料语言。每项都有默认值，旧设置不需要迁移。 */
+export const librarySettingsSchema = z.object({
+  /** 书架的分类方式（作者分组 / 规则版本 / 范围 / 书或冒险…）；取值由界面的登记表决定，这里不限死。 */
+  groupBy: z.string().min(1).default('group'),
+  /** 折叠着的分类。 */
+  collapsed: z.array(z.string()).default([]),
+  /** 导入自制文件前不预览（预览页的勾选，记住）。 */
+  skipImportPreview: z.boolean().default(false),
+  /** 删除 / 卸载前不列影响（影响页的勾选，记住）。 */
+  skipRemovePrompt: z.boolean().default(false),
+  /** 资料语言（作者程序那一套：cn / en）；条目页的 En / 中文 切换改的是它。 */
+  lang: z.string().min(1).default('cn'),
+})
+export type LibrarySettings = z.infer<typeof librarySettingsSchema>
+
 export const settingsSchema = z.object({
   /** 多少天没导出备份就提醒；0 = 不按天数提醒。 */
   reminderDays: z.number().int().nonnegative().default(7),
@@ -57,6 +72,8 @@ export const settingsSchema = z.object({
   skipAutoSaveOnLoad: z.boolean().default(false),
   /** 结算撤销最多保留多少条；0 或负数不合法。 */
   undoLimit: z.number().int().min(1).max(500).default(50),
+  /** 【库】页面的偏好。 */
+  library: librarySettingsSchema.default(() => librarySettingsSchema.parse({})),
 })
 export type Settings = z.infer<typeof settingsSchema>
 
