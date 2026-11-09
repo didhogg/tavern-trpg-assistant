@@ -1,6 +1,7 @@
 import type { Pinia } from 'pinia'
 import { watch } from 'vue'
 import { requestPersistence } from '../../core/backup'
+import { scheduleCatalogPrefetch } from '../../library/prefetch'
 import { ownerFromHost } from '../../core/ids'
 import { createServices } from '../../core/services'
 import { eventName, getContext, onEvent } from '../../host/context'
@@ -56,6 +57,8 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
       toast.error(`结算内核启动失败：${error instanceof Error ? error.message : String(error)}`)
     })
   }
+  // 首次启动后台预取书目与文件清单（缓存在就什么都不做；联网失败静默，下次启动再试）
+  const stopPrefetch = scheduleCatalogPrefetch(app.svc().backend.library.prefetch)
   reconcileKernel()
   const stopKernel = watch(
     () => [campaign.owner?.ownerKey ?? '', !!campaign.workspace?.data?.kernel, campaign.readOnly],
@@ -80,6 +83,7 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
     stop()
     stopSave()
     stopKernel()
+    stopPrefetch()
     off()
     if (campaign.owner) void app.svc().backend.kernel.closeAllExcept(null)
   }

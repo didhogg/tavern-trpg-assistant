@@ -29,6 +29,7 @@
 | 12 | **精确下载百分比** | 环只表示"到了第几步" | 需要后端给总进度 | 【缺】 |
 | 13 | **战役级管理**（删除整个战役、导出整个战役） | 战役卡片头只有"改战役名" | 需要先补后端 | 【缺】现在只有按存档删 / 导出 |
 | 14 | **下载时按所选书只下一部分** | 官方资料整套下载，勾选书只决定"战役里看得到哪些书" | 若要做，是改 P2 的下载设计（B1 §0 / §8.2 / §8.3 照抄作者离线设计），须驾驶员明确批准 | 设计 §2.2 |
+| 15 | **库的一键更新同时重新拉取类别 / 书目索引** | P4 只做首次启动后台预取（缓存缺失才取，见 14.14 P）；缓存按锁定提交号存，不会自动过期 | 库页"一键更新"按钮：更新官方数据的同时，重新拉取书目、冒险目录和文件清单并覆盖缓存 | 【有】`BookDirectory`、`FileProvider.fileList`（P5 需补"强制重取"入口） |
 
 ---
 
@@ -1295,6 +1296,7 @@ Pattern: Wizard + Progress Indicator + Prominent Done + Cancelability
 | B3（原 BE-10） | `wizardOptions.blockingError`（核心 SRD 资料包缺了才挡）；书目 / 冒险目录各自报错（`shelfError`、`adventureError`、`catalogUnavailable`）不挡 | `src/rules/kernel/core-pack.ts`、`library/directory.ts` |
 | B4 | `getCampaignView.otherCampaigns[].members`：其他战役的存档列表 | `src/core/saves/view.ts` |
 | B5 | 起点存档命名：做法 A，界面写"战役起点 · 日期"，后端不改 | 界面 |
+| P（启动预取） | 插件首次启动、界面可用 3 秒后，后台把中文书目 / 冒险目录和中英文件清单取回缓存；缓存在就不联网，失败静默、下次再试；自动化浏览器默认不做 | `src/library/prefetch.ts`、`ui/shell/boot.ts` |
 
 ---
 

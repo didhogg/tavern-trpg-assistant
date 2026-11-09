@@ -23,6 +23,7 @@ import { getSource } from '../library/sources'
 import { TrpgError } from './errors'
 import { CampaignStarter } from './start-campaign'
 import { BookDirectory } from '../library/directory'
+import { CatalogPrefetch, DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
 import { checkCorePacks } from '../rules/kernel/core-pack'
 
 export interface LibraryBackend {
@@ -34,6 +35,8 @@ export interface LibraryBackend {
   tasks: DownloadTasks
   /** 官方书目（没装也能列）。 */
   directory: BookDirectory
+  /** 首次启动后台预取书目与文件清单（boot.ts 调度）。 */
+  prefetch: CatalogPrefetch
   precompute: KernelPrecompute
   /** 改自制 / 房规后的后台补换算。 */
   precomputeQueue: PrecomputeQueue
@@ -119,7 +122,8 @@ export function createBackend(opts: BackendOptions): Backend {
     undoLimit: async () => (await loadSettings(opts.db)).undoLimit,
   })
 
-  const library: LibraryBackend = { db, files, service, scoped, custom, tasks, directory, precompute, precomputeQueue: queue, dataVersion }
+  const prefetch = new CatalogPrefetch({ files, directory, codeSets: DEFAULT_PREFETCH_CODE_SETS })
+  const library: LibraryBackend = { db, files, service, scoped, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   return { library, kernel, kernelSave, starter }
 }

@@ -12,9 +12,10 @@ const { server, url } = await startStatic({ port: 47338 })
 const report = { engine: ENGINE, checks: [], timings: {} }
 const check = (name, ok, detail) => { report.checks.push({ name, ok: !!ok, detail }); if (!ok) console.log('FAIL', name, JSON.stringify(detail)) }
 
-async function boot(profile, { online, block = [], gone = [] }) {
+async function boot(profile, { online, block = [], gone = [], prefetch = false }) {
   const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
   const page = await ctx.newPage()
+  if (prefetch) await page.addInitScript(() => { window.__TRPG_PREFETCH__ = true })
   page.setDefaultTimeout(120000)
   const external = []
   const pageErrors = []
@@ -157,6 +158,38 @@ try {
     })
     check('核心 SRD 资料包缺一个：向导给出原因（写明缺哪个）且是唯一的阻断', typeof r.blockingError === 'string' && r.blockingError.includes('dnd5e.classes.json') && r.books > 0, { block: r.blockingError, books: r.books })
     check('核心 SRD 资料包缺一个：开局被后端拒绝（E_CORE_MISSING），不建战役', start.ok === false && start.code === 'E_CORE_MISSING', start)
+    await s.ctx.close()
+  }
+  // P 首次启动后台预取：不打开向导，几秒内书目和两份文件清单就缓存好；之后断网，向导和下载大小估算立刻可用；再次启动缓存都在就不再联网
+  {
+    const prof = join(work, `profile-book-shelf-prefetch-${ENGINE}`)
+    await rm(prof, { recursive: true, force: true })
+    s = await boot(prof, { online: true, prefetch: true })
+    const state = () => s.page.evaluate(async () => {
+      const host = document.querySelector('#trpg-assistant-root')
+      const app = [...(host.shadowRoot.children)].map((c) => c.__vue_app__).find(Boolean)
+      const backend = app.config.globalProperties.$pinia._s.get('app').svc().backend
+      return { dir: !!(await backend.library.directory.peek('cn')), lists: (await backend.starter.dataStatus()).map((d) => d.downloadBytes !== null) }
+    })
+    const t0 = Date.now()
+    let st = await state()
+    while (!(st.dir && st.lists.every(Boolean)) && Date.now() - t0 < 40000) { await new Promise((r) => setTimeout(r, 500)); st = await state() }
+    report.timings.prefetchReadyMs = Date.now() - t0
+    check('P 首次启动后台预取：没打开向导，书目和中英文件清单已缓存好', st.dir && st.lists.length >= 2 && st.lists.every(Boolean), { st, ms: report.timings.prefetchReadyMs })
+    await s.page.route((u) => !u.href.startsWith(url), (route) => route.abort()) // 之后断网
+    const offline = await wizard(s.page, 'cn')
+    const offEst = await s.page.evaluate(async () => {
+      const host = document.querySelector('#trpg-assistant-root')
+      const app = [...(host.shadowRoot.children)].map((c) => c.__vue_app__).find(Boolean)
+      const e = await app.config.globalProperties.$pinia._s.get('app').svc().backend.starter.estimateDownload({ codeSet: 'cn' }, { network: false })
+      return { total: e.totalBytes, computing: e.computing }
+    })
+    check('P 预取后断网：第一次点开始新冒险，书架照常、不等待、没有错误', offline.shelfError === null && offline.books > 0 && offline.ms < 1500, { err: offline.shelfError, books: offline.books, ms: offline.ms })
+    check('P 预取后断网：下载大小立刻算出（不是"正在计算"）', offEst.total > 10_000_000 && offEst.computing === false, offEst)
+    await s.ctx.close()
+    s = await boot(prof, { online: true, prefetch: true })
+    await new Promise((r) => setTimeout(r, 7000))
+    check('P 再次启动：缓存都在，预取不联网（7 秒内 0 个联网请求）', s.external.length === 0, { ext: s.external.slice(0, 3) })
     await s.ctx.close()
   }
 } finally {
