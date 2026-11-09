@@ -35,95 +35,45 @@ const ladder = (s) => ({ primary: `m:r:${s}.11|r:${s}.12|0.25`, primaryHover: `r
 /** 深色：深底上主色要更亮才有存在感，基色取第 11 阶，悬停往第 10 阶走半步，按下往第 12 阶走 25%。 */
 const ladderDark = (s) => ({ primary: `r:${s}.11`, primaryHover: `m:r:${s}.11|r:${s}.10|0.5`, primaryPressed: `m:r:${s}.11|r:${s}.12|0.25` })
 
-// 层次（和参考图一致）：surface = 卡片 / 输入框 / 弹层（最亮）；bg = 内容区"纸色"；bgSide = 侧栏 / 栏目（比纸色略深）；bgSunk = 卡片里再嵌的块；bgHover = 悬停
+// 层次（和参考图一致）：surface = 卡片 / 输入框 / 弹层（最亮）；bg = 内容区"纸色"；bgSide = 嵌套块 / 栏目底；side = 边栏（暖深灰，两种模式都是深色）；bgSunk = 卡片里再嵌的块；bgHover = 悬停
+// 驾驶员 2026-11-09 选定 A，并要求：不要浅粉色（错误底、选中底）、点缀黄不要太突兀、深色不要近乎全黑（改暖深灰）、边栏用暖深灰。B、C 已删除（在 git 历史里 7fdd763）。
 export const CANDIDATES = {
   a: {
-    name: 'A · 奶油米（偏橄榄）· 番茄红', source: 'Radix Colors：gold（底）/ tomato（主色）/ bronze（深色）/ crimson / grass / amber',
-    feel: '安静的奶油米色，略带橄榄的灰调，主色是偏橙的番茄红。三套里最克制、最"软件"。',
-    risk: '主色（番茄红）和错误色相近，所以错误色改用偏粉的绯红，并且永远带 ⚠ 图标和文字。',
-    g1: 'r:gold.9', g2: 'r:gold.11',
+    name: 'A · 奶油米（偏橄榄）· 番茄红', source: 'Radix Colors：gold（底 / 暖深灰）/ tomato（主色）/ red / grass / amber',
+    feel: '安静的奶油米色，略带橄榄的灰调；边栏是暖深灰；主色是偏橙的番茄红；点缀是柔和的烛光琥珀，只做小面积。',
+    risk: '主色（番茄红）和错误色（正红）相近，所以错误永远带 ⚠ 图标 + 文字 + 红边框，错误文字不靠颜色单独表达；没有任何粉色底。',
     light: {
       surface: 'r:gold.2', bg: 'r:gold.3', bgSide: 'r:gold.4', bgSunk: 'r:gold.3', bgHover: 'r:gold.5', line: 'r:gold.6',
-      text: 'r:gold.12',
-      ...ladder('tomato'), primaryText: 'm:r:tomato.11|r:tomato.12|0.25', primaryTint: 'r:tomato.2', primaryTintLine: 'r:tomato.6',
+      text: 'r:gold.12', text2: 'r:gold.11', lineCtrl: 'r:gold.9',
+      side: 'r:gold.12', sideInk: 'r:gold.3', sideInk2: 'r:gold.7', sideHover: 'm:r:gold.12|r:gold.1|0.08', sideActive: 'm:r:gold.12|r:gold.1|0.16', sideLine: 'm:r:gold.12|r:gold.1|0.14',
+      ...ladder('tomato'), primaryText: 'm:r:tomato.11|r:tomato.12|0.25', primaryTint: 'r:gold.4', primaryTintLine: 'r:gold.7',
       heroBg: 'r:gold.12', heroInk: 'r:gold.1', heroInk2: 'r:gold.6',
-      dangerText: 'r:crimson.11', dangerBg: 'r:crimson.2', dangerLine: 'r:crimson.7',
+      dangerText: 'r:red.11', dangerBg: 'r:gold.2', dangerLine: 'r:red.9',
       successText: 'r:grass.11', successBg: 'r:grass.2', warnText: 'r:amber.12', warnBg: 'r:amber.2',
     },
     dark: {
-      surface: 'r:bronze-dark.2', bg: 'r:bronze-dark.1', bgSide: 'r:bronze-dark.2', bgSunk: 'r:bronze-dark.1', bgHover: 'r:bronze-dark.4', line: 'r:bronze-dark.5',
-      text: 'r:bronze-dark.12',
-      ...ladderDark('tomato'), primaryText: 'r:tomato-dark.11', primaryTint: 'r:tomato-dark.3', primaryTintLine: 'r:tomato-dark.6',
-      heroBg: 'r:bronze-dark.4', heroInk: 'r:bronze-dark.12', heroInk2: 'r:bronze-dark.11',
-      dangerText: 'r:crimson-dark.11', dangerBg: 'r:crimson-dark.3', dangerLine: 'r:crimson-dark.7',
-      successText: 'r:grass-dark.11', successBg: 'r:grass-dark.3', warnText: 'r:amber-dark.11', warnBg: 'r:amber-dark.3',
-    },
-  },
-  b: {
-    name: 'B · 桃米（偏暖粉）· 正红', source: 'Radix Colors：brown / red / orange / grass / amber',
-    feel: '最接近参考图的暖：带一点桃红的米色，主色是干净的深正红（不偏橙、不偏粉）。三套里最"规则书 / 手账"。',
-    risk: '深红靠近用户不想要的"酒红 AI 味"，所以红只用在主按钮、标题和选中态，不铺大块；错误色改用橙红。',
-    g1: 'r:brown.9', g2: 'r:brown.11',
-    light: {
-      surface: 'r:brown.2', bg: 'r:brown.3', bgSide: 'r:brown.4', bgSunk: 'r:brown.3', bgHover: 'r:brown.5', line: 'r:brown.6',
-      text: 'r:brown.12',
-      ...ladder('red'), primaryText: 'm:r:red.11|r:red.12|0.25', primaryTint: 'r:red.2', primaryTintLine: 'r:red.6',
-      heroBg: 'r:brown.12', heroInk: 'r:brown.1', heroInk2: 'r:brown.6',
-      dangerText: 'r:orange.12', dangerBg: 'r:orange.2', dangerLine: 'r:orange.7',
-      successText: 'r:grass.11', successBg: 'r:grass.2', warnText: 'r:amber.12', warnBg: 'r:amber.2',
-    },
-    dark: {
-      surface: 'r:brown-dark.2', bg: 'r:brown-dark.1', bgSide: 'r:brown-dark.2', bgSunk: 'r:brown-dark.1', bgHover: 'r:brown-dark.4', line: 'r:brown-dark.5',
-      text: 'r:brown-dark.12',
-      ...ladderDark('red'), primaryText: 'r:red-dark.11', primaryTint: 'r:red-dark.3', primaryTintLine: 'r:red-dark.6',
-      heroBg: 'r:brown-dark.4', heroInk: 'r:brown-dark.12', heroInk2: 'r:brown-dark.11',
-      dangerText: 'r:orange-dark.11', dangerBg: 'r:orange-dark.3', dangerLine: 'r:orange-dark.7',
-      successText: 'r:grass-dark.11', successBg: 'r:grass-dark.3', warnText: 'r:amber-dark.11', warnBg: 'r:amber-dark.3',
-    },
-  },
-  c: {
-    name: 'C · 奶油黄（偏黄）· 深琥珀', source: 'Radix Colors：gold + amber（底，内插）/ Tailwind CSS：amber（主色）/ stone（深色）/ red / green',
-    feel: '三套里最黄、最暖：淡奶油黄的纸色，主按钮是深琥珀，红只留给错误，"品牌色 ≠ 失败色"一眼分清。',
-    risk: '主色偏黄褐，容易显得"旧"；靠高对比文字和干净的底压住。底色是在 Radix gold 和 amber 之间内插出来的（不是色阶原值）。',
-    g1: 't:stone.500', g2: 't:stone.600',
-    light: {
-      surface: 'r:amber.1', bg: 'm:r:gold.3|r:amber.3|0.35', bgSide: 'm:r:gold.4|r:amber.4|0.2', bgSunk: 'm:r:gold.3|r:amber.3|0.2', bgHover: 'm:r:gold.5|r:amber.4|0.2', line: 'm:r:gold.6|r:amber.6|0.2',
-      text: 't:stone.900',
-      primary: 't:amber.800', primaryHover: 't:amber.700', primaryPressed: 't:amber.900', primaryText: 't:amber.800', primaryTint: 't:amber.50', primaryTintLine: 't:amber.300',
-      heroBg: 't:stone.900', heroInk: 't:stone.50', heroInk2: 't:stone.300',
-      dangerText: 't:red.700', dangerBg: 't:red.50', dangerLine: 't:red.300',
-      successText: 't:green.700', successBg: 't:green.50', warnText: 't:orange.700', warnBg: 't:orange.50',
-    },
-    dark: {
-      surface: 't:stone.800', bg: 't:stone.900', bgSide: 't:stone.800', bgSunk: 't:stone.800', bgHover: 't:stone.700', line: 't:stone.700',
-      text: 't:stone.50',
-      primary: 't:amber.700', primaryHover: 'm:t:amber.700|t:amber.600|0.15', primaryPressed: 't:amber.800', primaryText: 't:amber.400', primaryTint: '#3a2a12', primaryTintLine: 't:amber.800',
-      heroBg: 't:stone.700', heroInk: 't:stone.50', heroInk2: 't:stone.300',
-      dangerText: '#fca5a5', dangerBg: '#3b1515', dangerLine: 't:red.700',
-      successText: '#86efac', successBg: '#12301c', warnText: '#fdba74', warnBg: '#3a2010',
+      surface: 'r:gold-dark.5', bg: 'r:gold-dark.4', bgSide: 'r:gold-dark.3', bgSunk: 'r:gold-dark.3', bgHover: 'r:gold-dark.6', line: 'r:gold-dark.7',
+      text: 'r:gold-dark.12', text2: 'r:gold-dark.11', lineCtrl: 'r:gold-dark.9',
+      side: 'r:gold-dark.3', sideInk: 'r:gold-dark.12', sideInk2: 'r:gold-dark.11', sideHover: 'r:gold-dark.4', sideActive: 'r:gold-dark.5', sideLine: 'r:gold-dark.5',
+      ...ladderDark('tomato'), primaryText: 'm:r:tomato-dark.10|r:tomato-dark.11|0.5', primaryTint: 'r:gold-dark.4', primaryTintLine: 'r:gold-dark.8',
+      heroBg: 'r:gold-dark.2', heroInk: 'r:gold-dark.12', heroInk2: 'r:gold-dark.11',
+      dangerText: 'r:red-dark.10', dangerBg: 'r:gold-dark.3', dangerLine: 'r:red-dark.9',
+      successText: 'm:r:grass-dark.10|r:grass-dark.11|0.4', successBg: 'r:gold-dark.3', warnText: 'm:r:amber-dark.11|r:gold-dark.11|0.5', warnBg: 'r:gold-dark.3',
     },
   },
 }
 
-// 点缀色（极小面积）：从色阶里取干净的琥珀，不用现有的"经典黄"
-const ACCENT = { a: { light: 'r:amber.9', dark: 'r:amber-dark.9' }, b: { light: 'r:amber.9', dark: 'r:amber-dark.9' }, c: { light: 't:amber.400', dark: 't:amber.400' } }
-const ACCENT_TEXT = { a: { light: 'm:r:amber.11|r:amber.12|0.35', dark: 'r:amber-dark.11' }, b: { light: 'm:r:amber.11|r:amber.12|0.35', dark: 'r:amber-dark.11' }, c: { light: 't:amber.800', dark: 't:amber.400' } }
+// 点缀色（极小面积，不做大块按钮）：柔和的烛光琥珀，不用亮黄
+const ACCENT = { a: { light: 'r:amber.7', dark: 'r:amber.7' } }
+const ACCENT_TEXT = { a: { light: 'm:r:amber.11|r:amber.12|0.35', dark: 'r:gold-dark.11' } }
 
-// 二.4 交叉复用：g1 一个灰同时是 浅色的控件边线 = 深色的次要文字 = 深色的控件边线；g2 是浅色的次要文字（深色里没有第二个灰能同时满足 3:1 边线和 4.5:1 文字，所以只复用 g1）。
-// C 的色阶步长太大，只能复用 lineCtrl（g1 两种模式共用）；次要文字各取一档。
 function modeMap(id, mode) {
-  const c = CANDIDATES[id]
-  const m = { ...c[mode] }
-  if (id === 'c') {
-    m.lineCtrl = c.g1
-    m.text2 = mode === 'light' ? c.g2 : 't:stone.300'
-  } else if (mode === 'light') { m.lineCtrl = c.g1; m.text2 = c.g2 } else { m.text2 = c.g1; m.lineCtrl = c.g1 }
-  m.text3 = m.lineCtrl // 占位 / 禁用文字复用同一个灰（交叉复用，少一个灰）
+  const m = { ...CANDIDATES[id][mode] }
+  m.text3 = m.lineCtrl // 占位 / 禁用文字复用同一个灰（交叉复用：浅色的边线灰 gold.9 = 深色的边线灰 gold-dark.9，同一个 #978365）
   m.accent = ACCENT[id][mode]
   m.accentText = ACCENT_TEXT[id][mode]
-  m.onAccent = id === 'c' ? 't:stone.900' : 'r:amber.12'
+  m.onAccent = 'r:amber.12'
   m.onPrimary = '#ffffff'
-  // 禁用态（三.3）：浅 / 深各自独立的灰；文字仍要能读
   m.disabledBg = m.bgSunk
   m.disabledText = m.text3
   m.focus = mode === 'light' ? m.primary : m.primaryText
@@ -140,7 +90,7 @@ export const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) 
 const PAIRS = [
   ['text', 'bg', 4.5, '正文 / 纸色底'], ['text2', 'bg', 4.5, '次要文字 / 纸色底'], ['text', 'surface', 4.5, '正文 / 卡片'], ['text2', 'surface', 4.5, '次要文字 / 卡片'],
   ['text', 'bgSide', 4.5, '正文 / 侧栏'], ['text2', 'bgSide', 4.5, '次要文字 / 侧栏'], ['text2', 'bgSunk', 4.5, '浅灰说明 / 嵌套块'], ['text', 'bgHover', 4.5, '正文 / 悬停底'],
-  ['onPrimary', 'primary', 4.5, '主按钮文字（基色）'], ['onPrimary', 'primaryHover', 4.5, '主按钮文字（悬停 +1）'], ['onPrimary', 'primaryPressed', 4.5, '主按钮文字（按下 −1）'],
+  ['sideInk', 'side', 4.5, '边栏文字'], ['sideInk2', 'side', 4.5, '边栏次要文字'], ['sideInk', 'sideActive', 4.5, '边栏选中项文字'], ['onPrimary', 'primary', 4.5, '主按钮文字（基色）'], ['onPrimary', 'primaryHover', 4.5, '主按钮文字（悬停 +1）'], ['onPrimary', 'primaryPressed', 4.5, '主按钮文字（按下 −1）'],
   ['primaryText', 'bg', 4.5, '红 / 琥珀标题与链接 / 纸色底'], ['primaryText', 'surface', 4.5, '红 / 琥珀标题与链接 / 卡片'], ['primaryText', 'primaryTint', 4.5, '选中态文字 / 选中底'],
   ['accentText', 'bg', 4.5, '琥珀文字 / 纸色底'], ['onAccent', 'accent', 4.5, '琥珀块上的文字'],
   ['heroInk', 'heroBg', 4.5, '首页横幅文字'], ['heroInk2', 'heroBg', 4.5, '首页横幅次要文字'], ['accent', 'heroBg', 3, '横幅上的琥珀点缀（3:1）'],
@@ -163,7 +113,7 @@ export function build() {
         ...INFO.map(([f, b, note]) => ({ fg: f, bg: b, min: 0, note, ratio: Math.round(contrast(m[f], m[b]) * 100) / 100, ok: true, info: true })),
       ]
     }
-    const keys = ['surface', 'bg', 'bgSide', 'bgSunk', 'bgHover', 'line', 'lineCtrl', 'text', 'text2', 'text3']
+    const keys = ['surface', 'bg', 'bgSide', 'side', 'bgSunk', 'bgHover', 'line', 'lineCtrl', 'text', 'text2', 'text3']
     neutrals[id] = new Set(['light', 'dark'].flatMap((mo) => keys.map((k) => resolved[id][mo][k]))).size
   }
   return { resolved, report, neutrals }

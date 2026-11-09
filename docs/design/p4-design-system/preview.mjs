@@ -22,7 +22,7 @@ function candidate(id) {
   const rep = (mode) => report[id][mode].filter((x) => !x.info)
   const pass = (mode) => `${rep(mode).filter((x) => x.ok).length}/${rep(mode).length}`
   const rows = ['light', 'dark'].map((mode) => `<details><summary>${mode === 'light' ? '浅色' : '深色'}对比度明细（${pass(mode)} 项达标）</summary><table class="dsp-table"><tr><th>配对</th><th>要求</th><th>实测</th><th></th></tr>${report[id][mode].map((x) => `<tr><td>${esc(x.note)}</td><td>${x.info ? '仅报告' : '≥ ' + x.min}</td><td>${x.ratio}</td><td class="${x.ok ? 'dsp-ok' : 'dsp-bad'}">${x.info ? '—' : x.ok ? '✓' : '✘'}</td></tr>`).join('')}</table></details>`).join('')
-  return `<div class="dsp-cand" data-rec="${id === 'b'}"><h4>${esc(c.name)}${id === 'b' ? '　<small>★ 我的推荐</small>' : ''}</h4>
+  return `<div class="dsp-cand" data-rec="true"><h4>${esc(c.name)}　<small>★ 驾驶员选定（第二版）</small></h4>
     <p>${esc(c.feel)}</p><p><small>风险：${esc(c.risk)}　出处：${esc(c.source)}</small></p>
     <div class="dsp-two"><div class="ds-root dsp-mode" data-palette="${id}" data-theme="light"><b>浅色（白天）</b><div class="dsp-sw-row">${sw(resolved[id].light)}</div></div>
     <div class="ds-root dsp-mode" data-palette="${id}" data-theme="dark"><b>深色（晚上，暖黑带棕，不是纯黑 / 蓝黑）</b><div class="dsp-sw-row">${sw(resolved[id].dark)}</div></div></div>
@@ -61,11 +61,11 @@ export function designSystemSection() {
   const ring = (pct) => { const r = 12, c = 2 * Math.PI * r; return `<span class="trpg-ring"><svg width="30" height="30" viewBox="0 0 30 30"><circle data-part="track" cx="15" cy="15" r="${r}" fill="none" stroke-width="3"/><circle data-part="arc" cx="15" cy="15" r="${r}" fill="none" stroke-width="3" stroke-linecap="round" stroke-dasharray="${c * pct} ${c}" transform="rotate(-90 15 15)"/></svg></span>` }
   return `<link rel="stylesheet" href="../p4-design-system/ds.css">
 <section class="dsp" id="design-system"><h2 class="dsp-h2">Gate 4 · 设计系统预览（局部）</h2>
-<p class="dsp-lead">方向：<b>淡暖色浅黄米色底 + 暖红 / 深琥珀</b>，平整无纹理，圆角利落，外壳全部现代无衬线、术语用衬线。不用现有的"经典黄"点缀色；不做羊皮纸纹理、不做大块酒红、不做金色描边。配色按《如何在 UI 设计项目中组织与管理配色》分四类管理：品牌色 / 布局结构色（浅深交叉复用灰色）/ 指示色（品牌红不当错误色，禁用态独立）/ 交互色（一个基色 + 悬停 +1、按下 −1）。三套候选的每个色号都出自 Radix Colors 或 Tailwind 色阶，并核算过对比度。使用的 skill：ux-primer、interaction-patterns、laws-of-ux、oil-ui、ui-ux-pro-max、frontend-design。</p>
-<h3 class="dsp-h3">1. 三套候选配色（选一套，色号锁定后不再改）</h3>${['a', 'b', 'c'].map(candidate).join('')}
+<p class="dsp-lead">方向：<b>淡暖色浅黄米色底 + 暖红 / 深琥珀</b>，平整无纹理，圆角利落，外壳全部现代无衬线、术语用衬线。不用现有的"经典黄"点缀色；不做羊皮纸纹理、不做大块酒红、不做金色描边。配色按《如何在 UI 设计项目中组织与管理配色》分四类管理：品牌色 / 布局结构色（浅深交叉复用灰色）/ 指示色（品牌红不当错误色，禁用态独立）/ 交互色（一个基色 + 悬停 +1、按下 −1）。每个色号都出自 Radix Colors 色阶，并核算过对比度。使用的 skill：ux-primer、interaction-patterns、laws-of-ux、oil-ui、ui-ux-pro-max、frontend-design。</p>
+<h3 class="dsp-h3">1. 配色（已选 A，按你的意见改第二版：去粉色、黄色降级、深色改暖深灰、边栏暖深灰）</h3>${['a'].map(candidate).join('')}
 
-<div class="dsp-bar"><b>下面的示例用哪套：</b>${['a', 'b', 'c'].map((id) => `<label><input type="radio" name="dsp-pal" value="${id}"${id === 'b' ? ' checked' : ''}>${CANDIDATES[id].name.split('·')[0].trim()} ${esc(CANDIDATES[id].name.split('·')[1].trim())}</label>`).join('')}<span>|</span>${['light', 'dark'].map((m) => `<label><input type="radio" name="dsp-mode" value="${m}"${m === 'light' ? ' checked' : ''}>${m === 'light' ? '浅色' : '深色'}</label>`).join('')}</div>
-<div class="ds-root" id="dsp-root" data-palette="b" data-theme="light">
+<div class="dsp-bar"><b>下面的示例：</b>${['light', 'dark'].map((m) => `<label><input type="radio" name="dsp-mode" value="${m}"${m === 'light' ? ' checked' : ''}>${m === 'light' ? '浅色' : '深色'}</label>`).join('')}</div>
+<div class="ds-root" id="dsp-root" data-palette="a" data-theme="light">
 <h3 class="dsp-h3">2. 字体与字号</h3><div class="dsp-box"><div class="dsp-type">
   <div><code>28 / 700 · 首页大标题</code><span style="font-size:28px;font-weight:700;line-height:1.3">开始一场新的冒险</span></div>
   <div><code>18 / 600 · 窗口 / 弹窗标题</code><span style="font-size:18px;font-weight:600">开始新冒险</span></div>
@@ -91,12 +91,12 @@ export function designSystemSection() {
   <div><span>次要按钮</span><button class="trpg-btn" type="button">上一步</button></div><div><span>危险（带文字）</span><button class="trpg-btn trpg-btn--danger" type="button">${icon('trash', 16)}删除</button></div>
   <div><span>勾选：未选 / 选中 / 已下载（灰勾）</span><span style="display:grid;gap:6px">${check('未选', false)}${check('选中', true)}${check('冒险名', true, true)}</span></div>
   <div><span>开关：开 / 关</span><span style="display:flex;gap:10px"><i class="trpg-switch" data-on="true"></i><i class="trpg-switch" data-on="false"></i></span></div>
-  <div><span>输入框：默认 / 出错</span><div class="trpg-input" style="width:190px">D&amp;D 2014·11月9日</div><div class="trpg-input" aria-invalid="true" style="width:190px"></div><span class="trpg-field__err">${icon('warning', 12)}请输入战役名称</span></div>
-  <div><span>提示：成功 / 错误</span><span class="trpg-badge" data-tone="success">${icon('check-circle', 12)}已保存</span><span class="trpg-badge" data-tone="warn">● 有未保存的改动</span></div>
+  <div><span>输入框：默认 / 出错</span><div class="trpg-input" style="width:150px">D&amp;D 2014·11月9日</div><div class="trpg-input" aria-invalid="true" style="width:150px"></div><span class="trpg-field__err">${icon('warning', 12)}请输入战役名称</span></div>
+  <div><span>提示：成功 / 错误</span><span style="display:grid;gap:6px;justify-items:start"><span class="trpg-badge" data-tone="success">${icon('check-circle', 12)}已保存</span><span class="trpg-badge" data-tone="warn">● 有未保存的改动</span></span></div>
   <div><span>读取中</span><div class="trpg-loading" style="padding:0"><span class="trpg-spinner"></span>正在读取中…</div></div></div></div>
 
 <h3 class="dsp-h3">6. 两个黑白线框换成彩色（DOM 和线框一致，类名 trpg-*，样式在 components.css）</h3>
-<div class="dsp-example"><h4>首页 · 空态（上方的选择器可切换 三套配色 × 浅 / 深）</h4>${exHome}</div>
+<div class="dsp-example"><h4>首页 · 空态（上方的选择器可切换 浅 / 深）</h4>${exHome}</div>
 <div class="dsp-example"><h4>向导 ③ 冒险（灰勾 = 已在【库】里下载好；列表贴到底边）</h4>${exWizard}</div>
 </div>
 <script>(function(){var r=document.getElementById('dsp-root');if(!r)return;document.querySelectorAll('input[name=dsp-pal]').forEach(function(i){i.addEventListener('change',function(){r.setAttribute('data-palette',i.value)})});document.querySelectorAll('input[name=dsp-mode]').forEach(function(i){i.addEventListener('change',function(){r.setAttribute('data-theme',i.value)})})})()</script>

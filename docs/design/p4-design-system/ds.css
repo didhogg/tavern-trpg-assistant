@@ -31,7 +31,7 @@
 @media (prefers-color-scheme: dark) { :host(:not([data-theme='light'])), .ds-root:not([data-theme='light']) { --shadow-rgb: 0 0 0; } }
 
 /* 自动生成：node docs/design/p4-design-system/palettes.mjs ；不要手改 */
-/* 候选 A：A · 奶油米（偏橄榄）· 番茄红（Radix Colors：gold（底）/ tomato（主色）/ bronze（深色）/ crimson / grass / amber） */
+/* 候选 A：A · 奶油米（偏橄榄）· 番茄红（Radix Colors：gold（底 / 暖深灰）/ tomato（主色）/ red / grass / amber） */
 .ds-root[data-palette='a'], :host([data-palette='a']) {
   --surface: #faf9f2;
   --bg: #f2f0e7;
@@ -40,26 +40,32 @@
   --bg-hover: #e1dccf;
   --line: #d8d0bf;
   --text: #3b352b;
+  --text2: #71624b;
+  --line-ctrl: #978365;
+  --side: #3b352b;
+  --side-ink: #f2f0e7;
+  --side-ink2: #cbc0aa;
+  --side-hover: #4b453c;
+  --side-active: #5a554c;
+  --side-line: #565148;
   --primary: #b43118;
   --primary-hover: #d13415;
   --primary-pressed: #912d1b;
   --primary-text: #b43118;
-  --primary-tint: #fff8f7;
-  --primary-tint-line: #fdbdaf;
+  --primary-tint: #eae6db;
+  --primary-tint-line: #cbc0aa;
   --hero-bg: #3b352b;
   --hero-ink: #fdfdfc;
   --hero-ink2: #d8d0bf;
-  --danger-text: #cb1d63;
-  --danger-bg: #fef7f9;
-  --danger-line: #eaacc3;
+  --danger-text: #ce2c31;
+  --danger-bg: #faf9f2;
+  --danger-line: #e5484d;
   --success-text: #2a7e3b;
   --success-bg: #f5fbf5;
   --warn-text: #4f3422;
   --warn-bg: #fefbe9;
-  --line-ctrl: #978365;
-  --text2: #71624b;
   --text3: #978365;
-  --accent: #ffc53d;
+  --accent: #e9c162;
   --accent-text: #8b530c;
   --on-accent: #4f3422;
   --on-primary: #ffffff;
@@ -69,293 +75,87 @@
 }
 @media (prefers-color-scheme: dark) {
   .ds-root[data-palette='a']:not([data-theme='light']) {
-    --surface: #1c1917;
-    --bg: #141110;
-    --bg-side: #1c1917;
-    --bg-sunk: #141110;
-    --bg-hover: #302a27;
-    --line: #3b3330;
-    --text: #ede0d9;
+    --surface: #38352e;
+    --bg: #2d2b26;
+    --bg-side: #24231f;
+    --bg-sunk: #24231f;
+    --bg-hover: #444039;
+    --line: #544f46;
+    --text: #e8e2d9;
+    --text2: #cbb99f;
+    --line-ctrl: #978365;
+    --side: #24231f;
+    --side-ink: #e8e2d9;
+    --side-ink2: #cbb99f;
+    --side-hover: #2d2b26;
+    --side-active: #38352e;
+    --side-line: #38352e;
     --primary: #d13415;
     --primary-hover: #d73c1d;
     --primary-pressed: #b43118;
-    --primary-text: #ff977d;
-    --primary-tint: #391714;
-    --primary-tint-line: #6e2920;
-    --hero-bg: #302a27;
-    --hero-ink: #ede0d9;
-    --hero-ink2: #d4b3a5;
-    --danger-text: #ff92ad;
-    --danger-bg: #381525;
-    --danger-line: #873356;
-    --success-text: #71d083;
-    --success-bg: #1b2a1e;
-    --warn-text: #ffca16;
-    --warn-bg: #302008;
-    --text2: #978365;
-    --line-ctrl: #978365;
+    --primary-text: #f67c60;
+    --primary-tint: #2d2b26;
+    --primary-tint-line: #696256;
+    --hero-bg: #1b1a17;
+    --hero-ink: #e8e2d9;
+    --hero-ink2: #cbb99f;
+    --danger-text: #ec5d5e;
+    --danger-bg: #24231f;
+    --danger-line: #e5484d;
+    --success-text: #5fbf71;
+    --success-bg: #24231f;
+    --warn-text: #e5c25b;
+    --warn-bg: #24231f;
     --text3: #978365;
-    --accent: #ffc53d;
-    --accent-text: #ffca16;
+    --accent: #e9c162;
+    --accent-text: #cbb99f;
     --on-accent: #4f3422;
     --on-primary: #ffffff;
-    --disabled-bg: #141110;
+    --disabled-bg: #24231f;
     --disabled-text: #978365;
-    --focus: #ff977d;
+    --focus: #f67c60;
   }
 }
 .ds-root[data-palette='a'][data-theme='dark'] {
-  --surface: #1c1917;
-  --bg: #141110;
-  --bg-side: #1c1917;
-  --bg-sunk: #141110;
-  --bg-hover: #302a27;
-  --line: #3b3330;
-  --text: #ede0d9;
+  --surface: #38352e;
+  --bg: #2d2b26;
+  --bg-side: #24231f;
+  --bg-sunk: #24231f;
+  --bg-hover: #444039;
+  --line: #544f46;
+  --text: #e8e2d9;
+  --text2: #cbb99f;
+  --line-ctrl: #978365;
+  --side: #24231f;
+  --side-ink: #e8e2d9;
+  --side-ink2: #cbb99f;
+  --side-hover: #2d2b26;
+  --side-active: #38352e;
+  --side-line: #38352e;
   --primary: #d13415;
   --primary-hover: #d73c1d;
   --primary-pressed: #b43118;
-  --primary-text: #ff977d;
-  --primary-tint: #391714;
-  --primary-tint-line: #6e2920;
-  --hero-bg: #302a27;
-  --hero-ink: #ede0d9;
-  --hero-ink2: #d4b3a5;
-  --danger-text: #ff92ad;
-  --danger-bg: #381525;
-  --danger-line: #873356;
-  --success-text: #71d083;
-  --success-bg: #1b2a1e;
-  --warn-text: #ffca16;
-  --warn-bg: #302008;
-  --text2: #978365;
-  --line-ctrl: #978365;
+  --primary-text: #f67c60;
+  --primary-tint: #2d2b26;
+  --primary-tint-line: #696256;
+  --hero-bg: #1b1a17;
+  --hero-ink: #e8e2d9;
+  --hero-ink2: #cbb99f;
+  --danger-text: #ec5d5e;
+  --danger-bg: #24231f;
+  --danger-line: #e5484d;
+  --success-text: #5fbf71;
+  --success-bg: #24231f;
+  --warn-text: #e5c25b;
+  --warn-bg: #24231f;
   --text3: #978365;
-  --accent: #ffc53d;
-  --accent-text: #ffca16;
+  --accent: #e9c162;
+  --accent-text: #cbb99f;
   --on-accent: #4f3422;
   --on-primary: #ffffff;
-  --disabled-bg: #141110;
+  --disabled-bg: #24231f;
   --disabled-text: #978365;
-  --focus: #ff977d;
-}
-
-/* 候选 B：B · 桃米（偏暖粉）· 正红（Radix Colors：brown / red / orange / grass / amber） */
-.ds-root[data-palette='b'], :host([data-palette='b']) {
-  --surface: #fcf9f6;
-  --bg: #f6eee7;
-  --bg-side: #f0e4d9;
-  --bg-sunk: #f6eee7;
-  --bg-hover: #ebdaca;
-  --line: #e4cdb7;
-  --text: #3e332e;
-  --primary: #b4272e;
-  --primary-hover: #ce2c31;
-  --primary-pressed: #942029;
-  --primary-text: #b4272e;
-  --primary-tint: #fff7f7;
-  --primary-tint-line: #fdbdbe;
-  --hero-bg: #3e332e;
-  --hero-ink: #fefdfc;
-  --hero-ink2: #e4cdb7;
-  --danger-text: #582d1d;
-  --danger-bg: #fff7ed;
-  --danger-line: #f5ae73;
-  --success-text: #2a7e3b;
-  --success-bg: #f5fbf5;
-  --warn-text: #4f3422;
-  --warn-bg: #fefbe9;
-  --line-ctrl: #ad7f58;
-  --text2: #815e46;
-  --text3: #ad7f58;
-  --accent: #ffc53d;
-  --accent-text: #8b530c;
-  --on-accent: #4f3422;
-  --on-primary: #ffffff;
-  --disabled-bg: #f6eee7;
-  --disabled-text: #ad7f58;
-  --focus: #b4272e;
-}
-@media (prefers-color-scheme: dark) {
-  .ds-root[data-palette='b']:not([data-theme='light']) {
-    --surface: #1c1816;
-    --bg: #12110f;
-    --bg-side: #1c1816;
-    --bg-sunk: #12110f;
-    --bg-hover: #322922;
-    --line: #3e3128;
-    --text: #f2e1ca;
-    --primary: #ce2c31;
-    --primary-hover: #d5353a;
-    --primary-pressed: #b4272e;
-    --primary-text: #ff9592;
-    --primary-tint: #3b1219;
-    --primary-tint-line: #72232d;
-    --hero-bg: #322922;
-    --hero-ink: #f2e1ca;
-    --hero-ink2: #dbb594;
-    --danger-text: #ffa057;
-    --danger-bg: #331e0b;
-    --danger-line: #7e451d;
-    --success-text: #71d083;
-    --success-bg: #1b2a1e;
-    --warn-text: #ffca16;
-    --warn-bg: #302008;
-    --text2: #ad7f58;
-    --line-ctrl: #ad7f58;
-    --text3: #ad7f58;
-    --accent: #ffc53d;
-    --accent-text: #ffca16;
-    --on-accent: #4f3422;
-    --on-primary: #ffffff;
-    --disabled-bg: #12110f;
-    --disabled-text: #ad7f58;
-    --focus: #ff9592;
-  }
-}
-.ds-root[data-palette='b'][data-theme='dark'] {
-  --surface: #1c1816;
-  --bg: #12110f;
-  --bg-side: #1c1816;
-  --bg-sunk: #12110f;
-  --bg-hover: #322922;
-  --line: #3e3128;
-  --text: #f2e1ca;
-  --primary: #ce2c31;
-  --primary-hover: #d5353a;
-  --primary-pressed: #b4272e;
-  --primary-text: #ff9592;
-  --primary-tint: #3b1219;
-  --primary-tint-line: #72232d;
-  --hero-bg: #322922;
-  --hero-ink: #f2e1ca;
-  --hero-ink2: #dbb594;
-  --danger-text: #ffa057;
-  --danger-bg: #331e0b;
-  --danger-line: #7e451d;
-  --success-text: #71d083;
-  --success-bg: #1b2a1e;
-  --warn-text: #ffca16;
-  --warn-bg: #302008;
-  --text2: #ad7f58;
-  --line-ctrl: #ad7f58;
-  --text3: #ad7f58;
-  --accent: #ffc53d;
-  --accent-text: #ffca16;
-  --on-accent: #4f3422;
-  --on-primary: #ffffff;
-  --disabled-bg: #12110f;
-  --disabled-text: #ad7f58;
-  --focus: #ff9592;
-}
-
-/* 候选 C：C · 奶油黄（偏黄）· 深琥珀（Radix Colors：gold + amber（底，内插）/ Tailwind CSS：amber（主色）/ stone（深色）/ red / green） */
-.ds-root[data-palette='c'], :host([data-palette='c']) {
-  --surface: #fefdfb;
-  --bg: #f7f2da;
-  --bg-side: #eee8ce;
-  --bg-sunk: #f5f1e0;
-  --bg-hover: #e7e0c5;
-  --line: #ddd1b0;
-  --text: #1c1917;
-  --primary: #92400e;
-  --primary-hover: #b45309;
-  --primary-pressed: #78350f;
-  --primary-text: #92400e;
-  --primary-tint: #fffbeb;
-  --primary-tint-line: #fcd34d;
-  --hero-bg: #1c1917;
-  --hero-ink: #fafaf9;
-  --hero-ink2: #d6d3d1;
-  --danger-text: #b91c1c;
-  --danger-bg: #fef2f2;
-  --danger-line: #fca5a5;
-  --success-text: #15803d;
-  --success-bg: #f0fdf4;
-  --warn-text: #c2410c;
-  --warn-bg: #fff7ed;
-  --line-ctrl: #78716c;
-  --text2: #57534e;
-  --text3: #78716c;
-  --accent: #fbbf24;
-  --accent-text: #92400e;
-  --on-accent: #1c1917;
-  --on-primary: #ffffff;
-  --disabled-bg: #f5f1e0;
-  --disabled-text: #78716c;
-  --focus: #92400e;
-}
-@media (prefers-color-scheme: dark) {
-  .ds-root[data-palette='c']:not([data-theme='light']) {
-    --surface: #292524;
-    --bg: #1c1917;
-    --bg-side: #292524;
-    --bg-sunk: #292524;
-    --bg-hover: #44403c;
-    --line: #44403c;
-    --text: #fafaf9;
-    --primary: #b45309;
-    --primary-hover: #ba5809;
-    --primary-pressed: #92400e;
-    --primary-text: #fbbf24;
-    --primary-tint: #3a2a12;
-    --primary-tint-line: #92400e;
-    --hero-bg: #44403c;
-    --hero-ink: #fafaf9;
-    --hero-ink2: #d6d3d1;
-    --danger-text: #fca5a5;
-    --danger-bg: #3b1515;
-    --danger-line: #b91c1c;
-    --success-text: #86efac;
-    --success-bg: #12301c;
-    --warn-text: #fdba74;
-    --warn-bg: #3a2010;
-    --line-ctrl: #78716c;
-    --text2: #d6d3d1;
-    --text3: #78716c;
-    --accent: #fbbf24;
-    --accent-text: #fbbf24;
-    --on-accent: #1c1917;
-    --on-primary: #ffffff;
-    --disabled-bg: #292524;
-    --disabled-text: #78716c;
-    --focus: #fbbf24;
-  }
-}
-.ds-root[data-palette='c'][data-theme='dark'] {
-  --surface: #292524;
-  --bg: #1c1917;
-  --bg-side: #292524;
-  --bg-sunk: #292524;
-  --bg-hover: #44403c;
-  --line: #44403c;
-  --text: #fafaf9;
-  --primary: #b45309;
-  --primary-hover: #ba5809;
-  --primary-pressed: #92400e;
-  --primary-text: #fbbf24;
-  --primary-tint: #3a2a12;
-  --primary-tint-line: #92400e;
-  --hero-bg: #44403c;
-  --hero-ink: #fafaf9;
-  --hero-ink2: #d6d3d1;
-  --danger-text: #fca5a5;
-  --danger-bg: #3b1515;
-  --danger-line: #b91c1c;
-  --success-text: #86efac;
-  --success-bg: #12301c;
-  --warn-text: #fdba74;
-  --warn-bg: #3a2010;
-  --line-ctrl: #78716c;
-  --text2: #d6d3d1;
-  --text3: #78716c;
-  --accent: #fbbf24;
-  --accent-text: #fbbf24;
-  --on-accent: #1c1917;
-  --on-primary: #ffffff;
-  --disabled-bg: #292524;
-  --disabled-text: #78716c;
-  --focus: #fbbf24;
+  --focus: #f67c60;
 }
 
 /* P4 设计系统 · 组件样式。类名沿用插件现有界面（trpg-*）和灰度线框，复制时 DOM 不用改，只换样式。
@@ -370,15 +170,16 @@
 /* ── 窗口外壳 ── */
 .trpg-window { position: relative; width: var(--window-w); height: var(--window-h); max-width: 100%; display: flex; background: var(--bg); border: var(--border) solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-3); overflow: hidden; color: var(--text); }
 .trpg-shell { display: flex; flex: 1; min-width: 0; }
-.trpg-side { flex: none; width: var(--side-w); background: var(--bg-side); border-right: var(--border) solid var(--line); display: flex; flex-direction: column; padding-bottom: var(--sp-2); }
+.trpg-side { flex: none; width: var(--side-w); background: var(--side); color: var(--side-ink); border-right: var(--border) solid var(--side-line); display: flex; flex-direction: column; padding-bottom: var(--sp-2); }
 .trpg-side__brand { height: var(--head-h); display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-4); font-weight: var(--fw-semibold); }
-.trpg-brandmark { width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--primary); color: var(--on-primary); display: grid; place-items: center; }
+.trpg-brandmark { width: 28px; height: 28px; border-radius: var(--r-sm); background: var(--primary-hover); color: var(--on-primary); display: grid; place-items: center; }
 .trpg-side__list { list-style: none; margin: 0; padding: var(--sp-2); display: grid; gap: 2px; }
 .trpg-side__bottom { margin-top: auto; }
-.trpg-nav { width: 100%; min-height: var(--hit); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3); border: 0; border-radius: var(--r-sm); background: transparent; color: var(--text2); text-align: left; transition: background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
-.trpg-nav:hover { background: var(--bg-hover); color: var(--text); }
-.trpg-nav:active { background: var(--primary-tint-line); }
-.trpg-nav[aria-current='page'] { background: var(--primary-tint); color: var(--primary-text); font-weight: var(--fw-semibold); box-shadow: inset 3px 0 0 var(--primary); }
+.trpg-nav { width: 100%; min-height: var(--hit); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3); border: 0; border-radius: var(--r-sm); background: transparent; color: var(--side-ink2); text-align: left; transition: background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
+.trpg-nav:hover { background: var(--side-hover); color: var(--side-ink); }
+.trpg-nav:active { background: var(--side-active); }
+.trpg-nav[aria-current='page'] { background: var(--side-active); color: var(--side-ink); font-weight: var(--fw-semibold); box-shadow: inset 3px 0 0 var(--primary-hover); }
+.trpg-side :focus-visible { box-shadow: 0 0 0 2px var(--side), 0 0 0 4px var(--side-ink2); }
 .trpg-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .trpg-head { flex: none; height: var(--head-h); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-4); background: var(--surface); border-bottom: var(--border) solid var(--line); }
 .trpg-head__title { margin: 0; flex: 1; font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
@@ -397,7 +198,7 @@
 .trpg-btn--primary { background: var(--primary); border-color: transparent; color: var(--on-primary); font-weight: var(--fw-semibold); }
 .trpg-btn--primary:hover { background: var(--primary-hover); }
 .trpg-btn--primary:active { background: var(--primary-pressed); }
-.trpg-btn--danger { color: var(--danger-text); border-color: var(--danger-line); background: var(--danger-bg); }
+.trpg-btn--danger { color: var(--danger-text); border-color: var(--danger-line); background: var(--surface); }
 .trpg-btn--small { min-height: 28px; padding: 0 var(--sp-3); font-size: var(--fs-sm); }
 .trpg-btn:disabled, .trpg-btn[disabled] { background: var(--disabled-bg); border-color: var(--line); color: var(--disabled-text); cursor: not-allowed; transform: none; }
 .trpg-btn--primary:disabled { background: var(--line); color: var(--text2); }
@@ -423,7 +224,7 @@
 .trpg-field__err { font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--danger-text); display: inline-flex; gap: 4px; align-items: center; }
 .trpg-input { width: 100%; min-height: var(--hit); padding: 0 var(--sp-3); display: flex; align-items: center; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); color: var(--text); transition: border-color var(--dur-fast) var(--ease-std), box-shadow var(--dur-fast) var(--ease-std); }
 .trpg-input:hover { border-color: var(--text2); }
-.trpg-input[aria-invalid='true'] { border-color: var(--danger-text); background: var(--danger-bg); }
+.trpg-input[aria-invalid='true'] { border: 2px solid var(--danger-line); background: var(--surface); }
 .trpg-check { display: inline-flex; align-items: center; gap: var(--sp-2); }
 .trpg-check__box { width: 18px; height: 18px; flex: none; display: grid; place-items: center; border: var(--border-strong) solid var(--line-ctrl); border-radius: var(--r-xs); background: var(--surface); color: transparent; transition: background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std); }
 .trpg-check[data-on='true'] .trpg-check__box { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
@@ -447,7 +248,7 @@
 .trpg-hero__title, .trpg-hero__sub, .trpg-hero__go { position: relative; }
 .trpg-hero__title { font-size: var(--fs-3xl); font-weight: var(--fw-bold); line-height: var(--lh-tight); }
 .trpg-hero__sub { color: var(--hero-ink2); max-width: 30em; }
-.trpg-hero__go { margin-top: var(--sp-3); justify-self: start; display: inline-flex; align-items: center; gap: var(--sp-2); padding: 7px var(--sp-4); border-radius: var(--r-sm); background: var(--accent); color: var(--on-accent); font-weight: var(--fw-semibold); }
+.trpg-hero__go { margin-top: var(--sp-3); justify-self: start; display: inline-flex; align-items: center; gap: var(--sp-2); padding: 7px var(--sp-4); border-radius: var(--r-sm); background: var(--primary-hover); color: var(--on-primary); font-weight: var(--fw-semibold); }
 .trpg-linkcard { display: grid; grid-template-columns: auto 1fr auto; gap: var(--sp-3); align-items: center; width: 100%; padding: var(--sp-3) var(--sp-4); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); text-align: left; box-shadow: var(--shadow-1); transition: border-color var(--dur-fast) var(--ease-std), background var(--dur-fast) var(--ease-std); }
 .trpg-linkcard:hover { background: var(--bg-hover); border-color: var(--line-ctrl); }
 .trpg-linkcard__icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--primary-tint); color: var(--primary-text); }
@@ -501,8 +302,9 @@
 /* ── 提示条 / 悬停小窗 / 进度环 ── */
 .trpg-toasts { position: absolute; left: 0; right: 0; top: 44px; z-index: var(--z-toast); display: grid; justify-items: center; gap: var(--sp-2); pointer-events: none; padding: 0 var(--sp-3); }
 .trpg-toast { pointer-events: auto; display: flex; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-4); border-radius: var(--r-md); background: var(--hero-bg); color: var(--hero-ink); box-shadow: var(--shadow-2); animation: trpg-drop var(--dur-base) var(--ease-out); }
-.trpg-toast[data-kind='error'] { background: var(--danger-bg); color: var(--danger-text); box-shadow: var(--shadow-2), inset 0 0 0 1px var(--danger-line); }
-.trpg-toast small { color: var(--hero-ink2); } .trpg-toast[data-kind='error'] small { color: var(--danger-text); opacity: 0.8; }
+.trpg-toast[data-kind='error'] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-2), inset 0 0 0 2px var(--danger-line); }
+.trpg-toast[data-kind='error'] .trpg-icon { color: var(--danger-text); }
+.trpg-toast small { color: var(--hero-ink2); } .trpg-toast[data-kind='error'] small { color: var(--text2); }
 @keyframes trpg-drop { from { opacity: 0; transform: translateY(-8px); } }
 .trpg-pop { position: absolute; z-index: var(--z-pop); width: 272px; padding: var(--sp-2) var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-1); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); box-shadow: var(--shadow-2); animation: trpg-fade var(--dur-fast) var(--ease-out); }
 .trpg-pop h3 { margin: 0; font-size: var(--fs-sm); color: var(--text2); font-weight: var(--fw-semibold); }
@@ -510,6 +312,11 @@
 .trpg-ring { display: inline-grid; place-items: center; } .trpg-ring svg { display: block; }
 .trpg-ring [data-part='track'] { stroke: var(--line-ctrl); } .trpg-ring [data-part='arc'] { stroke: var(--primary); transition: stroke-dasharray var(--dur-ring) var(--ease-std); }
 .trpg-libmark { display: inline-flex; align-items: center; gap: 4px; } .trpg-count { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--primary-text); }
+
+/* 边栏是暖深灰：里面的进度环和数字用边栏的字色 */
+.trpg-side .trpg-count { color: var(--side-ink); }
+.trpg-side .trpg-ring [data-part='track'] { stroke: var(--side-hover); }
+.trpg-side .trpg-ring [data-part='arc'] { stroke: var(--accent); }
 
 /* 仅预览页用（dsp-*），不要复制进插件 */
 .dsp { margin-top: 56px; padding-top: 28px; border-top: 3px solid #1a1a1a; }
