@@ -11,6 +11,8 @@ import { libraryDataVersion, scopedCurrentOverrides, scopedRefChecker } from '..
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
 import { BrewPacks } from '../library/brew-packs'
+import { uninstallOfficial, type UninstallReport } from '../library/uninstall'
+import { impactOfRemoval, type RemovalImpact, type RemovalTarget } from './removal-impact'
 import { Counterparts } from '../library/counterpart'
 import { DocumentStore } from '../library/documents'
 import { imageUrls, type ImageHref } from '../library/images'
@@ -25,7 +27,7 @@ import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
 import { KernelPrecompute } from '../rules/kernel/precompute'
 import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
-import { getSource } from '../library/sources'
+import { SOURCES, getSource } from '../library/sources'
 import { TrpgError } from './errors'
 import type { ImportDeps } from './transfer/importer'
 import { CampaignStarter } from './start-campaign'
@@ -40,6 +42,8 @@ export interface LibraryBackend {
   scoped: ScopedLibrary
   /** 图片候选地址与头像（P5 B-03）：条目里只有相对路径，按数据源登记的图片根拼；界面点开才取、缓存在浏览器。 */
   images: { urls: (sourceId: string, href: ImageHref) => string[]; token: (codeSet: string, prop: string, ent: unknown) => Promise<string | null> }
+  /** 整套官方资料删除（释放空间，之后可在下载页重新下载）（P5 B-07）。 */
+  uninstallOfficial: (setId: string) => Promise<UninstallReport>
   /** 已装自制包清单（来历、来源、作者、依赖、条数），下载页 / 书架 / 我的库共用（P5 B-11）。 */
   brewPacks: BrewPacks
   /** 中英对应：这一条在另一种语言里是哪一条（P5 B-10）。 */
@@ -69,6 +73,8 @@ export interface Backend {
   starter: CampaignStarter
   /** 导出 / 导入存档文件要带的【库】那一半：完整备份里的自制 / 范围 / 房规，和导入后"依赖还在不在"的核对（P4 界面接线）。 */
   transfer: { library: BackupLibraryAdapter; checkRefs: NonNullable<ImportDeps['checkRefs']> }
+  /** 删除 / 卸载前的影响预览：依赖它的包、房规、版本选择、战役与存档（P5 B-08）。 */
+  removalImpact: (target: RemovalTarget) => Promise<RemovalImpact>
 }
 
 export interface BackendOptions {
@@ -150,11 +156,16 @@ export function createBackend(opts: BackendOptions): Backend {
     urls: imageUrls,
     token: async (codeSet, prop, ent) => (await service.frameOf(codeSet)).call('tokenPath', prop, ent),
   }
-  const library: LibraryBackend = { db, files, service, scoped, documents, links, images, counterparts, brewPacks, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const uninstall = (setId: string): Promise<UninstallReport> => uninstallOfficial({
+    db, tasks, afterDelete: async (id) => { service.reset(); scoped.reset(); await documents.clear(getSource(id)) },
+  }, setId)
+  const library: LibraryBackend = { db, files, service, scoped, documents, links, images, counterparts, uninstallOfficial: uninstall, brewPacks, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },
     checkRefs: (refs) => scoped.fetch(defaultCampaignLibrary(opts.rules.list()[0]?.id ?? 'dnd5e2014', DEFAULT_PREFETCH_CODE_SETS[0]), refs),
   }
-  return { library, kernel, kernelSave, starter, transfer }
+  const brewSetOf = (codeSet: string): string => SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)?.id ?? `${codeSet}-brew`
+  const removalImpact = (target: RemovalTarget): Promise<RemovalImpact> => impactOfRemoval({ db: opts.db, manage: scoped.manage, brewPacks, brewSetOf }, target)
+  return { library, kernel, kernelSave, starter, transfer, removalImpact }
 }

@@ -32,6 +32,8 @@ export interface BrewPack {
   includes: unknown
   /** 每个类别里有几条（作者编号算出来的非空条数）。 */
   props: Record<string, number>
+  /** 每个类别里每条的作者编号（删前影响预览找谁用了它用）。 */
+  hashes: Record<string, string[]>
   entryCount: number
 }
 
@@ -54,7 +56,8 @@ export class BrewPacks {
       const meta = e.meta as Meta
       const id = String(head.docIdLocal ?? '')
       const doc = byId.get(id)
-      const props = Object.fromEntries(Object.entries(doc?.props ?? {}).map(([k, hs]) => [k, hs.filter(Boolean).length]).filter(([, n]) => (n as number) > 0))
+      const hashes = Object.fromEntries(Object.entries(doc?.props ?? {}).map(([k, hs]) => [k, hs.filter((h): h is string => !!h)]).filter(([, hs]) => (hs as string[]).length > 0)) as Record<string, string[]>
+      const props = Object.fromEntries(Object.entries(hashes).map(([k, hs]) => [k, hs.length]))
       const sourceInfo: SourceInfo[] = (meta?.sources ?? []).map((s) => ({
         json: String(s.json ?? ''), full: s.full ?? null, abbreviation: s.abbreviation ?? null,
         authors: Array.isArray(s.authors) ? s.authors.map(String) : [], version: s.version ?? null, dateReleased: s.dateReleased ?? null,
@@ -63,7 +66,7 @@ export class BrewPacks {
         docIdLocal: id, filename: (head.filename as string | undefined) ?? null, url: (head.url as string | undefined) ?? null, origin: originOf(head),
         isEditable: !!head.isEditable, timeAdded: Number(head.timeAdded ?? 0), sources: doc?.sources ?? sourceInfo.map((s) => s.json), sourceInfo,
         dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null,
-        props: props as Record<string, number>, entryCount: Object.values(props as Record<string, number>).reduce((a, b) => a + b, 0),
+        props: props as Record<string, number>, hashes, entryCount: Object.values(props as Record<string, number>).reduce((a, b) => a + b, 0),
       }
     })
   }

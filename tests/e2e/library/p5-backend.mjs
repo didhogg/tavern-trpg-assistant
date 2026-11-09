@@ -155,6 +155,15 @@ const result = await page.evaluate(async () => {
   // 第二次读走缓存
   const t1 = performance.now(); await lib.service.query('cn-official', 'embeddedTable', {}); r.b09_cachedMs = Math.round(performance.now() - t1)
   const bySrc = await lib.service.query('cn-official', 'embeddedTable', { source: 'PHB' }); r.b09_phb = bySrc.length
+  // ---- B-08 删前影响预览（先于删除） ----
+  const imp1 = await backend.removalImpact({ kind: 'brew', setId: 'cn-brew', docIdLocals: [mine.docIdLocal] })
+  const imp2 = await backend.removalImpact({ kind: 'official', setId: 'cn-official' })
+  r.b08 = { brew: { packs: imp1.packs.length, house: imp1.houseRules.length, choices: imp1.choices.length, saves: imp1.saves.length }, official: { packs: imp2.packs.length, packIds: imp2.packs.map((p) => p.docIdLocal), house: imp2.houseRules.length, choices: imp2.choices.length, saves: imp2.saves.length } }
+  // ---- B-07 删整套官方资料（最后一步：之后这套不能再用） ----
+  const filesBefore = { cn: await lib.db.files.where('source').equals('cn-official').count(), en: await lib.db.files.where('source').equals('en-official').count() }
+  const rep = await lib.uninstallOfficial('cn-official')
+  const catsAfter = await lib.service.categories('cn-official').then(() => 'still-installed', (e) => String(e.message).slice(0, 60))
+  r.b07 = { filesBefore, rep, filesAfter: { cn: await lib.db.files.where('source').equals('cn-official').count(), en: await lib.db.files.where('source').equals('en-official').count() }, setRecord: !!(await lib.db.sets.get('cn-official')), catsAfter, enStillQueryable: (await lib.service.query('en-official', 'spell', { source: 'PHB' })).length > 0, brewKept: (await lib.db.kv.toArray()).length > 0 }
   return r
 })
 await writeFile(`${work}/p5-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))

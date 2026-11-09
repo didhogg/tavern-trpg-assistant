@@ -59,6 +59,14 @@ export class ManageStore {
     return Object.fromEntries((await this.all<string>('choice')).filter((r) => r.key.startsWith(prefix)).map((r) => [r.key.slice(prefix.length), r.value]))
   }
 
+  /** 所有层级的版本选择（删除影响预览用）：层级、目标 refKey、选的备选编号。 */
+  async allChoices(): Promise<Array<{ level: string; target: string; altId: string }>> {
+    return (await this.all<string>('choice')).map((r) => {
+      const at = r.key.indexOf('|')
+      return { level: r.key.slice(0, at), target: r.key.slice(at + 1), altId: r.value }
+    })
+  }
+
   /** 选版本；null = 清掉这一层的选择。 */
   setChoice(level: ChoiceLevel, targetKey: string, altId: string | null): Promise<void> {
     return this.put('choice', `${level}|${targetKey}`, altId)
