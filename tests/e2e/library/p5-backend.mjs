@@ -138,6 +138,23 @@ const result = await page.evaluate(async () => {
   const dir1 = await lib.directory.get('cn')
   const dir2 = await lib.directory.refresh('cn')
   r.b14 = { before: dir1.books.length, after: dir2.books.length, errors: dir2.errors, adv: dir2.adventures.length }
+  // ---- B-09 全部表格 ----
+  const t0 = performance.now()
+  const emb = await lib.service.query('cn-official', 'embeddedTable', {})
+  r.b09_ms = Math.round(performance.now() - t0)
+  const byParent = {}
+  for (const x of emb) byParent[x.item.parent.prop] = (byParent[x.item.parent.prop] || 0) + 1
+  const unnamed = emb.filter((x) => x.item.name.startsWith('「'))
+  r.b09 = { total: emb.length, unnamed: unnamed.length, byParent, sampleNamed: emb.filter((x) => !x.item.name.startsWith('「')).slice(0, 4).map((x) => x.item.name), sampleUnnamed: unnamed.slice(0, 4).map((x) => x.item.name), hashUnique: new Set(emb.map((x) => x.hash)).size === emb.length, noParent: emb.filter((x) => !x.item.parent?.hash).length, withSource: emb.filter((x) => x.source).length }
+  r.b09_skipped = (await lib.service.parsed('cn-official', 'embeddedTable')).skipped
+  const cats = await lib.service.categories('cn-official')
+  r.b09_cats = { embeddedTable: cats.embeddedTable, table: cats.table }
+  // 掷表：嵌入的表也能掷
+  const rollable = emb.find((x) => x.item.colLabels?.[0] && /d\d+/.test(String(x.item.colLabels[0])))
+  r.b09_roll = rollable && { name: rollable.item.name, res: (await (await lib.service.frameOf('cn')).call('tableRoll', rollable.item, { points: Array(10).fill(1) })).status }
+  // 第二次读走缓存
+  const t1 = performance.now(); await lib.service.query('cn-official', 'embeddedTable', {}); r.b09_cachedMs = Math.round(performance.now() - t1)
+  const bySrc = await lib.service.query('cn-official', 'embeddedTable', { source: 'PHB' }); r.b09_phb = bySrc.length
   return r
 })
 await writeFile(`${work}/p5-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))

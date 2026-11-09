@@ -8,6 +8,7 @@ import { precachePlan } from './plan'
 import { commitOf, type SourceEntry } from './sources'
 import { precomputeSource, type PrecomputeReport } from './cache'
 import { DocumentStore } from './documents'
+import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 
 export interface StorageEstimate {
   persisted: boolean | null
@@ -43,6 +44,8 @@ export interface InstallReport {
   index: Record<string, { parsed: number; index: number; onlyParsed: number; onlyIndex: number; samplesOnlyParsed: string[]; samplesOnlyIndex: string[] }>
   /** 文档类数据（规则速查、城主屏参考）：作者当小册子读，不走条目加载器（P5 B-02）。 */
   documents?: { count: number; error?: string }
+  /** 埋在条目正文里的表格（作者 table 类别之外的），提出来存成独立类别（P5 B-09）。 */
+  embeddedTables?: { count: number; error?: string }
   /** 装完作者数据后算好的离线缓存（配图描述、屏蔽标记、搜索索引）。 */
   precompute?: PrecomputeReport
   /** 用户取消了（下载到一半停下；已下载的文件留着，再装就是续传）。 */
@@ -203,6 +206,16 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
       report.documents = { count: (await new DocumentStore(db).build(source)).length }
     } catch (e) {
       report.documents = { count: 0, error: msg(e) }
+    }
+
+    // 埋在条目里的表格（B-09）：失败只记在报告里，不让整套安装失败
+    try {
+      onProgress?.({ stage: 'embedded-tables', done: 0, total: 0 })
+      const built = await new EmbeddedTables(db, async () => frame).build(source.id, { frame, props: report.parse.props })
+      report.parse.props[EMBEDDED_PROP] = { count: built.items.length, noHash: 0 }
+      report.embeddedTables = { count: built.items.length }
+    } catch (e) {
+      report.embeddedTables = { count: 0, error: msg(e) }
     }
 
     // 第 6 层：把看资料 / 搜索要用的东西一次算好存库（S1）。

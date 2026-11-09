@@ -2,6 +2,7 @@
 // 只交作者对象和作者搜索结果，不挑字段、不改名。凡是要理解字段含义的判断（屏蔽、背景描述、英文编号、
 // 搜索匹配与排序）都在小窗里由作者函数做；插件这边只读库、对编号、按来源分组。
 import { addGeneratedPairs } from './english-generated'
+import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import { ParsedMemo } from './parsed-memo'
 import { parseBrew, type BrewParseReport } from './brew'
 import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
@@ -31,9 +32,11 @@ export class LibraryService {
   private readonly pairsCache = new Map<string, Promise<EnglishPairs>>()
   private readonly searchLoaded = new Map<string, string>()
   private readonly parsedMemo: ParsedMemo
+  private readonly embedded: EmbeddedTables
 
   constructor(private readonly opts: LibraryServiceOptions) {
     this.parsedMemo = new ParsedMemo(opts.db)
+    this.embedded = new EmbeddedTables(opts.db, (cs) => this.frame(cs))
   }
 
   /** 每套作者程序只开一个小窗，屏蔽表、搜索索引都在这个小窗里，开关书也经它改，状态才一致。 */
@@ -73,6 +76,7 @@ export class LibraryService {
   }
 
   async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
+    if (prop === EMBEDDED_PROP) return getSource(sourceId).kind === 'official' ? this.embedded.ensure(sourceId) : { items: [], hashes: [], sources: [] } // 埋在条目里的表格（B-09）
     const value = await this.parsedMemo.get(parsedKey(sourceId, prop))
     const rec = value === undefined ? undefined : { value }
     // 自制只存有内容的类别：解析记录在、这一类没出错，就是"这一类没有条目"
@@ -99,6 +103,7 @@ export class LibraryService {
 
   /** 按类别（、来源）取作者对象。默认去掉被屏蔽的；includeExcluded 时一并返回并带标记。 */
   async query(sourceId: string, prop: string, { source, includeExcluded = false }: { source?: string; includeExcluded?: boolean } = {}): Promise<QueryRow[]> {
+    if (prop === EMBEDDED_PROP) { const p = await this.parsed(sourceId, prop); return p.items.flatMap((item, i) => (source === undefined || p.sources[i]?.toLowerCase() === source.toLowerCase() ? [{ hash: p.hashes[i], source: p.sources[i], excluded: false, item }] : [])) }
     await this.ensure(sourceId, { prop, excluded: true })
     const p = await this.parsed(sourceId, prop)
     const excludedOf = await cachedExcluded(this.opts.db, sourceId, prop)
@@ -350,8 +355,6 @@ export class LibraryService {
     await this.opts.db.derived.put({ key: `audit:english:${s.id}`, fingerprint: `${commitOf(s)}+${commitOf(getSource(pairs.pair))}`, value: out, savedAt: Date.now() })
     return out
   }
-
-  // ---- 体检 ----
 
   private async stored<T>(key: string, fingerprint: (fp: string) => boolean): Promise<StoredReport<T> | undefined> {
     const rec = await this.opts.db.derived.get(key)
