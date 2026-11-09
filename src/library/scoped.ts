@@ -15,6 +15,8 @@ import {
 import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
 import { chooseVersion, type Alternative, type Chosen } from './versions'
 import { hashValue } from '../core/hash'
+import type { BookDirectory } from './directory'
+import { attachShelf, directoryRows, groupShelf, type ShelfGroup, type ShelfInfo } from './shelf'
 import type { KernelOverride } from '../schemas/kernel'
 
 export interface VersionInfo extends Chosen {
@@ -63,13 +65,15 @@ export interface CatalogRow {
   view: { visible: boolean; reason: ViewReason }
   /** 这本书里有几条挂了备选。 */
   alternatives: number
+  /** 作者书目字段（分组、出版日期、冒险等级 / 故事线、封面链接…）；catalog(c, { remote: true }) 时才有。 */
+  shelf?: ShelfInfo | null
 }
 
 export class ScopedLibrary {
   readonly manage: ManageStore
   private readonly editionCache = new Map<string, EditionInfo>()
 
-  constructor(private readonly lib: LibraryService, private readonly db: LibraryDatabase) {
+  constructor(private readonly lib: LibraryService, private readonly db: LibraryDatabase, private readonly directory?: BookDirectory) {
     this.manage = new ManageStore(db)
   }
 
@@ -270,29 +274,54 @@ export class ScopedLibrary {
   }
 
   /** 书目：本套程序已装的每本书 / 每个自制来源 / 每本冒险，各自的归属、在不在本战役、条数、备选数。 */
-  async catalog(c: CampaignLibrary): Promise<CatalogRow[]> {
+  /**
+   * 书目行。默认只列已装好的数据集；remote = true 时没装的官方数据集也列（读作者书目文件，必要时只联网取那几个小文件），
+   * 并给每行带上作者书目字段 shelf。联网取不到时抛错，由调用方显示原因。
+   */
+  async catalog(c: CampaignLibrary, { remote = false }: { remote?: boolean } = {}): Promise<CatalogRow[]> {
+    if (remote && !this.directory) throw new Error('没有接书目入口')
     const assigns = await this.manage.assignments()
     const altMap = await this.alts(c.codeSet)
     const altBySource = new Map<string, number>()
     for (const r of altMap.values()) if (r.source) altBySource.set(r.source.toLowerCase(), (altBySource.get(r.source.toLowerCase()) ?? 0) + 1)
     const rows: Array<Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view'>> = []
+    const known: Record<string, { full: string; abv: string; edition: EditionInfo }> = {}
     for (const set of this.setsOf(c.codeSet)) {
-      if (!(await this.installed(set))) continue
+      const isInstalled = await this.installed(set)
+      const rec = remote && set.kind === 'official' ? await this.directory!.get(c.codeSet) : null
+      if (rec) Object.assign(known, rec.sources)
+      if (!isInstalled) {
+        if (rec) for (const r of directoryRows(set.id, rec)) rows.push({ ...r, alternatives: altBySource.get(r.source.toLowerCase()) ?? 0 })
+        continue
+      }
       for (const [source, count] of Object.entries(await this.sourceCounts(set.id))) {
-        rows.push({ kind: 'book', set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0 })
+        const row = { kind: 'book' as const, set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0 }
+        rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
       }
       if (set.kind === 'official') {
-        for (const a of await this.adventures(set)) rows.push({ kind: 'adventure', set: set.id, source: a.source, id: a.id, count: 0, downloaded: a.downloaded, alternatives: 0 })
+        for (const a of await this.adventures(set)) {
+          const row = { kind: 'adventure' as const, set: set.id, source: a.source, id: a.id, count: 0, downloaded: a.downloaded, alternatives: 0 }
+          rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
+        }
       }
     }
     const sources = [...new Set(rows.map((r) => r.source))]
-    const names = sources.length ? await (await this.lib.frameOf(c.codeSet)).call('sourceNames', sources) : {}
-    const eds = await this.editions(c.codeSet, sources)
+    // 作者书目已经给过全名 / 缩写 / 版本归类的来源不再问小窗（没装的数据集本地小窗也读不了）
+    const rest = sources.filter((s) => !known[s])
+    const names = rest.length ? await (await this.lib.frameOf(c.codeSet)).call('sourceNames', rest) : {}
+    const eds = rest.length ? await this.editions(c.codeSet, rest) : {}
     return rows.map((r) => {
       const unit = sourceUnit(r.source)
-      const m = membershipOf(undefined, assigns.get(unit), autoAssignment(eds[r.source]))
-      return { ...r, name: names[r.source]?.full ?? r.source, abv: names[r.source]?.abv ?? r.source, edition: eds[r.source] ?? null, membership: m, view: viewOf(c, { entry: unit, source: unit }, m) }
+      const edition = known[r.source]?.edition ?? eds[r.source] ?? null
+      const m = membershipOf(undefined, assigns.get(unit), autoAssignment(edition ?? undefined))
+      return { ...r, name: known[r.source]?.full ?? names[r.source]?.full ?? r.source, abv: known[r.source]?.abv ?? names[r.source]?.abv ?? r.source, edition, membership: m, view: viewOf(c, { entry: unit, source: unit }, m) }
     })
+  }
+
+  /** 书架：书目行按作者的分组表排好（BE-7）。没装官方数据也能列；联网取不到时抛错。 */
+  async shelf(c: CampaignLibrary): Promise<ShelfGroup[]> {
+    const rows = await this.catalog(c, { remote: true })
+    return groupShelf(rows, (await this.directory!.get(c.codeSet)).groups)
   }
 
   /** 每个来源在这个数据集里有几条（数解析结果；按解析报告的保存时间缓存，重装、改自制后自动重数）。 */

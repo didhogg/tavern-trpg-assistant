@@ -22,6 +22,7 @@ import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
 import { getSource } from '../library/sources'
 import { TrpgError } from './errors'
 import { CampaignStarter } from './start-campaign'
+import { BookDirectory } from '../library/directory'
 
 export interface LibraryBackend {
   db: LibraryDatabase
@@ -80,7 +81,12 @@ export function createBackend(opts: BackendOptions): Backend {
   }
   const queue = new PrecomputeQueue(async (codeSet) => precompute?.run({ codeSet }) ?? null)
   const service = new LibraryService({ db, openFrame, onDataChanged: async (codeSet) => queue.trigger(codeSet) })
-  const scoped = new ScopedLibrary(service, db)
+  // 书目（BE-7）：没装官方数据时用允许联网的一次性小窗读作者书目文件；已装好的用现成本地小窗
+  const directory = new BookDirectory({
+    db, localFrame: (codeSet) => service.frameOf(codeSet),
+    networkFrame: (codeSet, kvScope) => startAuthorFrame({ codeSet, pluginRoot, container: container(), handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => true, kvScope }) }),
+  })
+  const scoped = new ScopedLibrary(service, db, directory)
   const custom = new CustomLibrary(service, scoped, db)
   const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet),
     precompute: (setId, signal, onProgress) => runPrecompute([getSource(setId).codeSet], signal, onProgress) })

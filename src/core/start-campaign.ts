@@ -6,7 +6,8 @@
 // 免得第一次读档就提示“资料换过版本”。
 import type { LibraryDatabase } from '../library/db'
 import type { DownloadTasks, TaskState } from '../library/tasks'
-import type { CatalogRow, ScopedLibrary } from '../library/scoped'
+import type { ScopedLibrary } from '../library/scoped'
+import type { ShelfGroup } from '../library/shelf'
 import { defaultCampaignLibrary, ruleScopes, type CampaignLibrary, type ScopeDef } from '../library/scopes'
 import { SOURCES, officialSourceOf } from '../library/sources'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelDataVersion } from '../schemas/kernel'
@@ -50,9 +51,10 @@ export interface WizardOptions {
   defaultScopes: string[]
   /** 各语言官方资料装好没；中文战役也需要英文资料（结算内核只认英文原件）。 */
   data: DataSetState[]
-  /** 选定语言的资料装好之前，书目和冒险是空的——向导提示“选完范围后在后台下载”。 */
-  books: CatalogRow[]
-  adventures: CatalogRow[]
+  /** 书目与冒险，按作者的分组表排好（核心 / 官方出版物 / 设定集…）；没装官方数据也能列，每行 downloaded 标有没有下。 */
+  shelf: ShelfGroup[]
+  /** 书目取不到（联网失败等）的原因；有值时 shelf 为空，向导显示原因和重试，不卡住。 */
+  shelfError: string | null
   library: CampaignLibrary
 }
 
@@ -115,15 +117,16 @@ export class CampaignStarter {
     for (const s of SOURCES.filter((it) => it.kind === 'official')) {
       data.push({ codeSet: s.codeSet, lang: s.lang, setId: s.id, installed: await this.installed(s.id), task: this.runningTask(s.id) })
     }
-    const own = data.find((d) => d.codeSet === codeSet)
-    const rows = own?.installed ? await scoped.catalog(library) : []
+    let shelf: ShelfGroup[] = []
+    let shelfError: string | null = null
+    try { shelf = await scoped.shelf(library) } catch (e) { shelfError = msg(e) }
     return {
       rule: { id: rule.id, name: rule.name },
       scopes: await scoped.scopes(),
       defaultScopes: [...ruleScopes(ruleId).defaultScopes],
       data,
-      books: rows.filter((r) => r.kind === 'book'),
-      adventures: rows.filter((r) => r.kind === 'adventure'),
+      shelf,
+      shelfError,
       library,
     }
   }

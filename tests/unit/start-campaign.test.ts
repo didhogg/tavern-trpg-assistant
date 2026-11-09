@@ -31,7 +31,7 @@ function fakeLibrary() {
     installed, pending, started,
     library: {
       db: { sets: { get: async (id: string) => (installed.has(id) ? { id, status: 'installed' } : undefined) } },
-      scoped: { activeOverrides: async () => [], scopes: async () => [], catalog: async () => [] },
+      scoped: { activeOverrides: async () => [], scopes: async () => [], shelf: async () => [] },
       tasks,
       dataVersion: async () => ({ official: installed.size ? 'v1' : '', brews: {} }),
     },
@@ -98,7 +98,7 @@ describe('startCampaign', () => {
 })
 
 describe('wizardOptions', () => {
-  it('规则范围默认值、各语言资料状态；资料没装时书目为空', async () => {
+  it('规则范围默认值、各语言资料状态；资料没装时书架来自书目入口', async () => {
     await withDb(async (db) => {
       const { fake, starter } = await build(db)
       const o = await starter.wizardOptions('dnd5e2014', 'cn')
@@ -106,7 +106,8 @@ describe('wizardOptions', () => {
       expect(o.defaultScopes.length).toBeGreaterThan(0)
       expect(o.library.scopes).toEqual(o.defaultScopes)
       expect(o.data.every((d) => !d.installed)).toBe(true)
-      expect(o.books).toEqual([])
+      expect(o.shelf).toEqual([])
+      expect(o.shelfError).toBeNull()
       fake.installed.add('cn-official')
       expect((await starter.wizardOptions('dnd5e2014', 'cn')).data.find((d) => d.codeSet === 'cn')?.installed).toBe(true)
     })

@@ -4,6 +4,7 @@ import { A, hashOf, init, sourceOf } from './author'
 import { brewAddFiles, brewAddUrl, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch, variantTemplateNames, versionOrder } from './english-commands'
 import { detail, excludedFlags, search, searchIndexDump, searchIndexLoad, searchSettings } from './read-commands'
+import { directory } from './directory-commands'
 import { diceRead, diceRoll, diceStats, diceTag, tableRow } from './dice-commands'
 import { brewDocIndex, brewExport, brewItemsByHash, corpusFile, brewRaw, converters, convertText, editableAddDependencies, editableDoc, editableEnsureSource, editablePut, editableRemove, editionOf, entryTemplate, excludeList, fluffOf, fluffOfMany, sourceNames } from './edit-commands'
 
@@ -107,5 +108,5 @@ export async function frameErrors(): Promise<string[]> {
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddFiles, brewDelete, brewPull, parseBrewProp, rawHashes,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, directory }
 export type CommandName = keyof typeof COMMANDS
