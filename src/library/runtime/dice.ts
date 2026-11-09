@@ -3,10 +3,11 @@
 import { LibraryDatabase } from '../db'
 import { FileProvider } from '../files'
 import type { DiceRead, DiceRollResult } from './frame/dice-commands'
+import type { TableRollOptions, TableRollResult } from './frame/table-roll-commands'
 import { libraryHandlers } from './handlers'
 import { startAuthorFrame, type AuthorFrame } from './host'
 
-export type { DiceRead, DiceRollResult }
+export type { DiceRead, DiceRollResult, TableRollOptions, TableRollResult }
 
 /** 骰盘用到的两件事；测试可换成别的实现。 */
 export interface DiceBackend {
@@ -38,4 +39,10 @@ function frame(): Promise<AuthorFrame> {
 export const authorDice: DiceBackend = {
   read: async (text) => (await frame()).call('diceRead', text),
   roll: async (formula, points) => (await frame()).call('diceRoll', formula, points),
+}
+
+/** 随机表掷骰（P5 B-06）：表头骰式 → 问调整值 → 掷 → 找行 → 行内骰子，一次做完；用同一个作者骰子小窗。 */
+export const authorTables = {
+  roll: async (table: unknown, opts: TableRollOptions = {}): Promise<TableRollResult> => (await frame()).call('tableRoll', table, opts),
+  row: async (table: unknown, value: number): Promise<{ rollable: boolean; mode: unknown; index: number | null }> => (await frame()).call('tableRow', table, value),
 }

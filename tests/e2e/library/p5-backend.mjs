@@ -61,6 +61,40 @@ const result = await page.evaluate(async () => {
     dice: await tag('@dice', '1d6'),
     missing: await tag('@spell', '没有这个法术|PHB'),
   }
+  // ---- B-06 表格掷骰后端 ----
+  const frame = await lib.service.frameOf('cn')
+  const tables = (await lib.service.query('cn-official', 'table', {})).map((x) => x.item)
+  const group = (await lib.service.query('cn-official', 'tableGroup', {})).flatMap((x) => x.item.tables ?? [])
+  const stat = { rollable: 0, notRollable: 0, complete: 0, needsInput: 0, choose: 0, error: [], missing: 0, noRow: 0, nameGen: 0, nameGenCols: [], inlineRolled: 0, variable: [] }
+  const doOne = async (t) => {
+    const res = await frame.call('tableRoll', t, { points: Array(40).fill(1) })
+    if (res.status === 'not-rollable') { stat.notRollable++; return }
+    stat.rollable++
+    if (res.status === 'needs-input') { stat.needsInput++; stat.variable.push(t.name); return }
+    if (res.status === 'choose') { stat.choose++; stat.variable.push(t.name); return }
+    if (res.status === 'complete') {
+      stat.complete++
+      if (res.rolls.some((x) => x.rowIndex === null)) stat.noRow++
+      if (res.nameGenerator) { stat.nameGen++; stat.nameGenCols.push(res.rolls.length) }
+      if (res.inline.length) stat.inlineRolled++
+      return
+    }
+    if (res.status === 'missing') { stat.missing++; return }
+    stat.error.push(`${t.name}: ${JSON.stringify(res).slice(0, 120)}`)
+  }
+  for (const t of [...tables, ...group]) await doOne(t)
+  r.b06_stat = { ...stat, error: stat.error.slice(0, 5), nErrors: stat.error.length, nameGenCols: [...new Set(stat.nameGenCols)] }
+  const find = (name, source) => tables.find((x) => x.name === name && x.source === source)
+  const kid = find('补充表格; 童年居所', 'XGE')
+  r.b06_kid = {
+    ask: await frame.call('tableRoll', kid, {}),
+    low: await frame.call('tableRoll', kid, { promptValues: [0], points: [1] }),
+    high: await frame.call('tableRoll', kid, { promptValues: [1000], points: [50] }),
+    bad: await frame.call('tableRoll', kid, { promptValues: [], points: [1] }),
+    row: await frame.call('tableRow', kid, 5000),
+  }
+  const siege = find('围攻之中; 丧尸围攻遭遇', 'VRGR')
+  r.b06_siege = { choose: (await frame.call('tableRoll', siege, {})).status, pick: await frame.call('tableRoll', siege, { formulaIndex: 1 }).then((x) => ({ status: x.status, max: x.prompts?.[0]?.max })), done: await frame.call('tableRoll', siege, { formulaIndex: 0, promptValues: [2], points: [6] }).then((x) => ({ status: x.status, total: x.rolls?.[0]?.total, row: x.rolls?.[0]?.rowIndex })) }
   return r
 })
 await writeFile(`${work}/p5-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))

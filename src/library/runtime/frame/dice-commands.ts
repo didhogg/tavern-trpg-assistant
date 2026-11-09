@@ -105,17 +105,3 @@ export async function diceRoll(formula: string, points?: number[]): Promise<Dice
     A.RollerUtil._randomise = original
   }
 }
-
-/** 表格：作者判断能否按点数掷（getAutoConvertedRollMode），以及某个点数落在哪一行（作者 getRollableRow 规范行首）。 */
-export async function tableRow(table: any, value: number): Promise<{ rollable: boolean; mode: unknown; index: number | null }> {
-  await init()
-  const mode = A.Renderer.table.getAutoConvertedRollMode(table)
-  if (!mode) return { rollable: false, mode, index: null }
-  const index = (table.rows ?? []).findIndex((row: any) => {
-    const roll = A.Renderer.getRollableRow(row)?.[0]?.roll
-    if (!roll) return false
-    const v = roll.pad && value === 100 ? 0 : value
-    return roll.exact != null ? roll.exact === v : roll.min <= v && v <= roll.max
-  })
-  return { rollable: true, mode, index: index >= 0 ? index : null }
-}
