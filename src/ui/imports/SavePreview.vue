@@ -11,6 +11,7 @@ import { errorText, formatTime } from '../format'
 import Checkbox from '../kit/Checkbox.vue'
 import Segmented from '../kit/Segmented.vue'
 import { askConfirm } from '../kit/confirm'
+import { openImportResult } from './openImport'
 
 const props = defineProps<{ rec: RecognizedSaveFile }>()
 const app = useAppStore()
@@ -50,11 +51,10 @@ async function doImport(): Promise<void> {
   working.value = true
   try {
     const s = app.svc()
-    const result = await importSaves({ db: s.db, campaign: s.campaign, now: s.now, hasRule: (id) => s.rules.has(id) }, props.rec, { owner, selectedIds: selected.value, mode: isBackup.value ? mode.value : undefined })
+    const result = await importSaves({ db: s.db, campaign: s.campaign, now: s.now, hasRule: (id) => s.rules.has(id), library: s.backend.transfer.library, checkRefs: s.backend.transfer.checkRefs }, props.rec, { owner, selectedIds: selected.value, mode: isBackup.value ? mode.value : undefined })
     await campaign.switchOwner(owner)
     await saves.refresh()
-    toast.success(`已导入 ${result.imported} 个存档`)
-    modal.close(true)
+    openImportResult(result)
   } catch (error) {
     console.error('[trpg-assistant] 导入存档失败', error)
     toast.error(`导入失败：${errorText(error)}`)
@@ -73,7 +73,7 @@ async function doImport(): Promise<void> {
     </div>
     <ul class="trpg-list">
       <li v-for="item in items" :key="item.save.id" class="trpg-row">
-        <Checkbox :model-value="selected.includes(item.save.id)" :disabled="!item.selectable || (isBackup && mode === 'overwrite')" @update:model-value="toggle(item.save.id, $event)">
+        <Checkbox :model-value="selected.includes(item.save.id)" :label="item.save.name" :disabled="!item.selectable || (isBackup && mode === 'overwrite')" @update:model-value="toggle(item.save.id, $event)">
           <span class="trpg-row__title">{{ item.save.name }}</span>
         </Checkbox>
         <span class="trpg-row__meta">{{ ruleName(item.save.ruleId) }} · {{ formatTime(item.save.updatedAt) }}<template v-if="item.reason"> · {{ item.reason }}（不可选）</template></span>

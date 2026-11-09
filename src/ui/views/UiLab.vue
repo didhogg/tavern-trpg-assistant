@@ -8,6 +8,7 @@ import { askConfirm } from '../kit/confirm'
 import MoreMenu from '../kit/MoreMenu.vue'
 import SelectField from '../kit/SelectField.vue'
 import Segmented from '../kit/Segmented.vue'
+import Checkbox from '../kit/Checkbox.vue'
 import Combobox from '../kit/Combobox.vue'
 import Switch from '../kit/Switch.vue'
 import TagPill from '../kit/TagPill.vue'
@@ -59,7 +60,7 @@ function mark(id: string, title: string, status: 'pass' | 'fail'): void {
       </div>
       <div class="lab__row">
         <Segmented v-model="segment" label="分段按钮" :options="[{ value: 'a', label: '优势' }, { value: 'b', label: '普通' }, { value: 'c', label: '劣势' }]" />
-        <label class="trpg-check"><input v-model="checked" type="checkbox" /> 勾选框测试</label>
+        <Checkbox v-model="checked" label="勾选框测试">勾选框测试</Checkbox>
         <input v-model="typed" class="trpg-input" type="text" placeholder="输入测试：中文 / English" />
       </div>
       <div class="lab__row">

@@ -91,6 +91,16 @@ export function defaultCampaignLibrary(rule: string, codeSet: string): CampaignL
   return { rule, codeSet, scopes: [...ruleScopes(rule).defaultScopes], include: [], exclude: [], choices: {} }
 }
 
+/**
+ * 向导里勾选 / 取消一本书（一个来源）：只记用户明确表态的，加入和排除互斥；
+ * 取消勾选 = 排除，勾选 = 加入（排除说了算 > 加入 > 范围，见下面的 viewOf）。
+ */
+export function chooseSource(c: Pick<CampaignLibrary, 'include' | 'exclude'>, source: string, visible: boolean): Pick<CampaignLibrary, 'include' | 'exclude'> {
+  const unit = sourceUnit(source)
+  const rest = (list: string[]): string[] => list.filter((u) => u !== unit)
+  return visible ? { include: [...rest(c.include), unit], exclude: rest(c.exclude) } : { include: rest(c.include), exclude: [...rest(c.exclude), unit] }
+}
+
 export type ViewReason = 'excluded' | 'included' | 'global' | 'scope' | 'out-of-scope' | 'unclassified'
 
 /** 在不在本战役：排除说了算 > 额外加入 > 全局通用 > 所选范围 > 范围外 / 未归类。 */

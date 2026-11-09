@@ -11,7 +11,8 @@ import { libraryDataVersion, scopedCurrentOverrides, scopedRefChecker } from '..
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
 import { ScopedLibrary } from '../library/scoped'
-import type { CampaignLibrary } from '../library/scopes'
+import { defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
+import type { BackupLibraryAdapter } from './transfer/exporter'
 import { CustomLibrary } from '../library/custom'
 import { LibraryService } from '../library/service'
 import { DownloadTasks } from '../library/tasks'
@@ -21,6 +22,7 @@ import { KernelPrecompute } from '../rules/kernel/precompute'
 import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
 import { getSource } from '../library/sources'
 import { TrpgError } from './errors'
+import type { ImportDeps } from './transfer/importer'
 import { CampaignStarter } from './start-campaign'
 import { BookDirectory } from '../library/directory'
 import { CatalogPrefetch, DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
@@ -50,6 +52,8 @@ export interface Backend {
   kernelSave: KernelSaveService
   /** 开局向导：wizardOptions / startCampaign（缺的资料和冒险在【库】后台下载）。 */
   starter: CampaignStarter
+  /** 导出 / 导入存档文件要带的【库】那一半：完整备份里的自制 / 范围 / 房规，和导入后"依赖还在不在"的核对（P4 界面接线）。 */
+  transfer: { library: BackupLibraryAdapter; checkRefs: NonNullable<ImportDeps['checkRefs']> }
 }
 
 export interface BackendOptions {
@@ -125,5 +129,9 @@ export function createBackend(opts: BackendOptions): Backend {
   const prefetch = new CatalogPrefetch({ files, directory, codeSets: DEFAULT_PREFETCH_CODE_SETS })
   const library: LibraryBackend = { db, files, service, scoped, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
-  return { library, kernel, kernelSave, starter }
+  const transfer: Backend['transfer'] = {
+    library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },
+    checkRefs: (refs) => scoped.fetch(defaultCampaignLibrary(opts.rules.list()[0]?.id ?? 'dnd5e2014', DEFAULT_PREFETCH_CODE_SETS[0]), refs),
+  }
+  return { library, kernel, kernelSave, starter, transfer }
 }

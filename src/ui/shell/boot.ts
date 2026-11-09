@@ -9,6 +9,8 @@ import type { StContext } from '../../host/types'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useDiceStore } from '../../stores/dice'
+import { useDownloadsStore } from '../../stores/downloads'
+import { useSavesStore } from '../../stores/saves'
 import { useToastStore } from '../../stores/toast'
 
 /** 启动：打开数据库、载入当前聊天的战役数据，并跟随聊天切换。 */
@@ -17,6 +19,8 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
   const toast = useToastStore(pinia)
   const campaign = useCampaignStore(pinia)
   const dice = useDiceStore(pinia)
+  const downloads = useDownloadsStore(pinia)
+  const saves = useSavesStore(pinia)
   try {
     const services = createServices()
     app.setServices(services)
@@ -32,12 +36,17 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
     return () => undefined
   }
 
-  // 当前存档的名称与时间：存档切换、保存后重新读取
+  // 当前存档的名称与时间、战役名：存档切换、保存后重新读取
   const stopSave = watch(
-    () => [campaign.workspace?.currentSaveId, campaign.workspace?.savedHash],
-    () => void campaign.refreshCurrentSave().catch((error: unknown) => console.error('[trpg-assistant] 读取当前存档信息失败', error)),
+    () => [campaign.workspace?.currentSaveId, campaign.workspace?.savedHash, campaign.owner?.ownerKey],
+    () => {
+      void campaign.refreshCurrentSave().catch((error: unknown) => console.error('[trpg-assistant] 读取当前存档信息失败', error))
+      void saves.refreshView().catch((error: unknown) => console.error('[trpg-assistant] 读取战役视图失败', error))
+    },
     { immediate: true },
   )
+  // 资料下载进度（侧栏库标签的小环）：定时读 library.tasks.list()
+  const stopDownloads = downloads.start(() => app.svc().backend.library.tasks.list())
   // S5：进入有结算内核的战役后开小窗；切换聊天/读档时关旧开新；没有战役/未绑定不开。
   let kernelSeq = 0
   const reconcileKernel = (): void => {
@@ -82,6 +91,7 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
   return () => {
     stop()
     stopSave()
+    stopDownloads()
     stopKernel()
     stopPrefetch()
     off()

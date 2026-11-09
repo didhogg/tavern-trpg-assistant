@@ -63,7 +63,7 @@ export async function probeSuite(page, label, { width, height }) {
   check(`[${label}] 输入框读写通过`, /写入、读回、恢复都正常/.test(await diag.innerText()))
   check(`[${label}] IndexedDB 探针运行`, /IndexedDB 第 \d+ 次启动读写正常/.test(await diag.innerText()))
 
-  const box = await page.locator('.trpg-check input').first().boundingBox()
+  const box = await page.locator('.trpg-check__box').first().boundingBox()
   check(`[${label}] 样式隔离（勾选框 18×18）`, box && Math.round(box.width) === 18 && Math.round(box.height) === 18, JSON.stringify(box))
 
   // 下拉不被裁切：宽屏先把窗口拖到视口底部，再打开下拉

@@ -91,13 +91,36 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result.save
   }
 
+  /** 经开局向导的后端入口建战役：先把未写入的改动写掉，建好后结果直接成为当前状态（不能再 flush 旧数据覆盖它）。 */
+  async function startWith(run: (s: Services) => Promise<{ workspace: Workspace; save: SaveSlot; finished: Promise<{ errors: string[] }> }>): Promise<{ save: SaveSlot; finished: Promise<{ errors: string[] }> }> {
+    guardWrite()
+    if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '请先在酒馆中打开一个聊天')
+    await flush()
+    const result = await run(svc())
+    adopt(result.workspace)
+    return { save: result.save, finished: result.finished }
+  }
+
   async function save(): Promise<boolean> {
     guardWrite()
     if (!owner.value) return false
     await flush()
-    const result = await svc().campaign.saveCurrent(owner.value.ownerKey)
+    // 战役绑了结算内核：走内核存档服务（保存前现取数据版本与房规覆盖）；没绑就是普通保存
+    const s = svc()
+    const bound = !!workspace.value?.data.kernel
+    const result = bound ? await s.backend.kernelSave.save(owner.value.ownerKey) : await s.campaign.saveCurrent(owner.value.ownerKey)
     adopt(result.workspace)
     return result.changed
+  }
+
+  /** 读档后"采用现在的"：把当前数据版本 / 房规写进战役并存成新分支（旧存档不变）。 */
+  async function adoptCurrentData(): Promise<SaveSlot> {
+    guardWrite()
+    if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
+    await flush()
+    const { save } = await svc().backend.kernelSave.adoptCurrent(owner.value.ownerKey)
+    adopt(await svc().campaign.getWorkspace(owner.value.ownerKey))
+    return save
   }
 
   async function branch(name?: string): Promise<SaveSlot> {
@@ -133,5 +156,5 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result
   }
 
-  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, save, branch, load }
+  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, startWith, save, branch, load, adoptCurrentData }
 })

@@ -19,10 +19,10 @@ export async function gotoPage(page, name) {
   await settle(page, 150)
 }
 
-/** 打开设置 › 诊断。 */
+/** 打开设置 › 诊断（先回设置首页再进）。 */
 export async function openDiagnostics(page) {
   await gotoPage(page, '设置')
-  await page.locator('.trpg-content').getByRole('button', { name: /^打开/ }).first().click()
+  await page.getByTestId('settings-diag').click()
   await page.getByTestId('diagnostics').waitFor()
 }
 

@@ -17,12 +17,12 @@ async function layoutTests(page, label, { width, height }) {
   if (narrow) {
     check(`[${label}] 窄屏窗口铺满视口`, Math.round(box.width) === width && Math.round(box.height) === height, JSON.stringify(box))
     check(`[${label}] 窄屏底部标签栏 56px，标题栏 48px`, Math.round((await page.locator('.trpg-tabs').boundingBox()).height) === 56 && Math.round((await page.locator('.trpg-head').boundingBox()).height) === 48)
-    check(`[${label}] 窄屏只有首页、设置两个标签`, (await page.locator('.trpg-tab').count()) === 2)
+    check(`[${label}] 窄屏三个标签：首页、库、设置`, (await page.locator('.trpg-tab').count()) === 3)
     const tabs = await page.locator('.trpg-tab').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))
     check(`[${label}] 标签按钮触控高度 ≥44px`, tabs.every((h) => h >= 44), JSON.stringify(tabs))
   } else {
     check(`[${label}] 宽屏默认窗口 960×640`, Math.round(box.width) === 960 && Math.round(box.height) === 640, JSON.stringify(box))
-    check(`[${label}] 宽屏侧栏 176px，只有首页、设置`, Math.round((await page.locator('.trpg-side').boundingBox()).width) === 176 && (await page.locator('.trpg-nav').count()) === 2)
+    check(`[${label}] 宽屏侧栏 200px，三个入口：首页、库、设置`, Math.round((await page.locator('.trpg-side').boundingBox()).width) === 200 && (await page.locator('.trpg-nav').count()) === 3)
     const navs = await page.locator('.trpg-nav').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))
     check(`[${label}] 侧栏按钮触控高度 ≥44px`, navs.every((h) => h >= 44), JSON.stringify(navs))
     // 缩放到中宽
@@ -73,16 +73,17 @@ async function layoutTests(page, label, { width, height }) {
 async function switchTests(page, label) {
   const sw = page.getByRole('switch', { name: '演示开关' })
   await sw.scrollIntoViewIfNeeded()
-  const thumb = sw.locator('.trpg-switch__thumb')
-  const offset = async () => (await thumb.boundingBox()).x - (await sw.boundingBox()).x
-  check(`[${label}] 开关默认关：圆钮在左（○━）`, (await sw.getAttribute('aria-checked')) === 'false' && (await offset()) < 8, `x=${await offset()}`)
+  const on = async () => (await sw.getAttribute('aria-checked')) === 'true' && (await sw.getAttribute('data-on')) === 'true'
+  const bg = () => sw.evaluate((el) => getComputedStyle(el).backgroundColor)
+  const off = await bg()
+  check(`[${label}] 开关默认关：轨道是灰色（控件边线色）`, (await sw.getAttribute('aria-checked')) === 'false' && (await sw.getAttribute('data-on')) === 'false', off)
   await sw.click()
   await settle(page)
-  check(`[${label}] 点击后开：圆钮在右（━●），状态文字同步`, (await sw.getAttribute('aria-checked')) === 'true' && (await offset()) > 14 && (await page.getByTestId('switch-state').innerText()) === '开', `x=${await offset()}`)
+  check(`[${label}] 点击后开：轨道变主色，状态文字同步`, (await on()) && (await bg()) !== off && (await page.getByTestId('switch-state').innerText()) === '开', await bg())
   await sw.focus()
   await page.keyboard.press('Space')
   await settle(page)
-  check(`[${label}] 空格键可切回关`, (await sw.getAttribute('aria-checked')) === 'false' && (await offset()) < 8)
+  check(`[${label}] 空格键可切回关`, (await sw.getAttribute('aria-checked')) === 'false' && (await bg()) === off)
 }
 
 async function modalTests(page, label, { width }) {
@@ -240,8 +241,30 @@ async function toastTests(page, label) {
   check(`[${label}] 点「撤销」执行撤销动作`, await page.getByText('已撤销').isVisible())
 }
 
+/** 设计系统在位（Gate 4 选定的配色 A）、库标签的提示条、提示条在宿主层（窗口之外的顶部）。 */
+async function designTests(page, label, { width, scheme }) {
+  const narrow = width <= 480
+  const css = (sel, prop) => page.locator(sel).first().evaluate((el, p) => getComputedStyle(el)[p], prop)
+  const dark = scheme === 'dark'
+  check(`[${label}] 内容区底色是设计系统的米色（${dark ? '深色暖灰' : '浅奶油米'}）`, (await css('.trpg-main', 'backgroundColor')) === (dark ? 'rgb(48, 42, 36)' : 'rgb(253, 248, 240)'), await css('.trpg-main', 'backgroundColor'))
+  if (!narrow) check(`[${label}] 侧栏是暖深灰`, (await css('.trpg-side', 'backgroundColor')) === (dark ? 'rgb(38, 34, 30)' : 'rgb(62, 51, 46)'), await css('.trpg-side', 'backgroundColor'))
+  else check(`[${label}] 底部标签栏是暖深灰`, (await css('.trpg-tabs', 'backgroundColor')) === (dark ? 'rgb(38, 34, 30)' : 'rgb(62, 51, 46)'), await css('.trpg-tabs', 'backgroundColor'))
+  check(`[${label}] 骰盘按钮是番茄红主色`, (await css('.trpg-dice-btn', 'backgroundColor')) === (dark ? 'rgb(209, 52, 21)' : 'rgb(180, 49, 24)'), await css('.trpg-dice-btn', 'backgroundColor'))
+  const lib = page.getByTestId('nav-library')
+  await lib.click()
+  const toast = page.getByText('资料库页面将在后续版本开放')
+  await toast.waitFor()
+  const box = await page.locator('.trpg-toast').first().boundingBox()
+  check(`[${label}] 点库标签：宿主层提示条「资料库页面将在后续版本开放」，在窗口外的顶部（y≈48）`, !!box && Math.abs(box.y - 48) <= 8, JSON.stringify(box))
+  await page.locator('.trpg-toast').first().click()
+  await settle(page, 400)
+  check(`[${label}] 点击提示条即消失`, (await page.locator('.trpg-toast').count()) === 0)
+  check(`[${label}] 没有下载时库标签没有小环`, (await page.getByTestId('lib-ring').count()) === 0)
+}
+
 export async function shellSuite(page, label, ctx) {
   await layoutTests(page, label, ctx)
+  await designTests(page, label, ctx)
   await openDiagnostics(page)
   await switchTests(page, label)
   await modalTests(page, label, ctx)

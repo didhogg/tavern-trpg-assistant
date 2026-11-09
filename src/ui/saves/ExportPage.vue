@@ -24,7 +24,7 @@ const estimate = ref<{ saveBytes: number } | null>(null)
 const working = ref(false)
 
 const scope = computed<ExportScope>(() => (mode.value === 'backup' ? { type: 'backup' } : { type: 'save', saveId: target.value }))
-const deps = () => ({ db: app.svc().db, now: app.svc().now, appVersion: APP_VERSION })
+const deps = () => ({ db: app.svc().db, now: app.svc().now, appVersion: APP_VERSION, library: app.svc().backend.transfer.library })
 const sizeText = computed(() => formatBytes(estimate.value?.saveBytes ?? 0))
 const stamp = computed(() => new Date(app.svc().now()).toISOString().slice(0, 10))
 const filename = computed(() => (mode.value === 'backup' ? `TRPG备份_${stamp.value}.trpgsave` : `${saveName.value.replace(/\s+/g, '_')}_${stamp.value}.trpgsave`))

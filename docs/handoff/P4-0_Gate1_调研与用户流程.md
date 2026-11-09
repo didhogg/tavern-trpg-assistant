@@ -1377,3 +1377,52 @@ A = 暖奶油米 + 番茄红主色（B、C 已删，见提交 7fdd763）。按�
 3. 向导里已下载的行（灰勾）能不能点掉；
 4. 首页横幅的山景是用简单图形画的占位，不是正式主视觉；
 5. 未做：Gate 4 其余组件的完整状态页、WebKit / 手机宽度验证、Gate 5 实际界面。
+
+## 17. Gate 5：实际界面拼装（2026-11-09，驾驶员批准"直接替换旧界面"；视觉增强与评审 Gate 6 由驾驶员真机验收）
+
+做法：按 Gate 3 的 32 屏线框 + Gate 4 的设计系统（配色 A 第四版）**整套替换**外壳 / 首页 / 存档抽屉 / 向导 / 设置，不是在旧界面上零碎改。旧样式文件（`roster.css`、`probe.css`、旧 `shell.css` / `kit.css`）和旧界面里不再用的组件（BrowserTabs、CategoryTabs、EmptyState、HpBar、SearchField、StatCell、VirtualList、InfoPage、UnsavedLoadPage）已删除；骰盘内部**没有重画**，只把颜色换成设计系统令牌（`styles/dice.css`）。界面里的名称、书目、冒险、大小、存档、战役名全部从后端读，读不到显示"未知"或一句提示；没有手写数据。
+
+### 17.1 样式（`src/ui/styles/`）
+| 文件 | 内容 |
+|---|---|
+| `tokens.css` | 非颜色令牌（字体、字号、间距、圆角、阴影、动效、尺寸），来自 `docs/design/p4-design-system/tokens.css` |
+| `palette.css` | **自动生成**：`node docs/design/p4-design-system/palettes.mjs`（只取选定的 A；深色跟随系统）。不要手改 |
+| `base.css` / `shell.css` / `kit.css` / `pages.css` | 基础、外壳（窗口、侧栏、标签栏、提示条、进度环、悬停小窗）、控件与弹窗、各页面 |
+| `dice.css` | 骰盘悬浮窗内部（只换颜色变量） |
+
+### 17.2 线框 → 组件对照
+| 线框屏 | 代码 |
+|---|---|
+| 外壳（宽 / 中 / 窄）、页头芯片、⋯ 菜单 | `shell/MainWindow.vue`、`HeaderChips.vue`、`LibraryNav.vue` |
+| 库标签小环 + 数字 + 悬停小窗 | `LibraryNav.vue`、`kit/RingIcon.vue`、`stores/downloads.ts`（定时读 `library.tasks.list()`；官方资料中英合并成一项） |
+| 提示条（宿主层，酒馆顶部栏下方，点击消失） | `kit/ToastHost.vue`（顶部栏高度读宿主 DOM 位置，读不到用 48px） |
+| 首页：没聊天 / 空态 / 只读 / 有战役 / 刚开局 | `home/HomeEmpty.vue`、`HomeCampaign.vue`、`kit/HeroArt.vue`（山景是占位插画） |
+| 存档抽屉、战役卡片、折叠区 | `saves/SaveDrawerPage.vue`、`CampaignCard.vue`、`SaveRow.vue`、`SaveFolds.vue`；数据来自 `campaign.getCampaignView` |
+| 读取确认（合并成一页）、读不了的情况 | `saves/LoadConfirmPage.vue`（`kernelSave.checkSave`；"恢复原样 / 采用现在的"→ `adoptCurrent`） |
+| 删除确认、最近删除、彻底删除、导出、导入 + 结果页 | `SaveDrawerPage.vue`、`ExportPage.vue`、`imports/*` |
+| 向导四步 | `wizard/WizardPage.vue`、`StepRule/StepData/StepAdventure/StepName.vue`、`data.ts`、`state.ts` |
+| 设置：备份与撤销 / 诊断 / 关于 | `views/SettingsView.vue`、`BackupSettings.vue` |
+
+### 17.3 动了后端的地方（驾驶员已批准 BE-10；另两处是接线用的小加法，如实告知）
+| 编号 | 内容 | 位置 |
+|---|---|---|
+| **BE-10** | 备份提醒 `reminderDays` / `reminderSaves` 允许 0 = 不提醒（两项各自独立，都 0 永不提醒）；单元测试 +1 | `schemas/campaign.ts`、`core/backup.ts`，提交 `4f96542` |
+| 接线 1 | `chooseSource`：向导里勾选 / 取消一本书 → 加入 / 排除（纯函数，不改任何现有行为）；单元测试 +1 | `library/scopes.ts` |
+| 接线 2 | `Backend.transfer`：完整备份要带的【库】那一半（自制 / 范围 / 房规）和导入后"依赖还在不在"的核对。**之前界面没传这两样**：导出完整备份其实不含自制 / 范围 / 房规，导入结果一直是"依赖未核对"。适配器本身是 P3 已有的 `custom.exportBackup / importBackup` 与 `scoped.fetch` | `core/backend.ts` |
+
+### 17.4 我自己定的小事（不满意再改）
+- 向导里已下载的书（灰勾 +"已下载"）仍可点掉；已下载的冒险灰勾不可操作（冒险本来就不进战役设置）。
+- 离线算不出大小：写"大小暂时未知"，联网计算中才写"正在计算下载文件大小…"。
+- "资料已就绪"提示只在下载**完成**时出，取消 / 失败不出。
+- 备份设置：天数 1–365、次数 1–999、撤销上限按 10 一档（1–500）；开关关掉存 0，重新打开回默认 7 / 10。
+- 战役卡头 ⋯ 只放"改战役名"（= 改根存档名）；根存档行的 ⋯ 没有"改名"，删除 / 导出 / 备注照常。
+- 读取确认里"缺书"列的是"人物 · 条目名（原因）"，原因翻成大白话；条目所在的书名后端没有现成字段，没有拼（按哈希后缀拆是猜）。
+- 规则术语用悬停小窗（`HoverTip`）显示简介，不是链接。
+- 旧版的"本卡 / 全部"存档范围切换和搜索框随旧抽屉一起去掉（战役卡片已按战役分开）。
+
+### 17.5 修了顺手发现的毛病
+- 从下拉菜单（⋯）选项后再换页（如"删除"弹确认页）时，菜单关闭会把键盘焦点带走，Esc 失效：`ModalHost` 换页后补一次"焦点不在弹窗里就放回来"，`MoreMenu` 在触发按钮已被盖到下面时不还焦点。
+- 行内 / 卡头改名的输入框会在菜单刚关上时瞬间失焦导致没法输入：300 ms 内的失焦视为菜单关闭造成，不算填完。
+
+### 17.6 验证
+见交付汇报。没验证项：SillyTavern / TauriTavern 真机（顶部栏高度、提示条位置、字体渲染、触屏小窗）；手机；联网路径只在 Chrome 宽屏浅色跑一次（GitHub 目录树接口每小时 60 次）。

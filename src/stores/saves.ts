@@ -1,47 +1,57 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
+import type { CampaignView } from '../core/saves/view'
 import type { SaveSlot } from '../schemas/campaign'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
 
-export type SaveScope = 'card' | 'all'
+/** 没有当前战役时，按规则分开的战役列表。 */
+export interface RuleCampaigns { ruleId: string; view: CampaignView }
 
-/** 存档抽屉用的存档列表与操作。 */
+/** 存档抽屉用的数据与操作：战役视图（当前战役的存档树、其他战役）+ 自动存档 / 最近删除 / 其他规则。 */
 export const useSavesStore = defineStore('saves', () => {
   const app = useAppStore()
   const campaign = useCampaignStore()
-  const scope = ref<SaveScope>('card')
-  const manual = ref<SaveSlot[]>([])
+  /** 当前战役视图（页头芯片、首页横幅、抽屉都读它）；没有当前战役时为 null。 */
+  const view = shallowRef<CampaignView | null>(null)
+  /** 没有当前战役时：每条已安装规则的战役列表。 */
+  const byRule = shallowRef<RuleCampaigns[]>([])
   const autos = ref<SaveSlot[]>([])
   const deleted = ref<SaveSlot[]>([])
   const otherRules = ref<SaveSlot[]>([])
-  /** 没有当前战役时：全部存档（按规则分组显示）。 */
-  const everything = ref<SaveSlot[]>([])
   const loading = ref(false)
+  let seq = 0
+
+  /** 只更新战役视图（轻量，页头用）。 */
+  async function refreshView(): Promise<void> {
+    const mine = ++seq
+    const ws = campaign.workspace
+    const next = ws ? await app.svc().campaign.getCampaignView(ws.ownerKey, ws.ruleId) : null
+    if (mine === seq) view.value = next
+  }
 
   async function refresh(): Promise<void> {
     const s = app.svc()
     loading.value = true
     try {
+      await refreshView()
       const ws = campaign.workspace
-      if (!ws) {
-        everything.value = (await s.db.saves.toArray()).filter((x) => x.kind === 'manual' && x.deletedAt === undefined).sort((a, b) => b.updatedAt - a.updatedAt)
-        manual.value = autos.value = deleted.value = otherRules.value = []
+      if (ws) {
+        autos.value = await s.campaign.listAuto(ws.ownerKey, ws.ruleId)
+        deleted.value = await s.campaign.listDeleted(ws.ruleId)
+        otherRules.value = await s.campaign.listOtherRules(ws.ruleId)
+        byRule.value = []
         return
       }
-      const owner = { ownerKey: ws.ownerKey, ruleId: ws.ruleId }
-      manual.value = await s.campaign.listManual(owner, scope.value)
-      autos.value = await s.campaign.listAuto(ws.ownerKey, ws.ruleId)
-      deleted.value = await s.campaign.listDeleted(ws.ruleId)
-      otherRules.value = await s.campaign.listOtherRules(ws.ruleId)
+      const owner = campaign.owner
+      const ids = s.rules.list().map((r) => r.id)
+      byRule.value = owner ? await Promise.all(ids.map(async (ruleId) => ({ ruleId, view: await s.campaign.getCampaignView(owner.ownerKey, ruleId) }))) : []
+      autos.value = deleted.value = []
+      const manual = (await s.db.saves.toArray()).filter((x) => x.kind === 'manual' && x.deletedAt === undefined && !s.rules.has(x.ruleId))
+      otherRules.value = manual.sort((a, b) => b.updatedAt - a.updatedAt)
     } finally {
       loading.value = false
     }
-  }
-
-  async function setScope(next: SaveScope): Promise<void> {
-    scope.value = next
-    await refresh()
   }
 
   async function count(): Promise<number> {
@@ -66,5 +76,5 @@ export const useSavesStore = defineStore('saves', () => {
   const purge = (ids: string[]) => run(() => app.svc().campaign.purgeSaves(ids))
   const autoAsManual = (id: string) => run(() => app.svc().campaign.saveAutoAsManual(id))
 
-  return { scope, manual, autos, deleted, otherRules, everything, loading, refresh, setScope, count, rename, setNote, remove, restore, purge, autoAsManual }
+  return { view, byRule, autos, deleted, otherRules, loading, refreshView, refresh, count, rename, setNote, remove, restore, purge, autoAsManual }
 })

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
+import { useSavesStore } from '../../stores/saves'
 import { useToastStore } from '../../stores/toast'
 import { useUiStore } from '../../stores/ui'
 import Icon from '../kit/Icon.vue'
@@ -11,12 +12,14 @@ import { openSaveDrawer, saveNow } from '../saves/actions'
 const props = defineProps<{ layout: 'wide' | 'mid' | 'narrow' }>()
 const app = useAppStore()
 const campaign = useCampaignStore()
+const saves = useSavesStore()
 const toast = useToastStore()
 const ui = useUiStore()
 
 const visible = computed(() => app.booted && campaign.hasCampaign)
 const menu = computed<MenuItem[]>(() => [...(visible.value ? [{ key: 'saves', label: '存档' }] : []), { key: 'close', label: '收起助手' }])
-const name = computed(() => campaign.currentSave?.name ?? '存档')
+const campName = computed(() => saves.view?.name ?? campaign.currentSave?.name ?? '战役')
+const saveName = computed(() => campaign.currentSave?.name ?? '存档')
 
 function onMenu(key: string): void {
   if (key === 'saves') openSaveDrawer()
@@ -29,10 +32,10 @@ const explainReadOnly = () => toast.info('另一个窗口正在使用这份数�
   <div class="trpg-head__chips">
     <template v-if="visible">
       <button v-if="props.layout !== 'narrow'" class="trpg-pill trpg-chip" type="button" data-testid="save-chip" aria-haspopup="dialog" @click="openSaveDrawer">
-        <span class="trpg-chip__name">{{ name }}</span><Icon name="caret-down" :size="14" />
+        <span class="trpg-chip__camp">{{ campName }}</span><span class="trpg-chip__save">/ {{ saveName }}</span><Icon name="caret-down" :size="14" />
       </button>
-      <button v-if="campaign.dirty && !campaign.readOnly" class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" data-testid="save-button" @click="saveNow()">● 保存存档</button>
-      <button v-if="campaign.readOnly" class="trpg-badge trpg-badge--button" data-tone="warn" type="button" @click="explainReadOnly">只读</button>
+      <button v-if="campaign.dirty && !campaign.readOnly" class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" data-testid="save-button" @click="saveNow()">保存</button>
+      <button v-if="campaign.readOnly" class="trpg-badge" data-tone="warn" type="button" @click="explainReadOnly">只读</button>
     </template>
     <MoreMenu v-if="props.layout === 'narrow'" label="助手" :items="menu" @select="onMenu" />
   </div>

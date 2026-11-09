@@ -96,7 +96,14 @@ watch(
       const target = pushedFrom.pop() ?? null
       if (target && target.isConnected && target.getClientRects().length > 0) restore(target)
       else focusInto()
-    } else if (now !== before || key !== beforeKey) focusInto()
+    } else if (now !== before || key !== beforeKey) {
+      focusInto()
+      // 从下拉菜单里选了项再换页时，菜单关闭的瞬间会把焦点带走（焦点陷阱 + 元素被移除）：关完后若焦点不在弹窗里，再放回来
+      setTimeout(() => {
+        const active = deepActive()
+        if (rootEl.value && (!active || !active.closest('.trpg-modal'))) focusInto()
+      }, 200)
+    }
   },
 )
 
@@ -132,6 +139,7 @@ function onKeydown(event: KeyboardEvent): void {
         :style="modal.variant !== 'confirm' && modal.top?.width ? { '--trpg-drawer-width': `${modal.top.width}px`, ...(modal.top.height ? { '--trpg-dlg-h': `${modal.top.height}px` } : {}) } : undefined"
         tabindex="-1"
       >
+        <i class="trpg-sheet-grip" aria-hidden="true" />
         <header v-if="!modal.top?.bare" class="trpg-modal__head">
           <button v-if="modal.depth > 1" class="trpg-modal__back" type="button" :aria-label="`返回：${backLabel}`" @click="modal.pop()">
             <Icon name="caret-left" :size="16" /><span>{{ backLabel }}</span>

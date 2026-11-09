@@ -132,6 +132,10 @@ export function paletteCss(resolved) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { resolved, report, neutrals } = build()
   writeFileSync(join(here, 'tokens.palettes.css'), `/* 自动生成：node docs/design/p4-design-system/palettes.mjs ；不要手改 */\n${paletteCss(resolved)}\n`)
+  // 插件用：只取选定的 A，写到 src/ui/styles/palette.css（Shadow DOM 的 :host；深色跟随系统）
+  const a = resolved.a
+  const hostBlock = (m) => Object.entries(m).map(([k, v]) => `  --${kebab(k)}: ${v};`).join('\n')
+  writeFileSync(join(here, '../../../src/ui/styles/palette.css'), `/* 自动生成：node docs/design/p4-design-system/palettes.mjs ；不要手改。配色 A（Gate 4 选定），出处与对比度见 docs/design/p4-design-system/ */\n:host {\n${hostBlock(a.light)}\n}\n@media (prefers-color-scheme: dark) {\n  :host {\n${hostBlock(a.dark).replace(/^/gm, '  ')}\n  }\n}\n`)
   writeFileSync(join(here, 'contrast.json'), JSON.stringify({ resolved, report, neutrals }, null, 1))
   let bad = 0
   for (const [id, r] of Object.entries(report)) for (const [mode, rows] of Object.entries(r)) for (const x of rows) if (!x.ok) { bad++; console.log(`✘ ${id} ${mode} ${x.fg}/${x.bg} ${x.ratio} < ${x.min}（${x.note}）`) }

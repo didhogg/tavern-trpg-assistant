@@ -8,13 +8,17 @@ import HomeView from '../views/HomeView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import { saveNow } from '../saves/actions'
 import HeaderChips from './HeaderChips.vue'
+import LibraryNav from './LibraryNav.vue'
 import { clampRect, loadRect, MIN_H, MIN_W, saveRect, type Rect } from './windowRect'
 import { useDrag, type Point } from './useDrag'
 
 const ui = useUiStore()
 const modal = useModalStore()
-const NAV = computed<Array<{ id: PageId; label: string; icon: string; bottom?: boolean }>>(() => [
+type NavItem = { id: PageId | 'library'; label: string; icon: string; bottom?: boolean }
+// 库标签 P4 只有"进度环 + 提示"，没有库页面（P5 做）；其余两个是真页面
+const NAV = computed<NavItem[]>(() => [
   { id: 'home', label: '首页', icon: 'house' },
+  { id: 'library', label: '库', icon: 'books', bottom: true },
   { id: 'settings', label: '设置', icon: 'gear', bottom: true },
 ])
 const VIEWS = { home: HomeView, settings: SettingsView }
@@ -101,32 +105,24 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section
-    ref="winEl"
-    class="trpg-window"
-    :style="style"
-    :data-layout="layout"
-    :data-fullscreen="fullscreen"
-    role="dialog"
-    aria-label="TRPG 跑团助手"
-    @keydown="onKey"
-  >
+  <section ref="winEl" class="trpg-window" :style="style" :data-layout="layout" :data-fullscreen="fullscreen" role="dialog" aria-label="TRPG 跑团助手" @keydown="onKey">
     <div class="trpg-shell" :inert="modal.isOpen">
       <nav v-if="layout !== 'narrow'" class="trpg-side" aria-label="主导航">
         <div class="trpg-side__brand" title="拖动窗口" @pointerdown="startDrag">
-          <Icon name="dice-five" :size="22" />
+          <span class="trpg-brandmark"><Icon name="dice-five" :size="18" /></span>
           <span v-if="layout === 'wide'" class="trpg-side__name">TRPG 跑团助手</span>
         </div>
         <ul class="trpg-side__list">
           <li v-for="n in topNav" :key="n.id">
-            <button class="trpg-nav" type="button" :aria-current="ui.page === n.id ? 'page' : undefined" :title="n.label" @click="ui.go(n.id)">
+            <button class="trpg-nav" type="button" :aria-current="ui.page === n.id ? 'page' : undefined" :title="n.label" @click="ui.go(n.id as PageId)">
               <Icon :name="n.icon" :size="20" /><span v-if="layout === 'wide'">{{ n.label }}</span>
             </button>
           </li>
         </ul>
         <ul class="trpg-side__list trpg-side__bottom">
           <li v-for="n in bottomNav" :key="n.id">
-            <button class="trpg-nav" type="button" :aria-current="ui.page === n.id ? 'page' : undefined" :title="n.label" @click="ui.go(n.id)">
+            <LibraryNav v-if="n.id === 'library'" variant="side" :labeled="layout === 'wide'" />
+            <button v-else class="trpg-nav" type="button" :aria-current="ui.page === n.id ? 'page' : undefined" :title="n.label" @click="ui.go(n.id as PageId)">
               <Icon :name="n.icon" :size="20" /><span v-if="layout === 'wide'">{{ n.label }}</span>
             </button>
           </li>
@@ -141,7 +137,7 @@ onBeforeUnmount(() => {
           </button>
         </header>
         <div class="trpg-body">
-          <main class="trpg-content" tabindex="-1">
+          <main class="trpg-content" :data-flush="ui.page === 'settings' ? 'true' : undefined" tabindex="-1">
             <component :is="VIEWS[ui.page]" />
           </main>
           <button class="trpg-dice-btn" type="button" aria-label="掷骰" :aria-pressed="ui.diceOpen" @click="ui.diceOpen = !ui.diceOpen">
@@ -149,9 +145,12 @@ onBeforeUnmount(() => {
           </button>
         </div>
         <nav v-if="layout === 'narrow'" class="trpg-tabs" aria-label="主导航">
-          <button v-for="n in NAV" :key="n.id" class="trpg-tab" type="button" :aria-current="ui.page === n.id ? 'page' : undefined" @click="ui.go(n.id)">
-            <Icon :name="n.icon" :size="22" /><span>{{ n.label }}</span>
-          </button>
+          <template v-for="n in NAV" :key="n.id">
+            <LibraryNav v-if="n.id === 'library'" variant="tab" :labeled="true" />
+            <button v-else class="trpg-tab" type="button" :aria-current="ui.page === n.id ? 'page' : undefined" @click="ui.go(n.id as PageId)">
+              <Icon :name="n.icon" :size="22" /><span>{{ n.label }}</span>
+            </button>
+          </template>
         </nav>
       </div>
     </div>

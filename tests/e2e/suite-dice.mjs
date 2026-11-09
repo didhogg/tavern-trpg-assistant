@@ -146,7 +146,7 @@ export async function diceSuite(page, label, { width, height }) {
   // 主窗口里打开模态弹窗时，骰盘不被遮住、仍可使用
   // 骰盘按设计浮在页面上，可能盖住下面的按钮，所以用 dispatchEvent 触发点击
   await gotoPage(page, '设置')
-  await page.locator('.trpg-content').getByRole('button', { name: /^打开/ }).first().dispatchEvent('click')
+  await page.getByTestId('settings-diag').dispatchEvent('click')
   await page.getByTestId('diagnostics').waitFor()
   await page.getByRole('button', { name: '点我打开演示弹窗' }).dispatchEvent('click')
   await page.locator('.trpg-modal').waitFor()

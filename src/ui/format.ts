@@ -1,4 +1,4 @@
-import type { SaveSlot } from '../schemas/campaign'
+import type { SaveSummary } from '../schemas/campaign'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -20,7 +20,7 @@ export function formatBytes(bytes: number): string {
 }
 
 /** 存档摘要行：队伍前 3 名 · 地点 · 轮次。 */
-export function summaryLine(save: SaveSlot): string {
+export function summaryLine(save: { summary: SaveSummary }): string {
   const { partyNames, location, round } = save.summary
   const parts = [partyNames.slice(0, 3).join('、'), location, round ? `第 ${round} 轮` : ''].filter(Boolean)
   return parts.join(' · ')

@@ -2,6 +2,7 @@
 import { inject, nextTick, ref } from 'vue'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { SAVE_NAME_MAX } from '../../schemas/campaign'
+import Icon from '../kit/Icon.vue'
 
 const props = defineProps<{ defaultName: string; disabled?: boolean }>()
 const emit = defineEmits<{ create: [name: string] }>()
@@ -29,13 +30,13 @@ function submit(): void {
 
 <template>
   <PopoverRoot :open="open" @update:open="onOpen">
-    <PopoverTrigger class="trpg-btn" :disabled="disabled">分支存档</PopoverTrigger>
+    <PopoverTrigger class="trpg-btn" :disabled="disabled" data-testid="branch-button"><Icon name="git-branch" :size="16" />新建分支存档</PopoverTrigger>
     <PopoverPortal :to="portalTarget">
       <PopoverContent class="trpg-popover" align="start" :side-offset="6" :collision-padding="8" @open-auto-focus.prevent>
         <form class="trpg-field" @submit.prevent="submit">
           <label class="trpg-field__label" for="trpg-branch-name">新存档名</label>
           <input id="trpg-branch-name" ref="input" v-model="name" class="trpg-input" :maxlength="SAVE_NAME_MAX" autocomplete="off" @keydown.esc.stop.prevent="open = false" />
-          <span class="trpg-field__hint">原存档保持上次保存的样子；当前未保存的改动会进入新分支。</span>
+          <span class="trpg-field__hint">从现在这一刻开一条新时间线：原存档保持上次保存的样子，当前未保存的改动会进入新分支。</span>
           <div class="trpg-confirm__actions">
             <button class="trpg-btn" type="button" @click="open = false">取消</button>
             <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="!name.trim()">创建并切换</button>

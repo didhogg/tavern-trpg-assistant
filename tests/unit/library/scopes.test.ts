@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { autoAssignment, defaultCampaignLibrary, entryUnit, membershipOf, sourceUnit, viewOf, type CampaignLibrary } from '../../../src/library/scopes'
+import { autoAssignment, chooseSource, defaultCampaignLibrary, entryUnit, membershipOf, sourceUnit, viewOf, type CampaignLibrary } from '../../../src/library/scopes'
 import { chooseVersion, findCollisions, type Alternative, type DocIndex } from '../../../src/library/versions'
 
 const c2014: CampaignLibrary = defaultCampaignLibrary('dnd5e2014', 'cn')
@@ -74,5 +74,21 @@ describe('生效版本：本战役 > 当前规则 > 全局 > 原件', () => {
   })
   it('选过的备选被删了 → 回到原件并标出', () => {
     expect(chooseVersion(alts, { campaign: 'doc:gone' })).toEqual({ altId: 'base', by: 'campaign', missing: 'doc:gone' })
+  })
+})
+
+describe('向导勾选一本书', () => {
+  const noMatter = { scopes: ['5e2014'], global: false }
+  it('取消勾选 = 排除（说了算）；再勾选 = 加入，两边互斥且不重复', () => {
+    const off = chooseSource({ include: [], exclude: [] }, 'PHB', false)
+    expect(off).toEqual({ include: [], exclude: [sourceUnit('PHB')] })
+    const on = chooseSource({ ...off }, 'PHB', true)
+    expect(on).toEqual({ include: [sourceUnit('PHB')], exclude: [] })
+    expect(chooseSource(on, 'PHB', true)).toEqual(on)
+    // 效果：排除 > 加入 > 范围
+    const c = { ...defaultCampaignLibrary('dnd5e2014', 'cn'), ...off }
+    expect(viewOf(c, units, { assignment: noMatter, basis: 'author' })).toEqual({ visible: false, reason: 'excluded' })
+    const c2 = { ...defaultCampaignLibrary('dnd5e2014', 'cn'), ...on }
+    expect(viewOf(c2, units, { assignment: null, basis: 'none' })).toEqual({ visible: true, reason: 'included' })
   })
 })
