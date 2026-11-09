@@ -284,3 +284,6 @@ export async function pickChainEntries(library: ReturnType<typeof defaultCampaig
   const monster = await takeEntry(library, 'monster', 'MM', it => !!it.name)
   return { plan, monster }
 }
+
+// 探测脚本用：作者预载规则与源登记表
+export { precachePlan, getSource }
