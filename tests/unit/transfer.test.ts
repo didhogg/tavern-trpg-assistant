@@ -197,6 +197,16 @@ describe('备份提醒', () => {
     expect(reminderStatus(state({ lastExportAt: now }), settings, now, 2048).text).toContain('约 2 KB')
   })
 
+  it('提醒项设为 0 表示不提醒：天数、次数各自独立，两项都 0 永不提醒', () => {
+    const old = state({ lastExportAt: now - 30 * day, savesSinceExport: 99 })
+    expect(reminderStatus(old, settingsSchema.parse({}), now).kind).toBe('due')
+    expect(reminderStatus(old, settingsSchema.parse({ reminderDays: 0 }), now).kind).toBe('due') // 次数仍提醒
+    expect(reminderStatus(old, settingsSchema.parse({ reminderDays: 0, reminderSaves: 0 }), now)).toMatchObject({ kind: 'ok' })
+    expect(reminderStatus(state({ lastExportAt: now - 30 * day }), settingsSchema.parse({ reminderDays: 0 }), now).kind).toBe('ok')
+    expect(reminderStatus(state({ lastExportAt: now - 30 * day, savesSinceExport: 50 }), settingsSchema.parse({ reminderSaves: 0 }), now).kind).toBe('due') // 天数仍提醒
+    expect(settingsSchema.safeParse({ reminderDays: -1 }).success).toBe(false)
+  })
+
   it('导出完整备份后清零；持久存储只申请一次', async () => {
     await withDb(async (db) => {
       await db.setMeta('backup', { lastExportAt: null, savesSinceExport: 9, persistRequested: false, persistGranted: false })

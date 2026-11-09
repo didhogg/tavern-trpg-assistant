@@ -25,7 +25,8 @@ export function reminderStatus(state: BackupState, settings: Settings, now: numb
     return { kind: 'never', daysSince: null, savesSince: state.savesSinceExport, ...(estimatedBytes === undefined ? {} : { estimatedBytes }), text: `还没有导出过备份${size}` }
   }
   const daysSince = Math.max(0, Math.floor((now - state.lastExportAt) / DAY))
-  const due = daysSince >= settings.reminderDays || state.savesSinceExport >= settings.reminderSaves
+  // 0 = 这一项不提醒；两项都是 0 就永远不提醒
+  const due = (settings.reminderDays > 0 && daysSince >= settings.reminderDays) || (settings.reminderSaves > 0 && state.savesSinceExport >= settings.reminderSaves)
   const when = daysSince === 0 ? '今天' : `${daysSince} 天前`
   const base = due ? `建议导出备份 · 上次完整备份：${when}，之后保存 ${state.savesSinceExport} 次` : `上次完整备份：${when} · 之后保存 ${state.savesSinceExport} 次`
   const text = base + size

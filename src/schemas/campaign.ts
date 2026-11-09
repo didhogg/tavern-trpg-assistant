@@ -49,8 +49,10 @@ export const saveSlotSchema = z.object({
 export type SaveSlot = z.infer<typeof saveSlotSchema>
 
 export const settingsSchema = z.object({
-  reminderDays: z.number().int().positive().default(7),
-  reminderSaves: z.number().int().positive().default(10),
+  /** 多少天没导出备份就提醒；0 = 不按天数提醒。 */
+  reminderDays: z.number().int().nonnegative().default(7),
+  /** 导出后保存多少次就提醒；0 = 不按保存次数提醒。 */
+  reminderSaves: z.number().int().nonnegative().default(10),
   /** 结算撤销最多保留多少条；0 或负数不合法。 */
   undoLimit: z.number().int().min(1).max(500).default(50),
 })
