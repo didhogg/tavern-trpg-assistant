@@ -1,10 +1,12 @@
 // 测试用入口：在模拟宿主页里直接调用插件的【库】后端（不经界面）。
+import { configureBrewValidator } from '../../../src/library/brew-validate'
 import { LibraryDatabase } from '../../../src/library/db'
 import { FileProvider } from '../../../src/library/files'
 import { libraryHandlers } from '../../../src/library/runtime/handlers'
 import { startAuthorFrame, type AuthorFrame } from '../../../src/library/runtime/host'
 import { commitOf, getSource } from '../../../src/library/sources'
 
+configureBrewValidator(new URL('/', location.href)) // B-12 起结构校验要知道插件目录
 const db = new LibraryDatabase()
 export const files = new FileProvider({ db })
 const frames: AuthorFrame[] = []

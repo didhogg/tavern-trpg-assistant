@@ -103,13 +103,24 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
     json[prop] = have
   }
 
-  // 5. 作者自制文件的 _meta：来源全名 / 缩写取作者，版本风格按作者对来源的判断，版本号写这份官方数据的版本（说明副本是从哪个版本存的）
+  // 5. _copy 指向别的来源（例如怪物 _copy 了怪物图鉴里的怪）：作者自制文件要在 _meta.dependencies 里声明才展开得了
+  //    （和房规写 _copy 时用的是同一个办法，custom.ts createHouseRule → editableAddDependencies；格式：类别 → 来源列表）
+  const dependencies: Record<string, string[]> = {}
+  for (const [prop, rows] of Object.entries(json)) {
+    for (const row of rows as Array<{ _copy?: { source?: string } }>) {
+      const from = row?._copy?.source
+      if (typeof from === 'string' && low(from) !== want && !(dependencies[prop] ?? []).some((x) => low(x) === low(from))) (dependencies[prop] ??= []).push(from)
+    }
+  }
+
+  // 6. 作者自制文件的 _meta：来源全名 / 缩写取作者，版本风格按作者对来源的判断，版本号写这份官方数据的版本（说明副本是从哪个版本存的）
   const names = (await frame.call('sourceNames', [o.source]))[o.source]
   const edition = (await frame.call('editionOf', [o.source]))[o.source]
   const now = Math.floor(Date.now() / 1000)
   const meta = {
     sources: [{ json: o.source, abbreviation: names?.abv ?? o.source, full: names?.full ?? o.source, authors: [], convertedBy: [], version: CODE_SETS[o.official.codeSet].version }],
     dateAdded: now, dateLastModified: now,
+    ...(Object.keys(dependencies).length ? { dependencies } : {}),
     ...(edition?.classic === null || edition === undefined ? {} : { edition: edition.classic ? 'classic' : 'one' }),
   }
   return { json: { _meta: meta, ...json }, counts, corpora, skipped }

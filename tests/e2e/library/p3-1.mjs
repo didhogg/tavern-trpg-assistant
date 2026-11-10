@@ -166,10 +166,10 @@ const verdict = (o) => ({
   brewVsBrewEarlierWins: o.probeMissile.length === 1 && o.probeMissile[0].level === 1 && o.probeMissile[0].version.count === 1,
   copyOfOriginal: o.iceBall.has && !o.iceBall.copy,
   houseRule: o.houseRule.here.has10d6 && o.houseRule.here.version.by === 'campaign' && o.houseRule.other.altId === 'base' && o.houseRule.houseHiddenInList,
-  ruleLevel: o.ruleLevel.other.by === 'rule' && o.ruleLevel.other.altId.startsWith('doc:') && o.ruleLevel.here.by === 'campaign',
+  ruleLevel: o.ruleLevel.other.by === 'rule' && o.ruleLevel.other.altId.startsWith('pack:') && o.ruleLevel.here.by === 'campaign',
   restore: o.restored.version.altId === 'base' && !o.restored.text.includes('补丁版'),
-  fetchReasons: JSON.stringify(o.fetch) === JSON.stringify(['ok', 'out-of-scope', 'not-found', 'not-installed']),
-  search: o.search.phb && !o.search.xphb,
+  fetchReasons: JSON.stringify(o.fetch) === JSON.stringify(['ok', 'ok', 'not-found', 'not-installed']), // B-32/B-34：范围外的已下载默认也能取
+  search: o.search.phb && o.search.xphb, // B-32：范围外的已下载默认也能搜到
   convertClassic: o.convert.name === '测试冰锥' && !o.convert.tags.includes('|XPHB'),
   savedEntry: o.savedVisible.includes('测试冰锥'),
   template: o.template === '新法术' && o.templateNone === null,

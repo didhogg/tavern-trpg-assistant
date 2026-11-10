@@ -79,12 +79,15 @@ export async function brewAddSources(sources: string[]): Promise<WithErrors<{ ad
   const r = await withErrors(async () => {
     const notFound: string[] = []
     const failed: string[] = []
+    const before = new Set((await A.BrewUtil2.pGetBrew()).map((b: any) => b.head.docIdLocal))
     await Promise.all(sources.map(async (source) => {
       const url = await A.BrewUtil2.pGetSourceUrl(source)
       if (!url) { notFound.push(source); return }
       try { await A.BrewUtil2.pAddBrewFromUrl(url, { isLazy: true }) } catch { failed.push(source) }
     }))
-    const added: any[] = (await A.BrewUtil2.pAddBrewsLazyFinalize()) ?? []
+    await A.BrewUtil2.pAddBrewsLazyFinalize()
+    // 作者收尾函数不一定交回加进来的包，所以按装前后的已装列表对比（含自动追装的依赖）
+    const added: any[] = (await A.BrewUtil2.pGetBrew()).filter((b: any) => !before.has(b.head.docIdLocal))
     return { added, notFound: [...notFound, ...failed] }
   })
   return { errors: r.errors, value: { added: r.value.added.map(entryOf), notFound: r.value.notFound } }

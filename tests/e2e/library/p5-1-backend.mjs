@@ -6,11 +6,12 @@ import { startStatic } from './static.mjs'
 import { buildAll, engines, work } from './chain-common.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
-const [, type, options] = engines[0]
+const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
+const [, type, options] = engines.find((e) => e[0] === engineName)
 const { server, url } = await startStatic({ port: 47318 })
-const profile = `${work}/profile-p51-chrome`
+const profile = `${work}/profile-p51-${engineName}`
 await rm(profile, { recursive: true, force: true })
-await cp(`${work}/profile-b2-8a-chrome`, profile, { recursive: true })
+await cp(`${work}/profile-b2-8a-${engineName}`, profile, { recursive: true })
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage()
 page.setDefaultTimeout(900000)
@@ -123,7 +124,7 @@ const result = await page.evaluate(async (bookText) => {
     }
     r.b27.compareSpells = cmp
     // 重复存 = 并进去，不冲掉
-    const again = await lib.custom.saveToMine('cn', { kind: 'source', source: small.source })
+    await lib.custom.saveToMine('cn', { kind: 'source', source: small.source })
     r.b27.again = { packsAfter: (await lib.brewPacks.list('cn-brew')).filter((p) => p.sources.map((x) => x.toLowerCase()).includes(small.source.toLowerCase())).length }
     // B-31 拆行：同编号的原件 + 副本
     const rows = await lib.scoped.query(c, 'spell', { source: small.source, expand: true })
@@ -179,6 +180,12 @@ const result = await page.evaluate(async (bookText) => {
     const afterDel = (await lib.brewPacks.list('cn-brew')).map((p) => p.filename)
     const got = await lib.service.brewInstallSources('cn-brew', [depSource, 'NO_SUCH_SOURCE_ZZ'])
     r.net.b24 = { depSource, afterDel, added: got.value.added.map((e) => e.head.filename), notFound: got.value.notFound, back: (await lib.brewPacks.list('cn-brew')).some((p) => p.sources.includes(depSource)) }
+    // B-24 另一个没装的来源：目录里随便取一个小文件的来源标识，一键装
+    const other = cat.value.find((x) => x.path.startsWith('spell/Sample - Giddy;') && Array.isArray(x.sources) && x.sources.length)
+    if (other) {
+      const one = await lib.service.brewInstallSources('cn-brew', [other.sources[0]])
+      r.net.b24b = { source: other.sources[0], added: one.value.added.map((e) => e.head.filename), notFound: one.value.notFound, parseErrors: one.parse?.parse.errors.length }
+    }
     // B-27 存入下载包
     const cp = await lib.custom.saveToMine('cn', { kind: 'pack', docIdLocal: main.docIdLocal })
     r.net.b27pack = { name: cp.name, added: cp.added.length, origins: (await lib.brewPacks.list('cn-brew')).map((p) => p.filename + ':' + p.origin) }
@@ -187,6 +194,6 @@ const result = await page.evaluate(async (bookText) => {
   } catch (e) { r.net = { ...(r.net ?? {}), err: String(e.stack ?? e).slice(0, 700) } }
   return r
 }, bookText)
-await writeFile(`${work}/p5-1-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))
+await writeFile(`${work}/p5-1-backend-${engineName}.json`, JSON.stringify({ result, pageErrors }, null, 1))
 console.log(JSON.stringify(result, null, 1).slice(0, 6000)); console.log('pageErrors', pageErrors.slice(0, 8))
 await ctx.close(); server.close()

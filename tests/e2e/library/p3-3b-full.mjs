@@ -1,6 +1,6 @@
 // P3-3b 完整链路（Chrome / WebKit）：
 // 真实【库】条目 → 结算小窗建卡 → 打一场 → 拆成引用/选择/状态差别 → 存
-// → 关书（全局归类改掉）→ 读前检查报缺、当前战役不动 → 开书 → 读档 → 重建人物逐项比 0 差别。
+// → 关书（战役设置，P5 B-20/B-34）→ 读前检查把它们列进"关着的包"、不算缺、读档不被拦、设置不被读档改回 → 开书 → 读档 → 重建人物逐项比 0 差别。
 // 不手填引用/HP/法术位，不写死条目数量；人物全部用【库】真实条目建。
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -141,16 +141,16 @@ for (const [name, type, options] of engines) {
       choices: Object.keys(saved.compact.choices).length,
     }
 
-    // 关书：改全局归类（PHB 不再属于 2014）；读前检查报缺；当前战役不动。
+    // 关书（P5 B-20/B-34）：关书是战役设置，不是存档里的东西；关着的书里的引用照常能取，读前检查把它们列进"关着的包"清单，不再算缺、不再拦读档。
     r.closed = await page.evaluate(async owner => {
       const h = globalThis.__h
       const before = await h.campaign.getWorkspace(owner.ownerKey)
-      await h.scoped.setAssignment('src:phb', { scopes: ['p33b-off'], global: false })
-      await h.scoped.setAssignment('src:mm', { scopes: ['p33b-off'], global: false })
+      const open = await h.kernelSave.libraryOf(owner.ownerKey)
+      const closedLibrary = { ...open, exclude: ['src:phb', 'src:mm'] }
+      await h.kernelSave.setLibrary(owner.ownerKey, closedLibrary)
       const check = await h.kernelSave.checkSave((await h.campaign.getWorkspace(owner.ownerKey)).currentSaveId)
       const after = await h.campaign.getWorkspace(owner.ownerKey)
       const refsSurvive = (await h.kernelSave.read(owner.ownerKey)).actors.reduce((n, actor) => n + actor.refs.length, 0)
-      const closedLibrary = { ...h.defaultCampaignLibrary('dnd5e2014', 'cn'), exclude: ['src:phb', 'src:mm'] }
       const stored = await h.kernelSave.read(owner.ownerKey)
       const rebuilds = []
       for (const actor of stored.actors) {
@@ -164,22 +164,24 @@ for (const [name, type, options] of engines) {
           if (c.missing.length) throw new Error('missing')
         } })
       } catch (e) { blocked = String(e?.message ?? e) }
+      const settingKept = (await h.kernelSave.libraryOf(owner.ownerKey)).exclude.join(',')
       return {
         missing: check.missing.map(m => ({ actor: m.actorName, label: m.ref.label, reason: m.reason })),
+        closedPlan: check.plan.closed.map(c => ({ source: c.source, refs: c.refs })),
         checked: check.checked,
         revisionBefore: before.data.kernel.revision,
         revisionAfter: after.data.kernel.revision,
         refsSurvive,
         rebuilds,
         blocked,
+        settingKept,
       }
     }, saved.owner)
 
     // 开书：归类恢复；读前检查 0 缺；读档（带 precheck）→ 切换。
     r.open = await page.evaluate(async owner => {
       const h = globalThis.__h
-      await h.scoped.setAssignment('src:phb', null)
-      await h.scoped.setAssignment('src:mm', null)
+      await h.kernelSave.setLibrary(owner.ownerKey, { ...(await h.kernelSave.libraryOf(owner.ownerKey)), exclude: [] })
       const saveId = (await h.campaign.getWorkspace(owner.ownerKey)).currentSaveId
       const check = await h.kernelSave.checkSave(saveId)
       const loaded = await h.campaign.loadSave(owner, saveId, { precheck: async save => {
@@ -228,13 +230,13 @@ for (const [name, type, options] of engines) {
       && r.choiceSteps.every(x => x.chosen.length > 0)
       && r.save.kernelBytes < r.save.oldKernelBytes
       && r.save.compactStateBytes < r.save.fullActorBytes
-      && r.closed.missing.length > 0
-      && r.closed.missing.length === r.save.refs
-      && r.closed.missing.every(m => m.reason === 'out-of-scope' || m.reason === 'excluded' || m.reason === 'not-found' || m.reason === 'not-installed')
+      && r.closed.missing.length === 0
+      && r.closed.closedPlan.reduce((n, c) => n + c.refs, 0) === r.save.refs
       && r.closed.revisionBefore === r.closed.revisionAfter
       && r.closed.refsSurvive === r.save.refs
-      && r.closed.rebuilds.every(x => x.status === 'missing' && x.missing > 0)
-      && r.closed.blocked !== null
+      && r.closed.rebuilds.every(x => x.status === 'complete' && x.missing === 0)
+      && r.closed.blocked === null
+      && r.closed.settingKept === 'src:phb,src:mm'
       && r.open.missing === 0
       && r.open.loadedSaveId === r.save.saveId
       && r.rebuild.status === 'complete' && r.rebuildMonster.status === 'complete'
@@ -246,7 +248,7 @@ for (const [name, type, options] of engines) {
     results.push(r)
     await writeFile(`${work}/p3-3b-full-${name}.json`, JSON.stringify(r, null, 2))
     console.log(name, r.passed ? 'PASS' : 'FAIL', JSON.stringify({
-      build: r.build, choiceSteps: r.choiceSteps, save: r.save, closed: r.closed && { missing: r.closed.missing.length, for: r.closed.missing.slice(0, 2), rev: [r.closed.revisionBefore, r.closed.revisionAfter], refs: r.closed.refsSurvive, blocked: r.closed.blocked },
+      build: r.build, choiceSteps: r.choiceSteps, save: r.save, closed: r.closed && { missing: r.closed.missing.length, closedPlan: r.closed.closedPlan, for: r.closed.missing.slice(0, 2), rev: [r.closed.revisionBefore, r.closed.revisionAfter], refs: r.closed.refsSurvive, blocked: r.closed.blocked },
       open: r.open, rebuild: r.rebuild, rebuildMonster: r.rebuildMonster,
       diffs: [r.baseDiffs?.length, r.patchedDiffs?.length, r.monsterBaseDiffs?.length, r.monsterPatchedDiffs?.length, r.preparedDiffs?.length, r.monsterPreparedDiffs?.length],
       playMonster: r.playMonster, monsterHp: [r.monsterBase?.system?.attributes?.hp?.value, r.monsterCurrent?.system?.attributes?.hp?.value],

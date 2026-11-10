@@ -14,7 +14,7 @@ const file = (path: string, json: unknown) => ({ source: 'cn-official', path, co
 const frame = {
   call: async (fn: string, ...a: unknown[]) => {
     if (fn === 'loaders') return [
-      { props: ['spell', 'spellFluff'], page: 'spells.html', kind: 'site' }, { props: ['raw_class', 'class'], page: 'classes.html', kind: 'site' }, { props: ['classFeature'], page: 'classes.html', kind: 'site' }, { props: ['deck'], page: 'decks.html', kind: 'site' },
+      { props: ['spell', 'spellFluff'], page: 'spells.html', kind: 'site' }, { props: ['raw_class', 'class'], page: 'classes.html', kind: 'site' }, { props: ['classFeature'], page: 'classes.html', kind: 'site' }, { props: ['deck'], page: 'decks.html', kind: 'site' }, { props: ['monster'], page: 'bestiary.html', kind: 'site' },
       { props: ['book', 'bookData'], page: 'book.html', kind: 'corpus', index: 'books.json' }, { props: ['adventure', 'adventureData'], page: 'adventure.html', kind: 'corpus', index: 'adventures.json' },
     ]
     if (fn === 'rawHashes') return (a[1] as Array<{ name: string; source: string }>).map((r) => `${r.name}_${r.source}`.toLowerCase())
@@ -33,6 +33,7 @@ async function seed() {
     file('data/spells/spells-other.json', { spell: [{ name: '丙', source: 'OTHER' }] }),
     file('data/spells/fluff-spells-tst.json', { spellFluff: [{ name: '甲', source: 'TST', entries: ['x'] }] }),
     file('data/class/class-x.json', { class: [{ name: '职', source: 'TST', classFeatures: ['特性|职||1'] }], classFeature: [{ name: '特性', source: 'TST' }], rubbish: [{ source: 'TST' }] }),
+    file('data/bestiary/bestiary-tst.json', { monster: [{ name: '怪', source: 'TST', _copy: { name: '邪教徒', source: 'MM' } }, { name: '自己的', source: 'TST', _copy: { name: '怪', source: 'TST' } }] }),
     file('data/decks.json', { deck: [{ name: '牌组', source: 'TST', cards: [{ uid: '牌|集|TST' }] }] }),
     file('data/books.json', { book: [{ name: '测试之书', id: 'TST', source: 'TST', contents: [] }, { name: '别的书', id: 'OTHER', source: 'OTHER' }] }),
     file('data/book/book-tst.json', { bookData: [{ id: 'TST', data: [{ type: 'section', name: '第一章' }] }] }),
@@ -45,7 +46,7 @@ describe('copyRawSource', () => {
   it('整本：各类别里这个来源的原始记录（含 fluff、牌组原样不被改写），不碰别的来源、生成目录、不认识的字段', async () => {
     await seed()
     const r = await copyRawSource(opts())
-    expect(r.counts).toEqual({ spell: 1, spellFluff: 1, class: 1, classFeature: 1, deck: 1, book: 1, adventure: 1 })
+    expect(r.counts).toEqual({ spell: 1, spellFluff: 1, class: 1, classFeature: 1, deck: 1, monster: 2, book: 1, adventure: 1 })
     expect((r.json.spell as unknown[])).toEqual([{ name: '甲', source: 'TST' }])
     expect((r.json.deck as Array<{ cards: unknown }>)[0].cards).toEqual([{ uid: '牌|集|TST' }]) // 原文，没被展开
     expect(r.json.rubbish).toBeUndefined()
@@ -79,5 +80,11 @@ describe('copyRawSource', () => {
     const base = { _meta: {}, spell: [{ name: '甲', source: 'TST', old: true }, { name: '旧的', source: 'TST' }] }
     const r = await copyRawSource(opts({ entry: { prop: 'spell', hash: '甲_tst' }, base }))
     expect(r.json.spell).toEqual([{ name: '甲', source: 'TST' }, { name: '旧的', source: 'TST' }])
+  })
+
+  it('_copy 指向别的来源的，在 _meta.dependencies 里按类别声明（同来源内部的不算）', async () => {
+    await seed()
+    const meta = (await copyRawSource(opts())).json._meta as { dependencies?: Record<string, string[]> }
+    expect(meta.dependencies).toEqual({ monster: ['MM'] })
   })
 })
