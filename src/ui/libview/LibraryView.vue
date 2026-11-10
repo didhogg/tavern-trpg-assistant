@@ -4,9 +4,11 @@ import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
 import { officialSourceOf } from '../../library/sources'
+import { useBrewCatalogStore } from '../../stores/brewcatalog'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import { openSearch } from './open'
+import DownloadBanners from './DownloadBanners.vue'
 import DownloadTab from './DownloadTab.vue'
 import MyLibTab from './MyLibTab.vue'
 import ShelfTab from './ShelfTab.vue'
@@ -27,7 +29,14 @@ function warmPairs(): void {
     app.svc().backend.library.service.englishPairs(officialSourceOf(lib.campaignLib?.codeSet ?? 'cn').id).catch((e: unknown) => console.warn('[trpg-assistant] 预读中英配对表没成功（不影响使用）', e))
   }, 1500)
 }
-onMounted(() => { reload(); warmPairs() })
+// 自制包目录：有网就先取回来放着（下载页直接用），取不到只在下载页给原因和重试
+function prefetchBrewCatalog(): void {
+  setTimeout(() => {
+    if (!app.booted) return
+    useBrewCatalogStore().prefetch(app.svc(), lib.brewSetId(lib.campaignLib?.codeSet ?? 'cn') ?? 'cn-brew')
+  }, 800)
+}
+onMounted(() => { reload(); warmPairs(); prefetchBrewCatalog() })
 watch(() => [campaign.owner?.ownerKey, campaign.hasCampaign, campaign.currentSave?.id], reload)
 </script>
 
@@ -43,6 +52,7 @@ watch(() => [campaign.owner?.ownerKey, campaign.hasCampaign, campaign.currentSav
         <button class="trpg-btn" type="button" data-testid="open-search" @click="openSearch()"><Icon name="magnifying-glass" :size="16" />全库数据搜索</button>
       </span>
     </div>
+    <DownloadBanners />
     <ShelfTab v-if="tab === 'shelf'" />
     <MyLibTab v-else-if="tab === 'mine'" />
     <DownloadTab v-else-if="tab === 'download'" />

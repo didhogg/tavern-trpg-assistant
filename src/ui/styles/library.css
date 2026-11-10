@@ -146,3 +146,7 @@
 
 /* 书架顶部的搜索框：和「我的库」「下载」页一样放在最上面，滚动时留在顶部 */
 .lib-filter--top { position: sticky; top: 0; z-index: 3; padding: var(--sp-3) 0 var(--sp-2); background: var(--bg); }
+
+/* 下载失败横幅：库页顶部，三个分区都看得到；每条带重试 */
+.lib-bannerstack { flex: none; display: grid; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4) 0; }
+.lib-bannerstack .lib-banner { margin: 0; }

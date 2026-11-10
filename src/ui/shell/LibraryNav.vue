@@ -16,14 +16,14 @@ const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 
 function onEnter(event: PointerEvent): void {
-  if (event.pointerType === 'mouse' && dl.items.length) open.value = true
+  if (event.pointerType === 'mouse' && dl.count) open.value = true
 }
 function onLeave(event: PointerEvent): void {
   if (event.pointerType === 'mouse') open.value = false
 }
 function onClick(event: MouseEvent): void {
   const touch = (event as PointerEvent).pointerType !== undefined && (event as PointerEvent).pointerType !== 'mouse' && (event as PointerEvent).pointerType !== ''
-  if (touch && dl.items.length) {
+  if (touch && dl.count) {
     open.value = !open.value
     return
   }
@@ -36,7 +36,7 @@ watch(open, (now) => {
   if (now) document.addEventListener('pointerdown', closeOutside, true)
   else document.removeEventListener('pointerdown', closeOutside, true)
 })
-watch(() => dl.items.length, (n) => { if (!n) open.value = false })
+watch(() => dl.count, (n) => { if (!n) open.value = false })
 onBeforeUnmount(() => document.removeEventListener('pointerdown', closeOutside, true))
 const klass = props.variant === 'side' ? 'trpg-nav' : 'trpg-tab'
 </script>
@@ -51,7 +51,7 @@ const klass = props.variant === 'side' ? 'trpg-nav' : 'trpg-tab'
       <Icon v-else name="books" :size="variant === 'side' ? 20 : 22" />
       <span v-if="labeled">库</span>
     </button>
-    <div v-if="open && dl.items.length" class="trpg-pop" role="status" data-testid="lib-pop">
+    <div v-if="open && dl.count" class="trpg-pop" role="status" data-testid="lib-pop">
       <template v-if="dl.running.length">
         <h3>正在下载</h3>
         <div v-for="i in dl.running" :key="i.key" class="trpg-pop__row"><b>{{ i.label }}</b><small>{{ i.stage }}…</small></div>
