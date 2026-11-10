@@ -7,13 +7,13 @@ const G = 'U6 我的库（导入 · 存入 · 导出 · 删除）'
 const P = (n) => (n ? pin(n) : '')
 const ph = (t) => `<span class="lib-faint">${t}</span>`
 const prow = ({ title, meta, end, n }) => `<li class="trpg-row"><div class="trpg-row__main"><div class="trpg-row__title">${P(n)}${title}</div><div class="trpg-row__meta">${meta}</div></div><div class="trpg-row__end">${end}</div></li>`
-const bar = (n) => `<div class="lib-filter" style="padding-top:0">${P(n.search)}<div class="trpg-input">${icon('magnifying-glass', 16)}&nbsp;<span class="lib-faint">在我的库里搜索</span></div>${btn('导入文件', { ic: 'upload-simple', n: n.imp })}${btn('新建条目', { primary: true, ic: 'plus', n: n.add })}</div>`
+const bar = (n) => `<div class="lib-filter" style="padding-top:0">${P(n.search)}<div class="trpg-input">${icon('magnifying-glass', 16)}&nbsp;<span class="lib-faint">在我的库里搜索</span></div>${btn('导入文件', { ic: 'upload-simple', n: n.imp })}${btn('新建条目', { primary: true, ic: 'plus', n: n.add, disabled: true })}</div>`
 
 const myLib = (pins = {}, menu = false) => `${libTop('mine')}<div class="lib-scroll"><div class="lib-stack">${bar(pins)}
 <div><div class="trpg-group trpg-group--first">${P(pins.packs)}导入的包</div><ul class="trpg-list">
 ${prow({ title: ph('（你导入的文件名）'), meta: '来源 3 个 · 条目 n 条', end: `${sw(true)}${btn('导出', { small: true, ic: 'download-simple', n: pins.exp })}<span style="position:relative">${iconBtn('dots-three', '更多', pins.menu)}${menu ? dropdown([['管理'], ['删除…', true]], 168) : ''}</span>` })}</ul></div>
 <div><div class="trpg-group">${P(pins.saved)}存入的副本 ${badge('我的库')}</div><ul class="trpg-list">${prow({ title: '凡戴尔的失落矿坑（副本）', meta: '本地原样副本 · 存于 ' + ph('yyyy-mm-dd') + ' · 不跟源更新', end: `${sw(true)}${btn('导出', { small: true, ic: 'download-simple' })}${iconBtn('dots-three', '更多')}` })}</ul></div>
-<div><div class="trpg-group">${P(pins.own)}自己写的条目 ${badge('我的资料')}</div><ul class="trpg-list">${prow({ title: ph('（你写的条目名）'), meta: '法术 · 我的资料', end: `${iconBtn('pencil-simple', '编辑')}${iconBtn('dots-three', '更多')}` })}</ul></div>
+<div><div class="trpg-group">${P(pins.own)}自己写的条目 ${badge('我的资料')}</div><ul class="trpg-list">${prow({ title: ph('（你写的条目名）'), meta: '法术 · 我的资料', end: `${iconBtn('pencil-simple', '编辑', 0, { disabled: true })}${iconBtn('dots-three', '更多')}` })}</ul></div>
 </div></div>`
 
 const fileBlock = ({ name, rows, bad, errs = '', n }) => `<div class="lib-file"${bad ? ' data-bad="true"' : ''}><div class="lib-file__top"><b>${P(n)}${name}</b>${bad ? badge('结构有错', 'warn') : badge('可以导入', 'success')}</div><div class="lib-kv">${rows}</div>${errs}</div>`
@@ -25,7 +25,7 @@ export const screens = [
     goal: '管理自己导入的文件、存入的副本和写的条目', primary: '[导入文件] / [新建条目]', patterns: 'Titled Sections · Row actions · Switch', laws: 'Hick（顶部两个按钮，一个主色）· Jakob（开关 = 本战役）· Postel',
     diff: '窄：按钮换行，行尾操作收进 ⋯。',
     notes: [
-      [1, '搜索 + [导入文件] + [新建条目]', '[新建条目] 是主按钮；内容跟随全局语言，另一语言没有的灰', '【有】全局语言（D-5）'],
+      [1, '搜索 + [导入文件] + [新建条目]', '[新建条目] 是主按钮但**现在是灰的、点不了**：条目编辑与新建（模板新建、JSON 编辑、文字转条目、编辑自制条目、房规）是独立单元，P5.5 才做；条目上的 ✎ 同理；内容跟随全局语言，另一语言没有的灰', '【有】全局语言（D-5）'],
       [2, '导入的包（来历 = import）', '行：名称 · 来源数 · 条目数 · 开关（本战役，多来源的归一组）· [导出] · ⋯ [管理 / 删除]；任何 5etools 格式的内容（书、物品、人物）都应能读取〔R82、R85〕', '【有】brewPacks.list(…).origin · custom.exportBrew'],
       [3, '存入的副本', '从官方源 / 自制源"存入我的库"得到的**本地原样副本**：不受源仓库更新、卸载影响；与原件同编号时在列表里分行显示〔R83、Q-C 甲〕', '【有】custom.saveToMine（B-27）'],
       [4, '自己写的条目（来源「我的资料」）', '行：名称 · 类别；点行 → 条目详情；✎ → 编辑（U7）；⋯ [删除]', '【有】service.query(brewSet, prop, {source})'],

@@ -43,7 +43,7 @@ export const entryHead = ({ back, title, n = {} } = {}) =>
 /** 详情的工具行：En|中文（只是同一来源的语言切换）· 本战役启用开关（只在详情壳上，R38）· 已修改 + 复原 · ✎ · ⋯。 */
 export function entryTools({ langOn = 1, langOff = null, on = true, mod = false, n = {} } = {}) {
   const items = ['En', '中文'].map((label, i) => ({ label, on: i === langOn, disabled: i === langOff }))
-  return `<div class="lib-dtools">${seg(items, { n: n.lang })}<span class="trpg-switch-wrap">${P(n.sw)}${sw(on)}<span>本战役启用</span></span>${mod ? `${badge('已修改 / 覆盖', 'warn')}${btn('复原', { small: true, ic: 'arrow-counter-clockwise', n: n.restore })}` : ''}<span class="lib-end">${iconBtn('pencil-simple', '编辑', n.edit)}${iconBtn('dots-three', '更多：存入我的库…', n.more)}</span></div>`
+  return `<div class="lib-dtools">${seg(items, { n: n.lang })}<span class="trpg-switch-wrap">${P(n.sw)}${sw(on)}<span>本战役启用</span></span>${mod ? `${badge('已修改 / 覆盖', 'warn')}${btn('复原', { small: true, ic: 'arrow-counter-clockwise', n: n.restore })}` : ''}<span class="lib-end">${iconBtn('pencil-simple', '编辑（P5.5 才开放，现在点不了）', n.edit, { disabled: true })}${iconBtn('dots-three', '更多：存入我的库…', n.more)}</span></div>`
 }
 export const sheet = (head, body) => modal('sheet', head, body)
 export const mbody = (inner) => `<div class="lib-mbody">${inner}</div>`

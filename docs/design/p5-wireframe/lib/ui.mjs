@@ -1,5 +1,5 @@
 // 线框用的小片段（返回 HTML 字符串）。DOM 和类名沿用插件真实组件（src/ui/kit、src/ui/styles），lib- 开头的是库页新增。
-import { icon } from '../../p4-design-system/icons.mjs'
+import { icon } from './icons.mjs'
 
 export { icon }
 export const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])
@@ -8,7 +8,7 @@ const P = (n) => (n ? pin(n) : '')
 
 export const btn = (label, { primary, small, danger, quiet, ic, n, disabled } = {}) =>
   `<button class="trpg-btn${primary ? ' trpg-btn--primary' : ''}${small ? ' trpg-btn--small' : ''}${danger ? ' trpg-btn--danger' : ''}${quiet ? ' trpg-btn--quiet' : ''}"${disabled ? ' disabled' : ''} type="button">${P(n)}${ic ? icon(ic, 16) : ''}${label}</button>`
-export const iconBtn = (name, label, n) => `<button class="trpg-icon-btn" type="button" aria-label="${label}">${P(n)}${icon(name, 18)}</button>`
+export const iconBtn = (name, label, n, { disabled = false } = {}) => `<button class="trpg-icon-btn" type="button" aria-label="${label}"${disabled ? ' disabled title="条目编辑稍后开放（P5.5）"' : ''}>${P(n)}${icon(name, 18)}</button>`
 export const badge = (label, tone = '', extra = '') => `<span class="trpg-badge"${tone ? ` data-tone="${tone}"` : ''}${extra}>${label}</span>`
 export const gray = (t) => `<span class="lib-src">${t}</span>`
 export const link = (label) => `<button class="trpg-link" type="button">${label}</button>`

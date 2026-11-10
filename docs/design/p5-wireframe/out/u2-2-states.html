@@ -709,6 +709,53 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .lib-dlbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: 0 var(--sp-4) var(--sp-2); }
 .lib-dlbar .trpg-input { flex: 1 1 180px; }
 .lib-soft { opacity: .5; }
+
+/* ── 2026-11-10 U9 各类型详情 / 图标与控件页 / 读档抽屉 ── */
+.trpg-icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+.lib-stat { display: grid; }
+.lib-stat > div { display: grid; grid-template-columns: 84px 1fr; gap: var(--sp-3); padding: 5px 0; border-bottom: 1px dotted var(--line); font-size: var(--fs-sm); }
+.lib-stat > div > span { color: var(--text2); }
+.lib-abil { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--sp-2); text-align: center; padding: var(--sp-2) 0; }
+.trpg-window[data-layout='narrow'] .lib-abil { grid-template-columns: repeat(3, 1fr); }
+.lib-abil > div { border: var(--border) solid var(--line); border-radius: var(--r-sm); padding: 4px 2px; background: var(--bg-sunk); font-size: var(--fs-sm); }
+.lib-abil small { display: block; color: var(--text2); font-size: var(--fs-xs); }
+.lib-dice { display: inline-flex; align-items: center; gap: 3px; padding: 0 5px; border: var(--border) solid var(--primary-tint-line, var(--line-ctrl)); border-radius: var(--r-xs); background: var(--primary-tint); color: var(--primary-text); font: inherit; font-weight: var(--fw-semibold); line-height: 1.5; }
+.lib-dice--plain { background: none; border-style: dashed; color: var(--text2); font-weight: var(--fw-regular); }
+.lib-block { display: grid; gap: var(--sp-1); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
+.lib-block > b { font-family: var(--font-serif); }
+.lib-subsel { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.lib-subsel .trpg-input { min-width: 180px; justify-content: space-between; }
+.lib-rtable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.lib-rtable th, .lib-rtable td { border: var(--border) solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.lib-rtable th { background: var(--bg-sunk); }
+.lib-rtable tr[data-hit='true'] td { background: var(--primary-tint); font-weight: var(--fw-semibold); }
+.lib-rtable th .lib-dice { margin-left: 4px; }
+.lib-numbox { display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); }
+.lib-toc { display: grid; align-content: start; }
+.lib-toc button { display: flex; gap: var(--sp-2); align-items: center; min-height: 40px; padding: 0 var(--sp-3); border: 0; background: none; text-align: left; color: var(--text); border-left: 3px solid transparent; font: inherit; }
+.lib-toc button[aria-current='true'] { border-left-color: var(--primary); background: var(--primary-tint); font-weight: var(--fw-semibold); }
+.lib-toc button.lib-toc__sub { padding-left: var(--sp-6); font-size: var(--fs-sm); color: var(--text2); }
+.lib-read { position: absolute; inset: 0; display: grid; grid-template-columns: 200px 1fr; min-height: 0; }
+.lib-read[data-toc='false'] { grid-template-columns: 1fr; }
+.lib-read > aside { overflow: auto; border-right: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-read > main { overflow: auto; min-width: 0; }
+.lib-rbar { flex: none; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-rbody { padding: var(--sp-4) var(--sp-5) var(--sp-6); display: grid; gap: var(--sp-3); line-height: var(--lh-body); }
+.lib-rbody h3 { font-family: var(--font-serif); font-size: var(--fs-lg); margin-top: var(--sp-2); }
+.lib-rbody h4 { font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+.lib-rbody p { margin: 0; }
+.lib-sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--sp-3); }
+.lib-sw > div { border: var(--border) solid var(--line); border-radius: var(--r-md); padding: var(--sp-3); background: var(--surface); display: grid; gap: var(--sp-2); justify-items: start; font-size: var(--fs-sm); }
+.lib-ic { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--sp-2); }
+.lib-ic > div { display: flex; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.lib-ic .trpg-icon { flex: none; }
+.lib-ic small { display: block; color: var(--text2); font-size: var(--fs-xs); }
+.lib-ic em { color: var(--primary-text); font-style: normal; font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.lib-cmpgrid { display: grid; gap: var(--sp-4); width: 1380px; padding: var(--sp-5); background: var(--bg); }
+.lib-cmpgrid h3 { font-size: var(--fs-lg); margin: 0 0 var(--sp-2); }
+.lib-cmpgrid section { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); padding: var(--sp-4); }
+.lib-cmpgrid .row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
+.lib-cmpgrid .cap { color: var(--text2); font-size: var(--fs-xs); margin-top: var(--sp-2); }
 </style></head><body><div class="wf-board ds-root" style="background:transparent">
 <h1>U2a 书架的异常：空 / 无战役 / 书架搜索无匹配 / 卸载被拒</h1><p class="wf-meta">U2 库总览（书架 · 全库数据搜索 · 管理） · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
 <div class="wf-row"><div class="ds-root wf-states">
