@@ -14,12 +14,16 @@
 .lib-rowmeta { color: var(--text2); font-size: var(--fs-xs); white-space: nowrap; }
 .trpg-window[data-layout='narrow'] .lib-rowmeta { display: none; }
 .trpg-shelf + .lib-sec { margin-top: var(--sp-2); }
+/* 书架分组外框：随内容增高，圆角把里面的行裁齐（四角、底边都完整），不再自己滚动 */
+.lib-shelfbox { flex: none; min-height: 0; overflow: hidden; }
 .lib-banner { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--primary-tint); color: var(--primary-text); font-size: var(--fs-sm); }
-.lib-banner > span:first-of-type { flex: 1 1 140px; min-width: 0; }
+.lib-banner > span:first-of-type:not(.trpg-spinner), .lib-banner > .trpg-spinner + span { flex: 1 1 140px; min-width: 0; }
+.lib-banner > .trpg-spinner { flex: none; }
 .lib-banner--warn { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 2px var(--danger-line); }
 /* 弹窗里：一个栏目，自己管滚动 */
 .lib-mbody { height: 100%; display: flex; flex-direction: column; min-height: 0; }
-.lib-mscroll { flex: 1; min-height: 0; overflow: auto; }
+.lib-mscroll { --lib-row-h: 44px; flex: 1; min-height: 0; overflow: auto; }
+.trpg-window[data-layout='narrow'] .lib-mscroll { --lib-row-h: 48px; }
 .lib-filter { flex: none; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4) var(--sp-2); flex-wrap: wrap; }
 .lib-filter .trpg-input { flex: 1 1 160px; min-width: 140px; }
 .lib-pills { flex: none; display: flex; gap: var(--sp-2); overflow-x: auto; padding: 0 var(--sp-4) var(--sp-2); }
@@ -104,13 +108,41 @@
 .lib-versions { display: grid; gap: var(--sp-2); }
 .lib-alt-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 36px; }
 .lib-variants { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
-/* 虚拟滚动：行高固定（窄屏 48，宽屏 40；列表行 44），占位行不画边框 */
-.lib-table tbody tr:not(.lib-spacer) { height: 40px; }
-.trpg-window[data-layout='narrow'] .lib-table tbody tr:not(.lib-spacer) { height: 48px; }
+/* 虚拟滚动：行高固定且只有一个来源 --lib-row-h（useVirtual 读它），占位行不画边框 */
+.lib-table tbody tr:not(.lib-spacer) { height: var(--lib-row-h, 44px); }
 .lib-table tr.lib-spacer, .lib-table tr.lib-spacer td { padding: 0; border: 0; background: none; cursor: default; }
-.lib-list__row { height: 44px; box-sizing: border-box; }
+.lib-list__row { height: var(--lib-row-h, 44px); box-sizing: border-box; }
 .lib-table td { box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; }
 /* 设置页 / 管理页 / 批量勾选的内容区与勾选行 */
 .lib-pad { padding: var(--sp-4) var(--sp-5) 72px; display: grid; gap: var(--sp-3); align-content: start; }
 .trpg-window[data-layout='narrow'] .lib-pad { padding: var(--sp-4) var(--sp-4) 72px; }
 .lib-pad .trpg-check, .lib-fold__body .trpg-check { display: flex; width: 100%; min-height: 40px; align-items: center; border-bottom: var(--border) solid var(--line); }
+
+/* 条目里的图片 / 图集 / 分隔线 */
+.lib-img { margin: var(--sp-2) 0; display: grid; gap: var(--sp-1); }
+.lib-img__open { display: inline-flex; align-items: center; gap: var(--sp-2); justify-self: start; padding: 2px 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.lib-img__open .lib-img__label { text-decoration: underline dotted; text-underline-offset: 4px; font-family: var(--font-serif); font-weight: var(--fw-semibold); }
+.lib-img__pic { display: block; max-width: 100%; height: auto; border-radius: var(--r-md); }
+.lib-img__err { margin: 0; display: flex; align-items: center; gap: var(--sp-2); }
+.lib-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-3); }
+.lib-hr { border: 0; border-top: var(--border) solid var(--line); margin: var(--sp-3) 0; }
+
+/* 下载进度条：稍短的细条；没有总数时来回滑动的小块 */
+.lib-bar { position: relative; flex: none; display: inline-block; width: 96px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; vertical-align: middle; }
+.lib-bar > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--primary); transition: width var(--dur-base) var(--ease-std); }
+.lib-bar[data-indet='true'] > i { width: 36%; animation: lib-bar-slide 1.2s ease-in-out infinite alternate; }
+@keyframes lib-bar-slide { from { left: 0; } to { left: 64%; } }
+.lib-dling { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.lib-banner > .lib-bar { margin-left: auto; }
+@media (prefers-reduced-motion: reduce) { .lib-bar[data-indet='true'] > i { animation: none; left: 32%; } }
+
+/* 长书架：屏幕外的行不排版不绘制，滚动更顺 */
+.trpg-shelf__row { content-visibility: auto; contain-intrinsic-size: auto 48px; }
+
+/* 作者算出来的居中文字（豁免 DC = 8 + …）/ 内嵌块 */
+.lib-ability { text-align: center; font-weight: var(--fw-semibold); margin: var(--sp-2) 0; }
+.lib-statblock { margin: var(--sp-1) 0; }
+.lib-inline { display: inline; }
+
+/* 书架顶部的搜索框：和「我的库」「下载」页一样放在最上面，滚动时留在顶部 */
+.lib-filter--top { position: sticky; top: 0; z-index: 3; padding: var(--sp-3) 0 var(--sp-2); background: var(--bg); }

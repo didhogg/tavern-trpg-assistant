@@ -594,6 +594,26 @@ await page.locator('[data-testid="pack-page"] .lib-mscroll').evaluate((e) => { e
 await settle(page, 800)
 const lastRows = await page.locator('[data-testid="pack-table"] tbody tr:not(.lib-spacer)').count()
 check('滚到底：还是只画窗口里的行，且有行显示', lastRows > 5 && lastRows < 80, String(lastRows))
+// 真的滚到了末尾：最后画出的那一行贴着滚动容器底部（以前虚拟滚动没挂上滚动容器，永远只画前 20 来行，旧检查看不出来）
+const atEnd = await page.evaluate(() => {
+  const sc = document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid="pack-page"] .lib-mscroll')
+  const rows = [...sc.querySelectorAll('[data-testid="pack-table"] tbody tr:not(.lib-spacer)')]
+  const last = rows.at(-1)?.getBoundingClientRect().bottom ?? 0
+  return { gap: sc.getBoundingClientRect().bottom - last, firstName: rows[0]?.querySelector('td')?.textContent ?? '' }
+})
+check('滚到底：最后一行贴着容器底部（真的画到了末尾）', Math.abs(atEnd.gap) < 60, JSON.stringify(atEnd))
+// 弹窗大小：宽屏居中，占插件窗口的 60%–72%；点弹窗外的暗色区域不关闭弹窗
+const sizes = await page.evaluate(() => {
+  const root = document.getElementById('trpg-assistant-root').shadowRoot
+  const w = root.querySelector('.trpg-window').getBoundingClientRect()
+  const c = root.querySelector('.trpg-modal__card').getBoundingClientRect()
+  return { wr: c.width / w.width, hr: c.height / w.height }
+})
+check('弹窗宽屏大小占插件窗口 60%–72%', sizes.wr > 0.6 && sizes.wr < 0.72 && sizes.hr > 0.6 && sizes.hr < 0.75, JSON.stringify(sizes))
+const backdrop = await page.evaluate(() => { const r = document.getElementById('trpg-assistant-root').shadowRoot.querySelector('.trpg-modal').getBoundingClientRect(); return { x: r.left + 6, y: r.top + 6 } })
+await page.mouse.click(backdrop.x, backdrop.y)
+await settle(page, 400)
+check('点弹窗外的暗色区域不会关掉弹窗', (await page.locator('.trpg-modal__card').count()) === 1, '')
 await page.locator('[data-testid="pack-page"] .lib-mscroll').evaluate((e) => { e.scrollTop = 0 })
 await settle(page, 500)
 await page.locator('.trpg-modal__close').click()

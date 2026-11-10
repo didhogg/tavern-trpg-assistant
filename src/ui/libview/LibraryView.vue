@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
+import { officialSourceOf } from '../../library/sources'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import { openSearch } from './open'
@@ -19,7 +20,14 @@ const tab = ref('shelf')
 function reload(): void {
   if (app.booted) void lib.load(app.svc(), campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)
 }
-onMounted(reload)
+// 中英配对表第一次读很慢（实测约 3.6 秒，读一次才有，之后秒开）：库页一打开就在空闲时先读进内存，点条目详情时就不用等
+function warmPairs(): void {
+  setTimeout(() => {
+    if (!app.booted) return
+    app.svc().backend.library.service.englishPairs(officialSourceOf(lib.campaignLib?.codeSet ?? 'cn').id).catch((e: unknown) => console.warn('[trpg-assistant] 预读中英配对表没成功（不影响使用）', e))
+  }, 1500)
+}
+onMounted(() => { reload(); warmPairs() })
 watch(() => [campaign.owner?.ownerKey, campaign.hasCampaign, campaign.currentSave?.id], reload)
 </script>
 

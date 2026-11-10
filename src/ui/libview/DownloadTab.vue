@@ -83,7 +83,7 @@ function startAdventure(row: CatalogRow): void {
           </span>
         </div>
         <p class="lib-muted" style="margin: 0; font-size: var(--fs-sm)">全部规则书和数据，中英文自动一起装。<template v-if="est?.data.bytes">大小约 {{ formatBytes(est.data.bytes) }}。</template></p>
-        <div v-if="official?.status === 'running'" class="lib-banner" role="status"><span class="trpg-spinner" aria-hidden="true" /><span>{{ official.stage }}…<template v-if="official.pct !== null"> {{ Math.round(official.pct * 100) }}%</template></span></div>
+        <div v-if="official?.status === 'running'" class="lib-banner" role="status"><span>{{ official.stage }}…<template v-if="official.pct !== null"> {{ Math.round(official.pct * 100) }}%</template></span><span class="lib-bar" :data-indet="official.pct === null" aria-hidden="true"><i :style="official.pct === null ? undefined : { width: `${Math.round(official.pct * 100)}%` }" /></span></div>
         <div v-else-if="official?.status === 'failed'" class="lib-banner lib-banner--warn"><Icon name="warning" :size="16" /><span>下载没有成功：{{ official.error || '原因未知' }}</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" @click="startOfficial">重试</button></span></div>
         <div v-else-if="officialStatus === 'incomplete'" class="lib-banner lib-banner--warn"><Icon name="warning" :size="16" /><span>官方资料装了一半，已经下好的文件会直接复用。</span></div>
       </section>
@@ -96,7 +96,7 @@ function startAdventure(row: CatalogRow): void {
           <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ r.name }}</div><div class="trpg-row__meta">{{ r.shelf?.level ? `${r.shelf.level.start}–${r.shelf.level.end} 级` : '' }}</div></div>
           <div class="trpg-row__end">
             <span v-if="r.downloaded" class="trpg-badge" data-tone="success">已装</span>
-            <span v-else-if="adventureTask(r)?.status === 'running'" class="lib-muted"><span class="trpg-spinner" aria-hidden="true" /> 下载中…</span>
+            <span v-else-if="adventureTask(r)?.status === 'running'" class="lib-muted lib-dling" role="status">下载中<span class="lib-bar" :data-indet="adventureTask(r)?.pct == null" aria-hidden="true"><i :style="adventureTask(r)?.pct == null ? undefined : { width: `${Math.round((adventureTask(r)?.pct ?? 0) * 100)}%` }" /></span></span>
             <template v-else>
               <span v-if="adventureTask(r)?.status === 'failed'" class="lib-muted" style="color: var(--danger-text)">失败</span>
               <button class="trpg-btn trpg-btn--small" type="button" @click="startAdventure(r)">{{ adventureTask(r)?.status === 'failed' ? '重试' : '下载' }}</button>

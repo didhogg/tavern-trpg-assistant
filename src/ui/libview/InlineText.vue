@@ -8,7 +8,7 @@ import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import Term from '../kit/Term.vue'
 import { FORMAT_TAGS, splitInline, tagLabel, type InlineSeg } from './inline-text'
-import { openEntry } from './open'
+import { openEntry, openPack } from './open'
 import { isRollable, rollComment, rollTable } from './table-roll'
 import { resolveTagOnce, type TagResolved } from './useTags'
 
@@ -39,6 +39,12 @@ async function rollOutside(i: number): Promise<void> {
   toast.push('success', copied ? '已复制到剪贴板，可直接粘贴到酒馆输入框' : '掷好了，但没能复制，请点【填入酒馆输入框】', { actions: [{ label: '填入酒馆输入框', run: () => { if (!appendToInput(comment)) toast.error('没能填进酒馆输入框，结果文字已在剪贴板里') } }] })
 }
 const linkOf = (i: number): EntryRef | null => { const r = resolved.value[i]; return r?.kind === 'link' ? r.ref : null }
+const packOf = (i: number) => { const r = resolved.value[i]; return r?.kind === 'link' ? r.pack ?? null : null }
+function openLinked(i: number): void {
+  const p = packOf(i)
+  if (p) openPack({ set: p.set, source: p.source, name: p.name, kind: p.kind })
+  else if (linkOf(i)) openEntry(linkOf(i)!)
+}
 
 async function run(): Promise<void> {
   const mine = ++seq
@@ -59,8 +65,8 @@ watch(() => [props.text, props.codeSet], run)
   <template v-for="(seg, i) in segs" :key="i">
     <template v-if="seg.kind === 'text'">{{ seg.text }}</template>
     <component :is="FORMAT_TAGS[seg.tag]" v-else-if="FORMAT_TAGS[seg.tag]"><InlineText :text="seg.content" :code-set="codeSet" /></component>
-    <template v-else-if="linkOf(i)">
-      <Term @open="openEntry(linkOf(i)!)">{{ resolved[i]?.label }}</Term>
+    <template v-else-if="linkOf(i) || packOf(i)">
+      <Term @open="openLinked(i)">{{ resolved[i]?.label }}</Term>
       <button v-if="tableOf[i]" class="lib-dice" type="button" data-testid="roll-outside" aria-label="直接掷这张表" @click="rollOutside(i)"><Icon name="dice-five" :size="12" />掷</button>
     </template>
     <button v-else-if="resolved[i]?.kind === 'dice'" class="lib-dice" type="button" @click="toast.info('骰盘接线稍后开放')"><Icon name="dice-five" :size="12" />{{ resolved[i].label }}</button>

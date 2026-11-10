@@ -58,7 +58,17 @@ export const useDownloadsStore = defineStore('downloads', () => {
   let timer: ReturnType<typeof setInterval> | undefined
   let doneTimer: ReturnType<typeof setTimeout> | undefined
 
-  const items = computed(() => itemsOf(tasks.value, names))
+  /** 自制包的下载（不走后台任务队列，界面自己登记）：也列在库标签的小窗里。 */
+  const brew = ref<DownloadItem[]>([])
+  /** 登记一次自制包下载：开始时列为「正在下载」，结束时去掉；run 返回错误文字表示失败（留在列表里提示重试），返回 null 表示成功。 */
+  async function trackBrew(key: string, label: string, run: () => Promise<string | null>): Promise<void> {
+    const rest = brew.value.filter((i) => i.key !== key)
+    brew.value = [...rest, { key, label, stage: '下载文件', status: 'running', error: null, pct: null }]
+    let error: string | null
+    try { error = await run() } catch (e) { error = e instanceof Error ? e.message : String(e) }
+    brew.value = error ? [...rest, { key, label, stage: '', status: 'failed', error, pct: null }] : rest
+  }
+  const items = computed(() => [...itemsOf(tasks.value, names), ...brew.value])
   const running = computed(() => items.value.filter((i) => i.status === 'running'))
   const failed = computed(() => items.value.filter((i) => i.status === 'failed'))
   /** 还没完成的项数（环旁边的数字）。 */
@@ -104,5 +114,5 @@ export const useDownloadsStore = defineStore('downloads', () => {
     }
   }
 
-  return { tasks, items, running, failed, count, pct, ring, justDone, rememberName, refresh, start }
+  return { tasks, items, running, failed, count, pct, ring, justDone, rememberName, refresh, start, trackBrew }
 })

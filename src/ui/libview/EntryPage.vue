@@ -18,7 +18,7 @@ import EntryBody from './EntryBody.vue'
 import EntryVersions from './EntryVersions.vue'
 import { replaceEntry } from './open'
 import FeatureLevels from './FeatureLevels.vue'
-import { nameOf as itemName } from './pack-data'
+import { authorName, nameOf as itemName } from './pack-data'
 import { BLOCKS } from './statblock'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
@@ -55,16 +55,20 @@ const summary = ref<Array<{ k: string; v: string }>>([])
 const authorLines = ref<Array<{ label: string; value: string }>>([])
 const authorPb = ref<string[] | null>(null)
 const subraces = ref<Array<{ name: string; entries: unknown; ref: EntryRef }>>([])
+/** 正文不在 entries 里的类别（传奇组等）：作者拼出来的正文条目（frame summaryEntry，P5-1 B-40）。 */
+const summaryBody = ref<unknown>(null)
 async function loadExtras(item: unknown): Promise<void> {
   const s = app.svc().backend.library
   summary.value = []
   subraces.value = []
   authorLines.value = []
   authorPb.value = null
+  summaryBody.value = null
   try {
     const af = await (await s.service.frameOf(codeSet.value)).call('authorFields', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
     authorLines.value = af.lines
     authorPb.value = af.pb
+    summaryBody.value = await (await s.service.frameOf(codeSet.value)).call('summaryEntry', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
     const lc = await s.sorting.cells(codeSet.value, props.entryRef.prop)
     const row = lc?.cells[props.entryRef.hash]
     if (lc && row) summary.value = lc.columns.map((c, i) => ({ k: c.text, v: row[i], sort: c.sort })).filter((x) => x.sort !== 'name' && x.sort !== 'source' && x.v).map(({ k, v }) => ({ k, v }))
@@ -84,7 +88,6 @@ async function sourceText(item: unknown, source: string | null): Promise<string>
   const page = (item as { page?: unknown } | null)?.page
   return `${name}${typeof page === 'number' ? ` · 第 ${page} 页` : ''} · ${source}`
 }
-const nameOf = (item: unknown): string => (typeof item === 'object' && item && typeof (item as { name?: unknown }).name === 'string' ? (item as { name: string }).name : '未知')
 
 async function load(): Promise<void> {
   state.value = { kind: 'loading' }
@@ -111,7 +114,7 @@ async function load(): Promise<void> {
     void loadExtras(state.value.item)
     void loadCounterpart(state.value.kind === 'ok' ? state.value.d : null)
     const key = `entry:${props.entryRef.set}:${props.entryRef.prop}:${props.entryRef.hash}`
-    modal.setTitle(key, nameOf(state.value.item))
+    modal.setTitle(key, await authorName(app.svc(), getSource(props.entryRef.set).codeSet, props.entryRef.prop, state.value.item))
   } catch (e) {
     console.error('[trpg-assistant] 读取条目失败', e)
     state.value = { kind: 'error', message: e instanceof Error ? e.message : String(e) }
@@ -130,7 +133,7 @@ const body = computed(() => {
   if (!it) return null
   if (props.entryRef.prop === 'table') return { ...it, type: 'table' }
   if (props.entryRef.prop === 'tableGroup') return it.tables ?? it.entries ?? null
-  return it.entries ?? null
+  return it.entries ?? summaryBody.value ?? null
 })
 
 async function setEnabled(next: boolean): Promise<void> {

@@ -59,7 +59,11 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
     <div v-if="lib.error" class="lib-state"><h3>书架读不出来</h3><p class="lib-muted">{{ lib.error }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="lib.load(app.svc(), campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)">重试</button></div>
     <div v-else-if="!lib.shelf" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <template v-else>
+      <div class="lib-filter lib-filter--top">
+        <input v-model="q" class="trpg-input" type="search" placeholder="搜索书目 / 包名" aria-label="搜索书目 / 包名" data-testid="shelf-search" />
+      </div>
       <div v-if="!lib.bound" class="lib-banner" style="margin-top: var(--sp-2)"><Icon name="info" :size="16" /><span>先创建战役，开关才能用；所有书先显示为关。</span></div>
+      <div v-if="lib.officialMissing" class="lib-banner" style="margin-top: var(--sp-2)" data-testid="official-missing"><Icon name="info" :size="16" /><span>官方资料没装：已下载的自制包会保留，但要先在【下载】页装好官方资料才能读。</span></div>
       <div v-if="lib.shelf.booksError" class="lib-banner lib-banner--warn" style="margin-top: var(--sp-2)"><Icon name="warning" :size="16" /><span>书目读取失败：{{ lib.shelf.booksError }}</span></div>
       <div v-if="!total && !q" class="lib-state"><h3>还没有资料</h3><p class="lib-muted">去【下载】装官方资料或自制包。</p></div>
       <template v-for="s in sections" :key="s.kind">
@@ -70,7 +74,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
             <MoreMenu label="书架" :items="[{ key: 'pull', label: '拉取更新' }]" @select="onShelfMenu" />
           </span>
         </div>
-        <div class="trpg-shelf" style="min-height: 0; overflow: visible">
+        <div class="trpg-shelf lib-shelfbox">
           <details v-for="g in s.groups" :key="g.group" class="trpg-shelf__group" open>
             <summary class="trpg-shelf__sum">
               <span class="trpg-shelf__chev-closed"><Icon name="caret-right" :size="16" /></span><span class="trpg-shelf__chev-open"><Icon name="caret-down" :size="16" /></span>
@@ -85,9 +89,6 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
           </details>
         </div>
       </template>
-      <div class="lib-filter" style="padding: var(--sp-3) 0 0">
-        <input v-model="q" class="trpg-input" type="search" placeholder="搜索书名或包名" aria-label="搜索书名或包名" />
-      </div>
     </template>
   </div>
 </template>

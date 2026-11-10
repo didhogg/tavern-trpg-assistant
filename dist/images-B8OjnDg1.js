@@ -2,14 +2,14 @@ var e = {
 	codeSets: {
 		cn: {
 			repo: "tjliqy/5etools-cn",
-			commit: "774a320e4a92d71d100673bc0df965661d9e8c1b",
-			version: "2.39.0-cn.3",
+			commit: "aaadd34f4e61a4701c31aa38d0337a2b3ae856ba",
+			version: "2.40.0",
 			lang: "zh"
 		},
 		en: {
 			repo: "5etools-mirror-3/5etools-src",
-			commit: "8790755429c346d20020eed7826d312d484c393f",
-			version: "2.39.0",
+			commit: "32ef600fab87a585a61dd1a22e9b02dfc58c728a",
+			version: "2.41.0",
 			lang: "en"
 		}
 	},

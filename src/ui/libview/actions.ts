@@ -7,7 +7,7 @@ import { askConfirm } from '../kit/confirm'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
 
-const brewPackOf = async (s: Services, row: CatalogRow) => (await s.backend.library.brewPacks.list(row.set)).find((p) => p.sources.includes(row.source)) ?? null
+const brewPackOf = async (s: Services, row: CatalogRow) => (await s.backend.library.brewPacks.list(row.set)).find((p) => p.sources.some((x) => x.toLowerCase() === row.source.toLowerCase())) ?? null
 
 /** 卸载官方资料（整套，中英一起）或删除一个自制包；删之前列影响，因缺依赖必须一起删的包也列出（不可取消）。 */
 export async function removeSource(s: Services, row: CatalogRow, skipPrompt: boolean, toast: Toast): Promise<boolean> {
@@ -24,7 +24,7 @@ export async function removeSource(s: Services, row: CatalogRow, skipPrompt: boo
       ...(impact.saves.length ? [`${new Set(impact.saves.map((x) => x.ownerLabel)).size} 个战役的 ${impact.saves.length} 份存档 / 当前数据用到它`] : []),
     ]
     if (!skipPrompt || impact.packs.some((p) => p.mustRemove)) {
-      const ok = await askConfirm({ title: official ? '卸载官方资料？' : `删除《${row.name}》？`, message: official ? '整套官方资料（中英文）会从本机删除，释放空间，之后可在下载页重新下载。' : '这个包会从本机删除。', details: lines.length ? lines : undefined, confirmLabel: official ? '确认卸载' : '确认删除', danger: true })
+      const ok = await askConfirm({ title: official ? '卸载官方资料？' : `删除《${row.name}》？`, message: official ? '整套官方资料（中英文）会从本机删除，释放空间，之后可在下载页重新下载。已下载的自制包会保留，但要重装官方资料后才能读。' : '这个包会从本机删除。', details: lines.length ? lines : undefined, confirmLabel: official ? '确认卸载' : '确认删除', danger: true })
       if (!ok) return false
     }
     if (official) {

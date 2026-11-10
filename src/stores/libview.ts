@@ -24,6 +24,8 @@ export const useLibViewStore = defineStore('library', () => {
   /** 我的库里的包（导入的 / 存入的副本）；它们的来源不在书架里列。 */
   const minePacks = shallowRef<BrewPack[]>([])
   const brewSetId = (codeSet: string): string | null => SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)?.id ?? null
+  /** 官方资料没装：自制包读不了（作者程序启动要读官方数据），书架提示一句。 */
+  const officialMissing = ref(false)
   const loading = ref(false)
   const error = ref<string | null>(null)
   let seq = 0
@@ -41,7 +43,9 @@ export const useLibViewStore = defineStore('library', () => {
       const next = await s.backend.library.scoped.shelf(current)
       const brew = brewSetId(current.codeSet)
       const imported = brew ? (await s.backend.library.brewPacks.list(brew)).filter((p) => p.origin === 'import') : []
+      const missing = !(await s.backend.library.service.officialInstalled(current.codeSet))
       if (mine !== seq) return
+      officialMissing.value = missing
       bound.value = !!lib
       campaignLib.value = current
       shelf.value = next
@@ -72,5 +76,5 @@ export const useLibViewStore = defineStore('library', () => {
     await load(s, ownerKey)
   }
 
-  return { applySources, campaignLib, bound, shelf, minePacks, brewSetId, loading, error, load, toggleSource }
+  return { applySources, campaignLib, bound, officialMissing, shelf, minePacks, brewSetId, loading, error, load, toggleSource }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useModalStore } from '../../stores/modal'
 import { PAGE_TITLES, useUiStore, type PageId } from '../../stores/ui'
 import Icon from '../kit/Icon.vue'
@@ -34,6 +34,17 @@ const fullscreen = computed(() => vw.value <= 480)
 const layout = computed(() => (innerW.value >= 720 ? 'wide' : innerW.value > 480 ? 'mid' : 'narrow'))
 const style = computed(() => (fullscreen.value ? {} : { left: `${rect.value.x}px`, top: `${rect.value.y}px`, width: `${rect.value.w}px`, height: `${rect.value.h}px` }))
 const title = computed(() => PAGE_TITLES[ui.page])
+// 库页弹窗只占侧栏 / 底栏之外的空间：量出侧栏宽、底栏高，交给样式（--trpg-sheet-left / --trpg-sheet-bottom）；侧栏和底栏照常可点、可拖
+const insets = ref({ left: 0, bottom: 0 })
+function measureInsets(): void {
+  const el = winEl.value
+  if (!el) return
+  insets.value = { left: el.querySelector<HTMLElement>('.trpg-side')?.offsetWidth ?? 0, bottom: el.querySelector<HTMLElement>('.trpg-tabs')?.offsetHeight ?? 0 }
+}
+const insetVars = computed(() => ({ '--trpg-sheet-left': `${insets.value.left}px`, '--trpg-sheet-bottom': `${insets.value.bottom}px` }))
+// 弹窗是库页的 sheet 时，外壳其余部分照常可用；其他弹窗（确认、抽屉、向导）仍然整个外壳不可操作
+const sheetOpen = computed(() => modal.visible && modal.variant === 'sheet')
+const otherModalOpen = computed(() => modal.visible && modal.variant !== 'sheet')
 const topNav = computed(() => NAV.value.filter((n) => !n.bottom))
 const bottomNav = computed(() => NAV.value.filter((n) => n.bottom))
 
@@ -90,6 +101,7 @@ function onKey(event: KeyboardEvent): void {
   }
 }
 
+watch([layout, () => modal.visible], () => void nextTick(measureInsets))
 let observer: ResizeObserver | undefined
 onMounted(() => {
   window.addEventListener('resize', onViewport)
@@ -98,6 +110,7 @@ onMounted(() => {
     if (width) innerW.value = width
   })
   if (winEl.value) observer.observe(winEl.value)
+  measureInsets()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('resize', onViewport)
@@ -106,8 +119,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section ref="winEl" class="trpg-window" :style="style" :data-layout="layout" :data-fullscreen="fullscreen" role="dialog" aria-label="TRPG 跑团助手" @keydown="onKey">
-    <div class="trpg-shell" :inert="modal.isOpen">
+  <section ref="winEl" class="trpg-window" :style="[style, insetVars]" :data-layout="layout" :data-fullscreen="fullscreen" role="dialog" aria-label="TRPG 跑团助手" @keydown="onKey">
+    <div class="trpg-shell" :inert="otherModalOpen">
       <nav v-if="layout !== 'narrow'" class="trpg-side" aria-label="主导航">
         <div class="trpg-side__brand" title="拖动窗口" @pointerdown="startDrag">
           <span class="trpg-brandmark"><Icon name="dice-five" :size="18" /></span>
@@ -130,14 +143,14 @@ onBeforeUnmount(() => {
         </ul>
       </nav>
       <div class="trpg-main">
-        <header class="trpg-head" title="拖动窗口" @pointerdown="startDrag">
+        <header class="trpg-head" title="拖动窗口" :inert="sheetOpen" @pointerdown="startDrag">
           <h1 class="trpg-head__title">{{ title }}</h1>
           <HeaderChips :layout="layout" />
           <button v-if="layout !== 'narrow'" class="trpg-icon-btn" type="button" aria-label="收起助手" @click="ui.windowOpen = false">
             <Icon name="x" :size="18" />
           </button>
         </header>
-        <div class="trpg-body">
+        <div class="trpg-body" :inert="sheetOpen">
           <main class="trpg-content" :data-flush="ui.page === 'settings' || ui.page === 'library' ? 'true' : undefined" tabindex="-1">
             <component :is="VIEWS[ui.page]" />
           </main>
@@ -155,7 +168,7 @@ onBeforeUnmount(() => {
         </nav>
       </div>
     </div>
-    <ModalHost />
+    <ModalHost @drag="startDrag" />
     <div v-if="!fullscreen" class="trpg-resize" aria-hidden="true" @pointerdown="startResize" />
   </section>
 </template>

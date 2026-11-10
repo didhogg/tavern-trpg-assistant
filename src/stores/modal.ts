@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { computed, shallowRef, type Component } from 'vue'
+import { computed, ref, shallowRef, type Component } from 'vue'
+import { useUiStore, type PageId } from './ui'
 
 /** sheet = 库页的包 / 书 / 搜索弹窗：宽屏居中浮在整个窗口上，窄屏从底部上拉（P5）。 */
 export type ModalVariant = 'dialog' | 'drawer' | 'confirm' | 'sheet'
@@ -33,11 +34,16 @@ export interface ModalPage {
 export const useModalStore = defineStore('modal', () => {
   const stack = shallowRef<ModalPage[]>([])
   const direction = shallowRef<'forward' | 'back'>('forward')
+  const ui = useUiStore()
+  /** 弹窗是在哪个页面打开的；库页的 sheet 弹窗切到别的页面时只是藏起来（状态原样保留），切回来再显示。 */
+  const owner = ref<PageId | null>(null)
 
   const isOpen = computed(() => stack.value.length > 0)
   const top = computed(() => stack.value[stack.value.length - 1])
   const depth = computed(() => stack.value.length)
   const variant = computed<ModalVariant>(() => stack.value[0]?.variant ?? 'dialog')
+  /** 现在是否显示：sheet 弹窗只在它所属的页面显示，其余变体（确认、抽屉、向导）一直显示。 */
+  const visible = computed(() => stack.value.length > 0 && (variant.value !== 'sheet' || owner.value === ui.page))
 
   function leave(page: ModalPage | undefined): void {
     page?.onLeave?.()
@@ -46,6 +52,7 @@ export const useModalStore = defineStore('modal', () => {
   function clear(): void {
     const pages = [...stack.value].reverse()
     stack.value = []
+    owner.value = null
     for (const page of pages) leave(page)
   }
 
@@ -53,6 +60,7 @@ export const useModalStore = defineStore('modal', () => {
   function open(page: ModalPage): void {
     if (stack.value.length) clear()
     direction.value = 'forward'
+    owner.value = ui.page
     stack.value = [page]
   }
 
@@ -125,5 +133,5 @@ export const useModalStore = defineStore('modal', () => {
     stack.value = [...stack.value.slice(0, -1), { ...page, height }]
   }
 
-  return { stack, direction, isOpen, top, depth, variant, open, push, replace, pop, popToRoot, close, requestClose, escape, setTitle, setTopHeight }
+  return { stack, direction, isOpen, visible, top, depth, variant, open, push, replace, pop, popToRoot, close, requestClose, escape, setTitle, setTopHeight }
 })

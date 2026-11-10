@@ -30,7 +30,7 @@ button.trpg-badge { border: 0; cursor: pointer; }
 .trpg-group--first { margin-top: 0; }
 .trpg-empty { display: grid; gap: var(--sp-2); justify-items: start; padding: var(--sp-4); border: var(--border) dashed var(--line-ctrl); border-radius: var(--r-md); background: var(--bg-sunk); color: var(--text2); }
 .trpg-loading { display: flex; gap: var(--sp-3); align-items: center; justify-content: center; padding: 32px var(--sp-3); color: var(--text2); }
-.trpg-spinner { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--primary); animation: trpg-spin var(--dur-spin) linear infinite; }
+.trpg-spinner { display: inline-block; width: 22px; height: 22px; flex: none; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--primary); animation: trpg-spin var(--dur-spin) linear infinite; }
 .trpg-skeleton { height: 14px; border-radius: var(--r-xs); background: linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side)); opacity: 0.7; }
 .trpg-list { margin: 0; padding: 0; list-style: none; }
 .trpg-row { display: flex; align-items: center; gap: var(--sp-3); min-height: 52px; padding: 6px var(--sp-1); border-bottom: var(--border) solid var(--line); }
@@ -137,8 +137,11 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .page-stack { display: grid; gap: var(--sp-4); align-content: start; }
 .page-intro { color: var(--text2); }
 .trpg-info__line { margin: 0; }
-/* 库页弹窗 sheet：宽屏居中较大，窄屏底部抽屉（内容自己管滚动，页面不留内边距） */
-.trpg-modal[data-variant='sheet'] .trpg-modal__card { width: min(760px, 100%); height: min(600px, 100%); }
+/* 库页弹窗 sheet：只占侧栏 / 底栏之外的空间（边距由外壳量好写进 --trpg-sheet-left / -bottom）。宽屏居中较大，窄屏底部抽屉（内容自己管滚动，页面不留内边距） */
+.trpg-modal[data-variant='sheet'] { left: var(--trpg-sheet-left, 0px); bottom: var(--trpg-sheet-bottom, 0px); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__card { width: 68%; min-width: min(480px, 100%); height: 70%; min-height: min(520px, 100%); }
+/* 弹窗外的暗色遮罩不关弹窗（防误点），但可以按住拖动整个插件窗口 */
+.trpg-modal { cursor: grab; } .trpg-modal__card { cursor: auto; }
 .trpg-modal[data-variant='sheet'] .trpg-modal__page { padding: 0; overflow: hidden; }
 .trpg-modal[data-variant='sheet'] .trpg-modal__title { font-family: var(--font-serif); }
 .trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] { align-items: flex-end; background: color-mix(in srgb, var(--text) 46%, transparent); }

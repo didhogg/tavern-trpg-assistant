@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useVirtual } from './useVirtual'
 import type { ListCells, SortDir } from '../../library/sorting'
 import { getSource } from '../../library/sources'
@@ -17,7 +17,7 @@ const app = useAppStore()
 const lib = useLibViewStore()
 const toast = useToastStore()
 
-const rows = ref<PackRow[]>([])
+const rows = shallowRef<PackRow[]>([])
 const loading = ref(true)
 const failed = ref<string | null>(null)
 const q = ref('')
@@ -26,8 +26,6 @@ const sortBy = ref('none')
 const dir = ref<SortDir>('asc')
 const cells = ref<ListCells | null>(null)
 const scrollEl = ref<HTMLElement | null>(null)
-const narrow = ref(false)
-const rowH = computed(() => (narrow.value ? 48 : 40))
 const sorted = ref<PackRow[] | null>(null)
 const codeSet = computed(() => getSource(props.set).codeSet)
 
@@ -58,7 +56,7 @@ async function load(): Promise<void> {
     loading.value = false
   }
 }
-onMounted(() => { narrow.value = !!scrollEl.value?.closest('.trpg-window')?.matches('[data-layout="narrow"]'); void load(); void loadReaders() })
+onMounted(() => { void load(); void loadReaders() })
 
 const pills = computed(() => {
   const count = new Map<string, number>()
@@ -68,7 +66,7 @@ const pills = computed(() => {
 const shownReaders = computed(() => (cat.value === 'all' || cat.value === 'book' ? readers.value.filter((r) => !q.value.trim() || r.name.toLowerCase().includes(q.value.trim().toLowerCase())) : []))
 const byCat = computed(() => (cat.value === 'all' ? rows.value : rows.value.filter((r) => r.prop === cat.value)))
 const filtered = computed(() => matchName(sorted.value && cat.value !== 'all' ? sorted.value : byCat.value, q.value))
-const { range, toTop } = useVirtual(scrollEl, computed(() => filtered.value.length), rowH)
+const { range, toTop } = useVirtual(scrollEl, computed(() => filtered.value.length))
 const visible = computed(() => filtered.value.slice(range.value.start, range.value.end))
 // 列与每列显示什么都来自作者列表页（B-35）；来源列不用作者的文字（带标记），我们自己在行尾灰字标
 const cols = computed(() => (cells.value?.columns ?? []).map((c, i) => ({ ...c, i })).filter((c) => c.sort !== 'source'))
@@ -112,7 +110,7 @@ watch(q, () => toTop())
     </div>
     <div v-if="failed" class="lib-state"><h3>这个包读不出来</h3><p class="lib-muted">{{ failed }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
     <div v-else-if="loading && !rows.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
-    <div v-else class="lib-mscroll">
+    <div v-else ref="scrollEl" class="lib-mscroll">
       <div v-if="cat === 'book' ? false : !filtered.length && !shownReaders.length" class="lib-state"><h3>{{ q ? '没有符合的' : '这个包里没有可显示的条目' }}</h3><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>
       <div v-else-if="cat === 'book'" class="lib-list" role="list">
         <button v-for="r in shownReaders" :key="`${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>

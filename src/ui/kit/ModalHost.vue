@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useModalStore } from '../../stores/modal'
 import Icon from './Icon.vue'
 
+const emit = defineEmits<{ drag: [event: PointerEvent] }>()
 const modal = useModalStore()
 const rootEl = ref<HTMLElement | null>(null)
 const cardEl = ref<HTMLElement | null>(null)
@@ -128,7 +129,7 @@ function onKeydown(event: KeyboardEvent): void {
 
 <template>
   <div ref="rootEl" class="trpg-modal-root">
-    <div v-if="modal.isOpen" class="trpg-modal" :data-variant="modal.variant" @click.self="modal.requestClose()" @keydown.stop="onKeydown">
+    <div v-if="modal.isOpen" v-show="modal.visible" class="trpg-modal" :data-variant="modal.variant" @pointerdown.self="emit('drag', $event)" @keydown.stop="onKeydown">
       <section
         ref="cardEl"
         class="trpg-modal__card"

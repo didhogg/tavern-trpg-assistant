@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useVirtual } from './useVirtual'
 import type { ScopedSearchHit } from '../../library/scoped-search'
 import { useAppStore } from '../../stores/app'
@@ -8,7 +8,7 @@ import { useToastStore } from '../../stores/toast'
 import Checkbox from '../kit/Checkbox.vue'
 import Icon from '../kit/Icon.vue'
 import { openEntry, openReader } from './open'
-import { hitCategories, hitCategoryKey, hitCategoryLabel, hitName, hitSource, withoutUnchecked } from './search-data'
+import { hitCategories, hitCategoryKey, hitCategoryLabel, hitName, hitSource, loadAllHits, withoutUnchecked } from './search-data'
 
 /** 全库数据搜索（U2b）：和包弹窗同一种弹窗，多一个可折叠的"书目范围"。默认折叠、折叠状态记住；默认全勾已开启的书，取消勾选只对这次搜索有效。 */
 const app = useAppStore()
@@ -17,7 +17,7 @@ const toast = useToastStore()
 const OPEN_KEY = 'search:books:open'
 
 const q = ref('')
-const hits = ref<ScopedSearchHit[]>([])
+const hits = shallowRef<ScopedSearchHit[]>([])
 const searching = ref(false)
 const failed = ref<string | null>(null)
 const cat = ref('all')
@@ -49,8 +49,19 @@ let seq = 0
 async function run(): Promise<void> {
   const term = q.value.trim()
   const mine = ++seq
-  if (!term) { hits.value = []; searching.value = false; return }
   const c = lib.campaignLib
+  if (!term) {
+    // 空态：显示全部条目（边取边显示）
+    hits.value = []
+    if (!c) return
+    searching.value = true
+    failed.value = null
+    try { await loadAllHits(app.svc(), c, (part) => { if (mine === seq) hits.value = part }) } catch (e) {
+      console.error('[trpg-assistant] 读取全部条目失败', e)
+      if (mine === seq) { failed.value = e instanceof Error ? e.message : String(e); toast.error('读取条目出错了') }
+    } finally { if (mine === seq) searching.value = false }
+    return
+  }
   if (!c) return
   searching.value = true
   failed.value = null
@@ -65,12 +76,13 @@ async function run(): Promise<void> {
   }
 }
 watch(q, () => { clearTimeout(timer); cat.value = 'all'; toTop(); timer = setTimeout(() => void run(), 250) })
+onMounted(() => void run())
 onBeforeUnmount(() => clearTimeout(timer))
 
 const visibleHits = computed(() => withoutUnchecked(hits.value, unchecked.value))
 const pills = computed(() => hitCategories(visibleHits.value))
 const list = computed(() => (cat.value === 'all' ? visibleHits.value : visibleHits.value.filter((h) => hitCategoryKey(h) === cat.value)))
-const { range, toTop } = useVirtual(scrollEl, computed(() => list.value.length), ref(44))
+const { range, toTop } = useVirtual(scrollEl, computed(() => list.value.length))
 const windowed = computed(() => list.value.slice(range.value.start, range.value.end))
 const blocked = computed(() => hits.value.length - visibleHits.value.length)
 
@@ -84,7 +96,7 @@ function open(h: ScopedSearchHit): void {
 <template>
   <div class="lib-mbody" data-testid="search-page">
     <div class="lib-filter">
-      <input v-model="q" class="trpg-input" type="search" placeholder="输入名字，如 火球术" aria-label="搜索全部已开启的书" data-autofocus />
+      <input v-model="q" class="trpg-input" type="search" placeholder="输入名字，如 火球术（不输入时列出全部）" aria-label="搜索全部已开启的书" data-autofocus />
     </div>
     <details class="lib-fold lib-fold--bar" :open="expanded" data-testid="search-books" @toggle="setExpanded(($event.target as HTMLDetailsElement).open)">
       <summary><span>书目范围</span><small>已勾选 {{ checkedCount }} / {{ total }}</small><span class="lib-end"><Icon :name="expanded ? 'caret-down' : 'caret-right'" :size="14" /></span></summary>
@@ -108,9 +120,8 @@ function open(h: ScopedSearchHit): void {
     <div v-if="blocked" class="lib-banner" style="margin: 0 var(--sp-4) var(--sp-2)"><Icon name="info" :size="16" /><span>已屏蔽 {{ blocked }} 条（取消勾选的书）。</span></div>
     <div ref="scrollEl" class="lib-mscroll">
       <div v-if="failed" class="lib-state"><h3>搜索出错了</h3><p class="lib-muted">{{ failed }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="run">重试</button></div>
-      <div v-else-if="!q.trim()" class="lib-state"><p class="lib-muted">输入名字开始搜。</p></div>
-      <div v-else-if="searching && !hits.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>
-      <div v-else-if="!list.length" class="lib-state"><h3>没找到「{{ q.trim() }}」</h3><button class="trpg-btn" type="button" @click="q = ''">清空</button></div>
+ <div v-else-if="searching && !hits.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>
+      <div v-else-if="!list.length" class="lib-state"><h3>{{ q.trim() ? `没找到「${q.trim()}」` : '还没有可显示的条目' }}</h3><button v-if="q.trim()" class="trpg-btn" type="button" @click="q = ''">清空</button></div>
       <div v-else class="lib-list" role="list" data-testid="search-results" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
         <button v-for="(h, i) in windowed" :key="`${h.ref.set}:${h.ref.prop}:${h.ref.hash}:${h.variant?.altId ?? ''}:${range.start + i}`" class="lib-list__row" type="button" role="listitem" @click="open(h)">
           <span class="lib-name">{{ hitName(h) }}</span>
@@ -120,6 +131,6 @@ function open(h: ScopedSearchHit): void {
         </button>
       </div>
     </div>
-    <div class="lib-count">{{ q.trim() && !searching ? `共 ${list.length} 条` : '' }}</div>
+    <div class="lib-count">{{ searching ? '正在读取…' : `共 ${list.length} 条` }}</div>
   </div>
 </template>

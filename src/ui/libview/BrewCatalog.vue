@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import type { CatalogFile, CatalogPair } from '../../library/brew-pairing'
 import { useAppStore } from '../../stores/app'
+import { useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
@@ -10,6 +11,7 @@ import Icon from '../kit/Icon.vue'
 const app = useAppStore()
 const lib = useLibViewStore()
 const toast = useToastStore()
+const dl = useDownloadsStore()
 const rows = ref<CatalogPair[] | null>(null)
 const errors = ref<{ zh: string[]; en: string[] }>({ zh: [], en: [] })
 const loading = ref(false)
@@ -50,20 +52,23 @@ async function download(r: CatalogPair): Promise<void> {
   if (busy.value.has(k)) return
   busy.value = new Set([...busy.value, k])
   try {
-    const svc = app.svc().backend.library.service
-    let added = 0
-    let wanted = 0
-    const failed: string[] = []
-    for (const [side, f, id] of [['中文', r.zh, zhSet.value], ['英文', r.en, zhSet.value.replace(/^cn-/, 'en-')]] as const) {
-      if (!f) continue
-      wanted++
-      try { const res = await svc.brewAddUrl(id, f.urlDownload); added += res.value.length; if (res.errors.length) failed.push(side) } catch (e) { console.error('[trpg-assistant] 下载自制包失败', e); failed.push(side) }
-    }
-    await loadInstalled()
-    await lib.load(app.svc(), null).catch(() => undefined)
-    if (failed.length === wanted) toast.error('下载没有成功，请重试')
-    else if (failed.length) toast.error(`${failed.join('、')}没有装好，另一边已装好（可重试）`)
-    else toast.success(`刚刚下载完成了 ${wanted} 个包，同时下载了 ${Math.max(0, added - wanted)} 个额外依赖包`)
+    await dl.trackBrew(`brew:${k}`, `自制包《${nameOf(r)}》`, async () => {
+      const svc = app.svc().backend.library.service
+      let added = 0
+      let wanted = 0
+      const failed: string[] = []
+      for (const [side, f, id] of [['中文', r.zh, zhSet.value], ['英文', r.en, zhSet.value.replace(/^cn-/, 'en-')]] as const) {
+        if (!f) continue
+        wanted++
+        try { const res = await svc.brewAddUrl(id, f.urlDownload); added += res.value.length; if (res.errors.length) failed.push(side) } catch (e) { console.error('[trpg-assistant] 下载自制包失败', e); failed.push(side) }
+      }
+      await loadInstalled()
+      await lib.load(app.svc(), null).catch(() => undefined)
+      if (failed.length === wanted) { toast.error('下载没有成功，请重试'); return '下载没有成功' }
+      if (failed.length) toast.error(`${failed.join('、')}没有装好，另一边已装好（可重试）`)
+      else toast.success(`刚刚下载完成了 ${wanted} 个包，同时下载了 ${Math.max(0, added - wanted)} 个额外依赖包`)
+      return null
+    })
   } finally {
     const next = new Set(busy.value); next.delete(k); busy.value = next
   }
