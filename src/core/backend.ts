@@ -11,6 +11,7 @@ import { libraryDataVersion, scopedCurrentOverrides, scopedRefChecker } from '..
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
 import { BrewPacks } from '../library/brew-packs'
+import { BrewPairs } from '../library/brew-pairing'
 import { configureBrewValidator } from '../library/brew-validate'
 import { uninstallOfficial, type UninstallReport } from '../library/uninstall'
 import { impactOfRemoval, type RemovalImpact, type RemovalTarget } from './removal-impact'
@@ -47,6 +48,8 @@ export interface LibraryBackend {
   uninstallOfficial: (setId: string) => Promise<UninstallReport>
   /** 已装自制包清单（来历、来源、作者、依赖、条数），下载页 / 书架 / 我的库共用（P5 B-11）。 */
   brewPacks: BrewPacks
+  /** 自制包中英配对：下载页目录合并、已装包配对（P5 G-2）。 */
+  brewPairs: BrewPairs
   /** 中英对应：这一条在另一种语言里是哪一条（P5 B-10）。 */
   counterparts: Counterparts
   /** 文档类数据（规则速查、城主屏参考）：作者当小册子读（P5 B-02）。 */
@@ -152,7 +155,8 @@ export function createBackend(opts: BackendOptions): Backend {
   })
 
   const prefetch = new CatalogPrefetch({ files, directory, codeSets: DEFAULT_PREFETCH_CODE_SETS })
-  const counterparts = new Counterparts(service)
+  const brewPairs = new BrewPairs(service)
+  const counterparts = new Counterparts(service, brewPairs)
   const brewPacks = new BrewPacks(service)
   const images: LibraryBackend['images'] = {
     urls: imageUrls,
@@ -161,7 +165,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string): Promise<UninstallReport> => uninstallOfficial({
     db, tasks, afterDelete: async (id) => { service.reset(); scoped.reset(); await documents.clear(getSource(id)) },
   }, setId)
-  const library: LibraryBackend = { db, files, service, scoped, documents, links, images, counterparts, uninstallOfficial: uninstall, brewPacks, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { db, files, service, scoped, documents, links, images, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

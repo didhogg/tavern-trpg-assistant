@@ -36,10 +36,18 @@ describe('中英对应', () => {
   it('没有对应都给原因', async () => {
     expect(await c.counterpart(ref('cn-official', 'spell', 'zzz'))).toMatchObject({ status: 'none', reason: 'not-paired' })
     expect(await c.counterpart(ref('en-official', 'spell', 'zzz'))).toMatchObject({ status: 'none', reason: 'no-counterpart' })
-    expect(await c.counterpart(ref('cn-brew', 'spell', 'a'))).toMatchObject({ status: 'none', reason: 'not-official' })
+    expect(await c.counterpart(ref('nope', 'spell', 'a'))).toMatchObject({ status: 'none', reason: 'not-official' })
+    expect(await c.counterpart(ref('cn-brew', 'spell', 'a'))).toMatchObject({ status: 'none', reason: 'pack-unpaired' })
   })
   it('配对表里有、但对面没装这一条：说没找到，不交假地址', async () => {
     const bare = new Counterparts({ ...lib, storedItem: async () => null } as unknown as LibraryService)
     expect(await bare.counterpart(ref('cn-official', 'spell', 'a_phb'))).toMatchObject({ status: 'none', reason: 'not-found' })
+  })
+  it('自制条目：交给配对的包去找，原样带回原因', async () => {
+    const r1 = { set: 'en-brew', prop: 'spell', hash: 'x' }
+    const stub = (refs: typeof r1[], reason: 'structure-differs' | null) => new Counterparts(lib, { entry: async () => ({ refs, reason }) })
+    expect(await stub([r1], null).counterpart(ref('cn-brew', 'spell', 'a'))).toEqual({ status: 'found', refs: [r1], reason: null, sharedBy: 0 })
+    expect((await stub([r1, { ...r1, hash: 'y' }], null).counterpart(ref('cn-brew', 'spell', 'a'))).status).toBe('ambiguous')
+    expect(await stub([], 'structure-differs').counterpart(ref('en-brew', 'spell', 'a'))).toMatchObject({ status: 'none', reason: 'structure-differs' })
   })
 })

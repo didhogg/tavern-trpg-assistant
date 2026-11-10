@@ -53,6 +53,7 @@
       "kind": "brew",
       "lang": "zh",
       "codeSet": "cn",
+      "pair": "en-brew",
       "repo": "tjliqy/homebrew-deploy",
       "mirrors": [
         "https://homebrew.kiwee.top/",
@@ -64,6 +65,7 @@
       "kind": "brew",
       "lang": "en",
       "codeSet": "en",
+      "pair": "cn-brew",
       "repo": "TheGiddyLimit/homebrew",
       "mirrors": [
         "https://raw.githubusercontent.com/TheGiddyLimit/homebrew/master/",

@@ -1,7 +1,8 @@
-// 中英对应（P5 B-10）：条目页右上"En / 中文"一键切换要的"另一种语言里的这一条"。
+// 中英对应（P5 B-10、G-3a）：条目页右上"En / 中文"一键切换要的"另一种语言里的这一条"。官方数据靠配对表，自制靠配对的包（brew-pairing.ts）。
 // 中文 → 英文取作者做法算出的配对表（service.englishPairs）；英文 → 中文由同一张配对表反过来建。
 // 配对不是一一对应：约 3% 的条目没有对应，或多个中文条目指向同一个英文条目（作者"按名字配"的做法，见 P5-0 §11），
 // 所以返回的不只是地址，还带"有歧义 / 没有对应 / 被别的条目共用"，界面据此提示。
+import type { BrewPairs } from './brew-pairing'
 import type { EnglishPairs, LibraryService } from './service'
 import type { EntryRef } from './scopes'
 import { SOURCES, getSource, officialSourceOf } from './sources'
@@ -13,7 +14,7 @@ export interface Counterpart {
   /** found：一条；ambiguous：几个候选；none：空。 */
   refs: EntryRef[]
   /** none 的原因 / found 时的提示。 */
-  reason: 'not-official' | 'not-installed' | 'not-paired' | 'not-found' | 'no-counterpart' | null
+  reason: 'not-official' | 'not-installed' | 'not-paired' | 'not-found' | 'no-counterpart' | 'pack-unpaired' | 'structure-differs' | null
   /** found 时：另有几条别的条目也指向同一条（共用，切回来可能回不到原条）。 */
   sharedBy: number
 }
@@ -24,7 +25,7 @@ export class Counterparts {
   /** 配对表重建后是新对象，缓存自然换新，不需要手动清。 */
   private readonly reverse = new WeakMap<EnglishPairs, Map<string, string[]>>()
 
-  constructor(private readonly lib: LibraryService) {}
+  constructor(private readonly lib: LibraryService, private readonly brewPairs?: Pick<BrewPairs, 'entry'>) {}
 
   /** 英文编号 → 指向它的中文编号们（按类别）。配对表按"中文编号 → 英文编号"存，这里反过来建一次。 */
   private reverseOf(pairs: EnglishPairs): Map<string, string[]> {
@@ -44,9 +45,18 @@ export class Counterparts {
     return map
   }
 
-  /** 这一条在另一种语言里对应哪一条。只认官方数据集（自制没有登记配对语言）。 */
+  /** 自制条目：找配对的包，按同一下标取另一种语言里的那一条（P5 G-3a；配对规则见 brew-pairing.ts）。 */
+  private async brewCounterpart(ref: EntryRef): Promise<Counterpart> {
+    if (!this.brewPairs) return none('pack-unpaired')
+    const { refs, reason } = await this.brewPairs.entry(ref)
+    if (!refs.length) return none(reason ?? 'no-counterpart')
+    return { status: refs.length === 1 ? 'found' : 'ambiguous', refs, reason: null, sharedBy: 0 }
+  }
+
+  /** 这一条在另一种语言里对应哪一条。官方数据集用配对表，自制按配对的包同一下标取。 */
   async counterpart(ref: EntryRef): Promise<Counterpart> {
     const source = SOURCES.find((s) => s.id === ref.set)
+    if (source?.kind === 'brew' && source.pair) return this.brewCounterpart(ref)
     if (!source || source.kind !== 'official' || !source.pair) return none('not-official')
     const pair = getSource(source.pair)
     const cn = source.lang === 'zh' ? source : pair
