@@ -4,6 +4,7 @@ import type { EntryRef } from '../../library/scopes'
 import EntryPage from './EntryPage.vue'
 import PackHeader from './PackHeader.vue'
 import PackPage from './PackPage.vue'
+import SearchPage from './SearchPage.vue'
 
 export interface PackProps {
   set: string
@@ -17,4 +18,8 @@ export function openPack(p: PackProps): void {
 
 export function openEntry(ref: EntryRef, title = ''): void {
   useModalStore().push({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, props: { entryRef: ref }, variant: 'sheet' })
+}
+
+export function openSearch(): void {
+  useModalStore().open({ key: 'search', title: '全库数据搜索', component: SearchPage, variant: 'sheet' })
 }

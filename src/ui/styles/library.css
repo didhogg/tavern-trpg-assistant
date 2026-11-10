@@ -70,3 +70,10 @@
 .lib-table th:first-child { z-index: 3; }
 .trpg-window[data-layout='narrow'] .lib-table td { padding: 12px 10px; }
 .lib-sortable { opacity: .35; }
+.lib-fold--bar { margin: 0 var(--sp-4) var(--sp-2); }
+.lib-fold--bar > summary small { color: var(--text2); font-weight: var(--fw-regular); }
+.lib-fold--bar .lib-fold__body { display: grid; gap: var(--sp-2); max-height: 220px; }
+/* 下载页 */
+.lib-dlcard { display: grid; gap: var(--sp-2); margin-top: var(--sp-3); padding: var(--sp-4); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.lib-dlcard__top { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.lib-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
