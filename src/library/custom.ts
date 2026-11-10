@@ -3,6 +3,7 @@
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { validateBrewJson, type BrewValidation, type SchemaIssue } from './brew-validate'
 import { findCollisions, type DocIndex } from './versions'
+import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
 import type { ManageStore } from './manage'
@@ -37,7 +38,8 @@ export interface ScopeConfig {
 }
 
 export class CustomLibrary {
-  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase) {}
+  /** counterpartHint：保存条目后顺带查它在另一种语言里对上了谁（只提示，不写任何东西；P5 G-3b）。 */
+  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase, private readonly counterpartHint?: (ref: EntryRef) => Promise<Counterpart>) {}
 
   private get manage(): ManageStore {
     return this.scoped.manage
@@ -89,7 +91,10 @@ export class CustomLibrary {
     await f.call('editableEnsureSource', CUSTOM.mine)
     const saved = await f.call('editablePut', prop, { source: CUSTOM.mine.json, ...ent })
     // 结构问题只提示不拦截（作者的编辑器已经按结构引导；有疑问由界面决定是否提醒）
-    return { ...saved, parse: await this.after(codeSet), issues: await this.validateEntry(prop, ent) }
+    const parse = await this.after(codeSet)
+    // 另一种语言里有没有对上的条目（按英文名 + 来源）：只返回提示，保存时不改任何一边的条目
+    const counterpart = saved.hash && this.counterpartHint ? await this.counterpartHint({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }) : null
+    return { ...saved, parse, issues: await this.validateEntry(prop, ent), counterpart }
   }
 
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {

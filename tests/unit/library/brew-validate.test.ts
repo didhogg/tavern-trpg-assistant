@@ -78,4 +78,15 @@ describe('自制 JSON 结构校验（作者结构定义，预编译）', () => {
     expect(bad.map((i) => i.path)).toContain('/spell/0/level')
     expect(bad.every((i) => i.path.startsWith('/spell/0'))).toBe(true)
   })
+  it('saveEntry：保存后顺带返回另一种语言里对上了谁（只提示，另一边的条目一个字不改）', async () => {
+    const calls: string[] = []
+    const frame = { call: async (name: string, ..._args: unknown[]) => { calls.push(name); return name === 'editablePut' ? { uniqueId: 'u1', hash: 'h1' } : undefined } }
+    const lib = { frameOf: async () => frame, reparseBrew: async () => ({ parsed: true }) }
+    const hint = async (ref: { set: string; prop: string; hash: string }) => ({ status: 'found' as const, refs: [{ set: 'en-brew', prop: ref.prop, hash: 'e1' }], reason: null, sharedBy: 0 })
+    const custom = new CustomLibrary(lib as never, { reset: () => undefined } as never, {} as never, hint)
+    const r = await custom.saveEntry('cn', 'spell', spell)
+    expect(r).toMatchObject({ uniqueId: 'u1', hash: 'h1', counterpart: { status: 'found', refs: [{ set: 'en-brew', prop: 'spell', hash: 'e1' }] } })
+    expect(calls).toEqual(['editableEnsureSource', 'editablePut'])
+    expect((await new CustomLibrary(lib as never, { reset: () => undefined } as never, {} as never).saveEntry('cn', 'spell', spell)).counterpart).toBeNull()
+  })
 })

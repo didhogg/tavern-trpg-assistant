@@ -125,7 +125,9 @@ export function createBackend(opts: BackendOptions): Backend {
   const documents = new DocumentStore(db)
   const links = new EntryLinks(service, documents)
   const scoped = new ScopedLibrary(service, db, directory, links)
-  const custom = new CustomLibrary(service, scoped, db)
+  const brewPairs = new BrewPairs(service)
+  const counterparts = new Counterparts(service, brewPairs)
+  const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref))
   const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet),
     precompute: (setId, signal, onProgress) => runPrecompute([getSource(setId).codeSet], signal, onProgress) })
   const dataVersion = libraryDataVersion(db, service)
@@ -155,8 +157,6 @@ export function createBackend(opts: BackendOptions): Backend {
   })
 
   const prefetch = new CatalogPrefetch({ files, directory, codeSets: DEFAULT_PREFETCH_CODE_SETS })
-  const brewPairs = new BrewPairs(service)
-  const counterparts = new Counterparts(service, brewPairs)
   const brewPacks = new BrewPacks(service)
   const images: LibraryBackend['images'] = {
     urls: imageUrls,

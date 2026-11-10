@@ -86,7 +86,7 @@ export interface InstalledPair {
   status: PairStatus
 }
 
-export type BrewCounterpartReason = 'not-found' | 'pack-unpaired' | 'structure-differs' | 'no-counterpart'
+export type BrewCounterpartReason = 'not-found' | 'pack-unpaired' | 'structure-differs' | 'no-counterpart' | 'no-english-name'
 export interface BrewCounterpart {
   refs: EntryRef[]
   reason: BrewCounterpartReason | null
@@ -176,6 +176,31 @@ export class BrewPairs {
       }
     }
     if (refs.size) return { refs: [...refs.values()], reason: null }
-    return { refs: [], reason: !inPack ? 'not-found' : !paired ? 'pack-unpaired' : shape ? 'structure-differs' : 'no-counterpart' }
+    const reason: BrewCounterpartReason = !inPack ? 'not-found' : !paired ? 'pack-unpaired' : shape ? 'structure-differs' : 'no-counterpart'
+    if (reason === 'not-found') return { refs: [], reason }
+    // 按位置对不上（自己写的条目、本地导入的、没配对的包）：改按"英文名 + 来源"找
+    const named = await this.byName(ref)
+    if (named.refs.length) return named
+    return { refs: [], reason: named.reason === 'no-english-name' && reason === 'pack-unpaired' ? 'no-english-name' : reason }
+  }
+
+  /**
+   * 按"英文名 + 来源"对（P5 G-3b，办法 B）：中文条目带作者的 ENG_name（英文名），英文那边找同类别、同来源、name 等于它的；
+   * 反过来英文条目的 name 去找中文那边 ENG_name 等于它的。同名不止一条就都列出（界面当"有歧义"）。不写任何条目。
+   * 实测 23 对真实中英自制文件 3138 条：唯一且对 3036、重名 90、没有 ENG_name 12、配错 0。
+   */
+  private async byName(ref: EntryRef): Promise<BrewCounterpart> {
+    const here = getSource(ref.set)
+    const other = this.partnerOf(here)
+    const mine = await this.lib.storedItem(here.id, ref.prop, ref.hash)
+    if (!mine) return { refs: [], reason: 'not-found' }
+    const item = mine.item as { name?: unknown; ENG_name?: unknown }
+    const needle = here.lang === 'zh' ? item.ENG_name : item.name
+    if (typeof needle !== 'string' || !needle.trim() || !mine.source) return { refs: [], reason: here.lang === 'zh' ? 'no-english-name' : 'no-counterpart' }
+    if (!(await this.lib.brewInstalled(other.id)).length) return { refs: [], reason: 'no-counterpart' }
+    const field = other.lang === 'zh' ? 'ENG_name' : 'name'
+    const rows = await this.lib.query(other.id, ref.prop, { source: mine.source })
+    const refs = rows.filter((r) => r.hash && typeof (r.item as Record<string, unknown>)[field] === 'string' && ((r.item as Record<string, string>)[field]).trim() === needle.trim())
+    return { refs: refs.map((r) => ({ set: other.id, prop: ref.prop, hash: r.hash as string })), reason: refs.length ? null : 'no-counterpart' }
   }
 }

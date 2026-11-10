@@ -61,9 +61,9 @@ const installed: Record<string, ReturnType<typeof pack>[]> = {
     pack('zB', `${ZH}spell/Bu; 术.json`, ['B']),
     pack('zC', `${ZH}spell/Cu; 术.json`, ['C']),
     pack('zD', `${ZH}spell/Du; 术.json`, ['D']),
-    pack('zMine', null, ['Mine'], { isEditable: true }),
+    pack('zMine', null, ['TRPGMINE'], { isEditable: true }),
   ],
-  'en-brew': [pack('eA', `${EN}spell/Au; Spell.json`, ['A']), pack('eB', `${EN}spell/Bu; Spell.json`, ['B']), pack('eC', `${EN}spell/Cu; Spell.json`, ['C'])],
+  'en-brew': [pack('eA', `${EN}spell/Au; Spell.json`, ['A']), pack('eB', `${EN}spell/Bu; Spell.json`, ['B']), pack('eC', `${EN}spell/Cu; Spell.json`, ['C']), pack('eMine', null, ['TRPGMINE'], { isEditable: true })],
 }
 const docs: Record<string, Doc[]> = {
   cn: [
@@ -71,19 +71,30 @@ const docs: Record<string, Doc[]> = {
     { docIdLocal: 'zB', sources: ['B'], props: { spell: ['x_b', 'y_b'] } },
     { docIdLocal: 'zC', sources: ['C'], props: { spell: ['p_c'] } },
     { docIdLocal: 'zD', sources: ['D'], props: { spell: ['q_d'] } },
-    { docIdLocal: 'zMine', sources: ['Mine'], props: { spell: ['m_mine'] } },
+    { docIdLocal: 'zMine', sources: ['TRPGMINE'], props: { spell: ['m_mine', 'm_dup', 'm_noeng'] } },
   ],
   en: [
     { docIdLocal: 'eA', sources: ['A'], props: { spell: ['aa_a', 'bb_a', null] } },
     { docIdLocal: 'eB', sources: ['B'], props: { spell: ['xx_b'] } },
     { docIdLocal: 'eC', sources: ['C'], props: { spell: ['pp_c'] } },
+    { docIdLocal: 'eMine', sources: ['TRPGMINE'], props: { spell: ['e_mine', 'tw1', 'tw2'] } },
   ],
 }
-const stored = new Set(['en-brew|spell|aa_a', 'en-brew|spell|bb_a', 'cn-brew|spell|a_a', 'cn-brew|spell|b_a'])
+const named = (item: Record<string, unknown>, source: string) => ({ item, source })
+const items: Record<string, { item: Record<string, unknown>; source: string | null }> = {
+  'en-brew|spell|aa_a': named({}, 'A'), 'en-brew|spell|bb_a': named({}, 'A'), 'cn-brew|spell|a_a': named({}, 'A'), 'cn-brew|spell|b_a': named({}, 'A'),
+  'cn-brew|spell|m_mine': named({ name: '我的术', ENG_name: 'My Spell' }, 'TRPGMINE'),
+  'cn-brew|spell|m_dup': named({ name: '重名术', ENG_name: 'Twin' }, 'TRPGMINE'),
+  'cn-brew|spell|m_noeng': named({ name: '没英文名' }, 'TRPGMINE'),
+  'en-brew|spell|e_mine': named({ name: 'My Spell' }, 'TRPGMINE'),
+  'en-brew|spell|tw1': named({ name: 'Twin' }, 'TRPGMINE'),
+  'en-brew|spell|tw2': named({ name: 'Twin' }, 'TRPGMINE'),
+}
 const lib = {
   brewInstalled: async (id: string) => installed[id],
   frameOf: async (codeSet: string) => ({ call: async (name: string) => { if (name !== 'brewDocIndex') throw new Error(name); return docs[codeSet] } }),
-  storedItem: async (set: string, prop: string, hash: string) => (stored.has(`${set}|${prop}|${hash}`) ? { item: {}, source: null } : null),
+  storedItem: async (set: string, prop: string, hash: string) => items[`${set}|${prop}|${hash}`] ?? null,
+  query: async (set: string, prop: string, { source }: { source?: string }) => Object.entries(items).filter(([k, v]) => k.startsWith(`${set}|${prop}|`) && v.source?.toLowerCase() === source?.toLowerCase()).map(([k, v]) => ({ hash: k.split('|')[2], source: v.source, item: v.item })),
   brewCatalog: async (id: string) => ({
     value: id === 'cn-brew'
       ? [{ urlDownload: `${ZH}spell/Au; 术.json`, path: 'spell/Au; 术.json', sources: ['A'] }, { urlDownload: `${ZH}class/Zu; 职.json`, path: 'class/Zu; 职.json', sources: ['Z'] }]
@@ -123,5 +134,21 @@ describe('已装自制包的中英配对与条目对应（同一下标）', () =
     expect(await pairs.entry(ref('cn-brew', 'q_d'))).toEqual({ refs: [], reason: 'pack-unpaired' })
     expect(await pairs.entry(ref('cn-brew', 'p_c'))).toEqual({ refs: [], reason: 'no-counterpart' })
     expect(await pairs.entry(ref('cn-brew', 'nope'))).toEqual({ refs: [], reason: 'not-found' })
+  })
+  it('按位置对不上的（自己写的条目）改按"英文名 + 来源"找：中文 → 英文、英文 → 中文', async () => {
+    expect(await pairs.entry(ref('cn-brew', 'm_mine'))).toEqual({ refs: [ref('en-brew', 'e_mine')], reason: null })
+    expect(await pairs.entry(ref('en-brew', 'e_mine'))).toEqual({ refs: [ref('cn-brew', 'm_mine')], reason: null })
+  })
+
+  it('重名就都列出来（界面当有歧义）；中文没写英文名就说明原因；另一边什么都没装就是没有对应', async () => {
+    const dup = await pairs.entry(ref('cn-brew', 'm_dup'))
+    expect(dup.refs.map((r) => r.hash).sort()).toEqual(['tw1', 'tw2'])
+    expect(await pairs.entry(ref('cn-brew', 'm_noeng'))).toEqual({ refs: [], reason: 'no-english-name' })
+  })
+
+  it('不写任何东西：只读库', async () => {
+    const before = JSON.stringify(items)
+    await pairs.entry(ref('cn-brew', 'm_mine'))
+    expect(JSON.stringify(items)).toBe(before)
   })
 })
