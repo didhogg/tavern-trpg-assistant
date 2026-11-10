@@ -11,7 +11,10 @@ import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
+import ClassView from './ClassView.vue'
+import { byLevel, flattenFeatures } from './class-data'
 import EntryBody from './EntryBody.vue'
+import FeatureLevels from './FeatureLevels.vue'
 import { nameOf as itemName } from './pack-data'
 import { BLOCKS } from './statblock'
 
@@ -134,7 +137,9 @@ async function setEnabled(next: boolean): Promise<void> {
           <div v-if="block?.lines.length" class="lib-stat" data-testid="entry-statblock"><div v-for="l in block.lines" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
           <div v-if="block?.abilities.length" class="lib-abil"><div v-for="a in block.abilities" :key="a.key"><small>{{ a.label }}</small><b>{{ a.score }}</b> ({{ a.mod }})</div></div>
           <template v-for="sec in block?.sections ?? []" :key="sec.title"><h3>{{ sec.title }}</h3><EntryBody :block="sec.entries" :code-set="codeSet" /></template>
-          <EntryBody v-if="body" :block="body" :code-set="codeSet" />
+          <ClassView v-if="entryRef.prop === 'class' && state.kind === 'ok'" :item="state.item" :entry-ref="entryRef" :code-set="codeSet" />
+          <FeatureLevels v-else-if="entryRef.prop === 'subclass' && state.kind === 'ok'" :levels="byLevel(flattenFeatures((state.item as { subclassFeatures?: unknown }).subclassFeatures))" :code-set="codeSet" :open-upto="3" />
+          <EntryBody v-else-if="body" :block="body" :code-set="codeSet" />
           <p v-else-if="!block?.lines.length && !block?.sections.length" class="lib-muted">这一条没有正文。</p>
           <template v-if="subraces.length">
             <h3>亚种</h3>

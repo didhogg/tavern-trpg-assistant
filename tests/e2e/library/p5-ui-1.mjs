@@ -454,6 +454,25 @@ if (outside) {
   await settle(page, 300)
 }
 
+// ---- 职业页：职业表 + 按等级特性 + 子职业下拉 ----
+await page.locator('.trpg-shelf__row .lib-name', { hasText: '玩家手册' }).first().click()
+await page.waitForSelector('[data-testid="pack-page"] .lib-pills')
+await settle(page, 1000)
+await page.locator('.lib-pills .trpg-pill', { hasText: /^职业\d|^职业 / }).first().click().catch(async () => { await page.locator('.lib-pills .trpg-pill', { hasText: '职业' }).first().click() })
+await page.waitForSelector('[data-testid="pack-page"] .lib-list__row', { timeout: 60000 })
+check('职业没有作者列表列：显示名称 + 灰字来源的简单列表（不显示排序）', (await page.locator('[data-testid="pack-table"]').count()) === 0)
+await page.locator('[data-testid="pack-page"] input[type="search"]').fill('法师')
+await settle(page, 400)
+await page.locator('[data-testid="pack-page"] .lib-list__row', { hasText: '法师' }).first().click()
+await page.waitForSelector('[data-testid="class-view"]', { timeout: 30000 }).catch(async (e) => { console.log('职业页没出来：', (await page.locator('.trpg-modal').innerText()).slice(0, 300)); await shot('class-fail'); throw e })
+await settle(page, 2000)
+check('职业页：有职业表（等级 / 特性 / 作者额外列）20 行', (await page.locator('[data-testid="class-table"] tbody tr').count()) === 20 && (await page.locator('[data-testid="class-table"] thead th').count()) >= 3)
+check('职业页：按等级的特性（折叠，前三级展开）', (await page.locator('[data-testid="feature-level"]').count()) >= 5 && (await page.locator('[data-testid="feature-level"][open]').count()) >= 1)
+check('职业页：子职业下拉同页切换', (await page.locator('[data-testid="class-view"] .trpg-select-trigger').count()) === 1)
+await shot('class')
+await page.locator('.trpg-modal__close').click()
+await settle(page, 300)
+
 // ---- 窄屏：底部抽屉 ----
 await page.setViewportSize({ width: 390, height: 800 })
 await settle(page, 600)
