@@ -19,6 +19,7 @@ import type { BookDirectory } from './directory'
 import type { DirectoryRecord } from './directory'
 import { BrewPacks, brewShelfInfo } from './brew-packs'
 import { DocumentStore } from './documents'
+import { variantLinks, type VariantLink } from './variants'
 import { EntryLinks, type Located, type ResolvedTag } from './entry-links'
 import { scopedSearch, type ScopedSearchHit } from './scoped-search'
 import { attachShelf, directoryRows, groupShelf, type ShelfGroup, type ShelfInfo } from './shelf'
@@ -203,6 +204,21 @@ export class ScopedLibrary {
       }
     }
     return rows
+  }
+
+  /**
+   * 这一条有哪些变体（作者的版本 / 亚种 / 魔法变体），和它自己是谁的变体；只交本战役看得到的（B-33）。
+   * 详情里把变体显示在这一条旁边用。不做"用变体覆盖原条目"（先不做）。
+   */
+  async variantsOf(c: CampaignLibrary, ref: EntryRef): Promise<{ parent: EntryRef | null; variants: Array<VariantLink & { ref: EntryRef }> }> {
+    const links = variantLinks(await this.lib.parsed(ref.set, ref.prop), ref.hash)
+    const assigns = await this.manage.assignments()
+    const variants: Array<VariantLink & { ref: EntryRef }> = []
+    for (const v of links.variants) {
+      const vref = { set: ref.set, prop: ref.prop, hash: v.hash }
+      if ((await this.viewFor(c, vref, v.source, assigns)).visible) variants.push({ ...v, ref: vref })
+    }
+    return { parent: links.parent ? { set: ref.set, prop: ref.prop, hash: links.parent } : null, variants }
   }
 
   /** 按编号取【库】解析结果里的那一条（高效版本，不建作者详情）。 */

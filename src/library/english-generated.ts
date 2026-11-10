@@ -14,7 +14,7 @@ type Pairs = EnglishPairs['pairs']
 
 const low = (v: unknown): string => String(v ?? '').toLowerCase()
 
-type Kind = 'version' | 'subrace' | 'variant'
+export type Kind = 'version' | 'subrace' | 'variant'
 
 /** 作者写了哪种出处字段，就是哪种生成条目。 */
 function kindOf(it: any): Kind | null {
@@ -32,13 +32,13 @@ function motherHash(it: any, kind: Kind, byNameSource: Map<string, string>): str
   return byNameSource.get(`${low(name)}|${low(source)}`) ?? null
 }
 
-interface Gen { hash: string; kind: Kind; mother: string; ownMother: string; it: any }
+export interface Gen { hash: string; kind: Kind; mother: string; ownMother: string; it: any }
 
 /** 类别 → 母条目编号 → 版本编号（作者顺序）。 */
 export type VersionOrder = Record<string, Record<string, string[]>>
 
 /** 列出生成条目，母条目换成 mapMother 给的编号（中文那边换成英文母条目）。 */
-function generated(list: ParsedProp, mapMother: (hash: string) => string | null): Gen[] {
+export function generated(list: ParsedProp, mapMother: (hash: string) => string | null): Gen[] {
   // 有亚种的种族，解析结果里只剩合并后的无名亚种（编号与原始母条目相同），所以生成条目也算进来；同名时原始记录优先。
   const byNameSource = new Map<string, string>()
   for (const own of [true, false]) {
