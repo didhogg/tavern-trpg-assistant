@@ -41,7 +41,7 @@ describe('buildAlternatives', () => {
       frame: fakeFrame({
         brewDocIndex: () => [
           { docIdLocal: '甲', filename: '甲.json', timeAdded: 1, order: 1, isEditable: false, props: { spell: ['probe_a'] } },
-          { docIdLocal: '乙', filename: '乙.json', timeAdded: 2, order: 2, isEditable: false, props: { spell: ['probe_a', 'fireball_phb'] } },
+          { docIdLocal: '乙', filename: '乙.json', url: 'https://x/yi.json', sources: ['Yi'], timeAdded: 2, order: 2, isEditable: false, props: { spell: ['probe_a', 'fireball_phb'] } },
           { docIdLocal: '丙', filename: '丙.json', timeAdded: 3, order: 3, isEditable: false, props: { spell: ['new_c'] } },
         ],
       }),
@@ -59,9 +59,9 @@ describe('buildAlternatives', () => {
     })
     expect(Object.keys(index.targets).sort()).toEqual(['cn-brew|spell|probe_a', 'cn-official|spell|fireball_phb'])
     const fb = index.targets['cn-official|spell|fireball_phb']
-    expect(fb).toMatchObject({ base: 'official', source: 'PHB', alts: [{ altId: 'doc:乙', kind: 'collision', filename: '乙.json', item: { v: '乙', hash: 'fireball_phb' } }] })
+    expect(fb).toMatchObject({ base: 'official', source: 'PHB', alts: [{ altId: 'pack:https://x/yi.json', legacyIds: ['doc:乙'], kind: 'collision', filename: '乙.json', item: { v: '乙', hash: 'fireball_phb' } }] })
     const pa = index.targets['cn-brew|spell|probe_a']
-    expect(pa).toMatchObject({ base: '甲', source: 'A', alts: [{ altId: 'doc:乙', item: { v: '乙' } }] })
+    expect(pa).toMatchObject({ base: '甲', source: 'A', alts: [{ altId: 'pack:https://x/yi.json', item: { v: '乙' } }] })
     // 自制解析结果里撞编号的那条换回先装的甲
     const p = (await db.derived.get(parsedKey('cn-brew', 'spell')))!.value as ParsedProp
     expect(p.items[p.hashes.indexOf('probe_a')]).toEqual({ v: '甲', hash: 'probe_a' })

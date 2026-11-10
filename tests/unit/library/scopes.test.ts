@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { autoAssignment, chooseEntry, chooseSource, defaultCampaignLibrary, disabledEntries, entryUnit, membershipOf, sourceUnit, viewOf, type CampaignLibrary } from '../../../src/library/scopes'
-import { chooseVersion, findCollisions, type Alternative, type DocIndex } from '../../../src/library/versions'
+import { chooseVersion, findCollisions, packAltId, packStableId, type Alternative, type DocIndex } from '../../../src/library/versions'
 
 const c2014: CampaignLibrary = defaultCampaignLibrary('dnd5e2014', 'cn')
 const ref = { set: 'cn-official', prop: 'spell', hash: 'x_phb' }
@@ -109,5 +109,24 @@ describe('B-19 单条启用 / 停用', () => {
     const units = { entry: entryUnit(ref), source: sourceUnit('PHB') }
     expect(viewOf(c, units, membershipOf(undefined, undefined, null))).toEqual({ visible: false, reason: 'excluded' })
     expect(viewOf(c, { entry: entryUnit({ ...ref, hash: 'other' }), source: sourceUnit('PHB') }, membershipOf(undefined, undefined, null)).visible).toBe(true)
+  })
+})
+
+describe('B-21 备选编号用包的稳定标识', () => {
+  const alt: Alternative = { altId: 'pack:https://x/b.json', legacyIds: ['doc:随机1'], kind: 'collision', filename: 'b.json', item: {} }
+  it('新选的记稳定标识；旧版本记下的 doc:<本地编号> 仍认得，并归到新编号', () => {
+    expect(chooseVersion([alt], { global: 'pack:https://x/b.json' })).toEqual({ altId: 'pack:https://x/b.json', by: 'global', missing: null })
+    expect(chooseVersion([alt], { global: 'doc:随机1' })).toEqual({ altId: 'pack:https://x/b.json', by: 'global', missing: null })
+  })
+  it('卸载重装后本地编号变了，按稳定标识选的还在；只认旧本地编号的就丢（退回原件并标出）', () => {
+    const reinstalled: Alternative = { ...alt, legacyIds: ['doc:随机2'] }
+    expect(chooseVersion([reinstalled], { campaign: 'pack:https://x/b.json' }).altId).toBe('pack:https://x/b.json')
+    expect(chooseVersion([reinstalled], { campaign: 'doc:随机1' })).toEqual({ altId: 'base', by: 'campaign', missing: 'doc:随机1' })
+  })
+  it('稳定标识：有网址用网址；没有用来源（小写排序连起来）；都没有 → 退回 doc:', () => {
+    expect(packStableId({ url: 'https://x/a.json', sources: ['A'] })).toBe('https://x/a.json')
+    expect(packStableId({ url: null, sources: ['Zed', 'Alpha'] })).toBe('alpha :: zed')
+    expect(packStableId({ url: null, sources: [] })).toBeNull()
+    expect(packAltId(null, 'abc')).toBe('doc:abc')
   })
 })

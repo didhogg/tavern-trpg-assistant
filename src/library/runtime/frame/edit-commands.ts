@@ -33,11 +33,12 @@ export async function sourceNames(sources: string[]): Promise<Record<string, { f
 }
 
 /** 已装自制每个包：包头 + 声明的来源 + 每类每条的作者编号（原始文件直接算，不经加载器，所以同编号的都在）。 */
-export async function brewDocIndex(): Promise<Array<{ docIdLocal: string; filename: string | null; timeAdded: number; order: number; isEditable: boolean; sources: string[]; props: Record<string, Array<string | null>> }>> {
+export async function brewDocIndex(): Promise<Array<{ docIdLocal: string; filename: string | null; url: string | null; timeAdded: number; order: number; isEditable: boolean; sources: string[]; props: Record<string, Array<string | null>> }>> {
   await init()
   return (await A.BrewUtil2.pGetBrew()).map((b: any, i: number) => ({
     docIdLocal: b.head.docIdLocal,
     filename: b.head.filename ?? null,
+    url: b.head.url ?? null,
     timeAdded: b.head.timeAdded ?? 0,
     order: i,
     isEditable: !!b.head.isEditable,

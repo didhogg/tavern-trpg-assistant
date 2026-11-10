@@ -5,6 +5,7 @@ import type { TrpgDatabase } from './db'
 import type { BrewPack, BrewPacks } from '../library/brew-packs'
 import type { HouseRuleLink, ManageStore } from '../library/manage'
 import { getSource } from '../library/sources'
+import { packAltId, packStableId } from '../library/versions'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelCampaign } from '../schemas/kernel'
 import { libraryKey } from './saves/kernel'
 import { treeRootId } from './saves/view'
@@ -68,7 +69,7 @@ function removedOf(target: RemovalTarget, packs: BrewPack[]): Removed {
   const gone = target.kind === 'brew' ? packs.filter((p) => target.docIdLocals.includes(p.docIdLocal)) : []
   const hashes = new Map<string, Set<string>>()
   for (const p of gone) for (const [prop, hs] of Object.entries(p.hashes)) hashes.set(prop, new Set([...(hashes.get(prop) ?? []), ...hs]))
-  return { setId: set.id, codeSet: set.codeSet, official: target.kind === 'official', sources: lower(gone.flatMap((p) => p.sources)), hashes, altIds: new Set(gone.map((p) => `doc:${p.docIdLocal}`)) }
+  return { setId: set.id, codeSet: set.codeSet, official: target.kind === 'official', sources: lower(gone.flatMap((p) => p.sources)), hashes, altIds: new Set(gone.flatMap((p) => [`doc:${p.docIdLocal}`, packAltId(packStableId(p), p.docIdLocal)])) }
 }
 
 const refGone = (r: Removed, ref: { set: string; prop: string; hash: string }): boolean =>

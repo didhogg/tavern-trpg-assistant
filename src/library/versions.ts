@@ -7,6 +7,10 @@ import type { EntryRef } from './scopes'
 export interface DocIndex {
   docIdLocal: string
   filename: string | null
+  /** 下载网址（本地导入的没有）。 */
+  url?: string | null
+  /** 包声明的来源（_meta.sources[].json）。 */
+  sources?: string[]
   /** 作者包头的加入时间：先装的算"原来的"。同一次导入的几个包时间相同（同一毫秒），再按 order。 */
   timeAdded: number
   /** 在作者存储里的先后（作者按加入顺序往后排）。 */
@@ -15,6 +19,19 @@ export interface DocIndex {
   /** 类别 → 包里每一条的作者编号（原始文件直接算，不经加载器）。 */
   props: Record<string, Array<string | null>>
 }
+
+/**
+ * 包的稳定标识（P5 B-21）：作者自己判断"是不是同一个包"的规则（utils-brew-base.js `_getBrewId`）——有下载网址用网址，
+ * 没有就用声明的来源（小写、排序、' :: ' 连起来）。卸载重装后不变；作者的本地编号 docIdLocal 每次新建都是随机的，不能用来长期记选择。
+ */
+export function packStableId(pack: { url?: string | null; sources?: string[] }): string | null {
+  if (pack.url) return pack.url
+  const sources = (pack.sources ?? []).map((s) => s.toLowerCase()).sort()
+  return sources.length ? sources.join(' :: ') : null
+}
+
+/** 撞编号备选的编号：pack:<包的稳定标识>；包没有稳定标识时退回 doc:<本地编号>。 */
+export const packAltId = (stable: string | null, docIdLocal: string): string => (stable ? `pack:${stable}` : `doc:${docIdLocal}`)
 
 export interface Collision {
   prop: string
@@ -50,8 +67,10 @@ export function findCollisions(official: Record<string, Set<string>>, docs: DocI
 }
 
 export interface Alternative {
-  /** 备选编号：撞编号的用包的本地编号 doc:<docIdLocal>；房规用 house:<房规条目编号>。 */
+  /** 备选编号：撞编号的用包的稳定标识 pack:<稳定标识>（B-21，重装后不变）；房规用 house:<房规条目编号>。 */
   altId: string
+  /** 旧编号（旧版本记下的 doc:<本地编号>）：旧的选择还认得，新选的一律记 altId。 */
+  legacyIds?: string[]
   kind: 'collision' | 'houserule'
   /** 来自哪个包（文件名；可编辑自制为 null）。 */
   filename: string | null
@@ -72,12 +91,12 @@ export interface Chosen {
 
 /** 按 本战役 > 当前规则 > 全局 定生效版本；选的备选已不存在就回到原件并标出来。 */
 export function chooseVersion(alts: Alternative[], choices: { campaign?: string; rule?: string; global?: string }): Chosen {
-  const ids = new Set(alts.map((a) => a.altId))
   for (const by of ['campaign', 'rule', 'global'] as const) {
     const pick = choices[by]
     if (pick === undefined) continue
     if (pick === 'base') return { altId: 'base', by, missing: null }
-    if (ids.has(pick)) return { altId: pick, by, missing: null }
+    const hit = alts.find((a) => a.altId === pick || a.legacyIds?.includes(pick))
+    if (hit) return { altId: hit.altId, by, missing: null }
     return { altId: 'base', by, missing: pick }
   }
   return { altId: 'base', by: 'default', missing: null }

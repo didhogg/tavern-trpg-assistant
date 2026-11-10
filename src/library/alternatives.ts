@@ -7,7 +7,7 @@ import type { ParsedProp } from './runtime/frame/commands'
 import type { AuthorFrame } from './runtime/host'
 import { refKey, type EntryRef } from './scopes'
 import { officialSourceOf, type SourceEntry } from './sources'
-import { findCollisions, type Alternative, type DocIndex } from './versions'
+import { findCollisions, packAltId, packStableId, type Alternative, type DocIndex } from './versions'
 
 /** 作者自制存储的键（utils-brew-impl-brew.js 第 9 行 _STORAGE_KEY）。 */
 const BREW_STORAGE_KEY = 'HOMEBREW_2_STORAGE'
@@ -118,7 +118,8 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
         if (items.has(id)) out.errors.push({ docIdLocal: id, prop: c.prop, hash: c.hash, error: '隔离解析后作者没有交出这一条' })
         continue
       }
-      alts.push({ altId: `doc:${id}`, kind: 'collision', filename: filenameOf(id), ref: { set: source.id, prop: c.prop, hash: c.hash }, item })
+      const doc = docs.find((d) => d.docIdLocal === id)
+      alts.push({ altId: packAltId(doc ? packStableId(doc) : null, id), legacyIds: [`doc:${id}`], kind: 'collision', filename: filenameOf(id), ref: { set: source.id, prop: c.prop, hash: c.hash }, item })
     }
     // 自制解析结果里同编号的那条：官方是原件 → 去掉；先装的包是原件 → 换成先装的那条
     const p = brewParsed.get(c.prop) ?? ((await db.derived.get(parsedKey(source.id, c.prop)))?.value as ParsedProp | undefined)
