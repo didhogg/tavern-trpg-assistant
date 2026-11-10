@@ -4,7 +4,7 @@ import { resetWizard, wizardOptions } from '../../src/ui/wizard/state'
 import { sourceUnit } from '../../src/library/scopes'
 import type { ShelfGroup } from '../../src/library/shelf'
 
-const row = (source: string, visible: boolean, downloaded = false) => ({ kind: 'book', set: 'cn-official', source, id: null, name: source, abv: source, count: 1, downloaded, edition: null, membership: { assignment: null, basis: 'none' }, view: { visible, reason: visible ? 'scope' : 'out-of-scope' }, alternatives: 0 })
+const row = (source: string, visible: boolean, downloaded = false) => ({ kind: 'book', set: 'cn-official', source, id: null, name: source, abv: source, count: 1, downloaded, edition: null, membership: { assignment: null, basis: 'none' }, view: { visible: true, reason: visible ? 'scope' : 'out-of-scope' }, inScope: visible, alternatives: 0 })
 const group = (g: string, books: ReturnType<typeof row>[]): ShelfGroup => ({ group: g, name: g, books: books as never, adventures: [] })
 
 function setShelf(groups: ShelfGroup[]): void {
@@ -38,13 +38,13 @@ describe('向导选书：默认只勾核心组，已下载的恒勾且不能改'
     expect(libraryChoice().exclude).toEqual([sourceUnit('PHB')])
   })
 
-  it('已下载的恒勾：范围外的也记成加入；用户点不动它', () => {
+  it('已下载的恒勾：范围外的也不用记（已下载的默认就开，B-32）；用户点不动它', () => {
     const g = group('supplement', [row('XGE', false, true)])
     setShelf([g])
     expect(isPicked(g, g.books[0] as never)).toBe(true)
     toggleBook('XGE', false) // 界面已禁用；即使被调用也不生效
     expect(isPicked(g, g.books[0] as never)).toBe(true)
-    expect(libraryChoice()).toEqual({ include: [sourceUnit('XGE')], exclude: [] })
+    expect(libraryChoice()).toEqual({ include: [], exclude: [] })
   })
 
   it('范围只在用户改过时才带', () => {

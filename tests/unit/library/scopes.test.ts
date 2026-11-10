@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { autoAssignment, chooseSource, defaultCampaignLibrary, entryUnit, membershipOf, sourceUnit, viewOf, type CampaignLibrary } from '../../../src/library/scopes'
+import { autoAssignment, chooseEntry, chooseSource, defaultCampaignLibrary, disabledEntries, entryUnit, membershipOf, sourceUnit, viewOf, type CampaignLibrary } from '../../../src/library/scopes'
 import { chooseVersion, findCollisions, type Alternative, type DocIndex } from '../../../src/library/versions'
 
 const c2014: CampaignLibrary = defaultCampaignLibrary('dnd5e2014', 'cn')
@@ -33,8 +33,8 @@ describe('战役看得到什么：并集 − 排除', () => {
     expect(viewOf(c2014, units, in2014)).toEqual({ visible: true, reason: 'scope' })
     expect(viewOf(c2014, units, both)).toEqual({ visible: true, reason: 'scope' })
     expect(viewOf(c2014, units, global)).toEqual({ visible: true, reason: 'global' })
-    expect(viewOf(c2014, units, only2024)).toEqual({ visible: false, reason: 'out-of-scope' })
-    expect(viewOf(c2014, units, membershipOf(undefined, undefined, null))).toEqual({ visible: false, reason: 'unclassified' })
+    expect(viewOf(c2014, units, only2024)).toEqual({ visible: true, reason: 'out-of-scope' }) // B-32：已下载默认开
+    expect(viewOf(c2014, units, membershipOf(undefined, undefined, null))).toEqual({ visible: true, reason: 'unclassified' })
   })
   it('排除说了算（连全局通用也能排除）；额外加入能加进范围外的', () => {
     expect(viewOf({ ...c2014, exclude: [sourceUnit('phb')] }, units, global)).toEqual({ visible: false, reason: 'excluded' })
@@ -90,5 +90,24 @@ describe('向导勾选一本书', () => {
     expect(viewOf(c, units, { assignment: noMatter, basis: 'author' })).toEqual({ visible: false, reason: 'excluded' })
     const c2 = { ...defaultCampaignLibrary('dnd5e2014', 'cn'), ...on }
     expect(viewOf(c2, units, { assignment: null, basis: 'none' })).toEqual({ visible: true, reason: 'included' })
+  })
+})
+
+describe('B-19 单条启用 / 停用', () => {
+  const ref = { set: 'cn-official', prop: 'spell', hash: 'fireball|phb' }
+  it('停用 = 排除、启用 = 加入，互斥；停用清单能读回定位', () => {
+    const base = { include: [], exclude: [] }
+    const off = chooseEntry(base, ref, false)
+    expect(off.exclude).toEqual([entryUnit(ref)])
+    expect(disabledEntries(off)).toEqual([ref])
+    const on = chooseEntry(off, ref, true)
+    expect(on).toEqual({ include: [entryUnit(ref)], exclude: [] })
+    expect(disabledEntries(on)).toEqual([])
+  })
+  it('单条停用后查询按它过滤（viewOf 认条目单位），整本书仍开', () => {
+    const c = { ...defaultCampaignLibrary('dnd5e2014', 'cn'), ...chooseEntry({ include: [], exclude: [] }, ref, false) }
+    const units = { entry: entryUnit(ref), source: sourceUnit('PHB') }
+    expect(viewOf(c, units, membershipOf(undefined, undefined, null))).toEqual({ visible: false, reason: 'excluded' })
+    expect(viewOf(c, { entry: entryUnit({ ...ref, hash: 'other' }), source: sourceUnit('PHB') }, membershipOf(undefined, undefined, null)).visible).toBe(true)
   })
 })

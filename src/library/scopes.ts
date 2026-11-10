@@ -96,20 +96,44 @@ export function defaultCampaignLibrary(rule: string, codeSet: string): CampaignL
  * 取消勾选 = 排除，勾选 = 加入（排除说了算 > 加入 > 范围，见下面的 viewOf）。
  */
 export function chooseSource(c: Pick<CampaignLibrary, 'include' | 'exclude'>, source: string, visible: boolean): Pick<CampaignLibrary, 'include' | 'exclude'> {
-  const unit = sourceUnit(source)
+  return chooseUnit(c, sourceUnit(source), visible)
+}
+
+/** 单条启用 / 停用（P5 B-19）：和 chooseSource 同一套加入 / 排除，只是单位是一条（entryUnit）。 */
+export function chooseEntry(c: Pick<CampaignLibrary, 'include' | 'exclude'>, ref: EntryRef, visible: boolean): Pick<CampaignLibrary, 'include' | 'exclude'> {
+  return chooseUnit(c, entryUnit(ref), visible)
+}
+
+function chooseUnit(c: Pick<CampaignLibrary, 'include' | 'exclude'>, unit: string, visible: boolean): Pick<CampaignLibrary, 'include' | 'exclude'> {
   const rest = (list: string[]): string[] => list.filter((u) => u !== unit)
   return visible ? { include: [...rest(c.include), unit], exclude: rest(c.exclude) } : { include: rest(c.include), exclude: [...rest(c.exclude), unit] }
 }
 
+/** 本战役停用的单条（排除清单里的条目单位 → 定位）；"停用项目"页用。 */
+export function disabledEntries(c: Pick<CampaignLibrary, 'exclude'>): EntryRef[] {
+  const out: EntryRef[] = []
+  for (const u of c.exclude) {
+    const m = /^ent:([^:]+):([^:]+):(.+)$/.exec(u)
+    if (m) out.push({ set: m[1], prop: m[2], hash: m[3] })
+  }
+  return out
+}
+
 export type ViewReason = 'excluded' | 'included' | 'global' | 'scope' | 'out-of-scope' | 'unclassified'
 
-/** 在不在本战役：排除说了算 > 额外加入 > 全局通用 > 所选范围 > 范围外 / 未归类。 */
+/**
+ * 在不在本战役：排除说了算 > 额外加入 > 全局通用 > 所选范围 > 范围外 / 未归类。
+ * P5 B-32：已下载的来源默认开——范围外、未归类的 visible 也是 true（reason 照实写，界面可以提示"不在所选范围"），只有用户关掉的才看不见。
+ */
 export function viewOf(c: CampaignLibrary, units: { entry: string; source: string | null }, m: Membership): { visible: boolean; reason: ViewReason } {
   const hit = (list: string[]) => list.includes(units.entry) || (units.source !== null && list.includes(units.source))
   if (hit(c.exclude)) return { visible: false, reason: 'excluded' }
   if (hit(c.include)) return { visible: true, reason: 'included' }
-  if (!m.assignment) return { visible: false, reason: 'unclassified' }
+  if (!m.assignment) return { visible: true, reason: 'unclassified' }
   if (m.assignment.global) return { visible: true, reason: 'global' }
   if (m.assignment.scopes.some((s) => c.scopes.includes(s))) return { visible: true, reason: 'scope' }
-  return { visible: false, reason: 'out-of-scope' }
+  return { visible: true, reason: 'out-of-scope' }
 }
+
+/** 只按范围算本来看不看得到（向导的默认勾选用）：范围外、未归类的不算。 */
+export const inScopeOf = (v: { reason: ViewReason }): boolean => v.reason !== 'out-of-scope' && v.reason !== 'unclassified'

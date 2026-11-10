@@ -14,12 +14,12 @@ const CORE_GROUP = 'core'
 /** 这一行现在勾没勾：已下载的恒勾（灰勾，不能点掉）→ 用户点过的 → 默认（核心组里在范围内的书）。 */
 export function isPicked(group: ShelfGroup, row: CatalogRow): boolean {
   if (row.downloaded) return true
-  return wizard.picked[row.source] ?? (group.group === CORE_GROUP && row.view.visible)
+  return wizard.picked[row.source] ?? (group.group === CORE_GROUP && row.inScope)
 }
 
 /**
- * 当前向导的选书设置：把「勾没勾」和后端按范围算出的「本来看不看得到」（row.view.visible，不带加入 / 排除）比一比，
- * 不一样的才记成明确的加入 / 排除（chooseSource）。范围只在用户改过时才带。
+ * 当前向导的选书设置：把「勾没勾」和后端算出的「本来看不看得到」（row.view.visible，不带加入 / 排除；已下载的默认都开）比一比，
+ * 不一样的才记成明确的加入 / 排除（chooseSource）：没勾 = 排除，勾了不用记。范围只在用户改过时才带。
  */
 export function libraryChoice(): LibraryChoice {
   let lists = { include: [] as string[], exclude: [] as string[] }
@@ -37,7 +37,7 @@ export async function loadWizardOptions(s: Services): Promise<void> {
   wizard.showLoading = false
   const timer = setTimeout(() => { if (mine === loadSeq) wizard.showLoading = true }, 1000)
   try {
-    // 不带加入 / 排除：row.view.visible 是「只按范围」的默认，勾选差异在开局时才算（libraryChoice）
+    // 不带加入 / 排除：row.view.visible 是后端的默认（已下载的都开），row.inScope 是「只按范围」的默认，勾选差异在开局时才算（libraryChoice）
     const options = await s.backend.starter.wizardOptions(wizard.ruleId, WIZARD_CODE_SET, wizard.scopes ? { scopes: wizard.scopes } : {})
     if (mine !== loadSeq) return
     wizardOptions.value = options

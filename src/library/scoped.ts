@@ -8,7 +8,7 @@ import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } fr
 import type { ParsedProp } from './runtime/frame/commands'
 import type { EditionInfo } from './runtime/frame/edit-commands'
 import {
-  autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, refKey, sourceUnit, viewOf,
+  autoAssignment, BUILTIN_SCOPES, entryUnit, inScopeOf, membershipOf, refKey, sourceUnit, viewOf,
   type Assignment, type CampaignLibrary, type EntryRef, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
 import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
@@ -51,7 +51,7 @@ export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
 
 export type FetchResult =
   | { ok: true; ref: EntryRef; source: string | null; item: unknown; version: VersionInfo }
-  | { ok: false; ref: EntryRef; reason: 'not-installed' | 'not-found' | Exclude<ViewReason, 'included' | 'global' | 'scope'> }
+  | { ok: false; ref: EntryRef; reason: 'not-installed' | 'not-found' | 'excluded' }
 
 export interface CatalogRow {
   kind: 'book' | 'adventure'
@@ -67,6 +67,8 @@ export interface CatalogRow {
   edition: EditionInfo | null
   membership: Membership
   view: { visible: boolean; reason: ViewReason }
+  /** 只按范围算本来看得到吗（向导默认勾选用；已下载的默认都开，见 B-32）。 */
+  inScope: boolean
   /** 这本书里有几条挂了备选。 */
   alternatives: number
   /** 作者书目字段（分组、出版日期、冒险等级 / 故事线、封面链接…）；catalog(c, { remote: true }) 时才有。 */
@@ -248,7 +250,7 @@ export class ScopedLibrary {
       }
       const v = await this.viewFor(c, ref, stored.source, assigns)
       if (!v.visible) {
-        out.push({ ok: false, ref, reason: v.reason as 'excluded' | 'out-of-scope' | 'unclassified' })
+        out.push({ ok: false, ref, reason: 'excluded' })
         continue
       }
       const { chosen, item } = this.version(c, refKey(ref), await this.alternativesOf(ref, altMap), levels)
@@ -294,7 +296,7 @@ export class ScopedLibrary {
     const altMap = await this.alts(c.codeSet)
     const altBySource = new Map<string, number>()
     for (const r of altMap.values()) if (r.source) altBySource.set(r.source.toLowerCase(), (altBySource.get(r.source.toLowerCase()) ?? 0) + 1)
-    const rows: Array<Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view'>> = []
+    const rows: Array<Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'inScope'>> = []
     const known: Record<string, { full: string; abv: string; edition: EditionInfo }> = {}
     for (const set of this.setsOf(c.codeSet)) {
       const isInstalled = await this.installed(set)
@@ -326,7 +328,8 @@ export class ScopedLibrary {
       const unit = sourceUnit(r.source)
       const edition = known[r.source]?.edition ?? eds[r.source] ?? null
       const m = membershipOf(undefined, assigns.get(unit), autoAssignment(edition ?? undefined))
-      return { ...r, name: known[r.source]?.full ?? names[r.source]?.full ?? r.source, abv: known[r.source]?.abv ?? names[r.source]?.abv ?? r.source, edition, membership: m, view: viewOf(c, { entry: unit, source: unit }, m) }
+      const view = viewOf(c, { entry: unit, source: unit }, m)
+      return { ...r, name: known[r.source]?.full ?? names[r.source]?.full ?? r.source, abv: known[r.source]?.abv ?? names[r.source]?.abv ?? r.source, edition, membership: m, view, inScope: inScopeOf(view) }
     })
   }
 

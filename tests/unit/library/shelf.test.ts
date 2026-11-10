@@ -16,8 +16,8 @@ const REC: DirectoryRecord = {
   adventures: [{ id: 'LMoP', name: '失落矿坑', source: 'LMoP', group: 'supplement', published: '2014-07-15', level: { start: 1, end: 5 }, storyline: '新手包' }],
   adventureFiles: { LMoP: 'data/adventure/adventure-lmop.json' }, adventureProp: 'adventure', errors: { books: null, adventures: null },
 }
-const named = (r: Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'alternatives'>): CatalogRow =>
-  ({ ...r, name: r.source, abv: r.source, edition: null, membership: { scopes: [], basis: 'none' } as never, view: { visible: true, reason: 'scope' }, alternatives: 0 })
+const named = (r: Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'inScope' | 'alternatives'>): CatalogRow =>
+  ({ ...r, name: r.source, abv: r.source, edition: null, membership: { scopes: [], basis: 'none' } as never, view: { visible: true, reason: 'scope' }, inScope: true, alternatives: 0 })
 
 describe('书架', () => {
   it('没装的数据集：每本书、每个冒险一行，带作者字段；封面只带作者原对象（链接信息）', () => {

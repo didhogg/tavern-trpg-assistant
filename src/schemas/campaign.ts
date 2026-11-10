@@ -48,7 +48,7 @@ export const saveSlotSchema = z.object({
 })
 export type SaveSlot = z.infer<typeof saveSlotSchema>
 
-/** 【库】页面的偏好（P5 B-13）：分类方式、折叠状态、两个"总是…"开关、资料语言。每项都有默认值，旧设置不需要迁移。 */
+/** 【库】页面的偏好（P5 B-13）：分类方式、折叠状态（含全库搜索书目栏）、两个"总是…"开关、资料语言、编辑 / 覆盖默认层级。每项都有默认值，旧设置不需要迁移。 */
 export const librarySettingsSchema = z.object({
   /** 书架的分类方式（作者分组 / 规则版本 / 范围 / 书或冒险…）；取值由界面的登记表决定，这里不限死。 */
   groupBy: z.string().min(1).default('group'),
@@ -60,6 +60,8 @@ export const librarySettingsSchema = z.object({
   skipRemovePrompt: z.boolean().default(false),
   /** 资料语言（作者程序那一套：cn / en）；条目页的 En / 中文 切换改的是它。 */
   lang: z.string().min(1).default('cn'),
+  /** 编辑 / 覆盖默认作用于哪一层（P5 B-22）：本战役 / 某规则 / 全局；条目上可以逐条改。 */
+  overrideLevel: z.enum(['campaign', 'rule', 'global']).default('campaign'),
 })
 export type LibrarySettings = z.infer<typeof librarySettingsSchema>
 
