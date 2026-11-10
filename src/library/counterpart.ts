@@ -46,17 +46,24 @@ export class Counterparts {
   }
 
   /** 自制条目：找配对的包，按同一下标取另一种语言里的那一条（P5 G-3a；配对规则见 brew-pairing.ts）。 */
-  private async brewCounterpart(ref: EntryRef): Promise<Counterpart> {
+  private async brewCounterpart(ref: EntryRef, opts: { docIdLocal?: string }): Promise<Counterpart> {
     if (!this.brewPairs) return none('pack-unpaired')
-    const { refs, reason } = await this.brewPairs.entry(ref)
+    const { refs, reason } = await this.brewPairs.entry(ref, opts)
     if (!refs.length) return none(reason ?? 'no-counterpart')
     return { status: refs.length === 1 ? 'found' : 'ambiguous', refs, reason: null, sharedBy: 0 }
   }
 
-  /** 这一条在另一种语言里对应哪一条。官方数据集用配对表，自制按配对的包同一下标取。 */
-  async counterpart(ref: EntryRef): Promise<Counterpart> {
+  /**
+   * 这一条在另一种语言里对应哪一条。官方数据集用配对表，自制按配对的包同一下标取。
+   * 同编号拆成几行以后（B-31），variant.docIdLocal 指明是哪个包里的那一行，只在这个包里找。
+   */
+  async counterpart(ref: EntryRef, variant: { docIdLocal?: string } = {}): Promise<Counterpart> {
     const source = SOURCES.find((s) => s.id === ref.set)
-    if (source?.kind === 'brew' && source.pair) return this.brewCounterpart(ref)
+    if (source?.kind === 'brew' && source.pair) return this.brewCounterpart(ref, variant)
+    if (variant.docIdLocal) {
+      const brewSet = SOURCES.find((s) => s.kind === 'brew' && s.codeSet === source?.codeSet)
+      if (brewSet?.pair) return this.brewCounterpart({ ...ref, set: brewSet.id }, variant)
+    }
     if (!source || source.kind !== 'official' || !source.pair) return none('not-official')
     const pair = getSource(source.pair)
     const cn = source.lang === 'zh' ? source : pair

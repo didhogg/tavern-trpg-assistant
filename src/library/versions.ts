@@ -74,6 +74,8 @@ export interface Alternative {
   kind: 'collision' | 'houserule'
   /** 来自哪个包（文件名；可编辑自制为 null）。 */
   filename: string | null
+  /** 来自哪个包（作者本地编号）；房规没有。En / 中文按包取另一种语言时用。 */
+  docIdLocal?: string
   /** 这一条在库里的位置；详情用它读预计算的配图描述。 */
   ref?: EntryRef
   item: unknown
@@ -100,4 +102,43 @@ export function chooseVersion(alts: Alternative[], choices: { campaign?: string;
     return { altId: 'base', by, missing: pick }
   }
   return { altId: 'base', by: 'default', missing: null }
+}
+
+/** 同编号拆行（P5 B-31）：这一行是哪个版本。 */
+export interface VariantInfo {
+  /** 'base' = 原件（官方或先装的包）；否则是备选编号。 */
+  altId: string
+  kind: 'base' | 'collision'
+  /** 来自哪个包（文件名）；原件为 null。 */
+  pack: string | null
+  /** 来自哪个包（作者本地编号）；En / 中文按包取另一种语言用：counterpart(ref, { docIdLocal })。 */
+  docIdLocal: string | null
+  /** 现在在本战役生效的是不是这一行。 */
+  effective: boolean
+}
+
+/**
+ * 同编号拆行（B-31）的行清单：原件一行 + 每个撞编号的包一行（独立条目，各带来源）。房规是同一条的修改，不单独成行。
+ * 生效的那一行 effective = true；选了房规时原件那一行算生效（房规改的就是它）。source = 备选对象自己写的来源（没写为 null）。
+ */
+export function variantsOf(chosenAltId: string, alts: Alternative[]): Array<{ variant: VariantInfo; item: unknown | null; source: string | null }> {
+  const collisions = alts.filter((a) => a.kind === 'collision')
+  const baseEffective = !collisions.some((a) => a.altId === chosenAltId)
+  return [
+    { variant: { altId: 'base', kind: 'base', pack: null, docIdLocal: null, effective: baseEffective }, item: null, source: null },
+    ...collisions.map((a) => ({
+      variant: { altId: a.altId, kind: 'collision' as const, pack: a.filename, docIdLocal: a.docIdLocal ?? null, effective: chosenAltId === a.altId },
+      item: a.item, source: (a.item as { source?: string } | null)?.source ?? null,
+    })),
+  ]
+}
+
+/** 一行（带生效版本的对象）拆成多行；baseItem 是原件的对象。 */
+export function expandVariants<R extends { item: unknown; source: string | null; version: { altId: string } }>(row: R, baseItem: unknown, alts: Alternative[]): Array<R & { variant: VariantInfo }> {
+  return variantsOf(row.version.altId, alts).map((v) => ({
+    ...row,
+    item: v.variant.kind === 'base' ? (v.variant.effective ? row.item : baseItem) : v.item,
+    source: v.source ?? row.source,
+    variant: v.variant,
+  }))
 }

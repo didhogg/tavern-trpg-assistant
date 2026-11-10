@@ -5,6 +5,7 @@ import type { LibraryService } from './service'
 import type { SearchHit } from './runtime/frame/read-commands'
 import { refKey, ruleScopes, type CampaignLibrary, type Assignment, type EntryRef, type Membership, type ViewReason } from './scopes'
 import type { SourceEntry } from './sources'
+import type { VariantInfo } from './versions'
 
 /** 命中点开后走哪条路。 */
 export type SearchTarget =
@@ -12,7 +13,7 @@ export type SearchTarget =
   | { kind: 'corpus'; prop: string; id: string; source: string | null }
   | { kind: 'document'; id: string; chapter: number | null; header: string | null }
 
-export type ScopedSearchHit = SearchHit & { ref: EntryRef; reason: ViewReason; target: SearchTarget }
+export type ScopedSearchHit = SearchHit & { ref: EntryRef; reason: ViewReason; target: SearchTarget; /** 同编号拆行时才有（B-31）。 */ variant?: VariantInfo }
 
 /**
  * 判断一条命中属于哪一种。点不开的（作者的"页面"类、自制里的书 / 冒险）返回 null，不交给界面。

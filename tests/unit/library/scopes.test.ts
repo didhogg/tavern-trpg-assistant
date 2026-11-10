@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { autoAssignment, chooseEntry, chooseSource, defaultCampaignLibrary, disabledEntries, entryUnit, membershipOf, sourceUnit, viewOf, type CampaignLibrary } from '../../../src/library/scopes'
-import { chooseVersion, findCollisions, packAltId, packStableId, type Alternative, type DocIndex } from '../../../src/library/versions'
+import { chooseVersion, findCollisions, expandVariants, packAltId, packStableId, variantsOf, type Alternative, type DocIndex } from '../../../src/library/versions'
 
 const c2014: CampaignLibrary = defaultCampaignLibrary('dnd5e2014', 'cn')
 const ref = { set: 'cn-official', prop: 'spell', hash: 'x_phb' }
@@ -128,5 +128,33 @@ describe('B-21 备选编号用包的稳定标识', () => {
     expect(packStableId({ url: null, sources: ['Zed', 'Alpha'] })).toBe('alpha :: zed')
     expect(packStableId({ url: null, sources: [] })).toBeNull()
     expect(packAltId(null, 'abc')).toBe('doc:abc')
+  })
+})
+
+describe('B-31 同编号拆成独立行', () => {
+  const a1: Alternative = { altId: 'pack:a', kind: 'collision', filename: 'a.json', docIdLocal: 'da', item: { name: '火球术', source: 'ABrew' } }
+  const a2: Alternative = { altId: 'pack:b', kind: 'collision', filename: 'b.json', docIdLocal: 'db', item: { name: '火球术', source: 'BBrew' } }
+  const house: Alternative = { altId: 'house:h', kind: 'houserule', filename: null, item: { name: '火球术（房规）' } }
+  const row = (altId: string, item: unknown) => ({ item, source: 'PHB', version: { altId } })
+
+  it('原件一行 + 每个撞编号的包一行，各带自己的来源和包；房规不单独成行', () => {
+    const rows = expandVariants(row('base', { name: '火球术', source: 'PHB' }), { name: '火球术', source: 'PHB' }, [a1, a2, house])
+    expect(rows.map((r) => [r.variant.altId, r.source, r.variant.pack, r.variant.effective])).toEqual([['base', 'PHB', null, true], ['pack:a', 'ABrew', 'a.json', false], ['pack:b', 'BBrew', 'b.json', false]])
+    expect(rows[1].variant.docIdLocal).toBe('da')
+    expect(rows[2].item).toBe(a2.item)
+  })
+  it('用户选了某个包的版本：那一行生效，原件一行显示原件自己的对象', () => {
+    const base = { name: '火球术', source: 'PHB' }
+    const rows = expandVariants(row('pack:b', a2.item), base, [a1, a2])
+    expect(rows.map((r) => r.variant.effective)).toEqual([false, false, true])
+    expect(rows[0].item).toBe(base)
+  })
+  it('选了房规：原件那一行生效，显示房规后的对象', () => {
+    const rows = expandVariants(row('house:h', house.item), { name: '火球术' }, [a1, house])
+    expect(rows[0]).toMatchObject({ variant: { effective: true }, item: house.item })
+    expect(variantsOf('house:h', [a1, house]).length).toBe(2)
+  })
+  it('没有撞编号的包：只有原件一行', () => {
+    expect(variantsOf('base', [house]).map((v) => v.variant.altId)).toEqual(['base'])
   })
 })

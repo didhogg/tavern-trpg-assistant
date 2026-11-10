@@ -12,7 +12,8 @@ import {
   type Assignment, type CampaignLibrary, type EntryRef, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
 import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
-import { chooseVersion, type Alternative, type Chosen } from './versions'
+import { chooseVersion, expandVariants, variantsOf, type Alternative, type Chosen, type VariantInfo } from './versions'
+export type { VariantInfo } from './versions'
 import { hashValue } from '../core/hash'
 import type { BookDirectory } from './directory'
 import type { DirectoryRecord } from './directory'
@@ -32,9 +33,11 @@ export interface ScopedRow {
   ref: EntryRef
   source: string | null
   reason: ViewReason
-  /** 生效版本的作者对象。 */
+  /** 生效版本的作者对象（拆行时是这一行自己那个版本的对象）。 */
   item: unknown
   version: VersionInfo
+  /** 只在 expand 时有。 */
+  variant?: VariantInfo
 }
 
 export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
@@ -171,8 +174,8 @@ export class ScopedLibrary {
     return out
   }
 
-  /** 按战役查一类：只交本战役看得到的，条目是生效版本。 */
-  async query(c: CampaignLibrary, prop: string, { source }: { source?: string } = {}): Promise<ScopedRow[]> {
+  /** 按战役查一类：只交本战役看得到的，条目是生效版本。expand = 同编号的多个包版本拆成独立行（B-31）。 */
+  async query(c: CampaignLibrary, prop: string, { source, expand = false }: { source?: string; expand?: boolean } = {}): Promise<ScopedRow[]> {
     const assigns = await this.manage.assignments()
     const altMap = await this.alts(c.codeSet)
     const levels = await this.choicesFor(c)
@@ -192,8 +195,11 @@ export class ScopedLibrary {
         if (house.has(refKey(ref))) continue
         const v = await this.viewFor(c, ref, r.source, assigns)
         if (!v.visible) continue
-        const { chosen, item } = this.version(c, refKey(ref), await this.alternativesOf(ref, altMap), levels)
-        rows.push({ ref, source: r.source, reason: v.reason, item: item ?? r.item, version: chosen })
+        const alts = await this.alternativesOf(ref, altMap)
+        const { chosen, item } = this.version(c, refKey(ref), alts, levels)
+        const row: ScopedRow = { ref, source: r.source, reason: v.reason, item: item ?? r.item, version: chosen }
+        if (expand) rows.push(...expandVariants(row, r.item, alts))
+        else rows.push(row)
       }
     }
     return rows
@@ -256,8 +262,25 @@ export class ScopedLibrary {
     return out
   }
 
-  /** 按战役搜索：命中按种类分流（条目 / 书与冒险 / 文档），每条带 target；结果只留本战役看得到的。 */
-  search(c: CampaignLibrary, term: string): Promise<ScopedSearchHit[]> {
+  /** 按战役搜索：命中按种类分流（条目 / 书与冒险 / 文档），每条带 target；结果只留本战役看得到的。expand = 同编号的多个包版本拆成独立行（B-31）。 */
+  async search(c: CampaignLibrary, term: string, { expand = false }: { expand?: boolean } = {}): Promise<ScopedSearchHit[]> {
+    const hits = await this.searchHits(c, term)
+    if (!expand) return hits
+    const altMap = await this.alts(c.codeSet)
+    const levels = await this.choicesFor(c)
+    const out: ScopedSearchHit[] = []
+    for (const h of hits) {
+      const collisions = h.target.kind === 'entry' ? (await this.alternativesOf(h.ref, altMap)).filter((a) => a.kind === 'collision') : []
+      if (!collisions.length) { out.push(h); continue }
+      const { chosen } = this.version(c, refKey(h.ref), collisions, levels)
+      for (const v of variantsOf(chosen.altId, collisions)) {
+        out.push({ ...h, doc: v.source ? { ...h.doc, s: v.source } : h.doc, variant: v.variant })
+      }
+    }
+    return out
+  }
+
+  private searchHits(c: CampaignLibrary, term: string): Promise<ScopedSearchHit[]> {
     return scopedSearch({
       lib: this.lib, links: this.links, sets: this.setsOf(c.codeSet), installed: (s) => this.installed(s),
       viewFor: (cc, ref, source, assigns) => this.viewFor(cc, ref, source, assigns), assignments: () => this.manage.assignments(), houseUnits: () => this.houseUnits(),

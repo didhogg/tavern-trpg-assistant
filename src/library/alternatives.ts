@@ -119,7 +119,7 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
         continue
       }
       const doc = docs.find((d) => d.docIdLocal === id)
-      alts.push({ altId: packAltId(doc ? packStableId(doc) : null, id), legacyIds: [`doc:${id}`], kind: 'collision', filename: filenameOf(id), ref: { set: source.id, prop: c.prop, hash: c.hash }, item })
+      alts.push({ altId: packAltId(doc ? packStableId(doc) : null, id), legacyIds: [`doc:${id}`], kind: 'collision', filename: filenameOf(id), docIdLocal: id, ref: { set: source.id, prop: c.prop, hash: c.hash }, item })
     }
     // 自制解析结果里同编号的那条：官方是原件 → 去掉；先装的包是原件 → 换成先装的那条
     const p = brewParsed.get(c.prop) ?? ((await db.derived.get(parsedKey(source.id, c.prop)))?.value as ParsedProp | undefined)

@@ -148,7 +148,7 @@ export class BrewPairs {
    * 一条自制条目在另一种语言里是哪一条：先找它所在的包的配对包，再按"同类数组、同一下标"取英文（中文）那条的作者编号，
    * 并核对另一边库里真的有。同一条在几个包里（同编号挂备选）各自找，取得的结果合并去重。
    */
-  async entry(ref: EntryRef): Promise<BrewCounterpart> {
+  async entry(ref: EntryRef, opts: { docIdLocal?: string } = {}): Promise<BrewCounterpart> {
     const here = getSource(ref.set)
     const other = this.partnerOf(here)
     const zhId = here.lang === 'zh' ? here.id : other.id
@@ -161,6 +161,7 @@ export class BrewPairs {
     let paired = false
     let shape = false
     for (const [docId, props] of mine) {
+      if (opts.docIdLocal && docId !== opts.docIdLocal) continue // 同编号拆行后，只看这一行所在的包（B-31）
       const arr = props[ref.prop]
       if (!arr?.includes(ref.hash)) continue
       inPack = true
@@ -180,7 +181,7 @@ export class BrewPairs {
     if (reason === 'not-found') return { refs: [], reason }
     // 按位置对不上（自己写的条目、本地导入的、没配对的包）：改按"英文名 + 来源"找
     const named = await this.byName(ref)
-    if (named.refs.length) return named
+    if (named.refs.length && !opts.docIdLocal) return named
     return { refs: [], reason: named.reason === 'no-english-name' && reason === 'pack-unpaired' ? 'no-english-name' : reason }
   }
 
