@@ -316,14 +316,14 @@ export class LibraryService {
   /** 按网址装（作者自动追装依赖）。 */
   async brewAddUrl(sourceId: string, url: string): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport }> {
     const s = this.brewSource(sourceId)
-    const r = await (await this.frame(s.codeSet)).call('brewAddUrl', url)
+    const r = await this.withTimeout(async () => (await this.frame(s.codeSet)).call('brewAddUrl', url), '下载自制包')
     return { ...r, parse: await this.afterBrewChange(s) }
   }
 
   /** 缺依赖一键下载：给来源标识（缺什么），作者到来源索引找网址、装上并追装它的依赖。notFound = 索引里查不到的来源。 */
   async brewInstallSources(sourceId: string, sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null }> {
     const s = this.brewSource(sourceId)
-    const r = await (await this.frame(s.codeSet)).call('brewAddSources', sources)
+    const r = await this.withTimeout(async () => (await this.frame(s.codeSet)).call('brewAddSources', sources), '下载缺的依赖包')
     return { ...r, parse: r.value.added.length ? await this.afterBrewChange(s) : null }
   }
 
@@ -424,6 +424,16 @@ export class LibraryService {
   private async brewSourceCounts(sourceId: string): Promise<Record<string, number>> {
     const prefix = `parsed:${sourceId}:`
     return countSources(await this.opts.db.derived.where('key').startsWith(prefix).toArray(), prefix, { lower: true })
+  }
+
+  /**
+   * 联网下载自制包给个时限（P5-1 B-48）：作者程序的下载卡住时，调用永远不返回，界面就一直「下载中」，只能重载页面。
+   * 超时就关掉卡住的小窗、清掉缓存，抛错让界面能重试（重试会开新的小窗）。
+   */
+  private async withTimeout<T>(run: () => Promise<T>, what: string, ms = 180_000): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => { this.reset(); reject(new Error(`${what}超过 ${ms / 1000} 秒没有响应，已重置后台，请重试`)) }, ms) })
+    try { return await Promise.race([run(), timeout]) } finally { clearTimeout(timer) }
   }
 
   /** 这套作者程序对应的官方数据装好了吗（作者程序启动要读它；没装时自制读不了，P5-1 B-37）。 */
