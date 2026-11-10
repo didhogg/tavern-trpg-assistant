@@ -8,6 +8,7 @@ import { useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import Icon from '../kit/Icon.vue'
 import { formatBytes } from '../format'
+import BrewCatalog from './BrewCatalog.vue'
 
 /** 下载页（U4a）：官方资料（整套，中英自动一起装）+ 冒险按本下载。进度 / 失败用统一的警告样式；完成只用顶部提示，页面里不另提示。 */
 const app = useAppStore()
@@ -105,8 +106,7 @@ function startAdventure(row: CatalogRow): void {
         <li v-if="!shownAdventures.length" class="lib-muted" style="padding: var(--sp-3)">没有符合的冒险。</li>
       </ul>
 
-      <div class="lib-sec">自制包</div>
-      <p class="lib-muted" style="font-size: var(--fs-sm)">自制包目录与【增加数据源仓库】稍后开放。</p>
+      <BrewCatalog />
     </template>
   </div>
 </template>

@@ -227,8 +227,27 @@ check('下载页：官方资料显示「已安装」', (await page.locator('[dat
 const advN = await page.locator('[data-testid="adventure-list"] .trpg-row').count()
 out.adventureRows = advN
 check('下载页：列出冒险，已装的标「已装」', advN > 5)
-check('自制包区说明稍后开放（不假装能用）', (await page.locator('[data-testid="download-tab"]', { hasText: '稍后开放' }).count()) === 1)
+check('自制包区：有【载入目录】和灰掉的【增加数据源仓库】', (await page.getByTestId('brew-load').count()) === 1 && (await page.locator('[data-testid="brew-catalog"] button', { hasText: '增加数据源仓库' }).isDisabled()))
 await shot('download-wide')
+await page.getByTestId('brew-load').click()
+const catOk = await page.waitForSelector('[data-testid="brew-list"] .trpg-row', { timeout: 90000 }).then(() => true).catch(() => false)
+out.brewCatalogLoaded = catOk
+check('自制目录载入后列出包（中英配对行，带 中 / En 标记）', catOk && (await page.locator('[data-testid="brew-list"] .trpg-row .trpg-badge', { hasText: 'En' }).count()) > 0)
+if (catOk) {
+  const totalText = await page.locator('[data-testid="brew-catalog"] .lib-count').innerText()
+  out.brewCount = totalText
+  await page.locator('[data-testid="brew-catalog"] input[type="search"]').fill('Giddy')
+  await settle(page, 500)
+  const one = page.locator('[data-testid="brew-list"] .trpg-row', { has: page.locator('button', { hasText: '下载' }) }).first()
+  const hasOne = (await one.count()) > 0
+  check('搜得到一个可下载的自制包', hasOne)
+  if (hasOne) {
+    const nm = await one.locator('.lib-name').innerText()
+    await one.locator('button', { hasText: '下载' }).click()
+    await page.waitForFunction((n) => [...document.getElementById('trpg-assistant-root').shadowRoot.querySelectorAll('[data-testid="brew-list"] .trpg-row')].some((r) => r.textContent.includes(n) && r.textContent.includes('已装')), nm, { timeout: 180000 }).catch(() => {})
+    check('下载自制包：行变「已装」，顶部横幅说明下载了几个包', (await page.locator('[data-testid="brew-list"] .trpg-row', { hasText: nm }).first().innerText()).includes('已装'), nm)
+  }
+}
 await page.locator('.lib-top button', { hasText: '书架' }).click()
 await settle(page, 400)
 
