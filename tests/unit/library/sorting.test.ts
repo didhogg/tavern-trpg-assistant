@@ -41,3 +41,17 @@ describe('Sorting 缓存', () => {
     expect((await sorting.sort('cn', 'spell', [{ h: 'z' }, { h: 'a' }], (r) => r.h, 'level')).map((r) => r.h)).toEqual(['a', 'z'])
   })
 })
+
+describe('Sorting.cells（B-35 列显示值）', () => {
+  it('同一类只问小窗一次；小窗重开后重新问', async () => {
+    const calls: string[] = []
+    const lib = { generation: 0, frameOf: async () => ({ call: async (fn: string, ...a: unknown[]) => { calls.push(`${fn}:${a.join('|')}`); return { columns: [{ sort: 'level', text: '环阶', title: null }], cells: { h1: ['3 环'] } } } }) }
+    const sorting = new Sorting(lib as never)
+    expect((await sorting.cells('cn', 'spell'))?.cells.h1).toEqual(['3 环'])
+    await sorting.cells('cn', 'spell')
+    expect(calls).toEqual(['listCells:spell'])
+    lib.generation++
+    await sorting.cells('cn', 'spell')
+    expect(calls.length).toBe(2)
+  })
+})

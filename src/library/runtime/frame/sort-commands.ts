@@ -64,14 +64,8 @@ export async function sortColumns(prop: string): Promise<SortColumn[]> {
     .filter((c): c is SortColumn => !!c.sort)
 }
 
-/**
- * 按某一列排序后每条的名次：作者编号 → 名次（0 起）。条目 = 作者加载器里这个类别的全部（官方 + 已装自制）。
- * 做法同作者列表页：mutateAndAddToFilters 补上排序要用的归一化字段 → _getListItem 得到带排序值的列表项 → List.getSortedItems 排。
- */
-export async function sortRanks(prop: string, sortBy: string, sortDir: 'asc' | 'desc'): Promise<Record<string, number> | null> {
-  const m = await modalClassOf(prop)
-  if (!m) return null
-  if (!(await sortColumns(prop)).some((c) => c.sort === sortBy)) return null
+/** 作者做法：补排序用的归一化字段 → 用 _getListItem 为每条造列表项（带排序值和作者排好的行元素）。条目 = 作者加载器里这个类别的全部（官方 + 已装自制）。 */
+async function authorListItems(m: { Cls: any; page: string }, prop: string): Promise<{ inst: any; entities: any[]; items: any[] }> {
   const raw: any[] = [...((await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []), ...((await A.DataLoader.pCacheAndGetAllBrew(prop)) ?? [])]
   return withPage(m.page, () => {
     const inst = new m.Cls({ namespace: 'trpg-sort' })
@@ -79,6 +73,17 @@ export async function sortRanks(prop: string, sortBy: string, sortDir: 'asc' | '
     entities.forEach((e) => inst._pageFilter.mutateAndAddToFilters(e))
     const stub = { _previewButtonHandler: { bindPreviewButton() {} }, _isRadio: false, _getNameStyle: () => '' }
     const items = entities.map((e, i) => m.Cls.prototype._getListItem.call(stub, inst._pageFilter, e, i))
+    return { inst, entities, items }
+  })
+}
+
+/** 按某一列排序后每条的名次：作者编号 → 名次（0 起）。做法同作者列表页：列表项带排序值 → List.getSortedItems 排。 */
+export async function sortRanks(prop: string, sortBy: string, sortDir: 'asc' | 'desc'): Promise<Record<string, number> | null> {
+  const m = await modalClassOf(prop)
+  if (!m) return null
+  if (!(await sortColumns(prop)).some((c) => c.sort === sortBy)) return null
+  const { inst, entities, items } = await authorListItems(m, prop)
+  return withPage(m.page, () => {
     const list = { _filteredItems: items, _sortBy: sortBy, _sortDir: sortDir, _fnSort: inst._fnSort, _wrpList: { previousElementSibling: { querySelector: () => ({}) } }, constructor: A.List }
     const sorted: any[] = A.List.prototype.getSortedItems.call(list, { items: [...items] })
     const at = new Map(items.map((it, i) => [it, i]))
@@ -89,4 +94,40 @@ export async function sortRanks(prop: string, sortBy: string, sortDir: 'asc' | '
     })
     return out
   })
+}
+
+export interface ListColumn {
+  /** 作者的排序键；这一列不能排序时为 null。 */
+  sort: string | null
+  text: string
+  title: string | null
+}
+
+export interface ListCells {
+  /** 作者列表页的全部列（含不能排序的），顺序 = 作者的表头。 */
+  columns: ListColumn[]
+  /** 作者编号 → 每一列的显示文字（作者列表行里每个单元格的文字，顺序同 columns）。 */
+  cells: Record<string, string[]>
+}
+
+/**
+ * 每条在作者列表页上各列显示什么（P5 B-35）：就是作者 ModalFilter<类别>._getListItem 造出来的行里每个单元格的文字
+ * （环阶、时间、学派、范围…），不另算。行的前面有勾选框、预览按钮等非数据单元格，所以按表头个数从行尾对齐。
+ * 作者没有 ModalFilter 的类别返回 null（界面只显示名称与来源）。
+ */
+export async function listCells(prop: string): Promise<ListCells | null> {
+  const m = await modalClassOf(prop)
+  if (!m) return null
+  const headers: any[] = m.Cls.prototype._getColumnHeaders.call({})
+  const columns: ListColumn[] = headers.map((el) => ({ sort: el.getAttribute('data-sort'), text: el.textContent ?? '', title: el.getAttribute('title') }))
+  const { entities, items } = await authorListItems(m, prop)
+  const cells: Record<string, string[]> = {}
+  items.forEach((it, i) => {
+    const hash = hashOf(prop, entities[i])
+    if (!hash || hash in cells) return
+    const kids: any[] = [...(it.ele?.firstElementChild?.children ?? [])]
+    const texts = kids.map((k) => String(k.textContent ?? '').replace(/\s+/g, ' ').trim())
+    cells[hash] = columns.map((_, c) => texts[texts.length - columns.length + c] ?? '')
+  })
+  return { columns, cells }
 }

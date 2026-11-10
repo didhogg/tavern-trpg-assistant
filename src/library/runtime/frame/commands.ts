@@ -1,7 +1,7 @@
 // 小窗里插件能叫作者程序做的事。每一件都只是转调作者自己的函数，结果原样交回，不挑字段。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init, sourceOf } from './author'
-import { sortColumns, sortRanks } from './sort-commands'
+import { listCells, sortColumns, sortRanks } from './sort-commands'
 import { brewAddFiles, brewAddSources, brewAddUrl, brewCheckUpdates, brewCorpusList, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch, variantTemplateNames, versionOrder } from './english-commands'
 import { detail, excludedFlags, search, searchIndexDump, searchIndexLoad, searchSettings } from './read-commands'
@@ -113,5 +113,5 @@ export async function frameErrors(): Promise<string[]> {
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, parseBrewProp, rawHashes,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, sortColumns, sortRanks, tokenPath, extractTables, directory }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, sortColumns, sortRanks, listCells, tokenPath, extractTables, directory }
 export type CommandName = keyof typeof COMMANDS

@@ -53,6 +53,25 @@ const result = await page.evaluate(async (bookText) => {
       r.b18[prop] = out
     } catch (e) { r.b18[prop] = { err: String(e.message ?? e).slice(0, 200) } }
   }
+  // ---- B-35 列显示值：作者列表行里每个单元格的文字 ----
+  r.b35 = {}
+  for (const prop of ['spell', 'monster', 'item', 'race', 'feat', 'background', 'optionalfeature', 'class', 'action']) {
+    try {
+      const t0 = performance.now()
+      const lc = await lib.sorting.cells('cn', prop)
+      if (!lc) { r.b35[prop] = { none: true }; continue }
+      const rows = (await lib.service.query('cn-official', prop, {})).filter((x) => x.hash)
+      const have = rows.filter((x) => lc.cells[x.hash]).length
+      const nameCol = lc.columns.findIndex((c) => c.sort === 'name')
+      const nameOk = rows.filter((x) => lc.cells[x.hash] && lc.cells[x.hash][nameCol] === x.item.name).length
+      r.b35[prop] = { cols: lc.columns.map((c) => `${c.sort}:${c.text}`), n: rows.length, have, nameOk, ms: Math.round(performance.now() - t0) }
+    } catch (e) { r.b35[prop] = { err: String(e.message ?? e).slice(0, 200) } }
+  }
+  try {
+    const lc = await lib.sorting.cells('cn', 'spell')
+    const fb = (await lib.service.query('cn-official', 'spell', {})).find((x) => x.item.name === '火球术')
+    r.b35_fireball = lc && fb ? lc.cells[fb.hash] : null
+  } catch (e) { r.b35_fireballErr = String(e.message ?? e).slice(0, 200) }
   // 抽查：法术按环阶升序，环阶不下降；按名称升序
   try {
     const rows = (await lib.service.query('cn-official', 'spell', {})).filter((x) => x.hash)
