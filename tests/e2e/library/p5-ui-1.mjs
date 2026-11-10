@@ -97,6 +97,7 @@ check('弹窗内换成条目详情，标题是条目名', title.includes('火球
 check('只有一个弹窗（不叠加）', (await page.locator('.trpg-modal').count()) === 1)
 const bodyText = await page.locator('[data-testid="entry-page"] .lib-dbody').innerText()
 check('详情有正文（有"火"字且不是空）', bodyText.length > 40 && !bodyText.includes('这一条没有正文'), bodyText.slice(0, 60))
+check('火球术详情有成分与持续时间（作者函数翻译，B-36）', /成分/.test(await page.locator('[data-testid="entry-statblock"]').innerText().catch(() => '')) && /持续时间/.test(await page.locator('[data-testid="entry-statblock"]').innerText().catch(() => '')))
 check('火球术详情有摘要行（作者列表页的列：环阶 / 学派…）', (await page.locator('[data-testid="entry-summary"]').innerText()).includes('塑能'), await page.locator('[data-testid="entry-summary"]').innerText().catch(() => '无'))
 check('条目来源行有书的全名', (await page.locator('[data-testid="entry-page"] .lib-srcline').innerText()).includes('玩家手册'), await page.locator('[data-testid="entry-page"] .lib-srcline').innerText())
 check('正文里没有残留的 {@ 标签', !bodyText.includes('{@'), bodyText.slice(0, 200))
@@ -487,6 +488,7 @@ await page.locator('[data-testid="pack-page"] .lib-list__row', { hasText: '法�
 await page.waitForSelector('[data-testid="class-view"]', { timeout: 30000 }).catch(async (e) => { console.log('职业页没出来：', (await page.locator('.trpg-modal').innerText()).slice(0, 300)); await shot('class-fail'); throw e })
 await settle(page, 2000)
 check('职业页：有职业表（等级 / 特性 / 作者额外列）20 行', (await page.locator('[data-testid="class-table"] tbody tr').count()) === 20 && (await page.locator('[data-testid="class-table"] thead th').count()) >= 3)
+check('职业页：有熟练加值列、武器熟练与起始装备', (await page.locator('[data-testid="class-table"] thead th', { hasText: '熟练加值' }).count()) === 1 && /武器熟练/.test(await page.getByTestId('class-lines').innerText()) && /起始装备/.test(await page.getByTestId('class-lines').innerText()))
 check('职业页：按等级的特性（折叠，前三级展开）', (await page.locator('[data-testid="feature-level"]').count()) >= 5 && (await page.locator('[data-testid="feature-level"][open]').count()) >= 1)
 await page.waitForSelector('[data-testid="class-view"] .trpg-select-trigger', { timeout: 15000 }).catch(() => {})
 check('职业页：子职业下拉同页切换', (await page.locator('[data-testid="class-view"] .trpg-select-trigger').count()) === 1)
@@ -574,6 +576,28 @@ if (docHit) {
   await page.locator('.trpg-modal__close').click()
   await settle(page, 300)
 }
+
+// ---- 虚拟滚动：大列表只画窗口里的行，滚到底能看到最后一条 ----
+await page.locator('.trpg-shelf__row .lib-name', { hasText: '怪物图鉴' }).first().click()
+await page.waitForSelector('[data-testid="pack-page"] .lib-pills')
+await settle(page, 1500)
+await page.locator('.lib-pills .trpg-pill', { hasText: /^怪物/ }).first().click()
+await page.waitForSelector('[data-testid="pack-table"] tbody tr', { timeout: 60000 })
+await page.waitForFunction(() => /共 \d+ 条/.test(document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid="pack-page"] .lib-count')?.textContent ?? ''), null, { timeout: 120000 }).catch(() => {})
+await settle(page, 500)
+const totalText = await page.locator('[data-testid="pack-page"] .lib-count').innerText()
+const totalN = Number((/共 (\d+) 条/.exec(totalText) ?? [])[1] ?? 0)
+const domRows = await page.locator('[data-testid="pack-table"] tbody tr:not(.lib-spacer)').count()
+out.virtual = { totalN, domRows }
+check('虚拟滚动：条目很多，页面里只画窗口附近的行', totalN > 300 && domRows < 80, `${totalN} 条，画了 ${domRows} 行`)
+await page.locator('[data-testid="pack-page"] .lib-mscroll').evaluate((e) => { e.scrollTop = e.scrollHeight })
+await settle(page, 800)
+const lastRows = await page.locator('[data-testid="pack-table"] tbody tr:not(.lib-spacer)').count()
+check('滚到底：还是只画窗口里的行，且有行显示', lastRows > 5 && lastRows < 80, String(lastRows))
+await page.locator('[data-testid="pack-page"] .lib-mscroll').evaluate((e) => { e.scrollTop = 0 })
+await settle(page, 500)
+await page.locator('.trpg-modal__close').click()
+await settle(page, 300)
 
 // ---- 窄屏：底部抽屉 ----
 await page.setViewportSize({ width: 390, height: 800 })

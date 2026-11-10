@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useVirtual } from './useVirtual'
 import type { ListCells, SortDir } from '../../library/sorting'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
@@ -24,7 +25,9 @@ const cat = ref('all')
 const sortBy = ref('none')
 const dir = ref<SortDir>('asc')
 const cells = ref<ListCells | null>(null)
-const shown = ref(300)
+const scrollEl = ref<HTMLElement | null>(null)
+const narrow = ref(false)
+const rowH = computed(() => (narrow.value ? 48 : 40))
 const sorted = ref<PackRow[] | null>(null)
 const codeSet = computed(() => getSource(props.set).codeSet)
 
@@ -55,7 +58,7 @@ async function load(): Promise<void> {
     loading.value = false
   }
 }
-onMounted(() => { void load(); void loadReaders() })
+onMounted(() => { narrow.value = !!scrollEl.value?.closest('.trpg-window')?.matches('[data-layout="narrow"]'); void load(); void loadReaders() })
 
 const pills = computed(() => {
   const count = new Map<string, number>()
@@ -65,7 +68,8 @@ const pills = computed(() => {
 const shownReaders = computed(() => (cat.value === 'all' || cat.value === 'book' ? readers.value.filter((r) => !q.value.trim() || r.name.toLowerCase().includes(q.value.trim().toLowerCase())) : []))
 const byCat = computed(() => (cat.value === 'all' ? rows.value : rows.value.filter((r) => r.prop === cat.value)))
 const filtered = computed(() => matchName(sorted.value && cat.value !== 'all' ? sorted.value : byCat.value, q.value))
-const visible = computed(() => filtered.value.slice(0, shown.value))
+const { range, toTop } = useVirtual(scrollEl, computed(() => filtered.value.length), rowH)
+const visible = computed(() => filtered.value.slice(range.value.start, range.value.end))
 // 列与每列显示什么都来自作者列表页（B-35）；来源列不用作者的文字（带标记），我们自己在行尾灰字标
 const cols = computed(() => (cells.value?.columns ?? []).map((c, i) => ({ ...c, i })).filter((c) => c.sort !== 'source'))
 const nameCol = computed(() => cols.value.find((c) => c.sort === 'name')?.i ?? 0)
@@ -76,7 +80,7 @@ function sortOn(key: string): void {
 
 // 选了具体类别 → 问后端这一类有哪些能排序的列（作者没有定义的类别没有排序列，就不显示排序）
 watch(cat, async (prop) => {
-  shown.value = 300
+  toTop()
   sortBy.value = 'none'
   sorted.value = null
   cells.value = null
@@ -93,7 +97,7 @@ watch([sortBy, dir], async () => {
     sorted.value = null
   }
 })
-watch(q, () => { shown.value = 300 })
+watch(q, () => toTop())
 </script>
 
 <template>
@@ -125,22 +129,22 @@ watch(q, () => { shown.value = 300 })
             </tr>
           </thead>
           <tbody>
+            <tr v-if="range.padTop" aria-hidden="true" class="lib-spacer" :style="{ height: `${range.padTop}px` }"><td :colspan="cols.length + 1" /></tr>
             <tr v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" tabindex="0" :data-off="r.off" @click="openEntry(r.ref, r.name)" @keydown.enter="openEntry(r.ref, r.name)">
               <td v-for="c in cols" :key="c.i" :class="{ 'lib-name': c.i === nameCol }">{{ c.i === nameCol ? r.name : (cells?.cells[r.ref.hash]?.[c.i] ?? '') }}</td>
               <td class="lib-src">{{ r.pack ?? abv ?? r.source ?? '' }}</td>
             </tr>
+            <tr v-if="range.padBottom" aria-hidden="true" class="lib-spacer" :style="{ height: `${range.padBottom}px` }"><td :colspan="cols.length + 1" /></tr>
           </tbody>
         </table>
-        <button v-if="filtered.length > shown" class="trpg-btn trpg-btn--small" type="button" style="margin: var(--sp-3) var(--sp-4)" @click="shown += 300">显示更多（还有 {{ filtered.length - shown }} 条）</button>
       </div>
-      <div v-else class="lib-list" role="list">
+      <div v-else class="lib-list" role="list" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
         <button v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
         <button v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" class="lib-list__row" type="button" role="listitem" :data-off="r.off" @click="openEntry(r.ref, r.name)">
           <span class="lib-name">{{ r.name }}</span>
           <span v-if="cat === 'all'" class="trpg-badge">{{ categoryLabel(r.prop) }}</span>
           <span class="lib-src lib-end">{{ r.pack ?? abv ?? r.source ?? '' }}</span>
         </button>
-        <button v-if="filtered.length > shown" class="trpg-btn trpg-btn--small" type="button" style="margin: var(--sp-3) var(--sp-4)" @click="shown += 300">显示更多（还有 {{ filtered.length - shown }} 条）</button>
       </div>
     </div>
     <div class="lib-count">{{ loading ? '正在读取…' : `共 ${filtered.length} 条` }}</div>

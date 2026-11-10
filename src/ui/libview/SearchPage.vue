@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useVirtual } from './useVirtual'
 import type { ScopedSearchHit } from '../../library/scoped-search'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
@@ -20,7 +21,7 @@ const hits = ref<ScopedSearchHit[]>([])
 const searching = ref(false)
 const failed = ref<string | null>(null)
 const cat = ref('all')
-const shown = ref(100)
+const scrollEl = ref<HTMLElement | null>(null)
 const unchecked = ref<Set<string>>(new Set())
 const expanded = computed(() => (app.settings?.library.collapsed ?? []).includes(OPEN_KEY))
 
@@ -63,12 +64,14 @@ async function run(): Promise<void> {
     if (mine === seq) searching.value = false
   }
 }
-watch(q, () => { clearTimeout(timer); cat.value = 'all'; shown.value = 100; timer = setTimeout(() => void run(), 250) })
+watch(q, () => { clearTimeout(timer); cat.value = 'all'; toTop(); timer = setTimeout(() => void run(), 250) })
 onBeforeUnmount(() => clearTimeout(timer))
 
 const visibleHits = computed(() => withoutUnchecked(hits.value, unchecked.value))
 const pills = computed(() => hitCategories(visibleHits.value))
 const list = computed(() => (cat.value === 'all' ? visibleHits.value : visibleHits.value.filter((h) => hitCategoryKey(h) === cat.value)))
+const { range, toTop } = useVirtual(scrollEl, computed(() => list.value.length), ref(44))
+const windowed = computed(() => list.value.slice(range.value.start, range.value.end))
 const blocked = computed(() => hits.value.length - visibleHits.value.length)
 
 function open(h: ScopedSearchHit): void {
@@ -103,19 +106,18 @@ function open(h: ScopedSearchHit): void {
       <button v-for="p in pills" :key="p.key" class="trpg-pill" type="button" :aria-pressed="cat === p.key" @click="cat = p.key">{{ p.label }}<small>{{ p.n }}</small></button>
     </div>
     <div v-if="blocked" class="lib-banner" style="margin: 0 var(--sp-4) var(--sp-2)"><Icon name="info" :size="16" /><span>已屏蔽 {{ blocked }} 条（取消勾选的书）。</span></div>
-    <div class="lib-mscroll">
+    <div ref="scrollEl" class="lib-mscroll">
       <div v-if="failed" class="lib-state"><h3>搜索出错了</h3><p class="lib-muted">{{ failed }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="run">重试</button></div>
       <div v-else-if="!q.trim()" class="lib-state"><p class="lib-muted">输入名字开始搜。</p></div>
       <div v-else-if="searching && !hits.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>
       <div v-else-if="!list.length" class="lib-state"><h3>没找到「{{ q.trim() }}」</h3><button class="trpg-btn" type="button" @click="q = ''">清空</button></div>
-      <div v-else class="lib-list" role="list" data-testid="search-results">
-        <button v-for="(h, i) in list.slice(0, shown)" :key="`${h.ref.set}:${h.ref.prop}:${h.ref.hash}:${h.variant?.altId ?? ''}:${i}`" class="lib-list__row" type="button" role="listitem" @click="open(h)">
+      <div v-else class="lib-list" role="list" data-testid="search-results" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
+        <button v-for="(h, i) in windowed" :key="`${h.ref.set}:${h.ref.prop}:${h.ref.hash}:${h.variant?.altId ?? ''}:${range.start + i}`" class="lib-list__row" type="button" role="listitem" @click="open(h)">
           <span class="lib-name">{{ hitName(h) }}</span>
           <span class="trpg-badge">{{ hitCategoryLabel(h) }}</span>
           <span v-if="h.variant" class="trpg-badge" data-tone="primary">同名</span>
           <span class="lib-src lib-end">{{ h.variant?.pack ?? hitSource(h) ?? '' }}</span>
         </button>
-        <button v-if="list.length > shown" class="trpg-btn trpg-btn--small" type="button" style="margin: var(--sp-3) var(--sp-4)" @click="shown += 100">显示更多（还有 {{ list.length - shown }} 条）</button>
       </div>
     </div>
     <div class="lib-count">{{ q.trim() && !searching ? `共 ${list.length} 条` : '' }}</div>

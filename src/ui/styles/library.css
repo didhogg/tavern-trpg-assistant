@@ -104,3 +104,9 @@
 .lib-versions { display: grid; gap: var(--sp-2); }
 .lib-alt-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 36px; }
 .lib-variants { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
+/* 虚拟滚动：行高固定（窄屏 48，宽屏 40；列表行 44），占位行不画边框 */
+.lib-table tbody tr:not(.lib-spacer) { height: 40px; }
+.trpg-window[data-layout='narrow'] .lib-table tbody tr:not(.lib-spacer) { height: 48px; }
+.lib-table tr.lib-spacer, .lib-table tr.lib-spacer td { padding: 0; border: 0; background: none; cursor: default; }
+.lib-list__row { height: 44px; box-sizing: border-box; }
+.lib-table td { box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; }

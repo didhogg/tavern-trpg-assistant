@@ -21,15 +21,15 @@ export function byLevel(features: Feature[]): Array<{ level: number; features: F
 
 export interface ClassTable { head: string[]; rows: unknown[][] }
 
-/** 职业表：等级 | 特性（取自各级特性名）| 作者额外列（已知戏法、每环法术位…）。 */
-export function classTable(cls: unknown): ClassTable {
+/** 职业表：等级 | 熟练加值（作者 Parser.levelToPb，B-36）| 特性（取自各级特性名）| 作者额外列（已知戏法、每环法术位…）。 */
+export function classTable(cls: unknown, pb: string[] | null = null): ClassTable {
   const o = isObj(cls) ? cls : {}
   const feats = byLevel(flattenFeatures(o.classFeatures))
   const names = (lv: number): string => feats.find((g) => g.level === lv)?.features.map((f) => f.name).join('，') ?? ''
   const groups = (Array.isArray(o.classTableGroups) ? o.classTableGroups : []).filter(isObj)
   const levels = Math.max(20, ...groups.map((g) => (Array.isArray(g.rows) ? g.rows.length : 0)))
-  const head = ['等级', '特性', ...groups.flatMap((g) => (Array.isArray(g.colLabels) ? g.colLabels.map((c) => String(c)) : []))]
-  const rows = Array.from({ length: levels }, (_, i) => [i + 1, names(i + 1), ...groups.flatMap((g) => (Array.isArray(g.rows) && Array.isArray(g.rows[i]) ? (g.rows[i] as unknown[]) : []))])
+  const head = ['等级', ...(pb ? ['熟练加值'] : []), '特性', ...groups.flatMap((g) => (Array.isArray(g.colLabels) ? g.colLabels.map((c) => String(c)) : []))]
+  const rows = Array.from({ length: levels }, (_, i) => [i + 1, ...(pb ? [pb[i] ?? ''] : []), names(i + 1), ...groups.flatMap((g) => (Array.isArray(g.rows) && Array.isArray(g.rows[i]) ? (g.rows[i] as unknown[]) : []))])
   return { head, rows }
 }
 

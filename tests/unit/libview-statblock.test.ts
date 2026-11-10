@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { itemBlock, modOf, monsterBlock, signed } from '../../src/ui/libview/statblock'
+import { itemBlock, modOf, monsterBlock, recipeBlock, signed } from '../../src/ui/libview/statblock'
 
 describe('怪物数值块', () => {
   const m = { ac: [{ ac: 15, from: ['皮甲', '盾牌'] }], hp: { average: 7, formula: '2d6' }, speed: { walk: 30, fly: { number: 60, condition: '（悬浮）' } }, str: 8, dex: 14, con: 10, int: 10, wis: 8, cha: 8, skill: { stealth: '+6' }, save: { dex: '+4' }, senses: ['黑暗视觉 60 尺'], passive: 9, languages: ['通用语'], action: [{ name: '弯刀', entries: ['…'] }] }
@@ -27,5 +27,13 @@ describe('物品摘要行', () => {
   })
   it('魔法物品：稀有度与同调', () => {
     expect(itemBlock({ rarity: 'very rare', _attunementCategory: '需要同调' }).lines).toEqual([{ label: '稀有度', value: '极珍稀' }, { label: '同调', value: '需要同调' }])
+  })
+})
+
+describe('食谱', () => {
+  it('类型 / 份量 + 食材 / 做法 / 备注', () => {
+    const b = recipeBlock({ dishTypes: ['主菜'], makes: '6 人份', _fullIngredients: [{ entry: '5 汤匙黄油' }], instructions: ['混合', '烤'], noteCook: ['可以换配料'] })
+    expect(b.lines).toEqual([{ label: '类型', value: '主菜' }, { label: '份量', value: '6 人份' }])
+    expect(b.sections.map((s) => s.title)).toEqual(['食材', '做法', '备注'])
   })
 })

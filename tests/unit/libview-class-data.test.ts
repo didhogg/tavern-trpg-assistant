@@ -13,6 +13,11 @@ describe('职业页纯处理', () => {
     expect(t.rows[1]).toEqual([2, '奥术传承', 3])
     expect(t.rows.length).toBe(20)
   })
+  it('带熟练加值列', () => {
+    const t = classTable(cls, Array.from({ length: 20 }, (_, i) => `+${2 + Math.floor(i / 4)}`))
+    expect(t.head).toEqual(['等级', '熟练加值', '特性', '已知戏法'])
+    expect(t.rows[0]).toEqual([1, '+2', '奥术回想，施法', 3])
+  })
   it('摘要：生命骰与豁免熟练', () => {
     expect(classLines(cls)).toEqual([{ label: '生命骰', value: '1d6' }, { label: '豁免熟练', value: '智力、感知' }])
   })

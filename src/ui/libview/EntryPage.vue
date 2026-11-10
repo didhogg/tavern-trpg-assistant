@@ -51,12 +51,20 @@ const sourceLine = ref('')
 /** 摘要行：作者列表页每列的显示值（环阶、时间、学派…，B-35），名称与来源列不重复显示；没有列表定义的类别没有摘要行。 */
 const summary = ref<Array<{ k: string; v: string }>>([])
 /** 种族页：亚种直接全部列出（R94）；亚种在作者数据里是带 raceName 的独立条目。 */
+/** 作者函数翻译的摘要行（法术的成分 / 持续时间、神祇的阵营、职业的熟练…，B-36）与职业每级熟练加值。 */
+const authorLines = ref<Array<{ label: string; value: string }>>([])
+const authorPb = ref<string[] | null>(null)
 const subraces = ref<Array<{ name: string; entries: unknown; ref: EntryRef }>>([])
 async function loadExtras(item: unknown): Promise<void> {
   const s = app.svc().backend.library
   summary.value = []
   subraces.value = []
+  authorLines.value = []
+  authorPb.value = null
   try {
+    const af = await (await s.service.frameOf(codeSet.value)).call('authorFields', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
+    authorLines.value = af.lines
+    authorPb.value = af.pb
     const lc = await s.sorting.cells(codeSet.value, props.entryRef.prop)
     const row = lc?.cells[props.entryRef.hash]
     if (lc && row) summary.value = lc.columns.map((c, i) => ({ k: c.text, v: row[i], sort: c.sort })).filter((x) => x.sort !== 'name' && x.sort !== 'source' && x.v).map(({ k, v }) => ({ k, v }))
@@ -154,10 +162,10 @@ async function setEnabled(next: boolean): Promise<void> {
           <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
           <EntryVersions v-if="state.kind === 'ok'" :key="`${entryRef.hash}-${state.d?.version.altId ?? ''}`" :detail="state.d" :entry-ref="entryRef" @changed="load" />
           <div v-if="summary.length" class="lib-sumline" data-testid="entry-summary"><span v-for="x in summary" :key="x.k">{{ x.k }} <b>{{ x.v }}</b></span></div>
-          <div v-if="block?.lines.length" class="lib-stat" data-testid="entry-statblock"><div v-for="l in block.lines" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
+          <div v-if="(block?.lines.length || authorLines.length) && entryRef.prop !== 'class'" class="lib-stat" data-testid="entry-statblock"><div v-for="l in [...(block?.lines ?? []), ...authorLines]" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
           <div v-if="block?.abilities.length" class="lib-abil"><div v-for="a in block.abilities" :key="a.key"><small>{{ a.label }}</small><b>{{ a.score }}</b> ({{ a.mod }})</div></div>
           <template v-for="sec in block?.sections ?? []" :key="sec.title"><h3>{{ sec.title }}</h3><EntryBody :block="sec.entries" :code-set="codeSet" /></template>
-          <ClassView v-if="entryRef.prop === 'class' && state.kind === 'ok'" :item="state.item" :entry-ref="entryRef" :code-set="codeSet" />
+          <ClassView v-if="entryRef.prop === 'class' && state.kind === 'ok'" :item="state.item" :entry-ref="entryRef" :code-set="codeSet" :author-lines="authorLines" :pb="authorPb" />
           <FeatureLevels v-else-if="entryRef.prop === 'subclass' && state.kind === 'ok'" :levels="byLevel(flattenFeatures((state.item as { subclassFeatures?: unknown }).subclassFeatures))" :code-set="codeSet" :open-upto="3" />
           <EntryBody v-else-if="body" :block="body" :code-set="codeSet" />
           <p v-else-if="!block?.lines.length && !block?.sections.length" class="lib-muted">这一条没有正文。</p>

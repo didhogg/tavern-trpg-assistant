@@ -72,6 +72,15 @@ const result = await page.evaluate(async (bookText) => {
     const fb = (await lib.service.query('cn-official', 'spell', {})).find((x) => x.item.name === '火球术')
     r.b35_fireball = lc && fb ? lc.cells[fb.hash] : null
   } catch (e) { r.b35_fireballErr = String(e.message ?? e).slice(0, 200) }
+  // ---- B-36 作者函数翻译的摘要字段 ----
+  try {
+    const fr = await lib.service.frameOf('cn')
+    const q = async (prop, pred) => (await lib.service.query('cn-official', prop, {})).find((x) => pred(x.item))?.item
+    const fb = await q('spell', (s) => s.name === '火球术' && s.source === 'PHB')
+    const wiz = await q('class', (c) => c.name === '法师' && c.source === 'PHB')
+    const dei = await q('deity', (d) => d.name === '阿巴索')
+    r.b36 = { spell: (await fr.call('authorFields', 'spell', fb)).lines, cls: (await fr.call('authorFields', 'class', wiz)), deity: (await fr.call('authorFields', 'deity', dei)).lines, unknown: (await fr.call('authorFields', 'zzz', {})).lines }
+  } catch (e) { r.b36err = String(e.stack ?? e).slice(0, 300) }
   // 抽查：法术按环阶升序，环阶不下降；按名称升序
   try {
     const rows = (await lib.service.query('cn-official', 'spell', {})).filter((x) => x.hash)

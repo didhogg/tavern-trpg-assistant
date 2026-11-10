@@ -77,5 +77,22 @@ export function itemBlock(it: unknown): Statblock {
   return { lines, abilities: [], sections: [] }
 }
 
+/** 食谱：类型 / 份量 + 食材、做法、备注三节（字段取自作者数据：dishTypes / makes / _fullIngredients / instructions / noteCook）。 */
+export function recipeBlock(r: unknown): Statblock {
+  const o = isObj(r) ? r : {}
+  const lines: StatLine[] = []
+  const add = (label: string, value: string | null): void => { if (value) lines.push({ label, value }) }
+  add('类型', strs(o.dishTypes).join('、') || null)
+  add('份量', typeof o.makes === 'string' ? o.makes : null)
+  const ing = (Array.isArray(o._fullIngredients) ? o._fullIngredients : Array.isArray(o.ingredients) ? o.ingredients : []).map((i) => (isObj(i) ? i.entry : i)).filter((x) => typeof x === 'string')
+  const steps = strs(o.instructions)
+  const notes = strs(o.noteCook)
+  const sections: StatSection[] = []
+  if (ing.length) sections.push({ title: '食材', entries: { type: 'list', items: ing } })
+  if (steps.length) sections.push({ title: '做法', entries: { type: 'list', items: steps } })
+  if (notes.length) sections.push({ title: '备注', entries: notes })
+  return { lines, abilities: [], sections }
+}
+
 /** 类别 → 数值块函数（登记表；没登记的类别只有通用摘要行）。 */
-export const BLOCKS: Record<string, (item: unknown) => Statblock> = { monster: monsterBlock, object: monsterBlock, vehicle: monsterBlock, item: itemBlock, baseitem: itemBlock }
+export const BLOCKS: Record<string, (item: unknown) => Statblock> = { monster: monsterBlock, object: monsterBlock, vehicle: monsterBlock, item: itemBlock, baseitem: itemBlock, recipe: recipeBlock }

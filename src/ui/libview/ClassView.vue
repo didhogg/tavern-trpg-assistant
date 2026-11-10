@@ -10,11 +10,11 @@ import FeatureLevels from './FeatureLevels.vue'
 import InlineText from './InlineText.vue'
 
 /** 职业页（U9d）：职业表 → 按等级的特性（折叠，前几级默认展开）→ 子职业（下拉同页切换，不入栈）。 */
-const props = defineProps<{ item: unknown; entryRef: EntryRef; codeSet: string }>()
+const props = defineProps<{ item: unknown; entryRef: EntryRef; codeSet: string; authorLines?: Array<{ label: string; value: string }>; pb?: string[] | null }>()
 const app = useAppStore()
 const lib = useLibViewStore()
-const table = computed(() => classTable(props.item))
-const lines = computed(() => classLines(props.item))
+const table = computed(() => classTable(props.item, props.pb ?? null))
+const lines = computed(() => [...classLines(props.item), ...(props.authorLines ?? [])])
 const feats = computed(() => byLevel(flattenFeatures((props.item as { classFeatures?: unknown }).classFeatures)))
 const subs = ref<Array<{ name: string; item: unknown }>>([])
 const pick = ref('')
@@ -33,7 +33,7 @@ onMounted(async () => {
 
 <template>
   <div class="lib-dbody" style="padding: 0" data-testid="class-view">
-    <div v-if="lines.length" class="lib-stat"><div v-for="l in lines" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
+    <div v-if="lines.length" class="lib-stat" data-testid="class-lines"><div v-for="l in lines" :key="l.label"><span>{{ l.label }}</span><span><InlineText :text="l.value" :code-set="codeSet" /></span></div></div>
     <div class="lib-tablewrap" data-testid="class-table">
       <table class="lib-rtable">
         <thead><tr><th v-for="(h, i) in table.head" :key="i"><InlineText :text="h" :code-set="codeSet" /></th></tr></thead>
