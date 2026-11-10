@@ -5,6 +5,8 @@ import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import MoreMenu from '../kit/MoreMenu.vue'
+import { saveToMine } from './actions'
+import { openManage } from './open'
 import Switch from '../kit/Switch.vue'
 
 /** 包弹窗标题栏右侧：本战役开关 + ⋯。开关与书架同一状态；无战役时不可用（R60）。 */
@@ -16,6 +18,11 @@ const toast = useToastStore()
 const row = computed(() => lib.shelf?.groups.flatMap((g) => [...g.books, ...g.adventures]).find((r) => r.source === props.source && r.set === props.set))
 const on = computed(() => row.value?.view.visible ?? false)
 
+async function onMenu(key: string): Promise<void> {
+  if (key === 'manage') openManage({ set: props.set, source: props.source, name: props.name })
+  else if (key === 'save' && row.value) await saveToMine(app.svc(), row.value, toast)
+}
+
 async function toggle(next: boolean): Promise<void> {
   const owner = campaign.owner?.ownerKey
   if (!owner || !lib.bound) return
@@ -26,6 +33,6 @@ async function toggle(next: boolean): Promise<void> {
 <template>
   <span class="lib-headsw">
     <Switch :model-value="on" :label="`在本战役里使用《${name}》`" :disabled="!lib.bound" @update:model-value="toggle" />
-    <MoreMenu :label="name" :items="[{ key: 'manage', label: '管理', disabled: true, reason: '稍后开放' }, { key: 'save', label: '存入我的库', disabled: true, reason: '稍后开放' }]" />
+    <MoreMenu :label="name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }]" @select="onMenu" />
   </span>
 </template>

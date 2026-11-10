@@ -2,8 +2,6 @@
 import { computed, onMounted, ref } from 'vue'
 import type { HealthItem, HealthReport } from '../../library/health'
 import type { LogEntry } from '../../library/logs'
-import type { ChoiceLevel } from '../../library/manage'
-import type { EntryRef } from '../../library/scopes'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
@@ -11,7 +9,7 @@ import Checkbox from '../kit/Checkbox.vue'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import Switch from '../kit/Switch.vue'
-import { nameOf } from './pack-data'
+import { levelText, loadEditRows, restoreRows, type EditRow } from './edit-rows'
 
 /** 设置 → 库：偏好 | 全局编辑 / 覆盖 | 日志（原"体检"）。范围页已删；房规 / 覆盖并入"全局编辑 / 覆盖"。 */
 const app = useAppStore()
@@ -28,31 +26,18 @@ async function patch(next: Partial<NonNullable<typeof settings.value>>): Promise
 }
 
 // ── 全局编辑 / 覆盖 ──
-interface EditRow { level: string; target: string; ref: EntryRef; name: string; altId: string; picked: boolean }
 const edits = ref<EditRow[]>([])
 const editsLoading = ref(false)
-const LEVEL_LABEL: Record<string, string> = { campaign: '本战役', global: '全局' }
 async function loadEdits(): Promise<void> {
   editsLoading.value = true
-  try {
-    const s = app.svc().backend.library
-    const rows: EditRow[] = []
-    for (const c of await s.scoped.manage.allChoices()) {
-      const [set, prop, ...hash] = c.target.split('|')
-      const ref = { set, prop, hash: hash.join('|') }
-      const stored = await s.scoped.storedItem(ref)
-      rows.push({ ...c, ref, name: stored ? nameOf(stored.item) : '未知', picked: false })
-    }
-    edits.value = rows
-  } catch (e) { console.error('[trpg-assistant] 读取编辑 / 覆盖失败', e); toast.error('读取编辑 / 覆盖失败') } finally { editsLoading.value = false }
+  try { edits.value = await loadEditRows(app.svc()) } catch (e) { console.error('[trpg-assistant] 读取编辑 / 覆盖失败', e); toast.error('读取编辑 / 覆盖失败') } finally { editsLoading.value = false }
 }
-const levelText = (l: string): string => LEVEL_LABEL[l] ?? `规则：${l.replace(/^rule:/, '')}`
 async function restore(): Promise<void> {
   const c = lib.campaignLib
   if (!c) return
   const chosen = edits.value.filter((r) => r.picked)
   try {
-    for (const r of chosen) await app.svc().backend.library.scoped.choose(c, r.ref, null, (r.level === 'global' ? 'global' : r.level === 'campaign' ? 'campaign' : (r.level as ChoiceLevel)))
+    await restoreRows(app.svc(), c, chosen)
     toast.success(`已复原 ${chosen.length} 条`)
     await loadEdits()
   } catch (e) { console.error('[trpg-assistant] 复原失败', e); toast.error('复原没有成功') }

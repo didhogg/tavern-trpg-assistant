@@ -2,6 +2,7 @@
 import { useModalStore } from '../../stores/modal'
 import type { EntryRef } from '../../library/scopes'
 import EntryPage from './EntryPage.vue'
+import ManagePage from './ManagePage.vue'
 import PackHeader from './PackHeader.vue'
 import PackPage from './PackPage.vue'
 import SearchPage from './SearchPage.vue'
@@ -22,4 +23,9 @@ export function openEntry(ref: EntryRef, title = ''): void {
 
 export function openSearch(): void {
   useModalStore().open({ key: 'search', title: '全库数据搜索', component: SearchPage, variant: 'sheet' })
+}
+
+/** 包的【管理】：在包弹窗里前进一页；没有弹窗时直接打开。 */
+export function openManage(p: PackProps): void {
+  useModalStore().push({ key: `manage:${p.set}:${p.source}`, title: `管理 · ${p.name}`, component: ManagePage, props: { ...p }, variant: 'sheet' })
 }

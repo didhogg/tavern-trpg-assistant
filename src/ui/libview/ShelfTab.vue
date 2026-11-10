@@ -10,7 +10,8 @@ import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
-import { openPack } from './open'
+import { removeSource, saveToMine } from './actions'
+import { openManage, openPack } from './open'
 
 /** 书架（U2a）：官方 / 自制分开；每组可折叠；行 = 书名 · 版本 · 开关 · ⋯。无战役时所有书显示为关、开关不可用。书架搜索在列表下方。 */
 const app = useAppStore()
@@ -33,6 +34,13 @@ const sections = computed(() => (['official', 'brew'] as const).map((kind) => ({
 })).filter((s) => s.groups.length))
 const total = computed(() => sections.value.reduce((n, s) => n + s.groups.reduce((m, g) => m + g.books.length + g.adventures.length, 0), 0))
 
+async function onMenu(r: CatalogRow, key: string): Promise<void> {
+  const s = app.svc()
+  const owner = campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null
+  if (key === 'manage') openManage({ set: r.set, source: r.source, name: r.name })
+  else if (key === 'save') await saveToMine(s, r, toast)
+  else if (key === 'rm' && (await removeSource(s, r, app.settings?.library.skipRemovePrompt ?? false, toast))) await lib.load(s, owner)
+}
 const isOn = (r: CatalogRow): boolean => lib.bound && r.view.visible
 async function toggle(r: CatalogRow, next: boolean): Promise<void> {
   const owner = campaign.owner?.ownerKey
@@ -61,7 +69,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
               <button class="lib-name" type="button" @click="openPack({ set: r.set, source: r.source, name: r.name })">{{ r.name }}<template v-if="r.kind === 'adventure'">（冒险）</template></button>
               <span v-if="r.edition && r.edition.classic !== null" class="trpg-badge">{{ r.edition.classic ? '旧版' : '新版' }}</span>
               <Switch :model-value="isOn(r)" :label="`在本战役里使用《${r.name}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(r, v)" />
-              <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理', disabled: true, reason: '稍后开放' }, { key: 'save', label: '存入我的库', disabled: true, reason: '稍后开放' }, { key: 'rm', label: '卸载…', danger: true, disabled: true, reason: '稍后开放' }]" />
+              <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }, { key: 'rm', label: getSource(r.set).kind === 'official' ? '卸载官方资料…' : '删除…', danger: true }]" @select="(k: string) => onMenu(r, k)" />
             </div>
           </details>
         </div>
