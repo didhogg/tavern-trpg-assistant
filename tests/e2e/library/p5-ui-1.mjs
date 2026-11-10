@@ -355,6 +355,105 @@ check('精灵页：亚种直接全部列出，没有下拉', subN >= 2 && (await
 await page.locator('.trpg-modal__close').click()
 await settle(page, 300)
 
+// ---- 怪物数值块 / 物品摘要行 ----
+await page.locator('.trpg-shelf__row .lib-name', { hasText: '怪物图鉴' }).first().click()
+await page.waitForSelector('[data-testid="pack-page"] .lib-pills')
+await settle(page, 1200)
+await page.locator('.lib-pills .trpg-pill', { hasText: /^怪物/ }).first().click()
+await page.waitForSelector('[data-testid="pack-table"] tbody tr', { timeout: 60000 })
+await page.locator('[data-testid="pack-table"] tbody tr').first().click()
+await page.waitForSelector('[data-testid="entry-page"] .lib-dbody', { timeout: 60000 })
+await settle(page, 1500)
+const sb = await page.locator('[data-testid="entry-statblock"]').innerText().catch(() => '')
+check('怪物详情有数值块：防御 / 生命 / 速度', ['防御', '生命', '速度'].every((k) => sb.includes(k)), sb.slice(0, 120))
+check('怪物详情有六维', (await page.locator('.lib-abil > div').count()) === 6)
+check('怪物详情有「动作」等分节', (await page.locator('[data-testid="entry-page"] h3', { hasText: /动作|特性/ }).count()) >= 1)
+await shot('monster')
+await page.locator('.trpg-modal__close').click()
+await settle(page, 300)
+
+// ---- 随机表：表头骰子标签 → 命中行高亮 + 表下结果框（不出横幅）→ 复制 / 填入酒馆输入框 ----
+const rollName = await page.evaluate(async () => {
+  const host = document.querySelector('#trpg-assistant-root')
+  const app = [...host.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean)
+  const lib = app.config.globalProperties.$pinia._s.get('app').svc().backend.library
+  const fr = await lib.service.frameOf('cn')
+  const rows = await lib.service.query('cn-official', 'table', {})
+  const seen = new Set()
+  for (const r of rows.slice(0, 400)) {
+    const nm = r.item.name ?? r.item.caption
+    if (!nm || seen.has(nm) || !/[\u4e00-\u9fa5]/.test(nm)) continue
+    seen.add(nm)
+    if ((await fr.call('tableRow', r.item, 1)).rollable && rows.filter((x) => (x.item.name ?? x.item.caption) === nm).length === 1) return nm
+  }
+  return null
+})
+out.rollTableName = rollName
+check('找到一张能掷的随机表', !!rollName, String(rollName))
+if (rollName) {
+  await page.locator('[data-testid="open-search"]').click()
+  await page.waitForSelector('[data-testid="search-page"]')
+  await page.locator('[data-testid="search-page"] input[type="search"]').fill(rollName)
+  await page.waitForSelector('[data-testid="search-results"] .lib-list__row', { timeout: 120000 })
+  await page.locator('[data-testid="search-results"] .lib-list__row', { hasText: '表格' }).first().click().catch(async () => { await page.locator('[data-testid="search-results"] .lib-list__row').first().click() })
+  await page.waitForSelector('[data-testid="entry-page"] [data-testid="roll-header"]', { timeout: 30000 }).catch(async (e) => { console.log('没找到掷骰标签；页面：', (await page.locator('.trpg-modal').innerText()).slice(0, 400)); await shot('roll-fail'); throw e })
+  const toastsBefore = await page.locator('.trpg-toast').count()
+  await page.getByTestId('roll-header').first().click()
+  await page.waitForSelector('[data-testid="roll-result"] [data-testid="roll-text"]', { timeout: 30000 })
+  await settle(page, 500)
+  const rt = await page.getByTestId('roll-text').innerText()
+  check('表内掷：表格下面出结果框「掷出 n：…」', /^掷出/.test(rt), rt.slice(0, 80))
+  check('命中行高亮', (await page.locator('.lib-rtable tr[data-hit="true"]').count()) >= 1)
+  check('表内掷不出横幅', (await page.locator('.trpg-toast').count()) === toastsBefore)
+  await page.getByTestId('roll-fill').first().click()
+  await settle(page, 400)
+  check('点【填入酒馆输入框】：按钮变「已填入」或明说没填成', (await page.getByTestId('roll-fill').first().innerText()).includes('已填入') || (await page.locator('[data-testid="roll-result"]', { hasText: '没能完成' }).count()) === 1)
+  check('结果框里有两个按钮：复制文字 / 填入酒馆输入框', (await page.getByTestId('roll-copy').count()) === 1 && (await page.getByTestId('roll-fill').count()) === 1)
+  await shot('roll-table')
+  await page.locator('.trpg-modal__close').click()
+  await settle(page, 300)
+}
+
+// ---- 表外掷：正文里的表格链接旁有骰子标签，点了出横幅（已复制 + 填入酒馆输入框）----
+const outside = await page.evaluate(async () => {
+  const host = document.querySelector('#trpg-assistant-root')
+  const app = [...host.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean)
+  const lib = app.config.globalProperties.$pinia._s.get('app').svc().backend.library
+  const fr = await lib.service.frameOf('cn')
+  for (const prop of ['variantrule', 'background', 'item', 'feat']) {
+    const rows = await lib.service.query('cn-official', prop, {})
+    for (const r of rows.slice(0, 600)) {
+      const m = /\{@table ([^}|]+)(\|[^}]*)?\}/.exec(JSON.stringify(r.item.entries ?? ''))
+      if (!m) continue
+      const tag = await lib.links.resolveTag('cn', '@table', m[0].slice(8, -1))
+      const loc = tag?.located
+      if (!loc) continue
+      const st = await lib.scoped.storedItem({ set: loc.set, prop: loc.prop, hash: loc.hash })
+      if (st && (await fr.call('tableRow', st.item, 1)).rollable) return { prop, name: r.item.name, hash: r.hash }
+    }
+  }
+  return null
+})
+out.outsideTable = outside
+if (outside) {
+  await page.locator('[data-testid="open-search"]').click()
+  await page.waitForSelector('[data-testid="search-page"]')
+  await page.locator('[data-testid="search-page"] input[type="search"]').fill(outside.name)
+  await page.waitForSelector('[data-testid="search-results"] .lib-list__row', { timeout: 120000 })
+  await page.locator('[data-testid="search-results"] .lib-list__row', { hasText: outside.name }).first().click()
+  await page.waitForSelector('[data-testid="roll-outside"]', { timeout: 30000 }).catch(() => {})
+  const hasDice = (await page.getByTestId('roll-outside').count()) > 0
+  check('正文里的表格链接旁有骰子标签（可掷的表）', hasDice, JSON.stringify(outside))
+  if (hasDice) {
+    await page.getByTestId('roll-outside').first().click()
+    await page.waitForSelector('.trpg-toast', { timeout: 15000 })
+    const t = await page.locator('.trpg-toast').first().innerText()
+    check('表外掷出横幅：已复制 + [填入酒馆输入框]', /剪贴板/.test(t) && /填入酒馆输入框/.test(t), t.slice(0, 100))
+  }
+  await page.locator('.trpg-modal__close').click()
+  await settle(page, 300)
+}
+
 // ---- 窄屏：底部抽屉 ----
 await page.setViewportSize({ width: 390, height: 800 })
 await settle(page, 600)

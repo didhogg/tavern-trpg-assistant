@@ -13,6 +13,7 @@ import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
 import EntryBody from './EntryBody.vue'
 import { nameOf as itemName } from './pack-data'
+import { BLOCKS } from './statblock'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
 const props = defineProps<{ entryRef: EntryRef }>()
@@ -90,7 +91,16 @@ async function load(): Promise<void> {
 }
 onMounted(() => void load())
 
-const body = computed(() => (state.value.kind === 'ok' ? (state.value.item as { entries?: unknown } | null)?.entries ?? null : null))
+const block = computed(() => (state.value.kind === 'ok' ? BLOCKS[props.entryRef.prop]?.(state.value.item) ?? null : null))
+/** 正文：多数类别在 entries 里；随机表条目本身就是一张表，表组是几张表（作者提取出来的形状）。 */
+const body = computed(() => {
+  if (state.value.kind !== 'ok') return null
+  const it = state.value.item as { entries?: unknown; tables?: unknown } | null
+  if (!it) return null
+  if (props.entryRef.prop === 'table') return { ...it, type: 'table' }
+  if (props.entryRef.prop === 'tableGroup') return it.tables ?? it.entries ?? null
+  return it.entries ?? null
+})
 
 async function setEnabled(next: boolean): Promise<void> {
   const owner = campaign.owner?.ownerKey
@@ -121,8 +131,11 @@ async function setEnabled(next: boolean): Promise<void> {
           <div v-if="state.kind === 'ok' && state.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
           <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
           <div v-if="summary.length" class="lib-sumline" data-testid="entry-summary"><span v-for="x in summary" :key="x.k">{{ x.k }} <b>{{ x.v }}</b></span></div>
+          <div v-if="block?.lines.length" class="lib-stat" data-testid="entry-statblock"><div v-for="l in block.lines" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
+          <div v-if="block?.abilities.length" class="lib-abil"><div v-for="a in block.abilities" :key="a.key"><small>{{ a.label }}</small><b>{{ a.score }}</b> ({{ a.mod }})</div></div>
+          <template v-for="sec in block?.sections ?? []" :key="sec.title"><h3>{{ sec.title }}</h3><EntryBody :block="sec.entries" :code-set="codeSet" /></template>
           <EntryBody v-if="body" :block="body" :code-set="codeSet" />
-          <p v-else class="lib-muted">这一条没有正文。</p>
+          <p v-else-if="!block?.lines.length && !block?.sections.length" class="lib-muted">这一条没有正文。</p>
           <template v-if="subraces.length">
             <h3>亚种</h3>
             <div v-for="sr in subraces" :key="sr.ref.hash" class="lib-block" data-testid="subrace"><b>{{ sr.name }}</b><EntryBody :block="sr.entries" :code-set="codeSet" /></div>

@@ -88,3 +88,15 @@
 .lib-toc button { display: flex; align-items: center; min-height: 40px; padding: 0 var(--sp-3); border: 0; border-left: 3px solid transparent; background: none; text-align: left; color: var(--text); font: inherit; cursor: pointer; }
 .lib-toc button[aria-current='true'] { border-left-color: var(--primary); background: var(--primary-tint); font-weight: var(--fw-semibold); }
 .lib-sec-block { display: grid; gap: var(--sp-3); }
+/* 数值块（怪物 / 物品摘要行） */
+.lib-stat { display: grid; }
+.lib-stat > div { display: grid; grid-template-columns: 72px 1fr; gap: var(--sp-3); padding: 5px 0; border-bottom: 1px dotted var(--line); font-size: var(--fs-sm); }
+.lib-stat > div > span:first-child { color: var(--text2); }
+.lib-abil { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--sp-2); text-align: center; padding: var(--sp-2) 0; }
+.trpg-window[data-layout='narrow'] .lib-abil { grid-template-columns: repeat(3, 1fr); }
+.lib-abil > div { border: var(--border) solid var(--line); border-radius: var(--r-sm); padding: 4px 2px; background: var(--bg-sunk); font-size: var(--fs-sm); }
+.lib-abil small { display: block; color: var(--text2); font-size: var(--fs-xs); }
+/* 随机表 */
+.lib-rtable tr[data-hit='true'] td { background: var(--primary-tint); font-weight: var(--fw-semibold); }
+.lib-rolltable { display: grid; gap: var(--sp-2); }
+.lib-numbox { display: inline-flex; align-items: center; gap: var(--sp-2); }

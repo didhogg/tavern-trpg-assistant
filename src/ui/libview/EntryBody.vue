@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import InlineText from './InlineText.vue'
+import RollTable from './RollTable.vue'
 
 /**
  * 条目正文渲染（Vue，按块类型 → 渲染方式的登记）：作者的 entries 结构 → 文字 / 小节 / 列表 / 表格 / 引文 / 框；
@@ -12,7 +13,6 @@ const isObj = (v: unknown): v is Block => typeof v === 'object' && v !== null &&
 const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 const SECTION = new Set(['entries', 'section', 'item', 'itemSub', 'itemSpell'])
 const INSET = new Set(['inset', 'insetReadaloud', 'variant', 'variantInner', 'variantSub'])
-const cellText = (c: unknown): unknown => (isObj(c) && 'entry' in c ? c.entry : isObj(c) && 'roll' in c ? '' : c)
 const json = (v: unknown): string => JSON.stringify(v, null, 1)
 </script>
 
@@ -30,17 +30,7 @@ const json = (v: unknown): string => JSON.stringify(v, null, 1)
   <ul v-else-if="isObj(block) && block.type === 'list'" class="lib-list-ul">
     <li v-for="(it, i) in list(block.items)" :key="i"><EntryBody :block="it" :code-set="codeSet" /></li>
   </ul>
-  <div v-else-if="isObj(block) && block.type === 'table'" class="lib-tablewrap">
-    <table class="lib-rtable">
-      <caption v-if="block.caption" class="lib-faint"><InlineText :text="String(block.caption)" :code-set="codeSet" /></caption>
-      <thead v-if="list(block.colLabels).length"><tr><th v-for="(c, i) in list(block.colLabels)" :key="i"><InlineText :text="String(c)" :code-set="codeSet" /></th></tr></thead>
-      <tbody>
-        <tr v-for="(row, r) in list(block.rows)" :key="r">
-          <td v-for="(cell, c) in list(row)" :key="c"><EntryBody :block="cellText(cell)" :code-set="codeSet" /></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <RollTable v-else-if="isObj(block) && block.type === 'table'" :table="block" :code-set="codeSet" />
   <div v-else-if="isObj(block) && typeof block.type === 'string' && INSET.has(block.type)" class="lib-inset">
     <h3 v-if="block.name"><InlineText :text="String(block.name)" :code-set="codeSet" /></h3>
     <EntryBody :block="block.entries" :code-set="codeSet" />
