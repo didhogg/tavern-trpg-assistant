@@ -6,7 +6,7 @@ import type { LibraryService } from './service'
 import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
 
 /** 书、冒险这类"按本取全文"的类别：类别名 → 作者编号（小写）→ 本的编号与来源。 */
-export type CorpusIndex = Map<string, Map<string, { id: string; source: string | null }>>
+export type CorpusIndex = Map<string, Map<string, { id: string; source: string | null; /** 在哪个数据集（自制的书在自制数据集里）；省略 = 官方。 */ set?: string }>>
 
 export type LocatedKind = 'entry' | 'corpus' | 'document'
 
@@ -72,6 +72,13 @@ export class EntryLinks {
           const rows = await frame.call('corpusList', loader.index as string, prop, loader.page as string)
           out.set(prop, new Map(rows.map((r) => [r.hash.toLowerCase(), { id: r.id, source: r.source ?? null }])))
         }
+        // 自制里的书和冒险（B-29）：并进同一张表，带上所在的自制数据集
+        for (const brew of SOURCES.filter((s) => s.codeSet === codeSet && s.kind === 'brew')) {
+          for (const [prop, rows] of Object.entries(await this.lib.brewCorpora(brew.id))) {
+            const into = out.get(prop) ?? out.set(prop, new Map()).get(prop)!
+            for (const r of rows) into.set(r.hash.toLowerCase(), { id: r.id, source: r.source ?? null, set: brew.id })
+          }
+        }
         return out
       })()
       p.catch(() => this.corpora.delete(codeSet))
@@ -98,7 +105,7 @@ export class EntryLinks {
     const corpus = (await this.corpusIndex(codeSet)).get(prop)
     if (corpus) {
       const row = corpus.get(hash.toLowerCase())
-      return row ? { kind: 'corpus', set: official.id, prop, hash, source: row.source, id: row.id } : null
+      return row ? { kind: 'corpus', set: row.set ?? official.id, prop, hash, source: row.source, id: row.id } : null
     }
     const sets: SourceEntry[] = [official, ...SOURCES.filter((s) => s.codeSet === codeSet && s.kind === 'brew')]
     for (const set of sets) {

@@ -73,6 +73,8 @@ export interface CatalogRow {
   view: { visible: boolean; reason: ViewReason }
   /** 只按范围算本来看得到吗（向导默认勾选用；已下载的默认都开，见 B-32）。 */
   inScope: boolean
+  /** 这个来源（自制包）里带正文的书 / 冒险（B-29）：点进去用 service.corpus(set, prop, id) 读，按书的格式显示。 */
+  corpora?: Array<{ prop: string; id: string; name: string }>
   /** 这本书里有几条挂了备选。 */
   alternatives: number
   /** 作者书目字段（分组、出版日期、冒险等级 / 故事线、封面链接…）；catalog(c, { remote: true }) 时才有。 */
@@ -344,8 +346,13 @@ export class ScopedLibrary {
       }
       // 自制来源：作者书目里没有，名称 / 作者 / 日期取自包自带的来源信息（B-11）
       const brewInfo = set.kind === 'brew' ? await new BrewPacks(this.lib).sourceInfoMap(set.id) : null
-      for (const [source, count] of Object.entries(await this.sourceCounts(set.id))) {
-        const row = { kind: 'book' as const, set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0 }
+      // 自制里带正文的书和冒险（B-29）：只有书、没有别的条目的包也要有一行
+      const brewBooks = set.kind === 'brew' ? await this.lib.brewCorpora(set.id) : {}
+      const counts = { ...(await this.sourceCounts(set.id)) }
+      for (const list of Object.values(brewBooks)) for (const b of list) counts[b.source] ??= 0
+      for (const [source, count] of Object.entries(counts)) {
+        const corpora = Object.entries(brewBooks).flatMap(([prop, list]) => list.filter((b) => b.source.toLowerCase() === source.toLowerCase()).map((b) => ({ prop, id: b.id, name: b.name })))
+        const row = { kind: 'book' as const, set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0, ...(corpora.length ? { corpora } : {}) }
         rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : brewInfo ? { ...row, shelf: brewShelfInfo(source, brewInfo.get(source.toLowerCase())) } : row)
       }
       if (set.kind === 'official') {

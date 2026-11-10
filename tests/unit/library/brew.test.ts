@@ -53,6 +53,8 @@ describe('parseBrew', () => {
       openFrame: async () => fakeFrame({
         brewInstalled: () => [{ head: { docIdLocal: 'a', filename: 'x.json' }, meta: {} }],
         loaders: () => [{ props: ['spell', 'spellFluff'], page: 'spells.html', kind: 'site' }, { props: ['raw_class', 'class'], page: 'classes.html', kind: 'site' }, { props: ['book', 'bookData'], page: 'book.html', kind: 'corpus', index: 'books.json' }],
+        brewCorpusList: (prop) => (prop === 'book' ? [{ id: 'MyBook', name: '我的书', source: 'X', hash: 'mybook_x' }] : []),
+        parseCorpus: () => ({ book: [{ id: 'MyBook' }], bookData: [{ id: 'MyBook' }] }),
         frameErrors: () => ['Error: 无法加载 8 个条目的引用！'],
         brewDocIndex: () => [{ docIdLocal: 'a', filename: 'x.json', timeAdded: 1, order: 1, isEditable: false, sources: ['X'], props: { spell: ['s_x'] } }],
         parseBrewProp: (prop) => {
@@ -68,7 +70,11 @@ describe('parseBrew', () => {
     expect(report.alternatives).toEqual({ targets: 0, errors: [] })
     expect(report.parse.props).toEqual({ spell: { count: 1, noHash: 0 } })
     expect(report.parse.errors).toEqual([{ prop: 'class', error: '作者加载器报错' }])
-    expect(report.parse.notRun.map((n) => n.props)).toEqual([['book', 'bookData']])
+    // B-29：自制里的书走和官方同一条 parseCorpus，目录存起来给搜索 / 定位用
+    expect(report.parse.notRun).toEqual([])
+    expect(report.parse.corpora).toEqual({ book: { count: 1, failed: [] } })
+    expect((await db.derived.get(parsedKey('cn-brew', 'book', 'MyBook')))?.value).toEqual({ book: [{ id: 'MyBook' }], bookData: [{ id: 'MyBook' }] })
+    expect((await db.derived.get('corpora:cn-brew'))?.value).toEqual({ book: [{ id: 'MyBook', name: '我的书', source: 'X', hash: 'mybook_x' }] })
     expect(report.parse.authorErrors).toEqual(['Error: 无法加载 8 个条目的引用！'])
     // 自制里没有的类别：查询返回空，不报错；解析出错的类别照样报错
     const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludeList: () => [], excludedFlags: () => ({ hashes: [], excluded: null }) }) })

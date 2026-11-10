@@ -113,9 +113,10 @@ function brewItems(input: HealthInput): HealthItem[] {
   const out: HealthItem[] = []
   if (input.brew) {
     const { value: r, stale } = input.brew
+    const corpusFailed = Object.entries(r.parse.corpora ?? {}).flatMap(([prop, c]) => c.failed.map((f) => ({ prop, ...f })))
     const s = stale ? { stale } : {}
     out.push(
-      item(id, 'brew-parse', okOr(r.parse.errors, 'error'), `自制内容解析出错的类别（已装 ${r.installed.length} 个包）`, r.parse.errors, { layer: 2, ...s }),
+      item(id, 'brew-parse', okOr([...r.parse.errors, ...corpusFailed], 'error'), `自制内容解析出错的类别或书（已装 ${r.installed.length} 个包）`, [...r.parse.errors, ...corpusFailed], { layer: 2, ...s }),
       item(id, 'brew-author-errors', okOr(r.parse.authorErrors, 'warn'), '解析时作者报的错（自制内容本身的问题，例如引用了找不到的条目）', r.parse.authorErrors, s),
       item(id, 'not-run', okOr(r.parse.notRun, 'info'), '没有解析的（附原因）', r.parse.notRun, s),
     )

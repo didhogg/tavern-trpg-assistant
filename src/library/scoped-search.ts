@@ -10,7 +10,7 @@ import type { VariantInfo } from './versions'
 /** 命中点开后走哪条路。 */
 export type SearchTarget =
   | { kind: 'entry' }
-  | { kind: 'corpus'; prop: string; id: string; source: string | null }
+  | { kind: 'corpus'; prop: string; id: string; source: string | null; /** 书 / 冒险所在的数据集（自制的在自制数据集里，读全文用 service.corpus(set, prop, id)）。 */ set: string | null }
   | { kind: 'document'; id: string; chapter: number | null; header: string | null }
 
 export type ScopedSearchHit = SearchHit & { ref: EntryRef; reason: ViewReason; target: SearchTarget; /** 同编号拆行时才有（B-31）。 */ variant?: VariantInfo }
@@ -27,7 +27,7 @@ export function routeHit(hit: Pick<SearchHit, 'prop' | 'doc'>, corpus: CorpusInd
   const byProp = corpus.get(hit.prop)
   if (byProp) {
     const row = byProp.get(hash.toLowerCase())
-    return row ? { target: { kind: 'corpus', prop: hit.prop, id: row.id, source: row.source }, hash } : null
+    return row ? { target: { kind: 'corpus', prop: hit.prop, id: row.id, source: row.source, set: row.set ?? null }, hash } : null
   }
   return { target: { kind: 'entry' }, hash }
 }
@@ -58,7 +58,7 @@ export async function scopedSearch(d: SearchDeps, c: CampaignLibrary, term: stri
     const source = typeof h.doc.s === 'string' ? h.doc.s : null
     const located = routed.target.kind === 'entry'
       ? await d.links.locate(c.codeSet, h.prop, routed.hash)
-      : { set: official.id, prop: routed.target.kind === 'document' ? 'document' : h.prop }
+      : { set: routed.target.kind === 'corpus' && routed.target.set ? routed.target.set : official.id, prop: routed.target.kind === 'document' ? 'document' : h.prop }
     if (!located) continue
     const ref: EntryRef = { set: located.set, prop: located.prop, hash: routed.hash }
     if (house.has(refKey(ref))) continue

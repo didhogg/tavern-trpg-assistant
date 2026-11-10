@@ -24,7 +24,7 @@ describe('routeHit：按命中种类分流', () => {
     expect(routeHit(hit('spell', 'fireball_phb'), corpus, ['bookref-quick'])).toEqual({ target: { kind: 'entry' }, hash: 'fireball_phb' })
   })
   it('书与冒险走全文，带本的编号与来源（编号不分大小写对）', () => {
-    expect(routeHit(hit('book', 'phb'), corpus, [])?.target).toEqual({ kind: 'corpus', prop: 'book', id: 'PHB', source: 'PHB' })
+    expect(routeHit(hit('book', 'phb'), corpus, [])?.target).toEqual({ kind: 'corpus', prop: 'book', id: 'PHB', source: 'PHB', set: null })
     expect(routeHit(hit('adventure', 'LMoP', 'LMoP'), corpus, [])?.target).toMatchObject({ kind: 'corpus', id: 'LMoP' })
   })
   it('书目里找不到的书 / 冒险（例如自制里的）不交给界面', () => {
@@ -95,7 +95,7 @@ describe('DocumentStore：文档类数据原样读下载好的文件', () => {
 })
 
 // 假的库服务：只回答 locate / 搜索路由要用的这几件事
-function fakeLib(stored: Record<string, { item: unknown; source: string | null }>, search: Array<{ prop: string; doc: Record<string, unknown>; score: number }>): LibraryService {
+function fakeLib(stored: Record<string, { item: unknown; source: string | null }>, search: Array<{ prop: string; doc: Record<string, unknown>; score: number }>, brewCorpora: Record<string, unknown> = {}): LibraryService {
   const frame = {
     call: async (fn: string) => (fn === 'loaders'
       ? [{ props: ['book', 'bookData'], page: 'book.html', kind: 'corpus', index: 'books.json' }, { props: ['adventure', 'adventureData'], page: 'adventure.html', kind: 'corpus', index: 'adventures.json' }]
@@ -105,6 +105,7 @@ function fakeLib(stored: Record<string, { item: unknown; source: string | null }
     frameOf: async () => frame,
     storedItem: async (set: string, prop: string, hash: string) => stored[`${set}|${prop}|${hash}`] ?? null,
     search: async () => search,
+    brewCorpora: async (set: string) => brewCorpora[set] ?? {},
   } as unknown as LibraryService
 }
 
@@ -166,5 +167,16 @@ describe('EntryLinks.resolveTag：标签 → 条目（B-04）', () => {
 
   it('作者不认识的标签（骰子标签等）返回 null', async () => {
     expect(await new EntryLinks(libWithTag(null), new DocumentStore(db)).resolveTag('cn', '@dice', '1d6')).toBeNull()
+  })
+})
+
+describe('B-29 自制里的书和冒险并进同一张目录', () => {
+  it('locate / 搜索路由认得自制的书：set 是自制数据集，读全文用它', async () => {
+    const lib = fakeLib({}, [{ score: 2, prop: 'book', doc: { u: 'mybook_x', s: 'X' } }], { 'cn-brew': { book: [{ id: 'MyBook', name: '我的书', source: 'X', hash: 'mybook_x' }] } })
+    const links = new EntryLinks(lib, new DocumentStore(db))
+    expect(await links.locate('cn', 'book', 'mybook_x')).toMatchObject({ kind: 'corpus', set: 'cn-brew', id: 'MyBook', source: 'X' })
+    expect(await links.locate('cn', 'book', 'PHB')).toMatchObject({ set: 'cn-official' }) // 官方的照旧
+    const corpus = await links.corpusIndex('cn')
+    expect(routeHit({ prop: 'book', doc: { u: 'mybook_x' } }, corpus, [])?.target).toEqual({ kind: 'corpus', prop: 'book', id: 'MyBook', source: 'X', set: 'cn-brew' })
   })
 })

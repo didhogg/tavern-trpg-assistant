@@ -8,6 +8,11 @@ import { parsedKey } from './install'
 import type { AuthorFrame } from './runtime/host'
 import type { SourceEntry } from './sources'
 
+/** 自制里的书 / 冒险目录：类别（book / adventure）→ 每本的编号、名称、来源、作者编号。 */
+export interface CorpusRow { id: string; name: string; source: string; hash: string }
+export type BrewCorpora = Record<string, CorpusRow[]>
+export const brewCorporaKey = (brewSetId: string): string => `corpora:${brewSetId}`
+
 export interface BrewParseReport {
   source: string
   /** 已装的自制包（作者包头）。 */
@@ -16,6 +21,8 @@ export interface BrewParseReport {
     props: Record<string, { count: number; noHash: number }>
     notRun: Array<{ props: string[]; reason: string }>
     errors: Array<{ prop: string; error: string }>
+    /** 自制里的书和冒险正文（B-29）：每类解析了几本、失败的。 */
+    corpora: Record<string, { count: number; failed: Array<{ id: string; error: string }> }>
     /** 解析期间作者自己报的错误原文（例：自制内容引用了找不到的条目）。内容问题归自制作者，原样交给体检。 */
     authorErrors: string[]
   }
@@ -33,15 +40,33 @@ const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 /** 用一个新开的小窗重解析这套程序已装的全部自制内容；旧的解析结果先清掉（自制少了的类别不留旧数据）。 */
 export async function parseBrew({ source, db, openFrame, openFrameIn }: { source: SourceEntry; db: LibraryDatabase; openFrame: () => Promise<AuthorFrame>; openFrameIn: (kvScope: string) => Promise<AuthorFrame> }): Promise<BrewParseReport> {
   const t0 = Date.now()
-  const report: BrewParseReport = { source: source.id, installed: [], parse: { props: {}, notRun: [], errors: [], authorErrors: [] }, alternatives: { targets: 0, errors: [] }, ms: 0 }
+  const report: BrewParseReport = { source: source.id, installed: [], parse: { props: {}, corpora: {}, notRun: [], errors: [], authorErrors: [] }, alternatives: { targets: 0, errors: [] }, ms: 0 }
   await db.derived.where('key').startsWith(`parsed:${source.id}:`).delete()
   await invalidatePrecompute(db, source.id, ['fluff', 'excluded'])
+  const corpora: BrewCorpora = {}
   const frame = await openFrame()
   try {
     report.installed = (await frame.call('brewInstalled')).map((b) => b.head)
     for (const loader of await frame.call('loaders')) {
       if (loader.kind === 'corpus') {
-        report.parse.notRun.push({ props: loader.props, reason: '自制里的书和冒险正文按本取，用到再解析（B2-7 未做）' })
+        // 自制里的书和冒险（B-29）：目录取自作者合并后的自制数据，正文走作者加载器（和官方书同一条 parseCorpus）。本地文件，没有"按需下载"
+        const prop = loader.props[0]
+        const entry: BrewParseReport['parse']['corpora'][string] = (report.parse.corpora[prop] = { count: 0, failed: [] })
+        const listed: CorpusRow[] = []
+        try {
+          for (const it of await frame.call('brewCorpusList', prop, loader.page!)) {
+            try {
+              await db.derived.put({ key: parsedKey(source.id, prop, it.id), fingerprint: 'brew', value: await frame.call('parseCorpus', loader.page!, it.source, it.hash), savedAt: Date.now() })
+              listed.push(it)
+              entry.count++
+            } catch (e) {
+              entry.failed.push({ id: it.id, error: msg(e) })
+            }
+          }
+          if (listed.length) corpora[prop] = listed
+        } catch (e) {
+          report.parse.errors.push({ prop, error: msg(e) })
+        }
         continue
       }
       for (const prop of loader.props) {
@@ -56,6 +81,7 @@ export async function parseBrew({ source, db, openFrame, openFrameIn }: { source
         }
       }
     }
+    await db.derived.put({ key: brewCorporaKey(source.id), fingerprint: 'brew', value: corpora, savedAt: Date.now() })
     report.parse.authorErrors = await frame.call('frameErrors')
     const alts = await buildAlternatives({ source, db, frame, openFrameIn })
     report.alternatives = { targets: Object.keys(alts.targets).length, errors: alts.errors }

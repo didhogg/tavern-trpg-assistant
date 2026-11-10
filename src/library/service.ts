@@ -4,7 +4,7 @@
 import { addGeneratedPairs } from './english-generated'
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import { ParsedMemo } from './parsed-memo'
-import { parseBrew, type BrewParseReport } from './brew'
+import { brewCorporaKey, parseBrew, type BrewCorpora, type BrewParseReport } from './brew'
 import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import { healthItemsOf, healthReport, type HealthReport, type Layers34Summary, type StoredReport } from './health'
@@ -119,7 +119,12 @@ export class LibraryService {
     return rows
   }
 
-  /** 书或冒险的全文（安装时按本解析存下的）。 */
+  /** 自制里的书和冒险目录（装、删、更新自制后重解析时存下的）：类别 → 每本的编号、名称、来源、作者编号。 */
+  async brewCorpora(sourceId: string): Promise<BrewCorpora> {
+    return ((await this.opts.db.derived.get(brewCorporaKey(sourceId)))?.value ?? {}) as BrewCorpora
+  }
+
+  /** 书或冒险的全文（安装时按本解析存下的；自制的在装 / 改自制时解析存下）。 */
   async corpus(sourceId: string, prop: string, id: string): Promise<unknown> {
     const rec = await this.opts.db.derived.get(parsedKey(sourceId, prop, id))
     if (!rec) throw new Error(`${sourceId} 没有这本的全文：${prop} ${id}`)

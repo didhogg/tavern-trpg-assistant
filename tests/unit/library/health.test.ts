@@ -47,7 +47,7 @@ describe('体检：各份报告汇成统一格式', () => {
   it('自制：解析出错、作者报错、不显示的包、没解析出内容的包', () => {
     const items = healthItemsOf({
       source: getSource('cn-brew'), installed: false,
-      brew: { stale: false, value: { source: 'cn-brew', installed: [{}], parse: { props: {}, notRun: [], errors: [{ prop: 'class', error: 'x' }], authorErrors: ['无法加载'] }, alternatives: { targets: 0, errors: [] }, ms: 1 } },
+      brew: { stale: false, value: { source: 'cn-brew', installed: [{}], parse: { props: {}, corpora: {}, notRun: [], errors: [{ prop: 'class', error: 'x' }], authorErrors: ['无法加载'] }, alternatives: { targets: 0, errors: [] }, ms: 1 } },
       brewStorage: [
         { kind: 'brew', head: { docIdLocal: 'a', filename: 'a.json' }, sources: ['SrcA'], shown: true },
         { kind: 'brew', head: { docIdLocal: 'b', filename: 'b.json' }, sources: ['SrcB'], shown: true },

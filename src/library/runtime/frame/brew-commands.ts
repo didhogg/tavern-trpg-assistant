@@ -135,6 +135,16 @@ export async function brewPull(docIdLocals: string[] | null = null): Promise<Wit
   return { ...r, value: (r.value ?? []).map(entryOf) }
 }
 
+/**
+ * 已装自制里的书或冒险目录（P5 B-29）：作者 pGetBrewProcessed 合并后的 book / adventure 数组（书的目录项：编号、名称、章节…；
+ * 正文在 bookData / adventureData），连同作者编号、来源。读正文用 parseCorpus（作者 DataLoader 的自制书加载器 DataTypeLoaderCustomBook）。
+ */
+export async function brewCorpusList(prop: string, page: string): Promise<Array<{ id: string; name: string; source: string; hash: string }>> {
+  await init()
+  const processed = await A.BrewUtil2.pGetBrewProcessed()
+  return (processed?.[prop] ?? []).map((it: any) => ({ id: it.id, name: it.name, source: A.SourceUtil.getEntitySource(it), hash: A.UrlUtil.URL_TO_HASH_BUILDER[page](it) }))
+}
+
 /** 已装自制里某一类（作者 pCacheAndGetAllBrew），连同作者编号、来源。 */
 export async function parseBrewProp(prop: string): Promise<ParsedProp> {
   await init()
