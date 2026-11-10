@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import type { SortColumn, SortDir } from '../../library/sorting'
+import type { ListCells, SortDir } from '../../library/sorting'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
-import SelectField from '../kit/SelectField.vue'
 import { loadPackRows, matchName, type PackRow } from './pack-data'
 import { openEntry } from './open'
 import { categoryLabel, registeredCategories } from './registry'
@@ -24,7 +23,7 @@ const q = ref('')
 const cat = ref('all')
 const sortBy = ref('none')
 const dir = ref<SortDir>('asc')
-const columns = ref<SortColumn[]>([])
+const cells = ref<ListCells | null>(null)
 const shown = ref(300)
 const sorted = ref<PackRow[] | null>(null)
 const codeSet = computed(() => getSource(props.set).codeSet)
@@ -54,16 +53,22 @@ const pills = computed(() => {
 const byCat = computed(() => (cat.value === 'all' ? rows.value : rows.value.filter((r) => r.prop === cat.value)))
 const filtered = computed(() => matchName(sorted.value && cat.value !== 'all' ? sorted.value : byCat.value, q.value))
 const visible = computed(() => filtered.value.slice(0, shown.value))
-const sortOptions = computed(() => [{ value: 'none', label: '默认顺序' }, ...columns.value.map((c) => ({ value: c.sort, label: c.text }))])
+// 列与每列显示什么都来自作者列表页（B-35）；来源列不用作者的文字（带标记），我们自己在行尾灰字标
+const cols = computed(() => (cells.value?.columns ?? []).map((c, i) => ({ ...c, i })).filter((c) => c.sort !== 'source'))
+const nameCol = computed(() => cols.value.find((c) => c.sort === 'name')?.i ?? 0)
+function sortOn(key: string): void {
+  if (sortBy.value !== key) { sortBy.value = key; dir.value = 'asc' } else if (dir.value === 'asc') dir.value = 'desc'
+  else sortBy.value = 'none'
+}
 
 // 选了具体类别 → 问后端这一类有哪些能排序的列（作者没有定义的类别没有排序列，就不显示排序）
 watch(cat, async (prop) => {
   shown.value = 300
   sortBy.value = 'none'
   sorted.value = null
-  columns.value = []
+  cells.value = null
   if (prop === 'all') return
-  try { columns.value = await app.svc().backend.library.sorting.columns(codeSet.value, prop) } catch (e) { console.error('[trpg-assistant] 读取排序列失败', e) }
+  try { cells.value = await app.svc().backend.library.sorting.cells(codeSet.value, prop) } catch (e) { console.error('[trpg-assistant] 读取列表列失败', e) }
 })
 watch([sortBy, dir], async () => {
   if (cat.value === 'all' || sortBy.value === 'none') { sorted.value = null; return }
@@ -87,16 +92,30 @@ watch(q, () => { shown.value = 300 })
       <button class="trpg-pill" type="button" :aria-pressed="cat === 'all'" @click="cat = 'all'">全部<small>{{ rows.length }}</small></button>
       <button v-for="p in pills" :key="p.prop" class="trpg-pill" type="button" :aria-pressed="cat === p.prop" @click="cat = p.prop">{{ categoryLabel(p.prop) }}<small>{{ p.n }}</small></button>
     </div>
-    <div v-if="columns.length" class="lib-sortbar">
-      <SelectField v-model="sortBy" :options="sortOptions" label="排序" prefix="排序：" />
-      <button class="trpg-btn trpg-btn--small" type="button" :disabled="sortBy === 'none'" :aria-label="dir === 'asc' ? '升序，点击改降序' : '降序，点击改升序'" @click="dir = dir === 'asc' ? 'desc' : 'asc'">
-        <Icon :name="dir === 'asc' ? 'sort-ascending' : 'sort-descending'" :size="14" />{{ dir === 'asc' ? '升序' : '降序' }}
-      </button>
-    </div>
     <div v-if="failed" class="lib-state"><h3>这个包读不出来</h3><p class="lib-muted">{{ failed }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
     <div v-else-if="loading && !rows.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <div v-else class="lib-mscroll">
       <div v-if="!filtered.length" class="lib-state"><h3>{{ q ? '没有符合的' : '这个包里没有可显示的条目' }}</h3><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>
+      <div v-else-if="cat !== 'all' && cols.length" class="lib-tablewrap" data-testid="pack-table">
+        <table class="lib-table">
+          <thead>
+            <tr>
+              <th v-for="c in cols" :key="c.i" :aria-sort="c.sort && sortBy === c.sort ? (dir === 'asc' ? 'ascending' : 'descending') : undefined">
+                <button v-if="c.sort" class="lib-th" type="button" :title="c.title ?? undefined" @click="sortOn(c.sort)">{{ c.text }}<Icon :name="sortBy === c.sort && dir === 'desc' ? 'sort-descending' : 'sort-ascending'" :size="14" :class="{ 'lib-sortable': sortBy !== c.sort }" /></button>
+                <template v-else>{{ c.text }}</template>
+              </th>
+              <th class="lib-src">来源</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" tabindex="0" :data-off="r.off" @click="openEntry(r.ref, r.name)" @keydown.enter="openEntry(r.ref, r.name)">
+              <td v-for="c in cols" :key="c.i" :class="{ 'lib-name': c.i === nameCol }">{{ c.i === nameCol ? r.name : (cells?.cells[r.ref.hash]?.[c.i] ?? '') }}</td>
+              <td class="lib-src">{{ r.pack ?? abv ?? r.source ?? '' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <button v-if="filtered.length > shown" class="trpg-btn trpg-btn--small" type="button" style="margin: var(--sp-3) var(--sp-4)" @click="shown += 300">显示更多（还有 {{ filtered.length - shown }} 条）</button>
+      </div>
       <div v-else class="lib-list" role="list">
         <button v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" class="lib-list__row" type="button" role="listitem" :data-off="r.off" @click="openEntry(r.ref, r.name)">
           <span class="lib-name">{{ r.name }}</span>

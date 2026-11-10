@@ -26,6 +26,14 @@ const state = ref<State>({ kind: 'loading' })
 const enabled = ref(true)
 const codeSet = computed(() => getSource(props.entryRef.set).codeSet)
 const sourceLine = ref('')
+/** 来源行：书的全名（作者的 sourceNames）+ 页码；名字取不到就退回来源缩写。 */
+async function sourceText(item: unknown, source: string | null): Promise<string> {
+  if (!source) return ''
+  let name = source
+  try { name = (await (await app.svc().backend.library.service.frameOf(codeSet.value)).call('sourceNames', [source]))[source]?.full ?? source } catch (e) { console.error('[trpg-assistant] 读取书名失败', e) }
+  const page = (item as { page?: unknown } | null)?.page
+  return `${name}${typeof page === 'number' ? ` · 第 ${page} 页` : ''} · ${source}`
+}
 const nameOf = (item: unknown): string => (typeof item === 'object' && item && typeof (item as { name?: unknown }).name === 'string' ? (item as { name: string }).name : '未知')
 
 async function load(): Promise<void> {
@@ -41,13 +49,13 @@ async function load(): Promise<void> {
       if (!raw) { state.value = { kind: 'none' }; return }
       state.value = { kind: 'ok', d: null, item: raw.item, closed: true }
       enabled.value = false
-      sourceLine.value = raw.source ?? ''
+      sourceLine.value = await sourceText(raw.item, raw.source ?? null)
     } else if (!d) {
       state.value = { kind: 'none' }
       return
     } else {
       state.value = { kind: 'ok', d, item: d.item, closed: false }
-      sourceLine.value = d.source ?? ''
+      sourceLine.value = await sourceText(d.item, d.source ?? null)
       enabled.value = true
     }
     const key = `entry:${props.entryRef.set}:${props.entryRef.prop}:${props.entryRef.hash}`

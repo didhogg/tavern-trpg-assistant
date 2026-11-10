@@ -58,3 +58,15 @@
 .lib-fold__body { padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-sm); overflow: auto; }
 .lib-headsw { display: inline-flex; align-items: center; gap: 6px; flex: none; }
 .lib-sortbar { display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-4) var(--sp-2); font-size: var(--fs-sm); color: var(--text2); flex-wrap: wrap; }
+/* 包弹窗里选了具体类别：作者列表页的列（B-35），首列固定、窄屏横滑 */
+.lib-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--fs-sm); }
+.lib-table th { position: sticky; top: 0; z-index: 2; padding: 0 10px; text-align: left; white-space: nowrap; font-weight: var(--fw-semibold); color: var(--text2); background: var(--bg-sunk); border-bottom: var(--border) solid var(--line); }
+.lib-th { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: var(--fw-semibold); cursor: pointer; }
+.lib-table td { padding: 8px 10px; white-space: nowrap; border-bottom: var(--border) solid var(--line); background: var(--surface); }
+.lib-table tbody tr { cursor: pointer; } .lib-table tbody tr:hover td { background: var(--bg-hover); }
+.lib-table td.lib-name { font-weight: var(--fw-semibold); max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.lib-table tr[data-off='true'] td { color: var(--text3); }
+.lib-table th:first-child, .lib-table td:first-child { position: sticky; left: 0; z-index: 1; }
+.lib-table th:first-child { z-index: 3; }
+.trpg-window[data-layout='narrow'] .lib-table td { padding: 12px 10px; }
+.lib-sortable { opacity: .35; }
