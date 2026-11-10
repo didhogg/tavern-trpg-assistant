@@ -20,8 +20,11 @@ const ctx = await type.launchPersistentContext(profile, { ...options, viewport: 
 const page = await ctx.newPage()
 page.setDefaultTimeout(120000)
 const pageErrors = []
+const failedReq = []
+page.on('requestfailed', (r) => failedReq.push(r.url().slice(0, 140)))
 page.on('pageerror', (e) => pageErrors.push(String(e.message ?? e).slice(0, 200)))
-await page.route((u) => !u.href.startsWith(url), (route) => route.abort())
+// 作者程序装自制包时会去 GitHub 取来源索引（依赖 / 来源信息），所以放行 GitHub / jsDelivr，其余外网仍断开
+await page.route((u) => !u.href.startsWith(url), (route) => (/github|jsdelivr|kiwee\.top/.test(route.request().url()) && !process.env.OFFLINE ? route.continue() : route.abort()))
 await page.goto(url)
 await page.waitForFunction(() => { const h = document.querySelector('#trpg-assistant-root'); const app = [...(h?.shadowRoot?.children ?? [])].map((c) => c.__vue_app__).find(Boolean); return app?.config.globalProperties.$pinia._s.get('app')?.booted })
 await page.locator('.trpg-ball').click()
@@ -276,6 +279,37 @@ await page.locator('.trpg-confirm button', { hasText: '取消' }).click()
 await settle(page, 500)
 check('取消后弹窗关闭，书还在', (await page.locator('.trpg-modal').count()) === 0 && (await page.locator('.trpg-shelf__row', { hasText: '玩家手册' }).count()) > 0)
 
+// ---- 我的库：导入一个作者格式文件 → 预览 → 导入 → 出现在列表 → 导出 → 删除 ----
+await page.locator('.lib-top .trpg-seg button', { hasText: '我的库' }).click()
+await page.waitForSelector('[data-testid="mylib-tab"]')
+check('我的库：新建条目按钮是灰的（P5.5）', await page.locator('[data-testid="mylib-tab"] button', { hasText: '新建条目' }).isDisabled())
+const brewJson = JSON.stringify({ _meta: { sources: [{ json: 'P5UITEST', abbreviation: 'P5T', full: '界面测试小包', authors: ['测试'], convertedBy: ['测试'], version: '1.0.0' }], dateAdded: 1700000000, dateLastModified: 1700000000 }, spell: [{ name: '界面测试法术', source: 'P5UITEST', level: 1, school: 'A', time: [{ number: 1, unit: 'action' }], range: { type: 'point', distance: { type: 'feet', amount: 30 } }, components: { v: true }, duration: [{ type: 'instant' }], entries: ['这是界面测试用的法术。'] }] })
+await page.getByTestId('mylib-file').setInputFiles({ name: 'p5-ui-test.json', mimeType: 'application/json', buffer: Buffer.from(brewJson) })
+await page.waitForSelector('.trpg-confirm', { timeout: 120000 })
+const preview = await page.locator('.trpg-confirm').innerText()
+check('导入预览：列出文件、新增条数', /界面测试|p5-ui-test/.test(preview) && preview.includes('新增'), preview.slice(0, 200))
+await page.locator('.trpg-confirm button', { hasText: '确认导入' }).click()
+await page.waitForSelector('[data-testid="mylib-list"] .trpg-row', { timeout: 60000 }).catch(async (e) => { console.log('导入没成功；失败的请求：', failedReq.slice(0, 8), pageErrors.slice(0, 4), await page.locator('.trpg-toasts').innerText().catch(() => '')); throw e })
+await settle(page, 800)
+check('导入后出现在我的库列表', (await page.locator('[data-testid="mylib-list"] .trpg-row', { hasText: '界面测试小包' }).count()) === 1)
+await page.locator('.lib-top .trpg-seg button', { hasText: '书架' }).click()
+await settle(page, 800)
+check('导入的包不在书架里（书架只放下载来的）', (await page.locator('.trpg-shelf__row', { hasText: '界面测试小包' }).count()) === 0)
+await page.locator('.lib-top .trpg-seg button', { hasText: '我的库' }).click()
+await settle(page, 500)
+const dl = page.waitForEvent('download', { timeout: 30000 }).catch(() => null)
+await page.locator('[data-testid="mylib-list"] .trpg-row', { hasText: '界面测试小包' }).locator('button', { hasText: '导出' }).click()
+const got = await dl
+check('导出：浏览器收到 .json 文件', !!got && (got.suggestedFilename() || '').endsWith('.json'), got ? got.suggestedFilename() : '无下载')
+await page.locator('[data-testid="mylib-list"] .trpg-row', { hasText: '界面测试小包' }).locator('.trpg-more').click()
+await page.locator('.trpg-dropdown__item', { hasText: '删除' }).click()
+await page.waitForSelector('.trpg-confirm')
+await page.locator('.trpg-confirm button', { hasText: '确认删除' }).click()
+await settle(page, 1500)
+check('删除后列表里没有了', (await page.locator('[data-testid="mylib-list"] .trpg-row', { hasText: '界面测试小包' }).count()) === 0)
+await page.locator('.lib-top .trpg-seg button', { hasText: '书架' }).click()
+await settle(page, 400)
+
 // ---- 窄屏：底部抽屉 ----
 await page.setViewportSize({ width: 390, height: 800 })
 await settle(page, 600)
@@ -288,6 +322,7 @@ check('窄屏：弹窗贴底部、约 88% 高（底部抽屉）', Math.abs(narro
 await shot('pack-narrow')
 
 out.pageErrors = pageErrors
+out.failedRequests = failedReq.slice(0, 12)
 out.failures = failures.length
 await writeFile(`${work}/p5-ui-1-${engineName}.json`, JSON.stringify(out, null, 2))
 await ctx.close()

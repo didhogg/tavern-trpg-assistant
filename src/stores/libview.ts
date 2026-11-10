@@ -3,7 +3,9 @@ import { ref, shallowRef } from 'vue'
 import type { Services } from '../core/services'
 import { DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
 import { chooseSource, defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
+import type { BrewPack } from '../library/brew-packs'
 import type { ShelfGroup } from '../library/shelf'
+import { SOURCES } from '../library/sources'
 
 export interface ShelfState {
   groups: ShelfGroup[]
@@ -19,6 +21,9 @@ export const useLibViewStore = defineStore('library', () => {
   const campaignLib = shallowRef<CampaignLibrary | null>(null)
   const bound = ref(false)
   const shelf = shallowRef<ShelfState | null>(null)
+  /** 我的库里的包（导入的 / 存入的副本）；它们的来源不在书架里列。 */
+  const minePacks = shallowRef<BrewPack[]>([])
+  const brewSetId = (codeSet: string): string | null => SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)?.id ?? null
   const loading = ref(false)
   const error = ref<string | null>(null)
   let seq = 0
@@ -34,10 +39,13 @@ export const useLibViewStore = defineStore('library', () => {
       if (ownerKey && (await ks.read(ownerKey))) lib = (await ks.libraryOf(ownerKey)) as CampaignLibrary
       const current = lib ?? defaultCampaignLibrary(s.rules.list()[0]?.id ?? 'dnd5e2014', DEFAULT_PREFETCH_CODE_SETS[0])
       const next = await s.backend.library.scoped.shelf(current)
+      const brew = brewSetId(current.codeSet)
+      const imported = brew ? (await s.backend.library.brewPacks.list(brew)).filter((p) => p.origin === 'import') : []
       if (mine !== seq) return
       bound.value = !!lib
       campaignLib.value = current
       shelf.value = next
+      minePacks.value = imported
     } catch (e) {
       if (mine === seq) error.value = e instanceof Error ? e.message : String(e)
       console.error('[trpg-assistant] 读取书架失败', e)
@@ -55,5 +63,5 @@ export const useLibViewStore = defineStore('library', () => {
     await load(s, ownerKey)
   }
 
-  return { campaignLib, bound, shelf, loading, error, load, toggleSource }
+  return { campaignLib, bound, shelf, minePacks, brewSetId, loading, error, load, toggleSource }
 })

@@ -7,9 +7,10 @@ import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import { openSearch } from './open'
 import DownloadTab from './DownloadTab.vue'
+import MyLibTab from './MyLibTab.vue'
 import ShelfTab from './ShelfTab.vue'
 
-/** 库页（P5）：书架 | 我的库 | 下载；【全库数据搜索】。书架 / 下载已做；我的库先灰着。 */
+/** 库页（P5）：书架 | 我的库 | 下载；【全库数据搜索】。书架 / 我的库 / 下载。 */
 const app = useAppStore()
 const campaign = useCampaignStore()
 const lib = useLibViewStore()
@@ -28,13 +29,14 @@ watch(() => [campaign.owner?.ownerKey, campaign.hasCampaign, campaign.currentSav
       <Segmented
         v-model="tab"
         label="库的分区"
-        :options="[{ value: 'shelf', label: '书架' }, { value: 'mine', label: '我的库', disabled: true, hint: '稍后开放' }, { value: 'download', label: '下载' }]"
+        :options="[{ value: 'shelf', label: '书架' }, { value: 'mine', label: '我的库' }, { value: 'download', label: '下载' }]"
       />
       <span class="lib-end">
         <button class="trpg-btn" type="button" data-testid="open-search" @click="openSearch()"><Icon name="magnifying-glass" :size="16" />全库数据搜索</button>
       </span>
     </div>
     <ShelfTab v-if="tab === 'shelf'" />
+    <MyLibTab v-else-if="tab === 'mine'" />
     <DownloadTab v-else-if="tab === 'download'" />
   </div>
 </template>
