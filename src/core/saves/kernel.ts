@@ -13,12 +13,17 @@ import {
   actorIdOf, applyActorChanges, applyCombatChange, isCombatChange, type KernelRefMapper,
 } from './split'
 import { clone, isObject } from './state'
+import { chooseSource } from '../../library/scopes'
 
 /** 引用检查结果：和 P3-1 的 FetchResult 形状一致，但 core 不依赖 library 运行时。 */
 export interface KernelRefResult {
   ok: boolean
   ref: { set: string; prop: string; hash: string }
   reason?: string
+  /** 条目在，但本战役关着这本书（照常能取，P5 B-34）。 */
+  closed?: boolean
+  /** 条目所在的来源（书 / 包的来源标识）。 */
+  source?: string | null
 }
 
 export type KernelRefChecker = (refs: Array<{ set: string; prop: string; hash: string }>, library: KernelLibrary) => Promise<KernelRefResult[]>
@@ -51,6 +56,18 @@ export interface KernelMissing {
   reason: string
 }
 
+/** 读档检查给界面的三张清单（P5 B-34）。 */
+export interface KernelLoadPlan {
+  /** 数据集没装 → 建议下载（默认勾选）。set = 源登记表编号，official 用 tasks.startOfficial；自制数据集没装时没有可下的来源，界面只提示。 */
+  download: Array<{ set: string; kind: 'official' | 'brew'; refs: number; labels: string[] }>
+  /** 数据集装着、但条目已经没有了（上游删了 / 改了编号）：下载补不回来，只提示。 */
+  gone: Array<{ set: string; prop: string; hash: string; label?: string }>
+  /** 书 / 包在，但本战役关着（默认不勾；勾了 = 本战役开启它，用 openSources）。 */
+  closed: Array<{ set: string; source: string; refs: number; labels: string[] }>
+  /** 资料版本或房规 / 修改版跟存档保存时不一样：一行提示，不改存档，详情默认显示新版。 */
+  versionChanged: boolean
+}
+
 export interface KernelCheck {
   bound: boolean
   rule: string | null
@@ -70,6 +87,7 @@ export interface KernelCheck {
     before: string | null
     after: string | null
   }>
+  plan: KernelLoadPlan
 }
 
 export interface KernelPreviewRow {
@@ -168,7 +186,7 @@ export class KernelSaveService {
 
   private unboundCheck(): KernelCheck {
     return { bound: false, rule: null, ruleMissing: false, missing: [], checked: 0, dataVersion: null, dataVersionChanged: false,
-      dataVersionChanges: { official: null, brews: [] }, overridesChanged: false, overrideChanges: [] }
+      dataVersionChanges: { official: null, brews: [] }, overridesChanged: false, overrideChanges: [], plan: { download: [], gone: [], closed: [], versionChanged: false } }
   }
 
   /** 读当前战役的前检查：规则装没装、引用还在不在、版本/覆盖哪里变了；只报告，不改存档。 */
@@ -195,10 +213,21 @@ export class KernelSaveService {
     for (const actor of kernel.actors) for (const ref of actor.refs) rows.push({ actorId: actor.id, actorName: actor.name, ref })
     const results = rows.length ? await this.deps.checkRefs(rows.map((r) => r.ref), library) : []
     const missing: KernelMissing[] = []
+    const plan: KernelLoadPlan = { download: [], gone: [], closed: [], versionChanged: false }
     results.forEach((result, index) => {
-      if (result.ok) return
       const row = rows[index]
-      missing.push({ ...row, ref: { ...row.ref, label: row.ref.label }, reason: result.reason ?? 'missing' })
+      const label = row.ref.label
+      if (result.ok) {
+        if (!result.closed) return
+        const source = result.source ?? ''
+        const hit = plan.closed.find((c) => c.set === row.ref.set && c.source === source)
+        if (hit) { hit.refs++; if (label && hit.labels.length < 5) hit.labels.push(label) } else plan.closed.push({ set: row.ref.set, source, refs: 1, labels: label ? [label] : [] })
+        return
+      }
+      missing.push({ ...row, ref: { ...row.ref, label }, reason: result.reason ?? 'missing' })
+      if (result.reason === 'not-found') { plan.gone.push({ set: row.ref.set, prop: row.ref.prop, hash: row.ref.hash, label }); return }
+      const hit = plan.download.find((d) => d.set === row.ref.set)
+      if (hit) { hit.refs++; if (label && hit.labels.length < 5) hit.labels.push(label) } else plan.download.push({ set: row.ref.set, kind: row.ref.set.endsWith('-brew') ? 'brew' : 'official', refs: 1, labels: label ? [label] : [] })
     })
 
     const current = this.deps.currentVersion ? await this.deps.currentVersion() : undefined
@@ -234,8 +263,9 @@ export class KernelSaveService {
       }
     }
 
+    plan.versionChanged = !!current && (dataVersionChanges.official !== null || dataVersionChanges.brews.length > 0 || overrideChanges.length > 0)
     return {
-      bound: true, rule: kernel.rule, ruleMissing, missing, checked: rows.length,
+      bound: true, rule: kernel.rule, ruleMissing, missing, checked: rows.length, plan,
       dataVersion: kernel.dataVersion,
       dataVersionChanged: !!current && (dataVersionChanges.official !== null || dataVersionChanges.brews.length > 0),
       dataVersionChanges,
@@ -244,23 +274,12 @@ export class KernelSaveService {
     }
   }
 
-  /** 恢复原样：保留存档里记录的版本与覆盖，只交回现状，不写数据。 */
-  async keepSaved(ownerKey: string): Promise<KernelCampaign> {
-    const kernel = await this.read(ownerKey)
-    if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-    return kernel
-  }
-
-  /** 采用现在的：把当前数据版本/覆盖写进战役，再走 M1 branch 存成新分支；旧存档不变。 */
-  async adoptCurrent(ownerKey: string, current: { dataVersion?: KernelDataVersion; overrides?: KernelOverride[] } = {}): Promise<{ kernel: KernelCampaign; save: SaveSlot }> {
-    const kernel = await this.read(ownerKey)
-    if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-    const dataVersion = current.dataVersion ?? (this.deps.currentVersion ? await this.deps.currentVersion() : kernel.dataVersion)
-    const overrides = current.overrides ?? (this.deps.currentOverrides ? await this.deps.currentOverrides() : kernel.overrides)
-    const next: KernelCampaign = { ...kernel, dataVersion, overrides, revision: kernel.revision + 1 }
-    await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, kernel: next }))
-    const { save } = await this.deps.campaign.branch(ownerKey, '采用现在的')
-    return { kernel: next, save }
+  /** 把本战役关着的书 / 包开启（读档提示里用户勾了才调）：只写战役设置，不动存档。 */
+  async openSources(ownerKey: string, sources: string[]): Promise<KernelLibrary> {
+    let library = await this.libraryOf(ownerKey)
+    for (const source of sources) library = { ...library, ...chooseSource(library, source, true) }
+    await this.setLibrary(ownerKey, library)
+    return library
   }
 
   /** 保存：事务外现取版本记号与覆盖，再走 M1 的短事务保存；版本没变时不会凭空产生“已保存”。 */

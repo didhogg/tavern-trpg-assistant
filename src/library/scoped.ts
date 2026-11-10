@@ -50,8 +50,8 @@ export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
 }
 
 export type FetchResult =
-  | { ok: true; ref: EntryRef; source: string | null; item: unknown; version: VersionInfo }
-  | { ok: false; ref: EntryRef; reason: 'not-installed' | 'not-found' | 'excluded' }
+  | { ok: true; ref: EntryRef; source: string | null; item: unknown; version: VersionInfo; closed: boolean }
+  | { ok: false; ref: EntryRef; reason: 'not-installed' | 'not-found' }
 
 export interface CatalogRow {
   kind: 'book' | 'adventure'
@@ -231,7 +231,7 @@ export class ScopedLibrary {
     return { ...d, ...fluff, ref, reason: v.reason, item: effective, base: d.item, version: chosen, alternatives: alts, english: item === undefined ? d.english : null }
   }
 
-  /** 按编号批量取（给结算内核、人物用）：每个编号交生效版本，或具体为什么取不到。 */
+  /** 按编号批量取（给结算内核、人物用）：每个编号交生效版本，或具体为什么取不到（没装 / 没有这一条）；本战役关着的照常交，标 closed。 */
   async fetch(c: CampaignLibrary, refs: EntryRef[]): Promise<FetchResult[]> {
     const assigns = await this.manage.assignments()
     const altMap = await this.alts(c.codeSet)
@@ -248,13 +248,10 @@ export class ScopedLibrary {
         out.push({ ok: false, ref, reason: 'not-found' })
         continue
       }
+      // P5 B-34：人物 / 存档直接引用本战役关着的书里的条目也放行（文件在本地就照常给）；closed 标出它在本战役是关着的
       const v = await this.viewFor(c, ref, stored.source, assigns)
-      if (!v.visible) {
-        out.push({ ok: false, ref, reason: 'excluded' })
-        continue
-      }
       const { chosen, item } = this.version(c, refKey(ref), await this.alternativesOf(ref, altMap), levels)
-      out.push({ ok: true, ref, source: stored.source, item: item ?? stored.item, version: chosen })
+      out.push({ ok: true, ref, source: stored.source, item: item ?? stored.item, version: chosen, closed: !v.visible })
     }
     return out
   }

@@ -14,6 +14,7 @@ export function scopedRefChecker(lib: ScopedLibrary): KernelRefChecker {
       ok: result.ok,
       ref: result.ref,
       reason: result.ok ? undefined : result.reason,
+      ...(result.ok ? { closed: result.closed, source: result.source } : {}),
     }))
   }
 }

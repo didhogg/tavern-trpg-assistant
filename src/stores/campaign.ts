@@ -113,16 +113,6 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result.changed
   }
 
-  /** 读档后"采用现在的"：把当前数据版本 / 房规写进战役并存成新分支（旧存档不变）。 */
-  async function adoptCurrentData(): Promise<SaveSlot> {
-    guardWrite()
-    if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
-    await flush()
-    const { save } = await svc().backend.kernelSave.adoptCurrent(owner.value.ownerKey)
-    adopt(await svc().campaign.getWorkspace(owner.value.ownerKey))
-    return save
-  }
-
   async function branch(name?: string): Promise<SaveSlot> {
     guardWrite()
     if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
@@ -156,5 +146,5 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result
   }
 
-  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, startWith, save, branch, load, adoptCurrentData }
+  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, startWith, save, branch, load }
 })

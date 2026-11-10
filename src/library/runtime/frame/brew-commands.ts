@@ -71,6 +71,26 @@ export async function brewAddUrl(url: string): Promise<WithErrors<BrewEntry[]>> 
 }
 
 /**
+ * 缺的来源一键下载（P5 B-24）：照作者装依赖的做法（utils-brew-base.js `_pLoadParentDependencies`）——
+ * 每个来源标识用 pGetSourceUrl 到来源索引里找下载网址，pAddBrewFromUrl 惰性装（作者自动追装它声明的依赖），最后 pAddBrewsLazyFinalize 一次收尾。
+ * value.added 是这次加进来的包（含依赖）；value.notFound 是来源索引里查不到网址的来源。
+ */
+export async function brewAddSources(sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }>> {
+  const r = await withErrors(async () => {
+    const notFound: string[] = []
+    const failed: string[] = []
+    await Promise.all(sources.map(async (source) => {
+      const url = await A.BrewUtil2.pGetSourceUrl(source)
+      if (!url) { notFound.push(source); return }
+      try { await A.BrewUtil2.pAddBrewFromUrl(url, { isLazy: true }) } catch { failed.push(source) }
+    }))
+    const added: any[] = (await A.BrewUtil2.pAddBrewsLazyFinalize()) ?? []
+    return { added, notFound: [...notFound, ...failed] }
+  })
+  return { errors: r.errors, value: { added: r.value.added.map(entryOf), notFound: r.value.notFound } }
+}
+
+/**
  * 导入本地文件：照作者拖放导入的做法（utils-brew-base.js 第 97–127 行）——解析 JSON，
  * 按作者的判断分给试玩稿（PrereleaseUtil）或自制（BrewUtil2）的 pAddBrewsFromFiles。
  * 作者对解析不了的文件直接忽略，这里把它们列出来交回。

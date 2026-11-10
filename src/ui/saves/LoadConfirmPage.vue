@@ -29,7 +29,6 @@ const checkError = ref('')
 const working = ref(false)
 const saveFirst = ref(true)
 const skipAuto = computed(() => app.settings?.skipAutoSaveOnLoad ?? false)
-const adopt = ref(false)
 
 const rules = computed(() => app.svc().rules)
 const ruleName = (id: string) => rules.value.get(id)?.name ?? id
@@ -37,17 +36,9 @@ const switching = computed(() => !!campaign.workspace && campaign.workspace.rule
 const showDirty = computed(() => campaign.hasCampaign && campaign.dirty)
 const otherCard = computed(() => !!campaign.owner && props.save.ownerKey !== campaign.owner.ownerKey)
 const ruleBlocked = computed(() => !rules.value.has(props.save.ruleId) || !!check.value?.ruleMissing)
-const versionLines = computed(() => {
-  const c = check.value
-  if (!c) return []
-  const lines: string[] = []
-  if (c.dataVersionChanges.official) lines.push('官方资料版本变了')
-  for (const b of c.dataVersionChanges.brews) lines.push(`自制包「${b.id}」${b.change === 'added' ? '是新装的' : b.change === 'removed' ? '已被移除' : '有更新'}`)
-  if (c.overrideChanges.length) lines.push(`${c.overrideChanges.length} 条房规 / 修改版有变化`)
-  return lines
-})
-const changed = computed(() => !!check.value && (check.value.dataVersionChanged || check.value.overridesChanged))
-const MISSING_REASON: Record<string, string> = { 'not-installed': '资料没装', 'not-found': '资料里没有这一条', excluded: '这本书被排除了', 'out-of-scope': '不在这场战役的范围里', unclassified: '还没有归类' }
+// 资料版本变了：只一行提示（读档不改存档；详情默认显示新版资料）
+const changed = computed(() => !!check.value?.plan.versionChanged)
+const MISSING_REASON: Record<string, string> = { 'not-installed': '资料没装', 'not-found': '资料里没有这一条' }
 
 async function setSkipAuto(on: boolean): Promise<void> {
   try {
@@ -74,7 +65,6 @@ async function doLoad(): Promise<void> {
   try {
     if (showDirty.value && saveFirst.value) await campaign.save()
     await campaign.load(props.save.id, { allowRuleSwitch: switching.value || !campaign.hasCampaign, skipAutoSave: skipAuto.value })
-    if (changed.value && adopt.value) await campaign.adoptCurrentData()
     await saves.refresh()
     const missing = check.value?.missing.length ?? 0
     toast.success(`已读取「${props.save.name}」${missing ? `（有 ${missing} 项资料缺失）` : ''}`)
@@ -115,12 +105,7 @@ async function doLoad(): Promise<void> {
           <span v-if="check.missing.length > 8" class="trpg-field__hint">另有 {{ check.missing.length - 8 }} 项…</span>
           <span class="trpg-field__hint">仍可读取和导出；用到它们的结算会暂停，数据不会丢。</span>
         </div>
-        <div v-if="changed" data-testid="load-changed">
-          <b>资料有变化</b>
-          <span v-for="line in versionLines" :key="line">{{ line }}</span>
-          <Checkbox :model-value="!adopt" @update:model-value="adopt = false">恢复原样（按存档当时的资料）</Checkbox>
-          <Checkbox :model-value="adopt" @update:model-value="adopt = true">采用现在的（读取后存成新分支）</Checkbox>
-        </div>
+        <div v-if="changed" data-testid="load-changed"><span class="trpg-field__hint">资料有更新，读取后会按新版资料显示；存档里的改动（数量、等级等）不受影响。</span></div>
       </div>
     </div>
     <footer class="trpg-drawer__bottom trpg-drawer__bottom--confirm">

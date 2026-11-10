@@ -154,14 +154,10 @@ describe('P3-3 存档内核段', () => {
       ])
       expect(check.overridesChanged).toBe(true)
       expect(check.overrideChanges).toMatchObject([{ change: 'changed', before: 'digest-1', after: 'digest-2' }])
-      const kept = await changed.keepSaved(OWNER.ownerKey)
-      expect(kept.overrides[0].digest).toBe('digest-1')
-      const adopted = await changed.adoptCurrent(OWNER.ownerKey)
-      expect(adopted.kernel.revision).toBe(1)
-      expect(adopted.kernel.dataVersion.official).toBe('2.0')
-      expect(adopted.kernel.overrides[0].digest).toBe('digest-2')
-      expect(adopted.save.branchedFrom).toBe(save.id)
-      expect(adopted.save.snapshot.kernel).toMatchObject({ dataVersion: { official: '2.0' } })
+      // B-34：版本变了只是一行提示，不改存档；没有"恢复原样 / 采用现在的"
+      expect(check.plan.versionChanged).toBe(true)
+      expect((await changed.read(OWNER.ownerKey))?.overrides[0].digest).toBe('digest-1')
+      expect((await service.getSave(save.id))?.snapshot.kernel).toMatchObject({ dataVersion: { official: '1.0' } })
     })
   })
 
@@ -307,6 +303,33 @@ describe('结算内核世界编号', () => {
       await kernel.save(OWNER.ownerKey) // 保存时同步副本
       const saved = await service.getSave(branch.save.id)
       expect((saved?.snapshot.library as { exclude: string[] }).exclude).toEqual(closed.exclude)
+    })
+  })
+
+  it('B-34 读档三张清单：没装的包默认建议下载；条目没了单列；本战役关着的放行并可开启；版本变了一行提示', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      await service.startNewCampaign(NEW)
+      const second = { set: 'en-official', prop: 'item', hash: 'rope', label: '绳索' }
+      const checker: KernelRefChecker = async (refs, library) => refs.map((ref) => {
+        if (ref.hash === 'rope') return { ok: false, ref, reason: 'not-found' }
+        if (ref.set === 'cn-official') return { ok: false, ref, reason: 'not-installed' }
+        if (library.exclude.includes(`src:phb`)) return { ok: true, ref, closed: true, source: 'PHB' }
+        return { ok: true, ref, closed: false, source: 'PHB' }
+      })
+      const base = campaign()
+      const withRefs = { ...base, actors: [{ ...base.actors[0], refs: [{ kind: 'spell', ...REF, label: '火球术' }, { kind: 'item', ...second }, { kind: 'item', set: 'cn-official', prop: 'item', hash: 'sword', label: '长剑' }] }] }
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker })
+      await kernel.bind(OWNER.ownerKey, withRefs)
+      await service.saveCurrent(OWNER.ownerKey)
+      await kernel.setLibrary(OWNER.ownerKey, { ...defaultCampaignLibrary('dnd5e2014', 'en'), exclude: ['src:phb'] })
+      const plan = (await kernel.check(OWNER.ownerKey)).plan
+      expect(plan.download).toEqual([{ set: 'cn-official', kind: 'official', refs: 1, labels: ['长剑'] }])
+      expect(plan.gone).toEqual([{ set: 'en-official', prop: 'item', hash: 'rope', label: '绳索' }])
+      expect(plan.closed).toEqual([{ set: 'en-official', source: 'PHB', refs: 1, labels: ['火球术'] }])
+      await kernel.openSources(OWNER.ownerKey, ['PHB'])
+      expect((await kernel.check(OWNER.ownerKey)).plan.closed).toEqual([])
+      expect((await kernel.libraryOf(OWNER.ownerKey)).include).toContain('src:phb')
     })
   })
 })

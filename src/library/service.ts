@@ -300,6 +300,13 @@ export class LibraryService {
     return { ...r, parse: await this.afterBrewChange(s) }
   }
 
+  /** 缺依赖一键下载：给来源标识（缺什么），作者到来源索引找网址、装上并追装它的依赖。notFound = 索引里查不到的来源。 */
+  async brewInstallSources(sourceId: string, sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null }> {
+    const s = this.brewSource(sourceId)
+    const r = await (await this.frame(s.codeSet)).call('brewAddSources', sources)
+    return { ...r, parse: r.value.added.length ? await this.afterBrewChange(s) : null }
+  }
+
   /** 导入本地文件（文件名 + 原文）。 */
   async brewImport(sourceId: string, files: Array<{ name: string; text: string }>) {
     const s = this.brewSource(sourceId)
