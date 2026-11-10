@@ -47,6 +47,7 @@ var e = {
 			kind: "brew",
 			lang: "zh",
 			codeSet: "cn",
+			pair: "en-brew",
 			repo: "tjliqy/homebrew-deploy",
 			mirrors: ["https://homebrew.kiwee.top/", "https://cdn.jsdelivr.net/gh/tjliqy/homebrew-deploy@master/"]
 		},
@@ -55,6 +56,7 @@ var e = {
 			kind: "brew",
 			lang: "en",
 			codeSet: "en",
+			pair: "cn-brew",
 			repo: "TheGiddyLimit/homebrew",
 			mirrors: ["https://raw.githubusercontent.com/TheGiddyLimit/homebrew/master/", "https://cdn.jsdelivr.net/gh/TheGiddyLimit/homebrew@master/"]
 		}
@@ -70,31 +72,44 @@ function i(e) {
 	if (!t) throw Error(`作者程序 ${e} 没有登记对应的官方数据源`);
 	return t;
 }
-function a(e, n) {
-	let r = t[n.codeSet];
-	return e.replaceAll("{repo}", r.repo).replaceAll("{commit}", r.commit);
+var a = /* @__PURE__ */ new Map();
+function o(e, n) {
+	n && n !== t[e]?.commit ? a.set(e, n) : a.delete(e);
 }
-function o(e) {
-	return e.mirrors.map((t) => a(t, e));
+function s(e, t, n) {
+	return e.replaceAll("{repo}", t).replaceAll("{commit}", n);
 }
-function s(e) {
+function c(e, n) {
+	return e.mirrors.map((r) => s(r, t[e.codeSet].repo, n));
+}
+function l(e, n) {
 	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
-	return a(e.fileList, e);
+	return s(e.fileList, t[e.codeSet].repo, n);
 }
-function c(e) {
-	return t[e.codeSet].commit;
+function u(e, n) {
+	return s(e, t[n.codeSet].repo, p(n));
 }
-// src/library/images.ts
-function l(e, t) {
-	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
-}
-function u(e) {
-	return r(e).imageRoots ?? [];
-}
-function d(e, t) {
-	return l(u(e), t);
+function d(e) {
+	return e.mirrors.map((t) => u(t, e));
 }
 function f(e) {
+	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
+	return u(e.fileList, e);
+}
+function p(e) {
+	return a.get(e.codeSet) ?? t[e.codeSet].commit;
+}
+// src/library/images.ts
+function m(e, t) {
+	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
+}
+function h(e) {
+	return r(e).imageRoots ?? [];
+}
+function g(e, t) {
+	return m(h(e), t);
+}
+function _(e) {
 	return e.replace(/^\/?img\//, "");
 }
-export { s as a, i as c, c as i, f as n, r as o, n as r, o as s, d as t };
+export { p as a, r as c, i as d, o as f, n as i, d as l, _ as n, f as o, t as r, l as s, g as t, c as u };
