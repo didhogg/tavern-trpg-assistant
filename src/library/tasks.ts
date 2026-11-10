@@ -5,6 +5,7 @@ import type { LibraryDatabase } from './db'
 import type { FileProvider } from './files'
 import { installOfficial, parsedKey, type InstallReport } from './install'
 import type { AuthorFrame } from './runtime/host'
+import type { LogSink } from './logs'
 import { getSource } from './sources'
 
 export type TaskStatus = 'running' | 'done' | 'failed' | 'cancelled'
@@ -32,6 +33,8 @@ export interface TaskOptions {
   /** T2：下载任务里的换算段；后端接结算内核，库层只报进度。 */
   precompute?: (setId: string, signal: AbortSignal, onProgress: (p: TaskState['progress']) => void) => Promise<unknown>
   onChange?: (t: TaskState) => void
+  /** 失败写日志（P5 B-26）。 */
+  onLog?: LogSink
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
@@ -75,7 +78,9 @@ export class DownloadTasks {
       } catch (e) {
         state.status = abort.signal.aborted ? 'cancelled' : 'failed'
         state.error = msg(e)
+        if (state.status === 'failed') this.opts.onLog?.({ level: 'error', source: set, kind: `task:${kind}`, message: state.error, detail: { item, progress: state.progress } })
       }
+      if (state.convertError) this.opts.onLog?.({ level: 'warn', source: set, kind: 'task:convert', message: state.convertError })
       this.opts.onChange?.({ ...state })
       return { ...state }
     })()

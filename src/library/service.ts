@@ -4,6 +4,7 @@
 import { addGeneratedPairs } from './english-generated'
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import { ParsedMemo } from './parsed-memo'
+import type { LogSink } from './logs'
 import { brewCorporaKey, parseBrew, type BrewCorpora, type BrewParseReport } from './brew'
 import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
@@ -25,6 +26,8 @@ export interface LibraryServiceOptions {
   openFrame: (codeSet: string, kvScope?: string) => Promise<AuthorFrame>
   /** 自制 / 房规变了之后接着换算（T2）；回调由后端接，库层不认识结算内核。 */
   onDataChanged?: (codeSet: string) => Promise<void>
+  /** 自制解析出错、作者报错写日志（P5 B-26）。 */
+  onLog?: LogSink
 }
 
 export class LibraryService {
@@ -299,6 +302,14 @@ export class LibraryService {
     await invalidatePrecompute(this.opts.db, officialSourceOf(s.codeSet).id, ['search'])
     this.searchLoaded.delete(s.codeSet)
     try { await this.opts.onDataChanged?.(s.codeSet) } catch (error) { report.precomputeError = error instanceof Error ? error.message : String(error) }
+    const log = this.opts.onLog
+    if (log) {
+      for (const e of report.parse.errors) log({ level: 'error', source: s.id, kind: 'brew-parse', message: `${e.prop}：${e.error}` })
+      for (const [prop, c] of Object.entries(report.parse.corpora ?? {})) for (const f of c.failed) log({ level: 'error', source: s.id, kind: 'brew-corpus', message: `${prop} ${f.id}：${f.error}` })
+      if (report.parse.authorErrors.length) log({ level: 'warn', source: s.id, kind: 'brew-author-errors', message: `解析时作者报了 ${report.parse.authorErrors.length} 条错`, detail: report.parse.authorErrors })
+      if (report.alternatives.errors.length) log({ level: 'warn', source: s.id, kind: 'brew-alternatives', message: `${report.alternatives.errors.length} 条同编号的备选版本取失败`, detail: report.alternatives.errors })
+      if (report.precomputeError) log({ level: 'warn', source: s.id, kind: 'brew-precompute', message: report.precomputeError })
+    }
     return report
   }
 

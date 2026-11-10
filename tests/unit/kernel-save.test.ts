@@ -332,4 +332,15 @@ describe('结算内核世界编号', () => {
       expect((await kernel.libraryOf(OWNER.ownerKey)).include).toContain('src:phb')
     })
   })
+
+  it('B-26 读档检查失败会写日志，再把错误抛出去', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      await service.startNewCampaign(NEW)
+      const logged: Array<{ kind: string; message: string }> = []
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: async (refs) => refs.map((ref) => ({ ok: true, ref })), onLog: (e) => logged.push(e) })
+      expect(await code(kernel.checkSave('不存在的存档'))).toBe('E_NOT_FOUND')
+      expect(logged).toMatchObject([{ kind: 'load-check', message: '没有找到这个存档' }])
+    })
+  })
 })

@@ -47,6 +47,8 @@ export interface KernelSaveDeps {
   compactActors?: (ownerKey: string, ids: string[]) => Promise<KernelActorCompact[]>
   /** 撤销上限由设置决定；不给出时用默认值。 */
   undoLimit?: () => number | Promise<number>
+  /** 读档检查失败写日志（P5 B-26）。 */
+  onLog?: (entry: { level: 'error' | 'warn' | 'info'; source: string; kind: string; message: string; detail?: unknown }) => void
 }
 
 export interface KernelMissing {
@@ -200,6 +202,15 @@ export class KernelSaveService {
 
   /** 读档前检查存档槽：只看要读的那份存档，不动当前战役。 */
   async checkSave(saveId: string): Promise<KernelCheck> {
+    try {
+      return await this.checkSaveInner(saveId)
+    } catch (e) {
+      this.deps.onLog?.({ level: 'error', source: 'kernel-save', kind: 'load-check', message: e instanceof Error ? e.message : String(e), detail: { saveId } })
+      throw e
+    }
+  }
+
+  private async checkSaveInner(saveId: string): Promise<KernelCheck> {
     const save = await this.deps.campaign.getSave(saveId)
     if (!save || save.deletedAt !== undefined) throw new TrpgError('E_NOT_FOUND', '没有找到这个存档')
     const snapshot = save.snapshot as Record<string, unknown>
