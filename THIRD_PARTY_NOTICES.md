@@ -19,6 +19,7 @@
 | fast-uri 3.1.0 | 同上，开发期 ajv 解析结构文件之间的相对引用；固定在 3.1.0（3.1.9 起解析相对引用的结果变了，编译会失败） | BSD-3-Clause |
 | json-source-map 0.6.1 | 同上，运行时给校验错误标出原文行列（作者的校验器用的也是它） | MIT |
 | 5etools-utils 0.17.24 的 `schema/brew`（`vendor/brew-schema/schema/`，由 `tools/vendor-brew-schema.mjs` 原样取自 npm） | 作者的自制数据结构定义，校验自制 JSON 用 | MIT（包的 package.json 声明；包内无单独许可文件） |
+| 5etools-cn `validate-homebrew-json-shim.mjs` 里的结构扩展（`tools/build-brew-validator.mjs` 的 `applyCnSchemaExtensions`，照抄其做法并注明出处） | 给作者自制结构定义补中文仓库自己加的 `ENG_name`（及 `_meta.translators`），避免中文自制被误判不合格 | MIT（5etools-cn 的 `package.json` 与 LICENSE 第 I 部分：源码为 MIT） |
 | plutonium-scenes 的 `test/schema/shared.json`（`vendor/brew-schema/remote/`） | 上面结构定义里唯一的外部引用（作者测试器联网取，这里随插件带一份，约 7 KB） | 该仓库未声明许可（GitHub 查不到许可证）；随插件带属驾驶员判断承担的风险，与结构定义同属 5etools 生态 |
 
 ## 结算小窗随插件带的原件（`vendor/foundry/`，P3-2）

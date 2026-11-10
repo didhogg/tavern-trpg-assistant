@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { configureBrewValidator, describeError, validateBrewJson } from '../../../src/library/brew-validate'
 import { CustomLibrary } from '../../../src/library/custom'
 
-const spell = { name: '测试术', source: 'P5Test', level: 1, school: 'V', time: [{ number: 1, unit: 'action' }], range: { type: 'point', distance: { type: 'self' } }, components: { v: true }, duration: [{ type: 'instant' }], entries: ['x'] }
-type Brew = { _meta: { edition?: string; dateAdded: number; dateLastModified: number; sources: Array<Record<string, unknown>> }; spell: Array<Record<string, unknown>> }
+const spell: Record<string, unknown> = { name: '测试术', source: 'P5Test', level: 1, school: 'V', time: [{ number: 1, unit: 'action' }], range: { type: 'point', distance: { type: 'self' } }, components: { v: true }, duration: [{ type: 'instant' }], entries: ['x'] }
+type Brew = { _meta: { edition?: string; translators?: string[]; dateAdded: number; dateLastModified: number; sources: Array<Record<string, unknown>> }; spell: Array<Record<string, unknown>> }
 const good = (): Brew => ({
   _meta: { sources: [{ json: 'P5Test', abbreviation: 'P5', full: 'P5 测试包', authors: ['测试者'], convertedBy: ['测试者'], version: '1.0.0', dateReleased: '2024-05-06' }], dateAdded: 1, dateLastModified: 1, edition: 'classic' },
   spell: [structuredClone(spell)],
@@ -47,6 +47,16 @@ describe('自制 JSON 结构校验（作者结构定义，预编译）', () => {
     const date = good()
     date._meta.sources[0].dateReleased = '2024/05/06'
     expect((await validateBrewJson(date)).issues[0]).toMatchObject({ keyword: 'format', path: '/_meta/sources/0/dateReleased' })
+  })
+
+  it('中文自制仓库自己加的字段（ENG_name、_meta.translators）照中文 fork 的做法放行，别的多余字段照样报错', async () => {
+    const zh = good()
+    zh.spell[0].ENG_name = 'Test Spell'
+    zh._meta.translators = ['译者']
+    expect(await validateBrewJson(pretty(zh))).toMatchObject({ ok: true })
+    const bad = structuredClone(zh)
+    bad.spell[0].ENG_nam = 'typo'
+    expect((await validateBrewJson(bad)).issues.map((i) => i.text)).toContain('多出不认识的属性「ENG_nam」')
   })
 
   it('不是 JSON：说出位置，不抛错', async () => {

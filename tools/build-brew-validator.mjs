@@ -32,10 +32,30 @@ ajv.addKeyword({ keyword: 'version', validate: false })
 ajv.addKeyword({ keyword: 'markdownDescription', validate: false })
 ajv.addFormat('date', /^\d\d\d\d-\d\d-\d\d$/)
 
+// 中文 fork 的结构扩展（P5 G-4）：中文自制仓库在带 name 的对象上加了英文名字段 ENG_name，作者的结构定义不认。
+// 中文 fork 自己的做法是校验时在内存里给每个自制结构文件补这个字段（不改作者的包）；这里在编译前做同样的事。
+// 照抄 5etools-cn 的 codex-skills/homebrew-conversion-audit/scripts/validate-homebrew-json-shim.mjs 里的
+// _applyCnSchemaExtensions / _allowEngNameOnNamedObjects（原件注明：只补 ENG_name，别的字段照作者的）。
+function allowEngNameOnNamedObjects(node, seen = new Set()) {
+  if (!node || typeof node !== 'object' || seen.has(node)) return
+  seen.add(node)
+  if (node.properties?.name && !node.properties.ENG_name) node.properties.ENG_name = { type: 'string' }
+  for (const value of Object.values(node)) if (value && typeof value === 'object') allowEngNameOnNamedObjects(value, seen)
+}
+function applyCnSchemaExtensions(schema) {
+  const adventureProps = schema?.properties?.adventure?.items?.properties
+  if (adventureProps && !adventureProps.ENG_name) adventureProps.ENG_name = { type: 'string' }
+  allowEngNameOnNamedObjects(schema)
+  // 文件头 _meta.translators（译者名单，字符串数组）：中文仓库自己加的；中文 fork 的结构对比脚本（compare_json_structure.py）把 /_meta/translators 当作译文才有的合法字段。
+  const meta = schema?.$defs?._meta
+  if (meta?.properties && !meta.properties.translators) meta.properties.translators = { type: 'array', items: { type: 'string' } }
+  return schema
+}
+
 const schemaDir = join(dir, 'schema')
 let count = 0
 for (const file of await listJson(schemaDir)) {
-  ajv.addSchema(JSON.parse(await readFile(file, 'utf8')), relative(schemaDir, file).replace(/\\/g, '/'))
+  ajv.addSchema(applyCnSchemaExtensions(JSON.parse(await readFile(file, 'utf8'))), relative(schemaDir, file).replace(/\\/g, '/'))
   count++
 }
 ajv.addSchema(JSON.parse(await readFile(join(dir, 'remote/plutonium-scenes-shared.json'), 'utf8')), source.remote)
