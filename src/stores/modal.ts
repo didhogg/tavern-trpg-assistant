@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, shallowRef, type Component } from 'vue'
 
-export type ModalVariant = 'dialog' | 'drawer' | 'confirm'
+/** sheet = 库页的包 / 书 / 搜索弹窗：宽屏居中浮在整个窗口上，窄屏从底部上拉（P5）。 */
+export type ModalVariant = 'dialog' | 'drawer' | 'confirm' | 'sheet'
 
 export interface ModalPage {
   /** 同一弹窗内唯一；确认页以 `confirm:` 开头。 */

@@ -1,0 +1,60 @@
+/* 库页（P5）：书架、包 / 书弹窗、条目详情。样式取自线框 docs/design/p5-wireframe/p5.css（lib- 开头），令牌全部来自设计系统。 */
+.lib-page { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.lib-top { flex: none; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); flex-wrap: wrap; }
+.trpg-window[data-layout='narrow'] .lib-top { padding: var(--sp-2) var(--sp-3); gap: var(--sp-2); }
+.lib-end { margin-left: auto; display: flex; align-items: center; gap: var(--sp-2); flex: none; }
+.lib-scroll { flex: 1; min-height: 0; overflow: auto; padding: 0 var(--sp-4) var(--sp-8, 72px); }
+.trpg-window[data-layout='narrow'] .lib-scroll { padding: 0 var(--sp-3) 72px; }
+.lib-sec { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) 0 var(--sp-1); font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text2); }
+.lib-muted { color: var(--text2); } .lib-faint { color: var(--text3); }
+.lib-src { color: var(--text3); font-size: var(--fs-xs); font-weight: var(--fw-regular); font-family: var(--font-sans); }
+.lib-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-serif); font-weight: var(--fw-semibold); background: none; border: 0; padding: 0; text-align: left; color: inherit; font-size: inherit; }
+.lib-name:hover { text-decoration: underline dotted; text-underline-offset: 4px; }
+.trpg-shelf__row[data-off='true'] .lib-name { color: var(--text2); font-weight: var(--fw-regular); }
+.lib-rowmeta { color: var(--text2); font-size: var(--fs-xs); white-space: nowrap; }
+.trpg-window[data-layout='narrow'] .lib-rowmeta { display: none; }
+.trpg-shelf + .lib-sec { margin-top: var(--sp-2); }
+.lib-banner { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--primary-tint); color: var(--primary-text); font-size: var(--fs-sm); }
+.lib-banner > span:first-of-type { flex: 1 1 140px; min-width: 0; }
+.lib-banner--warn { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 2px var(--danger-line); }
+/* 弹窗里：一个栏目，自己管滚动 */
+.lib-mbody { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.lib-mscroll { flex: 1; min-height: 0; overflow: auto; }
+.lib-filter { flex: none; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4) var(--sp-2); flex-wrap: wrap; }
+.lib-filter .trpg-input { flex: 1 1 160px; min-width: 140px; }
+.lib-pills { flex: none; display: flex; gap: var(--sp-2); overflow-x: auto; padding: 0 var(--sp-4) var(--sp-2); }
+.lib-pills .trpg-pill { flex: none; background: var(--surface); cursor: pointer; }
+.lib-pills .trpg-pill[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); font-weight: var(--fw-semibold); }
+.lib-pills .trpg-pill small { margin-left: 4px; font-size: var(--fs-xs); opacity: .8; }
+.lib-list { display: grid; align-content: start; border-top: var(--border) solid var(--line); }
+.lib-list__row { display: flex; align-items: center; gap: var(--sp-3); min-height: 44px; padding: 4px var(--sp-4); border: 0; border-bottom: var(--border) solid var(--line); background: var(--surface); text-align: left; color: var(--text); font: inherit; cursor: pointer; width: 100%; }
+.lib-list__row:hover { background: var(--bg-hover); }
+.lib-list__row .lib-name { font-weight: var(--fw-semibold); }
+.lib-list__row[data-off='true'] .lib-name { color: var(--text3); }
+.lib-count { flex: none; padding: var(--sp-2) var(--sp-4); color: var(--text2); font-size: var(--fs-xs); display: flex; gap: var(--sp-3); align-items: center; }
+.lib-state { display: grid; gap: var(--sp-2); justify-items: start; padding: var(--sp-6) var(--sp-5); }
+.lib-state h3 { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+.lib-skel { display: grid; gap: var(--sp-2); padding: var(--sp-4); }
+.lib-skel i { display: block; height: 14px; border-radius: 4px; background: linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side)); opacity: .7; }
+/* 条目详情 */
+.lib-dtools { flex: none; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-dbody { padding: var(--sp-4) var(--sp-5) var(--sp-6); display: grid; gap: var(--sp-3); align-content: start; line-height: var(--lh-body); }
+.trpg-window[data-layout='narrow'] .lib-dbody { padding: var(--sp-4) var(--sp-4) var(--sp-6); }
+.lib-dbody p { margin: 0; } .lib-dbody h3 { margin: var(--sp-2) 0 0; font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+.lib-srcline { color: var(--text3); font-size: var(--fs-xs); }
+.lib-sumline { display: flex; flex-wrap: wrap; gap: 2px var(--sp-4); color: var(--text2); font-size: var(--fs-sm); }
+.lib-sumline b { color: var(--text); font-weight: var(--fw-semibold); }
+.lib-block { display: grid; gap: var(--sp-1); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
+.lib-rtable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.lib-rtable th, .lib-rtable td { border: var(--border) solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.lib-rtable th { background: var(--bg-sunk); }
+.lib-tablewrap { overflow: auto; }
+.lib-list-ul { margin: 0; padding-left: 1.4em; display: grid; gap: var(--sp-1); }
+.lib-quote { margin: 0; padding-left: var(--sp-3); border-left: 3px solid var(--line-ctrl); color: var(--text2); }
+.lib-inset { padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); display: grid; gap: var(--sp-2); }
+.lib-dice { display: inline-flex; align-items: center; gap: 3px; padding: 0 5px; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-xs); background: var(--primary-tint); color: var(--primary-text); font: inherit; font-weight: var(--fw-semibold); line-height: 1.5; cursor: pointer; }
+.lib-fold { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
+.lib-fold > summary { display: flex; align-items: center; gap: var(--sp-2); min-height: 40px; padding: 0 var(--sp-3); cursor: pointer; list-style: none; }
+.lib-fold__body { padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-sm); overflow: auto; }
+.lib-headsw { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.lib-sortbar { display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-4) var(--sp-2); font-size: var(--fs-sm); color: var(--text2); flex-wrap: wrap; }

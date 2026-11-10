@@ -137,3 +137,10 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .page-stack { display: grid; gap: var(--sp-4); align-content: start; }
 .page-intro { color: var(--text2); }
 .trpg-info__line { margin: 0; }
+/* 库页弹窗 sheet：宽屏居中较大，窄屏底部抽屉（内容自己管滚动，页面不留内边距） */
+.trpg-modal[data-variant='sheet'] .trpg-modal__card { width: min(760px, 100%); height: min(600px, 100%); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__page { padding: 0; overflow: hidden; }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title { font-family: var(--font-serif); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] { align-items: flex-end; background: color-mix(in srgb, var(--text) 46%, transparent); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__card { height: 88%; border-radius: 14px 14px 0 0; animation-name: trpg-sheet; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-sheet-grip { display: block; }

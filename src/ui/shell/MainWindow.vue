@@ -4,6 +4,7 @@ import { useModalStore } from '../../stores/modal'
 import { PAGE_TITLES, useUiStore, type PageId } from '../../stores/ui'
 import Icon from '../kit/Icon.vue'
 import ModalHost from '../kit/ModalHost.vue'
+import LibraryView from '../libview/LibraryView.vue'
 import HomeView from '../views/HomeView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import { saveNow } from '../saves/actions'
@@ -15,13 +16,13 @@ import { useDrag, type Point } from './useDrag'
 const ui = useUiStore()
 const modal = useModalStore()
 type NavItem = { id: PageId | 'library'; label: string; icon: string; bottom?: boolean }
-// 库标签 P4 只有"进度环 + 提示"，没有库页面（P5 做）；其余两个是真页面
+// 库标签：进度环 + 库页面（P5）
 const NAV = computed<NavItem[]>(() => [
   { id: 'home', label: '首页', icon: 'house' },
   { id: 'library', label: '库', icon: 'books', bottom: true },
   { id: 'settings', label: '设置', icon: 'gear', bottom: true },
 ])
-const VIEWS = { home: HomeView, settings: SettingsView }
+const VIEWS = { home: HomeView, settings: SettingsView, library: LibraryView }
 
 const vw = ref(window.innerWidth)
 const vh = ref(window.innerHeight)
@@ -137,7 +138,7 @@ onBeforeUnmount(() => {
           </button>
         </header>
         <div class="trpg-body">
-          <main class="trpg-content" :data-flush="ui.page === 'settings' ? 'true' : undefined" tabindex="-1">
+          <main class="trpg-content" :data-flush="ui.page === 'settings' || ui.page === 'library' ? 'true' : undefined" tabindex="-1">
             <component :is="VIEWS[ui.page]" />
           </main>
           <button class="trpg-dice-btn" type="button" aria-label="掷骰" :aria-pressed="ui.diceOpen" @click="ui.diceOpen = !ui.diceOpen">
