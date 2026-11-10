@@ -11,7 +11,8 @@ import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
 import { removeSource, saveToMine } from './actions'
-import { openManage, openPack } from './open'
+import { pullUpdates } from './update-flow'
+import { openBulk, openManage, openPack } from './open'
 
 /** 书架（U2a）：官方 / 自制分开；每组可折叠；行 = 书名 · 版本 · 开关 · ⋯。无战役时所有书显示为关、开关不可用。书架搜索在列表下方。 */
 const app = useAppStore()
@@ -42,6 +43,9 @@ async function onMenu(r: CatalogRow, key: string): Promise<void> {
   else if (key === 'save') await saveToMine(s, r, toast)
   else if (key === 'rm' && (await removeSource(s, r, app.settings?.library.skipRemovePrompt ?? false, toast))) await lib.load(s, owner)
 }
+async function onShelfMenu(key: string): Promise<void> {
+  if (key === 'pull' && (await pullUpdates(app.svc(), lib.campaignLib?.codeSet ?? 'cn', toast))) await lib.load(app.svc(), campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)
+}
 const isOn = (r: CatalogRow): boolean => lib.bound && r.view.visible
 async function toggle(r: CatalogRow, next: boolean): Promise<void> {
   const owner = campaign.owner?.ownerKey
@@ -59,7 +63,13 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
       <div v-if="lib.shelf.booksError" class="lib-banner lib-banner--warn" style="margin-top: var(--sp-2)"><Icon name="warning" :size="16" /><span>书目读取失败：{{ lib.shelf.booksError }}</span></div>
       <div v-if="!total && !q" class="lib-state"><h3>还没有资料</h3><p class="lib-muted">去【下载】装官方资料或自制包。</p></div>
       <template v-for="s in sections" :key="s.kind">
-        <div class="lib-sec">{{ s.label }}</div>
+        <div class="lib-sec">
+          {{ s.label }}
+          <span v-if="s.kind === 'official'" class="lib-end">
+            <button class="trpg-btn trpg-btn--small" type="button" data-testid="open-bulk" :disabled="!lib.bound" :title="lib.bound ? undefined : '先创建战役'" @click="openBulk()">批量勾选…</button>
+            <MoreMenu label="书架" :items="[{ key: 'pull', label: '拉取更新' }]" @select="onShelfMenu" />
+          </span>
+        </div>
         <div class="trpg-shelf" style="min-height: 0; overflow: visible">
           <details v-for="g in s.groups" :key="g.group" class="trpg-shelf__group" open>
             <summary class="trpg-shelf__sum">

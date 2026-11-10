@@ -63,5 +63,14 @@ export const useLibViewStore = defineStore('library', () => {
     await load(s, ownerKey)
   }
 
-  return { campaignLib, bound, shelf, minePacks, brewSetId, loading, error, load, toggleSource }
+  /** 一次改多本书的开关（批量勾选）：逐个算出新的加入 / 排除，只写一次战役设置。 */
+  async function applySources(s: Services, ownerKey: string, changes: Record<string, boolean>): Promise<void> {
+    const ks = s.backend.kernelSave
+    let cur = await ks.libraryOf(ownerKey)
+    for (const [source, visible] of Object.entries(changes)) cur = { ...cur, ...chooseSource(cur, source, visible) }
+    await ks.setLibrary(ownerKey, cur)
+    await load(s, ownerKey)
+  }
+
+  return { applySources, campaignLib, bound, shelf, minePacks, brewSetId, loading, error, load, toggleSource }
 })

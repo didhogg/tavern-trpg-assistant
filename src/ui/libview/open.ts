@@ -2,6 +2,7 @@
 import { useModalStore } from '../../stores/modal'
 import type { EntryRef } from '../../library/scopes'
 import EntryPage from './EntryPage.vue'
+import BulkPage from './BulkPage.vue'
 import ManagePage from './ManagePage.vue'
 import PackHeader from './PackHeader.vue'
 import PackPage from './PackPage.vue'
@@ -38,4 +39,8 @@ export function openManage(p: PackProps): void {
 /** 书 / 冒险阅读器：弹窗里前进一页。 */
 export function openReader(r: { set: string; prop: string; id: string; name: string }): void {
   useModalStore().push({ key: `reader:${r.set}:${r.prop}:${r.id}`, title: r.name, component: ReaderPage, props: { ...r }, variant: 'sheet' })
+}
+
+export function openBulk(): void {
+  useModalStore().open({ key: 'bulk', title: '批量勾选', component: BulkPage, variant: 'sheet' })
 }
