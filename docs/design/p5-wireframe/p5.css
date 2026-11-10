@@ -162,3 +162,49 @@
 
 /* 线框里关掉动画（截图不会截到淡入一半；真实界面的动效在设计系统里） */
 .ds-root *, .ds-root *::before, .ds-root *::after { animation: none !important; transition: none !important; }
+
+/* ── 2026-11-10 重画：包 / 书 / 搜索弹窗（宽 = 居中浮在整个插件窗口上；窄 = 底部抽屉）── 复制进插件时并入 kit.css 的 modal 部分 ── */
+.trpg-modal[data-variant='sheet'] .trpg-modal__card { width: min(760px, 100%); height: min(600px, 100%); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__page { padding: 0; overflow: hidden; }
+.trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-4); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title { font-family: var(--font-serif); display: flex; align-items: center; gap: var(--sp-2); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title .trpg-badge { font-family: var(--font-sans); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] { align-items: flex-end; padding: 0; background: color-mix(in srgb, var(--text) 46%, transparent); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__card { width: 100%; height: 88%; border-radius: 14px 14px 0 0; animation-name: trpg-sheet; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-sheet-grip { display: block; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-3); }
+.lib-mbody { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; }
+.lib-mbody > .lib-tablewrap { flex: 1; min-height: 0; }
+.lib-mscroll { flex: 1; min-height: 0; overflow: auto; }
+.lib-mpad { padding: var(--sp-3) var(--sp-4); display: grid; gap: var(--sp-3); align-content: start; }
+.lib-headsw { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.lib-dtools { flex: none; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-src { color: var(--text3); font-size: var(--fs-xs); font-weight: var(--fw-regular); font-family: var(--font-sans); }
+.lib-srcline { color: var(--text3); font-size: var(--fs-xs); padding: 0 0 var(--sp-1); }
+.lib-sortable { opacity: .35; margin-left: 2px; display: inline-flex; vertical-align: -2px; }
+.lib-sbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-3) 0 0; }
+.lib-sbar .trpg-input { flex: 1 1 200px; }
+.lib-sec { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text2); padding: var(--sp-3) 0 var(--sp-1); display: flex; align-items: center; gap: var(--sp-2); }
+.lib-chk { display: flex; align-items: center; gap: var(--sp-3); min-height: 44px; padding: 4px var(--sp-2); border-bottom: var(--border) solid var(--line); }
+.lib-chk .lib-grow { display: grid; gap: 0; }
+.lib-chk[data-lock='true'] { background: var(--bg-sunk); }
+.lib-chk .trpg-check { flex: 1; min-width: 0; }
+.lib-var { display: grid; gap: var(--sp-2); padding: var(--sp-3); border-left: 3px solid var(--primary); background: var(--primary-tint); border-radius: 0 var(--r-md) var(--r-md) 0; }
+.lib-var__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.lib-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.trpg-window[data-layout='narrow'] .lib-cmp { grid-template-columns: 1fr; }
+.lib-cmp > div { border: var(--border) solid var(--line); border-radius: var(--r-md); padding: var(--sp-3); background: var(--surface); display: grid; gap: 4px; font-size: var(--fs-sm); }
+.lib-cmp > div[data-new='true'] { border-color: var(--primary); background: var(--primary-tint); }
+.lib-fold { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
+.lib-fold > summary { display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: 0 var(--sp-3); cursor: pointer; list-style: none; font-weight: var(--fw-semibold); }
+.lib-fold > summary::-webkit-details-marker { display: none; }
+.lib-fold__body { padding: 0 var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-2); }
+.lib-fold small { color: var(--text2); font-weight: var(--fw-regular); }
+.lib-tabs2 { flex: none; display: flex; gap: var(--sp-1); padding: 0 var(--sp-4); border-bottom: var(--border) solid var(--line); overflow-x: auto; }
+.lib-tabs2 button { flex: none; min-height: var(--hit-touch); padding: 0 var(--sp-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--text2); }
+.lib-tabs2 button[aria-current='true'] { border-bottom-color: var(--primary); color: var(--text); font-weight: var(--fw-semibold); }
+.lib-tbtn { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); }
+.lib-btnend { margin-left: auto; display: flex; gap: var(--sp-2); flex: none; }
+.lib-dlbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: 0 var(--sp-4) var(--sp-2); }
+.lib-dlbar .trpg-input { flex: 1 1 180px; }
+.lib-soft { opacity: .5; }

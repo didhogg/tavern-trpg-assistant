@@ -663,9 +663,55 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* 线框里关掉动画（截图不会截到淡入一半；真实界面的动效在设计系统里） */
 .ds-root *, .ds-root *::before, .ds-root *::after { animation: none !important; transition: none !important; }
+
+/* ── 2026-11-10 重画：包 / 书 / 搜索弹窗（宽 = 居中浮在整个插件窗口上；窄 = 底部抽屉）── 复制进插件时并入 kit.css 的 modal 部分 ── */
+.trpg-modal[data-variant='sheet'] .trpg-modal__card { width: min(760px, 100%); height: min(600px, 100%); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__page { padding: 0; overflow: hidden; }
+.trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-4); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title { font-family: var(--font-serif); display: flex; align-items: center; gap: var(--sp-2); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title .trpg-badge { font-family: var(--font-sans); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] { align-items: flex-end; padding: 0; background: color-mix(in srgb, var(--text) 46%, transparent); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__card { width: 100%; height: 88%; border-radius: 14px 14px 0 0; animation-name: trpg-sheet; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-sheet-grip { display: block; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-3); }
+.lib-mbody { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; }
+.lib-mbody > .lib-tablewrap { flex: 1; min-height: 0; }
+.lib-mscroll { flex: 1; min-height: 0; overflow: auto; }
+.lib-mpad { padding: var(--sp-3) var(--sp-4); display: grid; gap: var(--sp-3); align-content: start; }
+.lib-headsw { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.lib-dtools { flex: none; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-src { color: var(--text3); font-size: var(--fs-xs); font-weight: var(--fw-regular); font-family: var(--font-sans); }
+.lib-srcline { color: var(--text3); font-size: var(--fs-xs); padding: 0 0 var(--sp-1); }
+.lib-sortable { opacity: .35; margin-left: 2px; display: inline-flex; vertical-align: -2px; }
+.lib-sbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-3) 0 0; }
+.lib-sbar .trpg-input { flex: 1 1 200px; }
+.lib-sec { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text2); padding: var(--sp-3) 0 var(--sp-1); display: flex; align-items: center; gap: var(--sp-2); }
+.lib-chk { display: flex; align-items: center; gap: var(--sp-3); min-height: 44px; padding: 4px var(--sp-2); border-bottom: var(--border) solid var(--line); }
+.lib-chk .lib-grow { display: grid; gap: 0; }
+.lib-chk[data-lock='true'] { background: var(--bg-sunk); }
+.lib-chk .trpg-check { flex: 1; min-width: 0; }
+.lib-var { display: grid; gap: var(--sp-2); padding: var(--sp-3); border-left: 3px solid var(--primary); background: var(--primary-tint); border-radius: 0 var(--r-md) var(--r-md) 0; }
+.lib-var__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.lib-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.trpg-window[data-layout='narrow'] .lib-cmp { grid-template-columns: 1fr; }
+.lib-cmp > div { border: var(--border) solid var(--line); border-radius: var(--r-md); padding: var(--sp-3); background: var(--surface); display: grid; gap: 4px; font-size: var(--fs-sm); }
+.lib-cmp > div[data-new='true'] { border-color: var(--primary); background: var(--primary-tint); }
+.lib-fold { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
+.lib-fold > summary { display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: 0 var(--sp-3); cursor: pointer; list-style: none; font-weight: var(--fw-semibold); }
+.lib-fold > summary::-webkit-details-marker { display: none; }
+.lib-fold__body { padding: 0 var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-2); }
+.lib-fold small { color: var(--text2); font-weight: var(--fw-regular); }
+.lib-tabs2 { flex: none; display: flex; gap: var(--sp-1); padding: 0 var(--sp-4); border-bottom: var(--border) solid var(--line); overflow-x: auto; }
+.lib-tabs2 button { flex: none; min-height: var(--hit-touch); padding: 0 var(--sp-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--text2); }
+.lib-tabs2 button[aria-current='true'] { border-bottom-color: var(--primary); color: var(--text); font-weight: var(--fw-semibold); }
+.lib-tbtn { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); }
+.lib-btnend { margin-left: auto; display: flex; gap: var(--sp-2); flex: none; }
+.lib-dlbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: 0 var(--sp-4) var(--sp-2); }
+.lib-dlbar .trpg-input { flex: 1 1 180px; }
+.lib-soft { opacity: .5; }
 </style></head><body><div class="wf-board ds-root" style="background:transparent">
-<h1>U3 的异常：0 条匹配 / 包是空的 / 读取失败 / 加载中</h1><p class="wf-meta">U3 包 / 书内容页 · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
+<h1>U3 的异常：0 条匹配 / 包是空的 / 读取失败 / 加载中</h1><p class="wf-meta">U3 包 / 书弹窗 · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
 <div class="wf-row"><div class="ds-root wf-states"><section class="wf-state"><h4><i class="wf-pin">1</i>0 条匹配</h4><div><div class="trpg-input"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg>&nbsp;飞龙</div><div class="trpg-empty"><span>没有符合的。</span><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="trpg-btn trpg-btn--small" type="button">清空筛选</button></span></div></div></section>
 <section class="wf-state"><h4><i class="wf-pin">2</i>这个包是空的</h4><div><div class="trpg-empty"><span>这个包里没有可显示的条目。</span></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">3</i>读取失败</h4><div><div class="lib-banner lib-banner--err"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg><span>读取这个包失败：数据库暂时打不开。</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button">重试</button></span></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">4</i>加载中</h4><div><div class="trpg-skeleton"></div><div class="trpg-skeleton" style="width:80%"></div><div class="trpg-skeleton" style="width:60%"></div></div></section></div></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>13.6.3</dd><dt>用户目标</dt><dd>列表里没东西时，说清为什么并给出口</dd><dt>主动作</dt><dd>[清空筛选] / [重试]</dd><dt>模式栈</dt><dd>Empty State · Error Messages</dd><dt>法则核对</dt><dd>Postel · Doherty（&gt; 300 ms 才出骨架）</dd><dt>宽度差异</dt><dd>状态板。</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端入口</th></tr></thead><tbody><tr><td>1</td><td>0 条匹配</td><td>空态「没有符合的」+ [清空筛选]；药丸与筛选条保留</td><td>全局规则</td></tr><tr><td>2</td><td>包是空的</td><td>自制包里没有任何可显示的条目：「这个包里没有可显示的条目」（辅助数据类别不显示）</td><td>【有】categories 为空</td></tr><tr><td>3</td><td>读取失败</td><td>一句原因 + [重试]；顶部概况照常显示</td><td>【有】</td></tr><tr><td>4</td><td>加载中</td><td>概况先出来，列表区用骨架行</td><td>全局规则</td></tr></tbody></table></div></div></body></html>
+<section class="wf-state"><h4><i class="wf-pin">3</i>读取失败（横幅 + 重试）</h4><div><div style="position:static"><div class="trpg-toast" data-kind="error" role="status"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg><span class="trpg-toast__text">读取这个包失败：数据库暂时打不开。</span><small>点击关闭</small></div></div><button class="trpg-btn trpg-btn--small" type="button">重试</button></div></section>
+<section class="wf-state"><h4><i class="wf-pin">4</i>加载中</h4><div><div class="trpg-skeleton"></div><div class="trpg-skeleton" style="width:80%"></div><div class="trpg-skeleton" style="width:60%"></div></div></section></div></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>13.6.3</dd><dt>用户目标</dt><dd>列表里没东西时，说清为什么并给出口</dd><dt>主动作</dt><dd>[清空筛选] / [重试]</dd><dt>模式栈</dt><dd>Empty State · 横幅</dd><dt>法则核对</dt><dd>Postel · Doherty（&gt; 300 ms 才出骨架）</dd><dt>宽度差异</dt><dd>状态板。</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端入口</th></tr></thead><tbody><tr><td>1</td><td>0 条匹配</td><td>空态「没有符合的」+ [清空筛选]；搜索框与药丸保留</td><td>全局规则</td></tr><tr><td>2</td><td>包是空的</td><td>「这个包里没有可显示的条目」</td><td>【有】categories 为空</td></tr><tr><td>3</td><td>读取失败</td><td>顶部横幅 + 弹窗内一个 [重试]；弹窗头照常显示〔R84〕</td><td>【有】</td></tr><tr><td>4</td><td>加载中</td><td>弹窗头先出来，列表区用骨架行</td><td>全局规则</td></tr></tbody></table></div></div></body></html>

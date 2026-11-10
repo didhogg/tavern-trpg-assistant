@@ -66,7 +66,7 @@ export function frameHtml(key, screen) {
   const win = `<section class="trpg-window" data-layout="${f.layout}" data-fullscreen="${!!f.full}" style="${pos}">${windowHtml(f.layout, s)}</section>`
   const chat = f.full ? '' : `<div class="wf-host__chat">${'<i></i>'.repeat(14)}</div><div class="wf-host__input">酒馆输入框（宿主，不属于插件）</div>`
   const toasts = s.toast ? `<div class="trpg-toasts" style="position:absolute;top:44px">${s.toast}</div>` : ''
-  return `<figure style="margin:0"><figcaption class="wf-cap">${f.label}</figcaption><div class="wf-host" style="width:${f.w}px;height:${f.h}px">${chat}<div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div>${win}${toasts}</div></figure>`
+  return `<figure style="margin:0"><figcaption class="wf-cap">${screen.captions?.[key] ?? f.label}</figcaption><div class="wf-host" style="width:${f.w}px;height:${f.h}px">${chat}<div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div>${win}${toasts}</div></figure>`
 }
 
 export const PAGE_CSS = `

@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>U1b 详情壳的异常：不可见 / 没有 / 读取失败 · P5 线框</title><style>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>U1b 详情的状态：只有三种不给看；其余都是正常 · P5 线框</title><style>
 body { margin: 0; background: #f4f1ea; font-family: 'PingFang SC', system-ui, sans-serif; color: #3e332e; }
 .wf-board { padding: 28px 32px 40px; min-width: 1100px; } .wf-board h1 { margin: 0 0 4px; font-size: 24px; } .wf-board .wf-meta { margin: 0 0 18px; color: #6b5a4e; }
 .wf-row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; } .wf-cap { font-size: 12px; color: #6b5a4e; margin-bottom: 6px; font-weight: 600; }
@@ -663,11 +663,57 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* 线框里关掉动画（截图不会截到淡入一半；真实界面的动效在设计系统里） */
 .ds-root *, .ds-root *::before, .ds-root *::after { animation: none !important; transition: none !important; }
+
+/* ── 2026-11-10 重画：包 / 书 / 搜索弹窗（宽 = 居中浮在整个插件窗口上；窄 = 底部抽屉）── 复制进插件时并入 kit.css 的 modal 部分 ── */
+.trpg-modal[data-variant='sheet'] .trpg-modal__card { width: min(760px, 100%); height: min(600px, 100%); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__page { padding: 0; overflow: hidden; }
+.trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-4); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title { font-family: var(--font-serif); display: flex; align-items: center; gap: var(--sp-2); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title .trpg-badge { font-family: var(--font-sans); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] { align-items: flex-end; padding: 0; background: color-mix(in srgb, var(--text) 46%, transparent); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__card { width: 100%; height: 88%; border-radius: 14px 14px 0 0; animation-name: trpg-sheet; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-sheet-grip { display: block; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-3); }
+.lib-mbody { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; }
+.lib-mbody > .lib-tablewrap { flex: 1; min-height: 0; }
+.lib-mscroll { flex: 1; min-height: 0; overflow: auto; }
+.lib-mpad { padding: var(--sp-3) var(--sp-4); display: grid; gap: var(--sp-3); align-content: start; }
+.lib-headsw { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.lib-dtools { flex: none; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-src { color: var(--text3); font-size: var(--fs-xs); font-weight: var(--fw-regular); font-family: var(--font-sans); }
+.lib-srcline { color: var(--text3); font-size: var(--fs-xs); padding: 0 0 var(--sp-1); }
+.lib-sortable { opacity: .35; margin-left: 2px; display: inline-flex; vertical-align: -2px; }
+.lib-sbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-3) 0 0; }
+.lib-sbar .trpg-input { flex: 1 1 200px; }
+.lib-sec { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text2); padding: var(--sp-3) 0 var(--sp-1); display: flex; align-items: center; gap: var(--sp-2); }
+.lib-chk { display: flex; align-items: center; gap: var(--sp-3); min-height: 44px; padding: 4px var(--sp-2); border-bottom: var(--border) solid var(--line); }
+.lib-chk .lib-grow { display: grid; gap: 0; }
+.lib-chk[data-lock='true'] { background: var(--bg-sunk); }
+.lib-chk .trpg-check { flex: 1; min-width: 0; }
+.lib-var { display: grid; gap: var(--sp-2); padding: var(--sp-3); border-left: 3px solid var(--primary); background: var(--primary-tint); border-radius: 0 var(--r-md) var(--r-md) 0; }
+.lib-var__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.lib-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.trpg-window[data-layout='narrow'] .lib-cmp { grid-template-columns: 1fr; }
+.lib-cmp > div { border: var(--border) solid var(--line); border-radius: var(--r-md); padding: var(--sp-3); background: var(--surface); display: grid; gap: 4px; font-size: var(--fs-sm); }
+.lib-cmp > div[data-new='true'] { border-color: var(--primary); background: var(--primary-tint); }
+.lib-fold { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
+.lib-fold > summary { display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: 0 var(--sp-3); cursor: pointer; list-style: none; font-weight: var(--fw-semibold); }
+.lib-fold > summary::-webkit-details-marker { display: none; }
+.lib-fold__body { padding: 0 var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-2); }
+.lib-fold small { color: var(--text2); font-weight: var(--fw-regular); }
+.lib-tabs2 { flex: none; display: flex; gap: var(--sp-1); padding: 0 var(--sp-4); border-bottom: var(--border) solid var(--line); overflow-x: auto; }
+.lib-tabs2 button { flex: none; min-height: var(--hit-touch); padding: 0 var(--sp-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--text2); }
+.lib-tabs2 button[aria-current='true'] { border-bottom-color: var(--primary); color: var(--text); font-weight: var(--fw-semibold); }
+.lib-tbtn { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); }
+.lib-btnend { margin-left: auto; display: flex; gap: var(--sp-2); flex: none; }
+.lib-dlbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: 0 var(--sp-4) var(--sp-2); }
+.lib-dlbar .trpg-input { flex: 1 1 180px; }
+.lib-soft { opacity: .5; }
 </style></head><body><div class="wf-board ds-root" style="background:transparent">
-<h1>U1b 详情壳的异常：不可见 / 没有 / 读取失败</h1><p class="wf-meta">U1 条目表格列表 + 详情壳 · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
-<div class="wf-row"><div class="ds-root wf-states"><section class="wf-state"><h4><i class="wf-pin">1</i>不可见 · excluded</h4><div><div class="lib-state"><h3>本战役把这本书关了</h3><p class="lib-muted">「火球术」在《玩家手册（2014）》里，这本书在当前战役里是关着的。</p><button class="trpg-btn trpg-btn--primary" type="button">去书架开启</button></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">1</i>不可见 · out-of-scope</h4><div><div class="lib-state"><h3>不在本战役的范围里</h3><p class="lib-muted">这本书属于 2024 规则范围，当前战役选的是 2014。</p><button class="trpg-btn" type="button">去 设置 · 库</button></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">1</i>不可见 · unclassified</h4><div><div class="lib-state"><h3>这本书还没归类</h3><p class="lib-muted">作者判断不了它属于哪个版本，需要你在 设置 · 库 里归类后才会出现。</p><button class="trpg-btn" type="button">去 设置 · 库</button></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">2</i>库里没有这一条</h4><div><div class="lib-state"><h3>库里没有这一条</h3><p class="lib-muted">这条所在的书还没下载。</p><div style="display:flex;gap:8px"><button class="trpg-btn" type="button">返回</button><button class="trpg-btn trpg-btn--primary" type="button">去下载</button></div></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">3</i>读取失败</h4><div><div class="lib-state"><h3>读取失败</h3><p class="lib-muted">读取这一条时出错了：数据库暂时打不开。</p><div style="display:flex;gap:8px"><button class="trpg-btn" type="button">返回</button><button class="trpg-btn trpg-btn--primary" type="button">重试</button></div></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">4</i>加载中（> 300 ms）</h4><div><div class="lib-state"><h3></h3><p class="lib-muted"></p><div class="lib-dbody" style="width:100%;padding:0"><div class="trpg-skeleton" style="width:55%;height:22px"></div><div class="trpg-skeleton"></div><div class="trpg-skeleton" style="width:90%"></div><div class="trpg-skeleton" style="width:70%"></div></div></div></div></section></div></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>13.6.1 U1b</dd><dt>用户目标</dt><dd>拿不到条目时，一句话说清原因，并给出口</dd><dt>主动作</dt><dd>点出口按钮</dd><dt>模式栈</dt><dd>Error Messages · Escape Hatch</dd><dt>法则核对</dt><dd>Postel（说清原因）· Hick（每种原因只给一个出口）</dd><dt>宽度差异</dt><dd>这是状态板，只画 1440 宽。窄屏相同，铺满整页。</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端入口</th></tr></thead><tbody><tr><td>1</td><td>三种"不可见"</td><td>excluded（本战役把这本书关了）→ [去书架开启]；out-of-scope（不在本战役的范围里）→ [去设置·库]；unclassified（这本书还没归类）→ [去设置·库]</td><td>【有】scoped.detail 返回 {hidden: 原因}</td></tr><tr><td>2</td><td>库里没有这一条</td><td>null / not-found / not-installed：[返回]；没装的加 [去下载]</td><td>【有】</td></tr><tr><td>3</td><td>读取失败</td><td>一句原因 + [重试]；原来的列表位置不丢</td><td>【有】</td></tr><tr><td>4</td><td>加载中</td><td>超过 300 ms 才显示骨架（小于 300 ms 不闪）</td><td>全局规则 13.6.0</td></tr></tbody></table></div></div></body></html>
+<h1>U1b 详情的状态：只有三种不给看；其余都是正常</h1><p class="wf-meta">U1 条目表格列表 + 详情壳 · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
+<div class="wf-row"><div class="ds-root wf-states"><section class="wf-state"><h4><i class="wf-pin">1</i>没有本地数据包</h4><div><div class="lib-state"><h3>库里没有这一条</h3><p class="lib-muted">这一条所在的《某扩展书》还没下载。</p><div style="display:flex;gap:8px"><button class="trpg-btn" type="button">返回</button><button class="trpg-btn trpg-btn--primary" type="button">下载依赖包</button></div></div></div></section>
+<section class="wf-state"><h4><i class="wf-pin">2</i>点了 [下载依赖包]（加载中）</h4><div><div class="lib-state"><h3>正在下载依赖包…</h3><div class="trpg-loading" role="status"><span class="trpg-spinner" aria-hidden="true"></span><span>后台下载中，库里会显示下载状况</span></div><div style="display:flex;gap:8px"><button class="trpg-btn" type="button">先返回</button></div></div></div></section>
+<section class="wf-state"><h4><i class="wf-pin">3</i>读取失败（横幅 + 重试）</h4><div><div style="position:static"><div class="trpg-toast" data-kind="error" role="status"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg><span class="trpg-toast__text">读取这一条时出错了：数据库暂时打不开。</span><small>点击关闭</small></div></div><div class="lib-state"><h3>这一条读不出来</h3><button class="trpg-btn trpg-btn--primary" type="button">重试</button></div></div></section>
+<section class="wf-state"><h4><i class="wf-pin">1</i>加载中（> 300 ms）</h4><div><div class="lib-dbody" style="width:100%;padding:0"><div class="trpg-skeleton" style="width:55%;height:22px"></div><div class="trpg-skeleton"></div><div class="trpg-skeleton" style="width:90%"></div><div class="trpg-skeleton" style="width:70%"></div></div></div></section>
+<section class="wf-state"><h4><i class="wf-pin">4</i>本战役关着的书（不是异常）</h4><div><div class="lib-banner lib-banner--info"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></svg><span>这本书在本战役里是关着的，内容照常可以看。</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button">开启</button></span></div><p class="lib-muted" style="margin:0">（下面照常显示这一条的全部内容）</p></div></section>
+<section class="wf-state"><h4><i class="wf-pin">5</i>没归类的书（不是异常）</h4><div><p style="margin:0">《（识别不了分类的书）》<span class="trpg-badge">其他</span></p><p class="lib-muted" style="margin:0">统一放在书架的【其他】分类里，已下载的默认开。</p></div></section></div></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>13.6.1 U1b</dd><dt>用户目标</dt><dd>拿不到条目时，一句话说清原因，并给出口；能看的一律让看</dd><dt>主动作</dt><dd>点出口按钮</dd><dt>模式栈</dt><dd>Error Messages（横幅）· Escape Hatch</dd><dt>法则核对</dt><dd>Hick（每种原因只给一个出口）· Postel（说清原因）</dd><dt>宽度差异</dt><dd>状态板，只画 1440 宽。窄屏同样在抽屉里整页显示。</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端入口</th></tr></thead><tbody><tr><td>1</td><td>三种不给看详情的情况</td><td>① 本地没有这个数据包 → [下载依赖包]；② 读取失败 → 横幅 + [重试]；③ 加载中 → 骨架（> 300 ms 才显示）〔R37〕</td><td>【有】scoped.detail（null / 抛错）</td></tr><tr><td>2</td><td>[下载依赖包]</td><td>点后这一块立刻显示"下载中…"（加载状态），后台自动把需要的包下好，库里相应显示下载状况；完成只用顶部横幅提示，页面里不再另外提示〔R36、R74、R75〕</td><td>【有】service.brewInstallSources；官方 tasks.startOfficial / startAdventure</td></tr><tr><td>3</td><td>读取失败</td><td>顶部横幅（不占页面、不粘在页面上）+ 本页一个 [重试]〔R84〕</td><td>【有】</td></tr><tr><td>4</td><td>本战役关了这本书 / 不在范围</td><td><b>不是异常</b>：内容照常显示，只多一行提示 [开启]；全局搜索里默认不勾选〔R33〕</td><td>【有】</td></tr><tr><td>5</td><td>没归类</td><td><b>不是异常</b>：识别不了分类的书统一放进书架的【其他】分类，已下载的书默认在战役里开〔R35〕</td><td>【有】shelf.ts fallbackGroup；viewOf（B-32）</td></tr></tbody></table></div></div></body></html>

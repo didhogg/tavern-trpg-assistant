@@ -663,10 +663,56 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* 线框里关掉动画（截图不会截到淡入一半；真实界面的动效在设计系统里） */
 .ds-root *, .ds-root *::before, .ds-root *::after { animation: none !important; transition: none !important; }
+
+/* ── 2026-11-10 重画：包 / 书 / 搜索弹窗（宽 = 居中浮在整个插件窗口上；窄 = 底部抽屉）── 复制进插件时并入 kit.css 的 modal 部分 ── */
+.trpg-modal[data-variant='sheet'] .trpg-modal__card { width: min(760px, 100%); height: min(600px, 100%); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__page { padding: 0; overflow: hidden; }
+.trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-4); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title { font-family: var(--font-serif); display: flex; align-items: center; gap: var(--sp-2); }
+.trpg-modal[data-variant='sheet'] .trpg-modal__title .trpg-badge { font-family: var(--font-sans); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] { align-items: flex-end; padding: 0; background: color-mix(in srgb, var(--text) 46%, transparent); }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__card { width: 100%; height: 88%; border-radius: 14px 14px 0 0; animation-name: trpg-sheet; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-sheet-grip { display: block; }
+.trpg-window[data-layout='narrow'] .trpg-modal[data-variant='sheet'] .trpg-modal__head { padding-left: var(--sp-3); }
+.lib-mbody { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; }
+.lib-mbody > .lib-tablewrap { flex: 1; min-height: 0; }
+.lib-mscroll { flex: 1; min-height: 0; overflow: auto; }
+.lib-mpad { padding: var(--sp-3) var(--sp-4); display: grid; gap: var(--sp-3); align-content: start; }
+.lib-headsw { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.lib-dtools { flex: none; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-src { color: var(--text3); font-size: var(--fs-xs); font-weight: var(--fw-regular); font-family: var(--font-sans); }
+.lib-srcline { color: var(--text3); font-size: var(--fs-xs); padding: 0 0 var(--sp-1); }
+.lib-sortable { opacity: .35; margin-left: 2px; display: inline-flex; vertical-align: -2px; }
+.lib-sbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-3) 0 0; }
+.lib-sbar .trpg-input { flex: 1 1 200px; }
+.lib-sec { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text2); padding: var(--sp-3) 0 var(--sp-1); display: flex; align-items: center; gap: var(--sp-2); }
+.lib-chk { display: flex; align-items: center; gap: var(--sp-3); min-height: 44px; padding: 4px var(--sp-2); border-bottom: var(--border) solid var(--line); }
+.lib-chk .lib-grow { display: grid; gap: 0; }
+.lib-chk[data-lock='true'] { background: var(--bg-sunk); }
+.lib-chk .trpg-check { flex: 1; min-width: 0; }
+.lib-var { display: grid; gap: var(--sp-2); padding: var(--sp-3); border-left: 3px solid var(--primary); background: var(--primary-tint); border-radius: 0 var(--r-md) var(--r-md) 0; }
+.lib-var__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.lib-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.trpg-window[data-layout='narrow'] .lib-cmp { grid-template-columns: 1fr; }
+.lib-cmp > div { border: var(--border) solid var(--line); border-radius: var(--r-md); padding: var(--sp-3); background: var(--surface); display: grid; gap: 4px; font-size: var(--fs-sm); }
+.lib-cmp > div[data-new='true'] { border-color: var(--primary); background: var(--primary-tint); }
+.lib-fold { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
+.lib-fold > summary { display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: 0 var(--sp-3); cursor: pointer; list-style: none; font-weight: var(--fw-semibold); }
+.lib-fold > summary::-webkit-details-marker { display: none; }
+.lib-fold__body { padding: 0 var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-2); }
+.lib-fold small { color: var(--text2); font-weight: var(--fw-regular); }
+.lib-tabs2 { flex: none; display: flex; gap: var(--sp-1); padding: 0 var(--sp-4); border-bottom: var(--border) solid var(--line); overflow-x: auto; }
+.lib-tabs2 button { flex: none; min-height: var(--hit-touch); padding: 0 var(--sp-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--text2); }
+.lib-tabs2 button[aria-current='true'] { border-bottom-color: var(--primary); color: var(--text); font-weight: var(--fw-semibold); }
+.lib-tbtn { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); }
+.lib-btnend { margin-left: auto; display: flex; gap: var(--sp-2); flex: none; }
+.lib-dlbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: 0 var(--sp-4) var(--sp-2); }
+.lib-dlbar .trpg-input { flex: 1 1 180px; }
+.lib-soft { opacity: .5; }
 </style></head><body><div class="wf-board ds-root" style="background:transparent">
 <h1>U1e 图片：点开才取</h1><p class="wf-meta">U1 条目表格列表 + 详情壳 · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
 <div class="wf-row"><div class="ds-root wf-states wf-states--3"><section class="wf-state"><h4><i class="wf-pin">1</i>点开前</h4><div><p>古代绿龙的栖息地在远离人烟之处。<br><button class="lib-embed" type="button">「绿龙头像」</button></p></div></section>
 <section class="wf-state"><h4><i class="wf-pin">1</i>加载中</h4><div><div class="lib-image"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="22" height="22"><path d="M232,128a104,104,0,0,1-208,0c0-41,23.81-78.36,60.66-95.27a8,8,0,0,1,6.68,14.54C60.15,61.59,40,93.27,40,128a88,88,0,0,0,176,0c0-34.73-20.15-66.41-51.34-80.73a8,8,0,0,1,6.68-14.54C208.19,49.64,232,87,232,128Z"/></svg><span>正在取图片…</span></div></div></section>
 <section class="wf-state"><h4><i class="wf-pin">5</i>图片显示</h4><div><div class="lib-image" style="min-height:160px;background:var(--bg-side)">（图片）</div><div style="display:flex;justify-content:flex-end"><button class="trpg-btn trpg-btn--small" type="button">收起</button></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">3</i>取不到</h4><div><div class="lib-image"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="22" height="22"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg><span>图片暂时取不到</span><button class="trpg-btn trpg-btn--small" type="button">重试</button></div></div></section>
-<section class="wf-state"><h4><i class="wf-pin">4</i>怪物头像（点开才取）</h4><div><div style="display:flex;gap:12px;align-items:center"><div class="lib-image" style="width:84px;min-height:84px;padding:0">头像</div><div><b class="lib-title--serif">成年红龙</b><br><span class="lib-muted">点头像放大，不会自动下载</span></div></div></div></section></div></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>13.6.1 U1e</dd><dt>用户目标</dt><dd>正文里的图片不拖慢页面；点开时才拉取，取不到也不破页</dd><dt>主动作</dt><dd>点下划线条目</dd><dt>模式栈</dt><dd>Progressive Disclosure · Recoverable error</dd><dt>法则核对</dt><dd>Doherty（先给占位，再给图）· Postel（失败可重试）</dd><dt>宽度差异</dt><dd>三宽度相同；窄屏图片占满宽度。</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端入口</th></tr></thead><tbody><tr><td>1</td><td>下划线条目</td><td>图片在正文里是一个下划线条目（如"绿龙头像"）；点开 → 加载中 → 显示；缓存在浏览器</td><td>【有】images.urls(sourceId, href)</td></tr><tr><td>2</td><td>第一个地址失败</td><td>自动换备用地址，用户看不到切换</td><td>【有】images.urls 返回候选地址列表</td></tr><tr><td>3</td><td>都失败</td><td>「图片暂时取不到」+ [重试]；不影响正文其余部分</td><td>【有】</td></tr><tr><td>4</td><td>怪物头像</td><td>详情里的 token 图同样点开才取</td><td>【有】images.token</td></tr><tr><td>5</td><td>[✕]</td><td>回条目页，位置不变</td><td></td></tr></tbody></table></div></div></body></html>
+<section class="wf-state"><h4><i class="wf-pin">3</i>取不到</h4><div><div style="position:static"><div class="trpg-toast" data-kind="error" role="status"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg><span class="trpg-toast__text">图片暂时取不到。</span><small>点击关闭</small></div></div><div class="lib-image"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="22" height="22"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg><span>没有取到图片</span><button class="trpg-btn trpg-btn--small" type="button">重试</button></div></div></section>
+<section class="wf-state"><h4><i class="wf-pin">4</i>怪物头像（点开才取）</h4><div><div style="display:flex;gap:12px;align-items:center"><div class="lib-image" style="width:84px;min-height:84px;padding:0">头像</div><div><b class="lib-title--serif">成年红龙</b><br><span class="lib-muted">点头像放大，不会自动下载</span></div></div></div></section></div></div><div class="wf-notes"><dl class="wf-facts"><dt>流程</dt><dd>13.6.1 U1e</dd><dt>用户目标</dt><dd>正文里的图片不拖慢页面；点开时才拉取，取不到也不破页</dd><dt>主动作</dt><dd>点下划线条目</dd><dt>模式栈</dt><dd>Progressive Disclosure · Recoverable error</dd><dt>法则核对</dt><dd>Doherty（先给占位，再给图）· Postel（失败可重试）</dd><dt>宽度差异</dt><dd>三宽度相同；窄屏图片占满宽度。</dd></dl><table><thead><tr><th>#</th><th>元素</th><th>行为 / 去向</th><th>状态 · 后端入口</th></tr></thead><tbody><tr><td>1</td><td>下划线条目</td><td>图片在正文里是一个下划线条目（如"绿龙头像"）；点开 → 加载中 → 显示；缓存在浏览器，不随数据下载〔R6、R14〕</td><td>【有】images.urls(sourceId, href)</td></tr><tr><td>2</td><td>第一个地址失败</td><td>自动换备用地址，用户看不到切换</td><td>【有】images.urls 返回候选地址列表</td></tr><tr><td>3</td><td>都失败</td><td>「图片暂时取不到」+ [重试]；错误横幅；不影响正文其余部分</td><td>【有】</td></tr><tr><td>4</td><td>怪物头像</td><td>详情里的 token 图同样点开才取</td><td>【有】images.token</td></tr><tr><td>5</td><td>[✕]</td><td>回条目页，位置不变</td><td></td></tr></tbody></table></div></div></body></html>

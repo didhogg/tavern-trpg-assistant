@@ -10,6 +10,7 @@ export const btn = (label, { primary, small, danger, quiet, ic, n, disabled } = 
   `<button class="trpg-btn${primary ? ' trpg-btn--primary' : ''}${small ? ' trpg-btn--small' : ''}${danger ? ' trpg-btn--danger' : ''}${quiet ? ' trpg-btn--quiet' : ''}"${disabled ? ' disabled' : ''} type="button">${P(n)}${ic ? icon(ic, 16) : ''}${label}</button>`
 export const iconBtn = (name, label, n) => `<button class="trpg-icon-btn" type="button" aria-label="${label}">${P(n)}${icon(name, 18)}</button>`
 export const badge = (label, tone = '', extra = '') => `<span class="trpg-badge"${tone ? ` data-tone="${tone}"` : ''}${extra}>${label}</span>`
+export const gray = (t) => `<span class="lib-src">${t}</span>`
 export const link = (label) => `<button class="trpg-link" type="button">${label}</button>`
 export const term = (label) => `<button class="trpg-term trpg-link" type="button" style="text-decoration-style:dotted;color:inherit">${label}</button>`
 export const embed = (label) => `<button class="lib-embed" type="button">${label}</button>`
@@ -41,7 +42,7 @@ export const progress = (text, pct = 0.4) => `<span class="trpg-ring" data-state
  * 窄屏：外层横滚，首列固定（CSS sticky）。
  */
 export const table = (cols, rows, { height } = {}) =>
-  `<div class="lib-tablewrap"${height ? ` style="max-height:${height}px"` : ''}><table class="lib-table"><thead><tr>${cols.map((c) => { const o = typeof c === 'string' ? { label: c } : c; return `<th${o.sort ? ` data-sort="${o.sort}"` : ''}>${o.label}${o.sort ? icon(o.sort === 'asc' ? 'sort-ascending' : 'sort-descending', 14) : ''}</th>` }).join('')}</tr></thead><tbody>${rows.map((r) => `<tr${r.sel ? ' data-sel="true"' : ''}${r.dim ? ' data-dim="true"' : ''}>${r.cells.map((c, i) => `<td>${c}${i === 0 && r.marks ? `<span class="lib-marks">${r.marks}</span>` : ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+  `<div class="lib-tablewrap"${height ? ` style="max-height:${height}px"` : ''}><table class="lib-table"><thead><tr>${cols.map((c) => { const o = typeof c === 'string' ? { label: c } : c; return `<th${o.sort ? ` data-sort="${o.sort}"` : ''}>${o.label}${o.sort ? icon(o.sort === 'asc' ? 'sort-ascending' : 'sort-descending', 14) : o.can ? `<span class="lib-sortable">${icon('sort-ascending', 14)}</span>` : ''}</th>` }).join('')}</tr></thead><tbody>${rows.map((r) => `<tr${r.sel ? ' data-sel="true"' : ''}${r.dim ? ' data-dim="true"' : ''}>${r.cells.map((c, i) => `<td>${c}${i === 0 && r.marks ? `<span class="lib-marks">${r.marks}</span>` : ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
 export const skelRows = (cols, n = 5) => `<div class="lib-tablewrap"><table class="lib-table lib-skel"><thead><tr>${cols.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${Array.from({ length: n }, () => `<tr>${cols.map(() => '<td><i></i></td>').join('')}</tr>`).join('')}</tbody></table></div>`
 export const count = (text, extra = '') => `<div class="lib-count">${text}${extra}</div>`
 
@@ -49,7 +50,7 @@ export const count = (text, extra = '') => `<div class="lib-count">${text}${extr
 export const modalHead = (title, { back, n } = {}) =>
   `<header class="trpg-modal__head">${back ? `<button class="trpg-modal__back" type="button">${icon('caret-left', 16)}<span>${back}</span></button>` : ''}<h2 class="trpg-modal__title">${P(n)}${title}</h2><button class="trpg-icon-btn" type="button" aria-label="关闭">${icon('x', 18)}</button></header>`
 export const modal = (variant, head, body) =>
-  `<div class="trpg-modal-root"><div class="trpg-modal"${variant === 'dialog' ? '' : ` data-variant="${variant}"`}><section class="trpg-modal__card" role="dialog" aria-modal="true"><i class="trpg-sheet-grip" style="display:none"></i>${head}<div class="trpg-modal__pages"><div class="trpg-modal__page">${body}</div></div></section></div></div>`
+  `<div class="trpg-modal-root"><div class="trpg-modal"${variant === 'dialog' ? '' : ` data-variant="${variant}"`}><section class="trpg-modal__card" role="dialog" aria-modal="true"><i class="trpg-sheet-grip"></i>${head}<div class="trpg-modal__pages"><div class="trpg-modal__page">${body}</div></div></section></div></div>`
 
 /** 影响页（共用）：删除 / 卸载前显示谁依赖它。 */
 export const impact = (what, lines, { confirm = '确认', n } = {}) =>
