@@ -67,7 +67,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
               {{ g.name }}<small>{{ g.books.length + g.adventures.length }} 项</small>
             </summary>
             <div v-for="r in [...g.books, ...g.adventures]" :key="`${r.set}:${r.source}:${r.id ?? ''}`" class="trpg-shelf__row" :data-off="!isOn(r)">
-              <button class="lib-name" type="button" @click="openPack({ set: r.set, source: r.source, name: r.name })">{{ r.name }}<template v-if="r.kind === 'adventure'">（冒险）</template></button>
+              <button class="lib-name" type="button" @click="openPack({ set: r.set, source: r.source, name: r.name, kind: r.kind, corpora: r.corpora })">{{ r.name }}<template v-if="r.kind === 'adventure'">（冒险）</template></button>
               <span v-if="r.edition && r.edition.classic !== null" class="trpg-badge">{{ r.edition.classic ? '旧版' : '新版' }}</span>
               <Switch :model-value="isOn(r)" :label="`在本战役里使用《${r.name}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(r, v)" />
               <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }, { key: 'rm', label: getSource(r.set).kind === 'official' ? '卸载官方资料…' : '删除…', danger: true }]" @select="(k: string) => onMenu(r, k)" />

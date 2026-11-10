@@ -77,3 +77,14 @@
 .lib-dlcard { display: grid; gap: var(--sp-2); margin-top: var(--sp-3); padding: var(--sp-4); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
 .lib-dlcard__top { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 .lib-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+/* 阅读器 */
+.lib-rbar { flex: none; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-read { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr; }
+.lib-read[data-toc='true'] { grid-template-columns: 200px 1fr; }
+.trpg-window[data-layout='narrow'] .lib-read[data-toc='true'] { grid-template-columns: 1fr; }
+.trpg-window[data-layout='narrow'] .lib-read[data-toc='true'] main { display: none; }
+.lib-read > aside { overflow: auto; border-right: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-toc { display: grid; align-content: start; }
+.lib-toc button { display: flex; align-items: center; min-height: 40px; padding: 0 var(--sp-3); border: 0; border-left: 3px solid transparent; background: none; text-align: left; color: var(--text); font: inherit; cursor: pointer; }
+.lib-toc button[aria-current='true'] { border-left-color: var(--primary); background: var(--primary-tint); font-weight: var(--fw-semibold); }
+.lib-sec-block { display: grid; gap: var(--sp-3); }

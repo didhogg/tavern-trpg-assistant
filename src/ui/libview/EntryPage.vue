@@ -12,6 +12,7 @@ import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
 import EntryBody from './EntryBody.vue'
+import { nameOf as itemName } from './pack-data'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
 const props = defineProps<{ entryRef: EntryRef }>()
@@ -26,6 +27,26 @@ const state = ref<State>({ kind: 'loading' })
 const enabled = ref(true)
 const codeSet = computed(() => getSource(props.entryRef.set).codeSet)
 const sourceLine = ref('')
+/** 摘要行：作者列表页每列的显示值（环阶、时间、学派…，B-35），名称与来源列不重复显示；没有列表定义的类别没有摘要行。 */
+const summary = ref<Array<{ k: string; v: string }>>([])
+/** 种族页：亚种直接全部列出（R94）；亚种在作者数据里是带 raceName 的独立条目。 */
+const subraces = ref<Array<{ name: string; entries: unknown; ref: EntryRef }>>([])
+async function loadExtras(item: unknown): Promise<void> {
+  const s = app.svc().backend.library
+  summary.value = []
+  subraces.value = []
+  try {
+    const lc = await s.sorting.cells(codeSet.value, props.entryRef.prop)
+    const row = lc?.cells[props.entryRef.hash]
+    if (lc && row) summary.value = lc.columns.map((c, i) => ({ k: c.text, v: row[i], sort: c.sort })).filter((x) => x.sort !== 'name' && x.sort !== 'source' && x.v).map(({ k, v }) => ({ k, v }))
+    const c = lib.campaignLib
+    const me = item as { name?: string; source?: string; raceName?: string } | null
+    if (props.entryRef.prop === 'race' && c && me && !me.raceName) {
+      const all = await s.scoped.query(c, 'race', { source: me.source })
+      subraces.value = all.filter((r) => (r.item as { raceName?: string; raceSource?: string }).raceName === me.name).map((r) => ({ name: itemName(r.item), entries: (r.item as { entries?: unknown }).entries ?? null, ref: r.ref }))
+    }
+  } catch (e) { console.error('[trpg-assistant] 读取摘要行 / 亚种失败', e) }
+}
 /** 来源行：书的全名（作者的 sourceNames）+ 页码；名字取不到就退回来源缩写。 */
 async function sourceText(item: unknown, source: string | null): Promise<string> {
   if (!source) return ''
@@ -58,6 +79,7 @@ async function load(): Promise<void> {
       sourceLine.value = await sourceText(d.item, d.source ?? null)
       enabled.value = true
     }
+    void loadExtras(state.value.item)
     const key = `entry:${props.entryRef.set}:${props.entryRef.prop}:${props.entryRef.hash}`
     modal.setTitle(key, nameOf(state.value.item))
   } catch (e) {
@@ -98,8 +120,13 @@ async function setEnabled(next: boolean): Promise<void> {
         <div class="lib-dbody">
           <div v-if="state.kind === 'ok' && state.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
           <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
+          <div v-if="summary.length" class="lib-sumline" data-testid="entry-summary"><span v-for="x in summary" :key="x.k">{{ x.k }} <b>{{ x.v }}</b></span></div>
           <EntryBody v-if="body" :block="body" :code-set="codeSet" />
           <p v-else class="lib-muted">这一条没有正文。</p>
+          <template v-if="subraces.length">
+            <h3>亚种</h3>
+            <div v-for="sr in subraces" :key="sr.ref.hash" class="lib-block" data-testid="subrace"><b>{{ sr.name }}</b><EntryBody :block="sr.entries" :code-set="codeSet" /></div>
+          </template>
         </div>
       </div>
     </template>

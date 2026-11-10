@@ -6,7 +6,7 @@ import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Checkbox from '../kit/Checkbox.vue'
 import Icon from '../kit/Icon.vue'
-import { openEntry } from './open'
+import { openEntry, openReader } from './open'
 import { hitCategories, hitCategoryKey, hitCategoryLabel, hitName, hitSource, withoutUnchecked } from './search-data'
 
 /** 全库数据搜索（U2b）：和包弹窗同一种弹窗，多一个可折叠的"书目范围"。默认折叠、折叠状态记住；默认全勾已开启的书，取消勾选只对这次搜索有效。 */
@@ -73,7 +73,8 @@ const blocked = computed(() => hits.value.length - visibleHits.value.length)
 
 function open(h: ScopedSearchHit): void {
   if (h.target.kind === 'entry') openEntry(h.ref, hitName(h))
-  else toast.info('书和规则速查的阅读器稍后开放')
+  else if (h.target.kind === 'corpus') openReader({ set: h.target.set ?? h.ref.set, prop: h.target.prop, id: h.target.id, name: hitName(h) })
+  else toast.info('规则速查的阅读器稍后开放')
 }
 </script>
 
