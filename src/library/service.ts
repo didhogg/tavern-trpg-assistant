@@ -54,8 +54,12 @@ export class LibraryService {
     return p
   }
 
+  /** 每次 reset 加一：依赖小窗里算出来的东西（排序名次等）的缓存用它判断是否过期。 */
+  generation = 0
+
   /** 关掉所有小窗。安装、装删自制之后要调用：小窗里作者的缓存和搜索索引是旧的。 */
   reset(): void {
+    this.generation++
     for (const p of this.frames.values()) p.then((f) => f.close(), (e: unknown) => console.warn('[trpg-library] 小窗本来就没开成', e))
     this.frames.clear()
     this.pairsCache.clear()
