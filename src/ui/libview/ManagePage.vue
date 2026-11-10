@@ -54,7 +54,7 @@ async function enableAgain(): Promise<void> {
 async function restore(): Promise<void> {
   const c = lib.campaignLib
   if (!c) return
-  try { await restoreRows(app.svc(), c, edits.value.filter((r) => r.picked)); toast.success('已复原'); await load() } catch (e) { console.error('[trpg-assistant] 复原失败', e); toast.error('复原没有成功') }
+  try { await restoreRows(app.svc(), c, edits.value.filter((r) => r.picked), lib.bound ? campaign.owner?.ownerKey ?? null : null); toast.success('已复原'); await load() } catch (e) { console.error('[trpg-assistant] 复原失败', e); toast.error('复原没有成功') }
 }
 </script>
 

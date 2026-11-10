@@ -100,3 +100,7 @@
 .lib-rtable tr[data-hit='true'] td { background: var(--primary-tint); font-weight: var(--fw-semibold); }
 .lib-rolltable { display: grid; gap: var(--sp-2); }
 .lib-numbox { display: inline-flex; align-items: center; gap: var(--sp-2); }
+/* 变体 / 备选 / 覆盖 */
+.lib-versions { display: grid; gap: var(--sp-2); }
+.lib-alt-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 36px; }
+.lib-variants { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }

@@ -22,6 +22,12 @@ export async function loadEditRows(s: Services, source?: string): Promise<EditRo
   return rows
 }
 
-export async function restoreRows(s: Services, c: CampaignLibrary, rows: EditRow[]): Promise<void> {
-  for (const r of rows) await s.backend.library.scoped.choose(c, r.ref, null, r.level as 'campaign' | ChoiceLevel)
+/** 复原：本战役层的选择在战役设置里（scoped.choose 只返回新设置，要自己写回 kernelSave.setLibrary）；规则 / 全局层 choose 自己存。 */
+export async function restoreRows(s: Services, c: CampaignLibrary, rows: EditRow[], ownerKey: string | null = null): Promise<void> {
+  let cur = c
+  for (const r of rows) cur = await s.backend.library.scoped.choose(cur, r.ref, null, r.level as 'campaign' | ChoiceLevel)
+  if (ownerKey && rows.some((r) => r.level === 'campaign')) {
+    const ks = s.backend.kernelSave
+    await ks.setLibrary(ownerKey, { ...(await ks.libraryOf(ownerKey)), choices: cur.choices })
+  }
 }

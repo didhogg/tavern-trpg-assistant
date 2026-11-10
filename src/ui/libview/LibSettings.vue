@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import type { HealthItem, HealthReport } from '../../library/health'
 import type { LogEntry } from '../../library/logs'
 import { useAppStore } from '../../stores/app'
+import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Checkbox from '../kit/Checkbox.vue'
@@ -14,6 +15,7 @@ import { levelText, loadEditRows, restoreRows, type EditRow } from './edit-rows'
 /** 设置 → 库：偏好 | 全局编辑 / 覆盖 | 日志（原"体检"）。范围页已删；房规 / 覆盖并入"全局编辑 / 覆盖"。 */
 const app = useAppStore()
 const lib = useLibViewStore()
+const campaign = useCampaignStore()
 const toast = useToastStore()
 const tab = ref('prefs')
 const settings = computed(() => app.settings?.library)
@@ -37,7 +39,7 @@ async function restore(): Promise<void> {
   if (!c) return
   const chosen = edits.value.filter((r) => r.picked)
   try {
-    await restoreRows(app.svc(), c, chosen)
+    await restoreRows(app.svc(), c, chosen, lib.bound ? campaign.owner?.ownerKey ?? null : null)
     toast.success(`已复原 ${chosen.length} 条`)
     await loadEdits()
   } catch (e) { console.error('[trpg-assistant] 复原失败', e); toast.error('复原没有成功') }

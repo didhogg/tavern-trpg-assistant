@@ -10,10 +10,13 @@ import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
+import Segmented from '../kit/Segmented.vue'
 import Switch from '../kit/Switch.vue'
 import ClassView from './ClassView.vue'
 import { byLevel, flattenFeatures } from './class-data'
 import EntryBody from './EntryBody.vue'
+import EntryVersions from './EntryVersions.vue'
+import { replaceEntry } from './open'
 import FeatureLevels from './FeatureLevels.vue'
 import { nameOf as itemName } from './pack-data'
 import { BLOCKS } from './statblock'
@@ -29,6 +32,20 @@ const toast = useToastStore()
 type State = { kind: 'loading' } | { kind: 'ok'; d: ScopedDetail | null; item: unknown; closed: boolean } | { kind: 'none' } | { kind: 'error'; message: string }
 const state = ref<State>({ kind: 'loading' })
 const enabled = ref(true)
+/** 中 / En 切换：只是同一个来源的另一种语言版本（作者的配对）；对不上就灰掉。 */
+const other = ref<EntryRef | null>(null)
+const lang = computed(() => getSource(props.entryRef.set).lang)
+async function loadCounterpart(d: ScopedDetail | null): Promise<void> {
+  other.value = null
+  try {
+    const cp = await app.svc().backend.library.counterparts.counterpart(props.entryRef, { docIdLocal: d?.version.altId && d.version.altId !== 'base' ? d.alternatives.find((a) => a.altId === d.version.altId)?.docIdLocal : undefined })
+    if (cp.status === 'found') other.value = cp.refs[0]
+  } catch (e) { console.error('[trpg-assistant] 读取另一种语言失败', e) }
+}
+function switchLang(v: string | undefined): void {
+  if (!v || v === (lang.value === 'zh' ? 'zh' : 'en') || !other.value) return
+  replaceEntry(other.value)
+}
 const codeSet = computed(() => getSource(props.entryRef.set).codeSet)
 const sourceLine = ref('')
 /** 摘要行：作者列表页每列的显示值（环阶、时间、学派…，B-35），名称与来源列不重复显示；没有列表定义的类别没有摘要行。 */
@@ -84,6 +101,7 @@ async function load(): Promise<void> {
       enabled.value = true
     }
     void loadExtras(state.value.item)
+    void loadCounterpart(state.value.kind === 'ok' ? state.value.d : null)
     const key = `entry:${props.entryRef.set}:${props.entryRef.prop}:${props.entryRef.hash}`
     modal.setTitle(key, nameOf(state.value.item))
   } catch (e) {
@@ -123,6 +141,7 @@ async function setEnabled(next: boolean): Promise<void> {
     <div v-else-if="state.kind === 'error'" class="lib-state"><h3>这一条读不出来</h3><p class="lib-muted">{{ state.message }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
     <template v-else>
       <div class="lib-dtools">
+        <Segmented :model-value="lang === 'zh' ? 'zh' : 'en'" label="语言" :options="[{ value: 'en', label: 'En', disabled: lang === 'zh' && !other, hint: '另一种语言里没有这一条' }, { value: 'zh', label: '中文', disabled: lang !== 'zh' && !other, hint: '另一种语言里没有这一条' }]" @update:model-value="switchLang" />
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
           <button class="trpg-icon-btn" type="button" disabled aria-label="编辑（稍后开放）" title="条目编辑稍后开放"><Icon name="pencil-simple" :size="18" /></button>
@@ -133,6 +152,7 @@ async function setEnabled(next: boolean): Promise<void> {
         <div class="lib-dbody">
           <div v-if="state.kind === 'ok' && state.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
           <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
+          <EntryVersions v-if="state.kind === 'ok'" :key="`${entryRef.hash}-${state.d?.version.altId ?? ''}`" :detail="state.d" :entry-ref="entryRef" @changed="load" />
           <div v-if="summary.length" class="lib-sumline" data-testid="entry-summary"><span v-for="x in summary" :key="x.k">{{ x.k }} <b>{{ x.v }}</b></span></div>
           <div v-if="block?.lines.length" class="lib-stat" data-testid="entry-statblock"><div v-for="l in block.lines" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
           <div v-if="block?.abilities.length" class="lib-abil"><div v-for="a in block.abilities" :key="a.key"><small>{{ a.label }}</small><b>{{ a.score }}</b> ({{ a.mod }})</div></div>

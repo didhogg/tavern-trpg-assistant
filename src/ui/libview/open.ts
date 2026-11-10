@@ -44,3 +44,8 @@ export function openReader(r: { set: string; prop: string; id: string; name: str
 export function openBulk(): void {
   useModalStore().open({ key: 'bulk', title: '批量勾选', component: BulkPage, variant: 'sheet' })
 }
+
+/** 语言切换：把当前详情页换成另一种语言里的同一条（不增加返回层数）。 */
+export function replaceEntry(ref: EntryRef, title = ''): void {
+  useModalStore().replace({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, props: { entryRef: ref }, variant: 'sheet' })
+}

@@ -66,6 +66,15 @@ export const useModalStore = defineStore('modal', () => {
     stack.value = [...stack.value, page]
   }
 
+  /** 把栈顶页换成另一页（语言切换用：不增加返回层数）。 */
+  function replace(page: ModalPage): void {
+    if (!stack.value.length) { open(page); return }
+    const removed = stack.value[stack.value.length - 1]
+    direction.value = 'forward'
+    stack.value = [...stack.value.slice(0, -1), page]
+    leave(removed)
+  }
+
   /** 返回上一页；已在第一页时关闭弹窗。 */
   function pop(): void {
     if (stack.value.length <= 1) {
@@ -116,5 +125,5 @@ export const useModalStore = defineStore('modal', () => {
     stack.value = [...stack.value.slice(0, -1), { ...page, height }]
   }
 
-  return { stack, direction, isOpen, top, depth, variant, open, push, pop, popToRoot, close, requestClose, escape, setTitle, setTopHeight }
+  return { stack, direction, isOpen, top, depth, variant, open, push, replace, pop, popToRoot, close, requestClose, escape, setTitle, setTopHeight }
 })
