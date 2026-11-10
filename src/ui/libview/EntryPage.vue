@@ -57,6 +57,8 @@ const authorPb = ref<string[] | null>(null)
 const subraces = ref<Array<{ name: string; entries: unknown; ref: EntryRef }>>([])
 /** 正文不在 entries 里的类别（传奇组等）：作者拼出来的正文条目（frame summaryEntry，P5-1 B-40）。 */
 const summaryBody = ref<unknown>(null)
+/** 怪物所属的传奇组（巢穴动作 / 区域效应 / 神话遭遇）：怪物自己只带传奇组的名字和来源，内容在传奇组条目里，作者的详情页把它接在数值块后面。 */
+const groupBody = ref<{ name: string; entry: unknown } | null>(null)
 async function loadExtras(item: unknown): Promise<void> {
   const s = app.svc().backend.library
   summary.value = []
@@ -64,11 +66,21 @@ async function loadExtras(item: unknown): Promise<void> {
   authorLines.value = []
   authorPb.value = null
   summaryBody.value = null
+  groupBody.value = null
   try {
     const af = await (await s.service.frameOf(codeSet.value)).call('authorFields', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
     authorLines.value = af.lines
     authorPb.value = af.pb
     summaryBody.value = await (await s.service.frameOf(codeSet.value)).call('summaryEntry', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
+    const lg = props.entryRef.prop === 'monster' ? (item as { legendaryGroup?: { name?: string; source?: string } } | null)?.legendaryGroup : null
+    if (lg?.name && lib.campaignLib) {
+      const frame = await s.service.frameOf(codeSet.value)
+      const m = await frame.call('statblockMeta', { type: 'statblock', prop: 'legendaryGroup', name: lg.name, source: lg.source })
+      const at = m.hash ? await s.scoped.locate(lib.campaignLib, 'legendaryGroup', m.hash) : null
+      const stored = at ? await s.scoped.storedItem(at.ref) : null
+      const entry = stored ? await frame.call('summaryEntry', 'legendaryGroup', JSON.parse(JSON.stringify(stored.item))) : null
+      if (entry) groupBody.value = { name: lg.name, entry }
+    }
     const lc = await s.sorting.cells(codeSet.value, props.entryRef.prop)
     const row = lc?.cells[props.entryRef.hash]
     if (lc && row) summary.value = lc.columns.map((c, i) => ({ k: c.text, v: row[i], sort: c.sort })).filter((x) => x.sort !== 'name' && x.sort !== 'source' && x.v).map(({ k, v }) => ({ k, v }))
@@ -173,6 +185,7 @@ async function setEnabled(next: boolean): Promise<void> {
           <ClassView v-if="entryRef.prop === 'class' && state.kind === 'ok'" :item="state.item" :entry-ref="entryRef" :code-set="codeSet" :author-lines="authorLines" :pb="authorPb" />
           <FeatureLevels v-else-if="entryRef.prop === 'subclass' && state.kind === 'ok'" :levels="byLevel(flattenFeatures((state.item as { subclassFeatures?: unknown }).subclassFeatures))" :code-set="codeSet" :open-upto="3" />
           <EntryBody v-else-if="body" :block="body" :code-set="codeSet" />
+          <template v-if="groupBody"><h3>传奇组：{{ groupBody.name }}</h3><EntryBody :block="groupBody.entry" :code-set="codeSet" /></template>
           <p v-else-if="!block?.lines.length && !block?.sections.length" class="lib-muted">这一条没有正文。</p>
           <template v-if="subraces.length">
             <h3>亚种</h3>

@@ -26,7 +26,7 @@ const title = (p: BrewPack): string => p.sourceInfo[0]?.full ?? p.filename ?? 'ï
 const rowOn = (p: BrewPack): boolean => lib.bound && p.sources.some((s) => lib.shelf?.groups.some((g) => [...g.books, ...g.adventures].some((r) => r.source === s && r.view.visible)))
 
 async function reload(): Promise<void> {
-  await lib.load(app.svc(), campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)
+  await lib.refresh(app.svc())
 }
 async function toggle(p: BrewPack, on: boolean): Promise<void> {
   const owner = campaign.owner?.ownerKey

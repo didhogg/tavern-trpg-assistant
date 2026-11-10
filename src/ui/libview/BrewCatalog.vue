@@ -61,7 +61,7 @@ async function download(r: CatalogPair): Promise<void> {
         try { const res = await svc.brewAddUrl(id, f.urlDownload); added += res.value.length; if (res.errors.length) failed.push(side) } catch (e) { console.error('[trpg-assistant] 下载自制包失败', e); failed.push(side) }
       }
       await loadInstalled()
-      await lib.load(app.svc(), null).catch(() => undefined)
+      await lib.refresh(app.svc()).catch(() => undefined)
       if (failed.length === wanted) { toast.error('下载没有成功，请重试'); return '下载没有成功' }
       if (failed.length) toast.error(`${failed.join('、')}没有装好，另一边已装好（可重试）`)
       else toast.success(`刚刚下载完成了 ${wanted} 个包，同时下载了 ${Math.max(0, added - wanted)} 个额外依赖包`)

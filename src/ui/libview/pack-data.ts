@@ -25,7 +25,7 @@ export async function authorName(s: Services, codeSet: string, prop: string, ite
   const own = nameOf(item)
   if (own !== '未知') return own
   try {
-    const n = await (await s.backend.library.service.frameOf(codeSet)).call('displayName', prop, item)
+    const n = await (await s.backend.library.service.frameOf(codeSet)).call('displayName', prop, JSON.parse(JSON.stringify(item)))
     if (n) return n
   } catch (e) { console.warn('[trpg-assistant] 取条目显示名失败', prop, e) }
   return own

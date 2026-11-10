@@ -22855,14 +22855,18 @@ var BD = ["data-narrow"], VD = { class: "trpg-dice__shell" }, HD = { class: "trp
 			d === l && (s.value = !1);
 		}
 	}
-	async function d(e, t, n, r) {
+	function d(e) {
+		let t = RE();
+		return u(e, t.hasCampaign ? t.owner?.ownerKey ?? null : null);
+	}
+	async function f(e, t, n, r) {
 		let i = e.backend.kernelSave, a = await i.libraryOf(t), o = Qb(a, n, r);
 		await i.setLibrary(t, {
 			...a,
 			...o
 		}), await u(e, t);
 	}
-	async function f(e, t, n) {
+	async function p(e, t, n) {
 		let r = e.backend.kernelSave, i = await r.libraryOf(t);
 		for (let [e, t] of Object.entries(n)) i = {
 			...i,
@@ -22871,7 +22875,7 @@ var BD = ["data-narrow"], VD = { class: "trpg-dice__shell" }, HD = { class: "trp
 		await r.setLibrary(t, i), await u(e, t);
 	}
 	return {
-		applySources: f,
+		applySources: p,
 		campaignLib: e,
 		bound: t,
 		officialMissing: o,
@@ -22881,7 +22885,8 @@ var BD = ["data-narrow"], VD = { class: "trpg-dice__shell" }, HD = { class: "trp
 		loading: s,
 		error: c,
 		load: u,
-		toggleSource: d
+		refresh: d,
+		toggleSource: f
 	};
 }), NO = FE("brewcatalog", () => {
 	let e = /* @__PURE__ */ Xn(null), t = /* @__PURE__ */ M({
@@ -31094,7 +31099,7 @@ var gI = ["onClick"], _I = /* @__PURE__ */ I({
 			let e = ++o;
 			r.value = "loading";
 			try {
-				let a = await (await n.svc().backend.library.service.frameOf(t.codeSet)).call("renderText", t.block);
+				let a = await (await n.svc().backend.library.service.frameOf(t.codeSet)).call("renderText", JSON.parse(JSON.stringify(t.block)));
 				if (e !== o) return;
 				i.value = a, r.value = a ? "ok" : "fail";
 			} catch (t) {
@@ -31234,18 +31239,21 @@ var gI = ["onClick"], _I = /* @__PURE__ */ I({
 		codeSet: {}
 	},
 	setup(e) {
-		let t = e, n = IE(), r = MO(), i = /* @__PURE__ */ M(String(t.block.displayName ?? t.block.name ?? "")), a = /* @__PURE__ */ M(null);
+		let t = e, n = IE(), r = MO(), i = /* @__PURE__ */ M(String(t.block.displayName ?? t.block.name ?? "")), a = /* @__PURE__ */ M(null), o = /* @__PURE__ */ new Map();
 		return Ra(async () => {
+			let e = r.campaignLib, s = JSON.parse(JSON.stringify(t.block)), c = `${t.codeSet}|${e?.codeSet ?? ""}|${JSON.stringify(s)}`, l = o.get(c);
+			l || (l = (async () => {
+				let r = await (await n.svc().backend.library.service.frameOf(t.codeSet)).call("statblockMeta", s), i = e && r.hash ? await n.svc().backend.library.scoped.locate(e, r.target, r.hash) : null;
+				return {
+					label: r.displayName,
+					ref: i ? i.ref : null
+				};
+			})(), o.set(c, l));
 			try {
-				let e = await (await n.svc().backend.library.service.frameOf(t.codeSet)).call("statblockMeta", t.block);
-				e.displayName && (i.value = e.displayName);
-				let o = r.campaignLib;
-				if (o && e.hash) {
-					let t = await n.svc().backend.library.scoped.locate(o, e.target, e.hash);
-					a.value = t ? t.ref : null;
-				}
+				let e = await l;
+				e.label && (i.value = e.label), a.value = e.ref;
 			} catch (e) {
-				console.warn("[trpg-assistant] 解析内嵌块指向失败", e);
+				o.delete(c), console.warn("[trpg-assistant] 解析内嵌块指向失败", e);
 			}
 		}), (e, t) => (B(), V("p", KI, [a.value ? (B(), H(nI, {
 			key: 0,
@@ -31708,7 +31716,7 @@ async function RL(e, t, n, r) {
 	let i = LL(r);
 	if (i !== "未知") return i;
 	try {
-		let i = await (await e.backend.library.service.frameOf(t)).call("displayName", n, r);
+		let i = await (await e.backend.library.service.frameOf(t)).call("displayName", n, JSON.parse(JSON.stringify(r)));
 		if (i) return i;
 	} catch (e) {
 		console.warn("[trpg-assistant] 取条目显示名失败", n, e);
@@ -31911,7 +31919,7 @@ var HL = (e, t) => {
 	key: 4,
 	class: "lib-abil"
 }, _R = {
-	key: 8,
+	key: 9,
 	class: "lib-muted"
 }, vR = /* @__PURE__ */ I({
 	__name: "EntryPage",
@@ -31930,26 +31938,39 @@ var HL = (e, t) => {
 		function p(e) {
 			e && e !== (d.value === "zh" ? "zh" : "en") && u.value && BB(u.value);
 		}
-		let m = q(() => t(n.entryRef.set).codeSet), h = /* @__PURE__ */ M(""), g = /* @__PURE__ */ M([]), _ = /* @__PURE__ */ M([]), v = /* @__PURE__ */ M(null), y = /* @__PURE__ */ M([]), b = /* @__PURE__ */ M(null);
-		async function x(e) {
+		let m = q(() => t(n.entryRef.set).codeSet), h = /* @__PURE__ */ M(""), g = /* @__PURE__ */ M([]), _ = /* @__PURE__ */ M([]), v = /* @__PURE__ */ M(null), y = /* @__PURE__ */ M([]), b = /* @__PURE__ */ M(null), x = /* @__PURE__ */ M(null);
+		async function S(e) {
 			let t = r.svc().backend.library;
-			g.value = [], y.value = [], _.value = [], v.value = null, b.value = null;
+			g.value = [], y.value = [], _.value = [], v.value = null, b.value = null, x.value = null;
 			try {
 				let r = await (await t.service.frameOf(m.value)).call("authorFields", n.entryRef.prop, JSON.parse(JSON.stringify(e)));
 				_.value = r.lines, v.value = r.pb, b.value = await (await t.service.frameOf(m.value)).call("summaryEntry", n.entryRef.prop, JSON.parse(JSON.stringify(e)));
-				let a = await t.sorting.cells(m.value, n.entryRef.prop), o = a?.cells[n.entryRef.hash];
-				a && o && (g.value = a.columns.map((e, t) => ({
+				let a = n.entryRef.prop === "monster" ? e?.legendaryGroup : null;
+				if (a?.name && i.campaignLib) {
+					let e = await t.service.frameOf(m.value), n = await e.call("statblockMeta", {
+						type: "statblock",
+						prop: "legendaryGroup",
+						name: a.name,
+						source: a.source
+					}), r = n.hash ? await t.scoped.locate(i.campaignLib, "legendaryGroup", n.hash) : null, o = r ? await t.scoped.storedItem(r.ref) : null, s = o ? await e.call("summaryEntry", "legendaryGroup", JSON.parse(JSON.stringify(o.item))) : null;
+					s && (x.value = {
+						name: a.name,
+						entry: s
+					});
+				}
+				let o = await t.sorting.cells(m.value, n.entryRef.prop), s = o?.cells[n.entryRef.hash];
+				o && s && (g.value = o.columns.map((e, t) => ({
 					k: e.text,
-					v: o[t],
+					v: s[t],
 					sort: e.sort
 				})).filter((e) => e.sort !== "name" && e.sort !== "source" && e.v).map(({ k: e, v: t }) => ({
 					k: e,
 					v: t
 				})));
-				let s = i.campaignLib, c = e;
-				if (n.entryRef.prop === "race" && s && c && !c.raceName) {
-					let e = await t.scoped.query(s, "race", { source: c.source });
-					y.value = e.filter((e) => e.item.raceName === c.name).map((e) => ({
+				let c = i.campaignLib, l = e;
+				if (n.entryRef.prop === "race" && c && l && !l.raceName) {
+					let e = await t.scoped.query(c, "race", { source: l.source });
+					y.value = e.filter((e) => e.item.raceName === l.name).map((e) => ({
 						name: LL(e.item),
 						entries: e.item.entries ?? null,
 						ref: e.ref
@@ -31959,7 +31980,7 @@ var HL = (e, t) => {
 				console.error("[trpg-assistant] 读取摘要行 / 亚种失败", e);
 			}
 		}
-		async function S(e, t) {
+		async function C(e, t) {
 			if (!t) return "";
 			let n = t;
 			try {
@@ -31970,7 +31991,7 @@ var HL = (e, t) => {
 			let i = e?.page;
 			return `${n}${typeof i == "number" ? ` · 第 ${i} 页` : ""} · ${t}`;
 		}
-		async function C() {
+		async function w() {
 			c.value = { kind: "loading" };
 			let e = r.svc(), a = i.campaignLib;
 			if (!a) c.value = {
@@ -31990,18 +32011,18 @@ var HL = (e, t) => {
 						d: null,
 						item: t.item,
 						closed: !0
-					}, l.value = !1, h.value = await S(t.item, t.source ?? null);
+					}, l.value = !1, h.value = await C(t.item, t.source ?? null);
 				} else if (i) c.value = {
 					kind: "ok",
 					d: i,
 					item: i.item,
 					closed: !1
-				}, h.value = await S(i.item, i.source ?? null), l.value = !0;
+				}, h.value = await C(i.item, i.source ?? null), l.value = !0;
 				else {
 					c.value = { kind: "none" };
 					return;
 				}
-				x(c.value.item), f(c.value.kind === "ok" ? c.value.d : null);
+				S(c.value.item), f(c.value.kind === "ok" ? c.value.d : null);
 				let s = `entry:${n.entryRef.set}:${n.entryRef.prop}:${n.entryRef.hash}`;
 				o.setTitle(s, await RL(r.svc(), t(n.entryRef.set).codeSet, n.entryRef.prop, c.value.item));
 			} catch (e) {
@@ -32011,11 +32032,11 @@ var HL = (e, t) => {
 				}, s.error("读取这一条时出错了");
 			}
 		}
-		Ra(() => void C());
-		let w = q(() => {
-			let e = new Set([...T.value?.lines ?? [], ..._.value].map((e) => e.label));
+		Ra(() => void w());
+		let T = q(() => {
+			let e = new Set([...E.value?.lines ?? [], ..._.value].map((e) => e.label));
 			return g.value.filter((t) => !e.has(t.k));
-		}), T = q(() => c.value.kind === "ok" ? YF[n.entryRef.prop]?.(c.value.item) ?? null : null), E = q(() => {
+		}), E = q(() => c.value.kind === "ok" ? YF[n.entryRef.prop]?.(c.value.item) ?? null : null), D = q(() => {
 			if (c.value.kind !== "ok") return null;
 			let e = c.value.item;
 			return e ? n.entryRef.prop === "table" ? {
@@ -32023,7 +32044,7 @@ var HL = (e, t) => {
 				type: "table"
 			} : n.entryRef.prop === "tableGroup" ? e.tables ?? e.entries ?? null : e.entries ?? b.value ?? null : null;
 		});
-		async function D(e) {
+		async function ee(e) {
 			let t = a.owner?.ownerKey;
 			if (!t || !i.bound) return;
 			let o = r.svc().backend.kernelSave, c = await o.libraryOf(t);
@@ -32046,7 +32067,7 @@ var HL = (e, t) => {
 			U("button", {
 				class: "trpg-btn trpg-btn--primary",
 				type: "button",
-				onClick: C
+				onClick: w
 			}, "重试")
 		])) : (B(), V(z, { key: 3 }, [U("div", oR, [
 			W(IO, {
@@ -32069,7 +32090,7 @@ var HL = (e, t) => {
 				"model-value": l.value,
 				label: "本战役启用这一条",
 				disabled: !N(i).bound,
-				"onUpdate:modelValue": D
+				"onUpdate:modelValue": ee
 			}, null, 8, ["model-value", "disabled"]), n[3] ||= U("span", null, "本战役启用", -1)]),
 			U("span", cR, [U("button", lR, [W(Q, {
 				name: "pencil-simple",
@@ -32090,16 +32111,16 @@ var HL = (e, t) => {
 				key: `${e.entryRef.hash}-${c.value.d?.version.altId ?? ""}`,
 				detail: c.value.d,
 				"entry-ref": e.entryRef,
-				onChanged: C
+				onChanged: w
 			}, null, 8, ["detail", "entry-ref"])) : K("", !0),
-			w.value.length ? (B(), V("div", mR, [(B(!0), V(z, null, L(w.value, (e) => (B(), V("span", { key: e.k }, [G(j(e.k) + " ", 1), U("b", null, j(e.v), 1)]))), 128))])) : K("", !0),
-			(T.value?.lines.length || _.value.length) && e.entryRef.prop !== "class" ? (B(), V("div", hR, [(B(!0), V(z, null, L([...T.value?.lines ?? [], ..._.value], (e) => (B(), V("div", { key: e.label }, [U("span", null, j(e.label), 1), U("span", null, j(e.value), 1)]))), 128))])) : K("", !0),
-			T.value?.abilities.length ? (B(), V("div", gR, [(B(!0), V(z, null, L(T.value.abilities, (e) => (B(), V("div", { key: e.key }, [
+			T.value.length ? (B(), V("div", mR, [(B(!0), V(z, null, L(T.value, (e) => (B(), V("span", { key: e.k }, [G(j(e.k) + " ", 1), U("b", null, j(e.v), 1)]))), 128))])) : K("", !0),
+			(E.value?.lines.length || _.value.length) && e.entryRef.prop !== "class" ? (B(), V("div", hR, [(B(!0), V(z, null, L([...E.value?.lines ?? [], ..._.value], (e) => (B(), V("div", { key: e.label }, [U("span", null, j(e.label), 1), U("span", null, j(e.value), 1)]))), 128))])) : K("", !0),
+			E.value?.abilities.length ? (B(), V("div", gR, [(B(!0), V(z, null, L(E.value.abilities, (e) => (B(), V("div", { key: e.key }, [
 				U("small", null, j(e.label), 1),
 				U("b", null, j(e.score), 1),
 				G(" (" + j(e.mod) + ")", 1)
 			]))), 128))])) : K("", !0),
-			(B(!0), V(z, null, L(T.value?.sections ?? [], (e) => (B(), V(z, { key: e.title }, [U("h3", null, j(e.title), 1), W(fL, {
+			(B(!0), V(z, null, L(E.value?.sections ?? [], (e) => (B(), V(z, { key: e.title }, [U("h3", null, j(e.title), 1), W(fL, {
 				block: e.entries,
 				"code-set": m.value
 			}, null, 8, ["block", "code-set"])], 64))), 128)),
@@ -32121,12 +32142,16 @@ var HL = (e, t) => {
 				levels: N(QF)(N(ZF)(c.value.item.subclassFeatures)),
 				"code-set": m.value,
 				"open-upto": 3
-			}, null, 8, ["levels", "code-set"])) : E.value ? (B(), H(fL, {
+			}, null, 8, ["levels", "code-set"])) : D.value ? (B(), H(fL, {
 				key: 7,
-				block: E.value,
+				block: D.value,
 				"code-set": m.value
-			}, null, 8, ["block", "code-set"])) : !T.value?.lines.length && !T.value?.sections.length ? (B(), V("p", _R, "这一条没有正文。")) : K("", !0),
-			y.value.length ? (B(), V(z, { key: 9 }, [n[5] ||= U("h3", null, "亚种", -1), (B(!0), V(z, null, L(y.value, (e) => (B(), V("div", {
+			}, null, 8, ["block", "code-set"])) : K("", !0),
+			x.value ? (B(), V(z, { key: 8 }, [U("h3", null, "传奇组：" + j(x.value.name), 1), W(fL, {
+				block: x.value.entry,
+				"code-set": m.value
+			}, null, 8, ["block", "code-set"])], 64)) : !E.value?.lines.length && !E.value?.sections.length ? (B(), V("p", _R, "这一条没有正文。")) : K("", !0),
+			y.value.length ? (B(), V(z, { key: 10 }, [n[5] ||= U("h3", null, "亚种", -1), (B(!0), V(z, null, L(y.value, (e) => (B(), V("div", {
 				key: e.ref.hash,
 				class: "lib-block",
 				"data-testid": "subrace"
@@ -33382,7 +33407,7 @@ var $B = { "data-testid": "brew-catalog" }, eV = {
 								console.error("[trpg-assistant] 下载自制包失败", e), s.push(t);
 							}
 						}
-						return await S(), await n.load(t.svc(), null).catch(() => void 0), s.length === o ? (r.error("下载没有成功，请重试"), "下载没有成功") : (s.length ? r.error(`${s.join("、")}没有装好，另一边已装好（可重试）`) : r.success(`刚刚下载完成了 ${o} 个包，同时下载了 ${Math.max(0, a - o)} 个额外依赖包`), null);
+						return await S(), await n.refresh(t.svc()).catch(() => void 0), s.length === o ? (r.error("下载没有成功，请重试"), "下载没有成功") : (s.length ? r.error(`${s.join("、")}没有装好，另一边已装好（可重试）`) : r.success(`刚刚下载完成了 ${o} 个包，同时下载了 ${Math.max(0, a - o)} 个额外依赖包`), null);
 					}, () => void w(e));
 				} finally {
 					let e = new Set(d.value);
@@ -33722,7 +33747,7 @@ var oH = {
 	setup(e) {
 		let t = IE(), n = MO(), r = RE(), i = pD(), a = /* @__PURE__ */ M(""), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(!1), c = q(() => n.campaignLib?.codeSet ?? "cn"), l = q(() => n.minePacks.filter((e) => !a.value.trim() || `${e.filename ?? ""}${e.sourceInfo.map((e) => e.full ?? "").join("")}`.toLowerCase().includes(a.value.trim().toLowerCase()))), u = (e) => e.sourceInfo[0]?.full ?? e.filename ?? "（未命名）", d = (e) => n.bound && e.sources.some((e) => n.shelf?.groups.some((t) => [...t.books, ...t.adventures].some((t) => t.source === e && t.view.visible)));
 		async function f() {
-			await n.load(t.svc(), r.hasCampaign ? r.owner?.ownerKey ?? null : null);
+			await n.refresh(t.svc());
 		}
 		async function p(e, a) {
 			let o = r.owner?.ownerKey;
@@ -33924,15 +33949,15 @@ var yH = {
 			})).filter((e) => e.books.length + e.adventures.length)
 		})).filter((e) => e.groups.length)), f = q(() => d.value.reduce((e, t) => e + t.groups.reduce((e, t) => e + t.books.length + t.adventures.length, 0), 0));
 		async function p(e, t) {
-			let o = n.svc(), s = i.hasCampaign ? i.owner?.ownerKey ?? null : null;
+			let i = n.svc();
 			t === "manage" ? LB({
 				set: e.set,
 				source: e.source,
 				name: e.name
-			}) : t === "save" ? await nz(o, e, a) : t === "rm" && await tz(o, e, n.settings?.library.skipRemovePrompt ?? !1, a) && await r.load(o, s);
+			}) : t === "save" ? await nz(i, e, a) : t === "rm" && await tz(i, e, n.settings?.library.skipRemovePrompt ?? !1, a) && await r.refresh(i);
 		}
 		async function m(e) {
-			e === "pull" && await vH(n.svc(), r.campaignLib?.codeSet ?? "cn", a) && await r.load(n.svc(), i.hasCampaign ? i.owner?.ownerKey ?? null : null);
+			e === "pull" && await vH(n.svc(), r.campaignLib?.codeSet ?? "cn", a) && await r.refresh(n.svc());
 		}
 		let h = (e) => r.bound && e.view.visible;
 		async function g(e, t) {
@@ -33943,17 +33968,17 @@ var yH = {
 				console.error("[trpg-assistant] 开关失败", e), a.error("没有保存成功");
 			}
 		}
-		return (e, a) => (B(), V("div", yH, [N(r).error ? (B(), V("div", bH, [
-			a[3] ||= U("h3", null, "书架读不出来", -1),
+		return (e, i) => (B(), V("div", yH, [N(r).error ? (B(), V("div", bH, [
+			i[3] ||= U("h3", null, "书架读不出来", -1),
 			U("p", xH, j(N(r).error), 1),
 			U("button", {
 				class: "trpg-btn trpg-btn--primary",
 				type: "button",
-				onClick: a[0] ||= (e) => N(r).load(N(n).svc(), N(i).hasCampaign ? N(i).owner?.ownerKey ?? null : null)
+				onClick: i[0] ||= (e) => N(r).refresh(N(n).svc())
 			}, "重试")
 		])) : N(r).shelf ? (B(), V(z, { key: 2 }, [
 			U("div", CH, [ii(U("input", {
-				"onUpdate:modelValue": a[1] ||= (e) => o.value = e,
+				"onUpdate:modelValue": i[1] ||= (e) => o.value = e,
 				class: "trpg-input",
 				type: "search",
 				placeholder: "搜索书目 / 包名",
@@ -33963,23 +33988,23 @@ var yH = {
 			N(r).bound ? K("", !0) : (B(), V("div", wH, [W(Q, {
 				name: "info",
 				size: 16
-			}), a[5] ||= U("span", null, "先创建战役，开关才能用；所有书先显示为关。", -1)])),
+			}), i[5] ||= U("span", null, "先创建战役，开关才能用；所有书先显示为关。", -1)])),
 			N(r).officialMissing ? (B(), V("div", TH, [W(Q, {
 				name: "info",
 				size: 16
-			}), a[6] ||= U("span", null, "官方资料没装：已下载的自制包会保留，但要先在【下载】页装好官方资料才能读。", -1)])) : K("", !0),
+			}), i[6] ||= U("span", null, "官方资料没装：已下载的自制包会保留，但要先在【下载】页装好官方资料才能读。", -1)])) : K("", !0),
 			N(r).shelf.booksError ? (B(), V("div", EH, [W(Q, {
 				name: "warning",
 				size: 16
 			}), U("span", null, "书目读取失败：" + j(N(r).shelf.booksError), 1)])) : K("", !0),
-			!f.value && !o.value ? (B(), V("div", DH, [...a[7] ||= [U("h3", null, "还没有资料", -1), U("p", { class: "lib-muted" }, "去【下载】装官方资料或自制包。", -1)]])) : K("", !0),
+			!f.value && !o.value ? (B(), V("div", DH, [...i[7] ||= [U("h3", null, "还没有资料", -1), U("p", { class: "lib-muted" }, "去【下载】装官方资料或自制包。", -1)]])) : K("", !0),
 			(B(!0), V(z, null, L(d.value, (e) => (B(), V(z, { key: e.kind }, [U("div", OH, [G(j(e.label) + " ", 1), e.kind === "official" ? (B(), V("span", kH, [U("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
 				"data-testid": "open-bulk",
 				disabled: !N(r).bound,
 				title: N(r).bound ? void 0 : "先创建战役",
-				onClick: a[2] ||= (e) => N(zB)()
+				onClick: i[2] ||= (e) => N(zB)()
 			}, "批量勾选…", 8, AH), W(wF, {
 				label: "书架",
 				items: [{
@@ -34054,7 +34079,7 @@ var yH = {
 					"onSelect"
 				])
 			], 8, FH))), 128))]))), 128))])], 64))), 128))
-		], 64)) : (B(), V("div", SH, [...a[4] ||= [
+		], 64)) : (B(), V("div", SH, [...i[4] ||= [
 			U("i", null, null, -1),
 			U("i", { style: { width: "80%" } }, null, -1),
 			U("i", { style: { width: "60%" } }, null, -1)
@@ -34068,7 +34093,7 @@ var yH = {
 	setup(e) {
 		let t = IE(), r = RE(), i = MO(), a = /* @__PURE__ */ M("shelf");
 		function o() {
-			t.booted && i.load(t.svc(), r.hasCampaign ? r.owner?.ownerKey ?? null : null);
+			t.booted && i.refresh(t.svc());
 		}
 		function s() {
 			setTimeout(() => {

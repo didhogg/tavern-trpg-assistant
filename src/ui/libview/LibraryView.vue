@@ -20,7 +20,7 @@ const lib = useLibViewStore()
 const tab = ref('shelf')
 
 function reload(): void {
-  if (app.booted) void lib.load(app.svc(), campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)
+  if (app.booted) void lib.refresh(app.svc())
 }
 // 中英配对表第一次读很慢（实测约 3.6 秒，读一次才有，之后秒开）：库页一打开就在空闲时先读进内存，点条目详情时就不用等
 function warmPairs(): void {

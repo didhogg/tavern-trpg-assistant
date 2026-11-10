@@ -38,13 +38,12 @@ const total = computed(() => sections.value.reduce((n, s) => n + s.groups.reduce
 
 async function onMenu(r: CatalogRow, key: string): Promise<void> {
   const s = app.svc()
-  const owner = campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null
   if (key === 'manage') openManage({ set: r.set, source: r.source, name: r.name })
   else if (key === 'save') await saveToMine(s, r, toast)
-  else if (key === 'rm' && (await removeSource(s, r, app.settings?.library.skipRemovePrompt ?? false, toast))) await lib.load(s, owner)
+  else if (key === 'rm' && (await removeSource(s, r, app.settings?.library.skipRemovePrompt ?? false, toast))) await lib.refresh(s)
 }
 async function onShelfMenu(key: string): Promise<void> {
-  if (key === 'pull' && (await pullUpdates(app.svc(), lib.campaignLib?.codeSet ?? 'cn', toast))) await lib.load(app.svc(), campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)
+  if (key === 'pull' && (await pullUpdates(app.svc(), lib.campaignLib?.codeSet ?? 'cn', toast))) await lib.refresh(app.svc())
 }
 const isOn = (r: CatalogRow): boolean => lib.bound && r.view.visible
 async function toggle(r: CatalogRow, next: boolean): Promise<void> {
@@ -56,7 +55,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
 
 <template>
   <div class="lib-scroll" data-testid="shelf-tab">
-    <div v-if="lib.error" class="lib-state"><h3>书架读不出来</h3><p class="lib-muted">{{ lib.error }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="lib.load(app.svc(), campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)">重试</button></div>
+    <div v-if="lib.error" class="lib-state"><h3>书架读不出来</h3><p class="lib-muted">{{ lib.error }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="lib.refresh(app.svc())">重试</button></div>
     <div v-else-if="!lib.shelf" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <template v-else>
       <div class="lib-filter lib-filter--top">

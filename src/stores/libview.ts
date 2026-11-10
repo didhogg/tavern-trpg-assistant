@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, shallowRef } from 'vue'
 import type { Services } from '../core/services'
+import { useCampaignStore } from './campaign'
 import { DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
 import { chooseSource, defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
 import type { BrewPack } from '../library/brew-packs'
@@ -58,6 +59,15 @@ export const useLibViewStore = defineStore('library', () => {
     }
   }
 
+  /**
+   * 按「现在的战役」重读书架。下载完成、装 / 删包、拉取更新之后用它，别自己传 ownerKey：
+   * 以前下载自制包后传了 null，书架被读成「没有战役」，所有书显示为关（P5-1 B-49）。
+   */
+  function refresh(s: Services): Promise<void> {
+    const campaign = useCampaignStore()
+    return load(s, campaign.hasCampaign ? campaign.owner?.ownerKey ?? null : null)
+  }
+
   /** 开 / 关一本书（本战役）：立即生效，不出预览（R77）。 */
   async function toggleSource(s: Services, ownerKey: string, source: string, visible: boolean): Promise<void> {
     const ks = s.backend.kernelSave
@@ -76,5 +86,5 @@ export const useLibViewStore = defineStore('library', () => {
     await load(s, ownerKey)
   }
 
-  return { applySources, campaignLib, bound, officialMissing, shelf, minePacks, brewSetId, loading, error, load, toggleSource }
+  return { applySources, campaignLib, bound, officialMissing, shelf, minePacks, brewSetId, loading, error, load, refresh, toggleSource }
 })

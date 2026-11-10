@@ -17,7 +17,7 @@ async function run(): Promise<void> {
   const mine = ++seq
   state.value = 'loading'
   try {
-    const t = await (await app.svc().backend.library.service.frameOf(props.codeSet)).call('renderText', props.block as Record<string, unknown>)
+    const t = await (await app.svc().backend.library.service.frameOf(props.codeSet)).call('renderText', JSON.parse(JSON.stringify(props.block)) as Record<string, unknown>)
     if (mine !== seq) return
     text.value = t
     state.value = t ? 'ok' : 'fail'
