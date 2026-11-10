@@ -514,7 +514,7 @@ await page.getByTestId('open-bulk').click()
 await page.waitForSelector('[data-testid="bulk-page"] .trpg-check')
 await page.locator('[data-testid="bulk-page"] .trpg-check', { hasText: /^\s*怪物图鉴\s*$/ }).first().click()
 await page.getByTestId('bulk-apply').click()
-await settle(page, 1800)
+await page.waitForFunction(() => !document.getElementById('trpg-assistant-root').shadowRoot.querySelector('.trpg-modal'), null, { timeout: 30000 }).catch(() => {})
 check('批量勾选：再改回去', (await page.locator('.trpg-modal').count()) === 0)
 await page.locator('.lib-sec .trpg-more').first().click()
 await page.locator('.trpg-dropdown__item', { hasText: '拉取更新' }).click()
@@ -546,6 +546,34 @@ const enTitle = await page.locator('.trpg-modal__title').innerText()
 check('点 En：换成英文版同一条，返回层数不变', enTitle !== zhTitle && /[A-Za-z]/.test(enTitle) && (await page.locator('.trpg-modal__page').count()) === depthBefore, `${zhTitle} → ${enTitle}`)
 await page.locator('.trpg-modal__close').click()
 await settle(page, 300)
+
+// ---- 规则速查（文档）：搜到 → 阅读器 ----
+const docHit = await page.evaluate(async () => {
+  const host = document.querySelector('#trpg-assistant-root')
+  const app = [...host.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean)
+  const pinia = app.config.globalProperties.$pinia
+  const lib = pinia._s.get('app').svc().backend.library
+  const c = { rule: 'dnd5e2014', codeSet: 'cn', scopes: ['5e2014'], include: [], exclude: [], choices: {} }
+  for (const t of ['先攻', '优势', '掩体', '休息', '战斗', '潜行', '陷阱', '伤害']) {
+    const hs = await lib.scoped.search(c, t)
+    const h = hs.find((x) => x.target.kind === 'document')
+    if (h) return { term: t, name: String(h.doc.cn ?? h.doc.n ?? '') }
+  }
+  return null
+})
+out.docHit = docHit
+if (docHit) {
+  await page.locator('[data-testid="open-search"]').click()
+  await page.waitForSelector('[data-testid="search-page"]')
+  await page.locator('[data-testid="search-page"] input[type="search"]').fill(docHit.term)
+  await page.waitForSelector('[data-testid="search-results"] .lib-list__row', { timeout: 120000 })
+  const rows = page.locator('[data-testid="search-results"] .lib-list__row', { hasText: docHit.name })
+  await rows.first().click()
+  const okDoc = await page.waitForSelector('[data-testid="reader-body"] .lib-dbody', { timeout: 30000 }).then(() => true).catch(() => false)
+  check('规则速查（文档）：点搜索结果进阅读器', okDoc, JSON.stringify(docHit))
+  await page.locator('.trpg-modal__close').click()
+  await settle(page, 300)
+}
 
 // ---- 窄屏：底部抽屉 ----
 await page.setViewportSize({ width: 390, height: 800 })

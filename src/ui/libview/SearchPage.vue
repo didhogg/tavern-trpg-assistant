@@ -74,7 +74,7 @@ const blocked = computed(() => hits.value.length - visibleHits.value.length)
 function open(h: ScopedSearchHit): void {
   if (h.target.kind === 'entry') openEntry(h.ref, hitName(h))
   else if (h.target.kind === 'corpus') openReader({ set: h.target.set ?? h.ref.set, prop: h.target.prop, id: h.target.id, name: hitName(h) })
-  else toast.info('规则速查的阅读器稍后开放')
+  else if (h.target.kind === 'document') openReader({ set: h.ref.set, prop: 'document', id: h.target.id, name: hitName(h) })
 }
 </script>
 

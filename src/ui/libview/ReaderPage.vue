@@ -23,8 +23,11 @@ const codeSet = computed(() => getSource(props.set).codeSet)
 async function load(): Promise<void> {
   state.value = { kind: 'loading' }
   try {
-    const v = (await app.svc().backend.library.service.corpus(props.set, props.prop, props.id)) as Record<string, { data?: unknown[] } | undefined>
-    const data = v[`${props.prop}Data`]?.data
+    const library = app.svc().backend.library
+    // 规则速查等文档（documents）与书同一个阅读页：章节 → 小节
+    const data = props.prop === 'document'
+      ? (await library.documents.get(getSource(props.set), props.id)).data
+      : ((await library.service.corpus(props.set, props.prop, props.id)) as Record<string, { data?: unknown[] } | undefined>)[`${props.prop}Data`]?.data
     if (!Array.isArray(data)) { state.value = { kind: 'error', message: '这本书没有正文' }; return }
     state.value = { kind: 'ok', chapters: data.map((c, i) => ({ name: String((c as { name?: unknown })?.name ?? `第 ${i + 1} 节`), entry: c })) }
   } catch (e) {
