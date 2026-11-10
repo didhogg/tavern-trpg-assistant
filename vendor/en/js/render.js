@@ -40,7 +40,8 @@ globalThis.Renderer = class {
 		this._tagExportDict = null;
 		this._roll20Ids = null;
 		this._trackTitles = {enabled: false, titles: {}};
-		this._enumerateTitlesRel = {enabled: false, titles: {}};
+		this._isEnumerateTitlesRel = false;
+		this._relativeTitles = new Renderer.utils.TitleRelativeIndexTracker();
 		this._isHeaderIndexIncludeTableCaptions = false;
 		this._isHeaderIndexIncludeImageTitles = false;
 		this._isRenderHeaderIndex = true;
@@ -148,7 +149,7 @@ globalThis.Renderer = class {
 	resetHeaderIndex () {
 		this._headerIndex = 1;
 		this._trackTitles.titles = {};
-		this._enumerateTitlesRel.titles = {};
+		this._relativeTitles.reset();
 		return this;
 	}
 
@@ -229,16 +230,15 @@ globalThis.Renderer = class {
 	 * This identifier is stored in `data-title-relative-index`
 	 */
 	setEnumerateTitlesRel (bool) {
-		this._enumerateTitlesRel.enabled = bool;
+		this._isEnumerateTitlesRel = bool;
 		return this;
 	}
 
-	_getEnumeratedTitleRel (name) {
-		if (this._enumerateTitlesRel.enabled && name) {
-			const clean = name.toLowerCase();
-			this._enumerateTitlesRel.titles[clean] = this._enumerateTitlesRel.titles[clean] || 0;
-			return `data-title-relative-index="${this._enumerateTitlesRel.titles[clean]++}"`;
-		} else return "";
+	_getEnumeratedTitleRel (entry) {
+		if (!this._isEnumerateTitlesRel) return "";
+
+		const meta = this._relativeTitles.getNextMetaForEntry(entry);
+		return meta ? `data-title-relative-index="${meta.ixTitleRel}"` : "";
 	}
 
 	setTrackTitles (bool) {
@@ -255,11 +255,15 @@ globalThis.Renderer = class {
 		// Invert it such that we have a map of `{"<name>": ["data-title-index-0", ..., "data-title-index-n"]}`
 		const trackedTitlesInverse = {};
 		Object.entries(this._trackTitles.titles || {}).forEach(([titleIx, titleName]) => {
-			if (isStripTags) titleName = Renderer.stripTags(titleName);
-			titleName = titleName.toLowerCase().trim();
+			titleName = Renderer.utils.TitleRelativeIndexTracker.getCleanName(titleName, {isStripTags});
 			(trackedTitlesInverse[titleName] = trackedTitlesInverse[titleName] || []).push(titleIx);
 		});
 		return trackedTitlesInverse;
+	}
+
+	_handleTrackEntryTitle (entry) {
+		const name = Renderer.utils.TitleRelativeIndexTracker.getEntryName(entry);
+		if (name != null) this._handleTrackTitles(name);
 	}
 
 	_handleTrackTitles (name, {isTable = false, isImage = false} = {}) {
@@ -270,7 +274,7 @@ globalThis.Renderer = class {
 	}
 
 	_handleTrackDepth (entry, depth) {
-		if (!entry.name || !this._depthTracker) return;
+		if (!this._depthTracker || !Renderer.utils.getEntryDisplayName(entry)) return;
 
 		this._lastDepthTrackerInheritedProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		if (entry.source) this._lastDepthTrackerInheritedProps.source = entry.source;
@@ -998,7 +1002,7 @@ globalThis.Renderer = class {
 	}
 
 	_renderEntriesSubtypes (entry, textStack, meta, options, incDepth) {
-		const displayName = entry._displayName || entry.name;
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
 		const isInlineTitle = meta.depth >= 2;
 
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
@@ -1042,7 +1046,7 @@ globalThis.Renderer = class {
 		const styleString = this._renderEntriesSubtypes_getStyleString({entry, meta, isNamed: !!displayName});
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 
 		const headerSpan = this._renderEntriesSubtypes_getHeaderSpan({
 			entry,
@@ -1080,7 +1084,7 @@ globalThis.Renderer = class {
 		const styleString = this._renderEntriesSubtypes_getStyleString({entry, meta, isInlineTitle: true, isNamed: !!displayName});
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 
 		const headerSpan = this._renderEntriesSubtypes_getHeaderSpan({
 			entry,
@@ -1111,7 +1115,8 @@ globalThis.Renderer = class {
 	}
 
 	_renderEntriesSubtypes_getDataString (entry, {isCollapsibleChild = false} = {}) {
-		const displayName = entry._displayName || entry.name;
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		let dataString = "";
 		if (displayName) dataString += ` data-roll-name-ancestor="${Renderer.stripTags(displayName).qq()}"`;
 		if (isCollapsibleChild) dataString += `data-rd-is-collapsible-child="true"`;
@@ -1139,14 +1144,14 @@ globalThis.Renderer = class {
 	}) {
 		if (!displayName) return "";
 
-		const type = entry.type || "entries";
+		const type = Renderer.utils.getRenderableEntryType(entry);
 
 		const headerClass = `ve-rd__h--${meta.depth + 1}${isInset ? "-inset" : ""}`; // adjust as the CSS is 0..4 rather than -1..3
 		const pluginDataNamePrefix = this._applyPlugins_getAll(`${type}_namePrefix`, {textStack, meta, options}, {input: entry});
 
 		const ptText = `${pluginDataNamePrefix.join("")}${this.render({type: "inline", entries: [displayName]})}${isAddPeriod ? "." : ""}`;
 
-		return `<${headerTag} class="ve-rd__h ${headerClass}" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}> <span class="entry-title-inner ${!pagePart && entry.source ? `ve-help-subtle` : ""}"${!pagePart && entry.source ? ` title="Source: ${Parser.sourceJsonToFull(entry.source)}${entry.page ? `, p${entry.page}` : ""}"` : ""}>${ptText}</span>${partPageExpandCollapse}</${headerTag}> `;
+		return `<${headerTag} class="ve-rd__h ${headerClass}" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}> <span class="entry-title-inner ${!pagePart && entry.source ? `ve-help-subtle` : ""}"${!pagePart && entry.source ? ` title="Source: ${Parser.sourceJsonToFull(entry.source)}${entry.page ? `, p${entry.page}` : ""}"` : ""}>${ptText}</span>${partPageExpandCollapse}</${headerTag}> `;
 	}
 
 	_renderEntriesSubtypes_renderPreReqText (entry, textStack, meta) {
@@ -1165,7 +1170,7 @@ globalThis.Renderer = class {
 
 	_renderEntriesSubtypes_getStyleString ({entry, meta, isNamed = false, isInlineTitle = false}) {
 		const styleClasses = ["ve-rd__b"];
-		styleClasses.push(this._getStyleClass(entry.type || "entries", entry));
+		styleClasses.push(this._getStyleClass(Renderer.utils.getRenderableEntryType(entry), entry));
 		if (isNamed) styleClasses.push("ve-rd__b--named");
 		if (isInlineTitle) {
 			if (this._subVariant) styleClasses.push(Renderer.HEAD_2_SUB_VARIANT);
@@ -1180,7 +1185,7 @@ globalThis.Renderer = class {
 		if (!entry.entries) return;
 		entry.entries = entry.entries.sort((a, b) => a.name && b.name ? SortUtil.ascSort(a.name, b.name) : a.name ? -1 : b.name ? 1 : 0);
 
-		if (entry.style && entry.style === "list-hang-notitle") {
+		if (Renderer.utils.getRenderableEntryType(entry) === "list") {
 			const fauxEntry = {
 				type: "list",
 				style: "list-hang-notitle",
@@ -1193,8 +1198,10 @@ globalThis.Renderer = class {
 					return out;
 				}),
 			};
-			this._renderList(fauxEntry, textStack, meta, options);
-		} else this._renderEntriesSubtypes(entry, textStack, meta, options, false);
+			return this._renderList(fauxEntry, textStack, meta, options);
+		}
+
+		return this._renderEntriesSubtypes(entry, textStack, meta, options, false);
 	}
 
 	_renderList (entry, textStack, meta, options) {
@@ -1253,7 +1260,7 @@ globalThis.Renderer = class {
 	}
 
 	_renderInset (entry, textStack, meta, options) {
-		const displayName = entry.name?.trim();
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry, {isCollapsibleChild: !displayName});
 		textStack[0] += `<${this.wrapperTag} class="${this._renderInset_getCssClasses(entry, textStack, meta, options)}" ${dataString}>`;
@@ -1266,7 +1273,7 @@ globalThis.Renderer = class {
 		const partPageExpandCollapse = `<span class="ve-flex-vh-center">${[pagePart, partExpandCollapse].filter(Boolean).join("")}</span>`;
 
 		if (displayName != null) {
-			if (Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+			this._handleTrackEntryTitle(entry);
 
 			const cacheDepth = meta.depth;
 			meta.depth = 1;
@@ -1303,7 +1310,7 @@ globalThis.Renderer = class {
 	}
 
 	_renderInsetReadaloud (entry, textStack, meta, options) {
-		const displayName = entry.name?.trim();
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry, {isCollapsibleChild: !displayName});
 		textStack[0] += `<${this.wrapperTag} class="${this._renderInset_getCssClasses(entry, textStack, meta, options)}" ${dataString}>`;
@@ -1316,7 +1323,7 @@ globalThis.Renderer = class {
 		const partPageExpandCollapse = `<span class="ve-flex-vh-center">${[pagePart, partExpandCollapse].filter(Boolean).join("")}</span>`;
 
 		if (displayName != null) {
-			if (Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+			this._handleTrackEntryTitle(entry);
 
 			const cacheDepth = meta.depth;
 			meta.depth = 1;
@@ -1351,9 +1358,11 @@ globalThis.Renderer = class {
 	}
 
 	_renderVariant (entry, textStack, meta, options) {
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 1);
 
@@ -1370,7 +1379,7 @@ globalThis.Renderer = class {
 			textStack,
 			meta,
 			options,
-			displayName: entry.name ? `Variant: ${entry.name}` : "Variant",
+			displayName: displayName ? `Variant: ${displayName}` : "Variant",
 			headerTag: `h4`,
 			pagePart,
 			partPageExpandCollapse,
@@ -1394,14 +1403,18 @@ globalThis.Renderer = class {
 	}
 
 	_renderVariantInner (entry, textStack, meta, options) {
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 1);
 
 		textStack[0] += `<${this.wrapperTag} class="ve-rd__b-inset-inner" ${dataString}>`;
-		textStack[0] += `<span class="ve-rd__h ve-rd__h--2-inset" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}><h4 class="entry-title-inner">${entry.name}</h4></span>`;
+		if (displayName != null) {
+			textStack[0] += `<span class="ve-rd__h ve-rd__h--2-inset" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}><h4 class="entry-title-inner">${this.render(displayName)}</h4></span>`;
+		}
 		const len = entry.entries.length;
 		for (let i = 0; i < len; ++i) {
 			const cacheDepth = meta.depth;
@@ -1419,7 +1432,7 @@ globalThis.Renderer = class {
 		// pretend this is an inline-header'd entry, but set a flag so we know not to add bold
 		this._subVariant = true;
 		const fauxEntry = entry;
-		fauxEntry.type = "entries";
+		fauxEntry.type = Renderer.utils.getRenderableEntryType(entry);
 		const cacheDepth = meta.depth;
 		meta.depth = 3;
 		this._recursiveRender(fauxEntry, textStack, meta, {prefix: "<p>", suffix: "</p>"});
@@ -1656,11 +1669,11 @@ globalThis.Renderer = class {
 	_renderActions (entry, textStack, meta, options) {
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 2);
 
-		const headerSpan = `<span class="ve-rd__h ve-rd__h--3" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}><span class="entry-title-inner">${entry.name}.</span></span> `;
+		const headerSpan = `<span class="ve-rd__h ve-rd__h--3" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}><span class="entry-title-inner">${entry.name}.</span></span> `;
 
 		textStack[0] += `<${this.wrapperTag} class="${Renderer.HEAD_2}" ${dataString}>`;
 		if (entry.entries) {
@@ -1696,9 +1709,10 @@ globalThis.Renderer = class {
 
 	_renderItemSubtypes (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
+		this._handleTrackEntryTitle(entry);
 		textStack[0] += `<p class="ve-rd__p-list-item" ${entry.name ? `data-roll-name-ancestor="${Renderer.stripTags(entry.name).qq()}"` : ""}>`;
 		if (entry.name) {
-			textStack[0] += `<span class="${entry.type === "itemSub" ? "ve-italic" : "ve-bold"} ve-rd__list-item-name">${this.render(entry.name)}${this._renderItemSubtypes_isAddPeriod(entry) ? "." : ""}</span> `;
+			textStack[0] += `<span class="${entry.type === "itemSub" ? "ve-italic" : "ve-bold"} ve-rd__list-item-name" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}>${this.render(entry.name)}${this._renderItemSubtypes_isAddPeriod(entry) ? "." : ""}</span> `;
 		}
 		if (entry.entry) this._recursiveRender(entry.entry, textStack, meta);
 		else if (entry.entries) {
@@ -1724,10 +1738,13 @@ globalThis.Renderer = class {
 	_renderItemSpell (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
 
+		this._handleTrackEntryTitle(entry);
+		const titleAttributes = entry.name ? `${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}` : "";
+
 		const tempStack = [""];
 		this._recursiveRender(entry.name || "", tempStack, meta);
 
-		this._recursiveRender(entry.entry, textStack, meta, {prefix: `<p>${tempStack.join("")} `, suffix: "</p>"});
+		this._recursiveRender(entry.entry, textStack, meta, {prefix: `<p ${titleAttributes}>${tempStack.join("")} `, suffix: "</p>"});
 		this._renderSuffix(entry, textStack, meta, options);
 	}
 
@@ -1966,15 +1983,17 @@ globalThis.Renderer = class {
 	}
 
 	_renderFlowBlock (entry, textStack, meta, options) {
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 		textStack[0] += `<${this.wrapperTag} class="ve-rd__b-special ve-rd__b-flow ve-text-center" ${dataString}>`;
 
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 1);
 
-		if (entry.name != null) {
-			if (Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
-			textStack[0] += `<span class="ve-rd__h ve-rd__h--2-flow-block" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}><h4 class="entry-title-inner">${this.render({type: "inline", entries: [entry.name]})}</h4></span>`;
+		if (displayName != null) {
+			this._handleTrackEntryTitle(entry);
+			textStack[0] += `<span class="ve-rd__h ve-rd__h--2-flow-block" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}><h4 class="entry-title-inner">${this.render({type: "inline", entries: [displayName]})}</h4></span>`;
 		}
 		if (entry.entries) {
 			const len = entry.entries.length;
@@ -2684,6 +2703,9 @@ Renderer.ENTRIES_WITH_ENUMERATED_TITLES = [
 	{type: "optfeature", key: "entries", depthIncrement: 1},
 	{type: "patron", key: "entries"},
 	{type: "image", propTitle: "title"},
+	{type: "item"},
+	{type: "itemSub"},
+	{type: "itemSpell"},
 ];
 
 Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP = Renderer.ENTRIES_WITH_ENUMERATED_TITLES.mergeMap(it => ({[it.type]: it}));
@@ -3366,6 +3388,51 @@ Renderer._cache = class {
 };
 
 Renderer.utils = class {
+	static getEntryDisplayName (entry) {
+		return (entry._displayName || entry.name)?.trim() || null;
+	}
+
+	static getRenderableEntryType (entry) {
+		if (!entry.type) return "entries";
+
+		// `variantSub` is rendered as an `entries` block
+		if (entry.type === "variantSub") return "entries";
+
+		if (entry.type === "options" && entry.style === "list-hang-notitle") return "list";
+
+		return entry.type;
+	}
+
+	static TitleRelativeIndexTracker = class {
+		static getEntryName (entry) {
+			const type = Renderer.utils.getRenderableEntryType(entry);
+			const meta = Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[type];
+			if (!meta || meta.propTitle) return null;
+
+			return entry.name || null;
+		}
+
+		static getCleanName (name, {isStripTags = true} = {}) {
+			return (isStripTags ? Renderer.stripTags(name) : name).toLowerCase().trim();
+		}
+
+		_nameToCount = Object.create(null);
+
+		reset () { this._nameToCount = Object.create(null); }
+
+		getNextMetaForEntry (entry) {
+			const name = this.constructor.getEntryName(entry);
+			return name == null ? null : this.getNextMeta(name);
+		}
+
+		getNextMeta (name) {
+			const nameClean = this.constructor.getCleanName(name);
+			const ixTitleRel = this._nameToCount[nameClean] || 0;
+			this._nameToCount[nameClean] = ixTitleRel + 1;
+			return {nameClean, ixTitleRel};
+		}
+	};
+
 	static getBorderTr (optText = null) {
 		return `<tr><th class="ve-tbl-border" colspan="6">${optText || ""}</th></tr>`;
 	}
@@ -3946,7 +4013,7 @@ Renderer.utils = class {
 		if (entity._versionBase_isVersion && (entity._versionBase_hasFluff || entity._versionBase_hasFluffImages)) {
 			return DataLoader.pCacheAndGet(
 				fluffProp,
-				SourceUtil.getEntitySource(entity),
+				entity._versionBase_source,
 				entity._versionBase_hash,
 				{
 					lockToken2,
@@ -3963,7 +4030,8 @@ Renderer.utils = class {
 			case "monster":
 				return Renderer.monster.pGetFluff(entity);
 			case "item":
-			case "magivariant":
+			case "itemGroup":
+			case "magicvariant":
 			case "baseitem":
 				return Renderer.item.pGetFluff(entity);
 			default: return Renderer.utils.pGetFluff({entity, fluffProp: `${prop}Fluff`});
@@ -4500,7 +4568,7 @@ Renderer.utils = class {
 					return `${raceName}${it.subrace != null ? ` (${it.subrace})` : ""}`;
 				}
 			});
-			return isListMode ? parts.join("/") : parts.joinConjunct(", ", " or ");
+			return isListMode ? parts.join("/") : `${parts.joinConjunct(", ", " or ")}${styleHint === "one" ? " Species" : ""}`;
 		}
 
 		static _getEntry_background ({v, isListMode, keyOptions, styleHint}) {
@@ -4586,6 +4654,26 @@ Renderer.utils = class {
 		}
 
 		static _getEntry_proficiency ({v, isListMode, keyOptions, styleHint}) {
+			if (!isListMode && v.length > 1 && v.every(obj => Object.keys(obj).length === 1)) {
+				for (const prop of ["weapon", "weaponGroup", "skill", "tool"]) {
+					if (
+						!v.every(obj => (
+							["skill", "tool"].includes(prop)
+								? (obj[prop] instanceof Array && obj[prop].length === 1)
+								: typeof obj[prop] === "string"
+						))
+					) continue;
+
+					switch (prop) {
+						case "weapon": return `Proficiency with a ${v.map(obj => obj[prop]).joinConjunct(", ", " or ")} weapon`;
+						case "weaponGroup": return `${v.map(obj => obj[prop].toTitleCase()).joinConjunct(", ", " or ")} Weapon Proficiency`;
+						case "skill": return `Proficiency in the ${v.map(obj => `{@skill ${obj[prop][0].toTitleCase()}}`).joinConjunct(", ", " or ")} skill`;
+						case "tool": return `Proficiency with ${v.map(obj => obj[prop][0].toTitleCase()).joinConjunct(", ", " or ")}`;
+						default: throw new Error("Unimplemented!");
+					}
+				}
+			}
+
 			const parts = v.map(obj => {
 				return Object.entries(obj).map(([profType, prof]) => {
 					switch (profType) {
@@ -4609,6 +4697,12 @@ Renderer.utils = class {
 							return isListMode
 								? prof.map(skill => skill.toTitleCase()).join("+")
 								: `Proficiency in the ${prof.map(skill => `{@skill ${skill.toTitleCase()}}`).joinConjunct(", ", " and ")} skill${prof.length === 1 ? "" : "s"}`;
+						}
+						case "tool": {
+							if (prof === true) return isListMode ? "Tool Proficiency" : "Proficiency with a Tool";
+							return isListMode
+								? prof.map(tool => tool.toTitleCase()).join("+")
+								: `Proficiency with ${prof.map(tool => tool.toTitleCase()).joinConjunct(", ", " and ")}`;
 						}
 						default: throw new Error(`Unhandled proficiency type: "${profType}"`);
 					}
@@ -6486,7 +6580,7 @@ Renderer.tag = class {
 
 		getHref (bookRender, area) {
 			if (!area) return `javascript:void(0)`;
-			return `#${bookRender.curBookId},${area.chapter},${UrlUtil.encodeForHash(area.entry.name)},0`;
+			return `#${bookRender.curBookId},${area.chapter},${UrlUtil.encodeForHash(Renderer.stripTags(area.entry.name))},${area.ixTitleRelChapter ?? 0}`;
 		}
 	};
 
@@ -10187,8 +10281,9 @@ class _RenderCompactBestiaryImplBase {
 		const labelAc = this._style !== "classic" ? "AC" : "Armor Class";
 		const titleAc = this._style !== "classic" ? `title="Armor Class"` : "";
 
-		const labelHp = this._style !== "classic" ? "HP" : "Hit Points";
-		const titleHp = this._style !== "classic" ? `title="Hit Points"` : "";
+		const labelHpFull = mon.hp?.isTemporary ? "Temporary Hit Points" : "Hit Points";
+		const labelHp = mon.hp?.isTemporary ? "Temp HP" : (this._style === "classic" ? labelHpFull : "HP");
+		const titleHp = (this._style === "classic" && !mon.hp?.isTemporary) ? "" : `title="${labelHpFull}"`;
 
 		const labelCr = isShowSpellLevelScaler ? "Spell Level" : isShowClassLevelScaler ? (classLevelScalerClass ? "Class Level" : "Level") : (this._style !== "classic" ? "CR" : "Challenge");
 		const titleCr = isShowSpellLevelScaler ? "" : isShowClassLevelScaler ? "" : (this._style !== "classic" ? `title="Challenge Rating"` : "");
@@ -11223,6 +11318,12 @@ Renderer.monster = class {
 		renderer ||= Renderer.get();
 
 		const typeObj = Parser.monTypeToFullObj(mon.type);
+		const ptType = [
+			mon.type?.typeHidden ? "" : typeObj.asText,
+			mon.typeNote ? renderer.render(mon.typeNote) : "",
+		]
+			.filter(Boolean)
+			.join(" ");
 
 		return [
 			mon.level != null ? `${Parser.getOrdinalForm(mon.level)}-level` : "",
@@ -11230,11 +11331,11 @@ Renderer.monster = class {
 			Renderer.utils.getRenderedSize(mon.size),
 			mon.sizeNote ? renderer.render(mon.sizeNote) : "",
 			[
-				typeObj.asText,
+				ptType,
 				mon.alignment ? `${mon.alignmentPrefix ? renderer.render(mon.alignmentPrefix) : ""}${Parser.alignmentListToFull(mon.alignment).toTitleCase()}` : "",
 			]
 				.filter(Boolean)
-				.join(typeObj.asText.includes(",") ? "; " : ", "),
+				.join(ptType.includes(",") ? "; " : ", "),
 		]
 			.filter(Boolean)
 			.join(" ");
@@ -11542,51 +11643,54 @@ Renderer.monster = class {
 
 	/* -------------------------------------------- */
 
-	static _getRenderedAbilityScores_isSpecial ({mon, abv}) {
-		return mon[abv] != null && typeof mon[abv] !== "number";
-	}
+	static getAbilityScoresRenderableEntriesMeta (mon, {styleHint = null} = {}) {
+		styleHint ||= VetoolsConfig.get("styleSwitcher", "style");
 
-	static _getRenderedAbilityScores_getSpecialMeta ({mon, styleHint}) {
-		const specialByAbil = {};
 		const specialByValue = {};
 
-		Parser.ABIL_ABVS
-			.forEach(abv => {
-				if (!this._getRenderedAbilityScores_isSpecial({mon, abv})) return;
+		const infosAbilities = Parser.ABIL_ABVS
+			.map(abv => {
+				const score = mon[abv];
+				const isSpecial = score != null && typeof score !== "number";
+				const isNumeric = typeof score === "number";
 
-				const specialMeta = {abil: abv, value: mon[abv].special};
-				specialByAbil[abv] = specialMeta;
-				specialMeta.family = (specialByValue[specialMeta.value] = specialByValue[specialMeta.value] || []);
-				specialMeta.family.push(specialMeta);
+				if (isSpecial) {
+					(specialByValue[score.special] ||= []).push(abv);
+				}
+
+				return {
+					abv,
+					isSpecial,
+					entry: isSpecial ? score.special : Renderer.utils.getAbilityRollerEntry(mon, abv),
+					entryScore: isNumeric ? `${score}` : "\u2013",
+					entryBonus: isNumeric ? Renderer.utils.getAbilityRollerEntry(mon, abv, {isDisplayAsBonus: true}) : "\u2013",
+					entrySave: mon.save?.[abv] != null
+						? `{@savingThrow ${abv} ${mon.save[abv]}}`
+						: isNumeric
+							? `{@savingThrow ${abv} ${Parser.getAbilityModNumber(score)}}`
+							: "\u2013",
+				};
 			});
 
-		const specialSeenAbs = new Set();
-		const ptsSpecial = Parser.ABIL_ABVS
-			.map(abv => {
-				if (!specialByAbil[abv]) return null;
-				if (specialSeenAbs.has(specialByAbil[abv].abil)) return null;
-				specialByAbil[abv].family.forEach(meta => specialSeenAbs.add(meta.abil));
-				return `<b>${specialByAbil[abv].family.map(meta => styleHint === "classic" ? meta.abil.toUpperCase() : `${meta.abil.uppercaseFirst()}.`).join(", ")}</b> ${specialByAbil[abv].value}`;
-			})
-			.filter(Boolean);
+		const entriesSpecial = infosAbilities
+			.filter(({abv, entry, isSpecial}) => isSpecial && specialByValue[entry][0] === abv)
+			.map(({entry}) => `{@b ${specialByValue[entry].map(abv => styleHint === "classic" ? abv.toUpperCase() : `${abv.uppercaseFirst()}.`).join(", ")}} ${entry}`);
 
-		const abvsRemaining = Parser.ABIL_ABVS.filter(ab => !specialSeenAbs.has(ab));
-
-		return {
-			abvsRemaining,
-			ptsSpecial,
-		};
+		return {infosAbilities, entriesSpecial};
 	}
 
-	static _getRenderedAbilityScores_classic ({mon}) {
-		const {abvsRemaining, ptsSpecial} = this._getRenderedAbilityScores_getSpecialMeta({mon, styleHint: "classic"});
-		const ptSpecial = ptsSpecial.map(pt => `<tr><td colspan="6">${pt}</td></tr>`).join("");
+	static _getRenderedAbilityScores_classic ({mon, renderer}) {
+		renderer ||= Renderer.get();
 
-		if (Parser.ABIL_ABVS.every(abv => this._getRenderedAbilityScores_isSpecial({mon, abv}))) return ptSpecial;
+		const {infosAbilities, entriesSpecial} = this.getAbilityScoresRenderableEntriesMeta(mon, {styleHint: "classic"});
+		const infosAbilitiesRemaining = infosAbilities.filter(info => !info.isSpecial);
+		const ptSpecial = entriesSpecial.map(entry => `<tr><td colspan="6">${renderer.render(entry)}</td></tr>`).join("");
+
+		if (!infosAbilitiesRemaining.length) return ptSpecial;
 
 		return `${ptSpecial}
-		<tr>${abvsRemaining.map(ab => `<th class="ve-col-2 ve-text-center ve-bold">${ab.toUpperCase()}</th>`).join("")}</tr>
-		<tr>${abvsRemaining.map(ab => `<td class="ve-text-center">${Renderer.utils.getAbilityRoller(mon, ab)}</td>`).join("")}</tr>`;
+		<tr>${infosAbilitiesRemaining.map(({abv}) => `<th class="ve-col-2 ve-text-center ve-bold">${abv.toUpperCase()}</th>`).join("")}</tr>
+		<tr>${infosAbilitiesRemaining.map(({entry}) => `<td class="ve-text-center">${renderer.render(entry)}</td>`).join("")}</tr>`;
 	}
 
 	static _ABILITY_ROW_STYLE_TO_CLASS_SCORE = {
@@ -11602,11 +11706,11 @@ Renderer.monster = class {
 	static _getRenderedAbilityScores_one ({mon, renderer}) {
 		renderer ||= Renderer.get();
 
-		const {abvsRemaining, ptsSpecial} = this._getRenderedAbilityScores_getSpecialMeta({mon, styleHint: "one"});
-		const ptSpecial = ptsSpecial.map(pt => `<tr><td colspan="6">${pt}</td></tr>`).join("");
+		const {infosAbilities, entriesSpecial} = this.getAbilityScoresRenderableEntriesMeta(mon, {styleHint: "one"});
+		const ptSpecial = entriesSpecial.map(entry => `<tr><td colspan="6">${renderer.render(entry)}</td></tr>`).join("");
 
 		// e.g. "Behemoth" (XUA2026VillainousOptions)
-		if (!abvsRemaining.length) return ptSpecial;
+		if (infosAbilities.every(info => info.isSpecial)) return ptSpecial;
 
 		const ptHeaders = Array.from(
 			{length: 14},
@@ -11619,27 +11723,17 @@ Renderer.monster = class {
 		)
 			.join("");
 
-		Object.keys(mon.save || {})
-			.map(s => Renderer.monster.getSave(Renderer.get(), s, mon.save[s]));
-
-		const ptsCells = Parser.ABIL_ABVS
-			.flatMap((abv, i) => {
+		const ptsCells = infosAbilities
+			.flatMap(({abv, entryScore, entryBonus, entrySave}, i) => {
 				const styleName = i < 3 ? "physical" : "mental";
 				const styleClassNameScore = this._ABILITY_ROW_STYLE_TO_CLASS_SCORE[styleName];
 				const styleClassNameBonus = this._ABILITY_ROW_STYLE_TO_CLASS_BONUS[styleName];
 
-				const numScore = abvsRemaining.includes(abv) ? mon[abv] : null;
-				const ptScore = numScore != null ? `${mon[abv]}` : `\u2013`;
-				const ptBonus = numScore != null ? Renderer.utils.getAbilityRoller(mon, abv, {isDisplayAsBonus: true}) : `\u2013`;
-				const ptSave = mon.save?.[abv] == null
-					? numScore == null ? "\u2013" : renderer.render(`{@savingThrow ${abv} ${Parser.getAbilityModNumber(ptScore)}}`)
-					: renderer.render(`{@savingThrow ${abv} ${mon.save[abv]}}`);
-
 				return [
 					`<td class="ve-stats-tbl-ability-scores__lbl-abv ${styleClassNameScore} ve-stats__disp-as-score--label"><div class="ve-bold ve-small-caps ve-text-right">${abv.toTitleCase()}</div></td>`,
-					`<td class="ve-stats-tbl-ability-scores__lbl-score ${styleClassNameScore}"><div class="ve-text-center">${ptScore}</div></td>`,
-					`<td class="ve-stats-tbl-ability-scores__lbl-score ${styleClassNameBonus}"><div class="ve-text-center">${ptBonus}</div></td>`,
-					`<td class="ve-stats-tbl-ability-scores__lbl-score ${styleClassNameBonus}"><div class="ve-text-center">${ptSave}</div></td>`,
+					`<td class="ve-stats-tbl-ability-scores__lbl-score ${styleClassNameScore}"><div class="ve-text-center">${renderer.render(entryScore)}</div></td>`,
+					`<td class="ve-stats-tbl-ability-scores__lbl-score ${styleClassNameBonus}"><div class="ve-text-center">${renderer.render(entryBonus)}</div></td>`,
+					`<td class="ve-stats-tbl-ability-scores__lbl-score ${styleClassNameBonus}"><div class="ve-text-center">${renderer.render(entrySave)}</div></td>`,
 					i % 3 !== 2 ? `<td class="ve-stats-tbl-ability-scores__lbl-spacer"><div></div></td>` : "",
 				];
 			});
@@ -14214,7 +14308,7 @@ Renderer.table = class {
 	}
 };
 
-Renderer.names = class {
+Renderer.namez = class {
 	static getDisplayName (ent) {
 		return Renderer.table.getConvertedNameTableName(ent, ent);
 	}
@@ -14244,7 +14338,7 @@ Renderer.names = class {
 	static getCompactRenderedString (ent) { return this.getRenderedString(ent); }
 };
 
-Renderer.encounters = class {
+Renderer.encounter = class {
 	static getDisplayName (ent) {
 		return Renderer.table.getConvertedEncounterTableName(ent, ent);
 	}
@@ -15013,8 +15107,8 @@ Renderer.language = class {
 Renderer.adventureBook = class {
 	static getEntryIdLookup (bookData, {isSilent = false} = {}) {
 		const out = {};
-		const titlesRel = {};
-		const titlesRelChapter = {};
+		const titlesRel = new Renderer.utils.TitleRelativeIndexTracker();
+		const titlesRelChapter = new Renderer.utils.TitleRelativeIndexTracker();
 
 		let chapIx;
 		const depthStack = [];
@@ -15035,6 +15129,10 @@ Renderer.adventureBook = class {
 						);
 					});
 
+				// Eagerly generate title rel info, to correctly match renderer indexing
+				const metaTitleRel = titlesRel.getNextMetaForEntry(obj);
+				const metaTitleRelChapter = titlesRelChapter.getNextMetaForEntry(obj);
+
 				if (!obj.id) return obj;
 
 				if (out[obj.id]) {
@@ -15050,18 +15148,11 @@ Renderer.adventureBook = class {
 
 				if (obj.name) {
 					out[obj.id].name = obj.name;
-
-					const cleanName = obj.name.toLowerCase();
-					out[obj.id].nameClean = cleanName;
-
-					// Relative title index for full-book mode
-					titlesRel[cleanName] = titlesRel[cleanName] || 0;
-					out[obj.id].ixTitleRel = titlesRel[cleanName]++;
-
-					// Relative title index per-chapter
-					MiscUtil.getOrSet(titlesRelChapter, chapIx, cleanName, -1);
-					out[obj.id].ixTitleRelChapter = ++titlesRelChapter[chapIx][cleanName];
+					out[obj.id].nameClean = metaTitleRel?.nameClean ?? Renderer.utils.TitleRelativeIndexTracker.getCleanName(obj.name);
 				}
+
+				if (metaTitleRel != null) out[obj.id].ixTitleRel = metaTitleRel.ixTitleRel;
+				if (metaTitleRelChapter != null) out[obj.id].ixTitleRelChapter = metaTitleRelChapter.ixTitleRel;
 
 				return obj;
 			},
@@ -15077,6 +15168,7 @@ Renderer.adventureBook = class {
 
 		bookData.forEach((chap, _chapIx) => {
 			chapIx = _chapIx;
+			titlesRelChapter.reset();
 			MiscUtil.getWalker({
 				isNoModification: true,
 				keyBlocklist: new Set(["mapParent"]),
@@ -16006,6 +16098,7 @@ Renderer.generic = class {
 		"artisan's tools",
 		"gaming set",
 		"musical instrument",
+		"vehicles",
 	]);
 	static FEATURE__TOOLS_ALL = [
 		"artisan's tools",
@@ -16025,13 +16118,14 @@ Renderer.generic = class {
 		"navigator's tools",
 		"thieves' tools",
 		"poisoner's kit",
+		"vehicles",
 		"vehicles (land)",
 		"vehicles (water)",
 		"vehicles (air)",
 		"vehicles (space)",
 	];
 
-	static _FEATURE__LANGUAGES_ALL = Parser.LANGUAGES_ALL.map(it => it.toLowerCase());
+	static _FEATURE__LANGUAGES_ALL = [...Parser.LANGUAGES_ALL, "Other"].map(it => it.toLowerCase());
 	static _FEATURE__LANGUAGES_STANDARD__CHOICE_OBJ = {
 		from: [
 			...Parser.LANGUAGES_STANDARD
@@ -16075,7 +16169,7 @@ Renderer.generic = class {
 
 	// region Should mirror the schema
 	static _SKILL_TOOL_LANGUAGE_KEYS__SKILL_ANY = new Set(["anySkill"]);
-	static _SKILL_TOOL_LANGUAGE_KEYS__TOOL_ANY = new Set(["anyTool", "anyArtisansTool"]);
+	static _SKILL_TOOL_LANGUAGE_KEYS__TOOL_ANY = new Set(["anyTool", "anyArtisansTool", "anyGamingSet", "anyMusicalInstrument"]);
 	static _SKILL_TOOL_LANGUAGE_KEYS__LANGAUGE_ANY = new Set(["anyLanguage", "anyStandardLanguage", "anyExoticLanguage", "anyRareLanguage"]);
 	// endregion
 
@@ -17956,6 +18050,7 @@ Renderer.hover = class {
 			case UrlUtil.PG_QUICKREF: return Renderer.hover.getGenericCompactRenderedString.bind(Renderer.hover);
 			case UrlUtil.PG_CLASSES: return Renderer.class.getCompactRenderedString.bind(Renderer.class);
 			case UrlUtil.PG_SPELLS: return Renderer.spell.getCompactRenderedString.bind(Renderer.spell);
+			case "itemGroup":
 			case UrlUtil.PG_ITEMS: return Renderer.item.getCompactRenderedString.bind(Renderer.item);
 			case UrlUtil.PG_BESTIARY: return it => Renderer.monster.getCompactRenderedString(it, {isShowScalers: !isStatic, isScaledCr: it._originalCr != null, isScaledSpellSummon: it._isScaledSpellSummon, isScaledClassSummon: it._isScaledClassSummon});
 			case UrlUtil.PG_CONDITIONS_DISEASES: return Renderer.conditionDisease.getCompactRenderedString.bind(Renderer.conditionDisease);
@@ -17971,8 +18066,9 @@ Renderer.hover = class {
 			case UrlUtil.PG_VARIANTRULES: return Renderer.variantrule.getCompactRenderedString.bind(Renderer.variantrule);
 			case UrlUtil.PG_CULTS_BOONS: return Renderer.cultboon.getCompactRenderedString.bind(Renderer.cultboon);
 			case UrlUtil.PG_TABLES: return Renderer.table.getCompactRenderedString.bind(Renderer.table);
-			case UrlUtil.PG_NAMES: return Renderer.names.getCompactRenderedString.bind(Renderer.names);
-			case UrlUtil.PG_ENCOUNTERGEN: return Renderer.encounters.getCompactRenderedString.bind(Renderer.encounters);
+			case "name":
+			case UrlUtil.PG_NAMES: return Renderer.namez.getCompactRenderedString.bind(Renderer.namez);
+			case UrlUtil.PG_ENCOUNTERGEN: return Renderer.encounter.getCompactRenderedString.bind(Renderer.encounter);
 			case UrlUtil.PG_VEHICLES: return Renderer.vehicle.getCompactRenderedString.bind(Renderer.vehicle);
 			case UrlUtil.PG_ACTIONS: return Renderer.action.getCompactRenderedString.bind(Renderer.action);
 			case UrlUtil.PG_LANGUAGES: return Renderer.language.getCompactRenderedString.bind(Renderer.language);
@@ -18001,6 +18097,7 @@ Renderer.hover = class {
 
 	static getFnRenderCompact (page, {isStatic = false} = {}) {
 		const fn = this._getFnRenderCompact({page, isStatic});
+		if (!fn) return null;
 		return (...args) => Renderer.get().withSetRenderHeaderIndex(false, () => fn(...args));
 	}
 

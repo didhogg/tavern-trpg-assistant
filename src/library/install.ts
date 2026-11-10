@@ -78,6 +78,25 @@ export function parsedKey(sourceId: string, prop: string, corpusId?: string): st
   return corpusId ? `parsed:${sourceId}:corpus:${prop}:${corpusId}` : `parsed:${sourceId}:${prop}`
 }
 
+/**
+ * 数一数解析记录里每个来源有几条。书 / 冒险正文那种记录（键带 corpus:）和没有来源列表的记录不是"按条目解析"的结果，一律跳过。
+ * 书架数来源（scoped.sourceCounts）、体检数自制来源（service.brewSourceCounts）共用这一处，两边不会再不一样。
+ */
+export function countSources(records: Array<{ key: string; value: unknown }>, prefix: string, { lower = false }: { lower?: boolean } = {}): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const rec of records) {
+    if (rec.key.slice(prefix.length).startsWith('corpus:')) continue
+    const sources = (rec.value as { sources?: unknown } | null | undefined)?.sources
+    if (!Array.isArray(sources)) continue
+    for (const src of sources) {
+      if (typeof src !== 'string' || !src) continue
+      const k = lower ? src.toLowerCase() : src
+      counts[k] = (counts[k] ?? 0) + 1
+    }
+  }
+  return counts
+}
+
 export async function installOfficial({ source, db, files, openFrame, onProgress, concurrency = 6, signal }: InstallOptions): Promise<InstallReport> {
   const t0 = Date.now()
   const commit = commitOf(source)

@@ -48,6 +48,8 @@ export class BrewPacks {
   async list(brewSetId: string): Promise<BrewPack[]> {
     const set = SOURCES.find((s) => s.id === brewSetId && s.kind === 'brew')
     if (!set) throw new Error(`${brewSetId} 不是自制源`)
+    // 作者程序启动要读官方数据；官方没装就读不了自制，给空清单（书架会提示"重装官方资料后才能读自制"，P5-1 B-37）
+    if (!(await this.lib.officialInstalled(set.codeSet))) return []
     const installed = await this.lib.brewInstalled(brewSetId)
     const docs = await (await this.lib.frameOf(set.codeSet)).call('brewDocIndex')
     const byId = new Map(docs.map((d) => [d.docIdLocal, d]))

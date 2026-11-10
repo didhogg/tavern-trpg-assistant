@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init, sourceOf } from './author'
 import { authorFields } from './field-commands'
+import { displayName, renderText, statblockMeta, summaryEntry } from './entry-commands'
 import { listCells, sortColumns, sortRanks } from './sort-commands'
 import { brewAddFiles, brewAddSources, brewAddUrl, brewCheckUpdates, brewCorpusList, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch, variantTemplateNames, versionOrder } from './english-commands'
@@ -114,5 +115,5 @@ export async function frameErrors(): Promise<string[]> {
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, parseBrewProp, rawHashes,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, sortColumns, sortRanks, listCells, authorFields, tokenPath, extractTables, directory }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory }
 export type CommandName = keyof typeof COMMANDS

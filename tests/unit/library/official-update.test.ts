@@ -9,6 +9,8 @@ import type { FetchLike } from '../../../src/library/fetcher'
 const SRC = getSource('cn-official')
 const OLD = CODE_SETS.cn.commit
 const NEW = 'f'.repeat(40)
+/** 插件里带的作者程序版本（取自登记表，升级作者程序时不用改测试） */
+const PLUGIN = programVersionOf(CODE_SETS.cn.version)
 let db: LibraryDatabase
 beforeEach(() => { db = new LibraryDatabase(`test-upd-${Math.random()}`) })
 afterEach(async () => { setCommitOverride('cn', null); await db.delete() })
@@ -43,13 +45,13 @@ describe('OfficialUpdates.check', () => {
     await seedLocal()
     const tree = { 'data/spells.json': { sha: 'aaa', size: 10 }, 'data/items.json': { sha: 'bbb2', size: 30 }, 'data/races.json': { sha: 'ddd', size: 5 }, 'search/index.json': { sha: 'eee', size: 7 } }
     const r = await make(upstream({ tree })).check('cn-official')
-    expect(r).toMatchObject({ status: 'available', latest: NEW, programVersion: { plugin: '2.39.0', upstream: '2.39.0' }, changed: { changed: 1, added: 2, removed: 1, bytes: 42 } })
+    expect(r).toMatchObject({ status: 'available', latest: NEW, programVersion: { plugin: PLUGIN, upstream: PLUGIN }, changed: { changed: 1, added: 2, removed: 1, bytes: 42 } })
     expect((await db.files.toArray()).every((f) => f.commit === OLD)).toBe(true)
     expect(commitOf(SRC)).toBe(OLD)
   })
 
   it('上游作者程序版本号变了：不让更新，提示要升级插件（取不到版本号也一样）', async () => {
-    expect(await make(upstream({ version: '2.40.0' })).check('cn-official')).toMatchObject({ status: 'needs-plugin-upgrade', programVersion: { plugin: '2.39.0', upstream: '2.40.0' } })
+    expect(await make(upstream({ version: '99.0.0' })).check('cn-official')).toMatchObject({ status: 'needs-plugin-upgrade', programVersion: { plugin: PLUGIN, upstream: '99.0.0' } })
     expect(await make(upstream({ version: null })).check('cn-official')).toMatchObject({ status: 'needs-plugin-upgrade', programVersion: { upstream: null } })
   })
 

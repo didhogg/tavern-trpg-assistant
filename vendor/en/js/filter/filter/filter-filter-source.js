@@ -40,9 +40,10 @@ export class SourceFilter extends Filter {
 	}
 
 	static _SORT_ITEMS_MINI (a, b) {
-		const valA = BrewUtil2.hasSourceJson(a.item) ? 2 : (SourceUtil.isNonstandardSource(a.item) || PrereleaseUtil.hasSourceJson(a.item)) ? 1 : 0;
-		const valB = BrewUtil2.hasSourceJson(b.item) ? 2 : (SourceUtil.isNonstandardSource(b.item) || PrereleaseUtil.hasSourceJson(b.item)) ? 1 : 0;
+		const valA = SourceUtil.getFilterGroup(a.item);
+		const valB = SourceUtil.getFilterGroup(b.item);
 		return SortUtil.ascSort(valA, valB)
+			|| SortUtil.ascSortLower(Parser.sourceJsonToAbv(a.item), Parser.sourceJsonToAbv(b.item))
 			|| SourceFilter._SORT_ITEMS(a, b);
 	}
 
@@ -55,6 +56,7 @@ export class SourceFilter extends Filter {
 		const group = SourceUtil.getFilterGroup(item);
 		switch (group) {
 			case SourceUtil.FILTER_GROUP_STANDARD: return `<span class="glyphicon glyphicon-book"></span>`;
+			case SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND: return `<span title="(Universes Beyond)" class="glyphicon glyphicon-globe"></span>`;
 			case SourceUtil.FILTER_GROUP_NON_STANDARD: return `<span title="(Other)" class="glyphicon glyphicon-file"></span>`;
 			case SourceUtil.FILTER_GROUP_PARTNERED: return `<span title="(Partnered)" class="glyphicon glyphicon-star-empty"></span>`;
 			case SourceUtil.FILTER_GROUP_PRERELEASE: return `<span title="(Prerelease)" class="glyphicon glyphicon-wrench"></span>`;
@@ -111,39 +113,39 @@ export class SourceFilter extends Filter {
 		this._proxyAssignSimple("state", nxtState, true);
 	}
 
-	static _TITLE_CONTEXT_SOURCE_SET = `SHIFT to add to existing selection; CTRL to exclude others.`;
+	static _TITLE_CONTEXT_SOURCE_SET = `SHIFT to add to existing selection; ALT to intersect; CTRL to exclude others.`;
 
 	_getHeaderControls_addExtraStateBtns (opts, wrpStateBtnsOuter) {
 		const btnSupplements = veE({
 			tag: "button",
 			clazz: `ve-btn ve-btn-default ve-w-100 ${opts.isMulti ? "ve-btn-xxs" : "ve-btn-xs"}`,
-			title: `SHIFT to add to existing selection; CTRL to include UA/etc.`,
+			title: `SHIFT to add to existing selection; ALT to intersect; CTRL to include UA/etc.`,
 			html: `Core/Supplements`,
-			click: evt => this._doSetPinsSupplements({isIncludeUnofficial: EventUtil.isCtrlMetaKey(evt), isAdditive: evt.shiftKey}),
+			click: evt => this._doSetPinsSupplements({isIncludeUnofficial: EventUtil.isCtrlMetaKey(evt), isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt)}),
 		});
 
 		const btnAdventures = veE({
 			tag: "button",
 			clazz: `ve-btn ve-btn-default ve-w-100 ${opts.isMulti ? "ve-btn-xxs" : "ve-btn-xs"}`,
-			title: `SHIFT to add to existing selection; CTRL to include UA`,
+			title: `SHIFT to add to existing selection; ALT to intersect; CTRL to include UA/etc.`,
 			html: `Adventures`,
-			click: evt => this._doSetPinsAdventures({isIncludeUnofficial: EventUtil.isCtrlMetaKey(evt), isAdditive: evt.shiftKey}),
+			click: evt => this._doSetPinsAdventures({isIncludeUnofficial: EventUtil.isCtrlMetaKey(evt), isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt)}),
 		});
 
 		const btnPartnered = veE({
 			tag: "button",
 			clazz: `ve-btn ve-btn-default ve-w-100 ${opts.isMulti ? "ve-btn-xxs" : "ve-btn-xs"}`,
-			title: `SHIFT to add to existing selection`,
+			title: `SHIFT to add to existing selection; ALT to intersect`,
 			html: `Partnered`,
-			click: evt => this._doSetPinsPartnered({isAdditive: evt.shiftKey}),
+			click: evt => this._doSetPinsPartnered({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt)}),
 		});
 
 		const btnHomebrew = veE({
 			tag: "button",
 			clazz: `ve-btn ve-btn-default ve-w-100 ${opts.isMulti ? "ve-btn-xxs" : "ve-btn-xs"}`,
-			title: `SHIFT to add to existing selection`,
+			title: `SHIFT to add to existing selection; ALT to intersect`,
 			html: `Homebrew`,
-			click: evt => this._doSetPinsHomebrew({isAdditive: evt.shiftKey}),
+			click: evt => this._doSetPinsHomebrew({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt)}),
 		});
 
 		const hkIsButtonsActive = () => {
@@ -168,60 +170,65 @@ export class SourceFilter extends Filter {
 		const menu = ContextUtil.getMenu([
 			new ContextUtil.Action(
 				"Select All Standard Sources",
-				(evt) => this._doSetPinsStandard({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsStandard({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			new ContextUtil.Action(
 				"Select All Partnered Sources",
-				(evt) => this._doSetPinsPartnered({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsPartnered({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
+			),
+			new ContextUtil.Action(
+				"Select All Universes Beyond Sources",
+				(evt) => this._doSetPinsUniversesBeyond({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			new ContextUtil.Action(
 				"Select All Non-Standard Sources",
-				(evt) => this._doSetPinsNonStandard({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsNonStandard({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			new ContextUtil.Action(
 				"Select All Prerelease Sources",
-				(evt) => this._doSetPinsPrerelease({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsPrerelease({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			new ContextUtil.Action(
 				"Select All Homebrew Sources",
-				(evt) => this._doSetPinsHomebrew({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsHomebrew({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			null,
 			new ContextUtil.Action(
 				`Select 5e/2014 Sources`,
-				(evt) => this._doSetPinsClassic({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsClassic({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: `Select sources published from 2014 to 2024. ${this.constructor._TITLE_CONTEXT_SOURCE_SET}`},
 			),
 			new ContextUtil.Action(
 				`Select 5.5e/2024 Sources`,
-				(evt) => this._doSetPinsOne({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsOne({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: `Select sources published from 2024 onwards. ${this.constructor._TITLE_CONTEXT_SOURCE_SET}`},
 			),
 			null,
 			new ContextUtil.Action(
 				`Select "Vanilla" Sources`,
-				(evt) => this._doSetPinsVanilla({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsVanilla({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: `Select a baseline set of sources suitable for any campaign. ${this.constructor._TITLE_CONTEXT_SOURCE_SET}`},
 			),
 			new ContextUtil.Action(
 				"Select All Non-UA Sources",
-				(evt) => this._doSetPinsNonUa({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsNonUa({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			null,
 			new ContextUtil.Action(
 				"Select SRD Sources",
-				(evt) => this._doSetPinsSrd({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsSrd({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: `Select System Reference Document Sources. ${this.constructor._TITLE_CONTEXT_SOURCE_SET}`},
 			),
 			new ContextUtil.Action(
 				"Select Basic Rules Sources",
-				(evt) => this._doSetPinsBasicRules({isAdditive: evt.shiftKey, isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				(evt) => this._doSetPinsBasicRules({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			null,
@@ -273,71 +280,83 @@ export class SourceFilter extends Filter {
 		return PILL_STATE__IGNORE;
 	}
 
-	_doSetPinsStandard ({isAdditive = false, isExclusive = false} = {}) {
-		Object.keys(this._state)
-			.forEach(k => this._state[k] = SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_STANDARD ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
-	}
-
-	_doSetPinsPartnered ({isAdditive = false, isExclusive = false} = {}) {
+	_doSetPins ({fnIsMatch, isAdditive = false, isExclusive = false, isIntersection = false} = {}) {
 		this._proxyAssignSimple(
 			"state",
 			Object.keys(this._state)
-				.mergeMap(k => ({[k]: SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_PARTNERED ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive})})),
+				.mergeMap(k => {
+					const isMatch = fnIsMatch(k);
+
+					if (isIntersection) {
+						if (isMatch && this._state[k] === PILL_STATE__YES) return {[k]: PILL_STATE__YES};
+						return {[k]: this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive})};
+					}
+
+					return {[k]: isMatch ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive})};
+				}),
 		);
 	}
 
-	_doSetPinsNonStandard ({isAdditive = false, isExclusive = false} = {}) {
-		Object.keys(this._state).forEach(k => this._state[k] = SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_NON_STANDARD ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+	_doSetPinsStandard (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_STANDARD});
 	}
 
-	_doSetPinsPrerelease ({isAdditive = false, isExclusive = false} = {}) {
-		Object.keys(this._state).forEach(k => this._state[k] = SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_PRERELEASE ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+	_doSetPinsPartnered (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_PARTNERED});
 	}
 
-	_doSetPinsSupplements ({isIncludeUnofficial = false, isAdditive = false} = {}) {
-		this._proxyAssignSimple(
-			"state",
-			Object.keys(this._state)
-				.mergeMap(k => ({[k]: SourceUtil.isCoreOrSupplement(k) && (isIncludeUnofficial || !SourceUtil.isNonstandardSource(k)) ? PILL_STATE__YES : isAdditive ? this._state[k] : PILL_STATE__IGNORE})),
-		);
+	_doSetPinsUniversesBeyond (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND});
 	}
 
-	_doSetPinsAdventures ({isIncludeUnofficial = false, isAdditive = false} = {}) {
-		this._proxyAssignSimple(
-			"state",
-			Object.keys(this._state)
-				.mergeMap(k => ({[k]: SourceUtil.isAdventure(k) && (isIncludeUnofficial || !SourceUtil.isNonstandardSource(k)) ? PILL_STATE__YES : isAdditive ? this._state[k] : PILL_STATE__IGNORE})),
-		);
+	_doSetPinsNonStandard (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_NON_STANDARD});
 	}
 
-	_doSetPinsHomebrew ({isAdditive = false, isExclusive = false} = {}) {
-		this._proxyAssignSimple(
-			"state",
-			Object.keys(this._state)
-				.mergeMap(k => ({[k]: SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_HOMEBREW ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive})})),
-		);
+	_doSetPinsPrerelease (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_PRERELEASE});
 	}
 
-	_doSetPinsClassic ({isAdditive = false, isExclusive = false} = {}) {
-		Object.keys(this._state).forEach(k => this._state[k] = SourceUtil.isClassicSource(k) ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+	_doSetPinsSupplements ({isIncludeUnofficial = false, ...opts} = {}) {
+		this._doSetPins({
+			...opts,
+			fnIsMatch: k => SourceUtil.isCoreOrSupplement(k)
+				&& (isIncludeUnofficial || (!SourceUtil.isNonstandardSource(k) && !SourceUtil.isUniversesBeyondSource(k))),
+		});
 	}
 
-	_doSetPinsOne ({isAdditive = false, isExclusive = false} = {}) {
-		Object.keys(this._state).forEach(k => this._state[k] = !SourceUtil.isClassicSource(k) ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+	_doSetPinsAdventures ({isIncludeUnofficial = false, ...opts} = {}) {
+		this._doSetPins({
+			...opts,
+			fnIsMatch: k => SourceUtil.isAdventure(k)
+				&& (isIncludeUnofficial || (!SourceUtil.isNonstandardSource(k) && !SourceUtil.isUniversesBeyondSource(k))),
+		});
 	}
 
-	_doSetPinsVanilla ({isAdditive = false, isExclusive = false} = {}) {
-		Object.keys(this._state).forEach(k => this._state[k] = Parser.SOURCES_VANILLA.has(k) ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+	_doSetPinsHomebrew (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_HOMEBREW});
 	}
 
-	_doSetPinsNonUa ({isAdditive = false, isExclusive = false} = {}) {
-		Object.keys(this._state).forEach(k => this._state[k] = !SourceUtil.isPrereleaseSource(k) ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+	_doSetPinsClassic (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.isClassicSource(k)});
 	}
 
-	_doSetPinsSrd ({isAdditive = false, isExclusive = false} = {}) {
+	_doSetPinsOne (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => !SourceUtil.isClassicSource(k)});
+	}
+
+	_doSetPinsVanilla (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => Parser.SOURCES_VANILLA.has(k)});
+	}
+
+	_doSetPinsNonUa (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => !SourceUtil.isPrereleaseSource(k)});
+	}
+
+	_doSetPinsSrd (opts) {
 		SourceFilter._SRD_SOURCES = SourceFilter._SRD_SOURCES || new Set([Parser.SRC_PHB, Parser.SRC_MM, Parser.SRC_DMG, Parser.SRC_XPHB, Parser.SRC_XDMG, Parser.SRC_XMM]);
 
-		Object.keys(this._state).forEach(k => this._state[k] = SourceFilter._SRD_SOURCES.has(k) ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+		this._doSetPins({...opts, fnIsMatch: k => SourceFilter._SRD_SOURCES.has(k)});
 
 		const srdFilter = this._filterBox.filters.find(it => it.isSrdFilter);
 		if (srdFilter) {
@@ -356,10 +375,10 @@ export class SourceFilter extends Filter {
 		if (reprintedFilter) reprintedFilter.setValue("Reprinted", PILL_STATE__IGNORE);
 	}
 
-	_doSetPinsBasicRules ({isAdditive = false, isExclusive = false} = {}) {
+	_doSetPinsBasicRules (opts) {
 		SourceFilter._BASIC_RULES_SOURCES = SourceFilter._BASIC_RULES_SOURCES || new Set([Parser.SRC_PHB, Parser.SRC_MM, Parser.SRC_DMG, Parser.SRC_XPHB, Parser.SRC_XDMG, Parser.SRC_XMM]);
 
-		Object.keys(this._state).forEach(k => this._state[k] = SourceFilter._BASIC_RULES_SOURCES.has(k) ? PILL_STATE__YES : this._doSetPins_getKeyStateDefault({k, isAdditive, isExclusive}));
+		this._doSetPins({...opts, fnIsMatch: k => SourceFilter._BASIC_RULES_SOURCES.has(k)});
 
 		const basicRulesFilter = this._filterBox.filters.find(it => it.isBasicRulesFilter);
 		if (basicRulesFilter) {

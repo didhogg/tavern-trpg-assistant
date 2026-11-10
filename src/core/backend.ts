@@ -141,7 +141,11 @@ export function createBackend(opts: BackendOptions): Backend {
   const counterparts = new Counterparts(service, brewPairs)
   const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref))
   const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openFrame(codeSet), onLog: logs.sink(),
-    precompute: (setId, signal, onProgress) => runPrecompute([getSource(setId).codeSet], signal, onProgress) })
+    precompute: async (setId, signal, onProgress) => {
+      const rows = await runPrecompute([getSource(setId).codeSet], signal, onProgress)
+      await service.warmEnglishPairs(setId) // 配对表换版本后要重建，趁下载刚完成在后台建好（P5-1 B-42）
+      return rows
+    } })
   const dataVersion = libraryDataVersion(db, service)
   precompute = new KernelPrecompute({ pluginRoot, files, scoped, db, dataVersion, container })
 

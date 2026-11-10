@@ -125,6 +125,11 @@ async function record(db: LibraryDatabase, key: string): Promise<DerivedRecord |
 /** 缺缓存/资料变了才开小窗补算；平时只读库。 */
 export async function ensurePrecomputed(opts: CacheOptions): Promise<void> {
   const { source, db, openFrame } = opts
+  // 这一类在这一套里本来就没有条目（自制常见）：没有东西可算，也就永远存不下缓存；不跳过的话每查一次就开一个新小窗（P5-1 B-41）
+  if (opts.prop) {
+    const parsed = (await db.derived.get(parsedKey(source.id, opts.prop)))?.value as { items?: unknown[] } | undefined
+    if (!parsed?.items?.length) return
+  }
   const base = await baseFingerprint(source, db)
   const manage = await manageFingerprint(db)
   let needFluff = false

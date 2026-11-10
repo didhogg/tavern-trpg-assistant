@@ -10,7 +10,7 @@ import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed
 import type { LibraryDatabase } from './db'
 import { healthItemsOf, healthReport, type HealthReport, type Layers34Summary, type StoredReport } from './health'
 import type { InstallReport } from './install'
-import { parsedKey } from './install'
+import { countSources, parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { SearchHit, SearchIndexDump } from './runtime/frame/read-commands'
 import type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
@@ -422,10 +422,24 @@ export class LibraryService {
 
   /** 自制解析结果里每个来源有几条（来源是解析时作者 SourceUtil.getEntitySource 给的，见 brew-commands.ts parseBrewProp）。 */
   private async brewSourceCounts(sourceId: string): Promise<Record<string, number>> {
-    const counts: Record<string, number> = {}
-    for (const rec of await this.opts.db.derived.where('key').startsWith(`parsed:${sourceId}:`).toArray()) {
-      for (const src of (rec.value as ParsedProp).sources) if (src) counts[src.toLowerCase()] = (counts[src.toLowerCase()] ?? 0) + 1
+    const prefix = `parsed:${sourceId}:`
+    return countSources(await this.opts.db.derived.where('key').startsWith(prefix).toArray(), prefix, { lower: true })
+  }
+
+  /** 这套作者程序对应的官方数据装好了吗（作者程序启动要读它；没装时自制读不了，P5-1 B-37）。 */
+  async officialInstalled(codeSet: string): Promise<boolean> {
+    return (await this.opts.db.sets.get(officialSourceOf(codeSet).id))?.status === 'installed'
+  }
+
+  /**
+   * 下载 / 更新完成后在后台把中英配对表建好（P5-1 B-42）：配对表的指纹含两边提交号，换版本后要重建一次（约 3 秒）；
+   * 提前建好，用户点条目详情时就不用等。两边没都装好时什么都不做；建失败写日志，不影响使用。
+   */
+  async warmEnglishPairs(sourceId: string): Promise<void> {
+    const s = getSource(sourceId)
+    if (!s.pair || !(await this.bothInstalled(s, getSource(s.pair)))) return
+    try { await this.englishPairs(sourceId) } catch (e) {
+      this.opts.onLog?.({ level: 'warn', source: sourceId, kind: 'english-pairs', message: e instanceof Error ? e.message : String(e) })
     }
-    return counts
   }
 }

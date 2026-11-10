@@ -91,6 +91,7 @@ const items: Record<string, { item: Record<string, unknown>; source: string | nu
   'en-brew|spell|tw2': named({ name: 'Twin' }, 'TRPGMINE'),
 }
 const lib = {
+  officialInstalled: async () => true,
   brewInstalled: async (id: string) => installed[id],
   frameOf: async (codeSet: string) => ({ call: async (name: string) => { if (name !== 'brewDocIndex') throw new Error(name); return docs[codeSet] } }),
   storedItem: async (set: string, prop: string, hash: string) => items[`${set}|${prop}|${hash}`] ?? null,

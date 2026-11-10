@@ -2,10 +2,9 @@
 // 交出的是"生效版本"（原件，或用户选了的备选 / 房规）。战役的选书设置由调用方传入（存在战役记录里，P3-3）。
 import { altsKey, type AltIndex, type AltRecord } from './alternatives'
 import type { LibraryDatabase } from './db'
-import { parsedKey } from './install'
+import { countSources, parsedKey } from './install'
 import { ManageStore, type ChoiceLevel } from './manage'
 import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } from './service'
-import type { ParsedProp } from './runtime/frame/commands'
 import type { EditionInfo } from './runtime/frame/edit-commands'
 import {
   autoAssignment, BUILTIN_SCOPES, entryUnit, inScopeOf, membershipOf, refKey, sourceUnit, viewOf,
@@ -95,7 +94,8 @@ export class ScopedLibrary {
   }
 
   private async installed(set: SourceEntry): Promise<boolean> {
-    if (set.kind === 'brew') return !!(await this.db.derived.get(`audit:${set.id}`))
+    // 自制要靠作者程序读，作者程序启动要读这套官方数据：官方没装，自制就读不了，不算已装（P5-1 B-37）
+    if (set.kind === 'brew') return !!(await this.db.derived.get(`audit:${set.id}`)) && (await this.lib.officialInstalled(set.codeSet))
     return (await this.db.sets.get(set.id))?.status === 'installed'
   }
 
@@ -391,12 +391,8 @@ export class ScopedLibrary {
     const fp = String((await this.db.derived.get(`audit:${setId}`))?.savedAt ?? '')
     const saved = await this.db.derived.get(`sources:${setId}`)
     if (saved && saved.fingerprint === fp) return saved.value as Record<string, number>
-    const counts: Record<string, number> = {}
     const prefix = parsedKey(setId, '')
-    await this.db.derived.where('key').startsWith(prefix).each((rec) => {
-      if (rec.key.slice(prefix.length).startsWith('corpus:')) return
-      for (const src of (rec.value as ParsedProp).sources) if (src) counts[src] = (counts[src] ?? 0) + 1
-    })
+    const counts = countSources(await this.db.derived.where('key').startsWith(prefix).toArray(), prefix)
     await this.db.derived.put({ key: `sources:${setId}`, fingerprint: fp, value: counts, savedAt: Date.now() })
     return counts
   }
