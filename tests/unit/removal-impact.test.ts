@@ -74,4 +74,25 @@ describe('删除前的影响预览', () => {
     const r = await impactOfRemoval(deps({ brewPacks: { list: async () => { throw new Error('没装') } } }), { kind: 'official', setId: 'cn-official' })
     expect(r.packs).toEqual([])
   })
+
+  it('B-25 依赖一路往下找：删 A，B 依赖 A、C 依赖 B，B 和 C 都"必须一起删"；官方整套被删时包不算必须', async () => {
+    db = new TrpgDatabase(`test-impact-chain-${Math.random()}`)
+    const chain = [pack('a', ['Alpha']), pack('b', ['Beta'], {}, { spell: ['alpha'] }), pack('c', ['Gamma'], {}, { spell: ['beta'] }), pack('d', ['Delta'])]
+    const d = deps({ brewPacks: { list: async () => chain } })
+    const r = await impactOfRemoval(d, { kind: 'brew', setId: 'cn-brew', docIdLocals: ['a'] })
+    expect(r.packs.map((p) => [p.docIdLocal, p.mustRemove])).toEqual([['b', true], ['c', true]])
+    expect(r.removeTogether).toEqual(['a', 'b', 'c'])
+    const o = await impactOfRemoval(d, { kind: 'official', setId: 'cn-official' })
+    expect(o.packs.every((p) => !p.mustRemove)).toBe(true)
+    expect(o.removeTogether).toEqual([])
+  })
+
+  it('B-20 战役设置以战役级那份为准：存档快照里的副本过期了也按最新的算', async () => {
+    db = new TrpgDatabase(`test-impact-meta-${Math.random()}`)
+    await db.workspaces.put({ ...ws('A', kernel()), currentSaveId: 's1' })
+    await db.saves.put(slot('s1', 'A', kernel()))
+    await db.setMeta('campaignLibrary:s1', { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: ['src:alpha'], exclude: [], choices: {} })
+    const r = await impactOfRemoval(deps(), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['p1'] })
+    expect(r.saves.map((x) => [x.saveId, x.why])).toEqual([[null, ['选书设置里有它的来源']], ['s1', ['选书设置里有它的来源']]])
+  })
 })

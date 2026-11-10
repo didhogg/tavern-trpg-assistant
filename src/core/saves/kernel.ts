@@ -99,7 +99,8 @@ export interface KernelPreviewRow {
 }
 
 const DEFAULT_UNDO_LIMIT = 50
-const libraryKey = (rootId: string): string => `campaignLibrary:${rootId}`
+/** 战役级选书设置在 meta 表里的键（按存档树根编号）。 */
+export const libraryKey = (rootId: string): string => `campaignLibrary:${rootId}`
 
 export class KernelSaveService {
   constructor(private readonly deps: KernelSaveDeps) {}

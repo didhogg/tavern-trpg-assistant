@@ -5,7 +5,9 @@ import type { TrpgDatabase } from './db'
 import type { BrewPack, BrewPacks } from '../library/brew-packs'
 import type { HouseRuleLink, ManageStore } from '../library/manage'
 import { getSource } from '../library/sources'
-import { kernelCampaignSchema, type KernelCampaign } from '../schemas/kernel'
+import { kernelCampaignSchema, kernelLibrarySchema, type KernelCampaign } from '../schemas/kernel'
+import { libraryKey } from './saves/kernel'
+import { treeRootId } from './saves/view'
 
 export type RemovalTarget =
   | { kind: 'official'; setId: string }
@@ -26,14 +28,16 @@ export interface AffectedSave {
 export interface RemovalImpact {
   target: RemovalTarget
   /** 依赖它的自制包（或：删官方资料后启动不了的自制包）。 */
-  packs: Array<{ docIdLocal: string; filename: string | null; why: string }>
+  packs: Array<{ docIdLocal: string; filename: string | null; why: string; mustRemove: boolean }>
+  /** 确认删除时要一起删的自制包本地编号：被选中的 + 因缺依赖必须一起删的（传递闭包，界面里不可取消勾选）。官方整套被删时为空。 */
+  removeTogether: string[]
   houseRules: HouseRuleLink[]
   choices: Array<{ level: string; target: string; altId: string }>
   saves: AffectedSave[]
 }
 
 export interface ImpactDeps {
-  db: Pick<TrpgDatabase, 'workspaces' | 'saves'>
+  db: Pick<TrpgDatabase, 'workspaces' | 'saves' | 'getMeta'>
   manage: Pick<ManageStore, 'houseRules' | 'allChoices'>
   brewPacks: Pick<BrewPacks, 'list'>
   /** 这套作者程序（cn / en）对应的自制源编号。 */
@@ -71,13 +75,13 @@ const refGone = (r: Removed, ref: { set: string; prop: string; hash: string }): 
   ref.set === r.setId && (r.official || !!r.hashes.get(ref.prop)?.has(ref.hash))
 
 /** 一份内核段（战役当前数据或存档）里哪些东西用了被删资料。 */
-function whyKernel(k: KernelCampaign, r: Removed): string[] {
+function whyKernel(k: KernelCampaign, library: KernelCampaign['library'], r: Removed): string[] {
   const why: string[] = []
-  if (r.official && k.library.codeSet === r.codeSet) why.push('这个战役用的是这套资料')
+  if (r.official && library.codeSet === r.codeSet) why.push('这个战役用的是这套资料')
   const refs = k.actors.flatMap((a) => a.refs).filter((ref) => refGone(r, ref)).length
   if (refs) why.push(`${refs} 处人物引用`)
-  if (k.library.include.concat(k.library.exclude).some((u) => r.sources.has(u.replace(/^src:/, '')))) why.push('选书设置里有它的来源')
-  if (Object.entries(k.library.choices).some(([key, alt]) => r.altIds.has(alt) || refGone(r, refOfKey(key)))) why.push('选了它的版本')
+  if (library.include.concat(library.exclude).some((u) => r.sources.has(u.replace(/^src:/, '')))) why.push('选书设置里有它的来源')
+  if (Object.entries(library.choices).some(([key, alt]) => r.altIds.has(alt) || refGone(r, refOfKey(key)))) why.push('选了它的版本')
   if (k.overrides.some((o) => refGone(r, o.target) || refGone(r, o.house))) why.push('有房规覆盖')
   return why
 }
@@ -93,16 +97,28 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
   const packs = await deps.brewPacks.list(brewSetId).catch(() => [] as BrewPack[])
   const removed = removedOf(target, packs)
 
-  // 自制包
+  // 自制包。删自制包：依赖被删来源的包也算，并且一路往下找（A 依赖被删的，B 依赖 A …），这些必须一起删
   const impacted: RemovalImpact['packs'] = []
+  const removeTogether: string[] = []
   if (target.kind === 'official') {
-    for (const p of packs) impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: '自制内容要靠这套官方资料才能运行，重新下载之前用不了' })
+    for (const p of packs) impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: '自制内容要靠这套官方资料才能运行，重新下载之前用不了', mustRemove: false })
   } else {
-    for (const p of packs) {
-      if (target.docIdLocals.includes(p.docIdLocal)) continue
-      const needs = lower(Object.values((p.dependencies ?? {}) as Record<string, string[]>).flat())
-      const hit = [...removed.sources].find((s) => needs.has(s))
-      if (hit) impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `依赖被删包里的来源 ${hit}` })
+    removeTogether.push(...target.docIdLocals)
+    const gone = new Set(target.docIdLocals)
+    const lostSources = new Set(removed.sources)
+    for (let grew = true; grew;) {
+      grew = false
+      for (const p of packs) {
+        if (gone.has(p.docIdLocal)) continue
+        const needs = lower(Object.values((p.dependencies ?? {}) as Record<string, string[]>).flat())
+        const hit = [...lostSources].find((s) => needs.has(s))
+        if (!hit) continue
+        gone.add(p.docIdLocal)
+        removeTogether.push(p.docIdLocal)
+        for (const s of p.sources) lostSources.add(s.toLowerCase())
+        impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `依赖被删包里的来源 ${hit}，缺了它就不能用，必须一起删`, mustRemove: true })
+        grew = true
+      }
     }
   }
 
@@ -110,17 +126,23 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
   const houseRules = (await deps.manage.houseRules()).filter((l) => refGone(removed, l.house) || refGone(removed, l.target))
   const choices = (await deps.manage.allChoices()).filter((c) => removed.altIds.has(c.altId) || refGone(removed, refOfKey(c.target)))
 
-  // 战役与存档
+  // 战役与存档。选书设置以战役级那份（meta）为准，没有才用快照里的副本（B-20）
+  const all = await deps.db.saves.toArray()
+  const libraryOf = async (rootId: string | null, k: KernelCampaign): Promise<KernelCampaign['library']> => {
+    const stored = rootId ? await deps.db.getMeta<unknown>(libraryKey(rootId)) : undefined
+    const parsed = stored ? kernelLibrarySchema.safeParse(stored) : null
+    return parsed?.success ? parsed.data : k.library
+  }
   const saves: AffectedSave[] = []
   for (const ws of await deps.db.workspaces.toArray()) {
     const k = kernelOf(ws.data)
-    const why = k ? whyKernel(k, removed) : []
+    const why = k ? whyKernel(k, await libraryOf(ws.currentSaveId ? treeRootId(all, ws.currentSaveId) : null, k), removed) : []
     if (why.length) saves.push({ ownerKey: ws.ownerKey, ownerLabel: ws.ownerLabel, saveId: null, name: '当前数据', kind: 'current', deleted: false, why })
   }
-  for (const s of await deps.db.saves.toArray()) {
+  for (const s of all) {
     const k = kernelOf(s.snapshot)
-    const why = k ? whyKernel(k, removed) : []
+    const why = k ? whyKernel(k, await libraryOf(treeRootId(all, s.id), k), removed) : []
     if (why.length) saves.push({ ownerKey: s.ownerKey, ownerLabel: s.ownerLabel, saveId: s.id, name: s.name, kind: s.kind, deleted: s.deletedAt !== undefined, why })
   }
-  return { target, packs: impacted, houseRules, choices, saves }
+  return { target, packs: impacted, removeTogether, houseRules, choices, saves }
 }
