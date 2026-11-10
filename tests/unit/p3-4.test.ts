@@ -101,6 +101,9 @@ describe('P3-4 完整链路（后端）', () => {
       await kernel.setLibrary(OWNER.ownerKey, closed)
       expect((await kernel.check(OWNER.ownerKey)).missing).toMatchObject([{ actorId: 'hero', reason: 'excluded' }])
       await service.loadSave(OWNER, save.id)
+      // B-20：读档不改战役设置，书还是关着；开书只能由用户改设置
+      expect((await kernel.check(OWNER.ownerKey)).missing).toMatchObject([{ actorId: 'hero', reason: 'excluded' }])
+      await kernel.setLibrary(OWNER.ownerKey, defaultCampaignLibrary('dnd5e2014', 'en'))
       expect((await kernel.check(OWNER.ownerKey)).missing).toEqual([])
       expect((await kernel.read(OWNER.ownerKey))?.actors[0].refs.map((r) => r.hash)).toEqual([HERO.hash, SPELL.hash])
     })

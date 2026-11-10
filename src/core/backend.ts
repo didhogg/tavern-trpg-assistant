@@ -143,7 +143,7 @@ export function createBackend(opts: BackendOptions): Backend {
       if (!ws) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
       const bound = kernelSave ? await kernelSave.read(ownerKey) : null
       if (!bound) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-      return { rule: bound.rule, library: (ws.data.library ?? bound.library) as CampaignLibrary, title: ws.ownerLabel }
+      return { rule: bound.rule, library: (await kernelSave!.libraryOf(ownerKey)) as CampaignLibrary, title: ws.ownerLabel }
     },
   })
   kernelSave = new KernelSaveService({

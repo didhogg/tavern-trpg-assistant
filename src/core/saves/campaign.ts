@@ -4,7 +4,7 @@ import { uuid as defaultUuid } from '../ids'
 import { SCHEMA_VERSIONS } from '../../schemas/common'
 import { backupStateSchema, type AutoReason, type SaveSlot, type Workspace, type WorkspaceData } from '../../schemas/campaign'
 import type { RuleRegistry } from '../../rules/registry'
-import { campaignViewOf, type CampaignView } from './view'
+import { campaignViewOf, treeRootId, type CampaignView } from './view'
 import { AUTO_SAVE_KEEP, byRecent, cleanName, isDirty, readSave, readWorkspace, snapshotHash, summarize, uniqueName, type SummaryContributor } from './helpers'
 
 export interface CampaignDeps {
@@ -86,6 +86,11 @@ export class CampaignService {
     const rows = (await this.db.saves.toArray()).map(readSave)
     const ws = await this.db.workspaces.get(ownerKey)
     return campaignViewOf(rows, { ownerKey, ruleId, currentSaveId: ws && ws.ruleId === ruleId ? ws.currentSaveId : null })
+  }
+
+  /** 一个存档所在战役（存档树）的根存档编号；自动存档 / 已删除的存档不在树里 → null。战役级设置按它存。 */
+  async campaignRootOf(saveId: string): Promise<string | null> {
+    return treeRootId((await this.db.saves.toArray()).map(readSave), saveId)
   }
 
   // ---------- 新存档 / 保存 / 分支 ----------

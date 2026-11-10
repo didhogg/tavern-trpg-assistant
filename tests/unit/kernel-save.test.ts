@@ -220,12 +220,10 @@ describe('P3-3 存档内核段', () => {
       closed.exclude = [entryUnit(REF)]
       await kernel.setLibrary(OWNER.ownerKey, closed)
       expect((await kernel.check(OWNER.ownerKey)).missing.length).toBeGreaterThan(0)
-      expect((await kernel.checkSave(save.id)).missing).toEqual([])
-
-      const raw = await db.saves.get(save.id)
-      if (!raw) throw new Error('存档不见了')
-      await db.saves.put({ ...raw, snapshot: { ...raw.snapshot, library: closed } })
+      // B-20：选书设置是战役级的，存档检查用战役现在的设置，不用存档快照里的副本
       expect((await kernel.checkSave(save.id)).missing.length).toBeGreaterThan(0)
+      await kernel.setLibrary(OWNER.ownerKey, defaultCampaignLibrary('dnd5e2014', 'en'))
+      expect((await kernel.checkSave(save.id)).missing).toEqual([])
 
       const before = await service.getWorkspace(OWNER.ownerKey)
       const count = await db.saves.count()
@@ -284,5 +282,31 @@ describe('结算内核世界编号', () => {
     expect(id).toMatch(/^[A-Za-z0-9_-]+$/)
     expect(worldIdOf('char:龙金劫.png')).toBe(id)
     expect(worldIdOf('group:7')).not.toBe(id)
+  })
+
+  it('B-20 战役设置：读档、回档不改它；同一战役的分支共用；保存时副本同步；不让工作副本变成未保存', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      const { save } = await service.startNewCampaign(NEW)
+      const checker: KernelRefChecker = async (refs) => refs.map((ref) => ({ ok: true, ref }))
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: checker })
+      await kernel.bind(OWNER.ownerKey, campaign())
+      await kernel.save(OWNER.ownerKey)
+
+      const closed = { ...defaultCampaignLibrary('dnd5e2014', 'en'), exclude: [entryUnit(REF)] }
+      await kernel.setLibrary(OWNER.ownerKey, closed)
+      const ws = await service.getWorkspace(OWNER.ownerKey)
+      expect(service.isDirty(ws!)).toBe(false) // 改设置不算存档改动
+
+      const branch = await service.branch(OWNER.ownerKey, '分支')
+      await service.loadSave(OWNER, save.id) // 读回根存档
+      expect((await kernel.libraryOf(OWNER.ownerKey)).exclude).toEqual(closed.exclude) // 设置没被读档改回
+      await service.loadSave(OWNER, branch.save.id)
+      expect((await kernel.libraryOf(OWNER.ownerKey)).exclude).toEqual(closed.exclude) // 分支共用
+
+      await kernel.save(OWNER.ownerKey) // 保存时同步副本
+      const saved = await service.getSave(branch.save.id)
+      expect((saved?.snapshot.library as { exclude: string[] }).exclude).toEqual(closed.exclude)
+    })
   })
 })

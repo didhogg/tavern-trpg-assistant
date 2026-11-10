@@ -81,6 +81,7 @@ export interface KernelPreviewRow {
 }
 
 const DEFAULT_UNDO_LIMIT = 50
+const libraryKey = (rootId: string): string => `campaignLibrary:${rootId}`
 
 export class KernelSaveService {
   constructor(private readonly deps: KernelSaveDeps) {}
@@ -118,16 +119,51 @@ export class KernelSaveService {
     const parsed = this.parse(campaign) ?? kernelCampaignSchema.parse(campaign)
     if (parsed.rule !== ws.ruleId) throw new TrpgError('E_RULE_MISMATCH', `结算内核规则 ${parsed.rule} 与战役规则 ${ws.ruleId} 不一致`)
     await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, kernel: parsed, library: parsed.library }))
+    const rootId = ws.currentSaveId ? await this.deps.campaign.campaignRootOf(ws.currentSaveId) : null
+    if (rootId) await this.deps.db.setMeta(libraryKey(rootId), parsed.library)
     return parsed
   }
 
-  /** 改本战役的选书设置（关书/开书）；人物引用和状态不动。 */
+  /**
+   * 本战役的选书设置（B-20）：战役级，同一棵存档树的所有存档、分支共用，读档、回档都不碰它。
+   * 存在 meta 表（`campaignLibrary:<树根存档编号>`）；第一次读不到时用工作副本里的那份当初值。
+   * 存档快照里的 library 只是保存时同步的一份副本（导出、换设备导入时当初值），读档时不读回。
+   */
+  async libraryOf(ownerKey: string): Promise<KernelLibrary> {
+    const ws = await this.workspace(ownerKey)
+    const kernel = this.parse(ws.data.kernel)
+    if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
+    const rootId = ws.currentSaveId ? await this.deps.campaign.campaignRootOf(ws.currentSaveId) : null
+    return this.libraryAt(rootId, ws.data.library ?? kernel.library)
+  }
+
+  /** 某个存档所在战役的选书设置（读档检查用）；不在树里的存档（自动存档）用它自己快照里的副本。 */
+  async libraryOfSave(save: SaveSlot): Promise<KernelLibrary> {
+    const snapshot = save.snapshot as Record<string, unknown>
+    const kernel = this.parse(snapshot.kernel)
+    if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个存档没有绑定结算内核')
+    return this.libraryAt(await this.deps.campaign.campaignRootOf(save.id), snapshot.library ?? kernel.library)
+  }
+
+  private async libraryAt(rootId: string | null, fallback: unknown): Promise<KernelLibrary> {
+    if (!rootId) return kernelLibrarySchema.parse(fallback)
+    const stored = await this.deps.db.getMeta<unknown>(libraryKey(rootId))
+    if (stored) return kernelLibrarySchema.parse(stored)
+    const seed = kernelLibrarySchema.parse(fallback)
+    await this.deps.db.setMeta(libraryKey(rootId), seed)
+    return seed
+  }
+
+  /** 改本战役的选书设置（关书/开书）：只写战役级的那一份，不动存档快照、不让工作副本变成"未保存"；人物引用和状态不动。 */
   async setLibrary(ownerKey: string, library: KernelLibrary): Promise<KernelCampaign> {
-    const current = await this.read(ownerKey)
+    const ws = await this.workspace(ownerKey)
+    const current = this.parse(ws.data.kernel)
     if (!current) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-    const next = { ...current, library: kernelLibrarySchema.parse(library) }
-    await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, library: next.library, kernel: next }))
-    return next
+    const parsed = kernelLibrarySchema.parse(library)
+    const rootId = ws.currentSaveId ? await this.deps.campaign.campaignRootOf(ws.currentSaveId) : null
+    if (!rootId) throw new TrpgError('E_NO_WORKSPACE', '还没有存档，先保存一次再改选书设置')
+    await this.deps.db.setMeta(libraryKey(rootId), parsed)
+    return { ...current, library: parsed }
   }
 
   private unboundCheck(): KernelCheck {
@@ -140,8 +176,7 @@ export class KernelSaveService {
     const ws = await this.workspace(ownerKey)
     const kernel = this.parse(ws.data.kernel)
     if (!kernel) return this.unboundCheck()
-    const library = kernelLibrarySchema.parse(ws.data.library ?? kernel.library)
-    return this.checkKernel(kernel, library)
+    return this.checkKernel(kernel, await this.libraryOf(ownerKey))
   }
 
   /** 读档前检查存档槽：只看要读的那份存档，不动当前战役。 */
@@ -151,8 +186,7 @@ export class KernelSaveService {
     const snapshot = save.snapshot as Record<string, unknown>
     const kernel = this.parse(snapshot.kernel)
     if (!kernel) return this.unboundCheck()
-    const library = kernelLibrarySchema.parse(snapshot.library ?? kernel.library)
-    return this.checkKernel(kernel, library)
+    return this.checkKernel(kernel, await this.libraryOfSave(save))
   }
 
   private async checkKernel(kernel: KernelCampaign, library: KernelLibrary): Promise<KernelCheck> {
@@ -235,9 +269,11 @@ export class KernelSaveService {
     if (kernel) {
       const dataVersion = this.deps.currentVersion ? await this.deps.currentVersion() : kernel.dataVersion
       const overrides = this.deps.currentOverrides ? await this.deps.currentOverrides() : kernel.overrides
-      if (JSON.stringify(dataVersion) !== JSON.stringify(kernel.dataVersion) || JSON.stringify(overrides) !== JSON.stringify(kernel.overrides)) {
-        const next: KernelCampaign = { ...kernel, dataVersion, overrides }
-        await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, kernel: next }))
+      const library = await this.libraryOf(ownerKey)
+      if (JSON.stringify(dataVersion) !== JSON.stringify(kernel.dataVersion) || JSON.stringify(overrides) !== JSON.stringify(kernel.overrides) || JSON.stringify(library) !== JSON.stringify(kernel.library)) {
+        // 存档里的 library 只是副本（导出 / 换设备导入时当初值），保存时同步一次
+        const next: KernelCampaign = { ...kernel, dataVersion, overrides, library }
+        await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, kernel: next, library }))
       }
     }
     return this.deps.campaign.saveCurrent(ownerKey)

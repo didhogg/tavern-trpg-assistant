@@ -56,6 +56,20 @@ const nodeOf = (s: SaveSlot, parentId: string | null): CampaignNode => ({
   parentId, updatedAt: s.updatedAt, summary: s.summary,
 })
 
+/** 一个存档所在存档树的根（沿 branchedFrom 向上；父不在了就地当根，环也停）。自动存档、已删除的存档不在树里 → null。 */
+export function treeRootId(rows: SaveSlot[], saveId: string): string | null {
+  const manual = rows.filter((s) => s.kind === 'manual' && s.deletedAt === undefined)
+  const byId = new Map(manual.map((s) => [s.id, s]))
+  let cur = byId.get(saveId)
+  if (!cur) return null
+  const seen = new Set<string>([cur.id])
+  for (let p = cur.branchedFrom; p && p !== cur.id && byId.has(p) && !seen.has(p); p = cur.branchedFrom) {
+    seen.add(p)
+    cur = byId.get(p) as SaveSlot
+  }
+  return cur.id
+}
+
 export function campaignViewOf(rows: SaveSlot[], at: { ownerKey: string; ruleId: string; currentSaveId: string | null }): CampaignView {
   const manual = rows.filter((s) => s.kind === 'manual' && s.deletedAt === undefined)
   const byId = new Map(manual.map((s) => [s.id, s]))
