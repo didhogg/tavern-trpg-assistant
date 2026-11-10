@@ -6,20 +6,30 @@ import { commitOf, fileListUrl, mirrorRoots, type SourceEntry } from './sources'
 export interface FileProviderOptions {
   db: LibraryDatabase
   fetchImpl?: FetchLike
+  /** 启动时恢复数据提交号（官方更新后不是登记表那个）；读写文件前先等它（B-28）。 */
+  ready?: Promise<void>
 }
 
 export class FileProvider {
   private readonly db: LibraryDatabase
   private readonly fetchImpl: FetchLike
+  private readonly ready: Promise<void>
   private readonly lists = new Map<string, Promise<FileList>>()
 
-  constructor({ db, fetchImpl }: FileProviderOptions) {
+  constructor({ db, fetchImpl, ready }: FileProviderOptions) {
     this.db = db
+    this.ready = ready ?? Promise.resolve()
     this.fetchImpl = fetchImpl ?? ((url) => fetch(url))
   }
 
+  /** 启动时恢复数据提交号完成（B-28）。 */
+  whenReady(): Promise<void> {
+    return this.ready
+  }
+
   /** 锁定版本的云端文件清单；取过一次就存进派生物，之后离线也能用。 */
-  fileList(source: SourceEntry): Promise<FileList> {
+  async fileList(source: SourceEntry): Promise<FileList> {
+    await this.ready
     const key = `filelist:${source.id}@${commitOf(source)}`
     let p = this.lists.get(key)
     if (!p) {
@@ -38,6 +48,7 @@ export class FileProvider {
 
   /** 重新取云端文件清单并覆盖缓存（P5 B-14）；取失败时原缓存不动，错误抛给调用方。 */
   async refreshFileList(source: SourceEntry): Promise<FileList> {
+    await this.ready
     const key = `filelist:${source.id}@${commitOf(source)}`
     const list = await fetchFileList(fileListUrl(source), this.fetchImpl)
     await this.db.derived.put({ key, fingerprint: commitOf(source), value: list, savedAt: Date.now() })
@@ -47,11 +58,13 @@ export class FileProvider {
 
   /** 已缓存的云端文件清单；没取过就是 null（不联网）。 */
   async cachedFileList(source: SourceEntry): Promise<FileList | null> {
+    await this.ready
     const saved = await this.db.derived.get(`filelist:${source.id}@${commitOf(source)}`)
     return saved ? (saved.value as FileList) : null
   }
 
   async local(source: SourceEntry, path: string): Promise<string | null> {
+    await this.ready
     const rec = await this.db.files.get([source.id, path])
     return rec && rec.commit === commitOf(source) ? rec.text : null
   }

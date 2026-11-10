@@ -9,6 +9,7 @@ import { LibraryDatabase } from '../library/db'
 import { FileProvider } from '../library/files'
 import { libraryDataVersion, scopedCurrentOverrides, scopedRefChecker } from '../library/kernel-check'
 import { LogStore } from '../library/logs'
+import { hydrateCommits, OfficialUpdates } from '../library/official-update'
 import { Sorting } from '../library/sorting'
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
@@ -54,6 +55,8 @@ export interface LibraryBackend {
   sorting: Sorting
   /** 统一后端日志：各处错误的流水，能列、能导出全文（P5 B-26）。 */
   logs: LogStore
+  /** 官方数据拉取更新：check 只比较，apply 才更新（P5 B-28）。 */
+  updates: OfficialUpdates
   /** 自制包中英配对：下载页目录合并、已装包配对（P5 G-2）。 */
   brewPairs: BrewPairs
   /** 中英对应：这一条在另一种语言里是哪一条（P5 B-10）。 */
@@ -109,7 +112,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const container = opts.container ?? (() => document.body)
 
   const db = new LibraryDatabase(opts.libraryDbName)
-  const files = new FileProvider({ db })
+  const files = new FileProvider({ db, ready: hydrateCommits(db) })
   const openFrame = (codeSet: string, kvScope?: string) => startAuthorFrame({
     codeSet, pluginRoot, container: container(),
     handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false, kvScope }),
@@ -133,6 +136,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const links = new EntryLinks(service, documents)
   const scoped = new ScopedLibrary(service, db, directory, links)
   const brewPairs = new BrewPairs(service)
+  const updates = new OfficialUpdates({ db, files, startOfficial: (id) => tasks.startOfficial(id) })
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
   const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref))
@@ -174,7 +178,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string): Promise<UninstallReport> => uninstallOfficial({
     db, tasks, afterDelete: async (id) => { service.reset(); scoped.reset(); await documents.clear(getSource(id)) },
   }, setId)
-  const library: LibraryBackend = { db, files, service, scoped, documents, links, images, sorting, logs, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

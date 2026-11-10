@@ -145,6 +145,42 @@ export async function brewCorpusList(prop: string, page: string): Promise<Array<
   return (processed?.[prop] ?? []).map((it: any) => ({ id: it.id, name: it.name, source: A.SourceUtil.getEntitySource(it), hash: A.UrlUtil.URL_TO_HASH_BUILDER[page](it) }))
 }
 
+export interface BrewUpdateCheck {
+  docIdLocal: string
+  filename: string | null
+  url: string
+  /** 本地包内 _meta.dateLastModified / 网址上现在的（没写按作者规则当 0）。 */
+  local: number
+  remote: number
+  hasUpdate: boolean
+  /** 取网址失败的原因（原文）；失败的包 hasUpdate = false。 */
+  error: string | null
+}
+
+/**
+ * 自制更新检查（P5 B-28）：只比较、不替换。逐包照作者 pPullAllBrews 的做法——isPullable（不是自己写的、有网址）、
+ * DataUtil.loadRawJSON(url, {isBustCache: true}) 重新下载原文件、比较 _meta.dateLastModified——但不调用 pSetBrew，所以什么都不改。
+ * 不给编号就是全部可更新的包。点【更新】才调 brewPull。
+ */
+export async function brewCheckUpdates(docIdLocals: string[] | null = null): Promise<WithErrors<BrewUpdateCheck[]>> {
+  return withErrors(async () => {
+    const util = A.BrewUtil2
+    const brews = (await util.pGetBrew()).filter((b: any) => util.isPullable(b) && (!docIdLocals || docIdLocals.includes(b.head.docIdLocal)))
+    const out: BrewUpdateCheck[] = []
+    for (const b of brews) {
+      const local = b.body._meta?.dateLastModified ?? 0
+      try {
+        const json = await A.DataUtil.loadRawJSON(b.head.url, { isBustCache: true })
+        const remote = json._meta?.dateLastModified ?? 0
+        out.push({ docIdLocal: b.head.docIdLocal, filename: b.head.filename ?? null, url: b.head.url, local, remote, hasUpdate: remote > local, error: null })
+      } catch (e) {
+        out.push({ docIdLocal: b.head.docIdLocal, filename: b.head.filename ?? null, url: b.head.url, local, remote: 0, hasUpdate: false, error: e instanceof Error ? e.message : String(e) })
+      }
+    }
+    return out
+  })
+}
+
 /** 已装自制里某一类（作者 pCacheAndGetAllBrew），连同作者编号、来源。 */
 export async function parseBrewProp(prop: string): Promise<ParsedProp> {
   await init()

@@ -341,6 +341,11 @@ export class LibraryService {
     return { ...r, parse: await this.afterBrewChange(s) }
   }
 
+  /** 拉取更新前先看有没有新版（只比较、不替换）；有新版的再调 brewPull。 */
+  async brewCheckUpdates(sourceId: string, docIdLocals: string[] | null = null) {
+    return (await this.frame(this.brewSource(sourceId).codeSet)).call('brewCheckUpdates', docIdLocals)
+  }
+
   /** 更新（作者：有新版的直接换）。不给编号就是全部；没有更新的不重解析。 */
   async brewPull(sourceId: string, docIdLocals: string[] | null = null): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null }> {
     const s = this.brewSource(sourceId)

@@ -37,9 +37,35 @@ export function officialSourceOf(codeSet: string): SourceEntry {
   return s
 }
 
+/**
+ * 官方数据跟上游新提交（P5 B-28）：数据提交号不再恒等于登记表里的那个，更新后改成新提交。
+ * 作者程序（vendor）仍是登记表里那一版；只有上游作者程序版本号一致才允许跟（official-update.ts）。
+ * 启动时按安装记录恢复（hydrateCommits）；全库一律经 commitOf 取，所以改这里就都跟着变。
+ */
+const commitOverrides = new Map<string, string>()
+
+export function setCommitOverride(codeSet: string, commit: string | null): void {
+  if (commit && commit !== CODE_SETS[codeSet]?.commit) commitOverrides.set(codeSet, commit)
+  else commitOverrides.delete(codeSet)
+}
+
+function fillWith(template: string, repo: string, commit: string): string {
+  return template.replaceAll('{repo}', repo).replaceAll('{commit}', commit)
+}
+
+/** 指定提交号的镜像地址（查上游新版本用）。 */
+export function mirrorRootsAt(source: SourceEntry, commit: string): string[] {
+  return source.mirrors.map((m) => fillWith(m, CODE_SETS[source.codeSet].repo, commit))
+}
+
+/** 指定提交号的文件清单地址。 */
+export function fileListUrlAt(source: SourceEntry, commit: string): string {
+  if (!source.fileList) throw new Error(`${source.id} 没有登记文件清单地址`)
+  return fillWith(source.fileList, CODE_SETS[source.codeSet].repo, commit)
+}
+
 function fill(template: string, source: SourceEntry): string {
-  const set = CODE_SETS[source.codeSet]
-  return template.replaceAll('{repo}', set.repo).replaceAll('{commit}', set.commit)
+  return fillWith(template, CODE_SETS[source.codeSet].repo, commitOf(source))
 }
 
 export function mirrorRoots(source: SourceEntry): string[] {
@@ -52,5 +78,5 @@ export function fileListUrl(source: SourceEntry): string {
 }
 
 export function commitOf(source: SourceEntry): string {
-  return CODE_SETS[source.codeSet].commit
+  return commitOverrides.get(source.codeSet) ?? CODE_SETS[source.codeSet].commit
 }
