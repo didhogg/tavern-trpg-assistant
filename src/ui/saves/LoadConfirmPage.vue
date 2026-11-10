@@ -10,6 +10,7 @@ import { useToastStore } from '../../stores/toast'
 import { errorText } from '../format'
 import Checkbox from '../kit/Checkbox.vue'
 import Icon from '../kit/Icon.vue'
+import { getSource } from '../../library/sources'
 
 export interface LoadTarget { id: string; name: string; ruleId: string; ownerKey: string; ownerLabel: string }
 
@@ -38,6 +39,12 @@ const otherCard = computed(() => !!campaign.owner && props.save.ownerKey !== cam
 const ruleBlocked = computed(() => !rules.value.has(props.save.ruleId) || !!check.value?.ruleMissing)
 // 资料版本变了：只一行提示（读档不改存档；详情默认显示新版资料）
 const changed = computed(() => !!check.value?.plan.versionChanged)
+// 读档三张清单（P5 B-34）：缺的包（默认勾，读取时一起下载）· 包在但本战役关着（默认不勾，勾了就开启）· 资料版本变了（一行提示）
+const downloadPick = ref<Record<string, boolean>>({})
+const closedPick = ref<Record<string, boolean>>({})
+const plan = computed(() => check.value?.plan ?? null)
+const isDl = (set: string): boolean => downloadPick.value[set] ?? true
+const setLabel = (set: string): string => (getSource(set).kind === 'official' ? '官方资料（整套）' : '自制包资料')
 const MISSING_REASON: Record<string, string> = { 'not-installed': '资料没装', 'not-found': '资料里没有这一条' }
 
 async function setSkipAuto(on: boolean): Promise<void> {
@@ -53,6 +60,7 @@ onMounted(async () => {
   if (!app.settings) await app.refreshSettings().catch((e) => console.error('[trpg-assistant] 读取设置失败', e))
   try {
     check.value = await app.svc().backend.kernelSave.checkSave(props.save.id)
+    downloadPick.value = Object.fromEntries((check.value.plan?.download ?? []).map((d) => [d.set, true]))
   } catch (error) {
     console.error('[trpg-assistant] 读取前检查失败', error)
     checkError.value = errorText(error)
@@ -65,6 +73,11 @@ async function doLoad(): Promise<void> {
   try {
     if (showDirty.value && saveFirst.value) await campaign.save()
     await campaign.load(props.save.id, { allowRuleSwitch: switching.value || !campaign.hasCampaign, skipAutoSave: skipAuto.value })
+    // 勾选的缺包一起下载（官方整套走下载任务，进度在侧栏库标签上）；勾了的关着的包在本战役开启
+    const library = app.svc().backend.library
+    for (const d of plan.value?.download ?? []) if (d.kind === 'official' && isDl(d.set)) library.tasks.startOfficial(d.set)
+    const open = (plan.value?.closed ?? []).filter((c) => closedPick.value[c.source]).map((c) => c.source)
+    if (open.length) await app.svc().backend.kernelSave.openSources(props.save.ownerKey, open)
     await saves.refresh()
     const missing = check.value?.missing.length ?? 0
     toast.success(`已读取「${props.save.name}」${missing ? `（有 ${missing} 项资料缺失）` : ''}`)
@@ -99,13 +112,22 @@ async function doLoad(): Promise<void> {
         </div>
         <div v-if="switching && !ruleBlocked"><b>这个存档属于其他规则</b><span>「{{ save.name }}」使用 {{ ruleName(save.ruleId) }}。读取后，整个助手会切换为该规则的界面与资料；当前的「{{ campaign.currentSave?.name ?? '存档' }}」会先写入自动存档。</span></div>
         <div v-if="otherCard"><b>这个存档属于其他角色卡「{{ save.ownerLabel }}」</b><span>读取时会复制成这张卡的新存档「{{ save.name }}（来自 {{ save.ownerLabel }}）」，成为一个独立战役。</span></div>
+        <div v-if="plan?.download.length" data-testid="load-download">
+          <b>缺少数据包 —— 为防止存档数据损坏，建议下载下面的包</b>
+          <Checkbox v-for="d in plan.download" :key="d.set" :model-value="isDl(d.set)" @update:model-value="(v: boolean) => (downloadPick[d.set] = v)">{{ setLabel(d.set) }}<span class="lib-src">（{{ d.refs }} 项用到{{ d.kind === 'brew' ? '，自制包请到下载页按来源安装' : '' }}）</span></Checkbox>
+        </div>
+        <div v-if="plan?.closed.length" data-testid="load-closed">
+          <b>包在，但本战役关着</b>
+          <span class="trpg-field__hint">勾选后在本战役里开启；不勾就保持关着，存档里的引用照常能看。</span>
+          <Checkbox v-for="c in plan.closed" :key="c.source" :model-value="!!closedPick[c.source]" @update:model-value="(v: boolean) => (closedPick[c.source] = v)">{{ c.source }}<span class="lib-src">（{{ c.refs }} 项用到：{{ c.labels.slice(0, 2).join("、") }}）</span></Checkbox>
+        </div>
         <div v-if="check?.missing.length" data-testid="load-missing">
           <b>缺少 {{ check.missing.length }} 项资料</b>
           <span v-for="(m, i) in check.missing.slice(0, 8)" :key="i">{{ m.actorName }} · {{ m.ref.label ?? m.ref.hash }}（{{ MISSING_REASON[m.reason] ?? m.reason }}）</span>
           <span v-if="check.missing.length > 8" class="trpg-field__hint">另有 {{ check.missing.length - 8 }} 项…</span>
           <span class="trpg-field__hint">仍可读取和导出；用到它们的结算会暂停，数据不会丢。</span>
         </div>
-        <div v-if="changed" data-testid="load-changed"><span class="trpg-field__hint">资料有更新，读取后会按新版资料显示；存档里的改动（数量、等级等）不受影响。</span></div>
+        <div v-if="changed" data-testid="load-changed"><span class="trpg-field__hint">有条目的资料版本变了，已使用新版；存档里的改动（数量、等级等）不受影响。</span></div>
       </div>
     </div>
     <footer class="trpg-drawer__bottom trpg-drawer__bottom--confirm">

@@ -22,10 +22,14 @@ const q = ref('')
 const kindOf = (r: CatalogRow): 'official' | 'brew' => (getSource(r.set).kind === 'brew' ? 'brew' : 'official')
 // 只列已下载的（未装的在下载页）；有搜索词时按名称 / 缩写匹配
 const match = (r: CatalogRow): boolean => r.downloaded && (!q.value.trim() || `${r.name}${r.abv}`.toLowerCase().includes(q.value.trim().toLowerCase()))
+// 分类方式（设置 → 库 → 偏好）：作者分组 / 书或冒险
+const regroup = (groups: ShelfGroup[]): ShelfGroup[] => (app.settings?.library.groupBy === 'kind'
+  ? [{ group: 'books', name: '书', books: groups.flatMap((g) => g.books), adventures: [] }, { group: 'adventures', name: '冒险', books: [], adventures: groups.flatMap((g) => g.adventures) }]
+  : groups)
 const sections = computed(() => (['official', 'brew'] as const).map((kind) => ({
   kind,
   label: kind === 'official' ? '官方' : '自制',
-  groups: (lib.shelf?.groups ?? []).map((g): ShelfGroup => ({ ...g, books: g.books.filter((r) => kindOf(r) === kind && match(r)), adventures: g.adventures.filter((r) => kindOf(r) === kind && match(r)) })).filter((g) => g.books.length + g.adventures.length),
+  groups: regroup(lib.shelf?.groups ?? []).map((g): ShelfGroup => ({ ...g, books: g.books.filter((r) => kindOf(r) === kind && match(r)), adventures: g.adventures.filter((r) => kindOf(r) === kind && match(r)) })).filter((g) => g.books.length + g.adventures.length),
 })).filter((s) => s.groups.length))
 const total = computed(() => sections.value.reduce((n, s) => n + s.groups.reduce((m, g) => m + g.books.length + g.adventures.length, 0), 0))
 
