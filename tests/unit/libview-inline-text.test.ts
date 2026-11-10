@@ -24,5 +24,6 @@ describe('tagLabel', () => {
     expect(tagLabel('火球术')).toBe('火球术')
     expect(tagLabel('火球术|PHB')).toBe('火球术')
     expect(tagLabel('火球术|PHB|那个火球')).toBe('那个火球')
+    expect(tagLabel('已知戏法|spells|level=0|class=法师', 'filter')).toBe('已知戏法')
   })
 })

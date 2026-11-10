@@ -47,7 +47,7 @@
 .lib-block { display: grid; gap: var(--sp-1); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--bg-sunk); }
 .lib-rtable { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .lib-rtable th, .lib-rtable td { border: var(--border) solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
-.lib-rtable th { background: var(--bg-sunk); }
+.lib-rtable th { background: var(--bg-sunk); white-space: nowrap; }
 .lib-tablewrap { overflow: auto; }
 .lib-list-ul { margin: 0; padding-left: 1.4em; display: grid; gap: var(--sp-1); }
 .lib-quote { margin: 0; padding-left: var(--sp-3); border-left: 3px solid var(--line-ctrl); color: var(--text2); }
@@ -110,3 +110,7 @@
 .lib-table tr.lib-spacer, .lib-table tr.lib-spacer td { padding: 0; border: 0; background: none; cursor: default; }
 .lib-list__row { height: 44px; box-sizing: border-box; }
 .lib-table td { box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; }
+/* 设置页 / 管理页 / 批量勾选的内容区与勾选行 */
+.lib-pad { padding: var(--sp-4) var(--sp-5) 72px; display: grid; gap: var(--sp-3); align-content: start; }
+.trpg-window[data-layout='narrow'] .lib-pad { padding: var(--sp-4) var(--sp-4) 72px; }
+.lib-pad .trpg-check, .lib-fold__body .trpg-check { display: flex; width: 100%; min-height: 40px; align-items: center; border-bottom: var(--border) solid var(--line); }

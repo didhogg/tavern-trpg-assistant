@@ -64,6 +64,6 @@ watch(() => [props.text, props.codeSet], run)
       <button v-if="tableOf[i]" class="lib-dice" type="button" data-testid="roll-outside" aria-label="直接掷这张表" @click="rollOutside(i)"><Icon name="dice-five" :size="12" />掷</button>
     </template>
     <button v-else-if="resolved[i]?.kind === 'dice'" class="lib-dice" type="button" @click="toast.info('骰盘接线稍后开放')"><Icon name="dice-five" :size="12" />{{ resolved[i].label }}</button>
-    <template v-else>{{ resolved[i]?.label ?? tagLabel(seg.content) }}</template>
+    <template v-else>{{ resolved[i]?.label ?? tagLabel(seg.content, seg.tag) }}</template>
   </template>
 </template>

@@ -16,7 +16,7 @@ export function resolveTagOnce(s: Services, codeSet: string, tag: string, conten
   let p = memo.get(key)
   if (!p) {
     p = (async (): Promise<TagResolved> => {
-      const label = tagLabel(content)
+      const label = tagLabel(content, tag.replace(/^@/, ''))
       try {
         const meta = await s.backend.library.links.resolveTag(codeSet, tag, content)
         if (meta) {

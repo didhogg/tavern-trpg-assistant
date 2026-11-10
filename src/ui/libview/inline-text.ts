@@ -31,9 +31,12 @@ export function splitInline(input: string): InlineSeg[] {
 }
 
 /** 标签内容的显示文字：作者约定 `显示名|来源|…|自定义文字`，没有自定义文字时取第一段。 */
-export function tagLabel(content: string): string {
+/** 后面的段不是显示文字的标签（{@filter 文字|页面|筛选条件}）：只取第一段。 */
+const FIRST_ONLY = new Set(['filter'])
+
+export function tagLabel(content: string, tag = ''): string {
   const parts = content.split('|')
-  const custom = parts.length >= 3 ? parts[parts.length - 1] : ''
+  const custom = parts.length >= 3 && !FIRST_ONLY.has(tag) ? parts[parts.length - 1] : ''
   return (custom || parts[0]).trim()
 }
 

@@ -120,6 +120,8 @@ async function load(): Promise<void> {
 }
 onMounted(() => void load())
 
+/** 摘要行里已经在下面的数值块 / 作者字段里出现过的标签不重复显示。 */
+const summaryShown = computed(() => { const seen = new Set([...(block.value?.lines ?? []), ...authorLines.value].map((l) => l.label)); return summary.value.filter((x) => !seen.has(x.k)) })
 const block = computed(() => (state.value.kind === 'ok' ? BLOCKS[props.entryRef.prop]?.(state.value.item) ?? null : null))
 /** 正文：多数类别在 entries 里；随机表条目本身就是一张表，表组是几张表（作者提取出来的形状）。 */
 const body = computed(() => {
@@ -161,7 +163,7 @@ async function setEnabled(next: boolean): Promise<void> {
           <div v-if="state.kind === 'ok' && state.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
           <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
           <EntryVersions v-if="state.kind === 'ok'" :key="`${entryRef.hash}-${state.d?.version.altId ?? ''}`" :detail="state.d" :entry-ref="entryRef" @changed="load" />
-          <div v-if="summary.length" class="lib-sumline" data-testid="entry-summary"><span v-for="x in summary" :key="x.k">{{ x.k }} <b>{{ x.v }}</b></span></div>
+          <div v-if="summaryShown.length" class="lib-sumline" data-testid="entry-summary"><span v-for="x in summaryShown" :key="x.k">{{ x.k }} <b>{{ x.v }}</b></span></div>
           <div v-if="(block?.lines.length || authorLines.length) && entryRef.prop !== 'class'" class="lib-stat" data-testid="entry-statblock"><div v-for="l in [...(block?.lines ?? []), ...authorLines]" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
           <div v-if="block?.abilities.length" class="lib-abil"><div v-for="a in block.abilities" :key="a.key"><small>{{ a.label }}</small><b>{{ a.score }}</b> ({{ a.mod }})</div></div>
           <template v-for="sec in block?.sections ?? []" :key="sec.title"><h3>{{ sec.title }}</h3><EntryBody :block="sec.entries" :code-set="codeSet" /></template>
