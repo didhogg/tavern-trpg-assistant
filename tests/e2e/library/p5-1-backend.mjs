@@ -16,7 +16,8 @@ const page = await ctx.newPage()
 page.setDefaultTimeout(900000)
 const pageErrors = []
 page.on('pageerror', (e) => pageErrors.push(String(e.message ?? e).slice(0, 200)))
-await page.route((u) => !u.href.startsWith(url), (route) => route.abort())
+// 联网部分（官方上游检查、自制下载 / 依赖 / 更新检查）需要外网：默认放行 GitHub / jsDelivr，OFFLINE=1 时全部断开
+await page.route((u) => !u.href.startsWith(url), (route) => (process.env.OFFLINE ? route.abort() : route.continue()))
 await page.goto(url)
 await page.waitForFunction(() => { const h = document.querySelector('#trpg-assistant-root'); const app = [...(h?.shadowRoot?.children ?? [])].map((c) => c.__vue_app__).find(Boolean); return app?.config.globalProperties.$pinia._s.get('app')?.booted })
 
@@ -99,6 +100,91 @@ const result = await page.evaluate(async (bookText) => {
     await lib.service.brewDelete('cn-brew', packs.filter((p) => p.filename?.includes('Ritual')).map((p) => p.docIdLocal))
     r.b29.afterDelete = Object.keys(await lib.service.brewCorpora('cn-brew'))
   } catch (e) { r.b29 = { ...(r.b29 ?? {}), err: String(e.stack ?? e).slice(0, 500) } }
+  // ---- B-27 存入我的库：官方的小书（作者办法复制 → 作者导入）----
+  try {
+    const cat = await lib.scoped.catalog(c)
+    const cands = cat.filter((x) => x.set === 'cn-official' && x.kind === 'book' && x.count > 0).sort((a, b) => a.count - b.count)
+    let small = cands[0]
+    for (const cand of cands) { if ((await lib.service.query('cn-official', 'spell', { source: cand.source })).length >= 3) { small = cand; break } }
+    const t0 = performance.now()
+    const saved = await lib.custom.saveToMine('cn', { kind: 'source', source: small.source })
+    r.b27 = { source: small.source, officialCount: small.count, counts: saved.counts, ms: Math.round(performance.now() - t0), issues: saved.issues.slice(0, 5).map((i) => i.path + ' ' + i.text), parseErrors: saved.parse.parse.errors, altTargets: saved.parse.alternatives.targets, altErrors: saved.parse.alternatives.errors.slice(0, 3) }
+    const packs = await lib.brewPacks.list('cn-brew')
+    const mine = packs.find((p) => p.sources.map((x) => x.toLowerCase()).includes(small.source.toLowerCase()))
+    r.b27.pack = mine && { origin: mine.origin, entryCount: mine.entryCount, filename: mine.filename }
+    // 与官方原件对比：同一条，复制后的版本（备选）和官方生效版本是不是一样（只量，不判）
+    const spells = (await lib.service.query('cn-official', 'spell', { source: small.source })).filter((x) => x.hash).slice(0, 5)
+    const cmp = []
+    for (const sp of spells) {
+      const d = await lib.scoped.detail(c, { set: 'cn-official', prop: 'spell', hash: sp.hash })
+      const alt = d?.alternatives?.[0]
+      const diff = alt ? [...new Set([...Object.keys(alt.item), ...Object.keys(d.base)])].filter((k) => JSON.stringify(alt.item[k]) !== JSON.stringify(d.base[k])) : null
+      cmp.push({ name: sp.item.name, hasAlt: !!alt, same: alt ? JSON.stringify(alt.item) === JSON.stringify(d.base) : null, diffKeys: diff })
+    }
+    r.b27.compareSpells = cmp
+    // 重复存 = 并进去，不冲掉
+    const again = await lib.custom.saveToMine('cn', { kind: 'source', source: small.source })
+    r.b27.again = { packsAfter: (await lib.brewPacks.list('cn-brew')).filter((p) => p.sources.map((x) => x.toLowerCase()).includes(small.source.toLowerCase())).length }
+    // B-31 拆行：同编号的原件 + 副本
+    const rows = await lib.scoped.query(c, 'spell', { source: small.source, expand: true })
+    r.b31 = { rows: rows.length, variants: rows.slice(0, 4).map((x) => x.variant?.altId + '|' + (x.variant?.pack ?? '-') + '|' + x.variant?.effective) }
+    // B-21 选了副本的版本后，卸载重装副本，选择还在
+    if (spells[0]) {
+      const target = { set: 'cn-official', prop: 'spell', hash: spells[0].hash }
+      const d1 = await lib.scoped.detail(c, target)
+      const altId = d1.alternatives[0]?.altId
+      await lib.scoped.choose(c, target, altId, 'global')
+      const before = (await lib.scoped.detail(c, target)).version
+      const docs = (await lib.brewPacks.list('cn-brew')).filter((p) => p.sources.map((x) => x.toLowerCase()).includes(small.source.toLowerCase()))
+      const exported = await lib.custom.exportBrew('cn', docs[0].docIdLocal)
+      await lib.service.brewDelete('cn-brew', docs.map((p) => p.docIdLocal))
+      const gone = (await lib.scoped.detail(c, target)).version
+      await lib.service.brewImport('cn-brew', [{ name: exported.filename ?? 'x.json', text: JSON.stringify(exported.body) }])
+      const back = (await lib.scoped.detail(c, target)).version
+      r.b21 = { altId, before: { altId: before.altId, by: before.by }, gone: { altId: gone.altId, missing: gone.missing }, back: { altId: back.altId, by: back.by } }
+    }
+    // 清理：删掉副本
+    const left = (await lib.brewPacks.list('cn-brew')).filter((p) => p.sources.map((x) => x.toLowerCase()).includes(small.source.toLowerCase()))
+    if (left.length) await lib.service.brewDelete('cn-brew', left.map((p) => p.docIdLocal))
+    await lib.scoped.manage.setChoice('global', `cn-official|spell|${spells[0]?.hash}`, null)
+  } catch (e) { r.b27 = { ...(r.b27 ?? {}), err: String(e.stack ?? e).slice(0, 700) } }
+
+  // ---- B-28 官方上游检查（只比较）----
+  try {
+    r.b28 = {}
+    for (const id of ['cn-official', 'en-official']) { const t0 = performance.now(); const chk = await lib.updates.check(id); r.b28[id] = { ...chk, ms: Math.round(performance.now() - t0) } }
+  } catch (e) { r.b28 = { ...(r.b28 ?? {}), err: String(e.stack ?? e).slice(0, 400) } }
+
+  // ---- 联网：B-24 缺依赖一键下载、B-25 传递闭包、B-28 自制检查、B-27 存入下载包 ----
+  try {
+    const WITH_DEP = 'class/DXHHH101, Sinder, Superxavman; 重振术士.json'
+    const cat = await lib.service.brewCatalog('cn-brew')
+    const entry = cat.value?.find((x) => x.path === WITH_DEP)
+    if (!entry) throw new Error('目录里没有 ' + WITH_DEP + '（目录取不到：' + JSON.stringify(cat.errors).slice(0, 120) + '）')
+    const a = await lib.service.brewAddUrl('cn-brew', entry.urlDownload)
+    const packs = await lib.brewPacks.list('cn-brew')
+    const dep = packs.find((p) => decodeURIComponent(p.url ?? '').includes('果园起源术士'))
+    const main = packs.find((p) => decodeURIComponent(p.url ?? '').includes('重振术士'))
+    r.net = { added: a.value.length, packs: packs.map((p) => [p.filename, p.origin]) }
+    // B-25
+    const imp = await backend.removalImpact({ kind: 'brew', setId: 'cn-brew', docIdLocals: [dep.docIdLocal] })
+    r.net.b25 = { packs: imp.packs.map((p) => [p.filename, p.mustRemove]), removeTogether: imp.removeTogether.length }
+    // B-28 自制检查（只比较）
+    const chk = await lib.service.brewCheckUpdates('cn-brew')
+    r.net.b28brew = chk.value.map((x) => ({ f: x.filename, has: x.hasUpdate, err: x.error, local: x.local, remote: x.remote }))
+    // B-24：删掉依赖包，再用"缺的来源"一键装回
+    const depSource = dep.sources[0]
+    const delRes = await lib.service.brewDelete('cn-brew', [dep.docIdLocal])
+    r.net.delRes = { value: delRes.value, errors: delRes.errors }
+    const afterDel = (await lib.brewPacks.list('cn-brew')).map((p) => p.filename)
+    const got = await lib.service.brewInstallSources('cn-brew', [depSource, 'NO_SUCH_SOURCE_ZZ'])
+    r.net.b24 = { depSource, afterDel, added: got.value.added.map((e) => e.head.filename), notFound: got.value.notFound, back: (await lib.brewPacks.list('cn-brew')).some((p) => p.sources.includes(depSource)) }
+    // B-27 存入下载包
+    const cp = await lib.custom.saveToMine('cn', { kind: 'pack', docIdLocal: main.docIdLocal })
+    r.net.b27pack = { name: cp.name, added: cp.added.length, origins: (await lib.brewPacks.list('cn-brew')).map((p) => p.filename + ':' + p.origin) }
+    // 清理
+    await lib.service.brewDelete('cn-brew', (await lib.brewPacks.list('cn-brew')).map((p) => p.docIdLocal))
+  } catch (e) { r.net = { ...(r.net ?? {}), err: String(e.stack ?? e).slice(0, 700) } }
   return r
 }, bookText)
 await writeFile(`${work}/p5-1-backend-chrome.json`, JSON.stringify({ result, pageErrors }, null, 1))

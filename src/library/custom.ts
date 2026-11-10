@@ -1,6 +1,7 @@
 // 自定义库（D2-P3 整体设计 §2.3、§2.5、§2.6）：写新条目、房规、文字转条目、新条目模板、导出、导入预览。
 // 条目内容全部走作者的可编辑自制（作者格式）；插件只记"房规 → 目标"的链接和范围设置。
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
+import { copyRawSource } from './copy-source'
 import { validateBrewJson, type BrewValidation, type SchemaIssue } from './brew-validate'
 import { findCollisions, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
@@ -137,6 +138,51 @@ export class CustomLibrary {
   async deleteHouseRule(codeSet: string, house: EntryRef, uniqueId: string) {
     await this.manage.unlinkHouseRule(house)
     return this.deleteEntries(codeSet, house.prop, [uniqueId])
+  }
+
+  /**
+   * 存入【我的库】（P5 B-27，驾驶员定：本地原样副本，不受源仓库更新、卸载影响；不是"变成可编辑态"）。
+   * 官方的书 / 一条条目：用作者的办法（加载器对象 + DataUtil.cleanJson + 作者自制文件的 _meta.sources）存成作者格式文件，走作者的本地导入；
+   * 下载来的自制包：作者格式原文原样再导入一份。副本进【我的库】（来历 = 导入），和原件同编号的按同编号规则并排显示成两条。
+   * 重复存同一个来源 = 替换上一份副本（作者按来源认包）。结构问题只提示不拦截。
+   */
+  async saveToMine(codeSet: string, target: { kind: 'source'; source: string } | { kind: 'entry'; ref: EntryRef } | { kind: 'pack'; docIdLocal: string }) {
+    const f = await this.frame(codeSet)
+    const brewSet = brewSetOf(codeSet).id
+    let name: string
+    let body: unknown
+    let counts: Record<string, number> = {}
+    if (target.kind === 'pack') {
+      const mine = (await this.lib.brewInstalled(brewSet)).find((b) => b.head.docIdLocal === target.docIdLocal)
+      if (!mine) throw new Error('找不到这个包')
+      if (mine.head.isEditable || !mine.head.url) throw new Error('这个包本来就在【我的库】里（自己写的或本地导入的）')
+      const exported = await this.exportBrew(codeSet, target.docIdLocal)
+      if (!exported) throw new Error('导出这个包失败')
+      name = exported.filename ?? `${target.docIdLocal}.json`
+      body = exported.body
+    } else {
+      let source: string
+      if (target.kind === 'source') source = target.source
+      else {
+        const stored = await this.lib.storedItem(target.ref.set, target.ref.prop, target.ref.hash)
+        if (!stored?.source) throw new Error(`找不到这一条或它没有来源：${refKey(target.ref)}`)
+        if (SOURCES.find((x) => x.id === target.ref.set)?.kind === 'brew') throw new Error('这一条本来就在自制里')
+        source = stored.source
+      }
+      // 这个来源已经有本地副本（以前存过）：并进去，不冲掉
+      const docs = await f.call('brewDocIndex')
+      const existing = docs.find((d) => !d.isEditable && !d.url && (d.sources ?? []).some((x) => x.toLowerCase() === source.toLowerCase()))
+      const base = existing ? (await this.exportBrew(codeSet, existing.docIdLocal))?.body as Record<string, unknown> | undefined : undefined
+      const copy = await copyRawSource({ db: this.db, lib: this.lib, official: officialSourceOf(codeSet), source, ...(base ? { base } : {}), ...(target.kind === 'entry' ? { entry: { prop: target.ref.prop, hash: target.ref.hash } } : {}) })
+      if (!Object.values(copy.counts).some((n) => n > 0) && !copy.corpora.length) throw new Error(`官方资料里没有来源 ${source} 的内容可存（还没下载？）`)
+      counts = copy.counts
+      body = copy.json
+      name = existing?.filename ?? `${source}.json`
+    }
+    const issues = (await validateBrewJson(body)).issues
+    const result = await this.lib.brewImport(brewSet, [{ name, text: JSON.stringify(body) }])
+    this.scoped.reset()
+    return { name, counts, issues, added: result.value.added, parse: result.parse, errors: result.errors }
   }
 
   /** 导出一个包：作者格式原样（文件名 + 内容）。 */
