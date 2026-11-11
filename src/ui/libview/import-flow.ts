@@ -2,6 +2,7 @@
 import type { Services } from '../../core/services'
 import { SOURCES } from '../../library/sources'
 import { askConfirm } from '../kit/confirm'
+import { reportLibError } from './deps-flow'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
 
@@ -25,12 +26,11 @@ export async function importFiles(s: Services, codeSet: string, files: File[], s
       if (!ok) return false
     }
     const r = await lib.service.brewImport(setId, texts)
-    if (r.errors.length) { toast.error(`导入没有完全成功：${String(r.errors[0])}`); return false }
+    if (r.errors.length) { await reportLibError(s, new Error(`作者程序报错：${String(r.errors[0])}`), '导入文件', toast); return false }
     toast.success(`已导入 ${files.length} 个文件`)
     return true
   } catch (e) {
-    console.error('[trpg-assistant] 导入失败', e)
-    toast.error('导入没有成功，原有内容没有改动')
+    await reportLibError(s, e, '导入文件', toast, () => void importFiles(s, codeSet, files, true, toast))
     return false
   }
 }

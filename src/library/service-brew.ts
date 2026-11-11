@@ -38,10 +38,32 @@ export async function afterBrewChange(ctx: BrewContext, s: SourceEntry, view: Li
   return report
 }
 
+/** 缺依赖导致作者合并全部自制包失败：这次改动不发布，旧版本照常可读（修法 A）。界面据 missing 给【下载依赖包】【删除缺依赖的包】。 */
+export class BrewDependencyError extends Error {
+  readonly missing: NonNullable<BrewParseReport['parse']['missingDeps']>
+  constructor(readonly setId: string, missing: NonNullable<BrewParseReport['parse']['missingDeps']>, detail: string) {
+    super(`缺依赖包 ${missing.map((m) => m.source).join('、') || '（未知）'}，这次改动已取消，原有内容没有变化（${detail.slice(0, 160)}）`)
+    this.name = 'BrewDependencyError'
+    this.missing = missing
+  }
+}
+
+/** 解析结果能不能发布：缺依赖 / 整类解析失败都不发布（P5 核验 5 + 修法 A）。所有发布自制改动的路径都先过这里。 */
+export function assertPublishable(s: SourceEntry, report: BrewParseReport): void {
+  if (report.parse.missingDeps) throw new BrewDependencyError(s.id, report.parse.missingDeps, report.parse.errors[0]?.error ?? '')
+  const fatal = report.parse.errors.length || Object.values(report.parse.corpora ?? {}).some((c) => c.failed.length)
+  if (fatal) {
+    const first = report.parse.errors[0]?.error ?? Object.values(report.parse.corpora ?? {}).flatMap((c) => c.failed)[0]?.error ?? '自制解析失败'
+    throw new Error(`自制解析失败，没有发布：${first}`)
+  }
+}
+
 export async function prepareBrewDelete(ctx: BrewContext, sourceId: string, docIdLocals: string[], view: LibraryView): Promise<{ value: WithErrors<number>; parse: BrewParseReport; packs: ReturnType<typeof packsOf> }> {
   const s = brewSource(sourceId)
   const value = await (await ctx.frame(s.codeSet, view)).call('brewDelete', docIdLocals)
   const parse = await afterBrewChange(ctx, s, view)
+  // 官方单本卸载连带删包也走这里：同样先检查，不能发布被清空的自制库
+  assertPublishable(s, parse)
   return { value, parse, packs: packsOf(parse) }
 }
 
@@ -64,12 +86,8 @@ export function logBrew(ctx: BrewContext, s: SourceEntry, report: BrewParseRepor
 }
 
 export async function publishBrew(ctx: BrewContext, s: SourceEntry, handle: OperationHandle, report: BrewParseReport): Promise<LibraryView> {
-  // 初始化 / 存储 / 整类解析失败：不发布缺内容的版本（P5 核验 5）；旧版本继续可读。
-  const fatal = report.parse.errors.length || Object.values(report.parse.corpora ?? {}).some((c) => c.failed.length)
-  if (fatal) {
-    const first = report.parse.errors[0]?.error ?? Object.values(report.parse.corpora ?? {}).flatMap((c) => c.failed)[0]?.error ?? '自制解析失败'
-    throw new Error(`自制解析失败，没有发布：${first}`)
-  }
+  // 初始化 / 存储 / 整类解析失败 / 缺依赖：不发布缺内容的版本；旧版本继续可读。
+  assertPublishable(s, report)
   const partial = report.alternatives.errors.length > 0 || !!report.precomputeError
   const view = await ctx.operations.publish(handle, {
     brews: { [s.id]: { packs: packsOf(report) } }, result: report,
@@ -114,6 +132,12 @@ export async function brewAddUrl(ctx: BrewContext, sourceId: string, url: string
   const handle = await ctx.operations.begin({ kind: 'brew-add', set: s.id, codeSet: s.codeSet })
   try {
     const r = await withTimeout(async () => (await ctx.frame(s.codeSet, handle.target)).call('brewAddUrl', url), '下载自制包')
+    // 作者网络出错时自己吞掉错误、什么都不装（返回空）：这时作废这次准备版本（下了一半的东西不进书架），报明确的失败给界面出横幅
+    if (!r.value.length) {
+      // 作者的原始报错（带地址、状态码）只进日志页，横幅里只说人话
+      ctx.onLog?.({ level: 'error', source: s.id, kind: 'brew-add', message: `下载没有完成：${url}`, detail: r.errors })
+      throw new Error('下载没有完成（网络中断或文件取不到），已丢弃这次下了一半的内容，原有内容没有变化')
+    }
     const parse = await afterBrewChange(ctx, s, handle.target)
     const view = await publishBrew(ctx, s, handle, parse)
     return { ...r, parse, view: view.id }

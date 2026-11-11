@@ -72,6 +72,51 @@ export async function brewAddUrl(url: string): Promise<WithErrors<BrewEntry[]>> 
   return { ...r, value: (r.value ?? []).map(entryOf) }
 }
 
+export interface MergeCheck {
+  ok: boolean
+  /** 作者合并失败的原文。 */
+  error: string | null
+  /** 缺的依赖来源，以及哪些已装的包声明了需要它（作者 _getBrewDependencySources）。 */
+  missing: Array<{ source: string; packs: Array<{ docIdLocal: string; filename: string | null }> }>
+}
+
+/**
+ * 修法 A（P5 T6）：作者 pGetBrewProcessed 把所有自制包合并成一份；任一依赖缺了，它把错误扔进 setTimeout、结果置空，
+ * 整个自制库就静悄悄变空。这里直接调作者同一个合并步骤（_pGetBrewProcessed_），让错误交回来；缺的来源从作者错误原文
+ * 和各包声明的依赖里找出来。不改作者程序。
+ */
+export async function brewMergeCheck(): Promise<MergeCheck> {
+  await init()
+  const U = A.BrewUtil2
+  const lockToken = await U._LOCK.pLock()
+  try {
+    U._cache_brewsProc = null
+    await U._pGetBrewProcessed_({ lockToken })
+    return { ok: true, error: null, missing: [] }
+  } catch (e) {
+    U._cache_brewsProc = null
+    const error = e instanceof Error ? e.message : String(e)
+    const named = new Set([...error.matchAll(/source "([^"]+)"/g)].map((m) => m[1].toLowerCase()))
+    const brews: any[] = await U.pGetBrew({ lockToken })
+    const have = new Set(brews.flatMap((b) => (b.body?._meta?.sources ?? []).map((x: any) => String(x?.json ?? '').toLowerCase())))
+    const by = new Map<string, { source: string; packs: Array<{ docIdLocal: string; filename: string | null }> }>()
+    for (const b of brews) {
+      const { available, unavailable } = U._getBrewDependencySources({ brewDoc: b, brewIndex: {} })
+      for (const src of [...available, ...unavailable] as string[]) {
+        const k = src.toLowerCase()
+        if (have.has(k) && !named.has(k)) continue
+        if (named.size && !named.has(k)) continue
+        const hit = by.get(k) ?? { source: src, packs: [] }
+        hit.packs.push({ docIdLocal: String(b.head?.docIdLocal ?? ''), filename: b.head?.filename ?? null })
+        by.set(k, hit)
+      }
+    }
+    return { ok: false, error, missing: [...by.values()] }
+  } finally {
+    U._LOCK.unlock()
+  }
+}
+
 export interface DependencyPreview {
   /** 这个包自己的来源。 */
   sources: string[]

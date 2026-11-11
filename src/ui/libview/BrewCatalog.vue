@@ -7,7 +7,7 @@ import { useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
-import { confirmDependencies, downloadOfficialBook } from './deps-flow'
+import { confirmDependencies, downloadOfficialBook, reportLibError } from './deps-flow'
 
 /** 下载页的自制包目录（U4b）：中英文配对成一行（只有一种语言的单独一行）；点【下载】先预览依赖（可不再提示），再一次装两边，依赖由作者程序自动追装。 */
 const app = useAppStore()
@@ -72,17 +72,22 @@ async function download(r: CatalogPair): Promise<void> {
       const svc = app.svc().backend.library.service
       let added = 0
       let wanted = 0
-      const failed: string[] = []
+      const failed: Array<{ side: string; e: unknown }> = []
+      // 成败只看后端有没有抛错：没装上 / 中途断网 / 缺依赖都会抛（准备版本已作废，下了一半的东西不进书架）；
+      // 作者在解析时报的零散提示不算失败（以前会把装好的包误判成失败）
       for (const [side, f, id] of [['中文', r.zh, zhSet.value], ['英文', r.en, zhSet.value.replace(/^cn-/, 'en-')]] as const) {
         if (!f) continue
         wanted++
-        try { const res = await svc.brewAddUrl(id, f.urlDownload); added += res.value.length; if (res.errors.length) failed.push(side) } catch (e) { console.error('[trpg-assistant] 下载自制包失败', e); failed.push(side) }
+        try { added += (await svc.brewAddUrl(id, f.urlDownload)).value.length } catch (e) { failed.push({ side, e }) }
       }
       await loadInstalled()
-      await lib.refresh(app.svc()).catch(() => undefined)
-      if (failed.length === wanted) { toast.error('下载没有成功，请重试'); return '下载没有成功' }
-      if (failed.length) toast.error(`${failed.join('、')}没有装好，另一边已装好（可重试）`)
-      else toast.success(`刚刚下载完成了 ${wanted} 个包，同时下载了 ${Math.max(0, added - wanted)} 个额外依赖包`)
+      void lib.refresh(app.svc()).catch((e: unknown) => console.error('[trpg-assistant] 下载后刷新书架失败', e))
+      const depFail = failed.find((x) => (x.e as { name?: unknown })?.name === 'BrewDependencyError')
+      if (depFail) { await reportLibError(app.svc(), depFail.e, `下载《${nameOf(r)}》`, toast, () => void download(r)); return null }
+      const why = (x: { e: unknown }): string => (x.e instanceof Error ? x.e.message : String(x.e))
+      if (failed.length === wanted) return why(failed[0])
+      if (failed.length) return `${failed.map((x) => x.side).join('、')}没有装好（另一边已装好）：${why(failed[0])}`
+      toast.success(`刚刚下载完成了 ${wanted} 个包，同时下载了 ${Math.max(0, added - wanted)} 个额外依赖包`)
       return null
     }, () => void download(r))
   } finally {

@@ -23,8 +23,11 @@ const errors = []
 page.on('pageerror', (e) => errors.push(String(e.message ?? e).slice(0, 160)))
 // 自制包文件走「外部网址」（作者小窗会把同源请求当成库内文件），由测试拦截后返回本地真实文件；其余外网全部拦掉
 const FIX = 'https://fixtures.example.test/'
+let dropHits = 0
 await ctx.route((u) => !u.href.startsWith(url), (r) => {
   const u = r.request().url()
+  // drop.json：第一次（预览）正常给文件，之后（正式安装）断网，模拟下载到一半网断了
+  if (u.startsWith(`${FIX}drop.json`)) return dropHits++ === 0 ? r.fulfill({ path: `${work}/fixtures/weapon4.json`, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' } }) : r.abort('internetdisconnected')
   if (u.startsWith(FIX)) return r.fulfill({ path: `${work}/fixtures/${u.slice(FIX.length).split('?')[0]}`, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' } })
   return r.abort()
 })
@@ -75,7 +78,7 @@ await settle(page, 1500)
 await page.evaluate(([P, base]) => {
   const cat = eval(P)._s.get('brewcatalog')
   const f = (path, name) => ({ urlDownload: `${base}${path}`, path: `x/${path}`, name, sources: [] })
-  cat.rows = [{ zh: f('dull-wizard.json', 'Sample - Giddy; 《乏味巫师指南》.json'), en: null, status: 'zh-only' }, { zh: f('psion.json', 'LaserLlama; 灵能使（测试副本）.json'), en: null, status: 'zh-only' }]
+  cat.rows = [{ zh: f('dull-wizard.json', 'Sample - Giddy; 《乏味巫师指南》.json'), en: null, status: 'zh-only' }, { zh: f('drop.json', 'Sample - Giddy; 断网测试包.json'), en: null, status: 'zh-only' }, { zh: f('psion.json', 'LaserLlama; 灵能使（测试副本）.json'), en: null, status: 'zh-only' }]
 }, [P, FIX])
 await settle(page, 300)
 await page.locator('[data-testid="brew-list"] .trpg-row', { hasText: '乏味巫师指南' }).getByRole('button', { name: '下载' }).click()
@@ -103,17 +106,16 @@ await settle(page, 300)
 const skipAfterCancel = await page.evaluate((P) => eval(P)._s.get('app').settings.library.skipDependencyPrompt, P)
 check('勾了「不再提示」但点取消：设置不改', skipAfterCancel === false, String(skipAfterCancel))
 
-// S4 缺依赖的条目：强制删掉法术合集（模拟缺依赖），打开灵能使的职业 → 说明需要的依赖包 + 重试拉取
+// S4 读不到的条目（所在的包没装）：按删除预览把法术合集和灵能使一起删掉，再打开灵能使的旧条目
 const ref = await page.evaluate(async (P) => {
-  const lib = eval(P)._s.get('app').svc().backend.library
+  const be = eval(P)._s.get('app').svc().backend, lib = be.library
   const cls = (await lib.service.query('cn-brew', 'class', {})).find((x) => String(x.source).toLowerCase() === 'llps')
   const prov = (await lib.brewPacks.list('cn-brew')).find((p) => p.sources.includes('llspell'))
-  await lib.service.brewDelete('cn-brew', [prov.docIdLocal])
+  await be.removalExecute(await be.removalImpact({ kind: 'brew', setId: 'cn-brew', docIdLocals: [prov.docIdLocal] }))
   return { set: 'cn-brew', prop: 'class', hash: cls.hash }
 }, P)
 await closeAll(); await settle(page, 300)
 await tab('书架')
-// 走真实入口：书架打开一本官方书 → 点第一条 → 栈顶是真正的详情页；再用同一个详情页组件打开灵能使那条
 await page.locator('[data-testid="shelf-tab"] .trpg-shelf__row .lib-name').first().click()
 await page.waitForSelector('[data-testid="pack-page"] [data-off]')
 await page.locator('[data-testid="pack-page"] [data-off]').first().click()
@@ -124,18 +126,68 @@ await page.evaluate(([P, ref]) => {
   if (!top) { window.__noOpen = true; return }
   m.push({ ...top, key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title: '灵能使', props: { entryRef: ref } })
 }, [P, ref])
-check('能打开缺依赖条目的详情（测试入口）', !(await page.evaluate(() => window.__noOpen)), '')
-await page.waitForSelector('[data-testid="entry-missing"]', { timeout: 60000 }).catch(() => null)
-await page.waitForSelector('[data-testid="entry-dep-failed"]', { timeout: 60000 }).catch(() => null)
-const miss = await page.locator('[data-testid="entry-missing"]').innerText().catch(() => '')
-console.log('S4 后台状态：', JSON.stringify(await page.evaluate(async (P) => { const lib = eval(P)._s.get('app').svc().backend.library; return { tasks: lib.tasks.list().map((t) => [t.kind, t.set, t.status, t.progress?.stage]), queue: lib.precomputeQueue?.status?.() ?? null, ops: await lib.operations.list?.().catch?.(() => null) ?? null } }, P)))
+check('能打开读不到的条目（用详情页同一组件）', !(await page.evaluate(() => window.__noOpen)), '')
+await page.waitForSelector('[data-testid="entry-missing"] button', { timeout: 60000 })
+await settle(page, 600)
+const miss = await page.locator('[data-testid="entry-missing"]').innerText()
 await page.screenshot({ path: `${shots}/s4-missing-entry.png` })
-check('缺依赖条目：说明需要的依赖包 llspell 和所在包，拉取失败时有【重试拉取】', /llspell/.test(miss) && /灵能使/.test(miss) && /重试拉取/.test(miss), miss.replace(/\n/g, ' | '))
+check('读不到的条目：说明来自没装的自制包（来源 llps）并给【下载这个包】', /没装的自制包/.test(miss) && /llps/i.test(miss) && /下载这个包/.test(miss), miss.replace(/\n/g, ' | '))
+await page.locator('[data-testid="entry-missing"] button', { hasText: '下载这个包' }).click()
+await page.waitForFunction(() => /重试下载/.test(document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid="entry-missing"]')?.textContent ?? ''), null, { timeout: 60000 }).catch(() => null)
+const miss2 = await page.locator('[data-testid="entry-missing"]').innerText()
+check('断网时点下载：说明原因并变成【重试下载】，不会一直转圈', /重试下载/.test(miss2), miss2.replace(/\n/g, ' | '))
+await closeAll(); await settle(page, 300)
+
+// S5 下载到一半断网：主文件取到了，依赖索引取不到 → 这次准备版本作废，书架不多东西；横幅带【重试】，按钮回到「下载」
+await page.evaluate((P) => { const n = eval(P)._s.get('libnotice'); for (const x of [...n.notices]) n.dismiss(x.key); const d = eval(P)._s.get('downloads'); for (const i of d.failedAll) d.dismiss(i.key) }, P)
+const packsBefore = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)
+await tab('下载')
+await page.waitForSelector('[data-testid="brew-list"]')
+await page.locator('[data-testid="brew-list"] .trpg-row', { hasText: '灵能使（测试副本）' }).getByRole('button', { name: '下载' }).click()
+await page.waitForSelector('[data-testid="dependency-preview"]')
+await page.locator('[data-testid="dependency-preview"] .trpg-btn--primary', { hasText: '下载' }).click()
+// 等这一行的按钮回到「下载」（下载结束），最多 2 分钟；结束后再按包名找它自己的横幅
+await page.waitForFunction(() => [...document.querySelector('#trpg-assistant-root').shadowRoot.querySelectorAll('[data-testid="brew-list"] .trpg-row')].find((r) => r.textContent.includes('灵能使（测试副本）'))?.querySelector('button')?.textContent.trim() === '下载', null, { timeout: 120000 }).catch(() => null)
+await settle(page, 600)
+const banner = (await page.locator('[data-testid="download-banners"] [role="alert"]', { hasText: '灵能使（测试副本）' }).allInnerTexts()).join(' / ')
+const btn = await page.locator('[data-testid="brew-list"] .trpg-row', { hasText: '灵能使（测试副本）' }).getByRole('button').innerText()
+const packsAfter = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)
+await page.screenshot({ path: `${shots}/s5-download-interrupted.png` })
+check('下载到一半断网（主文件取到、依赖取不到）：顶部横幅按包名说明没下完，带【重试】', /没有/.test(banner) && /重试/.test(banner), banner.replace(/\n/g, ' | ').slice(0, 300))
+check('下载到一半断网：下了一半的包没有进本机（包数不变）', packsAfter === packsBefore, `${packsBefore} → ${packsAfter}`)
+check('下载到一半断网：按钮回到「下载」，不会停在「下载中…」', btn.trim() === '下载', btn)
+
+// S5b 预览时有网、正式下载主文件时断网：什么都不装，下载失败横幅带【重试】，【库】图标亮警告
+await page.locator('[data-testid="brew-list"] .trpg-row', { hasText: '断网测试包' }).getByRole('button', { name: '下载' }).click()
+await page.waitForSelector('[data-testid="dependency-preview"]')
+await page.locator('[data-testid="dependency-preview"] .trpg-btn--primary', { hasText: '下载' }).click()
+await page.waitForFunction(() => [...document.querySelector('#trpg-assistant-root').shadowRoot.querySelectorAll('[data-testid="brew-list"] .trpg-row')].find((r) => r.textContent.includes('断网测试包'))?.querySelector('button')?.textContent.trim() === '下载', null, { timeout: 120000 }).catch(() => null)
+await settle(page, 600)
+const dropBanner = (await page.locator('[data-testid="download-banners"] [role="alert"]', { hasText: '断网测试包' }).allInnerTexts()).join(' / ')
+const ring = await page.evaluate((P) => eval(P)._s.get('downloads').ring, P)
+const packsAfterDrop = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)
+await page.screenshot({ path: `${shots}/s5b-main-file-dropped.png` })
+check('正式下载时断网：横幅说明没下完并带【重试】', /没有/.test(dropBanner) && /重试/.test(dropBanner), dropBanner.replace(/\n/g, ' | ').slice(0, 300))
+check('正式下载时断网：什么都没装（包数不变）、【库】图标亮警告', packsAfterDrop === packsAfter && ring === 'warn', `${packsAfter} → ${packsAfterDrop}，ring=${ring}`)
+
+// S6 导入一个依赖缺失的文件（法术合集已删）：被拦下，横幅点名缺的依赖并给【下载依赖包】【重试】
+await tab('我的库')
+await page.waitForSelector('[data-testid="mylib-file"]', { state: 'attached' })
+await page.locator('[data-testid="mylib-file"]').setInputFiles(`${work}/fixtures/psion.json`)
+await page.waitForSelector('[data-testid="confirm-page"]')
+await page.locator('.trpg-confirm__actions .trpg-btn--primary').click()
+await page.waitForSelector('[data-testid="lib-notice"]:has-text("导入文件")', { timeout: 120000 })
+await settle(page, 600)
+const notice = await page.locator('[data-testid="lib-notice"]', { hasText: '导入文件' }).innerText()
+const packsAfterImport = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)
+await page.screenshot({ path: `${shots}/s6-import-missing-dep.png` })
+check('导入缺依赖的文件：横幅点名 llspell，给【下载依赖包】【重试】', /llspell/.test(notice) && /下载依赖包/.test(notice) && /重试/.test(notice), notice.replace(/\n/g, ' | '))
+check('导入缺依赖的文件：没有装进来（包数不变）', packsAfterImport === packsAfter, `${packsAfter} → ${packsAfterImport}`)
 
 // 调查：缺依赖状态下重读书架要多久（作者会对缺的来源反复报错）
 const refreshMs = await page.evaluate(async (P) => { const ps = eval(P); const t = performance.now(); await ps._s.get('library').refresh(ps._s.get('app').svc()); return Math.round(performance.now() - t) }, P)
 console.log('缺依赖状态下重读书架耗时（毫秒）：', refreshMs)
-const real = errors.filter((e) => !/gendata-nav-adventure-book-index|网络错误|Network error|找不到物品(类型|属性)|Could not find prerelease\/brew URL/.test(e))
+const real = errors.filter((e) => !/gendata-nav-adventure-book-index|网络错误|Network error|找不到物品(类型|属性)|Could not find prerelease\/brew URL|无法加载 \d+ 个条目的引用/.test(e))
 check('没有界面自己的页面错误（作者联网失败、已知导航索引、作者物品类型提示单列）', real.length === 0, real.join(' | '))
 console.log('作者 / 网络类页面错误（单列，不算界面错误）：', errors.length - real.length)
 await ctx.close(); server.close()

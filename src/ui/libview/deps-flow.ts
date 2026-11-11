@@ -4,6 +4,7 @@ import { markRaw } from 'vue'
 import type { Services } from '../../core/services'
 import type { DownloadDependencyPreview } from '../../library/pack-health'
 import { useDownloadsStore } from '../../stores/downloads'
+import { useLibNoticeStore, type LibNotice } from '../../stores/libnotice'
 import { askChoice } from '../kit/choice'
 import DependencyPreviewPage, { type DependencyAnswer } from './DependencyPreviewPage.vue'
 
@@ -26,6 +27,7 @@ export async function installBrewSources(s: Services, setId: string, sources: re
     try { r = await s.backend.library.service.brewInstallSources(setId, plain) } catch (e) {
       console.error('[trpg-assistant] 补装依赖失败', e)
       error = e instanceof Error ? e.message : String(e)
+      if (isDependencyError(e)) { await reportLibError(s, e, `补装${label}`, toast); return null }
       return error
     }
     if (r.value.notFound.length) error = `自制仓库里找不到：${r.value.notFound.join('、')}`
@@ -52,4 +54,36 @@ export async function confirmDependencies(s: Services, name: string, files: Arra
   if (!a.ok) return null
   if (a.dontAsk) await saveSkip()
   return a.books
+}
+
+interface DependencyErrorLike { name: string; setId: string; missing: Array<{ source: string; packs: Array<{ docIdLocal: string; filename: string | null }> }> }
+const isDependencyError = (e: unknown): e is DependencyErrorLike => !!e && typeof e === 'object' && (e as { name?: unknown }).name === 'BrewDependencyError' && Array.isArray((e as { missing?: unknown }).missing)
+const packTitle = (f: string | null, id: string): string => (f ?? id).replace(/\.json$/, '').replace(/^[^;]+;\s*/, '')
+
+/**
+ * 库页出错一律进顶部横幅（P5 T6）。缺依赖（后端修法 A 拦下的改动）给【下载依赖包】和【删除缺依赖的包】，
+ * 其他错误给【重试】（调用方给了才有）。what = 做的是什么（例：「下载《X》」「删除《X》」）。
+ */
+export async function reportLibError(s: Services, e: unknown, what: string, toast: Toast, retry?: () => void): Promise<void> {
+  console.error(`[trpg-assistant] ${what}没有成功`, e)
+  const notices = useLibNoticeStore()
+  const key = `err:${what}`
+  const done = (): void => notices.dismiss(key)
+  if (!isDependencyError(e)) {
+    const why = e instanceof Error ? e.message : String(e)
+    notices.show({ key, text: `${what}没有成功：${why}`, actions: retry ? [{ label: '重试', run: () => { done(); retry() } }] : [] })
+    return
+  }
+  const sources = e.missing.map((m) => m.source)
+  const needers = [...new Map(e.missing.flatMap((m) => m.packs).map((p) => [p.docIdLocal, p])).values()]
+  // 「删除缺依赖的包」只对已经在本机的包给（刚要装、被拦下的包本来就没装进来）
+  const installed = new Set((await s.backend.library.brewPacks.list(e.setId).catch(() => [])).map((p) => p.docIdLocal))
+  const actions: LibNotice['actions'] = []
+  if (sources.length) actions.push({ label: '下载依赖包', run: () => { done(); void installBrewSources(s, e.setId, sources, `依赖包 ${sources.join('、')}`, toast) } })
+  for (const p of needers.filter((x) => installed.has(x.docIdLocal))) {
+    actions.push({ label: `删除《${packTitle(p.filename, p.docIdLocal)}》`, run: () => { void import('./actions').then(({ removeTarget }) => removeTarget(s, { kind: 'brew', setId: e.setId, docIdLocals: [p.docIdLocal] }, packTitle(p.filename, p.docIdLocal), false, toast)).then((ok) => { if (ok) done() }) } })
+  }
+  if (retry) actions.push({ label: '重试', run: () => { done(); retry() } })
+  const who = needers.map((p) => `《${packTitle(p.filename, p.docIdLocal)}》`).join('、')
+  notices.show({ key, text: `${what}没有完成：缺依赖包 ${sources.join('、') || '（未知）'}${who ? `（${who}需要它）` : ''}。这次改动已取消，原有内容没有变化。`, actions })
 }

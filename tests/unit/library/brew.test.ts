@@ -45,6 +45,25 @@ describe('作者同步存储（localStorage）存进库', () => {
 })
 
 describe('parseBrew', () => {
+  it('修法 A：作者合并全部自制包失败（缺依赖）→ 记下缺的依赖、标为解析失败、不再往下解析；小窗照样关掉', async () => {
+    let closed = false
+    let parsedAny = false
+    const report = await parseBrew({
+      source: getSource('cn-brew'), db, view: await revisions.published(),
+      openFrame: async () => fakeFrame({
+        brewInstalled: () => [{ head: { docIdLocal: 'p', filename: 'psion.json' }, meta: {} }],
+        brewMergeCheck: () => ({ ok: false, error: 'Could not find prerelease/brew URL for source "llspell"', missing: [{ source: 'llspell', packs: [{ docIdLocal: 'p', filename: 'psion.json' }] }] }),
+        loaders: () => { parsedAny = true; return [] },
+      }, () => { closed = true }),
+      openFrameIn: async () => { throw new Error('不该开隔离小窗') },
+    })
+    expect(report.parse.missingDeps).toEqual([{ source: 'llspell', packs: [{ docIdLocal: 'p', filename: 'psion.json' }] }])
+    expect(report.parse.errors[0].prop).toBe('*')
+    expect(parsedAny).toBe(false)
+    expect(closed).toBe(true)
+    const { assertPublishable, BrewDependencyError } = await import('../../../src/library/service-brew')
+    expect(() => assertPublishable(getSource('cn-brew'), report)).toThrow(BrewDependencyError)
+  })
   it('先清旧结果；只存有内容的类别；作者报错原样记下；小窗用完关掉', async () => {
     const source = getSource('cn-brew')
     await db.derived.put({ key: parsedKey('cn-brew', 'feat'), fingerprint: 'brew', value: {}, savedAt: 0 })
@@ -54,6 +73,7 @@ describe('parseBrew', () => {
       db, view: await revisions.published(),
       openFrame: async () => fakeFrame({
         brewInstalled: () => [{ head: { docIdLocal: 'a', filename: 'x.json' }, meta: {} }],
+        brewMergeCheck: () => ({ ok: true, error: null, missing: [] }),
         loaders: () => [{ props: ['spell', 'spellFluff'], page: 'spells.html', kind: 'site' }, { props: ['raw_class', 'class'], page: 'classes.html', kind: 'site' }, { props: ['book', 'bookData'], page: 'book.html', kind: 'corpus', index: 'books.json' }],
         brewCorpusList: (prop) => (prop === 'book' ? [{ id: 'MyBook', name: '我的书', source: 'X', hash: 'mybook_x' }] : []),
         parseCorpus: () => ({ book: [{ id: 'MyBook' }], bookData: [{ id: 'MyBook' }] }),

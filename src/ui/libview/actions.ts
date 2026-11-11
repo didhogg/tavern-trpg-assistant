@@ -4,6 +4,7 @@ import type { Services } from '../../core/services'
 import type { CatalogRow } from '../../library/scoped'
 import { getSource } from '../../library/sources'
 import { askConfirm, type ConfirmSection } from '../kit/confirm'
+import { reportLibError } from './deps-flow'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
 
@@ -63,8 +64,7 @@ export async function removeTarget(s: Services, target: RemovalTarget, label: st
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e)
       if (attempt === 0 && /重新预览/.test(m)) continue
-      console.error('[trpg-assistant] 卸载 / 删除失败', e)
-      toast.error(`没有删除，原有内容没有改动：${m}`)
+      await reportLibError(s, e, official ? `卸载《${label}》` : `删除《${label}》`, toast, () => void removeTarget(s, target, label, false, toast))
       return false
     }
   }

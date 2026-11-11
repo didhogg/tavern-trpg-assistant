@@ -2,6 +2,7 @@
 import type { Services } from '../../core/services'
 import { SOURCES, officialSourceOf } from '../../library/sources'
 import { askConfirm } from '../kit/confirm'
+import { reportLibError } from './deps-flow'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void; info: (m: string) => void }
 
@@ -24,8 +25,7 @@ export async function pullUpdates(s: Services, codeSet: string, toast: Toast): P
     toast.success(`已开始更新（${available.length} 套官方资料，${brew.length} 个自制包）`)
     return true
   } catch (e) {
-    console.error('[trpg-assistant] 拉取更新失败', e)
-    toast.error(e instanceof Error ? e.message : '拉取更新没有成功')
+    await reportLibError(s, e, '拉取更新', toast, () => void pullUpdates(s, codeSet, toast))
     return false
   }
 }
