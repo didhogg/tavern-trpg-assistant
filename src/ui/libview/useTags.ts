@@ -21,15 +21,18 @@ export function resolveTagOnce(s: Services, codeSet: string, tag: string, conten
   let p = memo.get(key)
   if (!p) {
     p = (async (): Promise<TagResolved> => {
-      const label = tagLabel(content, tag.replace(/^@/, ''))
+      const full = tag.startsWith('@') ? tag : '@' + tag
+      const label = tagLabel(content, full.slice(1))
       try {
         const meta = await library.links.resolveTag(codeSet, tag, content)
         if (meta) return { kind: 'link', label: meta.displayText || label, target: meta }
         const frame = await library.service.frameOf(codeSet)
-        const dice = await frame.call('diceTag', tag, content)
-        if (dice) return { kind: 'dice', label }
-        // 既不是链接也不是骰子（{@atk mw}、{@dc 18}、{@h} 等）：显示成什么由作者渲染器定（frame renderText，P5-1 B-40），不显示里面的原文
-        const full = tag.startsWith('@') ? tag : '@' + tag
+        try {
+          if (await frame.call('diceTag', full, content)) return { kind: 'dice', label }
+        } catch (e) {
+          // 作者的骰子入口会抛出「不处理此标签」，普通标签仍须交给渲染器。
+          if (!(e instanceof Error && e.message.includes(`Unhandled tag "${full}"`))) console.warn('[trpg-assistant] 识别骰子标签失败', full, e)
+        }
         const markup = await frame.call('renderContent', '{' + full + (content ? ' ' + content : '') + '}')
         if (markup.html) return { kind: 'markup', markup, label }
       } catch (e) {

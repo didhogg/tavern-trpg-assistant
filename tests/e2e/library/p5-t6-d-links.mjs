@@ -72,6 +72,22 @@ try {
   const back = () => page.getByRole('button', { name: /^返回：/ }).click()
   const active = () => page.locator('.trpg-modal__page:not(.is-under)')
   const title = () => page.locator('.trpg-modal__title').innerText()
+  await search('活化棺材')
+  const attack = active().getByText('近战武器攻击:', { exact: true }).first()
+  await attack.waitFor({ timeout: 4500 })
+  await active().getByText('命中:', { exact: true }).first().waitFor({ timeout: 4500 })
+  result.checks.attackAndHit = true
+  await attack.scrollIntoViewIfNeeded()
+  await page.screenshot({ path: join(profile, 'attack-terms.png') })
+  await close()
+  await search('法柏贾斯特')
+  await active().getByText('近战 或 远程武器攻击:', { exact: true }).first().waitFor({ timeout: 4500 })
+  result.checks.combinedAttack = true
+  await close()
+  await search('祝福术')
+  await active().getByTestId('entry-statblock').getByText(/专注.*至多.*分钟/).waitFor()
+  result.checks.concentration = true
+  await close()
   await search('地衣巫妖')
   await active().getByRole('tab', { name: '正文' }).waitFor()
   const detailHeader = () => page.evaluate(() => {

@@ -34065,31 +34065,35 @@ function ZL(e, t, n, r) {
 	XL !== i.service.generation && (YL.clear(), XL = i.service.generation);
 	let a = `${t}|${n}|${r}`, o = YL.get(a);
 	return o || (o = (async () => {
-		let e = qL(r, n.replace(/^@/, ""));
+		let e = n.startsWith("@") ? n : "@" + n, a = qL(r, e.slice(1));
 		try {
-			let a = await i.links.resolveTag(t, n, r);
-			if (a) return {
+			let o = await i.links.resolveTag(t, n, r);
+			if (o) return {
 				kind: "link",
-				label: a.displayText || e,
-				target: a
+				label: o.displayText || a,
+				target: o
 			};
-			let o = await i.service.frameOf(t);
-			if (await o.call("diceTag", n, r)) return {
-				kind: "dice",
-				label: e
-			};
-			let s = n.startsWith("@") ? n : "@" + n, c = await o.call("renderContent", "{" + s + (r ? " " + r : "") + "}");
+			let s = await i.service.frameOf(t);
+			try {
+				if (await s.call("diceTag", e, r)) return {
+					kind: "dice",
+					label: a
+				};
+			} catch (t) {
+				t instanceof Error && t.message.includes(`Unhandled tag "${e}"`) || console.warn("[trpg-assistant] 识别骰子标签失败", e, t);
+			}
+			let c = await s.call("renderContent", "{" + e + (r ? " " + r : "") + "}");
 			if (c.html) return {
 				kind: "markup",
 				markup: c,
-				label: e
+				label: a
 			};
 		} catch (e) {
 			console.error("[trpg-assistant] 解析标签失败", n, e);
 		}
 		return {
 			kind: "plain",
-			label: e
+			label: a
 		};
 	})(), YL.set(a, o)), o;
 }
