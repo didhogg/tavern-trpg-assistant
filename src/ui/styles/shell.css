@@ -53,11 +53,11 @@
 .trpg-resize { position: absolute; right: 0; bottom: 0; z-index: 30; width: 22px; height: 22px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 50%, var(--line-ctrl) 50%, var(--line-ctrl) 58%, transparent 58%, transparent 70%, var(--line-ctrl) 70%, var(--line-ctrl) 78%, transparent 78%); opacity: 0.6; }
 
 /* 库标签：小环 + 数字；悬停 / 点按出紧凑小窗 */
-.trpg-libmark { display: inline-flex; align-items: center; gap: 4px; padding: 1px 4px 1px 1px; border-radius: var(--r-pill); }
+/* 下载中的【库】图标：大小固定 30×30，数字是右下角的小角标——不让按钮变宽（以前侧栏收起时会凸进内容区，P5 T6） */
+.trpg-libmark { position: relative; flex: none; display: inline-flex; width: 30px; height: 30px; }
 .trpg-libmark__icon { position: relative; display: inline-grid; place-items: center; width: 30px; height: 30px; }
 .trpg-libmark__icon > .trpg-ring { position: absolute; inset: 0; }
-.trpg-count { font-size: var(--fs-sm); font-weight: var(--fw-semibold); min-width: 14px; text-align: center; color: var(--primary-text); }
-.trpg-side .trpg-count, .trpg-tabs .trpg-count { color: var(--side-ink); }
+.trpg-count { position: absolute; right: -5px; bottom: -3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--r-pill); background: var(--accent); color: var(--side); font-size: 10px; line-height: 16px; font-weight: var(--fw-semibold); text-align: center; box-sizing: border-box; pointer-events: none; }
 .trpg-ring { position: relative; display: inline-grid; place-items: center; flex: none; }
 .trpg-ring svg { display: block; }
 .trpg-ring [data-part='track'] { stroke: var(--line-ctrl); }
@@ -66,13 +66,17 @@
 .trpg-ring__badge { position: absolute; right: -4px; top: -4px; min-width: 14px; height: 14px; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 10px; font-weight: var(--fw-bold); line-height: 1; }
 .trpg-side .trpg-ring [data-part='track'], .trpg-tabs .trpg-ring [data-part='track'] { stroke: var(--side-hover); }
 .trpg-side .trpg-ring [data-part='arc'], .trpg-tabs .trpg-ring [data-part='arc'] { stroke: var(--accent); }
-.trpg-pop { max-height: 60vh; overflow: auto; overflow-wrap: anywhere; pointer-events: none; position: absolute; z-index: var(--z-pop); left: calc(100% + 8px); bottom: 0; width: 272px; padding: var(--sp-2) var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-1); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--text); box-shadow: var(--shadow-2); animation: trpg-fade var(--dur-fast) var(--ease-out); text-align: left; font-weight: var(--fw-regular); }
-.trpg-window:not([data-layout='wide']) .trpg-pop { position: fixed; left: 50%; right: auto; bottom: calc(72px + env(safe-area-inset-bottom)); width: min(272px, calc(100% - 24px)); transform: translateX(-50%); }
-.trpg-pop h3 { font-size: var(--fs-sm); color: var(--text2); font-weight: var(--fw-semibold); }
-.trpg-pop__row { display: grid; grid-template-columns: 1fr auto; gap: 0 var(--sp-3); align-items: baseline; padding-top: var(--sp-1); border-top: var(--border) solid var(--line); }
+/* 【库】下载悬浮窗（P5 T6 B1）：挂在插件最外层、按图标位置 fixed 定位，可以超出插件框；能移进去点按钮 */
+.trpg-pop { position: fixed; z-index: 100003; max-height: min(60vh, 420px); overflow: auto; overflow-wrap: anywhere; width: min(320px, calc(100vw - 16px)); padding: var(--sp-2) var(--sp-3) var(--sp-3); display: grid; gap: var(--sp-2); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--text); box-shadow: var(--shadow-3); animation: trpg-fade var(--dur-fast) var(--ease-out); text-align: left; font-weight: var(--fw-regular); }
+.trpg-pop h3 { font-size: var(--fs-sm); color: var(--text2); font-weight: var(--fw-semibold); margin: 0; }
+.trpg-pop__row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: var(--sp-2); align-items: center; padding-top: var(--sp-2); border-top: var(--border) solid var(--line); }
 .trpg-pop__row:first-of-type { border-top: 0; padding-top: 0; }
-.trpg-pop__row small { color: var(--text2); white-space: nowrap; }
-.trpg-pop__row .trpg-field__hint { grid-column: 1 / -1; }
+.trpg-pop__ring { display: inline-flex; width: 26px; height: 26px; }
+.trpg-pop__main { display: grid; min-width: 0; } .trpg-pop__main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trpg-pop__main small { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trpg-pop__row[data-status='failed'] .trpg-pop__main small { color: var(--danger-text); white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; } /* 失败原因只显示两行，全文在悬停提示里 */
+.trpg-pop__acts { display: inline-flex; gap: var(--sp-1); align-items: center; }
+.trpg-pop__foot { display: flex; justify-content: flex-end; }
 @keyframes trpg-fade { from { opacity: 0; } }
 @keyframes trpg-spin { to { transform: rotate(360deg); } }
 

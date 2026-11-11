@@ -2,6 +2,8 @@
 import { useModalStore } from '../../stores/modal'
 import type { EntryRef } from '../../library/scopes'
 import EntryPage from './EntryPage.vue'
+import EntryLangSwitch from './EntryLangSwitch.vue'
+import ReaderLangSwitch from './ReaderLangSwitch.vue'
 import BulkPage from './BulkPage.vue'
 import ManagePage from './ManagePage.vue'
 import PackHeader from './PackHeader.vue'
@@ -26,7 +28,7 @@ export function openPack(p: PackProps): void {
 }
 
 export function openEntry(ref: EntryRef, title = ''): void {
-  useModalStore().push({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, props: { entryRef: ref }, variant: 'sheet' })
+  useModalStore().push({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, header: EntryLangSwitch, props: { entryRef: ref }, variant: 'sheet' })
 }
 
 export function openSearch(): void {
@@ -40,7 +42,12 @@ export function openManage(p: PackProps): void {
 
 /** 书 / 冒险阅读器：弹窗里前进一页。 */
 export function openReader(r: { set: string; prop: string; id: string; name: string }): void {
-  useModalStore().push({ key: `reader:${r.set}:${r.prop}:${r.id}`, title: r.name, component: ReaderPage, props: { ...r }, variant: 'sheet' })
+  useModalStore().push({ key: `reader:${r.set}:${r.prop}:${r.id}`, title: r.name, component: ReaderPage, header: ReaderLangSwitch, props: { ...r }, variant: 'sheet' })
+}
+
+/** 阅读器换语言：把当前这一页换成另一种语言的同一本书（不增加返回层数）。 */
+export function replaceReader(r: { set: string; prop: string; id: string; name: string }): void {
+  useModalStore().replace({ key: `reader:${r.set}:${r.prop}:${r.id}`, title: r.name, component: ReaderPage, header: ReaderLangSwitch, props: { ...r }, variant: 'sheet' })
 }
 
 export function openBulk(): void {
@@ -49,5 +56,5 @@ export function openBulk(): void {
 
 /** 语言切换：把当前详情页换成另一种语言里的同一条（不增加返回层数）。 */
 export function replaceEntry(ref: EntryRef, title = ''): void {
-  useModalStore().replace({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, props: { entryRef: ref }, variant: 'sheet' })
+  useModalStore().replace({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, header: EntryLangSwitch, props: { entryRef: ref }, variant: 'sheet' })
 }

@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
+import { useDownloadsStore } from '../../stores/downloads'
 import { officialSourceOf } from '../../library/sources'
 import { useBrewCatalogStore } from '../../stores/brewcatalog'
 import Icon from '../kit/Icon.vue'
@@ -38,6 +39,10 @@ function prefetchBrewCatalog(): void {
 }
 onMounted(() => { reload(); warmPairs(); prefetchBrewCatalog() })
 watch(() => [campaign.owner?.ownerKey, campaign.hasCampaign, campaign.currentSave?.id], reload)
+// 下载 / 更新任务结束（完成、失败、取消）才按当前战役重读一次书架；进行中不重读，旧书架一直显示（P5 T6 B4）
+const dl = useDownloadsStore()
+let active = 0
+watch(() => dl.running.length + dl.paused.length, (n) => { if (n < active) reload(); active = n }, { immediate: true })
 </script>
 
 <template>

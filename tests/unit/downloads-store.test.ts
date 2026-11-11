@@ -23,6 +23,24 @@ describe('itemsOf', () => {
   })
 })
 
+describe('itemsOf 按书下载（P5 T6 B1）', () => {
+  it('登记了书名的官方任务各占一行、带任务号；暂停的标成已暂停；没登记的仍合并成「官方资料」', () => {
+    const names = new Map([['task:t1', '玩家手册'], ['task:t2', '姜']])
+    const items = itemsOf([
+      task('t1', 'running', { kind: 'official', item: null, progress: { stage: 'download', done: 1, total: 4 } }),
+      task('t2', 'paused', { kind: 'official', item: null }),
+      task('w', 'running', { kind: 'official', set: 'en-official', item: null }),
+    ], names)
+    expect(items.map((i) => [i.key, i.status, i.taskId ?? null])).toEqual([['official', 'running', null], ['official-book:玩家手册', 'running', 't1'], ['official-book:姜', 'paused', 't2']])
+    expect(items[2].stage).toBe('已暂停')
+  })
+  it('同一本书重试：只看最新一次任务', () => {
+    const names = new Map([['task:a', '玩家手册'], ['task:b', '玩家手册']])
+    const items = itemsOf([task('a', 'failed', { kind: 'official', item: null }), task('b', 'running', { kind: 'official', item: null })], names)
+    expect(items.map((i) => [i.status, i.taskId])).toEqual([['running', 'b']])
+  })
+})
+
 describe('下载状态仓库', () => {
   let tasks: TaskState[]
   beforeEach(() => { setActivePinia(createPinia()); tasks = [] })
@@ -70,5 +88,19 @@ describe('下载状态仓库', () => {
     expect(retried).toBe(1)
     dl.dismiss('brew:x')
     expect(dl.failedAll).toHaveLength(0)
+  })
+})
+
+describe('自制包阶段（P5 T6 B1）', () => {
+  beforeEach(() => { setActivePinia(createPinia()) })
+  it('trackBrew 把后端报的阶段实时写进这一行；结束后去掉；暂停的任务算进数字', async () => {
+    const dl = useDownloadsStore()
+    let release!: () => void
+    const done = dl.trackBrew('brew:x', '自制包《X》', async (report) => { report('整理资料', 0.5); await new Promise<void>((r) => { release = r }); return null })
+    await Promise.resolve()
+    expect(dl.items.find((i) => i.key === 'brew:x')).toMatchObject({ stage: '整理资料', pct: 0.5, status: 'running' })
+    release()
+    await done
+    expect(dl.items.find((i) => i.key === 'brew:x')).toBeUndefined()
   })
 })

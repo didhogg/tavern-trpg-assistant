@@ -12,7 +12,9 @@ import { ruleBadge } from './registry'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
 import { removeSource, saveToMine } from './actions'
-import { pullUpdates } from './update-flow'
+import { pullUpdates, updateRow } from './update-flow'
+import { useUpdatesStore } from '../../stores/updates'
+import { useDownloadsStore } from '../../stores/downloads'
 import { openBulk, openManage, openPack } from './open'
 
 /** 书架（U2a）：官方 / 自制分开；每组可折叠；行 = 书名 · 版本 · 开关 · ⋯。无战役时所有书显示为关、开关不可用。书架搜索在列表下方。 */
@@ -20,6 +22,11 @@ const app = useAppStore()
 const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const toast = useToastStore()
+const updates = useUpdatesStore()
+const dl = useDownloadsStore()
+// 这一行有没有更新 / 正在更新（检查结果来自后端，书架只显示）
+const hasUpdate = (r: CatalogRow): boolean => !!(updates.brewOf(r.pack?.docIdLocal) || updates.officialOf(r.set, r.kind, r.id, r.source))
+const updating = (r: CatalogRow): boolean => dl.items.some((i) => i.status === 'running' && (i.key === `update:${r.pack?.docIdLocal}` || i.label === `更新《${r.name}》`))
 const q = ref('')
 
 const kindOf = (r: CatalogRow): 'official' | 'brew' => (getSource(r.set).kind === 'brew' ? 'brew' : 'official')
@@ -45,7 +52,7 @@ async function onMenu(r: CatalogRow, key: string): Promise<void> {
   else if ((key === 'rm' || key === 'rm-all') && (await removeSource(s, r, app.settings?.library.skipRemovePrompt ?? false, toast, key === 'rm-all'))) await lib.refresh(s)
 }
 async function onShelfMenu(key: string): Promise<void> {
-  if (key === 'pull' && (await pullUpdates(app.svc(), lib.campaignLib?.codeSet ?? 'cn', toast))) await lib.refresh(app.svc())
+  if (key === 'pull') await pullUpdates(app.svc(), lib.campaignLib?.codeSet ?? 'cn', toast)
 }
 const isOn = (r: CatalogRow): boolean => lib.bound && r.view.visible
 async function toggle(r: CatalogRow, next: boolean): Promise<void> {
@@ -74,7 +81,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
           {{ s.label }}
           <span v-if="s.kind === 'official'" class="lib-end">
             <button class="trpg-btn trpg-btn--small" type="button" data-testid="open-bulk" :disabled="!lib.bound" :title="lib.bound ? undefined : '先创建战役'" @click="openBulk()">批量勾选…</button>
-            <MoreMenu label="书架" :items="[{ key: 'pull', label: '拉取更新' }]" @select="onShelfMenu" />
+            <MoreMenu label="书架" :items="[{ key: 'pull', label: updates.checking ? '正在检查更新…' : '拉取更新', disabled: updates.checking }]" @select="onShelfMenu" />
           </span>
         </div>
         <div class="trpg-shelf lib-shelfbox">
@@ -86,6 +93,8 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
             <div v-for="r in [...g.books, ...g.adventures]" :key="`${r.set}:${r.pack?.docIdLocal ?? r.source}:${r.id ?? ''}`" class="trpg-shelf__row" :data-off="!isOn(r)">
               <button class="lib-name" type="button" @click="openPack({ set: r.set, source: r.source, name: r.name, kind: r.kind, corpora: r.corpora, ...(r.pack ? { docIdLocal: r.pack.docIdLocal } : {}) })">{{ r.name }}<template v-if="r.kind === 'adventure'">（冒险）</template><small v-if="r.altName" class="lib-alt-name">{{ r.altName }}</small></button>
               <span v-if="ruleBadge(r)" class="trpg-badge" :title="r.shelf?.published ? `出版：${r.shelf.published}` : undefined">{{ ruleBadge(r) }}</span>
+              <span v-if="updating(r)" class="lib-muted" role="status">更新中…</span>
+              <button v-else-if="hasUpdate(r)" class="trpg-btn trpg-btn--small" type="button" data-testid="row-update" :title="`更新《${r.name}》`" @click="updateRow(app.svc(), r, toast)">有更新 · 更新</button>
               <Switch :model-value="isOn(r)" :label="`在本战役里使用《${r.name}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(r, v)" />
               <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }, ...(getSource(r.set).kind === 'official' ? [{ key: 'rm', label: r.kind === 'adventure' ? '卸载这本冒险…' : '卸载这本书…', danger: true }, { key: 'rm-all', label: '卸载整套官方资料…', danger: true }] : [{ key: 'rm', label: '删除这个包…', danger: true }])]" @select="(k: string) => onMenu(r, k)" />
             </div>

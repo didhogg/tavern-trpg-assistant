@@ -94,8 +94,9 @@ export async function wizardSuite(page, label, { width }) {
   await page.getByTestId('nav-library').hover()
   await page.getByTestId('lib-pop').waitFor()
   const pop = await page.getByTestId('lib-pop').innerText()
-  check(`[${label}] 悬停小窗：只列「下载失败」的项，写明原因和「请之后到库里重试」，没有取消 / 继续按钮`, pop.includes('下载失败') && pop.includes('官方资料') && pop.includes('请之后到库里重试') && (await page.getByTestId('lib-pop').getByRole('button').count()) === 0, pop)
+  // P5 T6 起：悬浮窗每项可直接【重试】或关掉（驾驶员要求），不再写「请之后到库里重试」
+  check(`[${label}] 悬停小窗：列出失败的「官方资料」并写明失败原因，带【重试】和关掉按钮`, pop.includes('官方资料') && pop.includes('失败') && (await page.getByTestId('pop-retry').count()) >= 1, pop)
   await page.mouse.move(2, 2)
-  await settle(page, 300)
+  await settle(page, 600) // 移开后有 250 毫秒缓冲（方便鼠标移进小窗），再等一会
   check(`[${label}] 移开鼠标小窗即消失`, (await page.getByTestId('lib-pop').count()) === 0)
 }

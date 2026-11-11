@@ -151,3 +151,32 @@
 /* 下载失败横幅：库页顶部，三个分区都看得到；每条带重试 */
 .lib-bannerstack { flex: none; display: grid; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4) 0; }
 .lib-bannerstack .lib-banner { margin: 0; }
+
+/* 下载页栏目（P5 T6 B2）：标题 + 搜索 + 多选；按作者分类分组，组间细线；多选时底部钉批量操作栏 */
+.lib-dlsec { display: grid; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.lib-dlsec__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
+.lib-dlsec__head .lib-title { flex: 1 0 auto; }
+.lib-dlsec__tools { display: flex; gap: var(--sp-2); align-items: center; flex: 1 1 280px; justify-content: flex-end; }
+.lib-dlsec__tools .trpg-input { flex: 1 1 auto; min-width: 0; max-width: 320px; }
+.lib-dlsec__tools .trpg-btn { flex: none; white-space: nowrap; }
+.lib-dlsec__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.lib-dlsec__bar .lib-banner { flex: 1 1 100%; }
+.lib-dlsec__empty { margin: 0; padding: var(--sp-2) 0; }
+.lib-dlgrp { border-top: var(--border) solid var(--line); }
+.lib-dlgrp:first-child { border-top: 0; }
+.lib-dlgrp__sum { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--hit); }
+.lib-dlgrp__btn { flex: 1; display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--hit); padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: var(--fw-semibold); text-align: left; cursor: pointer; }
+.lib-dlgrp__btn small { margin-left: var(--sp-2); color: var(--text3); font-weight: var(--fw-regular); }
+.lib-dlgrp__rows { margin: 0 0 var(--sp-2); }
+.lib-dlgrp__rows .trpg-row { gap: var(--sp-2); }
+.lib-dlgrp__rows .trpg-row[data-selected='true'] { background: var(--primary-tint); }
+.lib-selbar { position: sticky; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); margin: 0 calc(-1 * var(--sp-3)) calc(-1 * var(--sp-3)); border-top: var(--border) solid var(--line); background: var(--surface); box-shadow: 0 -4px 10px color-mix(in srgb, var(--text) 8%, transparent); border-radius: 0 0 var(--r-md) var(--r-md); }
+.lib-selbar .lib-end { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+/* 详情弹窗标题栏上的 中 / En 切换（P5 T6）：两段式圆角、细边 + 轻阴影；当前语言填主色，另一种语言没有时那一侧变淡、悬停说原因 */
+.lib-langsw { flex: none; display: inline-flex; padding: 2px; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-pill); background: var(--surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 10%, transparent), 0 2px 6px color-mix(in srgb, var(--text) 8%, transparent); }
+.lib-langsw__btn { min-width: 44px; min-height: 28px; padding: 0 var(--sp-3); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--text2); font: inherit; font-size: var(--fs-sm); font-weight: var(--fw-semibold); cursor: pointer; transition: background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
+.lib-langsw__btn:hover:not(:disabled):not([aria-pressed='true']) { background: var(--bg-hover); color: var(--text); }
+.lib-langsw__btn[aria-pressed='true'] { background: var(--primary); color: var(--on-primary, #fff); box-shadow: 0 1px 3px color-mix(in srgb, var(--primary) 40%, transparent); cursor: default; }
+.lib-langsw__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.lib-langsw__btn:focus-visible { outline: 2px solid var(--focus, var(--primary)); outline-offset: 1px; }

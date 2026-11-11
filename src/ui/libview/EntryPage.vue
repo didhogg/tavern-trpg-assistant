@@ -10,17 +10,16 @@ import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
-import Segmented from '../kit/Segmented.vue'
 import Switch from '../kit/Switch.vue'
 import ClassView from './ClassView.vue'
 import { byLevel, flattenFeatures } from './class-data'
 import EntryBody from './EntryBody.vue'
 import EntryVersions from './EntryVersions.vue'
 import MissingEntry from './MissingEntry.vue'
-import { replaceEntry } from './open'
 import FeatureLevels from './FeatureLevels.vue'
 import { authorName, nameOf as itemName } from './pack-data'
 import { BLOCKS } from './statblock'
+import { useEntryLangStore } from '../../stores/entrylang'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
 const props = defineProps<{ entryRef: EntryRef }>()
@@ -35,17 +34,24 @@ const state = ref<State>({ kind: 'loading' })
 const enabled = ref(true)
 /** 中 / En 切换：只是同一个来源的另一种语言版本（作者的配对）；对不上就灰掉。 */
 const other = ref<EntryRef | null>(null)
-const lang = computed(() => getSource(props.entryRef.set).lang)
+const langs = useEntryLangStore()
+// 后端给的「为什么没有另一种语言」→ 标题栏切换按钮的悬停说明
+const WHY: Record<string, string> = {
+  'not-installed': '另一种语言的资料还没装', 'not-paired': '作者没给这一条配另一种语言', 'not-found': '另一种语言里找不到这一条',
+  'pack-unpaired': '这个包没有配对的另一种语言包', 'structure-differs': '两种语言的包结构不一样，对不上', 'no-english-name': '这条自制条目没写英文名（ENG_name），对不上',
+  'no-counterpart': '另一种语言里没有这一条', 'not-official': '另一种语言里没有这一条',
+}
 async function loadCounterpart(d: ScopedDetail | null): Promise<void> {
   other.value = null
+  langs.set(props.entryRef, { other: null, reason: null, loading: true })
   try {
     const cp = await app.svc().backend.library.counterparts.counterpart(props.entryRef, { docIdLocal: d?.version.altId && d.version.altId !== 'base' ? d.alternatives.find((a) => a.altId === d.version.altId)?.docIdLocal : undefined })
     if (cp.status === 'found') other.value = cp.refs[0]
-  } catch (e) { console.error('[trpg-assistant] 读取另一种语言失败', e) }
-}
-function switchLang(v: string | undefined): void {
-  if (!v || v === (lang.value === 'zh' ? 'zh' : 'en') || !other.value) return
-  replaceEntry(other.value)
+    langs.set(props.entryRef, { other: other.value, reason: cp.status === 'ambiguous' ? '另一种语言里有好几条对得上，没法确定是哪一条' : cp.reason ? WHY[cp.reason] ?? '另一种语言里没有这一条' : null, loading: false })
+  } catch (e) {
+    console.error('[trpg-assistant] 读取另一种语言失败', e)
+    langs.set(props.entryRef, { other: null, reason: '这次没查出另一种语言（出错了，重新打开这一条再试）', loading: false })
+  }
 }
 const codeSet = computed(() => getSource(props.entryRef.set).codeSet)
 const sourceLine = ref('')
@@ -167,7 +173,6 @@ async function setEnabled(next: boolean): Promise<void> {
     <div v-else-if="state.kind === 'error'" class="lib-state"><h3>这一条读不出来</h3><p class="lib-muted">{{ state.message }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
     <template v-else>
       <div class="lib-dtools">
-        <Segmented :model-value="lang === 'zh' ? 'zh' : 'en'" label="语言" :options="[{ value: 'en', label: 'En', disabled: lang === 'zh' && !other, hint: '另一种语言里没有这一条' }, { value: 'zh', label: '中文', disabled: lang !== 'zh' && !other, hint: '另一种语言里没有这一条' }]" @update:model-value="switchLang" />
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
           <button class="trpg-icon-btn" type="button" disabled aria-label="编辑（稍后开放）" title="条目编辑稍后开放"><Icon name="pencil-simple" :size="18" /></button>
