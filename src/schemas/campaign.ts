@@ -58,6 +58,8 @@ export const librarySettingsSchema = z.object({
   skipImportPreview: z.boolean().default(false),
   /** 删除 / 卸载前不列影响（影响页的勾选，记住）。 */
   skipRemovePrompt: z.boolean().default(false),
+  /** 下载自制包前不弹依赖预览（预览页的「不再提示」，记住）；依赖仍按作者程序自动一起装。 */
+  skipDependencyPrompt: z.boolean().default(false),
   /** 资料语言（作者程序那一套：cn / en）；条目页的 En / 中文 切换改的是它。 */
   lang: z.string().min(1).default('cn'),
   /** 编辑 / 覆盖默认作用于哪一层（P5 B-22）：本战役 / 某规则 / 全局；条目上可以逐条改。 */

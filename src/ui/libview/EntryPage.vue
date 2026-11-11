@@ -16,6 +16,7 @@ import ClassView from './ClassView.vue'
 import { byLevel, flattenFeatures } from './class-data'
 import EntryBody from './EntryBody.vue'
 import EntryVersions from './EntryVersions.vue'
+import MissingEntry from './MissingEntry.vue'
 import { replaceEntry } from './open'
 import FeatureLevels from './FeatureLevels.vue'
 import { authorName, nameOf as itemName } from './pack-data'
@@ -162,7 +163,7 @@ async function setEnabled(next: boolean): Promise<void> {
 <template>
   <div class="lib-mbody" data-testid="entry-page">
     <div v-if="state.kind === 'loading'" class="lib-skel" aria-busy="true"><i style="width:55%;height:22px" /><i /><i style="width:90%" /><i style="width:70%" /></div>
-    <div v-else-if="state.kind === 'none'" class="lib-state"><h3>库里没有这一条</h3><p class="lib-muted">这一条所在的书还没下载。</p></div>
+    <MissingEntry v-else-if="state.kind === 'none'" :entry-ref="entryRef" @retry="load" />
     <div v-else-if="state.kind === 'error'" class="lib-state"><h3>这一条读不出来</h3><p class="lib-muted">{{ state.message }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
     <template v-else>
       <div class="lib-dtools">

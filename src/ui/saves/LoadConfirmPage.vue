@@ -11,6 +11,7 @@ import { errorText } from '../format'
 import Checkbox from '../kit/Checkbox.vue'
 import Icon from '../kit/Icon.vue'
 import { getSource } from '../../library/sources'
+import { downloadOfficialBook, installBrewSources } from '../libview/deps-flow'
 
 export interface LoadTarget { id: string; name: string; ruleId: string; ownerKey: string; ownerLabel: string }
 
@@ -43,8 +44,15 @@ const changed = computed(() => !!check.value?.plan.versionChanged)
 const downloadPick = ref<Record<string, boolean>>({})
 const closedPick = ref<Record<string, boolean>>({})
 const plan = computed(() => check.value?.plan ?? null)
-const isDl = (set: string): boolean => downloadPick.value[set] ?? true
-const setLabel = (set: string): string => (getSource(set).kind === 'official' ? '官方资料（整套）' : '自制包资料')
+type DlItem = NonNullable<typeof plan.value>['download'][number]
+// 按书、按包补装（P5 T6）：官方给出书就只下这本；自制按缺的来源补装（作者自动带依赖）
+const dlKey = (d: DlItem): string => `${d.set}|${d.book?.id ?? ''}|${(d.sources ?? []).join(',')}|${d.via ?? ''}`
+const isDl = (d: DlItem): boolean => downloadPick.value[dlKey(d)] ?? true
+const dlLabel = (d: DlItem): string => {
+  if (d.kind === 'official') return d.book ? `《${d.book.name}》` : `${getSource(d.set).codeSet === 'en' ? '英文' : '中文'}官方资料（查不出在哪本书，只能整套下载）`
+  if (d.via) return `依赖包 ${(d.sources ?? []).join('、')}（「${d.via.replace(/\.json$/, '')}」缺了它读不出）`
+  return d.sources?.length ? `自制包（来源 ${d.sources.join('、')}）` : '自制包（查不出来源）'
+}
 const MISSING_REASON: Record<string, string> = { 'not-installed': '资料没装', 'not-found': '资料里没有这一条' }
 
 async function setSkipAuto(on: boolean): Promise<void> {
@@ -60,7 +68,7 @@ onMounted(async () => {
   if (!app.settings) await app.refreshSettings().catch((e) => console.error('[trpg-assistant] 读取设置失败', e))
   try {
     check.value = await app.svc().backend.kernelSave.checkSave(props.save.id)
-    downloadPick.value = Object.fromEntries((check.value.plan?.download ?? []).map((d) => [d.set, true]))
+    downloadPick.value = Object.fromEntries((check.value.plan?.download ?? []).map((d) => [dlKey(d), true]))
   } catch (error) {
     console.error('[trpg-assistant] 读取前检查失败', error)
     checkError.value = errorText(error)
@@ -73,9 +81,12 @@ async function doLoad(): Promise<void> {
   try {
     if (showDirty.value && saveFirst.value) await campaign.save()
     await campaign.load(props.save.id, { allowRuleSwitch: switching.value || !campaign.hasCampaign, skipAutoSave: skipAuto.value })
-    // 勾选的缺包一起下载（官方整套走下载任务，进度在侧栏库标签上）；勾了的关着的包在本战役开启
-    const library = app.svc().backend.library
-    for (const d of plan.value?.download ?? []) if (d.kind === 'official' && isDl(d.set)) library.tasks.startOfficial(d.set)
+    // 勾选的缺包一起下载（官方按书 / 自制按来源，都在后台，进度在【库】标志上）；勾了的关着的包在本战役开启
+    const s = app.svc()
+    for (const d of (plan.value?.download ?? []).filter(isDl)) {
+      if (d.kind === 'official') { if (d.book) downloadOfficialBook(s, { set: d.set, id: d.book.id, name: d.book.name }); else s.backend.library.tasks.startOfficial(d.set) }
+      else if (d.sources?.length) void installBrewSources(s, d.set, d.sources, dlLabel(d), toast)
+    }
     const open = (plan.value?.closed ?? []).filter((c) => closedPick.value[c.source]).map((c) => c.source)
     if (open.length) await app.svc().backend.kernelSave.openSources(props.save.ownerKey, open)
     await saves.refresh()
@@ -114,7 +125,8 @@ async function doLoad(): Promise<void> {
         <div v-if="otherCard"><b>这个存档属于其他角色卡「{{ save.ownerLabel }}」</b><span>读取时会复制成这张卡的新存档「{{ save.name }}（来自 {{ save.ownerLabel }}）」，成为一个独立战役。</span></div>
         <div v-if="plan?.download.length" data-testid="load-download">
           <b>缺少数据包 —— 为防止存档数据损坏，建议下载下面的包</b>
-          <Checkbox v-for="d in plan.download" :key="d.set" :model-value="isDl(d.set)" @update:model-value="(v: boolean) => (downloadPick[d.set] = v)">{{ setLabel(d.set) }}<span class="lib-src">（{{ d.refs }} 项用到{{ d.kind === 'brew' ? '，自制包请到下载页按来源安装' : '' }}）</span></Checkbox>
+          <span class="trpg-field__hint">读取后在后台下载，进度见【库】标志；自制包的依赖会按作者程序一起装。</span>
+          <Checkbox v-for="d in plan.download" :key="dlKey(d)" :model-value="isDl(d)" :disabled="d.kind === 'brew' && !d.sources?.length" @update:model-value="(v: boolean) => (downloadPick[dlKey(d)] = v)">{{ dlLabel(d) }}<span class="lib-src">（{{ d.refs }} 项用到{{ d.labels.length ? `：${d.labels.slice(0, 2).join('、')}` : '' }}）</span></Checkbox>
         </div>
         <div v-if="plan?.closed.length" data-testid="load-closed">
           <b>包在，但本战役关着</b>

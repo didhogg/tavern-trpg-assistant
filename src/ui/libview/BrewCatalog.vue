@@ -7,8 +7,9 @@ import { useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
+import { confirmDependencies, downloadOfficialBook } from './deps-flow'
 
-/** 下载页的自制包目录（U4b）：中英文配对成一行（只有一种语言的单独一行）；点【下载】一次装两边，依赖由作者程序自动追装。目录要点【载入目录】才联网取。 */
+/** 下载页的自制包目录（U4b）：中英文配对成一行（只有一种语言的单独一行）；点【下载】先预览依赖（可不再提示），再一次装两边，依赖由作者程序自动追装。 */
 const app = useAppStore()
 const lib = useLibViewStore()
 const toast = useToastStore()
@@ -20,6 +21,8 @@ const loading = computed(() => cat.loading)
 const q = ref('')
 const page = ref(0)
 const busy = ref<Set<string>>(new Set())
+// 正在看依赖预览（还没开始下载）的行：按钮写「准备中…」，不冒充下载中
+const preparing = ref<Set<string>>(new Set())
 const installed = ref<Set<string>>(new Set())
 const PAGE = 40
 const codeSet = computed(() => lib.campaignLib?.codeSet ?? 'cn')
@@ -50,6 +53,21 @@ async function download(r: CatalogPair): Promise<void> {
   if (busy.value.has(k)) return
   busy.value = new Set([...busy.value, k])
   try {
+    // 下载前看依赖（按作者程序：依赖包会一起装；需要的官方书可勾选一起下载）
+    let books: Awaited<ReturnType<typeof confirmDependencies>>
+    preparing.value = new Set([...preparing.value, k])
+    try {
+      const files = ([[r.zh, zhSet.value], [r.en, zhSet.value.replace(/^cn-/, 'en-')]] as const).filter(([f]) => !!f).map(([f, setId]) => ({ setId, url: f!.urlDownload }))
+      books = await confirmDependencies(app.svc(), nameOf(r), files, app.settings?.library.skipDependencyPrompt ?? false, () => app.updateSettings({ library: { ...app.settings!.library, skipDependencyPrompt: true } }))
+    } catch (e) {
+      console.error('[trpg-assistant] 读取依赖失败', e)
+      const why = e instanceof Error ? e.message : String(e)
+      await dl.trackBrew(`brew:${k}`, `自制包《${nameOf(r)}》`, async () => `读不到这个包的依赖：${why}`, () => void download(r))
+      return
+    }
+    finally { const p = new Set(preparing.value); p.delete(k); preparing.value = p }
+    if (books === null) return
+    for (const b of books) downloadOfficialBook(app.svc(), b)
     await dl.trackBrew(`brew:${k}`, `自制包《${nameOf(r)}》`, async () => {
       const svc = app.svc().backend.library.service
       let added = 0
@@ -92,7 +110,7 @@ async function download(r: CatalogPair): Promise<void> {
           <div class="trpg-row__end">
             <span class="trpg-badge" :data-off="!r.zh">中</span><span class="trpg-badge" :data-off="!r.en">En</span>
             <span v-if="isInstalled(r)" class="trpg-badge" data-tone="success">已装</span>
-            <button v-else class="trpg-btn trpg-btn--small" type="button" :disabled="busy.has(keyOf(r))" @click="download(r)">{{ busy.has(keyOf(r)) ? '下载中…' : '下载' }}</button>
+            <button v-else class="trpg-btn trpg-btn--small" type="button" :disabled="busy.has(keyOf(r))" @click="download(r)">{{ preparing.has(keyOf(r)) ? '准备中…' : busy.has(keyOf(r)) ? '下载中…' : '下载' }}</button>
           </div>
         </li>
         <li v-if="!pageRows.length" class="lib-muted" style="padding: var(--sp-3)">没有符合的包。</li>

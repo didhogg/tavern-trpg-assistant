@@ -204,7 +204,7 @@ describe('备份提醒', () => {
   })
 
   it('设置：【库】偏好有默认值，旧设置缺这一组也能读；只改一项不影响别的（P5 B-13）', () => {
-    expect(settingsSchema.parse({}).library).toEqual({ groupBy: 'group', collapsed: [], skipImportPreview: false, skipRemovePrompt: false, lang: 'cn', overrideLevel: 'campaign' })
+    expect(settingsSchema.parse({}).library).toEqual({ groupBy: 'group', collapsed: [], skipImportPreview: false, skipRemovePrompt: false, skipDependencyPrompt: false, lang: 'cn', overrideLevel: 'campaign' })
     expect(settingsSchema.parse({ reminderDays: 3 }).library.lang).toBe('cn')
     expect(settingsSchema.parse({ library: { overrideLevel: 'global' } }).library.overrideLevel).toBe('global')
     expect(settingsSchema.safeParse({ library: { overrideLevel: 'x' } }).success).toBe(false)

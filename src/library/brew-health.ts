@@ -31,29 +31,39 @@ export function canProvide(req: BrewRequirement, official: Set<string>, packs: B
   })
 }
 
-export interface MissingDependency {
-  /** 缺的来源（作者的来源标识）。 */
+export interface DependencyStatus {
+  /** 依赖的来源（作者的来源标识）。 */
   source: string
   /** 用到它的类别（去重）。 */
   props: string[]
-  /** official = 已知的官方来源（下载对应的书）；brew = 到作者自制仓库按来源找包。 */
+  /** official = 官方书里的来源；brew = 自制包提供的来源。 */
   kind: 'official' | 'brew'
+  /** 现在有没有提供者。 */
+  ok: boolean
+  /** 提供它的已装自制包文件名（自制、ok 时才有）。 */
+  provider?: string | null
 }
+export type MissingDependency = Omit<DependencyStatus, 'ok' | 'provider'>
 
-/**
- * 一个已装包现在缺哪些依赖（按来源合并）。自己提供的来源不算；
- * isOfficialSource：这个来源是不是官方书目里的来源（决定去下载官方书还是自制包）。
- */
-export function missingDependencies(pack: BrewPack, official: Set<string>, packs: BrewPack[], isOfficialSource: (source: string) => boolean): MissingDependency[] {
+/** 一个包声明的全部依赖（按来源合并）及各自现在由谁提供。自己提供的来源不算。【依赖包】标签与包体检共用。 */
+export function dependencyStatus(pack: BrewPack, official: Set<string>, packs: BrewPack[], isOfficialSource: (source: string) => boolean): DependencyStatus[] {
   const own = new Set(sourcesOf(pack))
   const others = packs.filter((p) => p.docIdLocal !== pack.docIdLocal)
-  const out = new Map<string, MissingDependency>()
+  const out = new Map<string, DependencyStatus>()
   for (const req of requirementsOf(pack)) {
     const src = req.source.toLowerCase()
-    if (own.has(src) || canProvide(req, official, others)) continue
-    const hit = out.get(src) ?? { source: req.source, props: [], kind: isOfficialSource(req.source) ? 'official' as const : 'brew' as const }
+    if (own.has(src)) continue
+    const ok = canProvide(req, official, others)
+    const hit = out.get(src) ?? { source: req.source, props: [], kind: isOfficialSource(req.source) || official.has(src) ? 'official' as const : 'brew' as const, ok: true }
     if (!hit.props.includes(req.prop)) hit.props.push(req.prop)
+    hit.ok = hit.ok && ok
+    if (hit.kind === 'brew' && hit.ok) hit.provider = others.find((p) => sourcesOf(p).includes(src))?.filename ?? null
     out.set(src, hit)
   }
   return [...out.values()]
+}
+
+/** 现在缺的依赖（dependencyStatus 里没有提供者的那些）。 */
+export function missingDependencies(pack: BrewPack, official: Set<string>, packs: BrewPack[], isOfficialSource: (source: string) => boolean): MissingDependency[] {
+  return dependencyStatus(pack, official, packs, isOfficialSource).filter((d) => !d.ok).map(({ source, props, kind }) => ({ source, props, kind }))
 }

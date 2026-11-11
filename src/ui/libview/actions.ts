@@ -32,7 +32,7 @@ export function impactSections(impact: RemovalImpact, label: string): ConfirmSec
   ]
   return [
     { title: '本次选中', items: [label], tone: 'info' as const },
-    ...(must.length ? [{ title: '必须一起删除（缺了它们会读不出）', items: must.map((p) => `${p.filename ?? p.docIdLocal}：${p.why}`), tone: 'must' as const }] : []),
+    ...(must.length ? [{ title: '会一起删除（它们依赖要删的数据，按作者程序缺了会读不出）', items: must.map((p) => `${p.filename ?? p.docIdLocal}：${p.why}`), tone: 'must' as const }] : []),
     ...(keep.length ? [{ title: '受影响，但保留', items: keep.map((p) => `${p.filename ?? p.docIdLocal}：${p.why}`), tone: 'keep' as const }] : []),
     ...(refs.length ? [{ title: '引用提醒（存档不会被改）', items: refs, tone: 'info' as const }] : []),
   ]

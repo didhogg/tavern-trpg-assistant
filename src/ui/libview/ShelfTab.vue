@@ -40,7 +40,7 @@ const total = computed(() => sections.value.reduce((n, s) => n + s.groups.reduce
 
 async function onMenu(r: CatalogRow, key: string): Promise<void> {
   const s = app.svc()
-  if (key === 'manage') openManage({ set: r.set, source: r.source, name: r.name })
+  if (key === 'manage') openManage({ set: r.set, source: r.source, name: r.name, ...(r.pack ? { docIdLocal: r.pack.docIdLocal } : {}) })
   else if (key === 'save') await saveToMine(s, r, toast)
   else if ((key === 'rm' || key === 'rm-all') && (await removeSource(s, r, app.settings?.library.skipRemovePrompt ?? false, toast, key === 'rm-all'))) await lib.refresh(s)
 }

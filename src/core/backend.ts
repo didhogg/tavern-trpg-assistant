@@ -41,7 +41,7 @@ import type { ImportDeps } from './transfer/importer'
 import { CampaignStarter } from './start-campaign'
 import { BookDirectory } from '../library/directory'
 import { installedOfficialSources } from '../library/installed-sources'
-import { packHealth, type PackHealth } from '../library/pack-health'
+import { downloadDependencyPreview, packHealth, type DownloadDependencyPreview, type PackHealth } from '../library/pack-health'
 import { suggestDownloads, type DownloadSuggestion, type MissingRef } from '../library/missing-refs'
 import { DownloadEstimator, type DownloadEstimate, type EstimateInput, type EstimateOptions } from '../library/download-estimate'
 import { CatalogPrefetch, DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
@@ -84,6 +84,8 @@ export interface LibraryBackend {
   directory: BookDirectory
   /** 包体检：已装自制包缺哪些依赖（官方的对到书号），管理页用（P5 T6 后2）。只读本地。 */
   packHealth: (setId: string, docIdLocal?: string) => Promise<PackHealth[]>
+  /** 下载自制包前的依赖预览：作者算的直接依赖 + 需要的官方书（P5 T6）。会取一次包文件，不安装。 */
+  brewDependencyPreview: (setId: string, url: string) => Promise<DownloadDependencyPreview>
   /** 缺的条目该补哪本书 / 哪个包：条目详情「缺依赖」和读档补包共用（P5 T6 后4）。只读本地。 */
   suggestDownloads: (refs: MissingRef[]) => Promise<{ suggestions: DownloadSuggestion[]; unresolved: MissingRef[] }>
   /** 下载页按所选数据集 / 书 / 冒险估算（不像向导那样自动加结算内核要的英文资料；与真正下载同一份计划，P5 T6 G5）。 */
@@ -217,7 +219,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

@@ -72,6 +72,32 @@ export async function brewAddUrl(url: string): Promise<WithErrors<BrewEntry[]>> 
   return { ...r, value: (r.value ?? []).map(entryOf) }
 }
 
+export interface DependencyPreview {
+  /** 这个包自己的来源。 */
+  sources: string[]
+  /** 自制仓库索引里找得到的直接依赖（作者 _getBrewDependencySources）；更深层的依赖安装时作者会一起追装。 */
+  dependencies: Array<{ source: string; file: string; installed: boolean }>
+  /** 自制仓库索引里找不到的依赖来源（通常是官方书，安装时作者交给上级数据处理）。 */
+  unavailable: string[]
+}
+
+/** 下载前预览依赖（P5 T6，驾驶员定按作者程序做）：取包文件 → 作者算直接依赖 → 标出本机已装哪些。不安装、不写存储。 */
+export async function brewDependencyPreview(url: string): Promise<WithErrors<DependencyPreview | null>> {
+  await init()
+  return withErrors(async () => {
+    const U = A.BrewUtil2
+    const doc = await U._pGetBrewDocFromUrl({ url })
+    const index = await U._pGetBrewDependencies_getBrewIndex({ urlRoot: await U.pGetCustomUrl(), isIgnoreNetworkErrors: true })
+    const { available, unavailable } = U._getBrewDependencySources({ brewDoc: doc, brewIndex: index })
+    const installed = new Set<string>((await U.pGetBrew()).flatMap((b: any) => (b.body?._meta?.sources ?? []).map((x: any) => x?.json).filter(Boolean)))
+    return {
+      sources: (doc.body?._meta?.sources ?? []).map((x: any) => x?.json).filter(Boolean),
+      dependencies: (available as string[]).map((src) => ({ source: src, file: String(index[src] ?? '').split('/').pop() ?? src, installed: installed.has(src) })),
+      unavailable: unavailable as string[],
+    }
+  })
+}
+
 /**
  * 缺的来源一键下载（P5 B-24）：照作者装依赖的做法（utils-brew-base.js `_pLoadParentDependencies`）——
  * 每个来源标识用 pGetSourceUrl 到来源索引里找下载网址，pAddBrewFromUrl 惰性装（作者自动追装它声明的依赖），最后 pAddBrewsLazyFinalize 一次收尾。

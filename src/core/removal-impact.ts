@@ -13,8 +13,8 @@ import { treeRootId } from './saves/view'
 import { hashValue, stableStringify } from './hash'
 
 export type RemovalTarget =
-  | { kind: 'official'; setId: string; /** 中英一起卸载时给完整集合。 */ setIds?: string[]; /** 只删作者书号 / 冒险号；都不给 = 整套。 */ bookIds?: string[]; bookSources?: string[]; adventureIds?: string[]; /** 同 brew.keep。 */ keep?: string[] }
-  | { kind: 'brew'; setId: string; docIdLocals: string[]; /** 会失去依赖、但用户选择保留的包（不删，暂停到补回依赖；P5 T6 按装 mod 的方式）。 */ keep?: string[] }
+  | { kind: 'official'; setId: string; /** 中英一起卸载时给完整集合。 */ setIds?: string[]; /** 只删作者书号 / 冒险号；都不给 = 整套。 */ bookIds?: string[]; bookSources?: string[]; adventureIds?: string[] }
+  | { kind: 'brew'; setId: string; docIdLocals: string[] }
 
 export interface AffectedSave {
   ownerKey: string
@@ -33,9 +33,9 @@ export interface RemovalImpact {
   /** 这份影响预览的凭据：执行时必须还是同一份计划（P5 T4）。 */
   plan: { id: string; fingerprint: string; checkedAt: number; removeTogether: string[] }
   /** 依赖它的自制包（或：删官方资料后启动不了的自制包）。 */
-  /** mustRemove = 会失去依赖、默认一起删；kept = 会失去依赖但按用户选择保留（暂停到补回依赖）。 */
-  packs: Array<{ docIdLocal: string; filename: string | null; why: string; mustRemove: boolean; kept?: boolean }>
-  /** 确认删除时要一起删的自制包本地编号：被选中的 + 会失去依赖、用户没选保留的（传递闭包）。官方整套被删时为空。 */
+  /** mustRemove = 缺了被删的数据源会读不出，按作者规则必须一起删（P5 T6 实测：缺一个依赖会让全部自制条目消失）。 */
+  packs: Array<{ docIdLocal: string; filename: string | null; why: string; mustRemove: boolean }>
+  /** 确认删除时要一起删的自制包本地编号：被选中的 + 因缺依赖必须一起删的（传递闭包，界面里不可取消勾选）。官方整套被删时为空。 */
   removeTogether: string[]
   houseRules: HouseRuleLink[]
   choices: Array<{ level: string; target: string; altId: string }>
@@ -146,44 +146,30 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
     removed = removedOf(target, packs)
   } else {
     const gone = new Set<string>(target.kind === 'brew' ? target.docIdLocals : [])
-    const keep = new Set((target.keep ?? []).filter((id) => !gone.has(id)))
     const requirements = requirementsOf
     const sourceOf = (p: BrewPack): string[] => p.sources.map((s) => s.toLowerCase())
     const officialBefore = new Set([...(deps.officialSources ?? []), ...(target.kind === 'official' ? removed.sources : [])])
     const officialAfter = new Set(deps.officialSources ?? [])
     if (target.kind === 'official') for (const s of removed.sources) officialAfter.delete(s)
     const attached = new Set<string>()
-    // 被保留（暂停）的包读不出，不能再给下游当提供者；下游跟着它一起「保留、暂停」
-    const paused = new Set<string>()
-    const pausedIds = new Set<string>()
     let changed = true
     while (changed) {
       changed = false
       const remaining = packs.filter((p) => !gone.has(p.docIdLocal))
-      const providers = remaining.filter((p) => !pausedIds.has(p.docIdLocal))
       for (const p of remaining) {
         if (attached.has(p.docIdLocal)) continue
         const lost = requirements(p).find((req) => {
           const src = req.source.toLowerCase()
-          if (!removed.sources.has(src) && !paused.has(src)) return false
+          if (!removed.sources.has(src)) return false
           if (!canProvide(req, officialBefore, packs)) return false // 删除前就缺：不是这次造成的
-          return !canProvide(req, officialAfter, providers.filter((x) => x.docIdLocal !== p.docIdLocal))
+          return !canProvide(req, officialAfter, remaining.filter((x) => x.docIdLocal !== p.docIdLocal))
         })
         if (!lost) continue
         attached.add(p.docIdLocal)
         const why = `依赖 ${lost.source} 的 ${lost.prop}${lost.hash ? ` / ${lost.hash}` : ''}，删除后没有可用提供者`
-        // 用户选择保留：不删，留在「还在」的一侧继续给下游当提供者；补回依赖后作者会自动恢复它的条目（P5 T6 实测）
-        const viaPaused = paused.has(lost.source.toLowerCase()) && !removed.sources.has(lost.source.toLowerCase())
-        if (keep.has(p.docIdLocal) || viaPaused) {
-          pausedIds.add(p.docIdLocal)
-          for (const src of sourceOf(p)) paused.add(src)
-          impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: viaPaused ? `依赖的 ${lost.source} 暂停了，它也跟着暂停到补回依赖` : `${why}；按你的选择保留，补回依赖前暂停使用`, mustRemove: false, kept: true })
-          changed = true
-          continue
-        }
         gone.add(p.docIdLocal)
         for (const src of sourceOf(p)) removed.sources.add(src)
-        impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `${why}，会读不出`, mustRemove: true })
+        impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `${why}，缺了会读不出，必须一起删`, mustRemove: true })
         changed = true
       }
     }

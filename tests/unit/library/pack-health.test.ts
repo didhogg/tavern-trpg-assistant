@@ -37,6 +37,7 @@ describe('packHealth', () => {
   it('只看一个包；装上提供者后不再缺', async () => {
     const packs = [pack('psion', ['LLPS'], { class: ['psion_llps'] }, { spell: ['llspell'] }), pack('prov', ['llspell'], { spell: ['a_llspell'] })]
     const r = await packHealth(world(packs, ['PHB']), 'cn-brew', 'psion')
-    expect(r).toEqual([{ docIdLocal: 'psion', filename: 'psion.json', missing: [] }])
+    expect(r.map((h) => [h.docIdLocal, h.missing])).toEqual([['psion', []]])
+    expect(r[0].requires).toEqual([{ source: 'llspell', props: ['spell'], kind: 'brew', ok: true, provider: 'prov.json' }])
   })
 })

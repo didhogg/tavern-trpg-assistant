@@ -4,7 +4,7 @@ import { A, hashOf, init, sourceOf } from './author'
 import { authorFields } from './field-commands'
 import { displayName, renderText, statblockMeta, summaryEntry } from './entry-commands'
 import { listCells, sortColumns, sortRanks } from './sort-commands'
-import { brewAddFiles, brewAddSources, brewAddUrl, brewCheckUpdates, brewCorpusList, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, brewPackRows, parseBrewProp } from './brew-commands'
+import { brewAddFiles, brewAddSources, brewAddUrl, brewCheckUpdates, brewDependencyPreview, brewCorpusList, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, brewPackRows, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch, variantTemplateNames, versionOrder } from './english-commands'
 import { detail, excludedFlags, search, searchIndexDump, searchIndexLoad, searchSettings } from './read-commands'
 import { directory, sourceFiles } from './directory-commands'
@@ -124,5 +124,5 @@ export async function storageFlush(): Promise<string[]> {
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, brewPackRows, parseBrewProp, rawHashes, storageFlush,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tagRefs, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory, sourceFiles }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tagRefs, brewDependencyPreview, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory, sourceFiles }
 export type CommandName = keyof typeof COMMANDS
