@@ -5,6 +5,7 @@ import { parsedKey } from '../../../src/library/install'
 import type { AuthorFrame } from '../../../src/library/runtime/host'
 import type { ParsedProp } from '../../../src/library/runtime/frame/commands'
 import { getSource } from '../../../src/library/sources'
+import { LibraryRevisionStore } from '../../../src/library/revision'
 
 // 假小窗：作者函数本身在 e2e（tests/e2e/library/p3-1.mjs）里用真程序测
 function fakeFrame(answers: Record<string, (...args: unknown[]) => unknown>, onClose?: () => void): AuthorFrame {
@@ -22,8 +23,11 @@ function fakeFrame(answers: Record<string, (...args: unknown[]) => unknown>, onC
 const doc = (id: string, t: number, body: unknown) => ({ head: { docIdLocal: id, filename: `${id}.json`, timeAdded: t }, body })
 
 let db: LibraryDatabase
+let revisions: LibraryRevisionStore
 beforeEach(async () => {
   db = new LibraryDatabase(`test-alts-${Math.random()}`)
+  revisions = new LibraryRevisionStore(db)
+  await revisions.ensureLegacy()
   // 官方有火球术；自制解析结果（作者合并后）里有两个包撞编号的探路飞弹（后装的乙赢了）
   await db.derived.put({ key: parsedKey('cn-official', 'spell'), fingerprint: 'x', value: { items: [{ name: '火球术' }], hashes: ['fireball_phb'], sources: ['PHB'] }, savedAt: 0 })
   await db.derived.put({ key: parsedKey('cn-brew', 'spell'), fingerprint: 'brew', value: { items: [{ v: '乙' }, { v: '新' }], hashes: ['probe_a', 'new_c'], sources: ['A', 'C'] }, savedAt: 0 })
@@ -37,7 +41,7 @@ describe('buildAlternatives', () => {
     const isolated: Array<{ scope: string; docs: string[]; wants: unknown }> = []
     const index = await buildAlternatives({
       source: getSource('cn-brew'),
-      db,
+      db, view: await revisions.published(),
       frame: fakeFrame({
         brewDocIndex: () => [
           { docIdLocal: '甲', filename: '甲.json', timeAdded: 1, order: 1, isEditable: false, props: { spell: ['probe_a'] } },
@@ -73,7 +77,7 @@ describe('buildAlternatives', () => {
 
   it('没有同编号：不开隔离小窗，备选表为空', async () => {
     const index = await buildAlternatives({
-      source: getSource('cn-brew'), db,
+      source: getSource('cn-brew'), db, view: await revisions.published(),
       frame: fakeFrame({ brewDocIndex: () => [{ docIdLocal: '丙', filename: '丙.json', timeAdded: 3, order: 3, isEditable: false, props: { spell: ['new_c'] } }] }),
       openFrameIn: async () => { throw new Error('不该开') },
     })

@@ -18,7 +18,7 @@ const docs = [
   { docIdLocal: 'a1', filename: 'x', timeAdded: 5, order: 0, isEditable: false, sources: ['Sorc'], props: { class: ['x_sorc'], subclass: ['y_sorc', 'z_sorc', null] } },
   { docIdLocal: 'b2', filename: 'mine.json', timeAdded: 9, order: 1, isEditable: false, sources: ['MyStuff'], props: { spell: [] } },
 ]
-const lib = { officialInstalled: async () => true, brewInstalled: async () => installed, frameOf: async () => ({ call: async () => docs }) } as unknown as LibraryService
+const lib = { currentView: async () => ({ id: 'v', kvGet: async () => null }), officialInstalled: async () => true, brewInstalled: async () => installed, frameOf: async () => ({ call: async () => docs }) } as unknown as LibraryService
 
 describe('BrewPacks：已装自制包清单', () => {
   it('来历三种：仓库下载（有网址）、本地导入（无网址）、自己写的（可编辑）', async () => {

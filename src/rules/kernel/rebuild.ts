@@ -83,10 +83,11 @@ export async function rebuildActor(opts: {
   session: KernelSession
   library: CampaignLibrary
   actor: KernelActor
+  view?: import('../../library/revision').LibraryView
 }): Promise<RebuildResult> {
   const refs = opts.actor.refs
   if (!refs.length) return { status: 'error', error: '这个人物没有引用，无法重建' }
-  const fetched = await opts.lib.fetch(opts.library, refs.map((ref) => ({ set: ref.set, prop: ref.prop, hash: ref.hash })))
+  const fetched = await opts.lib.fetch(opts.library, refs.map((ref) => ({ set: ref.set, prop: ref.prop, hash: ref.hash })), opts.view)
   const missing: RebuildMissing[] = []
   const entries: Array<{ ref: KernelRef; entry: unknown }> = []
   const noEnglish: KernelRef[] = []
@@ -94,7 +95,7 @@ export async function rebuildActor(opts: {
     const ref = refs[i]
     const result = fetched[i]
     if (!result.ok) { missing.push({ ref, reason: result.reason }); continue }
-    const k = await kernelEntryOf(opts.lib, opts.library.codeSet, result.ref as EntryRef, result.item, result.version.altId)
+    const k = await kernelEntryOf(opts.lib, opts.library.codeSet, result.ref as EntryRef, result.item, result.version.altId, opts.view)
     if (k.noEnglish) noEnglish.push(ref)
     entries.push({ ref, entry: k.entry })
   }

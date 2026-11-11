@@ -37,7 +37,7 @@ async function loadReaders(): Promise<void> {
   try {
     const index = await app.svc().backend.library.links.corpusIndex(codeSet.value)
     const found: Array<{ set: string; prop: string; id: string; name: string }> = []
-    for (const [prop, m] of index) for (const r of m.values()) if (r.source === props.source && (r.set ?? props.set) === props.set) found.push({ set: props.set, prop, id: r.id, name: props.name })
+    for (const [prop, m] of index) for (const providers of m.values()) { const r = providers[0]; if (r && r.source === props.source && (r.set ?? props.set) === props.set) found.push({ set: props.set, prop, id: r.id, name: props.name }) }
     readers.value = found
   } catch (e) { console.error('[trpg-assistant] 读取书目索引失败', e) }
 }

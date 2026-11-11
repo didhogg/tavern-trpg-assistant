@@ -3,6 +3,7 @@
 // 作者的速查页（quickreference.js）就是直接读这个文件、当书来显示；作者的加载器里没有对应的"条目类别"，
 // 所以不能按条目类别读（读出来是 0 条）。这里照作者的读法：原样读下载好的文件，原样存进派生物，不挑字段。
 import type { LibraryDatabase } from './db'
+import type { LibraryView } from './revision'
 import { commitOf, type SourceEntry } from './sources'
 
 /** 文件名规则（不手抄名单）：data/generated/ 下 bookref-*.json，排除 -index 目录文件。 */
@@ -55,49 +56,61 @@ export class DocumentStore {
   constructor(private readonly db: LibraryDatabase) {}
 
   /** 这套官方数据里的文档清单；没存过就从已下载的文件里读一次（不联网），所以旧安装不用重装。 */
-  list(source: SourceEntry): Promise<DocumentHead[]> {
-    let p = this.building.get(source.id)
+  list(source: SourceEntry, view?: LibraryView): Promise<DocumentHead[]> {
+    const key = `${view?.id ?? 'legacy'}:${source.id}`
+    let p = this.building.get(key)
     if (!p) {
-      p = this.load(source)
-      p.catch(() => this.building.delete(source.id))
-      this.building.set(source.id, p)
+      p = this.load(source, view)
+      p.catch(() => this.building.delete(key))
+      this.building.set(key, p)
     }
     return p
   }
 
-  private async load(source: SourceEntry): Promise<DocumentHead[]> {
-    const saved = await this.db.derived.get(documentListKey(source.id))
-    if (saved && saved.fingerprint === commitOf(source)) return saved.value as DocumentHead[]
-    return this.build(source)
+  private async load(source: SourceEntry, view?: LibraryView): Promise<DocumentHead[]> {
+    const saved = view ? await view.derivedGet(documentListKey(source.id)) : await this.db.derived.get(documentListKey(source.id))
+    if (saved && saved.fingerprint === (view ? await view.commitOf(source) : commitOf(source))) return saved.value as DocumentHead[]
+    return this.build(source, view)
   }
 
   /** 读下载好的文件、存进派生物。同编号的文档（城主屏文件里也带了速查）按文件名顺序取第一份。 */
-  async build(source: SourceEntry): Promise<DocumentHead[]> {
-    const paths = (await this.db.files.where('source').equals(source.id).primaryKeys()).map(([, path]) => path).filter(isDocumentFile).sort()
+  async build(source: SourceEntry, view?: LibraryView): Promise<DocumentHead[]> {
+    const paths = (view ? await view.filePaths(source) : (await this.db.files.where('source').equals(source.id).primaryKeys()).map(([, path]) => path)).filter(isDocumentFile).sort()
     const seen = new Map<string, DocumentBody>()
+    const commit = view ? await view.commitOf(source) : commitOf(source)
     for (const path of paths) {
-      const rec = await this.db.files.get([source.id, path])
-      if (!rec || rec.commit !== commitOf(source)) continue
+      const rec = view ? await view.fileGet(source, path) : await this.db.files.get([source.id, path])
+      if (!rec || (!view && rec.commit !== commit)) continue
       for (const doc of documentsOfFile(path, rec.text)) if (!seen.has(doc.head.id)) seen.set(doc.head.id, doc)
     }
-    for (const doc of seen.values()) await this.db.derived.put({ key: documentKey(source.id, doc.head.id), fingerprint: commitOf(source), value: doc, savedAt: Date.now() })
+    for (const doc of seen.values()) {
+      if (view) await view.derivedPut(documentKey(source.id, doc.head.id), commit, doc)
+      else await this.db.derived.put({ key: documentKey(source.id, doc.head.id), fingerprint: commit, value: doc, savedAt: Date.now() })
+    }
     const heads = [...seen.values()].map((d) => d.head)
-    await this.db.derived.put({ key: documentListKey(source.id), fingerprint: commitOf(source), value: heads, savedAt: Date.now() })
+    if (view) await view.derivedPut(documentListKey(source.id), commit, heads)
+    else await this.db.derived.put({ key: documentListKey(source.id), fingerprint: commit, value: heads, savedAt: Date.now() })
     return heads
   }
 
   /** 一份文档的全文。没有就抛错（说明哪份、哪套）。 */
-  async get(source: SourceEntry, id: string): Promise<DocumentBody> {
-    await this.list(source)
-    const rec = await this.db.derived.get(documentKey(source.id, id))
+  async get(source: SourceEntry, id: string, view?: LibraryView): Promise<DocumentBody> {
+    await this.list(source, view)
+    const rec = view ? await view.derivedGet(documentKey(source.id, id)) : await this.db.derived.get(documentKey(source.id, id))
     if (!rec) throw new Error(`${source.id} 没有这份文档：${id}`)
     return rec.value as DocumentBody
   }
 
   /** 清掉缓存（重装或删除整套资料后）。 */
-  async clear(source: SourceEntry): Promise<void> {
-    this.building.delete(source.id)
-    await this.db.derived.where('key').startsWith(`doc:${source.id}:`).delete()
-    await this.db.derived.delete(documentListKey(source.id))
+  async clear(source: SourceEntry, view?: LibraryView): Promise<void> {
+    this.building.delete(`${view?.id ?? 'legacy'}:${source.id}`)
+    if (view) {
+      const old = await view.derivedKeys(`doc:${source.id}:`)
+      for (const key of old.keys()) await view.derivedDelete(key)
+      if (await view.derivedGet(documentListKey(source.id))) await view.derivedDelete(documentListKey(source.id))
+    } else {
+      await this.db.derived.where('key').startsWith(`doc:${source.id}:`).delete()
+      await this.db.derived.delete(documentListKey(source.id))
+    }
   }
 }

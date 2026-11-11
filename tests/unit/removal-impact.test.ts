@@ -69,10 +69,9 @@ describe('删除前的影响预览', () => {
     expect(r.saves.map((s) => s.ownerKey)).toEqual(['A'])
   })
 
-  it('自制包列不出来（没装官方数据）不报错，只是没有包', async () => {
+  it('自制包列不出来（没装官方数据）= 检查失败，禁止执行，不冒充没有包', async () => {
     db = new TrpgDatabase(`test-impact4-${Math.random()}`)
-    const r = await impactOfRemoval(deps({ brewPacks: { list: async () => { throw new Error('没装') } } }), { kind: 'official', setId: 'cn-official' })
-    expect(r.packs).toEqual([])
+    await expect(impactOfRemoval(deps({ brewPacks: { list: async () => { throw new Error('没装') } } }), { kind: 'official', setId: 'cn-official' })).rejects.toThrow('没装')
   })
 
   it('B-25 依赖一路往下找：删 A，B 依赖 A、C 依赖 B，B 和 C 都"必须一起删"；官方整套被删时包不算必须', async () => {

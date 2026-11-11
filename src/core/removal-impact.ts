@@ -9,9 +9,10 @@ import { packAltId, packStableId } from '../library/versions'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelCampaign } from '../schemas/kernel'
 import { libraryKey } from './saves/kernel'
 import { treeRootId } from './saves/view'
+import { hashValue } from './hash'
 
 export type RemovalTarget =
-  | { kind: 'official'; setId: string }
+  | { kind: 'official'; setId: string; /** 中英一起卸载时给完整集合。 */ setIds?: string[] }
   | { kind: 'brew'; setId: string; docIdLocals: string[] }
 
 export interface AffectedSave {
@@ -28,6 +29,8 @@ export interface AffectedSave {
 
 export interface RemovalImpact {
   target: RemovalTarget
+  /** 这份影响预览的凭据：执行时必须还是同一份计划（P5 T4）。 */
+  plan: { id: string; fingerprint: string; checkedAt: number; removeTogether: string[] }
   /** 依赖它的自制包（或：删官方资料后启动不了的自制包）。 */
   packs: Array<{ docIdLocal: string; filename: string | null; why: string; mustRemove: boolean }>
   /** 确认删除时要一起删的自制包本地编号：被选中的 + 因缺依赖必须一起删的（传递闭包，界面里不可取消勾选）。官方整套被删时为空。 */
@@ -56,6 +59,8 @@ const kernelOf = (data: unknown): KernelCampaign | null => {
 interface Removed {
   /** 被删的数据集：官方整套 / 自制源。 */
   setId: string
+  /** 官方可以一次删多套（中英）；refGone 按集合判断。 */
+  setIds: Set<string>
   codeSet: string
   official: boolean
   /** 自制：被删包里的来源（小写）与每类的作者编号。 */
@@ -64,21 +69,22 @@ interface Removed {
   altIds: Set<string>
 }
 
-function removedOf(target: RemovalTarget, packs: BrewPack[]): Removed {
+function removedOf(target: RemovalTarget, packs: BrewPack[], goneIds?: Set<string>): Removed {
   const set = getSource(target.setId)
-  const gone = target.kind === 'brew' ? packs.filter((p) => target.docIdLocals.includes(p.docIdLocal)) : []
+  const gone = target.kind === 'brew' ? packs.filter((p) => (goneIds ?? new Set(target.docIdLocals)).has(p.docIdLocal)) : []
   const hashes = new Map<string, Set<string>>()
   for (const p of gone) for (const [prop, hs] of Object.entries(p.hashes)) hashes.set(prop, new Set([...(hashes.get(prop) ?? []), ...hs]))
-  return { setId: set.id, codeSet: set.codeSet, official: target.kind === 'official', sources: lower(gone.flatMap((p) => p.sources)), hashes, altIds: new Set(gone.flatMap((p) => [`doc:${p.docIdLocal}`, packAltId(packStableId(p), p.docIdLocal)])) }
+  const setIds = new Set(target.kind === 'official' ? (target.setIds ?? [target.setId]) : [target.setId])
+  return { setId: set.id, setIds, codeSet: set.codeSet, official: target.kind === 'official', sources: lower(gone.flatMap((p) => p.sources)), hashes, altIds: new Set(gone.flatMap((p) => [`doc:${p.docIdLocal}`, packAltId(packStableId(p), p.docIdLocal)])) }
 }
 
 const refGone = (r: Removed, ref: { set: string; prop: string; hash: string }): boolean =>
-  ref.set === r.setId && (r.official || !!r.hashes.get(ref.prop)?.has(ref.hash))
+  r.official ? r.setIds.has(ref.set) : ref.set === r.setId && !!r.hashes.get(ref.prop)?.has(ref.hash)
 
 /** 一份内核段（战役当前数据或存档）里哪些东西用了被删资料。 */
 function whyKernel(k: KernelCampaign, library: KernelCampaign['library'], r: Removed): string[] {
   const why: string[] = []
-  if (r.official && library.codeSet === r.codeSet) why.push('这个战役用的是这套资料')
+  if (r.official && [...r.setIds].some((id) => getSource(id).codeSet === library.codeSet)) why.push('这个战役用的是这套资料')
   const refs = k.actors.flatMap((a) => a.refs).filter((ref) => refGone(r, ref)).length
   if (refs) why.push(`${refs} 处人物引用`)
   if (library.include.concat(library.exclude).some((u) => r.sources.has(u.replace(/^src:/, '')))) why.push('选书设置里有它的来源')
@@ -93,20 +99,23 @@ const refOfKey = (key: string): { set: string; prop: string; hash: string } => {
 }
 
 export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): Promise<RemovalImpact> {
-  const set = getSource(target.setId)
-  const brewSetId = target.kind === 'brew' ? target.setId : deps.brewSetOf(set.codeSet)
-  const packs = await deps.brewPacks.list(brewSetId).catch(() => [] as BrewPack[])
-  const removed = removedOf(target, packs)
+  const brewSetIds = target.kind === 'brew'
+    ? [target.setId]
+    : [...new Set((target.setIds ?? [target.setId]).map((id) => deps.brewSetOf(getSource(id).codeSet)))]
+  // 清单读不到 = 检查失败，不能当成“没有包”放行（P5 H6）
+  const packs = (await Promise.all(brewSetIds.map((id) => deps.brewPacks.list(id)))).flat()
 
   // 自制包。删自制包：依赖被删来源的包也算，并且一路往下找（A 依赖被删的，B 依赖 A …），这些必须一起删
   const impacted: RemovalImpact['packs'] = []
   const removeTogether: string[] = []
+  let removed: Removed
   if (target.kind === 'official') {
+    removed = removedOf(target, packs)
     for (const p of packs) impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: '自制内容要靠这套官方资料才能运行，重新下载之前用不了', mustRemove: false })
   } else {
-    removeTogether.push(...target.docIdLocals)
     const gone = new Set(target.docIdLocals)
-    const lostSources = new Set(removed.sources)
+    const lostSources = new Set<string>()
+    for (const p of packs) if (gone.has(p.docIdLocal)) for (const src of p.sources) lostSources.add(src.toLowerCase())
     for (let grew = true; grew;) {
       grew = false
       for (const p of packs) {
@@ -115,12 +124,14 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
         const hit = [...lostSources].find((s) => needs.has(s))
         if (!hit) continue
         gone.add(p.docIdLocal)
-        removeTogether.push(p.docIdLocal)
         for (const s of p.sources) lostSources.add(s.toLowerCase())
         impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `依赖被删包里的来源 ${hit}，缺了它就不能用，必须一起删`, mustRemove: true })
         grew = true
       }
     }
+    // 先求最终删除集合，再用完整集合重建 Removed；后面的房规 / 存档扫描不能再用最初的目标
+    removeTogether.push(...gone)
+    removed = removedOf(target, packs, gone)
   }
 
   // 房规、版本选择
@@ -145,5 +156,7 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
     const why = k ? whyKernel(k, await libraryOf(treeRootId(all, s.id), k), removed) : []
     if (why.length) saves.push({ ownerKey: s.ownerKey, ownerLabel: s.ownerLabel, saveId: s.id, name: s.name, kind: s.kind, deleted: s.deletedAt !== undefined, why })
   }
-  return { target, packs: impacted, removeTogether, houseRules, choices, saves }
+  const checkedAt = Date.now()
+  const fingerprint = hashValue(JSON.stringify({ target, removeTogether: [...removeTogether].sort(), packs: packs.filter((p) => removeTogether.includes(p.docIdLocal)).map((p) => [p.docIdLocal, p.sources, p.dependencies]) }))
+  return { target, plan: { id: fingerprint.slice(0, 16), fingerprint, checkedAt, removeTogether }, packs: impacted, removeTogether, houseRules, choices, saves }
 }

@@ -1,4 +1,4 @@
-import { n as e } from "./images-B8OjnDg1.js";
+import { n as e } from "./images-9osTC28w.js";
 import { t } from "./protocol-03CO7Rhf.js";
 // src/library/runtime/frame/author.ts
 var n = globalThis, r = null;
@@ -177,7 +177,7 @@ async function ee(e, t, r) {
 		}), d;
 	});
 }
-async function E(e) {
+async function te(e) {
 	let t = await S(e);
 	if (!t) return null;
 	let n = t.Cls.prototype._getColumnHeaders.call({}).map((e) => ({
@@ -196,7 +196,7 @@ async function E(e) {
 	};
 }
 // src/library/runtime/frame/brew-commands.ts
-async function D(e) {
+async function E(e) {
 	await i();
 	let t = n.__trpgFrameErrors, r = t.length, a = await e();
 	return await new Promise((e) => setTimeout(e, 50)), {
@@ -204,17 +204,17 @@ async function D(e) {
 		errors: t.slice(r)
 	};
 }
-var O = (e) => ({
+var D = (e) => ({
 	head: e.head,
 	meta: e.body?._meta ?? null
 });
-function te() {
-	return D(() => n.BrewUtil2.pGetCombinedIndexes());
-}
-async function ne() {
-	return await i(), (await n.BrewUtil2.pGetBrew()).map(O);
+function ne() {
+	return E(() => n.BrewUtil2.pGetCombinedIndexes());
 }
 async function re() {
+	return await i(), (await n.BrewUtil2.pGetBrew()).map(D);
+}
+async function ie() {
 	await i();
 	let e = [];
 	for (let [t, r] of [["brew", n.BrewUtil2], ["prerelease", n.PrereleaseUtil]]) {
@@ -228,15 +228,15 @@ async function re() {
 	}
 	return e;
 }
-async function ie(e) {
-	let t = await D(() => n.BrewUtil2.pAddBrewFromUrl(e));
+async function ae(e) {
+	let t = await E(() => n.BrewUtil2.pAddBrewFromUrl(e));
 	return {
 		...t,
-		value: (t.value ?? []).map(O)
+		value: (t.value ?? []).map(D)
 	};
 }
-async function ae(e) {
-	let t = await D(async () => {
+async function oe(e) {
+	let t = await E(async () => {
 		let t = [], r = [], i = new Set((await n.BrewUtil2.pGetBrew()).map((e) => e.head.docIdLocal));
 		return await Promise.all(e.map(async (e) => {
 			let i = await n.BrewUtil2.pGetSourceUrl(e);
@@ -254,12 +254,12 @@ async function ae(e) {
 	return {
 		errors: t.errors,
 		value: {
-			added: t.value.added.map(O),
+			added: t.value.added.map(D),
 			notFound: t.value.notFound
 		}
 	};
 }
-async function oe(e) {
+async function se(e) {
 	let t = [], r = [];
 	for (let n of e) try {
 		r.push({
@@ -272,35 +272,35 @@ async function oe(e) {
 			error: e instanceof Error ? e.message : String(e)
 		});
 	}
-	let i = await D(async () => {
+	let i = await E(async () => {
 		let [e, t] = r.segregate((e) => n.BrewUtil2.constructor._isPrereleaseDroppedJson(e.json)), i = [];
 		return e.length && i.push(...await n.PrereleaseUtil.pAddBrewsFromFiles(e) ?? []), t.length && i.push(...await n.BrewUtil2.pAddBrewsFromFiles(t) ?? []), i;
 	});
 	return {
 		errors: i.errors,
 		value: {
-			added: i.value.map(O),
+			added: i.value.map(D),
 			notJson: t
 		}
 	};
 }
-async function se(e) {
-	return D(async () => {
+async function ce(e) {
+	return E(async () => {
 		let t = new Set(e), r = (await n.BrewUtil2.pGetBrew()).filter((e) => t.has(e.head.docIdLocal));
 		return await n.BrewUtil2.pDeleteBrews(r), r.length;
 	});
 }
-async function ce(e = null) {
-	let t = await D(async () => {
+async function le(e = null) {
+	let t = await E(async () => {
 		let t = e ? (await n.BrewUtil2.pGetBrew()).filter((t) => e.includes(t.head.docIdLocal)) : null;
 		return n.BrewUtil2.pPullAllBrews({ brews: t });
 	});
 	return {
 		...t,
-		value: (t.value ?? []).map(O)
+		value: (t.value ?? []).map(D)
 	};
 }
-async function le(e, t) {
+async function ue(e, t) {
 	return await i(), ((await n.BrewUtil2.pGetBrewProcessed())?.[e] ?? []).map((e) => ({
 		id: e.id,
 		name: e.name,
@@ -308,8 +308,8 @@ async function le(e, t) {
 		hash: n.UrlUtil.URL_TO_HASH_BUILDER[t](e)
 	}));
 }
-async function ue(e = null) {
-	return D(async () => {
+async function de(e = null) {
+	return E(async () => {
 		let t = n.BrewUtil2, r = (await t.pGetBrew()).filter((n) => t.isPullable(n) && (!e || e.includes(n.head.docIdLocal))), i = [];
 		for (let e of r) {
 			let t = e.body._meta?.dateLastModified ?? 0;
@@ -339,7 +339,7 @@ async function ue(e = null) {
 		return i;
 	});
 }
-async function de(e) {
+async function fe(e) {
 	await i();
 	let t = await n.DataLoader.pCacheAndGetAllBrew(e) ?? [];
 	return {
@@ -349,35 +349,39 @@ async function de(e) {
 	};
 }
 // src/library/runtime/frame/english-commands.ts
-async function fe() {
+async function pe(e) {
 	await i();
-	let e = [], t = async (t, r, i) => {
-		let a = new n.Omnidexer();
-		await a.pAddToIndex(t, r, {
+	let t = e ? new Set(e.map((e) => e.toUpperCase())) : null, r = [], a = async (e, i, a) => {
+		let o = new n.Omnidexer();
+		await o.pAddToIndex(e, i, {
 			isNoFilter: !0,
 			isIncludeEntityLocator: !0
 		});
-		for (let t of a.getIndex().x) t._entityLocator && e.push({
-			prop: n.Parser.pageCategoryToProp(t.c),
-			hash: t.u,
-			file: i,
-			locator: t._entityLocator
-		});
+		for (let e of o.getIndex().x) {
+			if (!e._entityLocator) continue;
+			let i = e._entityLocator.source ? String(e._entityLocator.source).toUpperCase() : null;
+			t && i && !t.has(i) || r.push({
+				prop: n.Parser.pageCategoryToProp(e.c),
+				hash: e.u,
+				file: a,
+				locator: e._entityLocator
+			});
+		}
 	};
 	for (let e of n.Omnidexer.TO_INDEX__FROM_INDEX_JSON) {
-		let r = await n.DataUtil.loadRawJSON(`data/${e.dir}/index.json`);
-		for (let i of Object.values(r)) {
-			let r = `data/${e.dir}/${i}`;
-			await t(e, await n.DataUtil.loadRawJSON(r), r);
+		let t = await n.DataUtil.loadRawJSON(`data/${e.dir}/index.json`);
+		for (let r of Object.values(t)) {
+			let t = `data/${e.dir}/${r}`;
+			await a(e, await n.DataUtil.loadRawJSON(t), t);
 		}
 	}
 	for (let e of n.Omnidexer.TO_INDEX) {
-		let r = `data/${e.file}`;
-		await t(e, await n.DataUtil.loadJSON(r), r);
+		let t = `data/${e.file}`;
+		await a(e, await n.DataUtil.loadJSON(t), t);
 	}
-	return e;
+	return r;
 }
-async function pe(e) {
+async function me(e) {
 	await i();
 	let t = /* @__PURE__ */ new Map(), r = (e) => {
 		let r = t.get(e);
@@ -409,14 +413,14 @@ async function pe(e) {
 	}
 	return a;
 }
-async function me() {
+async function he() {
 	return await i(), ((await n.DataUtil.item.loadRawJSON())?.magicvariant ?? []).map((e) => ({
 		name: e.name,
 		eng: e.ENG_name ?? null,
 		source: e.inherits?.source ?? e.source ?? null
 	}));
 }
-async function he(e) {
+async function ge(e) {
 	await i();
 	let t = {};
 	for (let r of e) {
@@ -432,11 +436,11 @@ async function he(e) {
 	return t;
 }
 // src/library/runtime/frame/read-commands.ts
-function k(e, t, r) {
+function O(e, t, r) {
 	let i = c(t);
 	return i ? n.DataLoader.getPropPage(e) === n.UrlUtil.PG_ITEMS && n.Renderer.item.isExcluded(t, { hash: r }) ? !0 : n.ExcludeUtil.isExcluded(r ?? "", t.__prop ?? e, i, { isNoCount: !0 }) : !1;
 }
-async function ge(e, t = "site") {
+async function _e(e, t = "site") {
 	if (await i(), !n.ExcludeUtil.getList().length) return {
 		hashes: [],
 		excluded: null
@@ -444,10 +448,10 @@ async function ge(e, t = "site") {
 	let r = await (t === "brew" ? n.DataLoader.pCacheAndGetAllBrew(e) : n.DataLoader.pCacheAndGetAllSite(e)) ?? [], a = r.map((t) => o(e, t));
 	return {
 		hashes: a,
-		excluded: r.map((t, n) => k(e, t, a[n]))
+		excluded: r.map((t, n) => O(e, t, a[n]))
 	};
 }
-async function _e(e, t, r) {
+async function ve(e, t, r) {
 	await i();
 	let a = r ? await n.DataLoader.pCacheAndGet(e, r, t) : await n.DataLoader.pCacheAndGetHash(e, t);
 	if (!a) return null;
@@ -464,15 +468,15 @@ async function _e(e, t, r) {
 		item: a,
 		hash: t,
 		source: c(a),
-		excluded: k(e, a, t),
+		excluded: O(e, a, t),
 		fluff: o,
 		fluffError: l,
 		engSiteHash: s(e, a)
 	};
 }
-async function ve(e, t = null) {
+async function ye(e, t = null) {
 	await i();
-	let r = t === null ? null : await A(), a = r?.isShowLegacy;
+	let r = t === null ? null : await k(), a = r?.isShowLegacy;
 	r && (r.isShowLegacy = t);
 	try {
 		return (await n.OmnisearchBacking.pGetResults(n.CleanUtil.getCleanString(e))).map((e) => ({
@@ -484,22 +488,22 @@ async function ve(e, t = null) {
 		r && (r.isShowLegacy = a);
 	}
 }
-async function A() {
+async function k() {
 	return (await import(
 		/* @vite-ignore */
 		new URL("js/omnisearch/omnisearch-state.js", location.href).href
 )).OmnisearchState;
 }
-async function j(e = {}) {
+async function A(e = {}) {
 	await i();
-	let t = await A();
+	let t = await k();
 	for (let [n, r] of Object.entries(e)) {
 		if (!(n in t._DEFAULT_STATE)) throw Error(`作者的搜索设置里没有这一项：${n}`);
 		n === "partneredMode" ? t.setPartneredMode(r) : t[n] = r;
 	}
 	return t._getComp().toObject();
 }
-async function M() {
+async function j() {
 	await i();
 	let e = n.OmnisearchBacking;
 	return await e._pInit(), {
@@ -509,17 +513,17 @@ async function M() {
 		adventureBookLookup: e._adventureBookLookup ?? {}
 	};
 }
-async function N(e) {
+async function M(e) {
 	await i();
 	let t = n.OmnisearchBacking;
 	return t._searchIndex = n.elasticlunr.Index.load(JSON.parse(e.json)), t._maxId = e.maxId, t._CATEGORY_COUNTS = e.categoryCounts, t._adventureBookLookup = e.adventureBookLookup, t._pLoadSearch = Promise.resolve(), t._initReInCategory(), !0;
 }
 // src/library/runtime/frame/edit-commands.ts
-var P = (e) => import(
+var N = (e) => import(
 	/* @vite-ignore */
 	new URL(`js/${e}`, location.href).href
 );
-async function F(e) {
+async function P(e) {
 	await i();
 	let t = {};
 	for (let r of e) t[r] = n.BrewUtil2.hasSourceJson(r) || n.PrereleaseUtil.hasSourceJson(r) ? {
@@ -534,13 +538,13 @@ async function F(e) {
 	};
 	return t;
 }
-async function ye(e) {
+async function be(e) {
 	return await i(), Object.fromEntries(e.map((e) => [e, {
 		full: n.Parser.sourceJsonToFull(e),
 		abv: n.Parser.sourceJsonToAbv(e)
 	}]));
 }
-async function be() {
+async function xe() {
 	return await i(), (await n.BrewUtil2.pGetBrew()).map((e, t) => ({
 		docIdLocal: e.head.docIdLocal,
 		filename: e.head.filename ?? null,
@@ -552,12 +556,12 @@ async function be() {
 		props: Object.fromEntries(Object.entries(e.body ?? {}).filter(([e, t]) => !e.startsWith("_") && Array.isArray(t)).map(([e, t]) => [e, t.map((t) => t && typeof t == "object" ? o(e, t) : null)]))
 	}));
 }
-async function I(e = null) {
+async function F(e = null) {
 	await i();
 	let t = await n.BrewUtil2.pGetBrew();
 	return e ? t.filter((t) => e.includes(t.head.docIdLocal)) : t;
 }
-async function xe(e) {
+async function Se(e) {
 	await i();
 	let t = {};
 	for (let { prop: r, hash: i } of e) {
@@ -567,17 +571,17 @@ async function xe(e) {
 	}
 	return t;
 }
-async function L(e, t) {
+async function I(e, t) {
 	return await i(), `data/${e}/${e}-${n.UrlUtil.encodeForHash(t.toLowerCase())}.json`;
 }
-async function Se(e) {
-	let t = (await I([e]))[0];
+async function Ce(e) {
+	let t = (await F([e]))[0];
 	return t ? {
 		filename: t.head.filename ?? null,
 		body: t.body
 	} : null;
 }
-async function Ce(e, t) {
+async function we(e, t) {
 	await i();
 	try {
 		return {
@@ -594,7 +598,7 @@ async function Ce(e, t) {
 		};
 	}
 }
-async function we(e, t) {
+async function Te(e, t) {
 	await i();
 	let r = {};
 	for (let i of t) {
@@ -618,21 +622,21 @@ async function we(e, t) {
 	}
 	return r;
 }
-async function Te() {
+async function Ee() {
 	return await i(), n.ExcludeUtil.getList();
 }
-async function R() {
+async function L() {
 	return await i(), n.BrewUtil2.pGetOrCreateEditableBrewDoc();
 }
-async function Ee(e) {
-	return ((await R()).body?._meta?.sources ?? []).some((t) => String(t.json).toLowerCase() === e.json.toLowerCase()) || await n.BrewUtil2.pAddSource({
+async function De(e) {
+	return ((await L()).body?._meta?.sources ?? []).some((t) => String(t.json).toLowerCase() === e.json.toLowerCase()) || await n.BrewUtil2.pAddSource({
 		authors: [],
 		convertedBy: [],
 		version: "1",
 		...e
-	}), ((await R()).body?._meta?.sources ?? []).map((e) => e.json);
+	}), ((await L()).body?._meta?.sources ?? []).map((e) => e.json);
 }
-async function De(e, t) {
+async function Oe(e, t) {
 	await i();
 	let r = {
 		...t,
@@ -643,15 +647,15 @@ async function De(e, t) {
 		hash: o(e, r)
 	};
 }
-async function Oe(e, t) {
+async function ke(e, t) {
 	await i(), await n.BrewUtil2.pRemoveEditableBrewEntities(e, t);
 }
-async function ke(e) {
-	let t = n.MiscUtil.copyFast(await R()), r = t.body._meta.dependencies ??= {};
+async function Ae(e) {
+	let t = n.MiscUtil.copyFast(await L()), r = t.body._meta.dependencies ??= {};
 	for (let [t, n] of Object.entries(e)) r[t] = [.../* @__PURE__ */ new Set([...r[t] ?? [], ...n])];
 	return await n.BrewUtil2.pSetEditableBrewDoc(t), r;
 }
-var z = {
+var R = {
 	spell: {
 		file: "converter/converter-spell.js",
 		cls: "ConverterSpell",
@@ -692,21 +696,21 @@ var z = {
 		cls: "ConverterEntries",
 		formats: ["markdown"]
 	}
-}, Ae = {
+}, je = {
 	text: "doParseText",
 	markdown: "doParseMarkdown",
 	html: "doParseHtml"
-}, B = null;
-function je() {
-	return B ??= (async () => {
+}, z = null;
+function Me() {
+	return z ??= (async () => {
 		await i();
 		let [{ TagCondition: e, TaggerUtils: t }, { TagJsons: r }, { AcConvert: a, AttachedItemTag: o, MiscTag: s, SpellcastingTraitConvert: c }, { ConverterItem: l }, { RaceTraitTag: u }, { InstrumentBaseItemTag: d }] = await Promise.all([
-			P("converter/converterutils-tags.js"),
-			P("converter/converterutils-entries.js"),
-			P("converter/converterutils-creature.js"),
-			P("converter/converter-item.js"),
-			P("converter/converterutils-race.js"),
-			P("converter/converterutils-item.js")
+			N("converter/converterutils-tags.js"),
+			N("converter/converterutils-entries.js"),
+			N("converter/converterutils-creature.js"),
+			N("converter/converter-item.js"),
+			N("converter/converterutils-race.js"),
+			N("converter/converterutils-item.js")
 		]), [f, p, m, h, g, _] = await Promise.all([
 			n.DataUtil.spell.pLoadAll(),
 			n.Renderer.item.pBuildList(),
@@ -719,20 +723,20 @@ function je() {
 			legendaryGroups: h,
 			spells: f
 		}), await r.pInit({ spells: f }), u.init({ itemsRaw: m }), s.init({ items: p }), o.init({ items: p }), await e.pInit({ conditionsBrew: _.condition }), d.init({ items: v });
-	})(), B.catch(() => {
-		B = null;
-	}), B;
+	})(), z.catch(() => {
+		z = null;
+	}), z;
 }
-async function Me() {
-	return Object.fromEntries(Object.entries(z).map(([e, t]) => [e, t.formats]));
+async function Ne() {
+	return Object.fromEntries(Object.entries(R).map(([e, t]) => [e, t.formats]));
 }
-async function Ne(e, t, n, r) {
-	let i = z[e];
+async function Pe(e, t, n, r) {
+	let i = R[e];
 	if (!i) throw Error(`作者没有这一类的转换器：${e}`);
 	if (!i.formats.includes(t)) throw Error(`作者的${e}转换器不支持这种格式：${t}（支持 ${i.formats.join("、")}）`);
-	await je();
-	let a = (await P(i.file))[i.cls], o = [], s = [];
-	return a[Ae[t]](n, {
+	await Me();
+	let a = (await N(i.file))[i.cls], o = [], s = [];
+	return a[je[t]](n, {
 		cbOutput: (e) => o.push(e),
 		cbWarning: (e) => s.push(String(e)),
 		isAppend: !1,
@@ -744,7 +748,7 @@ async function Ne(e, t, n, r) {
 		warnings: s
 	};
 }
-var Pe = {
+var Fe = {
 	spell: {
 		file: "makebrew/makebrew-spell.js",
 		cls: "SpellBuilder"
@@ -758,16 +762,45 @@ var Pe = {
 		cls: "LegendaryGroupBuilder"
 	}
 };
-async function Fe(e) {
+async function Ie(e) {
 	await i();
-	let t = Pe[e];
+	let t = Fe[e];
 	if (!t) return null;
-	let n = (await P(t.file))[t.cls];
+	let n = (await N(t.file))[t.cls];
 	return n.prototype._getInitialState.call(Object.create(n.prototype));
 }
 // src/library/runtime/frame/directory-commands.ts
-var Ie = (e) => e instanceof Error ? e.message : String(e);
-async function Le(e) {
+var Le = (e) => e instanceof Error ? e.message : String(e);
+async function B() {
+	await i();
+	let e = {}, t = /* @__PURE__ */ new Set();
+	for (let r of n.DataLoader._DATA_TYPE_LOADER_LIST) for (let i of r.constructor.PROPS) {
+		if (t.has(i) || i.startsWith("raw_")) continue;
+		t.add(i);
+		let r = n.DataUtil[i];
+		if (!r || typeof r.pLoadIndex != "function") continue;
+		let a = String(r._DIR ?? "");
+		if (a) try {
+			e[i] = {
+				dir: a,
+				indexPath: `data/${a}/${i.endsWith("Fluff") ? "fluff-" : ""}index.json`,
+				index: await r.pLoadIndex()
+			};
+		} catch {}
+	}
+	let r;
+	try {
+		let e = await n.DataUtil.loadRawJSON("data/class/index.json");
+		r = [...new Set(Object.values(e ?? {}).map((e) => `data/class/${String(e)}`))];
+	} catch {
+		r = [];
+	}
+	return {
+		maps: e,
+		classFiles: r
+	};
+}
+async function Re(e) {
 	await i();
 	let t = [];
 	for (let r of e) try {
@@ -775,7 +808,7 @@ async function Le(e) {
 		t.push({
 			prop: r.prop,
 			items: e,
-			files: await Promise.all(e.map((e) => L(r.prop, String(e.id)))),
+			files: await Promise.all(e.map((e) => I(r.prop, String(e.id)))),
 			error: null
 		});
 	} catch (e) {
@@ -783,10 +816,10 @@ async function Le(e) {
 			prop: r.prop,
 			items: [],
 			files: [],
-			error: Ie(e).split("\n")[0]
+			error: Le(e).split("\n")[0]
 		});
 	}
-	let r = [...new Set(t.flatMap((e) => e.items.map((e) => n.SourceUtil.getEntitySource(e))))], a = r.length ? await F(r) : {}, o = {};
+	let r = [...new Set(t.flatMap((e) => e.items.map((e) => n.SourceUtil.getEntitySource(e))))], a = r.length ? await P(r) : {}, o = {};
 	for (let e of r) o[e] = {
 		full: n.Parser.sourceJsonToFull(e),
 		abv: n.Parser.sourceJsonToAbv(e),
@@ -795,15 +828,16 @@ async function Le(e) {
 	return {
 		groups: n.SourceUtil.ADV_BOOK_GROUPS.map((e) => ({ ...e })),
 		corpora: t,
-		sources: o
+		sources: o,
+		sourceFiles: await B()
 	};
 }
 // src/library/runtime/frame/dice-commands.ts
-var V = (e) => n.Renderer.dice.lang.getTree3(e)?.tree ?? null, Re = (e) => e.replace(/<[^>]+>/g, "");
-async function ze(e, t) {
+var V = (e) => n.Renderer.dice.lang.getTree3(e)?.tree ?? null, ze = (e) => e.replace(/<[^>]+>/g, "");
+async function Be(e, t) {
 	return await i(), n.Renderer.utils.getTagEntry(e.startsWith("@") ? e : `@${e}`, t);
 }
-async function Be(e) {
+async function Ve(e) {
 	await i();
 	let t = V(e);
 	return t ? {
@@ -818,7 +852,7 @@ async function Be(e) {
 		max: null
 	};
 }
-async function Ve(e) {
+async function He(e) {
 	if (await i(), !e.trim()) return {
 		ok: !0,
 		simple: !0,
@@ -833,7 +867,7 @@ async function Ve(e) {
 	} catch (e) {
 		return {
 			ok: !1,
-			error: Re(e instanceof Error ? e.message : String(e))
+			error: ze(e instanceof Error ? e.message : String(e))
 		};
 	}
 	let t = n.Renderer.dice.tk, r = n.Renderer.dice.lang._lex3(e).lexed, a = (e) => e?.type === t.TYP_NUMBER && /^\d+$/.test(String(e.value)) ? Number(e.value) : null, o = [], s = 0, c = 0;
@@ -951,7 +985,7 @@ function G(e, t = U) {
 		};
 	});
 }
-function He(e, t, n = U) {
+function Ue(e, t, n = U) {
 	let r = G(e, n);
 	if (t.length !== r.length) throw Error(`要填 ${r.length} 个数，给了 ${t.length} 个`);
 	r.forEach((e, n) => {
@@ -962,7 +996,7 @@ function He(e, t, n = U) {
 	let i = 0;
 	return e.replace(new RegExp(n, "g"), () => String(t[i++]));
 }
-function Ue(e) {
+function We(e) {
 	return e.split(";").map((e) => e.trim()).filter(Boolean);
 }
 function K(e, t) {
@@ -986,7 +1020,7 @@ function J(e, t) {
 		})?.[0]?.roll ?? null : null;
 	});
 }
-async function We(e, t) {
+async function Ge(e, t) {
 	await i();
 	let r = n.Renderer.table.getAutoConvertedRollMode(e);
 	return r ? {
@@ -999,7 +1033,7 @@ async function We(e, t) {
 		index: null
 	};
 }
-function Ge(e) {
+function Ke(e) {
 	let t = n.Renderer.table.getHeaderRowMetas(e)?.at(-1)?.[0];
 	if (typeof t != "string") return null;
 	let r = n.RollerUtil.getFullRollCol(t), i = /^\{@dice (?<inner>.*)\}$/s.exec(r);
@@ -1008,7 +1042,7 @@ function Ge(e) {
 function Y(e, t = []) {
 	return typeof e == "string" ? t.push(e) : Array.isArray(e) ? e.forEach((e) => Y(e, t)) : e && typeof e == "object" && Object.values(e).forEach((e) => Y(e, t)), t;
 }
-function Ke(e) {
+function qe(e) {
 	let t = [];
 	for (let r of Y(e)) for (let e of r.matchAll(/\{@(\w+) ([^}]*)\}/g)) try {
 		let r = n.Renderer.utils.getTagEntry(`@${e[1]}`, e[2]);
@@ -1020,14 +1054,14 @@ function Ke(e) {
 	} catch {}
 	return t;
 }
-var qe = (e) => e.replace(/<[^>]+>/g, "");
-async function Je(e, t = {}) {
+var Je = (e) => e.replace(/<[^>]+>/g, "");
+async function Ye(e, t = {}) {
 	await i();
 	let r = n.Renderer.table.getAutoConvertedRollMode(e);
 	if (!r) return { status: "not-rollable" };
-	let a = Ge(e);
+	let a = Ke(e);
 	if (!a) return { status: "not-rollable" };
-	let o = n.Renderer.dice.RE_PROMPT.source, s = Ue(a).map((e) => ({
+	let o = n.Renderer.dice.RE_PROMPT.source, s = We(a).map((e) => ({
 		formula: e,
 		prompts: G(e, o)
 	}));
@@ -1048,7 +1082,7 @@ async function Je(e, t = {}) {
 			prompts: c.prompts
 		};
 		try {
-			l = He(l, t.promptValues, o);
+			l = Ue(l, t.promptValues, o);
 		} catch (e) {
 			return {
 				status: "error",
@@ -1072,7 +1106,7 @@ async function Je(e, t = {}) {
 		};
 		let r = K(u, n.total), i = r === null ? [] : q((e.rows ?? [])[r]).slice(1);
 		g.push({
-			label: d ? qe(String(f.at(-1)[t + 1] ?? "")) : null,
+			label: d ? Je(String(f.at(-1)[t + 1] ?? "")) : null,
 			formula: l,
 			total: n.total,
 			used: n.used,
@@ -1082,7 +1116,7 @@ async function Je(e, t = {}) {
 		});
 	}
 	let _ = [];
-	for (let e of g) for (let t of Ke(e.cells)) {
+	for (let e of g) for (let t of qe(e.cells)) {
 		let e = await h(t.formula);
 		if (e.status === "missing") return {
 			status: "missing",
@@ -1108,7 +1142,7 @@ function X(e) {
 	let t = n.DataLoader._PROP_TO_HASH_PAGE, r = Object.entries(t).filter(([, t]) => t === e).map(([e]) => e);
 	return r.length ? r : Object.keys(t).filter((t) => t.toLowerCase() === e.toLowerCase());
 }
-function Ye(e, t) {
+function Xe(e, t) {
 	let r = e === "@book" ? "book.html" : "adventure.html", { displayText: i, id: a, ixChapter: o, sectionName: s } = n.UidUtil.unpackUidAdventureBook(t);
 	return {
 		tag: e,
@@ -1124,10 +1158,10 @@ function Ye(e, t) {
 		}
 	};
 }
-async function Xe(e, t) {
+async function Ze(e, t) {
 	await i();
 	let r = e.startsWith("@") ? e : `@${e}`;
-	if (r === "@book" || r === "@adventure") return Ye(r, t);
+	if (r === "@book" || r === "@adventure") return Xe(r, t);
 	let a;
 	try {
 		a = n.Renderer.utils.getTagMeta(r, t);
@@ -1147,20 +1181,20 @@ async function Xe(e, t) {
 	};
 }
 // src/library/runtime/frame/image-commands.ts
-var Ze = {
+var Qe = {
 	monster: "monster",
 	object: "object",
 	vehicle: "vehicle"
 };
-async function Qe(t, r) {
+async function $e(t, r) {
 	await i();
-	let a = Ze[t];
+	let a = Qe[t];
 	if (!a || !n.Renderer[a]?.getTokenUrl || !n.Renderer.generic.hasToken(r)) return null;
 	let o = n.Renderer[a].getTokenUrl(r);
 	return o ? /^https?:/.test(o) ? o : e(o) : null;
 }
 // src/library/runtime/frame/table-extract-commands.ts
-async function $e() {
+async function et() {
 	let e = new URL("js/generate-tables-data/", location.href).href, [t, n] = await Promise.all([import(
 		/* @vite-ignore */
 		`${e}generate-tables-data-utils.js`
@@ -1173,9 +1207,9 @@ async function $e() {
 		RecursiveSearchStateGeneric: n.RecursiveSearchStateGeneric
 	};
 }
-async function et(e) {
+async function tt(e) {
 	await i();
-	let { UtilGenTables: t, RecursiveSearchStateGeneric: r } = await $e(), a = await n.DataLoader.pCacheAndGetAllSite(e) ?? [], s = [], l = [];
+	let { UtilGenTables: t, RecursiveSearchStateGeneric: r } = await et(), a = await n.DataLoader.pCacheAndGetAllSite(e) ?? [], s = [], l = [];
 	for (let n of a) {
 		let i = o(e, n);
 		if (i) try {
@@ -1225,7 +1259,7 @@ async function et(e) {
 	};
 }
 // src/library/runtime/frame/commands.ts
-async function tt() {
+async function nt() {
 	let e = /* @__PURE__ */ new Set(), t = [];
 	for (let r of n.DataLoader._DATA_TYPE_LOADER_LIST) {
 		if (e.has(r)) continue;
@@ -1244,7 +1278,7 @@ async function tt() {
 	}
 	return t;
 }
-async function nt(e) {
+async function rt(e) {
 	await i();
 	let t = await n.DataLoader.pCacheAndGetAllSite(e) ?? [];
 	return {
@@ -1253,29 +1287,30 @@ async function nt(e) {
 		sources: t.map((e) => c(e))
 	};
 }
-async function rt(e, t, r) {
+async function Z(e, t, r) {
 	return await i(), ((await n.DataUtil.loadJSON(`data/${e}`))[t] ?? []).map((e) => ({
 		id: e.id,
 		source: n.SourceUtil.getEntitySource(e),
 		hash: n.UrlUtil.URL_TO_HASH_BUILDER[r](e)
 	}));
 }
-async function Z(e, t, r) {
+async function it(e, t, r) {
 	return await i(), n.DataLoader.pCacheAndGet(e, t, r, { isRequired: !0 });
 }
-async function it() {
+async function at(e) {
 	await i();
-	let e = {};
-	for (let t of ["search/index.json", "search/index-item.json"]) {
-		let r = n.Omnidexer.decompressIndex(await n.DataUtil.loadRawJSON(t));
-		for (let t of r) {
-			let r = n.Parser.CAT_ID_TO_PROP[t.c] ?? `cat:${t.c}`;
-			(e[r] ??= []).push(t.u);
+	let t = e ? new Set(e.map((e) => e.toUpperCase())) : null, r = {};
+	for (let e of ["search/index.json", "search/index-item.json"]) {
+		let i = n.Omnidexer.decompressIndex(await n.DataUtil.loadRawJSON(e));
+		for (let e of i) {
+			if (t && e.s && !t.has(String(e.s).toUpperCase())) continue;
+			let i = n.Parser.CAT_ID_TO_PROP[e.c] ?? `cat:${e.c}`;
+			(r[i] ??= []).push(e.u);
 		}
 	}
-	return e;
+	return r;
 }
-async function at(e, t) {
+async function ot(e, t) {
 	await i();
 	let r = n.ExcludeUtil.getList().filter((t) => t.hash !== "*" || t.category !== "*" || String(t.source).toLowerCase() !== e.toLowerCase()), a = t ? [...r, {
 		displayName: e,
@@ -1286,84 +1321,90 @@ async function at(e, t) {
 	}] : r;
 	return await n.ExcludeUtil.pSetList(a), await n.ExcludeUtil._pSave(), n.ExcludeUtil.getList();
 }
-async function ot(e, t, r) {
+async function st(e, t, r) {
 	return await i(), n.ExcludeUtil.isExcluded(e, t, r, { isNoCount: !0 });
 }
-async function st(e, t) {
+async function ct(e, t) {
 	return await i(), t.map((t) => o(e, t));
 }
-async function ct() {
+async function lt() {
 	return [...n.__trpgFrameErrors];
 }
-var lt = {
-	frameErrors: ct,
+async function ut() {
+	let e = n.__trpgStorageFlush;
+	return e ? e() : [];
+}
+var dt = {
+	frameErrors: lt,
 	init: i,
-	loaders: tt,
-	parseProp: nt,
-	corpusList: rt,
-	parseCorpus: Z,
-	searchIndexHashes: it,
-	setSourceExcluded: at,
-	isExcluded: ot,
-	excludedFlags: ge,
-	detail: _e,
-	search: ve,
-	searchIndexDump: M,
-	searchIndexLoad: N,
-	searchSettings: j,
-	englishLocators: fe,
-	englishMatch: pe,
-	variantTemplateNames: me,
-	versionOrder: he,
-	brewCatalog: te,
-	brewInstalled: ne,
-	brewStorage: re,
-	brewAddUrl: ie,
-	brewAddSources: ae,
-	brewAddFiles: oe,
-	brewDelete: se,
-	brewPull: ce,
-	brewCheckUpdates: ue,
-	brewCorpusList: le,
-	parseBrewProp: de,
-	rawHashes: st,
-	editionOf: F,
-	sourceNames: ye,
-	corpusFile: L,
-	brewDocIndex: be,
-	brewItemsByHash: xe,
-	brewRaw: I,
-	brewExport: Se,
-	fluffOf: Ce,
-	fluffOfMany: we,
-	excludeList: Te,
-	editableDoc: R,
-	editableEnsureSource: Ee,
-	editablePut: De,
-	editableRemove: Oe,
-	editableAddDependencies: ke,
-	converters: Me,
-	convertText: Ne,
-	entryTemplate: Fe,
-	diceTag: ze,
-	diceStats: Be,
-	diceRead: Ve,
+	loaders: nt,
+	parseProp: rt,
+	corpusList: Z,
+	parseCorpus: it,
+	searchIndexHashes: at,
+	setSourceExcluded: ot,
+	isExcluded: st,
+	excludedFlags: _e,
+	detail: ve,
+	search: ye,
+	searchIndexDump: j,
+	searchIndexLoad: M,
+	searchSettings: A,
+	englishLocators: pe,
+	englishMatch: me,
+	variantTemplateNames: he,
+	versionOrder: ge,
+	brewCatalog: ne,
+	brewInstalled: re,
+	brewStorage: ie,
+	brewAddUrl: ae,
+	brewAddSources: oe,
+	brewAddFiles: se,
+	brewDelete: ce,
+	brewPull: le,
+	brewCheckUpdates: de,
+	brewCorpusList: ue,
+	parseBrewProp: fe,
+	rawHashes: ct,
+	storageFlush: ut,
+	editionOf: P,
+	sourceNames: be,
+	corpusFile: I,
+	brewDocIndex: xe,
+	brewItemsByHash: Se,
+	brewRaw: F,
+	brewExport: Ce,
+	fluffOf: we,
+	fluffOfMany: Te,
+	excludeList: Ee,
+	editableDoc: L,
+	editableEnsureSource: De,
+	editablePut: Oe,
+	editableRemove: ke,
+	editableAddDependencies: Ae,
+	converters: Ne,
+	convertText: Pe,
+	entryTemplate: Ie,
+	diceTag: Be,
+	diceStats: Ve,
+	diceRead: He,
 	diceRoll: H,
-	tableRow: We,
-	tableRoll: Je,
-	tagMeta: Xe,
+	tableRow: Ge,
+	tableRoll: Ye,
+	tagMeta: Ze,
 	sortColumns: w,
 	sortRanks: ee,
-	listCells: E,
+	listCells: te,
 	authorFields: f,
 	displayName: m,
 	renderText: h,
 	statblockMeta: g,
 	summaryEntry: v,
-	tokenPath: Qe,
-	extractTables: et,
-	directory: Le
-}, ut = [
+	tokenPath: $e,
+	extractTables: tt,
+	directory: Re,
+	sourceFiles: B
+}, ft = [
 	"DataLoader",
 	"DataUtil",
 	"BrewUtil2",
@@ -1386,7 +1427,7 @@ addEventListener("message", (e) => {
 		frame: $,
 		id: n.id,
 		...e
-	}, location.origin), i = lt[n.fn];
+	}, location.origin), i = dt[n.fn];
 	i ? i(...n.args).then((e) => r({
 		ok: !0,
 		value: e
@@ -1398,13 +1439,13 @@ addEventListener("message", (e) => {
 		error: `小窗没有这个指令：${n.fn}`
 	});
 });
-var dt = new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "", ft = {
+var pt = new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "", mt = {
 	channel: t,
 	type: "ready",
 	frame: $,
-	codeSet: dt,
+	codeSet: pt,
 	authorVersion: typeof Q.VERSION_NUMBER == "string" ? Q.VERSION_NUMBER : null,
-	present: Object.fromEntries(ut.map((e) => [e, Q[e] !== void 0])),
+	present: Object.fromEntries(ft.map((e) => [e, Q[e] !== void 0])),
 	errors: [...Q.__trpgFrameErrors ?? []]
 };
-parent.postMessage(ft, location.origin);
+parent.postMessage(mt, location.origin);

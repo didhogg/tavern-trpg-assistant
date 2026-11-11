@@ -1,11 +1,12 @@
 // 自制内容的解析（D2-P2 B1 设计 §8.4：装、删、更新自制之后"重开小窗 → 重跑解析"）。
 // 和官方的全量解析一样：按作者加载器登记表逐类调作者加载器（读已装自制用 pCacheAndGetAllBrew），结果原样存进库。
-// 作者网站的做法也是改了自制就整页重新加载。
-import { buildAlternatives, type AltIndex } from './alternatives'
-import { invalidatePrecompute, precomputeSource, type PrecomputeReport } from './cache'
+// P5 T1/T3：解析写进准备版本；旧的解析结果不删，先写删除记号把父层挡住，失败时旧版本仍可读。
+import { buildAlternatives, altsKey, type AltIndex } from './alternatives'
+import { precomputeSource, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
 import type { AuthorFrame } from './runtime/host'
+import type { LibraryView } from './revision'
 import type { SourceEntry } from './sources'
 
 /** 自制里的书 / 冒险目录：类别（book / adventure）→ 每本的编号、名称、来源、作者编号。 */
@@ -37,12 +38,21 @@ export interface BrewParseReport {
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 
-/** 用一个新开的小窗重解析这套程序已装的全部自制内容；旧的解析结果先清掉（自制少了的类别不留旧数据）。 */
-export async function parseBrew({ source, db, openFrame, openFrameIn }: { source: SourceEntry; db: LibraryDatabase; openFrame: () => Promise<AuthorFrame>; openFrameIn: (kvScope: string) => Promise<AuthorFrame> }): Promise<BrewParseReport> {
+/** 用一个新开的小窗在准备版本里重解析这套程序已装的全部自制内容；旧版本数据不删。 */
+export async function parseBrew({ source, db, view, openFrame, openFrameIn }: {
+  source: SourceEntry
+  db: LibraryDatabase
+  view: LibraryView
+  openFrame: () => Promise<AuthorFrame>
+  openFrameIn: (kvScope: string) => Promise<AuthorFrame>
+}): Promise<BrewParseReport> {
   const t0 = Date.now()
   const report: BrewParseReport = { source: source.id, installed: [], parse: { props: {}, corpora: {}, notRun: [], errors: [], authorErrors: [] }, alternatives: { targets: 0, errors: [] }, ms: 0 }
-  await db.derived.where('key').startsWith(`parsed:${source.id}:`).delete()
-  await invalidatePrecompute(db, source.id, ['fluff', 'excluded'])
+  // 先给父层的旧结果写删除记号；下面解析成功再写新结果（某一类没了也不会把旧结果带回来）
+  for (const prefix of [`parsed:${source.id}:`, `pre:${source.id}:`, brewCorporaKey(source.id), altsKey(source.id)]) {
+    const old = await view.derivedKeys(prefix)
+    for (const key of old.keys()) await view.derivedDelete(key)
+  }
   const corpora: BrewCorpora = {}
   const frame = await openFrame()
   try {
@@ -56,7 +66,7 @@ export async function parseBrew({ source, db, openFrame, openFrameIn }: { source
         try {
           for (const it of await frame.call('brewCorpusList', prop, loader.page!)) {
             try {
-              await db.derived.put({ key: parsedKey(source.id, prop, it.id), fingerprint: 'brew', value: await frame.call('parseCorpus', loader.page!, it.source, it.hash), savedAt: Date.now() })
+              await view.derivedPut(parsedKey(source.id, prop, it.id), 'brew', await frame.call('parseCorpus', loader.page!, it.source, it.hash))
               listed.push(it)
               entry.count++
             } catch (e) {
@@ -74,19 +84,19 @@ export async function parseBrew({ source, db, openFrame, openFrameIn }: { source
         try {
           const parsed = await frame.call('parseBrewProp', prop)
           if (!parsed.items.length) continue
-          await db.derived.put({ key: parsedKey(source.id, prop), fingerprint: 'brew', value: parsed, savedAt: Date.now() })
+          await view.derivedPut(parsedKey(source.id, prop), 'brew', parsed)
           report.parse.props[prop] = { count: parsed.items.length, noHash: parsed.hashes.filter((h) => h === null).length }
         } catch (e) {
           report.parse.errors.push({ prop, error: msg(e) })
         }
       }
     }
-    await db.derived.put({ key: brewCorporaKey(source.id), fingerprint: 'brew', value: corpora, savedAt: Date.now() })
+    await view.derivedPut(brewCorporaKey(source.id), 'brew', corpora)
     report.parse.authorErrors = await frame.call('frameErrors')
-    const alts = await buildAlternatives({ source, db, frame, openFrameIn })
+    const alts = await buildAlternatives({ source, db, view, frame, openFrameIn })
     report.alternatives = { targets: Object.keys(alts.targets).length, errors: alts.errors }
     try {
-      report.precompute = await precomputeSource({ source, db, frame, fluff: true, excluded: true, search: false })
+      report.precompute = await precomputeSource({ source, db, frame, view, fluff: true, excluded: true, search: false })
     } catch (e) {
       report.parse.errors.push({ prop: '(预计算缓存)', error: msg(e) })
     }
@@ -94,6 +104,6 @@ export async function parseBrew({ source, db, openFrame, openFrameIn }: { source
     frame.close()
   }
   report.ms = Date.now() - t0
-  await db.derived.put({ key: `audit:${source.id}`, fingerprint: 'brew', value: report, savedAt: Date.now() })
+  await view.derivedPut(`audit:${source.id}`, 'brew', report)
   return report
 }

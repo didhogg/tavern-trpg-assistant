@@ -2,6 +2,7 @@
 // 压缩存进【库】；玩的时候只读。类别不写死：从已解析数据的类别里取，再问作者登记表哪些真有导入器。
 import type { FileProvider } from '../../library/files'
 import type { LibraryDatabase } from '../../library/db'
+import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { ScopedLibrary } from '../../library/scoped'
 import { defaultCampaignLibrary } from '../../library/scopes'
 import { getSource, SOURCES } from '../../library/sources'
@@ -39,6 +40,7 @@ export interface PrecomputeOptions {
   files: FileProvider
   scoped: ScopedLibrary
   db: LibraryDatabase
+  revisions: LibraryRevisionStore
   dataVersion: () => Promise<KernelDataVersion>
   rule?: string
   fetchImpl?: typeof fetch
@@ -74,6 +76,7 @@ export class KernelPrecompute {
   /** 一个下载任务里的换算段。中途取消会保留已写缓存，下一次从没换的接着换。 */
   async run({ codeSet = 'cn', signal, onProgress, limit }: { codeSet?: string; signal?: AbortSignal; onProgress?: (p: PrecomputeProgress) => void; /** 仅测试用：只换算前 N 条。 */ limit?: number } = {}): Promise<PrecomputeReport> {
     const started = Date.now()
+    const view = await this.opts.revisions.published()
     const input = await this.input(codeSet)
     const fingerprint = input.cacheKey ?? ''
     const version = await this.opts.dataVersion()
@@ -83,17 +86,17 @@ export class KernelPrecompute {
     const skip = (reason: string): PrecomputeReport => ({ ...base, skippedReason: reason, total: 0, done: 0, converted: 0, cached: 0, failed: [], noEnglish: [], swept: 0, rawBytes: 0, compressedBytes: 0, ms: Date.now() - started, cancelled: false, complete: false })
     const en = SOURCES.find((s) => s.kind === 'official' && s.codeSet === 'en')
     const own = SOURCES.find((s) => s.kind === 'official' && s.codeSet === codeSet)
-    if (!own || (await this.opts.db.sets.get(own.id))?.status !== 'installed') return skip(`${own?.id ?? codeSet} 还没装好`)
-    if (!en || (await this.opts.db.sets.get(en.id))?.status !== 'installed') return skip('英文官方数据还没装好，换算需要英文对照原件')
+    if (!own || (await view.officialState(own.id))?.status !== 'installed') return skip(`${own?.id ?? codeSet} 还没装好`)
+    if (!en || (await view.officialState(en.id))?.status !== 'installed') return skip('英文官方数据还没装好，换算需要英文对照原件')
 
     onProgress?.({ stage: 'open-kernel', done: 0, total: 0 })
-    const session = await startKernel({ pluginRoot: this.opts.pluginRoot, container: this.opts.container?.() ?? document.body, data: libraryData(this.opts.files), fetchImpl: this.opts.fetchImpl, timeoutMs: this.opts.timeoutMs ?? 180_000 })
+    const session = await startKernel({ pluginRoot: this.opts.pluginRoot, container: this.opts.container?.() ?? document.body, data: libraryData(this.opts.files, view), fetchImpl: this.opts.fetchImpl, timeoutMs: this.opts.timeoutMs ?? 180_000 })
     let total: number; let done = 0; let converted = 0; let cached = 0; let rawBytes = 0; let compressedBytes = 0; let cancelled = false
     const failed: PrecomputeReport['failed'] = []
     try {
       await session.boot(input)
       const noEnglish: PrecomputeReport['noEnglish'] = []
-      const candidates = await this.candidates(session, codeSet, noEnglish, signal, limit)
+      const candidates = await this.candidates(session, codeSet, view, noEnglish, signal, limit)
       total = candidates.length
       onProgress?.({ stage: 'convert', done: 0, total })
       const cache = new KernelCache(this.opts.db)
@@ -129,15 +132,16 @@ export class KernelPrecompute {
   }
 
   /** 从已解析数据的类别 + 本战役可见条目里收集；类别由作者登记表确认，不写类别清单。 */
-  private async candidates(session: KernelSession, codeSet: string, noEnglish: PrecomputeReport['noEnglish'], signal?: AbortSignal, limit?: number): Promise<Candidate[]> {
+  private async candidates(session: KernelSession, codeSet: string, view: LibraryView, noEnglish: PrecomputeReport['noEnglish'], signal?: AbortSignal, limit?: number): Promise<Candidate[]> {
     const props = new Set<string>()
     for (const source of SOURCES.filter((s) => s.codeSet === codeSet)) {
-      await this.opts.db.derived.where('key').startsWith(`parsed:${source.id}:`).each((rec) => {
-        const rest = rec.key.slice(`parsed:${source.id}:`.length)
-        if (rest.startsWith('corpus:') || rest.startsWith('raw_')) return
+      const map = await view.derivedKeys(`parsed:${source.id}:`)
+      for (const key of map.keys()) {
+        const rest = key.slice(`parsed:${source.id}:`.length)
+        if (rest.startsWith('corpus:') || rest.startsWith('raw_')) continue
         const prop = rest.split(':')[0]
         if (prop && getSource(source.id)) props.add(prop)
-      })
+      }
     }
     if (signal?.aborted) return []
     const meta = await session.call('importerMeta', [...props])
@@ -146,22 +150,22 @@ export class KernelPrecompute {
     const out: Candidate[] = []
     for (const prop of usable) {
       if (signal?.aborted) break
-      const rows = await this.opts.scoped.query(library, prop).catch(() => [])
+      const rows = await this.opts.scoped.query(library, prop, { view }).catch(() => [])
       for (const row of rows) {
         if (limit && out.length >= limit) break
         const item = row.item as { name?: unknown } | null
         // 作者条目里有一类只有属性缩写、没有 name 的元数据（例如 itemProperty）；它们不是 Actor/Item 文档。
         // 作者导入器对它们会返回无文档；这里按内容的真实形状跳过，不写类别名单。
         if (typeof item?.name !== 'string' || !item.name) continue
-        const k = await kernelEntryOf(this.opts.scoped, library.codeSet, row.ref, row.item, row.version.altId)
+        const k = await kernelEntryOf(this.opts.scoped, library.codeSet, row.ref, row.item, row.version.altId, view)
         if (k.noEnglish) noEnglish.push({ prop, name: item.name, reason: k.reason ?? 'english-missing' })
         out.push({ prop, entry: k.entry, name: item.name })
         // 有备选（房规、撞编号的包）：每个备选版本也换好——哪个战役选它都即时；原件已在上面
         if (row.version.count > 0) {
-          const d = await this.opts.scoped.detail(library, row.ref)
+          const d = await this.opts.scoped.detail(library, row.ref, { view })
           for (const alt of d && !('hidden' in d) ? d.alternatives : []) {
             if (alt.item === row.item) continue
-            const a = await kernelEntryOf(this.opts.scoped, library.codeSet, row.ref, alt.item, alt.altId)
+            const a = await kernelEntryOf(this.opts.scoped, library.codeSet, row.ref, alt.item, alt.altId, view)
             if (a.noEnglish) noEnglish.push({ prop, name: item.name, reason: a.reason ?? 'alternative' })
             out.push({ prop, entry: a.entry, name: item.name })
           }

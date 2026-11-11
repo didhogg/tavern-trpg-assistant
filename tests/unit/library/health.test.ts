@@ -6,8 +6,8 @@ import { getSource } from '../../../src/library/sources'
 const install = (over: Partial<InstallReport['parse']> = {}): InstallReport => ({
   source: 'cn-official', commit: 'c', storage: { persisted: null, quota: null, usage: null }, plan: { files: 2, bytes: 1 },
   download: { fetched: 2, reused: 0, failed: [] }, mirror: { checked: 2, missing: [], mismatched: ['data/x.json'] },
-  parse: { props: { spell: { count: 3, noHash: 1 } }, corpora: { book: { count: 1, failed: [{ id: 'PHB', error: '坏了' }] } }, notRun: [{ props: ['adventure'], reason: '按需' }], errors: [], ...over },
-  index: { spell: { parsed: 3, index: 2, onlyParsed: 1, onlyIndex: 0, samplesOnlyParsed: ['a'], samplesOnlyIndex: [] } }, ms: 1,
+  parse: { props: { spell: { count: 3, noHash: 1 } }, corpora: { book: { count: 1, skipped: 0, failed: [{ id: 'PHB', error: '坏了' }] } }, notRun: [{ props: ['adventure'], reason: '按需' }], errors: [], ...over },
+  index: { spell: { parsed: 3, index: 2, onlyParsed: 1, onlyIndex: 0, samplesOnlyParsed: ['a'], samplesOnlyIndex: [] } }, publishable: true, reasons: [], settlementReady: true, ms: 1,
 })
 
 const find = (items: ReturnType<typeof healthItemsOf>, check: string) => items.find((i) => i.check === check)!
@@ -16,6 +16,12 @@ describe('体检：各份报告汇成统一格式', () => {
   it('官方：没装只报一条"还没安装"', () => {
     const items = healthItemsOf({ source: getSource('cn-official'), installed: false })
     expect(items.map((i) => [i.check, i.level])).toEqual([['not-installed', 'info']])
+  })
+
+  it('官方：装失败 / 没装好也保留失败报告，不只剩“还没安装”', () => {
+    const items = healthItemsOf({ source: getSource('cn-official'), installed: false, install: { value: install(), stale: false } })
+    expect(items.some((i) => i.check === 'not-installed')).toBe(true)
+    expect(find(items, 'mirror')).toMatchObject({ level: 'error', count: 1 })
   })
 
   it('官方：第 1、2、5 层按级别分好；第 3、4 层没跑时说明在哪跑；旧报告带 stale', () => {

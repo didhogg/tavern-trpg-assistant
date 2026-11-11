@@ -11,7 +11,7 @@
 	window.name.startsWith("trpg-local:") && (i = JSON.parse(window.name.slice(11)), window.name = "");
 	function a(e, t) {
 		let n = new Map(Object.entries(e)), i = (e) => {
-			t && l(e).catch((e) => r.push(`同步存储没存进插件：${String(e)}`));
+			t && u(e).catch((e) => r.push(`同步存储没存进插件：${String(e)}`));
 		};
 		return {
 			get length() {
@@ -49,15 +49,15 @@
 		configurable: !0,
 		get: () => t
 	});
-	let s = 1, c = /* @__PURE__ */ new Map();
+	let s = 1, c = /* @__PURE__ */ new Map(), l = /* @__PURE__ */ new Set();
 	addEventListener("message", (t) => {
 		let n = t.data;
 		if (t.source !== parent || !n || n.channel !== e || n.type !== "response") return;
 		let r = c.get(n.id);
 		r && (c.delete(n.id), n.ok ? r.resolve(n.value) : r.reject(Error(n.error)));
 	});
-	function l(n) {
-		return new Promise((r, i) => {
+	function u(n) {
+		let r = new Promise((r, i) => {
 			let a = s++;
 			c.set(a, {
 				resolve: r,
@@ -70,8 +70,10 @@
 				...n
 			}, location.origin);
 		});
+		return (n.op === "local-set" || n.op === "local-remove" || n.op === "kv-set" || n.op === "kv-remove") && (l.add(r), r.then(() => l.delete(r), () => l.delete(r))), r;
 	}
-	function u(e, t) {
+	n.__trpgStorageFlush = async () => (await Promise.allSettled([...l]), [...r]);
+	function d(e, t) {
 		let n;
 		Object.defineProperty(globalThis, e, {
 			configurable: !0,
@@ -82,53 +84,53 @@
 			}
 		});
 	}
-	let d = new URL(".", location.href);
-	function f(e) {
-		let t = new URL(e, d);
-		return t.origin !== d.origin || !t.pathname.startsWith(d.pathname) ? null : decodeURIComponent(t.pathname.slice(d.pathname.length));
+	let f = new URL(".", location.href);
+	function p(e) {
+		let t = new URL(e, f);
+		return t.origin !== f.origin || !t.pathname.startsWith(f.pathname) ? null : decodeURIComponent(t.pathname.slice(f.pathname.length));
 	}
-	let p = /* @__PURE__ */ new Map();
-	function m(e) {
-		let t = p.get(e);
-		return t || (t = l({
+	let m = /* @__PURE__ */ new Map();
+	function h(e) {
+		let t = m.get(e);
+		return t || (t = u({
 			op: "file",
 			path: e
 		}).then((t) => {
 			if (typeof t != "string") throw Error(`文件不存在：${e}`);
 			return t;
-		}), t.catch(() => p.delete(e)), p.set(e, t)), t;
+		}), t.catch(() => m.delete(e)), m.set(e, t)), t;
 	}
-	u("DataUtil", (e) => {
+	d("DataUtil", (e) => {
 		let t = e.loadJSON.bind(e), n = e.loadRawJSON.bind(e), r = /* @__PURE__ */ new Map();
 		e.loadJSON = (n, ...i) => {
-			let a = f(n);
+			let a = p(n);
 			if (a === null) return t(n, ...i);
 			let o = r.get(n);
 			return o || (o = (async () => {
-				let t = JSON.parse(await m(a));
+				let t = JSON.parse(await h(a));
 				return await e.pDoMetaMerge(n, t, { isSkipMetaMergeCache: !0 }), t;
 			})(), o.catch(() => r.delete(n)), r.set(n, o)), o;
 		}, e.loadRawJSON = async (e, ...t) => {
-			let r = f(e);
-			return r === null ? n(e, ...t) : JSON.parse(await m(r));
+			let r = p(e);
+			return r === null ? n(e, ...t) : JSON.parse(await h(r));
 		};
 	});
-	let h = {
-		getItem: (e) => l({
+	let g = {
+		getItem: (e) => u({
 			op: "kv-get",
 			key: e
 		}),
-		setItem: (e, t) => l({
+		setItem: (e, t) => u({
 			op: "kv-set",
 			key: e,
 			value: t
 		}),
-		removeItem: (e) => l({
+		removeItem: (e) => u({
 			op: "kv-remove",
 			key: e
 		})
 	};
-	u("StorageUtil", (e) => {
-		e._getAsyncStorage = async () => h;
+	d("StorageUtil", (e) => {
+		e._getAsyncStorage = async () => g;
 	});
 })();

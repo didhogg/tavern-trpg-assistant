@@ -4,6 +4,7 @@ import { LibraryDatabase } from '../../../src/library/db'
 import { DownloadEstimator } from '../../../src/library/download-estimate'
 import type { DirectoryRecord } from '../../../src/library/directory'
 import { parsedKey } from '../../../src/library/install'
+import { LibraryRevisionStore } from '../../../src/library/revision'
 
 // 文件清单：预载（data 根下、各子目录里不叫 adventure 的 json、search 根下）+ 冒险（data/adventure）+ 不算的（js、图片）
 const LIST = {
@@ -14,7 +15,7 @@ const LIST = {
   'data/adventure/adventure-cos.json': { sha: 'e', size: 999 },
   'js/utils.js': { sha: 'f', size: 7 },
 }
-const REC = { adventureFiles: { LMoP: 'data/adventure/adventure-lmop.json', CoS: 'data/adventure/adventure-cos.json' }, adventureProp: 'adventure', errors: { books: null, adventures: null } } as unknown as DirectoryRecord
+const REC = { adventureFiles: { LMoP: 'data/adventure/adventure-lmop.json', CoS: 'data/adventure/adventure-cos.json' }, adventureProp: 'adventure', owners: {}, indexSources: {}, errors: { books: null, adventures: null } } as unknown as DirectoryRecord
 
 function world(opts: { cached?: string[]; fail?: boolean } = {}) {
   const calls: string[] = []
@@ -24,7 +25,7 @@ function world(opts: { cached?: string[]; fail?: boolean } = {}) {
     fileList: async (s: { id: string }) => { calls.push(s.id); if (opts.fail) throw new Error('网络断了'); cached.add(s.id); return LIST },
   }
   const directory = { get: async () => REC, peek: async () => (cached.size ? REC : null) }
-  return { calls, make: (db: LibraryDatabase) => new DownloadEstimator({ db, files: files as never, directory: directory as never }) }
+  return { calls, make: (db: LibraryDatabase) => new DownloadEstimator({ db, files: files as never, directory: directory as never, revisions: new LibraryRevisionStore(db) }) }
 }
 const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
   const db = new LibraryDatabase(`est-${Math.random()}`)
@@ -50,7 +51,7 @@ describe('DownloadEstimator', () => {
   it('已装好的数据集不算；不选冒险就是 0', () => withDb(async (db) => {
     await db.sets.put({ id: 'cn-official', commit: 'x', status: 'installed', plan: { files: 0, bytes: 0 }, updatedAt: 1 } as never)
     const r = await world().make(db).estimate({ sets: ['cn-official', 'en-official'] })
-    expect(r.data.sets).toEqual([{ setId: 'cn-official', installed: true, bytes: 0 }, { setId: 'en-official', installed: false, bytes: 390 }])
+    expect(r.data.sets).toMatchObject([{ setId: 'cn-official', installed: true, bytes: 0 }, { setId: 'en-official', installed: false, bytes: 390 }])
     expect(r.adventures).toEqual({ bytes: 0, items: [] })
     expect(r.totalBytes).toBe(390)
   }))

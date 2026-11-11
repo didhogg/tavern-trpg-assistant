@@ -7,7 +7,7 @@ import { listCells, sortColumns, sortRanks } from './sort-commands'
 import { brewAddFiles, brewAddSources, brewAddUrl, brewCheckUpdates, brewCorpusList, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, parseBrewProp } from './brew-commands'
 import { englishLocators, englishMatch, variantTemplateNames, versionOrder } from './english-commands'
 import { detail, excludedFlags, search, searchIndexDump, searchIndexLoad, searchSettings } from './read-commands'
-import { directory } from './directory-commands'
+import { directory, sourceFiles } from './directory-commands'
 import { diceRead, diceRoll, diceStats, diceTag } from './dice-commands'
 import { tableRoll, tableRow } from './table-roll-commands'
 import { tagMeta } from './tag-commands'
@@ -72,13 +72,16 @@ export async function parseCorpus(page: string, source: string, hash: string): P
   return A.DataLoader.pCacheAndGet(page, source, hash, { isRequired: true })
 }
 
-/** 作者预生成的搜索索引（search/index.json + 物品变体副索引 index-item.json），按类别列出作者编号。 */
-export async function searchIndexHashes(): Promise<Record<string, string[]>> {
+/** 作者预生成的搜索索引（search/index.json + 物品变体副索引 index-item.json），按类别列出作者编号。
+ *  sources 给了就只留这些来源的命中（按书安装时，索引文件仍是整套，但审计只看已选来源）。 */
+export async function searchIndexHashes(sources?: string[] | null): Promise<Record<string, string[]>> {
   await init()
+  const keep = sources ? new Set(sources.map((s) => s.toUpperCase())) : null
   const out: Record<string, string[]> = {}
   for (const file of ['search/index.json', 'search/index-item.json']) {
     const docs: any[] = A.Omnidexer.decompressIndex(await A.DataUtil.loadRawJSON(file))
     for (const d of docs) {
+      if (keep && d.s && !keep.has(String(d.s).toUpperCase())) continue
       const prop = A.Parser.CAT_ID_TO_PROP[d.c] ?? `cat:${d.c}`
       ;(out[prop] ??= []).push(d.u)
     }
@@ -112,8 +115,14 @@ export async function frameErrors(): Promise<string[]> {
   return [...(A.__trpgFrameErrors as string[])]
 }
 
+/** 等作者同步 / 异步存储的迟到写入真的落库（P5 T1）；返回这期间作者报的错。 */
+export async function storageFlush(): Promise<string[]> {
+  const flush = A.__trpgStorageFlush as (() => Promise<string[]>) | undefined
+  return flush ? flush() : []
+}
+
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
-  brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, parseBrewProp, rawHashes,
+  brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, parseBrewProp, rawHashes, storageFlush,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory, sourceFiles }
 export type CommandName = keyof typeof COMMANDS

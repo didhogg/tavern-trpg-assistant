@@ -11,6 +11,7 @@ import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { ExtractedTable } from './runtime/frame/table-extract-commands'
 import type { AuthorFrame } from './runtime/host'
+import type { LibraryView } from './revision'
 import { commitOf, getSource } from './sources'
 
 export const EMBEDDED_PROP = 'embeddedTable'
@@ -79,19 +80,21 @@ export function buildEmbedded(extracted: Array<{ prop: string; tables: Extracted
 export class EmbeddedTables {
   private readonly building = new Map<string, Promise<ParsedProp>>()
 
-  constructor(private readonly db: LibraryDatabase, private readonly frameOf: (codeSet: string) => Promise<AuthorFrame>) {}
+  constructor(private readonly db: LibraryDatabase, private readonly frameOf: (codeSet: string, view?: LibraryView) => Promise<AuthorFrame>) {}
 
   /** 取（没有或版本不对就现建）这套官方数据里的所有嵌入表格。旧安装第一次读时从已装的解析结果现建。 */
-  ensure(sourceId: string): Promise<ParsedProp> {
-    let p = this.building.get(sourceId)
+  ensure(sourceId: string, view?: LibraryView): Promise<ParsedProp> {
+    const key = `${view?.id ?? 'legacy'}:${sourceId}`
+    let p = this.building.get(key)
     if (!p) {
       p = (async () => {
-        const saved = await this.db.derived.get(parsedKey(sourceId, EMBEDDED_PROP))
-        if (saved && saved.fingerprint === commitOf(getSource(sourceId))) return saved.value as ParsedProp
-        return this.build(sourceId)
+        const saved = view ? await view.derivedGet(parsedKey(sourceId, EMBEDDED_PROP)) : await this.db.derived.get(parsedKey(sourceId, EMBEDDED_PROP))
+        const commit = view ? await view.commitOf(getSource(sourceId)) : commitOf(getSource(sourceId))
+        if (saved && saved.fingerprint === commit) return saved.value as ParsedProp
+        return this.build(sourceId, { view })
       })()
-      p.catch(() => this.building.delete(sourceId))
-      this.building.set(sourceId, p)
+      p.catch(() => this.building.delete(key))
+      this.building.set(key, p)
     }
     return p
   }
@@ -100,13 +103,14 @@ export class EmbeddedTables {
    * 全部重建：问小窗逐个类别提表，整理后存库。类别清单：装的时候由安装流程传进来；没传就读解析报告（旧安装现建），
    * 这时把条数补记进解析报告，类别清单里才有它。
    */
-  async build(sourceId: string, opts: { frame?: AuthorFrame; props?: Record<string, { count: number }> } = {}): Promise<ParsedProp> {
+  async build(sourceId: string, opts: { frame?: AuthorFrame; props?: Record<string, { count: number }>; view?: LibraryView } = {}): Promise<ParsedProp> {
     const source = getSource(sourceId)
     if (source.kind !== 'official') throw new Error(`${sourceId} 不是官方数据集`)
-    const audit = (await this.db.derived.get(`audit:${sourceId}`))?.value as { parse?: { props?: Record<string, { count: number }> } } | undefined
+    const auditRec = opts.view ? await opts.view.derivedGet(`audit:${sourceId}`) : await this.db.derived.get(`audit:${sourceId}`)
+    const audit = auditRec?.value as { parse?: { props?: Record<string, { count: number }> } } | undefined
     const props = opts.props ?? audit?.parse?.props
     if (!props) throw new Error(`${sourceId} 还没安装`)
-    const f = opts.frame ?? (await this.frameOf(source.codeSet))
+    const f = opts.frame ?? (await this.frameOf(source.codeSet, opts.view))
     const extracted: Array<{ prop: string; tables: ExtractedTable[] }> = []
     const skipped: Record<string, { count: number; sample: string }> = {}
     for (const [prop, v] of Object.entries(props)) {
@@ -117,18 +121,22 @@ export class EmbeddedTables {
     }
     const known = new Set<string>()
     for (const prop of ['table', 'tableGroup']) {
-      const rec = await this.db.derived.get(parsedKey(sourceId, prop))
+      const rec = opts.view ? await opts.view.derivedGet(parsedKey(sourceId, prop)) : await this.db.derived.get(parsedKey(sourceId, prop))
       for (const it of ((rec?.value as ParsedProp | undefined)?.items ?? []) as Array<Record<string, unknown>>) {
         if (prop === 'tableGroup') for (const t of (it.tables as Array<Record<string, unknown>> | undefined) ?? []) known.add(tableDigest(t))
         else known.add(tableDigest(it))
       }
     }
     const built = buildEmbedded(extracted, known)
-    await this.db.derived.put({ key: parsedKey(sourceId, EMBEDDED_PROP), fingerprint: commitOf(source), value: { ...built, skipped }, savedAt: Date.now() })
+    const commit = opts.view ? await opts.view.commitOf(source) : commitOf(source)
+    if (opts.view) await opts.view.derivedPut(parsedKey(sourceId, EMBEDDED_PROP), commit, { ...built, skipped })
+    else await this.db.derived.put({ key: parsedKey(sourceId, EMBEDDED_PROP), fingerprint: commit, value: { ...built, skipped }, savedAt: Date.now() })
     if (!opts.props && audit?.parse) {
-      await this.db.derived.put({ key: `audit:${sourceId}`, fingerprint: commitOf(source), value: { ...audit, parse: { ...audit.parse, props: { ...props, [EMBEDDED_PROP]: { count: built.items.length, noHash: 0 } } } }, savedAt: Date.now() })
+      const value = { ...audit, parse: { ...audit.parse, props: { ...props, [EMBEDDED_PROP]: { count: built.items.length, noHash: 0 } } } }
+      if (opts.view) await opts.view.derivedPut(`audit:${sourceId}`, commit, value)
+      else await this.db.derived.put({ key: `audit:${sourceId}`, fingerprint: commit, value, savedAt: Date.now() })
     }
-    this.building.delete(sourceId)
+    this.building.delete(`${opts.view?.id ?? 'legacy'}:${sourceId}`)
     return built
   }
 }

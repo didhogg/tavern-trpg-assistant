@@ -1,13 +1,13 @@
 // 按战役看【库】（D2-P3 整体设计 §2.2、§2.4、§2.7）：书目、查询、详情、取条目、搜索都按战役的选书设置过滤，
-// 交出的是"生效版本"（原件，或用户选了的备选 / 房规）。战役的选书设置由调用方传入（存在战役记录里，P3-3）。
+// 交出的是"生效版本"（原件，或用户选了的备选 / 房规）。P5 T4：身份、浏览、关闭书、查询放大一起收口。
 import { altsKey, type AltIndex, type AltRecord } from './alternatives'
 import type { LibraryDatabase } from './db'
 import { countSources, parsedKey } from './install'
-import { ManageStore, type ChoiceLevel } from './manage'
+import { ManageStore, type ChoiceLevel, type HouseRuleLink } from './manage'
 import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } from './service'
 import type { EditionInfo } from './runtime/frame/edit-commands'
 import {
-  autoAssignment, BUILTIN_SCOPES, entryUnit, inScopeOf, membershipOf, refKey, sourceUnit, viewOf,
+  autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, refKey, sourceUnit, viewOf,
   type Assignment, type CampaignLibrary, type EntryRef, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
 import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
@@ -16,12 +16,15 @@ export type { VariantInfo } from './versions'
 import { hashValue } from '../core/hash'
 import type { BookDirectory } from './directory'
 import type { DirectoryRecord } from './directory'
-import { BrewPacks, brewShelfInfo } from './brew-packs'
+import { BrewPacks, type BrewPack } from './brew-packs'
+import { catalogFor, packUrl, type CatalogRow } from './scoped-catalog'
+export type { CatalogRow } from './scoped-catalog'
 import { DocumentStore } from './documents'
 import { variantLinks, type VariantLink } from './variants'
 import { EntryLinks, type Located, type ResolvedTag } from './entry-links'
 import { scopedSearch, type ScopedSearchHit } from './scoped-search'
-import { attachShelf, directoryRows, groupShelf, type ShelfGroup, type ShelfInfo } from './shelf'
+import { groupShelf, type ShelfGroup } from './shelf'
+import type { LibraryView } from './revision'
 import type { KernelOverride } from '../schemas/kernel'
 
 export interface VersionInfo extends Chosen {
@@ -33,16 +36,22 @@ export interface ScopedRow {
   ref: EntryRef
   source: string | null
   reason: ViewReason
+  /** 本战役看不看得到（browse 模式也会返回看不到的行，带 false）。 */
+  visible: boolean
   /** 生效版本的作者对象（拆行时是这一行自己那个版本的对象）。 */
   item: unknown
   version: VersionInfo
   /** 只在 expand 时有。 */
   variant?: VariantInfo
+  /** 自制包的稳定身份（浏览 / 删除按包定位，不按来源猜）。 */
+  pack?: { docIdLocal: string; filename: string | null; stableId: string | null; sources: string[] }
 }
 
 export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
   ref: EntryRef
   reason: ViewReason
+  /** 本战役关着 / 不在范围时，browse 仍然给内容，并标出。 */
+  closed: boolean
   item: unknown
   /** 原件（官方或先装的包）。 */
   base: unknown
@@ -56,47 +65,58 @@ export type FetchResult =
   | { ok: true; ref: EntryRef; source: string | null; item: unknown; version: VersionInfo; closed: boolean }
   | { ok: false; ref: EntryRef; reason: 'not-installed' | 'not-found' }
 
-export interface CatalogRow {
-  kind: 'book' | 'adventure'
-  set: string
-  source: string
-  /** 冒险的编号（按本下载用）；书为 null。 */
-  id: string | null
-  name: string
-  abv: string
-  /** 这本在库里有几条（冒险：正文下载了没有）。 */
-  count: number
-  downloaded: boolean
-  edition: EditionInfo | null
-  membership: Membership
-  view: { visible: boolean; reason: ViewReason }
-  /** 只按范围算本来看得到吗（向导默认勾选用；已下载的默认都开，见 B-32）。 */
-  inScope: boolean
-  /** 这个来源（自制包）里带正文的书 / 冒险（B-29）：点进去用 service.corpus(set, prop, id) 读，按书的格式显示。 */
-  corpora?: Array<{ prop: string; id: string; name: string }>
-  /** 这本书里有几条挂了备选。 */
-  alternatives: number
-  /** 作者书目字段（分组、出版日期、冒险等级 / 故事线、封面链接…）；catalog(c, { remote: true }) 时才有。 */
-  shelf?: ShelfInfo | null
+interface Context {
+  view: LibraryView
+  assigns: Map<string, Assignment>
+  altMap: Map<string, AltRecord>
+  levels: { rule: Record<string, string>; global: Record<string, string> }
+  houseUnits: Set<string>
+  houseByTarget: Map<string, HouseRuleLink[]>
+  houseItems: Map<string, unknown>
+  packs: Map<string, Map<string, BrewPack>>
 }
 
 export class ScopedLibrary {
   readonly manage: ManageStore
   private readonly editionCache = new Map<string, EditionInfo>()
 
-  constructor(private readonly lib: LibraryService, private readonly db: LibraryDatabase, private readonly directory?: BookDirectory, readonly links: EntryLinks = new EntryLinks(lib, new DocumentStore(db))) {
+  constructor(private readonly lib: LibraryService, db: LibraryDatabase, private readonly directory?: BookDirectory, readonly links: EntryLinks = new EntryLinks(lib, new DocumentStore(db))) {
     this.manage = new ManageStore(db)
   }
 
-  /** 这套作者程序（cn / en）下已登记的数据集：官方 + 自制。 */
   setsOf(codeSet: string): SourceEntry[] {
     return SOURCES.filter((s) => s.codeSet === codeSet)
   }
 
-  private async installed(set: SourceEntry): Promise<boolean> {
-    // 自制要靠作者程序读，作者程序启动要读这套官方数据：官方没装，自制就读不了，不算已装（P5-1 B-37）
-    if (set.kind === 'brew') return !!(await this.db.derived.get(`audit:${set.id}`)) && (await this.lib.officialInstalled(set.codeSet))
-    return (await this.db.sets.get(set.id))?.status === 'installed'
+  private async context(c: CampaignLibrary, view: LibraryView): Promise<Context> {
+    const assigns = await this.manage.assignments()
+    const altMap = await this.alts(c.codeSet, view)
+    const levels = { rule: await this.manage.choices(`rule:${c.rule}`), global: await this.manage.choices('global') }
+    const links = await this.manage.houseRules()
+    const houseByTarget = new Map<string, HouseRuleLink[]>()
+    for (const link of links) {
+      const k = refKey(link.target)
+      houseByTarget.set(k, [...(houseByTarget.get(k) ?? []), link])
+    }
+    const packs = new Map<string, Map<string, BrewPack>>()
+    for (const set of this.setsOf(c.codeSet).filter((s) => s.kind === 'brew')) {
+      const rows = await new BrewPacks(this.lib).list(set.id, view).catch(() => [])
+      packs.set(set.id, new Map(rows.map((p) => [p.docIdLocal, p])))
+    }
+    return { view, assigns, altMap, levels, houseUnits: new Set(links.map((l) => refKey(l.house))), houseByTarget, houseItems: new Map(), packs }
+  }
+
+  private async installed(set: SourceEntry, view: LibraryView): Promise<boolean> {
+    if (set.kind === 'brew') {
+      if (await view.brewState(set.id)) return true
+      return !!(await view.derivedGet(`audit:${set.id}`))
+    }
+    return (await view.officialState(set.id))?.status === 'installed'
+  }
+
+  private async readable(set: SourceEntry, view: LibraryView): Promise<boolean> {
+    if (set.kind === 'official') return (await view.officialState(set.id))?.status === 'installed'
+    return (await this.installed(set, view)) && (await this.lib.officialInstalled(set.codeSet, view))
   }
 
   async scopes(): Promise<ScopeDef[]> {
@@ -104,103 +124,105 @@ export class ScopedLibrary {
   }
 
   /** 作者对来源的版本判断（问小窗，缓存到下次 reset）。 */
-  async editions(codeSet: string, sources: string[]): Promise<Record<string, EditionInfo>> {
-    const want = [...new Set(sources)].filter((s) => !this.editionCache.has(`${codeSet}|${s.toLowerCase()}`))
+  async editions(codeSet: string, sources: string[], viewArg?: LibraryView): Promise<Record<string, EditionInfo>> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const want = [...new Set(sources)].filter((s) => !this.editionCache.has(`${view.id}|${codeSet}|${s.toLowerCase()}`))
     if (want.length) {
-      const got = await (await this.lib.frameOf(codeSet)).call('editionOf', want)
-      for (const [s, e] of Object.entries(got)) this.editionCache.set(`${codeSet}|${s.toLowerCase()}`, e)
+      const got = await (await this.lib.frameOf(codeSet, view)).call('editionOf', want)
+      for (const [s, e] of Object.entries(got)) this.editionCache.set(`${view.id}|${codeSet}|${s.toLowerCase()}`, e)
     }
-    return Object.fromEntries(sources.map((s) => [s, this.editionCache.get(`${codeSet}|${s.toLowerCase()}`)!]))
+    return Object.fromEntries(sources.map((s) => [s, this.editionCache.get(`${view.id}|${codeSet}|${s.toLowerCase()}`)!]))
   }
 
-  /** 装、删自制或改归类后调用：清掉缓存的作者判断（自制来源的版本取决于已装的包）。 */
   reset(): void {
     this.editionCache.clear()
     this.links.reset()
   }
 
-  private async alts(codeSet: string): Promise<Map<string, AltRecord>> {
+  private async alts(codeSet: string, view: LibraryView): Promise<Map<string, AltRecord>> {
     const out = new Map<string, AltRecord>()
     for (const set of this.setsOf(codeSet).filter((s) => s.kind === 'brew')) {
-      const rec = (await this.db.derived.get(altsKey(set.id)))?.value as AltIndex | undefined
+      const rec = (await view.derivedGet(altsKey(set.id)))?.value as AltIndex | undefined
       for (const [k, v] of Object.entries(rec?.targets ?? {})) out.set(k, v)
     }
     return out
   }
 
-  /** 一条的全部备选：撞编号的包 + 指向它的房规。 */
-  private async alternativesOf(ref: EntryRef, altMap: Map<string, AltRecord>): Promise<Alternative[]> {
-    const out = [...(altMap.get(refKey(ref))?.alts ?? [])]
-    for (const link of await this.manage.houseRules()) {
-      if (refKey(link.target) !== refKey(ref)) continue
-      const house = await this.lib.storedItem(link.house.set, link.house.prop, link.house.hash)
-      if (house) out.push({ altId: `house:${link.house.hash}`, kind: 'houserule', filename: null, ref: link.house, item: house.item })
+  private async alternativesOf(ref: EntryRef, ctx: Context): Promise<Alternative[]> {
+    const out = [...(ctx.altMap.get(refKey(ref))?.alts ?? [])]
+    for (const link of ctx.houseByTarget.get(refKey(ref)) ?? []) {
+      const key = refKey(link.house)
+      let item = ctx.houseItems.get(key)
+      if (item === undefined) {
+        const house = await this.lib.storedItem(link.house.set, link.house.prop, link.house.hash, ctx.view)
+        if (!house) continue
+        item = house.item
+        ctx.houseItems.set(key, item)
+      }
+      out.push({ altId: `house:${link.house.hash}`, kind: 'houserule', filename: null, ref: link.house, item })
     }
     return out
   }
 
-  private async choicesFor(c: CampaignLibrary): Promise<{ rule: Record<string, string>; global: Record<string, string> }> {
-    return { rule: await this.manage.choices(`rule:${c.rule}`), global: await this.manage.choices('global') }
-  }
-
-  private version(c: CampaignLibrary, key: string, alts: Alternative[], levels: { rule: Record<string, string>; global: Record<string, string> }): { chosen: VersionInfo; item: unknown | undefined } {
-    const chosen = chooseVersion(alts, { campaign: c.choices[key], rule: levels.rule[key], global: levels.global[key] })
+  private version(key: string, alts: Alternative[], ctx: Context, campaignChoice?: string): { chosen: VersionInfo; item: unknown | undefined } {
+    const chosen = chooseVersion(alts, { campaign: campaignChoice, rule: ctx.levels.rule[key], global: ctx.levels.global[key] })
     const alt = alts.find((a) => a.altId === chosen.altId)
     return { chosen: { ...chosen, count: alts.length }, item: alt?.item }
   }
 
-  /** 在不在本战役（含原因）。 */
-  async viewFor(c: CampaignLibrary, ref: EntryRef, source: string | null, assigns?: Map<string, Assignment>): Promise<{ visible: boolean; reason: ViewReason; membership: Membership }> {
+  async viewFor(c: CampaignLibrary, ref: EntryRef, source: string | null, assigns?: Map<string, Assignment>, viewArg?: LibraryView): Promise<{ visible: boolean; reason: ViewReason; membership: Membership }> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
     const a = assigns ?? (await this.manage.assignments())
-    const auto = source ? autoAssignment((await this.editions(c.codeSet, [source]))[source]) : null
+    const allowed = await view.visibleSources(ref.set)
+    if (allowed && source && !allowed.some((s) => s.toLowerCase() === source.toLowerCase())) {
+      return { visible: false, reason: 'out-of-scope', membership: membershipOf(undefined, a.get(sourceUnit(source)), null) }
+    }
+    const auto = source ? autoAssignment((await this.editions(c.codeSet, [source], view))[source]) : null
     const m = membershipOf(a.get(entryUnit(ref)), source ? a.get(sourceUnit(source)) : undefined, auto)
     return { ...viewOf(c, { entry: entryUnit(ref), source: source ? sourceUnit(source) : null }, m), membership: m }
   }
 
-  /** 房规条目本身不单独出现在列表里（挂在原条目下当备选）。 */
-  private async houseUnits(): Promise<Set<string>> {
-    return new Set((await this.manage.houseRules()).map((l) => refKey(l.house)))
-  }
-
-  /** 本战役当前实际生效的房规覆盖：目标编号 → 房规条目（带内容指纹）。 */
-  async activeOverrides(): Promise<KernelOverride[]> {
+  async activeOverrides(viewArg?: LibraryView): Promise<KernelOverride[]> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
     const out: KernelOverride[] = []
     for (const link of await this.manage.houseRules()) {
-      const stored = await this.lib.storedItem(link.house.set, link.house.prop, link.house.hash)
+      const stored = await this.lib.storedItem(link.house.set, link.house.prop, link.house.hash, view)
       if (!stored) continue
-      out.push({
-        target: { kind: 'entry', ...link.target },
-        house: { kind: 'houserule', ...link.house },
-        digest: hashValue(stored.item),
-      })
+      out.push({ target: { kind: 'entry', ...link.target }, house: { kind: 'houserule', ...link.house }, digest: hashValue(stored.item) })
     }
     return out
   }
 
-  /** 按战役查一类：只交本战役看得到的，条目是生效版本。expand = 同编号的多个包版本拆成独立行（B-31）。 */
-  async query(c: CampaignLibrary, prop: string, { source, expand = false }: { source?: string; expand?: boolean } = {}): Promise<ScopedRow[]> {
-    const assigns = await this.manage.assignments()
-    const altMap = await this.alts(c.codeSet)
-    const levels = await this.choicesFor(c)
-    const house = await this.houseUnits()
+  /** 按战役查一类。mode = browse 时关闭 / 不在范围的行也返回（带 visible=false），供浏览本机内容。 */
+  async query(c: CampaignLibrary, prop: string, { source, expand = false, mode = 'campaign', packDocIdLocal, view: viewArg }: { source?: string; expand?: boolean; mode?: 'campaign' | 'browse'; packDocIdLocal?: string; view?: LibraryView } = {}): Promise<ScopedRow[]> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const ctx = await this.context(c, view)
     const rows: ScopedRow[] = []
     for (const set of this.setsOf(c.codeSet)) {
-      if (!(await this.installed(set))) continue
-      const got: QueryRow[] = await this.lib.query(set.id, prop, { source }).catch((e: unknown) => {
+      if (!(await this.readable(set, view))) continue
+      const allowed = set.kind === 'official' ? await view.visibleSources(set.id) : null
+      const pack = packDocIdLocal ? ctx.packs.get(set.id)?.get(packDocIdLocal) : undefined
+      if (packDocIdLocal && !pack) continue
+      const got: QueryRow[] = await this.lib.query(set.id, prop, { source, view }).catch((e: unknown) => {
         if (e instanceof Error && e.message.includes('没有这一类的解析结果')) return []
         throw e
       })
       const sources = [...new Set(got.map((r) => r.source).filter((s): s is string => !!s))]
-      await this.editions(c.codeSet, sources)
+      await this.editions(c.codeSet, sources, view)
       for (const r of got) {
         if (!r.hash) continue
-        const ref = { set: set.id, prop, hash: r.hash }
-        if (house.has(refKey(ref))) continue
-        const v = await this.viewFor(c, ref, r.source, assigns)
-        if (!v.visible) continue
-        const alts = await this.alternativesOf(ref, altMap)
-        const { chosen, item } = this.version(c, refKey(ref), alts, levels)
-        const row: ScopedRow = { ref, source: r.source, reason: v.reason, item: item ?? r.item, version: chosen }
+        if (allowed && r.source && !allowed.some((s) => s.toLowerCase() === r.source!.toLowerCase())) continue
+        if (pack && !(pack.hashes[prop] ?? []).includes(r.hash)) continue
+        const ref: EntryRef = { set: set.id, prop, hash: r.hash }
+        if (ctx.houseUnits.has(refKey(ref))) continue
+        const v = await this.viewFor(c, ref, r.source, ctx.assigns, view)
+        if (!v.visible && mode !== 'browse') continue
+        const alts = await this.alternativesOf(ref, ctx)
+        const { chosen, item } = this.version(refKey(ref), alts, ctx, c.choices[refKey(ref)])
+        const row: ScopedRow = {
+          ref, source: r.source, reason: v.reason, visible: v.visible, item: item ?? r.item, version: chosen,
+          ...(pack ? { pack: { docIdLocal: pack.docIdLocal, filename: pack.filename, stableId: packUrl(pack), sources: pack.sources } } : {}),
+        }
         if (expand) rows.push(...expandVariants(row, r.item, alts))
         else rows.push(row)
       }
@@ -208,212 +230,152 @@ export class ScopedLibrary {
     return rows
   }
 
-  /**
-   * 这一条有哪些变体（作者的版本 / 亚种 / 魔法变体），和它自己是谁的变体；只交本战役看得到的（B-33）。
-   * 详情里把变体显示在这一条旁边用。不做"用变体覆盖原条目"（先不做）。
-   */
-  async variantsOf(c: CampaignLibrary, ref: EntryRef): Promise<{ parent: EntryRef | null; variants: Array<VariantLink & { ref: EntryRef }> }> {
-    const links = variantLinks(await this.lib.parsed(ref.set, ref.prop), ref.hash)
+  async variantsOf(c: CampaignLibrary, ref: EntryRef, viewArg?: LibraryView): Promise<{ parent: EntryRef | null; variants: Array<VariantLink & { ref: EntryRef }> }> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const links = variantLinks(await this.lib.parsed(ref.set, ref.prop, view), ref.hash)
     const assigns = await this.manage.assignments()
     const variants: Array<VariantLink & { ref: EntryRef }> = []
     for (const v of links.variants) {
       const vref = { set: ref.set, prop: ref.prop, hash: v.hash }
-      if ((await this.viewFor(c, vref, v.source, assigns)).visible) variants.push({ ...v, ref: vref })
+      if ((await this.viewFor(c, vref, v.source, assigns, view)).visible) variants.push({ ...v, ref: vref })
     }
     return { parent: links.parent ? { set: ref.set, prop: ref.prop, hash: links.parent } : null, variants }
   }
 
-  /** 按编号取【库】解析结果里的那一条（高效版本，不建作者详情）。 */
-  async storedItem(ref: EntryRef): Promise<{ item: unknown; source: string | null } | null> {
-    return this.lib.storedItem(ref.set, ref.prop, ref.hash)
+  async storedItem(ref: EntryRef, viewArg?: LibraryView): Promise<{ item: unknown; source: string | null } | null> {
+    return this.lib.storedItem(ref.set, ref.prop, ref.hash, viewArg)
   }
 
-  /** 按编号取英文对照原件（中文条目喂 Plutonium 用）；英文源或没配对时返回 null。 */
-  async englishOf(ref: EntryRef, opts: { fluff?: boolean } = {}): Promise<English | null> {
+  async englishOf(ref: EntryRef, opts: { fluff?: boolean } = {}, viewArg?: LibraryView): Promise<English | null> {
     const set = SOURCES.find((s) => s.id === ref.set)
     if (!set) return null
-    return this.lib.english(set, ref.prop, ref.hash, opts)
+    return this.lib.english(set, ref.prop, ref.hash, { ...opts, ...(viewArg ? { view: viewArg } : {}) })
   }
 
-  /** 中英配对表（作者做法）；英文源或没装英文时抛错，调用方自行处理。 */
-  async englishPairs(codeSet: string): Promise<EnglishPairs> {
-    return this.lib.englishPairs(officialSourceOf(codeSet).id)
+  async englishPairs(codeSet: string, viewArg?: LibraryView): Promise<EnglishPairs> {
+    return this.lib.englishPairs(officialSourceOf(codeSet).id, viewArg)
   }
 
-  /** 按战役取一条详情：生效版本 + 原件 + 全部备选 + 背景描述 + 英文（原件生效时）。看不到的返回 null 和原因。 */
-  async detail(c: CampaignLibrary, ref: EntryRef): Promise<ScopedDetail | { hidden: ViewReason } | null> {
-    const d = await this.lib.detail(ref.set, ref.prop, ref.hash)
+  async detail(c: CampaignLibrary, ref: EntryRef, { browse = false, view: viewArg }: { browse?: boolean; view?: LibraryView } = {}): Promise<ScopedDetail | { hidden: ViewReason } | null> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const d = await this.lib.detail(ref.set, ref.prop, ref.hash, undefined, view)
     if (!d) return null
-    const v = await this.viewFor(c, ref, d.source)
-    if (!v.visible) return { hidden: v.reason }
-    const alts = await this.alternativesOf(ref, await this.alts(c.codeSet))
-    const { chosen, item } = this.version(c, refKey(ref), alts, await this.choicesFor(c))
+    const v = await this.viewFor(c, ref, d.source, undefined, view)
+    if (!v.visible && !browse) return { hidden: v.reason }
+    const ctx = await this.context(c, view)
+    const alternatives = await this.alternativesOf(ref, ctx)
+    const { chosen, item } = this.version(refKey(ref), alternatives, ctx, c.choices[refKey(ref)])
     const effective = item ?? d.item
-    const alt = item === undefined ? null : alts.find((a) => a.item === effective)
-    const cached = alt?.ref ? await this.lib.fluff(alt.ref.set, alt.ref.prop, alt.ref.hash) : null
+    const alt = item === undefined ? null : alternatives.find((a) => a.item === effective)
+    const cached = alt?.ref ? await this.lib.fluff(alt.ref.set, alt.ref.prop, alt.ref.hash, view) : null
     const fluff = item === undefined ? { fluff: d.fluff, fluffError: d.fluffError } : { fluff: cached?.fluff ?? null, fluffError: cached?.fluffError ?? null }
-    return { ...d, ...fluff, ref, reason: v.reason, item: effective, base: d.item, version: chosen, alternatives: alts, english: item === undefined ? d.english : null }
+    return { ...d, ...fluff, ref, reason: v.reason, closed: !v.visible, item: effective, base: d.item, version: chosen, alternatives, english: item === undefined ? d.english : null }
   }
 
-  /** 按编号批量取（给结算内核、人物用）：每个编号交生效版本，或具体为什么取不到（没装 / 没有这一条）；本战役关着的照常交，标 closed。 */
-  async fetch(c: CampaignLibrary, refs: EntryRef[]): Promise<FetchResult[]> {
-    const assigns = await this.manage.assignments()
-    const altMap = await this.alts(c.codeSet)
-    const levels = await this.choicesFor(c)
+  async fetch(c: CampaignLibrary, refs: EntryRef[], viewArg?: LibraryView): Promise<FetchResult[]> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const ctx = await this.context(c, view)
     const out: FetchResult[] = []
     for (const ref of refs) {
       const set = SOURCES.find((s) => s.id === ref.set)
-      if (!set || !(await this.installed(set))) {
+      if (!set || !(await this.installed(set, view))) {
         out.push({ ok: false, ref, reason: 'not-installed' })
         continue
       }
-      const stored = await this.lib.storedItem(ref.set, ref.prop, ref.hash)
-      if (!stored) {
-        out.push({ ok: false, ref, reason: 'not-found' })
-        continue
-      }
-      // P5 B-34：人物 / 存档直接引用本战役关着的书里的条目也放行（文件在本地就照常给）；closed 标出它在本战役是关着的
-      const v = await this.viewFor(c, ref, stored.source, assigns)
-      const { chosen, item } = this.version(c, refKey(ref), await this.alternativesOf(ref, altMap), levels)
+      const stored = await this.lib.storedItem(ref.set, ref.prop, ref.hash, view)
+      if (!stored) { out.push({ ok: false, ref, reason: 'not-found' }); continue }
+      const v = await this.viewFor(c, ref, stored.source, ctx.assigns, view)
+      const { chosen, item } = this.version(refKey(ref), await this.alternativesOf(ref, ctx), ctx, c.choices[refKey(ref)])
       out.push({ ok: true, ref, source: stored.source, item: item ?? stored.item, version: chosen, closed: !v.visible })
     }
     return out
   }
 
-  /** 按战役搜索：命中按种类分流（条目 / 书与冒险 / 文档），每条带 target；结果只留本战役看得到的。expand = 同编号的多个包版本拆成独立行（B-31）。 */
-  async search(c: CampaignLibrary, term: string, { expand = false }: { expand?: boolean } = {}): Promise<ScopedSearchHit[]> {
-    const hits = await this.searchHits(c, term)
+  async search(c: CampaignLibrary, term: string, { expand = false, view: viewArg }: { expand?: boolean; view?: LibraryView } = {}): Promise<ScopedSearchHit[]> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const hits = await this.searchHits(c, term, view)
     if (!expand) return hits
-    const altMap = await this.alts(c.codeSet)
-    const levels = await this.choicesFor(c)
+    const ctx = await this.context(c, view)
     const out: ScopedSearchHit[] = []
     for (const h of hits) {
-      const collisions = h.target.kind === 'entry' ? (await this.alternativesOf(h.ref, altMap)).filter((a) => a.kind === 'collision') : []
+      const collisions = h.target.kind === 'entry' ? (await this.alternativesOf(h.ref, ctx)).filter((a) => a.kind === 'collision') : []
       if (!collisions.length) { out.push(h); continue }
-      const { chosen } = this.version(c, refKey(h.ref), collisions, levels)
-      for (const v of variantsOf(chosen.altId, collisions)) {
-        out.push({ ...h, doc: v.source ? { ...h.doc, s: v.source } : h.doc, variant: v.variant })
-      }
+      const { chosen } = this.version(refKey(h.ref), collisions, ctx, c.choices[refKey(h.ref)])
+      for (const v of variantsOf(chosen.altId, collisions)) out.push({ ...h, doc: v.source ? { ...h.doc, s: v.source } : h.doc, variant: v.variant })
     }
     return out
   }
 
-  private searchHits(c: CampaignLibrary, term: string): Promise<ScopedSearchHit[]> {
+  private searchHits(c: CampaignLibrary, term: string, view: LibraryView): Promise<ScopedSearchHit[]> {
     return scopedSearch({
-      lib: this.lib, links: this.links, sets: this.setsOf(c.codeSet), installed: (s) => this.installed(s),
-      viewFor: (cc, ref, source, assigns) => this.viewFor(cc, ref, source, assigns), assignments: () => this.manage.assignments(), houseUnits: () => this.houseUnits(),
+      lib: this.lib, links: this.links, sets: this.setsOf(c.codeSet), view,
+      installed: (s) => this.installed(s, view), readable: (s) => this.readable(s, view),
+      viewFor: (cc, ref, source, assigns) => this.viewFor(cc, ref, source, assigns, view), assignments: () => this.manage.assignments(), houseUnits: async () => (await this.context(c, view)).houseUnits,
     }, c, term)
   }
 
-  /** 按（类别、作者编号）找条目在哪个包，并说明本战役看不看得到（跨包跳转用）。 */
-  async locate(c: CampaignLibrary, prop: string, hash: string): Promise<(Located & { ref: EntryRef; visible: boolean; reason: ViewReason; alternatives: number }) | null> {
-    const at = await this.links.locate(c.codeSet, prop, hash)
+  async locate(c: CampaignLibrary, prop: string, hash: string, viewArg?: LibraryView): Promise<(Located & { ref: EntryRef; visible: boolean; reason: ViewReason; alternatives: number }) | null> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const at = await this.links.locate(c.codeSet, prop, hash, view)
     if (!at) return null
     const ref: EntryRef = { set: at.set, prop: at.prop, hash: at.hash }
-    const v: { visible: boolean; reason: ViewReason } = at.kind === 'document' ? { visible: true, reason: 'global' } : await this.viewFor(c, ref, at.source)
-    const alternatives = at.kind === 'entry' ? (await this.alternativesOf(ref, await this.alts(c.codeSet))).length : 0
+    const v: { visible: boolean; reason: ViewReason } = at.kind === 'document' ? { visible: true, reason: 'global' } : await this.viewFor(c, ref, at.source, undefined, view)
+    const alternatives = at.kind === 'entry' ? (await this.alternativesOf(ref, await this.context(c, view))).length : 0
     return { ...at, ref, visible: v.visible, reason: v.reason, alternatives }
   }
 
-  /** 链接标签 → 条目，并说明本战役看不看得到（术语跳转用）。 */
-  async resolveTag(c: CampaignLibrary, tag: string, text: string): Promise<(ResolvedTag & { view: { visible: boolean; reason: ViewReason; alternatives: number } | null }) | null> {
-    const r = await this.links.resolveTag(c.codeSet, tag, text)
+  async resolveTag(c: CampaignLibrary, tag: string, text: string, viewArg?: LibraryView): Promise<(ResolvedTag & { view: { visible: boolean; reason: ViewReason; alternatives: number } | null }) | null> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const r = await this.links.resolveTag(c.codeSet, tag, text, view)
     if (!r) return null
-    const at = r.located && (await this.locate(c, r.located.prop, r.located.hash))
+    const at = r.located && (await this.locate(c, r.located.prop, r.located.hash, view))
     return { ...r, view: at ? { visible: at.visible, reason: at.reason, alternatives: at.alternatives } : null }
   }
 
-  /** 书目：本套程序已装的每本书 / 每个自制来源 / 每本冒险，各自的归属、在不在本战役、条数、备选数。 */
-  /**
-   * 书目行。默认只列已装好的数据集；remote = true 时没装的官方数据集也列（读作者书目文件，必要时只联网取那几个小文件），
-   * 并给每行带上作者书目字段 shelf。联网取不到时抛错，由调用方显示原因。
-   */
-  async catalog(c: CampaignLibrary, { remote = false, record }: { remote?: boolean; record?: DirectoryRecord } = {}): Promise<CatalogRow[]> {
-    if (remote && !this.directory) throw new Error('没有接书目入口')
-    const assigns = await this.manage.assignments()
-    const altMap = await this.alts(c.codeSet)
-    const altBySource = new Map<string, number>()
-    for (const r of altMap.values()) if (r.source) altBySource.set(r.source.toLowerCase(), (altBySource.get(r.source.toLowerCase()) ?? 0) + 1)
-    const rows: Array<Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'inScope'>> = []
-    const known: Record<string, { full: string; abv: string; edition: EditionInfo }> = {}
-    for (const set of this.setsOf(c.codeSet)) {
-      const isInstalled = await this.installed(set)
-      const rec = remote && set.kind === 'official' ? (record ?? await this.directory!.get(c.codeSet)) : null
-      if (rec) Object.assign(known, rec.sources)
-      if (!isInstalled) {
-        if (rec) for (const r of directoryRows(set.id, rec)) rows.push({ ...r, alternatives: altBySource.get(r.source.toLowerCase()) ?? 0 })
-        continue
-      }
-      // 自制来源：作者书目里没有，名称 / 作者 / 日期取自包自带的来源信息（B-11）
-      const brewInfo = set.kind === 'brew' ? await new BrewPacks(this.lib).sourceInfoMap(set.id) : null
-      // 自制里带正文的书和冒险（B-29）：只有书、没有别的条目的包也要有一行
-      const brewBooks = set.kind === 'brew' ? await this.lib.brewCorpora(set.id) : {}
-      const counts = { ...(await this.sourceCounts(set.id)) }
-      for (const list of Object.values(brewBooks)) for (const b of list) counts[b.source] ??= 0
-      for (const [source, count] of Object.entries(counts)) {
-        const corpora = Object.entries(brewBooks).flatMap(([prop, list]) => list.filter((b) => b.source.toLowerCase() === source.toLowerCase()).map((b) => ({ prop, id: b.id, name: b.name })))
-        const row = { kind: 'book' as const, set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0, ...(corpora.length ? { corpora } : {}) }
-        rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : brewInfo ? { ...row, shelf: brewShelfInfo(source, brewInfo.get(source.toLowerCase())) } : row)
-      }
-      if (set.kind === 'official') {
-        for (const a of await this.adventures(set)) {
-          const row = { kind: 'adventure' as const, set: set.id, source: a.source, id: a.id, count: 0, downloaded: a.downloaded, alternatives: 0 }
-          rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
-        }
-      }
-    }
-    const sources = [...new Set(rows.map((r) => r.source))]
-    // 作者书目已经给过全名 / 缩写 / 版本归类的来源不再问小窗（没装的数据集本地小窗也读不了）
-    const rest = sources.filter((s) => !known[s])
-    const names = rest.length ? await (await this.lib.frameOf(c.codeSet)).call('sourceNames', rest) : {}
-    const eds = rest.length ? await this.editions(c.codeSet, rest) : {}
-    return rows.map((r) => {
-      const unit = sourceUnit(r.source)
-      const edition = known[r.source]?.edition ?? eds[r.source] ?? null
-      const m = membershipOf(undefined, assigns.get(unit), autoAssignment(edition ?? undefined))
-      const view = viewOf(c, { entry: unit, source: unit }, m)
-      return { ...r, name: known[r.source]?.full ?? names[r.source]?.full ?? r.source, abv: known[r.source]?.abv ?? names[r.source]?.abv ?? r.source, edition, membership: m, view, inScope: inScopeOf(view) }
-    })
+  /** 书目行（实现在 scoped-catalog.ts）。 */
+  async catalog(c: CampaignLibrary, { remote = false, record, view: viewArg }: { remote?: boolean; record?: DirectoryRecord; view?: LibraryView } = {}): Promise<CatalogRow[]> {
+    return catalogFor({
+      lib: this.lib, ...(this.directory ? { directory: this.directory } : {}),
+      sourcesFor: (cs) => this.setsOf(cs), context: (cc, v) => this.context(cc, v),
+      installed: (set, v) => this.installed(set, v), editions: (cs, ss, v) => this.editions(cs, ss, v),
+      sourceCounts: (id, v) => this.sourceCounts(id, v), adventures: (set, v) => this.adventures(set, v),
+    }, c, { remote, ...(record ? { record } : {}), ...(viewArg ? { view: viewArg } : {}) })
   }
-
-  /**
-   * 书架：书目行按作者的分组表排好（BE-7）。没装官方数据也能列。
-   * 书目文件、冒险目录各自独立：哪个取不到只在它的 error 里写原因，另一个照常交回（不抛错）。
-   */
-  async shelf(c: CampaignLibrary): Promise<{ groups: ShelfGroup[]; booksError: string | null; adventuresError: string | null }> {
+  async shelf(c: CampaignLibrary, view?: LibraryView): Promise<{ groups: ShelfGroup[]; booksError: string | null; adventuresError: string | null }> {
     const record = await this.directory!.get(c.codeSet)
-    const rows = await this.catalog(c, { remote: true, record })
+    const rows = await this.catalog(c, { remote: true, record, ...(view ? { view } : {}) })
     return { groups: groupShelf(rows, record.groups), booksError: record.errors.books, adventuresError: record.errors.adventures }
   }
-
-  /** 每个来源在这个数据集里有几条（数解析结果；按解析报告的保存时间缓存，重装、改自制后自动重数）。 */
-  private async sourceCounts(setId: string): Promise<Record<string, number>> {
-    const fp = String((await this.db.derived.get(`audit:${setId}`))?.savedAt ?? '')
-    const saved = await this.db.derived.get(`sources:${setId}`)
+  private async sourceCounts(setId: string, view: LibraryView): Promise<Record<string, number>> {
+    const fp = String((await view.derivedGet(`audit:${setId}`))?.savedAt ?? '')
+    const saved = await view.derivedGet(`sources:${setId}`)
     if (saved && saved.fingerprint === fp) return saved.value as Record<string, number>
     const prefix = parsedKey(setId, '')
-    const counts = countSources(await this.db.derived.where('key').startsWith(prefix).toArray(), prefix)
-    await this.db.derived.put({ key: `sources:${setId}`, fingerprint: fp, value: counts, savedAt: Date.now() })
+    const map = await view.derivedKeys(prefix)
+    const counts = countSources([...map.entries()].map(([key, rec]) => ({ key, value: rec.value })), prefix)
+    await view.derivedPut(`sources:${setId}`, fp, counts)
     return counts
   }
 
-  /** 作者冒险书目（adventures.json，经作者加载器登记表找到）；正文下载解析过的标 downloaded。 */
-  async adventures(set: SourceEntry): Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>> {
-    const frame = await this.lib.frameOf(set.codeSet)
+  async adventures(set: SourceEntry, viewArg?: LibraryView): Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const frame = await this.lib.frameOf(set.codeSet, view)
     const loader = (await frame.call('loaders')).find((l) => l.kind === 'corpus' && l.props.includes('adventureData'))
     if (!loader?.index || !loader.page) return []
+    const installed = await view.installedAdventures(set.id)
     const out = []
     for (const it of await frame.call('corpusList', loader.index, loader.props[0], loader.page)) {
-      out.push({ ...it, downloaded: !!(await this.db.derived.get(parsedKey(set.id, loader.props[0], it.id))) })
+      const downloaded = installed ? installed.includes(it.id) : !!(await view.derivedGet(parsedKey(set.id, loader.props[0], it.id)))
+      out.push({ ...it, downloaded })
     }
     return out
   }
 
-  /** 改归类前的预览：改了以后这本书 / 这一条在各范围的归属。 */
-  async previewAssignment(codeSet: string, unit: string, next: Assignment | null): Promise<{ unit: string; before: Membership; after: Membership }> {
+  async previewAssignment(codeSet: string, unit: string, next: Assignment | null, viewArg?: LibraryView): Promise<{ unit: string; before: Membership; after: Membership }> {
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
     const assigns = await this.manage.assignments()
     const source = unit.startsWith('src:') ? unit.slice(4) : null
-    const auto = source ? autoAssignment((await this.editions(codeSet, [source]))[source]) : null
+    const auto = source ? autoAssignment((await this.editions(codeSet, [source], view))[source]) : null
     const before = membershipOf(undefined, assigns.get(unit), auto)
     const after = membershipOf(undefined, next ?? undefined, auto)
     return { unit, before, after }
@@ -423,7 +385,6 @@ export class ScopedLibrary {
     return this.manage.setAssignment(unit, next)
   }
 
-  /** 选版本：本战役的选择改进战役选书设置（返回新的，调用方存进战役记录）；全局 / 某规则的存进库。 */
   async choose(c: CampaignLibrary, target: EntryRef, altId: string | null, level: 'campaign' | ChoiceLevel = 'campaign'): Promise<CampaignLibrary> {
     const key = refKey(target)
     if (level === 'campaign') {

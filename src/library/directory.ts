@@ -6,7 +6,9 @@
 import type { LibraryDatabase } from './db'
 import type { DirectoryData } from './runtime/frame/directory-commands'
 import type { AuthorFrame } from './runtime/host'
+import type { PlanOwner } from './plan'
 import { commitOf, officialSourceOf } from './sources'
+import type { LibraryView } from './revision'
 
 export interface DirectoryRecord extends Omit<DirectoryData, 'corpora'> {
   codeSet: string
@@ -18,6 +20,10 @@ export interface DirectoryRecord extends Omit<DirectoryData, 'corpora'> {
   adventureFiles: Record<string, string>
   /** 冒险的类别名（作者加载器登记表的 props[0]），查"这本冒险下载了没有"用。 */
   adventureProp: string
+  /** 文件 → 归属（来源 / 书正文 / 冒险正文 / 职业文件）；没登记的是共用文件。 */
+  owners: Record<string, PlanOwner>
+  /** 作者来源索引文件 → 索引里的全部来源（按书安装时用来生成读上下文过滤）。 */
+  indexSources: Record<string, string[]>
   /** 哪个目录文件取不到及原因；null = 正常。 */
   errors: { books: string | null; adventures: string | null }
 }
@@ -27,26 +33,29 @@ export interface DirectoryOptions {
   /** 已装好的数据集用：现成的只读本地小窗。 */
   localFrame: (codeSet: string) => Promise<AuthorFrame>
   /** 没装的数据集用：允许联网的一次性小窗；kvScope 隔离，不碰真正的作者存储。 */
-  networkFrame: (codeSet: string, kvScope: string) => Promise<AuthorFrame>
+  networkFrame: (codeSet: string, kvScope: string, view?: LibraryView) => Promise<AuthorFrame>
+  /** 当前已发布版本；给了就按版本的提交号缓存书目。 */
+  view?: () => Promise<LibraryView>
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
-const KEY_VERSION = 'v2'
+const KEY_VERSION = 'v3'
 
 export class BookDirectory {
   private readonly inflight = new Map<string, Promise<DirectoryRecord>>()
 
   constructor(private readonly opts: DirectoryOptions) {}
 
-  private keyOf(codeSet: string): { key: string; commit: string; sourceId: string } {
+  private async keyOf(codeSet: string): Promise<{ key: string; commit: string; sourceId: string }> {
     const source = officialSourceOf(codeSet)
-    const commit = commitOf(source)
+    const view = this.opts.view ? await this.opts.view() : null
+    const commit = view ? await view.commitOf(source) : commitOf(source)
     return { key: `directory:${KEY_VERSION}:${source.id}@${commit}`, commit, sourceId: source.id }
   }
 
   /** 只看缓存，不联网、不开小窗。 */
   async peek(codeSet: string): Promise<DirectoryRecord | null> {
-    const saved = await this.opts.db.derived.get(this.keyOf(codeSet).key)
+    const saved = await this.opts.db.derived.get((await this.keyOf(codeSet)).key)
     return saved ? (saved.value as DirectoryRecord) : null
   }
 
@@ -78,18 +87,20 @@ export class BookDirectory {
   }
 
   private async load(codeSet: string, force = false): Promise<DirectoryRecord> {
-    const { key, commit, sourceId } = this.keyOf(codeSet)
+    const { key, commit, sourceId } = await this.keyOf(codeSet)
     const saved = await this.opts.db.derived.get(key)
     if (saved && !force) return saved.value as DirectoryRecord
 
     const failed = (why: string): DirectoryRecord => ({
       codeSet, commit, groups: [], sources: {}, books: [], adventures: [], adventureFiles: {}, adventureProp: '',
+      owners: {}, indexSources: {}, sourceFiles: { maps: {}, classFiles: [] },
       errors: { books: `官方书目（${codeSet}）取不到：${why}`, adventures: `官方冒险目录（${codeSet}）取不到：${why}` },
     })
     const installed = (await this.opts.db.sets.get(sourceId))?.status === 'installed'
+    const view = this.opts.view ? await this.opts.view() : undefined
     let frame: AuthorFrame
     try {
-      frame = installed ? await this.opts.localFrame(codeSet) : await this.opts.networkFrame(codeSet, `directory:${codeSet}`)
+      frame = installed ? await this.opts.localFrame(codeSet) : await this.opts.networkFrame(codeSet, `directory:${codeSet}`, view)
     } catch (e) {
       return failed(msg(e))
     }
@@ -104,10 +115,27 @@ export class BookDirectory {
       }
       const books = find('bookData')
       const adventures = find('adventureData')
+      const owners: Record<string, PlanOwner> = {}
+      const addBook = (path: string, id: string, source: string): void => { if (path) owners[path] = { kind: 'book', id, source } }
+      const addAdventure = (path: string, id: string, source: string): void => { if (path) owners[path] = { kind: 'adventure', id, source } }
+      const sourceFiles = data.sourceFiles ?? { maps: {}, classFiles: [] }
+      const indexSources: Record<string, string[]> = {}
+      for (const map of Object.values(sourceFiles.maps)) {
+        indexSources[map.indexPath] = Object.keys(map.index)
+        for (const [source, file] of Object.entries(map.index)) {
+          const path = `data/${map.dir}/${file}`
+          const cur = owners[path]
+          if (cur?.kind === 'source') { if (!cur.sources.includes(source)) cur.sources.push(source) }
+          else owners[path] = { kind: 'source', sources: [source] }
+        }
+      }
+      for (const path of sourceFiles.classFiles) owners[path] = { kind: 'class' }
+      books.items.forEach((it, i) => addBook(books.files[i], String(it.id), String(it.source)))
+      adventures.items.forEach((it, i) => addAdventure(adventures.files[i], String(it.id), String(it.source)))
       const record: DirectoryRecord = {
         codeSet, commit, groups: data.groups, sources: data.sources, books: books.items, adventures: adventures.items,
         adventureFiles: Object.fromEntries(adventures.items.map((it, i) => [String(it.id), adventures.files[i]])),
-        adventureProp: adventures.prop,
+        adventureProp: adventures.prop, owners, indexSources, sourceFiles,
         errors: { books: books.error ? `官方书目（${codeSet}）取不到：${books.error}` : null, adventures: adventures.error ? `官方冒险目录（${codeSet}）取不到：${adventures.error}` : null },
       }
       if (!record.errors.books && !record.errors.adventures) await this.opts.db.derived.put({ key, fingerprint: commit, value: record, savedAt: Date.now() })

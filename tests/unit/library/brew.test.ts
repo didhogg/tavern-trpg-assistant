@@ -7,6 +7,7 @@ import { libraryHandlers } from '../../../src/library/runtime/handlers'
 import type { AuthorFrame } from '../../../src/library/runtime/host'
 import { LibraryService } from '../../../src/library/service'
 import { getSource } from '../../../src/library/sources'
+import { LibraryRevisionStore } from '../../../src/library/revision'
 
 // 假小窗：只回答用到的指令；作者函数本身在 e2e（tests/e2e/library/b2-7-brew.mjs）里用真程序测
 function fakeFrame(answers: Record<string, (...args: unknown[]) => unknown>, onClose?: () => void): AuthorFrame {
@@ -25,7 +26,8 @@ function fakeFrame(answers: Record<string, (...args: unknown[]) => unknown>, onC
 }
 
 let db: LibraryDatabase
-beforeEach(() => { db = new LibraryDatabase(`test-brew-${Math.random()}`) })
+let revisions: LibraryRevisionStore
+beforeEach(async () => { db = new LibraryDatabase(`test-brew-${Math.random()}`); revisions = new LibraryRevisionStore(db); await revisions.ensureLegacy() })
 afterEach(async () => { await db.delete() })
 
 describe('作者同步存储（localStorage）存进库', () => {
@@ -49,7 +51,7 @@ describe('parseBrew', () => {
     let closed = false
     const report = await parseBrew({
       source,
-      db,
+      db, view: await revisions.published(),
       openFrame: async () => fakeFrame({
         brewInstalled: () => [{ head: { docIdLocal: 'a', filename: 'x.json' }, meta: {} }],
         loaders: () => [{ props: ['spell', 'spellFluff'], page: 'spells.html', kind: 'site' }, { props: ['raw_class', 'class'], page: 'classes.html', kind: 'site' }, { props: ['book', 'bookData'], page: 'book.html', kind: 'corpus', index: 'books.json' }],
@@ -77,7 +79,7 @@ describe('parseBrew', () => {
     expect((await db.derived.get('corpora:cn-brew'))?.value).toEqual({ book: [{ id: 'MyBook', name: '我的书', source: 'X', hash: 'mybook_x' }] })
     expect(report.parse.authorErrors).toEqual(['Error: 无法加载 8 个条目的引用！'])
     // 自制里没有的类别：查询返回空，不报错；解析出错的类别照样报错
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ excludeList: () => [], excludedFlags: () => ({ hashes: [], excluded: null }) }) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({ excludeList: () => [], excludedFlags: () => ({ hashes: [], excluded: null }) }) })
     expect(await svc.query('cn-brew', 'feat')).toEqual([])
     await expect(svc.query('cn-brew', 'class')).rejects.toThrow('没有这一类的解析结果')
     expect(report.installed).toEqual([{ docIdLocal: 'a', filename: 'x.json' }])
@@ -91,13 +93,13 @@ describe('parseBrew', () => {
 describe('LibraryService 自制', () => {
   it('更新没有换掉任何包：不重解析', async () => {
     let opened = 0
-    const svc = new LibraryService({ db, openFrame: async () => { opened++; return fakeFrame({ brewPull: () => ({ value: [], errors: [] }) }) } })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => { opened++; return fakeFrame({ brewPull: () => ({ value: [], errors: [] }) }) } })
     expect(await svc.brewPull('cn-brew')).toEqual({ value: [], errors: [], parse: null })
     expect(opened).toBe(1)
   })
 
   it('不是自制源：报错', async () => {
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({}) })
     await expect(svc.brewInstalled('cn-official')).rejects.toThrow('不是自制源')
   })
 })

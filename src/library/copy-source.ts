@@ -5,6 +5,7 @@
 import type { LibraryDatabase } from './db'
 import type { LibraryService } from './service'
 import { CODE_SETS, type SourceEntry } from './sources'
+import type { LibraryView } from './revision'
 
 export interface RawCopy {
   json: Record<string, unknown>
@@ -29,6 +30,8 @@ export interface CopyOptions {
   entry?: { prop: string; hash: string }
   /** 已有的本地副本内容：新内容并进去，同编号的换成新的（作者按来源认包，同来源再存会整个替换）。 */
   base?: Record<string, unknown>
+  /** 固定的库版本；不给时按旧 files 表读。 */
+  view?: LibraryView
 }
 
 export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
@@ -41,11 +44,13 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
   const skipped: RawCopy['skipped'] = []
 
   // 1. 官方原始文件里这个来源的记录
-  const files = await o.db.files.where('source').equals(o.official.id).toArray()
-  for (const f of files) {
-    if (!f.path.startsWith('data/') || !f.path.endsWith('.json') || f.path.startsWith('data/generated/') || f.path.startsWith('data/adventure/') || f.path.startsWith('data/book/')) continue
+  const paths = o.view ? await o.view.filePaths(o.official) : (await o.db.files.where('source').equals(o.official.id).toArray()).map((f) => f.path)
+  for (const path of paths) {
+    if (!path.startsWith('data/') || !path.endsWith('.json') || path.startsWith('data/generated/') || path.startsWith('data/adventure/') || path.startsWith('data/book/')) continue
+    const text = o.view ? (await o.view.fileGet(o.official, path))?.text : (await o.db.files.get([o.official.id, path]))?.text
+    if (text == null) continue
     let json: unknown
-    try { json = JSON.parse(f.text) } catch { skipped.push({ what: f.path, reason: '不是 JSON' }); continue }
+    try { json = JSON.parse(text) } catch { skipped.push({ what: path, reason: '不是 JSON' }); continue }
     if (!isEntity(json)) continue
     for (const [prop, arr] of Object.entries(json)) {
       if (!props.has(prop) || !Array.isArray(arr)) continue
@@ -71,8 +76,8 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
       for (const row of found[prop] ?? []) {
         const id = String(row.id ?? '')
         const path = await frame.call('corpusFile', prop, id)
-        const text = (await o.db.files.get([o.official.id, path]))?.text
-        if (text === undefined) { skipped.push({ what: `${prop} ${id}`, reason: '正文还没下载' }); continue }
+        const text = o.view ? (await o.view.fileGet(o.official, path))?.text : (await o.db.files.get([o.official.id, path]))?.text
+        if (text == null) { skipped.push({ what: `${prop} ${id}`, reason: '正文还没下载' }); continue }
         try {
           const data = (JSON.parse(text) as Record<string, unknown>)[propData]
           if (!Array.isArray(data)) throw new Error(`没有 ${propData}`)

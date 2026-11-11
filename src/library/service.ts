@@ -1,33 +1,45 @@
 // 【库】的数据接口：类别、查询、详情（含英文）、搜索、按书开关（D2-P2 B1 设计 §8.3、§8.6、§8.7、§9）。
-// 只交作者对象和作者搜索结果，不挑字段、不改名。凡是要理解字段含义的判断（屏蔽、背景描述、英文编号、
-// 搜索匹配与排序）都在小窗里由作者函数做；插件这边只读库、对编号、按来源分组。
-import { addGeneratedPairs } from './english-generated'
+// P5 T1/T3：每次读取绑定一个库版本；装 / 改 / 删都走“准备版本 → 发布”，不再提前改活动数据。
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import { ParsedMemo } from './parsed-memo'
 import type { LogSink } from './logs'
-import { brewCorporaKey, parseBrew, type BrewCorpora, type BrewParseReport } from './brew'
-import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
+import { brewCorporaKey, type BrewCorpora, type BrewParseReport } from './brew'
+import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutateAuthor, type BrewContext } from './service-brew'
+import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
-import { healthItemsOf, healthReport, type HealthReport, type Layers34Summary, type StoredReport } from './health'
+import type { HealthReport } from './health'
+import { englishCoverageOf, healthOf, officialInstalledOf, storedOf, warmEnglishPairsOf, type HealthContext } from './service-health'
+import { buildEnglishPairsFor, type PairContext } from './service-english'
 import type { InstallReport } from './install'
 import { countSources, parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { SearchHit, SearchIndexDump } from './runtime/frame/read-commands'
-import type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
+import type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow } from './service-types'
 import type { BrewEntry, WithErrors } from './runtime/frame/brew-commands'
 import type { AuthorFrame } from './runtime/host'
-import { commitOf, getSource, officialSourceOf, SOURCES, type SourceEntry } from './sources'
+import { getSource, type SourceEntry } from './sources'
+import { LibraryOperations } from './operations'
+import type { LibraryRevisionStore, LibraryView } from './revision'
 
 export type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
 
+export interface FrameContext {
+  view?: LibraryView
+  /** 隔离解析用的单一作者存储范围（不配合 view 时是旧的单范围行为）。 */
+  kvScope?: string
+  filterIndex?: boolean
+}
+
 export interface LibraryServiceOptions {
   db: LibraryDatabase
-  /** 开一个只读本地的作者小窗；kvScope 给了就用那个作者存储范围（隔离解析用）。 */
-  openFrame: (codeSet: string, kvScope?: string) => Promise<AuthorFrame>
+  revisions: LibraryRevisionStore
+  /** 开一个只读本地的作者小窗；view 给了就绑定这个库版本。 */
+  openFrame: (codeSet: string, ctx?: FrameContext) => Promise<AuthorFrame>
   /** 自制 / 房规变了之后接着换算（T2）；回调由后端接，库层不认识结算内核。 */
   onDataChanged?: (codeSet: string) => Promise<void>
   /** 自制解析出错、作者报错写日志（P5 B-26）。 */
   onLog?: LogSink
+  operations?: LibraryOperations
 }
 
 export class LibraryService {
@@ -36,31 +48,48 @@ export class LibraryService {
   private readonly searchLoaded = new Map<string, string>()
   private readonly parsedMemo: ParsedMemo
   private readonly embedded: EmbeddedTables
+  readonly operations: LibraryOperations
 
   constructor(private readonly opts: LibraryServiceOptions) {
     this.parsedMemo = new ParsedMemo(opts.db)
-    this.embedded = new EmbeddedTables(opts.db, (cs) => this.frame(cs))
+    this.embedded = new EmbeddedTables(opts.db, (cs, view) => this.frame(cs, view))
+    this.operations = opts.operations ?? new LibraryOperations({ db: opts.db, revisions: opts.revisions })
   }
 
-  /** 每套作者程序只开一个小窗，屏蔽表、搜索索引都在这个小窗里，开关书也经它改，状态才一致。 */
-  frameOf(codeSet: string): Promise<AuthorFrame> {
-    return this.frame(codeSet)
+  /** 当前已发布版本；读操作开始处只取一次。 */
+  currentView(): Promise<LibraryView> {
+    return this.opts.revisions.published()
   }
 
-  private frame(codeSet: string): Promise<AuthorFrame> {
-    let p = this.frames.get(codeSet)
+  private async view(view?: LibraryView): Promise<LibraryView> {
+    return view ?? this.currentView()
+  }
+
+  /** 每套作者程序、每个库版本一个小窗；屏蔽表、搜索索引都在这个小窗里，开关书也经它改。 */
+  frameOf(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
+    return this.frame(codeSet, view)
+  }
+
+  private frame(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
+    const key = `${view?.id ?? 'legacy'}:${codeSet}`
+    let p = this.frames.get(key)
     if (!p) {
-      p = this.opts.openFrame(codeSet)
-      p.catch(() => this.frames.delete(codeSet))
-      this.frames.set(codeSet, p)
+      p = this.opts.openFrame(codeSet, { ...(view ? { view } : {}), filterIndex: true })
+      p.catch(() => this.frames.delete(key))
+      this.frames.set(key, p)
     }
     return p
   }
 
-  /** 每次 reset 加一：依赖小窗里算出来的东西（排序名次等）的缓存用它判断是否过期。 */
+  /** 在指定作者存储范围里开一个小窗（隔离解析、导入预览用；用完由调用方关）。 */
+  openFrameIn(codeSet: string, kvScope: string, view?: LibraryView): Promise<AuthorFrame> {
+    return this.opts.openFrame(codeSet, { kvScope, ...(view ? { view } : {}), filterIndex: true })
+  }
+
+  /** 每次发布加一：依赖小窗里算出来的东西（排序名次等）的缓存用它判断是否过期。 */
   generation = 0
 
-  /** 关掉所有小窗。安装、装删自制之后要调用：小窗里作者的缓存和搜索索引是旧的。 */
+  /** 关掉所有小窗（测试 / 全量重置）。 */
   reset(): void {
     this.generation++
     for (const p of this.frames.values()) p.then((f) => f.close(), (e: unknown) => console.warn('[trpg-library] 小窗本来就没开成', e))
@@ -69,26 +98,38 @@ export class LibraryService {
     this.searchLoaded.clear()
   }
 
+  /** 发布后只关这个旧版本的小窗；别的版本正在读的窗口不动。 */
+  retire(viewId: string): void {
+    this.generation++
+    for (const [key, p] of [...this.frames]) {
+      if (!key.startsWith(`${viewId}:`)) continue
+      p.then((f) => f.close(), () => undefined)
+      this.frames.delete(key)
+    }
+    for (const key of [...this.pairsCache.keys()]) if (key.startsWith(`${viewId}:`)) this.pairsCache.delete(key)
+    for (const key of [...this.searchLoaded.keys()]) if (key.startsWith(`${viewId}:`)) this.searchLoaded.delete(key)
+  }
+
   /** 手动把整套资料一次算好存库（装书 / 迁移后用；平时看资料走缓存）。 */
-  async precompute(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean } = {}): Promise<PrecomputeReport> {
+  async precompute(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean } = {}, viewArg?: LibraryView): Promise<PrecomputeReport> {
+    const view = await this.view(viewArg)
     const source = getSource(sourceId)
-    const frame = await this.frame(source.codeSet)
-    return precomputeSource({ source, db: this.opts.db, frame, prop: opts.prop, fluff: opts.fluff ?? true, excluded: opts.excluded ?? true, search: opts.search ?? source.kind === 'official' })
+    const frame = await this.frame(source.codeSet, view)
+    return precomputeSource({ source, db: this.opts.db, frame, view, prop: opts.prop, fluff: opts.fluff ?? true, excluded: opts.excluded ?? true, search: opts.search ?? source.kind === 'official' })
   }
 
-  /** 缓存缺了/资料变了才开小窗补算；平时看资料、查询只读库。 */
-  private async ensure(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean }): Promise<void> {
+  private async ensure(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean }, view: LibraryView): Promise<void> {
     const source = getSource(sourceId)
-    await ensurePrecomputed({ source, db: this.opts.db, openFrame: (cs) => this.opts.openFrame(cs), ...opts })
+    await ensurePrecomputed({ source, db: this.opts.db, view, openFrame: (cs) => this.opts.openFrame(cs, { view, filterIndex: true }), ...opts })
   }
 
-  async parsed(sourceId: string, prop: string): Promise<ParsedProp> {
-    if (prop === EMBEDDED_PROP) return getSource(sourceId).kind === 'official' ? this.embedded.ensure(sourceId) : { items: [], hashes: [], sources: [] } // 埋在条目里的表格（B-09）
-    const value = await this.parsedMemo.get(parsedKey(sourceId, prop))
+  async parsed(sourceId: string, prop: string, viewArg?: LibraryView): Promise<ParsedProp> {
+    const view = await this.view(viewArg)
+    if (prop === EMBEDDED_PROP) return getSource(sourceId).kind === 'official' ? this.embedded.ensure(sourceId, view) : { items: [], hashes: [], sources: [] }
+    const value = await this.parsedMemo.get(parsedKey(sourceId, prop), view)
     const rec = value === undefined ? undefined : { value }
-    // 自制只存有内容的类别：解析记录在、这一类没出错，就是"这一类没有条目"
     if (!rec && getSource(sourceId).kind === 'brew') {
-      const report = await this.opts.db.derived.get(`audit:${sourceId}`)
+      const report = await view.derivedGet(`audit:${sourceId}`)
       const errors = (report?.value as BrewParseReport | undefined)?.parse.errors ?? []
       if (report && !errors.some((e) => e.prop === prop)) return { items: [], hashes: [], sources: [] }
     }
@@ -96,24 +137,27 @@ export class LibraryService {
     return rec.value as ParsedProp
   }
 
-  private async report(sourceId: string): Promise<{ parse: Pick<InstallReport['parse'], 'props'> }> {
-    const rec = await this.opts.db.derived.get(`audit:${sourceId}`)
+  private async report(sourceId: string, viewArg?: LibraryView): Promise<{ parse: Pick<InstallReport['parse'], 'props'> }> {
+    const view = await this.view(viewArg)
+    const rec = await view.derivedGet(`audit:${sourceId}`)
     if (!rec) throw new Error(`${sourceId} 还没安装`)
     return rec.value as InstallReport | BrewParseReport
   }
 
-  /** 全量解析出来的类别和条数（数解析结果，不写死）。 */
-  async categories(sourceId: string): Promise<Record<string, number>> {
-    const r = await this.report(sourceId)
+  async categories(sourceId: string, viewArgs?: LibraryView): Promise<Record<string, number>> {
+    const r = await this.report(sourceId, viewArgs)
     return Object.fromEntries(Object.entries(r.parse.props).map(([prop, v]) => [prop, v.count]))
   }
 
-  /** 按类别（、来源）取作者对象。默认去掉被屏蔽的；includeExcluded 时一并返回并带标记。 */
-  async query(sourceId: string, prop: string, { source, includeExcluded = false }: { source?: string; includeExcluded?: boolean } = {}): Promise<QueryRow[]> {
-    if (prop === EMBEDDED_PROP) { const p = await this.parsed(sourceId, prop); return p.items.flatMap((item, i) => (source === undefined || p.sources[i]?.toLowerCase() === source.toLowerCase() ? [{ hash: p.hashes[i], source: p.sources[i], excluded: false, item }] : [])) }
-    await this.ensure(sourceId, { prop, excluded: true })
-    const p = await this.parsed(sourceId, prop)
-    const excludedOf = await cachedExcluded(this.opts.db, sourceId, prop)
+  async query(sourceId: string, prop: string, { source, includeExcluded = false, view: viewArg }: { source?: string; includeExcluded?: boolean; view?: LibraryView } = {}): Promise<QueryRow[]> {
+    const view = await this.view(viewArg)
+    if (prop === EMBEDDED_PROP) {
+      const p = await this.parsed(sourceId, prop, view)
+      return p.items.flatMap((item, i) => (source === undefined || p.sources[i]?.toLowerCase() === source.toLowerCase() ? [{ hash: p.hashes[i], source: p.sources[i], excluded: false, item }] : []))
+    }
+    await this.ensure(sourceId, { prop, excluded: true }, view)
+    const p = await this.parsed(sourceId, prop, view)
+    const excludedOf = await cachedExcluded(this.opts.db, sourceId, prop, view)
     if (excludedOf && p.hashes.some((h) => h && excludedOf[h] === undefined)) throw new Error(`缓存里的「${prop}」屏蔽表和解析结果对不上，不猜`)
     const want = source?.toLowerCase()
     const rows: QueryRow[] = []
@@ -126,147 +170,127 @@ export class LibraryService {
     return rows
   }
 
-  /** 自制里的书和冒险目录（装、删、更新自制后重解析时存下的）：类别 → 每本的编号、名称、来源、作者编号。 */
-  async brewCorpora(sourceId: string): Promise<BrewCorpora> {
-    return ((await this.opts.db.derived.get(brewCorporaKey(sourceId)))?.value ?? {}) as BrewCorpora
+  async brewCorpora(sourceId: string, viewArg?: LibraryView): Promise<BrewCorpora> {
+    const view = await this.view(viewArg)
+    return ((await view.derivedGet(brewCorporaKey(sourceId)))?.value ?? {}) as BrewCorpora
   }
 
-  /** 书或冒险的全文（安装时按本解析存下的；自制的在装 / 改自制时解析存下）。 */
-  async corpus(sourceId: string, prop: string, id: string): Promise<unknown> {
-    const rec = await this.opts.db.derived.get(parsedKey(sourceId, prop, id))
+  async corpus(sourceId: string, prop: string, id: string, viewArg?: LibraryView): Promise<unknown> {
+    const view = await this.view(viewArg)
+    const rec = await view.derivedGet(parsedKey(sourceId, prop, id))
     if (!rec) throw new Error(`${sourceId} 没有这本的全文：${prop} ${id}`)
     return rec.value
   }
 
-  /** 库里存的解析结果中按编号找一条（不经作者缓存）。 */
-  async storedItem(sourceId: string, prop: string, hash: string): Promise<{ item: unknown; source: string | null } | null> {
-    const p = await this.parsed(sourceId, prop).catch(() => null)
+  async storedItem(sourceId: string, prop: string, hash: string, viewArg?: LibraryView): Promise<{ item: unknown; source: string | null } | null> {
+    const view = await this.view(viewArg)
+    const p = await this.parsed(sourceId, prop, view).catch(() => null)
     const i = p ? p.hashes.indexOf(hash) : -1
     return p && i >= 0 ? { item: p.items[i], source: p.sources[i] } : null
   }
 
-  /**
-   * 一条的详情：作者对象 + 背景描述 + 英文对象。source 可省（作者从编号里解出）。
-   * 条目对象取库里这个数据集自己的解析结果：作者缓存里同编号的自制会顶掉官方（P3-1 探路实测），不能直接用缓存里的；
-   * 库里没有这一条时才用作者缓存。背景描述按交出去的那个对象问作者。
-   */
-  async detail(sourceId: string, prop: string, hash: string, _source?: string | null): Promise<DetailResult | null> {
-    await this.ensure(sourceId, { prop, fluff: true, excluded: true })
-    const stored = await this.storedItem(sourceId, prop, hash)
+  async detail(sourceId: string, prop: string, hash: string, _source?: string | null, viewArg?: LibraryView): Promise<DetailResult | null> {
+    const view = await this.view(viewArg)
+    await this.ensure(sourceId, { prop, fluff: true, excluded: true }, view)
+    const stored = await this.storedItem(sourceId, prop, hash, view)
     if (!stored) return null
-    const f = await cachedFluff(this.opts.db, sourceId, prop, hash)
-    const excluded = await cachedExcluded(this.opts.db, sourceId, prop)
-    return { item: stored.item, hash, source: stored.source, excluded: excluded?.[hash] ?? false, fluff: f?.fluff ?? null, fluffError: f?.fluffError ?? null, engSiteHash: f?.engSiteHash ?? null, english: await this.english(getSource(sourceId), prop, hash) }
+    const f = await cachedFluff(this.opts.db, sourceId, prop, hash, view)
+    const excluded = await cachedExcluded(this.opts.db, sourceId, prop, view)
+    return { item: stored.item, hash, source: stored.source, excluded: excluded?.[hash] ?? false, fluff: f?.fluff ?? null, fluffError: f?.fluffError ?? null, engSiteHash: f?.engSiteHash ?? null, english: await this.english(getSource(sourceId), prop, hash, { view }) }
   }
 
-  /** 预计算的配图描述；没有这一条就返回 null（详情共用）。 */
-  async fluff(sourceId: string, prop: string, hash: string) {
-    return cachedFluff(this.opts.db, sourceId, prop, hash)
+  async fluff(sourceId: string, prop: string, hash: string, viewArg?: LibraryView) {
+    const view = await this.view(viewArg)
+    return cachedFluff(this.opts.db, sourceId, prop, hash, view)
   }
 
-  /** fluff：false 时不读配图描述（结算内核换算用不着；读一次要把这一类的配图描述整张读出来）。 */
-  async english(s: SourceEntry, prop: string, hash: string, { fluff = true }: { fluff?: boolean } = {}): Promise<English | null> {
+  async english(s: SourceEntry, prop: string, hash: string, { fluff = true, view: viewArg }: { fluff?: boolean; view?: LibraryView } = {}): Promise<English | null> {
+    const view = await this.view(viewArg)
     if (!s.pair) return null
     const pair = getSource(s.pair)
-    if (!(await this.bothInstalled(s, pair))) return { status: 'not-installed' }
-    const hit = (await this.englishPairs(s.id)).pairs[prop]?.[hash]
+    if (!(await this.bothInstalled(s, pair, view))) return { status: 'not-installed' }
+    const hit = (await this.englishPairs(s.id, view)).pairs[prop]?.[hash]
     if (!hit) return { status: 'not-paired' }
-    const stored = await this.storedItem(pair.id, prop, hit.enHash)
+    const stored = await this.storedItem(pair.id, prop, hit.enHash, view)
     if (!stored) return { status: 'not-found', hash: hit.enHash }
-    const f = fluff ? await cachedFluff(this.opts.db, pair.id, prop, hit.enHash) : null
+    const f = fluff ? await cachedFluff(this.opts.db, pair.id, prop, hit.enHash, view) : null
     return { status: 'found', hash: hit.enHash, via: hit.via, item: stored.item, fluff: f?.fluff ?? null }
   }
 
-  private async bothInstalled(a: SourceEntry, b: SourceEntry): Promise<boolean> {
-    const [x, y] = await Promise.all([this.opts.db.sets.get(a.id), this.opts.db.sets.get(b.id)])
+  private async bothInstalled(a: SourceEntry, b: SourceEntry, view: LibraryView): Promise<boolean> {
+    const [x, y] = await Promise.all([view.officialState(a.id), view.officialState(b.id)])
     return x?.status === 'installed' && y?.status === 'installed'
   }
 
-  /**
-   * 中英配对表（作者做法，见 runtime/frame/english-commands.ts）。按两边版本存进库，版本不变就直接用。
-   * 配对要建索引，作者的 postLoad 可能改动小窗里缓存的数据，所以另开两个小窗、用完关掉，不用查询那个。
-   */
-  englishPairs(sourceId: string): Promise<EnglishPairs> {
-    let p = this.pairsCache.get(sourceId)
-    if (!p) {
-      p = this.buildEnglishPairs(sourceId)
-      p.catch(() => this.pairsCache.delete(sourceId))
-      this.pairsCache.set(sourceId, p)
-    }
-    return p
-  }
-
-  private async buildEnglishPairs(sourceId: string): Promise<EnglishPairs> {
-    const s = getSource(sourceId)
-    if (!s.pair) throw new Error(`${sourceId} 没有登记配对的另一种语言`)
-    const pair = getSource(s.pair)
-    if (!(await this.bothInstalled(s, pair))) throw new Error(`${s.id} 或 ${pair.id} 还没安装，不能配对`)
-    const key = `english:${s.id}`
-    // +gen：配对表含生成条目（english-generated.ts）；旧表没有，换个记号让它重建一次。
-    const fingerprint = `${commitOf(s)}+${commitOf(pair)}+gen4`
-    const saved = await this.opts.db.derived.get(key)
-    if (saved?.fingerprint === fingerprint) return saved.value as EnglishPairs
-    const cnFrame = await this.opts.openFrame(s.codeSet)
-    const enFrame = await this.opts.openFrame(pair.codeSet).catch((e: unknown) => { cnFrame.close(); throw e })
-    try {
-      const docs = await cnFrame.call('englishLocators')
-      const matches = await enFrame.call('englishMatch', docs)
-      const out: EnglishPairs = { source: s.id, pair: pair.id, pairs: {}, unmatched: [], via: {}, located: docs.length }
-      for (const m of matches) {
-        if (!m.enHash) {
-          out.unmatched.push({ prop: m.prop, hash: m.hash, ...(m.error ? { error: m.error } : {}) })
-          continue
-        }
-        ;(out.pairs[m.prop] ??= {})[m.hash] = { enHash: m.enHash, enSource: m.enSource, via: m.via }
-        out.via[m.via ?? 'none'] = (out.via[m.via ?? 'none'] ?? 0) + 1
+  englishPairs(sourceId: string, viewArg?: LibraryView): Promise<EnglishPairs> {
+    return this.view(viewArg).then((view) => {
+      const key = `${view.id}:${sourceId}`
+      let p = this.pairsCache.get(key)
+      if (!p) {
+        const s = getSource(sourceId)
+        p = buildEnglishPairsFor(this.englishContext(), s, view)
+        p.catch(() => this.pairsCache.delete(key))
+        this.pairsCache.set(key, p)
       }
-      // 作者加载器生成的条目（版本 / 亚种 / 魔法变体）按母条目补配对
-      out.generated = await addGeneratedPairs(out.pairs, {
-        // 冒险 / 书正文这类不按条目解析，没有解析结果，也就没有生成条目
-        parsed: (side, prop) => this.parsed(side === 'cn' ? s.id : pair.id, prop).catch(() => null),
-        templates: () => cnFrame.call('variantTemplateNames'),
-        versions: (side, props) => (side === 'cn' ? cnFrame : enFrame).call('versionOrder', props),
-      })
-      out.via.generated = Object.values(out.generated).reduce((n, r) => n + r.paired, 0)
-      await this.opts.db.derived.put({ key, fingerprint, value: out, savedAt: Date.now() })
-      return out
-    } finally {
-      cnFrame.close()
-      enFrame.close()
-    }
+      return p
+    })
   }
 
-  /** 作者搜索器的结果原样（按作者得分排序，已按作者的搜索设置去掉被屏蔽的等）。showLegacy：这一次显示旧版来源（2014 战役用）。 */
-  async search(sourceId: string, term: string, { showLegacy }: { showLegacy?: boolean } = {}): Promise<SearchHit[]> {
-    await this.ensure(sourceId, { search: true })
+  private englishContext(): PairContext {
+    return { openFrame: this.opts.openFrame, parsed: (id, prop, view) => this.parsed(id, prop, view) }
+  }
+
+  async search(sourceId: string, term: string, { showLegacy, view: viewArg }: { showLegacy?: boolean; view?: LibraryView } = {}): Promise<SearchHit[]> {
+    const view = await this.view(viewArg)
+    await this.ensure(sourceId, { search: true }, view)
     const s = getSource(sourceId)
-    const frame = await this.frame(s.codeSet)
-    const rec = await searchIndexOf(this.opts.db, sourceId)
+    const frame = await this.frame(s.codeSet, view)
+    const rec = await searchIndexOf(this.opts.db, sourceId, view)
     if (rec) {
-      const fingerprint = `${String(rec.base ?? '')}|${String(rec.exclude ?? '')}|${String(rec.manage ?? '')}`
-      if (this.searchLoaded.get(s.codeSet) !== fingerprint) {
+      const fingerprint = `${String(rec.base ?? '')}|${String(rec.exclude ?? '')}|${String(rec.manage ?? '')}|${view.id}`
+      if (this.searchLoaded.get(`${view.id}:${s.codeSet}`) !== fingerprint) {
         await frame.call('searchIndexLoad', rec as unknown as SearchIndexDump)
-        this.searchLoaded.set(s.codeSet, fingerprint)
+        this.searchLoaded.set(`${view.id}:${s.codeSet}`, fingerprint)
       }
     }
     return frame.call('search', term, showLegacy ?? null)
   }
 
-  /** 读或改作者的搜索设置。 */
-  async searchSettings(sourceId: string, patch: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
-    return (await this.frame(getSource(sourceId).codeSet)).call('searchSettings', patch)
+  async searchSettings(sourceId: string, patch: Record<string, unknown> = {}, viewArg?: LibraryView): Promise<Record<string, unknown>> {
+    const view = await this.view(viewArg)
+    return (await this.frame(getSource(sourceId).codeSet, view)).call('searchSettings', patch)
   }
 
-  /** 按书开关：改作者屏蔽表里"整本书"一行（经这套程序唯一的小窗，查询、搜索立即生效）。 */
+  /** 按书开关：只改这个版本自己的作者存储层，不再直接改活动数据。 */
   async setBookExcluded(sourceId: string, book: string, excluded: boolean): Promise<void> {
     const s = getSource(sourceId)
-    await (await this.frame(s.codeSet)).call('setSourceExcluded', book, excluded)
-    await invalidatePrecompute(this.opts.db, sourceId, ['excluded'])
-    await invalidatePrecompute(this.opts.db, officialSourceOf(s.codeSet).id, ['search'])
-    this.searchLoaded.delete(s.codeSet)
+    const handle = await this.operations.begin({ kind: 'author-kv', set: s.id, codeSet: s.codeSet })
+    try {
+      const f = await this.opts.openFrame(s.codeSet, { view: handle.target, filterIndex: true })
+      try {
+        await f.call('setSourceExcluded', book, excluded)
+        const errors = await f.call('storageFlush')
+        if (errors.length) throw new Error(errors[0])
+      } finally { f.close() }
+      await this.operations.publish(handle, {})
+    } catch (e) {
+      await this.operations.abort(handle, e)
+      throw e
+    }
   }
 
   // ---- 自制（源登记表里 kind = brew 的源；作者包管理器在对应那套程序的小窗里）----
+
+  private brewContext(): BrewContext {
+    return {
+      db: this.opts.db, revisions: this.opts.revisions, operations: this.operations,
+      openFrame: this.opts.openFrame,
+      frame: (codeSet, view) => this.frame(codeSet, view),
+      ...(this.opts.onDataChanged ? { onDataChanged: this.opts.onDataChanged } : {}),
+      ...(this.opts.onLog ? { onLog: this.opts.onLog } : {}),
+      onPublished: (view) => { this.retire(view.id) },
+    }
+  }
 
   private brewSource(sourceId: string): SourceEntry {
     const s = getSource(sourceId)
@@ -274,182 +298,90 @@ export class LibraryService {
     return s
   }
 
-  /** 自制书目：作者读自制仓库目录文件得出的列表（原样）。 */
-  async brewCatalog(sourceId: string): Promise<WithErrors<unknown[] | null>> {
-    return (await this.frame(this.brewSource(sourceId).codeSet)).call('brewCatalog')
+  async brewCatalog(sourceId: string, viewArg?: LibraryView): Promise<WithErrors<unknown[] | null>> {
+    const view = await this.view(viewArg)
+    return (await this.frame(this.brewSource(sourceId).codeSet, view)).call('brewCatalog')
   }
 
-  /** 已装的自制包。 */
-  async brewInstalled(sourceId: string): Promise<BrewEntry[]> {
-    return (await this.frame(this.brewSource(sourceId).codeSet)).call('brewInstalled')
+  async brewInstalled(sourceId: string, viewArg?: LibraryView): Promise<BrewEntry[]> {
+    const view = await this.view(viewArg)
+    return (await this.frame(this.brewSource(sourceId).codeSet, view)).call('brewInstalled')
   }
 
-  /** 在指定作者存储范围里开一个小窗（隔离解析、导入预览用；用完由调用方关）。 */
-  openFrameIn(codeSet: string, kvScope: string): Promise<AuthorFrame> {
-    return this.opts.openFrame(codeSet, kvScope)
-  }
-
-  /** 自制改过以后（含可编辑自制）重解析。 */
-  reparseBrew(sourceId: string): Promise<BrewParseReport> {
-    return this.afterBrewChange(this.brewSource(sourceId))
-  }
-
-  /** 装、导入、删、更新之后：关掉旧小窗（作者缓存和搜索索引是旧的），用新小窗重解析自制内容。 */
-  private async afterBrewChange(s: SourceEntry): Promise<BrewParseReport> {
-    this.reset()
-    const report = await parseBrew({ source: s, db: this.opts.db, openFrame: () => this.opts.openFrame(s.codeSet), openFrameIn: (scope) => this.opts.openFrame(s.codeSet, scope) })
-    // 搜索索引里含自制；自制变了，官方那套的搜索缓存作废，下一次搜索重算。
-    await invalidatePrecompute(this.opts.db, officialSourceOf(s.codeSet).id, ['search'])
-    this.searchLoaded.delete(s.codeSet)
-    try { await this.opts.onDataChanged?.(s.codeSet) } catch (error) { report.precomputeError = error instanceof Error ? error.message : String(error) }
-    const log = this.opts.onLog
-    if (log) {
-      for (const e of report.parse.errors) log({ level: 'error', source: s.id, kind: 'brew-parse', message: `${e.prop}：${e.error}` })
-      for (const [prop, c] of Object.entries(report.parse.corpora ?? {})) for (const f of c.failed) log({ level: 'error', source: s.id, kind: 'brew-corpus', message: `${prop} ${f.id}：${f.error}` })
-      if (report.parse.authorErrors.length) log({ level: 'warn', source: s.id, kind: 'brew-author-errors', message: `解析时作者报了 ${report.parse.authorErrors.length} 条错`, detail: report.parse.authorErrors })
-      if (report.alternatives.errors.length) log({ level: 'warn', source: s.id, kind: 'brew-alternatives', message: `${report.alternatives.errors.length} 条同编号的备选版本取失败`, detail: report.alternatives.errors })
-      if (report.precomputeError) log({ level: 'warn', source: s.id, kind: 'brew-precompute', message: report.precomputeError })
-    }
-    return report
-  }
-
-  /** 按网址装（作者自动追装依赖）。 */
-  async brewAddUrl(sourceId: string, url: string): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport }> {
+  /** 自制改过以后（含可编辑自制）在准备版本里重解析并发布；调用方已经写过作者存储时用 mutateAuthor。 */
+  async reparseBrew(sourceId: string): Promise<BrewParseReport> {
     const s = this.brewSource(sourceId)
-    const r = await this.withTimeout(async () => (await this.frame(s.codeSet)).call('brewAddUrl', url), '下载自制包')
-    return { ...r, parse: await this.afterBrewChange(s) }
+    const r = await this.mutateAuthor(s.codeSet, 'brew-reparse', async () => null)
+    return r.parse
   }
 
-  /** 缺依赖一键下载：给来源标识（缺什么），作者到来源索引找网址、装上并追装它的依赖。notFound = 索引里查不到的来源。 */
-  async brewInstallSources(sourceId: string, sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null }> {
-    const s = this.brewSource(sourceId)
-    const r = await this.withTimeout(async () => (await this.frame(s.codeSet)).call('brewAddSources', sources), '下载缺的依赖包')
-    return { ...r, parse: r.value.added.length ? await this.afterBrewChange(s) : null }
+  /** 在准备版本里跑一次作者存储修改，再重解析、发布。可编辑条目 / 房规 / 存副本都走这里。 */
+  async mutateAuthor<T>(codeSet: string, kind: string, run: (view: LibraryView) => Promise<T>): Promise<{ value: T; parse: BrewParseReport; view: LibraryView }> {
+    return mutateAuthor(this.brewContext(), codeSet, kind, run)
   }
 
-  /** 导入本地文件（文件名 + 原文）。 */
+  async brewAddUrl(sourceId: string, url: string): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
+    return brewAddUrl(this.brewContext(), sourceId, url)
+  }
+
+  async brewInstallSources(sourceId: string, sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null; view?: string }> {
+    return brewInstallSources(this.brewContext(), sourceId, sources)
+  }
+
   async brewImport(sourceId: string, files: Array<{ name: string; text: string }>) {
-    const s = this.brewSource(sourceId)
-    const r = await (await this.frame(s.codeSet)).call('brewAddFiles', files)
-    return { ...r, parse: await this.afterBrewChange(s) }
+    return brewImport(this.brewContext(), sourceId, files)
   }
 
-  /** 删（按作者包头里的本地编号）。 */
-  async brewDelete(sourceId: string, docIdLocals: string[]): Promise<WithErrors<number> & { parse: BrewParseReport }> {
-    const s = this.brewSource(sourceId)
-    const r = await (await this.frame(s.codeSet)).call('brewDelete', docIdLocals)
-    return { ...r, parse: await this.afterBrewChange(s) }
+  async brewDelete(sourceId: string, docIdLocals: string[]): Promise<WithErrors<number> & { parse: BrewParseReport; view?: string }> {
+    return brewDelete(this.brewContext(), sourceId, docIdLocals)
   }
 
   /** 拉取更新前先看有没有新版（只比较、不替换）；有新版的再调 brewPull。 */
   async brewCheckUpdates(sourceId: string, docIdLocals: string[] | null = null) {
-    return (await this.frame(this.brewSource(sourceId).codeSet)).call('brewCheckUpdates', docIdLocals)
+    const view = await this.currentView()
+    return (await this.frame(this.brewSource(sourceId).codeSet, view)).call('brewCheckUpdates', docIdLocals)
   }
 
-  /** 更新（作者：有新版的直接换）。不给编号就是全部；没有更新的不重解析。 */
-  async brewPull(sourceId: string, docIdLocals: string[] | null = null): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null }> {
-    const s = this.brewSource(sourceId)
-    const r = await (await this.frame(s.codeSet)).call('brewPull', docIdLocals)
-    return { ...r, parse: r.value.length ? await this.afterBrewChange(s) : null }
+  async brewPull(sourceId: string, docIdLocals: string[] | null = null): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null; view?: string }> {
+    return brewPull(this.brewContext(), sourceId, docIdLocals)
   }
 
-  /** 中英配对覆盖率：中文解析结果的每一条，看作者做法配上了没有、英文解析结果里有没有那一条；没配上的按原因列清单，存进体检。 */
-  async englishCoverage(sourceId: string): Promise<EnglishCoverage> {
-    const s = getSource(sourceId)
-    const pairs = await this.englishPairs(s.id)
-    const unmatched = new Set(pairs.unmatched.map((u) => `${u.prop}\u0000${u.hash}`))
-    const out: EnglishCoverage = { source: s.id, pair: pairs.pair, props: {}, via: pairs.via, unpaired: [], nameMismatch: [] }
-    for (const prop of Object.keys((await this.report(s.id)).parse.props)) {
-      const cn = await this.parsed(s.id, prop)
-      const enRec = await this.opts.db.derived.get(parsedKey(pairs.pair, prop))
-      const enParsed = enRec ? (enRec.value as ParsedProp) : null
-      const en = new Map((enParsed?.hashes ?? []).map((h, i) => [h, i]))
-      const row: EnglishCoverage['props'][string] = (out.props[prop] = { total: cn.items.length, paired: 0, nameMismatch: 0 })
-      cn.hashes.forEach((hash, i) => {
-        const hit = hash ? pairs.pairs[prop]?.[hash] : undefined
-        let reason: UnpairedReason | null = null
-        if (!hit) reason = hash && unmatched.has(`${prop}\u0000${hash}`) ? 'no-english-record' : 'not-in-index'
-        else if (!en.has(hit.enHash)) reason = 'english-not-in-parsed'
-        if (!reason) {
-          row.paired++
-          const engName = (cn.items[i] as { ENG_name?: unknown }).ENG_name
-          const enName = (enParsed!.items[en.get(hit!.enHash)!] as { name?: unknown }).name
-          if (engName !== undefined && engName !== enName) {
-            row.nameMismatch++
-            out.nameMismatch.push({ prop, hash: hash!, enHash: hit!.enHash, via: hit!.via, engName, enName })
-          }
-          return
-        }
-        row[reason] = (row[reason] ?? 0) + 1
-        out.unpaired.push({ prop, hash, reason, ...(hit ? { enHash: hit.enHash } : {}) })
-      })
+  /** 中英配对覆盖率（P5 B-26 体检）。 */
+  async englishCoverage(sourceId: string, viewArg?: LibraryView): Promise<EnglishCoverage> {
+    const view = await this.view(viewArg)
+    return englishCoverageOf(this.healthContext(), sourceId, view)
+  }
+
+  private healthContext(): HealthContext {
+    return {
+      report: (id, view) => this.report(id, view),
+      parsed: (id, prop, view) => this.parsed(id, prop, view),
+      englishPairs: (id, view) => this.englishPairs(id, view),
+      frame: (codeSet, view) => this.frame(codeSet, view),
+      stored: (key, fingerprint, view) => storedOf(view, key, fingerprint),
+      brewSourceCounts: (id, view) => this.brewSourceCounts(id, view),
     }
-    await this.opts.db.derived.put({ key: `audit:english:${s.id}`, fingerprint: `${commitOf(s)}+${commitOf(getSource(pairs.pair))}`, value: out, savedAt: Date.now() })
-    return out
   }
 
-  private async stored<T>(key: string, fingerprint: (fp: string) => boolean): Promise<StoredReport<T> | undefined> {
-    const rec = await this.opts.db.derived.get(key)
-    return rec ? { value: rec.value as T, stale: !fingerprint(rec.fingerprint) } : undefined
+  /** 体检：日志与体检分开、每来源隔离失败（P5 M7）。 */
+  async health(viewArg?: LibraryView): Promise<HealthReport> {
+    const view = await this.view(viewArg)
+    return healthOf(this.healthContext(), view)
   }
 
-  /** 体检：源登记表里每个源的各份报告汇成一份（第 9 节）。自制会现场问作者包管理器存了哪些包。 */
-  async health(): Promise<HealthReport> {
-    const items = []
-    for (const source of SOURCES) {
-      const commit = commitOf(source)
-      const set = await this.opts.db.sets.get(source.id)
-      const pairCommit = source.pair ? commitOf(getSource(source.pair)) : ''
-      const input: Parameters<typeof healthItemsOf>[0] = {
-        source,
-        installed: set?.status === 'installed',
-        install: source.kind === 'official' ? await this.stored<InstallReport>(`audit:${source.id}`, (fp) => fp === commit) : undefined,
-        brew: source.kind === 'brew' ? await this.stored<BrewParseReport>(`audit:${source.id}`, () => true) : undefined,
-        english: await this.stored<EnglishCoverage>(`audit:english:${source.id}`, (fp) => fp === `${commit}+${pairCommit}`),
-        layers34: await this.stored<Layers34Summary>(`audit:layers34:${source.id}`, (fp) => fp.startsWith(`${commit}+`)),
-      }
-      // 作者程序启动要读这套官方数据：没装就开不了小窗，自制这几项跳过（体检里注明）
-      if (source.kind === 'brew' && (await this.opts.db.sets.get(officialSourceOf(source.codeSet).id))?.status !== 'installed') {
-        input.officialMissing = officialSourceOf(source.codeSet).id
-      } else if (source.kind === 'brew') {
-        input.brewStorage = await (await this.frame(source.codeSet)).call('brewStorage')
-        input.brewSourceCounts = await this.brewSourceCounts(source.id)
-      }
-      items.push(...healthItemsOf(input))
-    }
-    return healthReport(items)
-  }
-
-  /** 自制解析结果里每个来源有几条（来源是解析时作者 SourceUtil.getEntitySource 给的，见 brew-commands.ts parseBrewProp）。 */
-  private async brewSourceCounts(sourceId: string): Promise<Record<string, number>> {
+  private async brewSourceCounts(sourceId: string, view: LibraryView): Promise<Record<string, number>> {
     const prefix = `parsed:${sourceId}:`
-    return countSources(await this.opts.db.derived.where('key').startsWith(prefix).toArray(), prefix, { lower: true })
+    const map = await view.derivedKeys(prefix)
+    return countSources([...map.entries()].map(([key, rec]) => ({ key, value: rec.value })), prefix, { lower: true })
   }
 
-  /**
-   * 联网下载自制包给个时限（P5-1 B-48）：作者程序的下载卡住时，调用永远不返回，界面就一直「下载中」，只能重载页面。
-   * 超时就关掉卡住的小窗、清掉缓存，抛错让界面能重试（重试会开新的小窗）。
-   */
-  private async withTimeout<T>(run: () => Promise<T>, what: string, ms = 180_000): Promise<T> {
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => { this.reset(); reject(new Error(`${what}超过 ${ms / 1000} 秒没有响应，已重置后台，请重试`)) }, ms) })
-    try { return await Promise.race([run(), timeout]) } finally { clearTimeout(timer) }
+  /** 这套作者程序对应的官方数据装好了吗（作者程序启动要读它；没装时自制读不了）。 */
+  async officialInstalled(codeSet: string, viewArg?: LibraryView): Promise<boolean> {
+    return officialInstalledOf(await this.view(viewArg), codeSet)
   }
 
-  /** 这套作者程序对应的官方数据装好了吗（作者程序启动要读它；没装时自制读不了，P5-1 B-37）。 */
-  async officialInstalled(codeSet: string): Promise<boolean> {
-    return (await this.opts.db.sets.get(officialSourceOf(codeSet).id))?.status === 'installed'
-  }
-
-  /**
-   * 下载 / 更新完成后在后台把中英配对表建好（P5-1 B-42）：配对表的指纹含两边提交号，换版本后要重建一次（约 3 秒）；
-   * 提前建好，用户点条目详情时就不用等。两边没都装好时什么都不做；建失败写日志，不影响使用。
-   */
-  async warmEnglishPairs(sourceId: string): Promise<void> {
-    const s = getSource(sourceId)
-    if (!s.pair || !(await this.bothInstalled(s, getSource(s.pair)))) return
-    try { await this.englishPairs(sourceId) } catch (e) {
-      this.opts.onLog?.({ level: 'warn', source: sourceId, kind: 'english-pairs', message: e instanceof Error ? e.message : String(e) })
-    }
+  /** 下载 / 更新完成后在后台把中英配对表建好（P5-1 B-42）。 */
+  async warmEnglishPairs(sourceId: string, viewArg?: LibraryView): Promise<void> {
+    await warmEnglishPairsOf({ englishPairs: (id, view) => this.englishPairs(id, view), ...(this.opts.onLog ? { onLog: this.opts.onLog } : {}) }, sourceId, await this.view(viewArg))
   }
 }

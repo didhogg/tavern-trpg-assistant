@@ -91,6 +91,7 @@ const items: Record<string, { item: Record<string, unknown>; source: string | nu
   'en-brew|spell|tw2': named({ name: 'Twin' }, 'TRPGMINE'),
 }
 const lib = {
+  currentView: async () => ({ id: 'v', kvGet: async () => null }),
   officialInstalled: async () => true,
   brewInstalled: async (id: string) => installed[id],
   frameOf: async (codeSet: string) => ({ call: async (name: string) => { if (name !== 'brewDocIndex') throw new Error(name); return docs[codeSet] } }),

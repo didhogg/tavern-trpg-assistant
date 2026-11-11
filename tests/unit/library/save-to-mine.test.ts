@@ -17,6 +17,7 @@ let docs: Array<Record<string, unknown>>
 function make(answers: Record<string, (...args: unknown[]) => unknown>) {
   const frame = { call: async (fn: string, ...args: unknown[]) => { calls.push({ fn, args }); const a = answers[fn]; if (!a) throw new Error(`假小窗没有 ${fn}`); return a(...args) } }
   const lib = {
+    currentView: async () => ({ id: 'v', filePaths: async () => [], fileGet: async () => null }),
     frameOf: async () => frame,
     brewInstalled: async () => docs.map((d) => ({ head: d, meta: {} })),
     brewImport: async (setId: string, files: Imported['files']) => { imported.push({ setId, files }); return { value: { added: [{ head: {} }], notJson: [] }, errors: [], parse: { ok: true } } },

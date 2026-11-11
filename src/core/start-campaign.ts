@@ -10,6 +10,7 @@ import { DownloadEstimator, type DownloadEstimate, type EstimateOptions } from '
 import type { FileProvider } from '../library/files'
 import { precachePlan } from '../library/plan'
 import type { DownloadTasks, TaskState } from '../library/tasks'
+import type { LibraryRevisionStore } from '../library/revision'
 import type { ScopedLibrary } from '../library/scoped'
 import type { ShelfGroup } from '../library/shelf'
 import { defaultCampaignLibrary, ruleScopes, type CampaignLibrary, type ScopeDef } from '../library/scopes'
@@ -38,6 +39,7 @@ export interface StartCampaignDeps {
     directory: BookDirectory
     scoped: ScopedLibrary
     tasks: DownloadTasks
+    revisions: LibraryRevisionStore
     dataVersion: () => Promise<KernelDataVersion>
   }
 }
@@ -90,6 +92,8 @@ export interface StartCampaignInput extends Owner {
   library?: LibraryChoice
   /** 选了的冒险（catalog 里 kind = adventure 的行的 set + id）。 */
   adventures?: Array<{ set: string; id: string }>
+  /** 选中的官方书 / 来源（书随整套安装的旧入口不传 = 全部）。 */
+  books?: string[]
 }
 
 export interface StartCampaignResult {
@@ -123,8 +127,12 @@ export class CampaignStarter {
     return [...sets]
   }
 
-  private async installed(setId: string): Promise<boolean> {
-    return (await this.deps.library.db.sets.get(setId))?.status === 'installed'
+  private async installed(setId: string, books?: string[]): Promise<boolean> {
+    const view = await this.deps.library.revisions.published()
+    const state = await view.officialState(setId)
+    if (state?.status !== 'installed') return false
+    if (!books || !books.length || state.books === null) return true
+    return books.every((b) => state.books!.includes(b))
   }
 
   private runningTask(setId: string): TaskState | null {
@@ -135,9 +143,12 @@ export class CampaignStarter {
    * 向导要写的"总下载约 xx MB"：资料（所选语言 + 结算内核要的英文，已装好的不算）+ 所选冒险。
    * 规则用作者离线设计的现成两条（plan.ts），与真正下载同一份计划。network = false 只看缓存，没算出来的是 null（界面写"正在计算下载文件大小"）。
    */
-  estimateDownload(input: { codeSet: string; adventures?: Array<{ set: string; id: string }> }, opts?: EstimateOptions): Promise<DownloadEstimate> {
-    const { db, files, directory } = this.deps.library
-    return new DownloadEstimator({ db, files, directory }).estimate({ sets: this.neededSets(input.codeSet), adventures: input.adventures }, opts)
+  estimateDownload(input: { codeSet: string; adventures?: Array<{ set: string; id: string }>; books?: string[] }, opts?: EstimateOptions): Promise<DownloadEstimate> {
+    const { db, files, directory, revisions } = this.deps.library
+    const sets = this.neededSets(input.codeSet)
+    const books = input.books ? Object.fromEntries(sets.map((id) => [id, input.books as string[]])) : undefined
+    const sources = books
+    return new DownloadEstimator({ db, files, directory, revisions }).estimate({ sets, ...(books ? { books } : {}), ...(sources ? { sources } : {}), adventures: input.adventures }, opts)
   }
 
   /**
@@ -145,15 +156,17 @@ export class CampaignStarter {
    * 刷新页面后任务列表会清空，"装了一半"靠库里记的状态认出来（status = incomplete），界面据此提示并给"继续"。
    */
   async dataStatus(): Promise<DataSetState[]> {
-    const { db, files } = this.deps.library
+    const { db, files, revisions } = this.deps.library
+    const view = await revisions.published()
     const out: DataSetState[] = []
     for (const s of SOURCES.filter((it) => it.kind === 'official')) {
       const record = await db.sets.get(s.id)
+      const state = await view.officialState(s.id)
       const recordStatus = record ? String(record.status) : null
       const task = this.runningTask(s.id)
-      const status: DataStatus = recordStatus === 'installed' ? 'installed' : task ? 'running' : recordStatus ? 'incomplete' : 'none'
-      const list = await files.cachedFileList(s)
-      out.push({ codeSet: s.codeSet, lang: s.lang, setId: s.id, installed: recordStatus === 'installed', status, recordStatus, downloadBytes: list ? precachePlan(list).bytes : null, task })
+      const status: DataStatus = task ? 'running' : state?.status === 'installed' ? 'installed' : recordStatus ? 'incomplete' : 'none'
+      const list = await files.cachedFileList(s, view)
+      out.push({ codeSet: s.codeSet, lang: s.lang, setId: s.id, installed: state?.status === 'installed', status, recordStatus, downloadBytes: list ? precachePlan(list).bytes : null, task })
     }
     return out
   }
@@ -214,8 +227,8 @@ export class CampaignStarter {
     const waiting: Array<Promise<TaskState>> = []
     const officialTasks = new Map<string, string>()
     for (const setId of needed) {
-      if (await this.installed(setId)) continue
-      const taskId = tasks.startOfficial(setId)
+      if (await this.installed(setId, input.books)) continue
+      const taskId = tasks.startOfficial(setId, input.books ? { books: input.books } : {})
       officialTasks.set(setId, taskId)
       downloads.push({ kind: 'official', set: setId, item: null, taskId })
       waiting.push(tasks.wait(taskId))

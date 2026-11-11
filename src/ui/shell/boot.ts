@@ -24,6 +24,7 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
   try {
     const services = createServices()
     app.setServices(services)
+    await services.backend.library.ready
     await requestPersistence(services.db)
     await app.refreshBackup()
     const owner = ownerFromHost(getContext())

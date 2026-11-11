@@ -2,6 +2,7 @@
 // 让原件照常生效，后来的挂成备选。作者加载器合并时"后装的盖掉先装的"（utils-dataloader-dataloader.js 第 1071 行），
 // 所以备选的条目对象要单独取：开一个隔离的作者存储范围，只放那个包（和它声明依赖的包），用作者加载器原样解析。
 import type { LibraryDatabase } from './db'
+import type { LibraryView } from './revision'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { AuthorFrame } from './runtime/host'
@@ -42,6 +43,7 @@ function withDependencies(doc: StoredBrew, all: StoredBrew[]): StoredBrew[] {
 export interface BuildAltOptions {
   source: SourceEntry
   db: LibraryDatabase
+  view: LibraryView
   /** 平常的小窗（读包索引用）。 */
   frame: AuthorFrame
   /** 在指定作者存储范围里开小窗（隔离解析用）。 */
@@ -50,12 +52,17 @@ export interface BuildAltOptions {
 
 /** 在隔离范围里只放这几个包，取指定编号的作者对象（作者加载器原样）。 */
 async function isolatedItems(opts: BuildAltOptions, docs: StoredBrew[], wants: Array<{ prop: string; hash: string }>): Promise<Record<string, unknown>> {
-  const { db, source } = opts
+  const { db, source, view } = opts
   const scope = `${source.codeSet}:iso:${docs.at(-1)!.head.docIdLocal}`
-  // 复制作者存储的其他键（迁移版本、屏蔽表等），只换掉自制列表
-  const rows = await db.kv.where('scope').equals(source.codeSet).toArray()
-  await db.kv.bulkPut(rows.map((r) => ({ ...r, scope, value: r.key === BREW_STORAGE_KEY ? docs : r.value })))
-  if (!rows.some((r) => r.key === BREW_STORAGE_KEY)) await db.kv.put({ scope, key: BREW_STORAGE_KEY, value: docs })
+  // 复制作者存储的有效内容（新层盖旧层），只换掉自制列表；同步存储也复制
+  const scopes = await view.kvScopes(source.codeSet)
+  const merged = new Map<string, unknown>()
+  for (const s of [...scopes].reverse()) for (const row of await db.kv.where('scope').equals(s).toArray()) { if (row.deleted) merged.delete(row.key); else merged.set(row.key, row.value) }
+  merged.set(BREW_STORAGE_KEY, docs)
+  await db.kv.bulkPut([...merged].map(([key, value]) => ({ scope, key, value })))
+  const localMerged = new Map<string, unknown>()
+  for (const s of [...scopes].reverse()) for (const row of await db.kv.where('scope').equals(`${s}:local`).toArray()) { if (row.deleted) localMerged.delete(row.key); else localMerged.set(row.key, row.value) }
+  if (localMerged.size) await db.kv.bulkPut([...localMerged].map(([key, value]) => ({ scope: `${scope}:local`, key, value })))
   const frame = await opts.openFrameIn(scope)
   try {
     return await frame.call('brewItemsByHash', wants)
@@ -67,13 +74,13 @@ async function isolatedItems(opts: BuildAltOptions, docs: StoredBrew[], wants: A
 
 /** 找同编号、取备选对象、把自制解析结果里同编号的那条换回原件，存成备选表。 */
 export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex> {
-  const { source, db, frame } = opts
+  const { source, frame } = opts
   const official = officialSourceOf(source.codeSet)
   const docs: DocIndex[] = await frame.call('brewDocIndex')
   const officialHashes: Record<string, Set<string>> = {}
   const officialParsed = new Map<string, ParsedProp>()
   for (const prop of new Set(docs.flatMap((d) => Object.keys(d.props)))) {
-    const rec = await db.derived.get(parsedKey(official.id, prop))
+    const rec = await opts.view.derivedGet(parsedKey(official.id, prop))
     if (!rec) continue
     officialParsed.set(prop, rec.value as ParsedProp)
     officialHashes[prop] = new Set((rec.value as ParsedProp).hashes.filter((h): h is string => !!h))
@@ -81,10 +88,10 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
   const collisions = findCollisions(officialHashes, docs)
   const out: AltIndex = { source: source.id, targets: {}, errors: [] }
   if (!collisions.length) {
-    await db.derived.put({ key: altsKey(source.id), fingerprint: 'brew', value: out, savedAt: Date.now() })
+    await opts.view.derivedPut(altsKey(source.id), 'brew', out)
     return out
   }
-  const stored = ((await db.kv.get([source.codeSet, BREW_STORAGE_KEY]))?.value ?? []) as StoredBrew[]
+  const stored = ((await opts.view.kvGet(source.codeSet, BREW_STORAGE_KEY)) ?? []) as StoredBrew[]
   const byId = new Map(stored.map((d) => [d.head.docIdLocal, d]))
   // 每个涉及的包要取哪些编号
   const need = new Map<string, Array<{ prop: string; hash: string }>>()
@@ -122,7 +129,7 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
       alts.push({ altId: packAltId(doc ? packStableId(doc) : null, id), legacyIds: [`doc:${id}`], kind: 'collision', filename: filenameOf(id), docIdLocal: id, ref: { set: source.id, prop: c.prop, hash: c.hash }, item })
     }
     // 自制解析结果里同编号的那条：官方是原件 → 去掉；先装的包是原件 → 换成先装的那条
-    const p = brewParsed.get(c.prop) ?? ((await db.derived.get(parsedKey(source.id, c.prop)))?.value as ParsedProp | undefined)
+    const p = brewParsed.get(c.prop) ?? ((await opts.view.derivedGet(parsedKey(source.id, c.prop)))?.value as ParsedProp | undefined)
     if (p) brewParsed.set(c.prop, p)
     const i = p ? p.hashes.indexOf(c.hash) : -1
     const op = officialParsed.get(c.prop)
@@ -138,7 +145,7 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
       if (baseItem !== undefined) p.items[i] = baseItem
     }
   }
-  for (const [prop, p] of brewParsed) await db.derived.put({ key: parsedKey(source.id, prop), fingerprint: 'brew', value: p, savedAt: Date.now() })
-  await db.derived.put({ key: altsKey(source.id), fingerprint: 'brew', value: out, savedAt: Date.now() })
+  for (const [prop, p] of brewParsed) await opts.view.derivedPut(parsedKey(source.id, prop), 'brew', p)
+  await opts.view.derivedPut(altsKey(source.id), 'brew', out)
   return out
 }

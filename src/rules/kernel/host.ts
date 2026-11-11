@@ -7,6 +7,7 @@
 // 作者存储只放内存：结算只算不存（上位设计 §3.1），关掉小窗就没了。
 // 世界数据怎么从存档组出来属于 P3-3；这里只留输入接口（KernelInput）。
 import type { FileProvider } from '../../library/files'
+import type { LibraryView } from '../../library/revision'
 import { startAuthorFrame, type AuthorFrame, type FrameHandlers } from '../../library/runtime/host'
 import { officialSourceOf } from '../../library/sources'
 import type { KERNEL_COMMANDS } from './frame/commands'
@@ -18,9 +19,9 @@ export type { KernelInput }
 export type DataReader = (path: string) => Promise<string | null>
 
 /** 【库】里的英文官方原件，只读本地。 */
-export function libraryData(files: FileProvider): DataReader {
+export function libraryData(files: FileProvider, view?: LibraryView): DataReader {
   const source = officialSourceOf('en')
-  return (path) => files.get(source, path, { allowNetwork: false })
+  return (path) => files.get(source, path, { allowNetwork: false, ...(view ? { view } : {}) })
 }
 
 export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch }): FrameHandlers {

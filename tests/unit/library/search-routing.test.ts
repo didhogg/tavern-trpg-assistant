@@ -5,6 +5,7 @@ import { LibraryDatabase } from '../../../src/library/db'
 import type { LibraryService } from '../../../src/library/service'
 import { routeHit, scopedSearch, type SearchDeps } from '../../../src/library/scoped-search'
 import { commitOf, getSource } from '../../../src/library/sources'
+import type { LibraryView } from '../../../src/library/revision'
 
 const quickFile = JSON.stringify({
   reference: { 'bookref-quick': { name: 'Quick Reference', id: 'bookref-quick', contents: [{ name: '第一章' }] } },
@@ -16,7 +17,7 @@ const dmFile = JSON.stringify({
   data: { 'bookref-quick': [], 'bookref-dmscreen': [{ type: 'section', name: '城主', entries: [] }] },
 })
 
-const corpus: CorpusIndex = new Map([['book', new Map([['phb', { id: 'PHB', source: 'PHB' }]])], ['adventure', new Map([['lmop', { id: 'LMoP', source: 'LMoP' }]])]])
+const corpus: CorpusIndex = new Map([['book', new Map([['phb', [{ id: 'PHB', source: 'PHB' }]]])], ['adventure', new Map([['lmop', [{ id: 'LMoP', source: 'LMoP' }]]])]])
 const hit = (prop: string | null, u: string, s = 'PHB') => ({ prop: prop as string, doc: { u, s } })
 
 describe('routeHit：按命中种类分流', () => {
@@ -44,6 +45,16 @@ describe('routeHit：按命中种类分流', () => {
 
 let db: LibraryDatabase
 const official = getSource('cn-official')
+const view = {
+  id: 'test-view',
+  officialState: async () => ({ status: 'installed', commit: 'c', sources: null, books: null, adventures: null }),
+  brewState: async (id: string) => id === 'cn-brew' ? { packs: [] } : null,
+  derivedGet: async (key: string) => db.derived.get(key),
+  derivedPut: async (key: string, fingerprint: string, value: unknown) => { await db.derived.put({ key, fingerprint, value, savedAt: Date.now() }) },
+  filePaths: async (source: { id: string }) => (await db.files.where('source').equals(source.id).primaryKeys()).map(([, path]) => path),
+  fileGet: async (source: { id: string }, path: string) => { const rec = await db.files.get([source.id, path]); return rec && rec.commit === commitOf(official) ? { text: rec.text, gitSha: rec.gitSha, size: rec.size, commit: rec.commit } : null },
+  commitOf: async () => commitOf(official), installedAdventures: async () => null,
+} as unknown as LibraryView
 async function seedFile(path: string, text: string, commit = commitOf(official)): Promise<void> {
   await db.files.put({ source: official.id, path, commit, text, gitSha: 'x', size: text.length, savedAt: 0 })
 }
@@ -102,6 +113,7 @@ function fakeLib(stored: Record<string, { item: unknown; source: string | null }
       : fn === 'corpusList' ? [{ id: 'PHB', source: 'PHB', hash: 'phb' }] : []),
   }
   return {
+    currentView: async () => view,
     frameOf: async () => frame,
     storedItem: async (set: string, prop: string, hash: string) => stored[`${set}|${prop}|${hash}`] ?? null,
     search: async () => search,
@@ -132,8 +144,8 @@ describe('scopedSearch：命中的包不再靠猜（B-01）', () => {
       { score: 1, prop: null as unknown as string, doc: { u: 'some-tool-page', s: 'PHB' } },
     ])
     const deps: SearchDeps = {
-      lib, links: new EntryLinks(lib, new DocumentStore(db)), sets: [official, getSource('cn-brew')],
-      installed: async (s) => s.kind === 'official', assignments: async () => new Map(), houseUnits: async () => new Set(),
+      lib, links: new EntryLinks(lib, new DocumentStore(db)), sets: [official, getSource('cn-brew')], view,
+      installed: async (s) => s.kind === 'official', readable: async (s) => s.kind === 'official', assignments: async () => new Map(), houseUnits: async () => new Set(),
       viewFor: async () => ({ visible: true, reason: 'scope', membership: { assignment: null, basis: 'author' } as never }),
     }
     const out = await scopedSearch(deps, { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: [], exclude: [], choices: {} }, '玩家')

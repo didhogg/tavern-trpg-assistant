@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { LibraryDatabase } from '../../../src/library/db'
 import { parsedKey } from '../../../src/library/install'
 import { LibraryService } from '../../../src/library/service'
+import { LibraryRevisionStore } from '../../../src/library/revision'
 import { baseFingerprint, manageFingerprint } from '../../../src/library/cache'
 import { getSource } from '../../../src/library/sources'
 import type { AuthorFrame } from '../../../src/library/runtime/host'
@@ -31,6 +32,7 @@ const spells = {
 }
 
 let db: LibraryDatabase
+let revisions: LibraryRevisionStore
 async function seedSpellCache({ excluded = null as Record<string, boolean> | null, fluff = {} as Record<string, unknown> } = {}): Promise<void> {
   const source = getSource('cn-official')
   const base = await baseFingerprint(source, db)
@@ -41,6 +43,8 @@ async function seedSpellCache({ excluded = null as Record<string, boolean> | nul
 
 beforeEach(async () => {
   db = new LibraryDatabase(`test-service-${Math.random()}`)
+  revisions = new LibraryRevisionStore(db)
+  await revisions.ensureLegacy()
   await db.derived.put({ key: parsedKey('cn-official', 'spell'), fingerprint: 'x', value: spells, savedAt: 0 })
   await db.derived.put({ key: 'audit:cn-official', fingerprint: 'x', value: { parse: { props: { spell: { count: 3, noHash: 0 } } } }, savedAt: 0 })
 })
@@ -50,7 +54,7 @@ describe('LibraryService.query', () => {
   it('缓存命中：只读库，不开小窗；按来源取只留这本书（不分大小写）', async () => {
     await seedSpellCache()
     let opened = 0
-    const svc = new LibraryService({ db, openFrame: async () => { opened++; return fakeFrame({}) } })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => { opened++; return fakeFrame({}) } })
     expect((await svc.query('cn-official', 'spell')).map((r) => r.hash)).toEqual(spells.hashes)
     expect((await svc.query('cn-official', 'spell', { source: 'xphb' })).map((r) => r.hash)).toEqual(['a_xphb', 'c_xphb'])
     expect(opened).toBe(0)
@@ -58,26 +62,26 @@ describe('LibraryService.query', () => {
 
   it('缓存里的屏蔽标记：默认去掉；includeExcluded 时带标记一并返回', async () => {
     await seedSpellCache({ excluded: { a_xphb: true, b_phb: false, c_xphb: true } })
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({}) })
     expect((await svc.query('cn-official', 'spell')).map((r) => r.hash)).toEqual(['b_phb'])
     expect((await svc.query('cn-official', 'spell', { includeExcluded: true })).map((r) => [r.hash, r.excluded])).toEqual([['a_xphb', true], ['b_phb', false], ['c_xphb', true]])
   })
 
   it('缓存按编号取，不按作者现场的先后顺序', async () => {
     await seedSpellCache({ excluded: { c_xphb: true, a_xphb: false, b_phb: false } })
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({}) })
     expect((await svc.query('cn-official', 'spell', { includeExcluded: true })).map((r) => [r.hash, r.excluded])).toEqual([['a_xphb', false], ['b_phb', false], ['c_xphb', true]])
   })
 
   it('缓存里的编号和库里存的对不上：报错，不猜', async () => {
     await seedSpellCache({ excluded: { a_xphb: false, b_phb: false } })
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({}) })
     await expect(svc.query('cn-official', 'spell')).rejects.toThrow('对不上')
   })
 
   it('缓存缺了：按作者屏蔽表现算一次并存库，下一次只读库', async () => {
     let opened = 0
-    const svc = new LibraryService({ db, openFrame: async () => { opened++; return fakeFrame({
+    const svc = new LibraryService({ db, revisions, openFrame: async () => { opened++; return fakeFrame({
       excludeList: () => [],
       excludedFlags: () => ({ hashes: spells.hashes, excluded: [true, false, true] }),
     }) } })
@@ -89,7 +93,7 @@ describe('LibraryService.query', () => {
   })
 
   it('补算缓存时作者现场编号和库里存的对不上：报错，不猜', async () => {
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({
       excludeList: () => [],
       excludedFlags: () => ({ hashes: ['a_xphb', 'b_phb'], excluded: [false, false] }),
     }) })
@@ -116,7 +120,7 @@ describe('LibraryService.detail', () => {
   it('英文没装：返回 not-installed，不开任何小窗', async () => {
     await seedSpellCache({ fluff: { a_xphb: { fluff: { from: 'cache' }, fluffError: null, engSiteHash: null } } })
     const opened: string[] = []
-    const svc = new LibraryService({ db, openFrame: async (codeSet) => { opened.push(codeSet); return fakeFrame({}) } })
+    const svc = new LibraryService({ db, revisions, openFrame: async (codeSet) => { opened.push(codeSet); return fakeFrame({}) } })
     const d = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
     expect(d?.english).toEqual({ status: 'not-installed' })
     expect(opened).toEqual([])
@@ -130,6 +134,7 @@ describe('LibraryService.detail', () => {
     const asked: unknown[] = []
     const svc = new LibraryService({
       db,
+      revisions,
       openFrame: async () => fakeFrame({
         detail: (prop, hash) => { asked.push([prop, hash]); return null },
         englishLocators: cnLocators,
@@ -147,7 +152,7 @@ describe('LibraryService.detail 只读预计算缓存', () => {
   it('详情交库里存的原件和预计算配图描述，不碰作者缓存的同编号自制', async () => {
     await seedSpellCache({ fluff: { a_xphb: { fluff: { from: 'cache' }, fluffError: null, engSiteHash: 'ea_xphb' } } })
     const calls: string[] = []
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({}, calls) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({}, calls) })
     const d = await svc.detail('cn-official', 'spell', 'a_xphb', 'XPHB')
     expect(d?.item).toEqual(spells.items[0])
     expect(d?.fluff).toEqual({ from: 'cache' })
@@ -161,11 +166,11 @@ describe('LibraryService.englishPairs', () => {
     await installBoth()
     let opened = 0
     const open = async () => { opened++; return fakeFrame({ englishLocators: cnLocators, englishMatch: enMatches }) }
-    const first = await new LibraryService({ db, openFrame: open }).englishPairs('cn-official')
+    const first = await new LibraryService({ db, revisions, openFrame: open }).englishPairs('cn-official')
     expect(first.pairs).toEqual({ spell: { a_xphb: { enHash: 'ea_xphb', enSource: 'XPHB', via: 'name' } } })
     expect(first.unmatched).toEqual([{ prop: 'spell', hash: 'c_xphb' }])
     expect(opened).toBe(2)
-    await new LibraryService({ db, openFrame: open }).englishPairs('cn-official')
+    await new LibraryService({ db, revisions, openFrame: open }).englishPairs('cn-official')
     expect(opened).toBe(2)
   })
 })
@@ -173,7 +178,7 @@ describe('LibraryService.englishPairs', () => {
 describe('LibraryService.englishCoverage', () => {
   it('每条中文按原因分：配上、不在作者索引、索引里有但英文没找到；清单存进体检', async () => {
     await installBoth()
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ englishLocators: cnLocators, englishMatch: enMatches }) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({ englishLocators: cnLocators, englishMatch: enMatches }) })
     const c = await svc.englishCoverage('cn-official')
     expect(c.props.spell).toEqual({ total: 3, paired: 1, nameMismatch: 0, 'not-in-index': 1, 'no-english-record': 1 })
     expect(c.unpaired).toEqual([{ prop: 'spell', hash: 'b_phb', reason: 'not-in-index' }, { prop: 'spell', hash: 'c_xphb', reason: 'no-english-record' }])
@@ -184,7 +189,7 @@ describe('LibraryService.englishCoverage', () => {
     await installBoth()
     await db.derived.put({ key: parsedKey('cn-official', 'spell'), fingerprint: 'x', value: { ...spells, items: [{ ENG_name: 'Fireball' }, {}, {}] }, savedAt: 0 })
     await db.derived.put({ key: parsedKey('en-official', 'spell'), fingerprint: 'x', value: { items: [{ name: 'Delayed Blast Fireball' }], hashes: ['ea_xphb'], sources: [] }, savedAt: 0 })
-    const svc = new LibraryService({ db, openFrame: async () => fakeFrame({ englishLocators: cnLocators, englishMatch: enMatches }) })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({ englishLocators: cnLocators, englishMatch: enMatches }) })
     const c = await svc.englishCoverage('cn-official')
     expect(c.props.spell.nameMismatch).toBe(1)
     expect(c.nameMismatch).toEqual([{ prop: 'spell', hash: 'a_xphb', enHash: 'ea_xphb', via: 'name', engName: 'Fireball', enName: 'Delayed Blast Fireball' }])

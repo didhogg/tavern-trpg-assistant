@@ -16,7 +16,7 @@ describe('【库】数据库第 3 版', () => {
 
     const db = new LibraryDatabase(name)
     await db.open()
-    expect(db.verno).toBe(3)
+    expect(db.verno).toBe(4)
     expect(await db.derived.get('pre:cn-official:fluff:spell')).toBeUndefined()
     expect(await db.derived.get('parsed:cn-official:spell')).toBeDefined()
     expect(await db.manage.get(['scope', 's1'])).toBeDefined()

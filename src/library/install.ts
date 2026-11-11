@@ -1,14 +1,16 @@
-// 安装一套官方数据（D2-P2 B1 设计 §8.2、§8.2.1、§11 第 1、2、5 层）：
-// 空间检查 → 按作者离线规则下载 → 镜像核对 → 全量解析（作者加载器登记表 + 作者书目）→ 与作者搜索索引对账。
+// 安装一套官方数据（D2-P2 B1 设计 §8.2、§8.2.1、§11 第 1、2、5 层；P5 T1/T2 改为版本化准备与发布）：
+// 空间检查 → 按作者离线 / 按书计划下载到准备版本 → 镜像核对 → 作者加载器解析到准备版本 → 检查 → 发布。
 // 解析只读本地（小窗不许联网），用来证明下载的文件是全的。插件不碰字段，只存作者对象整个原样。
-import type { LibraryDatabase } from './db'
+import type { LibraryDatabase, OfficialSetState } from './db'
 import type { FileProvider } from './files'
 import type { AuthorFrame } from './runtime/host'
-import { precachePlan } from './plan'
-import { commitOf, type SourceEntry } from './sources'
+import { precachePlan, type OfficialPlan } from './plan'
+import type { LibraryRevisionStore, LibraryView } from './revision'
+import { LibraryOperations } from './operations'
 import { precomputeSource, type PrecomputeReport } from './cache'
 import { DocumentStore } from './documents'
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
+import type { SourceEntry } from './sources'
 
 export interface StorageEstimate {
   persisted: boolean | null
@@ -29,18 +31,26 @@ export interface InstallReport {
   source: string
   commit: string
   storage: StorageEstimate
-  plan: { files: number; bytes: number }
+  plan: {
+    files: number; bytes: number
+    shared?: { files: number; bytes: number }
+    bySource?: { files: number; bytes: number }
+    byBook?: { files: number; bytes: number }
+    byClass?: { files: number; bytes: number }
+    byAdventure?: { files: number; bytes: number }
+    missing?: { sources: string[]; books: string[] }
+  }
   download: { fetched: number; reused: number; failed: Array<{ path: string; error: string }> }
   /** 第 1 层：本地 = 云端镜像。 */
   mirror: { checked: number; missing: string[]; mismatched: string[] }
   /** 第 2 层：作者加载器每一类、每一本都跑通。 */
   parse: {
     props: Record<string, { count: number; noHash: number }>
-    corpora: Record<string, { count: number; failed: Array<{ id: string; error: string }> }>
+    corpora: Record<string, { count: number; skipped: number; failed: Array<{ id: string; error: string }> }>
     notRun: Array<{ props: string[]; reason: string }>
     errors: Array<{ prop: string; error: string }>
   }
-  /** 第 5 层（辅助）：作者搜索索引对账。 */
+  /** 第 5 层（辅助）：作者搜索索引对账（按这次可见来源过滤后的索引）。 */
   index: Record<string, { parsed: number; index: number; onlyParsed: number; onlyIndex: number; samplesOnlyParsed: string[]; samplesOnlyIndex: string[] }>
   /** 文档类数据（规则速查、城主屏参考）：作者当小册子读，不走条目加载器（P5 B-02）。 */
   documents?: { count: number; error?: string }
@@ -48,7 +58,15 @@ export interface InstallReport {
   embeddedTables?: { count: number; error?: string }
   /** 装完作者数据后算好的离线缓存（配图描述、屏蔽标记、搜索索引）。 */
   precompute?: PrecomputeReport
-  /** 用户取消了（下载到一半停下；已下载的文件留着，再装就是续传）。 */
+  /** 这次能不能发布（下载 / 镜像 / 解析 / 选中书正文全部成功）。 */
+  publishable: boolean
+  /** 不能发布的原因；可发布时为空。 */
+  reasons: string[]
+  /** 资料可浏览，但结算准备失败（换算 / 预计算）；单独重试，不重下资料。 */
+  settlementReady: boolean
+  /** 发布后的版本编号（包装器 installOfficial 填）。 */
+  revision?: string
+  /** 用户取消了（下载到一半停下；已下载的文件留在准备区，再装可复用）。 */
   cancelled?: boolean
   ms: number
 }
@@ -57,11 +75,21 @@ export interface InstallOptions {
   source: SourceEntry
   db: LibraryDatabase
   files: FileProvider
-  /** 开一个只读本地的作者小窗（解析用）。 */
-  openFrame: () => Promise<AuthorFrame>
+  revisions: LibraryRevisionStore
+  /** 开一个绑定到指定版本的作者小窗（解析用）。 */
+  openFrame: (view: LibraryView) => Promise<AuthorFrame>
+  /** 包装器 installOfficial 自己开操作时用；不给就现建一个。 */
+  operations?: LibraryOperations
+  /** 已有计划（按书 / 更新）；不给就整套预载。 */
+  plan?: OfficialPlan
+  /** 准备版本；不给时 installOfficial 自己开一个操作。 */
+  view?: LibraryView
+  /** 这次安装的可见来源 / 书 / 冒险；null = 全部（旧整套安装）。 */
+  sources?: string[] | null
+  books?: string[] | null
+  adventures?: string[] | null
   onProgress?: (p: { stage: string; done: number; total: number; item?: string }) => void
   concurrency?: number
-  /** 取消：下载阶段每个文件前检查；取消后不解析，安装记录标 cancelled。 */
   signal?: AbortSignal
 }
 
@@ -97,84 +125,107 @@ export function countSources(records: Array<{ key: string; value: unknown }>, pr
   return counts
 }
 
-export async function installOfficial({ source, db, files, openFrame, onProgress, concurrency = 6, signal }: InstallOptions): Promise<InstallReport> {
-  const t0 = Date.now()
-  const commit = commitOf(source)
-  const storage = await storageEstimate()
-  const list = await files.fileList(source)
-  const plan = precachePlan(list)
-  const report: InstallReport = {
-    source: source.id, commit, storage, plan: { files: plan.files.length, bytes: plan.bytes },
-    download: { fetched: 0, reused: 0, failed: [] }, mirror: { checked: 0, missing: [], mismatched: [] },
-    parse: { props: {}, corpora: {}, notRun: [], errors: [] }, index: {}, ms: 0,
-  }
-  const setRecord = (status: string, extra: Record<string, unknown> = {}) => db.sets.put({ id: source.id, commit, status, plan: report.plan, updatedAt: Date.now(), ...extra })
+const planOf = (full: ReturnType<typeof precachePlan>): OfficialPlan => ({
+  ...full,
+  shared: { ...full },
+  bySource: { files: [], bytes: 0 },
+  byBook: { files: [], bytes: 0 },
+  byClass: { files: [], bytes: 0 },
+  byAdventure: { files: [], bytes: 0 },
+  sourceIndexes: {},
+  missing: { sources: [], books: [] },
+})
 
-  // 下载（已存的跳过 → 中断后再点安装就是续传）
-  await setRecord('downloading')
+/** 准备版本里的安装 / 解析；不发布。调用方负责操作生命周期或直接发布。 */
+export async function prepareOfficial(opts: InstallOptions & { view: LibraryView }): Promise<InstallReport> {
+  const { source, db, files, view } = opts
+  const t0 = Date.now()
+  const commit = await view.commitOf(source)
+  const storage = await storageEstimate()
+  const list = await files.fileList(source, view)
+  const plan = opts.plan ?? planOf(precachePlan(list))
+  const report: InstallReport = {
+    source: source.id, commit, storage,
+    plan: {
+      files: plan.files.length, bytes: plan.bytes,
+      shared: { files: plan.shared.files.length, bytes: plan.shared.bytes },
+      bySource: { files: plan.bySource.files.length, bytes: plan.bySource.bytes },
+      byBook: { files: plan.byBook.files.length, bytes: plan.byBook.bytes },
+      byClass: { files: plan.byClass.files.length, bytes: plan.byClass.bytes },
+      byAdventure: { files: plan.byAdventure.files.length, bytes: plan.byAdventure.bytes },
+      missing: plan.missing,
+    },
+    download: { fetched: 0, reused: 0, failed: [] }, mirror: { checked: 0, missing: [], mismatched: [] },
+    parse: { props: {}, corpora: {}, notRun: [], errors: [] }, index: {},
+    publishable: true, reasons: [], settlementReady: true, ms: 0,
+  }
+  const sources = opts.sources ?? null
+  const books = opts.books ?? null
+
+  // 下载到准备版本（沿父版本已存在的同指纹文件直接复用）
   let done = 0
-  await pool(plan.files, concurrency, async (path) => {
-    if (signal?.aborted) return
+  await pool(plan.files, opts.concurrency ?? 6, async (path) => {
+    if (opts.signal?.aborted) return
+    const expected = list[path]
     try {
-      const had = await files.local(source, path)
-      if (had === null) {
-        await files.get(source, path, { allowNetwork: true })
+      const had = await files.record(source, path, view)
+      if (had && had.gitSha === expected.sha) report.download.reused++
+      else {
+        await files.get(source, path, { allowNetwork: true, view })
         report.download.fetched++
-      } else report.download.reused++
+      }
     } catch (e) {
       report.download.failed.push({ path, error: msg(e) })
     }
-    onProgress?.({ stage: 'download', done: ++done, total: plan.files.length, item: path })
+    opts.onProgress?.({ stage: 'download', done: ++done, total: plan.files.length, item: path })
   })
 
-  if (signal?.aborted) {
+  if (opts.signal?.aborted) {
     report.cancelled = true
     report.ms = Date.now() - t0
-    await setRecord('cancelled', { ms: report.ms })
     return report
   }
 
   // 第 1 层：镜像
-  onProgress?.({ stage: 'mirror', done: 0, total: plan.files.length })
+  opts.onProgress?.({ stage: 'mirror', done: 0, total: plan.files.length })
   for (const path of plan.files) {
-    const rec = await db.files.get([source.id, path])
+    const rec = await files.record(source, path, view)
     report.mirror.checked++
-    if (!rec || rec.commit !== commit) report.mirror.missing.push(path)
+    if (!rec) report.mirror.missing.push(path)
     else if (rec.gitSha !== list[path].sha || rec.size !== list[path].size) report.mirror.mismatched.push(path)
   }
 
-  // 全量解析（第 2 层）
-  await setRecord('parsing')
-  onProgress?.({ stage: 'open-frame', done: 0, total: 0 })
-  const frame = await openFrame()
+  // 全量解析（第 2 层）；只解析这次选中的书 / 来源
+  opts.onProgress?.({ stage: 'open-frame', done: 0, total: 0 })
+  const frame = await opts.openFrame(view)
   try {
     const parsedHashes: Record<string, Set<string>> = {}
     try {
-      onProgress?.({ stage: 'author-init', done: 0, total: 0 })
+      opts.onProgress?.({ stage: 'author-init', done: 0, total: 0 })
       await frame.call('init')
     } catch (e) {
-      // 作者程序初始化失败时只报这一条，不让后面每一类都重复报同一个错
       report.parse.errors.push({ prop: '(作者程序初始化)', error: msg(e) })
       throw e
     }
-    onProgress?.({ stage: 'loaders', done: 0, total: 0 })
+    opts.onProgress?.({ stage: 'loaders', done: 0, total: 0 })
     const loaders = await frame.call('loaders')
     let n = 0
     for (const loader of loaders) {
-      onProgress?.({ stage: 'parse', done: n++, total: loaders.length, item: loader.props.join('/') })
+      opts.onProgress?.({ stage: 'parse', done: n++, total: loaders.length, item: loader.props.join('/') })
       if (loader.kind === 'corpus') {
         const prop = loader.props[0]
         if (loader.props.includes('adventureData')) {
           report.parse.notRun.push({ props: loader.props, reason: '冒险正文按需下载（作者离线规则），用到哪本再解析哪本' })
           continue
         }
-        const entry: InstallReport['parse']['corpora'][string] = (report.parse.corpora[prop] = { count: 0, failed: [] })
+        const entry: InstallReport['parse']['corpora'][string] = (report.parse.corpora[prop] = { count: 0, skipped: 0, failed: [] })
         try {
           for (const it of await frame.call('corpusList', loader.index!, prop, loader.page!)) {
+            if (books && !books.includes(it.id)) { entry.skipped++; continue }
             try {
-              onProgress?.({ stage: 'parse-corpus', done: entry.count, total: 0, item: it.id })
+              opts.onProgress?.({ stage: 'parse-corpus', done: entry.count, total: 0, item: it.id })
               const value = await frame.call('parseCorpus', loader.page!, it.source, it.hash)
-              await db.derived.put({ key: parsedKey(source.id, prop, it.id), fingerprint: commit, value, savedAt: Date.now() })
+              await view.derivedPut(parsedKey(source.id, prop, it.id), commit, value)
               entry.count++
             } catch (e) {
               entry.failed.push({ id: it.id, error: msg(e) })
@@ -192,10 +243,10 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
           continue
         }
         try {
-          onProgress?.({ stage: 'parse-prop', done: 0, total: 0, item: prop })
+          opts.onProgress?.({ stage: 'parse-prop', done: 0, total: 0, item: prop })
           const parsed = await frame.call('parseProp', prop)
           const { items, hashes } = parsed
-          await db.derived.put({ key: parsedKey(source.id, prop), fingerprint: commit, value: parsed, savedAt: Date.now() })
+          await view.derivedPut(parsedKey(source.id, prop), commit, parsed)
           report.parse.props[prop] = { count: items.length, noHash: hashes.filter((h) => h === null).length }
           parsedHashes[prop] = new Set(hashes.filter((h): h is string => h !== null))
         } catch (e) {
@@ -204,10 +255,10 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
       }
     }
 
-    // 第 5 层（辅助）：作者搜索索引对账
+    // 第 5 层（辅助）：作者搜索索引对账；按这次可见来源过滤，避免拿整套索引和部分解析比
     try {
-      onProgress?.({ stage: 'index', done: 0, total: 0 })
-      const index = await frame.call('searchIndexHashes')
+      opts.onProgress?.({ stage: 'index', done: 0, total: 0 })
+      const index = await frame.call('searchIndexHashes', sources)
       for (const prop of new Set([...Object.keys(index), ...Object.keys(parsedHashes)])) {
         const a = parsedHashes[prop] ?? new Set<string>()
         const b = new Set(index[prop] ?? [])
@@ -221,28 +272,30 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
 
     // 文档类数据（B-02）：读已下载的 data/generated/bookref-*.json，原样存；失败只记在报告里，不让整套安装失败
     try {
-      onProgress?.({ stage: 'documents', done: 0, total: 0 })
-      report.documents = { count: (await new DocumentStore(db).build(source)).length }
+      opts.onProgress?.({ stage: 'documents', done: 0, total: 0 })
+      report.documents = { count: (await new DocumentStore(db).build(source, view)).length }
     } catch (e) {
       report.documents = { count: 0, error: msg(e) }
     }
 
     // 埋在条目里的表格（B-09）：失败只记在报告里，不让整套安装失败
     try {
-      onProgress?.({ stage: 'embedded-tables', done: 0, total: 0 })
-      const built = await new EmbeddedTables(db, async () => frame).build(source.id, { frame, props: report.parse.props })
+      opts.onProgress?.({ stage: 'embedded-tables', done: 0, total: 0 })
+      const built = await new EmbeddedTables(db, async () => frame).build(source.id, { frame, props: report.parse.props, view })
       report.parse.props[EMBEDDED_PROP] = { count: built.items.length, noHash: 0 }
       report.embeddedTables = { count: built.items.length }
     } catch (e) {
       report.embeddedTables = { count: 0, error: msg(e) }
     }
 
-    // 第 6 层：把看资料 / 搜索要用的东西一次算好存库（S1）。
+    // 第 6 层：把看资料 / 搜索要用的东西一次算好存库
     try {
-      onProgress?.({ stage: 'precompute', done: 0, total: 0 })
-      report.precompute = await precomputeSource({ source, db, frame, fluff: true, excluded: true, search: true })
+      opts.onProgress?.({ stage: 'precompute', done: 0, total: 0 })
+      report.precompute = await precomputeSource({ source, db, frame, view, fluff: true, excluded: true, search: true })
+      report.settlementReady = true
     } catch (e) {
       report.parse.errors.push({ prop: '(预计算缓存)', error: msg(e) })
+      report.settlementReady = false
     }
   } catch (e) {
     if (!report.parse.errors.length) report.parse.errors.push({ prop: '(解析)', error: msg(e) })
@@ -250,11 +303,50 @@ export async function installOfficial({ source, db, files, openFrame, onProgress
     frame.close()
   }
 
-  onProgress?.({ stage: 'save', done: 0, total: 0 })
+  opts.onProgress?.({ stage: 'save', done: 0, total: 0 })
   report.ms = Date.now() - t0
-  const ok = !report.download.failed.length && !report.mirror.missing.length && !report.mirror.mismatched.length && !report.parse.errors.length
-    && Object.values(report.parse.corpora).every((c) => !c.failed.length)
-  await db.derived.put({ key: `audit:${source.id}`, fingerprint: commit, value: report, savedAt: Date.now() })
-  await setRecord(ok ? 'installed' : 'failed', { ms: report.ms })
+  const corpusFailed = Object.values(report.parse.corpora).some((c) => c.failed.length)
+  if (report.download.failed.length) report.reasons.push(`${report.download.failed.length} 个文件没下载下来`)
+  if (report.mirror.missing.length || report.mirror.mismatched.length) report.reasons.push('本地文件和云端镜像对不上')
+  if (report.parse.errors.length) report.reasons.push('作者加载器解析出错')
+  if (corpusFailed) report.reasons.push('选中的书正文解析失败')
+  report.publishable = report.reasons.length === 0
+  await view.derivedPut(`audit:${source.id}`, commit, report)
   return report
+}
+
+/** 安装 / 更新的可见集合：没给就沿用当前版本的设置（旧整套安装为 null）。 */
+export async function installOfficial(opts: InstallOptions): Promise<InstallReport> {
+  const { revisions, db, source } = opts
+  const operations = opts.operations ?? new LibraryOperations({ db, revisions })
+  if (opts.view) return prepareOfficial({ ...opts, view: opts.view })
+  const handle = await operations.begin({ kind: 'official', set: source.id, codeSet: source.codeSet, sourceIndexes: opts.plan?.sourceIndexes })
+  try {
+    if (opts.plan) await operations.setTargetIndexes(handle, opts.plan.sourceIndexes)
+    const report = await prepareOfficial({ ...opts, view: handle.target })
+    if (report.cancelled) {
+      await operations.abort(handle, new Error('已取消'), 'cancelled')
+      report.revision = handle.target.id
+      return report
+    }
+    if (!report.publishable) {
+      await operations.abort(handle, new Error(report.reasons.join('；')))
+      report.revision = handle.target.id
+      return report
+    }
+    const official: Record<string, OfficialSetState> = {
+      [source.id]: {
+        commit: report.commit, status: 'installed', sources: opts.sources ?? null, books: opts.books ?? null,
+        adventures: opts.adventures ?? null, plan: { files: report.plan.files, bytes: report.plan.bytes },
+      },
+    }
+    const published = await operations.publish(handle, {
+      official, sourceIndexes: opts.plan?.sourceIndexes ?? {}, result: report, status: report.settlementReady ? 'done' : 'partial',
+    })
+    report.revision = published.id
+    return report
+  } catch (e) {
+    await operations.abort(handle, e)
+    throw e
+  }
 }

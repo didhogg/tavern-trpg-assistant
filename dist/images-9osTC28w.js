@@ -73,43 +73,30 @@ function i(e) {
 	return t;
 }
 var a = /* @__PURE__ */ new Map();
-function o(e, n) {
-	n && n !== t[e]?.commit ? a.set(e, n) : a.delete(e);
-}
-function s(e, t, n) {
+function o(e, t, n) {
 	return e.replaceAll("{repo}", t).replaceAll("{commit}", n);
 }
+function s(e, n) {
+	return e.mirrors.map((r) => o(r, t[e.codeSet].repo, n));
+}
 function c(e, n) {
-	return e.mirrors.map((r) => s(r, t[e.codeSet].repo, n));
-}
-function l(e, n) {
 	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
-	return s(e.fileList, t[e.codeSet].repo, n);
+	return o(e.fileList, t[e.codeSet].repo, n);
 }
-function u(e, n) {
-	return s(e, t[n.codeSet].repo, p(n));
-}
-function d(e) {
-	return e.mirrors.map((t) => u(t, e));
-}
-function f(e) {
-	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
-	return u(e.fileList, e);
-}
-function p(e) {
+function l(e) {
 	return a.get(e.codeSet) ?? t[e.codeSet].commit;
 }
 // src/library/images.ts
-function m(e, t) {
+function u(e, t) {
 	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
 }
-function h(e) {
+function d(e) {
 	return r(e).imageRoots ?? [];
 }
-function g(e, t) {
-	return m(h(e), t);
+function f(e, t) {
+	return u(d(e), t);
 }
-function _(e) {
+function p(e) {
 	return e.replace(/^\/?img\//, "");
 }
-export { p as a, r as c, i as d, o as f, n as i, d as l, _ as n, f as o, t as r, l as s, g as t, c as u };
+export { l as a, s as c, n as i, i as l, p as n, c as o, t as r, r as s, f as t };

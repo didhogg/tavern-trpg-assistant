@@ -4,6 +4,7 @@ import type { DerivedRecord, LibraryDatabase } from './db'
 import type { AuthorFrame } from './runtime/host'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { SourceEntry } from './sources'
+import type { LibraryView } from './revision'
 import { commitOf, officialSourceOf } from './sources'
 import { parsedKey } from './install'
 import { hashValue, stableStringify } from '../core/hash'
@@ -28,6 +29,8 @@ export interface PrecomputeOptions {
   fluff?: boolean
   excluded?: boolean
   search?: boolean
+  /** 固定的库版本（P5 T1）；不给时按旧的单版本行为。 */
+  view?: LibraryView
 }
 
 export interface CacheOptions {
@@ -38,6 +41,7 @@ export interface CacheOptions {
   fluff?: boolean
   excluded?: boolean
   search?: boolean
+  view?: LibraryView
 }
 
 const preKey = (sourceId: string, kind: 'fluff' | 'excluded' | 'search', prop?: string): string =>
@@ -46,8 +50,8 @@ const preKey = (sourceId: string, kind: 'fluff' | 'excluded' | 'search', prop?: 
 const isRecord = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
 
 /** 源的资料基线：提交号 + 已装自制包的校验值和。 */
-export async function baseFingerprint(source: SourceEntry, db: LibraryDatabase): Promise<string> {
-  const rec = await db.derived.get(`audit:${source.codeSet}-brew`)
+export async function baseFingerprint(source: SourceEntry, db: LibraryDatabase, view?: LibraryView): Promise<string> {
+  const rec = view ? await view.derivedGet(`audit:${source.codeSet}-brew`) : await db.derived.get(`audit:${source.codeSet}-brew`)
   const installed = isRecord(rec?.value) && Array.isArray(rec.value.installed) ? rec.value.installed as Array<Record<string, unknown>> : []
   const brew = hashValue(installed.map((h) => `${String(h.docIdLocal ?? '')}:${String(h.checksum ?? '')}`).sort())
   return `${commitOf(source)}|${brew}`
@@ -59,33 +63,38 @@ export async function manageFingerprint(db: LibraryDatabase): Promise<string> {
   return hashValue(rows.map((r) => `${r.kind}|${r.key}|${stableStringify(r.value)}`).sort())
 }
 
-async function parsedProps(db: LibraryDatabase, sourceId: string): Promise<string[]> {
+async function parsedProps(db: LibraryDatabase, sourceId: string, view?: LibraryView): Promise<string[]> {
   const prefix = `parsed:${sourceId}:`
+  if (view) {
+    const map = await view.derivedKeys(prefix)
+    return [...map.keys()].filter((k) => !k.slice(prefix.length).startsWith('corpus:')).map((k) => k.slice(prefix.length))
+  }
   const recs = await db.derived.where('key').startsWith(prefix).toArray()
   return recs.filter((r) => !r.key.includes(':corpus:')).map((r) => r.key.slice(prefix.length))
 }
 
-async function put(db: LibraryDatabase, key: string, fingerprint: string, value: unknown): Promise<void> {
-  await db.derived.put({ key, fingerprint, value, savedAt: Date.now() })
+async function put(db: LibraryDatabase, key: string, fingerprint: string, value: unknown, view?: LibraryView): Promise<void> {
+  if (view) await view.derivedPut(key, fingerprint, value)
+  else await db.derived.put({ key, fingerprint, value, savedAt: Date.now() })
 }
 
 /** 装书 / 改自制后一次算好；frame 必须是已经加载好作者数据的那一个。 */
 export async function precomputeSource(opts: PrecomputeOptions): Promise<PrecomputeReport> {
   const t0 = Date.now()
   const { source, db, frame } = opts
-  const base = await baseFingerprint(source, db)
+  const base = await baseFingerprint(source, db, opts.view)
   const manage = await manageFingerprint(db)
   const excludeList = opts.excluded || opts.search ? await frame.call('excludeList') : null
   const exclude = excludeList ? hashValue(excludeList) : ''
-  const props = opts.prop ? [opts.prop] : await parsedProps(db, source.id)
+  const props = opts.prop ? [opts.prop] : await parsedProps(db, source.id, opts.view)
   const report: PrecomputeReport = { source: source.id, base, props: props.length, fluff: 0, excluded: 0, search: false, searchBytes: 0, ms: 0 }
   for (const prop of props) {
-    const rec = await db.derived.get(parsedKey(source.id, prop))
+    const rec = opts.view ? await opts.view.derivedGet(parsedKey(source.id, prop)) : await db.derived.get(parsedKey(source.id, prop))
     const parsed = rec?.value as ParsedProp | undefined
     if (!parsed?.items.length) continue
     if (opts.fluff) {
       const fluff = await frame.call('fluffOfMany', prop, parsed.items)
-      await put(db, preKey(source.id, 'fluff', prop), base, fluff)
+      await put(db, preKey(source.id, 'fluff', prop), base, fluff, opts.view)
       report.fluff += Object.keys(fluff).length
     }
     if (opts.excluded) {
@@ -104,13 +113,13 @@ export async function precomputeSource(opts: PrecomputeOptions): Promise<Precomp
       }
       const excluded: Record<string, boolean> = {}
       if (flags.excluded) flags.hashes.forEach((h, i) => { if (h) excluded[h] = flags.excluded![i] })
-      await put(db, preKey(source.id, 'excluded', prop), `${base}|${exclude}|${manage}`, { excluded: flags.excluded ? excluded : null, base, exclude, manage })
+      await put(db, preKey(source.id, 'excluded', prop), `${base}|${exclude}|${manage}`, { excluded: flags.excluded ? excluded : null, base, exclude, manage }, opts.view)
       report.excluded++
     }
   }
   if (opts.search && source.kind === 'official') {
     const dump = await frame.call('searchIndexDump')
-    await put(db, preKey(source.id, 'search'), `${base}|${exclude}|${manage}`, { ...dump, base, exclude, manage })
+    await put(db, preKey(source.id, 'search'), `${base}|${exclude}|${manage}`, { ...dump, base, exclude, manage }, opts.view)
     report.search = true
     report.searchBytes = dump.json.length
   }
@@ -127,25 +136,25 @@ export async function ensurePrecomputed(opts: CacheOptions): Promise<void> {
   const { source, db, openFrame } = opts
   // 这一类在这一套里本来就没有条目（自制常见）：没有东西可算，也就永远存不下缓存；不跳过的话每查一次就开一个新小窗（P5-1 B-41）
   if (opts.prop) {
-    const parsed = (await db.derived.get(parsedKey(source.id, opts.prop)))?.value as { items?: unknown[] } | undefined
+    const parsed = (opts.view ? await opts.view.derivedGet(parsedKey(source.id, opts.prop)) : await db.derived.get(parsedKey(source.id, opts.prop)))?.value as { items?: unknown[] } | undefined
     if (!parsed?.items?.length) return
   }
-  const base = await baseFingerprint(source, db)
+  const base = await baseFingerprint(source, db, opts.view)
   const manage = await manageFingerprint(db)
   let needFluff = false
   let needExcluded = false
   let needSearch = false
   if (opts.fluff) {
-    const rec = await record(db, preKey(source.id, 'fluff', opts.prop))
+    const rec = opts.view ? await opts.view.derivedGet(preKey(source.id, 'fluff', opts.prop)) : await record(db, preKey(source.id, 'fluff', opts.prop))
     needFluff = !rec || rec.fingerprint !== base
   }
   if (opts.excluded) {
-    const rec = await record(db, preKey(source.id, 'excluded', opts.prop))
+    const rec = opts.view ? await opts.view.derivedGet(preKey(source.id, 'excluded', opts.prop)) : await record(db, preKey(source.id, 'excluded', opts.prop))
     const value = isRecord(rec?.value) ? rec.value : null
     needExcluded = !value || value.base !== base || value.manage !== manage
   }
   if (opts.search) {
-    const rec = await record(db, preKey(source.id, 'search'))
+    const rec = opts.view ? await opts.view.derivedGet(preKey(source.id, 'search')) : await record(db, preKey(source.id, 'search'))
     const value = isRecord(rec?.value) ? rec.value : null
     needSearch = !value || value.base !== base || value.manage !== manage
   }
@@ -158,10 +167,15 @@ export async function ensurePrecomputed(opts: CacheOptions): Promise<void> {
   }
 }
 
-export async function invalidatePrecompute(db: LibraryDatabase, sourceId: string, kinds: Array<'fluff' | 'excluded' | 'search'>): Promise<void> {
+export async function invalidatePrecompute(db: LibraryDatabase, sourceId: string, kinds: Array<'fluff' | 'excluded' | 'search'>, view?: LibraryView): Promise<void> {
   for (const kind of kinds) {
     const prefix = preKey(sourceId, kind)
-    await db.derived.where('key').startsWith(prefix).delete()
+    if (view) {
+      const old = await view.derivedKeys(prefix)
+      for (const key of old.keys()) await view.derivedDelete(key)
+    } else {
+      await db.derived.where('key').startsWith(prefix).delete()
+    }
   }
 }
 
@@ -169,22 +183,22 @@ export async function invalidatePrecompute(db: LibraryDatabase, sourceId: string
 
 export type FluffRecord = { fluff: unknown; fluffError: string | null; engSiteHash: string | null }
 
-export async function fluffOf(db: LibraryDatabase, sourceId: string, prop: string, hash: string): Promise<FluffRecord | null> {
-  const rec = await record(db, preKey(sourceId, 'fluff', prop))
+export async function fluffOf(db: LibraryDatabase, sourceId: string, prop: string, hash: string, view?: LibraryView): Promise<FluffRecord | null> {
+  const rec = view ? await view.derivedGet(preKey(sourceId, 'fluff', prop)) : await record(db, preKey(sourceId, 'fluff', prop))
   const map = isRecord(rec?.value) ? rec.value : null
   const hit = map?.[hash]
   return isRecord(hit) ? hit as unknown as FluffRecord : null
 }
 
-export async function excludedOf(db: LibraryDatabase, sourceId: string, prop: string): Promise<Record<string, boolean> | null> {
-  const rec = await record(db, preKey(sourceId, 'excluded', prop))
+export async function excludedOf(db: LibraryDatabase, sourceId: string, prop: string, view?: LibraryView): Promise<Record<string, boolean> | null> {
+  const rec = view ? await view.derivedGet(preKey(sourceId, 'excluded', prop)) : await record(db, preKey(sourceId, 'excluded', prop))
   const value = isRecord(rec?.value) ? rec.value : null
   const excluded = value?.excluded
   return isRecord(excluded) ? excluded as Record<string, boolean> : null
 }
 
-export async function searchIndexOf(db: LibraryDatabase, sourceId: string): Promise<Record<string, unknown> | null> {
-  const rec = await record(db, preKey(sourceId, 'search'))
+export async function searchIndexOf(db: LibraryDatabase, sourceId: string, view?: LibraryView): Promise<Record<string, unknown> | null> {
+  const rec = view ? await view.derivedGet(preKey(sourceId, 'search')) : await record(db, preKey(sourceId, 'search'))
   return isRecord(rec?.value) ? rec.value : null
 }
 

@@ -5,6 +5,7 @@ import type { LibraryService } from './service'
 import type { SearchHit } from './runtime/frame/read-commands'
 import { refKey, ruleScopes, type CampaignLibrary, type Assignment, type EntryRef, type Membership, type ViewReason } from './scopes'
 import type { SourceEntry } from './sources'
+import type { LibraryView } from './revision'
 import type { VariantInfo } from './versions'
 
 /** 命中点开后走哪条路。 */
@@ -26,7 +27,7 @@ export function routeHit(hit: Pick<SearchHit, 'prop' | 'doc'>, corpus: CorpusInd
   if (!hit.prop) return null
   const byProp = corpus.get(hit.prop)
   if (byProp) {
-    const row = byProp.get(hash.toLowerCase())
+    const row = byProp.get(hash.toLowerCase())?.[0]
     return row ? { target: { kind: 'corpus', prop: hit.prop, id: row.id, source: row.source, set: row.set ?? null }, hash } : null
   }
   return { target: { kind: 'entry' }, hash }
@@ -36,7 +37,9 @@ export interface SearchDeps {
   lib: LibraryService
   links: EntryLinks
   sets: SourceEntry[]
+  view: LibraryView
   installed: (set: SourceEntry) => Promise<boolean>
+  readable: (set: SourceEntry) => Promise<boolean>
   viewFor: (c: CampaignLibrary, ref: EntryRef, source: string | null, assigns: Map<string, Assignment>) => Promise<{ visible: boolean; reason: ViewReason; membership: Membership }>
   assignments: () => Promise<Map<string, Assignment>>
   houseUnits: () => Promise<Set<string>>
@@ -46,9 +49,9 @@ export interface SearchDeps {
 export async function scopedSearch(d: SearchDeps, c: CampaignLibrary, term: string): Promise<ScopedSearchHit[]> {
   const official = d.sets.find((s) => s.kind === 'official')
   if (!official || !(await d.installed(official))) return []
-  const hits = await d.lib.search(official.id, term, { showLegacy: ruleScopes(c.rule).showLegacy })
-  const corpus = await d.links.corpusIndex(c.codeSet)
-  const documentIds = await d.links.documentIds(c.codeSet)
+  const hits = await d.lib.search(official.id, term, { showLegacy: ruleScopes(c.rule).showLegacy, view: d.view })
+  const corpus = await d.links.corpusIndex(c.codeSet, d.view)
+  const documentIds = await d.links.documentIds(c.codeSet, d.view)
   const assigns = await d.assignments()
   const house = await d.houseUnits()
   const out: ScopedSearchHit[] = []
@@ -57,7 +60,7 @@ export async function scopedSearch(d: SearchDeps, c: CampaignLibrary, term: stri
     if (!routed) continue
     const source = typeof h.doc.s === 'string' ? h.doc.s : null
     const located = routed.target.kind === 'entry'
-      ? await d.links.locate(c.codeSet, h.prop, routed.hash)
+      ? await d.links.locate(c.codeSet, h.prop, routed.hash, d.view)
       : { set: routed.target.kind === 'corpus' && routed.target.set ? routed.target.set : official.id, prop: routed.target.kind === 'document' ? 'document' : h.prop }
     if (!located) continue
     const ref: EntryRef = { set: located.set, prop: located.prop, hash: routed.hash }

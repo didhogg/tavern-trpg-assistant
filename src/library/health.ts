@@ -142,8 +142,13 @@ function brewItems(input: HealthInput): HealthItem[] {
 /** 一个源的体检项。纯函数：输入是存下的报告，输出统一格式。 */
 export function healthItemsOf(input: HealthInput): HealthItem[] {
   const id = input.source.id
-  if (!input.installed && input.source.kind === 'official') return [item(id, 'not-installed', 'info', '还没安装', [])]
   const out: HealthItem[] = []
+  if (!input.installed && input.source.kind === 'official') {
+    out.push(item(id, 'not-installed', 'info', '还没安装', []))
+    // 失败安装的报告不能因为“还没装好”就被遮掉（P5 M7）
+    if (input.install) out.push(...officialItems(id, input.install))
+    return out
+  }
   if (input.install) out.push(...officialItems(id, input.install))
   if (input.english) out.push(...englishItems(id, input.english))
   else if (input.source.pair && input.installed) out.push(item(id, 'english', 'info', '还没算中英配对覆盖率', []))

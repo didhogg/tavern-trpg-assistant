@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { LibraryDatabase } from '../../../src/library/db'
 import { uninstallOfficial } from '../../../src/library/uninstall'
+import { LibraryRevisionStore } from '../../../src/library/revision'
 import type { TaskState } from '../../../src/library/tasks'
 
 let db: LibraryDatabase
@@ -29,7 +30,7 @@ describe('整套官方资料删除', () => {
     db = new LibraryDatabase(`test-uninstall-${Math.random()}`)
     await seed()
     let reset = ''
-    const r = await uninstallOfficial({ db, tasks: { list: () => [] }, afterDelete: (id) => { reset = id } }, 'cn-official')
+    const r = await uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [] }, afterDelete: (id) => { reset = id } }, 'cn-official')
     expect(r).toMatchObject({ set: 'cn-official', files: 2, bytes: 150, brewKept: true })
     expect(reset).toBe('cn-official')
     expect(await db.files.where('source').equals('cn-official').count()).toBe(0)
@@ -46,16 +47,27 @@ describe('整套官方资料删除', () => {
   it('正在下载 / 换算时拒绝，什么都不删；自制源不能当官方整套删', async () => {
     db = new LibraryDatabase(`test-uninstall2-${Math.random()}`)
     await seed()
-    await expect(uninstallOfficial({ db, tasks: { list: () => [task('cn-official', 'running')] }, afterDelete: () => {} }, 'cn-official')).rejects.toThrow(/正在下载/)
+    await expect(uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [task('cn-official', 'running')] }, afterDelete: () => {} }, 'cn-official')).rejects.toThrow(/正在下载/)
     expect(await db.files.where('source').equals('cn-official').count()).toBe(2)
-    await expect(uninstallOfficial({ db, tasks: { list: () => [] }, afterDelete: () => {} }, 'cn-brew')).rejects.toThrow(/不是官方数据集/)
+    await expect(uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [] }, afterDelete: () => {} }, 'cn-brew')).rejects.toThrow(/不是官方数据集/)
     // 别的套在下载不影响这一套
-    await uninstallOfficial({ db, tasks: { list: () => [task('en-official', 'running'), task('cn-official', 'done')] }, afterDelete: () => {} }, 'cn-official')
+    await uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [task('en-official', 'running'), task('cn-official', 'done')] }, afterDelete: () => {} }, 'cn-official')
     expect(await db.sets.get('cn-official')).toBeUndefined()
+  })
+
+  it('中英两套一次删：同一份检查，全部目标一起发布移除', async () => {
+    db = new LibraryDatabase(`test-uninstall4-${Math.random()}`)
+    await seed()
+    const r = await uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [] }, afterDelete: () => {} }, ['cn-official', 'en-official'])
+    expect(r).toMatchObject({ sets: ['cn-official', 'en-official'], files: 4, bytes: 300 })
+    expect(await db.files.where('source').equals('cn-official').count()).toBe(0)
+    expect(await db.files.where('source').equals('en-official').count()).toBe(0)
+    expect(await db.sets.get('cn-official')).toBeUndefined()
+    expect(await db.sets.get('en-official')).toBeUndefined()
   })
 
   it('没装的也能删（什么都没有，不报错）', async () => {
     db = new LibraryDatabase(`test-uninstall3-${Math.random()}`)
-    expect(await uninstallOfficial({ db, tasks: { list: () => [] }, afterDelete: () => {} }, 'en-official')).toMatchObject({ files: 0, bytes: 0, brewKept: false })
+    expect(await uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [] }, afterDelete: () => {} }, 'en-official')).toMatchObject({ files: 0, bytes: 0, brewKept: false })
   })
 })

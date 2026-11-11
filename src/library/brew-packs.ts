@@ -1,11 +1,11 @@
-// 自制包清单（P5 B-11）：已装的每个自制包——从哪来、有哪些来源、谁做的、依赖谁、多少条。
-// 数据都来自作者包管理器（已装包的包头 + 文件元数据 _meta）和包里每条的作者编号（brewDocIndex），这里只拼成界面用的一张表。
-// 书架（从下载页下来的包）、【我的库】（本地导入的文件、自己写的内容）、下载页的"已装"标记都用它。
+// 自制包清单（P5 B-11 / T4）：已装的每个自制包——从哪来、有哪些来源、谁做的、依赖谁、多少条。
+// 数据都来自作者包管理器（已装包的包头 + 文件元数据 _meta）和包里每条的作者编号（brewDocIndex）。
+// P5 T4：官方资料没装时也能从作者存储原文列出包 / 导出（不再返回空清单冒充没包）。
 import type { LibraryService } from './service'
 import type { ShelfInfo } from './shelf'
+import type { LibraryView } from './revision'
 import { SOURCES } from './sources'
 
-/** 来历：download = 从自制仓库下载（有网址）；import = 本地导入的文件；editable = 自己写的（可编辑的"我的资料 / 房规"）。 */
 export type PackOrigin = 'download' | 'import' | 'editable'
 
 export interface SourceInfo {
@@ -38,45 +38,61 @@ export interface BrewPack {
 }
 
 type Meta = { sources?: Array<Record<string, any>>; dependencies?: unknown; includes?: unknown } | null // eslint-disable-line @typescript-eslint/no-explicit-any -- 作者文件元数据没有类型
+type StoredDoc = { head: Record<string, unknown>; body?: { _meta?: Meta } }
 
 const originOf = (head: Record<string, unknown>): PackOrigin => (head.isEditable ? 'editable' : head.url ? 'download' : 'import')
+const sourcesOf = (meta: Meta): string[] => (meta?.sources ?? []).map((s) => String(s.json ?? '')).filter(Boolean)
+const sourceInfoOf = (meta: Meta): SourceInfo[] => (meta?.sources ?? []).map((s) => ({
+  json: String(s.json ?? ''), full: s.full ?? null, abbreviation: s.abbreviation ?? null,
+  authors: Array.isArray(s.authors) ? s.authors.map(String) : [], version: s.version ?? null, dateReleased: s.dateReleased ?? null,
+}))
 
 export class BrewPacks {
   constructor(private readonly lib: LibraryService) {}
 
   /** 这套自制（cn-brew / en-brew）里已装的包。 */
-  async list(brewSetId: string): Promise<BrewPack[]> {
+  async list(brewSetId: string, viewArg?: LibraryView): Promise<BrewPack[]> {
     const set = SOURCES.find((s) => s.id === brewSetId && s.kind === 'brew')
     if (!set) throw new Error(`${brewSetId} 不是自制源`)
-    // 作者程序启动要读官方数据；官方没装就读不了自制，给空清单（书架会提示"重装官方资料后才能读自制"，P5-1 B-37）
-    if (!(await this.lib.officialInstalled(set.codeSet))) return []
-    const installed = await this.lib.brewInstalled(brewSetId)
-    const docs = await (await this.lib.frameOf(set.codeSet)).call('brewDocIndex')
-    const byId = new Map(docs.map((d) => [d.docIdLocal, d]))
-    return installed.map((e) => {
-      const head = e.head as Record<string, unknown>
-      const meta = e.meta as Meta
+    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
+    const officialOk = await this.lib.officialInstalled(set.codeSet, view)
+    if (officialOk) {
+      const installed = await this.lib.brewInstalled(brewSetId, view)
+      const docs = await (await this.lib.frameOf(set.codeSet, view)).call('brewDocIndex')
+      const byId = new Map(docs.map((d) => [d.docIdLocal, d]))
+      return installed.map((e) => {
+        const head = e.head as Record<string, unknown>
+        const meta = e.meta as Meta
+        const id = String(head.docIdLocal ?? '')
+        const doc = byId.get(id)
+        const hashes = Object.fromEntries(Object.entries(doc?.props ?? {}).map(([k, hs]) => [k, hs.filter((h): h is string => !!h)]).filter(([, hs]) => (hs as string[]).length > 0)) as Record<string, string[]>
+        const props = Object.fromEntries(Object.entries(hashes).map(([k, hs]) => [k, hs.length]))
+        return {
+          docIdLocal: id, filename: (head.filename as string | undefined) ?? null, url: (head.url as string | undefined) ?? null, origin: originOf(head),
+          isEditable: !!head.isEditable, timeAdded: Number(head.timeAdded ?? 0), sources: doc?.sources ?? sourcesOf(meta), sourceInfo: sourceInfoOf(meta),
+          dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null,
+          props: props as Record<string, number>, hashes, entryCount: Object.values(props as Record<string, number>).reduce((a, b) => a + b, 0),
+        }
+      })
+    }
+    // 官方资料没装：直接读作者存储原文，包头和来源信息都在，仍能列出 / 导出；条目索引要作者程序，先不给。
+    const raw = (await view.kvGet(set.codeSet, 'HOMEBREW_2_STORAGE')) as StoredDoc[] | null
+    return (Array.isArray(raw) ? raw : []).filter((d) => d?.head).map((d) => {
+      const head = d.head
+      const meta = d.body?._meta ?? null
       const id = String(head.docIdLocal ?? '')
-      const doc = byId.get(id)
-      const hashes = Object.fromEntries(Object.entries(doc?.props ?? {}).map(([k, hs]) => [k, hs.filter((h): h is string => !!h)]).filter(([, hs]) => (hs as string[]).length > 0)) as Record<string, string[]>
-      const props = Object.fromEntries(Object.entries(hashes).map(([k, hs]) => [k, hs.length]))
-      const sourceInfo: SourceInfo[] = (meta?.sources ?? []).map((s) => ({
-        json: String(s.json ?? ''), full: s.full ?? null, abbreviation: s.abbreviation ?? null,
-        authors: Array.isArray(s.authors) ? s.authors.map(String) : [], version: s.version ?? null, dateReleased: s.dateReleased ?? null,
-      }))
       return {
         docIdLocal: id, filename: (head.filename as string | undefined) ?? null, url: (head.url as string | undefined) ?? null, origin: originOf(head),
-        isEditable: !!head.isEditable, timeAdded: Number(head.timeAdded ?? 0), sources: doc?.sources ?? sourceInfo.map((s) => s.json), sourceInfo,
-        dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null,
-        props: props as Record<string, number>, hashes, entryCount: Object.values(props as Record<string, number>).reduce((a, b) => a + b, 0),
+        isEditable: !!head.isEditable, timeAdded: Number(head.timeAdded ?? 0), sources: sourcesOf(meta), sourceInfo: sourceInfoOf(meta),
+        dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null, props: {}, hashes: {}, entryCount: 0,
       }
     })
   }
 
   /** 来源标识（小写）→ 来源信息，书架给自制行补作者、日期用。 */
-  async sourceInfoMap(brewSetId: string): Promise<Map<string, SourceInfo>> {
+  async sourceInfoMap(brewSetId: string, view?: LibraryView): Promise<Map<string, SourceInfo>> {
     const out = new Map<string, SourceInfo>()
-    for (const p of await this.list(brewSetId)) for (const s of p.sourceInfo) if (!out.has(s.json.toLowerCase())) out.set(s.json.toLowerCase(), s)
+    for (const p of await this.list(brewSetId, view)) for (const s of p.sourceInfo) if (!out.has(s.json.toLowerCase())) out.set(s.json.toLowerCase(), s)
     return out
   }
 }

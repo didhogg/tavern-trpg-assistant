@@ -5,6 +5,7 @@
 import type { ScopedLibrary } from '../../library/scoped'
 import type { EntryRef } from '../../library/scopes'
 import { officialSourceOf } from '../../library/sources'
+import type { LibraryView } from '../../library/revision'
 
 export interface KernelEntry {
   entry: unknown
@@ -14,9 +15,9 @@ export interface KernelEntry {
   reason?: string
 }
 
-export async function kernelEntryOf(scoped: ScopedLibrary, codeSet: string, ref: EntryRef, item: unknown, altId: string): Promise<KernelEntry> {
+export async function kernelEntryOf(scoped: ScopedLibrary, codeSet: string, ref: EntryRef, item: unknown, altId: string, view?: LibraryView): Promise<KernelEntry> {
   if (officialSourceOf(codeSet).lang !== 'zh') return { entry: item, noEnglish: false }
   if (altId !== 'base') return { entry: item, noEnglish: true, reason: 'alternative' }
-  const en = await scoped.englishOf(ref, { fluff: false })
+  const en = await scoped.englishOf(ref, { fluff: false }, view)
   return en?.status === 'found' ? { entry: en.item, noEnglish: false } : { entry: item, noEnglish: true, reason: en?.status ?? 'english-missing' }
 }

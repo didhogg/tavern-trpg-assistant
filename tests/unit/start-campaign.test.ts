@@ -38,6 +38,7 @@ function fakeLibrary() {
       directory: {},
       scoped: { activeOverrides: async () => [], scopes: async () => [], shelf: async () => ({ groups: [], booksError: null, adventuresError: null }) },
       tasks,
+      revisions: { published: async () => ({ officialState: async (id: string) => installed.has(id) ? { id, status: 'installed', commit: 'c', sources: null, books: null, adventures: null } : recorded.has(id) ? { id, status: 'missing', commit: 'c', sources: [], books: [], adventures: [] } : null }) },
       dataVersion: async () => ({ official: installed.size ? 'v1' : '', brews: {} }),
     },
   }

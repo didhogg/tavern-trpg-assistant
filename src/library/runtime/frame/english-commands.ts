@@ -23,14 +23,17 @@ export interface LocatedDoc {
  * 作者在单文件型里先排序再建索引，但定位是排序前算好的（fnGetEntityLocator）；这里不排序，
  * Omnidexer 自己算的定位就是同一个值（omnidexer.js 第 199–207 行）。特殊索引（TO_INDEX__SPECIAL）作者这里也没有文件，跳过。
  */
-export async function englishLocators(): Promise<LocatedDoc[]> {
+export async function englishLocators(sources?: string[] | null): Promise<LocatedDoc[]> {
   await init()
+  const keep = sources ? new Set(sources.map((s) => s.toUpperCase())) : null
   const out: LocatedDoc[] = []
   const add = async (indexMeta: any, data: any, file: string): Promise<void> => {
     const indexer = new A.Omnidexer()
     await indexer.pAddToIndex(indexMeta, data, { isNoFilter: true, isIncludeEntityLocator: true })
     for (const d of indexer.getIndex().x) {
       if (!d._entityLocator) continue
+      const source = d._entityLocator.source ? String(d._entityLocator.source).toUpperCase() : null
+      if (keep && source && !keep.has(source)) continue
       out.push({ prop: A.Parser.pageCategoryToProp(d.c), hash: d.u, file, locator: d._entityLocator })
     }
   }

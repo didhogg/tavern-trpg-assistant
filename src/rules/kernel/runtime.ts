@@ -6,6 +6,7 @@ import type { KernelActorCompact } from '../../core/saves/kernel'
 import type { KernelRefMapper } from '../../core/saves/split'
 import type { FileProvider } from '../../library/files'
 import type { ScopedLibrary } from '../../library/scoped'
+import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { CampaignLibrary } from '../../library/scopes'
 import type { KernelActor } from '../../schemas/kernel'
 import type { EntryRef } from '../../library/scopes'
@@ -28,6 +29,7 @@ export interface KernelRuntimeDeps {
   pluginRoot: URL
   files: FileProvider
   scoped: ScopedLibrary
+  revisions: LibraryRevisionStore
   /** 小窗挂在哪里（隐藏 iframe 的父元素）。 */
   container: () => HTMLElement
   /** 本战役的规则与选书（从存档的内核段读）。 */
@@ -47,6 +49,7 @@ interface Open {
   seeds: Map<string, string>
   boot: unknown
   bootMs: number
+  view: LibraryView
   cache: KernelCache | null
   cacheBase: string
   dataVersion: () => Promise<KernelDataVersion>
@@ -69,8 +72,9 @@ export class KernelRuntime {
     const opening = (async () => {
       const campaign = await this.deps.campaignOf(ownerKey)
       const started = performance.now()
+      const view = await this.deps.revisions.published()
       const session = await startKernel({
-        pluginRoot: this.deps.pluginRoot, container: this.deps.container(), data: libraryData(this.deps.files),
+        pluginRoot: this.deps.pluginRoot, container: this.deps.container(), data: libraryData(this.deps.files, view),
         fetchImpl: this.deps.fetchImpl, timeoutMs: this.deps.timeoutMs ?? 180_000,
       })
       const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
@@ -78,7 +82,7 @@ export class KernelRuntime {
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
       const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, this.deps.cache!.dataVersion, campaign.rule) : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, dataVersion: this.deps.cache?.dataVersion ?? (async () => ({ official: '', brews: {} })) }
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, view, dataVersion: this.deps.cache?.dataVersion ?? (async () => ({ official: '', brews: {} })) }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => this.open.delete(ownerKey))
@@ -175,13 +179,15 @@ export class KernelRuntime {
   /** 引用 → 【库】条目（中文战役交英文对照），给建卡/加条目/批量建共用。 */
   private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
     const lib = await this.library(ownerKey)
-    const fetched = await this.deps.scoped.fetch(lib, refs)
+    const existing = this.open.get(ownerKey)
+    const view = existing ? (await existing).view : await this.deps.revisions.published()
+    const fetched = await this.deps.scoped.fetch(lib, refs, view)
     const rows = []
     const noEnglish: EntryRef[] = []
     for (let i = 0; i < refs.length; i++) {
       const got = fetched[i]
       if (!got.ok) return { status: 'missing', error: `取不到 ${refs[i].hash}：${got.reason}`, rows: [], noEnglish: [] }
-      const k = await kernelEntryOf(this.deps.scoped, lib.codeSet, got.ref as EntryRef, got.item, got.version.altId)
+      const k = await kernelEntryOf(this.deps.scoped, lib.codeSet, got.ref as EntryRef, got.item, got.version.altId, view)
       if (k.noEnglish) noEnglish.push(refs[i])
       rows.push({ ref: refs[i], entry: k.entry })
     }
@@ -229,7 +235,7 @@ export class KernelRuntime {
     }
     for (const index of misses) {
       const actor = actors[index]
-      const result = await rebuildActor({ lib: this.deps.scoped, session: o.session, library: lib, actor })
+      const result = await rebuildActor({ lib: this.deps.scoped, session: o.session, library: lib, actor, view: o.view })
       results[index] = result
       if (result.status === 'complete') {
         if (!result.id || !result.base) throw new Error(`重建 ${actor.name} 没有交回人物编号或重建基准`)

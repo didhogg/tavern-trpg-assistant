@@ -13,9 +13,58 @@ export interface DirectoryData {
   corpora: Array<{ prop: string; items: any[]; files: string[]; error: string | null }>
   /** 书目里出现的每个来源：全名、缩写、版本归类（作者函数）。 */
   sources: Record<string, { full: string; abv: string; edition: EditionInfo }>
+  /** 来源 → 文件映射与职业文件（P5 T2 按书计划用）。 */
+  sourceFiles: SourceFiles
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
+
+/** 一个来源索引文件：目录名、索引文件路径、来源 → 文件。 */
+export interface SourceFileMap {
+  /** 作者程序里的目录名（data/<dir>/…）。 */
+  dir: string
+  /** 作者自己读的索引文件路径（index.json / fluff-index.json）。 */
+  indexPath: string
+  /** 来源标识 → 文件名的索引（作者自己的 index.json 原文）。 */
+  index: Record<string, string>
+}
+
+export interface SourceFiles {
+  /** 按类别：多来源加载器的来源 → 文件映射。 */
+  maps: Record<string, SourceFileMap>
+  /** 作者按职业拆的文件（data/class/index.json 的值）；这些文件不按来源拆。 */
+  classFiles: string[]
+}
+
+/** 作者的来源 → 文件映射与职业文件清单（P5 T2）；全部问作者，不手抄书单 / 文件名。 */
+export async function sourceFiles(): Promise<SourceFiles> {
+  await init()
+  const maps: SourceFiles['maps'] = {}
+  const seen = new Set<string>()
+  for (const loader of A.DataLoader._DATA_TYPE_LOADER_LIST) {
+    for (const prop of (loader.constructor.PROPS as string[])) {
+      if (seen.has(prop) || prop.startsWith('raw_')) continue
+      seen.add(prop)
+      const cfg = A.DataUtil[prop]
+      if (!cfg || typeof cfg.pLoadIndex !== 'function') continue
+      const dir = String(cfg._DIR ?? '')
+      if (!dir) continue
+      try {
+        maps[prop] = {
+          dir,
+          indexPath: `data/${dir}/${prop.endsWith('Fluff') ? 'fluff-' : ''}index.json`,
+          index: await cfg.pLoadIndex(),
+        }
+      } catch { /* 这个加载器没有来源索引，按共用文件处理 */ }
+    }
+  }
+  let classFiles: string[]
+  try {
+    const index = await A.DataUtil.loadRawJSON('data/class/index.json')
+    classFiles = [...new Set(Object.values(index ?? {}).map((f) => `data/class/${String(f)}`))]
+  } catch { classFiles = [] }
+  return { maps, classFiles }
+}
 
 export async function directory(specs: Array<{ index: string; prop: string }>): Promise<DirectoryData> {
   await init()
@@ -33,5 +82,5 @@ export async function directory(specs: Array<{ index: string; prop: string }>): 
   const editions = names.length ? await editionOf(names) : {}
   const sources: DirectoryData['sources'] = {}
   for (const s of names) sources[s] = { full: A.Parser.sourceJsonToFull(s), abv: A.Parser.sourceJsonToAbv(s), edition: editions[s] }
-  return { groups: (A.SourceUtil.ADV_BOOK_GROUPS as DirectoryData['groups']).map((g) => ({ ...g })), corpora, sources }
+  return { groups: (A.SourceUtil.ADV_BOOK_GROUPS as DirectoryData['groups']).map((g) => ({ ...g })), corpora, sources, sourceFiles: await sourceFiles() }
 }

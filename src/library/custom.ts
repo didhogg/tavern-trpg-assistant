@@ -50,12 +50,6 @@ export class CustomLibrary {
     return this.lib.frameOf(codeSet)
   }
 
-  /** 改完以后：作者重解析 + 同编号挂备选；作者判断缓存清掉。 */
-  private async after(codeSet: string) {
-    this.scoped.reset()
-    return this.lib.reparseBrew(brewSetOf(codeSet).id)
-  }
-
   /** JSON 结构校验（作者的自制结构定义）：传原文错误带行列，传对象只有路径。目前只有 kind: 'brew'。 */
   validate(input: string | unknown, _opts: { kind: 'brew' } = { kind: 'brew' }): Promise<BrewValidation> {
     return validateBrewJson(input)
@@ -88,19 +82,20 @@ export class CustomLibrary {
 
   /** 写一条新条目（或改：带作者的 uniqueId 就是改那一条）。来源默认是插件的"我的资料"。 */
   async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>) {
-    const f = await this.frame(codeSet)
-    await f.call('editableEnsureSource', CUSTOM.mine)
-    const saved = await f.call('editablePut', prop, { source: CUSTOM.mine.json, ...ent })
-    // 结构问题只提示不拦截（作者的编辑器已经按结构引导；有疑问由界面决定是否提醒）
-    const parse = await this.after(codeSet)
+    const result = await this.lib.mutateAuthor(codeSet, 'custom-entry', async (view) => {
+      const f = await this.lib.frameOf(codeSet, view)
+      await f.call('editableEnsureSource', CUSTOM.mine)
+      return f.call('editablePut', prop, { source: CUSTOM.mine.json, ...ent })
+    })
+    const saved = result.value
     // 另一种语言里有没有对上的条目（按英文名 + 来源）：只返回提示，保存时不改任何一边的条目
     const counterpart = saved.hash && this.counterpartHint ? await this.counterpartHint({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }) : null
-    return { ...saved, parse, issues: await this.validateEntry(prop, ent), counterpart }
+    return { ...saved, parse: result.parse, issues: await this.validateEntry(prop, ent), counterpart }
   }
 
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {
-    await (await this.frame(codeSet)).call('editableRemove', prop, uniqueIds)
-    return this.after(codeSet)
+    const result = await this.lib.mutateAuthor(codeSet, 'custom-delete', async (view) => (await this.lib.frameOf(codeSet, view)).call('editableRemove', prop, uniqueIds))
+    return result.parse
   }
 
   /**
@@ -112,6 +107,7 @@ export class CustomLibrary {
     if (!stored) throw new Error(`找不到要改的条目：${refKey(target)}`)
     const base = stored.item as { name?: string; source?: string }
     if (!base.name || !base.source) throw new Error(`原件没有名字或来源，作者的 _copy 指不到它：${refKey(target)}`)
+    const baseSource = base.source
     // 房规来源里同名的只能有一条（作者编号 = 名字 + 来源）；同名不同书的加书名缩写区分
     const taken = new Set<string>()
     for (const l of await this.manage.houseRules()) {
@@ -121,23 +117,26 @@ export class CustomLibrary {
     const name = taken.has(base.name) ? `${base.name}（${base.source}）` : base.name
     const ent = edit.entity
       ? { ...edit.entity, name, source: CUSTOM.house.json }
-      : { name, source: CUSTOM.house.json, _copy: { name: base.name, source: base.source, ...(edit.mod ? { _mod: edit.mod } : {}) } }
-    const f = await this.frame(c.codeSet)
-    await f.call('editableEnsureSource', CUSTOM.house)
-    if (!edit.entity) await f.call('editableAddDependencies', { [target.prop]: [base.source] })
-    const saved = await f.call('editablePut', target.prop, ent)
+      : { name, source: CUSTOM.house.json, _copy: { name: base.name, source: baseSource, ...(edit.mod ? { _mod: edit.mod } : {}) } }
+    const result = await this.lib.mutateAuthor(c.codeSet, 'custom-houserule', async (view) => {
+      const f = await this.lib.frameOf(c.codeSet, view)
+      await f.call('editableEnsureSource', CUSTOM.house)
+      if (!edit.entity) await f.call('editableAddDependencies', { [target.prop]: [baseSource] })
+      return f.call('editablePut', target.prop, ent)
+    })
+    const saved = result.value
     if (!saved.hash) throw new Error('作者算不出房规条目的编号')
     const house: EntryRef = { set: brewSetOf(c.codeSet).id, prop: target.prop, hash: saved.hash }
     await this.manage.linkHouseRule({ house, target })
-    const parse = await this.after(c.codeSet)
     const altId = `house:${saved.hash}`
-    return { house, altId, uniqueId: saved.uniqueId, parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
+    return { house, altId, uniqueId: saved.uniqueId, parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
   }
 
   /** 删房规：作者删条 + 去掉链接；选过它的地方自动回到原件（生效版本会标"选过的备选不在了"）。 */
   async deleteHouseRule(codeSet: string, house: EntryRef, uniqueId: string) {
+    const parse = await this.deleteEntries(codeSet, house.prop, [uniqueId])
     await this.manage.unlinkHouseRule(house)
-    return this.deleteEntries(codeSet, house.prop, [uniqueId])
+    return parse
   }
 
   /**
@@ -173,7 +172,8 @@ export class CustomLibrary {
       const docs = await f.call('brewDocIndex')
       const existing = docs.find((d) => !d.isEditable && !d.url && (d.sources ?? []).some((x) => x.toLowerCase() === source.toLowerCase()))
       const base = existing ? (await this.exportBrew(codeSet, existing.docIdLocal))?.body as Record<string, unknown> | undefined : undefined
-      const copy = await copyRawSource({ db: this.db, lib: this.lib, official: officialSourceOf(codeSet), source, ...(base ? { base } : {}), ...(target.kind === 'entry' ? { entry: { prop: target.ref.prop, hash: target.ref.hash } } : {}) })
+      const view = await this.lib.currentView()
+      const copy = await copyRawSource({ db: this.db, lib: this.lib, official: officialSourceOf(codeSet), source, view, ...(base ? { base } : {}), ...(target.kind === 'entry' ? { entry: { prop: target.ref.prop, hash: target.ref.hash } } : {}) })
       if (!Object.values(copy.counts).some((n) => n > 0) && !copy.corpora.length) throw new Error(`官方资料里没有来源 ${source} 的内容可存（还没下载？）`)
       counts = copy.counts
       body = copy.json
@@ -187,24 +187,28 @@ export class CustomLibrary {
 
   /** 导出一个包：作者格式原样（文件名 + 内容）。 */
   async exportBrew(codeSet: string, docIdLocal: string) {
-    return (await this.frame(codeSet)).call('brewExport', docIdLocal)
+    try { return await (await this.frame(codeSet)).call('brewExport', docIdLocal) }
+    catch {
+      // 官方资料没装时作者窗口开不起来：直接读作者存储原文，包仍是作者格式（M5）
+      const view = await this.lib.currentView()
+      const raw = (await view.kvGet(codeSet, 'HOMEBREW_2_STORAGE')) as Array<{ head?: Record<string, unknown>; body?: unknown }> | null
+      const hit = (raw ?? []).find((d) => String(d.head?.docIdLocal ?? '') === docIdLocal)
+      return hit ? { filename: (hit.head?.filename as string | undefined) ?? `${docIdLocal}.json`, body: hit.body } : null
+    }
   }
 
   /** 完整备份：自制（作者格式原样）+ 范围设置 + 房规链接；官方数据不进备份。 */
   async exportBackup(): Promise<Record<string, string>> {
     const files: Record<string, string> = {}
-    for (const codeSet of ['cn', 'en']) {
-      const official = SOURCES.find((s) => s.kind === 'official' && s.codeSet === codeSet)
-      // 没装这套官方数据时，作者小窗读不到生成文件（例如 gendata-nav…）；跳过，不把缺文件当成备份错误。
-      if (!official || (await this.db.sets.get(official.id))?.status !== 'installed') continue
-      const set = SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)
-      if (!set) continue
-      for (const entry of await this.lib.brewInstalled(set.id)) {
-        const docId = String(entry.head.docIdLocal ?? entry.head.docId ?? '')
+    const view = await this.lib.currentView()
+    // 按源登记表遍历，不写死语言；官方没装时也能从作者存储原文导出自制（M5）
+    for (const set of SOURCES.filter((s) => s.kind === 'brew')) {
+      const raw = (await view.kvGet(set.codeSet, 'HOMEBREW_2_STORAGE')) as Array<{ head?: Record<string, unknown>; body?: unknown }> | null
+      for (const doc of raw ?? []) {
+        const docId = String(doc.head?.docIdLocal ?? '')
         if (!docId) continue
-        const exported = await this.exportBrew(codeSet, docId)
-        if (!exported) continue
-        files[`brew/${codeSet}/${exported.filename ?? `${docId}.json`}`] = JSON.stringify(exported.body)
+        const filename = (doc.head?.filename as string | undefined) ?? `${docId}.json`
+        files[`brew/${set.codeSet}/${filename}`] = JSON.stringify(doc.body)
       }
     }
     files['scopes.json'] = JSON.stringify(await this.exportScopes())
@@ -277,9 +281,11 @@ export class CustomLibrary {
   async previewImport(codeSet: string, files: Array<{ name: string; text: string }>) {
     const set = brewSetOf(codeSet)
     const scope = `${codeSet}:preview:${Date.now()}`
-    const rows = await this.db.kv.where('scope').equals(codeSet).toArray()
-    await this.db.kv.bulkPut(rows.map((r) => ({ ...r, scope })))
-    const f = await this.lib.openFrameIn(codeSet, scope)
+    const view = await this.lib.currentView()
+    const merged = new Map<string, unknown>()
+    for (const s of [...(await view.kvScopes(codeSet))].reverse()) for (const row of await this.db.kv.where('scope').equals(s).toArray()) { if (row.deleted) merged.delete(row.key); else merged.set(row.key, row.value) }
+    await this.db.kv.bulkPut([...merged].map(([key, value]) => ({ scope, key, value })))
+    const f = await this.lib.openFrameIn(codeSet, scope, view)
     try {
       const before = new Set((await f.call('brewDocIndex')).map((d) => d.docIdLocal))
       const added = await f.call('brewAddFiles', files)
@@ -287,7 +293,7 @@ export class CustomLibrary {
       const official = officialSourceOf(codeSet)
       const officialHashes: Record<string, Set<string>> = {}
       for (const prop of new Set(docs.flatMap((d) => Object.keys(d.props)))) {
-        const rec = await this.db.derived.get(parsedKey(official.id, prop))
+        const rec = await view.derivedGet(parsedKey(official.id, prop))
         if (rec) officialHashes[prop] = new Set((rec.value as ParsedProp).hashes.filter((h): h is string => !!h))
       }
       const fresh = docs.filter((d) => !before.has(d.docIdLocal))

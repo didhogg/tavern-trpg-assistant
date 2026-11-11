@@ -59,6 +59,7 @@
   // 传话
   let nextId = 1
   const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>()
+  const pendingWrites = new Set<Promise<unknown>>()
   addEventListener('message', (event) => {
     const d = event.data as { channel?: string; type?: string; id?: number; ok?: boolean; value?: unknown; error?: string } | null
     if (event.source !== parent || !d || d.channel !== CHANNEL || d.type !== 'response') return
@@ -69,11 +70,21 @@
     else p.reject(new Error(d.error))
   })
   function request(body: Record<string, unknown>): Promise<unknown> {
-    return new Promise((resolve, reject) => {
+    const p = new Promise((resolve, reject) => {
       const id = nextId++
       pending.set(id, { resolve, reject })
       parent.postMessage({ channel: CHANNEL, type: 'request', frame: FRAME, id, ...body }, location.origin)
     })
+    // 同步存储的写入是“发出去就算”的；发布前要等它们真的落库（P5 T1）
+    if (body.op === 'local-set' || body.op === 'local-remove' || body.op === 'kv-set' || body.op === 'kv-remove') {
+      pendingWrites.add(p)
+      p.then(() => pendingWrites.delete(p), () => pendingWrites.delete(p))
+    }
+    return p
+  }
+  g.__trpgStorageFlush = async (): Promise<string[]> => {
+    await Promise.allSettled([...pendingWrites])
+    return [...errors]
   }
 
   // 作者在定义某个全局对象的那一刻，交给 patch 处理

@@ -4,11 +4,16 @@ import { LibraryDatabase } from '../../../src/library/db'
 import { FileProvider } from '../../../src/library/files'
 import { libraryHandlers } from '../../../src/library/runtime/handlers'
 import { startAuthorFrame, type AuthorFrame } from '../../../src/library/runtime/host'
-import { commitOf, getSource } from '../../../src/library/sources'
+import { getSource, SOURCES } from '../../../src/library/sources'
+import { LibraryRevisionStore } from '../../../src/library/revision'
+import { LibraryOperations } from '../../../src/library/operations'
 
 configureBrewValidator(new URL('/', location.href)) // B-12 起结构校验要知道插件目录
 const db = new LibraryDatabase()
-export const files = new FileProvider({ db })
+export const revisions = new LibraryRevisionStore(db)
+export const operations = new LibraryOperations({ db, revisions })
+void revisions.ensureLegacy()
+export const files = new FileProvider({ db, ready: revisions.ensureLegacy() })
 const frames: AuthorFrame[] = []
 
 export async function startFrames(codeSets: string[], { allowNetwork }: { allowNetwork: boolean }) {
@@ -30,14 +35,19 @@ export function failures() {
 /** 第 1 层（镜像）的局部检查：本地每个文件的指纹 = 锁定版本云端清单里的指纹。 */
 export async function mirrorCheck() {
   const out: Record<string, { files: number; bytes: number; mismatched: string[]; notInList: string[] }> = {}
-  for (const rec of await db.files.toArray()) {
-    const list = await files.fileList(getSource(rec.source))
-    const s = (out[rec.source] ??= { files: 0, bytes: 0, mismatched: [], notInList: [] })
-    s.files++
-    s.bytes += rec.size
-    const expected = list[rec.path]
-    if (!expected) s.notInList.push(rec.path)
-    else if (expected.sha !== rec.gitSha || expected.size !== rec.size) s.mismatched.push(rec.path)
+  const view = await revisions.published()
+  for (const source of SOURCES.filter((x) => x.kind === 'official')) {
+    const list = await files.fileList(source, view)
+    for (const path of await view.filePaths(source)) {
+      const rec = await files.record(source, path, view)
+      if (!rec) continue
+      const s = (out[source.id] ??= { files: 0, bytes: 0, mismatched: [], notInList: [] })
+      s.files++
+      s.bytes += rec.size
+      const expected = list[path]
+      if (!expected) s.notInList.push(path)
+      else if (expected.sha !== rec.gitSha || expected.size !== rec.size) s.mismatched.push(path)
+    }
   }
   return out
 }
@@ -47,27 +57,29 @@ export async function kvDump() {
 }
 
 // ---- B2-3 ----
-import { installOfficial, parsedKey } from '../../../src/library/install'
-import { precachePlan } from '../../../src/library/plan'
+import { installOfficial, parsedKey, prepareOfficial } from '../../../src/library/install'
+import { officialPlan, precachePlan } from '../../../src/library/plan'
 
-function openLocalFrame(codeSet: string, kvScope?: string) {
-  return startAuthorFrame({ codeSet, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false, kvScope }) })
+function openLocalFrame(codeSet: string, ctx: { view?: import('../../../src/library/revision').LibraryView; kvScope?: string; filterIndex?: boolean } = {}) {
+  return startAuthorFrame({ codeSet, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => false, ...(ctx.kvScope ? { kvScope: ctx.kvScope } : {}), ...(ctx.view ? { view: ctx.view } : {}), ...(ctx.filterIndex === false ? { filterIndex: false } : {}) }) })
 }
 
 export { openLocalFrame as openAuthorFrame }
+export { officialPlan, precachePlan, prepareOfficial }
 
 export async function install(sourceId: string) {
   const source = getSource(sourceId)
-  return installOfficial({ source, db, files, openFrame: () => openLocalFrame(source.codeSet), onProgress: (p) => console.log(`[progress] ${sourceId} ${p.stage} ${p.done}/${p.total} ${p.item ?? ''}`) })
+  return installOfficial({ source, db, files, revisions, operations, openFrame: (view) => openLocalFrame(source.codeSet, { view }), onProgress: (p) => console.log(`[progress] ${sourceId} ${p.stage} ${p.done}/${p.total} ${p.item ?? ''}`) })
 }
 
 /** 按书开关：关掉一本书后，作者的 isExcluded 对这本书的条目返回 true；别的书不受影响。 */
 export async function toggleBook(codeSet: string, sourceId: string, bookSource: string, excluded: boolean) {
-  const rec = await db.derived.get(parsedKey(sourceId, 'spell'))
+  const view = await revisions.published()
+  const rec = await view.derivedGet(parsedKey(sourceId, 'spell'))
   const { items, hashes } = rec!.value as { items: Array<{ source: string }>; hashes: string[] }
   const i = items.findIndex((it) => it.source === bookSource)
   const j = items.findIndex((it) => it.source !== bookSource)
-  const f = await openLocalFrame(codeSet)
+  const f = await openLocalFrame(codeSet, { view })
   try {
     if (excluded !== undefined) await f.call('setSourceExcluded', bookSource, excluded)
     return {
@@ -80,10 +92,11 @@ export async function toggleBook(codeSet: string, sourceId: string, bookSource: 
 }
 
 export async function bookState(codeSet: string, sourceId: string, bookSource: string) {
-  const rec = await db.derived.get(parsedKey(sourceId, 'spell'))
+  const view = await revisions.published()
+  const rec = await view.derivedGet(parsedKey(sourceId, 'spell'))
   const { items, hashes } = rec!.value as { items: Array<{ source: string }>; hashes: string[] }
   const i = items.findIndex((it) => it.source === bookSource)
-  const f = await openLocalFrame(codeSet)
+  const f = await openLocalFrame(codeSet, { view })
   try {
     return await f.call('isExcluded', hashes[i], 'spell', bookSource)
   } finally {
@@ -94,22 +107,24 @@ export async function bookState(codeSet: string, sourceId: string, bookSource: s
 /** 断网后复查：第 1 层镜像仍然完整，解析结果都在库里。 */
 export async function offlineAudit(sourceId: string) {
   const source = getSource(sourceId)
-  const list = await files.fileList(source)
+  const view = await revisions.published()
+  const list = await files.fileList(source, view)
   const plan = precachePlan(list)
   let ok = 0
   const bad: string[] = []
   for (const path of plan.files) {
-    const rec = await db.files.get([sourceId, path])
+    const rec = await files.record(source, path, view)
     if (rec && rec.gitSha === list[path].sha) ok++
     else bad.push(path)
   }
-  const parsedKeys = (await db.derived.where('key').startsWith(`parsed:${sourceId}:`).primaryKeys()).length
+  const parsedKeys = (await view.derivedKeys(`parsed:${sourceId}:`)).size
   return { planFiles: plan.files.length, ok, bad: bad.slice(0, 10), parsedKeys, set: await db.sets.get(sourceId) }
 }
 
 /** 某个源文件是否在【库】镜像里（用来查作者导航生成文件的来源）。 */
 export async function hasSourceFile(sourceId: string, path: string): Promise<boolean> {
-  return !!(await db.files.get([sourceId, path]))
+  const view = await revisions.published()
+  return !!(await files.record(getSource(sourceId), path, view))
 }
 
 /** 诊断用：经传话通道叫最近打开的某个小窗做一件事。 */
@@ -121,9 +136,10 @@ export async function callFrame(codeSet: string, fn: string, ...args: unknown[])
 
 // ---- B2-4 / B2-5 ----
 import { LibraryService } from '../../../src/library/service'
+import { BookDirectory } from '../../../src/library/directory'
 
 /** 库服务（界面将来的唯一入口）。安装会另开小窗，所以安装后要 service.reset()。 */
-export const service = new LibraryService({ db, openFrame: openLocalFrame })
+export const service = new LibraryService({ db, revisions, operations, openFrame: openLocalFrame })
 export const libraryDb = db
 
 // ---- B2-8a 审计第 3、4 层 ----
@@ -143,27 +159,30 @@ export async function auditLayers34(sourceId: string, schema: SchemaInfo): Promi
     const foundry: Record<string, number> = {}
     const corpusRaw: Record<string, number> = {}
     const raws: RawRecord[] = []
-    const files = await db.files.where('source').equals(sourceId).toArray()
-    for (const file of files) {
-      if (!file.path.startsWith('data/') || !file.path.endsWith('.json')) continue
-      const json = JSON.parse(file.text) as Record<string, unknown>
+    const view = await revisions.published()
+    const paths = await view.filePaths(source)
+    for (const path of paths) {
+      if (!path.startsWith('data/') || !path.endsWith('.json') || path.startsWith('data/adventure/') || path.startsWith('data/book/')) continue
+      const text = (await view.fileGet(source, path))?.text
+      if (text === undefined) continue
+      const json = JSON.parse(text) as Record<string, unknown>
       for (const [key, value] of Object.entries(json)) {
         if (!Array.isArray(value)) continue
-        if (isFoundryFile(file.path)) { foundry[file.path] = (foundry[file.path] ?? 0) + value.length; continue }
-        const { schema: recSchema, fallback } = recordSchemaOf(schema, file.path, key)
+        if (isFoundryFile(path)) { foundry[path] = (foundry[path] ?? 0) + value.length; continue }
+        const { schema: recSchema, fallback } = recordSchemaOf(schema, path, key)
         // 结构定义里没有、但作者加载器登记了这一类（例 data/generated/gendata-tables.json 的 tableGroup）：照样比，字段判断不了
-        if (!recSchema && !loaderProps.has(key)) { (notCategory[key] ??= []).push(file.path); continue }
-        if (fallback) (noSchemaFile[file.path] ??= []).push(key)
+        if (!recSchema && !loaderProps.has(key)) { (notCategory[key] ??= []).push(path); continue }
+        if (fallback) (noSchemaFile[path] ??= []).push(key)
         if (corpusProps.has(key)) { corpusRaw[key] = (corpusRaw[key] ?? 0) + value.length; continue }
         const hashes = await f.call('rawHashes', key, value)
-        value.forEach((rec, i) => raws.push({ prop: key, file: file.path, hash: hashes[i], rec: rec as Record<string, unknown>, schema: recSchema }))
+        value.forEach((rec, i) => raws.push({ prop: key, file: path, hash: hashes[i], rec: rec as Record<string, unknown>, schema: recSchema }))
       }
     }
     const parseds: ParsedRecord[] = []
     const parsedProps = new Set<string>()
-    for (const rec of await db.derived.where('key').startsWith(`parsed:${sourceId}:`).toArray()) {
-      if (rec.key.includes(':corpus:')) continue
-      const prop = rec.key.slice(`parsed:${sourceId}:`.length)
+    for (const [key, rec] of await view.derivedKeys(`parsed:${sourceId}:`)) {
+      if (key.includes(':corpus:')) continue
+      const prop = key.slice(`parsed:${sourceId}:`.length)
       parsedProps.add(prop)
       const { items, hashes } = rec.value as { items: Array<Record<string, unknown>>; hashes: Array<string | null> }
       items.forEach((item, i) => parseds.push({ prop, hash: hashes[i], item }))
@@ -177,7 +196,7 @@ export async function auditLayers34(sourceId: string, schema: SchemaInfo): Promi
       notChecked: Object.entries(corpusRaw).map(([prop, raw]) => ({ prop, raw, reason: '书、冒险：作者按本取正文，第 2 层已逐本解析' })),
       ...compareLayers(raws, parseds, schema, loaders.map((l) => l.props), parsedProps, AUTHOR_RULES, source.codeSet),
     }
-    await db.derived.put({ key: `audit:layers34:${sourceId}`, fingerprint: `${commitOf(source)}+schema@${schema.version}`, value: report, savedAt: Date.now() })
+    await view.derivedPut(`audit:layers34:${sourceId}`, `${await view.commitOf(source)}+schema@${schema.version}`, report)
     return report
   } finally {
     f.close()
@@ -187,18 +206,21 @@ export async function auditLayers34(sourceId: string, schema: SchemaInfo): Promi
 /** 诊断用：某个编号在原始文件和解析结果里各是什么（查可疑清单的根因）。 */
 export async function auditProbe(sourceId: string, prop: string, hash: string) {
   const source = getSource(sourceId)
-  const f = await openLocalFrame(source.codeSet)
+  const view = await revisions.published()
+  const f = await openLocalFrame(source.codeSet, { view })
   try {
     const raws: Array<{ file: string; key: string; rec: unknown }> = []
-    for (const file of await db.files.where('source').equals(sourceId).toArray()) {
-      if (!file.path.startsWith('data/') || !file.path.endsWith('.json')) continue
-      for (const [key, value] of Object.entries(JSON.parse(file.text) as Record<string, unknown>)) {
+    for (const path of await view.filePaths(source)) {
+      if (!path.startsWith('data/') || !path.endsWith('.json')) continue
+      const text = (await view.fileGet(source, path))?.text
+      if (text === undefined) continue
+      for (const [key, value] of Object.entries(JSON.parse(text) as Record<string, unknown>)) {
         if (!Array.isArray(value)) continue
         const hashes = await f.call('rawHashes', prop, value)
-        hashes.forEach((h, i) => { if (h === hash) raws.push({ file: file.path, key, rec: value[i] }) })
+        hashes.forEach((h, i) => { if (h === hash) raws.push({ file: path, key, rec: value[i] }) })
       }
     }
-    const rec = await db.derived.get(parsedKey(sourceId, prop))
+    const rec = await view.derivedGet(parsedKey(sourceId, prop))
     const { items, hashes } = (rec?.value ?? { items: [], hashes: [] }) as { items: unknown[]; hashes: Array<string | null> }
     return { raws, parsed: items.filter((_, i) => hashes[i] === hash) }
   } finally {
@@ -214,7 +236,8 @@ import { defaultCampaignLibrary } from '../../../src/library/scopes'
 
 export const scoped = new ScopedLibrary(service, db)
 export const custom = new CustomLibrary(service, scoped, db)
-export const tasks = new DownloadTasks({ db, files, openFrame: (codeSet) => openLocalFrame(codeSet) })
+export const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openLocalFrame(codeSet, { view }) })
+export const directory = new BookDirectory({ db, localFrame: (cs) => service.frameOf(cs), networkFrame: (cs, scope) => startAuthorFrame({ codeSet: cs, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet: cs, db, files, allowNetwork: () => true, kvScope: scope, filterIndex: false }) }) })
 export { defaultCampaignLibrary }
 
 // ---- P3-3 / P3-4：用户存档 + 结算内核段，引用检查直接问上面的【库】 ----
@@ -234,7 +257,7 @@ export const rules = new RuleRegistry()
 rules.register(dnd5e2014)
 export const campaign = new CampaignService(userDb, { rules, now: () => Date.now() })
 /** 当前装的数据版本记号：用正式代码（src/library/kernel-check.ts），测试不另写一份。 */
-export const dataVersion = libraryDataVersion(db, service)
+export const dataVersion = libraryDataVersion(revisions, service)
 export const kernelSave = new KernelSaveService({ db: userDb, campaign, rules, now: () => Date.now(),
   checkRefs: scopedRefChecker(scoped), currentVersion: dataVersion, currentOverrides: scopedCurrentOverrides(scoped) })
 export const backupLibrary = { exportFiles: () => custom.exportBackup(), importFiles: (files: Record<string, string>) => custom.importBackup(files) }
@@ -288,4 +311,4 @@ export async function pickChainEntries(library: ReturnType<typeof defaultCampaig
 }
 
 // 探测脚本用：作者预载规则与源登记表
-export { precachePlan, getSource }
+export { getSource }
