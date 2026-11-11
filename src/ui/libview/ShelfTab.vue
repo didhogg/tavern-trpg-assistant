@@ -8,6 +8,7 @@ import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
+import { ruleBadge } from './registry'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
 import { removeSource, saveToMine } from './actions'
@@ -84,7 +85,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
             </summary>
             <div v-for="r in [...g.books, ...g.adventures]" :key="`${r.set}:${r.pack?.docIdLocal ?? r.source}:${r.id ?? ''}`" class="trpg-shelf__row" :data-off="!isOn(r)">
               <button class="lib-name" type="button" @click="openPack({ set: r.set, source: r.source, name: r.name, kind: r.kind, corpora: r.corpora, ...(r.pack ? { docIdLocal: r.pack.docIdLocal } : {}) })">{{ r.name }}<template v-if="r.kind === 'adventure'">（冒险）</template><small v-if="r.altName" class="lib-alt-name">{{ r.altName }}</small></button>
-              <span v-if="r.edition && r.edition.classic !== null" class="trpg-badge" :title="r.shelf?.published ? `出版：${r.shelf.published}` : undefined">{{ r.edition.classic ? '2014 规则' : '2024 规则' }}</span>
+              <span v-if="ruleBadge(r)" class="trpg-badge" :title="r.shelf?.published ? `出版：${r.shelf.published}` : undefined">{{ ruleBadge(r) }}</span>
               <Switch :model-value="isOn(r)" :label="`在本战役里使用《${r.name}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(r, v)" />
               <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }, ...(getSource(r.set).kind === 'official' ? [{ key: 'rm', label: r.kind === 'adventure' ? '卸载这本冒险…' : '卸载这本书…', danger: true }, { key: 'rm-all', label: '卸载整套官方资料…', danger: true }] : [{ key: 'rm', label: '删除这个包…', danger: true }])]" @select="(k: string) => onMenu(r, k)" />
             </div>

@@ -1,3 +1,5 @@
+import { getSource } from '../../library/sources'
+
 // 库页类别登记表（P5-0 §4.5 登记草表的"中文显示名"列）：登记了的类别才在包弹窗的类别药丸里出现；没登记的（辅助数据、挂靠类）不单独列。
 // 增加类别 = 加一行；顺序 = 药丸顺序。（列与摘要行字段在 U9 阶段按同一张表扩展。）
 export interface CategoryDef {
@@ -26,4 +28,14 @@ export const categoryLabel = (prop: string): string | null => BY_PROP.get(prop)?
 /** 只留登记过的类别，按登记顺序排。 */
 export function registeredCategories<T extends { prop: string }>(rows: T[]): T[] {
   return rows.filter((r) => BY_PROP.has(r.prop)).sort((a, b) => (BY_PROP.get(a.prop)?.order ?? 0) - (BY_PROP.get(b.prop)?.order ?? 0))
+}
+
+/**
+ * 书 / 包行的规则标签（驾驶员 2026-11-11 定）：自制源的包标「自制」；否则按作者的版本归类，2014 规则标「5e」、
+ * 2024 规则（含 2025 年出版的）标「5.5e」；作者分不出的不标（返回 null）。
+ */
+export function ruleBadge(row: { set: string; edition: { classic: boolean | null } | null }): string | null {
+  if (getSource(row.set).kind === 'brew') return '自制'
+  if (!row.edition || row.edition.classic === null) return null
+  return row.edition.classic ? '5e' : '5.5e'
 }

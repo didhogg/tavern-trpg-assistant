@@ -8,6 +8,7 @@ import { useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import { getSource } from '../../library/sources'
 import Icon from '../kit/Icon.vue'
+import { ruleBadge } from './registry'
 import { formatBytes } from '../format'
 import BrewCatalog from './BrewCatalog.vue'
 
@@ -105,7 +106,7 @@ function startAdventure(row: CatalogRow): void {
             </summary>
             <div v-for="r in g.books" :key="`${r.set}:${r.source}`" class="trpg-shelf__row">
               <span class="lib-name">{{ r.name }}</span>
-              <span v-if="r.edition && r.edition.classic !== null" class="trpg-badge">{{ r.edition.classic ? '旧版' : '新版' }}</span>
+              <span v-if="ruleBadge(r)" class="trpg-badge" :title="r.shelf?.published ? `出版：${r.shelf.published}` : undefined">{{ ruleBadge(r) }}</span>
               <span class="trpg-badge" :data-tone="r.downloaded ? 'success' : undefined">{{ r.downloaded ? '已装' : '未装' }}</span>
             </div>
           </details>
