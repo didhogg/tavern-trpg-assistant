@@ -82,6 +82,21 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
     expect(rows.map((r) => [r.source, r.downloaded])).toEqual([['XGE', false], ['PHB', true], ['ZZ', false]])
   })
 
+  it('冒险自带的条目并进冒险那一行，不另起一行「书」（不掉进杂项、不同名两行）；其他没对上的来源照旧单列', async () => {
+    const view = { installedBooks: async () => ['PHB'], visibleSources: async () => null } as never
+    const deps = {
+      lib: { currentView: async () => view, frameOf: async () => ({ call: async () => ({}) }), brewCorpora: async () => ({}) },
+      sourcesFor: () => [{ id: 'cn-official', kind: 'official', codeSet: 'cn', lang: 'zh', mirrors: [] }],
+      context: async () => ({ altMap: new Map(), assigns: new Map(), packs: new Map() }),
+      directory: { get: async () => REC },
+      installed: async () => true, editions: async () => ({}), sourceCounts: async () => ({ PHB: 2, lmop: 7, Generic: 3 }),
+      adventures: async () => [{ id: 'LMoP', source: 'LMoP', hash: 'lmop', downloaded: true }],
+    } as never
+    const rows = await catalogFor(deps, { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: [], exclude: [], choices: {} }, { remote: true, record: REC, view: view as never })
+    expect(rows.filter((r) => r.source.toLowerCase() === 'lmop').map((r) => [r.kind, r.count, r.shelf?.group])).toEqual([['adventure', 7, 'supplement']])
+    expect(rows.find((r) => r.source === 'Generic')).toMatchObject({ kind: 'book', id: null, count: 3 })
+  })
+
   it('另一语言名字：中文行带作者 ENG_name，英文行从配对语言的书目缓存取中文名（只看缓存）', async () => {
     const view = { installedBooks: async () => null, visibleSources: async () => null } as never
     const cnRec = { ...REC, books: [{ id: 'PHB', name: '玩家手册', ENG_name: "Player's Handbook", source: 'PHB', group: 'core' }], adventures: [] }

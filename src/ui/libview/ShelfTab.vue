@@ -30,10 +30,10 @@ const updating = (r: CatalogRow): boolean => dl.items.some((i) => i.status === '
 const q = ref('')
 
 const kindOf = (r: CatalogRow): 'official' | 'brew' => (getSource(r.set).kind === 'brew' ? 'brew' : 'official')
-// 只列已下载的（未装的在下载页）；有搜索词时按名称 / 缩写匹配
+// 只列已下载的（未装的在下载页）；冒险正文没下、但它自带的条目已在本地的，也列出（条目能看，正文另下）。有搜索词时按名称 / 缩写匹配
 const mineSources = computed(() => new Set(lib.minePacks.flatMap((p) => p.sources)))
 // 中英文名都能搜到（另一语言名由后端 altName 给，P5 T6 #18）
-const match = (r: CatalogRow): boolean => r.downloaded && !mineSources.value.has(r.source) && (!q.value.trim() || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q.value.trim().toLowerCase()))
+const match = (r: CatalogRow): boolean => (r.downloaded || (r.kind === 'adventure' && r.count > 0)) && !mineSources.value.has(r.source) && (!q.value.trim() || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q.value.trim().toLowerCase()))
 // 分类方式（设置 → 库 → 偏好）：作者分组 / 书或冒险
 const regroup = (groups: ShelfGroup[]): ShelfGroup[] => (app.settings?.library.groupBy === 'kind'
   ? [{ group: 'books', name: '书', books: groups.flatMap((g) => g.books), adventures: [] }, { group: 'adventures', name: '冒险', books: [], adventures: groups.flatMap((g) => g.adventures) }]
@@ -92,6 +92,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
             </summary>
             <div v-for="r in [...g.books, ...g.adventures]" :key="`${r.set}:${r.pack?.docIdLocal ?? r.source}:${r.id ?? ''}`" class="trpg-shelf__row" :data-off="!isOn(r)">
               <button class="lib-name" type="button" @click="openPack({ set: r.set, source: r.source, name: r.name, kind: r.kind, corpora: r.corpora, ...(r.pack ? { docIdLocal: r.pack.docIdLocal } : {}) })">{{ r.name }}<template v-if="r.kind === 'adventure'">（冒险）</template><small v-if="r.altName" class="lib-alt-name">{{ r.altName }}</small></button>
+              <span v-if="r.kind === 'adventure' && !r.downloaded" class="lib-muted" title="这本冒险自带的怪物、物品等已在本地；正文在下载页另下">正文没下载</span>
               <span v-if="ruleBadge(r)" class="trpg-badge" :title="r.shelf?.published ? `出版：${r.shelf.published}` : undefined">{{ ruleBadge(r) }}</span>
               <span v-if="updating(r)" class="lib-muted" role="status">更新中…</span>
               <button v-else-if="hasUpdate(r)" class="trpg-btn trpg-btn--small" type="button" data-testid="row-update" :title="`更新《${r.name}》`" @click="updateRow(app.svc(), r, toast)">有更新 · 更新</button>

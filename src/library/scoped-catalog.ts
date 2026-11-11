@@ -111,15 +111,21 @@ export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote
         const row = { kind: 'book' as const, set: set.id, source, id, count: counts[source] ?? 0, downloaded, alternatives: altBySource.get(source.toLowerCase()) ?? 0 }
         rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
       }
+      // 冒险自带的条目（怪物、物品…）来源就是冒险编号：条目数并进作者冒险目录里那一行，不另起一行“书”（否则掉进“其他”分组、同名两行）。
+      const adventures = await deps.adventures(set, view)
+      const advBySource = new Map(adventures.map((a) => [a.source.toLowerCase(), a]))
+      const advCounts = new Map<string, number>()
       // 来源索引里有、但作者书目没列出对应书号的共享/来源行，仍给一行“来源”身份。
       for (const [source, count] of Object.entries(counts)) {
         if (bookSources.has(source.toLowerCase())) continue
+        const adv = advBySource.get(source.toLowerCase())
+        if (adv) { advCounts.set(adv.id, (advCounts.get(adv.id) ?? 0) + count); continue }
         if (allowed && !allowed.some((s) => s.toLowerCase() === source.toLowerCase())) continue
         const row = { kind: 'book' as const, set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0 }
         rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
       }
-      for (const a of await deps.adventures(set, view)) {
-        const row = { kind: 'adventure' as const, set: set.id, source: a.source, id: a.id, count: 0, downloaded: a.downloaded, alternatives: 0 }
+      for (const a of adventures) {
+        const row = { kind: 'adventure' as const, set: set.id, source: a.source, id: a.id, count: advCounts.get(a.id) ?? 0, downloaded: a.downloaded, alternatives: altBySource.get(a.source.toLowerCase()) ?? 0 }
         rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
       }
     }
