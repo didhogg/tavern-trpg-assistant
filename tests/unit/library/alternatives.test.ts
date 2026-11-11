@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { altsKey, buildAlternatives, type AltIndex } from '../../../src/library/alternatives'
+import { altsKey, buildAlternatives, packOwnedItems, type AltIndex } from '../../../src/library/alternatives'
 import { LibraryDatabase } from '../../../src/library/db'
 import { parsedKey } from '../../../src/library/install'
 import type { AuthorFrame } from '../../../src/library/runtime/host'
@@ -82,5 +82,23 @@ describe('buildAlternatives', () => {
       openFrameIn: async () => { throw new Error('不该开') },
     })
     expect(index.targets).toEqual({})
+  })
+})
+
+
+describe('按包归属的作者隔离', () => {
+  it('目标包 raw 编号 + 隔离作者解析；依赖包条目不在目标 raw 中，不混入', async () => {
+    const source = getSource('cn-brew')
+    const view = {
+      kvScopes: async () => ['cn'],
+      kvGet: async () => [doc('p1', 1, { _meta: { sources: [{ json: 'A' }] } }), doc('p2', 2, { _meta: { sources: [{ json: 'D' }] } })],
+    } as never
+    const frame = fakeFrame({})
+    const got = await packOwnedItems(
+      { source, db, view, frame, openFrameIn: async () => fakeFrame({ brewItemsByHash: async () => ({ 'item|own': { name: '目标包' }, 'item|dep': { name: '依赖包' } }) }) },
+      'p1', 'item', ['own', 'dep'], ['own'],
+    )
+    expect([...got.keys()]).toEqual(['own'])
+    expect((got.get('own') as { name: string }).name).toBe('目标包')
   })
 })

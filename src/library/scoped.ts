@@ -102,12 +102,10 @@ export class ScopedLibrary {
     }
     return (await view.officialState(set.id))?.status === 'installed'
   }
-
   private async readable(set: SourceEntry, view: LibraryView): Promise<boolean> {
     if (set.kind === 'official') return (await view.officialState(set.id))?.status === 'installed'
     return (await this.installed(set, view)) && (await this.lib.officialInstalled(set.codeSet, view))
   }
-
   async scopes(): Promise<ScopeDef[]> {
     return [...BUILTIN_SCOPES, ...(await this.manage.userScopes())]
   }
@@ -197,10 +195,12 @@ export class ScopedLibrary {
       })
       const sources = [...new Set(got.map((r) => r.source).filter((s): s is string => !!s))]
       await this.editions(c.codeSet, sources, view)
+      const owned = pack ? await this.lib.packOwnedItems(set.id, pack.docIdLocal, prop, got.map((r) => r.hash).filter((h): h is string => !!h), Object.values(pack.hashes).flat(), view) : null
       for (const r of got) {
         if (!r.hash) continue
         if (allowed && r.source && !allowed.some((s) => s.toLowerCase() === r.source!.toLowerCase())) continue
-        if (pack && !(pack.hashes[prop] ?? []).includes(r.hash)) continue
+        if (owned && !owned.has(r.hash)) continue
+        const packItem = owned?.get(r.hash)
         const ref: EntryRef = { set: set.id, prop, hash: r.hash }
         if (ctx.houseUnits.has(refKey(ref))) continue
         const v = await this.viewFor(c, ref, r.source, ctx.assigns, view)
@@ -208,10 +208,10 @@ export class ScopedLibrary {
         const alts = await this.alternativesOf(ref, ctx)
         const { chosen, item } = this.version(refKey(ref), alts, ctx, c.choices[refKey(ref)])
         const row: ScopedRow = {
-          ref, source: r.source, reason: v.reason, visible: v.visible, item: item ?? r.item, version: chosen,
+          ref, source: (packItem as { source?: string } | undefined)?.source ?? r.source, reason: v.reason, visible: v.visible, item: packItem ?? item ?? r.item, version: chosen,
           ...(pack ? { pack: { docIdLocal: pack.docIdLocal, filename: pack.filename, stableId: packUrl(pack), sources: pack.sources } } : {}),
         }
-        if (expand) rows.push(...expandVariants(row, r.item, alts))
+        if (expand) rows.push(...expandVariants({ ...row, item: packItem ?? row.item }, packItem ?? r.item, alts))
         else rows.push(row)
       }
     }

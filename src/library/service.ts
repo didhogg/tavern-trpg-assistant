@@ -22,6 +22,7 @@ import { LibraryOperations } from './operations'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 import { ensureReadable, installedSource } from './service-read'
 import { tablesFor } from './service-tables'
+import { packOwnedItems } from './alternatives'
 import { englishOf } from './service-english-entry'
 export type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
 export interface FrameContext {
@@ -112,6 +113,12 @@ export class LibraryService {
     const source = getSource(sourceId)
     await ensurePrecomputed({ source, db: this.opts.db, view, openFrame: (cs) => this.opts.openFrame(cs, { view, filterIndex: true }), ...opts })
   }
+  /** 某个包自己提供的条目：只在这个包的隔离作者存储里解析，依赖包的内容不算进来。 */
+  async packOwnedItems(sourceId: string, docIdLocal: string, prop: string, hashes: string[], rawHashes: Iterable<string>, viewArg?: LibraryView): Promise<Map<string, unknown>> {
+    const view = await this.view(viewArg)
+    const source = getSource(sourceId)
+    return packOwnedItems({ source, db: this.opts.db, view, frame: await this.frameOf(source.codeSet, view), openFrameIn: (scope) => this.openFrameIn(source.codeSet, scope, view) }, docIdLocal, prop, hashes, rawHashes)
+  }
   async parsed(sourceId: string, prop: string, viewArg?: LibraryView): Promise<ParsedProp> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)
@@ -126,21 +133,18 @@ export class LibraryService {
     if (!rec) throw new Error(`${sourceId} 没有这一类的解析结果：${prop}（未安装，或这一类解析失败，见体检）`)
     return rec.value as ParsedProp
   }
-
   private async report(sourceId: string, viewArg?: LibraryView): Promise<{ parse: Pick<InstallReport['parse'], 'props'> }> {
     const view = await this.view(viewArg)
     const rec = await view.derivedGet(`audit:${sourceId}`)
     if (!rec) throw new Error(`${sourceId} 还没安装`)
     return rec.value as InstallReport | BrewParseReport
   }
-
   async categories(sourceId: string, viewArgs?: LibraryView): Promise<Record<string, number>> {
     const view = await this.view(viewArgs)
     await ensureReadable(view, sourceId)
     const r = await this.report(sourceId, view)
     return Object.fromEntries(Object.entries(r.parse.props).map(([prop, v]) => [prop, v.count]))
   }
-
   async query(sourceId: string, prop: string, { source, includeExcluded = false, view: viewArg }: { source?: string; includeExcluded?: boolean; view?: LibraryView } = {}): Promise<QueryRow[]> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)
@@ -165,12 +169,10 @@ export class LibraryService {
     })
     return rows
   }
-
   async brewCorpora(sourceId: string, viewArg?: LibraryView): Promise<BrewCorpora> {
     const view = await this.view(viewArg)
     return ((await view.derivedGet(brewCorporaKey(sourceId)))?.value ?? {}) as BrewCorpora
   }
-
   async corpus(sourceId: string, prop: string, id: string, viewArg?: LibraryView): Promise<unknown> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)
@@ -182,7 +184,6 @@ export class LibraryService {
     if (!rec) throw new Error(`${sourceId} 没有这本的全文：${prop} ${id}`)
     return rec.value
   }
-
   async storedItem(sourceId: string, prop: string, hash: string, viewArg?: LibraryView): Promise<{ item: unknown; source: string | null } | null> {
     const view = await this.view(viewArg)
     const p = await this.parsed(sourceId, prop, view).catch(() => null)
@@ -193,7 +194,6 @@ export class LibraryService {
   tables(sourceId: string, prop: string, hash?: string, viewArg?: LibraryView) {
     return tablesFor(this, sourceId, prop, hash, viewArg)
   }
-
   async detail(sourceId: string, prop: string, hash: string, _source?: string | null, viewArg?: LibraryView): Promise<DetailResult | null> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)

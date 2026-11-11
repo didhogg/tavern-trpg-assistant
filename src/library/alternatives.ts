@@ -11,7 +11,7 @@ import { officialSourceOf, type SourceEntry } from './sources'
 import { findCollisions, packAltId, packStableId, type Alternative, type DocIndex } from './versions'
 
 /** 作者自制存储的键（utils-brew-impl-brew.js 第 9 行 _STORAGE_KEY）。 */
-const BREW_STORAGE_KEY = 'HOMEBREW_2_STORAGE'
+export const BREW_STORAGE_KEY = 'HOMEBREW_2_STORAGE'
 
 export interface AltRecord {
   target: EntryRef
@@ -31,10 +31,10 @@ export interface AltIndex {
 
 export const altsKey = (brewSetId: string): string => `alts:${brewSetId}`
 
-type StoredBrew = { head: { docIdLocal: string; filename?: string }; body: { _meta?: { sources?: Array<{ json?: string }>; dependencies?: Record<string, string[]> } } }
+export type StoredBrew = { head: { docIdLocal: string; filename?: string }; body: { _meta?: { sources?: Array<{ json?: string }>; dependencies?: Record<string, string[]> } } }
 
 /** 一个包加上它 _meta.dependencies 里声明的、由别的已装包提供的来源（作者展开 _copy 时要用）。被测的包放最后，同编号时它赢。 */
-function withDependencies(doc: StoredBrew, all: StoredBrew[]): StoredBrew[] {
+export function withDependencies(doc: StoredBrew, all: StoredBrew[]): StoredBrew[] {
   const want = new Set(Object.values(doc.body._meta?.dependencies ?? {}).flat().map((s) => s.toLowerCase()))
   const deps = all.filter((d) => d !== doc && (d.body._meta?.sources ?? []).some((s) => s.json && want.has(s.json.toLowerCase())))
   return [...deps, doc]
@@ -51,7 +51,7 @@ export interface BuildAltOptions {
 }
 
 /** 在隔离范围里只放这几个包，取指定编号的作者对象（作者加载器原样）。 */
-async function isolatedItems(opts: BuildAltOptions, docs: StoredBrew[], wants: Array<{ prop: string; hash: string }>): Promise<Record<string, unknown>> {
+export async function isolatedItems(opts: BuildAltOptions, docs: StoredBrew[], wants: Array<{ prop: string; hash: string }>): Promise<Record<string, unknown>> {
   const { db, source, view } = opts
   const scope = `${source.codeSet}:iso:${docs.at(-1)!.head.docIdLocal}`
   // 复制作者存储的有效内容（新层盖旧层），只换掉自制列表；同步存储也复制
@@ -148,4 +148,28 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
   for (const [prop, p] of brewParsed) await opts.view.derivedPut(parsedKey(source.id, prop), 'brew', p)
   await opts.view.derivedPut(altsKey(source.id), 'brew', out)
   return out
+}
+
+
+/**
+ * 判断查询出来的条目是否由指定包自己提供：在只放这个包的隔离作者存储里，让作者加载器按同一类别 + 编号取回。
+ * 解析时带上目标包作者声明的 dependencies（只用于让作者展开 _copy）；输出再用目标包 raw 清单筛，
+ * 依赖包自己的条目不会算到这个包名下。baseitem / magicvariant 等作者加载器在包内合并出的条目会按
+ * 解析后的最终类别返回，不需要手写类别转换表。
+ */
+export async function packOwnedItems(
+  opts: BuildAltOptions,
+  docIdLocal: string,
+  prop: string,
+  hashes: string[],
+  rawHashes: Iterable<string>,
+): Promise<Map<string, unknown>> {
+  const stored = ((await opts.view.kvGet(opts.source.codeSet, BREW_STORAGE_KEY)) ?? []) as StoredBrew[]
+  const doc = stored.find((d) => String(d.head.docIdLocal) === docIdLocal)
+  if (!doc) return new Map()
+  const raw = new Set(rawHashes)
+  const unique = [...new Set(hashes.filter((hash) => Boolean(hash) && raw.has(hash)))]
+  if (!unique.length) return new Map()
+  const got = await isolatedItems(opts, withDependencies(doc, stored), unique.map((hash) => ({ prop, hash })))
+  return new Map(unique.filter((hash) => got[`${prop}|${hash}`] !== undefined).map((hash) => [hash, got[`${prop}|${hash}`]]))
 }
