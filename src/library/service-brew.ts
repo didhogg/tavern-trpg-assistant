@@ -127,10 +127,18 @@ export async function mutateAuthor<T>(ctx: BrewContext, codeSet: string, kind: s
   }
 }
 
-export async function brewAddUrl(ctx: BrewContext, sourceId: string, url: string): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
+/** 自制包下载的真实阶段（P5 T6 B1，驾驶员批准）：作者一次调用下完主文件和依赖，中间拆不开，所以只有这三段。 */
+export type BrewProgress = (stage: 'download' | 'parse' | 'publish', step: number, total: number) => void
+
+export async function brewAddUrl(ctx: BrewContext, sourceId: string, url: string, onProgress?: BrewProgress): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
   const s = brewSource(sourceId)
   const handle = await ctx.operations.begin({ kind: 'brew-add', set: s.id, codeSet: s.codeSet })
+  const step = async (stage: 'download' | 'parse' | 'publish', i: number): Promise<void> => {
+    onProgress?.(stage, i, 3)
+    await ctx.operations.progress(handle, { stage: `brew-${stage}`, done: i, total: 3 })
+  }
   try {
+    await step('download', 0)
     const r = await withTimeout(async () => (await ctx.frame(s.codeSet, handle.target)).call('brewAddUrl', url), '下载自制包')
     // 作者网络出错时自己吞掉错误、什么都不装（返回空）：这时作废这次准备版本（下了一半的东西不进书架），报明确的失败给界面出横幅
     if (!r.value.length) {
@@ -138,7 +146,9 @@ export async function brewAddUrl(ctx: BrewContext, sourceId: string, url: string
       ctx.onLog?.({ level: 'error', source: s.id, kind: 'brew-add', message: `下载没有完成：${url}`, detail: r.errors })
       throw new Error('下载没有完成（网络中断或文件取不到），已丢弃这次下了一半的内容，原有内容没有变化')
     }
+    await step('parse', 1)
     const parse = await afterBrewChange(ctx, s, handle.target)
+    await step('publish', 2)
     const view = await publishBrew(ctx, s, handle, parse)
     return { ...r, parse, view: view.id }
   } catch (e) {

@@ -70,6 +70,11 @@ describe('按书计划（P5 T2）', () => {
     expect(plan.bySource.files).toEqual([])
     expect(plan.byBook.files).toEqual([])
   })
+  it('已经装着、但没有专属文件的来源（Generic 等）不算缺；拼错的照样报缺（P5 T6 回归）', () => {
+    const plan = officialPlan(list, owners, { sources: ['Generic', 'NOPE'], books: [] }, { installedSources: ['generic'] })
+    expect(plan.missing.sources).toEqual(['NOPE'])
+  })
+
   it('已装冒险正文按需加进计划；全装时不筛来源', () => {
     const plan = officialPlan(list, owners, { adventures: ['LMoP'] })
     expect(plan.byAdventure.files).toEqual(['data/adventure/adventure-lmop.json'])

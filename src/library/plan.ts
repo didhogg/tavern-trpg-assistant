@@ -87,6 +87,11 @@ export interface PlanOptions {
   allBooks?: boolean
   /** 已经在本地装过的冒险；用于区分“新选但作者没有”和“上游移除了已装冒险”。 */
   knownAdventures?: string[]
+  /**
+   * 这一套里已经装着的来源（状态里记的）。其中没有专属文件的（Generic、基础包等，混在共用文件里，共用文件总会一起装）
+   * 不算「缺」；拼错 / 从没装过的来源照样报缺（P5 T6：单本卸载后再下载 / 检查更新被误拒的回归）。
+   */
+  installedSources?: string[]
   /** 这套作者程序（cn / en）；索引过滤按资料集 + 路径存，避免中英互相覆盖。 */
   codeSet?: string
   /** 作者来源索引文件：路径 → 索引里出现的全部来源。 */
@@ -169,7 +174,8 @@ export function officialPlan(list: FileList, owners: Record<string, PlanOwner>, 
     out.sourceIndexes[keyOf(path)] = allSources ? null : allowed.filter((s) => sources?.has(s) ?? false)
   }
   if (allSources && !Object.keys(opts.indexSources ?? {}).length) out.sourceIndexes[keyOf('*')] = null
-  if (!allSources && sources) for (const s of sources) if (!seenSource.has(s)) out.missing.sources.push(s)
+  const installed = new Set((opts.installedSources ?? []).map((s) => s.toLowerCase()))
+  if (!allSources && sources) for (const s of sources) if (!seenSource.has(s) && !installed.has(s.toLowerCase())) out.missing.sources.push(s)
   if (!allBooks && books) for (const b of books) if (!seenBook.has(b)) out.missing.books.push(b)
   // 冒险正文：只加选中的（计划外，但执行 / 估算共用这一份）
   const seenAdventure = new Set<string>()

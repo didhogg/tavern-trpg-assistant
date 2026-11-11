@@ -174,7 +174,7 @@ export function createBackend(opts: BackendOptions): Backend {
       const source = getSource(setId)
       const rec = await directory.get(source.codeSet)
       const list = await files.fileList(source, view)
-      return officialPlan(list, rec.owners, { sources: planOpts.sources ?? null, books: planOpts.books ?? null, adventures: planOpts.adventures ?? null }, { indexSources: rec.indexSources, codeSet: source.codeSet, ...(planOpts.knownAdventures ? { knownAdventures: planOpts.knownAdventures } : {}), ...(planOpts.allSources ? { allSources: true } : {}) })
+      return officialPlan(list, rec.owners, { sources: planOpts.sources ?? null, books: planOpts.books ?? null, adventures: planOpts.adventures ?? null }, { indexSources: rec.indexSources, codeSet: source.codeSet, ...(planOpts.knownAdventures ? { knownAdventures: planOpts.knownAdventures } : {}), ...(planOpts.installedSources ? { installedSources: planOpts.installedSources } : {}), ...(planOpts.allSources ? { allSources: true } : {}) })
     },
     precompute: async (setId, view, signal, onProgress) => {
       const rows = await runPrecompute([getSource(setId).codeSet], signal, onProgress)

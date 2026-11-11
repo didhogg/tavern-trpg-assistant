@@ -4,7 +4,7 @@ import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import { ParsedMemo } from './parsed-memo'
 import type { LogSink } from './logs'
 import { brewCorporaKey, type BrewCorpora, type BrewParseReport } from './brew'
-import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutateAuthor, prepareBrewDelete, type BrewContext } from './service-brew'
+import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutateAuthor, prepareBrewDelete, type BrewContext, type BrewProgress } from './service-brew'
 import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import type { HealthReport } from './health'
@@ -327,8 +327,8 @@ export class LibraryService {
     return mutateAuthor(this.brewContext(), codeSet, kind, run)
   }
 
-  async brewAddUrl(sourceId: string, url: string): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
-    return brewAddUrl(this.brewContext(), sourceId, url)
+  async brewAddUrl(sourceId: string, url: string, onProgress?: BrewProgress): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
+    return brewAddUrl(this.brewContext(), sourceId, url, onProgress)
   }
 
   async brewInstallSources(sourceId: string, sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null; view?: string }> {

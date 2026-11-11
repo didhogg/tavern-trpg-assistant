@@ -17,6 +17,7 @@ const stored = new Set(['en-official|spell|fireball_phb', 'en-official|subclass|
 const lib = {
   englishPairs: async (id: string) => { if (id !== 'cn-official') throw new Error('x'); return pairs },
   storedItem: async (set: string, prop: string, hash: string) => (stored.has(`${set}|${prop}|${hash}`) ? { item: {}, source: null } : null),
+  officialInstalled: async () => true,
 } as unknown as LibraryService
 
 const ref = (set: string, prop: string, hash: string) => ({ set, prop, hash })
@@ -49,5 +50,21 @@ describe('中英对应', () => {
     expect(await stub([r1], null).counterpart(ref('cn-brew', 'spell', 'a'))).toEqual({ status: 'found', refs: [r1], reason: null, sharedBy: 0 })
     expect((await stub([r1, { ...r1, hash: 'y' }], null).counterpart(ref('cn-brew', 'spell', 'a'))).status).toBe('ambiguous')
     expect(await stub([], 'structure-differs').counterpart(ref('en-brew', 'spell', 'a'))).toMatchObject({ status: 'none', reason: 'structure-differs' })
+  })
+  it('自制条目：另一种语言的官方资料没装 → 直接说没装，不去开那边的作者小窗（P5 T6）', async () => {
+    let asked = 0
+    const c = new Counterparts({ ...lib, officialInstalled: async (codeSet: string) => codeSet !== 'en' } as unknown as LibraryService, { entry: async () => { asked++; return { refs: [], reason: null } } })
+    expect(await c.counterpart(ref('cn-brew', 'item', 'a'))).toMatchObject({ status: 'none', reason: 'not-installed' })
+    expect(asked).toBe(0)
+  })
+  it('书 / 冒险正文：另一种语言装了同一书号才可切换；没装 / 没下载 / 自制没有各给原因（P5 T6）', async () => {
+    const view = (books: string[] | null, installed = true) => ({ officialState: async () => (installed ? { status: 'installed' } : null), installedBooks: async () => books, installedAdventures: async () => [], derivedGet: async () => null })
+    const mk = (over: Record<string, unknown>) => new Counterparts({ ...lib, ...over } as unknown as LibraryService)
+    expect(await mk({ currentView: async () => view(['PHB']) }).corpus({ set: 'cn-official', prop: 'book', id: 'PHB' })).toEqual({ target: { set: 'en-official', prop: 'book', id: 'PHB' }, reason: null })
+    expect((await mk({ officialInstalled: async () => false }).corpus({ set: 'cn-official', prop: 'book', id: 'PHB' })).reason).toBe('not-installed')
+    expect((await mk({ currentView: async () => view(['MM']) }).corpus({ set: 'cn-official', prop: 'book', id: 'PHB' })).reason).toBe('not-found')
+    const brew = mk({ brewCorpora: async () => ({ book: [{ id: 'MyBook', name: 'x', source: 'X', hash: 'h' }] }) })
+    expect((await brew.corpus({ set: 'cn-brew', prop: 'book', id: 'MyBook' })).target).toEqual({ set: 'en-brew', prop: 'book', id: 'MyBook' })
+    expect((await brew.corpus({ set: 'cn-brew', prop: 'book', id: 'Other' })).reason).toBe('no-counterpart')
   })
 })

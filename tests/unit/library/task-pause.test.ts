@@ -44,4 +44,24 @@ describe('任务暂停 / 继续', () => {
     expect((done.result as { download: { reused: number } }).download.reused).toBe(1)
     expect(fileRequests).toBe(0)
   })
+  it('取消一个已暂停的任务：状态变成已取消，不能再继续（P5 T6）', async () => {
+    db = new LibraryDatabase(`task-pause-cancel-${Math.random()}`)
+    const revisions = new LibraryRevisionStore(db)
+    await revisions.ensureLegacy()
+    const operations = new LibraryOperations({ db, revisions })
+    const path = 'data/spells/spells-phb.json'
+    const bytes = utf8ToBytes('{"spell":[]}')
+    const sha = gitBlobSha(bytes)
+    const common = { files: [] as string[], bytes: 0 }
+    const plan = { ...common, files: [path], bytes: bytes.length, shared: common, bySource: { files: [path], bytes: bytes.length }, byBook: common, byClass: common, byAdventure: common, sourceIndexes: {}, missing: { sources: [], books: [] }, sources: ['PHB'], books: ['PHB'], adventures: [] }
+    const fetchImpl = (async (url: string) => (url.includes('/git/trees/') ? { ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(0), json: async () => ({ tree: [{ path, type: 'blob', sha, size: bytes.length }] }) } : { ok: true, status: 200, arrayBuffer: async () => bytes.slice().buffer, json: async () => null })) as never
+    const frame = { codeSet: 'cn', frame: null, ready: null, failures: [], close: () => undefined, call: async () => undefined }
+    const tasks = new DownloadTasks({ db, revisions, operations, files: new FileProvider({ db, fetchImpl }), openFrame: async () => frame as never, planOfficial: async () => plan })
+    const id = tasks.startOfficial('cn-official', { books: ['PHB'] })
+    tasks.pause(id)
+    expect((await tasks.wait(id)).status).toBe('paused')
+    await tasks.cancel(id)
+    expect(tasks.get(id)?.status).toBe('cancelled')
+    expect(await tasks.resume(id)).toBeNull()
+  })
 })

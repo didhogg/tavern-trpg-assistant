@@ -123,7 +123,7 @@ export class OfficialUpdates {
     const rec = await this.opts.directory.get(source.codeSet, { commit: latest })
     if (rec.errors.books || !rec.books.length) throw new Error(rec.errors.books ?? `作者书目（目标提交 ${latest.slice(0, 7)}）为空或取不到`)
     if (rec.errors.adventures && adventures.length) throw new Error(rec.errors.adventures)
-    const plan = officialPlan(list, rec.owners, { sources: state.sources, books: state.books, adventures }, { indexSources: rec.indexSources, codeSet: source.codeSet, knownAdventures: adventures })
+    const plan = officialPlan(list, rec.owners, { sources: state.sources, books: state.books, adventures }, { indexSources: rec.indexSources, codeSet: source.codeSet, knownAdventures: adventures, installedSources: state.sources ?? [] })
     if (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0)) {
       throw new Error(`目标提交的作者目录缺少：${[...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')}`)
     }

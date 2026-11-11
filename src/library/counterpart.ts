@@ -6,6 +6,7 @@ import type { BrewPairs } from './brew-pairing'
 import type { EnglishPairs, LibraryService } from './service'
 import type { EntryRef } from './scopes'
 import { SOURCES, getSource, officialSourceOf } from './sources'
+import { parsedKey } from './install'
 
 export type CounterpartStatus = 'found' | 'ambiguous' | 'none'
 
@@ -48,9 +49,34 @@ export class Counterparts {
   /** 自制条目：找配对的包，按同一下标取另一种语言里的那一条（P5 G-3a；配对规则见 brew-pairing.ts）。 */
   private async brewCounterpart(ref: EntryRef, opts: { docIdLocal?: string }): Promise<Counterpart> {
     if (!this.brewPairs) return none('pack-unpaired')
+    // 另一种语言的官方资料没装：那边的作者程序启动不了（缺官方数据文件），直接说「没装」，不去开一个注定失败的小窗（P5 T6）
+    const pairSet = getSource(ref.set).pair
+    if (pairSet && !(await this.lib.officialInstalled(getSource(pairSet).codeSet))) return none('not-installed')
     const { refs, reason } = await this.brewPairs.entry(ref, opts)
     if (!refs.length) return none(reason ?? 'no-counterpart')
     return { status: refs.length === 1 ? 'found' : 'ambiguous', refs, reason: null, sharedBy: 0 }
+  }
+
+  /**
+   * 书 / 冒险正文（阅读器）在另一种语言里是不是也有（P5 T6）：两种语言的书号相同。
+   * 官方：另一种语言的官方资料装着，且这本书 / 冒险也装了；自制：配对的自制源里有同一书号的正文。只看安装记录，不读正文。
+   */
+  async corpus(ref: { set: string; prop: string; id: string }): Promise<{ target: { set: string; prop: string; id: string } | null; reason: Counterpart['reason'] }> {
+    const source = SOURCES.find((s) => s.id === ref.set)
+    if (!source?.pair) return { target: null, reason: 'not-paired' }
+    const pair = getSource(source.pair)
+    if (!(await this.lib.officialInstalled(pair.codeSet))) return { target: null, reason: 'not-installed' }
+    const target = { set: pair.id, prop: ref.prop, id: ref.id }
+    if (pair.kind === 'brew') {
+      const list = (await this.lib.brewCorpora(pair.id))[ref.prop] ?? []
+      return list.some((b) => b.id === ref.id) ? { target, reason: null } : { target: null, reason: 'no-counterpart' }
+    }
+    const view = await this.lib.currentView()
+    const state = await view.officialState(pair.id)
+    if (!state || state.status !== 'installed') return { target: null, reason: 'not-installed' }
+    const installed = ref.prop === 'adventure' || ref.prop === 'adventureData' ? await view.installedAdventures(pair.id) : await view.installedBooks(pair.id)
+    const has = installed ? installed.includes(ref.id) : !!(await view.derivedGet(parsedKey(pair.id, ref.prop, ref.id)))
+    return has ? { target, reason: null } : { target: null, reason: 'not-found' }
   }
 
   /**

@@ -50,7 +50,7 @@ export interface TaskOptions {
   /** 开一个只读本地、绑定到指定版本的作者小窗。 */
   openFrame: (codeSet: string, view: LibraryView) => Promise<AuthorFrame>
   /** 按书计划：任务没拿到现成计划、但给了 books / sources 时，由后端用作者目录生成。 */
-  planOfficial?: (setId: string, opts: { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null; allSources?: boolean; knownAdventures?: string[] }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
+  planOfficial?: (setId: string, opts: { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null; allSources?: boolean; knownAdventures?: string[]; installedSources?: string[] }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
   /** T2：下载任务里的换算段；后端接结算内核，库层只报进度。 */
   precompute?: (setId: string, view: LibraryView, signal: AbortSignal, onProgress: (p: TaskState['progress']) => void) => Promise<unknown>
   onChange?: (t: TaskState) => void
@@ -102,7 +102,14 @@ export class DownloadTasks {
   }
 
   async cancel(id: string): Promise<void> {
-    this.tasks.get(id)?.abort.abort()
+    const task = this.tasks.get(id)
+    task?.abort.abort()
+    // 已暂停的任务早已停下（没有在跑的流程会把状态改掉）：这里直接标「已取消」，不能再继续（P5 T6）
+    if (task && task.state.status === 'paused') {
+      task.state.status = 'cancelled'
+      this.paused.delete(id)
+      this.officialOpts.delete(id)
+    }
     await this.opts.operations.cancel(id)
   }
 
@@ -192,6 +199,7 @@ export class DownloadTasks {
         const plan = opts.plan ?? await this.opts.planOfficial?.(setId, {
           books: selection.books, sources: selection.sources, adventures: selection.adventures,
           allSources: selection.allSources, knownAdventures: baseAdventures ?? [],
+          installedSources: base?.status === 'installed' ? base.sources ?? [] : [],
         }, handle.target)
         if (plan && (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0))) {
           const miss = [...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')
