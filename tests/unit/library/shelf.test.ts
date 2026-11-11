@@ -82,6 +82,26 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
     expect(rows.map((r) => [r.source, r.downloaded])).toEqual([['XGE', false], ['PHB', true], ['ZZ', false]])
   })
 
+  it('另一语言名字：中文行带作者 ENG_name，英文行从配对语言的书目缓存取中文名（只看缓存）', async () => {
+    const view = { installedBooks: async () => null, visibleSources: async () => null } as never
+    const cnRec = { ...REC, books: [{ id: 'PHB', name: '玩家手册', ENG_name: "Player's Handbook", source: 'PHB', group: 'core' }], adventures: [] }
+    const enRec = { ...REC, codeSet: 'en', books: [{ id: 'PHB', name: "Player's Handbook", source: 'PHB', group: 'core' }, { id: 'XX', name: 'Only English', source: 'XX', group: 'core' }], adventures: [] }
+    const peeked: string[] = []
+    const mk = (codeSet: string, setId: string, pair: string, rec: DirectoryRecord) => ({
+      lib: { currentView: async () => view, frameOf: async () => ({ call: async () => ({}) }), brewCorpora: async () => ({}) },
+      sourcesFor: () => [{ id: setId, kind: 'official', codeSet, lang: codeSet === 'cn' ? 'zh' : 'en', mirrors: [], pair }],
+      context: async () => ({ altMap: new Map(), assigns: new Map(), packs: new Map() }),
+      directory: { get: async () => rec, peek: async (cs: string) => { peeked.push(cs); return cs === 'cn' ? cnRec : cs === 'en' ? enRec : null } },
+      installed: async () => true, editions: async () => ({}), sourceCounts: async () => ({}), adventures: async () => [],
+    }) as never
+    const cn = await catalogFor(mk('cn', 'cn-official', 'en-official', cnRec as never), { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: [], exclude: [], choices: {} }, { remote: true, record: cnRec as never, view })
+    expect(cn.find((r) => r.source === 'PHB')?.altName).toBe("Player's Handbook")
+    const en = await catalogFor(mk('en', 'en-official', 'cn-official', enRec as never), { rule: 'dnd5e2014', codeSet: 'en', scopes: [], include: [], exclude: [], choices: {} }, { remote: true, record: enRec as never, view })
+    expect(en.find((r) => r.source === 'PHB')?.altName).toBe('玩家手册')
+    expect(en.find((r) => r.source === 'XX')?.altName).toBeUndefined()
+    expect(peeked).toContain('cn')
+  })
+
 describe('BookDirectory', () => {
   it('没装：开联网一次性小窗读完就关；带冒险文件路径；结果存缓存，第二次不再开小窗；peek 只看缓存', () => withDb(async (db) => {
     const net = fakeFrame()

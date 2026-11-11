@@ -21,7 +21,7 @@ import { getSource, type SourceEntry } from './sources'
 import { LibraryOperations } from './operations'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 import { ensureReadable, installedSource } from './service-read'
-import { tablesFor } from './service-tables'
+import { relatedTablesFor, tablesFor } from './service-tables'
 import { PackEntries } from './pack-entries'
 import type { BrewPack } from './brew-packs'
 import { englishOf } from './service-english-entry'
@@ -191,9 +191,8 @@ export class LibraryService {
     return p && i >= 0 ? { item: p.items[i], source: p.sources[i] } : null
   }
 
-  tables(sourceId: string, prop: string, hash?: string, viewArg?: LibraryView) {
-    return tablesFor(this, sourceId, prop, hash, viewArg)
-  }
+  tables(sourceId: string, prop: string, hash?: string, viewArg?: LibraryView) { return tablesFor(this, sourceId, prop, hash, viewArg) }
+  relatedTables(sourceId: string, prop: string, hash: string, viewArg?: LibraryView) { return relatedTablesFor(this, sourceId, prop, hash, viewArg) }
   async detail(sourceId: string, prop: string, hash: string, _source?: string | null, viewArg?: LibraryView): Promise<DetailResult | null> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)

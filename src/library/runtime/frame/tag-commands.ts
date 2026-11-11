@@ -70,3 +70,43 @@ export async function tagMeta(tag: string, text: string): Promise<TagMeta | null
     props: propsOfPage(page),
   }
 }
+
+/**
+ * 一批作者对象里出现的所有链接标签各自指向谁（P5 T6 G3：反向关联表）。按作者 Renderer.splitByTags 拆（嵌套标签也拆到），
+ * 每个标签交给上面的 tagMeta；结果是每个对象一组去重的「类别|编号」。作者不认识的标签（骰子、格式）跳过。
+ */
+export async function tagRefs(items: unknown[]): Promise<string[][]> {
+  await init()
+  const memo = new Map<string, string[]>()
+  const keysOf = async (tag: string, text: string): Promise<string[]> => {
+    const k = `${tag} ${text}`
+    let v = memo.get(k)
+    if (!v) {
+      const m = await tagMeta(tag, text)
+      v = m && m.hash ? m.props.map((p) => `${p}|${m.hash}`) : []
+      memo.set(k, v)
+    }
+    return v
+  }
+  const walkText = async (str: string, out: Set<string>): Promise<void> => {
+    if (!str.includes('{@')) return
+    for (const part of A.Renderer.splitByTags(str) as string[]) {
+      if (!part.startsWith('{@')) continue
+      const [tag, text] = A.Renderer.splitFirstSpace(part.slice(1, -1)) as [string, string]
+      for (const key of await keysOf(tag, text)) out.add(key)
+      await walkText(text, out)
+    }
+  }
+  const walk = async (v: unknown, out: Set<string>): Promise<void> => {
+    if (typeof v === 'string') return walkText(v, out)
+    if (Array.isArray(v)) { for (const x of v) await walk(x, out); return }
+    if (v && typeof v === 'object') for (const x of Object.values(v)) await walk(x, out)
+  }
+  const result: string[][] = []
+  for (const it of items) {
+    const out = new Set<string>()
+    await walk(it, out)
+    result.push([...out])
+  }
+  return result
+}

@@ -17,14 +17,15 @@ const LIST = {
 }
 const REC = { adventureFiles: { LMoP: 'data/adventure/adventure-lmop.json', CoS: 'data/adventure/adventure-cos.json' }, adventureProp: 'adventure', owners: {}, indexSources: {}, errors: { books: null, adventures: null } } as unknown as DirectoryRecord
 
-function world(opts: { cached?: string[]; fail?: boolean } = {}) {
+function world(opts: { cached?: string[]; fail?: boolean; noDir?: boolean; dirError?: string } = {}) {
   const calls: string[] = []
   const cached = new Set(opts.cached ?? [])
   const files = {
     cachedFileList: async (s: { id: string }) => (cached.has(s.id) ? LIST : null),
     fileList: async (s: { id: string }) => { calls.push(s.id); if (opts.fail) throw new Error('网络断了'); cached.add(s.id); return LIST },
   }
-  const directory = { get: async () => REC, peek: async () => (cached.size ? REC : null) }
+  const bad = { ...REC, errors: { books: opts.dirError ?? null, adventures: null } } as unknown as DirectoryRecord
+  const directory = { get: async () => (opts.dirError ? bad : REC), peek: async () => (opts.noDir ? null : cached.size ? REC : null) }
   return { calls, make: (db: LibraryDatabase) => new DownloadEstimator({ db, files: files as never, directory: directory as never, revisions: new LibraryRevisionStore(db) }) }
 }
 const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
@@ -33,6 +34,16 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
 }
 
 describe('DownloadEstimator', () => {
+  it('只选几本书却没有作者书目：大小为 null，不拿整套冒充；书目取不到写原因', () => withDb(async (db) => {
+    const r1 = await world({ cached: ['cn-official'], noDir: true }).make(db).estimate({ sets: ['cn-official'], books: { 'cn-official': ['PHB'] } }, { network: false })
+    expect(r1.data.sets[0].bytes).toBeNull()
+    expect(r1.data.sets[0].totalBytes).toBeNull()
+    const r2 = await world({ dirError: '书目取不到：断网' }).make(db).estimate({ sets: ['cn-official'], books: { 'cn-official': ['PHB'] } })
+    expect(r2.data.sets[0].bytes).toBeNull()
+    expect(r2.errors).toContain('书目取不到：断网')
+    const whole = await world({ cached: ['cn-official'], noDir: true }).make(db).estimate({ sets: ['cn-official'] }, { network: false })
+    expect(whole.data.sets[0].bytes).toBe(390)
+  }))
   it('资料 = 每套预载字节数之和（冒险和 js 不计）；冒险按所选相加；已下载的不再算', () => withDb(async (db) => {
     const w = world()
     const e = w.make(db)

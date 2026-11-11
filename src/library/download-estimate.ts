@@ -74,8 +74,15 @@ export class DownloadEstimator {
       const list = await this.listOf(setId, network, errors, view)
       if (!list) { sets.push({ setId, installed, bytes: null, totalBytes: null, sharedBytes: null, reusedBytes: null }); continue }
       const rec = network ? await this.deps.directory.get(getSource(setId).codeSet) : await this.deps.directory.peek(getSource(setId).codeSet)
+      const picked = !!(needBooks || needSources)
+      // 选了具体书 / 来源却拿不到作者书目：只能说"算不出"，不能拿整套大小冒充这几本（P5 T6 G5）
+      if (picked && (!rec || rec.errors.books)) {
+        if (rec?.errors.books) errors.push(rec.errors.books)
+        sets.push({ setId, installed, bytes: installed ? 0 : null, totalBytes: null, sharedBytes: null, reusedBytes: null })
+        continue
+      }
       const plan = rec
-        ? officialPlan(list, rec.owners, { sources: input.sources?.[setId] ?? null, books: input.books?.[setId] ?? null }, { indexSources: rec.indexSources, codeSet: getSource(setId).codeSet })
+        ? officialPlan(list, rec.owners, { sources: needSources, books: needBooks }, { indexSources: rec.indexSources, codeSet: getSource(setId).codeSet })
         : precachePlan(list)
       if (installed) { sets.push({ setId, installed, bytes: 0, totalBytes: plan.bytes, sharedBytes: 0, reusedBytes: plan.bytes }); continue }
       const missing = await this.missingBytes(view, setId, list, plan.files)

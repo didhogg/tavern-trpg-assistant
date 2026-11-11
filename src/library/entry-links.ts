@@ -54,7 +54,8 @@ export interface ResolvedTag {
   source: string | null
   page: string
   hash: string
-  part?: { chapter: number | null; section: string | null }
+  /** 书 / 冒险的章号、小节名，以及同名小节是第几个（作者 `UidUtil.unpackUidAdventureBook` 的 ixNamedSection；旧链接没有时为 null）。 */
+  part?: { chapter: number | null; section: string | null; ixNamedSection?: number | null }
   located: Located | null
 }
 

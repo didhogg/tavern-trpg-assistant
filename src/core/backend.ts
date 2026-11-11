@@ -40,6 +40,7 @@ import { TrpgError } from './errors'
 import type { ImportDeps } from './transfer/importer'
 import { CampaignStarter } from './start-campaign'
 import { BookDirectory } from '../library/directory'
+import { DownloadEstimator, type DownloadEstimate, type EstimateInput, type EstimateOptions } from '../library/download-estimate'
 import { CatalogPrefetch, DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
 import { checkCorePacks } from '../rules/kernel/core-pack'
 
@@ -78,6 +79,8 @@ export interface LibraryBackend {
   tasks: DownloadTasks
   /** 官方书目（没装也能列）。 */
   directory: BookDirectory
+  /** 下载页按所选数据集 / 书 / 冒险估算（不像向导那样自动加结算内核要的英文资料；与真正下载同一份计划，P5 T6 G5）。 */
+  estimate: (input: EstimateInput, opts?: EstimateOptions) => Promise<DownloadEstimate>
   /** 首次启动后台预取书目与文件清单（boot.ts 调度）。 */
   prefetch: CatalogPrefetch
   precompute: KernelPrecompute
@@ -206,7 +209,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

@@ -158,6 +158,8 @@ export interface BrewUpdateCheck {
   local: number
   remote: number
   hasUpdate: boolean
+  /** 网址上现在这份的大小（约数：作者读回的原文重新序列化后的字节，原文件带缩进时实际传输会更多）。取失败为 null。 */
+  approxBytes: number | null
   /** 取网址失败的原因（原文）；失败的包 hasUpdate = false。 */
   error: string | null
 }
@@ -177,9 +179,9 @@ export async function brewCheckUpdates(docIdLocals: string[] | null = null): Pro
       try {
         const json = await A.DataUtil.loadRawJSON(b.head.url, { isBustCache: true })
         const remote = json._meta?.dateLastModified ?? 0
-        out.push({ docIdLocal: b.head.docIdLocal, filename: b.head.filename ?? null, url: b.head.url, local, remote, hasUpdate: remote > local, error: null })
+        out.push({ docIdLocal: b.head.docIdLocal, filename: b.head.filename ?? null, url: b.head.url, local, remote, hasUpdate: remote > local, approxBytes: new TextEncoder().encode(JSON.stringify(json)).length, error: null })
       } catch (e) {
-        out.push({ docIdLocal: b.head.docIdLocal, filename: b.head.filename ?? null, url: b.head.url, local, remote: 0, hasUpdate: false, error: e instanceof Error ? e.message : String(e) })
+        out.push({ docIdLocal: b.head.docIdLocal, filename: b.head.filename ?? null, url: b.head.url, local, remote: 0, hasUpdate: false, approxBytes: null, error: e instanceof Error ? e.message : String(e) })
       }
     }
     return out

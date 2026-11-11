@@ -10,7 +10,7 @@ import { detail, excludedFlags, search, searchIndexDump, searchIndexLoad, search
 import { directory, sourceFiles } from './directory-commands'
 import { diceRead, diceRoll, diceStats, diceTag } from './dice-commands'
 import { tableRoll, tableRow } from './table-roll-commands'
-import { tagMeta } from './tag-commands'
+import { tagMeta, tagRefs } from './tag-commands'
 import { tokenPath } from './image-commands'
 import { extractTables } from './table-extract-commands'
 import { brewDocIndex, brewExport, brewItemsByHash, corpusFile, brewRaw, converters, convertText, editableAddDependencies, editableDoc, editableEnsureSource, editablePut, editableRemove, editionOf, entryTemplate, excludeList, fluffOf, fluffOfMany, sourceNames } from './edit-commands'
@@ -124,5 +124,5 @@ export async function storageFlush(): Promise<string[]> {
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, brewPackRows, parseBrewProp, rawHashes, storageFlush,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory, sourceFiles }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tagRefs, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory, sourceFiles }
 export type CommandName = keyof typeof COMMANDS
