@@ -69,6 +69,8 @@ watch(() => [props.text, props.codeSet], run)
       <Term @open="openLinked(i)">{{ resolved[i]?.label }}</Term>
       <button v-if="tableOf[i]" class="lib-dice" type="button" data-testid="roll-outside" aria-label="直接掷这张表" @click="rollOutside(i)"><Icon name="dice-five" :size="12" />掷</button>
     </template>
+    <!-- 认得出是链接、库里却找不到目标：和普通字区分开（虚线），悬停说明；不猜着链到别的条目（P5 T6） -->
+    <span v-else-if="resolved[i]?.kind === 'link'" class="lib-deadlink" data-testid="dead-link" :title="`库里找不到「${resolved[i]?.label}」：可能它所在的书还没装，或者资料里的名字和链接对不上（上游数据）`">{{ resolved[i]?.label }}</span>
     <button v-else-if="resolved[i]?.kind === 'dice'" class="lib-dice" type="button" @click="toast.info('骰盘接线稍后开放')"><Icon name="dice-five" :size="12" />{{ resolved[i].label }}</button>
     <template v-else>{{ resolved[i]?.label ?? tagLabel(seg.content, seg.tag) }}</template>
   </template>

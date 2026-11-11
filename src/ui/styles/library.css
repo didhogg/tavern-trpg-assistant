@@ -142,7 +142,14 @@
 
 /* 作者算出来的居中文字（豁免 DC = 8 + …）/ 内嵌块 */
 .lib-ability { text-align: center; font-weight: var(--fw-semibold); margin: var(--sp-2) 0; }
-.lib-statblock { margin: var(--sp-1) 0; }
+/* 书里摊开的数值块 / 背景描述（照作者 _renderStatblock 的带标题框，P5 T6） */
+.lib-embedded { margin: var(--sp-3) 0; border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); overflow: hidden; }
+.lib-embedded__head { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) var(--sp-3) var(--sp-1) var(--sp-1); background: var(--primary-tint); border-bottom: var(--border) solid var(--line); font-family: var(--font-serif); }
+.lib-embedded__head small { margin-left: auto; font-family: var(--font-sans, inherit); }
+.lib-embedded[data-fluff="true"] .lib-embedded__head { background: var(--bg); }
+.lib-embedded > div, .lib-embedded__body { padding: var(--sp-2) var(--sp-3); }
+.lib-embedded .lib-embedded__body { padding: 0; }
+.lib-embedded h4 { margin: var(--sp-2) 0 var(--sp-1); font-size: var(--fs-md, 1rem); }
 .lib-inline { display: inline; }
 
 /* 书架顶部的搜索框：和「我的库」「下载」页一样放在最上面，滚动时留在顶部 */
@@ -180,3 +187,6 @@
 .lib-langsw__btn[aria-pressed='true'] { background: var(--primary); color: var(--on-primary, #fff); box-shadow: 0 1px 3px color-mix(in srgb, var(--primary) 40%, transparent); cursor: default; }
 .lib-langsw__btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .lib-langsw__btn:focus-visible { outline: 2px solid var(--focus, var(--primary)); outline-offset: 1px; }
+
+/* 认得出是链接、库里找不到目标的文字（P5 T6）：虚线下划线 + 悬停说明，和普通文字区分 */
+.lib-deadlink { text-decoration: underline dashed var(--text3); text-underline-offset: 3px; cursor: help; color: var(--text2); }
