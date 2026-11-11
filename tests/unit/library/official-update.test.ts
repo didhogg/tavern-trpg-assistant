@@ -37,8 +37,16 @@ async function seedLocal() {
   await db.sets.put({ id: 'cn-official', commit: OLD, status: 'installed' })
   await db.files.bulkPut([file('data/spells.json', 'aaa'), file('data/items.json', 'bbb'), file('data/old.json', 'ccc')])
 }
-const make = (fetchImpl: FetchLike, started: Array<{ id: string; plan?: unknown }> = []) =>
-  new OfficialUpdates({ db, revisions, files: new FileProvider({ db, fetchImpl }), fetchImpl, startOfficial: (id, opts) => { started.push({ id, plan: opts?.plan }); return 'task-1' } })
+const directoryFor = (tree: Record<string, { sha: string; size: number }>) => ({
+  get: async () => ({
+    codeSet: 'cn', commit: NEW, groups: [], sources: { PHB: { full: 'Player Handbook', abv: 'PHB', edition: { classic: true, basis: 'date' } } },
+    books: [{ id: 'PHB', source: 'PHB', name: 'Player Handbook' }], adventures: [], adventureFiles: {}, adventureProp: 'adventure',
+    owners: Object.fromEntries(Object.keys(tree).map((path) => [path, { kind: 'source', sources: ['PHB'] }])),
+    indexSources: { 'data/spells/index.json': ['PHB'] }, sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null },
+  }),
+}) as never
+const make = (fetchImpl: FetchLike, started: Array<{ id: string; plan?: unknown }> = [], tree: Record<string, { sha: string; size: number }> = {}) =>
+  new OfficialUpdates({ db, revisions, files: new FileProvider({ db, fetchImpl }), fetchImpl, directory: directoryFor(tree), startOfficial: (id, opts) => { started.push({ id, plan: opts?.plan }); return 'task-1' } })
 
 describe('OfficialUpdates.check', () => {
   it('上游最新提交就是现在的：已是最新', async () => {
@@ -50,7 +58,7 @@ describe('OfficialUpdates.check', () => {
   it('有新提交、作者程序版本一致：可更新，数出要重下 / 新增 / 删掉多少；不改任何已装的东西', async () => {
     await seedLocal()
     const tree = { 'data/spells.json': { sha: 'aaa', size: 10 }, 'data/items.json': { sha: 'bbb2', size: 30 }, 'data/races.json': { sha: 'ddd', size: 5 }, 'search/index.json': { sha: 'eee', size: 7 } }
-    const r = await make(upstream({ tree })).check('cn-official')
+    const r = await make(upstream({ tree }), [], tree).check('cn-official')
     expect(r).toMatchObject({ status: 'available', latest: NEW, programVersion: { plugin: PLUGIN, upstream: PLUGIN }, changed: { changed: 1, added: 2, bytes: 42 } })
     expect((await db.files.toArray()).every((f) => f.commit === OLD)).toBe(true)
     expect(commitOf(SRC)).toBe(OLD)
@@ -71,7 +79,7 @@ describe('OfficialUpdates.apply', () => {
     await seedLocal()
     const started: Array<{ id: string; plan?: unknown }> = []
     const tree = { 'data/spells.json': { sha: 'aaa', size: 10 }, 'data/items.json': { sha: 'bbb2', size: 30 } }
-    const r = await make(upstream({ tree }), started).apply('cn-official')
+    const r = await make(upstream({ tree }), started, tree).apply('cn-official')
     expect(r.task).toBe('task-1')
     expect(started.map((x) => x.id)).toEqual(['cn-official'])
     expect(started[0].plan).toBeTruthy()

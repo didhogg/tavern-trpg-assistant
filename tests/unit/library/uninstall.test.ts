@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { LibraryDatabase } from '../../../src/library/db'
-import { uninstallOfficial } from '../../../src/library/uninstall'
+import { removeOfficialParts, uninstallOfficial } from '../../../src/library/uninstall'
 import { getSource } from '../../../src/library/sources'
 import { LibraryRevisionStore } from '../../../src/library/revision'
 import type { TaskState } from '../../../src/library/tasks'
@@ -76,4 +76,58 @@ describe('整套官方资料删除', () => {
     db = new LibraryDatabase(`test-uninstall3-${Math.random()}`)
     expect(await uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [] }, afterDelete: () => {} }, 'en-official')).toMatchObject({ files: 0, bytes: 0, brewKept: false })
   })
+  it('官方单书牵连自制包：同一准备版本里删包并在一次发布写入 brews', async () => {
+    db = new LibraryDatabase(`test-uninstall-book-brew-${Math.random()}`)
+    await seed()
+    const revisions = new LibraryRevisionStore(db)
+    const directory = { get: async () => ({ codeSet: 'cn', commit: 'c', groups: [], sources: { PHB: {}, MM: {} }, books: [{ id: 'PHB', source: 'PHB' }, { id: 'MM', source: 'MM' }], adventures: [], adventureFiles: {}, adventureProp: 'adventure', owners: {}, indexSources: {}, sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null } }) } as never
+    let removed: string[] = []
+    await removeOfficialParts({
+      db, revisions, tasks: { list: () => [] }, directory, brewSetOf: () => 'cn-brew',
+      removeBrews: async (_view, setId, ids) => { removed = [setId, ...ids]; return { packs: [{ docIdLocal: ids[0], stableId: null, checksum: null }] } },
+      afterDelete: () => undefined,
+    }, { setId: 'cn-official', bookIds: ['PHB'], bookSources: ['PHB'], removeBrews: ['p1'] })
+    expect(removed).toEqual(['cn-brew', 'p1'])
+    expect((await (await revisions.published()).brewState('cn-brew'))?.packs).toEqual([{ docIdLocal: 'p1', stableId: null, checksum: null }])
+  })
+
+})
+
+describe('官方单本书删除', () => {
+  it('只移除选中书和来源，保留其他书、共享文件与旧版本', async () => {
+    db = new LibraryDatabase(`test-uninstall-book-${Math.random()}`)
+    await seed()
+    const revisions = new LibraryRevisionStore(db)
+    const directory = {
+      get: async () => ({
+        codeSet: 'cn', commit: 'c', groups: [], sources: { PHB: {}, MM: {} }, books: [{ id: 'PHB', source: 'PHB' }, { id: 'MM', source: 'MM' }], adventures: [],
+        adventureFiles: {}, adventureProp: 'adventure', owners: {}, indexSources: { 'data/bestiary/index.json': ['PHB', 'MM'] },
+        sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null },
+      }),
+    } as never
+    let reset = ''
+    const r = await removeOfficialParts({ db, revisions, tasks: { list: () => [] }, directory, afterDelete: (_id, previous) => { reset = previous } }, { setId: 'cn-official', bookIds: ['PHB'], bookSources: ['PHB'] })
+    expect(r).toMatchObject({ retainedFiles: 2, retainedBytes: 150 })
+    expect(reset).toBeTruthy()
+    const view = await revisions.published()
+    expect((await view.officialState('cn-official'))?.books).toEqual(['MM'])
+    expect((await view.officialState('cn-official'))?.sources).toEqual(['MM'])
+    expect(await db.files.where('source').equals('cn-official').count()).toBe(2)
+    expect(await db.fileContents.where('source').equals('cn-official').count()).toBe(0)
+  })
+  it('官方单书牵连自制包：同一准备版本里删包并在一次发布写入 brews', async () => {
+    db = new LibraryDatabase(`test-uninstall-book-brew-${Math.random()}`)
+    await seed()
+    const revisions = new LibraryRevisionStore(db)
+    const directory = { get: async () => ({ codeSet: 'cn', commit: 'c', groups: [], sources: { PHB: {}, MM: {} }, books: [{ id: 'PHB', source: 'PHB' }, { id: 'MM', source: 'MM' }], adventures: [], adventureFiles: {}, adventureProp: 'adventure', owners: {}, indexSources: {}, sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null } }) } as never
+    let removed: string[] = []
+    await removeOfficialParts({
+      db, revisions, tasks: { list: () => [] }, directory, brewSetOf: () => 'cn-brew',
+      removeBrews: async (_view, setId, ids) => { removed = [setId, ...ids]; return { packs: [{ docIdLocal: ids[0], stableId: null, checksum: null }] } },
+      afterDelete: () => undefined,
+    }, { setId: 'cn-official', bookIds: ['PHB'], bookSources: ['PHB'], removeBrews: ['p1'] })
+    expect(removed).toEqual(['cn-brew', 'p1'])
+    expect((await (await revisions.published()).brewState('cn-brew'))?.packs).toEqual([{ docIdLocal: 'p1', stableId: null, checksum: null }])
+  })
+
 })

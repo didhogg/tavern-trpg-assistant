@@ -83,3 +83,18 @@ describe('版本化文件复用（P5 核验 1）', () => {
     await DB.delete()
   })
 })
+
+
+describe('旧库文件枚举（P5 复核）', () => {
+  it('复合主键 [source,path] 要返回真实路径，不返回 source', async () => {
+    const DB = new LibraryDatabase(`t-paths-${Math.random()}`)
+    const revisions = new (await import('../../../src/library/revision')).LibraryRevisionStore(DB)
+    await revisions.ensureLegacy()
+    await DB.files.bulkPut([
+      { source: source.id, path: 'data/a.json', commit: 'c', text: '{}', gitSha: 'a', size: 2, savedAt: 0 },
+      { source: source.id, path: 'data/b.json', commit: 'c', text: '{}', gitSha: 'b', size: 2, savedAt: 0 },
+    ])
+    expect(await (await revisions.published()).filePaths(source)).toEqual(['data/a.json', 'data/b.json'])
+    DB.close(); await DB.delete()
+  })
+})

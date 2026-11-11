@@ -2,7 +2,7 @@
 import { sha1 } from '@noble/hashes/legacy.js'
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js'
 
-export type FetchLike = (url: string) => Promise<{ ok: boolean; status: number; arrayBuffer(): Promise<ArrayBuffer>; json(): Promise<unknown> }>
+export type FetchLike = (url: string, init?: { signal?: AbortSignal }) => Promise<{ ok: boolean; status: number; arrayBuffer(): Promise<ArrayBuffer>; json(): Promise<unknown> }>
 
 /** Git 给文件算指纹的办法：sha1("blob <字节数>\0" + 内容)。和 GitHub 目录树里的 sha 直接可比。 */
 export function gitBlobSha(bytes: Uint8Array): string {
@@ -27,12 +27,12 @@ export interface Fetched {
 }
 
 /** 依次试每个地址；有指纹就核对，对不上换下一个；全部失败才报错。 */
-export async function fetchVerified(roots: string[], path: string, expected: Expected | undefined, fetchImpl: FetchLike = fetch): Promise<Fetched> {
+export async function fetchVerified(roots: string[], path: string, expected: Expected | undefined, fetchImpl: FetchLike = fetch, signal?: AbortSignal): Promise<Fetched> {
   const skipped: Fetched['skipped'] = []
   for (const root of roots) {
     const url = `${root}${path}`
     try {
-      const res = await fetchImpl(url)
+      const res = await fetchImpl(url, signal ? { signal } : undefined)
       if (!res.ok) {
         skipped.push({ url, reason: `HTTP ${res.status}` })
         continue
@@ -45,6 +45,7 @@ export async function fetchVerified(roots: string[], path: string, expected: Exp
       }
       return { bytes, url, gitSha, skipped }
     } catch (error) {
+      if (signal?.aborted) throw error
       skipped.push({ url, reason: error instanceof Error ? error.message : String(error) })
     }
   }
@@ -54,8 +55,8 @@ export async function fetchVerified(roots: string[], path: string, expected: Exp
 export type FileList = Record<string, Expected>
 
 /** GitHub 目录树（锁定版本）→ 路径 → {指纹, 大小}。这是镜像比对的标准答案。 */
-export async function fetchFileList(url: string, fetchImpl: FetchLike = fetch): Promise<FileList> {
-  const res = await fetchImpl(url)
+export async function fetchFileList(url: string, fetchImpl: FetchLike = fetch, signal?: AbortSignal): Promise<FileList> {
+  const res = await fetchImpl(url, signal ? { signal } : undefined)
   if (!res.ok) throw new Error(`取文件清单失败：HTTP ${res.status} ${url}`)
   const body = (await res.json()) as { truncated?: boolean; tree?: Array<{ path: string; type: string; sha: string; size?: number }> }
   if (body.truncated) throw new Error(`文件清单被截断：${url}`)

@@ -4,8 +4,8 @@ import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import { ParsedMemo } from './parsed-memo'
 import type { LogSink } from './logs'
 import { brewCorporaKey, type BrewCorpora, type BrewParseReport } from './brew'
-import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutateAuthor, type BrewContext } from './service-brew'
-import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
+import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutateAuthor, prepareBrewDelete, type BrewContext } from './service-brew'
+import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import type { HealthReport } from './health'
 import { englishCoverageOf, healthOf, officialInstalledOf, storedOf, warmEnglishPairsOf, type HealthContext } from './service-health'
@@ -20,16 +20,16 @@ import type { AuthorFrame } from './runtime/host'
 import { getSource, type SourceEntry } from './sources'
 import { LibraryOperations } from './operations'
 import type { LibraryRevisionStore, LibraryView } from './revision'
-
+import { ensureReadable, installedSource } from './service-read'
+import { tablesFor } from './service-tables'
+import { englishOf } from './service-english-entry'
 export type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
-
 export interface FrameContext {
   view?: LibraryView
   /** 隔离解析用的单一作者存储范围（不配合 view 时是旧的单范围行为）。 */
   kvScope?: string
   filterIndex?: boolean
 }
-
 export interface LibraryServiceOptions {
   db: LibraryDatabase
   revisions: LibraryRevisionStore
@@ -41,7 +41,6 @@ export interface LibraryServiceOptions {
   onLog?: LogSink
   operations?: LibraryOperations
 }
-
 export class LibraryService {
   private readonly frames = new Map<string, Promise<AuthorFrame>>()
   private readonly pairsCache = new Map<string, Promise<EnglishPairs>>()
@@ -49,27 +48,22 @@ export class LibraryService {
   private readonly parsedMemo: ParsedMemo
   private readonly embedded: EmbeddedTables
   readonly operations: LibraryOperations
-
   constructor(private readonly opts: LibraryServiceOptions) {
     this.parsedMemo = new ParsedMemo(opts.db)
     this.embedded = new EmbeddedTables(opts.db, (cs, view) => this.frame(cs, view))
     this.operations = opts.operations ?? new LibraryOperations({ db: opts.db, revisions: opts.revisions })
   }
-
   /** 当前已发布版本；读操作开始处只取一次。 */
   currentView(): Promise<LibraryView> {
     return this.opts.revisions.published()
   }
-
   private async view(view?: LibraryView): Promise<LibraryView> {
     return view ?? this.currentView()
   }
-
   /** 每套作者程序、每个库版本一个小窗；屏蔽表、搜索索引都在这个小窗里，开关书也经它改。 */
   async frameOf(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
     return this.frame(codeSet, await this.view(view))
   }
-
   private frame(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
     const key = `${view?.id ?? 'legacy'}:${codeSet}`
     let p = this.frames.get(key)
@@ -80,13 +74,11 @@ export class LibraryService {
     }
     return p
   }
-
   /** 在指定作者存储范围里开一个小窗（隔离解析、导入预览用；用完由调用方关）。 */
   openFrameIn(codeSet: string, kvScope: string, view?: LibraryView): Promise<AuthorFrame> {
     return this.opts.openFrame(codeSet, { kvScope, ...(view ? { view } : {}), filterIndex: true })
   }
 
-  /** 每次发布加一：依赖小窗里算出来的东西（排序名次等）的缓存用它判断是否过期。 */
   generation = 0
 
   /** 关掉所有小窗（测试 / 全量重置）。 */
@@ -109,7 +101,6 @@ export class LibraryService {
     for (const key of [...this.pairsCache.keys()]) if (key.startsWith(`${viewId}:`)) this.pairsCache.delete(key)
     for (const key of [...this.searchLoaded.keys()]) if (key.startsWith(`${viewId}:`)) this.searchLoaded.delete(key)
   }
-
   /** 手动把整套资料一次算好存库（装书 / 迁移后用；平时看资料走缓存）。 */
   async precompute(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean } = {}, viewArg?: LibraryView): Promise<PrecomputeReport> {
     const view = await this.view(viewArg)
@@ -117,15 +108,14 @@ export class LibraryService {
     const frame = await this.frame(source.codeSet, view)
     return precomputeSource({ source, db: this.opts.db, frame, view, prop: opts.prop, fluff: opts.fluff ?? true, excluded: opts.excluded ?? true, search: opts.search ?? source.kind === 'official' })
   }
-
   private async ensure(sourceId: string, opts: { prop?: string; fluff?: boolean; excluded?: boolean; search?: boolean }, view: LibraryView): Promise<void> {
     const source = getSource(sourceId)
     await ensurePrecomputed({ source, db: this.opts.db, view, openFrame: (cs) => this.opts.openFrame(cs, { view, filterIndex: true }), ...opts })
   }
-
   async parsed(sourceId: string, prop: string, viewArg?: LibraryView): Promise<ParsedProp> {
     const view = await this.view(viewArg)
-    if (prop === EMBEDDED_PROP) return getSource(sourceId).kind === 'official' ? this.embedded.ensure(sourceId, view) : { items: [], hashes: [], sources: [] }
+    await ensureReadable(view, sourceId)
+    if (prop === EMBEDDED_PROP) return this.embedded.ensure(sourceId, view)
     const value = await this.parsedMemo.get(parsedKey(sourceId, prop), view)
     const rec = value === undefined ? undefined : { value }
     if (!rec && getSource(sourceId).kind === 'brew') {
@@ -145,12 +135,15 @@ export class LibraryService {
   }
 
   async categories(sourceId: string, viewArgs?: LibraryView): Promise<Record<string, number>> {
-    const r = await this.report(sourceId, viewArgs)
+    const view = await this.view(viewArgs)
+    await ensureReadable(view, sourceId)
+    const r = await this.report(sourceId, view)
     return Object.fromEntries(Object.entries(r.parse.props).map(([prop, v]) => [prop, v.count]))
   }
 
   async query(sourceId: string, prop: string, { source, includeExcluded = false, view: viewArg }: { source?: string; includeExcluded?: boolean; view?: LibraryView } = {}): Promise<QueryRow[]> {
     const view = await this.view(viewArg)
+    await ensureReadable(view, sourceId)
     if (prop === EMBEDDED_PROP) {
       const p = await this.parsed(sourceId, prop, view)
       return p.items.flatMap((item, i) => (source === undefined || p.sources[i]?.toLowerCase() === source.toLowerCase() ? [{ hash: p.hashes[i], source: p.sources[i], excluded: false, item }] : []))
@@ -159,12 +152,15 @@ export class LibraryService {
     const p = await this.parsed(sourceId, prop, view)
     const excludedOf = await cachedExcluded(this.opts.db, sourceId, prop, view)
     if (excludedOf && p.hashes.some((h) => h && excludedOf[h] === undefined)) throw new Error(`缓存里的「${prop}」屏蔽表和解析结果对不上，不猜`)
+    const state = await view.officialState(sourceId)
+    const allowed = state?.status === 'installed' && state.sources ? new Set(state.sources.map((x) => x.toLowerCase())) : null
     const want = source?.toLowerCase()
     const rows: QueryRow[] = []
     p.items.forEach((item, i) => {
       const excluded = excludedOf?.[p.hashes[i] ?? ''] ?? false
       if (excluded && !includeExcluded) return
       if (want !== undefined && p.sources[i]?.toLowerCase() !== want) return
+      if (allowed && p.sources[i] && !allowed.has(p.sources[i]!.toLowerCase())) return
       rows.push({ hash: p.hashes[i], source: p.sources[i], excluded, item })
     })
     return rows
@@ -177,6 +173,11 @@ export class LibraryService {
 
   async corpus(sourceId: string, prop: string, id: string, viewArg?: LibraryView): Promise<unknown> {
     const view = await this.view(viewArg)
+    await ensureReadable(view, sourceId)
+    if (prop === 'book' || prop === 'adventure') {
+      const installed = prop === 'book' ? await view.installedBooks(sourceId) : await view.installedAdventures(sourceId)
+      if (installed && !installed.includes(id)) throw new Error(`${sourceId} 没有安装这本${prop === 'book' ? '书' : '冒险'}：${id}`)
+    }
     const rec = await view.derivedGet(parsedKey(sourceId, prop, id))
     if (!rec) throw new Error(`${sourceId} 没有这本的全文：${prop} ${id}`)
     return rec.value
@@ -189,11 +190,17 @@ export class LibraryService {
     return p && i >= 0 ? { item: p.items[i], source: p.sources[i] } : null
   }
 
+  tables(sourceId: string, prop: string, hash?: string, viewArg?: LibraryView) {
+    return tablesFor(this, sourceId, prop, hash, viewArg)
+  }
+
   async detail(sourceId: string, prop: string, hash: string, _source?: string | null, viewArg?: LibraryView): Promise<DetailResult | null> {
     const view = await this.view(viewArg)
+    await ensureReadable(view, sourceId)
     await this.ensure(sourceId, { prop, fluff: true, excluded: true }, view)
     const stored = await this.storedItem(sourceId, prop, hash, view)
     if (!stored) return null
+    if (!(await installedSource(view, sourceId, stored.source))) return null
     const f = await cachedFluff(this.opts.db, sourceId, prop, hash, view)
     const excluded = await cachedExcluded(this.opts.db, sourceId, prop, view)
     return { item: stored.item, hash, source: stored.source, excluded: excluded?.[hash] ?? false, fluff: f?.fluff ?? null, fluffError: f?.fluffError ?? null, engSiteHash: f?.engSiteHash ?? null, english: await this.english(getSource(sourceId), prop, hash, { view }) }
@@ -204,22 +211,8 @@ export class LibraryService {
     return cachedFluff(this.opts.db, sourceId, prop, hash, view)
   }
 
-  async english(s: SourceEntry, prop: string, hash: string, { fluff = true, view: viewArg }: { fluff?: boolean; view?: LibraryView } = {}): Promise<English | null> {
-    const view = await this.view(viewArg)
-    if (!s.pair) return null
-    const pair = getSource(s.pair)
-    if (!(await this.bothInstalled(s, pair, view))) return { status: 'not-installed' }
-    const hit = (await this.englishPairs(s.id, view)).pairs[prop]?.[hash]
-    if (!hit) return { status: 'not-paired' }
-    const stored = await this.storedItem(pair.id, prop, hit.enHash, view)
-    if (!stored) return { status: 'not-found', hash: hit.enHash }
-    const f = fluff ? await cachedFluff(this.opts.db, pair.id, prop, hit.enHash, view) : null
-    return { status: 'found', hash: hit.enHash, via: hit.via, item: stored.item, fluff: f?.fluff ?? null }
-  }
-
-  private async bothInstalled(a: SourceEntry, b: SourceEntry, view: LibraryView): Promise<boolean> {
-    const [x, y] = await Promise.all([view.officialState(a.id), view.officialState(b.id)])
-    return x?.status === 'installed' && y?.status === 'installed'
+  english(s: SourceEntry, prop: string, hash: string, opts: { fluff?: boolean; view?: LibraryView } = {}): Promise<English | null> {
+    return englishOf(this, s, prop, hash, opts)
   }
 
   englishPairs(sourceId: string, viewArg?: LibraryView): Promise<EnglishPairs> {
@@ -242,18 +235,33 @@ export class LibraryService {
 
   async search(sourceId: string, term: string, { showLegacy, view: viewArg }: { showLegacy?: boolean; view?: LibraryView } = {}): Promise<SearchHit[]> {
     const view = await this.view(viewArg)
+    await ensureReadable(view, sourceId)
     await this.ensure(sourceId, { search: true }, view)
     const s = getSource(sourceId)
-    const frame = await this.frame(s.codeSet, view)
-    const rec = await searchIndexOf(this.opts.db, sourceId, view)
+    let frame = await this.frame(s.codeSet, view)
+    let rec = await searchIndexOf(this.opts.db, sourceId, view)
     if (rec) {
       const fingerprint = `${String(rec.base ?? '')}|${String(rec.exclude ?? '')}|${String(rec.manage ?? '')}|${view.id}`
       if (this.searchLoaded.get(`${view.id}:${s.codeSet}`) !== fingerprint) {
-        await frame.call('searchIndexLoad', rec as unknown as SearchIndexDump)
-        this.searchLoaded.set(`${view.id}:${s.codeSet}`, fingerprint)
+        try {
+          await frame.call('searchIndexLoad', rec as unknown as SearchIndexDump)
+          this.searchLoaded.set(`${view.id}:${s.codeSet}`, fingerprint)
+        } catch (error) {
+          // 缓存格式不兼容：只重建这一版、这一语言的搜索缓存，不碰别的版本。
+          this.searchLoaded.delete(`${view.id}:${s.codeSet}`)
+          await invalidatePrecompute(this.opts.db, sourceId, ['search'], view)
+          await this.precompute(sourceId, { search: true, fluff: false, excluded: false }, view)
+          rec = await searchIndexOf(this.opts.db, sourceId, view)
+          frame = await this.frame(s.codeSet, view)
+          if (rec) await frame.call('searchIndexLoad', rec as unknown as SearchIndexDump)
+          this.searchLoaded.set(`${view.id}:${s.codeSet}`, `${String(rec?.base ?? '')}|${String(rec?.exclude ?? '')}|${String(rec?.manage ?? '')}|${view.id}`)
+          this.opts.onLog?.({ level: 'warn', source: sourceId, kind: 'search-cache', message: `搜索缓存已重建：${error instanceof Error ? error.message : String(error)}` })
+        }
       }
     }
-    return frame.call('search', term, showLegacy ?? null)
+    const hits = await frame.call('search', term, showLegacy ?? null) as SearchHit[]
+    const allowed = await view.visibleSources(sourceId)
+    return allowed ? hits.filter((h) => { const src = typeof h.doc.s === 'string' ? h.doc.s : null; return !src || allowed.some((x) => x.toLowerCase() === src.toLowerCase()) }) : hits
   }
 
   async searchSettings(sourceId: string, patch: Record<string, unknown> = {}, viewArg?: LibraryView): Promise<Record<string, unknown>> {
@@ -288,7 +296,7 @@ export class LibraryService {
       frame: (codeSet, view) => this.frame(codeSet, view),
       ...(this.opts.onDataChanged ? { onDataChanged: this.opts.onDataChanged } : {}),
       ...(this.opts.onLog ? { onLog: this.opts.onLog } : {}),
-      onPublished: (view) => { this.retire(view.id) },
+      onPublished: (_view, previous) => { this.retire(previous) },
     }
   }
 
@@ -332,8 +340,13 @@ export class LibraryService {
     return brewImport(this.brewContext(), sourceId, files)
   }
 
-  async brewDelete(sourceId: string, docIdLocals: string[]): Promise<WithErrors<number> & { parse: BrewParseReport; view?: string }> {
-    return brewDelete(this.brewContext(), sourceId, docIdLocals)
+  /** 在已有准备视图里删包并重解析，不发布；供官方单书删除在同一次发布里连带删除。 */
+  deleteBrewsInView(sourceId: string, docIdLocals: string[], view: LibraryView) {
+    return prepareBrewDelete(this.brewContext(), sourceId, docIdLocals, view)
+  }
+
+  async brewDelete(sourceId: string, docIdLocals: string[], handle?: import('./operations').OperationHandle): Promise<WithErrors<number> & { parse: BrewParseReport; view?: string }> {
+    return brewDelete(this.brewContext(), sourceId, docIdLocals, handle)
   }
 
   /** 拉取更新前先看有没有新版（只比较、不替换）；有新版的再调 brewPull。 */

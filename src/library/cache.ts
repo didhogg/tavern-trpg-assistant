@@ -156,12 +156,12 @@ export async function ensurePrecomputed(opts: CacheOptions): Promise<void> {
   if (opts.search) {
     const rec = opts.view ? await opts.view.derivedGet(preKey(source.id, 'search')) : await record(db, preKey(source.id, 'search'))
     const value = isRecord(rec?.value) ? rec.value : null
-    needSearch = !value || value.base !== base || value.manage !== manage
+    needSearch = !value || value.base !== base || value.manage !== manage || value.version !== (opts.view?.id ?? '')
   }
   if (!needFluff && !needExcluded && !needSearch) return
   const frame = await openFrame(source.codeSet)
   try {
-    await precomputeSource({ source, db, frame, prop: opts.prop, fluff: needFluff, excluded: needExcluded, search: needSearch })
+    await precomputeSource({ source, db, frame, view: opts.view, prop: opts.prop, fluff: needFluff, excluded: needExcluded, search: needSearch })
   } finally {
     frame.close()
   }

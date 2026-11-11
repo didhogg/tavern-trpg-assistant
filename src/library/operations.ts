@@ -6,8 +6,6 @@ import { dataVersionOf, mirrorOfficialToSets } from './revision-data'
 
 const LOCK_ID = 'library'
 const LOCK_MS = 10 * 60_000
-/** 操作记录超过这么久没有心跳，才当成上次遗留的中断；仍活着的窗口会持续更新。 */
-const STALE_MS = 60_000
 const LOCK_WAIT_MS = 5 * 60_000
 const PROGRESS_MS = 400
 
@@ -157,7 +155,7 @@ export class LibraryOperations {
   }
 
   /** 失败 / 取消：准备版本作废，已发布版本一动不动。 */
-  async abort(handle: OperationHandle, error: unknown, status: 'failed' | 'cancelled' = 'failed'): Promise<void> {
+  async abort(handle: OperationHandle, error: unknown, status: 'failed' | 'cancelled' | 'interrupted' = 'failed'): Promise<void> {
     const { db } = this.opts
     const now = this.now()
     const message = error instanceof Error ? error.message : String(error)
@@ -188,11 +186,10 @@ export class LibraryOperations {
         changed.push(done)
         continue
       }
-      // 另一个窗口可能还在跑：只有超过心跳窗口、且租约也不是它的（或已过期）才判中断。
+      // 有效租约优先：另一个窗口可能还在跑，不能因为暂时没有进度就判中断。
       const lock = await db.locks.get(LOCK_ID)
       const liveLock = !!lock && lock.token === op.token && lock.expiresAt > now
-      const stale = now - Number(op.updatedAt ?? 0) > STALE_MS
-      if (liveLock && !stale) continue
+      if (liveLock) continue
       const interrupted = { ...op, status: 'interrupted' as const, error: '上次修改没有完成，已中断；可以重试', updatedAt: now }
       await db.ops.put(interrupted)
       if (lock && lock.token === op.token) await db.locks.delete(LOCK_ID)
@@ -219,9 +216,14 @@ export class LibraryOperations {
     for (;;) {
       if (signal?.aborted) throw new Error('操作已取消')
       const now = this.now()
-      const got = await this.opts.db.transaction('rw', [this.opts.db.locks], async () => {
+      const got = await this.opts.db.transaction('rw', [this.opts.db.locks, this.opts.db.ops], async () => {
         const cur = await this.opts.db.locks.get(LOCK_ID)
         if (cur && cur.expiresAt > now && cur.token !== token) return false
+        if (cur && cur.expiresAt <= now && cur.token !== token) {
+          // 过期租约接管：旧操作失去发布权，标中断；旧回包之后会被 publish 的令牌校验挡住。
+          const stale = await this.opts.db.ops.where('status').equals('preparing').toArray()
+          for (const op of stale) if (op.token === cur.token) await this.opts.db.ops.put({ ...op, status: 'interrupted', error: '修改租约已过期，已由新的操作接管', updatedAt: now })
+        }
         await this.opts.db.locks.put({ id: LOCK_ID, token, owner: token, expiresAt: now + LOCK_MS })
         return true
       })

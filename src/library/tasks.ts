@@ -3,6 +3,7 @@
 import type { LibraryDatabase, OfficialSetState } from './db'
 import type { FileProvider } from './files'
 import { installedAdventureIds, parsedKey, prepareOfficial, type InstallReport } from './install'
+import { failedInstallReport } from './install-report'
 import type { AuthorFrame } from './runtime/host'
 import type { LogSink } from './logs'
 import { getSource } from './sources'
@@ -10,7 +11,7 @@ import { LibraryOperations, type OperationHandle } from './operations'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 import { selectionFor } from './plan'
 
-export type TaskStatus = 'running' | 'done' | 'partial' | 'failed' | 'cancelled' | 'interrupted'
+export type TaskStatus = 'running' | 'paused' | 'done' | 'partial' | 'failed' | 'cancelled' | 'interrupted'
 
 export interface TaskState {
   id: string
@@ -49,12 +50,12 @@ export interface TaskOptions {
   /** 开一个只读本地、绑定到指定版本的作者小窗。 */
   openFrame: (codeSet: string, view: LibraryView) => Promise<AuthorFrame>
   /** 按书计划：任务没拿到现成计划、但给了 books / sources 时，由后端用作者目录生成。 */
-  planOfficial?: (setId: string, opts: { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null; allSources?: boolean }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
+  planOfficial?: (setId: string, opts: { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null; allSources?: boolean; knownAdventures?: string[] }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
   /** T2：下载任务里的换算段；后端接结算内核，库层只报进度。 */
   precompute?: (setId: string, view: LibraryView, signal: AbortSignal, onProgress: (p: TaskState['progress']) => void) => Promise<unknown>
   onChange?: (t: TaskState) => void
   /** 发布成功后的通知（后端用它关掉旧版本的作者小窗 / 清缓存）。 */
-  onPublished?: (view: LibraryView) => void
+  onPublished?: (view: LibraryView, previous: string) => void
   /** 失败写日志（P5 B-26）。 */
   onLog?: LogSink
   /** 失败安装的完整报告独立保存，体检在当前版本也能看到。 */
@@ -63,11 +64,23 @@ export interface TaskOptions {
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 
-interface RunResult { result: TaskState['result']; status?: 'done' | 'partial' | 'cancelled'; revision?: string }
+const listKey = (xs: string[] | null | undefined): string => (xs == null ? 'all' : [...new Set(xs)].sort().join(','))
+/** 官方任务身份：同一数据集、同一组书/来源/冒险/目标提交才算同一个请求；否则各自排队。 */
+export const officialTaskKey = (opts: OfficialTaskOptions): string => [
+  `commit=${opts.commit ?? 'current'}`,
+  `books=${listKey(opts.books ?? opts.plan?.books)}`,
+  `sources=${listKey(opts.sources ?? opts.plan?.sources)}`,
+  `adventures=${listKey(opts.adventures ?? opts.plan?.adventures)}`,
+].join(';')
+
+
+interface RunResult { result: TaskState['result']; status?: 'done' | 'partial' | 'cancelled' | 'paused'; revision?: string }
 
 export class DownloadTasks {
   private readonly tasks = new Map<string, { state: TaskState; abort: AbortController; done: Promise<TaskState> }>()
   private readonly handles = new Map<string, OperationHandle>()
+  private readonly paused = new Set<string>()
+  private readonly officialOpts = new Map<string, OfficialTaskOptions>()
   private seq = 0
 
   constructor(private readonly opts: TaskOptions) {}
@@ -91,6 +104,25 @@ export class DownloadTasks {
   async cancel(id: string): Promise<void> {
     this.tasks.get(id)?.abort.abort()
     await this.opts.operations.cancel(id)
+  }
+
+  /** 在文件 / 解析边界暂停；已经完成的下载留在内容表，前缀版本作废。 */
+  pause(id: string): boolean {
+    const task = this.tasks.get(id)
+    if (!task || task.state.status !== 'running' || task.state.kind !== 'official') return false
+    this.paused.add(id)
+    return true
+  }
+
+  /** 继续：用原选择重新排队，已校验文件按内容哈希复用。 */
+  async resume(id: string): Promise<string | null> {
+    const task = this.tasks.get(id)
+    const opts = this.officialOpts.get(id)
+    if (!task || task.state.status !== 'paused' || !opts) return null
+    const op = await this.opts.operations.get(id)
+    const current = await this.opts.revisions.published()
+    if (opts.plan && op?.base && op.base !== current.id) throw new Error('资料已经换过版本，暂停的计划已过期，请重新预览更新')
+    return this.startOfficial(task.state.set, opts)
   }
 
   /** 启动时恢复未完成的操作：未发布的标中断，已经切了指針的照实际版本算完成。 */
@@ -146,22 +178,23 @@ export class DownloadTasks {
   /** 下载并安装一套官方数据（按书 / 全部）。 */
   startOfficial(setId: string, opts: OfficialTaskOptions = {}): string {
     const source = getSource(setId)
-    return this.start('official', setId, null, async (state, signal) => {
+    const id = this.start('official', setId, officialTaskKey(opts), async (state, signal) => {
       const handle = await this.opts.operations.begin({
         id: state.id, kind: 'official', set: setId, codeSet: source.codeSet, sourceIndexes: opts.plan?.sourceIndexes, signal,
       })
       this.handles.set(state.id, handle)
       state.revision = handle.target.id
+      let report: InstallReport | null = null
       try {
         const base = await handle.target.officialState(setId)
         const baseAdventures = base?.status === 'installed' && base.adventures === null ? await installedAdventureIds(handle.target, setId) : base?.adventures ?? null
         const selection = selectionFor(base, { ...opts, adventures: baseAdventures })
         const plan = opts.plan ?? await this.opts.planOfficial?.(setId, {
           books: selection.books, sources: selection.sources, adventures: selection.adventures,
-          allSources: selection.allSources,
+          allSources: selection.allSources, knownAdventures: baseAdventures ?? [],
         }, handle.target)
-        if (plan && (plan.missing.sources.length || plan.missing.books.length)) {
-          const miss = [...plan.missing.sources, ...plan.missing.books].join('、')
+        if (plan && (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0))) {
+          const miss = [...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')
           await this.opts.operations.abort(handle, new Error(`作者目录里找不到这些书 / 来源：${miss}`))
           throw new Error(`作者目录里找不到这些书 / 来源：${miss}`)
         }
@@ -172,15 +205,20 @@ export class DownloadTasks {
         }
         const sources = plan ? plan.sources : selection.sources
         const books = plan ? plan.books : selection.books
-        const report = await prepareOfficial({
+        report = await prepareOfficial({
           source, db: this.opts.db, files: this.opts.files, revisions: this.opts.revisions, operations: this.opts.operations,
           openFrame: (view) => this.opts.openFrame(source.codeSet, view), view: handle.target, plan: plan ?? undefined,
           sources, books, adventures: selection.adventures,
           signal, onProgress: (p) => { void this.progress(state, p) },
+          onCheckpoint: () => (this.paused.has(state.id) ? 'pause' : 'continue'),
         })
         if (report.cancelled) {
           await this.opts.operations.abort(handle, new Error('已取消'), 'cancelled')
           return { result: report, status: 'cancelled', revision: handle.target.id }
+        }
+        if (report.paused) {
+          await this.opts.operations.abort(handle, new Error('已暂停，继续时会复用已下载文件'), 'interrupted')
+          return { result: report, status: 'paused', revision: handle.target.id }
         }
         if (!report.publishable) {
           await this.opts.onDiagnostic?.(setId, report)
@@ -200,19 +238,23 @@ export class DownloadTasks {
         })
         state.revision = published.id
         await this.opts.db.derived.delete(`audit:last-failed:${setId}`)
-        this.opts.onPublished?.(published)
+        this.opts.onPublished?.(published, handle.base.id)
         if (this.opts.precompute) {
           try { state.convert = await this.opts.precompute(setId, published, signal, (p) => { void this.progress(state, p) }) }
           catch (e) { state.convertError = msg(e) }
         }
         return { result: report, status: report.settlementReady && !state.convertError ? 'done' : 'partial', revision: published.id }
       } catch (e) {
+        if (!report) await this.opts.onDiagnostic?.(setId, failedInstallReport(source, e))
         await this.opts.operations.abort(handle, e)
         throw e
       } finally {
         this.handles.delete(state.id)
+        this.paused.delete(state.id)
       }
     })
+    this.officialOpts.set(id, opts)
+    return id
   }
 
   /** 单独重跑换算（结算内核指纹变了时；界面 P5 再接）。 */
@@ -260,7 +302,7 @@ export class DownloadTasks {
             official: { [setId]: { ...base, adventures } }, result: { path, parsed: true },
           })
           state.revision = published.id
-          this.opts.onPublished?.(published)
+          this.opts.onPublished?.(published, handle.base.id)
           return { result: { path, parsed: true }, revision: published.id }
         } finally {
           frame.close()

@@ -39,7 +39,7 @@ export function shelfInfoOf(rec: DirectoryRecord, it: Entry): ShelfInfo {
 /** 数据集没装时：每本书、每个冒险各一行（条数未知记 0，downloaded 为 false）。 */
 export function directoryRows(set: string, rec: DirectoryRecord): Array<Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'inScope' | 'alternatives'>> {
   return [
-    ...rec.books.map((b: Entry) => ({ kind: 'book' as const, set, source: String(b.source), id: null, count: 0, downloaded: false, shelf: shelfInfoOf(rec, b) })),
+    ...rec.books.map((b: Entry) => ({ kind: 'book' as const, set, source: String(b.source), id: String(b.id), count: 0, downloaded: false, shelf: shelfInfoOf(rec, b) })),
     ...rec.adventures.map((a: Entry) => ({ kind: 'adventure' as const, set, source: String(a.source), id: String(a.id), count: 0, downloaded: false, shelf: shelfInfoOf(rec, a) })),
   ]
 }

@@ -120,6 +120,9 @@ export async function searchIndexDump(): Promise<SearchIndexDump> {
 /** 把存好的索引接回作者搜索器：只设置作者自己的静态状态，不改作者文件。 */
 export async function searchIndexLoad(dump: SearchIndexDump): Promise<boolean> {
   await init()
+  // 作者在 SearchUtil 里登记 vetoolsFoldAscii；Index.load 会重建流水线，必须先登记再反序列化。
+  // 直接调用作者的登记函数，避免为了登记而另造一条流水线。
+  A.SearchUtil._initSearchIndex_getFnFold()
   const B = A.OmnisearchBacking
   B._searchIndex = A.elasticlunr.Index.load(JSON.parse(dump.json))
   B._maxId = dump.maxId

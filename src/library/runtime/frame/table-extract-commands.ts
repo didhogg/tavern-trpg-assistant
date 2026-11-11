@@ -31,10 +31,10 @@ export interface ExtractResult {
 }
 
 /** 一个类别里（作者加载器整类取）所有条目里的所有表格。无编号的条目跳过（无法指回母条目）。 */
-export async function extractTables(prop: string): Promise<ExtractResult> {
+export async function extractTables(prop: string, supplied?: unknown[], fallbackSource: string | null = null): Promise<ExtractResult> {
   await init()
   const { UtilGenTables, RecursiveSearchStateGeneric } = await modules()
-  const items: any[] = (await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []
+  const items: any[] = supplied ?? (await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []
   const out: ExtractedTable[] = []
   const skipped: ExtractResult['skipped'] = []
   for (const ent of items) {
@@ -43,8 +43,9 @@ export async function extractTables(prop: string): Promise<ExtractResult> {
     try {
       const state = new RecursiveSearchStateGeneric({ isRequireIncludes: false })
       // 作者整理表格时按母条目的类别要不同的字段（职业背景描述要职业名，子职业要职业名与简称）：条目自己有就用，没有用条目名
+      const source = ent.source ?? fallbackSource
       const tmpMeta = {
-        metaType: prop, name: ent.name, source: ent.source,
+        metaType: prop, name: ent.name, source,
         className: ent.className ?? ent.name, classSource: ent.classSource ?? ent.source,
         subclassName: ent.name, subclassShortName: ent.shortName, subclassSource: ent.source ?? ent.classSource,
       }
@@ -62,7 +63,7 @@ export async function extractTables(prop: string): Promise<ExtractResult> {
       const raw: any[] = state._tables
       const cleaned: any[] = state.getStacks().table
       cleaned.forEach((table, i) => out.push({
-        parentHash, parentName: String(ent.name ?? ''), parentSource: sourceOf(ent), table,
+        parentHash, parentName: String(ent.name ?? ''), parentSource: sourceOf(ent) ?? fallbackSource, table,
         path: raw[i]?.path ?? [], sectionIndex: raw[i]?.sectionIndex ?? null,
       }))
     } catch (e) {

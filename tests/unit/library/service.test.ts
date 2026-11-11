@@ -68,6 +68,20 @@ describe('LibraryService.query', () => {
     expect(opened).toBe(0)
   })
 
+  it('当前版本已装来源之外的条目读不到；旧版本仍可读', async () => {
+    await seedSpellCache()
+    const old = await revisions.published()
+    const ops = new (await import('../../../src/library/operations')).LibraryOperations({ db, revisions })
+    const h = await ops.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    const state = { commit: old.revision.official?.['cn-official']?.commit ?? '', status: 'installed' as const, sources: ['PHB'], books: ['PHB'], adventures: [] }
+    await ops.setTargetOfficial(h, { 'cn-official': state })
+    const current = await ops.publish(h, { official: { 'cn-official': state } })
+    const svc = new LibraryService({ db, revisions, openFrame: async () => { throw new Error('不该开小窗') } })
+    expect((await svc.query('cn-official', 'spell', { view: current })).map((r) => r.hash)).toEqual(['b_phb'])
+    expect(await svc.detail('cn-official', 'spell', 'a_xphb', undefined, current)).toBeNull()
+    expect((await svc.query('cn-official', 'spell', { view: old })).map((r) => r.hash)).toEqual(spells.hashes)
+  })
+
   it('缓存里的屏蔽标记：默认去掉；includeExcluded 时带标记一并返回', async () => {
     await seedSpellCache({ excluded: { a_xphb: true, b_phb: false, c_xphb: true } })
     const svc = new LibraryService({ db, revisions, openFrame: async () => fakeFrame({}) })

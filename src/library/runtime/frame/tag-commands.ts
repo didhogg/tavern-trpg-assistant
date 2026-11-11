@@ -16,7 +16,7 @@ export interface TagMeta {
   /** 这个页面对应的类别（作者加载器的登记表反查）；一个页面可能对应几个类别（职业页 = 职业 + 子职业）。 */
   props: string[]
   /** 书 / 冒险标签带的章节与小节（{@book 显示|DMG|章|小节}）；hash 只指到这一本。 */
-  part?: { chapter: number | null; section: string | null }
+  part?: { chapter: number | null; section: string | null; ixNamedSection?: number | null }
 }
 
 /** 按作者加载器登记表（页面或类别名 → 类别）找类别；找不到就是空。 */
@@ -34,11 +34,11 @@ function propsOfPage(page: string): string[] {
  */
 function bookTagMeta(tag: '@book' | '@adventure', text: string): TagMeta {
   const page = tag === '@book' ? 'book.html' : 'adventure.html'
-  const { displayText, id, ixChapter, sectionName } = A.UidUtil.unpackUidAdventureBook(text)
+  const { displayText, id, ixChapter, sectionName, ixNamedSection } = A.UidUtil.unpackUidAdventureBook(text)
   return {
     tag, name: String(displayText ?? id ?? ''), displayText: String(displayText ?? id ?? ''), source: id ?? null,
     page, hash: String(id ?? '').toLowerCase(), props: propsOfPage(page),
-    part: { chapter: ixChapter ?? null, section: sectionName ?? null },
+    part: { chapter: ixChapter ?? null, section: sectionName ?? null, ixNamedSection: ixNamedSection ?? null },
   }
 }
 

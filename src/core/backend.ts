@@ -19,7 +19,7 @@ import { startAuthorFrame } from '../library/runtime/host'
 import { BrewPacks } from '../library/brew-packs'
 import { BrewPairs } from '../library/brew-pairing'
 import { configureBrewValidator } from '../library/brew-validate'
-import { uninstallOfficial, type UninstallReport } from '../library/uninstall'
+import { removeOfficialParts, uninstallOfficial, type UninstallReport } from '../library/uninstall'
 import { impactOfRemoval, type RemovalImpact, type RemovalTarget } from './removal-impact'
 import { Counterparts } from '../library/counterpart'
 import { DocumentStore } from '../library/documents'
@@ -144,9 +144,9 @@ export function createBackend(opts: BackendOptions): Backend {
   // 书目（BE-7）：没装官方数据时用允许联网的一次性小窗读作者书目文件；已装好的用现成本地小窗
   const directory = new BookDirectory({
     db, view: () => revisions.published(), localFrame: async (codeSet) => { const view = await revisions.published(); return openFrame(codeSet, { view, filterIndex: false }) },
-    networkFrame: async (codeSet, kvScope, view) => {
+    networkFrame: async (codeSet, kvScope, view, target) => {
       const current = view ?? await revisions.published()
-      return startAuthorFrame({ codeSet, pluginRoot, container: container(), handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => true, kvScope, view: current, filterIndex: false, writeLegacy: true }) })
+      return startAuthorFrame({ codeSet, pluginRoot, container: container(), handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => true, kvScope, view: current, filterIndex: false, writeLegacy: !target, ...(target ? { commit: target.commit, persist: target.persist } : {}) }) })
     },
   })
   const documents = new DocumentStore(db)
@@ -157,12 +157,12 @@ export function createBackend(opts: BackendOptions): Backend {
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
   const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref))
-  const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openFrame(codeSet, { view }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (view) => { service.retire(view.id); scoped.reset() },
+  const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openFrame(codeSet, { view }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (_view, previous) => { service.retire(previous); scoped.reset() },
     planOfficial: async (setId, planOpts, view) => {
       const source = getSource(setId)
       const rec = await directory.get(source.codeSet)
       const list = await files.fileList(source, view)
-      return officialPlan(list, rec.owners, { sources: planOpts.sources ?? null, books: planOpts.books ?? null, adventures: planOpts.adventures ?? null }, { indexSources: rec.indexSources, ...(planOpts.allSources ? { allSources: true } : {}) })
+      return officialPlan(list, rec.owners, { sources: planOpts.sources ?? null, books: planOpts.books ?? null, adventures: planOpts.adventures ?? null }, { indexSources: rec.indexSources, codeSet: source.codeSet, ...(planOpts.knownAdventures ? { knownAdventures: planOpts.knownAdventures } : {}), ...(planOpts.allSources ? { allSources: true } : {}) })
     },
     precompute: async (setId, view, signal, onProgress) => {
       const rows = await runPrecompute([getSource(setId).codeSet], signal, onProgress)
@@ -204,7 +204,7 @@ export function createBackend(opts: BackendOptions): Backend {
     token: async (codeSet, prop, ent) => (await service.frameOf(codeSet)).call('tokenPath', prop, ent),
   }
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
-    db, revisions, operations, tasks, afterDelete: async () => { const view = await revisions.published(); service.retire(view.id); scoped.reset() },
+    db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
   const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
@@ -213,16 +213,65 @@ export function createBackend(opts: BackendOptions): Backend {
     checkRefs: (refs) => scoped.fetch(defaultCampaignLibrary(opts.rules.list()[0]?.id ?? 'dnd5e2014', DEFAULT_PREFETCH_CODE_SETS[0]), refs),
   }
   const brewSetOf = (codeSet: string): string => SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)?.id ?? `${codeSet}-brew`
-  const removalImpact = async (target: RemovalTarget): Promise<RemovalImpact> => {
-    const view = await revisions.published()
-    return impactOfRemoval({ db: opts.db, manage: scoped.manage, brewPacks, brewSetOf, revision: view.id }, target)
+  const impactAt = async (view: LibraryView, target: RemovalTarget): Promise<RemovalImpact> => {
+    if (target.kind === 'official') {
+      const ids = target.setIds ?? [target.setId]
+      const states = await Promise.all(ids.map((id) => view.officialState(id)))
+      if (states.some((st) => st?.status !== 'installed')) throw new Error('官方资料已经不在当前版本里，请刷新后再预览')
+      if (target.bookIds?.length || target.adventureIds?.length) {
+        for (const state of states) {
+          if (state?.books && target.bookIds?.some((id) => !state.books!.includes(id))) throw new Error('选中的书已经不在已装集合里，请刷新后再预览')
+          if (state?.adventures && target.adventureIds?.some((id) => !state.adventures!.includes(id))) throw new Error('选中的冒险已经不在已装集合里，请刷新后再预览')
+        }
+      }
+    }
+    const officialSources = new Set<string>()
+    const removedSources = new Set((target.kind === 'official' ? target.bookSources ?? target.bookIds ?? [] : []).map((s) => s.toLowerCase()))
+    const whole = target.kind === 'official' && !target.bookIds?.length && !target.bookSources?.length && !target.adventureIds?.length
+    for (const set of SOURCES.filter((s) => s.kind === 'official')) {
+      const state = await view.officialState(set.id)
+      if (state?.status !== 'installed') continue
+      if (whole && (target.setIds ?? [target.setId]).includes(set.id)) continue
+      for (const src of state.sources ?? []) if (!removedSources.has(src.toLowerCase())) officialSources.add(src.toLowerCase())
+    }
+    const officialHashes = async (setId: string, bookSources: string[]): Promise<Map<string, Set<string>>> => {
+      const wanted = new Set(bookSources.map((s) => s.toLowerCase()))
+      const out = new Map<string, Set<string>>()
+      for (const [key, rec] of await view.derivedKeys(`parsed:${setId}:`)) {
+        if (key.slice(`parsed:${setId}:`.length).startsWith('corpus:')) continue
+        const prop = key.slice(`parsed:${setId}:`.length)
+        const p = rec.value as { hashes?: Array<string | null>; sources?: Array<string | null> } | undefined
+        p?.hashes?.forEach((h, i) => { if (h && p.sources?.[i] && wanted.has(String(p.sources[i]).toLowerCase())) (out.get(prop) ?? out.set(prop, new Set()).get(prop)!).add(h) })
+      }
+      return out
+    }
+    return impactOfRemoval({ db: opts.db, manage: scoped.manage, brewPacks, brewSetOf, revision: view.id, officialSources, officialHashes }, target)
   }
+  const removalImpact = (target: RemovalTarget): Promise<RemovalImpact> => revisions.published().then((view) => impactAt(view, target))
   const removalExecute = async (impact: RemovalImpact): Promise<unknown> => {
-    const view = await revisions.published()
-    const fresh = await impactOfRemoval({ db: opts.db, manage: scoped.manage, brewPacks, brewSetOf, revision: view.id }, impact.target)
-    if (fresh.plan.fingerprint !== impact.plan.fingerprint) throw new Error('资料已经变化，请重新预览删除影响')
-    if (impact.target.kind === 'official') return library.uninstallOfficial(impact.target.setIds ?? [impact.target.setId])
-    return library.service.brewDelete(impact.target.setId, impact.plan.removeTogether)
+    const source = getSource(impact.target.setId)
+    // 先取得修改租约；排队期间可能有人发布，拿到锁后再按 handle.base 这一固定版本重算。
+    const handle = await operations.begin({ kind: 'remove', set: impact.target.setId, codeSet: source.codeSet })
+    try {
+      const fresh = await impactAt(handle.base, impact.target)
+      if (fresh.plan.fingerprint !== impact.plan.fingerprint) throw new Error('资料或引用已经变化，请重新预览删除影响')
+      if (impact.target.kind === 'brew') {
+        const all = await brewPacks.list(impact.target.setId, handle.base)
+        const missing = impact.target.docIdLocals.find((id) => !all.some((p) => p.docIdLocal === id))
+        if (missing) throw new Error(`这个自制包已经不存在：${missing}`)
+      }
+      const deps = { db, revisions, operations, tasks, directory, brewSetOf, removeBrews: (view: LibraryView, setId: string, ids: string[]) => service.deleteBrewsInView(setId, ids, view), afterDelete: async (_id: string, previous: string) => { if (previous) service.retire(previous); scoped.reset() } }
+      if (impact.target.kind === 'official') {
+        if (impact.target.bookIds?.length || impact.target.bookSources?.length || impact.target.adventureIds?.length) {
+          return await removeOfficialParts(deps, { ...impact.target, removeBrews: fresh.removeTogether }, handle)
+        }
+        return await uninstallOfficial(deps, impact.target.setIds ?? [impact.target.setId], handle)
+      }
+      return await service.brewDelete(impact.target.setId, fresh.removeTogether.length ? fresh.removeTogether : impact.target.docIdLocals, handle)
+    } catch (e) {
+      await operations.abort(handle, e)
+      throw e
+    }
   }
   return { library, kernel, kernelSave, starter, transfer, removalImpact, removalExecute }
 }

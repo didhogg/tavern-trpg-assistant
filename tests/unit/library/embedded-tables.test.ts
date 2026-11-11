@@ -67,10 +67,10 @@ describe('EmbeddedTables：存库与现建', () => {
     expect(asked).toEqual([])
   })
 
-  it('只有官方数据集有；没装就说没装', async () => {
+  it('自制也走同一提取器；没装就说没装', async () => {
     db = new LibraryDatabase(`test-emb2-${Math.random()}`)
     const store = new EmbeddedTables(db, async () => ({}) as AuthorFrame)
-    await expect(store.build('cn-brew')).rejects.toThrow(/不是官方数据集/)
+    await expect(store.build('cn-brew')).rejects.toThrow(/还没安装/)
     await expect(store.build('cn-official')).rejects.toThrow(/还没安装/)
   })
 })

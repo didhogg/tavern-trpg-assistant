@@ -32,8 +32,44 @@ export async function sourceNames(sources: string[]): Promise<Record<string, { f
   return Object.fromEntries(sources.map((s) => [s, { full: A.Parser.sourceJsonToFull(s), abv: A.Parser.sourceJsonToAbv(s) }]))
 }
 
+const requiresOf = (body: any): BrewRequirement[] => {
+  const out: BrewRequirement[] = []
+  const seen = new Set<string>()
+  const add = (r: BrewRequirement): void => {
+    const key = `${r.kind}|${r.prop}|${String(r.source).toLowerCase()}|${r.hash ?? ''}`
+    if (seen.has(key)) return
+    seen.add(key); out.push(r)
+  }
+  for (const kind of ['dependencies', 'includes'] as const) {
+    for (const [prop, list] of Object.entries(body?._meta?.[kind] ?? {})) {
+      for (const source of Array.isArray(list) ? list : []) add({ kind: kind === 'dependencies' ? 'dependency' : 'include', prop, source: String(source) })
+    }
+  }
+  for (const [prop, list] of Object.entries(body?._meta?.otherSources ?? {})) {
+    for (const source of Object.keys((list ?? {}) as Record<string, unknown>)) add({ kind: 'otherSource', prop, source })
+  }
+  for (const [prop, list] of Object.entries(body ?? {})) {
+    if (prop.startsWith('_') || !Array.isArray(list)) continue
+    for (const entry of list) {
+      const copy = (entry as any)?._copy
+      if (!copy || typeof copy !== 'object') continue
+      const source = String(copy.source ?? '')
+      if (!source) continue
+      add({ kind: 'copy', prop, source, hash: hashOf(prop, copy) })
+    }
+  }
+  return out
+}
+
 /** 已装自制每个包：包头 + 声明的来源 + 每类每条的作者编号（原始文件直接算，不经加载器，所以同编号的都在）。 */
-export async function brewDocIndex(): Promise<Array<{ docIdLocal: string; filename: string | null; url: string | null; timeAdded: number; order: number; isEditable: boolean; sources: string[]; props: Record<string, Array<string | null>> }>> {
+export interface BrewRequirement {
+  kind: 'dependency' | 'include' | 'otherSource' | 'copy'
+  prop: string
+  source: string
+  hash?: string | null
+}
+
+export async function brewDocIndex(): Promise<Array<{ docIdLocal: string; filename: string | null; url: string | null; timeAdded: number; order: number; isEditable: boolean; sources: string[]; props: Record<string, Array<string | null>>; requires: BrewRequirement[] }>> {
   await init()
   return (await A.BrewUtil2.pGetBrew()).map((b: any, i: number) => ({
     docIdLocal: b.head.docIdLocal,
@@ -46,6 +82,7 @@ export async function brewDocIndex(): Promise<Array<{ docIdLocal: string; filena
     props: Object.fromEntries(Object.entries(b.body ?? {})
       .filter(([k, v]) => !k.startsWith('_') && Array.isArray(v))
       .map(([k, v]) => [k, (v as any[]).map((e) => (e && typeof e === 'object' ? hashOf(k, e) : null))])),
+    requires: requiresOf(b.body),
   }))
 }
 

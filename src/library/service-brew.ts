@@ -18,7 +18,7 @@ export interface BrewContext {
   frame: (codeSet: string, view?: LibraryView) => Promise<AuthorFrame>
   onDataChanged?: (codeSet: string) => Promise<void>
   onLog?: LogSink
-  onPublished?: (view: LibraryView) => void
+  onPublished?: (view: LibraryView, previous: string) => void
 }
 
 const brewSource = (sourceId: string): SourceEntry => {
@@ -38,7 +38,14 @@ export async function afterBrewChange(ctx: BrewContext, s: SourceEntry, view: Li
   return report
 }
 
-const packsOf = (report: BrewParseReport): Array<{ docIdLocal: string; stableId: string | null; checksum: string | null }> =>
+export async function prepareBrewDelete(ctx: BrewContext, sourceId: string, docIdLocals: string[], view: LibraryView): Promise<{ value: WithErrors<number>; parse: BrewParseReport; packs: ReturnType<typeof packsOf> }> {
+  const s = brewSource(sourceId)
+  const value = await (await ctx.frame(s.codeSet, view)).call('brewDelete', docIdLocals)
+  const parse = await afterBrewChange(ctx, s, view)
+  return { value, parse, packs: packsOf(parse) }
+}
+
+export const packsOf = (report: BrewParseReport): Array<{ docIdLocal: string; stableId: string | null; checksum: string | null }> =>
   report.installed.map((head) => {
     const id = String(head.docIdLocal ?? '')
     const url = typeof head.url === 'string' ? head.url : null
@@ -70,7 +77,7 @@ export async function publishBrew(ctx: BrewContext, s: SourceEntry, handle: Oper
   })
   try { await ctx.onDataChanged?.(s.codeSet) } catch (e) { ctx.onLog?.({ level: 'warn', source: s.id, kind: 'brew-precompute', message: e instanceof Error ? e.message : String(e) }) }
   logBrew(ctx, s, report)
-  ctx.onPublished?.(view)
+  ctx.onPublished?.(view, handle.base.id)
   return view
 }
 
@@ -148,16 +155,17 @@ export async function brewImport(ctx: BrewContext, sourceId: string, files: Arra
   }
 }
 
-export async function brewDelete(ctx: BrewContext, sourceId: string, docIdLocals: string[]): Promise<WithErrors<number> & { parse: BrewParseReport; view?: string }> {
+export async function brewDelete(ctx: BrewContext, sourceId: string, docIdLocals: string[], supplied?: OperationHandle): Promise<WithErrors<number> & { parse: BrewParseReport; view?: string }> {
   const s = brewSource(sourceId)
-  const handle = await ctx.operations.begin({ kind: 'brew-delete', set: s.id, codeSet: s.codeSet })
+  const own = !supplied
+  const handle = supplied ?? await ctx.operations.begin({ kind: 'brew-delete', set: s.id, codeSet: s.codeSet })
   try {
     const r = await (await ctx.frame(s.codeSet, handle.target)).call('brewDelete', docIdLocals)
     const parse = await afterBrewChange(ctx, s, handle.target)
     const view = await publishBrew(ctx, s, handle, parse)
     return { ...r, parse, view: view.id }
   } catch (e) {
-    await ctx.operations.abort(handle, e)
+    if (own) await ctx.operations.abort(handle, e)
     throw e
   }
 }

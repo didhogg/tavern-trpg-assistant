@@ -27,3 +27,25 @@ describe('预计算缓存的依赖指纹', () => {
     expect(await manageFingerprint(db)).not.toBe(after)
   })
 })
+
+describe('缓存补算绑定请求版本', () => {
+  it('缺口补算写到请求持有的版本，不写旧 derived', async () => {
+    const { ensurePrecomputed } = await import('../../../src/library/cache')
+    const { LibraryRevisionStore } = await import('../../../src/library/revision')
+    const { LibraryOperations } = await import('../../../src/library/operations')
+    const { parsedKey } = await import('../../../src/library/install')
+    const revisions = new LibraryRevisionStore(db)
+    await revisions.ensureLegacy()
+    const ops = new LibraryOperations({ db, revisions })
+    const h = await ops.begin({ kind: 'cache', set: 'cn-official', codeSet: 'cn' })
+    await h.target.derivedPut(parsedKey('cn-official', 'spell'), 'c', { items: [{ name: '火球' }], hashes: ['fire_phb'], sources: ['PHB'] })
+    const frame = {
+      codeSet: 'cn', frame: null, ready: null, failures: [], close: () => undefined,
+      call: async (fn: string) => fn === 'excludeList' ? [] : fn === 'excludedFlags' ? { excluded: null, hashes: ['fire_phb'] } : undefined,
+    }
+    await ensurePrecomputed({ source: getSource('cn-official'), db, view: h.target, prop: 'spell', excluded: true, openFrame: async () => frame as never })
+    expect(await h.target.derivedGet('pre:cn-official:excluded:spell')).toBeTruthy()
+    expect(await db.derived.get('pre:cn-official:excluded:spell')).toBeUndefined()
+    await ops.abort(h, new Error('清理'))
+  })
+})

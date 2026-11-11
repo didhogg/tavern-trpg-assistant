@@ -77,6 +77,15 @@ describe('按书计划（P5 T2）', () => {
   })
 })
 
+  it('已装冒险在上游文件清单里没了：记 removedAdventures，不因读 size 崩掉', () => {
+    const owners: Record<string, PlanOwner> = { 'data/bestiary/index.json': { kind: 'source', sources: ['PHB'] }, 'data/adventure/adventure-lmop.json': { kind: 'adventure', id: 'LMoP', source: 'LMoP' } }
+    const plan = officialPlan({ 'data/bestiary/index.json': { sha: 'a', size: 1 } }, owners, { adventures: ['LMoP'] }, { knownAdventures: ['LMoP'] })
+    expect(plan.removedAdventures).toEqual(['LMoP'])
+    expect(plan.missing.adventures).toBeUndefined()
+    expect(plan.adventures).toEqual([])
+    expect(plan.files).toEqual(['data/bestiary/index.json'])
+  })
+
 describe('补装并集（P5 核验 2）', () => {
   it('已装 PHB + 新装 MM：书和来源并集，不清掉 PHB', () => {
     expect(unionSelection(['PHB'], ['MM'])).toEqual(['MM', 'PHB'])

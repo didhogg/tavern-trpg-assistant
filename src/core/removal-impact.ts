@@ -2,7 +2,7 @@
 // 作者的删除函数只按编号删、不检查依赖（utils-brew-base.js 的 _pDeleteBrews_），插件要自己列。纯读取，不改任何数据。
 // 在 core 层：要同时读【库】（自制包、房规、版本选择）和用户数据库（战役、存档里的内核段）。
 import type { TrpgDatabase } from './db'
-import type { BrewPack, BrewPacks } from '../library/brew-packs'
+import type { BrewPack, BrewPacks, BrewRequirement } from '../library/brew-packs'
 import type { HouseRuleLink, ManageStore } from '../library/manage'
 import { getSource } from '../library/sources'
 import { packAltId, packStableId } from '../library/versions'
@@ -12,7 +12,7 @@ import { treeRootId } from './saves/view'
 import { hashValue, stableStringify } from './hash'
 
 export type RemovalTarget =
-  | { kind: 'official'; setId: string; /** 中英一起卸载时给完整集合。 */ setIds?: string[] }
+  | { kind: 'official'; setId: string; /** 中英一起卸载时给完整集合。 */ setIds?: string[]; /** 只删作者书号 / 冒险号；都不给 = 整套。 */ bookIds?: string[]; bookSources?: string[]; adventureIds?: string[] }
   | { kind: 'brew'; setId: string; docIdLocals: string[] }
 
 export interface AffectedSave {
@@ -48,9 +48,27 @@ export interface ImpactDeps {
   brewSetOf: (codeSet: string) => string
   /** 当前已发布库版本；预览凭据要包含它。 */
   revision: string
+  /** 官方单书删除时，该书涉及的类别 → 作者编号；只用于精确判断引用。 */
+  officialHashes?: (setId: string, bookSources: string[]) => Promise<Map<string, Set<string>>>
+  /** 删除后仍在的官方来源（小写）；用于判断自制依赖是否还有官方提供者。 */
+  officialSources?: Set<string>
 }
 
 const lower = (xs: Iterable<string>): Set<string> => new Set([...xs].map((s) => s.toLowerCase()))
+
+/** 旧包没有 requires（或测试替身）时，用作者 _meta 的声明补齐。 */
+const fallbackRequirements = (p: BrewPack): BrewRequirement[] => {
+  const out: BrewRequirement[] = []
+  for (const kind of ['dependencies', 'includes'] as const) {
+    for (const [prop, list] of Object.entries((p[kind] ?? {}) as Record<string, unknown>)) {
+      for (const source of Array.isArray(list) ? list : []) out.push({ kind: kind === 'dependencies' ? 'dependency' : 'include', prop, source: String(source) })
+    }
+  }
+  for (const [prop, list] of Object.entries((p as { otherSources?: Record<string, Record<string, unknown>> }).otherSources ?? {})) {
+    for (const source of Object.keys(list ?? {})) out.push({ kind: 'otherSource', prop, source })
+  }
+  return out
+}
 const kernelOf = (data: unknown): KernelCampaign | null => {
   const raw = (data as { kernel?: unknown } | null | undefined)?.kernel
   const r = raw ? kernelCampaignSchema.safeParse(raw) : null
@@ -65,28 +83,42 @@ interface Removed {
   setIds: Set<string>
   codeSet: string
   official: boolean
-  /** 自制：被删包里的来源（小写）与每类的作者编号。 */
+  /** true = 整套官方；false 时按 books/sources/adventures 精确判断。 */
+  officialWhole: boolean
+  /** 被删来源（小写）与每类的作者编号（官方单书也用它判断 library 选书设置）。 */
   sources: Set<string>
+  books: Set<string>
+  adventures: Set<string>
   hashes: Map<string, Set<string>>
   altIds: Set<string>
 }
 
-function removedOf(target: RemovalTarget, packs: BrewPack[], goneIds?: Set<string>): Removed {
+function removedOf(target: RemovalTarget, packs: BrewPack[], goneIds?: Set<string>, officialHashes?: Map<string, Set<string>>): Removed {
   const set = getSource(target.setId)
   const gone = target.kind === 'brew' ? packs.filter((p) => (goneIds ?? new Set(target.docIdLocals)).has(p.docIdLocal)) : []
   const hashes = new Map<string, Set<string>>()
   for (const p of gone) for (const [prop, hs] of Object.entries(p.hashes)) hashes.set(prop, new Set([...(hashes.get(prop) ?? []), ...hs]))
   const setIds = new Set(target.kind === 'official' ? (target.setIds ?? [target.setId]) : [target.setId])
-  return { setId: set.id, setIds, codeSet: set.codeSet, official: target.kind === 'official', sources: lower(gone.flatMap((p) => p.sources)), hashes, altIds: new Set(gone.flatMap((p) => [`doc:${p.docIdLocal}`, packAltId(packStableId(p), p.docIdLocal)])) }
+  const officialWhole = target.kind === 'official' && !(target.bookIds?.length || target.bookSources?.length || target.adventureIds?.length)
+  const books = new Set(target.kind === 'official' ? target.bookIds ?? [] : [])
+  const adventures = new Set(target.kind === 'official' ? target.adventureIds ?? [] : [])
+  const sources = target.kind === 'official' ? lower(target.bookSources ?? target.bookIds ?? []) : lower(gone.flatMap((p) => p.sources))
+  if (officialHashes) for (const [prop, hs] of officialHashes) hashes.set(prop, new Set([...(hashes.get(prop) ?? []), ...hs]))
+  return { setId: set.id, setIds, codeSet: set.codeSet, official: target.kind === 'official', officialWhole, sources, books, adventures, hashes, altIds: new Set(gone.flatMap((p) => [`doc:${p.docIdLocal}`, packAltId(packStableId(p), p.docIdLocal)])) }
 }
 
-const refGone = (r: Removed, ref: { set: string; prop: string; hash: string }): boolean =>
-  r.official ? r.setIds.has(ref.set) : ref.set === r.setId && !!r.hashes.get(ref.prop)?.has(ref.hash)
+const refGone = (r: Removed, ref: { set: string; prop: string; hash: string }): boolean => {
+  if (!r.official) return ref.set === r.setId && !!r.hashes.get(ref.prop)?.has(ref.hash)
+  if (r.officialWhole) return r.setIds.has(ref.set)
+  if (!r.setIds.has(ref.set)) return false
+  if (ref.prop === 'adventure') return r.adventures.has(ref.hash)
+  return !!r.hashes.get(ref.prop)?.has(ref.hash)
+}
 
 /** 一份内核段（战役当前数据或存档）里哪些东西用了被删资料。 */
 function whyKernel(k: KernelCampaign, library: KernelCampaign['library'], r: Removed): string[] {
   const why: string[] = []
-  if (r.official && [...r.setIds].some((id) => getSource(id).codeSet === library.codeSet)) why.push('这个战役用的是这套资料')
+  if (r.official && r.officialWhole && [...r.setIds].some((id) => getSource(id).codeSet === library.codeSet)) why.push('这个战役用的是这套资料')
   const refs = k.actors.flatMap((a) => a.refs).filter((ref) => refGone(r, ref)).length
   if (refs) why.push(`${refs} 处人物引用`)
   if (library.include.concat(library.exclude).some((u) => r.sources.has(u.replace(/^src:/, '')))) why.push('选书设置里有它的来源')
@@ -106,34 +138,78 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
     : [...new Set((target.setIds ?? [target.setId]).map((id) => deps.brewSetOf(getSource(id).codeSet)))]
   // 清单读不到 = 检查失败，不能当成“没有包”放行（P5 H6）
   const packs = (await Promise.all(brewSetIds.map((id) => deps.brewPacks.list(id)))).flat()
+  if (target.kind === 'brew') {
+    const missing = target.docIdLocals.find((id) => !packs.some((p) => p.docIdLocal === id))
+    if (missing) throw new Error(`这个自制包已经不存在：${missing}`)
+  }
 
-  // 自制包。删自制包：依赖被删来源的包也算，并且一路往下找（A 依赖被删的，B 依赖 A …），这些必须一起删
+  // 依赖：先用作者实际声明（dependencies / includes / otherSources / _copy）核对删除前后。
+  // 只有“删除前有提供者、删除后没有提供者”的必需数据才算本次新增缺失；已有缺依赖不算到这次删除。
+  const officialHashes = target.kind === 'official'
+    ? await deps.officialHashes?.(target.setId, target.bookSources ?? target.bookIds ?? [])
+    : undefined
+  let removed = removedOf(target, packs, undefined, officialHashes)
   const impacted: RemovalImpact['packs'] = []
   const removeTogether: string[] = []
-  let removed: Removed
-  if (target.kind === 'official') {
-    removed = removedOf(target, packs)
+  const officialWhole = target.kind === 'official' && removed.officialWhole
+  if (target.kind === 'official' && officialWhole) {
     for (const p of packs) impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: '自制内容要靠这套官方资料才能运行，重新下载之前用不了', mustRemove: false })
+    removed = removedOf(target, packs)
   } else {
-    const gone = new Set(target.docIdLocals)
-    const lostSources = new Set<string>()
-    for (const p of packs) if (gone.has(p.docIdLocal)) for (const src of p.sources) lostSources.add(src.toLowerCase())
-    for (let grew = true; grew;) {
-      grew = false
-      for (const p of packs) {
-        if (gone.has(p.docIdLocal)) continue
-        const needs = lower(Object.values((p.dependencies ?? {}) as Record<string, string[]>).flat())
-        const hit = [...lostSources].find((s) => needs.has(s))
-        if (!hit) continue
+    const gone = new Set<string>(target.kind === 'brew' ? target.docIdLocals : [])
+    const requirements = (p: BrewPack): BrewRequirement[] => p.requires.length ? p.requires : fallbackRequirements(p)
+    const sourceOf = (p: BrewPack): string[] => p.sources.map((s) => s.toLowerCase())
+    const officialBefore = new Set([...(deps.officialSources ?? []), ...(target.kind === 'official' ? removed.sources : [])])
+    const officialAfter = new Set(deps.officialSources ?? [])
+    if (target.kind === 'official') for (const s of removed.sources) officialAfter.delete(s)
+    const canProvide = (req: BrewRequirement, official: Set<string>, remaining: BrewPack[]): boolean => {
+      const src = req.source.toLowerCase()
+      if (official.has(src)) return true
+      return remaining.some((p) => {
+        if (!sourceOf(p).includes(src)) return false
+        if (req.hash) return (p.hashes[req.prop] ?? []).includes(req.hash)
+        return (p.props[req.prop] ?? 0) > 0 || (p.hashes[req.prop]?.length ?? 0) > 0
+      })
+    }
+    const attached = new Set<string>()
+    let changed = true
+    while (changed) {
+      changed = false
+      const remaining = packs.filter((p) => !gone.has(p.docIdLocal))
+      for (const p of remaining) {
+        if (attached.has(p.docIdLocal)) continue
+        const lost = requirements(p).find((req) => {
+          const src = req.source.toLowerCase()
+          if (!removed.sources.has(src)) return false
+          if (!canProvide(req, officialBefore, packs)) return false // 删除前就缺：不是这次造成的
+          return !canProvide(req, officialAfter, remaining.filter((x) => x.docIdLocal !== p.docIdLocal))
+        })
+        if (!lost) continue
         gone.add(p.docIdLocal)
-        for (const s of p.sources) lostSources.add(s.toLowerCase())
-        impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `依赖被删包里的来源 ${hit}，缺了它就不能用，必须一起删`, mustRemove: true })
-        grew = true
+        attached.add(p.docIdLocal)
+        for (const src of sourceOf(p)) removed.sources.add(src)
+        const why = `依赖 ${lost.source} 的 ${lost.prop}${lost.hash ? ` / ${lost.hash}` : ''}，删除后没有可用提供者`
+        impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `${why}，必须一起删`, mustRemove: true })
+        changed = true
       }
     }
-    // 先求最终删除集合，再用完整集合重建 Removed；后面的房规 / 存档扫描不能再用最初的目标
-    removeTogether.push(...gone)
-    removed = removedOf(target, packs, gone)
+    // 仍有提供者的受影响包只提示，不进入必删集合。
+    for (const p of packs) {
+      if (gone.has(p.docIdLocal)) continue
+      const hit = requirements(p).find((req) => removed.sources.has(req.source.toLowerCase()))
+      if (hit) impacted.push({ docIdLocal: p.docIdLocal, filename: p.filename, why: `依赖的 ${hit.prop} / ${hit.source} 仍可从其他提供者取得，保留但受影响`, mustRemove: false })
+    }
+    for (const id of gone) if (!removeTogether.includes(id)) removeTogether.push(id)
+    if (target.kind === 'brew') removeTogether.unshift(...target.docIdLocals.filter((id) => !removeTogether.includes(id)))
+    // 最终集合可能还包含因官方单书删除而必须一起删的自制包；把它们的条目也纳入引用扫描。
+    if (gone.size && target.kind === 'official') {
+      const extra = removedOf({ kind: 'brew', setId: deps.brewSetOf(removed.codeSet), docIdLocals: [...gone] }, packs, gone)
+      for (const src of extra.sources) removed.sources.add(src)
+      for (const [prop, hs] of extra.hashes) for (const h of hs) (removed.hashes.get(prop) ?? removed.hashes.set(prop, new Set()).get(prop)!).add(h)
+      for (const alt of extra.altIds) removed.altIds.add(alt)
+    } else if (target.kind === 'brew') {
+      removed = removedOf(target, packs, gone)
+    }
   }
 
   // 房规、版本选择

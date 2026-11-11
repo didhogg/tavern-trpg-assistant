@@ -70,7 +70,7 @@ export class LibraryView {
   localSet(codeSet: string, key: string, value: string): Promise<void> { return this.store.localSet(this, codeSet, key, value) }
   localRemove(codeSet: string, key: string): Promise<void> { return this.store.localRemove(this, codeSet, key) }
 
-  filterIndex(path: string, text: string): Promise<string> { return this.store.filterIndex(this, path, text) }
+  filterIndex(path: string, text: string, codeSet?: string): Promise<string> { return this.store.filterIndex(this, path, text, codeSet) }
     dataVersion(brews?: Record<string, BrewSetState>): Promise<KernelDataVersion> { return this.store.dataVersion(this, brews) }
 }
 
@@ -377,8 +377,8 @@ export class LibraryRevisionStore {
   }
   // ---- 读上下文里的来源索引过滤 ----
 
-  filterIndex(view: LibraryView, path: string, text: string): Promise<string> {
-    return filterIndexFromChain(view, path, text)
+  filterIndex(view: LibraryView, path: string, text: string, codeSet?: string): Promise<string> {
+    return filterIndexFromChain(view, path, text, codeSet)
   }
   // ---- 数据版本记号（N1） ----
 

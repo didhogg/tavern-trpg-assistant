@@ -75,7 +75,7 @@ export class DownloadEstimator {
       if (!list) { sets.push({ setId, installed, bytes: null, totalBytes: null, sharedBytes: null, reusedBytes: null }); continue }
       const rec = network ? await this.deps.directory.get(getSource(setId).codeSet) : await this.deps.directory.peek(getSource(setId).codeSet)
       const plan = rec
-        ? officialPlan(list, rec.owners, { sources: input.sources?.[setId] ?? null, books: input.books?.[setId] ?? null }, { indexSources: rec.indexSources })
+        ? officialPlan(list, rec.owners, { sources: input.sources?.[setId] ?? null, books: input.books?.[setId] ?? null }, { indexSources: rec.indexSources, codeSet: getSource(setId).codeSet })
         : precachePlan(list)
       if (installed) { sets.push({ setId, installed, bytes: 0, totalBytes: plan.bytes, sharedBytes: 0, reusedBytes: plan.bytes }); continue }
       const missing = await this.missingBytes(view, setId, list, plan.files)

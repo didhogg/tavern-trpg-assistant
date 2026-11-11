@@ -17,6 +17,8 @@ export interface SourceInfo {
   dateReleased: string | null
 }
 
+export interface BrewRequirement { kind: 'dependency' | 'include' | 'otherSource' | 'copy'; prop: string; source: string; hash?: string | null }
+
 export interface BrewPack {
   docIdLocal: string
   filename: string | null
@@ -30,6 +32,9 @@ export interface BrewPack {
   /** 作者 _meta 里的依赖与包含，原样。 */
   dependencies: unknown
   includes: unknown
+  otherSources?: unknown
+  /** 作者实际取数声明：dependencies / includes / otherSources / _copy；用于删除影响核对。 */
+  requires: BrewRequirement[]
   /** 每个类别里有几条（作者编号算出来的非空条数）。 */
   props: Record<string, number>
   /** 每个类别里每条的作者编号（删前影响预览找谁用了它用）。 */
@@ -46,6 +51,19 @@ const sourceInfoOf = (meta: Meta): SourceInfo[] => (meta?.sources ?? []).map((s)
   json: String(s.json ?? ''), full: s.full ?? null, abbreviation: s.abbreviation ?? null,
   authors: Array.isArray(s.authors) ? s.authors.map(String) : [], version: s.version ?? null, dateReleased: s.dateReleased ?? null,
 }))
+
+function metaRequirements(meta: Meta): BrewRequirement[] {
+  const out: BrewRequirement[] = []
+  for (const kind of ['dependencies', 'includes'] as const) {
+    for (const [prop, list] of Object.entries((meta?.[kind] ?? {}) as Record<string, unknown>)) {
+      for (const source of Array.isArray(list) ? list : []) out.push({ kind: kind === 'dependencies' ? 'dependency' : 'include', prop, source: String(source) })
+    }
+  }
+  for (const [prop, list] of Object.entries((meta as { otherSources?: Record<string, Record<string, unknown>> } | null)?.otherSources ?? {})) {
+    for (const source of Object.keys(list ?? {})) out.push({ kind: 'otherSource', prop, source })
+  }
+  return out
+}
 
 export class BrewPacks {
   constructor(private readonly lib: LibraryService) {}
@@ -66,11 +84,12 @@ export class BrewPacks {
         const id = String(head.docIdLocal ?? '')
         const doc = byId.get(id)
         const hashes = Object.fromEntries(Object.entries(doc?.props ?? {}).map(([k, hs]) => [k, hs.filter((h): h is string => !!h)]).filter(([, hs]) => (hs as string[]).length > 0)) as Record<string, string[]>
+        const requires = doc?.requires ?? metaRequirements(meta)
         const props = Object.fromEntries(Object.entries(hashes).map(([k, hs]) => [k, hs.length]))
         return {
           docIdLocal: id, filename: (head.filename as string | undefined) ?? null, url: (head.url as string | undefined) ?? null, origin: originOf(head),
           isEditable: !!head.isEditable, timeAdded: Number(head.timeAdded ?? 0), sources: doc?.sources ?? sourcesOf(meta), sourceInfo: sourceInfoOf(meta),
-          dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null,
+          dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null, requires,
           props: props as Record<string, number>, hashes, entryCount: Object.values(props as Record<string, number>).reduce((a, b) => a + b, 0),
         }
       })
@@ -84,7 +103,7 @@ export class BrewPacks {
       return {
         docIdLocal: id, filename: (head.filename as string | undefined) ?? null, url: (head.url as string | undefined) ?? null, origin: originOf(head),
         isEditable: !!head.isEditable, timeAdded: Number(head.timeAdded ?? 0), sources: sourcesOf(meta), sourceInfo: sourceInfoOf(meta),
-        dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null, props: {}, hashes: {}, entryCount: 0,
+        dependencies: meta?.dependencies ?? null, includes: meta?.includes ?? null, requires: metaRequirements(meta), props: {}, hashes: {}, entryCount: 0,
       }
     })
   }

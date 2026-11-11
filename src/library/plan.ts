@@ -69,11 +69,13 @@ export interface OfficialPlan extends Plan {
   /** 读上下文里要过滤的来源索引文件：路径 → 允许的来源（null = 不过滤）。 */
   sourceIndexes: Record<string, string[] | null>
   /** 用户选了、但作者目录里找不到对应文件的来源 / 书。 */
-  missing: { sources: string[]; books: string[] }
+  missing: { sources: string[]; books: string[]; adventures?: string[] }
   /** 这份计划最终应该登记的来源 / 书 / 冒险集合；null = 不限制（全部 / 旧整套）。 */
   sources: string[] | null
   books: string[] | null
   adventures: string[] | null
+  /** 已装但目标目录移除的冒险；任务应把正文移除，而不是要求补文件。 */
+  removedAdventures?: string[]
 }
 
 export interface PlanOptions {
@@ -83,6 +85,10 @@ export interface PlanOptions {
   allSources?: boolean
   /** 书正文全部要。 */
   allBooks?: boolean
+  /** 已经在本地装过的冒险；用于区分“新选但作者没有”和“上游移除了已装冒险”。 */
+  knownAdventures?: string[]
+  /** 这套作者程序（cn / en）；索引过滤按资料集 + 路径存，避免中英互相覆盖。 */
+  codeSet?: string
   /** 作者来源索引文件：路径 → 索引里出现的全部来源。 */
   indexSources?: Record<string, string[]>
 }
@@ -100,6 +106,11 @@ export function selectionFor(base: OfficialSetState | null, opts: SelectionInput
   const adventures = unionSelection(installed ? base.adventures : null, opts.adventures)
   return { books, sources, adventures, allSources: installed && baseSources === null }
 }
+
+export const fullPlan = (full: Plan): OfficialPlan => ({
+  ...full, shared: { ...full }, bySource: empty(), byBook: empty(), byClass: empty(), byAdventure: empty(),
+  sourceIndexes: { '*': null }, missing: { sources: [], books: [] }, sources: null, books: null, adventures: null,
+})
 
 export function unionSelection(current: string[] | null | undefined, add: string[] | null | undefined): string[] | null {
   if (current == null) return add == null ? null : [...new Set(add)].sort()
@@ -153,19 +164,36 @@ export function officialPlan(list: FileList, owners: Record<string, PlanOwner>, 
     }
     // 冒险正文不在 precache 里；由 directory 的 adventureFiles 单独加
   }
+  const keyOf = (path: string): string => (opts.codeSet ? `${opts.codeSet}|${path}` : path)
   for (const [path, allowed] of Object.entries(opts.indexSources ?? {})) {
-    out.sourceIndexes[path] = allSources ? null : allowed.filter((s) => sources?.has(s) ?? false)
+    out.sourceIndexes[keyOf(path)] = allSources ? null : allowed.filter((s) => sources?.has(s) ?? false)
   }
-  if (allSources && !Object.keys(opts.indexSources ?? {}).length) out.sourceIndexes['*'] = null
+  if (allSources && !Object.keys(opts.indexSources ?? {}).length) out.sourceIndexes[keyOf('*')] = null
   if (!allSources && sources) for (const s of sources) if (!seenSource.has(s)) out.missing.sources.push(s)
   if (!allBooks && books) for (const b of books) if (!seenBook.has(b)) out.missing.books.push(b)
   // 冒险正文：只加选中的（计划外，但执行 / 估算共用这一份）
+  const seenAdventure = new Set<string>()
+  const removedAdventures: string[] = []
   if (adventures) {
+    const known = new Set(opts.knownAdventures ?? [])
     for (const [path, owner] of Object.entries(owners)) {
       if (owner.kind !== 'adventure' || !adventures.has(owner.id)) continue
-      add(out.byAdventure, path, list[path].size)
-      add(out, path, list[path].size)
+      seenAdventure.add(owner.id)
+      const expected = list[path]
+      if (!expected) {
+        if (known.has(owner.id)) removedAdventures.push(owner.id)
+        else (out.missing.adventures ??= []).push(owner.id)
+        continue
+      }
+      add(out.byAdventure, path, expected.size)
+      add(out, path, expected.size)
+    }
+    for (const id of adventures) if (!seenAdventure.has(id)) {
+      if (known.has(id)) removedAdventures.push(id)
+      else (out.missing.adventures ??= []).push(id)
     }
   }
+  if (removedAdventures.length) out.removedAdventures = [...new Set(removedAdventures)].sort()
+  if (adventures) out.adventures = [...adventures].filter((id) => !out.removedAdventures?.includes(id) && !out.missing.adventures?.includes(id)).sort()
   return out
 }

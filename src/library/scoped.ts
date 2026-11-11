@@ -14,8 +14,7 @@ import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
 import { chooseVersion, expandVariants, variantsOf, type Alternative, type Chosen, type VariantInfo } from './versions'
 export type { VariantInfo } from './versions'
 import { hashValue } from '../core/hash'
-import type { BookDirectory } from './directory'
-import type { DirectoryRecord } from './directory'
+import type { BookDirectory, DirectoryRecord } from './directory'
 import { BrewPacks, type BrewPack } from './brew-packs'
 import { catalogFor, packUrl, type CatalogRow } from './scoped-catalog'
 export type { CatalogRow } from './scoped-catalog'
@@ -26,12 +25,10 @@ import { scopedSearch, type ScopedSearchHit } from './scoped-search'
 import { groupShelf, type ShelfGroup } from './shelf'
 import type { LibraryView } from './revision'
 import type { KernelOverride } from '../schemas/kernel'
-
 export interface VersionInfo extends Chosen {
   /** 有几个备选（不含原件）。 */
   count: number
 }
-
 export interface ScopedRow {
   ref: EntryRef
   source: string | null
@@ -46,7 +43,6 @@ export interface ScopedRow {
   /** 自制包的稳定身份（浏览 / 删除按包定位，不按来源猜）。 */
   pack?: { docIdLocal: string; filename: string | null; stableId: string | null; sources: string[] }
 }
-
 export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
   ref: EntryRef
   reason: ViewReason
@@ -60,11 +56,9 @@ export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
   /** 英文对照只对原件（官方）有意义；生效的是备选时为 null。 */
   english: English | null
 }
-
 export type FetchResult =
   | { ok: true; ref: EntryRef; source: string | null; item: unknown; version: VersionInfo; closed: boolean }
   | { ok: false; ref: EntryRef; reason: 'not-installed' | 'not-found' }
-
 interface Context {
   view: LibraryView
   assigns: Map<string, Assignment>
@@ -75,19 +69,15 @@ interface Context {
   houseItems: Map<string, unknown>
   packs: Map<string, Map<string, BrewPack>>
 }
-
 export class ScopedLibrary {
   readonly manage: ManageStore
   private readonly editionCache = new Map<string, EditionInfo>()
-
   constructor(private readonly lib: LibraryService, db: LibraryDatabase, private readonly directory?: BookDirectory, readonly links: EntryLinks = new EntryLinks(lib, new DocumentStore(db))) {
     this.manage = new ManageStore(db)
   }
-
   setsOf(codeSet: string): SourceEntry[] {
     return SOURCES.filter((s) => s.codeSet === codeSet)
   }
-
   private async context(c: CampaignLibrary, view: LibraryView): Promise<Context> {
     const assigns = await this.manage.assignments()
     const altMap = await this.alts(c.codeSet, view)
@@ -105,7 +95,6 @@ export class ScopedLibrary {
     }
     return { view, assigns, altMap, levels, houseUnits: new Set(links.map((l) => refKey(l.house))), houseByTarget, houseItems: new Map(), packs }
   }
-
   private async installed(set: SourceEntry, view: LibraryView): Promise<boolean> {
     if (set.kind === 'brew') {
       if (await view.brewState(set.id)) return true
@@ -133,7 +122,6 @@ export class ScopedLibrary {
     }
     return Object.fromEntries(sources.map((s) => [s, this.editionCache.get(`${view.id}|${codeSet}|${s.toLowerCase()}`)!]))
   }
-
   reset(): void {
     this.editionCache.clear()
     this.links.reset()
@@ -284,6 +272,10 @@ export class ScopedLibrary {
       }
       const stored = await this.lib.storedItem(ref.set, ref.prop, ref.hash, view)
       if (!stored) { out.push({ ok: false, ref, reason: 'not-found' }); continue }
+      if (set.kind === 'official') {
+        const allowed = await view.visibleSources(set.id)
+        if (allowed && stored.source && !allowed.some((src) => src.toLowerCase() === stored.source!.toLowerCase())) { out.push({ ok: false, ref, reason: 'not-found' }); continue }
+      }
       const v = await this.viewFor(c, ref, stored.source, ctx.assigns, view)
       const { chosen, item } = this.version(refKey(ref), await this.alternativesOf(ref, ctx), ctx, c.choices[refKey(ref)])
       out.push({ ok: true, ref, source: stored.source, item: item ?? stored.item, version: chosen, closed: !v.visible })
@@ -341,22 +333,31 @@ export class ScopedLibrary {
       sourceCounts: (id, v) => this.sourceCounts(id, v), adventures: (set, v) => this.adventures(set, v),
     }, c, { remote, ...(record ? { record } : {}), ...(viewArg ? { view: viewArg } : {}) })
   }
-  async shelf(c: CampaignLibrary, view?: LibraryView): Promise<{ groups: ShelfGroup[]; booksError: string | null; adventuresError: string | null }> {
+  async shelf(c: CampaignLibrary, view?: LibraryView): Promise<{ groups: ShelfGroup[]; booksError: string | null; adventuresError: string | null; brewError: string | null }> {
     const record = await this.directory!.get(c.codeSet)
     const rows = await this.catalog(c, { remote: true, record, ...(view ? { view } : {}) })
-    return { groups: groupShelf(rows, record.groups), booksError: record.errors.books, adventuresError: record.errors.adventures }
+    let brewError: string | null = null
+    const v = view ?? await this.lib.currentView()
+    for (const set of this.setsOf(c.codeSet).filter((s) => s.kind === 'brew')) {
+      try { await new BrewPacks(this.lib).list(set.id, v) } catch (e) { brewError = brewError ?? `${set.id}：${e instanceof Error ? e.message : String(e)}` }
+    }
+    return { groups: groupShelf(rows, record.groups), booksError: record.errors.books, adventuresError: record.errors.adventures, brewError }
   }
   private async sourceCounts(setId: string, view: LibraryView): Promise<Record<string, number>> {
     const fp = String((await view.derivedGet(`audit:${setId}`))?.savedAt ?? '')
+    const allowed = await view.visibleSources(setId)
+    const trim = (counts: Record<string, number>): Record<string, number> => {
+      if (allowed) for (const key of Object.keys(counts)) if (!allowed.some((s) => s.toLowerCase() === key.toLowerCase())) delete counts[key]
+      return counts
+    }
     const saved = await view.derivedGet(`sources:${setId}`)
-    if (saved && saved.fingerprint === fp) return saved.value as Record<string, number>
+    if (saved && saved.fingerprint === fp) return trim({ ...(saved.value as Record<string, number>) })
     const prefix = parsedKey(setId, '')
     const map = await view.derivedKeys(prefix)
-    const counts = countSources([...map.entries()].map(([key, rec]) => ({ key, value: rec.value })), prefix)
+    const counts = trim(countSources([...map.entries()].map(([key, rec]) => ({ key, value: rec.value })), prefix))
     await view.derivedPut(`sources:${setId}`, fp, counts)
     return counts
   }
-
   async adventures(set: SourceEntry, viewArg?: LibraryView): Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>> {
     const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
     const frame = await this.lib.frameOf(set.codeSet, view)

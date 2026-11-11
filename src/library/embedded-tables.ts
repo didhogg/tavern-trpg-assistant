@@ -89,8 +89,10 @@ export class EmbeddedTables {
     if (!p) {
       p = (async () => {
         const saved = view ? await view.derivedGet(parsedKey(sourceId, EMBEDDED_PROP)) : await this.db.derived.get(parsedKey(sourceId, EMBEDDED_PROP))
-        const commit = view ? await view.commitOf(getSource(sourceId)) : commitOf(getSource(sourceId))
-        if (saved && saved.fingerprint === commit) return saved.value as ParsedProp
+        const source = getSource(sourceId)
+        const commit = view ? await view.commitOf(source) : commitOf(source)
+        const fp = source.kind === 'brew' ? `${commit}|${view?.id ?? 'legacy'}` : commit
+        if (saved && saved.fingerprint === fp) return saved.value as ParsedProp
         return this.build(sourceId, { view })
       })()
       p.catch(() => this.building.delete(key))
@@ -105,7 +107,6 @@ export class EmbeddedTables {
    */
   async build(sourceId: string, opts: { frame?: AuthorFrame; props?: Record<string, { count: number }>; view?: LibraryView } = {}): Promise<ParsedProp> {
     const source = getSource(sourceId)
-    if (source.kind !== 'official') throw new Error(`${sourceId} 不是官方数据集`)
     const auditRec = opts.view ? await opts.view.derivedGet(`audit:${sourceId}`) : await this.db.derived.get(`audit:${sourceId}`)
     const audit = auditRec?.value as { parse?: { props?: Record<string, { count: number }> } } | undefined
     const props = opts.props ?? audit?.parse?.props
@@ -115,7 +116,9 @@ export class EmbeddedTables {
     const skipped: Record<string, { count: number; sample: string }> = {}
     for (const [prop, v] of Object.entries(props)) {
       if (SKIP.has(prop) || prop.startsWith('raw_') || !v.count) continue
-      const r = await f.call('extractTables', prop)
+      const parsedRec = opts.view ? await opts.view.derivedGet(parsedKey(sourceId, prop)) : await this.db.derived.get(parsedKey(sourceId, prop))
+      const supplied = source.kind === 'brew' ? ((parsedRec?.value as ParsedProp | undefined)?.items ?? []) : undefined
+      const r = await f.call('extractTables', prop, supplied)
       if (r.tables.length) extracted.push({ prop, tables: r.tables })
       if (r.skipped.length) skipped[prop] = { count: r.skipped.length, sample: `${r.skipped[0].name}：${r.skipped[0].error}` }
     }
@@ -129,8 +132,9 @@ export class EmbeddedTables {
     }
     const built = buildEmbedded(extracted, known)
     const commit = opts.view ? await opts.view.commitOf(source) : commitOf(source)
-    if (opts.view) await opts.view.derivedPut(parsedKey(sourceId, EMBEDDED_PROP), commit, { ...built, skipped })
-    else await this.db.derived.put({ key: parsedKey(sourceId, EMBEDDED_PROP), fingerprint: commit, value: { ...built, skipped }, savedAt: Date.now() })
+    const fp = source.kind === 'brew' ? `${commit}|${opts.view?.id ?? 'legacy'}` : commit
+    if (opts.view) await opts.view.derivedPut(parsedKey(sourceId, EMBEDDED_PROP), fp, { ...built, skipped })
+    else await this.db.derived.put({ key: parsedKey(sourceId, EMBEDDED_PROP), fingerprint: fp, value: { ...built, skipped }, savedAt: Date.now() })
     if (!opts.props && audit?.parse) {
       const value = { ...audit, parse: { ...audit.parse, props: { ...props, [EMBEDDED_PROP]: { count: built.items.length, noHash: 0 } } } }
       if (opts.view) await opts.view.derivedPut(`audit:${sourceId}`, commit, value)

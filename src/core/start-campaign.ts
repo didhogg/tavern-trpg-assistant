@@ -78,6 +78,8 @@ export interface WizardOptions {
   shelfError: string | null
   /** 冒险目录取不到的原因：同上，不挡。 */
   adventureError: string | null
+  /** 自制包清单取不到的原因：只影响自制行，不遮住官方书架。 */
+  brewError: string | null
   /** 书目或冒险目录任何一个没取到：界面据此显示统一提示（文案归界面）。 */
   catalogUnavailable: boolean
   library: CampaignLibrary
@@ -181,10 +183,11 @@ export class CampaignStarter {
     if (!rule) throw new TrpgError('E_RULE_MISSING', `没有这套规则：${ruleId}`)
     const library = this.libraryOf(ruleId, codeSet, choice)
     const { scoped } = this.deps.library
-    const r = await scoped.shelf(library).catch((e: unknown) => ({ groups: [] as ShelfGroup[], booksError: msg(e), adventuresError: null as string | null }))
+    const r = await scoped.shelf(library).catch((e: unknown) => ({ groups: [] as ShelfGroup[], booksError: msg(e), adventuresError: null as string | null, brewError: null as string | null }))
     const shelf = r.groups
     const shelfError = r.booksError
     const adventureError = r.adventuresError
+    const brewError = r.brewError
     const core = await this.deps.corePacks()
     const data = await this.dataStatus() // 书目步骤会顺带缓存文件清单，所以放在它后面才有下载大小
     return {
@@ -196,6 +199,7 @@ export class CampaignStarter {
       blockingError: core.ok ? null : this.coreMessage(core),
       shelfError,
       adventureError,
+      brewError,
       catalogUnavailable: !!(shelfError || adventureError),
       library,
     }

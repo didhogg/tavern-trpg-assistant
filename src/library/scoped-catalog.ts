@@ -72,17 +72,25 @@ export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote
         }
         continue
       }
-      const allowed = await view.visibleSources(set.id)
+      const allowed = remote ? null : await view.visibleSources(set.id)
       const counts = { ...(await deps.sourceCounts(set.id, view)) }
       const installedBooks = await view.installedBooks(set.id)
+      const bookSources = new Set<string>()
+      // 已装一套资料时，仍把作者书目里的每一本列出来； downloaded 只说明这一本在不在本地。
+      // 已装书架再按 downloaded 过滤，下载目录则能看到下一本。
       for (const book of (rec?.books ?? []) as Array<{ id?: unknown; source?: unknown }>) {
         const id = String(book.id ?? '')
         const source = String(book.source ?? '')
         if (!id || !source) continue
-        if (installedBooks && !installedBooks.includes(id)) continue
-        if (!counts[source]) counts[source] = 0
+        if (allowed && !allowed.some((s) => s.toLowerCase() === source.toLowerCase())) continue
+        bookSources.add(source.toLowerCase())
+        const downloaded = !installedBooks || installedBooks.includes(id)
+        const row = { kind: 'book' as const, set: set.id, source, id, count: counts[source] ?? 0, downloaded, alternatives: altBySource.get(source.toLowerCase()) ?? 0 }
+        rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
       }
+      // 来源索引里有、但作者书目没列出对应书号的共享/来源行，仍给一行“来源”身份。
       for (const [source, count] of Object.entries(counts)) {
+        if (bookSources.has(source.toLowerCase())) continue
         if (allowed && !allowed.some((s) => s.toLowerCase() === source.toLowerCase())) continue
         const row = { kind: 'book' as const, set: set.id, source, id: null, count, downloaded: true, alternatives: altBySource.get(source.toLowerCase()) ?? 0 }
         rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)

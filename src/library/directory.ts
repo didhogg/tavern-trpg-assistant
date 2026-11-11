@@ -32,8 +32,8 @@ export interface DirectoryOptions {
   db: LibraryDatabase
   /** 已装好的数据集用：现成的只读本地小窗。 */
   localFrame: (codeSet: string) => Promise<AuthorFrame>
-  /** 没装的数据集用：允许联网的一次性小窗；kvScope 隔离，不碰真正的作者存储。 */
-  networkFrame: (codeSet: string, kvScope: string, view?: LibraryView) => Promise<AuthorFrame>
+  /** 没装 / 目标提交用：允许联网的一次性小窗；kvScope 隔离，不碰真正的作者存储。target 只读不落旧 files。 */
+  networkFrame: (codeSet: string, kvScope: string, view?: LibraryView, target?: { commit: string; persist: boolean }) => Promise<AuthorFrame>
   /** 当前已发布版本；给了就按版本的提交号缓存书目。 */
   view?: () => Promise<LibraryView>
 }
@@ -46,25 +46,26 @@ export class BookDirectory {
 
   constructor(private readonly opts: DirectoryOptions) {}
 
-  private async keyOf(codeSet: string): Promise<{ key: string; commit: string; sourceId: string }> {
+  private async keyOf(codeSet: string, commitOverride?: string): Promise<{ key: string; commit: string; sourceId: string }> {
     const source = officialSourceOf(codeSet)
     const view = this.opts.view ? await this.opts.view() : null
-    const commit = view ? await view.commitOf(source) : commitOf(source)
+    const commit = commitOverride ?? (view ? await view.commitOf(source) : commitOf(source))
     return { key: `directory:${KEY_VERSION}:${source.id}@${commit}`, commit, sourceId: source.id }
   }
 
   /** 只看缓存，不联网、不开小窗。 */
-  async peek(codeSet: string): Promise<DirectoryRecord | null> {
-    const saved = await this.opts.db.derived.get((await this.keyOf(codeSet)).key)
+  async peek(codeSet: string, opts: { commit?: string } = {}): Promise<DirectoryRecord | null> {
+    const saved = await this.opts.db.derived.get((await this.keyOf(codeSet, opts.commit)).key)
     return saved ? (saved.value as DirectoryRecord) : null
   }
 
-  get(codeSet: string): Promise<DirectoryRecord> {
-    let p = this.inflight.get(codeSet)
+  get(codeSet: string, opts: { commit?: string } = {}): Promise<DirectoryRecord> {
+    const key = `${codeSet}@${opts.commit ?? ''}`
+    let p = this.inflight.get(key)
     if (!p) {
-      p = this.load(codeSet)
-      this.inflight.set(codeSet, p)
-      void p.then(() => this.inflight.delete(codeSet), () => this.inflight.delete(codeSet))
+      p = this.load(codeSet, false, opts)
+      this.inflight.set(key, p)
+      void p.then(() => this.inflight.delete(key), () => this.inflight.delete(key))
     }
     return p
   }
@@ -75,19 +76,20 @@ export class BookDirectory {
    */
   async refresh(codeSet: string): Promise<DirectoryRecord> {
     const old = await this.peek(codeSet)
-    this.inflight.delete(codeSet)
+    const key = `${codeSet}@`
+    this.inflight.delete(key)
     const p = this.load(codeSet, true)
-    this.inflight.set(codeSet, p)
+    this.inflight.set(key, p)
     try {
       const fresh = await p
       return (fresh.errors.books || fresh.errors.adventures) && old ? old : fresh
     } finally {
-      this.inflight.delete(codeSet)
+      this.inflight.delete(key)
     }
   }
 
-  private async load(codeSet: string, force = false): Promise<DirectoryRecord> {
-    const { key, commit, sourceId } = await this.keyOf(codeSet)
+  private async load(codeSet: string, force = false, opts: { commit?: string } = {}): Promise<DirectoryRecord> {
+    const { key, commit, sourceId } = await this.keyOf(codeSet, opts.commit)
     const saved = await this.opts.db.derived.get(key)
     if (saved && !force) return saved.value as DirectoryRecord
 
@@ -96,11 +98,12 @@ export class BookDirectory {
       owners: {}, indexSources: {}, sourceFiles: { maps: {}, classFiles: [] },
       errors: { books: `官方书目（${codeSet}）取不到：${why}`, adventures: `官方冒险目录（${codeSet}）取不到：${why}` },
     })
-    const installed = (await this.opts.db.sets.get(sourceId))?.status === 'installed'
     const view = this.opts.view ? await this.opts.view() : undefined
+    const currentCommit = view ? await view.commitOf(officialSourceOf(codeSet)) : commitOf(officialSourceOf(codeSet))
+    const installed = opts.commit ? commit === currentCommit && (await this.opts.db.sets.get(sourceId))?.status === 'installed' : (await this.opts.db.sets.get(sourceId))?.status === 'installed'
     let frame: AuthorFrame
     try {
-      frame = installed ? await this.opts.localFrame(codeSet) : await this.opts.networkFrame(codeSet, `directory:${codeSet}`, view)
+      frame = installed ? await this.opts.localFrame(codeSet) : await this.opts.networkFrame(codeSet, `directory:${codeSet}`, view, opts.commit ? { commit: opts.commit, persist: false } : undefined)
     } catch (e) {
       return failed(msg(e))
     }

@@ -116,12 +116,39 @@ describe('版本化库（P5 T1）', () => {
     expect(JSON.parse(await v3.filterIndex(path, text))).toEqual({ PHB: 'spells-phb.json', XPHB: 'spells-xphb.json' })
   })
 
+  it('索引过滤按资料集隔离：英文 XPHB 不覆盖中文 PHB', async () => {
+    const { operations } = await setup()
+    const path = 'data/bestiary/index.json'
+    const text = JSON.stringify({ PHB: 'phb.json', XPHB: 'xphb.json' })
+    const h1 = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.setTargetIndexes(h1, { [`cn|${path}`]: ['PHB'] })
+    const v1 = await operations.publish(h1, {})
+    expect(JSON.parse(await v1.filterIndex(path, text, 'cn'))).toEqual({ PHB: 'phb.json' })
+    const h2 = await operations.begin({ kind: 'test', set: 'en-official', codeSet: 'en' })
+    await operations.setTargetIndexes(h2, { [`en|${path}`]: ['XPHB'] })
+    const v2 = await operations.publish(h2, {})
+    expect(JSON.parse(await v2.filterIndex(path, text, 'cn'))).toEqual({ PHB: 'phb.json' })
+    expect(JSON.parse(await v2.filterIndex(path, text, 'en'))).toEqual({ XPHB: 'xphb.json' })
+  })
+
+  it('过期租约被新操作接管：旧操作标中断，旧回包不能发布', async () => {
+    const { operations } = await setup()
+    const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    const lock = await db.locks.get('library')
+    await db.locks.put({ ...lock!, expiresAt: Date.now() - 1 })
+    const next = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    expect((await db.ops.get(h.record.id))?.status).toBe('interrupted')
+    await expect(operations.publish(h, {})).rejects.toThrow('租约')
+    await operations.abort(next, new Error('清理'))
+  })
+
   it('恢复不打断仍在运行的窗口；真正过期才标中断并释放锁', async () => {
     const { operations } = await setup()
     const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
     await operations.restore()
     expect((await db.ops.get(h.record.id))?.status).toBe('preparing')
     await db.ops.put({ ...h.record, updatedAt: Date.now() - 120_000 })
+    await db.locks.put({ ...(await db.locks.get('library'))!, expiresAt: Date.now() - 1 })
     await operations.restore()
     expect((await db.ops.get(h.record.id))?.status).toBe('interrupted')
     expect(await db.locks.get('library')).toBeUndefined()

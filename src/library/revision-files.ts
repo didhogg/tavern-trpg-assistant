@@ -67,7 +67,8 @@ export async function fileSha(store: LibraryRevisionStore, view: LibraryView, so
 export async function filePaths(store: LibraryRevisionStore, view: LibraryView, source: SourceEntry): Promise<string[]> {
   const db = store.db
   const out = new Set<string>()
-  for (const [key] of await db.files.where('source').equals(source.id).primaryKeys()) out.add(String(key))
+  // 复合主键是 [source, path]，不能用 primaryKeys() 后 String(key)；旧探测因此只返回了 ["cn-official"]。
+  for (const rec of await db.files.where('source').equals(source.id).toArray()) out.add(rec.path)
   const seen = new Set<string>()
   for (const rev of await view.chain()) {
     const rows = await db.fileVersions.where('revision').equals(rev.id).toArray()
@@ -82,20 +83,33 @@ export async function filePaths(store: LibraryRevisionStore, view: LibraryView, 
 }
 
 /** 沿父链找这个索引文件最近的过滤规则；没有规则 = 不过滤，null = 明确不限制。 */
-export async function filterIndexFromChain(view: LibraryView, path: string, text: string): Promise<string> {
+export async function filterIndexFromChain(view: LibraryView, path: string, text: string, codeSet?: string): Promise<string> {
   for (const rev of await view.chain()) {
     const map = rev.sourceIndexes
     if (!map) continue
+    // 新记录按 codeSet|path 存；旧记录只有 path，作为兼容回退。
+    const scopedPath = codeSet ? `${codeSet}|${path}` : null
+    const scopedStar = codeSet ? `${codeSet}|*` : null
+    if (scopedStar && map[scopedStar] === null) return text
+    if (scopedPath && Object.prototype.hasOwnProperty.call(map, scopedPath)) {
+      const allowed = map[scopedPath]
+      if (allowed === null) return text
+      return filterText(allowed, text)
+    }
     if (map['*'] === null) return text
     if (!Object.prototype.hasOwnProperty.call(map, path)) continue
     const allowed = map[path]
     if (allowed === null) return text
-    try {
-      const json = JSON.parse(text) as Record<string, unknown>
-      if (!json || typeof json !== 'object' || Array.isArray(json)) return text
-      const keep = new Set(allowed)
-      return JSON.stringify(Object.fromEntries(Object.entries(json).filter(([k]) => keep.has(k))))
-    } catch { return text }
+    return filterText(allowed, text)
   }
   return text
+}
+
+function filterText(allowed: string[], text: string): string {
+  try {
+    const json = JSON.parse(text) as Record<string, unknown>
+    if (!json || typeof json !== 'object' || Array.isArray(json)) return text
+    const keep = new Set(allowed)
+    return JSON.stringify(Object.fromEntries(Object.entries(json).filter(([k]) => keep.has(k))))
+  } catch { return text }
 }

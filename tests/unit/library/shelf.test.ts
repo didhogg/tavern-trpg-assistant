@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { BookDirectory, type DirectoryRecord } from '../../../src/library/directory'
 import { attachShelf, directoryRows, groupShelf } from '../../../src/library/shelf'
+import { catalogFor } from '../../../src/library/scoped-catalog'
 import type { CatalogRow } from '../../../src/library/scoped'
 import { LibraryDatabase } from '../../../src/library/db'
 
@@ -68,6 +69,19 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
   try { await run(db) } finally { db.close(); await db.delete() }
 }
 
+  it('已装一部分：下载目录仍列全部书，downloaded 区分已装 / 可下载', async () => {
+    const view = { installedBooks: async () => ['PHB'], visibleSources: async () => ['PHB'] } as never
+    const deps = {
+      lib: { currentView: async () => view, frameOf: async () => ({ call: async () => ({}) }), brewCorpora: async () => ({}) },
+      sourcesFor: () => [{ id: 'cn-official', kind: 'official', codeSet: 'cn', lang: 'zh', mirrors: [] }],
+      context: async () => ({ altMap: new Map(), assigns: new Map(), packs: new Map() }),
+      directory: { get: async () => REC },
+      installed: async () => true, editions: async () => ({}), sourceCounts: async () => ({ PHB: 2 }), adventures: async () => [],
+    } as never
+    const rows = await catalogFor(deps, { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: [], exclude: [], choices: {} }, { remote: true, record: REC, view: view as never })
+    expect(rows.map((r) => [r.source, r.downloaded])).toEqual([['XGE', false], ['PHB', true], ['ZZ', false]])
+  })
+
 describe('BookDirectory', () => {
   it('没装：开联网一次性小窗读完就关；带冒险文件路径；结果存缓存，第二次不再开小窗；peek 只看缓存', () => withDb(async (db) => {
     const net = fakeFrame()
@@ -91,6 +105,16 @@ describe('BookDirectory', () => {
     const dir = new BookDirectory({ db, localFrame: async () => local.frame, networkFrame: async () => { throw new Error('不该联网') } })
     expect((await dir.get('cn')).books).toHaveLength(3)
     expect(local.closed).toHaveLength(1)
+  }))
+
+  it('按目标提交取目录：走联网小窗、带 commit/persist=false，不读当前已装缓存', () => withDb(async (db) => {
+    await db.sets.put({ id: 'cn-official', commit: 'old', status: 'installed', plan: { files: 0, bytes: 0 }, updatedAt: 1 } as never)
+    let seen: unknown = null
+    const net = fakeFrame()
+    const dir = new BookDirectory({ db, localFrame: async () => { throw new Error('目标提交不该用本地小窗') }, networkFrame: async (_cs, _scope, _view, target) => { seen = target; return net.frame } })
+    const r = await dir.get('cn', { commit: 'new' })
+    expect(r.commit).toBe('new')
+    expect(seen).toEqual({ commit: 'new', persist: false })
   }))
 
   it('冒险目录取不到：书目照常交回，只记冒险的错误；不写缓存（重试会重新联网）', () => withDb(async (db) => {

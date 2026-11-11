@@ -6,9 +6,9 @@ import type { BrewPack } from '../../src/library/brew-packs'
 let db: TrpgDatabase
 afterEach(async () => { await db?.delete() })
 
-const pack = (id: string, sources: string[], hashes: Record<string, string[]> = {}, dependencies: unknown = null): BrewPack => ({
+const pack = (id: string, sources: string[], hashes: Record<string, string[]> = {}, dependencies: unknown = null, extra: Partial<BrewPack> = {}): BrewPack => ({
   docIdLocal: id, filename: `${id}.json`, url: null, origin: 'import', isEditable: false, timeAdded: 0, sources, sourceInfo: [], dependencies, includes: null,
-  props: {}, hashes, entryCount: 0,
+  props: Object.fromEntries(Object.entries(hashes).map(([k, v]) => [k, v.length])), hashes, requires: [], entryCount: 0, ...extra,
 })
 const packs = [pack('p1', ['Alpha'], { spell: ['fire_alpha'] }), pack('p2', ['Beta'], { spell: ['ice_beta'] }, { spell: ['alpha'] }), pack('p3', ['Gamma'])]
 
@@ -77,7 +77,7 @@ describe('删除前的影响预览', () => {
 
   it('B-25 依赖一路往下找：删 A，B 依赖 A、C 依赖 B，B 和 C 都"必须一起删"；官方整套被删时包不算必须', async () => {
     db = new TrpgDatabase(`test-impact-chain-${Math.random()}`)
-    const chain = [pack('a', ['Alpha']), pack('b', ['Beta'], {}, { spell: ['alpha'] }), pack('c', ['Gamma'], {}, { spell: ['beta'] }), pack('d', ['Delta'])]
+    const chain = [pack('a', ['Alpha'], { spell: ['alpha'] }), pack('b', ['Beta'], { spell: ['beta'] }, { spell: ['alpha'] }), pack('c', ['Gamma'], { spell: ['gamma'] }, { spell: ['beta'] }), pack('d', ['Delta'])]
     const d = deps({ brewPacks: { list: async () => chain } })
     const r = await impactOfRemoval(d, { kind: 'brew', setId: 'cn-brew', docIdLocals: ['a'] })
     expect(r.packs.map((p) => [p.docIdLocal, p.mustRemove])).toEqual([['b', true], ['c', true]])
@@ -96,6 +96,38 @@ describe('删除前的影响预览', () => {
     const c = await impactOfRemoval(deps(), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['p1'] })
     expect(c.plan.fingerprint).not.toBe(a.plan.fingerprint)
     expect(c.saves.length).toBe(1)
+  })
+
+  it('同来源仍有可用提供者：不能因为来源名还在就把使用者判成必删', async () => {
+    db = new TrpgDatabase(`test-impact-provider-${Math.random()}`)
+    const a = pack('a', ['Alpha'], { spell: ['fire_alpha'] })
+    const b = pack('b', ['Beta'], {}, { spell: ['Alpha'] })
+    const x = pack('x', ['Alpha'], { spell: ['fire_alpha'] })
+    const r = await impactOfRemoval(deps({ brewPacks: { list: async () => [a, b, x] } }), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['a'] })
+    expect(r.packs.map((p) => [p.docIdLocal, p.mustRemove])).toEqual([['b', false]])
+    expect(r.removeTogether).toEqual(['a'])
+  })
+
+  it('作者 includes / otherSources 也进入依赖判断', async () => {
+    db = new TrpgDatabase(`test-impact-includes-${Math.random()}`)
+    const a = pack('a', ['Alpha'], { spell: ['fire_alpha'] })
+    const i = pack('i', ['Included'], {}, null, { includes: { spell: ['Alpha'] } })
+    const o = pack('o', ['Other'], {}, null, { otherSources: { spell: { Alpha: 'fire_alpha' } } })
+    const r = await impactOfRemoval(deps({ brewPacks: { list: async () => [a, i, o] } }), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['a'] })
+    expect(r.packs.map((p) => p.docIdLocal).sort()).toEqual(['i', 'o'])
+    expect(r.removeTogether.sort()).toEqual(['a', 'i', 'o'])
+  })
+
+  it('官方单本书只按作者编号和来源扫描引用，不再当成整套官方', async () => {
+    db = new TrpgDatabase(`test-impact-book-${Math.random()}`)
+    await db.workspaces.put(ws('A', kernel({ actors: [{ id: 'a', name: '甲', refs: [{ kind: 'spell', set: 'cn-official', prop: 'spell', hash: 'fire_phb' }] }] })))
+    const d = deps({
+      officialHashes: async () => new Map([['spell', new Set(['fire_phb'])]]),
+      officialSources: new Set(['xphb']),
+    })
+    const r = await impactOfRemoval(d, { kind: 'official', setId: 'cn-official', bookIds: ['PHB'], bookSources: ['PHB'] })
+    expect(r.saves.map((s) => s.why)).toEqual([['1 处人物引用']])
+    expect(r.packs).toEqual([])
   })
 
   it('B-20 战役设置以战役级那份为准：存档快照里的副本过期了也按最新的算', async () => {

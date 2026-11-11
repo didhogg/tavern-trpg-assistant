@@ -129,7 +129,11 @@ export class EntryLinks {
         if ((await view.officialState(set.id))?.status !== 'installed') continue
       } else if (!(await view.brewState(set.id)) && !(await view.derivedGet(`audit:${set.id}`))) continue
       const stored = await this.lib.storedItem(set.id, prop, hash, view)
-      if (stored) return { kind: 'entry', set: set.id, prop, hash, source: stored.source, id: null }
+      if (stored) {
+        const allowed = set.id === official.id && typeof view.visibleSources === 'function' ? await view.visibleSources(set.id) : null
+        if (allowed && stored.source && !allowed.some((src) => src.toLowerCase() === stored.source!.toLowerCase())) continue
+        return { kind: 'entry', set: set.id, prop, hash, source: stored.source, id: null }
+      }
     }
     return null
   }

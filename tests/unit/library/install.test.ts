@@ -53,6 +53,7 @@ function fakeFiles(view: LibraryView) {
   return {
     fileList: async () => LIST,
     record: async (s: typeof source, path: string) => view.fileGet(s, path),
+    cachedContent: async () => null,
     get: async (s: typeof source, path: string) => {
       const local = await view.fileGet(s, path)
       if (local) return local.text
@@ -81,6 +82,23 @@ describe('prepareOfficial（P5 T3）', () => {
     })
     expect(report.publishable).toBe(true)
     expect(report.parse.corpora.adventure).toMatchObject({ count: 1, failed: [] })
+    await operations.abort(handle, new Error('清理'))
+  })
+
+  it('暂停停在文件边界：不发布、不开始镜像', async () => {
+    db = new LibraryDatabase(`install-pause-${Math.random()}`)
+    const revisions = new LibraryRevisionStore(db)
+    await revisions.ensureLegacy()
+    const operations = new LibraryOperations({ db, revisions })
+    const handle = await operations.begin({ kind: 'official', set: 'cn-official', codeSet: 'cn' })
+    const base = { files: [] as string[], bytes: 0 }
+    const report = await prepareOfficial({
+      source, db, revisions, operations, files: fakeFiles(handle.target) as never, openFrame: async () => fakeFrame(), view: handle.target,
+      plan: { ...base, files: ['data/spells/spells-phb.json'], shared: base, bySource: base, byBook: base, byClass: base, byAdventure: base, sourceIndexes: {}, missing: { sources: [], books: [] }, sources: [], books: [], adventures: [] },
+      onCheckpoint: () => 'pause',
+    })
+    expect(report.paused).toBe(true)
+    expect(report.mirror.checked).toBe(0)
     await operations.abort(handle, new Error('清理'))
   })
 

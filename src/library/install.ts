@@ -4,14 +4,15 @@
 import type { LibraryDatabase, OfficialSetState } from './db'
 import type { FileProvider } from './files'
 import type { AuthorFrame } from './runtime/host'
-import { isAdventure, isPrecache, precachePlan, type OfficialPlan } from './plan'
+import { fullPlan, isAdventure, isPrecache, precachePlan, type OfficialPlan } from './plan'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 import { LibraryOperations } from './operations'
 import { invalidatePrecompute, precomputeSource, type PrecomputeReport } from './cache'
+import { failedInstallReport } from './install-report'
 import { DocumentStore } from './documents'
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import type { SourceEntry } from './sources'
-
+const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 export interface StorageEstimate {
   persisted: boolean | null
   quota: number | null
@@ -62,6 +63,8 @@ export interface InstallReport {
   precomputeError?: string
   /** 这次能不能发布（下载 / 镜像 / 解析 / 选中书正文全部成功）。 */
   publishable: boolean
+  /** 用户暂停：没有发布，已校验文件留给后续继续复用。 */
+  paused?: boolean
   /** 不能发布的原因；可发布时为空。 */
   reasons: string[]
   /** 资料可浏览，但结算准备失败（换算 / 预计算）；单独重试，不重下资料。 */
@@ -72,7 +75,6 @@ export interface InstallReport {
   cancelled?: boolean
   ms: number
 }
-
 export interface InstallOptions {
   source: SourceEntry
   db: LibraryDatabase
@@ -95,9 +97,10 @@ export interface InstallOptions {
   signal?: AbortSignal
   /** 失败安装报告单独保存（不进准备版本）。 */
   onDiagnostic?: (setId: string, report: InstallReport) => Promise<void>
+  /** 下载 / 解析边界检查；返回 pause 时停在安全边界、作废准备版本。 */
+  onCheckpoint?: () => 'continue' | 'pause'
 }
 
-const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 
 async function pool<T>(items: T[], n: number, fn: (it: T) => Promise<void>): Promise<void> {
   let i = 0
@@ -140,26 +143,14 @@ export function countSources(records: Array<{ key: string; value: unknown }>, pr
   return counts
 }
 
-const planOf = (full: ReturnType<typeof precachePlan>): OfficialPlan => ({
-  ...full,
-  shared: { ...full },
-  bySource: { files: [], bytes: 0 },
-  byBook: { files: [], bytes: 0 },
-  byClass: { files: [], bytes: 0 },
-  byAdventure: { files: [], bytes: 0 },
-  sourceIndexes: { '*': null },
-  missing: { sources: [], books: [] },
-  sources: null, books: null, adventures: null,
-})
-
 /** 准备版本里的安装 / 解析；不发布。调用方负责操作生命周期或直接发布。 */
 export async function prepareOfficial(opts: InstallOptions & { view: LibraryView }): Promise<InstallReport> {
   const { source, db, files, view } = opts
   const t0 = Date.now()
   const commit = await view.commitOf(source)
   const storage = await storageEstimate()
-  const list = await files.fileList(source, view)
-  const plan = opts.plan ?? planOf(precachePlan(list))
+  const list = await files.fileList(source, view, { ...(opts.signal ? { signal: opts.signal } : {}) })
+  const plan = opts.plan ?? fullPlan(precachePlan(list))
   const report: InstallReport = {
     source: source.id, commit, storage,
     plan: {
@@ -183,21 +174,27 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     if (isPrecache(path) && !plan.files.includes(path)) await view.fileRemove(source, path, commit)
     else if (isAdventure(path) && opts.adventures && !plan.files.includes(path)) await view.fileRemove(source, path, commit)
   }
-  if (plan.missing.sources.length || plan.missing.books.length) {
-    report.reasons.push(`作者目录里找不到这些书 / 来源：${[...plan.missing.sources, ...plan.missing.books].join('、')}`)
+  if (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0)) {
+    report.reasons.push(`作者目录里找不到这些书 / 来源 / 冒险：${[...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')}`)
   }
 
   // 下载到准备版本（沿父版本已存在的同指纹文件直接复用）
   let done = 0
   await pool(plan.files, opts.concurrency ?? 6, async (path) => {
-    if (opts.signal?.aborted) return
+    if (opts.signal?.aborted || opts.onCheckpoint?.() === 'pause') return
     const expected = list[path]
     try {
       const had = await files.record(source, path, view)
       if (had && had.gitSha === expected.sha) report.download.reused++
       else {
-        await files.get(source, path, { allowNetwork: true, view })
-        report.download.fetched++
+        const cached = await files.cachedContent(source, path, expected.sha)
+        if (cached !== null) {
+          await view.filePut(source, path, { commit, text: cached, gitSha: expected.sha, size: expected.size })
+          report.download.reused++
+        } else {
+          await files.get(source, path, { allowNetwork: true, view, ...(opts.signal ? { signal: opts.signal } : {}) })
+          report.download.fetched++
+        }
       }
     } catch (e) {
       report.download.failed.push({ path, error: msg(e) })
@@ -207,6 +204,11 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
 
   if (opts.signal?.aborted) {
     report.cancelled = true
+    report.ms = Date.now() - t0
+    return report
+  }
+  if (opts.onCheckpoint?.() === 'pause') {
+    report.paused = true
     report.ms = Date.now() - t0
     return report
   }
@@ -236,6 +238,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     const loaders = await frame.call('loaders')
     let n = 0
     for (const loader of loaders) {
+      if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
       opts.onProgress?.({ stage: 'parse', done: n++, total: loaders.length, item: loader.props.join('/') })
       if (loader.kind === 'corpus') {
         const prop = loader.props[0]
@@ -245,6 +248,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
           try {
             const allowed = opts.adventures ? new Set(opts.adventures) : new Set<string>()
             for (const it of await frame.call('corpusList', loader.index!, prop, loader.page!)) {
+              if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
               if (!allowed.has(it.id)) { entry.skipped++; continue }
               try {
                 opts.onProgress?.({ stage: 'parse-corpus', done: entry.count, total: 0, item: it.id })
@@ -258,6 +262,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
         const entry: InstallReport['parse']['corpora'][string] = (report.parse.corpora[prop] = { count: 0, skipped: 0, failed: [] })
         try {
           for (const it of await frame.call('corpusList', loader.index!, prop, loader.page!)) {
+            if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
             if (books && !books.includes(it.id)) { entry.skipped++; continue }
             try {
               opts.onProgress?.({ stage: 'parse-corpus', done: entry.count, total: 0, item: it.id })
@@ -274,6 +279,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
         continue
       }
       for (const prop of loader.props) {
+        if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
         // 作者用名字前缀 raw_ 标加载器的中间草稿层（utils-dataloader-dataloader.js 第 27 行 `raw_${prop}`），不是最终输出
         if (prop.startsWith('raw_')) {
           report.parse.notRun.push({ props: [prop], reason: '作者加载器的中间草稿层（raw_ 前缀），不是最终输出' })
@@ -359,9 +365,10 @@ export async function installOfficial(opts: InstallOptions): Promise<InstallRepo
   const operations = opts.operations ?? new LibraryOperations({ db, revisions })
   if (opts.view) return prepareOfficial({ ...opts, view: opts.view })
   const handle = await operations.begin({ kind: 'official', set: source.id, codeSet: source.codeSet, sourceIndexes: opts.plan?.sourceIndexes })
+  let report: InstallReport | null = null
   try {
     if (opts.plan) await operations.setTargetIndexes(handle, opts.plan.sourceIndexes)
-    const report = await prepareOfficial({ ...opts, view: handle.target })
+    report = await prepareOfficial({ ...opts, view: handle.target })
     if (report.cancelled) {
       await operations.abort(handle, new Error('已取消'), 'cancelled')
       report.revision = handle.target.id
@@ -386,6 +393,7 @@ export async function installOfficial(opts: InstallOptions): Promise<InstallRepo
     await db.derived.delete(`audit:last-failed:${source.id}`)
     return report
   } catch (e) {
+    if (!report) await opts.onDiagnostic?.(source.id, failedInstallReport(source, e))
     await operations.abort(handle, e)
     throw e
   }

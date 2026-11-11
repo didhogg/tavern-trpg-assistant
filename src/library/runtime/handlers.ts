@@ -23,9 +23,13 @@ export interface HandlerOptions {
   filterIndex?: boolean
   /** 书目预取这类只写旧缓存、不写版本（不发版）。 */
   writeLegacy?: boolean
+  /** 按指定目标提交读；用于更新检查，不写当前版本。 */
+  commit?: string
+  /** false = 只读联网文件，不落本地缓存（目标提交目录检查）。 */
+  persist?: boolean
 }
 
-export function libraryHandlers({ codeSet, db, files, allowNetwork, view, kvScope, filterIndex = true, writeLegacy = false }: HandlerOptions): FrameHandlers {
+export function libraryHandlers({ codeSet, db, files, allowNetwork, view, kvScope, filterIndex = true, writeLegacy = false, commit, persist = true }: HandlerOptions): FrameHandlers {
   const source = officialSourceOf(codeSet)
   const scopes = async (): Promise<string[]> => {
     if (!view) return [kvScope ?? codeSet]
@@ -43,9 +47,9 @@ export function libraryHandlers({ codeSet, db, files, allowNetwork, view, kvScop
   }
   return {
     file: async (path) => {
-      const text = await files.get(source, path, { allowNetwork: allowNetwork(), ...(view ? { view } : {}), ...(writeLegacy ? { writeLegacy: true } : {}) })
+      const text = await files.get(source, path, { allowNetwork: allowNetwork(), ...(view ? { view } : {}), ...(writeLegacy ? { writeLegacy: true } : {}), ...(commit ? { commit } : {}), persist })
       if (text === null || !view || !filterIndex) return text
-      return await view.filterIndex(path, text)
+      return await view.filterIndex(path, text, codeSet)
     },
     kvGet: async (key) => {
       for (const scope of await scopes()) {
