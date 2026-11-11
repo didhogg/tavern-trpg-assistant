@@ -39,6 +39,8 @@ export interface EntryRef {
 export const sourceUnit = (source: string): string => `src:${source.toLowerCase()}`
 export const entryUnit = (ref: EntryRef): string => `ent:${ref.set}:${ref.prop}:${ref.hash}`
 export const refKey = (ref: EntryRef): string => `${ref.set}|${ref.prop}|${ref.hash}`
+/** A clicked row can name an installed copy or the original explicitly. A text link has no selection. */
+export type EntrySelection = { docIdLocal: string } | { original: true }
 
 export interface Assignment {
   scopes: string[]

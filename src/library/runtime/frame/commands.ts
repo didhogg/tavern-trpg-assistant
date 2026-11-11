@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init, sourceOf } from './author'
 import { authorFields } from './field-commands'
+import { renderContent } from './author-markup'
 import { displayName, renderText, statblockMeta, summaryEntry } from './entry-commands'
 import { listCells, sortColumns, sortRanks } from './sort-commands'
 import { brewAddFiles, brewAddSources, brewAddUrl, brewCheckUpdates, brewDependencyPreview, brewMergeCheck, brewCorpusList, brewCatalog, brewDelete, brewInstalled, brewPull, brewStorage, brewPackRows, parseBrewProp } from './brew-commands'
@@ -124,5 +125,5 @@ export async function storageFlush(): Promise<string[]> {
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, brewPackRows, parseBrewProp, rawHashes, storageFlush,
   editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableAddDependencies, converters, convertText, entryTemplate,
-  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tagRefs, brewDependencyPreview, brewMergeCheck, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, statblockMeta, summaryEntry, tokenPath, extractTables, directory, sourceFiles }
+  diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tagRefs, brewDependencyPreview, brewMergeCheck, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, renderContent, statblockMeta, summaryEntry, tokenPath, extractTables, directory, sourceFiles }
 export type CommandName = keyof typeof COMMANDS

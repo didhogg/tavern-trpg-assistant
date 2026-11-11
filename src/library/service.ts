@@ -91,7 +91,6 @@ export class LibraryService {
     this.searchLoaded.clear()
     this.packEntries.clear()
   }
-
   /** 发布后只关这个旧版本的小窗；别的版本正在读的窗口不动。 */
   retire(viewId: string): void {
     this.generation++
@@ -115,10 +114,12 @@ export class LibraryService {
     const source = getSource(sourceId)
     await ensurePrecomputed({ source, db: this.opts.db, view, openFrame: (cs) => this.opts.openFrame(cs, { view, filterIndex: true }), ...opts })
   }
-  packOwnedItems(sourceId: string, pack: BrewPack, view: LibraryView) {
+  private packOptions(sourceId: string, view: LibraryView) {
     const source = getSource(sourceId)
-    return this.packEntries.get({ source, db: this.opts.db, view, openFrameIn: (scope) => this.openFrameIn(source.codeSet, scope, view) }, pack)
+    return { source, db: this.opts.db, view, openFrameIn: (scope: string) => this.openFrameIn(source.codeSet, scope, view) }
   }
+  packOwnedItems(sourceId: string, pack: BrewPack, view: LibraryView) { return this.packEntries.get(this.packOptions(sourceId, view), pack) }
+  packDetail(sourceId: string, pack: BrewPack, prop: string, hash: string, view: LibraryView) { return this.packEntries.detail(this.packOptions(sourceId, view), pack, prop, hash) }
   async parsed(sourceId: string, prop: string, viewArg?: LibraryView): Promise<ParsedProp> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)
@@ -192,7 +193,7 @@ export class LibraryService {
   }
 
   tables(sourceId: string, prop: string, hash?: string, viewArg?: LibraryView) { return tablesFor(this, sourceId, prop, hash, viewArg) }
-  relatedTables(sourceId: string, prop: string, hash: string, viewArg?: LibraryView) { return relatedTablesFor(this, sourceId, prop, hash, viewArg) }
+  relatedTables(sourceId: string, prop: string, hash: string, viewArg?: LibraryView, item?: unknown) { return relatedTablesFor(this, sourceId, prop, hash, viewArg, item) }
   async detail(sourceId: string, prop: string, hash: string, _source?: string | null, viewArg?: LibraryView): Promise<DetailResult | null> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)

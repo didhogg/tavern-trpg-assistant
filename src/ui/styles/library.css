@@ -43,6 +43,13 @@
 .lib-skel i { display: block; height: 14px; border-radius: 4px; background: linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side)); opacity: .7; }
 /* 条目详情 */
 .lib-dtools { flex: none; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-entrytabs { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.lib-entrytabs__list { flex: none; padding-block-start: var(--sp-2); }
+.lib-entrytabs__list [data-state='active'] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.lib-entrytabs > [hidden] { display: none; }
+.lib-class-table tr > :first-child { position: sticky; left: 0; background: var(--bg-sunk); }
+.lib-class-table td { white-space: normal; }
+.lib-class-picker { margin-block-end: var(--sp-3); }
 .lib-dbody { padding: var(--sp-4) var(--sp-5) var(--sp-6); display: grid; gap: var(--sp-3); align-content: start; line-height: var(--lh-body); }
 .trpg-window[data-layout='narrow'] .lib-dbody { padding: var(--sp-4) var(--sp-4) var(--sp-6); }
 .lib-dbody p { margin: 0; } .lib-dbody h3 { margin: var(--sp-2) 0 0; font-size: var(--fs-md); font-weight: var(--fw-semibold); }
@@ -90,6 +97,14 @@
 .trpg-window[data-layout='narrow'] .lib-read[data-toc='true'] main { display: none; }
 .lib-read > aside { overflow: auto; border-right: var(--border) solid var(--line); background: var(--bg-sunk); }
 .lib-toc { display: grid; align-content: start; }
+.lib-toc summary { padding: var(--sp-2) var(--sp-3); font-weight: var(--fw-semibold); cursor: pointer; }
+.lib-toc details > button { width: 100%; }
+.lib-toc .lib-toc__section[data-depth='true'] { padding-inline-start: var(--sp-5); }
+[data-reader-current] { background: var(--primary-tint); }
+.lib-author-block { display: flow-root; min-width: 0; overflow-wrap: anywhere; }
+.lib-author-block table { border-collapse: collapse; width: 100%; }
+.lib-author-block th, .lib-author-block td { border: var(--border) solid var(--line); padding: var(--sp-2); }
+.lib-roll-outcome { margin-block: var(--sp-2); }
 .lib-toc button { display: flex; align-items: center; min-height: 40px; padding: 0 var(--sp-3); border: 0; border-left: 3px solid transparent; background: none; text-align: left; color: var(--text); font: inherit; cursor: pointer; }
 .lib-toc button[aria-current='true'] { border-left-color: var(--primary); background: var(--primary-tint); font-weight: var(--fw-semibold); }
 .lib-sec-block { display: grid; gap: var(--sp-3); }
@@ -182,11 +197,11 @@
 /* 右下角有骰子悬浮按钮：批量操作栏右侧让出位置，按钮不被挡住 */
 .lib-selbar { padding-right: calc(var(--sp-3) + 64px); }
 
-/* 详情弹窗标题栏上的 中 / En 切换（P5 T6）：两段式圆角、细边 + 轻阴影；当前语言填主色，另一种语言没有时那一侧变淡、悬停说原因 */
-.lib-langsw { flex: none; display: inline-flex; padding: 2px; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-pill); background: var(--surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 10%, transparent), 0 2px 6px color-mix(in srgb, var(--text) 8%, transparent); }
+/* 详情和阅读器标题栏共用的语言切换：浅边、内阴影、实色选中项。 */
+.lib-langsw { flex: none; display: inline-flex; padding: 2px; border: var(--border) solid var(--line); border-radius: var(--r-pill); background: var(--surface); box-shadow: inset 0 1px 3px color-mix(in srgb, var(--text) 12%, transparent); }
 .lib-langsw__btn { min-width: 44px; min-height: 28px; padding: 0 var(--sp-3); border: 0; border-radius: var(--r-pill); background: transparent; color: var(--text2); font: inherit; font-size: var(--fs-sm); font-weight: var(--fw-semibold); cursor: pointer; transition: background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
 .lib-langsw__btn:hover:not(:disabled):not([aria-pressed='true']) { background: var(--bg-hover); color: var(--text); }
-.lib-langsw__btn[aria-pressed='true'] { background: var(--primary); color: var(--on-primary, #fff); box-shadow: 0 1px 3px color-mix(in srgb, var(--primary) 40%, transparent); cursor: default; }
+.lib-langsw__btn[aria-pressed='true'] { background: var(--primary); color: var(--on-primary); cursor: default; }
 .lib-langsw__btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .lib-langsw__btn:focus-visible { outline: 2px solid var(--focus, var(--primary)); outline-offset: 1px; }
 

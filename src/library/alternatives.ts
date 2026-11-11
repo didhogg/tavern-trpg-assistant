@@ -177,10 +177,17 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
 }
 
 /** 在同一个隔离小窗读取一个包的所有可查询类别。条目仍由作者加载器交出。 */
-export async function packOwnedItems(opts: Isolation, docIdLocal: string, raw: Record<string, string[]>): Promise<Record<string, QueryRow[]>> {
-  if (!Object.keys(raw).length) return {}
+async function withPack<T>(opts: Isolation, docIdLocal: string, read: (frame: AuthorFrame) => Promise<T>): Promise<T | null> {
   const stored = ((await opts.view.kvGet(opts.source.codeSet, BREW_STORAGE_KEY)) ?? []) as StoredBrew[]
   const doc = stored.find((d) => d.head.docIdLocal === docIdLocal)
-  if (!doc) return {}
-  return withIsolatedBrew(opts, withDependencies(doc, stored), (frame) => frame.call('brewPackRows', raw))
+  return doc ? withIsolatedBrew(opts, withDependencies(doc, stored), read) : null
+}
+
+export async function packOwnedItems(opts: Isolation, docIdLocal: string, raw: Record<string, string[]>): Promise<Record<string, QueryRow[]>> {
+  if (!Object.keys(raw).length) return {}
+  return (await withPack(opts, docIdLocal, (frame) => frame.call('brewPackRows', raw))) ?? {}
+}
+
+export function packFluff(opts: Isolation, docIdLocal: string, prop: string, item: unknown) {
+  return withPack(opts, docIdLocal, (frame) => frame.call('fluffOf', prop, item))
 }

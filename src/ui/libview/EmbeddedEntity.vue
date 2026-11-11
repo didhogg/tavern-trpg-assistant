@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import EntryBody from './EntryBody.vue'
+import InlineText from './InlineText.vue'
 import { BLOCKS } from './statblock'
+import { entriesOf } from './entry-content'
 
 /**
  * 条目内容的紧凑版（P5 T6）：书里摊开的怪物 / 物品等数值块、整个内嵌在书里的对象都用它显示。
@@ -9,12 +11,12 @@ import { BLOCKS } from './statblock'
  */
 const props = defineProps<{ prop: string; item: unknown; codeSet: string }>()
 const block = computed(() => BLOCKS[props.prop]?.(props.item) ?? null)
-const entries = computed(() => (typeof props.item === 'object' && props.item ? (props.item as { entries?: unknown }).entries ?? null : null))
+const entries = computed(() => entriesOf(props.prop, props.item))
 </script>
 
 <template>
   <div class="lib-embedded__body">
-    <div v-if="block?.lines.length" class="lib-stat"><div v-for="l in block.lines" :key="l.label"><span>{{ l.label }}</span><span>{{ l.value }}</span></div></div>
+    <div v-if="block?.lines.length" class="lib-stat"><div v-for="l in block.lines" :key="l.label"><span>{{ l.label }}</span><span><InlineText :text="l.value" :code-set="codeSet" /></span></div></div>
     <div v-if="block?.abilities.length" class="lib-abil"><div v-for="a in block.abilities" :key="a.key"><small>{{ a.label }}</small><b>{{ a.score }}</b> ({{ a.mod }})</div></div>
     <template v-for="sec in block?.sections ?? []" :key="sec.title"><h4>{{ sec.title }}</h4><EntryBody :block="sec.entries" :code-set="codeSet" /></template>
     <EntryBody v-if="entries" :block="entries" :code-set="codeSet" />

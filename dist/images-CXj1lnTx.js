@@ -86,17 +86,41 @@ function c(e, n) {
 function l(e) {
 	return a.get(e.codeSet) ?? t[e.codeSet].commit;
 }
-// src/library/images.ts
-function u(e, t) {
-	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
+// src/core/ids.ts
+function u() {
+	let e = /* @__PURE__ */ new Uint8Array(16);
+	crypto.getRandomValues(e), e[6] = e[6] & 15 | 64, e[8] = e[8] & 63 | 128;
+	let t = Array.from(e, (e) => e.toString(16).padStart(2, "0"));
+	return `${t.slice(0, 4).join("")}-${t.slice(4, 6).join("")}-${t.slice(6, 8).join("")}-${t.slice(8, 10).join("")}-${t.slice(10).join("")}`;
 }
 function d(e) {
-	return r(e).imageRoots ?? [];
+	if (e.groupId) {
+		let t = e.groups?.find((t) => t.id === e.groupId);
+		return {
+			ownerKey: `group:${e.groupId}`,
+			ownerLabel: t?.name ?? "群组"
+		};
+	}
+	if (e.characterId !== void 0 && e.characterId !== null) {
+		let t = e.characters?.[Number(e.characterId)];
+		if (t?.avatar) return {
+			ownerKey: `char:${t.avatar}`,
+			ownerLabel: t.name ?? t.avatar
+		};
+	}
+	return null;
 }
+// src/library/images.ts
 function f(e, t) {
-	return u(d(e), t);
+	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
 }
 function p(e) {
+	return r(e).imageRoots ?? [];
+}
+function m(e, t) {
+	return f(p(e), t);
+}
+function h(e) {
 	return e.replace(/^\/?img\//, "");
 }
-export { l as a, s as c, n as i, i as l, p as n, c as o, t as r, r as s, f as t };
+export { t as a, c, i as d, u as i, r as l, h as n, n as o, d as r, l as s, m as t, s as u };

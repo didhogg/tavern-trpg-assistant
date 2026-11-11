@@ -1,7 +1,7 @@
 // 包 / 书弹窗要的数据：这个来源里每个登记类别的条目（scoped.query 按来源取）。只做"取"和"过滤 / 排序"，不算别的。
 import type { Services } from '../../core/services'
 import type { ScopedRow } from '../../library/scoped'
-import type { EntryRef, CampaignLibrary } from '../../library/scopes'
+import type { EntryRef, EntrySelection, CampaignLibrary } from '../../library/scopes'
 import { registeredCategories } from './registry'
 
 export interface PackRow {
@@ -13,6 +13,7 @@ export interface PackRow {
   off: boolean
   /** 同编号拆行时才有：所在的包名。 */
   pack: string | null
+  selection?: EntrySelection
 }
 
 export const nameOf = (item: unknown): string => (typeof item === 'object' && item && typeof (item as { name?: unknown }).name === 'string' ? (item as { name: string }).name : '未知')
@@ -59,7 +60,8 @@ export async function loadPackRows(s: Services, c: CampaignLibrary, setId: strin
 }
 
 function toRow(prop: string, r: ScopedRow, name: string): PackRow {
-  return { ref: r.ref, name, prop, source: r.source, off: !r.visible, pack: r.variant?.pack ?? null }
+  const id = r.pack?.docIdLocal ?? r.variant?.docIdLocal
+  return { ref: r.ref, name, prop, source: r.source, off: !r.visible, pack: r.variant?.pack ?? null, selection: id ? { docIdLocal: id } : r.variant?.kind === 'base' ? { original: true } : undefined }
 }
 
 /** 文字匹配（名称，不分大小写）。 */

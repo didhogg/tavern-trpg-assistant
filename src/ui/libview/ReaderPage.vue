@@ -1,23 +1,29 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useDownloadsStore } from '../../stores/downloads'
 import { useToastStore } from '../../stores/toast'
+import { useModalStore } from '../../stores/modal'
 import Icon from '../kit/Icon.vue'
 import EntryBody from './EntryBody.vue'
+import { headingKey, headingText, readerChapters } from './reader-content'
+import type { ReaderPart, ReaderTarget } from './open'
 
 /** 书 / 冒险阅读器（U9h）：弹窗里的一页。章节目录宽屏在左侧、窄屏是点【目录】展开的列表；正文用和条目同一套渲染器。冒险没下载时先下载。 */
-const props = defineProps<{ set: string; prop: string; id: string; name: string }>()
+const props = defineProps<ReaderTarget & { readerKey?: string }>()
 const app = useAppStore()
 const dl = useDownloadsStore()
 const toast = useToastStore()
+const modal = useModalStore()
 
-interface Chapter { name: string; entry: unknown }
-type State = { kind: 'loading' } | { kind: 'ok'; chapters: Chapter[] } | { kind: 'missing' } | { kind: 'error'; message: string }
-const state = ref<State>({ kind: 'loading' })
+type State = { kind: 'loading' } | { kind: 'ok'; chapters: ReturnType<typeof readerChapters> } | { kind: 'missing' } | { kind: 'error'; message: string }
+const state = shallowRef<State>({ kind: 'loading' })
 const cur = ref(0)
 const tocOpen = ref(false)
+const body = ref<HTMLElement | null>(null)
+const selected = ref<ReaderPart | null>(null)
+const unavailable = ref('')
 const codeSet = computed(() => getSource(props.set).codeSet)
 
 async function load(): Promise<void> {
@@ -25,11 +31,18 @@ async function load(): Promise<void> {
   try {
     const library = app.svc().backend.library
     // 规则速查等文档（documents）与书同一个阅读页：章节 → 小节
-    const data = props.prop === 'document'
-      ? (await library.documents.get(getSource(props.set), props.id)).data
-      : ((await library.service.corpus(props.set, props.prop, props.id)) as Record<string, { data?: unknown[] } | undefined>)[`${props.prop}Data`]?.data
+    let data: unknown[] | undefined
+    let meta: { name?: string; contents?: Parameters<typeof readerChapters>[1] } | undefined
+    if (props.prop === 'document') data = (await library.documents.get(getSource(props.set), props.id)).data
+    else {
+      const corpus = await library.service.corpus(props.set, props.prop, props.id) as Record<string, { data?: unknown[]; name?: string; contents?: Parameters<typeof readerChapters>[1] } | undefined>
+      data = corpus[`${props.prop}Data`]?.data
+      meta = corpus[props.prop]
+    }
     if (!Array.isArray(data)) { state.value = { kind: 'error', message: '这本书没有正文' }; return }
-    state.value = { kind: 'ok', chapters: data.map((c, i) => ({ name: String((c as { name?: unknown })?.name ?? `第 ${i + 1} 节`), entry: c })) }
+    if (meta?.name && props.readerKey) modal.setTitle(props.readerKey, meta.name)
+    state.value = { kind: 'ok', chapters: readerChapters(data, meta?.contents) }
+    await go(props.part?.chapter ?? 0, props.part?.section, props.part?.ixNamedSection)
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     // 冒险正文按本下载：没有全文 = 还没下载
@@ -47,7 +60,27 @@ function download(): void {
   dl.refresh()
 }
 const chapters = computed(() => (state.value.kind === 'ok' ? state.value.chapters : []))
-function go(i: number): void { cur.value = Math.min(Math.max(i, 0), chapters.value.length - 1); tocOpen.value = false }
+async function go(i: number, section?: string | null, index?: number | null): Promise<void> {
+  if (!chapters.value.length) return
+  const validChapter = Number.isInteger(i) && i >= 0 && i < chapters.value.length
+  cur.value = validChapter ? i : 0
+  selected.value = { chapter: cur.value, section: section ?? null, ixNamedSection: index ?? 0 }
+  unavailable.value = validChapter ? '' : '这本资料里找不到链接指向的章节。'
+  tocOpen.value = false
+  await nextTick()
+  const pane = body.value
+  if (!pane) return
+  pane.querySelector('[data-reader-current]')?.removeAttribute('data-reader-current')
+  pane.scrollTop = 0
+  if (!validChapter || !section) return
+  const headings = [...pane.querySelectorAll<HTMLElement>('[data-reader-heading]')]
+  const target = headings.filter((el) => headingKey(el.dataset.readerHeading ?? '') === headingKey(section))[index ?? 0]
+  if (!target) { unavailable.value = `这一章里找不到「${section}」。`; return }
+  target.setAttribute('data-reader-current', '')
+  pane.scrollTop = target.getBoundingClientRect().top - pane.getBoundingClientRect().top
+  target.setAttribute('tabindex', '-1')
+  target.focus({ preventScroll: true })
+}
 </script>
 
 <template>
@@ -68,8 +101,25 @@ function go(i: number): void { cur.value = Math.min(Math.max(i, 0), chapters.val
         <button class="trpg-btn trpg-btn--small" type="button" :disabled="cur >= chapters.length - 1" @click="go(cur + 1)">下一章</button>
       </div>
       <div class="lib-read" :data-toc="tocOpen">
-        <aside v-if="tocOpen" class="lib-toc" data-testid="reader-toc-list"><button v-for="(c, i) in chapters" :key="i" type="button" :aria-current="i === cur" @click="go(i)">{{ c.name }}</button></aside>
-        <main class="lib-mscroll" data-testid="reader-body"><div class="lib-dbody"><EntryBody :block="chapters[cur]?.entry" :code-set="codeSet" /></div></main>
+        <aside v-if="tocOpen" class="lib-toc" data-testid="reader-toc-list">
+          <details v-for="(c, i) in chapters" :key="i" :open="i === cur">
+            <summary>{{ c.name }}</summary>
+            <button type="button" :aria-current="i === cur && !selected?.section" @click="go(i)">读本章</button>
+            <button
+              v-for="(h, j) in c.headings" :key="j" type="button" class="lib-toc__section" :data-depth="h.depth > 0"
+              :aria-current="i === cur && !!selected?.section && headingKey(selected.section) === headingKey(h.name) && selected.ixNamedSection === h.index"
+              @click="go(i, h.name, h.index)"
+            >
+              {{ headingText(h.name) }}
+            </button>
+          </details>
+        </aside>
+        <main ref="body" class="lib-mscroll" data-testid="reader-body">
+          <div class="lib-dbody">
+            <p v-if="unavailable" class="lib-banner lib-banner--warn">{{ unavailable }}</p>
+            <EntryBody :key="cur" :block="chapters[cur]?.entry" :code-set="codeSet" />
+          </div>
+        </main>
       </div>
     </template>
   </div>

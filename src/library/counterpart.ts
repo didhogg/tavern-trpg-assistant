@@ -2,7 +2,7 @@
 // 中文 → 英文取作者做法算出的配对表（service.englishPairs）；英文 → 中文由同一张配对表反过来建。
 // 配对不是一一对应：约 3% 的条目没有对应，或多个中文条目指向同一个英文条目（作者"按名字配"的做法，见 P5-0 §11），
 // 所以返回的不只是地址，还带"有歧义 / 没有对应 / 被别的条目共用"，界面据此提示。
-import type { BrewPairs } from './brew-pairing'
+import type { BrewPairs, CounterpartRef } from './brew-pairing'
 import type { EnglishPairs, LibraryService } from './service'
 import type { EntryRef } from './scopes'
 import { SOURCES, getSource, officialSourceOf } from './sources'
@@ -13,7 +13,7 @@ export type CounterpartStatus = 'found' | 'ambiguous' | 'none'
 export interface Counterpart {
   status: CounterpartStatus
   /** found：一条；ambiguous：几个候选；none：空。 */
-  refs: EntryRef[]
+  refs: CounterpartRef[]
   /** none 的原因 / found 时的提示。 */
   reason: 'not-official' | 'not-installed' | 'not-paired' | 'not-found' | 'no-counterpart' | 'pack-unpaired' | 'structure-differs' | 'no-english-name' | null
   /** found 时：另有几条别的条目也指向同一条（共用，切回来可能回不到原条）。 */

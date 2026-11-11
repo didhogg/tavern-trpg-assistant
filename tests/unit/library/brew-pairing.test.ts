@@ -96,6 +96,10 @@ const lib = {
   brewInstalled: async (id: string) => installed[id],
   frameOf: async (codeSet: string) => ({ call: async (name: string) => { if (name !== 'brewDocIndex') throw new Error(name); return docs[codeSet] } }),
   storedItem: async (set: string, prop: string, hash: string) => items[`${set}|${prop}|${hash}`] ?? null,
+  packOwnedItems: async (set: string, selected: { docIdLocal: string }) => {
+    const doc = docs[set.split('-')[0]].find((d) => d.docIdLocal === selected.docIdLocal)
+    return { spell: (doc?.props.spell ?? []).filter((hash) => items[`${set}|spell|${hash}`]).map((hash) => ({ hash })) }
+  },
   query: async (set: string, prop: string, { source }: { source?: string }) => Object.entries(items).filter(([k, v]) => k.startsWith(`${set}|${prop}|`) && v.source?.toLowerCase() === source?.toLowerCase()).map(([k, v]) => ({ hash: k.split('|')[2], source: v.source, item: v.item })),
   brewCatalog: async (id: string) => ({
     value: id === 'cn-brew'
@@ -127,8 +131,8 @@ describe('已装自制包的中英配对与条目对应（同一下标）', () =
   })
 
   it('中文 → 英文、英文 → 中文：按同一下标取，另一边库里要真有', async () => {
-    expect(await pairs.entry(ref('cn-brew', 'b_a'))).toEqual({ refs: [ref('en-brew', 'bb_a')], reason: null })
-    expect(await pairs.entry(ref('en-brew', 'aa_a'))).toEqual({ refs: [ref('cn-brew', 'a_a')], reason: null })
+    expect(await pairs.entry(ref('cn-brew', 'b_a'))).toEqual({ refs: [{ ...ref('en-brew', 'bb_a'), docIdLocal: 'eA' }], reason: null })
+    expect(await pairs.entry(ref('en-brew', 'aa_a'))).toEqual({ refs: [{ ...ref('cn-brew', 'a_a'), docIdLocal: 'zA' }], reason: null })
   })
 
   it('没有对应都带原因：数组长度不同、没配对的包、另一边没存、不在任何包里', async () => {

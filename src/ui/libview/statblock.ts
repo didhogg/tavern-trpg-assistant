@@ -56,7 +56,14 @@ export function monsterBlock(m: unknown): Statblock {
   add('感官', [...strs(o.senses), ...(num(o.passive) !== null ? [`被动察觉 ${o.passive}`] : [])].join('，') || null)
   add('语言', strs(o.languages).join('，') || null)
   const abilities = ABILITIES.map(([key, label]) => ({ key, label, score: num(o[key]) })).filter((a): a is { key: string; label: string; score: number } => a.score !== null).map((a) => ({ ...a, mod: signed(modOf(a.score)) }))
-  const sections = MONSTER_SECTIONS.filter(([k]) => Array.isArray(o[k]) && (o[k] as unknown[]).length).map(([k, title]) => ({ title, entries: o[k] }))
+  const spells = Array.isArray(o.spellcasting) ? o.spellcasting.filter(isObj) : []
+  const sections = MONSTER_SECTIONS.map(([key, title]) => ({
+    title,
+    entries: [
+      ...(Array.isArray(o[key]) ? o[key] : []),
+      ...spells.filter((spell) => (spell.displayAs ?? 'trait') === key).map((spell) => ({ ...spell, type: 'spellcasting' })),
+    ],
+  })).filter((section) => section.entries.length)
   return { lines, abilities, sections }
 }
 

@@ -1,4 +1,4 @@
-import { altsKey, packOwnedItems, type AltIndex } from './alternatives'
+import { altsKey, packFluff, packOwnedItems, type AltIndex } from './alternatives'
 import type { BrewPack } from './brew-packs'
 import type { QueryRow } from './service-types'
 
@@ -43,6 +43,13 @@ export class PackEntries {
       if (!row) items.push({ hash: target.hash, source, item: own.item, excluded: false })
     }
     return rows
+  }
+
+  async detail(options: Parameters<typeof packOwnedItems>[0], pack: BrewPack, prop: string, hash: string) {
+    const row = (await this.get(options, pack))[prop]?.find((r) => r.hash === hash)
+    if (!row) return null
+    const fluff = await packFluff(options, pack.docIdLocal, prop, row.item)
+    return fluff ? { ...row, ...fluff, hash, engSiteHash: null, english: null } : null
   }
 
   retire(viewId: string): void {

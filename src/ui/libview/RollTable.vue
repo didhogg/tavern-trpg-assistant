@@ -5,7 +5,8 @@ import { appendToInput } from '../../host/input'
 import { useAppStore } from '../../stores/app'
 import Icon from '../kit/Icon.vue'
 import InlineText from './InlineText.vue'
-import { isRollable, plainOf, resultText, rollComment, rollTable, type TableRollResult } from './table-roll'
+import EntryBody from './EntryBody.vue'
+import { isRollable, resultTitle, rollComment, rollTable, tableName, type TableRollResult } from './table-roll'
 
 /**
  * 条目里的表格（U9g）：表头带骰式的表才有骰子标签（作者判定，参考表不可掷）；点标签 → 命中行高亮 + 表格下面出结果框（表内掷不出横幅）。
@@ -17,11 +18,10 @@ const rollable = ref(false)
 const result = ref<TableRollResult | null>(null)
 const prompts = ref<number[]>([])
 const sent = ref<'idle' | 'copied' | 'filled' | 'failed'>('idle')
-const rows = computed(() => (Array.isArray(props.table.rows) ? (props.table.rows as unknown[][]) : []))
+const rows = computed(() => Array.isArray(props.table.rows) ? props.table.rows.map((row) => Array.isArray(row) ? row : Array.isArray(row?.row) ? row.row : []) : [])
 const labels = computed(() => (Array.isArray(props.table.colLabels) ? (props.table.colLabels as unknown[]) : []))
-const name = computed(() => plainOf(props.table.caption) || '随机表')
+const name = computed(() => tableName(props.table))
 const hit = computed(() => (result.value?.status === 'complete' ? result.value.rolls.map((c) => c.rowIndex).filter((i): i is number => i !== null) : []))
-const cellText = (c: unknown): unknown => (c && typeof c === 'object' && 'entry' in (c as object) ? (c as { entry: unknown }).entry : c)
 
 onMounted(async () => { rollable.value = await isRollable(app.svc(), props.codeSet, props.table) })
 
@@ -43,24 +43,27 @@ function fill(): void {
 
 <template>
   <div class="lib-rolltable" data-testid="roll-table">
+    <EntryBody v-if="table.intro" :block="table.intro" :code-set="codeSet" />
     <div class="lib-tablewrap">
       <table class="lib-rtable">
-        <caption v-if="table.caption" class="lib-faint"><InlineText :text="String(table.caption)" :code-set="codeSet" /></caption>
+        <caption v-if="name" class="lib-faint"><InlineText :text="String(table.caption ?? table.name)" :code-set="codeSet" /></caption>
         <thead v-if="labels.length">
           <tr>
             <th v-for="(c, i) in labels" :key="i">
-              <InlineText :text="String(c)" :code-set="codeSet" />
+              <InlineText v-if="typeof c === 'string'" :text="c" :code-set="codeSet" /><EntryBody v-else :block="c" :code-set="codeSet" />
               <button v-if="i === 0 && rollable" class="lib-dice" type="button" data-testid="roll-header" aria-label="掷这张表" @click="roll()"><Icon name="dice-five" :size="12" />掷</button>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(row, r) in rows" :key="r" :data-hit="hit.includes(r)">
-            <td v-for="(cell, c) in row" :key="c"><InlineText :text="typeof cellText(cell) === 'string' ? (cellText(cell) as string) : plainOf(cellText(cell))" :code-set="codeSet" /></td>
+            <td v-for="(cell, c) in row" :key="c"><InlineText v-if="typeof cell === 'string'" :text="cell" :code-set="codeSet" /><EntryBody v-else :block="cell" :code-set="codeSet" /></td>
           </tr>
         </tbody>
       </table>
     </div>
+    <EntryBody v-if="table.footnotes" :block="table.footnotes" :code-set="codeSet" />
+    <EntryBody v-if="table.outro" :block="table.outro" :code-set="codeSet" />
     <div v-if="result" class="lib-block" data-testid="roll-result">
       <template v-if="result.status === 'choose'"><b>这张表有几种骰法，先选一种</b><div style="display: flex; gap: var(--sp-2); flex-wrap: wrap"><button v-for="(o, i) in result.options" :key="i" class="trpg-btn trpg-btn--small" type="button" @click="roll({ formulaIndex: i })">{{ o.formula }}</button></div></template>
       <template v-else-if="result.status === 'needs-input'">
@@ -69,7 +72,17 @@ function fill(): void {
         <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" style="justify-self: start" @click="roll({ promptValues: prompts })">掷</button>
       </template>
       <template v-else-if="result.status === 'complete'">
-        <b data-testid="roll-text">{{ resultText(result) }}</b>
+        <div data-testid="roll-text">
+          <b>{{ resultTitle(name) }}</b>
+          <div v-for="(r, i) in result.rolls" :key="i" class="lib-roll-outcome">
+            <b>{{ r.label ? `${r.label} · ` : '' }}掷出 {{ r.total }}</b>
+            <template v-if="r.rowIndex !== null">
+              <EntryBody v-for="(cell, j) in r.cells" :key="j" :block="cell" :code-set="codeSet" />
+            </template>
+            <span v-else>没有对应的行</span>
+          </div>
+          <div v-for="(r, i) in result.inline" :key="i">{{ r.text }} = {{ r.total }}</div>
+        </div>
         <div style="display: flex; gap: var(--sp-2); flex-wrap: wrap">
           <button class="trpg-btn trpg-btn--small" type="button" data-testid="roll-copy" @click="copy"><Icon name="copy" :size="14" />{{ sent === 'copied' ? '已复制' : '复制文字' }}</button>
           <button class="trpg-btn trpg-btn--small" type="button" data-testid="roll-fill" @click="fill">{{ sent === 'filled' ? '已填入' : '填入酒馆输入框' }}</button>

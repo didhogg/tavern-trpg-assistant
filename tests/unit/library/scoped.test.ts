@@ -98,6 +98,10 @@ describe('按包查询的同编号身份', () => {
       brewInstalled: async () => [{ head: { docIdLocal: 'p1' }, meta: { sources: [{ json: 'A' }] } }, { head: { docIdLocal: 'p2' }, meta: { sources: [{ json: 'A' }] } }],
       brewCorpora: async () => ({}),
       packOwnedItems: async (_setId: string, pack: { docIdLocal: string }) => ({ item: [{ hash: 'same', source: 'A', excluded: false, item: { name: pack.docIdLocal === 'p1' ? '包一' : '包二' } }] }),
+      detail: async () => ({ hash: 'same', source: 'A', item: { name: '官方' }, fluff: { from: 'official' } }),
+      packDetail: async (_setId: string, pack: { docIdLocal: string }) => ({
+        hash: 'same', source: 'A', item: { name: pack.docIdLocal === 'p1' ? '包一' : '包二' }, fluff: { from: pack.docIdLocal },
+      }),
     } as unknown as LibraryService
     const scoped = new ScopedLibrary(lib, db)
     const c = defaultCampaignLibrary('dnd5e2014', 'cn')
@@ -105,5 +109,9 @@ describe('按包查询的同编号身份', () => {
     const second = await scoped.query(c, 'item', { mode: 'browse', packDocIdLocal: 'p2', expand: true, view })
     expect(first).toMatchObject([{ ref: target, item: { name: '包一' }, variant: { altId: 'shared-alt', docIdLocal: 'p1' } }])
     expect(second).toMatchObject([{ ref: target, item: { name: '包二' }, variant: { altId: 'shared-alt', docIdLocal: 'p2' } }])
+    expect(await scoped.detail(c, target, { browse: true })).toMatchObject({ item: { name: '官方' }, fluff: { from: 'official' } })
+    expect(await scoped.detail(c, target, { browse: true, selection: { docIdLocal: 'p1' } })).toMatchObject({ item: { name: '包一' }, fluff: { from: 'p1' } })
+    expect(await scoped.detail(c, { ...target, set: 'cn-brew' }, { browse: true, selection: { docIdLocal: 'p2' } })).toMatchObject({ ref: target, item: { name: '包二' }, fluff: { from: 'p2' } })
+    expect(await scoped.detail(c, target, { browse: true, selection: { docIdLocal: 'missing' } })).toBeNull()
   })
 })

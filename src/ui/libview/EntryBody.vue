@@ -21,12 +21,13 @@ const INSET = new Set(['inset', 'insetReadaloud', 'variant', 'variantInner', 'va
 
 <template>
   <p v-if="typeof block === 'string'"><InlineText :text="block" :code-set="codeSet" /></p>
+  <template v-else-if="typeof block === 'number'">{{ block }}</template>
   <template v-else-if="Array.isArray(block)">
     <EntryBody v-for="(b, i) in block" :key="i" :block="b" :code-set="codeSet" />
   </template>
   <template v-else-if="isObj(block) && typeof block.type === 'string' && SECTION.has(block.type) || (isObj(block) && block.type === undefined && 'entries' in block)">
     <div class="lib-sec-block">
-      <h3 v-if="(block as Block).name"><InlineText :text="String((block as Block).name)" :code-set="codeSet" /></h3>
+      <h3 v-if="(block as Block).name" :data-reader-heading="(block as Block).name"><InlineText :text="String((block as Block).name)" :code-set="codeSet" /></h3>
       <EntryBody :block="(block as Block).entries ?? (block as Block).entry" :code-set="codeSet" />
     </div>
   </template>
@@ -39,8 +40,10 @@ const INSET = new Set(['inset', 'insetReadaloud', 'variant', 'variantInner', 'va
   </div>
   <hr v-else-if="isObj(block) && block.type === 'hr'" class="lib-hr" />
   <RollTable v-else-if="isObj(block) && block.type === 'table'" :table="block" :code-set="codeSet" />
+  <EntryBody v-else-if="isObj(block) && block.type === 'wrapper'" :block="block.wrapped" :code-set="codeSet" />
+  <EntryBody v-else-if="isObj(block) && block.type === 'cell' && 'entry' in block" :block="block.entry" :code-set="codeSet" />
   <div v-else-if="isObj(block) && typeof block.type === 'string' && INSET.has(block.type)" class="lib-inset">
-    <h3 v-if="block.name"><InlineText :text="String(block.name)" :code-set="codeSet" /></h3>
+    <h3 v-if="block.name" :data-reader-heading="block.name"><InlineText :text="String(block.name)" :code-set="codeSet" /></h3>
     <EntryBody :block="block.entries" :code-set="codeSet" />
   </div>
   <blockquote v-else-if="isObj(block) && block.type === 'quote'" class="lib-quote">
@@ -53,12 +56,11 @@ const INSET = new Set(['inset', 'insetReadaloud', 'variant', 'variantInner', 'va
   <EntryBody v-else-if="isObj(block) && block.type === 'homebrew' && (block.entries || block.oldEntries)" :block="block.entries ?? block.oldEntries" :code-set="codeSet" />
   <span v-else-if="isObj(block) && (block.type === 'inline' || block.type === 'inlineBlock') && block.entries" class="lib-inline"><EntryBody :block="block.entries" :code-set="codeSet" /></span>
   <EntryBody v-else-if="isObj(block) && block.type === 'tableGroup'" :block="block.tables" :code-set="codeSet" />
-  <p v-else-if="isObj(block) && block.type === 'link' && isObj(block.href) && block.href.type === 'external' && typeof block.href.url === 'string'"><a :href="block.href.url" target="_blank" rel="noopener noreferrer">{{ block.text ?? block.href.url }}</a></p>
   <StatblockBlock v-else-if="isObj(block) && block.type === 'statblock'" :block="block" :code-set="codeSet" />
   <!-- 整个对象直接写在书里（作者 _renderStatblockInline：statblockType + statblockData；旧写法 dataType + data） -->
   <section v-else-if="isObj(block) && block.type === 'statblockInline'" class="lib-embedded" data-testid="statblock-inline">
     <header class="lib-embedded__head"><b>{{ block.displayName ?? (block.statblockData as Block | undefined)?.name ?? (block.data as Block | undefined)?.name ?? block.name ?? '' }}</b></header>
     <EmbeddedEntity :prop="String(block.statblockType ?? block.dataType ?? '').replace(/Fluff$/, '')" :item="block.statblockData ?? block.data" :code-set="codeSet" />
   </section>
-  <RenderedBlock v-else :block="block" :code-set="codeSet" />
+  <RenderedBlock v-else-if="block != null" :block="block" :code-set="codeSet" />
 </template>

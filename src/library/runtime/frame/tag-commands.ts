@@ -20,7 +20,7 @@ export interface TagMeta {
 }
 
 /** 按作者加载器登记表（页面或类别名 → 类别）找类别；找不到就是空。 */
-function propsOfPage(page: string): string[] {
+export function authorPageProps(page: string): string[] {
   const table = A.DataLoader._PROP_TO_HASH_PAGE as Record<string, string>
   const byPage = Object.entries(table).filter(([, pg]) => pg === page).map(([prop]) => prop)
   if (byPage.length) return byPage
@@ -32,12 +32,12 @@ function propsOfPage(page: string): string[] {
  * 作者的渲染器对 {@book} / {@adventure} 单独处理、不走 getTagMeta（render.js 2495–2510）：
  * 用作者的 UidUtil.unpackUidAdventureBook 拆开，编号写法照作者（小写的书编号）。
  */
-function bookTagMeta(tag: '@book' | '@adventure', text: string): TagMeta {
+export function bookTagMeta(tag: '@book' | '@adventure', text: string): TagMeta {
   const page = tag === '@book' ? 'book.html' : 'adventure.html'
   const { displayText, id, ixChapter, sectionName, ixNamedSection } = A.UidUtil.unpackUidAdventureBook(text)
   return {
     tag, name: String(displayText ?? id ?? ''), displayText: String(displayText ?? id ?? ''), source: id ?? null,
-    page, hash: String(id ?? '').toLowerCase(), props: propsOfPage(page),
+    page, hash: String(id ?? '').toLowerCase(), props: authorPageProps(page),
     part: { chapter: ixChapter ?? null, section: sectionName ?? null, ixNamedSection: ixNamedSection ?? null },
   }
 }
@@ -67,7 +67,7 @@ export async function tagMeta(tag: string, text: string): Promise<TagMeta | null
     source: sourceHover ?? null,
     page,
     hash,
-    props: propsOfPage(page),
+    props: authorPageProps(page),
   }
 }
 

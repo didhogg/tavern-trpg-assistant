@@ -87,7 +87,7 @@ const windowed = computed(() => list.value.slice(range.value.start, range.value.
 const blocked = computed(() => hits.value.length - visibleHits.value.length)
 
 function open(h: ScopedSearchHit): void {
-  if (h.target.kind === 'entry') openEntry(h.ref, hitName(h))
+  if (h.target.kind === 'entry') openEntry(h.ref, hitName(h), h.variant?.docIdLocal ? { docIdLocal: h.variant.docIdLocal } : h.variant?.kind === 'base' ? { original: true } : undefined)
   else if (h.target.kind === 'corpus') openReader({ set: h.target.set ?? h.ref.set, prop: h.target.prop, id: h.target.id, name: hitName(h) })
   else if (h.target.kind === 'document') openReader({ set: h.ref.set, prop: 'document', id: h.target.id, name: hitName(h) })
 }

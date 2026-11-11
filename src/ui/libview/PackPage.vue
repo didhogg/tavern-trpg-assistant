@@ -69,8 +69,13 @@ const filtered = computed(() => matchName(sorted.value && cat.value !== 'all' ? 
 const { range, toTop } = useVirtual(scrollEl, computed(() => filtered.value.length))
 const visible = computed(() => filtered.value.slice(range.value.start, range.value.end))
 // 列与每列显示什么都来自作者列表页（B-35）；来源列不用作者的文字（带标记），我们自己在行尾灰字标
-const cols = computed(() => (cells.value?.columns ?? []).map((c, i) => ({ ...c, i })).filter((c) => c.sort !== 'source'))
+const cols = computed(() => (cells.value?.columns ?? []).map((c, i) => ({ ...c, i, text: c.sort === 'concentration' ? c.title ?? c.text : c.text })).filter((c) => c.sort !== 'source'))
 const nameCol = computed(() => cols.value.find((c) => c.sort === 'name')?.i ?? 0)
+function cellValue(row: PackRow, column: typeof cols.value[number]): string {
+  if (column.i === nameCol.value) return row.name
+  const value = cells.value?.cells[row.ref.hash]?.[column.i] ?? ''
+  return column.sort === 'concentration' && value ? (codeSet.value === 'cn' ? '需要' : 'Required') : value
+}
 function sortOn(key: string): void {
   if (sortBy.value !== key) { sortBy.value = key; dir.value = 'asc' } else if (dir.value === 'asc') dir.value = 'desc'
   else sortBy.value = 'none'
@@ -128,8 +133,8 @@ watch(q, () => toTop())
           </thead>
           <tbody>
             <tr v-if="range.padTop" aria-hidden="true" class="lib-spacer" :style="{ height: `${range.padTop}px` }"><td :colspan="cols.length + 1" /></tr>
-            <tr v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" tabindex="0" :data-off="r.off" @click="openEntry(r.ref, r.name)" @keydown.enter="openEntry(r.ref, r.name)">
-              <td v-for="c in cols" :key="c.i" :class="{ 'lib-name': c.i === nameCol }">{{ c.i === nameCol ? r.name : (cells?.cells[r.ref.hash]?.[c.i] ?? '') }}</td>
+            <tr v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}:${r.selection && 'docIdLocal' in r.selection ? r.selection.docIdLocal : ''}`" tabindex="0" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)" @keydown.enter="openEntry(r.ref, r.name, r.selection)">
+              <td v-for="c in cols" :key="c.i" :class="{ 'lib-name': c.i === nameCol }">{{ cellValue(r, c) }}</td>
               <td class="lib-src">{{ r.pack ?? abv ?? r.source ?? '' }}</td>
             </tr>
             <tr v-if="range.padBottom" aria-hidden="true" class="lib-spacer" :style="{ height: `${range.padBottom}px` }"><td :colspan="cols.length + 1" /></tr>
@@ -138,7 +143,7 @@ watch(q, () => toTop())
       </div>
       <div v-else class="lib-list" role="list" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
         <button v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
-        <button v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" class="lib-list__row" type="button" role="listitem" :data-off="r.off" @click="openEntry(r.ref, r.name)">
+        <button v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}:${r.selection && 'docIdLocal' in r.selection ? r.selection.docIdLocal : ''}`" class="lib-list__row" type="button" role="listitem" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)">
           <span class="lib-name">{{ r.name }}</span>
           <span v-if="cat === 'all'" class="trpg-badge">{{ categoryLabel(r.prop) }}</span>
           <span class="lib-src lib-end">{{ r.pack ?? abv ?? r.source ?? '' }}</span>

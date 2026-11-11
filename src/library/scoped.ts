@@ -10,9 +10,9 @@ import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } fr
 import type { EditionInfo } from './runtime/frame/edit-commands'
 import {
   autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, refKey, sourceUnit, viewOf,
-  type Assignment, type CampaignLibrary, type EntryRef, type Membership, type ScopeDef, type ViewReason,
+  type Assignment, type CampaignLibrary, type EntryRef, type EntrySelection, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
-import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
+import { SOURCES, getSource, officialSourceOf, type SourceEntry } from './sources'
 import { chooseVersion, expandVariants, variantsOf, type Alternative, type Chosen, type VariantInfo } from './versions'
 export type { VariantInfo } from './versions'
 import { hashValue } from '../core/hash'
@@ -27,6 +27,7 @@ import { scopedSearch, type ScopedSearchHit } from './scoped-search'
 import { groupShelf, type ShelfGroup } from './shelf'
 import type { LibraryView } from './revision'
 import type { KernelOverride } from '../schemas/kernel'
+import { detailItem } from './scoped-detail'
 export interface VersionInfo extends Chosen {
   /** 有几个备选（不含原件）。 */
   count: number
@@ -57,6 +58,7 @@ export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
   alternatives: Array<Omit<Alternative, 'item'> & { item: unknown }>
   /** 英文对照只对原件（官方）有意义；生效的是备选时为 null。 */
   english: English | null
+  docIdLocal?: string
 }
 export type FetchResult =
   | { ok: true; ref: EntryRef; source: string | null; item: unknown; version: VersionInfo; closed: boolean }
@@ -245,20 +247,19 @@ export class ScopedLibrary {
     return this.lib.englishPairs(officialSourceOf(codeSet).id, viewArg)
   }
 
-  async detail(c: CampaignLibrary, ref: EntryRef, { browse = false, view: viewArg }: { browse?: boolean; view?: LibraryView } = {}): Promise<ScopedDetail | { hidden: ViewReason } | null> {
-    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
-    const d = await this.lib.detail(ref.set, ref.prop, ref.hash, undefined, view)
-    if (!d) return null
-    const v = await this.viewFor(c, ref, d.source, undefined, view)
-    if (!v.visible && !browse) return { hidden: v.reason }
-    const ctx = await this.context(c, view)
+  async detail(c: CampaignLibrary, ref: EntryRef, { browse = false, view: viewArg, selection }: { browse?: boolean; view?: LibraryView; selection?: EntrySelection } = {}): Promise<ScopedDetail | { hidden: ViewReason } | null> {
+    const view = viewArg ?? await this.lib.currentView()
+    const scope = { ...c, codeSet: getSource(ref.set).codeSet }
+    const ctx = await this.context(scope, view)
+    if (selection && 'docIdLocal' in selection) ref = packTarget(ref, scope.codeSet, selection.docIdLocal, ctx.altMap).ref
+    const key = refKey(ref)
     const alternatives = await this.alternativesOf(ref, ctx)
-    const { chosen, item } = this.version(refKey(ref), alternatives, ctx, c.choices[refKey(ref)])
-    const effective = item ?? d.item
-    const alt = item === undefined ? null : alternatives.find((a) => a.item === effective)
-    const cached = alt?.ref ? await this.lib.fluff(alt.ref.set, alt.ref.prop, alt.ref.hash, view) : null
-    const fluff = item === undefined ? { fluff: d.fluff, fluffError: d.fluffError } : { fluff: cached?.fluff ?? null, fluffError: cached?.fluffError ?? null }
-    return { ...d, ...fluff, ref, reason: v.reason, closed: !v.visible, item: effective, base: d.item, version: chosen, alternatives, english: item === undefined ? d.english : null }
+    const { chosen } = this.version(key, alternatives, ctx, c.choices[key])
+    const entry = await detailItem(this.lib, ref, ctx.packs, ctx.altMap.get(key), alternatives, chosen, view, selection)
+    if (!entry) return null
+    const v = await this.viewFor(scope, ref, entry.source, ctx.assigns, view)
+    if (!v.visible && !browse) return { hidden: v.reason }
+    return { ...entry, ref, reason: v.reason, closed: !v.visible, version: chosen, alternatives }
   }
 
   async fetch(c: CampaignLibrary, refs: EntryRef[], viewArg?: LibraryView): Promise<FetchResult[]> {

@@ -2,8 +2,9 @@
 // 全部调用作者自己的 Parser / Renderer.class 函数，不在界面里手写翻译。哪个类别取哪几项是这里的登记表，加一类 = 加一行。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, init } from './author'
+import { collectAuthorLinks, type AuthorMarkup } from './author-markup'
 
-export interface AuthorLine { label: string; value: string }
+export interface AuthorLine { label: string; value: string; markup?: AuthorMarkup }
 export interface AuthorFields {
   lines: AuthorLine[]
   /** 职业：每一级的熟练加值（作者 Parser.levelToPb），下标 0 = 1 级。 */
@@ -43,9 +44,11 @@ export async function authorFields(prop: string, item: any): Promise<AuthorField
   const lines: AuthorLine[] = []
   if (rule) {
     try {
-      for (const [label, value] of rule(item)) {
+      const { value: fields, marker, links } = collectAuthorLinks(() => rule(item))
+      for (const [label, value] of fields) {
         const v = Array.isArray(value) ? listText(value) : text(value)
-        if (v) lines.push({ label, value: v })
+        const markup = typeof value === 'string' && value.includes(marker) ? { html: value, marker, links } : undefined
+        if (v || markup) lines.push({ label, value: v, ...(markup ? { markup } : {}) })
       }
     } catch (e) {
       lines.push({ label: '读取失败', value: e instanceof Error ? e.message : String(e) })

@@ -6,6 +6,7 @@
 import { BrewPacks, type BrewPack } from './brew-packs'
 import type { EntryRef } from './scopes'
 import type { LibraryService } from './service'
+import type { LibraryView } from './revision'
 import { getSource, type SourceEntry } from './sources'
 
 /** 参与配对的一个文件（目录里的一项，或已装的一个包）。dir 为 null（本地导入的没有网址）时不限目录。 */
@@ -87,8 +88,9 @@ export interface InstalledPair {
 }
 
 export type BrewCounterpartReason = 'not-found' | 'pack-unpaired' | 'structure-differs' | 'no-counterpart' | 'no-english-name'
+export type CounterpartRef = EntryRef & { docIdLocal?: string }
 export interface BrewCounterpart {
-  refs: EntryRef[]
+  refs: CounterpartRef[]
   reason: BrewCounterpartReason | null
 }
 
@@ -134,10 +136,10 @@ export class BrewPairs {
   }
 
   /** 已装的包两两配对：同样的规则，目录从下载网址里取；自己写的（可编辑）包不参与。 */
-  async installed(zhId = 'cn-brew'): Promise<InstalledPair[]> {
+  async installed(zhId = 'cn-brew', view?: LibraryView): Promise<InstalledPair[]> {
     const zhSet = getSource(zhId)
     const enSet = this.partnerOf(zhSet)
-    const side = async (set: SourceEntry): Promise<Map<string, BrewPack>> => new Map((await this.packs.list(set.id)).filter((p) => !p.isEditable).map((p) => [p.docIdLocal, p]))
+    const side = async (set: SourceEntry): Promise<Map<string, BrewPack>> => new Map((await this.packs.list(set.id, view)).filter((p) => !p.isEditable).map((p) => [p.docIdLocal, p]))
     const zh = await side(zhSet)
     const en = await side(enSet)
     const pairable = (m: Map<string, BrewPack>, set: SourceEntry): PairableFile[] => [...m.values()].map((p) => ({ key: p.docIdLocal, dir: dirOfUrl(p.url, set), sources: p.sources }))
@@ -152,11 +154,12 @@ export class BrewPairs {
     const here = getSource(ref.set)
     const other = this.partnerOf(here)
     const zhId = here.lang === 'zh' ? here.id : other.id
-    const pairs = (await this.installed(zhId)).filter((p) => p.zh && p.en)
-    const index = async (set: SourceEntry) => new Map((await (await this.lib.frameOf(set.codeSet)).call('brewDocIndex')).map((d) => [d.docIdLocal, d.props]))
+    const view = await this.lib.currentView()
+    const pairs = (await this.installed(zhId, view)).filter((p) => p.zh && p.en)
+    const index = async (set: SourceEntry) => new Map((await (await this.lib.frameOf(set.codeSet, view)).call('brewDocIndex')).map((d) => [d.docIdLocal, d.props]))
     const mine = await index(here)
     const theirs = await index(other)
-    const refs = new Map<string, EntryRef>()
+    const refs = new Map<string, CounterpartRef>()
     let inPack = false
     let paired = false
     let shape = false
@@ -171,9 +174,12 @@ export class BrewPairs {
       paired = true
       const target = theirs.get(partner.docIdLocal)?.[ref.prop]
       if (!target || target.length !== arr.length) { shape = true; continue }
+      const rows = (await this.lib.packOwnedItems(other.id, partner, view))[ref.prop] ?? []
       for (let i = 0; i < arr.length; i++) {
         const h = target[i]
-        if (arr[i] === ref.hash && h && !refs.has(h) && (await this.lib.storedItem(other.id, ref.prop, h))) refs.set(h, { set: other.id, prop: ref.prop, hash: h })
+        if (arr[i] === ref.hash && h && rows.some((r) => r.hash === h)) {
+          refs.set(`${partner.docIdLocal}|${h}`, { set: other.id, prop: ref.prop, hash: h, docIdLocal: partner.docIdLocal })
+        }
       }
     }
     if (refs.size) return { refs: [...refs.values()], reason: null }

@@ -93,13 +93,13 @@ async function reverseIndex(service: LibraryService, sourceId: string, view: Lib
  * 详情「关联 › 表格」（P5 T6 #8 / G3）：自己的表 + 正文链接到的表 + 同语言里引用了它的表。
  * 「引用」只认作者标签解析出的编号，不按名字猜；读不到的资料集跳过并照常返回其余部分。
  */
-export async function relatedTablesFor(service: LibraryService, sourceId: string, prop: string, hash: string, viewArg?: LibraryView): Promise<RelatedTables> {
+export async function relatedTablesFor(service: LibraryService, sourceId: string, prop: string, hash: string, viewArg?: LibraryView, selectedItem?: unknown): Promise<RelatedTables> {
   const view = viewArg ?? await service.currentView()
   const source = getSource(sourceId)
-  const own = await tablesFor(service, sourceId, prop, hash, view)
   const frame = await service.frameOf(source.codeSet, view)
-  let item: unknown = null
-  if (prop !== 'book' && prop !== 'adventure') {
+  const own = selectedItem === undefined ? await tablesFor(service, sourceId, prop, hash, view) : await frame.call('extractTables', prop, [selectedItem])
+  let item = selectedItem
+  if (item === undefined && prop !== 'book' && prop !== 'adventure') {
     const parsed = await service.parsed(sourceId, prop, view)
     item = parsed.items[parsed.hashes.indexOf(hash)] ?? null
   }

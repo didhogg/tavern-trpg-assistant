@@ -1,6 +1,7 @@
 // 打开库页弹窗：包 / 书（栈底）、条目详情（弹窗内前进一页）。弹窗是 sheet 变体：宽屏居中、窄屏底部抽屉；同一时间只有一个弹窗，详情是入栈。
 import { useModalStore } from '../../stores/modal'
-import type { EntryRef } from '../../library/scopes'
+import { entryPageKey } from '../../stores/entrylang'
+import type { EntryRef, EntrySelection } from '../../library/scopes'
 import EntryPage from './EntryPage.vue'
 import EntryLangSwitch from './EntryLangSwitch.vue'
 import ReaderLangSwitch from './ReaderLangSwitch.vue'
@@ -27,8 +28,10 @@ export function openPack(p: PackProps): void {
   useModalStore().open({ key: `pack:${p.set}:${p.docIdLocal ?? p.source}`, title: p.name, component: PackPage, header: PackHeader, props: { ...p }, variant: 'sheet' })
 }
 
-export function openEntry(ref: EntryRef, title = ''): void {
-  useModalStore().push({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, header: EntryLangSwitch, props: { entryRef: ref }, variant: 'sheet' })
+export function openEntry(ref: EntryRef, title = '', selection?: EntrySelection): void {
+  const modal = useModalStore()
+  const key = `${entryPageKey(ref, selection)}:page:${modal.depth}`
+  modal.push({ key, title, component: EntryPage, header: EntryLangSwitch, props: { entryRef: ref, selection, pageKey: key }, variant: 'sheet' })
 }
 
 export function openSearch(): void {
@@ -41,13 +44,20 @@ export function openManage(p: PackProps): void {
 }
 
 /** 书 / 冒险阅读器：弹窗里前进一页。 */
-export function openReader(r: { set: string; prop: string; id: string; name: string }): void {
-  useModalStore().push({ key: `reader:${r.set}:${r.prop}:${r.id}`, title: r.name, component: ReaderPage, header: ReaderLangSwitch, props: { ...r }, variant: 'sheet' })
+export interface ReaderPart { chapter: number | null; section: string | null; ixNamedSection?: number | null }
+export interface ReaderTarget { set: string; prop: string; id: string; name: string; part?: ReaderPart }
+
+export function openReader(r: ReaderTarget): void {
+  const modal = useModalStore()
+  const key = `reader:${r.set}:${r.prop}:${r.id}:${modal.depth}`
+  modal.push({ key, title: r.name, component: ReaderPage, header: ReaderLangSwitch, props: { ...r, readerKey: key }, variant: 'sheet' })
 }
 
 /** 阅读器换语言：把当前这一页换成另一种语言的同一本书（不增加返回层数）。 */
-export function replaceReader(r: { set: string; prop: string; id: string; name: string }): void {
-  useModalStore().replace({ key: `reader:${r.set}:${r.prop}:${r.id}`, title: r.name, component: ReaderPage, header: ReaderLangSwitch, props: { ...r }, variant: 'sheet' })
+export function replaceReader(r: ReaderTarget): void {
+  const modal = useModalStore()
+  const key = `reader:${r.set}:${r.prop}:${r.id}:${Math.max(0, modal.depth - 1)}`
+  modal.replace({ key, title: r.name, component: ReaderPage, header: ReaderLangSwitch, props: { ...r, readerKey: key }, variant: 'sheet' })
 }
 
 export function openBulk(): void {
@@ -55,6 +65,8 @@ export function openBulk(): void {
 }
 
 /** 语言切换：把当前详情页换成另一种语言里的同一条（不增加返回层数）。 */
-export function replaceEntry(ref: EntryRef, title = ''): void {
-  useModalStore().replace({ key: `entry:${ref.set}:${ref.prop}:${ref.hash}`, title, component: EntryPage, header: EntryLangSwitch, props: { entryRef: ref }, variant: 'sheet' })
+export function replaceEntry(ref: EntryRef, title = '', selection?: EntrySelection): void {
+  const modal = useModalStore()
+  const key = `${entryPageKey(ref, selection)}:page:${Math.max(0, modal.depth - 1)}`
+  modal.replace({ key, title, component: EntryPage, header: EntryLangSwitch, props: { entryRef: ref, selection, pageKey: key }, variant: 'sheet' })
 }

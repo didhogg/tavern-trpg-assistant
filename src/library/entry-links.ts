@@ -142,12 +142,18 @@ export class EntryLinks {
   async resolveTag(codeSet: string, tag: string, text: string, viewArg?: LibraryView): Promise<ResolvedTag | null> {
     const view = viewArg ?? await this.lib.currentView()
     const meta: TagMeta | null = await (await this.lib.frameOf(codeSet, view)).call('tagMeta', tag, text)
-    if (!meta) return null
+    return meta ? this.resolveMeta(codeSet, meta, view) : null
+  }
+
+  async resolveMeta(codeSet: string, meta: TagMeta, viewArg?: LibraryView): Promise<ResolvedTag> {
+    const view = viewArg ?? await this.lib.currentView()
     let located: Located | null = null
     for (const prop of [...meta.props, 'document']) {
       located = await this.locate(codeSet, prop, meta.hash, view)
       if (located) break
     }
-    return { tag: meta.tag, name: meta.name, displayText: meta.displayText, source: meta.source, page: meta.page, hash: meta.hash, ...(meta.part ? { part: meta.part } : {}), located }
+    const document = located?.kind === 'document' ? parseDocumentHash(meta.hash, [located.id!]) : null
+    const part = meta.part ?? (document ? { chapter: document.chapter, section: document.header } : null)
+    return { tag: meta.tag, name: meta.name, displayText: meta.displayText, source: meta.source, page: meta.page, hash: meta.hash, ...(part ? { part } : {}), located }
   }
 }

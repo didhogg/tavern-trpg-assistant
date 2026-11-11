@@ -19,17 +19,29 @@ export function byLevel(features: Feature[]): Array<{ level: number; features: F
   return [...map].sort((a, b) => a[0] - b[0]).map(([level, fs]) => ({ level, features: fs }))
 }
 
-export interface ClassTable { head: string[]; rows: unknown[][] }
+export interface ClassTable { head: unknown[]; rows: unknown[][] }
 
 /** 职业表：等级 | 熟练加值（作者 Parser.levelToPb，B-36）| 特性（取自各级特性名）| 作者额外列（已知戏法、每环法术位…）。 */
-export function classTable(cls: unknown, pb: string[] | null = null): ClassTable {
+export function classTable(cls: unknown, pb: string[] | null = null, subclass?: unknown): ClassTable {
   const o = isObj(cls) ? cls : {}
-  const feats = byLevel(flattenFeatures(o.classFeatures))
+  const child = isObj(subclass) ? subclass : {}
+  const feats = byLevel([...flattenFeatures(o.classFeatures), ...flattenFeatures(child.subclassFeatures)])
   const names = (lv: number): string => feats.find((g) => g.level === lv)?.features.map((f) => f.name).join('，') ?? ''
-  const groups = (Array.isArray(o.classTableGroups) ? o.classTableGroups : []).filter(isObj)
-  const levels = Math.max(20, ...groups.map((g) => (Array.isArray(g.rows) ? g.rows.length : 0)))
-  const head = ['等级', ...(pb ? ['熟练加值'] : []), '特性', ...groups.flatMap((g) => (Array.isArray(g.colLabels) ? g.colLabels.map((c) => String(c)) : []))]
-  const rows = Array.from({ length: levels }, (_, i) => [i + 1, ...(pb ? [pb[i] ?? ''] : []), names(i + 1), ...groups.flatMap((g) => (Array.isArray(g.rows) && Array.isArray(g.rows[i]) ? (g.rows[i] as unknown[]) : []))])
+  const groups = [...(Array.isArray(o.classTableGroups) ? o.classTableGroups : []), ...(Array.isArray(child.subclassTableGroups) ? child.subclassTableGroups : [])]
+    .filter(isObj).map((g) => ({
+      labels: Array.isArray(g.colLabels) ? g.colLabels : [],
+      rows: Array.isArray(g.rows) ? g.rows : [],
+      slots: Array.isArray(g.rowsSpellProgression) ? g.rowsSpellProgression : [],
+    }))
+  const levels = Math.max(pb?.length ?? 20, feats.at(-1)?.level ?? 0, ...groups.map((g) => Math.max(g.rows.length, g.slots.length)))
+  const head = ['等级', ...(pb ? ['熟练加值'] : []), '特性', ...groups.flatMap((g) => g.labels)]
+  const rows = Array.from({ length: levels }, (_, i) => [
+    i + 1, ...(pb ? [pb[i] ?? ''] : []), names(i + 1),
+    ...groups.flatMap((g) => {
+      const row = g.slots[i] ?? g.rows[i]
+      return g.labels.map((_, col) => !Array.isArray(row) || row[col] == null || row[col] === 0 ? '—' : row[col])
+    }),
+  ])
   return { head, rows }
 }
 
