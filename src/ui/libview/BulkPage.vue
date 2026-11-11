@@ -6,6 +6,7 @@ import { useLibViewStore } from '../../stores/libview'
 import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import Checkbox from '../kit/Checkbox.vue'
+import GroupCheck from '../kit/GroupCheck.vue'
 import Icon from '../kit/Icon.vue'
 
 /** 批量勾选（U2c）：下载了很多书时一次选完；只写"和现在不一样"的，应用时一次性写进战役设置。 */
@@ -41,7 +42,7 @@ async function apply(): Promise<void> {
     <div class="lib-mscroll">
 <div class="lib-pad">
       <template v-for="g in groups" :key="g.name">
-        <div class="lib-sec" style="padding: 0">{{ g.name }}<span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" :disabled="!lib.bound" @click="setMany(g.rows.map((r) => r.source), true)">这一类全选</button><button class="trpg-btn trpg-btn--small" type="button" :disabled="!lib.bound" @click="setMany(g.rows.map((r) => r.source), false)">全不选</button></span></div>
+        <div class="lib-sec" style="padding: 0">{{ g.name }}<span class="lib-end"><GroupCheck :selected="g.rows.filter((r) => isOn(r.source, r.view.visible)).length" :total="g.rows.length" :label="g.name" :disabled="!lib.bound" @change="(all: boolean) => setMany(g.rows.map((r) => r.source), all)" /></span></div>
         <Checkbox v-for="r in g.rows" :key="r.source" :model-value="isOn(r.source, r.view.visible)" :disabled="!lib.bound" @update:model-value="(v: boolean) => setMany([r.source], v)">{{ r.name }}</Checkbox>
       </template>
       <p v-if="!groups.length" class="lib-muted">没有符合的书。</p>

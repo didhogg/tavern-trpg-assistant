@@ -53,6 +53,13 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .trpg-check[data-on='true'] .trpg-check__box { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .trpg-check[data-dl='true'] .trpg-check__box { background: var(--text3); border-color: var(--text3); color: var(--surface); }
 .trpg-check[data-dl='true'] { color: var(--text2); }
+.trpg-check[data-disabled='true'] { cursor: not-allowed; } .trpg-check[data-disabled='true'] .trpg-check__box { opacity: 0.35; } /* 不能勾的行（已装等）一眼看得出来 */
+/* 分组全选框（驾驶员 2026-11-11 定）：[ ] 一个没选、[−] 这组有选（全部或部分）；外观同勾选框 */
+.trpg-groupcheck { flex: none; display: inline-grid; place-items: center; min-width: var(--hit); min-height: var(--hit); padding: 0; border: 0; background: none; cursor: pointer; }
+.trpg-groupcheck__box { width: 18px; height: 18px; display: grid; place-items: center; border: var(--border-strong) solid var(--line-ctrl); border-radius: var(--r-xs); background: var(--surface); color: var(--on-primary); font-weight: var(--fw-semibold); line-height: 1; transition: background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std); }
+.trpg-groupcheck[aria-checked='true'] .trpg-groupcheck__box, .trpg-groupcheck[aria-checked='mixed'] .trpg-groupcheck__box { background: var(--primary); border-color: var(--primary); }
+.trpg-groupcheck:disabled { opacity: 0.4; cursor: not-allowed; }
+.trpg-groupcheck:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .trpg-check[data-disabled='true'] { cursor: not-allowed; }
 .trpg-check[data-disabled='true']:not([data-dl='true']) { opacity: 0.75; }
 .trpg-check input:focus-visible ~ .trpg-check__box { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus); }

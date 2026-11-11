@@ -225,7 +225,12 @@ await page.waitForSelector('[data-testid="download-tab"]')
 await page.waitForSelector('[data-testid="official-card"]', { timeout: 60000 })
 await settle(page, 800)
 check('下载页：官方资料显示「已安装」', (await page.locator('[data-testid="official-card"] .trpg-badge', { hasText: '已安装' }).count()) === 1)
-const advN = await page.locator('[data-testid="adventure-list"] .trpg-row').count()
+// C 段起冒险并进「官方资料与冒险」一栏：点类型「冒险」，搜一个常见字让分组展开后数行
+await page.locator('[data-testid="kind-adventure"]').click()
+await page.locator('[data-testid="official-card"] input[type="search"]').fill('的')
+await settle(page, 400)
+const advN = await page.locator('[data-testid="official-card"] .trpg-row').count()
+await page.locator('[data-testid="official-card"] input[type="search"]').fill('')
 out.adventureRows = advN
 check('下载页：列出冒险，已装的标「已装」', advN > 5)
 check('自制包区：有【载入目录】和灰掉的【增加数据源仓库】', (await page.getByTestId('brew-load').count()) === 1 && (await page.locator('[data-testid="brew-catalog"] button', { hasText: '增加数据源仓库' }).isDisabled()))

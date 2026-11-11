@@ -1,24 +1,26 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { DataSetState } from '../../core/start-campaign'
 import type { CatalogRow } from '../../library/scoped'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
+import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
-import { askConfirm } from '../kit/confirm'
+import { askChoice } from '../kit/choice'
 import { formatBytes } from '../format'
 import BrewCatalog from './BrewCatalog.vue'
 import DlSection, { type DlGroup } from './DlSection.vue'
+import DownloadAllPage, { type DownloadAllAnswer } from './DownloadAllPage.vue'
 import { reportLibError } from './deps-flow'
 import { ruleBadge } from './registry'
-import { useToastStore } from '../../stores/toast'
 
 /**
- * 下载页（U4，P5 T6 B2）：官方资料 / 冒险 / 自制包三个栏目，每栏 搜索 + 【多选】，官方和冒险按作者分类分组（可折叠）。
- * 每一行单独【下载】或显示「已装」；多选后底部【下载选中的 n 本】【下载这一类全部】。行和分组都来自书架那一份数据（作者书目），不手写书单。
+ * 下载页（U4，P5 T6 C 段）：「官方资料与冒险」一栏 + 「自制包」一栏。每栏 搜索 + 【多选】，官方书和冒险按作者分类分组（可折叠、组间细线），
+ * 有类型（书 / 冒险）和规则（5e / 5.5e / 未归类）两组筛选。每行单独【下载】或显示「已装」；多选后底部【下载选中的 n 项】【下载全部…】。
+ * 行和分组都来自书架那一份数据（作者书目），不手写书单。
  */
 const app = useAppStore()
 const lib = useLibViewStore()
@@ -27,24 +29,32 @@ const toast = useToastStore()
 const sets = ref<DataSetState[]>([])
 const error = ref<string | null>(null)
 type Rule = 'all' | '5e' | '5.5e' | 'none'
+type Kind = 'all' | 'book' | 'adventure'
 const rule = ref<Rule>('all')
+const kind = ref<Kind>('all')
 const RULES: Array<{ value: Rule; label: string }> = [{ value: 'all', label: '全部' }, { value: '5e', label: '5e' }, { value: '5.5e', label: '5.5e' }, { value: 'none', label: '未归类' }]
-const qBooks = ref('')
-const qAdv = ref('')
-const selBooks = ref<Set<string>>(new Set())
-const selAdv = ref<Set<string>>(new Set())
+const KINDS: Array<{ value: Kind; label: string }> = [{ value: 'all', label: '全部' }, { value: 'book', label: '书' }, { value: 'adventure', label: '冒险' }]
+const q = ref('')
+const sel = ref<Set<string>>(new Set())
 
 const keyOf = (r: CatalogRow): string => `${r.set}:${r.kind}:${r.id ?? `src:${r.source}`}`
-const hit = (r: CatalogRow, q: string): boolean => !q.trim() || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q.trim().toLowerCase())
+const hit = (r: CatalogRow): boolean => !q.value.trim() || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q.value.trim().toLowerCase())
 const ruleOk = (r: CatalogRow): boolean => rule.value === 'all' || (rule.value === 'none' ? ruleBadge(r) === null : ruleBadge(r) === rule.value)
 const isOfficial = (r: CatalogRow): boolean => getSource(r.set).kind === 'official'
-const groupsOf = (pick: (g: { books: CatalogRow[]; adventures: CatalogRow[] }) => CatalogRow[], q: string, extra: (r: CatalogRow) => boolean): Array<DlGroup<CatalogRow>> =>
-  (lib.shelf?.groups ?? []).map((g) => ({ key: g.group, name: g.name, rows: pick(g).filter((r) => isOfficial(r) && hit(r, q) && extra(r)).map((r) => ({ key: keyOf(r), name: r.name, selectable: !r.downloaded && !rowTask(r), row: r })) })).filter((g) => g.rows.length)
-const bookGroups = computed(() => groupsOf((g) => g.books, qBooks.value, ruleOk))
-const advGroups = computed(() => groupsOf((g) => g.adventures, qAdv.value, () => true))
-const allBooks = computed(() => (lib.shelf?.groups ?? []).flatMap((g) => g.books).filter(isOfficial))
-const allAdv = computed(() => (lib.shelf?.groups ?? []).flatMap((g) => g.adventures).filter(isOfficial))
 const officialReady = computed(() => sets.value.some((s) => s.status === 'installed'))
+// 冒险正文要先有官方资料才能读：一本官方书都没装时冒险行不能下
+const canGet = (r: CatalogRow): boolean => !r.downloaded && !rowTask(r) && (r.kind === 'book' || officialReady.value)
+const groups = computed<Array<DlGroup<CatalogRow>>>(() => (lib.shelf?.groups ?? []).map((g) => ({
+  key: g.group,
+  name: g.name,
+  rows: [...(kind.value === 'adventure' ? [] : g.books), ...(kind.value === 'book' ? [] : g.adventures)]
+    .filter((r) => isOfficial(r) && hit(r) && ruleOk(r))
+    .map((r) => ({ key: keyOf(r), name: r.name, selectable: canGet(r), row: r })),
+})).filter((g) => g.rows.length))
+const allRows = computed(() => (lib.shelf?.groups ?? []).flatMap((g) => [...g.books, ...g.adventures]).filter(isOfficial))
+const picked = computed(() => allRows.value.filter((r) => sel.value.has(keyOf(r))))
+const pickedBooks = computed(() => picked.value.filter((r) => r.kind === 'book'))
+const pickedAdv = computed(() => picked.value.filter((r) => r.kind === 'adventure'))
 
 // 行 → 正在跑的任务：按书下载时记下「这一行属于哪个任务」，任务进度直接显示在行上
 const pending = ref<Map<string, string>>(new Map())
@@ -59,11 +69,11 @@ async function loadStatus(): Promise<void> {
   try { sets.value = await app.svc().backend.starter.dataStatus() } catch (e) { console.error('[trpg-assistant] 读取下载页失败', e); error.value = e instanceof Error ? e.message : String(e) }
 }
 onMounted(() => void loadStatus())
-// 任务结束（完成 / 失败 / 取消）才重读一次安装状态；任务进行中不整页重读
+// 任务结束（完成 / 失败 / 取消）才重读一次安装状态；任务进行中不整页重读（书架由库页外壳在任务结束时重读）
 let lastRunning = 0
-watch(() => dl.running.length + dl.paused.length, (n) => { if (n < lastRunning) void loadStatus() /* 书架由库页外壳在任务结束时重读 */; lastRunning = n }, { immediate: true })
+watch(() => dl.running.length + dl.paused.length, (n) => { if (n < lastRunning) void loadStatus(); lastRunning = n }, { immediate: true })
 
-/** 按书下载：同一次选中的书合成一个任务（中文这一套；每本单开会把整套重解析很多遍）。 */
+/** 按书下载：同一次选中的书合成一个任务（每本单开会把整套重解析很多遍）。 */
 function downloadBooks(rows: CatalogRow[]): void {
   const s = app.svc()
   const bySet = new Map<string, CatalogRow[]>()
@@ -95,36 +105,52 @@ function downloadAdventures(rows: CatalogRow[]): void {
   }
   dl.refresh()
 }
-function downloadAllOfficial(): void {
-  const tasks = app.svc().backend.library.tasks
-  for (const set of sets.value.filter((x) => x.status !== 'installed' && x.status !== 'running')) tasks.startOfficial(set.setId)
+function downloadRows(rows: CatalogRow[]): void {
+  const books = rows.filter((r) => r.kind === 'book')
+  const adv = rows.filter((r) => r.kind === 'adventure')
+  if (books.length) downloadBooks(books)
+  if (adv.length) downloadAdventures(adv)
+}
+/** 【下载全部…】：弹窗勾选范围（全部书 / 全部冒险）。全部书 = 中文还没装的书按书合成一个任务，状态里其他没装的数据集（结算内核要的英文）照旧整套装。 */
+async function downloadAll(): Promise<void> {
+  const leftBooks = allRows.value.filter((r) => r.kind === 'book' && !r.downloaded)
+  const leftAdv = allRows.value.filter((r) => r.kind === 'adventure' && !r.downloaded)
+  const a = await askChoice<DownloadAllAnswer | null>({ key: 'download-all', title: '下载全部', component: markRaw(DownloadAllPage), props: (answer) => ({ bookCount: leftBooks.length, adventureCount: leftAdv.length, adventuresReady: officialReady.value, onAnswer: answer }) }, null)
+  if (!a) return
+  if (a.books) {
+    downloadBooks(leftBooks)
+    const shelfSets = new Set(leftBooks.map((r) => r.set))
+    const tasks = app.svc().backend.library.tasks
+    for (const set of sets.value.filter((x) => !shelfSets.has(x.setId) && x.status !== 'installed' && x.status !== 'running')) tasks.startOfficial(set.setId)
+  }
+  if (a.adventures) downloadAdventures(leftAdv)
   dl.refresh()
 }
-async function downloadAllAdventures(): Promise<void> {
-  const left = allAdv.value.filter((r) => !r.downloaded)
-  if (!left.length) return
-  if (await askConfirm({ title: `下载全部 ${left.length} 本冒险？`, message: '会在后台一本一本下载，进度见【库】标志；可以随时在那里取消。', confirmLabel: `下载 ${left.length} 本` })) downloadAdventures(left)
-}
 
-// 选中的书要下载多少：后端按所选书算（拿不到书目时是「计算中」，不拿整套冒充）
+// 选中的要下载多少：书和冒险合计，后端按实际计划算（算不出就如实说，不拿整套冒充）
 const estimate = ref<{ bytes: number | null; busy: boolean }>({ bytes: null, busy: false })
 let estTimer: ReturnType<typeof setTimeout> | undefined
-watch(selBooks, (sel) => {
+watch(sel, () => {
   clearTimeout(estTimer)
-  const rows = allBooks.value.filter((r) => sel.has(keyOf(r)))
-  if (!rows.length) { estimate.value = { bytes: null, busy: false }; return }
+  const books = pickedBooks.value
+  const adv = pickedAdv.value
+  if (!books.length && !adv.length) { estimate.value = { bytes: null, busy: false }; return }
   estimate.value = { bytes: null, busy: true }
   estTimer = setTimeout(async () => {
     try {
-      const setId = rows[0].set
-      const books = rows.flatMap((r) => (r.id ? [r.id] : []))
-      const r = await app.svc().backend.library.estimate({ sets: [setId], books: { [setId]: books }, sources: { [setId]: rows.map((x) => x.source) } }, { network: false })
-      estimate.value = { bytes: r.data.bytes, busy: false }
+      const setIds = [...new Set(books.map((r) => r.set))]
+      const r = await app.svc().backend.library.estimate({
+        sets: setIds,
+        books: Object.fromEntries(setIds.map((id) => [id, books.filter((x) => x.set === id).flatMap((x) => (x.id ? [x.id] : []))])),
+        sources: Object.fromEntries(setIds.map((id) => [id, books.filter((x) => x.set === id).map((x) => x.source)])),
+        adventures: adv.flatMap((x) => (x.id ? [{ set: x.set, id: x.id }] : [])),
+      }, { network: false })
+      estimate.value = { bytes: r.totalBytes, busy: false }
     } catch (e) { console.warn('[trpg-assistant] 估算下载大小失败', e); estimate.value = { bytes: null, busy: false } }
   }, 300)
 })
 onBeforeUnmount(() => clearTimeout(estTimer))
-// 栏目 ⋯ →【重新拉取书目】：重新取作者书目（取不到时后端保留旧的，书架不会变空），再按当前战役重读书架
+// 栏目 ⋯ →【重新拉取书目】：重新取作者书目（书和冒险目录一起；取不到时后端保留旧的，书架不会变空），再按当前战役重读书架
 const reloading = ref(false)
 async function reloadDirectory(): Promise<void> {
   if (reloading.value) return
@@ -141,66 +167,54 @@ async function reloadDirectory(): Promise<void> {
 const MENU = [{ key: 'reload', label: '重新拉取书目' }]
 const pctText = (p: number | null | undefined): string => (p == null ? '' : ` ${Math.round(p * 100)}%`)
 const officialAll = computed(() => dl.items.find((i) => i.key === 'official') ?? null)
+const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.length} 本书` : '', pickedAdv.value.length ? `${pickedAdv.value.length} 本冒险` : ''].filter(Boolean).join('、') || '0 项')
 </script>
 
 <template>
   <div class="lib-scroll" data-testid="download-tab">
     <div v-if="error" class="lib-banner lib-banner--warn" style="margin-top: var(--sp-3)" role="alert" data-testid="download-load-error"><Icon name="warning" :size="16" /><span>下载页的安装状态没读出来，下面的列表照常可用。</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" @click="loadStatus">重试</button></span></div>
     <div v-if="!lib.shelf" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
-    <template v-else>
-      <DlSection v-model:q="qBooks" v-model:selected="selBooks" title="官方资料" placeholder="搜索书名（中文或英文）" :groups="bookGroups" testid="official-card" empty-text="书目暂时取不到，联网后会自动出现。">
-        <template #tools><MoreMenu :label="`${reloading ? '正在拉取…' : '下载列表'}`" :items="MENU" @select="reloadDirectory" /></template>
-        <template #above>
-          <div class="lib-dlsec__bar">
-            <div class="lib-pills" role="group" aria-label="规则版本">
-              <button v-for="o in RULES" :key="o.value" class="trpg-pill" type="button" :aria-pressed="rule === o.value" @click="rule = o.value">{{ o.label }}</button>
-            </div>
-            <span v-if="officialAll?.status === 'running'" class="lib-muted lib-dling" role="status">整套下载中：{{ officialAll.stage }}{{ pctText(officialAll.pct) }}</span>
-            <span v-else-if="sets.some((x) => x.status === 'incomplete')" class="lib-muted">上次装了一半，已下好的文件会复用</span>
+    <DlSection v-else v-model:q="q" v-model:selected="sel" title="官方资料与冒险" placeholder="搜索书名或冒险名（中英都行）" :groups="groups" testid="official-card" empty-text="书目暂时取不到，联网后会自动出现。">
+      <template #tools><MoreMenu :label="reloading ? '正在拉取…' : '官方资料与冒险'" :items="MENU" @select="reloadDirectory" /></template>
+      <template #above>
+        <div class="lib-dlsec__bar">
+          <div class="lib-pills" role="group" aria-label="类型">
+            <button v-for="o in KINDS" :key="o.value" class="trpg-pill" type="button" :aria-pressed="kind === o.value" :data-testid="`kind-${o.value}`" @click="kind = o.value">{{ o.label }}</button>
           </div>
-        </template>
-        <template #row="{ item: r }">
-          <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ r.name }}<small v-if="r.altName" class="lib-alt-name">{{ r.altName }}</small></div><div class="trpg-row__meta"><span v-if="ruleBadge(r)" class="trpg-badge">{{ ruleBadge(r) }}</span><template v-if="r.shelf?.published"> 出版 {{ r.shelf.published.slice(0, 4) }}</template></div></div>
-          <div class="trpg-row__end">
-            <span v-if="r.downloaded" class="trpg-badge" data-tone="success">已装</span>
-            <span v-else-if="rowTask(r) && rowTask(r)!.status !== 'failed'" class="lib-muted lib-dling" role="status">{{ rowTask(r)!.status === 'paused' ? '已暂停' : '下载中' }}{{ pctText(rowTask(r)!.pct) }}<span class="lib-bar" :data-indet="rowTask(r)!.pct == null" aria-hidden="true"><i :style="rowTask(r)!.pct == null ? undefined : { width: `${Math.round((rowTask(r)!.pct ?? 0) * 100)}%` }" /></span></span>
-            <template v-else>
-              <span v-if="rowTask(r)?.status === 'failed'" class="lib-muted" style="color: var(--danger-text)">失败</span>
-              <button class="trpg-btn trpg-btn--small" type="button" data-testid="book-download" @click="downloadBooks([r])">{{ rowTask(r)?.status === 'failed' ? '重试' : '下载' }}</button>
-            </template>
+          <div class="lib-pills" role="group" aria-label="规则版本">
+            <button v-for="o in RULES" :key="o.value" class="trpg-pill" type="button" :aria-pressed="rule === o.value" @click="rule = o.value">{{ o.label }}</button>
           </div>
-        </template>
-        <template #actions="{ selected, clear }">
-          <span class="lib-muted">已选 {{ selected.size }} 本<template v-if="selected.size"> · {{ estimate.busy ? '正在计算大小…' : estimate.bytes == null ? '大小暂时算不出' : `要下载 ${formatBytes(estimate.bytes)}` }}</template></span>
-          <span class="lib-end">
-            <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :disabled="!selected.size" data-testid="official-card-download-selected" @click="downloadBooks(allBooks.filter((r) => selected.has(keyOf(r)))); clear()">下载选中的 {{ selected.size }} 本</button>
-            <button class="trpg-btn trpg-btn--small" type="button" :disabled="sets.every((x) => x.status === 'installed')" @click="downloadAllOfficial">下载全部官方资料</button>
-          </span>
-        </template>
-      </DlSection>
-
-      <DlSection v-model:q="qAdv" v-model:selected="selAdv" title="冒险（官方，按本下载）" placeholder="搜索冒险名" :groups="officialReady ? advGroups : []" testid="adventure-list" :empty-text="officialReady ? '冒险目录暂时取不到。' : '先装官方资料，才能下载冒险正文。'">
-        <template #tools><MoreMenu :label="`${reloading ? '正在拉取…' : '下载列表'}`" :items="MENU" @select="reloadDirectory" /></template>
-        <template #row="{ item: r }">
-          <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ r.name }}<small v-if="r.altName" class="lib-alt-name">{{ r.altName }}</small></div><div class="trpg-row__meta">{{ r.shelf?.level ? `${r.shelf.level.start}–${r.shelf.level.end} 级` : '' }}</div></div>
-          <div class="trpg-row__end">
-            <span v-if="r.downloaded" class="trpg-badge" data-tone="success">已装</span>
-            <span v-else-if="rowTask(r)?.status === 'running'" class="lib-muted lib-dling" role="status">下载中{{ pctText(rowTask(r)!.pct) }}<span class="lib-bar" :data-indet="rowTask(r)!.pct == null" aria-hidden="true"><i :style="rowTask(r)!.pct == null ? undefined : { width: `${Math.round((rowTask(r)!.pct ?? 0) * 100)}%` }" /></span></span>
-            <template v-else>
-              <span v-if="rowTask(r)?.status === 'failed'" class="lib-muted" style="color: var(--danger-text)">失败</span>
-              <button class="trpg-btn trpg-btn--small" type="button" @click="downloadAdventures([r])">{{ rowTask(r)?.status === 'failed' ? '重试' : '下载' }}</button>
-            </template>
+          <span v-if="officialAll?.status === 'running'" class="lib-muted lib-dling" role="status">整套下载中：{{ officialAll.stage }}{{ pctText(officialAll.pct) }}</span>
+          <span v-else-if="sets.some((x) => x.status === 'incomplete')" class="lib-muted">上次装了一半，已下好的文件会复用</span>
+        </div>
+      </template>
+      <template #row="{ item: r }">
+        <div class="trpg-row__main">
+          <div class="trpg-row__title lib-name">{{ r.name }}<small v-if="r.altName" class="lib-alt-name">{{ r.altName }}</small></div>
+          <div class="trpg-row__meta">
+            <span class="trpg-badge" data-testid="row-kind">{{ r.kind === 'adventure' ? '冒险' : '书' }}</span>
+            <span v-if="ruleBadge(r)" class="trpg-badge">{{ ruleBadge(r) }}</span>
+            <template v-if="r.kind === 'adventure' && r.shelf?.level"> {{ r.shelf.level.start }}–{{ r.shelf.level.end }} 级</template>
+            <template v-else-if="r.shelf?.published"> 出版 {{ r.shelf.published.slice(0, 4) }}</template>
           </div>
-        </template>
-        <template #actions="{ selected, clear }">
-          <span class="lib-muted">已选 {{ selected.size }} 本</span>
-          <span class="lib-end">
-            <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :disabled="!selected.size" @click="downloadAdventures(allAdv.filter((r) => selected.has(keyOf(r)))); clear()">下载选中的 {{ selected.size }} 本</button>
-            <button class="trpg-btn trpg-btn--small" type="button" :disabled="!allAdv.some((r) => !r.downloaded)" @click="downloadAllAdventures">下载全部冒险</button>
-          </span>
-        </template>
-      </DlSection>
-    </template>
+        </div>
+        <div class="trpg-row__end">
+          <span v-if="r.downloaded" class="trpg-badge" data-tone="success">已装</span>
+          <span v-else-if="rowTask(r) && rowTask(r)!.status !== 'failed'" class="lib-muted lib-dling" role="status">{{ rowTask(r)!.status === 'paused' ? '已暂停' : '下载中' }}{{ pctText(rowTask(r)!.pct) }}<span class="lib-bar" :data-indet="rowTask(r)!.pct == null" aria-hidden="true"><i :style="rowTask(r)!.pct == null ? undefined : { width: `${Math.round((rowTask(r)!.pct ?? 0) * 100)}%` }" /></span></span>
+          <template v-else>
+            <span v-if="rowTask(r)?.status === 'failed'" class="lib-muted" style="color: var(--danger-text)">失败</span>
+            <button class="trpg-btn trpg-btn--small" type="button" data-testid="book-download" :disabled="r.kind === 'adventure' && !officialReady" :title="r.kind === 'adventure' && !officialReady ? '先下载至少一本官方书，才能下载冒险正文' : undefined" @click="downloadRows([r])">{{ rowTask(r)?.status === 'failed' ? '重试' : '下载' }}</button>
+          </template>
+        </div>
+      </template>
+      <template #actions="{ selected, clear }">
+        <span class="lib-muted">已选 {{ selText }}<template v-if="selected.size"> · {{ estimate.busy ? '正在计算大小…' : estimate.bytes == null ? '大小暂时算不出' : `要下载约 ${formatBytes(estimate.bytes)}` }}</template></span>
+        <span class="lib-end">
+          <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :disabled="!selected.size" data-testid="official-card-download-selected" @click="downloadRows(picked); clear()">下载选中的 {{ selected.size }} 项</button>
+          <button class="trpg-btn trpg-btn--small" type="button" :disabled="!allRows.some((r) => !r.downloaded)" data-testid="download-all-open" @click="downloadAll">下载全部…</button>
+        </span>
+      </template>
+    </DlSection>
     <!-- 自制包目录不放在上面的读取状态里：官方部分读取失败也不能把已拉取的目录弹掉 -->
     <BrewCatalog />
   </div>
