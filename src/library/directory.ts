@@ -144,7 +144,7 @@ export class BookDirectory {
       const why = frame.failures.length ? `${msg(e)}（${frame.failures[0]}）` : msg(e)
       return failed(why)
     } finally {
-      if (!installed) frame.close()
+      frame.close()
     }
   }
 }

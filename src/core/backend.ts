@@ -143,7 +143,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const service = new LibraryService({ db, revisions, operations, openFrame, onDataChanged: async (codeSet) => queue.trigger(codeSet), onLog: logs.sink() })
   // 书目（BE-7）：没装官方数据时用允许联网的一次性小窗读作者书目文件；已装好的用现成本地小窗
   const directory = new BookDirectory({
-    db, view: () => revisions.published(), localFrame: (codeSet) => service.frameOf(codeSet),
+    db, view: () => revisions.published(), localFrame: async (codeSet) => { const view = await revisions.published(); return openFrame(codeSet, { view, filterIndex: false }) },
     networkFrame: async (codeSet, kvScope, view) => {
       const current = view ?? await revisions.published()
       return startAuthorFrame({ codeSet, pluginRoot, container: container(), handlers: libraryHandlers({ codeSet, db, files, allowNetwork: () => true, kvScope, view: current, filterIndex: false, writeLegacy: true }) })
@@ -157,12 +157,12 @@ export function createBackend(opts: BackendOptions): Backend {
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
   const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref))
-  const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openFrame(codeSet, { view }), onLog: logs.sink(), onPublished: (view) => { service.retire(view.id); scoped.reset() },
+  const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openFrame(codeSet, { view }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (view) => { service.retire(view.id); scoped.reset() },
     planOfficial: async (setId, planOpts, view) => {
       const source = getSource(setId)
       const rec = await directory.get(source.codeSet)
       const list = await files.fileList(source, view)
-      return officialPlan(list, rec.owners, { sources: planOpts.sources ?? null, books: planOpts.books ?? null, adventures: planOpts.adventures ?? null }, { indexSources: rec.indexSources })
+      return officialPlan(list, rec.owners, { sources: planOpts.sources ?? null, books: planOpts.books ?? null, adventures: planOpts.adventures ?? null }, { indexSources: rec.indexSources, ...(planOpts.allSources ? { allSources: true } : {}) })
     },
     precompute: async (setId, view, signal, onProgress) => {
       const rows = await runPrecompute([getSource(setId).codeSet], signal, onProgress)
@@ -204,7 +204,7 @@ export function createBackend(opts: BackendOptions): Backend {
     token: async (codeSet, prop, ent) => (await service.frameOf(codeSet)).call('tokenPath', prop, ent),
   }
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
-    db, revisions, operations, tasks, afterDelete: async (id) => { const view = await revisions.published(); service.retire(view.id); scoped.reset(); await documents.clear(getSource(id), view) },
+    db, revisions, operations, tasks, afterDelete: async () => { const view = await revisions.published(); service.retire(view.id); scoped.reset() },
   }, setId)
   const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
@@ -213,10 +213,13 @@ export function createBackend(opts: BackendOptions): Backend {
     checkRefs: (refs) => scoped.fetch(defaultCampaignLibrary(opts.rules.list()[0]?.id ?? 'dnd5e2014', DEFAULT_PREFETCH_CODE_SETS[0]), refs),
   }
   const brewSetOf = (codeSet: string): string => SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)?.id ?? `${codeSet}-brew`
-  const impactDeps = { db: opts.db, manage: scoped.manage, brewPacks, brewSetOf }
-  const removalImpact = (target: RemovalTarget): Promise<RemovalImpact> => impactOfRemoval(impactDeps, target)
+  const removalImpact = async (target: RemovalTarget): Promise<RemovalImpact> => {
+    const view = await revisions.published()
+    return impactOfRemoval({ db: opts.db, manage: scoped.manage, brewPacks, brewSetOf, revision: view.id }, target)
+  }
   const removalExecute = async (impact: RemovalImpact): Promise<unknown> => {
-    const fresh = await impactOfRemoval(impactDeps, impact.target)
+    const view = await revisions.published()
+    const fresh = await impactOfRemoval({ db: opts.db, manage: scoped.manage, brewPacks, brewSetOf, revision: view.id }, impact.target)
     if (fresh.plan.fingerprint !== impact.plan.fingerprint) throw new Error('资料已经变化，请重新预览删除影响')
     if (impact.target.kind === 'official') return library.uninstallOfficial(impact.target.setIds ?? [impact.target.setId])
     return library.service.brewDelete(impact.target.setId, impact.plan.removeTogether)

@@ -63,7 +63,10 @@ export async function healthOf(ctx: HealthContext, view: LibraryView): Promise<H
       const input: Parameters<typeof healthItemsOf>[0] = {
         source,
         installed: source.kind === 'official' ? set?.status === 'installed' : !!(await view.brewState(source.id)),
-        install: source.kind === 'official' ? await ctx.stored<InstallReport>(`audit:${source.id}`, (fp) => fp === commit, view) : undefined,
+        install: source.kind === 'official'
+          ? (await ctx.stored<InstallReport>(`audit:last-failed:${source.id}`, () => true, view))
+            ?? (await ctx.stored<InstallReport>(`audit:${source.id}`, (fp) => fp === commit, view))
+          : undefined,
         brew: source.kind === 'brew' ? await ctx.stored<BrewParseReport>(`audit:${source.id}`, () => true, view) : undefined,
         english: await ctx.stored<EnglishCoverage>(`audit:english:${source.id}`, (fp) => fp === `${commit}+${pairCommit}`, view),
         layers34: await ctx.stored<Layers34Summary>(`audit:layers34:${source.id}`, (fp) => fp.startsWith(`${commit}+`), view),

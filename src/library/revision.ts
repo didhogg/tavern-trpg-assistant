@@ -7,7 +7,7 @@ import type {
 } from './db'
 import { CODE_SETS, SOURCES, type SourceEntry } from './sources'
 import { dataVersionOf } from './revision-data'
-import { fileGet, filePaths, filePut, fileRemove, fileSha, type FileRead } from './revision-files'
+import { fileGet, filePaths, filePut, fileRemove, fileSha, filterIndexFromChain, type FileRead } from './revision-files'
 import type { KernelDataVersion } from '../schemas/kernel'
 
 export const LEGACY_REVISION = 'rev-legacy'
@@ -70,7 +70,7 @@ export class LibraryView {
   localSet(codeSet: string, key: string, value: string): Promise<void> { return this.store.localSet(this, codeSet, key, value) }
   localRemove(codeSet: string, key: string): Promise<void> { return this.store.localRemove(this, codeSet, key) }
 
-  filterIndex(path: string, text: string): string { return this.store.filterIndex(this, path, text) }
+  filterIndex(path: string, text: string): Promise<string> { return this.store.filterIndex(this, path, text) }
     dataVersion(brews?: Record<string, BrewSetState>): Promise<KernelDataVersion> { return this.store.dataVersion(this, brews) }
 }
 
@@ -172,7 +172,7 @@ export class LibraryRevisionStore {
     const revision: RevisionRecord = {
       id: `rev-${now.toString(36)}-${uid()}`, parent: parent.id, status: 'preparing',
       ...(official ? { official } : {}), ...(brews ? { brews } : {}),
-      kvScope, kvCodeSet, sourceIndexes: sourceIndexes ?? {}, createdAt: now, updatedAt: now,
+      kvScope, kvCodeSet, ...(sourceIndexes ? { sourceIndexes } : {}), createdAt: now, updatedAt: now,
     }
     await this.db.revisions.put(revision)
     const view = new LibraryView(this, revision)
@@ -377,17 +377,8 @@ export class LibraryRevisionStore {
   }
   // ---- 读上下文里的来源索引过滤 ----
 
-  filterIndex(view: LibraryView, path: string, text: string): string {
-    const allowed = view.revision.sourceIndexes?.[path]
-    if (allowed === undefined || allowed === null) return text
-    try {
-      const json = JSON.parse(text) as Record<string, unknown>
-      if (!json || typeof json !== 'object' || Array.isArray(json)) return text
-      const keep = new Set(allowed)
-      return JSON.stringify(Object.fromEntries(Object.entries(json).filter(([k]) => keep.has(k))))
-    } catch {
-      return text
-    }
+  filterIndex(view: LibraryView, path: string, text: string): Promise<string> {
+    return filterIndexFromChain(view, path, text)
   }
   // ---- 数据版本记号（N1） ----
 

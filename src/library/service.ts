@@ -66,8 +66,8 @@ export class LibraryService {
   }
 
   /** 每套作者程序、每个库版本一个小窗；屏蔽表、搜索索引都在这个小窗里，开关书也经它改。 */
-  frameOf(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
-    return this.frame(codeSet, view)
+  async frameOf(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
+    return this.frame(codeSet, await this.view(view))
   }
 
   private frame(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {

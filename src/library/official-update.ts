@@ -5,7 +5,8 @@ import type { LibraryDatabase } from './db'
 import type { BookDirectory } from './directory'
 import { fetchFileList, type FetchLike, type FileList } from './fetcher'
 import type { FileProvider } from './files'
-import { isAdventure, officialPlan, precachePlan, type OfficialPlan } from './plan'
+import { officialPlan, precachePlan, type OfficialPlan } from './plan'
+import { installedAdventureIds } from './install'
 import { CODE_SETS, fileListUrlAt, getSource, mirrorRootsAt, SOURCES, type SourceEntry } from './sources'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 
@@ -101,10 +102,11 @@ export class OfficialUpdates {
     if (upstream !== plugin) return { setId, status: 'needs-plugin-upgrade', current, latest, programVersion: { plugin, upstream } }
     const list = await this.newList(source, latest, view)
     const state = await view.officialState(setId)
+    const adventures = state?.status === 'installed' && state.adventures === null ? await installedAdventureIds(view, setId) : state?.adventures ?? null
     const rec = this.opts.directory ? await this.opts.directory.peek(source.codeSet) : null
     const plan = rec && state
-      ? officialPlan(list, rec.owners, { sources: state.sources, books: state.books, adventures: state.adventures }, { indexSources: rec.indexSources })
-      : { ...precachePlan(list), shared: precachePlan(list), bySource: { files: [], bytes: 0 }, byBook: { files: [], bytes: 0 }, byClass: { files: [], bytes: 0 }, byAdventure: { files: [], bytes: 0 }, sourceIndexes: {}, missing: { sources: [], books: [] } }
+      ? officialPlan(list, rec.owners, { sources: state.sources, books: state.books, adventures }, { indexSources: rec.indexSources })
+      : { ...precachePlan(list), shared: precachePlan(list), bySource: { files: [], bytes: 0 }, byBook: { files: [], bytes: 0 }, byClass: { files: [], bytes: 0 }, byAdventure: { files: [], bytes: 0 }, sourceIndexes: { '*': null }, missing: { sources: [], books: [] }, sources: null, books: null, adventures: null }
     let changed = 0
     let added = 0
     let bytes = 0
@@ -116,7 +118,7 @@ export class OfficialUpdates {
       else if (had !== expected.sha) { changed++; bytes += expected.size }
     }
     // 旧版本里实际存在的预载文件，在新计划里不需要了 = 要移除（冒险正文不在预载里，另算）
-    const currentPaths = (await view.filePaths(source)).filter((p) => !isAdventure(p))
+    const currentPaths = await view.filePaths(source)
     const removed = currentPaths.filter((p) => !plan.files.includes(p)).length
     return { setId, status: 'available', current, latest, programVersion: { plugin, upstream }, changed: { changed, added, removed, bytes }, plan }
   }

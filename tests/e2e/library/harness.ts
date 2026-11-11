@@ -236,8 +236,14 @@ import { defaultCampaignLibrary } from '../../../src/library/scopes'
 
 export const scoped = new ScopedLibrary(service, db)
 export const custom = new CustomLibrary(service, scoped, db)
-export const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openLocalFrame(codeSet, { view }) })
-export const directory = new BookDirectory({ db, localFrame: (cs) => service.frameOf(cs), networkFrame: (cs, scope) => startAuthorFrame({ codeSet: cs, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet: cs, db, files, allowNetwork: () => true, kvScope: scope, filterIndex: false }) }) })
+export const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openLocalFrame(codeSet, { view }),
+  planOfficial: async (setId, opts, view) => {
+    const source = getSource(setId)
+    const rec = await directory.get(source.codeSet)
+    const list = await files.fileList(source, view)
+    return officialPlan(list, rec.owners, { sources: opts.sources ?? null, books: opts.books ?? null, adventures: opts.adventures ?? null }, { indexSources: rec.indexSources, ...(opts.allSources ? { allSources: true } : {}) })
+  } })
+export const directory = new BookDirectory({ db, view: () => revisions.published(), localFrame: async (cs) => openLocalFrame(cs, { view: await revisions.published(), filterIndex: false }), networkFrame: (cs, scope) => startAuthorFrame({ codeSet: cs, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet: cs, db, files, allowNetwork: () => true, kvScope: scope, filterIndex: false }) }) })
 export { defaultCampaignLibrary }
 
 // ---- P3-3 / P3-4：用户存档 + 结算内核段，引用检查直接问上面的【库】 ----

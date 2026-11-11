@@ -99,11 +99,12 @@ export class FileProvider {
   /** 取一个文件的原文。本地没有且不允许联网 → null；云端清单里没有这个文件 → null。 */
   async get(source: SourceEntry, path: string, { allowNetwork, view, writeLegacy = false }: { allowNetwork: boolean; view?: LibraryView; writeLegacy?: boolean }): Promise<string | null> {
     const local = await this.record(source, path, view)
-    if (local) return local.text
-    if (!allowNetwork) return null
+    if (!allowNetwork) return local?.text ?? null
     const commit = await this.commit(source, view)
     const expected = (await this.fileList(source, view))[path]
-    if (!expected) return null
+    if (!expected) return local?.text ?? null
+    // 目标版本要的是这个哈希；父版本的同路径文件哈希不同时必须重新下载，不能“本地有内容”就复用（P5 核验 1）
+    if (local && local.gitSha === expected.sha) return local.text
     const fetched = await fetchVerified(mirrorRootsAt(source, commit), path, expected, this.fetchImpl)
     const text = new TextDecoder('utf-8', { fatal: true }).decode(fetched.bytes)
     if (view && !writeLegacy) await view.filePut(source, path, { commit, text, gitSha: fetched.gitSha, size: fetched.bytes.length })

@@ -4,6 +4,7 @@
 // P5 T2：按书安装不是另写书单；用作者目录/index 给出的“来源 → 文件”映射把预载文件分成
 //   共用 / 某来源 / 某本书正文 / 职业文件，再由用户选的书筛。共享文件原样保留，不重打包。
 import type { FileList } from './fetcher'
+import type { OfficialSetState } from './db'
 
 const isJson = (p: string): boolean => p.endsWith('.json')
 const parentDir = (p: string): string => p.split('/').at(-2) ?? ''
@@ -69,13 +70,41 @@ export interface OfficialPlan extends Plan {
   sourceIndexes: Record<string, string[] | null>
   /** 用户选了、但作者目录里找不到对应文件的来源 / 书。 */
   missing: { sources: string[]; books: string[] }
+  /** 这份计划最终应该登记的来源 / 书 / 冒险集合；null = 不限制（全部 / 旧整套）。 */
+  sources: string[] | null
+  books: string[] | null
+  adventures: string[] | null
 }
 
 export interface PlanOptions {
   /** 全部安装（不按书筛）。 */
   all?: boolean
+  /** 来源文件全部要（旧整套安装），但书正文仍按 books 筛。 */
+  allSources?: boolean
+  /** 书正文全部要。 */
+  allBooks?: boolean
   /** 作者来源索引文件：路径 → 索引里出现的全部来源。 */
   indexSources?: Record<string, string[]>
+}
+
+
+export interface SelectionInput { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null }
+
+/** 补装保留既有书 / 来源；旧整套（null）继续表示不限制。 */
+export function selectionFor(base: OfficialSetState | null, opts: SelectionInput): { books: string[] | null; sources: string[] | null; adventures: string[] | null; allSources: boolean } {
+  const installed = base?.status === 'installed'
+  const baseBooks = installed ? base.books : null
+  const baseSources = installed ? base.sources : null
+  const books = installed && baseBooks === null ? null : unionSelection(baseBooks, opts.books)
+  const sources = installed && baseSources === null ? null : unionSelection(baseSources, opts.sources)
+  const adventures = unionSelection(installed ? base.adventures : null, opts.adventures)
+  return { books, sources, adventures, allSources: installed && baseSources === null }
+}
+
+export function unionSelection(current: string[] | null | undefined, add: string[] | null | undefined): string[] | null {
+  if (current == null) return add == null ? null : [...new Set(add)].sort()
+  if (add == null) return [...new Set(current)].sort()
+  return [...new Set([...current, ...add])].sort()
 }
 
 const empty = (): Plan => ({ files: [], bytes: 0 })
@@ -87,18 +116,22 @@ const add = (plan: Plan, path: string, size: number): void => { plan.files.push(
  */
 export function officialPlan(list: FileList, owners: Record<string, PlanOwner>, input: PlanInput = {}, opts: PlanOptions = {}): OfficialPlan {
   const all = opts.all === true || (input.sources == null && input.books == null)
+  const allSources = opts.allSources === true || all
+  const allBooks = opts.allBooks === true || all
   const books = input.books ? new Set(input.books) : null
   let sources = input.sources ? new Set(input.sources) : null
-  if (!sources && books) {
-    sources = new Set<string>()
+  if (!allSources && books) {
+    sources ??= new Set<string>()
     for (const owner of Object.values(owners)) if (owner.kind === 'book' && books.has(owner.id)) sources.add(owner.source)
   }
   const adventures = input.adventures ? new Set(input.adventures) : null
   const out: OfficialPlan = {
     ...empty(), shared: empty(), bySource: empty(), byBook: empty(), byClass: empty(), byAdventure: empty(),
     sourceIndexes: {}, missing: { sources: [], books: [] },
+    sources: allSources ? null : [...(sources ?? [])].sort(), books: allBooks ? null : [...(books ?? [])].sort(),
+    adventures: adventures ? [...adventures].sort() : null,
   }
-  if (!all && !sources) sources = new Set<string>()
+  if (!allSources && !sources) sources = new Set<string>()
   const seenSource = new Set<string>()
   const seenBook = new Set<string>()
   for (const path of Object.keys(list).filter(isPrecache).sort()) {
@@ -107,25 +140,25 @@ export function officialPlan(list: FileList, owners: Record<string, PlanOwner>, 
     if (!owner) { add(out.shared, path, size); add(out, path, size); continue }
     if (owner.kind === 'class') { add(out.byClass, path, size); add(out, path, size); continue }
     if (owner.kind === 'source') {
-      const hit = all || owner.sources.some((s) => sources?.has(s))
+      const hit = allSources || owner.sources.some((s) => sources?.has(s))
       if (!hit) continue
-      for (const s of owner.sources) if (all || sources?.has(s)) seenSource.add(s)
+      for (const s of owner.sources) if (allSources || sources?.has(s)) seenSource.add(s)
       add(out.bySource, path, size); add(out, path, size); continue
     }
     if (owner.kind === 'book') {
-      if (!(all || books?.has(owner.id))) continue
+      if (!(allBooks || books?.has(owner.id))) continue
       seenBook.add(owner.id)
+      seenSource.add(owner.source)
       add(out.byBook, path, size); add(out, path, size); continue
     }
     // 冒险正文不在 precache 里；由 directory 的 adventureFiles 单独加
   }
   for (const [path, allowed] of Object.entries(opts.indexSources ?? {})) {
-    out.sourceIndexes[path] = all ? null : allowed.filter((s) => sources?.has(s) ?? false)
+    out.sourceIndexes[path] = allSources ? null : allowed.filter((s) => sources?.has(s) ?? false)
   }
-  if (!all) {
-    if (sources) for (const s of sources) if (!seenSource.has(s)) out.missing.sources.push(s)
-    if (books) for (const b of books) if (!seenBook.has(b)) out.missing.books.push(b)
-  }
+  if (allSources && !Object.keys(opts.indexSources ?? {}).length) out.sourceIndexes['*'] = null
+  if (!allSources && sources) for (const s of sources) if (!seenSource.has(s)) out.missing.sources.push(s)
+  if (!allBooks && books) for (const b of books) if (!seenBook.has(b)) out.missing.books.push(b)
   // 冒险正文：只加选中的（计划外，但执行 / 估算共用这一份）
   if (adventures) {
     for (const [path, owner] of Object.entries(owners)) {

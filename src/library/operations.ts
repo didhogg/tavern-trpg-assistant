@@ -5,7 +5,10 @@ import { LibraryRevisionStore, type LibraryView } from './revision'
 import { dataVersionOf, mirrorOfficialToSets } from './revision-data'
 
 const LOCK_ID = 'library'
-const LOCK_MS = 30 * 60_000
+const LOCK_MS = 10 * 60_000
+/** 操作记录超过这么久没有心跳，才当成上次遗留的中断；仍活着的窗口会持续更新。 */
+const STALE_MS = 60_000
+const LOCK_WAIT_MS = 5 * 60_000
 const PROGRESS_MS = 400
 
 const uid = (): string => {
@@ -35,6 +38,7 @@ export interface BeginOptions {
   codeSet: string
   kvCodeSet?: string
   sourceIndexes?: Record<string, string[] | null>
+  signal?: AbortSignal
 }
 
 export class LibraryOperations {
@@ -50,12 +54,7 @@ export class LibraryOperations {
     await revisions.ensureLegacy()
     const token = uid()
     const id = opts.id ?? `op-${this.now().toString(36)}-${token}`
-    const now = this.now()
-    await db.transaction('rw', [db.locks], async () => {
-      const cur = await db.locks.get(LOCK_ID)
-      if (cur && cur.expiresAt > now && cur.token !== token) throw new Error('另一个窗口正在修改资料，请等它完成后再试')
-      await db.locks.put({ id: LOCK_ID, token, owner: id, expiresAt: now + LOCK_MS })
-    })
+    await this.acquireLock(token, opts.signal)
     try {
       const base = await revisions.published()
       const target = await revisions.createPreparing({
@@ -64,6 +63,7 @@ export class LibraryOperations {
         kvCodeSet: opts.kvCodeSet ?? opts.codeSet,
         sourceIndexes: opts.sourceIndexes,
       })
+      const now = this.now()
       const record: OperationRecord = {
         id, kind: opts.kind, set: opts.set, item: opts.item ?? null, base: base.id, revision: target.id,
         status: 'preparing', stage: 'start', done: 0, total: 0, error: null, token,
@@ -94,12 +94,21 @@ export class LibraryOperations {
     handle.target = await this.opts.revisions.refresh(handle.target.id)
   }
 
-  async progress(handle: OperationHandle, p: { stage: string; done: number; total: number; item?: string }): Promise<void> {    const now = this.now()
+  async progress(handle: OperationHandle, p: { stage: string; done: number; total: number; item?: string }): Promise<void> {
+    const now = this.now()
     const last = this.lastProgress.get(handle.record.id) ?? 0
     if (now - last < PROGRESS_MS && p.stage === handle.record.stage) return
     this.lastProgress.set(handle.record.id, now)
+    // 进度只能改进度字段；不能把状态写回 preparing（别的窗口可能已经取消 / 中断），P5 核验 6。
+    let wrote = false
+    await this.opts.db.transaction('rw', [this.opts.db.ops], async () => {
+      const rec = await this.opts.db.ops.get(handle.record.id)
+      if (!rec || (rec.status !== 'preparing' && rec.status !== 'publishing')) return
+      await this.opts.db.ops.put({ ...rec, stage: p.stage, done: p.done, total: p.total, ...(p.item ? { progressItem: p.item } : {}), updatedAt: now })
+      wrote = true
+    })
+    if (!wrote) return
     handle.record = { ...handle.record, stage: p.stage, done: p.done, total: p.total, ...(p.item ? { progressItem: p.item } : {}), updatedAt: now }
-    await this.opts.db.ops.put(handle.record)
     await this.renewLock(handle.record.token)
   }
 
@@ -124,13 +133,15 @@ export class LibraryOperations {
     await db.transaction('rw', [db.revisions, db.state, db.ops, db.locks, db.sets], async () => {
       const current = await db.state.get('published')
       if ((current?.revision ?? null) !== handle.base.id) throw new Error('资料已经换过版本，这次结果已过期，请重试')
+      const lock = await db.locks.get(LOCK_ID)
+      if (!lock || lock.token !== handle.record.token || lock.expiresAt <= now) throw new Error('修改租约已失效（可能另一个窗口接手了），这次结果不能发布')
       const op = await db.ops.get(handle.record.id)
-      if (!op || op.status === 'cancelled') throw new Error('操作已取消，没有发布')
+      if (!op || op.status !== 'preparing') throw new Error(op?.status === 'cancelled' ? '操作已取消，没有发布' : '操作已经中断或不在可发布状态，没有发布')
       const revision = await db.revisions.get(handle.target.id)
       if (!revision) throw new Error('准备版本不在了，不能发布')
       await db.revisions.put({
         ...revision, status: 'published', official, brews,
-        sourceIndexes: changes.sourceIndexes ?? revision.sourceIndexes ?? {},
+        ...(changes.sourceIndexes !== undefined ? { sourceIndexes: changes.sourceIndexes } : {}),
         dataVersion: version, publishedAt: now, updatedAt: now,
       })
       await db.state.put({ id: 'published', revision: revision.id, updatedAt: now })
@@ -167,13 +178,31 @@ export class LibraryOperations {
     const open = await db.ops.where('status').anyOf('preparing', 'publishing').toArray()
     const state = await db.state.get('published')
     const now = this.now()
+    const changed: OperationRecord[] = []
     for (const op of open) {
-      const published = state?.revision === op.revision
-      await db.ops.put(published
-        ? { ...op, status: 'done', error: null, updatedAt: now }
-        : { ...op, status: 'interrupted', error: '上次修改没有完成，已中断；可以重试', updatedAt: now })
+      if (state?.revision === op.revision) {
+        const done = { ...op, status: 'done' as const, error: null, updatedAt: now }
+        await db.ops.put(done)
+        const lock = await db.locks.get(LOCK_ID)
+        if (lock && lock.token === op.token) await db.locks.delete(LOCK_ID)
+        changed.push(done)
+        continue
+      }
+      // 另一个窗口可能还在跑：只有超过心跳窗口、且租约也不是它的（或已过期）才判中断。
+      const lock = await db.locks.get(LOCK_ID)
+      const liveLock = !!lock && lock.token === op.token && lock.expiresAt > now
+      const stale = now - Number(op.updatedAt ?? 0) > STALE_MS
+      if (liveLock && !stale) continue
+      const interrupted = { ...op, status: 'interrupted' as const, error: '上次修改没有完成，已中断；可以重试', updatedAt: now }
+      await db.ops.put(interrupted)
+      if (lock && lock.token === op.token) await db.locks.delete(LOCK_ID)
+      changed.push(interrupted)
     }
-    return open
+    return changed
+  }
+
+  async get(id: string): Promise<OperationRecord | undefined> {
+    return this.opts.db.ops.get(id)
   }
 
   async list(): Promise<OperationRecord[]> {
@@ -184,10 +213,30 @@ export class LibraryOperations {
     await mirrorOfficialToSets(this.opts.db, official)
   }
 
+  /** 正常入口（开战役会连续启动中英两套）在这里排队，不直接拒绝第二个操作。 */
+  private async acquireLock(token: string, signal?: AbortSignal): Promise<void> {
+    const started = this.now()
+    for (;;) {
+      if (signal?.aborted) throw new Error('操作已取消')
+      const now = this.now()
+      const got = await this.opts.db.transaction('rw', [this.opts.db.locks], async () => {
+        const cur = await this.opts.db.locks.get(LOCK_ID)
+        if (cur && cur.expiresAt > now && cur.token !== token) return false
+        await this.opts.db.locks.put({ id: LOCK_ID, token, owner: token, expiresAt: now + LOCK_MS })
+        return true
+      })
+      if (got) return
+      if (this.now() - started > LOCK_WAIT_MS) throw new Error('另一个窗口长时间在修改资料，请等它完成后再试')
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    }
+  }
+
   private async renewLock(token: string): Promise<void> {
-    const lock = await this.opts.db.locks.get(LOCK_ID)
-    if (!lock || lock.token !== token) return
-    await this.opts.db.locks.put({ ...lock, expiresAt: this.now() + LOCK_MS })
+    await this.opts.db.transaction('rw', [this.opts.db.locks], async () => {
+      const lock = await this.opts.db.locks.get(LOCK_ID)
+      if (!lock || lock.token !== token) return
+      await this.opts.db.locks.put({ ...lock, expiresAt: this.now() + LOCK_MS })
+    })
   }
 
   private async releaseLock(token: string): Promise<void> {

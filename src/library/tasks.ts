@@ -2,12 +2,13 @@
 // 每次修改都开一个准备版本；成功才发布。任务状态和内容状态分开：失败 / 取消 / 重启不会让旧库消失。
 import type { LibraryDatabase, OfficialSetState } from './db'
 import type { FileProvider } from './files'
-import { parsedKey, prepareOfficial, type InstallReport } from './install'
+import { installedAdventureIds, parsedKey, prepareOfficial, type InstallReport } from './install'
 import type { AuthorFrame } from './runtime/host'
 import type { LogSink } from './logs'
 import { getSource } from './sources'
 import { LibraryOperations, type OperationHandle } from './operations'
 import type { LibraryRevisionStore, LibraryView } from './revision'
+import { selectionFor } from './plan'
 
 export type TaskStatus = 'running' | 'done' | 'partial' | 'failed' | 'cancelled' | 'interrupted'
 
@@ -48,7 +49,7 @@ export interface TaskOptions {
   /** 开一个只读本地、绑定到指定版本的作者小窗。 */
   openFrame: (codeSet: string, view: LibraryView) => Promise<AuthorFrame>
   /** 按书计划：任务没拿到现成计划、但给了 books / sources 时，由后端用作者目录生成。 */
-  planOfficial?: (setId: string, opts: { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
+  planOfficial?: (setId: string, opts: { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null; allSources?: boolean }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
   /** T2：下载任务里的换算段；后端接结算内核，库层只报进度。 */
   precompute?: (setId: string, view: LibraryView, signal: AbortSignal, onProgress: (p: TaskState['progress']) => void) => Promise<unknown>
   onChange?: (t: TaskState) => void
@@ -56,6 +57,8 @@ export interface TaskOptions {
   onPublished?: (view: LibraryView) => void
   /** 失败写日志（P5 B-26）。 */
   onLog?: LogSink
+  /** 失败安装的完整报告独立保存，体检在当前版本也能看到。 */
+  onDiagnostic?: (setId: string, report: InstallReport) => Promise<void>
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
@@ -120,7 +123,8 @@ export class DownloadTasks {
         state.revision = r.revision ?? state.revision
         state.status = abort.signal.aborted ? 'cancelled' : r.status ?? 'done'
       } catch (e) {
-        state.status = abort.signal.aborted ? 'cancelled' : 'failed'
+        const op = await this.opts.operations.get(state.id).catch(() => undefined)
+        state.status = abort.signal.aborted || op?.status === 'cancelled' ? 'cancelled' : 'failed'
         state.error = msg(e)
         if (state.status === 'failed') this.opts.onLog?.({ level: 'error', source: set, kind: `task:${kind}`, message: state.error, detail: { item, progress: state.progress } })
       }
@@ -144,25 +148,34 @@ export class DownloadTasks {
     const source = getSource(setId)
     return this.start('official', setId, null, async (state, signal) => {
       const handle = await this.opts.operations.begin({
-        id: state.id, kind: 'official', set: setId, codeSet: source.codeSet, sourceIndexes: opts.plan?.sourceIndexes,
+        id: state.id, kind: 'official', set: setId, codeSet: source.codeSet, sourceIndexes: opts.plan?.sourceIndexes, signal,
       })
       this.handles.set(state.id, handle)
       state.revision = handle.target.id
       try {
         const base = await handle.target.officialState(setId)
-        const plan = opts.plan ?? (opts.books || opts.sources ? await this.opts.planOfficial?.(setId, { books: opts.books, sources: opts.sources, adventures: opts.adventures }, handle.target) : null)
+        const baseAdventures = base?.status === 'installed' && base.adventures === null ? await installedAdventureIds(handle.target, setId) : base?.adventures ?? null
+        const selection = selectionFor(base, { ...opts, adventures: baseAdventures })
+        const plan = opts.plan ?? await this.opts.planOfficial?.(setId, {
+          books: selection.books, sources: selection.sources, adventures: selection.adventures,
+          allSources: selection.allSources,
+        }, handle.target)
+        if (plan && (plan.missing.sources.length || plan.missing.books.length)) {
+          const miss = [...plan.missing.sources, ...plan.missing.books].join('、')
+          await this.opts.operations.abort(handle, new Error(`作者目录里找不到这些书 / 来源：${miss}`))
+          throw new Error(`作者目录里找不到这些书 / 来源：${miss}`)
+        }
         const commit = opts.commit ?? base?.commit ?? await handle.target.commitOf(source)
         if (plan) await this.opts.operations.setTargetIndexes(handle, plan.sourceIndexes)
         if (!base || base.commit !== commit) {
           await this.opts.operations.setTargetOfficial(handle, { [setId]: base ? { ...base, commit } : { commit, status: 'missing', sources: null, books: null, adventures: null } })
         }
-        const sources = opts.sources ?? base?.sources ?? null
-        const books = opts.books ?? base?.books ?? null
-        const adventures = opts.adventures ?? base?.adventures ?? null
+        const sources = plan ? plan.sources : selection.sources
+        const books = plan ? plan.books : selection.books
         const report = await prepareOfficial({
           source, db: this.opts.db, files: this.opts.files, revisions: this.opts.revisions, operations: this.opts.operations,
           openFrame: (view) => this.opts.openFrame(source.codeSet, view), view: handle.target, plan: plan ?? undefined,
-          sources, books, adventures,
+          sources, books, adventures: selection.adventures,
           signal, onProgress: (p) => { void this.progress(state, p) },
         })
         if (report.cancelled) {
@@ -170,13 +183,14 @@ export class DownloadTasks {
           return { result: report, status: 'cancelled', revision: handle.target.id }
         }
         if (!report.publishable) {
+          await this.opts.onDiagnostic?.(setId, report)
           await this.opts.operations.abort(handle, new Error(report.reasons.join('；')))
           throw new Error(report.reasons.join('；'))
         }
         const official: Record<string, OfficialSetState> = {
           [setId]: {
             commit: report.commit, status: 'installed',
-            sources, books, adventures,
+            sources, books, adventures: plan ? plan.adventures : selection.adventures,
             plan: { files: report.plan.files, bytes: report.plan.bytes },
           },
         }
@@ -185,6 +199,7 @@ export class DownloadTasks {
           status: report.settlementReady ? 'done' : 'partial',
         })
         state.revision = published.id
+        await this.opts.db.derived.delete(`audit:last-failed:${setId}`)
         this.opts.onPublished?.(published)
         if (this.opts.precompute) {
           try { state.convert = await this.opts.precompute(setId, published, signal, (p) => { void this.progress(state, p) }) }
@@ -215,7 +230,7 @@ export class DownloadTasks {
   startAdventure(setId: string, adventureId: string): string {
     const source = getSource(setId)
     return this.start('adventure', setId, adventureId, async (state, signal) => {
-      const handle = await this.opts.operations.begin({ id: state.id, kind: 'adventure', set: setId, item: adventureId, codeSet: source.codeSet })
+      const handle = await this.opts.operations.begin({ id: state.id, kind: 'adventure', set: setId, item: adventureId, codeSet: source.codeSet, signal })
       this.handles.set(state.id, handle)
       state.revision = handle.target.id
       const view = handle.target

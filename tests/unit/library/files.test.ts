@@ -53,3 +53,33 @@ describe('FileProvider', () => {
     expect(f.calls).toEqual([fileListUrl(source)])
   })
 })
+
+describe('版本化文件复用（P5 核验 1）', () => {
+  it('目标版本哈希和父版本不同：必须重新下载，不能直接返回旧文件', async () => {
+    const DB = new LibraryDatabase(`t-upd-${Math.random()}`)
+    const revisions = new (await import('../../../src/library/revision')).LibraryRevisionStore(DB)
+    await revisions.ensureLegacy()
+    const operations = new (await import('../../../src/library/operations')).LibraryOperations({ db: DB, revisions })
+    const path = 'data/spells/spells-phb.json'
+    const oldText = '{"spell":[{"name":"old"}]}'
+    await DB.files.put({ source: source.id, path, commit: 'c1', text: oldText, gitSha: 'old-sha', size: oldText.length, savedAt: 0 })
+    const handle = await operations.begin({ kind: 'test', set: source.id, codeSet: 'cn' })
+    await operations.setTargetOfficial(handle, { [source.id]: { commit: 'c2', status: 'missing', sources: null, books: null, adventures: null } })
+    const newText = '{"spell":[{"name":"new"}]}'
+    const bytes = utf8ToBytes(newText)
+    const sha = gitBlobSha(bytes)
+    let fileRequests = 0
+    const impl = (async (url: string) => {
+      if (url.includes('/git/trees/')) return { ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(0), json: async () => ({ truncated: false, tree: [{ path, type: 'blob', sha, size: bytes.length }] }) }
+      if (url.endsWith(path)) { fileRequests++; return { ok: true, status: 200, arrayBuffer: async () => bytes.slice().buffer, json: async () => null } }
+      return { ok: false, status: 404, arrayBuffer: async () => new ArrayBuffer(0), json: async () => null }
+    }) as FetchLike
+    const provider = new FileProvider({ db: DB, fetchImpl: impl })
+    expect(await provider.get(source, path, { allowNetwork: true, view: handle.target })).toBe(newText)
+    expect(fileRequests).toBe(1)
+    expect((await handle.target.fileGet(source, path))?.text).toBe(newText)
+    await operations.abort(handle, new Error('清理'))
+    DB.close()
+    await DB.delete()
+  })
+})

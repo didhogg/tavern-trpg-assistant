@@ -18,6 +18,7 @@ const LIST: FileList = {
   'data/spells/spells-phb.json': { sha: 'c', size: 20 },
   'data/items.json': { sha: 'd', size: 30 },
   'search/index.json': { sha: 'e', size: 5 },
+  'data/adventure/adventure-lmop.json': { sha: 'f', size: 10 },
 }
 
 function fakeFrame(opts: { parseError?: boolean } = {}): AuthorFrame {
@@ -29,10 +30,11 @@ function fakeFrame(opts: { parseError?: boolean } = {}): AuthorFrame {
         case 'loaders': return [
           { props: ['spell'], page: 'spells.html', kind: 'site' },
           { props: ['book', 'bookData'], page: 'book.html', kind: 'corpus', index: 'books.json' },
+          { props: ['adventure', 'adventureData'], page: 'adventure.html', kind: 'corpus', index: 'adventures.json' },
         ]
         case 'parseProp': if (opts.parseError) throw new Error('作者解析失败'); return { items: [{ name: '火球术' }], hashes: ['fireball_phb'], sources: ['PHB'] }
-        case 'corpusList': return [{ id: 'PHB', source: 'PHB', hash: 'phb' }]
-        case 'parseCorpus': return { book: [{ id: 'PHB' }], bookData: [{ id: 'PHB' }] }
+        case 'corpusList': return args[0] === 'adventures.json' ? [{ id: 'LMoP', source: 'LMoP', hash: 'lmop' }] : [{ id: 'PHB', source: 'PHB', hash: 'phb' }]
+        case 'parseCorpus': return { book: [{ id: 'PHB' }], bookData: [{ id: 'PHB' }], adventure: [{ id: 'LMoP' }], adventureData: [{ id: 'LMoP' }] }
         case 'searchIndexHashes': return { spell: ['fireball_phb'] }
         case 'excludeList': return []
         case 'fluffOfMany': return {}
@@ -63,6 +65,43 @@ function fakeFiles(view: LibraryView) {
 }
 
 describe('prepareOfficial（P5 T3）', () => {
+  it('已装冒险更新：计划里的冒险正文也会解析发布，不永远跳过', async () => {
+    db = new LibraryDatabase(`install-adv-${Math.random()}`)
+    const revisions = new LibraryRevisionStore(db)
+    await revisions.ensureLegacy()
+    const operations = new LibraryOperations({ db, revisions })
+    const handle = await operations.begin({ kind: 'official', set: 'cn-official', codeSet: 'cn' })
+    const base = { files: [] as string[], bytes: 0 }
+    const files = ['data/adventure/adventure-lmop.json']
+    const report = await prepareOfficial({
+      source, db, revisions, operations, files: fakeFiles(handle.target) as never,
+      openFrame: async () => fakeFrame(), view: handle.target,
+      plan: { ...base, files, bytes: 10, shared: { files, bytes: 10 }, bySource: base, byBook: base, byClass: base, byAdventure: { files, bytes: 10 }, sourceIndexes: {}, missing: { sources: [], books: [] }, sources: [], books: [], adventures: ['LMoP'] },
+      sources: [], books: [], adventures: ['LMoP'],
+    })
+    expect(report.publishable).toBe(true)
+    expect(report.parse.corpora.adventure).toMatchObject({ count: 1, failed: [] })
+    await operations.abort(handle, new Error('清理'))
+  })
+
+  it('计划里缺书：不能发布，也不登记为已装', async () => {
+    db = new LibraryDatabase(`install-miss-${Math.random()}`)
+    const revisions = new LibraryRevisionStore(db)
+    await revisions.ensureLegacy()
+    const operations = new LibraryOperations({ db, revisions })
+    const handle = await operations.begin({ kind: 'official', set: 'cn-official', codeSet: 'cn' })
+    const base = { files: [] as string[], bytes: 0 }
+    const report = await prepareOfficial({
+      source, db, revisions, operations, files: fakeFiles(handle.target) as never,
+      openFrame: async () => fakeFrame(), view: handle.target,
+      plan: { ...base, shared: base, bySource: base, byBook: base, byClass: base, byAdventure: base, sourceIndexes: {}, missing: { sources: [], books: ['NOPE'] }, sources: [], books: ['NOPE'], adventures: [] },
+      sources: [], books: ['NOPE'], adventures: [],
+    })
+    expect(report.publishable).toBe(false)
+    expect(report.reasons.join('；')).toContain('找不到')
+    await operations.abort(handle, new Error('清理'))
+  })
+
   it('在准备版本里下载 / 解析 / 检查；发布前旧版本不动，发布后新版本可读', async () => {
     db = new LibraryDatabase(`install-${Math.random()}`)
     const revisions = new LibraryRevisionStore(db)

@@ -71,13 +71,69 @@ describe('版本化库（P5 T1）', () => {
     expect((await db.revisions.get(h.target.id))?.status).toBe('aborted')
   })
 
-  it('同一时间只允许一个修改；发布后释放锁', async () => {
+  it('同一时间只允许一个修改：后来的排队，前一个释放后接上', async () => {
     const { operations } = await setup()
     const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
-    await expect(operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })).rejects.toThrow('另一个窗口')
-    await operations.publish(h, {})
-    const next = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    const waiting = operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.abort(h, new Error('先让位'))
+    const next = await waiting
     await operations.abort(next, new Error('清理'))
+  })
+
+  it('取消后进度不能把状态写回 preparing；发布必须被拒绝', async () => {
+    const { operations } = await setup()
+    const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.cancel(h.record.id)
+    await operations.progress(h, { stage: 'parse', done: 1, total: 2 })
+    expect((await db.ops.get(h.record.id))?.status).toBe('cancelled')
+    await expect(operations.publish(h, {})).rejects.toThrow('取消')
+  })
+
+  it('租约被另一操作接手后，旧操作不能发布', async () => {
+    const { operations } = await setup()
+    const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    const lock = await db.locks.get('library')
+    await db.locks.put({ ...lock!, token: 'other-window', expiresAt: Date.now() + 10_000 })
+    await expect(operations.publish(h, {})).rejects.toThrow('租约')
+  })
+
+  it('来源索引过滤沿父版本继承；明确 null 才取消限制', async () => {
+    const { operations } = await setup()
+    const path = 'data/spells/index.json'
+    const text = JSON.stringify({ PHB: 'spells-phb.json', XPHB: 'spells-xphb.json' })
+    const h1 = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.setTargetIndexes(h1, { [path]: ['PHB'] })
+    const v1 = await operations.publish(h1, {})
+    expect(JSON.parse(await v1.filterIndex(path, text))).toEqual({ PHB: 'spells-phb.json' })
+    // 普通自制操作不写 sourceIndexes：沿用父版本的过滤
+    const h2 = await operations.begin({ kind: 'brew', set: 'cn-brew', codeSet: 'cn' })
+    const v2 = await operations.publish(h2, {})
+    expect(JSON.parse(await v2.filterIndex(path, text))).toEqual({ PHB: 'spells-phb.json' })
+    // 明确取消限制
+    const h3 = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.setTargetIndexes(h3, { [path]: null })
+    const v3 = await operations.publish(h3, {})
+    expect(JSON.parse(await v3.filterIndex(path, text))).toEqual({ PHB: 'spells-phb.json', XPHB: 'spells-xphb.json' })
+  })
+
+  it('恢复不打断仍在运行的窗口；真正过期才标中断并释放锁', async () => {
+    const { operations } = await setup()
+    const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.restore()
+    expect((await db.ops.get(h.record.id))?.status).toBe('preparing')
+    await db.ops.put({ ...h.record, updatedAt: Date.now() - 120_000 })
+    await operations.restore()
+    expect((await db.ops.get(h.record.id))?.status).toBe('interrupted')
+    expect(await db.locks.get('library')).toBeUndefined()
+  })
+
+  it('发布后释放租约，下一个操作立即能开始', async () => {
+    const { operations } = await setup()
+    const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.publish(h, {})
+    const h2 = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    expect(h2.base.id).toBe(h.target.id)
+    await operations.abort(h2, new Error('清理'))
   })
 
   it('恢复：未发布的准备版本标中断，已经切了指針的算完成', async () => {

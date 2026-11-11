@@ -57,10 +57,16 @@ export function logBrew(ctx: BrewContext, s: SourceEntry, report: BrewParseRepor
 }
 
 export async function publishBrew(ctx: BrewContext, s: SourceEntry, handle: OperationHandle, report: BrewParseReport): Promise<LibraryView> {
-  const failed = report.parse.errors.length || Object.values(report.parse.corpora ?? {}).some((c) => c.failed.length)
+  // 初始化 / 存储 / 整类解析失败：不发布缺内容的版本（P5 核验 5）；旧版本继续可读。
+  const fatal = report.parse.errors.length || Object.values(report.parse.corpora ?? {}).some((c) => c.failed.length)
+  if (fatal) {
+    const first = report.parse.errors[0]?.error ?? Object.values(report.parse.corpora ?? {}).flatMap((c) => c.failed)[0]?.error ?? '自制解析失败'
+    throw new Error(`自制解析失败，没有发布：${first}`)
+  }
+  const partial = report.alternatives.errors.length > 0 || !!report.precomputeError
   const view = await ctx.operations.publish(handle, {
     brews: { [s.id]: { packs: packsOf(report) } }, result: report,
-    status: failed || report.precomputeError ? 'partial' : 'done',
+    status: partial ? 'partial' : 'done',
   })
   try { await ctx.onDataChanged?.(s.codeSet) } catch (e) { ctx.onLog?.({ level: 'warn', source: s.id, kind: 'brew-precompute', message: e instanceof Error ? e.message : String(e) }) }
   logBrew(ctx, s, report)

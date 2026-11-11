@@ -4,10 +4,10 @@
 import type { LibraryDatabase, OfficialSetState } from './db'
 import type { FileProvider } from './files'
 import type { AuthorFrame } from './runtime/host'
-import { precachePlan, type OfficialPlan } from './plan'
+import { isAdventure, isPrecache, precachePlan, type OfficialPlan } from './plan'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 import { LibraryOperations } from './operations'
-import { precomputeSource, type PrecomputeReport } from './cache'
+import { invalidatePrecompute, precomputeSource, type PrecomputeReport } from './cache'
 import { DocumentStore } from './documents'
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import type { SourceEntry } from './sources'
@@ -58,6 +58,8 @@ export interface InstallReport {
   embeddedTables?: { count: number; error?: string }
   /** 装完作者数据后算好的离线缓存（配图描述、屏蔽标记、搜索索引）。 */
   precompute?: PrecomputeReport
+  /** 预计算 / 换算失败；不阻止资料发布，但结算未就绪。 */
+  precomputeError?: string
   /** 这次能不能发布（下载 / 镜像 / 解析 / 选中书正文全部成功）。 */
   publishable: boolean
   /** 不能发布的原因；可发布时为空。 */
@@ -91,6 +93,8 @@ export interface InstallOptions {
   onProgress?: (p: { stage: string; done: number; total: number; item?: string }) => void
   concurrency?: number
   signal?: AbortSignal
+  /** 失败安装报告单独保存（不进准备版本）。 */
+  onDiagnostic?: (setId: string, report: InstallReport) => Promise<void>
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
@@ -100,6 +104,17 @@ async function pool<T>(items: T[], n: number, fn: (it: T) => Promise<void>): Pro
   await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
     while (i < items.length) await fn(items[i++])
   }))
+}
+
+export async function installedAdventureIds(view: LibraryView, setId: string): Promise<string[]> {
+  const prefix = `parsed:${setId}:corpus:`
+  const out: string[] = []
+  for (const key of (await view.derivedKeys(prefix)).keys()) {
+    const rest = key.slice(prefix.length)
+    const at = rest.lastIndexOf(':')
+    if (at > 0) out.push(rest.slice(at + 1))
+  }
+  return [...new Set(out)].sort()
 }
 
 export function parsedKey(sourceId: string, prop: string, corpusId?: string): string {
@@ -132,8 +147,9 @@ const planOf = (full: ReturnType<typeof precachePlan>): OfficialPlan => ({
   byBook: { files: [], bytes: 0 },
   byClass: { files: [], bytes: 0 },
   byAdventure: { files: [], bytes: 0 },
-  sourceIndexes: {},
+  sourceIndexes: { '*': null },
   missing: { sources: [], books: [] },
+  sources: null, books: null, adventures: null,
 })
 
 /** 准备版本里的安装 / 解析；不发布。调用方负责操作生命周期或直接发布。 */
@@ -159,8 +175,17 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     parse: { props: {}, corpora: {}, notRun: [], errors: [] }, index: {},
     publishable: true, reasons: [], settlementReady: true, ms: 0,
   }
-  const sources = opts.sources ?? null
-  const books = opts.books ?? null
+  const sources = opts.sources ?? plan.sources
+  const books = opts.books ?? plan.books
+  // 先把旧版本的解析结果 / 文件引用在准备版本里挡住；失败时准备版本作废，父版本不动。
+  for (const key of (await view.derivedKeys(`parsed:${source.id}:`)).keys()) await view.derivedDelete(key)
+  for (const path of await view.filePaths(source)) {
+    if (isPrecache(path) && !plan.files.includes(path)) await view.fileRemove(source, path, commit)
+    else if (isAdventure(path) && opts.adventures && !plan.files.includes(path)) await view.fileRemove(source, path, commit)
+  }
+  if (plan.missing.sources.length || plan.missing.books.length) {
+    report.reasons.push(`作者目录里找不到这些书 / 来源：${[...plan.missing.sources, ...plan.missing.books].join('、')}`)
+  }
 
   // 下载到准备版本（沿父版本已存在的同指纹文件直接复用）
   let done = 0
@@ -215,7 +240,19 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
       if (loader.kind === 'corpus') {
         const prop = loader.props[0]
         if (loader.props.includes('adventureData')) {
-          report.parse.notRun.push({ props: loader.props, reason: '冒险正文按需下载（作者离线规则），用到哪本再解析哪本' })
+          const prop = loader.props[0]
+          const entry: InstallReport['parse']['corpora'][string] = (report.parse.corpora[prop] = { count: 0, skipped: 0, failed: [] })
+          try {
+            const allowed = opts.adventures ? new Set(opts.adventures) : new Set<string>()
+            for (const it of await frame.call('corpusList', loader.index!, prop, loader.page!)) {
+              if (!allowed.has(it.id)) { entry.skipped++; continue }
+              try {
+                opts.onProgress?.({ stage: 'parse-corpus', done: entry.count, total: 0, item: it.id })
+                await view.derivedPut(parsedKey(source.id, prop, it.id), commit, await frame.call('parseCorpus', loader.page!, it.source, it.hash))
+                entry.count++
+              } catch (e) { entry.failed.push({ id: it.id, error: msg(e) }) }
+            }
+          } catch (e) { report.parse.errors.push({ prop, error: msg(e) }) }
           continue
         }
         const entry: InstallReport['parse']['corpora'][string] = (report.parse.corpora[prop] = { count: 0, skipped: 0, failed: [] })
@@ -291,10 +328,11 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     // 第 6 层：把看资料 / 搜索要用的东西一次算好存库
     try {
       opts.onProgress?.({ stage: 'precompute', done: 0, total: 0 })
+      await invalidatePrecompute(db, source.id, ['fluff', 'excluded', 'search'], view)
       report.precompute = await precomputeSource({ source, db, frame, view, fluff: true, excluded: true, search: true })
       report.settlementReady = true
     } catch (e) {
-      report.parse.errors.push({ prop: '(预计算缓存)', error: msg(e) })
+      report.precomputeError = msg(e)
       report.settlementReady = false
     }
   } catch (e) {
@@ -330,20 +368,22 @@ export async function installOfficial(opts: InstallOptions): Promise<InstallRepo
       return report
     }
     if (!report.publishable) {
+      await opts.onDiagnostic?.(source.id, report)
       await operations.abort(handle, new Error(report.reasons.join('；')))
       report.revision = handle.target.id
       return report
     }
     const official: Record<string, OfficialSetState> = {
       [source.id]: {
-        commit: report.commit, status: 'installed', sources: opts.sources ?? null, books: opts.books ?? null,
-        adventures: opts.adventures ?? null, plan: { files: report.plan.files, bytes: report.plan.bytes },
+        commit: report.commit, status: 'installed', sources: opts.sources ?? opts.plan?.sources ?? null, books: opts.books ?? opts.plan?.books ?? null,
+        adventures: opts.adventures ?? opts.plan?.adventures ?? null, plan: { files: report.plan.files, bytes: report.plan.bytes },
       },
     }
     const published = await operations.publish(handle, {
       official, sourceIndexes: opts.plan?.sourceIndexes ?? {}, result: report, status: report.settlementReady ? 'done' : 'partial',
     })
     report.revision = published.id
+    await db.derived.delete(`audit:last-failed:${source.id}`)
     return report
   } catch (e) {
     await operations.abort(handle, e)

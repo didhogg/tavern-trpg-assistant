@@ -98,7 +98,7 @@ export async function parseBrew({ source, db, view, openFrame, openFrameIn }: {
     try {
       report.precompute = await precomputeSource({ source, db, frame, view, fluff: true, excluded: true, search: false })
     } catch (e) {
-      report.parse.errors.push({ prop: '(预计算缓存)', error: msg(e) })
+      report.precomputeError = msg(e)
     }
   } finally {
     frame.close()

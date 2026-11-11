@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { LibraryDatabase } from '../../../src/library/db'
 import { uninstallOfficial } from '../../../src/library/uninstall'
+import { getSource } from '../../../src/library/sources'
 import { LibraryRevisionStore } from '../../../src/library/revision'
 import type { TaskState } from '../../../src/library/tasks'
 
@@ -30,13 +31,18 @@ describe('整套官方资料删除', () => {
     db = new LibraryDatabase(`test-uninstall-${Math.random()}`)
     await seed()
     let reset = ''
-    const r = await uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [] }, afterDelete: (id) => { reset = id } }, 'cn-official')
-    expect(r).toMatchObject({ set: 'cn-official', files: 2, bytes: 150, brewKept: true })
+    const revisions = new LibraryRevisionStore(db)
+    const before = await revisions.published()
+    const r = await uninstallOfficial({ db, revisions, tasks: { list: () => [] }, afterDelete: (id) => { reset = id } }, 'cn-official')
+    expect(r).toMatchObject({ set: 'cn-official', files: 0, bytes: 0, retainedFiles: 2, retainedBytes: 150, brewKept: true })
     expect(reset).toBe('cn-official')
-    expect(await db.files.where('source').equals('cn-official').count()).toBe(0)
+    // 逻辑移除：已发布版本不再列出这一套；旧版本仍可读（物理回收不在这一步）
+    expect(await db.files.where('source').equals('cn-official').count()).toBe(2)
     expect(await db.sets.get('cn-official')).toBeUndefined()
+    expect((await before.fileGet(getSource('cn-official'), 'data/a.json'))?.text).toBe('{}')
+    expect(await before.derivedGet('parsed:cn-official:spell')).toBeDefined()
     const keys = new Set(await db.derived.toCollection().primaryKeys())
-    for (const gone of ['parsed:cn-official:spell', 'parsed:cn-official:corpus:book:PHB', 'pre:cn-official:fluff:spell', 'audit:cn-official', 'audit:layers34:cn-official', 'sources:cn-official', 'docs:cn-official', 'doc:cn-official:bookref-quick', 'english:cn-official', 'audit:english:cn-official', 'kc:abc']) expect(keys.has(gone), gone).toBe(false)
+    for (const kept of ['parsed:cn-official:spell', 'parsed:cn-official:corpus:book:PHB', 'pre:cn-official:fluff:spell', 'audit:cn-official', 'audit:layers34:cn-official', 'sources:cn-official', 'docs:cn-official', 'doc:cn-official:bookref-quick', 'english:cn-official', 'audit:english:cn-official', 'kc:abc']) expect(keys.has(kept), kept).toBe(true)
     for (const kept of ['parsed:en-official:spell', 'audit:en-official', 'filelist:cn-official@c', 'directory:v2:cn-official@c', 'parsed:cn-brew:spell', 'audit:cn-brew']) expect(keys.has(kept), kept).toBe(true)
     expect(await db.files.where('source').equals('en-official').count()).toBe(2)
     expect(await db.sets.get('en-official')).toBeTruthy()
@@ -59,9 +65,9 @@ describe('整套官方资料删除', () => {
     db = new LibraryDatabase(`test-uninstall4-${Math.random()}`)
     await seed()
     const r = await uninstallOfficial({ db, revisions: new LibraryRevisionStore(db), tasks: { list: () => [] }, afterDelete: () => {} }, ['cn-official', 'en-official'])
-    expect(r).toMatchObject({ sets: ['cn-official', 'en-official'], files: 4, bytes: 300 })
-    expect(await db.files.where('source').equals('cn-official').count()).toBe(0)
-    expect(await db.files.where('source').equals('en-official').count()).toBe(0)
+    expect(r).toMatchObject({ sets: ['cn-official', 'en-official'], files: 0, bytes: 0, retainedFiles: 4, retainedBytes: 300 })
+    expect(await db.files.where('source').equals('cn-official').count()).toBe(2)
+    expect(await db.files.where('source').equals('en-official').count()).toBe(2)
     expect(await db.sets.get('cn-official')).toBeUndefined()
     expect(await db.sets.get('en-official')).toBeUndefined()
   })

@@ -27,6 +27,7 @@ function deps(extra: Partial<ImpactDeps> = {}): ImpactDeps {
     },
     brewPacks: { list: async () => packs },
     brewSetOf: () => 'cn-brew',
+    revision: 'rev-test',
     ...extra,
   }
 }
@@ -84,6 +85,17 @@ describe('删除前的影响预览', () => {
     const o = await impactOfRemoval(d, { kind: 'official', setId: 'cn-official' })
     expect(o.packs.every((p) => !p.mustRemove)).toBe(true)
     expect(o.removeTogether).toEqual([])
+  })
+
+  it('预览凭据包含版本 / 房规 / 选择 / 存档：影响变了就不能沿用旧预览', async () => {
+    db = new TrpgDatabase(`test-impact-plan-${Math.random()}`)
+    const a = await impactOfRemoval(deps(), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['p1'] })
+    const b = await impactOfRemoval(deps({ revision: 'rev-other' }), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['p1'] })
+    expect(a.plan.fingerprint).not.toBe(b.plan.fingerprint)
+    await db.workspaces.put(ws('A', kernel({ actors: [{ id: 'a', name: '甲', refs: [{ kind: 'spell', set: 'cn-brew', prop: 'spell', hash: 'fire_alpha' }] }] })))
+    const c = await impactOfRemoval(deps(), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['p1'] })
+    expect(c.plan.fingerprint).not.toBe(a.plan.fingerprint)
+    expect(c.saves.length).toBe(1)
   })
 
   it('B-20 战役设置以战役级那份为准：存档快照里的副本过期了也按最新的算', async () => {

@@ -85,12 +85,12 @@ describe('BookDirectory', () => {
     expect((await dir.peek('cn'))?.books).toHaveLength(3)
   }))
 
-  it('已装好：用本地小窗，不联网、不关它', () => withDb(async (db) => {
+  it('已装好：用本地小窗，不联网；用完关掉专用窗口', () => withDb(async (db) => {
     await db.sets.put({ id: 'cn-official', commit: 'x', status: 'installed', plan: { files: 0, bytes: 0 }, updatedAt: 1 } as never)
     const local = fakeFrame()
     const dir = new BookDirectory({ db, localFrame: async () => local.frame, networkFrame: async () => { throw new Error('不该联网') } })
     expect((await dir.get('cn')).books).toHaveLength(3)
-    expect(local.closed).toHaveLength(0)
+    expect(local.closed).toHaveLength(1)
   }))
 
   it('冒险目录取不到：书目照常交回，只记冒险的错误；不写缓存（重试会重新联网）', () => withDb(async (db) => {

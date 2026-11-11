@@ -51,6 +51,14 @@ beforeEach(async () => {
 afterEach(async () => { await db.delete() })
 
 describe('LibraryService.query', () => {
+  it('公共 frameOf 默认绑定当前已发布版本，不再传 legacy 缓存键', async () => {
+    let seen: string | undefined
+    const svc = new LibraryService({ db, revisions, openFrame: async (_cs, ctx) => { seen = ctx?.view?.id; return fakeFrame({}) } })
+    const view = await revisions.published()
+    await svc.frameOf('cn')
+    expect(seen).toBe(view.id)
+  })
+
   it('缓存命中：只读库，不开小窗；按来源取只留这本书（不分大小写）', async () => {
     await seedSpellCache()
     let opened = 0

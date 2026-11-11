@@ -80,3 +80,22 @@ export async function filePaths(store: LibraryRevisionStore, view: LibraryView, 
   }
   return [...out].sort()
 }
+
+/** 沿父链找这个索引文件最近的过滤规则；没有规则 = 不过滤，null = 明确不限制。 */
+export async function filterIndexFromChain(view: LibraryView, path: string, text: string): Promise<string> {
+  for (const rev of await view.chain()) {
+    const map = rev.sourceIndexes
+    if (!map) continue
+    if (map['*'] === null) return text
+    if (!Object.prototype.hasOwnProperty.call(map, path)) continue
+    const allowed = map[path]
+    if (allowed === null) return text
+    try {
+      const json = JSON.parse(text) as Record<string, unknown>
+      if (!json || typeof json !== 'object' || Array.isArray(json)) return text
+      const keep = new Set(allowed)
+      return JSON.stringify(Object.fromEntries(Object.entries(json).filter(([k]) => keep.has(k))))
+    } catch { return text }
+  }
+  return text
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { adventurePlan, isAdventure, isPrecache, officialPlan, precachePlan, type PlanOwner } from '../../../src/library/plan'
+import { adventurePlan, isAdventure, isPrecache, officialPlan, precachePlan, selectionFor, unionSelection, type PlanOwner } from '../../../src/library/plan'
 
 // 规则来自作者 node/build-sw.mjs："data/*.json"、"data/**/!(adventure)/*.json"、"search/*.json"；按需 "data/adventure/**/*.json"
 describe('作者离线规则', () => {
@@ -74,5 +74,47 @@ describe('按书计划（P5 T2）', () => {
     const plan = officialPlan(list, owners, { adventures: ['LMoP'] })
     expect(plan.byAdventure.files).toEqual(['data/adventure/adventure-lmop.json'])
     expect(plan.files).toContain('data/spells/spells-xphb.json')
+  })
+})
+
+describe('补装并集（P5 核验 2）', () => {
+  it('已装 PHB + 新装 MM：书和来源并集，不清掉 PHB', () => {
+    expect(unionSelection(['PHB'], ['MM'])).toEqual(['MM', 'PHB'])
+    expect(unionSelection(null, ['PHB'])).toEqual(['PHB'])
+    expect(unionSelection(['PHB'], null)).toEqual(['PHB'])
+  })
+  it('只给 books 时计划自己推出 sources；旧整套 allSources + 新书仍保留全部来源文件', () => {
+    const list = {
+      'data/spells/spells-phb.json': { sha: 'a', size: 1 },
+      'data/spells/spells-xphb.json': { sha: 'b', size: 1 },
+      'data/book/book-phb.json': { sha: 'c', size: 1 },
+      'data/books.json': { sha: 'd', size: 1 },
+      'search/index.json': { sha: 'e', size: 1 },
+    }
+    const owners: Record<string, PlanOwner> = {
+      'data/spells/spells-phb.json': { kind: 'source', sources: ['PHB'] },
+      'data/spells/spells-xphb.json': { kind: 'source', sources: ['XPHB'] },
+      'data/book/book-phb.json': { kind: 'book', id: 'PHB', source: 'PHB' },
+    }
+    const p = officialPlan(list, owners, { books: ['PHB'] }, { indexSources: { 'data/spells/index.json': ['PHB', 'XPHB'] } })
+    expect(p.sources).toEqual(['PHB'])
+    expect(p.books).toEqual(['PHB'])
+    expect(p.files).toContain('data/spells/spells-phb.json')
+    expect(p.files).not.toContain('data/spells/spells-xphb.json')
+    const fullSources = officialPlan(list, owners, { books: ['PHB'] }, { indexSources: { 'data/spells/index.json': ['PHB', 'XPHB'] }, allSources: true })
+    expect(fullSources.sources).toBeNull()
+    expect(fullSources.books).toEqual(['PHB'])
+    expect(fullSources.files).toContain('data/spells/spells-xphb.json')
+  })
+})
+
+describe('安装集合合并（P5 核验 2）', () => {
+  it('已装部分书 + 新书：保留旧书；旧整套仍为 null；未装时只取新书', () => {
+    const partial = selectionFor({ commit: 'c', status: 'installed', sources: ['PHB'], books: ['PHB'], adventures: [] }, { books: ['MM'], sources: ['MM'] })
+    expect(partial).toMatchObject({ books: ['MM', 'PHB'], sources: ['MM', 'PHB'], allSources: false })
+    const full = selectionFor({ commit: 'c', status: 'installed', sources: null, books: null, adventures: null }, { books: ['MM'] })
+    expect(full).toMatchObject({ books: null, sources: null, allSources: true })
+    const fresh = selectionFor(null, { books: ['MM'] })
+    expect(fresh).toMatchObject({ books: ['MM'], sources: null, allSources: false })
   })
 })

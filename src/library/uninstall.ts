@@ -23,22 +23,13 @@ export interface UninstallReport {
   sets: string[]
   files: number
   bytes: number
-  /** 删掉的派生物（解析结果、索引、配对表、报告、换算缓存）条数。 */
+  /** 这次物理删掉的派生物条数；新实现为 0（保留旧版本可读）。 */
   derived: number
+  /** 逻辑移除后仍保留的文件 / 字节：旧版本 / 读者可能还在用。 */
+  retainedFiles: number
+  retainedBytes: number
   /** 这套作者程序下有自制内容被保留（它们启动要读官方数据，重装之前用不了）。 */
   brewKept: boolean
-}
-
-const matches = (key: string, setId: string): boolean => {
-  let k = key
-  if (k.startsWith('rev:')) {
-    const at = k.indexOf(':', 4)
-    if (at > 0) k = k.slice(at + 1)
-  }
-  return k === `audit:${setId}` || k === `audit:layers34:${setId}` || k === `sources:${setId}` || k === `docs:${setId}`
-    || k.startsWith(`parsed:${setId}:`) || k.startsWith(`pre:${setId}:`) || k.startsWith(`doc:${setId}:`)
-    || k.startsWith(`audit:english:${setId}`) || k === `english:${setId}`
-    || k.startsWith(`corpus:${setId}:`)
 }
 
 export async function uninstallOfficial({ db, revisions, operations, tasks, afterDelete }: UninstallDeps, setId: string | string[]): Promise<UninstallReport> {
@@ -59,19 +50,13 @@ export async function uninstallOfficial({ db, revisions, operations, tasks, afte
       official[id] = { ...state, status: 'missing', sources: [], books: [], adventures: [] }
     }
     await ops.publish(handle, { official })
-    const report: UninstallReport = { set: sets[0], sets, files: 0, bytes: 0, derived: 0, brewKept: false }
+    const report: UninstallReport = { set: sets[0], sets, files: 0, bytes: 0, derived: 0, brewKept: false, retainedFiles: 0, retainedBytes: 0 }
     for (const id of sets) {
       const s = getSource(id)
-      await db.files.where('source').equals(id).each((rec) => { report.files++; report.bytes += rec.size })
-      await db.files.where('source').equals(id).delete()
-      await db.fileContents.where('source').equals(id).delete()
-      await db.fileVersions.where('source').equals(id).delete()
-      const all = await db.derived.toArray()
-      const doomed = all.filter((r) => matches(r.key, id)).map((r) => r.key)
-      await db.derived.bulkDelete(doomed)
-      report.derived += doomed.length
+      // 逻辑移除已完成；物理回收要检查所有版本引用，不能在发布后立刻删（P5 核验 4）。
+      await db.files.where('source').equals(id).each((rec) => { report.retainedFiles++; report.retainedBytes += rec.size })
+      await db.fileContents.where('source').equals(id).each((rec) => { report.retainedFiles++; report.retainedBytes += rec.size })
       report.brewKept = report.brewKept || (await db.kv.where('scope').equals(s.codeSet).count()) > 0
-      await db.derived.where('key').startsWith('kc:').delete()
       await afterDelete(id)
     }
     return report

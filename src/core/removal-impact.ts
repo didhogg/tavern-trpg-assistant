@@ -9,7 +9,7 @@ import { packAltId, packStableId } from '../library/versions'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelCampaign } from '../schemas/kernel'
 import { libraryKey } from './saves/kernel'
 import { treeRootId } from './saves/view'
-import { hashValue } from './hash'
+import { hashValue, stableStringify } from './hash'
 
 export type RemovalTarget =
   | { kind: 'official'; setId: string; /** 中英一起卸载时给完整集合。 */ setIds?: string[] }
@@ -46,6 +46,8 @@ export interface ImpactDeps {
   brewPacks: Pick<BrewPacks, 'list'>
   /** 这套作者程序（cn / en）对应的自制源编号。 */
   brewSetOf: (codeSet: string) => string
+  /** 当前已发布库版本；预览凭据要包含它。 */
+  revision: string
 }
 
 const lower = (xs: Iterable<string>): Set<string> => new Set([...xs].map((s) => s.toLowerCase()))
@@ -157,6 +159,6 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
     if (why.length) saves.push({ ownerKey: s.ownerKey, ownerLabel: s.ownerLabel, saveId: s.id, name: s.name, kind: s.kind, deleted: s.deletedAt !== undefined, why })
   }
   const checkedAt = Date.now()
-  const fingerprint = hashValue(JSON.stringify({ target, removeTogether: [...removeTogether].sort(), packs: packs.filter((p) => removeTogether.includes(p.docIdLocal)).map((p) => [p.docIdLocal, p.sources, p.dependencies]) }))
+  const fingerprint = hashValue(stableStringify({ revision: deps.revision, target, removeTogether: [...removeTogether].sort(), packs: packs.map((p) => [p.docIdLocal, p.sources, p.dependencies]), houseRules, choices, saves }))
   return { target, plan: { id: fingerprint.slice(0, 16), fingerprint, checkedAt, removeTogether }, packs: impacted, removeTogether, houseRules, choices, saves }
 }

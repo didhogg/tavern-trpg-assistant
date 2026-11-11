@@ -45,7 +45,7 @@ export function libraryHandlers({ codeSet, db, files, allowNetwork, view, kvScop
     file: async (path) => {
       const text = await files.get(source, path, { allowNetwork: allowNetwork(), ...(view ? { view } : {}), ...(writeLegacy ? { writeLegacy: true } : {}) })
       if (text === null || !view || !filterIndex) return text
-      return view.filterIndex(path, text)
+      return await view.filterIndex(path, text)
     },
     kvGet: async (key) => {
       for (const scope of await scopes()) {

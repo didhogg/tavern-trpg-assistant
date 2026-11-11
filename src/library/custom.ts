@@ -24,6 +24,10 @@ interface CustomSource {
 /** 插件建在可编辑自制里的来源（登记在 custom.json）：house = 房规，mine = 自己写的新条目。 */
 const CUSTOM = registry.sources as Record<'house' | 'mine', CustomSource>
 
+/** 作者两个包管理器的存储键（BrewUtil2 / PrereleaseUtil）；备份按作者存储分类完整导出。 */
+const BREW_STORAGE_KEY = 'HOMEBREW_2_STORAGE'
+const PRERELEASE_STORAGE_KEY = 'PRERELEASE_STORAGE'
+
 const brewSetOf = (codeSet: string): SourceEntry => {
   const s = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)
   if (!s) throw new Error(`作者程序 ${codeSet} 没有登记自制数据集`)
@@ -203,12 +207,14 @@ export class CustomLibrary {
     const view = await this.lib.currentView()
     // 按源登记表遍历，不写死语言；官方没装时也能从作者存储原文导出自制（M5）
     for (const set of SOURCES.filter((s) => s.kind === 'brew')) {
-      const raw = (await view.kvGet(set.codeSet, 'HOMEBREW_2_STORAGE')) as Array<{ head?: Record<string, unknown>; body?: unknown }> | null
-      for (const doc of raw ?? []) {
-        const docId = String(doc.head?.docIdLocal ?? '')
-        if (!docId) continue
-        const filename = (doc.head?.filename as string | undefined) ?? `${docId}.json`
-        files[`brew/${set.codeSet}/${filename}`] = JSON.stringify(doc.body)
+      for (const [key, sub] of [[BREW_STORAGE_KEY, ''], [PRERELEASE_STORAGE_KEY, 'prerelease/']] as const) {
+        const raw = (await view.kvGet(set.codeSet, key)) as Array<{ head?: Record<string, unknown>; body?: unknown }> | null
+        for (const doc of Array.isArray(raw) ? raw : []) {
+          const docId = String(doc.head?.docIdLocal ?? '')
+          if (!docId) continue
+          const filename = (doc.head?.filename as string | undefined) ?? `${docId}.json`
+          files[`brew/${set.codeSet}/${sub}${filename}`] = JSON.stringify(doc.body)
+        }
       }
     }
     files['scopes.json'] = JSON.stringify(await this.exportScopes())
@@ -231,6 +237,7 @@ export class CustomLibrary {
         const result = await this.lib.brewImport(set.id, [{ name: rest.join('/'), text }])
         brews += result.value?.added?.length ?? 0
         errors.push(...result.errors)
+        for (const bad of result.value?.notJson ?? []) errors.push(`${path}：${bad.name} ${bad.error}`)
       } catch (error) {
         errors.push(`${path}: ${error instanceof Error ? error.message : String(error)}`)
       }

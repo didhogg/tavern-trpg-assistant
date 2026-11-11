@@ -119,8 +119,8 @@ export class EntryLinks {
       }
       const state = await view.officialState(official.id)
       if (state?.status !== 'installed') continue
-      const books = state.books
-      if (books && !books.includes(p.id)) continue
+      const installed = prop === 'adventure' ? state.adventures : state.books
+      if (installed && !installed.includes(p.id)) continue
       return { kind: 'corpus', set: official.id, prop, hash, source: p.source, id: p.id, providers }
     }
     const sets: SourceEntry[] = [official, ...SOURCES.filter((s) => s.codeSet === codeSet && s.kind === 'brew')]
