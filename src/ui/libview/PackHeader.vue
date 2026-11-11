@@ -10,16 +10,16 @@ import { openManage } from './open'
 import Switch from '../kit/Switch.vue'
 
 /** 包弹窗标题栏右侧：本战役开关 + ⋯。开关与书架同一状态；无战役时不可用（R60）。 */
-const props = defineProps<{ set: string; source: string; name: string }>()
+const props = defineProps<{ set: string; source: string; name: string; docIdLocal?: string }>()
 const app = useAppStore()
 const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const toast = useToastStore()
-const row = computed(() => lib.shelf?.groups.flatMap((g) => [...g.books, ...g.adventures]).find((r) => r.source === props.source && r.set === props.set))
+const row = computed(() => lib.shelf?.groups.flatMap((g) => [...g.books, ...g.adventures]).find((r) => r.set === props.set && (props.docIdLocal ? r.pack?.docIdLocal === props.docIdLocal : r.source === props.source)))
 const on = computed(() => row.value?.view.visible ?? false)
 
 async function onMenu(key: string): Promise<void> {
-  if (key === 'manage') openManage({ set: props.set, source: props.source, name: props.name })
+  if (key === 'manage') openManage({ set: props.set, source: props.source, name: props.name, ...(props.docIdLocal ? { docIdLocal: props.docIdLocal } : {}) })
   else if (key === 'save' && row.value) await saveToMine(app.svc(), row.value, toast)
 }
 

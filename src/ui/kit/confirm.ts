@@ -2,10 +2,18 @@ import { markRaw } from 'vue'
 import { askChoice } from './choice'
 import ConfirmPage from './ConfirmPage.vue'
 
+export interface ConfirmSection {
+  title: string
+  items: string[]
+  /** must = 必须一起执行（红）；keep = 受影响但保留；info = 普通提醒。 */
+  tone?: 'must' | 'keep' | 'info'
+}
+
 export interface ConfirmOptions {
   title: string
   message: string
   details?: string[]
+  sections?: ConfirmSection[]
   confirmLabel: string
   cancelLabel?: string
   danger?: boolean

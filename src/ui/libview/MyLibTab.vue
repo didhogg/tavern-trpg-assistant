@@ -8,8 +8,9 @@ import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
-import { askConfirm } from '../kit/confirm'
 import { importFiles } from './import-flow'
+import { removeTarget } from './actions'
+import { openPack } from './open'
 
 /** 我的库（U6）：自己导入的包、从别处存入的本地副本。从下载页装的包在书架；房规 / 编辑 / 覆盖不放这里。条目编辑与新建是 P5.5，按钮先灰。 */
 const app = useAppStore()
@@ -53,19 +54,11 @@ async function exportPack(p: BrewPack): Promise<void> {
     toast.success(`已导出 ${a.download}`)
   } catch (e) { console.error('[trpg-assistant] 导出失败', e); toast.error('导出没有成功') }
 }
+const setOf = (): string => lib.brewSetId(codeSet.value) ?? ''
 async function remove(p: BrewPack): Promise<void> {
   const setId = lib.brewSetId(codeSet.value)
   if (!setId) return
-  try {
-    const impact = await app.svc().backend.removalImpact({ kind: 'brew', setId, docIdLocals: [p.docIdLocal] })
-    const lines = [...impact.packs.map((x) => `${x.mustRemove ? '必须一起删除：' : '依赖它：'}${x.filename ?? x.docIdLocal}`), ...(impact.saves.length ? [`${impact.saves.length} 份存档 / 当前数据用到它`] : [])]
-    if (!(app.settings?.library.skipRemovePrompt) || impact.packs.some((x) => x.mustRemove)) {
-      if (!(await askConfirm({ title: `删除《${title(p)}》？`, message: '这个包会从本机删除。', details: lines.length ? lines : undefined, confirmLabel: '确认删除', danger: true }))) return
-    }
-    await app.svc().backend.library.service.brewDelete(setId, impact.removeTogether.length ? impact.removeTogether : [p.docIdLocal])
-    toast.success('已删除')
-    await reload()
-  } catch (e) { console.error('[trpg-assistant] 删除失败', e); toast.error('没有成功，原有内容没有改动') }
+  if (await removeTarget(app.svc(), { kind: 'brew', setId, docIdLocals: [p.docIdLocal] }, title(p), app.settings?.library.skipRemovePrompt ?? false, toast)) await reload()
 }
 </script>
 
@@ -81,7 +74,7 @@ async function remove(p: BrewPack): Promise<void> {
     <div v-if="!packs.length" class="lib-state"><h3>这里放你自己的内容</h3><p class="lib-muted">导入作者格式的 JSON 文件，或在书架的 ⋯ 里把一本书"存入我的库"。</p></div>
     <ul v-else class="trpg-list" data-testid="mylib-list">
       <li v-for="p in packs" :key="p.docIdLocal" class="trpg-row">
-        <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ title(p) }}</div><div class="trpg-row__meta">来源 {{ p.sources.length }} 个 · 条目 {{ p.entryCount }} 条</div></div>
+        <div class="trpg-row__main"><button class="trpg-row__title lib-name" type="button" data-testid="mylib-open" @click="openPack({ set: setOf(), source: p.sources[0] ?? p.docIdLocal, name: title(p), docIdLocal: p.docIdLocal })">{{ title(p) }}</button><div class="trpg-row__meta">来源 {{ p.sources.length }} 个 · 条目 {{ p.entryCount }} 条</div></div>
         <div class="trpg-row__end">
           <Switch :model-value="rowOn(p)" :label="`在本战役里使用《${title(p)}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(p, v)" />
           <button class="trpg-btn trpg-btn--small" type="button" @click="exportPack(p)"><Icon name="download-simple" :size="14" />导出</button>

@@ -17,10 +17,12 @@ export interface PackProps {
   kind?: 'book' | 'adventure'
   /** 自制包里带正文的书 / 冒险（B-29）。 */
   corpora?: Array<{ prop: string; id: string; name: string }>
+  /** 自制包的真实包编号：同来源多个包各开各的（P5 T6 包身份）。 */
+  docIdLocal?: string
 }
 
 export function openPack(p: PackProps): void {
-  useModalStore().open({ key: `pack:${p.set}:${p.source}`, title: p.name, component: PackPage, header: PackHeader, props: { ...p }, variant: 'sheet' })
+  useModalStore().open({ key: `pack:${p.set}:${p.docIdLocal ?? p.source}`, title: p.name, component: PackPage, header: PackHeader, props: { ...p }, variant: 'sheet' })
 }
 
 export function openEntry(ref: EntryRef, title = ''): void {
@@ -33,7 +35,7 @@ export function openSearch(): void {
 
 /** 包的【管理】：在包弹窗里前进一页；没有弹窗时直接打开。 */
 export function openManage(p: PackProps): void {
-  useModalStore().push({ key: `manage:${p.set}:${p.source}`, title: `管理 · ${p.name}`, component: ManagePage, props: { ...p }, variant: 'sheet' })
+  useModalStore().push({ key: `manage:${p.set}:${p.docIdLocal ?? p.source}`, title: `管理 · ${p.name}`, component: ManagePage, props: { ...p }, variant: 'sheet' })
 }
 
 /** 书 / 冒险阅读器：弹窗里前进一页。 */

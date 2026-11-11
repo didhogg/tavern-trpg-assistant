@@ -12,7 +12,7 @@ import { openEntry, openReader } from './open'
 import { categoryLabel, registeredCategories } from './registry'
 
 /** 包 / 书弹窗的列表页（U1a + U3）：搜索与类别药丸始终显示；选"全部"平铺；点行弹窗内换成详情。不出现"书目来源"勾选（进包就是只看这个来源）。 */
-const props = defineProps<{ set: string; source: string; name: string; abv?: string; kind?: 'book' | 'adventure'; corpora?: Array<{ prop: string; id: string; name: string }> }>()
+const props = defineProps<{ set: string; source: string; name: string; abv?: string; kind?: 'book' | 'adventure'; corpora?: Array<{ prop: string; id: string; name: string }>; docIdLocal?: string }>()
 const app = useAppStore()
 const lib = useLibViewStore()
 const toast = useToastStore()
@@ -47,7 +47,7 @@ async function load(): Promise<void> {
   loading.value = true
   failed.value = null
   try {
-    rows.value = await loadPackRows(app.svc(), c, props.set, props.source, (part) => { rows.value = part })
+    rows.value = await loadPackRows(app.svc(), c, props.set, props.source, (part) => { rows.value = part }, props.docIdLocal)
   } catch (e) {
     console.error('[trpg-assistant] 读取包内容失败', e)
     failed.value = e instanceof Error ? e.message : String(e)

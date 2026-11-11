@@ -34,12 +34,24 @@ export async function authorName(s: Services, codeSet: string, prop: string, ite
 /** 一次最多并行取几类（每类一次作者查询）。 */
 const BATCH = 6
 
-export async function loadPackRows(s: Services, c: CampaignLibrary, setId: string, source: string, onPart?: (rows: PackRow[]) => void): Promise<PackRow[]> {
-  const counts = await s.backend.library.service.categories(setId)
+/**
+ * 一个包 / 一本书弹窗里的全部条目。自制包按真实包编号（packDocIdLocal）取这个包自己的条目，类别只取这个包里非空的；
+ * 官方书按数据集 + 作者来源。mode = browse：本战役关着的条目也列出（灰显，仍能点开）。
+ */
+export async function loadPackRows(s: Services, c: CampaignLibrary, setId: string, source: string, onPart?: (rows: PackRow[]) => void, packDocIdLocal?: string): Promise<PackRow[]> {
+  const lib = s.backend.library
+  const view = await lib.currentView()
+  let counts: Record<string, number>
+  if (packDocIdLocal) {
+    const pack = (await lib.brewPacks.list(setId, view)).find((p) => p.docIdLocal === packDocIdLocal)
+    if (!pack) throw new Error('这个包已经不在本机了（可能刚被删除或更新），请回书架重新打开')
+    counts = Object.fromEntries(Object.entries(await lib.service.packOwnedItems(setId, pack, view)).map(([prop, list]) => [prop, list.length]))
+  } else counts = await lib.service.categories(setId)
   const props = registeredCategories(Object.entries(counts).filter(([, n]) => n > 0).map(([prop]) => ({ prop }))).map((x) => x.prop)
+  const opts = packDocIdLocal ? { packDocIdLocal, expand: true, mode: 'browse' as const, view } : { source, expand: true, mode: 'browse' as const, view }
   const rows: PackRow[] = []
   for (let i = 0; i < props.length; i += BATCH) {
-    const parts = await Promise.all(props.slice(i, i + BATCH).map(async (prop) => Promise.all((await s.backend.library.scoped.query(c, prop, { source, expand: true })).map(async (r) => toRow(prop, r, await authorName(s, c.codeSet, prop, r.item))))))
+    const parts = await Promise.all(props.slice(i, i + BATCH).map(async (prop) => Promise.all((await lib.scoped.query(c, prop, opts)).filter((r) => r.ref.set === setId || !!packDocIdLocal).map(async (r) => toRow(prop, r, await authorName(s, c.codeSet, prop, r.item))))))
     for (const part of parts) rows.push(...part)
     onPart?.([...rows])
   }
@@ -47,7 +59,7 @@ export async function loadPackRows(s: Services, c: CampaignLibrary, setId: strin
 }
 
 function toRow(prop: string, r: ScopedRow, name: string): PackRow {
-  return { ref: r.ref, name, prop, source: r.source, off: r.reason === 'excluded' || r.reason === 'out-of-scope' || r.reason === 'unclassified', pack: r.variant?.pack ?? null }
+  return { ref: r.ref, name, prop, source: r.source, off: !r.visible, pack: r.variant?.pack ?? null }
 }
 
 /** 文字匹配（名称，不分大小写）。 */

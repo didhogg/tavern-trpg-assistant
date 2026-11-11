@@ -113,9 +113,9 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .trpg-modal__back span { overflow: hidden; text-overflow: ellipsis; } .trpg-modal__back:hover { background: var(--bg-hover); }
 .trpg-sheet-grip { display: none; width: 44px; height: 5px; margin: 8px auto 0; border-radius: 3px; background: var(--line-ctrl); opacity: 0.5; }
 .trpg-modal__pages { position: relative; flex: 1; min-height: 0; }
-.trpg-modal[data-variant='confirm'] .trpg-modal__pages { flex: none; }
+.trpg-modal[data-variant='confirm'] .trpg-modal__pages { flex: 0 1 auto; display: flex; flex-direction: column; }
 .trpg-modal__page { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; overflow: auto; padding: var(--sp-4) var(--sp-5) var(--sp-5); transition: opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s; }
-.trpg-modal[data-variant='confirm'] .trpg-modal__page { position: relative; }
+.trpg-modal[data-variant='confirm'] .trpg-modal__page { position: relative; flex: 0 1 auto; overflow: hidden; }
 .trpg-modal__page.is-under { opacity: 0; transform: translateX(-24px); visibility: hidden; transition: opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s var(--dur-fast); }
 .trpg-page-enter-from, .trpg-page-leave-to { opacity: 0; transform: translateX(24px); }
 .trpg-page-enter-active, .trpg-page-leave-active { transition: opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std); }
@@ -128,9 +128,16 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .trpg-window[data-layout='mid'] .trpg-modal[data-variant='drawer'] .trpg-modal__card { width: min(440px, 100%); }
 .trpg-window[data-layout='narrow'] .trpg-modal[data-variant='confirm'] { align-items: flex-end; background: color-mix(in srgb, var(--text) 46%, transparent); }
 .trpg-window[data-layout='narrow'] .trpg-modal[data-variant='confirm'] .trpg-modal__card { height: auto; border-radius: 14px 14px 0 0; animation-name: trpg-sheet; }
-.trpg-confirm { display: grid; gap: var(--sp-3); }
-.trpg-confirm__details { padding-left: var(--sp-5); color: var(--text2); list-style: disc; }
-.trpg-confirm__actions { display: flex; justify-content: flex-end; gap: var(--sp-2); margin-top: var(--sp-1); }
+/* 确认页：说明固定、明细自己滚、按钮钉底（长清单不把按钮挤出弹窗，P5 T6 #1） */
+.trpg-confirm { display: flex; flex-direction: column; gap: var(--sp-3); min-height: 0; max-height: 100%; }
+.trpg-modal[data-variant='sheet'] .trpg-confirm { height: 100%; padding: var(--sp-4) var(--sp-5) var(--sp-5); }
+.trpg-confirm__message { flex: none; }
+.trpg-confirm__scroll { flex: 0 1 auto; min-height: 0; overflow: auto; display: grid; gap: var(--sp-3); align-content: start; padding-right: var(--sp-1); overscroll-behavior: contain; }
+.trpg-confirm__section { display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); }
+.trpg-confirm__section[data-tone='must'] { border-color: var(--danger-line); background: var(--danger-bg); } .trpg-confirm__section[data-tone='must'] .trpg-confirm__h { color: var(--danger-text); }
+.trpg-confirm__h { margin: 0; font-size: var(--fs-sm); font-weight: var(--fw-semibold); } .trpg-confirm__h small { margin-left: var(--sp-2); color: var(--text3); font-weight: normal; }
+.trpg-confirm__details { padding-left: var(--sp-5); color: var(--text2); list-style: disc; overflow-wrap: anywhere; }
+.trpg-confirm__actions { flex: none; display: flex; justify-content: flex-end; gap: var(--sp-2); margin-top: var(--sp-1); padding-top: var(--sp-2); border-top: var(--border) solid var(--line); }
 .trpg-confirm__actions--stack { flex-wrap: wrap; }
 .trpg-window[data-layout='narrow'] .trpg-confirm__actions { flex-direction: column-reverse; } .trpg-window[data-layout='narrow'] .trpg-confirm__actions .trpg-btn { width: 100%; }
 .trpg-warn { color: var(--warn-text); }

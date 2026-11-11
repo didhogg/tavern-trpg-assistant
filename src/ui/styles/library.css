@@ -11,6 +11,7 @@
 .lib-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-serif); font-weight: var(--fw-semibold); background: none; border: 0; padding: 0; text-align: left; color: inherit; font-size: inherit; }
 .lib-name:hover { text-decoration: underline dotted; text-underline-offset: 4px; }
 .trpg-shelf__row[data-off='true'] .lib-name { color: var(--text2); font-weight: var(--fw-regular); }
+.lib-alt-name { margin-left: var(--sp-2); color: var(--text3); font-family: var(--font-sans, inherit); font-weight: var(--fw-regular); font-size: var(--fs-sm); }
 .lib-rowmeta { color: var(--text2); font-size: var(--fs-xs); white-space: nowrap; }
 .trpg-window[data-layout='narrow'] .lib-rowmeta { display: none; }
 .trpg-shelf + .lib-sec { margin-top: var(--sp-2); }

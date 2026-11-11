@@ -12,6 +12,8 @@ export interface ShelfState {
   groups: ShelfGroup[]
   booksError: string | null
   adventuresError: string | null
+  /** 某套自制包读取失败（只影响自制那一块，P5-4 §3.1）。 */
+  brewError?: string | null
 }
 
 /**
