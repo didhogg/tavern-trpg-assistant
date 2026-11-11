@@ -5,6 +5,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init, sourceOf } from './author'
 import type { ParsedProp } from './commands'
+import { isExcludedEntity } from './read-commands'
+import type { QueryRow } from '../../service-types'
 
 export interface WithErrors<T> {
   value: T
@@ -189,4 +191,53 @@ export async function parseBrewProp(prop: string): Promise<ParsedProp> {
   await init()
   const items: any[] = (await A.DataLoader.pCacheAndGetAllBrew(prop)) ?? []
   return { items, hashes: items.map((it) => hashOf(prop, it)), sources: items.map((it) => sourceOf(it)) }
+}
+
+
+// 作者生成的编号可能不同。用作者保留的出处回查对应类别的原始编号。
+function isPackItem(prop: string, item: any, hash: string, direct: Set<string>, raw: Record<string, string[]>): boolean {
+  if (item._versionBase_hash) return direct.has(item._versionBase_hash)
+  if (item._isSubRace && item._subraceName) {
+    const parent = hashOf('subrace', { name: item._subraceName, raceName: item._baseName, source: sourceOf(item) })
+    return !!parent && (raw.subrace ?? []).includes(parent)
+  }
+  if (item.genericVariant) {
+    const template = hashOf('magicvariant', item.genericVariant)
+    return !!template && (raw.magicvariant ?? []).includes(template)
+  }
+  if (prop === 'item' && item._isItemGroup) return (raw.itemGroup ?? []).includes(hash)
+  return direct.has(hash)
+}
+
+/** 作者登记的类别决定读哪些数据。物品和种族由作者加载器合并，依赖只参与展开。 */
+export async function brewPackRows(raw: Record<string, string[]>): Promise<Record<string, QueryRow[]>> {
+  await init()
+  const out: Record<string, QueryRow[]> = {}
+  for (const loader of new Set<any>(A.DataLoader._DATA_TYPE_LOADER_LIST)) {
+    const page = loader.constructor.PAGE
+    if (A.UrlUtil._PAGE_TO_PROPS_CORPUS[page]) continue
+    const props: string[] = loader.constructor.PROPS
+    const combined = page === A.UrlUtil.PG_ITEMS || page === A.UrlUtil.PG_RACES
+    const family: string[] = combined ? A.UrlUtil.PAGE_TO_PROPS[page] ?? [] : []
+    for (const prop of props) {
+      if (prop.startsWith('raw_')) continue
+      const primary = prop === family[0]
+      if (!raw[prop]?.length && !(primary && family.some((alias) => raw[alias]?.length))) continue
+      const direct = new Set(raw[prop] ?? [])
+      // 基础物品和魔法模板在作者物品页合并成 item；作者给物品组、亚种和具体变体留下出处。
+      if (primary && page === A.UrlUtil.PG_ITEMS) {
+        for (const alias of family.filter((key) => A.UrlUtil.URL_TO_HASH_BUILDER[key] === A.UrlUtil.URL_TO_HASH_BUILDER[page])) {
+          for (const hash of raw[alias] ?? []) direct.add(hash)
+        }
+      }
+      const items: any[] = (await A.DataLoader.pCacheAndGetAllBrew(prop)) ?? []
+      const rows = items.flatMap((item): QueryRow[] => {
+        const hash = hashOf(prop, item)
+        if (!hash || !isPackItem(prop, item, hash, direct, raw)) return []
+        return [{ hash, item, source: sourceOf(item), excluded: isExcludedEntity(prop, item, hash) }]
+      })
+      if (rows.length) out[prop] = rows
+    }
+  }
+  return out
 }

@@ -7,7 +7,7 @@ import { A, engSiteHashOf, hashOf, init, sourceOf } from './author'
  * 物品页另外走 Renderer.item.isExcluded（items.js 第 304 行，连带判断基础物品、变体）。
  * 没有来源的条目作者 isExcluded 会报错，也无从按书屏蔽，记为不屏蔽。
  */
-function isExcludedEntity(prop: string, ent: any, hash: string | null): boolean {
+export function isExcludedEntity(prop: string, ent: any, hash: string | null): boolean {
   const source = sourceOf(ent)
   if (!source) return false
   if (A.DataLoader.getPropPage(prop) === A.UrlUtil.PG_ITEMS && A.Renderer.item.isExcluded(ent, { hash })) return true

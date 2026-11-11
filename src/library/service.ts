@@ -22,7 +22,8 @@ import { LibraryOperations } from './operations'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 import { ensureReadable, installedSource } from './service-read'
 import { tablesFor } from './service-tables'
-import { packOwnedItems } from './alternatives'
+import { PackEntries } from './pack-entries'
+import type { BrewPack } from './brew-packs'
 import { englishOf } from './service-english-entry'
 export type { DetailResult, English, EnglishCoverage, EnglishPairs, QueryRow, UnpairedReason } from './service-types'
 export interface FrameContext {
@@ -46,6 +47,7 @@ export class LibraryService {
   private readonly frames = new Map<string, Promise<AuthorFrame>>()
   private readonly pairsCache = new Map<string, Promise<EnglishPairs>>()
   private readonly searchLoaded = new Map<string, string>()
+  private readonly packEntries = new PackEntries()
   private readonly parsedMemo: ParsedMemo
   private readonly embedded: EmbeddedTables
   readonly operations: LibraryOperations
@@ -79,9 +81,7 @@ export class LibraryService {
   openFrameIn(codeSet: string, kvScope: string, view?: LibraryView): Promise<AuthorFrame> {
     return this.opts.openFrame(codeSet, { kvScope, ...(view ? { view } : {}), filterIndex: true })
   }
-
   generation = 0
-
   /** 关掉所有小窗（测试 / 全量重置）。 */
   reset(): void {
     this.generation++
@@ -89,11 +89,13 @@ export class LibraryService {
     this.frames.clear()
     this.pairsCache.clear()
     this.searchLoaded.clear()
+    this.packEntries.clear()
   }
 
   /** 发布后只关这个旧版本的小窗；别的版本正在读的窗口不动。 */
   retire(viewId: string): void {
     this.generation++
+    this.packEntries.retire(viewId)
     for (const [key, p] of [...this.frames]) {
       if (!key.startsWith(`${viewId}:`)) continue
       p.then((f) => f.close(), () => undefined)
@@ -113,11 +115,9 @@ export class LibraryService {
     const source = getSource(sourceId)
     await ensurePrecomputed({ source, db: this.opts.db, view, openFrame: (cs) => this.opts.openFrame(cs, { view, filterIndex: true }), ...opts })
   }
-  /** 某个包自己提供的条目：只在这个包的隔离作者存储里解析，依赖包的内容不算进来。 */
-  async packOwnedItems(sourceId: string, docIdLocal: string, prop: string, hashes: string[], rawHashes: Iterable<string>, viewArg?: LibraryView): Promise<Map<string, unknown>> {
-    const view = await this.view(viewArg)
+  packOwnedItems(sourceId: string, pack: BrewPack, view: LibraryView) {
     const source = getSource(sourceId)
-    return packOwnedItems({ source, db: this.opts.db, view, frame: await this.frameOf(source.codeSet, view), openFrameIn: (scope) => this.openFrameIn(source.codeSet, scope, view) }, docIdLocal, prop, hashes, rawHashes)
+    return this.packEntries.get({ source, db: this.opts.db, view, openFrameIn: (scope) => this.openFrameIn(source.codeSet, scope, view) }, pack)
   }
   async parsed(sourceId: string, prop: string, viewArg?: LibraryView): Promise<ParsedProp> {
     const view = await this.view(viewArg)

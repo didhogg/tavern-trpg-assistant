@@ -1,6 +1,7 @@
 // 按战役看【库】（D2-P3 整体设计 §2.2、§2.4、§2.7）：书目、查询、详情、取条目、搜索都按战役的选书设置过滤，
 // 交出的是"生效版本"（原件，或用户选了的备选 / 房规）。P5 T4：身份、浏览、关闭书、查询放大一起收口。
 import { altsKey, type AltIndex, type AltRecord } from './alternatives'
+import { packTarget, packVariant } from './pack-target'
 import type { LibraryDatabase } from './db'
 import { countSources, parsedKey } from './install'
 import { ManageStore, type ChoiceLevel, type HouseRuleLink } from './manage'
@@ -189,35 +190,34 @@ export class ScopedLibrary {
       const allowed = set.kind === 'official' ? await view.visibleSources(set.id) : null
       const pack = packDocIdLocal ? ctx.packs.get(set.id)?.get(packDocIdLocal) : undefined
       if (packDocIdLocal && !pack) continue
-      const got: QueryRow[] = await this.lib.query(set.id, prop, { source, view }).catch((e: unknown) => {
-        if (e instanceof Error && e.message.includes('没有这一类的解析结果')) return []
-        throw e
-      })
-      const sources = [...new Set(got.map((r) => r.source).filter((s): s is string => !!s))]
-      await this.editions(c.codeSet, sources, view)
-      const owned = pack ? await this.lib.packOwnedItems(set.id, pack.docIdLocal, prop, got.map((r) => r.hash).filter((h): h is string => !!h), Object.values(pack.hashes).flat(), view) : null
+      const got = pack
+        ? (await this.lib.packOwnedItems(set.id, pack, view))[prop]?.filter((r) => !r.excluded && (!source || r.source?.toLowerCase() === source.toLowerCase())) ?? []
+        : await this.lib.query(set.id, prop, { source, view }).catch((e: unknown) => {
+          if (e instanceof Error && e.message.includes('没有这一类的解析结果')) return [] as QueryRow[]
+          throw e
+        })
+      await this.editions(c.codeSet, [...new Set(got.flatMap((r) => r.source ? [r.source] : []))], view)
       for (const r of got) {
         if (!r.hash) continue
         if (allowed && r.source && !allowed.some((s) => s.toLowerCase() === r.source!.toLowerCase())) continue
-        if (owned && !owned.has(r.hash)) continue
-        const packItem = owned?.get(r.hash)
-        const ref: EntryRef = { set: set.id, prop, hash: r.hash }
+        const candidate: EntryRef = { set: set.id, prop, hash: r.hash }
+        const { ref, altId } = pack ? packTarget(candidate, set.codeSet, pack.docIdLocal, ctx.altMap) : { ref: candidate, altId: null }
         if (ctx.houseUnits.has(refKey(ref))) continue
         const v = await this.viewFor(c, ref, r.source, ctx.assigns, view)
         if (!v.visible && mode !== 'browse') continue
         const alts = await this.alternativesOf(ref, ctx)
         const { chosen, item } = this.version(refKey(ref), alts, ctx, c.choices[refKey(ref)])
         const row: ScopedRow = {
-          ref, source: (packItem as { source?: string } | undefined)?.source ?? r.source, reason: v.reason, visible: v.visible, item: packItem ?? item ?? r.item, version: chosen,
+          ref, source: r.source, reason: v.reason, visible: v.visible, item: pack ? r.item : item ?? r.item, version: chosen,
           ...(pack ? { pack: { docIdLocal: pack.docIdLocal, filename: pack.filename, stableId: packUrl(pack), sources: pack.sources } } : {}),
         }
-        if (expand) rows.push(...expandVariants({ ...row, item: packItem ?? row.item }, packItem ?? r.item, alts))
+        if (expand && pack) rows.push({ ...row, variant: packVariant(chosen.altId, alts, pack.docIdLocal, altId !== null) })
+        else if (expand) rows.push(...expandVariants(row, r.item, alts))
         else rows.push(row)
       }
     }
     return rows
   }
-
   async variantsOf(c: CampaignLibrary, ref: EntryRef, viewArg?: LibraryView): Promise<{ parent: EntryRef | null; variants: Array<VariantLink & { ref: EntryRef }> }> {
     const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
     const links = variantLinks(await this.lib.parsed(ref.set, ref.prop, view), ref.hash)

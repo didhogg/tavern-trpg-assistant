@@ -1,17 +1,19 @@
 // 同编号挂备选（D2-P3 整体设计 §2.4）：自制包装、删、更新之后，找出和官方或先装的包同编号的条目，
 // 让原件照常生效，后来的挂成备选。作者加载器合并时"后装的盖掉先装的"（utils-dataloader-dataloader.js 第 1071 行），
 // 所以备选的条目对象要单独取：开一个隔离的作者存储范围，只放那个包（和它声明依赖的包），用作者加载器原样解析。
+import { uuid } from '../core/ids'
 import type { LibraryDatabase } from './db'
 import type { LibraryView } from './revision'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { AuthorFrame } from './runtime/host'
+import type { QueryRow } from './service-types'
 import { refKey, type EntryRef } from './scopes'
 import { officialSourceOf, type SourceEntry } from './sources'
 import { findCollisions, packAltId, packStableId, type Alternative, type DocIndex } from './versions'
 
 /** 作者自制存储的键（utils-brew-impl-brew.js 第 9 行 _STORAGE_KEY）。 */
-export const BREW_STORAGE_KEY = 'HOMEBREW_2_STORAGE'
+const BREW_STORAGE_KEY = 'HOMEBREW_2_STORAGE'
 
 export interface AltRecord {
   target: EntryRef
@@ -31,43 +33,67 @@ export interface AltIndex {
 
 export const altsKey = (brewSetId: string): string => `alts:${brewSetId}`
 
-export type StoredBrew = { head: { docIdLocal: string; filename?: string }; body: { _meta?: { sources?: Array<{ json?: string }>; dependencies?: Record<string, string[]> } } }
+type StoredBrew = { head: { docIdLocal: string; filename?: string }; body: { _meta?: {
+  sources?: Array<{ json?: string }>
+  dependencies?: Record<string, string[]>
+  includes?: Record<string, string[]>
+  otherSources?: Record<string, Record<string, unknown>>
+} } }
 
-/** 一个包加上它 _meta.dependencies 里声明的、由别的已装包提供的来源（作者展开 _copy 时要用）。被测的包放最后，同编号时它赢。 */
-export function withDependencies(doc: StoredBrew, all: StoredBrew[]): StoredBrew[] {
-  const want = new Set(Object.values(doc.body._meta?.dependencies ?? {}).flat().map((s) => s.toLowerCase()))
-  const deps = all.filter((d) => d !== doc && (d.body._meta?.sources ?? []).some((s) => s.json && want.has(s.json.toLowerCase())))
-  return [...deps, doc]
+/** 只加作者声明的已装依赖，沿依赖链展开。目标包放最后，保留作者同编号的覆盖顺序。 */
+function withDependencies(doc: StoredBrew, all: StoredBrew[]): StoredBrew[] {
+  const seen = new Set([doc])
+  const visit = (current: StoredBrew): void => {
+    const meta = current.body._meta
+    const want = new Set([
+      ...Object.values(meta?.dependencies ?? {}).flat(),
+      ...Object.values(meta?.includes ?? {}).flat(),
+      ...Object.values(meta?.otherSources ?? {}).flatMap((bySource) => Object.keys(bySource)),
+    ].map((source) => source.toLowerCase()))
+    for (const dep of all) {
+      if (seen.has(dep) || !dep.body._meta?.sources?.some((s) => s.json && want.has(s.json.toLowerCase()))) continue
+      seen.add(dep)
+      visit(dep)
+    }
+  }
+  visit(doc)
+  return [...all.filter((entry) => entry !== doc && seen.has(entry)), doc]
 }
 
-export interface BuildAltOptions {
+type Isolation = {
   source: SourceEntry
   db: LibraryDatabase
   view: LibraryView
-  /** 平常的小窗（读包索引用）。 */
-  frame: AuthorFrame
-  /** 在指定作者存储范围里开小窗（隔离解析用）。 */
   openFrameIn: (kvScope: string) => Promise<AuthorFrame>
 }
 
-/** 在隔离范围里只放这几个包，取指定编号的作者对象（作者加载器原样）。 */
-export async function isolatedItems(opts: BuildAltOptions, docs: StoredBrew[], wants: Array<{ prop: string; hash: string }>): Promise<Record<string, unknown>> {
+export interface BuildAltOptions extends Isolation {
+  frame: AuthorFrame
+}
+
+async function withIsolatedBrew<T>(opts: Isolation, docs: StoredBrew[], read: (frame: AuthorFrame) => Promise<T>): Promise<T> {
   const { db, source, view } = opts
-  const scope = `${source.codeSet}:iso:${docs.at(-1)!.head.docIdLocal}`
-  // 复制作者存储的有效内容（新层盖旧层），只换掉自制列表；同步存储也复制
-  const scopes = await view.kvScopes(source.codeSet)
-  const merged = new Map<string, unknown>()
-  for (const s of [...scopes].reverse()) for (const row of await db.kv.where('scope').equals(s).toArray()) { if (row.deleted) merged.delete(row.key); else merged.set(row.key, row.value) }
-  merged.set(BREW_STORAGE_KEY, docs)
-  await db.kv.bulkPut([...merged].map(([key, value]) => ({ scope, key, value })))
-  const localMerged = new Map<string, unknown>()
-  for (const s of [...scopes].reverse()) for (const row of await db.kv.where('scope').equals(`${s}:local`).toArray()) { if (row.deleted) localMerged.delete(row.key); else localMerged.set(row.key, row.value) }
-  if (localMerged.size) await db.kv.bulkPut([...localMerged].map(([key, value]) => ({ scope: `${scope}:local`, key, value })))
-  const frame = await opts.openFrameIn(scope)
+  const scope = `${source.codeSet}:iso:${uuid()}`
+  const scopes = [...(await view.kvScopes(source.codeSet))].reverse()
+  const copy = async (suffix: string): Promise<void> => {
+    const merged = new Map<string, unknown>()
+    for (const parent of scopes) {
+      for (const row of await db.kv.where('scope').equals(parent + suffix).toArray()) {
+        if (row.deleted) merged.delete(row.key)
+        else merged.set(row.key, row.value)
+      }
+    }
+    if (!suffix) merged.set(BREW_STORAGE_KEY, docs)
+    if (merged.size) await db.kv.bulkPut([...merged].map(([key, value]) => ({ scope: scope + suffix, key, value })))
+  }
+  let frame: AuthorFrame | undefined
   try {
-    return await frame.call('brewItemsByHash', wants)
+    await copy('')
+    await copy(':local')
+    frame = await opts.openFrameIn(scope)
+    return await read(frame)
   } finally {
-    frame.close()
+    frame?.close()
     await db.kv.where('scope').anyOf(scope, `${scope}:local`).delete()
   }
 }
@@ -108,7 +134,7 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
       continue
     }
     try {
-      items.set(id, await isolatedItems(opts, withDependencies(doc, stored), wants))
+      items.set(id, await withIsolatedBrew(opts, withDependencies(doc, stored), (frame) => frame.call('brewItemsByHash', wants)))
     } catch (e) {
       for (const w of wants) out.errors.push({ docIdLocal: id, ...w, error: e instanceof Error ? e.message : String(e) })
     }
@@ -150,26 +176,11 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
   return out
 }
 
-
-/**
- * 判断查询出来的条目是否由指定包自己提供：在只放这个包的隔离作者存储里，让作者加载器按同一类别 + 编号取回。
- * 解析时带上目标包作者声明的 dependencies（只用于让作者展开 _copy）；输出再用目标包 raw 清单筛，
- * 依赖包自己的条目不会算到这个包名下。baseitem / magicvariant 等作者加载器在包内合并出的条目会按
- * 解析后的最终类别返回，不需要手写类别转换表。
- */
-export async function packOwnedItems(
-  opts: BuildAltOptions,
-  docIdLocal: string,
-  prop: string,
-  hashes: string[],
-  rawHashes: Iterable<string>,
-): Promise<Map<string, unknown>> {
+/** 在同一个隔离小窗读取一个包的所有可查询类别。条目仍由作者加载器交出。 */
+export async function packOwnedItems(opts: Isolation, docIdLocal: string, raw: Record<string, string[]>): Promise<Record<string, QueryRow[]>> {
+  if (!Object.keys(raw).length) return {}
   const stored = ((await opts.view.kvGet(opts.source.codeSet, BREW_STORAGE_KEY)) ?? []) as StoredBrew[]
-  const doc = stored.find((d) => String(d.head.docIdLocal) === docIdLocal)
-  if (!doc) return new Map()
-  const raw = new Set(rawHashes)
-  const unique = [...new Set(hashes.filter((hash) => Boolean(hash) && raw.has(hash)))]
-  if (!unique.length) return new Map()
-  const got = await isolatedItems(opts, withDependencies(doc, stored), unique.map((hash) => ({ prop, hash })))
-  return new Map(unique.filter((hash) => got[`${prop}|${hash}`] !== undefined).map((hash) => [hash, got[`${prop}|${hash}`]]))
+  const doc = stored.find((d) => d.head.docIdLocal === docIdLocal)
+  if (!doc) return {}
+  return withIsolatedBrew(opts, withDependencies(doc, stored), (frame) => frame.call('brewPackRows', raw))
 }

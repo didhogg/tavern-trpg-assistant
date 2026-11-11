@@ -87,18 +87,30 @@ describe('buildAlternatives', () => {
 
 
 describe('按包归属的作者隔离', () => {
-  it('目标包 raw 编号 + 隔离作者解析；依赖包条目不在目标 raw 中，不混入', async () => {
+  it('带上已装的传递依赖，独立隔离并发读取，启动失败也清理', async () => {
     const source = getSource('cn-brew')
-    const view = {
-      kvScopes: async () => ['cn'],
-      kvGet: async () => [doc('p1', 1, { _meta: { sources: [{ json: 'A' }] } }), doc('p2', 2, { _meta: { sources: [{ json: 'D' }] } })],
-    } as never
-    const frame = fakeFrame({})
-    const got = await packOwnedItems(
-      { source, db, view, frame, openFrameIn: async () => fakeFrame({ brewItemsByHash: async () => ({ 'item|own': { name: '目标包' }, 'item|dep': { name: '依赖包' } }) }) },
-      'p1', 'item', ['own', 'dep'], ['own'],
-    )
-    expect([...got.keys()]).toEqual(['own'])
-    expect((got.get('own') as { name: string }).name).toBe('目标包')
+    const stored = [
+      doc('target', 1, { _meta: { sources: [{ json: 'A' }], includes: { spell: ['D'] } } }),
+      doc('dep', 2, { _meta: { sources: [{ json: 'D' }], dependencies: { spell: ['E'] } } }),
+      doc('nested', 3, { _meta: { sources: [{ json: 'E' }] } }),
+      doc('unrelated', 4, { _meta: { sources: [{ json: 'F' }] } }),
+    ]
+    const view = { kvScopes: async () => ['cn'], kvGet: async () => stored } as never
+    const scopes: string[] = []
+    const openFrameIn = async (scope: string) => {
+      scopes.push(scope)
+      const inScope = (await db.kv.get([scope, 'HOMEBREW_2_STORAGE']))?.value as typeof stored
+      expect(inScope.map((d) => d.head.docIdLocal)).toEqual(['dep', 'nested', 'target'])
+      return fakeFrame({ brewPackRows: (raw) => {
+        expect(raw).toEqual({ baseitem: ['own'] })
+        return { item: [{ hash: 'own', source: 'A', excluded: false, item: { name: '目标包' } }] }
+      } })
+    }
+    const options = { source, db, view, openFrameIn }
+    const results = await Promise.all([packOwnedItems(options, 'target', { baseitem: ['own'] }), packOwnedItems(options, 'target', { baseitem: ['own'] })])
+    expect(results.map((r) => r.item[0].hash)).toEqual(['own', 'own'])
+    expect(new Set(scopes).size).toBe(2)
+    await expect(packOwnedItems({ ...options, openFrameIn: async () => { throw new Error('启动失败') } }, 'target', { baseitem: ['own'] })).rejects.toThrow('启动失败')
+    expect(await db.kv.where('scope').notEqual('cn').count()).toBe(0)
   })
 })
