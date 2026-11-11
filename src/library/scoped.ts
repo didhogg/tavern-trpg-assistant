@@ -3,7 +3,8 @@
 import { altsKey, type AltIndex, type AltRecord } from './alternatives'
 import { packTarget, packVariant } from './pack-target'
 import type { LibraryDatabase } from './db'
-import { countSources, parsedKey } from './install'
+import { parsedKey } from './install'
+import { sourceCountsAll } from './installed-sources'
 import { ManageStore, type ChoiceLevel, type HouseRuleLink } from './manage'
 import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } from './service'
 import type { EditionInfo } from './runtime/frame/edit-commands'
@@ -344,19 +345,12 @@ export class ScopedLibrary {
     return { groups: groupShelf(rows, record.groups), booksError: record.errors.books, adventuresError: record.errors.adventures, brewError }
   }
   private async sourceCounts(setId: string, view: LibraryView): Promise<Record<string, number>> {
-    const fp = String((await view.derivedGet(`audit:${setId}`))?.savedAt ?? '')
     const allowed = await view.visibleSources(setId)
     const trim = (counts: Record<string, number>): Record<string, number> => {
       if (allowed) for (const key of Object.keys(counts)) if (!allowed.some((s) => s.toLowerCase() === key.toLowerCase())) delete counts[key]
       return counts
     }
-    const saved = await view.derivedGet(`sources:${setId}`)
-    if (saved && saved.fingerprint === fp) return trim({ ...(saved.value as Record<string, number>) })
-    const prefix = parsedKey(setId, '')
-    const map = await view.derivedKeys(prefix)
-    const counts = trim(countSources([...map.entries()].map(([key, rec]) => ({ key, value: rec.value })), prefix))
-    await view.derivedPut(`sources:${setId}`, fp, counts)
-    return counts
+    return trim(await sourceCountsAll(view, setId))
   }
   async adventures(set: SourceEntry, viewArg?: LibraryView): Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>> {
     const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())

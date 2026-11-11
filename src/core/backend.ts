@@ -40,6 +40,9 @@ import { TrpgError } from './errors'
 import type { ImportDeps } from './transfer/importer'
 import { CampaignStarter } from './start-campaign'
 import { BookDirectory } from '../library/directory'
+import { installedOfficialSources } from '../library/installed-sources'
+import { packHealth, type PackHealth } from '../library/pack-health'
+import { suggestDownloads, type DownloadSuggestion, type MissingRef } from '../library/missing-refs'
 import { DownloadEstimator, type DownloadEstimate, type EstimateInput, type EstimateOptions } from '../library/download-estimate'
 import { CatalogPrefetch, DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
 import { checkCorePacks } from '../rules/kernel/core-pack'
@@ -79,6 +82,10 @@ export interface LibraryBackend {
   tasks: DownloadTasks
   /** 官方书目（没装也能列）。 */
   directory: BookDirectory
+  /** 包体检：已装自制包缺哪些依赖（官方的对到书号），管理页用（P5 T6 后2）。只读本地。 */
+  packHealth: (setId: string, docIdLocal?: string) => Promise<PackHealth[]>
+  /** 缺的条目该补哪本书 / 哪个包：条目详情「缺依赖」和读档补包共用（P5 T6 后4）。只读本地。 */
+  suggestDownloads: (refs: MissingRef[]) => Promise<{ suggestions: DownloadSuggestion[]; unresolved: MissingRef[] }>
   /** 下载页按所选数据集 / 书 / 冒险估算（不像向导那样自动加结算内核要的英文资料；与真正下载同一份计划，P5 T6 G5）。 */
   estimate: (input: EstimateInput, opts?: EstimateOptions) => Promise<DownloadEstimate>
   /** 首次启动后台预取书目与文件清单（boot.ts 调度）。 */
@@ -192,6 +199,7 @@ export function createBackend(opts: BackendOptions): Backend {
   kernelSave = new KernelSaveService({
     db: opts.db, campaign: opts.campaign, rules: opts.rules, now: opts.now,
     checkRefs: scopedRefChecker(scoped),
+    suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs),
     currentVersion: dataVersion,
     currentOverrides: scopedCurrentOverrides(scoped),
     mapRef: (ownerKey) => kernel.mapRef(ownerKey),
@@ -209,7 +217,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },
@@ -235,7 +243,7 @@ export function createBackend(opts: BackendOptions): Backend {
       const state = await view.officialState(set.id)
       if (state?.status !== 'installed') continue
       if (whole && (target.setIds ?? [target.setId]).includes(set.id)) continue
-      for (const src of state.sources ?? []) if (!removedSources.has(src.toLowerCase())) officialSources.add(src.toLowerCase())
+      for (const src of await installedOfficialSources(view, set.id)) if (!removedSources.has(src.toLowerCase())) officialSources.add(src.toLowerCase())
     }
     const officialHashes = async (setId: string, bookSources: string[]): Promise<Map<string, Set<string>>> => {
       const wanted = new Set(bookSources.map((s) => s.toLowerCase()))

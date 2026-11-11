@@ -94,6 +94,21 @@ describe('整套官方资料删除', () => {
 })
 
 describe('官方单本书删除', () => {
+  it('全装时删一本：只有来源、没有书号的来源（如 Generic）仍算已装，不会被一起藏掉（P5 T6 后1）', async () => {
+    db = new LibraryDatabase(`test-uninstall-generic-${Math.random()}`)
+    await seed()
+    await db.derived.put({ key: 'parsed:cn-official:spell', fingerprint: 'x', value: { items: [{}, {}, {}], hashes: ['a', 'b', 'c'], sources: ['PHB', 'MM', 'Generic'] }, savedAt: 0 })
+    const revisions = new LibraryRevisionStore(db)
+    const directory = {
+      get: async () => ({
+        codeSet: 'cn', commit: 'c', groups: [], sources: { PHB: {}, MM: {} }, books: [{ id: 'PHB', source: 'PHB' }, { id: 'MM', source: 'MM' }], adventures: [],
+        adventureFiles: {}, adventureProp: 'adventure', owners: {}, indexSources: {}, sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null },
+      }),
+    } as never
+    await removeOfficialParts({ db, revisions, tasks: { list: () => [] }, directory, afterDelete: () => undefined }, { setId: 'cn-official', bookIds: ['PHB'], bookSources: ['PHB'] })
+    const sources = (await (await revisions.published()).officialState('cn-official'))?.sources ?? []
+    expect([...sources].sort()).toEqual(['Generic', 'MM'])
+  })
   it('只移除选中书和来源，保留其他书、共享文件与旧版本', async () => {
     db = new LibraryDatabase(`test-uninstall-book-${Math.random()}`)
     await seed()

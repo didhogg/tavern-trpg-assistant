@@ -7,6 +7,7 @@ import type { TaskState } from './tasks'
 import { LibraryOperations, type OperationHandle } from './operations'
 import type { LibraryRevisionStore } from './revision'
 import { installedAdventureIds } from './install'
+import { installedOfficialSources } from './installed-sources'
 import type { BookDirectory } from './directory'
 
 export interface UninstallDeps {
@@ -108,7 +109,8 @@ export async function removeOfficialParts(
     if (missingBook) throw new Error(`这本书已经不在已装集合里：${missingBook}`)
     if (missingAdventure) throw new Error(`这本冒险已经不在已装集合里：${missingAdventure}`)
     const removedSources = new Set([...(target.bookSources ?? books), ...books.map((id) => rec.books.find((b) => String(b.id) === id)?.source ?? id)].map((s) => String(s).toLowerCase()))
-    const allSources = state.sources ?? Object.keys(rec.sources)
+    // 「全部已装」要按本机实际数据展开，不能只用书目里有书号的来源（否则 Generic、基础包等会被一起藏掉，P5 T6 后1）
+    const allSources = state.sources ?? [...new Set([...Object.keys(rec.sources), ...await installedOfficialSources(handle.target, target.setId)])]
     const remainingSources = allSources.filter((s) => !removedSources.has(s.toLowerCase()))
     const remainingBooks = allBooks.filter((id) => !books.includes(id))
     const remainingAdventures = allAdventures.filter((id) => !adventures.includes(id))

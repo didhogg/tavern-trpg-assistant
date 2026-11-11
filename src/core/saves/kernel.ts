@@ -16,6 +16,7 @@ import { clone, isObject } from './state'
 import { chooseSource } from '../../library/scopes'
 
 import type { KernelActorCompact, KernelRefChecker } from './kernel-types'
+import type { DownloadSuggestion, MissingRef } from '../../library/missing-refs'
 export type { KernelActorCompact, KernelRefChecker, KernelRefResult } from './kernel-types'
 
 export interface KernelSaveDeps {
@@ -28,6 +29,7 @@ export interface KernelSaveDeps {
   currentVersion?: () => KernelDataVersion | Promise<KernelDataVersion>
   /** 当前实际生效的房规覆盖；给了就报告覆盖是否变了。 */
   currentOverrides?: () => Promise<KernelOverride[]>
+  /** 缺的条目该补哪本书 / 哪个包（P5 T6 后4）；给了就按书、按包分组，不按整套。 */ suggestDownloads?: (refs: MissingRef[]) => Promise<{ suggestions: DownloadSuggestion[]; unresolved: MissingRef[] }>
   /** 作者编号 → 本战役【库】条目（按战役的选书）；不给出时遇到要对照的改动直接报错。 */
   mapRef?: (ownerKey: string) => KernelRefMapper | Promise<KernelRefMapper>
   /** 把本战役结算小窗里的完整人物重新拆成引用/选择/状态差别；给了就用它，没给就按改动叠。 */
@@ -48,7 +50,7 @@ export interface KernelMissing {
 /** 读档检查给界面的三张清单（P5 B-34）。 */
 export interface KernelLoadPlan {
   /** 数据集没装 → 建议下载（默认勾选）。set = 源登记表编号，official 用 tasks.startOfficial；自制数据集没装时没有可下的来源，界面只提示。 */
-  download: Array<{ set: string; kind: 'official' | 'brew'; refs: number; labels: string[] }>
+  download: Array<{ set: string; kind: 'official' | 'brew'; refs: number; labels: string[] } & Partial<Pick<DownloadSuggestion, 'book' | 'sources' | 'via'>>>
   /** 数据集装着、但条目已经没有了（上游删了 / 改了编号）：下载补不回来，只提示。 */
   gone: Array<{ set: string; prop: string; hash: string; label?: string }>
   /** 书 / 包在，但本战役关着（默认不勾；勾了 = 本战役开启它，用 openSources）。 */
@@ -228,7 +230,10 @@ export class KernelSaveService {
       const hit = plan.download.find((d) => d.set === row.ref.set)
       if (hit) { hit.refs++; if (label && hit.labels.length < 5) hit.labels.push(label) } else plan.download.push({ set: row.ref.set, kind: row.ref.set.endsWith('-brew') ? 'brew' : 'official', refs: 1, labels: label ? [label] : [] })
     })
-
+    if (this.deps.suggestDownloads && (plan.download.length || plan.gone.length)) {
+      const r = await this.deps.suggestDownloads(missing.filter((m) => m.reason !== 'excluded' && m.reason !== 'out-of-scope').map((m) => m.ref))
+      ;[plan.download, plan.gone] = [r.suggestions, r.unresolved.map((x) => ({ set: x.set, prop: x.prop, hash: x.hash, label: x.label }))]
+    }
     const current = this.deps.currentVersion ? await this.deps.currentVersion() : undefined
     const dataVersionChanges = {
       official: current && current.official !== kernel.dataVersion.official

@@ -87,6 +87,17 @@ describe('删除前的影响预览', () => {
     expect(o.removeTogether).toEqual([])
   })
 
+  it('按装 mod 的方式：保留 B（会失去依赖）时 B 不删、标为暂停；依赖 B 的 C 跟着暂停、也不删（P5 T6）', async () => {
+    db = new TrpgDatabase(`test-impact-keep-${Math.random()}`)
+    const chain = [pack('a', ['Alpha'], { spell: ['alpha'] }), pack('b', ['Beta'], { spell: ['beta'] }, { spell: ['alpha'] }), pack('c', ['Gamma'], { spell: ['gamma'] }, { spell: ['beta'] }), pack('d', ['Delta'])]
+    const d = deps({ brewPacks: { list: async () => chain } })
+    const r = await impactOfRemoval(d, { kind: 'brew', setId: 'cn-brew', docIdLocals: ['a'], keep: ['b'] })
+    expect(r.packs.map((p) => [p.docIdLocal, p.mustRemove, !!p.kept])).toEqual([['b', false, true], ['c', false, true]])
+    expect(r.removeTogether).toEqual(['a'])
+    const keepC = await impactOfRemoval(d, { kind: 'brew', setId: 'cn-brew', docIdLocals: ['a'], keep: ['c'] })
+    expect(keepC.removeTogether).toEqual(['a', 'b'])
+    expect(keepC.packs.find((p) => p.docIdLocal === 'c')?.kept).toBe(true)
+  })
   it('预览凭据包含版本 / 房规 / 选择 / 存档：影响变了就不能沿用旧预览', async () => {
     db = new TrpgDatabase(`test-impact-plan-${Math.random()}`)
     const a = await impactOfRemoval(deps(), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['p1'] })
