@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
-import { useDownloadsStore } from '../../stores/downloads'
 import { useToastStore } from '../../stores/toast'
 import { useModalStore } from '../../stores/modal'
 import Icon from '../kit/Icon.vue'
 import EntryBody from './EntryBody.vue'
+import ReinstallBlock from './ReinstallBlock.vue'
+import { ownerByCorpus, ownerFromOpenPack } from './reinstall'
 import { headingKey, headingText, readerChapters } from './reader-content'
 import type { ReaderPart, ReaderTarget } from './open'
 
 /** 书 / 冒险阅读器（U9h）：弹窗里的一页。章节目录宽屏在左侧、窄屏是点【目录】展开的列表；正文用和条目同一套渲染器。冒险没下载时先下载。 */
 const props = defineProps<ReaderTarget & { readerKey?: string }>()
 const app = useAppStore()
-const dl = useDownloadsStore()
 const toast = useToastStore()
 const modal = useModalStore()
 
-type State = { kind: 'loading' } | { kind: 'ok'; chapters: ReturnType<typeof readerChapters> } | { kind: 'missing' } | { kind: 'error'; message: string }
+type State = { kind: 'loading' } | { kind: 'ok'; chapters: ReturnType<typeof readerChapters> } | { kind: 'missing'; message: string | null } | { kind: 'error'; message: string }
 const state = shallowRef<State>({ kind: 'loading' })
 const cur = ref(0)
 const tocOpen = ref(false)
@@ -45,20 +45,15 @@ async function load(): Promise<void> {
     await go(props.part?.chapter ?? 0, props.part?.section, props.part?.ixNamedSection)
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    // 冒险正文按本下载：没有全文 = 还没下载
-    if (props.prop === 'adventure' && /没有这本的全文/.test(message)) state.value = { kind: 'missing' }
+    // 读不出正文：能找到它属于书架上的哪本书 / 冒险 / 包，就给【下载 / 重新下载】（P5-5 §11.2），不显示错误 + 重试
+    if (owner.value) { console.warn('[trpg-assistant] 读不出正文，给重新下载', message); state.value = { kind: 'missing', message } }
     else { console.error('[trpg-assistant] 读取书失败', e); state.value = { kind: 'error', message }; toast.error('读取这本书失败') }
   }
 }
 onMounted(() => void load())
-watch(() => dl.justDone, (done) => { if (done && state.value.kind === 'missing') void load() })
 
-const task = computed(() => dl.items.find((i) => i.label === `冒险《${props.name}》`) ?? null)
-function download(): void {
-  dl.rememberName(props.set, props.id, props.name)
-  app.svc().backend.library.tasks.startAdventure(props.set, props.id)
-  dl.refresh()
-}
+// 这本书属于书架上的哪一行（官方按书号；自制按包里带的正文；都没有时看栈底打开的包）
+const owner = computed(() => ownerByCorpus(props.set, props.prop, props.id) ?? ownerFromOpenPack(props.readerKey))
 const chapters = computed(() => (state.value.kind === 'ok' ? state.value.chapters : []))
 async function go(i: number, section?: string | null, index?: number | null): Promise<void> {
   if (!chapters.value.length) return
@@ -86,12 +81,7 @@ async function go(i: number, section?: string | null, index?: number | null): Pr
 <template>
   <div class="lib-mbody" data-testid="reader-page">
     <div v-if="state.kind === 'loading'" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
-    <div v-else-if="state.kind === 'missing'" class="lib-state">
-      <h3>这个冒险的正文还没下载</h3>
-      <div v-if="task?.status === 'running'" class="lib-banner" role="status"><span class="trpg-spinner" aria-hidden="true" /><span>正在下载冒险正文…</span></div>
-      <p v-else-if="task?.status === 'failed'" class="lib-banner lib-banner--warn">下载没有成功：{{ task.error || '原因未知' }}</p>
-      <button v-if="task?.status !== 'running'" class="trpg-btn trpg-btn--primary" type="button" data-testid="reader-download" @click="download">{{ task?.status === 'failed' ? '重试' : '下载此冒险' }}</button>
-    </div>
+    <ReinstallBlock v-else-if="state.kind === 'missing' && owner" :owner="owner" :title="owner.downloaded ? '这本的正文读不出来' : `这个${owner.kind === 'adventure' ? '冒险' : ''}的正文还没下载`" :detail="state.message" @done="load" />
     <div v-else-if="state.kind === 'error'" class="lib-state"><h3>这本书读不出来</h3><p class="lib-muted">{{ state.message }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
     <template v-else>
       <div class="lib-rbar">

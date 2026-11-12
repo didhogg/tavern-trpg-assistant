@@ -18,6 +18,8 @@ import { byLevel, flattenFeatures } from './class-data'
 import EntryBody from './EntryBody.vue'
 import EntryVersions from './EntryVersions.vue'
 import MissingEntry from './MissingEntry.vue'
+import ReinstallBlock from './ReinstallBlock.vue'
+import { ownerByPack, ownerFromOpenPack } from './reinstall'
 import FeatureLevels from './FeatureLevels.vue'
 import { authorName, nameOf as itemName } from './pack-data'
 import { BLOCKS } from './statblock'
@@ -152,6 +154,8 @@ onMounted(() => void load())
 const summaryShown = computed(() => { const seen = new Set([...(block.value?.lines ?? []), ...authorLines.value].map((l) => l.label)); return summary.value.filter((x) => !seen.has(x.k)) })
 const block = computed(() => detail.value ? BLOCKS[props.entryRef.prop]?.(detail.value.item) ?? null : null)
 const body = computed(() => entriesOf(props.entryRef.prop, detail.value?.item) ?? summaryBody.value)
+// 缺数据时这一条归哪个包（自制按包编号；从包列表点进来的按栈底的包），给【重新下载这个包】（P5-5 §11.2）
+const packOwner = computed(() => (props.selection && 'docIdLocal' in props.selection ? ownerByPack(props.selection.docIdLocal) : null) ?? ownerFromOpenPack(props.pageKey))
 const fluff = computed(() => detail.value?.fluff as { entries?: unknown[]; images?: unknown[] } | null)
 const images = computed(() => imagesOf([fluff.value?.images, fluff.value?.entries, body.value, block.value?.sections.map((s) => s.entries)]))
 
@@ -169,8 +173,9 @@ async function setEnabled(next: boolean): Promise<void> {
 <template>
   <div class="lib-mbody" data-testid="entry-page">
     <div v-if="state.kind === 'loading'" class="lib-skel" aria-busy="true"><i style="width:55%;height:22px" /><i /><i style="width:90%" /><i style="width:70%" /></div>
-    <div v-else-if="state.kind === 'none' && selection && 'docIdLocal' in selection" class="lib-state"><h3>这个包里已找不到这一条</h3><p>回书架重新打开该包，查看它现在有哪些资料。</p></div>
+    <ReinstallBlock v-else-if="state.kind === 'none' && packOwner" :owner="packOwner" title="这个包里缺了这一条" @done="load" />
     <MissingEntry v-else-if="state.kind === 'none'" :entry-ref="entryRef" @retry="load" />
+    <ReinstallBlock v-else-if="state.kind === 'error' && packOwner" :owner="packOwner" title="这一条读不出来" :detail="state.message" @done="load" />
     <div v-else-if="state.kind === 'error'" class="lib-state"><h3>这一条读不出来</h3><p class="lib-muted">{{ state.message }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
     <template v-else>
       <div class="lib-dtools">

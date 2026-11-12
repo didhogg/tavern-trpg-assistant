@@ -6,6 +6,7 @@ import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
+import { SOURCES, getSource } from '../../library/sources'
 import { downloadOfficialBook, installBrewSources } from './deps-flow'
 
 /**
@@ -41,8 +42,15 @@ async function check(): Promise<void> {
   loading.value = true
   checkError.value = null
   try {
-    const r = await app.svc().backend.library.suggestDownloads([props.entryRef])
+    const backend = app.svc().backend.library
+    const r = await backend.suggestDownloads([props.entryRef])
     sug.value = r.suggestions[0] ?? null
+    // 官方书里推不出来（来源不是官方书）：同一种语言的自制库里再问一次——可能是某个自制包的条目（P5-5 §11.2 找不到的链接）
+    const brewSet = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === getSource(props.entryRef.set).codeSet)
+    if (sug.value?.kind === 'official' && !sug.value.book && brewSet && getSource(props.entryRef.set).kind === 'official') {
+      const b = await backend.suggestDownloads([{ ...props.entryRef, set: brewSet.id }])
+      if (b.suggestions[0]?.sources?.length) sug.value = b.suggestions[0]
+    }
   } catch (e) {
     console.error('[trpg-assistant] 查找缺的资料失败', e)
     checkError.value = e instanceof Error ? e.message : String(e)
@@ -54,6 +62,8 @@ onMounted(() => void check())
 function getBook(): void {
   const b = sug.value?.book
   if (!b || !sug.value) return
+  if (!navigator.onLine) { failed.value = '现在没有网络，连上后再试'; return }
+  failed.value = null
   downloadOfficialBook(app.svc(), { set: sug.value.set, id: b.id, name: b.name })
   toast.success(`已开始下载《${b.name}》，下好后再打开这一条`)
 }
@@ -81,11 +91,12 @@ function getBook(): void {
     <template v-else-if="sug?.kind === 'official' && sug.book">
       <h3>这一条在《{{ sug.book.name }}》里</h3>
       <p class="lib-muted">这本{{ sug.book.kind === 'adventure' ? '冒险' : '书' }}还没下载。</p>
+      <div v-if="failed" class="lib-banner lib-banner--warn" role="alert"><Icon name="warning" :size="16" /><span>{{ failed }}</span></div>
       <button class="trpg-btn trpg-btn--primary" type="button" @click="getBook">下载这本{{ sug.book.kind === 'adventure' ? '冒险' : '书' }}</button>
     </template>
     <template v-else>
       <h3>库里没有这一条</h3>
-      <p class="lib-muted">{{ sug?.kind === 'official' ? '查不出它在哪本书里，可到【下载】页找找。' : '它所在的书或包已经装着，可能是上游删掉或改了编号。' }}</p>
+      <div class="lib-banner lib-banner--warn" role="alert"><Icon name="warning" :size="16" /><span>{{ sug?.kind === 'official' ? '查不出它在哪本书或哪个包里，可到【下载】页找找。' : '它所在的书或包已经装着，可能是上游删掉或改了编号，重新下载也补不回来。' }}</span></div>
     </template>
   </div>
 </template>

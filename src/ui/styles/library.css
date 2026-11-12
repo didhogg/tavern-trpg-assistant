@@ -18,7 +18,7 @@
 /* 书架分组外框：随内容增高，圆角把里面的行裁齐（四角、底边都完整），不再自己滚动 */
 .lib-shelfbox { flex: none; min-height: 0; overflow: hidden; }
 .lib-banner { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--primary-tint); color: var(--primary-text); font-size: var(--fs-sm); }
-.lib-banner > span:first-of-type:not(.trpg-spinner), .lib-banner > .trpg-spinner + span { flex: 1 1 140px; min-width: 0; }
+.lib-banner > span:first-of-type:not(.trpg-spinner), .lib-banner > .trpg-spinner + span { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
 .lib-banner > .trpg-spinner { flex: none; }
 .lib-banner--warn { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 2px var(--danger-line); }
 /* 弹窗里：一个栏目，自己管滚动 */
@@ -207,3 +207,4 @@
 
 /* 认得出是链接、库里找不到目标的文字（P5 T6）：虚线下划线 + 悬停说明，和普通文字区分 */
 .lib-deadlink { text-decoration: underline dashed var(--text3); text-underline-offset: 3px; cursor: help; color: var(--text2); }
+.lib-deadlink__q { margin-left: 1px; font-size: .7em; color: var(--text3); }
