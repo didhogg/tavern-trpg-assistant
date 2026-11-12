@@ -3,6 +3,8 @@
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { copyRawSource } from './copy-source'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
+import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
+import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
 import { createPack, exportPack, listPacks, moveEntries, type PackDeps, type PackSource } from './custom-packs'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
@@ -62,20 +64,48 @@ export class CustomLibrary {
     return formatOfCodeSet(codeSet).fields(prop)
   }
 
-  /** 作者新条目模板（法术、怪物、传奇组有作者构建器；别的类别 null）。 */
+  // ---- 编辑器草稿（P5.5 B7，custom-drafts.ts）：只存插件管理记录，不碰条目 ----
+  /** 存草稿（同键覆盖）；返回键。 */
+  saveDraft(input: DraftInput, key?: string) { return saveDraft(this.manage, input, key) }
+  drafts(codeSet?: string) { return listDrafts(this.manage, codeSet) }
+  draft(key: string) { return this.manage.draft(key) }
+  /** 丢掉草稿（保存条目成功后、或用户选「丢掉」）。 */
+  discardDraft(key: string) { return this.manage.putDraft(key, null) }
+
+  // ---- 新建条目（P5.5 B5 / B6，custom-new.ts）：类型、起点、空白、模板、文字转条目全从作者代码读 ----
+  private get newDeps(): NewEntryDeps {
+    return { frame: (codeSet) => this.frame(codeSet), categories: (setId) => this.lib.categories(setId) }
+  }
+
+  /** 能新建的类型（作者认为能单独打开、且结构定义收的），每类有哪几种起点。 */
+  entryTypes(codeSet: string) {
+    return entryTypes(this.newDeps, codeSet)
+  }
+
+  /** 空白条目：只放必填字段的空值（B6）。 */
+  blankEntry(codeSet: string, prop: string) {
+    return blankEntry(codeSet, prop)
+  }
+
+  /** 作者新条目模板（作者有这一类的构建器才有；别的类别 null）。 */
   async template(codeSet: string, prop: string): Promise<Record<string, unknown> | null> {
     return (await this.frame(codeSet)).call('entryTemplate', prop)
   }
 
-  /** 作者有哪些文字转条目、各支持什么格式。 */
-  async converters(codeSet: string) {
+  /** 作者有哪些文字转条目（转换器编号、转成哪一类、支持的模式、有没有示例）。 */
+  async converters(codeSet: string): Promise<ConverterInfo[]> {
     return (await this.frame(codeSet)).call('converters')
   }
 
+  /** 作者某个转换器的示例文字；按战役规则挑版本。 */
+  async converterSample(c: CampaignLibrary, id: string, mode: ConvertMode): Promise<string | null> {
+    return (await this.frame(c.codeSet)).call('converterSample', id, mode, ruleScopes(c.rule).style)
+  }
+
   /** 文字转条目（作者转换器）；版本风格按战役规则（2014 → 旧版标签）。只转换，不存。 */
-  async convert(c: CampaignLibrary, prop: string, format: 'text' | 'markdown' | 'html', text: string) {
+  async convert(c: CampaignLibrary, id: string, mode: ConvertMode, text: string) {
     formatOfCampaign(c)
-    return (await this.frame(c.codeSet)).call('convertText', prop, format, text, { source: CUSTOM.mine.json, styleHint: ruleScopes(c.rule).style })
+    return (await this.frame(c.codeSet)).call('convertText', id, mode, text, { source: CUSTOM.mine.json, styleHint: ruleScopes(c.rule).style })
   }
 
   /**

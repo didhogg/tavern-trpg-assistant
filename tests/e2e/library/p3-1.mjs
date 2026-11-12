@@ -114,7 +114,7 @@ async function run(page) {
     out.search = { phb: hits.some((x) => x.ref.hash === fireball.hash), xphb: hits.some((x) => x.ref.hash === fireballX.hash), n: hits.length }
 
     // ⑧ 文字转条目（旧版风格）→ 存成新条目 → 查得到；模板；导出
-    const conv = await h.custom.convert(c, 'spell', 'text', CONVERT)
+    const conv = await h.custom.convert(c, 'spell', 'txt', CONVERT)
     out.convert = { name: conv.outputs[0]?.name, tags: JSON.stringify(conv.outputs[0]?.entries), warnings: conv.warnings }
     await h.custom.saveEntry('cn', 'spell', conv.outputs[0])
     h.scoped.reset()

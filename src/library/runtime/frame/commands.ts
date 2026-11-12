@@ -15,7 +15,8 @@ import { tableRoll, tableRow } from './table-roll-commands'
 import { tagMeta, tagRefs } from './tag-commands'
 import { tokenPath } from './image-commands'
 import { extractTables } from './table-extract-commands'
-import { brewDocIndex, brewExport, brewItemsByHash, corpusFile, brewRaw, converters, convertText, editableAddDependencies, editableDoc, cleanEntity, editableExport, sourceTaken, editableEnsureSource, editablePut, editableRemove, editableRetargetCopies, editionOf, entryTemplate, excludeList, fluffOf, fluffOfMany, sourceNames } from './edit-commands'
+import { brewDocIndex, brewExport, brewItemsByHash, corpusFile, brewRaw, editableAddDependencies, editableDoc, cleanEntity, editableExport, sourceTaken, editableEnsureSource, editablePut, editableRemove, editableRetargetCopies, editionOf, excludeList, fluffOf, fluffOfMany, sourceNames } from './edit-commands'
+import { converters, converterSample, convertText, entryTemplate, entryTypes } from './entry-types-commands'
 
 export interface LoaderInfo {
   props: string[]
@@ -125,6 +126,6 @@ export async function storageFlush(): Promise<string[]> {
 
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, brewPackRows, parseBrewProp, rawHashes, storageFlush,
-  editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableRetargetCopies, editableAddDependencies, cleanEntity, editableExport, sourceTaken, converters, convertText, entryTemplate,
+  editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableRetargetCopies, editableAddDependencies, cleanEntity, editableExport, sourceTaken, converters, converterSample, convertText, entryTemplate, entryTypes,
   diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tagRefs, brewDependencyPreview, brewMergeCheck, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, renderContent, renderEntity, statblockMeta, tokenPath, extractTables, directory, sourceFiles }
 export type CommandName = keyof typeof COMMANDS

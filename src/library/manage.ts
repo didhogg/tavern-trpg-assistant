@@ -24,6 +24,21 @@ export interface EditStep {
   link?: HouseRuleLink
 }
 
+/**
+ * 编辑器草稿（P5.5 B7）。结构照作者构建器的草稿（makebrew-builder-base.js getSaveableState：s = 条目原文，
+ * m = _getInitialMetaState 的 isModified / isPersisted / nameOriginal / styleHint），另记在哪个数据集、哪一类、改的是谁。
+ * 草稿只是草稿：不写作者内容，保存条目时才写。
+ */
+export interface EditDraft {
+  at: number
+  codeSet: string
+  prop: string
+  s: Record<string, unknown>
+  m: { isModified: boolean; isPersisted: boolean; nameOriginal: string | null; styleHint: 'classic' | 'one' | null }
+  /** new：新条目，存进哪个包（来源编号）；mine：改自己的条目（作者 uniqueId）；house：改官方 / 下载的条目（存成房规）。 */
+  target: { kind: 'new'; pack: string | null } | { kind: 'mine'; uniqueId: string } | { kind: 'house'; ref: EntryRef }
+}
+
 /** 每条最多留几步撤销（驾驶员 2026-11-12 定 20）。 */
 export const HISTORY_LIMIT = 20
 
@@ -114,5 +129,19 @@ export class ManageStore {
     const step = list.pop() ?? null
     await this.put('history', key, list.length ? list : null)
     return step
+  }
+
+  /** 全部草稿（键 → 草稿）。 */
+  async drafts(): Promise<Map<string, EditDraft>> {
+    return new Map((await this.all<EditDraft>('draft')).map((r) => [r.key, r.value]))
+  }
+
+  async draft(key: string): Promise<EditDraft | null> {
+    return ((await this.db.manage.get(['draft', key]))?.value as EditDraft | undefined) ?? null
+  }
+
+  /** 写草稿（同键覆盖，只留最新一份）；null = 丢掉。 */
+  putDraft(key: string, draft: EditDraft | null): Promise<void> {
+    return this.put('draft', key, draft)
   }
 }
