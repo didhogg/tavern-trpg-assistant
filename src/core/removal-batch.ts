@@ -63,9 +63,11 @@ export async function withCounterparts(view: LibraryView, brewPairs: Pick<BrewPa
     if (t.kind === 'official') {
       const state = await view.officialState(set.pair)
       if (state?.status !== 'installed') continue
-      const has = (list: string[] | null | undefined, id: string): boolean => list == null || list.includes(id)
-      const bookIds = (t.bookIds ?? []).filter((id) => has(state.books, id))
-      const adventureIds = (t.adventureIds ?? []).filter((id) => has(state.adventures, id))
+      // 书号 / 冒险号两种语言大小写不一定一样，不分大小写配；用那边自己的写法
+      const has = (list: string[] | null | undefined, id: string): boolean => list == null || list.some((x) => x.toLowerCase() === id.toLowerCase())
+      const theirs = (list: string[] | null | undefined, id: string): string => list?.find((x) => x.toLowerCase() === id.toLowerCase()) ?? id
+      const bookIds = (t.bookIds ?? []).filter((id) => has(state.books, id)).map((id) => theirs(state.books, id))
+      const adventureIds = (t.adventureIds ?? []).filter((id) => has(state.adventures, id)).map((id) => theirs(state.adventures, id))
       // 整套 = 书号、来源、冒险号都没给；只给来源的（没有书号的来源行）按来源配到另一种语言
       if (!t.bookIds?.length && !t.adventureIds?.length && !t.bookSources?.length) { out.push({ kind: 'official', setId: set.pair }); continue }
       const sourceOnly = !t.bookIds?.length && !t.adventureIds?.length

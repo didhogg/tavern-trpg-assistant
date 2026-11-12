@@ -94,7 +94,7 @@ watch(error, (e) => {
 let lastRunning = 0
 watch(() => dl.running.length + dl.paused.length, (n) => { if (n < lastRunning) void loadStatus(); lastRunning = n }, { immediate: true })
 
-/** 按书下载：同一次选中的书合成一个任务（每本单开会把整套重解析很多遍）。 */
+/** 按书下载：同一次选中的书合成一个任务（每本单开会把整套重解析很多遍）；另一种语言由后端按登记一起下。 */
 function downloadBooks(rows: CatalogRow[]): void {
   const s = app.svc()
   const bySet = new Map<string, CatalogRow[]>()
@@ -103,16 +103,18 @@ function downloadBooks(rows: CatalogRow[]): void {
     const books = list.flatMap((r) => (r.id ? [r.id] : []))
     const sources = list.map((r) => r.source)
     const label = list.length === 1 ? list[0].name : `${list[0].name} 等 ${list.length} 本`
-    const start = (): void => {
+    const start = async (): Promise<void> => {
       try {
-        const id = s.backend.library.tasks.startOfficial(setId, { books: books.length ? books : null, sources })
-        dl.rememberTask(id, label, start)
+        const started = await s.backend.library.downloads.official(setId, { books: books.length ? books : null, sources })
+        for (const t of started.tasks) dl.rememberTask(t.taskId, t.setId === setId ? label : `${label}（另一种语言）`, () => void start())
+        const id = started.tasks[0].taskId
         const next = new Map(pending.value)
         for (const r of list) next.set(keyOf(r), id)
         pending.value = next
-      } catch (e) { void reportLibError(s, e, `下载《${label}》`, toast, start) }
+        dl.refresh()
+      } catch (e) { void reportLibError(s, e, `下载《${label}》`, toast, () => void start()) }
     }
-    start()
+    void start()
   }
   dl.refresh()
 }
@@ -121,13 +123,13 @@ function downloadAdventures(rows: CatalogRow[]): void {
   for (const r of rows.filter((x) => !x.downloaded && x.id)) {
     const before = rowTask(r)
     if (before?.status === 'failed') dl.markRetried(before.key)
-    dl.rememberName(r.set, r.id!, r.name)
-    try {
-      const id = s.backend.library.tasks.startAdventure(r.set, r.id!)
+    void s.backend.library.downloads.adventure(r.set, r.id!).then((started) => {
+      for (const t of started.tasks) dl.rememberName(t.setId, r.id!, r.name)
       const next = new Map(pending.value)
-      next.set(keyOf(r), id)
+      next.set(keyOf(r), started.tasks[0].taskId)
       pending.value = next
-    } catch (e) { void reportLibError(s, e, `下载冒险《${r.name}》`, toast) }
+      dl.refresh()
+    }, (e: unknown) => reportLibError(s, e, `下载冒险《${r.name}》`, toast))
   }
   dl.refresh()
 }

@@ -2,6 +2,7 @@
 import { useLibNoticeStore } from '../../stores/libnotice'
 import { computed, onMounted, ref, watch } from 'vue'
 import type { CatalogFile, CatalogPair } from '../../library/brew-pairing'
+import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useBrewCatalogStore } from '../../stores/brewcatalog'
 import { useDownloadsStore } from '../../stores/downloads'
@@ -43,7 +44,7 @@ const isInstalled = (r: CatalogPair): boolean => [r.zh, r.en].filter((f): f is C
 async function loadInstalled(): Promise<void> {
   const s = app.svc().backend.library
   const urls = new Set<string>()
-  for (const id of [zhSet.value, s.brewPairs ? zhSet.value.replace(/^cn-/, 'en-') : '']) if (id) for (const p of await s.brewPacks.list(id).catch(() => [])) if (p.url) urls.add(p.url)
+  for (const id of [zhSet.value, s.brewPairs ? pairOf(zhSet.value) : '']) if (id) for (const p of await s.brewPacks.list(id).catch(() => [])) if (p.url) urls.add(p.url)
   installed.value = urls
 }
 async function loadCatalog(force = false): Promise<void> {
@@ -64,7 +65,10 @@ watch(() => [rows.value, errors.value.zh.length, errors.value.en.length, loading
   if (!r) notices.show({ key: 'brew-catalog', text: `自制包目录这次没取回来，请检查网络后重试：${[...errors.value.zh, ...errors.value.en].join('；') || '没有取到任何目录'}`, actions: [{ label: '重试', run: () => void loadCatalog(true) }] })
   else notices.dismiss('brew-catalog')
 })
-const filesOf = (r: CatalogPair): Array<{ setId: string; url: string }> => ([[r.zh, zhSet.value], [r.en, zhSet.value.replace(/^cn-/, 'en-')]] as const).filter(([f]) => !!f).map(([f, setId]) => ({ setId, url: f!.urlDownload }))
+// 另一种语言的自制源按源登记里的 pair 找，不手写语言规则
+const pairOf = (setId: string): string => getSource(setId).pair ?? setId
+const langOf = (setId: string): string => (getSource(setId).lang === 'zh' ? '中文' : '英文')
+const filesOf = (r: CatalogPair): Array<{ setId: string; url: string }> => ([[r.zh, zhSet.value], [r.en, pairOf(zhSet.value)]] as const).filter(([f]) => !!f).map(([f, setId]) => ({ setId, url: f!.urlDownload }))
 const mark = (set: typeof busy, k: string, on: boolean): void => { const n = new Set(set.value); if (on) n.add(k); else n.delete(k); set.value = n }
 
 /**
@@ -76,7 +80,7 @@ async function preview(rows: CatalogPair[], name: string): Promise<boolean> {
   try {
     const books = await confirmDependencies(app.svc(), name, rows.flatMap(filesOf), app.settings?.library.skipDependencyPrompt ?? false, () => app.updateSettings({ library: { ...app.settings!.library, skipDependencyPrompt: true } }))
     if (books === null) return false
-    for (const b of books) downloadOfficialBook(app.svc(), b)
+    for (const b of books) void downloadOfficialBook(app.svc(), b).catch((e: unknown) => console.error('[trpg-assistant] 开始下载失败', e))
     return true
   } catch (e) {
     console.error('[trpg-assistant] 读取依赖失败', e)
@@ -105,18 +109,15 @@ async function install(r: CatalogPair): Promise<void> {
   mark(busy, k, true)
   try {
     await dl.trackBrew(`brew:${k}`, `自制包《${nameOf(r)}》`, async (report) => {
-      const svc = app.svc().backend.library.service
       const STAGE = { download: '下载文件（含依赖）', parse: '整理资料', publish: '放进书架' } as const
-      let added = 0
-      let wanted = 0
-      const failed: Array<{ side: string; e: unknown }> = []
+      // 中英一起：给这一行有的那种语言，后端按自制目录配上另一种语言一起装（core/paired-download.ts）。
       // 成败只看后端有没有抛错：没装上 / 中途断网 / 缺依赖都会抛（准备版本已作废，下了一半的东西不进书架）；
       // 作者在解析时报的零散提示不算失败（以前会把装好的包误判成失败）
-      for (const [side, f, id] of [['中文', r.zh, zhSet.value], ['英文', r.en, zhSet.value.replace(/^cn-/, 'en-')]] as const) {
-        if (!f) continue
-        wanted++
-        try { added += (await svc.brewAddUrl(id, f.urlDownload, (st, i, n) => report(`${wanted > 1 ? `${side} · ` : ''}${STAGE[st]}`, i / n))).value.length } catch (e) { failed.push({ side, e }) }
-      }
+      const [first] = filesOf(r)
+      const res = await app.svc().backend.library.downloads.brewUrl(first.setId, first.url, (side, st, i, n) => report(`${r.zh && r.en ? `${langOf(side === 'self' ? first.setId : pairOf(first.setId))} · ` : ''}${STAGE[st]}`, i / n))
+      const wanted = res.added + res.failed.length
+      const added = res.entries
+      const failed = res.failed.map((f) => ({ side: langOf(f.setId), e: f.error }))
       await loadInstalled()
       void lib.refresh(app.svc()).catch((e: unknown) => console.error('[trpg-assistant] 下载后刷新书架失败', e))
       const depFail = failed.find((x) => (x.e as { name?: unknown })?.name === 'BrewDependencyError')

@@ -15,6 +15,7 @@ import type { ScopedLibrary } from '../library/scoped'
 import type { ShelfGroup } from '../library/shelf'
 import { defaultCampaignLibrary, ruleScopes, type CampaignLibrary, type ScopeDef } from '../library/scopes'
 import { SOURCES, getSource, officialSourceOf } from '../library/sources'
+import type { PairedDownloads } from './paired-download'
 import { checkSelection, type SelectionCheck, type SelectionInput } from '../library/selection'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelDataVersion } from '../schemas/kernel'
 import type { Workspace, SaveSlot } from '../schemas/campaign'
@@ -40,6 +41,8 @@ export interface StartCampaignDeps {
     directory: BookDirectory
     scoped: ScopedLibrary
     tasks: DownloadTasks
+    /** 冒险正文中英一起下（core/paired-download.ts）。 */
+    downloads: Pick<PairedDownloads, 'adventure'>
     revisions: LibraryRevisionStore
     dataVersion: () => Promise<KernelDataVersion>
   }
@@ -272,20 +275,23 @@ export class CampaignStarter {
       waiting.push(tasks.wait(taskId))
     }
     const adventureJobs: Array<Promise<void>> = []
-    for (const pick of input.adventures ?? []) {
-      const before = officialTasks.get(pick.set)
-      if (!before) {
-        const taskId = tasks.startAdventure(pick.set, pick.id)
-        downloads.push({ kind: 'adventure', set: pick.set, item: pick.id, taskId })
-        waiting.push(tasks.wait(taskId))
-        continue
+    // 冒险正文中英一起下（library.downloads 按登记配另一种语言）：这本冒险两种语言的官方资料要是正在下，先等装完
+    const startAdventure = async (pick: { set: string; id: string }): Promise<void> => {
+      const r = await this.deps.library.downloads.adventure(pick.set, pick.id)
+      for (const t of r.tasks) {
+        downloads.push({ kind: 'adventure', set: t.setId, item: pick.id, taskId: t.taskId })
+        const s = await tasks.wait(t.taskId)
+        if (s.status !== 'done') errors.push(`冒险 ${pick.id}（${t.setId}）下载失败：${s.error ?? s.status}`)
       }
-      // 这本冒险所在的资料还在下载：等它装完再下冒险正文
-      adventureJobs.push(tasks.wait(before).then((state) => {
-        if (state.status !== 'done') { errors.push(`冒险 ${pick.id} 没下载：${pick.set} 没装好（${state.error ?? state.status}）`); return }
-        const taskId = tasks.startAdventure(pick.set, pick.id)
-        downloads.push({ kind: 'adventure', set: pick.set, item: pick.id, taskId })
-        return tasks.wait(taskId).then((s) => { if (s.status !== 'done') errors.push(`冒险 ${pick.id} 下载失败：${s.error ?? s.status}`) })
+    }
+    for (const pick of input.adventures ?? []) {
+      const pair = getSource(pick.set).pair
+      const before = [officialTasks.get(pick.set), pair ? officialTasks.get(pair) : undefined].filter((x): x is string => !!x)
+      if (!before.length) { adventureJobs.push(startAdventure(pick)); continue }
+      adventureJobs.push(Promise.all(before.map((id) => tasks.wait(id))).then((states) => {
+        const self = states[0]
+        if (officialTasks.get(pick.set) && self.status !== 'done') { errors.push(`冒险 ${pick.id} 没下载：${pick.set} 没装好（${self.error ?? self.status}）`); return }
+        return startAdventure(pick)
       }))
     }
 

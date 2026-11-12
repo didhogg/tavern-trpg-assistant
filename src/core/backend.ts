@@ -17,6 +17,7 @@ import { Sorting } from '../library/sorting'
 import { libraryHandlers } from '../library/runtime/handlers'
 import { startAuthorFrame } from '../library/runtime/host'
 import { BrewPacks } from '../library/brew-packs'
+import { PairedDownloads } from './paired-download'
 import { BrewPairs } from '../library/brew-pairing'
 import { configureBrewValidator } from '../library/brew-validate'
 import { removeOfficialParts, removeParts, uninstallOfficial, type UninstallReport } from '../library/uninstall'
@@ -67,6 +68,8 @@ export interface LibraryBackend {
   uninstallOfficial: (setId: string | string[]) => Promise<UninstallReport>
   /** 已装自制包清单（来历、来源、作者、依赖、条数），下载页 / 书架 / 我的库共用（P5 B-11）。 */
   brewPacks: BrewPacks
+  /** 下载入口（中英一起）：官方书 / 冒险 / 自制包都走它，界面不自己决定语言。 */
+  downloads: PairedDownloads
   /** 列表排序：哪些列能排序、按某一列的名次（作者的 ModalFilter 定义，P5 B-18）。 */
   sorting: Sorting
   /** 统一后端日志：各处错误的流水，能列、能导出全文（P5 B-26）。 */
@@ -223,6 +226,16 @@ export function createBackend(opts: BackendOptions): Backend {
 
   const prefetch = new CatalogPrefetch({ files, directory, codeSets: DEFAULT_PREFETCH_CODE_SETS })
   const brewPacks = new BrewPacks(service)
+  const downloads = new PairedDownloads({
+    startOfficial: (id, o) => tasks.startOfficial(id, o),
+    startAdventure: (id, adv) => tasks.startAdventure(id, adv),
+    officialState: async (id) => (await revisions.published()).officialState(id),
+    directoryOf: async (codeSet) => (await directory.peek(codeSet)) ?? await directory.get(codeSet).catch((e: unknown) => { console.warn('[trpg-assistant] 另一种语言的书目取不到，按同书号照下', codeSet, e); return null }),
+    brewCatalog: (zhId) => brewPairs.catalog(zhId),
+    brewAddUrl: (id, url, p) => service.brewAddUrl(id, url, p),
+    brewInstallSources: (id, sources) => service.brewInstallSources(id, sources),
+    brewInstalledUrls: async (id) => new Set((await brewPacks.list(id)).flatMap((p) => (p.url ? [p.url] : []))),
+  })
   const images: LibraryBackend['images'] = {
     urls: imageUrls,
     token: async (codeSet, prop, ent) => (await service.frameOf(codeSet)).call('tokenPath', prop, ent),
@@ -230,7 +243,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

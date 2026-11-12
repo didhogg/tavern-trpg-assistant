@@ -173,6 +173,8 @@ check('正式下载时断网：横幅说明没下完并带【重试】', /没有
 check('正式下载时断网：什么都没装（包数不变）、【库】图标亮警告', packsAfterDrop === packsAfter && ring === 'warn', `${packsAfter} → ${packsAfterDrop}，ring=${ring}`)
 
 // S6 导入一个依赖缺失的文件（法术合集已删）：被拦下，横幅点名缺的依赖并给【下载依赖包】【重试】
+// 错误横幅在插件外顶部、不自动消失，会盖住窗口上沿的按钮：先逐条点 × 关掉（2026-11-12 起）
+for (let i = 0; i < 10 && await page.locator('.trpg-toasts [role="alert"] [aria-label="关闭这条提示"]').count(); i++) await page.locator('.trpg-toasts [role="alert"] [aria-label="关闭这条提示"]').first().click()
 await tab('我的库')
 await page.waitForSelector('[data-testid="mylib-file"]', { state: 'attached' })
 await page.locator('[data-testid="mylib-file"]').setInputFiles(`${work}/fixtures/psion.json`)

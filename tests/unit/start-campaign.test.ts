@@ -1,4 +1,5 @@
 // 开局入口：一次建好战役（存档里带绑好的内核与选书）；缺的资料 / 冒险后台下载，不等；下载完补版本记号。
+import { PairedDownloads } from '../../src/core/paired-download'
 import { describe, expect, it } from 'vitest'
 import { KernelSaveService } from '../../src/core/saves/kernel'
 import { CampaignStarter } from '../../src/core/start-campaign'
@@ -40,6 +41,12 @@ function fakeLibrary() {
       directory: {},
       scoped: { activeOverrides: async () => [], scopes: async () => [], shelf: async () => ({ groups: [], booksError: null, adventuresError: null }) },
       tasks,
+      // 下载入口用真的（中英一起的规则），任务 / 安装状态用上面的假的；书目取不到 → 按同编号配
+      downloads: new PairedDownloads({
+        startOfficial: tasks.startOfficial, startAdventure: tasks.startAdventure,
+        officialState: async (id: string) => (installed.has(id) ? { id, status: 'installed', commit: 'c', sources: null, books: null, adventures: [] } : null) as never,
+        directoryOf: async () => null, brewCatalog: async () => ({ rows: [] }), brewAddUrl: async () => ({ value: [] }), brewInstallSources: async () => ({}) as never, brewInstalledUrls: async () => new Set<string>(),
+      }),
       revisions: { published: async () => ({ officialState: async (id: string) => installed.has(id) ? { id, status: 'installed', commit: 'c', sources: null, books: null, adventures: null } : recorded.has(id) ? { id, status: 'missing', commit: 'c', sources: [], books: [], adventures: [] } : null }) },
       dataVersion: async () => ({ official: installed.size ? 'v1' : '', brews: {} }),
     },
@@ -137,6 +144,7 @@ describe('startCampaign', () => {
       const { errors } = await r.finished
       expect(errors).toEqual([])
       expect(fake.started).toContain('adventure:cn-official/LMoP')
+      expect(fake.started).toContain('adventure:en-official/LMoP') // 冒险正文中英一起（两套官方资料都装好以后）
       expect((await kernelSave.read(OWNER.ownerKey))?.dataVersion.official).toBe('v1')
       const ws = await campaign.getWorkspace(OWNER.ownerKey)
       expect(ws && campaign.isDirty(ws)).toBe(false)

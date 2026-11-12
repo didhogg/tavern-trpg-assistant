@@ -49,7 +49,7 @@ try {
   ok('冒险正文没下：显示【下载这本冒险】，没有「读不出来 + 重试」', /下载这本冒险/.test(block) && !/读不出来/.test(block), block.replace(/\n/g, ' | ').slice(0, 160))
   await page.screenshot({ path: join(profile, 'reader-reinstall.png') })
   await active().getByTestId('reinstall-btn').click()
-  const banner = active().locator('[data-testid="reinstall"] [role="alert"]')
+  const banner = page.locator('.trpg-toasts [role="alert"]').first() // 错误横幅在插件外（2026-11-12）
   await banner.waitFor({ timeout: 120000 })
   ok('断网下载失败：横幅说明原因，按钮可再点', /没有成功|取消|网络/.test(await banner.innerText()) && await active().getByTestId('reinstall-btn').isEnabled(), (await banner.innerText()).slice(0, 120))
   await page.screenshot({ path: join(profile, 'reader-reinstall-failed.png') })
@@ -75,7 +75,7 @@ try {
   const miss = await active().getByTestId('entry-missing').innerText()
   ok('点开：查出它来自没装的自制来源，给【下载这个包】', /ThisSourceIsNotInstalled/i.test(miss) && /下载这个包/.test(miss), miss.replace(/\n/g, ' | ').slice(0, 160))
   await active().getByRole('button', { name: /下载这个包/ }).click()
-  const miss2 = active().getByTestId('entry-missing').locator('.lib-banner--warn')
+  const miss2 = page.locator('.trpg-toasts [role="alert"], [data-testid="entry-missing"] .lib-banner--warn').first() // 失败横幅在插件外；查不出提供者是页面里的说明
   await miss2.waitFor({ timeout: 90000 })
   ok('找不到提供者 / 断网：横幅报错', (await miss2.innerText()).length > 0, (await miss2.innerText()).slice(0, 120))
   await page.screenshot({ path: join(profile, 'deadlink-missing.png') })

@@ -10,11 +10,12 @@ import DependencyPreviewPage, { type DependencyAnswer } from './DependencyPrevie
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
 
-/** 下载一本官方书（按书下载任务，进度在【库】悬浮窗）。 */
-export function downloadOfficialBook(s: Services, book: { set: string; id: string; name: string }): void {
+/** 下载一本官方书（按书下载任务，中英一起，进度在【库】悬浮窗）。 */
+export async function downloadOfficialBook(s: Services, book: { set: string; id: string; name: string }): Promise<void> {
   const dl = useDownloadsStore()
-  dl.rememberName(book.set, book.id, book.name)
-  s.backend.library.tasks.startOfficial(book.set, { books: [book.id] })
+  const started = await s.backend.library.downloads.official(book.set, { books: [book.id] })
+  for (const t of started.tasks) dl.rememberName(t.setId, book.id, book.name)
+  dl.refresh()
 }
 
 /** 补装缺的自制依赖（作者 pGetSourceUrl 找网址、自动带上更深的依赖）。返回错误文字，成功为 null。 */
@@ -24,7 +25,8 @@ export async function installBrewSources(s: Services, setId: string, sources: re
   let error: string | null = null
   await useDownloadsStore().trackBrew(`deps:${setId}:${plain.join(',')}`, label, async () => {
     let r
-    try { r = await s.backend.library.service.brewInstallSources(setId, plain) } catch (e) {
+    // 中英一起：这一种装完，另一种语言配上的包也装（后端按自制目录配对）
+    try { r = (await s.backend.library.downloads.brewSources(setId, plain)).result } catch (e) {
       console.error('[trpg-assistant] 补装依赖失败', e)
       error = e instanceof Error ? e.message : String(e)
       if (isDependencyError(e)) { await reportLibError(s, e, `补装${label}`, toast); return null }

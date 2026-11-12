@@ -65,7 +65,7 @@ function getBook(): void {
   if (!b || !sug.value) return
   if (!navigator.onLine) { failed.value = '现在没有网络，连上后再试'; return }
   failed.value = null
-  downloadOfficialBook(app.svc(), { set: sug.value.set, id: b.id, name: b.name })
+  void downloadOfficialBook(app.svc(), { set: sug.value.set, id: b.id, name: b.name }).catch((e: unknown) => console.error('[trpg-assistant] 开始下载失败', e))
   toast.success(`已开始下载《${b.name}》，下好后再打开这一条`)
 }
 </script>

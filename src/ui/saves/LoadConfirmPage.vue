@@ -84,7 +84,7 @@ async function doLoad(): Promise<void> {
     // 勾选的缺包一起下载（官方按书 / 自制按来源，都在后台，进度在【库】标志上）；勾了的关着的包在本战役开启
     const s = app.svc()
     for (const d of (plan.value?.download ?? []).filter(isDl)) {
-      if (d.kind === 'official') { if (d.book) downloadOfficialBook(s, { set: d.set, id: d.book.id, name: d.book.name }); else s.backend.library.tasks.startOfficial(d.set) }
+      if (d.kind === 'official') { void (d.book ? downloadOfficialBook(s, { set: d.set, id: d.book.id, name: d.book.name }) : s.backend.library.downloads.official(d.set, { books: null })).catch((e: unknown) => console.error('[trpg-assistant] 开始下载失败', e)) }
       else if (d.sources?.length) void installBrewSources(s, d.set, d.sources, dlLabel(d), toast)
     }
     const open = (plan.value?.closed ?? []).filter((c) => closedPick.value[c.source]).map((c) => c.source)

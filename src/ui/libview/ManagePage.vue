@@ -57,7 +57,7 @@ onMounted(() => void load())
 const busyDep = ref<string | null>(null)
 async function getDep(d: PackHealth['requires'][number]): Promise<void> {
   const s = app.svc()
-  if (d.kind === 'official' && d.book) { downloadOfficialBook(s, d.book); toast.success(`已开始下载《${d.book.name}》，进度见【库】标志`); return }
+  if (d.kind === 'official' && d.book) { void downloadOfficialBook(s, d.book).catch((e: unknown) => console.error('[trpg-assistant] 开始下载失败', e)); toast.success(`已开始下载《${d.book.name}》，进度见【库】标志`); return }
   busyDep.value = d.source
   try { await installBrewSources(s, props.set, [d.source], `依赖包 ${d.source}`, toast, async () => { await lib.refresh(s); await loadDeps() }) } finally { busyDep.value = null }
 }
