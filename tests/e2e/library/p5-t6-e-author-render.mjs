@@ -87,6 +87,13 @@ try {
     ok('只有头像的怪物：图片标签里有头像', /头像/.test(tokText), { name: samples.tok, text: tokText.slice(0, 60) })
     await close()
   }
+  // §12：带武器精通的自制武器（中文版精通名「削弱|XPHB」）能解析发布——以前解析前没装作者的物品参考表，报「Item mastery … not found」
+  const mastery = await page.evaluate(async (P) => {
+    const L = eval(P)._s.get('app').svc().backend.library
+    const file = { _meta: { sources: [{ json: 'MasteryProbe', abbreviation: 'MP', full: 'MasteryProbe', authors: [] }] }, baseitem: [{ name: '精通测试剑', source: 'MasteryProbe', type: 'M', rarity: 'none', weaponCategory: 'martial', dmg1: '1d8', dmgType: 'S', weapon: true, mastery: ['削弱|XPHB'] }] }
+    try { await L.service.brewImport('cn-brew', [{ name: 'MasteryProbe.json', text: JSON.stringify(file) }]); return { ok: true } } catch (e) { return { ok: false, error: String(e.message ?? e).slice(0, 160) } }
+  }, P)
+  ok('带武器精通的自制武器能装上（解析前先做作者物品页的准备）', mastery.ok, mastery)
   const real = result.pageErrors.filter((e) => !/gendata-nav-adventure-book-index|网络错误|Network error|无法加载 \d+ 个条目的引用/.test(e))
   ok('没有界面自己的页面错误（含「找不到物品类型 / 属性」）', real.length === 0, real)
 } catch (e) {

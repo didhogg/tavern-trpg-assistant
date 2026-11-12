@@ -4,6 +4,7 @@
 // 这里只按需把那个脚本加载进小窗，原样转调；作者没有 ModalFilter 的类别就是没有排序（不手抄列、不自己定排序规则）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init } from './author'
+import { prepareProp } from './page-prepare'
 
 export interface SortColumn {
   /** 作者的排序键（data-sort），传给 sortRanks。 */
@@ -66,6 +67,7 @@ export async function sortColumns(prop: string): Promise<SortColumn[]> {
 
 /** 作者做法：补排序用的归一化字段 → 用 _getListItem 为每条造列表项（带排序值和作者排好的行元素）。条目 = 作者加载器里这个类别的全部（官方 + 已装自制）。 */
 async function authorListItems(m: { Cls: any; page: string }, prop: string): Promise<{ inst: any; entities: any[]; items: any[] }> {
+  await prepareProp(prop)
   const raw: any[] = [...((await A.DataLoader.pCacheAndGetAllSite(prop)) ?? []), ...((await A.DataLoader.pCacheAndGetAllBrew(prop)) ?? [])]
   return withPage(m.page, () => {
     const inst = new m.Cls({ namespace: 'trpg-sort' })

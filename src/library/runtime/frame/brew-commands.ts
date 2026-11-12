@@ -4,6 +4,7 @@
 // 所以每次调用都把这段时间里 early.ts 收集到的错误原样交回。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init, sourceOf } from './author'
+import { prepareProp } from './page-prepare'
 import type { ParsedProp } from './commands'
 import { isExcludedEntity } from './read-commands'
 import type { QueryRow } from '../../service-types'
@@ -262,6 +263,7 @@ export async function brewCheckUpdates(docIdLocals: string[] | null = null): Pro
 /** 已装自制里某一类（作者 pCacheAndGetAllBrew），连同作者编号、来源。 */
 export async function parseBrewProp(prop: string): Promise<ParsedProp> {
   await init()
+  await prepareProp(prop)
   const items: any[] = (await A.DataLoader.pCacheAndGetAllBrew(prop)) ?? []
   return { items, hashes: items.map((it) => hashOf(prop, it)), sources: items.map((it) => sourceOf(it)) }
 }
@@ -303,6 +305,7 @@ export async function brewPackRows(raw: Record<string, string[]>): Promise<Recor
           for (const hash of raw[alias] ?? []) direct.add(hash)
         }
       }
+      await prepareProp(prop)
       const items: any[] = (await A.DataLoader.pCacheAndGetAllBrew(prop)) ?? []
       const rows = items.flatMap((item): QueryRow[] => {
         const hash = hashOf(prop, item)

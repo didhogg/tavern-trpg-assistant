@@ -4,28 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, init } from './author'
 import { collectAuthorLinks, type AuthorMarkup } from './author-markup'
-
-/**
- * 作者各列表页打开时先做的准备（照作者页面脚本：bestiary.js 第 341–346、608 行预载传奇组；
- * filter-items.js 第 605 行装物品类型 / 属性表）。不做的话，怪物画不出巢穴动作 / 区域效应，物品报「找不到物品类型」。
- * 按作者页面名登记：加一页 = 加一行。
- */
-const PAGE_PREPARE: Record<string, () => Promise<unknown>> = {
-  'bestiary.html': () => Promise.all([A.DataUtil.monster.pPreloadLegendaryGroupsSite(), A.DataUtil.monster.pUpdatePreloadLegendaryGroupsBrew()]),
-  'items.html': () => A.Renderer.item.pPopulatePropertyAndTypeReference(),
-}
-const prepared = new Map<string, Promise<unknown>>()
-
-export async function preparePage(page: string): Promise<void> {
-  const run = PAGE_PREPARE[page]
-  if (!run) return
-  let p = prepared.get(page)
-  if (!p) {
-    p = run().catch((e: unknown) => { prepared.delete(page); throw e })
-    prepared.set(page, p)
-  }
-  await p
-}
+import { prepareProp } from './page-prepare'
 
 /** 作者的整条渲染函数：先按页面找，再按类别名找（作者两种都登记了）。没有返回 null。 */
 function compactOf(prop: string): ((ent: any) => string) | null {
@@ -58,7 +37,7 @@ function run(fn: (ent: any) => string, item: any): AuthorMarkup | null {
  */
 export async function renderEntity(prop: string, item: any): Promise<AuthorMarkup | null> {
   await init()
-  await preparePage(A.DataLoader.getPropPage(prop) ?? '')
+  await prepareProp(prop)
   const fn = compactOf(prop)
   if (fn) {
     try { return run(fn, item) } catch (e) { console.warn(`[trpg-assistant] 作者的「${prop}」整条渲染出错，改用通用渲染`, e) }

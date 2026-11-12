@@ -2,6 +2,7 @@
 // 版本判断、来源名、单包编号、可编辑自制、文字转条目、新条目模板、自制导出、背景描述。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, engSiteHashOf, hashOf, init } from './author'
+import { prepareProp } from './page-prepare'
 
 const mod = (path: string): Promise<any> => import(/* @vite-ignore */ new URL(`js/${path}`, location.href).href)
 
@@ -101,6 +102,7 @@ export async function brewItemsByHash(wants: Array<{ prop: string; hash: string 
   await init()
   const out: Record<string, unknown> = {}
   for (const { prop, hash } of wants) {
+    await prepareProp(prop)
     await A.DataLoader.pCacheAndGetAllBrew(prop)
     const item = await A.DataLoader.pCacheAndGetHash(prop, hash)
     if (!item) continue

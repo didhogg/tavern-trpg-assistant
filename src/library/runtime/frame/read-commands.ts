@@ -1,6 +1,7 @@
 // 小窗里：查询、详情、搜索用到的作者函数（D2-P2 B1 设计 §8.6、§8.7）。只转调作者函数，结果原样交回。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, engSiteHashOf, hashOf, init, sourceOf } from './author'
+import { prepareProp } from './page-prepare'
 
 /**
  * 一条是否被屏蔽：照作者列表页的写法（listpage.js 第 1379 行 ExcludeUtil.isExcluded(hash, __prop, source)）；
@@ -21,6 +22,7 @@ export function isExcludedEntity(prop: string, ent: any, hash: string | null): b
 export async function excludedFlags(prop: string, scope: 'site' | 'brew' = 'site'): Promise<{ hashes: Array<string | null>; excluded: boolean[] | null }> {
   await init()
   if (!A.ExcludeUtil.getList().length) return { hashes: [], excluded: null }
+  await prepareProp(prop)
   const items: any[] = (await (scope === 'brew' ? A.DataLoader.pCacheAndGetAllBrew(prop) : A.DataLoader.pCacheAndGetAllSite(prop))) ?? []
   const hashes = items.map((it) => hashOf(prop, it))
   return { hashes, excluded: items.map((it, i) => isExcludedEntity(prop, it, hashes[i])) }
@@ -41,6 +43,7 @@ export interface Detail {
 /** 按编号取一条（作者 pCacheAndGet；不给来源时用 pCacheAndGetHash 从编号里解出来源）+ 背景描述。 */
 export async function detail(prop: string, hash: string, source?: string | null): Promise<Detail | null> {
   await init()
+  await prepareProp(prop)
   const item = source ? await A.DataLoader.pCacheAndGet(prop, source, hash) : await A.DataLoader.pCacheAndGetHash(prop, hash)
   if (!item) return null
   let fluff: unknown = null
