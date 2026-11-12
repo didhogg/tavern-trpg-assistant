@@ -29,11 +29,8 @@ const toast = useToastStore()
 const sets = ref<DataSetState[]>([])
 const error = ref<string | null>(null)
 type Rule = 'all' | '5e' | '5.5e' | 'none'
-type Kind = 'all' | 'book' | 'adventure'
 const rule = ref<Rule>('all')
-const kind = ref<Kind>('all')
 const RULES: Array<{ value: Rule; label: string }> = [{ value: 'all', label: '全部' }, { value: '5e', label: '5e' }, { value: '5.5e', label: '5.5e' }, { value: 'none', label: '未归类' }]
-const KINDS: Array<{ value: Kind; label: string }> = [{ value: 'all', label: '全部' }, { value: 'book', label: '书' }, { value: 'adventure', label: '冒险' }]
 const q = ref('')
 const sel = ref<Set<string>>(new Set())
 
@@ -44,10 +41,11 @@ const isOfficial = (r: CatalogRow): boolean => getSource(r.set).kind === 'offici
 const officialReady = computed(() => sets.value.some((s) => s.status === 'installed'))
 // 冒险正文要先有官方资料才能读：一本官方书都没装时冒险行不能下
 const canGet = (r: CatalogRow): boolean => !r.downloaded && !rowTask(r) && (r.kind === 'book' || officialReady.value)
+// 按作者分组列出；冒险是它所属分组里的一个包，和书并列（驾驶员 2026-11-12：不再分「全部 / 书 / 冒险」标签）
 const groups = computed<Array<DlGroup<CatalogRow>>>(() => (lib.shelf?.groups ?? []).map((g) => ({
   key: g.group,
   name: g.name,
-  rows: [...(kind.value === 'adventure' ? [] : g.books), ...(kind.value === 'book' ? [] : g.adventures)]
+  rows: [...g.books, ...g.adventures]
     .filter((r) => isOfficial(r) && hit(r) && ruleOk(r))
     .map((r) => ({ key: keyOf(r), name: r.name, selectable: canGet(r), row: r })),
 })).filter((g) => g.rows.length))
@@ -178,9 +176,6 @@ const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.
       <template #tools><MoreMenu :label="reloading ? '正在拉取…' : '官方资料与冒险'" :items="MENU" @select="reloadDirectory" /></template>
       <template #above>
         <div class="lib-dlsec__bar">
-          <div class="lib-pills" role="group" aria-label="类型">
-            <button v-for="o in KINDS" :key="o.value" class="trpg-pill" type="button" :aria-pressed="kind === o.value" :data-testid="`kind-${o.value}`" @click="kind = o.value">{{ o.label }}</button>
-          </div>
           <div class="lib-pills" role="group" aria-label="规则版本">
             <button v-for="o in RULES" :key="o.value" class="trpg-pill" type="button" :aria-pressed="rule === o.value" @click="rule = o.value">{{ o.label }}</button>
           </div>

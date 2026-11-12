@@ -228,7 +228,7 @@ await page.waitForSelector('[data-testid="official-card"]', { timeout: 60000 })
 await settle(page, 800)
 check('下载页：官方资料显示「已安装」', (await page.locator('[data-testid="official-card"] .trpg-badge', { hasText: '已安装' }).count()) === 1)
 // C 段起冒险并进「官方资料与冒险」一栏：点类型「冒险」，搜一个常见字让分组展开后数行
-await page.locator('[data-testid="kind-adventure"]').click()
+// 下载页不再有类型标签（2026-11-12），冒险在作者分组里
 await page.locator('[data-testid="official-card"] input[type="search"]').fill('的')
 await settle(page, 400)
 const advN = await page.locator('[data-testid="official-card"] .trpg-row').count()

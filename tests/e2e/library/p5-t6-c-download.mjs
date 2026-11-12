@@ -32,17 +32,18 @@ await settle(page, 800)
 const card = page.locator('[data-testid="official-card"]')
 
 check('下载页只有两栏：「官方资料与冒险」和「自制包」，没有单独的冒险栏', (await card.locator('.lib-title').innerText()).includes('官方资料与冒险') && (await page.locator('[data-testid="adventure-list"]').count()) === 0, '')
-// 类型筛选：冒险 → 每行都标「冒险」
-await page.locator('[data-testid="kind-adventure"]').click()
-await card.locator('.lib-dlgrp__btn').first().click()
+// 不再分「全部 / 书 / 冒险」标签（驾驶员 2026-11-12）：冒险按作者分组，和书在同一组里
+check('没有类型标签', (await page.locator('[data-testid^="kind-"]').count()) === 0, '')
+const mixed = await page.evaluate((P) => {
+  const g = eval(P)._s.get('library').shelf.groups.filter((x) => x.adventures.some((r) => r.set === 'cn-official'))
+  return g.map((x) => ({ name: x.name, books: x.books.filter((r) => r.set === 'cn-official').length, adv: x.adventures.filter((r) => r.set === 'cn-official').length }))
+}, P)
+const grpWithBoth = mixed.find((x) => x.books > 0 && x.adv > 0)
+await card.locator('.lib-dlgrp__btn', { hasText: grpWithBoth.name }).first().click()
 await settle(page, 300)
-const advKinds = await card.locator('[data-testid="row-kind"]').allInnerTexts()
-check('类型选「冒险」：显示的行都标「冒险」', advKinds.length > 0 && advKinds.every((t) => t === '冒险'), `${advKinds.length} 行`)
-await page.locator('[data-testid="kind-book"]').click()
-await settle(page, 300)
-const bookKinds = await card.locator('[data-testid="row-kind"]').allInnerTexts()
-check('类型选「书」：显示的行都标「书」', bookKinds.every((t) => t === '书'), `${bookKinds.length} 行`)
-await page.locator('[data-testid="kind-all"]').click()
+const kinds = await card.locator('.lib-dlgrp', { has: page.locator('.lib-dlgrp__btn', { hasText: grpWithBoth.name }) }).first().locator('[data-testid="row-kind"]').allInnerTexts()
+check('冒险作为作者分组里的一个包，和书在同一组', kinds.includes('书') && kinds.includes('冒险'), JSON.stringify({ group: grpWithBoth.name, kinds: [...new Set(kinds)], n: kinds.length }))
+await card.locator('.lib-dlgrp__btn', { hasText: grpWithBoth.name }).first().click()
 await page.screenshot({ path: `${shots}/merged.png` })
 
 // 分组全选框：先卸载两本书让某组有能勾的行

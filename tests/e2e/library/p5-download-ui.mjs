@@ -46,7 +46,7 @@ check('断网时下载页内容照常显示，没有被整页警告盖住', (awa
 
 // 冒险下载失败 → 环 + 横幅
 // C 段起冒险并进「官方资料与冒险」一栏：先点类型「冒险」、展开第一组
-await page.locator('[data-testid="kind-adventure"]').click()
+// 下载页不再有类型标签（2026-11-12），冒险在作者分组里
 await page.locator('[data-testid="official-card"] .lib-dlgrp__btn').first().click()
 await page.locator('[data-testid="official-card"] .trpg-row button', { hasText: '下载' }).first().click()
 await page.waitForSelector('[data-testid="download-banners"] [data-testid="download-retry"]', { timeout: 120000 })
