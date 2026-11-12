@@ -27,7 +27,7 @@ export async function importFiles(s: Services, codeSet: string, files: File[], s
       if (!ok) return false
     }
     const r = await lib.service.brewImport(setId, texts)
-    if (r.errors.length) { await reportLibError(s, new Error(`作者程序报错：${String(r.errors[0])}`), '导入文件', toast); return false }
+    if (!r.ok) { await reportLibError(s, new Error(`作者程序报错：${String(r.errors[0])}`), '导入文件', toast); return false }
     const rejected = r.rejected ?? []
     if (rejected.length) toast.error(`没有导入：${rejected.map((x) => `${x.name}（${x.reason}）`).join('；')}`)
     toast.success(`已导入 ${files.length - rejected.length} 个文件`)

@@ -8,7 +8,7 @@ import { findCollisions, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
-import type { ManageStore } from './manage'
+import type { ChoiceLevel, ManageStore } from './manage'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
@@ -84,34 +84,46 @@ export class CustomLibrary {
   /**
    * 写一条新条目（或改：带作者的 uniqueId 就是改那一条）。来源默认是插件的"我的资料"。
    * 版本（P5.5 R78）：新写的一条归到 rule 这套规则的默认范围（2014 → 5e，2024 → 5.5e），之后用户可改；不给 rule 就是未归类。
-   * 改已有的一条不动它的归类；改了名字（作者编号跟着变）把归类搬到新编号上。
+   * 改名（作者编号 = 名字 + 来源，跟着变）：同一次修改里把可编辑自制中用 _copy 指向它的条目改指新名字；
+   * 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
    */
   async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, { rule }: { rule?: string } = {}) {
+    const full: Record<string, unknown> = { source: CUSTOM.mine.json, ...ent }
     const result = await this.lib.mutateAuthor(codeSet, 'custom-entry', async (view) => {
       const f = await this.lib.frameOf(codeSet, view)
       await f.call('editableEnsureSource', CUSTOM.mine)
-      return f.call('editablePut', prop, { source: CUSTOM.mine.json, ...ent })
+      const put = await f.call('editablePut', prop, full)
+      const prev = put.previous
+      const retargeted = prev && put.previousHash !== put.hash ? await f.call('editableRetargetCopies', prop, prev, { name: String(full.name ?? ''), source: String(full.source) }) : 0
+      return { ...put, retargeted }
     })
     const saved = result.value
-    if (saved.hash) await this.carryAssignment({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }, saved.previousHash ?? null, rule)
+    const set = brewSetOf(codeSet).id
+    const renamed = saved.hash && saved.previousHash && saved.previousHash !== saved.hash ? { from: { set, prop, hash: saved.previousHash }, to: { set, prop, hash: saved.hash }, retargeted: saved.retargeted } : null
+    if (renamed) await this.carryRefs(renamed.from, renamed.to)
+    else if (saved.hash && !saved.previousHash && rule) await this.manage.setAssignment(entryUnit({ set, prop, hash: saved.hash }), { scopes: [...ruleScopes(rule).defaultScopes], global: false })
     // 另一种语言里有没有对上的条目（按英文名 + 来源）：只返回提示，保存时不改任何一边的条目
     const counterpart = saved.hash && this.counterpartHint ? await this.counterpartHint({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }) : null
-    return { ...saved, parse: result.parse, issues: await this.validateEntry(codeSet, prop, ent), counterpart }
+    return { ...saved, renamed, parse: result.parse, issues: await this.validateEntry(codeSet, prop, ent), counterpart }
   }
 
-  /** 新条目按规则给默认归类；改名的把旧编号上的归类搬到新编号（只动插件的管理记录，不写作者内容）。 */
-  private async carryAssignment(ref: EntryRef, previousHash: string | null, rule: string | undefined): Promise<void> {
-    const unit = entryUnit(ref)
-    if (previousHash) {
-      if (previousHash === ref.hash) return
-      const old = entryUnit({ ...ref, hash: previousHash })
-      const a = (await this.manage.assignments()).get(old)
-      if (!a) return
-      await this.manage.setAssignment(unit, a)
-      await this.manage.setAssignment(old, null)
-      return
+  /** 一条的编号变了：插件管理记录里认旧编号的（归类、房规链接两头、各层选的版本）搬到新编号。不写作者内容。 */
+  private async carryRefs(from: EntryRef, to: EntryRef): Promise<void> {
+    const oldUnit = entryUnit(from)
+    const a = (await this.manage.assignments()).get(oldUnit)
+    if (a) { await this.manage.setAssignment(entryUnit(to), a); await this.manage.setAssignment(oldUnit, null) }
+    const same = (x: EntryRef): boolean => refKey(x) === refKey(from)
+    for (const link of await this.manage.houseRules()) {
+      if (same(link.house)) { await this.manage.unlinkHouseRule(link.house); await this.manage.linkHouseRule({ house: to, target: link.target }) }
+      else if (same(link.target)) await this.manage.linkHouseRule({ house: link.house, target: to })
     }
-    if (rule) await this.manage.setAssignment(unit, { scopes: [...ruleScopes(rule).defaultScopes], global: false })
+    const oldAlt = `house:${from.hash}`
+    for (const c of await this.manage.allChoices()) {
+      const level = c.level as ChoiceLevel
+      const altId = c.altId === oldAlt ? `house:${to.hash}` : c.altId
+      if (c.target === refKey(from)) { await this.manage.setChoice(level, c.target, null); await this.manage.setChoice(level, refKey(to), altId) }
+      else if (altId !== c.altId) await this.manage.setChoice(level, c.target, altId)
+    }
   }
 
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {
@@ -149,7 +161,7 @@ export class CustomLibrary {
     const saved = result.value
     if (!saved.hash) throw new Error('作者算不出房规条目的编号')
     const house: EntryRef = { set: brewSetOf(c.codeSet).id, prop: target.prop, hash: saved.hash }
-    await this.carryAssignment(house, saved.previousHash ?? null, c.rule)
+    await this.manage.setAssignment(entryUnit(house), { scopes: [...ruleScopes(c.rule).defaultScopes], global: false })
     await this.manage.linkHouseRule({ house, target })
     const altId = `house:${saved.hash}`
     return { house, altId, uniqueId: saved.uniqueId, parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }

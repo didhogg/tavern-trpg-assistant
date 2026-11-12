@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { formatOfCodeSet, recognizeText, splitRecognized } from '../../../src/library/formats'
-import { brewImport } from '../../../src/library/service-brew'
+import { authorImportOk, brewImport } from '../../../src/library/service-brew'
 import { CODE_SETS, SOURCES } from '../../../src/library/sources'
 
 // P5.5 A3：导入前先认格式。只看作者结构定义规定的外壳（_meta.sources），内容对不对交给校验器。
@@ -45,5 +45,17 @@ describe('brewImport：一个都认不出时报错，什么都不改', () => {
     const ctx = { operations: { begin: async () => { begun++; throw new Error('不该开操作') } } }
     await expect(brewImport(ctx as never, set.id, [{ name: 'b.json', text: foundryItem }])).rejects.toThrow('没有可以导入的文件')
     expect(begun).toBe(0)
+  })
+})
+
+describe('导入成没成按作者的结果（authorImportOk）', () => {
+  it('加进了包：成，即使小窗收到作者容忍的错误（断网取不到来源索引）', () => {
+    expect(authorImportOk({ value: { added: [{}] }, errors: ['Uncaught Error: 请求 JSON 时发生网络错误'] })).toBe(true)
+  })
+  it('一个没加、也没有错：成（同一个文件再导一次，作者不重复加）', () => {
+    expect(authorImportOk({ value: { added: [] }, errors: [] })).toBe(true)
+  })
+  it('一个没加、还有错：没成（作者出错时整批不加）', () => {
+    expect(authorImportOk({ value: { added: [] }, errors: ['x'] })).toBe(false)
   })
 })

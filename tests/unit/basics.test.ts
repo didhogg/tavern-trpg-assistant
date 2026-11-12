@@ -4,6 +4,7 @@ import { hashValue, stableStringify } from '../../src/core/hash'
 import { batchLabel, ownerFromHost, uuid } from '../../src/core/ids'
 import { migrateRecord } from '../../src/core/migrate'
 import { compareVersions } from '../../src/core/semver'
+import { SCHEMA_VERSIONS } from '../../src/schemas/common'
 
 describe('semver', () => {
   it('比较版本', () => {
@@ -47,7 +48,8 @@ describe('migrate', () => {
   })
   it('版本高于当前时拒绝并给出提示', () => {
     try {
-      migrateRecord('save', { schemaVersion: 9 })
+      // 比当前版本高一版（读登记表，不写死：存档格式升级后这条测试不用跟着改）
+      migrateRecord('save', { schemaVersion: SCHEMA_VERSIONS.save + 1 })
       expect.unreachable()
     } catch (e) {
       expect(e).toBeInstanceOf(TrpgError)

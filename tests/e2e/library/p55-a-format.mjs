@@ -38,7 +38,8 @@ const r = await page.evaluate(async () => {
   out.preview = { files: pre.files.map((f) => f.filename), rejected: pre.rejected }
   try { await lib.service.brewImport('cn-brew', [foundry]); out.onlyForeign = 'no-throw' } catch (e) { out.onlyForeign = String(e.message ?? e) }
   const imp = await lib.service.brewImport('cn-brew', [noEd, one, foundry])
-  out.import = { added: imp.value.added.length, rejected: imp.rejected, errors: imp.errors }
+  out.importLog = (await lib.logs.list({ kind: 'brew-import-author-errors' })).length
+  out.import = { ok: imp.ok, added: imp.value.added.length, rejected: imp.rejected, errors: imp.errors }
   // A2：我的库里没写版本的 → 未归类；写了 one 的 → 新版
   lib.scoped.reset()
   out.editions = await lib.scoped.editions('cn', ['P55NOED', 'P55ONE'])
@@ -48,6 +49,17 @@ const r = await page.evaluate(async () => {
   out.saved = { hash: saved.hash, assignment: assigns.get(`ent:cn-brew:spell:${saved.hash}`) ?? null }
   lib.scoped.reset()
   out.mineEdition = (await lib.scoped.editions('cn', ['TRPGMINE'])).TRPGMINE
+  // 小修③：改名时指向它的房规跟着改指，链接搬到新编号
+  const c = { rule: 'dnd5e2014', codeSet: 'cn', scopes: ['5e2014'], include: [], exclude: [], choices: {} }
+  const base = await lib.custom.saveEntry('cn', 'spell', spell('改名前术', 'TRPGMINE'), { rule: 'dnd5e2014' })
+  const target = { set: 'cn-brew', prop: 'spell', hash: base.hash }
+  const hr = await lib.custom.createHouseRule(c, target, { mod: { entries: { mode: 'appendArr', items: '房规加一句' } } }, { activate: false })
+  const re = await lib.custom.saveEntry('cn', 'spell', { ...spell('改名后术', 'TRPGMINE'), uniqueId: base.uniqueId })
+  const doc = await (await lib.service.frameOf('cn')).call('editableDoc')
+  const houseEnt = (doc.body.spell ?? []).find((e) => e.uniqueId === hr.uniqueId)
+  const link = (await lib.scoped.manage.houseRules()).find((l) => l.house.hash === hr.house.hash)
+  const merged = await lib.service.storedItem('cn-brew', 'spell', hr.house.hash)
+  out.rename = { renamed: re.renamed, houseCopy: houseEnt?._copy ?? null, linkTarget: link?.target.hash ?? null, mergedLevel: merged?.item?.level ?? null, mergedEntries: merged?.item?.entries ?? null }
   return out
 })
 
@@ -57,10 +69,16 @@ check('A1 单条校验只留这一条的错', r.validateEntryIssues.length > 0 &
 check('A3 预览：5etools 包进预览，Foundry 文件被拒并说明', r.preview.files.length === 1 && r.preview.rejected.length === 1 && /Foundry VTT（规则系统 dnd5e）/.test(r.preview.rejected[0].reason), JSON.stringify(r.preview))
 check('A3 只给外来文件：报错、不导入', /没有可以导入的文件/.test(r.onlyForeign), r.onlyForeign)
 check('A3 混着导：收 2 个、拒 1 个', r.import.added === 2 && r.import.rejected.length === 1, JSON.stringify(r.import))
+check('小修①：断网导入成功就算成功（作者容忍的取索引失败不算失败）', r.import.ok === true, `errors ${r.import.errors.length}`)
+check('小修①：作者另报的错记进日志（设置→库→日志能看到）', r.importLog >= 1, String(r.importLog))
 check('A2 我的库里没写版本的自制：未归类（不猜旧版）', r.editions.P55NOED?.classic === null, JSON.stringify(r.editions.P55NOED))
 check('A2 写了 edition: one 的：判为新版', r.editions.P55ONE?.classic === false, JSON.stringify(r.editions.P55ONE))
 check('A2 新写条目按 2024 规则归到 5e2024', JSON.stringify(r.saved.assignment) === JSON.stringify({ scopes: ['5e2024'], global: false }), JSON.stringify(r.saved))
 check('A2「我的资料」来源本身未归类（版本看单条）', r.mineEdition?.classic === null, JSON.stringify(r.mineEdition))
+check('小修③：改名返回新旧编号，指向它的 1 条房规已改指', r.rename.renamed?.retargeted === 1 && r.rename.renamed?.from.hash !== r.rename.renamed?.to.hash, JSON.stringify(r.rename.renamed))
+check('小修③：房规的 _copy 指向新名字', r.rename.houseCopy?.name === '改名后术', JSON.stringify(r.rename.houseCopy))
+check('小修③：房规链接的目标搬到新编号', r.rename.linkTarget === r.rename.renamed?.to.hash, `${r.rename.linkTarget}`)
+check('小修③：作者能合并出房规（原件的数值 + 房规加的一句）', r.rename.mergedLevel === 1 && JSON.stringify(r.rename.mergedEntries ?? []).includes('房规加一句'), JSON.stringify({ l: r.rename.mergedLevel, e: r.rename.mergedEntries }))
 // 断网时作者程序联网取目录 / 冒险书索引失败的报错是预期的（同 p5-download-ui.mjs），不算
 const realErrors = pageErrors.filter((m) => !/网络错误|Network error|gendata-nav-adventure-book-index/.test(m))
 check('页面没有未处理的错误（断网预期的除外）', realErrors.length === 0, realErrors.slice(0, 2).join(' | '))

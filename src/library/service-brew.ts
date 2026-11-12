@@ -190,6 +190,9 @@ export function brewInstallSources(ctx: BrewContext, sourceId: string, sources: 
   return downloadBrew(ctx, sourceId, 'brew-deps', '下载缺的依赖包', (frame) => frame.call('brewAddSources', sources), (r) => !!r.value.added.length, signal)
 }
 
+/** 作者导入成没成：作者出错时整批不加、返回空并抛错；加进了包，或者一条错都没有，就是成了（同一个文件再导一次作者不重复加，也算成）。 */
+export const authorImportOk = (r: { value: { added: unknown[] }; errors: unknown[] }): boolean => r.value.added.length > 0 || r.errors.length === 0
+
 /**
  * 导入本地文件。先按这套资料集的数据格式认文件（P5.5 A3，formats.ts）：不是这种格式的拒收并写明原因，不交给作者；
  * 一个都认不出就报错（什么都不改）。不是合法 JSON 的照旧交给作者，作者列进 notJson。
@@ -201,9 +204,14 @@ export async function brewImport(ctx: BrewContext, sourceId: string, files: Arra
   const handle = await ctx.operations.begin({ kind: 'brew-import', set: s.id, codeSet: s.codeSet })
   try {
     const r = await (await ctx.frame(s.codeSet, handle.target)).call('brewAddFiles', accepted)
+    // 成没成按作者自己的结果判断：作者导入出错时整批不加（返回空、错误用 setTimeout 抛出）。
+    // 作者容忍的错误（例如断网取不到自制来源索引，作者注明"支持离线导入文件"，utils-brew-base.js _pGetBrewDependencies_getBrewIndex）
+    // 也会被小窗当作未处理错误收进 errors；这类不算导入失败，记进日志。
+    const ok = authorImportOk(r)
+    if (ok && r.errors.length) ctx.onLog?.({ level: 'warn', source: s.id, kind: 'brew-import-author-errors', message: `导入成功，作者程序另报了 ${r.errors.length} 条错`, detail: r.errors })
     const parse = await afterBrewChange(ctx, s, handle.target)
     const view = await publishBrew(ctx, s, handle, parse)
-    return { ...r, rejected, parse, view: view.id }
+    return { ...r, ok, rejected, parse, view: view.id }
   } catch (e) {
     await ctx.operations.abort(handle, e)
     throw e

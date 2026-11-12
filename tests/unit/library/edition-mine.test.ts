@@ -24,22 +24,30 @@ describe('我的库里没写版本的自制 → 未归类（isMineWithoutEdition
 })
 
 describe('saveEntry / createHouseRule 的版本归类', () => {
-  const setup = (put: { uniqueId: string; hash: string; previousHash?: string | null }, existing: Record<string, Assignment> = {}) => {
+  type Ref = { set: string; prop: string; hash: string }
+  const setup = (put: { uniqueId: string; hash: string; previousHash?: string | null; previous?: { name: string; source: string } | null }, existing: Record<string, Assignment> = {}, extra: { links?: Array<{ house: Ref; target: Ref }>; choices?: Record<string, string> } = {}) => {
     const assigns = new Map(Object.entries(existing))
+    const key = (r: Ref) => `${r.set}|${r.prop}|${r.hash}`
+    const links = new Map((extra.links ?? []).map((l) => [key(l.house), l]))
+    const choices = new Map(Object.entries(extra.choices ?? {}))
     const manage = {
       assignments: async () => new Map(assigns),
       setAssignment: async (u: string, a: Assignment | null) => { if (a) assigns.set(u, a); else assigns.delete(u) },
-      houseRules: async () => [],
-      linkHouseRule: async () => undefined,
+      houseRules: async () => [...links.values()],
+      linkHouseRule: async (l: { house: Ref; target: Ref }) => { links.set(key(l.house), l) },
+      unlinkHouseRule: async (h: Ref) => { links.delete(key(h)) },
+      allChoices: async () => [...choices].map(([k, altId]) => { const at = k.indexOf('|'); return { level: k.slice(0, at), target: k.slice(at + 1), altId } }),
+      setChoice: async (level: string, target: string, altId: string | null) => { if (altId) choices.set(`${level}|${target}`, altId); else choices.delete(`${level}|${target}`) },
     }
-    const frame = { call: async (name: string) => (name === 'editablePut' ? put : undefined) }
+    const calls: Array<[string, unknown[]]> = []
+    const frame = { call: async (name: string, ...args: unknown[]) => { calls.push([name, args]); return name === 'editablePut' ? put : name === 'editableRetargetCopies' ? 1 : undefined } }
     const lib = {
       frameOf: async () => frame,
       mutateAuthor: async (_c: string, _k: string, run: (view: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }),
       storedItem: async () => ({ item: { name: '火球术', source: 'PHB' }, source: 'PHB' }),
     }
     const scoped = { manage, choose: async (c: unknown) => c, reset: () => undefined }
-    return { custom: new CustomLibrary(lib as never, scoped as never, {} as never), assigns }
+    return { custom: new CustomLibrary(lib as never, scoped as never, {} as never), assigns, links, choices, calls }
   }
   const spell = { name: '测试术', level: 1 }
   const rules = Object.keys(registry.rules)
@@ -66,7 +74,7 @@ describe('saveEntry / createHouseRule 的版本归类', () => {
   it('改名（编号变了）：旧编号上的归类搬到新编号，旧的清掉', async () => {
     const old = entryUnit({ set: 'cn-brew', prop: 'spell', hash: 'h-old' })
     const mine: Assignment = { scopes: ['5e2024'], global: false }
-    const { custom, assigns } = setup({ uniqueId: 'u1', hash: 'h-new', previousHash: 'h-old' }, { [old]: mine })
+    const { custom, assigns } = setup({ uniqueId: 'u1', hash: 'h-new', previousHash: 'h-old', previous: { name: '旧名', source: 'TRPGMINE' } }, { [old]: mine })
     await custom.saveEntry('cn', 'spell', { ...spell, uniqueId: 'u1' }, { rule: rules[0] })
     expect(assigns.get(entryUnit({ set: 'cn-brew', prop: 'spell', hash: 'h-new' }))).toEqual(mine)
     expect(assigns.has(old)).toBe(false)
@@ -77,5 +85,28 @@ describe('saveEntry / createHouseRule 的版本归类', () => {
     const c = { rule, codeSet: 'cn', scopes: [], include: [], exclude: [], choices: {} }
     await custom.createHouseRule(c, { set: 'cn-official', prop: 'spell', hash: 'fireball' }, { entity: { name: '火球术' } }, { activate: false })
     expect(assigns.get(entryUnit({ set: 'cn-brew', prop: 'spell', hash: 'house-h' }))).toEqual({ scopes: ruleScopes(rule).defaultScopes, global: false })
+  })
+  it('改名：用 _copy 指向它的条目改指新名字（同一次修改），房规链接和各层选的版本搬到新编号', async () => {
+    const from = { set: 'cn-brew', prop: 'spell', hash: 'h-old' }
+    const to = { set: 'cn-brew', prop: 'spell', hash: 'h-new' }
+    const house = { set: 'cn-brew', prop: 'spell', hash: 'house-1' }
+    const { custom, links, choices, calls } = setup(
+      { uniqueId: 'u1', hash: 'h-new', previousHash: 'h-old', previous: { name: '旧名', source: 'TRPGMINE' } },
+      {},
+      { links: [{ house, target: from }], choices: { 'global|cn-brew|spell|h-old': 'house:house-1', 'rule:dnd5e2014|cn-official|spell|x': 'house:h-old' } },
+    )
+    const r = await custom.saveEntry('cn', 'spell', { name: '新名', level: 1, uniqueId: 'u1' })
+    expect(calls.find(([n]) => n === 'editableRetargetCopies')?.[1]).toEqual(['spell', { name: '旧名', source: 'TRPGMINE' }, { name: '新名', source: 'TRPGMINE' }])
+    expect(r.renamed).toMatchObject({ from, to, retargeted: 1 })
+    expect([...links.values()]).toEqual([{ house, target: to }])
+    expect(choices.get('global|cn-brew|spell|h-new')).toBe('house:house-1')
+    expect(choices.has('global|cn-brew|spell|h-old')).toBe(false)
+    expect(choices.get('rule:dnd5e2014|cn-official|spell|x')).toBe('house:h-new')
+  })
+  it('没改名：不改指、不搬', async () => {
+    const { custom, calls } = setup({ uniqueId: 'u1', hash: 'h1', previousHash: 'h1', previous: { name: '同名', source: 'TRPGMINE' } })
+    const r = await custom.saveEntry('cn', 'spell', { name: '同名', uniqueId: 'u1' })
+    expect(r.renamed).toBeNull()
+    expect(calls.some(([n]) => n === 'editableRetargetCopies')).toBe(false)
   })
 })

@@ -183,13 +183,30 @@ export async function editableEnsureSource(sourceObj: { json: string; full: stri
 }
 
 /** 存一条（作者 pPersistEditableBrewEntity：按 uniqueId 新增或覆盖）。没有 uniqueId 就让作者生成。 */
-export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: string; hash: string | null; previousHash: string | null }> {
+export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: string; hash: string | null; previousHash: string | null; previous: { name: string; source: string } | null }> {
   await init()
-  // 改已有的一条时先记下它原来的编号（作者编号 = 名字 + 来源，改名就变），调用方据此把插件的归类搬过去
+  // 改已有的一条时先记下它原来的编号和名字（作者编号 = 名字 + 来源，改名就变），调用方据此把指向它的东西搬过去
   const before = ent.uniqueId ? ((await A.BrewUtil2.pGetOrCreateEditableBrewDoc()).body?.[prop] ?? []).find((x: any) => x?.uniqueId === ent.uniqueId) : null
   const e = { ...ent, uniqueId: ent.uniqueId ?? A.CryptUtil.uid() }
   await A.BrewUtil2.pPersistEditableBrewEntity(prop, e)
-  return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null }
+  return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null, previous: before ? { name: String(before.name ?? ''), source: String(before.source ?? '') } : null }
+}
+
+/**
+ * 一条改了名（或换了来源）：可编辑自制里用 _copy 指向它的条目（房规、自己写的变体）改指新名字，否则作者合并时找不到原件。
+ * 作者 _copy 按名字 + 来源找（不分大小写）；写回走作者 pSetEditableBrewDoc（同 editableAddDependencies）。返回改了几条。
+ */
+export async function editableRetargetCopies(prop: string, from: { name: string; source: string }, to: { name: string; source: string }): Promise<number> {
+  await init()
+  const doc = A.MiscUtil.copyFast(await editableDoc())
+  const same = (a: unknown, b: string): boolean => String(a ?? '').toLowerCase() === b.toLowerCase()
+  let n = 0
+  for (const e of doc.body?.[prop] ?? []) {
+    const c = e?._copy
+    if (c && same(c.name, from.name) && same(c.source, from.source)) { c.name = to.name; c.source = to.source; n++ }
+  }
+  if (n) await A.BrewUtil2.pSetEditableBrewDoc(doc)
+  return n
 }
 
 /** 删条（作者 pRemoveEditableBrewEntities）。 */
