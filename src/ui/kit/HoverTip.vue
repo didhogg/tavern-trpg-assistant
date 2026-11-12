@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref } from 'vue'
+import { inject, nextTick, onBeforeUnmount, ref } from 'vue'
 
 /**
  * 悬停气泡（U5R §1.2）：只读、不接收鼠标、不遮住触发元素；优先在上方，放不下翻到下方。
@@ -7,6 +7,8 @@ import { nextTick, onBeforeUnmount, ref } from 'vue'
  */
 const props = defineProps<{ lines?: string[]; text?: string; disabled?: boolean; inline?: boolean }>()
 const open = ref(false)
+/** 气泡挂到插件顶层（和下拉菜单同一处）：不被列表行的裁切（content-visibility / overflow）切掉。 */
+const portalTarget = inject<HTMLElement | undefined>('portalTarget', undefined)
 const trigger = ref<HTMLElement | null>(null)
 const bubble = ref<HTMLElement | null>(null)
 const pos = ref({ left: 0, top: 0, below: false })
@@ -41,6 +43,8 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <span ref="trigger" class="trpg-tip" :class="{ 'is-inline': inline }" :aria-describedby="open ? id : undefined" @mouseenter="show" @mouseleave="hide" @focusin="show" @focusout="hide" @pointerdown="toggleTouch">
     <slot />
-    <span v-if="open" :id="id" ref="bubble" class="trpg-tip__bubble" :class="{ 'is-below': pos.below }" role="tooltip" :style="{ left: `${pos.left}px`, top: `${pos.top}px` }"><span v-for="(line, i) in content()" :key="i" class="trpg-tip__line">{{ line }}</span></span>
+    <Teleport :to="portalTarget" :disabled="!portalTarget">
+      <span v-if="open" :id="id" ref="bubble" class="trpg-tip__bubble" :class="{ 'is-below': pos.below }" role="tooltip" :style="{ left: `${pos.left}px`, top: `${pos.top}px` }"><span v-for="(line, i) in content()" :key="i" class="trpg-tip__line">{{ line }}</span></span>
+    </Teleport>
   </span>
 </template>

@@ -46,6 +46,16 @@ try {
   await page.reload()
   await openShelf(page)
   ok('刷新后仍是关（本战役持久）', (await switchOf(page, name)) === 'false')
+  // 开关悬停：按现在的状态写「本战役启用 / 本战役停用」
+  const tipOf = async (n) => { const sw = page.locator('.trpg-shelf__row').filter({ has: page.locator('.lib-name', { hasText: n }) }).first().getByTestId('shelf-switch'); await sw.hover(); const t = page.locator('.trpg-tip__bubble'); await t.waitFor(); const text = (await t.innerText()).trim(); await page.mouse.move(0, 0); return text }
+  const offTip = await tipOf(name)
+  const onName = (await page.locator('.trpg-shelf__row .trpg-switch[aria-checked="true"]').first().locator('xpath=ancestor::div[contains(@class,"trpg-shelf__row")]').locator('.lib-name').evaluate((e) => e.firstChild.textContent)).trim()
+  const onTip = await tipOf(onName)
+  ok('开关悬停：关着写「本战役停用」，开着写「本战役启用」', offTip === '本战役停用' && onTip === '本战役启用', { offTip, onTip })
+  await page.locator('.trpg-shelf__row').filter({ has: page.locator('.lib-name', { hasText: onName }) }).first().getByTestId('shelf-switch').hover()
+  await page.locator('.trpg-tip__bubble').waitFor()
+  await page.screenshot({ path: join(profile, 'switch-tip.png') })
+  await page.mouse.move(0, 0)
   await page.getByTestId('shelf-multi-official').click()
   await page.locator('.trpg-shelf__row').filter({ has: page.locator('.lib-name', { hasText: name }) }).first().locator('.lib-rowpick').click()
   await page.getByTestId('shelf-enable-picked').click()

@@ -9,6 +9,7 @@ import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Checkbox from '../kit/Checkbox.vue'
 import GroupCheck from '../kit/GroupCheck.vue'
+import HoverTip from '../kit/HoverTip.vue'
 import Icon from '../kit/Icon.vue'
 import { formatBytes } from '../format'
 import { ruleBadge } from './registry'
@@ -148,7 +149,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
               <span v-if="ruleBadge(r)" class="trpg-badge" :title="r.shelf?.published ? `出版：${r.shelf.published}` : undefined">{{ ruleBadge(r) }}</span>
               <span v-if="updating(r)" class="lib-muted" role="status">更新中…</span>
               <button v-else-if="hasUpdate(r)" class="trpg-btn trpg-btn--small" type="button" data-testid="row-update" :title="`更新《${r.name}》`" @click="updateRow(app.svc(), r, toast)">有更新 · 更新</button>
-              <Switch :model-value="isOn(r)" :label="`在本战役里使用《${r.name}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(r, v)" />
+              <HoverTip inline :text="!lib.bound ? '先创建战役，开关才能用' : isOn(r) ? '本战役启用' : '本战役停用'"><Switch :model-value="isOn(r)" :label="`在本战役里使用《${r.name}》`" :disabled="!lib.bound" data-testid="shelf-switch" @update:model-value="(v: boolean) => toggle(r, v)" /></HoverTip>
               <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }, ...(getSource(r.set).kind === 'official' ? [{ key: 'rm', label: r.kind === 'adventure' ? '卸载这本冒险…' : '卸载这本书…', danger: true }] : [{ key: 'rm', label: '删除这个包…', danger: true }])]" @select="(k: string) => onMenu(r, k)" />
             </div>
           </details>
