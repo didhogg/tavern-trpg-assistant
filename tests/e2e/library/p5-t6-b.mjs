@@ -14,7 +14,6 @@ const { server, url } = await startStatic({ port: 47342 })
 const shots = `${work}/p5-t6-shots/b`
 await mkdir(shots, { recursive: true })
 const P = `(() => { const h = document.querySelector('#trpg-assistant-root'); return [...h.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean).config.globalProperties.$pinia })()`
-const root = (page) => page.locator('#trpg-assistant-root')
 
 async function open(label, viewport) {
   const profile = `${work}/profile-p5t6b-${label}`

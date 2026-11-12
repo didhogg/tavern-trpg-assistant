@@ -92,7 +92,7 @@ async function cancel(i: DownloadItem): Promise<void> {
   dl.refresh()
 }
 function retry(i: DownloadItem): void {
-  if (i.kind === 'official' && i.key.startsWith('official-book:')) { if (!dl.retryTask(i.key)) ui.go('library') } else if (i.kind === 'official') { dl.markRetried(i.key); for (const set of i.sets ?? []) tasks().startOfficial(set) } else if (i.kind === 'adventure' && i.set && i.item) { dl.markRetried(i.key); tasks().startAdventure(i.set, i.item) } else dl.retryBrew(i.key)
+  if (i.kind === 'official' && i.key.startsWith('official-book:')) { if (!i.taskId || !dl.retryTask(i.taskId, i.key)) ui.go('library') } else if (i.kind === 'official') { dl.markRetried(i.key); for (const set of i.sets ?? []) tasks().startOfficial(set) } else if (i.kind === 'adventure' && i.set && i.item) { dl.markRetried(i.key); tasks().startAdventure(i.set, i.item) } else dl.retryBrew(i.key)
   dl.refresh()
 }
 function clearFailed(): void { for (const i of dl.failed) dl.dismiss(i.key) }

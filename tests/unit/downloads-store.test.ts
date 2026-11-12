@@ -39,6 +39,15 @@ describe('itemsOf 按书下载（P5 T6 B1）', () => {
     const items = itemsOf([task('a', 'failed', { kind: 'official', item: null }), task('b', 'running', { kind: 'official', item: null })], names)
     expect(items.map((i) => [i.status, i.taskId])).toEqual([['running', 'b']])
   })
+  it('同名但不同请求的两个任务各占一行，不按显示名合并', () => {
+    const names = new Map([['task:a', '玩家手册'], ['task:b', '玩家手册']])
+    const items = itemsOf([
+      task('a', 'running', { kind: 'official', item: 'books=PHB', set: 'cn-official' }),
+      task('b', 'running', { kind: 'official', item: 'books=MM', set: 'cn-official' }),
+    ], names)
+    expect(items.map((i) => i.taskId)).toEqual(['a', 'b'])
+    expect(new Set(items.map((i) => i.key)).size).toBe(2)
+  })
 })
 
 describe('下载状态仓库', () => {
@@ -102,5 +111,21 @@ describe('自制包阶段（P5 T6 B1）', () => {
     release()
     await done
     expect(dl.items.find((i) => i.key === 'brew:x')).toBeUndefined()
+  })
+  it('两个自制包同时下载：先完成的一个不会用旧列表抹掉另一个', async () => {
+    const dl = useDownloadsStore()
+    let releaseA!: () => void
+    let releaseB!: () => void
+    const a = dl.trackBrew('brew:a', '包甲', async () => { await new Promise<void>((r) => { releaseA = r }); return null })
+    const b = dl.trackBrew('brew:b', '包乙', async () => { await new Promise<void>((r) => { releaseB = r }); return null })
+    await Promise.resolve()
+    expect(dl.items.filter((i) => i.kind === 'brew').map((i) => i.key)).toEqual(['brew:a', 'brew:b'])
+    releaseA()
+    await a
+    expect(dl.items.find((i) => i.key === 'brew:b')).toMatchObject({ status: 'running' })
+    releaseB()
+    await b
+    expect(dl.items.find((i) => i.key === 'brew:a')).toBeUndefined()
+    expect(dl.items.find((i) => i.key === 'brew:b')).toBeUndefined()
   })
 })

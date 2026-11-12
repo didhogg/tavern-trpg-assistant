@@ -100,6 +100,11 @@
 .lib-toc summary { padding: var(--sp-2) var(--sp-3); font-weight: var(--fw-semibold); cursor: pointer; }
 .lib-toc details > button { width: 100%; }
 .lib-toc .lib-toc__section[data-depth='true'] { padding-inline-start: var(--sp-5); }
+.lib-toc__chapter { display: flex; align-items: center; gap: var(--sp-1); width: 100%; min-width: 0; min-height: 40px; padding: 0 var(--sp-3); border: 0; border-left: 3px solid transparent; background: none; color: var(--text); font: inherit; font-weight: var(--fw-semibold); text-align: left; cursor: pointer; }
+.lib-toc__chapter span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-toc__chapter:hover { background: var(--bg-hover); }
+.lib-toc__chapter[aria-current='true'] { border-left-color: var(--primary); background: var(--primary-tint); }
+.lib-toc__sections { display: grid; }
 [data-reader-current] { background: var(--primary-tint); }
 .lib-author-block { display: flow-root; min-width: 0; overflow-wrap: anywhere; }
 .lib-author-block table { border-collapse: collapse; width: 100%; }
@@ -179,27 +184,42 @@
 .trpg-window[data-layout='narrow'] .lib-bannerstack { left: var(--sp-3); right: var(--sp-3); }
 
 /* 下载页栏目（P5 T6 B2）：标题 + 搜索 + 多选；按作者分类分组，组间细线；多选时底部钉批量操作栏 */
-.lib-dlsec { display: grid; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
-.lib-dlsec__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
+.lib-dlsec { display: grid; min-width: 0; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.lib-dlsec__head { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
 .lib-dlsec__head .lib-title { flex: 1 0 auto; }
-.lib-dlsec__tools { display: flex; gap: var(--sp-2); align-items: center; flex: 1 1 280px; justify-content: flex-end; }
+.lib-dlsec__tools { display: flex; min-width: 0; flex-wrap: wrap; gap: var(--sp-2); align-items: center; flex: 1 1 280px; justify-content: flex-end; }
 .lib-dlsec__tools .trpg-input { flex: 1 1 auto; min-width: 0; max-width: 320px; }
+.trpg-window[data-layout='wide'] .lib-dlsec__tools { flex-wrap: nowrap; }
 .lib-dlsec__tools .trpg-btn { flex: none; white-space: nowrap; }
 .lib-dlsec__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
 .lib-dlsec__bar .lib-banner { flex: 1 1 100%; }
+.lib-dlsec__list { min-width: 0; }
 .lib-dlsec__empty { margin: 0; padding: var(--sp-2) 0; }
-.lib-dlgrp { border-top: var(--border) solid var(--line); }
+.lib-dlgrp { min-width: 0; border-top: var(--border) solid var(--line); }
 .lib-dlgrp:first-child { border-top: 0; }
 .lib-dlgrp__sum { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--hit); }
 .lib-dlgrp__btn { flex: 1; display: inline-flex; align-items: center; gap: var(--sp-1); min-height: var(--hit); padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: var(--fw-semibold); text-align: left; cursor: pointer; }
 .lib-dlgrp__btn small { margin-left: var(--sp-2); color: var(--text3); font-weight: var(--fw-regular); }
-.lib-dlgrp__rows { margin: 0 0 var(--sp-2); }
+.lib-dlgrp__rows { min-width: 0; margin: 0 0 var(--sp-2); }
 .lib-dlgrp__rows .trpg-row { gap: var(--sp-2); }
 .lib-dlgrp__rows .trpg-row[data-selected='true'] { background: var(--primary-tint); }
-.lib-selbar { position: sticky; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); margin: 0 calc(-1 * var(--sp-3)) calc(-1 * var(--sp-3)); border-top: var(--border) solid var(--line); background: var(--surface); box-shadow: 0 -4px 10px color-mix(in srgb, var(--text) 8%, transparent); border-radius: 0 0 var(--r-md) var(--r-md); }
-.lib-selbar .lib-end { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); }
+.lib-selbar { position: sticky; bottom: 0; z-index: 2; display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); margin: 0 calc(-1 * var(--sp-3)) calc(-1 * var(--sp-3)); border-top: var(--border) solid var(--line); background: var(--surface); box-shadow: 0 -4px 10px color-mix(in srgb, var(--text) 8%, transparent); border-radius: 0 0 var(--r-md) var(--r-md); }
+.lib-selbar .lib-end { display: inline-flex; min-width: 0; flex: 1 1 auto; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2); }
+.lib-selbar > .lib-muted { min-width: 0; }
 /* 右下角有骰子悬浮按钮：批量操作栏右侧让出位置，按钮不被挡住 */
 .lib-selbar { padding-right: calc(var(--sp-3) + 64px); }
+/* 多选时批量栏贴住滚动区底边：72px 是给正文末尾 / 骰子留的空间，不能把 sticky 栏顶起来。 */
+.lib-scroll:has(.lib-selbar) { padding-bottom: 0; }
+.lib-scroll:has(.lib-selbar) .lib-dlsec { padding-bottom: var(--sp-3); }
+
+/* 下载页窄屏：头部工具行和批量栏都允许换行，不能被最小内容宽度撑出白卡。 */
+.trpg-window[data-layout='narrow'] .lib-dlsec__head .lib-title { flex: 1 1 100%; }
+.trpg-window[data-layout='narrow'] .lib-dlsec__tools { flex: 1 1 100%; justify-content: flex-start; }
+.trpg-window[data-layout='narrow'] .lib-dlsec__tools .trpg-input { flex: 1 1 100%; max-width: none; }
+.trpg-window[data-layout='narrow'] .lib-dlsec__tools .trpg-btn { flex: 0 1 auto; }
+.trpg-window[data-layout='narrow'] .lib-selbar .lib-end { flex: 1 1 100%; justify-content: flex-start; }
+.trpg-window[data-layout='narrow'] .lib-selbar .lib-end .trpg-btn { flex: 1 1 120px; }
+.trpg-window[data-layout='narrow'] .lib-scroll:has(.lib-selbar) { padding-bottom: 0; }
 
 /* 详情和阅读器标题栏共用的语言切换：浅边、内阴影、实色选中项。 */
 .lib-langsw { flex: none; display: inline-flex; padding: 2px; border: var(--border) solid var(--line); border-radius: var(--r-pill); background: var(--surface); box-shadow: inset 0 1px 3px color-mix(in srgb, var(--text) 12%, transparent); }

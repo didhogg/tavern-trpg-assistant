@@ -41,6 +41,7 @@
 .trpg-content { flex: 1; min-width: 0; overflow: auto; padding: var(--sp-4) var(--sp-5) 88px; outline: none; }
 .trpg-window[data-layout='narrow'] .trpg-content { padding: var(--sp-3) var(--sp-4) 88px; }
 .trpg-content[data-flush='true'] { padding: 0; }
+.trpg-window[data-layout='narrow'] .trpg-content[data-flush='true'] { padding: 0; }
 .trpg-dice-btn { position: absolute; right: var(--sp-5); bottom: var(--sp-5); z-index: 6; width: 52px; height: 52px; padding: 0; border-radius: 50%; border: 0; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; box-shadow: var(--shadow-2); transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-std); }
 .trpg-window[data-layout='narrow'] .trpg-dice-btn { right: var(--sp-4); bottom: var(--sp-4); }
 .trpg-dice-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }

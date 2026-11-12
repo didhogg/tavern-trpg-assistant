@@ -96,13 +96,12 @@ await page.waitForSelector('[data-testid="pack-page"] [data-testid="book-row"]',
 await page.locator('[data-testid="pack-page"] [data-testid="book-row"]').first().click()
 await page.waitForSelector('[data-testid="reader-toc"]')
 await page.locator('[data-testid="reader-toc"]').click()
-const chapters = page.getByTestId('reader-toc-list').locator('details')
+const chapters = page.getByTestId('reader-toc-list').locator('.lib-toc__chapter')
 const n = await chapters.count()
 let dead = null
 for (let i = 0; i < n && !dead; i++) {
   const chapter = chapters.nth(i)
-  if (await chapter.getAttribute('open') === null) await chapter.locator('summary').click()
-  await chapter.getByRole('button', { name: '读本章', exact: true }).click()
+  await chapter.click()
   await settle(page, 1200)
   dead = await page.evaluate(() => { const d = document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid="reader-body"] [data-testid="dead-link"]'); return d ? { text: d.textContent, title: d.title } : null })
   if (!dead && i < n - 1 && !(await page.locator('[data-testid="reader-toc-list"]').count())) await page.locator('[data-testid="reader-toc"]').click()

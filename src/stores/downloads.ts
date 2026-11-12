@@ -44,7 +44,8 @@ function latestOf(tasks: TaskState[], names: Map<string, string>): TaskState[] {
   const last = new Map<string, TaskState>()
   for (const t of tasks) {
     const label = taskLabel(names, t)
-    last.set(label ? `official-book:${label}` : `${t.kind}:${t.set}:${t.item ?? ''}`, t)
+    // 按任务身份去重，不按显示名：同名的两本书 / 两个包不能互相盖掉；重试同一个请求仍只留最新一条。
+    last.set(label ? `official-book:${t.item ?? label}` : `${t.kind}:${t.set}:${t.item ?? ''}`, t)
   }
   return [...last.values()]
 }
@@ -64,10 +65,16 @@ export function itemsOf(tasks: TaskState[], names: Map<string, string>): Downloa
   } else if (failed.length) {
     out.push({ key: 'official', kind: 'official', label: '官方资料', stage: '', status: 'failed', error: failed[0].error, pct: null, sets: [...new Set(failed.map((t) => t.set))] })
   }
-  // 按书下载的官方任务：每个任务一行，可暂停 / 继续 / 取消
-  for (const t of latest.filter((x) => x.kind === 'official' && taskLabel(names, x) && ['running', 'paused', 'failed', 'interrupted'].includes(x.status))) {
+  // 按书下载的官方任务：每个任务一行，可暂停 / 继续 / 取消。默认 key 保持 official-book:书名；
+  // 两个任务的显示名相同时加任务号，避免悬浮窗把其中一条合并掉。
+  const labeled = latest.filter((x) => x.kind === 'official' && taskLabel(names, x) && ['running', 'paused', 'failed', 'interrupted'].includes(x.status))
+  const labelCount = new Map<string, number>()
+  for (const t of labeled) { const label = taskLabel(names, t)!; labelCount.set(label, (labelCount.get(label) ?? 0) + 1) }
+  for (const t of labeled) {
+    const label = taskLabel(names, t)!
     const status = t.status === 'running' ? 'running' : t.status === 'paused' ? 'paused' : 'failed'
-    out.push({ key: `official-book:${taskLabel(names, t)}`, kind: 'official', label: taskLabel(names, t)!, stage: status === 'running' ? STAGE_GROUPS[groupIndex(t.progress.stage)].label : status === 'paused' ? '已暂停' : '', status, error: status === 'failed' ? t.error : null, pct: status === 'failed' ? null : pctOf(t), set: t.set, sets: [t.set], taskId: t.id })
+    const key = `official-book:${label}${(labelCount.get(label) ?? 0) > 1 ? `:${t.id}` : ''}`
+    out.push({ key, kind: 'official', label, stage: status === 'running' ? STAGE_GROUPS[groupIndex(t.progress.stage)].label : status === 'paused' ? '已暂停' : '', status, error: status === 'failed' ? t.error : null, pct: status === 'failed' ? null : pctOf(t), set: t.set, sets: [t.set], taskId: t.id })
   }
   for (const t of latest.filter((x) => x.kind === 'adventure' && (x.status === 'running' || x.status === 'failed'))) {
     const label = `冒险《${names.get(`${t.set}/${t.item}`) ?? t.item ?? ''}》`
@@ -102,12 +109,13 @@ export const useDownloadsStore = defineStore('downloads', () => {
   async function trackBrew(key: string, label: string, run: (report: (stage: string, pct: number | null) => void) => Promise<string | null>, retry?: () => void): Promise<void> {
     if (brew.value.some((i) => i.key === key && i.status === 'failed')) mark(retried, key)
     if (retry) brewRetry.set(key, retry)
-    const rest = brew.value.filter((i) => i.key !== key)
-    brew.value = [...rest, { key, kind: 'brew', label, stage: '下载文件', status: 'running', error: null, pct: null }]
+    brew.value = [...brew.value.filter((i) => i.key !== key), { key, kind: 'brew', label, stage: '下载文件', status: 'running', error: null, pct: null }]
     let error: string | null
     // 后端报的阶段（下载文件 → 整理资料 → 发布）实时写到这一行，悬浮窗里看得到
     const report = (stage: string, pct: number | null): void => { brew.value = brew.value.map((i) => (i.key === key && i.status === 'running' ? { ...i, stage, pct } : i)) }
     try { error = await run(report) } catch (e) { error = e instanceof Error ? e.message : String(e) }
+    // 结束只移除自己；不能用启动时保存的旧列表覆盖，否则会抹掉这期间新开始的另一项。
+    const rest = brew.value.filter((i) => i.key !== key)
     brew.value = error ? [...rest, { key, kind: 'brew', label, stage: '', status: 'failed', error, pct: null }] : rest
     if (!error) brewRetry.delete(key)
   }
@@ -152,15 +160,15 @@ export const useDownloadsStore = defineStore('downloads', () => {
   /** 按书下载：登记任务号对应的显示名（只是名字，不是数据），悬浮窗里每个任务一行。 */
   function rememberTask(taskId: string, label: string, retry?: () => void): void {
     names.set(`task:${taskId}`, label)
-    if (retry) taskRetry.set(`official-book:${label}`, retry)
+    if (retry) taskRetry.set(taskId, retry)
     refresh()
   }
   const taskRetry = new Map<string, () => void>()
   /** 按书下载失败后的重试（开任务时登记的那次选择）；没有登记返回 false。 */
-  function retryTask(key: string): boolean {
-    const fn = taskRetry.get(key)
+  function retryTask(taskId: string, key?: string): boolean {
+    const fn = taskRetry.get(taskId)
     if (!fn) return false
-    mark(retried, key)
+    mark(retried, key ?? `official-book:${taskId}`)
     fn()
     return true
   }

@@ -44,7 +44,7 @@ export function openManage(p: PackProps): void {
 }
 
 /** 书 / 冒险阅读器：弹窗里前进一页。 */
-export interface ReaderPart { chapter: number | null; section: string | null; ixNamedSection?: number | null }
+export interface ReaderPart { chapter: number | null; section: string | null; ixNamedSection?: number | null; headingIndex?: number | null; tocOpen?: boolean; scrollTop?: number }
 export interface ReaderTarget { set: string; prop: string; id: string; name: string; part?: ReaderPart }
 
 export function openReader(r: ReaderTarget): void {

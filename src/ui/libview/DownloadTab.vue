@@ -40,7 +40,7 @@ const ruleOk = (r: CatalogRow): boolean => rule.value === 'all' || (rule.value =
 const isOfficial = (r: CatalogRow): boolean => getSource(r.set).kind === 'official'
 const officialReady = computed(() => sets.value.some((s) => s.status === 'installed'))
 // 冒险正文要先有官方资料才能读：一本官方书都没装时冒险行不能下
-const canGet = (r: CatalogRow): boolean => !r.downloaded && !rowTask(r) && (r.kind === 'book' || officialReady.value)
+const canGet = (r: CatalogRow): boolean => !r.downloaded && !rowTask(r) && !finishing(r) && (r.kind === 'book' || officialReady.value)
 // 按作者分组列出；冒险是它所属分组里的一个包，和书并列（驾驶员 2026-11-12：不再分「全部 / 书 / 冒险」标签）
 const groups = computed<Array<DlGroup<CatalogRow>>>(() => (lib.shelf?.groups ?? []).map((g) => ({
   key: g.group,
@@ -54,12 +54,22 @@ const picked = computed(() => allRows.value.filter((r) => sel.value.has(keyOf(r)
 const pickedBooks = computed(() => picked.value.filter((r) => r.kind === 'book'))
 const pickedAdv = computed(() => picked.value.filter((r) => r.kind === 'adventure'))
 
-// 行 → 正在跑的任务：按书下载时记下「这一行属于哪个任务」，任务进度直接显示在行上
+// 行 → 正在跑的任务：按任务号认，不按书名认（同名书 / 同名包不能互相覆盖）。
+// 任务结束到书架刷新之间还有一小段空档，finishing() 用来显示「整理书架…」，不能先掉回【下载】。
 const pending = ref<Map<string, string>>(new Map())
+const taskOf = (r: CatalogRow) => {
+  const id = pending.value.get(keyOf(r))
+  return id ? dl.tasks.find((t) => t.id === id) ?? null : null
+}
 const rowTask = (r: CatalogRow) => {
+  const byId = taskOf(r)
+  if (byId) return dl.items.find((i) => i.taskId === byId.id) ?? null
   if (r.kind === 'adventure') return dl.items.find((i) => i.kind === 'adventure' && i.set === r.set && i.item === r.id) ?? null
-  const key = pending.value.get(keyOf(r))
-  return key ? dl.items.find((i) => i.key === key) ?? null : null
+  return null
+}
+const finishing = (r: CatalogRow): boolean => {
+  const t = taskOf(r)
+  return !!t && (t.status === 'done' || t.status === 'partial') && !r.downloaded
 }
 
 async function loadStatus(): Promise<void> {
@@ -91,7 +101,7 @@ function downloadBooks(rows: CatalogRow[]): void {
         const id = s.backend.library.tasks.startOfficial(setId, { books: books.length ? books : null, sources })
         dl.rememberTask(id, label, start)
         const next = new Map(pending.value)
-        for (const r of list) next.set(keyOf(r), `official-book:${label}`)
+        for (const r of list) next.set(keyOf(r), id)
         pending.value = next
       } catch (e) { void reportLibError(s, e, `下载《${label}》`, toast, start) }
     }
@@ -105,7 +115,12 @@ function downloadAdventures(rows: CatalogRow[]): void {
     const before = rowTask(r)
     if (before?.status === 'failed') dl.markRetried(before.key)
     dl.rememberName(r.set, r.id!, r.name)
-    try { s.backend.library.tasks.startAdventure(r.set, r.id!) } catch (e) { void reportLibError(s, e, `下载冒险《${r.name}》`, toast) }
+    try {
+      const id = s.backend.library.tasks.startAdventure(r.set, r.id!)
+      const next = new Map(pending.value)
+      next.set(keyOf(r), id)
+      pending.value = next
+    } catch (e) { void reportLibError(s, e, `下载冒险《${r.name}》`, toast) }
   }
   dl.refresh()
 }
@@ -201,6 +216,7 @@ const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.
         <div class="trpg-row__end">
           <span v-if="r.downloaded" class="trpg-badge" data-tone="success">已装</span>
           <span v-else-if="rowTask(r) && rowTask(r)!.status !== 'failed'" class="lib-muted lib-dling" role="status">{{ rowTask(r)!.status === 'paused' ? '已暂停' : '下载中' }}{{ pctText(rowTask(r)!.pct) }}<span class="lib-bar" :data-indet="rowTask(r)!.pct == null" aria-hidden="true"><i :style="rowTask(r)!.pct == null ? undefined : { width: `${Math.round((rowTask(r)!.pct ?? 0) * 100)}%` }" /></span></span>
+          <span v-else-if="finishing(r)" class="lib-muted lib-dling" role="status">整理书架…</span>
           <template v-else>
             <span v-if="rowTask(r)?.status === 'failed'" class="lib-muted" style="color: var(--danger-text)">失败</span>
             <button class="trpg-btn trpg-btn--small" type="button" data-testid="book-download" :disabled="r.kind === 'adventure' && !officialReady" :title="r.kind === 'adventure' && !officialReady ? '先下载至少一本官方书，才能下载冒险正文' : undefined" @click="downloadRows([r])">{{ rowTask(r)?.status === 'failed' ? '重试' : '下载' }}</button>
