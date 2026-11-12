@@ -2,6 +2,7 @@
 // 条目内容全部走作者的可编辑自制（作者格式）；插件只记"房规 → 目标"的链接和范围设置。
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { copyRawSource } from './copy-source'
+import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
 import { topLevelChanges } from './house-diff'
@@ -9,12 +10,12 @@ import { findCollisions, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
-import type { ChoiceLevel, ManageStore } from './manage'
+import type { ChoiceLevel, HouseRuleLink, ManageStore } from './manage'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
 import registry from './custom.json'
-import { entryUnit, refKey, ruleScopes, type Assignment, type CampaignLibrary, type EntryRef, type ScopeDef } from './scopes'
+import { entryUnit, refKey, ruleScopes, type CampaignLibrary, type EntryRef } from './scopes'
 import { officialSourceOf, SOURCES, type SourceEntry } from './sources'
 
 interface CustomSource {
@@ -26,23 +27,12 @@ interface CustomSource {
 /** 插件建在可编辑自制里的来源（登记在 custom.json）：house = 房规，mine = 自己写的新条目。 */
 const CUSTOM = registry.sources as Record<'house' | 'mine', CustomSource>
 
-/** 作者两个包管理器的存储键（BrewUtil2 / PrereleaseUtil）；备份按作者存储分类完整导出。 */
-const BREW_STORAGE_KEY = 'HOMEBREW_2_STORAGE'
-const PRERELEASE_STORAGE_KEY = 'PRERELEASE_STORAGE'
-
 const brewSetOf = (codeSet: string): SourceEntry => {
   const s = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)
   if (!s) throw new Error(`作者程序 ${codeSet} 没有登记自制数据集`)
   return s
 }
 
-export interface ScopeConfig {
-  format: 'trpg-library-scopes'
-  version: 1
-  scopes: ScopeDef[]
-  /** 单位 → 归属（单位写法见 scopes.ts sourceUnit / entryUnit）。 */
-  assignments: Record<string, Assignment>
-}
 
 export class CustomLibrary {
   /** counterpartHint：保存条目后顺带查它在另一种语言里对上了谁（只提示，不写任何东西；P5 G-3b）。 */
@@ -95,6 +85,11 @@ export class CustomLibrary {
    * 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
    */
   async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, { rule }: { rule?: string } = {}) {
+    return this.persist(codeSet, prop, ent, { rule, record: true })
+  }
+
+  /** 存一条的实际做法；record：记一步撤销（撤销自己存回去时不记）。 */
+  private async persist(codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record }: { rule?: string; record: boolean }) {
     const full: Record<string, unknown> = { source: CUSTOM.mine.json, ...ent }
     // 新写的一条：这一类在作者结构定义里能自带版本（字段说明表 edition）就写上规则的版本（2014 → classic，2024 → one）。
     // Plutonium 按它决定种族是否生成属性、背景是否按新版处理等（P5.5 B1 探路）。用户自己写了就不动。
@@ -107,8 +102,9 @@ export class CustomLibrary {
       const retargeted = prev && put.previousHash !== put.hash ? await f.call('editableRetargetCopies', prop, prev, { name: String(full.name ?? ''), source: String(full.source) }) : 0
       return { ...put, retargeted }
     })
-    const saved = result.value
+    const { previousEntity, ...saved } = result.value
     const set = brewSetOf(codeSet).id
+    if (record) await this.manage.pushHistory(this.historyKey(codeSet, prop, saved.uniqueId), { at: Date.now(), prop, before: previousEntity ?? null })
     const renamed = saved.hash && saved.previousHash && saved.previousHash !== saved.hash ? { from: { set, prop, hash: saved.previousHash }, to: { set, prop, hash: saved.hash }, retargeted: saved.retargeted } : null
     if (renamed) await this.carryRefs(renamed.from, renamed.to)
     else if (saved.hash && !saved.previousHash && rule) await this.manage.setAssignment(entryUnit({ set, prop, hash: saved.hash }), { scopes: [...ruleScopes(rule).defaultScopes], global: false })
@@ -136,9 +132,43 @@ export class CustomLibrary {
     }
   }
 
+  /** 删自己的条目；每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。 */
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {
+    return (await this.remove(codeSet, prop, uniqueIds, { record: true })).parse
+  }
+
+  private async remove(codeSet: string, prop: string, uniqueIds: string[], { record, link }: { record: boolean; link?: HouseRuleLink }) {
     const result = await this.lib.mutateAuthor(codeSet, 'custom-delete', async (view) => (await this.lib.frameOf(codeSet, view)).call('editableRemove', prop, uniqueIds))
-    return result.parse
+    if (record) for (const before of result.value) await this.manage.pushHistory(this.historyKey(codeSet, prop, String(before.uniqueId)), { at: Date.now(), prop, before, ...(link ? { link } : {}) })
+    return result
+  }
+
+  /** 撤销记录的键：数据集 | 类别 | 作者 uniqueId（改名、换包都不变）。 */
+  private historyKey(codeSet: string, prop: string, uniqueId: string): string {
+    return `${brewSetOf(codeSet).id}|${prop}|${uniqueId}`
+  }
+
+  /** 这一条还能撤销几步（最多 HISTORY_LIMIT）。 */
+  async undoSteps(codeSet: string, prop: string, uniqueId: string): Promise<number> {
+    return (await this.manage.history(this.historyKey(codeSet, prop, uniqueId))).length
+  }
+
+  /**
+   * 撤销这一条最近一步（P5.5 B2）：之前没有这一条 → 删掉（是房规的连链接一起去掉）；
+   * 之前有 → 把那时的原文存回去（同一个 uniqueId；改过名的自动改回，指向它的 _copy 和插件记录跟着回来；删掉的加回来，房规链接恢复）。
+   * 官方条目的「复原」不走这里（scoped.choose 选回原件）。
+   */
+  async undo(codeSet: string, prop: string, uniqueId: string) {
+    const step = await this.manage.popHistory(this.historyKey(codeSet, prop, uniqueId))
+    if (!step) throw new Error('这一条没有可以撤销的修改')
+    if (step.before === null) {
+      await this.remove(codeSet, prop, [uniqueId], { record: false })
+      if (step.link) await this.manage.unlinkHouseRule(step.link.house)
+      return { undone: 'created' as const, left: await this.undoSteps(codeSet, prop, uniqueId) }
+    }
+    const entry = await this.persist(codeSet, prop, step.before, { record: false })
+    if (step.link && entry.hash) await this.manage.linkHouseRule({ house: { ...step.link.house, hash: entry.hash }, target: step.link.target })
+    return { undone: 'restored' as const, entry, left: await this.undoSteps(codeSet, prop, uniqueId) }
   }
 
   /**
@@ -184,13 +214,15 @@ export class CustomLibrary {
     const house: EntryRef = { set: brewSetOf(c.codeSet).id, prop: target.prop, hash: saved.hash }
     await this.manage.setAssignment(entryUnit(house), { scopes: [...ruleScopes(c.rule).defaultScopes], global: false })
     await this.manage.linkHouseRule({ house, target })
+    await this.manage.pushHistory(this.historyKey(c.codeSet, target.prop, saved.uniqueId), { at: Date.now(), prop: target.prop, before: null, link: { house, target } })
     const altId = `house:${saved.hash}`
     return { house, altId, uniqueId: saved.uniqueId, changed: Object.keys(changes), parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
   }
 
   /** 删房规：作者删条 + 去掉链接；选过它的地方自动回到原件（生效版本会标"选过的备选不在了"）。 */
   async deleteHouseRule(codeSet: string, house: EntryRef, uniqueId: string) {
-    const parse = await this.deleteEntries(codeSet, house.prop, [uniqueId])
+    const link = (await this.manage.houseRules()).find((l) => refKey(l.house) === refKey(house))
+    const { parse } = await this.remove(codeSet, house.prop, [uniqueId], { record: true, ...(link ? { link } : {}) })
     await this.manage.unlinkHouseRule(house)
     return parse
   }
@@ -253,84 +285,17 @@ export class CustomLibrary {
     }
   }
 
-  /** 完整备份：自制（作者格式原样）+ 范围设置 + 房规链接；官方数据不进备份。 */
-  async exportBackup(): Promise<Record<string, string>> {
-    const files: Record<string, string> = {}
-    const view = await this.lib.currentView()
-    // 按源登记表遍历，不写死语言；官方没装时也能从作者存储原文导出自制（M5）
-    for (const set of SOURCES.filter((s) => s.kind === 'brew')) {
-      for (const [key, sub] of [[BREW_STORAGE_KEY, ''], [PRERELEASE_STORAGE_KEY, 'prerelease/']] as const) {
-        const raw = (await view.kvGet(set.codeSet, key)) as Array<{ head?: Record<string, unknown>; body?: unknown }> | null
-        for (const doc of Array.isArray(raw) ? raw : []) {
-          const docId = String(doc.head?.docIdLocal ?? '')
-          if (!docId) continue
-          const filename = (doc.head?.filename as string | undefined) ?? `${docId}.json`
-          files[`brew/${set.codeSet}/${sub}${filename}`] = JSON.stringify(doc.body)
-        }
-      }
-    }
-    files['scopes.json'] = JSON.stringify(await this.exportScopes())
-    files['house-rules.json'] = JSON.stringify(await this.manage.houseRules())
-    return files
-  }
-
+  /** 完整备份：自制（作者格式原样）+ 范围设置 + 房规链接；官方数据不进备份（custom-backup.ts）。 */
+  exportBackup(): Promise<Record<string, string>> { return exportBackup(this.backupDeps) }
   /** 完整备份恢复：先按作者包管理器导入自制，再恢复范围设置与房规链接。 */
-  async importBackup(files: Record<string, string>): Promise<{ brews: number; scopes: number; houseRules: number; errors: string[] }> {
-    const errors: string[] = []
-    let brews = 0
-    let scopes = 0
-    let houseRules = 0
-    for (const [path, text] of Object.entries(files)) {
-      if (!path.startsWith('brew/')) continue
-      const [, codeSet, ...rest] = path.split('/')
-      const set = SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)
-      if (!set) { errors.push(`不认识的自制来源：${codeSet}`); continue }
-      try {
-        const result = await this.lib.brewImport(set.id, [{ name: rest.join('/'), text }])
-        brews += result.value?.added?.length ?? 0
-        errors.push(...result.errors)
-        for (const bad of result.value?.notJson ?? []) errors.push(`${path}：${bad.name} ${bad.error}`)
-      } catch (error) {
-        errors.push(`${path}: ${error instanceof Error ? error.message : String(error)}`)
-      }
-    }
-    const scopesRaw = files['scopes.json']
-    if (scopesRaw) {
-      try {
-        const parsed = JSON.parse(scopesRaw) as ScopeConfig
-        const restored = await this.importScopes(parsed)
-        scopes = restored.scopes + restored.assignments
-      } catch (error) {
-        errors.push(`scopes.json: ${error instanceof Error ? error.message : String(error)}`)
-      }
-    }
-    const houseRaw = files['house-rules.json']
-    if (houseRaw) {
-      try {
-        const links = JSON.parse(houseRaw) as Array<{ house: EntryRef; target: EntryRef }>
-        for (const link of links) { await this.manage.linkHouseRule(link); houseRules++ }
-      } catch (error) {
-        errors.push(`house-rules.json: ${error instanceof Error ? error.message : String(error)}`)
-      }
-    }
-    this.scoped.reset()
-    return { brews, scopes, houseRules, errors }
-  }
-
+  importBackup(files: Record<string, string>) { return importBackup(this.backupDeps, files) }
   /** 范围设置单独一个文件（可带可不带）：自建范围 + 归类。只给 units 就只导这些。 */
-  async exportScopes(units?: string[]): Promise<ScopeConfig> {
-    const all = await this.manage.assignments()
-    const assignments = Object.fromEntries([...all].filter(([u]) => !units || units.includes(u)))
-    return { format: 'trpg-library-scopes', version: 1, scopes: await this.manage.userScopes(), assignments }
-  }
-
+  exportScopes(units?: string[]): Promise<ScopeConfig> { return exportScopes(this.backupDeps, units) }
   /** 导入范围设置：自建范围补进来，归类按文件覆盖。 */
-  async importScopes(cfg: ScopeConfig): Promise<{ scopes: number; assignments: number }> {
-    if (cfg.format !== 'trpg-library-scopes' || cfg.version !== 1) throw new Error('不是范围设置文件，或版本不认识')
-    for (const s of cfg.scopes) await this.manage.addScope(s)
-    for (const [u, a] of Object.entries(cfg.assignments)) await this.manage.setAssignment(u, a)
-    this.scoped.reset()
-    return { scopes: cfg.scopes.length, assignments: Object.keys(cfg.assignments).length }
+  importScopes(cfg: ScopeConfig) { return importScopes(this.backupDeps, cfg) }
+
+  private get backupDeps(): BackupDeps {
+    return { lib: this.lib, manage: this.manage, reset: () => this.scoped.reset() }
   }
 
   /**

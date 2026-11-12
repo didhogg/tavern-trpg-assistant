@@ -13,6 +13,20 @@ export interface HouseRuleLink {
   target: EntryRef
 }
 
+/**
+ * 一步撤销记录（P5.5 B2）：改之前这一条在可编辑自制里的作者原文；null = 之前没有这一条（撤销 = 删掉）。
+ * link：这一条是房规时它的链接（删房规的撤销要连链接一起恢复，建房规的撤销要连链接一起去掉）。
+ */
+export interface EditStep {
+  at: number
+  prop: string
+  before: Record<string, unknown> | null
+  link?: HouseRuleLink
+}
+
+/** 每条最多留几步撤销（驾驶员 2026-11-12 定 20）。 */
+export const HISTORY_LIMIT = 20
+
 export class ManageStore {
   constructor(private readonly db: LibraryDatabase) {}
 
@@ -82,5 +96,23 @@ export class ManageStore {
 
   unlinkHouseRule(house: EntryRef): Promise<void> {
     return this.put('houserule', `${house.set}|${house.prop}|${house.hash}`, null)
+  }
+
+  /** 一条自制条目的撤销记录（键 = 数据集|类别|作者 uniqueId：改名不变），旧的在前。 */
+  async history(key: string): Promise<EditStep[]> {
+    return ((await this.db.manage.get(['history', key]))?.value as EditStep[] | undefined) ?? []
+  }
+
+  /** 记一步；超过上限丢最早的。 */
+  async pushHistory(key: string, step: EditStep, limit = HISTORY_LIMIT): Promise<void> {
+    await this.put('history', key, [...(await this.history(key)), step].slice(-limit))
+  }
+
+  /** 取出最近一步（取出即从记录里去掉）；没有就是 null。 */
+  async popHistory(key: string): Promise<EditStep | null> {
+    const list = await this.history(key)
+    const step = list.pop() ?? null
+    await this.put('history', key, list.length ? list : null)
+    return step
   }
 }

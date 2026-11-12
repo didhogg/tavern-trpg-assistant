@@ -28,7 +28,7 @@ describe('createHouseRule({ edited }) / saveEntry 写版本', () => {
   const base = { name: '火球术', source: 'PHB', level: 3, entries: ['a'], _isCopy: true, page: 241 }
   const setup = () => {
     const puts: Array<[string, Record<string, unknown>]> = []
-    const manage = { assignments: async () => new Map(), setAssignment: async () => undefined, houseRules: async () => [], linkHouseRule: async () => undefined, allChoices: async () => [] }
+    const manage = { assignments: async () => new Map(), setAssignment: async () => undefined, houseRules: async () => [], linkHouseRule: async () => undefined, allChoices: async () => [], pushHistory: async () => undefined, history: async () => [] }
     // 小窗的 cleanEntity 照作者 cleanJson：去掉下划线开头的运行时字段（_copy 保留）
     const clean = (e: Record<string, unknown>) => Object.fromEntries(Object.entries(e).filter(([k]) => !k.startsWith('_') || k === '_copy'))
     const frame = { call: async (name: string, ...args: unknown[]) => {

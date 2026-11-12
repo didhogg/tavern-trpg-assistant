@@ -148,8 +148,8 @@ export interface StateRecord {
  * 不是作者内容；作者内容仍在 kv（作者包管理器）和 files（官方原件）里。
  */
 export interface ManageRecord {
-  /** assign：归类；scope：自建范围；choice：版本选择（全局 / 某规则）；houserule：房规 → 目标条目。 */
-  kind: 'assign' | 'scope' | 'choice' | 'houserule'
+  /** assign：归类；scope：自建范围；choice：版本选择（全局 / 某规则）；houserule：房规 → 目标条目；history：自制条目的撤销记录（P5.5 B2）。 */
+  kind: 'assign' | 'scope' | 'choice' | 'houserule' | 'history'
   key: string
   value: unknown
   updatedAt: number

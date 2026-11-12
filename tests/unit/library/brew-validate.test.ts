@@ -83,10 +83,11 @@ describe('自制 JSON 结构校验（作者结构定义，预编译）', () => {
     const frame = { call: async (name: string, ..._args: unknown[]) => { calls.push(name); return name === 'editablePut' ? { uniqueId: 'u1', hash: 'h1' } : undefined } }
     const lib = { frameOf: async () => frame, mutateAuthor: async (_codeSet: string, _kind: string, run: (view: unknown) => Promise<unknown>) => ({ value: await run({}), parse: { parsed: true }, view: {} }) }
     const hint = async (ref: { set: string; prop: string; hash: string }) => ({ status: 'found' as const, refs: [{ set: 'en-brew', prop: ref.prop, hash: 'e1' }], reason: null, sharedBy: 0 })
-    const custom = new CustomLibrary(lib as never, { reset: () => undefined } as never, {} as never, hint)
+    const manage = { pushHistory: async () => undefined, assignments: async () => new Map() }
+    const custom = new CustomLibrary(lib as never, { reset: () => undefined, manage } as never, {} as never, hint)
     const r = await custom.saveEntry('cn', 'spell', spell)
     expect(r).toMatchObject({ uniqueId: 'u1', hash: 'h1', counterpart: { status: 'found', refs: [{ set: 'en-brew', prop: 'spell', hash: 'e1' }] } })
     expect(calls).toEqual(['editableEnsureSource', 'editablePut'])
-    expect((await new CustomLibrary(lib as never, { reset: () => undefined } as never, {} as never).saveEntry('cn', 'spell', spell)).counterpart).toBeNull()
+    expect((await new CustomLibrary(lib as never, { reset: () => undefined, manage } as never, {} as never).saveEntry('cn', 'spell', spell)).counterpart).toBeNull()
   })
 })

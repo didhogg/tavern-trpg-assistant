@@ -183,13 +183,13 @@ export async function editableEnsureSource(sourceObj: { json: string; full: stri
 }
 
 /** 存一条（作者 pPersistEditableBrewEntity：按 uniqueId 新增或覆盖）。没有 uniqueId 就让作者生成。 */
-export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: string; hash: string | null; previousHash: string | null; previous: { name: string; source: string } | null }> {
+export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: string; hash: string | null; previousHash: string | null; previous: { name: string; source: string } | null; previousEntity: any }> {
   await init()
   // 改已有的一条时先记下它原来的编号和名字（作者编号 = 名字 + 来源，改名就变），调用方据此把指向它的东西搬过去
   const before = ent.uniqueId ? ((await A.BrewUtil2.pGetOrCreateEditableBrewDoc()).body?.[prop] ?? []).find((x: any) => x?.uniqueId === ent.uniqueId) : null
   const e = { ...ent, uniqueId: ent.uniqueId ?? A.CryptUtil.uid() }
   await A.BrewUtil2.pPersistEditableBrewEntity(prop, e)
-  return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null, previous: before ? { name: String(before.name ?? ''), source: String(before.source ?? '') } : null }
+  return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null, previous: before ? { name: String(before.name ?? ''), source: String(before.source ?? '') } : null, previousEntity: before ? A.MiscUtil.copyFast(before) : null }
 }
 
 /** 去掉作者运行时加的字段（作者 DataUtil.cleanJson：下划线开头的临时字段、uniqueId 等），得到能存回作者格式的原样；不改传入的对象。 */
@@ -215,10 +215,12 @@ export async function editableRetargetCopies(prop: string, from: { name: string;
   return n
 }
 
-/** 删条（作者 pRemoveEditableBrewEntities）。 */
-export async function editableRemove(prop: string, uniqueIds: string[]): Promise<void> {
+/** 删条（作者 pRemoveEditableBrewEntities）。返回删掉的那几条原文（撤销用）。 */
+export async function editableRemove(prop: string, uniqueIds: string[]): Promise<any[]> {
   await init()
+  const removed = ((await A.BrewUtil2.pGetOrCreateEditableBrewDoc()).body?.[prop] ?? []).filter((x: any) => uniqueIds.includes(x?.uniqueId)).map((x: any) => A.MiscUtil.copyFast(x))
   await A.BrewUtil2.pRemoveEditableBrewEntities(prop, uniqueIds)
+  return removed
 }
 
 /**

@@ -38,6 +38,8 @@ describe('saveEntry / createHouseRule 的版本归类', () => {
       unlinkHouseRule: async (h: Ref) => { links.delete(key(h)) },
       allChoices: async () => [...choices].map(([k, altId]) => { const at = k.indexOf('|'); return { level: k.slice(0, at), target: k.slice(at + 1), altId } }),
       setChoice: async (level: string, target: string, altId: string | null) => { if (altId) choices.set(`${level}|${target}`, altId); else choices.delete(`${level}|${target}`) },
+      pushHistory: async () => undefined,
+      history: async () => [],
     }
     const calls: Array<[string, unknown[]]> = []
     const frame = { call: async (name: string, ...args: unknown[]) => { calls.push([name, args]); return name === 'editablePut' ? put : name === 'editableRetargetCopies' ? 1 : undefined } }
