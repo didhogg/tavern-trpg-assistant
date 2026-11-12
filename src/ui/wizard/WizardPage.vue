@@ -9,12 +9,13 @@ import { useToastStore } from '../../stores/toast'
 import { useUiStore } from '../../stores/ui'
 import { errorText } from '../format'
 import Icon from '../kit/Icon.vue'
-import { libraryChoice, loadWizardOptions } from './data'
-import StepAdventure from './StepAdventure.vue'
+import { buildRuleFamilies } from '../../rules/registry'
+import { chooseVersion, picksInput } from './data'
 import StepData from './StepData.vue'
 import StepName from './StepName.vue'
 import StepRule from './StepRule.vue'
-import { WIZARD_CODE_SET, wizard, wizardOptions } from './state'
+import StepVersion from './StepVersion.vue'
+import { WIZARD_CODE_SET, pickedOf, wizard, wizardOptions } from './state'
 
 const app = useAppStore()
 const campaign = useCampaignStore()
@@ -24,22 +25,27 @@ const toast = useToastStore()
 const ui = useUiStore()
 const working = ref(false)
 
-const STEPS = [{ n: 1, label: '规则' }, { n: 2, label: '资料' }, { n: 3, label: '冒险' }, { n: 4, label: '命名' }] as const
+const STEPS = [{ n: 1, label: '规则' }, { n: 2, label: '版本' }, { n: 3, label: '资料' }, { n: 4, label: '命名' }] as const
 const nameOk = computed(() => wizard.name.trim().length > 0 && wizard.name.trim().length <= SAVE_NAME_MAX)
 const blocked = computed(() => !!wizardOptions.value?.blockingError)
+const ready = computed(() => app.svc().rules.ready(wizard.ruleId))
 const canNext = computed(() => {
-  if (wizard.step === 1) return !!wizard.ruleId
-  if (wizard.step === 2) return !blocked.value
+  if (wizard.step === 1) return !!wizard.family
+  if (wizard.step === 2) return !!wizard.ruleId && ready.value
+  if (wizard.step === 3) return !blocked.value
   if (wizard.step === 4) return nameOk.value && !working.value
   return true
 })
 const stepLabel = computed(() => STEPS.find((s) => s.n === wizard.step)?.label)
 
 onMounted(() => {
-  const installedRules = app.svc().rules.list()
-  if (!wizard.ruleId && installedRules.length === 1) wizard.ruleId = installedRules[0].id
-  // 弹窗一打开就在后台取书目和资料状态，到第②步时通常已经好了
-  void loadWizardOptions(app.svc()).catch((error: unknown) => console.error('[trpg-assistant] 读取向导选项失败', error))
+  // 只有一个能用的体系就自动选中，并预选它第一个能建战役的版本；弹窗一打开就在后台取这个版本的书架，到第③步时通常已经好了
+  const families = buildRuleFamilies(app.svc().rules).filter((f) => f.ready)
+  if (!wizard.family && families.length === 1) {
+    wizard.family = families[0].family
+    const first = families[0].versions.find((v) => v.status === 'installed')
+    if (first) chooseVersion(app.svc(), first.id, first.versionLabel)
+  }
 })
 
 function goto(n: 1 | 2 | 3 | 4): void {
@@ -60,12 +66,11 @@ async function start(): Promise<void> {
     const name = wizard.name.trim()
     const owner = campaign.owner
     if (!owner) throw new Error('请先在酒馆中打开一个聊天')
-    const picks = wizard.adventures
+    // 已下载的书默认在战役里看得见（B-32），勾选的下载完也看得见，所以不用再记加入 / 排除
     const result = await campaign.startWith((s) => s.backend.starter.startCampaign({
-      ...owner, ruleId: wizard.ruleId, name, note: wizard.note, codeSet: WIZARD_CODE_SET, library: libraryChoice(),
-      adventures: picks.map((a) => ({ set: a.set, id: a.id })),
+      ...owner, ruleId: wizard.ruleId, name, note: wizard.note, codeSet: WIZARD_CODE_SET, ...picksInput(),
     }))
-    for (const a of picks) downloads.rememberName(a.set, a.id, a.name)
+    for (const a of pickedOf('adventure')) if (a.id) downloads.rememberName(a.set, a.id, a.name)
     downloads.refresh()
     void result.finished.then(({ errors }) => { if (errors.length) console.error('[trpg-assistant] 后台下载有问题', errors) })
     await app.refreshBackup()
@@ -94,8 +99,8 @@ async function start(): Promise<void> {
     <p class="trpg-steps__compact" aria-hidden="true">{{ wizard.step }}/{{ STEPS.length }} · {{ stepLabel }}</p>
     <div class="trpg-wizard__body">
       <StepRule v-if="wizard.step === 1" />
-      <StepData v-else-if="wizard.step === 2" />
-      <StepAdventure v-else-if="wizard.step === 3" />
+      <StepVersion v-else-if="wizard.step === 2" />
+      <StepData v-else-if="wizard.step === 3" />
       <StepName v-else @submit="start" />
     </div>
     <footer class="trpg-wizard__foot">

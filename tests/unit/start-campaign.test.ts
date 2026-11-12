@@ -6,6 +6,7 @@ import { TrpgError } from '../../src/core/errors'
 import type { TaskState } from '../../src/library/tasks'
 import { OWNER, setup } from '../helpers/harness'
 import { makeRegistry, withDb } from '../helpers/fixtures'
+import { createRuleRegistry } from '../../src/rules'
 
 /** 假的【库】：下载任务由测试放行；装好后数据版本记号才有值。 */
 function fakeLibrary() {
@@ -15,6 +16,7 @@ function fakeLibrary() {
   const running = new Set<string>() // 有任务在跑的数据集
   const pending = new Map<string, (s: TaskState['status']) => void>()
   const started: string[] = []
+  const officialOpts: Array<{ set: string; opts: unknown }> = []
   const states = new Map<string, TaskState>()
   let seq = 0
   const begin = (kind: TaskState['kind'], set: string, item: string | null): string => {
@@ -26,12 +28,12 @@ function fakeLibrary() {
   const waiters = new Map<string, Promise<TaskState>>()
   const tasks = {
     list: () => [...states.values(), ...[...running].map((set) => ({ id: `r-${set}`, kind: 'official', set, item: null, status: 'running', progress: { stage: 'download', done: 1, total: 2 }, error: null, result: null }))],
-    startOfficial: (set: string) => { const id = begin('official', set, null); waiters.set(id, new Promise((ok) => pending.set(id, (st) => { const s = states.get(id) as TaskState; s.status = st; if (st === 'done') installed.add(set); ok({ ...s }) }))); return id },
+    startOfficial: (set: string, opts: unknown = {}) => { officialOpts.push({ set, opts }); const id = begin('official', set, null); waiters.set(id, new Promise((ok) => pending.set(id, (st) => { const s = states.get(id) as TaskState; s.status = st; if (st === 'done') installed.add(set); ok({ ...s }) }))); return id },
     startAdventure: (set: string, item: string) => { const id = begin('adventure', set, item); waiters.set(id, Promise.resolve({ ...(states.get(id) as TaskState), status: 'done' })); return id },
     wait: (id: string) => waiters.get(id) as Promise<TaskState>,
   }
   return {
-    installed, pending, started, recorded, lists, running,
+    installed, pending, started, recorded, lists, running, officialOpts,
     library: {
       db: { sets: { get: async (id: string) => (installed.has(id) ? { id, status: 'installed' } : recorded.has(id) ? { id, status: recorded.get(id) } : undefined) } },
       files: { cachedFileList: async (s: { id: string }) => lists.get(s.id) ?? null },
@@ -52,8 +54,61 @@ async function build(db: Parameters<typeof setup>[0]) {
   const fake = fakeLibrary()
   const lib = fake.library as never as ConstructorParameters<typeof CampaignStarter>[0]['library']
   const kernelSave = new KernelSaveService({ db, campaign, rules: makeRegistry(), now: clock, checkRefs: async (refs) => refs.map((ref) => ({ ok: true, ref })), currentVersion: fake.library.dataVersion, currentOverrides: async () => [] })
-  return { campaign, kernelSave, fake, core, starter: new CampaignStarter({ campaign, kernelSave, rules: makeRegistry(), corePacks: async () => core.status, library: lib }) }
+  const make = (rules = makeRegistry()) => new CampaignStarter({ campaign, kernelSave, rules, corePacks: async () => core.status, library: lib })
+  return { campaign, kernelSave, fake, core, make, starter: make() }
 }
+
+describe('startCampaign：按勾选的书下载（P5-5 §13 B3）', () => {
+  it('勾选的书号 / 来源配到这场战役要的每个数据集（中文 + 结算内核要的英文），前端只给一份', async () => {
+    await withDb(async (db) => {
+      const { fake, starter } = await build(db)
+      await starter.startCampaign({ ...INPUT, picks: [{ set: 'cn-official', book: 'PHB', source: 'PHB' }, { set: 'cn-official', book: 'XGE', source: 'XGE' }] })
+      expect(fake.officialOpts).toEqual([
+        { set: 'cn-official', opts: { books: ['PHB', 'XGE'], sources: ['PHB', 'XGE'] } },
+        { set: 'en-official', opts: { books: ['PHB', 'XGE'], sources: ['PHB', 'XGE'] } },
+      ])
+    })
+  })
+  it('没有书号的来源行（如 Generic）：只按来源装，绝不变成整套', async () => {
+    await withDb(async (db) => {
+      const { fake, starter } = await build(db)
+      await starter.startCampaign({ ...INPUT, picks: [{ set: 'cn-official', book: null, source: 'Generic' }] })
+      expect(fake.officialOpts.map((x) => x.opts)).toEqual([{ books: null, sources: ['Generic'] }, { books: null, sources: ['Generic'] }])
+    })
+  })
+  it('勾了空：这次不下载官方资料；不传：旧入口照旧整套装', async () => {
+    await withDb(async (db) => {
+      const { fake, starter } = await build(db)
+      const r = await starter.startCampaign({ ...INPUT, picks: [] })
+      expect(r.downloads).toEqual([])
+      expect(fake.officialOpts).toEqual([])
+      await starter.startCampaign({ ...INPUT, ownerKey: 'char:乙.png' })
+      expect(fake.officialOpts.map((x) => x.opts)).toEqual([{}, {}])
+    })
+  })
+  it('只能勾官方资料：混进自制包的勾选直接拒绝，不建战役', async () => {
+    await withDb(async (db) => {
+      const { campaign, starter } = await build(db)
+      await expect(starter.startCampaign({ ...INPUT, picks: [{ set: 'cn-brew', book: null, source: 'X' }] })).rejects.toBeInstanceOf(TrpgError)
+      expect(await campaign.getWorkspace(OWNER.ownerKey)).toBeFalsy()
+    })
+  })
+})
+
+describe('startCampaign：结算还没接入的规则版本（P5-5 §13 B2）', () => {
+  it('5.5e：书架照样能读（资料可以下载），开局被拒绝，什么都不建', async () => {
+    await withDb(async (db) => {
+      const { campaign, make } = await build(db)
+      const starter = make(createRuleRegistry())
+      const opts = await starter.wizardOptions('dnd5e2024', 'cn')
+      expect(opts.rule).toMatchObject({ id: 'dnd5e2024', versionLabel: '5.5e', ready: false })
+      expect(opts.defaultScopes).toEqual(['5e2024'])
+      await expect(starter.startCampaign({ ...INPUT, ruleId: 'dnd5e2024' })).rejects.toMatchObject({ code: 'E_RULE_UNSUPPORTED' })
+      expect(await campaign.getWorkspace(OWNER.ownerKey)).toBeFalsy()
+      expect((await starter.wizardOptions('dnd5e2014', 'cn')).rule).toMatchObject({ versionLabel: '5e', ready: true })
+    })
+  })
+})
 
 describe('startCampaign', () => {
   it('资料没装：立刻返回，第一个存档里已有内核与选书；下载完补上版本记号，仍无未保存改动', async () => {

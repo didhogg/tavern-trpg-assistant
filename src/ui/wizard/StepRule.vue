@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { buildRuleCards } from '../../rules/registry'
+import { buildRuleFamilies, type RuleFamily } from '../../rules/registry'
 import { useAppStore } from '../../stores/app'
-import HoverTip from '../kit/HoverTip.vue'
 import Icon from '../kit/Icon.vue'
+import { chooseVersion } from './data'
 import { wizard } from './state'
 
+/** ① 选规则（体系）：来自规则登记表按体系分组；选了体系就预选它第一个能建战役的版本，②可以直接下一步。 */
 const app = useAppStore()
-const cards = computed(() => buildRuleCards(app.svc().rules))
+const families = computed(() => buildRuleFamilies(app.svc().rules))
 
-function choose(id: string, status: string): void {
-  if (status === 'installed') wizard.ruleId = id
+function choose(f: RuleFamily): void {
+  if (!f.ready) return
+  wizard.family = f.family
+  if (f.versions.some((v) => v.id === wizard.ruleId)) return
+  const first = f.versions.find((v) => v.status === 'installed')
+  if (first) chooseVersion(app.svc(), first.id, first.versionLabel)
 }
 </script>
 
@@ -19,25 +24,24 @@ function choose(id: string, status: string): void {
     <h3 class="trpg-wizard__title">选择这场战役用的规则</h3>
     <div class="trpg-rulecards" role="radiogroup" aria-label="规则">
       <div
-        v-for="c in cards"
-        :key="c.id"
+        v-for="f in families"
+        :key="f.family"
         class="trpg-rulecard"
         role="radio"
-        :aria-checked="wizard.ruleId === c.id"
-        :aria-disabled="c.status !== 'installed'"
-        :tabindex="c.status === 'installed' ? 0 : -1"
-        :data-status="c.status"
+        :aria-checked="wizard.family === f.family"
+        :aria-disabled="!f.ready"
+        :tabindex="f.ready ? 0 : -1"
+        :data-status="f.ready ? 'installed' : 'coming'"
         data-testid="rule-card"
-        @click="choose(c.id, c.status)"
-        @keydown.enter.prevent="choose(c.id, c.status)"
-        @keydown.space.prevent="choose(c.id, c.status)"
+        @click="choose(f)"
+        @keydown.enter.prevent="choose(f)"
+        @keydown.space.prevent="choose(f)"
       >
-        <span class="trpg-rulecard__mark" aria-hidden="true"><Icon :name="wizard.ruleId === c.id ? 'check-circle' : 'info'" :size="20" /></span>
+        <span class="trpg-rulecard__mark" aria-hidden="true"><Icon :name="wizard.family === f.family ? 'check-circle' : 'info'" :size="20" /></span>
         <span class="trpg-rulecard__body">
-          <HoverTip :text="c.description" inline><span class="trpg-term">{{ c.name }}</span></HoverTip>
-          <span class="trpg-field__hint">{{ c.description }}</span>
-          <span v-if="c.status === 'coming'" class="trpg-badge">即将推出</span>
-          <span v-else-if="c.status === 'installable'" class="trpg-badge" data-tone="warn">可安装</span>
+          <span class="trpg-term">{{ f.name }}</span>
+          <span class="trpg-field__hint">版本：{{ f.versions.map((v) => v.versionLabel).join(' / ') }}，下一步选</span>
+          <span v-if="!f.ready" class="trpg-badge">即将推出</span>
         </span>
       </div>
     </div>

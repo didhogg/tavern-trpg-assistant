@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { getCampaignBanner, PATTERN_BANNER } from '../../src/core/banner'
 import { WindowLock } from '../../src/core/windowLock'
 import { dnd5e2014 } from '../../src/rules/dnd5e2014'
-import { buildRuleCards, RuleRegistry } from '../../src/rules/registry'
+import { buildRuleCards, buildRuleFamilies, RuleRegistry } from '../../src/rules/registry'
 import { createRuleRegistry } from '../../src/rules'
 
 describe('横幅取图', () => {
@@ -19,7 +19,7 @@ describe('横幅取图', () => {
     expect(getCampaignBanner({ rule: dnd5e2014, data, narrow: true }).src).toBe('https://a1.ax1x.com/2026/10/28/wwHs9.md.png')
   })
   it('不同规则取各自的默认图；没有默认图的规则用纹样', () => {
-    const coc = { id: 'coc7', name: 'CoC', nameShort: 'CoC', description: '', defaultBanner: { wide: 'coc.png', narrow: 'coc-s.png', alt: 'CoC 横幅' } }
+    const coc = { id: 'coc7', name: 'CoC', nameShort: 'CoC', description: '', family: 'coc', familyName: 'CoC', versionLabel: '7', defaultBanner: { wide: 'coc.png', narrow: 'coc-s.png', alt: 'CoC 横幅' } }
     expect(getCampaignBanner({ rule: coc, data }).src).toBe('coc.png')
     expect(getCampaignBanner({ rule: { ...coc, defaultBanner: undefined }, data })).toEqual(PATTERN_BANNER)
     expect(getCampaignBanner({ rule: undefined, data })).toEqual(PATTERN_BANNER)
@@ -27,8 +27,12 @@ describe('横幅取图', () => {
 })
 
 describe('规则卡', () => {
-  it('来自注册表', () => {
-    expect(buildRuleCards(createRuleRegistry()).map((c) => [c.id, c.status])).toEqual([['dnd5e2014', 'installed']])
+  it('来自注册表：一个版本一张卡，能不能建战役按结算内核支不支持算（5.5e 还没接入 → coming）', () => {
+    expect(buildRuleCards(createRuleRegistry()).map((c) => [c.id, c.versionLabel, c.status])).toEqual([['dnd5e2014', '5e', 'installed'], ['dnd5e2024', '5.5e', 'coming']])
+  })
+  it('按体系分组：D&D 5e 一个体系两个版本', () => {
+    const f = buildRuleFamilies(createRuleRegistry())
+    expect(f.map((x) => [x.family, x.name, x.versions.map((v) => v.id), x.ready])).toEqual([['dnd5e', 'D&D 5e', ['dnd5e2014', 'dnd5e2024'], true]])
   })
   it('重复注册同一规则报错', () => {
     const r = new RuleRegistry()

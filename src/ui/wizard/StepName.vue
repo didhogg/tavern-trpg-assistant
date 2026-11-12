@@ -4,7 +4,7 @@ import { SAVE_NAME_MAX, SAVE_NOTE_MAX } from '../../schemas/campaign'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useSavesStore } from '../../stores/saves'
-import { sizeOf, wizard, wizardOptions } from './state'
+import { pickedOf, sizeOf, wizard, wizardOptions } from './state'
 
 const emit = defineEmits<{ submit: [] }>()
 const app = useAppStore()
@@ -17,7 +17,9 @@ const empty = computed(() => wizard.name.trim().length === 0)
 const invalid = computed(() => empty.value || tooLong.value)
 const data = computed(() => sizeOf('data'))
 const adv = computed(() => sizeOf('adv'))
-const ruleName = computed(() => wizardOptions.value?.rule.name ?? rule.value?.name ?? '')
+const ruleName = computed(() => (rule.value ? `${rule.value.familyName} · 版本 ${rule.value.versionLabel}` : wizardOptions.value?.rule.name ?? ''))
+const books = computed(() => pickedOf('book').length)
+const advs = computed(() => pickedOf('adventure').length)
 const currentCampaign = computed(() => (campaign.hasCampaign ? (saves.view?.name ?? campaign.currentSave?.name ?? null) : null))
 
 onMounted(() => {
@@ -45,7 +47,8 @@ onMounted(() => {
     </div>
     <div class="trpg-summary" data-testid="wizard-summary">
       <b>将建立战役：{{ wizard.name.trim() || '（未命名）' }}</b>
-      <span>{{ ruleName }} · 资料（{{ data.text }}） · 冒险（{{ adv.text }}）</span>
+      <span>{{ ruleName }}</span>
+      <span>资料：{{ books ? `选中 ${books} 本（${data.text}）` : '这次不下载新的书' }} · 冒险：{{ advs ? `选中 ${advs} 本（${adv.text}）` : '未选择' }}</span>
       <span v-if="currentCampaign" class="trpg-field__hint">当前战役「{{ currentCampaign }}」会先自动存档。</span>
     </div>
   </form>

@@ -47,6 +47,9 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .trpg-steps__compact { display: none; margin: 0 0 var(--sp-2); font-weight: var(--fw-semibold); }
 .trpg-window[data-layout='narrow'] .trpg-steps { display: none; } .trpg-window[data-layout='narrow'] .trpg-steps__compact { display: block; }
 .trpg-wizard__title { margin: 0 0 var(--sp-3); font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
+.trpg-wizard__filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-3); }
+.trpg-wizard__filters .trpg-input { flex: 1 1 160px; min-width: 0; }
+.trpg-wizard__picked { flex: none; margin: var(--sp-3) 0 0; font-weight: var(--fw-semibold); }
 .trpg-wizard__body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
 .trpg-wizard__foot { flex: none; display: flex; justify-content: flex-end; gap: var(--sp-3); padding-top: var(--sp-4); margin-top: var(--sp-3); border-top: var(--border) solid var(--line); }
 .trpg-window[data-layout='narrow'] .trpg-wizard__foot { flex-direction: column-reverse; } .trpg-window[data-layout='narrow'] .trpg-wizard__foot .trpg-btn { width: 100%; }

@@ -1,54 +1,72 @@
+// 向导③选资料（P5-5 §13）：书和冒险一个列表；没下载的默认不勾，已下载的恒勾；分组框全选 / 取消；冒险要先有官方资料；规则标签筛选。
 import { beforeEach, describe, expect, it } from 'vitest'
-import { isPicked, libraryChoice, toggleBook } from '../../src/ui/wizard/data'
-import { resetWizard, wizardOptions } from '../../src/ui/wizard/state'
-import { sourceUnit } from '../../src/library/scopes'
+import { canPick, isPicked, picksInput, rowsOf, toggleGroup, togglePick } from '../../src/ui/wizard/data'
+import { resetWizard, wizard, wizardOptions } from '../../src/ui/wizard/state'
 import type { ShelfGroup } from '../../src/library/shelf'
 
-const row = (source: string, visible: boolean, downloaded = false) => ({ kind: 'book', set: 'cn-official', source, id: null, name: source, abv: source, count: 1, downloaded, edition: null, membership: { assignment: null, basis: 'none' }, view: { visible: true, reason: visible ? 'scope' : 'out-of-scope' }, inScope: visible, alternatives: 0 })
-const group = (g: string, books: ReturnType<typeof row>[]): ShelfGroup => ({ group: g, name: g, books: books as never, adventures: [] })
+type Row = { kind: 'book' | 'adventure'; set: string; source: string; id: string | null; name: string; abv: string; altName: null; downloaded: boolean; edition: { classic: boolean | null } | null }
+const book = (id: string | null, source: string, o: Partial<Row> = {}): Row => ({ kind: 'book', set: 'cn-official', source, id, name: source, abv: source, altName: null, downloaded: false, edition: { classic: true }, ...o })
+const adv = (id: string, o: Partial<Row> = {}): Row => ({ ...book(id, id, o), kind: 'adventure', ...o })
+const group = (g: string, books: Row[], adventures: Row[] = []): ShelfGroup => ({ group: g, name: g, books: books as never, adventures: adventures as never })
+const svc = { backend: { starter: { estimateDownload: async () => ({ computing: false, data: { sets: [], bytes: 0 }, adventures: { items: [], bytes: 0 }, errors: [] }) } } } as never
 
-function setShelf(groups: ShelfGroup[]): void {
-  wizardOptions.value = { shelf: groups } as never
+function setShelf(groups: ShelfGroup[], installed: string[] = []): void {
+  wizardOptions.value = { shelf: groups, data: installed.map((setId) => ({ setId, installed: true })) } as never
 }
 
-describe('向导选书：默认只勾核心组，已下载的恒勾且不能改', () => {
+describe('向导③选资料', () => {
   beforeEach(() => resetWizard())
 
-  it('默认：核心组里在范围内的勾；核心组范围外的、其他组的都不勾', () => {
-    const core = group('core', [row('PHB', true), row('XPHB', false)])
-    const other = group('supplement', [row('XGE', true)])
-    setShelf([core, other])
-    expect(isPicked(core, core.books[0] as never)).toBe(true)
-    expect(isPicked(core, core.books[1] as never)).toBe(false)
-    expect(isPicked(other, other.books[0] as never)).toBe(false)
-  })
-
-  it('开局时只把"勾选 ≠ 范围默认"的记成加入 / 排除：范围内但没勾 → 排除', () => {
-    setShelf([group('core', [row('PHB', true)]), group('supplement', [row('XGE', true)])])
-    expect(libraryChoice()).toEqual({ include: [], exclude: [sourceUnit('XGE')] })
-  })
-
-  it('用户点过的优先；点回默认就不记', () => {
-    const other = group('supplement', [row('XGE', true)])
-    setShelf([group('core', [row('PHB', true)]), other])
-    toggleBook('XGE', true)
-    expect(isPicked(other, other.books[0] as never)).toBe(true)
-    expect(libraryChoice()).toEqual({ include: [], exclude: [] })
-    toggleBook('PHB', false)
-    expect(libraryChoice().exclude).toEqual([sourceUnit('PHB')])
-  })
-
-  it('已下载的恒勾：范围外的也不用记（已下载的默认就开，B-32）；用户点不动它', () => {
-    const g = group('supplement', [row('XGE', false, true)])
+  it('默认一本不勾；已下载的恒勾、不能点掉', () => {
+    const g = group('core', [book('PHB', 'PHB'), book('DMG', 'DMG', { downloaded: true })])
     setShelf([g])
-    expect(isPicked(g, g.books[0] as never)).toBe(true)
-    toggleBook('XGE', false) // 界面已禁用；即使被调用也不生效
-    expect(isPicked(g, g.books[0] as never)).toBe(true)
-    expect(libraryChoice()).toEqual({ include: [], exclude: [] })
+    expect(rowsOf(g).map((r) => isPicked(r as never))).toEqual([false, true])
+    togglePick(svc, g.books[1] as never, false)
+    expect(isPicked(g.books[1] as never)).toBe(true)
+    expect(picksInput()).toEqual({ picks: [], adventures: [] })
   })
 
-  it('范围只在用户改过时才带', () => {
-    setShelf([])
-    expect(libraryChoice()).toEqual({ include: [], exclude: [] })
+  it('勾书：开局给后端的是书号 + 来源；没有书号的来源行只给来源', () => {
+    const g = group('core', [book('PHB', 'PHB'), book(null, 'Generic')])
+    setShelf([g])
+    togglePick(svc, g.books[0] as never, true)
+    togglePick(svc, g.books[1] as never, true)
+    expect(picksInput().picks).toEqual([{ set: 'cn-official', book: 'PHB', source: 'PHB' }, { set: 'cn-official', book: null, source: 'Generic' }])
+  })
+
+  it('冒险要先有同一套官方资料：没装也没勾书时不能勾；勾了书就能勾；取消最后一本书，冒险一起取消', () => {
+    const g = group('adv', [book('PHB', 'PHB')], [adv('LMoP')])
+    setShelf([g])
+    expect(canPick(g.adventures[0] as never)).toBe(false)
+    togglePick(svc, g.books[0] as never, true)
+    togglePick(svc, g.adventures[0] as never, true)
+    expect(picksInput().adventures).toEqual([{ set: 'cn-official', id: 'LMoP' }])
+    togglePick(svc, g.books[0] as never, false)
+    expect(picksInput()).toEqual({ picks: [], adventures: [] })
+  })
+
+  it('官方资料已经装过：冒险直接能勾', () => {
+    const g = group('adv', [], [adv('LMoP')])
+    setShelf([g], ['cn-official'])
+    expect(canPick(g.adventures[0] as never)).toBe(true)
+  })
+
+  it('分组框：[ ] 全选这一组能勾的（书和冒险，已下载的不算）；[−] 取消这一组全部', () => {
+    const g = group('core', [book('PHB', 'PHB'), book('DMG', 'DMG', { downloaded: true })], [adv('LMoP')])
+    setShelf([g])
+    toggleGroup(svc, rowsOf(g) as never, true)
+    expect(picksInput()).toEqual({ picks: [{ set: 'cn-official', book: 'PHB', source: 'PHB' }], adventures: [{ set: 'cn-official', id: 'LMoP' }] })
+    toggleGroup(svc, rowsOf(g) as never, false)
+    expect(picksInput()).toEqual({ picks: [], adventures: [] })
+  })
+
+  it('规则标签：书和冒险都按作者对来源的版本判断筛；未归类 = 判断不了的', () => {
+    const g = group('core', [book('PHB', 'PHB'), book('XPHB', 'XPHB', { edition: { classic: false } }), book('X', 'X', { edition: { classic: null } })], [adv('LMoP')])
+    setShelf([g])
+    const ids = () => rowsOf(g).map((r) => r.id)
+    wizard.filter = '5e'; expect(ids()).toEqual(['PHB', 'LMoP'])
+    wizard.filter = '5.5e'; expect(ids()).toEqual(['XPHB'])
+    wizard.filter = 'none'; expect(ids()).toEqual(['X'])
+    wizard.filter = 'all'; expect(ids()).toHaveLength(4)
   })
 })

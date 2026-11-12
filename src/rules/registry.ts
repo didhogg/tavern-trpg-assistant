@@ -4,18 +4,34 @@ export interface RuleBanner {
   alt: string
 }
 
-/** 规则的静态定义；规则引擎与界面配置由各规则自己的模块提供。 */
+/**
+ * 规则的静态定义；规则引擎与界面配置由各规则自己的模块提供。
+ * 一条登记 = 一个规则版本（如 D&D 5e 的 2014 / 2024）；同一体系的版本用 family 归在一起，共用同一个【库】（P5-5 §13）。
+ */
 export interface RuleDefinition {
   id: string
   name: string
   nameShort: string
   description: string
+  /** 体系（游戏系统）编号，如 dnd5e；向导第①步按它分组。 */
+  family: string
+  /** 体系显示名，如「D&D 5e」。 */
+  familyName: string
+  /** 这个版本的短标签，和书架上的规则标签同一套写法（5e / 5.5e）。 */
+  versionLabel: string
   /** 首页默认战役横幅；未提供时使用纹样底图。 */
   defaultBanner?: RuleBanner
 }
 
+export interface RuleRegistryOptions {
+  /** 结算内核支不支持这个规则版本；不支持的只能看资料，不能建战役（status = coming）。不给 = 全部支持（测试用）。 */
+  kernelReady?: (ruleId: string) => boolean
+}
+
 export class RuleRegistry {
   private readonly rules = new Map<string, RuleDefinition>()
+
+  constructor(private readonly opts: RuleRegistryOptions = {}) {}
 
   register(rule: RuleDefinition): void {
     if (this.rules.has(rule.id)) throw new Error(`规则已注册：${rule.id}`)
@@ -33,6 +49,11 @@ export class RuleRegistry {
   list(): RuleDefinition[] {
     return [...this.rules.values()]
   }
+
+  /** 能不能用它建战役（结算内核接入了没有）。 */
+  ready(id: string): boolean {
+    return this.rules.has(id) && (this.opts.kernelReady?.(id) ?? true)
+  }
 }
 
 export type RuleCardStatus = 'installed' | 'installable' | 'coming'
@@ -42,16 +63,44 @@ export interface RuleCard {
   name: string
   nameShort: string
   description: string
+  family: string
+  familyName: string
+  versionLabel: string
+  /** installed = 能建战役；coming = 结算规则还没接入（资料照常能下载、能看）。 */
   status: RuleCardStatus
 }
 
-/** 规则卡：来自注册表。 */
+/** 规则卡（一个版本一张）：来自注册表，状态按结算内核支不支持算，不写死。 */
 export function buildRuleCards(registry: RuleRegistry): RuleCard[] {
   return registry.list().map((r) => ({
     id: r.id,
     name: r.name,
     nameShort: r.nameShort,
     description: r.description,
-    status: 'installed',
+    family: r.family,
+    familyName: r.familyName,
+    versionLabel: r.versionLabel,
+    status: registry.ready(r.id) ? 'installed' : 'coming',
   }))
+}
+
+export interface RuleFamily {
+  family: string
+  name: string
+  /** 这个体系下的版本，按登记顺序。 */
+  versions: RuleCard[]
+  /** 至少有一个版本能建战役。 */
+  ready: boolean
+}
+
+/** 按体系分组（向导第①步选体系、第②步选版本）。 */
+export function buildRuleFamilies(registry: RuleRegistry): RuleFamily[] {
+  const out = new Map<string, RuleFamily>()
+  for (const card of buildRuleCards(registry)) {
+    const f = out.get(card.family) ?? { family: card.family, name: card.familyName, versions: [], ready: false }
+    f.versions.push(card)
+    f.ready ||= card.status === 'installed'
+    out.set(card.family, f)
+  }
+  return [...out.values()]
 }

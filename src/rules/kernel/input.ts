@@ -17,6 +17,9 @@ const RULE_SETTINGS: Record<string, Record<string, unknown>> = {
   dnd5e2014: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false },
 }
 
+/** 结算内核支不支持这个规则版本（这张表里有没有它）；规则登记表据此判断能不能建战役。 */
+export const kernelSupports = (rule: string): boolean => Object.hasOwn(RULE_SETTINGS, rule)
+
 /**
  * 结算模式：结算内核只算数、不要图片（图片只存链接，见设计）。Plutonium 导入时为了给条目配图，
  * 会把 dnd5e 自带资料包整包读进来逐条校验（怪物第一次导入约 8 秒，全花在这里）。

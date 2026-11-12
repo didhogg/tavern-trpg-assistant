@@ -14,7 +14,7 @@ import type { LibraryRevisionStore } from '../library/revision'
 import type { ScopedLibrary } from '../library/scoped'
 import type { ShelfGroup } from '../library/shelf'
 import { defaultCampaignLibrary, ruleScopes, type CampaignLibrary, type ScopeDef } from '../library/scopes'
-import { SOURCES, officialSourceOf } from '../library/sources'
+import { SOURCES, getSource, officialSourceOf } from '../library/sources'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelDataVersion } from '../schemas/kernel'
 import type { Workspace, SaveSlot } from '../schemas/campaign'
 import type { RuleRegistry } from '../rules/registry'
@@ -44,6 +44,13 @@ export interface StartCampaignDeps {
   }
 }
 
+/**
+ * 向导勾选的一本官方书 / 一个来源（书架 CatalogRow 的 set / id / source）。
+ * 书号和来源不分语言：后端按同一份勾选去配这场战役要的每个数据集（所选语言 + 结算内核要的英文），前端不用知道要下英文（P5-5 §13 B3）。
+ * 没有书号的来源行（如 Generic）只按来源装，绝不当成整套。
+ */
+export interface OfficialPick { set: string; book: string | null; source: string }
+
 /** 向导里用户能改的选书设置（其余由规则默认）。 */
 export type LibraryChoice = Partial<Pick<CampaignLibrary, 'scopes' | 'include' | 'exclude' | 'choices'>>
 
@@ -65,7 +72,7 @@ export interface DataSetState {
 }
 
 export interface WizardOptions {
-  rule: { id: string; name: string }
+  rule: { id: string; name: string; familyName: string; versionLabel: string; ready: boolean }
   scopes: ScopeDef[]
   defaultScopes: string[]
   /** 各语言官方资料装好没；中文战役也需要英文资料（结算内核只认英文原件）。 */
@@ -94,8 +101,8 @@ export interface StartCampaignInput extends Owner {
   library?: LibraryChoice
   /** 选了的冒险（catalog 里 kind = adventure 的行的 set + id）。 */
   adventures?: Array<{ set: string; id: string }>
-  /** 选中的官方书 / 来源（书随整套安装的旧入口不传 = 全部）。 */
-  books?: string[]
+  /** 勾选的官方书 / 来源（每个数据集各自配）；不传 = 旧入口，整套安装；传空数组 = 这次不下载官方资料。 */
+  picks?: OfficialPick[]
 }
 
 export interface StartCampaignResult {
@@ -129,12 +136,21 @@ export class CampaignStarter {
     return [...sets]
   }
 
-  private async installed(setId: string, books?: string[]): Promise<boolean> {
+  /** 勾选 → 一个数据集要装的书号 / 来源（和下载页按书下载同一种写法）。 */
+  private static selectionOf(picks: OfficialPick[]): { books: string[] | null; sources: string[] } {
+    for (const p of picks) if (getSource(p.set).kind !== 'official') throw new TrpgError('E_BAD_CONTENT', `只能勾选官方资料：${p.set}`)
+    const books = [...new Set(picks.flatMap((p) => (p.book ? [p.book] : [])))]
+    return { books: books.length ? books : null, sources: [...new Set(picks.map((p) => p.source))] }
+  }
+
+  /** 这个数据集已经装好了这些书 / 来源（来源不分大小写，和估算同一口径）。 */
+  private async installed(setId: string, sel: { books: string[] | null; sources: string[] } | null): Promise<boolean> {
     const view = await this.deps.library.revisions.published()
     const state = await view.officialState(setId)
     if (state?.status !== 'installed') return false
-    if (!books || !books.length || state.books === null) return true
-    return books.every((b) => state.books!.includes(b))
+    if (!sel) return true
+    return (!sel.books || state.books === null || sel.books.every((b) => state.books!.includes(b)))
+      && (state.sources === null || sel.sources.every((x) => state.sources!.some((y) => y.toLowerCase() === x.toLowerCase())))
   }
 
   private runningTask(setId: string): TaskState | null {
@@ -145,12 +161,15 @@ export class CampaignStarter {
    * 向导要写的"总下载约 xx MB"：资料（所选语言 + 结算内核要的英文，已装好的不算）+ 所选冒险。
    * 规则用作者离线设计的现成两条（plan.ts），与真正下载同一份计划。network = false 只看缓存，没算出来的是 null（界面写"正在计算下载文件大小"）。
    */
-  estimateDownload(input: { codeSet: string; adventures?: Array<{ set: string; id: string }>; books?: string[] }, opts?: EstimateOptions): Promise<DownloadEstimate> {
+  estimateDownload(input: { codeSet: string; adventures?: Array<{ set: string; id: string }>; picks?: OfficialPick[] }, opts?: EstimateOptions): Promise<DownloadEstimate> {
     const { db, files, directory, revisions } = this.deps.library
-    const sets = this.neededSets(input.codeSet)
-    const books = input.books ? Object.fromEntries(sets.map((id) => [id, input.books as string[]])) : undefined
-    const sources = books
-    return new DownloadEstimator({ db, files, directory, revisions }).estimate({ sets, ...(books ? { books } : {}), ...(sources ? { sources } : {}), adventures: input.adventures }, opts)
+    // 勾了空 = 不下载官方资料，只算冒险
+    const sets = input.picks && !input.picks.length ? [] : this.neededSets(input.codeSet)
+    const sel = input.picks?.length ? CampaignStarter.selectionOf(input.picks) : null
+    const each = <T>(v: T): Record<string, T> => Object.fromEntries(sets.map((id) => [id, v]))
+    return new DownloadEstimator({ db, files, directory, revisions }).estimate({
+      sets, ...(sel ? { sources: each(sel.sources), ...(sel.books ? { books: each(sel.books) } : {}) } : {}), adventures: input.adventures,
+    }, opts)
   }
 
   /**
@@ -181,6 +200,7 @@ export class CampaignStarter {
   async wizardOptions(ruleId: string, codeSet: string, choice: LibraryChoice = {}): Promise<WizardOptions> {
     const rule = this.deps.rules.get(ruleId)
     if (!rule) throw new TrpgError('E_RULE_MISSING', `没有这套规则：${ruleId}`)
+    // 还不能建战役的版本也照样给书架（资料可以看、可以下），界面据 rule.ready 灰掉开局
     const library = this.libraryOf(ruleId, codeSet, choice)
     const { scoped } = this.deps.library
     const r = await scoped.shelf(library).catch((e: unknown) => ({ groups: [] as ShelfGroup[], booksError: msg(e), adventuresError: null as string | null, brewError: null as string | null }))
@@ -191,7 +211,7 @@ export class CampaignStarter {
     const core = await this.deps.corePacks()
     const data = await this.dataStatus() // 书目步骤会顺带缓存文件清单，所以放在它后面才有下载大小
     return {
-      rule: { id: rule.id, name: rule.name },
+      rule: { id: rule.id, name: rule.name, familyName: rule.familyName, versionLabel: rule.versionLabel, ready: this.deps.rules.ready(rule.id) },
       scopes: await scoped.scopes(),
       defaultScopes: [...ruleScopes(ruleId).defaultScopes],
       data,
@@ -208,8 +228,13 @@ export class CampaignStarter {
   async startCampaign(input: StartCampaignInput): Promise<StartCampaignResult> {
     const { campaign, rules } = this.deps
     const { scoped, tasks, dataVersion } = this.deps.library
-    if (!rules.has(input.ruleId)) throw new TrpgError('E_RULE_MISSING', `没有这套规则：${input.ruleId}`)
+    const rule = rules.get(input.ruleId)
+    if (!rule) throw new TrpgError('E_RULE_MISSING', `没有这套规则：${input.ruleId}`)
+    if (!rules.ready(input.ruleId)) throw new TrpgError('E_RULE_UNSUPPORTED', `「${rule.name}」的结算规则还没接入，暂时不能建战役；这一版的资料可以先在【库】里下载。`)
     const name = cleanName(input.name)
+    // 不传 = 旧入口整套装；勾了空 = 这次不下官方资料
+    const sel = input.picks?.length ? CampaignStarter.selectionOf(input.picks) : null
+    const skipOfficial = !!input.picks && !input.picks.length
     const core = await this.deps.corePacks()
     if (!core.ok) throw new TrpgError('E_CORE_MISSING', this.coreMessage(core))
     const needed = this.neededSets(input.codeSet) // 先验：资料语言没登记会在这里抛，不会留下半个战役
@@ -230,9 +255,9 @@ export class CampaignStarter {
     const errors: string[] = []
     const waiting: Array<Promise<TaskState>> = []
     const officialTasks = new Map<string, string>()
-    for (const setId of needed) {
-      if (await this.installed(setId, input.books)) continue
-      const taskId = tasks.startOfficial(setId, input.books ? { books: input.books } : {})
+    for (const setId of skipOfficial ? [] : needed) {
+      if (await this.installed(setId, sel)) continue
+      const taskId = tasks.startOfficial(setId, sel ? { books: sel.books, sources: sel.sources } : {})
       officialTasks.set(setId, taskId)
       downloads.push({ kind: 'official', set: setId, item: null, taskId })
       waiting.push(tasks.wait(taskId))

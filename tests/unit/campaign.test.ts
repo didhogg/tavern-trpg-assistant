@@ -185,7 +185,7 @@ describe('读取存档', () => {
   it('其他规则：未确认拒绝；确认后以"切换规则前"写自动存档并整体切换', async () => {
     await withDb(async (db) => {
       const h = await setup(db)
-      h.campaign['deps'].rules.register({ id: 'coc7', name: '克苏鲁的呼唤 7 版', nameShort: 'CoC 7', description: '' })
+      h.campaign['deps'].rules.register({ id: 'coc7', name: '克苏鲁的呼唤 7 版', nameShort: 'CoC 7', description: '', family: 'coc', familyName: 'CoC', versionLabel: '7' })
       const coc = await h.campaign.startNewCampaign({ ...NEW, ruleId: 'coc7', name: '黑暗边境', ...OTHER_OWNER })
       await h.campaign.startNewCampaign(NEW)
       expect(await code(h.campaign.loadSave(OWNER, coc.save.id))).toBe('E_RULE_SWITCH_REQUIRED')

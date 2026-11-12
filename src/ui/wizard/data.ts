@@ -1,35 +1,79 @@
-import { chooseSource } from '../../library/scopes'
 import type { ShelfGroup } from '../../library/shelf'
 import type { CatalogRow } from '../../library/scoped'
-import type { LibraryChoice } from '../../core/start-campaign'
+import { getSource } from '../../library/sources'
+import type { OfficialPick } from '../../core/start-campaign'
 import type { Services } from '../../core/services'
-import { WIZARD_CODE_SET, wizard, wizardEstimate, wizardOptions } from './state'
+import { ruleBadge } from '../libview/registry'
+import { pickedOf, WIZARD_CODE_SET, wizard, wizardEstimate, wizardOptions, type PickRow } from './state'
 
 let loadSeq = 0
 let estimateSeq = 0
 
-/** 核心组（作者分组表里的 core）：新战役默认只勾这一组里「在所选范围内」的书。 */
-const CORE_GROUP = 'core'
+/** 一行的身份（和下载页同一种写法：没有书号的来源行用来源认）。 */
+export const rowKey = (r: CatalogRow): string => `${r.set}:${r.kind}:${r.id ?? `src:${r.source}`}`
+const official = (r: CatalogRow): boolean => getSource(r.set).kind === 'official'
 
-/** 这一行现在勾没勾：已下载的恒勾（灰勾，不能点掉）→ 用户点过的 → 默认（核心组里在范围内的书）。 */
-export function isPicked(group: ShelfGroup, row: CatalogRow): boolean {
-  if (row.downloaded) return true
-  return wizard.picked[row.source] ?? (group.group === CORE_GROUP && row.inScope)
+/** ③的一组：作者分组里的官方书和冒险放在一起（冒险是它所属分组里的一个包），按规则标签和搜索筛。 */
+export function rowsOf(g: ShelfGroup): CatalogRow[] {
+  const q = wizard.q.trim().toLowerCase()
+  return [...g.books, ...g.adventures].filter((r) => official(r)
+    && (wizard.filter === 'all' || (wizard.filter === 'none' ? ruleBadge(r) === null : ruleBadge(r) === wizard.filter))
+    && (!q || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q)))
 }
 
-/**
- * 当前向导的选书设置：把「勾没勾」和后端算出的「本来看不看得到」（row.view.visible，不带加入 / 排除；已下载的默认都开）比一比，
- * 不一样的才记成明确的加入 / 排除（chooseSource）：没勾 = 排除，勾了不用记。范围只在用户改过时才带。
- */
-export function libraryChoice(): LibraryChoice {
-  let lists = { include: [] as string[], exclude: [] as string[] }
-  for (const g of wizardOptions.value?.shelf ?? []) {
-    for (const row of g.books) if (isPicked(g, row) !== row.view.visible) lists = chooseSource(lists, row.source, !row.view.visible)
+/** 这个数据集已经有官方资料（装过至少一部分），或这次勾了它的书：冒险正文要先有官方资料才能读。 */
+function officialReady(set: string): boolean {
+  return !!wizardOptions.value?.data.some((d) => d.setId === set && d.installed) || pickedOf('book').some((p) => p.set === set)
+}
+
+export const isPicked = (r: CatalogRow): boolean => r.downloaded || !!wizard.picked[rowKey(r)]
+/** 能不能勾：已下载的恒为灰勾；冒险要先有同一套官方资料（已装或这次勾了书）。 */
+export const canPick = (r: CatalogRow): boolean => !r.downloaded && (r.kind === 'book' || (r.id !== null && officialReady(r.set)))
+export const ADVENTURE_NEEDS_BOOK = '冒险正文要先有官方资料：先勾一本书'
+
+function put(r: CatalogRow, on: boolean, next: Record<string, PickRow>): void {
+  const key = rowKey(r)
+  if (on) next[key] = { key, set: r.set, kind: r.kind === 'adventure' ? 'adventure' : 'book', id: r.id, source: r.source, name: r.name }
+  else delete next[key]
+}
+
+/** 取消书以后，没有官方资料可依靠的冒险一起取消（不能留一个下不了的冒险）。 */
+function dropOrphanAdventures(): void {
+  const keep = { ...wizard.picked }
+  for (const p of Object.values(keep)) if (p.kind === 'adventure' && !wizardOptions.value?.data.some((d) => d.setId === p.set && d.installed) && !Object.values(keep).some((b) => b.kind === 'book' && b.set === p.set)) delete keep[p.key]
+  wizard.picked = keep
+}
+
+export function togglePick(s: Services, r: CatalogRow, on: boolean): void {
+  if (!canPick(r)) return
+  const next = { ...wizard.picked }
+  put(r, on, next)
+  wizard.picked = next
+  if (!on) dropOrphanAdventures()
+  void refreshEstimate(s)
+}
+
+/** 分组框：[ ] 全选这一组能勾的（书先勾，冒险才勾得上），[−] 取消这一组全部。 */
+export function toggleGroup(s: Services, rows: CatalogRow[], on: boolean): void {
+  const next = { ...wizard.picked }
+  for (const r of rows.filter((x) => !x.downloaded && x.kind !== 'adventure')) put(r, on, next)
+  wizard.picked = next
+  const after = { ...wizard.picked }
+  for (const r of rows.filter((x) => x.kind === 'adventure')) if (!on || canPick(r)) put(r, on, after)
+  wizard.picked = after
+  if (!on) dropOrphanAdventures()
+  void refreshEstimate(s)
+}
+
+/** 开局 / 估算要的勾选：书给后端去配每个数据集，冒险按本。 */
+export function picksInput(): { picks: OfficialPick[]; adventures: Array<{ set: string; id: string }> } {
+  return {
+    picks: pickedOf('book').map((p) => ({ set: p.set, book: p.id, source: p.source })),
+    adventures: pickedOf('adventure').flatMap((p) => (p.id ? [{ set: p.set, id: p.id }] : [])),
   }
-  return { ...(wizard.scopes ? { scopes: wizard.scopes } : {}), ...lists }
 }
 
-/** 向导每一步要的：范围清单、各语言资料、书目与冒险、阻断原因。范围变了才需要重取，勾书不用。 */
+/** 向导每一步要的：各语言资料、书目与冒险、阻断原因、这个版本能不能建战役。 */
 export async function loadWizardOptions(s: Services): Promise<void> {
   if (!wizard.ruleId) return
   const mine = ++loadSeq
@@ -37,8 +81,7 @@ export async function loadWizardOptions(s: Services): Promise<void> {
   wizard.showLoading = false
   const timer = setTimeout(() => { if (mine === loadSeq) wizard.showLoading = true }, 1000)
   try {
-    // 不带加入 / 排除：row.view.visible 是后端的默认（已下载的都开），row.inScope 是「只按范围」的默认，勾选差异在开局时才算（libraryChoice）
-    const options = await s.backend.starter.wizardOptions(wizard.ruleId, WIZARD_CODE_SET, wizard.scopes ? { scopes: wizard.scopes } : {})
+    const options = await s.backend.starter.wizardOptions(wizard.ruleId, WIZARD_CODE_SET)
     if (mine !== loadSeq) return
     wizardOptions.value = options
   } finally {
@@ -48,10 +91,21 @@ export async function loadWizardOptions(s: Services): Promise<void> {
   await refreshEstimate(s)
 }
 
-/** 总下载大小：先只看缓存（毫秒级）；没算出来再联网取一次文件清单。联网失败写在 errors 里，界面显示"大小暂时未知"。 */
+/** ②选版本：清空③的勾选，标签默认筛到这个版本，重新读这个版本的书架。 */
+export function chooseVersion(s: Services, ruleId: string, versionLabel: string): void {
+  if (wizard.ruleId === ruleId && wizardOptions.value) return
+  wizard.ruleId = ruleId
+  wizard.picked = {}
+  wizard.filter = versionLabel
+  wizard.q = ''
+  void loadWizardOptions(s).catch((error: unknown) => console.error('[trpg-assistant] 读取向导选项失败', error))
+}
+
+/** 下载大小：先只看缓存（毫秒级）；没算出来再联网取一次文件清单。联网失败写在 errors 里，界面显示"大小暂时未知"。 */
 export async function refreshEstimate(s: Services): Promise<void> {
   const mine = ++estimateSeq
-  const input = { codeSet: WIZARD_CODE_SET, adventures: wizard.adventures.map((a) => ({ set: a.set, id: a.id })) }
+  const input = { codeSet: WIZARD_CODE_SET, ...picksInput() }
+  if (!input.picks.length && !input.adventures.length) { wizardEstimate.value = null; return }
   const cached = await s.backend.starter.estimateDownload(input, { network: false })
   if (mine !== estimateSeq) return
   wizardEstimate.value = cached
@@ -64,14 +118,4 @@ export async function refreshEstimate(s: Services): Promise<void> {
   } finally {
     wizard.estimating = false
   }
-}
-
-/** 勾选 / 取消一本书（已下载的不能点，界面已禁用）：只记在向导里，开局时才变成加入 / 排除。 */
-export function toggleBook(source: string, on: boolean): void {
-  wizard.picked = { ...wizard.picked, [source]: on }
-}
-
-export function setScopes(s: Services, scopes: string[]): void {
-  wizard.scopes = scopes
-  void loadWizardOptions(s)
 }
