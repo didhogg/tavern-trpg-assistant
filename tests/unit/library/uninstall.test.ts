@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { LibraryDatabase } from '../../../src/library/db'
-import { removeOfficialParts, uninstallOfficial } from '../../../src/library/uninstall'
+import { removeOfficialParts, removeParts, uninstallOfficial } from '../../../src/library/uninstall'
 import { getSource } from '../../../src/library/sources'
 import { LibraryRevisionStore } from '../../../src/library/revision'
 import type { TaskState } from '../../../src/library/tasks'
@@ -94,6 +94,18 @@ describe('整套官方资料删除', () => {
 })
 
 describe('官方单本书删除', () => {
+  it('只给来源、没有书号（书架上 Generic 这类行）：只移除这个来源，这一套照常是已装，书都还在', async () => {
+    db = new LibraryDatabase(`test-uninstall-source-only-${Math.random()}`)
+    await seed()
+    const revisions = new LibraryRevisionStore(db)
+    const directory = { get: async () => ({ codeSet: 'cn', commit: 'c', groups: [], sources: { PHB: {}, MM: {} }, books: [{ id: 'PHB', source: 'PHB' }, { id: 'MM', source: 'MM' }], adventures: [], adventureFiles: {}, adventureProp: 'adventure', owners: {}, indexSources: {}, sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null } }) } as never
+    await db.derived.put({ key: 'parsed:cn-official:spell', fingerprint: 'x', value: { items: [{}, {}], hashes: ['a', 'b'], sources: ['PHB', 'Generic'] }, savedAt: 0 })
+    await removeParts({ db, revisions, tasks: { list: () => [] }, directory, afterDelete: () => undefined }, { official: [{ setId: 'cn-official', bookSources: ['Generic'] }], brews: [] })
+    const st = await (await revisions.published()).officialState('cn-official')
+    expect(st?.status).toBe('installed')
+    expect(st?.books).toEqual(['PHB', 'MM'])
+    expect(st?.sources?.map((x) => x.toLowerCase())).not.toContain('generic')
+  })
   it('全装时删一本：只有来源、没有书号的来源（如 Generic）仍算已装，不会被一起藏掉（P5 T6 后1）', async () => {
     db = new LibraryDatabase(`test-uninstall-generic-${Math.random()}`)
     await seed()

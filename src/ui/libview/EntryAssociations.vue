@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { onMounted, ref, shallowRef } from 'vue'
 import type { ScopedDetail } from '../../library/scoped'
 import type { EntryRef } from '../../library/scopes'
@@ -49,7 +50,7 @@ onMounted(load)
 
 <template>
   <p v-if="loading" role="status" class="lib-muted">正在查找关联资料…</p>
-  <div v-if="errors.length" class="lib-banner lib-banner--warn"><span>{{ errors.join('、') }}</span><button type="button" class="trpg-btn trpg-btn--small" @click="load">重试</button></div>
+  <ErrorBanner v-if="errors.length" :text="`关联资料没查全：${errors.join('；')}`" what="查找关联资料" :actions="[{ label: '重试', run: load }]" />
   <details v-if="variants.length || parent" class="lib-fold" data-testid="variant-list">
     <summary>变体</summary>
     <div class="lib-fold__body lib-variants">

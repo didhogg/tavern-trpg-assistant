@@ -163,6 +163,8 @@ await page.waitForSelector('[data-testid="dependency-preview"]')
 await page.locator('[data-testid="dependency-preview"] .trpg-btn--primary', { hasText: '下载' }).click()
 await page.waitForFunction(() => [...document.querySelector('#trpg-assistant-root').shadowRoot.querySelectorAll('[data-testid="brew-list"] .trpg-row')].find((r) => r.textContent.includes('断网测试包'))?.querySelector('button')?.textContent.trim() === '下载', null, { timeout: 120000 }).catch(() => null)
 await settle(page, 600)
+// 横幅多于一条时只露最新一条（P5-5 §12.3）：先展开再读
+if (await page.getByTestId('banners-more').count() && (await page.getByTestId('banners-more').getAttribute('aria-expanded')) !== 'true') await page.getByTestId('banners-more').click()
 const dropBanner = (await page.locator('[data-testid="download-banners"] [role="alert"]', { hasText: '断网测试包' }).allInnerTexts()).join(' / ')
 const ring = await page.evaluate((P) => eval(P)._s.get('downloads').ring, P)
 const packsAfterDrop = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)

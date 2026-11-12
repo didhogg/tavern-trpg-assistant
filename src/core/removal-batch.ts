@@ -66,9 +66,12 @@ export async function withCounterparts(view: LibraryView, brewPairs: Pick<BrewPa
       const has = (list: string[] | null | undefined, id: string): boolean => list == null || list.includes(id)
       const bookIds = (t.bookIds ?? []).filter((id) => has(state.books, id))
       const adventureIds = (t.adventureIds ?? []).filter((id) => has(state.adventures, id))
-      if (!t.bookIds?.length && !t.adventureIds?.length) { out.push({ kind: 'official', setId: set.pair }); continue }
-      if (!bookIds.length && !adventureIds.length) continue
-      out.push({ kind: 'official', setId: set.pair, ...(bookIds.length ? { bookIds } : {}), ...(t.bookSources?.length && bookIds.length ? { bookSources: t.bookSources } : {}), ...(adventureIds.length ? { adventureIds } : {}) })
+      // 整套 = 书号、来源、冒险号都没给；只给来源的（没有书号的来源行）按来源配到另一种语言
+      if (!t.bookIds?.length && !t.adventureIds?.length && !t.bookSources?.length) { out.push({ kind: 'official', setId: set.pair }); continue }
+      const sourceOnly = !t.bookIds?.length && !t.adventureIds?.length
+      if (!sourceOnly && !bookIds.length && !adventureIds.length) continue
+      const bookSources = sourceOnly ? t.bookSources : bookIds.length ? t.bookSources : undefined
+      out.push({ kind: 'official', setId: set.pair, ...(bookIds.length ? { bookIds } : {}), ...(bookSources?.length ? { bookSources } : {}), ...(adventureIds.length ? { adventureIds } : {}) })
       continue
     }
     const zhId = set.lang === 'zh' ? set.id : set.pair

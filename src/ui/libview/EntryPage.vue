@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { computed, onMounted, ref, shallowRef } from 'vue'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import { chooseEntry, type EntryRef, type EntrySelection } from '../../library/scopes'
@@ -142,7 +143,6 @@ async function load(): Promise<void> {
   } catch (e) {
     console.error('[trpg-assistant] 读取条目失败', e)
     state.value = { kind: 'error', message: e instanceof Error ? e.message : String(e) }
-    toast.error('读取这一条时出错了')
   }
 }
 onMounted(() => void load())
@@ -171,7 +171,10 @@ async function setEnabled(next: boolean): Promise<void> {
     <ReinstallBlock v-else-if="state.kind === 'none' && packOwner" :owner="packOwner" title="这个包里缺了这一条" @done="load" />
     <MissingEntry v-else-if="state.kind === 'none'" :entry-ref="entryRef" @retry="load" />
     <ReinstallBlock v-else-if="state.kind === 'error' && packOwner" :owner="packOwner" title="这一条读不出来" :detail="state.message" @done="load" />
-    <div v-else-if="state.kind === 'error'" class="lib-state"><h3>这一条读不出来</h3><p class="lib-muted">{{ state.message }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
+    <template v-else-if="state.kind === 'error'">
+      <ErrorBanner :text="`这一条没读出来：${state.message}`" what="读取这一条" :actions="[{ label: '重试', run: load }]" />
+      <div class="lib-state"><h3>这一条暂时读不出来</h3><p class="lib-muted">点上面的【重试】再读一次。</p></div>
+    </template>
     <template v-else>
       <div class="lib-dtools">
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
@@ -205,7 +208,7 @@ async function setEnabled(next: boolean): Promise<void> {
         </TabsContent>
         <TabsContent value="background" class="lib-mscroll">
           <div class="lib-dbody">
-            <p v-if="state.d.fluffError" class="lib-banner lib-banner--warn">这次没能读取背景。<button class="trpg-btn trpg-btn--small" type="button" @click="load">重试</button></p>
+            <ErrorBanner v-if="state.d.fluffError" :text="`这次没能读取背景：${state.d.fluffError}`" what="读取背景" :actions="[{ label: '重试', run: load }]" />
             <EntryBody v-else-if="fluff?.entries?.length" :block="fluff.entries" :code-set="codeSet" />
             <p v-else class="lib-muted">这份资料没有单独的背景说明。</p>
           </div>
@@ -213,7 +216,7 @@ async function setEnabled(next: boolean): Promise<void> {
         <TabsContent value="images" class="lib-mscroll">
           <div class="lib-dbody">
             <div v-if="images.length" class="lib-gallery"><ImageBlock v-for="(image, i) in images" :key="i" :block="image" :code-set="codeSet" /></div>
-            <p v-else-if="state.d.fluffError" class="lib-banner lib-banner--warn">这次没能读取配图。<button class="trpg-btn trpg-btn--small" type="button" @click="load">重试</button></p>
+            <ErrorBanner v-else-if="state.d.fluffError" :text="`这次没能读取配图：${state.d.fluffError}`" what="读取配图" :actions="[{ label: '重试', run: load }]" />
             <p v-else class="lib-muted">这份资料没有配图。</p>
           </div>
         </TabsContent>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { plainError } from '../libview/error-text'
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useDownloadsStore, type DownloadItem } from '../../stores/downloads'
@@ -112,7 +113,7 @@ const pctText = (i: DownloadItem): string => (i.pct === null ? '' : `${Math.roun
       <h3>下载</h3>
       <div v-for="i in items" :key="i.key" class="trpg-pop__row" :data-status="i.status" data-testid="lib-pop-row">
         <span class="trpg-pop__ring"><RingIcon :state="ringOf(i)" :pct="i.pct ?? 0" :size="26" /></span>
-        <span class="trpg-pop__main" :title="i.status === 'failed' ? i.error ?? undefined : undefined"><b>{{ i.label }}</b><small>{{ i.status === 'failed' ? `失败：${i.error || '原因未知'}` : [i.stage, pctText(i)].filter(Boolean).join(' · ') }}</small></span>
+        <span class="trpg-pop__main" :title="i.status === 'failed' ? i.error ?? undefined : undefined"><b>{{ i.label }}</b><small>{{ i.status === 'failed' ? `失败：${plainError(i.error)}` : [i.stage, pctText(i)].filter(Boolean).join(' · ') }}</small></span>
         <span class="trpg-pop__acts">
           <template v-if="i.status === 'running' && i.taskId && i.key.startsWith('official-book:')"><button class="trpg-btn trpg-btn--small" type="button" @click="pause(i)">暂停</button></template>
           <template v-if="i.status === 'paused'"><button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" @click="resume(i)">继续</button></template>

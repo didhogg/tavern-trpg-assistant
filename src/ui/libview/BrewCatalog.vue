@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLibNoticeStore } from '../../stores/libnotice'
 import { computed, onMounted, ref, watch } from 'vue'
 import type { CatalogFile, CatalogPair } from '../../library/brew-pairing'
 import { useAppStore } from '../../stores/app'
@@ -51,6 +52,18 @@ async function loadCatalog(force = false): Promise<void> {
   await loadInstalled()
 }
 onMounted(() => { void loadCatalog() })
+// 目录没取回来的原因进库页顶部的浮动横幅（P5-5 §12.3）
+const notices = useLibNoticeStore()
+watch(() => [rows.value, errors.value.zh.length, errors.value.en.length, loading.value] as const, ([r, zh, en, busy]) => {
+  if (busy) return
+  for (const side of ['zh', 'en'] as const) {
+    const n = side === 'zh' ? zh : en
+    if (r && n) notices.show({ key: `brew-catalog:${side}`, text: `${side === 'zh' ? '中文' : '英文'}自制目录这次没取回来（可能是网络问题），${side === 'zh' ? '英文' : '中文'}的照常列出：${errors.value[side].join('；')}`, actions: [{ label: '重试', run: () => void loadCatalog(true) }] })
+    else notices.dismiss(`brew-catalog:${side}`)
+  }
+  if (!r) notices.show({ key: 'brew-catalog', text: `自制包目录这次没取回来，请检查网络后重试：${[...errors.value.zh, ...errors.value.en].join('；') || '没有取到任何目录'}`, actions: [{ label: '重试', run: () => void loadCatalog(true) }] })
+  else notices.dismiss('brew-catalog')
+})
 const filesOf = (r: CatalogPair): Array<{ setId: string; url: string }> => ([[r.zh, zhSet.value], [r.en, zhSet.value.replace(/^cn-/, 'en-')]] as const).filter(([f]) => !!f).map(([f, setId]) => ({ setId, url: f!.urlDownload }))
 const mark = (set: typeof busy, k: string, on: boolean): void => { const n = new Set(set.value); if (on) n.add(k); else n.delete(k); set.value = n }
 
@@ -126,13 +139,12 @@ watch(q, () => { page.value = 0 })
 <template>
   <div data-testid="brew-catalog">
     <div v-if="!rows && loading" class="lib-skel" aria-busy="true" data-testid="brew-loading"><i /><i style="width:70%" /></div>
-    <div v-else-if="!rows" class="lib-banner lib-banner--warn" data-testid="brew-load-error"><Icon name="warning" :size="16" /><span>自制包目录这次没取回来，请检查网络后重试。</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" data-testid="brew-load" @click="loadCatalog(true)">重试</button></span></div>
+    <div v-else-if="!rows" class="lib-state" data-testid="brew-load-error"><h3>自制包目录还没取回来</h3><button class="trpg-btn" type="button" data-testid="brew-load" @click="loadCatalog(true)">重新拉取</button></div>
     <DlSection v-else v-model:q="q" v-model:selected="selected" title="自制包" placeholder="搜索包名或作者" :groups="groups" testid="brew-list" flat empty-text="没有符合的包。">
       <template #tools><MoreMenu label="自制包列表" :items="[{ key: 'reload', label: loading ? '正在拉取…' : '重新拉取自制包列表', disabled: loading }]" @select="loadCatalog(true)" /></template>
       <template #above>
         <div class="lib-dlsec__bar">
           <template v-for="side in (['zh', 'en'] as const)" :key="side">
-            <div v-if="errors[side].length" class="lib-banner lib-banner--warn" role="alert"><Icon name="warning" :size="16" /><span>{{ side === 'zh' ? '中文' : '英文' }}自制目录这次没取回来（可能是网络问题），{{ side === 'zh' ? '英文' : '中文' }}的照常列出。</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" @click="loadCatalog(true)">重试</button></span></div>
           </template>
           <button class="trpg-btn trpg-btn--small lib-end" type="button" disabled title="之后再做"><Icon name="plus" :size="14" />增加数据源仓库</button>
         </div>

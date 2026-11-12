@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { computed, ref, watch } from 'vue'
 import type { CatalogRow } from '../../library/scoped'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useDownloadsStore } from '../../stores/downloads'
-import Icon from '../kit/Icon.vue'
 import { reinstall } from './reinstall'
 
 /**
@@ -21,7 +21,6 @@ const started = computed(() => !!taskId.value)
 const failed = ref<string | null>(null)
 /** 失败的完整原文（网址很长）：横幅只放第一句，全文折叠在下面。 */
 const raw = ref<string | null>(null)
-const short = (m: string): string => m.split(/[：:]\s*https?:|；/)[0]
 const official = computed(() => getSource(props.owner.set).kind === 'official')
 const what = computed(() => (official.value ? (props.owner.kind === 'adventure' ? '冒险' : '书') : '包'))
 const label = computed(() => (props.owner.downloaded ? `重新下载这个${what.value}` : `下载这本${what.value}`))
@@ -51,9 +50,9 @@ watch(() => dl.tasks.find((t) => t.id === taskId.value)?.status, (st) => {
   <div class="lib-state" data-testid="reinstall">
     <h3>{{ title }}</h3>
     <p class="lib-muted">《{{ owner.name }}》{{ owner.downloaded ? '在本地缺了这部分资料。重新下载一次可以恢复原状。' : '还没下载。' }}</p>
-    <div v-if="failed" class="lib-banner lib-banner--warn" role="alert"><Icon name="warning" :size="16" /><span>{{ short(failed) }}</span></div>
+    <ErrorBanner v-if="failed" :text="raw && raw !== failed ? `${failed}：${raw}` : failed" :what="label" />
     <div v-if="started" class="lib-banner" role="status"><span class="trpg-spinner" aria-hidden="true" /><span>正在下载《{{ owner.name }}》，进度见【库】标志；下好后这里自动重新打开。</span></div>
     <button v-else class="trpg-btn trpg-btn--primary" type="button" data-testid="reinstall-btn" :disabled="busy" @click="run">{{ busy ? '下载中…' : failed ? `再试一次：${label}` : label }}</button>
-    <details v-if="raw || (detail && owner.downloaded)" class="lib-fold"><summary>原始报错</summary><pre class="lib-fold__body">{{ raw ?? detail }}</pre></details>
+    <details v-if="!failed && detail && owner.downloaded" class="lib-fold"><summary>原始报错</summary><pre class="lib-fold__body lib-errdetail">{{ detail }}</pre></details>
   </div>
 </template>

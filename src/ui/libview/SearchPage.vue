@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useVirtual } from './useVirtual'
 import type { ScopedSearchHit } from '../../library/scoped-search'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
-import { useToastStore } from '../../stores/toast'
 import Checkbox from '../kit/Checkbox.vue'
 import GroupCheck from '../kit/GroupCheck.vue'
 import Icon from '../kit/Icon.vue'
@@ -14,7 +14,6 @@ import { hitCategories, hitCategoryKey, hitCategoryLabel, hitName, hitSource, lo
 /** 全库数据搜索（U2b）：和包弹窗同一种弹窗，多一个可折叠的"书目范围"。默认折叠、折叠状态记住；默认全勾已开启的书，取消勾选只对这次搜索有效。 */
 const app = useAppStore()
 const lib = useLibViewStore()
-const toast = useToastStore()
 const OPEN_KEY = 'search:books:open'
 
 const q = ref('')
@@ -62,7 +61,7 @@ async function run(): Promise<void> {
     failed.value = null
     try { await loadAllHits(app.svc(), c, (part) => { if (mine === seq) hits.value = part }) } catch (e) {
       console.error('[trpg-assistant] 读取全部条目失败', e)
-      if (mine === seq) { failed.value = e instanceof Error ? e.message : String(e); toast.error('读取条目出错了') }
+      if (mine === seq) { failed.value = e instanceof Error ? e.message : String(e) }
     } finally { if (mine === seq) searching.value = false }
     return
   }
@@ -74,7 +73,7 @@ async function run(): Promise<void> {
     if (mine === seq) hits.value = found
   } catch (e) {
     console.error('[trpg-assistant] 全库搜索失败', e)
-    if (mine === seq) { failed.value = e instanceof Error ? e.message : String(e); toast.error('搜索出错了') }
+    if (mine === seq) { failed.value = e instanceof Error ? e.message : String(e) }
   } finally {
     if (mine === seq) searching.value = false
   }
@@ -120,7 +119,10 @@ function open(h: ScopedSearchHit): void {
     </div>
     <div v-if="blocked" class="lib-banner" style="margin: 0 var(--sp-4) var(--sp-2)"><Icon name="info" :size="16" /><span>已屏蔽 {{ blocked }} 条（取消勾选的书）。</span></div>
     <div ref="scrollEl" class="lib-mscroll">
-      <div v-if="failed" class="lib-state"><h3>搜索出错了</h3><p class="lib-muted">{{ failed }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="run">重试</button></div>
+      <template v-if="failed">
+        <ErrorBanner :text="`搜索没有成功：${failed}`" what="搜索" :actions="[{ label: '重试', run }]" />
+        <div class="lib-state"><h3>这次没搜出来</h3><p class="lib-muted">点上面的【重试】再搜一次；上次的结果还在。</p></div>
+      </template>
  <div v-else-if="searching && !hits.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>
       <div v-else-if="!list.length" class="lib-state"><h3>{{ q.trim() ? `没找到「${q.trim()}」` : '还没有可显示的条目' }}</h3><button v-if="q.trim()" class="trpg-btn" type="button" @click="q = ''">清空</button></div>
       <div v-else class="lib-list" role="list" data-testid="search-results" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">

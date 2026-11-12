@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { onMounted, ref } from 'vue'
 import type { DownloadSuggestion } from '../../library/missing-refs'
 import type { EntryRef } from '../../library/scopes'
@@ -74,24 +75,24 @@ function getBook(): void {
     <div v-if="loading" class="lib-skel" aria-busy="true"><i style="width:60%" /><i style="width:40%" /></div>
     <template v-else-if="checkError">
       <h3>库里没有这一条</h3>
-      <div class="lib-banner lib-banner--warn"><Icon name="warning" :size="16" /><span>查不出它该从哪里补：{{ checkError }}</span><button class="trpg-btn trpg-btn--small lib-end" type="button" @click="check">重试</button></div>
+      <ErrorBanner :text="`查不出它该从哪里补：${checkError}`" what="查找缺的资料" :actions="[{ label: '重试', run: check }]" />
     </template>
     <template v-else-if="sug?.kind === 'brew' && sug.via">
       <h3>{{ pulling ? '正在拉取依赖包…' : '这一条需要依赖包' }}</h3>
       <p class="lib-muted">所在的包「{{ sug.via.replace(/\.json$/, '') }}」缺依赖包：{{ sug.sources?.join('、') }}。缺了它，这个包读不出来。</p>
-      <div v-if="failed && !pulling" class="lib-banner lib-banner--warn" data-testid="entry-dep-failed"><Icon name="warning" :size="16" /><span>没拉到依赖包：{{ failed }}</span><button class="trpg-btn trpg-btn--small lib-end" type="button" @click="pull">重试拉取</button></div>
+      <ErrorBanner v-if="failed && !pulling" :text="`没拉到依赖包：${failed}`" what="拉取依赖包" :actions="[{ label: '重试拉取', run: pull }]" data-testid="entry-dep-failed" />
       <div v-else-if="pulling" class="lib-skel" aria-busy="true"><i style="width:50%" /></div>
     </template>
     <template v-else-if="sug?.kind === 'brew'">
       <h3>这一条来自没装的自制包</h3>
       <p class="lib-muted">来源：{{ sug.sources?.join('、') || '未知' }}</p>
-      <div v-if="failed" class="lib-banner lib-banner--warn"><Icon name="warning" :size="16" /><span>{{ failed }}</span></div>
+      <ErrorBanner v-if="failed" :text="failed" what="下载这个包" />
       <button class="trpg-btn trpg-btn--primary" type="button" :disabled="pulling || !sug.sources?.length" @click="pull">{{ pulling ? '下载中…' : failed ? '重试下载' : '下载这个包' }}</button>
     </template>
     <template v-else-if="sug?.kind === 'official' && sug.book">
       <h3>这一条在《{{ sug.book.name }}》里</h3>
       <p class="lib-muted">这本{{ sug.book.kind === 'adventure' ? '冒险' : '书' }}还没下载。</p>
-      <div v-if="failed" class="lib-banner lib-banner--warn" role="alert"><Icon name="warning" :size="16" /><span>{{ failed }}</span></div>
+      <ErrorBanner v-if="failed" :text="failed" what="下载这本书" />
       <button class="trpg-btn trpg-btn--primary" type="button" @click="getBook">下载这本{{ sug.book.kind === 'adventure' ? '冒险' : '书' }}</button>
     </template>
     <template v-else>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useVirtual } from './useVirtual'
 import type { ListCells, SortDir } from '../../library/sorting'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
-import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import { loadPackRows, matchName, type PackRow } from './pack-data'
 import { openEntry, openReader } from './open'
@@ -15,7 +15,6 @@ import { categoryLabel, registeredCategories } from './registry'
 const props = defineProps<{ set: string; source: string; name: string; abv?: string; kind?: 'book' | 'adventure'; corpora?: Array<{ prop: string; id: string; name: string }>; docIdLocal?: string }>()
 const app = useAppStore()
 const lib = useLibViewStore()
-const toast = useToastStore()
 
 const rows = shallowRef<PackRow[]>([])
 const loading = ref(true)
@@ -51,7 +50,6 @@ async function load(): Promise<void> {
   } catch (e) {
     console.error('[trpg-assistant] 读取包内容失败', e)
     failed.value = e instanceof Error ? e.message : String(e)
-    toast.error('读取这个包失败')
   } finally {
     loading.value = false
   }
@@ -90,13 +88,16 @@ watch(cat, async (prop) => {
   if (prop === 'all') return
   try { cells.value = await app.svc().backend.library.sorting.cells(codeSet.value, prop) } catch (e) { console.error('[trpg-assistant] 读取列表列失败', e) }
 })
+/** 排序没成功：横幅说明，列表按原顺序显示（P5-5 §12.3） */
+const sortError = ref<string | null>(null)
 watch([sortBy, dir], async () => {
+  sortError.value = null
   if (cat.value === 'all' || sortBy.value === 'none') { sorted.value = null; return }
   try {
     sorted.value = await app.svc().backend.library.sorting.sort(codeSet.value, cat.value, byCat.value, (r) => r.ref.hash, sortBy.value, dir.value)
   } catch (e) {
     console.error('[trpg-assistant] 排序失败', e)
-    toast.error('排序没有成功')
+    sortError.value = e instanceof Error ? e.message : String(e)
     sorted.value = null
   }
 })
@@ -113,7 +114,11 @@ watch(q, () => toTop())
       <button v-if="readers.length" class="trpg-pill" type="button" :aria-pressed="cat === 'book'" @click="cat = 'book'">书<small>{{ readers.length }}</small></button>
       <button v-for="p in pills" :key="p.prop" class="trpg-pill" type="button" :aria-pressed="cat === p.prop" @click="cat = p.prop">{{ categoryLabel(p.prop) }}<small>{{ p.n }}</small></button>
     </div>
-    <div v-if="failed" class="lib-state"><h3>这个包读不出来</h3><p class="lib-muted">{{ failed }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
+    <ErrorBanner v-if="sortError && !failed" :text="`排序没有成功，先按原顺序显示：${sortError}`" what="排序" dismissible @dismiss="sortError = null" />
+    <template v-if="failed">
+      <ErrorBanner :text="`这个包没读出来：${failed}`" what="读取这个包" :actions="[{ label: '重试', run: load }]" />
+      <div class="lib-state"><h3>这个包暂时读不出来</h3><p class="lib-muted">点上面的【重试】再读一次。</p></div>
+    </template>
     <div v-else-if="loading && !rows.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <div v-else ref="scrollEl" class="lib-mscroll">
       <div v-if="cat === 'book' ? false : !filtered.length && !shownReaders.length" class="lib-state"><h3>{{ q ? '没有符合的' : '这个包里没有可显示的条目' }}</h3><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>

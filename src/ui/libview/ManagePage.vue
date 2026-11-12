@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { computed, onMounted, ref } from 'vue'
 import { chooseEntry, disabledEntries, type EntryRef } from '../../library/scopes'
 import { useAppStore } from '../../stores/app'
@@ -88,7 +89,7 @@ async function restore(): Promise<void> {
 <div class="lib-pad">
       <div v-if="loading" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
       <template v-else-if="tab === 'deps'">
-        <div v-if="depsError" class="lib-banner lib-banner--warn"><Icon name="warning" :size="16" /><span>依赖读不出来：{{ depsError }}</span><button class="trpg-btn trpg-btn--small lib-end" type="button" @click="loadDeps">重试</button></div>
+        <ErrorBanner v-if="depsError" :text="`依赖读不出来：${depsError}`" what="读取依赖" :actions="[{ label: '重试', run: loadDeps }]" />
         <p v-else-if="!health?.requires.length" class="lib-muted">这个包不依赖别的包。</p>
         <ul v-else class="trpg-list" data-testid="manage-deps">
           <li v-for="d in health.requires" :key="d.source" class="trpg-row">

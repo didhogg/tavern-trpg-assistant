@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import ErrorBanner from './ErrorBanner.vue'
 import { computed, nextTick, onMounted, ref, shallowRef } from 'vue'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
-import { useToastStore } from '../../stores/toast'
 import { useModalStore } from '../../stores/modal'
 import Icon from '../kit/Icon.vue'
 import EntryBody from './EntryBody.vue'
@@ -14,7 +14,6 @@ import type { ReaderPart, ReaderTarget } from './open'
 /** 书 / 冒险阅读器（U9h）：弹窗里的一页。章节目录宽屏在左侧、窄屏是点【目录】展开的列表；正文用和条目同一套渲染器。冒险没下载时先下载。 */
 const props = defineProps<ReaderTarget & { readerKey?: string }>()
 const app = useAppStore()
-const toast = useToastStore()
 const modal = useModalStore()
 
 type State = { kind: 'loading' } | { kind: 'ok'; chapters: ReturnType<typeof readerChapters> } | { kind: 'missing'; message: string | null } | { kind: 'error'; message: string }
@@ -47,7 +46,7 @@ async function load(): Promise<void> {
     const message = e instanceof Error ? e.message : String(e)
     // 读不出正文：能找到它属于书架上的哪本书 / 冒险 / 包，就给【下载 / 重新下载】（P5-5 §11.2），不显示错误 + 重试
     if (owner.value) { console.warn('[trpg-assistant] 读不出正文，给重新下载', message); state.value = { kind: 'missing', message } }
-    else { console.error('[trpg-assistant] 读取书失败', e); state.value = { kind: 'error', message }; toast.error('读取这本书失败') }
+    else { console.error('[trpg-assistant] 读取书失败', e); state.value = { kind: 'error', message } }
   }
 }
 onMounted(() => void load())
@@ -82,7 +81,10 @@ async function go(i: number, section?: string | null, index?: number | null): Pr
   <div class="lib-mbody" data-testid="reader-page">
     <div v-if="state.kind === 'loading'" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <ReinstallBlock v-else-if="state.kind === 'missing' && owner" :owner="owner" :title="owner.downloaded ? '这本的正文读不出来' : `这个${owner.kind === 'adventure' ? '冒险' : ''}的正文还没下载`" :detail="state.message" @done="load" />
-    <div v-else-if="state.kind === 'error'" class="lib-state"><h3>这本书读不出来</h3><p class="lib-muted">{{ state.message }}</p><button class="trpg-btn trpg-btn--primary" type="button" @click="load">重试</button></div>
+    <template v-else-if="state.kind === 'error'">
+      <ErrorBanner :text="`这本书没读出来：${state.message}`" what="读取这本书" :actions="[{ label: '重试', run: load }]" />
+      <div class="lib-state"><h3>这本书暂时读不出来</h3><p class="lib-muted">点上面的【重试】再读一次。</p></div>
+    </template>
     <template v-else>
       <div class="lib-rbar">
         <button class="trpg-btn trpg-btn--small" type="button" data-testid="reader-toc" :aria-expanded="tocOpen" @click="tocOpen = !tocOpen"><Icon name="list-bullets" :size="14" />目录</button>

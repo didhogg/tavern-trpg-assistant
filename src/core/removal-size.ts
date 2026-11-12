@@ -35,7 +35,7 @@ async function bytesOf(deps: Deps, view: LibraryView, targets: RemovalTarget[]):
     if (!list || !rec) return null
     const books = new Set(t.bookIds ?? [])
     const adventures = new Set(t.adventureIds ?? [])
-    const whole = !books.size && !adventures.size
+    const whole = !books.size && !adventures.size && !t.bookSources?.length
     const sources = new Set([...(t.bookSources ?? []), ...rec.books.filter((b) => books.has(String(b.id))).map((b) => String(b.source))].map((s) => s.toLowerCase()))
     for (const [path, file] of Object.entries(list)) {
       const owner = rec.owners[path]

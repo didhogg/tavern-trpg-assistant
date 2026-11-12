@@ -39,9 +39,11 @@ async function longConfirm(label, viewport) {
   await page.evaluate((P) => {
     const be = eval(P)._s.get('app').svc().backend
     window.__exec = 0
-    be.removalImpact = async (target) => ({ target, plan: { id: 'x', fingerprint: 'f', checkedAt: 0, removeTogether: [] }, removeTogether: [], houseRules: [], choices: [], saves: [],
+    // 卸载走多目标接口（P5-5 §12）：同样造 60 行长名单
+    be.removalImpactMany = async (targets) => ({ targets, parts: [], plan: { fingerprint: 'f' }, removeTogether: [], houseRules: [], choices: [], saves: [],
       packs: Array.from({ length: 60 }, (_, i) => ({ docIdLocal: `p${i}`, filename: `一个名字很长很长的自制包第 ${i + 1} 号（用来撑长清单）.json`, why: '依赖它提供的法术', mustRemove: i < 30 })) })
-    be.removalExecute = async () => { window.__exec++ }
+    be.removalSizes = async (targets) => ({ each: targets.map(() => 1000), total: 1000 })
+    be.removalExecuteMany = async () => { window.__exec++; return { done: ['cn'], reclaim: null } }
   }, pinia)
   const row = page.locator('[data-testid="shelf-tab"] .trpg-shelf__row').first()
   await row.locator('.trpg-more').click()
@@ -101,7 +103,7 @@ await longConfirm('narrow', { width: 390, height: 640 })
     await page.screenshot({ path: `${shots}/real-after-uninstall.png` })
     check(`单本卸载《${pick.name}》：这本不在书架了，其余还在`, !still && after === before - 1, `${before} → ${after}`)
     check('卸载后战役状态没变（不会变成「没有战役」）', (await page.evaluate((P) => eval(P)._s.get('library').bound, pinia)) === boundBefore, '')
-    check('卸载后没有书架错误横幅', !(await page.locator('[data-testid="shelf-error"]').count()), '')
+    check('卸载后没有书架错误横幅', !(await page.locator('[data-testid="lib-notice"]', { hasText: '书架这次没读出来' }).count()), '')
   } else if (!process.env.SKIP_UNINSTALL) check('有可卸载的官方书', false, '')
   // 自制包按真实包编号打开（这个库里的自制包都是导入的，在【我的库】）
   await page.locator('.lib-tabs, [role="tablist"]').getByRole('button', { name: '我的库' }).first().click().catch(async () => page.getByRole('button', { name: '我的库' }).first().click())

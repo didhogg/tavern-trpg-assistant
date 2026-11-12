@@ -95,7 +95,8 @@ export async function stageOfficialParts(deps: UninstallDeps, ops: LibraryOperat
   if (!state || state.status !== 'installed') throw new Error(`${target.setId} 还没安装，不能卸载`)
   const books = target.bookIds ?? []
   const adventures = target.adventureIds ?? []
-  if (!books.length && !adventures.length) {
+  // 只有书号、来源、冒险号全都没给才是整套；只给来源（书架上没有书号的来源行，如 Generic）按来源移除
+  if (!books.length && !adventures.length && !target.bookSources?.length) {
     const gone = { ...state, status: 'missing' as const, sources: [], books: [], adventures: [] }
     await ops.setTargetOfficial(handle, { [target.setId]: gone })
     return gone

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLibNoticeStore } from '../../stores/libnotice'
 import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { DataSetState } from '../../core/start-campaign'
 import type { CatalogRow } from '../../library/scoped'
@@ -7,7 +8,6 @@ import { useAppStore } from '../../stores/app'
 import { useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
-import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import { askChoice } from '../kit/choice'
 import { formatBytes } from '../format'
@@ -67,6 +67,12 @@ async function loadStatus(): Promise<void> {
   try { sets.value = await app.svc().backend.starter.dataStatus() } catch (e) { console.error('[trpg-assistant] 读取下载页失败', e); error.value = e instanceof Error ? e.message : String(e) }
 }
 onMounted(() => void loadStatus())
+// 读不出来的原因进库页顶部的浮动横幅（P5-5 §12.3），页面里不放报错
+const notices = useLibNoticeStore()
+watch(error, (e) => {
+  if (e) notices.show({ key: 'download-status', text: `下载页的安装状态没读出来，下面的列表照常可用：${e}`, actions: [{ label: '重试', run: () => void loadStatus() }] })
+  else notices.dismiss('download-status')
+})
 // 任务结束（完成 / 失败 / 取消）才重读一次安装状态；任务进行中不整页重读（书架由库页外壳在任务结束时重读）
 let lastRunning = 0
 watch(() => dl.running.length + dl.paused.length, (n) => { if (n < lastRunning) void loadStatus(); lastRunning = n }, { immediate: true })
@@ -170,7 +176,6 @@ const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.
 
 <template>
   <div class="lib-scroll" data-testid="download-tab">
-    <div v-if="error" class="lib-banner lib-banner--warn" style="margin-top: var(--sp-3)" role="alert" data-testid="download-load-error"><Icon name="warning" :size="16" /><span>下载页的安装状态没读出来，下面的列表照常可用。</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" @click="loadStatus">重试</button></span></div>
     <div v-if="!lib.shelf" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
     <DlSection v-else v-model:q="q" v-model:selected="sel" title="官方资料与冒险" placeholder="搜索书名或冒险名（中英都行）" :groups="groups" testid="official-card" empty-text="书目暂时取不到，联网后会自动出现。">
       <template #tools><MoreMenu :label="reloading ? '正在拉取…' : '官方资料与冒险'" :items="MENU" @select="reloadDirectory" /></template>

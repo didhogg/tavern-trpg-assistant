@@ -23,6 +23,10 @@ describe('多选卸载', () => {
     const out = await withCounterparts(view({}), pairs, [{ kind: 'official', setId: 'cn-official', bookIds: ['PHB'] }])
     expect(out.map((t) => t.setId)).toEqual(['cn-official'])
   })
+  it('只给来源（书架上没有书号的来源行，如 Generic）：配到英文也只按来源，绝不变成整套', async () => {
+    const out = await withCounterparts(view({ 'en-official': { status: 'installed', books: null, adventures: null } }), pairs, [{ kind: 'official', setId: 'cn-official', bookSources: ['Generic'] }])
+    expect(out).toEqual([{ kind: 'official', setId: 'cn-official', bookSources: ['Generic'] }, { kind: 'official', setId: 'en-official', bookSources: ['Generic'] }])
+  })
   it('自制包：配上的英文包一起删；没配上的只删自己', async () => {
     const out = await withCounterparts(view({}), pairs, [{ kind: 'brew', setId: 'cn-brew', docIdLocals: ['z1', 'z2'] }])
     expect(out).toEqual([{ kind: 'brew', setId: 'cn-brew', docIdLocals: ['z1', 'z2'] }, { kind: 'brew', setId: 'en-brew', docIdLocals: ['e1'] }])
