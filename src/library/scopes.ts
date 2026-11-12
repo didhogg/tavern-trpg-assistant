@@ -17,6 +17,8 @@ export interface RuleScopes {
   showLegacy: boolean
   /** 作者的版本风格（consts.js SITE_STYLE__CLASSIC / SITE_STYLE__ONE）：文字转条目时标签指向哪一版。 */
   style: 'classic' | 'one'
+  /** 这套规则的资料用哪种数据格式（formats.ts 登记）；战役选的资料集必须是同一种。 */
+  format: string
 }
 
 export const BUILTIN_SCOPES = registry.scopes as ScopeDef[]

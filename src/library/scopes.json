@@ -4,7 +4,7 @@
     { "id": "5e2024", "name": "5e 2024", "edition": "one" }
   ],
   "rules": {
-    "dnd5e2014": { "defaultScopes": ["5e2014"], "showLegacy": true, "style": "classic" },
-    "dnd5e2024": { "defaultScopes": ["5e2024"], "showLegacy": false, "style": "one" }
+    "dnd5e2014": { "defaultScopes": ["5e2014"], "showLegacy": true, "style": "classic", "format": "5etools" },
+    "dnd5e2024": { "defaultScopes": ["5e2024"], "showLegacy": false, "style": "one", "format": "5etools" }
   }
 }

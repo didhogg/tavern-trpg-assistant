@@ -6,6 +6,8 @@ export interface CodeSet {
   commit: string
   version: string
   lang: string
+  /** 这套作者程序读写的数据格式（formats.ts 登记）。 */
+  format: string
 }
 
 export interface SourceEntry {

@@ -158,15 +158,15 @@ const result = await page.evaluate(async () => {
   // ---- B-12 JSON 结构校验（打包后的预编译校验器，不用 eval） ----
   const fixed = JSON.parse(brewText); fixed._meta.edition = 'classic'
   const t12 = performance.now()
-  const vGood = await lib.custom.validate(JSON.stringify(fixed, null, 1), { kind: 'brew' })
+  const vGood = await lib.custom.validate('cn', JSON.stringify(fixed, null, 1))
   const firstMs = Math.round(performance.now() - t12)
-  const t13 = performance.now(); await lib.custom.validate(fixed, { kind: 'brew' }); const againMs = Math.round(performance.now() - t13)
-  const vBad = await lib.custom.validate(brewText, { kind: 'brew' })
+  const t13 = performance.now(); await lib.custom.validate('cn', fixed); const againMs = Math.round(performance.now() - t13)
+  const vBad = await lib.custom.validate('cn', brewText)
   const pre = await lib.custom.previewImport('cn', [{ name: 'p5-test.json', text: brewText }, { name: 'p5-fixed.json', text: JSON.stringify(fixed) }])
-  const entryBad = await lib.custom.validateEntry('spell', { name: 'x', level: 'bad' })
+  const entryBad = await lib.custom.validateEntry('cn', 'spell', { name: 'x', level: 'bad' })
   // 中文自制仓库自己加的字段（ENG_name、_meta.translators）按中文 fork 的做法放行（G-4）
   const zhBrew = structuredClone(fixed); zhBrew._meta.translators = ['译者']; for (const k of Object.keys(zhBrew)) if (Array.isArray(zhBrew[k]) && k !== '_meta') for (const e of zhBrew[k]) if (e && typeof e === 'object' && e.name) e.ENG_name = 'English name'
-  const vZh = await lib.custom.validate(zhBrew, { kind: 'brew' })
+  const vZh = await lib.custom.validate('cn', zhBrew)
   r.b12 = { zhOk: vZh.ok, zhIssues: vZh.issues.map((i) => i.path + ' ' + i.text), good: vGood.ok, firstMs, againMs, bad: vBad.issues.map((i) => ({ path: i.path, text: i.text, line: i.line })), preview: pre.structure.map((x) => ({ name: x.name, ok: x.ok, issues: x.issues.map((i) => i.text) })), entryBad: entryBad.map((i) => i.path + ' ' + i.text) }
   // ---- B-08 删前影响预览（先于删除） ----
   const imp1 = await backend.removalImpact({ kind: 'brew', setId: 'cn-brew', docIdLocals: [mine.docIdLocal] })

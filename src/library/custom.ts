@@ -2,7 +2,8 @@
 // 条目内容全部走作者的可编辑自制（作者格式）；插件只记"房规 → 目标"的链接和范围设置。
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { copyRawSource } from './copy-source'
-import { validateBrewJson, type BrewValidation, type SchemaIssue } from './brew-validate'
+import type { BrewValidation, SchemaIssue } from './brew-validate'
+import { formatOfCampaign, formatOfCodeSet } from './formats'
 import { findCollisions, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
@@ -54,19 +55,14 @@ export class CustomLibrary {
     return this.lib.frameOf(codeSet)
   }
 
-  /** JSON 结构校验（作者的自制结构定义）：传原文错误带行列，传对象只有路径。目前只有 kind: 'brew'。 */
-  validate(input: string | unknown, _opts: { kind: 'brew' } = { kind: 'brew' }): Promise<BrewValidation> {
-    return validateBrewJson(input)
+  /** JSON 结构校验：按这套资料集登记的数据格式取校验器（formats.ts），传原文错误带行列，传对象只有路径。 */
+  validate(codeSet: string, input: string | unknown): Promise<BrewValidation> {
+    return formatOfCodeSet(codeSet).validate(input)
   }
 
   /** 单条条目在写入前的结构检查：套上"我的资料"的来源信息，只留这一条自己的错（来源信息等外壳的错不算）。 */
-  async validateEntry(prop: string, ent: Record<string, unknown>): Promise<SchemaIssue[]> {
-    const wrapper = {
-      _meta: { sources: [{ json: CUSTOM.mine.json, abbreviation: CUSTOM.mine.abbreviation, full: CUSTOM.mine.full, authors: ['-'], convertedBy: ['-'], version: '1.0.0' }], dateAdded: 0, dateLastModified: 0, edition: 'classic' },
-      [prop]: [{ source: CUSTOM.mine.json, ...ent }],
-    }
-    const mine = (await validateBrewJson(wrapper)).issues
-    return mine.filter((i) => i.path.startsWith(`/${prop}/0`))
+  validateEntry(codeSet: string, prop: string, ent: Record<string, unknown>): Promise<SchemaIssue[]> {
+    return formatOfCodeSet(codeSet).validateEntry(prop, ent, CUSTOM.mine)
   }
 
   /** 作者新条目模板（法术、怪物、传奇组有作者构建器；别的类别 null）。 */
@@ -81,6 +77,7 @@ export class CustomLibrary {
 
   /** 文字转条目（作者转换器）；版本风格按战役规则（2014 → 旧版标签）。只转换，不存。 */
   async convert(c: CampaignLibrary, prop: string, format: 'text' | 'markdown' | 'html', text: string) {
+    formatOfCampaign(c)
     return (await this.frame(c.codeSet)).call('convertText', prop, format, text, { source: CUSTOM.mine.json, styleHint: ruleScopes(c.rule).style })
   }
 
@@ -94,7 +91,7 @@ export class CustomLibrary {
     const saved = result.value
     // 另一种语言里有没有对上的条目（按英文名 + 来源）：只返回提示，保存时不改任何一边的条目
     const counterpart = saved.hash && this.counterpartHint ? await this.counterpartHint({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }) : null
-    return { ...saved, parse: result.parse, issues: await this.validateEntry(prop, ent), counterpart }
+    return { ...saved, parse: result.parse, issues: await this.validateEntry(codeSet, prop, ent), counterpart }
   }
 
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {
@@ -107,6 +104,7 @@ export class CustomLibrary {
    * 原件不动；房规挂在原件下当备选。activate：在本战役立即生效（默认），返回改好的战役选书设置。
    */
   async createHouseRule(c: CampaignLibrary, target: EntryRef, edit: { mod?: Record<string, unknown>; entity?: Record<string, unknown> }, { activate = true }: { activate?: boolean } = {}) {
+    formatOfCampaign(c)
     const stored = await this.lib.storedItem(target.set, target.prop, target.hash)
     if (!stored) throw new Error(`找不到要改的条目：${refKey(target)}`)
     const base = stored.item as { name?: string; source?: string }
@@ -183,7 +181,7 @@ export class CustomLibrary {
       body = copy.json
       name = existing?.filename ?? `${source}.json`
     }
-    const issues = (await validateBrewJson(body)).issues
+    const issues = (await formatOfCodeSet(codeSet).validate(body)).issues
     const result = await this.lib.brewImport(brewSet, [{ name, text: JSON.stringify(body) }])
     this.scoped.reset()
     return { name, counts, issues, added: result.value.added, parse: result.parse, errors: result.errors }
@@ -313,7 +311,7 @@ export class CustomLibrary {
         alternatives: collisions.map((c) => ({ prop: c.prop, hash: c.hash, base: c.base.kind === 'official' ? 'official' : c.base.docIdLocal })),
         notJson: added.value.notJson,
         authorErrors: added.errors,
-        structure: await Promise.all(files.map(async (file) => ({ name: file.name, ...(await validateBrewJson(file.text)) }))),
+        structure: await Promise.all(files.map(async (file) => ({ name: file.name, ...(await formatOfCodeSet(codeSet).validate(file.text)) }))),
       }
     } finally {
       f.close()

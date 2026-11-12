@@ -72,9 +72,9 @@ describe('自制 JSON 结构校验（作者结构定义，预编译）', () => {
 
   it('custom.validate / validateEntry：单条套外壳，只留这一条自己的错', async () => {
     const custom = new CustomLibrary({} as never, {} as never, {} as never)
-    expect((await custom.validate(pretty(good()), { kind: 'brew' })).ok).toBe(true)
-    expect(await custom.validateEntry('spell', spell)).toEqual([])
-    const bad = await custom.validateEntry('spell', { ...spell, level: 'x' })
+    expect((await custom.validate('cn', pretty(good()))).ok).toBe(true)
+    expect(await custom.validateEntry('cn', 'spell', spell)).toEqual([])
+    const bad = await custom.validateEntry('cn', 'spell', { ...spell, level: 'x' })
     expect(bad.map((i) => i.path)).toContain('/spell/0/level')
     expect(bad.every((i) => i.path.startsWith('/spell/0'))).toBe(true)
   })
