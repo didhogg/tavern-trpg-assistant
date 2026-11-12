@@ -43,7 +43,8 @@ export class LibraryOperations {
   private readonly handles = new Map<string, OperationHandle>()
   private lastProgress = new Map<string, number>()
 
-  constructor(private readonly opts: { db: LibraryDatabase; revisions: LibraryRevisionStore; now?: () => number }) {}
+  /** onPublished：每发布一个新版本后调一次（下载、更新、自制、卸载都经过这里）；后端用它安排回收空间。 */
+  constructor(private readonly opts: { db: LibraryDatabase; revisions: LibraryRevisionStore; now?: () => number; onPublished?: (revisionId: string) => void }) {}
 
   private now(): number { return this.opts.now?.() ?? Date.now() }
 
@@ -151,6 +152,7 @@ export class LibraryOperations {
     await this.releaseLock(handle.record.token)
     this.handles.delete(handle.record.id)
     const fresh = await revisions.refresh(handle.target.id)
+    try { this.opts.onPublished?.(handle.target.id) } catch (e) { console.warn('[trpg-assistant] 发布后回调出错', e) }
     return fresh
   }
 

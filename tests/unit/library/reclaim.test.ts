@@ -79,4 +79,34 @@ describe('空间回收', () => {
     const next = await operations.begin({ kind: 'x', set: 'cn-official', codeSet: 'cn' })
     await operations.abort(next, new Error('done'))
   })
+
+  it('反复下载（每次发布一整套解析结果）：发布时通知后端；回收后只剩当前版本那一份，读到的是最新的（2026-11-12）', async () => {
+    db = new LibraryDatabase(`test-reclaim-parsed-${Math.random()}`)
+    const revisions = new LibraryRevisionStore(db)
+    const published: string[] = []
+    const operations = new LibraryOperations({ db, revisions, onPublished: (id) => published.push(id) })
+    for (const n of [1, 2, 3]) {
+      const h = await operations.begin({ kind: 'official', set: 'cn-official', codeSet: 'cn' })
+      await h.target.derivedPut('parsed:cn-official:monster', `f${n}`, { big: 'x'.repeat(1000), n })
+      await operations.publish(h, {})
+    }
+    expect(published).toHaveLength(3)
+    const copies = async (): Promise<number> => (await db.derived.toCollection().primaryKeys()).filter((k) => k.endsWith(':parsed:cn-official:monster')).length
+    expect(await copies()).toBe(3)
+    const r = await reclaimLibrary({ db, revisions, operations, directory })
+    expect(r.derived).toBe(2)
+    expect(await copies()).toBe(1)
+    expect(((await (await revisions.published()).derivedGet('parsed:cn-official:monster'))?.value as { n: number }).n).toBe(3)
+  })
+
+  it('结算内核换算缓存：不是当前官方数据版本的行、没记版本的老格式行清掉，当前版本的留着', async () => {
+    db = new LibraryDatabase(`test-reclaim-kc-${Math.random()}`)
+    const revisions = new LibraryRevisionStore(db)
+    const operations = new LibraryOperations({ db, revisions })
+    const put = (key: string, official?: string) => db.derived.put({ key, fingerprint: key, value: { z: new Uint8Array(10), ...(official ? { scope: { rule: 'dnd5e2014', base: 'b', official } } : {}) }, savedAt: 0 })
+    await put('kc:old', 'v1'); await put('kc:now', 'v2'); await put('kc:legacy')
+    const r = await reclaimLibrary({ db, revisions, operations, directory, kernelOfficial: async () => 'v2' })
+    expect(r.kernelCache).toBe(2)
+    expect(await db.derived.toCollection().primaryKeys()).toEqual(['kc:now'])
+  })
 })

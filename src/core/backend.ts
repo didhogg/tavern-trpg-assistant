@@ -150,7 +150,9 @@ export function createBackend(opts: BackendOptions): Backend {
 
   const db = new LibraryDatabase(opts.libraryDbName)
   const revisions = new LibraryRevisionStore(db)
-  const operations = new LibraryOperations({ db, revisions })
+  // 每发布一个新版本（下载 / 更新 / 自制 / 卸载）后，等下载队列空了回收一次旧副本（2026-11-12：以前只在卸载后回收，下载多了库会涨到几个 G）
+  let afterPublish = (): void => {}
+  const operations = new LibraryOperations({ db, revisions, onPublished: () => afterPublish() })
   let ready = revisions.ensureLegacy().then(() => undefined)
   const files = new FileProvider({ db, ready: revisions.ensureLegacy() })
   const openFrame = (codeSet: string, ctx: { view?: LibraryView; kvScope?: string; filterIndex?: boolean } = {}) => startAuthorFrame({
@@ -315,7 +317,16 @@ export function createBackend(opts: BackendOptions): Backend {
     const all = await withCounterparts(view, brewPairs, targets)
     return mergeImpacts(all, await Promise.all(all.map((t) => impactAt(view, t))))
   }
-  const reclaim = (): Promise<ReclaimReport> => reclaimLibrary({ db, revisions, operations, directory })
+  const reclaim = (): Promise<ReclaimReport> => reclaimLibrary({ db, revisions, operations, directory, kernelOfficial: async () => (await dataVersion()).official })
+  // 连着下好几本时只在最后回收一次：发布后等 3 秒，还有任务在跑就再等
+  let reclaimTimer: ReturnType<typeof setTimeout> | undefined
+  afterPublish = (): void => {
+    clearTimeout(reclaimTimer)
+    reclaimTimer = setTimeout(() => {
+      if (tasks.list().some((t) => t.status === 'running' || t.status === 'paused')) { afterPublish(); return }
+      void reclaimAfter()
+    }, 3000)
+  }
   const removalExecute = async (impact: RemovalImpact): Promise<unknown> => {
     const r = await removeOne(impact)
     await reclaimAfter()

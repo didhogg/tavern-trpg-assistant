@@ -3,7 +3,8 @@
 //   1. 作废（aborted）的准备版本留下的一切；
 //   2. 当前版本父链里被更新的一层盖住的旧副本（解析结果、文件版本、自制存储）——读取总是从最新一层往下找，盖住的永远读不到；
 //   3. 当前版本里已经卸载的官方资料：整套卸掉的那套的全部文件与解析结果；按书卸掉的书 / 来源 / 冒险独占的文件与正文；
-//   4. 没有任何文件版本再指向的文件内容。
+//   4. 没有任何文件版本再指向的文件内容；
+//   5. 结算内核换算缓存（kc:）里不属于当前官方数据版本的行（换算钥匙含官方数据版本，旧版本的永远用不上，2026-11-12）。
 // 不动：用户数据（战役、存档在另一个库）、自制包本身（当前版本还在的）、房规、版本选择、书目缓存。
 // 代价：被回收的旧版本不再能读（读旧版本的小窗在发布后已经退休，service.retire）。
 import type { LibraryDatabase } from './db'
@@ -21,6 +22,8 @@ export interface ReclaimReport {
   legacyFiles: number
   derived: number
   kv: number
+  /** 删掉的结算内核旧换算缓存行数。 */
+  kernelCache: number
   /** 跳过的部分（例如没有作者书目缓存，按书卸掉的文件这次没回收）。 */
   notes: string[]
 }
@@ -28,10 +31,10 @@ export interface ReclaimReport {
 const REV = 'rev:'
 const jsonBytes = (v: unknown): number => { try { return JSON.stringify(v ?? null).length } catch { return 0 } }
 
-export async function reclaimLibrary(deps: { db: LibraryDatabase; revisions: LibraryRevisionStore; operations: LibraryOperations; directory: BookDirectory }): Promise<ReclaimReport> {
+export async function reclaimLibrary(deps: { db: LibraryDatabase; revisions: LibraryRevisionStore; operations: LibraryOperations; directory: BookDirectory; kernelOfficial?: () => Promise<string> }): Promise<ReclaimReport> {
   const { db, revisions, operations, directory } = deps
   return operations.withLock(async (renew) => {
-    const report: ReclaimReport = { bytes: 0, fileContents: 0, fileVersions: 0, legacyFiles: 0, derived: 0, kv: 0, notes: [] }
+    const report: ReclaimReport = { bytes: 0, fileContents: 0, fileVersions: 0, legacyFiles: 0, derived: 0, kv: 0, kernelCache: 0, notes: [] }
     const view = await revisions.published()
     const chain = await view.chain() // 新 → 旧，最后是旧版 R0
     const prefixOf = (rev: { id: string; legacy?: boolean }): string => (rev.legacy ? '' : `${REV}${rev.id}:`)
@@ -153,6 +156,19 @@ export async function reclaimLibrary(deps: { db: LibraryDatabase; revisions: Lib
       await db.fileContents.bulkDelete(orphans)
     }
     report.fileContents += orphans.length
+
+    // 5. 结算内核旧换算缓存：钥匙含官方数据版本，不是当前版本的行永远命中不了；没记版本的老格式行也删
+    if (deps.kernelOfficial) {
+      await renew()
+      const official = await deps.kernelOfficial()
+      const stale: string[] = []
+      await db.derived.where('key').startsWith('kc:').each((r) => {
+        const scope = (r.value as { scope?: { official?: unknown }; z?: Uint8Array } | undefined)
+        if (scope?.scope?.official !== official) { stale.push(r.key); report.bytes += scope?.z?.byteLength ?? jsonBytes(r.value) }
+      })
+      if (stale.length) await db.derived.bulkDelete(stale)
+      report.kernelCache = stale.length
+    }
     return report
   })
 }

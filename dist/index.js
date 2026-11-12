@@ -15052,7 +15052,7 @@ var xS = "library", SS = 6e5, CS = 3e5, wS = 400, TS = () => [...crypto.getRando
 			...a,
 			...t.brews ?? {}
 		}, c = yS(o, s), l = this.now();
-		return await n.transaction("rw", [
+		await n.transaction("rw", [
 			n.revisions,
 			n.state,
 			n.ops,
@@ -15092,7 +15092,14 @@ var xS = "library", SS = 6e5, CS = 3e5, wS = 400, TS = () => [...crypto.getRando
 				error: null,
 				updatedAt: l
 			});
-		}), await this.releaseLock(e.record.token), this.handles.delete(e.record.id), await r.refresh(e.target.id);
+		}), await this.releaseLock(e.record.token), this.handles.delete(e.record.id);
+		let u = await r.refresh(e.target.id);
+		try {
+			this.opts.onPublished?.(e.target.id);
+		} catch (e) {
+			console.warn("[trpg-assistant] 发布后回调出错", e);
+		}
+		return u;
 	}
 	async abort(e, t, n = "failed") {
 		let { db: r } = this.opts, i = this.now(), a = t instanceof Error ? t.message : String(t);
@@ -18202,97 +18209,106 @@ var Uw = "rev:", Ww = (e) => {
 };
 async function Gw(e) {
 	let { db: t, revisions: n, operations: r, directory: i } = e;
-	return r.withLock(async (e) => {
-		let r = {
+	return r.withLock(async (r) => {
+		let o = {
 			bytes: 0,
 			fileContents: 0,
 			fileVersions: 0,
 			legacyFiles: 0,
 			derived: 0,
 			kv: 0,
+			kernelCache: 0,
 			notes: []
-		}, o = await n.published(), s = await o.chain(), c = (e) => e.legacy ? "" : `${Uw}${e.id}:`, l = async (e) => {
+		}, s = await n.published(), c = await s.chain(), l = (e) => e.legacy ? "" : `${Uw}${e.id}:`, u = async (e) => {
 			e.length && (await t.derived.where("key").anyOf(e).each((e) => {
-				r.bytes += Ww(e.value);
-			}), await t.derived.bulkDelete(e), r.derived += e.length);
-		}, u = async (e) => {
-			e.length && (await t.fileVersions.bulkDelete(e), r.fileVersions += e.length);
+				o.bytes += Ww(e.value);
+			}), await t.derived.bulkDelete(e), o.derived += e.length);
+		}, d = async (e) => {
+			e.length && (await t.fileVersions.bulkDelete(e), o.fileVersions += e.length);
 		};
-		for (let e of await t.revisions.where("status").equals("aborted").toArray()) if (await l(await t.derived.where("key").startsWith(`${Uw}${e.id}:`).primaryKeys()), await u((await t.fileVersions.where("revision").equals(e.id).toArray()).map((e) => [
+		for (let e of await t.revisions.where("status").equals("aborted").toArray()) if (await u(await t.derived.where("key").startsWith(`${Uw}${e.id}:`).primaryKeys()), await d((await t.fileVersions.where("revision").equals(e.id).toArray()).map((e) => [
 			e.revision,
 			e.source,
 			e.path
 		])), e.kvScope) for (let n of [e.kvScope, `${e.kvScope}:local`]) {
 			let e = await t.kv.where("scope").equals(n).toArray();
-			for (let t of e) r.bytes += Ww(t.value);
-			await t.kv.bulkDelete(e.map((e) => [e.scope, e.key])), r.kv += e.length;
+			for (let t of e) o.bytes += Ww(t.value);
+			await t.kv.bulkDelete(e.map((e) => [e.scope, e.key])), o.kv += e.length;
 		}
-		await e();
-		let d = /* @__PURE__ */ new Set();
-		for (let e of s) {
-			let n = c(e), r = e.legacy ? (await t.derived.toCollection().primaryKeys()).filter((e) => !e.startsWith(Uw)) : await t.derived.where("key").startsWith(n).primaryKeys(), i = [];
+		await r();
+		let f = /* @__PURE__ */ new Set();
+		for (let e of c) {
+			let n = l(e), r = e.legacy ? (await t.derived.toCollection().primaryKeys()).filter((e) => !e.startsWith(Uw)) : await t.derived.where("key").startsWith(n).primaryKeys(), i = [];
 			for (let e of r) {
 				let t = e.slice(n.length);
-				d.has(t) ? i.push(e) : d.add(t);
+				f.has(t) ? i.push(e) : f.add(t);
 			}
-			await l(e.legacy ? i.filter((e) => /^(parsed|pre|audit|alts|sources|tableRefs):/.test(e)) : i);
+			await u(e.legacy ? i.filter((e) => /^(parsed|pre|audit|alts|sources|tableRefs):/.test(e)) : i);
 		}
-		let f = /* @__PURE__ */ new Set();
-		for (let e of s) e.legacy || await u((await t.fileVersions.where("revision").equals(e.id).toArray()).filter((e) => {
+		let p = /* @__PURE__ */ new Set();
+		for (let e of c) e.legacy || await d((await t.fileVersions.where("revision").equals(e.id).toArray()).filter((e) => {
 			let t = `${e.source}|${e.path}`;
-			return f.has(t) ? !0 : (f.add(t), !1);
+			return p.has(t) ? !0 : (p.add(t), !1);
 		}).map((e) => [
 			e.revision,
 			e.source,
 			e.path
 		]));
 		for (let e of [...new Set(a.map((e) => e.codeSet))]) for (let n of ["", ":local"]) {
-			let i = /* @__PURE__ */ new Set();
-			for (let a of await o.kvScopes(e)) {
-				let e = (await t.kv.where("scope").equals(`${a}${n}`).toArray()).filter((e) => i.has(e.key) ? !0 : (i.add(e.key), !1));
-				for (let t of e) r.bytes += Ww(t.value);
-				await t.kv.bulkDelete(e.map((e) => [e.scope, e.key])), r.kv += e.length;
+			let r = /* @__PURE__ */ new Set();
+			for (let i of await s.kvScopes(e)) {
+				let e = (await t.kv.where("scope").equals(`${i}${n}`).toArray()).filter((e) => r.has(e.key) ? !0 : (r.add(e.key), !1));
+				for (let t of e) o.bytes += Ww(t.value);
+				await t.kv.bulkDelete(e.map((e) => [e.scope, e.key])), o.kv += e.length;
 			}
 		}
-		await e();
-		let p = async (e, n) => {
+		await r();
+		let m = async (e, n) => {
 			if (!n.size) return;
-			let i = (await t.fileVersions.where("source").equals(e).toArray()).filter((e) => n.has(e.path));
-			await u(i.map((e) => [
+			let r = (await t.fileVersions.where("source").equals(e).toArray()).filter((e) => n.has(e.path));
+			await d(r.map((e) => [
 				e.revision,
 				e.source,
 				e.path
 			]));
-			let a = (await t.files.where("source").equals(e).primaryKeys()).filter(([, e]) => n.has(e));
-			a.length && (await t.files.where("[source+path]").anyOf(a).each((e) => {
-				r.bytes += e.size;
-			}), await t.files.bulkDelete(a), r.legacyFiles += a.length);
-		}, m = await t.derived.toCollection().primaryKeys();
+			let i = (await t.files.where("source").equals(e).primaryKeys()).filter(([, e]) => n.has(e));
+			i.length && (await t.files.where("[source+path]").anyOf(i).each((e) => {
+				o.bytes += e.size;
+			}), await t.files.bulkDelete(i), o.legacyFiles += i.length);
+		}, h = await t.derived.toCollection().primaryKeys();
 		for (let e of a.filter((e) => e.kind === "official")) {
-			let n = await o.officialState(e.id);
+			let n = await s.officialState(e.id);
 			if (!n) continue;
 			if (n.status !== "installed") {
 				let n = await t.files.where("source").equals(e.id).primaryKeys(), r = /* @__PURE__ */ new Set([...(await t.fileVersions.where("source").equals(e.id).toArray()).map((e) => e.path), ...n.map(([, e]) => e)]);
-				await p(e.id, r), await l(m.filter((t) => (t.startsWith(Uw) ? t.split(":").slice(2) : t.split(":")).includes(e.id)));
+				await m(e.id, r), await u(h.filter((t) => (t.startsWith(Uw) ? t.split(":").slice(2) : t.split(":")).includes(e.id)));
 				continue;
 			}
 			if (n.books === null && n.sources === null && n.adventures === null) continue;
-			let a = await i.peek(e.codeSet);
-			if (!a) {
-				r.notes.push(`${e.id}：没有作者书目缓存，按书卸掉的文件这次没回收`);
+			let r = await i.peek(e.codeSet);
+			if (!r) {
+				o.notes.push(`${e.id}：没有作者书目缓存，按书卸掉的文件这次没回收`);
 				continue;
 			}
-			let s = new Set(n.books ?? a.books.map((e) => String(e.id))), c = new Set((n.sources ?? []).map((e) => e.toLowerCase())), u = new Set(n.adventures ?? []), d = /* @__PURE__ */ new Set();
-			for (let [e, t] of Object.entries(a.owners)) (t.kind === "book" && !s.has(t.id) || t.kind === "adventure" && !u.has(t.id) || t.kind === "source" && n.sources !== null && !t.sources.some((e) => c.has(e.toLowerCase()))) && d.add(e);
-			await p(e.id, d);
-			let f = [...a.books.map((e) => String(e.id)).filter((e) => !s.has(e)).map((t) => UC(e.id, "book", t)), ...a.adventures.map((e) => String(e.id)).filter((e) => !u.has(e)).map((t) => UC(e.id, a.adventureProp, t))], h = new Set(f);
-			await l(m.filter((e) => h.has(e.startsWith(Uw) ? e.split(":").slice(2).join(":") : e)));
+			let a = new Set(n.books ?? r.books.map((e) => String(e.id))), c = new Set((n.sources ?? []).map((e) => e.toLowerCase())), l = new Set(n.adventures ?? []), d = /* @__PURE__ */ new Set();
+			for (let [e, t] of Object.entries(r.owners)) (t.kind === "book" && !a.has(t.id) || t.kind === "adventure" && !l.has(t.id) || t.kind === "source" && n.sources !== null && !t.sources.some((e) => c.has(e.toLowerCase()))) && d.add(e);
+			await m(e.id, d);
+			let f = [...r.books.map((e) => String(e.id)).filter((e) => !a.has(e)).map((t) => UC(e.id, "book", t)), ...r.adventures.map((e) => String(e.id)).filter((e) => !l.has(e)).map((t) => UC(e.id, r.adventureProp, t))], p = new Set(f);
+			await u(h.filter((e) => p.has(e.startsWith(Uw) ? e.split(":").slice(2).join(":") : e)));
 		}
-		await e();
-		let h = new Set((await t.fileVersions.toArray()).filter((e) => e.gitSha).map((e) => `${e.source}|${e.path}|${e.gitSha}`)), g = (await t.fileContents.toCollection().primaryKeys()).filter(([e, t, n]) => !h.has(`${e}|${t}|${n}`));
-		return g.length && (await t.fileContents.where("[source+path+gitSha]").anyOf(g).each((e) => {
-			r.bytes += e.size;
-		}), await t.fileContents.bulkDelete(g)), r.fileContents += g.length, r;
+		await r();
+		let g = new Set((await t.fileVersions.toArray()).filter((e) => e.gitSha).map((e) => `${e.source}|${e.path}|${e.gitSha}`)), _ = (await t.fileContents.toCollection().primaryKeys()).filter(([e, t, n]) => !g.has(`${e}|${t}|${n}`));
+		if (_.length && (await t.fileContents.where("[source+path+gitSha]").anyOf(_).each((e) => {
+			o.bytes += e.size;
+		}), await t.fileContents.bulkDelete(_)), o.fileContents += _.length, e.kernelOfficial) {
+			await r();
+			let n = await e.kernelOfficial(), i = [];
+			await t.derived.where("key").startsWith("kc:").each((e) => {
+				let t = e.value;
+				t?.scope?.official !== n && (i.push(e.key), o.bytes += t?.z?.byteLength ?? Ww(e.value));
+			}), i.length && await t.derived.bulkDelete(i), o.kernelCache = i.length;
+		}
+		return o;
 	});
 }
 // src/library/brew-health.ts
@@ -23466,47 +23482,48 @@ var KD = () => new URL("../", "" + import.meta.url);
 function qD(e) {
 	let t = e.pluginRoot ?? KD();
 	bw(t);
-	let n = e.container ?? (() => document.body), r = new vS(e.libraryDbName), o = new ZS(r), s = new ES({
+	let n = e.container ?? (() => document.body), r = new vS(e.libraryDbName), o = new ZS(r), s = () => {}, l = new ES({
 		db: r,
-		revisions: o
-	}), l = o.ensureLegacy().then(() => void 0), u = new aC({
+		revisions: o,
+		onPublished: () => s()
+	}), u = o.ensureLegacy().then(() => void 0), d = new aC({
 		db: r,
 		ready: o.ensureLegacy()
-	}), d = (e, i = {}) => $C({
+	}), f = (e, i = {}) => $C({
 		codeSet: e,
 		pluginRoot: t,
 		container: n(),
 		handlers: XC({
 			codeSet: e,
 			db: r,
-			files: u,
+			files: d,
 			allowNetwork: () => !1,
 			...i.kvScope ? { kvScope: i.kvScope } : {},
 			...i.view ? { view: i.view } : {},
 			...i.filterIndex === !1 ? { filterIndex: !1 } : {}
 		})
-	}), f = null, p = async (e, t, n) => {
-		if (!f) return null;
+	}), p = null, m = async (e, t, n) => {
+		if (!p) return null;
 		let r = [];
-		for (let i of [...new Set(e)]) r.push(await f.run({
+		for (let i of [...new Set(e)]) r.push(await p.run({
 			codeSet: i,
 			signal: t,
 			onProgress: n
 		}));
 		return r;
-	}, m = new ED(async (e) => f?.run({ codeSet: e }) ?? null), h = new dC(r), g = new JE({
+	}, h = new ED(async (e) => p?.run({ codeSet: e }) ?? null), g = new dC(r), _ = new JE({
 		db: r,
 		revisions: o,
-		operations: s,
-		openFrame: d,
-		onDataChanged: async (e) => m.trigger(e),
-		onLog: h.sink()
-	}), _ = new LD({
+		operations: l,
+		openFrame: f,
+		onDataChanged: async (e) => h.trigger(e),
+		onLog: g.sink()
+	}), v = new LD({
 		db: r,
 		view: () => o.published(),
 		localFrame: async (e) => {
 			let t = await o.published();
-			return d(e, {
+			return f(e, {
 				view: t,
 				filterIndex: !1
 			});
@@ -23520,7 +23537,7 @@ function qD(e) {
 				handlers: XC({
 					codeSet: e,
 					db: r,
-					files: u,
+					files: d,
 					allowNetwork: () => !0,
 					kvScope: i,
 					view: c,
@@ -23533,19 +23550,19 @@ function qD(e) {
 				})
 			});
 		}
-	}), v = new jC(r), y = new fT(g, v), b = new qT(g, r, _, y), x = new gw(g), S = new qC({
+	}), y = new jC(r), b = new fT(_, y), x = new qT(_, r, v, b), S = new gw(_), C = new qC({
 		db: r,
 		revisions: o,
-		files: u,
-		directory: _,
-		startOfficial: (e, t) => E.startOfficial(e, t)
-	}), C = new YC(g), w = new uT(g, x), T = new tE(g, b, r, (e) => w.counterpart(e)), E = new QE({
+		files: d,
+		directory: v,
+		startOfficial: (e, t) => D.startOfficial(e, t)
+	}), w = new YC(_), T = new uT(_, S), E = new tE(_, x, r, (e) => T.counterpart(e)), D = new QE({
 		db: r,
 		revisions: o,
-		operations: s,
-		files: u,
-		openFrame: (e, t) => d(e, { view: t }),
-		onLog: h.sink(),
+		operations: l,
+		files: d,
+		openFrame: (e, t) => f(e, { view: t }),
+		onLog: g.sink(),
 		onDiagnostic: async (e, t) => {
 			await r.derived.put({
 				key: `audit:last-failed:${e}`,
@@ -23555,11 +23572,11 @@ function qD(e) {
 			});
 		},
 		onPublished: (e, t) => {
-			g.retire(t), b.reset();
+			_.retire(t), x.reset();
 		},
 		planOfficial: async (e, t, n) => {
-			let r = i(e), a = await _.get(r.codeSet);
-			return RS(await u.fileList(r, n), a.owners, {
+			let r = i(e), a = await v.get(r.codeSet);
+			return RS(await d.fileList(r, n), a.owners, {
 				sources: t.sources ?? null,
 				books: t.books ?? null,
 				adventures: t.adventures ?? null
@@ -23572,147 +23589,147 @@ function qD(e) {
 			});
 		},
 		precompute: async (e, t, n, r) => {
-			let a = await p([i(e).codeSet], n, r);
-			return await g.warmEnglishPairs(e, t), a;
+			let a = await m([i(e).codeSet], n, r);
+			return await _.warmEnglishPairs(e, t), a;
 		}
 	});
-	l = l.then(() => E.restore()).then(() => void 0);
-	let D = cC(o, g);
-	f = new TD({
+	u = u.then(() => D.restore()).then(() => void 0);
+	let O = cC(o, _);
+	p = new TD({
 		pluginRoot: t,
-		files: u,
-		scoped: b,
+		files: d,
+		scoped: x,
 		db: r,
 		revisions: o,
-		dataVersion: D,
+		dataVersion: O,
 		container: n
 	});
-	let O = null, ee = new CD({
+	let ee = null, te = new CD({
 		pluginRoot: t,
-		files: u,
-		scoped: b,
+		files: d,
+		scoped: x,
 		revisions: o,
 		container: n,
 		cache: {
 			db: r,
-			dataVersion: D
+			dataVersion: O
 		},
-		hasKernel: async (e) => !!(O && await O.read(e)),
+		hasKernel: async (e) => !!(ee && await ee.read(e)),
 		campaignOf: async (t) => {
 			let n = await e.campaign.getWorkspace(t);
 			if (!n) throw new Z("E_NO_WORKSPACE", "还没有当前战役");
-			let r = O ? await O.read(t) : null;
+			let r = ee ? await ee.read(t) : null;
 			if (!r) throw new Z("E_NO_KERNEL", "这个战役还没有绑定结算内核");
 			return {
 				rule: r.rule,
-				library: await O.libraryOf(t),
+				library: await ee.libraryOf(t),
 				title: n.ownerLabel
 			};
 		}
 	});
-	O = new nS({
+	ee = new nS({
 		db: e.db,
 		campaign: e.campaign,
 		rules: e.rules,
 		now: e.now,
-		checkRefs: oC(b),
+		checkRefs: oC(x),
 		suggestDownloads: (e) => HD({
-			brewPacks: ne,
-			directory: _,
+			brewPacks: re,
+			directory: v,
 			revisions: o
 		}, e),
-		currentVersion: D,
-		currentOverrides: sC(b),
-		mapRef: (e) => ee.mapRef(e),
-		compactActors: (e, t) => ee.compact(e, t),
+		currentVersion: O,
+		currentOverrides: sC(x),
+		mapRef: (e) => te.mapRef(e),
+		compactActors: (e, t) => te.compact(e, t),
 		undoLimit: async () => (await cb(e.db)).undoLimit,
-		onLog: h.sink()
+		onLog: g.sink()
 	});
-	let te = new fb({
-		files: u,
-		directory: _,
+	let ne = new fb({
+		files: d,
+		directory: v,
 		codeSets: hb
-	}), ne = new iw(g), re = new cw({
-		startOfficial: (e, t) => E.startOfficial(e, t),
-		startAdventure: (e, t) => E.startAdventure(e, t),
+	}), re = new iw(_), ie = new cw({
+		startOfficial: (e, t) => D.startOfficial(e, t),
+		startAdventure: (e, t) => D.startAdventure(e, t),
 		officialState: async (e) => (await o.published()).officialState(e),
-		directoryOf: async (e) => await _.peek(e) ?? await _.get(e).catch((t) => (console.warn("[trpg-assistant] 另一种语言的书目取不到，按同书号照下", e, t), null)),
-		brewCatalog: (e) => x.catalog(e),
-		brewAddUrl: (e, t, n) => g.brewAddUrl(e, t, n),
-		brewInstallSources: (e, t) => g.brewInstallSources(e, t),
-		brewInstalledUrls: async (e) => new Set((await ne.list(e)).flatMap((e) => e.url ? [e.url] : []))
-	}), ie = {
-		ready: l,
+		directoryOf: async (e) => await v.peek(e) ?? await v.get(e).catch((t) => (console.warn("[trpg-assistant] 另一种语言的书目取不到，按同书号照下", e, t), null)),
+		brewCatalog: (e) => S.catalog(e),
+		brewAddUrl: (e, t, n) => _.brewAddUrl(e, t, n),
+		brewInstallSources: (e, t) => _.brewInstallSources(e, t),
+		brewInstalledUrls: async (e) => new Set((await re.list(e)).flatMap((e) => e.url ? [e.url] : []))
+	}), ae = {
+		ready: u,
 		currentView: () => o.published(),
 		revisions: o,
-		operations: s,
+		operations: l,
 		db: r,
-		files: u,
-		service: g,
-		scoped: b,
-		documents: v,
-		links: y,
+		files: d,
+		service: _,
+		scoped: x,
+		documents: y,
+		links: b,
 		images: {
 			urls: c,
-			token: async (e, t, n) => (await g.frameOf(e)).call("tokenPath", t, n)
+			token: async (e, t, n) => (await _.frameOf(e)).call("tokenPath", t, n)
 		},
-		sorting: C,
-		logs: h,
-		updates: S,
-		counterparts: w,
+		sorting: w,
+		logs: g,
+		updates: C,
+		counterparts: T,
 		uninstallOfficial: (e) => kw({
 			db: r,
 			revisions: o,
-			operations: s,
-			tasks: E,
+			operations: l,
+			tasks: D,
 			afterDelete: async (e, t) => {
-				t && g.retire(t), b.reset();
+				t && _.retire(t), x.reset();
 			}
 		}, e),
-		brewPacks: ne,
-		downloads: re,
-		brewPairs: x,
-		custom: T,
-		tasks: E,
-		directory: _,
+		brewPacks: re,
+		downloads: ie,
+		brewPairs: S,
+		custom: E,
+		tasks: D,
+		directory: v,
 		packHealth: (e, t) => RD({
-			brewPacks: ne,
-			directory: _,
+			brewPacks: re,
+			directory: v,
 			revisions: o
 		}, e, t),
 		brewDependencyPreview: (e, t) => zD({
-			frame: (e) => g.frameOf(e),
-			directory: _,
+			frame: (e) => _.frameOf(e),
+			directory: v,
 			revisions: o
 		}, e, t),
 		suggestDownloads: (e) => HD({
-			brewPacks: ne,
-			directory: _,
+			brewPacks: re,
+			directory: v,
 			revisions: o
 		}, e),
 		estimate: (e, t) => new kD({
 			db: r,
-			files: u,
-			directory: _,
+			files: d,
+			directory: v,
 			revisions: o
 		}).estimate(e, t),
-		prefetch: te,
-		precompute: f,
-		precomputeQueue: m,
-		dataVersion: D
-	}, ae = new PD({
+		prefetch: ne,
+		precompute: p,
+		precomputeQueue: h,
+		dataVersion: O
+	}, oe = new PD({
 		campaign: e.campaign,
-		kernelSave: O,
+		kernelSave: ee,
 		rules: e.rules,
 		corePacks: () => GD({ pluginRoot: t }),
-		library: ie
-	}), oe = {
+		library: ae
+	}), se = {
 		library: {
-			exportFiles: () => T.exportBackup(),
-			importFiles: (e) => T.importBackup(e)
+			exportFiles: () => E.exportBackup(),
+			importFiles: (e) => E.importBackup(e)
 		},
-		checkRefs: (t) => b.fetch(Jb(e.rules.list()[0]?.id ?? "dnd5e2014", hb[0]), t)
-	}, se = (e) => a.find((t) => t.kind === "brew" && t.codeSet === e)?.id ?? `${e}-brew`, ce = async (t, n) => {
+		checkRefs: (t) => x.fetch(Jb(e.rules.list()[0]?.id ?? "dnd5e2014", hb[0]), t)
+	}, ce = (e) => a.find((t) => t.kind === "brew" && t.codeSet === e)?.id ?? `${e}-brew`, le = async (t, n) => {
 		if (n.kind === "official") {
 			let e = n.setIds ?? [n.setId], r = await Promise.all(e.map((e) => t.officialState(e)));
 			if (r.some((e) => e?.status !== "installed")) throw Error("官方资料已经不在当前版本里，请刷新后再预览");
@@ -23725,9 +23742,9 @@ function qD(e) {
 		for (let e of a.filter((e) => e.kind === "official")) if ((await t.officialState(e.id))?.status === "installed" && !(o && (n.setIds ?? [n.setId]).includes(e.id))) for (let n of await Ow(t, e.id)) i.has(n.toLowerCase()) || r.add(n.toLowerCase());
 		return cT({
 			db: e.db,
-			manage: b.manage,
-			brewPacks: ne,
-			brewSetOf: se,
+			manage: x.manage,
+			brewPacks: re,
+			brewSetOf: ce,
 			revision: t.id,
 			officialSources: r,
 			officialHashes: async (e, n) => {
@@ -23742,104 +23759,111 @@ function qD(e) {
 				return i;
 			}
 		}, n);
-	}, le = (e) => o.published().then((t) => ce(t, e)), ue = async (e) => {
-		let t = i(e.target.setId), n = await s.begin({
+	}, ue = (e) => o.published().then((t) => le(t, e)), de = async (e) => {
+		let t = i(e.target.setId), n = await l.begin({
 			kind: "remove",
 			set: e.target.setId,
 			codeSet: t.codeSet
 		});
 		try {
-			let t = await ce(n.base, e.target);
+			let t = await le(n.base, e.target);
 			if (t.plan.fingerprint !== e.plan.fingerprint) throw Error("资料或引用已经变化，请重新预览删除影响");
 			if (e.target.kind === "brew") {
-				let t = await ne.list(e.target.setId, n.base), r = e.target.docIdLocals.find((e) => !t.some((t) => t.docIdLocal === e));
+				let t = await re.list(e.target.setId, n.base), r = e.target.docIdLocals.find((e) => !t.some((t) => t.docIdLocal === e));
 				if (r) throw Error(`这个自制包已经不存在：${r}`);
 			}
 			let i = {
 				db: r,
 				revisions: o,
-				operations: s,
-				tasks: E,
-				directory: _,
-				brewSetOf: se,
-				removeBrews: (e, t, n) => g.deleteBrewsInView(t, n, e),
+				operations: l,
+				tasks: D,
+				directory: v,
+				brewSetOf: ce,
+				removeBrews: (e, t, n) => _.deleteBrewsInView(t, n, e),
 				afterDelete: async (e, t) => {
-					t && g.retire(t), b.reset();
+					t && _.retire(t), x.reset();
 				}
 			};
 			return e.target.kind === "official" ? e.target.bookIds?.length || e.target.bookSources?.length || e.target.adventureIds?.length ? await Mw(i, {
 				...e.target,
 				removeBrews: t.removeTogether
-			}, n) : await kw(i, e.target.setIds ?? [e.target.setId], n) : await g.brewDelete(e.target.setId, t.removeTogether.length ? t.removeTogether : e.target.docIdLocals, n);
+			}, n) : await kw(i, e.target.setIds ?? [e.target.setId], n) : await _.brewDelete(e.target.setId, t.removeTogether.length ? t.removeTogether : e.target.docIdLocals, n);
 		} catch (e) {
-			throw await s.abort(n, e), e;
+			throw await l.abort(n, e), e;
 		}
-	}, de = async (e) => {
-		let t = await o.published(), n = await Iw(t, x, e);
-		return Lw(n, await Promise.all(n.map((e) => ce(t, e))));
-	}, fe = () => Gw({
+	}, fe = async (e) => {
+		let t = await o.published(), n = await Iw(t, S, e);
+		return Lw(n, await Promise.all(n.map((e) => le(t, e))));
+	}, pe = () => Gw({
 		db: r,
 		revisions: o,
-		operations: s,
-		directory: _
-	}), pe = async (e) => {
-		let t = await ue(e);
-		return await me(), t;
-	}, me = async () => {
+		operations: l,
+		directory: v,
+		kernelOfficial: async () => (await O()).official
+	}), me;
+	s = () => {
+		clearTimeout(me), me = setTimeout(() => {
+			D.list().some((e) => e.status === "running" || e.status === "paused") ? s() : ge();
+		}, 3e3);
+	};
+	let he = async (e) => {
+		let t = await de(e);
+		return await ge(), t;
+	}, ge = async () => {
 		try {
-			return await fe();
+			return await pe();
 		} catch (e) {
-			return h.sink()({
+			return g.sink()({
 				level: "warn",
 				source: "library",
 				kind: "reclaim",
 				message: `回收空间没有成功：${e instanceof Error ? e.message : String(e)}`
 			}), null;
 		}
-	}, he = async (e) => Hw({
-		files: u,
-		directory: _,
-		brewPairs: x
-	}, await o.published(), e), ge = (e) => Rw({
-		impactAt: ce,
-		operations: s,
-		brewSetOf: se,
+	}, _e = async (e) => Hw({
+		files: d,
+		directory: v,
+		brewPairs: S
+	}, await o.published(), e), ve = (e) => Rw({
+		impactAt: le,
+		operations: l,
+		brewSetOf: ce,
 		removeParts: (e, t) => jw({
 			db: r,
 			revisions: o,
-			operations: s,
-			tasks: E,
-			directory: _,
-			brewSetOf: se,
-			removeBrews: (e, t, n) => g.deleteBrewsInView(t, n, e),
+			operations: l,
+			tasks: D,
+			directory: v,
+			brewSetOf: ce,
+			removeBrews: (e, t, n) => _.deleteBrewsInView(t, n, e),
 			afterDelete: async (e, t) => {
-				t && g.retire(t), b.reset();
+				t && _.retire(t), x.reset();
 			}
 		}, e, t)
 	}, e);
 	return {
-		library: ie,
-		kernel: ee,
-		kernelSave: O,
-		starter: ae,
-		transfer: oe,
-		removalImpact: le,
-		removalExecute: pe,
-		removalImpactMany: de,
+		library: ae,
+		kernel: te,
+		kernelSave: ee,
+		starter: oe,
+		transfer: se,
+		removalImpact: ue,
+		removalExecute: he,
+		removalImpactMany: fe,
 		removalExecuteMany: async (e) => {
 			let t;
 			try {
-				t = await ge(e);
+				t = await ve(e);
 			} catch (e) {
-				throw e.done?.length && await me(), e;
+				throw e.done?.length && await ge(), e;
 			}
 			return {
 				...t,
-				reclaim: await me()
+				reclaim: await ge()
 			};
 		},
-		removalSizes: he,
-		reclaim: fe
+		removalSizes: _e,
+		reclaim: pe
 	};
 }
 // src/core/db.ts
