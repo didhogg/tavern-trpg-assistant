@@ -2,6 +2,7 @@
 import { computed, nextTick, ref } from 'vue'
 import { SAVE_NAME_MAX, SAVE_NOTE_MAX, type SaveSummary } from '../../schemas/campaign'
 import { formatTime, summaryLine } from '../format'
+import Icon from '../kit/Icon.vue'
 import MoreMenu, { type MenuItem } from '../kit/MoreMenu.vue'
 
 /** 战役卡片里的一行存档：左对齐、不缩进；当前存档用圆角高亮外框；父子关系用文字"来自「…」"表达。 */
@@ -70,7 +71,7 @@ function commitNote(): void {
   <li :data-current="current" :data-testid="`save-${name}`">
     <div class="trpg-saves__main">
       <div class="trpg-saves__top">
-        <input v-if="renaming" ref="nameInput" v-model="draft" class="trpg-input trpg-saves__rename" :maxlength="SAVE_NAME_MAX" aria-label="存档名" @keydown.enter.prevent="commitRename" @keydown.esc.stop.prevent="renaming = false" @blur="onBlur" />
+        <template v-if="renaming"><input ref="nameInput" v-model="draft" class="trpg-input trpg-saves__rename" :maxlength="SAVE_NAME_MAX" aria-label="存档名" @keydown.enter.prevent="commitRename" @keydown.esc.stop.prevent="renaming = false" @blur="onBlur" /><span v-if="renaming" class="trpg-saves__renamebtns" @click.prevent.stop><button class="trpg-icon-btn" type="button" aria-label="确定改名" data-testid="rename-ok" @mousedown.prevent @click.prevent.stop="commitRename"><Icon name="check" :size="16" /></button><button class="trpg-icon-btn" type="button" aria-label="取消改名" data-testid="rename-cancel" @mousedown.prevent @click.prevent.stop="renaming = false"><Icon name="x" :size="16" /></button></span></template>
         <b v-else>{{ title }}</b>
         <span v-if="current" class="trpg-badge" data-tone="primary">当前</span>
       </div>

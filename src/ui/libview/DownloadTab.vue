@@ -195,7 +195,6 @@ async function reloadDirectory(): Promise<void> {
 }
 const MENU = [{ key: 'reload', label: '重新拉取书目' }]
 const pctText = (p: number | null | undefined): string => (p == null ? '' : ` ${Math.round(p * 100)}%`)
-const officialAll = computed(() => dl.items.find((i) => i.key === 'official') ?? null)
 const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.length} 本书` : '', pickedAdv.value.length ? `${pickedAdv.value.length} 本冒险` : ''].filter(Boolean).join('、') || '0 项')
 </script>
 
@@ -209,8 +208,7 @@ const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.
           <div class="lib-pills" role="group" aria-label="规则版本">
             <button v-for="o in RULES" :key="o.value" class="trpg-pill" type="button" :aria-pressed="rule === o.value" @click="rule = o.value">{{ o.label }}</button>
           </div>
-          <span v-if="officialAll?.status === 'running'" class="lib-muted lib-dling" role="status">整套下载中：{{ officialAll.stage }}{{ pctText(officialAll.pct) }}</span>
-          <span v-else-if="sets.some((x) => x.status === 'incomplete')" class="lib-muted">上次装了一半，已下好的文件会复用</span>
+          <span v-if="sets.some((x) => x.status === 'incomplete')" class="lib-muted">上次装了一半，已下好的文件会复用</span>
         </div>
       </template>
       <template #row="{ item: r }">

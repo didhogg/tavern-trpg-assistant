@@ -92,7 +92,10 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .trpg-saves__top { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; } .trpg-saves__top b { font-weight: var(--fw-semibold); overflow-wrap: anywhere; }
 .trpg-saves__meta { font-size: var(--fs-xs); color: var(--text2); overflow-wrap: anywhere; }
 .trpg-saves__end { display: flex; align-items: center; gap: var(--sp-1); flex: none; }
-.trpg-saves__rename { min-height: 32px; flex: 1; }
+.trpg-saves__rename { min-height: 32px; flex: 1; min-width: 0; }
+/* 改名：输入框右边【✓ 确定】【✕ 取消】；按下时不让输入框失焦（失焦会当成填完提交） */
+.trpg-saves__renamerow { display: flex; align-items: center; gap: var(--sp-1); min-width: 0; }
+.trpg-saves__renamebtns { display: inline-flex; flex: none; gap: 2px; }
 .trpg-saves__noteedit { display: grid; gap: var(--sp-2); margin-top: var(--sp-1); } .trpg-saves__noteactions { display: flex; justify-content: flex-end; gap: var(--sp-2); }
 .trpg-fold { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
 .trpg-fold > summary { display: flex; align-items: center; gap: var(--sp-2); min-height: var(--hit); padding: var(--sp-1) var(--sp-3); font-weight: var(--fw-semibold); cursor: pointer; list-style: none; }

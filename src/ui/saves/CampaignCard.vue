@@ -56,7 +56,7 @@ function commit(): void {
     <summary>
       <span class="trpg-camp__chev" aria-hidden="true"><Icon class="trpg-camp__chev-open" name="caret-down" :size="16" /><Icon class="trpg-camp__chev-closed" name="caret-right" :size="16" /></span>
       <span class="trpg-camp__name">
-        <input v-if="renaming" ref="input" v-model="draft" class="trpg-input trpg-saves__rename" :maxlength="SAVE_NAME_MAX" aria-label="战役名" @click.prevent.stop @keydown.enter.prevent="commit" @keydown.esc.stop.prevent="renaming = false" @blur="onBlur" />
+        <span v-if="renaming" class="trpg-saves__renamerow"><input ref="input" v-model="draft" class="trpg-input trpg-saves__rename" :maxlength="SAVE_NAME_MAX" aria-label="战役名" @click.prevent.stop @keydown.enter.prevent="commit" @keydown.esc.stop.prevent="renaming = false" @blur="onBlur" /><span v-if="renaming" class="trpg-saves__renamebtns" @click.prevent.stop><button class="trpg-icon-btn" type="button" aria-label="确定改名" data-testid="rename-ok" @mousedown.prevent @click.prevent.stop="commit"><Icon name="check" :size="16" /></button><button class="trpg-icon-btn" type="button" aria-label="取消改名" data-testid="rename-cancel" @mousedown.prevent @click.prevent.stop="renaming = false"><Icon name="x" :size="16" /></button></span></span>
         <span v-else>{{ name }}</span>
         <small>{{ sub }}</small>
       </span>
