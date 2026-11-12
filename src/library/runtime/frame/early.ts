@@ -12,6 +12,8 @@
 
   const errors: string[] = []
   g.__trpgFrameErrors = errors
+  // 只记写盘失败（storageFlush 用）；作者其他报错（例如断网时后台取索引失败）不算写盘失败
+  const storageErrors: string[] = []
   addEventListener('error', (e) => {
     errors.push(`${e.message} @ ${e.filename}:${e.lineno}`)
   })
@@ -31,7 +33,7 @@
   function memoryStorage(init: Record<string, string>, persist: boolean): Storage {
     const map = new Map<string, string>(Object.entries(init))
     const save = (body: Record<string, unknown>): void => {
-      if (persist) request(body).catch((e: unknown) => errors.push(`同步存储没存进插件：${String(e)}`))
+      if (persist) request(body).catch((e: unknown) => { const m = `同步存储没存进插件：${String(e)}`; errors.push(m); storageErrors.push(m) })
     }
     return {
       get length() { return map.size },
@@ -78,13 +80,16 @@
     // 同步存储的写入是“发出去就算”的；发布前要等它们真的落库（P5 T1）
     if (body.op === 'local-set' || body.op === 'local-remove' || body.op === 'kv-set' || body.op === 'kv-remove') {
       pendingWrites.add(p)
-      p.then(() => pendingWrites.delete(p), () => pendingWrites.delete(p))
+      p.then(() => pendingWrites.delete(p), (e: unknown) => {
+        pendingWrites.delete(p)
+        if (body.op === 'kv-set' || body.op === 'kv-remove') storageErrors.push(`作者存储没存进插件：${String(e)}`)
+      })
     }
     return p
   }
   g.__trpgStorageFlush = async (): Promise<string[]> => {
     await Promise.allSettled([...pendingWrites])
-    return [...errors]
+    return [...storageErrors]
   }
 
   // 作者在定义某个全局对象的那一刻，交给 patch 处理

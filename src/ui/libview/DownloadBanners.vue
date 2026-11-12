@@ -13,28 +13,34 @@ import ErrorBanner from './ErrorBanner.vue'
  * 多于一条时只露最新一条和「还有 N 条」（收起逻辑在 ToastHost）。
  */
 const app = useAppStore()
+const props = defineProps<{ libraryOpen: boolean }>()
 const dl = useDownloadsStore()
 const notices = useLibNoticeStore()
 const lib = useLibViewStore()
 
-function retry(i: DownloadItem): void {
-  const tasks = app.svc().backend.library.tasks
-  if (i.kind === 'official') { dl.markRetried(i.key); for (const set of i.sets ?? []) tasks.startOfficial(set) } else if (i.kind === 'adventure' && i.set && i.item) { dl.markRetried(i.key); tasks.startAdventure(i.set, i.item) } else dl.retryBrew(i.key)
-  dl.refresh()
+function retryOf(i: DownloadItem): (() => void) | undefined {
+  const registered = dl.retryOf(i)
+  if (registered) return registered
+  const { set, item } = i
+  if (i.kind !== 'adventure' || !set || !item) return undefined
+  return () => dl.rememberTask(app.svc().backend.library.tasks.startAdventure(set, item), i.label)
 }
 const reload = (): void => { void lib.refresh(app.svc()) }
 
 interface Row { key: string; text: string; what: string; actions: Array<{ label: string; run: () => void; testid?: string }>; dismiss?: () => void }
 const rows = computed<Row[]>(() => [
-  ...(lib.error ? [{ key: 'shelf', text: `书架这次没读出来${lib.shelf ? '（下面是上次的内容）' : ''}：${lib.error}`, what: '读取书架', actions: [{ label: '重试', run: reload }] }] : []),
-  ...(lib.shelf?.brewError ? [{ key: 'brew', text: `自制包读取失败：${lib.shelf.brewError}`, what: '读取自制包', actions: [{ label: '重试', run: reload }] }] : []),
-  ...(lib.shelf?.booksError ? [{ key: 'books', text: `书目读取失败：${lib.shelf.booksError}`, what: '读取书目', actions: [{ label: '重试', run: reload }] }] : []),
+  ...(props.libraryOpen && lib.error ? [{ key: 'shelf', text: `书架这次没读出来${lib.shelf ? '（下面是上次的内容）' : ''}：${lib.error}`, what: '读取书架', actions: [{ label: '重试', run: reload }] }] : []),
+  ...(props.libraryOpen && lib.shelf?.brewError ? [{ key: 'brew', text: `自制包读取失败：${lib.shelf.brewError}`, what: '读取自制包', actions: [{ label: '重试', run: reload }] }] : []),
+  ...(props.libraryOpen && lib.shelf?.booksError ? [{ key: 'books', text: `书目读取失败：${lib.shelf.booksError}`, what: '读取书目', actions: [{ label: '重试', run: reload }] }] : []),
   // 按发生先后排：后发生的后登记，宿主层把最后登记的放最上面，收起时露出的就是刚发生的那条
-  ...notices.notices.map((n) => ({ key: `n:${n.key}`, text: n.text, what: n.text.split('：')[0], actions: n.actions, dismiss: () => notices.dismiss(n.key) })),
-  ...dl.failedAll.map((i) => ({ key: `d:${i.key}`, text: `${i.label}下载没有成功：${i.error || '原因未知'}`, what: `下载${i.label}`, actions: [{ label: '重试', run: () => retry(i), testid: 'download-retry' }], dismiss: () => dl.dismiss(i.key) })),
+  ...notices.notices.filter((n) => props.libraryOpen || n.key.startsWith('download:')).map((n) => ({ key: `n:${n.key}`, text: n.text, what: n.text.split('：')[0], actions: n.actions, dismiss: () => notices.dismiss(n.key) })),
+  ...dl.failedAll.map((i) => {
+    const retry = retryOf(i)
+    return { key: `d:${i.taskId}`, text: `${i.label}下载没有完成，本次失败的资料未安装：${i.error || '原因未知'}`, what: `下载${i.label}`, actions: retry ? [{ label: '重试', run: () => { dl.dismiss(i); retry() }, testid: 'download-retry' }] : [], dismiss: () => dl.dismiss(i) }
+  }),
 ])
 </script>
 
 <template>
-  <ErrorBanner v-for="r in rows" :key="r.key" :text="r.text" :what="r.what" :actions="r.actions" :dismissible="!!r.dismiss" data-testid="lib-notice" @dismiss="r.dismiss?.()" />
+  <ErrorBanner v-for="r in rows" :key="r.key" :text="r.text" :what="r.what" :actions="r.actions" :dismissible="!!r.dismiss" :data-testid="r.key.startsWith('d:') ? 'download-banner' : 'lib-notice'" @dismiss="r.dismiss?.()" />
 </template>

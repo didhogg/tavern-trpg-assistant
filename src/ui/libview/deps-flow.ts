@@ -3,7 +3,7 @@
 import { markRaw } from 'vue'
 import type { Services } from '../../core/services'
 import type { DownloadDependencyPreview } from '../../library/pack-health'
-import { useDownloadsStore } from '../../stores/downloads'
+import { officialTaskLabel, useDownloadsStore } from '../../stores/downloads'
 import { useLibNoticeStore, type LibNotice } from '../../stores/libnotice'
 import { askChoice } from '../kit/choice'
 import DependencyPreviewPage, { type DependencyAnswer } from './DependencyPreviewPage.vue'
@@ -14,7 +14,7 @@ type Toast = { success: (m: string) => void; error: (m: string) => void }
 export async function downloadOfficialBook(s: Services, book: { set: string; id: string; name: string }): Promise<void> {
   const dl = useDownloadsStore()
   const started = await s.backend.library.downloads.official(book.set, { books: [book.id] })
-  for (const t of started.tasks) dl.rememberName(t.setId, book.id, book.name)
+  for (const t of started.tasks) dl.rememberTask(t.taskId, officialTaskLabel(t.setId, [book.name]), () => void downloadOfficialBook(s, book).catch((e: unknown) => console.error('[trpg-assistant] 下载失败', e)))
   dl.refresh()
 }
 
@@ -23,15 +23,17 @@ export async function installBrewSources(s: Services, setId: string, sources: re
   // 交给小窗的参数必须是普通数组：Vue 响应式代理过 postMessage 会复制失败（DataCloneError）
   const plain: string[] = [...sources].map(String)
   let error: string | null = null
-  await useDownloadsStore().trackBrew(`deps:${setId}:${plain.join(',')}`, label, async () => {
+  const task = await useDownloadsStore().trackBrew(s.backend.library.tasks, setId, `deps:${setId}:${plain.join(',')}`, label, async (_report, signal) => {
     let r
     // 中英一起：这一种装完，另一种语言配上的包也装（后端按自制目录配对）
-    try { r = (await s.backend.library.downloads.brewSources(setId, plain)).result } catch (e) {
+    try { r = (await s.backend.library.downloads.brewSources(setId, plain, signal)).result } catch (e) {
+      signal.throwIfAborted()
       console.error('[trpg-assistant] 补装依赖失败', e)
       error = e instanceof Error ? e.message : String(e)
-      if (isDependencyError(e)) { await reportLibError(s, e, `补装${label}`, toast); return null }
+      if (isDependencyError(e)) { await reportLibError(s, e, `补装${label}`, toast); return { reported: error } }
       return error
     }
+    signal.throwIfAborted()
     if (r.value.notFound.length) error = `自制仓库里找不到：${r.value.notFound.join('、')}`
     else if (!r.value.added.length) error = r.errors[0] ?? '没有装上任何包'
     // 真装上了才刷新；刷新放后台，不挡住结果提示（缺依赖时重读书架可能很慢）
@@ -40,7 +42,7 @@ export async function installBrewSources(s: Services, setId: string, sources: re
     toast.success(`已装好 ${r.value.added.length} 个依赖包`)
     return null
   }, () => void installBrewSources(s, setId, plain, label, toast, after))
-  return error
+  return task.status === 'cancelled' ? '已取消下载' : error
 }
 
 /**

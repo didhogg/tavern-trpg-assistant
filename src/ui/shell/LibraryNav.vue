@@ -1,30 +1,28 @@
 <script setup lang="ts">
-import { plainError } from '../libview/error-text'
-import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useDownloadsStore, type DownloadItem } from '../../stores/downloads'
 import { useUiStore } from '../../stores/ui'
-import { useToastStore } from '../../stores/toast'
+import { useLibNoticeStore } from '../../stores/libnotice'
 import Icon from '../kit/Icon.vue'
 import RingIcon from '../kit/RingIcon.vue'
-import { askConfirm } from '../kit/confirm'
+import type { InstallReport } from '../../library/install'
 
 /**
- * 侧栏 / 底部标签栏上的"库"：没有下载时只有图标；有下载 / 暂停 / 失败时，图标外一圈小环 + 数字。
+ * 侧栏 / 底部标签栏上的"库"：有下载时，图标外显示进度环和任务数。
  * 悬浮窗（P5 T6 B1）：挂到插件最外层（不被插件框裁掉，可以超出插件框、不超出屏幕），按图标位置定位；
- * 鼠标从图标移进悬浮窗不会消失；每一项按后端任务号暂停 / 继续 / 取消，失败可重试或逐项关掉；最后一项没了外环就消失。
+ * 鼠标从图标移进悬浮窗不会消失；按后端任务号取消；失败转入横幅。
  */
 const props = defineProps<{ variant: 'side' | 'tab'; labeled: boolean }>()
 const app = useAppStore()
 const dl = useDownloadsStore()
 const ui = useUiStore()
-const toast = useToastStore()
+const notices = useLibNoticeStore()
 const portalTarget = inject<HTMLElement | undefined>('portalTarget', undefined)
 const open = ref(false)
 const btn = ref<HTMLElement | null>(null)
 const pop = ref<HTMLElement | null>(null)
 const pos = ref<{ left: number; top: number }>({ left: 0, top: 0 })
-const items = computed(() => [...dl.running, ...dl.paused, ...dl.failed])
 let closeTimer: ReturnType<typeof setTimeout> | undefined
 
 /** 按图标在屏幕上的位置放悬浮窗：侧栏放在图标右边，底栏放在图标上方；超出屏幕就往回收。 */
@@ -77,25 +75,29 @@ watch(() => dl.count, (n) => { if (!n) open.value = false; else if (open.value) 
 onBeforeUnmount(() => { ro?.disconnect(); clearTimeout(closeTimer); document.removeEventListener('pointerdown', closeOutside, true); document.removeEventListener('keydown', onKey, true) })
 
 const tasks = () => app.svc().backend.library.tasks
-const ringOf = (i: DownloadItem): 'running' | 'spin' | 'warn' => (i.status === 'failed' ? 'warn' : i.pct === null ? 'spin' : 'running')
-function pause(i: DownloadItem): void { if (i.taskId && !tasks().pause(i.taskId)) toast.error('现在不能暂停这一项'); dl.refresh() }
-async function resume(i: DownloadItem): Promise<void> {
-  if (!i.taskId) return
-  try { const id = await tasks().resume(i.taskId); if (id) dl.rememberTask(id, i.label) } catch (e) { console.error('[trpg-assistant] 继续下载失败', e); toast.error(e instanceof Error ? e.message : '继续下载没有成功') }
-  dl.refresh()
-}
+const cancelling = ref(new Set<string>())
 async function cancel(i: DownloadItem): Promise<void> {
-  if (!i.taskId) return
-  const ok = await askConfirm({ title: `取消下载《${i.label}》？`, message: '已经下好的文件会留着，之后重新下载可以接着用；书架保持现在的样子。', confirmLabel: '取消下载', cancelLabel: '继续下载', danger: true })
-  if (!ok) return
-  try { await tasks().cancel(i.taskId) } catch (e) { console.error('[trpg-assistant] 取消下载失败', e); toast.error('取消没有成功') }
-  dl.refresh()
+  const id = i.taskId
+  if (cancelling.value.has(id)) return
+  cancelling.value.add(id)
+  try {
+    await tasks().cancel(id)
+    const state = await tasks().wait(id)
+    const report = state.result as InstallReport | null
+    if (state.status === 'cancelled') {
+      const text = report?.publishable && !report.cancelled
+        ? `「${i.label}」已安装，已停止后续准备。`
+        : `已取消「${i.label}」未完成的下载。`
+      notices.show({ key: `download:cancel:${id}`, text, actions: [] })
+    }
+  } catch (e) {
+    const why = e instanceof Error ? e.message : String(e)
+    notices.show({ key: `download:cancel:${id}`, text: `取消「${i.label}」失败：${why}`, actions: [] })
+  } finally {
+    cancelling.value.delete(id)
+    dl.refresh()
+  }
 }
-function retry(i: DownloadItem): void {
-  if (i.kind === 'official' && i.key.startsWith('official-book:')) { if (!i.taskId || !dl.retryTask(i.taskId, i.key)) ui.go('library') } else if (i.kind === 'official') { dl.markRetried(i.key); for (const set of i.sets ?? []) tasks().startOfficial(set) } else if (i.kind === 'adventure' && i.set && i.item) { dl.markRetried(i.key); tasks().startAdventure(i.set, i.item) } else dl.retryBrew(i.key)
-  dl.refresh()
-}
-function clearFailed(): void { for (const i of dl.failed) dl.dismiss(i.key) }
 const klass = props.variant === 'side' ? 'trpg-nav' : 'trpg-tab'
 const pctText = (i: DownloadItem): string => (i.pct === null ? '' : `${Math.round(i.pct * 100)}%`)
 </script>
@@ -111,20 +113,13 @@ const pctText = (i: DownloadItem): string => (i.pct === null ? '' : `${Math.roun
   <Teleport :to="portalTarget ?? 'body'">
     <div v-if="open && dl.count" ref="pop" class="trpg-pop" role="dialog" aria-label="下载进度" data-testid="lib-pop" :style="{ left: `${pos.left}px`, top: `${pos.top}px` }" @pointerenter="show" @pointerleave="hideSoon" @focusout="onFocusOut">
       <h3>下载</h3>
-      <div v-for="i in items" :key="i.key" class="trpg-pop__row" :data-status="i.status" data-testid="lib-pop-row">
-        <span class="trpg-pop__ring"><RingIcon :state="ringOf(i)" :pct="i.pct ?? 0" :size="26" /></span>
-        <span class="trpg-pop__main" :title="i.status === 'failed' ? i.error ?? undefined : undefined"><b>{{ i.label }}</b><small>{{ i.status === 'failed' ? `失败：${plainError(i.error)}` : [i.stage, pctText(i)].filter(Boolean).join(' · ') }}</small></span>
+      <div v-for="i in dl.running" :key="i.key" class="trpg-pop__row" data-status="running" data-testid="lib-pop-row">
+        <span class="trpg-pop__ring"><RingIcon :state="i.pct === null ? 'spin' : 'running'" :pct="i.pct ?? 0" :size="26" /></span>
+        <span class="trpg-pop__main"><b>{{ i.label }}</b><small>{{ cancelling.has(i.taskId) ? '正在取消…' : [i.stage, pctText(i)].filter(Boolean).join(' · ') }}</small></span>
         <span class="trpg-pop__acts">
-          <template v-if="i.status === 'running' && i.taskId && i.key.startsWith('official-book:')"><button class="trpg-btn trpg-btn--small" type="button" @click="pause(i)">暂停</button></template>
-          <template v-if="i.status === 'paused'"><button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" @click="resume(i)">继续</button></template>
-          <button v-if="i.status !== 'failed' && i.taskId" class="trpg-icon-btn" type="button" :aria-label="`取消下载《${i.label}》`" title="取消下载" @click="cancel(i)"><Icon name="x" :size="14" /></button>
-          <template v-if="i.status === 'failed'">
-            <button class="trpg-btn trpg-btn--small" type="button" data-testid="pop-retry" @click="retry(i)">重试</button>
-            <button class="trpg-icon-btn" type="button" :aria-label="`关掉《${i.label}》这条失败`" title="关掉这一条" @click="dl.dismiss(i.key)"><Icon name="x" :size="14" /></button>
-          </template>
+          <button class="trpg-icon-btn" type="button" :disabled="cancelling.has(i.taskId)" :aria-label="`取消下载《${i.label}》`" title="取消下载" @click="cancel(i)"><Icon name="x" :size="14" /></button>
         </span>
       </div>
-      <div v-if="dl.failed.length > 1" class="trpg-pop__foot"><button class="trpg-btn trpg-btn--small" type="button" @click="clearFailed">清除失败项</button></div>
     </div>
   </Teleport>
 </template>

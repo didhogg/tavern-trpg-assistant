@@ -80,7 +80,7 @@ describe('startCampaign：按勾选的书下载（P5-5 §13 B3）', () => {
     await withDb(async (db) => {
       const { fake, starter } = await build(db)
       await starter.startCampaign({ ...INPUT, picks: [{ set: 'cn-official', book: null, source: 'Generic' }] })
-      expect(fake.officialOpts.map((x) => x.opts)).toEqual([{ books: null, sources: ['Generic'] }, { books: null, sources: ['Generic'] }])
+      expect(fake.officialOpts.map((x) => x.opts)).toEqual([{ books: [], sources: ['Generic'] }, { books: [], sources: ['Generic'] }])
     })
   })
   it('勾了空：这次不下载官方资料；不传：旧入口照旧整套装', async () => {

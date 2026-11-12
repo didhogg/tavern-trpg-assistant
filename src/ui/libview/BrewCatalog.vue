@@ -84,7 +84,7 @@ async function preview(rows: CatalogPair[], name: string): Promise<boolean> {
     return true
   } catch (e) {
     console.error('[trpg-assistant] 读取依赖失败', e)
-    for (const r of rows) await dl.trackBrew(`brew:${keyOf(r)}`, `自制包《${nameOf(r)}》`, async () => '读不到这个包的依赖（可能是网络问题），什么都没装', () => void download(r))
+    await reportLibError(app.svc(), e, `检查《${name}》的下载依赖`, toast, () => void downloadMany(rows))
     return false
   } finally { for (const r of rows) mark(preparing, keyOf(r), false) }
 }
@@ -108,20 +108,21 @@ async function install(r: CatalogPair): Promise<void> {
   if (busy.value.has(k)) return
   mark(busy, k, true)
   try {
-    await dl.trackBrew(`brew:${k}`, `自制包《${nameOf(r)}》`, async (report) => {
+    const [first] = filesOf(r)
+    await dl.trackBrew(app.svc().backend.library.tasks, first.setId, `brew:${k}`, `自制包《${nameOf(r)}》`, async (report, signal) => {
       const STAGE = { download: '下载文件（含依赖）', parse: '整理资料', publish: '放进书架' } as const
       // 中英一起：给这一行有的那种语言，后端按自制目录配上另一种语言一起装（core/paired-download.ts）。
       // 成败只看后端有没有抛错：没装上 / 中途断网 / 缺依赖都会抛（准备版本已作废，下了一半的东西不进书架）；
       // 作者在解析时报的零散提示不算失败（以前会把装好的包误判成失败）
-      const [first] = filesOf(r)
-      const res = await app.svc().backend.library.downloads.brewUrl(first.setId, first.url, (side, st, i, n) => report(`${r.zh && r.en ? `${langOf(side === 'self' ? first.setId : pairOf(first.setId))} · ` : ''}${STAGE[st]}`, i / n))
+      const res = await app.svc().backend.library.downloads.brewUrl(first.setId, first.url, (side, st, i, n) => report(`${r.zh && r.en ? `${langOf(side === 'self' ? first.setId : pairOf(first.setId))} · ` : ''}${STAGE[st]}`, i / n), signal)
+      signal.throwIfAborted()
       const wanted = res.added + res.failed.length
       const added = res.entries
       const failed = res.failed.map((f) => ({ side: langOf(f.setId), e: f.error }))
       await loadInstalled()
       void lib.refresh(app.svc()).catch((e: unknown) => console.error('[trpg-assistant] 下载后刷新书架失败', e))
       const depFail = failed.find((x) => (x.e as { name?: unknown })?.name === 'BrewDependencyError')
-      if (depFail) { await reportLibError(app.svc(), depFail.e, `下载《${nameOf(r)}》`, toast, () => void download(r)); return null }
+      if (depFail) { await reportLibError(app.svc(), depFail.e, `下载《${nameOf(r)}》`, toast, () => void download(r)); return { reported: (depFail.e as Error).message } }
       const why = (x: { e: unknown }): string => (x.e instanceof Error ? x.e.message : String(x.e))
       if (failed.length === wanted) return why(failed[0])
       if (failed.length) return `${failed.map((x) => x.side).join('、')}没有装好（另一边已装好）：${why(failed[0])}`

@@ -62,6 +62,14 @@ try {
   await page.screenshot({ path: join(profile, 'reincarnate.png') })
   await close()
 
+  // 作者标的骰子（ve-roller）画成骰子标签，不留成普通文字
+  await open('酸液飞溅', '法术')
+  const dice = await active().getByTestId('entry-author').locator('.lib-dice').count()
+  const leftover = await active().getByTestId('entry-author').locator('.ve-roller, .render-roller').count()
+  ok('法术正文里的骰子是骰子标签（酸液飞溅）', dice >= 2 && leftover === 0, { dice, leftover })
+  await page.screenshot({ path: join(profile, 'spell-dice.png') })
+  await close()
+
   // 传奇组怪物：巢穴动作 / 区域效应由作者整条渲染带出
   await open(samples.lg, '怪物')
   const mtxt = await active().getByTestId('entry-author').innerText()

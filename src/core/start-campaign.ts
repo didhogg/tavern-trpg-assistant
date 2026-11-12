@@ -141,19 +141,19 @@ export class CampaignStarter {
   }
 
   /** 勾选 → 一个数据集要装的书号 / 来源（和下载页按书下载同一种写法）。 */
-  private static selectionOf(picks: OfficialPick[]): { books: string[] | null; sources: string[] } {
+  private static selectionOf(picks: OfficialPick[]): { books: string[]; sources: string[] } {
     for (const p of picks) if (getSource(p.set).kind !== 'official') throw new TrpgError('E_BAD_CONTENT', `只能勾选官方资料：${p.set}`)
     const books = [...new Set(picks.flatMap((p) => (p.book ? [p.book] : [])))]
-    return { books: books.length ? books : null, sources: [...new Set(picks.map((p) => p.source))] }
+    return { books, sources: [...new Set(picks.map((p) => p.source))] }
   }
 
   /** 这个数据集已经装好了这些书 / 来源（来源不分大小写，和估算同一口径）。 */
-  private async installed(setId: string, sel: { books: string[] | null; sources: string[] } | null): Promise<boolean> {
+  private async installed(setId: string, sel: { books: string[]; sources: string[] } | null): Promise<boolean> {
     const view = await this.deps.library.revisions.published()
     const state = await view.officialState(setId)
     if (state?.status !== 'installed') return false
     if (!sel) return true
-    return (!sel.books || state.books === null || sel.books.every((b) => state.books!.includes(b)))
+    return (state.books === null || sel.books.every((b) => state.books!.includes(b)))
       && (state.sources === null || sel.sources.every((x) => state.sources!.some((y) => y.toLowerCase() === x.toLowerCase())))
   }
 
@@ -172,7 +172,7 @@ export class CampaignStarter {
     const sel = input.picks?.length ? CampaignStarter.selectionOf(input.picks) : null
     const each = <T>(v: T): Record<string, T> => Object.fromEntries(sets.map((id) => [id, v]))
     return new DownloadEstimator({ db, files, directory, revisions }).estimate({
-      sets, ...(sel ? { sources: each(sel.sources), ...(sel.books ? { books: each(sel.books) } : {}) } : {}), adventures: input.adventures,
+      sets, ...(sel ? { sources: each(sel.sources), books: each(sel.books) } : {}), adventures: input.adventures,
     }, opts)
   }
 

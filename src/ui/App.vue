@@ -3,6 +3,7 @@ import { provide } from 'vue'
 import type { StContext } from '../host/types'
 import { useUiStore } from '../stores/ui'
 import ToastHost from './kit/ToastHost.vue'
+import DownloadBanners from './libview/DownloadBanners.vue'
 import DiceTray from './shell/DiceTray.vue'
 import FloatingBall from './shell/FloatingBall.vue'
 import MainWindow from './shell/MainWindow.vue'
@@ -18,6 +19,7 @@ const ui = useUiStore()
     <FloatingBall />
     <MainWindow v-if="ui.windowOpen" />
     <DiceTray />
+    <DownloadBanners :library-open="ui.windowOpen && ui.page === 'library'" />
     <ToastHost />
   </div>
 </template>

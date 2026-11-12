@@ -59,7 +59,8 @@ async function updateWholeSet(s: Services, check: OfficialUpdateCheck, reason: s
   if (!ok) return
   try {
     const { task } = await s.backend.library.updates.apply(check.setId)
-    useDownloadsStore().rememberTask(task, `更新官方资料（${objs.length || 1} 项）`, () => void updateWholeSet(s, check, null, toast))
+    const label = objs.length ? `更新《${objs[0].name || objs[0].id}》${objs.length > 1 ? `等 ${objs.length} 项` : ''}` : '更新共用资料'
+    useDownloadsStore().rememberTask(task, label, () => void updateWholeSet(s, check, null, toast))
     toast.success('已开始更新，进度见【库】标志')
   } catch (e) {
     if (e instanceof OfficialUpdateCurrent) { useUpdatesStore().published(check.setId, check.latest); toast.info(e.message) }
@@ -74,12 +75,13 @@ export async function updateRow(s: Services, row: CatalogRow, toast: Toast): Pro
   const brew = store.brewOf(row.pack?.docIdLocal)
   if (brew) {
     const label = `更新《${row.name}》`
-    await dl.trackBrew(`update:${brew.docIdLocal}`, label, async (report) => {
+    await dl.trackBrew(s.backend.library.tasks, brew.setId, `update:${brew.docIdLocal}`, label, async (report, signal) => {
       report('下载新版并整理资料', null)
-      try { await s.backend.library.service.brewPull(brew.setId, [brew.docIdLocal]) } catch (e) {
-        if ((e as { name?: unknown })?.name === 'BrewDependencyError') { await reportLibError(s, e, label, toast, () => void updateRow(s, row, toast)); return null }
+      try { await s.backend.library.service.brewPull(brew.setId, [brew.docIdLocal], signal) } catch (e) {
+        if ((e as { name?: unknown })?.name === 'BrewDependencyError') { await reportLibError(s, e, label, toast, () => void updateRow(s, row, toast)); return { reported: (e as Error).message } }
         return e instanceof Error ? e.message : String(e)
       }
+      signal.throwIfAborted()
       store.done(brew.setId, brew.docIdLocal)
       toast.success(`《${row.name}》已更新`)
       return null
@@ -106,9 +108,9 @@ export async function updateAll(s: Services, toast: Toast): Promise<void> {
   for (const check of [...store.available]) await updateWholeSet(s, check, null, toast)
   for (const b of [...store.brew]) {
     const label = `更新《${(b.filename ?? b.docIdLocal).replace(/\.json$/, '')}》`
-    await useDownloadsStore().trackBrew(`update:${b.docIdLocal}`, label, async () => {
-      try { await s.backend.library.service.brewPull(b.setId, [b.docIdLocal]); store.done(b.setId, b.docIdLocal); return null } catch (e) {
-        if ((e as { name?: unknown })?.name === 'BrewDependencyError') { await reportLibError(s, e, label, toast); return null }
+    await useDownloadsStore().trackBrew(s.backend.library.tasks, b.setId, `update:${b.docIdLocal}`, label, async (_report, signal) => {
+      try { await s.backend.library.service.brewPull(b.setId, [b.docIdLocal], signal); signal.throwIfAborted(); store.done(b.setId, b.docIdLocal); return null } catch (e) {
+        if ((e as { name?: unknown })?.name === 'BrewDependencyError') { await reportLibError(s, e, label, toast); return { reported: (e as Error).message } }
         return e instanceof Error ? e.message : String(e)
       }
     })

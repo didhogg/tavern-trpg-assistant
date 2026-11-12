@@ -7,6 +7,7 @@ import { useDownloadsStore } from '../../stores/downloads'
 import { useModalStore } from '../../stores/modal'
 import { useToastStore } from '../../stores/toast'
 import { useUiStore } from '../../stores/ui'
+import { getSource } from '../../library/sources'
 import { errorText } from '../format'
 import Icon from '../kit/Icon.vue'
 import { buildRuleFamilies } from '../../rules/registry'
@@ -67,10 +68,13 @@ async function start(): Promise<void> {
     const owner = campaign.owner
     if (!owner) throw new Error('请先在酒馆中打开一个聊天')
     // 已下载的书默认在战役里看得见（B-32），勾选的下载完也看得见，所以不用再记加入 / 排除
+    for (const row of [...pickedOf('book'), ...pickedOf('adventure')]) {
+      const pair = getSource(row.set).pair
+      for (const set of pair ? [row.set, pair] : [row.set]) downloads.rememberName(set, row.id ?? row.source, row.name)
+    }
     const result = await campaign.startWith((s) => s.backend.starter.startCampaign({
       ...owner, ruleId: wizard.ruleId, name, note: wizard.note, codeSet: WIZARD_CODE_SET, ...picksInput(),
     }))
-    for (const a of pickedOf('adventure')) if (a.id) downloads.rememberName(a.set, a.id, a.name)
     downloads.refresh()
     void result.finished.then(({ errors }) => { if (errors.length) console.error('[trpg-assistant] 后台下载有问题', errors) })
     await app.refreshBackup()

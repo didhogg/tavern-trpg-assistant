@@ -12,11 +12,11 @@ import type { LibraryRevisionStore, LibraryView } from './revision'
 import { selectionFor } from './plan'
 import type { FileList } from './fetcher'
 
-export type TaskStatus = 'running' | 'paused' | 'done' | 'partial' | 'failed' | 'cancelled' | 'interrupted'
+export type TaskStatus = 'running' | 'done' | 'partial' | 'failed' | 'cancelled' | 'interrupted'
 
 export interface TaskState {
   id: string
-  kind: 'official' | 'adventure' | 'precompute'
+  kind: 'official' | 'adventure' | 'brew' | 'precompute'
   set: string
   /** 冒险编号（kind = adventure）。 */
   item: string | null
@@ -50,7 +50,7 @@ export interface TaskOptions {
   operations: LibraryOperations
   files: FileProvider
   /** 开一个只读本地、绑定到指定版本的作者小窗。 */
-  openFrame: (codeSet: string, view: LibraryView) => Promise<AuthorFrame>
+  openFrame: (codeSet: string, view: LibraryView, signal?: AbortSignal) => Promise<AuthorFrame>
   /** 拿到修改权后，按已装集合和目标提交生成作者计划。 */
   planOfficial?: (setId: string, opts: import('./plan').SelectionInput & { commit?: string; allSources?: boolean; knownAdventures?: string[]; installedSources?: string[]; signal?: AbortSignal; manifest?: FileList }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
   selectUpdate?: (setId: string, commit: string, selection: import('./official-update').OfficialUpdateSelection | undefined, base: LibraryView) => Promise<NonNullable<OfficialSetState['fileOverrides']> | null>
@@ -79,13 +79,11 @@ export const officialTaskKey = (opts: OfficialTaskOptions): string => [
 ].join(';')
 
 
-interface RunResult { result: TaskState['result']; status?: 'done' | 'partial' | 'cancelled' | 'paused'; revision?: string }
+interface RunResult { result: TaskState['result']; status?: 'done' | 'partial' | 'cancelled'; revision?: string }
 
 export class DownloadTasks {
   private readonly tasks = new Map<string, { state: TaskState; abort: AbortController; done: Promise<TaskState> }>()
   private readonly handles = new Map<string, OperationHandle>()
-  private readonly paused = new Set<string>()
-  private readonly officialOpts = new Map<string, OfficialTaskOptions>()
   private seq = 0
 
   constructor(private readonly opts: TaskOptions) {}
@@ -107,31 +105,15 @@ export class DownloadTasks {
   }
 
   async cancel(id: string): Promise<void> {
-    const task = this.tasks.get(id)
-    task?.abort.abort()
-    // 已暂停的任务早已停下（没有在跑的流程会把状态改掉）：这里直接标「已取消」，不能再继续（P5 T6）
-    if (task && task.state.status === 'paused') {
-      task.state.status = 'cancelled'
-      this.paused.delete(id)
-      this.officialOpts.delete(id)
-    }
+    this.tasks.get(id)?.abort.abort()
     await this.opts.operations.cancel(id)
   }
 
-  /** 在文件 / 解析边界暂停；已经完成的下载留在内容表，前缀版本作废。 */
-  pause(id: string): boolean {
-    const task = this.tasks.get(id)
-    if (!task || task.state.status !== 'running' || task.state.kind !== 'official') return false
-    this.paused.add(id)
-    return true
-  }
-
-  /** 继续：用原选择重新排队，已校验文件按内容哈希复用。 */
-  async resume(id: string): Promise<string | null> {
-    const task = this.tasks.get(id)
-    const opts = this.officialOpts.get(id)
-    if (!task || task.state.status !== 'paused' || !opts) return null
-    return this.startOfficial(task.state.set, opts)
+  stopDownloads(reason?: DOMException): void {
+    if (!reason) this.opts.operations.rememberPageExit()
+    for (const task of this.tasks.values()) {
+      if (task.state.kind !== 'precompute' && task.state.status === 'running') task.abort.abort(reason)
+    }
   }
 
   /** 启动时恢复未完成的操作：未发布的标中断，已经切了指針的照实际版本算完成。 */
@@ -169,6 +151,10 @@ export class DownloadTasks {
         state.error = msg(e)
         if (state.status === 'failed') this.opts.onLog?.({ level: 'error', source: set, kind: `task:${kind}`, message: state.error, detail: { item, progress: state.progress } })
       }
+      if (abort.signal.reason?.name === 'NetworkError' && (state.result as InstallReport | null)?.publishable !== true) {
+        state.status = 'failed'
+        state.error = msg(abort.signal.reason)
+      }
       if (state.convertError) this.opts.onLog?.({ level: 'warn', source: set, kind: 'task:convert', message: state.convertError })
       this.opts.onChange?.({ ...state })
       return { ...state }
@@ -186,9 +172,18 @@ export class DownloadTasks {
 
   /** 下载并安装一套官方数据（按书 / 全部）。 */
   startOfficial(setId: string, opts: OfficialTaskOptions = {}): string {
-    const id = this.start('official', setId, officialTaskKey(opts), (state, signal) => this.install(state, signal, opts))
-    this.officialOpts.set(id, opts)
-    return id
+    return this.start('official', setId, officialTaskKey(opts), (state, signal) => this.install(state, signal, opts))
+  }
+
+  /** 自制走同一任务队列、同一个取消信号；具体原件仍由作者的包管理器处理。 */
+  startBrew(setId: string, item: string, run: (signal: AbortSignal, report: (stage: string, pct: number | null) => void) => Promise<string | null>): string {
+    return this.start('brew', setId, item, async (state, signal) => {
+      const error = await run(signal, (stage, pct) => {
+        if (!signal.aborted) state.progress = { stage, done: pct ?? 0, total: pct === null ? 0 : 1 }
+      })
+      if (error) throw new Error(error)
+      return { result: null }
+    })
   }
 
   /** 冒险正文与它的来源、隐藏依赖按同一份安装计划准备。 */
@@ -249,7 +244,7 @@ export class DownloadTasks {
       const books = plan ? plan.books : selection.books
       report = await prepareOfficial({
         source, db: this.opts.db, files: this.opts.files, revisions: this.opts.revisions, operations: this.opts.operations, manifest, fileOverrides,
-        openFrame: (view) => this.opts.openFrame(source.codeSet, view), view: handle.target, plan: plan ?? undefined,
+        openFrame: (view) => this.opts.openFrame(source.codeSet, view, signal), view: handle.target, plan: plan ?? undefined,
         sources, books, adventures: plan ? plan.adventures : selection.adventures,
         setIndexes: async (indexes) => {
           sourceIndexes = indexes
@@ -257,15 +252,10 @@ export class DownloadTasks {
           return handle.target
         },
         signal, onProgress: (p) => { void this.progress(state, p) },
-        onCheckpoint: () => (this.paused.has(state.id) ? 'pause' : 'continue'),
       })
       if (report.cancelled) {
         await this.opts.operations.abort(handle, new Error('已取消'), 'cancelled')
         return { result: report, status: 'cancelled', revision: handle.target.id }
-      }
-      if (report.paused) {
-        await this.opts.operations.abort(handle, new Error('已暂停，继续时会复用已下载文件'), 'interrupted')
-        return { result: report, status: 'paused', revision: handle.target.id }
       }
       if (!report.publishable) {
         await this.opts.onDiagnostic?.(setId, report)
@@ -294,12 +284,11 @@ export class DownloadTasks {
       }
       return { result: report, status: report.settlementReady && !state.convertError ? 'done' : 'partial', revision: published.id }
     } catch (e) {
-      if (!report) await this.opts.onDiagnostic?.(setId, failedInstallReport(source, e))
+      if (!report && !signal.aborted) await this.opts.onDiagnostic?.(setId, failedInstallReport(source, e))
       await this.opts.operations.abort(handle, e)
       throw e
     } finally {
       this.handles.delete(state.id)
-      this.paused.delete(state.id)
     }
   }
 

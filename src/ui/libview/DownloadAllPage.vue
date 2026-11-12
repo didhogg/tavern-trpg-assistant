@@ -11,7 +11,7 @@ const adventures = ref(props.adventureCount > 0 && props.adventuresReady)
 
 <template>
   <div class="trpg-confirm" data-testid="download-all">
-    <p class="trpg-confirm__message">选要下载的范围。会在后台下载，进度见【库】标志，可以随时在那里暂停或取消；书架照常可用。</p>
+    <p class="trpg-confirm__message">选要下载的范围。下载时可以照常看书，在【库】标志上查看进度或取消。</p>
     <div class="trpg-confirm__scroll">
       <Checkbox v-model="books" :disabled="!bookCount">全部官方书<span class="lib-src">（还有 {{ bookCount }} 本没装）</span></Checkbox>
       <Checkbox v-model="adventures" :disabled="!adventureCount || !adventuresReady">全部冒险<span class="lib-src">（还有 {{ adventureCount }} 本没装{{ adventuresReady ? '' : '；先下载至少一本官方书才能下冒险' }}）</span></Checkbox>

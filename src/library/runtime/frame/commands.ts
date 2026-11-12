@@ -117,7 +117,7 @@ export async function frameErrors(): Promise<string[]> {
   return [...(A.__trpgFrameErrors as string[])]
 }
 
-/** 等作者同步 / 异步存储的迟到写入真的落库（P5 T1）；返回这期间作者报的错。 */
+/** 等作者同步 / 异步存储的迟到写入真的落库（P5 T1）；返回写盘失败的错（作者其他报错不算，见 frameErrors）。 */
 export async function storageFlush(): Promise<string[]> {
   const flush = A.__trpgStorageFlush as (() => Promise<string[]>) | undefined
   return flush ? flush() : []

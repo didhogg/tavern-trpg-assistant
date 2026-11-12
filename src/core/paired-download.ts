@@ -27,8 +27,8 @@ export interface PairedDownloadDeps {
   /** 某语言的作者书目（先用缓存，没有再联网；都取不到给 null）。 */
   directoryOf: (codeSet: string) => Promise<DirectoryLike | null>
   brewCatalog: (zhSetId: string) => Promise<{ rows: CatalogPair[] }>
-  brewAddUrl: (setId: string, url: string, onProgress?: BrewProgress) => Promise<{ value: unknown[] }>
-  brewInstallSources: (setId: string, sources: string[]) => Promise<InstallSourcesResult>
+  brewAddUrl: (setId: string, url: string, onProgress?: BrewProgress, signal?: AbortSignal) => Promise<{ value: unknown[] }>
+  brewInstallSources: (setId: string, sources: string[], signal?: AbortSignal) => Promise<InstallSourcesResult>
   /** 某个自制源已装的包的下载网址。 */
   brewInstalledUrls: (setId: string) => Promise<Set<string>>
 }
@@ -86,21 +86,31 @@ export class PairedDownloads {
   }
 
   /** 自制包（按目录里的文件网址）：这一种装完，再按中英目录配对装另一种语言的那个文件。两边各自成败，都写回。 */
-  async brewUrl(setId: string, url: string, onProgress?: PairedBrewProgress): Promise<PairedBrewResult> {
+  async brewUrl(setId: string, url: string, onProgress?: PairedBrewProgress, signal?: AbortSignal): Promise<PairedBrewResult> {
     const out: PairedBrewResult = { added: 0, entries: 0, failed: [], skipped: [] }
-    await this.run(out, setId, () => this.deps.brewAddUrl(setId, url, (...a) => onProgress?.('self', ...a)))
+    await this.run(out, setId, () => this.deps.brewAddUrl(setId, url, (...a) => onProgress?.('self', ...a), signal))
+    signal?.throwIfAborted()
     const pair = await this.partnerFiles(setId, (mine) => mine.urlDownload === url, out)
-    for (const p of pair) await this.run(out, p.setId, () => this.deps.brewAddUrl(p.setId, p.file.urlDownload, (...a) => onProgress?.('pair', ...a)))
+    for (const p of pair) {
+      signal?.throwIfAborted()
+      await this.run(out, p.setId, () => this.deps.brewAddUrl(p.setId, p.file.urlDownload, (...a) => onProgress?.('pair', ...a), signal))
+    }
+    signal?.throwIfAborted()
     return out
   }
 
   /** 自制依赖（按来源名补装）：这一种装完，再把目录里提供这些来源的文件的另一种语言版本装上。 */
-  async brewSources(setId: string, sources: string[]): Promise<PairedBrewResult & { result: InstallSourcesResult }> {
+  async brewSources(setId: string, sources: string[], signal?: AbortSignal): Promise<PairedBrewResult & { result: InstallSourcesResult }> {
     const out: PairedBrewResult = { added: 0, entries: 0, failed: [], skipped: [] }
-    const result = await this.deps.brewInstallSources(setId, sources)
+    const result = await this.deps.brewInstallSources(setId, sources, signal)
+    signal?.throwIfAborted()
     out.added++
     const pair = await this.partnerFiles(setId, (mine) => (Array.isArray(mine.sources) ? mine.sources : []).some((s) => sources.some((x) => same(x, s))), out)
-    for (const p of pair) await this.run(out, p.setId, () => this.deps.brewAddUrl(p.setId, p.file.urlDownload))
+    for (const p of pair) {
+      signal?.throwIfAborted()
+      await this.run(out, p.setId, () => this.deps.brewAddUrl(p.setId, p.file.urlDownload, undefined, signal))
+    }
+    signal?.throwIfAborted()
     return { ...out, result }
   }
 

@@ -14,7 +14,7 @@ export interface BrewContext {
   db: LibraryDatabase
   revisions: LibraryRevisionStore
   operations: LibraryOperations
-  openFrame: (codeSet: string, ctx?: { view?: LibraryView; kvScope?: string; filterIndex?: boolean }) => Promise<AuthorFrame>
+  openFrame: (codeSet: string, ctx?: { view?: LibraryView; kvScope?: string; filterIndex?: boolean; signal?: AbortSignal }) => Promise<AuthorFrame>
   frame: (codeSet: string, view?: LibraryView) => Promise<AuthorFrame>
   onDataChanged?: (codeSet: string) => Promise<void>
   onLog?: LogSink
@@ -28,12 +28,14 @@ const brewSource = (sourceId: string): SourceEntry => {
 }
 
 /** 自制装 / 改 / 删之后：在准备版本里重解析；旧版本数据不删。 */
-export async function afterBrewChange(ctx: BrewContext, s: SourceEntry, view: LibraryView): Promise<BrewParseReport> {
+export async function afterBrewChange(ctx: BrewContext, s: SourceEntry, view: LibraryView, signal?: AbortSignal): Promise<BrewParseReport> {
+  signal?.throwIfAborted()
   const report = await parseBrew({
     source: s, db: ctx.db, view,
-    openFrame: () => ctx.openFrame(s.codeSet, { view, filterIndex: true }),
-    openFrameIn: (scope) => ctx.openFrame(s.codeSet, { view, kvScope: scope, filterIndex: true }),
+    openFrame: () => ctx.openFrame(s.codeSet, { view, filterIndex: true, signal }),
+    openFrameIn: (scope) => ctx.openFrame(s.codeSet, { view, kvScope: scope, filterIndex: true, signal }),
   })
+  signal?.throwIfAborted()
   await invalidatePrecompute(ctx.db, officialSourceOf(s.codeSet).id, ['search'], view)
   return report
 }
@@ -60,7 +62,10 @@ export function assertPublishable(s: SourceEntry, report: BrewParseReport): void
 
 export async function prepareBrewDelete(ctx: BrewContext, sourceId: string, docIdLocals: string[], view: LibraryView): Promise<{ value: WithErrors<number>; parse: BrewParseReport; packs: ReturnType<typeof packsOf> }> {
   const s = brewSource(sourceId)
-  const value = await (await ctx.frame(s.codeSet, view)).call('brewDelete', docIdLocals)
+  const frame = await ctx.frame(s.codeSet, view)
+  const value = await frame.call('brewDelete', docIdLocals)
+  const errors = await frame.call('storageFlush')
+  if (errors.length) throw new Error(errors[0])
   const parse = await afterBrewChange(ctx, s, view)
   // 官方单本卸载连带删包也走这里：同样先检查，不能发布被清空的自制库
   assertPublishable(s, parse)
@@ -130,49 +135,58 @@ export async function mutateAuthor<T>(ctx: BrewContext, codeSet: string, kind: s
 /** 自制包下载的真实阶段（P5 T6 B1，驾驶员批准）：作者一次调用下完主文件和依赖，中间拆不开，所以只有这三段。 */
 export type BrewProgress = (stage: 'download' | 'parse' | 'publish', step: number, total: number) => void
 
-export async function brewAddUrl(ctx: BrewContext, sourceId: string, url: string, onProgress?: BrewProgress): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
+/** 下载、补依赖、更新共用准备版本和关闭小窗的时机，作者入口只负责取各自的资料。 */
+async function downloadBrew<T>(
+  ctx: BrewContext, sourceId: string, kind: string, label: string,
+  load: (frame: AuthorFrame) => Promise<T>, hasContent: (value: T) => boolean, signal?: AbortSignal, onProgress?: BrewProgress,
+): Promise<T & { parse: BrewParseReport | null; view?: string }> {
   const s = brewSource(sourceId)
-  const handle = await ctx.operations.begin({ kind: 'brew-add', set: s.id, codeSet: s.codeSet })
+  const handle = await ctx.operations.begin({ kind, set: s.id, codeSet: s.codeSet, signal })
   const step = async (stage: 'download' | 'parse' | 'publish', i: number): Promise<void> => {
+    signal?.throwIfAborted()
     onProgress?.(stage, i, 3)
     await ctx.operations.progress(handle, { stage: `brew-${stage}`, done: i, total: 3 })
   }
   try {
     await step('download', 0)
-    const r = await withTimeout(async () => (await ctx.frame(s.codeSet, handle.target)).call('brewAddUrl', url), '下载自制包')
-    // 作者网络出错时自己吞掉错误、什么都不装（返回空）：这时作废这次准备版本（下了一半的东西不进书架），报明确的失败给界面出横幅
-    if (!r.value.length) {
-      // 作者的原始报错（带地址、状态码）只进日志页，横幅里只说人话
-      ctx.onLog?.({ level: 'error', source: s.id, kind: 'brew-add', message: `下载没有完成：${url}`, detail: r.errors })
-      throw new Error('下载没有完成（网络中断或文件取不到），已丢弃这次下了一半的内容，原有内容没有变化')
+    const frame = await ctx.openFrame(s.codeSet, { view: handle.target, filterIndex: true, signal })
+    let value: T
+    try {
+      value = await withTimeout(() => load(frame), label)
+      if (hasContent(value)) {
+        const errors = await frame.call('storageFlush')
+        if (errors.length) throw new Error(errors[0])
+      }
+    } finally { frame.close() }
+    if (!hasContent(value)) {
+      await ctx.operations.abort(handle, new Error('没有写入任何包'))
+      return { ...value, parse: null }
     }
     await step('parse', 1)
-    const parse = await afterBrewChange(ctx, s, handle.target)
+    const parse = await afterBrewChange(ctx, s, handle.target, signal)
     await step('publish', 2)
     const view = await publishBrew(ctx, s, handle, parse)
-    return { ...r, parse, view: view.id }
+    return { ...value, parse, view: view.id }
   } catch (e) {
     await ctx.operations.abort(handle, e)
     throw e
   }
 }
 
-export async function brewInstallSources(ctx: BrewContext, sourceId: string, sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null; view?: string }> {
-  const s = brewSource(sourceId)
-  const handle = await ctx.operations.begin({ kind: 'brew-deps', set: s.id, codeSet: s.codeSet })
-  try {
-    const r = await withTimeout(async () => (await ctx.frame(s.codeSet, handle.target)).call('brewAddSources', sources), '下载缺的依赖包')
-    const parse = r.value.added.length ? await afterBrewChange(ctx, s, handle.target) : null
-    if (parse) {
-      const view = await publishBrew(ctx, s, handle, parse)
-      return { ...r, parse, view: view.id }
+export async function brewAddUrl(ctx: BrewContext, sourceId: string, url: string, onProgress?: BrewProgress, signal?: AbortSignal): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
+  const result = await downloadBrew(ctx, sourceId, 'brew-add', '下载自制包', async (frame) => {
+    const r = await frame.call('brewAddUrl', url)
+    if (!r.value.length) {
+      ctx.onLog?.({ level: 'error', source: sourceId, kind: 'brew-add', message: `下载没有完成：${url}`, detail: r.errors })
+      throw new Error('下载没有完成（网络中断或文件取不到），已丢弃这次下了一半的内容，原有内容没有变化')
     }
-    await ctx.operations.abort(handle, new Error('没有装进任何包'))
-    return { ...r, parse: null }
-  } catch (e) {
-    await ctx.operations.abort(handle, e)
-    throw e
-  }
+    return r
+  }, () => true, signal, onProgress)
+  return { ...result, parse: result.parse! }
+}
+
+export function brewInstallSources(ctx: BrewContext, sourceId: string, sources: string[], signal?: AbortSignal): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null; view?: string }> {
+  return downloadBrew(ctx, sourceId, 'brew-deps', '下载缺的依赖包', (frame) => frame.call('brewAddSources', sources), (r) => !!r.value.added.length, signal)
 }
 
 export async function brewImport(ctx: BrewContext, sourceId: string, files: Array<{ name: string; text: string }>) {
@@ -194,30 +208,19 @@ export async function brewDelete(ctx: BrewContext, sourceId: string, docIdLocals
   const own = !supplied
   const handle = supplied ?? await ctx.operations.begin({ kind: 'brew-delete', set: s.id, codeSet: s.codeSet })
   try {
-    const r = await (await ctx.frame(s.codeSet, handle.target)).call('brewDelete', docIdLocals)
-    const parse = await afterBrewChange(ctx, s, handle.target)
+    const { value, parse } = await prepareBrewDelete(ctx, sourceId, docIdLocals, handle.target)
     const view = await publishBrew(ctx, s, handle, parse)
-    return { ...r, parse, view: view.id }
+    return { ...value, parse, view: view.id }
   } catch (e) {
     if (own) await ctx.operations.abort(handle, e)
     throw e
   }
 }
 
-export async function brewPull(ctx: BrewContext, sourceId: string, docIdLocals: string[] | null = null): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null; view?: string }> {
-  const s = brewSource(sourceId)
-  const handle = await ctx.operations.begin({ kind: 'brew-pull', set: s.id, codeSet: s.codeSet })
-  try {
-    const r = await (await ctx.frame(s.codeSet, handle.target)).call('brewPull', docIdLocals)
-    const parse = r.value.length ? await afterBrewChange(ctx, s, handle.target) : null
-    if (parse) {
-      const view = await publishBrew(ctx, s, handle, parse)
-      return { ...r, parse, view: view.id }
-    }
-    await ctx.operations.abort(handle, new Error('没有更新任何包'))
-    return { ...r, parse: null }
-  } catch (e) {
-    await ctx.operations.abort(handle, e)
-    throw e
-  }
+export function brewPull(ctx: BrewContext, sourceId: string, docIdLocals: string[] | null = null, signal?: AbortSignal): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null; view?: string }> {
+  return downloadBrew(ctx, sourceId, 'brew-pull', '更新自制包', async (frame) => {
+    const r = await frame.call('brewPull', docIdLocals)
+    if (!r.value.length && r.errors.length) throw new Error(r.errors[0])
+    return r
+  }, (r) => !!r.value.length, signal)
 }

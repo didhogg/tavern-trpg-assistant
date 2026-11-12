@@ -4,7 +4,7 @@
 import type { Services } from '../../core/services'
 import type { CatalogRow } from '../../library/scoped'
 import { getSource } from '../../library/sources'
-import { useDownloadsStore } from '../../stores/downloads'
+import { officialTaskLabel, useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import { useModalStore } from '../../stores/modal'
 
@@ -40,21 +40,24 @@ export async function reinstall(s: Services, r: CatalogRow, after?: () => void):
   if (!navigator.onLine) return { error: '现在没有网络，连上后再试' }
   const dl = useDownloadsStore()
   if (getSource(r.set).kind === 'official') {
-    if (!r.id) return { error: '这一项不是单独的一本书，只能在【下载】页整套重新下载' }
     // 中英一起（后端按登记配另一种语言）；按这一种的任务看结果
     const d = s.backend.library.downloads
-    const started = r.kind === 'adventure' ? await d.adventure(r.set, r.id) : await d.official(r.set, { books: [r.id] })
-    for (const t of started.tasks) dl.rememberName(t.setId, r.id, r.name)
+    if (r.kind === 'adventure' && !r.id) return { error: '作者目录没有这项冒险的编号' }
+    const started = r.kind === 'adventure' && r.id
+      ? await d.adventure(r.set, r.id)
+      : await d.official(r.set, { books: r.id ? [r.id] : [], sources: [r.source] })
+    for (const t of started.tasks) dl.rememberTask(t.taskId, r.kind === 'adventure' ? `冒险《${r.name}》` : officialTaskLabel(t.setId, [r.name]), () => void reinstall(s, r, after))
     dl.refresh()
     return { error: null, taskId: started.tasks[0].taskId }
   }
   const url = r.pack?.stableId
   if (!isUrl(url)) return { error: '这个包是从本地文件导入的，没有下载地址；请到【我的库】重新导入原文件' }
   let error: string | null = null
-  await dl.trackBrew(`reinstall:${url}`, `自制包《${r.name}》`, async (report) => {
+  const task = await dl.trackBrew(s.backend.library.tasks, r.set, `reinstall:${url}`, `自制包《${r.name}》`, async (report, signal) => {
     const STAGE = { download: '下载文件（含依赖）', parse: '整理资料', publish: '放进书架' } as const
     // 中英一起：另一种语言配上的包也重下；两边都没装上才算失败
-    const r2 = await s.backend.library.downloads.brewUrl(r.set, url, (side, st, i, n) => report(`${side === 'pair' ? '另一种语言 · ' : ''}${STAGE[st]}`, i / n))
+    const r2 = await s.backend.library.downloads.brewUrl(r.set, url, (side, st, i, n) => report(`${side === 'pair' ? '另一种语言 · ' : ''}${STAGE[st]}`, i / n), signal)
+    signal.throwIfAborted()
     const self = r2.failed.find((f) => f.setId === r.set)
     if (self) {
       console.error('[trpg-assistant] 重新下载自制包失败', self.error)
@@ -65,6 +68,6 @@ export async function reinstall(s: Services, r: CatalogRow, after?: () => void):
     await useLibViewStore().refresh(s)
     return null
   }, () => void reinstall(s, r, after))
-  if (!error) after?.()
-  return { error }
+  if (task.status === 'done' && !error) after?.()
+  return { error: task.status === 'cancelled' ? null : task.error ?? error }
 }

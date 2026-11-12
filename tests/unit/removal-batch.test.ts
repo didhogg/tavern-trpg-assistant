@@ -44,7 +44,12 @@ describe('多选卸载', () => {
   })
   const fakeOps = () => {
     const log: string[] = []
-    return { log, ops: { begin: async (o: { codeSet: string }) => { log.push(`begin:${o.codeSet}`); return { base: {} } }, abort: async () => { log.push('abort') } } as never }
+    let step = 0
+    const begin = async (o: { codeSet: string }) => {
+      log.push(`begin:${o.codeSet}`)
+      return { base: { id: `r${step}` }, target: { id: `r${++step}` } }
+    }
+    return { log, ops: { begin, abort: async () => { log.push('abort') } } as never }
   }
   it('按语言分步：中文一步、英文一步；官方书牵连的自制包并进同一步', async () => {
     const cn: RemovalTarget = { kind: 'official', setId: 'cn-official', bookIds: ['PHB'] }
@@ -53,7 +58,15 @@ describe('多选卸载', () => {
     const batch = mergeImpacts([cn, en], parts)
     const { log, ops } = fakeOps()
     const calls: unknown[] = []
-    const r = await executeBatch({ operations: ops, brewSetOf: (c) => `${c}-brew`, impactAt: async (_v, t) => parts.find((p) => p.target === t)!, removeParts: async (p) => { calls.push(p) } }, batch)
+    const r = await executeBatch({
+      operations: ops, brewSetOf: (c) => `${c}-brew`,
+      impactAt: async (view, t, checkedRevision) => {
+        expect(view.id).toBe(t === cn ? 'r0' : 'r1')
+        expect(checkedRevision).toBe('r0')
+        return parts.find((p) => p.target === t)!
+      },
+      removeParts: async (p) => { calls.push(p) },
+    }, batch)
     expect(r.done).toEqual(['cn', 'en'])
     expect(log).toEqual(['begin:cn', 'begin:en'])
     expect(calls[0]).toEqual({ official: [{ setId: 'cn-official', bookIds: ['PHB'], bookSources: undefined, adventureIds: undefined }], brews: [{ setId: 'cn-brew', ids: ['z9'] }] })

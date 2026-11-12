@@ -48,6 +48,12 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
   )
   // 资料下载进度（侧栏库标签的小环）：定时读 library.tasks.list()
   const stopDownloads = downloads.start(() => app.svc().backend.library.tasks.list())
+  const cancelPageDownloads = (): void => app.svc().backend.library.tasks.stopDownloads()
+  const offline = (): void => {
+    app.svc().backend.library.tasks.stopDownloads(new DOMException('网络已断开，已丢弃这次未完成的下载', 'NetworkError'))
+  }
+  window.addEventListener('pagehide', cancelPageDownloads)
+  window.addEventListener('offline', offline)
   // S5：进入有结算内核的战役后开小窗；切换聊天/读档时关旧开新；没有战役/未绑定不开。
   let kernelSeq = 0
   const reconcileKernel = (): void => {
@@ -90,6 +96,9 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
     dice.setOwner(next?.ownerKey ?? null)
   })
   return () => {
+    window.removeEventListener('pagehide', cancelPageDownloads)
+    window.removeEventListener('offline', offline)
+    cancelPageDownloads()
     stop()
     stopSave()
     stopDownloads()

@@ -112,7 +112,7 @@ export function mergeImpacts(targets: RemovalTarget[], parts: RemovalImpact[]): 
 }
 
 export interface BatchDeps {
-  impactAt: (view: LibraryView, target: RemovalTarget) => Promise<RemovalImpact>
+  impactAt: (view: LibraryView, target: RemovalTarget, checkedRevision?: string) => Promise<RemovalImpact>
   operations: LibraryOperations
   brewSetOf: (codeSet: string) => string
   /** 一种语言的一次修改：官方若干套的书 / 冒险 + 自制若干包，一起发布。 */
@@ -123,21 +123,27 @@ export interface BatchDeps {
 export async function executeBatch(deps: BatchDeps, batch: RemovalBatch): Promise<{ done: string[] }> {
   const codeSets = uniq(batch.targets.map((t) => getSource(t.setId).codeSet))
   const done: string[] = []
+  let checkedRevision: string | undefined
+  let lastPublished: string | undefined
   for (const codeSet of codeSets) {
     const group = batch.targets.filter((t) => getSource(t.setId).codeSet === codeSet)
     const handle = await deps.operations.begin({ kind: 'remove-batch', set: group.map((t) => t.setId).join(','), codeSet })
     try {
+      if (lastPublished && handle.base.id !== lastPublished) throw new Error('资料已经变化，请重新预览删除影响')
+      checkedRevision ??= handle.base.id
       const official: Array<Omit<Official, 'kind' | 'setIds'>> = []
       const brewIds = new Map<string, string[]>()
       for (const t of group) {
         const before = batch.parts[batch.targets.indexOf(t)]
-        const fresh = await deps.impactAt(handle.base, t)
+        // 后续语言仍重读实际影响，用首次版本号比较凭据，允许同一批前一步自己的发布。
+        const fresh = await deps.impactAt(handle.base, t, checkedRevision)
         if (fresh.plan.fingerprint !== before.plan.fingerprint) throw new Error('资料或引用已经变化，请重新预览删除影响')
         const brewSet = t.kind === 'brew' ? t.setId : deps.brewSetOf(codeSet)
         brewIds.set(brewSet, uniq([...(brewIds.get(brewSet) ?? []), ...(t.kind === 'brew' ? t.docIdLocals : []), ...fresh.removeTogether]))
         if (t.kind === 'official') official.push({ setId: t.setId, bookIds: t.bookIds, bookSources: t.bookSources, adventureIds: t.adventureIds })
       }
       await deps.removeParts({ official, brews: [...brewIds].map(([setId, ids]) => ({ setId, ids })) }, handle)
+      lastPublished = handle.target.id
       done.push(codeSet)
     } catch (e) {
       await deps.operations.abort(handle, e)

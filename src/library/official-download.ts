@@ -17,7 +17,7 @@ export async function downloadOfficial(opts: InstallOptions & { view: LibraryVie
   // 下载到准备版本（沿父版本已存在的同指纹文件直接复用）
   let done = 0
   const download = async (path: string): Promise<string | null> => {
-    if (opts.signal?.aborted || opts.onCheckpoint?.() === 'pause') return null
+    if (opts.signal?.aborted || report.download.failed.length) return null
     const expected = list[path]
     try {
       const had = await files.record(source, path, view)
@@ -33,17 +33,17 @@ export async function downloadOfficial(opts: InstallOptions & { view: LibraryVie
       report.download.fetched++
       return text
     } catch (e) {
-      report.download.failed.push({ path, error: e instanceof Error ? e.message : String(e) })
+      if (!opts.signal?.aborted) report.download.failed.push({ path, error: e instanceof Error ? e.message : String(e) })
       return null
     } finally {
       opts.onProgress?.({ stage: 'download', done: ++done, total: Math.max(done, plan.files.length), item: path })
     }
   }
   await pool(plan.files, opts.concurrency ?? 6, async (path) => { await download(path) })
-  if (!opts.signal?.aborted && opts.onCheckpoint?.() !== 'pause' && !report.download.failed.length) {
+  if (!opts.signal?.aborted && !report.download.failed.length) {
     const roots = new Set(plan.files)
     const expanded = await extendOfficialPlan(plan, list, source.codeSet, (path) => {
-      if (opts.signal?.aborted || opts.onCheckpoint?.() === 'pause') return Promise.resolve(null)
+      if (opts.signal?.aborted) return Promise.resolve(null)
       return roots.has(path) ? files.local(source, path, view) : list[path] ? download(path) : Promise.resolve(null)
     }, opts.concurrency)
     plan = expanded.plan

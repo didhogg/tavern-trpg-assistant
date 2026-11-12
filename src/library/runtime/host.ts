@@ -32,6 +32,7 @@ export interface StartOptions {
   container: HTMLElement
   handlers: FrameHandlers
   timeoutMs?: number
+  signal?: AbortSignal
 }
 
 export function frameUrl(pluginRoot: URL, codeSet: string): URL {
@@ -49,10 +50,12 @@ async function answer(handlers: FrameHandlers, req: FrameRequest): Promise<unkno
   }
 }
 
-export async function startAuthorFrame({ codeSet, pluginRoot, container, handlers, timeoutMs = 60_000 }: StartOptions): Promise<AuthorFrame> {
+export async function startAuthorFrame({ codeSet, pluginRoot, container, handlers, timeoutMs = 60_000, signal }: StartOptions): Promise<AuthorFrame> {
+  signal?.throwIfAborted()
   const frame = document.createElement('iframe')
   // 作者同步存储上次的内容经 name 交给小窗（小窗里 early.ts 在作者脚本之前读出，读完清掉 name）
   frame.name = LOCAL_SNAPSHOT_PREFIX + JSON.stringify(await handlers.localSnapshot())
+  signal?.throwIfAborted()
   frame.dataset.trpgAuthorFrame = codeSet
   frame.setAttribute('aria-hidden', 'true')
   frame.tabIndex = -1
@@ -95,7 +98,12 @@ export async function startAuthorFrame({ codeSet, pluginRoot, container, handler
   }
   addEventListener('message', onRequest)
   addEventListener('message', onResult)
+  let closed = false
+  let cleanup = (): void => undefined
   const close = (): void => {
+    if (closed) return
+    closed = true
+    cleanup()
     removeEventListener('message', onRequest)
     removeEventListener('message', onResult)
     for (const p of calls.values()) p.reject(new Error(`作者小窗 ${codeSet} 已关闭`))
@@ -103,6 +111,7 @@ export async function startAuthorFrame({ codeSet, pluginRoot, container, handler
     frame.remove()
   }
   const call = ((fn: string, ...args: unknown[]) => new Promise<unknown>((resolve, reject) => {
+    if (closed) { reject(new Error(`作者小窗 ${codeSet} 已关闭`)); return }
     const id = nextCall++
     calls.set(id, { resolve, reject })
     frame.contentWindow?.postMessage({ channel: CHANNEL, type: 'call', id, fn, args } satisfies FrameCall, url.origin)
@@ -120,7 +129,14 @@ export async function startAuthorFrame({ codeSet, pluginRoot, container, handler
       removeEventListener('message', onReady)
       resolve({ codeSet, frame, ready: m, failures, call, close })
     }
+    const onAbort = (): void => { close(); reject(signal?.reason) }
+    cleanup = () => {
+      clearTimeout(timer)
+      removeEventListener('message', onReady)
+      signal?.removeEventListener('abort', onAbort)
+    }
     addEventListener('message', onReady)
+    signal?.addEventListener('abort', onAbort, { once: true })
     frame.src = url.href
     container.append(frame)
   })

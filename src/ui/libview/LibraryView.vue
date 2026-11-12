@@ -9,7 +9,6 @@ import { useBrewCatalogStore } from '../../stores/brewcatalog'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import { openSearch } from './open'
-import DownloadBanners from './DownloadBanners.vue'
 import DownloadTab from './DownloadTab.vue'
 import MyLibTab from './MyLibTab.vue'
 import ShelfTab from './ShelfTab.vue'
@@ -42,7 +41,7 @@ watch(() => [campaign.owner?.ownerKey, campaign.hasCampaign, campaign.currentSav
 // 下载 / 更新任务结束（完成、失败、取消）才按当前战役重读一次书架；进行中不重读，旧书架一直显示（P5 T6 B4）
 const dl = useDownloadsStore()
 let active = 0
-watch(() => dl.running.length + dl.paused.length, (n) => { if (n < active) reload(); active = n }, { immediate: true })
+watch(() => dl.running.length, (n) => { if (n < active) reload(); active = n }, { immediate: true })
 </script>
 
 <template>
@@ -57,7 +56,6 @@ watch(() => dl.running.length + dl.paused.length, (n) => { if (n < active) reloa
         <button class="trpg-btn" type="button" data-testid="open-search" @click="openSearch()"><Icon name="magnifying-glass" :size="16" />全库数据搜索</button>
       </span>
     </div>
-    <DownloadBanners />
     <ShelfTab v-if="tab === 'shelf'" />
     <MyLibTab v-else-if="tab === 'mine'" />
     <DownloadTab v-else-if="tab === 'download'" />

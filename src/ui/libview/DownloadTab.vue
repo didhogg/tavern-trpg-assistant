@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { useLibNoticeStore } from '../../stores/libnotice'
 import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { DataSetState } from '../../core/start-campaign'
 import type { SelectionCheck } from '../../library/selection'
 import type { CatalogRow } from '../../library/scoped'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
-import { useDownloadsStore } from '../../stores/downloads'
+import { officialTaskLabel, useDownloadsStore } from '../../stores/downloads'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import MoreMenu from '../kit/MoreMenu.vue'
@@ -27,7 +26,6 @@ const app = useAppStore()
 const lib = useLibViewStore()
 const dl = useDownloadsStore()
 const toast = useToastStore()
-const sets = ref<DataSetState[]>([])
 const error = ref<string | null>(null)
 type Rule = 'all' | '5e' | '5.5e' | 'none'
 const rule = ref<Rule>('all')
@@ -44,7 +42,7 @@ const isOfficial = (r: CatalogRow): boolean => getSource(r.set).kind === 'offici
 const gate = ref<SelectionCheck | null>(null)
 const advOk = (r: CatalogRow): boolean => !!gate.value?.sets[r.set]?.adventures
 const advReason = (r: CatalogRow): string | undefined => (r.kind === 'adventure' && !advOk(r) ? gate.value?.sets[r.set]?.reason ?? undefined : undefined)
-const canGet = (r: CatalogRow): boolean => !r.downloaded && !rowTask(r) && !finishing(r) && (r.kind === 'book' || advOk(r))
+const canGet = (r: CatalogRow): boolean => !r.downloaded && !dling(r) && !finishing(r) && (r.kind === 'book' || advOk(r))
 // 按作者分组列出；冒险是它所属分组里的一个包，和书并列（驾驶员 2026-11-12：不再分「全部 / 书 / 冒险」标签）
 const groups = computed<Array<DlGroup<CatalogRow>>>(() => (lib.shelf?.groups ?? []).map((g) => ({
   key: g.group,
@@ -61,6 +59,19 @@ const pickedAdv = computed(() => picked.value.filter((r) => r.kind === 'adventur
 // 行 → 正在跑的任务：按任务号认，不按书名认（同名书 / 同名包不能互相覆盖）。
 // 任务结束到书架刷新之间还有一小段空档，finishing() 用来显示「整理书架…」，不能先掉回【下载】。
 const pending = ref<Map<string, string>>(new Map())
+// 点了下载、后端还在配另一种语言（任务号没回来）的行：先显示下载中，按钮不能再点，免得重复开任务
+const starting = ref<Set<string>>(new Set())
+const markStarting = (rows: CatalogRow[], on: boolean): void => {
+  const next = new Set(starting.value)
+  for (const r of rows) { if (on) next.add(keyOf(r)); else next.delete(keyOf(r)) }
+  starting.value = next
+}
+/** 这一行正在下载：进度（不知道时 null）；不在下载返回 undefined。 */
+const dling = (r: CatalogRow): { pct: number | null } | undefined => {
+  const t = rowTask(r)
+  if (t?.status === 'running') return { pct: t.pct }
+  return starting.value.has(keyOf(r)) ? { pct: null } : undefined
+}
 const taskOf = (r: CatalogRow) => {
   const id = pending.value.get(keyOf(r))
   return id ? dl.tasks.find((t) => t.id === id) ?? null : null
@@ -79,7 +90,6 @@ const finishing = (r: CatalogRow): boolean => {
 async function loadStatus(): Promise<void> {
   error.value = null
   try {
-    sets.value = await app.svc().backend.starter.dataStatus()
     gate.value = await app.svc().backend.starter.checkSelection()
   } catch (e) { console.error('[trpg-assistant] 读取下载页失败', e); error.value = e instanceof Error ? e.message : String(e) }
 }
@@ -92,7 +102,7 @@ watch(error, (e) => {
 })
 // 任务结束（完成 / 失败 / 取消）才重读一次安装状态；任务进行中不整页重读（书架由库页外壳在任务结束时重读）
 let lastRunning = 0
-watch(() => dl.running.length + dl.paused.length, (n) => { if (n < lastRunning) void loadStatus(); lastRunning = n }, { immediate: true })
+watch(() => dl.running.length, (n) => { if (n < lastRunning) void loadStatus(); lastRunning = n }, { immediate: true })
 
 /** 按书下载：同一次选中的书合成一个任务（每本单开会把整套重解析很多遍）；另一种语言由后端按登记一起下。 */
 function downloadBooks(rows: CatalogRow[]): void {
@@ -103,16 +113,21 @@ function downloadBooks(rows: CatalogRow[]): void {
     const books = list.flatMap((r) => (r.id ? [r.id] : []))
     const sources = list.map((r) => r.source)
     const label = list.length === 1 ? list[0].name : `${list[0].name} 等 ${list.length} 本`
+    const pair = getSource(setId).pair
+    for (const row of list) {
+      for (const set of pair ? [setId, pair] : [setId]) dl.rememberName(set, row.id ?? row.source, row.name)
+    }
     const start = async (): Promise<void> => {
+      markStarting(list, true)
       try {
-        const started = await s.backend.library.downloads.official(setId, { books: books.length ? books : null, sources })
-        for (const t of started.tasks) dl.rememberTask(t.taskId, t.setId === setId ? label : `${label}（另一种语言）`, () => void start())
+        const started = await s.backend.library.downloads.official(setId, { books, sources })
+        for (const t of started.tasks) dl.rememberTask(t.taskId, officialTaskLabel(t.setId, list.map((r) => r.name)), () => void start())
         const id = started.tasks[0].taskId
         const next = new Map(pending.value)
         for (const r of list) next.set(keyOf(r), id)
         pending.value = next
         dl.refresh()
-      } catch (e) { void reportLibError(s, e, `下载《${label}》`, toast, () => void start()) }
+      } catch (e) { void reportLibError(s, e, `下载《${label}》`, toast, () => void start()) } finally { markStarting(list, false) }
     }
     void start()
   }
@@ -121,10 +136,11 @@ function downloadBooks(rows: CatalogRow[]): void {
 function downloadAdventures(rows: CatalogRow[]): void {
   const s = app.svc()
   for (const r of rows.filter((x) => !x.downloaded && x.id)) {
-    const before = rowTask(r)
-    if (before?.status === 'failed') dl.markRetried(before.key)
-    void s.backend.library.downloads.adventure(r.set, r.id!).then((started) => {
-      for (const t of started.tasks) dl.rememberName(t.setId, r.id!, r.name)
+    const pair = getSource(r.set).pair
+    for (const set of pair ? [r.set, pair] : [r.set]) dl.rememberName(set, r.id!, r.name)
+    markStarting([r], true)
+    void s.backend.library.downloads.adventure(r.set, r.id!).finally(() => markStarting([r], false)).then((started) => {
+      for (const t of started.tasks) dl.rememberTask(t.taskId, `冒险《${r.name}》`, () => downloadAdventures([r]))
       const next = new Map(pending.value)
       next.set(keyOf(r), started.tasks[0].taskId)
       pending.value = next
@@ -139,19 +155,14 @@ function downloadRows(rows: CatalogRow[]): void {
   if (books.length) downloadBooks(books)
   if (adv.length) downloadAdventures(adv)
 }
-/** 【下载全部…】：弹窗勾选范围（全部书 / 全部冒险）。全部书 = 中文还没装的书按书合成一个任务，状态里其他没装的数据集（结算内核要的英文）照旧整套装。 */
+/** 【下载全部…】沿用按书入口，另一种语言也只配对选中范围。 */
 async function downloadAll(): Promise<void> {
   const leftBooks = allRows.value.filter((r) => r.kind === 'book' && !r.downloaded)
   const leftAdv = allRows.value.filter((r) => r.kind === 'adventure' && !r.downloaded)
   const readyAdv = leftAdv.filter(advOk)
   const a = await askChoice<DownloadAllAnswer | null>({ key: 'download-all', title: '下载全部', component: markRaw(DownloadAllPage), props: (answer) => ({ bookCount: leftBooks.length, adventureCount: leftAdv.length, adventuresReady: readyAdv.length > 0, onAnswer: answer }) }, null)
   if (!a) return
-  if (a.books) {
-    downloadBooks(leftBooks)
-    const shelfSets = new Set(leftBooks.map((r) => r.set))
-    const tasks = app.svc().backend.library.tasks
-    for (const set of sets.value.filter((x) => !shelfSets.has(x.setId) && x.status !== 'installed' && x.status !== 'running')) tasks.startOfficial(set.setId)
-  }
+  if (a.books) downloadBooks(leftBooks)
   if (a.adventures) downloadAdventures(readyAdv)
   dl.refresh()
 }
@@ -208,7 +219,6 @@ const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.
           <div class="lib-pills" role="group" aria-label="规则版本">
             <button v-for="o in RULES" :key="o.value" class="trpg-pill" type="button" :aria-pressed="rule === o.value" @click="rule = o.value">{{ o.label }}</button>
           </div>
-          <span v-if="sets.some((x) => x.status === 'incomplete')" class="lib-muted">上次装了一半，已下好的文件会复用</span>
         </div>
       </template>
       <template #row="{ item: r }">
@@ -223,7 +233,7 @@ const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.
         </div>
         <div class="trpg-row__end">
           <span v-if="r.downloaded" class="trpg-badge" data-tone="success">已装</span>
-          <span v-else-if="rowTask(r) && rowTask(r)!.status !== 'failed'" class="lib-muted lib-dling" role="status">{{ rowTask(r)!.status === 'paused' ? '已暂停' : '下载中' }}{{ pctText(rowTask(r)!.pct) }}<span class="lib-bar" :data-indet="rowTask(r)!.pct == null" aria-hidden="true"><i :style="rowTask(r)!.pct == null ? undefined : { width: `${Math.round((rowTask(r)!.pct ?? 0) * 100)}%` }" /></span></span>
+          <span v-else-if="dling(r)" class="lib-muted lib-dling" role="status">下载中{{ pctText(dling(r)!.pct) }}<span class="lib-bar" :data-indet="dling(r)!.pct == null" aria-hidden="true"><i :style="dling(r)!.pct == null ? undefined : { width: `${Math.round((dling(r)!.pct ?? 0) * 100)}%` }" /></span></span>
           <span v-else-if="finishing(r)" class="lib-muted lib-dling" role="status">整理书架…</span>
           <template v-else>
             <span v-if="rowTask(r)?.status === 'failed'" class="lib-muted" style="color: var(--danger-text)">失败</span>

@@ -31,6 +31,7 @@ export interface FrameContext {
   /** 隔离解析用的单一作者存储范围（不配合 view 时是旧的单范围行为）。 */
   kvScope?: string
   filterIndex?: boolean
+  signal?: AbortSignal
 }
 export interface LibraryServiceOptions {
   db: LibraryDatabase
@@ -228,7 +229,6 @@ export class LibraryService {
       return p
     })
   }
-
   private englishContext(): PairContext {
     return { openFrame: this.opts.openFrame, parsed: (id, prop, view) => this.parsed(id, prop, view) }
   }
@@ -328,12 +328,12 @@ export class LibraryService {
     return mutateAuthor(this.brewContext(), codeSet, kind, run)
   }
 
-  async brewAddUrl(sourceId: string, url: string, onProgress?: BrewProgress): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
-    return brewAddUrl(this.brewContext(), sourceId, url, onProgress)
+  async brewAddUrl(sourceId: string, url: string, onProgress?: BrewProgress, signal?: AbortSignal): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport; view?: string }> {
+    return brewAddUrl(this.brewContext(), sourceId, url, onProgress, signal)
   }
 
-  async brewInstallSources(sourceId: string, sources: string[]): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null; view?: string }> {
-    return brewInstallSources(this.brewContext(), sourceId, sources)
+  async brewInstallSources(sourceId: string, sources: string[], signal?: AbortSignal): Promise<WithErrors<{ added: BrewEntry[]; notFound: string[] }> & { parse: BrewParseReport | null; view?: string }> {
+    return brewInstallSources(this.brewContext(), sourceId, sources, signal)
   }
 
   async brewImport(sourceId: string, files: Array<{ name: string; text: string }>) {
@@ -355,8 +355,8 @@ export class LibraryService {
     return (await this.frame(this.brewSource(sourceId).codeSet, view)).call('brewCheckUpdates', docIdLocals)
   }
 
-  async brewPull(sourceId: string, docIdLocals: string[] | null = null): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null; view?: string }> {
-    return brewPull(this.brewContext(), sourceId, docIdLocals)
+  async brewPull(sourceId: string, docIdLocals: string[] | null = null, signal?: AbortSignal): Promise<WithErrors<BrewEntry[]> & { parse: BrewParseReport | null; view?: string }> {
+    return brewPull(this.brewContext(), sourceId, docIdLocals, signal)
   }
 
   /** 中英配对覆盖率（P5 B-26 体检）。 */

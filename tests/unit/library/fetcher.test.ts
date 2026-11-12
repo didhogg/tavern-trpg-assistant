@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { utf8ToBytes } from '@noble/hashes/utils.js'
 import { fetchFileList, fetchVerified, gitBlobSha, type FetchLike } from '../../../src/library/fetcher'
 
@@ -38,6 +38,26 @@ describe('fetchVerified', () => {
   it('全部失败时报错并列出每个地址的原因', async () => {
     const f = fakeFetch({ 'https://a/x.json': 404 })
     await expect(fetchVerified(['https://a/', 'https://b/'], 'x.json', expected, f)).rejects.toThrow(/HTTP 404.*网络不通/)
+  })
+
+  it('一个镜像没有响应时，到时换镜像；用户取消时不再试下一个', async () => {
+    vi.useFakeTimers()
+    const requests: string[] = []
+    const f: FetchLike = (url, opts) => {
+      requests.push(url)
+      if (url.includes('://b/')) return fakeFetch({ [url]: '{"a":1}' })(url)
+      return new Promise((_, reject) => opts?.signal?.addEventListener('abort', () => reject(opts.signal?.reason), { once: true }))
+    }
+    try {
+      const timed = fetchVerified(['https://a/', 'https://b/'], 'x.json', expected, f)
+      await vi.advanceTimersByTimeAsync(30_000)
+      expect((await timed).skipped[0]?.reason).toContain('超过 30 秒')
+      const ctrl = new AbortController()
+      const cancelled = expect(fetchVerified(['https://a/', 'https://b/'], 'x.json', expected, f, ctrl.signal)).rejects.toMatchObject({ name: 'AbortError' })
+      ctrl.abort()
+      await cancelled
+      expect(requests).toEqual(['https://a/x.json', 'https://b/x.json', 'https://a/x.json'])
+    } finally { vi.useRealTimers() }
   })
 })
 

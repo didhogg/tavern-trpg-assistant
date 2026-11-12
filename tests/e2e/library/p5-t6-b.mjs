@@ -1,6 +1,6 @@
 // P5 T6 B 单元（下载页、悬浮窗、拉取更新、任务前后书架不变）真实数据点击验证（Chrome）。
 // 资料：p5-t6-pack-audit-WST6kp 副本（端口须 47342）；外网全部拦掉。
-// 「下载中」的造法：先在后端单本卸载一本书（文件保留），再从下载页把它下回来——真实跑一遍整套解析。
+// 「下载中」的造法：先在后端单本卸载一本书（会移除它的文件），再从下载页把它下回来；外网请求挂着不回，任务停在下载中。
 // 拉取更新要连上游：这里替换 updates.check 和任务启动，沿用真实 apply 来判定共用文件。
 // 用法：SKIP_BUILD=1 node tests/e2e/library/p5-t6-b.mjs
 import { cp, mkdir, rm } from 'node:fs/promises'
@@ -83,12 +83,14 @@ if (!process.env.SKIP_WIDE) {
   const bar2 = await page.locator('[data-testid="official-card-selbar"]').innerText()
   check('选中后显示要下载多少（或如实写算不出）', /要下载|算不出/.test(bar2), bar2.replace(/\n/g, ' '))
   await page.screenshot({ path: `${shots}/wide-multiselect.png` })
+  // 卸载会移除这本书的文件，外网又是断开的：让外网请求一直挂着（模拟慢网），才看得到「下载中」并在中途取消
+  await ctx.route((u) => !u.href.startsWith(url), () => {})
   await page.locator('[data-testid="official-card-download-selected"]').click()
   await page.locator('[data-testid="official-card"] input[type="search"]').fill(name.slice(0, 4))
   // 下载中：行上有进度；悬浮窗能看见、在最上层、移进去不消失
   await page.waitForFunction(() => document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid="lib-ring"]'), null, { timeout: 30000 })
   const rowText = await page.locator('[data-testid="official-card"] .trpg-row', { hasText: name }).first().innerText()
-  check('按书下载：这一行显示下载中', /下载中|已暂停/.test(rowText), rowText.replace(/\n/g, ' '))
+  check('按书下载：这一行显示下载中', /下载中/.test(rowText), rowText.replace(/\n/g, ' '))
   await page.getByTestId('nav-library').hover()
   await page.waitForSelector('[data-testid="lib-pop"]')
   await settle(page, 300)
@@ -99,22 +101,15 @@ if (!process.env.SKIP_WIDE) {
   await settle(page, 600)
   check('鼠标从图标移进悬浮窗：不消失', (await page.getByTestId('lib-pop').count()) === 1, '')
   const popText = await page.getByTestId('lib-pop').innerText()
-  check('悬浮窗里这一项有【暂停】和取消按钮', /暂停/.test(popText) && (await page.getByTestId('lib-pop').getByRole('button', { name: /取消下载/ }).count()) === 1, popText.replace(/\n/g, ' | '))
+  check('悬浮窗按书显示任务，只有取消按钮', popText.includes(name) && !/暂停|继续/.test(popText) && (await page.getByTestId('lib-pop').getByRole('button', { name: /取消下载/ }).count()) === 1, popText.replace(/\n/g, ' | '))
   await page.screenshot({ path: `${shots}/wide-popover-running.png` })
   // 任务进行中：书架不清空、战役状态不变
   const during = await page.evaluate((P) => { const lib = eval(P)._s.get('library'); return { rows: lib.shelf?.groups.flatMap((g) => g.books).filter((r) => r.downloaded).length ?? 0, bound: lib.bound, error: lib.error } }, P)
   check('下载进行中：书架还在、战役状态不变、没有书架错误', during.rows > 0 && during.bound === boundBefore && !during.error, JSON.stringify(during))
-  // 暂停 → 继续 → 取消（先弹确认）
-  await page.getByTestId('lib-pop').getByRole('button', { name: '暂停' }).click()
-  await page.waitForFunction(() => /已暂停/.test(document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid="lib-pop"]')?.textContent ?? ''), null, { timeout: 60000 }).catch(() => null)
-  const paused = await page.getByTestId('lib-pop').innerText().catch(() => '')
-  await page.screenshot({ path: `${shots}/wide-popover-paused.png` })
-  check('暂停后：这一项显示已暂停，并有【继续】', /已暂停/.test(paused) && /继续/.test(paused), paused.replace(/\n/g, ' | '))
   await page.getByTestId('lib-pop').getByRole('button', { name: /取消下载/ }).click()
-  await page.waitForSelector('[data-testid="confirm-page"]')
-  await page.screenshot({ path: `${shots}/wide-cancel-confirm.png` })
-  await page.locator('.trpg-confirm__actions .trpg-btn--danger').click()
-  await page.waitForFunction((P) => !eval(P)._s.get('downloads').items.some((i) => i.key.startsWith('official-book:')), P, { timeout: 60000 }).catch(() => null)
+  await page.getByText(/已取消「.*」未完成的下载/).first().waitFor()
+  check('取消直接生效，横幅提示，没有弹窗', await page.getByTestId('confirm-page').count() === 0, '')
+  await page.screenshot({ path: `${shots}/wide-cancelled.png` })
   await settle(page, 1500)
   const after = await page.evaluate((P) => ({ ring: eval(P)._s.get('downloads').ring, count: eval(P)._s.get('downloads').count, bound: eval(P)._s.get('library').bound, items: eval(P)._s.get('downloads').items.map((i) => [i.key, i.status]), tasks: eval(P)._s.get('app').svc().backend.library.tasks.list().map((t) => [t.id.slice(0, 12), t.kind, t.status]) }), P)
   check('取消后：这一项消失、图标外环消失、战役状态不变', after.count === 0 && after.ring !== 'running' && after.ring !== 'spin' && after.bound === boundBefore, JSON.stringify(after))
@@ -172,6 +167,7 @@ if (!process.env.SKIP_WIDE) {
   // 搜到刚卸载的书并下载
   const name = await page.evaluate((P) => eval(P)._s.get('library').shelf.groups.flatMap((g) => g.books).find((r) => !r.downloaded && r.set === 'cn-official' && r.id)?.name, P)
   await page.locator('[data-testid="official-card"] input[type="search"]').fill(name.slice(0, 4))
+  await ctx.route((u) => !u.href.startsWith(url), () => {})
   await page.locator('[data-testid="official-card"] .trpg-row', { hasText: name }).first().locator('[data-testid="book-download"]').click()
   await page.waitForFunction(() => document.querySelector('#trpg-assistant-root').shadowRoot.querySelector('[data-testid="lib-ring"]'), null, { timeout: 30000 })
   await settle(page, 500)

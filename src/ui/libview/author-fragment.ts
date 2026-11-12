@@ -2,6 +2,8 @@ import { defineComponent, h, shallowRef, watch, type PropType, type VNodeChild }
 import type { ResolvedTag } from '../../library/entry-links'
 import type { AuthorMarkup } from '../../library/runtime/frame/author-markup'
 import { useAppStore } from '../../stores/app'
+import { useToastStore } from '../../stores/toast'
+import Icon from '../kit/Icon.vue'
 import ContentLink from './ContentLink.vue'
 import RollTable from './RollTable.vue'
 
@@ -25,6 +27,7 @@ export default defineComponent({
   props: { markup: { type: Object as PropType<AuthorMarkup>, required: true }, codeSet: { type: String, required: true }, inline: Boolean },
   setup(props) {
     const app = useAppStore()
+    const toast = useToastStore()
     const resolved = shallowRef<Record<number, ResolvedTag>>({})
     const nodes = shallowRef<Node[]>([])
     watch(() => [props.markup, props.codeSet] as const, ([markup, codeSet], _, onCleanup) => {
@@ -60,6 +63,10 @@ export default defineComponent({
       if (tableMark?.startsWith(`${props.markup.marker}:`)) {
         const table = props.markup.tables?.[Number(tableMark.slice(props.markup.marker.length + 1))]
         if (table && typeof table === 'object') return h(RollTable, { key, table: table as Record<string, unknown>, codeSet: props.codeSet })
+      }
+      // 作者标的骰子（{@dice} {@damage} {@hit} 等渲染出的 ve-roller / render-roller）：画成骰子标签，和 InlineText 同一个样子
+      if (node.classList.contains('ve-roller') || node.classList.contains('render-roller')) {
+        return h('button', { key, class: 'lib-dice', type: 'button', title: node.getAttribute('title') ?? undefined, onClick: () => toast.info('骰盘接线稍后开放') }, [h(Icon, { name: 'dice-five', size: 12 }), node.textContent ?? ''])
       }
       const children = [...node.childNodes].map((child, i) => draw(child, `${key}.${i}`))
       const mark = node.getAttribute('data-trpg-link')

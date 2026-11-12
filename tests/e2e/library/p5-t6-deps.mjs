@@ -139,7 +139,7 @@ check('断网时点下载：说明原因并变成【重试下载】，不会一�
 await closeAll(); await settle(page, 300)
 
 // S5 下载到一半断网：主文件取到了，依赖索引取不到 → 这次准备版本作废，书架不多东西；横幅带【重试】，按钮回到「下载」
-await page.evaluate((P) => { const n = eval(P)._s.get('libnotice'); for (const x of [...n.notices]) n.dismiss(x.key); const d = eval(P)._s.get('downloads'); for (const i of d.failedAll) d.dismiss(i.key) }, P)
+await page.evaluate((P) => { const n = eval(P)._s.get('libnotice'); for (const x of [...n.notices]) n.dismiss(x.key); const d = eval(P)._s.get('downloads'); for (const i of d.failedAll) d.dismiss(i) }, P)
 const packsBefore = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)
 await tab('下载')
 await page.waitForSelector('[data-testid="brew-list"]')
@@ -149,15 +149,21 @@ await page.locator('[data-testid="dependency-preview"] .trpg-btn--primary', { ha
 // 等这一行的按钮回到「下载」（下载结束），最多 2 分钟；结束后再按包名找它自己的横幅
 await page.waitForFunction(() => [...document.querySelector('#trpg-assistant-root').shadowRoot.querySelectorAll('[data-testid="brew-list"] .trpg-row')].find((r) => r.textContent.includes('灵能使（测试副本）'))?.querySelector('button')?.textContent.trim() === '下载', null, { timeout: 120000 }).catch(() => null)
 await settle(page, 600)
-const banner = (await page.locator('[data-testid="download-banners"] [role="alert"]', { hasText: '灵能使（测试副本）' }).allInnerTexts()).join(' / ')
+// 主文件下到了、依赖取不到 → 缺依赖横幅（说明缺哪个，带【下载依赖包】【重试】）；只这一条，不再叠一条普通下载失败，也不报「资料已就绪」
+const bannerLoc = page.locator('[role="alert"]', { hasText: '灵能使（测试副本）' })
+const banner = (await bannerLoc.allInnerTexts()).join(' / ')
+const bannerCount = await bannerLoc.count()
+const doneToast = await page.getByText('资料已就绪').count()
+const ringAfterDep = await page.evaluate((P) => eval(P)._s.get('downloads').ring, P)
 const btn = await page.locator('[data-testid="brew-list"] .trpg-row', { hasText: '灵能使（测试副本）' }).getByRole('button').innerText()
 const packsAfter = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)
 await page.screenshot({ path: `${shots}/s5-download-interrupted.png` })
-check('下载到一半断网（主文件取到、依赖取不到）：顶部横幅按包名说明没下完，带【重试】', /没有/.test(banner) && /重试/.test(banner), banner.replace(/\n/g, ' | ').slice(0, 300))
+check('下载到一半断网（主文件取到、依赖取不到）：顶部横幅按包名说明没下完、缺哪个依赖，带【下载依赖包】【重试】', /没有/.test(banner) && /llspell/.test(banner) && /下载依赖包/.test(banner) && /重试/.test(banner), banner.replace(/\n/g, ' | ').slice(0, 300))
+check('下载到一半断网：只出这一条横幅，不报「资料已就绪」、库图标不打勾', bannerCount === 1 && doneToast === 0 && ringAfterDep !== 'done', `横幅 ${bannerCount} 条，就绪提示 ${doneToast}，ring=${ringAfterDep}`)
 check('下载到一半断网：下了一半的包没有进本机（包数不变）', packsAfter === packsBefore, `${packsBefore} → ${packsAfter}`)
 check('下载到一半断网：按钮回到「下载」，不会停在「下载中…」', btn.trim() === '下载', btn)
 
-// S5b 预览时有网、正式下载主文件时断网：什么都不装，下载失败横幅带【重试】，【库】图标亮警告
+// S5b 预览时有网、正式下载主文件时断网：什么都不装，下载失败横幅带【重试】，【库】图标退出下载状态
 await page.locator('[data-testid="brew-list"] .trpg-row', { hasText: '断网测试包' }).getByRole('button', { name: '下载' }).click()
 await page.waitForSelector('[data-testid="dependency-preview"]')
 await page.locator('[data-testid="dependency-preview"] .trpg-btn--primary', { hasText: '下载' }).click()
@@ -165,12 +171,12 @@ await page.waitForFunction(() => [...document.querySelector('#trpg-assistant-roo
 await settle(page, 600)
 // 横幅多于一条时只露最新一条（P5-5 §12.3）：先展开再读
 if (await page.getByTestId('banners-more').count() && (await page.getByTestId('banners-more').getAttribute('aria-expanded')) !== 'true') await page.getByTestId('banners-more').click()
-const dropBanner = (await page.locator('[data-testid="download-banners"] [role="alert"]', { hasText: '断网测试包' }).allInnerTexts()).join(' / ')
+const dropBanner = (await page.locator('[data-testid="download-banner"][role="alert"]', { hasText: '断网测试包' }).allInnerTexts()).join(' / ')
 const ring = await page.evaluate((P) => eval(P)._s.get('downloads').ring, P)
 const packsAfterDrop = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.brewPacks.list('cn-brew')).length, P)
 await page.screenshot({ path: `${shots}/s5b-main-file-dropped.png` })
 check('正式下载时断网：横幅说明没下完并带【重试】', /没有/.test(dropBanner) && /重试/.test(dropBanner), dropBanner.replace(/\n/g, ' | ').slice(0, 300))
-check('正式下载时断网：什么都没装（包数不变）、【库】图标亮警告', packsAfterDrop === packsAfter && ring === 'warn', `${packsAfter} → ${packsAfterDrop}，ring=${ring}`)
+check('正式下载时断网：什么都没装（包数不变）、【库】图标退出下载状态', packsAfterDrop === packsAfter && ring === 'none', `${packsAfter} → ${packsAfterDrop}，ring=${ring}`)
 
 // S6 导入一个依赖缺失的文件（法术合集已删）：被拦下，横幅点名缺的依赖并给【下载依赖包】【重试】
 // 错误横幅在插件外顶部、不自动消失，会盖住窗口上沿的按钮：先逐条点 × 关掉（2026-11-12 起）

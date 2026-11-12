@@ -22,6 +22,8 @@
 /* 作者的间距 / 分隔（main.css 同名规则） */
 .lib-author-block .ve-pl-2 { padding-left: .5rem; }
 .lib-author-block .ve-pr-2 { padding-right: .5rem; }
+.lib-author-block .ve-pb-2 { padding-bottom: .5rem; }
+.lib-author-block .ve-min-w-25 { min-width: 25%; }
 .lib-author-block .ve-br-1p { border-right: var(--border) solid var(--line); }
 .lib-author-block .ve-mt-1 { margin-top: .25rem; }
 .lib-author-block .ve-mt-4 { margin-top: 1.5rem; }

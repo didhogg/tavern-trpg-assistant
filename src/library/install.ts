@@ -65,8 +65,6 @@ export interface InstallReport {
   precomputeError?: string
   /** 这次能不能发布（下载 / 镜像 / 解析 / 选中书正文全部成功）。 */
   publishable: boolean
-  /** 用户暂停：没有发布，已校验文件留给后续继续复用。 */
-  paused?: boolean
   /** 不能发布的原因；可发布时为空。 */
   reasons: string[]
   /** 资料可浏览，但结算准备失败（换算 / 预计算）；单独重试，不重下资料。 */
@@ -103,8 +101,6 @@ export interface InstallOptions {
   signal?: AbortSignal
   /** 失败安装报告单独保存（不进准备版本）。 */
   onDiagnostic?: (setId: string, report: InstallReport) => Promise<void>
-  /** 下载 / 解析边界检查；返回 pause 时停在安全边界、作废准备版本。 */
-  onCheckpoint?: () => 'continue' | 'pause'
   /** 下载追到依赖后，更新准备版的索引再打开作者小窗。 */
   setIndexes?: (indexes: OfficialPlan['sourceIndexes']) => Promise<LibraryView>
   manifest?: FileList
@@ -185,12 +181,14 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     report.ms = Date.now() - t0
     return report
   }
-  if (opts.onCheckpoint?.() === 'pause') {
-    report.paused = true
+  if (report.download.failed.length) {
+    report.reasons.push(`有 ${report.download.failed.length} 个文件取不到，请检查网络后重试`)
+    report.publishable = false
+    report.settlementReady = false
     report.ms = Date.now() - t0
+    await view.derivedPut(`audit:${source.id}`, commit, report)
     return report
   }
-
   if (opts.setIndexes) view = await opts.setIndexes(plan.sourceIndexes)
   const wanted = new Set(plan.files)
   for (const path of await view.filePaths(source)) {
@@ -222,7 +220,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     const loaders = await frame.call('loaders')
     let n = 0
     for (const loader of loaders) {
-      if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
+      opts.signal?.throwIfAborted()
       opts.onProgress?.({ stage: 'parse', done: n++, total: loaders.length, item: loader.props.join('/') })
       if (loader.kind === 'corpus') {
         const prop = loader.props[0]
@@ -232,7 +230,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
           try {
             const allowed = opts.adventures ? new Set(opts.adventures) : new Set<string>()
             for (const it of await frame.call('corpusList', loader.index!, prop, loader.page!)) {
-              if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
+              opts.signal?.throwIfAborted()
               if (!allowed.has(it.id)) { entry.skipped++; continue }
               try {
                 opts.onProgress?.({ stage: 'parse-corpus', done: entry.count, total: 0, item: it.id })
@@ -246,7 +244,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
         const entry: InstallReport['parse']['corpora'][string] = (report.parse.corpora[prop] = { count: 0, skipped: 0, failed: [] })
         try {
           for (const it of await frame.call('corpusList', loader.index!, prop, loader.page!)) {
-            if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
+            opts.signal?.throwIfAborted()
             if (books && !books.includes(it.id)) { entry.skipped++; continue }
             try {
               opts.onProgress?.({ stage: 'parse-corpus', done: entry.count, total: 0, item: it.id })
@@ -263,7 +261,7 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
         continue
       }
       for (const prop of loader.props) {
-        if (opts.onCheckpoint?.() === 'pause') { report.paused = true; report.ms = Date.now() - t0; return report }
+        opts.signal?.throwIfAborted()
         // 作者用名字前缀 raw_ 标加载器的中间草稿层（utils-dataloader-dataloader.js 第 27 行 `raw_${prop}`），不是最终输出
         if (prop.startsWith('raw_')) {
           report.parse.notRun.push({ props: [prop], reason: '作者加载器的中间草稿层（raw_ 前缀），不是最终输出' })
@@ -334,10 +332,10 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     frame.close()
   }
 
+  opts.signal?.throwIfAborted()
   opts.onProgress?.({ stage: 'save', done: 0, total: 0 })
   report.ms = Date.now() - t0
   const corpusFailed = Object.values(report.parse.corpora).some((c) => c.failed.length)
-  if (report.download.failed.length) report.reasons.push(`${report.download.failed.length} 个文件没下载下来`)
   if (report.mirror.missing.length || report.mirror.mismatched.length) report.reasons.push('本地文件和云端镜像对不上')
   if (report.parse.errors.length) report.reasons.push('作者加载器解析出错')
   if (corpusFailed) report.reasons.push('选中的书正文解析失败')

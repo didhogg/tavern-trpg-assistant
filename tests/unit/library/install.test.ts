@@ -85,19 +85,21 @@ describe('prepareOfficial（P5 T3）', () => {
     await operations.abort(handle, new Error('清理'))
   })
 
-  it('暂停停在文件边界：不发布、不开始镜像', async () => {
-    db = new LibraryDatabase(`install-pause-${Math.random()}`)
+  it('取消停在文件边界：不发布、不开始镜像', async () => {
+    db = new LibraryDatabase(`install-cancel-${Math.random()}`)
     const revisions = new LibraryRevisionStore(db)
     await revisions.ensureLegacy()
     const operations = new LibraryOperations({ db, revisions })
     const handle = await operations.begin({ kind: 'official', set: 'cn-official', codeSet: 'cn' })
     const base = { files: [] as string[], bytes: 0 }
+    const controller = new AbortController()
+    controller.abort()
     const report = await prepareOfficial({
       source, db, revisions, operations, files: fakeFiles(handle.target) as never, openFrame: async () => fakeFrame(), view: handle.target,
       plan: { ...base, files: ['data/spells/spells-phb.json'], shared: base, bySource: base, byBook: base, byClass: base, byAdventure: base, sourceIndexes: {}, missing: { sources: [], books: [] }, sources: [], books: [], adventures: [] },
-      onCheckpoint: () => 'pause',
+      signal: controller.signal,
     })
-    expect(report.paused).toBe(true)
+    expect(report.cancelled).toBe(true)
     expect(report.mirror.checked).toBe(0)
     await operations.abort(handle, new Error('清理'))
   })

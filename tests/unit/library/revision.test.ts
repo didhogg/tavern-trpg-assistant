@@ -161,6 +161,7 @@ describe('版本化库（P5 T1）', () => {
     await db.locks.put({ ...(await db.locks.get('library'))!, expiresAt: Date.now() - 1 })
     await operations.restore()
     expect((await db.ops.get(h.record.id))?.status).toBe('interrupted')
+    expect((await db.revisions.get(h.target.id))?.status).toBe('aborted')
     expect(await db.locks.get('library')).toBeUndefined()
   })
 

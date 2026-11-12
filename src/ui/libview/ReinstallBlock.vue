@@ -38,11 +38,11 @@ async function run(): Promise<void> {
 }
 // 官方是后台任务：按任务编号看结果。完成 → 通知上层重读；失败 / 取消 → 横幅说明，可再点
 watch(() => dl.tasks.find((t) => t.id === taskId.value)?.status, (st) => {
-  if (!taskId.value || !st || st === 'running' || st === 'paused') return
+  if (!taskId.value || !st || st === 'running') return
   const t = dl.tasks.find((x) => x.id === taskId.value)
   taskId.value = null
   if (st === 'done') emit('done')
-  else { failed.value = st === 'cancelled' ? '下载已取消' : `下载没有成功：${t?.error || '原因未知'}`; raw.value = t?.error ?? null }
+  else if (st === 'failed') { failed.value = `下载没有成功：${t?.error || '原因未知'}`; raw.value = t?.error ?? null }
 })
 </script>
 

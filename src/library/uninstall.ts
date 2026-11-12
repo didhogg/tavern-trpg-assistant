@@ -41,46 +41,11 @@ export interface UninstallReport {
   brewKept: boolean
 }
 
-export async function uninstallOfficial({ db, revisions, operations, tasks, afterDelete }: UninstallDeps, setId: string | string[], supplied?: OperationHandle): Promise<UninstallReport> {
+/** 诊断页的整套移除也使用同一条准备、发布路径。 */
+export function uninstallOfficial(deps: UninstallDeps, setId: string | string[], supplied?: OperationHandle): Promise<UninstallReport> {
   const sets = Array.isArray(setId) ? setId : [setId]
-  for (const id of sets) if (getSource(id).kind !== 'official') throw new Error(`${id} 不是官方数据集，不能整套删除`)
-  // 先看所有目标：任何一套正在跑，就一套都不删
-  for (const id of sets) {
-    if (tasks.list().some((t) => t.status === 'running' && t.set === id)) throw new Error('这套资料正在下载或换算，先取消任务再删除')
-  }
-  const ops = operations ?? new LibraryOperations({ db, revisions })
-  const source = getSource(sets[0])
-  const own = !supplied
-  const handle = supplied ?? await ops.begin({ kind: 'uninstall', set: sets.join(','), codeSet: source.codeSet })
-  try {
-    const official: Record<string, import('./db').OfficialSetState> = {}
-    for (const id of sets) {
-      const state = await handle.target.officialState(id)
-      if (!state) continue
-      official[id] = { ...state, status: 'missing', sources: [], books: [], adventures: [] }
-    }
-    await ops.publish(handle, { official })
-    const report: UninstallReport = { set: sets[0], sets, files: 0, bytes: 0, derived: 0, brewKept: false, retainedFiles: 0, retainedBytes: 0 }
-    for (const id of sets) {
-      const s = getSource(id)
-      // 逻辑移除已完成；物理回收要检查所有版本引用，不能在发布后立刻删（P5 核验 4）。
-      await db.files.where('source').equals(id).each((rec) => { report.retainedFiles++; report.retainedBytes += rec.size })
-      await db.fileContents.where('source').equals(id).each((rec) => { report.retainedFiles++; report.retainedBytes += rec.size })
-      report.brewKept = report.brewKept || (await db.kv.where('scope').equals(s.codeSet).count()) > 0
-      await afterDelete(id, handle.base.id)
-    }
-    return report
-  } catch (e) {
-    if (own) await ops.abort(handle, e)
-    throw e
-  }
+  return removeParts(deps, { official: sets.map((id) => ({ setId: id })), brews: [] }, supplied)
 }
-
-/** 中英两套一起卸载：同一份计划、同一事务发布，避免只删一半。 */
-export function uninstallOfficialMany(deps: UninstallDeps, setIds: string[]): Promise<UninstallReport> {
-  return uninstallOfficial(deps, setIds)
-}
-
 
 export interface OfficialPart { setId: string; bookIds?: string[]; bookSources?: string[]; adventureIds?: string[] }
 
@@ -88,20 +53,21 @@ export interface OfficialPart { setId: string; bookIds?: string[]; bookSources?:
  * 在准备版本里摆好「去掉这些书 / 冒险之后」的官方状态与过滤索引（不发布）。没给书和冒险 = 这一套整套移除。
  * 单本卸载和多选卸载共用（P5-5 §12 B1）。
  */
-export async function stageOfficialParts(deps: UninstallDeps, ops: LibraryOperations, handle: OperationHandle, target: OfficialPart): Promise<import('./db').OfficialSetState> {
+export async function stageOfficialParts(deps: UninstallDeps, ops: LibraryOperations, handle: OperationHandle, target: OfficialPart): Promise<import('./db').OfficialSetState | null> {
   const source = getSource(target.setId)
   if (source.kind !== 'official') throw new Error(`${target.setId} 不是官方数据集`)
   if (deps.tasks.list().some((t) => t.status === 'running' && t.set === target.setId)) throw new Error('这套资料正在下载或换算，先取消任务再删除')
   const state = await handle.target.officialState(target.setId)
-  if (!state || state.status !== 'installed') throw new Error(`${target.setId} 还没安装，不能卸载`)
   const books = target.bookIds ?? []
   const adventures = target.adventureIds ?? []
   // 只有书号、来源、冒险号全都没给才是整套；只给来源（书架上没有书号的来源行，如 Generic）按来源移除
   if (!books.length && !adventures.length && !target.bookSources?.length) {
+    if (!state) return null
     const gone = { ...state, status: 'missing' as const, sources: [], books: [], adventures: [], dependencyFiles: [] }
     await ops.setTargetOfficial(handle, { [target.setId]: gone })
     return gone
   }
+  if (!state || state.status !== 'installed') throw new Error(`${target.setId} 还没安装，不能卸载`)
   if (!deps.directory) throw new Error('没有接作者书目入口，不能按书删除')
   const rec = await deps.directory.get(source.codeSet, { commit: state.commit })
   const { nextState, indexes } = await officialRemovalPlan(handle.target, target, state, rec)
@@ -170,15 +136,19 @@ export async function removeParts(
   supplied?: OperationHandle,
 ): Promise<UninstallReport> {
   const ops = deps.operations ?? new LibraryOperations({ db: deps.db, revisions: deps.revisions })
-  const sets = [...parts.official.map((p) => p.setId), ...parts.brews.map((b) => b.setId)]
+  const brewsToRemove = parts.brews.filter((b) => b.ids.length)
+  const sets = [...new Set([...parts.official.map((p) => p.setId), ...brewsToRemove.map((b) => b.setId)])]
+  if (!sets.length) throw new Error('没有选中要卸载的资料')
   const own = !supplied
   const handle = supplied ?? await ops.begin({ kind: 'remove-parts', set: sets.join(','), codeSet: getSource(sets[0]).codeSet })
   try {
     const official: Record<string, import('./db').OfficialSetState> = {}
-    for (const part of parts.official) official[part.setId] = await stageOfficialParts(deps, ops, handle, part)
+    for (const part of parts.official) {
+      const state = await stageOfficialParts(deps, ops, handle, part)
+      if (state) official[part.setId] = state
+    }
     const brews: Record<string, { packs: Array<{ docIdLocal: string; stableId: string | null; checksum: string | null }> }> = {}
-    for (const b of parts.brews) {
-      if (!b.ids.length) continue
+    for (const b of brewsToRemove) {
       if (!deps.removeBrews) throw new Error('没有接自制包删除入口')
       brews[b.setId] = { packs: (await deps.removeBrews(handle.target, b.setId, b.ids)).packs }
     }
@@ -187,6 +157,7 @@ export async function removeParts(
     for (const id of parts.official.map((p) => p.setId)) {
       await deps.db.files.where('source').equals(id).each((r) => { report.retainedFiles++; report.retainedBytes += r.size })
       await deps.db.fileContents.where('source').equals(id).each((r) => { report.retainedFiles++; report.retainedBytes += r.size })
+      if (!report.brewKept && official[id]?.status === 'missing') report.brewKept = (await deps.db.kv.where('scope').equals(getSource(id).codeSet).count()) > 0
     }
     for (const id of sets) await deps.afterDelete(id, handle.base.id)
     return report
