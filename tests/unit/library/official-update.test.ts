@@ -38,15 +38,16 @@ async function seedLocal() {
   await db.files.bulkPut([file('data/spells.json', 'aaa'), file('data/items.json', 'bbb'), file('data/old.json', 'ccc')])
 }
 const directoryFor = (tree: Record<string, { sha: string; size: number }>) => ({
+  peek: async () => null,
   get: async () => ({
     codeSet: 'cn', commit: NEW, groups: [], sources: { PHB: { full: 'Player Handbook', abv: 'PHB', edition: { classic: true, basis: 'date' } } },
-    books: [{ id: 'PHB', source: 'PHB', name: 'Player Handbook' }], adventures: [], adventureFiles: {}, adventureProp: 'adventure',
-    owners: Object.fromEntries(Object.keys(tree).map((path) => [path, { kind: 'source', sources: ['PHB'] }])),
+    books: [{ id: 'PHB', source: 'PHB', name: 'Player Handbook' }, { id: 'MM', source: 'MM', name: 'Monster Manual' }], adventures: [], adventureFiles: {}, adventureProp: 'adventure',
+    owners: Object.fromEntries(Object.keys(tree).filter((path) => path !== 'data/shared.json').map((path) => [path, { kind: 'source', sources: [path.endsWith('-mm.json') ? 'MM' : 'PHB'] }])),
     indexSources: { 'data/spells/index.json': ['PHB'] }, sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null },
   }),
 }) as never
 const make = (fetchImpl: FetchLike, started: Array<{ id: string; plan?: unknown }> = [], tree: Record<string, { sha: string; size: number }> = {}) =>
-  new OfficialUpdates({ db, revisions, files: new FileProvider({ db, fetchImpl }), fetchImpl, directory: directoryFor(tree), startOfficial: (id, opts) => { started.push({ id, plan: opts?.plan }); return 'task-1' } })
+  new OfficialUpdates({ db, revisions, files: new FileProvider({ db, fetchImpl }), fetchImpl, directory: directoryFor(tree), startOfficial: (id, opts) => { started.push({ id, ...opts }); return 'task-1' } })
 
 describe('OfficialUpdates.check', () => {
   it('上游最新提交就是现在的：已是最新', async () => {
@@ -82,10 +83,34 @@ describe('OfficialUpdates.apply', () => {
     const r = await make(upstream({ tree }), started, tree).apply('cn-official')
     expect(r.task).toBe('task-1')
     expect(started.map((x) => x.id)).toEqual(['cn-official'])
-    expect(started[0].plan).toBeTruthy()
+    expect(started[0].plan).toBeUndefined()
     expect(commitOf(SRC)).toBe(OLD)
     const by = Object.fromEntries((await db.files.toArray()).map((f) => [f.path, f.commit]))
     expect(by).toEqual({ 'data/spells.json': OLD, 'data/items.json': OLD, 'data/old.json': OLD })
+  })
+
+  it('作者按来源拆出的文件归到已装书，允许单本更新', async () => {
+    await db.sets.put({ id: 'cn-official', commit: OLD, status: 'installed' })
+    await db.files.put(file('data/spells/spells-phb.json', 'old'))
+    const tree = { 'data/spells/spells-phb.json': { sha: 'new', size: 30 } }
+    const r = await make(upstream({ tree }), [], tree).apply('cn-official', { bookIds: ['PHB'] })
+    expect(r.check.objects).toMatchObject([{ id: 'PHB', changed: 1, shared: false, bytes: 30 }])
+  })
+
+  it('两本独立变化只固定选中书的路径，共用文件变化才要求整批', async () => {
+    await db.sets.put({ id: 'cn-official', commit: OLD, status: 'installed' })
+    const phb = 'data/spells/spells-phb.json'
+    const mm = 'data/bestiary/bestiary-mm.json'
+    await db.files.bulkPut([file(phb, 'old-phb'), file(mm, 'old-mm')])
+    const tree = { [phb]: { sha: 'new-phb', size: 30 }, [mm]: { sha: 'new-mm', size: 20 } }
+    const updates = make(upstream({ tree }), [], tree)
+    const selection = { bookIds: ['PHB'] }
+    expect((await updates.apply('cn-official', selection)).check.shared).toBe(false)
+    expect(await updates.planSelection('cn-official', NEW, selection, await revisions.published()))
+      .toEqual({ [phb]: { ...tree[phb], commit: NEW } })
+
+    const shared = { ...tree, 'data/shared.json': { sha: 'shared', size: 10 } }
+    await expect(make(upstream({ latest: 'a'.repeat(40), tree: shared }), [], shared).apply('cn-official', selection)).rejects.toThrow('牵连共用文件')
   })
 
   it('已是最新 / 要升级插件：不动任何东西并说明原因', async () => {

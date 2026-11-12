@@ -1123,24 +1123,18 @@ async function V() {
 		let n = r.DataUtil[i];
 		if (!n || typeof n.pLoadIndex != "function") continue;
 		let a = String(n._DIR ?? "");
-		if (a) try {
-			e[i] = {
-				dir: a,
-				indexPath: `data/${a}/${i.endsWith("Fluff") ? "fluff-" : ""}index.json`,
-				index: await n.pLoadIndex()
-			};
-		} catch {}
-	}
-	let n;
-	try {
-		let e = await r.DataUtil.loadRawJSON("data/class/index.json");
-		n = [...new Set(Object.values(e ?? {}).map((e) => `data/class/${String(e)}`))];
-	} catch {
-		n = [];
+		if (!a) continue;
+		let o = await n.pLoadIndex();
+		e[i] = {
+			dir: a,
+			indexPath: `data/${a}/${n._isFluff ? "fluff-" : ""}index.json`,
+			index: o,
+			bySource: Object.keys(o).some((e) => r.Parser.hasSourceJson(e))
+		};
 	}
 	return {
 		maps: e,
-		classFiles: n
+		classFiles: [...new Set(Object.values(e).filter((e) => !e.bySource).flatMap(({ dir: e, index: t }) => Object.values(t).map((t) => `data/${e}/${t}`)))]
 	};
 }
 async function nt(e) {

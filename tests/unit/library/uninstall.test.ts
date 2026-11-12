@@ -3,6 +3,7 @@ import { LibraryDatabase } from '../../../src/library/db'
 import { removeOfficialParts, removeParts, uninstallOfficial } from '../../../src/library/uninstall'
 import { getSource } from '../../../src/library/sources'
 import { LibraryRevisionStore } from '../../../src/library/revision'
+import { LibraryOperations } from '../../../src/library/operations'
 import type { TaskState } from '../../../src/library/tasks'
 
 let db: LibraryDatabase
@@ -125,10 +126,13 @@ describe('官方单本书删除', () => {
     db = new LibraryDatabase(`test-uninstall-book-${Math.random()}`)
     await seed()
     const revisions = new LibraryRevisionStore(db)
+    const ops = new LibraryOperations({ db, revisions })
+    const full = await ops.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await ops.publish(full, { official: { 'cn-official': { commit: 'c', status: 'installed', books: null, sources: null, adventures: [], dependencyFiles: [] } } })
     const directory = {
       get: async () => ({
         codeSet: 'cn', commit: 'c', groups: [], sources: { PHB: {}, MM: {} }, books: [{ id: 'PHB', source: 'PHB' }, { id: 'MM', source: 'MM' }], adventures: [],
-        adventureFiles: {}, adventureProp: 'adventure', owners: {}, indexSources: { 'data/bestiary/index.json': ['PHB', 'MM'] },
+        adventureFiles: {}, adventureProp: 'adventure', owners: {}, indexSources: { 'data/bestiary/index.json': ['PHB', 'MM', 'ESK'] },
         sourceFiles: { maps: {}, classFiles: [] }, errors: { books: null, adventures: null },
       }),
     } as never
@@ -138,7 +142,9 @@ describe('官方单本书删除', () => {
     expect(reset).toBeTruthy()
     const view = await revisions.published()
     expect((await view.officialState('cn-official'))?.books).toEqual(['MM'])
-    expect((await view.officialState('cn-official'))?.sources).toEqual(['MM'])
+    expect((await view.officialState('cn-official'))?.sources).toEqual(['MM', 'ESK'])
+    const index = JSON.stringify({ PHB: 'phb', MM: 'mm', ESK: 'esk' })
+    expect(JSON.parse(await view.filterIndex('data/bestiary/index.json', index, 'cn'))).toEqual({ MM: 'mm', ESK: 'esk' })
     expect(await db.files.where('source').equals('cn-official').count()).toBe(2)
     expect(await db.fileContents.where('source').equals('cn-official').count()).toBe(0)
   })

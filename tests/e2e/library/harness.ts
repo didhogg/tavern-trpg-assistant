@@ -241,7 +241,7 @@ export const tasks = new DownloadTasks({ db, revisions, operations, files, openF
     const source = getSource(setId)
     const rec = await directory.get(source.codeSet)
     const list = await files.fileList(source, view)
-    return officialPlan(list, rec.owners, { sources: opts.sources ?? null, books: opts.books ?? null, adventures: opts.adventures ?? null }, { indexSources: rec.indexSources, codeSet: source.codeSet, ...(opts.knownAdventures ? { knownAdventures: opts.knownAdventures } : {}), ...(opts.allSources ? { allSources: true } : {}) })
+    return officialPlan(list, rec.owners, opts, { ...opts, indexSources: rec.indexSources, sourceFiles: rec.sourceFiles, codeSet: source.codeSet })
   } })
 export const directory = new BookDirectory({ db, view: () => revisions.published(), localFrame: async (cs) => openLocalFrame(cs, { view: await revisions.published(), filterIndex: false }), networkFrame: (cs, scope) => startAuthorFrame({ codeSet: cs, pluginRoot: new URL('/', location.href), container: document.body, handlers: libraryHandlers({ codeSet: cs, db, files, allowNetwork: () => true, kvScope: scope, filterIndex: false }) }) })
 export { defaultCampaignLibrary }

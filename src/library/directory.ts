@@ -39,7 +39,7 @@ export interface DirectoryOptions {
 }
 
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
-const KEY_VERSION = 'v3'
+const KEY_VERSION = 'v4'
 
 export class BookDirectory {
   private readonly inflight = new Map<string, Promise<DirectoryRecord>>()
@@ -124,6 +124,7 @@ export class BookDirectory {
       const sourceFiles = data.sourceFiles ?? { maps: {}, classFiles: [] }
       const indexSources: Record<string, string[]> = {}
       for (const map of Object.values(sourceFiles.maps)) {
+        if (!map.bySource) continue
         indexSources[map.indexPath] = Object.keys(map.index)
         for (const [source, file] of Object.entries(map.index)) {
           const path = `data/${map.dir}/${file}`

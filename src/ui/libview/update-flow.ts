@@ -1,8 +1,8 @@
 // 书架【拉取更新】（P5 T6 B3）：检查时书架照常显示，顶部出一条「正在检查更新…」；有更新的行标【有更新】，
-// 可以单本更新或【全部更新】。能不能只更新一本由后端判断：后端拒绝（牵连共用文件 / 别的书也变了）时，
+// 可以单本更新或【全部更新】。能不能只更新一本由后端判断：后端发现牵连共用文件时，
 // 弹窗列出这次会连带更新的书和大小，确认后按整批更新。需要升级插件只提示、不给更新。
 import type { Services } from '../../core/services'
-import type { OfficialUpdateCheck } from '../../library/official-update'
+import { OfficialUpdateBatchRequired, OfficialUpdateCurrent, type OfficialUpdateCheck } from '../../library/official-update'
 import type { CatalogRow } from '../../library/scoped'
 import { SOURCES, officialSourceOf } from '../../library/sources'
 import { useDownloadsStore } from '../../stores/downloads'
@@ -24,11 +24,15 @@ export async function pullUpdates(s: Services, codeSet: string, toast: Toast): P
   store.checking = true
   notices.show({ key: CHECKING, text: '正在检查更新…（书架照常可用）', actions: [] })
   try {
-    const official = await Promise.all([...new Set([officialSourceOf(codeSet).id, officialSourceOf('en').id])].map((id) => lib.updates.check(id)))
+    const view = await lib.currentView()
+    const sets = [...new Set([officialSourceOf(codeSet).id, officialSourceOf('en').id])]
+    const states = await Promise.all(sets.map((id) => view.officialState(id)))
+    const official = await Promise.all(sets.filter((_, i) => states[i]?.status === 'installed').map((id) => lib.updates.check(id)))
     const brewSet = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)?.id
     const brew = brewSet ? (await lib.service.brewCheckUpdates(brewSet)).value.filter((b) => b.hasUpdate).map((b) => ({ ...b, setId: brewSet })) : []
     store.set(official, brew)
     notices.dismiss(CHECKING)
+    notices.dismiss('update:available')
     const upgrade = official.find((o) => o.status === 'needs-plugin-upgrade')
     if (upgrade) notices.show({ key: 'update:plugin', text: `官方资料有新版，但上游作者程序是 ${upgrade.programVersion.upstream ?? '新版本'}，插件里是 ${upgrade.programVersion.plugin}：要先升级插件才能更新官方资料。`, actions: [] })
     if (!store.available.length && !brew.length) { if (!upgrade) toast.info('都是最新的'); return false }
@@ -56,9 +60,11 @@ async function updateWholeSet(s: Services, check: OfficialUpdateCheck, reason: s
   try {
     const { task } = await s.backend.library.updates.apply(check.setId)
     useDownloadsStore().rememberTask(task, `更新官方资料（${objs.length || 1} 项）`, () => void updateWholeSet(s, check, null, toast))
-    useUpdatesStore().done(check.setId)
     toast.success('已开始更新，进度见【库】标志')
-  } catch (e) { await reportLibError(s, e, '更新官方资料', toast) }
+  } catch (e) {
+    if (e instanceof OfficialUpdateCurrent) { useUpdatesStore().published(check.setId, check.latest); toast.info(e.message) }
+    else await reportLibError(s, e, '更新官方资料', toast)
+  }
 }
 
 /** 书架行上的【更新】：先请后端只更新这一本；后端说不能单独更新时，改为确认后整批更新。 */
@@ -83,12 +89,13 @@ export async function updateRow(s: Services, row: CatalogRow, toast: Toast): Pro
   const hit = store.officialOf(row.set, row.kind, row.id, row.source)
   if (!hit) return
   try {
-    const { task } = await s.backend.library.updates.apply(row.set, row.kind === 'adventure' ? { adventureIds: row.id ? [row.id] : [] } : { bookIds: row.id ? [row.id] : [] })
+    const { task } = await s.backend.library.updates.apply(row.set, row.kind === 'adventure' ? { adventureIds: [row.id ?? row.source] } : { bookIds: [row.id ?? row.source] })
     dl.rememberTask(task, `更新《${row.name}》`, () => void updateRow(s, row, toast))
     toast.success(`已开始更新《${row.name}》，进度见【库】标志`)
   } catch (e) {
-    // 后端拒绝单独更新（牵连共用文件 / 别的书也变了）：如实转述原因，确认后整批更新
-    await updateWholeSet(s, hit.check, e instanceof Error ? e.message : null, toast)
+    if (e instanceof OfficialUpdateCurrent) { store.published(hit.check.setId, hit.check.latest, e.selection); toast.info(e.message) }
+    else if (e instanceof OfficialUpdateBatchRequired) await updateWholeSet(s, hit.check, e.message, toast)
+    else await reportLibError(s, e, `更新《${row.name}》`, toast)
   }
 }
 

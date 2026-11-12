@@ -149,23 +149,23 @@ export class LibraryService {
   async query(sourceId: string, prop: string, { source, includeExcluded = false, view: viewArg }: { source?: string; includeExcluded?: boolean; view?: LibraryView } = {}): Promise<QueryRow[]> {
     const view = await this.view(viewArg)
     await ensureReadable(view, sourceId)
+    const state = await view.officialState(sourceId)
+    const allowed = state?.status === 'installed' && state.sources ? new Set(state.sources.map((x) => x.toLowerCase())) : null
+    const want = source?.toLowerCase()
+    const visible = (value: string | null): boolean => (want === undefined || value?.toLowerCase() === want) && (!allowed || !value || allowed.has(value.toLowerCase()))
     if (prop === EMBEDDED_PROP) {
       const p = await this.parsed(sourceId, prop, view)
-      return p.items.flatMap((item, i) => (source === undefined || p.sources[i]?.toLowerCase() === source.toLowerCase() ? [{ hash: p.hashes[i], source: p.sources[i], excluded: false, item }] : []))
+      return p.items.flatMap((item, i) => visible(p.sources[i]) ? [{ hash: p.hashes[i], source: p.sources[i], excluded: false, item }] : [])
     }
     await this.ensure(sourceId, { prop, excluded: true }, view)
     const p = await this.parsed(sourceId, prop, view)
     const excludedOf = await cachedExcluded(this.opts.db, sourceId, prop, view)
     if (excludedOf && p.hashes.some((h) => h && excludedOf[h] === undefined)) throw new Error(`缓存里的「${prop}」屏蔽表和解析结果对不上，不猜`)
-    const state = await view.officialState(sourceId)
-    const allowed = state?.status === 'installed' && state.sources ? new Set(state.sources.map((x) => x.toLowerCase())) : null
-    const want = source?.toLowerCase()
     const rows: QueryRow[] = []
     p.items.forEach((item, i) => {
       const excluded = excludedOf?.[p.hashes[i] ?? ''] ?? false
       if (excluded && !includeExcluded) return
-      if (want !== undefined && p.sources[i]?.toLowerCase() !== want) return
-      if (allowed && p.sources[i] && !allowed.has(p.sources[i]!.toLowerCase())) return
+      if (!visible(p.sources[i])) return
       rows.push({ hash: p.hashes[i], source: p.sources[i], excluded, item })
     })
     return rows

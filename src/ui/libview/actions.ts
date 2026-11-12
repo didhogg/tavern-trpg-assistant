@@ -7,6 +7,7 @@ import { getSource } from '../../library/sources'
 import { askConfirm, type ConfirmSection } from '../kit/confirm'
 import { reportLibError } from './deps-flow'
 import { formatBytes } from '../format'
+import { useLibViewStore } from '../../stores/libview'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
 
@@ -66,7 +67,7 @@ export async function removeTargets(s: Services, targets: RemovalTarget[], label
           message: [
             attempt > 0 ? '刚才的预览之后资料有变化，下面是重新算的影响。' : '',
             extra ? `另一种语言的同一份（${extra} 项）也会一起${verb}。` : '',
-            size?.total != null ? `共占用约 ${formatBytes(size.total)}，${verb}后会腾出来。` : '占用大小暂时算不出。',
+            size?.total != null ? (official ? `所选文件最多约 ${formatBytes(size.total)}，其他资料仍需要的文件会保留。` : `共占用约 ${formatBytes(size.total)}。`) : '占用大小暂时算不出。',
             official ? '之后可以在【下载】页重新下载。' : '',
           ].filter(Boolean).join(''),
           sections: impactSections(batch, labels), confirmLabel: `确认${verb}`, danger: true,
@@ -80,6 +81,7 @@ export async function removeTargets(s: Services, targets: RemovalTarget[], label
       const m = e instanceof Error ? e.message : String(e)
       if (attempt === 0 && /重新预览/.test(m)) continue
       const remaining = (e as { remaining?: RemovalTarget[] }).remaining
+      await useLibViewStore().refresh(s)
       await reportLibError(s, e, `${verb}${what}`, toast, () => void removeTargets(s, remaining?.length ? remaining : targets, labels, false, toast))
       return false
     }

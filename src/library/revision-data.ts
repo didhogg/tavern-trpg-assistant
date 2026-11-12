@@ -9,7 +9,11 @@ export function dataVersionOf(officialStates: Record<string, OfficialSetState>, 
   const official = Object.entries(officialStates)
     .filter(([, s]) => s.status === 'installed')
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([id, s]) => `${id}:${s.commit}:${s.sources ? [...s.sources].sort().join(',') : '*'}`)
+    .map(([id, s]) => {
+      const base = `${id}:${s.commit}:${s.sources ? [...s.sources].sort().join(',') : '*'}`
+      const files = Object.entries(s.fileOverrides ?? {}).sort(([a], [b]) => a.localeCompare(b))
+      return files.length ? `${base}:${hashValue(files)}` : base
+    })
     .join('|')
   const brewOut: Record<string, string> = {}
   for (const [setId, state] of Object.entries(brewStates)) {

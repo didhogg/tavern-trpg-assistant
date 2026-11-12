@@ -84,6 +84,8 @@ export async function filePaths(store: LibraryRevisionStore, view: LibraryView, 
 
 /** 沿父链找这个索引文件最近的过滤规则；没有规则 = 不过滤，null = 明确不限制。 */
 export async function filterIndexFromChain(view: LibraryView, path: string, text: string, codeSet?: string): Promise<string> {
+  // 旧版本曾写过空职业目录；作者这两个目录的键是职业名，任何旧来源过滤都不能应用。
+  if (path === 'data/class/index.json' || path === 'data/class/fluff-index.json') return text
   for (const rev of await view.chain()) {
     const map = rev.sourceIndexes
     if (!map) continue

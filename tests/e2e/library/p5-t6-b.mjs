@@ -1,7 +1,7 @@
 // P5 T6 B 单元（下载页、悬浮窗、拉取更新、任务前后书架不变）真实数据点击验证（Chrome）。
 // 资料：p5-t6-pack-audit-WST6kp 副本（端口须 47342）；外网全部拦掉。
 // 「下载中」的造法：先在后端单本卸载一本书（文件保留），再从下载页把它下回来——真实跑一遍整套解析。
-// 拉取更新要连上游：这里替换 updates.check / apply 的返回值，只测界面流程（报告里写明）。
+// 拉取更新要连上游：这里替换 updates.check 和任务启动，沿用真实 apply 来判定共用文件。
 // 用法：SKIP_BUILD=1 node tests/e2e/library/p5-t6-b.mjs
 import { cp, mkdir, rm } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
@@ -128,19 +128,18 @@ if (!process.env.SKIP_WIDE) {
   const { ctx, page } = await open('update', { width: 1280, height: 800 })
   const target = await page.evaluate((P) => {
     const ps = eval(P), be = ps._s.get('app').svc().backend, lib = ps._s.get('library')
-    // 只挑书架上真的显示的行（「我的库」里有副本的来源不在书架列）
-    const mine = new Set(lib.minePacks.flatMap((p) => p.sources))
-    const rows = lib.shelf.groups.flatMap((g) => g.books).filter((r) => r.downloaded && r.set === 'cn-official' && r.id && !mine.has(r.source))
+    const rows = lib.shelf.groups.flatMap((g) => g.books).filter((r) => r.downloaded && r.set === 'cn-official' && r.id)
     const a = rows[0], b = rows[1]
     window.__applied = []
     be.library.updates.check = async (setId) => setId === 'cn-official'
-      ? { setId, status: 'available', current: 'c1', latest: 'c2', programVersion: { plugin: 'x', upstream: 'x' }, changed: { changed: 3, added: 0, removed: 0, bytes: 1048576 }, objects: [{ kind: 'book', id: a.id, source: a.source, name: a.name, added: 0, changed: 2, removed: 0, bytes: 1, shared: false }, { kind: 'book', id: b.id, source: b.source, name: b.name, added: 0, changed: 1, removed: 0, bytes: 1, shared: false }] }
+      ? { setId, status: 'available', current: 'c1', latest: 'c2', programVersion: { plugin: 'x', upstream: 'x' }, shared: true, changed: { changed: 3, added: 0, removed: 0, bytes: 1048576 }, objects: [{ kind: 'book', id: a.id, source: a.source, name: a.name, added: 0, changed: 2, removed: 0, bytes: 1, shared: true }, { kind: 'book', id: b.id, source: b.source, name: b.name, added: 0, changed: 1, removed: 0, bytes: 1, shared: true }] }
       : { setId, status: 'up-to-date', current: 'c', latest: 'c', programVersion: { plugin: 'x', upstream: 'x' } }
     be.library.service.brewCheckUpdates = async () => ({ value: [], errors: [] })
-    be.library.updates.apply = async (setId, opts = {}) => {
+    const apply = be.library.updates.apply.bind(be.library.updates)
+    be.library.tasks.startOfficial = () => 'fake-task'
+    be.library.updates.apply = (setId, opts = {}) => {
       window.__applied.push(opts)
-      if (opts.bookIds?.length) throw new Error(`未选中的对象也有变化（${b.name}），请按整批更新`)
-      return { task: 'fake-task', check: null }
+      return apply(setId, opts)
     }
     return { a: a.name, b: b.name }
   }, P)
@@ -155,7 +154,7 @@ if (!process.env.SKIP_WIDE) {
   await page.waitForSelector('[data-testid="confirm-page"]')
   const conf = await page.locator('[data-testid="confirm-page"]').innerText()
   await page.screenshot({ path: `${shots}/update-batch-confirm.png` })
-  check('单本更新被后端拒绝（别的书也变了）：弹窗说明原因并列出会一起更新的书', /整批/.test(conf) && conf.includes(target.b) && conf.includes(target.a), conf.replace(/\n/g, ' | ').slice(0, 300))
+  check('共用文件变化：弹窗说明原因并列出会一起更新的书', /共用文件/.test(conf) && conf.includes(target.b) && conf.includes(target.a), conf.replace(/\n/g, ' | ').slice(0, 300))
   await page.locator('.trpg-confirm__actions .trpg-btn--primary').click()
   await settle(page, 600)
   const applied = await page.evaluate(() => window.__applied)

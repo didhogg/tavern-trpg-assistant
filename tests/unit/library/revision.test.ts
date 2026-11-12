@@ -131,6 +131,16 @@ describe('版本化库（P5 T1）', () => {
     expect(JSON.parse(await v2.filterIndex(path, text, 'en'))).toEqual({ XPHB: 'xphb.json' })
   })
 
+  it('兼容旧库曾写入的空职业目录过滤，读取职业正文和附录的完整目录', async () => {
+    const { operations } = await setup()
+    const paths = ['data/class/index.json', 'data/class/fluff-index.json']
+    const handle = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await operations.setTargetIndexes(handle, Object.fromEntries(paths.map((path) => [`cn|${path}`, []])))
+    const view = await operations.publish(handle, {})
+    const text = JSON.stringify({ fighter: 'class-fighter.json' })
+    for (const path of paths) expect(await view.filterIndex(path, text, 'cn')).toBe(text)
+  })
+
   it('过期租约被新操作接管：旧操作标中断，旧回包不能发布', async () => {
     const { operations } = await setup()
     const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })

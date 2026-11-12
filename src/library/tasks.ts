@@ -2,7 +2,7 @@
 // 每次修改都开一个准备版本；成功才发布。任务状态和内容状态分开：失败 / 取消 / 重启不会让旧库消失。
 import type { LibraryDatabase, OfficialSetState } from './db'
 import type { FileProvider } from './files'
-import { installedAdventureIds, parsedKey, prepareOfficial, type InstallReport } from './install'
+import { installedAdventureIds, prepareOfficial, type InstallReport } from './install'
 import { failedInstallReport } from './install-report'
 import type { AuthorFrame } from './runtime/host'
 import type { LogSink } from './logs'
@@ -10,6 +10,7 @@ import { getSource } from './sources'
 import { LibraryOperations, type OperationHandle } from './operations'
 import type { LibraryRevisionStore, LibraryView } from './revision'
 import { selectionFor } from './plan'
+import type { FileList } from './fetcher'
 
 export type TaskStatus = 'running' | 'paused' | 'done' | 'partial' | 'failed' | 'cancelled' | 'interrupted'
 
@@ -38,8 +39,9 @@ export interface OfficialTaskOptions {
   sources?: string[] | null
   /** 已装 / 选中的冒险正文编号；不填 = 沿用当前版本。 */
   adventures?: string[] | null
-  /** 已有按书计划（估算 / 更新共用）；不给就整套预载。 */
-  plan?: import('./plan').OfficialPlan
+  /** 这次更新针对的已发布提交与选择。锁内重新计划，不能拿检查结果覆盖清单。 */
+  updateFrom?: string
+  updateSelection?: import('./official-update').OfficialUpdateSelection
 }
 
 export interface TaskOptions {
@@ -49,8 +51,9 @@ export interface TaskOptions {
   files: FileProvider
   /** 开一个只读本地、绑定到指定版本的作者小窗。 */
   openFrame: (codeSet: string, view: LibraryView) => Promise<AuthorFrame>
-  /** 按书计划：任务没拿到现成计划、但给了 books / sources 时，由后端用作者目录生成。 */
-  planOfficial?: (setId: string, opts: { books?: string[] | null; sources?: string[] | null; adventures?: string[] | null; allSources?: boolean; knownAdventures?: string[]; installedSources?: string[] }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
+  /** 拿到修改权后，按已装集合和目标提交生成作者计划。 */
+  planOfficial?: (setId: string, opts: import('./plan').SelectionInput & { commit?: string; allSources?: boolean; knownAdventures?: string[]; installedSources?: string[]; signal?: AbortSignal; manifest?: FileList }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
+  selectUpdate?: (setId: string, commit: string, selection: import('./official-update').OfficialUpdateSelection | undefined, base: LibraryView) => Promise<NonNullable<OfficialSetState['fileOverrides']> | null>
   /** T2：下载任务里的换算段；后端接结算内核，库层只报进度。 */
   precompute?: (setId: string, view: LibraryView, signal: AbortSignal, onProgress: (p: TaskState['progress']) => void) => Promise<unknown>
   onChange?: (t: TaskState) => void
@@ -68,9 +71,11 @@ const listKey = (xs: string[] | null | undefined): string => (xs == null ? 'all'
 /** 官方任务身份：同一数据集、同一组书/来源/冒险/目标提交才算同一个请求；否则各自排队。 */
 export const officialTaskKey = (opts: OfficialTaskOptions): string => [
   `commit=${opts.commit ?? 'current'}`,
-  `books=${listKey(opts.books ?? opts.plan?.books)}`,
-  `sources=${listKey(opts.sources ?? opts.plan?.sources)}`,
-  `adventures=${listKey(opts.adventures ?? opts.plan?.adventures)}`,
+  `books=${listKey(opts.books)}`,
+  `sources=${listKey(opts.sources)}`,
+  `adventures=${listKey(opts.adventures)}`,
+  `updateBooks=${listKey(opts.updateSelection?.bookIds)}`,
+  `updateAdventures=${listKey(opts.updateSelection?.adventureIds)}`,
 ].join(';')
 
 
@@ -126,9 +131,6 @@ export class DownloadTasks {
     const task = this.tasks.get(id)
     const opts = this.officialOpts.get(id)
     if (!task || task.state.status !== 'paused' || !opts) return null
-    const op = await this.opts.operations.get(id)
-    const current = await this.opts.revisions.published()
-    if (opts.plan && op?.base && op.base !== current.id) throw new Error('资料已经换过版本，暂停的计划已过期，请重新预览更新')
     return this.startOfficial(task.state.set, opts)
   }
 
@@ -184,85 +186,121 @@ export class DownloadTasks {
 
   /** 下载并安装一套官方数据（按书 / 全部）。 */
   startOfficial(setId: string, opts: OfficialTaskOptions = {}): string {
-    const source = getSource(setId)
-    const id = this.start('official', setId, officialTaskKey(opts), async (state, signal) => {
-      const handle = await this.opts.operations.begin({
-        id: state.id, kind: 'official', set: setId, codeSet: source.codeSet, sourceIndexes: opts.plan?.sourceIndexes, signal,
-      })
-      this.handles.set(state.id, handle)
-      state.revision = handle.target.id
-      let report: InstallReport | null = null
-      try {
-        const base = await handle.target.officialState(setId)
-        const baseAdventures = base?.status === 'installed' && base.adventures === null ? await installedAdventureIds(handle.target, setId) : base?.adventures ?? null
-        const selection = selectionFor(base, { ...opts, adventures: baseAdventures })
-        const plan = opts.plan ?? await this.opts.planOfficial?.(setId, {
-          books: selection.books, sources: selection.sources, adventures: selection.adventures,
-          allSources: selection.allSources, knownAdventures: baseAdventures ?? [],
-          installedSources: base?.status === 'installed' ? base.sources ?? [] : [],
-        }, handle.target)
-        if (plan && (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0))) {
-          const miss = [...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')
-          await this.opts.operations.abort(handle, new Error(`作者目录里找不到这些书 / 来源：${miss}`))
-          throw new Error(`作者目录里找不到这些书 / 来源：${miss}`)
-        }
-        const commit = opts.commit ?? base?.commit ?? await handle.target.commitOf(source)
-        if (plan) await this.opts.operations.setTargetIndexes(handle, plan.sourceIndexes)
-        if (!base || base.commit !== commit) {
-          await this.opts.operations.setTargetOfficial(handle, { [setId]: base ? { ...base, commit } : { commit, status: 'missing', sources: null, books: null, adventures: null } })
-        }
-        const sources = plan ? plan.sources : selection.sources
-        const books = plan ? plan.books : selection.books
-        report = await prepareOfficial({
-          source, db: this.opts.db, files: this.opts.files, revisions: this.opts.revisions, operations: this.opts.operations,
-          openFrame: (view) => this.opts.openFrame(source.codeSet, view), view: handle.target, plan: plan ?? undefined,
-          sources, books, adventures: selection.adventures,
-          signal, onProgress: (p) => { void this.progress(state, p) },
-          onCheckpoint: () => (this.paused.has(state.id) ? 'pause' : 'continue'),
-        })
-        if (report.cancelled) {
-          await this.opts.operations.abort(handle, new Error('已取消'), 'cancelled')
-          return { result: report, status: 'cancelled', revision: handle.target.id }
-        }
-        if (report.paused) {
-          await this.opts.operations.abort(handle, new Error('已暂停，继续时会复用已下载文件'), 'interrupted')
-          return { result: report, status: 'paused', revision: handle.target.id }
-        }
-        if (!report.publishable) {
-          await this.opts.onDiagnostic?.(setId, report)
-          await this.opts.operations.abort(handle, new Error(report.reasons.join('；')))
-          throw new Error(report.reasons.join('；'))
-        }
-        const official: Record<string, OfficialSetState> = {
-          [setId]: {
-            commit: report.commit, status: 'installed',
-            sources, books, adventures: plan ? plan.adventures : selection.adventures,
-            plan: { files: report.plan.files, bytes: report.plan.bytes },
-          },
-        }
-        const published = await this.opts.operations.publish(handle, {
-          official, sourceIndexes: plan?.sourceIndexes ?? {}, result: report,
-          status: report.settlementReady ? 'done' : 'partial',
-        })
-        state.revision = published.id
-        await this.opts.db.derived.delete(`audit:last-failed:${setId}`)
-        this.opts.onPublished?.(published, handle.base.id)
-        if (this.opts.precompute) {
-          try { state.convert = await this.opts.precompute(setId, published, signal, (p) => { void this.progress(state, p) }) }
-          catch (e) { state.convertError = msg(e) }
-        }
-        return { result: report, status: report.settlementReady && !state.convertError ? 'done' : 'partial', revision: published.id }
-      } catch (e) {
-        if (!report) await this.opts.onDiagnostic?.(setId, failedInstallReport(source, e))
-        await this.opts.operations.abort(handle, e)
-        throw e
-      } finally {
-        this.handles.delete(state.id)
-        this.paused.delete(state.id)
-      }
-    })
+    const id = this.start('official', setId, officialTaskKey(opts), (state, signal) => this.install(state, signal, opts))
     this.officialOpts.set(id, opts)
     return id
+  }
+
+  /** 冒险正文与它的来源、隐藏依赖按同一份安装计划准备。 */
+  startAdventure(setId: string, adventureId: string): string {
+    return this.start('adventure', setId, adventureId, (state, signal) => this.install(state, signal, { adventures: [adventureId] }))
+  }
+
+  private async install(state: TaskState, signal: AbortSignal, opts: OfficialTaskOptions): Promise<RunResult> {
+    const setId = state.set
+    const source = getSource(setId)
+    const handle = await this.opts.operations.begin({
+      id: state.id, kind: state.kind, set: setId, item: state.item, codeSet: source.codeSet, signal,
+    })
+    this.handles.set(state.id, handle)
+    state.revision = handle.target.id
+    let report: InstallReport | null = null
+    try {
+      const base = await handle.base.officialState(setId)
+      const target = opts.commit ?? base?.commit ?? await handle.base.commitOf(source)
+      let slice: OfficialSetState['fileOverrides']
+      if (state.kind === 'adventure' && base?.status !== 'installed') throw new Error(`${setId} 还没安装，先装官方数据`)
+      if (opts.updateFrom) {
+        if (base?.status !== 'installed') throw new Error('这套资料已卸载，请重新下载')
+        if (base.commit === target) {
+          await this.opts.operations.abort(handle, new Error('另一项任务已完成同一更新'))
+          return { result: null, revision: handle.base.id }
+        }
+        if (base.commit !== opts.updateFrom) throw new Error('这套资料已经换过版本，请重新检查更新')
+        slice = await this.opts.selectUpdate?.(setId, target, opts.updateSelection, handle.base) ?? undefined
+      }
+      const commit = slice && base ? base.commit : target
+      const fileOverrides = slice ? { ...base?.fileOverrides, ...slice } : base?.commit === commit ? base.fileOverrides : undefined
+      const baseAdventures = base?.status === 'installed' && base.adventures === null ? await installedAdventureIds(handle.base, setId) : base?.adventures ?? null
+      const selection = selectionFor(base && baseAdventures ? { ...base, adventures: baseAdventures } : base, opts)
+      if (!base || base.commit !== commit) {
+        await this.opts.operations.setTargetOfficial(handle, { [setId]: base ? { ...base, commit } : { commit, status: 'missing', sources: null, books: null, adventures: null } })
+      }
+      let manifest: FileList | undefined
+      if (fileOverrides) {
+        manifest = { ...await this.opts.files.fileList(source, handle.target, { signal }) }
+        for (const [path, pinned] of Object.entries(fileOverrides)) {
+          if (pinned) manifest[path] = pinned
+          else delete manifest[path]
+        }
+      }
+      const plan = await this.opts.planOfficial?.(setId, {
+        ...(opts.commit ? { commit: opts.commit } : {}), ...(manifest ? { manifest } : {}), signal,
+        books: selection.books, sources: selection.sources, adventures: selection.adventures,
+        allSources: selection.allSources, knownAdventures: baseAdventures ?? [],
+        installedSources: base?.status === 'installed' ? base.sources ?? [] : [],
+      }, handle.target)
+      if (plan && (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0))) {
+        const miss = [...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')
+        throw new Error(`作者目录里找不到这些书 / 来源：${miss}`)
+      }
+      let sourceIndexes = plan?.sourceIndexes ?? {}
+      const sources = plan ? plan.sources : selection.sources
+      const books = plan ? plan.books : selection.books
+      report = await prepareOfficial({
+        source, db: this.opts.db, files: this.opts.files, revisions: this.opts.revisions, operations: this.opts.operations, manifest, fileOverrides,
+        openFrame: (view) => this.opts.openFrame(source.codeSet, view), view: handle.target, plan: plan ?? undefined,
+        sources, books, adventures: plan ? plan.adventures : selection.adventures,
+        setIndexes: async (indexes) => {
+          sourceIndexes = indexes
+          await this.opts.operations.setTargetIndexes(handle, indexes)
+          return handle.target
+        },
+        signal, onProgress: (p) => { void this.progress(state, p) },
+        onCheckpoint: () => (this.paused.has(state.id) ? 'pause' : 'continue'),
+      })
+      if (report.cancelled) {
+        await this.opts.operations.abort(handle, new Error('已取消'), 'cancelled')
+        return { result: report, status: 'cancelled', revision: handle.target.id }
+      }
+      if (report.paused) {
+        await this.opts.operations.abort(handle, new Error('已暂停，继续时会复用已下载文件'), 'interrupted')
+        return { result: report, status: 'paused', revision: handle.target.id }
+      }
+      if (!report.publishable) {
+        await this.opts.onDiagnostic?.(setId, report)
+        throw new Error(report.reasons.join('；'))
+      }
+      if (opts.updateFrom) report.update = { target, ...(slice && opts.updateSelection ? { selection: opts.updateSelection } : {}) }
+      const official: Record<string, OfficialSetState> = {
+        [setId]: {
+          commit: report.commit, status: 'installed',
+          sources, books, adventures: plan ? plan.adventures : selection.adventures,
+          plan: { files: report.plan.files, bytes: report.plan.bytes },
+          ...(report.dependencyFiles ? { dependencyFiles: report.dependencyFiles } : {}),
+          ...(fileOverrides ? { fileOverrides } : {}),
+        },
+      }
+      const published = await this.opts.operations.publish(handle, {
+        official, sourceIndexes, result: report,
+        status: report.settlementReady ? 'done' : 'partial',
+      })
+      state.revision = published.id
+      await this.opts.db.derived.delete(`audit:last-failed:${setId}`)
+      this.opts.onPublished?.(published, handle.base.id)
+      if (this.opts.precompute) {
+        try { state.convert = await this.opts.precompute(setId, published, signal, (p) => { void this.progress(state, p) }) }
+        catch (e) { state.convertError = msg(e) }
+      }
+      return { result: report, status: report.settlementReady && !state.convertError ? 'done' : 'partial', revision: published.id }
+    } catch (e) {
+      if (!report) await this.opts.onDiagnostic?.(setId, failedInstallReport(source, e))
+      await this.opts.operations.abort(handle, e)
+      throw e
+    } finally {
+      this.handles.delete(state.id)
+      this.paused.delete(state.id)
+    }
   }
 
   /** 单独重跑换算（结算内核指纹变了时；界面 P5 再接）。 */
@@ -276,51 +314,4 @@ export class DownloadTasks {
     })
   }
 
-  /** 按本下载一本冒险的正文（作者离线规则：冒险正文按需取），成功才发布。 */
-  startAdventure(setId: string, adventureId: string): string {
-    const source = getSource(setId)
-    return this.start('adventure', setId, adventureId, async (state, signal) => {
-      const handle = await this.opts.operations.begin({ id: state.id, kind: 'adventure', set: setId, item: adventureId, codeSet: source.codeSet, signal })
-      this.handles.set(state.id, handle)
-      state.revision = handle.target.id
-      const view = handle.target
-      try {
-        const base = await view.officialState(setId)
-        if (base?.status !== 'installed') throw new Error(`${setId} 还没安装，先装官方数据`)
-        const frame = await this.opts.openFrame(source.codeSet, view)
-        try {
-          const loader = (await frame.call('loaders')).find((l) => l.kind === 'corpus' && l.props.includes('adventureData'))
-          if (!loader?.index || !loader.page) throw new Error('作者加载器登记表里没有冒险')
-          const prop = loader.props[0]
-          const it = (await frame.call('corpusList', loader.index, prop, loader.page)).find((a) => a.id === adventureId)
-          if (!it) throw new Error(`作者冒险书目里没有：${adventureId}`)
-          const path = await frame.call('corpusFile', prop, adventureId)
-          await this.progress(state, { stage: 'download', done: 0, total: 1, item: path })
-          if (signal.aborted) {
-            await this.opts.operations.abort(handle, new Error('已取消'), 'cancelled')
-            return { result: null, status: 'cancelled', revision: view.id }
-          }
-          const text = await this.opts.files.get(source, path, { allowNetwork: true, view })
-          if (text === null) throw new Error(`锁定版本的文件清单里没有这本冒险的正文：${path}`)
-          await this.progress(state, { stage: 'parse', done: 1, total: 1, item: adventureId })
-          const value = await frame.call('parseCorpus', loader.page, it.source, it.hash)
-          await view.derivedPut(parsedKey(setId, prop, adventureId), await view.commitOf(source), value)
-          const adventures = base.adventures === null ? null : [...new Set([...(base.adventures ?? []), adventureId])]
-          const published = await this.opts.operations.publish(handle, {
-            official: { [setId]: { ...base, adventures } }, result: { path, parsed: true },
-          })
-          state.revision = published.id
-          this.opts.onPublished?.(published, handle.base.id)
-          return { result: { path, parsed: true }, revision: published.id }
-        } finally {
-          frame.close()
-        }
-      } catch (e) {
-        await this.opts.operations.abort(handle, e)
-        throw e
-      } finally {
-        this.handles.delete(state.id)
-      }
-    })
-  }
 }

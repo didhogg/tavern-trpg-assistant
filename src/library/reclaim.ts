@@ -132,16 +132,18 @@ export async function reclaimLibrary(deps: { db: LibraryDatabase; revisions: Lib
       const books = new Set(state.books ?? rec.books.map((b) => String(b.id)))
       const sources = new Set((state.sources ?? []).map((s) => s.toLowerCase()))
       const adventures = new Set(state.adventures ?? [])
+      const dependencies = new Set(state.dependencyFiles ?? [])
       const gone = new Set<string>()
       for (const [path, owner] of Object.entries(rec.owners)) {
+        if (dependencies.has(path)) continue
         if (owner.kind === 'book' && !books.has(owner.id)) gone.add(path)
-        else if (owner.kind === 'adventure' && !adventures.has(owner.id)) gone.add(path)
-        else if (owner.kind === 'source' && state.sources !== null && !owner.sources.some((s) => sources.has(s.toLowerCase()))) gone.add(path)
+        else if (owner.kind === 'adventure' && state.adventures !== null && !adventures.has(owner.id)) gone.add(path)
+        else if (owner.kind === 'source' && state.dependencyFiles && state.sources !== null && !owner.sources.some((s) => sources.has(s.toLowerCase()))) gone.add(path)
       }
       await dropPaths(set.id, gone)
       const corpusGone = [
         ...rec.books.map((b) => String(b.id)).filter((id) => !books.has(id)).map((id) => parsedKey(set.id, 'book', id)),
-        ...rec.adventures.map((a) => String(a.id)).filter((id) => !adventures.has(id)).map((id) => parsedKey(set.id, rec.adventureProp, id)),
+        ...rec.adventures.map((a) => String(a.id)).filter((id) => state.adventures !== null && !adventures.has(id)).map((id) => parsedKey(set.id, rec.adventureProp, id)),
       ]
       const wanted = new Set(corpusGone)
       await dropDerived(allDerived.filter((k) => wanted.has(k.startsWith(REV) ? k.split(':').slice(2).join(':') : k)))

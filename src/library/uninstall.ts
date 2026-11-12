@@ -5,10 +5,11 @@ import type { LibraryDatabase } from './db'
 import { getSource } from './sources'
 import type { TaskState } from './tasks'
 import { LibraryOperations, type OperationHandle } from './operations'
-import type { LibraryRevisionStore } from './revision'
+import type { LibraryRevisionStore, LibraryView } from './revision'
 import { installedAdventureIds } from './install'
 import { installedOfficialSources } from './installed-sources'
-import type { BookDirectory } from './directory'
+import type { BookDirectory, DirectoryRecord } from './directory'
+import { officialDependencies } from './official-dependencies'
 
 export interface UninstallDeps {
   db: LibraryDatabase
@@ -97,31 +98,69 @@ export async function stageOfficialParts(deps: UninstallDeps, ops: LibraryOperat
   const adventures = target.adventureIds ?? []
   // 只有书号、来源、冒险号全都没给才是整套；只给来源（书架上没有书号的来源行，如 Generic）按来源移除
   if (!books.length && !adventures.length && !target.bookSources?.length) {
-    const gone = { ...state, status: 'missing' as const, sources: [], books: [], adventures: [] }
+    const gone = { ...state, status: 'missing' as const, sources: [], books: [], adventures: [], dependencyFiles: [] }
     await ops.setTargetOfficial(handle, { [target.setId]: gone })
     return gone
   }
   if (!deps.directory) throw new Error('没有接作者书目入口，不能按书删除')
-  const rec = await deps.directory.get(source.codeSet)
+  const rec = await deps.directory.get(source.codeSet, { commit: state.commit })
+  const { nextState, indexes } = await officialRemovalPlan(handle.target, target, state, rec)
+  await ops.setTargetOfficial(handle, { [target.setId]: nextState })
+  await ops.setTargetIndexes(handle, { ...(handle.target.revision.sourceIndexes ?? {}), ...indexes })
+  return nextState
+}
+
+/** 保留其他官方资料仍需要的原件与目录键。 */
+async function officialRemovalPlan(view: LibraryView, target: OfficialPart, state: import('./db').OfficialSetState, rec: DirectoryRecord) {
   if (rec.errors.books) throw new Error(rec.errors.books)
+  const source = getSource(target.setId)
+  const books = target.bookIds ?? []
+  const adventures = target.adventureIds ?? []
   const allBooks = state.books ?? rec.books.map((b) => String(b.id))
-  const allAdventures = state.adventures ?? await installedAdventureIds(handle.target, target.setId)
+  const allAdventures = state.adventures ?? await installedAdventureIds(view, target.setId)
   const missingBook = books.find((id) => !allBooks.includes(id))
   const missingAdventure = adventures.find((id) => !allAdventures.includes(id))
   if (missingBook) throw new Error(`这本书已经不在已装集合里：${missingBook}`)
   if (missingAdventure) throw new Error(`这本冒险已经不在已装集合里：${missingAdventure}`)
-  const removedSources = new Set([...(target.bookSources ?? books), ...books.map((id) => rec.books.find((b) => String(b.id) === id)?.source ?? id)].map((s) => String(s).toLowerCase()))
+  const removedSources = new Set([
+    ...(target.bookSources ?? []),
+    ...books.map((id) => rec.books.find((b) => String(b.id) === id)?.source ?? id),
+    ...adventures.map((id) => rec.adventures.find((a) => String(a.id) === id)?.source ?? id),
+  ].map((s) => String(s).toLowerCase()))
   // 「全部已装」要按本机实际数据展开，不能只用书目里有书号的来源（否则 Generic、基础包等会被一起藏掉，P5 T6 后1）
-  const allSources = state.sources ?? [...new Set([...Object.keys(rec.sources), ...await installedOfficialSources(handle.target, target.setId)])]
-  const remainingSources = allSources.filter((s) => !removedSources.has(s.toLowerCase()))
+  const allSources = new Map((state.sources ?? [...Object.keys(rec.sources), ...await installedOfficialSources(view, target.setId)])
+    .map((s) => [s.toLowerCase(), s]))
+  const selected = new Set<string>()
   const indexes: Record<string, string[] | null> = {}
   for (const [path, allowed] of Object.entries(rec.indexSources)) {
-    indexes[`${source.codeSet}|${path}`] = allowed.filter((s) => remainingSources.some((x) => x.toLowerCase() === s.toLowerCase()))
+    const map = Object.values(rec.sourceFiles.maps).find((m) => m.indexPath === path)
+    const raw = map?.index ?? Object.fromEntries(allowed.map((key) => [key, '']))
+    const effective = JSON.parse(await view.filterIndex(path, JSON.stringify(raw), source.codeSet)) as Record<string, string>
+    indexes[`${source.codeSet}|${path}`] = Object.keys(effective).filter((key) => {
+      const lower = key.toLowerCase()
+      const file = map ? `data/${map.dir}/${effective[key]}` : null
+      if (removedSources.has(lower) || (state.sources !== null && state.dependencyFiles && !allSources.has(lower))) return false
+      allSources.set(lower, allSources.get(lower) ?? key)
+      if (file) selected.add(file)
+      return true
+    })
   }
-  const nextState = { ...state, status: 'installed' as const, books: allBooks.filter((id) => !books.includes(id)), sources: remainingSources, adventures: allAdventures.filter((id) => !adventures.includes(id)) }
-  await ops.setTargetOfficial(handle, { [target.setId]: nextState })
-  await ops.setTargetIndexes(handle, { ...(handle.target.revision.sourceIndexes ?? {}), ...indexes })
-  return nextState
+  const nextBooks = allBooks.filter((id) => !books.includes(id))
+  const nextAdventures = allAdventures.filter((id) => !adventures.includes(id))
+  const roots = (await view.filePaths(source)).filter((path) => {
+    const owner = rec.owners[path]
+    if (owner?.kind === 'book') return nextBooks.includes(owner.id)
+    if (owner?.kind === 'adventure') return nextAdventures.includes(owner.id)
+    return owner?.kind !== 'source' || selected.has(path)
+  })
+  const needed = await officialDependencies(roots, rec.sourceFiles.maps, async (path) => (await view.fileGet(source, path))?.text ?? null)
+  for (const [path, keys] of needed.indexes) {
+    const scoped = `${source.codeSet}|${path}`
+    indexes[scoped] = [...new Set([...(indexes[scoped] ?? []), ...keys])].sort()
+  }
+  const nextState = { ...state, status: 'installed' as const, books: nextBooks, adventures: nextAdventures,
+    sources: [...allSources].flatMap(([key, value]) => removedSources.has(key) ? [] : [value]), dependencyFiles: needed.files }
+  return { nextState, indexes }
 }
 
 /** 一次修改里移除一组官方书 / 冒险（可多套）和若干自制包，一起发布（同一种语言的自制存储）。 */
@@ -163,7 +202,7 @@ export async function removeOfficialParts(
   target: OfficialPart & { removeBrews?: string[] },
   supplied?: OperationHandle,
 ): Promise<UninstallReport> {
-  if (!target.bookIds?.length && !target.adventureIds?.length) throw new Error('没有指定要删除的书或冒险')
+  if (!target.bookIds?.length && !target.bookSources?.length && !target.adventureIds?.length) throw new Error('没有指定要删除的书或冒险')
   const brewSet = deps.brewSetOf?.(getSource(target.setId).codeSet)
   return removeParts(deps, { official: [target], brews: target.removeBrews?.length && brewSet ? [{ setId: brewSet, ids: target.removeBrews }] : [] }, supplied)
 }

@@ -5,6 +5,7 @@
 //   共用 / 某来源 / 某本书正文 / 职业文件，再由用户选的书筛。共享文件原样保留，不重打包。
 import type { FileList } from './fetcher'
 import type { OfficialSetState } from './db'
+import type { SourceFiles } from './runtime/frame/directory-commands'
 
 const isJson = (p: string): boolean => p.endsWith('.json')
 const parentDir = (p: string): string => p.split('/').at(-2) ?? ''
@@ -76,6 +77,8 @@ export interface OfficialPlan extends Plan {
   adventures: string[] | null
   /** 已装但目标目录移除的冒险；任务应把正文移除，而不是要求补文件。 */
   removedAdventures?: string[]
+  /** 作者目录，用于从实际下载的原件追补隐藏依赖。 */
+  sourceFiles?: SourceFiles
 }
 
 export interface PlanOptions {
@@ -96,6 +99,7 @@ export interface PlanOptions {
   codeSet?: string
   /** 作者来源索引文件：路径 → 索引里出现的全部来源。 */
   indexSources?: Record<string, string[]>
+  sourceFiles?: SourceFiles
 }
 
 
@@ -112,9 +116,9 @@ export function selectionFor(base: OfficialSetState | null, opts: SelectionInput
   return { books, sources, adventures, allSources: installed && baseSources === null }
 }
 
-export const fullPlan = (full: Plan): OfficialPlan => ({
+export const fullPlan = (full: Plan, codeSet?: string): OfficialPlan => ({
   ...full, shared: { ...full }, bySource: empty(), byBook: empty(), byClass: empty(), byAdventure: empty(),
-  sourceIndexes: { '*': null }, missing: { sources: [], books: [] }, sources: null, books: null, adventures: null,
+  sourceIndexes: { [codeSet ? `${codeSet}|*` : '*']: null }, missing: { sources: [], books: [] }, sources: null, books: null, adventures: null,
 })
 
 export function unionSelection(current: string[] | null | undefined, add: string[] | null | undefined): string[] | null {
@@ -141,14 +145,18 @@ export function officialPlan(list: FileList, owners: Record<string, PlanOwner>, 
     for (const owner of Object.values(owners)) if (owner.kind === 'book' && books.has(owner.id)) sources.add(owner.source)
   }
   const adventures = input.adventures ? new Set(input.adventures) : null
+  const adventureSources = new Set(Object.entries(owners).flatMap(([path, owner]) =>
+    owner.kind === 'adventure' && adventures?.has(owner.id) && list[path] ? [owner.source] : []))
+  if (sources) for (const source of adventureSources) sources.add(source)
   const out: OfficialPlan = {
     ...empty(), shared: empty(), bySource: empty(), byBook: empty(), byClass: empty(), byAdventure: empty(),
     sourceIndexes: {}, missing: { sources: [], books: [] },
     sources: allSources ? null : [...(sources ?? [])].sort(), books: allBooks ? null : [...(books ?? [])].sort(),
     adventures: adventures ? [...adventures].sort() : null,
+    ...(opts.sourceFiles ? { sourceFiles: opts.sourceFiles } : {}),
   }
   if (!allSources && !sources) sources = new Set<string>()
-  const seenSource = new Set<string>()
+  const seenSource = new Set(adventureSources)
   const seenBook = new Set<string>()
   for (const path of Object.keys(list).filter(isPrecache).sort()) {
     const size = list[path].size

@@ -25,8 +25,10 @@ export interface SourceFileMap {
   dir: string
   /** 作者自己读的索引文件路径（index.json / fluff-index.json）。 */
   indexPath: string
-  /** 来源标识 → 文件名的索引（作者自己的 index.json 原文）。 */
+  /** 键 → 文件名的索引（作者自己的 index.json 原文）。 */
   index: Record<string, string>
+  /** 作者的键是资料来源，还是像职业那样的分组名。 */
+  bySource: boolean
 }
 
 export interface SourceFiles {
@@ -49,20 +51,15 @@ export async function sourceFiles(): Promise<SourceFiles> {
       if (!cfg || typeof cfg.pLoadIndex !== 'function') continue
       const dir = String(cfg._DIR ?? '')
       if (!dir) continue
-      try {
-        maps[prop] = {
-          dir,
-          indexPath: `data/${dir}/${prop.endsWith('Fluff') ? 'fluff-' : ''}index.json`,
-          index: await cfg.pLoadIndex(),
-        }
-      } catch { /* 这个加载器没有来源索引，按共用文件处理 */ }
+      const index = await cfg.pLoadIndex() as Record<string, string>
+      maps[prop] = {
+        dir, indexPath: `data/${dir}/${cfg._isFluff ? 'fluff-' : ''}index.json`, index,
+        bySource: Object.keys(index).some((key) => A.Parser.hasSourceJson(key)),
+      }
     }
   }
-  let classFiles: string[]
-  try {
-    const index = await A.DataUtil.loadRawJSON('data/class/index.json')
-    classFiles = [...new Set(Object.values(index ?? {}).map((f) => `data/class/${String(f)}`))]
-  } catch { classFiles = [] }
+  const classFiles = [...new Set(Object.values(maps).filter((map) => !map.bySource)
+    .flatMap(({ dir, index }) => Object.values(index).map((file) => `data/${dir}/${file}`)))]
   return { maps, classFiles }
 }
 

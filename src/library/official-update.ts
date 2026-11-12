@@ -1,16 +1,24 @@
 // 官方数据跟上游新提交（P5 B-28 / T2-T3）：只比较、先在准备版本里下载，成功才切已发布版本。
 // 规矩（Q-A 甲）：插件里带的作者程序（vendor）固定在登记表那一版；上游作者程序版本号一致才允许跟。
 // P5 T2：更新比较用“已装书 + 已装冒险正文”的计划，不再只比较整套预载；P5 T3：不再提前改全局提交号。
-import type { LibraryDatabase } from './db'
+import type { LibraryDatabase, OfficialSetState } from './db'
 import type { BookDirectory } from './directory'
 import { fetchFileList, type FetchLike, type FileList } from './fetcher'
 import type { FileProvider } from './files'
-import { officialPlan, type OfficialPlan } from './plan'
+import { isAdventure, isPrecache, officialPlan } from './plan'
 import { installedAdventureIds } from './install'
 import { CODE_SETS, fileListUrlAt, getSource, mirrorRootsAt, SOURCES, type SourceEntry } from './sources'
 import type { LibraryRevisionStore, LibraryView } from './revision'
+import type { OfficialTaskOptions } from './tasks'
 
 export type OfficialUpdateStatus = 'up-to-date' | 'available' | 'needs-plugin-upgrade'
+export interface OfficialUpdateSelection { bookIds?: string[]; adventureIds?: string[] }
+type FileOverrides = NonNullable<OfficialSetState['fileOverrides']>
+
+export class OfficialUpdateBatchRequired extends Error {}
+export class OfficialUpdateCurrent extends Error {
+  constructor(message: string, readonly selection?: OfficialUpdateSelection) { super(message) }
+}
 
 export interface OfficialUpdateObject {
   kind: 'book' | 'adventure'
@@ -36,8 +44,8 @@ export interface OfficialUpdateCheck {
   changed?: { changed: number; added: number; removed: number; bytes: number }
   /** 本次受影响的已装书 / 冒险；共用文件变化时 shared=true，界面据此说明牵连范围。 */
   objects?: OfficialUpdateObject[]
-  /** 已经按已装书 / 冒险算好的计划；apply 直接交给下载任务，不再重新解释。 */
-  plan?: OfficialPlan
+  /** 有变化的共用文件需要与这套资料一起发布。 */
+  shared?: boolean
 }
 
 /** 登记表里的版本 "2.39.0-cn.3" → 作者程序版本 "2.39.0"（后缀是中文数据的修订号，不是程序版本）。 */
@@ -60,7 +68,7 @@ export interface OfficialUpdatesOptions {
   directory?: BookDirectory
   fetchImpl?: FetchLike
   /** 下载任务入口（tasks.startOfficial）；返回任务编号。 */
-  startOfficial: (setId: string, opts?: { plan?: OfficialPlan; commit?: string }) => string
+  startOfficial: (setId: string, opts?: OfficialTaskOptions) => string
 }
 
 export class OfficialUpdates {
@@ -114,6 +122,12 @@ export class OfficialUpdates {
     if (latest === current) return { setId, status: 'up-to-date', current, latest, programVersion: { plugin, upstream: plugin } }
     const upstream = await this.upstreamProgramVersion(source, latest)
     if (upstream !== plugin) return { setId, status: 'needs-plugin-upgrade', current, latest, programVersion: { plugin, upstream } }
+    const { summary } = await this.compare(source, latest, view)
+    return { setId, status: 'available', current, latest, programVersion: { plugin, upstream }, ...summary }
+  }
+
+  private async compare(source: SourceEntry, latest: string, view: LibraryView) {
+    const setId = source.id
     const list = await this.newList(source, latest, view)
     const state = await view.officialState(setId)
     if (!state || state.status !== 'installed') throw new Error(`${setId} 还没安装，不能检查更新`)
@@ -127,62 +141,98 @@ export class OfficialUpdates {
     if (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0)) {
       throw new Error(`目标提交的作者目录缺少：${[...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')}`)
     }
-    let changed = 0
-    let added = 0
-    let bytes = 0
-    for (const p of plan.files) {
-      const expected = list[p]
-      if (!expected) continue
-      const had = await view.fileSha(source, p)
-      if (had === null) { added++; bytes += expected.size }
-      else if (had !== expected.sha) { changed++; bytes += expected.size }
-    }
-    // 旧版本里实际存在的预载文件，在新计划里不需要了 = 要移除（冒险正文不在预载里，另算）
-    const currentPaths = await view.filePaths(source)
-    const removedPaths = currentPaths.filter((p) => !plan.files.includes(p))
-    const objects = new Map<string, OfficialUpdateObject>()
+    const wanted = new Set([...plan.files, ...(state.dependencyFiles ?? []).filter((p) => list[p])])
+    const old = rec.commit === state.commit ? rec :
+      await this.opts.directory.peek(source.codeSet, { commit: state.commit }) ?? await this.opts.directory.get(source.codeSet, { commit: state.commit })
+    const visible = state.sources && new Set(state.sources.map((s) => s.toLowerCase()))
+    const plannedSources = new Set(plan.bySource.files.flatMap((p) => {
+      const owner = rec.owners[p]
+      return owner?.kind === 'source' ? owner.sources.map((s) => s.toLowerCase()) : []
+    }))
+    const installedObjects = [
+      ...[...old.books, ...rec.books].filter((b) => state.books === null || state.books.includes(String(b.id))).map((b) => ({ kind: 'book' as const, id: String(b.id), source: String(b.source), name: String(b.name ?? b.id) })),
+      ...[...old.adventures, ...rec.adventures].filter((a) => adventures.includes(String(a.id)) || (visible ?? plannedSources).has(String(a.source).toLowerCase())).map((a) => ({ kind: 'adventure' as const, id: String(a.id), source: String(a.source), name: String(a.name ?? a.id) })),
+    ]
+    const blank = (entry: Pick<OfficialUpdateObject, 'kind' | 'id' | 'source' | 'name'>): OfficialUpdateObject => ({ ...entry, added: 0, changed: 0, removed: 0, bytes: 0, shared: false })
+    const objects = new Map<string, OfficialUpdateObject>(installedObjects.map((entry) => [`${entry.kind}:${entry.id}`, blank(entry)]))
+    const actual = { added: 0, changed: 0, removed: 0, bytes: 0 }
+    const files = new Map<string, Set<OfficialUpdateObject>>()
     let shared = false
     const addObject = (path: string, field: 'added' | 'changed' | 'removed', size: number): void => {
-      const owner = rec.owners[path]
-      if (!owner || (owner.kind !== 'book' && owner.kind !== 'adventure')) { shared = true; return }
-      const key = `${owner.kind}:${owner.id}`
-      const row = objects.get(key) ?? { kind: owner.kind, id: owner.id, source: owner.source ?? null, name: '', added: 0, changed: 0, removed: 0, bytes: 0, shared: false }
-      row[field]++
-      if (field !== 'removed') row.bytes += size
-      objects.set(key, row)
+      actual[field]++
+      actual.bytes += size
+      const owner = rec.owners[path] ?? old.owners[path]
+      if (!owner || owner.kind === 'class') { shared = true; return }
+      const owners = new Set<OfficialUpdateObject>()
+      files.set(path, owners)
+      if (owner.kind === 'source') {
+        for (const source of owner.sources) {
+          if (visible && !visible.has(source.toLowerCase())) { shared = true; continue }
+          const rows = [...objects.values()].filter((r) => r.source?.toLowerCase() === source.toLowerCase())
+          if (!rows.length) {
+            const row = blank({ kind: 'book', id: source, source, name: rec.sources[source]?.full ?? source })
+            rows.push(row)
+            objects.set(`book:${source}`, row)
+          }
+          for (const row of rows) owners.add(row)
+        }
+      } else {
+        const row = objects.get(`${owner.kind}:${owner.id}`)
+        if (row) owners.add(row)
+      }
+      if (owners.size > 1) shared = true
+      for (const row of owners) { row[field]++; row.bytes += size }
     }
-    for (const path of plan.files) {
+    for (const path of wanted) {
       const expected = list[path]
       if (!expected) continue
       const had = await view.fileSha(source, path)
       if (had === null) addObject(path, 'added', expected.size)
       else if (had !== expected.sha) addObject(path, 'changed', expected.size)
     }
-    for (const path of removedPaths) addObject(path, 'removed', list[path]?.size ?? 0)
-    for (const row of objects.values()) {
-      const book = row.kind === 'book' ? rec.books.find((b) => String(b.id) === row.id) : rec.adventures.find((a) => String(a.id) === row.id)
-      row.name = String((book as { name?: unknown } | undefined)?.name ?? row.id)
-      row.shared = shared
+    for (const path of await view.filePaths(source)) {
+      if (wanted.has(path) || list[path]) continue
+      if (!isPrecache(path) && !isAdventure(path)) continue
+      const owner = old.owners[path]
+      if (owner?.kind === 'book' && state.books && !state.books.includes(owner.id)) continue
+      if (owner?.kind === 'adventure' && !adventures.includes(owner.id)) continue
+      if (owner?.kind === 'source' && visible && !owner.sources.some((s) => visible.has(s.toLowerCase())) && !state.dependencyFiles?.includes(path)) continue
+      addObject(path, 'removed', 0)
     }
-    return { setId, status: 'available', current, latest, programVersion: { plugin, upstream }, changed: { changed, added, removed: removedPaths.length, bytes }, objects: [...objects.values()], plan }
+    return { list, files, summary: { changed: actual, objects: [...objects.values()].filter((row) => shared || hasChange(row)).map((row) => ({ ...row, shared })), shared } }
   }
 
-  /** 更新：启动下载任务；任务在准备版本里下载 / 解析，成功才发布。没有新版 / 不能跟时抛错。
-   *  给了 bookIds / adventureIds 时只允许独立更新；共享文件或未选对象也有变化就要求整批更新。 */
-  async apply(setId: string, opts: { bookIds?: string[]; adventureIds?: string[] } = {}): Promise<{ task: string; check: OfficialUpdateCheck }> {
+  /** 共用文件必须整批更新；独立变化只更新选中书 / 冒险。 */
+  async apply(setId: string, opts: OfficialUpdateSelection = {}): Promise<{ task: string; check: OfficialUpdateCheck }> {
     const check = await this.check(setId)
-    if (check.status !== 'available') throw new Error(check.status === 'up-to-date' ? '已经是最新的' : `上游作者程序是 ${check.programVersion.upstream ?? '未知版本'}，插件里是 ${check.programVersion.plugin}，要先升级插件才能跟这次更新`)
-    const selectedBooks = new Set(opts.bookIds ?? [])
-    const selectedAdventures = new Set(opts.adventureIds ?? [])
-    const selecting = selectedBooks.size > 0 || selectedAdventures.size > 0
-    if (selecting) {
-      const selected = (o: OfficialUpdateObject): boolean => o.kind === 'book' ? selectedBooks.has(o.id) : selectedAdventures.has(o.id)
-      const changed = (check.objects ?? []).filter((o) => selected(o) && (o.added || o.changed || o.removed || o.shared))
-      const outside = (check.objects ?? []).filter((o) => !selected(o) && (o.added || o.changed || o.removed))
-      if ((check.objects ?? []).some((o) => selected(o) && o.shared)) throw new Error('这次变化牵连共用文件，不能只更新选中的书 / 冒险；请按整批更新')
-      if (outside.length) throw new Error(`未选中的对象也有变化（${outside.map((o) => o.name || o.id).join('、')}），请按整批更新`)
-      if (!changed.length) throw new Error('选中的书 / 冒险没有可更新变化')
-    }
-    return { task: this.opts.startOfficial(setId, { ...(check.plan ? { plan: check.plan } : {}), commit: check.latest }), check }
+    if (check.status === 'up-to-date') throw new OfficialUpdateCurrent('已经是最新的')
+    if (check.status !== 'available') throw new Error(`上游作者程序是 ${check.programVersion.upstream ?? '未知版本'}，插件里是 ${check.programVersion.plugin}，要先升级插件才能跟这次更新`)
+    assertUpdateSelection(check, opts)
+    const updateSelection = opts.bookIds?.length || opts.adventureIds?.length ? opts : undefined
+    return { task: this.opts.startOfficial(setId, { commit: check.latest, updateFrom: check.current, ...(updateSelection ? { updateSelection } : {}) }), check }
   }
+
+  /** 锁内按实际已装文件重算选中路径。有其他独立变化时保持基础提交，只固定选中的新文件。 */
+  async planSelection(setId: string, commit: string, opts: OfficialUpdateSelection | undefined, base: LibraryView): Promise<FileOverrides | null> {
+    const source = getSource(setId)
+    const state = await base.officialState(setId)
+    const pinnedElsewhere = Object.values(state?.fileOverrides ?? {}).some((file) => file && file.commit !== commit)
+    if (pinnedElsewhere && await this.latestCommit(source) !== commit) throw new Error('部分书已更新到别的提交，请重新检查更新')
+    if (!opts) return null
+    const { summary, list, files } = await this.compare(source, commit, base)
+    assertUpdateSelection(summary, opts)
+    if (!summary.objects.some((o) => !selectedBy(o, opts))) return null
+    return Object.fromEntries([...files].filter(([, owners]) => [...owners].some((o) => selectedBy(o, opts)))
+      .map(([path]) => [path, list[path] ? { ...list[path], commit } : null]))
+  }
+}
+
+const hasChange = (o: OfficialUpdateObject): boolean => !!(o.added || o.changed || o.removed)
+const selectedBy = (o: OfficialUpdateObject, opts: OfficialUpdateSelection): boolean =>
+  !!(o.kind === 'book' ? opts.bookIds?.includes(o.id) : opts.adventureIds?.includes(o.id))
+
+function assertUpdateSelection(check: Pick<OfficialUpdateCheck, 'shared' | 'objects'>, opts: OfficialUpdateSelection): void {
+  if (!opts.bookIds?.length && !opts.adventureIds?.length) return
+  if (check.shared) throw new OfficialUpdateBatchRequired('这次变化牵连共用文件，不能只更新选中的书 / 冒险；请按整批更新')
+  if (!(check.objects ?? []).some((o) => hasChange(o) && selectedBy(o, opts))) throw new OfficialUpdateCurrent('选中的书 / 冒险已经是最新的', opts)
 }

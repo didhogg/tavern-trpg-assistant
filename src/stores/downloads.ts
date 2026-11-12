@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import type { TaskState } from '../library/tasks'
+import type { InstallReport } from '../library/install'
 import { useToastStore } from './toast'
+import { useUpdatesStore } from './updates'
 
 /** 作者阶段归并成三段（环 = 到了第几步，不是精确百分比）：下载文件 → 整理资料 → 准备结算。没登记的阶段算"整理资料"。 */
 export const STAGE_GROUPS: Array<{ label: string; stages: string[] }> = [
@@ -89,6 +91,7 @@ export const useDownloadsStore = defineStore('downloads', () => {
   const names = new Map<string, string>()
   const justDone = ref(false)
   let running_ids = new Set<string>()
+  const reportedUpdates = new Set<string>()
   let reader: (() => TaskState[]) | null = null
   let timer: ReturnType<typeof setInterval> | undefined
   let doneTimer: ReturnType<typeof setTimeout> | undefined
@@ -176,6 +179,13 @@ export const useDownloadsStore = defineStore('downloads', () => {
   function refresh(): void {
     if (!reader) return
     tasks.value = reader().filter((t) => t.kind !== 'precompute')
+    for (const task of tasks.value) {
+      if (task.kind !== 'official' || reportedUpdates.has(task.id)) continue
+      const update = (task.result as InstallReport | null)?.update
+      if (!update) continue
+      useUpdatesStore().published(task.set, update.target, update.selection)
+      reportedUpdates.add(task.id)
+    }
     const nowRunning = new Set(tasks.value.filter((t) => t.status === 'running').map((t) => t.id))
     // 刚才在跑的任务现在全部是"完成"才算资料已就绪；被取消 / 失败不报"已就绪"
     const finished = [...running_ids].filter((id) => !nowRunning.has(id)).map((id) => tasks.value.find((t) => t.id === id))

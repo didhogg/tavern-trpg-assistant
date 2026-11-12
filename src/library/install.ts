@@ -11,6 +11,8 @@ import { invalidatePrecompute, precomputeSource, type PrecomputeReport } from '.
 import { failedInstallReport } from './install-report'
 import { DocumentStore } from './documents'
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
+import { downloadOfficial } from './official-download'
+import type { FileList } from './fetcher'
 import type { SourceEntry } from './sources'
 const msg = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 export interface StorageEstimate {
@@ -71,6 +73,10 @@ export interface InstallReport {
   settlementReady: boolean
   /** 发布后的版本编号（包装器 installOfficial 填）。 */
   revision?: string
+  /** 仅供作者解析的原件，回收时与用户选中的文件一起保留。 */
+  dependencyFiles?: string[]
+  /** 更新后的目标与选择，供书架清除这次发布对应的标记。 */
+  update?: { target: string; selection?: import('./official-update').OfficialUpdateSelection }
   /** 用户取消了（下载到一半停下；已下载的文件留在准备区，再装可复用）。 */
   cancelled?: boolean
   ms: number
@@ -99,15 +105,12 @@ export interface InstallOptions {
   onDiagnostic?: (setId: string, report: InstallReport) => Promise<void>
   /** 下载 / 解析边界检查；返回 pause 时停在安全边界、作废准备版本。 */
   onCheckpoint?: () => 'continue' | 'pause'
+  /** 下载追到依赖后，更新准备版的索引再打开作者小窗。 */
+  setIndexes?: (indexes: OfficialPlan['sourceIndexes']) => Promise<LibraryView>
+  manifest?: FileList
+  fileOverrides?: OfficialSetState['fileOverrides']
 }
 
-
-async function pool<T>(items: T[], n: number, fn: (it: T) => Promise<void>): Promise<void> {
-  let i = 0
-  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
-    while (i < items.length) await fn(items[i++])
-  }))
-}
 
 export async function installedAdventureIds(view: LibraryView, setId: string): Promise<string[]> {
   const prefix = `parsed:${setId}:corpus:`
@@ -145,12 +148,13 @@ export function countSources(records: Array<{ key: string; value: unknown }>, pr
 
 /** 准备版本里的安装 / 解析；不发布。调用方负责操作生命周期或直接发布。 */
 export async function prepareOfficial(opts: InstallOptions & { view: LibraryView }): Promise<InstallReport> {
-  const { source, db, files, view } = opts
+  const { source, db, files } = opts
+  let { view } = opts
   const t0 = Date.now()
   const commit = await view.commitOf(source)
   const storage = await storageEstimate()
-  const list = await files.fileList(source, view, { ...(opts.signal ? { signal: opts.signal } : {}) })
-  const plan = opts.plan ?? fullPlan(precachePlan(list))
+  const list = opts.manifest ?? await files.fileList(source, view, { ...(opts.signal ? { signal: opts.signal } : {}) })
+  let plan = opts.plan ?? fullPlan(precachePlan(list), source.codeSet)
   const report: InstallReport = {
     source: source.id, commit, storage,
     plan: {
@@ -167,41 +171,15 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     publishable: true, reasons: [], settlementReady: true, ms: 0,
   }
   const sources = opts.sources ?? plan.sources
+  const visible = sources && new Set(sources.map((s) => s.toLowerCase()))
   const books = opts.books ?? plan.books
   // 先把旧版本的解析结果 / 文件引用在准备版本里挡住；失败时准备版本作废，父版本不动。
   for (const key of (await view.derivedKeys(`parsed:${source.id}:`)).keys()) await view.derivedDelete(key)
-  for (const path of await view.filePaths(source)) {
-    if (isPrecache(path) && !plan.files.includes(path)) await view.fileRemove(source, path, commit)
-    else if (isAdventure(path) && opts.adventures && !plan.files.includes(path)) await view.fileRemove(source, path, commit)
-  }
   if (plan.missing.sources.length || plan.missing.books.length || (plan.missing.adventures?.length ?? 0)) {
     report.reasons.push(`作者目录里找不到这些书 / 来源 / 冒险：${[...plan.missing.sources, ...plan.missing.books, ...(plan.missing.adventures ?? [])].join('、')}`)
   }
 
-  // 下载到准备版本（沿父版本已存在的同指纹文件直接复用）
-  let done = 0
-  await pool(plan.files, opts.concurrency ?? 6, async (path) => {
-    if (opts.signal?.aborted || opts.onCheckpoint?.() === 'pause') return
-    const expected = list[path]
-    try {
-      const had = await files.record(source, path, view)
-      if (had && had.gitSha === expected.sha) report.download.reused++
-      else {
-        const cached = await files.cachedContent(source, path, expected.sha)
-        if (cached !== null) {
-          await view.filePut(source, path, { commit, text: cached, gitSha: expected.sha, size: expected.size })
-          report.download.reused++
-        } else {
-          await files.get(source, path, { allowNetwork: true, view, ...(opts.signal ? { signal: opts.signal } : {}) })
-          report.download.fetched++
-        }
-      }
-    } catch (e) {
-      report.download.failed.push({ path, error: msg(e) })
-    }
-    opts.onProgress?.({ stage: 'download', done: ++done, total: plan.files.length, item: path })
-  })
-
+  plan = await downloadOfficial(opts, list, plan, report, commit)
   if (opts.signal?.aborted) {
     report.cancelled = true
     report.ms = Date.now() - t0
@@ -211,6 +189,12 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
     report.paused = true
     report.ms = Date.now() - t0
     return report
+  }
+
+  if (opts.setIndexes) view = await opts.setIndexes(plan.sourceIndexes)
+  const wanted = new Set(plan.files)
+  for (const path of await view.filePaths(source)) {
+    if (!wanted.has(path) && (isPrecache(path) || (isAdventure(path) && opts.adventures))) await view.fileRemove(source, path, commit)
   }
 
   // 第 1 层：镜像
@@ -291,7 +275,10 @@ export async function prepareOfficial(opts: InstallOptions & { view: LibraryView
           const { items, hashes } = parsed
           await view.derivedPut(parsedKey(source.id, prop), commit, parsed)
           report.parse.props[prop] = { count: items.length, noHash: hashes.filter((h) => h === null).length }
-          parsedHashes[prop] = new Set(hashes.filter((h): h is string => h !== null))
+          parsedHashes[prop] = new Set(hashes.filter((h, i): h is string => {
+            const source = parsed.sources[i]
+            return h !== null && (!visible || !source || visible.has(source.toLowerCase()))
+          }))
         } catch (e) {
           report.parse.errors.push({ prop, error: msg(e) })
         }
@@ -368,7 +355,12 @@ export async function installOfficial(opts: InstallOptions): Promise<InstallRepo
   let report: InstallReport | null = null
   try {
     if (opts.plan) await operations.setTargetIndexes(handle, opts.plan.sourceIndexes)
-    report = await prepareOfficial({ ...opts, view: handle.target })
+    let sourceIndexes = opts.plan?.sourceIndexes ?? {}
+    report = await prepareOfficial({ ...opts, view: handle.target, setIndexes: async (indexes) => {
+      sourceIndexes = indexes
+      await operations.setTargetIndexes(handle, indexes)
+      return handle.target
+    } })
     if (report.cancelled) {
       await operations.abort(handle, new Error('已取消'), 'cancelled')
       report.revision = handle.target.id
@@ -384,10 +376,11 @@ export async function installOfficial(opts: InstallOptions): Promise<InstallRepo
       [source.id]: {
         commit: report.commit, status: 'installed', sources: opts.sources ?? opts.plan?.sources ?? null, books: opts.books ?? opts.plan?.books ?? null,
         adventures: opts.adventures ?? opts.plan?.adventures ?? null, plan: { files: report.plan.files, bytes: report.plan.bytes },
+        ...(report.dependencyFiles ? { dependencyFiles: report.dependencyFiles } : {}),
       },
     }
     const published = await operations.publish(handle, {
-      official, sourceIndexes: opts.plan?.sourceIndexes ?? {}, result: report, status: report.settlementReady ? 'done' : 'partial',
+      official, sourceIndexes, result: report, status: report.settlementReady ? 'done' : 'partial',
     })
     report.revision = published.id
     await db.derived.delete(`audit:last-failed:${source.id}`)

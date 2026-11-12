@@ -30,7 +30,7 @@ export class FileProvider {
   constructor({ db, fetchImpl, ready }: FileProviderOptions) {
     this.db = db
     this.ready = ready ?? Promise.resolve()
-    this.fetchImpl = fetchImpl ?? ((url) => fetch(url))
+    this.fetchImpl = fetchImpl ?? ((url, init) => fetch(url, init))
   }
 
   /** 启动时恢复数据提交号完成（B-28）。 */

@@ -181,16 +181,19 @@ export function createBackend(opts: BackendOptions): Backend {
   const links = new EntryLinks(service, documents)
   const scoped = new ScopedLibrary(service, db, directory, links)
   const brewPairs = new BrewPairs(service)
-  const updates = new OfficialUpdates({ db, revisions, files, directory, startOfficial: (id, taskOpts) => tasks.startOfficial(id, taskOpts) })
+  const updates: OfficialUpdates = new OfficialUpdates({ db, revisions, files, directory, startOfficial: (id, taskOpts) => tasks.startOfficial(id, taskOpts) })
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
   const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref))
   const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view) => openFrame(codeSet, { view }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (_view, previous) => { service.retire(previous); scoped.reset() },
+    selectUpdate: (id, commit, selection, base) => updates.planSelection(id, commit, selection, base),
     planOfficial: async (setId, planOpts, view) => {
       const source = getSource(setId)
-      const rec = await directory.get(source.codeSet)
-      const list = await files.fileList(source, view)
-      return officialPlan(list, rec.owners, { sources: planOpts.sources ?? null, books: planOpts.books ?? null, adventures: planOpts.adventures ?? null }, { indexSources: rec.indexSources, codeSet: source.codeSet, ...(planOpts.knownAdventures ? { knownAdventures: planOpts.knownAdventures } : {}), ...(planOpts.installedSources ? { installedSources: planOpts.installedSources } : {}), ...(planOpts.allSources ? { allSources: true } : {}) })
+      const rec = await directory.get(source.codeSet, planOpts.commit ? { commit: planOpts.commit } : {})
+      if (rec.errors.books) throw new Error(rec.errors.books)
+      if (rec.errors.adventures && planOpts.adventures?.length) throw new Error(rec.errors.adventures)
+      const list = planOpts.manifest ?? await files.fileList(source, view, planOpts.signal ? { signal: planOpts.signal } : {})
+      return officialPlan(list, rec.owners, planOpts, { ...planOpts, indexSources: rec.indexSources, sourceFiles: rec.sourceFiles, codeSet: source.codeSet })
     },
     precompute: async (setId, view, signal, onProgress) => {
       const rows = await runPrecompute([getSource(setId).codeSet], signal, onProgress)

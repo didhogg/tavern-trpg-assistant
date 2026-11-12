@@ -71,6 +71,10 @@ export interface OfficialSetState {
   /** 已下载的冒险正文编号；null = 旧整套安装，按派生记录判断。 */
   adventures: string[] | null
   plan?: { files: number; bytes: number }
+  /** 作者加载器需要，但不属于用户选中的资料。 */
+  dependencyFiles?: string[]
+  /** 单本更新先于整套提交时，这些路径固定在各自已核验的新版本。null 表示该路径已被上游移除。 */
+  fileOverrides?: Record<string, { sha: string; size: number; commit: string } | null>
 }
 
 export interface BrewSetState {

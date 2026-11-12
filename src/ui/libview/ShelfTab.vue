@@ -35,9 +35,9 @@ const q = ref('')
 
 const kindOf = (r: CatalogRow): 'official' | 'brew' => (getSource(r.set).kind === 'brew' ? 'brew' : 'official')
 // 只列已下载的（未装的在下载页）；冒险正文没下、但它自带的条目已在本地的，也列出（条目能看，正文另下）。有搜索词时按名称 / 缩写匹配
-const mineSources = computed(() => new Set(lib.minePacks.flatMap((p) => p.sources)))
+const minePackIds = computed(() => new Set(lib.minePacks.map((p) => p.docIdLocal)))
 // 中英文名都能搜到（另一语言名由后端 altName 给，P5 T6 #18）
-const match = (r: CatalogRow): boolean => (r.downloaded || (r.kind === 'adventure' && r.count > 0)) && !mineSources.value.has(r.source) && (!q.value.trim() || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q.value.trim().toLowerCase()))
+const match = (r: CatalogRow): boolean => (r.downloaded || (r.kind === 'adventure' && r.count > 0)) && !(r.pack && minePackIds.value.has(r.pack.docIdLocal)) && (!q.value.trim() || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q.value.trim().toLowerCase()))
 // 分类方式（设置 → 库 → 偏好）：作者分组 / 书或冒险
 const regroup = (groups: ShelfGroup[]): ShelfGroup[] => (app.settings?.library.groupBy === 'kind'
   ? [{ group: 'books', name: '书', books: groups.flatMap((g) => g.books), adventures: [] }, { group: 'adventures', name: '冒险', books: [], adventures: groups.flatMap((g) => g.adventures) }]

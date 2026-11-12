@@ -24,7 +24,7 @@ export const useLibViewStore = defineStore('library', () => {
   const campaignLib = shallowRef<CampaignLibrary | null>(null)
   const bound = ref(false)
   const shelf = shallowRef<ShelfState | null>(null)
-  /** 我的库里的包（导入的 / 存入的副本）；它们的来源不在书架里列。 */
+  /** 我的库里的包（导入的 / 存入的副本）；书架按包编号隐藏这些副本。 */
   const minePacks = shallowRef<BrewPack[]>([])
   const brewSetId = (codeSet: string): string | null => SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)?.id ?? null
   /** 官方资料没装：自制包读不了（作者程序启动要读官方数据），书架提示一句。 */

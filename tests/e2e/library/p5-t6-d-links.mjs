@@ -22,6 +22,15 @@ try {
   await page.locator('.trpg-ball').click()
   await page.locator('.trpg-window').getByRole('button', { name: '库', exact: true }).first().click()
   await page.waitForSelector('[data-testid="shelf-tab"] .trpg-shelf__row')
+  const copiedBook = await page.evaluate(P => {
+    const shelf = eval(P)._s.get('library')
+    const mine = new Set(shelf.minePacks.flatMap((p) => p.sources))
+    return shelf.shelf.groups.flatMap((g) => g.books).find((b) => b.set === 'cn-official' && b.downloaded && mine.has(b.source))?.name
+  }, P)
+  if (copiedBook) {
+    await page.getByRole('switch', { name: `在本战役里使用《${copiedBook}》`, exact: true }).waitFor()
+    result.checks.copyDoesNotHideOfficialBook = true
+  }
   const info = await page.evaluate(async P => {
     const stores = eval(P)._s
     const app = stores.get('app')
