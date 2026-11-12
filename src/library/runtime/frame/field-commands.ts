@@ -44,7 +44,7 @@ export async function authorFields(prop: string, item: any): Promise<AuthorField
   const lines: AuthorLine[] = []
   if (rule) {
     try {
-      const { value: fields, marker, links } = collectAuthorLinks(() => rule(item))
+      const { value: fields, marker, links } = collectAuthorLinks(() => rule(item), { tables: false })
       for (const [label, value] of fields) {
         const v = Array.isArray(value) ? listText(value) : text(value)
         const markup = typeof value === 'string' && value.includes(marker) ? { html: value, marker, links } : undefined

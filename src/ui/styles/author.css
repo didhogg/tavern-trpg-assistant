@@ -1,0 +1,56 @@
+/*
+ * 作者整条渲染的版式（P5-5 §11.5）：作者渲染器输出的类名（ve-* / stats*）按作者 main.css 的同名规则移植一小部分，
+ * 颜色换成插件的配色变量。只管版式（列宽、对齐、隐藏、小节标题、属性值格子），不带作者的字体和配色。
+ * 作者没有的类名在 author-fragment 里就被丢掉了；这里没写到的作者类名不影响显示（退回普通排版）。
+ */
+.lib-author-block .ve-hidden, .lib-author-block .ve-print__hidden { display: none !important; }
+.lib-author-block .ve-text-center { text-align: center; }
+.lib-author-block .ve-text-right { text-align: right; }
+.lib-author-block .ve-text-left { text-align: left; }
+.lib-author-block .ve-bold, .lib-author-block .bold { font-weight: var(--fw-semibold); }
+.lib-author-block .ve-italic { font-style: italic; }
+.lib-author-block .ve-muted { color: var(--text2); }
+.lib-author-block .small-caps, .lib-author-block .ve-small-caps { font-variant: small-caps; }
+.lib-author-block .no-wrap, .lib-author-block .ve-no-wrap { white-space: nowrap; }
+.lib-author-block .ve-flex { display: flex; }
+.lib-author-block .ve-flex-col { display: flex; flex-direction: column; }
+.lib-author-block .ve-flex-v-center { display: flex; align-items: center; }
+.lib-author-block .ve-flex-vh-center { display: flex; align-items: center; justify-content: center; }
+.lib-author-block .ve-split, .lib-author-block .ve-split-v-center { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); }
+.lib-author-block .ve-grow, .lib-author-block .ve-flex-1 { flex: 1 1 0; min-width: 0; }
+.lib-author-block .ve-w-100, .lib-author-block .w100 { width: 100%; }
+.lib-author-block .ve-table-layout-fixed { table-layout: fixed; }
+
+/* 作者的 12 栏宽度（ve-col-N = N/12，ve-col-N-M = N.M/12） */
+.lib-author-block .ve-col-1 { width: 8.3333%; }
+.lib-author-block .ve-col-2 { width: 16.6667%; }
+.lib-author-block .ve-col-2-3 { width: 19.1667%; }
+.lib-author-block .ve-col-3 { width: 25%; }
+.lib-author-block .ve-col-4 { width: 33.3333%; }
+.lib-author-block .ve-col-5 { width: 41.6667%; }
+.lib-author-block .ve-col-5-5 { width: 45.8333%; }
+.lib-author-block .ve-col-6 { width: 50%; }
+.lib-author-block .ve-col-10 { width: 83.3333%; }
+.lib-author-block .ve-col-11 { width: 91.6667%; }
+.lib-author-block .ve-col-12 { width: 100%; }
+
+/* 整条条目：作者用表格排版，不画格线；只有作者的数据表（ve-rd__table）画格线 */
+.lib-entity table { border-collapse: collapse; width: 100%; }
+.lib-entity th, .lib-entity td { border: 0; padding: 2px var(--sp-1); vertical-align: top; text-align: left; }
+.lib-entity .ve-stats__sect-header-inner { display: block; margin-top: var(--sp-3); padding-bottom: 2px; border-bottom: var(--border) solid var(--primary-tint-line); color: var(--primary-text); font-weight: var(--fw-semibold); font-variant: small-caps; }
+.lib-entity .ve-stats__sect-row-inner { padding-top: var(--sp-2); }
+.lib-entity .ve-tbl-border { height: 2px; padding: 0; background: var(--primary-tint-line); }
+.lib-entity .ve-tbl-divider { height: 1px; padding: 0; background: var(--line); }
+/* 属性值格子：分数 / 调整 / 豁免交替底色（作者 disp-as-score / disp-as-bonus） */
+.lib-entity [class*='ve-stats__disp-as-score'] { background: var(--bg-sunk); text-align: center; }
+.lib-entity [class*='ve-stats__disp-as-bonus'] { background: var(--primary-tint); text-align: center; }
+.lib-entity [class*='stats-tbl-ability-scores__lbl'] { text-align: center; color: var(--text2); font-size: var(--fs-xs); }
+
+/* 正文块：作者的小标题、列表 */
+.lib-author-block .ve-rd__h--1 { font-size: var(--fs-lg); font-weight: var(--fw-bold); }
+.lib-author-block .ve-rd__h--2 { font-weight: var(--fw-bold); }
+.lib-author-block .ve-rd__h--3 { font-weight: var(--fw-bold); font-style: italic; }
+.lib-author-block ul.ve-rd__list-hang-notitle { list-style: none; padding: 0; }
+.lib-author-block .ve-rd__wrp-embedded-data { border: var(--border) solid var(--line); border-radius: var(--r-sm); margin: var(--sp-2) 0; }
+.lib-author-block .ve-rd__b-inset { border: var(--border) solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); margin: var(--sp-2) 0; background: var(--bg-sunk); }
+.lib-author-block .ve-rd__quote { font-style: italic; }

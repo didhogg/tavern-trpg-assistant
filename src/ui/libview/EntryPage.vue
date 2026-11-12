@@ -4,6 +4,7 @@ import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 import { chooseEntry, type EntryRef, type EntrySelection } from '../../library/scopes'
 import type { ScopedDetail } from '../../library/scoped'
 import type { AuthorLine } from '../../library/runtime/frame/field-commands'
+import type { AuthorMarkup } from '../../library/runtime/frame/author-markup'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
@@ -22,13 +23,11 @@ import ReinstallBlock from './ReinstallBlock.vue'
 import { ownerByPack, ownerFromOpenPack } from './reinstall'
 import FeatureLevels from './FeatureLevels.vue'
 import { authorName, nameOf as itemName } from './pack-data'
-import { BLOCKS } from './statblock'
 import { entryPageKey, useEntryLangStore } from '../../stores/entrylang'
 import EntryAssociations from './EntryAssociations.vue'
 import ImageBlock from './ImageBlock.vue'
-import InlineText from './InlineText.vue'
 import AuthorFragment from './author-fragment'
-import { entriesOf, imagesOf } from './entry-content'
+import { imagesOf } from './entry-content'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
 const props = defineProps<{ entryRef: EntryRef; selection?: EntrySelection; pageKey?: string }>()
@@ -64,46 +63,42 @@ async function loadCounterpart(d: ScopedDetail): Promise<void> {
 }
 const codeSet = computed(() => getSource(props.entryRef.set).codeSet)
 const sourceLine = ref('')
-/** 摘要行：作者列表页每列的显示值（环阶、时间、学派…，B-35），名称与来源列不重复显示；没有列表定义的类别没有摘要行。 */
-const summary = ref<Array<{ k: string; v: string }>>([])
 /** 种族页：亚种直接全部列出（R94）；亚种在作者数据里是带 raceName 的独立条目。 */
 /** 作者函数翻译的摘要行（法术的成分 / 持续时间、神祇的阵营、职业的熟练…，B-36）与职业每级熟练加值。 */
 const authorLines = shallowRef<AuthorLine[]>([])
 const authorPb = ref<string[] | null>(null)
 const subraces = ref<Array<{ name: string; entries: unknown; ref: EntryRef }>>([])
-/** 正文不在 entries 里的类别（传奇组等）：作者拼出来的正文条目（frame summaryEntry，P5-1 B-40）。 */
-const summaryBody = ref<unknown>(null)
-/** 怪物所属的传奇组（巢穴动作 / 区域效应 / 神话遭遇）：怪物自己只带传奇组的名字和来源，内容在传奇组条目里，作者的详情页把它接在数值块后面。 */
-const groupBody = ref<{ name: string; entry: unknown } | null>(null)
+/**
+ * 整条正文的作者渲染（P5-5 §11.5）：每类由哪些部分组成、怎么画都照作者（含怪物的传奇动作 / 巢穴 / 区域效应、表格的掷骰范围）。
+ * pending = 还在画；null = 作者这一类没有整条渲染（职业 / 子职用自己的页面），退回下面的通用正文。
+ */
+const entity = shallowRef<AuthorMarkup | null | 'pending'>('pending')
+const OWN_VIEWS = new Set(['class', 'subclass'])
+async function loadEntity(item: unknown): Promise<void> {
+  entity.value = 'pending'
+  if (OWN_VIEWS.has(props.entryRef.prop)) { entity.value = null; return }
+  try {
+    entity.value = await (await app.svc().backend.library.service.frameOf(codeSet.value)).call('renderEntity', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
+  } catch (e) {
+    console.warn('[trpg-assistant] 作者没能画出这一条，用通用正文显示', e)
+    entity.value = null
+  }
+}
+/** 头像（作者各类的 getTokenUrl，后端 images.token，P5 B-03）：图片标签里和背景图放在一起。 */
+const token = ref<string | null>(null)
+async function loadToken(item: unknown): Promise<void> {
+  token.value = null
+  try { token.value = await app.svc().backend.library.images.token(codeSet.value, props.entryRef.prop, JSON.parse(JSON.stringify(item))) } catch (e) { console.warn('[trpg-assistant] 读取头像失败', e) }
+}
 async function loadExtras(item: unknown): Promise<void> {
   const s = app.svc().backend.library
-  summary.value = []
   subraces.value = []
   authorLines.value = []
   authorPb.value = null
-  summaryBody.value = null
-  groupBody.value = null
   try {
     const af = await (await s.service.frameOf(codeSet.value)).call('authorFields', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
     authorLines.value = af.lines
     authorPb.value = af.pb
-    summaryBody.value = await (await s.service.frameOf(codeSet.value)).call('summaryEntry', props.entryRef.prop, JSON.parse(JSON.stringify(item)))
-    const lg = props.entryRef.prop === 'monster' ? (item as { legendaryGroup?: { name?: string; source?: string } } | null)?.legendaryGroup : null
-    if (lg?.name && lib.campaignLib) {
-      const frame = await s.service.frameOf(codeSet.value)
-      const m = await frame.call('statblockMeta', { type: 'statblock', prop: 'legendaryGroup', name: lg.name, source: lg.source })
-      const at = m.hash ? await s.scoped.locate({ ...lib.campaignLib, codeSet: codeSet.value }, 'legendaryGroup', m.hash) : null
-      const stored = at ? await s.scoped.storedItem(at.ref) : null
-      const entry = stored ? await frame.call('summaryEntry', 'legendaryGroup', JSON.parse(JSON.stringify(stored.item))) : null
-      if (entry) groupBody.value = { name: lg.name, entry }
-    }
-    const lc = await s.sorting.cells(codeSet.value, props.entryRef.prop)
-    const row = lc?.cells[props.entryRef.hash]
-    if (lc && row) summary.value = lc.columns.flatMap((c, i) => {
-      if (c.sort === 'name' || c.sort === 'source' || !row[i]) return []
-      if (c.sort === 'concentration') return [{ k: c.title ?? c.text, v: codeSet.value === 'cn' ? '需要' : 'Required' }]
-      return [{ k: c.text, v: row[i] }]
-    })
     const c = lib.campaignLib
     const me = item as { name?: string; source?: string; raceName?: string } | null
     if (props.entryRef.prop === 'race' && c && me && !me.raceName) {
@@ -113,7 +108,7 @@ async function loadExtras(item: unknown): Promise<void> {
         return race.raceName === me.name && (race.raceSource ?? r.source) === me.source
       }).map((r) => ({ name: itemName(r.item), entries: (r.item as { entries?: unknown }).entries ?? null, ref: r.ref }))
     }
-  } catch (e) { console.error('[trpg-assistant] 读取摘要行 / 亚种失败', e) }
+  } catch (e) { console.error('[trpg-assistant] 读取职业字段 / 亚种失败', e) }
 }
 /** 来源行：书的全名（作者的 sourceNames）+ 页码；名字取不到就退回来源缩写。 */
 async function sourceText(item: unknown, source: string | null): Promise<string> {
@@ -139,6 +134,8 @@ async function load(): Promise<void> {
     state.value = { kind: 'ok', d }
     enabled.value = !d.closed
     void loadExtras(d.item)
+    void loadEntity(d.item)
+    void loadToken(d.item)
     void loadCounterpart(d)
     sourceLine.value = await sourceText(d.item, d.source)
     modal.setTitle(props.pageKey ?? entryPageKey(props.entryRef, props.selection), await authorName(app.svc(), codeSet.value, props.entryRef.prop, d.item))
@@ -150,14 +147,12 @@ async function load(): Promise<void> {
 }
 onMounted(() => void load())
 
-/** 摘要行里已经在下面的数值块 / 作者字段里出现过的标签不重复显示。 */
-const summaryShown = computed(() => { const seen = new Set([...(block.value?.lines ?? []), ...authorLines.value].map((l) => l.label)); return summary.value.filter((x) => !seen.has(x.k)) })
-const block = computed(() => detail.value ? BLOCKS[props.entryRef.prop]?.(detail.value.item) ?? null : null)
-const body = computed(() => entriesOf(props.entryRef.prop, detail.value?.item) ?? summaryBody.value)
+/** 作者画不出来时的退路：条目自己的 entries。 */
+const plainEntries = computed(() => (detail.value?.item as { entries?: unknown } | null)?.entries ?? null)
 // 缺数据时这一条归哪个包（自制按包编号；从包列表点进来的按栈底的包），给【重新下载这个包】（P5-5 §11.2）
 const packOwner = computed(() => (props.selection && 'docIdLocal' in props.selection ? ownerByPack(props.selection.docIdLocal) : null) ?? ownerFromOpenPack(props.pageKey))
 const fluff = computed(() => detail.value?.fluff as { entries?: unknown[]; images?: unknown[] } | null)
-const images = computed(() => imagesOf([fluff.value?.images, fluff.value?.entries, body.value, block.value?.sections.map((s) => s.entries)]))
+const images = computed(() => [...(token.value ? [{ type: 'image', href: /^https?:/.test(token.value) ? { type: 'external', url: token.value } : { type: 'internal', path: token.value }, title: '头像' }] : []), ...imagesOf([fluff.value?.images, fluff.value?.entries, detail.value?.item])])
 
 async function setEnabled(next: boolean): Promise<void> {
   const owner = campaign.owner?.ownerKey
@@ -194,19 +189,14 @@ async function setEnabled(next: boolean): Promise<void> {
             <div v-if="state.d.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
             <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
             <EntryVersions :key="`${entryRef.hash}-${state.d.version.altId}`" :detail="state.d" :entry-ref="state.d.ref" :preview-copy="!!selection" @changed="load" />
-            <div v-if="summaryShown.length" class="lib-sumline" data-testid="entry-summary"><span v-for="x in summaryShown" :key="x.k">{{ x.k }} <b>{{ x.v }}</b></span></div>
-            <div v-if="(block?.lines.length || authorLines.length) && entryRef.prop !== 'class'" class="lib-stat" data-testid="entry-statblock">
-              <div v-for="l in [...(block?.lines ?? []), ...authorLines]" :key="l.label">
-                <span>{{ l.label }}</span><span><AuthorFragment v-if="'markup' in l && l.markup" :markup="l.markup" :code-set="codeSet" inline /><InlineText v-else :text="l.value" :code-set="codeSet" /></span>
-              </div>
-            </div>
-            <div v-if="block?.abilities.length" class="lib-abil"><div v-for="a in block.abilities" :key="a.key"><small>{{ a.label }}</small><b>{{ a.score }}</b> ({{ a.mod }})</div></div>
-            <template v-for="sec in block?.sections ?? []" :key="sec.title"><h3>{{ sec.title }}</h3><EntryBody :block="sec.entries" :code-set="codeSet" /></template>
-            <ClassView v-if="entryRef.prop === 'class'" :item="state.d.item" :entry-ref="state.d.ref" :code-set="codeSet" :doc-id-local="state.d.docIdLocal" :author-lines="authorLines" :pb="authorPb" />
+            <div v-if="entity === 'pending'" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
+            <!-- 作者整条渲染（§11.5）：数值块、正文、传奇组、表格都照作者 -->
+            <AuthorFragment v-else-if="entity" :markup="entity" :code-set="codeSet" class="lib-entity" data-testid="entry-author" />
+            <ClassView v-else-if="entryRef.prop === 'class'" :item="state.d.item" :entry-ref="state.d.ref" :code-set="codeSet" :doc-id-local="state.d.docIdLocal" :author-lines="authorLines" :pb="authorPb" />
             <FeatureLevels v-else-if="entryRef.prop === 'subclass'" :levels="byLevel(flattenFeatures((state.d.item as { subclassFeatures?: unknown }).subclassFeatures))" :code-set="codeSet" :open-upto="3" />
-            <EntryBody v-else-if="body" :block="body" :code-set="codeSet" />
-            <template v-if="groupBody"><h3>传奇组：{{ groupBody.name }}</h3><EntryBody :block="groupBody.entry" :code-set="codeSet" /></template>
-            <p v-else-if="!body && !block?.lines.length && !block?.sections.length && !['class', 'subclass'].includes(entryRef.prop)" class="lib-muted">这一条没有正文。</p>
+            <!-- 作者也画不出来：条目自己的正文 -->
+            <EntryBody v-else-if="plainEntries" :block="plainEntries" :code-set="codeSet" />
+            <p v-else class="lib-muted">这一条没有正文。</p>
             <template v-if="subraces.length">
               <h3>亚种</h3>
               <div v-for="sr in subraces" :key="sr.ref.hash" class="lib-block" data-testid="subrace"><b>{{ sr.name }}</b><EntryBody :block="sr.entries" :code-set="codeSet" /></div>

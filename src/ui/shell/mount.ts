@@ -2,6 +2,7 @@ import { createPinia, type Pinia } from 'pinia'
 import { createApp } from 'vue'
 import type { StContext } from '../../host/types'
 import App from '../App.vue'
+import author from '../styles/author.css?inline'
 import base from '../styles/base.css?inline'
 import dice from '../styles/dice.css?inline'
 import kit from '../styles/kit.css?inline'
@@ -20,7 +21,7 @@ export function mountApp(ctx: StContext): Pinia | null {
   host.id = HOST_ID
   const shadow = host.attachShadow({ mode: 'open' })
   const style = document.createElement('style')
-  style.textContent = [tokens, palette, base, shell, kit, pages, library, dice].join('\n')
+  style.textContent = [tokens, palette, base, shell, kit, pages, library, author, dice].join('\n')
   const portal = document.createElement('div')
   portal.className = 'trpg-portal'
   const container = document.createElement('div')

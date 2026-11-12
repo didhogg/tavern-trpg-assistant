@@ -46,14 +46,3 @@ export async function statblockMeta(entry: Record<string, unknown>): Promise<Sta
   return { prop, target: isFluff ? prop.replace(/Fluff$/, '') : prop, source: m.source ?? null, hash: m.hash ?? null, displayName: m.displayName ?? null, isFluff }
 }
 
-/** 正文不在 entries 里的类别：作者怎么把它的字段拼成正文条目（作者自己的 getSummaryEntry）。传奇组：巢穴动作 / 区域效应 / 神话遭遇。加一类 = 加一行。 */
-const SUMMARY_RULES: Record<string, (item: any) => unknown> = {
-  legendaryGroup: (it) => A.Renderer.legendaryGroup.getSummaryEntry(it),
-}
-
-/** 这一条的"作者拼出来的正文条目"（没有登记的类别、或作者说没有内容时返回 null）。 */
-export async function summaryEntry(prop: string, item: any): Promise<Record<string, unknown> | null> {
-  await init()
-  const rule = SUMMARY_RULES[prop]
-  return (rule ? (rule(item) as Record<string, unknown> | null) : null) ?? null
-}

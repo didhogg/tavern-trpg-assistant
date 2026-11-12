@@ -85,7 +85,7 @@ try {
   result.checks.combinedAttack = true
   await close()
   await search('祝福术')
-  await active().getByTestId('entry-statblock').getByText(/专注.*至多.*分钟/).waitFor()
+  await active().getByTestId('entry-author').getByText(/专注.*至多.*分钟/).waitFor()
   result.checks.concentration = true
   await close()
   await search('地衣巫妖')
@@ -111,7 +111,7 @@ try {
   await page.screenshot({ path: join(profile, 'detail-header-narrow.png') })
   await page.setViewportSize({ width: 1280, height: 850 })
   result.checks.detailHeader = Object.values(result.header).every(h => h.gap >= 8 && h.inset && h.softBorder && h.selectedShadow === 'none')
-  const spell = active().getByTestId('rendered-block').getByRole('button', { name: '侦测魔法', exact: true })
+  const spell = active().getByTestId('entry-author').getByRole('button', { name: '侦测魔法', exact: true })
   await spell.waitFor()
   await spell.scrollIntoViewIfNeeded()
   await page.screenshot({ path: join(profile, 'spellcasting.png') })
@@ -152,7 +152,7 @@ try {
   await jump.waitFor()
   await active().getByTestId('dead-link').filter({ hasText: '找不到的测试法术' }).waitFor()
   result.checks.missing = true
-  const embeddedLink = active().getByTestId('statblock-inline').getByRole('button', { name: '法师护甲', exact: true }).first()
+  const embeddedLink = active().getByTestId('entry-author').getByRole('button', { name: '法师护甲', exact: true }).first()
   await embeddedLink.click()
   result.checks.embeddedLink = (await title()) === '法师护甲'
   await back()

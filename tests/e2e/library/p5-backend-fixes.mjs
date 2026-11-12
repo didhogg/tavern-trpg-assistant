@@ -55,7 +55,7 @@ const r = await page.evaluate(async (P) => {
   out.abilityDc = await fr.call('renderText', { type: 'abilityDc', name: '法术', attributes: ['cha'] })
   out.statblock = await fr.call('statblockMeta', { type: 'statblock', prop: 'monsterFluff', source: 'MM', name: 'Giants' })
   const lg = await be.library.scoped.query(c, 'legendaryGroup', {})
-  out.legendary = { total: lg.length, summary: lg.length ? !!(await fr.call('summaryEntry', 'legendaryGroup', lg[0].item)) : null }
+  out.legendary = { total: lg.length, summary: lg.length ? !!(await fr.call('renderEntity', 'legendaryGroup', lg[0].item)) : null }
   // B-41：同一批类别查两遍，第二遍不应再开新小窗
   const q = () => Promise.all(['spell', 'monster', 'item'].map((p) => be.library.scoped.query(c, p, { source: 'PHB', expand: true })))
   await q()

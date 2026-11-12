@@ -3,6 +3,7 @@ import type { ResolvedTag } from '../../library/entry-links'
 import type { AuthorMarkup } from '../../library/runtime/frame/author-markup'
 import { useAppStore } from '../../stores/app'
 import ContentLink from './ContentLink.vue'
+import RollTable from './RollTable.vue'
 
 const elements = new Set('p div span strong b i em u s del small sub sup br hr ul ol li dl dt dd blockquote h2 h3 h4 h5 h6 table caption colgroup col thead tbody tfoot tr th td details summary'.split(' '))
 const discarded = new Set('script style template iframe object embed link meta base svg math form input button'.split(' '))
@@ -54,6 +55,12 @@ export default defineComponent({
       if (node.nodeType === Node.TEXT_NODE) return node.textContent
       if (!(node instanceof Element) || discarded.has(node.localName)) return null
       if (node.hasAttribute('data-rd-h-toggle-button') || node.hasAttribute('data-rd-h-special-toggle-button')) return null
+      // 作者画的表格（author-markup 标了序号）：换成随机表组件，表格仍由作者画，插件叠掷骰
+      const tableMark = node.getAttribute('data-trpg-table')
+      if (tableMark?.startsWith(`${props.markup.marker}:`)) {
+        const table = props.markup.tables?.[Number(tableMark.slice(props.markup.marker.length + 1))]
+        if (table && typeof table === 'object') return h(RollTable, { key, table: table as Record<string, unknown>, codeSet: props.codeSet })
+      }
       const children = [...node.childNodes].map((child, i) => draw(child, `${key}.${i}`))
       const mark = node.getAttribute('data-trpg-link')
       if (mark?.startsWith(`${props.markup.marker}:`)) {
@@ -73,6 +80,9 @@ export default defineComponent({
         const heading = node.querySelector('.ve-rd__h-inner')?.textContent
         if (heading) attrs['data-reader-heading'] = heading
       }
+      // 作者的版式类名（ve-* / stats*）带过来，由 author.css 按作者规则排版；其他类名不带
+      const cls = (node.getAttribute('class') ?? '').split(/\s+/).filter((c) => /^(ve-|stats|stripe-|small-caps$|bold$|no-wrap$|w100$)/.test(c)).join(' ')
+      if (cls) attrs.class = cls
       for (const name of ['colspan', 'rowspan', 'span', 'start', 'title']) {
         const value = node.getAttribute(name)
         if (value !== null) attrs[name] = value
