@@ -19,7 +19,10 @@ import { startAuthorFrame } from '../library/runtime/host'
 import { BrewPacks } from '../library/brew-packs'
 import { BrewPairs } from '../library/brew-pairing'
 import { configureBrewValidator } from '../library/brew-validate'
-import { removeOfficialParts, uninstallOfficial, type UninstallReport } from '../library/uninstall'
+import { removeOfficialParts, removeParts, uninstallOfficial, type UninstallReport } from '../library/uninstall'
+import { executeBatch, mergeImpacts, withCounterparts, type RemovalBatch } from './removal-batch'
+import { removalSizes, type RemovalSizes } from './removal-size'
+import { reclaimLibrary, type ReclaimReport } from '../library/reclaim'
 import { impactOfRemoval, type RemovalImpact, type RemovalTarget } from './removal-impact'
 import { Counterparts } from '../library/counterpart'
 import { DocumentStore } from '../library/documents'
@@ -111,6 +114,14 @@ export interface Backend {
   removalImpact: (target: RemovalTarget) => Promise<RemovalImpact>
   /** 按预览凭据执行删除 / 卸载；预览后资料变了就拒绝（T4）。 */
   removalExecute: (impact: RemovalImpact) => Promise<unknown>
+  /** 多选卸载 / 删除（P5-5 §12 B1）：补上另一种语言的那一份，合成一份预览。 */
+  removalImpactMany: (targets: RemovalTarget[]) => Promise<RemovalBatch>
+  /** 按合并预览执行：按语言分步，每步全成或全不成；第二步失败报 RemovalBatchError（写清已完成哪一步）。 */
+  removalExecuteMany: (batch: RemovalBatch) => Promise<{ done: string[]; reclaim: ReclaimReport | null }>
+  /** 已装的书 / 冒险 / 自制包各占多少（含另一种语言那份；共用文件不算），P5-5 §12 B2。 */
+  removalSizes: (targets: RemovalTarget[]) => Promise<RemovalSizes>
+  /** 回收已卸载资料和旧版本留下的空间（P5-5 §12 B3）；卸载成功后会自动做一次。 */
+  reclaim: () => Promise<ReclaimReport>
 }
 
 export interface BackendOptions {
@@ -261,7 +272,7 @@ export function createBackend(opts: BackendOptions): Backend {
     return impactOfRemoval({ db: opts.db, manage: scoped.manage, brewPacks, brewSetOf, revision: view.id, officialSources, officialHashes }, target)
   }
   const removalImpact = (target: RemovalTarget): Promise<RemovalImpact> => revisions.published().then((view) => impactAt(view, target))
-  const removalExecute = async (impact: RemovalImpact): Promise<unknown> => {
+  const removeOne = async (impact: RemovalImpact): Promise<unknown> => {
     const source = getSource(impact.target.setId)
     // 先取得修改租约；排队期间可能有人发布，拿到锁后再按 handle.base 这一固定版本重算。
     const handle = await operations.begin({ kind: 'remove', set: impact.target.setId, codeSet: source.codeSet })
@@ -286,5 +297,34 @@ export function createBackend(opts: BackendOptions): Backend {
       throw e
     }
   }
-  return { library, kernel, kernelSave, starter, transfer, removalImpact, removalExecute }
+  const removalImpactMany = async (targets: RemovalTarget[]): Promise<RemovalBatch> => {
+    const view = await revisions.published()
+    const all = await withCounterparts(view, brewPairs, targets)
+    return mergeImpacts(all, await Promise.all(all.map((t) => impactAt(view, t))))
+  }
+  const reclaim = (): Promise<ReclaimReport> => reclaimLibrary({ db, revisions, operations, directory })
+  const removalExecute = async (impact: RemovalImpact): Promise<unknown> => {
+    const r = await removeOne(impact)
+    await reclaimAfter()
+    return r
+  }
+  /** 卸载成功后回收空间；回收失败不影响卸载结果，只记日志。 */
+  const reclaimAfter = async (): Promise<ReclaimReport | null> => {
+    try { return await reclaim() } catch (e) { logs.sink()({ level: 'warn', source: 'library', kind: 'reclaim', message: `回收空间没有成功：${e instanceof Error ? e.message : String(e)}` }); return null }
+  }
+  const removalSizesOf = async (targets: RemovalTarget[]): Promise<RemovalSizes> => removalSizes({ files, directory, brewPairs }, await revisions.published(), targets)
+  const runBatch = (batch: RemovalBatch): Promise<{ done: string[] }> => executeBatch({
+    impactAt, operations, brewSetOf,
+    removeParts: (parts, handle) => removeParts({ db, revisions, operations, tasks, directory, brewSetOf, removeBrews: (view, setId, ids) => service.deleteBrewsInView(setId, ids, view), afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() } }, parts, handle),
+  }, batch)
+  const removalExecuteMany = async (batch: RemovalBatch): Promise<{ done: string[]; reclaim: ReclaimReport | null }> => {
+    let done: { done: string[] }
+    try { done = await runBatch(batch) } catch (e) {
+      // 分步执行时前一步已经卸掉的部分也回收
+      if ((e as { done?: string[] }).done?.length) await reclaimAfter()
+      throw e
+    }
+    return { ...done, reclaim: await reclaimAfter() }
+  }
+  return { library, kernel, kernelSave, starter, transfer, removalImpact, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim }
 }

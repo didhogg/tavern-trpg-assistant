@@ -211,6 +211,17 @@ export class LibraryOperations {
   }
 
   /** 正常入口（开战役会连续启动中英两套）在这里排队，不直接拒绝第二个操作。 */
+  /** 拿着修改锁做一件不发布版本的事（空间回收，P5-5 §12 B3）：期间没有别的修改能开始。renew 用来给长任务续租。 */
+  async withLock<T>(run: (renew: () => Promise<void>) => Promise<T>): Promise<T> {
+    const token = uid()
+    await this.acquireLock(token)
+    try {
+      return await run(() => this.renewLock(token))
+    } finally {
+      await this.releaseLock(token)
+    }
+  }
+
   private async acquireLock(token: string, signal?: AbortSignal): Promise<void> {
     const started = this.now()
     for (;;) {
