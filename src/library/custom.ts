@@ -3,7 +3,7 @@
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { copyRawSource } from './copy-source'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
-import { formatOfCampaign, formatOfCodeSet } from './formats'
+import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
 import { findCollisions, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
@@ -306,6 +306,10 @@ export class CustomLibrary {
    */
   async previewImport(codeSet: string, files: Array<{ name: string; text: string }>) {
     const set = brewSetOf(codeSet)
+    const format = formatOfCodeSet(codeSet)
+    // 先认格式（P5.5 A3）：不是这种格式的不交给作者试装，单独列出原因
+    const { accepted, rejected } = splitRecognized(format, files)
+    files = accepted
     const scope = `${codeSet}:preview:${Date.now()}`
     const view = await this.lib.currentView()
     const merged = new Map<string, unknown>()
@@ -331,8 +335,9 @@ export class CustomLibrary {
         newEntries: fresh.reduce((n, d) => n + Object.values(d.props).reduce((m, hs) => m + hs.filter(Boolean).length, 0), 0) - collisions.length,
         alternatives: collisions.map((c) => ({ prop: c.prop, hash: c.hash, base: c.base.kind === 'official' ? 'official' : c.base.docIdLocal })),
         notJson: added.value.notJson,
+        rejected,
         authorErrors: added.errors,
-        structure: await Promise.all(files.map(async (file) => ({ name: file.name, ...(await formatOfCodeSet(codeSet).validate(file.text)) }))),
+        structure: await Promise.all(files.map(async (file) => ({ name: file.name, ...(await format.validate(file.text)) }))),
       }
     } finally {
       f.close()

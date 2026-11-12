@@ -9,6 +9,7 @@ import { officialSourceOf, SOURCES, type SourceEntry } from './sources'
 import type { AuthorFrame } from './runtime/host'
 import type { BrewEntry, WithErrors } from './runtime/frame/brew-commands'
 import type { LogSink } from './logs'
+import { formatOfCodeSet, splitRecognized } from './formats'
 
 export interface BrewContext {
   db: LibraryDatabase
@@ -189,14 +190,20 @@ export function brewInstallSources(ctx: BrewContext, sourceId: string, sources: 
   return downloadBrew(ctx, sourceId, 'brew-deps', '下载缺的依赖包', (frame) => frame.call('brewAddSources', sources), (r) => !!r.value.added.length, signal)
 }
 
+/**
+ * 导入本地文件。先按这套资料集的数据格式认文件（P5.5 A3，formats.ts）：不是这种格式的拒收并写明原因，不交给作者；
+ * 一个都认不出就报错（什么都不改）。不是合法 JSON 的照旧交给作者，作者列进 notJson。
+ */
 export async function brewImport(ctx: BrewContext, sourceId: string, files: Array<{ name: string; text: string }>) {
   const s = brewSource(sourceId)
+  const { accepted, rejected } = splitRecognized(formatOfCodeSet(s.codeSet), files)
+  if (!accepted.length) throw new Error(`没有可以导入的文件：${rejected.map((x) => `${x.name}：${x.reason}`).join('；')}`)
   const handle = await ctx.operations.begin({ kind: 'brew-import', set: s.id, codeSet: s.codeSet })
   try {
-    const r = await (await ctx.frame(s.codeSet, handle.target)).call('brewAddFiles', files)
+    const r = await (await ctx.frame(s.codeSet, handle.target)).call('brewAddFiles', accepted)
     const parse = await afterBrewChange(ctx, s, handle.target)
     const view = await publishBrew(ctx, s, handle, parse)
-    return { ...r, parse, view: view.id }
+    return { ...r, rejected, parse, view: view.id }
   } catch (e) {
     await ctx.operations.abort(handle, e)
     throw e
