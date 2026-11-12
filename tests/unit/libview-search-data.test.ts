@@ -19,3 +19,22 @@ describe('全库搜索的纯处理', () => {
     expect(cats).toEqual([{ key: 'spell', label: '法术', n: 2 }, { key: 'other', label: '其他', n: 1 }])
   })
 })
+
+describe('书目范围分组（§11.3）', () => {
+  const r = (over: Record<string, unknown>) => ({ kind: 'book', set: 'cn-official', source: 'PHB', id: 'PHB', name: 'PHB', count: 1, downloaded: true, view: { visible: true }, ...over }) as never
+  it('书架分组照搬（含自制内容）；自己导入的包另成「我的库」；包的全部来源一起；只列开着的', async () => {
+    const { searchScopeGroups } = await import('../../src/ui/libview/search-data')
+    const groups = [
+      { group: 'core', name: '核心', books: [r({}), r({ source: 'DMG', id: 'DMG', name: 'DMG', view: { visible: false } })], adventures: [] },
+      { group: 'homebrew', name: '自制内容', books: [r({ set: 'cn-brew', source: 'A', id: null, name: '甲包', pack: { docIdLocal: 'a', filename: null, stableId: null, sources: ['A', 'A2'] } }), r({ set: 'cn-brew', source: 'M', id: null, name: '我导入的', pack: { docIdLocal: 'm', filename: null, stableId: null, sources: ['M'] } })], adventures: [] },
+      { group: 'supplement', name: '官方出版物', books: [], adventures: [r({ kind: 'adventure', source: 'LMoP', id: 'LMoP', name: '矿坑', downloaded: false, count: 9 })] },
+    ] as never
+    const out = searchScopeGroups(groups, new Set(['m']), (x: { view: { visible: boolean } }) => x.view.visible)
+    expect(out.map((g) => [g.name, g.rows.map((x) => [x.name, x.sources])])).toEqual([
+      ['核心', [['PHB', ['PHB']]]],
+      ['自制内容', [['甲包', ['A', 'A2']]]],
+      ['官方出版物', [['矿坑', ['LMoP']]]],
+      ['我的库', [['我导入的', ['M']]]],
+    ])
+  })
+})

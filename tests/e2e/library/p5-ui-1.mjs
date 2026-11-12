@@ -199,7 +199,9 @@ await page.locator('[data-testid="search-books"] .trpg-check', { hasText: '玩�
 await settle(page, 400)
 const afterN = await page.locator('[data-testid="search-results"] .lib-list__row').count().catch(() => 0)
 check('取消勾选一本书：命中减少，出现"已屏蔽"提示', afterN < hitsN && (await page.locator('.lib-banner', { hasText: '已屏蔽' }).count()) === 1, `${hitsN} → ${afterN}，${checked}`)
-await page.locator('[data-testid="search-books"] button', { hasText: '全选' }).first().click()
+// 「全部」框：[−] 点一下全部取消，再点一下全部勾上（分组全选框规则）
+await page.locator('[data-testid="search-books"] [data-testid="group-check"]').first().click()
+await page.locator('[data-testid="search-books"] [data-testid="group-check"]').first().click()
 await settle(page, 300)
 await page.locator('[data-testid="search-results"] .lib-list__row', { hasText: '火球术' }).first().click()
 await page.waitForSelector('[data-testid="entry-page"] .lib-dbody', { timeout: 60000 })

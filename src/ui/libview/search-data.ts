@@ -2,6 +2,8 @@
 import type { ScopedSearchHit } from '../../library/scoped-search'
 import type { Services } from '../../core/services'
 import type { CampaignLibrary } from '../../library/scopes'
+import type { CatalogRow } from '../../library/scoped'
+import type { ShelfGroup } from '../../library/shelf'
 import { SOURCES } from '../../library/sources'
 import { authorName } from './pack-data'
 import { categoryLabel, registeredCategories } from './registry'
@@ -40,4 +42,24 @@ export async function loadAllHits(s: Services, c: CampaignLibrary, onPart: (hits
     onPart([...out])
   }
   return out
+}
+
+/** 「书目范围」里的一行：一本书 / 冒险 / 一个包（包可能有多个来源，取消勾选时一起屏蔽）。 */
+export interface ScopeRow { key: string; name: string; sources: string[] }
+export interface ScopeGroup { key: string; name: string; rows: ScopeRow[] }
+
+/**
+ * 书目范围的分组（P5-5 §11.3）：和用户在库里看到的一样登记式取——书架的分组（作者分组 + 自制内容），
+ * 自己导入的包另成「我的库」一组；只列本战役开着的（搜索也只搜这些）。不手写分类或书目。
+ */
+export function searchScopeGroups(groups: readonly ShelfGroup[], mineIds: ReadonlySet<string>, isOn: (r: CatalogRow) => boolean): ScopeGroup[] {
+  const usable = (r: CatalogRow): boolean => (r.downloaded || (r.kind === 'adventure' && r.count > 0)) && isOn(r)
+  const row = (r: CatalogRow): ScopeRow => ({ key: r.pack ? `pack:${r.pack.docIdLocal}` : `${r.set}:${r.source}:${r.id ?? ''}`, name: r.name, sources: r.pack?.sources.length ? [...r.pack.sources] : [r.source] })
+  const all = groups.flatMap((g) => [...g.books, ...g.adventures])
+  const isMine = (r: CatalogRow): boolean => !!r.pack && mineIds.has(r.pack.docIdLocal)
+  const out: ScopeGroup[] = groups
+    .map((g) => ({ key: g.group, name: g.name, rows: [...g.books, ...g.adventures].filter((r) => !isMine(r) && usable(r)).map(row) }))
+  const mine = all.filter((r) => isMine(r) && usable(r)).map(row)
+  if (mine.length) out.push({ key: 'mine', name: '我的库', rows: mine })
+  return out.filter((g) => g.rows.length)
 }

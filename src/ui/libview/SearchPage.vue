@@ -6,9 +6,10 @@ import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Checkbox from '../kit/Checkbox.vue'
+import GroupCheck from '../kit/GroupCheck.vue'
 import Icon from '../kit/Icon.vue'
 import { openEntry, openReader } from './open'
-import { hitCategories, hitCategoryKey, hitCategoryLabel, hitName, hitSource, loadAllHits, withoutUnchecked } from './search-data'
+import { hitCategories, hitCategoryKey, hitCategoryLabel, hitName, hitSource, loadAllHits, searchScopeGroups, withoutUnchecked, type ScopeRow } from './search-data'
 
 /** 全库数据搜索（U2b）：和包弹窗同一种弹窗，多一个可折叠的"书目范围"。默认折叠、折叠状态记住；默认全勾已开启的书，取消勾选只对这次搜索有效。 */
 const app = useAppStore()
@@ -31,10 +32,13 @@ async function setExpanded(open: boolean): Promise<void> {
   try { await app.updateSettings({ library: { ...app.settings.library, collapsed: open ? [...rest, OPEN_KEY] : rest } }) } catch (e) { console.error('[trpg-assistant] 保存折叠状态失败', e) }
 }
 
-// 已安装并已开启的书 / 包（按作者分组）；没开启的不列
-const groups = computed(() => (lib.shelf?.groups ?? []).map((g) => ({ name: g.name, rows: [...g.books, ...g.adventures].filter((r) => r.downloaded && r.view.visible) })).filter((g) => g.rows.length))
-const total = computed(() => groups.value.reduce((n, g) => n + g.rows.length, 0))
-const checkedCount = computed(() => groups.value.reduce((n, g) => n + g.rows.filter((r) => !unchecked.value.has(r.source)).length, 0))
+// 已安装并已开启的书 / 包：和书架、我的库同一份登记（作者分组 + 自制内容 + 我的库），P5-5 §11.3
+const groups = computed(() => searchScopeGroups(lib.shelf?.groups ?? [], new Set(lib.minePacks.map((p) => p.docIdLocal)), (r) => r.view.visible))
+const allRows = computed(() => groups.value.flatMap((g) => g.rows))
+const isChecked = (r: ScopeRow): boolean => !r.sources.every((x) => unchecked.value.has(x))
+const total = computed(() => allRows.value.length)
+const checkedCount = computed(() => allRows.value.filter(isChecked).length)
+const sourcesOf = (rows: readonly ScopeRow[]): string[] => rows.flatMap((r) => r.sources)
 function setChecked(sources: string[], on: boolean): void {
   const next = new Set(unchecked.value)
   for (const s of sources) {
@@ -102,13 +106,10 @@ function open(h: ScopedSearchHit): void {
       <summary><span>书目范围</span><small>已勾选 {{ checkedCount }} / {{ total }}</small><span class="lib-end"><Icon :name="expanded ? 'caret-down' : 'caret-right'" :size="14" /></span></summary>
       <div class="lib-fold__body">
         <p class="lib-muted" style="margin: 0">取消勾选某些书 / 包，可以在这次搜索里临时屏蔽它们；下次进来重新全部勾选。</p>
-        <div style="display: flex; gap: var(--sp-2)">
-          <button class="trpg-btn trpg-btn--small" type="button" @click="setChecked(groups.flatMap((g) => g.rows.map((r) => r.source)), true)">全选</button>
-          <button class="trpg-btn trpg-btn--small" type="button" @click="setChecked(groups.flatMap((g) => g.rows.map((r) => r.source)), false)">全不选</button>
-        </div>
-        <template v-for="g in groups" :key="g.name">
-          <div class="lib-sec" style="padding: 0">{{ g.name }}<span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" @click="setChecked(g.rows.map((r) => r.source), !g.rows.every((r) => !unchecked.has(r.source)))">{{ g.rows.every((r) => !unchecked.has(r.source)) ? '这一类取消' : '这一类全选' }}</button></span></div>
-          <Checkbox v-for="r in g.rows" :key="r.source" :model-value="!unchecked.has(r.source)" @update:model-value="(v: boolean) => setChecked([r.source], v)">{{ r.name }}</Checkbox>
+        <div class="lib-sec" style="padding: 0">全部<span class="lib-end"><GroupCheck :selected="checkedCount" :total="total" label="全部" @change="(all: boolean) => setChecked(sourcesOf(allRows), all)" /></span></div>
+        <template v-for="g in groups" :key="g.key">
+          <div class="lib-sec" style="padding: 0" data-testid="search-scope-group">{{ g.name }}<span class="lib-end"><GroupCheck :selected="g.rows.filter(isChecked).length" :total="g.rows.length" :label="g.name" @change="(all: boolean) => setChecked(sourcesOf(g.rows), all)" /></span></div>
+          <Checkbox v-for="r in g.rows" :key="r.key" :model-value="isChecked(r)" @update:model-value="(v: boolean) => setChecked(r.sources, v)">{{ r.name }}</Checkbox>
         </template>
         <p v-if="!groups.length" class="lib-muted" style="margin: 0">还没有已开启的书。</p>
       </div>
