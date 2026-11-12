@@ -19,10 +19,12 @@ const modal = useModalStore()
 const readerPos = useReaderPositionStore()
 
 type State = { kind: 'loading' } | { kind: 'ok'; chapters: ReturnType<typeof readerChapters> } | { kind: 'missing'; message: string | null } | { kind: 'error'; message: string }
-type GoOptions = { closeToc?: boolean; scrollTop?: number; headingIndex?: number | null }
+type GoOptions = { closeToc?: boolean; scrollTop?: number; headingIndex?: number | null; smooth?: boolean }
 const state = shallowRef<State>({ kind: 'loading' })
 const cur = ref(0)
 const tocOpen = ref(false)
+/** 目录里展开了小节的那一章（null = 全收起）。再点同一章收起，正文不动（驾驶员 2026-11-12）。 */
+const expanded = ref<number | null>(0)
 const body = ref<HTMLElement | null>(null)
 const selected = ref<ReaderPart | null>(null)
 const currentHeading = ref<number | null>(null)
@@ -85,11 +87,14 @@ async function go(i: number, section?: string | null, index?: number | null, opt
   selected.value = { chapter: cur.value, section: section ?? null, ixNamedSection: index ?? 0 }
   unavailable.value = validChapter ? '' : '这本资料里找不到链接指向的章节。'
   if (opts.closeToc) tocOpen.value = false
+  expanded.value = cur.value
   await nextTick()
   const pane = body.value
   if (!pane) return
   pane.querySelector('[data-reader-current]')?.removeAttribute('data-reader-current')
-  pane.scrollTop = 0
+  // 同一章里点小节：正文从当前位置平滑滑过去；换章：从章首开始
+  const smooth = !!opts.smooth && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!smooth) pane.scrollTop = 0
   const headings = [...pane.querySelectorAll<HTMLElement>('[data-reader-heading]')]
   // 点击小节用名字 + 同名序号；换语言时用标题顺序，避免「装备」找不到「Equipment」。
   const target = section
@@ -112,7 +117,9 @@ async function go(i: number, section?: string | null, index?: number | null, opt
   const targetName = target.dataset.readerHeading ?? null
   selected.value = { chapter: cur.value, section: targetName, ixNamedSection: section ? index ?? 0 : null }
   target.setAttribute('data-reader-current', '')
-  pane.scrollTop = target.getBoundingClientRect().top - pane.getBoundingClientRect().top
+  const top = target.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop
+  if (smooth) pane.scrollTo({ top, behavior: 'smooth' })
+  else pane.scrollTop = top
   if (opts.scrollTop != null) pane.scrollTop = opts.scrollTop
   target.setAttribute('tabindex', '-1')
   target.focus({ preventScroll: true })
@@ -120,8 +127,12 @@ async function go(i: number, section?: string | null, index?: number | null, opt
 }
 
 function toggleToc(): void { tocOpen.value = !tocOpen.value; remember() }
-function openChapter(i: number): void { void go(i, null, null, { closeToc: narrow() }) }
-function openSection(i: number, j: number, h: ReaderHeading): void { void go(i, h.name, h.index, { headingIndex: j, closeToc: narrow() }) }
+/** 点章节名：第一次 = 跳到章首并展开小节；再点同一章 = 收起，正文停在原处。 */
+function openChapter(i: number): void {
+  if (i === cur.value && expanded.value === i && !narrow()) { expanded.value = null; return }
+  void go(i, null, null, { closeToc: narrow() })
+}
+function openSection(i: number, j: number, h: ReaderHeading): void { void go(i, h.name, h.index, { headingIndex: j, closeToc: narrow(), smooth: i === cur.value }) }
 </script>
 
 <template>
@@ -144,21 +155,25 @@ function openSection(i: number, j: number, h: ReaderHeading): void { void go(i, 
           <template v-for="(c, i) in chapters" :key="i">
             <button
               type="button" class="lib-toc__chapter"
-              :aria-expanded="i === cur" :aria-current="i === cur && !selected?.section"
+              :aria-expanded="c.headings.length ? i === expanded : undefined" :aria-current="i === cur && !selected?.section"
               @click="openChapter(i)"
             >
-              <Icon v-if="i === cur" name="caret-down" :size="12" />
+              <Icon v-if="c.headings.length" class="lib-toc__caret" name="caret-right" :size="12" />
               <span>{{ c.name }}</span>
             </button>
-            <div v-if="i === cur" class="lib-toc__sections">
-              <button
-                v-for="(h, j) in c.headings" :key="j" type="button" class="lib-toc__section" :data-depth="h.depth > 0"
-                :aria-current="!!selected?.section && headingKey(selected.section) === headingKey(h.name) && selected.ixNamedSection === h.index"
-                @click="openSection(i, j, h)"
-              >
-                {{ headingText(h.name) }}
-              </button>
-            </div>
+            <Transition name="lib-toc-drop">
+              <div v-if="i === expanded && c.headings.length" class="lib-toc__sections">
+                <div class="lib-toc__inner">
+                  <button
+                    v-for="(h, j) in c.headings" :key="j" type="button" class="lib-toc__section" :data-depth="h.depth > 0"
+                    :aria-current="!!selected?.section && headingKey(selected.section) === headingKey(h.name) && selected.ixNamedSection === h.index"
+                    @click="openSection(i, j, h)"
+                  >
+                    {{ headingText(h.name) }}
+                  </button>
+                </div>
+              </div>
+            </Transition>
           </template>
         </aside>
         <main ref="body" class="lib-mscroll" data-testid="reader-body" @scroll="remember">

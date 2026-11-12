@@ -104,7 +104,14 @@
 .lib-toc__chapter span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lib-toc__chapter:hover { background: var(--bg-hover); }
 .lib-toc__chapter[aria-current='true'] { border-left-color: var(--primary); background: var(--primary-tint); }
-.lib-toc__sections { display: grid; }
+.lib-toc__sections { display: grid; grid-template-rows: 1fr; }
+.lib-toc__inner { display: grid; min-height: 0; overflow: hidden; }
+/* 目录小节展开 / 收起：高度从 0 拉开（grid 行 0fr ↔ 1fr），箭头转向 */
+.lib-toc-drop-enter-active, .lib-toc-drop-leave-active { transition: grid-template-rows var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out); }
+.lib-toc-drop-enter-from, .lib-toc-drop-leave-to { grid-template-rows: 0fr; opacity: 0; }
+.lib-toc__caret { flex: none; transition: transform var(--dur-base) var(--ease-out); }
+.lib-toc__chapter[aria-expanded='true'] .lib-toc__caret { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .lib-toc-drop-enter-active, .lib-toc-drop-leave-active, .lib-toc__caret { transition: none; } }
 [data-reader-current] { background: var(--primary-tint); }
 .lib-author-block { display: flow-root; min-width: 0; overflow-wrap: anywhere; }
 .lib-author-block table { border-collapse: collapse; width: 100%; }
