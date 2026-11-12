@@ -121,7 +121,7 @@ function open(h: ScopedSearchHit): void {
     <div ref="scrollEl" class="lib-mscroll">
       <template v-if="failed">
         <ErrorBanner :text="`搜索没有成功：${failed}`" what="搜索" :actions="[{ label: '重试', run }]" />
-        <div class="lib-state"><h3>这次没搜出来</h3><p class="lib-muted">点上面的【重试】再搜一次；上次的结果还在。</p></div>
+        <div class="lib-state"><h3>这次没搜出来</h3><p class="lib-muted">点顶部提示里的【重试】再搜一次；上次的结果还在。</p></div>
       </template>
  <div v-else-if="searching && !hits.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>
       <div v-else-if="!list.length" class="lib-state"><h3>{{ q.trim() ? `没找到「${q.trim()}」` : '还没有可显示的条目' }}</h3><button v-if="q.trim()" class="trpg-btn" type="button" @click="q = ''">清空</button></div>

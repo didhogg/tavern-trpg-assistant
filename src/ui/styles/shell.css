@@ -87,6 +87,10 @@
 .trpg-toast[data-kind='error'] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-2), inset 0 0 0 2px var(--danger-line); }
 .trpg-toast[data-kind='error'] .trpg-icon { color: var(--danger-text); }
 .trpg-toast[data-kind='success'] .trpg-icon { color: var(--accent); }
+.trpg-toasts__banners, .trpg-toasts__list { display: grid; justify-items: center; gap: var(--sp-2); }
+.trpg-toasts__banners { max-height: 60vh; overflow: auto; padding: var(--sp-1); }
+.trpg-toast--banner { cursor: default; width: min(92vw, 520px); }
+.trpg-toast--more { justify-self: center; gap: var(--sp-1); padding: 2px var(--sp-3); font: inherit; font-size: var(--fs-xs); border: 0; }
 .trpg-toast__text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .trpg-toast small { color: var(--hero-ink2); white-space: nowrap; }
 .trpg-toast[data-kind='error'] small { color: var(--text2); }

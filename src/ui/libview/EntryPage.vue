@@ -173,7 +173,7 @@ async function setEnabled(next: boolean): Promise<void> {
     <ReinstallBlock v-else-if="state.kind === 'error' && packOwner" :owner="packOwner" title="这一条读不出来" :detail="state.message" @done="load" />
     <template v-else-if="state.kind === 'error'">
       <ErrorBanner :text="`这一条没读出来：${state.message}`" what="读取这一条" :actions="[{ label: '重试', run: load }]" />
-      <div class="lib-state"><h3>这一条暂时读不出来</h3><p class="lib-muted">点上面的【重试】再读一次。</p></div>
+      <div class="lib-state"><h3>这一条暂时读不出来</h3><p class="lib-muted">点顶部提示里的【重试】再读一次。</p></div>
     </template>
     <template v-else>
       <div class="lib-dtools">
@@ -208,7 +208,7 @@ async function setEnabled(next: boolean): Promise<void> {
         </TabsContent>
         <TabsContent value="background" class="lib-mscroll">
           <div class="lib-dbody">
-            <ErrorBanner v-if="state.d.fluffError" :text="`这次没能读取背景：${state.d.fluffError}`" what="读取背景" :actions="[{ label: '重试', run: load }]" />
+            <template v-if="state.d.fluffError"><ErrorBanner :text="`这次没能读取背景：${state.d.fluffError}`" what="读取背景" :actions="[{ label: '重试', run: load }]" /><p class="lib-muted">背景这次没读出来。</p></template>
             <EntryBody v-else-if="fluff?.entries?.length" :block="fluff.entries" :code-set="codeSet" />
             <p v-else class="lib-muted">这份资料没有单独的背景说明。</p>
           </div>
@@ -216,7 +216,7 @@ async function setEnabled(next: boolean): Promise<void> {
         <TabsContent value="images" class="lib-mscroll">
           <div class="lib-dbody">
             <div v-if="images.length" class="lib-gallery"><ImageBlock v-for="(image, i) in images" :key="i" :block="image" :code-set="codeSet" /></div>
-            <ErrorBanner v-else-if="state.d.fluffError" :text="`这次没能读取配图：${state.d.fluffError}`" what="读取配图" :actions="[{ label: '重试', run: load }]" />
+            <template v-else-if="state.d.fluffError"><ErrorBanner :text="`这次没能读取配图：${state.d.fluffError}`" what="读取配图" :actions="[{ label: '重试', run: load }]" /><p class="lib-muted">配图这次没读出来。</p></template>
             <p v-else class="lib-muted">这份资料没有配图。</p>
           </div>
         </TabsContent>

@@ -130,7 +130,7 @@ function openSection(i: number, j: number, h: ReaderHeading): void { void go(i, 
     <ReinstallBlock v-else-if="state.kind === 'missing' && owner" :owner="owner" :title="owner.downloaded ? '这本的正文读不出来' : `这个${owner.kind === 'adventure' ? '冒险' : ''}的正文还没下载`" :detail="state.message" @done="load" />
     <template v-else-if="state.kind === 'error'">
       <ErrorBanner :text="`这本书没读出来：${state.message}`" what="读取这本书" :actions="[{ label: '重试', run: load }]" />
-      <div class="lib-state"><h3>这本书暂时读不出来</h3><p class="lib-muted">点上面的【重试】再读一次。</p></div>
+      <div class="lib-state"><h3>这本书暂时读不出来</h3><p class="lib-muted">点顶部提示里的【重试】再读一次。</p></div>
     </template>
     <template v-else>
       <div class="lib-rbar">

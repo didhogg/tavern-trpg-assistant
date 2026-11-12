@@ -60,7 +60,7 @@ await page.locator('[data-testid="open-search"]').click(); await page.waitForSel
 await page.locator('[data-testid="search-page"] input[type="search"]').fill('火球'); await page.waitForSelector('[data-testid="search-results"] .lib-list__row'); await settle(page, 500); await shot('09-search')
 await page.locator('[data-testid="search-books"] summary').click(); await settle(page, 400); await shot('10-search-books')
 await page.locator('[data-testid="search-books"] summary').click(); await close()
-await page.getByTestId('open-bulk').click(); await page.waitForSelector('[data-testid="bulk-page"] .trpg-check'); await settle(page, 400); await shot('11-bulk'); await close()
+await page.getByTestId('shelf-multi-official').click(); await settle(page, 400); await shot('11-multi'); await page.getByTestId('shelf-multi-official').click()
 await page.locator('.trpg-shelf__row .trpg-more').first().click(); await page.locator('.trpg-dropdown__item', { hasText: '管理' }).click(); await page.waitForSelector('[data-testid="manage-page"]'); await settle(page, 600); await shot('12-manage'); await close()
 await page.locator('.trpg-shelf__row .trpg-more').first().click(); await page.locator('.trpg-dropdown__item', { hasText: '卸载' }).click(); await page.waitForSelector('.trpg-confirm'); await settle(page, 600); await shot('13-uninstall-confirm')
 await page.locator('.trpg-confirm button', { hasText: '取消' }).click(); await settle(page, 400)

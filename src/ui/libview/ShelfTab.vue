@@ -18,7 +18,7 @@ import { removeSource, removeTargets, saveToMine, targetOf } from './actions'
 import { pullUpdates, updateRow } from './update-flow'
 import { useUpdatesStore } from '../../stores/updates'
 import { useDownloadsStore } from '../../stores/downloads'
-import { openBulk, openManage, openPack } from './open'
+import { openManage, openPack } from './open'
 
 /** 书架（U2a）：官方 / 自制分开；每组可折叠；行 = 书名 · 版本 · 开关 · ⋯。无战役时所有书显示为关、开关不可用。书架搜索在列表下方。 */
 const app = useAppStore()
@@ -90,6 +90,18 @@ async function removePicked(): Promise<void> {
     if (await removeTargets(app.svc(), rows.map(targetOf), rows.map((r) => r.name), false, toast)) { setMulti(false); await lib.refresh(app.svc()) }
   } finally { removing.value = false }
 }
+// 多选下栏：选中的一次全部启用 / 全部禁用（本战役，只写一次战役设置；原「批量勾选」并进这里）
+const switching = ref(false)
+async function switchPicked(on: boolean): Promise<void> {
+  const owner = campaign.owner?.ownerKey
+  const rows = picked.value
+  if (!owner || !lib.bound || !rows.length || switching.value) return
+  switching.value = true
+  try {
+    await lib.applySources(app.svc(), owner, Object.fromEntries(rows.map((r) => [r.source, on])))
+    toast.success(`已${on ? '启用' : '禁用'} ${rows.length} 项`)
+  } catch (e) { console.error('[trpg-assistant] 批量开关失败', e); toast.error('没有保存成功') } finally { switching.value = false }
+}
 async function onShelfMenu(key: string): Promise<void> {
   if (key === 'pull') await pullUpdates(app.svc(), lib.campaignLib?.codeSet ?? 'cn', toast)
 }
@@ -103,7 +115,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
 
 <template>
   <div class="lib-scroll" data-testid="shelf-tab">
-    <div v-if="!lib.shelf && lib.error" class="lib-state"><h3>还读不到书架</h3><p class="lib-muted">点上面的【重试】；已下载的资料不会丢。</p></div>
+    <div v-if="!lib.shelf && lib.error" class="lib-state"><h3>还读不到书架</h3><p class="lib-muted">点顶部提示里的【重试】；已下载的资料不会丢。</p></div>
     <div v-else-if="!lib.shelf" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <template v-else>
       <div class="lib-filter lib-filter--top">
@@ -118,7 +130,6 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
           <span class="lib-end">
             <button class="trpg-btn trpg-btn--small" type="button" :aria-pressed="multi" :data-testid="`shelf-multi-${s.kind}`" @click="setMulti(!multi)"><Icon :name="multi ? 'x' : 'check'" :size="14" />{{ multi ? '退出多选' : '多选' }}</button>
             <template v-if="s.kind === 'official'">
-            <button class="trpg-btn trpg-btn--small" type="button" data-testid="open-bulk" :disabled="!lib.bound" :title="lib.bound ? undefined : '先创建战役'" @click="openBulk()">批量勾选…</button>
             <MoreMenu label="书架" :items="[{ key: 'pull', label: updates.checking ? '正在检查更新…' : '拉取更新', disabled: updates.checking }]" @select="onShelfMenu" />
             </template>
           </span>
@@ -145,7 +156,10 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
       </template>
       <div v-if="multi" class="lib-selbar" data-testid="shelf-selbar">
         <span class="lib-muted">已选 {{ picked.length }} 项<template v-if="picked.length"> · {{ size.busy ? '正在计算大小…' : size.bytes == null ? '大小暂时算不出' : `约 ${formatBytes(size.bytes)}` }}</template></span>
-        <span class="lib-end"><button class="trpg-btn trpg-btn--small trpg-btn--danger" type="button" data-testid="shelf-remove-picked" :disabled="!picked.length || removing" @click="removePicked">{{ removing ? '正在卸载…' : `卸载选中的 ${picked.length} 项…` }}</button></span>
+        <span class="lib-end">
+          <button class="trpg-btn trpg-btn--small" type="button" data-testid="shelf-enable-picked" :disabled="!picked.length || !lib.bound || switching" :title="lib.bound ? undefined : '先创建战役'" @click="switchPicked(true)">全部启用</button>
+          <button class="trpg-btn trpg-btn--small" type="button" data-testid="shelf-disable-picked" :disabled="!picked.length || !lib.bound || switching" :title="lib.bound ? undefined : '先创建战役'" @click="switchPicked(false)">全部禁用</button>
+          <button class="trpg-btn trpg-btn--small trpg-btn--danger" type="button" data-testid="shelf-remove-picked" :disabled="!picked.length || removing" @click="removePicked">{{ removing ? '正在卸载…' : `卸载选中的 ${picked.length} 项…` }}</button></span>
       </div>
     </template>
   </div>

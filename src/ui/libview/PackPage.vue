@@ -117,7 +117,7 @@ watch(q, () => toTop())
     <ErrorBanner v-if="sortError && !failed" :text="`排序没有成功，先按原顺序显示：${sortError}`" what="排序" dismissible @dismiss="sortError = null" />
     <template v-if="failed">
       <ErrorBanner :text="`这个包没读出来：${failed}`" what="读取这个包" :actions="[{ label: '重试', run: load }]" />
-      <div class="lib-state"><h3>这个包暂时读不出来</h3><p class="lib-muted">点上面的【重试】再读一次。</p></div>
+      <div class="lib-state"><h3>这个包暂时读不出来</h3><p class="lib-muted">点顶部提示里的【重试】再读一次。</p></div>
     </template>
     <div v-else-if="loading && !rows.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <div v-else ref="scrollEl" class="lib-mscroll">

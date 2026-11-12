@@ -5,7 +5,6 @@ import type { EntryRef, EntrySelection } from '../../library/scopes'
 import EntryPage from './EntryPage.vue'
 import EntryLangSwitch from './EntryLangSwitch.vue'
 import ReaderLangSwitch from './ReaderLangSwitch.vue'
-import BulkPage from './BulkPage.vue'
 import ManagePage from './ManagePage.vue'
 import PackHeader from './PackHeader.vue'
 import PackPage from './PackPage.vue'
@@ -60,9 +59,6 @@ export function replaceReader(r: ReaderTarget): void {
   modal.replace({ key, title: r.name, component: ReaderPage, header: ReaderLangSwitch, props: { ...r, readerKey: key }, variant: 'sheet' })
 }
 
-export function openBulk(): void {
-  useModalStore().open({ key: 'bulk', title: '批量勾选', component: BulkPage, variant: 'sheet' })
-}
 
 /** 语言切换：把当前详情页换成另一种语言里的同一条（不增加返回层数）。 */
 export function replaceEntry(ref: EntryRef, title = '', selection?: EntrySelection): void {

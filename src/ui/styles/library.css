@@ -177,11 +177,6 @@
 
 /* 下载失败横幅：库页顶部，三个分区都看得到；每条带重试 */
 /* 库页错误横幅浮在内容上方（P5-5 §12.3）：0 高度的锚点，不挤下面的书架 / 下载页 */
-.lib-bannerdock { position: relative; flex: none; height: 0; z-index: 5; }
-.lib-bannerstack { position: absolute; top: 0; left: var(--sp-4); right: var(--sp-4); display: grid; gap: var(--sp-2); max-height: 60vh; overflow: auto; padding: var(--sp-1); }
-.lib-bannerstack .lib-banner { margin: 0; box-shadow: var(--shadow-2); }
-.lib-bannerstack__more { justify-self: start; display: inline-flex; align-items: center; gap: var(--sp-1); padding: 2px var(--sp-2); border: var(--border) solid var(--line); border-radius: var(--r-pill); background: var(--surface); color: var(--text2); font-size: var(--fs-xs); box-shadow: var(--shadow-1); cursor: pointer; }
-.trpg-window[data-layout='narrow'] .lib-bannerstack { left: var(--sp-3); right: var(--sp-3); }
 
 /* 下载页栏目（P5 T6 B2）：标题 + 搜索 + 多选；按作者分类分组，组间细线；多选时底部钉批量操作栏 */
 .lib-dlsec { display: grid; min-width: 0; gap: var(--sp-2); margin-top: var(--sp-4); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
