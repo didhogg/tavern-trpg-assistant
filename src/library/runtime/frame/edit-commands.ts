@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, engSiteHashOf, hashOf, init } from './author'
 import { prepareProp } from './page-prepare'
+import { isMineWithoutEdition, type BrewDocLike } from '../../scopes'
 
 const mod = (path: string): Promise<any> => import(/* @vite-ignore */ new URL(`js/${path}`, location.href).href)
 
@@ -15,12 +16,16 @@ export interface EditionInfo {
  * 作者对来源的版本判断（SourceUtil.isClassicSource，utils.js 第 648 行）：
  * 自制 / 试玩稿按包头 _meta.edition（没写时作者默认旧版，utils-brew-base.js 第 1235 行）；
  * 官方按出版日期；查不到日期的作者也判断不了 → classic: null。
+ * 例外（P5.5 R78）：【我的库】里的自制（本地导入的、自己写的，都没有网址）包头没写 edition 的，不替它猜旧版，
+ * 记作判断不了（未归类）；从网址下载的自制照作者默认。
  */
 export async function editionOf(sources: string[]): Promise<Record<string, EditionInfo>> {
   await init()
   const out: Record<string, EditionInfo> = {}
+  const brews: BrewDocLike[] = await A.BrewUtil2.pGetBrew()
   for (const s of sources) {
-    if (A.BrewUtil2.hasSourceJson(s) || A.PrereleaseUtil.hasSourceJson(s)) out[s] = { classic: !!A.SourceUtil.isClassicSource(s), basis: 'brew-meta' }
+    if (A.BrewUtil2.hasSourceJson(s) && isMineWithoutEdition(brews, s)) out[s] = { classic: null, basis: 'brew-meta' }
+    else if (A.BrewUtil2.hasSourceJson(s) || A.PrereleaseUtil.hasSourceJson(s)) out[s] = { classic: !!A.SourceUtil.isClassicSource(s), basis: 'brew-meta' }
     else if (A.Parser.sourceJsonToDate(s)) out[s] = { classic: !!A.SourceUtil.isClassicSource(s), basis: 'date' }
     else out[s] = { classic: null, basis: null }
   }
@@ -178,11 +183,13 @@ export async function editableEnsureSource(sourceObj: { json: string; full: stri
 }
 
 /** 存一条（作者 pPersistEditableBrewEntity：按 uniqueId 新增或覆盖）。没有 uniqueId 就让作者生成。 */
-export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: string; hash: string | null }> {
+export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: string; hash: string | null; previousHash: string | null }> {
   await init()
+  // 改已有的一条时先记下它原来的编号（作者编号 = 名字 + 来源，改名就变），调用方据此把插件的归类搬过去
+  const before = ent.uniqueId ? ((await A.BrewUtil2.pGetOrCreateEditableBrewDoc()).body?.[prop] ?? []).find((x: any) => x?.uniqueId === ent.uniqueId) : null
   const e = { ...ent, uniqueId: ent.uniqueId ?? A.CryptUtil.uid() }
   await A.BrewUtil2.pPersistEditableBrewEntity(prop, e)
-  return { uniqueId: e.uniqueId, hash: hashOf(prop, e) }
+  return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null }
 }
 
 /** 删条（作者 pRemoveEditableBrewEntities）。 */

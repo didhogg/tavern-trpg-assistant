@@ -63,6 +63,22 @@ export interface Membership {
   basis: MembershipBasis
 }
 
+/** 自制包的样子（作者 BrewUtil2.pGetBrew 的一项，只用到这几个字段）。 */
+export interface BrewDocLike {
+  head?: { url?: string | null }
+  body?: { _meta?: { sources?: Array<{ json?: string }>; edition?: string } }
+}
+
+/**
+ * P5.5 R78：这个来源是不是"【我的库】里没写版本的自制"——所有含它的包都没有网址（本地导入 / 自己写的）且包头没写 edition。
+ * 是的话不按作者的"没写算旧版"猜，记作未归类；从网址下载的自制、写了 edition 的照作者判断。
+ */
+export function isMineWithoutEdition(docs: BrewDocLike[], source: string): boolean {
+  const s = source.toLowerCase()
+  const hits = docs.filter((d) => (d.body?._meta?.sources ?? []).some((x) => String(x?.json ?? '').toLowerCase() === s))
+  return hits.length > 0 && hits.every((d) => !d.head?.url && !d.body?._meta?.edition)
+}
+
 /** 作者判断 → 默认范围（按登记表里范围的 edition）。判断不了 → null（未归类）。 */
 export function autoAssignment(ed: EditionInfo | undefined, scopes: ScopeDef[] = BUILTIN_SCOPES): Assignment | null {
   if (!ed || ed.classic === null) return null

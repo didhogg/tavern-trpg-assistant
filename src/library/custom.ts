@@ -13,7 +13,7 @@ import type { ParsedProp } from './runtime/frame/commands'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
 import registry from './custom.json'
-import { refKey, ruleScopes, type Assignment, type CampaignLibrary, type EntryRef, type ScopeDef } from './scopes'
+import { entryUnit, refKey, ruleScopes, type Assignment, type CampaignLibrary, type EntryRef, type ScopeDef } from './scopes'
 import { officialSourceOf, SOURCES, type SourceEntry } from './sources'
 
 interface CustomSource {
@@ -81,17 +81,37 @@ export class CustomLibrary {
     return (await this.frame(c.codeSet)).call('convertText', prop, format, text, { source: CUSTOM.mine.json, styleHint: ruleScopes(c.rule).style })
   }
 
-  /** 写一条新条目（或改：带作者的 uniqueId 就是改那一条）。来源默认是插件的"我的资料"。 */
-  async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>) {
+  /**
+   * 写一条新条目（或改：带作者的 uniqueId 就是改那一条）。来源默认是插件的"我的资料"。
+   * 版本（P5.5 R78）：新写的一条归到 rule 这套规则的默认范围（2014 → 5e，2024 → 5.5e），之后用户可改；不给 rule 就是未归类。
+   * 改已有的一条不动它的归类；改了名字（作者编号跟着变）把归类搬到新编号上。
+   */
+  async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, { rule }: { rule?: string } = {}) {
     const result = await this.lib.mutateAuthor(codeSet, 'custom-entry', async (view) => {
       const f = await this.lib.frameOf(codeSet, view)
       await f.call('editableEnsureSource', CUSTOM.mine)
       return f.call('editablePut', prop, { source: CUSTOM.mine.json, ...ent })
     })
     const saved = result.value
+    if (saved.hash) await this.carryAssignment({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }, saved.previousHash ?? null, rule)
     // 另一种语言里有没有对上的条目（按英文名 + 来源）：只返回提示，保存时不改任何一边的条目
     const counterpart = saved.hash && this.counterpartHint ? await this.counterpartHint({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }) : null
     return { ...saved, parse: result.parse, issues: await this.validateEntry(codeSet, prop, ent), counterpart }
+  }
+
+  /** 新条目按规则给默认归类；改名的把旧编号上的归类搬到新编号（只动插件的管理记录，不写作者内容）。 */
+  private async carryAssignment(ref: EntryRef, previousHash: string | null, rule: string | undefined): Promise<void> {
+    const unit = entryUnit(ref)
+    if (previousHash) {
+      if (previousHash === ref.hash) return
+      const old = entryUnit({ ...ref, hash: previousHash })
+      const a = (await this.manage.assignments()).get(old)
+      if (!a) return
+      await this.manage.setAssignment(unit, a)
+      await this.manage.setAssignment(old, null)
+      return
+    }
+    if (rule) await this.manage.setAssignment(unit, { scopes: [...ruleScopes(rule).defaultScopes], global: false })
   }
 
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {
@@ -129,6 +149,7 @@ export class CustomLibrary {
     const saved = result.value
     if (!saved.hash) throw new Error('作者算不出房规条目的编号')
     const house: EntryRef = { set: brewSetOf(c.codeSet).id, prop: target.prop, hash: saved.hash }
+    await this.carryAssignment(house, saved.previousHash ?? null, c.rule)
     await this.manage.linkHouseRule({ house, target })
     const altId = `house:${saved.hash}`
     return { house, altId, uniqueId: saved.uniqueId, parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
