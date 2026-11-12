@@ -192,6 +192,12 @@ export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: s
   return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null, previous: before ? { name: String(before.name ?? ''), source: String(before.source ?? '') } : null }
 }
 
+/** 去掉作者运行时加的字段（作者 DataUtil.cleanJson：下划线开头的临时字段、uniqueId 等），得到能存回作者格式的原样；不改传入的对象。 */
+export async function cleanEntity(ent: any): Promise<any> {
+  await init()
+  return A.DataUtil.cleanJson(A.MiscUtil.copyFast(ent))
+}
+
 /**
  * 一条改了名（或换了来源）：可编辑自制里用 _copy 指向它的条目（房规、自己写的变体）改指新名字，否则作者合并时找不到原件。
  * 作者 _copy 按名字 + 来源找（不分大小写）；写回走作者 pSetEditableBrewDoc（同 editableAddDependencies）。返回改了几条。

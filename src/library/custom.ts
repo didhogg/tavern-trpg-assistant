@@ -4,6 +4,7 @@
 import { copyRawSource } from './copy-source'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
+import { topLevelChanges } from './house-diff'
 import { findCollisions, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
@@ -89,11 +90,15 @@ export class CustomLibrary {
   /**
    * 写一条新条目（或改：带作者的 uniqueId 就是改那一条）。来源默认是插件的"我的资料"。
    * 版本（P5.5 R78）：新写的一条归到 rule 这套规则的默认范围（2014 → 5e，2024 → 5.5e），之后用户可改；不给 rule 就是未归类。
+   * 作者结构定义允许条目自带版本的类别（背景、种族、职业等），同时把版本写进条目（B1）。
    * 改名（作者编号 = 名字 + 来源，跟着变）：同一次修改里把可编辑自制中用 _copy 指向它的条目改指新名字；
    * 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
    */
   async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, { rule }: { rule?: string } = {}) {
     const full: Record<string, unknown> = { source: CUSTOM.mine.json, ...ent }
+    // 新写的一条：这一类在作者结构定义里能自带版本（字段说明表 edition）就写上规则的版本（2014 → classic，2024 → one）。
+    // Plutonium 按它决定种族是否生成属性、背景是否按新版处理等（P5.5 B1 探路）。用户自己写了就不动。
+    if (rule && !ent.uniqueId && full.edition === undefined && (await formatOfCodeSet(codeSet).fields(prop))?.edition) full.edition = ruleScopes(rule).style
     const result = await this.lib.mutateAuthor(codeSet, 'custom-entry', async (view) => {
       const f = await this.lib.frameOf(codeSet, view)
       await f.call('editableEnsureSource', CUSTOM.mine)
@@ -137,10 +142,12 @@ export class CustomLibrary {
   }
 
   /**
-   * 房规：在可编辑自制里写一条，用作者 _copy 指向原件、只写改动（mod 是作者的 _mod 写法）；或给整条（entity）。
+   * 房规：在可编辑自制里写一条，用作者 _copy 指向原件、只写改动。三种给法：
+   *   edited：改完的整条（P5.5 B1，编辑器用）——后端和原件逐个顶层字段比，只存改过的，删掉的写 null；改了名字就用新名字；
+   *   mod：作者的 _mod 写法（JSON 高级入口）；entity：整条覆盖（不再跟原件走）。
    * 原件不动；房规挂在原件下当备选。activate：在本战役立即生效（默认），返回改好的战役选书设置。
    */
-  async createHouseRule(c: CampaignLibrary, target: EntryRef, edit: { mod?: Record<string, unknown>; entity?: Record<string, unknown> }, { activate = true }: { activate?: boolean } = {}) {
+  async createHouseRule(c: CampaignLibrary, target: EntryRef, edit: { mod?: Record<string, unknown>; entity?: Record<string, unknown>; edited?: Record<string, unknown> }, { activate = true }: { activate?: boolean } = {}) {
     formatOfCampaign(c)
     const stored = await this.lib.storedItem(target.set, target.prop, target.hash)
     if (!stored) throw new Error(`找不到要改的条目：${refKey(target)}`)
@@ -153,10 +160,19 @@ export class CustomLibrary {
       const it = (await this.lib.storedItem(l.house.set, l.house.prop, l.house.hash))?.item as { name?: string } | undefined
       if (l.house.prop === target.prop && it?.name) taken.add(it.name)
     }
-    const name = taken.has(base.name) ? `${base.name}（${base.source}）` : base.name
+    let changes: Record<string, unknown> = {}
+    if (edit.edited) {
+      const f0 = await this.frame(c.codeSet)
+      const [was, now] = await Promise.all([f0.call('cleanEntity', base), f0.call('cleanEntity', edit.edited)])
+      changes = topLevelChanges(was as Record<string, unknown>, now as Record<string, unknown>)
+      if (!Object.keys(changes).length) throw new Error('和原件一样，没有改动，不用存房规')
+    }
+    const { name: renamedTo, ...fieldChanges } = changes
+    const want = typeof renamedTo === 'string' && renamedTo ? renamedTo : base.name
+    const name = taken.has(want) ? `${want}（${base.source}）` : want
     const ent = edit.entity
       ? { ...edit.entity, name, source: CUSTOM.house.json }
-      : { name, source: CUSTOM.house.json, _copy: { name: base.name, source: baseSource, ...(edit.mod ? { _mod: edit.mod } : {}) } }
+      : { ...fieldChanges, name, source: CUSTOM.house.json, _copy: { name: base.name, source: baseSource, ...(edit.mod ? { _mod: edit.mod } : {}) } }
     const result = await this.lib.mutateAuthor(c.codeSet, 'custom-houserule', async (view) => {
       const f = await this.lib.frameOf(c.codeSet, view)
       await f.call('editableEnsureSource', CUSTOM.house)
@@ -169,7 +185,7 @@ export class CustomLibrary {
     await this.manage.setAssignment(entryUnit(house), { scopes: [...ruleScopes(c.rule).defaultScopes], global: false })
     await this.manage.linkHouseRule({ house, target })
     const altId = `house:${saved.hash}`
-    return { house, altId, uniqueId: saved.uniqueId, parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
+    return { house, altId, uniqueId: saved.uniqueId, changed: Object.keys(changes), parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
   }
 
   /** 删房规：作者删条 + 去掉链接；选过它的地方自动回到原件（生效版本会标"选过的备选不在了"）。 */
