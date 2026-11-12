@@ -65,6 +65,11 @@ export class CustomLibrary {
     return formatOfCodeSet(codeSet).validateEntry(prop, ent, CUSTOM.mine)
   }
 
+  /** 一类条目的字段说明表（P5.5 B4，给编辑表单用）：按资料集的数据格式取，说明是格式作者的原文。不认识的类别 null。 */
+  fields(codeSet: string, prop: string) {
+    return formatOfCodeSet(codeSet).fields(prop)
+  }
+
   /** 作者新条目模板（法术、怪物、传奇组有作者构建器；别的类别 null）。 */
   async template(codeSet: string, prop: string): Promise<Record<string, unknown> | null> {
     return (await this.frame(codeSet)).call('entryTemplate', prop)

@@ -35,9 +35,31 @@ type Validator = ((data: unknown) => boolean) & { errors?: ErrorObject[] | null 
 let pluginRoot: URL | null = null
 let loading: Promise<Validator> | null = null
 export function configureBrewValidator(root: URL): void {
-  if (pluginRoot?.href !== root.href) loading = null
+  if (pluginRoot?.href !== root.href) { loading = null; loadingFields = null }
   pluginRoot = root
 }
+/** 一类条目的一个顶层字段（tools/build-brew-fields.mjs 从作者结构定义生成；说明是作者原文）。 */
+export interface BrewField {
+  name: string
+  types: string[]
+  required: boolean
+  enum?: unknown[]
+  itemEnum?: unknown[]
+  itemTypes?: string[]
+  description?: string
+}
+export interface BrewFieldTable {
+  generatedFrom: string
+  props: Record<string, { fields: BrewField[]; edition: boolean }>
+}
+let loadingFields: Promise<BrewFieldTable> | null = null
+/** 字段说明表（vendor/brew-schema/fields.js），第一次用时按网址加载，之后复用。插件目录同校验器。 */
+export const loadBrewFields = (): Promise<BrewFieldTable> => {
+  if (!pluginRoot) return Promise.reject(new Error('字段说明表还没有告诉它插件目录（configureBrewValidator）'))
+  const url = new URL('vendor/brew-schema/fields.js', pluginRoot).href
+  return (loadingFields ||= import(/* @vite-ignore */ url).then((m: { default: BrewFieldTable }) => m.default, (error: unknown) => { loadingFields = null; throw error }))
+}
+
 const loadValidator = (): Promise<Validator> => {
   if (!pluginRoot) return Promise.reject(new Error('结构校验器还没有告诉它插件目录（configureBrewValidator）'))
   const url = new URL('vendor/brew-schema/validator.js', pluginRoot).href

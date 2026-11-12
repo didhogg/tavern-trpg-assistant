@@ -1,7 +1,7 @@
 // 数据格式登记（P5.5 A1/A3，原 P5.6a）：一套资料集（作者程序 cn / en）用哪种数据格式、怎么校验、怎么认出一个文件是不是这种格式。
 // 体系的规则在 scopes.json 的 rules 里写 format，资料集在 sources.json 的 codeSets 里写 format；加一种格式 = 在这里登记一条。
 // 不定义数据形状：校验用格式作者自己的结构定义，认文件只看作者结构定义规定的必填外壳。
-import { validateBrewJson, type BrewValidation, type SchemaIssue } from './brew-validate'
+import { loadBrewFields, validateBrewJson, type BrewField, type BrewValidation, type SchemaIssue } from './brew-validate'
 import { ruleScopes } from './scopes'
 import { CODE_SETS } from './sources'
 
@@ -21,6 +21,8 @@ export interface DataFormat {
   validateEntry(prop: string, ent: Record<string, unknown>, source: FormatSource): Promise<SchemaIssue[]>
   /** 已解析的 JSON 是不是这种格式（只看作者规定的必填外壳，内容错误交给 validate）。 */
   recognize(json: unknown): boolean
+  /** 一类条目的顶层字段说明（类型、可选值、必填、作者原文说明）+ 这一类能不能在条目上自带版本；不认识的类别 null。 */
+  fields(prop: string): Promise<{ fields: BrewField[]; edition: boolean } | null>
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -42,6 +44,7 @@ const FIVETOOLS: DataFormat = {
     return issues.filter((i) => i.path.startsWith(`/${prop}/0`))
   },
   recognize: (json) => isObject(json) && isObject(json._meta) && Array.isArray(json._meta.sources),
+  fields: async (prop) => (await loadBrewFields()).props[prop] ?? null,
 }
 
 const FORMATS: Record<string, DataFormat> = { [FIVETOOLS.id]: FIVETOOLS }

@@ -5,7 +5,7 @@
   "type": "module",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "gen:brew-validator": "node tools/vendor-brew-schema.mjs && node tools/build-brew-validator.mjs",
+    "gen:brew-validator": "node tools/vendor-brew-schema.mjs && node tools/build-brew-validator.mjs && node tools/build-brew-fields.mjs",
     "dev": "vite build --watch",
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
