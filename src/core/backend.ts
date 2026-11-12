@@ -24,7 +24,7 @@ import { removeParts, uninstallOfficial, type UninstallReport } from '../library
 import { executeBatch, mergeImpacts, withCounterparts, type RemovalBatch } from './removal-batch'
 import { removalSizes, type RemovalSizes } from './removal-size'
 import { reclaimLibrary, type ReclaimReport } from '../library/reclaim'
-import { impactOfRemoval, type RemovalImpact, type RemovalTarget } from './removal-impact'
+import { impactOfEntries, impactOfRemoval, type RemovalImpact, type RemovalTarget } from './removal-impact'
 import { Counterparts } from '../library/counterpart'
 import { DocumentStore } from '../library/documents'
 import { imageUrls, type ImageHref } from '../library/images'
@@ -115,6 +115,8 @@ export interface Backend {
   transfer: { library: BackupLibraryAdapter; checkRefs: NonNullable<ImportDeps['checkRefs']> }
   /** 删除 / 卸载前的影响预览：依赖它的包、房规、版本选择、战役与存档（P5 B-08）。 */
   removalImpact: (target: RemovalTarget) => Promise<RemovalImpact>
+  /** 自己写的几条要改编号（改名、换包）或要删之前：谁用了它们（房规、版本选择、战役与存档）。P5.5 B3。 */
+  entryChangeImpact: (setId: string, refs: Array<{ prop: string; hash: string }>) => Promise<Pick<RemovalImpact, 'houseRules' | 'choices' | 'saves'>>
   /** 按预览凭据执行删除 / 卸载；预览后资料变了就拒绝（T4）。 */
   removalExecute: (impact: RemovalImpact) => Promise<unknown>
   /** 多选卸载 / 删除（P5-5 §12 B1）：补上另一种语言的那一份，合成一份预览。 */
@@ -340,5 +342,6 @@ export function createBackend(opts: BackendOptions): Backend {
     const targets = target.setIds.map((setId) => ({ ...target, setId, setIds: undefined }))
     return removalExecuteMany(mergeImpacts(targets, await Promise.all(targets.map((t) => impactAt(view, t)))))
   }
-  return { library, kernel, kernelSave, starter, transfer, removalImpact, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim }
+  const entryChangeImpact: Backend['entryChangeImpact'] = (setId, refs) => impactOfEntries({ db: opts.db, manage: scoped.manage }, setId, refs)
+  return { library, kernel, kernelSave, starter, transfer, removalImpact, entryChangeImpact, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim }
 }

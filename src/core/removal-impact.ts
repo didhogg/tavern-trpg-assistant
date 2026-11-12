@@ -111,6 +111,7 @@ function whyKernel(k: KernelCampaign, library: KernelCampaign['library'], r: Rem
   const refs = k.actors.flatMap((a) => a.refs).filter((ref) => refGone(r, ref)).length
   if (refs) why.push(`${refs} 处人物引用`)
   if (library.include.concat(library.exclude).some((u) => r.sources.has(u.replace(/^src:/, '')))) why.push('选书设置里有它的来源')
+  if (library.include.concat(library.exclude).some((u) => { const m = /^ent:([^:]+):([^:]+):(.+)$/.exec(u); return !!m && refGone(r, { set: m[1], prop: m[2], hash: m[3] }) })) why.push('本战役单独开关过它')
   if (Object.entries(library.choices).some(([key, alt]) => r.altIds.has(alt) || refGone(r, refOfKey(key)))) why.push('选了它的版本')
   if (k.overrides.some((o) => refGone(r, o.target) || refGone(r, o.house))) why.push('有房规覆盖')
   return why
@@ -192,6 +193,14 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
     }
   }
 
+  const { houseRules, choices, saves } = await referencesTo(deps, removed)
+  const checkedAt = Date.now()
+  const fingerprint = hashValue(stableStringify({ revision: deps.revision, target, removeTogether: [...removeTogether].sort(), packs: packs.map((p) => [p.docIdLocal, p.sources, p.dependencies]), houseRules, choices, saves }))
+  return { target, plan: { id: fingerprint.slice(0, 16), fingerprint, checkedAt, removeTogether }, packs: impacted, removeTogether, houseRules, choices, saves }
+}
+
+/** 谁用了被删 / 要变编号的东西：房规链接、各层版本选择、战役当前数据和存档（按战役级选书设置）。纯读取。 */
+async function referencesTo(deps: Pick<ImpactDeps, 'db' | 'manage'>, removed: Removed): Promise<Pick<RemovalImpact, 'houseRules' | 'choices' | 'saves'>> {
   // 房规、版本选择
   const houseRules = (await deps.manage.houseRules()).filter((l) => refGone(removed, l.house) || refGone(removed, l.target))
   const choices = (await deps.manage.allChoices()).filter((c) => removed.altIds.has(c.altId) || refGone(removed, refOfKey(c.target)))
@@ -214,7 +223,18 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
     const why = k ? whyKernel(k, await libraryOf(campaignIdOfSave(all, s), k), removed) : []
     if (why.length) saves.push({ ownerKey: s.ownerKey, ownerLabel: s.ownerLabel, saveId: s.id, name: s.name, kind: s.kind, deleted: s.deletedAt !== undefined, why })
   }
-  const checkedAt = Date.now()
-  const fingerprint = hashValue(stableStringify({ revision: deps.revision, target, removeTogether: [...removeTogether].sort(), packs: packs.map((p) => [p.docIdLocal, p.sources, p.dependencies]), houseRules, choices, saves }))
-  return { target, plan: { id: fingerprint.slice(0, 16), fingerprint, checkedAt, removeTogether }, packs: impacted, removeTogether, houseRules, choices, saves }
+  return { houseRules, choices, saves }
+}
+
+/**
+ * P5.5 B3：这几条自己写的条目要改编号（改名、换包）或要删，之前先列出谁用了它们。
+ * 和删包同一套检查（房规、版本选择、战役与存档里的人物引用 / 单条开关 / 选的版本），只是"被删的"换成这几条。
+ * 编号变了插件自己的记录会跟着搬（custom.carryRefs），列出来的是搬不了的：战役记录和存档里的引用。
+ */
+export async function impactOfEntries(deps: Pick<ImpactDeps, 'db' | 'manage'>, setId: string, refs: Array<{ prop: string; hash: string }>): Promise<Pick<RemovalImpact, 'houseRules' | 'choices' | 'saves'>> {
+  const set = getSource(setId)
+  const hashes = new Map<string, Set<string>>()
+  for (const r of refs) (hashes.get(r.prop) ?? hashes.set(r.prop, new Set()).get(r.prop)!).add(r.hash)
+  const removed: Removed = { setId: set.id, setIds: new Set([set.id]), codeSet: set.codeSet, official: false, officialWhole: false, sources: new Set(), books: new Set(), adventures: new Set(), hashes, altIds: new Set(refs.map((r) => `house:${r.hash}`)) }
+  return referencesTo(deps, removed)
 }

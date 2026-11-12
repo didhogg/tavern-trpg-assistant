@@ -3,6 +3,7 @@
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { copyRawSource } from './copy-source'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
+import { createPack, exportPack, listPacks, moveEntries, type PackDeps, type PackSource } from './custom-packs'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
 import { topLevelChanges } from './house-diff'
@@ -141,6 +142,25 @@ export class CustomLibrary {
     const result = await this.lib.mutateAuthor(codeSet, 'custom-delete', async (view) => (await this.lib.frameOf(codeSet, view)).call('editableRemove', prop, uniqueIds))
     if (record) for (const before of result.value) await this.manage.pushHistory(this.historyKey(codeSet, prop, String(before.uniqueId)), { at: Date.now(), prop, before, ...(link ? { link } : {}) })
     return result
+  }
+
+  // ---- 自己的包（P5.5 B3，custom-packs.ts）----
+  /** 建一个自己的包（作者可编辑自制里加一个来源）；rule 给包打版本标签。 */
+  createPack(codeSet: string, src: PackSource, opts: { rule?: string } = {}) { return createPack(this.packDeps, codeSet, src, opts) }
+  /** 自己的包：来源 + 每类几条。 */
+  packs(codeSet: string) { return listPacks(this.packDeps, codeSet) }
+  /** 条目换包（编号会变：先用 backend.entryChangeImpact 看影响）。每条记一步撤销。 */
+  moveEntries(codeSet: string, prop: string, uniqueIds: string[], toSource: string) { return moveEntries(this.packDeps, codeSet, prop, uniqueIds, toSource) }
+  /** 按包导出（作者格式文件）。 */
+  exportPack(codeSet: string, json: string) { return exportPack(this.packDeps, codeSet, json) }
+
+  private get packDeps(): PackDeps {
+    return {
+      frame: (codeSet) => this.frame(codeSet),
+      mutate: (codeSet, kind, run) => this.lib.mutateAuthor(codeSet, kind, async (view) => run(await this.lib.frameOf(codeSet, view))),
+      manage: this.manage,
+      save: (codeSet, prop, ent) => this.persist(codeSet, prop, ent, { record: true }),
+    }
   }
 
   /** 撤销记录的键：数据集 | 类别 | 作者 uniqueId（改名、换包都不变）。 */

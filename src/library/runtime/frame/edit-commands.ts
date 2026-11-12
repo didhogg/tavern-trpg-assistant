@@ -192,6 +192,40 @@ export async function editablePut(prop: string, ent: any): Promise<{ uniqueId: s
   return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null, previous: before ? { name: String(before.name ?? ''), source: String(before.source ?? '') } : null, previousEntity: before ? A.MiscUtil.copyFast(before) : null }
 }
 
+/** 这个来源编号是不是已经有人用了（官方、已装自制、试玩稿；不分大小写）——自己建包时不能撞。 */
+export async function sourceTaken(json: string): Promise<boolean> {
+  await init()
+  const s = json.toLowerCase()
+  const official = Object.keys(A.Parser.SOURCE_JSON_TO_FULL ?? {}).some((k) => k.toLowerCase() === s)
+  return official || !!A.BrewUtil2.hasSourceJson(json) || !!A.PrereleaseUtil.hasSourceJson(json)
+}
+
+/**
+ * 按来源导出可编辑自制里的一个包（P5.5 B3），照作者编辑器的做法（makebrew.js _getJsonOutputTemplate、
+ * makebrew-builder-base.js pDoHandleClickDownloadJson）：包头 = 这个来源 + 时间（秒）+ edition；每条经 DataUtil.cleanJson、PropOrder.getOrdered。
+ * edition 作者编辑器写死 classic，这里由调用方按包的版本标签给。另把条目 _copy 到别的来源的声明成依赖（作者规则：_copy 别的来源要声明）。
+ */
+export async function editableExport(json: string, edition: 'classic' | 'one'): Promise<{ filename: string; body: any }> {
+  await init()
+  const { PropOrder } = await mod('utils-proporder.js')
+  const doc = await editableDoc()
+  const same = (x: unknown): boolean => String(x ?? '').toLowerCase() === json.toLowerCase()
+  const src = (doc.body?._meta?.sources ?? []).find((s: any) => same(s?.json))
+  if (!src) throw new Error(`可编辑自制里没有来源 ${json}`)
+  const ts = Math.round(Date.now() / 1000)
+  const body: any = { _meta: { sources: [A.MiscUtil.copyFast(src)], dateAdded: ts, dateLastModified: ts, edition } }
+  const deps: Record<string, Set<string>> = {}
+  for (const [prop, list] of Object.entries(doc.body ?? {})) {
+    if (prop.startsWith('_') || !Array.isArray(list)) continue
+    const mine = (list as any[]).filter((e) => same(e?.source))
+    if (!mine.length) continue
+    body[prop] = mine.map((e) => PropOrder.getOrdered(A.DataUtil.cleanJson(A.MiscUtil.copyFast(e)), prop))
+    for (const e of mine) if (e?._copy?.source && !same(e._copy.source)) (deps[prop] ??= new Set()).add(String(e._copy.source))
+  }
+  if (Object.keys(deps).length) body._meta.dependencies = Object.fromEntries(Object.entries(deps).map(([k, v]) => [k, [...v]]))
+  return { filename: `${A.DataUtil.getCleanFilename(src.full ?? src.json)}.json`, body }
+}
+
 /** 去掉作者运行时加的字段（作者 DataUtil.cleanJson：下划线开头的临时字段、uniqueId 等），得到能存回作者格式的原样；不改传入的对象。 */
 export async function cleanEntity(ent: any): Promise<any> {
   await init()

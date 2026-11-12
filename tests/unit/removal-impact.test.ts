@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { TrpgDatabase } from '../../src/core/db'
-import { impactOfRemoval, type ImpactDeps } from '../../src/core/removal-impact'
+import { impactOfEntries, impactOfRemoval, type ImpactDeps } from '../../src/core/removal-impact'
 import type { BrewPack } from '../../src/library/brew-packs'
 
 let db: TrpgDatabase
@@ -137,5 +137,26 @@ describe('删除前的影响预览', () => {
     await db.setMeta('campaignLibrary:s1', { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: ['src:alpha'], exclude: [], choices: {} })
     const r = await impactOfRemoval(deps(), { kind: 'brew', setId: 'cn-brew', docIdLocals: ['p1'] })
     expect(r.saves.map((x) => [x.saveId, x.why])).toEqual([[null, ['选书设置里有它的来源']], ['s1', ['选书设置里有它的来源']]])
+  })
+})
+
+describe('自己写的几条要改编号或要删之前（P5.5 B3 impactOfEntries）', () => {
+  it('列出：指向它的房规、选它当目标的版本、引用它的人物、本战役单独开关过它；别的不列', async () => {
+    db = new TrpgDatabase(`test-impact-ent-${Math.random()}`)
+    const ref = { kind: 'spell', set: 'cn-brew', prop: 'spell', hash: 'fire_alpha' }
+    await db.workspaces.put(ws('A', kernel({ actors: [{ id: 'a', name: '甲', refs: [ref] }] })))
+    await db.saves.put(slot('s1', 'A', kernel({ library: { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: [], exclude: ['ent:cn-brew:spell:fire_alpha'], choices: {} } })))
+    await db.saves.put(slot('s2', 'A', kernel({ library: { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: ['src:alpha'], exclude: [], choices: {} } })))
+    const r = await impactOfEntries(deps(), 'cn-brew', [{ prop: 'spell', hash: 'fire_alpha' }])
+    expect(r.houseRules.map((h) => h.house.hash)).toEqual(['house_x'])
+    expect(r.choices).toEqual([])
+    const by = Object.fromEntries(r.saves.map((s) => [s.saveId ?? 'current:' + s.ownerKey, s.why]))
+    expect(by).toEqual({ 'current:A': ['1 处人物引用'], s1: ['本战役单独开关过它'] })
+  })
+  it('自己是房规：选了这条房规的版本也列出', async () => {
+    db = new TrpgDatabase(`test-impact-ent2-${Math.random()}`)
+    const d = deps({ manage: { houseRules: async () => [], allChoices: async () => [{ level: 'global', target: 'cn-official|spell|fireball_phb', altId: 'house:house_y' }] } })
+    const r = await impactOfEntries(d, 'cn-brew', [{ prop: 'spell', hash: 'house_y' }])
+    expect(r.choices.map((c) => c.altId)).toEqual(['house:house_y'])
   })
 })
