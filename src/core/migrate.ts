@@ -62,8 +62,10 @@ function kernelV8(record: Record<string, unknown>, holderKey: 'data' | 'snapshot
 export const MIGRATIONS: MigrationTable = {
   // 第 5 版（P3-3）：workspace / save 增加可选的 kernel 段（规则、选书、引用、选择、状态、修订、撤销）。
   // 第 6 版（P3-3b）：人物改为引用/选择/状态差别；旧格式整份内容保留到 legacyState，标 legacy。
-  workspace: { 4: (record) => record, 5: (record) => kernelV6(record, 'data'), 6: (record) => kernelV7(record, 'data'), 7: (record) => kernelV8(record, 'data') },
-  save: { 4: (record) => record, 5: (record) => kernelV6(record, 'snapshot'), 6: (record) => kernelV7(record, 'snapshot'), 7: (record) => kernelV8(record, 'snapshot') },
+  // 第 9 版（P5 反馈 2026-11-12）：加可选的战役编号 campaignId。单条记录算不出属于哪棵存档树，
+  // 这一步不改内容；编号在第一次读到时按存档树根补上（CampaignService.campaignIdOf），和旧的 campaignLibrary:<树根> 键一致，原有选书设置不丢。
+  workspace: { 4: (record) => record, 5: (record) => kernelV6(record, 'data'), 6: (record) => kernelV7(record, 'data'), 7: (record) => kernelV8(record, 'data'), 8: (record) => record },
+  save: { 4: (record) => record, 5: (record) => kernelV6(record, 'snapshot'), 6: (record) => kernelV7(record, 'snapshot'), 7: (record) => kernelV8(record, 'snapshot'), 8: (record) => record },
 }
 
 /**

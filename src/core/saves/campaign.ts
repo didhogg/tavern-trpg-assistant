@@ -4,7 +4,7 @@ import { uuid as defaultUuid } from '../ids'
 import { SCHEMA_VERSIONS } from '../../schemas/common'
 import { backupStateSchema, type AutoReason, type SaveSlot, type Workspace, type WorkspaceData } from '../../schemas/campaign'
 import type { RuleRegistry } from '../../rules/registry'
-import { campaignViewOf, treeRootId, type CampaignView } from './view'
+import { campaignIdOfSave, campaignViewOf, libraryKey, treeRootId, type CampaignView } from './view'
 import { AUTO_SAVE_KEEP, byRecent, cleanName, isDirty, readSave, readWorkspace, snapshotHash, summarize, uniqueName, type SummaryContributor } from './helpers'
 
 export interface CampaignDeps {
@@ -88,9 +88,30 @@ export class CampaignService {
     return campaignViewOf(rows, { ownerKey, ruleId, currentSaveId: ws && ws.ruleId === ruleId ? ws.currentSaveId : null })
   }
 
-  /** 一个存档所在战役（存档树）的根存档编号；自动存档 / 已删除的存档不在树里 → null。战役级设置按它存。 */
+  /** 一个存档所在战役（存档树）的根存档编号；自动存档 / 已删除的存档不在树里 → null。 */
   async campaignRootOf(saveId: string): Promise<string | null> {
     return treeRootId((await this.db.saves.toArray()).map(readSave), saveId)
+  }
+
+  /** 一份存档属于哪个战役（有编号用编号，旧存档按存档树根算；算不出 → null）。 */
+  async campaignIdOfSaveId(saveId: string): Promise<string | null> {
+    const rows = (await this.db.saves.toArray()).map(readSave)
+    const save = rows.find((s) => s.id === saveId)
+    return save ? campaignIdOfSave(rows, save) : null
+  }
+
+  /**
+   * 当前战役的编号（战役级设置挂在它上面）。旧数据没有编号：按当前存档所在的存档树根补上（和旧的设置键一致，不丢设置）；
+   * 当前用的是没编号的旧自动存档、算不出时发一个新编号。补上后写回当前数据，之后的存档、分支、自动存档都带它。
+   */
+  async campaignIdOf(ownerKey: string): Promise<string> {
+    return this.db.transaction('rw', [this.db.workspaces, this.db.saves], async () => {
+      const ws = await this.requireWorkspace(ownerKey)
+      if (ws.campaignId) return ws.campaignId
+      const id = (ws.currentSaveId ? await this.campaignIdOfSaveId(ws.currentSaveId) : null) ?? this.uuid()
+      await this.db.workspaces.put({ ...ws, campaignId: id })
+      return id
+    })
   }
 
   // ---------- 新存档 / 保存 / 分支 ----------
@@ -112,7 +133,10 @@ export class CampaignService {
         schemaVersion: SCHEMA_VERSIONS.workspace,
         updatedAt: this.deps.now(),
       }
-      const save = await this.buildSave(ws, { id: this.uuid(), name, note: input.note ?? '', kind: 'manual' })
+      // 新战役：战役编号 = 根存档编号（和旧数据按树根取编号是同一个约定）
+      const rootId = this.uuid()
+      ws.campaignId = rootId
+      const save = await this.buildSave(ws, { id: rootId, name, note: input.note ?? '', kind: 'manual' })
       ws.currentSaveId = save.id
       ws.savedHash = save.hash
       await this.db.saves.put(save)
@@ -176,14 +200,21 @@ export class CampaignService {
       if (source.ownerKey !== owner.ownerKey) {
         const taken = await this.manualNames(owner.ownerKey, source.ruleId)
         const now = this.deps.now()
-        target = { ...source, id: this.uuid(), ownerKey: owner.ownerKey, ownerLabel: owner.ownerLabel, name: uniqueName(`${source.name}（来自 ${source.ownerLabel}）`, taken), branchedFrom: undefined, createdAt: now, updatedAt: now }
+        // 复制到本卡 = 本卡的一棵新存档树 = 新战役；战役设置从原战役那份抄一份当初值
+        const id = this.uuid()
+        const fromId = campaignIdOfSave((await this.db.saves.toArray()).map(readSave), source)
+        target = { ...source, id, campaignId: id, ownerKey: owner.ownerKey, ownerLabel: owner.ownerLabel, name: uniqueName(`${source.name}（来自 ${source.ownerLabel}）`, taken), branchedFrom: undefined, createdAt: now, updatedAt: now }
         await this.db.saves.put(target)
+        await this.copyLibrary(fromId, id)
       }
+      // 读档：当前数据换成这份存档，所属战役跟着换（旧存档没有编号按存档树根算；算不出的留空，用到时再补）
+      const campaignId = target.campaignId ?? campaignIdOfSave((await this.db.saves.toArray()).map(readSave), target) ?? undefined
       const ws: Workspace = {
         ownerKey: owner.ownerKey,
         ownerLabel: owner.ownerLabel,
         ruleId: target.ruleId,
         currentSaveId: target.id,
+        ...(campaignId ? { campaignId } : {}),
         data: structuredClone(target.snapshot),
         savedHash: target.hash,
         schemaVersion: SCHEMA_VERSIONS.workspace,
@@ -245,8 +276,11 @@ export class CampaignService {
     const now = this.deps.now()
     const date = new Date(auto.createdAt)
     const stamp = `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-    const manual: SaveSlot = { ...auto, id: this.uuid(), kind: 'manual', autoReason: undefined, name: uniqueName(`自动存档 · ${stamp}`, taken), createdAt: now, updatedAt: now }
+    // 另存出来的手动存档是一棵新存档树 = 新战役；战役设置从自动存档所属战役抄一份当初值，看到的开关不变
+    const id = this.uuid()
+    const manual: SaveSlot = { ...auto, id, campaignId: id, kind: 'manual', autoReason: undefined, name: uniqueName(`自动存档 · ${stamp}`, taken), createdAt: now, updatedAt: now }
     await this.db.saves.put(manual)
+    await this.copyLibrary(auto.campaignId ?? null, id)
     return manual
   }
 
@@ -291,6 +325,7 @@ export class CampaignService {
       kind: f.kind,
       ...(f.autoReason ? { autoReason: f.autoReason } : {}),
       ...(f.branchedFrom ? { branchedFrom: f.branchedFrom } : {}),
+      ...(ws.campaignId ? { campaignId: ws.campaignId } : {}),
       createdAt: now,
       updatedAt: now,
       summary: summarize(ws.data, this.deps.summaryContributors ?? []),
@@ -303,6 +338,13 @@ export class CampaignService {
   async manualNames(ownerKey: string, ruleId: string): Promise<Set<string>> {
     const rows = await this.db.saves.where('[ownerKey+ruleId]').equals([ownerKey, ruleId]).toArray()
     return new Set(rows.filter((s) => s.kind === 'manual' && s.deletedAt === undefined).map((s) => s.name))
+  }
+
+  /** 新战役从别的战役抄一份战役级选书设置当初值（原战役没有就不抄，用到时按存档里的副本）。 */
+  private async copyLibrary(fromCampaignId: string | null, toCampaignId: string): Promise<void> {
+    if (!fromCampaignId) return
+    const stored = await this.db.getMeta<unknown>(libraryKey(fromCampaignId))
+    if (stored !== undefined) await this.db.setMeta(libraryKey(toCampaignId), structuredClone(stored))
   }
 
   private async bumpSaves(): Promise<void> {

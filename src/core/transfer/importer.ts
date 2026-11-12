@@ -81,7 +81,7 @@ export async function importSaves(deps: ImportDeps, rec: RecognizedSaveFile, opt
       for (const save of usable.filter((s) => selected.has(s.id))) {
         const taken = await campaign.manualNames(opts.owner.ownerKey, save.ruleId)
         const now = deps.now()
-        const { deletedAt: _d, autoReason: _a, branchedFrom: _b, ...rest } = save
+        const { deletedAt: _d, autoReason: _a, branchedFrom: _b, campaignId: _c, ...rest } = save // 导入的单个存档 = 新战役，编号按它自己算
         await db.saves.put({ ...rest, id: makeId(), ownerKey: opts.owner.ownerKey, ownerLabel: opts.owner.ownerLabel, kind: 'manual', name: importedName(save.name, taken), createdAt: now, updatedAt: now })
         imported++
       }

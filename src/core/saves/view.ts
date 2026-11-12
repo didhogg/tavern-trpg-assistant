@@ -57,6 +57,14 @@ const nodeOf = (s: SaveSlot, parentId: string | null): CampaignNode => ({
 })
 
 /** 一个存档所在存档树的根（沿 branchedFrom 向上；父不在了就地当根，环也停）。自动存档、已删除的存档不在树里 → null。 */
+/** 战役级设置（选书开关等）在 meta 表里的键：按战役编号。旧数据的战役编号就是存档树根编号，键不变。 */
+export const libraryKey = (campaignId: string): string => `campaignLibrary:${campaignId}`
+
+/** 一份存档属于哪个战役：有编号用编号；旧存档没有，按它所在存档树的根算（自动存档不在树里时返回 null）。 */
+export function campaignIdOfSave(rows: SaveSlot[], save: SaveSlot): string | null {
+  return save.campaignId ?? treeRootId(rows, save.id)
+}
+
 export function treeRootId(rows: SaveSlot[], saveId: string): string | null {
   const manual = rows.filter((s) => s.kind === 'manual' && s.deletedAt === undefined)
   const byId = new Map(manual.map((s) => [s.id, s]))

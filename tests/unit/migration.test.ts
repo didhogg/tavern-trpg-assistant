@@ -1,4 +1,5 @@
 import Dexie from 'dexie'
+import { SCHEMA_VERSIONS } from '../../src/schemas/common'
 import { describe, expect, it } from 'vitest'
 import { TrpgDatabase } from '../../src/core/db'
 import { TrpgError } from '../../src/core/errors'
@@ -66,7 +67,7 @@ describe('旧版本的战役与存档记录', () => {
         expect((e as TrpgError).code).toBe('E_OLD_DATA')
       }
     }
-    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: 8, x: 1 })
+    expect(migrateRecord('save', { schemaVersion: 4, x: 1 })).toEqual({ schemaVersion: SCHEMA_VERSIONS.save, x: 1 })
   })
 
   it('第 5→8 版：旧人物的整份内容原样保留，标旧格式，不丢不猜', () => {
@@ -82,7 +83,7 @@ describe('旧版本的战役与存档记录', () => {
       },
     }
     const out = migrateRecord('save', raw)
-    expect(out.schemaVersion).toBe(8)
+    expect(out.schemaVersion).toBe(SCHEMA_VERSIONS.save)
     const kernel = (out.snapshot as Record<string, unknown>).kernel as Record<string, unknown>
     const actor = (kernel.actors as Array<Record<string, unknown>>)[0]
     expect(kernel.legacy).toBe(true)

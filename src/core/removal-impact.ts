@@ -9,7 +9,7 @@ import { getSource } from '../library/sources'
 import { packAltId, packStableId } from '../library/versions'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelCampaign } from '../schemas/kernel'
 import { libraryKey } from './saves/kernel'
-import { treeRootId } from './saves/view'
+import { campaignIdOfSave, treeRootId } from './saves/view'
 import { hashValue, stableStringify } from './hash'
 
 export type RemovalTarget =
@@ -198,20 +198,20 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
 
   // 战役与存档。选书设置以战役级那份（meta）为准，没有才用快照里的副本（B-20）
   const all = await deps.db.saves.toArray()
-  const libraryOf = async (rootId: string | null, k: KernelCampaign): Promise<KernelCampaign['library']> => {
-    const stored = rootId ? await deps.db.getMeta<unknown>(libraryKey(rootId)) : undefined
+  const libraryOf = async (campaignId: string | null, k: KernelCampaign): Promise<KernelCampaign['library']> => {
+    const stored = campaignId ? await deps.db.getMeta<unknown>(libraryKey(campaignId)) : undefined
     const parsed = stored ? kernelLibrarySchema.safeParse(stored) : null
     return parsed?.success ? parsed.data : k.library
   }
   const saves: AffectedSave[] = []
   for (const ws of await deps.db.workspaces.toArray()) {
     const k = kernelOf(ws.data)
-    const why = k ? whyKernel(k, await libraryOf(ws.currentSaveId ? treeRootId(all, ws.currentSaveId) : null, k), removed) : []
+    const why = k ? whyKernel(k, await libraryOf(ws.campaignId ?? (ws.currentSaveId ? treeRootId(all, ws.currentSaveId) : null), k), removed) : []
     if (why.length) saves.push({ ownerKey: ws.ownerKey, ownerLabel: ws.ownerLabel, saveId: null, name: '当前数据', kind: 'current', deleted: false, why })
   }
   for (const s of all) {
     const k = kernelOf(s.snapshot)
-    const why = k ? whyKernel(k, await libraryOf(treeRootId(all, s.id), k), removed) : []
+    const why = k ? whyKernel(k, await libraryOf(campaignIdOfSave(all, s), k), removed) : []
     if (why.length) saves.push({ ownerKey: s.ownerKey, ownerLabel: s.ownerLabel, saveId: s.id, name: s.name, kind: s.kind, deleted: s.deletedAt !== undefined, why })
   }
   const checkedAt = Date.now()

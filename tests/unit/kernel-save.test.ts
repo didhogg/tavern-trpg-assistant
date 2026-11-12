@@ -306,6 +306,59 @@ describe('结算内核世界编号', () => {
     })
   })
 
+  it('战役编号（2026-11-12）：开关静默保存在战役上——读自动存档、自动存档另存、删掉根存档都不会读回旧设置；旧数据按树根接上原设置', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      const { save: root } = await service.startNewCampaign(NEW)
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: async (refs) => refs.map((ref) => ({ ok: true, ref })) })
+      await kernel.bind(OWNER.ownerKey, campaign())
+      await kernel.save(OWNER.ownerKey)
+      const closed = { ...defaultCampaignLibrary('dnd5e2014', 'en'), exclude: ['src:phb'] }
+      const exclude = async (): Promise<string[]> => (await kernel.libraryOf(OWNER.ownerKey)).exclude
+
+      // 分支后读档前会写一份自动存档；读这份自动存档：仍是同一个战役，开关照常能改、能读回
+      const branch = await service.branch(OWNER.ownerKey, '分支')
+      await service.loadSave(OWNER, root.id)
+      const auto = (await service.listAuto(OWNER.ownerKey, 'dnd5e2014'))[0]
+      expect(auto.campaignId).toBe(root.id)
+      await service.loadSave(OWNER, auto.id)
+      await kernel.setLibrary(OWNER.ownerKey, closed) // 以前：当前是自动存档时报「先保存一次」
+      expect(await exclude()).toEqual(['src:phb'])
+      await service.loadSave(OWNER, branch.save.id)
+      expect(await exclude()).toEqual(['src:phb'])
+
+      // 删掉根存档：分支还在同一个战役，设置不丢
+      await service.deleteSave(root.id)
+      expect(await exclude()).toEqual(['src:phb'])
+
+      // 自动存档另存为手动 = 新战役，看到的开关和原来一样，之后各改各的
+      const manual = await service.saveAutoAsManual(auto.id)
+      await service.loadSave(OWNER, manual.id)
+      expect(await exclude()).toEqual(['src:phb'])
+      await kernel.setLibrary(OWNER.ownerKey, defaultCampaignLibrary('dnd5e2014', 'en'))
+      await service.loadSave(OWNER, branch.save.id)
+      expect(await exclude()).toEqual(['src:phb'])
+    })
+  })
+
+  it('战役编号：旧数据（第 8 版，没有编号）按存档树根接上原来的设置', async () => {
+    await withDb(async (db) => {
+      const { campaign: service, clock } = await setup(db)
+      const { save: root } = await service.startNewCampaign(NEW)
+      const kernel = new KernelSaveService({ db, campaign: service, rules: makeRegistry(), now: clock, checkRefs: async (refs) => refs.map((ref) => ({ ok: true, ref })) })
+      await kernel.bind(OWNER.ownerKey, campaign())
+      await kernel.save(OWNER.ownerKey)
+      // 做成旧数据：去掉编号，设置存在旧键 campaignLibrary:<树根>
+      const ws = await service.getWorkspace(OWNER.ownerKey)
+      const { campaignId: _w, ...oldWs } = ws!
+      await db.workspaces.put(oldWs)
+      for (const s of await db.saves.toArray()) { const { campaignId: _s, ...old } = s; await db.saves.put(old) }
+      await db.setMeta(`campaignLibrary:${root.id}`, { ...defaultCampaignLibrary('dnd5e2014', 'en'), exclude: ['src:mm'] })
+      expect((await kernel.libraryOf(OWNER.ownerKey)).exclude).toEqual(['src:mm'])
+      expect((await service.getWorkspace(OWNER.ownerKey))?.campaignId).toBe(root.id) // 补上编号后写回
+    })
+  })
+
   it('B-34 读档三张清单：没装的包默认建议下载；条目没了单列；本战役关着的放行并可开启；版本变了一行提示', async () => {
     await withDb(async (db) => {
       const { campaign: service, clock } = await setup(db)

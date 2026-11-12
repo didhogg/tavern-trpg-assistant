@@ -90,8 +90,8 @@ export interface KernelPreviewRow {
 }
 
 const DEFAULT_UNDO_LIMIT = 50
-/** 战役级选书设置在 meta 表里的键（按存档树根编号）。 */
-export const libraryKey = (rootId: string): string => `campaignLibrary:${rootId}`
+import { libraryKey } from './view'
+export { libraryKey }
 
 export class KernelSaveService {
   constructor(private readonly deps: KernelSaveDeps) {}
@@ -129,50 +129,47 @@ export class KernelSaveService {
     const parsed = this.parse(campaign) ?? kernelCampaignSchema.parse(campaign)
     if (parsed.rule !== ws.ruleId) throw new TrpgError('E_RULE_MISMATCH', `结算内核规则 ${parsed.rule} 与战役规则 ${ws.ruleId} 不一致`)
     await this.deps.campaign.updateData(ownerKey, (data) => ({ ...data, kernel: parsed, library: parsed.library }))
-    const rootId = ws.currentSaveId ? await this.deps.campaign.campaignRootOf(ws.currentSaveId) : null
-    if (rootId) await this.deps.db.setMeta(libraryKey(rootId), parsed.library)
+    await this.deps.db.setMeta(libraryKey(await this.deps.campaign.campaignIdOf(ownerKey)), parsed.library)
     return parsed
   }
 
   /**
-   * 本战役的选书设置（B-20）：战役级，同一棵存档树的所有存档、分支共用，读档、回档都不碰它。
-   * 存在 meta 表（`campaignLibrary:<树根存档编号>`）；第一次读不到时用工作副本里的那份当初值。
+   * 本战役的选书设置（B-20）：战役级，同一个战役的所有存档、分支、自动存档共用，读档、回档都不碰它；改了静默保存，不用存档。
+   * 存在 meta 表（`campaignLibrary:<战役编号>`，P5 反馈 2026-11-12：以前按存档树根，当前是自动存档或树根被删时会读回旧设置）；
+   * 第一次读不到时用工作副本里的那份当初值。
    * 存档快照里的 library 只是保存时同步的一份副本（导出、换设备导入时当初值），读档时不读回。
    */
   async libraryOf(ownerKey: string): Promise<KernelLibrary> {
     const ws = await this.workspace(ownerKey)
     const kernel = this.parse(ws.data.kernel)
     if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-    const rootId = ws.currentSaveId ? await this.deps.campaign.campaignRootOf(ws.currentSaveId) : null
-    return this.libraryAt(rootId, ws.data.library ?? kernel.library)
+    return this.libraryAt(await this.deps.campaign.campaignIdOf(ownerKey), ws.data.library ?? kernel.library)
   }
 
-  /** 某个存档所在战役的选书设置（读档检查用）；不在树里的存档（自动存档）用它自己快照里的副本。 */
+  /** 某个存档所在战役的选书设置（读档检查用）；算不出战役的旧自动存档用它自己快照里的副本。 */
   async libraryOfSave(save: SaveSlot): Promise<KernelLibrary> {
     const snapshot = save.snapshot as Record<string, unknown>
     const kernel = this.parse(snapshot.kernel)
     if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个存档没有绑定结算内核')
-    return this.libraryAt(await this.deps.campaign.campaignRootOf(save.id), snapshot.library ?? kernel.library)
+    return this.libraryAt(save.campaignId ?? await this.deps.campaign.campaignIdOfSaveId(save.id), snapshot.library ?? kernel.library)
   }
 
-  private async libraryAt(rootId: string | null, fallback: unknown): Promise<KernelLibrary> {
-    if (!rootId) return kernelLibrarySchema.parse(fallback)
-    const stored = await this.deps.db.getMeta<unknown>(libraryKey(rootId))
+  private async libraryAt(campaignId: string | null, fallback: unknown): Promise<KernelLibrary> {
+    if (!campaignId) return kernelLibrarySchema.parse(fallback)
+    const stored = await this.deps.db.getMeta<unknown>(libraryKey(campaignId))
     if (stored) return kernelLibrarySchema.parse(stored)
     const seed = kernelLibrarySchema.parse(fallback)
-    await this.deps.db.setMeta(libraryKey(rootId), seed)
+    await this.deps.db.setMeta(libraryKey(campaignId), seed)
     return seed
   }
 
-  /** 改本战役的选书设置（关书/开书）：只写战役级的那一份，不动存档快照、不让工作副本变成"未保存"；人物引用和状态不动。 */
+  /** 改本战役的选书设置（关书/开书）：静默写战役级的那一份，不动存档快照、不让工作副本变成"未保存"、不要求先存档；人物引用和状态不动。 */
   async setLibrary(ownerKey: string, library: KernelLibrary): Promise<KernelCampaign> {
     const ws = await this.workspace(ownerKey)
     const current = this.parse(ws.data.kernel)
     if (!current) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
     const parsed = kernelLibrarySchema.parse(library)
-    const rootId = ws.currentSaveId ? await this.deps.campaign.campaignRootOf(ws.currentSaveId) : null
-    if (!rootId) throw new TrpgError('E_NO_WORKSPACE', '还没有存档，先保存一次再改选书设置')
-    await this.deps.db.setMeta(libraryKey(rootId), parsed)
+    await this.deps.db.setMeta(libraryKey(await this.deps.campaign.campaignIdOf(ownerKey)), parsed)
     return { ...current, library: parsed }
   }
 

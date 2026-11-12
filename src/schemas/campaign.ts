@@ -10,6 +10,8 @@ export const workspaceSchema = z.object({
   ownerLabel: z.string(),
   ruleId: idSchema,
   currentSaveId: z.string().nullable(),
+  /** 战役编号（第 9 版）：同一战役的所有存档、分支、自动存档共用；战役级设置（选书开关等）挂在它上面。旧数据没有，第一次读到时按存档树根补上。 */
+  campaignId: z.string().optional(),
   data: workspaceDataSchema,
   savedHash: z.string(),
   schemaVersion: z.number().int(),
@@ -38,6 +40,8 @@ export const saveSlotSchema = z.object({
   kind: z.enum(['manual', 'auto']),
   autoReason: autoReasonSchema.optional(),
   branchedFrom: z.string().optional(),
+  /** 战役编号（第 9 版），见 workspaceSchema.campaignId。 */
+  campaignId: z.string().optional(),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
   deletedAt: timestampSchema.optional(),
