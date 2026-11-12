@@ -2,6 +2,7 @@
 import { useLibNoticeStore } from '../../stores/libnotice'
 import { computed, markRaw, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { DataSetState } from '../../core/start-campaign'
+import type { SelectionCheck } from '../../library/selection'
 import type { CatalogRow } from '../../library/scoped'
 import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
@@ -38,9 +39,12 @@ const keyOf = (r: CatalogRow): string => `${r.set}:${r.kind}:${r.id ?? `src:${r.
 const hit = (r: CatalogRow): boolean => !q.value.trim() || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q.value.trim().toLowerCase())
 const ruleOk = (r: CatalogRow): boolean => rule.value === 'all' || (rule.value === 'none' ? ruleBadge(r) === null : ruleBadge(r) === rule.value)
 const isOfficial = (r: CatalogRow): boolean => getSource(r.set).kind === 'official'
-const officialReady = computed(() => sets.value.some((s) => s.status === 'installed'))
-// 冒险正文要先有官方资料才能读：一本官方书都没装时冒险行不能下
-const canGet = (r: CatalogRow): boolean => !r.downloaded && !rowTask(r) && !finishing(r) && (r.kind === 'book' || officialReady.value)
+// 冒险能不能下由后端的勾选检查说了算（library/selection.ts）：那套官方资料装过才行。
+// 下载页的书和冒险同时开下载，这次勾的书不算（驾驶员 2026-11-12 定 A），所以不传勾选
+const gate = ref<SelectionCheck | null>(null)
+const advOk = (r: CatalogRow): boolean => !!gate.value?.sets[r.set]?.adventures
+const advReason = (r: CatalogRow): string | undefined => (r.kind === 'adventure' && !advOk(r) ? gate.value?.sets[r.set]?.reason ?? undefined : undefined)
+const canGet = (r: CatalogRow): boolean => !r.downloaded && !rowTask(r) && !finishing(r) && (r.kind === 'book' || advOk(r))
 // 按作者分组列出；冒险是它所属分组里的一个包，和书并列（驾驶员 2026-11-12：不再分「全部 / 书 / 冒险」标签）
 const groups = computed<Array<DlGroup<CatalogRow>>>(() => (lib.shelf?.groups ?? []).map((g) => ({
   key: g.group,
@@ -74,7 +78,10 @@ const finishing = (r: CatalogRow): boolean => {
 
 async function loadStatus(): Promise<void> {
   error.value = null
-  try { sets.value = await app.svc().backend.starter.dataStatus() } catch (e) { console.error('[trpg-assistant] 读取下载页失败', e); error.value = e instanceof Error ? e.message : String(e) }
+  try {
+    sets.value = await app.svc().backend.starter.dataStatus()
+    gate.value = await app.svc().backend.starter.checkSelection()
+  } catch (e) { console.error('[trpg-assistant] 读取下载页失败', e); error.value = e instanceof Error ? e.message : String(e) }
 }
 onMounted(() => void loadStatus())
 // 读不出来的原因进库页顶部的浮动横幅（P5-5 §12.3），页面里不放报错
@@ -134,7 +141,8 @@ function downloadRows(rows: CatalogRow[]): void {
 async function downloadAll(): Promise<void> {
   const leftBooks = allRows.value.filter((r) => r.kind === 'book' && !r.downloaded)
   const leftAdv = allRows.value.filter((r) => r.kind === 'adventure' && !r.downloaded)
-  const a = await askChoice<DownloadAllAnswer | null>({ key: 'download-all', title: '下载全部', component: markRaw(DownloadAllPage), props: (answer) => ({ bookCount: leftBooks.length, adventureCount: leftAdv.length, adventuresReady: officialReady.value, onAnswer: answer }) }, null)
+  const readyAdv = leftAdv.filter(advOk)
+  const a = await askChoice<DownloadAllAnswer | null>({ key: 'download-all', title: '下载全部', component: markRaw(DownloadAllPage), props: (answer) => ({ bookCount: leftBooks.length, adventureCount: leftAdv.length, adventuresReady: readyAdv.length > 0, onAnswer: answer }) }, null)
   if (!a) return
   if (a.books) {
     downloadBooks(leftBooks)
@@ -142,7 +150,7 @@ async function downloadAll(): Promise<void> {
     const tasks = app.svc().backend.library.tasks
     for (const set of sets.value.filter((x) => !shelfSets.has(x.setId) && x.status !== 'installed' && x.status !== 'running')) tasks.startOfficial(set.setId)
   }
-  if (a.adventures) downloadAdventures(leftAdv)
+  if (a.adventures) downloadAdventures(readyAdv)
   dl.refresh()
 }
 
@@ -219,7 +227,7 @@ const selText = computed(() => [pickedBooks.value.length ? `${pickedBooks.value.
           <span v-else-if="finishing(r)" class="lib-muted lib-dling" role="status">整理书架…</span>
           <template v-else>
             <span v-if="rowTask(r)?.status === 'failed'" class="lib-muted" style="color: var(--danger-text)">失败</span>
-            <button class="trpg-btn trpg-btn--small" type="button" data-testid="book-download" :disabled="r.kind === 'adventure' && !officialReady" :title="r.kind === 'adventure' && !officialReady ? '先下载至少一本官方书，才能下载冒险正文' : undefined" @click="downloadRows([r])">{{ rowTask(r)?.status === 'failed' ? '重试' : '下载' }}</button>
+            <button class="trpg-btn trpg-btn--small" type="button" data-testid="book-download" :disabled="r.kind === 'adventure' && !advOk(r)" :title="advReason(r)" @click="downloadRows([r])">{{ rowTask(r)?.status === 'failed' ? '重试' : '下载' }}</button>
           </template>
         </div>
       </template>

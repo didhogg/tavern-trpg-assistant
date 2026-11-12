@@ -7,7 +7,7 @@ import GroupCheck from '../kit/GroupCheck.vue'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import { ruleBadge } from '../libview/registry'
-import { ADVENTURE_NEEDS_BOOK, canPick, isPicked, loadWizardOptions, rowKey, rowsOf, toggleGroup, togglePick } from './data'
+import { blockedReason, canPick, isPicked, loadWizardOptions, rowKey, rowsOf, toggleGroup, togglePick } from './data'
 import { pickedOf, totalSize, wizard, wizardOptions } from './state'
 
 /**
@@ -28,7 +28,7 @@ function meta(r: CatalogRow): string {
   if (r.kind === 'adventure') return ['冒险', r.shelf?.level ? `等级 ${r.shelf.level.start}–${r.shelf.level.end}` : ''].filter(Boolean).join(' · ')
   return ['书', ruleBadge(r) ?? '', r.shelf?.published?.slice(0, 4) ?? ''].filter(Boolean).join(' · ')
 }
-const tip = (r: CatalogRow): string | undefined => (r.downloaded ? '已下载，这场战役里默认可用' : r.kind === 'adventure' && !canPick(r) ? ADVENTURE_NEEDS_BOOK : undefined)
+const tip = (r: CatalogRow): string | undefined => (r.downloaded ? '已下载，这场战役里默认可用' : canPick(r) ? undefined : blockedReason(r) ?? undefined)
 const groupPicked = (rows: CatalogRow[]): number => rows.filter((r) => !r.downloaded && isPicked(r)).length
 const groupTotal = (rows: CatalogRow[]): number => rows.filter((r) => !r.downloaded).length
 </script>

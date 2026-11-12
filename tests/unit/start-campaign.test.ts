@@ -86,6 +86,17 @@ describe('startCampaign：按勾选的书下载（P5-5 §13 B3）', () => {
       expect(fake.officialOpts.map((x) => x.opts)).toEqual([{}, {}])
     })
   })
+  it('冒险要先有官方资料：没装也没勾书却勾了冒险 → 开局前就拒绝（E_NEEDS_OFFICIAL），什么都不建', async () => {
+    await withDb(async (db) => {
+      const { campaign, fake, starter } = await build(db)
+      await expect(starter.startCampaign({ ...INPUT, picks: [], adventures: [{ set: 'cn-official', id: 'LMoP' }] })).rejects.toMatchObject({ code: 'E_NEEDS_OFFICIAL' })
+      expect(await campaign.getWorkspace(OWNER.ownerKey)).toBeFalsy()
+      expect(fake.started).toEqual([])
+      // 勾了同一套的书：可以，冒险排在书后面
+      const r = await starter.startCampaign({ ...INPUT, picks: [{ set: 'cn-official', book: 'LMoP', source: 'LMoP' }], adventures: [{ set: 'cn-official', id: 'LMoP' }] })
+      expect(r.downloads.map((d) => d.kind)).toEqual(['official', 'official'])
+    })
+  })
   it('只能勾官方资料：混进自制包的勾选直接拒绝，不建战役', async () => {
     await withDb(async (db) => {
       const { campaign, starter } = await build(db)

@@ -4,7 +4,7 @@ import { getSource } from '../../library/sources'
 import type { OfficialPick } from '../../core/start-campaign'
 import type { Services } from '../../core/services'
 import { ruleBadge } from '../libview/registry'
-import { pickedOf, WIZARD_CODE_SET, wizard, wizardEstimate, wizardOptions, type PickRow } from './state'
+import { pickedOf, WIZARD_CODE_SET, wizard, wizardEstimate, wizardGate, wizardOptions, type PickRow } from './state'
 
 let loadSeq = 0
 let estimateSeq = 0
@@ -21,15 +21,11 @@ export function rowsOf(g: ShelfGroup): CatalogRow[] {
     && (!q || `${r.name} ${r.altName ?? ''} ${r.abv}`.toLowerCase().includes(q)))
 }
 
-/** 这个数据集已经有官方资料（装过至少一部分），或这次勾了它的书：冒险正文要先有官方资料才能读。 */
-function officialReady(set: string): boolean {
-  return !!wizardOptions.value?.data.some((d) => d.setId === set && d.installed) || pickedOf('book').some((p) => p.set === set)
-}
-
 export const isPicked = (r: CatalogRow): boolean => r.downloaded || !!wizard.picked[rowKey(r)]
-/** 能不能勾：已下载的恒为灰勾；冒险要先有同一套官方资料（已装或这次勾了书）。 */
-export const canPick = (r: CatalogRow): boolean => !r.downloaded && (r.kind === 'book' || (r.id !== null && officialReady(r.set)))
-export const ADVENTURE_NEEDS_BOOK = '冒险正文要先有官方资料：先勾一本书'
+/** 能不能勾：已下载的恒为灰勾；冒险按后端的勾选检查（那套官方资料已装或这次勾了书）。 */
+export const canPick = (r: CatalogRow): boolean => !r.downloaded && (r.kind === 'book' || (r.id !== null && !!wizardGate.value?.sets[r.set]?.adventures))
+/** 冒险勾不了的原因（后端给）。 */
+export const blockedReason = (r: CatalogRow): string | null => (r.kind === 'adventure' && !r.downloaded ? wizardGate.value?.sets[r.set]?.reason ?? null : null)
 
 function put(r: CatalogRow, on: boolean, next: Record<string, PickRow>): void {
   const key = rowKey(r)
@@ -37,31 +33,35 @@ function put(r: CatalogRow, on: boolean, next: Record<string, PickRow>): void {
   else delete next[key]
 }
 
-/** 取消书以后，没有官方资料可依靠的冒险一起取消（不能留一个下不了的冒险）。 */
-function dropOrphanAdventures(): void {
-  const keep = { ...wizard.picked }
-  for (const p of Object.values(keep)) if (p.kind === 'adventure' && !wizardOptions.value?.data.some((d) => d.setId === p.set && d.installed) && !Object.values(keep).some((b) => b.kind === 'book' && b.set === p.set)) delete keep[p.key]
-  wizard.picked = keep
+/** 问后端这次的勾选：更新哪些冒险能勾；后端说下不了的冒险取消勾选（比如刚取消了最后一本书）。 */
+export async function refreshGate(s: Services): Promise<void> {
+  const check = await s.backend.starter.checkSelection(picksInput())
+  wizardGate.value = check
+  if (!check.drop.length) return
+  const next = { ...wizard.picked }
+  for (const a of check.drop) for (const p of Object.values(next)) if (p.kind === 'adventure' && p.set === a.set && p.id === a.id) delete next[p.key]
+  wizard.picked = next
 }
 
-export function togglePick(s: Services, r: CatalogRow, on: boolean): void {
+export async function togglePick(s: Services, r: CatalogRow, on: boolean): Promise<void> {
   if (!canPick(r)) return
   const next = { ...wizard.picked }
   put(r, on, next)
   wizard.picked = next
-  if (!on) dropOrphanAdventures()
+  if (r.kind !== 'adventure') await refreshGate(s)
   void refreshEstimate(s)
 }
 
 /** 分组框：[ ] 全选这一组能勾的（书先勾，冒险才勾得上），[−] 取消这一组全部。 */
-export function toggleGroup(s: Services, rows: CatalogRow[], on: boolean): void {
+export async function toggleGroup(s: Services, rows: CatalogRow[], on: boolean): Promise<void> {
   const next = { ...wizard.picked }
   for (const r of rows.filter((x) => !x.downloaded && x.kind !== 'adventure')) put(r, on, next)
   wizard.picked = next
+  await refreshGate(s) // 先按勾的书问一次，冒险能不能勾以后端为准
   const after = { ...wizard.picked }
   for (const r of rows.filter((x) => x.kind === 'adventure')) if (!on || canPick(r)) put(r, on, after)
   wizard.picked = after
-  if (!on) dropOrphanAdventures()
+  if (!on) await refreshGate(s)
   void refreshEstimate(s)
 }
 
@@ -84,6 +84,7 @@ export async function loadWizardOptions(s: Services): Promise<void> {
     const options = await s.backend.starter.wizardOptions(wizard.ruleId, WIZARD_CODE_SET)
     if (mine !== loadSeq) return
     wizardOptions.value = options
+    await refreshGate(s)
   } finally {
     clearTimeout(timer)
     if (mine === loadSeq) { wizard.loading = false; wizard.showLoading = false }

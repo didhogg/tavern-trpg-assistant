@@ -58,9 +58,12 @@ try {
   // 分组框：找一个有没下载的行的分组（测试副本里 5e 的书都装了，可勾的是冒险），[ ] 全选 → [−] 取消
   const grp = page.locator('[data-testid=wizard-shelf] .trpg-shelf__group').filter({ has: page.locator('[data-testid=wizard-row] .trpg-check:not([data-dl])') }).first()
   const gbox = grp.locator('[data-testid=group-check]')
+  const pickedIs = (re) => page.waitForFunction((src) => new RegExp(src).test(document.getElementById('trpg-assistant-root').shadowRoot.querySelector('[data-testid=wizard-picked]')?.textContent ?? ''), re.source, { timeout: 10000 }).catch(() => {})
   await gbox.click()
+  await pickedIs(/已选 [1-9]\d* 项/) // 分组框要先问后端的勾选检查，冒险才勾上
   const all = await page.getByTestId('wizard-picked').innerText()
   await gbox.click()
+  await pickedIs(/已选 0 项/)
   const none = await page.getByTestId('wizard-picked').innerText()
   ok('③：分组框 [ ] 全选这一组、[−] 再点取消', /已选 [1-9]\d* 项/.test(all) && /已选 0 项/.test(none), { all, none })
   // 切到 5.5e：2024 规则的书照样列出（这份副本官方书全装了，都是灰勾）；勾一本 5.5e 标签下的冒险，真走一遍开局。

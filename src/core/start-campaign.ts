@@ -15,6 +15,7 @@ import type { ScopedLibrary } from '../library/scoped'
 import type { ShelfGroup } from '../library/shelf'
 import { defaultCampaignLibrary, ruleScopes, type CampaignLibrary, type ScopeDef } from '../library/scopes'
 import { SOURCES, getSource, officialSourceOf } from '../library/sources'
+import { checkSelection, type SelectionCheck, type SelectionInput } from '../library/selection'
 import { kernelCampaignSchema, kernelLibrarySchema, type KernelDataVersion } from '../schemas/kernel'
 import type { Workspace, SaveSlot } from '../schemas/campaign'
 import type { RuleRegistry } from '../rules/registry'
@@ -172,6 +173,11 @@ export class CampaignStarter {
     }, opts)
   }
 
+  /** 勾选检查（library/selection.ts）：哪套官方资料能下冒险、勾了但下不了的冒险。向导、下载页都问它，界面不自己判断。 */
+  async checkSelection(input: SelectionInput = {}): Promise<SelectionCheck> {
+    return checkSelection(await this.deps.library.revisions.published(), input)
+  }
+
   /**
    * 各套官方资料的状态与大小（只读，不联网；首页 / 侧栏 / 向导都用它）。
    * 刷新页面后任务列表会清空，"装了一半"靠库里记的状态认出来（status = incomplete），界面据此提示并给"继续"。
@@ -238,6 +244,9 @@ export class CampaignStarter {
     const core = await this.deps.corePacks()
     if (!core.ok) throw new TrpgError('E_CORE_MISSING', this.coreMessage(core))
     const needed = this.neededSets(input.codeSet) // 先验：资料语言没登记会在这里抛，不会留下半个战役
+    // 冒险要先有同一套官方资料：开局前就查，下不了的直接拒绝，不先建战役再在后台失败
+    const check = await this.checkSelection({ picks: input.picks, adventures: input.adventures, wholeSets: input.picks ? [] : needed })
+    if (check.drop.length) throw new TrpgError('E_NEEDS_OFFICIAL', `${check.drop.map((a) => a.id).join('、')}：${check.sets[check.drop[0].set]?.reason ?? ''}`)
     const library = this.libraryOf(input.ruleId, input.codeSet, input.library)
 
     // 事务外先取版本记号与覆盖（用户数据库短事务里不能等【库】）

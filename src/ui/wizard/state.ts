@@ -2,6 +2,7 @@ import { reactive, shallowRef } from 'vue'
 import type { DownloadEstimate } from '../../library/download-estimate'
 import { DEFAULT_PREFETCH_CODE_SETS } from '../../library/prefetch'
 import type { WizardOptions } from '../../core/start-campaign'
+import type { SelectionCheck } from '../../library/selection'
 
 /** P4 向导的资料语言固定中文（中英切换留到 P5 的数据条目页）；和启动后台预取用同一个，预取的书目才对得上。 */
 export const WIZARD_CODE_SET = DEFAULT_PREFETCH_CODE_SETS[0]
@@ -40,11 +41,14 @@ export const wizard = reactive<WizardState>(fresh())
 /** 向导每一步要的东西（后端给）；shallow：整份换，不深度监听。 */
 export const wizardOptions = shallowRef<WizardOptions | null>(null)
 export const wizardEstimate = shallowRef<DownloadEstimate | null>(null)
+/** 后端的勾选检查：哪套官方资料能勾冒险、原因（规则在 library/selection.ts，界面不自己判断）。 */
+export const wizardGate = shallowRef<SelectionCheck | null>(null)
 
 export function resetWizard(): void {
   Object.assign(wizard, fresh())
   wizardOptions.value = null
   wizardEstimate.value = null
+  wizardGate.value = null
 }
 
 export const pickedOf = (kind: PickRow['kind']): PickRow[] => Object.values(wizard.picked).filter((p) => p.kind === kind)
