@@ -57,13 +57,15 @@ export interface BrewField {
 /**
  * 控件形状：text / number / switch / select（enum）/ multiselect（enum）/ list（of）/ group（props）/ map（of）/
  * pick（几种写法任选，by = 用来区分的共同字段）/ entries（作者正文）/ const / json（表单里画不了，提示到 JSON 里改，why = 原因）。
+ * text 的 suggest = 作者给的建议值；select / multiselect / text 的 labels = 值的显示名（custom.fields 按资料集从作者对照表取，P5.5 C10）。
  * { ref } 指向 defs 里同一个结构（同一个 $ref 只拆一次）。
  */
 export type FieldShape =
   | { ref: string }
-  | { c: 'text' | 'switch' | 'entries'; description?: string }
+  | { c: 'text'; suggest?: unknown[]; labels?: Record<string, string>; description?: string }
+  | { c: 'switch' | 'entries'; description?: string }
   | { c: 'number'; integer?: boolean; description?: string }
-  | { c: 'select' | 'multiselect'; enum: unknown[]; description?: string }
+  | { c: 'select' | 'multiselect'; enum: unknown[]; labels?: Record<string, string>; description?: string }
   | { c: 'const'; value: unknown; description?: string }
   | { c: 'list' | 'map'; of: FieldShape; description?: string }
   | { c: 'group'; props: Array<{ name: string; required: boolean; shape: FieldShape }>; description?: string }

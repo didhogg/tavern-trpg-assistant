@@ -13,6 +13,7 @@ import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } f
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
+import { fieldTable } from './field-values'
 import { fieldChanges, topLevelChanges } from './house-diff'
 import { findCollisions, packAltId, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
@@ -66,7 +67,7 @@ export class CustomLibrary {
 
   /** 一类条目的字段说明表（P5.5 B4，给编辑表单用）：按资料集的数据格式取，说明是格式作者的原文。不认识的类别 null。 */
   fields(codeSet: string, prop: string) {
-    return formatOfCodeSet(codeSet).fields(prop)
+    return fieldTable(this.lib, codeSet, prop)
   }
 
   // ---- 编辑器草稿（P5.5 B7，custom-drafts.ts）：只存插件管理记录，不碰条目 ----

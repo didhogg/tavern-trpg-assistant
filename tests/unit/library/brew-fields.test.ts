@@ -27,10 +27,17 @@ describe('字段说明表（B4）', () => {
     expect(spell.fields.find((f) => f.name === 'name')).toMatchObject({ required: true, types: ['string'] })
     expect(spell.fields.find((f) => f.name === 'level')).toMatchObject({ required: true, types: ['integer'] })
   })
-  it('按资料集的数据格式取：custom.fields 和格式登记表给的一样；不认识的类别给 null', async () => {
-    const codeSet = Object.keys(CODE_SETS)[0]
-    const custom = new CustomLibrary({} as never, {} as never, {} as never)
-    expect(await custom.fields(codeSet, 'spell')).toEqual(await formatOfCodeSet(codeSet).fields('spell'))
+  it('按资料集的数据格式取：custom.fields = 格式登记表的 + 下拉 / 建议值的显示名（小窗按作者对照表给，P5.5 C10）；不认识的类别给 null', async () => {
+    const codeSet = Object.keys(CODE_SETS)[1] ?? Object.keys(CODE_SETS)[0]
+    let asked: string[][] = []
+    const frame = { call: async (fn: string, lists: string[][]) => { expect(fn).toBe('valueLabels'); asked = lists; return lists.map((l) => (l.includes('action') ? { action: '动作' } : null)) } }
+    const custom = new CustomLibrary({ frameOf: async () => frame } as never, {} as never, {} as never)
+    const got = (await custom.fields(codeSet, 'spell'))!
+    const raw = (await formatOfCodeSet(codeSet).fields('spell'))!
+    expect(got.fields.map((f) => f.name)).toEqual(raw.fields.map((f) => f.name))
+    expect(asked.some((l) => l.includes('action'))).toBe(true)
+    expect(JSON.stringify(got.defs)).toContain('"labels":{"action":"动作"}')
+    expect(JSON.stringify(raw.defs)).not.toContain('"labels"')
     expect(await custom.fields(codeSet, 'no-such-prop')).toBeNull()
   })
 })

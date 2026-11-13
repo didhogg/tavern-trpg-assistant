@@ -4,7 +4,7 @@
 //     有可选值 → select；是非 → switch；数字 → number；文字 → text；指向作者正文结构（entry.json）→ entries；
 //     数组 → list（每项再拆；每项是可选值 → multiselect）；有 properties 的对象 → group；键随意、值同一种的对象 → map；
 //     几种写法任选（anyOf / oneOf，去掉只为「删掉这个字段」的 null）→ pick（有共同的可选值字段就按它分，没有就按写法分）；
-//     递归、太深、键值都随意的对象 → json（表单里提示「在 JSON 里改」）。
+//     递归、太深、键值都随意的对象 → json（表单里提示「在 JSON 里改」）。作者给了建议值（examples）的文字带 suggest。
 //   同一个 $ref 只拆一次，放在 defs 里，字段里用 { ref } 指过去。
 // - internalOf：指向作者 Foundry / Roll20 / Plutonium 专用结构文件的字段，用户用不上（表单不显示）。
 import { readdir, readFile, stat } from 'node:fs/promises'
@@ -110,7 +110,8 @@ export async function loadSchemas(dir) {
     if (!t.length && n.properties) t.push('object')
     if (t.length > 1) return t.every((x) => ['string', 'integer', 'number', 'boolean'].includes(x)) ? { c: 'text' } : { c: 'json', why: 'many-types' }
     switch (t[0]) {
-      case 'string': return { c: 'text' }
+      // 没有固定可选值、但作者给了建议值（examples）的文字：表单里可从建议值选，也能自己填
+      case 'string': return Array.isArray(n.examples) && n.examples.length ? { c: 'text', suggest: n.examples } : { c: 'text' }
       case 'integer': case 'number': return { c: 'number', integer: t[0] === 'integer' }
       case 'boolean': return { c: 'switch' }
       case 'array': {
