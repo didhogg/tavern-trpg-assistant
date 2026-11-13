@@ -18398,10 +18398,11 @@ async function nT(e) {
 		}), await t.fileContents.bulkDelete(_)), o.fileContents += _.length, e.kernelOfficial) {
 			await r();
 			let n = await e.kernelOfficial(), i = [];
-			await t.derived.where("key").startsWith("kc:").each((e) => {
+			for (let e of ["kc:", "kc-failed:"]) await t.derived.where("key").startsWith(e).each((e) => {
 				let t = e.value;
 				t?.scope?.official !== n && (i.push(e.key), o.bytes += t?.z?.byteLength ?? tT(e.value));
-			}), i.length && await t.derived.bulkDelete(i), o.kernelCache = i.length;
+			});
+			i.length && await t.derived.bulkDelete(i), o.kernelCache = i.length;
 		}
 		return o;
 	});
@@ -22461,6 +22462,30 @@ var ZD = class {
 		let t = (await this.db.derived.get(`kc:${e}`))?.value;
 		return t ? t.z ? JSON.parse(await XD(t.z)) : "data" in t ? t.data ?? null : null : null;
 	}
+	async state(e) {
+		return await this.db.derived.where("key").equals(`kc:${e}`).count() ? await this.db.derived.where("key").equals(`kc-failed:${e}`).count() ? "failed" : "done" : "missing";
+	}
+	async putFailed(e, t, n) {
+		await this.db.derived.bulkPut([{
+			key: `kc:${e}`,
+			fingerprint: e,
+			value: {
+				data: null,
+				failed: t,
+				scope: n,
+				savedAt: Date.now()
+			},
+			savedAt: Date.now()
+		}, {
+			key: `kc-failed:${e}`,
+			fingerprint: e,
+			value: {
+				error: t,
+				scope: n
+			},
+			savedAt: Date.now()
+		}]);
+	}
 	async put(e, t, n) {
 		let r = JSON.stringify(t), i = await YD(r);
 		return await this.db.derived.put({
@@ -22473,17 +22498,18 @@ var ZD = class {
 				savedAt: Date.now()
 			},
 			savedAt: Date.now()
-		}), {
+		}), await this.db.derived.delete(`kc-failed:${e}`), {
 			raw: r.length,
 			compressed: i.byteLength
 		};
 	}
 	async sweep(e) {
 		let t = [];
-		return await this.db.derived.where("key").startsWith("kc:").each((n) => {
+		for (let n of ["kc:", "kc-failed:"]) await this.db.derived.where("key").startsWith(n).each((n) => {
 			let r = n.value?.scope;
 			r && (r.rule !== e.rule || r.base === e.base && r.official === e.official) || t.push(n.key);
-		}), await this.db.derived.bulkDelete(t), t.length;
+		});
+		return await this.db.derived.bulkDelete(t), t.length;
 	}
 };
 async function QD(e) {
@@ -23064,126 +23090,182 @@ var dO = class {
 			needsUpdate: r?.kernelFingerprint !== t || JSON.stringify(r?.dataVersion) !== JSON.stringify(n) || r?.complete !== !0
 		};
 	}
-	async run({ codeSet: e = "cn", signal: t, onProgress: n, limit: r } = {}) {
-		let i = Date.now(), o = await this.opts.revisions.published(), s = await this.input(e), c = s.cacheKey ?? "", l = await this.opts.dataVersion(), u = {
+	async run({ codeSet: e = "cn", signal: t, onProgress: n, limit: r, mode: i = "full" } = {}) {
+		let o = Date.now(), s = await this.opts.revisions.published(), c = await this.input(e), l = c.cacheKey ?? "", u = await this.opts.dataVersion(), d = {
 			codeSet: e,
 			rule: this.rule(),
-			kernelFingerprint: c,
-			dataVersion: l
-		}, d = (e) => ({
-			...u,
+			kernelFingerprint: l,
+			dataVersion: u,
+			mode: i
+		}, f = (e) => ({
+			...d,
 			skippedReason: e,
 			total: 0,
 			done: 0,
 			converted: 0,
 			cached: 0,
 			failed: [],
+			knownFailed: 0,
 			noEnglish: [],
 			swept: 0,
 			rawBytes: 0,
 			compressedBytes: 0,
-			ms: Date.now() - i,
+			ms: Date.now() - o,
 			cancelled: !1,
-			complete: !1
-		}), f = a.find((e) => e.kind === "official" && e.codeSet === "en"), p = a.find((t) => t.kind === "official" && t.codeSet === e);
-		if (!p || (await o.officialState(p.id))?.status !== "installed") return d(`${p?.id ?? e} 还没装好`);
-		if (!f || (await o.officialState(f.id))?.status !== "installed") return d("英文官方数据还没装好，换算需要英文对照原件");
-		n?.({
-			stage: "open-kernel",
-			done: 0,
-			total: 0
-		});
-		let m = await UD({
-			pluginRoot: this.opts.pluginRoot,
-			container: this.opts.container?.() ?? document.body,
-			data: VD(this.opts.files, o),
-			fetchImpl: this.opts.fetchImpl,
-			timeoutMs: this.opts.timeoutMs ?? 18e4
-		}), h, g = 0, _ = 0, v = 0, y = 0, b = 0, x = !1, S = [];
+			complete: !1,
+			kernelOpened: !1
+		}), p = a.find((e) => e.kind === "official" && e.codeSet === "en"), m = a.find((t) => t.kind === "official" && t.codeSet === e);
+		if (!m || (await s.officialState(m.id))?.status !== "installed") return f(`${m?.id ?? e} 还没装好`);
+		if (!p || (await s.officialState(p.id))?.status !== "installed") return f("英文官方数据还没装好，换算需要英文对照原件");
+		let h = null, g = async () => {
+			if (h) return h;
+			n?.({
+				stage: "open-kernel",
+				done: 0,
+				total: 0
+			});
+			let e = await UD({
+				pluginRoot: this.opts.pluginRoot,
+				container: this.opts.container?.() ?? document.body,
+				data: VD(this.opts.files, s),
+				fetchImpl: this.opts.fetchImpl,
+				timeoutMs: this.opts.timeoutMs ?? 18e4
+			});
+			try {
+				await e.boot(c);
+			} catch (t) {
+				throw e.close(), t;
+			}
+			return h = e, e;
+		}, _, v = 0, y = 0, b = 0, x = 0, S = 0, C = 0, w = !1, T = [];
 		try {
-			await m.boot(s);
-			let a = [], d = await this.candidates(m, e, o, a, t, r);
-			h = d.length, n?.({
+			let a = [], c = await this.importableProps(g, e, s, l), f = await this.candidates(c, e, s, a, t, r, i);
+			_ = f.length, n?.({
 				stage: "convert",
 				done: 0,
-				total: h
+				total: _
 			});
-			let f = new ZD(this.opts.db), p = {
+			let p = new ZD(this.opts.db), m = {
 				rule: this.rule(),
-				base: c,
-				official: l.official
+				base: l,
+				official: u.official
 			};
-			for (let e of d) {
+			for (let e of f) {
 				if (t?.aborted) {
-					x = !0;
+					w = !0;
 					break;
 				}
 				let r = await $D({
-					base: c,
-					dataVersion: l,
+					base: l,
+					dataVersion: u,
 					kind: e.prop === "monster" ? "monster" : "build",
 					prop: e.prop,
 					entry: e.entry
-				});
-				if (await f.get(r) !== null) v++, g++, n?.({
+				}), a = await p.state(r);
+				if (a === "done" || a === "failed" && i === "changed") a === "failed" ? x++ : b++, v++, v % 50 == 0 && n?.({
 					stage: "convert",
-					done: g,
-					total: h,
+					done: v,
+					total: _,
 					item: e.prop
 				});
 				else {
 					try {
-						let t = await m.call("importForBuild", e.prop, e.entry);
+						let t = await (await g()).call("importForBuild", e.prop, e.entry);
 						if (t.status !== "complete" || !t.result) throw Error(t.error ?? `换算状态：${t.status}`);
-						let n = await f.put(r, t.result, p);
-						y += n.raw, b += n.compressed, _++;
+						let n = await p.put(r, t.result, m);
+						S += n.raw, C += n.compressed, y++;
 					} catch (t) {
-						S.push({
+						T.push({
 							prop: e.prop,
 							name: e.name,
 							error: fO(t)
-						});
+						}), await p.putFailed(r, fO(t), m);
 					}
-					g++, g % 10 == 0 && n?.({
+					v++, v % 10 == 0 && n?.({
 						stage: "convert",
-						done: g,
-						total: h,
+						done: v,
+						total: _,
 						item: e.prop
 					});
 				}
 			}
-			let C = !x && S.length === 0 && g === h, w = C && !r ? await f.sweep(p) : 0;
+			let E = !w && T.length === 0 && x === 0 && v === _;
+			if (i === "changed") return {
+				...d,
+				skippedReason: null,
+				total: _,
+				done: v,
+				converted: y,
+				cached: b,
+				failed: T,
+				knownFailed: x,
+				noEnglish: a,
+				swept: 0,
+				rawBytes: S,
+				compressedBytes: C,
+				ms: Date.now() - o,
+				cancelled: w,
+				complete: E,
+				kernelOpened: h !== null
+			};
+			let D = E && !r ? await p.sweep(m) : 0;
 			return await this.opts.db.derived.put({
 				key: this.markerKey(e),
-				fingerprint: c,
+				fingerprint: l,
 				value: {
-					kernelFingerprint: c,
-					dataVersion: l,
-					total: h,
-					done: g,
-					complete: C,
+					kernelFingerprint: l,
+					dataVersion: u,
+					total: _,
+					done: v,
+					complete: E,
 					at: Date.now()
 				},
 				savedAt: Date.now()
 			}), {
-				...u,
+				...d,
 				skippedReason: null,
-				total: h,
-				done: g,
-				converted: _,
-				cached: v,
-				failed: S,
+				total: _,
+				done: v,
+				converted: y,
+				cached: b,
+				failed: T,
+				knownFailed: x,
 				noEnglish: a,
-				swept: w,
-				rawBytes: y,
-				compressedBytes: b,
-				ms: Date.now() - i,
-				cancelled: x,
-				complete: C
+				swept: D,
+				rawBytes: S,
+				compressedBytes: C,
+				ms: Date.now() - o,
+				cancelled: w,
+				complete: E,
+				kernelOpened: h !== null
 			};
 		} finally {
-			m.close();
+			h?.close();
 		}
+	}
+	async importableProps(t, n, r, i) {
+		let o = /* @__PURE__ */ new Set();
+		for (let t of a.filter((e) => e.codeSet === n)) {
+			let n = await r.derivedKeys(`parsed:${t.id}:`);
+			for (let r of n.keys()) {
+				let n = r.slice(`parsed:${t.id}:`.length);
+				if (n.startsWith("corpus:") || n.startsWith("raw_")) continue;
+				let i = n.split(":")[0];
+				i && e(t.id) && o.add(i);
+			}
+		}
+		let s = `kc-importable:${this.rule()}`, c = await this.opts.db.derived.get(s), l = c?.fingerprint === i ? c.value : {}, u = [...o].filter((e) => !(e in l));
+		if (u.length) {
+			let e = await (await t()).call("importerMeta", u), n = new Set(e.filter((e) => e.folderType === "Item" || e.folderType === "Actor").map((e) => e.prop));
+			for (let e of u) l[e] = n.has(e);
+			await this.opts.db.derived.put({
+				key: s,
+				fingerprint: i,
+				value: l,
+				savedAt: Date.now()
+			});
+		}
+		return new Set([...o].filter((e) => l[e]));
 	}
 	async input(e) {
 		return JD({
@@ -23196,71 +23278,72 @@ var dO = class {
 			fetchImpl: this.opts.fetchImpl
 		});
 	}
-	async candidates(t, n, r, i, o, s) {
-		let c = /* @__PURE__ */ new Set();
-		for (let t of a.filter((e) => e.codeSet === n)) {
-			let n = await r.derivedKeys(`parsed:${t.id}:`);
-			for (let r of n.keys()) {
-				let n = r.slice(`parsed:${t.id}:`.length);
-				if (n.startsWith("corpus:") || n.startsWith("raw_")) continue;
-				let i = n.split(":")[0];
-				i && e(t.id) && c.add(i);
-			}
-		}
-		if (o?.aborted) return [];
-		let l = await t.call("importerMeta", [...c]), u = new Set(l.filter((e) => e.folderType === "Item" || e.folderType === "Actor").map((e) => e.prop)), d = g(this.rule(), n), f = [];
-		for (let e of u) {
-			if (o?.aborted) break;
-			let t = await this.opts.scoped.query(d, e, { view: r }).catch(() => []);
-			for (let n of t) {
-				if (s && f.length >= s) break;
-				let t = n.item;
+	async candidates(t, n, r, i, a, o, s = "full") {
+		if (a?.aborted) return [];
+		let c = g(this.rule(), n), l = [];
+		for (let n of t) {
+			if (a?.aborted) break;
+			let t = await this.opts.scoped.query(c, n, { view: r }).catch(() => []);
+			for (let a of t) {
+				if (o && l.length >= o) break;
+				if (s === "changed" && e(a.ref.set).kind !== "brew" && a.version.count === 0) continue;
+				let t = a.item;
 				if (typeof t?.name != "string" || !t.name) continue;
-				let a = await rO(this.opts.scoped, d.codeSet, n.ref, n.item, n.version.altId, r);
-				if (a.noEnglish && i.push({
-					prop: e,
+				let u = await rO(this.opts.scoped, c.codeSet, a.ref, a.item, a.version.altId, r);
+				if (u.noEnglish && i.push({
+					prop: n,
 					name: t.name,
-					reason: a.reason ?? "english-missing"
-				}), f.push({
-					prop: e,
-					entry: a.entry,
+					reason: u.reason ?? "english-missing"
+				}), l.push({
+					prop: n,
+					entry: u.entry,
 					name: t.name
-				}), n.version.count > 0) {
-					let a = await this.opts.scoped.detail(d, n.ref, { view: r });
-					for (let o of a && !("hidden" in a) ? a.alternatives : []) {
-						if (o.item === n.item) continue;
-						let a = await rO(this.opts.scoped, d.codeSet, n.ref, o.item, o.altId, r);
-						a.noEnglish && i.push({
-							prop: e,
+				}), a.version.count > 0) {
+					let e = await this.opts.scoped.detail(c, a.ref, { view: r });
+					for (let o of e && !("hidden" in e) ? e.alternatives : []) {
+						if (o.item === a.item) continue;
+						let e = await rO(this.opts.scoped, c.codeSet, a.ref, o.item, o.altId, r);
+						e.noEnglish && i.push({
+							prop: n,
 							name: t.name,
-							reason: a.reason ?? "alternative"
-						}), f.push({
-							prop: e,
-							entry: a.entry,
+							reason: e.reason ?? "alternative"
+						}), l.push({
+							prop: n,
+							entry: e.entry,
 							name: t.name
 						});
 					}
 				}
 			}
-			if (s && f.length >= s) break;
+			if (o && l.length >= o) break;
 		}
-		return f;
+		return l;
 	}
 }, mO = class {
 	run;
+	quietMs;
 	running = null;
 	pending = /* @__PURE__ */ new Set();
+	timer = null;
+	waiting = null;
+	release = null;
 	last = null;
-	constructor(e) {
-		this.run = e;
+	constructor(e, t = 0) {
+		this.run = e, this.quietMs = t;
 	}
 	trigger(e) {
-		this.pending.add(e), this.running ||= this.loop().finally(() => {
-			this.running = null;
-		});
+		this.pending.add(e), !this.running && (this.timer && clearTimeout(this.timer), this.waiting ??= new Promise((e) => {
+			this.release = e;
+		}), this.timer = setTimeout(() => {
+			this.timer = null;
+			let e = this.release;
+			this.release = null, this.waiting = null, this.running = this.loop().finally(() => {
+				this.running = null;
+			}), e?.();
+		}, this.quietMs));
 	}
 	async settled() {
-		for (; this.running;) await this.running;
+		for (; this.waiting || this.running;) this.waiting && await this.waiting, this.running && await this.running;
 		return this.last;
 	}
 	async loop() {
@@ -24009,7 +24092,10 @@ function FO(t) {
 			onProgress: n
 		}));
 		return r;
-	}, m = new mO(async (e) => f?.run({ codeSet: e }) ?? null), h = new fC(i), v = new ID({
+	}, m = new mO(async (e) => f?.run({
+		codeSet: e,
+		mode: "changed"
+	}) ?? null, 5e3), h = new fC(i), v = new ID({
 		db: i,
 		revisions: o,
 		operations: c,
