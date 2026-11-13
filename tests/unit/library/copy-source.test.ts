@@ -1,4 +1,5 @@
 // B-27 复制官方的书：取官方下载下来的原始文件，按 source 挑记录，不取加载器改写过的对象。
+// P5.5 B8-3：只从作者加载这一类时实际读的文件里取（小窗 authorDataFiles）；书内 _copy 声明 internalCopies。
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { copyRawSource } from '../../../src/library/copy-source'
 import { LibraryDatabase } from '../../../src/library/db'
@@ -25,7 +26,9 @@ const frame = {
   },
 }
 const lib = { frameOf: async () => frame } as never
-const opts = (extra: Record<string, unknown> = {}) => ({ db, lib, official: getSource('cn-official'), source: 'TST', ...extra })
+// 作者网站实际读的数据文件（照作者：目录读 index 里列的；作者不读 foundry*.json）
+const authorFiles = async () => ['data/spells/index.json', 'data/spells/spells-tst.json', 'data/spells/spells-other.json', 'data/spells/fluff-index.json', 'data/spells/fluff-spells-tst.json', 'data/class/index.json', 'data/class/class-x.json', 'data/decks.json', 'data/bestiary/index.json', 'data/bestiary/bestiary-tst.json', 'data/books.json', 'data/adventures.json', 'data/generated/gendata-x.json']
+const opts = (extra: Record<string, unknown> = {}) => ({ db, lib, official: getSource('cn-official'), source: 'TST', authorFiles, ...extra })
 
 async function seed() {
   await db.files.bulkPut([
@@ -39,6 +42,9 @@ async function seed() {
     file('data/book/book-tst.json', { bookData: [{ id: 'TST', data: [{ type: 'section', name: '第一章' }] }] }),
     file('data/adventures.json', { adventure: [{ name: '测试冒险', id: 'TST', source: 'TST' }] }),
     file('data/generated/gendata-x.json', { spell: [{ name: '生成', source: 'TST' }] }),
+    // 作者给 Foundry 用的补充文件：顶层也叫 spell / classFeature，作者网站不读
+    file('data/spells/foundry.json', { spell: [{ name: '甲', source: 'TST', activities: [] }] }),
+    file('data/foundry-optionalfeatures.json', { optionalfeature: [{ name: '祈唤', source: 'TST', activities: [] }] }),
   ])
 }
 
@@ -50,6 +56,7 @@ describe('copyRawSource', () => {
     expect((r.json.spell as unknown[])).toEqual([{ name: '甲', source: 'TST' }])
     expect((r.json.deck as Array<{ cards: unknown }>)[0].cards).toEqual([{ uid: '牌|集|TST' }]) // 原文，没被展开
     expect(r.json.rubbish).toBeUndefined()
+    expect(r.json.optionalfeature).toBeUndefined() // Foundry 补充文件没混进来
   })
 
   it('书的正文带上；冒险正文没下载的写明原因，不阻止复制', async () => {
@@ -86,5 +93,11 @@ describe('copyRawSource', () => {
     await seed()
     const meta = (await copyRawSource(opts())).json._meta as { dependencies?: Record<string, string[]> }
     expect(meta.dependencies).toEqual({ monster: ['MM'] })
+  })
+
+  it('_copy 本书另一条的：照作者规矩在 _meta.internalCopies 声明这一类', async () => {
+    await seed()
+    const meta = (await copyRawSource(opts())).json._meta as { internalCopies?: string[] }
+    expect(meta.internalCopies).toEqual(['monster'])
   })
 })

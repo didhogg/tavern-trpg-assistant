@@ -1,7 +1,10 @@
-// 存入【我的库】（P5 B-27）：把官方的一本书 / 一条条目原样存成作者格式的自制文件。
+// 复制成我的（P5 B-27 → P5.5 B8-3）：把官方的一本书 / 一条条目原样复制成作者格式的自制文件。
 // 原样 = 取官方下载下来的原始文件（本来就是作者的自制文件格式），按每条的 source 挑出这本书的记录，套上作者自制文件的 _meta.sources。
 // 不取作者加载器处理后的对象：加载器会把职业特性、牌组、亚种等改写成运行时形状（P5-0 §2.4 后处理清单），那样复制出来不是原文。
 // 哪些顶层字段算条目类别，问作者加载器登记表（frame 的 loaders），不写类别清单；一个条目的编号用作者规则（frame 的 rawHashes）算。
+// 只从作者网站实际读的数据文件里取（在全新小窗里让作者把每类网站数据取一遍，记下读过的文件；frame 的 authorDataFiles，P5.5 B8-0）：
+// 作者给 Foundry 用的补充文件（data/foundry-*.json 等，顶层也叫 spell、classFeature…，只有效果没有正文）作者不读，也就不会混进来。
+// 条目 _copy 本书的另一条：照作者规矩在 _meta.internalCopies 声明这一类（utils.js _pDoMetaMerge），否则作者找不到原件。
 import type { LibraryDatabase } from './db'
 import type { LibraryService } from './service'
 import { CODE_SETS, type SourceEntry } from './sources'
@@ -32,6 +35,8 @@ export interface CopyOptions {
   base?: Record<string, unknown>
   /** 固定的库版本；不给时按旧 files 表读。 */
   view?: LibraryView
+  /** 作者网站实际读的数据文件（在全新小窗里取，custom-copy.ts authorFiles）。 */
+  authorFiles: () => Promise<string[]>
 }
 
 export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
@@ -43,10 +48,11 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
   const found: Record<string, Record<string, unknown>[]> = {}
   const skipped: RawCopy['skipped'] = []
 
-  // 1. 官方原始文件里这个来源的记录
-  const paths = o.view ? await o.view.filePaths(o.official) : (await o.db.files.where('source').equals(o.official.id).toArray()).map((f) => f.path)
-  for (const path of paths) {
-    if (!path.startsWith('data/') || !path.endsWith('.json') || path.startsWith('data/generated/') || path.startsWith('data/adventure/') || path.startsWith('data/book/')) continue
+  // 1. 官方原始文件里这个来源的记录：只看作者网站实际读的数据文件
+  const have = new Set(o.view ? await o.view.filePaths(o.official) : (await o.db.files.where('source').equals(o.official.id).toArray()).map((f) => f.path))
+  for (const path of await o.authorFiles()) {
+    // 生成文件（作者从书正文里抽出来的表格等）照旧不复制，书 / 冒险正文在第 3 步按目录取
+    if (!have.has(path) || path.startsWith('data/generated/') || path.startsWith('data/adventure/') || path.startsWith('data/book/')) continue
     const text = o.view ? (await o.view.fileGet(o.official, path))?.text : (await o.db.files.get([o.official.id, path]))?.text
     if (text == null) continue
     let json: unknown
@@ -110,11 +116,15 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
 
   // 5. _copy 指向别的来源（例如怪物 _copy 了怪物图鉴里的怪）：作者自制文件要在 _meta.dependencies 里声明才展开得了
   //    （和房规写 _copy 时用的是同一个办法，custom.ts createHouseRule → editableAddDependencies；格式：类别 → 来源列表）
+  //    _copy 本书的另一条：在 _meta.internalCopies 声明这一类（作者规矩，结构定义 util-meta.json internalCopies）
   const dependencies: Record<string, string[]> = {}
+  const internalCopies = new Set<string>()
   for (const [prop, rows] of Object.entries(json)) {
     for (const row of rows as Array<{ _copy?: { source?: string } }>) {
       const from = row?._copy?.source
-      if (typeof from === 'string' && low(from) !== want && !(dependencies[prop] ?? []).some((x) => low(x) === low(from))) (dependencies[prop] ??= []).push(from)
+      if (typeof from !== 'string') continue
+      if (low(from) === want) internalCopies.add(prop)
+      else if (!(dependencies[prop] ?? []).some((x) => low(x) === low(from))) (dependencies[prop] ??= []).push(from)
     }
   }
 
@@ -126,6 +136,7 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
     sources: [{ json: o.source, abbreviation: names?.abv ?? o.source, full: names?.full ?? o.source, authors: [], convertedBy: [], version: CODE_SETS[o.official.codeSet].version }],
     dateAdded: now, dateLastModified: now,
     ...(Object.keys(dependencies).length ? { dependencies } : {}),
+    ...(internalCopies.size ? { internalCopies: [...internalCopies] } : {}),
     ...(edition?.classic === null || edition === undefined ? {} : { edition: edition.classic ? 'classic' : 'one' }),
   }
   return { json: { _meta: meta, ...json }, counts, corpora, skipped }

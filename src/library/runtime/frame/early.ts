@@ -114,7 +114,11 @@
     return decodeURIComponent(u.pathname.slice(frameDir.pathname.length))
   }
   const texts = new Map<string, Promise<string>>()
+  // 小窗启动以来作者请求过的网站文件（P5.5 B8-3：复制成我的只从作者实际读的数据文件里取）
+  const sitePaths = new Set<string>()
+  g.__trpgSitePaths = sitePaths
   function siteText(path: string): Promise<string> {
+    sitePaths.add(path)
     let p = texts.get(path)
     if (!p) {
       p = request({ op: 'file', path }).then((text) => {

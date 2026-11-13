@@ -3,6 +3,7 @@
 // 条目第一次被改时补一个 uniqueId（作者编辑器 CryptUtil.uid 同法），导出时 DataUtil.cleanJson 会去掉它。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者程序是没有类型的 JS，这里只做转调 */
 import { A, hashOf, init } from './author'
+import { prepareProp } from './page-prepare'
 
 const mod = (path: string): Promise<any> => import(/* @vite-ignore */ new URL(`js/${path}`, location.href).href)
 const same = (a: unknown, b: string): boolean => String(a ?? '').toLowerCase() === b.toLowerCase()
@@ -90,4 +91,37 @@ export async function packExport(docIdLocal: string, edition?: 'classic' | 'one'
   }
   const src = doc.body._meta?.sources?.at(-1)
   return { filename: doc.head.filename ?? `${A.DataUtil.getCleanFilename(src?.full ?? src?.json ?? 'pack')}.json`, body }
+}
+
+/**
+ * 作者网站实际读哪些数据文件（P5.5 B8-3）：让作者把每一类的网站数据都取一遍（每个加载器的 pGetSiteData，作者 pCacheAndGetAllSite 同法），
+ * 再交出小窗启动以来作者请求过的数据文件（early.ts 在作者读文件的唯一出口 siteText 记下）。要在**全新的小窗**里调，
+ * 否则作者缓存过的不会再读。作者不读的文件（例如给 Foundry 用的 foundry*.json 补充文件）不会出现。取某一类失败的照报，不中断。
+ */
+export async function authorDataFiles(): Promise<{ paths: string[]; failed: Array<{ props: string[]; error: string }> }> {
+  await init()
+  const [{ DataLoaderConst }, { DataLoaderInternalUtil }] = await Promise.all([mod('utils-dataloader/utils-dataloader-const.js'), mod('utils-dataloader/utils-dataloader-internal-util.js')])
+  const failed: Array<{ props: string[]; error: string }> = []
+  for (const loader of new Set<any>(A.DataLoader._DATA_TYPE_LOADER_LIST)) {
+    const props: string[] = [...(loader.constructor.PROPS ?? [])]
+    if (!props.length) continue
+    const pageClean = DataLoaderInternalUtil.getCleanPage({ page: props[0] })
+    // 先做作者这一页的准备步骤（例如物品页先装物品类型表），否则作者取数时会报找不到
+    try { await prepareProp(props[0]); await loader.pGetSiteData({ pageClean, sourceClean: DataLoaderConst.SOURCE_SITE_ALL }) } catch (e) { failed.push({ props, error: e instanceof Error ? e.message : String(e) }) }
+  }
+  const seen = (A.__trpgSitePaths ?? new Set()) as Set<string>
+  return { paths: [...seen].filter((p) => p.startsWith('data/')).sort(), failed }
+}
+
+/** 给包头补依赖声明（_copy 别的来源要在 _meta.dependencies 里声明；同 editableAddDependencies，只是对一个包）。 */
+export async function packAddDependencies(docIdLocal: string, add: Record<string, string[]>): Promise<void> {
+  const doc = await docOf(docIdLocal)
+  const deps: Record<string, string[]> = (doc.body._meta.dependencies ??= {})
+  let changed = false
+  for (const [prop, sources] of Object.entries(add)) {
+    const have = deps[prop] ?? []
+    const next = [...new Set([...have, ...sources])]
+    if (next.length !== have.length) { deps[prop] = next; changed = true }
+  }
+  if (changed) await A.BrewUtil2.pUpdateBrew(doc)
 }

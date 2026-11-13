@@ -2,7 +2,7 @@
 // 条目内容全部走作者的可编辑自制（作者格式）；插件只记"房规 → 目标"的链接和范围设置。
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { BrewPacks } from './brew-packs'
-import { copyRawSource } from './copy-source'
+import { copyEntryToPack, copyToMine, type CopyDeps } from './custom-copy'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
@@ -219,49 +219,20 @@ export class CustomLibrary {
   }
 
   /**
-   * 存入【我的库】（P5 B-27，驾驶员定：本地原样副本，不受源仓库更新、卸载影响；不是"变成可编辑态"）。
-   * 官方的书 / 一条条目：用作者的办法（加载器对象 + DataUtil.cleanJson + 作者自制文件的 _meta.sources）存成作者格式文件，走作者的本地导入；
-   * 下载来的自制包：作者格式原文原样再导入一份。副本进【我的库】（来历 = 导入），和原件同编号的按同编号规则并排显示成两条。
-   * 重复存同一个来源 = 替换上一份副本（作者按来源认包）。结构问题只提示不拦截。
+   * 存入【我的库】= 复制成我的（P5.5 B8-3，驾驶员 2026-11-13 定）：一本书 / 一个包整个复制进【我的库】成为一个新的可改的包，
+   * 同一本可以复制多份；一条复制进你选的包（pack 必给）。做法见 custom-copy.ts。结构问题只提示不拦截。
    */
-  async saveToMine(codeSet: string, target: { kind: 'source'; source: string } | { kind: 'entry'; ref: EntryRef } | { kind: 'pack'; docIdLocal: string }) {
-    const f = await this.frame(codeSet)
-    const brewSet = brewSetOf(codeSet).id
-    let name: string
-    let body: unknown
-    let counts: Record<string, number> = {}
-    if (target.kind === 'pack') {
-      const mine = (await this.lib.brewInstalled(brewSet)).find((b) => b.head.docIdLocal === target.docIdLocal)
-      if (!mine) throw new Error('找不到这个包')
-      if (mine.head.isEditable || !mine.head.url) throw new Error('这个包本来就在【我的库】里（自己写的或本地导入的）')
-      const exported = await this.exportBrew(codeSet, target.docIdLocal)
-      if (!exported) throw new Error('导出这个包失败')
-      name = exported.filename ?? `${target.docIdLocal}.json`
-      body = exported.body
-    } else {
-      let source: string
-      if (target.kind === 'source') source = target.source
-      else {
-        const stored = await this.lib.storedItem(target.ref.set, target.ref.prop, target.ref.hash)
-        if (!stored?.source) throw new Error(`找不到这一条或它没有来源：${refKey(target.ref)}`)
-        if (SOURCES.find((x) => x.id === target.ref.set)?.kind === 'brew') throw new Error('这一条本来就在自制里')
-        source = stored.source
-      }
-      // 这个来源已经有本地副本（以前存过）：并进去，不冲掉
-      const docs = await f.call('brewDocIndex')
-      const existing = docs.find((d) => !d.isEditable && !d.url && (d.sources ?? []).some((x) => x.toLowerCase() === source.toLowerCase()))
-      const base = existing ? (await this.exportBrew(codeSet, existing.docIdLocal))?.body as Record<string, unknown> | undefined : undefined
-      const view = await this.lib.currentView()
-      const copy = await copyRawSource({ db: this.db, lib: this.lib, official: officialSourceOf(codeSet), source, view, ...(base ? { base } : {}), ...(target.kind === 'entry' ? { entry: { prop: target.ref.prop, hash: target.ref.hash } } : {}) })
-      if (!Object.values(copy.counts).some((n) => n > 0) && !copy.corpora.length) throw new Error(`官方资料里没有来源 ${source} 的内容可存（还没下载？）`)
-      counts = copy.counts
-      body = copy.json
-      name = existing?.filename ?? `${source}.json`
+  async saveToMine(codeSet: string, target: { kind: 'source'; source: string } | { kind: 'entry'; ref: EntryRef } | { kind: 'pack'; docIdLocal: string }, opts: { pack?: string; rule?: string } = {}) {
+    const deps: CopyDeps = { ...this.packDeps, db: this.db, lib: this.lib, exportBrew: (cs, id) => this.exportBrew(cs, id), entries: this.entryDeps }
+    if (target.kind === 'entry') {
+      if (!opts.pack) throw new Error('选一个【我的库】里的包，把这一条存进去')
+      const saved = await copyEntryToPack(deps, codeSet, target.ref, opts.pack, opts.rule ? { rule: opts.rule } : {})
+      this.scoped.reset()
+      return { kind: 'entry' as const, pack: opts.pack, ...saved }
     }
-    const issues = (await formatOfCodeSet(codeSet).validate(body)).issues
-    const result = await this.lib.brewImport(brewSet, [{ name, text: JSON.stringify(body) }])
+    const made = await copyToMine(deps, codeSet, target)
     this.scoped.reset()
-    return { name, counts, issues, added: result.value.added, parse: result.parse, errors: result.errors }
+    return { kind: 'pack' as const, ...made }
   }
 
   /** 导出一个包：作者格式原样（文件名 + 内容）。 */

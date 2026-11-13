@@ -1,80 +1,72 @@
-// B-27 存入我的库：官方的书 / 条目用作者办法存成作者格式文件再走作者导入；下载来的自制包原文原样再导入；重复存并进去不冲掉。
-// 作者函数本身（cleanJson、导入）的行为在 tests/e2e/library/p5-1-backend.mjs 里用真数据测。
+// P5.5 B8-3 复制成我的（取代 P5 B-27「同来源再存就并进旧副本」）：整本 / 整包复制成一个新包，包头多登记一行复制件自己的来源，
+// 同一本可以复制多份；复制件再复制换掉旧的那一行；版本标签照原来的；单条存进选的包、换成包的来源。
+// 作者函数本身（导入、认包）的行为在 e2e p55-c-b8.mjs 里用真数据测。
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../../src/library/brew-validate', () => ({ validateBrewJson: async () => ({ ok: true, issues: [] }) }))
-let copyCalls: Array<Record<string, unknown>> = []
-let copyAnswer: () => unknown = () => ({})
-vi.mock('../../../src/library/copy-source', () => ({ copyRawSource: async (o: Record<string, unknown>) => { copyCalls.push(o); return copyAnswer() } }))
+vi.mock('../../../src/library/brew-validate', () => ({ validateBrewJson: async () => ({ ok: true, issues: [] }), loadBrewFields: async () => ({ props: {} }) }))
+let copyAnswer: (o: Record<string, unknown>) => unknown = () => ({})
+vi.mock('../../../src/library/copy-source', () => ({ copyRawSource: async (o: Record<string, unknown>) => copyAnswer(o) }))
 
-import { CustomLibrary } from '../../../src/library/custom'
+import { copyToMine, type CopyDeps } from '../../../src/library/custom-copy'
+import { sourceUnit, type Assignment } from '../../../src/library/scopes'
 
-interface Imported { setId: string; files: Array<{ name: string; text: string }> }
-let imported: Imported[]
-let calls: Array<{ fn: string; args: unknown[] }>
-let docs: Array<Record<string, unknown>>
+let imported: Array<{ name: string; text: string }>
+let taken: Set<string>
+let assigns: Map<string, Assignment>
 
-function make(answers: Record<string, (...args: unknown[]) => unknown>) {
-  const frame = { call: async (fn: string, ...args: unknown[]) => { calls.push({ fn, args }); const a = answers[fn]; if (!a) throw new Error(`假小窗没有 ${fn}`); return a(...args) } }
+function deps(edition: boolean | null = true): CopyDeps {
+  const frame = { call: async (fn: string, ...a: unknown[]) => {
+    if (fn === 'sourceTaken') return taken.has(String(a[0]))
+    if (fn === 'editionOf') return { [String((a[0] as string[])[0])]: { classic: edition } }
+    if (fn === 'packExport') return { filename: 'x.json', body: { _meta: { sources: [{ json: 'PHB', full: '玩家手册' }, { json: 'PHB_COPY1', full: '玩家手册（副本 1）' }] }, spell: [{ name: '火球术', source: 'PHB' }] } }
+    throw new Error(`假小窗没有 ${fn}`)
+  } }
   const lib = {
-    currentView: async () => ({ id: 'v', filePaths: async () => [], fileGet: async () => null }),
     frameOf: async () => frame,
-    brewInstalled: async () => docs.map((d) => ({ head: d, meta: {} })),
-    brewImport: async (setId: string, files: Imported['files']) => { imported.push({ setId, files }); return { value: { added: [{ head: {} }], notJson: [] }, errors: [], parse: { ok: true } } },
-    storedItem: async (_set: string, _prop: string, hash: string) => (hash === 'fireball_phb' ? { item: { name: '火球术', source: 'PHB' }, source: 'PHB' } : null),
+    currentView: async () => ({}),
+    brewImport: async (_s: string, files: Array<{ name: string; text: string }>) => { imported.push(...files); for (const f of files) for (const s of JSON.parse(f.text)._meta.sources) taken.add(s.json); return { ok: true, errors: [], parse: {} } },
   }
-  const scoped = { reset: () => {} }
-  return new CustomLibrary(lib as never, scoped as never, {} as never)
+  const packsOf = async () => [{ docIdLocal: 'mine1', origin: 'import', sources: ['PHB', 'PHB_COPY1'], sourceInfo: [{ json: 'PHB' }, { json: 'PHB_COPY1' }] }]
+  return { lib: lib as never, manage: { assignments: async () => new Map(assigns), setAssignment: async (u: string, a: Assignment | null) => { if (a) assigns.set(u, a); else assigns.delete(u) } } as never, packsOf: packsOf as never, db: {} as never, exportBrew: async () => ({ filename: 'dl.json', body: { _meta: { sources: [{ json: 'KIB', full: 'Kib 合集' }] }, feat: [{ name: 'x', source: 'KIB' }] } }), entries: {} as never }
 }
 
-beforeEach(() => { imported = []; calls = []; docs = []; copyCalls = []; copyAnswer = () => ({ json: {}, counts: {}, corpora: [], skipped: [] }) })
+beforeEach(() => { imported = []; taken = new Set(['PHB']); assigns = new Map(); copyAnswer = () => ({ json: { _meta: { sources: [{ json: 'PHB', full: '玩家手册', abbreviation: 'PHB' }] }, spell: [{ name: '火球术', source: 'PHB' }] }, counts: { spell: 1 }, corpora: [], skipped: [] }) })
 
-describe('saveToMine', () => {
-  it('官方的书：作者办法复制 → 作者导入；文件叫来源名；没有本地副本时不带 base', async () => {
-    copyAnswer = () => ({ json: { _meta: { sources: [{ json: 'PHB' }] }, spell: [{ name: '火球术', source: 'PHB' }] }, counts: { spell: 1 }, corpora: [], skipped: [] })
-    const c = make({ brewDocIndex: () => [] })
-    const r = await c.saveToMine('cn', { kind: 'source', source: 'PHB' })
-    expect(copyCalls).toHaveLength(1)
-    expect(copyCalls[0]).toMatchObject({ source: 'PHB' })
-    expect(copyCalls[0].base).toBeUndefined()
-    expect(copyCalls[0].entry).toBeUndefined()
-    expect(imported).toHaveLength(1)
-    expect(imported[0]).toMatchObject({ setId: 'cn-brew', files: [{ name: 'PHB.json' }] })
-    expect(JSON.parse(imported[0].files[0].text).spell).toEqual([{ name: '火球术', source: 'PHB' }])
-    expect(r.counts).toEqual({ spell: 1 })
+describe('复制成我的（整本 / 整包）', () => {
+  it('官方的书：包头 = 原来源 + 复制件自己的一行；条目编号不改；同一本复制两份是两个包', async () => {
+    const a = await copyToMine(deps(), 'cn', { kind: 'source', source: 'PHB' })
+    const b = await copyToMine(deps(), 'cn', { kind: 'source', source: 'PHB' })
+    expect(a).toMatchObject({ id: 'phb :: phb_copy1', json: 'PHB_COPY1', full: '玩家手册（副本 1）', counts: { spell: 1 } })
+    expect(b.id).toBe('phb :: phb_copy2')
+    const body = JSON.parse(imported[0].text)
+    expect(body._meta.sources.map((s: { json: string }) => s.json)).toEqual(['PHB', 'PHB_COPY1'])
+    expect(body.spell).toEqual([{ name: '火球术', source: 'PHB' }])
   })
-
-  it('这个来源已有本地副本：把它的内容当 base 并进去，沿用原文件名（不冲掉以前存的）', async () => {
-    docs = [{ docIdLocal: 'd1', filename: 'PHB.json', isEditable: false, url: null }]
-    copyAnswer = () => ({ json: { spell: [{ name: '旧' }, { name: '新' }] }, counts: { spell: 1 }, corpora: [], skipped: [] })
-    const c = make({
-      brewDocIndex: () => [{ docIdLocal: 'd1', filename: 'PHB.json', isEditable: false, url: null, sources: ['phb'] }],
-      brewExport: () => ({ filename: 'PHB.json', body: { _meta: {}, spell: [{ name: '旧' }] } }),
-    })
-    await c.saveToMine('cn', { kind: 'entry', ref: { set: 'cn-official', prop: 'spell', hash: 'fireball_phb' } })
-    expect(copyCalls[0]).toMatchObject({ source: 'PHB', entry: { prop: 'spell', hash: 'fireball_phb' }, base: { spell: [{ name: '旧' }] } })
-    expect(imported[0].files[0].name).toBe('PHB.json')
-    expect(JSON.parse(imported[0].files[0].text).spell).toEqual([{ name: '旧' }, { name: '新' }])
+  it('版本标签：原来源有归类就照抄；没有就按作者的版本判断（判断不了不打）', async () => {
+    assigns.set(sourceUnit('PHB'), { scopes: ['mine'], global: false })
+    await copyToMine(deps(), 'cn', { kind: 'source', source: 'PHB' })
+    expect(assigns.get(sourceUnit('PHB_COPY1'))?.scopes).toEqual(['mine'])
+    assigns.clear()
+    await copyToMine(deps(true), 'cn', { kind: 'source', source: 'PHB' })
+    expect(assigns.get(sourceUnit('PHB_COPY2'))?.scopes.length).toBeGreaterThan(0)
+    assigns.clear()
+    await copyToMine(deps(null), 'cn', { kind: 'source', source: 'PHB' })
+    expect(assigns.has(sourceUnit('PHB_COPY3'))).toBe(false)
   })
-
-  it('什么都没复制到（没下载 / 来源不对）：明说，不导入空文件', async () => {
-    const c = make({ brewDocIndex: () => [] })
-    await expect(c.saveToMine('cn', { kind: 'source', source: 'XYZ' })).rejects.toThrow('没有来源 XYZ')
+  it('复制件再复制：旧的那一行（没有条目用）换成新的，不叠加', async () => {
+    taken.add('PHB_COPY1') // 原来那份还在
+    const r = await copyToMine(deps(), 'cn', { kind: 'pack', docIdLocal: 'mine1' })
+    expect(JSON.parse(imported[0].text)._meta.sources.map((s: { json: string }) => s.json)).toEqual(['PHB', 'PHB_COPY2'])
+    expect(r.json).toBe('PHB_COPY2')
+  })
+  it('下载来的包：原文复制一份，加自己的一行', async () => {
+    const r = await copyToMine(deps(), 'cn', { kind: 'pack', docIdLocal: 'dl' })
+    expect(JSON.parse(imported[0].text)._meta.sources.map((s: { json: string }) => s.json)).toEqual(['KIB', 'KIB_COPY1'])
+    expect(r.counts).toEqual({ feat: 1 })
+  })
+  it('什么都没复制到：明说，不导入空文件', async () => {
+    copyAnswer = () => ({ json: {}, counts: {}, corpora: [], skipped: [] })
+    await expect(copyToMine(deps(), 'cn', { kind: 'source', source: 'XYZ' })).rejects.toThrow('没有来源 XYZ')
     expect(imported).toEqual([])
-  })
-
-  it('下载来的自制包：作者格式原文原样再导入一份；自己写的 / 本地导入的不用存（本来就在我的库）', async () => {
-    docs = [{ docIdLocal: 'dl', filename: 'a.json', isEditable: false, url: 'https://x/a.json' }, { docIdLocal: 'im', filename: 'b.json', isEditable: false, url: null }, { docIdLocal: 'ed', isEditable: true }]
-    const c = make({ brewExport: (id) => ({ filename: `${id}.json`, body: { _meta: { sources: [] }, spell: [{ name: 'x' }] } }) })
-    await c.saveToMine('cn', { kind: 'pack', docIdLocal: 'dl' })
-    expect(imported[0].files[0]).toEqual({ name: 'dl.json', text: JSON.stringify({ _meta: { sources: [] }, spell: [{ name: 'x' }] }) })
-    await expect(c.saveToMine('cn', { kind: 'pack', docIdLocal: 'im' })).rejects.toThrow('本来就在【我的库】')
-    await expect(c.saveToMine('cn', { kind: 'pack', docIdLocal: 'ed' })).rejects.toThrow('本来就在【我的库】')
-    await expect(c.saveToMine('cn', { kind: 'pack', docIdLocal: 'nope' })).rejects.toThrow('找不到这个包')
-  })
-
-  it('找不到的条目：明说原因，不导入', async () => {
-    const c = make({})
-    await expect(c.saveToMine('cn', { kind: 'entry', ref: { set: 'cn-official', prop: 'spell', hash: 'unknown' } })).rejects.toThrow('找不到这一条')
   })
 })
