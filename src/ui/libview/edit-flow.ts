@@ -67,14 +67,21 @@ export async function openEditMine(s: Services, codeSet: string, pack: { id: str
 }
 
 /** 我的库顶上的草稿 [继续]：回到编辑器接着改。 */
-export async function openDraft(s: Services, d: { key: string; codeSet: string; prop: string; s: Ent; target: EditSession['target'] }, packName: (id: string) => string | null): Promise<void> {
+export async function openDraft(s: Services, d: { key: string; codeSet: string; prop: string; s: Ent; target: EditSession['target'] }, packName: (id: string) => string | null, c?: CampaignLibrary | null): Promise<void> {
+  // 房规的草稿：重新取原件，接着在房规模式里改
+  if (d.target.kind === 'house') {
+    if (!c) throw new Error('要先打开库页才能接着改房规')
+    const det = await s.backend.library.scoped.detail(c, d.target.ref, { browse: true })
+    if (!det || 'hidden' in det) throw new Error('找不到这条房规改的那一条')
+    return openHouseEditor(s, c, { ref: d.target.ref, item: det.item, base: det.base }, undefined, { ent: d.s, draftKey: d.key })
+  }
   const packId = d.target.kind === 'new' ? d.target.pack : d.target.kind === 'mine' ? d.target.pack ?? null : null
   openEditor({ codeSet: d.codeSet, prop: d.prop, typeName: await typeNameOf(s, d.codeSet, d.prop), pack: packId ? { id: packId, name: packName(packId) ?? packId } : null, ent: d.s, target: d.target, draftKey: d.key, detailed: true })
 }
 
 /** 书架上的官方 / 下载的条目 ✎ → 房规（同一个编辑器，u7-13）：从这个战役里现在生效的那一份开始改，原件不动。 */
-export async function openHouseEditor(s: Services, c: CampaignLibrary, d: { ref: EntryRef; item: unknown; base?: unknown }, onSaved?: () => void): Promise<void> {
+export async function openHouseEditor(s: Services, c: CampaignLibrary, d: { ref: EntryRef; item: unknown; base?: unknown }, onSaved?: () => void, from?: { ent: Ent; draftKey: string }): Promise<void> {
   const codeSet = getSource(d.ref.set).codeSet
   const clean = (x: unknown): Ent => { const out: Ent = {}; for (const [k, v] of Object.entries(JSON.parse(JSON.stringify(x ?? {})) as Ent)) if (!k.startsWith('_') && k !== 'uniqueId') out[k] = v; return out }
-  openEditor({ codeSet, prop: d.ref.prop, typeName: await typeNameOf(s, codeSet, d.ref.prop), pack: null, ent: clean(d.item), target: { kind: 'house', ref: d.ref }, house: { ref: d.ref, base: clean(d.base ?? d.item), campaign: c }, detailed: true, onSaved })
+  openEditor({ codeSet, prop: d.ref.prop, typeName: await typeNameOf(s, codeSet, d.ref.prop), pack: null, ent: from?.ent ?? clean(d.item), target: { kind: 'house', ref: d.ref }, house: { ref: d.ref, base: clean(d.base ?? d.item), campaign: c }, detailed: true, onSaved, ...(from ? { draftKey: from.draftKey } : {}) })
 }

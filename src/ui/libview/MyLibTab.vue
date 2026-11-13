@@ -49,7 +49,7 @@ async function loadDrafts(): Promise<void> {
 const draftName = (d: EditDraft) => `${String(d.s.name ?? '') || '未命名'}（${categoryLabel(d.prop) ?? d.prop}）`
 function continueDraft(key: string): void {
   const d = drafts.value.find((x) => x.key === key)
-  if (d) void openDraft(app.svc(), d, (id) => { const p = lib.pairs?.find((x) => x.id === id); return p ? packTitle(sideOf(p, d.codeSet)) : null })
+  if (d) openDraft(app.svc(), d, (id) => { const p = lib.pairs?.find((x) => x.id === id); return p ? packTitle(sideOf(p, d.codeSet)) : null }, lib.campaignLib).catch((e: unknown) => { console.error('[trpg-assistant] 接着改草稿失败', e); toast.error(e instanceof Error ? e.message : '没能打开草稿') })
 }
 async function reload(): Promise<void> {
   await lib.loadPairs(app.svc())
