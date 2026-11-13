@@ -1,21 +1,12 @@
 // P5.5 阶段 C（三）：起点的三个页面（作者模板 / 从已有的挑 / 粘贴 JSON）、编辑器（只有表单；JSON 在侧边，点开才出来）、预览兼保存。
 // 驾驶员 2026-11-13：表单不塞代码、字段用中文名、每个字段画成能一眼看懂的控件；点［完成］才跳到预览；JSON 用代码编辑框（CodeMirror 6，§8.1）。
 // 字段、控件种类来自后端字段表（custom.fields：shape + label，作者结构定义 + 作者中文版）。
-import { badge, btn, gray, icon, iconBtn, input, mbody, pills, pin, sheet, table, count, libPage, libTop } from '../lib/parts.mjs'
+import { badge, btn, gray, icon, iconBtn, input, mbody, pills, sheet, table, count } from '../lib/parts.mjs'
 import { errorLine, infoLine } from '../lib/ui.mjs'
 import { tri } from '../lib/boards.mjs'
+import { P, bar, bg, ck, cm, head, lab, sel, spellRender } from '../lib/editor.mjs'
 
 const G = 'P5.5 新建条目 · 编辑器 · 保存'
-const P = (n) => (n ? pin(n) : '')
-const bg = () => ({ page: 'library', flush: true, content: libPage(`${libTop('mine')}<div class="lib-scroll"></div>`) })
-const head = (back, title) => `<header class="trpg-modal__head"><button class="trpg-modal__back" type="button">${icon('caret-left', 16)}<span>${back}</span></button><h2 class="trpg-modal__title">${title}</h2>${iconBtn('x', '关闭')}</header>`
-const sel = (t, w) => `<button type="button" class="trpg-select-trigger"${w ? ` style="width:${w}px;flex:none"` : ''}><span>${t}</span>${icon('caret-down', 14)}</button>`
-const ck = (t, on) => `<span class="trpg-check" data-on="${on}"><span class="trpg-check__box">${on ? icon('check', 12) : ''}</span>${t}</span>`
-const lab = (t, { req, en, n } = {}) => `<label${en ? ' data-en="true"' : ''}>${P(n)}${t}${req ? '<small>*</small>' : ''}${icon('info', 13)}</label>`
-const bar = (inner) => `<div class="lib-ebar">${inner}</div>`
-
-// 作者渲染的法术块（示意；真实由作者渲染器画）
-const spellRender = (name = '火焰鹦鹉', sub = '1 环 塑能') => `<div class="lib-dbody" style="padding:0"><h3 style="margin:0">${name}</h3><p class="lib-muted" style="margin:2px 0 8px">${sub}</p><p style="margin:0"><b>施法时间</b> 1 动作<br><b>射程</b> 150 尺<br><b>成分</b> 言语、姿势<br><b>持续时间</b> 立即</p><p>一团燃烧的羽毛从你指尖飞出，命中射程内一个你能看见的生物……</p><p>被命中的生物进行一次敏捷豁免，失败受到 <span class="lib-tag">3d6</span> 火焰伤害。</p></div>`
 
 // ── 起点：作者模板 ──
 const tplPage = () => mbody(`<div class="lib-pad">${infoLine('这是作者编辑器里「新法术」的样子。用它开始，表单里会预先填好这些内容。')}<div style="height:12px"></div>${spellRender('新法术', '1 环 塑能')}</div>${bar(`<span class="lib-end">${btn('换一种起点')}${btn('用这个开始', { primary: true, n: 1 })}</span>`)}`)
@@ -26,42 +17,11 @@ const pickList = (sel = '燃烧之手') => mbody(`<div class="lib-filter" style=
 const pickPreview = () => mbody(`<div class="lib-pad"><div class="lib-dbody" style="padding:0"><h3 style="margin:0">燃烧之手</h3><p class="lib-muted" style="margin:2px 0 8px">1 环 塑能</p><p class="lib-faint">（作者渲染的这条法术全文）</p></div></div>${bar(`${gray('玩家手册 · 第 220 页')}<span class="lib-end">${btn('换一条')}${btn('复制它开始改', { primary: true, n: 2 })}</span>`)}`)
 
 // ── 起点：粘贴 JSON ──
-const cmLine = (no, code, err = false) => `<div class="lib-cm__line"${err ? ' data-err="true"' : ''}><i>${err ? '●' : ''}</i><small>${no}</small><span>${code}</span></div>`
-const cm = ({ pop = false, err = true, short = false } = {}) => `<div class="lib-cm">${[
-  cmLine(1, '{'),
-  cmLine(2, '  <b>"name"</b>: "火焰鹦鹉",'),
-  cmLine(3, `  <b>"level"</b>: ${err ? '<u>12</u>' : '1'},`, err),
-  cmLine(4, '  <b>"school"</b>: "V",'),
-  cmLine(5, '  <b>"time"</b>: [{ <b>"number"</b>: 1, <b>"unit"</b>: "action" }],'),
-  cmLine(6, '  <b>"ra</b>'),
-  ...(short ? [] : [cmLine(7, '  <b>"entries"</b>: ['), cmLine(8, '    "一团燃烧的羽毛从你指尖飞出……"'), cmLine(9, '  ]')]),
-  cmLine(short ? 7 : 10, '}'),
-].join('')}${pop ? '<div class="lib-cm__pop"><div data-on="true"><span>range</span><span class="lib-faint">范围</span></div><div><span>races</span><span class="lib-faint">种族</span></div><div><span>reprintedAs</span><span class="lib-faint"></span></div></div>' : ''}</div>`
 const jsonPage = (L) => mbody(`<div class="lib-etop">${P(1)}代码编辑框：行号、高亮、错误标在行上、字段名补全${L === 'narrow' ? '' : '<span class="lib-end lib-faint">粘贴一整条法术（作者格式）</span>'}</div><div style="flex:1;min-height:0;display:flex;flex-direction:column;padding-top:var(--sp-3)">${cm({ pop: true })}</div>
 <div class="lib-cm__err">${errorLine(`${P(2)}第 3 行：环节应该是 0 到 9 的整数（作者结构定义）`, btn('跳到这一行', { small: true, quiet: true }))}</div>${bar(`<span class="lib-end">${btn('检查')}${btn('进表单', { primary: true, n: 3 })}</span>`)}`)
 
-// ── 编辑器：只有表单 ──
-const spellForm = (L, n = {}) => `<div class="lib-form">
-<div class="lib-fgrid">
-${lab('中文名', { req: true, n: n.label })}${input('火焰鹦鹉')}
-${lab('英文名')}${input('Fire Parrot')}
-${lab('环节', { req: true, n: n.select })}<div class="lib-inline">${sel('1 环', 120)}<span class="lib-muted">学派<small style="color:var(--danger-text)">*</small></span>${sel('塑能', 120)}</div>
-${lab('施法时间', { req: true, n: n.rep })}<div class="lib-rep"><div class="lib-rep__row">${input('1').replace('class="trpg-input"', 'class="trpg-input lib-num"')}${sel('动作')}${input('', { placeholder: '条件（可不填）' })}${iconBtn('x', '删掉这一种')}</div><div>${btn('添加施法时间', { small: true, quiet: true, ic: 'plus' })}</div></div>
-${lab('范围', { req: true })}<div class="lib-inline">${sel('点', 110)}${input('150').replace('class="trpg-input"', 'class="trpg-input lib-num"')}${sel('尺', 90)}</div>
-${lab('成分', { n: n.check })}<div class="lib-checks">${ck('言语', true)}${ck('姿势', true)}${ck('材料', false)}</div>
-${lab('持续时间', { req: true })}<div class="lib-rep"><div class="lib-rep__row">${sel('立即')}${ck('专注', false)}${iconBtn('x', '删掉')}</div><div>${btn('添加持续时间', { small: true, quiet: true, ic: 'plus' })}</div></div>
-${lab('说明', { req: true, n: n.rte })}<div class="lib-rte"><div class="lib-rte__bar"><button>段落</button><button>列表</button><button>表格</button><button>${icon('dice-five', 12)} 骰子</button><button>引用条目</button></div><div class="lib-rte__body"><p>一团燃烧的羽毛从你指尖飞出，命中射程内一个你能看见的生物……</p><p>失败受到 <span class="lib-tag">3d6</span> 火焰伤害。</p></div></div>
-${L === 'narrow' ? '' : `${lab('"升环施法" 说明')}<div class="lib-rte"><div class="lib-rte__body" style="min-height:44px"><p class="lib-faint">用高于 1 环的法术位施放时……</p></div></div>`}
-</div>
-<div class="lib-more">${P(n.more)}${icon('caret-right', 14)}更多选项（子学派、伤害类型、豁免检定、职业……共 31 项）<span class="lib-end">${input('', { placeholder: '搜选项', ic: 'magnifying-glass' })}</span></div></div>`
-const etop = (L, { house = false, n = {} } = {}) => `<div class="lib-etop">${badge('法术')}${badge('5e')}${house ? `<span>${icon('info', 14)} 改的是<b>房规</b>：原件不动</span>` : `<span>在 <b>海盗战役</b></span>`}<span class="lib-end">${btn(L === 'narrow' ? '撤销 3' : '撤销（还剩 3 步）', { small: true, ic: 'arrow-counter-clockwise' })}${L === 'narrow' ? btn('{ } JSON', { small: true, n: n.jsonLink }) : ''}</span></div>`
-const ebar = (n = {}) => bar(`<span class="lib-src">${P(n.draft)}草稿已自动存 · 12:03</span><span class="lib-end">${btn('取消')}${btn('完成', { primary: true, n: n.done })}</span>`)
-const jtab = (n) => `<div class="lib-jtab"><b>{ }</b>JSON${n ? `<span style="position:absolute;top:8px;writing-mode:horizontal-tb">${P(n)}</span>` : ''}</div>`
-const jpane = () => `<div class="lib-jpane"><div class="lib-jpane__head"><b>JSON</b><span class="lib-faint">和表单同步：改哪边，另一边跟着变</span><span class="lib-end">${iconBtn('x', '收起 JSON')}</span></div>${cm({ err: false, short: true })}</div>`
-const editor = (L, { json = false, house = false, n = {} } = {}) => mbody(`${etop(L, { house, n })}<div class="lib-eshell"><div class="lib-pad">${spellForm(L, n)}</div>${L === 'narrow' ? '' : json ? jpane() : jtab(n.jtab)}</div>${ebar(n)}`)
-
 // ── 没有作者编辑器的类型（神祇）：作者没有中文名的字段照实显示英文；画不成控件的一项提示到 JSON 里改 ──
-const deityForm = () => mbody(`<div class="lib-etop">${badge('神祇')}${badge('5e')}<span>在 <b>海盗战役</b></span></div><div class="lib-eshell"><div class="lib-pad"><div class="lib-form"><div class="lib-fgrid">
+const deityForm = () => mbody(`<div class="lib-etop">${badge('神祇')}${badge('5e')}<span>在 <b>海盗战役</b></span><span class="lib-end">${btn('对比', { small: true })}</span></div><div class="lib-eshell"><div class="lib-pad"><div class="lib-form"><div class="lib-fgrid">
 ${lab('中文名', { req: true })}${input('浪涛之母')}
 ${lab('pantheon', { req: true, en: true, n: 1 })}${input('海盗诸神')}
 ${lab('alignment', { en: true })}<div class="lib-checks">${ck('L', false)}${ck('N', true)}${ck('C', true)}${ck('G', false)}${ck('E', false)}</div>
@@ -69,8 +29,7 @@ ${lab('domains', { en: true })}<div class="lib-rep"><div class="lib-rep__row">${
 ${lab('symbol', { en: true })}${input('一只缠着海草的锚')}
 ${lab('说明', { req: true })}<div class="lib-rte"><div class="lib-rte__body"><p>她的信徒相信每一场风暴都是她的呼吸……</p></div></div>
 ${lab('customProperties', { en: true, n: 2 })}<span class="lib-tojson">${icon('info', 14)}这一项比较复杂，在 JSON 里改 ›</span>
-</div></div></div>${jtabX()}</div>${ebar()}`)
-const jtabX = () => `<div class="lib-jtab"><b>{ }</b>JSON</div>`
+</div></div></div></div>${bar(`<span class="lib-src">草稿已自动存 · 12:03</span><span class="lib-end">${btn('取消')}${btn('完成', { primary: true })}</span>`)}`)
 
 // ── 预览兼保存 ──
 const notes = (open) => open
@@ -115,41 +74,19 @@ export const screens = [
     board: tri({ '1440': () => ({ ...bg(), overlay: sheet(head('起点', '粘贴 JSON'), jsonPage('wide')) }), '900': () => ({ ...bg(), overlay: sheet(head('起点', '粘贴 JSON'), jsonPage('wide')) }), '390': () => ({ ...bg(), overlay: sheet(head('起点', '粘贴 JSON'), jsonPage('narrow')) }) }),
   },
   {
-    id: 'u7-10-editor', group: G, title: 'P5.5 编辑器：只有表单（中文字段名、每个字段一个控件）；JSON 在侧边', flow: 'P5.5 §15 ⑩',
-    goal: '一眼看懂每一项怎么填，改完点［完成］', primary: '[完成]', patterns: 'Form · Repeatable rows · Progressive disclosure · Side drawer（JSON）', laws: 'Miller（必填在前、其余折叠）· Jakob（和作者中文版编辑器同样的字段与写法）· Fitts（主按钮右下）',
-    captions: { '1440': '宽窗 · 默认只有表单；右边一条竖条「{ } JSON」', '900': '宽窗 · 点了竖条：JSON 在右边展开，和表单同步', '390': '窄屏 · 右上「{ } JSON」跳到 JSON 页（‹ 返回表单）' },
-    diff: '宽：JSON 侧边展开；窄：跳页。没有右边常驻预览——预览在点［完成］之后（u7-11）。',
-    notes: [
-      [1, '中文字段名', '法术、怪物、传奇组用作者中文版编辑器的叫法（环节、施法时间……）；其余类型用作者共用的叫法，没有的显示英文原名（见 u7-10b），之后由翻译补', '【有】custom.fields → label（f6752fa）'],
-      [2, '下拉', '有可选值的字段；选项显示中文（「1 环」「塑能」「动作」「尺」）', '形状【有】；**中文选项待接**：作者法术编辑器里有（Parser 显示函数），还没接进字段表'],
-      [3, '可加几个的一组', '施法时间、持续时间这类：每一种一行，［添加…］再加一行，✕ 删掉', '【有】shape = list(group)'],
-      [4, '勾选', '是非题（言语 / 姿势 / 材料）；勾了「材料」才出现材料说明一行', '【有】shape = group(switch)；小字段中文名同上待接'],
-      [5, '说明（正文）', '段落编辑器：一段一行；工具条插入列表、表格、骰子、引用条目（作者的标签写法，不让用户手打代码）', '【有】shape = entries；作者 getTextAsEntries'],
-      [6, '更多选项', '其余非必填字段折叠，可搜', '【有】fields（required）'],
-      [7, '{ } JSON 竖条', '宽屏点开在右边展开代码编辑框，和表单双向同步；窄屏跳页', 'CodeMirror 6'],
-      [8, '草稿已自动存', '停手几秒自动存；草稿不影响任何条目', '【有】custom.saveDraft'],
-      [9, '[完成]', '跳到预览兼保存页（u7-11），这时才算「改完了」', '—'],
-    ],
-    board: tri({
-      '1440': () => ({ ...bg(), overlay: sheet(head('海盗战役', '火焰鹦鹉'), editor('wide', { n: { label: 1, select: 2, rep: 3, check: 4, rte: 5, more: 6, jtab: 7, draft: 8, done: 9 } })) }),
-      '900': () => ({ ...bg(), overlay: sheet(head('海盗战役', '火焰鹦鹉'), editor('wide', { json: true })) }),
-      '390': () => ({ ...bg(), overlay: sheet(head('海盗战役', '火焰鹦鹉'), editor('narrow', { n: { jsonLink: 7 } })) }),
-    }),
-  },
-  {
-    id: 'u7-10b-fallback', group: G, title: 'P5.5 编辑器：没有作者编辑器的类型 · 窄屏 JSON 页', flow: 'P5.5 §15 ⑩',
+    id: 'u7-10b-fallback', group: G, title: 'P5.5 编辑器：没有作者中文名的类型 · 窄屏 JSON 页', flow: 'P5.5 §15 ⑩',
     goal: '看清现在中文覆盖不到的地方长什么样', primary: '—', patterns: 'Graceful fallback', laws: 'Postel（没有中文名也能填）',
-    captions: { '1440': '宽窗 · 神祇：作者没有中文名的字段照实显示英文原名；画不成控件的一项提示到 JSON 里改', '900': '宽窗 · 同上', '390': '窄屏 · JSON 页（从表单右上跳来）' },
+    captions: { '1440': '宽窗 · 神祇：作者没有中文名的字段照实显示英文原名；画不成控件的一项提示到 JSON 里改', '900': '宽窗 · 同上', '390': '窄屏 · 对比页的 JSON 标签（从表单右上［对比］跳来）' },
     diff: '英文名用等宽字，和中文名一眼区分开。',
     notes: [
       [1, '英文原名', '作者中文版没有这个字段的叫法 → 显示英文原名；之后翻译补在 field-labels.json，自动换成中文', '【有】label 没有时不给'],
       [2, '到 JSON 里改', '少数结构太复杂的字段（用户字段里约 2%）：点一下跳到 JSON 里那一行', '【有】shape = json'],
-      [3, '窄屏 JSON 页', '整页代码编辑框；‹ 返回表单，两边同步', 'CodeMirror 6'],
+      [3, '窄屏 JSON', '对比页（u7-10c）里的 JSON 标签：整页代码编辑框；‹ 返回表单，两边同步', 'CodeMirror 6'],
     ],
     board: tri({
       '1440': () => ({ ...bg(), overlay: sheet(head('海盗战役', '浪涛之母'), deityForm()) }),
       '900': () => ({ ...bg(), overlay: sheet(head('海盗战役', '浪涛之母'), deityForm()) }),
-      '390': () => ({ ...bg(), overlay: sheet(head('表单', 'JSON'), mbody(`<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding-top:var(--sp-3)">${P(3)}${cm({ err: false })}</div>${bar(`<span class="lib-end">${btn('返回表单', { primary: true })}</span>`)}`)) }),
+      '390': () => ({ ...bg(), overlay: sheet(head('表单', '对比'), mbody(`<div class="lib-ctabs"><span class="trpg-seg" role="group"><button type="button" aria-pressed="false">英文版</button><button type="button" aria-pressed="true">JSON</button><button type="button" aria-pressed="false">预览</button></span></div><div style="flex:1;min-height:0;display:flex;flex-direction:column;padding-top:var(--sp-3)">${P(3)}${cm({ err: false })}</div>${bar(`<span class="lib-end">${btn('返回表单', { primary: true })}</span>`)}`)) }),
     }),
   },
   {

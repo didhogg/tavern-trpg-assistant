@@ -94,12 +94,12 @@ export const screens = [
     }),
   },
   {
-    id: 'u7-12-states', group: G, title: 'P5.5 状态：已保存 / 撤销 / 更新中 / 失败 / 放弃修改 / 空态', flow: 'P5.5 §15 ⑫',
+    id: 'u7-12-states', group: G, title: 'P5.5 状态：已保存 / 撤销 / 整理中 / 失败 / 放弃修改 / 空态', flow: 'P5.5 §15 ⑫',
     goal: '每一步都知道发生了什么，出错了东西不丢', primary: '[撤销] / [重试]', patterns: 'Toast with Undo · Recoverable error · Confirm', laws: 'Doherty（<400 ms 有反馈）· Peak–End · Postel',
     diff: '状态板。提示统一用顶部横幅（自动消失），错误横幅点了才消失。',
     notes: [
       [1, '已保存', '「已保存 · [撤销]」几秒后自动消失；编辑器里的撤销按钮一直在（Q13）', '【有】saveEntry · undo'],
-      [2, '更新中', '包和条目旁的小转圈；后台停手 5 秒后统一解析，一般十几秒内消失（复制的大书二十多秒）', '【有】custom.pending'],
+      [2, '整理中', '包和条目旁的小转圈；后台停手 5 秒后统一整理，一般十几秒内消失（复制的大书二十多秒）', '【有】custom.pending'],
       [3, '后台更新没成功', '例如缺依赖：横幅写原因 + [重试]；条目原文已经存好，不会丢', '【有】library.brewQueue.last / trigger'],
       [4, '保存失败', '横幅原因；编辑器里的内容原样留着，草稿也在', '【有】'],
       [5, '放弃修改？', '有没保存的改动时按 ✕ 或 ‹：「放弃修改？草稿会留着」[继续改] [放弃]', '【有】草稿'],
@@ -108,7 +108,7 @@ export const screens = [
     ],
     board: () => `<div class="ds-root wf-states">
 ${stateCard('已保存（自动消失）', `<div>${toast('已保存「火焰鹦鹉」', { kind: 'success', hint: '撤销' })}</div>`, 1)}
-${stateCard('更新中', `<span>火焰鹦鹉 <span class="lib-pending">${icon('arrow-clockwise', 12)}更新中</span></span>`, 2)}
+${stateCard('整理中', `<span>火焰鹦鹉 <span class="lib-pending">${icon('arrow-clockwise', 12)}整理中</span></span>`, 2)}
 ${stateCard('后台更新没成功', errorLine('海盗战役后台更新没成功：缺少依赖「玩家手册」。你存的内容都在。', btn('重试', { small: true })), 3)}
 ${stateCard('保存失败', `<div>${toast('保存没有成功：作者存储写不进去。编辑器里的内容还在。', { kind: 'error' })}</div>`, 4)}
 ${stateCard('放弃修改？', modal('confirm', modalHead('放弃修改？'), `<div class="trpg-confirm"><p>还有没保存的改动。草稿会留着，之后可以在我的库顶上 [继续]。</p><div class="trpg-confirm__actions">${btn('继续改')}${btn('放弃', { danger: true })}</div></div>`).replace('class="trpg-modal-root"', 'class="trpg-modal-root" style="position:static"').replace('class="trpg-modal"', 'class="trpg-modal" style="position:static;background:none"'), 5)}

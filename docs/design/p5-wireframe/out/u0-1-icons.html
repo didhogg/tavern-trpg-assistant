@@ -886,6 +886,32 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .lib-pickrow { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-3); }
 [data-layout='narrow'] .lib-fgrid { grid-template-columns: 1fr; gap: 4px var(--sp-3); } [data-layout='narrow'] .lib-fgrid > label { padding-top: var(--sp-2); }
 [data-layout='narrow'] .lib-pickrow { grid-template-columns: 1fr; }
+/* P5.5 双语编辑器 · 对比抽屉 · 字段浮窗 · 覆盖管理（u7d） */
+.lib-other { margin-left: 2px; padding: 0 5px; border-radius: 999px; border: var(--border) solid var(--line-ctrl); font: 500 10px/16px var(--font-sans); color: var(--text2); cursor: pointer; } .lib-other[data-on='true'] { background: var(--primary); color: var(--on-primary, #fff); border-color: var(--primary); }
+.lib-mark { padding: 0 6px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-text); font: 500 10px/16px var(--font-sans); white-space: nowrap; }
+.lib-mono { font-family: ui-monospace, Menlo, monospace; } .lib-popwrap { position: relative; min-width: 0; }
+.lib-pop { position: absolute; z-index: 30; left: 0; top: calc(100% + 6px); width: min(300px, 100%); display: grid; gap: 6px; padding: var(--sp-3); border-radius: var(--r-md); background: var(--surface); border: var(--border) solid var(--line); box-shadow: var(--shadow-2); font-size: var(--fs-sm); }
+.lib-pop__head { color: var(--text2); font-size: 12px; } .lib-pop__val { font-weight: var(--fw-semibold); } .lib-pop__acts { display: flex; gap: var(--sp-2); justify-content: flex-end; }
+.lib-help { position: absolute; z-index: 30; left: var(--sp-4); top: 44px; width: 280px; padding: var(--sp-3); border-radius: var(--r-md); background: var(--surface); border: var(--border) solid var(--line); box-shadow: var(--shadow-2); font-size: var(--fs-sm); line-height: 1.6; }
+.lib-etop { position: relative; } .lib-etop .trpg-icon-btn { width: 28px; height: 28px; }
+.lib-cdrawer { flex: 0 0 44%; min-width: 0; display: flex; flex-direction: column; border-left: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-cdrawer__head, .lib-ctabs { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); }
+.lib-cdrawer__body { flex: 1; min-height: 0; overflow: auto; padding: 0 var(--sp-3) var(--sp-3); display: flex; flex-direction: column; }
+.lib-crow { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: var(--sp-2); align-items: start; padding: 7px var(--sp-2); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.lib-crow > b { font-weight: var(--fw-semibold); color: var(--text2); font-size: 12px; padding-top: 2px; } .lib-crow[data-diff='true'] { background: var(--warn-bg); border-radius: var(--r-sm); }
+.lib-crow small { display: block; color: var(--warn-text); font-size: 11px; }
+.lib-edits { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.lib-erow { display: grid; gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: var(--border) solid var(--line); }
+.lib-erow__top { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; } .lib-erow__top > .lib-erow__name { font-weight: var(--fw-semibold); }
+.lib-erow__meta { color: var(--text2); font-size: 12px; flex: 1 1 200px; min-width: 0; }
+.lib-erow__body { display: grid; gap: var(--sp-2); margin-left: 26px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-sm); background: var(--bg-sunk); }
+.lib-layer { display: grid; gap: 6px; padding: var(--sp-3); border-radius: var(--r-md); border: var(--border) solid var(--line); } .lib-layer[data-win='true'] { border-color: var(--primary); }
+.lib-layer__head { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; font-size: var(--fs-sm); } .lib-layer[data-off='true'] { opacity: .6; }
+.lib-fillopt { display: grid; gap: 6px; padding: var(--sp-3); border-radius: var(--r-md); border: var(--border) solid var(--line); } .lib-fillopt[data-on='true'] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
+[data-layout='narrow'] .lib-erow__body { margin-left: 0; } [data-layout='narrow'] .lib-crow { grid-template-columns: 1fr auto; } [data-layout='narrow'] .lib-crow > b { grid-column: 1 / -1; }
+.lib-fgrid > label { flex-wrap: wrap; } .lib-lname { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; } .lib-fgrid { grid-template-columns: 128px minmax(0, 1fr); }
+.lib-cdrawer .trpg-seg button { white-space: nowrap; }
+.lib-fgrid > label[data-en='true'] .lib-lname { white-space: normal; word-break: break-all; }
 </style></head><body><div class="wf-board ds-root" style="background:transparent">
 <h1>U0 图标库（Icons）</h1><p class="wf-meta">U0 图标与基础控件 · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
 <div class="wf-row"><div class="ds-root lib-cmpgrid">

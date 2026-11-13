@@ -8,7 +8,7 @@ const G = 'P5.5 我的库（包 · 新建包 · 管理 · 导入 · 复制成我
 const P = (n) => (n ? pin(n) : '')
 const ph = (t) => `<span class="lib-faint">${t}</span>`
 const page = (content, extra = {}) => ({ page: 'library', flush: true, content: libPage(content), ...extra })
-const pending = (n) => `<span class="lib-pending">${P(n)}${icon('arrow-clockwise', 12)}更新中</span>`
+const pending = (n) => `<span class="lib-pending">${P(n)}${icon('arrow-clockwise', 12)}整理中</span>`
 
 const PACKS = [
   { name: '海盗战役', ver: '5e', cats: '法术 3 · 怪物 12 · 物品 4', on: true },
@@ -56,13 +56,13 @@ export const screens = [
   {
     id: 'u7-1-mylib', group: G, title: 'P5.5 我的库：只有一种东西——包', flow: 'P5.5 §15 ①',
     goal: '看到自己所有的包，进包改条目，或者新建 / 导入一个包', primary: '[新建包]', patterns: 'Row list · Row actions · Switch · Notification（草稿条）', laws: 'Jakob（同书架行）· Hick（顶部只有两个按钮，一个主色）· Zeigarnik（没保存的草稿提醒）',
-    captions: { '1440': '宽窗 · 三个包：自己建的、整本复制的（后台更新中）、迁移来的「我的资料」', '900': '宽窗 · 行尾 ⋯ 展开：管理 / 再复制一份 / 删除', '390': '窄屏 · 底部标签栏；导出收进 ⋯；空态见状态板 u7-11' },
+    captions: { '1440': '宽窗 · 三个包：自己建的、整本复制的（后台整理中）、迁移来的「我的资料」', '900': '宽窗 · 行尾 ⋯ 展开：管理 / 再复制一份 / 删除', '390': '窄屏 · 底部标签栏；导出收进 ⋯；空态见状态板 u7-11' },
     diff: '窄：按钮缩成「导入」「新建包」，行尾的 [导出] 收进 ⋯。',
     notes: [
       [1, '搜索 + [导入文件] + [新建包]', '[新建包] 是主按钮（问卷 Q9、驾驶员 11-13：先建包，进包才新建条目）；搜索在所有包的条目里找', '【有】custom.packs · custom.createPack'],
       [2, '草稿提醒条', '有没保存的草稿才出现：几份、是哪几条；[继续] 下拉选一份回到编辑器。草稿只是草稿，不影响任何条目（Q15）', '【有】custom.drafts(codeSet)'],
       [3, '包的行', '名字 · 版本标签 · 每类几条（复制件写「复制自 xx」）· 本战役开关 · [导出] · ⋯。不再分「导入的 / 存入的副本 / 自己写的」三组，全都是能改的包', '【有】custom.packs → MyPack（own、scopes、props）'],
-      [4, '更新中', '刚改过、后台还在解析的包，带一个小转圈「更新中」；解析完自动消失；条目照样能看能改（U2）', '【有】custom.pending(codeSet)'],
+      [4, '整理中', '刚改过、后台还在整理的包，带一个小转圈「整理中」；整理完自动消失；条目照样能看能改（U2）', '【有】custom.pending(codeSet)'],
       [5, '⋯ 菜单', '管理（u7-4）· 再复制一份 · 删除（影响页沿用 u6-4）', '【有】custom.saveToMine({kind:"pack"}) · deletePack'],
       [6, '从下载页装的包', '不在这里，在书架；想改就在书架 ⋯ → 复制成我的（u7-6）', '【有】origin 区分'],
     ],
@@ -92,13 +92,13 @@ export const screens = [
   {
     id: 'u7-3-pack', group: G, title: 'P5.5 包弹窗：条目列表 + [新建条目]', flow: 'P5.5 §15 ③',
     goal: '在包里找到要改的条目，或者往包里加新条目', primary: '[新建条目]', patterns: 'Modal Panel（沿用 u3-2）· Sortable Table · Row action ✎', laws: 'Jakob（和书架的包弹窗同一个样子）· Fitts（✎ 在行尾）',
-    captions: { '1440': '宽窗 · 刚存的条目带「更新中」', '900': '宽窗 · 选了「怪物」药丸', '390': '窄屏 · 底部抽屉' },
+    captions: { '1440': '宽窗 · 刚存的条目带「整理中」', '900': '宽窗 · 选了「怪物」药丸', '390': '窄屏 · 底部抽屉' },
     diff: '和 u3-2 自制包弹窗同一个壳，只多 [新建条目] 和行尾 ✎。',
     notes: [
       [1, '弹窗头', '‹ 我的库 · 包名 · 版本标签 · 本战役开关 · ⋯（管理 / 再复制一份 / 导出 / 删除）· ✕', '沿用 u3'],
       [2, '[新建条目]', '包里加一条：选类型 → 选起点 → 编辑器（u7-7 起）；存进的就是这个包，不再问', '【有】custom.entryTypes'],
       [3, '行尾 ✎', '打开编辑器；复制件里的条目同样能改（编号不变）', '【有】custom.packEntry'],
-      [4, '更新中', '刚存、后台还没解析完的条目：列表里先显示，详情和预览用刚存的原文', '【有】custom.pending'],
+      [4, '整理中', '刚存、后台还没整理完的条目：列表里先显示，详情和预览用刚存的原文', '【有】custom.pending'],
     ],
     board: tri({
       '1440': () => page(myLib('wide'), { overlay: sheet(packHead({ back: '我的库', title: '海盗战役', ver: '5e', n: { title: 1 } }), packList('wide')) }),

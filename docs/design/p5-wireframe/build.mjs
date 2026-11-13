@@ -14,15 +14,17 @@ import { screens as u6 } from './screens/u6.mjs'
 import { screens as u7a } from './screens/u7a.mjs'
 import { screens as u7b } from './screens/u7b.mjs'
 import { screens as u7c } from './screens/u7c.mjs'
+import { screens as u7d } from './screens/u7d.mjs'
+import { screens as u7e } from './screens/u7e.mjs'
 import { screens as u8 } from './screens/u8.mjs'
 import { screens as u0 } from './screens/u0.mjs'
 import { screens as u9a } from './screens/u9a.mjs'
 import { screens as u9b } from './screens/u9b.mjs'
 import { screens as u9c } from './screens/u9c.mjs'
 
-// P5.5 的屏分在三个文件里，按编号排（u7-8a 排在 u7-8 后面）
+// P5.5 的屏分在五个文件里，按编号排（u7-8a 排在 u7-8 后面）
 const u7key = (s) => { const m = s.id.match(/^u7-(\d+)([a-z]?)/); return Number(m[1]) * 100 + (m[2] ? m[2].charCodeAt(0) - 96 : 0) }
-const u7 = [...u7a, ...u7b, ...u7c].sort((a, b) => u7key(a) - u7key(b))
+const u7 = [...u7a, ...u7b, ...u7c, ...u7d, ...u7e].sort((a, b) => u7key(a) - u7key(b))
 
 const here = dirname(fileURLToPath(import.meta.url))
 const out = join(here, 'out')
