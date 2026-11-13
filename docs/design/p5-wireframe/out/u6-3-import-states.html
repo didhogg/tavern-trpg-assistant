@@ -912,6 +912,22 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .lib-fgrid > label { flex-wrap: wrap; } .lib-lname { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; } .lib-fgrid { grid-template-columns: 128px minmax(0, 1fr); }
 .lib-cdrawer .trpg-seg button { white-space: nowrap; }
 .lib-fgrid > label[data-en='true'] .lib-lname { white-space: normal; word-break: break-all; }
+/* 双语编辑：上方标签表单 · 左右两栏 · 窄屏上下两栏（2026-11-13 驾驶员定） */
+.lib-tform { display: grid; gap: var(--sp-3); } .lib-tfield { display: grid; gap: 4px; min-width: 0; }
+.lib-tfield > label { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: var(--fs-sm); font-weight: var(--fw-semibold); } .lib-tfield > label small { color: var(--danger-text); } .lib-tfield > label .trpg-icon { color: var(--text3); }
+.lib-fsec { margin-top: var(--sp-2); padding-bottom: 4px; border-bottom: var(--border) solid var(--line); color: var(--text2); font-size: 12px; font-weight: var(--fw-semibold); }
+.lib-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); } .lib-row2 .trpg-select-trigger { width: 100%; }
+.lib-split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.lib-pane { min-height: 0; min-width: 0; display: flex; flex-direction: column; } .lib-pane--side { background: var(--bg-sunk); } .lib-split > .lib-pane + .lib-pane { border-left: var(--border) solid var(--line); }
+.lib-pane__head { flex: none; display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.lib-pane__body { flex: 1; min-height: 0; overflow: auto; padding: var(--sp-3) var(--sp-4) var(--sp-5); display: flex; flex-direction: column; }
+.lib-vsplit { flex: 1; min-height: 0; display: flex; flex-direction: column; } .lib-pane--top { flex: 0 0 42%; } .lib-vsplit > .lib-pane:last-child { flex: 1; }
+.lib-grip { flex: none; height: 14px; display: grid; place-items: center; background: var(--surface); border-block: var(--border) solid var(--line); position: relative; } .lib-grip i { width: 36px; height: 4px; border-radius: 2px; background: var(--line-ctrl); }
+[data-layout='narrow'] .lib-row2 { grid-template-columns: 1fr 1fr; }
+.lib-pane__head .trpg-seg button { white-space: nowrap; } .lib-pane__head > .lib-faint { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-tfield > label .lib-mark { font-size: 11px; padding: 1px 8px; box-shadow: inset 0 0 0 1px var(--accent); }
+.lib-tform .lib-rep__row { flex-wrap: wrap; } .lib-tform .lib-rep__row:has(.trpg-select-trigger) > .trpg-icon-btn { order: 3; } .lib-tform .lib-rep__row:has(.trpg-select-trigger) > .trpg-input:not(.lib-num) { order: 4; flex: 1 1 100%; } .lib-tform .lib-rep__row > .trpg-input { flex: 1; }
+.lib-tfield > label { flex-wrap: nowrap; } .lib-tfield[data-diff='true'] .trpg-select-trigger, .lib-tfield[data-diff='true'] .trpg-input { border-color: var(--accent); box-shadow: 0 0 0 3px var(--warn-bg); }
 </style></head><body><div class="wf-board ds-root" style="background:transparent">
 <h1>U6 导入 / 导出的异常</h1><p class="wf-meta">U6 我的库（导入 · 存入 · 导出 · 删除） · 配色 A（P4 定稿）· 样式 = 插件真实样式 · 内容只表达结构、层级、控件位置；条目里的文字是真实数据示例，真实显示由作者函数生成</p>
 <div class="wf-row"><div class="ds-root wf-states">

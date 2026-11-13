@@ -3,7 +3,7 @@
 // 三个入口用同一个列表，只是范围不同（单条 / 一个包或一本书 / 整个书架）；设置 → 库 → 全局编辑 / 覆盖（u5-5）是全部规则。
 // 每一条可展开看「改了什么」（和原件比）。层级：本战役 > 规则 > 全局，上面的盖住下面的（versions.chooseVersion）。
 import { tri } from '../lib/boards.mjs'
-import { P, badge, bar, bg, btn, ck, head, icon, iconBtn, mbody, sel, spellForm } from '../lib/editor.mjs'
+import { P, badge, bar, bg, btn, ck, head, icon, iconBtn, mbody, sel, spellForm, split, vsplit } from '../lib/editor.mjs'
 import { dropdown, entryHead, mdetail, sheet, shelfPage, spellBody } from '../lib/parts.mjs'
 import { infoLine } from '../lib/ui.mjs'
 
@@ -14,10 +14,13 @@ const FIRE = [['环节', '3 环', '4 环'], ['范围', '150 尺', '100 尺'], ['
 
 // ── 改官方条目 = 房规：同一个编辑器，顶上说清楚；对比抽屉多一个「原件」标签 ──
 const crow = (k, v, now, diffOn) => `<div class="lib-crow"${diffOn ? ' data-diff="true"' : ''}><b>${k}</b><span>${v}${diffOn ? `<small>现在是 ${now}</small>` : ''}</span>${diffOn ? btn('← 用回原件的', { small: true, quiet: true }) : '<span></span>'}</div>`
-const origin = (n = {}) => `<aside class="lib-cdrawer"><div class="lib-cdrawer__head"><span class="trpg-seg" role="group">${P(n.tabs)}${['原件', '英文', 'JSON', '预览'].map((t, i) => `<button type="button" aria-pressed="${i === 0}">${t}</button>`).join('')}</span><span class="lib-end">${iconBtn('x', '收起对比')}</span></div><div class="lib-cdrawer__body"><p class="lib-faint" style="margin:0 0 6px;font-size:12px">玩家手册（2014）· 第 241 页 · 改了的标黄</p>
-${crow('中文名', '火球术')}${crow('环节', '3 环', '4 环', true)}${crow('学派', '塑能')}${crow('施法时间', '1 动作')}${crow('范围', '点 · 150 尺', '100 尺', true)}${crow('说明', '明亮的闪光从你的指间飞驰向……')}</div></aside>`
-const houseTop = (L, n = {}) => `<div class="lib-etop">${L === 'narrow' ? '' : `${badge('法术')}${badge('5e')}`}<span>${P(n.house)}${icon('info', 14)} 改的是<b>房规</b>：《玩家手册》原件不动</span><span class="lib-end">${btn(L === 'narrow' ? '撤销 2' : '撤销（还剩 2 步）', { small: true, ic: 'arrow-counter-clockwise' })}${btn(L === 'narrow' ? '对比' : '收起对比', { small: true, primary: L !== 'narrow', n: n.cmp })}</span></div>`
-const houseEditor = (L, n = {}) => mbody(`${houseTop(L, n)}<div class="lib-eshell"><div class="lib-pad">${spellForm(L, { house: true }).replace('火焰鹦鹉', '火球术').replace('Fire Parrot', 'Fireball').replace('一团燃烧的羽毛从你指尖飞出，命中射程内一个你能看见的生物……', '明亮的闪光从你的指间飞驰向施法距离内你指定的一点……').replace(/失败受到 .*? 火焰伤害。/, '豁免失败者受到 <span class="lib-tag">8d6</span> 火焰伤害。')}</div>${L === 'narrow' ? '' : origin(n)}</div>${bar(`<span class="lib-src">草稿已自动存 · 12:03</span><span class="lib-end">${btn('取消')}${btn('完成', { primary: true, n: n.done })}</span>`)}`)
+const originRows = () => `<p class="lib-faint" style="margin:0 0 6px;font-size:12px">玩家手册（2014）· 第 241 页 · 只能看 · 改了的标黄</p>
+${crow('名字', '火球术')}${crow('环节', '3 环', '4 环', true)}${crow('学派', '塑能')}${crow('施法时间', '1 动作')}${crow('范围', '点 · 150 尺', '100 尺', true)}${crow('说明', '明亮的闪光从你的指间飞驰向……')}`
+const houseTop = (L, n = {}) => `<div class="lib-etop">${L === 'narrow' ? '' : `${badge('法术')}${badge('5e')}`}<span>${P(n.house)}${icon('info', 14)} 改的是<b>房规</b>：《玩家手册》原件不动</span><span class="lib-end">${btn(L === 'narrow' ? '撤销 2' : '撤销（还剩 2 步）', { small: true, ic: 'arrow-counter-clockwise' })}</span></div>`
+const fireForm = (L) => spellForm(L, { lang: 'zh', house: true, v: { name: '火球术', text: '<p>明亮的闪光从你的指间飞驰向施法距离内你指定的一点……</p><p>豁免失败者受到 <span class="lib-tag">8d6</span> 火焰伤害。</p>' } })
+const houseEditor = (L, n = {}) => mbody(`${houseTop(L, n)}${L === 'narrow'
+  ? vsplit({ open: true, tabs: ['原件', 'English', 'JSON', '预览'], on: '原件', body: originRows() }, '中文（房规）', fireForm(L), n)
+  : split('中文（房规）', fireForm(L), { tabs: ['原件', 'English', 'JSON', '预览'], on: '原件', note: '只能看', body: originRows() }, n)}${bar(`<span class="lib-src">草稿已自动存 · 12:03</span><span class="lib-end">${btn('取消')}${btn('完成', { primary: true, n: n.done })}</span>`)}`)
 
 // 保存页：作用于（下拉打开）
 const scopeOpen = (n) => `<span style="position:relative">${P(n)}${sel('本战役「失落矿坑」', 220)}${dropdown([['本战役「失落矿坑」（所有存档和分支）'], ['当前规则：D&D 5e（2014）'], ['全局（所有战役）']], 280).replace('right:0', 'left:0;right:auto')}</span>`
@@ -51,8 +54,8 @@ export const screens = [
   {
     id: 'u7-13-house', group: G, title: 'P5.5 书架上的官方条目 ✎ → 房规（同一个编辑器）', flow: 'P5.5 §15 ⑩⑪ · Q14',
     goal: '改官方的一两个数，原件不动；存的时候定作用于哪一层', primary: '[保存房规]', patterns: 'Same editor, labelled mode · Compare with original · Preview before commit', laws: 'Jakob（和改自己的条目同一个编辑器）· Postel（存前列出改了什么）· Hick（作用于三选一，默认本战役）',
-    captions: { '1440': '宽窗 · 改「火球术」：顶上写明是房规；对比抽屉多一个「原件」标签，改了的标黄、可一键用回原件的', '900': '宽窗 · 点［完成］：和原件比改了 3 项；作用于（下拉打开）', '390': '窄屏 · 存好回到详情：显示覆盖后的内容；⋯ 菜单里进「管理」' },
-    diff: '房规只改现在看的这一种语言；另一语言的同一条要不要一起改 → 待驾驶员定（线框没画中文 | English 切换）。',
+    captions: { '1440': '宽窗 · 改「火球术」：顶上写明是房规；左栏中文表单，右栏多一个「原件」标签（只能看），改了的标黄、可一键用回原件的', '900': '宽窗 · 点［完成］：和原件比改了 3 项；作用于（下拉打开）', '390': '窄屏 · 存好回到详情：显示覆盖后的内容；⋯ 菜单里进「管理」' },
+    diff: '和改自己的条目同一套左右两栏（窄屏上下两栏）。右栏 English 是英文官方原文：房规要不要两种语言一起改 → 待驾驶员定（§16.4 第 3 项），线框先画成只读看。',
     notes: [
       [1, '改的是房规', '书架上的官方 / 下载的条目点 ✎ 进同一个编辑器；顶上一句话说明原件不动', '【有】custom.createHouseRule（只记改动，B1）'],
       [2, '原件标签', '对比抽屉：原件 / 英文（英文版原文）/ JSON / 预览；原件逐行对齐，改了的标黄 +［← 用回原件的］', '【有】scoped.detail 的 base（原件）'],

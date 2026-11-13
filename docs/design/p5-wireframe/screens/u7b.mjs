@@ -21,14 +21,14 @@ const types = (L, n = {}) => mbody(`<div class="lib-filter" style="padding-top:v
 
 // ── ② 选起点 ──
 const startsSpell = (n = {}, on = 0) => choice([
-  [`${P(n.blank)}空白`, '只预先填好必填的 7 项：name、level、school、time、range、duration、entries', on === 0],
-  [`${P(n.tpl)}作者模板`, '作者编辑器里「新法术」那一份'],
+  [`${P(n.blank)}简易表单`, '只列必填的 7 项（名字、环节、学派、施法时间、范围、持续时间、说明），空白；其余折在「更多选项」里', on === 0],
+  [`${P(n.tpl)}详细表单`, '作者模板：全部字段展开，预先填好作者编辑器里「新法术」那一份'],
   [`${P(n.exist)}从已有的法术开始`, '在全库 969 条法术里挑一条复制', on === 2, `<div style="margin-top:6px">${input('', { placeholder: '搜法术…', ic: 'magnifying-glass' })}</div>`],
   [`${P(n.conv)}文字转条目`, '把书上、网页上的法术文字粘进来，作者的转换器转成条目'],
   ['粘贴 JSON', '已经有作者格式的 JSON'],
 ])
 const startsDeity = () => choice([
-  ['空白', '只预先填好必填项', true],
+  ['简易表单', '只列必填项，空白', true],
   ['从已有的神祇开始', '在全库 563 条神祇里挑一条复制'],
   ['粘贴 JSON', '已经有作者格式的 JSON'],
 ])
@@ -61,12 +61,12 @@ export const screens = [
   },
   {
     id: 'u7-8-start', group: G, title: 'P5.5 新建条目 ② 选起点', flow: 'P5.5 §15 ⑧',
-    goal: '选最省事的开头：照已有的抄、文字转、或者空白', primary: '[下一步]', patterns: 'Wizard step · Radio cards', laws: 'Hick（这一类没有的起点直接不显示）· Jakob（D&D Beyond：照已有的复制最常用）',
-    captions: { '1440': '宽窗 · 法术：五种起点都有', '900': '宽窗 · 神祇：作者没有模板和转换器，只剩三种', '390': '窄屏 · 法术，选了「从已有的开始」' },
+    goal: '选最省事的开头：简易表单、详细表单、照已有的抄、文字转', primary: '[下一步]', patterns: 'Wizard step · Radio cards', laws: 'Hick（这一类没有的起点直接不显示）· Jakob（D&D Beyond：照已有的复制最常用）',
+    captions: { '1440': '宽窗 · 法术：五种起点都有', '900': '宽窗 · 神祇：作者没有模板（所以没有详细表单）和转换器，只剩三种', '390': '窄屏 · 法术，选了「从已有的开始」' },
     diff: '哪一类有哪几种起点由后端判断（B5），界面只按结果显示。',
     notes: [
-      [1, '空白', '按作者结构定义只填必填项（B6）', '【有】custom.blankEntry'],
-      [2, '作者模板', '作者编辑器自带的新条目（法术、怪物、传奇组有）', '【有】custom.template'],
+      [1, '简易表单（原「空白」）', '按作者结构定义只列必填项，空白（B6）；可选项折叠', '【有】custom.blankEntry'],
+      [2, '详细表单（原「作者模板」）', '全部字段展开，用作者编辑器自带的新条目预填（法术、怪物、传奇组有）；点了先看样子（u7-8a）', '【有】custom.template'],
       [3, '从已有的开始', '只在这一类里搜全库；复制后进编辑器，存进的是这个包', '【有】entryTypes → starts.existing（条数）'],
       [4, '文字转条目', '作者转换器（u7-9）', '【有】custom.converters'],
     ],

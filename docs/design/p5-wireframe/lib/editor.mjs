@@ -28,26 +28,42 @@ export const cm = ({ pop = false, err = true, short = false } = {}) => `<div cla
   cmLine(short ? 7 : 10, '}'),
 ].join('')}${pop ? '<div class="lib-cm__pop"><div data-on="true"><span>range</span><span class="lib-faint">范围</span></div><div><span>races</span><span class="lib-faint">种族</span></div><div><span>reprintedAs</span><span class="lib-faint"></span></div></div>' : ''}</div>`
 
+// 字段（上方标签）。mark：'≠' 不用翻译的项两边不一样 / '改过' 房规和原件不一样
+export const fld = (t, ctl, { req, mark, n, en } = {}) => `<div class="lib-tfield"${mark ? ' data-diff="true"' : ''}><label${en ? ' data-en="true"' : ''}>${P(n)}<span class="lib-lname">${t}${req ? '<small>*</small>' : ''}${icon('info', 13)}</span>${mark ? `<span class="lib-mark">${mark}</span>` : ''}</label>${ctl}</div>`
+const sec = (t) => `<div class="lib-fsec">${t}</div>`
+const T = {
+  zh: { name: '名字', basic: '基本', level: '环节', school: '学派', cast: '施法', time: '施法时间', cond: '条件（可不填）', addTime: '添加施法时间', range: '范围', comp: '成分', effect: '效果', text: '说明', more: '更多选项（子学派、伤害类型、豁免检定、职业……共 31 项）', bar: ['段落', '列表', '表格', '骰子', '引用条目'] },
+  en: { name: 'Name', basic: 'Basics', level: 'Level', school: 'School', cast: 'Casting', time: 'Casting Time', cond: 'Condition (optional)', addTime: 'Add casting time', range: 'Range', comp: 'Components', effect: 'Effect', text: 'Text', more: 'More (subschools, damage, saves, classes … 31)', bar: ['Paragraph', 'List', 'Table', 'Dice', 'Link'] },
+}
+const V = {
+  zh: { name: '火焰鹦鹉', level: '1 环', school: '塑能', unit: '动作', rtype: '点', runit: '尺', text: '<p>一团燃烧的羽毛从你指尖飞出，命中射程内一个你能看见的生物……</p><p>失败受到 <span class="lib-tag">3d6</span> 火焰伤害。</p>' },
+  en: { name: 'Fire Parrot', level: 'Level 2', school: 'Evocation', unit: 'Action', rtype: 'Point', runit: 'feet', text: '<p>A burning feather darts from your fingertip toward a creature you can see within range…</p><p>On a failed save, it takes <span class="lib-tag">3d6</span> fire damage.</p>' },
+}
+
 /**
- * 法术表单。o.lang = 'zh' | 'en'（编辑哪一边）；o.other = 另一语言有这一条（字段旁出 (En)/(中) 小标）；
- * o.house = 改官方条目（字段旁标「改过」）；o.pop = 打开浮窗的字段名；o.empty = 另一边还没有这一条（空表单）。
+ * 一种语言的法术表单（只写这一种语言自己的内容；中文条目的英文名 ENG_name 由系统按英文那一条自动写，不在表单里）。
+ * o.diff：标出两边不一样的不用翻译的项；o.house：房规（标「改过」）；o.empty：这一边还没有这一条（空表单）；o.v：覆盖示例值。
  */
 export function spellForm(L, o = {}) {
-  const { lang = 'zh', other = false, house = false, pop = null, empty = false, n = {} } = o
-  const zh = lang === 'zh'
-  const tag = other ? (zh ? 'En' : '中') : null
-  const fx = (k, extra = {}) => ({ other: tag, pop: pop === k, ...extra })
-  const v = (zhVal, enVal) => (empty ? '' : zh ? zhVal : enVal)
-  const popHtml = (k, val) => (pop === k ? `<div class="lib-pop">${P(n.pop)}<div class="lib-pop__head">${zh ? '英文版现在是' : '中文版现在是'}</div><div class="lib-pop__val">${val}</div><div class="lib-pop__acts">${btn('复制', { small: true, ic: 'copy' })}${btn('填进这一项', { small: true, primary: true })}</div></div>` : '')
-  return `<div class="lib-form"><div class="lib-fgrid">
-${lab(zh ? '中文名' : 'Name', fx('name', { req: true, n: n.label }))}<div class="lib-popwrap">${input(v('火焰鹦鹉', 'Fire Parrot'), { placeholder: empty ? (zh ? '中文名' : 'Name') : '' })}${popHtml('name', zh ? 'Fire Parrot' : '火焰鹦鹉')}</div>
-${zh ? `${lab('英文名', fx('eng'))}${input(empty ? '' : 'Fire Parrot')}` : ''}
-${lab(zh ? '环节' : 'Level', fx('level', { req: true, n: n.select, mark: other && !empty ? '≠' : house ? '改过' : '' }))}<div class="lib-inline">${sel(empty ? '—' : zh ? (house ? '4 环' : '1 环') : 'Level 2', 120)}<span class="lib-muted">${zh ? '学派' : 'School'}<small style="color:var(--danger-text)">*</small></span>${sel(empty ? '—' : zh ? '塑能' : 'Evocation', 120)}</div>
-${lab(zh ? '施法时间' : 'Casting Time', fx('time', { req: true, n: n.rep }))}<div class="lib-rep"><div class="lib-rep__row">${num(empty ? '' : '1')}${sel(empty ? '—' : zh ? '动作' : 'Action')}${input('', { placeholder: zh ? '条件（可不填）' : 'Condition (optional)' })}${iconBtn('x', '删掉这一种')}</div><div>${btn(zh ? '添加施法时间' : 'Add casting time', { small: true, quiet: true, ic: 'plus' })}</div></div>
-${lab(zh ? '范围' : 'Range', fx('range', { req: true, mark: house ? '改过' : '' }))}<div class="lib-inline">${sel(empty ? '—' : zh ? '点' : 'Point', 110)}${num(empty ? '' : house ? '100' : '150')}${sel(empty ? '—' : zh ? '尺' : 'feet', 90)}</div>
-${lab(zh ? '成分' : 'Components', fx('comp', { n: n.check }))}<div class="lib-checks"><span data-en="true" class="lib-checks lib-mono">${ck('v', !empty)}${ck('s', !empty)}${ck('m', false)}</span></div>
-${lab(zh ? '说明' : 'Text', fx('entries', { req: true, n: n.rte }))}<div class="lib-rte"><div class="lib-rte__bar"><button>${zh ? '段落' : 'Paragraph'}</button><button>${zh ? '列表' : 'List'}</button><button>${zh ? '表格' : 'Table'}</button><button>${icon('dice-five', 12)} ${zh ? '骰子' : 'Dice'}</button><button>${zh ? '引用条目' : 'Link'}</button></div><div class="lib-rte__body">${empty ? `<p class="lib-faint">${zh ? '（还没写）' : '(empty)'}</p>` : zh ? '<p>一团燃烧的羽毛从你指尖飞出，命中射程内一个你能看见的生物……</p><p>失败受到 <span class="lib-tag">3d6</span> 火焰伤害。</p>' : '<p>A burning feather darts from your fingertip toward a creature you can see within range…</p><p>On a failed save, it takes <span class="lib-tag">3d6</span> fire damage.</p>'}</div></div>
-</div><div class="lib-more">${P(n.more)}${icon('caret-right', 14)}${zh ? '更多选项（子学派、伤害类型、豁免检定、职业……共 31 项）' : 'More (subschools, damage, saves, classes … 31)'}<span class="lib-end">${L === 'narrow' ? '' : input('', { placeholder: zh ? '搜选项' : 'Search', ic: 'magnifying-glass' })}</span></div></div>`
+  const { lang = 'zh', diff = false, house = false, empty = false, n = {} } = o
+  const t = T[lang]
+  const v = { ...V[lang], range: house ? '100' : '150', ...(lang === 'zh' && house ? { level: '4 环' } : {}), ...(o.v ?? {}) }
+  const e = (x) => (empty ? '' : x)
+  const s = (x, w) => sel(empty ? '—' : x, w)
+  return `<div class="lib-tform">
+${fld(t.name, input(e(v.name), { placeholder: empty ? t.name : '' }), { req: true, n: n.name })}
+${sec(t.basic)}<div class="lib-row2">${fld(t.level, s(v.level), { req: true, n: n.select, mark: diff ? '≠' : house ? '改过' : '' })}${fld(t.school, s(v.school), { req: true })}</div>
+${sec(t.cast)}${fld(t.time, `<div class="lib-rep"><div class="lib-rep__row">${num(e('1'))}${s(v.unit)}${input('', { placeholder: t.cond })}${iconBtn('x', '删掉这一种')}</div><div>${btn(t.addTime, { small: true, quiet: true, ic: 'plus' })}</div></div>`, { req: true, n: n.rep })}
+${fld(t.range, `<div class="lib-inline">${s(v.rtype, 110)}${num(e(v.range))}${s(v.runit, 90)}</div>`, { req: true, mark: house ? '改过' : '' })}
+${fld(t.comp, `<div class="lib-checks lib-mono">${ck('v', !empty)}${ck('s', !empty)}${ck('m', false)}</div>`, { n: n.check })}
+${sec(t.effect)}${fld(t.text, `<div class="lib-rte"><div class="lib-rte__bar">${t.bar.map((b, i) => `<button>${i === 3 ? icon('dice-five', 12) + ' ' : ''}${b}</button>`).join('')}</div><div class="lib-rte__body">${empty ? `<p class="lib-faint">${lang === 'zh' ? '（还没写）' : '(empty)'}</p>` : v.text}</div></div>`, { req: true, n: n.rte })}
+<div class="lib-more">${P(n.more)}${icon('caret-right', 14)}${t.more}</div></div>`
 }
+
+/** 宽屏：左右两栏。left = 左栏标题（主编辑语言）；right = { tabs, on, body }；两栏一起滚。 */
+export const split = (leftTitle, leftBody, right, n = {}) => `<div class="lib-split"><section class="lib-pane"><div class="lib-pane__head">${P(n.left)}<b>${leftTitle}</b>${n.leftNote ? `<span class="lib-faint">${n.leftNote}</span>` : ''}</div><div class="lib-pane__body">${leftBody}</div></section><section class="lib-pane lib-pane--side"><div class="lib-pane__head">${P(n.tabs)}${segTabs(right.tabs, right.on)}${right.note ? `<span class="lib-end lib-faint">${right.note}</span>` : ''}</div><div class="lib-pane__body">${right.body}</div></section></div>`
+export const segTabs = (tabs, on) => `<span class="trpg-seg" role="group">${tabs.map((t) => `<button type="button" aria-pressed="${t === on}">${t}</button>`).join('')}</span>`
+/** 窄屏：上半栏（另一语言 / JSON / 预览，可收起、可拖高度）+ 下半栏主语言表单。 */
+export const vsplit = (top, bottomTitle, bottomBody, n = {}) => `<div class="lib-vsplit">${top.open ? `<section class="lib-pane lib-pane--side lib-pane--top"><div class="lib-pane__head">${P(n.tabs)}${segTabs(top.tabs, top.on)}<span class="lib-end">${btn('收起', { small: true, quiet: true, ic: 'caret-down' })}</span></div><div class="lib-pane__body">${top.body}</div></section><div class="lib-grip">${P(n.grip)}<i></i></div>` : `<div class="lib-pane__head lib-pane--side" style="border-bottom:var(--border) solid var(--line)">${P(n.tabs)}${segTabs(top.tabs, null)}<span class="lib-end">${btn('展开', { small: true, quiet: true, ic: 'caret-down' })}</span></div>`}<section class="lib-pane"><div class="lib-pane__head"><b>${bottomTitle}</b></div><div class="lib-pane__body">${bottomBody}</div></section></div>`
 
 export { badge, btn, icon, iconBtn, input, mbody }

@@ -1,15 +1,15 @@
-// P5.5 阶段 C（三）：起点的三个页面（作者模板 / 从已有的挑 / 粘贴 JSON）、编辑器（只有表单；JSON 在侧边，点开才出来）、预览兼保存。
+// P5.5 阶段 C（三）：起点的三个页面（详细表单 / 从已有的挑 / 粘贴 JSON）、编辑器（只有表单；JSON 在侧边，点开才出来）、预览兼保存。
 // 驾驶员 2026-11-13：表单不塞代码、字段用中文名、每个字段画成能一眼看懂的控件；点［完成］才跳到预览；JSON 用代码编辑框（CodeMirror 6，§8.1）。
 // 字段、控件种类来自后端字段表（custom.fields：shape + label，作者结构定义 + 作者中文版）。
 import { badge, btn, gray, icon, iconBtn, input, mbody, pills, sheet, table, count } from '../lib/parts.mjs'
 import { errorLine, infoLine } from '../lib/ui.mjs'
 import { tri } from '../lib/boards.mjs'
-import { P, bar, bg, ck, cm, head, lab, sel, spellRender } from '../lib/editor.mjs'
+import { P, bar, bg, ck, cm, fld, head, sel, spellRender, split } from '../lib/editor.mjs'
 
 const G = 'P5.5 新建条目 · 编辑器 · 保存'
 
 // ── 起点：作者模板 ──
-const tplPage = () => mbody(`<div class="lib-pad">${infoLine('这是作者编辑器里「新法术」的样子。用它开始，表单里会预先填好这些内容。')}<div style="height:12px"></div>${spellRender('新法术', '1 环 塑能')}</div>${bar(`<span class="lib-end">${btn('换一种起点')}${btn('用这个开始', { primary: true, n: 1 })}</span>`)}`)
+const tplPage = () => mbody(`<div class="lib-pad">${infoLine('详细表单用的是作者编辑器里「新法术」这一份：全部字段展开，预先填好下面这些内容。')}<div style="height:12px"></div>${spellRender('新法术', '1 环 塑能')}</div>${bar(`<span class="lib-end">${btn('换一种起点')}${btn('用详细表单开始', { primary: true, n: 1 })}</span>`)}`)
 
 // ── 起点：从已有的挑 ──
 const SP = [['火球术', '3 环', '塑能', 'PHB'], ['燃烧之手', '1 环', '塑能', 'PHB'], ['魔法飞弹', '1 环', '塑能', 'PHB'], ['冰锥术', '5 环', '塑能', 'PHB'], ['火焰箭', '戏法', '塑能', 'PHB']]
@@ -21,15 +21,15 @@ const jsonPage = (L) => mbody(`<div class="lib-etop">${P(1)}代码编辑框：�
 <div class="lib-cm__err">${errorLine(`${P(2)}第 3 行：环节应该是 0 到 9 的整数（作者结构定义）`, btn('跳到这一行', { small: true, quiet: true }))}</div>${bar(`<span class="lib-end">${btn('检查')}${btn('进表单', { primary: true, n: 3 })}</span>`)}`)
 
 // ── 没有作者编辑器的类型（神祇）：作者没有中文名的字段照实显示英文；画不成控件的一项提示到 JSON 里改 ──
-const deityForm = () => mbody(`<div class="lib-etop">${badge('神祇')}${badge('5e')}<span>在 <b>海盗战役</b></span><span class="lib-end">${btn('对比', { small: true })}</span></div><div class="lib-eshell"><div class="lib-pad"><div class="lib-form"><div class="lib-fgrid">
-${lab('中文名', { req: true })}${input('浪涛之母')}
-${lab('pantheon', { req: true, en: true, n: 1 })}${input('海盗诸神')}
-${lab('alignment', { en: true })}<div class="lib-checks">${ck('L', false)}${ck('N', true)}${ck('C', true)}${ck('G', false)}${ck('E', false)}</div>
-${lab('domains', { en: true })}<div class="lib-rep"><div class="lib-rep__row">${input('Tempest')}${iconBtn('x', '删掉')}</div><div>${btn('再加一个', { small: true, quiet: true, ic: 'plus' })}</div></div>
-${lab('symbol', { en: true })}${input('一只缠着海草的锚')}
-${lab('说明', { req: true })}<div class="lib-rte"><div class="lib-rte__body"><p>她的信徒相信每一场风暴都是她的呼吸……</p></div></div>
-${lab('customProperties', { en: true, n: 2 })}<span class="lib-tojson">${icon('info', 14)}这一项比较复杂，在 JSON 里改 ›</span>
-</div></div></div></div>${bar(`<span class="lib-src">草稿已自动存 · 12:03</span><span class="lib-end">${btn('取消')}${btn('完成', { primary: true })}</span>`)}`)
+const deityBody = (zh, n = {}) => `<div class="lib-tform">
+${fld(zh ? '名字' : 'Name', input(zh ? '浪涛之母' : 'Mother of Waves'), { req: true })}
+${fld('pantheon', input(zh ? '海盗诸神' : 'Pirate Gods'), { req: true, en: true, n: n.en })}
+${fld('alignment', `<div class="lib-checks lib-mono">${ck('L', false)}${ck('N', true)}${ck('C', true)}${ck('G', false)}${ck('E', false)}</div>`, { en: true })}
+${fld('domains', `<div class="lib-rep"><div class="lib-rep__row">${input('Tempest')}${iconBtn('x', '删掉')}</div><div>${btn(zh ? '再加一个' : 'Add', { small: true, quiet: true, ic: 'plus' })}</div></div>`, { en: true })}
+${fld('symbol', input(zh ? '一只缠着海草的锚' : 'An anchor wrapped in kelp'), { en: true })}
+${fld(zh ? '说明' : 'Text', `<div class="lib-rte"><div class="lib-rte__body"><p>${zh ? '她的信徒相信每一场风暴都是她的呼吸……' : 'Her faithful believe every storm is her breath…'}</p></div></div>`, { req: true })}
+${fld('customProperties', `<span class="lib-tojson">${icon('info', 14)}${zh ? '这一项比较复杂，在右栏 JSON 里改 ›' : 'Complex — edit in JSON ›'}</span>`, { en: true, n: n.json })}</div>`
+const deityForm = () => mbody(`<div class="lib-etop">${badge('神祇')}${badge('5e')}<span>在 <b>海盗战役</b></span><span class="lib-end">${btn('⇄ 左右对调', { small: true })}</span></div>${split('中文', deityBody(true, { en: 1, json: 2 }), { tabs: ['English', 'JSON', '预览'], on: 'English', note: '《海盗战役》En', body: deityBody(false) })}${bar(`<span class="lib-src">草稿已自动存 · 12:03</span><span class="lib-end">${btn('取消')}${btn('完成', { primary: true })}</span>`)}`)
 
 // ── 预览兼保存 ──
 const notes = (open) => open
@@ -37,18 +37,18 @@ const notes = (open) => open
   : `<span class="lib-notes">${P(1)}${icon('info', 12)}作者提醒 2 条 ▸</span>`
 const diffList = `<ul class="lib-diff"><li><code>环节</code><span><s>1 环</s> → 2 环</span></li><li><code>说明</code><span>第 2 段改了 ${btn('展开看', { small: true, quiet: true })}</span></li><li><code>范围</code><span><s>60 尺</s> → 150 尺</span></li></ul>`
 const previewPage = (L, kind, n = {}) => mbody(`<div class="lib-pad"><div class="lib-stack">${notes(kind === 'edit' && L === 'narrow')}${spellRender(kind === 'house' ? '我的火球术' : '火焰鹦鹉', kind === 'house' ? '3 环 塑能' : '1 环 塑能')}</div></div>
-<div class="lib-sum">${kind === 'new' ? `<div class="lib-sum__row">${P(2)}<span>存进</span>${sel('海盗战役（上次用的）')}</div>` : `<div class="lib-sum__row">${P(3)}<span>这次改了 3 项</span>${btn(kind === 'house' ? '展开看' : '收起', { small: true, quiet: true })}</div>${kind === 'house' ? '' : diffList}`}
+<div class="lib-sum">${kind === 'new' ? `<div class="lib-sum__row">${P(2)}<span>存进</span>${sel('海盗战役（上次用的）')}<span class="lib-faint">中文、英文两边一起存；英文那边还没有包就自动建同编号的</span></div>` : `<div class="lib-sum__row">${P(3)}<span>${kind === 'house' ? '这次改了 3 项' : '中文改了 3 项 · English 改了 1 项'}</span>${btn(kind === 'house' ? '展开看' : '收起', { small: true, quiet: true })}</div>${kind === 'house' ? '' : diffList}`}
 ${kind === 'house' ? `<div class="lib-sum__row">${P(4)}<span>作用于</span>${sel('本战役')}</div>` : ''}</div>
 ${bar(`${btn('回去改', { ic: 'caret-left', n: n.back })}<span class="lib-end">${btn(kind === 'house' ? '保存房规' : '保存', { primary: true, n: n.save })}</span>`)}`)
 
 export const screens = [
   {
-    id: 'u7-8a-template', group: G, title: 'P5.5 起点：作者模板（先看样子再用）', flow: 'P5.5 §15 ⑧',
-    goal: '知道模板里有什么，再决定用不用', primary: '[用这个开始]', patterns: 'Preview before commit', laws: 'Jakob（作者网站同一份模板）· Hick（两个按钮）',
+    id: 'u7-8a-template', group: G, title: 'P5.5 起点：详细表单（作者模板，先看样子再用）', flow: 'P5.5 §15 ⑧',
+    goal: '知道模板里有什么，再决定用不用', primary: '[用详细表单开始]', patterns: 'Preview before commit', laws: 'Jakob（作者网站同一份模板）· Hick（两个按钮）',
     captions: { '1440': '宽窗', '900': '宽窗', '390': '窄屏 · 底部抽屉' },
     diff: '弹窗内换页，‹ 回选起点。',
-    notes: [[1, '[用这个开始]', '进编辑器（u7-10），表单按模板填好；还没存', '【有】custom.template']],
-    board: tri({ '1440': () => ({ ...bg(), overlay: sheet(head('起点', '作者模板：新法术'), tplPage()) }), '900': () => ({ ...bg(), overlay: sheet(head('起点', '作者模板：新法术'), tplPage()) }), '390': () => ({ ...bg(), overlay: sheet(head('起点', '作者模板'), tplPage()) }) }),
+    notes: [[1, '[用详细表单开始]', '进编辑器（u7-10），全部字段展开、按模板填好；还没存', '【有】custom.template']],
+    board: tri({ '1440': () => ({ ...bg(), overlay: sheet(head('起点', '详细表单：新法术'), tplPage()) }), '900': () => ({ ...bg(), overlay: sheet(head('起点', '详细表单：新法术'), tplPage()) }), '390': () => ({ ...bg(), overlay: sheet(head('起点', '详细表单'), tplPage()) }) }),
   },
   {
     id: 'u7-8b-existing', group: G, title: 'P5.5 起点：从已有的法术开始（挑一条 → 先预览）', flow: 'P5.5 §15 ⑧',
@@ -76,11 +76,11 @@ export const screens = [
   {
     id: 'u7-10b-fallback', group: G, title: 'P5.5 编辑器：没有作者中文名的类型 · 窄屏 JSON 页', flow: 'P5.5 §15 ⑩',
     goal: '看清现在中文覆盖不到的地方长什么样', primary: '—', patterns: 'Graceful fallback', laws: 'Postel（没有中文名也能填）',
-    captions: { '1440': '宽窗 · 神祇：作者没有中文名的字段照实显示英文原名；画不成控件的一项提示到 JSON 里改', '900': '宽窗 · 同上', '390': '窄屏 · 对比页的 JSON 标签（从表单右上［对比］跳来）' },
+    captions: { '1440': '宽窗 · 神祇（左右两栏同 u7-10）：作者没有中文名的字段照实显示英文原名；画不成控件的一项提示到右栏 JSON 里改', '900': '宽窗 · 同上', '390': '窄屏 · 对比页的 JSON 标签（从表单右上［对比］跳来）' },
     diff: '英文名用等宽字，和中文名一眼区分开。',
     notes: [
       [1, '英文原名', '作者中文版没有这个字段的叫法 → 显示英文原名；之后翻译补在 field-labels.json，自动换成中文', '【有】label 没有时不给'],
-      [2, '到 JSON 里改', '少数结构太复杂的字段（用户字段里约 2%）：点一下跳到 JSON 里那一行', '【有】shape = json'],
+      [2, '到 JSON 里改', '少数结构太复杂的字段（用户字段里约 2%）：点一下右栏切到 JSON、跳到那一行', '【有】shape = json'],
       [3, '窄屏 JSON', '对比页（u7-10c）里的 JSON 标签：整页代码编辑框；‹ 返回表单，两边同步', 'CodeMirror 6'],
     ],
     board: tri({
