@@ -33,12 +33,14 @@ export async function migrateMine(d: MigrateDeps, codeSet: string): Promise<Migr
   const report: MigrateReport = { moved: [], fixed: [] }
   const f = await d.lib.frameOf(codeSet)
   // ① 要搬的：可编辑自制里房规以外的来源
-  const editable = (await f.call('editableDoc')).body ?? {}
+  // 没有可编辑自制就没有要搬的（不能用 editableDoc 去读：没有时作者会新建一个，等于在只读版本上写，例如第一次用英文那套）
+  const docs = (await f.call('brewDocIndex'))
+  const editable = docs.some((x) => x.isEditable) ? (await f.call('editableDoc')).body ?? {} : {}
   const sources = ((editable._meta?.sources ?? []) as Array<{ json: string }>).filter((s) => low(s.json) !== low(d.houseSource))
   // ② 要修的旧副本：本地导入、包头来源全是官方来源；补充记录 = 作者网站不读的官方数据文件里、来源对得上的那些
-  const docs = (await f.call('brewDocIndex')).filter((x) => !x.isEditable && !x.url && x.sources.length)
-  const old: typeof docs = []
-  for (const doc of docs) if ((await f.call('officialSourcesOf', doc.sources)).length === doc.sources.length) old.push(doc)
+  const local = docs.filter((x) => !x.isEditable && !x.url && x.sources.length)
+  const old: typeof local = []
+  for (const doc of local) if ((await f.call('officialSourcesOf', doc.sources)).length === doc.sources.length) old.push(doc)
   const overlay: string[] = []
   if (old.length) {
     const view = await d.lib.currentView()
@@ -88,5 +90,32 @@ export async function migrateMine(d: MigrateDeps, codeSet: string): Promise<Migr
     }
   }
   await d.manage.setMeta(FLAG(codeSet), { at: Date.now(), ...report })
+  return report
+}
+
+/**
+ * P5.5 C1：已经复制过的副本补一次「抄全」（第一次用到【我的库】时做一次，做完记标记）。
+ * 【我的库】的包（本地导入、没有网址）里 _copy 指向包以外来源的条目，用作者的拼接存成完整的一条（小窗 packFlattenCopies）。
+ * 走统一的「只写原文 → 后台整理」（writeAuthor）。拼不成的保持原样，记在标记里。
+ */
+const FLATTEN_FLAG = (codeSet: string): string => `p55-c1-flattened:${codeSet}`
+
+export async function flattenOldCopies(d: { lib: Pick<LibraryService, 'frameOf' | 'writeAuthor'>; manage: ManageStore }, codeSet: string) {
+  if (await d.manage.meta(FLATTEN_FLAG(codeSet))) return null
+  const docs = (await (await d.lib.frameOf(codeSet)).call('brewDocIndex')).filter((x) => !x.isEditable && !x.url && x.sources.length)
+  const report: Array<{ pack: string; flattened: number; failed: number }> = []
+  if (docs.length) {
+    await d.lib.writeAuthor(codeSet, 'p55-c1-flatten', async (view) => {
+      const f = await d.lib.frameOf(codeSet, view)
+      const touched: string[] = []
+      for (const doc of docs) {
+        const r = await f.call('packFlattenCopies', doc.docIdLocal)
+        if (r.flattened) touched.push(doc.docIdLocal)
+        report.push({ pack: packStableId({ sources: doc.sources }) ?? doc.docIdLocal, flattened: r.flattened, failed: r.failed.length })
+      }
+      return { value: null, touched }
+    })
+  }
+  await d.manage.setMeta(FLATTEN_FLAG(codeSet), { at: Date.now(), report })
   return report
 }

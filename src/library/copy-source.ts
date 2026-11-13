@@ -5,6 +5,7 @@
 // 只从作者网站实际读的数据文件里取（在全新小窗里让作者把每类网站数据取一遍，记下读过的文件；frame 的 authorDataFiles，P5.5 B8-0）：
 // 作者给 Foundry 用的补充文件（data/foundry-*.json 等，顶层也叫 spell、classFeature…，只有效果没有正文）作者不读，也就不会混进来。
 // 条目 _copy 本书的另一条：照作者规矩在 _meta.internalCopies 声明这一类（utils.js _pDoMetaMerge），否则作者找不到原件。
+// _copy 别的书的：复制时抄全（P5.5 C1，小窗 flattenCopies → 作者 DataUtil.pDoMetaMergeSingle）。
 import type { LibraryDatabase } from './db'
 import type { LibraryService } from './service'
 import { CODE_SETS, type SourceEntry } from './sources'
@@ -18,6 +19,9 @@ export interface RawCopy {
   corpora: Array<{ prop: string; id: string }>
   /** 没复制到的（例如冒险正文还没下载、文件不是 JSON）。 */
   skipped: Array<{ what: string; reason: string }>
+  /** 「抄全」了几条（_copy 指向别的书的条目拼成完整的，P5.5 C1）；拼不成的保持原写法。 */
+  flattened: number
+  flattenFailed: Array<{ prop: string; name: string; reason: string }>
 }
 
 const low = (v: unknown): string => String(v ?? '').toLowerCase()
@@ -114,6 +118,11 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
     json[prop] = have
   }
 
+  // 4b. 抄全（P5.5 C1，驾驶员定）：_copy 指向别的书的条目，用作者自己的拼接存成完整的一条，副本从此不跟那本书变。
+  //     整本复制保留指向本书的（作者 internalCopies，跟着副本自己走）；只复制一条时全部抄全（它要进别的包）。
+  const flat = await frame.call('flattenCopies', json, o.entry ? [] : [o.source])
+  Object.assign(json, flat.json)
+
   // 5. _copy 指向别的来源（例如怪物 _copy 了怪物图鉴里的怪）：作者自制文件要在 _meta.dependencies 里声明才展开得了
   //    （和房规写 _copy 时用的是同一个办法，custom.ts createHouseRule → editableAddDependencies；格式：类别 → 来源列表）
   //    _copy 本书的另一条：在 _meta.internalCopies 声明这一类（作者规矩，结构定义 util-meta.json internalCopies）
@@ -139,5 +148,5 @@ export async function copyRawSource(o: CopyOptions): Promise<RawCopy> {
     ...(internalCopies.size ? { internalCopies: [...internalCopies] } : {}),
     ...(edition?.classic === null || edition === undefined ? {} : { edition: edition.classic ? 'classic' : 'one' }),
   }
-  return { json: { _meta: meta, ...json }, counts, corpora, skipped }
+  return { json: { _meta: meta, ...json }, counts, corpora, skipped, flattened: flat.flattened, flattenFailed: flat.failed }
 }

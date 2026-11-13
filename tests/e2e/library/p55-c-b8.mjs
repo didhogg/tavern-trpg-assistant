@@ -32,6 +32,8 @@ const r = await page.evaluate(async () => {
   // 复制成我的：玩家手册两份
   let t = T(); const copy1 = await lib.custom.saveToMine('cn', { kind: 'source', source: 'PHB' }); out.copy1Ms = T() - t
   const copy2 = await lib.custom.saveToMine('cn', { kind: 'source', source: 'PHB' })
+  // P5.5 C1 抄全：《失落矿坑》毒牙 = 《怪物图鉴》年轻绿龙 + 换名字；复制件里应是完整的一条
+  { const c = await lib.custom.saveToMine('cn', { kind: 'source', source: 'LMoP' }); const b = (await lib.custom.exportPack('cn', c.id)).body; const v = (b.monster ?? []).find((m) => /venomfang/i.test(m.ENG_name ?? m.name)); out.lmop = { flattened: c.flattened, failed: c.flattenFailed.length, crossCopies: (b.monster ?? []).filter((m) => m._copy && String(m._copy.source).toLowerCase() !== 'lmop').length, deps: b._meta.dependencies ?? null, veno: v ? { name: v.name, hasCopy: !!v._copy, hp: v.hp, ac: !!v.ac, action: (v.action ?? []).length } : null } }
   out.copies = [copy1.id, copy2.id]
   await lib.custom.createPack('cn', { json: 'P55OWN', full: '我的测试包', abbreviation: 'OWN' }, { rule: 'dnd5e2014' })
   out.packs = (await lib.custom.packs('cn')).map((p) => ({ id: p.id, own: p.own.full, n: p.entryCount, scopes: p.scopes }))
@@ -84,7 +86,8 @@ const r = await page.evaluate(async () => {
 
 await writeFile(`${work}/p55-c-b8-chrome.json`, JSON.stringify({ r, pageErrors }, null, 1))
 const o = r
-check('复制成我的：玩家手册两份是两个包，版本标签照原书', o.copies[0] !== o.copies[1] && o.packs.filter((p) => /副本/.test(p.own)).length === 2 && o.packs.every((p) => p.scopes.length), JSON.stringify(o.packs))
+check('复制成我的：玩家手册两份是两个包，版本标签照原书', o.copies[0] !== o.copies[1] && o.packs.filter((p) => /玩家手册（副本/.test(p.own)).length === 2 && o.packs.every((p) => p.scopes.length), JSON.stringify(o.packs))
+check('复制时抄全（C1）：失落矿坑里指向别的书的条目都拼成完整的（毒牙有生命值、护甲、动作，没有 _copy），不再声明依赖', o.lmop.flattened >= 1 && o.lmop.failed === 0 && o.lmop.crossCopies === 0 && o.lmop.veno && !o.lmop.veno.hasCopy && o.lmop.veno.hp && o.lmop.veno.ac && o.lmop.veno.action > 0, JSON.stringify(o.lmop))
 check('自己的包里连存 5 条：每次几秒内，不当场解析', o.ownSaves.every((ms) => ms < 6000) && o.lastPending === true, JSON.stringify(o.ownSaves))
 check('复制件里连改 5 次：每次几秒内（不再每次整份重解析）', o.copySaves.every((ms) => ms < 8000), JSON.stringify(o.copySaves))
 check('后台解析前：条目带「更新中」，脏的包列得出', o.beforeParse.pending && o.pendingNow.packs.includes('p55own'), JSON.stringify({ b: o.beforeParse, p: o.pendingNow }))

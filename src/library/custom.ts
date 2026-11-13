@@ -3,7 +3,7 @@
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { BrewPacks } from './brew-packs'
 import { copyEntryToPack, copyToMine, type CopyDeps } from './custom-copy'
-import { migrateMine } from './custom-migrate'
+import { flattenOldCopies, migrateMine } from './custom-migrate'
 import { importReplaces } from './import-replace'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
@@ -158,7 +158,9 @@ export class CustomLibrary {
 
   /** P5.5 B8-6：第一次用到【我的库】时做一次迁移（custom-migrate.ts），做过就跳过。 */
   async ensureMigrated(codeSet: string) {
-    return migrateMine({ db: this.db, lib: this.lib, manage: this.manage, houseSource: CUSTOM.house.json }, codeSet)
+    const r = await migrateMine({ db: this.db, lib: this.lib, manage: this.manage, houseSource: CUSTOM.house.json }, codeSet)
+    await flattenOldCopies({ lib: this.lib, manage: this.manage }, codeSet)
+    return r
   }
 
   /** 不指定包时存进「我的资料」这个包（P5.5 B8-6；以前在可编辑自制里，迁移后是独立的包）；没有就建一个。 */

@@ -22,6 +22,15 @@ const frame = {
     if (fn === 'sourceNames') return { [(a[0] as string[])[0]]: { full: '测试之书', abv: 'TST' } }
     if (fn === 'editionOf') return { [(a[0] as string[])[0]]: { classic: true, basis: 'date' } }
     if (fn === 'corpusFile') return `data/${a[0]}/${a[0]}-${String(a[1]).toLowerCase()}.json`
+    // 作者拼接（P5.5 C1 抄全）：_copy 指向保留来源以外的拼成完整的一条；原件叫「找不到」的拼不成、保持原样
+    if (fn === 'flattenCopies') {
+      const json = structuredClone(a[0]) as Record<string, Array<Record<string, unknown>>>
+      const keep = (a[1] as string[]).map((x) => x.toLowerCase())
+      let flattened = 0
+      const failed: unknown[] = []
+      for (const [k, list] of Object.entries(json)) if (Array.isArray(list)) json[k] = list.map((e) => { const c = e._copy as { name: string; source: string } | undefined; if (!c || keep.includes(c.source.toLowerCase())) return e; if (c.name === '找不到') { failed.push({ prop: k, name: e.name }); return e } flattened++; const { _copy: _c, ...rest } = e; return { ...rest, hp: 136, copiedFrom: c.name } })
+      return { json, flattened, failed }
+    }
     throw new Error(`假小窗没有 ${fn}`)
   },
 }
@@ -89,10 +98,22 @@ describe('copyRawSource', () => {
     expect(r.json.spell).toEqual([{ name: '甲', source: 'TST' }, { name: '旧的', source: 'TST' }])
   })
 
-  it('_copy 指向别的来源的，在 _meta.dependencies 里按类别声明（同来源内部的不算）', async () => {
+  it('抄全（C1）：_copy 指向别的书的拼成完整的一条，不再声明依赖；拼不成的保持原写法、仍声明依赖', async () => {
     await seed()
-    const meta = (await copyRawSource(opts())).json._meta as { dependencies?: Record<string, string[]> }
-    expect(meta.dependencies).toEqual({ monster: ['MM'] })
+    const full = await copyRawSource(opts())
+    expect((full.json.monster as Array<Record<string, unknown>>)[0]).toEqual({ name: '怪', source: 'TST', hp: 136, copiedFrom: '邪教徒' })
+    expect(full.flattened).toBe(1)
+    expect((full.json._meta as { dependencies?: unknown }).dependencies).toBeUndefined()
+    await db.files.put(file('data/bestiary/bestiary-tst.json', { monster: [{ name: '怪', source: 'TST', _copy: { name: '找不到', source: 'VGM' } }] }))
+    const r = await copyRawSource(opts())
+    expect(r.flattenFailed).toEqual([{ prop: 'monster', name: '怪' }])
+    expect((r.json._meta as { dependencies?: unknown }).dependencies).toEqual({ monster: ['VGM'] })
+  })
+  it('抄全：只复制一条时连指向本书的 _copy 也拼全（它要进别的包）', async () => {
+    await seed()
+    const r = await copyRawSource(opts({ entry: { prop: 'monster', hash: '自己的_tst' } }))
+    expect((r.json.monster as Array<Record<string, unknown>>)[0]).toMatchObject({ name: '自己的', copiedFrom: '怪' })
+    expect((r.json.monster as Array<Record<string, unknown>>)[0]._copy).toBeUndefined()
   })
 
   it('_copy 本书另一条的：照作者规矩在 _meta.internalCopies 声明这一类', async () => {

@@ -60,17 +60,27 @@ export async function copyToMine(d: CopyDeps, codeSet: string, target: { kind: '
   const frame = await d.lib.frameOf(codeSet)
   let body: Record<string, unknown>
   let counts: Record<string, number> = {}
+  let flattened: number
+  let flattenFailed: Array<{ prop: string; name: string; reason: string }>
   if (target.kind === 'source') {
     const copy = await copyRawSource({ db: d.db, lib: d.lib, official: officialSourceOf(codeSet), source: target.source, view: await d.lib.currentView(), authorFiles: () => authorFiles(d, codeSet) })
     if (!Object.values(copy.counts).some((n) => n > 0) && !copy.corpora.length) throw new Error(`官方资料里没有来源 ${target.source} 的内容可复制（还没下载？）`)
     body = copy.json as Record<string, unknown>
     counts = copy.counts
+    flattened = copy.flattened
+    flattenFailed = copy.flattenFailed
   } else {
     const mine = (await listPacks(d, codeSet)).find((p) => p.docIdLocal === target.docIdLocal)
     const got = mine ? await frame.call('packExport', target.docIdLocal) : await d.exportBrew(codeSet, target.docIdLocal)
     if (!got) throw new Error('取不到这个包的内容')
     body = structuredClone(got.body) as Record<string, unknown>
     for (const [k, v] of Object.entries(body)) if (!k.startsWith('_') && Array.isArray(v)) counts[k] = v.length
+    // 抄全（P5.5 C1）：_copy 指向这个包以外来源的条目拼成完整的；指向包自己来源的不动
+    const keep = (((body._meta as { sources?: Src[] } | undefined)?.sources) ?? []).map((s) => s.json)
+    const flat = await frame.call('flattenCopies', body, keep)
+    body = flat.json as Record<string, unknown>
+    flattened = flat.flattened
+    flattenFailed = flat.failed
   }
   const meta = (body._meta ??= {}) as { sources?: Src[] }
   const sources = meta.sources ?? []
@@ -93,7 +103,7 @@ export async function copyToMine(d: CopyDeps, codeSet: string, target: { kind: '
   const r = await d.lib.brewImport(brewSetOf(codeSet).id, [{ name: `${own.json}.json`, text: JSON.stringify(body) }])
   if (!r.ok) throw new Error(`作者没有收下这份复制件：${r.errors.join('；')}`)
   if (scopes.length) await d.manage.setAssignment(sourceUnit(own.json), { scopes, global: false })
-  return { id: packStableId({ sources: meta.sources.map((s) => s.json) })!, json: own.json, full: own.full, counts, parse: r.parse }
+  return { id: packStableId({ sources: meta.sources.map((s) => s.json) })!, json: own.json, full: own.full, counts, flattened, flattenFailed, parse: r.parse }
 }
 
 /**

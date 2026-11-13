@@ -19,6 +19,7 @@ function deps(edition: boolean | null = true): CopyDeps {
     if (fn === 'sourceTaken') return taken.has(String(a[0]))
     if (fn === 'editionOf') return { [String((a[0] as string[])[0])]: { classic: edition } }
     if (fn === 'packExport') return { filename: 'x.json', body: { _meta: { sources: [{ json: 'PHB', full: '玩家手册' }, { json: 'PHB_COPY1', full: '玩家手册（副本 1）' }] }, spell: [{ name: '火球术', source: 'PHB' }] } }
+    if (fn === 'flattenCopies') return { json: a[0], flattened: 0, failed: [] }
     throw new Error(`假小窗没有 ${fn}`)
   } }
   const lib = {

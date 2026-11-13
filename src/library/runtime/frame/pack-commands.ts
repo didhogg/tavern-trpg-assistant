@@ -8,7 +8,7 @@ import { prepareProp } from './page-prepare'
 const mod = (path: string): Promise<any> => import(/* @vite-ignore */ new URL(`js/${path}`, location.href).href)
 const same = (a: unknown, b: string): boolean => String(a ?? '').toLowerCase() === b.toLowerCase()
 
-async function docOf(docIdLocal: string): Promise<any> {
+export async function docOf(docIdLocal: string): Promise<any> {
   await init()
   const d = (await A.BrewUtil2.pGetBrew()).find((b: any) => b.head.docIdLocal === docIdLocal)
   if (!d) throw new Error(`作者存储里没有这个包：${docIdLocal}`)
