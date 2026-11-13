@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, provide, ref } from 'vue'
-import type { BrewField } from '../../library/brew-validate'
+import type { BrewField, FieldShape } from '../../library/brew-validate'
 import Icon from '../kit/Icon.vue'
 import FieldInput from './FieldInput.vue'
 import { isEmpty, resolve, type Defs } from './field-shape'
@@ -37,6 +37,22 @@ const isNum = (f: BrewField): boolean => {
   return def.c === 'number'
 }
 /** 一块里的字段按「连着的数字一行 / 其余一项一行」分组。 */
+// 背景介绍与图片（作者 fluff，表单安排给 media）：取作者 fluffObject 那种写法的子项，按形状起名（正文 → 介绍，图片 → 图片）
+const mediaName = computed(() => plan.value?.media ?? null)
+const mediaProps = computed(() => {
+  const f = mediaName.value ? props.table.fields.find((x) => x.name === mediaName.value) : null
+  const s = f?.shape ? resolve(f.shape, props.table.defs) : null
+  const obj = s?.c === 'pick' ? s.branches.map((b) => resolve(b.shape, props.table.defs)).find((b) => b.c === 'group' && b.props.length) : null
+  return obj?.c === 'group' ? obj.props : []
+})
+const mediaVal = computed(() => { const v = mediaName.value ? props.ent[mediaName.value] : undefined; return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {} })
+const mediaTitle = (p: { shape: FieldShape }) => { const s = resolve(p.shape, props.table.defs); const of = s.c === 'list' ? resolve(s.of, props.table.defs).c : s.c; return of === 'image' ? '图片（填网址，只存网址不存图）' : of === 'entries' ? '介绍' : p.shape && 'description' in p.shape ? String(p.shape.description ?? '') : '' }
+function setMedia(name: string, v: unknown): void {
+  const next = { ...mediaVal.value }
+  if (isEmpty(v)) delete next[name]
+  else next[name] = v
+  setField(mediaName.value!, isEmpty(next) ? undefined : next)
+}
 function rowsOf(list: BrewField[]): BrewField[][] {
   const out: BrewField[][] = []
   for (const f of list) { const last = out[out.length - 1]; if (isNum(f) && last && isNum(last[0])) last.push(f); else out.push([f]) }
@@ -66,6 +82,14 @@ const tip = (f: BrewField) => f.description ?? (f.shape && 'description' in f.sh
           <label><span class="lib-lname" :data-en="rawNames || !f.label || undefined">{{ nameOf(f) }}<small v-if="f.required">*</small><span v-if="tip(f)" class="lib-tip" :title="tip(f)"><Icon name="info" :size="13" /></span></span><span v-if="marks?.[f.name]" class="lib-mark">{{ marks[f.name] }}</span></label>
           <FieldInput :shape="f.shape!" :value="ent[f.name]" :defs="table.defs" :labels="subLabels" :name="f.name" :path="f.name" @update="(v: unknown) => setField(f.name, v)" @json="emit('json', f.name)" />
         </div>
+      </div>
+    </template>
+    <template v-if="mediaName && mediaProps.length">
+      <div class="lib-fsec">背景介绍与图片</div>
+      <p class="lib-faint lib-fhint">显示在条目详情的「背景」「图片」两个标签里。</p>
+      <div v-for="p in mediaProps" :key="p.name" class="lib-tfield" :data-field="`${mediaName}.${p.name}`">
+        <label v-if="mediaTitle(p)"><span class="lib-lname">{{ mediaTitle(p) }}</span></label>
+        <FieldInput :shape="p.shape" :value="mediaVal[p.name]" :defs="table.defs" :labels="subLabels" :name="p.name" :path="`${mediaName}.${p.name}`" @update="(v: unknown) => setMedia(p.name, v)" @json="emit('json', mediaName!)" />
       </div>
     </template>
     <button v-if="rest.length" class="lib-more" type="button" :aria-expanded="open" data-testid="form-more" @click="open = !open"><Icon :name="open ? 'caret-down' : 'caret-right'" :size="14" />更多（{{ rest.length }} 项，官方条目里很少用）</button>

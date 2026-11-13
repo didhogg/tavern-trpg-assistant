@@ -10,6 +10,7 @@ import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import type { EditSession } from './edit-flow'
 import EmbeddedEntity from './EmbeddedEntity.vue'
+import ChildrenSection from './ChildrenSection.vue'
 import EntryForm from './EntryForm.vue'
 import FillPage from './FillPage.vue'
 import JsonBox from './JsonBox.vue'
@@ -67,6 +68,18 @@ function restoreField(f: string): void {
   ed.setEnt('main', next); formKey.value++
 }
 const showJson = () => { tab.value = 'json'; showMain.value = false }
+/** 从属条目存好了：后端已同步主条目的引用表（职业 classFeatures……），把这几张表从存储里重读进编辑器，免得再存主条目时拿旧表盖掉（§16.10 2c）。 */
+async function relink(fields: string[]): Promise<void> {
+  if (props.session.target.kind !== 'mine' || !props.session.pack) return
+  try {
+    const got = await app.svc().backend.library.custom.packEntry(ed.cs.main, props.session.pack.id, props.session.prop, { uniqueId: props.session.target.uniqueId })
+    const stored = got?.entity as Record<string, unknown> | undefined
+    if (!stored) return
+    const next = { ...ed.ents.main.value }
+    for (const f of fields) { if (stored[f] === undefined) delete next[f]; else next[f] = stored[f] }
+    ed.setEnt('main', next); formKey.value++
+  } catch (e) { console.warn('[trpg-assistant] 主条目的引用表没重读到', e) }
+}
 
 // 从左栏那一种语言填入右栏空着的（u7-10c）
 const labelOf = (side: 'main' | 'other') => (f: string) => ed.tables[side].value?.fields.find((x) => x.name === f)?.label ?? ed.tables[side].value?.labels[f] ?? f
@@ -132,7 +145,8 @@ function done(): void {
         toast.push('undo', `已保存「${title.value}」`, { undo: undoAll })
         await lib.loadPairs(app.svc())
         // 回到包的列表；从我的库的草稿条直接进来的（下面没有包的弹窗）就整个关掉
-        if (modal.stack[0]?.key.startsWith('edit:')) modal.close(true)
+        if (props.session.nested) { modal.pop(); modal.pop(); props.session.onSaved?.() } // 从主条目里点开的从属条目：回到主条目
+        else if (modal.stack[0]?.key.startsWith('edit:')) modal.close(true)
         else modal.popToRoot()
       } finally { saving.value = false }
     },
@@ -215,7 +229,8 @@ async function doneHouse(): Promise<void> {
       <div v-if="!wide" class="lib-pane__head" data-testid="editor-views"><Segmented v-model="narrowView" label="看哪一栏" :options="narrowTabs" /><span v-if="!showMain" class="lib-end lib-faint">{{ sideNote }}</span></div>
       <section v-show="wide || showMain" class="lib-pane" data-testid="editor-main">
         <div v-if="wide" class="lib-pane__head"><b>{{ langName(ed.cs[L]) }}{{ house ? '（房规）' : '' }}</b></div>
-        <div class="lib-pane__body"><EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setEnt(L, e)" @json="showJson" /></div>
+        <div class="lib-pane__body"><EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setEnt(L, e)" @json="showJson" />
+          <ChildrenSection v-if="session.pack && L === 'main'" :code-set="ed.cs.main" :pack="session.pack" :prop="session.prop" :ent="ed.ents.main.value" :saved="session.target.kind === 'mine'" @linked="relink" /></div>
       </section>
       <section v-show="wide || !showMain" class="lib-pane lib-pane--side" data-testid="editor-side">
         <div v-if="wide" class="lib-pane__head"><Segmented v-model="tab" label="右栏" :options="tabs" /><span class="lib-end lib-faint">{{ sideNote }}</span></div>

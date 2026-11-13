@@ -114,6 +114,12 @@ function onCombo(v: string | undefined): void {
   ownCombo.value = false
   set(v === undefined ? undefined : structuredClone(combos.value[Number(v)]))
 }
+// 图片（作者图片条目）：填网址 + 缩略图；站内图片（作者包里的相对路径）照原样显示路径，填了网址就换成网址（只存网址，不存图）
+const img = computed(() => (obj.value.href ?? {}) as { type?: string; url?: string; path?: string })
+function setImg(url: string): void {
+  const u = url.trim()
+  set(u ? { ...obj.value, type: 'image', href: { type: 'external', url: u } } : undefined)
+}
 const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(t === '' ? undefined : Number(t)) }
 </script>
 
@@ -173,6 +179,12 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   </div>
   <!-- 正文（一段）：文字 + 小工具栏；其他段能无损转的用 Markdown 写，不能的到 JSON 里改（EntryBlock） -->
   <EntryBlock v-else-if="s.c === 'entries'" :value="value" :label="lab(name)" @update="set" @split="(bs: unknown[]) => emit('split', bs)" @json="emit('json')" />
+  <!-- 图片：填网址 -->
+  <div v-else-if="s.c === 'image'" class="lib-img" data-testid="field-image">
+    <input class="trpg-input" type="url" inputmode="url" placeholder="https://… 图片网址" :value="img.url ?? ''" :aria-label="`${lab(name)}：图片网址`" @change="setImg(($event.target as HTMLInputElement).value)" />
+    <span v-if="img.path && !img.url" class="lib-faint">站内图片：{{ img.path }}</span>
+    <img v-if="img.url" class="lib-img__thumb" :src="img.url" alt="" loading="lazy" referrerpolicy="no-referrer" />
+  </div>
   <!-- 画不了 -->
   <button v-else class="lib-tojson" type="button" :title="s.c === 'json' ? s.why : undefined" @click="emit('json')"><Icon name="info" :size="14" />这一项比较复杂，在 JSON 里改 ›</button>
 </template>

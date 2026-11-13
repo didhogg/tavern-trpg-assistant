@@ -34,6 +34,8 @@ export interface EditSession {
   house?: { ref: EntryRef; base: Ent; campaign: CampaignLibrary }
   /** 存好以后（详情页重读）。 */
   onSaved?: () => void
+  /** 从主条目编辑器里点开的从属条目（子职、职业特性……）：存好回到主条目，不回包的列表（§16.10 2c）。 */
+  nested?: boolean
 }
 
 /** 包里 [新建条目]：选类型（弹窗里前进一页）。 */
@@ -53,17 +55,17 @@ export function openEditor(s: EditSession): void {
 }
 
 /** 作者给这一类的显示名（中文版给中文）；读不到就用类别原名。 */
-async function typeNameOf(s: Services, codeSet: string, prop: string): Promise<string> {
+export async function typeNameOf(s: Services, codeSet: string, prop: string): Promise<string> {
   try { return (await s.backend.library.custom.entryTypes(codeSet)).find((t) => t.prop === prop)?.name ?? prop } catch { return prop }
 }
 
 /** 包里的 ✎：打开自己包里的一条（中文、英文两边由编辑器自己对上）。 */
-export async function openEditMine(s: Services, codeSet: string, pack: { id: string; name: string }, prop: string, hash: string): Promise<void> {
+export async function openEditMine(s: Services, codeSet: string, pack: { id: string; name: string }, prop: string, hash: string, nested?: { onSaved: () => void }): Promise<void> {
   const got = await s.backend.library.custom.packEntry(codeSet, pack.id, prop, { hash })
   if (!got?.entity) throw new Error('包里找不到这一条')
   const ent = got.entity as Ent
   const uniqueId = typeof ent.uniqueId === 'string' ? ent.uniqueId : got.hash ?? hash
-  openEditor({ codeSet, prop, typeName: await typeNameOf(s, codeSet, prop), pack, ent, target: { kind: 'mine', uniqueId, pack: pack.id }, hash: got.hash ?? hash, replaceHash: got.hadId ? undefined : got.hash ?? hash, detailed: true })
+  openEditor({ codeSet, prop, typeName: await typeNameOf(s, codeSet, prop), pack, ent, target: { kind: 'mine', uniqueId, pack: pack.id }, hash: got.hash ?? hash, replaceHash: got.hadId ? undefined : got.hash ?? hash, detailed: true, ...(nested ? { nested: true, onSaved: nested.onSaved } : {}) })
 }
 
 /** 我的库顶上的草稿 [继续]：回到编辑器接着改。 */

@@ -67,7 +67,11 @@ export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: 
     // 新写的一条：这一类在作者结构定义里能自带版本（字段说明表 edition）就写上规则的版本（P5.5 B1）。用户自己写了就不动。
     if (rule && !ent.uniqueId && !replaceHash && full.edition === undefined && (await formatOfCodeSet(codeSet).fields(prop))?.edition) full.edition = ruleScopes(rule).style
     let put
-    if (doc) put = await f.call('packPut', doc.id, prop, full, replaceHash ? { replaceHash } : {})
+    if (doc) {
+      put = await f.call('packPut', doc.id, prop, full, replaceHash ? { replaceHash } : {})
+      // 从属条目（职业特性……）：同步主条目的引用表（§16.10 2c，小窗 linkParent）
+      await f.call('linkParent', doc.id, prop, put.previousEntity ?? null, full)
+    }
     else {
       await f.call('editableEnsureSource', d.mineSource)
       put = await f.call('editablePut', prop, full)
@@ -110,7 +114,12 @@ async function withAutoFields(d: EntryDeps, codeSet: string, prop: string, ent: 
 
 /** 删条（按 uniqueId）；record：每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。返回删掉的原文。 */
 export async function remove(d: EntryDeps, codeSet: string, prop: string, uniqueIds: string[], { record, link, pack, carry }: { record: boolean; link?: HouseRuleLink; pack?: string | null; carry?: EditStep['carry'] }) {
-  const result = await inStore(d, codeSet, 'custom-delete', pack, async (f, doc) => doc ? f.call('packRemove', doc.id, prop, uniqueIds) : f.call('editableRemove', prop, uniqueIds))
+  const result = await inStore(d, codeSet, 'custom-delete', pack, async (f, doc) => {
+    if (!doc) return f.call('editableRemove', prop, uniqueIds)
+    const removed = (await f.call('packRemove', doc.id, prop, uniqueIds)) as Array<Record<string, unknown>>
+    for (const r of removed) await f.call('linkParent', doc.id, prop, r, null) // 删从属条目：主条目引用表里去掉
+    return removed
+  })
   if (record) for (const before of result.value) await d.manage.pushHistory(historyKey(codeSet, prop, String(before.uniqueId)), { at: Date.now(), prop, before, pack: pack ?? null, ...(link ? { link } : {}), ...(carry ? { carry } : {}) })
   return result
 }

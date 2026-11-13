@@ -13,6 +13,7 @@ import { createHouseRule, type HouseEdit } from './custom-house'
 import { houseNow } from './custom-raw'
 import { emptyIfMissing } from './official-missing'
 import { autoFieldsOf, formPlanOf, usageOf } from './field-usage-store'
+import { childrenOf, childStart } from './custom-children'
 import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
@@ -94,10 +95,20 @@ export class CustomLibrary {
     return { frame: (codeSet) => this.frame(codeSet), categories: (setId) => this.lib.categories(setId) }
   }
 
-  /** 能新建的类型（作者认为能单独打开、且结构定义收的），每类有哪几种起点。 */
+  /** 能新建的类型（作者认为能单独打开、且结构定义收的），每类有哪几种起点、是主条目还是从属。同一资料集只算一次。 */
   entryTypes(codeSet: string) {
-    return entryTypes(this.newDeps, codeSet)
+    let got = this.typesMemo.get(codeSet)
+    if (!got) { got = entryTypes(this.newDeps, codeSet); got.catch(() => this.typesMemo.delete(codeSet)); this.typesMemo.set(codeSet, got) }
+    return got
   }
+  private readonly typesMemo = new Map<string, ReturnType<typeof entryTypes>>()
+
+  /** 包里属于这一条的从属条目（子职、职业特性……，§16.10 2c）。 */
+  children(codeSet: string, packId: string, prop: string, parent: Record<string, unknown>) {
+    return childrenOf({ frame: (cs) => this.frame(cs), types: (cs) => this.entryTypes(cs) }, codeSet, packId, prop, parent)
+  }
+  /** 新从属条目的起点（指向主条目的字段照主条目填）。 */
+  childStart(codeSet: string, childProp: string, parentProp: string, parent: Record<string, unknown>) { return childStart(codeSet, childProp, parentProp, parent) }
 
   /** 空白条目：只放必填字段的空值（B6）。 */
   blankEntry(codeSet: string, prop: string) {

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { distinctNames, entryKinds, NOT_CREATABLE } from '../../../src/library/entry-kinds'
 import { fieldUsage, ownItems } from '../../../src/library/field-usage'
-import type { BrewField } from '../../../src/library/brew-validate'
+import { configureBrewValidator, type BrewField } from '../../../src/library/brew-validate'
 // @ts-expect-error 生成的字段表是 JS，没有类型声明
 import fields from '../../../vendor/brew-schema/fields.js'
 
@@ -74,5 +74,16 @@ describe('出版信息字段（结构定义特征，驾驶员 11-13 定）', () 
   })
   it('有意义的开关不误收（召唤物按等级缩放）；人填的字段不收', () => {
     for (const n of ['summonedScaleByPlayerLevel', 'name', 'alignment', 'ac', 'trait']) expect(flag(n), n).toBe(false)
+  })
+})
+
+describe('新从属条目的起点（§16.10 2c）', () => {
+  configureBrewValidator(new URL('../../../', import.meta.url))
+  it('指向主条目的字段照主条目填；指向更上一层的照主条目自己的同名字段填', async () => {
+    const { childStart } = await import('../../../src/library/custom-children')
+    const feat = await childStart('cn', 'classFeature', 'class', { name: '海盗', source: 'PIR' })
+    expect(feat).toMatchObject({ className: '海盗', classSource: 'PIR' })
+    const scf = await childStart('cn', 'subclassFeature', 'subclass', { name: '船长之道', shortName: '船长', source: 'PIR', className: '海盗', classSource: 'PIR' })
+    expect(scf).toMatchObject({ subclassShortName: '船长', subclassSource: 'PIR', className: '海盗', classSource: 'PIR' })
   })
 })

@@ -1,7 +1,7 @@
 // 读作者的自制结构定义（vendor/brew-schema/schema）并往下拆：给字段表（build-brew-fields.mjs）用。
 // - resolve：$ref 按作者文件的 $id + 标准 JSON 指针取（不用 ajv.getSchema 取片段：它会顺着片段里的 $ref 跳到别的文件，基准对不上）。
 // - shapeOf（P5.5 阶段 C）：一个字段该画成什么控件。规则只看结构定义的写法，不按类别、不按字段名：
-//     有可选值 → select；是非 → switch；数字 → number；文字 → text；指向作者正文结构（entry.json）→ entries；
+//     有可选值 → select；是非 → switch；数字 → number；文字 → text；指向作者图片条目（entry.json entryImage）→ image；指向作者正文结构（entry.json）→ entries；
 //     数组 → list（每项再拆；每项是可选值 → multiselect）；有 properties 的对象 → group；键随意、值同一种的对象 → map；
 //     几种写法任选（anyOf / oneOf，去掉只为「删掉这个字段」的 null）→ pick（有共同的可选值字段就按它分，没有就按写法分）；
 //     递归、太深、键值都随意的对象 → json（表单里提示「在 JSON 里改」）。作者给了建议值（examples）的文字带 suggest。
@@ -99,6 +99,8 @@ export async function loadSchemas(dir) {
   function shapeOf(node, base, defs, stack = [], depth = 0) {
     const r = resolve(node, base)
     const n = r.node
+    // 作者的「图片条目」（entry.json entryImage）：画成填链接 + 缩略图（§16.10 2c），其余作者正文结构 → entries
+    if (r.refs.some((x) => /^entry\.json#\/\$defs\/entryImage$/.test(x))) return { c: 'image' }
     if (r.refs.some((x) => /^entry\.json#/.test(x))) return { c: 'entries' }
     const key = r.refs.at(-1)
     if (key && stack.includes(key)) return { c: 'json', why: 'recursive' }

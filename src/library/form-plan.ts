@@ -29,6 +29,8 @@ export interface FormPlan {
   more: string[]
   /** 表单不出现的（出版信息、自动字段、系统写的）。 */
   hidden: string[]
+  /** 「背景介绍与图片」那个字段（作者 fluff：指向作者 util.json fluffObject 的）：单独一节画，不在三块里。没有 null。 */
+  media: string | null
   at: Record<string, PlanAt>
 }
 
@@ -86,7 +88,10 @@ export function branchNames(shape: Extract<Shape, { c: 'pick' }>, defs: Defs, la
 export function formPlan(table: { fields: BrewField[]; defs: Defs; labels: Record<string, string> }, usage: FieldUsage | null, auto: string[]): FormPlan {
   const label = (n: string) => table.labels[n] ?? n
   const hidden = table.fields.filter((f) => !f.internal && (f.publish || SYSTEM.has(f.name) || auto.includes(f.name))).map((f) => f.name)
-  const usable = table.fields.filter((f) => !f.internal && f.shape && !hidden.includes(f.name))
+  // 背景介绍与图片：字段形状里有一种写法是作者的 fluffObject（另一种是引用作者 xxxFluff 列表，自制用不上）
+  const isMedia = (f: BrewField) => { const s = f.shape ? resolve(f.shape, table.defs) : null; return !!s && s.c === 'pick' && s.branches.some((b) => 'ref' in b.shape && /fluffObject$/.test(b.shape.ref)) }
+  const media = table.fields.find((f) => !f.internal && !hidden.includes(f.name) && isMedia(f))?.name ?? null
+  const usable = table.fields.filter((f) => !f.internal && f.shape && !hidden.includes(f.name) && f.name !== media)
   const share = (f: BrewField) => (usage?.items ? (usage.fields[f.name] ?? 0) / usage.items : 0)
   const byUse = (a: BrewField, b: BrewField) => share(b) - share(a)
   const optional = usable.filter((f) => !f.required)
@@ -130,6 +135,7 @@ export function formPlan(table: { fields: BrewField[]; defs: Defs; labels: Recor
     common: optional.filter((f) => share(f) >= COMMON).sort(byUse).map((f) => f.name),
     more: optional.filter((f) => share(f) < COMMON).sort((a, b) => byUse(a, b) || a.name.localeCompare(b.name)).map((f) => f.name),
     hidden,
+    media,
     at,
   }
 }
