@@ -21,6 +21,7 @@ import { pullUpdates, updateRow } from './update-flow'
 import { useUpdatesStore } from '../../stores/updates'
 import { useDownloadsStore } from '../../stores/downloads'
 import { openManage, openPack } from './open'
+import { officialSourceOf } from '../../library/sources'
 
 /** 书架（U2a）：官方 / 自制分开；每组可折叠；行 = 书名 · 版本 · 开关 · ⋯。无战役时所有书显示为关、开关不可用。书架搜索在列表下方。 */
 const app = useAppStore()
@@ -106,6 +107,8 @@ async function switchPicked(on: boolean): Promise<void> {
 }
 async function onShelfMenu(key: string): Promise<void> {
   if (key === 'pull') await pullUpdates(app.svc(), lib.campaignLib?.codeSet ?? 'cn', toast)
+  // 整个书架的管理（P5.5 u7-14）：停用项目 + 房规（覆盖），不限哪本书
+  else if (key === 'manage') openManage({ set: lib.campaignLib ? officialSourceOf(lib.campaignLib.codeSet).id : '', source: '', name: '书架' })
 }
 const isOn = (r: CatalogRow): boolean => lib.bound && r.view.visible
 async function toggle(r: CatalogRow, next: boolean): Promise<void> {
@@ -132,7 +135,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
           <span class="lib-end">
             <button class="trpg-btn trpg-btn--small" type="button" :aria-pressed="multi" :data-testid="`shelf-multi-${s.kind}`" @click="setMulti(!multi)"><Icon :name="multi ? 'x' : 'check'" :size="14" />{{ multi ? '退出多选' : '多选' }}</button>
             <template v-if="s.kind === 'official'">
-            <MoreMenu label="书架" :items="[{ key: 'pull', label: updates.checking ? '正在检查更新…' : '拉取更新', disabled: updates.checking }]" @select="onShelfMenu" />
+            <MoreMenu label="书架" :items="[{ key: 'pull', label: updates.checking ? '正在检查更新…' : '拉取更新', disabled: updates.checking }, { key: 'manage', label: '管理：停用和覆盖' }]" @select="onShelfMenu" />
             </template>
           </span>
         </div>

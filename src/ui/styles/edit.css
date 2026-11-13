@@ -105,3 +105,20 @@
 .lib-sum { flex: none; display: grid; gap: var(--sp-2); max-height: 45%; overflow: auto; padding: var(--sp-3) var(--sp-4); border-top: var(--border) solid var(--line); background: var(--surface); }
 .lib-sum__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-size: var(--fs-sm); }
 .lib-sum__row > .trpg-select-trigger { width: auto; min-width: 200px; }
+/* 房规（u7-13）· 覆盖管理（u7-14） */
+.lib-crow { display: grid; grid-template-columns: minmax(64px, 96px) minmax(0, 1fr) auto; gap: var(--sp-2); align-items: start; padding: 7px var(--sp-2); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.lib-crow > b { font-weight: var(--fw-semibold); color: var(--text2); font-size: 12px; padding-top: 2px; }
+.lib-crow[data-diff='true'] { background: var(--warn-bg); border-radius: var(--r-sm); }
+.lib-crow small { display: block; color: var(--warn-text); font-size: 11px; }
+.lib-edits { display: grid; margin: 0; padding: 0; list-style: none; }
+.lib-erow { display: grid; gap: var(--sp-2); padding: var(--sp-2) 0; border-bottom: var(--border) solid var(--line); }
+.lib-erow[data-off='true'] { opacity: .65; }
+.lib-erow__top { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.lib-erow__name { font-weight: var(--fw-semibold); }
+.lib-erow__meta { color: var(--text2); font-size: 12px; flex: 1 1 200px; min-width: 0; }
+.lib-erow__top .trpg-select-trigger { width: auto; min-width: 120px; }
+.lib-erow__body { display: grid; gap: var(--sp-2); margin-left: 26px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-sm); background: var(--bg-sunk); }
+.lib-housenote { display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
+.lib-erow__top > .trpg-check, [data-testid='overrides'] > .lib-filter > .trpg-check { width: auto; flex: none; margin: 0; }
+.lib-erow__top > .lib-end { flex: 1 1 100%; justify-content: flex-end; }
+.lib-erow__top > .lib-end .trpg-select-trigger { flex: 0 1 200px; width: auto; }

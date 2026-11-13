@@ -33,16 +33,28 @@ export const useLibViewStore = defineStore('library', () => {
   /** P5.5【我的库】：中英配对后的包（一对一行）。 */
   const pairs = shallowRef<PackPair[] | null>(null)
   const pairsError = ref<string | null>(null)
+  const pairsNote = ref<string | null>(null)
   let pairSeq = 0
   async function loadPairs(s: Services): Promise<void> {
     const mine = ++pairSeq
     pairsError.value = null
+    pairsNote.value = null
     try {
       const next = await s.backend.library.bilingual.packs()
       if (mine === pairSeq) pairs.value = next
     } catch (e) {
-      console.error('[trpg-assistant] 读取我的库失败', e)
-      if (mine === pairSeq) pairsError.value = e instanceof Error ? e.message : String(e)
+      // 另一种语言的资料没装时配对读不出来：先只列现在这种语言的包（后端缺口见 P5.5 §16.7），别让整个我的库读不出来
+      console.warn('[trpg-assistant] 中英配对读不出来，先只列这一种语言的包', e)
+      const cs = campaignLib.value?.codeSet ?? DEFAULT_PREFETCH_CODE_SETS[0]
+      try {
+        const one = await s.backend.library.custom.packs(cs)
+        if (mine !== pairSeq) return
+        pairs.value = one.map((p) => ({ id: p.id, zh: cs === 'en' ? null : p, en: cs === 'en' ? p : null }))
+        pairsNote.value = '另一种语言的资料没装，先只列这一种语言的包'
+      } catch (e2) {
+        console.error('[trpg-assistant] 读取我的库失败', e2)
+        if (mine === pairSeq) pairsError.value = e2 instanceof Error ? e2.message : String(e2)
+      }
     }
   }
   const loading = ref(false)
@@ -104,5 +116,5 @@ export const useLibViewStore = defineStore('library', () => {
     await load(s, ownerKey)
   }
 
-  return { applySources, campaignLib, pairs, pairsError, loadPairs, bound, officialMissing, shelf, minePacks, brewSetId, loading, error, load, refresh, toggleSource }
+  return { applySources, campaignLib, pairs, pairsError, pairsNote, loadPairs, bound, officialMissing, shelf, minePacks, brewSetId, loading, error, load, refresh, toggleSource }
 })

@@ -1,4 +1,4 @@
-// P5.5 界面 e2e 共用：复制测试资料夹（已装中英官方数据，端口必须 47318）、断网、打开库页。
+// P5.5 界面 e2e 共用：复制测试资料夹（已装中英官方数据，端口必须 47318）、断网、打开库页。ENGINE=webkit 换 WebKit。
 import { cp, mkdir, rm } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
 import { buildAll, engines, work } from './chain-common.mjs'
@@ -8,13 +8,15 @@ export const P = `(() => { const h = document.querySelector('#trpg-assistant-roo
 
 export async function openLibrary(name, { width = 1280, height = 800 } = {}) {
   if (!process.env.SKIP_BUILD) await buildAll()
-  const [, type, options] = engines[0]
+  // ENGINE=webkit 用 WebKit（测试资料夹也换成 WebKit 那一份）；默认 Chrome
+  const engine = process.env.ENGINE ?? 'chrome'
+  const [, type, options] = engines.find((e) => e[0] === engine) ?? engines[0]
   const { server, url } = await startStatic({ port: 47318 })
-  const shots = `${work}/p55-ui-shots/${name}`
+  const shots = `${work}/p55-ui-shots/${name}${engine === 'chrome' ? '' : `-${engine}`}`
   await mkdir(shots, { recursive: true })
-  const profile = `${work}/profile-p55ui${name}-chrome`
+  const profile = `${work}/profile-p55ui${name}-${engine}`
   await rm(profile, { recursive: true, force: true })
-  await cp(`${work}/profile-b2-8a-chrome`, profile, { recursive: true, filter: (p) => !p.includes('Singleton') })
+  await cp(`${work}/profile-b2-8a-${engine}`, profile, { recursive: true, filter: (p) => !p.includes('Singleton') })
   const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width, height }, acceptDownloads: true })
   const page = await ctx.newPage()
   page.setDefaultTimeout(180000)

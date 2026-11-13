@@ -27,7 +27,10 @@ export interface SaveCtx {
   /** 改名时旧的作者编号（我的库的条目），用来查有几处用到它。 */
   oldHash?: string
   labelOf: (cs: string) => (field: string) => string
-  save: (packId: string) => Promise<void>
+  /** 房规（u7-13）：作用于哪一层（本战役 / 当前规则 / 全局），默认取 设置 → 库 → 偏好。 */
+  house?: { levels: Array<{ value: string; label: string }>; level: string }
+  /** 新建 / 改：存进的包编号；房规：作用于哪一层。 */
+  save: (choice: string) => Promise<void>
 }
 const props = defineProps<{ ctx: SaveCtx }>()
 const app = useAppStore()
@@ -66,13 +69,15 @@ onMounted(async () => {
     } catch (e) { console.warn('[trpg-assistant] 查改名影响没成功', e) }
   }
 })
+const level = ref(props.ctx.house?.level ?? '')
 async function save(): Promise<void> {
-  if (!pack.value) { err.value = '选一个包'; return }
+  const choice = props.ctx.house ? level.value : pack.value
+  if (!choice) { err.value = props.ctx.house ? '选作用于哪一层' : '选一个包'; return }
   busy.value = true
   err.value = null
-  try { await props.ctx.save(pack.value) } catch (e) { err.value = e instanceof Error ? e.message : String(e) } finally { busy.value = false }
+  try { await props.ctx.save(choice) } catch (e) { err.value = e instanceof Error ? e.message : String(e) } finally { busy.value = false }
 }
-const diffTitle = computed(() => sides.value.map((k) => `${langName(props.ctx[k].cs)}：${props.ctx[k].before ? `改了 ${changes.value[k].length} 项` : '新写一条'}`).join(' · '))
+const diffTitle = computed(() => sides.value.map((k) => `${langName(props.ctx[k].cs)}：${props.ctx[k].before ? `${props.ctx.house ? '和原件比' : ''}改了 ${changes.value[k].length} 项` : '新写一条'}`).join(' · '))
 </script>
 
 <template>
@@ -91,7 +96,7 @@ const diffTitle = computed(() => sides.value.map((k) => `${langName(props.ctx[k]
       </div>
       <div class="lib-sum__row">
         <span data-testid="save-diff-title">{{ diffTitle }}</span>
-        <span v-if="ctx.other.include" class="lib-faint">中文、英文两边一起存；另一边还没有包就自动建同编号的</span>
+        <span v-if="ctx.other.include && !ctx.house" class="lib-faint">中文、英文两边一起存；另一边还没有包就自动建同编号的</span>
         <button v-if="!ctx.isNew && (changes.main.length || changes.other.length)" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="showDiff = !showDiff">{{ showDiff ? '收起' : '展开看' }}</button>
       </div>
       <template v-if="!ctx.isNew && showDiff">
@@ -99,6 +104,10 @@ const diffTitle = computed(() => sides.value.map((k) => `${langName(props.ctx[k]
           <li v-for="c in changes[k]" :key="c.field"><code>{{ sides.length > 1 ? `${langName(ctx[k].cs)} · ` : '' }}{{ ctx.labelOf(ctx[k].cs)(c.field) }}</code><span><s v-if="c.before !== undefined">{{ valueText(c.before) }}</s>{{ c.before !== undefined ? ' → ' : '' }}{{ valueText(c.after) }}</span></li>
         </ul>
       </template>
+      <div v-if="ctx.house" class="lib-sum__row" data-testid="save-level">
+        <span>{{ ctx.other.include ? '中英两条都作用于' : '作用于' }}</span>
+        <SelectField v-model="level" label="作用于哪一层" :options="ctx.house.levels" />
+      </div>
       <div v-if="impact?.length" class="lib-sum__row lib-banner lib-banner--warn" data-testid="save-impact">
         <span>改了名字，这一条的编号会跟着变：有 {{ impact.length }} 处用到它（插件里的会跟着搬，存档里的读档时会列出来）</span>
         <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="showImpact = !showImpact">{{ showImpact ? '收起' : '看每一处' }}</button>
@@ -108,7 +117,7 @@ const diffTitle = computed(() => sides.value.map((k) => `${langName(props.ctx[k]
     </div>
     <div class="lib-ebar">
       <button class="trpg-btn" type="button" @click="modal.pop()"><Icon name="caret-left" :size="14" />回去改</button>
-      <span class="lib-end"><button class="trpg-btn trpg-btn--primary" type="button" :disabled="busy" data-testid="save-go" @click="save">{{ busy ? '正在存…' : '保存' }}</button></span>
+      <span class="lib-end"><button class="trpg-btn trpg-btn--primary" type="button" :disabled="busy" data-testid="save-go" @click="save">{{ busy ? '正在存…' : ctx.house ? '保存房规' : '保存' }}</button></span>
     </div>
   </div>
 </template>

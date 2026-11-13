@@ -10,8 +10,9 @@ import SelectField from '../kit/SelectField.vue'
 import { ruleOfScopes, ruleOptions } from './mine'
 import { runPackMenu } from './mine-actions'
 import PackDeps from './PackDeps.vue'
+import OverridesList from './OverridesList.vue'
 
-/** P5.5 u7-4 我的库的包 ⋯ → 管理：名字 · 规则与版本 · 依赖包。房规（覆盖）分区见第 6 批。 */
+/** P5.5 u7-4 我的库的包 ⋯ → 管理：名字 · 规则与版本 · 房规（覆盖）（u7-14 同一个列表）· 依赖包。 */
 const props = defineProps<{ set: string; source: string; name: string; docIdLocal?: string; mine: { id: string; codeSet: string } }>()
 const app = useAppStore()
 const lib = useLibViewStore()
@@ -55,7 +56,7 @@ const menu = (key: string) => { if (pair.value) void runPackMenu(app.svc(), key,
 
 <template>
   <div class="lib-mbody" data-testid="mypack-manage">
-    <div class="lib-filter"><Segmented v-model="tab" label="管理分区" :options="[{ value: 'name', label: '名字' }, { value: 'rule', label: '规则与版本' }, ...(docIdLocal ? [{ value: 'deps', label: missing ? `依赖包 ⚠${missing}` : '依赖包' }] : [])]" /></div>
+    <div class="lib-filter"><Segmented v-model="tab" label="管理分区" :options="[{ value: 'name', label: '名字' }, { value: 'rule', label: '规则与版本' }, { value: 'house', label: '房规（覆盖）' }, ...(docIdLocal ? [{ value: 'deps', label: missing ? `依赖包 ⚠${missing}` : '依赖包' }] : [])]" /></div>
     <div v-if="missing && tab !== 'deps'" class="lib-banner lib-banner--warn"><Icon name="warning" :size="16" /><span>这个包缺 {{ missing }} 个依赖，缺了会读不出。</span><button class="trpg-btn trpg-btn--small lib-end" type="button" @click="tab = 'deps'">查看并下载</button></div>
     <div class="lib-mscroll">
       <div class="lib-pad">
@@ -70,6 +71,7 @@ const menu = (key: string) => { if (pair.value) void runPackMenu(app.svc(), key,
           </div>
           <div><button class="trpg-btn trpg-btn--primary trpg-btn--small" type="submit" :disabled="busy || !full.trim()">保存名字</button></div>
         </form>
+        <OverridesList v-else-if="tab === 'house'" :scope="{ kind: 'pack', codeSet: mine.codeSet, id: mine.id }" />
         <div v-else-if="tab === 'rule' && pack" class="lib-form" data-testid="mypack-rule">
           <div class="trpg-field">
             <span class="trpg-field__label">属于规则</span>

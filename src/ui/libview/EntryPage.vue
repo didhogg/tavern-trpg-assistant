@@ -30,8 +30,9 @@ import ImageBlock from './ImageBlock.vue'
 import AuthorFragment from './author-fragment'
 import { imagesOf } from './entry-content'
 import CopyEntryPage from './CopyEntryPage.vue'
+import EntryOverridesPage from './EntryOverridesPage.vue'
 import { openMineById } from './mine-actions'
-import { openEditMine } from './edit-flow'
+import { openEditMine, openHouseEditor } from './edit-flow'
 import { packTitle, sideOf } from './mine'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
@@ -52,14 +53,22 @@ const mineOf = computed(() => {
 })
 function editThis(): void {
   const m = mineOf.value, d = detail.value
-  if (!m || !d) return
+  if (!d) return
+  // 官方 / 下载的条目：改成房规（P5.5 u7-13），原件不动
+  if (!m) {
+    if (!lib.campaignLib) return
+    openHouseEditor(app.svc(), lib.campaignLib, { ref: d.ref, item: d.item, base: d.base }, () => void load()).catch((e: unknown) => { console.error('[trpg-assistant] 打开房规编辑失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
+    return
+  }
   openEditMine(app.svc(), m.codeSet, m.pack, d.ref.prop, d.ref.hash).catch((e: unknown) => { console.error('[trpg-assistant] 打开编辑器失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
 }
 
 /** 条目 ⋯：复制成我的（P5.5 u7-6，单条进选的包）。 */
 function onEntryMenu(key: string): void {
   const d = detail.value
-  if (key !== 'copy' || !d) return
+  if (!d) return
+  if (key === 'manage') { modal.push({ key: `ovr:${props.pageKey ?? d.ref.hash}`, title: '管理', component: EntryOverridesPage, variant: 'sheet', props: { entryRef: d.ref, name: itemName(d.item) }, onLeave: () => void load() }); return }
+  if (key !== 'copy') return
   modal.push({ key: `copy:${props.pageKey ?? d.ref.hash}`, title: '复制成我的', component: CopyEntryPage, variant: 'sheet', props: { entryRef: d.ref, name: itemName(d.item), onDone: (id: string, cs: string) => void openMineById(app.svc(), id, cs) } })
 }
 
@@ -204,8 +213,8 @@ async function setEnabled(next: boolean): Promise<void> {
       <div class="lib-dtools">
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
-          <button class="trpg-icon-btn" type="button" :disabled="!mineOf" :aria-label="mineOf ? '编辑这一条' : '编辑（官方条目改成房规，稍后开放）'" :title="mineOf ? '编辑这一条' : '官方条目改成房规稍后开放'" data-testid="entry-edit" @click="editThis"><Icon name="pencil-simple" :size="18" /></button>
-          <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }]" @select="onEntryMenu" />
+          <button class="trpg-icon-btn" type="button" :aria-label="mineOf ? '编辑这一条' : '改成房规（原件不动）'" :title="mineOf ? '编辑这一条' : '改成房规（原件不动）'" data-testid="entry-edit" @click="editThis"><Icon name="pencil-simple" :size="18" /></button>
+          <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }, { key: 'manage', label: '管理：覆盖与作用范围' }]" @select="onEntryMenu" />
         </span>
       </div>
       <TabsRoot v-model="tab" class="lib-entrytabs">

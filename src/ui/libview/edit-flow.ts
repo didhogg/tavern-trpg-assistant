@@ -3,6 +3,8 @@ import { markRaw } from 'vue'
 import type { Services } from '../../core/services'
 import type { EntryType } from '../../library/custom-new'
 import type { EditDraft } from '../../library/manage'
+import type { CampaignLibrary, EntryRef } from '../../library/scopes'
+import { getSource } from '../../library/sources'
 import { useModalStore } from '../../stores/modal'
 import type { Ent } from './edit-json'
 import EditorPage from './EditorPage.vue'
@@ -28,6 +30,10 @@ export interface EditSession {
   hash?: string
   /** 改已有的条目：作者编号（换掉这一条）。 */
   replaceHash?: string
+  /** 改官方 / 下载的条目 = 房规（u7-13）：原件、在哪个战役设置下改。 */
+  house?: { ref: EntryRef; base: Ent; campaign: CampaignLibrary }
+  /** 存好以后（详情页重读）。 */
+  onSaved?: () => void
 }
 
 /** 包里 [新建条目]：选类型（弹窗里前进一页）。 */
@@ -64,4 +70,11 @@ export async function openEditMine(s: Services, codeSet: string, pack: { id: str
 export async function openDraft(s: Services, d: { key: string; codeSet: string; prop: string; s: Ent; target: EditSession['target'] }, packName: (id: string) => string | null): Promise<void> {
   const packId = d.target.kind === 'new' ? d.target.pack : d.target.kind === 'mine' ? d.target.pack ?? null : null
   openEditor({ codeSet: d.codeSet, prop: d.prop, typeName: await typeNameOf(s, d.codeSet, d.prop), pack: packId ? { id: packId, name: packName(packId) ?? packId } : null, ent: d.s, target: d.target, draftKey: d.key, detailed: true })
+}
+
+/** 书架上的官方 / 下载的条目 ✎ → 房规（同一个编辑器，u7-13）：从这个战役里现在生效的那一份开始改，原件不动。 */
+export async function openHouseEditor(s: Services, c: CampaignLibrary, d: { ref: EntryRef; item: unknown; base?: unknown }, onSaved?: () => void): Promise<void> {
+  const codeSet = getSource(d.ref.set).codeSet
+  const clean = (x: unknown): Ent => { const out: Ent = {}; for (const [k, v] of Object.entries(JSON.parse(JSON.stringify(x ?? {})) as Ent)) if (!k.startsWith('_') && k !== 'uniqueId') out[k] = v; return out }
+  openEditor({ codeSet, prop: d.ref.prop, typeName: await typeNameOf(s, codeSet, d.ref.prop), pack: null, ent: clean(d.item), target: { kind: 'house', ref: d.ref }, house: { ref: d.ref, base: clean(d.base ?? d.item), campaign: c }, detailed: true, onSaved })
 }

@@ -3,6 +3,7 @@
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import type { Services } from '../../core/services'
 import type { EditSession } from './edit-flow'
+import type { EntryRef } from '../../library/scopes'
 import { fromText, issueLines, toText, type Ent } from './edit-json'
 import type { FormTable } from './EntryForm.vue'
 import type { JsonIssue } from './JsonBox.vue'
@@ -21,7 +22,7 @@ export function useEditor(svc: () => Services, session: EditSession) {
   const ents = { main: shallowRef<Ent>(plain(session.ent)), other: shallowRef<Ent | null>(null) }
   const tables = { main: shallowRef<FormTable | null>(null), other: shallowRef<FormTable | null>(null) }
   /** 另一语言：found 有这一条 / none 还没有（右栏是空表单）/ ambiguous 对上好几条 / loading / error。 */
-  const otherState = ref<'loading' | 'found' | 'none' | 'ambiguous' | 'error'>('loading')
+  const otherState = ref<'loading' | 'found' | 'none' | 'ambiguous' | 'error' | 'missing'>('loading')
   const otherHash = ref<string | null>(null)
   let otherStart = ''
   const dirty = ref(false)
@@ -33,9 +34,24 @@ export function useEditor(svc: () => Services, session: EditSession) {
     const t = await lib().custom.fields(cs[side], prop)
     tables[side].value = t ? { fields: t.fields, defs: t.defs, labels: t.labels } : null
   }
+  // 房规（u7-13b）：右栏 English = 这个战役里生效的英文官方原文（有英文房规就是房规那一份），改了就在英文那套也建一条房规
+  const otherRef = shallowRef<EntryRef | null>(null)
+  const otherBase = shallowRef<Ent | null>(null)
+  const clean = (x: unknown): Ent => { const out: Ent = {}; for (const [k, v] of Object.entries(plain(x ?? {}) as Ent)) if (!k.startsWith('_') && k !== 'uniqueId') out[k] = v; return out }
+  async function loadOtherHouse(h: NonNullable<EditSession['house']>): Promise<void> {
+    const en = await lib().bilingual.englishInCampaign(h.campaign, h.ref)
+    if (!en) { otherState.value = 'missing'; return }
+    otherRef.value = en.ref
+    ents.other.value = clean(en.item)
+    otherStart = JSON.stringify(ents.other.value)
+    const d = await lib().scoped.detail({ ...h.campaign, codeSet: cs.other }, en.ref, { browse: true }).catch(() => null)
+    otherBase.value = clean(d && !('hidden' in d) ? d.base ?? d.item : en.item)
+    otherState.value = 'found'
+  }
   async function loadOther(): Promise<void> {
     otherState.value = 'loading'
     try {
+      if (session.house) return await loadOtherHouse(session.house)
       if (session.target.kind === 'mine' && session.pack) {
         const r = await lib().bilingual.otherEntry(cs.main, session.pack.id, prop, { uniqueId: session.target.uniqueId })
         if (r.state === 'found' && r.entity) { ents.other.value = r.entity; otherHash.value = r.hash; otherState.value = 'found'; otherStart = JSON.stringify(r.entity); return }
@@ -71,13 +87,26 @@ export function useEditor(svc: () => Services, session: EditSession) {
     try { jsonIssues.value = issueLines(r.pointers, prop, await lib().custom.validateEntry(cs[left.value], prop, plain(r.ent))) } catch (e) { console.warn('[trpg-assistant] 结构检查没跑成', e) }
   }
 
-  // ---- 两边不一样的不用翻译的项（≠）；房规以后再加「改过」 ----
+  // ---- 两边不一样的不用翻译的项（≠）；房规标和原件比「改过」的（每一边和自己的原件比） ----
   const marks = ref<Record<string, string>>({})
+  const houseMarks = ref<Record<Side, Record<string, string>>>({ main: {}, other: {} })
+  const marksOf = (side: Side): Record<string, string> => (session.house ? houseMarks.value[side] : marks.value)
   let markTimer: ReturnType<typeof setTimeout> | null = null
   watch([ents.main, ents.other], () => {
     if (markTimer) clearTimeout(markTimer)
     markTimer = setTimeout(async () => {
       const a = ents.main.value, b = ents.other.value
+      if (session.house) {
+        const base = { main: session.house.base, other: otherBase.value }
+        const next: Record<Side, Record<string, string>> = { main: {}, other: {} }
+        for (const side of ['main', 'other'] as const) {
+          const e = ents[side].value, was = base[side]
+          if (!e || !was) continue
+          try { next[side] = Object.fromEntries((await lib().custom.changes(cs[side], plain(was), plain(e))).map((c) => [c.field, '改过'])) } catch (err) { console.warn('[trpg-assistant] 和原件比没成功', err) }
+        }
+        houseMarks.value = next
+        return
+      }
       if (!b || otherState.value === 'none' && !otherTouched()) { marks.value = {}; return }
       try { marks.value = Object.fromEntries((await lib().bilingual.mismatches(cs.main, prop, plain(a), plain(b))).map((f) => [f, '≠'])) } catch (e) { console.warn('[trpg-assistant] 对比两边没成功', e) }
     }, 600)
@@ -111,6 +140,15 @@ export function useEditor(svc: () => Services, session: EditSession) {
   }
   void loadUndo()
 
+  /** 房规：交给 bilingual.houseRuleBoth 的两边（中文这一条总给；英文改过才给）。 */
+  function houseSides() {
+    const h = session.house!
+    const zhIsMain = cs.main !== 'en'
+    const mainSide = { target: h.ref, edited: plain(ents.main.value) }
+    const otherSide = otherRef.value && ents.other.value && otherTouched() ? { target: otherRef.value, edited: plain(ents.other.value) } : undefined
+    return zhIsMain ? { zh: mainSide, en: otherSide } : { zh: otherSide, en: mainSide }
+  }
+
   /** 存的时候交给后端的两边（中文 / 英文按资料集分）。另一语言只在动过、或本来就有的时候存。 */
   function sides() {
     const zhSide = cs.main === 'en' ? 'other' : 'main'
@@ -119,7 +157,7 @@ export function useEditor(svc: () => Services, session: EditSession) {
   }
 
   /** 另一语言打开时的样子（本来就有那一条才有；新建 / 还没有为 null）。 */
-  const otherBefore = (): Ent | null => (otherState.value === 'found' && otherStart ? JSON.parse(otherStart) as Ent : null)
+  const otherBefore = (): Ent | null => (session.house ? otherBase.value : otherState.value === 'found' && otherStart ? JSON.parse(otherStart) as Ent : null)
 
-  return { otherBefore, cs, ents, tables, otherState, left, right, ready, dirty, setEnt, jsonText, jsonIssues, onJson, marks, draftAt, dropDraft, undoLeft, loadUndo, sides, otherTouched }
+  return { otherBefore, otherBase, houseSides, marksOf, cs, ents, tables, otherState, left, right, ready, dirty, setEnt, jsonText, jsonIssues, onJson, marks, draftAt, dropDraft, undoLeft, loadUndo, sides, otherTouched }
 }
