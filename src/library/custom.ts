@@ -8,11 +8,12 @@ import { importReplaces } from './import-replace'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
-import { createPack, deletePack, docIdOf, exportPack, listPacks, renamePack, type PackDeps, type PackSource } from './custom-packs'
+import { createPack, deletePack, docIdOf, exportPack, lastPack, listPacks, rememberPack, renamePack, type PackDeps, type PackSource } from './custom-packs'
+import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
-import { topLevelChanges } from './house-diff'
+import { fieldChanges, topLevelChanges } from './house-diff'
 import { findCollisions, packAltId, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
@@ -120,7 +121,39 @@ export class CustomLibrary {
    * 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
    */
   async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, opts: SaveOptions = {}) {
-    return persist(this.entryDeps, codeSet, prop, ent, { ...opts, pack: opts.pack ?? await this.defaultPack(codeSet), record: true })
+    const saved = await persist(this.entryDeps, codeSet, prop, ent, { ...opts, pack: opts.pack ?? await this.defaultPack(codeSet), record: true })
+    if (opts.pack) await rememberPack(this.packDeps, codeSet, opts.pack)
+    return saved
+  }
+
+  /** 保存确认页「这次改了哪几项」（G1）：两边经作者 cleanEntity 后逐个顶层字段比；before 为 null（新建）时没有对比。 */
+  async changes(codeSet: string, before: Record<string, unknown> | null, after: Record<string, unknown>) {
+    if (!before) return []
+    const f = await this.frame(codeSet)
+    const [was, now] = await Promise.all([f.call('cleanEntity', before), f.call('cleanEntity', after)])
+    return fieldChanges(was as Record<string, unknown>, now as Record<string, unknown>)
+  }
+
+  /** 存条目时默认选哪个包（G2）：上次用的；没有就是「我的资料」。 */
+  async suggestedPack(codeSet: string): Promise<string> {
+    return (await lastPack(this.packDeps, codeSet)) ?? this.defaultPack(codeSet)
+  }
+
+  /** 编辑 / 覆盖列表（G3）：按书（sources）或按包（packEdits）筛；给战役就连本战役层一起列。 */
+  edits(filter: EditFilter = {}, c?: CampaignLibrary | null): Promise<EditRow[]> {
+    return listEdits(this.scoped, filter, c)
+  }
+
+  /** 【我的库】某个包相关的编辑 / 覆盖：条目来源在包头里的，或选的是这个包自己这一份的。 */
+  async packEdits(codeSet: string, id: string, c?: CampaignLibrary | null): Promise<EditRow[]> {
+    const pack = (await this.packs(codeSet)).find((p) => p.id === id)
+    if (!pack) throw new Error(`【我的库】里没有这个包：${id}`)
+    return listEdits(this.scoped, { sources: pack.sources, altIds: [packAltId(pack.id, pack.docIdLocal)] }, c)
+  }
+
+  /** 整批改作用范围（Q14）：本战役 / 规则 / 全局。返回新的战役选书设置（本战役层的要调用方写回）。 */
+  moveEdits(c: CampaignLibrary, rows: Array<Pick<EditRow, 'level' | 'ref' | 'altId'>>, to: EditLevel) {
+    return moveEdits(this.scoped, c, rows, to)
   }
 
   /** P5.5 B8-6：第一次用到【我的库】时做一次迁移（custom-migrate.ts），做过就跳过。 */
@@ -280,6 +313,7 @@ export class CustomLibrary {
     if (target.kind === 'entry') {
       if (!opts.pack) throw new Error('选一个【我的库】里的包，把这一条存进去')
       const saved = await copyEntryToPack(deps, codeSet, target.ref, opts.pack, opts.rule ? { rule: opts.rule } : {})
+      await rememberPack(this.packDeps, codeSet, opts.pack)
       this.scoped.reset()
       return { kind: 'entry' as const, pack: opts.pack, ...saved }
     }

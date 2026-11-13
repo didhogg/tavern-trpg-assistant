@@ -107,3 +107,16 @@ export async function deletePack(d: PackDeps, codeSet: string, id: string) {
   if (!pack) throw new Error(`【我的库】里没有这个包：${id}`)
   return d.lib.brewDelete(brewSetOf(codeSet).id, [pack.docIdLocal])
 }
+
+/** P5.5 阶段 C G2：存条目时「默认上次用的包」。按资料集各记一个（管理记录里的一次性标记）。 */
+const lastPackKey = (codeSet: string) => `last-pack:${codeSet}`
+
+export async function rememberPack(d: Pick<PackDeps, 'manage'>, codeSet: string, id: string): Promise<void> {
+  await d.manage.setMeta(lastPackKey(codeSet), id)
+}
+
+/** 上次用的包；没记过或那个包已经删了，返回 null（调用方退回默认包）。 */
+export async function lastPack(d: PackDeps, codeSet: string): Promise<string | null> {
+  const id = await d.manage.meta<string>(lastPackKey(codeSet))
+  return id && (await listPacks(d, codeSet)).some((p) => p.id === id) ? id : null
+}

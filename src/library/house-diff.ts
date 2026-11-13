@@ -17,3 +17,18 @@ export function topLevelChanges(was: Record<string, unknown>, now: Record<string
   }
   return out
 }
+
+export interface FieldChange {
+  field: string
+  /** 改之前（新加的字段为 undefined）。 */
+  before: unknown
+  /** 改之后；删掉的为 null。 */
+  after: unknown
+}
+
+/** P5.5 阶段 C G1：保存前「这次改了哪几项」。和房规只记改动是同一个比较（topLevelChanges），按字段名排好。 */
+export function fieldChanges(was: Record<string, unknown>, now: Record<string, unknown>): FieldChange[] {
+  return Object.entries(topLevelChanges(was, now))
+    .map(([field, after]) => ({ field, before: was[field], after }))
+    .sort((a, b) => a.field.localeCompare(b.field))
+}
