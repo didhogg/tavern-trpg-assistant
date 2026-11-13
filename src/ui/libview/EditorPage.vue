@@ -20,7 +20,8 @@ import { langName, plain, useEditor } from './use-editor'
 
 /**
  * P5.5 u7-10 编辑器（驾驶员 2026-11-13 第二版）：宽屏左栏 = 主编辑语言的表单，右侧栏 = ［另一语言 | JSON | 预览］一次一种，
- * 另一语言和 JSON 能直接改、预览只能看；窄屏上半栏是另一语言 / JSON / 预览（能收起、能拖高度），下半栏是表单。
+ * 另一语言和 JSON 能直接改、预览只能看；窄屏（编辑器不到 600 宽）一次只看一栏：顶上一排［主语言 | 另一语言 | JSON | 预览］切换，
+ * 当前那一栏占满高度（驾驶员 2026-11-13：上下分栏在矮窗口里把表单挤没了）。
  * 每栏只写自己的语言；中文条目的英文名存的时候由后端按英文那一条自动写（bilingual.saveBoth）。
  */
 const props = defineProps<{ session: EditSession }>()
@@ -52,15 +53,11 @@ function swap(): void { ed.left.value = R.value; formKey.value++ }
 const previewItem = ref<unknown>(ed.ents.main.value)
 let pt: ReturnType<typeof setTimeout> | null = null
 watch(() => ed.ents[L.value].value, (e) => { if (pt) clearTimeout(pt); pt = setTimeout(() => { previewItem.value = e ? structuredClone(e) : null }, 500) })
-const topOpen = ref(true)
-const topH = ref(260)
-function drag(e: PointerEvent): void {
-  const y0 = e.clientY, h0 = topH.value
-  const move = (m: PointerEvent) => { topH.value = Math.max(120, Math.min(600, h0 + m.clientY - y0)) }
-  const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
-  window.addEventListener('pointermove', move)
-  window.addEventListener('pointerup', up)
-}
+// 窄屏一次只看一栏：showMain = 看主语言表单，否则看右栏那一种（tab）
+const showMain = ref(true)
+const narrowTabs = computed(() => [{ value: 'main', label: `${langName(ed.cs[L.value])}${house ? '（房规）' : ''}` }, ...tabs.value])
+const narrowView = computed({ get: () => (showMain.value ? 'main' : tab.value), set: (v: string) => { if (v === 'main') showMain.value = true; else { tab.value = v; showMain.value = false } } })
+const sideNote = computed(() => (tab.value === 'other' ? (ed.otherState.value === 'none' ? '还没有这一条：写了就一起存' : '') : tab.value === 'json' ? `${langName(ed.cs[L.value])}这一条 · 和表单同步` : '只能看'))
 /** 原件标签里的［← 用回原件的］：这一项换回原件的值。 */
 function restoreField(f: string): void {
   if (!house) return
@@ -69,7 +66,7 @@ function restoreField(f: string): void {
   else next[f] = structuredClone(house.base[f])
   ed.setEnt('main', next); formKey.value++
 }
-const showJson = () => { tab.value = 'json'; topOpen.value = true }
+const showJson = () => { tab.value = 'json'; showMain.value = false }
 
 // 从左栏那一种语言填入右栏空着的（u7-10c）
 const labelOf = (side: 'main' | 'other') => (f: string) => ed.tables[side].value?.fields.find((x) => x.name === f)?.label ?? ed.tables[side].value?.labels[f] ?? f
@@ -215,14 +212,13 @@ async function doneHouse(): Promise<void> {
     <div v-if="failed" class="lib-pad"><div class="lib-banner lib-banner--err"><span>编辑器没打开：{{ failed }}</span></div></div>
     <div v-else-if="!loaded || !ed.tables.main.value" class="lib-pad"><div class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div></div>
     <div v-else :class="wide ? 'lib-split' : 'lib-vsplit'">
-      <section v-if="!wide && !topOpen" class="lib-pane__head lib-pane--side lib-pane--bar"><Segmented v-model="tab" label="上半栏" :options="tabs" @update:model-value="topOpen = true" /><button class="trpg-btn trpg-btn--small trpg-btn--quiet lib-end" type="button" @click="topOpen = true">展开</button></section>
-      <section :class="['lib-pane', wide ? '' : 'lib-pane--left']" :style="wide ? { order: 0 } : { order: 2 }" data-testid="editor-main">
-        <div class="lib-pane__head"><b>{{ langName(ed.cs[L]) }}{{ house ? '（房规）' : '' }}</b></div>
+      <div v-if="!wide" class="lib-pane__head" data-testid="editor-views"><Segmented v-model="narrowView" label="看哪一栏" :options="narrowTabs" /><span v-if="!showMain" class="lib-end lib-faint">{{ sideNote }}</span></div>
+      <section v-show="wide || showMain" class="lib-pane" data-testid="editor-main">
+        <div v-if="wide" class="lib-pane__head"><b>{{ langName(ed.cs[L]) }}{{ house ? '（房规）' : '' }}</b></div>
         <div class="lib-pane__body"><EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setEnt(L, e)" @json="showJson" /></div>
       </section>
-      <div v-if="!wide && topOpen" class="lib-grip" role="separator" aria-label="拖动调上半栏高度" :style="{ order: 1 }" @pointerdown.prevent="drag"><i /></div>
-      <section v-if="wide || topOpen" class="lib-pane lib-pane--side" :style="wide ? { order: 1 } : { order: 0, flex: `0 0 ${topH}px` }" data-testid="editor-side">
-        <div class="lib-pane__head"><Segmented v-model="tab" label="右栏" :options="tabs" /><span class="lib-end lib-faint">{{ tab === 'origin' ? '只能看' : tab === 'other' ? (ed.otherState.value === 'none' ? '还没有这一条：写了就一起存' : '') : tab === 'json' ? `${langName(ed.cs[L])}这一条 · 和表单同步` : '只能看' }}</span><button v-if="!wide" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="topOpen = false">收起</button></div>
+      <section v-show="wide || !showMain" class="lib-pane lib-pane--side" data-testid="editor-side">
+        <div v-if="wide" class="lib-pane__head"><Segmented v-model="tab" label="右栏" :options="tabs" /><span class="lib-end lib-faint">{{ sideNote }}</span></div>
         <div class="lib-pane__body">
           <OriginPane v-if="tab === 'origin' && house" :base="house.base" :current="ed.ents.main.value" :changed="Object.keys(ed.marksOf('main'))" :label-of="labelOf('main')" :prop="session.prop" :code-set="ed.cs.main" :source="String(house.base.source ?? '')" @restore="restoreField" />
           <template v-else-if="tab === 'other'">

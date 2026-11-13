@@ -2,7 +2,6 @@
 import { onMounted, ref, watch } from 'vue'
 import { useAppStore } from '../../stores/app'
 import { useToastStore } from '../../stores/toast'
-import Icon from '../kit/Icon.vue'
 import { FORMAT_TAGS, splitInline, tagLabel, type InlineSeg } from './inline-text'
 import { resolveTagOnce, type TagResolved } from './useTags'
 import ContentLink from './ContentLink.vue'
@@ -36,7 +35,7 @@ watch(() => [props.text, props.codeSet], run)
     <component :is="FORMAT_TAGS[seg.tag]" v-else-if="FORMAT_TAGS[seg.tag]"><InlineText :text="seg.content" :code-set="codeSet" /></component>
     <ContentLink v-else-if="resolved[i]?.kind === 'link'" :target="resolved[i].target" :label="resolved[i].label" :code-set="codeSet" />
     <AuthorFragment v-else-if="resolved[i]?.kind === 'markup'" :markup="resolved[i].markup" :code-set="codeSet" inline />
-    <button v-else-if="resolved[i]?.kind === 'dice'" class="lib-dice" type="button" @click="toast.info('骰盘接线稍后开放')"><Icon name="dice-five" :size="12" />{{ resolved[i].label }}</button>
+    <button v-else-if="resolved[i]?.kind === 'dice'" class="lib-dice" type="button" @click="toast.info('骰盘接线稍后开放')">{{ resolved[i].label }}</button>
     <template v-else>{{ resolved[i]?.label ?? tagLabel(seg.content, seg.tag) }}</template>
   </template>
 </template>

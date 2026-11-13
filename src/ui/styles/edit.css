@@ -52,16 +52,14 @@
 .lib-split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .lib-split > .lib-pane + .lib-pane { border-left: var(--border) solid var(--line); }
 .lib-vsplit { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.lib-vsplit > .lib-pane--left { flex: 1; min-height: 0; }
+.lib-vsplit > .lib-pane { flex: 1; min-height: 0; }
+.lib-vsplit > .lib-pane__head { overflow-x: auto; }
 .lib-pane { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 .lib-pane--side { background: var(--bg-sunk); }
 .lib-pane__head { flex: none; display: flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
 .lib-pane__head .trpg-seg button { white-space: nowrap; min-height: 30px; padding-inline: var(--sp-3); }
 .lib-pane__head > .lib-faint { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lib-pane__body { flex: 1; min-height: 0; overflow: auto; padding: var(--sp-3) var(--sp-4) var(--sp-5); display: flex; flex-direction: column; }
-.lib-pane--bar { border-bottom: var(--border) solid var(--line); }
-.lib-grip { flex: none; height: 14px; display: grid; place-items: center; background: var(--surface); border-block: var(--border) solid var(--line); cursor: row-resize; touch-action: none; }
-.lib-grip i { width: 36px; height: 4px; border-radius: 2px; background: var(--line-ctrl); }
 .lib-tform { display: grid; gap: var(--sp-3); align-content: start; }
 .lib-tfield { display: grid; gap: 4px; min-width: 0; }
 .lib-tfield > label { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }

@@ -88,15 +88,31 @@ const enName = await page.getByTestId('editor-side').locator('[data-field="name"
 await page.screenshot({ path: `${shots}/6-reopen.png` })
 check('✎ 再打开：右栏是对上的英文那一条', enName === 'Fire Parrot', enName)
 
-// 窄屏：上下两栏
-await page.setViewportSize({ width: 390, height: 800 })
+// 窄（编辑器不到 600 宽）：一次只看一栏，顶上一排切换；当前那一栏占满高度（驾驶员 2026-11-13：上下分栏在矮窗口里把表单挤没了）
+const views = page.getByTestId('editor-views')
+const narrowState = async () => {
+  const m = await page.getByTestId('editor-main').boundingBox()
+  const nameBox = await page.getByTestId('editor-main').locator('[data-field="name"] input').boundingBox()
+  return { views: await views.locator('.trpg-seg button').allInnerTexts().catch(() => []), mainH: Math.round(m?.height ?? 0), nameIn: !!nameBox && !!m && nameBox.y >= m.y && nameBox.y + nameBox.height <= m.y + m.height, side: await page.getByTestId('editor-side').isVisible() }
+}
+await page.setViewportSize({ width: 900, height: 700 })
+await settle(page, 900)
+await page.screenshot({ path: `${shots}/7-editor-mid.png` })
+const mid = await narrowState()
+// 宽够 600 时左右两栏、不够时一次一栏：哪种都要中文表单够高、必填项看得见
+check('中等窗口（900×700）：中文表单够高、必填项看得见（两栏或一次一栏）', mid.mainH > 300 && mid.nameIn && (mid.views.length === 4 ? !mid.side : mid.side), JSON.stringify(mid))
+await page.setViewportSize({ width: 390, height: 640 })
 await settle(page, 900)
 await page.screenshot({ path: `${shots}/7-editor-narrow.png` })
-const vsplit = await page.locator('[data-testid="editor"] .lib-vsplit').count()
-check('窄屏：上半栏另一语言 / JSON / 预览，下半栏表单', vsplit === 1)
-await page.getByTestId('editor-side').getByRole('button', { name: '收起' }).click()
+const nar = await narrowState()
+check('窄屏（390×640）：同样一次一栏，中文表单占满、必填项看得见', nar.views.length === 4 && nar.mainH > 300 && nar.nameIn && !nar.side, JSON.stringify(nar))
+await views.locator('.trpg-seg button', { hasText: 'English' }).click()
+await settle(page, 500)
+await page.screenshot({ path: `${shots}/8-editor-narrow-en.png` })
+const enNarrow = await page.getByTestId('editor-side').locator('[data-field="name"] input').inputValue()
+check('窄屏切到 English：英文表单占满，内容还在；中文那栏收起来', enNarrow === 'Fire Parrot' && !(await page.getByTestId('editor-main').isVisible()), enNarrow)
+await views.locator('.trpg-seg button').first().click()
 await settle(page, 400)
-await page.screenshot({ path: `${shots}/8-editor-narrow-collapsed.png` })
 
 // 草稿：改一下不存 → 取消（放弃）→ 我的库顶上有草稿条
 await field(page.getByTestId('editor-main'), 'name').locator('input').fill('火焰鹦鹉（改）')

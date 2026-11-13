@@ -3,7 +3,6 @@ import type { ResolvedTag } from '../../library/entry-links'
 import type { AuthorMarkup } from '../../library/runtime/frame/author-markup'
 import { useAppStore } from '../../stores/app'
 import { useToastStore } from '../../stores/toast'
-import Icon from '../kit/Icon.vue'
 import ContentLink from './ContentLink.vue'
 import RollTable from './RollTable.vue'
 
@@ -64,9 +63,9 @@ export default defineComponent({
         const table = props.markup.tables?.[Number(tableMark.slice(props.markup.marker.length + 1))]
         if (table && typeof table === 'object') return h(RollTable, { key, table: table as Record<string, unknown>, codeSet: props.codeSet })
       }
-      // 作者标的骰子（{@dice} {@damage} {@hit} 等渲染出的 ve-roller / render-roller）：画成骰子标签，和 InlineText 同一个样子
+      // 作者标的骰子（{@dice} {@damage} {@hit} 等渲染出的 ve-roller / render-roller）：画成带下划线的文字（驾驶员 2026-11-13：不要骰子图标和框），和 InlineText 同一个样子
       if (node.classList.contains('ve-roller') || node.classList.contains('render-roller')) {
-        return h('button', { key, class: 'lib-dice', type: 'button', title: node.getAttribute('title') ?? undefined, onClick: () => toast.info('骰盘接线稍后开放') }, [h(Icon, { name: 'dice-five', size: 12 }), node.textContent ?? ''])
+        return h('button', { key, class: 'lib-dice', type: 'button', title: node.getAttribute('title') ?? undefined, onClick: () => toast.info('骰盘接线稍后开放') }, node.textContent ?? '')
       }
       const children = [...node.childNodes].map((child, i) => draw(child, `${key}.${i}`))
       const mark = node.getAttribute('data-trpg-link')

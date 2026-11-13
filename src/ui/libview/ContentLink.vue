@@ -5,7 +5,6 @@ import { copyText } from '../../host/clipboard'
 import { appendToInput } from '../../host/input'
 import { useAppStore } from '../../stores/app'
 import { useToastStore } from '../../stores/toast'
-import Icon from '../kit/Icon.vue'
 import Term from '../kit/Term.vue'
 import { SOURCES } from '../../library/sources'
 import { openEntry, openReader } from './open'
@@ -54,5 +53,5 @@ async function roll(): Promise<void> {
 <template>
   <Term v-if="target.located" @open="open"><slot>{{ label }}</slot></Term>
   <span v-else class="lib-deadlink" data-testid="dead-link" role="link" tabindex="0" :title="`库里找不到「${label}」：可能它所在的书或包还没装（点开查找并下载），或者资料里的名字和链接对不上（上游数据）`" @click="openMissing" @keydown.enter="openMissing"><slot>{{ label }}</slot><sup class="lib-deadlink__q" aria-hidden="true">?</sup></span>
-  <button v-if="table" class="lib-dice" type="button" data-testid="roll-outside" aria-label="直接掷这张表" @click="roll"><Icon name="dice-five" :size="12" />掷</button>
+  <button v-if="table" class="lib-dice" type="button" data-testid="roll-outside" aria-label="直接掷这张表" @click="roll">掷</button>
 </template>
