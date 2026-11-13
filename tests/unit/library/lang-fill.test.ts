@@ -72,6 +72,8 @@ function setup() {
   } }
   const lib = {
     frameOf: async () => frame,
+    // 两种语言的官方资料都装了（没装的情况见 lang-packs.test.ts）
+    officialInstalled: async () => true,
     brewImport: async (set: string, files: Array<{ name: string; text: string }>) => { imported.push({ set, names: files.map((f) => f.name) }); if (set === 'en-brew') for (const f of files) packs.en.push({ id: 'solo', docIdLocal: 'e2', sources: JSON.parse(f.text)._meta.sources.map((s: { json: string }) => s.json) }); return { ok: true, errors: [] } },
   }
   const pairs = { installed: async () => [{ zh: { docIdLocal: 'z1' }, en: { docIdLocal: 'e1' }, status: 'paired' }, { zh: { docIdLocal: 'z2' }, en: null, status: 'zh-only' }] }

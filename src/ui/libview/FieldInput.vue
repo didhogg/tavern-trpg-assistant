@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
+import { useAppStore } from '../../stores/app'
 import type { FieldShape } from '../../library/brew-validate'
 import Checkbox from '../kit/Checkbox.vue'
 import Icon from '../kit/Icon.vue'
 import SelectField from '../kit/SelectField.vue'
+import EntryBlock from './EntryBlock.vue'
+import { CODESET_KEY, NEW_BLOCKS } from './entry-blocks'
 import { branchOf, emptyOf, isEmpty, kindName, resolve, type Defs } from './field-shape'
 
 /**
@@ -11,7 +14,7 @@ import { branchOf, emptyOf, isEmpty, kindName, resolve, type Defs } from './fiel
  * 一组和好几项里面再套自己。画不了的提示「在 JSON 里改」。显示名：字段名查 labels（作者中文名），值查形状里的 labels；没有就显示原文。
  */
 const props = defineProps<{ shape: FieldShape; value: unknown; defs: Defs; labels: Record<string, string>; name: string; depth?: number }>()
-const emit = defineEmits<{ update: [v: unknown]; json: [] }>()
+const emit = defineEmits<{ update: [v: unknown]; json: []; split: [blocks: unknown[]] }>()
 const s = computed(() => ((props.depth ?? 0) > 6 ? { c: 'json' as const, why: '套得太深' } : resolve(props.shape, props.defs)))
 const d = computed(() => (props.depth ?? 0) + 1)
 const set = (v: unknown) => emit('update', v)
@@ -40,6 +43,17 @@ function toggleMulti(v: unknown, on: boolean): void {
 function setItem(i: number, v: unknown): void { const next = [...arr.value]; next[i] = v; set(next) }
 const removeItem = (i: number) => { const next = arr.value.filter((_, j) => j !== i); set(next.length ? next : undefined) }
 const addItem = () => { if (s.value.c === 'list') set([...arr.value, emptyOf(s.value.of, props.defs)]) }
+/** 正文的一段写成了几段（Markdown 里加了小标题 / 列表）：换成那几段。 */
+function splitItem(i: number, blocks: unknown[]): void { const next = [...arr.value]; next.splice(i, 1, ...blocks); set(next) }
+// 正文（一串段落）：下面多一排「加一段」——小标题段 / 列表 / 表格，起稿交作者转换器转成正文（custom.markdownBlocks）
+const isEntries = computed(() => s.value.c === 'list' && resolve(s.value.of, props.defs).c === 'entries')
+const app = useAppStore()
+const codeSet = inject(CODESET_KEY, ref('cn'))
+const adding = ref(false)
+async function addBlock(md: string): Promise<void> {
+  adding.value = true
+  try { set([...arr.value, ...(await app.svc().backend.library.custom.markdownBlocks(codeSet.value, md))]) } catch (e) { console.error('[trpg-assistant] 加一段没成功', e) } finally { adding.value = false }
+}
 function setProp(k: string, v: unknown): void {
   const next = { ...obj.value }
   if (v === undefined || (typeof v === 'string' && v === '')) delete next[k]
@@ -73,10 +87,14 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   <!-- 好几项 -->
   <div v-else-if="s.c === 'list'" class="lib-rep">
     <div v-for="(item, i) in arr" :key="i" class="lib-rep__row">
-      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="item" :defs="defs" :labels="labels" :name="name" :depth="d" @update="(v: unknown) => setItem(i, v)" @json="emit('json')" /></div>
+      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="item" :defs="defs" :labels="labels" :name="name" :depth="d" @update="(v: unknown) => setItem(i, v)" @split="(bs: unknown[]) => splitItem(i, bs)" @json="emit('json')" /></div>
       <button class="trpg-icon-btn" type="button" :aria-label="`删掉第 ${i + 1} 项`" @click="removeItem(i)"><Icon name="x" :size="16" /></button>
     </div>
-    <div><button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="field-add" @click="addItem"><Icon name="plus" :size="14" />{{ arr.length ? '再加一项' : '加一项' }}</button></div>
+    <div v-if="isEntries" class="lib-inline" role="toolbar" :aria-label="`${lab(name)}：加一段`" data-testid="block-add">
+      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="field-add" @click="addItem"><Icon name="plus" :size="14" />文字段</button>
+      <button v-for="b in NEW_BLOCKS" :key="b.key" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="adding" :data-testid="`block-add-${b.key}`" @click="addBlock(b.md)"><Icon :name="b.icon" :size="14" />{{ b.label }}</button>
+    </div>
+    <div v-else><button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="field-add" @click="addItem"><Icon name="plus" :size="14" />{{ arr.length ? '再加一项' : '加一项' }}</button></div>
   </div>
   <!-- 一组 -->
   <div v-else-if="s.c === 'group'" class="lib-grp">
@@ -99,9 +117,8 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
     <span class="trpg-seg lib-seg--small" role="group" :aria-label="`${lab(name)}的写法`"><button v-for="(b, i) in s.branches" :key="i" type="button" :aria-pressed="i === branch" @click="chooseBranch(i)">{{ kindName(b.shape, defs) }}</button></span>
     <FieldInput :shape="s.branches[branch].shape" :value="value" :defs="defs" :labels="labels" :name="name" :depth="d" @update="set" @json="emit('json')" />
   </div>
-  <!-- 正文（一段）：文字一段一个框；列表 / 表格等复杂的一段到 JSON 里改 -->
-  <textarea v-else-if="s.c === 'entries' && (typeof value === 'string' || value == null)" class="trpg-input lib-para" rows="3" :value="typeof value === 'string' ? value : ''" :aria-label="lab(name)" @input="set(($event.target as HTMLInputElement).value)" />
-  <button v-else-if="s.c === 'entries'" class="lib-tojson" type="button" @click="emit('json')"><Icon name="info" :size="14" />这一段是{{ (value as { type?: string })?.type ?? '复杂内容' }}，在 JSON 里改 ›</button>
+  <!-- 正文（一段）：文字 + 小工具栏；其他段能无损转的用 Markdown 写，不能的到 JSON 里改（EntryBlock） -->
+  <EntryBlock v-else-if="s.c === 'entries'" :value="value" :label="lab(name)" @update="set" @split="(bs: unknown[]) => emit('split', bs)" @json="emit('json')" />
   <!-- 画不了 -->
   <button v-else class="lib-tojson" type="button" :title="s.c === 'json' ? s.why : undefined" @click="emit('json')"><Icon name="info" :size="14" />这一项比较复杂，在 JSON 里改 ›</button>
 </template>

@@ -9,12 +9,13 @@ import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
 import { createPack, deletePack, docIdOf, exportPack, lastPack, listPacks, rememberPack, renamePack, type PackDeps, type PackSource } from './custom-packs'
+import { createHouseRule, type HouseEdit } from './custom-house'
 import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
 import { fieldTable } from './field-values'
-import { fieldChanges, topLevelChanges } from './house-diff'
+import { fieldChanges } from './house-diff'
 import { findCollisions, packAltId, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
@@ -24,7 +25,7 @@ import type { ParsedProp } from './runtime/frame/commands'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
 import registry from './custom.json'
-import { entryUnit, refKey, ruleScopes, type CampaignLibrary, type EntryRef } from './scopes'
+import { refKey, ruleScopes, type CampaignLibrary, type EntryRef } from './scopes'
 import { officialSourceOf, SOURCES, type SourceEntry } from './sources'
 
 interface CustomSource {
@@ -109,6 +110,15 @@ export class CustomLibrary {
   }
 
   /** 文字转条目（作者转换器）；版本风格按战役规则（2014 → 旧版标签）。只转换，不存。 */
+  /** 正文的一段能不能用 Markdown 改：能无损来回转（作者 RendererMarkdown ⇄ MarkdownConverter）给 Markdown，不能给 null（§16.7 第 2 条）。 */
+  async blockMarkdown(codeSet: string, block: unknown): Promise<string | null> {
+    return (await this.frame(codeSet)).call('blockMarkdown', block)
+  }
+  /** Markdown → 正文的几段（作者 MarkdownConverter + 作者编辑器给骰子加标签）；was = 改之前的那一段。 */
+  async markdownBlocks(codeSet: string, md: string, was?: unknown): Promise<unknown[]> {
+    return (await this.frame(codeSet)).call('markdownBlocks', md, was)
+  }
+
   async convert(c: CampaignLibrary, id: string, mode: ConvertMode, text: string) {
     formatOfCampaign(c)
     return (await this.frame(c.codeSet)).call('convertText', id, mode, text, { source: CUSTOM.mine.json, styleHint: ruleScopes(c.rule).style })
@@ -243,59 +253,9 @@ export class CustomLibrary {
   /** 条目换包（编号会变：先用 backend.entryChangeImpact 看影响）。撤销两步。 */
   moveEntries(codeSet: string, prop: string, uniqueIds: string[], fromPack: string, toPack: string) { return moveEntries(this.entryDeps, codeSet, prop, uniqueIds, fromPack, toPack) }
 
-  /**
-   * 房规：在可编辑自制里写一条，用作者 _copy 指向原件、只写改动。三种给法：
-   *   edited：改完的整条（P5.5 B1，编辑器用）——后端和原件逐个顶层字段比，只存改过的，删掉的写 null；改了名字就用新名字；
-   *   mod：作者的 _mod 写法（JSON 高级入口）；entity：整条覆盖（不再跟原件走）。
-   * 原件不动；房规挂在原件下当备选。activate：在本战役立即生效（默认），返回改好的战役选书设置。
-   */
-  async createHouseRule(c: CampaignLibrary, target: EntryRef, edit: { mod?: Record<string, unknown>; entity?: Record<string, unknown>; edited?: Record<string, unknown> }, { activate = true }: { activate?: boolean } = {}) {
-    formatOfCampaign(c)
-    let stored = await this.lib.storedItem(target.set, target.prop, target.hash)
-    // 目标是刚存、后台还没解析完的自制条目（P5.5 U2）：等后台解析完再查一次
-    if (!stored && SOURCES.find((x) => x.id === target.set)?.kind === 'brew' && typeof this.lib.brewDirty === 'function' && (await this.lib.brewDirty(target.set)).length) {
-      await this.settle(c.codeSet)
-      stored = await this.lib.storedItem(target.set, target.prop, target.hash)
-    }
-    if (!stored) throw new Error(`找不到要改的条目：${refKey(target)}`)
-    const base = stored.item as { name?: string; source?: string }
-    if (!base.name || !base.source) throw new Error(`原件没有名字或来源，作者的 _copy 指不到它：${refKey(target)}`)
-    const baseSource = base.source
-    // 房规来源里同名的只能有一条（作者编号 = 名字 + 来源）；同名不同书的加书名缩写区分
-    const taken = new Set<string>()
-    for (const l of await this.manage.houseRules()) {
-      const it = (await this.lib.storedItem(l.house.set, l.house.prop, l.house.hash))?.item as { name?: string } | undefined
-      if (l.house.prop === target.prop && it?.name) taken.add(it.name)
-    }
-    let changes: Record<string, unknown> = {}
-    if (edit.edited) {
-      const f0 = await this.frame(c.codeSet)
-      const [was, now] = await Promise.all([f0.call('cleanEntity', base), f0.call('cleanEntity', edit.edited)])
-      changes = topLevelChanges(was as Record<string, unknown>, now as Record<string, unknown>)
-      if (!Object.keys(changes).length) throw new Error('和原件一样，没有改动，不用存房规')
-    }
-    const { name: renamedTo, ...fieldChanges } = changes
-    const want = typeof renamedTo === 'string' && renamedTo ? renamedTo : base.name
-    const name = taken.has(want) ? `${want}（${base.source}）` : want
-    const ent = edit.entity
-      ? { ...edit.entity, name, source: CUSTOM.house.json }
-      : { ...fieldChanges, name, source: CUSTOM.house.json, _copy: { name: base.name, source: baseSource, ...(edit.mod ? { _mod: edit.mod } : {}) } }
-    const result = await this.lib.writeAuthor(c.codeSet, 'custom-houserule', async (view) => {
-      const f = await this.lib.frameOf(c.codeSet, view)
-      await f.call('editableEnsureSource', CUSTOM.house)
-      if (!edit.entity) await f.call('editableAddDependencies', { [target.prop]: [baseSource] })
-      const put = await f.call('editablePut', target.prop, ent)
-      const editable = ((await f.call('brewDocIndex')) ?? []).find((x) => x.isEditable)?.docIdLocal
-      return { value: put, touched: editable ? [editable] : [] }
-    })
-    const saved = result.value
-    if (!saved.hash) throw new Error('作者算不出房规条目的编号')
-    const house: EntryRef = { set: brewSetOf(c.codeSet).id, prop: target.prop, hash: saved.hash }
-    await this.manage.setAssignment(entryUnit(house), { scopes: [...ruleScopes(c.rule).defaultScopes], global: false })
-    await this.manage.linkHouseRule({ house, target })
-    await this.manage.pushHistory(historyKey(c.codeSet, target.prop, saved.uniqueId), { at: Date.now(), prop: target.prop, before: null, link: { house, target } })
-    const altId = `house:${saved.hash}`
-    return { house, altId, uniqueId: saved.uniqueId, changed: Object.keys(changes), pending: true as const, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
+  /** 房规（写一条 / 直接改已有的一条）：见 custom-house.ts。 */
+  createHouseRule(c: CampaignLibrary, target: EntryRef, edit: HouseEdit, opts: { activate?: boolean; replace?: EntryRef } = {}) {
+    return createHouseRule({ lib: this.lib, manage: this.manage, choose: (cc, t, alt) => this.scoped.choose(cc, t, alt), settle: this.settle, houseSource: CUSTOM.house, houseSet: (cs) => brewSetOf(cs).id }, c, target, edit, opts)
   }
 
   /** 删房规：作者删条 + 去掉链接；选过它的地方自动回到原件（生效版本会标"选过的备选不在了"）。 */

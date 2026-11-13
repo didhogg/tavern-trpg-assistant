@@ -13,6 +13,7 @@ import EmbeddedEntity from './EmbeddedEntity.vue'
 import EntryForm from './EntryForm.vue'
 import FillPage from './FillPage.vue'
 import JsonBox from './JsonBox.vue'
+import { existingHouse } from './house-existing'
 import OriginPane from './OriginPane.vue'
 import SavePage, { type SaveCtx } from './SavePage.vue'
 import { langName, plain, useEditor } from './use-editor'
@@ -109,7 +110,7 @@ async function cancel(): Promise<void> {
 const saving = ref(false)
 /** [完成] → 预览兼保存（u7-11）；真正存在那一页点 [保存]。 */
 function done(): void {
-  if (house) { doneHouse(); return }
+  if (house) { void doneHouse(); return }
   const sides = ed.sides()
   const zhIsMain = ed.cs.main !== 'en'
   const mainSide = zhIsMain ? sides.zh : sides.en, otherSide = zhIsMain ? sides.en : sides.zh
@@ -141,37 +142,55 @@ function done(): void {
   }
   modal.push({ key: 'save', title: '预览', component: markRaw(SavePage), variant: 'sheet', props: { ctx } })
 }
-/** 房规的 [完成] → 预览兼保存（作用于哪一层）→ bilingual.houseRuleBoth；不是本战役层就再挪过去（moveEdits）；战役设置写回。 */
-function doneHouse(): void {
+/**
+ * 房规的 [完成] → 预览兼保存（作用于哪一层）→ bilingual.houseRuleBoth；不是本战役层就再挪过去（moveEdits）；战役设置写回。
+ * 已经有生效的房规时（§16.7 第 5 条）：默认直接改那一条（用到它的地方一起变），也可以另存一条新的。
+ */
+async function doneHouse(): Promise<void> {
   if (!house) return
   const hs = ed.houseSides()
   const zhIsMain = ed.cs.main !== 'en'
   const mainSide = zhIsMain ? hs.zh : hs.en, otherSide = zhIsMain ? hs.en : hs.zh
   const c = house.campaign
+  const s0 = app.svc()
+  const existing = await existingHouse(s0, lib.bound ? c : null, { zh: hs.zh?.target, en: hs.en?.target }, (cs) => lib.brewSetId(cs)).catch((e: unknown) => { console.warn('[trpg-assistant] 查已有房规没成功，按新建处理', e); return null })
   const levels = [...(lib.bound ? [{ value: 'campaign', label: '本战役（所有存档和分支）' }] : []), { value: `rule:${c.rule}`, label: '当前规则' }, { value: 'global', label: '全局（所有战役）' }]
   const pref = app.settings?.library.overrideLevel ?? 'campaign'
   const want = pref === 'rule' ? `rule:${c.rule}` : pref
+  const levelLabel = (l: string) => levels.find((x) => x.value === l)?.label ?? l
   const ctx: SaveCtx = {
     prop: props.session.prop, isNew: false, pack: null,
     main: { cs: ed.cs.main, before: house.base, after: mainSide?.edited ?? null, include: !!mainSide },
     other: { cs: ed.cs.other, before: ed.otherBase.value, after: otherSide?.edited ?? null, include: !!otherSide },
     labelOf: (cs: string) => labelOf(cs === ed.cs.main ? 'main' : 'other'),
-    house: { levels, level: levels.some((l) => l.value === want) ? want : levels[0].value },
-    save: async (level: string) => {
+    house: { levels, level: levels.some((l) => l.value === want) ? want : levels[0].value, ...(existing ? { existing: { where: existing.where } } : {}) },
+    save: async (picked: string, opts) => {
       const s = app.svc()
-      const r = await s.backend.library.bilingual.houseRuleBoth(c, hs)
+      const replace = !!opts?.replace && !!existing
+      // 直接改：两边各自改已有的那条；另一边还没有房规的新建，放到已有那条所在的层
+      const level = replace ? existing!.level : picked
+      const sides = replace ? { ...(hs.zh ? { zh: { ...hs.zh, ...(existing!.zh ? { replace: existing!.zh } : {}) } } : {}), ...(hs.en ? { en: { ...hs.en, ...(existing!.en ? { replace: existing!.en } : {}) } } : {}) } : hs
+      const r = await s.backend.library.bilingual.houseRuleBoth(c, sides)
       const made = [hs.zh && r.zh ? { level: 'campaign' as const, ref: hs.zh.target, altId: r.zh.altId } : null, hs.en && r.en ? { level: 'campaign' as const, ref: hs.en.target, altId: r.en.altId } : null].filter((x) => !!x)
       const cur = level === 'campaign' ? r.campaign : await s.backend.library.custom.moveEdits(r.campaign, made, level as 'global')
       const owner = campaign.owner?.ownerKey
-      if (lib.bound && owner) { const ks = s.backend.kernelSave; await ks.setLibrary(owner, { ...(await ks.libraryOf(owner)), choices: cur.choices }) }
+      const writeBack = async (choices: typeof cur.choices) => { if (lib.bound && owner) { const ks = s.backend.kernelSave; await ks.setLibrary(owner, { ...(await ks.libraryOf(owner)), choices }) } }
+      await writeBack(cur.choices)
       await ed.dropDraft()
       await lib.refresh(s)
-      toast.push('undo', `已保存房规「${title.value}」（作用于${levels.find((l) => l.value === level)?.label ?? level}），整理完详情就更新`, { undo: async () => {
-        let back = lib.campaignLib ?? cur
-        for (const m of made) back = await s.backend.library.scoped.choose(back, m.ref, null, level as 'campaign')
-        if (lib.bound && owner) { const ks = s.backend.kernelSave; await ks.setLibrary(owner, { ...(await ks.libraryOf(owner)), choices: back.choices }) }
-        await lib.refresh(s); props.session.onSaved?.(); toast.success('已复原成原件')
-      } })
+      const undo = replace
+        ? async () => {
+          // 撤销 = 两边房规各退回上一版（后端记的撤销步）
+          for (const [cs, x] of [['cn', r.zh], ['en', r.en]] as const) if (x?.uniqueId) await s.backend.library.custom.undo(cs, props.session.prop, x.uniqueId)
+          await lib.refresh(s); props.session.onSaved?.(); toast.success('已退回这条房规的上一版')
+        }
+        : async () => {
+          let back = lib.campaignLib ?? cur
+          for (const m of made) back = await s.backend.library.scoped.choose(back, m.ref, null, level as 'campaign')
+          await writeBack(back.choices)
+          await lib.refresh(s); props.session.onSaved?.(); toast.success('已复原成原件')
+        }
+      toast.push('undo', replace ? `已改好房规「${title.value}」，用到它的地方都跟着变；整理完详情就更新` : `已保存房规「${title.value}」（作用于${levelLabel(level)}），整理完详情就更新`, { undo })
       modal.pop(); modal.pop()
       props.session.onSaved?.()
       // 房规要等后台整理完才在详情里生效：整理完再重读一次
@@ -199,7 +218,7 @@ function doneHouse(): void {
       <section v-if="!wide && !topOpen" class="lib-pane__head lib-pane--side lib-pane--bar"><Segmented v-model="tab" label="上半栏" :options="tabs" @update:model-value="topOpen = true" /><button class="trpg-btn trpg-btn--small trpg-btn--quiet lib-end" type="button" @click="topOpen = true">展开</button></section>
       <section :class="['lib-pane', wide ? '' : 'lib-pane--left']" :style="wide ? { order: 0 } : { order: 2 }" data-testid="editor-main">
         <div class="lib-pane__head"><b>{{ langName(ed.cs[L]) }}{{ house ? '（房规）' : '' }}</b></div>
-        <div class="lib-pane__body"><EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" @update="(e) => ed.setEnt(L, e)" @json="showJson" /></div>
+        <div class="lib-pane__body"><EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setEnt(L, e)" @json="showJson" /></div>
       </section>
       <div v-if="!wide && topOpen" class="lib-grip" role="separator" aria-label="拖动调上半栏高度" :style="{ order: 1 }" @pointerdown.prevent="drag"><i /></div>
       <section v-if="wide || topOpen" class="lib-pane lib-pane--side" :style="wide ? { order: 1 } : { order: 0, flex: `0 0 ${topH}px` }" data-testid="editor-side">
@@ -211,7 +230,7 @@ function doneHouse(): void {
             <div v-else-if="ed.otherState.value === 'loading'" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
             <p v-else-if="ed.otherState.value === 'ambiguous'" class="lib-muted">{{ langName(ed.cs[R]) }}那套里有好几条对得上，没法确定是哪一条；这次先不改另一种语言。</p>
             <p v-else-if="ed.otherState.value === 'error'" class="lib-muted">另一种语言这次没读出来；这次先只改{{ langName(ed.cs[L]) }}。</p>
-            <EntryForm v-else-if="ed.tables[R].value && ed.ents[R].value" :key="`R${formKey}${R}`" :table="ed.tables[R].value!" :ent="ed.ents[R].value!" :detailed="session.detailed" :marks="ed.marksOf(R)" :raw-names="ed.cs[R] === 'en'" @update="(e) => ed.setEnt(R, e)" @json="showJson" />
+            <EntryForm v-else-if="ed.tables[R].value && ed.ents[R].value" :key="`R${formKey}${R}`" :table="ed.tables[R].value!" :ent="ed.ents[R].value!" :detailed="session.detailed" :marks="ed.marksOf(R)" :raw-names="ed.cs[R] === 'en'" :code-set="ed.cs[R]" @update="(e) => ed.setEnt(R, e)" @json="showJson" />
           </template>
           <template v-else-if="tab === 'json'">
             <JsonBox :model-value="ed.jsonText.value" :issues="ed.jsonIssues.value" :keys="ed.tables[L].value?.fields.map((f) => f.name) ?? []" :label="`${langName(ed.cs[L])}这一条的 JSON`" @update:model-value="ed.onJson" />

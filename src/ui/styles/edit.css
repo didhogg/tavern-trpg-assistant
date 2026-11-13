@@ -105,6 +105,7 @@
 .lib-sum { flex: none; display: grid; gap: var(--sp-2); max-height: 45%; overflow: auto; padding: var(--sp-3) var(--sp-4); border-top: var(--border) solid var(--line); background: var(--surface); }
 .lib-sum__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-size: var(--fs-sm); }
 .lib-sum__row > .trpg-select-trigger { width: auto; min-width: 200px; }
+.lib-sum__choice { display: grid; gap: 4px; font-size: var(--fs-sm); }
 /* 房规（u7-13）· 覆盖管理（u7-14） */
 .lib-crow { display: grid; grid-template-columns: minmax(64px, 96px) minmax(0, 1fr) auto; gap: var(--sp-2); align-items: start; padding: 7px var(--sp-2); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
 .lib-crow > b { font-weight: var(--fw-semibold); color: var(--text2); font-size: 12px; padding-top: 2px; }
@@ -122,3 +123,7 @@
 .lib-erow__top > .trpg-check, [data-testid='overrides'] > .lib-filter > .trpg-check { width: auto; flex: none; margin: 0; }
 .lib-erow__top > .lib-end { flex: 1 1 100%; justify-content: flex-end; }
 .lib-erow__top > .lib-end .trpg-select-trigger { flex: 0 1 200px; width: auto; }
+/* 正文的一段（§16.7 第 2 条）：文字 + 小工具栏 / Markdown 框 */
+.lib-block { display: grid; gap: 4px; }
+.lib-block__bar { display: flex; gap: 2px; flex-wrap: wrap; }
+.lib-block__bar .trpg-btn { min-height: 28px; }

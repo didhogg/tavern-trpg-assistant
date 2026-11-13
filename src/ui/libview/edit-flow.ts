@@ -82,6 +82,12 @@ export async function openDraft(s: Services, d: { key: string; codeSet: string; 
 /** 书架上的官方 / 下载的条目 ✎ → 房规（同一个编辑器，u7-13）：从这个战役里现在生效的那一份开始改，原件不动。 */
 export async function openHouseEditor(s: Services, c: CampaignLibrary, d: { ref: EntryRef; item: unknown; base?: unknown }, onSaved?: () => void, from?: { ent: Ent; draftKey: string }): Promise<void> {
   const codeSet = getSource(d.ref.set).codeSet
+  // 刚存过房规时详情页可能还是整理前的样子：等后台整理完，从后端重新取现在生效的那一份再开始改（免得「直接改这条」拿旧内容盖掉新的）
+  if (!from) {
+    await s.backend.library.brewQueue.settled()
+    const det = await s.backend.library.scoped.detail(c, d.ref, { browse: true })
+    if (det && !('hidden' in det)) d = { ref: d.ref, item: det.item, base: det.base }
+  }
   const clean = (x: unknown): Ent => { const out: Ent = {}; for (const [k, v] of Object.entries(JSON.parse(JSON.stringify(x ?? {})) as Ent)) if (!k.startsWith('_') && k !== 'uniqueId') out[k] = v; return out }
   openEditor({ codeSet, prop: d.ref.prop, typeName: await typeNameOf(s, codeSet, d.ref.prop), pack: null, ent: from?.ent ?? clean(d.item), target: { kind: 'house', ref: d.ref }, house: { ref: d.ref, base: clean(d.base ?? d.item), campaign: c }, detailed: true, onSaved, ...(from ? { draftKey: from.draftKey } : {}) })
 }

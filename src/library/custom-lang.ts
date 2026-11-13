@@ -59,18 +59,26 @@ export interface OtherEntry {
   reason: string | null
 }
 
-export class BilingualLibrary {
-  constructor(private readonly custom: CustomLibrary, private readonly lib: Pick<LibraryService, 'frameOf' | 'brewImport'>, private readonly brewPairs: Pick<BrewPairs, 'installed'>, private readonly counterparts: Pick<Counterparts, 'counterpart'>, private readonly scoped?: Pick<ScopedLibrary, 'englishOf' | 'detail'>) {}
+/** 房规的一边：改哪条官方条目、改完的整条；replace = 直接改这条已有的房规。 */
+export interface HouseSide { target: EntryRef; edited: Ent; replace?: EntryRef }
 
-  /** C2【我的库】的包按中英配对：一对一行（只有一边的，另一边为 null）。 */
+export class BilingualLibrary {
+  constructor(private readonly custom: CustomLibrary, private readonly lib: Pick<LibraryService, 'frameOf' | 'brewImport' | 'officialInstalled'>, private readonly brewPairs: Pick<BrewPairs, 'installed'>, private readonly counterparts: Pick<Counterparts, 'counterpart'>, private readonly scoped?: Pick<ScopedLibrary, 'englishOf' | 'detail'>) {}
+
+  /**
+   * C2【我的库】的包按中英配对：一对一行（只有一边的，另一边为 null）。
+   * 某种语言的官方资料没装时，那一套的自制读不出来（作者程序要先读官方数据，B-37）：那一边当作没有包，只列装了的那一边。
+   */
   async packs(): Promise<PackPair[]> {
-    const [zh, en] = await Promise.all([this.custom.packs(codeSetOf('zh')), this.custom.packs(codeSetOf('en'))])
+    const readable = async (lang: Lang) => this.lib.officialInstalled(codeSetOf(lang))
+    const [zhOk, enOk] = await Promise.all([readable('zh'), readable('en')])
+    const [zh, en] = await Promise.all([zhOk ? this.custom.packs(codeSetOf('zh')) : [], enOk ? this.custom.packs(codeSetOf('en')) : []])
     const zhBy = new Map(zh.map((p) => [p.docIdLocal, p]))
     const enBy = new Map(en.map((p) => [p.docIdLocal, p]))
     const out: PackPair[] = []
     const seen = new Set<MyPack>()
     // 配上了、而且两边都是【我的库】的包 → 一行；别的（只有一边、歧义、另一边是下载的包）各自一行
-    for (const row of await this.brewPairs.installed(brewOf('zh').id)) {
+    for (const row of zhOk && enOk ? await this.brewPairs.installed(brewOf('zh').id) : []) {
       const a = row.zh ? zhBy.get(row.zh.docIdLocal) : undefined
       const b = row.en ? enBy.get(row.en.docIdLocal) : undefined
       if (row.status !== 'paired' || !a || !b) continue
@@ -206,15 +214,16 @@ export class BilingualLibrary {
   /**
    * 房规两种语言一起改（驾驶员 2026-11-13）：书架上的中文官方条目和它的英文官方原文各建一条房规（各在自己那一套的可编辑自制里，
    * 作者 _copy 只记改动，B1），在同一个战役、同一层生效。只给一边就只建那一边。返回改好的战役选书设置（调用方写回）。
+   * 某一边给了 replace（已有的那条房规）就直接改那一条，不新建（§16.7 第 5 条）。
    */
-  async houseRuleBoth(c: CampaignLibrary, sides: { zh?: { target: EntryRef; edited: Ent }; en?: { target: EntryRef; edited: Ent } }) {
+  async houseRuleBoth(c: CampaignLibrary, sides: { zh?: HouseSide; en?: HouseSide }) {
     type House = Awaited<ReturnType<CustomLibrary['createHouseRule']>>
     const out: { zh: House | null; en: House | null } = { zh: null, en: null }
     let cur = c
     for (const lang of ['zh', 'en'] as const) {
       const s = sides[lang]
       if (!s) continue
-      const r = await this.custom.createHouseRule({ ...cur, codeSet: getSource(s.target.set).codeSet }, s.target, { edited: s.edited })
+      const r = await this.custom.createHouseRule({ ...cur, codeSet: getSource(s.target.set).codeSet }, s.target, { edited: s.edited }, s.replace ? { replace: s.replace } : {})
       out[lang] = r
       cur = { ...r.campaign, codeSet: c.codeSet }
     }

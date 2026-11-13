@@ -19,6 +19,7 @@ import { brewDocIndex, brewExport, brewItemsByHash, corpusFile, brewRaw, editabl
 import { converters, converterSample, convertText, entryTemplate, entryTypes } from './entry-types-commands'
 import { flattenCopies, packFlattenCopies } from './copy-flatten-commands'
 import { valueLabels } from './field-value-commands'
+import { blockMarkdown, markdownBlocks } from './markdown-commands'
 import { authorDataFiles, editableTake, officialSourcesOf, packFixOldCopy, packAddDependencies, packEntity, packExport, packPut, packRemove, packRenameSource, packRetargetCopies } from './pack-commands'
 
 export interface LoaderInfo {
@@ -129,6 +130,6 @@ export async function storageFlush(): Promise<string[]> {
 
 export const COMMANDS = { frameErrors, init, loaders, parseProp, corpusList, parseCorpus, searchIndexHashes, setSourceExcluded, isExcluded, excludedFlags, detail, search, searchIndexDump, searchIndexLoad, searchSettings, englishLocators, englishMatch, variantTemplateNames, versionOrder,
   brewCatalog, brewInstalled, brewStorage, brewAddUrl, brewAddSources, brewAddFiles, brewDelete, brewPull, brewCheckUpdates, brewCorpusList, brewPackRows, parseBrewProp, rawHashes, storageFlush,
-  editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableRetargetCopies, editableAddDependencies, cleanEntity, editableExport, sourceTaken, converters, converterSample, convertText, entryTemplate, entryTypes, packEntity, packPut, packRemove, packRetargetCopies, packRenameSource, packExport, authorDataFiles, packAddDependencies, officialSourcesOf, editableTake, packFixOldCopy, flattenCopies, packFlattenCopies, valueLabels,
+  editionOf, sourceNames, corpusFile, brewDocIndex, brewItemsByHash, brewRaw, brewExport, fluffOf, fluffOfMany, excludeList, editableDoc, editableEnsureSource, editablePut, editableRemove, editableRetargetCopies, editableAddDependencies, cleanEntity, editableExport, sourceTaken, converters, converterSample, convertText, entryTemplate, entryTypes, packEntity, packPut, packRemove, packRetargetCopies, packRenameSource, packExport, authorDataFiles, packAddDependencies, officialSourcesOf, editableTake, packFixOldCopy, flattenCopies, packFlattenCopies, valueLabels, blockMarkdown, markdownBlocks,
   diceTag, diceStats, diceRead, diceRoll, tableRow, tableRoll, tagMeta, tagRefs, brewDependencyPreview, brewMergeCheck, sortColumns, sortRanks, listCells, authorFields, displayName, renderText, renderContent, renderEntity, statblockMeta, tokenPath, extractTables, directory, sourceFiles }
 export type CommandName = keyof typeof COMMANDS

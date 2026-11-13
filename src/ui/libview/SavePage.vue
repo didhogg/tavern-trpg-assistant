@@ -6,6 +6,7 @@ import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useModalStore } from '../../stores/modal'
 import Icon from '../kit/Icon.vue'
+import Segmented from '../kit/Segmented.vue'
 import SelectField from '../kit/SelectField.vue'
 import type { Ent } from './edit-json'
 import EmbeddedEntity from './EmbeddedEntity.vue'
@@ -28,9 +29,9 @@ export interface SaveCtx {
   oldHash?: string
   labelOf: (cs: string) => (field: string) => string
   /** 房规（u7-13）：作用于哪一层（本战役 / 当前规则 / 全局），默认取 设置 → 库 → 偏好。 */
-  house?: { levels: Array<{ value: string; label: string }>; level: string }
-  /** 新建 / 改：存进的包编号；房规：作用于哪一层。 */
-  save: (choice: string) => Promise<void>
+  house?: { levels: Array<{ value: string; label: string }>; level: string; existing?: { where: string[] } }
+  /** 新建 / 改：存进的包编号；房规：作用于哪一层；replace = 直接改已有的那条房规（§16.7 第 5 条）。 */
+  save: (choice: string, opts?: { replace?: boolean }) => Promise<void>
 }
 const props = defineProps<{ ctx: SaveCtx }>()
 const app = useAppStore()
@@ -70,12 +71,15 @@ onMounted(async () => {
   }
 })
 const level = ref(props.ctx.house?.level ?? '')
+/** 已有房规时：直接改那一条（默认），还是另存一条新的。 */
+const mode = ref<'replace' | 'new'>(props.ctx.house?.existing ? 'replace' : 'new')
+const replacing = computed(() => mode.value === 'replace' && !!props.ctx.house?.existing)
 async function save(): Promise<void> {
   const choice = props.ctx.house ? level.value : pack.value
   if (!choice) { err.value = props.ctx.house ? '选作用于哪一层' : '选一个包'; return }
   busy.value = true
   err.value = null
-  try { await props.ctx.save(choice) } catch (e) { err.value = e instanceof Error ? e.message : String(e) } finally { busy.value = false }
+  try { await props.ctx.save(choice, { replace: replacing.value }) } catch (e) { err.value = e instanceof Error ? e.message : String(e) } finally { busy.value = false }
 }
 const diffTitle = computed(() => sides.value.map((k) => `${langName(props.ctx[k].cs)}：${props.ctx[k].before ? `${props.ctx.house ? '和原件比' : ''}改了 ${changes.value[k].length} 项` : '新写一条'}`).join(' · '))
 </script>
@@ -104,7 +108,11 @@ const diffTitle = computed(() => sides.value.map((k) => `${langName(props.ctx[k]
           <li v-for="c in changes[k]" :key="c.field"><code>{{ sides.length > 1 ? `${langName(ctx[k].cs)} · ` : '' }}{{ ctx.labelOf(ctx[k].cs)(c.field) }}</code><span><s v-if="c.before !== undefined">{{ valueText(c.before) }}</s>{{ c.before !== undefined ? ' → ' : '' }}{{ valueText(c.after) }}</span></li>
         </ul>
       </template>
-      <div v-if="ctx.house" class="lib-sum__row" data-testid="save-level">
+      <div v-if="ctx.house?.existing" class="lib-sum__choice" data-testid="save-house-mode">
+        <span class="lib-sum__row"><b>这一条已经有你的房规{{ ctx.house.existing.where.length ? `，用在 ${ctx.house.existing.where.length} 处` : '' }}</b><Segmented v-model="mode" label="已有房规时怎么存" :options="[{ value: 'replace', label: '直接改这条' }, { value: 'new', label: '另存一条新的' }]" /></span>
+        <span class="lib-faint" data-testid="save-house-hint">{{ mode === 'replace' ? (ctx.house.existing.where.length ? `${ctx.house.existing.where.join('、')}都跟着变。` : '用到它的地方都跟着变。') : '原来那条不动；新的只用在下面选的这一层。' }}</span>
+      </div>
+      <div v-if="ctx.house && !replacing" class="lib-sum__row" data-testid="save-level">
         <span>{{ ctx.other.include ? '中英两条都作用于' : '作用于' }}</span>
         <SelectField v-model="level" label="作用于哪一层" :options="ctx.house.levels" />
       </div>

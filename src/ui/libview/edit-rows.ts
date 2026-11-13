@@ -1,17 +1,11 @@
-// 编辑 / 覆盖（版本选择）的行：全局编辑页和包的【管理】页共用。数据来自后端 custom.edits；复原 = scoped.choose(…, null, 层级)。
+// 编辑 / 覆盖（版本选择）的行：覆盖列表（OverridesList，设置 / 书架 / 包 / 单条共用）用。数据来自后端 custom.edits；复原 = scoped.choose(…, null, 层级)。
 import type { Services } from '../../core/services'
 import type { ChoiceLevel } from '../../library/manage'
-import { refKey, type CampaignLibrary, type EntryRef } from '../../library/scopes'
+import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 
 export interface EditRow { level: string; target: string; ref: EntryRef; name: string; source: string | null; altId: string; picked: boolean }
 
 export const levelText = (l: string): string => (l === 'campaign' ? '本战役' : l === 'global' ? '全局' : `规则：${l.replace(/^rule:/, '')}`)
-
-/** 所有层级的编辑 / 覆盖；给了 source 就只留这本书 / 包里的。筛选在后端（custom.edits，P5.5 G3），这里只排版。 */
-export async function loadEditRows(s: Services, source?: string): Promise<EditRow[]> {
-  const rows = await s.backend.library.custom.edits(source ? { sources: [source] } : {})
-  return rows.map((r) => ({ level: r.level, target: refKey(r.ref), ref: r.ref, name: r.name ?? '未知', source: r.source, altId: r.altId, picked: false }))
-}
 
 /** 复原：本战役层的选择在战役设置里（scoped.choose 只返回新设置，要自己写回 kernelSave.setLibrary）；规则 / 全局层 choose 自己存。 */
 export async function restoreRows(s: Services, c: CampaignLibrary, rows: EditRow[], ownerKey: string | null = null): Promise<void> {

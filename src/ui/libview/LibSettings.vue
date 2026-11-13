@@ -3,19 +3,14 @@ import { computed, onMounted, ref } from 'vue'
 import type { HealthItem, HealthReport } from '../../library/health'
 import type { LogEntry } from '../../library/logs'
 import { useAppStore } from '../../stores/app'
-import { useCampaignStore } from '../../stores/campaign'
-import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
-import Checkbox from '../kit/Checkbox.vue'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import Switch from '../kit/Switch.vue'
-import { levelText, loadEditRows, restoreRows, type EditRow } from './edit-rows'
+import OverridesList from './OverridesList.vue'
 
 /** 设置 → 库：偏好 | 全局编辑 / 覆盖 | 日志（原"体检"）。范围页已删；房规 / 覆盖并入"全局编辑 / 覆盖"。 */
 const app = useAppStore()
-const lib = useLibViewStore()
-const campaign = useCampaignStore()
 const toast = useToastStore()
 const tab = ref('prefs')
 const settings = computed(() => app.settings?.library)
@@ -25,24 +20,6 @@ onMounted(() => void (app.settings ? null : app.refreshSettings().catch((e) => c
 async function patch(next: Partial<NonNullable<typeof settings.value>>): Promise<void> {
   if (!app.settings) return
   try { await app.updateSettings({ library: { ...app.settings.library, ...next } }) } catch (e) { console.error('[trpg-assistant] 保存设置失败', e); toast.error('没有保存成功，已恢复原来的设置') }
-}
-
-// ── 全局编辑 / 覆盖 ──
-const edits = ref<EditRow[]>([])
-const editsLoading = ref(false)
-async function loadEdits(): Promise<void> {
-  editsLoading.value = true
-  try { edits.value = await loadEditRows(app.svc()) } catch (e) { console.error('[trpg-assistant] 读取编辑 / 覆盖失败', e); toast.error('读取编辑 / 覆盖失败') } finally { editsLoading.value = false }
-}
-async function restore(): Promise<void> {
-  const c = lib.campaignLib
-  if (!c) return
-  const chosen = edits.value.filter((r) => r.picked)
-  try {
-    await restoreRows(app.svc(), c, chosen, lib.bound ? campaign.owner?.ownerKey ?? null : null)
-    toast.success(`已复原 ${chosen.length} 条`)
-    await loadEdits()
-  } catch (e) { console.error('[trpg-assistant] 复原失败', e); toast.error('复原没有成功') }
 }
 
 // ── 日志 ──
@@ -79,7 +56,6 @@ const time = (at: number): string => new Date(at).toLocaleString()
 function onTab(v: string | undefined): void {
   if (!v) return
   tab.value = v
-  if (v === 'edits') void loadEdits()
   if (v === 'logs') void loadLogs()
 }
 </script>
@@ -100,12 +76,8 @@ function onTab(v: string | undefined): void {
     </div>
 
     <div v-else-if="tab === 'edits'" class="lib-pad" data-testid="lib-edits">
-      <div v-if="editsLoading" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
-      <div v-else-if="!edits.length" class="lib-state"><p class="lib-muted">还没有编辑或覆盖。</p></div>
-      <template v-else>
-        <div style="display: flex; gap: var(--sp-2)"><button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :disabled="!edits.some((r) => r.picked)" @click="restore">复原所选（{{ edits.filter((r) => r.picked).length }}）</button></div>
-        <Checkbox v-for="r in edits" :key="`${r.level}|${r.target}`" v-model="r.picked"><b class="lib-name">{{ r.name }}</b><span class="lib-src">（{{ levelText(r.level) }}）</span></Checkbox>
-      </template>
+      <!-- 和书架 / 包 / 单条同一个覆盖列表（u7-14），范围是全部 -->
+      <OverridesList :scope="{ kind: 'all' }" />
     </div>
 
     <div v-else-if="tab === 'logs'" class="lib-pad" data-testid="lib-logs">

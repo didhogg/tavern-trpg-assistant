@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import type { BrewField } from '../../library/brew-validate'
 import Icon from '../kit/Icon.vue'
 import FieldInput from './FieldInput.vue'
 import { isEmpty, type Defs } from './field-shape'
 import type { Ent } from './edit-json'
+import { CODESET_KEY } from './entry-blocks'
 
 /**
  * 一条条目的表单（P5.5 编辑器的一栏）：字段、顺序、控件、中文名全按后端字段表（custom.fields）。
@@ -13,7 +14,9 @@ import type { Ent } from './edit-json'
  */
 export interface FormTable { fields: BrewField[]; defs: Defs; labels: Record<string, string> }
 /** rawNames：显示作者的原字段名（英文那一栏：作者中文版的叫法是给中文条目的，例如 name 叫「中文名」，放在英文栏会误导）。 */
-const props = defineProps<{ table: FormTable; ent: Ent; detailed?: boolean; marks?: Record<string, string>; readonly?: boolean; rawNames?: boolean }>()
+const props = defineProps<{ table: FormTable; ent: Ent; detailed?: boolean; marks?: Record<string, string>; readonly?: boolean; rawNames?: boolean; codeSet?: string }>()
+// 正文的段落转换要用这一栏语言的作者程序（EntryBlock）
+provide(CODESET_KEY, computed(() => props.codeSet ?? 'cn'))
 const emit = defineEmits<{ update: [ent: Ent]; json: [field: string] }>()
 const HIDDEN = new Set(['source'])
 const usable = computed(() => props.table.fields.filter((f) => !f.internal && f.shape && !HIDDEN.has(f.name)))
