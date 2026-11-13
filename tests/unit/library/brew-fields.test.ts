@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { configureBrewValidator, loadBrewFields } from '../../../src/library/brew-validate'
 import { CustomLibrary } from '../../../src/library/custom'
 import { formatOfCodeSet } from '../../../src/library/formats'
+import { branchOf, gridFields, resolve } from '../../../src/library/field-shape-core'
 import { CODE_SETS } from '../../../src/library/sources'
 
 // P5.5 B4：字段说明表从作者结构定义生成（tools/build-brew-fields.mjs）。不写死类别和条数，按作者根结构核对。
@@ -26,6 +27,23 @@ describe('字段说明表（B4）', () => {
     const spell = (await loadBrewFields()).props.spell
     expect(spell.fields.find((f) => f.name === 'name')).toMatchObject({ required: true, types: ['string'] })
     expect(spell.fields.find((f) => f.name === 'level')).toMatchObject({ required: true, types: ['integer'] })
+  })
+  it('单表和表格组的必填项分开；职业表按作者结构识别数字格', async () => {
+    const t = await loadBrewFields()
+    expect(t.props.table.requiredChoices).toEqual([
+      { fields: ['rows'], fixed: { type: 'table' } },
+      { fields: ['tables'], fixed: { type: 'tableGroup' } },
+    ])
+    expect(t.props.table.fields.filter((f) => f.required).map((f) => f.name)).toEqual(['name', 'source'])
+    const defs = t.defs ?? {}
+    const groups = resolve(t.props.class.fields.find((f) => f.name === 'classTableGroups')!.shape!, defs)
+    if (groups.c !== 'list') throw new Error('作者职业表不是列表')
+    const choice = resolve(groups.of, defs)
+    if (choice.c !== 'pick') throw new Error('作者职业表没有不同写法')
+    const branch = branchOf(choice, { colLabels: ['1'], rowsSpellProgression: [[2]] }, defs)
+    const group = resolve(choice.branches[branch].shape, defs)
+    if (group.c !== 'group') throw new Error('作者职业表不是对象')
+    expect(gridFields(group.props, defs)).toEqual({ rows: 'rowsSpellProgression', numeric: true })
   })
   it('按资料集的数据格式取：custom.fields = 格式登记表的 + 下拉 / 建议值的显示名（小窗按作者对照表给，P5.5 C10）；不认识的类别给 null', async () => {
     const codeSet = Object.keys(CODE_SETS)[1] ?? Object.keys(CODE_SETS)[0]

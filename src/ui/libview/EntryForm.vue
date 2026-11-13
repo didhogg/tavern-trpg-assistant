@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, provide, ref } from 'vue'
-import type { BrewField, FieldShape } from '../../library/brew-validate'
+import type { BrewField, FieldShape, RequiredChoice } from '../../library/brew-validate'
 import Icon from '../kit/Icon.vue'
 import FieldInput from './FieldInput.vue'
+import TableGrid from './TableGrid.vue'
+import Segmented from '../kit/Segmented.vue'
+import { askConfirm } from '../kit/confirm'
+import { gridFields } from '../../library/field-shape-core'
 import { isEmpty, resolve, type Defs } from './field-shape'
 import type { Ent } from './edit-json'
 import { CODESET_KEY, PLAN_KEY } from './entry-blocks'
@@ -13,7 +17,7 @@ import type { FormPlan } from '../../library/form-plan'
  * 必填 → 常用（官方条目里真在用的）→ 已填的其他项 → 更多（收起、可搜；详细表单一开始就展开）。出版信息、自动字段、来源、规则版本不出现。
  * marks：要标出来的字段（两边不一样的 ≠ / 房规改过的）。
  */
-export interface FormTable { fields: BrewField[]; defs: Defs; labels: Record<string, string>; plan?: FormPlan | null }
+export interface FormTable { fields: BrewField[]; defs: Defs; labels: Record<string, string>; plan?: FormPlan | null; requiredChoices?: RequiredChoice[] }
 /** rawNames：显示作者的原字段名（英文那一栏：作者中文版的叫法是给中文条目的，例如 name 叫「中文名」，放在英文栏会误导）。 */
 const props = defineProps<{ table: FormTable; ent: Ent; detailed?: boolean; marks?: Record<string, string>; readonly?: boolean; rawNames?: boolean; codeSet?: string }>()
 // 正文的段落转换要用这一栏语言的作者程序（EntryBlock）
@@ -24,9 +28,35 @@ const emit = defineEmits<{ update: [ent: Ent]; json: [field: string] }>()
 const byName = computed(() => new Map(props.table.fields.filter((f) => !f.internal && f.shape).map((f) => [f.name, f])))
 const pick = (names: string[]) => names.map((n) => byName.value.get(n)).filter((f): f is BrewField => !!f)
 const plan = computed(() => props.table.plan ?? null)
-const required = computed(() => (plan.value ? pick(plan.value.required) : [...byName.value.values()].filter((f) => f.required && f.name !== 'source')))
-const common = computed(() => (plan.value ? pick(plan.value.common) : []))
-const others = computed(() => (plan.value ? pick(plan.value.more) : [...byName.value.values()].filter((f) => !f.required && f.name !== 'source')))
+const grid = computed(() => gridFields(props.table.fields, props.table.defs))
+const choices = computed(() => props.table.requiredChoices ?? [])
+const mode = computed(() => {
+  const byType = choices.value.findIndex((c) => Object.keys(c.fixed).length && Object.entries(c.fixed).every(([k, v]) => props.ent[k] === v))
+  return byType >= 0 ? byType : Math.max(0, choices.value.findIndex((c) => c.fields.every((k) => props.ent[k] !== undefined)))
+})
+const chosen = computed(() => new Set(choices.value[mode.value]?.fields ?? []))
+const conditional = computed(() => new Set(choices.value.flatMap((c) => [...c.fields, ...Object.keys(c.fixed)])))
+const showField = (f: BrewField) => !conditional.value.has(f.name) && !(grid.value && (!choices.value.length || chosen.value.has(grid.value.rows)) && ['colLabels', 'colLabelRows'].includes(f.name))
+const required = computed(() => [...(plan.value ? pick(plan.value.required) : [...byName.value.values()].filter((f) => f.required && f.name !== 'source')).filter(showField), ...pick([...chosen.value])])
+const common = computed(() => (plan.value ? pick(plan.value.common).filter(showField) : []))
+const others = computed(() => (plan.value ? pick(plan.value.more) : [...byName.value.values()].filter((f) => !f.required && f.name !== 'source')).filter(showField))
+const modeOptions = computed(() => choices.value.map((c, i) => ({
+  value: String(i),
+  label: c.fields.length === 1 && grid.value?.rows === c.fields[0] ? '单个表格' : c.fields.map((f) => f === 'tables' ? '表格组' : props.table.labels[f] ?? f).join('、'),
+})))
+
+async function chooseMode(value: string | undefined): Promise<void> {
+  const before = choices.value[mode.value]
+  const after = choices.value[Number(value)]
+  if (!before || !after || before === after) return
+  const remove = before.fields.filter((f) => !after.fields.includes(f))
+  if (remove.some((f) => !isEmpty(props.ent[f])) && !await askConfirm({
+    title: '切换表格写法？', message: '切换会清除当前写法的表格内容。', confirmLabel: '切换',
+  })) return
+  const next = { ...props.ent, ...after.fixed }
+  for (const f of remove) delete next[f]
+  emit('update', next)
+}
 // 打开时就填了的「更多」项放上面；之后在「更多」里新填的留在原处（不然打第一个字就跳走、丢焦点）。整条换掉时父组件重建表单。
 const seed = new Set(Object.keys(props.ent).filter((k) => !isEmpty(props.ent[k])))
 const filled = computed(() => others.value.filter((f) => seed.has(f.name)))
@@ -68,6 +98,9 @@ function setField(name: string, v: unknown): void {
   else next[name] = v
   emit('update', next)
 }
+function setGrid(name: string, rows: unknown[], headers?: unknown[]): void {
+  emit('update', { ...props.ent, [name]: rows, ...(headers ? { [Array.isArray(props.ent?.colLabelRows) ? 'colLabelRows' : 'colLabels']: headers } : {}) })
+}
 const nameOf = (f: BrewField) => (props.rawNames ? f.name : f.label ?? f.name)
 const subLabels = computed(() => (props.rawNames ? {} : props.table.labels))
 const tip = (f: BrewField) => f.description ?? (f.shape && 'description' in f.shape ? f.shape.description : undefined)
@@ -75,12 +108,14 @@ const tip = (f: BrewField) => f.description ?? (f.shape && 'description' in f.sh
 
 <template>
   <div class="lib-tform" :inert="readonly || undefined" data-testid="entry-form">
+    <div v-if="choices.length > 1"><Segmented :model-value="String(mode)" label="表格写法" :options="modeOptions" @update:model-value="chooseMode" /></div>
     <template v-for="[title, list] in ([['必填', required], ['常用', common], ['已填的其他项', filled]] as const)" :key="title">
       <div v-if="list.length" class="lib-fsec">{{ title }}</div>
       <div v-for="row in rowsOf(list)" :key="row[0].name" :class="row.length > 1 ? 'lib-numrow' : 'lib-row1'">
         <div v-for="f in row" :key="f.name" class="lib-tfield" :data-diff="marks?.[f.name] ? 'true' : undefined" :data-field="f.name">
-          <label><span class="lib-lname" :data-en="rawNames || !f.label || undefined">{{ nameOf(f) }}<small v-if="f.required">*</small><span v-if="tip(f)" class="lib-tip" :title="tip(f)"><Icon name="info" :size="13" /></span></span><span v-if="marks?.[f.name]" class="lib-mark">{{ marks[f.name] }}</span></label>
-          <FieldInput :shape="f.shape!" :value="ent[f.name]" :defs="table.defs" :labels="subLabels" :name="f.name" :path="f.name" @update="(v: unknown) => setField(f.name, v)" @json="emit('json', f.name)" />
+          <label><span class="lib-lname" :data-en="rawNames || !f.label || undefined">{{ nameOf(f) }}<small v-if="f.required || chosen.has(f.name)">*</small><span v-if="tip(f)" class="lib-tip" :title="tip(f)"><Icon name="info" :size="13" /></span></span><span v-if="marks?.[f.name]" class="lib-mark">{{ marks[f.name] }}</span></label>
+          <TableGrid v-if="grid?.rows === f.name" :rows="ent[f.name]" :headers="ent.colLabelRows ?? ent.colLabels" :multi-header="Array.isArray(ent.colLabelRows)" :numeric="grid.numeric" :label="nameOf(f)" @rows="setField(f.name, $event)" @headers="setField(Array.isArray(ent.colLabelRows) ? 'colLabelRows' : 'colLabels', $event)" @column="(rows, headers) => setGrid(f.name, rows, headers)" @json="emit('json', f.name)" />
+          <FieldInput v-else :shape="f.shape!" :value="ent[f.name]" :defs="table.defs" :labels="subLabels" :name="f.name" :path="f.name" @update="(v: unknown) => setField(f.name, v)" @json="emit('json', f.name)" />
         </div>
       </div>
     </template>

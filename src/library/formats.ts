@@ -1,7 +1,7 @@
 // 数据格式登记（P5.5 A1/A3，原 P5.6a）：一套资料集（作者程序 cn / en）用哪种数据格式、怎么校验、怎么认出一个文件是不是这种格式。
 // 体系的规则在 scopes.json 的 rules 里写 format，资料集在 sources.json 的 codeSets 里写 format；加一种格式 = 在这里登记一条。
 // 不定义数据形状：校验用格式作者自己的结构定义，认文件只看作者结构定义规定的必填外壳。
-import { loadBrewFields, loadFieldLabels, validateBrewJson, type BrewField, type BrewValidation, type FieldShape, type SchemaIssue } from './brew-validate'
+import { loadBrewFields, loadFieldLabels, validateBrewJson, type BrewField, type BrewValidation, type FieldShape, type RequiredChoice, type SchemaIssue } from './brew-validate'
 import translated from './field-labels.json'
 import { ruleScopes } from './scopes'
 import { CODE_SETS } from './sources'
@@ -31,6 +31,8 @@ export interface DataFormat {
 
 export interface FieldTable {
   fields: BrewField[]
+  /** 作者结构定义中，任选一组填齐的字段。fields.required 仍表示所有写法共用的必填项。 */
+  requiredChoices?: RequiredChoice[]
   edition: boolean
   defs: Record<string, FieldShape>
   labels: Record<string, string>

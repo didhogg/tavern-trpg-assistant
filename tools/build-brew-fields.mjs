@@ -59,10 +59,28 @@ for (const prop of Object.keys(rootSchema.properties).filter((k) => !k.startsWit
   // "完整写法"那一支：properties 里没有 _copy 的；都有 _copy（只能复制）就全用
   const full = all.filter((b) => !b.node.properties._copy)
   const use = full.length ? full : all
-  const required = new Set(use.flatMap((b) => b.node.required ?? []))
+  const variants = [...new Map(use.map((b) => {
+    const keys = [...new Set(b.node.required ?? [])].sort()
+    return [JSON.stringify(keys), keys]
+  })).values()]
+  const minimal = variants.filter((keys) => !variants.some((other) => other.length < keys.length && other.every((key) => keys.includes(key))))
+  // 不可互相替代的最小必填集合是不同写法（如单表和表格组）。共享字段必填，各写法自己的字段按选项标出。
+  const shared = minimal[0]?.filter((key) => minimal.every((keys) => keys.includes(key))) ?? []
+  const choices = minimal.length > 1 ? minimal.map((keys) => {
+    const branch = use.find((b) => keys.every((key) => b.node.required?.includes(key)) && keys.length === b.node.required?.length)
+    const fixed = Object.entries(branch.node.properties).flatMap(([key, value]) => {
+      const n = resolve(value, branch.base).node
+      return n.const === undefined ? [] : [[key, n.const]]
+    })
+    return { fields: keys.filter((key) => !shared.includes(key)), fixed: Object.fromEntries(fixed) }
+  }) : null
+  const requiredChoices = choices?.map(({ fields, fixed }) => ({
+    fields, fixed: Object.fromEntries(Object.entries(fixed).filter(([key, val]) => choices.some((choice) => choice.fixed[key] !== val))),
+  }))
+  const required = new Set(requiredChoices ? shared : variants.flat())
   const fields = new Map()
   for (const b of use) for (const [name, node] of Object.entries(b.node.properties)) if (!fields.has(name)) fields.set(name, fieldOf(name, node, b.base, required.has(name)))
-  props[prop] = { fields: [...fields.values()], edition: fields.has('edition') }
+  props[prop] = { fields: [...fields.values()], edition: fields.has('edition'), ...(requiredChoices ? { requiredChoices } : {}) }
 }
 
 const out = { generatedFrom: `${source.package}@${source.version}`, props, defs: Object.fromEntries(defs) }

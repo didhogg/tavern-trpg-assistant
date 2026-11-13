@@ -8,6 +8,8 @@ import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import SelectField from '../kit/SelectField.vue'
 import EntryBlock from './EntryBlock.vue'
+import TableGrid from './TableGrid.vue'
+import { gridFields } from '../../library/field-shape-core'
 import { CODESET_KEY, NEW_BLOCKS, PLAN_KEY } from './entry-blocks'
 import { branchOf, emptyOf, isEmpty, kindName, resolve, type Defs } from './field-shape'
 
@@ -18,8 +20,9 @@ import { branchOf, emptyOf, isEmpty, kindName, resolve, type Defs } from './fiel
  * 套组里用得少的子项收起；选项按官方常见程度排；一串代号给常见组合。
  */
 const props = defineProps<{ shape: FieldShape; value: unknown; defs: Defs; labels: Record<string, string>; name: string; depth?: number; path?: string }>()
-const emit = defineEmits<{ update: [v: unknown]; json: []; split: [blocks: unknown[]] }>()
+const emit = defineEmits<{ update: [v: unknown]; json: [] }>()
 const s = computed(() => ((props.depth ?? 0) > 6 ? { c: 'json' as const, why: '套得太深' } : resolve(props.shape, props.defs)))
+const grid = computed(() => s.value.c === 'group' ? gridFields(s.value.props, props.defs) : null)
 const d = computed(() => (props.depth ?? 0) + 1)
 const set = (v: unknown) => emit('update', v)
 const lab = (n: string) => props.labels[n] ?? n
@@ -62,16 +65,20 @@ function setItem(i: number, v: unknown): void {
 }
 const removeItem = (i: number) => { const next = arr.value.filter((_, j) => j !== i); set(next.length ? next : undefined) }
 const addItem = () => { if (s.value.c === 'list') set([...arr.value, emptyOf(s.value.of, props.defs)]) }
-/** 正文的一段写成了几段（Markdown 里加了小标题 / 列表）：换成那几段。 */
-function splitItem(i: number, blocks: unknown[]): void { const next = [...arr.value]; next.splice(i, 1, ...blocks); set(next) }
 // 正文（一串段落）：下面多一排「加一段」——小标题段 / 列表 / 表格，起稿交作者转换器转成正文（custom.markdownBlocks）
 const isEntries = computed(() => s.value.c === 'list' && resolve(s.value.of, props.defs).c === 'entries')
 const app = useAppStore()
 const codeSet = inject(CODESET_KEY, ref('cn'))
 const adding = ref(false)
+const addError = ref<string | null>(null)
 async function addBlock(md: string): Promise<void> {
   adding.value = true
-  try { set([...arr.value, ...(await app.svc().backend.library.custom.markdownBlocks(codeSet.value, md))]) } catch (e) { console.error('[trpg-assistant] 加一段没成功', e) } finally { adding.value = false }
+  addError.value = null
+  try {
+    const blocks = await app.svc().backend.library.custom.markdownBlocks(codeSet.value, md)
+    if (!blocks.length) throw new Error('没有生成正文，请再试一次。')
+    set([...arr.value, ...blocks])
+  } catch (e) { addError.value = e instanceof Error ? e.message : String(e) } finally { adding.value = false }
 }
 function setProp(k: string, v: unknown): void {
   const next = { ...obj.value }
@@ -79,17 +86,47 @@ function setProp(k: string, v: unknown): void {
   else next[k] = v
   set(isEmpty(next) ? undefined : next)
 }
+function setGrid(name: string, rows: unknown[], headers?: unknown[]): void {
+  set({ ...obj.value, [name]: rows, ...(headers ? { [Array.isArray(obj.value?.colLabelRows) ? 'colLabelRows' : 'colLabels']: headers } : {}) })
+}
 const newKey = ref('')
 function addKey(): void { const k = newKey.value.trim(); if (!k || s.value.c !== 'map') return; setProp(k, emptyOf(s.value.of, props.defs)); newKey.value = '' }
 // 几种写法：没填时用官方最常用的那种；换写法在小菜单里（叫法由后端按这种写法独有的子项起）
 const branch = computed(() => (s.value.c !== 'pick' ? 0 : props.value === undefined ? (here.value.order?.[0] ?? 0) : branchOf(s.value, props.value, props.defs)))
 const branchName = (i: number) => here.value.names?.[i] ?? (s.value.c === 'pick' ? kindName(s.value.branches[i].shape, props.defs) : '')
-const otherBranches = computed(() => (s.value.c !== 'pick' ? [] : (here.value.alt ?? here.value.order ?? s.value.branches.map((_, i) => i)).filter((i) => i !== branch.value).map((i) => ({ key: String(i), label: branchName(i) }))))
-const chooseBranch = (k: string) => { const i = Number(k); if (s.value.c === 'pick' && i !== branch.value) set(emptyOf(s.value.branches[i].shape, props.defs)) }
+const otherBranches = computed(() => {
+  if (s.value.c !== 'pick') return []
+  const indices = s.value.branches.map((_, i) => i)
+  const show = new Set(here.value.alt ?? here.value.order ?? indices)
+  s.value.branches.forEach((b, i) => {
+    const shape = resolve(b.shape, props.defs)
+    if (shape.c === 'group' && gridFields(shape.props, props.defs)) show.add(i)
+  })
+  return [...show].filter((i) => i !== activeBranch.value).map((i) => ({ key: String(i), label: branchName(i) }))
+})
+const chosenBranch = ref<number | null>(null)
+const activeBranch = computed(() => {
+  const i = chosenBranch.value
+  if (i === null || s.value.c !== 'pick') return branch.value
+  const target = s.value.branches[i]
+  const current = s.value.branches[branch.value]
+  const stillAmbiguous = current.keys.every((key) => target.keys.includes(key) || obj.value[key] === undefined)
+  return isEmpty(props.value) || stillAmbiguous && resolve(target.shape, props.defs).c === 'group' ? i : branch.value
+})
+function chooseBranch(k: string): void {
+  const i = Number(k)
+  if (s.value.c !== 'pick' || i === activeBranch.value) return
+  const next = resolve(s.value.branches[i].shape, props.defs)
+  const prev = resolve(s.value.branches[activeBranch.value].shape, props.defs)
+  chosenBranch.value = i
+  if (next.c === 'group' && prev.c === 'group' && gridFields(next.props, props.defs) && gridFields(prev.props, props.defs)) {
+    set(Object.fromEntries(next.props.filter((p) => obj.value[p.name] !== undefined).map((p) => [p.name, obj.value[p.name]])))
+  } else set(emptyOf(s.value.branches[i].shape, props.defs))
+}
 // 套组：用得少的子项收起（填了的照常显示）
 const showRare = ref(false)
 const rare = computed(() => new Set(here.value.rare ?? []))
-const groupProps = computed(() => (s.value.c === 'group' ? s.value.props.filter((p) => showRare.value || !rare.value.has(p.name) || obj.value[p.name] !== undefined) : []))
+const groupProps = computed(() => (s.value.c === 'group' ? s.value.props.filter((p) => (!grid.value || !['colLabels', 'colLabelRows'].includes(p.name)) && (showRare.value || !rare.value.has(p.name) || obj.value[p.name] !== undefined)) : []))
 // 小套组（≤ 3 个子项、都是简单值）摊成一行；和字段同名的子项（AC 的 ac、类型的 type）不再写一遍名字
 const SIMPLE = new Set(['text', 'number', 'select', 'switch', 'const'])
 // 「几种写法」看默认那种（官方最常用的，表单安排给）
@@ -146,9 +183,10 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   </div>
   <div v-else-if="s.c === 'list'" class="lib-rep">
     <div v-for="(item, i) in rows" :key="i" class="lib-rep__row">
-      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="item" :defs="defs" :labels="labels" :name="name" :path="sub('[]')" :depth="d" @update="(v: unknown) => setItem(i, v)" @split="(bs: unknown[]) => splitItem(i, bs)" @json="emit('json')" /></div>
+      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="item" :defs="defs" :labels="labels" :name="name" :path="sub('[]')" :depth="d" @update="(v: unknown) => setItem(i, v)" @json="emit('json')" /></div>
       <button v-if="arr.length" class="trpg-icon-btn" type="button" :aria-label="`删掉第 ${i + 1} 项`" @click="removeItem(i)"><Icon name="x" :size="16" /></button>
     </div>
+    <p v-if="addError" class="trpg-field__err" role="alert">{{ addError }}</p>
     <div v-if="isEntries" class="lib-inline" role="toolbar" :aria-label="`${lab(name)}：加一段`" data-testid="block-add">
       <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="field-add" @click="addItem"><Icon name="plus" :size="14" />文字段</button>
       <button v-for="b in NEW_BLOCKS" :key="b.key" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="adding" :data-testid="`block-add-${b.key}`" @click="addBlock(b.md)"><Icon :name="b.icon" :size="14" />{{ b.label }}</button>
@@ -159,7 +197,8 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   <div v-else-if="s.c === 'group'" :class="['lib-grp', groupRow && 'lib-grp--row']">
     <div v-for="p in groupProps" :key="p.name" class="lib-tfield">
       <label v-if="p.name !== selfName"><span class="lib-lname" :data-en="!labels[p.name] || undefined">{{ lab(p.name) }}<small v-if="p.required">*</small></span></label>
-      <FieldInput :shape="p.shape" :value="obj[p.name]" :defs="defs" :labels="labels" :name="p.name" :path="sub(`.${p.name}`)" :depth="d" @update="(v: unknown) => setProp(p.name, v)" @json="emit('json')" />
+      <TableGrid v-if="grid?.rows === p.name" :rows="obj[p.name]" :headers="obj.colLabelRows ?? obj.colLabels" :multi-header="Array.isArray(obj.colLabelRows)" :numeric="grid.numeric" :label="lab(p.name)" @rows="setProp(p.name, $event)" @headers="setProp(Array.isArray(obj.colLabelRows) ? 'colLabelRows' : 'colLabels', $event)" @column="(rows, headers) => setGrid(p.name, rows, headers)" @json="emit('json')" />
+      <FieldInput v-else :shape="p.shape" :value="obj[p.name]" :defs="defs" :labels="labels" :name="p.name" :path="sub(`.${p.name}`)" :depth="d" @update="(v: unknown) => setProp(p.name, v)" @json="emit('json')" />
     </div>
     <button v-if="hiddenRare.length && !showRare" class="trpg-btn trpg-btn--small trpg-btn--quiet lib-subs" type="button" data-testid="field-rare" @click="showRare = true"><Icon name="plus" :size="14" />{{ hiddenRare.slice(0, 3).map((p) => lab(p.name)).join('、') }}{{ hiddenRare.length > 3 ? ` 等 ${hiddenRare.length} 项` : '' }}</button>
   </div>
@@ -174,11 +213,11 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   </div>
   <!-- 几种写法任选 -->
   <div v-else-if="s.c === 'pick'" class="lib-pick" data-testid="field-pick">
-    <FieldInput :shape="s.branches[branch].shape" :value="value" :defs="defs" :labels="labels" :name="name" :path="path ?? name" :depth="d" @update="set" @json="emit('json')" />
+    <FieldInput :key="activeBranch" :shape="s.branches[activeBranch].shape" :value="value" :defs="defs" :labels="labels" :name="name" :path="path ?? name" :depth="d" @update="set" @json="emit('json')" />
     <MoreMenu v-if="otherBranches.length" :label="`${lab(name)}：换一种写法`" text="换一种写法" :items="otherBranches" @select="chooseBranch" />
   </div>
-  <!-- 正文（一段）：文字 + 小工具栏；其他段能无损转的用 Markdown 写，不能的到 JSON 里改（EntryBlock） -->
-  <EntryBlock v-else-if="s.c === 'entries'" :value="value" :label="lab(name)" @update="set" @split="(bs: unknown[]) => emit('split', bs)" @json="emit('json')" />
+  <!-- 正文的常见块直接编辑作者字段。 -->
+  <EntryBlock v-else-if="s.c === 'entries'" :value="value" :label="lab(name)" @update="set" @json="emit('json')" />
   <!-- 图片：填网址 -->
   <div v-else-if="s.c === 'image'" class="lib-img" data-testid="field-image">
     <input class="trpg-input" type="url" inputmode="url" placeholder="https://… 图片网址" :value="img.url ?? ''" :aria-label="`${lab(name)}：图片网址`" @change="setImg(($event.target as HTMLInputElement).value)" />

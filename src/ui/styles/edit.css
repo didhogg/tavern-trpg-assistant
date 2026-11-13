@@ -142,3 +142,17 @@
 .lib-children__items { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 .lib-typehint { display: grid; gap: 2px; margin-top: var(--sp-3); font-size: 12px; }
 .lib-typehint p { margin: 0; }
+
+/* 正文、独立表和职业进度表共用的格子编辑区。宽表只在自身横向滚动。 */
+.lib-editgrid { display: grid; gap: var(--sp-2); min-width: 0; }
+.lib-editgrid__scroll { overflow-x: auto; border: var(--border) solid var(--line); border-radius: var(--r-sm); }
+.lib-editgrid table { border-collapse: collapse; width: 100%; }
+.lib-editgrid td, .lib-editgrid th { min-width: 84px; padding: 3px; border: var(--border) solid var(--line); text-align: start; }
+.lib-editgrid th { background: var(--bg-sunk); }
+.lib-editgrid td .trpg-input, .lib-editgrid th .trpg-input { width: 100%; min-width: 0; }
+.lib-editgrid th .trpg-input { font-weight: var(--fw-semibold); }
+.lib-editgrid td .trpg-btn, .lib-editgrid th .trpg-btn { white-space: normal; }
+.lib-editgrid .lib-editgrid__actions { width: 1%; min-width: 0; text-align: center; }
+.lib-edittext { display: grid; gap: var(--sp-2); min-width: 0; }
+.lib-edittext__item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1); align-items: start; }
+.lib-edittext__add { justify-self: start; }

@@ -5,6 +5,19 @@ import type { FieldShape } from './brew-validate'
 export type Shape = Exclude<FieldShape, { ref: string }>
 export type Defs = Record<string, FieldShape>
 
+/** 作者表格和职业进度表共用列标题。返回其原字段名和格子允许的基本值。 */
+export function gridFields(fields: ReadonlyArray<{ name: string; shape?: FieldShape }>, defs: Defs) {
+  if (!fields.some((f) => f.name === 'colLabels')) return null
+  const rows = fields.find((f) => f.name === 'rows' || f.name === 'rowsSpellProgression')
+  if (!rows?.shape) return null
+  const outer = resolve(rows.shape, defs)
+  if (outer.c !== 'list') return null
+  const inner = resolve(outer.of, defs)
+  const row = inner.c === 'pick' ? inner.branches.map((b) => resolve(b.shape, defs)).find((b) => b.c === 'list') : inner
+  if (row?.c !== 'list') return null
+  return { rows: rows.name, numeric: resolve(row.of, defs).c === 'number' }
+}
+
 /** 跟着 { ref } 找到真正的形状；找不到（或绕圈）就当作「画不了」。 */
 export function resolve(shape: FieldShape, defs: Defs): Shape {
   let s = shape
@@ -24,8 +37,11 @@ export function branchOf(s: Extract<Shape, { c: 'pick' }>, value: unknown, defs:
     if (value && typeof value === 'object') return r.c === 'group' || r.c === 'map' || r.c === 'json'
     return false
   }
-  const byKeys = s.branches.findIndex((b) => b.keys.length && value && typeof value === 'object' && b.keys.some((k) => k in (value as object)) && fits(b.shape))
-  if (byKeys >= 0) return byKeys
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const scores = s.branches.map((b) => fits(b.shape) ? b.keys.filter((k) => k in value).length : 0)
+    const best = Math.max(...scores)
+    if (best) return scores.indexOf(best)
+  }
   const i = s.branches.findIndex((b) => fits(b.shape))
   return i >= 0 ? i : 0
 }

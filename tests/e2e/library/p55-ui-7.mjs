@@ -1,7 +1,7 @@
 // P5.5 §16.7 待定项（驾驶员 2026-11-13 批准）：
 //   第 1 条 我的库只导入了一种语言的包：写明没找到另一种语言版（不提示下载）；
 //   第 5 条 再次编辑已有房规：默认直接改那一条（不再多出一条），可撤销；也能另存一条新的；
-//   第 2 条 正文：文字段有骰子 / 加粗工具栏；小标题段能无损转的用 Markdown 改；下面一排加一段（小标题段 / 列表 / 表格，作者转换器生成）；
+//   第 2 条 正文：文字段有骰子 / 加粗工具栏；小标题段、列表直接编辑；下面一排加一段（小标题段 / 列表 / 表格，作者转换器生成）；
 //   第 3 条 设置 → 库 → 全局编辑 / 覆盖 换成覆盖列表。
 // 用法：SKIP_BUILD=1 node tests/e2e/library/p55-ui-7.mjs（截图 work/e2e-lib/p55-ui-shots/7/）
 import { check, failures, settle } from '../helpers.mjs'
@@ -117,34 +117,26 @@ await openHouseEditor()
 const startLevel = await main().locator('[data-field="level"] input').inputValue()
 check('刚存完再打开编辑器：从现在生效的那条房规开始改（环节 7），不是整理前的旧样子', startLevel === '7', startLevel)
 const ents = main().locator('[data-field="entries"]')
-const textBoxes = ents.locator('.lib-block textarea.lib-para')
+const textBoxes = ents.locator('.lib-edittext textarea.lib-para')
 await ents.getByTestId('block-dice').first().click()
 await settle(page, 300)
 const withDice = await textBoxes.first().inputValue()
 check('文字段的工具栏：点「骰子」插入作者的骰子标签', /\{@dice 1d6\}/.test(withDice), withDice.slice(-60))
-const higher = main().locator('[data-field="entriesHigherLevel"] [data-testid="block-md"] textarea')
+const higher = main().locator('[data-field="entriesHigherLevel"] [data-testid="block-heading"]').first()
 await higher.waitFor({ timeout: 30000 })
-const md0 = await higher.inputValue()
-check('小标题段（升环施法）能无损来回转：给 Markdown 框，标题写成 ####', /^#### /.test(md0), md0.slice(0, 80))
-await higher.fill(`${md0}\n\n- 额外一条：火焰会点燃易燃物。`)
-await main().locator('[data-field="level"] input').click()
-await settle(page, 1500)
-const before = await ents.getByTestId('block-md').count()
+await higher.locator('textarea').first().fill('额外伤害。')
+const listCount = await ents.getByTestId('block-list').count()
 await ents.getByTestId('block-add-list').click()
-await page.waitForFunction((n) => document.querySelector('#trpg-assistant-root').shadowRoot.querySelectorAll('[data-testid="editor-main"] [data-field="entries"] [data-testid="block-md"]').length > n, before, { timeout: 30000 })
-await settle(page, 600)
-const newMd = await ents.getByTestId('block-md').last().locator('textarea').inputValue()
-check('「加一段 → 列表」：作者转换器生成一段列表，接着用 Markdown 改', /^- 第一项/.test(newMd), newMd)
+const list = ents.getByTestId('block-list').nth(listCount)
+await list.locator('input').first().fill('改过的一项')
 await page.screenshot({ path: `${shots}/3-entries-blocks.png` })
 await page.getByTestId('editor-done').click()
 await page.waitForSelector('[data-testid="save-page"]')
-await settle(page, 2000)
-const diff = await page.locator('[data-testid="save-diff"]').first().innerText().catch(() => '')
-// 要存的那一条（预览页拿到的），看 Markdown 转回来的结构
+await settle(page, 1000)
 const after = await page.evaluate((P) => { const m = eval(P)._s.get('modal'); return JSON.parse(JSON.stringify(m.stack[m.stack.length - 1].props.ctx.main.after)) }, P)
 const hl = after.entriesHigherLevel?.[0]
-const lastBlock = after.entries?.[after.entries.length - 1]
-check('Markdown 转回了作者正文：升环施法里多了一个列表（标题、中文版英文名保留）；正文末尾多了一段列表；预览页列出这两项改了', hl?.name === '升环施法' && hl?.ENG_name === 'At Higher Levels' && hl.entries.some((e) => e?.type === 'list' && /额外一条/.test(JSON.stringify(e))) && lastBlock?.type === 'list' && lastBlock.items?.[0] === '第一项' && /升环施法/.test(diff), JSON.stringify({ hl, lastBlock, diff }).slice(0, 500))
+const lastBlock = after.entries?.at(-1)
+check('直接改小标题段与列表：原英文名保留，正文和列表项分别写回原字段', hl?.name === '升环施法' && hl?.ENG_name === 'At Higher Levels' && hl.entries.includes('额外伤害。') && lastBlock?.type === 'list' && lastBlock.items?.[0] === '改过的一项', JSON.stringify({ hl, lastBlock }).slice(0, 500))
 await page.screenshot({ path: `${shots}/4-entries-save.png` })
 await closeAll(); await settle(page, 400)
 

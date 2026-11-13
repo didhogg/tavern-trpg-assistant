@@ -75,8 +75,12 @@ export type FieldShape =
   | { c: 'json'; why: string; description?: string }
 export interface BrewFieldTable {
   generatedFrom: string
-  props: Record<string, { fields: BrewField[]; edition: boolean }>
+  props: Record<string, { fields: BrewField[]; edition: boolean; requiredChoices?: RequiredChoice[] }>
   defs?: Record<string, FieldShape>
+}
+export interface RequiredChoice {
+  fields: string[]
+  fixed: Record<string, unknown>
 }
 export interface FieldLabelTable {
   generatedFrom: string
