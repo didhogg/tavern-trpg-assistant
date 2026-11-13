@@ -34,3 +34,38 @@ describe('字段说明表（B4）', () => {
     expect(await custom.fields(codeSet, 'no-such-prop')).toBeNull()
   })
 })
+
+// P5.5 阶段 C：每个字段该画成什么控件（tools/brew-schema-walk.mjs）、中文名（tools/build-field-labels.mjs，只从作者中文版取）。
+describe('控件形状与中文名（阶段 C）', () => {
+  const deref = (s: unknown, defs: Record<string, unknown>): Record<string, unknown> => { const x = s as Record<string, unknown>; return (x && 'ref' in x ? defs[x.ref as string] : x) as Record<string, unknown> }
+  it('不是内部字段的都有形状；Foundry / Roll20 专用的标内部、没有形状', async () => {
+    const t = await loadBrewFields()
+    for (const [prop, v] of Object.entries(t.props)) for (const f of v.fields) expect(f.internal ? !f.shape : !!f.shape, `${prop}.${f.name}`).toBe(true)
+    expect(t.props.spell.fields.find((f) => f.name === 'foundrySystem')?.internal).toBe(true)
+  })
+  it('{ ref } 都能在 defs 里找到', async () => {
+    const t = await loadBrewFields()
+    const refs = JSON.stringify(t).match(/"ref":"[^"]+"/g) ?? []
+    for (const r of refs) expect(t.defs, r).toHaveProperty([r.slice(7, -1)])
+  })
+  it('法术：施法时间 = 可以加几个的一组；范围 = 一组，里面「类型」是下拉；正文 = 作者正文', async () => {
+    const t = (await formatOfCodeSet(Object.keys(CODE_SETS)[0]).fields('spell'))!
+    const f = (n: string) => deref(t.fields.find((x) => x.name === n)!.shape, t.defs)
+    expect(f('time')).toMatchObject({ c: 'list' })
+    expect(deref(f('time').of, t.defs)).toMatchObject({ c: 'group' })
+    const range = f('range') as { c: string; props: Array<{ name: string; shape: { c: string } }> }
+    expect(range.c).toBe('group')
+    expect(range.props.find((p) => p.name === 'type')?.shape.c).toBe('select')
+    expect(f('entries')).toMatchObject({ c: 'list', of: { c: 'entries' } })
+  })
+  it('中文名：法术用作者法术编辑器的（level = 环节），怪物用怪物编辑器的（level = 等级）；作者没有的不给（界面显示英文）', async () => {
+    const codeSet = Object.keys(CODE_SETS)[0]
+    const spell = (await formatOfCodeSet(codeSet).fields('spell'))!
+    const monster = (await formatOfCodeSet(codeSet).fields('monster'))!
+    expect(spell.fields.find((f) => f.name === 'level')?.label).toBe('环节')
+    expect(spell.fields.find((f) => f.name === 'time')?.label).toBe('施法时间')
+    expect(monster.fields.find((f) => f.name === 'level')?.label).toBe('等级')
+    const action = (await formatOfCodeSet(codeSet).fields('action'))!
+    expect(action.fields.find((f) => f.name === 'time')?.label).toBeUndefined()
+  })
+})

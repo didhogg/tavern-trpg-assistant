@@ -47,10 +47,37 @@ export interface BrewField {
   itemEnum?: unknown[]
   itemTypes?: string[]
   description?: string
+  /** 该画成什么控件（P5.5 阶段 C，tools/brew-schema-walk.mjs）；内部字段没有。 */
+  shape?: FieldShape
+  /** Foundry / Roll20 专用字段：表单不显示。 */
+  internal?: boolean
+  /** 中文名（作者中文版的；没有就不给，界面显示英文原名）。fields() 填。 */
+  label?: string
 }
+/**
+ * 控件形状：text / number / switch / select（enum）/ multiselect（enum）/ list（of）/ group（props）/ map（of）/
+ * pick（几种写法任选，by = 用来区分的共同字段）/ entries（作者正文）/ const / json（表单里画不了，提示到 JSON 里改，why = 原因）。
+ * { ref } 指向 defs 里同一个结构（同一个 $ref 只拆一次）。
+ */
+export type FieldShape =
+  | { ref: string }
+  | { c: 'text' | 'switch' | 'entries'; description?: string }
+  | { c: 'number'; integer?: boolean; description?: string }
+  | { c: 'select' | 'multiselect'; enum: unknown[]; description?: string }
+  | { c: 'const'; value: unknown; description?: string }
+  | { c: 'list' | 'map'; of: FieldShape; description?: string }
+  | { c: 'group'; props: Array<{ name: string; required: boolean; shape: FieldShape }>; description?: string }
+  | { c: 'pick'; by?: string; branches: Array<{ shape: FieldShape; keys: string[] }>; description?: string }
+  | { c: 'json'; why: string; description?: string }
 export interface BrewFieldTable {
   generatedFrom: string
   props: Record<string, { fields: BrewField[]; edition: boolean }>
+  defs?: Record<string, FieldShape>
+}
+export interface FieldLabelTable {
+  generatedFrom: string
+  byProp: Record<string, Record<string, string>>
+  shared: Record<string, string>
 }
 let loadingFields: Promise<BrewFieldTable> | null = null
 /** 字段说明表（vendor/brew-schema/fields.js），第一次用时按网址加载，之后复用。插件目录同校验器。 */
@@ -58,6 +85,14 @@ export const loadBrewFields = (): Promise<BrewFieldTable> => {
   if (!pluginRoot) return Promise.reject(new Error('字段说明表还没有告诉它插件目录（configureBrewValidator）'))
   const url = new URL('vendor/brew-schema/fields.js', pluginRoot).href
   return (loadingFields ||= import(/* @vite-ignore */ url).then((m: { default: BrewFieldTable }) => m.default, (error: unknown) => { loadingFields = null; throw error }))
+}
+
+let loadingLabels: Promise<FieldLabelTable> | null = null
+/** 字段中文名表（vendor/brew-schema/field-labels.js，作者中文版自动取），加载办法同字段说明表。 */
+export const loadFieldLabels = (): Promise<FieldLabelTable> => {
+  if (!pluginRoot) return Promise.reject(new Error('字段中文名表还没有告诉它插件目录（configureBrewValidator）'))
+  const url = new URL('vendor/brew-schema/field-labels.js', pluginRoot).href
+  return (loadingLabels ||= import(/* @vite-ignore */ url).then((m: { default: FieldLabelTable }) => m.default, (error: unknown) => { loadingLabels = null; throw error }))
 }
 
 const loadValidator = (): Promise<Validator> => {

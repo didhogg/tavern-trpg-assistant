@@ -37,6 +37,7 @@ const r = await page.evaluate(async () => {
   out.template = { spell: (await lib.custom.template('cn', 'spell'))?.name ?? null, feat: await lib.custom.template('cn', 'feat') }
   // B6：空白条目
   out.blank = await lib.custom.blankEntry('cn', 'spell')
+  { const t = await lib.custom.fields('cn', 'spell'); const f = (n) => t.fields.find((x) => x.name === n); const d = (s) => (s && s.ref ? t.defs[s.ref] : s); out.form = { level: f('level')?.label, time: f('time')?.label, timeShape: d(f('time')?.shape)?.c, rangeShape: d(f('range')?.shape)?.c, internal: f('foundrySystem')?.internal === true, defs: Object.keys(t.defs).length } }
   out.blankIssues = (await lib.custom.validateEntry('cn', 'spell', { ...out.blank, source: 'TRPGMINE' })).length
   // B7：草稿不碰条目
   const before = (await (await lib.service.frameOf('cn')).call('editableDoc')).body?.spell?.length ?? 0
@@ -56,6 +57,7 @@ check('B5 转换器从作者登记读：法术 txt、怪物有 md、通用正文
 check('B5 文字转条目走作者转换器', o.convert.n === 1 && !!o.convert.name, JSON.stringify(o.convert))
 check('B5 作者模板：法术有、专长没有', !!o.template.spell && o.template.feat === null, JSON.stringify(o.template))
 check('B6 空白法术：只有必填项，结构检查会指出没填好的', !!o.blank && 'level' in o.blank && !('source' in o.blank) && o.blankIssues > 0, JSON.stringify(o.blank) + ' issues ' + o.blankIssues)
+check('阶段 C 表单：字段带作者中文名（法术 level = 环节、time = 施法时间）和控件形状（施法时间 = 可加几个的一组、范围 = 一组），Foundry 字段标内部', o.form.level === '环节' && o.form.time === '施法时间' && o.form.timeShape === 'list' && o.form.rangeShape === 'group' && o.form.internal && o.form.defs > 0, JSON.stringify(o.form))
 check('B7 草稿：存得进、读得回、列得出，条目本身没变；丢掉后没了', JSON.stringify(o.draft.got) === '{"name":"P55草稿术"}' && o.draft.listed >= 1 && o.draft.entriesUnchanged && o.draftGone, JSON.stringify(o.draft))
 console.log('converter sample:', o.sample)
 const realErrors = pageErrors.filter((m) => !/网络错误|Network error|gendata-nav-adventure-book-index/.test(m))
