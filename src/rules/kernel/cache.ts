@@ -30,20 +30,40 @@ export class KernelCache {
     return 'data' in value ? value.data ?? null : null
   }
 
+  /** 这一行的状态，只看有没有、是不是失败行，不解压内容（补换算逐条查时用；数主键不读内容）。 */
+  async state(key: string): Promise<'missing' | 'done' | 'failed'> {
+    if (!(await this.db.derived.where('key').equals(`kc:${key}`).count())) return 'missing'
+    return (await this.db.derived.where('key').equals(`kc-failed:${key}`).count()) ? 'failed' : 'done'
+  }
+
+  /**
+   * 记一条换算失败：占住这一行（读的人拿到 null，照旧现场换算并报原错），失败原因另存。
+   * 钥匙含内核指纹和官方版本，内核或官方数据换过就是新钥匙、自然重试；sweep 按 scope 一并清掉。
+   */
+  async putFailed(key: string, error: string, scope: KernelCacheScope): Promise<void> {
+    await this.db.derived.bulkPut([
+      { key: `kc:${key}`, fingerprint: key, value: { data: null, failed: error, scope, savedAt: Date.now() }, savedAt: Date.now() },
+      { key: `kc-failed:${key}`, fingerprint: key, value: { error, scope }, savedAt: Date.now() },
+    ])
+  }
+
   async put(key: string, data: unknown, scope: KernelCacheScope): Promise<{ raw: number; compressed: number }> {
     const text = JSON.stringify(data)
     const z = await gzipText(text)
     await this.db.derived.put({ key: `kc:${key}`, fingerprint: key, value: { z, raw: text.length, scope, savedAt: Date.now() }, savedAt: Date.now() })
+    await this.db.derived.delete(`kc-failed:${key}`)
     return { raw: text.length, compressed: z.byteLength }
   }
 
-  /** 删掉同规则下不属于这一套的行（结算内核或官方数据换过之后的旧换算），以及没记套别的老格式行。返回删了几行。 */
+  /** 删掉同规则下不属于这一套的行（结算内核或官方数据换过之后的旧换算、旧失败记录），以及没记套别的老格式行。返回删了几行。 */
   async sweep(scope: KernelCacheScope): Promise<number> {
     const stale: string[] = []
-    await this.db.derived.where('key').startsWith('kc:').each((rec) => {
-      const s = (rec.value as { scope?: KernelCacheScope } | undefined)?.scope
-      if (!s || (s.rule === scope.rule && (s.base !== scope.base || s.official !== scope.official))) stale.push(rec.key)
-    })
+    for (const prefix of ['kc:', 'kc-failed:']) {
+      await this.db.derived.where('key').startsWith(prefix).each((rec) => {
+        const s = (rec.value as { scope?: KernelCacheScope } | undefined)?.scope
+        if (!s || (s.rule === scope.rule && (s.base !== scope.base || s.official !== scope.official))) stale.push(rec.key)
+      })
+    }
     await this.db.derived.bulkDelete(stale)
     return stale.length
   }

@@ -33,4 +33,22 @@ describe('结算内核换算缓存', () => {
     db.close()
     await db.delete()
   })
+
+  it('state 只看有没有、是不是失败行；失败行读出来是 null；之后换成功了失败记录跟着删；sweep 一并清旧失败记录', async () => {
+    const db = new LibraryDatabase(`test-kc-${Math.random()}`)
+    const cache = new KernelCache(db)
+    const now = { rule: 'dnd5e2014', base: 'k2', official: 'c1' }
+    expect(await cache.state('a')).toBe('missing')
+    await cache.putFailed('a', '换算状态：error', now)
+    expect(await cache.state('a')).toBe('failed')
+    expect(await cache.get('a')).toBeNull()
+    await cache.put('a', { ok: 1 }, now)
+    expect(await cache.state('a')).toBe('done')
+    expect(await cache.get('a')).toEqual({ ok: 1 })
+    await cache.putFailed('old', 'x', { ...now, base: 'k1' })
+    expect(await cache.sweep(now)).toBe(2)
+    expect(await cache.state('old')).toBe('missing')
+    db.close()
+    await db.delete()
+  })
 })

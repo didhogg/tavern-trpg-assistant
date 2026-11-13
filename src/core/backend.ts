@@ -168,7 +168,8 @@ export function createBackend(opts: BackendOptions): Backend {
     for (const codeSet of [...new Set(codeSets)]) rows.push(await precompute.run({ codeSet, signal, onProgress }))
     return rows
   }
-  const queue = new PrecomputeQueue(async (codeSet) => precompute?.run({ codeSet }) ?? null)
+  // 改自制 / 房规后：停手 5 秒再补换算，只看自制和带备选的条目（P5.5 查慢）
+  const queue = new PrecomputeQueue(async (codeSet) => precompute?.run({ codeSet, mode: 'changed' }) ?? null, 5000)
   const logs = new LogStore(db)
   const service = new LibraryService({ db, revisions, operations, openFrame, onDataChanged: async (codeSet) => queue.trigger(codeSet), onLog: logs.sink() })
   // 书目（BE-7）：没装官方数据时用允许联网的一次性小窗读作者书目文件；已装好的用现成本地小窗

@@ -164,10 +164,13 @@ export async function reclaimLibrary(deps: { db: LibraryDatabase; revisions: Lib
       await renew()
       const official = await deps.kernelOfficial()
       const stale: string[] = []
-      await db.derived.where('key').startsWith('kc:').each((r) => {
-        const scope = (r.value as { scope?: { official?: unknown }; z?: Uint8Array } | undefined)
-        if (scope?.scope?.official !== official) { stale.push(r.key); report.bytes += scope?.z?.byteLength ?? jsonBytes(r.value) }
-      })
+      // kc-failed：换算失败记录（P5.5 后台补换算），和换算行同一套版本
+      for (const prefix of ['kc:', 'kc-failed:']) {
+        await db.derived.where('key').startsWith(prefix).each((r) => {
+          const scope = (r.value as { scope?: { official?: unknown }; z?: Uint8Array } | undefined)
+          if (scope?.scope?.official !== official) { stale.push(r.key); report.bytes += scope?.z?.byteLength ?? jsonBytes(r.value) }
+        })
+      }
       if (stale.length) await db.derived.bulkDelete(stale)
       report.kernelCache = stale.length
     }
