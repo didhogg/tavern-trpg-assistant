@@ -1,4 +1,4 @@
-// P5.5 阶段 B（字段说明表 / 房规只记改动 / 撤销 / 自己的包）的本机局部验证：真实构建的插件 + 已装中英官方数据的旧测试资料夹副本，断网。
+// P5.5 阶段 B（字段说明表 / 房规只记改动 / 撤销 / 自己的包；B8 起包 = 独立的作者自制包、编辑后台解析）的本机局部验证：真实构建的插件 + 已装中英官方数据的旧测试资料夹副本，断网。
 // 用法：SKIP_BUILD=1 node tests/e2e/library/p55-b-edit.mjs（不设 SKIP_BUILD 会先构建）。结果写进 work/e2e-lib/p55-b-edit-chrome.json。
 import { cp, rm, writeFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
@@ -27,7 +27,11 @@ const r = await page.evaluate(async () => {
   const lib = backend.library
   const c = { rule: 'dnd5e2014', codeSet: 'cn', scopes: ['5e2014'], include: [], exclude: [], choices: {} }
   const editable = async () => (await (await lib.service.frameOf('cn')).call('editableDoc')).body
+  // P5.5 B8 起：自己写的条目默认存进「我的资料」包（独立的作者自制包）；编辑只写原文、后台解析（U2），要读解析结果先等后台
+  const settled = () => lib.brewQueue.settled('cn')
+  const mine = async (uniqueId) => (await lib.custom.packEntry('cn', 'trpgmine', 'spell', { uniqueId }))?.entity ?? null
   const out = {}
+  out.migrated = await lib.custom.ensureMigrated('cn')
   // B4：字段说明表在真实插件里按网址加载
   const sf = await lib.custom.fields('cn', 'spell')
   out.fields = { spell: sf?.fields.length ?? 0, level: sf?.fields.find((f) => f.name === 'level') ?? null, bgEdition: (await lib.custom.fields('cn', 'background'))?.edition ?? null }
@@ -38,18 +42,19 @@ const r = await page.evaluate(async () => {
   const base = (await lib.service.storedItem('cn-official', 'spell', row.hash)).item
   const hr = await lib.custom.createHouseRule(c, target, { edited: { ...structuredClone(base), level: base.level + 1 } }, { activate: false })
   const houseRaw = (await editable()).spell.find((e) => e.uniqueId === hr.uniqueId)
+  await settled()
   const merged = (await lib.service.storedItem('cn-brew', 'spell', hr.house.hash))?.item
   out.house = { changed: hr.changed, rawKeys: Object.keys(houseRaw).sort(), mergedLevel: merged?.level, baseLevel: base.level, sameEntries: JSON.stringify(merged?.entries) === JSON.stringify(base.entries) }
   try { await lib.custom.createHouseRule(c, target, { edited: structuredClone(base) }, { activate: false }); out.noChange = 'no-throw' } catch (e) { out.noChange = String(e.message ?? e) }
   // B1：新背景按 2024 规则写上 edition
   const bg = await lib.custom.saveEntry('cn', 'background', { name: 'P55新背景', entries: ['x'] }, { rule: 'dnd5e2024' })
-  out.bgEdition = (await editable()).background.find((e) => e.uniqueId === bg.uniqueId)?.edition ?? null
+  out.bgEdition = (await lib.custom.packEntry('cn', 'trpgmine', 'background', { uniqueId: bg.uniqueId }))?.entity?.edition ?? null
   // B2：存 3 次 → 撤销 3 次
   const sp = (lvl) => ({ name: 'P55撤销术', level: lvl, school: 'V', time: [{ number: 1, unit: 'action' }], range: { type: 'point', distance: { type: 'self' } }, components: { v: true }, duration: [{ type: 'instant' }], entries: ['x'] })
   const s1 = await lib.custom.saveEntry('cn', 'spell', sp(1))
   await lib.custom.saveEntry('cn', 'spell', { ...sp(2), uniqueId: s1.uniqueId })
   await lib.custom.saveEntry('cn', 'spell', { ...sp(3), uniqueId: s1.uniqueId })
-  const levelNow = async () => (await editable()).spell.find((e) => e.uniqueId === s1.uniqueId)?.level ?? null
+  const levelNow = async () => (await mine(s1.uniqueId))?.level ?? null
   const seq = [await levelNow()]
   await lib.custom.undo('cn', 'spell', s1.uniqueId); seq.push(await levelNow())
   await lib.custom.undo('cn', 'spell', s1.uniqueId); seq.push(await levelNow())
@@ -58,22 +63,23 @@ const r = await page.evaluate(async () => {
   // B2：删掉再撤销
   const s2 = await lib.custom.saveEntry('cn', 'spell', sp(1))
   await lib.custom.deleteEntries('cn', 'spell', [s2.uniqueId])
-  const goneAfterDelete = !(await editable()).spell.some((e) => e.uniqueId === s2.uniqueId)
+  const goneAfterDelete = !(await mine(s2.uniqueId))
   await lib.custom.undo('cn', 'spell', s2.uniqueId)
-  out.undoDelete = { goneAfterDelete, back: (await editable()).spell.some((e) => e.uniqueId === s2.uniqueId) }
-  // B3：建包 → 先看影响 → 挪条目（房规跟着改指）→ 按包导出
+  out.undoDelete = { goneAfterDelete, back: !!(await mine(s2.uniqueId)) }
+  // B3 → B8：建包 → 先看影响 → 挪条目（房规跟着改指）→ 按包导出
   const pack = await lib.custom.createPack('cn', { json: 'P55PACK', full: 'P55 测试包', abbreviation: 'P55' }, { rule: 'dnd5e2024' })
+  await settled()
   const hr2 = await lib.custom.createHouseRule(c, { set: 'cn-brew', prop: 'spell', hash: s2.hash }, { edited: { ...sp(1), source: 'TRPGMINE', level: 9 } }, { activate: false })
   out.impact = await backend.entryChangeImpact('cn-brew', [{ prop: 'spell', hash: s2.hash }]).then((x) => ({ houseRules: x.houseRules.length, choices: x.choices.length, saves: x.saves.length }))
-  const moved = await lib.custom.moveEntries('cn', 'spell', [s2.uniqueId], 'P55PACK')
-  const doc = await editable()
-  out.move = { renamed: moved[0]?.renamed ?? null, source: doc.spell.find((e) => e.uniqueId === s2.uniqueId)?.source, houseCopy: doc.spell.find((e) => e.uniqueId === hr2.uniqueId)?._copy ?? null }
-  const packs = await lib.custom.packs('cn')
-  out.packs = packs.find((p) => p.json === 'P55PACK') ?? null
-  const ex = await lib.custom.exportPack('cn', 'P55PACK')
+  const moved = await lib.custom.moveEntries('cn', 'spell', [s2.uniqueId], 'trpgmine', pack.id)
+  const movedEnt = (await lib.custom.packEntry('cn', pack.id, 'spell', { uniqueId: s2.uniqueId }))?.entity
+  out.move = { retargeted: moved[0]?.retargeted ?? null, source: movedEnt?.source, gone: !(await mine(s2.uniqueId)), houseCopy: (await editable()).spell.find((e) => e.uniqueId === hr2.uniqueId)?._copy ?? null }
+  out.packs = (await lib.custom.packs('cn')).find((p) => p.id === pack.id) ?? null
+  const ex = await lib.custom.exportPack('cn', pack.id)
   out.export = { filename: ex.filename, meta: ex.body._meta, spells: (ex.body.spell ?? []).length, hasUniqueId: (ex.body.spell ?? []).some((e) => 'uniqueId' in e) }
   out.exportValid = (await lib.custom.validate('cn', ex.body)).ok
   try { await lib.custom.createPack('cn', { json: 'PHB', full: 'x', abbreviation: 'x' }); out.taken = 'no-throw' } catch (e) { out.taken = String(e.message ?? e) }
+  await settled()
   return { out, pack }
 })
 
@@ -83,12 +89,13 @@ check('B4 字段说明表在插件里能读到：法术环阶必填整数，背�
 check('B1 房规只存改的那项（环阶）+ _copy', JSON.stringify(o.house.changed) === '["level"]' && JSON.stringify(o.house.rawKeys) === JSON.stringify(['_copy', 'level', 'name', 'source', 'uniqueId']), JSON.stringify(o.house))
 check('B1 作者合并后：环阶是新的，正文还是原件的', o.house.mergedLevel === o.house.baseLevel + 1 && o.house.sameEntries, JSON.stringify(o.house))
 check('B1 和原件一样：拒绝', /没有改动/.test(o.noChange), o.noChange)
+check('B8-6 迁移做过（第一次用到我的库时）', o.migrated !== undefined, JSON.stringify(o.migrated))
 check('B1 新背景按 2024 规则写上 edition: one', o.bgEdition === 'one', String(o.bgEdition))
 check('B2 存 3 次再撤销 3 次：3 → 2 → 1 → 没有这一条', JSON.stringify(o.undo.seq) === JSON.stringify([3, 2, 1, null]) && o.undo.left === 0, JSON.stringify(o.undo))
 check('B2 删掉的撤销：加回来', o.undoDelete.goneAfterDelete && o.undoDelete.back, JSON.stringify(o.undoDelete))
 check('B3 影响清单：列出指向它的房规', o.impact.houseRules === 1, JSON.stringify(o.impact))
-check('B3 换包：来源变成新包，编号变了，房规的 _copy 改指新包', o.move.source === 'P55PACK' && o.move.renamed?.retargeted === 1 && o.move.houseCopy?.source === 'P55PACK', JSON.stringify(o.move))
-check('B3 列包：新包里 1 条法术', o.packs?.counts?.spell === 1, JSON.stringify(o.packs))
+check('B3 换包：来源变成新包、原来的包里没了，房规的 _copy 改指新包', o.move.source === 'P55PACK' && o.move.gone && o.move.retargeted === 1 && o.move.houseCopy?.source === 'P55PACK', JSON.stringify(o.move))
+check('B3 列包：新包里 1 条法术', o.packs?.props?.spell === 1, JSON.stringify(o.packs?.props))
 check('B3 按包导出：作者格式、版本 one、没有运行时字段、能通过结构校验', o.export.meta?.sources?.[0]?.json === 'P55PACK' && o.export.meta?.edition === 'one' && o.export.spells === 1 && !o.export.hasUniqueId && o.exportValid, JSON.stringify(o.export) + ' valid ' + o.exportValid)
 check('B3 编号撞已有的书：拒绝', /已经有书或包在用/.test(o.taken), o.taken)
 // 断网时作者程序联网取目录 / 冒险书索引失败的报错是预期的（同 p5-download-ui.mjs），不算

@@ -1724,8 +1724,51 @@ async function Lt(e, t) {
 	}
 	a && await i.BrewUtil2.pUpdateBrew(n);
 }
+async function Rt(e) {
+	await o();
+	let t = new Set(Object.keys(i.Parser.SOURCE_JSON_TO_FULL ?? {}).map((e) => e.toLowerCase()));
+	return e.filter((e) => t.has(e.toLowerCase()));
+}
+async function zt(e) {
+	await o();
+	let t = i.MiscUtil.copyFast(await i.BrewUtil2.pGetOrCreateEditableBrewDoc()), n = (t.body._meta?.sources ?? []).find((t) => Z(t?.json, e));
+	if (!n) throw Error(`可编辑自制里没有来源 ${e}`);
+	let r = Math.round(Date.now() / 1e3), a = { _meta: {
+		sources: [n],
+		dateAdded: r,
+		dateLastModified: r
+	} }, s = {}, c = /* @__PURE__ */ new Set(), l = [];
+	for (let [n, r] of Object.entries(t.body)) {
+		if (n.startsWith("_") || !Array.isArray(r)) continue;
+		let i = r.filter((t) => Z(t?.source, e));
+		if (i.length) {
+			a[n] = i, t.body[n] = r.filter((t) => !Z(t?.source, e));
+			for (let t of i) {
+				t.uniqueId && l.push(t.uniqueId);
+				let r = t?._copy?.source;
+				typeof r == "string" && (Z(r, e) ? c.add(n) : (s[n] ??= /* @__PURE__ */ new Set()).add(r));
+			}
+		}
+	}
+	return Object.keys(s).length && (a._meta.dependencies = Object.fromEntries(Object.entries(s).map(([e, t]) => [e, [...t]]))), c.size && (a._meta.internalCopies = [...c]), t.body._meta.sources = t.body._meta.sources.filter((e) => e !== n), await i.BrewUtil2.pSetEditableBrewDoc(t), {
+		body: a,
+		uniqueIds: l
+	};
+}
+async function Bt(e, t) {
+	let n = await Q(e), r = new Set(t), a = (n.body._meta?.sources ?? []).map((e) => String(e?.json ?? "").toLowerCase()), o = new Set(n.body._meta?.internalCopies ?? []), s = 0;
+	for (let [e, t] of Object.entries(n.body)) {
+		if (e.startsWith("_") || !Array.isArray(t)) continue;
+		let i = t.filter((e) => !r.has(JSON.stringify(e)));
+		s += t.length - i.length, n.body[e] = i, i.some((e) => typeof e?._copy?.source == "string" && a.includes(e._copy.source.toLowerCase())) && o.add(e);
+	}
+	return o.size && (n.body._meta.internalCopies = [...o]), await i.BrewUtil2.pUpdateBrew(n), {
+		removed: s,
+		internalCopies: [...o]
+	};
+}
 // src/library/runtime/frame/commands.ts
-async function Rt() {
+async function Vt() {
 	let e = /* @__PURE__ */ new Set(), t = [];
 	for (let n of i.DataLoader._DATA_TYPE_LOADER_LIST) {
 		if (e.has(n)) continue;
@@ -1744,7 +1787,7 @@ async function Rt() {
 	}
 	return t;
 }
-async function zt(e) {
+async function Ht(e) {
 	await o();
 	let t = await i.DataLoader.pCacheAndGetAllSite(e) ?? [];
 	return {
@@ -1753,17 +1796,17 @@ async function zt(e) {
 		sources: t.map((e) => u(e))
 	};
 }
-async function Bt(e, t, n) {
+async function Ut(e, t, n) {
 	return await o(), ((await i.DataUtil.loadJSON(`data/${e}`))[t] ?? []).map((e) => ({
 		id: e.id,
 		source: i.SourceUtil.getEntitySource(e),
 		hash: i.UrlUtil.URL_TO_HASH_BUILDER[n](e)
 	}));
 }
-async function Vt(e, t, n) {
+async function Wt(e, t, n) {
 	return await o(), i.DataLoader.pCacheAndGet(e, t, n, { isRequired: !0 });
 }
-async function Ht(e) {
+async function Gt(e) {
 	await o();
 	let t = e ? new Set(e.map((e) => e.toUpperCase())) : null, n = {};
 	for (let e of ["search/index.json", "search/index-item.json"]) {
@@ -1776,7 +1819,7 @@ async function Ht(e) {
 	}
 	return n;
 }
-async function Ut(e, t) {
+async function Kt(e, t) {
 	await o();
 	let n = i.ExcludeUtil.getList().filter((t) => t.hash !== "*" || t.category !== "*" || String(t.source).toLowerCase() !== e.toLowerCase()), r = t ? [...n, {
 		displayName: e,
@@ -1787,29 +1830,29 @@ async function Ut(e, t) {
 	}] : n;
 	return await i.ExcludeUtil.pSetList(r), await i.ExcludeUtil._pSave(), i.ExcludeUtil.getList();
 }
-async function Wt(e, t, n) {
+async function qt(e, t, n) {
 	return await o(), i.ExcludeUtil.isExcluded(e, t, n, { isNoCount: !0 });
 }
-async function Gt(e, t) {
+async function Jt(e, t) {
 	return await o(), t.map((t) => c(e, t));
 }
-async function Kt() {
+async function Yt() {
 	return [...i.__trpgFrameErrors];
 }
-async function qt() {
+async function Xt() {
 	let e = i.__trpgStorageFlush;
 	return e ? e() : [];
 }
-var Jt = {
-	frameErrors: Kt,
+var Zt = {
+	frameErrors: Yt,
 	init: o,
-	loaders: Rt,
-	parseProp: zt,
-	corpusList: Bt,
-	parseCorpus: Vt,
-	searchIndexHashes: Ht,
-	setSourceExcluded: Ut,
-	isExcluded: Wt,
+	loaders: Vt,
+	parseProp: Ht,
+	corpusList: Ut,
+	parseCorpus: Wt,
+	searchIndexHashes: Gt,
+	setSourceExcluded: Kt,
+	isExcluded: qt,
 	excludedFlags: ge,
 	detail: _e,
 	search: ve,
@@ -1832,8 +1875,8 @@ var Jt = {
 	brewCorpusList: Me,
 	brewPackRows: Ie,
 	parseBrewProp: Pe,
-	rawHashes: Gt,
-	storageFlush: qt,
+	rawHashes: Jt,
+	storageFlush: Xt,
 	editionOf: j,
 	sourceNames: He,
 	corpusFile: N,
@@ -1866,6 +1909,9 @@ var Jt = {
 	packExport: Ft,
 	authorDataFiles: It,
 	packAddDependencies: Lt,
+	officialSourcesOf: Rt,
+	editableTake: zt,
+	packFixOldCopy: Bt,
 	diceTag: lt,
 	diceStats: ut,
 	diceRead: dt,
@@ -1889,7 +1935,7 @@ var Jt = {
 	extractTables: wt,
 	directory: ot,
 	sourceFiles: at
-}, Yt = [
+}, Qt = [
 	"DataLoader",
 	"DataUtil",
 	"BrewUtil2",
@@ -1902,17 +1948,17 @@ var Jt = {
 	"Hist",
 	"Parser",
 	"SourceUtil"
-], $ = globalThis, Xt = new URLSearchParams(location.search).get("frame") ?? "";
+], $ = globalThis, $t = new URLSearchParams(location.search).get("frame") ?? "";
 addEventListener("message", (e) => {
 	let t = e.data;
 	if (e.source !== parent || !t || t.channel !== "trpg-library" || t.type !== "call") return;
 	let n = (e) => parent.postMessage({
 		channel: r,
 		type: "result",
-		frame: Xt,
+		frame: $t,
 		id: t.id,
 		...e
-	}, location.origin), i = Jt[t.fn];
+	}, location.origin), i = Zt[t.fn];
 	i ? i(...t.args).then((e) => n({
 		ok: !0,
 		value: e
@@ -1924,13 +1970,13 @@ addEventListener("message", (e) => {
 		error: `小窗没有这个指令：${t.fn}`
 	});
 });
-var Zt = new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "", Qt = {
+var en = new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "", tn = {
 	channel: r,
 	type: "ready",
-	frame: Xt,
-	codeSet: Zt,
+	frame: $t,
+	codeSet: en,
 	authorVersion: typeof $.VERSION_NUMBER == "string" ? $.VERSION_NUMBER : null,
-	present: Object.fromEntries(Yt.map((e) => [e, $[e] !== void 0])),
+	present: Object.fromEntries(Qt.map((e) => [e, $[e] !== void 0])),
 	errors: [...$.__trpgFrameErrors ?? []]
 };
-parent.postMessage(Qt, location.origin);
+parent.postMessage(tn, location.origin);
