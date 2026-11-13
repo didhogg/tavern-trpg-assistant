@@ -75,6 +75,36 @@ describe('buildAlternatives', () => {
     expect(((await db.derived.get(altsKey('cn-brew')))!.value as AltIndex).errors).toEqual([])
   })
 
+  it('P5.5 B8-5：包和它依赖的内容没变就复用上次隔离解析的结果；改了哪个包只重新解析那一个', async () => {
+    const opened: string[] = []
+    const run = async () => buildAlternatives({
+      source: getSource('cn-brew'), db, view: await revisions.published(),
+      frame: fakeFrame({
+        brewDocIndex: () => [
+          { docIdLocal: '甲', filename: '甲.json', timeAdded: 1, order: 1, isEditable: false, props: { spell: ['probe_a'] } },
+          { docIdLocal: '乙', filename: '乙.json', timeAdded: 2, order: 2, isEditable: false, props: { spell: ['probe_a', 'fireball_phb'] } },
+        ],
+      }),
+      openFrameIn: async (scope) => {
+        const docs = ((await db.kv.get([scope, 'HOMEBREW_2_STORAGE']))?.value as Array<{ head: { docIdLocal: string } }>).map((d) => d.head.docIdLocal)
+        opened.push(docs.at(-1)!)
+        return fakeFrame({ brewItemsByHash: (wants) => Object.fromEntries((wants as Array<{ prop: string; hash: string }>).map((w) => [`${w.prop}|${w.hash}`, { v: docs.at(-1) }])) })
+      },
+    })
+    await run()
+    expect(opened.sort()).toEqual(['乙', '甲'])
+    opened.length = 0
+    const again = await run()
+    expect(opened).toEqual([])
+    expect(again.targets['cn-official|spell|fireball_phb'].alts[0].item).toEqual({ v: '乙' })
+    // 改了乙的内容：只重新解析乙
+    const stored = (await db.kv.get(['cn', 'HOMEBREW_2_STORAGE']))!.value as Array<{ head: { docIdLocal: string }; body: Record<string, unknown> }>
+    stored[1].body = { ...stored[1].body, spell: [{ name: 'changed' }] }
+    await db.kv.put({ scope: 'cn', key: 'HOMEBREW_2_STORAGE', value: stored })
+    await run()
+    expect(opened).toEqual(['乙'])
+  })
+
   it('没有同编号：不开隔离小窗，备选表为空', async () => {
     const index = await buildAlternatives({
       source: getSource('cn-brew'), db, view: await revisions.published(),

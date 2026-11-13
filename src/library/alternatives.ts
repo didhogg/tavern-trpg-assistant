@@ -1,6 +1,7 @@
 // 同编号挂备选（D2-P3 整体设计 §2.4）：自制包装、删、更新之后，找出和官方或先装的包同编号的条目，
 // 让原件照常生效，后来的挂成备选。作者加载器合并时"后装的盖掉先装的"（utils-dataloader-dataloader.js 第 1071 行），
 // 所以备选的条目对象要单独取：开一个隔离的作者存储范围，只放那个包（和它声明依赖的包），用作者加载器原样解析。
+import { hashValue } from '../core/hash'
 import { uuid } from '../core/ids'
 import type { LibraryDatabase } from './db'
 import type { LibraryView } from './revision'
@@ -32,6 +33,8 @@ export interface AltIndex {
 }
 
 export const altsKey = (brewSetId: string): string => `alts:${brewSetId}`
+/** 一个包隔离解析出来的同编号条目（P5.5 B8-5 复用）。 */
+export const altItemsKey = (brewSetId: string, docIdLocal: string): string => `alt-items:${brewSetId}:${docIdLocal}`
 
 type StoredBrew = { head: { docIdLocal: string; filename?: string }; body: { _meta?: {
   sources?: Array<{ json?: string }>
@@ -127,6 +130,8 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
     if (c.base.kind === 'doc') add(c.base.docIdLocal, c.prop, c.hash)
   }
   const items = new Map<string, Record<string, unknown>>()
+  // P5.5 B8-5：隔离解析的结果按「这个包和它依赖的包的内容 + 官方数据状态」存下来；没变、要取的都在 → 直接复用，不再开隔离小窗
+  const officialState = await opts.view.officialState(official.id)
   for (const [id, wants] of need) {
     const doc = byId.get(id)
     if (!doc) {
@@ -134,7 +139,15 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
       continue
     }
     try {
-      items.set(id, await withIsolatedBrew(opts, withDependencies(doc, stored), (frame) => frame.call('brewItemsByHash', wants)))
+      const docs = withDependencies(doc, stored)
+      const fingerprint = hashValue({ docs: docs.map((d) => d.body), official: officialState })
+      const memoKey = altItemsKey(source.id, id)
+      const memo = await opts.view.derivedGet(memoKey)
+      const cached = memo?.fingerprint === fingerprint ? memo.value as Record<string, unknown> : null
+      if (cached && wants.every((w) => `${w.prop}|${w.hash}` in cached)) { items.set(id, cached); continue }
+      const got = await withIsolatedBrew(opts, docs, (frame) => frame.call('brewItemsByHash', wants))
+      items.set(id, got)
+      await opts.view.derivedPut(memoKey, fingerprint, got)
     } catch (e) {
       for (const w of wants) out.errors.push({ docIdLocal: id, ...w, error: e instanceof Error ? e.message : String(e) })
     }
