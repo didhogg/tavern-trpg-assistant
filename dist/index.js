@@ -21549,8 +21549,9 @@ var WD = class {
 	lib;
 	brewPairs;
 	counterparts;
-	constructor(e, t, n, r) {
-		this.custom = e, this.lib = t, this.brewPairs = n, this.counterparts = r;
+	scoped;
+	constructor(e, t, n, r, i) {
+		this.custom = e, this.lib = t, this.brewPairs = n, this.counterparts = r, this.scoped = i;
 	}
 	async packs() {
 		let [e, t] = await Promise.all([this.custom.packs(HD("zh")), this.custom.packs(HD("en"))]), n = new Map(e.map((e) => [e.docIdLocal, e])), r = new Map(t.map((e) => [e.docIdLocal, e])), i = [], a = /* @__PURE__ */ new Set();
@@ -21725,6 +21726,50 @@ var WD = class {
 	async mismatches(e, t, n, r) {
 		let i = await this.custom.fields(e, t);
 		return i ? RD(n, r, i.fields, i.defs) : [];
+	}
+	async houseRuleBoth(t, n) {
+		let r = {
+			zh: null,
+			en: null
+		}, i = t;
+		for (let a of ["zh", "en"]) {
+			let o = n[a];
+			if (!o) continue;
+			let s = await this.custom.createHouseRule({
+				...i,
+				codeSet: e(o.target.set).codeSet
+			}, o.target, { edited: o.edited });
+			r[a] = s, i = {
+				...s.campaign,
+				codeSet: t.codeSet
+			};
+		}
+		if (!r.zh && !r.en) throw Error("中文、英文都没有要改的");
+		return {
+			...r,
+			campaign: i
+		};
+	}
+	async englishInCampaign(t, n) {
+		if (!this.scoped) throw Error("没有接上条目查询（scoped）");
+		let r = await this.scoped.englishOf(n, { fluff: !1 });
+		if (r?.status !== "found") return null;
+		let i = e(n.set).pair;
+		if (!i) return null;
+		let a = {
+			set: i,
+			prop: n.prop,
+			hash: r.hash
+		}, o = await this.scoped.detail(t, a, { browse: !0 });
+		return o && !("hidden" in o) ? {
+			ref: a,
+			item: o.item,
+			altId: o.version.altId
+		} : {
+			ref: a,
+			item: r.item,
+			altId: "base"
+		};
 	}
 }, GD = 4, KD = class {
 	db;
@@ -25131,7 +25176,7 @@ function Vk(t) {
 		startOfficial: (e, t) => te.startOfficial(e, t)
 	}), E = new iw(y), D = new OT(y, w), O = new jD(y, C, i, (e) => D.counterpart(e), (e) => v?.busy(e) ?? !1, async (e) => {
 		await v?.settled(e);
-	}), ee = new WD(O, y, w, D), te = new GO({
+	}), ee = new WD(O, y, w, D, C), te = new GO({
 		db: i,
 		revisions: o,
 		operations: c,

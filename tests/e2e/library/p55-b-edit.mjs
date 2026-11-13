@@ -45,6 +45,19 @@ const r = await page.evaluate(async () => {
   await settled()
   const merged = (await lib.service.storedItem('cn-brew', 'spell', hr.house.hash))?.item
   out.house = { changed: hr.changed, rawKeys: Object.keys(houseRaw).sort(), mergedLevel: merged?.level, baseLevel: base.level, sameEntries: JSON.stringify(merged?.entries) === JSON.stringify(base.entries) }
+  // 房规两种语言一起改（驾驶员 2026-11-13）：另找一条有英文对照的法术，中英各建一条房规
+  const both = rows.find((x) => x.hash !== row.hash && typeof x.item?.level === 'number' && x.item.level > 0 && x.item.level < 9)
+  const zhT = { set: 'cn-official', prop: 'spell', hash: both.hash }
+  const en0 = await lib.bilingual.englishInCampaign(c, zhT)
+  if (en0) {
+    const zhBase = (await lib.service.storedItem('cn-official', 'spell', both.hash)).item
+    const hb = await lib.bilingual.houseRuleBoth(c, { zh: { target: zhT, edited: { ...structuredClone(zhBase), level: zhBase.level + 1 } }, en: { target: en0.ref, edited: { ...structuredClone(en0.item), level: en0.item.level + 1 } } })
+    await settled()
+    await lib.brewQueue.settled('en')
+    const en1 = await lib.bilingual.englishInCampaign(hb.campaign, zhT)
+    const zh1 = await lib.scoped.detail(hb.campaign, zhT, { browse: true })
+    out.houseBoth = { enBefore: en0.altId, enAfter: en1?.altId ?? null, enLevel: [en0.item.level, en1?.item?.level ?? null], zhAlt: zh1?.version?.altId ?? null, zhLevel: zh1?.item?.level ?? null, base: zhBase.level, codeSet: hb.campaign.codeSet }
+  } else out.houseBoth = { noEnglish: true }
   // 覆盖管理（驾驶员 2026-11-13）：单条筛选 + 改了什么
   const c2 = await lib.scoped.choose(c, target, hr.altId)
   out.editRows = (await lib.custom.edits({ refs: [target] }, c2)).map((x) => [x.level, x.kind])
@@ -89,6 +102,7 @@ const r = await page.evaluate(async () => {
 
 const o = r.out
 await writeFile(`${work}/p55-b-edit-chrome.json`, JSON.stringify({ r, pageErrors }, null, 1))
+check('房规两种语言一起改：中英各一条房规，战役里中文、英文生效的都是房规（环节 +1）', o.houseBoth?.enBefore === 'base' && String(o.houseBoth?.enAfter).startsWith('house:') && o.houseBoth.enLevel[1] === o.houseBoth.enLevel[0] + 1 && String(o.houseBoth.zhAlt).startsWith('house:') && o.houseBoth.zhLevel === o.houseBoth.base + 1 && o.houseBoth.codeSet === 'cn', JSON.stringify(o.houseBoth))
 check('覆盖管理：单条筛选只列这一条（本战役 · 房规）；改了什么 = 只有环节 +1', JSON.stringify(o.editRows) === '[["campaign","house"]]' && o.editChanges?.length === 1 && o.editChanges[0][0] === 'level' && o.editChanges[0][2] === o.editChanges[0][1] + 1, JSON.stringify({ rows: o.editRows, ch: o.editChanges }))
 check('B4 字段说明表在插件里能读到：法术环阶必填整数，背景能自带版本', o.fields.spell > 0 && o.fields.level?.required === true && o.fields.level?.types?.[0] === 'integer' && o.fields.bgEdition === true, JSON.stringify(o.fields))
 check('B1 房规只存改的那项（环阶）+ _copy', JSON.stringify(o.house.changed) === '["level"]' && JSON.stringify(o.house.rawKeys) === JSON.stringify(['_copy', 'level', 'name', 'source', 'uniqueId']), JSON.stringify(o.house))

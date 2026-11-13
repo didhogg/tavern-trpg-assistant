@@ -210,7 +210,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
   const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref), (codeSet) => brewQueue?.busy(codeSet) ?? false, async (codeSet) => { await brewQueue?.settled(codeSet) })
-  const bilingual = new BilingualLibrary(custom, service, brewPairs, counterparts)
+  const bilingual = new BilingualLibrary(custom, service, brewPairs, counterparts, scoped)
   const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view, signal) => openFrame(codeSet, { view, signal }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (_view, previous) => { service.retire(previous); scoped.reset() },
     selectUpdate: (id, commit, selection, base) => updates.planSelection(id, commit, selection, base),
     planOfficial: async (setId, planOpts, view) => {

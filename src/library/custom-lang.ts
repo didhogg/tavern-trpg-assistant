@@ -8,7 +8,9 @@ import type { CustomLibrary } from './custom'
 import type { MyPack } from './custom-packs'
 import { fillFrom, fillPlan, neutralMismatches, type Lang } from './lang-fill'
 import type { LibraryService } from './service'
-import { SOURCES, type SourceEntry } from './sources'
+import type { ScopedLibrary } from './scoped'
+import type { CampaignLibrary, EntryRef } from './scopes'
+import { SOURCES, getSource, type SourceEntry } from './sources'
 
 type Ent = Record<string, unknown>
 type Files = Array<{ name: string; text: string }>
@@ -58,7 +60,7 @@ export interface OtherEntry {
 }
 
 export class BilingualLibrary {
-  constructor(private readonly custom: CustomLibrary, private readonly lib: Pick<LibraryService, 'frameOf' | 'brewImport'>, private readonly brewPairs: Pick<BrewPairs, 'installed'>, private readonly counterparts: Pick<Counterparts, 'counterpart'>) {}
+  constructor(private readonly custom: CustomLibrary, private readonly lib: Pick<LibraryService, 'frameOf' | 'brewImport'>, private readonly brewPairs: Pick<BrewPairs, 'installed'>, private readonly counterparts: Pick<Counterparts, 'counterpart'>, private readonly scoped?: Pick<ScopedLibrary, 'englishOf' | 'detail'>) {}
 
   /** C2【我的库】的包按中英配对：一对一行（只有一边的，另一边为 null）。 */
   async packs(): Promise<PackPair[]> {
@@ -199,5 +201,39 @@ export class BilingualLibrary {
   async mismatches(codeSet: string, prop: string, a: Ent, b: Ent): Promise<string[]> {
     const t = await this.custom.fields(codeSet, prop)
     return t ? neutralMismatches(a, b, t.fields, t.defs) : []
+  }
+
+  /**
+   * 房规两种语言一起改（驾驶员 2026-11-13）：书架上的中文官方条目和它的英文官方原文各建一条房规（各在自己那一套的可编辑自制里，
+   * 作者 _copy 只记改动，B1），在同一个战役、同一层生效。只给一边就只建那一边。返回改好的战役选书设置（调用方写回）。
+   */
+  async houseRuleBoth(c: CampaignLibrary, sides: { zh?: { target: EntryRef; edited: Ent }; en?: { target: EntryRef; edited: Ent } }) {
+    type House = Awaited<ReturnType<CustomLibrary['createHouseRule']>>
+    const out: { zh: House | null; en: House | null } = { zh: null, en: null }
+    let cur = c
+    for (const lang of ['zh', 'en'] as const) {
+      const s = sides[lang]
+      if (!s) continue
+      const r = await this.custom.createHouseRule({ ...cur, codeSet: getSource(s.target.set).codeSet }, s.target, { edited: s.edited })
+      out[lang] = r
+      cur = { ...r.campaign, codeSet: c.codeSet }
+    }
+    if (!out.zh && !out.en) throw new Error('中文、英文都没有要改的')
+    return { ...out, campaign: cur }
+  }
+
+  /**
+   * 一条官方条目在这个战役里生效的英文：英文原文有房规 / 选了别的版本就给那一份，没有就是英文原文（P5 英文对照）。
+   * 编辑器右栏 English、详情的 En 用。英文对照查不到给 null。
+   */
+  async englishInCampaign(c: CampaignLibrary, ref: EntryRef): Promise<{ ref: EntryRef; item: unknown; altId: string } | null> {
+    if (!this.scoped) throw new Error('没有接上条目查询（scoped）')
+    const en = await this.scoped.englishOf(ref, { fluff: false })
+    if (en?.status !== 'found') return null
+    const pair = getSource(ref.set).pair
+    if (!pair) return null
+    const enRef = { set: pair, prop: ref.prop, hash: en.hash }
+    const d = await this.scoped.detail(c, enRef, { browse: true })
+    return d && !('hidden' in d) ? { ref: enRef, item: d.item, altId: d.version.altId } : { ref: enRef, item: en.item, altId: 'base' }
   }
 }
