@@ -17,7 +17,17 @@ const r = await page.evaluate(async (P) => {
   }
   const auto = {}
   for (const p of ['monster', 'spell', 'item', 'race', 'background', 'feat']) auto[p] = await c.autoFields('cn', p)
-  return { types: types.map((t) => ({ prop: t.prop, name: t.name, kind: t.kind, parent: t.parent, group: t.group?.name ?? null })), usage, auto }
+  // 2a：英文条目保存时照作者做法写自动字段（伤害、施加状态标签）；中文条目不跑
+  const mon = { name: 'Ember Wisp', size: ['T'], type: 'elemental', ac: [12], hp: { average: 7, formula: '2d4 + 2' }, speed: { walk: 30 }, str: 4, dex: 14, con: 12, int: 6, wis: 10, cha: 8, passive: 10, cr: '1/4',
+    action: [{ name: 'Burn', entries: ['{@atk ms} {@hit 4} to hit, reach 5 ft., one target. {@h}5 ({@damage 1d6 + 2}) fire damage, and the target must succeed on a {@dc 11} Dexterity saving throw or be {@condition blinded} until the end of its next turn.'] }] }
+  const saved = {}
+  for (const cs of ['en', 'cn']) {
+    const pack = await c.createPack(cs, { json: 'R1AUTO', full: 'R1 Auto', abbreviation: 'R1A' }, { rule: 'dnd5e2014' })
+    const r = await c.saveEntry(cs, 'monster', structuredClone(mon), { pack: pack.id ?? pack })
+    const got = await c.packEntry(cs, pack.id ?? pack, 'monster', { uniqueId: r.uniqueId })
+    saved[cs] = { damageTags: got?.entity?.damageTags ?? null, conditionInflict: got?.entity?.conditionInflict ?? null }
+  }
+  return { types: types.map((t) => ({ prop: t.prop, name: t.name, kind: t.kind, parent: t.parent, group: t.group?.name ?? null })), usage, auto, saved }
 }, P)
 await writeFile(`${work}/p55-r1-stats.json`, JSON.stringify(r, null, 1))
 const t = (p) => r.types.find((x) => x.prop === p)
@@ -35,6 +45,7 @@ check('统计第二次读缓存（≤ 20 ms）', Object.values(u).every((x) => x
 const a = r.auto
 check('自动字段：怪物的伤害 / 特性 / 动作 / 语言标签、法术的伤害类型和豁免', ['damageTags', 'traitTags', 'actionTags', 'languageTags'].every((f) => a.monster?.auto.includes(f)) && ['damageInflict', 'savingThrow'].every((f) => a.spell?.auto.includes(f)), JSON.stringify({ monster: a.monster?.auto, spell: a.spell?.auto }))
 check('自动字段不收人填的结构化数据（种族抗性、背景熟练）', !a.race?.auto.includes('resist') && !a.background?.auto.some((f) => /Proficiencies$/.test(f)), JSON.stringify({ race: a.race?.auto, background: a.background?.auto }))
+check('保存英文怪物：自动写上伤害标签（火焰）和施加状态（目盲）；中文条目不跑（驾驶员定留空）', JSON.stringify(r.saved.en.damageTags) === '["F"]' && JSON.stringify(r.saved.en.conditionInflict) === '["blinded"]' && r.saved.cn.damageTags === null, JSON.stringify(r.saved))
 check('页面没有未处理的错误（断网预期的除外）', realErrors().length === 0, realErrors().slice(0, 2).join(' | '))
 await ctx.close()
 server.close()

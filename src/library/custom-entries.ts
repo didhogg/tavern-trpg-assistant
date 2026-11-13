@@ -4,6 +4,7 @@
 // 改名（作者编号 = 名字 + 来源）：同一次修改里把用 _copy 指向它的条目改指新名字（这个包里 + 可编辑自制里的房规），
 // 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
 import { docIdOf } from './custom-packs'
+import { autoFieldsOf } from './field-usage-store'
 import { formatOfCodeSet } from './formats'
 import type { SchemaIssue } from './brew-validate'
 import type { ChoiceLevel, EditStep, HouseRuleLink, ManageStore } from './manage'
@@ -59,6 +60,7 @@ async function inStore<T>(d: EntryDeps, codeSet: string, kind: string, pack: str
 
 /** 存一条（新写或改）。record：记一步撤销（撤销自己存回去时不记）。 */
 export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record, pack, replaceHash }: SaveOptions & { record: boolean }) {
+  ent = await withAutoFields(d, codeSet, prop, ent, rule)
   const result = await inStore(d, codeSet, 'custom-entry', pack, async (f, doc) => {
     // 没给来源（包括写成 undefined）才用默认：包自己的来源 / 可编辑自制的「我的资料」
     const full: Record<string, unknown> = { ...ent, source: ent.source ?? (doc ? doc.own : d.mineSource.json) }
@@ -87,6 +89,23 @@ export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: 
   else if (saved.hash && !saved.previousHash && rule) await d.manage.setAssignment(entryUnit({ set, prop, hash: saved.hash }), { scopes: [...ruleScopes(rule).defaultScopes], global: false })
   // 解析在后台（pending）；另一种语言对上了谁要等解析完才知道，到时用 counterparts 再查
   return { ...saved, renamed, pending: true as const, issues: await d.validateEntry(codeSet, prop, ent) }
+}
+
+/**
+ * 自动字段（§16.10 2a）：作者打标签程序从条目别的内容写出来的（伤害标签、语言标签……，custom.autoFields 实测出的），保存时照作者做法重写。
+ * 作者打标签程序按英文原文找，只给英文条目跑（驾驶员 2026-11-13 定：中文条目的自动标签留空 / 留着原来的，英文那一条照常有）。
+ */
+async function withAutoFields(d: EntryDeps, codeSet: string, prop: string, ent: Record<string, unknown>, rule?: string): Promise<Record<string, unknown>> {
+  if (codeSet !== 'en') return ent
+  const auto = (await autoFieldsOf(d.lib, codeSet, prop))?.auto ?? []
+  if (!auto.length) return ent
+  const got = (await (await d.lib.frameOf(codeSet)).call('autoTag', prop, ent, auto, rule ? ruleScopes(rule).style : undefined)) as Record<string, unknown>
+  const out = { ...ent }
+  for (const [f, v] of Object.entries(got)) {
+    if (v === null || (Array.isArray(v) && !v.length)) delete out[f]
+    else out[f] = v
+  }
+  return out
 }
 
 /** 删条（按 uniqueId）；record：每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。返回删掉的原文。 */

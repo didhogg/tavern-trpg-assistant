@@ -43,7 +43,7 @@ export interface AutoFields {
   detail: Record<string, { tried: number; back: number }>
 }
 
-const AUTO_FINGERPRINT = 'auto-v2'
+const AUTO_FINGERPRINT = 'auto-v4'
 /** 抽几条官方条目实测；至少试过几次、多大比例写回来才算自动。 */
 const SAMPLES = 30
 const MIN_TRIED = 3
@@ -52,7 +52,7 @@ const MIN_SHARE = 0.8
 /**
  * 作者打标签程序按英文原文找（"fire damage" → 火焰伤害标签），中文条目里找不到，所以固定用英文官方条目实测，
  * 各语言共用这一份（字段是同一套结构定义）。英文没装 → 用这一种语言自己的条目测（会认得偏少）。
- * 只认形状是「一串固定代号」（多选）的字段：打标签程序也会从正文读出熟练、抗性（列表套对象），那些是人填的结构化数据，不算。
+ * 只认一串代号 / 文字或单个值的字段：打标签程序也会从正文读出熟练、抗性（列表套对象），那些是人填的结构化数据，不算。
  */
 export async function autoFieldsOf(lib: UsageDeps & Pick<LibraryService, 'officialInstalled'>, codeSet: string, prop: string): Promise<AutoFields | null> {
   const english = 'en'
@@ -75,7 +75,14 @@ async function autoFieldsIn(lib: UsageDeps, codeSet: string, prop: string): Prom
     // 均匀抽样（不只取前几条，前几条常是同一本书）
     const step = Math.max(1, Math.floor(own.length / SAMPLES))
     const samples = own.filter((_, i) => i % step === 0).slice(0, SAMPLES)
-    const codes = (f: BrewField) => !!f.shape && resolve(f.shape, table.defs ?? {}).c === 'multiselect'
+    // 候选：一串代号 / 文字（多选、列表里是文字或选项），或单个开关 / 选项 / 文字；列表套对象的（熟练、抗性）是人填的结构化数据，不算
+    const SCALAR = new Set(['switch', 'const', 'select', 'text'])
+    const codes = (f: BrewField) => {
+      if (!f.shape) return false
+      const s = resolve(f.shape, table.defs ?? {})
+      if (s.c === 'multiselect' || SCALAR.has(s.c)) return true
+      return s.c === 'list' && SCALAR.has(resolve(s.of, table.defs ?? {}).c)
+    }
     const fields = table.fields.filter((f) => !f.internal && !f.publish && !f.required && codes(f)).map((f) => f.name)
     const r = (await (await lib.frameOf(codeSet, view)).call('autoFieldProbe', prop, samples, fields)) as { calls: string[]; fields: AutoFields['detail'] }
     const detail = r.fields

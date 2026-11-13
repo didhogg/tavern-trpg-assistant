@@ -43,7 +43,8 @@ async function tagCalls(prop: string): Promise<TagCall[]> {
     if (seen.has(name) || typeof Conv[name] !== 'function') return
     seen.add(name)
     const src = String(Conv[name])
-    for (const m of src.matchAll(/\b([A-Z]\w*(?:Tag|Tagger|Tags))\.(try\w+)\(|\bthis\.(_\w+)\(/g)) {
+    // 打标签类：作者命名以 Tag 开头或以 Tag / Tagger / Tags 结尾（TagCondition、DamageTypeTag、SavingThrowTagger……）
+    for (const m of src.matchAll(/\b(Tag\w*|[A-Z]\w*(?:Tag|Tagger|Tags))\.(try\w+)\(|\bthis\.(_\w+)\(/g)) {
       if (m[3]) { await visit(m[3]); continue }
       const file = imports.get(m[1])
       if (!file || !/converterutils/.test(file)) continue
@@ -57,6 +58,11 @@ async function tagCalls(prop: string): Promise<TagCall[]> {
 }
 
 const quiet = () => undefined
+/** 一串代号不管先后（作者打标签有时按出现先后、有时按字母排）；其他照原样比。 */
+const sameCodes = (a: unknown, b: unknown): boolean => {
+  const flat = (x: unknown) => Array.isArray(x) && x.every((v) => typeof v !== 'object' || v === null)
+  return flat(a) && flat(b) ? stableStringify([...(a as unknown[])].map(String).sort()) === stableStringify([...(b as unknown[])].map(String).sort()) : stableStringify(a) === stableStringify(b)
+}
 
 /**
  * 实测：samples 每条一次删掉一个字段（fields 里的），只跑打标签调用，看能不能原样写回来。
@@ -79,8 +85,26 @@ export async function autoFieldProbe(prop: string, samples: Array<Record<string,
       }
       const r = (out[f] ??= { tried: 0, back: 0 })
       r.tried++
-      if (copy[f] !== undefined && stableStringify(copy[f]) === stableStringify(ent[f])) r.back++
+      if (copy[f] !== undefined && sameCodes(copy[f], ent[f])) r.back++
     }
   }
   return { calls: calls.map((c) => c.label), fields: out }
+}
+
+/**
+ * 保存时写自动字段（§16.10 2a）：照作者转换器后处理只跑打标签调用（同上），只交回 fields 里这几个字段的结果（null = 打标签后没有）。
+ * 别的字段打标签程序也会动（例如正文里加 {@hit} 标签），这里不交回，条目只改自动字段。
+ */
+export async function autoTag(prop: string, entity: Record<string, unknown>, fields: string[], styleHint?: 'classic' | 'one'): Promise<Record<string, unknown>> {
+  await init()
+  const calls = await tagCalls(prop)
+  if (!calls.length || !fields.length) return {}
+  await prepareConverters()
+  const copy: Record<string, unknown> = structuredClone(entity)
+  for (const f of fields) delete copy[f]
+  const opts = { cbWarning: quiet, cbMan: quiet, styleHint, isTagInflicted: true }
+  for (const c of calls) {
+    try { c.cls[c.method](copy, opts) } catch (e) { console.debug(`[trpg-assistant] 打标签 ${c.label} 没跑通`, e) }
+  }
+  return Object.fromEntries(fields.map((f) => [f, copy[f] ?? null]))
 }

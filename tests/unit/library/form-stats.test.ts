@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { distinctNames, entryKinds, NOT_CREATABLE } from '../../../src/library/entry-kinds'
 import { fieldUsage, ownItems } from '../../../src/library/field-usage'
 import type { BrewField } from '../../../src/library/brew-validate'
+// @ts-expect-error 生成的字段表是 JS，没有类型声明
 import fields from '../../../vendor/brew-schema/fields.js'
 
 describe('类别从属（作者规矩：主类别名 + Fluff；必填写着主条目名）', () => {
@@ -65,6 +66,11 @@ describe('出版信息字段（结构定义特征，驾驶员 11-13 定）', () 
   const flag = (n: string) => monster.find((x) => x.name === n)?.publish ?? false
   it('头像 / 媒体 / 重印出处 / has 开头的素材标记 → 出版信息', () => {
     for (const n of ['hasToken', 'hasFluff', 'hasFluffImages', 'soundClip', 'altArt', 'tokenHref', 'reprintedAs', 'otherSources', 'referenceSources', 'isReprinted']) expect(flag(n), n).toBe(true)
+  })
+  it('种族里写成是否的 hasFluff 也算（11-13 补）', () => {
+    const race = (fields as { props: Record<string, { fields: BrewField[] }> }).props.race.fields
+    expect(race.find((x) => x.name === 'hasFluff')?.publish).toBe(true)
+    expect(race.find((x) => x.name === 'size')?.publish ?? false).toBe(false)
   })
   it('有意义的开关不误收（召唤物按等级缩放）；人填的字段不收', () => {
     for (const n of ['summonedScaleByPlayerLevel', 'name', 'alignment', 'ac', 'trait']) expect(flag(n), n).toBe(false)

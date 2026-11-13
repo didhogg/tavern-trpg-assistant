@@ -82,12 +82,12 @@ export async function loadSchemas(dir) {
    * 出版信息字段（P5.5 §16.10 1c，驾驶员 2026-11-13 定「按结构定义特征认，之后不对再改」）：用户自制时不填、作者网站 / 出版用的。
    * 认法：指向作者这几个公用定义——头像（util-token.json）、媒体（entry.json 的 mediaHref）、
    * 重印 / 出处（util.json 的 reprintedAs / isReprinted / otherSources / referenceSources / additionalSources）；
-   * 或作者「有没有附带素材」的标记（值只能是 true、名字按作者惯例以 has 开头：hasToken、hasFluff、hasFluffImages）。
+   * 或作者「有没有附带素材」的标记（名字按作者惯例以 has 开头、值是 true / 是否：hasToken、hasFluff、hasFluffImages；种族等写成是否）。
    * 只看「值只能是 true」会误收有意义的开关（召唤物按等级缩放 summonedScaleByPlayerLevel、跟班职业 isSidekick），所以加了 has 前缀（11-13 实测后收窄）。
    */
   const publishOf = (name, node, base) => {
     const r = resolve(node, base)
-    if (r.node?.const === true && /^has[A-Z]/.test(name)) return true
+    if (/^has[A-Z]/.test(name) && (r.node?.const === true || r.node?.type === 'boolean')) return true
     return r.refs.some((x) => PUBLISH_REF.test(x))
   }
 
