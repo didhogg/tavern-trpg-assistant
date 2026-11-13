@@ -13,6 +13,9 @@ import ErrorBanner from './ErrorBanner.vue'
 import { importFiles } from './import-flow'
 import { catsText, copiedFrom, exportPair, packTitle, sideOf, usePending, versionTag } from './mine'
 import { openMyPack, openNewPack, packMenu, runPackMenu } from './mine-actions'
+import { openDraft } from './edit-flow'
+import { categoryLabel } from './registry'
+import type { EditDraft } from '../../library/manage'
 
 /**
  * P5.5 u7-1 我的库：只有一种东西——包（自己建的、复制的、导入的，全都能改）。中英一对包一行，带「中 / En」。
@@ -38,9 +41,20 @@ const pack = (p: PackPair) => sideOf(p, codeSet.value)
 const isPending = (p: PackPair) => pending.packs.value.has(p.id)
 const rowOn = (p: PackPair): boolean => lib.bound && pack(p).sources.some((s) => lib.shelf?.groups.some((g) => [...g.books, ...g.adventures].some((r) => r.source === s && r.view.visible)))
 
+// 没保存的草稿（u7-1 草稿条）：草稿只是草稿，不影响任何条目（Q15）
+const drafts = ref<Array<EditDraft & { key: string }>>([])
+async function loadDrafts(): Promise<void> {
+  try { drafts.value = (await Promise.all(['cn', 'en'].map((c) => app.svc().backend.library.custom.drafts(c)))).flat().sort((a, b) => b.at - a.at) } catch (e) { console.warn('[trpg-assistant] 读取草稿没成功', e) }
+}
+const draftName = (d: EditDraft) => `${String(d.s.name ?? '') || '未命名'}（${categoryLabel(d.prop) ?? d.prop}）`
+function continueDraft(key: string): void {
+  const d = drafts.value.find((x) => x.key === key)
+  if (d) void openDraft(app.svc(), d, (id) => { const p = lib.pairs?.find((x) => x.id === id); return p ? packTitle(sideOf(p, d.codeSet)) : null })
+}
 async function reload(): Promise<void> {
   await lib.loadPairs(app.svc())
   void pending.check()
+  void loadDrafts()
 }
 onMounted(() => void reload())
 watch(() => lib.campaignLib, () => void reload())
@@ -69,6 +83,11 @@ const onMenu = (p: PackPair, key: string) => runPackMenu(app.svc(), key, p, code
         <button class="trpg-btn" type="button" :disabled="busy" data-testid="mylib-import" @click="picker?.click()"><Icon name="upload-simple" :size="16" />{{ narrow ? '导入' : '导入文件' }}</button>
         <button class="trpg-btn trpg-btn--primary" type="button" data-testid="mylib-newpack" @click="openNewPack(app.svc(), codeSet)"><Icon name="plus" :size="16" />新建包</button>
         <input ref="picker" type="file" accept=".json,application/json" multiple hidden data-testid="mylib-file" @change="onPick" />
+      </div>
+      <div v-if="drafts.length" class="lib-drafts" data-testid="mylib-drafts">
+        <Icon name="pencil-simple" :size="16" />
+        <span>{{ narrow ? `${drafts.length} 份没保存的草稿` : `有 ${drafts.length} 份没保存的草稿：${drafts.slice(0, 3).map(draftName).join(' · ')}` }}</span>
+        <span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" data-testid="draft-continue" @click="continueDraft(drafts[0].key)">继续{{ drafts.length > 1 ? '最新的' : '' }}</button><MoreMenu v-if="drafts.length > 1" label="继续哪一份草稿" :items="drafts.map((d) => ({ key: d.key, label: `继续：${draftName(d)}` }))" @select="continueDraft" /></span>
       </div>
       <ErrorBanner v-if="lib.pairsError" :text="`我的库没读出来：${lib.pairsError}`" what="读取我的库" :actions="[{ label: '重试', run: reload }]" />
       <div v-if="lib.pairs === null && !lib.pairsError" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>

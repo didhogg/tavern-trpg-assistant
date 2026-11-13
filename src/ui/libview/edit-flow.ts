@@ -1,10 +1,11 @@
 // P5.5 新建 / 编辑条目的流程：选类型 → 选起点 → 编辑器。各起点最后都交给 openEditor（带着起点给的条目，还没存）。
 import { markRaw } from 'vue'
+import type { Services } from '../../core/services'
 import type { EntryType } from '../../library/custom-new'
 import type { EditDraft } from '../../library/manage'
 import { useModalStore } from '../../stores/modal'
 import type { Ent } from './edit-json'
-import JsonStartPage from './JsonStartPage.vue'
+import EditorPage from './EditorPage.vue'
 import NewStartPage from './NewStartPage.vue'
 import NewTypePage from './NewTypePage.vue'
 
@@ -36,11 +37,29 @@ export function openStart(codeSet: string, pack: { id: string; name: string } | 
   useModalStore().push({ key: `start:${type.prop}`, title: `新建${type.name}：从哪开始`, component: markRaw(NewStartPage), variant: 'sheet', props: { codeSet, pack, type } })
 }
 
-/**
- * 进编辑器。表单编辑器在第 4 批接上；在那之前先进 JSON 页（u7-8c 同一个代码编辑框），内容已经按起点填好。
- */
+/** 进编辑器（u7-10）：带着起点给的条目，还没存。 */
 export function openEditor(s: EditSession): void {
   // 新条目存进选的包：来源由保存时按包写（起点给的来源是原书 / 转换器的，留着会和原件同编号）
   if (s.target.kind === 'new' && 'source' in s.ent) { const { source: _drop, ...rest } = s.ent; s = { ...s, ent: rest } }
-  useModalStore().push({ key: `edit:${s.prop}:${Date.now()}`, title: `编辑${s.typeName}`, component: markRaw(JsonStartPage), variant: 'sheet', props: { session: s } })
+  useModalStore().push({ key: `edit:${s.prop}:${Date.now()}`, title: String(s.ent.name ?? '') || `新${s.typeName}`, component: markRaw(EditorPage), variant: 'sheet', props: { session: s } })
+}
+
+/** 作者给这一类的显示名（中文版给中文）；读不到就用类别原名。 */
+async function typeNameOf(s: Services, codeSet: string, prop: string): Promise<string> {
+  try { return (await s.backend.library.custom.entryTypes(codeSet)).find((t) => t.prop === prop)?.name ?? prop } catch { return prop }
+}
+
+/** 包里的 ✎：打开自己包里的一条（中文、英文两边由编辑器自己对上）。 */
+export async function openEditMine(s: Services, codeSet: string, pack: { id: string; name: string }, prop: string, hash: string): Promise<void> {
+  const got = await s.backend.library.custom.packEntry(codeSet, pack.id, prop, { hash })
+  if (!got?.entity) throw new Error('包里找不到这一条')
+  const ent = got.entity as Ent
+  const uniqueId = typeof ent.uniqueId === 'string' ? ent.uniqueId : got.hash ?? hash
+  openEditor({ codeSet, prop, typeName: await typeNameOf(s, codeSet, prop), pack, ent, target: { kind: 'mine', uniqueId, pack: pack.id }, replaceHash: got.hadId ? undefined : got.hash ?? hash, detailed: true })
+}
+
+/** 我的库顶上的草稿 [继续]：回到编辑器接着改。 */
+export async function openDraft(s: Services, d: { key: string; codeSet: string; prop: string; s: Ent; target: EditSession['target'] }, packName: (id: string) => string | null): Promise<void> {
+  const packId = d.target.kind === 'new' ? d.target.pack : d.target.kind === 'mine' ? d.target.pack ?? null : null
+  openEditor({ codeSet: d.codeSet, prop: d.prop, typeName: await typeNameOf(s, d.codeSet, d.prop), pack: packId ? { id: packId, name: packName(packId) ?? packId } : null, ent: d.s, target: d.target, draftKey: d.key, detailed: true })
 }

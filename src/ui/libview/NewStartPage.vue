@@ -38,7 +38,7 @@ async function next(): Promise<void> {
   if (k === 'template') return page('tpl', `详细表单：新${props.type.name}`, TemplatePage)
   if (k === 'existing') return page('pick', `从已有的${props.type.name}开始`, PickExistingPage)
   if (k === 'convert') return page('convert', `文字转${props.type.name}`, ConvertPage)
-  if (k === 'json') return page('json', '粘贴 JSON', JsonStartPage, { paste: true })
+  if (k === 'json') return page('json', '粘贴 JSON', JsonStartPage)
   busy.value = true
   try {
     const ent = await app.svc().backend.library.custom.blankEntry(props.codeSet, props.type.prop)

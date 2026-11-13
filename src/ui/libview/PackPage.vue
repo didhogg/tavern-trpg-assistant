@@ -9,7 +9,9 @@ import { useLibViewStore } from '../../stores/libview'
 import Icon from '../kit/Icon.vue'
 import { loadPackRows, matchName, type PackRow } from './pack-data'
 import { openEntry, openReader } from './open'
-import { openNewEntry } from './edit-flow'
+import { openEditMine, openNewEntry } from './edit-flow'
+import { usePending } from './mine'
+import { useToastStore } from '../../stores/toast'
 import { categoryLabel, registeredCategories } from './registry'
 
 /** 包 / 书弹窗的列表页（U1a + U3）：搜索与类别药丸始终显示；选"全部"平铺；点行弹窗内换成详情。不出现"书目来源"勾选（进包就是只看这个来源）。 */
@@ -55,7 +57,11 @@ async function load(): Promise<void> {
     loading.value = false
   }
 }
-onMounted(() => { void load(); void loadReaders() })
+// 我的库的包：刚存的条目要等后台整理完才进列表（整理中），整理完自动重读（P5.5 u7-3 / U2）
+const pending = usePending(() => app.svc(), () => (props.mine ? [props.mine.codeSet] : []), () => void load())
+const packPending = computed(() => !!props.mine && pending.packs.value.has(props.mine.id))
+watch(() => lib.pairs, () => { if (props.mine) void pending.check() })
+onMounted(() => { void load(); void loadReaders(); if (props.mine) void pending.check() })
 
 const pills = computed(() => {
   const count = new Map<string, number>()
@@ -103,6 +109,12 @@ watch([sortBy, dir], async () => {
   }
 })
 watch(q, () => toTop())
+const toast = useToastStore()
+/** 我的库的包：行尾 ✎ 打开编辑器（P5.5 u7-3）。 */
+function edit(r: PackRow): void {
+  if (!props.mine) return
+  openEditMine(app.svc(), props.mine.codeSet, { id: props.mine.id, name: props.name }, r.ref.prop, r.ref.hash).catch((e: unknown) => { console.error('[trpg-assistant] 打开编辑器失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
+}
 </script>
 
 <template>
@@ -136,6 +148,7 @@ watch(q, () => toTop())
                 <template v-else>{{ c.text }}</template>
               </th>
               <th class="lib-src">来源</th>
+              <th v-if="mine" aria-label="编辑" />
             </tr>
           </thead>
           <tbody>
@@ -143,6 +156,7 @@ watch(q, () => toTop())
             <tr v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}:${r.selection && 'docIdLocal' in r.selection ? r.selection.docIdLocal : ''}`" tabindex="0" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)" @keydown.enter="openEntry(r.ref, r.name, r.selection)">
               <td v-for="c in cols" :key="c.i" :class="{ 'lib-name': c.i === nameCol }">{{ cellValue(r, c) }}</td>
               <td class="lib-src">{{ r.pack ?? abv ?? r.source ?? '' }}</td>
+              <td v-if="mine" @click.stop><button class="trpg-icon-btn" type="button" :aria-label="`编辑 ${r.name}`" @click="edit(r)"><Icon name="pencil-simple" :size="16" /></button></td>
             </tr>
             <tr v-if="range.padBottom" aria-hidden="true" class="lib-spacer" :style="{ height: `${range.padBottom}px` }"><td :colspan="cols.length + 1" /></tr>
           </tbody>
@@ -150,13 +164,19 @@ watch(q, () => toTop())
       </div>
       <div v-else class="lib-list" role="list" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
         <button v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
-        <button v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}:${r.selection && 'docIdLocal' in r.selection ? r.selection.docIdLocal : ''}`" class="lib-list__row" type="button" role="listitem" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)">
+        <template v-if="mine">
+          <div v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" class="lib-list__row lib-list__row--edit" role="listitem" data-testid="mine-row">
+            <button class="lib-list__open" type="button" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)"><span class="lib-name">{{ r.name }}</span><span v-if="cat === 'all'" class="trpg-badge">{{ categoryLabel(r.prop) }}</span></button>
+            <button class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="mine-edit" @click="edit(r)"><Icon name="pencil-simple" :size="18" /></button>
+          </div>
+        </template>
+        <button v-for="r in mine ? [] : visible" :key="`${r.ref.prop}:${r.ref.hash}:${r.selection && 'docIdLocal' in r.selection ? r.selection.docIdLocal : ''}`" class="lib-list__row" type="button" role="listitem" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)">
           <span class="lib-name">{{ r.name }}</span>
           <span v-if="cat === 'all'" class="trpg-badge">{{ categoryLabel(r.prop) }}</span>
           <span class="lib-src lib-end">{{ r.pack ?? abv ?? r.source ?? '' }}</span>
         </button>
       </div>
     </div>
-    <div class="lib-count">{{ loading ? '正在读取…' : `共 ${filtered.length} 条` }}</div>
+    <div class="lib-count">{{ loading ? '正在读取…' : `共 ${filtered.length} 条` }}<span v-if="packPending" class="lib-pending" data-testid="pack-pending"> · <Icon name="arrow-clockwise" :size="12" />整理中：刚存的条目整理完就出现在列表里</span></div>
   </div>
 </template>

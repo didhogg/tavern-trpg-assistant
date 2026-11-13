@@ -31,6 +31,8 @@ import AuthorFragment from './author-fragment'
 import { imagesOf } from './entry-content'
 import CopyEntryPage from './CopyEntryPage.vue'
 import { openMineById } from './mine-actions'
+import { openEditMine } from './edit-flow'
+import { packTitle, sideOf } from './mine'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
 const props = defineProps<{ entryRef: EntryRef; selection?: EntrySelection; pageKey?: string }>()
@@ -39,6 +41,20 @@ const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const modal = useModalStore()
 const toast = useToastStore()
+
+/** 这一条在【我的库】的哪个包里（✎ 直接编辑）；不是就 null。 */
+const mineOf = computed(() => {
+  const doc = detail.value?.docIdLocal
+  const pair = doc ? lib.pairs?.find((p) => p.zh?.docIdLocal === doc || p.en?.docIdLocal === doc) : null
+  if (!pair) return null
+  const cs = pair.en?.docIdLocal === doc ? 'en' : 'cn'
+  return { codeSet: cs, pack: { id: pair.id, name: packTitle(sideOf(pair, cs)) } }
+})
+function editThis(): void {
+  const m = mineOf.value, d = detail.value
+  if (!m || !d) return
+  openEditMine(app.svc(), m.codeSet, m.pack, d.ref.prop, d.ref.hash).catch((e: unknown) => { console.error('[trpg-assistant] 打开编辑器失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
+}
 
 /** 条目 ⋯：复制成我的（P5.5 u7-6，单条进选的包）。 */
 function onEntryMenu(key: string): void {
@@ -188,7 +204,7 @@ async function setEnabled(next: boolean): Promise<void> {
       <div class="lib-dtools">
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
-          <button class="trpg-icon-btn" type="button" disabled aria-label="编辑（稍后开放）" title="条目编辑稍后开放"><Icon name="pencil-simple" :size="18" /></button>
+          <button class="trpg-icon-btn" type="button" :disabled="!mineOf" :aria-label="mineOf ? '编辑这一条' : '编辑（官方条目改成房规，稍后开放）'" :title="mineOf ? '编辑这一条' : '官方条目改成房规稍后开放'" data-testid="entry-edit" @click="editThis"><Icon name="pencil-simple" :size="18" /></button>
           <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }]" @select="onEntryMenu" />
         </span>
       </div>
