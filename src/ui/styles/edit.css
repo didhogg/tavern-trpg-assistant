@@ -125,3 +125,12 @@
 .lib-block { display: grid; gap: 4px; }
 .lib-block__bar { display: flex; gap: 2px; flex-wrap: wrap; }
 .lib-block__bar .trpg-btn { min-height: 28px; }
+/* §16.10 2b：几种写法只显示一种，「换一种写法」在控件下面；套组里收起的子项 */
+.lib-pick { display: grid; gap: var(--sp-1); }
+.lib-pick > .trpg-btn, .lib-subs { justify-self: start; }
+/* 连着的几个数字框并排（属性值、生命值……） */
+.lib-numrow { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); }
+.lib-numrow > .lib-tfield { width: 7.5em; }
+.lib-row1 { display: contents; }
+.lib-grp--row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sp-2) var(--sp-3); }
+.lib-grp--row > .lib-tfield { flex: 1 1 8em; }

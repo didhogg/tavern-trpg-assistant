@@ -28,10 +28,10 @@ describe('entryTypes（B5）', () => {
 })
 
 describe('blankEntry（B6）', () => {
-  it('只放必填字段（不放来源），按类型给空值', async () => {
+  it('只放必填字段（不放来源），按类型给空值；几种写法 / 套组的先不放（§16.10 2b：表单按官方最常用的写法显示）', async () => {
     const b = await blankEntry('cn', 'spell')
-    expect(Object.keys(b!).sort()).toEqual(['duration', 'entries', 'level', 'name', 'range', 'school', 'time'])
-    expect(b).toMatchObject({ name: '', level: 0, time: [], range: {}, entries: [] })
+    expect(Object.keys(b!).sort()).toEqual(['duration', 'entries', 'level', 'name', 'school', 'time'])
+    expect(b).toMatchObject({ name: '', level: 0, time: [], entries: [] })
   })
   it('结构定义不收的类别：null', async () => {
     expect(await blankEntry('cn', 'notInSchema')).toBeNull()

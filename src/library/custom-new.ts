@@ -2,6 +2,7 @@
 // 类型、中文名、分组、构建器、转换器都从作者代码读（小窗 entry-types-commands.ts）；这里只按这套资料集的结构定义再筛一遍，
 // 并按库里现有条目算「能不能从已有条目开始」。不写类型名单。
 import type { BrewField } from './brew-validate'
+import { resolve } from './field-shape-core'
 import { distinctNames, entryKinds, NOT_CREATABLE, type EntryKind } from './entry-kinds'
 import { formatOfCodeSet } from './formats'
 import type { AuthorFrame } from './runtime/host'
@@ -91,5 +92,7 @@ function emptyOf(f: BrewField): unknown {
 export async function blankEntry(codeSet: string, prop: string): Promise<Record<string, unknown> | null> {
   const t = await formatOfCodeSet(codeSet).fields(prop)
   if (!t) return null
-  return Object.fromEntries(t.fields.filter((f) => f.required && f.name !== 'source').map((f) => [f.name, emptyOf(f)]))
+  // 「几种写法」和「套组」先不放空值（§16.10 2b）：放 {} 会让表单当成套组那种写法；不放，表单按官方最常用的写法显示，必填照样标着
+  const open = (f: BrewField) => !!f.shape && ['pick', 'group'].includes(resolve(f.shape, t.defs ?? {}).c)
+  return Object.fromEntries(t.fields.filter((f) => f.required && f.name !== 'source' && !open(f)).map((f) => [f.name, emptyOf(f)]))
 }

@@ -14,7 +14,8 @@ export interface MenuItem {
   reason?: string
 }
 
-defineProps<{ label: string; items: MenuItem[] }>()
+/** text：触发按钮写字（「换一种写法 ▾」）；不给就是 ⋯ 图标。 */
+defineProps<{ label: string; items: MenuItem[]; text?: string }>()
 defineEmits<{ select: [key: string] }>()
 const portalTarget = inject<HTMLElement | undefined>('portalTarget', undefined)
 const trigger = ref<{ $el?: HTMLElement } | null>(null)
@@ -26,7 +27,10 @@ function onCloseAutoFocus(event: Event): void {
 
 <template>
   <DropdownMenuRoot>
-    <DropdownMenuTrigger ref="trigger" class="trpg-icon-btn trpg-more" :aria-label="`${label} 的更多操作`">
+    <DropdownMenuTrigger v-if="text" ref="trigger" class="trpg-btn trpg-btn--small trpg-btn--quiet" :aria-label="label">
+      {{ text }}<Icon name="caret-down" :size="14" />
+    </DropdownMenuTrigger>
+    <DropdownMenuTrigger v-else ref="trigger" class="trpg-icon-btn trpg-more" :aria-label="`${label} 的更多操作`">
       <Icon name="dots-three" :size="20" />
     </DropdownMenuTrigger>
     <DropdownMenuPortal :to="portalTarget">

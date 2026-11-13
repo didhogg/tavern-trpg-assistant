@@ -1,8 +1,12 @@
 // 正文编辑（P5.5 §16.7 第 2 条）共用：表单所在的资料集（中文 / 英文，转换要用对应的作者程序）、新加一段用的 Markdown 起稿。
 // 起稿只是给人看的示例文字，结构由作者转换器（custom.markdownBlocks）生成，不在这里写正文结构。
 import type { ComputedRef, InjectionKey, Ref } from 'vue'
+import type { PlanAt } from '../../library/form-plan'
 
 export const CODESET_KEY: InjectionKey<Ref<string> | ComputedRef<string>> = Symbol('trpg-entry-codeset')
+
+/** 表单安排里各位置的安排（后端 custom.formPlan 的 at，§16.10 2b）：默认写法、收起的子项、常见值。表单各层按路径取。 */
+export const PLAN_KEY: InjectionKey<Ref<Record<string, PlanAt>> | ComputedRef<Record<string, PlanAt>>> = Symbol('trpg-form-plan')
 
 export const NEW_BLOCKS: Array<{ key: string; label: string; icon: string; md: string }> = [
   { key: 'heading', label: '小标题段', icon: 'plus', md: '#### 小标题\n\n这里写这一段的内容。' },

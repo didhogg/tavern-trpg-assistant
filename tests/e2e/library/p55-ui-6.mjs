@@ -122,9 +122,13 @@ await page.setViewportSize({ width: 390, height: 800 })
 await settle(page, 600)
 await openFireball()
 await page.getByTestId('entry-edit').click()
+// 窄屏一次只看一栏（aad9e0f）：顶上一排切换里有「原件」，点了才看原件那一栏
+await page.waitForSelector('[data-testid="editor-views"]')
+await page.getByTestId('editor-views').locator('.trpg-seg button', { hasText: '原件' }).click()
 await page.waitForSelector('[data-testid="editor"] [data-testid="origin-pane"]')
 await settle(page, 1200)
 await page.screenshot({ path: `${shots}/7-house-narrow.png` })
+check('窄屏房规编辑器：切到「原件」能看原件那一栏', await page.getByTestId('origin-pane').isVisible())
 
 check('页面没有未处理的错误（断网预期的除外）', realErrors().length === 0, realErrors().slice(0, 2).join(' | '))
 await ctx.close()

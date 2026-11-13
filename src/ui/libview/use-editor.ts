@@ -31,8 +31,8 @@ export function useEditor(svc: () => Services, session: EditSession) {
   const right = computed<Side>(() => (left.value === 'main' ? 'other' : 'main'))
 
   async function loadTable(side: Side): Promise<void> {
-    const t = await lib().custom.fields(cs[side], prop)
-    tables[side].value = t ? { fields: t.fields, defs: t.defs, labels: t.labels } : null
+    const [t, plan] = await Promise.all([lib().custom.fields(cs[side], prop), lib().custom.formPlan(cs[side], prop).catch((e: unknown) => { console.warn('[trpg-assistant] 表单安排没读到，按字段表画', e); return null })])
+    tables[side].value = t ? { fields: t.fields, defs: t.defs, labels: t.labels, plan } : null
   }
   // 房规（u7-13b）：右栏 English = 这个战役里生效的英文官方原文（有英文房规就是房规那一份），改了就在英文那套也建一条房规
   const otherRef = shallowRef<EntryRef | null>(null)
