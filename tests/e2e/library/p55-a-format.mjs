@@ -58,6 +58,8 @@ const r = await page.evaluate(async () => {
   const doc = await (await lib.service.frameOf('cn')).call('editableDoc')
   const houseEnt = (doc.body.spell ?? []).find((e) => e.uniqueId === hr.uniqueId)
   const link = (await lib.scoped.manage.houseRules()).find((l) => l.house.hash === hr.house.hash)
+  // P5.5 U2 起编辑只写原文、后台解析：读作者合并结果前先等后台
+  await lib.brewQueue.settled('cn')
   const merged = await lib.service.storedItem('cn-brew', 'spell', hr.house.hash)
   out.rename = { renamed: re.renamed, houseCopy: houseEnt?._copy ?? null, linkTarget: link?.target.hash ?? null, mergedLevel: merged?.item?.level ?? null, mergedEntries: merged?.item?.entries ?? null }
   return out

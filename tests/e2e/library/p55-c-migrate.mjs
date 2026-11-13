@@ -63,6 +63,9 @@ const r = await page.evaluate(async () => {
   const s3 = await lib.custom.saveEntry('cn', 'spell', { ...sp(3), source: undefined })
   out.newDefault = (await lib.custom.packEntry('cn', 'trpgmine', 'spell', { uniqueId: s3.uniqueId }))?.entity?.source ?? null
   await lib.brewQueue.settled('cn')
+  // B8-7：导入一个和「我的资料」同来源的文件 → 预览里提示会替换它
+  const pre = await lib.custom.previewImport('cn', [{ name: 'mine-again.json', text: JSON.stringify({ _meta: { sources: [{ json: 'TRPGMINE', full: 'x', abbreviation: 'x' }], edition: 'classic' }, spell: [] }) }])
+  out.replaces = pre.replaces
   return out
 })
 
@@ -73,6 +76,7 @@ check('撤销记录补上了「在哪个包」', o.history?.pack === 'trpgmine',
 check('旧式副本：去掉了 Foundry 补充记录，补上 internalCopies', o.oldCopy.spells === 0 && JSON.stringify(o.oldCopy.internalCopies) === '["background"]', JSON.stringify(o.oldCopy))
 check('迁移报告列得出；第二次不再做', o.report?.moved.some((m) => m.source === 'TRPGMINE' && m.entries === 2) && o.report.fixed.length === 1 && o.again === null, JSON.stringify(o.report))
 check('迁移后不指定包的新条目进「我的资料」包', o.newDefault === 'TRPGMINE', String(o.newDefault))
+check('B8-7 导入预览：和已有包同来源的文件提示会替换哪个包', o.replaces?.length === 1 && o.replaces[0].pack === 'trpgmine', JSON.stringify(o.replaces))
 const duringMigrate = pageErrors.filter((e) => e.phase === 'migrate').map((e) => e.m)
 const realErrors = pageErrors.filter((e) => e.phase === 'after').map((e) => e.m).filter((m) => !/网络错误|Network error|gendata-nav-adventure-book-index|找不到物品类型|找不到物品属性/.test(m))
 console.log('迁移过程中作者报的（迁移前打开的小窗读到还没修的旧副本）：', duringMigrate.length)
