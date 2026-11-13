@@ -1,7 +1,7 @@
 // P5.5 阶段 C 的 G1–G3：保存前列出改了哪几项；存条目默认上次用的包；编辑 / 覆盖按包列出、整批改作用范围。
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { fieldChanges } from '../../../src/library/house-diff'
-import { listEdits, moveEdits } from '../../../src/library/custom-edits'
+import { editChanges, listEdits, moveEdits } from '../../../src/library/custom-edits'
 import { lastPack, rememberPack, type PackDeps } from '../../../src/library/custom-packs'
 import { LibraryDatabase } from '../../../src/library/db'
 import { ManageStore } from '../../../src/library/manage'
@@ -69,5 +69,26 @@ describe('G3 编辑 / 覆盖按包列、改作用范围', () => {
     const back = await moveEdits(deps(), next, [{ level: 'global', ref: fire, altId: 'house:fireball_trpghouse' }], 'campaign')
     expect(back.choices).toEqual({ [refKey(fire)]: 'house:fireball_trpghouse' })
     expect(await manage.choices('global')).toEqual({})
+  })
+  it('单条筛选：只列给的那几条（和来源筛选一起给时同时满足）', async () => {
+    await manage.setChoice('global', refKey(sword), 'house:longsword_trpghouse')
+    const c = camp({ [refKey(fire)]: 'house:fireball_trpghouse' })
+    expect((await listEdits(deps(), { refs: [fire] }, c)).map((r) => [r.name, r.level])).toEqual([['火球术', 'campaign']])
+    expect(await listEdits(deps(), { refs: [fire], sources: ['XGE'] }, c)).toEqual([])
+  })
+  it('改了什么：本战役层临时选这一份，和原件比；房规只列它自己写了的字段；选的是原件就没有改动', async () => {
+    const seen: Array<Record<string, string>> = []
+    const d = {
+      // 房规合并后作者不抄 page（_MERGE_REQUIRES_PRESERVE），整条比会多出「page 删掉了」
+      detail: async (c: CampaignLibrary) => { seen.push(c.choices); const alt = c.choices[refKey(fire)] ?? c.choices[refKey({ ...fire, set: 'cn-official' })]; return { item: alt === 'base' ? { name: '火球术', level: 3, page: 241 } : { name: '火球术', level: 4 }, base: { name: '火球术', level: 3, page: 241 } } },
+      changes: async (codeSet: string, a: Record<string, unknown> | null, b: Record<string, unknown>) => (codeSet === 'cn' ? fieldChanges(a!, b) : []),
+      frameOf: async () => ({ call: async (cmd: string) => (cmd === 'brewDocIndex' ? [{ docIdLocal: 'ed', isEditable: true }] : { entity: { name: '火球术', source: 'TRPGHOUSE', level: 4, _copy: { name: '火球术', source: 'PHB' } } }) }),
+    } as never
+    const c = camp({})
+    const got = await editChanges(d, c, { ref: { ...fire, set: 'cn-official' }, altId: 'house:fireball_trpghouse' })
+    expect(got?.changes).toEqual([{ field: 'level', before: 3, after: 4 }])
+    expect(c.choices).toEqual({})
+    expect((await editChanges(d, c, { ref: fire, altId: 'base' }))?.changes).toEqual([])
+    expect(await editChanges({ detail: async () => null, changes: async () => [], frameOf: async () => ({ call: async () => [] }) } as never, c, { ref: fire, altId: 'x' })).toBeNull()
   })
 })

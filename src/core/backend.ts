@@ -34,6 +34,7 @@ import { defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
 import type { BackupLibraryAdapter } from './transfer/exporter'
 import { CustomLibrary } from '../library/custom'
 import { BilingualLibrary } from '../library/custom-lang'
+import { editChanges, type EditRow } from '../library/custom-edits'
 import { LibraryService } from '../library/service'
 import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
@@ -89,6 +90,8 @@ export interface LibraryBackend {
   custom: CustomLibrary
   /** 双语自制（P5.5 C2–C9）：中英成对的包、另一语言的同一条、填入、对不上。 */
   bilingual: BilingualLibrary
+  /** 一条编辑 / 覆盖和原件比改了什么（覆盖管理里展开看）；列表见 custom.edits / packEdits（单条用 refs 筛）。 */
+  editChanges: (c: CampaignLibrary, row: Pick<EditRow, 'ref' | 'altId'>) => ReturnType<typeof editChanges>
   tasks: DownloadTasks
   /** 官方书目（没装也能列）。 */
   directory: BookDirectory
@@ -274,7 +277,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, bilingual, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, brewQueue: brewQueue!, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, bilingual, editChanges: (c, row) => editChanges({ detail: (...a) => scoped.detail(...a), changes: (...a) => custom.changes(...a), frameOf: (cs) => service.frameOf(cs) as never }, c, row), tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, brewQueue: brewQueue!, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

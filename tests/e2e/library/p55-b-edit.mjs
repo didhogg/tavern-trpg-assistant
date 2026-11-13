@@ -45,6 +45,10 @@ const r = await page.evaluate(async () => {
   await settled()
   const merged = (await lib.service.storedItem('cn-brew', 'spell', hr.house.hash))?.item
   out.house = { changed: hr.changed, rawKeys: Object.keys(houseRaw).sort(), mergedLevel: merged?.level, baseLevel: base.level, sameEntries: JSON.stringify(merged?.entries) === JSON.stringify(base.entries) }
+  // 覆盖管理（驾驶员 2026-11-13）：单条筛选 + 改了什么
+  const c2 = await lib.scoped.choose(c, target, hr.altId)
+  out.editRows = (await lib.custom.edits({ refs: [target] }, c2)).map((x) => [x.level, x.kind])
+  out.editChanges = ((await backend.library.editChanges(c2, { ref: target, altId: hr.altId }))?.changes ?? null)?.map((x) => [x.field, x.before, x.after])
   try { await lib.custom.createHouseRule(c, target, { edited: structuredClone(base) }, { activate: false }); out.noChange = 'no-throw' } catch (e) { out.noChange = String(e.message ?? e) }
   // B1：新背景按 2024 规则写上 edition
   const bg = await lib.custom.saveEntry('cn', 'background', { name: 'P55新背景', entries: ['x'] }, { rule: 'dnd5e2024' })
@@ -85,6 +89,7 @@ const r = await page.evaluate(async () => {
 
 const o = r.out
 await writeFile(`${work}/p55-b-edit-chrome.json`, JSON.stringify({ r, pageErrors }, null, 1))
+check('覆盖管理：单条筛选只列这一条（本战役 · 房规）；改了什么 = 只有环节 +1', JSON.stringify(o.editRows) === '[["campaign","house"]]' && o.editChanges?.length === 1 && o.editChanges[0][0] === 'level' && o.editChanges[0][2] === o.editChanges[0][1] + 1, JSON.stringify({ rows: o.editRows, ch: o.editChanges }))
 check('B4 字段说明表在插件里能读到：法术环阶必填整数，背景能自带版本', o.fields.spell > 0 && o.fields.level?.required === true && o.fields.level?.types?.[0] === 'integer' && o.fields.bgEdition === true, JSON.stringify(o.fields))
 check('B1 房规只存改的那项（环阶）+ _copy', JSON.stringify(o.house.changed) === '["level"]' && JSON.stringify(o.house.rawKeys) === JSON.stringify(['_copy', 'level', 'name', 'source', 'uniqueId']), JSON.stringify(o.house))
 check('B1 作者合并后：环阶是新的，正文还是原件的', o.house.mergedLevel === o.house.baseLevel + 1 && o.house.sameEntries, JSON.stringify(o.house))
