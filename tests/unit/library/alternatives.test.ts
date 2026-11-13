@@ -88,7 +88,8 @@ describe('buildAlternatives', () => {
       openFrameIn: async (scope) => {
         const docs = ((await db.kv.get([scope, 'HOMEBREW_2_STORAGE']))?.value as Array<{ head: { docIdLocal: string } }>).map((d) => d.head.docIdLocal)
         opened.push(docs.at(-1)!)
-        return fakeFrame({ brewItemsByHash: (wants) => Object.fromEntries((wants as Array<{ prop: string; hash: string }>).map((w) => [`${w.prop}|${w.hash}`, { v: docs.at(-1) }])) })
+        // 作者有的条目隔离解析不交（例如 card）：乙的 probe_a 不交，也要能复用
+        return fakeFrame({ brewItemsByHash: (wants) => Object.fromEntries((wants as Array<{ prop: string; hash: string }>).filter((w) => !(docs.at(-1) === '乙' && w.hash === 'probe_a')).map((w) => [`${w.prop}|${w.hash}`, { v: docs.at(-1) }])) })
       },
     })
     await run()

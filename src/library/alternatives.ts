@@ -143,11 +143,12 @@ export async function buildAlternatives(opts: BuildAltOptions): Promise<AltIndex
       const fingerprint = hashValue({ docs: docs.map((d) => d.body), official: officialState })
       const memoKey = altItemsKey(source.id, id)
       const memo = await opts.view.derivedGet(memoKey)
-      const cached = memo?.fingerprint === fingerprint ? memo.value as Record<string, unknown> : null
-      if (cached && wants.every((w) => `${w.prop}|${w.hash}` in cached)) { items.set(id, cached); continue }
+      // 上次问过的条目包含这次要的就复用（作者隔离解析有的类别本来就不交，例如 card；不能以「都交出来了」为准，否则永远复用不了）
+      const cached = memo?.fingerprint === fingerprint ? memo.value as { asked: string[]; items: Record<string, unknown> } : null
+      if (cached?.asked && wants.every((w) => cached.asked.includes(`${w.prop}|${w.hash}`))) { items.set(id, cached.items); continue }
       const got = await withIsolatedBrew(opts, docs, (frame) => frame.call('brewItemsByHash', wants))
       items.set(id, got)
-      await opts.view.derivedPut(memoKey, fingerprint, got)
+      await opts.view.derivedPut(memoKey, fingerprint, { asked: wants.map((w) => `${w.prop}|${w.hash}`), items: got })
     } catch (e) {
       for (const w of wants) out.errors.push({ docIdLocal: id, ...w, error: e instanceof Error ? e.message : String(e) })
     }
