@@ -1,6 +1,7 @@
 // 自制包清单（P5 B-11 / T4）：已装的每个自制包——从哪来、有哪些来源、谁做的、依赖谁、多少条。
 // 数据都来自作者包管理器（已装包的包头 + 文件元数据 _meta）和包里每条的作者编号（brewDocIndex）。
 // P5 T4：官方资料没装时也能从作者存储原文列出包 / 导出（不再返回空清单冒充没包）。
+import { isOfficialMissing } from './official-missing'
 import type { LibraryService } from './service'
 import type { ShelfInfo } from './shelf'
 import type { LibraryView } from './revision'
@@ -73,10 +74,11 @@ export class BrewPacks {
     const set = SOURCES.find((s) => s.id === brewSetId && s.kind === 'brew')
     if (!set) throw new Error(`${brewSetId} 不是自制源`)
     const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
-    const officialOk = await this.lib.officialInstalled(set.codeSet, view)
-    if (officialOk) {
-      const installed = await this.lib.brewInstalled(brewSetId, view)
-      const docs = await (await this.lib.frameOf(set.codeSet, view)).call('brewDocIndex')
+    // 作者程序开不了（这种语言的官方资料没装，统一那道门报 OfficialMissingError）就走下面直接读存储原文
+    const opened = await Promise.all([this.lib.brewInstalled(brewSetId, view), this.lib.frameOf(set.codeSet, view).then((f) => f.call('brewDocIndex'))])
+      .catch((e: unknown) => { if (isOfficialMissing(e)) return null; throw e })
+    if (opened) {
+      const [installed, docs] = opened
       const byId = new Map(docs.map((d) => [d.docIdLocal, d]))
       return installed.map((e) => {
         const head = e.head as Record<string, unknown>

@@ -43,6 +43,8 @@ async function seedSpellCache({ excluded = null as Record<string, boolean> | nul
 
 beforeEach(async () => {
   db = new LibraryDatabase(`test-service-${Math.random()}`)
+  // 官方资料装好了（开作者小窗那道门要查，C1）
+  await db.sets.put({ id: 'cn-official', commit: 'c', status: 'installed' } as never)
   revisions = new LibraryRevisionStore(db)
   await revisions.ensureLegacy()
   await db.derived.put({ key: parsedKey('cn-official', 'spell'), fingerprint: 'x', value: spells, savedAt: 0 })

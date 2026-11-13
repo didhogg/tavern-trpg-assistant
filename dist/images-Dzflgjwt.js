@@ -5,6 +5,7 @@ var e = {
 			commit: "aaadd34f4e61a4701c31aa38d0337a2b3ae856ba",
 			version: "2.40.0",
 			lang: "zh",
+			label: "中文",
 			format: "5etools"
 		},
 		en: {
@@ -12,6 +13,7 @@ var e = {
 			commit: "32ef600fab87a585a61dd1a22e9b02dfc58c728a",
 			version: "2.41.0",
 			lang: "en",
+			label: "English",
 			format: "5etools"
 		}
 	},

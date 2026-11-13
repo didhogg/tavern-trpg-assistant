@@ -1,4 +1,5 @@
 // P5-1 B-37 / B-38 / B-41：卸载官方后自制不再读、来源计数不被正文记录拖垮、没有条目的类别不再每次开小窗。
+import { OfficialMissingError } from '../../../src/library/official-missing'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { BrewPacks } from '../../../src/library/brew-packs'
 import { ensurePrecomputed } from '../../../src/library/cache'
@@ -44,7 +45,7 @@ describe('ensurePrecomputed（B-41）', () => {
 
 describe('BrewPacks.list（B-37）', () => {
   it('官方资料没装：从作者存储原文列出包，不启动作者程序（M5）', async () => {
-    const lib = { currentView: async () => ({ id: 'v', kvGet: async () => [{ head: { docIdLocal: 'a', filename: 'a.json' }, body: { _meta: { sources: [{ json: 'A' }] } } }] }), officialInstalled: async () => false } as unknown as LibraryService
+    const lib = { currentView: async () => ({ id: 'v', kvGet: async () => [{ head: { docIdLocal: 'a', filename: 'a.json' }, body: { _meta: { sources: [{ json: 'A' }] } } }] }), brewInstalled: async () => [], frameOf: async () => { throw new OfficialMissingError('cn') } } as unknown as LibraryService
     expect(await new BrewPacks(lib).list('cn-brew')).toMatchObject([{ docIdLocal: 'a', sources: ['A'] }])
   })
 })

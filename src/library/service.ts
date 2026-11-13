@@ -8,6 +8,7 @@ import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutat
 import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import type { HealthReport } from './health'
+import { OfficialMissingError } from './official-missing'
 import { englishCoverageOf, healthOf, officialInstalledOf, storedOf, warmEnglishPairsOf, type HealthContext } from './service-health'
 import { buildEnglishPairsFor, type PairContext } from './service-english'
 import type { InstallReport } from './install'
@@ -71,11 +72,19 @@ export class LibraryService {
   async frameOf(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
     return this.frame(codeSet, await this.view(view))
   }
+  /**
+   * 读资料用的那道门（P5.5 收尾 C1）：这种语言的官方资料没装，作者程序启动不了（要读官方数据，B-37），
+   * 直接报 OfficialMissingError，不再去开小窗等一个看不懂的「文件不存在」。安装官方资料自己的流程不走这里。
+   */
+  private async gatedOpen(codeSet: string, ctx: FrameContext): Promise<AuthorFrame> {
+    if (!(await officialInstalledOf(ctx.view ?? (await this.currentView()), codeSet))) throw new OfficialMissingError(codeSet)
+    return this.opts.openFrame(codeSet, ctx)
+  }
   private frame(codeSet: string, view?: LibraryView): Promise<AuthorFrame> {
     const key = `${view?.id ?? 'legacy'}:${codeSet}`
     let p = this.frames.get(key)
     if (!p) {
-      p = this.opts.openFrame(codeSet, { ...(view ? { view } : {}), filterIndex: true })
+      p = this.gatedOpen(codeSet, { ...(view ? { view } : {}), filterIndex: true })
       p.catch(() => this.frames.delete(key))
       this.frames.set(key, p)
     }
@@ -83,7 +92,7 @@ export class LibraryService {
   }
   /** 在指定作者存储范围里开一个小窗（隔离解析、导入预览用；用完由调用方关）。 */
   openFrameIn(codeSet: string, kvScope: string, view?: LibraryView): Promise<AuthorFrame> {
-    return this.opts.openFrame(codeSet, { kvScope, ...(view ? { view } : {}), filterIndex: true })
+    return this.gatedOpen(codeSet, { kvScope, ...(view ? { view } : {}), filterIndex: true })
   }
   generation = 0
   /** 关掉所有小窗（测试 / 全量重置）。 */
@@ -295,7 +304,7 @@ export class LibraryService {
   private brewContext(): BrewContext {
     return {
       db: this.opts.db, revisions: this.opts.revisions, operations: this.operations,
-      openFrame: this.opts.openFrame,
+      openFrame: (codeSet, ctx) => this.gatedOpen(codeSet, ctx ?? {}),
       frame: (codeSet, view) => this.frame(codeSet, view),
       ...(this.opts.onDataChanged ? { onDataChanged: this.opts.onDataChanged } : {}),
       ...(this.opts.onLog ? { onLog: this.opts.onLog } : {}),

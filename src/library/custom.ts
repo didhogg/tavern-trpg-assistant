@@ -10,6 +10,7 @@ import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
 import { createPack, deletePack, docIdOf, exportPack, lastPack, listPacks, rememberPack, renamePack, type PackDeps, type PackSource } from './custom-packs'
 import { createHouseRule, type HouseEdit } from './custom-house'
+import { emptyIfMissing } from './official-missing'
 import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
@@ -229,7 +230,8 @@ export class CustomLibrary {
   /** 建一个空包；rule 给包打版本标签。 */
   async createPack(codeSet: string, src: PackSource, opts: { rule?: string } = {}) { await this.ensureMigrated(codeSet); return createPack(this.packDeps, codeSet, src, opts) }
   /** 【我的库】里的包：身份、自己的来源、每类几条、版本标签。 */
-  async packs(codeSet: string) { await this.ensureMigrated(codeSet); return listPacks(this.packDeps, codeSet) }
+  /** 【我的库】这一套的包；这种语言的官方资料没装（读不了）就是空的。 */
+  async packs(codeSet: string) { return emptyIfMissing(async () => { await this.ensureMigrated(codeSet); return listPacks(this.packDeps, codeSet) }) }
   /** 改包的显示名 / 缩写（身份不变）。 */
   renamePack(codeSet: string, id: string, patch: { full?: string; abbreviation?: string }) { return renamePack(this.packDeps, codeSet, id, patch) }
   /** 按包导出（作者格式文件）。 */

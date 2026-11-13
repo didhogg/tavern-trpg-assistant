@@ -63,22 +63,20 @@ export interface OtherEntry {
 export interface HouseSide { target: EntryRef; edited: Ent; replace?: EntryRef }
 
 export class BilingualLibrary {
-  constructor(private readonly custom: CustomLibrary, private readonly lib: Pick<LibraryService, 'frameOf' | 'brewImport' | 'officialInstalled'>, private readonly brewPairs: Pick<BrewPairs, 'installed'>, private readonly counterparts: Pick<Counterparts, 'counterpart'>, private readonly scoped?: Pick<ScopedLibrary, 'englishOf' | 'detail'>) {}
+  constructor(private readonly custom: CustomLibrary, private readonly lib: Pick<LibraryService, 'frameOf' | 'brewImport'>, private readonly brewPairs: Pick<BrewPairs, 'installed'>, private readonly counterparts: Pick<Counterparts, 'counterpart'>, private readonly scoped?: Pick<ScopedLibrary, 'englishOf' | 'detail'>) {}
 
   /**
    * C2【我的库】的包按中英配对：一对一行（只有一边的，另一边为 null）。
-   * 某种语言的官方资料没装时，那一套的自制读不出来（作者程序要先读官方数据，B-37）：那一边当作没有包，只列装了的那一边。
+   * 某种语言的官方资料没装时那一套读不出来，custom.packs 给空的（统一那道门，C1）：只列装了的那一边，两边都有包才配对。
    */
   async packs(): Promise<PackPair[]> {
-    const readable = async (lang: Lang) => this.lib.officialInstalled(codeSetOf(lang))
-    const [zhOk, enOk] = await Promise.all([readable('zh'), readable('en')])
-    const [zh, en] = await Promise.all([zhOk ? this.custom.packs(codeSetOf('zh')) : [], enOk ? this.custom.packs(codeSetOf('en')) : []])
+    const [zh, en] = await Promise.all([this.custom.packs(codeSetOf('zh')), this.custom.packs(codeSetOf('en'))])
     const zhBy = new Map(zh.map((p) => [p.docIdLocal, p]))
     const enBy = new Map(en.map((p) => [p.docIdLocal, p]))
     const out: PackPair[] = []
     const seen = new Set<MyPack>()
     // 配上了、而且两边都是【我的库】的包 → 一行；别的（只有一边、歧义、另一边是下载的包）各自一行
-    for (const row of zhOk && enOk ? await this.brewPairs.installed(brewOf('zh').id) : []) {
+    for (const row of zh.length && en.length ? await this.brewPairs.installed(brewOf('zh').id) : []) {
       const a = row.zh ? zhBy.get(row.zh.docIdLocal) : undefined
       const b = row.en ? enBy.get(row.en.docIdLocal) : undefined
       if (row.status !== 'paired' || !a || !b) continue

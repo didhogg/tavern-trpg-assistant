@@ -27,7 +27,8 @@ function fakeFrame(answers: Record<string, (...args: unknown[]) => unknown>, onC
 
 let db: LibraryDatabase
 let revisions: LibraryRevisionStore
-beforeEach(async () => { db = new LibraryDatabase(`test-brew-${Math.random()}`); revisions = new LibraryRevisionStore(db); await revisions.ensureLegacy() })
+// 官方资料装好了（开作者小窗那道门要查，C1）
+beforeEach(async () => { db = new LibraryDatabase(`test-brew-${Math.random()}`); await db.sets.put({ id: 'cn-official', commit: 'c', status: 'installed' } as never); revisions = new LibraryRevisionStore(db); await revisions.ensureLegacy() })
 afterEach(async () => { await db.delete() })
 
 describe('作者同步存储（localStorage）存进库', () => {
