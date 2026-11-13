@@ -255,3 +255,49 @@
 .lib-cmpgrid section { border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); padding: var(--sp-4); }
 .lib-cmpgrid .row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
 .lib-cmpgrid .cap { color: var(--text2); font-size: var(--fs-xs); margin-top: var(--sp-2); }
+
+/* ── P5.5 阶段 C（u7）：我的库的包、新建条目、编辑器、保存确认 ── */
+.lib-pack { display: grid; gap: 2px; }
+.lib-pack__cats { color: var(--text2); font-size: var(--fs-sm); }
+.lib-drafts { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--bg-sunk); font-size: var(--fs-sm); }
+.lib-drafts > span:not(.lib-end) { flex: 1 1 160px; min-width: 0; }
+.lib-pending { display: inline-flex; align-items: center; gap: 4px; color: var(--text2); font-size: var(--fs-xs); font-weight: var(--fw-regular); }
+.lib-form { display: grid; gap: var(--sp-3); align-content: start; }
+.lib-form__sec { font-size: var(--fs-xs); color: var(--text2); font-weight: var(--fw-semibold); padding-top: var(--sp-1); }
+.lib-frow { display: grid; grid-template-columns: 112px 1fr; gap: var(--sp-2) var(--sp-3); align-items: start; }
+.lib-frow > label { display: flex; align-items: center; gap: 4px; padding-top: 7px; font: 13px ui-monospace, Menlo, monospace; color: var(--text); }
+.lib-frow > label .trpg-icon { color: var(--text3); }
+.lib-frow[data-err='true'] .trpg-input, .lib-frow[data-err='true'] .lib-lines { box-shadow: inset 0 0 0 2px var(--danger-line); }
+.lib-frow .trpg-field__err { grid-column: 2; }
+.lib-lines { align-content: start; border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); display: grid; gap: 4px; min-height: 72px; }
+.lib-lines i { font-style: normal; color: var(--text3); font: 12px ui-monospace, Menlo, monospace; }
+.lib-optional { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) 0; border-top: var(--border) dashed var(--line); color: var(--text2); font-size: var(--fs-sm); }
+.lib-edit { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
+.lib-edit[data-json='true'] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.lib-edit > section { min-height: 0; overflow: auto; padding: var(--sp-3) var(--sp-4); }
+.lib-edit > section + section { border-left: var(--border) solid var(--line); background: var(--bg-sunk); }
+.lib-edit__title { font-size: var(--fs-xs); color: var(--text2); font-weight: var(--fw-semibold); margin-bottom: var(--sp-2); display: flex; gap: var(--sp-2); align-items: center; }
+.lib-json { font: 12px/1.6 ui-monospace, Menlo, monospace; white-space: pre; color: var(--text); background: var(--surface); border: var(--border) solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); overflow: hidden; }
+.lib-json b { color: var(--primary-text); font-weight: var(--fw-regular); } .lib-json u { text-decoration: wavy underline var(--danger-text); }
+.lib-json small { display: inline-block; width: 22px; color: var(--text3); }
+.lib-ebar { flex: none; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-top: var(--border) solid var(--line); background: var(--surface); }
+.lib-ebar .lib-src { margin-right: auto; }
+.lib-etop { flex: none; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); color: var(--text2); }
+.lib-diff { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); }
+.lib-diff li { display: grid; grid-template-columns: 92px 1fr; gap: var(--sp-2); padding: 6px var(--sp-3); border-radius: var(--r-sm); background: var(--bg-sunk); }
+.lib-diff code { font: 12px ui-monospace, Menlo, monospace; }
+.lib-diff s { color: var(--text3); }
+.lib-choice { display: grid; gap: var(--sp-2); }
+.lib-choice > label { display: grid; grid-template-columns: 20px 1fr; gap: 2px var(--sp-2); padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.lib-choice > label[data-on='true'] { box-shadow: inset 0 0 0 2px var(--primary); }
+.lib-choice > label > span:last-child { grid-column: 2; color: var(--text2); font-size: var(--fs-sm); }
+.lib-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-strong, var(--text3)); margin-top: 2px; }
+.lib-radio[data-on='true'] { border: 5px solid var(--primary); }
+.lib-types { display: grid; gap: var(--sp-1); }
+.lib-tgroup { display: flex; gap: var(--sp-2); align-items: baseline; flex-wrap: wrap; padding: 6px 0; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.lib-tgroup > b { min-width: 96px; color: var(--text2); font-weight: var(--fw-semibold); }
+.lib-two { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+.lib-two > div { display: grid; grid-template-rows: auto 1fr; gap: var(--sp-2); min-height: 0; }
+.lib-pad { padding: var(--sp-3) var(--sp-4); overflow: auto; flex: 1; min-height: 0; }
+[data-layout='narrow'] .lib-frow { grid-template-columns: 1fr; } [data-layout='narrow'] .lib-frow > label { padding-top: 0; } [data-layout='narrow'] .lib-frow .trpg-field__err { grid-column: 1; }
+[data-layout='narrow'] .lib-two { grid-template-columns: 1fr; }

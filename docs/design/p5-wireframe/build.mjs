@@ -11,6 +11,8 @@ import { screens as u3 } from './screens/u3.mjs'
 import { screens as u4 } from './screens/u4.mjs'
 import { screens as u5 } from './screens/u5.mjs'
 import { screens as u6 } from './screens/u6.mjs'
+import { screens as u7a } from './screens/u7a.mjs'
+import { screens as u7b } from './screens/u7b.mjs'
 import { screens as u8 } from './screens/u8.mjs'
 import { screens as u0 } from './screens/u0.mjs'
 import { screens as u9a } from './screens/u9a.mjs'
@@ -20,7 +22,7 @@ import { screens as u9c } from './screens/u9c.mjs'
 const here = dirname(fileURLToPath(import.meta.url))
 const out = join(here, 'out')
 const shots = join(here, 'shots')
-const all = [...u0, ...u1, ...u2, ...u3, ...u4, ...u5, ...u6, ...u8, ...u9a, ...u9b, ...u9c]
+const all = [...u0, ...u1, ...u2, ...u3, ...u4, ...u5, ...u6, ...u7a, ...u7b, ...u8, ...u9a, ...u9b, ...u9c]
 
 const facts = (s) => `<dl class="wf-facts"><dt>流程</dt><dd>${esc(s.flow)}</dd><dt>用户目标</dt><dd>${esc(s.goal)}</dd><dt>主动作</dt><dd>${esc(s.primary)}</dd><dt>模式栈</dt><dd>${esc(s.patterns)}</dd><dt>法则核对</dt><dd>${esc(s.laws)}</dd>${s.diff ? `<dt>宽度差异</dt><dd>${bold(esc(s.diff))}</dd>` : ''}</dl>`
 const bold = (t) => String(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
