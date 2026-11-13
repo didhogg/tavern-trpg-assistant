@@ -1,4 +1,4 @@
-// P5.5 阶段 C（二）：新建条目（选类型 → 选起点 → 文字转条目）、编辑器（表单 + 预览，JSON 抽屉）、保存确认、各种状态。
+// P5.5 阶段 C（二）：新建条目（选类型 → 选起点 → 文字转条目）、各种状态。编辑器、预览与保存在 u7c.mjs。
 // 流程见 docs/handoff/P5.5_条目编辑与自制库_执行方案.md §15。类型、分组、起点、字段都由后端从作者读（custom.entryTypes / fields），这里的是实测时读到的样子。
 import { badge, btn, gray, icon, iconBtn, infoLine, input, libPage, libTop, mbody, packHead, pills, pin, sheet } from '../lib/parts.mjs'
 import { empty, errorLine, field, modal, modalHead, stateCard, toast } from '../lib/ui.mjs'
@@ -41,43 +41,6 @@ ${L === 'narrow' ? `<div class="lib-filter" style="padding-top:var(--sp-2)"><spa
 <div class="lib-two">${L === 'narrow' ? '' : `<div><span class="lib-form__sec">粘贴文字</span><div class="lib-lines">${SAMPLE}</div></div>`}
 <div><span class="lib-form__sec">${P(n.out)}转换结果（作者渲染）</span><div class="lib-lines"><b>繁彩球</b><span class="lib-muted">一环 塑能</span><span>施法时间 1 动作 · 射程 90 尺</span>${errorLine('作者的提醒（原样）：有 1 处没认出来的文字，留在了正文里')}</div></div></div>
 <div class="lib-ebar"><span class="lib-end">${btn('重新转换')}${btn('进编辑器', { primary: true, n: n.go })}</span></div>`)
-
-// ── 编辑器 ──
-const frow = (name, control, { err, n } = {}) => `<div class="lib-frow"${err ? ' data-err="true"' : ''}><label>${P(n)}${name}${icon('info', 14)}</label>${control}${err ? `<span class="trpg-field__err">${icon('warning', 14)}${err}</span>` : ''}</div>`
-const mini = (t) => `<div class="lib-json" style="padding:6px 10px">${t}</div>`
-const form = ({ errs = false, house = false, n = {} } = {}) => `<div class="lib-form">
-<div class="lib-form__sec">${P(n.req)}必填</div>
-${frow('name', input(house ? '我的火球术' : '火焰鹦鹉'), { n: n.info })}
-${frow('level', sel(errs ? '12' : '1'), errs ? { err: '应该是 0 到 9 的整数（作者结构定义）' } : {})}
-${frow('school', sel('V（塑能）'))}
-${frow('time', mini('[{ "number": 1, "unit": "action" }]'), { n: n.mini })}
-${frow('range', mini('{ "type": "point", "distance": … }'))}
-${frow('duration', mini('[{ "type": "instant" }]'))}
-${frow('entries', `<div class="lib-lines">${P(n.lines)}<span>一团燃烧的羽毛从你指尖飞出……</span><span>被命中的生物进行一次敏捷豁免……</span><i>（一段一行；回车 = 新的一段）</i></div>`)}
-<div class="lib-optional">${P(n.opt)}${icon('caret-right', 14)}可选字段（42）<span class="lib-end">${input('', { placeholder: '搜字段', ic: 'magnifying-glass' })}</span></div></div>`
-const preview = () => `<div class="lib-edit__title">预览（作者渲染）</div><div class="lib-dbody" style="padding:0"><h3 style="margin:0">火焰鹦鹉</h3><p class="lib-muted" style="margin:2px 0 8px">1 环 塑能</p><p style="margin:0"><b>施法时间</b> 1 动作<br><b>射程</b> …<br><b>持续时间</b> 立即</p><p>一团燃烧的羽毛从你指尖飞出……</p></div>`
-const json = (errs) => `<div class="lib-edit__title">JSON <span class="lib-src">平时收着，防手滑</span></div><div class="lib-json"><small>1</small>{
-<small>2</small>  <b>"name"</b>: "火焰鹦鹉",
-<small>3</small>  <b>"level"</b>: ${errs ? '<u>12</u>' : '1'},
-<small>4</small>  <b>"school"</b>: "V",
-<small>5</small>  <b>"time"</b>: [{ "number": 1, "unit": "action" }],
-<small>6</small>  …
-<small>9</small>}</div>`
-const etop = (L, { house = false, n = {} } = {}) => `<div class="lib-etop">${P(n.where)}${badge('法术')}${badge('5e')}${house ? `<span>${icon('info', 14)} 改的是<b>房规</b>：原件不动，另存一份盖在上面</span>` : `<span>在 ${L === 'narrow' ? '' : '包 '}<b>海盗战役</b></span>`}<span class="lib-end">${btn(L === 'narrow' ? '撤销 3' : '撤销（还剩 3 步）', { small: true, ic: 'arrow-counter-clockwise', n: n.undo })}</span></div>`
-const ebar = (L, { errs = false, n = {} } = {}) => `<div class="lib-ebar">${L === 'narrow' ? '' : btn('{ } JSON', { small: true, n: n.json })}${errs ? `<span class="trpg-field__err">${P(n.errs)}${icon('warning', 14)}1 处格式问题 ${btn('定位', { small: true, quiet: true })}</span>` : ''}<span class="lib-src">${P(n.draft)}草稿已自动存 · 12:03</span>${btn('取消')}${btn('保存', { primary: true, n: n.save })}</div>`
-const editor = (L, o = {}) => mbody(`${etop(L, o)}${L === 'narrow'
-  ? `<div class="lib-filter" style="padding-top:var(--sp-2)">${P(o.n?.tabs)}<span class="trpg-seg" role="group"><button type="button" aria-pressed="true">表单</button><button type="button" aria-pressed="false">预览</button><button type="button" aria-pressed="false">JSON</button></span></div><div class="lib-pad">${form(o)}</div>`
-  : `<div class="lib-edit"><section>${form(o)}</section><section>${o.json ? json(o.errs) : preview()}</section></div>`}${ebar(L, o)}`)
-
-// ── 保存确认（弹窗内换页）──
-const diff = (rows) => `<ul class="lib-diff">${rows.map(([f, a, b]) => `<li><code>${f}</code><span>${a === null ? '' : `<s>${a}</s> → `}${b}</span></li>`).join('')}</ul>`
-const confirmPage = (L, kind, n = {}) => mbody(`<div class="lib-pad"><div class="lib-stack">
-${kind === 'new' ? `<p style="margin:0">${P(n.what)}新建一条法术「火焰鹦鹉」</p>${field(`${P(n.pack)}存进`, sel('海盗战役（上次用的）'), { hint: '只有新建时问；在包里点 [新建条目] 进来的不问' })}`
-  : `<p style="margin:0">${P(n.what)}这次改了 ${kind === 'house' ? 2 : 3} 项：</p>${diff(kind === 'house' ? [['entries', null, '第 1 段改了 ' + btn('展开看', { small: true, quiet: true })], ['name', '火球术', '我的火球术']] : [['entries', null, '第 2 段改了 ' + btn('展开看', { small: true, quiet: true })], ['level', '1', '2'], ['range', '60 尺', '（删掉了）']])}`}
-${kind === 'house' ? field(`${P(n.scope)}作用于`, sel('本战役'), { hint: '默认本战役（设置 → 库里可改默认）；之后在 ⋯ → 管理 → 房规 里整批改' }) : ''}
-${kind === 'edit' ? infoLine(`${P(n.impact)}改了名字：有 3 处用到它 ${btn('展开', { small: true, quiet: true })}`) : ''}
-${kind === 'new' ? errorLine('有 1 处格式问题：/level 应该是 0 到 9 的整数。仍然可以保存，作者网站也是这样') : ''}</div></div>
-<div class="lib-ebar"><span class="lib-end">${btn('再改改')}${btn(kind === 'house' ? '保存房规' : '保存', { primary: true, n: n.save })}</span></div>`)
 
 export const screens = [
   {
@@ -128,47 +91,6 @@ export const screens = [
       '1440': () => ({ ...bg('wide'), overlay: sheet(head('起点', '文字转法术'), convert('wide', { mode: 1, sample: 2, out: 3, go: 4 })) }),
       '900': () => ({ ...bg('wide'), overlay: sheet(head('起点', '文字转法术'), convert('wide')) }),
       '390': () => ({ ...bg('narrow'), overlay: sheet(head('起点', '文字转法术'), convert('narrow')) }),
-    }),
-  },
-  {
-    id: 'u7-10-editor', group: G, title: 'P5.5 编辑器（表单 + 预览；JSON 抽屉）', flow: 'P5.5 §15 ⑩',
-    goal: '改一两个数，或者从头填完一条，边改边看效果', primary: '[保存]', patterns: 'Form + Live Preview · Progressive disclosure（可选字段折叠）· Drawer（JSON）', laws: 'Miller（必填 7 项在前，42 个可选折叠）· Doherty（预览即时）· Postel（格式问题标出但不硬拦）· Zeigarnik（草稿自动存）',
-    captions: { '1440': '宽窗 · 表单 + 预览；JSON 收着（Q5、Q7）', '900': '宽窗 · 点了 [{ } JSON]：右边换成 JSON，和表单并排；有 1 处格式问题', '390': '窄屏 · 「表单 | 预览 | JSON」三个标签；改的是官方条目 = 房规' },
-    diff: '宽：表单左、右边是预览或 JSON（二选一，避免三栏挤）；窄：三个标签。',
-    notes: [
-      [1, '顶行', '类别 · 版本标签 · 在哪个包（官方条目写「改的是房规，原件不动」）· 撤销（还剩 n 步，每条最多 20 步）', '【有】custom.undoSteps · undo'],
-      [2, '必填字段', '字段从作者结构定义读（B4）；字段名先显示英文原名，ⓘ 里是作者的英文说明（暂不翻译）', '【有】custom.fields(codeSet, prop)'],
-      [3, '结构复杂的字段', 'time、range、duration 这类对象 / 列表给小 JSON 框', '【有】fields → 类型'],
-      [4, '正文 entries', '一段一行的文字框（作者的 getTextAsEntries / getEntriesAsText 互转）', '作者函数，前端接线时确认入口'],
-      [5, '可选字段（42）', '折叠；可搜字段名', '【有】fields'],
-      [6, '[{ } JSON]', '平时收着；打开后右边换成 JSON，语法错、结构错都标在行上', '【有】custom.validateEntry'],
-      [7, '格式问题', '字段旁标红 + 底部一行 [定位]；保存时只提示，不硬拦（作者做法）', '【有】validateEntry'],
-      [8, '草稿已自动存', '停手几秒自动存草稿；草稿不影响任何条目（Q15）', '【有】custom.saveDraft'],
-      [9, '[保存]', '进保存确认页（u7-11）', '—'],
-    ],
-    board: tri({
-      '1440': () => ({ ...bg('wide'), overlay: sheet(head('海盗战役', '火焰鹦鹉'), editor('wide', { n: { where: 1, undo: 1, req: 2, info: 2, mini: 3, lines: 4, opt: 5, json: 6, draft: 8, save: 9 } })) }),
-      '900': () => ({ ...bg('wide'), overlay: sheet(head('海盗战役', '火焰鹦鹉'), editor('wide', { json: true, errs: true, n: { errs: 7 } })) }),
-      '390': () => ({ ...bg('narrow'), overlay: sheet(head('火球术', '改火球术'), editor('narrow', { house: true })) }),
-    }),
-  },
-  {
-    id: 'u7-11-save', group: G, title: 'P5.5 保存确认（这次改了哪几项）', flow: 'P5.5 §15 ⑪',
-    goal: '存之前看清改了什么、存到哪、管多大范围', primary: '[保存]', patterns: 'Review step（弹窗内换页，不叠层）· Diff list', laws: 'Peak–End（最后一步给确定感）· Postel（格式问题仍可存）· Tesler（存进哪个包默认上次的）',
-    captions: { '1440': '宽窗 · 新建：只问存进哪个包', '900': '宽窗 · 官方条目（房规）：改了 2 项 + 作用于', '390': '窄屏 · 改自己的条目：改了 3 项；改了名字有 3 处用到它' },
-    diff: '是编辑器弹窗里的下一页，‹ 回编辑器（输入都还在）。',
-    notes: [
-      [1, '这次改了哪几项', '字段 · 改前 → 改后；删掉的写「删掉了」；正文这类长字段只写「改了」，可展开', '【新 G1】custom.changes(codeSet, 改前, 改后)'],
-      [2, '存进', '只有新建、而且不是从包里点进来的才问；默认上次用的包', '【新 G2】custom.suggestedPack'],
-      [3, '作用于', '只有房规才有；默认本战役', '【有】settings.library.overrideLevel · createHouseRule'],
-      [4, '有 n 处用到它', '改名 / 换包（编号会变）才出现；可展开看每一处（Q11）', '【有】backend.entryChangeImpact'],
-      [5, '格式问题', '仍可保存（作者做法）', '【有】validateEntry'],
-      [6, '[保存]', '约 1 秒；然后回到包的列表，顶部「已保存 · [撤销]」（u7-12）', '【有】custom.saveEntry / createHouseRule'],
-    ],
-    board: tri({
-      '1440': () => ({ ...bg('wide'), overlay: sheet(head('火焰鹦鹉', '保存'), confirmPage('wide', 'new', { what: 1, pack: 2, save: 6 })) }),
-      '900': () => ({ ...bg('wide'), overlay: sheet(head('我的火球术', '保存房规'), confirmPage('wide', 'house', { what: 1, scope: 3 })) }),
-      '390': () => ({ ...bg('narrow'), overlay: sheet(head('火焰鹦鹉', '保存'), confirmPage('narrow', 'edit', { what: 1, impact: 4 })) }),
     }),
   },
   {
