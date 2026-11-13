@@ -1,1 +1,116 @@
-{}
+{
+  "shared": {
+    "entries": "说明",
+    "from": "来源",
+    "rows": {
+      "label": "表格行",
+      "tip": "和“表格组”二选一；每一行按作者格式填写。"
+    },
+    "tables": {
+      "label": "表格组",
+      "tip": "和“表格行”二选一；每张表按作者格式填写。"
+    }
+  },
+  "byProp": {
+    "monster": {
+      "ac": "AC",
+      "hp": "生命值",
+      "str": "力量",
+      "dex": "敏捷",
+      "con": "体质",
+      "int": "智力",
+      "wis": "感知",
+      "cha": "魅力",
+      "passive": "被动感知",
+      "senseTags": {
+        "label": "感官标签",
+        "tip": "筛选用的标签，由作者程序从正文自动写入，不代替正文内容。"
+      },
+      "conditionImmune": "状态免疫",
+      "immune": "伤害免疫",
+      "resist": "伤害抗性",
+      "conditionInflictSpell": "法术施加的状态"
+    },
+    "spell": {
+      "optionalfeatures": "可选特性"
+    },
+    "item": {
+      "entries": "说明",
+      "baseItem": "基础物品",
+      "reqAttune": "同调要求",
+      "dmgType": "伤害类型",
+      "dmg1": "伤害骰",
+      "tier": "阶层",
+      "wondrous": "奇物",
+      "ac": "AC",
+      "ammoType": "弹药类型"
+    },
+    "race": {
+      "entries": "说明",
+      "age": "年龄",
+      "resist": "伤害抗性",
+      "additionalSpells": "附加法术",
+      "sizeEntry": "体型说明"
+    },
+    "class": {
+      "hd": "生命骰",
+      "classTableGroups": "职业表格组",
+      "startingProficiencies": "起始熟练",
+      "casterProgression": "施法进度",
+      "cantripProgression": "戏法进度",
+      "preparedSpellsChange": "准备法术变化",
+      "featProgression": "专长进度",
+      "preparedSpellsProgression": "准备法术进度",
+      "optionalfeatureProgression": "可选特性进度",
+      "additionalSpells": "附加法术",
+      "spellsKnownProgression": "已知法术进度",
+      "itemMasteries": "物品精通",
+      "itemMasteriesProgression": "物品精通进度",
+      "isSidekick": "是否为伙伴"
+    },
+    "background": {
+      "entries": "说明"
+    },
+    "feat": {
+      "entries": "说明",
+      "additionalSpells": "附加法术"
+    },
+    "subclass": {
+      "additionalSpells": "附加法术"
+    },
+    "classFeature": {
+      "entries": "说明"
+    },
+    "subrace": {
+      "entries": "说明",
+      "additionalSpells": "附加法术",
+      "overwrite": "覆盖",
+      "otherSources": "其他来源",
+      "resist": "伤害抗性"
+    }
+  },
+  "byPath": {
+    "monster": {
+      "hp.formula": "公式",
+      "ac.from": "来源",
+      "speed.fly": "飞行"
+    },
+    "spell": {
+      "time[].unit": "单位"
+    },
+    "class": {
+      "hd.faces": "面数",
+      "classTableGroups[].rowsSpellProgression": {
+        "label": "法术位数量",
+        "tip": "职业表中的每一格只填写数字，表示该等级可用的法术位数量。"
+      }
+    },
+    "race": {
+      "languageProficiencies[].anyStandard": "任意标准语言"
+    },
+    "background": {
+      "languageProficiencies[].anyStandard": "任意标准语言",
+      "skillToolLanguageProficiencies[].anyStandardLanguage": "任意标准语言"
+    }
+  }
+}

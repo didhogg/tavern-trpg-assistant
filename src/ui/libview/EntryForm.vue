@@ -17,7 +17,7 @@ import type { FormPlan } from '../../library/form-plan'
  * 必填 → 常用（官方条目里真在用的）→ 已填的其他项 → 更多（收起、可搜；详细表单一开始就展开）。出版信息、自动字段、来源、规则版本不出现。
  * marks：要标出来的字段（两边不一样的 ≠ / 房规改过的）。
  */
-export interface FormTable { fields: BrewField[]; defs: Defs; labels: Record<string, string>; plan?: FormPlan | null; requiredChoices?: RequiredChoice[] }
+export interface FormTable { fields: BrewField[]; defs: Defs; labels: Record<string, string>; tips?: Record<string, string>; plan?: FormPlan | null; requiredChoices?: RequiredChoice[] }
 /** rawNames：显示作者的原字段名（英文那一栏：作者中文版的叫法是给中文条目的，例如 name 叫「中文名」，放在英文栏会误导）。 */
 const props = defineProps<{ table: FormTable; ent: Ent; detailed?: boolean; marks?: Record<string, string>; readonly?: boolean; rawNames?: boolean; codeSet?: string }>()
 // 正文的段落转换要用这一栏语言的作者程序（EntryBlock）
@@ -103,7 +103,7 @@ function setGrid(name: string, rows: unknown[], headers?: unknown[]): void {
 }
 const nameOf = (f: BrewField) => (props.rawNames ? f.name : f.label ?? f.name)
 const subLabels = computed(() => (props.rawNames ? {} : props.table.labels))
-const tip = (f: BrewField) => f.description ?? (f.shape && 'description' in f.shape ? f.shape.description : undefined)
+const tip = (f: BrewField) => props.rawNames ? (f.description ?? (f.shape && 'description' in f.shape ? f.shape.description : undefined)) : (props.table.tips?.[f.name] ?? f.description ?? (f.shape && 'description' in f.shape ? f.shape.description : undefined))
 </script>
 
 <template>
@@ -115,7 +115,7 @@ const tip = (f: BrewField) => f.description ?? (f.shape && 'description' in f.sh
         <div v-for="f in row" :key="f.name" class="lib-tfield" :data-diff="marks?.[f.name] ? 'true' : undefined" :data-field="f.name">
           <label><span class="lib-lname" :data-en="rawNames || !f.label || undefined">{{ nameOf(f) }}<small v-if="f.required || chosen.has(f.name)">*</small><span v-if="tip(f)" class="lib-tip" :title="tip(f)"><Icon name="info" :size="13" /></span></span><span v-if="marks?.[f.name]" class="lib-mark">{{ marks[f.name] }}</span></label>
           <TableGrid v-if="grid?.rows === f.name" :rows="ent[f.name]" :headers="ent.colLabelRows ?? ent.colLabels" :multi-header="Array.isArray(ent.colLabelRows)" :numeric="grid.numeric" :label="nameOf(f)" @rows="setField(f.name, $event)" @headers="setField(Array.isArray(ent.colLabelRows) ? 'colLabelRows' : 'colLabels', $event)" @column="(rows, headers) => setGrid(f.name, rows, headers)" @json="emit('json', f.name)" />
-          <FieldInput v-else :shape="f.shape!" :value="ent[f.name]" :defs="table.defs" :labels="subLabels" :name="f.name" :path="f.name" @update="(v: unknown) => setField(f.name, v)" @json="emit('json', f.name)" />
+          <FieldInput v-else :shape="f.shape!" :value="ent[f.name]" :defs="table.defs" :labels="subLabels" :tips="table.tips" :name="f.name" :path="f.name" @update="(v: unknown) => setField(f.name, v)" @json="emit('json', f.name)" />
         </div>
       </div>
     </template>
@@ -124,7 +124,7 @@ const tip = (f: BrewField) => f.description ?? (f.shape && 'description' in f.sh
       <p class="lib-faint lib-fhint">显示在条目详情的「背景」「图片」两个标签里。</p>
       <div v-for="p in mediaProps" :key="p.name" class="lib-tfield" :data-field="`${mediaName}.${p.name}`">
         <label v-if="mediaTitle(p)"><span class="lib-lname">{{ mediaTitle(p) }}</span></label>
-        <FieldInput :shape="p.shape" :value="mediaVal[p.name]" :defs="table.defs" :labels="subLabels" :name="p.name" :path="`${mediaName}.${p.name}`" @update="(v: unknown) => setMedia(p.name, v)" @json="emit('json', mediaName!)" />
+        <FieldInput :shape="p.shape" :value="mediaVal[p.name]" :defs="table.defs" :labels="subLabels" :tips="table.tips" :name="p.name" :path="`${mediaName}.${p.name}`" @update="(v: unknown) => setMedia(p.name, v)" @json="emit('json', mediaName!)" />
       </div>
     </template>
     <button v-if="rest.length" class="lib-more" type="button" :aria-expanded="open" data-testid="form-more" @click="open = !open"><Icon :name="open ? 'caret-down' : 'caret-right'" :size="14" />更多（{{ rest.length }} 项，官方条目里很少用）</button>
@@ -132,7 +132,7 @@ const tip = (f: BrewField) => f.description ?? (f.shape && 'description' in f.sh
       <input v-if="rest.length > 8" v-model="q" class="trpg-input" type="search" placeholder="在更多里找" aria-label="在更多里找" />
       <div v-for="f in restShown" :key="f.name" class="lib-tfield" :data-field="f.name">
         <label><span class="lib-lname" :data-en="rawNames || !f.label || undefined">{{ nameOf(f) }}<span v-if="tip(f)" class="lib-tip" :title="tip(f)"><Icon name="info" :size="13" /></span></span></label>
-        <FieldInput :shape="f.shape!" :value="ent[f.name]" :defs="table.defs" :labels="subLabels" :name="f.name" :path="f.name" @update="(v: unknown) => setField(f.name, v)" @json="emit('json', f.name)" />
+        <FieldInput :shape="f.shape!" :value="ent[f.name]" :defs="table.defs" :labels="subLabels" :tips="table.tips" :name="f.name" :path="f.name" @update="(v: unknown) => setField(f.name, v)" @json="emit('json', f.name)" />
       </div>
     </template>
   </div>

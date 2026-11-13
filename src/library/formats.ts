@@ -36,6 +36,32 @@ export interface FieldTable {
   edition: boolean
   defs: Record<string, FieldShape>
   labels: Record<string, string>
+  /** 只给中文表单的短提示，键同样是字段路径；英文栏继续用作者原文 description。 */
+  tips: Record<string, string>
+}
+
+type ManualLabel = string | { label?: string; tip?: string }
+type ManualLabels = Record<string, ManualLabel>
+type StructuredManualLabels = { shared?: Record<string, ManualLabel>; byProp?: Record<string, Record<string, ManualLabel>>; byPath?: Record<string, Record<string, ManualLabel>> }
+
+function manualFor(prop: string): { labels: Record<string, ManualLabel>; tips: Record<string, string> } {
+  const raw = translated as ManualLabels
+  const labels: Record<string, ManualLabel> = {}
+  const tips: Record<string, string> = {}
+  const put = (key: string, value: ManualLabel | undefined) => {
+    if (value === undefined) return
+    labels[key] = value
+    if (typeof value === 'object' && value.tip) tips[key] = value.tip
+  }
+  const structured = raw as unknown as StructuredManualLabels
+  if (structured.shared || structured.byProp) {
+    for (const [key, value] of Object.entries(structured.shared ?? {})) put(key, value)
+    for (const [key, value] of Object.entries(structured.byProp?.[prop] ?? {})) put(key, value)
+    for (const [key, value] of Object.entries(structured.byPath?.[prop] ?? {})) put(key, value)
+  } else {
+    for (const [key, value] of Object.entries(raw as Record<string, ManualLabel>)) put(key, value)
+  }
+  return { labels, tips }
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
@@ -61,10 +87,23 @@ const FIVETOOLS: DataFormat = {
     const [table, names] = await Promise.all([loadBrewFields(), loadFieldLabels()])
     const own = table.props[prop]
     if (!own) return null
-    // 中文名：这一类作者编辑器里的 > 各编辑器一致的 / 作者界面词表 > 另由翻译补的（field-labels.json）；都没有就不给
-    const labels: Record<string, string> = { ...(translated as Record<string, string>), ...names.shared }
-    const mine = { ...labels, ...(names.byProp[prop] ?? {}) }
-    return { ...own, fields: own.fields.map((f) => (mine[f.name] ? { ...f, label: mine[f.name] } : f)), defs: table.defs ?? {}, labels }
+    // 中文名：作者类别编辑器 > 自动生成的作者词表 / 大译名表 > 手译补充；都没有就显示英文原名。
+    const labels: Record<string, string> = { ...names.shared, ...(names.byProp[prop] ?? {}) }
+    const nested = names.byPath?.[prop] ?? {}
+    for (const [path, label] of Object.entries(nested)) labels[path] = label
+    const manual = manualFor(prop)
+    for (const [key, value] of Object.entries(manual.labels)) {
+      const label = typeof value === 'string' ? value : value.label
+      // 手译表只放自动资料查不到或抽查后发现语境不对的字段；明确写出的项允许修正自动拼词的歧义。
+      if (label && (!labels[key] || key in manual.labels)) labels[key] = label
+    }
+    return {
+      ...own,
+      fields: own.fields.map((f) => (labels[f.name] ? { ...f, label: labels[f.name] } : f)),
+      defs: table.defs ?? {},
+      labels,
+      tips: manual.tips,
+    }
   },
 }
 

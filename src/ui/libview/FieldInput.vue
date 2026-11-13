@@ -19,13 +19,16 @@ import { branchOf, emptyOf, isEmpty, kindName, resolve, type Defs } from './fiel
  * 表单安排（后端 custom.formPlan，按路径 path 取，§16.10 2b）：几种写法只显示一种（默认官方最常用的），其余在「换一种写法」里；
  * 套组里用得少的子项收起；选项按官方常见程度排；一串代号给常见组合。
  */
-const props = defineProps<{ shape: FieldShape; value: unknown; defs: Defs; labels: Record<string, string>; name: string; depth?: number; path?: string }>()
+const props = defineProps<{ shape: FieldShape; value: unknown; defs: Defs; labels: Record<string, string>; tips?: Record<string, string>; name: string; depth?: number; path?: string }>()
 const emit = defineEmits<{ update: [v: unknown]; json: [] }>()
 const s = computed(() => ((props.depth ?? 0) > 6 ? { c: 'json' as const, why: '套得太深' } : resolve(props.shape, props.defs)))
 const grid = computed(() => s.value.c === 'group' ? gridFields(s.value.props, props.defs) : null)
 const d = computed(() => (props.depth ?? 0) + 1)
 const set = (v: unknown) => emit('update', v)
-const lab = (n: string) => props.labels[n] ?? n
+// 顶层字段和嵌套字段不能共用一个名字：例如顶层 name 是“中文名”，action[].name 必须是“名称”。
+const labAt = (n: string, at: string) => props.labels[at] ?? props.labels[n] ?? n
+const tipAt = (n: string, at: string) => props.tips?.[at] ?? props.tips?.[n]
+const lab = (n: string) => labAt(n, props.path ?? props.name)
 const planAll = inject(PLAN_KEY, ref<Record<string, PlanAt>>({}))
 const here = computed(() => planAll.value[props.path ?? props.name] ?? {})
 const sub = (step: string) => `${props.path ?? props.name}${step}`
@@ -187,7 +190,7 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   </div>
   <div v-else-if="s.c === 'list'" class="lib-rep">
     <div v-for="(item, i) in rows" :key="i" class="lib-rep__row">
-      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="item" :defs="defs" :labels="labels" :name="name" :path="sub('[]')" :depth="d" @update="(v: unknown) => setItem(i, v)" @json="emit('json')" /></div>
+      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="item" :defs="defs" :labels="labels" :tips="tips" :name="name" :path="sub('[]')" :depth="d" @update="(v: unknown) => setItem(i, v)" @json="emit('json')" /></div>
       <button v-if="arr.length" class="trpg-icon-btn" type="button" :aria-label="`删掉第 ${i + 1} 项`" @click="removeItem(i)"><Icon name="x" :size="16" /></button>
     </div>
     <p v-if="addError" class="trpg-field__err" role="alert">{{ addError }}</p>
@@ -201,9 +204,9 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   <!-- 一组 -->
   <div v-else-if="s.c === 'group'" :class="['lib-grp', groupRow && 'lib-grp--row']">
     <div v-for="p in groupProps" :key="p.name" class="lib-tfield">
-      <label v-if="p.name !== selfName"><span class="lib-lname" :data-en="!labels[p.name] || undefined">{{ lab(p.name) }}<small v-if="p.required">*</small></span></label>
-      <TableGrid v-if="grid?.rows === p.name" :rows="obj[p.name]" :headers="obj.colLabelRows ?? obj.colLabels" :multi-header="Array.isArray(obj.colLabelRows)" :numeric="grid.numeric" :label="lab(p.name)" @rows="setProp(p.name, $event)" @headers="setProp(Array.isArray(obj.colLabelRows) ? 'colLabelRows' : 'colLabels', $event)" @column="(rows, headers) => setGrid(p.name, rows, headers)" @json="emit('json')" />
-      <FieldInput v-else :shape="p.shape" :value="obj[p.name]" :defs="defs" :labels="labels" :name="p.name" :path="sub(`.${p.name}`)" :depth="d" @update="(v: unknown) => setProp(p.name, v)" @json="emit('json')" />
+      <label v-if="p.name !== selfName"><span class="lib-lname" :data-en="!labels[sub(`.${p.name}`)] || undefined">{{ labAt(p.name, sub(`.${p.name}`)) }}<small v-if="p.required">*</small><span v-if="tipAt(p.name, sub(`.${p.name}`))" class="lib-tip" :title="tipAt(p.name, sub(`.${p.name}`))"><Icon name="info" :size="13" /></span></span></label>
+      <TableGrid v-if="grid?.rows === p.name" :rows="obj[p.name]" :headers="obj.colLabelRows ?? obj.colLabels" :multi-header="Array.isArray(obj.colLabelRows)" :numeric="grid.numeric" :label="labAt(p.name, sub(`.${p.name}`))" @rows="setProp(p.name, $event)" @headers="setProp(Array.isArray(obj.colLabelRows) ? 'colLabelRows' : 'colLabels', $event)" @column="(rows, headers) => setGrid(p.name, rows, headers)" @json="emit('json')" />
+      <FieldInput v-else :shape="p.shape" :value="obj[p.name]" :defs="defs" :labels="labels" :tips="tips" :name="p.name" :path="sub(`.${p.name}`)" :depth="d" @update="(v: unknown) => setProp(p.name, v)" @json="emit('json')" />
     </div>
     <button v-if="hiddenRare.length && !showRare" class="trpg-btn trpg-btn--small trpg-btn--quiet lib-subs" type="button" data-testid="field-rare" @click="showRare = true"><Icon name="plus" :size="14" />{{ hiddenRare.slice(0, 3).map((p) => lab(p.name)).join('、') }}{{ hiddenRare.length > 3 ? ` 等 ${hiddenRare.length} 项` : '' }}</button>
   </div>
@@ -211,14 +214,14 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
   <div v-else-if="s.c === 'map'" class="lib-rep">
     <div v-for="(v, k) in obj" :key="k" class="lib-rep__row">
       <b class="lib-mono">{{ k }}</b>
-      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="v" :defs="defs" :labels="labels" :name="String(k)" :path="sub('{}')" :depth="d" @update="(x: unknown) => setProp(String(k), x)" @json="emit('json')" /></div>
+      <div class="lib-rep__body"><FieldInput :shape="s.of" :value="v" :defs="defs" :labels="labels" :tips="tips" :name="String(k)" :path="sub('{}')" :depth="d" @update="(x: unknown) => setProp(String(k), x)" @json="emit('json')" /></div>
       <button class="trpg-icon-btn" type="button" :aria-label="`删掉 ${k}`" @click="setProp(String(k), undefined)"><Icon name="x" :size="16" /></button>
     </div>
     <div class="lib-inline"><input v-model="newKey" class="trpg-input" type="text" placeholder="名字" aria-label="新加一项的名字" /><button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="!newKey.trim()" @click="addKey"><Icon name="plus" :size="14" />加</button></div>
   </div>
   <!-- 几种写法任选 -->
   <div v-else-if="s.c === 'pick'" class="lib-pick" data-testid="field-pick">
-    <FieldInput :key="activeBranch" :shape="s.branches[activeBranch].shape" :value="value" :defs="defs" :labels="labels" :name="name" :path="path ?? name" :depth="d" @update="set" @json="emit('json')" />
+    <FieldInput :key="activeBranch" :shape="s.branches[activeBranch].shape" :value="value" :defs="defs" :labels="labels" :tips="tips" :name="name" :path="path ?? name" :depth="d" @update="set" @json="emit('json')" />
     <MoreMenu v-if="otherBranches.length" :label="`${lab(name)}：换一种写法`" text="换一种写法" :items="otherBranches" @select="chooseBranch" />
   </div>
   <!-- 正文的常见块直接编辑作者字段。 -->

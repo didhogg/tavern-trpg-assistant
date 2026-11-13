@@ -18,6 +18,29 @@ function authorMaps(): Array<{ name: string; map: Record<string, string> }> {
   return maps
 }
 
+/** 作者 Parser 里有些显示名不是常量表，而是 Parser.xxxToCn(value) 函数。
+ * 自动找能完整覆盖这一组值、且确实返回中文的函数；不登记项目自己的对照表。 */
+function authorConverters(): Array<{ name: string; fn: (value: string) => unknown }> {
+  return Object.entries(A.Parser as Record<string, unknown>)
+    .filter(([name, value]) => /ToCn$/.test(name) && typeof value === 'function')
+    .map(([name, value]) => ({ name, fn: value as (value: string) => unknown }))
+}
+
+function convertedLabels(values: string[]): Record<string, string> | null {
+  const candidates = authorConverters().flatMap(({ name, fn }) => {
+    try {
+      const pairs = values.map((value) => [value, fn(value)] as const)
+      if (!pairs.every(([, label]) => typeof label === 'string' && label && label !== undefined)) return []
+      const labels = pairs.map(([, label]) => String(label))
+      if (!labels.some((label, i) => label !== values[i] && HAN.test(label))) return []
+      return [{ name, labels }]
+    } catch { return [] }
+  })
+  candidates.sort((a, b) => (b.labels.filter((x) => HAN.test(x)).length - a.labels.filter((x) => HAN.test(x)).length) || a.name.localeCompare(b.name))
+  const best = candidates[0]
+  return best ? Object.fromEntries(values.map((value, i) => [value, best.labels[i]])) : null
+}
+
 /** 每组值给一张「值 → 显示名」（对不上的组给 null）。 */
 export async function valueLabels(lists: string[][]): Promise<Array<Record<string, string> | null>> {
   await init()
@@ -25,7 +48,7 @@ export async function valueLabels(lists: string[][]): Promise<Array<Record<strin
   return lists.map((values) => {
     if (!values.length) return null
     const hits = all.filter(({ map }) => values.every((v) => v in map))
-    if (!hits.length) return null
+    if (!hits.length) return convertedLabels(values)
     hits.sort((a, b) => Number(Object.values(b.map).some((x) => HAN.test(x))) - Number(Object.values(a.map).some((x) => HAN.test(x))) || Object.keys(a.map).length - Object.keys(b.map).length)
     const best = hits[0].map
     return Object.fromEntries(values.map((v) => [v, best[v]]))

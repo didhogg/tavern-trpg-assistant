@@ -83,7 +83,7 @@ describe('控件形状与中文名（阶段 C）', () => {
     expect(range.props.find((p) => p.name === 'type')?.shape.c).toBe('select')
     expect(f('entries')).toMatchObject({ c: 'list', of: { c: 'entries' } })
   })
-  it('中文名：法术用作者法术编辑器的（level = 环节），怪物用怪物编辑器的（level = 等级）；作者没有的不给（界面显示英文）', async () => {
+  it('中文名：类别专用标签优先；其余字段从作者中文资料自动补，英文栏仍可取原名', async () => {
     const codeSet = Object.keys(CODE_SETS)[0]
     const spell = (await formatOfCodeSet(codeSet).fields('spell'))!
     const monster = (await formatOfCodeSet(codeSet).fields('monster'))!
@@ -91,6 +91,14 @@ describe('控件形状与中文名（阶段 C）', () => {
     expect(spell.fields.find((f) => f.name === 'time')?.label).toBe('施法时间')
     expect(monster.fields.find((f) => f.name === 'level')?.label).toBe('等级')
     const action = (await formatOfCodeSet(codeSet).fields('action'))!
-    expect(action.fields.find((f) => f.name === 'time')?.label).toBeUndefined()
+    expect(action.fields.find((f) => f.name === 'time')?.label).toBe('时间')
+    const mt = (await formatOfCodeSet(codeSet).fields('monster'))!
+    expect(mt.labels['action[].name']).toBe('名称')
+    expect(mt.fields.find((f) => f.name === 'skill')?.label).toBe('技能')
+    expect(mt.fields.find((f) => f.name === 'ac')?.label).toBe('AC')
+    expect(Object.values(mt.labels)).not.toContain('飞行术')
+    const cls = (await formatOfCodeSet(codeSet).fields('class'))!
+    expect(cls.fields.find((f) => f.name === 'classTableGroups')?.label).toBe('职业表格组')
+    expect(cls.tips['classTableGroups[].rowsSpellProgression']).toMatch(/每一格只填写数字/)
   })
 })

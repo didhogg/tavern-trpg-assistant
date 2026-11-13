@@ -86,6 +86,10 @@ export interface FieldLabelTable {
   generatedFrom: string
   byProp: Record<string, Record<string, string>>
   shared: Record<string, string>
+  /** 嵌套字段的中文名，键是作者结构路径（例如 monster.action[].name）。 */
+  byPath?: Record<string, Record<string, string>>
+  /** 供驾驶员抽查的自动生成结果，不参与表单显示。 */
+  review?: { conflicts?: unknown[]; wordBuilt?: unknown[] }
 }
 let loadingFields: Promise<BrewFieldTable> | null = null
 /** 字段说明表（vendor/brew-schema/fields.js），第一次用时按网址加载，之后复用。插件目录同校验器。 */

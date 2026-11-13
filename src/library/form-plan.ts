@@ -72,7 +72,7 @@ const KIND: Record<string, string> = { text: '自己写', number: '填数字', s
  * 和字段同名的子项不算（作者常把主值写成同名子项：AC 的 {ac, from}、类型的 {type, tags}、阵营的 {alignment, chance}），
  * 这样阵营那种叫「带概率、备注」而不是「带阵营……」。
  */
-export function branchNames(shape: Extract<Shape, { c: 'pick' }>, defs: Defs, label: (name: string) => string, field = ''): string[] {
+export function branchNames(shape: Extract<Shape, { c: 'pick' }>, defs: Defs, label: (name: string, path?: string) => string, field = '', prefix = ''): string[] {
   const groups = shape.branches.map((b) => resolve(b.shape, defs))
   const propsOf = (s: Shape) => (s.c === 'group' ? s.props.map((p) => p.name) : [])
   const names = groups.map((s, i) => {
@@ -80,13 +80,13 @@ export function branchNames(shape: Extract<Shape, { c: 'pick' }>, defs: Defs, la
     const others = new Set(groups.flatMap((o, j) => (j === i ? [] : propsOf(o))))
     const all = propsOf(s).filter((p) => !others.has(p))
     const own = all.filter((p) => p !== field).length ? all.filter((p) => p !== field) : all
-    return own.length ? `带${own.slice(0, 3).map(label).join('、')}` : KIND.group
+    return own.length ? `带${own.slice(0, 3).map((name) => label(name, prefix ? `${prefix}.${name}` : name)).join('、')}` : KIND.group
   })
   return names.map((n, i) => (names.indexOf(n) !== i || names.lastIndexOf(n) !== i ? `${n}（${names.slice(0, i + 1).filter((x) => x === n).length}）` : n))
 }
 
 export function formPlan(table: { fields: BrewField[]; defs: Defs; labels: Record<string, string> }, usage: FieldUsage | null, auto: string[]): FormPlan {
-  const label = (n: string) => table.labels[n] ?? n
+  const label = (n: string, path = n) => table.labels[path] ?? table.labels[n] ?? n
   const hidden = table.fields.filter((f) => !f.internal && (f.publish || SYSTEM.has(f.name) || auto.includes(f.name))).map((f) => f.name)
   // 背景介绍与图片：字段形状里有一种写法是作者的 fluffObject（另一种是引用作者 xxxFluff 列表，自制用不上）
   const isMedia = (f: BrewField) => { const s = f.shape ? resolve(f.shape, table.defs) : null; return !!s && s.c === 'pick' && s.branches.some((b) => 'ref' in b.shape && /fluffObject$/.test(b.shape.ref)) }
@@ -105,7 +105,7 @@ export function formPlan(table: { fields: BrewField[]; defs: Defs; labels: Recor
       plan.order = s.branches.map((_, i) => i).sort((a, b) => used(b) - used(a) || a - b)
       const total = s.branches.reduce((n, _, i) => n + used(i), 0)
       plan.alt = plan.order.filter((i) => !total || used(i) / total >= ALT)
-      plan.names = branchNames(s, table.defs, label, lastName(path))
+      plan.names = branchNames(s, table.defs, label, lastName(path), path)
     }
     const groups = s.c === 'group' ? [s] : s.c === 'pick' ? s.branches.map((b) => resolve(b.shape, table.defs)).filter((g): g is Extract<Shape, { c: 'group' }> => g.c === 'group') : []
     if (groups.length && u.n) {
@@ -121,7 +121,7 @@ export function formPlan(table: { fields: BrewField[]; defs: Defs; labels: Recor
     const s = resolve(shape, table.defs)
     if (s.c === 'pick') {
       at[path] ??= {}
-      at[path].names ??= branchNames(s, table.defs, label, lastName(path))
+      at[path].names ??= branchNames(s, table.defs, label, lastName(path), path)
       at[path].order ??= s.branches.map((_, i) => i)
       at[path].alt ??= at[path].order
       for (const b of s.branches) names(b.shape, path, depth + 1)
