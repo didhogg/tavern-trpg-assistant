@@ -13,7 +13,7 @@ import {
   type Assignment, type CampaignLibrary, type EntryRef, type EntrySelection, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
 import { SOURCES, getSource, officialSourceOf, type SourceEntry } from './sources'
-import { chooseVersion, expandVariants, variantsOf, type Alternative, type Chosen, type VariantInfo } from './versions'
+import { chooseVersion, expandVariants, packChoiceKey, pickChoice, variantsOf, type Alternative, type Chosen, type VariantInfo } from './versions'
 export type { VariantInfo } from './versions'
 import { hashValue } from '../core/hash'
 import type { BookDirectory, DirectoryRecord } from './directory'
@@ -154,8 +154,10 @@ export class ScopedLibrary {
     return out
   }
 
-  private version(key: string, alts: Alternative[], ctx: Context, campaignChoice?: string): { chosen: VersionInfo; item: unknown | undefined } {
-    const chosen = chooseVersion(alts, { campaign: campaignChoice, rule: ctx.levels.rule[key], global: ctx.levels.global[key] })
+  /** 生效版本：每层先看这一条单独选的，再看它的书 / 包整包选用的（P5.5 B8-4，versions.ts pickChoice）。 */
+  private version(key: string, alts: Alternative[], ctx: Context, campaign?: Record<string, string>): { chosen: VersionInfo; item: unknown | undefined } {
+    const source = ctx.altMap.get(key)?.source
+    const chosen = chooseVersion(alts, { campaign: pickChoice(campaign, key, source, alts), rule: pickChoice(ctx.levels.rule, key, source, alts), global: pickChoice(ctx.levels.global, key, source, alts) })
     const alt = alts.find((a) => a.altId === chosen.altId)
     return { chosen: { ...chosen, count: alts.length }, item: alt?.item }
   }
@@ -209,7 +211,7 @@ export class ScopedLibrary {
         const v = await this.viewFor(c, ref, r.source, ctx.assigns, view)
         if (!v.visible && mode !== 'browse') continue
         const alts = await this.alternativesOf(ref, ctx)
-        const { chosen, item } = this.version(refKey(ref), alts, ctx, c.choices[refKey(ref)])
+        const { chosen, item } = this.version(refKey(ref), alts, ctx, c.choices)
         const row: ScopedRow = {
           ref, source: r.source, reason: v.reason, visible: v.visible, item: pack ? r.item : item ?? r.item, version: chosen,
           ...(pack ? { pack: { docIdLocal: pack.docIdLocal, filename: pack.filename, stableId: packUrl(pack), sources: pack.sources } } : {}),
@@ -254,7 +256,7 @@ export class ScopedLibrary {
     if (selection && 'docIdLocal' in selection) ref = packTarget(ref, scope.codeSet, selection.docIdLocal, ctx.altMap).ref
     const key = refKey(ref)
     const alternatives = await this.alternativesOf(ref, ctx)
-    const { chosen } = this.version(key, alternatives, ctx, c.choices[key])
+    const { chosen } = this.version(key, alternatives, ctx, c.choices)
     const entry = await detailItem(this.lib, ref, ctx.packs, ctx.altMap.get(key), alternatives, chosen, view, selection)
     if (!entry) return null
     const v = await this.viewFor(scope, ref, entry.source, ctx.assigns, view)
@@ -279,7 +281,7 @@ export class ScopedLibrary {
         if (allowed && stored.source && !allowed.some((src) => src.toLowerCase() === stored.source!.toLowerCase())) { out.push({ ok: false, ref, reason: 'not-found' }); continue }
       }
       const v = await this.viewFor(c, ref, stored.source, ctx.assigns, view)
-      const { chosen, item } = this.version(refKey(ref), await this.alternativesOf(ref, ctx), ctx, c.choices[refKey(ref)])
+      const { chosen, item } = this.version(refKey(ref), await this.alternativesOf(ref, ctx), ctx, c.choices)
       out.push({ ok: true, ref, source: stored.source, item: item ?? stored.item, version: chosen, closed: !v.visible })
     }
     return out
@@ -294,7 +296,7 @@ export class ScopedLibrary {
     for (const h of hits) {
       const collisions = h.target.kind === 'entry' ? (await this.alternativesOf(h.ref, ctx)).filter((a) => a.kind === 'collision') : []
       if (!collisions.length) { out.push(h); continue }
-      const { chosen } = this.version(refKey(h.ref), collisions, ctx, c.choices[refKey(h.ref)])
+      const { chosen } = this.version(refKey(h.ref), collisions, ctx, c.choices)
       for (const v of variantsOf(chosen.altId, collisions)) out.push({ ...h, doc: v.source ? { ...h.doc, s: v.source } : h.doc, variant: v.variant })
     }
     return out
@@ -391,5 +393,23 @@ export class ScopedLibrary {
     }
     await this.manage.setChoice(level, key, altId)
     return c
+  }
+
+  /**
+   * 整包选用（P5.5 B8-4）：这些原来源下所有和它撞编号的条目，在这一层都用 altId 这一份（'base' = 原件；null = 取消整包选用）。
+   * 单条的选择仍然优先。本战役层返回新的战役选书设置（调用方写回），别的层直接存。
+   */
+  async choosePack(c: CampaignLibrary, sources: string[], altId: string | null, level: 'campaign' | ChoiceLevel = 'campaign'): Promise<CampaignLibrary> {
+    let cur = c
+    for (const s of sources) {
+      const key = packChoiceKey(s)
+      if (level === 'campaign') {
+        const choices = { ...cur.choices }
+        if (altId === null) delete choices[key]
+        else choices[key] = altId
+        cur = { ...cur, choices }
+      } else await this.manage.setChoice(level, key, altId)
+    }
+    return cur
   }
 }

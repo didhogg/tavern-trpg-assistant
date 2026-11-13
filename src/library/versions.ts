@@ -92,6 +92,22 @@ export interface Chosen {
 }
 
 /** 按 本战役 > 当前规则 > 全局 定生效版本；选的备选已不存在就回到原件并标出来。 */
+/** 整包选用的键（P5.5 B8-4）：选择表里按原来源记，例如 src:phb → 'pack:phb :: phb_copy2'。和条目编号（数据集|类别|编号）不会撞。 */
+export const packChoiceKey = (source: string): string => `src:${source.toLowerCase()}`
+export const isPackChoiceKey = (key: string): boolean => key.startsWith('src:')
+
+/**
+ * 某一层的选择（P5.5 B8-4）：这一条单独选过的优先；没有就看它所属的书 / 包整包选过的（选的那一份确实有这一条才算，
+ * 否则当没选，不报「选过的不在了」）。
+ */
+export function pickChoice(map: Record<string, string> | undefined, key: string, source: string | null | undefined, alts: Alternative[]): string | undefined {
+  if (!map) return undefined
+  if (map[key] !== undefined) return map[key]
+  if (!source) return undefined
+  const pick = map[packChoiceKey(source)]
+  return pick !== undefined && (pick === 'base' || alts.some((a) => a.altId === pick)) ? pick : undefined
+}
+
 export function chooseVersion(alts: Alternative[], choices: { campaign?: string; rule?: string; global?: string }): Chosen {
   for (const by of ['campaign', 'rule', 'global'] as const) {
     const pick = choices[by]

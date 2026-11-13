@@ -11,11 +11,11 @@ import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type Sa
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
 import { topLevelChanges } from './house-diff'
-import { findCollisions, type DocIndex } from './versions'
+import { findCollisions, packAltId, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
-import type { ManageStore } from './manage'
+import type { ChoiceLevel, ManageStore } from './manage'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
@@ -158,6 +158,15 @@ export class CustomLibrary {
   async packEntry(codeSet: string, pack: string, prop: string, key: { uniqueId?: string; hash?: string }) {
     const f = await this.frame(codeSet)
     return f.call('packEntity', await docIdOf(f, pack), prop, key)
+  }
+  /**
+   * 整包选用（P5.5 B8-4）：这个包（例如玩家手册的副本 2）里和别处撞编号的条目，在这一层都用这一份；on=false 取消。
+   * 单条的选择仍然优先。本战役层返回新的战役选书设置（调用方写回），别的层直接存。
+   */
+  async choosePack(c: CampaignLibrary, id: string, { on = true, level = 'campaign' }: { on?: boolean; level?: 'campaign' | ChoiceLevel } = {}) {
+    const pack = (await this.packs(c.codeSet)).find((p) => p.id === id)
+    if (!pack) throw new Error(`【我的库】里没有这个包：${id}`)
+    return this.scoped.choosePack(c, pack.sources, on ? packAltId(pack.id, pack.docIdLocal) : null, level)
   }
   /** 条目换包（编号会变：先用 backend.entryChangeImpact 看影响）。撤销两步。 */
   moveEntries(codeSet: string, prop: string, uniqueIds: string[], fromPack: string, toPack: string) { return moveEntries(this.entryDeps, codeSet, prop, uniqueIds, fromPack, toPack) }

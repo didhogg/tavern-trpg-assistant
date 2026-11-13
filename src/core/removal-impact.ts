@@ -203,7 +203,7 @@ export async function impactOfRemoval(deps: ImpactDeps, target: RemovalTarget): 
 async function referencesTo(deps: Pick<ImpactDeps, 'db' | 'manage'>, removed: Removed): Promise<Pick<RemovalImpact, 'houseRules' | 'choices' | 'saves'>> {
   // 房规、版本选择
   const houseRules = (await deps.manage.houseRules()).filter((l) => refGone(removed, l.house) || refGone(removed, l.target))
-  const choices = (await deps.manage.allChoices()).filter((c) => removed.altIds.has(c.altId) || refGone(removed, refOfKey(c.target)))
+  const choices = (await deps.manage.allChoices({ packs: true })).filter((c) => removed.altIds.has(c.altId) || refGone(removed, refOfKey(c.target)))
 
   // 战役与存档。选书设置以战役级那份（meta）为准，没有才用快照里的副本（B-20）
   const all = await deps.db.saves.toArray()

@@ -92,12 +92,15 @@ export class ManageStore {
     return Object.fromEntries((await this.all<string>('choice')).filter((r) => r.key.startsWith(prefix)).map((r) => [r.key.slice(prefix.length), r.value]))
   }
 
-  /** 所有层级的版本选择（删除影响预览用）：层级、目标 refKey、选的备选编号。 */
-  async allChoices(): Promise<Array<{ level: string; target: string; altId: string }>> {
+  /**
+   * 所有层级的版本选择：层级、目标、选的备选编号。默认只给逐条的（目标 = 条目 refKey，界面的编辑 / 覆盖列表用）；
+   * packs：连整包选用（目标 = src:原来源，P5.5 B8-4）一起给（删除影响预览用）。
+   */
+  async allChoices({ packs = false }: { packs?: boolean } = {}): Promise<Array<{ level: string; target: string; altId: string }>> {
     return (await this.all<string>('choice')).map((r) => {
       const at = r.key.indexOf('|')
       return { level: r.key.slice(0, at), target: r.key.slice(at + 1), altId: r.value }
-    })
+    }).filter((c) => packs || !c.target.startsWith('src:'))
   }
 
   /** 选版本；null = 清掉这一层的选择。 */
