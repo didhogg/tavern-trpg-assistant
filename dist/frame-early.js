@@ -96,8 +96,10 @@
 		let t = new URL(e, p);
 		return t.origin !== p.origin || !t.pathname.startsWith(p.pathname) ? null : decodeURIComponent(t.pathname.slice(p.pathname.length));
 	}
-	let h = /* @__PURE__ */ new Map();
-	function g(e) {
+	let h = /* @__PURE__ */ new Map(), g = /* @__PURE__ */ new Set();
+	n.__trpgSitePaths = g;
+	function _(e) {
+		g.add(e);
 		let t = h.get(e);
 		return t || (t = d({
 			op: "file",
@@ -114,15 +116,15 @@
 			if (a === null) return t(n, ...i);
 			let o = r.get(n);
 			return o || (o = (async () => {
-				let t = JSON.parse(await g(a));
+				let t = JSON.parse(await _(a));
 				return await e.pDoMetaMerge(n, t, { isSkipMetaMergeCache: !0 }), t;
 			})(), o.catch(() => r.delete(n)), r.set(n, o)), o;
 		}, e.loadRawJSON = async (e, ...t) => {
 			let r = m(e);
-			return r === null ? n(e, ...t) : JSON.parse(await g(r));
+			return r === null ? n(e, ...t) : JSON.parse(await _(r));
 		};
 	});
-	let _ = {
+	let v = {
 		getItem: (e) => d({
 			op: "kv-get",
 			key: e
@@ -138,6 +140,6 @@
 		})
 	};
 	f("StorageUtil", (e) => {
-		e._getAsyncStorage = async () => _;
+		e._getAsyncStorage = async () => v;
 	});
 })();
