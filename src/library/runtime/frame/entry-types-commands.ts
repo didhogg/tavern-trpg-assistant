@@ -23,7 +23,7 @@ async function authorImports(page: string, dir: string, suffix: RegExp): Promise
 
 let converterReady: Promise<void> | null = null
 /** 照作者 converter.js 第 17–41 行的页面准备步骤（去掉界面部分）。 */
-function prepareConverters(): Promise<void> {
+export function prepareConverters(): Promise<void> {
   converterReady ??= (async () => {
     await init()
     const [{ TagCondition, TaggerUtils }, { TagJsons }, { AcConvert, AttachedItemTag, MiscTag, SpellcastingTraitConvert }, { ConverterItem }, { RaceTraitTag }, { InstrumentBaseItemTag }] = await Promise.all([
@@ -52,7 +52,7 @@ function prepareConverters(): Promise<void> {
 
 let converterList: Promise<any[]> | null = null
 /** 作者登记的转换器（界面类实例，不建界面：界面对象只给作者构造时要挂的保存回调）。示例文字取作者 data/converter.json，取不到就没有示例。 */
-function converterUis(): Promise<any[]> {
+export function converterUis(): Promise<any[]> {
   converterList ??= (async () => {
     await init()
     const converterData: any = await A.DataUtil.loadJSON(`${A.Renderer.get().baseUrl}data/converter.json`).catch(() => ({ converterSample: [] }))
@@ -160,8 +160,11 @@ export async function entryTypes(): Promise<EntryTypeInfo[]> {
   for (const [page, props] of Object.entries(U.PAGE_TO_PROPS ?? {}) as Array<[string, string[]]>) for (const p of props) if (!pageOf.has(p)) pageOf.set(p, page)
   const bs = new Set((await builders()).map((b) => b.prop))
   const cs = await converters()
+  // 页面表（PAGE_TO_PROPS）作者没登全（神祇、表格、载具……不在里面）：再看作者每类数据加载类自己写的页面（DataUtil.<类别>._PAGE，
+  // 描述类如 monsterFluff 写的是怪物页）。§16.10 1d
+  const dataPage = (prop: string): string | undefined => { const pg = (A.DataUtil as any)?.[prop]?._PAGE; return typeof pg === 'string' && pg.endsWith('.html') ? pg : undefined }
   return Object.keys(U.URL_TO_HASH_BUILDER ?? {}).filter((p) => !corpus.has(p)).map((prop) => {
-    const page = pageOf.get(prop)
+    const page = pageOf.get(prop) ?? dataPage(prop)
     return {
       prop,
       name: String(A.Parser.getPropDisplayName(prop)),
@@ -170,4 +173,23 @@ export async function entryTypes(): Promise<EntryTypeInfo[]> {
       converters: cs.filter((c) => c.prop === prop).map((c) => c.id),
     }
   })
+}
+
+/**
+ * 一类条目的作者原文件内容（§16.10 1a 用法统计用）：先用这一类自己的 DataUtil.<类别>.loadRawJSON，
+ * 没有就用同一页别的类别的（子种族在种族文件里：DataUtil.race 读 races.json）。取不到 null。
+ */
+export async function rawProp(prop: string): Promise<unknown[] | null> {
+  await init()
+  const U = A.UrlUtil, D = A.DataUtil as any
+  const page = Object.entries((U.PAGE_TO_PROPS ?? {}) as Record<string, string[]>).find(([, ps]) => ps.includes(prop))?.[0]
+  for (const c of [prop, ...(page ? U.PAGE_TO_PROPS[page] as string[] : [])]) {
+    const cls = D?.[c]
+    if (typeof cls?.loadRawJSON !== 'function') continue
+    try {
+      const j = await cls.loadRawJSON()
+      if (Array.isArray(j?.[prop])) return j[prop]
+    } catch (e) { console.debug(`[trpg-assistant] 作者 ${c} 原文件没读到`, e) }
+  }
+  return null
 }

@@ -24,6 +24,7 @@ async function listJson(base) {
 
 /** 只给 Foundry / Roll20 / Plutonium 用的结构文件（作者分文件放的，按文件名认）。 */
 const INTERNAL_FILE = /(^|\/)(util-foundry|foundry[^/]*|roll20[^/]*)\.json$|^https?:/
+const PUBLISH_REF = /(^|\/)util-token\.json#|(^|\/)entry\.json#\/\$defs\/mediaHref$|(^|\/)util\.json#\/\$defs\/(reprintedAs|isReprinted|otherSources|referenceSources|additionalSources)$/
 
 export async function loadSchemas(dir) {
   const schemaDir = join(dir, 'schema')
@@ -77,6 +78,18 @@ export async function loadSchemas(dir) {
   }
 
   const internalOf = (node, base) => resolve(node, base).refs.some((x) => INTERNAL_FILE.test(x.split('#')[0]))
+  /**
+   * 出版信息字段（P5.5 §16.10 1c，驾驶员 2026-11-13 定「按结构定义特征认，之后不对再改」）：用户自制时不填、作者网站 / 出版用的。
+   * 认法：指向作者这几个公用定义——头像（util-token.json）、媒体（entry.json 的 mediaHref）、
+   * 重印 / 出处（util.json 的 reprintedAs / isReprinted / otherSources / referenceSources / additionalSources）；
+   * 或作者「有没有附带素材」的标记（值只能是 true、名字按作者惯例以 has 开头：hasToken、hasFluff、hasFluffImages）。
+   * 只看「值只能是 true」会误收有意义的开关（召唤物按等级缩放 summonedScaleByPlayerLevel、跟班职业 isSidekick），所以加了 has 前缀（11-13 实测后收窄）。
+   */
+  const publishOf = (name, node, base) => {
+    const r = resolve(node, base)
+    if (r.node?.const === true && /^has[A-Z]/.test(name)) return true
+    return r.refs.some((x) => PUBLISH_REF.test(x))
+  }
 
   const isNull = (n) => n.type === 'null' || (Array.isArray(n.type) && n.type.length === 1 && n.type[0] === 'null')
   const SIMPLE = new Set(['text', 'number', 'switch', 'select', 'const'])
@@ -165,5 +178,5 @@ export async function loadSchemas(dir) {
     return { c: 'pick', ...(by ? { by } : {}), branches: shapes.map((shape, i) => ({ shape, keys: objs[i].required ?? Object.keys(objs[i].properties ?? {}) })) }
   }
 
-  return { files, source, resolve, branches, internalOf, shapeOf }
+  return { files, source, resolve, branches, internalOf, publishOf, shapeOf }
 }

@@ -51,6 +51,8 @@ export interface BrewField {
   shape?: FieldShape
   /** Foundry / Roll20 专用字段：表单不显示。 */
   internal?: boolean
+  /** 出版信息（头像、媒体、重印出处、has 开头的素材标记）：自制不填，表单不显示（§16.10 1c，tools/brew-schema-walk.mjs publishOf）。 */
+  publish?: boolean
   /** 中文名（作者中文版的；没有就不给，界面显示英文原名）。fields() 填。 */
   label?: string
 }

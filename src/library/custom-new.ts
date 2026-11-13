@@ -2,6 +2,7 @@
 // 类型、中文名、分组、构建器、转换器都从作者代码读（小窗 entry-types-commands.ts）；这里只按这套资料集的结构定义再筛一遍，
 // 并按库里现有条目算「能不能从已有条目开始」。不写类型名单。
 import type { BrewField } from './brew-validate'
+import { distinctNames, entryKinds, NOT_CREATABLE, type EntryKind } from './entry-kinds'
 import { formatOfCodeSet } from './formats'
 import type { AuthorFrame } from './runtime/host'
 import type { ConvertMode, ConverterInfo, EntryTypeInfo } from './runtime/frame/entry-types-commands'
@@ -16,6 +17,9 @@ export interface NewEntryDeps {
 }
 
 export interface EntryType extends Omit<EntryTypeInfo, 'builder' | 'converters'> {
+  /** 主条目 / 从属（在 parent 里编辑）/ 背景介绍与图片（在 parent 里编辑）。§16.10 1d，entry-kinds.ts */
+  kind: EntryKind
+  parent: string | null
   /** 新建这一类可以从哪里开始。 */
   starts: {
     /** 空白：按结构定义只预先填好必填项（总有）。 */
@@ -41,12 +45,29 @@ export async function entryTypes(d: NewEntryDeps, codeSet: string): Promise<Entr
     try { c = await d.categories(s.id) } catch { continue } // 这个数据集还没装
     for (const [prop, n] of Object.entries(c)) counts[prop] = (counts[prop] ?? 0) + n
   }
-  const out: EntryType[] = []
+  const kept: Array<EntryTypeInfo & { required: string[] }> = []
   for (const t of types) {
-    if (!(await format.fields(t.prop))) continue
-    out.push({ prop: t.prop, name: t.name, group: t.group, starts: { blank: true, template: t.builder, existing: counts[t.prop] ?? 0, convert: t.converters, json: true } })
+    if (NOT_CREATABLE.has(t.prop)) continue
+    const table = await format.fields(t.prop)
+    if (table) kept.push({ ...t, required: table.fields.filter((f) => f.required).map((f) => f.name) })
   }
-  return out
+  const kinds = entryKinds(kept.map((t) => t.prop), (p) => kept.find((t) => t.prop === p)?.required ?? [])
+  const out: EntryType[] = kept.map((t) => ({ prop: t.prop, name: t.name, group: t.group, ...(kinds.get(t.prop) ?? { kind: 'main' as const, parent: null }), starts: { blank: true, template: t.builder, existing: counts[t.prop] ?? 0, convert: t.converters, json: true } }))
+  // 作者中文名重名的补另一种语言的名字（另一种语言的小窗没装 / 打不开就用类别编号）
+  const otherNames = await otherLanguageNames(d, codeSet)
+  return distinctNames(out, (p) => otherNames.get(p))
+}
+
+async function otherLanguageNames(d: NewEntryDeps, codeSet: string): Promise<Map<string, string>> {
+  const other = SOURCES.find((s) => s.kind === 'official' && s.codeSet !== codeSet)?.codeSet
+  if (!other) return new Map()
+  try {
+    const list: EntryTypeInfo[] = await (await d.frame(other)).call('entryTypes')
+    return new Map(list.map((t) => [t.prop, t.name]))
+  } catch (e) {
+    console.debug('[trpg-assistant] 另一种语言的类型名没取到，重名的用类别编号区分', e)
+    return new Map()
+  }
 }
 
 /** 一个字段的空值：有可选值的取第一个，否则按结构定义里的第一种类型给空值。 */

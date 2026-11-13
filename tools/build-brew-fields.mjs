@@ -2,7 +2,7 @@
 // 输出 vendor/brew-schema/fields.js（提交进仓库；插件第一次要用时按网址加载，和 validator.js 同一个办法）。
 // 不定义数据形状、不写死类别：类别 = 结构定义根部 homebrew.json 的 properties（去掉 _ 开头的外壳），
 // 字段 = 那一类条目"完整写法"那一支（不是 _copy 那一支）的 properties；$ref 按作者文件的 $id 和标准 JSON 指针取。
-// 说明只取作者原文（description），不翻译。P5.5 阶段 C：每个字段带 shape（该画成什么控件，brew-schema-walk.mjs）和 internal（Foundry / Roll20 专用，不给用户看）。只在作者结构定义换版本后重跑：npm run gen:brew-validator。
+// 说明只取作者原文（description），不翻译。P5.5 阶段 C：每个字段带 shape（该画成什么控件，brew-schema-walk.mjs）和 internal（Foundry / Roll20 专用，不给用户看）、publish（出版信息，§16.10 1c）。只在作者结构定义换版本后重跑：npm run gen:brew-validator。
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -10,7 +10,7 @@ import { loadSchemas } from './brew-schema-walk.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const dir = join(root, 'vendor/brew-schema')
-const { files, source, resolve, branches, internalOf, shapeOf } = await loadSchemas(dir)
+const { files, source, resolve, branches, internalOf, publishOf, shapeOf } = await loadSchemas(dir)
 /** 同一个 $ref 只拆一次（brew-schema-walk.mjs shapeOf）。 */
 const defs = new Map()
 
@@ -44,6 +44,8 @@ function fieldOf(name, node, base, required) {
   // 内部字段：指向作者 Foundry / Roll20 专用结构文件的；或按作者命名惯例以 _ / foundry 开头的（例 foundryAdvice 指向的是通用正文结构）
   if (/^(_|foundry)/.test(name) || internalOf(node, base)) f.internal = true
   else f.shape = shapeOf(node, base, defs)
+  // 出版信息字段（作者网站 / 出版用，自制不填）：表单不显示，见 brew-schema-walk.mjs publishOf
+  if (!f.internal && publishOf(name, node, base)) f.publish = true
   return f
 }
 

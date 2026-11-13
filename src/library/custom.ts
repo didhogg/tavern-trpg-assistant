@@ -12,6 +12,7 @@ import { createPack, deletePack, docIdOf, exportPack, lastPack, listPacks, remem
 import { createHouseRule, type HouseEdit } from './custom-house'
 import { houseNow } from './custom-raw'
 import { emptyIfMissing } from './official-missing'
+import { autoFieldsOf, usageOf } from './field-usage-store'
 import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
@@ -72,6 +73,11 @@ export class CustomLibrary {
   fields(codeSet: string, prop: string) {
     return fieldTable(this.lib, codeSet, prop)
   }
+
+  /** 官方数据里这一类怎么用（§16.10 1a，field-usage-store.ts）：字段使用率、几种写法各用多少、子项、常见值。官方没装 null。 */
+  usage(codeSet: string, prop: string) { return usageOf(this.lib, codeSet, prop) }
+  /** 作者打标签程序自动写的字段（§16.10 1b，实测）：表单不显示。官方没装 null。 */
+  autoFields(codeSet: string, prop: string) { return autoFieldsOf(this.lib, codeSet, prop) }
 
   // ---- 编辑器草稿（P5.5 B7，custom-drafts.ts）：只存插件管理记录，不碰条目 ----
   /** 存草稿（同键覆盖）；返回键。 */
