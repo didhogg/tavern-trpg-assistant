@@ -1,0 +1,41 @@
+// P5.5 §16.10 表单返工 2d：草稿管理（每份能放弃、全部放弃要再问一次、都能撤销）。
+// 用法：SKIP_BUILD=1 node tests/e2e/library/p55-r2d-drafts.mjs（截图 work/e2e-lib/p55-ui-shots/r2d/）
+import { check, failures, settle } from '../helpers.mjs'
+import { openLibrary, P } from './p55-ui-common.mjs'
+
+const { ctx, page, server, shots, tab, realErrors } = await openLibrary('r2d', { width: 900, height: 760 })
+const count = () => page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.library.custom.drafts('cn')).length, P)
+await page.evaluate(async (P) => {
+  const c = eval(P)._s.get('app').svc().backend.library.custom
+  for (const [prop, name] of [['monster', '新生物'], ['item', '明夜之剑'], ['spell', '新法术']]) await c.saveDraft({ codeSet: 'cn', prop, s: { name }, target: { kind: 'new', pack: null } })
+}, P)
+await tab('书架'); await tab('我的库')
+await page.waitForSelector('[data-testid="mylib-drafts"]')
+await page.getByTestId('draft-manage').click()
+await settle(page, 300)
+await page.screenshot({ path: `${shots}/1-manage.png` })
+const rows = await page.getByTestId('draft-list').locator('.lib-draftlist__row').count()
+check('管理：三份草稿各一行（名字 · 语言 · 时间 · 继续 · ×）', rows === 3, String(rows))
+await page.getByTestId('draft-drop').first().click()
+await page.locator('.trpg-toast', { hasText: '已放弃草稿' }).waitFor()
+await settle(page, 400)
+const afterOne = await count()
+check('× 放弃一份：剩两份', afterOne === 2, String(afterOne))
+await page.locator('.trpg-toast', { hasText: '已放弃草稿' }).getByRole('button', { name: '撤销' }).click()
+await settle(page, 800)
+const undone = await count()
+check('撤销：放弃的那份回来了', undone === 3, String(undone))
+if (!(await page.getByTestId('draft-list').count())) await page.getByTestId('draft-manage').click()
+await page.getByTestId('draft-drop-all').click()
+await page.waitForSelector('[data-testid="confirm-page"]')
+await page.screenshot({ path: `${shots}/2-confirm.png` })
+await page.locator('[data-testid="confirm-page"]').getByRole('button', { name: '全部放弃' }).click()
+await page.locator('.trpg-toast', { hasText: '已放弃 3 份草稿' }).waitFor()
+await settle(page, 600)
+await page.screenshot({ path: `${shots}/3-gone.png` })
+check('全部放弃（再问一次后）：草稿条没了', (await count()) === 0 && (await page.getByTestId('mylib-drafts').count()) === 0)
+check('页面没有未处理的错误（断网预期的除外）', realErrors().length === 0, realErrors().slice(0, 2).join(' | '))
+await ctx.close()
+server.close()
+console.log(failures.length ? `FAIL ${failures.length}` : 'ALL PASS')
+process.exit(failures.length ? 1 : 0)

@@ -229,8 +229,10 @@ async function doneHouse(): Promise<void> {
       <div v-if="!wide" class="lib-pane__head" data-testid="editor-views"><Segmented v-model="narrowView" label="看哪一栏" :options="narrowTabs" /><span v-if="!showMain" class="lib-end lib-faint">{{ sideNote }}</span></div>
       <section v-show="wide || showMain" class="lib-pane" data-testid="editor-main">
         <div v-if="wide" class="lib-pane__head"><b>{{ langName(ed.cs[L]) }}{{ house ? '（房规）' : '' }}</b></div>
-        <div class="lib-pane__body"><EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setEnt(L, e)" @json="showJson" />
-          <ChildrenSection v-if="session.pack && L === 'main'" :code-set="ed.cs.main" :pack="session.pack" :prop="session.prop" :ent="ed.ents.main.value" :saved="session.target.kind === 'mine'" @linked="relink" /></div>
+        <div class="lib-pane__body">
+<EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setEnt(L, e)" @json="showJson" />
+          <ChildrenSection v-if="session.pack && L === 'main'" :code-set="ed.cs.main" :pack="session.pack" :prop="session.prop" :ent="ed.ents.main.value" :saved="session.target.kind === 'mine'" @linked="relink" />
+</div>
       </section>
       <section v-show="wide || !showMain" class="lib-pane lib-pane--side" data-testid="editor-side">
         <div v-if="wide" class="lib-pane__head"><Segmented v-model="tab" label="右栏" :options="tabs" /><span class="lib-end lib-faint">{{ sideNote }}</span></div>

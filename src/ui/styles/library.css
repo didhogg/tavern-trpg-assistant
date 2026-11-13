@@ -246,3 +246,8 @@
 .trpg-shelf__row .trpg-check.lib-rowpick { flex: none; } /* 书架多选：只是一个勾选框，不占满一行（批量勾选页的勾选框带书名，仍占满） */
 /* 报错横幅与详情（P5-5 §12.3） */
 .lib-errdetail { margin: 0; padding: var(--sp-3); border-radius: var(--r-sm); background: var(--bg-sunk); font-size: var(--fs-xs); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 50vh; overflow: auto; user-select: text; }
+/* 草稿管理（§16.10 2d）：每一份一行（名字 · 语言 · 时间 · 继续 · ×），最下面全部放弃 */
+.lib-draftlist { display: grid; gap: 2px; margin: calc(-1 * var(--sp-2)) 0 var(--sp-3); padding: var(--sp-2); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.lib-draftlist__row { display: flex; align-items: center; gap: var(--sp-2); min-height: 40px; }
+.lib-draftlist__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-draftlist__foot { display: flex; justify-content: flex-end; padding-top: var(--sp-1); border-top: var(--border) solid var(--line); }
