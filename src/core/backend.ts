@@ -33,6 +33,7 @@ import { ScopedLibrary } from '../library/scoped'
 import { defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
 import type { BackupLibraryAdapter } from './transfer/exporter'
 import { CustomLibrary } from '../library/custom'
+import { BilingualLibrary } from '../library/custom-lang'
 import { LibraryService } from '../library/service'
 import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
@@ -86,6 +87,8 @@ export interface LibraryBackend {
   /** 按（类别、作者编号）找条目在哪个包、术语跳转（P5 B-04、B-05）。 */
   links: EntryLinks
   custom: CustomLibrary
+  /** 双语自制（P5.5 C2–C9）：中英成对的包、另一语言的同一条、填入、对不上。 */
+  bilingual: BilingualLibrary
   tasks: DownloadTasks
   /** 官方书目（没装也能列）。 */
   directory: BookDirectory
@@ -204,6 +207,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
   const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref), (codeSet) => brewQueue?.busy(codeSet) ?? false, async (codeSet) => { await brewQueue?.settled(codeSet) })
+  const bilingual = new BilingualLibrary(custom, service, brewPairs, counterparts)
   const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view, signal) => openFrame(codeSet, { view, signal }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (_view, previous) => { service.retire(previous); scoped.reset() },
     selectUpdate: (id, commit, selection, base) => updates.planSelection(id, commit, selection, base),
     planOfficial: async (setId, planOpts, view) => {
@@ -270,7 +274,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, brewQueue: brewQueue!, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, bilingual, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, brewQueue: brewQueue!, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },
