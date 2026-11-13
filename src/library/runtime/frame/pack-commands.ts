@@ -125,3 +125,69 @@ export async function packAddDependencies(docIdLocal: string, add: Record<string
   }
   if (changed) await A.BrewUtil2.pUpdateBrew(doc)
 }
+
+// ---- P5.5 B8-6 迁移 ----
+
+/** 这些来源里哪些是官方的（作者 Parser.SOURCE_JSON_TO_FULL；sourceTaken 同一个判断）。 */
+export async function officialSourcesOf(jsons: string[]): Promise<string[]> {
+  await init()
+  const official = new Set(Object.keys(A.Parser.SOURCE_JSON_TO_FULL ?? {}).map((k) => k.toLowerCase()))
+  return jsons.filter((j) => official.has(j.toLowerCase()))
+}
+
+/**
+ * 从可编辑自制里取出一个来源：它的包头那一行 + 来源是它的全部条目（保留 uniqueId，撤销记录接着用），并从可编辑自制里删掉
+ * （写回走作者 pSetEditableBrewDoc）。交回一个作者格式的包（_copy 别的来源的声明依赖，本来源内部的声明 internalCopies）。
+ */
+export async function editableTake(json: string): Promise<{ body: any; uniqueIds: string[] }> {
+  await init()
+  const doc = A.MiscUtil.copyFast(await A.BrewUtil2.pGetOrCreateEditableBrewDoc())
+  const src = (doc.body._meta?.sources ?? []).find((s: any) => same(s?.json, json))
+  if (!src) throw new Error(`可编辑自制里没有来源 ${json}`)
+  const ts = Math.round(Date.now() / 1000)
+  const body: any = { _meta: { sources: [src], dateAdded: ts, dateLastModified: ts } }
+  const deps: Record<string, Set<string>> = {}
+  const internal = new Set<string>()
+  const uniqueIds: string[] = []
+  for (const [prop, list] of Object.entries(doc.body)) {
+    if (prop.startsWith('_') || !Array.isArray(list)) continue
+    const mine = (list as any[]).filter((e) => same(e?.source, json))
+    if (!mine.length) continue
+    body[prop] = mine
+    doc.body[prop] = (list as any[]).filter((e) => !same(e?.source, json))
+    for (const e of mine) {
+      if (e.uniqueId) uniqueIds.push(e.uniqueId)
+      const from = e?._copy?.source
+      if (typeof from !== 'string') continue
+      if (same(from, json)) internal.add(prop)
+      else (deps[prop] ??= new Set()).add(from)
+    }
+  }
+  if (Object.keys(deps).length) body._meta.dependencies = Object.fromEntries(Object.entries(deps).map(([k, v]) => [k, [...v]]))
+  if (internal.size) body._meta.internalCopies = [...internal]
+  doc.body._meta.sources = doc.body._meta.sources.filter((s: any) => s !== src)
+  await A.BrewUtil2.pSetEditableBrewDoc(doc)
+  return { body, uniqueIds }
+}
+
+/**
+ * 修以前「存入我的库」的旧副本（B8-0 两个旧问题）：补 _meta.internalCopies（条目 _copy 本包来源的类别），
+ * 去掉和作者给 Foundry 用的补充文件里一模一样的记录（removeKeys = 那些记录的 JSON 原文）。返回去掉了几条。
+ */
+export async function packFixOldCopy(docIdLocal: string, removeKeys: string[]): Promise<{ removed: number; internalCopies: string[] }> {
+  const doc = await docOf(docIdLocal)
+  const drop = new Set(removeKeys)
+  const sources = (doc.body._meta?.sources ?? []).map((s: any) => String(s?.json ?? '').toLowerCase())
+  const internal = new Set<string>(doc.body._meta?.internalCopies ?? [])
+  let removed = 0
+  for (const [prop, list] of Object.entries(doc.body)) {
+    if (prop.startsWith('_') || !Array.isArray(list)) continue
+    const keep = (list as any[]).filter((e) => !drop.has(JSON.stringify(e)))
+    removed += (list as any[]).length - keep.length
+    doc.body[prop] = keep
+    if (keep.some((e) => typeof e?._copy?.source === 'string' && sources.includes(e._copy.source.toLowerCase()))) internal.add(prop)
+  }
+  if (internal.size) doc.body._meta.internalCopies = [...internal]
+  await A.BrewUtil2.pUpdateBrew(doc)
+  return { removed, internalCopies: [...internal] }
+}

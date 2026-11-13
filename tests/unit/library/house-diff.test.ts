@@ -5,6 +5,9 @@ import { topLevelChanges } from '../../../src/library/house-diff'
 import { ruleScopes } from '../../../src/library/scopes'
 import registry from '../../../src/library/scopes.json'
 
+/** 测共用逻辑：不指定包时走可编辑自制（P5.5 B8-6 起默认存进「我的资料」包，那条路见 custom-packs.test.ts）。 */
+const toEditable = <T>(c: T): T => { (c as unknown as { defaultPack: () => Promise<null> }).defaultPack = async () => null; return c }
+
 // P5.5 B1：房规只记改动（作者 _copy：写了的覆盖，null 删掉，没写的从原件抄）；新条目按规则写条目级版本。
 configureBrewValidator(new URL('../../../', import.meta.url))
 
@@ -37,7 +40,7 @@ describe('createHouseRule({ edited }) / saveEntry 写版本', () => {
       return undefined
     } }
     const lib = { frameOf: async () => frame, storedItem: async () => ({ item: base, source: 'PHB' }), mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }), writeAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<{ value: unknown }>) => ({ value: (await run({})).value, view: {}, dirty: [] }) }
-    const custom = new CustomLibrary(lib as never, { manage, choose: async (c: unknown) => c, reset: () => undefined } as never, {} as never)
+    const custom = toEditable(new CustomLibrary(lib as never, { manage, choose: async (c: unknown) => c, reset: () => undefined } as never, {} as never))
     return { custom, puts }
   }
   const rule = Object.keys(registry.rules)[0]

@@ -28,12 +28,14 @@ const brewSetOf = (codeSet: string) => {
 }
 
 /**
- * 作者网站实际读哪些数据文件：开一个全新的隔离小窗（空的作者存储，只读官方数据；作者缓存是空的，不会漏），
+ * 作者网站实际读哪些数据文件：开一个全新的隔离小窗（自制列表放空，只读官方数据；作者缓存是空的，不会漏），
  * 让作者把每类网站数据取一遍（小窗 authorDataFiles）。用完关掉、清掉临时存储。
  */
-async function authorFiles(d: CopyDeps, codeSet: string): Promise<string[]> {
+export async function authorFiles(d: Pick<CopyDeps, "db" | "lib">, codeSet: string): Promise<string[]> {
   const view = await d.lib.currentView()
   const scope = `${codeSet}:author-files:${Date.now()}`
+  // 临时范围里找不到的会退回读当前版本的存储（handlers.ts）：先放一个空的自制列表，作者只看得到官方数据（alternatives.ts withIsolatedBrew 同法）
+  await d.db.kv.put({ scope, key: 'HOMEBREW_2_STORAGE', value: [] })
   const f = await d.lib.openFrameIn(codeSet, scope, view)
   try {
     const r = await f.call('authorDataFiles')

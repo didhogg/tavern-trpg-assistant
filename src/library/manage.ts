@@ -40,7 +40,7 @@ export interface EditDraft {
   s: Record<string, unknown>
   m: { isModified: boolean; isPersisted: boolean; nameOriginal: string | null; styleHint: 'classic' | 'one' | null }
   /** new：新条目，存进哪个包（来源编号）；mine：改自己的条目（作者 uniqueId）；house：改官方 / 下载的条目（存成房规）。 */
-  target: { kind: 'new'; pack: string | null } | { kind: 'mine'; uniqueId: string } | { kind: 'house'; ref: EntryRef }
+  target: { kind: 'new'; pack: string | null } | { kind: 'mine'; uniqueId: string; pack?: string } | { kind: 'house'; ref: EntryRef }
 }
 
 /** 每条最多留几步撤销（驾驶员 2026-11-12 定 20）。 */
@@ -136,6 +136,25 @@ export class ManageStore {
     const step = list.pop() ?? null
     await this.put('history', key, list.length ? list : null)
     return step
+  }
+
+  /** 全部撤销记录（键 → 步骤；迁移时补包用）。 */
+  async allHistory(): Promise<Map<string, EditStep[]>> {
+    return new Map((await this.all<EditStep[]>('history')).map((r) => [r.key, r.value]))
+  }
+
+  /** 整个换掉一条的撤销记录（迁移用）。 */
+  setHistory(key: string, steps: EditStep[]): Promise<void> {
+    return this.put('history', key, steps.length ? steps : null)
+  }
+
+  /** 一次性标记（例如 P5.5 B8-6 迁移做过了）。 */
+  async meta<T = unknown>(key: string): Promise<T | null> {
+    return ((await this.db.manage.get(['meta', key]))?.value as T | undefined) ?? null
+  }
+
+  setMeta(key: string, value: unknown | null): Promise<void> {
+    return this.put('meta', key, value)
   }
 
   /** 全部草稿（键 → 草稿）。 */

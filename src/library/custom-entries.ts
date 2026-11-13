@@ -60,7 +60,8 @@ async function inStore<T>(d: EntryDeps, codeSet: string, kind: string, pack: str
 /** 存一条（新写或改）。record：记一步撤销（撤销自己存回去时不记）。 */
 export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record, pack, replaceHash }: SaveOptions & { record: boolean }) {
   const result = await inStore(d, codeSet, 'custom-entry', pack, async (f, doc) => {
-    const full: Record<string, unknown> = { source: doc ? doc.own : d.mineSource.json, ...ent }
+    // 没给来源（包括写成 undefined）才用默认：包自己的来源 / 可编辑自制的「我的资料」
+    const full: Record<string, unknown> = { ...ent, source: ent.source ?? (doc ? doc.own : d.mineSource.json) }
     // 新写的一条：这一类在作者结构定义里能自带版本（字段说明表 edition）就写上规则的版本（P5.5 B1）。用户自己写了就不动。
     if (rule && !ent.uniqueId && !replaceHash && full.edition === undefined && (await formatOfCodeSet(codeSet).fields(prop))?.edition) full.edition = ruleScopes(rule).style
     let put
@@ -138,10 +139,16 @@ export async function moveEntries(d: EntryDeps, codeSet: string, prop: string, u
       await f.call('packRemove', fromId, prop, [id])
       const from = { name: String(got.entity.name ?? ''), source: String(got.entity.source ?? '') }
       const to = { name: String(ent.name ?? ''), source: toOwn }
-      const retargeted = (await f.call('packRetargetCopies', fromId, prop, from, to)) + (await f.call('editableRetargetCopies', prop, from, to))
+      // 改指以后它们 _copy 的是另一个包里的条目：照作者规矩在包头声明依赖（_copy 别的来源要声明，utils.js _pDoMetaMerge）
+      const inPack = await f.call('packRetargetCopies', fromId, prop, from, to)
+      if (inPack) await f.call('packAddDependencies', fromId, { [prop]: [toOwn] })
+      const inEditable = await f.call('editableRetargetCopies', prop, from, to)
+      if (inEditable) await f.call('editableAddDependencies', { [prop]: [toOwn] })
+      const retargeted = inPack + inEditable
       moved.push({ uniqueId: id, before: got.entity, oldHash: got.hash, newHash: put.hash, retargeted })
     }
-    return { value: moved, touched: [fromId, toId] }
+    const editable = ((await f.call('brewDocIndex')) ?? []).find((x) => x.isEditable)?.docIdLocal
+    return { value: moved, touched: [fromId, toId, ...(editable ? [editable] : [])] }
   })
   for (const m of result.value) {
     const carry = m.oldHash && m.newHash ? { from: { set, prop, hash: m.oldHash }, to: { set, prop, hash: m.newHash } } : undefined

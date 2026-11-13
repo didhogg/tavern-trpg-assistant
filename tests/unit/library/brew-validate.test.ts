@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { configureBrewValidator, describeError, validateBrewJson } from '../../../src/library/brew-validate'
 import { CustomLibrary } from '../../../src/library/custom'
 
+/** 测共用逻辑：不指定包时走可编辑自制（P5.5 B8-6 起默认存进「我的资料」包，那条路见 custom-packs.test.ts）。 */
+const toEditable = <T>(c: T): T => { (c as unknown as { defaultPack: () => Promise<null> }).defaultPack = async () => null; return c }
+
 const spell: Record<string, unknown> = { name: '测试术', source: 'P5Test', level: 1, school: 'V', time: [{ number: 1, unit: 'action' }], range: { type: 'point', distance: { type: 'self' } }, components: { v: true }, duration: [{ type: 'instant' }], entries: ['x'] }
 type Brew = { _meta: { edition?: string; translators?: string[]; dateAdded: number; dateLastModified: number; sources: Array<Record<string, unknown>> }; spell: Array<Record<string, unknown>> }
 const good = (): Brew => ({
@@ -84,7 +87,7 @@ describe('自制 JSON 结构校验（作者结构定义，预编译）', () => {
     const lib = { frameOf: async () => frame, writeAuthor: async (_codeSet: string, _kind: string, run: (view: unknown) => Promise<{ value: unknown }>) => ({ value: (await run({})).value, view: {}, dirty: [] }) }
     const hint = async (ref: { set: string; prop: string; hash: string }) => ({ status: 'found' as const, refs: [{ set: 'en-brew', prop: ref.prop, hash: 'e1' }], reason: null, sharedBy: 0 })
     const manage = { pushHistory: async () => undefined, assignments: async () => new Map() }
-    const custom = new CustomLibrary(lib as never, { reset: () => undefined, manage } as never, {} as never, hint)
+    const custom = toEditable(new CustomLibrary(lib as never, { reset: () => undefined, manage } as never, {} as never, hint))
     const r = await custom.saveEntry('cn', 'spell', spell)
     expect(r).toMatchObject({ uniqueId: 'u1', hash: 'h1', pending: true })
     expect(calls).toEqual(['brewDocIndex', 'editableEnsureSource', 'editablePut', 'brewDocIndex'])

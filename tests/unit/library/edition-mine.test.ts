@@ -4,6 +4,9 @@ import { CustomLibrary } from '../../../src/library/custom'
 import { entryUnit, isMineWithoutEdition, ruleScopes, type Assignment } from '../../../src/library/scopes'
 import registry from '../../../src/library/scopes.json'
 
+/** 测共用逻辑：不指定包时走可编辑自制（P5.5 B8-6 起默认存进「我的资料」包，那条路见 custom-packs.test.ts）。 */
+const toEditable = <T>(c: T): T => { (c as unknown as { defaultPack: () => Promise<null> }).defaultPack = async () => null; return c }
+
 configureBrewValidator(new URL('../../../', import.meta.url))
 
 // P5.5 A2（R78）：新建跟战役版本走、改名搬归类；【我的库】里没写版本的自制不猜旧版。
@@ -49,7 +52,7 @@ describe('saveEntry / createHouseRule 的版本归类', () => {
       storedItem: async () => ({ item: { name: '火球术', source: 'PHB' }, source: 'PHB' }),
     }
     const scoped = { manage, choose: async (c: unknown) => c, reset: () => undefined }
-    return { custom: new CustomLibrary(lib as never, scoped as never, {} as never), assigns, links, choices, calls }
+    return { custom: toEditable(new CustomLibrary(lib as never, scoped as never, {} as never)), assigns, links, choices, calls }
   }
   const spell = { name: '测试术', level: 1 }
   const rules = Object.keys(registry.rules)

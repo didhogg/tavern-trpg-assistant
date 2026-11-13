@@ -3,6 +3,7 @@
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
 import { BrewPacks } from './brew-packs'
 import { copyEntryToPack, copyToMine, type CopyDeps } from './custom-copy'
+import { migrateMine } from './custom-migrate'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
@@ -118,7 +119,19 @@ export class CustomLibrary {
    * 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
    */
   async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, opts: SaveOptions = {}) {
-    return persist(this.entryDeps, codeSet, prop, ent, { ...opts, record: true })
+    return persist(this.entryDeps, codeSet, prop, ent, { ...opts, pack: opts.pack ?? await this.defaultPack(codeSet), record: true })
+  }
+
+  /** P5.5 B8-6：第一次用到【我的库】时做一次迁移（custom-migrate.ts），做过就跳过。 */
+  async ensureMigrated(codeSet: string) {
+    return migrateMine({ db: this.db, lib: this.lib, manage: this.manage, houseSource: CUSTOM.house.json }, codeSet)
+  }
+
+  /** 不指定包时存进「我的资料」这个包（P5.5 B8-6；以前在可编辑自制里，迁移后是独立的包）；没有就建一个。 */
+  private async defaultPack(codeSet: string): Promise<string> {
+    const mine = (await this.packs(codeSet)).find((p) => p.own.json.toLowerCase() === CUSTOM.mine.json.toLowerCase())
+    if (mine) return mine.id
+    return (await createPack(this.packDeps, codeSet, CUSTOM.mine)).id
   }
 
   private get entryDeps(): EntryDeps {
@@ -135,7 +148,7 @@ export class CustomLibrary {
 
   /** 删自己的条目（pack：在【我的库】哪个包里）；每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。 */
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[], { pack }: { pack?: string | null } = {}) {
-    const r = await remove(this.entryDeps, codeSet, prop, uniqueIds, { record: true, pack })
+    const r = await remove(this.entryDeps, codeSet, prop, uniqueIds, { record: true, pack: pack ?? await this.defaultPack(codeSet) })
     return { removed: r.value.length, pending: true as const }
   }
 
@@ -167,9 +180,9 @@ export class CustomLibrary {
     return { lib: this.lib, manage: this.manage, packsOf: (id, view) => new BrewPacks(this.lib).list(id, view) }
   }
   /** 建一个空包；rule 给包打版本标签。 */
-  createPack(codeSet: string, src: PackSource, opts: { rule?: string } = {}) { return createPack(this.packDeps, codeSet, src, opts) }
+  async createPack(codeSet: string, src: PackSource, opts: { rule?: string } = {}) { await this.ensureMigrated(codeSet); return createPack(this.packDeps, codeSet, src, opts) }
   /** 【我的库】里的包：身份、自己的来源、每类几条、版本标签。 */
-  packs(codeSet: string) { return listPacks(this.packDeps, codeSet) }
+  async packs(codeSet: string) { await this.ensureMigrated(codeSet); return listPacks(this.packDeps, codeSet) }
   /** 改包的显示名 / 缩写（身份不变）。 */
   renamePack(codeSet: string, id: string, patch: { full?: string; abbreviation?: string }) { return renamePack(this.packDeps, codeSet, id, patch) }
   /** 按包导出（作者格式文件）。 */
@@ -256,6 +269,7 @@ export class CustomLibrary {
    * 同一本可以复制多份；一条复制进你选的包（pack 必给）。做法见 custom-copy.ts。结构问题只提示不拦截。
    */
   async saveToMine(codeSet: string, target: { kind: 'source'; source: string } | { kind: 'entry'; ref: EntryRef } | { kind: 'pack'; docIdLocal: string }, opts: { pack?: string; rule?: string } = {}) {
+    await this.ensureMigrated(codeSet)
     const deps: CopyDeps = { ...this.packDeps, db: this.db, lib: this.lib, exportBrew: (cs, id) => this.exportBrew(cs, id), entries: this.entryDeps }
     if (target.kind === 'entry') {
       if (!opts.pack) throw new Error('选一个【我的库】里的包，把这一条存进去')

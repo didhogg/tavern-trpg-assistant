@@ -5,6 +5,9 @@ import { LibraryDatabase } from '../../../src/library/db'
 import { HISTORY_LIMIT, ManageStore } from '../../../src/library/manage'
 import registry from '../../../src/library/scopes.json'
 
+/** 测共用逻辑：不指定包时走可编辑自制（P5.5 B8-6 起默认存进「我的资料」包，那条路见 custom-packs.test.ts）。 */
+const toEditable = <T>(c: T): T => { (c as unknown as { defaultPack: () => Promise<null> }).defaultPack = async () => null; return c }
+
 // P5.5 B2：撤销。管理记录用真的 ManageStore（测试库）；可编辑自制用一个照作者行为写的假文档：
 // 按 uniqueId 存（有就覆盖、没有就加）、删时交回原文、编号 = 名字 + 来源。
 configureBrewValidator(new URL('../../../', import.meta.url))
@@ -44,7 +47,7 @@ function setup() {
     mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }), writeAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<{ value: unknown }>) => ({ value: (await run({})).value, view: {}, dirty: [] }),
     storedItem: async () => ({ item: { name: '火球术', source: 'PHB', level: 3 }, source: 'PHB' }),
   }
-  const custom = new CustomLibrary(lib as never, { manage, choose: async (c: unknown) => c, reset: () => undefined } as never, {} as never)
+  const custom = toEditable(new CustomLibrary(lib as never, { manage, choose: async (c: unknown) => c, reset: () => undefined } as never, {} as never))
   return { custom, doc }
 }
 
