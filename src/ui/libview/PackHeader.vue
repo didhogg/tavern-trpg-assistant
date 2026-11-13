@@ -6,6 +6,7 @@ import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import MoreMenu from '../kit/MoreMenu.vue'
 import { saveToMine } from './actions'
+import { openMineById } from './mine-actions'
 import { openManage } from './open'
 import Switch from '../kit/Switch.vue'
 
@@ -20,7 +21,7 @@ const on = computed(() => row.value?.view.visible ?? false)
 
 async function onMenu(key: string): Promise<void> {
   if (key === 'manage') openManage({ set: props.set, source: props.source, name: props.name, ...(props.docIdLocal ? { docIdLocal: props.docIdLocal } : {}) })
-  else if (key === 'save' && row.value) await saveToMine(app.svc(), row.value, toast)
+  else if (key === 'save' && row.value) await saveToMine(app.svc(), row.value, toast, (id) => void openMineById(app.svc(), id, lib.campaignLib?.codeSet ?? 'cn'))
 }
 
 async function toggle(next: boolean): Promise<void> {
@@ -33,6 +34,6 @@ async function toggle(next: boolean): Promise<void> {
 <template>
   <span class="lib-headsw">
     <Switch :model-value="on" :label="`在本战役里使用《${name}》`" :disabled="!lib.bound" @update:model-value="toggle" />
-    <MoreMenu :label="name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }]" @select="onMenu" />
+    <MoreMenu :label="name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '复制成我的' }]" @select="onMenu" />
   </span>
 </template>

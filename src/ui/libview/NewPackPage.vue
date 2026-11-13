@@ -9,7 +9,8 @@ import SelectField from '../kit/SelectField.vue'
 import { ruleOptions, suggestJson } from './mine'
 
 /** P5.5 u7-2 新建包：名字 · 编号（按名字给建议，建好不能改）· 缩写 · 规则（默认当前战役）。建好直接打开这个包。 */
-const props = defineProps<{ codeSet: string; onCreated: (id: string, name: string) => void }>()
+/** inline：在别的弹窗里前进一页（复制成我的 → 新建一个包），建好 / 取消都退回上一页。 */
+const props = defineProps<{ codeSet: string; onCreated: (id: string, name: string) => void; inline?: boolean }>()
 const app = useAppStore()
 const lib = useLibViewStore()
 const modal = useModalStore()
@@ -26,6 +27,8 @@ watch(name, (n) => { if (!touched.value) json.value = n.trim() ? suggestJson(n) 
 const jsonOk = computed(() => /^[A-Za-z0-9_-]+$/.test(json.value.trim()))
 const canSave = computed(() => !!name.value.trim() && jsonOk.value && !busy.value)
 
+const leave = (): void => { if (props.inline) modal.pop(); else modal.close(true) }
+
 async function create(): Promise<void> {
   if (!canSave.value) return
   busy.value = true
@@ -33,7 +36,7 @@ async function create(): Promise<void> {
   try {
     const made = await app.svc().backend.library.custom.createPack(props.codeSet, { json: json.value.trim(), full: name.value.trim(), abbreviation: abv.value.trim() }, rule.value ? { rule: rule.value } : {})
     toast.success(`已建好《${made.full}》`)
-    modal.close(true)
+    leave()
     props.onCreated(made.id, made.full)
   } catch (e) {
     err.value = e instanceof Error ? e.message : String(e)
@@ -60,7 +63,7 @@ async function create(): Promise<void> {
       </div>
     </div>
     <div class="trpg-confirm__actions">
-      <button class="trpg-btn" type="button" @click="modal.close(true)">取消</button>
+      <button class="trpg-btn" type="button" @click="leave">取消</button>
       <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="!canSave" data-testid="newpack-create">{{ busy ? '正在建…' : '建好并打开' }}</button>
     </div>
   </form>

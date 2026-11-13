@@ -29,6 +29,8 @@ import EntryAssociations from './EntryAssociations.vue'
 import ImageBlock from './ImageBlock.vue'
 import AuthorFragment from './author-fragment'
 import { imagesOf } from './entry-content'
+import CopyEntryPage from './CopyEntryPage.vue'
+import { openMineById } from './mine-actions'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
 const props = defineProps<{ entryRef: EntryRef; selection?: EntrySelection; pageKey?: string }>()
@@ -37,6 +39,13 @@ const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const modal = useModalStore()
 const toast = useToastStore()
+
+/** 条目 ⋯：复制成我的（P5.5 u7-6，单条进选的包）。 */
+function onEntryMenu(key: string): void {
+  const d = detail.value
+  if (key !== 'copy' || !d) return
+  modal.push({ key: `copy:${props.pageKey ?? d.ref.hash}`, title: '复制成我的', component: CopyEntryPage, variant: 'sheet', props: { entryRef: d.ref, name: itemName(d.item), onDone: (id: string, cs: string) => void openMineById(app.svc(), id, cs) } })
+}
 
 type State = { kind: 'loading' } | { kind: 'ok'; d: ScopedDetail } | { kind: 'none' } | { kind: 'error'; message: string }
 const state = shallowRef<State>({ kind: 'loading' })
@@ -180,7 +189,7 @@ async function setEnabled(next: boolean): Promise<void> {
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
           <button class="trpg-icon-btn" type="button" disabled aria-label="编辑（稍后开放）" title="条目编辑稍后开放"><Icon name="pencil-simple" :size="18" /></button>
-          <MoreMenu label="这一条" :items="[{ key: 'save', label: '存入我的库', disabled: true, reason: '稍后开放' }]" />
+          <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }]" @select="onEntryMenu" />
         </span>
       </div>
       <TabsRoot v-model="tab" class="lib-entrytabs">

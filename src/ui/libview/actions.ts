@@ -1,4 +1,4 @@
-// 库页上的"动作"：卸载 / 删除（先看影响）、存入我的库。界面只调后端、只拼提示；谁受影响由 backend.removalImpact 算。
+// 库页上的"动作"：卸载 / 删除（先看影响）、复制成我的。界面只调后端、只拼提示；谁受影响由 backend.removalImpact 算。
 import type { RemovalTarget } from '../../core/removal-impact'
 import type { RemovalBatch } from '../../core/removal-batch'
 import type { Services } from '../../core/services'
@@ -8,6 +8,7 @@ import { askConfirm, type ConfirmSection } from '../kit/confirm'
 import { reportLibError } from './deps-flow'
 import { formatBytes } from '../format'
 import { useLibViewStore } from '../../stores/libview'
+import { useToastStore } from '../../stores/toast'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
 
@@ -99,23 +100,35 @@ export function removeSource(s: Services, row: CatalogRow, skipPrompt: boolean, 
   return removeTargets(s, [targetOf(row)], [row.name], skipPrompt, toast)
 }
 
-/** 存入我的库：本地原样副本，不跟着源更新，也不受卸载影响。 */
-export async function saveToMine(s: Services, row: CatalogRow, toast: Toast): Promise<boolean> {
-  const ok = await askConfirm({ title: `把《${row.name}》存入我的库？`, message: '会存一份本地原样副本到「我的库」。之后源仓库更新、或者卸载这本书，都不会影响这份副本。', confirmLabel: '存入' })
+/**
+ * 复制成我的（P5.5 u7-6，整本 / 整包）：复制一份进【我的库】成为一个新的、能改的包；原书以后更新、卸载都不影响副本，可以复制多份。
+ * 大书要十几秒：先出「正在复制」，完成后给 [打开]。
+ */
+export async function saveToMine(s: Services, row: CatalogRow, toast: Toast, onOpen?: (id: string) => void): Promise<boolean> {
+  const ok = await askConfirm({
+    title: '复制成我的', message: `把《${row.name}》整本复制一份，放进【我的库】成为一个新包：`,
+    details: ['新包名字后面带「副本」，可以随便改', '原书以后更新、卸载都不影响副本', '同一本书可以复制多份，每份是一个包'], confirmLabel: '复制',
+  })
   if (!ok) return false
+  const t = useToastStore()
+  const wait = t.push('status', `正在复制《${row.name}》…大书要十几秒`)
   try {
     const codeSet = getSource(row.set).codeSet
-    if (getSource(row.set).kind === 'official') await s.backend.library.custom.saveToMine(codeSet, { kind: 'source', source: row.source })
+    let made: { id: string; full: string | null }
+    if (getSource(row.set).kind === 'official') made = await s.backend.library.custom.saveToMine(codeSet, { kind: 'source', source: row.source }) as typeof made
     else {
       const pack = await brewPackOf(s, row)
-      if (!pack) { toast.error('找不到这个包的安装记录'); return false }
-      await s.backend.library.custom.saveToMine(codeSet, { kind: 'pack', docIdLocal: pack.docIdLocal })
+      if (!pack) { t.dismiss(wait); toast.error('找不到这个包的安装记录'); return false }
+      made = await s.backend.library.custom.saveToMine(codeSet, { kind: 'pack', docIdLocal: pack.docIdLocal }) as typeof made
     }
-    toast.success('已存入我的库')
+    t.dismiss(wait)
+    t.push('success', `已复制成我的：${made.full ?? row.name}`, onOpen ? { actions: [{ label: '打开', run: () => onOpen(made.id) }] } : undefined)
+    await useLibViewStore().loadPairs(s)
     return true
   } catch (e) {
-    console.error('[trpg-assistant] 存入我的库失败', e)
-    toast.error(e instanceof Error ? e.message : '存入没有成功')
+    t.dismiss(wait)
+    console.error('[trpg-assistant] 复制成我的失败', e)
+    toast.error(e instanceof Error ? e.message : '复制没有成功')
     return false
   }
 }

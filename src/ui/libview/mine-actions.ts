@@ -22,6 +22,14 @@ export function openMyPack(lib: ReturnType<typeof useLibViewStore>, pair: PackPa
   openPack(packProps(lib, pair, codeSet))
 }
 
+/** 按包的身份打开我的库里的包（复制成我的完成后的 [打开]）。 */
+export async function openMineById(s: Services, id: string, codeSet: string): Promise<void> {
+  const lib = useLibViewStore()
+  if (!lib.pairs?.some((p) => p.id === id)) await lib.loadPairs(s)
+  const pair = lib.pairs?.find((p) => p.id === id)
+  if (pair) openMyPack(lib, pair, codeSet)
+}
+
 export function openNewPack(s: Services, codeSet: string): void {
   const lib = useLibViewStore()
   useModalStore().open({

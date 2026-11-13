@@ -16,6 +16,7 @@ import { ruleBadge } from './registry'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
 import { removeSource, removeTargets, saveToMine, targetOf } from './actions'
+import { openMineById } from './mine-actions'
 import { pullUpdates, updateRow } from './update-flow'
 import { useUpdatesStore } from '../../stores/updates'
 import { useDownloadsStore } from '../../stores/downloads'
@@ -52,7 +53,7 @@ const total = computed(() => sections.value.reduce((n, s) => n + s.groups.reduce
 async function onMenu(r: CatalogRow, key: string): Promise<void> {
   const s = app.svc()
   if (key === 'manage') openManage({ set: r.set, source: r.source, name: r.name, ...(r.pack ? { docIdLocal: r.pack.docIdLocal } : {}) })
-  else if (key === 'save') await saveToMine(s, r, toast)
+  else if (key === 'save') await saveToMine(s, r, toast, (id) => void openMineById(s, id, lib.campaignLib?.codeSet ?? 'cn'))
   else if (key === 'rm' && (await removeSource(s, r, app.settings?.library.skipRemovePrompt ?? false, toast))) await lib.refresh(s)
 }
 
@@ -150,7 +151,7 @@ async function toggle(r: CatalogRow, next: boolean): Promise<void> {
               <span v-if="updating(r)" class="lib-muted" role="status">更新中…</span>
               <button v-else-if="hasUpdate(r)" class="trpg-btn trpg-btn--small" type="button" data-testid="row-update" :title="`更新《${r.name}》`" @click="updateRow(app.svc(), r, toast)">有更新 · 更新</button>
               <HoverTip inline :text="!lib.bound ? '先创建战役，开关才能用' : isOn(r) ? '本战役启用' : '本战役停用'"><Switch :model-value="isOn(r)" :label="`在本战役里使用《${r.name}》`" :disabled="!lib.bound" data-testid="shelf-switch" @update:model-value="(v: boolean) => toggle(r, v)" /></HoverTip>
-              <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '存入我的库' }, ...(getSource(r.set).kind === 'official' ? [{ key: 'rm', label: r.kind === 'adventure' ? '卸载这本冒险…' : '卸载这本书…', danger: true }] : [{ key: 'rm', label: '删除这个包…', danger: true }])]" @select="(k: string) => onMenu(r, k)" />
+              <MoreMenu :label="r.name" :items="[{ key: 'manage', label: '管理' }, { key: 'save', label: '复制成我的' }, ...(getSource(r.set).kind === 'official' ? [{ key: 'rm', label: r.kind === 'adventure' ? '卸载这本冒险…' : '卸载这本书…', danger: true }] : [{ key: 'rm', label: '删除这个包…', danger: true }])]" @select="(k: string) => onMenu(r, k)" />
             </div>
           </details>
         </div>
