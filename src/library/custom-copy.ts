@@ -3,6 +3,7 @@
 // 整本 / 整包：条目编号一个不改（不用改任何引用），包头在原来源之外多登记一行这份复制件自己的来源（作者按「来源编号组合」认包，
 // utils-brew-base.js _getBrewId，所以每份是不同的包）；和原件同编号的按「同编号不同包」并排，整包选用在 B8-4。
 // 单条：换成目标包自己的来源（成为独立的一条），_copy 别的来源的在包头补依赖声明。
+import { rawEntry } from './custom-raw'
 import { copyRawSource } from './copy-source'
 import { listPacks, docIdOf, type MyPack, type PackDeps } from './custom-packs'
 import { persist, type EntryDeps } from './custom-entries'
@@ -118,7 +119,8 @@ export async function copyEntryToPack(d: CopyDeps, codeSet: string, ref: EntryRe
     const copy = await copyRawSource({ db: d.db, lib: d.lib, official: officialSourceOf(codeSet), source: stored.source, entry: { prop: ref.prop, hash: ref.hash }, view: await d.lib.currentView(), authorFiles: () => authorFiles(d, codeSet) })
     ent = ((copy.json as Record<string, unknown>)[ref.prop] as Array<Record<string, unknown>> | undefined)?.[0]
   } else {
-    ent = (await d.lib.storedItem(ref.set, ref.prop, ref.hash))?.item as Record<string, unknown> | undefined
+    // 自制的：读现在的原文（刚改过、后台还没解析的也是新的，C2）
+    ent = (await rawEntry(d, ref))?.entity
     if (ent) ent = await (await d.lib.frameOf(codeSet)).call('cleanEntity', ent)
   }
   if (!ent) throw new Error('找不到这一条的原文')

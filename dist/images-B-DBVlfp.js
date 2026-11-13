@@ -72,32 +72,37 @@ function r(e) {
 	return t;
 }
 function i(e) {
+	let t = n.find((t) => t.kind === "brew" && t.codeSet === e);
+	if (!t) throw Error(`作者程序 ${e} 没有登记对应的自制源`);
+	return t;
+}
+function a(e) {
 	let t = n.find((t) => t.kind === "official" && t.codeSet === e);
 	if (!t) throw Error(`作者程序 ${e} 没有登记对应的官方数据源`);
 	return t;
 }
-var a = /* @__PURE__ */ new Map();
-function o(e, t, n) {
+var o = /* @__PURE__ */ new Map();
+function s(e, t, n) {
 	return e.replaceAll("{repo}", t).replaceAll("{commit}", n);
 }
-function s(e, n) {
-	return e.mirrors.map((r) => o(r, t[e.codeSet].repo, n));
-}
 function c(e, n) {
-	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
-	return o(e.fileList, t[e.codeSet].repo, n);
+	return e.mirrors.map((r) => s(r, t[e.codeSet].repo, n));
 }
-function l(e) {
-	return a.get(e.codeSet) ?? t[e.codeSet].commit;
+function l(e, n) {
+	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
+	return s(e.fileList, t[e.codeSet].repo, n);
+}
+function u(e) {
+	return o.get(e.codeSet) ?? t[e.codeSet].commit;
 }
 // src/core/ids.ts
-function u() {
+function d() {
 	let e = /* @__PURE__ */ new Uint8Array(16);
 	crypto.getRandomValues(e), e[6] = e[6] & 15 | 64, e[8] = e[8] & 63 | 128;
 	let t = Array.from(e, (e) => e.toString(16).padStart(2, "0"));
 	return `${t.slice(0, 4).join("")}-${t.slice(4, 6).join("")}-${t.slice(6, 8).join("")}-${t.slice(8, 10).join("")}-${t.slice(10).join("")}`;
 }
-function d(e) {
+function f(e) {
 	if (e.groupId) {
 		let t = e.groups?.find((t) => t.id === e.groupId);
 		return {
@@ -114,7 +119,7 @@ function d(e) {
 	}
 	return null;
 }
-var f = {
+var p = {
 	scopes: [{
 		id: "5e2014",
 		name: "5e 2014",
@@ -138,18 +143,18 @@ var f = {
 			format: "5etools"
 		}
 	}
-}, p = f.scopes, m = f.rules;
-function h(e) {
-	let t = m[e];
+}, m = p.scopes, h = p.rules;
+function g(e) {
+	let t = h[e];
 	if (!t) throw Error(`范围登记表里没有这套规则：${e}`);
 	return t;
 }
-var g = (e) => `src:${e.toLowerCase()}`, _ = (e) => `ent:${e.set}:${e.prop}:${e.hash}`, v = (e) => `${e.set}|${e.prop}|${e.hash}`;
-function y(e, t) {
+var _ = (e) => `src:${e.toLowerCase()}`, v = (e) => `ent:${e.set}:${e.prop}:${e.hash}`, y = (e) => `${e.set}|${e.prop}|${e.hash}`;
+function b(e, t) {
 	let n = t.toLowerCase(), r = e.filter((e) => (e.body?._meta?.sources ?? []).some((e) => String(e?.json ?? "").toLowerCase() === n));
 	return r.length > 0 && r.every((e) => !e.head?.url && !e.body?._meta?.edition);
 }
-function b(e, t = p) {
+function x(e, t = m) {
 	if (!e || e.classic === null) return null;
 	let n = e.classic ? "classic" : "one", r = t.filter((e) => e.edition === n).map((e) => e.id);
 	return r.length ? {
@@ -157,7 +162,7 @@ function b(e, t = p) {
 		global: !1
 	} : null;
 }
-function x(e, t, n) {
+function S(e, t, n) {
 	return e ? {
 		assignment: e,
 		basis: "entry"
@@ -172,23 +177,23 @@ function x(e, t, n) {
 		basis: "none"
 	};
 }
-function S(e, t) {
+function C(e, t) {
 	return {
 		rule: e,
 		codeSet: t,
-		scopes: [...h(e).defaultScopes],
+		scopes: [...g(e).defaultScopes],
 		include: [],
 		exclude: [],
 		choices: {}
 	};
 }
-function C(e, t, n) {
-	return T(e, g(t), n);
-}
 function w(e, t, n) {
-	return T(e, _(t), n);
+	return E(e, _(t), n);
 }
 function T(e, t, n) {
+	return E(e, v(t), n);
+}
+function E(e, t, n) {
 	let r = (e) => e.filter((e) => e !== t);
 	return n ? {
 		include: [...r(e.include), t],
@@ -198,7 +203,7 @@ function T(e, t, n) {
 		exclude: [...r(e.exclude), t]
 	};
 }
-function E(e) {
+function D(e) {
 	let t = [];
 	for (let n of e.exclude) {
 		let e = /^ent:([^:]+):([^:]+):(.+)$/.exec(n);
@@ -210,7 +215,7 @@ function E(e) {
 	}
 	return t;
 }
-function D(e, t, n) {
+function O(e, t, n) {
 	let r = (e) => e.includes(t.entry) || t.source !== null && e.includes(t.source);
 	return r(e.exclude) ? {
 		visible: !1,
@@ -232,18 +237,18 @@ function D(e, t, n) {
 		reason: "unclassified"
 	};
 }
-var O = (e) => e.reason !== "out-of-scope" && e.reason !== "unclassified";
+var k = (e) => e.reason !== "out-of-scope" && e.reason !== "unclassified";
 // src/library/images.ts
-function k(e, t) {
+function A(e, t) {
 	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
 }
-function A(e) {
+function j(e) {
 	return r(e).imageRoots ?? [];
 }
-function j(e, t) {
-	return k(A(e), t);
+function M(e, t) {
+	return A(j(e), t);
 }
-function M(e) {
+function N(e) {
 	return e.replace(/^\/?img\//, "");
 }
-export { r as C, c as S, i as T, d as _, w as a, n as b, E as c, y as d, x as f, D as g, g as h, b as i, _ as l, h as m, M as n, C as o, v as p, p as r, S as s, j as t, O as u, u as v, s as w, l as x, t as y };
+export { l as C, a as E, u as S, c as T, f as _, T as a, n as b, D as c, b as d, S as f, O as g, _ as h, x as i, v as l, g as m, N as n, w as o, y as p, m as r, C as s, M as t, k as u, d as v, r as w, i as x, t as y };

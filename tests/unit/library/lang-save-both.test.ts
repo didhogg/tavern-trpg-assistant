@@ -80,6 +80,11 @@ describe('房规两种语言一起改', () => {
         const altId = `house:${target.set}`
         return { altId, campaign: { ...c, choices: { ...c.choices, [`${target.set}|${target.prop}|${target.hash}`]: altId } } }
       },
+      // 现在生效的那一份（custom-raw.houseNow，单测在 house-now.test.ts）
+      houseNow: async (c: typeof camp, ref: typeof zhRef) => {
+        const altId = c.choices[`${ref.set}|${ref.prop}|${ref.hash}`] ?? 'base'
+        return { altId, item: { name: 'Fireball', level: altId === 'base' ? 3 : 4 }, start: { name: 'Fireball', level: altId === 'base' ? 3 : 4 }, base: { name: 'Fireball', level: 3 } }
+      },
     }
     const scoped = {
       englishOf: async () => ({ status: 'found', hash: 'fireball_phb', item: { name: 'Fireball', level: 3 } }),

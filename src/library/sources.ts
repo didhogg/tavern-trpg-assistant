@@ -35,6 +35,13 @@ export function getSource(id: string): SourceEntry {
 }
 
 /** 一套作者程序对应的官方数据源（作者程序读相对路径 data/… 时取的就是它）。 */
+/** 这套作者程序对应的自制源（房规、【我的库】的包都在这一套里）。 */
+export function brewSourceOf(codeSet: string): SourceEntry {
+  const s = SOURCES.find((it) => it.kind === 'brew' && it.codeSet === codeSet)
+  if (!s) throw new Error(`作者程序 ${codeSet} 没有登记对应的自制源`)
+  return s
+}
+
 export function officialSourceOf(codeSet: string): SourceEntry {
   const s = SOURCES.find((it) => it.kind === 'official' && it.codeSet === codeSet)
   if (!s) throw new Error(`作者程序 ${codeSet} 没有登记对应的官方数据源`)

@@ -1,4 +1,4 @@
-import { d as e, n as t, v as n } from "./images-Dzflgjwt.js";
+import { d as e, n as t, v as n } from "./images-B-DBVlfp.js";
 import { t as r } from "./protocol-03CO7Rhf.js";
 // src/library/runtime/frame/author.ts
 var i = globalThis, a = null;
@@ -1807,9 +1807,17 @@ async function Kt(e) {
 		failed: r.failed
 	};
 }
+async function qt(e, t) {
+	await o();
+	let n = t?._copy?.source;
+	if (typeof n != "string") return i.DataUtil.cleanJson(i.MiscUtil.copyFast(t));
+	let r = await i.DataUtil.pDoMetaMergeSingle(e, { dependencies: { [e]: [n] } }, i.MiscUtil.copyFast(t));
+	if (!r || r._copy) throw Error("作者没有拼出完整的一条（原件找不到）");
+	return i.DataUtil.cleanJson(r);
+}
 // src/library/runtime/frame/field-value-commands.ts
-var qt = /[㐀-鿿]/, X = null;
-function Jt() {
+var Jt = /[㐀-鿿]/, X = null;
+function Yt() {
 	if (X) return X;
 	X = [];
 	for (let [e, t] of Object.entries(i.Parser)) {
@@ -1822,37 +1830,37 @@ function Jt() {
 	}
 	return X;
 }
-async function Yt(e) {
+async function Xt(e) {
 	await o();
-	let t = Jt();
+	let t = Yt();
 	return e.map((e) => {
 		if (!e.length) return null;
 		let n = t.filter(({ map: t }) => e.every((e) => e in t));
 		if (!n.length) return null;
-		n.sort((e, t) => Number(Object.values(t.map).some((e) => qt.test(e))) - Number(Object.values(e.map).some((e) => qt.test(e))) || Object.keys(e.map).length - Object.keys(t.map).length);
+		n.sort((e, t) => Number(Object.values(t.map).some((e) => Jt.test(e))) - Number(Object.values(e.map).some((e) => Jt.test(e))) || Object.keys(e.map).length - Object.keys(t.map).length);
 		let r = n[0].map;
 		return Object.fromEntries(e.map((e) => [e, r[e]]));
 	});
 }
 // src/library/runtime/frame/markdown-commands.ts
-var Xt = (e) => import(
+var Zt = (e) => import(
 	/* @vite-ignore */
 	new URL(`js/${e}`, location.href).href
 );
-async function Zt(e) {
+async function Qt(e) {
 	await o();
 	let t = i.RendererMarkdown.get();
 	return t._renderString = (e, t) => {
 		t[0] += e;
 	}, String(t.render({ entries: i.MiscUtil.copyFast(e) }) ?? "").trim();
 }
-async function Qt(e) {
+async function $t(e) {
 	await o();
-	let t = i.MarkdownConverter.getEntries(e), { DiceConvert: n } = await Xt("converter/converterutils-tags.js");
+	let t = i.MarkdownConverter.getEntries(e), { DiceConvert: n } = await Zt("converter/converterutils-tags.js");
 	return t.map((e) => n.getTaggedEntry(e));
 }
-var Z = (e) => Array.isArray(e) ? e.map(Z) : e && typeof e == "object" ? Object.fromEntries(Object.keys(e).sort().map((t) => [t, Z(e[t])])) : e, $t = (e, t) => JSON.stringify(Z(e)) === JSON.stringify(Z(t));
-function en(e, t) {
+var Z = (e) => Array.isArray(e) ? e.map(Z) : e && typeof e == "object" ? Object.fromEntries(Object.keys(e).sort().map((t) => [t, Z(e[t])])) : e, en = (e, t) => JSON.stringify(Z(e)) === JSON.stringify(Z(t));
+function tn(e, t) {
 	if (!e || !t || typeof e != "object" || typeof t != "object" || Array.isArray(e) || Array.isArray(t)) return e;
 	let n = e, r = t;
 	if (n.type !== r.type) return e;
@@ -1860,21 +1868,21 @@ function en(e, t) {
 	for (let [e, t] of Object.entries(r)) e in i || (i[e] = t);
 	return i;
 }
-async function tn(e) {
-	let t = await Zt([e]);
+async function nn(e) {
+	let t = await Qt([e]);
 	try {
 		let n = i.MarkdownConverter.getEntries(t);
-		return n.length === 1 && $t(en(n[0], e), e) ? t : null;
+		return n.length === 1 && en(tn(n[0], e), e) ? t : null;
 	} catch (e) {
 		return console.debug("[trpg-assistant] 这一段转不回来，留给 JSON", e), null;
 	}
 }
-async function nn(e, t) {
-	let n = await Qt(e);
-	return n.length === 1 && t !== void 0 ? [en(n[0], t)] : n;
+async function rn(e, t) {
+	let n = await $t(e);
+	return n.length === 1 && t !== void 0 ? [tn(n[0], t)] : n;
 }
 // src/library/runtime/frame/commands.ts
-async function rn() {
+async function an() {
 	let e = /* @__PURE__ */ new Set(), t = [];
 	for (let n of i.DataLoader._DATA_TYPE_LOADER_LIST) {
 		if (e.has(n)) continue;
@@ -1893,7 +1901,7 @@ async function rn() {
 	}
 	return t;
 }
-async function an(e) {
+async function on(e) {
 	await o();
 	let t = await i.DataLoader.pCacheAndGetAllSite(e) ?? [];
 	return {
@@ -1902,17 +1910,17 @@ async function an(e) {
 		sources: t.map((e) => u(e))
 	};
 }
-async function on(e, t, n) {
+async function sn(e, t, n) {
 	return await o(), ((await i.DataUtil.loadJSON(`data/${e}`))[t] ?? []).map((e) => ({
 		id: e.id,
 		source: i.SourceUtil.getEntitySource(e),
 		hash: i.UrlUtil.URL_TO_HASH_BUILDER[n](e)
 	}));
 }
-async function sn(e, t, n) {
+async function cn(e, t, n) {
 	return await o(), i.DataLoader.pCacheAndGet(e, t, n, { isRequired: !0 });
 }
-async function cn(e) {
+async function ln(e) {
 	await o();
 	let t = e ? new Set(e.map((e) => e.toUpperCase())) : null, n = {};
 	for (let e of ["search/index.json", "search/index-item.json"]) {
@@ -1925,7 +1933,7 @@ async function cn(e) {
 	}
 	return n;
 }
-async function ln(e, t) {
+async function un(e, t) {
 	await o();
 	let n = i.ExcludeUtil.getList().filter((t) => t.hash !== "*" || t.category !== "*" || String(t.source).toLowerCase() !== e.toLowerCase()), r = t ? [...n, {
 		displayName: e,
@@ -1936,29 +1944,29 @@ async function ln(e, t) {
 	}] : n;
 	return await i.ExcludeUtil.pSetList(r), await i.ExcludeUtil._pSave(), i.ExcludeUtil.getList();
 }
-async function un(e, t, n) {
+async function dn(e, t, n) {
 	return await o(), i.ExcludeUtil.isExcluded(e, t, n, { isNoCount: !0 });
 }
-async function dn(e, t) {
+async function fn(e, t) {
 	return await o(), t.map((t) => c(e, t));
 }
-async function fn() {
+async function pn() {
 	return [...i.__trpgFrameErrors];
 }
-async function pn() {
+async function mn() {
 	let e = i.__trpgStorageFlush;
 	return e ? e() : [];
 }
-var mn = {
-	frameErrors: fn,
+var hn = {
+	frameErrors: pn,
 	init: o,
-	loaders: rn,
-	parseProp: an,
-	corpusList: on,
-	parseCorpus: sn,
-	searchIndexHashes: cn,
-	setSourceExcluded: ln,
-	isExcluded: un,
+	loaders: an,
+	parseProp: on,
+	corpusList: sn,
+	parseCorpus: cn,
+	searchIndexHashes: ln,
+	setSourceExcluded: un,
+	isExcluded: dn,
 	excludedFlags: be,
 	detail: xe,
 	search: Se,
@@ -1981,8 +1989,8 @@ var mn = {
 	brewCorpusList: Ie,
 	brewPackRows: Be,
 	parseBrewProp: Re,
-	rawHashes: dn,
-	storageFlush: pn,
+	rawHashes: fn,
+	storageFlush: mn,
 	editionOf: D,
 	sourceNames: Ke,
 	corpusFile: k,
@@ -2020,9 +2028,10 @@ var mn = {
 	packFixOldCopy: Wt,
 	flattenCopies: Gt,
 	packFlattenCopies: Kt,
-	valueLabels: Yt,
-	blockMarkdown: tn,
-	markdownBlocks: nn,
+	mergeOne: qt,
+	valueLabels: Xt,
+	blockMarkdown: nn,
+	markdownBlocks: rn,
 	diceTag: dt,
 	diceStats: ft,
 	diceRead: pt,
@@ -2046,7 +2055,7 @@ var mn = {
 	extractTables: wt,
 	directory: lt,
 	sourceFiles: j
-}, hn = [
+}, gn = [
 	"DataLoader",
 	"DataUtil",
 	"BrewUtil2",
@@ -2069,7 +2078,7 @@ addEventListener("message", (e) => {
 		frame: $,
 		id: t.id,
 		...e
-	}, location.origin), i = mn[t.fn];
+	}, location.origin), i = hn[t.fn];
 	i ? i(...t.args).then((e) => n({
 		ok: !0,
 		value: e
@@ -2081,13 +2090,13 @@ addEventListener("message", (e) => {
 		error: `小窗没有这个指令：${t.fn}`
 	});
 });
-var gn = new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "", _n = {
+var _n = new URL(".", location.href).pathname.split("/").filter(Boolean).at(-1) ?? "", vn = {
 	channel: r,
 	type: "ready",
 	frame: $,
-	codeSet: gn,
+	codeSet: _n,
 	authorVersion: typeof Q.VERSION_NUMBER == "string" ? Q.VERSION_NUMBER : null,
-	present: Object.fromEntries(hn.map((e) => [e, Q[e] !== void 0])),
+	present: Object.fromEntries(gn.map((e) => [e, Q[e] !== void 0])),
 	errors: [...Q.__trpgFrameErrors ?? []]
 };
-parent.postMessage(_n, location.origin);
+parent.postMessage(vn, location.origin);

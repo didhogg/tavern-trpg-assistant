@@ -76,19 +76,30 @@ describe('G3 编辑 / 覆盖按包列、改作用范围', () => {
     expect((await listEdits(deps(), { refs: [fire] }, c)).map((r) => [r.name, r.level])).toEqual([['火球术', 'campaign']])
     expect(await listEdits(deps(), { refs: [fire], sources: ['XGE'] }, c)).toEqual([])
   })
-  it('改了什么：本战役层临时选这一份，和原件比；房规只列它自己写了的字段；选的是原件就没有改动', async () => {
+  it('改了什么：房规用唯一的房规改动算法（原文 + 原件当场拼，只看原文写了的字段）；别的版本本战役层临时选这一份和原件比；选的是原件就没有改动', async () => {
     const seen: Array<Record<string, string>> = []
+    const house = { name: '火球术', source: 'TRPGHOUSE', level: 4, _copy: { name: '火球术', source: 'PHB' } }
+    const frame = { call: async (cmd: string, ...a: unknown[]) => {
+      if (cmd === 'brewDocIndex') return [{ docIdLocal: 'ed', isEditable: true }]
+      if (cmd === 'packEntity') return { entity: house, hadId: true }
+      if (cmd === 'cleanEntity') return a[0]
+      // 作者合并不抄 page（_MERGE_REQUIRES_PRESERVE）：整条比会多出「page 删掉了」，只看原文写了的就不会
+      if (cmd === 'mergeOne') return { name: '火球术', level: 4 }
+      throw new Error(cmd)
+    } }
     const d = {
-      // 房规合并后作者不抄 page（_MERGE_REQUIRES_PRESERVE），整条比会多出「page 删掉了」
-      detail: async (c: CampaignLibrary) => { seen.push(c.choices); const alt = c.choices[refKey(fire)] ?? c.choices[refKey({ ...fire, set: 'cn-official' })]; return { item: alt === 'base' ? { name: '火球术', level: 3, page: 241 } : { name: '火球术', level: 4 }, base: { name: '火球术', level: 3, page: 241 } } },
+      lib: { frameOf: async () => frame, storedItem: async () => ({ item: { name: '火球术', level: 3, page: 241 }, source: 'PHB' }) },
+      houseSet: () => 'cn-brew',
+      detail: async (c: CampaignLibrary) => { seen.push(c.choices); const alt = c.choices[refKey(fire)]; return { item: alt === 'base' ? { name: '火球术', level: 3 } : { name: '某版本', level: 5 }, base: { name: '火球术', level: 3 } } },
       changes: async (codeSet: string, a: Record<string, unknown> | null, b: Record<string, unknown>) => (codeSet === 'cn' ? fieldChanges(a!, b) : []),
-      frameOf: async () => ({ call: async (cmd: string) => (cmd === 'brewDocIndex' ? [{ docIdLocal: 'ed', isEditable: true }] : { entity: { name: '火球术', source: 'TRPGHOUSE', level: 4, _copy: { name: '火球术', source: 'PHB' } } }) }),
     } as never
     const c = camp({})
     const got = await editChanges(d, c, { ref: { ...fire, set: 'cn-official' }, altId: 'house:fireball_trpghouse' })
     expect(got?.changes).toEqual([{ field: 'level', before: 3, after: 4 }])
+    expect((await editChanges(d, c, { ref: fire, altId: 'pack:x' }))?.changes).toEqual([{ field: 'level', before: 3, after: 5 }, { field: 'name', before: '火球术', after: '某版本' }])
+    expect(seen.at(-1)).toEqual({ [refKey(fire)]: 'pack:x' })
     expect(c.choices).toEqual({})
     expect((await editChanges(d, c, { ref: fire, altId: 'base' }))?.changes).toEqual([])
-    expect(await editChanges({ detail: async () => null, changes: async () => [], frameOf: async () => ({ call: async () => [] }) } as never, c, { ref: fire, altId: 'x' })).toBeNull()
+    expect(await editChanges({ detail: async () => null, changes: async () => [] } as never, c, { ref: fire, altId: 'x' })).toBeNull()
   })
 })

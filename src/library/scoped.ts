@@ -270,7 +270,9 @@ export class ScopedLibrary {
     const fromDoc = 'docIdLocal' in entry ? entry.docIdLocal : undefined
     const pending = dirty.length > 0 && (
       (getSource(ref.set).kind === 'brew' && (!fromDoc || dirty.includes(fromDoc)))
-      || alternatives.some((a) => (a.docIdLocal && dirty.includes(a.docIdLocal)) || a.kind === 'houserule'))
+      || alternatives.some((a) => (a.docIdLocal && dirty.includes(a.docIdLocal)) || a.kind === 'houserule')
+      // 刚建的房规 / 刚存的版本还没解析出来：选了它但备选里还没有（C2）
+      || !!chosen.missing)
     return { ...entry, ref, reason: v.reason, closed: !v.visible, version: chosen, alternatives, ...(pending ? { pending } : {}) }
   }
 

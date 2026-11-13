@@ -1,6 +1,7 @@
 // P3 收尾：插件后端服务入口的组装（唯一同时引用 core / library / rules 运行时的地方）。
 // 【库】（含按战役取库、自定义库、下载任务）、结算内核（一个战役一个小窗）、内核存档在这里接好，
 // 界面和状态仓库以后只经 services.backend 取用，不各自 new。
+import { houseExisting, type HouseExisting } from './house-existing'
 import type { TrpgDatabase } from './db'
 import type { CampaignService } from './saves/campaign'
 import { KernelSaveService } from './saves/kernel'
@@ -30,7 +31,7 @@ import { DocumentStore } from '../library/documents'
 import { imageUrls, type ImageHref } from '../library/images'
 import { EntryLinks } from '../library/entry-links'
 import { ScopedLibrary } from '../library/scoped'
-import { defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
+import { defaultCampaignLibrary, type CampaignLibrary, type EntryRef } from '../library/scopes'
 import type { BackupLibraryAdapter } from './transfer/exporter'
 import { CustomLibrary } from '../library/custom'
 import { BilingualLibrary } from '../library/custom-lang'
@@ -41,7 +42,7 @@ import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
 import { KernelPrecompute } from '../rules/kernel/precompute'
 import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
-import { SOURCES, getSource } from '../library/sources'
+import { SOURCES, brewSourceOf, getSource } from '../library/sources'
 import { TrpgError } from './errors'
 import type { ImportDeps } from './transfer/importer'
 import { CampaignStarter } from './start-campaign'
@@ -126,6 +127,8 @@ export interface Backend {
   removalImpact: (target: RemovalTarget) => Promise<RemovalImpact>
   /** 自己写的几条要改编号（改名、换包）或要删之前：谁用了它们（房规、版本选择、战役与存档）。P5.5 B3。 */
   entryChangeImpact: (setId: string, refs: Array<{ prop: string; hash: string }>) => Promise<Pick<RemovalImpact, 'houseRules' | 'choices' | 'saves'>>
+  /** 再改一条官方条目：它现在生效的是不是已有的房规、在哪一层、用在哪里（P5.5 收尾 C3，house-existing.ts）。 */
+  houseExisting: (c: CampaignLibrary, refs: { zh?: EntryRef; en?: EntryRef }) => Promise<HouseExisting | null>
   /** 按预览凭据执行删除 / 卸载；预览后资料变了就拒绝（T4）。 */
   removalExecute: (impact: RemovalImpact) => Promise<unknown>
   /** 多选卸载 / 删除（P5-5 §12 B1）：补上另一种语言的那一份，合成一份预览。 */
@@ -209,7 +212,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const updates: OfficialUpdates = new OfficialUpdates({ db, revisions, files, directory, startOfficial: (id, taskOpts) => tasks.startOfficial(id, taskOpts) })
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
-  const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref), (codeSet) => brewQueue?.busy(codeSet) ?? false, async (codeSet) => { await brewQueue?.settled(codeSet) })
+  const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref), (codeSet) => brewQueue?.busy(codeSet) ?? false)
   const bilingual = new BilingualLibrary(custom, service, brewPairs, counterparts, scoped)
   const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view, signal) => openFrame(codeSet, { view, signal }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (_view, previous) => { service.retire(previous); scoped.reset() },
     selectUpdate: (id, commit, selection, base) => updates.planSelection(id, commit, selection, base),
@@ -277,7 +280,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, bilingual, editChanges: (c, row) => editChanges({ detail: (...a) => scoped.detail(...a), changes: (...a) => custom.changes(...a), frameOf: (cs) => service.frameOf(cs) as never }, c, row), tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, brewQueue: brewQueue!, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, bilingual, editChanges: (c, row) => editChanges({ detail: (...a) => scoped.detail(...a), changes: (...a) => custom.changes(...a), lib: service, houseSet: (cs) => brewSourceOf(cs).id }, c, row), tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, brewQueue: brewQueue!, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },
@@ -367,5 +370,6 @@ export function createBackend(opts: BackendOptions): Backend {
     return removalExecuteMany(mergeImpacts(targets, await Promise.all(targets.map((t) => impactAt(view, t)))))
   }
   const entryChangeImpact: Backend['entryChangeImpact'] = (setId, refs) => impactOfEntries({ db: opts.db, manage: scoped.manage }, setId, refs)
-  return { library, kernel, kernelSave, starter, transfer, removalImpact, entryChangeImpact, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim }
+  const houseExistingOf: Backend['houseExisting'] = (c, refs) => houseExisting({ houseNow: (cc, t) => custom.houseNow(cc, t), impact: entryChangeImpact }, c, refs)
+  return { library, kernel, kernelSave, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim }
 }

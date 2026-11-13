@@ -1,6 +1,7 @@
 // P5.5 阶段 C G3：编辑 / 覆盖（各层选的版本，包括房规）按书、按包列出，以及整批改作用范围。
 // 以前在界面里（ui/libview/edit-rows.ts）按「一个来源」筛；【我的库】的副本包有两个来源（原来源 + 副本自己的），
 // 所以改成后端按「包的全部来源 + 包自己这一份」筛，界面只排版。
+import { houseVersion, type RawDeps } from './custom-raw'
 import type { ChoiceLevel } from './manage'
 import type { ScopedLibrary } from './scoped'
 import { isPackChoiceKey } from './versions'
@@ -73,39 +74,25 @@ export async function moveEdits(d: Deps, c: CampaignLibrary, rows: Array<Pick<Ed
 }
 
 type Ent = Record<string, unknown>
-type Frame = { call: (cmd: never, ...args: never[]) => Promise<unknown> }
-type ChangeDeps = Pick<ScopedLibrary, 'detail'> & {
+type ChangeDeps = Pick<ScopedLibrary, 'detail'> & RawDeps & {
   changes: (codeSet: string, before: Ent | null, after: Ent) => Promise<FieldChange[]>
-  frameOf: (codeSet: string) => Promise<Frame>
-}
-
-/** 房规原文（可编辑自制里那一条，只写了改动的字段；P5.5 B1）。 */
-async function houseRaw(d: ChangeDeps, codeSet: string, prop: string, hash: string): Promise<Ent | null> {
-  const f = (await d.frameOf(codeSet)) as unknown as { call: (cmd: string, ...a: unknown[]) => Promise<{ entity?: Ent } & Array<{ docIdLocal: string; isEditable: boolean }>> }
-  const doc = ((await f.call('brewDocIndex')) as Array<{ docIdLocal: string; isEditable: boolean }>).find((x) => x.isEditable)
-  return doc ? ((await f.call('packEntity', doc.docIdLocal, prop, { hash }))?.entity ?? null) : null
+  houseSet: (codeSet: string) => string
 }
 
 /**
- * 一条编辑 / 覆盖「改了什么」（覆盖管理里展开看；驾驶员 2026-11-13 定）：按这一行选的那一份取条目（本战役层临时选它），
- * 和原件比（custom.changes，同保存前「改了哪几项」）。选的是原件就没有改动。条目取不到给 null。
- * 房规只列房规原文里写了的字段（含 _mod 改的）：作者 _copy 合并时本来就不抄页码、图片标记、参考来源这些（作者 _MERGE_REQUIRES_PRESERVE），
- * 中文版还会去掉译者，整条比会把它们误报成「删掉了」。
+ * 一条编辑 / 覆盖「改了什么」（覆盖管理里展开看；驾驶员 2026-11-13 定）。选的是原件就没有改动。条目取不到给 null。
+ * 房规：用唯一的房规改动算法（custom-raw.houseVersion，C3）——房规原文 + 原件当场拼，只看原文写了的字段，刚存的也是新的。
+ * 别的版本：按这一行选的那一份取条目（本战役层临时选它），和原件比（custom.changes）。
  */
 export async function editChanges(d: ChangeDeps, c: CampaignLibrary, row: Pick<EditRow, 'ref' | 'altId'>): Promise<{ changes: FieldChange[]; item: unknown; base: unknown } | null> {
+  const codeSet = getSource(row.ref.set).codeSet
+  if (row.altId.startsWith('house:')) {
+    const v = await houseVersion(d, row.ref, { set: d.houseSet(codeSet), prop: row.ref.prop, hash: row.altId.slice('house:'.length) })
+    return v ? { changes: v.changes, item: v.item, base: v.base } : null
+  }
   const forced = { ...c, choices: { ...c.choices, [refKey(row.ref)]: row.altId } }
   const got = await d.detail(forced, row.ref, { browse: true })
   if (!got || 'hidden' in got) return null
   if (row.altId === 'base' || got.item === got.base) return { changes: [], item: got.item, base: got.base }
-  const codeSet = getSource(row.ref.set).codeSet
-  let changes = await d.changes(codeSet, got.base as Ent, got.item as Ent)
-  if (row.altId.startsWith('house:')) {
-    const raw = await houseRaw(d, codeSet, row.ref.prop, row.altId.slice('house:'.length))
-    if (raw) {
-      const mod = ((raw._copy as { _mod?: Ent } | undefined)?._mod) ?? {}
-      const own = new Set([...Object.keys(raw), ...Object.keys(mod)].filter((k) => !k.startsWith('_') && k !== 'source' && k !== 'uniqueId'))
-      changes = changes.filter((x) => own.has(x.field))
-    }
-  }
-  return { changes, item: got.item, base: got.base }
+  return { changes: await d.changes(codeSet, got.base as Ent, got.item as Ent), item: got.item, base: got.base }
 }

@@ -63,3 +63,16 @@ export async function packFlattenCopies(docIdLocal: string): Promise<Omit<Flatte
   }
   return { flattened: r.flattened, failed: r.failed }
 }
+
+/**
+ * 一条「照另一条 + 改几处」（_copy）当场拼成完整的一条（P5.5 收尾 C2：房规生效的样子不等后台解析）。
+ * 作者同一个函数 DataUtil.pDoMetaMergeSingle；作者合并不抄的字段（页码、图片标记……）照作者规则不抄。不是 _copy 的原样返回。
+ */
+export async function mergeOne(prop: string, ent: any): Promise<any> {
+  await init()
+  const from = ent?._copy?.source
+  if (typeof from !== 'string') return A.DataUtil.cleanJson(A.MiscUtil.copyFast(ent))
+  const merged = await A.DataUtil.pDoMetaMergeSingle(prop, { dependencies: { [prop]: [from] } }, A.MiscUtil.copyFast(ent))
+  if (!merged || merged._copy) throw new Error('作者没有拼出完整的一条（原件找不到）')
+  return A.DataUtil.cleanJson(merged)
+}

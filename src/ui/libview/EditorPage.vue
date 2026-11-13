@@ -13,9 +13,9 @@ import EmbeddedEntity from './EmbeddedEntity.vue'
 import EntryForm from './EntryForm.vue'
 import FillPage from './FillPage.vue'
 import JsonBox from './JsonBox.vue'
-import { existingHouse } from './house-existing'
 import OriginPane from './OriginPane.vue'
 import SavePage, { type SaveCtx } from './SavePage.vue'
+import type { HouseUse } from '../../core/house-existing'
 import { langName, plain, useEditor } from './use-editor'
 
 /**
@@ -153,7 +153,9 @@ async function doneHouse(): Promise<void> {
   const mainSide = zhIsMain ? hs.zh : hs.en, otherSide = zhIsMain ? hs.en : hs.zh
   const c = house.campaign
   const s0 = app.svc()
-  const existing = await existingHouse(s0, lib.bound ? c : null, { zh: hs.zh?.target, en: hs.en?.target }, (cs) => lib.brewSetId(cs)).catch((e: unknown) => { console.warn('[trpg-assistant] 查已有房规没成功，按新建处理', e); return null })
+  // 已有房规、在哪一层、用在哪里：后端判断（C3），这里只把层名 / 战役名显示出来
+  const existing = await s0.backend.houseExisting(c, { zh: hs.zh?.target, en: hs.en?.target }).catch((e: unknown) => { console.warn('[trpg-assistant] 查已有房规没成功，按新建处理', e); return null })
+  const useText = (u: HouseUse): string => (u.kind === 'campaign' ? `战役「${u.name}」` : u.level === 'global' ? '全局（所有战役）' : u.level.startsWith('rule:') ? `规则「${s0.rules.get(u.level.slice(5))?.name ?? u.level.slice(5)}」` : u.level)
   const levels = [...(lib.bound ? [{ value: 'campaign', label: '本战役（所有存档和分支）' }] : []), { value: `rule:${c.rule}`, label: '当前规则' }, { value: 'global', label: '全局（所有战役）' }]
   const pref = app.settings?.library.overrideLevel ?? 'campaign'
   const want = pref === 'rule' ? `rule:${c.rule}` : pref
@@ -163,7 +165,7 @@ async function doneHouse(): Promise<void> {
     main: { cs: ed.cs.main, before: house.base, after: mainSide?.edited ?? null, include: !!mainSide },
     other: { cs: ed.cs.other, before: ed.otherBase.value, after: otherSide?.edited ?? null, include: !!otherSide },
     labelOf: (cs: string) => labelOf(cs === ed.cs.main ? 'main' : 'other'),
-    house: { levels, level: levels.some((l) => l.value === want) ? want : levels[0].value, ...(existing ? { existing: { where: existing.where } } : {}) },
+    house: { levels, level: levels.some((l) => l.value === want) ? want : levels[0].value, ...(existing ? { existing: { where: existing.usedAt.map(useText) } } : {}) },
     save: async (picked: string, opts) => {
       const s = app.svc()
       const replace = !!opts?.replace && !!existing
@@ -193,8 +195,6 @@ async function doneHouse(): Promise<void> {
       toast.push('undo', replace ? `已改好房规「${title.value}」，用到它的地方都跟着变；整理完详情就更新` : `已保存房规「${title.value}」（作用于${levelLabel(level)}），整理完详情就更新`, { undo })
       modal.pop(); modal.pop()
       props.session.onSaved?.()
-      // 房规要等后台整理完才在详情里生效：整理完再重读一次
-      void s.backend.library.brewQueue.settled().then(() => { void lib.refresh(s); props.session.onSaved?.() })
     },
   }
   modal.push({ key: 'save', title: '预览', component: markRaw(SavePage), variant: 'sheet', props: { ctx } })

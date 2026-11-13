@@ -168,6 +168,8 @@ async function load(): Promise<void> {
     sourceLine.value = ''
     state.value = { kind: 'ok', d }
     enabled.value = !d.closed
+    // 后端说这一条还在整理（存完立刻发布、后台停手 5 秒才解析，§14）：整理完重读一次。只在这一处等，别的地方不用各自等（C2）
+    if (d.pending) void s.backend.library.brewQueue.settled().then(() => { if (state.value.kind === 'ok' && state.value.d === d) void load() })
     void loadExtras(d.item)
     void loadEntity(d.item)
     void loadToken(d.item)
@@ -223,6 +225,7 @@ async function setEnabled(next: boolean): Promise<void> {
         </TabsList>
         <TabsContent value="body" class="lib-mscroll">
           <div class="lib-dbody">
+            <div v-if="state.d.pending" class="lib-banner" data-testid="entry-pending"><span class="lib-pending"><Icon name="arrow-clockwise" :size="12" />更新中</span><span>刚改的内容还在后台整理，整理完这里自动换成新的。</span></div>
             <div v-if="state.d.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
             <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
             <EntryVersions :key="`${entryRef.hash}-${state.d.version.altId}`" :detail="state.d" :entry-ref="state.d.ref" :preview-copy="!!selection" @changed="load" />

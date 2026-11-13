@@ -42,10 +42,9 @@ export function useEditor(svc: () => Services, session: EditSession) {
     const en = await lib().bilingual.englishInCampaign(h.campaign, h.ref)
     if (!en) { otherState.value = 'missing'; return }
     otherRef.value = en.ref
-    ents.other.value = clean(en.item)
+    ents.other.value = clean(en.start)
     otherStart = JSON.stringify(ents.other.value)
-    const d = await lib().scoped.detail({ ...h.campaign, codeSet: cs.other }, en.ref, { browse: true }).catch(() => null)
-    otherBase.value = clean(d && !('hidden' in d) ? d.base ?? d.item : en.item)
+    otherBase.value = clean(en.base)
     otherState.value = 'found'
   }
   async function loadOther(): Promise<void> {

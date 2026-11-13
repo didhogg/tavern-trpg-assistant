@@ -7,14 +7,13 @@ import type { ManageStore } from './manage'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
 import { entryUnit, refKey, ruleScopes, type CampaignLibrary, type EntryRef } from './scopes'
-import { SOURCES } from './sources'
+import { rawEntry, type RawDeps } from './custom-raw'
 
 export type HouseEdit = { mod?: Record<string, unknown>; entity?: Record<string, unknown>; edited?: Record<string, unknown> }
 export interface HouseDeps {
-  lib: LibraryService
+  lib: LibraryService & RawDeps['lib']
   manage: ManageStore
   choose: ScopedLibrary['choose']
-  settle: (codeSet: string) => Promise<void>
   /** 插件登记的房规来源（custom.json）。 */
   houseSource: { json: string; full: string; abbreviation: string }
   /** 这套资料集的自制编号（房规条目在那里）。 */
@@ -31,31 +30,26 @@ export interface HouseDeps {
  */
 export async function createHouseRule(d: HouseDeps, c: CampaignLibrary, target: EntryRef, edit: HouseEdit, { activate = true, replace }: { activate?: boolean; replace?: EntryRef } = {}) {
   formatOfCampaign(c)
-  let stored = await d.lib.storedItem(target.set, target.prop, target.hash)
-  // 目标是刚存、后台还没解析完的自制条目（P5.5 U2）：等后台解析完再查一次
-  if (!stored && SOURCES.find((x) => x.id === target.set)?.kind === 'brew' && typeof d.lib.brewDirty === 'function' && (await d.lib.brewDirty(target.set)).length) {
-    await d.settle(c.codeSet)
-    stored = await d.lib.storedItem(target.set, target.prop, target.hash)
-  }
-  if (!stored) throw new Error(`找不到要改的条目：${refKey(target)}`)
-  const base = stored.item as { name?: string; source?: string }
+  // 原件、要改的那条房规、重名都读现在的原文（C2：刚存的还没解析也读得到，不用等后台）
+  const orig = await rawEntry(d, target)
+  if (!orig) throw new Error(`找不到要改的条目：${refKey(target)}`)
+  const base = orig.entity as { name?: string; source?: string }
   if (!base.name || !base.source) throw new Error(`原件没有名字或来源，作者的 _copy 指不到它：${refKey(target)}`)
   const baseSource = base.source
-  // 房规来源里同名的只能有一条（作者编号 = 名字 + 来源）；同名不同书的加书名缩写区分
   const links = await d.manage.houseRules()
   const replacing = replace ? links.find((l) => refKey(l.house) === refKey(replace) && refKey(l.target) === refKey(target)) : undefined
   if (replace && !replacing) throw new Error('要改的房规不是这一条条目的房规，或者已经删掉了')
-  const oldName = replacing ? ((await d.lib.storedItem(replace!.set, replace!.prop, replace!.hash))?.item as { name?: string } | undefined)?.name : undefined
-  if (replacing && !oldName) throw new Error('找不到要改的那条房规')
-  const taken = new Set<string>()
-  for (const l of links) {
-    if (replacing && refKey(l.house) === refKey(replacing.house)) continue
-    const it = (await d.lib.storedItem(l.house.set, l.house.prop, l.house.hash))?.item as { name?: string } | undefined
-    if (l.house.prop === target.prop && it?.name) taken.add(it.name)
-  }
+  const old = replacing ? await rawEntry(d, replacing.house) : null
+  if (replacing && !old?.uniqueId) throw new Error('作者的可编辑自制里找不到要改的那条房规')
+  const oldName = old ? String(old.entity.name ?? '') : undefined
+  // 房规来源里同名的只能有一条（作者编号 = 名字 + 来源）；同名不同书的加书名缩写区分
+  // 只读不建：读的小窗是只读版本，作者的 editableDoc 是「取，没有就建」，第一次建房规时会被拒（C2 回归里撞到）
+  const f0 = await d.lib.frameOf(c.codeSet)
+  const editableId = ((await f0.call('brewDocIndex')) ?? []).find((x) => x.isEditable)?.docIdLocal
+  const body = ((editableId ? (await f0.call('brewRaw', [editableId]))[0]?.body : null) ?? {}) as Record<string, Array<{ name?: string; source?: string; uniqueId?: string }> | undefined>
+  const taken = new Set((body[target.prop] ?? []).filter((x) => String(x?.source).toLowerCase() === d.houseSource.json.toLowerCase() && x?.uniqueId !== old?.uniqueId).map((x) => String(x?.name ?? '')))
   let changes: Record<string, unknown> = {}
   if (edit.edited) {
-    const f0 = await d.lib.frameOf(c.codeSet)
     const [was, now] = await Promise.all([f0.call('cleanEntity', base), f0.call('cleanEntity', edit.edited)])
     changes = topLevelChanges(was as Record<string, unknown>, now as Record<string, unknown>)
     if (!Object.keys(changes).length) throw new Error('和原件一样，没有改动，不用存房规')
@@ -70,13 +64,7 @@ export async function createHouseRule(d: HouseDeps, c: CampaignLibrary, target: 
     const f = await d.lib.frameOf(c.codeSet, view)
     await f.call('editableEnsureSource', d.houseSource)
     if (!edit.entity) await f.call('editableAddDependencies', { [target.prop]: [baseSource] })
-    let uniqueId: string | undefined
-    if (replacing) {
-      const body = (await f.call('editableDoc')).body as Record<string, Array<{ name?: string; source?: string; uniqueId?: string }> | undefined>
-      uniqueId = body?.[target.prop]?.find((x) => x?.name === oldName && String(x?.source).toLowerCase() === d.houseSource.json.toLowerCase())?.uniqueId
-      if (!uniqueId) throw new Error('作者的可编辑自制里找不到要改的那条房规')
-    }
-    const put = await f.call('editablePut', target.prop, uniqueId ? { ...ent, uniqueId } : ent)
+    const put = await f.call('editablePut', target.prop, old?.uniqueId ? { ...ent, uniqueId: old.uniqueId } : ent)
     const editable = ((await f.call('brewDocIndex')) ?? []).find((x) => x.isEditable)?.docIdLocal
     return { value: put, touched: editable ? [editable] : [] }
   })

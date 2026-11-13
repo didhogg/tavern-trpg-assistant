@@ -60,6 +60,9 @@ check('第一次改：没有已有房规时不出现选择；存成房规（环�
 
 await saveHouse(5)
 await page.screenshot({ path: `${shots}/1-house-replace.png` })
+// C3：再改已有房规，只有真改了的那一项（页码、basicRules 这些作者合并不抄的字段不算「改过」）
+const reTitle = await page.getByTestId('save-diff-title').innerText()
+check('再改已有房规：预览只列真改了的（中文：和原件比改了 1 项，没有页码 / basicRules 的假「改过」）', /中文：和原件比改了 1 项/.test(reTitle), reTitle)
 const modeText = await page.getByTestId('save-house-mode').innerText()
 const pressed = await page.locator('[data-testid="save-house-mode"] .trpg-seg button[aria-pressed="true"]').innerText().catch(() => '')
 const levelHidden = (await page.getByTestId('save-level').count()) === 0
@@ -74,9 +77,30 @@ check('直接改 → 撤销：还是那一条房规（不多出一条），退�
 
 await saveHouse(6)
 const replacedNow = await page.getByTestId('save-go').click().then(() => page.locator('.trpg-toast', { hasText: '已改好房规' }).waitFor()).then(() => true)
+// C2：详情页显示「更新中」，后台整理完自己换成新的（不用各处去等）
+const pendingShown = await page.getByTestId('entry-pending').waitFor({ timeout: 10000 }).then(() => true, () => false)
+await page.getByTestId('entry-pending').waitFor({ state: 'detached', timeout: 90000 }).catch(() => null)
+await settle(page, 1500)
+const detailNow = await page.locator('.lib-dbody').first().innerText().catch(() => '')
+await page.screenshot({ path: `${shots}/0-detail-updated.png` })
+// 这一页是从书里原件那一行点进来的，显示的是点中的版本（原件），房规标「生效中」
+check('存完：详情页先标「更新中」，整理完自己去掉、重读（房规仍标生效中）', pendingShown && (await page.getByTestId('entry-pending').count()) === 0 && /生效中/.test(detailNow), detailNow.replace(/\n/g, ' | ').slice(0, 160))
 await closeAll(); await settle(page, 600)
 const s3 = await state()
 check('直接改（不撤销）：仍是一条房规，环节 6', replacedNow && s3.kind === 'house' && s3.houseRules === 1 && s3.level === 6, JSON.stringify(s3))
+
+// C2：存完马上（不等后台整理）再打开编辑器 → 拿到的是刚存的
+await saveHouse(8)
+await page.getByTestId('save-go').click()
+await page.locator('.trpg-toast', { hasText: '已改好房规' }).waitFor()
+await closeAll()
+await openHouseEditor()
+const freshLevel = await main().locator('[data-field="level"] input').inputValue()
+const stillPending = await page.evaluate((P) => eval(P)._s.get('app').svc().backend.library.brewQueue.busy?.('cn') ?? null, P).catch(() => null)
+check('存完马上再打开编辑器（后台还没整理完也行）：从刚存的环节 8 开始改', freshLevel === '8', JSON.stringify({ freshLevel, stillPending }))
+await closeAll(); await settle(page, 600)
+const s3b = await state()
+check('还是一条房规（环节 8）', s3b.houseRules === 1 && s3b.level === 8, JSON.stringify(s3b))
 
 await saveHouse(7, '另存一条新的')
 const levelShown = (await page.getByTestId('save-level').count()) === 1

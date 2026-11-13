@@ -231,16 +231,17 @@ export class BilingualLibrary {
 
   /**
    * 一条官方条目在这个战役里生效的英文：英文原文有房规 / 选了别的版本就给那一份，没有就是英文原文（P5 英文对照）。
-   * 编辑器右栏 English、详情的 En 用。英文对照查不到给 null。
+   * 编辑器右栏 English、详情的 En 用（base = 英文原件；start = 编辑器从这一份开始改，见 custom-raw.houseNow）。英文对照查不到给 null。
    */
-  async englishInCampaign(c: CampaignLibrary, ref: EntryRef): Promise<{ ref: EntryRef; item: unknown; altId: string } | null> {
+  async englishInCampaign(c: CampaignLibrary, ref: EntryRef): Promise<{ ref: EntryRef; item: unknown; altId: string; base: unknown; start: unknown } | null> {
     if (!this.scoped) throw new Error('没有接上条目查询（scoped）')
     const en = await this.scoped.englishOf(ref, { fluff: false })
     if (en?.status !== 'found') return null
     const pair = getSource(ref.set).pair
     if (!pair) return null
     const enRef = { set: pair, prop: ref.prop, hash: en.hash }
-    const d = await this.scoped.detail(c, enRef, { browse: true })
-    return d && !('hidden' in d) ? { ref: enRef, item: d.item, altId: d.version.altId } : { ref: enRef, item: en.item, altId: 'base' }
+    // 现在生效的那一份按插件的选择 + 原文当场拼（C2：刚存的英文房规不用等后台解析）
+    const now = await this.custom.houseNow(c, enRef)
+    return { ref: enRef, item: now.item as unknown, altId: now.altId, base: now.base as unknown, start: now.start as unknown }
   }
 }

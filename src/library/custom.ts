@@ -10,6 +10,7 @@ import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
 import { createPack, deletePack, docIdOf, exportPack, lastPack, listPacks, rememberPack, renamePack, type PackDeps, type PackSource } from './custom-packs'
 import { createHouseRule, type HouseEdit } from './custom-house'
+import { houseNow } from './custom-raw'
 import { emptyIfMissing } from './official-missing'
 import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
@@ -47,7 +48,7 @@ const brewSetOf = (codeSet: string): SourceEntry => {
 
 export class CustomLibrary {
   /** counterpartHint：保存条目后顺带查它在另一种语言里对上了谁（只提示，不写任何东西；P5 G-3b）。 */
-  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase, private readonly counterpartHint?: (ref: EntryRef) => Promise<Counterpart>, private readonly busy: (codeSet: string) => boolean = () => false, private readonly settle: (codeSet: string) => Promise<void> = async () => undefined) {}
+  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase, private readonly counterpartHint?: (ref: EntryRef) => Promise<Counterpart>, private readonly busy: (codeSet: string) => boolean = () => false) {}
 
   private get manage(): ManageStore {
     return this.scoped.manage
@@ -255,9 +256,13 @@ export class CustomLibrary {
   /** 条目换包（编号会变：先用 backend.entryChangeImpact 看影响）。撤销两步。 */
   moveEntries(codeSet: string, prop: string, uniqueIds: string[], fromPack: string, toPack: string) { return moveEntries(this.entryDeps, codeSet, prop, uniqueIds, fromPack, toPack) }
 
+  /** 这个战役里这一条现在用的是哪一份、生效的样子（房规当场拼，不等后台解析）：见 custom-raw.ts（C2）。编辑器打开房规用。 */
+  houseNow(c: CampaignLibrary, target: EntryRef) {
+    return houseNow({ lib: this.lib, edits: (f, cc) => this.edits(f, cc), detail: (...a) => this.scoped.detail(...a), houseSet: (cs) => brewSetOf(cs).id }, c, target)
+  }
   /** 房规（写一条 / 直接改已有的一条）：见 custom-house.ts。 */
   createHouseRule(c: CampaignLibrary, target: EntryRef, edit: HouseEdit, opts: { activate?: boolean; replace?: EntryRef } = {}) {
-    return createHouseRule({ lib: this.lib, manage: this.manage, choose: (cc, t, alt) => this.scoped.choose(cc, t, alt), settle: this.settle, houseSource: CUSTOM.house, houseSet: (cs) => brewSetOf(cs).id }, c, target, edit, opts)
+    return createHouseRule({ lib: this.lib, manage: this.manage, choose: (cc, t, alt) => this.scoped.choose(cc, t, alt), houseSource: CUSTOM.house, houseSet: (cs) => brewSetOf(cs).id }, c, target, edit, opts)
   }
 
   /** 删房规：作者删条 + 去掉链接；选过它的地方自动回到原件（生效版本会标"选过的备选不在了"）。 */

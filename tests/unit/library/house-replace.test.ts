@@ -30,6 +30,10 @@ function setup({ newHash = 'fireball_trpghouse' } = {}) {
   const frame = { call: async (name: string, ...args: unknown[]) => {
     if (name === 'cleanEntity') return clean(args[0] as Record<string, unknown>)
     if (name === 'editableDoc') return { body: { spell: [old] } }
+    // 现在的原文（C2：读作者存储，不读解析结果）
+    if (name === 'brewDocIndex') return [{ docIdLocal: 'editable', isEditable: true }]
+    if (name === 'brewRaw') return [{ body: { spell: [old] } }]
+    if (name === 'packEntity') return (args[2] as { hash: string }).hash === house.hash ? { entity: old, hadId: true } : null
     if (name === 'editablePut') { puts.push(args[1] as Record<string, unknown>); return { uniqueId: 'house-1', hash: newHash, previousHash: house.hash, previous: { name: old.name, source: old.source }, previousEntity: old } }
     return undefined
   } }
