@@ -79,6 +79,8 @@ export function suggestJson(name: string): string {
  */
 export function usePending(s: () => Services, codeSets: () => string[], onDone: () => void) {
   const packs = ref<Set<string>>(new Set())
+  /** 后台整理没成功（例如缺依赖）：原因；存的原文还在，[重试] 再整理一次。 */
+  const failed = ref<string | null>(null)
   let timer: ReturnType<typeof setTimeout> | null = null
   let stopped = false
   async function check(): Promise<void> {
@@ -90,9 +92,18 @@ export function usePending(s: () => Services, codeSets: () => string[], onDone: 
       packs.value = new Set(rs.flatMap((r) => r.packs))
       const busy = rs.some((r) => r.busy || r.packs.length)
       if (busy) timer = setTimeout(() => void check(), 2000)
-      else if (was) onDone()
+      else {
+        const last = codeSets().map((c) => s().backend.library.brewQueue.last.get(c) as { error?: string; aborted?: boolean } | undefined).find((x) => x?.error && !x.aborted)
+        failed.value = last?.error ?? null
+        if (was) onDone()
+      }
     } catch (e) { console.warn('[trpg-assistant] 读取整理状态没成功（不影响使用）', e) }
   }
   onBeforeUnmount(() => { stopped = true; if (timer) clearTimeout(timer) })
-  return { packs, check }
+  async function retry(): Promise<void> {
+    failed.value = null
+    for (const c of codeSets()) s().backend.library.brewQueue.trigger(c)
+    await check()
+  }
+  return { packs, failed, check, retry }
 }

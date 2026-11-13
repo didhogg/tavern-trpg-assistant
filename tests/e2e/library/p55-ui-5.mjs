@@ -1,0 +1,96 @@
+// P5.5 界面第 5 批（u7-11 预览兼保存、u7-12 状态）：新建 → [完成] → 预览页（作者渲染、作者提醒小条、存进哪个包）→ 保存 → 「已保存 · 撤销」、
+// 包和我的库「整理中」；改自己的条目 → 预览页列「中文改了几项 · English 改了几项」、改名写「有 n 处用到它」；撤销。
+// 用法：SKIP_BUILD=1 node tests/e2e/library/p55-ui-5.mjs（截图 work/e2e-lib/p55-ui-shots/5/）
+import { check, failures, settle } from '../helpers.mjs'
+import { openLibrary, P } from './p55-ui-common.mjs'
+
+const { ctx, page, server, shots, tab, closeAll, realErrors } = await openLibrary('5')
+await page.evaluate(async (P) => { const lib = eval(P)._s.get('app').svc().backend.library; await lib.custom.createPack('cn', { json: 'PIRATE', full: '海盗战役', abbreviation: 'PIR' }, { rule: 'dnd5e2014' }); await lib.custom.createPack('cn', { json: 'OTHERPK', full: '另一个包', abbreviation: 'OTH' }, { rule: 'dnd5e2014' }) }, P)
+await tab('我的库')
+await page.locator('[data-testid="mylib-open"]', { hasText: '海盗战役' }).first().click()
+await page.waitForSelector('[data-testid="pack-page"]')
+const main = () => page.getByTestId('editor-main')
+const side = () => page.getByTestId('editor-side')
+
+// 新建：从已有的火球术开始 → 完成 → 预览页
+await page.getByTestId('pack-new-entry').click()
+await page.getByTestId('type-common').filter({ hasText: /^法术$/ }).first().click()
+await page.getByTestId('start-option').nth(2).click()
+await page.getByTestId('start-next').click()
+await page.locator('[data-testid="start-existing"] input[type="search"]').fill('火球')
+await page.getByTestId('pick-row').first().click()
+await page.getByTestId('pick-go').click()
+await page.waitForSelector('[data-testid="editor"] [data-testid="entry-form"]')
+await main().locator('[data-field="name"] input').fill('海盗火球')
+await page.getByTestId('editor-done').click()
+await page.waitForSelector('[data-testid="save-page"] [data-testid="embedded-author"]', { timeout: 60000 })
+await settle(page, 800)
+await page.screenshot({ path: `${shots}/1-save-new.png` })
+const sumNew = await page.getByTestId('save-page').locator('.lib-sum').innerText()
+check('新建的预览页：作者渲染 + 只问存进哪个包（默认这个包）', /存进/.test(sumNew) && /海盗战役/.test(sumNew) && /新写一条/.test(sumNew), sumNew.replace(/\n/g, ' | '))
+// [回去改] 回到表单，内容还在
+await page.getByRole('button', { name: '回去改' }).click()
+await page.waitForSelector('[data-testid="editor"]')
+check('[回去改]：回到表单，内容还在', (await main().locator('[data-field="name"] input').inputValue()) === '海盗火球')
+await page.getByTestId('editor-done').click()
+await page.waitForSelector('[data-testid="save-page"]')
+await page.getByTestId('save-go').click()
+await page.locator('.trpg-toast', { hasText: '已保存「海盗火球」' }).waitFor()
+await settle(page, 300)
+await page.screenshot({ path: `${shots}/2-saved-toast-pending.png` })
+const toastText = await page.locator('.trpg-toast', { hasText: '已保存' }).innerText()
+const pend = await page.getByTestId('pack-pending').waitFor({ timeout: 8000 }).then(() => 1, () => 0)
+check('保存后：回到包的列表，「已保存 · 撤销」，包里显示整理中', /撤销/.test(toastText) && pend === 1, JSON.stringify({ toastText, pend }))
+await page.waitForSelector('[data-testid="mine-row"]', { timeout: 90000 })
+await page.screenshot({ path: `${shots}/3-pack-after-tidy.png` })
+
+// 改自己的条目：改名 + 改环节 + 写英文 → 预览页列两边改了几项；改名写有几处用到它
+await page.getByTestId('mine-edit').first().click()
+await page.waitForSelector('[data-testid="editor"] [data-testid="entry-form"]')
+await settle(page, 1200)
+await main().locator('[data-field="name"] input').fill('海盗大火球')
+await main().locator('[data-field="level"] input').fill('4')
+await side().locator('[data-field="name"] input').fill('Pirate Fireball')
+await page.getByTestId('editor-done').click()
+await page.waitForSelector('[data-testid="save-diff-title"]')
+await settle(page, 1500)
+await page.screenshot({ path: `${shots}/4-save-edit-diff.png` })
+const title = await page.getByTestId('save-diff-title').innerText()
+const diff = await page.getByTestId('save-page').locator('[data-testid="save-diff"]').first().innerText().catch(() => '')
+check('改自己的条目：列「中文改了几项 · English 新写一条」和每项改前 → 改后（字段用中文名）', /中文：改了 \d+ 项/.test(title) && /English/.test(title) && /环节/.test(diff) && /3 → 4|3\s*→\s*4/.test(diff), JSON.stringify({ title, diff: diff.replace(/\n/g, ' | ') }))
+await page.getByTestId('save-go').click()
+await page.locator('.trpg-toast', { hasText: '已保存「海盗大火球」' }).waitFor()
+// 原文是马上存好的（整理在后台），直接读包文件
+const after = await page.evaluate(async (P) => { const lib = eval(P)._s.get('app').svc().backend.library; return { zh: ((await lib.custom.exportPack('cn', 'pirate')).body.spell ?? []).map((s) => [s.name, s.ENG_name, s.level]), en: ((await lib.custom.exportPack('en', 'pirate')).body.spell ?? []).map((s) => s.name) } }, P)
+check('存好：中文改名改环节、英文名自动写；英文那套自动建包存了一条', after.zh[0]?.[0] === '海盗大火球' && after.zh[0]?.[1] === 'Pirate Fireball' && after.zh[0]?.[2] === 4 && after.en[0] === 'Pirate Fireball', JSON.stringify(after))
+
+// 撤销：提示条里的 [撤销]
+await page.locator('.trpg-toast', { hasText: '已保存「海盗大火球」' }).getByRole('button', { name: '撤销' }).click()
+await page.locator('.trpg-toast', { hasText: '已撤销' }).waitFor({ timeout: 30000 }).catch(() => null)
+const undone = await page.evaluate(async (P) => ((await eval(P)._s.get('app').svc().backend.library.custom.exportPack('cn', 'pirate')).body.spell ?? []).map((s) => [s.name, s.level]), P)
+check('「已保存」里的 [撤销]：中文退回改之前', undone[0]?.[0] === '海盗火球' && undone[0]?.[1] === 3, JSON.stringify(undone))
+await page.evaluate(async (P) => eval(P)._s.get('app').svc().backend.library.brewQueue.settled(), P)
+
+// 我的库：整理中 / 草稿条都没有了
+await closeAll(); await settle(page, 300)
+await tab('书架'); await tab('我的库')
+await settle(page, 1500)
+await page.screenshot({ path: `${shots}/5-mylib.png` })
+// 窄屏的预览页
+await page.setViewportSize({ width: 390, height: 800 })
+await page.locator('[data-testid="mylib-open"]', { hasText: '海盗战役' }).first().click()
+await page.waitForSelector('[data-testid="mine-edit"]', { timeout: 90000 })
+await page.getByTestId('mine-edit').first().click()
+await page.waitForSelector('[data-testid="editor"] [data-testid="entry-form"]')
+await settle(page, 800)
+await main().locator('[data-field="level"] input').fill('5')
+await page.getByTestId('editor-done').click()
+await page.waitForSelector('[data-testid="save-diff-title"]')
+await settle(page, 1200)
+await page.screenshot({ path: `${shots}/6-save-narrow.png` })
+
+check('页面没有未处理的错误（断网预期的除外）', realErrors().length === 0, realErrors().slice(0, 2).join(' | '))
+await ctx.close()
+server.close()
+console.log(failures.length ? `FAIL ${failures.length}` : 'ALL PASS')
+process.exit(failures.length ? 1 : 0)

@@ -100,3 +100,8 @@
 .lib-list__row--edit { display: flex; align-items: center; gap: var(--sp-2); padding-block: 0; }
 .lib-list__open { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--sp-2); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; min-height: inherit; }
 .lib-pane__head > .trpg-seg { flex: none; }
+/* 预览兼保存（u7-11） */
+.lib-notes { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 10px; border: 0; border-radius: 999px; background: var(--bg-sunk); color: var(--text2); font-size: 12px; cursor: pointer; }
+.lib-sum { flex: none; display: grid; gap: var(--sp-2); max-height: 45%; overflow: auto; padding: var(--sp-3) var(--sp-4); border-top: var(--border) solid var(--line); background: var(--surface); }
+.lib-sum__row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-size: var(--fs-sm); }
+.lib-sum__row > .trpg-select-trigger { width: auto; min-width: 200px; }

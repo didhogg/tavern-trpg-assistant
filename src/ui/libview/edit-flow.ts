@@ -24,6 +24,8 @@ export interface EditSession {
   draftKey?: string
   /** 详细表单：全部字段展开（作者模板起点）；简易表单只列必填，其余折起来。 */
   detailed?: boolean
+  /** 改自己包里的条目：打开时的作者编号（改名时查有几处用到它）。 */
+  hash?: string
   /** 改已有的条目：作者编号（换掉这一条）。 */
   replaceHash?: string
 }
@@ -55,7 +57,7 @@ export async function openEditMine(s: Services, codeSet: string, pack: { id: str
   if (!got?.entity) throw new Error('包里找不到这一条')
   const ent = got.entity as Ent
   const uniqueId = typeof ent.uniqueId === 'string' ? ent.uniqueId : got.hash ?? hash
-  openEditor({ codeSet, prop, typeName: await typeNameOf(s, codeSet, prop), pack, ent, target: { kind: 'mine', uniqueId, pack: pack.id }, replaceHash: got.hadId ? undefined : got.hash ?? hash, detailed: true })
+  openEditor({ codeSet, prop, typeName: await typeNameOf(s, codeSet, prop), pack, ent, target: { kind: 'mine', uniqueId, pack: pack.id }, hash: got.hash ?? hash, replaceHash: got.hadId ? undefined : got.hash ?? hash, detailed: true })
 }
 
 /** 我的库顶上的草稿 [继续]：回到编辑器接着改。 */

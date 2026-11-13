@@ -135,7 +135,7 @@ function edit(r: PackRow): void {
     </template>
     <div v-else-if="loading && !rows.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <div v-else ref="scrollEl" class="lib-mscroll">
-      <div v-if="cat === 'book' ? false : !filtered.length && !shownReaders.length" class="lib-state"><h3>{{ q ? '没有符合的' : '这个包里没有可显示的条目' }}</h3><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>
+      <div v-if="cat === 'book' ? false : !filtered.length && !shownReaders.length" class="lib-state"><h3>{{ q ? '没有符合的' : packPending ? '刚存的条目正在整理' : '这个包里没有可显示的条目' }}</h3><p v-if="!q && packPending" class="lib-muted">整理完就出现在这里，一般十几秒。</p><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>
       <div v-else-if="cat === 'book'" class="lib-list" role="list">
         <button v-for="r in shownReaders" :key="`${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
       </div>

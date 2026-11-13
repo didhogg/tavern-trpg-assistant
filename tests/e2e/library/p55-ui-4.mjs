@@ -66,6 +66,8 @@ check('停手后草稿自动存', /草稿已自动存/.test(draftLine), draftLin
 
 // 完成：两边一起存
 await page.getByTestId('editor-done').click()
+await page.waitForSelector('[data-testid="save-page"]')
+await page.getByTestId('save-go').click()
 await page.locator('.trpg-toast', { hasText: '已保存' }).waitFor()
 await page.evaluate(async (P) => eval(P)._s.get('app').svc().backend.library.brewQueue.settled(), P)
 const saved = await page.evaluate(async (P) => {

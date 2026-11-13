@@ -118,5 +118,8 @@ export function useEditor(svc: () => Services, session: EditSession) {
     return { zh: pick(zhSide), en: pick(zhSide === 'main' ? 'other' : 'main') }
   }
 
-  return { cs, ents, tables, otherState, left, right, ready, dirty, setEnt, jsonText, jsonIssues, onJson, marks, draftAt, dropDraft, undoLeft, loadUndo, sides, otherTouched }
+  /** 另一语言打开时的样子（本来就有那一条才有；新建 / 还没有为 null）。 */
+  const otherBefore = (): Ent | null => (otherState.value === 'found' && otherStart ? JSON.parse(otherStart) as Ent : null)
+
+  return { otherBefore, cs, ents, tables, otherState, left, right, ready, dirty, setEnt, jsonText, jsonIssues, onJson, marks, draftAt, dropDraft, undoLeft, loadUndo, sides, otherTouched }
 }

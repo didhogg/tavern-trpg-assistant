@@ -89,6 +89,7 @@ const onMenu = (p: PackPair, key: string) => runPackMenu(app.svc(), key, p, code
         <span>{{ narrow ? `${drafts.length} 份没保存的草稿` : `有 ${drafts.length} 份没保存的草稿：${drafts.slice(0, 3).map(draftName).join(' · ')}` }}</span>
         <span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" data-testid="draft-continue" @click="continueDraft(drafts[0].key)">继续{{ drafts.length > 1 ? '最新的' : '' }}</button><MoreMenu v-if="drafts.length > 1" label="继续哪一份草稿" :items="drafts.map((d) => ({ key: d.key, label: `继续：${draftName(d)}` }))" @select="continueDraft" /></span>
       </div>
+      <ErrorBanner v-if="pending.failed.value" :text="`后台整理没成功：${pending.failed.value}。你存的内容都在。`" what="后台整理" :actions="[{ label: '重试', run: pending.retry }]" data-testid="mylib-parse-failed" />
       <ErrorBanner v-if="lib.pairsError" :text="`我的库没读出来：${lib.pairsError}`" what="读取我的库" :actions="[{ label: '重试', run: reload }]" />
       <div v-if="lib.pairs === null && !lib.pairsError" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>
       <div v-else-if="!rows.length && !q" class="lib-state" data-testid="mylib-empty">

@@ -12,6 +12,7 @@ import EmbeddedEntity from './EmbeddedEntity.vue'
 import EntryForm from './EntryForm.vue'
 import FillPage from './FillPage.vue'
 import JsonBox from './JsonBox.vue'
+import SavePage, { type SaveCtx } from './SavePage.vue'
 import { langName, plain, useEditor } from './use-editor'
 
 /**
@@ -94,17 +95,38 @@ async function cancel(): Promise<void> {
   modal.pop()
 }
 const saving = ref(false)
-async function done(): Promise<void> {
-  const pack = props.session.pack
-  if (!pack) { toast.error('不知道存进哪个包'); return }
-  saving.value = true
-  try {
-    await app.svc().backend.library.bilingual.saveBoth(pack.id, props.session.prop, ed.sides(), lib.campaignLib?.rule ? { rule: lib.campaignLib.rule } : {})
-    await ed.dropDraft()
-    toast.success(`已保存「${title.value}」`)
-    await lib.loadPairs(app.svc())
-    modal.popToRoot()
-  } catch (e) { console.error('[trpg-assistant] 保存失败', e); toast.error(`保存没有成功：${e instanceof Error ? e.message : String(e)}。编辑器里的内容还在。`) } finally { saving.value = false }
+/** [完成] → 预览兼保存（u7-11）；真正存在那一页点 [保存]。 */
+function done(): void {
+  const sides = ed.sides()
+  const zhIsMain = ed.cs.main !== 'en'
+  const mainSide = zhIsMain ? sides.zh : sides.en, otherSide = zhIsMain ? sides.en : sides.zh
+  const isNew = props.session.target.kind === 'new'
+  const ctx: SaveCtx = {
+    prop: props.session.prop, isNew, pack: props.session.pack,
+    main: { cs: ed.cs.main, before: isNew ? null : plain(props.session.ent), after: mainSide?.ent ?? null, include: !!mainSide },
+    other: { cs: ed.cs.other, before: ed.otherBefore(), after: otherSide?.ent ?? null, include: !!otherSide },
+    oldHash: props.session.hash,
+    labelOf: (cs: string) => labelOf(cs === ed.cs.main ? 'main' : 'other'),
+    save: async (packId: string) => {
+      saving.value = true
+      try {
+        const lib2 = app.svc().backend.library
+        const r = await lib2.bilingual.saveBoth(packId, props.session.prop, sides, lib.campaignLib?.rule ? { rule: lib.campaignLib.rule } : {})
+        await ed.dropDraft()
+        const undoAll = async () => {
+          for (const [cs, x] of [['cn', r.zh], ['en', r.en]] as const) if (x?.uniqueId) await lib2.custom.undo(cs, props.session.prop, x.uniqueId)
+          toast.success('已撤销这次保存')
+          await lib.loadPairs(app.svc())
+        }
+        toast.push('undo', `已保存「${title.value}」`, { undo: undoAll })
+        await lib.loadPairs(app.svc())
+        // 回到包的列表；从我的库的草稿条直接进来的（下面没有包的弹窗）就整个关掉
+        if (modal.stack[0]?.key.startsWith('edit:')) modal.close(true)
+        else modal.popToRoot()
+      } finally { saving.value = false }
+    },
+  }
+  modal.push({ key: 'save', title: '预览', component: markRaw(SavePage), variant: 'sheet', props: { ctx } })
 }
 </script>
 
@@ -149,7 +171,7 @@ async function done(): Promise<void> {
       <span class="lib-end">
         <button v-if="wide" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="!loaded || ed.otherState.value === 'ambiguous'" data-testid="editor-fill" @click="openFill">从{{ langName(ed.cs[L]) }}版填入空着的…</button>
         <button class="trpg-btn" type="button" @click="cancel">取消</button>
-        <button class="trpg-btn trpg-btn--primary" type="button" :disabled="!loaded || saving" data-testid="editor-done" @click="done">{{ saving ? '正在存…' : '完成' }}</button>
+        <button class="trpg-btn trpg-btn--primary" type="button" :disabled="!loaded || saving" data-testid="editor-done" @click="done">完成</button>
       </span>
     </div>
   </div>
