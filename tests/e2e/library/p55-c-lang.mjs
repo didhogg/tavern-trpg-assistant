@@ -33,6 +33,10 @@ const r = await page.evaluate(async () => {
   const unitOf = async (cs) => { const t = await lib.custom.fields(cs, 'spell'); const d = (s) => (s && s.ref ? t.defs[s.ref] : s); const time = d(t.fields.find((x) => x.name === 'time').shape); return d(time.of).props.find((p) => p.name === 'unit').shape }
   const zhUnit = await unitOf('cn')
   out.labels = { suggest: zhUnit.suggest, zh: zhUnit.labels ?? null, en: (await unitOf('en')).labels ?? null }
+  // 学派：作者结构定义给了代号建议值（A / V …），中文小窗给作者中文名、英文小窗给英文名
+  const schoolOf = async (cs) => { const t = await lib.custom.fields(cs, 'spell'); const s = t.fields.find((x) => x.name === 'school').shape; return s.ref ? t.defs[s.ref] : s }
+  const zs = await schoolOf('cn')
+  out.school = { c: zs.c, suggest: zs.suggest, zh: zs.labels ?? null, en: (await schoolOf('en')).labels ?? null }
   out.step = '// C2 / C3'
   // C2 / C3：中文建包 → 加英文版 → 列成一行
   await lib.custom.createPack('cn', { json: 'P55LANG', full: '双语测试包', abbreviation: 'L' })
@@ -78,6 +82,7 @@ await writeFile(`${work}/p55-c-lang-chrome.json`, JSON.stringify({ r, pageErrors
 const o = r
 if (o.error) { console.log('STEP', o.step, o.error); process.exit(1) }
 check('C10 下拉 / 建议值显示名：施法时间单位的建议值，中文小窗给作者中文名（action = 动作）', o.labels.suggest?.includes('action') && o.labels.zh?.action === '动作', JSON.stringify(o.labels))
+check('学派：9 个代号可选，中文 V = 塑能、英文 V = Evocation', o.school?.suggest?.length === 9 && o.school.zh?.V === '塑能' && o.school.en?.V === 'Evocation', JSON.stringify(o.school))
 check('C3 加英文版 → 英文那套出现同编号的包；C2 列成一行（中 / En 都有）', o.add.codeSet === 'en' && o.row?.zh && o.row?.en, JSON.stringify({ add: o.add, row: o.row }))
 check('C7 英文那边还没有包：存英文时自动建同编号的包', o.soloRow?.zh && o.soloRow?.en, JSON.stringify(o.soloRow))
 check('C6 中文这一条在英文里的原文：对上 Fire Parrot', o.other.state === 'found' && o.other.name === 'Fire Parrot', JSON.stringify(o.other))
