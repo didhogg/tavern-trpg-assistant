@@ -12,12 +12,15 @@ import type { EditSession } from './edit-flow'
 import EmbeddedEntity from './EmbeddedEntity.vue'
 import ChildrenSection from './ChildrenSection.vue'
 import EntryForm from './EntryForm.vue'
+import ConvertPage from './ConvertPage.vue'
 import FillPage from './FillPage.vue'
 import JsonBox from './JsonBox.vue'
 import OriginPane from './OriginPane.vue'
 import SavePage, { type SaveCtx } from './SavePage.vue'
 import type { HouseUse } from '../../core/house-existing'
-import { langName, plain, useEditor } from './use-editor'
+import { langName, plain, useEditor, type Side } from './use-editor'
+import { sideOf } from './mine'
+import type { Ent } from './edit-json'
 
 /**
  * P5.5 u7-10 编辑器（驾驶员 2026-11-13 第二版）：宽屏左栏 = 主编辑语言的表单，右侧栏 = ［另一语言 | JSON | 预览］一次一种，
@@ -46,6 +49,20 @@ onBeforeUnmount(() => ro?.disconnect())
 const L = computed(() => ed.left.value)
 const R = computed(() => ed.right.value)
 const house = props.session.house ?? null
+const convertSides = ref<Side[]>([])
+onMounted(async () => {
+  const sides = ['main', 'other'] as const
+  const available = await Promise.all(sides.map(async (side) => {
+    try {
+      const converters = await app.svc().backend.library.custom.converters(ed.cs[side])
+      return converters.some((c) => c.prop === props.session.prop) ? side : null
+    } catch (e) {
+      console.warn('[trpg-assistant] 这一栏的作者转换器没读到', e)
+      return null
+    }
+  }))
+  convertSides.value = available.filter((side) => side !== null)
+})
 const tab = ref(house ? 'origin' : 'other')
 const tabs = computed(() => [...(house && L.value === 'main' ? [{ value: 'origin', label: '原件' }] : []), { value: 'other', label: langName(ed.cs[R.value]) }, { value: 'json', label: 'JSON' }, { value: 'preview', label: '预览' }])
 const formKey = ref(0)
@@ -68,6 +85,41 @@ function restoreField(f: string): void {
   ed.setEnt('main', next); formKey.value++
 }
 const showJson = () => { tab.value = 'json'; showMain.value = false }
+const conversionSide = computed(() => !wide.value && !showMain.value && tab.value === 'other' ? R.value : L.value)
+function regenerate(side: Side): void {
+  const before = ed.ents[side].value
+  const context = house?.campaign ?? lib.campaignLib
+  if (!before || !context) return
+  const pair = lib.pairs?.find((p) => p.id === props.session.pack?.id)
+  const rule = house ? context.rule : pair ? sideOf(pair, ed.cs[side]).rule ?? context.rule : context.rule
+  const codeSet = ed.cs[side]
+  modal.push({
+    key: 'editor-convert', title: `从文字重新生成 · ${langName(codeSet)}`, component: markRaw(ConvertPage), variant: 'sheet',
+    props: {
+      session: { ...props.session, codeSet },
+      campaign: { ...context, rule },
+      onUse: (output: Ent) => {
+        const { source: _source, uniqueId: _id, ...converted } = output
+        const next: Ent = {
+          ...converted,
+          name: converted.name || converted.caption || before.name,
+          ...(before.source !== undefined ? { source: before.source } : {}),
+          ...(before.uniqueId !== undefined ? { uniqueId: before.uniqueId } : {}),
+          ...(before.edition !== undefined ? { edition: before.edition } : {}),
+          ...(before.ENG_name !== undefined && converted.ENG_name === undefined ? { ENG_name: before.ENG_name } : {}),
+        }
+        ed.setEnt(side, next)
+        formKey.value++
+        modal.pop()
+        toast.push('undo', `已替换${langName(codeSet)}这一栏`, { undo: () => {
+          if (ed.ents[side].value !== next) { toast.info('这一栏已有后续改动'); return }
+          ed.setEnt(side, before)
+          formKey.value++
+        } })
+      },
+    },
+  })
+}
 /** 从属条目存好了：后端已同步主条目的引用表（职业 classFeatures……），把这几张表从存储里重读进编辑器，免得再存主条目时拿旧表盖掉（§16.10 2c）。 */
 async function relink(fields: string[]): Promise<void> {
   if (props.session.target.kind !== 'mine' || !props.session.pack) return
@@ -219,6 +271,7 @@ async function doneHouse(): Promise<void> {
       <span v-if="session.pack">在 <b>{{ session.pack.name }}</b></span>
       <span v-if="house" class="lib-housenote" data-testid="house-note"><Icon name="info" :size="14" />改的是<b>房规</b>：原件不动</span>
       <span class="lib-end">
+        <button v-if="loaded && ed.ents[conversionSide].value && convertSides.includes(conversionSide) && (wide || showMain || tab === 'other')" class="trpg-btn trpg-btn--small" type="button" data-testid="editor-regenerate" @click="regenerate(conversionSide)">从文字重新生成…{{ wide ? `（${langName(ed.cs[conversionSide])}）` : '' }}</button>
         <button v-if="session.target.kind === 'mine'" class="trpg-btn trpg-btn--small" type="button" :disabled="!ed.undoLeft.value" data-testid="editor-undo" @click="undo"><Icon name="arrow-counter-clockwise" :size="14" />{{ wide ? `撤销（还剩 ${ed.undoLeft.value} 步）` : `撤销 ${ed.undoLeft.value}` }}</button>
         <button v-if="wide" class="trpg-btn trpg-btn--small" type="button" data-testid="editor-swap" @click="swap">⇄ 左右对调</button>
       </span>
@@ -239,6 +292,7 @@ async function doneHouse(): Promise<void> {
         <div class="lib-pane__body">
           <OriginPane v-if="tab === 'origin' && house" :base="house.base" :current="ed.ents.main.value" :changed="Object.keys(ed.marksOf('main'))" :label-of="labelOf('main')" :prop="session.prop" :code-set="ed.cs.main" :source="String(house.base.source ?? '')" @restore="restoreField" />
           <template v-else-if="tab === 'other'">
+            <button v-if="wide && ed.ents[R].value && ed.tables[R].value && convertSides.includes(R)" class="trpg-btn trpg-btn--small" type="button" data-testid="editor-regenerate-other" @click="regenerate(R)">从文字重新生成…（{{ langName(ed.cs[R]) }}）</button>
             <p v-if="ed.otherState.value === 'missing'" class="lib-muted">这一条没有{{ langName(ed.cs[R]) }}对照；这次只改{{ langName(ed.cs[L]) }}。</p>
             <div v-else-if="ed.otherState.value === 'loading'" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
             <p v-else-if="ed.otherState.value === 'ambiguous'" class="lib-muted">{{ langName(ed.cs[R]) }}那套里有好几条对得上，没法确定是哪一条；这次先不改另一种语言。</p>

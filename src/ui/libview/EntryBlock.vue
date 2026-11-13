@@ -3,7 +3,7 @@ import { computed, inject, ref } from 'vue'
 import Icon from '../kit/Icon.vue'
 import RenderedBlock from './RenderedBlock.vue'
 import TableGrid from './TableGrid.vue'
-import { CODESET_KEY } from './entry-blocks'
+import { CODESET_KEY, openEntriesPaste } from './entry-blocks'
 
 /** 直接编辑作者正文块的对应属性。保留段落的标题译名、样式、出处等附加字段。 */
 const props = defineProps<{ value: unknown; label: string }>()
@@ -36,6 +36,10 @@ function changeChild(key: 'items' | 'entries' | 'tables', index: number, value: 
 function setGrid(rows: unknown[], headers?: unknown[]): void {
   emit('update', { ...obj.value, rows, ...(headers ? { [Array.isArray(obj.value?.colLabelRows) ? 'colLabelRows' : 'colLabels']: headers } : {}) })
 }
+async function pasteEntries(): Promise<void> {
+  const blocks = await openEntriesPaste(codeSet.value)
+  if (blocks?.length && Array.isArray(entries.value)) set('entries', [...entries.value, ...blocks])
+}
 </script>
 
 <template>
@@ -53,7 +57,10 @@ function setGrid(rows: unknown[], headers?: unknown[]): void {
       <EntryBlock :value="entry" :label="`${label}，第 ${i + 1} 段`" @update="changeChild('entries', i, $event)" @json="emit('json')" />
       <button class="trpg-icon-btn" type="button" :aria-label="`删除第 ${i + 1} 段正文`" @click="set('entries', entries.filter((_, index) => index !== i))"><Icon name="x" :size="14" /></button>
     </div>
-    <button class="trpg-btn trpg-btn--small trpg-btn--quiet lib-edittext__add" type="button" @click="set('entries', [...entries, ''])"><Icon name="plus" :size="14" />文字段</button>
+    <div class="lib-inline">
+      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="set('entries', [...entries, ''])"><Icon name="plus" :size="14" />文字段</button>
+      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="pasteEntries">粘贴文字转成正文</button>
+    </div>
   </div>
   <div v-else-if="obj?.type === 'list' && items" class="lib-edittext" data-testid="block-list">
     <input v-if="obj.name !== undefined" class="trpg-input" type="text" :value="obj.name" :aria-label="`${label}的列表标题`" @input="set('name', input($event))" />

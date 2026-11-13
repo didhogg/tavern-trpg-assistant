@@ -10,7 +10,7 @@ import SelectField from '../kit/SelectField.vue'
 import EntryBlock from './EntryBlock.vue'
 import TableGrid from './TableGrid.vue'
 import { gridFields } from '../../library/field-shape-core'
-import { CODESET_KEY, NEW_BLOCKS, PLAN_KEY } from './entry-blocks'
+import { CODESET_KEY, NEW_BLOCKS, PLAN_KEY, openEntriesPaste } from './entry-blocks'
 import { branchOf, emptyOf, isEmpty, kindName, resolve, type Defs } from './field-shape'
 
 /**
@@ -79,6 +79,10 @@ async function addBlock(md: string): Promise<void> {
     if (!blocks.length) throw new Error('没有生成正文，请再试一次。')
     set([...arr.value, ...blocks])
   } catch (e) { addError.value = e instanceof Error ? e.message : String(e) } finally { adding.value = false }
+}
+async function pasteEntries(): Promise<void> {
+  const blocks = await openEntriesPaste(codeSet.value)
+  if (blocks?.length) set([...arr.value, ...blocks])
 }
 function setProp(k: string, v: unknown): void {
   const next = { ...obj.value }
@@ -190,6 +194,7 @@ const num = (e: Event) => { const t = (e.target as HTMLInputElement).value; set(
     <div v-if="isEntries" class="lib-inline" role="toolbar" :aria-label="`${lab(name)}：加一段`" data-testid="block-add">
       <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="field-add" @click="addItem"><Icon name="plus" :size="14" />文字段</button>
       <button v-for="b in NEW_BLOCKS" :key="b.key" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :disabled="adding" :data-testid="`block-add-${b.key}`" @click="addBlock(b.md)"><Icon :name="b.icon" :size="14" />{{ b.label }}</button>
+      <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="field-paste-entries" @click="pasteEntries">粘贴文字转成正文</button>
     </div>
     <div v-else class="lib-inline"><button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="field-add" @click="addItem"><Icon name="plus" :size="14" />再加一项</button><button v-if="combos.length" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="ownCombo = false; set(undefined)">从常见的里选</button></div>
   </div>
