@@ -6,6 +6,8 @@ import EntryPage from './EntryPage.vue'
 import EntryLangSwitch from './EntryLangSwitch.vue'
 import ReaderLangSwitch from './ReaderLangSwitch.vue'
 import ManagePage from './ManagePage.vue'
+import MyPackManage from './MyPackManage.vue'
+import MyPackHeader from './MyPackHeader.vue'
 import PackHeader from './PackHeader.vue'
 import PackPage from './PackPage.vue'
 import ReaderPage from './ReaderPage.vue'
@@ -21,10 +23,12 @@ export interface PackProps {
   corpora?: Array<{ prop: string; id: string; name: string }>
   /** 自制包的真实包编号：同来源多个包各开各的（P5 T6 包身份）。 */
   docIdLocal?: string
+  /** P5.5 我的库的包：包的身份 + 在哪一套资料（标题栏换成我的库的 ⋯，列表可以新建 / 编辑条目）。 */
+  mine?: { id: string; codeSet: string }
 }
 
 export function openPack(p: PackProps): void {
-  useModalStore().open({ key: `pack:${p.set}:${p.docIdLocal ?? p.source}`, title: p.name, component: PackPage, header: PackHeader, props: { ...p }, variant: 'sheet' })
+  useModalStore().open({ key: `pack:${p.set}:${p.docIdLocal ?? p.source}`, title: p.name, component: PackPage, header: p.mine ? MyPackHeader : PackHeader, props: { ...p }, variant: 'sheet' })
 }
 
 export function openEntry(ref: EntryRef, title = '', selection?: EntrySelection): void {
@@ -39,7 +43,7 @@ export function openSearch(): void {
 
 /** 包的【管理】：在包弹窗里前进一页；没有弹窗时直接打开。 */
 export function openManage(p: PackProps): void {
-  useModalStore().push({ key: `manage:${p.set}:${p.docIdLocal ?? p.source}`, title: `管理 · ${p.name}`, component: ManagePage, props: { ...p }, variant: 'sheet' })
+  useModalStore().push({ key: `manage:${p.set}:${p.docIdLocal ?? p.source}`, title: `管理 · ${p.name}`, component: p.mine ? MyPackManage : ManagePage, props: { ...p }, variant: 'sheet' })
 }
 
 /** 书 / 冒险阅读器：弹窗里前进一页。 */

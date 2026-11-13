@@ -102,6 +102,7 @@ function onKey(event: KeyboardEvent): void {
 }
 
 watch([layout, () => modal.visible], () => void nextTick(measureInsets))
+watch(layout, (v) => { ui.layout = v }, { immediate: true })
 let observer: ResizeObserver | undefined
 onMounted(() => {
   window.addEventListener('resize', onViewport)

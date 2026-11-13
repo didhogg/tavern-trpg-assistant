@@ -5,6 +5,7 @@ import { useCampaignStore } from './campaign'
 import { DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
 import { chooseSource, defaultCampaignLibrary, type CampaignLibrary } from '../library/scopes'
 import type { BrewPack } from '../library/brew-packs'
+import type { PackPair } from '../library/custom-lang'
 import type { ShelfGroup } from '../library/shelf'
 import { SOURCES } from '../library/sources'
 
@@ -29,6 +30,21 @@ export const useLibViewStore = defineStore('library', () => {
   const brewSetId = (codeSet: string): string | null => SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)?.id ?? null
   /** 官方资料没装：自制包读不了（作者程序启动要读官方数据），书架提示一句。 */
   const officialMissing = ref(false)
+  /** P5.5【我的库】：中英配对后的包（一对一行）。 */
+  const pairs = shallowRef<PackPair[] | null>(null)
+  const pairsError = ref<string | null>(null)
+  let pairSeq = 0
+  async function loadPairs(s: Services): Promise<void> {
+    const mine = ++pairSeq
+    pairsError.value = null
+    try {
+      const next = await s.backend.library.bilingual.packs()
+      if (mine === pairSeq) pairs.value = next
+    } catch (e) {
+      console.error('[trpg-assistant] 读取我的库失败', e)
+      if (mine === pairSeq) pairsError.value = e instanceof Error ? e.message : String(e)
+    }
+  }
   const loading = ref(false)
   const error = ref<string | null>(null)
   let seq = 0
@@ -88,5 +104,5 @@ export const useLibViewStore = defineStore('library', () => {
     await load(s, ownerKey)
   }
 
-  return { applySources, campaignLib, bound, officialMissing, shelf, minePacks, brewSetId, loading, error, load, refresh, toggleSource }
+  return { applySources, campaignLib, pairs, pairsError, loadPairs, bound, officialMissing, shelf, minePacks, brewSetId, loading, error, load, refresh, toggleSource }
 })

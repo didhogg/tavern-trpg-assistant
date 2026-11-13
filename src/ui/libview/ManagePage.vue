@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ErrorBanner from './ErrorBanner.vue'
+import PackDeps from './PackDeps.vue'
 import { computed, onMounted, ref } from 'vue'
 import { chooseEntry, disabledEntries, type EntryRef } from '../../library/scopes'
 import { useAppStore } from '../../stores/app'
@@ -10,10 +10,7 @@ import Checkbox from '../kit/Checkbox.vue'
 import Segmented from '../kit/Segmented.vue'
 import { levelText, loadEditRows, restoreRows, type EditRow } from './edit-rows'
 import { nameOf } from './pack-data'
-import type { PackHealth } from '../../library/pack-health'
 import Icon from '../kit/Icon.vue'
-import { downloadOfficialBook, installBrewSources } from './deps-flow'
-import { categoryLabel } from './registry'
 
 /** 包的【管理】（弹窗里的一页）：停用项目、被编辑 / 覆盖的条目；全部 / 部分勾选复原。只看这一本书 / 包里的。 */
 const props = defineProps<{ set: string; source: string; name: string; docIdLocal?: string }>()
@@ -22,10 +19,7 @@ const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const toast = useToastStore()
 const tab = ref('disabled')
-// 自制包的依赖（按作者程序：缺了这个包读不出）。只排版后端 packHealth 的结果
-const health = ref<PackHealth | null>(null)
-const depsError = ref<string | null>(null)
-const missingCount = computed(() => health.value?.missing.length ?? 0)
+const missingCount = ref(0)
 
 interface OffRow { ref: EntryRef; name: string; picked: boolean }
 const off = ref<OffRow[]>([])
@@ -45,23 +39,9 @@ async function load(): Promise<void> {
     }
     off.value = rows
     edits.value = await loadEditRows(s, props.source)
-    await loadDeps()
   } catch (e) { console.error('[trpg-assistant] 读取管理页失败', e); toast.error('读取管理页失败') } finally { loading.value = false }
 }
-async function loadDeps(): Promise<void> {
-  if (!props.docIdLocal) return
-  depsError.value = null
-  try { health.value = (await app.svc().backend.library.packHealth(props.set, props.docIdLocal))[0] ?? null } catch (e) { console.error('[trpg-assistant] 读取依赖失败', e); depsError.value = e instanceof Error ? e.message : String(e) }
-}
 onMounted(() => void load())
-const busyDep = ref<string | null>(null)
-async function getDep(d: PackHealth['requires'][number]): Promise<void> {
-  const s = app.svc()
-  if (d.kind === 'official' && d.book) { void downloadOfficialBook(s, d.book).catch((e: unknown) => console.error('[trpg-assistant] 开始下载失败', e)); toast.success(`已开始下载《${d.book.name}》，进度见【库】标志`); return }
-  busyDep.value = d.source
-  try { await installBrewSources(s, props.set, [d.source], `依赖包 ${d.source}`, toast, async () => { await lib.refresh(s); await loadDeps() }) } finally { busyDep.value = null }
-}
-const depName = (d: PackHealth['requires'][number]): string => (d.kind === 'official' ? `《${d.book?.name ?? d.source}》（官方书）` : d.provider?.replace(/\.json$/, '') ?? d.source)
 
 async function enableAgain(): Promise<void> {
   const owner = campaign.owner?.ownerKey
@@ -87,23 +67,8 @@ async function restore(): Promise<void> {
     <div v-if="missingCount && tab !== 'deps'" class="lib-banner lib-banner--warn" data-testid="manage-missing-deps"><Icon name="warning" :size="16" /><span>这个包缺 {{ missingCount }} 个依赖，缺了会读不出。</span><button class="trpg-btn trpg-btn--small lib-end" type="button" @click="tab = 'deps'">查看并下载</button></div>
     <div class="lib-mscroll">
 <div class="lib-pad">
-      <div v-if="loading" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
-      <template v-else-if="tab === 'deps'">
-        <template v-if="depsError"><ErrorBanner :text="`依赖读不出来：${depsError}`" what="读取依赖" :actions="[{ label: '重试', run: loadDeps }]" /><p class="lib-muted">依赖这次没读出来。</p></template>
-        <p v-else-if="!health?.requires.length" class="lib-muted">这个包不依赖别的包。</p>
-        <ul v-else class="trpg-list" data-testid="manage-deps">
-          <li v-for="d in health.requires" :key="d.source" class="trpg-row">
-            <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ depName(d) }}</div><div class="trpg-row__meta">提供：{{ d.props.map(categoryLabel).join('、') }}</div></div>
-            <div class="trpg-row__end">
-              <span v-if="d.ok" class="trpg-badge" data-tone="success">已装</span>
-              <template v-else>
-                <span class="trpg-badge" data-tone="warn">缺</span>
-                <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" :disabled="busyDep === d.source || (d.kind === 'official' && !d.book)" :title="d.kind === 'official' && !d.book ? '书目里找不到这本书' : undefined" @click="getDep(d)">{{ busyDep === d.source ? '下载中…' : d.kind === 'official' ? '下载这本书' : '下载' }}</button>
-              </template>
-            </div>
-          </li>
-        </ul>
-      </template>
+      <PackDeps v-if="docIdLocal" v-show="tab === 'deps'" :set="set" :doc-id-local="docIdLocal" @missing="(n: number) => (missingCount = n)" />
+      <div v-if="tab !== 'deps' && loading" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
       <template v-else-if="tab === 'disabled'">
         <p v-if="!off.length" class="lib-muted">没有停用的条目。</p>
         <template v-else>
@@ -111,7 +76,7 @@ async function restore(): Promise<void> {
           <Checkbox v-for="r in off" :key="`${r.ref.prop}:${r.ref.hash}`" v-model="r.picked"><b class="lib-name">{{ r.name }}</b></Checkbox>
         </template>
       </template>
-      <template v-else>
+      <template v-else-if="tab === 'edits'">
         <p v-if="!edits.length" class="lib-muted">没有被编辑或覆盖的条目。</p>
         <template v-else>
           <button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button" style="justify-self: start" :disabled="!edits.some((r) => r.picked)" @click="restore">复原所选（{{ edits.filter((r) => r.picked).length }}）</button>

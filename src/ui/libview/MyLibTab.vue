@@ -1,38 +1,54 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { BrewPack } from '../../library/brew-packs'
+import { computed, onMounted, ref, watch } from 'vue'
+import type { PackPair } from '../../library/custom-lang'
 import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
+import { useUiStore } from '../../stores/ui'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import Switch from '../kit/Switch.vue'
+import ErrorBanner from './ErrorBanner.vue'
 import { importFiles } from './import-flow'
-import { removeTarget } from './actions'
-import { openPack } from './open'
+import { catsText, copiedFrom, exportPair, packTitle, sideOf, usePending, versionTag } from './mine'
+import { openMyPack, openNewPack, packMenu, runPackMenu } from './mine-actions'
 
-/** 我的库（U6）：自己导入的包、从别处存入的本地副本。从下载页装的包在书架；房规 / 编辑 / 覆盖不放这里。条目编辑与新建是 P5.5，按钮先灰。 */
+/**
+ * P5.5 u7-1 我的库：只有一种东西——包（自己建的、复制的、导入的，全都能改）。中英一对包一行，带「中 / En」。
+ * 从下载页装的包在书架；想改就在书架 ⋯ → 复制成我的。
+ */
 const app = useAppStore()
 const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const toast = useToastStore()
+const ui = useUiStore()
 const q = ref('')
 const picker = ref<HTMLInputElement | null>(null)
 const busy = ref(false)
 const codeSet = computed(() => lib.campaignLib?.codeSet ?? 'cn')
-const packs = computed(() => lib.minePacks.filter((p) => !q.value.trim() || `${p.filename ?? ''}${p.sourceInfo.map((i) => i.full ?? '').join('')}`.toLowerCase().includes(q.value.trim().toLowerCase())))
+const narrow = computed(() => ui.layout === 'narrow')
+const pending = usePending(() => app.svc(), () => ['cn', 'en'], () => void reload())
 
-const title = (p: BrewPack): string => p.sourceInfo[0]?.full ?? p.filename ?? '（未命名）'
-const rowOn = (p: BrewPack): boolean => lib.bound && p.sources.some((s) => lib.shelf?.groups.some((g) => [...g.books, ...g.adventures].some((r) => r.source === s && r.view.visible)))
+const rows = computed(() => {
+  const needle = q.value.trim().toLowerCase()
+  return (lib.pairs ?? []).filter((p) => !needle || [p.zh, p.en].some((x) => x && `${x.own.full ?? ''}${x.own.json}${x.filename ?? ''}`.toLowerCase().includes(needle)))
+})
+const pack = (p: PackPair) => sideOf(p, codeSet.value)
+const isPending = (p: PackPair) => pending.packs.value.has(p.id)
+const rowOn = (p: PackPair): boolean => lib.bound && pack(p).sources.some((s) => lib.shelf?.groups.some((g) => [...g.books, ...g.adventures].some((r) => r.source === s && r.view.visible)))
 
 async function reload(): Promise<void> {
-  await lib.refresh(app.svc())
+  await lib.loadPairs(app.svc())
+  void pending.check()
 }
-async function toggle(p: BrewPack, on: boolean): Promise<void> {
+onMounted(() => void reload())
+watch(() => lib.campaignLib, () => void reload())
+
+async function toggle(p: PackPair, on: boolean): Promise<void> {
   const owner = campaign.owner?.ownerKey
   if (!owner || !lib.bound) return
-  try { for (const s of p.sources) await lib.toggleSource(app.svc(), owner, s, on) } catch (e) { console.error('[trpg-assistant] 开关失败', e); toast.error('没有保存成功') }
+  try { for (const s of pack(p).sources) await lib.toggleSource(app.svc(), owner, s, on) } catch (e) { console.error('[trpg-assistant] 开关失败', e); toast.error('没有保存成功') }
 }
 async function onPick(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement
@@ -40,47 +56,46 @@ async function onPick(event: Event): Promise<void> {
   input.value = ''
   if (!files.length) return
   busy.value = true
-  try { if (await importFiles(app.svc(), codeSet.value, files, app.settings?.library.skipImportPreview ?? false, toast)) await reload() } finally { busy.value = false }
+  try { if (await importFiles(app.svc(), codeSet.value, files, app.settings?.library.skipImportPreview ?? false, toast)) { await reload(); await lib.refresh(app.svc()) } } finally { busy.value = false }
 }
-async function exportPack(p: BrewPack): Promise<void> {
-  try {
-    const r = await app.svc().backend.library.custom.exportBrew(codeSet.value, p.docIdLocal)
-    if (!r) { toast.error('没有找到这个包'); return }
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(r.body, null, 2)], { type: 'application/json' }))
-    a.download = r.filename ?? `${title(p)}.json`
-    a.click()
-    URL.revokeObjectURL(a.href)
-    toast.success(`已导出 ${a.download}`)
-  } catch (e) { console.error('[trpg-assistant] 导出失败', e); toast.error('导出没有成功') }
-}
-const setOf = (): string => lib.brewSetId(codeSet.value) ?? ''
-async function remove(p: BrewPack): Promise<void> {
-  const setId = lib.brewSetId(codeSet.value)
-  if (!setId) return
-  if (await removeTarget(app.svc(), { kind: 'brew', setId, docIdLocals: [p.docIdLocal] }, title(p), app.settings?.library.skipRemovePrompt ?? false, toast)) await reload()
-}
+const onMenu = (p: PackPair, key: string) => runPackMenu(app.svc(), key, p, codeSet.value, toast, app.settings?.library.skipRemovePrompt ?? false)
 </script>
 
 <template>
   <div class="lib-scroll" data-testid="mylib-tab">
-    <div class="lib-filter" style="padding-left: 0; padding-right: 0">
-      <input v-model="q" class="trpg-input" type="search" placeholder="在我的库里搜索" aria-label="在我的库里搜索" />
-      <button class="trpg-btn" type="button" :disabled="busy" data-testid="mylib-import" @click="picker?.click()"><Icon name="upload-simple" :size="16" />导入文件</button>
-      <button class="trpg-btn trpg-btn--primary" type="button" disabled title="条目编辑与新建稍后开放（P5.5）"><Icon name="plus" :size="16" />新建条目</button>
-      <input ref="picker" type="file" accept=".json,application/json" multiple hidden data-testid="mylib-file" @change="onPick" />
+    <div class="lib-stack">
+      <div class="lib-filter" style="padding-left: 0; padding-right: 0; padding-top: 0">
+        <input v-model="q" class="trpg-input" type="search" :placeholder="narrow ? '搜索' : '在我的库里搜索'" aria-label="在我的库里搜索" />
+        <button class="trpg-btn" type="button" :disabled="busy" data-testid="mylib-import" @click="picker?.click()"><Icon name="upload-simple" :size="16" />{{ narrow ? '导入' : '导入文件' }}</button>
+        <button class="trpg-btn trpg-btn--primary" type="button" data-testid="mylib-newpack" @click="openNewPack(app.svc(), codeSet)"><Icon name="plus" :size="16" />新建包</button>
+        <input ref="picker" type="file" accept=".json,application/json" multiple hidden data-testid="mylib-file" @change="onPick" />
+      </div>
+      <ErrorBanner v-if="lib.pairsError" :text="`我的库没读出来：${lib.pairsError}`" what="读取我的库" :actions="[{ label: '重试', run: reload }]" />
+      <div v-if="lib.pairs === null && !lib.pairsError" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /></div>
+      <div v-else-if="!rows.length && !q" class="lib-state" data-testid="mylib-empty">
+        <h3>这里放你自己的包</h3>
+        <p class="lib-muted">新建一个包往里加条目，或者导入作者格式的 JSON 文件。想改官方的书，在书架那本书的 ⋯ 里选「复制成我的」。</p>
+        <span style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center"><button class="trpg-btn trpg-btn--primary" type="button" @click="openNewPack(app.svc(), codeSet)"><Icon name="plus" :size="16" />新建包</button><button class="trpg-btn" type="button" @click="picker?.click()"><Icon name="upload-simple" :size="16" />导入文件</button></span>
+      </div>
+      <div v-else-if="!rows.length" class="lib-state"><h3>没有符合的包</h3><button class="trpg-btn" type="button" @click="q = ''">清空搜索</button></div>
+      <ul v-else class="trpg-list" data-testid="mylib-list">
+        <li v-for="p in rows" :key="p.id" class="trpg-row" data-testid="mylib-row">
+          <div class="trpg-row__main lib-pack">
+            <div class="trpg-row__title">
+              <button class="lib-name trpg-link" type="button" data-testid="mylib-open" @click="openMyPack(lib, p, codeSet)">{{ packTitle(pack(p)) }}</button>
+              <span class="trpg-badge">{{ versionTag(app.svc(), pack(p).scopes) }}</span>
+              <span class="lib-langs" :title="p.zh && p.en ? '中文、英文两个文件' : p.zh ? '只有中文' : '只有英文'"><span v-if="p.zh" class="trpg-badge" data-tone="info">中</span><span v-if="p.en" class="trpg-badge" data-tone="info">En</span></span>
+              <span v-if="isPending(p)" class="lib-pending" data-testid="mylib-pending"><Icon name="arrow-clockwise" :size="12" />整理中</span>
+            </div>
+            <div class="lib-pack__cats">{{ copiedFrom(pack(p)) ? `复制自 ${copiedFrom(pack(p))} · ` : '' }}{{ catsText(pack(p)) }}</div>
+          </div>
+          <div class="trpg-row__end">
+            <Switch :model-value="rowOn(p)" :label="`在本战役里使用《${packTitle(pack(p))}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(p, v)" />
+            <button v-if="!narrow" class="trpg-btn trpg-btn--small" type="button" data-testid="mylib-export" @click="exportPair(app.svc(), p.id, packTitle(pack(p)), toast)"><Icon name="download-simple" :size="14" />导出</button>
+            <MoreMenu :label="packTitle(pack(p))" :items="packMenu(p, { withExport: narrow })" @select="(k: string) => onMenu(p, k)" />
+          </div>
+        </li>
+      </ul>
     </div>
-    <div class="lib-sec" style="padding-top: 0">导入与存入的包</div>
-    <div v-if="!packs.length" class="lib-state"><h3>这里放你自己的内容</h3><p class="lib-muted">导入作者格式的 JSON 文件，或在书架的 ⋯ 里把一本书"存入我的库"。</p></div>
-    <ul v-else class="trpg-list" data-testid="mylib-list">
-      <li v-for="p in packs" :key="p.docIdLocal" class="trpg-row">
-        <div class="trpg-row__main"><button class="trpg-row__title lib-name" type="button" data-testid="mylib-open" @click="openPack({ set: setOf(), source: p.sources[0] ?? p.docIdLocal, name: title(p), docIdLocal: p.docIdLocal })">{{ title(p) }}</button><div class="trpg-row__meta">来源 {{ p.sources.length }} 个 · 条目 {{ p.entryCount }} 条</div></div>
-        <div class="trpg-row__end">
-          <Switch :model-value="rowOn(p)" :label="`在本战役里使用《${title(p)}》`" :disabled="!lib.bound" @update:model-value="(v: boolean) => toggle(p, v)" />
-          <button class="trpg-btn trpg-btn--small" type="button" @click="exportPack(p)"><Icon name="download-simple" :size="14" />导出</button>
-          <MoreMenu :label="title(p)" :items="[{ key: 'rm', label: '删除…', danger: true }]" @select="remove(p)" />
-        </div>
-      </li>
-    </ul>
   </div>
 </template>

@@ -11,10 +11,12 @@ export const useUiStore = defineStore('ui', () => {
   const windowOpen = ref(false)
   const page = ref<PageId>('home')
   const diceOpen = ref(false)
+  /** 主窗口现在的宽度档（MainWindow 量出来写进来）：库页弹窗（编辑器左右 / 上下两栏）按它排。 */
+  const layout = ref<'wide' | 'mid' | 'narrow'>('wide')
 
   function go(next: PageId): void {
     page.value = next
   }
 
-  return { windowOpen, page, diceOpen, go }
+  return { windowOpen, page, diceOpen, layout, go }
 })
