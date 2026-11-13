@@ -50,6 +50,7 @@ import { suggestDownloads, type DownloadSuggestion, type MissingRef } from '../l
 import { DownloadEstimator, type DownloadEstimate, type EstimateInput, type EstimateOptions } from '../library/download-estimate'
 import { CatalogPrefetch, DEFAULT_PREFETCH_CODE_SETS } from '../library/prefetch'
 import { checkCorePacks } from '../rules/kernel/core-pack'
+import { BrewParseQueue } from '../library/brew-queue'
 
 export interface LibraryBackend {
   /** 启动时建好 R0、恢复未完成操作；boot 里等它。 */
@@ -101,6 +102,8 @@ export interface LibraryBackend {
   precompute: KernelPrecompute
   /** 改自制 / 房规后的后台补换算。 */
   precomputeQueue: PrecomputeQueue
+  /** P5.5 U2：编辑后的自制后台解析队列。 */
+  brewQueue: BrewParseQueue
   /** 当前装的数据版本记号（存档保存时现取）。 */
   dataVersion: () => ReturnType<ReturnType<typeof libraryDataVersion>>
 }
@@ -171,7 +174,13 @@ export function createBackend(opts: BackendOptions): Backend {
   // 改自制 / 房规后：停手 5 秒再补换算，只看自制和带备选的条目（P5.5 查慢）
   const queue = new PrecomputeQueue(async (codeSet) => precompute?.run({ codeSet, mode: 'changed' }) ?? null, 5000)
   const logs = new LogStore(db)
-  const service = new LibraryService({ db, revisions, operations, openFrame, onDataChanged: async (codeSet) => queue.trigger(codeSet), onLog: logs.sink() })
+  // P5.5 U2：编辑只写原文就发布，停手 5 秒后后台批量解析（brew-queue.ts）
+  let brewQueue: BrewParseQueue | null = null
+  const service = new LibraryService({
+    db, revisions, operations, openFrame, onDataChanged: async (codeSet) => queue.trigger(codeSet), onLog: logs.sink(),
+    beforeBrewWrite: async (codeSet) => { await brewQueue?.yield(codeSet) },
+    onBrewDirty: (codeSet) => brewQueue?.trigger(codeSet),
+  })
   // 书目（BE-7）：没装官方数据时用允许联网的一次性小窗读作者书目文件；已装好的用现成本地小窗
   const directory = new BookDirectory({
     db, view: () => revisions.published(), localFrame: async (codeSet) => { const view = await revisions.published(); return openFrame(codeSet, { view, filterIndex: false }) },
@@ -183,11 +192,18 @@ export function createBackend(opts: BackendOptions): Backend {
   const documents = new DocumentStore(db)
   const links = new EntryLinks(service, documents)
   const scoped = new ScopedLibrary(service, db, directory, links)
+  brewQueue = new BrewParseQueue(async (codeSet, signal) => {
+    const set = SOURCES.find((s) => s.kind === 'brew' && s.codeSet === codeSet)
+    if (!set || !(await service.brewDirty(set.id)).length) return { codeSet, skipped: '没有改过的包' }
+    const report = await service.reparseBrew(set.id, signal)
+    scoped.reset()
+    return report
+  }, 5000)
   const brewPairs = new BrewPairs(service)
   const updates: OfficialUpdates = new OfficialUpdates({ db, revisions, files, directory, startOfficial: (id, taskOpts) => tasks.startOfficial(id, taskOpts) })
   const sorting = new Sorting(service)
   const counterparts = new Counterparts(service, brewPairs)
-  const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref))
+  const custom = new CustomLibrary(service, scoped, db, (ref) => counterparts.counterpart(ref), (codeSet) => brewQueue?.busy(codeSet) ?? false)
   const tasks = new DownloadTasks({ db, revisions, operations, files, openFrame: (codeSet, view, signal) => openFrame(codeSet, { view, signal }), onLog: logs.sink(), onDiagnostic: async (setId, report) => { await db.derived.put({ key: `audit:last-failed:${setId}`, fingerprint: '', value: report, savedAt: Date.now() }) }, onPublished: (_view, previous) => { service.retire(previous); scoped.reset() },
     selectUpdate: (id, commit, selection, base) => updates.planSelection(id, commit, selection, base),
     planOfficial: async (setId, planOpts, view) => {
@@ -254,7 +270,7 @@ export function createBackend(opts: BackendOptions): Backend {
   const uninstall = (setId: string | string[]): Promise<UninstallReport> => uninstallOfficial({
     db, revisions, operations, tasks, afterDelete: async (_id, previous) => { if (previous) service.retire(previous); scoped.reset() },
   }, setId)
-  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, dataVersion }
+  const library: LibraryBackend = { ready, currentView: () => revisions.published(), revisions, operations, db, files, service, scoped, documents, links, images, sorting, logs, updates, counterparts, uninstallOfficial: uninstall, brewPacks, downloads, brewPairs, custom, tasks, directory, packHealth: (setId, id) => packHealth({ brewPacks, directory, revisions }, setId, id), brewDependencyPreview: (setId, u) => downloadDependencyPreview({ frame: (cs) => service.frameOf(cs) as never, directory, revisions }, setId, u), suggestDownloads: (refs) => suggestDownloads({ brewPacks, directory, revisions }, refs), estimate: (input, o) => new DownloadEstimator({ db, files, directory, revisions }).estimate(input, o), prefetch, precompute, precomputeQueue: queue, brewQueue: brewQueue!, dataVersion }
   const starter = new CampaignStarter({ campaign: opts.campaign, kernelSave, rules: opts.rules, corePacks: () => checkCorePacks({ pluginRoot }), library })
   const transfer: Backend['transfer'] = {
     library: { exportFiles: () => custom.exportBackup(), importFiles: (files) => custom.importBackup(files) },

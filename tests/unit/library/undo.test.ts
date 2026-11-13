@@ -41,7 +41,7 @@ function setup() {
   } }
   const lib = {
     frameOf: async () => frame,
-    mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }),
+    mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }), writeAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<{ value: unknown }>) => ({ value: (await run({})).value, view: {}, dirty: [] }),
     storedItem: async () => ({ item: { name: '火球术', source: 'PHB', level: 3 }, source: 'PHB' }),
   }
   const custom = new CustomLibrary(lib as never, { manage, choose: async (c: unknown) => c, reset: () => undefined } as never, {} as never)

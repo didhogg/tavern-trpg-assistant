@@ -20,6 +20,10 @@ export interface BrewContext {
   onDataChanged?: (codeSet: string) => Promise<void>
   onLog?: LogSink
   onPublished?: (view: LibraryView, previous: string) => void
+  /** P5.5 U2：编辑写原文之前：让后台解析先停下、放开修改锁（brew-queue.ts）。 */
+  beforeWrite?: (codeSet: string) => Promise<void>
+  /** P5.5 U2：编辑写完原文、发布之后：通知后台排一次解析。 */
+  onDirty?: (codeSet: string) => void
 }
 
 const brewSource = (sourceId: string): SourceEntry => {
@@ -73,8 +77,11 @@ export async function prepareBrewDelete(ctx: BrewContext, sourceId: string, docI
   return { value, parse, packs: packsOf(parse) }
 }
 
-export const packsOf = (report: BrewParseReport): Array<{ docIdLocal: string; stableId: string | null; checksum: string | null }> =>
-  report.installed.map((head) => {
+export const packsOf = (report: BrewParseReport): Array<{ docIdLocal: string; stableId: string | null; checksum: string | null }> => packsOfHeads(report.installed)
+
+/** 已装包的作者包头 → 版本状态里的包记录。 */
+export const packsOfHeads = (heads: Array<Record<string, unknown>>): Array<{ docIdLocal: string; stableId: string | null; checksum: string | null }> =>
+  heads.map((head) => {
     const id = String(head.docIdLocal ?? '')
     const url = typeof head.url === 'string' ? head.url : null
     const checksum = String(head.checksum ?? head.version ?? head.dateAdded ?? head.filename ?? '')
@@ -113,10 +120,10 @@ export async function withTimeout<T>(run: () => Promise<T>, what: string, ms = 1
 }
 
 /** 在准备版本里跑一次作者存储修改，再重解析、发布。可编辑条目 / 房规 / 存副本都走这里。 */
-export async function mutateAuthor<T>(ctx: BrewContext, codeSet: string, kind: string, run: (view: LibraryView) => Promise<T>): Promise<{ value: T; parse: BrewParseReport; view: LibraryView }> {
+export async function mutateAuthor<T>(ctx: BrewContext, codeSet: string, kind: string, run: (view: LibraryView) => Promise<T>, signal?: AbortSignal): Promise<{ value: T; parse: BrewParseReport; view: LibraryView }> {
   const s = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)
   if (!s) throw new Error(`作者程序 ${codeSet} 没有登记自制数据集`)
-  const handle = await ctx.operations.begin({ kind, set: s.id, codeSet })
+  const handle = await ctx.operations.begin({ kind, set: s.id, codeSet, ...(signal ? { signal } : {}) })
   try {
     const value = await run(handle.target)
     const f = await ctx.openFrame(codeSet, { view: handle.target, filterIndex: true })
@@ -124,9 +131,45 @@ export async function mutateAuthor<T>(ctx: BrewContext, codeSet: string, kind: s
       const errors = await f.call('storageFlush')
       if (errors.length) throw new Error(errors[0])
     } finally { f.close() }
-    const parse = await afterBrewChange(ctx, s, handle.target)
+    const parse = await afterBrewChange(ctx, s, handle.target, signal)
     const view = await publishBrew(ctx, s, handle, parse)
     return { value, parse, view }
+  } catch (e) {
+    await ctx.operations.abort(handle, e)
+    throw e
+  }
+}
+
+/**
+ * P5.5 U2 编辑写原文：在准备版本里改作者存储、刷盘，**不解析**就发布；版本状态里记下改过的包（dirty），
+ * 解析交给后台队列（onDirty → brew-queue.ts，停手一会儿后批量跑一次 mutateAuthor 那套解析）。
+ * 作者编辑器同法：保存只写原文、标记脏，要读时才整批处理（utils-brew-base.js _pSetBrew_ 置 _isDirty）。
+ * run 返回 { value, touched }：touched = 改了哪些包（作者本地编号），记进 dirty。
+ */
+export async function writeAuthor<T>(ctx: BrewContext, codeSet: string, kind: string, run: (view: LibraryView) => Promise<{ value: T; touched: string[] }>): Promise<{ value: T; view: LibraryView; dirty: string[] }> {
+  const s = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)
+  if (!s) throw new Error(`作者程序 ${codeSet} 没有登记自制数据集`)
+  await ctx.beforeWrite?.(codeSet)
+  const handle = await ctx.operations.begin({ kind, set: s.id, codeSet })
+  try {
+    const { value, touched } = await run(handle.target)
+    const f = await ctx.openFrame(codeSet, { view: handle.target, filterIndex: true })
+    let installed: Array<Record<string, unknown>>
+    try {
+      const errors = await f.call('storageFlush')
+      if (errors.length) throw new Error(errors[0])
+      installed = (await f.call('brewInstalled')).map((b) => b.head)
+    } finally { f.close() }
+    const before = await handle.base.brewState(s.id)
+    const ids = new Set(installed.map((h) => String(h.docIdLocal ?? '')))
+    const dirty = [...new Set([...(before?.dirty ?? []), ...touched])].filter((id) => ids.has(id))
+    const view = await ctx.operations.publish(handle, {
+      brews: { [s.id]: { packs: packsOfHeads(installed), dirty } },
+      result: { kind: 'brew-write', touched }, status: 'done',
+    })
+    ctx.onPublished?.(view, handle.base.id)
+    ctx.onDirty?.(codeSet)
+    return { value, view, dirty }
   } catch (e) {
     await ctx.operations.abort(handle, e)
     throw e

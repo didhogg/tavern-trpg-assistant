@@ -113,9 +113,11 @@ export async function copyEntryToPack(d: CopyDeps, codeSet: string, ref: EntryRe
   const { source: _s, uniqueId: _u, ...rest } = ent
   const deps = typeof (rest._copy as { source?: unknown } | undefined)?.source === 'string' ? { [ref.prop]: [String((rest._copy as { source: string }).source)] } : null
   if (deps) {
-    await d.lib.mutateAuthor(codeSet, 'custom-pack-deps', async (view) => {
+    await d.lib.writeAuthor(codeSet, 'custom-pack-deps', async (view) => {
       const f = await d.lib.frameOf(codeSet, view)
-      await f.call('packAddDependencies', await docIdOf(f, pack), deps)
+      const doc = await docIdOf(f, pack)
+      await f.call('packAddDependencies', doc, deps)
+      return { value: null, touched: [doc] }
     })
   }
   return persist(d.entries, codeSet, ref.prop, rest, { record: true, pack, ...(opts.rule ? { rule: opts.rule } : {}) })

@@ -36,7 +36,7 @@ describe('createHouseRule({ edited }) / saveEntry 写版本', () => {
       if (name === 'editablePut') { puts.push([args[0] as string, args[1] as Record<string, unknown>]); return { uniqueId: 'u', hash: 'h', previousHash: null, previous: null } }
       return undefined
     } }
-    const lib = { frameOf: async () => frame, storedItem: async () => ({ item: base, source: 'PHB' }), mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }) }
+    const lib = { frameOf: async () => frame, storedItem: async () => ({ item: base, source: 'PHB' }), mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }), writeAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<{ value: unknown }>) => ({ value: (await run({})).value, view: {}, dirty: [] }) }
     const custom = new CustomLibrary(lib as never, { manage, choose: async (c: unknown) => c, reset: () => undefined } as never, {} as never)
     return { custom, puts }
   }

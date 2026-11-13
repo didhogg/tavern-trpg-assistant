@@ -18,7 +18,7 @@ export interface PackSource {
 }
 
 export interface PackDeps {
-  lib: Pick<LibraryService, 'frameOf' | 'brewImport' | 'brewDelete' | 'mutateAuthor'>
+  lib: Pick<LibraryService, 'frameOf' | 'brewImport' | 'brewDelete' | 'writeAuthor'>
   manage: ManageStore
   /** 这套自制里已装的包（BrewPacks.list）。 */
   packsOf: (brewSetId: string, view?: LibraryView) => Promise<BrewPack[]>
@@ -80,9 +80,11 @@ export async function createPack(d: PackDeps, codeSet: string, src: PackSource, 
 export async function renamePack(d: PackDeps, codeSet: string, id: string, patch: { full?: string; abbreviation?: string }): Promise<void> {
   const pack = (await listPacks(d, codeSet)).find((p) => p.id === id)
   if (!pack) throw new Error(`【我的库】里没有这个包：${id}`)
-  await d.lib.mutateAuthor(codeSet, 'custom-pack-rename', async (view) => {
+  await d.lib.writeAuthor(codeSet, 'custom-pack-rename', async (view) => {
     const f = await d.lib.frameOf(codeSet, view)
-    await f.call('packRenameSource', await docIdOf(f, id), pack.own.json, patch)
+    const doc = await docIdOf(f, id)
+    await f.call('packRenameSource', doc, pack.own.json, patch)
+    return { value: null, touched: [doc] }
   })
 }
 

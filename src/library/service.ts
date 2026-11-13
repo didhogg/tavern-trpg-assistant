@@ -4,7 +4,7 @@ import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
 import { ParsedMemo } from './parsed-memo'
 import type { LogSink } from './logs'
 import { brewCorporaKey, type BrewCorpora, type BrewParseReport } from './brew'
-import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutateAuthor, prepareBrewDelete, type BrewContext, type BrewProgress } from './service-brew'
+import { brewAddUrl, brewDelete, brewImport, brewInstallSources, brewPull, mutateAuthor, prepareBrewDelete, writeAuthor, type BrewContext, type BrewProgress } from './service-brew'
 import { excludedOf as cachedExcluded, fluffOf as cachedFluff, ensurePrecomputed, invalidatePrecompute, precomputeSource, searchIndexOf, type PrecomputeReport } from './cache'
 import type { LibraryDatabase } from './db'
 import type { HealthReport } from './health'
@@ -43,6 +43,9 @@ export interface LibraryServiceOptions {
   /** 自制解析出错、作者报错写日志（P5 B-26）。 */
   onLog?: LogSink
   operations?: LibraryOperations
+  /** P5.5 U2：编辑写原文前让后台解析停下放锁；写完发布后通知后台排一次解析（后端接 brew-queue.ts）。 */
+  beforeBrewWrite?: (codeSet: string) => Promise<void>
+  onBrewDirty?: (codeSet: string) => void
 }
 export class LibraryService {
   private readonly frames = new Map<string, Promise<AuthorFrame>>()
@@ -297,6 +300,8 @@ export class LibraryService {
       ...(this.opts.onDataChanged ? { onDataChanged: this.opts.onDataChanged } : {}),
       ...(this.opts.onLog ? { onLog: this.opts.onLog } : {}),
       onPublished: (_view, previous) => { this.retire(previous) },
+      ...(this.opts.beforeBrewWrite ? { beforeWrite: this.opts.beforeBrewWrite } : {}),
+      ...(this.opts.onBrewDirty ? { onDirty: this.opts.onBrewDirty } : {}),
     }
   }
 
@@ -317,10 +322,23 @@ export class LibraryService {
   }
 
   /** 自制改过以后（含可编辑自制）在准备版本里重解析并发布；调用方已经写过作者存储时用 mutateAuthor。 */
-  async reparseBrew(sourceId: string): Promise<BrewParseReport> {
+  async reparseBrew(sourceId: string, signal?: AbortSignal): Promise<BrewParseReport> {
     const s = this.brewSource(sourceId)
-    const r = await this.mutateAuthor(s.codeSet, 'brew-reparse', async () => null)
+    const r = await mutateAuthor(this.brewContext(), s.codeSet, 'brew-reparse', async () => null, signal)
     return r.parse
+  }
+
+  /**
+   * P5.5 U2 编辑写原文：改作者存储、不解析就发布、记脏，后台再解析（service-brew.ts writeAuthor）。
+   * run 返回 { value, touched }：touched = 改了哪些包（作者本地编号）。
+   */
+  async writeAuthor<T>(codeSet: string, kind: string, run: (view: LibraryView) => Promise<{ value: T; touched: string[] }>): Promise<{ value: T; view: LibraryView; dirty: string[] }> {
+    return writeAuthor(this.brewContext(), codeSet, kind, run)
+  }
+
+  /** 原文改过、还没重新解析的包（作者本地编号）；空 = 解析结果是最新的。 */
+  async brewDirty(sourceId: string, viewArg?: LibraryView): Promise<string[]> {
+    return (await (await this.view(viewArg)).brewState(sourceId))?.dirty ?? []
   }
 
   /** 在准备版本里跑一次作者存储修改，再重解析、发布。可编辑条目 / 房规 / 存副本都走这里。 */

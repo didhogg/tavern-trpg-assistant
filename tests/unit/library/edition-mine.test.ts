@@ -45,7 +45,7 @@ describe('saveEntry / createHouseRule 的版本归类', () => {
     const frame = { call: async (name: string, ...args: unknown[]) => { calls.push([name, args]); return name === 'editablePut' ? put : name === 'editableRetargetCopies' ? 1 : undefined } }
     const lib = {
       frameOf: async () => frame,
-      mutateAuthor: async (_c: string, _k: string, run: (view: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }),
+      mutateAuthor: async (_c: string, _k: string, run: (view: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }), writeAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<{ value: unknown }>) => ({ value: (await run({})).value, view: {}, dirty: [] }),
       storedItem: async () => ({ item: { name: '火球术', source: 'PHB' }, source: 'PHB' }),
     }
     const scoped = { manage, choose: async (c: unknown) => c, reset: () => undefined }

@@ -59,6 +59,10 @@ export interface ScopedDetail extends Omit<DetailResult, 'item' | 'english'> {
   /** 英文对照只对原件（官方）有意义；生效的是备选时为 null。 */
   english: English | null
   docIdLocal?: string
+  /**
+   * P5.5 U3：这一条（或它的另一版、房规）所在的包原文改过、后台还没重新解析完：给的是上次解析的结果，界面标「更新中」。
+   */
+  pending?: boolean
 }
 export type FetchResult =
   | { ok: true; ref: EntryRef; source: string | null; item: unknown; version: VersionInfo; closed: boolean }
@@ -261,7 +265,13 @@ export class ScopedLibrary {
     if (!entry) return null
     const v = await this.viewFor(scope, ref, entry.source, ctx.assigns, view)
     if (!v.visible && !browse) return { hidden: v.reason }
-    return { ...entry, ref, reason: v.reason, closed: !v.visible, version: chosen, alternatives }
+    const brewSet = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === scope.codeSet)?.id
+    const dirty = brewSet && typeof this.lib.brewDirty === 'function' ? await this.lib.brewDirty(brewSet, view) : []
+    const fromDoc = 'docIdLocal' in entry ? entry.docIdLocal : undefined
+    const pending = dirty.length > 0 && (
+      (getSource(ref.set).kind === 'brew' && (!fromDoc || dirty.includes(fromDoc)))
+      || alternatives.some((a) => (a.docIdLocal && dirty.includes(a.docIdLocal)) || a.kind === 'houserule'))
+    return { ...entry, ref, reason: v.reason, closed: !v.visible, version: chosen, alternatives, ...(pending ? { pending } : {}) }
   }
 
   async fetch(c: CampaignLibrary, refs: EntryRef[], viewArg?: LibraryView): Promise<FetchResult[]> {

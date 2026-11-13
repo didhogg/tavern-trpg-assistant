@@ -41,7 +41,7 @@ const brewSetOf = (codeSet: string): SourceEntry => {
 
 export class CustomLibrary {
   /** counterpartHint：保存条目后顺带查它在另一种语言里对上了谁（只提示，不写任何东西；P5 G-3b）。 */
-  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase, private readonly counterpartHint?: (ref: EntryRef) => Promise<Counterpart>) {}
+  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase, private readonly counterpartHint?: (ref: EntryRef) => Promise<Counterpart>, private readonly busy: (codeSet: string) => boolean = () => false) {}
 
   private get manage(): ManageStore {
     return this.scoped.manage
@@ -122,12 +122,34 @@ export class CustomLibrary {
   }
 
   private get entryDeps(): EntryDeps {
-    return { lib: this.lib, manage: this.manage, mineSource: CUSTOM.mine, validateEntry: (cs, p, e) => this.validateEntry(cs, p, e), ...(this.counterpartHint ? { counterpartHint: this.counterpartHint } : {}) }
+    return { lib: this.lib, manage: this.manage, mineSource: CUSTOM.mine, validateEntry: (cs, p, e) => this.validateEntry(cs, p, e) }
+  }
+
+  /**
+   * 这一条在另一种语言里对上了谁（P5 G-3b，只提示，不改任何一边）。P5.5 U2 起保存只写原文、解析在后台，
+   * 所以不在保存时返回：等后台解析完（brewQueue.settled / 「更新中」消失）再查。
+   */
+  async counterpartHintFor(ref: EntryRef) {
+    return this.counterpartHint ? this.counterpartHint(ref) : null
   }
 
   /** 删自己的条目（pack：在【我的库】哪个包里）；每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。 */
   async deleteEntries(codeSet: string, prop: string, uniqueIds: string[], { pack }: { pack?: string | null } = {}) {
-    return (await remove(this.entryDeps, codeSet, prop, uniqueIds, { record: true, pack })).parse
+    const r = await remove(this.entryDeps, codeSet, prop, uniqueIds, { record: true, pack })
+    return { removed: r.value.length, pending: true as const }
+  }
+
+  /**
+   * P5.5 U3：原文改过、后台还没重新解析完的包（包的身份；房规所在的可编辑自制记作 'editable'），以及后台是否在等 / 在跑。
+   * 界面据此标「更新中」；刚存的这一条的原文用 packEntry 取。
+   */
+  async pending(codeSet: string): Promise<{ packs: string[]; busy: boolean }> {
+    const set = SOURCES.find((x) => x.kind === 'brew' && x.codeSet === codeSet)
+    const dirty = set ? await this.lib.brewDirty(set.id) : []
+    const packs = await this.packs(codeSet)
+    const editable = ((await (await this.frame(codeSet)).call('brewDocIndex')) ?? []).find((x) => x.isEditable)?.docIdLocal
+    const ids = dirty.map((id) => (id === editable ? 'editable' : packs.find((p) => p.docIdLocal === id)?.id ?? id))
+    return { packs: ids, busy: this.busy(codeSet) }
   }
 
   /** 这一条还能撤销几步（最多 HISTORY_LIMIT）。 */
@@ -203,11 +225,13 @@ export class CustomLibrary {
     const ent = edit.entity
       ? { ...edit.entity, name, source: CUSTOM.house.json }
       : { ...fieldChanges, name, source: CUSTOM.house.json, _copy: { name: base.name, source: baseSource, ...(edit.mod ? { _mod: edit.mod } : {}) } }
-    const result = await this.lib.mutateAuthor(c.codeSet, 'custom-houserule', async (view) => {
+    const result = await this.lib.writeAuthor(c.codeSet, 'custom-houserule', async (view) => {
       const f = await this.lib.frameOf(c.codeSet, view)
       await f.call('editableEnsureSource', CUSTOM.house)
       if (!edit.entity) await f.call('editableAddDependencies', { [target.prop]: [baseSource] })
-      return f.call('editablePut', target.prop, ent)
+      const put = await f.call('editablePut', target.prop, ent)
+      const editable = ((await f.call('brewDocIndex')) ?? []).find((x) => x.isEditable)?.docIdLocal
+      return { value: put, touched: editable ? [editable] : [] }
     })
     const saved = result.value
     if (!saved.hash) throw new Error('作者算不出房规条目的编号')
@@ -216,15 +240,15 @@ export class CustomLibrary {
     await this.manage.linkHouseRule({ house, target })
     await this.manage.pushHistory(historyKey(c.codeSet, target.prop, saved.uniqueId), { at: Date.now(), prop: target.prop, before: null, link: { house, target } })
     const altId = `house:${saved.hash}`
-    return { house, altId, uniqueId: saved.uniqueId, changed: Object.keys(changes), parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
+    return { house, altId, uniqueId: saved.uniqueId, changed: Object.keys(changes), pending: true as const, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
   }
 
   /** 删房规：作者删条 + 去掉链接；选过它的地方自动回到原件（生效版本会标"选过的备选不在了"）。 */
   async deleteHouseRule(codeSet: string, house: EntryRef, uniqueId: string) {
     const link = (await this.manage.houseRules()).find((l) => refKey(l.house) === refKey(house))
-    const { parse } = await remove(this.entryDeps, codeSet, house.prop, [uniqueId], { record: true, ...(link ? { link } : {}) })
+    await remove(this.entryDeps, codeSet, house.prop, [uniqueId], { record: true, ...(link ? { link } : {}) })
     await this.manage.unlinkHouseRule(house)
-    return parse
+    return { pending: true as const }
   }
 
   /**

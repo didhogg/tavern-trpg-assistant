@@ -80,6 +80,11 @@ export interface OfficialSetState {
 export interface BrewSetState {
   /** 已装包的管理记录；null = 旧版本，从作者存储现场读。 */
   packs: Array<{ docIdLocal: string; stableId: string | null; checksum: string | null }> | null
+  /**
+   * P5.5 U2：编辑只写原文就发布，解析交给后台。这里记原文改过、还没重新解析的包（作者本地编号）；
+   * 后台解析发布后清空。读到的解析结果是上次的，脏的包要标「更新中」。
+   */
+  dirty?: string[]
 }
 
 /** 文件版本引用：新版本只记变化，没变的沿父版本回退；正文按内容哈希去重。 */

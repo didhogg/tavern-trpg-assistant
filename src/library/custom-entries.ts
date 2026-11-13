@@ -3,7 +3,6 @@
 //   pack 不给 → 作者可编辑自制（房规；B8-6 迁移前的「我的资料」）。
 // 改名（作者编号 = 名字 + 来源）：同一次修改里把用 _copy 指向它的条目改指新名字（这个包里 + 可编辑自制里的房规），
 // 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
-import type { Counterpart } from './counterpart'
 import { docIdOf } from './custom-packs'
 import { formatOfCodeSet } from './formats'
 import type { SchemaIssue } from './brew-validate'
@@ -19,7 +18,6 @@ export interface EntryDeps {
   /** 可编辑自制里「我的资料」的来源编号（不给包时新条目的来源）。 */
   mineSource: { json: string; full: string; abbreviation: string }
   validateEntry: (codeSet: string, prop: string, ent: Record<string, unknown>) => Promise<SchemaIssue[]>
-  counterpartHint?: (ref: EntryRef) => Promise<Counterpart>
 }
 
 export interface SaveOptions {
@@ -39,15 +37,23 @@ const brewSetOf = (codeSet: string) => {
 /** 撤销记录的键：数据集 | 类别 | 作者 uniqueId（改名、换包都不变）。 */
 export const historyKey = (codeSet: string, prop: string, uniqueId: string): string => `${brewSetOf(codeSet).id}|${prop}|${uniqueId}`
 
-/** 在一次「准备 → 发布」里拿到小窗和这个包的本地编号、包自己的来源（包头最后一行）。 */
+/**
+ * 在一次编辑里拿到小窗和这个包的本地编号、包自己的来源（包头最后一行），只写原文、不当场解析
+ * （P5.5 U2：service.writeAuthor 记脏，后台批量解析）。不给包 = 可编辑自制（房规）。
+ */
 async function inStore<T>(d: EntryDeps, codeSet: string, kind: string, pack: string | null | undefined, run: (f: AuthorFrame, doc: { id: string; own: string } | null) => Promise<T>) {
-  return d.lib.mutateAuthor(codeSet, kind, async (view) => {
+  return d.lib.writeAuthor(codeSet, kind, async (view) => {
     const f = await d.lib.frameOf(codeSet, view)
-    if (!pack) return run(f, null)
+    const index = (await f.call('brewDocIndex')) ?? []
+    if (!pack) {
+      const value = await run(f, null)
+      const editable = ((await f.call('brewDocIndex')) ?? []).find((x) => x.isEditable)?.docIdLocal
+      return { value, touched: editable ? [editable] : [] }
+    }
     const id = await docIdOf(f, pack)
-    const own = (await f.call('brewDocIndex')).find((x) => x.docIdLocal === id)?.sources.at(-1)
+    const own = index.find((x) => x.docIdLocal === id)?.sources.at(-1)
     if (!own) throw new Error('这个包的包头没有来源')
-    return run(f, { id, own })
+    return { value: await run(f, { id, own }), touched: [id] }
   })
 }
 
@@ -78,9 +84,8 @@ export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: 
   const renamed = saved.hash && saved.previousHash && saved.previousHash !== saved.hash ? { from: { set, prop, hash: saved.previousHash }, to: { set, prop, hash: saved.hash }, retargeted: saved.retargeted } : null
   if (renamed) await carryRefs(d.manage, renamed.from, renamed.to)
   else if (saved.hash && !saved.previousHash && rule) await d.manage.setAssignment(entryUnit({ set, prop, hash: saved.hash }), { scopes: [...ruleScopes(rule).defaultScopes], global: false })
-  // 另一种语言里有没有对上的条目（按英文名 + 来源）：只返回提示，保存时不改任何一边的条目
-  const counterpart = saved.hash && d.counterpartHint ? await d.counterpartHint({ set, prop, hash: saved.hash }) : null
-  return { ...saved, renamed, parse: result.parse, issues: await d.validateEntry(codeSet, prop, ent), counterpart }
+  // 解析在后台（pending）；另一种语言对上了谁要等解析完才知道，到时用 counterparts 再查
+  return { ...saved, renamed, pending: true as const, issues: await d.validateEntry(codeSet, prop, ent) }
 }
 
 /** 删条（按 uniqueId）；record：每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。返回删掉的原文。 */
@@ -118,7 +123,7 @@ export async function carryRefs(manage: ManageStore, from: EntryRef, to: EntryRe
 export async function moveEntries(d: EntryDeps, codeSet: string, prop: string, uniqueIds: string[], fromPack: string, toPack: string) {
   if (fromPack === toPack) return []
   const set = brewSetOf(codeSet).id
-  const result = await d.lib.mutateAuthor(codeSet, 'custom-move', async (view) => {
+  const result = await d.lib.writeAuthor(codeSet, 'custom-move', async (view) => {
     const f = await d.lib.frameOf(codeSet, view)
     const fromId = await docIdOf(f, fromPack)
     const toId = await docIdOf(f, toPack)
@@ -136,7 +141,7 @@ export async function moveEntries(d: EntryDeps, codeSet: string, prop: string, u
       const retargeted = (await f.call('packRetargetCopies', fromId, prop, from, to)) + (await f.call('editableRetargetCopies', prop, from, to))
       moved.push({ uniqueId: id, before: got.entity, oldHash: got.hash, newHash: put.hash, retargeted })
     }
-    return moved
+    return { value: moved, touched: [fromId, toId] }
   })
   for (const m of result.value) {
     const carry = m.oldHash && m.newHash ? { from: { set, prop, hash: m.oldHash }, to: { set, prop, hash: m.newHash } } : undefined

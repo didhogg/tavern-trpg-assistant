@@ -46,7 +46,7 @@ function setup(taken: string[] = ['PHB']) {
   } }
   const lib = {
     frameOf: async () => frame,
-    mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }),
+    mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }), writeAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<{ value: unknown }>) => ({ value: (await run({})).value, view: {}, dirty: [] }),
     brewImport: async (_s: string, files: Array<{ name: string; text: string }>) => {
       for (const f of files) {
         const body = JSON.parse(f.text)
