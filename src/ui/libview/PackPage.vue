@@ -9,6 +9,7 @@ import { useLibViewStore } from '../../stores/libview'
 import Icon from '../kit/Icon.vue'
 import { loadPackRows, matchName, type PackRow } from './pack-data'
 import { openEntry, openReader } from './open'
+import { openNewEntry } from './edit-flow'
 import { categoryLabel, registeredCategories } from './registry'
 
 /** 包 / 书弹窗的列表页（U1a + U3）：搜索与类别药丸始终显示；选"全部"平铺；点行弹窗内换成详情。不出现"书目来源"勾选（进包就是只看这个来源）。 */
@@ -107,7 +108,8 @@ watch(q, () => toTop())
 <template>
   <div class="lib-mbody" data-testid="pack-page">
     <div class="lib-filter">
-      <input v-model="q" class="trpg-input" type="search" placeholder="搜索这本书里的条目" aria-label="搜索这本书里的条目" data-autofocus />
+      <input v-model="q" class="trpg-input" type="search" :placeholder="mine ? '搜索这个包里的条目' : '搜索这本书里的条目'" :aria-label="mine ? '搜索这个包里的条目' : '搜索这本书里的条目'" data-autofocus />
+      <button v-if="mine" class="trpg-btn trpg-btn--primary" type="button" data-testid="pack-new-entry" @click="openNewEntry(mine.codeSet, { id: mine.id, name })"><Icon name="plus" :size="16" />新建条目</button>
     </div>
     <div class="lib-pills" role="group" aria-label="类别">
       <button class="trpg-pill" type="button" :aria-pressed="cat === 'all'" @click="cat = 'all'">全部<small>{{ rows.length }}</small></button>

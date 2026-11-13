@@ -20,3 +20,29 @@
 .lib-dialog__body .trpg-field { margin-bottom: 0; }
 .lib-locked { display: flex; align-items: center; justify-content: space-between; background: var(--bg-sunk); color: var(--text3); }
 .lib-langs { display: inline-flex; gap: 4px; }
+/* 新建条目：选类型 · 选起点 · 文字转条目 · 粘贴 JSON（u7-7 … u7-9） */
+.lib-form__sec { font-size: var(--fs-xs); color: var(--text2); font-weight: var(--fw-semibold); padding-bottom: var(--sp-1); }
+.lib-types { display: grid; gap: var(--sp-1); }
+.lib-tgroup { display: flex; gap: var(--sp-2); align-items: baseline; flex-wrap: wrap; padding: 6px 0; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.lib-tgroup > b { min-width: 96px; color: var(--text2); font-weight: var(--fw-semibold); }
+.lib-tgroup__items { display: flex; flex-wrap: wrap; gap: 4px var(--sp-3); flex: 1; min-width: 0; }
+.lib-choice { display: grid; gap: var(--sp-2); }
+.lib-choice > label { display: grid; grid-template-columns: 20px 1fr; gap: 2px var(--sp-2); padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); cursor: pointer; }
+.lib-choice > label[data-on='true'] { box-shadow: inset 0 0 0 2px var(--primary); }
+.lib-choice > label > span:last-child { grid-column: 2; color: var(--text2); font-size: var(--fs-sm); }
+.lib-choice__radio { margin: 3px 0 0; accent-color: var(--primary); }
+.lib-etop { flex: none; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); color: var(--text2); }
+.lib-two { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+.lib-two > div { display: flex; flex-direction: column; gap: var(--sp-2); min-height: 0; }
+.lib-lines { flex: 1; min-height: 0; overflow: auto; align-content: start; border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); display: grid; gap: var(--sp-2); }
+.lib-convert__in { flex: 1; min-height: 160px; resize: none; font: 13px/1.6 var(--font-sans); padding: var(--sp-2) var(--sp-3); }
+.lib-jsonwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: var(--sp-3) var(--sp-4) 0; }
+.lib-cmhost { flex: 1; min-height: 160px; display: flex; flex-direction: column; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); overflow: hidden; }
+.lib-cmhost .cm-editor { flex: 1; min-height: 0; font: 12px/1.6 ui-monospace, Menlo, monospace; }
+.lib-cmhost .cm-editor.cm-focused { outline: none; }
+.lib-cmhost .cm-scroller { overflow: auto; }
+.lib-cmhost .cm-gutters { background: var(--bg-sunk); border-right: var(--border) solid var(--line); color: var(--text3); }
+.lib-cmhost .cm-tooltip { font-family: var(--font-sans); }
+.lib-cm__err { flex: none; display: grid; gap: 6px; padding: var(--sp-2) var(--sp-4) 0; }
+.trpg-window[data-layout='narrow'] .lib-two, .lib-two:has(> div:only-child) { grid-template-columns: 1fr; }
+.lib-pills--wrap { flex-wrap: wrap; overflow: visible; padding-inline: 0; }
