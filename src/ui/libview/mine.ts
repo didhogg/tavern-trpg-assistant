@@ -3,7 +3,7 @@ import { onBeforeUnmount, ref } from 'vue'
 import type { Services } from '../../core/services'
 import type { PackPair } from '../../library/custom-lang'
 import type { MyPack } from '../../library/custom-packs'
-import { BUILTIN_SCOPES, ruleScopes } from '../../library/scopes'
+import { BUILTIN_SCOPES } from '../../library/scopes'
 import { categoryLabel } from './registry'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
@@ -25,26 +25,19 @@ export function catsText(p: MyPack, max = 4): string {
   return parts.length > max ? `${parts.slice(0, max).join(' · ')} 等 ${parts.length} 类` : parts.join(' · ')
 }
 
-export interface RuleOption { value: string; label: string; scopes: string[] }
+export interface RuleOption { value: string; label: string }
 
 /** 「属于规则」的选项：每套规则的默认范围（范围登记表），外加「未归类」。规则名取规则登记表。 */
 export function ruleOptions(s: Services): RuleOption[] {
-  const out: RuleOption[] = s.rules.list().map((r) => ({ value: r.id, label: r.name, scopes: [...ruleScopes(r.id).defaultScopes] }))
-  return [...out, { value: '', label: '未归类', scopes: [] }]
+  const out: RuleOption[] = s.rules.list().map((r) => ({ value: r.id, label: r.name }))
+  return [...out, { value: '', label: '未归类' }]
 }
 
-/** 包现在属于哪套规则（范围和哪套规则的默认范围一样）；对不上就是「未归类」。 */
-export function ruleOfScopes(s: Services, scopes: string[]): RuleOption {
-  const key = [...scopes].sort().join(',')
-  const opts = ruleOptions(s)
-  return opts.find((o) => o.value && [...o.scopes].sort().join(',') === key) ?? opts[opts.length - 1]
-}
-
-/** 行上的小标签：规则的版本短名（5e / 5.5e），没归类写「未归类」。 */
-export function versionTag(s: Services, scopes: string[]): string {
-  const r = ruleOfScopes(s, scopes)
-  if (!r.value) return scopes.length ? scopes.map((id) => BUILTIN_SCOPES.find((x) => x.id === id)?.name ?? id).join(' / ') : '未归类'
-  return s.rules.list().find((x) => x.id === r.value)?.versionLabel ?? r.label
+/** 行上的小标签：包属于的规则（后端判断，MyPack.rule）的版本短名（5e / 5.5e）；没归类写范围名或「未归类」。 */
+export function versionTag(s: Services, pack: MyPack): string {
+  if (!pack.rule) return pack.scopes.length ? pack.scopes.map((id) => BUILTIN_SCOPES.find((x) => x.id === id)?.name ?? id).join(' / ') : '未归类'
+  const r = s.rules.list().find((x) => x.id === pack.rule)
+  return r?.versionLabel ?? r?.name ?? pack.rule
 }
 
 /** 把一份作者格式内容存成文件下载。 */

@@ -4,7 +4,7 @@
 import { houseVersion, type RawDeps } from './custom-raw'
 import type { ChoiceLevel } from './manage'
 import type { ScopedLibrary } from './scoped'
-import { isPackChoiceKey } from './versions'
+import { isPackChoiceKey, levelRank } from './versions'
 import { refKey, type CampaignLibrary, type EntryRef } from './scopes'
 import type { FieldChange } from './house-diff'
 import { getSource } from './sources'
@@ -20,6 +20,12 @@ export interface EditRow {
   kind: 'house' | 'pack' | 'base' | 'other'
   name: string | null
   source: string | null
+  /**
+   * 这个战役里这一份是不是生效的（给了战役才算）：同一条条目在几层都有选择时，本战役 → 这个战役的规则 → 全局，最上面那层生效（versions.levelRank）。
+   * 不生效的原因：covered = 被上面那层盖住；other-rule = 属于别的规则，这个战役用不上。
+   */
+  active: boolean
+  inactive?: 'covered' | 'other-rule'
 }
 
 export interface EditFilter {
@@ -57,7 +63,16 @@ export async function listEdits(d: Deps, filter: EditFilter = {}, campaign?: Cam
     const source = stored?.source ?? null
     if (sources && !(source && sources.has(source.toLowerCase())) && !alts.has(c.altId)) continue
     const name = (stored?.item as { name?: unknown } | undefined)?.name
-    out.push({ level: c.level, ref, altId: c.altId, kind: kindOf(c.altId), name: typeof name === 'string' ? name : null, source })
+    out.push({ level: c.level, ref, altId: c.altId, kind: kindOf(c.altId), name: typeof name === 'string' ? name : null, source, active: false })
+  }
+  if (campaign) {
+    const top = new Map<string, number>()
+    for (const r of out) { const k = levelRank(campaign.rule, r.level); if (k >= 0 && k < (top.get(refKey(r.ref)) ?? 9)) top.set(refKey(r.ref), k) }
+    for (const r of out) {
+      const k = levelRank(campaign.rule, r.level)
+      r.active = k >= 0 && k === top.get(refKey(r.ref))
+      if (!r.active) r.inactive = k < 0 ? 'other-rule' : 'covered'
+    }
   }
   return out
 }

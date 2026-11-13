@@ -149,12 +149,16 @@ function g(e) {
 	if (!t) throw Error(`范围登记表里没有这套规则：${e}`);
 	return t;
 }
-var _ = (e) => `src:${e.toLowerCase()}`, v = (e) => `ent:${e.set}:${e.prop}:${e.hash}`, y = (e) => `${e.set}|${e.prop}|${e.hash}`;
-function b(e, t) {
+function _(e) {
+	let t = [...e].sort().join(",");
+	return t ? Object.entries(h).find(([, e]) => [...e.defaultScopes].sort().join(",") === t)?.[0] ?? null : null;
+}
+var v = (e) => `src:${e.toLowerCase()}`, y = (e) => `ent:${e.set}:${e.prop}:${e.hash}`, b = (e) => `${e.set}|${e.prop}|${e.hash}`;
+function x(e, t) {
 	let n = t.toLowerCase(), r = e.filter((e) => (e.body?._meta?.sources ?? []).some((e) => String(e?.json ?? "").toLowerCase() === n));
 	return r.length > 0 && r.every((e) => !e.head?.url && !e.body?._meta?.edition);
 }
-function x(e, t = m) {
+function S(e, t = m) {
 	if (!e || e.classic === null) return null;
 	let n = e.classic ? "classic" : "one", r = t.filter((e) => e.edition === n).map((e) => e.id);
 	return r.length ? {
@@ -162,7 +166,7 @@ function x(e, t = m) {
 		global: !1
 	} : null;
 }
-function S(e, t, n) {
+function C(e, t, n) {
 	return e ? {
 		assignment: e,
 		basis: "entry"
@@ -177,7 +181,7 @@ function S(e, t, n) {
 		basis: "none"
 	};
 }
-function C(e, t) {
+function w(e, t) {
 	return {
 		rule: e,
 		codeSet: t,
@@ -187,13 +191,13 @@ function C(e, t) {
 		choices: {}
 	};
 }
-function w(e, t, n) {
-	return E(e, _(t), n);
-}
 function T(e, t, n) {
-	return E(e, v(t), n);
+	return D(e, v(t), n);
 }
 function E(e, t, n) {
+	return D(e, y(t), n);
+}
+function D(e, t, n) {
 	let r = (e) => e.filter((e) => e !== t);
 	return n ? {
 		include: [...r(e.include), t],
@@ -203,7 +207,7 @@ function E(e, t, n) {
 		exclude: [...r(e.exclude), t]
 	};
 }
-function D(e) {
+function O(e) {
 	let t = [];
 	for (let n of e.exclude) {
 		let e = /^ent:([^:]+):([^:]+):(.+)$/.exec(n);
@@ -215,7 +219,7 @@ function D(e) {
 	}
 	return t;
 }
-function O(e, t, n) {
+function k(e, t, n) {
 	let r = (e) => e.includes(t.entry) || t.source !== null && e.includes(t.source);
 	return r(e.exclude) ? {
 		visible: !1,
@@ -237,18 +241,18 @@ function O(e, t, n) {
 		reason: "unclassified"
 	};
 }
-var k = (e) => e.reason !== "out-of-scope" && e.reason !== "unclassified";
+var A = (e) => e.reason !== "out-of-scope" && e.reason !== "unclassified";
 // src/library/images.ts
-function A(e, t) {
+function j(e, t) {
 	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
 }
-function j(e) {
+function M(e) {
 	return r(e).imageRoots ?? [];
 }
-function M(e, t) {
-	return A(j(e), t);
+function N(e, t) {
+	return j(M(e), t);
 }
-function N(e) {
+function P(e) {
 	return e.replace(/^\/?img\//, "");
 }
-export { l as C, a as E, u as S, c as T, f as _, T as a, n as b, D as c, b as d, S as f, O as g, _ as h, x as i, v as l, g as m, N as n, w as o, y as p, m as r, C as s, M as t, k as u, d as v, r as w, i as x, t as y };
+export { u as C, a as D, c as E, i as S, r as T, k as _, E as a, t as b, O as c, x as d, C as f, v as g, g as h, S as i, y as l, _ as m, P as n, T as o, b as p, m as r, w as s, N as t, A as u, f as v, l as w, n as x, d as y };

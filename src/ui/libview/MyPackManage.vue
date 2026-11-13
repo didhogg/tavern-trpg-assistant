@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { sourceUnit } from '../../library/scopes'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import SelectField from '../kit/SelectField.vue'
-import { ruleOfScopes, ruleOptions } from './mine'
+import { ruleOptions } from './mine'
 import { runPackMenu } from './mine-actions'
 import PackDeps from './PackDeps.vue'
 import OverridesList from './OverridesList.vue'
@@ -38,13 +37,14 @@ async function saveName(): Promise<void> {
 
 const rules = computed(() => ruleOptions(app.svc()))
 const rule = ref('')
-watch(pack, (p) => { if (p) rule.value = ruleOfScopes(app.svc(), p.scopes).value }, { immediate: true })
+// 包属于哪套规则由后端判断（MyPack.rule）；改规则交给 custom.setPackRule
+watch(pack, (p) => { if (p) rule.value = p.rule ?? '' }, { immediate: true })
 async function saveRule(next: string | undefined): Promise<void> {
   const p = pack.value
   if (!p || next === undefined) return
   const opt = rules.value.find((o) => o.value === next)
   try {
-    await app.svc().backend.library.scoped.setAssignment(sourceUnit(p.own.json), opt?.scopes.length ? { scopes: opt.scopes, global: false } : null)
+    await app.svc().backend.library.custom.setPackRule(props.mine.codeSet, props.mine.id, next || null)
     rule.value = next
     toast.success(`已改成：${opt?.label ?? '未归类'}`)
     await lib.loadPairs(app.svc())

@@ -8,7 +8,7 @@ import { importReplaces } from './import-replace'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
-import { createPack, deletePack, docIdOf, exportPack, lastPack, listPacks, rememberPack, renamePack, type PackDeps, type PackSource } from './custom-packs'
+import { createPack, deletePack, docIdOf, exportPack, lastPack, listPacks, rememberPack, renamePack, setPackRule, type PackDeps, type PackSource } from './custom-packs'
 import { createHouseRule, type HouseEdit } from './custom-house'
 import { houseNow } from './custom-raw'
 import { emptyIfMissing } from './official-missing'
@@ -233,6 +233,8 @@ export class CustomLibrary {
   /** 【我的库】里的包：身份、自己的来源、每类几条、版本标签。 */
   /** 【我的库】这一套的包；这种语言的官方资料没装（读不了）就是空的。 */
   async packs(codeSet: string) { return emptyIfMissing(async () => { await this.ensureMigrated(codeSet); return listPacks(this.packDeps, codeSet) }) }
+  /** 包改成属于哪套规则（null = 未归类）；版本标签跟着变。 */
+  setPackRule(codeSet: string, id: string, rule: string | null) { return setPackRule(this.packDeps, codeSet, id, rule) }
   /** 改包的显示名 / 缩写（身份不变）。 */
   renamePack(codeSet: string, id: string, patch: { full?: string; abbreviation?: string }) { return renamePack(this.packDeps, codeSet, id, patch) }
   /** 按包导出（作者格式文件）。 */

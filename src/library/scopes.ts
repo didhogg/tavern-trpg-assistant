@@ -30,6 +30,13 @@ export function ruleScopes(rule: string): RuleScopes {
   return r
 }
 
+/** 一组范围属于哪套规则：和哪套规则的默认范围一模一样就是它；都对不上（含空的）= null（未归类）。按登记表，不写死。 */
+export function ruleOfScopes(scopes: string[]): string | null {
+  const key = [...scopes].sort().join(',')
+  if (!key) return null
+  return Object.entries(RULES).find(([, r]) => [...r.defaultScopes].sort().join(',') === key)?.[0] ?? null
+}
+
 /** 条目的定位：哪个数据集（源登记表 id）、哪一类、作者编号。 */
 export interface EntryRef {
   set: string

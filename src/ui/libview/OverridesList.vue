@@ -33,8 +33,8 @@ const kind = ref('all')
 const open = ref<string | null>(null)
 const diffs = shallowRef<Record<string, FieldChange[] | 'loading' | string>>({})
 const labels = shallowRef<Record<string, Record<string, string>>>({})
-const c = computed(() => (lib.bound ? lib.campaignLib : null))
-const ORDER = (l: string) => (l === 'campaign' ? 0 : l.startsWith('rule:') ? 1 : 2)
+// 战役选书设置总是给（没打开战役时是默认的、本战役层为空）：后端要用它的规则判断哪一层生效
+const c = computed(() => lib.campaignLib)
 /** 层的叫法：规则层写规则名（规则登记表），不写编号。 */
 const levelText = (l: string) => (l.startsWith('rule:') ? `规则：${app.svc().rules.get(l.slice(5))?.name ?? l.slice(5)}` : rawLevel(l))
 const key = (r: EditRow) => `${r.level}|${r.ref.set}|${r.ref.prop}|${r.ref.hash}`
@@ -45,7 +45,8 @@ async function load(): Promise<void> {
     const custom = app.svc().backend.library.custom
     const s = props.scope
     const list = s.kind === 'pack' ? await custom.packEdits(s.codeSet, s.id, c.value) : await custom.edits(s.kind === 'sources' ? { sources: s.sources } : s.kind === 'refs' ? { refs: s.refs } : {}, c.value)
-    rows.value = list.filter((r) => r.kind !== 'base').sort((a, b) => (a.source ?? '').localeCompare(b.source ?? '') || ORDER(a.level) - ORDER(b.level)).map((r) => ({ ...r, picked: false }))
+    // 按书分组排一下（同一本里保持后端给的层的先后）；哪一份生效由后端标（active）
+    rows.value = list.filter((r) => r.kind !== 'base').sort((a, b) => (a.source ?? '').localeCompare(b.source ?? '')).map((r) => ({ ...r, picked: false }))
   } catch (e) { console.error('[trpg-assistant] 读取覆盖列表失败', e); error.value = e instanceof Error ? e.message : String(e) }
 }
 onMounted(() => void load())
@@ -55,8 +56,7 @@ const groups = computed(() => {
   for (const r of shown.value) { const g = props.scope.kind === 'refs' ? '' : r.source ?? '其他'; out.set(g, [...(out.get(g) ?? []), r]) }
   return [...out]
 })
-/** 单条：每条条目生效的是最上面那一层。 */
-const winner = (r: Row) => !(rows.value ?? []).some((x) => x.ref.hash === r.ref.hash && x.ref.set === r.ref.set && ORDER(x.level) < ORDER(r.level))
+const offText = (r: Row) => (r.inactive === 'other-rule' ? '（属于别的规则，这个战役用不上）' : '（被上面那层盖住，现在不生效）')
 const levels = computed(() => [...(lib.bound ? [{ value: 'campaign', label: '本战役' }] : []), ...(lib.campaignLib ? [{ value: `rule:${lib.campaignLib.rule}`, label: '当前规则' }] : []), { value: 'global', label: '全局（所有战役）' }])
 const bulk = ref(levels.value[levels.value.length - 1].value)
 const kindText = (r: Row) => (r.kind === 'house' ? '房规' : r.kind === 'pack' ? '别的版本' : '其他')
@@ -123,13 +123,13 @@ defineExpose({ load })
       <template v-for="[g, list] in groups" :key="g">
         <div v-if="g" class="lib-sec" style="padding: var(--sp-2) 0 0">{{ g }}</div>
         <ul class="lib-edits">
-          <li v-for="r in list" :key="key(r)" class="lib-erow" :data-off="scope.kind === 'refs' && !winner(r) ? 'true' : undefined" data-testid="override-row">
+          <li v-for="r in list" :key="key(r)" class="lib-erow" :data-off="scope.kind === 'refs' && !r.active ? 'true' : undefined" data-testid="override-row">
             <div class="lib-erow__top">
               <Checkbox :model-value="r.picked" :label="`选择 ${r.name ?? ''}`" @update:model-value="(v: boolean) => pick(r, v)" />
               <span class="lib-erow__name">{{ r.name ?? '未知' }}</span>
               <span class="trpg-badge" :data-tone="r.kind === 'house' ? 'warn' : undefined">{{ kindText(r) }}</span>
-              <span v-if="scope.kind === 'refs' && winner(r)" class="trpg-badge" data-tone="success">生效中</span>
-              <span class="lib-erow__meta">改成 {{ toText(r) }} · 作用于{{ levelText(r.level) }}{{ scope.kind === 'refs' && !winner(r) ? '（被上面那层盖住，现在不生效）' : '' }}</span>
+              <span v-if="scope.kind === 'refs' && r.active" class="trpg-badge" data-tone="success">生效中</span>
+              <span class="lib-erow__meta">改成 {{ toText(r) }} · 作用于{{ levelText(r.level) }}{{ scope.kind === 'refs' && !r.active ? offText(r) : '' }}</span>
               <span class="lib-end lib-inline">
                 <SelectField :model-value="r.level" :label="`${r.name ?? ''} 作用于`" :options="levels.some((l) => l.value === r.level) ? levels : [{ value: r.level, label: levelText(r.level) }, ...levels]" @update:model-value="(v) => v && v !== r.level && move([r], v)" />
                 <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" data-testid="override-open" @click="toggle(r)">{{ open === key(r) ? '收起' : '看改了什么' }}</button>

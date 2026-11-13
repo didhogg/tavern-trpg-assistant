@@ -105,7 +105,7 @@ const onMenu = (p: PackPair, key: string) => runPackMenu(app.svc(), key, p, code
           <div class="trpg-row__main lib-pack">
             <div class="trpg-row__title">
               <button class="lib-name trpg-link" type="button" data-testid="mylib-open" @click="openMyPack(lib, p, codeSet)">{{ packTitle(pack(p)) }}</button>
-              <span class="trpg-badge">{{ versionTag(app.svc(), pack(p).scopes) }}</span>
+              <span class="trpg-badge">{{ versionTag(app.svc(), pack(p)) }}</span>
               <span class="lib-langs" :title="p.zh && p.en ? '中文、英文两个文件' : p.zh ? '只有中文' : '只有英文'"><span v-if="p.zh" class="trpg-badge" data-tone="info">中</span><span v-if="p.en" class="trpg-badge" data-tone="info">En</span></span>
               <span v-if="isPending(p)" class="lib-pending" data-testid="mylib-pending"><Icon name="arrow-clockwise" :size="12" />整理中</span>
             </div>

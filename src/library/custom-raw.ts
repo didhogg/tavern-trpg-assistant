@@ -10,6 +10,7 @@ import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
 import type { CampaignLibrary, EntryRef } from './scopes'
 import { getSource } from './sources'
+import { levelRank } from './versions'
 
 type Ent = Record<string, unknown>
 type Frame = { call: (cmd: string, ...a: unknown[]) => Promise<unknown> }
@@ -92,8 +93,8 @@ export type HouseNowDeps = RawDeps & {
   houseSet: (codeSet: string) => string
 }
 
-/** 层的先后：本战役 → 当前规则 → 全局（作者 / 插件的选版本顺序，versions.chooseVersion）。别的规则的层不算。 */
-const rank = (c: CampaignLibrary, level: string): number => (level === 'campaign' ? 0 : level === `rule:${c.rule}` ? 1 : level === 'global' ? 2 : -1)
+/** 层的先后（versions.levelRank，和 chooseVersion 同一个顺序）；别的规则的层不算。 */
+const rank = (c: CampaignLibrary, level: string): number => levelRank(c.rule, level)
 
 export async function houseNow(d: HouseNowDeps, c: CampaignLibrary, target: EntryRef): Promise<HouseNow> {
   const codeSet = getSource(target.set).codeSet

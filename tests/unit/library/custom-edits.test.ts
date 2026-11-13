@@ -70,6 +70,16 @@ describe('G3 编辑 / 覆盖按包列、改作用范围', () => {
     expect(back.choices).toEqual({ [refKey(fire)]: 'house:fireball_trpghouse' })
     expect(await manage.choices('global')).toEqual({})
   })
+  it('生效中由后端标：本战役 → 这个战役的规则 → 全局，最上面那层生效；别的规则的层这个战役用不上', async () => {
+    await manage.setChoice('global', refKey(fire), 'house:g')
+    await manage.setChoice('rule:dnd5e-2024', refKey(fire), 'house:other')
+    await manage.setChoice('rule:dnd5e-2014', refKey(fire), 'house:r')
+    const rows = await listEdits(deps(), { refs: [fire] }, camp({}))
+    const by = Object.fromEntries(rows.map((r) => [r.level, [r.active, r.inactive ?? null]]))
+    expect(by).toEqual({ 'global': [false, 'covered'], 'rule:dnd5e-2024': [false, 'other-rule'], 'rule:dnd5e-2014': [true, null] })
+    const withCampaign = await listEdits(deps(), { refs: [fire] }, camp({ [refKey(fire)]: 'base' }))
+    expect(withCampaign.filter((r) => r.active).map((r) => r.level)).toEqual(['campaign'])
+  })
   it('单条筛选：只列给的那几条（和来源筛选一起给时同时满足）', async () => {
     await manage.setChoice('global', refKey(sword), 'house:longsword_trpghouse')
     const c = camp({ [refKey(fire)]: 'house:fireball_trpghouse' })

@@ -1,4 +1,4 @@
-import { d as e, n as t, v as n } from "./images-B-DBVlfp.js";
+import { d as e, n as t, y as n } from "./images-Cyuc_KQ4.js";
 import { t as r } from "./protocol-03CO7Rhf.js";
 // src/library/runtime/frame/author.ts
 var i = globalThis, a = null;

@@ -108,6 +108,9 @@ export function pickChoice(map: Record<string, string> | undefined, key: string,
   return pick !== undefined && (pick === 'base' || alts.some((a) => a.altId === pick)) ? pick : undefined
 }
 
+/** 选版本的层的先后（和 chooseVersion 同一个顺序）：本战役 0 → 这个战役的规则 1 → 全局 2；别的规则的层这个战役用不上（-1）。 */
+export const levelRank = (rule: string, level: string): number => (level === 'campaign' ? 0 : level === `rule:${rule}` ? 1 : level === 'global' ? 2 : -1)
+
 export function chooseVersion(alts: Alternative[], choices: { campaign?: string; rule?: string; global?: string }): Chosen {
   for (const by of ['campaign', 'rule', 'global'] as const) {
     const pick = choices[by]

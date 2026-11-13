@@ -5,7 +5,7 @@
 import type { BrewPack, SourceInfo } from './brew-packs'
 import type { ManageStore } from './manage'
 import type { AuthorFrame } from './runtime/host'
-import { BUILTIN_SCOPES, ruleScopes, sourceUnit } from './scopes'
+import { BUILTIN_SCOPES, ruleOfScopes, ruleScopes, sourceUnit } from './scopes'
 import type { LibraryService } from './service'
 import type { LibraryView } from './revision'
 import { SOURCES } from './sources'
@@ -32,6 +32,8 @@ export interface MyPack extends BrewPack {
   own: SourceInfo
   /** 版本标签（自己的来源归在哪些范围；没归类为空）。 */
   scopes: string[]
+  /** 这些范围属于哪套规则（scopes.ruleOfScopes）；对不上 = null（未归类）。 */
+  rule: string | null
 }
 
 /** 来源编号：作者编号 = 名字 + 来源，用 | 拼；只允许不会和这个分隔冲突的字符。 */
@@ -50,8 +52,16 @@ export async function listPacks(d: PackDeps, codeSet: string, view?: LibraryView
     .filter((p) => p.origin === 'import' && p.sourceInfo.length)
     .map((p) => {
       const own = p.sourceInfo[p.sourceInfo.length - 1]
-      return { ...p, id: packStableId({ sources: p.sources }) ?? p.docIdLocal, own, scopes: [...(assigns.get(sourceUnit(own.json))?.scopes ?? [])] }
+      const scopes = [...(assigns.get(sourceUnit(own.json))?.scopes ?? [])]
+      return { ...p, id: packStableId({ sources: p.sources }) ?? p.docIdLocal, own, scopes, rule: ruleOfScopes(scopes) }
     })
+}
+
+/** 包改成属于哪套规则（版本标签跟着变）：范围 = 那套规则的默认范围；null = 未归类。 */
+export async function setPackRule(d: PackDeps, codeSet: string, id: string, rule: string | null): Promise<void> {
+  const pack = (await listPacks(d, codeSet)).find((p) => p.id === id)
+  if (!pack) throw new Error(`【我的库】里没有这个包：${id}`)
+  await d.manage.setAssignment(sourceUnit(pack.own.json), rule ? { scopes: [...ruleScopes(rule).defaultScopes], global: false } : null)
 }
 
 /** 按包的身份找它在作者存储里的本地编号（小窗给哪个版本就在哪个版本里找）。 */
