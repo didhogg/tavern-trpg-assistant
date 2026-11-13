@@ -1,6 +1,6 @@
 // 条目英文对照：从 service.ts 拆出，保持单文件职责与行数上限。
 import { fluffOf } from './cache'
-import type { LibraryService } from './service'
+import type { LibraryServiceCore as LibraryService } from './service-core'
 import type { English } from './service-types'
 import { getSource, type SourceEntry } from './sources'
 import type { LibraryView } from './revision'

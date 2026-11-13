@@ -2,7 +2,7 @@
 import { SOURCES, getSource } from './sources'
 import { EMBEDDED_PROP } from './embedded-tables'
 import { parsedKey } from './install'
-import type { LibraryService } from './service'
+import type { LibraryServiceCore as LibraryService } from './service-core'
 import type { LibraryView } from './revision'
 import { ensureReadable } from './service-read'
 import type { ExtractedTable } from './runtime/frame/table-extract-commands'

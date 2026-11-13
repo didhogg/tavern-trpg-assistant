@@ -9,6 +9,8 @@ import { attachShelf, directoryRows, type ShelfInfo } from './shelf'
 import { BrewPack } from './brew-packs'
 import { BrewPairs } from './brew-pairing'
 import { getSource } from './sources'
+import { parsedKey } from './install'
+import { sourceCountsAll } from './installed-sources'
 
 export interface CatalogRow {
   kind: 'book' | 'adventure'
@@ -146,3 +148,25 @@ export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote
     })
   }
 
+
+/** 这套资料每个来源几条，只留这个库版本里看得到的来源（从 scoped.ts 拆出，行为不变）。 */
+export async function visibleSourceCounts(view: LibraryView, setId: string): Promise<Record<string, number>> {
+  const allowed = await view.visibleSources(setId)
+  const counts = await sourceCountsAll(view, setId)
+  if (allowed) for (const key of Object.keys(counts)) if (!allowed.some((s) => s.toLowerCase() === key.toLowerCase())) delete counts[key]
+  return counts
+}
+
+/** 这套资料的冒险目录（作者书目 + 哪些已下载；从 scoped.ts 拆出，行为不变）。 */
+export async function adventuresOf(lib: LibraryService, set: SourceEntry, view: LibraryView): Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>> {
+  const frame = await lib.frameOf(set.codeSet, view)
+  const loader = (await frame.call('loaders')).find((l) => l.kind === 'corpus' && l.props.includes('adventureData'))
+  if (!loader?.index || !loader.page) return []
+  const installed = await view.installedAdventures(set.id)
+  const out = []
+  for (const it of await frame.call('corpusList', loader.index, loader.props[0], loader.page)) {
+    const downloaded = installed ? installed.includes(it.id) : !!(await view.derivedGet(parsedKey(set.id, loader.props[0], it.id)))
+    out.push({ ...it, downloaded })
+  }
+  return out
+}

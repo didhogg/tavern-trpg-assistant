@@ -41,7 +41,7 @@ try {
   ok('多选下栏：全部启用、全部禁用在卸载左边', /全部启用[\s\S]*全部禁用[\s\S]*卸载选中/.test(bar), bar.replace(/\n/g, ' '))
   await page.screenshot({ path: join(profile, 'selbar.png') })
   await page.getByTestId('shelf-disable-picked').click()
-  await page.waitForFunction(([n, P]) => [...document.getElementById('trpg-assistant-root').shadowRoot.querySelectorAll('.trpg-shelf__row')].some((r) => r.querySelector('.lib-name')?.firstChild?.textContent.trim() === n && r.querySelector('.trpg-switch')?.getAttribute('aria-checked') === 'false'), [name, P]).catch(() => {})
+  await page.waitForFunction(([n]) => [...document.getElementById('trpg-assistant-root').shadowRoot.querySelectorAll('.trpg-shelf__row')].some((r) => r.querySelector('.lib-name')?.firstChild?.textContent.trim() === n && r.querySelector('.trpg-switch')?.getAttribute('aria-checked') === 'false'), [name]).catch(() => {})
   ok('全部禁用：选中的那本开关变关', (await switchOf(page, name)) === 'false')
   await page.reload()
   await openShelf(page)

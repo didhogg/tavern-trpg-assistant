@@ -1,10 +1,9 @@
 // 按战役看【库】（D2-P3 整体设计 §2.2、§2.4、§2.7）：书目、查询、详情、取条目、搜索都按战役的选书设置过滤，
 // 交出的是"生效版本"（原件，或用户选了的备选 / 房规）。P5 T4：身份、浏览、关闭书、查询放大一起收口。
+import { setChoiceAt } from './scoped-choices'
 import { altsKey, type AltIndex, type AltRecord } from './alternatives'
 import { packTarget, packVariant } from './pack-target'
 import type { LibraryDatabase } from './db'
-import { parsedKey } from './install'
-import { sourceCountsAll } from './installed-sources'
 import { ManageStore, type ChoiceLevel, type HouseRuleLink } from './manage'
 import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } from './service'
 import type { EditionInfo } from './runtime/frame/edit-commands'
@@ -18,7 +17,7 @@ export type { VariantInfo } from './versions'
 import { hashValue } from '../core/hash'
 import type { BookDirectory, DirectoryRecord } from './directory'
 import { BrewPacks, type BrewPack } from './brew-packs'
-import { catalogFor, packUrl, type CatalogRow } from './scoped-catalog'
+import { adventuresOf, catalogFor, packUrl, visibleSourceCounts, type CatalogRow } from './scoped-catalog'
 export type { CatalogRow } from './scoped-catalog'
 import { DocumentStore } from './documents'
 import { variantLinks, type VariantLink } from './variants'
@@ -359,26 +358,10 @@ export class ScopedLibrary {
     }
     return { groups: groupShelf(rows, record.groups), booksError: record.errors.books, adventuresError: record.errors.adventures, brewError }
   }
-  private async sourceCounts(setId: string, view: LibraryView): Promise<Record<string, number>> {
-    const allowed = await view.visibleSources(setId)
-    const trim = (counts: Record<string, number>): Record<string, number> => {
-      if (allowed) for (const key of Object.keys(counts)) if (!allowed.some((s) => s.toLowerCase() === key.toLowerCase())) delete counts[key]
-      return counts
-    }
-    return trim(await sourceCountsAll(view, setId))
-  }
+  private sourceCounts(setId: string, view: LibraryView): Promise<Record<string, number>> { return visibleSourceCounts(view, setId) }
+  /** 这套资料的冒险目录（实现在 scoped-catalog.ts）。 */
   async adventures(set: SourceEntry, viewArg?: LibraryView): Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>> {
-    const view = await (viewArg ? Promise.resolve(viewArg) : this.lib.currentView())
-    const frame = await this.lib.frameOf(set.codeSet, view)
-    const loader = (await frame.call('loaders')).find((l) => l.kind === 'corpus' && l.props.includes('adventureData'))
-    if (!loader?.index || !loader.page) return []
-    const installed = await view.installedAdventures(set.id)
-    const out = []
-    for (const it of await frame.call('corpusList', loader.index, loader.props[0], loader.page)) {
-      const downloaded = installed ? installed.includes(it.id) : !!(await view.derivedGet(parsedKey(set.id, loader.props[0], it.id)))
-      out.push({ ...it, downloaded })
-    }
-    return out
+    return adventuresOf(this.lib, set, viewArg ?? (await this.lib.currentView()))
   }
 
   async previewAssignment(codeSet: string, unit: string, next: Assignment | null, viewArg?: LibraryView): Promise<{ unit: string; before: Membership; after: Membership }> {
@@ -395,16 +378,9 @@ export class ScopedLibrary {
     return this.manage.setAssignment(unit, next)
   }
 
-  async choose(c: CampaignLibrary, target: EntryRef, altId: string | null, level: 'campaign' | ChoiceLevel = 'campaign'): Promise<CampaignLibrary> {
-    const key = refKey(target)
-    if (level === 'campaign') {
-      const choices = { ...c.choices }
-      if (altId === null) delete choices[key]
-      else choices[key] = altId
-      return { ...c, choices }
-    }
-    await this.manage.setChoice(level, key, altId)
-    return c
+  /** 单条选版本（scoped-choices.ts）。 */
+  choose(c: CampaignLibrary, target: EntryRef, altId: string | null, level: 'campaign' | ChoiceLevel = 'campaign'): Promise<CampaignLibrary> {
+    return setChoiceAt(this.manage, c, refKey(target), altId, level)
   }
 
   /**
@@ -413,15 +389,7 @@ export class ScopedLibrary {
    */
   async choosePack(c: CampaignLibrary, sources: string[], altId: string | null, level: 'campaign' | ChoiceLevel = 'campaign'): Promise<CampaignLibrary> {
     let cur = c
-    for (const s of sources) {
-      const key = packChoiceKey(s)
-      if (level === 'campaign') {
-        const choices = { ...cur.choices }
-        if (altId === null) delete choices[key]
-        else choices[key] = altId
-        cur = { ...cur, choices }
-      } else await this.manage.setChoice(level, key, altId)
-    }
+    for (const s of sources) cur = await setChoiceAt(this.manage, cur, packChoiceKey(s), altId, level)
     return cur
   }
 }
