@@ -22,6 +22,10 @@ export interface EditStep {
   prop: string
   before: Record<string, unknown> | null
   link?: HouseRuleLink
+  /** 这一条在【我的库】哪个包里（包的身份，P5.5 B8）；没有 = 可编辑自制（房规）。 */
+  pack?: string | null
+  /** 换包时编号从哪变到哪：撤销这一步时插件记录（归类、房规链接、选的版本）搬回原编号。 */
+  carry?: { from: EntryRef; to: EntryRef }
 }
 
 /**

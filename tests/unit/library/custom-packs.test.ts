@@ -1,59 +1,131 @@
-import { describe, expect, it } from 'vitest'
-import { createPack, exportPack, listPacks, moveEntries, type PackDeps } from '../../../src/library/custom-packs'
-import { ruleScopes, sourceUnit, type Assignment } from '../../../src/library/scopes'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { configureBrewValidator } from '../../../src/library/brew-validate'
+import { createPack, exportPack, listPacks, renamePack, type PackDeps } from '../../../src/library/custom-packs'
+import { moveEntries, persist, remove, undo, type EntryDeps } from '../../../src/library/custom-entries'
+import { LibraryDatabase } from '../../../src/library/db'
+import { ManageStore } from '../../../src/library/manage'
+import { ruleScopes, sourceUnit } from '../../../src/library/scopes'
 import registry from '../../../src/library/scopes.json'
 
-// P5.5 B3：自己的包 = 作者可编辑自制里的一个来源。
-function setup(doc: Record<string, unknown> = { _meta: { sources: [{ json: 'TRPGMINE', full: '我的资料', abbreviation: '我的' }] }, spell: [{ name: 'a', source: 'TRPGMINE', uniqueId: 'u1' }, { name: 'b', source: 'TRPGMINE', uniqueId: 'u2' }], feat: [{ name: 'c', source: 'TRPGMINE', uniqueId: 'u3' }] }, taken: string[] = ['PHB']) {
-  const assigns = new Map<string, Assignment>()
-  const calls: Array<[string, unknown[]]> = []
-  const frame = { call: async (name: string, ...args: unknown[]) => {
-    calls.push([name, args])
-    if (name === 'sourceTaken') return taken.map((x) => x.toLowerCase()).includes(String(args[0]).toLowerCase())
-    if (name === 'editableDoc') return { body: doc }
-    if (name === 'editableExport') return { filename: 'x.json', body: { edition: args[1] } }
-    return undefined
-  } }
-  const saved: Array<[string, Record<string, unknown>]> = []
-  const d: PackDeps = {
-    frame: async () => frame as never,
-    mutate: async (_c, _k, run) => ({ value: await run(frame as never) }),
-    manage: { assignments: async () => new Map(assigns), setAssignment: async (u: string, a: Assignment | null) => { if (a) assigns.set(u, a); else assigns.delete(u) } } as never,
-    save: async (_c, prop, ent) => { saved.push([prop, ent]); return { uniqueId: String(ent.uniqueId), hash: 'h', renamed: null } },
-  }
-  return { d, calls, assigns, saved }
-}
+// P5.5 B8-1 / B8-2：【我的库】的包 = 作者的一个独立自制包。假的作者存储照作者行为写：
+// 包按本地编号存、按「来源编号组合」认包（导入同组合的会顶掉旧的）、条目编号 = 名字 + 来源。
+configureBrewValidator(new URL('../../../', import.meta.url))
 
-describe('自己的包', () => {
-  it('建包：编号要合法、不能撞已有的书 / 包、要有名字；给了规则就打上这套规则的版本标签', async () => {
-    const { d, calls, assigns } = setup()
-    await expect(createPack(d, 'cn', { json: 'has space', full: 'x', abbreviation: 'x' })).rejects.toThrow('只能用')
-    await expect(createPack(d, 'cn', { json: 'phb', full: 'x', abbreviation: 'x' })).rejects.toThrow('已经有书或包在用')
-    await expect(createPack(d, 'cn', { json: 'MyPack', full: ' ', abbreviation: 'x' })).rejects.toThrow('要有名字')
-    const rule = Object.keys(registry.rules)[0]
-    const made = await createPack(d, 'cn', { json: 'MyPack', full: '我的包', abbreviation: '' }, { rule })
-    expect(made).toEqual({ json: 'MyPack', full: '我的包', abbreviation: 'MyPack' })
-    expect(calls.find(([n]) => n === 'editableEnsureSource')?.[1]).toEqual([made])
-    expect(assigns.get(sourceUnit('MyPack'))).toEqual({ scopes: ruleScopes(rule).defaultScopes, global: false })
-  })
-  it('列包：每个来源每类几条', async () => {
-    const { d } = setup()
-    expect(await listPacks(d, 'cn')).toEqual([{ json: 'TRPGMINE', full: '我的资料', abbreviation: '我的', counts: { spell: 2, feat: 1 }, total: 3 }])
-  })
-  it('换包：改来源后走 custom 的保存；已经在那个包的跳过；目标包不存在报错', async () => {
-    const doc = { _meta: { sources: [{ json: 'TRPGMINE', full: '', abbreviation: '' }, { json: 'MyPack', full: '', abbreviation: '' }] }, spell: [{ name: 'a', source: 'TRPGMINE', uniqueId: 'u1' }, { name: 'b', source: 'MyPack', uniqueId: 'u2' }] }
-    const { d, saved } = setup(doc)
-    await moveEntries(d, 'cn', 'spell', ['u1', 'u2'], 'MyPack')
-    expect(saved).toEqual([['spell', { name: 'a', source: 'MyPack', uniqueId: 'u1' }]])
-    await expect(moveEntries(d, 'cn', 'spell', ['u1'], 'Nope')).rejects.toThrow('没有这个包')
-  })
-  it('按包导出：包头 edition 按包的版本标签（只带一种版本时），否则用作者默认 classic', async () => {
-    for (const rule of Object.keys(registry.rules)) {
-      const { d, assigns } = setup()
-      assigns.set(sourceUnit('TRPGMINE'), { scopes: ruleScopes(rule).defaultScopes, global: false })
-      expect((await exportPack(d, 'cn', 'TRPGMINE')).body).toEqual({ edition: ruleScopes(rule).style })
+type Doc = { docIdLocal: string; filename: string; isEditable?: boolean; body: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
+const hashOf = (e: Record<string, unknown>) => `${String(e.name)}_${String(e.source)}`.toLowerCase()
+
+let db: LibraryDatabase
+let manage: ManageStore
+beforeEach(() => { db = new LibraryDatabase(`test-packs-${Math.random()}`); manage = new ManageStore(db) })
+afterEach(async () => { db.close(); await db.delete() })
+
+function setup(taken: string[] = ['PHB']) {
+  const docs: Doc[] = []
+  let n = 0
+  const doc = (id: string) => { const d = docs.find((x) => x.docIdLocal === id); if (!d) throw new Error('no doc'); return d }
+  const frame = { call: async (name: string, ...a: any[]) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+    switch (name) {
+      case 'sourceTaken': return taken.includes(a[0]) || docs.some((d) => d.body._meta.sources.some((s: { json: string }) => s.json === a[0]))
+      case 'brewDocIndex': return docs.map((d) => ({ docIdLocal: d.docIdLocal, isEditable: !!d.isEditable, url: null, sources: d.body._meta.sources.map((s: { json: string }) => s.json) }))
+      case 'packEntity': { const e = (doc(a[0]).body[a[1]] ?? []).find((x: Record<string, unknown>) => x.uniqueId === a[2].uniqueId || hashOf(x) === a[2].hash); return e ? { entity: { ...e, uniqueId: e.uniqueId ?? `u${++n}` }, hash: hashOf(e), hadId: !!e.uniqueId } : null }
+      case 'packPut': {
+        const list = (doc(a[0]).body[a[1]] ??= [])
+        let i = a[2].uniqueId ? list.findIndex((x: Record<string, unknown>) => x.uniqueId === a[2].uniqueId) : -1
+        if (i < 0 && a[3]?.replaceHash) i = list.findIndex((x: Record<string, unknown>) => !x.uniqueId && hashOf(x) === a[3].replaceHash)
+        const before = i >= 0 ? structuredClone(list[i]) : null
+        const e = { ...a[2], uniqueId: a[2].uniqueId ?? `u${++n}` }
+        if (i >= 0) list[i] = e; else list.push(e)
+        return { uniqueId: e.uniqueId, hash: hashOf(e), previousHash: before ? hashOf(before) : null, previous: before ? { name: before.name, source: before.source } : null, previousEntity: before }
+      }
+      case 'packRemove': { const d = doc(a[0]); const out = (d.body[a[1]] ?? []).filter((x: Record<string, unknown>) => a[2].includes(x.uniqueId)); d.body[a[1]] = (d.body[a[1]] ?? []).filter((x: Record<string, unknown>) => !a[2].includes(x.uniqueId)); return structuredClone(out) }
+      case 'packRetargetCopies': case 'editableRetargetCopies': return 0
+      case 'packRenameSource': { const s = doc(a[0]).body._meta.sources.find((x: { json: string }) => x.json === a[1]); Object.assign(s, a[2]); return undefined }
+      case 'packExport': return { filename: 'x.json', body: { _meta: { ...doc(a[0]).body._meta, ...(a[1] ? { edition: a[1] } : {}) } } }
+      default: return undefined
     }
-    const { d } = setup()
-    expect((await exportPack(d, 'cn', 'TRPGMINE')).body).toEqual({ edition: 'classic' })
+  } }
+  const lib = {
+    frameOf: async () => frame,
+    mutateAuthor: async (_c: string, _k: string, run: (v: unknown) => Promise<unknown>) => ({ value: await run({}), parse: {}, view: {} }),
+    brewImport: async (_s: string, files: Array<{ name: string; text: string }>) => {
+      for (const f of files) {
+        const body = JSON.parse(f.text)
+        const id = body._meta.sources.map((s: { json: string }) => s.json.toLowerCase()).sort().join(' :: ')
+        const i = docs.findIndex((d) => d.body._meta.sources.map((s: { json: string }) => s.json.toLowerCase()).sort().join(' :: ') === id)
+        if (i >= 0) docs.splice(i, 1)
+        docs.push({ docIdLocal: `d${++n}`, filename: f.name, body })
+      }
+      return { ok: true, errors: [], value: { added: files } }
+    },
+    brewDelete: async () => ({}),
+  }
+  const packsOf = async () => docs.filter((d) => !d.isEditable).map((d) => ({ docIdLocal: d.docIdLocal, filename: d.filename, url: null, origin: 'import', isEditable: false, timeAdded: 0, sources: d.body._meta.sources.map((s: { json: string }) => s.json), sourceInfo: d.body._meta.sources.map((s: { json: string; full: string; abbreviation: string }) => ({ json: s.json, full: s.full, abbreviation: s.abbreviation, authors: [], version: null, dateReleased: null })), dependencies: null, includes: null, requires: [], props: {}, hashes: {}, entryCount: 0 }))
+  const pd: PackDeps = { lib: lib as never, manage, packsOf: packsOf as never }
+  const ed: EntryDeps = { lib: lib as never, manage, mineSource: { json: 'TRPGMINE', full: '我的资料', abbreviation: '我的' }, validateEntry: async () => [] }
+  return { pd, ed, docs }
+}
+const rule = Object.keys(registry.rules)[0]
+
+describe('包 = 作者的一个独立自制包（B8-1）', () => {
+  it('建包：编号要合法、不能撞已有的书 / 包、要有名字；导入一个只有包头的文件；给了规则就打版本标签、包头写版本风格', async () => {
+    const { pd, docs } = setup()
+    await expect(createPack(pd, 'cn', { json: 'has space', full: 'x', abbreviation: 'x' })).rejects.toThrow('只能用')
+    await expect(createPack(pd, 'cn', { json: 'PHB', full: 'x', abbreviation: 'x' })).rejects.toThrow('已经有书或包在用')
+    await expect(createPack(pd, 'cn', { json: 'OK1', full: ' ', abbreviation: 'x' })).rejects.toThrow('要有名字')
+    const p = await createPack(pd, 'cn', { json: 'PIRATE', full: '海盗战役', abbreviation: '' }, { rule })
+    expect(p.id).toBe('pirate')
+    expect(docs[0].body._meta).toMatchObject({ sources: [{ json: 'PIRATE', full: '海盗战役', abbreviation: 'PIRATE' }], edition: ruleScopes(rule).style })
+    expect((await manage.assignments()).get(sourceUnit('PIRATE'))?.scopes).toEqual([...ruleScopes(rule).defaultScopes])
+  })
+  it('列包：身份 = 来源编号组合；自己的来源 = 包头最后一行；改名不变身份；导出按版本标签写 edition', async () => {
+    const { pd } = setup()
+    await createPack(pd, 'cn', { json: 'PIRATE', full: '海盗战役', abbreviation: 'P' }, { rule })
+    const [p] = await listPacks(pd, 'cn')
+    expect(p).toMatchObject({ id: 'pirate', own: { json: 'PIRATE', full: '海盗战役' } })
+    await renamePack(pd, 'cn', 'pirate', { full: '海盗战役·改' })
+    const [q] = await listPacks(pd, 'cn')
+    expect(q).toMatchObject({ id: 'pirate', own: { full: '海盗战役·改' } })
+    const ex = await exportPack(pd, 'cn', 'pirate') as { body: { _meta: { edition?: string } } }
+    expect(ex.body._meta.edition).toBeDefined()
+  })
+})
+
+describe('包里的条目（B8-2）', () => {
+  it('存进包：来源默认是包自己的来源；改两次撤销两次；删掉的撤销回到同一个包', async () => {
+    const { pd, ed, docs } = setup()
+    await createPack(pd, 'cn', { json: 'PIRATE', full: '海盗战役', abbreviation: 'P' })
+    const a = await persist(ed, 'cn', 'spell', { name: '火焰鹦鹉', level: 1 }, { record: true, pack: 'pirate' })
+    expect(docs[0].body.spell[0]).toMatchObject({ name: '火焰鹦鹉', source: 'PIRATE' })
+    await persist(ed, 'cn', 'spell', { name: '火焰鹦鹉', level: 2, uniqueId: a.uniqueId }, { record: true, pack: 'pirate' })
+    await undo(ed, 'cn', 'spell', a.uniqueId)
+    expect(docs[0].body.spell[0].level).toBe(1)
+    await remove(ed, 'cn', 'spell', [a.uniqueId], { record: true, pack: 'pirate' })
+    expect(docs[0].body.spell).toEqual([])
+    await undo(ed, 'cn', 'spell', a.uniqueId)
+    expect(docs[0].body.spell.map((x: { uniqueId: string }) => x.uniqueId)).toEqual([a.uniqueId])
+  })
+  it('改导入 / 复制来的条目（没有 uniqueId）：按作者编号换掉那一条，不另加一条', async () => {
+    const { pd, ed, docs } = setup()
+    await pd.lib.brewImport('cn-brew', [{ name: 'c.json', text: JSON.stringify({ _meta: { sources: [{ json: 'PHB' }, { json: 'PHB_COPY1', full: '玩家手册（副本 1）' }] }, spell: [{ name: '火球术', source: 'PHB', level: 3 }] }) }])
+    await persist(ed, 'cn', 'spell', { name: '火球术', source: 'PHB', level: 9 }, { record: true, pack: 'phb :: phb_copy1', replaceHash: '火球术_phb' })
+    expect(docs[0].body.spell).toHaveLength(1)
+    expect(docs[0].body.spell[0]).toMatchObject({ level: 9, source: 'PHB' })
+  })
+  it('换包：来源换成目标包的，原来的包里没了；撤销两步回到原样，插件记录跟着搬回', async () => {
+    const { pd, ed, docs } = setup()
+    await createPack(pd, 'cn', { json: 'AAA', full: 'A', abbreviation: 'A' })
+    await createPack(pd, 'cn', { json: 'BBB', full: 'B', abbreviation: 'B' })
+    const s = await persist(ed, 'cn', 'spell', { name: '术', level: 1 }, { record: true, pack: 'aaa', rule })
+    const oldUnit = `ent:cn-brew:spell:术_aaa`
+    expect((await manage.assignments()).has(oldUnit)).toBe(true)
+    await moveEntries(ed, 'cn', 'spell', [s.uniqueId], 'aaa', 'bbb')
+    expect(docs[0].body.spell).toEqual([])
+    expect(docs[1].body.spell[0]).toMatchObject({ name: '术', source: 'BBB', uniqueId: s.uniqueId })
+    expect((await manage.assignments()).has(`ent:cn-brew:spell:术_bbb`)).toBe(true)
+    await undo(ed, 'cn', 'spell', s.uniqueId)
+    expect(docs[0].body.spell[0]).toMatchObject({ source: 'AAA' })
+    expect((await manage.assignments()).has(oldUnit)).toBe(true)
+    await undo(ed, 'cn', 'spell', s.uniqueId)
+    expect(docs[1].body.spell).toEqual([])
   })
 })

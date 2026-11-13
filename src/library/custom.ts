@@ -1,11 +1,13 @@
 // 自定义库（D2-P3 整体设计 §2.3、§2.5、§2.6）：写新条目、房规、文字转条目、新条目模板、导出、导入预览。
 // 条目内容全部走作者的可编辑自制（作者格式）；插件只记"房规 → 目标"的链接和范围设置。
 // 改完都走同一条路：作者包管理器 → 重新解析 → 同编号挂备选（LibraryService.afterBrewChange）。
+import { BrewPacks } from './brew-packs'
 import { copyRawSource } from './copy-source'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
-import { createPack, exportPack, listPacks, moveEntries, type PackDeps, type PackSource } from './custom-packs'
+import { createPack, deletePack, docIdOf, exportPack, listPacks, renamePack, type PackDeps, type PackSource } from './custom-packs'
+import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
 import { topLevelChanges } from './house-diff'
@@ -13,7 +15,7 @@ import { findCollisions, type DocIndex } from './versions'
 import type { Counterpart } from './counterpart'
 import type { LibraryDatabase } from './db'
 import { parsedKey } from './install'
-import type { ChoiceLevel, HouseRuleLink, ManageStore } from './manage'
+import type { ManageStore } from './manage'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
@@ -115,111 +117,50 @@ export class CustomLibrary {
    * 改名（作者编号 = 名字 + 来源，跟着变）：同一次修改里把可编辑自制中用 _copy 指向它的条目改指新名字；
    * 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
    */
-  async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, { rule }: { rule?: string } = {}) {
-    return this.persist(codeSet, prop, ent, { rule, record: true })
+  async saveEntry(codeSet: string, prop: string, ent: Record<string, unknown>, opts: SaveOptions = {}) {
+    return persist(this.entryDeps, codeSet, prop, ent, { ...opts, record: true })
   }
 
-  /** 存一条的实际做法；record：记一步撤销（撤销自己存回去时不记）。 */
-  private async persist(codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record }: { rule?: string; record: boolean }) {
-    const full: Record<string, unknown> = { source: CUSTOM.mine.json, ...ent }
-    // 新写的一条：这一类在作者结构定义里能自带版本（字段说明表 edition）就写上规则的版本（2014 → classic，2024 → one）。
-    // Plutonium 按它决定种族是否生成属性、背景是否按新版处理等（P5.5 B1 探路）。用户自己写了就不动。
-    if (rule && !ent.uniqueId && full.edition === undefined && (await formatOfCodeSet(codeSet).fields(prop))?.edition) full.edition = ruleScopes(rule).style
-    const result = await this.lib.mutateAuthor(codeSet, 'custom-entry', async (view) => {
-      const f = await this.lib.frameOf(codeSet, view)
-      await f.call('editableEnsureSource', CUSTOM.mine)
-      const put = await f.call('editablePut', prop, full)
-      const prev = put.previous
-      const retargeted = prev && put.previousHash !== put.hash ? await f.call('editableRetargetCopies', prop, prev, { name: String(full.name ?? ''), source: String(full.source) }) : 0
-      return { ...put, retargeted }
-    })
-    const { previousEntity, ...saved } = result.value
-    const set = brewSetOf(codeSet).id
-    if (record) await this.manage.pushHistory(this.historyKey(codeSet, prop, saved.uniqueId), { at: Date.now(), prop, before: previousEntity ?? null })
-    const renamed = saved.hash && saved.previousHash && saved.previousHash !== saved.hash ? { from: { set, prop, hash: saved.previousHash }, to: { set, prop, hash: saved.hash }, retargeted: saved.retargeted } : null
-    if (renamed) await this.carryRefs(renamed.from, renamed.to)
-    else if (saved.hash && !saved.previousHash && rule) await this.manage.setAssignment(entryUnit({ set, prop, hash: saved.hash }), { scopes: [...ruleScopes(rule).defaultScopes], global: false })
-    // 另一种语言里有没有对上的条目（按英文名 + 来源）：只返回提示，保存时不改任何一边的条目
-    const counterpart = saved.hash && this.counterpartHint ? await this.counterpartHint({ set: brewSetOf(codeSet).id, prop, hash: saved.hash }) : null
-    return { ...saved, renamed, parse: result.parse, issues: await this.validateEntry(codeSet, prop, ent), counterpart }
+  private get entryDeps(): EntryDeps {
+    return { lib: this.lib, manage: this.manage, mineSource: CUSTOM.mine, validateEntry: (cs, p, e) => this.validateEntry(cs, p, e), ...(this.counterpartHint ? { counterpartHint: this.counterpartHint } : {}) }
   }
 
-  /** 一条的编号变了：插件管理记录里认旧编号的（归类、房规链接两头、各层选的版本）搬到新编号。不写作者内容。 */
-  private async carryRefs(from: EntryRef, to: EntryRef): Promise<void> {
-    const oldUnit = entryUnit(from)
-    const a = (await this.manage.assignments()).get(oldUnit)
-    if (a) { await this.manage.setAssignment(entryUnit(to), a); await this.manage.setAssignment(oldUnit, null) }
-    const same = (x: EntryRef): boolean => refKey(x) === refKey(from)
-    for (const link of await this.manage.houseRules()) {
-      if (same(link.house)) { await this.manage.unlinkHouseRule(link.house); await this.manage.linkHouseRule({ house: to, target: link.target }) }
-      else if (same(link.target)) await this.manage.linkHouseRule({ house: link.house, target: to })
-    }
-    const oldAlt = `house:${from.hash}`
-    for (const c of await this.manage.allChoices()) {
-      const level = c.level as ChoiceLevel
-      const altId = c.altId === oldAlt ? `house:${to.hash}` : c.altId
-      if (c.target === refKey(from)) { await this.manage.setChoice(level, c.target, null); await this.manage.setChoice(level, refKey(to), altId) }
-      else if (altId !== c.altId) await this.manage.setChoice(level, c.target, altId)
-    }
-  }
-
-  /** 删自己的条目；每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。 */
-  async deleteEntries(codeSet: string, prop: string, uniqueIds: string[]) {
-    return (await this.remove(codeSet, prop, uniqueIds, { record: true })).parse
-  }
-
-  private async remove(codeSet: string, prop: string, uniqueIds: string[], { record, link }: { record: boolean; link?: HouseRuleLink }) {
-    const result = await this.lib.mutateAuthor(codeSet, 'custom-delete', async (view) => (await this.lib.frameOf(codeSet, view)).call('editableRemove', prop, uniqueIds))
-    if (record) for (const before of result.value) await this.manage.pushHistory(this.historyKey(codeSet, prop, String(before.uniqueId)), { at: Date.now(), prop, before, ...(link ? { link } : {}) })
-    return result
-  }
-
-  // ---- 自己的包（P5.5 B3，custom-packs.ts）----
-  /** 建一个自己的包（作者可编辑自制里加一个来源）；rule 给包打版本标签。 */
-  createPack(codeSet: string, src: PackSource, opts: { rule?: string } = {}) { return createPack(this.packDeps, codeSet, src, opts) }
-  /** 自己的包：来源 + 每类几条。 */
-  packs(codeSet: string) { return listPacks(this.packDeps, codeSet) }
-  /** 条目换包（编号会变：先用 backend.entryChangeImpact 看影响）。每条记一步撤销。 */
-  moveEntries(codeSet: string, prop: string, uniqueIds: string[], toSource: string) { return moveEntries(this.packDeps, codeSet, prop, uniqueIds, toSource) }
-  /** 按包导出（作者格式文件）。 */
-  exportPack(codeSet: string, json: string) { return exportPack(this.packDeps, codeSet, json) }
-
-  private get packDeps(): PackDeps {
-    return {
-      frame: (codeSet) => this.frame(codeSet),
-      mutate: (codeSet, kind, run) => this.lib.mutateAuthor(codeSet, kind, async (view) => run(await this.lib.frameOf(codeSet, view))),
-      manage: this.manage,
-      save: (codeSet, prop, ent) => this.persist(codeSet, prop, ent, { record: true }),
-    }
-  }
-
-  /** 撤销记录的键：数据集 | 类别 | 作者 uniqueId（改名、换包都不变）。 */
-  private historyKey(codeSet: string, prop: string, uniqueId: string): string {
-    return `${brewSetOf(codeSet).id}|${prop}|${uniqueId}`
+  /** 删自己的条目（pack：在【我的库】哪个包里）；每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。 */
+  async deleteEntries(codeSet: string, prop: string, uniqueIds: string[], { pack }: { pack?: string | null } = {}) {
+    return (await remove(this.entryDeps, codeSet, prop, uniqueIds, { record: true, pack })).parse
   }
 
   /** 这一条还能撤销几步（最多 HISTORY_LIMIT）。 */
   async undoSteps(codeSet: string, prop: string, uniqueId: string): Promise<number> {
-    return (await this.manage.history(this.historyKey(codeSet, prop, uniqueId))).length
+    return (await this.manage.history(historyKey(codeSet, prop, uniqueId))).length
   }
 
-  /**
-   * 撤销这一条最近一步（P5.5 B2）：之前没有这一条 → 删掉（是房规的连链接一起去掉）；
-   * 之前有 → 把那时的原文存回去（同一个 uniqueId；改过名的自动改回，指向它的 _copy 和插件记录跟着回来；删掉的加回来，房规链接恢复）。
-   * 官方条目的「复原」不走这里（scoped.choose 选回原件）。
-   */
-  async undo(codeSet: string, prop: string, uniqueId: string) {
-    const step = await this.manage.popHistory(this.historyKey(codeSet, prop, uniqueId))
-    if (!step) throw new Error('这一条没有可以撤销的修改')
-    if (step.before === null) {
-      await this.remove(codeSet, prop, [uniqueId], { record: false })
-      if (step.link) await this.manage.unlinkHouseRule(step.link.house)
-      return { undone: 'created' as const, left: await this.undoSteps(codeSet, prop, uniqueId) }
-    }
-    const entry = await this.persist(codeSet, prop, step.before, { record: false })
-    if (step.link && entry.hash) await this.manage.linkHouseRule({ house: { ...step.link.house, hash: entry.hash }, target: step.link.target })
-    return { undone: 'restored' as const, entry, left: await this.undoSteps(codeSet, prop, uniqueId) }
+  /** 撤销这一条最近一步（custom-entries.ts undo）。官方条目的「复原」不走这里（scoped.choose 选回原件）。 */
+  undo(codeSet: string, prop: string, uniqueId: string) {
+    return undo(this.entryDeps, codeSet, prop, uniqueId)
   }
+
+  // ---- 【我的库】的包（P5.5 B8：一个包 = 作者的一个独立自制包；custom-packs.ts）----
+  private get packDeps(): PackDeps {
+    return { lib: this.lib, manage: this.manage, packsOf: (id, view) => new BrewPacks(this.lib).list(id, view) }
+  }
+  /** 建一个空包；rule 给包打版本标签。 */
+  createPack(codeSet: string, src: PackSource, opts: { rule?: string } = {}) { return createPack(this.packDeps, codeSet, src, opts) }
+  /** 【我的库】里的包：身份、自己的来源、每类几条、版本标签。 */
+  packs(codeSet: string) { return listPacks(this.packDeps, codeSet) }
+  /** 改包的显示名 / 缩写（身份不变）。 */
+  renamePack(codeSet: string, id: string, patch: { full?: string; abbreviation?: string }) { return renamePack(this.packDeps, codeSet, id, patch) }
+  /** 按包导出（作者格式文件）。 */
+  exportPack(codeSet: string, id: string) { return exportPack(this.packDeps, codeSet, id) }
+  /** 删包（先看卸载影响页）。 */
+  deletePack(codeSet: string, id: string) { return deletePack(this.packDeps, codeSet, id) }
+  /** 包里的一条（编辑器打开用）：按 uniqueId 或作者编号；hadId=false 时保存要带 replaceHash。 */
+  async packEntry(codeSet: string, pack: string, prop: string, key: { uniqueId?: string; hash?: string }) {
+    const f = await this.frame(codeSet)
+    return f.call('packEntity', await docIdOf(f, pack), prop, key)
+  }
+  /** 条目换包（编号会变：先用 backend.entryChangeImpact 看影响）。撤销两步。 */
+  moveEntries(codeSet: string, prop: string, uniqueIds: string[], fromPack: string, toPack: string) { return moveEntries(this.entryDeps, codeSet, prop, uniqueIds, fromPack, toPack) }
 
   /**
    * 房规：在可编辑自制里写一条，用作者 _copy 指向原件、只写改动。三种给法：
@@ -264,7 +205,7 @@ export class CustomLibrary {
     const house: EntryRef = { set: brewSetOf(c.codeSet).id, prop: target.prop, hash: saved.hash }
     await this.manage.setAssignment(entryUnit(house), { scopes: [...ruleScopes(c.rule).defaultScopes], global: false })
     await this.manage.linkHouseRule({ house, target })
-    await this.manage.pushHistory(this.historyKey(c.codeSet, target.prop, saved.uniqueId), { at: Date.now(), prop: target.prop, before: null, link: { house, target } })
+    await this.manage.pushHistory(historyKey(c.codeSet, target.prop, saved.uniqueId), { at: Date.now(), prop: target.prop, before: null, link: { house, target } })
     const altId = `house:${saved.hash}`
     return { house, altId, uniqueId: saved.uniqueId, changed: Object.keys(changes), parse: result.parse, campaign: activate ? await this.scoped.choose(c, target, altId) : c }
   }
@@ -272,7 +213,7 @@ export class CustomLibrary {
   /** 删房规：作者删条 + 去掉链接；选过它的地方自动回到原件（生效版本会标"选过的备选不在了"）。 */
   async deleteHouseRule(codeSet: string, house: EntryRef, uniqueId: string) {
     const link = (await this.manage.houseRules()).find((l) => refKey(l.house) === refKey(house))
-    const { parse } = await this.remove(codeSet, house.prop, [uniqueId], { record: true, ...(link ? { link } : {}) })
+    const { parse } = await remove(this.entryDeps, codeSet, house.prop, [uniqueId], { record: true, ...(link ? { link } : {}) })
     await this.manage.unlinkHouseRule(house)
     return parse
   }
