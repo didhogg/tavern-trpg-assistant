@@ -4,6 +4,7 @@
 import { BrewPacks } from './brew-packs'
 import { copyEntryToPack, copyToMine, type CopyDeps } from './custom-copy'
 import { migrateMine } from './custom-migrate'
+import { importReplaces } from './import-replace'
 import { exportBackup, exportScopes, importBackup, importScopes, type BackupDeps, type ScopeConfig } from './custom-backup'
 import { listDrafts, saveDraft, type DraftInput } from './custom-drafts'
 import { blankEntry, entryTypes, type ConvertMode, type ConverterInfo, type NewEntryDeps } from './custom-new'
@@ -42,7 +43,7 @@ const brewSetOf = (codeSet: string): SourceEntry => {
 
 export class CustomLibrary {
   /** counterpartHint：保存条目后顺带查它在另一种语言里对上了谁（只提示，不写任何东西；P5 G-3b）。 */
-  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase, private readonly counterpartHint?: (ref: EntryRef) => Promise<Counterpart>, private readonly busy: (codeSet: string) => boolean = () => false) {}
+  constructor(private readonly lib: LibraryService, private readonly scoped: ScopedLibrary, private readonly db: LibraryDatabase, private readonly counterpartHint?: (ref: EntryRef) => Promise<Counterpart>, private readonly busy: (codeSet: string) => boolean = () => false, private readonly settle: (codeSet: string) => Promise<void> = async () => undefined) {}
 
   private get manage(): ManageStore {
     return this.scoped.manage
@@ -214,7 +215,12 @@ export class CustomLibrary {
    */
   async createHouseRule(c: CampaignLibrary, target: EntryRef, edit: { mod?: Record<string, unknown>; entity?: Record<string, unknown>; edited?: Record<string, unknown> }, { activate = true }: { activate?: boolean } = {}) {
     formatOfCampaign(c)
-    const stored = await this.lib.storedItem(target.set, target.prop, target.hash)
+    let stored = await this.lib.storedItem(target.set, target.prop, target.hash)
+    // 目标是刚存、后台还没解析完的自制条目（P5.5 U2）：等后台解析完再查一次
+    if (!stored && SOURCES.find((x) => x.id === target.set)?.kind === 'brew' && typeof this.lib.brewDirty === 'function' && (await this.lib.brewDirty(target.set)).length) {
+      await this.settle(c.codeSet)
+      stored = await this.lib.storedItem(target.set, target.prop, target.hash)
+    }
     if (!stored) throw new Error(`找不到要改的条目：${refKey(target)}`)
     const base = stored.item as { name?: string; source?: string }
     if (!base.name || !base.source) throw new Error(`原件没有名字或来源，作者的 _copy 指不到它：${refKey(target)}`)
@@ -317,6 +323,8 @@ export class CustomLibrary {
     // 先认格式（P5.5 A3）：不是这种格式的不交给作者试装，单独列出原因
     const { accepted, rejected } = splitRecognized(format, files)
     files = accepted
+    // P5.5 B8-7：作者按来源编号组合认包，身份相同的已有包会被整个替换，先列出来（import-replace.ts）
+    const replaces = importReplaces(await (await this.frame(codeSet)).call('brewDocIndex'), files)
     const scope = `${codeSet}:preview:${Date.now()}`
     const view = await this.lib.currentView()
     const merged = new Map<string, unknown>()
@@ -343,6 +351,7 @@ export class CustomLibrary {
         alternatives: collisions.map((c) => ({ prop: c.prop, hash: c.hash, base: c.base.kind === 'official' ? 'official' : c.base.docIdLocal })),
         notJson: added.value.notJson,
         rejected,
+        replaces,
         authorErrors: added.errors,
         structure: await Promise.all(files.map(async (file) => ({ name: file.name, ...(await format.validate(file.text)) }))),
       }
