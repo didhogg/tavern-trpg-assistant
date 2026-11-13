@@ -12,6 +12,9 @@ import { SOURCES, type SourceEntry } from './sources'
 
 type Ent = Record<string, unknown>
 type Files = Array<{ name: string; text: string }>
+/** 一边要存的：条目 + 换哪一条（作者编号，旧条目没有 uniqueId 时）。 */
+export interface Side { ent: Ent; replaceHash?: string }
+type Saved = Awaited<ReturnType<CustomLibrary['saveEntry']>>
 
 const brewOf = (lang: Lang): SourceEntry => {
   const s = SOURCES.find((x) => x.kind === 'brew' && x.lang === lang)
@@ -128,8 +131,13 @@ export class BilingualLibrary {
   async otherEntry(codeSet: string, pack: string, prop: string, key: { uniqueId?: string; hash?: string }): Promise<OtherEntry> {
     const mine = await this.custom.packEntry(codeSet, pack, prop, key)
     if (!mine?.hash) return { state: 'none', entity: null, hash: null, reason: 'not-found' }
+    return this.counterpartOf(codeSet, prop, mine.hash)
+  }
+
+  /** 这一套里作者编号为 hash 的条目，在另一套里对上的那一条。 */
+  private async counterpartOf(codeSet: string, prop: string, hash: string): Promise<OtherEntry> {
     const set = brewOf(langOf(codeSet))
-    const c = await this.counterparts.counterpart({ set: set.id, prop, hash: mine.hash })
+    const c = await this.counterparts.counterpart({ set: set.id, prop, hash })
     const refs = (c as { refs?: Array<{ hash: string; docIdLocal?: string }> }).refs ?? []
     if (!refs.length) return { state: 'none', entity: null, hash: null, reason: (c as { reason?: string | null }).reason ?? null }
     if (refs.length > 1) return { state: 'ambiguous', entity: null, hash: null, reason: null }
@@ -139,6 +147,33 @@ export class BilingualLibrary {
     const docId = ref.docIdLocal ?? (await f.call('brewDocIndex')).find((d) => !d.isEditable && (d.props[prop] ?? []).includes(ref.hash))?.docIdLocal
     const got = docId ? await f.call('packEntity', docId, prop, { hash: ref.hash }) : null
     return got ? { state: 'found', entity: got.entity as Ent, hash: got.hash, reason: null } : { state: 'none', entity: null, hash: null, reason: 'not-found' }
+  }
+
+  /**
+   * 两边一起存（驾驶员 2026-11-13 批准；编辑器一个［完成］存中英两边）+ 中文条目的英文名自动写：
+   *   作者中文版规矩是中文条目用 ENG_name 记英文名（显示、配对、英文名搜索都靠它）。表单里每栏只写自己的语言，
+   *   所以存的时候把英文那一条的 name 写进中文这一条的 ENG_name。只存英文、而且改了名（给了 replaceHash）时，
+   *   找到对上的中文那一条，英文名不一样就一起改。英文那边没有就不动中文原来的英文名。
+   * 先存中文再存英文（两套是两个作者文件，不能一次写完）；英文存失败时中文已经存好，错误里写明。
+   */
+  async saveBoth(pack: string, prop: string, sides: { zh?: Side; en?: Side }, opts: { rule?: string } = {}): Promise<{ zh: Saved | null; en: Saved | null }> {
+    let zh = sides.zh
+    const en = sides.en
+    if (!zh && !en) throw new Error('中文、英文都没有要存的')
+    const enName = typeof en?.ent.name === 'string' && en.ent.name.trim() ? en.ent.name : null
+    if (!zh && en?.replaceHash && enName) {
+      const other = await this.counterpartOf(codeSetOf('en'), prop, en.replaceHash)
+      if (other.state === 'found' && other.entity && other.hash && other.entity.ENG_name !== enName) zh = { ent: other.entity, replaceHash: other.hash }
+    }
+    if (zh && enName) zh = { ...zh, ent: { ...zh.ent, ENG_name: enName } }
+    const save = (lang: Lang, s: Side) => this.saveInLanguage(codeSetOf(lang), pack, prop, s.ent, { ...opts, ...(s.replaceHash ? { replaceHash: s.replaceHash } : {}) })
+    const out: { zh: Saved | null; en: Saved | null } = { zh: zh ? await save('zh', zh) : null, en: null }
+    if (en) {
+      try { out.en = await save('en', en) } catch (e) {
+        throw new Error(`中文已经存好，英文没存上：${e instanceof Error ? e.message : String(e)}`, { cause: e })
+      }
+    }
+    return out
   }
 
   /** C7 存另一语言：那一套里还没有这个包就先建同编号的包，再按平常的保存走（custom.saveEntry）。 */

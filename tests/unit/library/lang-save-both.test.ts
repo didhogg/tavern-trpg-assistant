@@ -1,0 +1,69 @@
+// P5.5 两边一起存 + 中文条目的英文名（ENG_name）自动写（驾驶员 2026-11-13 批准）。
+import { describe, expect, it } from 'vitest'
+import { BilingualLibrary } from '../../../src/library/custom-lang'
+
+type Ent = Record<string, unknown>
+const PACK = { id: 'p55', docIdLocal: 'doc', sources: ['P55'] }
+
+function make({ zhEntity = null as Ent | null, failEn = false } = {}) {
+  const saved: Array<{ codeSet: string; ent: Ent; opts: Record<string, unknown> }> = []
+  const custom = {
+    packs: async () => [PACK],
+    saveEntry: async (codeSet: string, _prop: string, ent: Ent, opts: Record<string, unknown>) => {
+      if (failEn && codeSet === 'en') throw new Error('写不进去')
+      saved.push({ codeSet, ent, opts })
+      return { uniqueId: 'u', hash: 'h', pending: true }
+    },
+    packEntry: async () => null,
+  }
+  const lib = {
+    frameOf: async () => ({ call: async (cmd: string) => (cmd === 'packEntity' && zhEntity ? { entity: zhEntity, hash: 'zh-hash', hadId: true } : []) }),
+    brewImport: async () => ({ ok: true, errors: [] }),
+  }
+  const counterparts = { counterpart: async () => (zhEntity ? { refs: [{ hash: 'zh-hash', docIdLocal: 'zh-doc' }] } : { refs: [], reason: 'not-paired' }) }
+  const b = new BilingualLibrary(custom as never, lib as never, { installed: async () => [] } as never, counterparts as never)
+  return { b, saved }
+}
+
+describe('两边一起存', () => {
+  it('中英都给：先存中文、再存英文；中文的英文名写成英文那一条的名字', async () => {
+    const { b, saved } = make()
+    await b.saveBoth('p55', 'spell', { zh: { ent: { name: '火焰鹦鹉', ENG_name: '旧名' } }, en: { ent: { name: 'Fire Parrot' } } })
+    expect(saved.map((s) => s.codeSet)).toEqual(['cn', 'en'])
+    expect(saved[0].ent).toMatchObject({ name: '火焰鹦鹉', ENG_name: 'Fire Parrot' })
+    expect(saved[0].opts.pack).toBe('p55')
+  })
+
+  it('只存中文：英文名不动', async () => {
+    const { b, saved } = make()
+    await b.saveBoth('p55', 'spell', { zh: { ent: { name: '火焰鹦鹉', ENG_name: 'Fire Parrot' }, replaceHash: 'x' } })
+    expect(saved).toHaveLength(1)
+    expect(saved[0].ent.ENG_name).toBe('Fire Parrot')
+    expect(saved[0].opts.replaceHash).toBe('x')
+  })
+
+  it('只存英文、改了名：对上的中文那一条英文名跟着改', async () => {
+    const { b, saved } = make({ zhEntity: { name: '火焰鹦鹉', ENG_name: 'Fire Parrot', uniqueId: 'z' } })
+    await b.saveBoth('p55', 'spell', { en: { ent: { name: 'Flame Parrot' }, replaceHash: 'en-old' } })
+    expect(saved.map((s) => s.codeSet)).toEqual(['cn', 'en'])
+    expect(saved[0].ent).toMatchObject({ name: '火焰鹦鹉', ENG_name: 'Flame Parrot' })
+    expect(saved[0].opts.replaceHash).toBe('zh-hash')
+  })
+
+  it('只存英文、名字没变：中文不用再存', async () => {
+    const { b, saved } = make({ zhEntity: { name: '火焰鹦鹉', ENG_name: 'Fire Parrot' } })
+    await b.saveBoth('p55', 'spell', { en: { ent: { name: 'Fire Parrot' }, replaceHash: 'en-old' } })
+    expect(saved.map((s) => s.codeSet)).toEqual(['en'])
+  })
+
+  it('英文存失败：报错里说中文已经存好', async () => {
+    const { b, saved } = make({ failEn: true })
+    await expect(b.saveBoth('p55', 'spell', { zh: { ent: { name: '火焰鹦鹉' } }, en: { ent: { name: 'Fire Parrot' } } })).rejects.toThrow('中文已经存好')
+    expect(saved.map((s) => s.codeSet)).toEqual(['cn'])
+  })
+
+  it('两边都没给：报错', async () => {
+    const { b } = make()
+    await expect(b.saveBoth('p55', 'spell', {})).rejects.toThrow('都没有要存的')
+  })
+})

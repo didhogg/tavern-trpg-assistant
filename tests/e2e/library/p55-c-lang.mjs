@@ -74,6 +74,15 @@ const r = await page.evaluate(async () => {
   out.step = '// C5'
   // C5：导出两个文件
   out.export = (await b.exportBoth('p55lang')).map((x) => ({ lang: x.lang, names: (x.body.spell ?? []).map((s) => s.name) }))
+  out.step = '// 两边一起存'
+  // 两边一起存：中文自动带上英文名；之后只改英文的名字，中文的英文名跟着改
+  const both = await b.saveBoth('p55lang', 'spell', { zh: { ent: { name: '水晶鹦鹉', ...base, entries: ['水晶。'] } }, en: { ent: { name: 'Crystal Parrot', ...base, entries: ['Crystal.'] } } })
+  const eng1 = (await lib.custom.packEntry('cn', 'p55lang', 'spell', { uniqueId: both.zh.uniqueId })).entity.ENG_name
+  await lib.brewQueue.settled()
+  const en2 = await lib.custom.packEntry('en', 'p55lang', 'spell', { uniqueId: both.en.uniqueId })
+  const again = await b.saveBoth('p55lang', 'spell', { en: { ent: { ...en2.entity, name: 'Glass Parrot' }, replaceHash: en2.hash } })
+  const eng2 = (await lib.custom.packEntry('cn', 'p55lang', 'spell', { uniqueId: both.zh.uniqueId })).entity.ENG_name
+  out.both = { eng1, eng2, savedZh: !!again.zh }
   } catch (e) { out.error = String(e?.stack ?? e).slice(0, 1500) }
   return out
 })
@@ -89,6 +98,7 @@ check('C6 中文这一条在英文里的原文：对上 Fire Parrot', o.other.st
 check('C9 不用翻译的字段对不上：环节（中 1 / 英 2）', Array.isArray(o.mismatch) && o.mismatch.includes('level') && !o.mismatch.includes('entries'), JSON.stringify(o.mismatch))
 check('C8 从英文填入（只填空着的）：英文 name 进中文的英文名，中文名不动', o.plan?.filled === 'Fire Parrot' && o.plan.onlyEmpty.includes('level'), JSON.stringify(o.plan))
 check('C4 导入按语言分开：中文文件进中文那套、英文进英文那套，导入后配成一对', JSON.stringify(o.preview.map((x) => x.slice(0, 2))) === JSON.stringify([['zh', 'cn'], ['en', 'en']]) && o.importRow?.zh && o.importRow?.en, JSON.stringify({ p: o.preview, row: o.importRow }))
+check('两边一起存：中文自动带上英文名；只改英文名字时中文的英文名跟着改', o.both?.eng1 === 'Crystal Parrot' && o.both?.eng2 === 'Glass Parrot' && o.both?.savedZh, JSON.stringify(o.both))
 check('C5 导出双语包：两个文件，各是各的语言', o.export.length === 2 && o.export[0].names[0] === '火焰鹦鹉' && o.export[1].names[0] === 'Fire Parrot', JSON.stringify(o.export))
 const realErrors = pageErrors.filter((m) => !/网络错误|Network error|gendata-nav-adventure-book-index/.test(m))
 check('页面没有未处理的错误（断网预期的除外）', realErrors.length === 0, realErrors.slice(0, 2).join(' | '))

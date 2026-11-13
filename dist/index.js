@@ -21603,34 +21603,36 @@ var HD = class {
 	}
 	async otherEntry(e, t, n, r) {
 		let i = await this.custom.packEntry(e, t, n, r);
-		if (!i?.hash) return {
+		return i?.hash ? this.counterpartOf(e, n, i.hash) : {
 			state: "none",
 			entity: null,
 			hash: null,
 			reason: "not-found"
 		};
-		let a = LD(RD(e)), o = await this.counterparts.counterpart({
-			set: a.id,
-			prop: n,
-			hash: i.hash
-		}), s = o.refs ?? [];
-		if (!s.length) return {
+	}
+	async counterpartOf(e, t, n) {
+		let r = LD(RD(e)), i = await this.counterparts.counterpart({
+			set: r.id,
+			prop: t,
+			hash: n
+		}), a = i.refs ?? [];
+		if (!a.length) return {
 			state: "none",
 			entity: null,
 			hash: null,
-			reason: o.reason ?? null
+			reason: i.reason ?? null
 		};
-		if (s.length > 1) return {
+		if (a.length > 1) return {
 			state: "ambiguous",
 			entity: null,
 			hash: null,
 			reason: null
 		};
-		let c = s[0], l = BD(zD(a.lang)), u = await this.lib.frameOf(l), d = c.docIdLocal ?? (await u.call("brewDocIndex")).find((e) => !e.isEditable && (e.props[n] ?? []).includes(c.hash))?.docIdLocal, f = d ? await u.call("packEntity", d, n, { hash: c.hash }) : null;
-		return f ? {
+		let o = a[0], s = BD(zD(r.lang)), c = await this.lib.frameOf(s), l = o.docIdLocal ?? (await c.call("brewDocIndex")).find((e) => !e.isEditable && (e.props[t] ?? []).includes(o.hash))?.docIdLocal, u = l ? await c.call("packEntity", l, t, { hash: o.hash }) : null;
+		return u ? {
 			state: "found",
-			entity: f.entity,
-			hash: f.hash,
+			entity: u.entity,
+			hash: u.hash,
 			reason: null
 		} : {
 			state: "none",
@@ -21638,6 +21640,38 @@ var HD = class {
 			hash: null,
 			reason: "not-found"
 		};
+	}
+	async saveBoth(e, t, n, r = {}) {
+		let i = n.zh, a = n.en;
+		if (!i && !a) throw Error("中文、英文都没有要存的");
+		let o = typeof a?.ent.name == "string" && a.ent.name.trim() ? a.ent.name : null;
+		if (!i && a?.replaceHash && o) {
+			let e = await this.counterpartOf(BD("en"), t, a.replaceHash);
+			e.state === "found" && e.entity && e.hash && e.entity.ENG_name !== o && (i = {
+				ent: e.entity,
+				replaceHash: e.hash
+			});
+		}
+		i && o && (i = {
+			...i,
+			ent: {
+				...i.ent,
+				ENG_name: o
+			}
+		});
+		let s = (n, i) => this.saveInLanguage(BD(n), e, t, i.ent, {
+			...r,
+			...i.replaceHash ? { replaceHash: i.replaceHash } : {}
+		}), c = {
+			zh: i ? await s("zh", i) : null,
+			en: null
+		};
+		if (a) try {
+			c.en = await s("en", a);
+		} catch (e) {
+			throw Error(`中文已经存好，英文没存上：${e instanceof Error ? e.message : String(e)}`, { cause: e });
+		}
+		return c;
 	}
 	async saveInLanguage(e, t, n, r, i = {}) {
 		if (!(await this.custom.packs(e)).some((e) => e.id === t)) {
