@@ -27,6 +27,8 @@ export interface SaveOptions {
   pack?: string | null
   /** 改包里一条还没有 uniqueId 的（导入 / 复制来的）：按作者编号找到它换掉。 */
   replaceHash?: string
+  /** 同上，给没有作者编号的类别（书 / 冒险的正文）：按 id 找。 */
+  replaceId?: string
 }
 
 const brewSetOf = (codeSet: string) => {
@@ -59,16 +61,16 @@ async function inStore<T>(d: EntryDeps, codeSet: string, kind: string, pack: str
 }
 
 /** 存一条（新写或改）。record：记一步撤销（撤销自己存回去时不记）。 */
-export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record, pack, replaceHash }: SaveOptions & { record: boolean }) {
+export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record, pack, replaceHash, replaceId }: SaveOptions & { record: boolean }) {
   ent = await withAutoFields(d, codeSet, prop, ent, rule)
   const result = await inStore(d, codeSet, 'custom-entry', pack, async (f, doc) => {
     // 没给来源（包括写成 undefined）才用默认：包自己的来源 / 可编辑自制的「我的资料」
     const full: Record<string, unknown> = { ...ent, source: ent.source ?? (doc ? doc.own : d.mineSource.json) }
     // 新写的一条：这一类在作者结构定义里能自带版本（字段说明表 edition）就写上规则的版本（P5.5 B1）。用户自己写了就不动。
-    if (rule && !ent.uniqueId && !replaceHash && full.edition === undefined && (await formatOfCodeSet(codeSet).fields(prop))?.edition) full.edition = ruleScopes(rule).style
+    if (rule && !ent.uniqueId && !replaceHash && !replaceId && full.edition === undefined && (await formatOfCodeSet(codeSet).fields(prop))?.edition) full.edition = ruleScopes(rule).style
     let put
     if (doc) {
-      put = await f.call('packPut', doc.id, prop, full, replaceHash ? { replaceHash } : {})
+      put = await f.call('packPut', doc.id, prop, full, { ...(replaceHash ? { replaceHash } : {}), ...(replaceId ? { replaceId } : {}) })
       // 从属条目（职业特性……）：同步主条目的引用表（§16.10 2c，小窗 linkParent）
       await f.call('linkParent', doc.id, prop, put.previousEntity ?? null, full)
     }

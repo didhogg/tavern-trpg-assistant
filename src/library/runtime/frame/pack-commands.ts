@@ -19,10 +19,11 @@ export async function docOf(docIdLocal: string): Promise<any> {
  * 包里的一条（按 uniqueId，没有就按作者编号）连同作者编号；没补过 uniqueId 的补一个（只在返回的副本上，存的时候才写进包，
  * 存时带上 replaceHash 找到原来那条）。
  */
-export async function packEntity(docIdLocal: string, prop: string, key: { uniqueId?: string; hash?: string }): Promise<{ entity: any; hash: string | null; hadId: boolean } | null> {
+export async function packEntity(docIdLocal: string, prop: string, key: { uniqueId?: string; hash?: string; id?: string }): Promise<{ entity: any; hash: string | null; hadId: boolean } | null> {
   const doc = await docOf(docIdLocal)
   const list: any[] = doc.body?.[prop] ?? []
-  const e = list.find((x) => (key.uniqueId && x?.uniqueId === key.uniqueId) || (key.hash && hashOf(prop, x) === key.hash))
+  // id：书 / 冒险的正文（bookData 等）没有作者编号，按和目录相同的 id 找
+  const e = list.find((x) => (key.uniqueId && x?.uniqueId === key.uniqueId) || (key.hash && hashOf(prop, x) === key.hash) || (key.id && String(x?.id ?? '').toLowerCase() === key.id.toLowerCase()))
   return e ? { entity: { ...e, uniqueId: e.uniqueId ?? A.CryptUtil.uid() }, hash: hashOf(prop, e), hadId: !!e.uniqueId } : null
 }
 
@@ -30,11 +31,13 @@ export async function packEntity(docIdLocal: string, prop: string, key: { unique
  * 存一条进包：按 uniqueId 找到就换，找不到再按 replaceHash（作者编号）找没补过 uniqueId 的那条换，都没有就加。
  * 返回形状同 editablePut：改之前的编号、名字、原文（改名搬记录、撤销用）。
  */
-export async function packPut(docIdLocal: string, prop: string, ent: any, opts: { replaceHash?: string } = {}): Promise<{ uniqueId: string; hash: string | null; previousHash: string | null; previous: { name: string; source: string } | null; previousEntity: any }> {
+export async function packPut(docIdLocal: string, prop: string, ent: any, opts: { replaceHash?: string; replaceId?: string } = {}): Promise<{ uniqueId: string; hash: string | null; previousHash: string | null; previous: { name: string; source: string } | null; previousEntity: any }> {
   const doc = await docOf(docIdLocal)
   const list: any[] = (doc.body[prop] ??= [])
   let i = ent.uniqueId ? list.findIndex((x) => x?.uniqueId === ent.uniqueId) : -1
   if (i < 0 && opts.replaceHash) i = list.findIndex((x) => !x?.uniqueId && hashOf(prop, x) === opts.replaceHash)
+  // 书 / 冒险的正文没有作者编号：导入来的（没有 uniqueId）按 id 找
+  if (i < 0 && opts.replaceId) i = list.findIndex((x) => !x?.uniqueId && String(x?.id ?? '').toLowerCase() === opts.replaceId!.toLowerCase())
   const before = i >= 0 ? A.MiscUtil.copyFast(list[i]) : null
   const e = { ...ent, uniqueId: ent.uniqueId ?? A.CryptUtil.uid() }
   if (i >= 0) list[i] = e

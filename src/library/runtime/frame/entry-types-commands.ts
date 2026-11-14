@@ -151,6 +151,12 @@ export interface EntryTypeInfo {
   converters: string[]
 }
 
+/** 作者的书 / 冒险：目录类别（book / adventure）和正文类别（bookData / adventureData）成对，编号相同（UrlUtil._PAGE_TO_PROPS_CORPUS）。 */
+export async function corpusPairs(): Promise<Array<{ head: string; body: string }>> {
+  await init()
+  return Object.values((A.UrlUtil as any)._PAGE_TO_PROPS_CORPUS ?? {}).map((x: any) => ({ head: String(x.propHead), body: String(x.propBody) }))
+}
+
 /** 作者认为能单独打开的条目类型（不含书 / 冒险的正文类）。 */
 export async function entryTypes(): Promise<EntryTypeInfo[]> {
   await init()

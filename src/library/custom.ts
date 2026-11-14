@@ -14,6 +14,7 @@ import { houseNow } from './custom-raw'
 import { emptyIfMissing } from './official-missing'
 import { autoFieldsOf, formPlanOf, usageOf } from './field-usage-store'
 import { childrenOf, childStart } from './custom-children'
+import { corpusEntry, corpusStart, deleteCorpus, saveCorpus, type CorpusDeps, type CorpusDraft } from './custom-corpus'
 import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
 import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
@@ -244,6 +245,13 @@ export class CustomLibrary {
   }
 
   // ---- 【我的库】的包（P5.5 B8：一个包 = 作者的一个独立自制包；custom-packs.ts）----
+  // 自制书 / 冒险（custom-corpus.ts）：新建的起点、取一本、存（目录自动算）、删
+  private get corpusDeps(): CorpusDeps { return { entry: this.entryDeps, pack: this.packDeps, frame: (cs) => this.frame(cs) } }
+  corpusStart(codeSet: string, prop: string, pack: string) { return corpusStart(this.corpusDeps, codeSet, prop, pack) }
+  corpusEntry(codeSet: string, pack: string, prop: string, id: string) { return corpusEntry(this.corpusDeps, codeSet, pack, prop, id) }
+  saveCorpus(codeSet: string, prop: string, draft: CorpusDraft, opts: { pack: string; rule?: string }) { return saveCorpus(this.corpusDeps, codeSet, prop, draft, opts) }
+  deleteCorpus(codeSet: string, pack: string, prop: string, id: string) { return deleteCorpus(this.corpusDeps, codeSet, pack, prop, id) }
+
   private get packDeps(): PackDeps {
     return { lib: this.lib, manage: this.manage, packsOf: (id, view) => new BrewPacks(this.lib).list(id, view) }
   }
