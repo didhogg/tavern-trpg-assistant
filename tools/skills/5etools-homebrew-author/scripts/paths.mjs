@@ -14,3 +14,9 @@ export const fieldsPath = join(repoRoot, 'vendor/brew-schema/fields.js')
 export const brewPool = process.env.BREW_POOL ?? '/Users/xxx/DND- reference（DO NO DELETE！）/homebrew-master'
 export const wikiDir = process.env.BREW_WIKI ?? '/Users/xxx/tavern-trpg-data-next/_upstream/author-docs/wiki.tercept.net'
 export const indexJson = join(skillDir, 'references/类别索引.json')
+//   TAVERN_TERMS_FILE 作者中文站「大译名表」（15 MB，不进仓库；P5.5 第 5 步同一个环境变量与默认路径，见 docs/handoff/P5.5_第5步_字段翻译交接.md §6）
+//   CHECK_STRUCTURE   作者中文 fork 的 compare_json_structure.py（译文与英文结构一致检查）
+export const termsPath = process.env.TAVERN_TERMS_FILE ?? '/Users/xxx/tavern-trpg-data-next/_upstream/cn/docs/terms-20261015-105551.json'
+//   BREW_RENDER_JS    作者 5etools 站的 js/render.js（读出哪些 {@标签} 是“带名字的条目引用”，不手写名单）
+export const renderJs = process.env.BREW_RENDER_JS ?? '/Users/xxx/tavern-trpg-data-next/_upstream/code/5etools-src/js/render.js'
+export const compareScript = process.env.CHECK_STRUCTURE ?? '/Users/xxx/tavern-trpg-data-next/_upstream/cn/codex-skills/5etools-json-translate/scripts/compare_json_structure.py'

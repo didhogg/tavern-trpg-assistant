@@ -2,6 +2,7 @@
 // 插件导入自制时检查的也是它），再补几条作者 README 写明的写法约定。不联网、不装依赖。
 // 用法（在 TRPG 助手仓库根目录）：node tools/skills/5etools-homebrew-author/scripts/validate.mjs <文件.json> [更多文件…] [--no-unique] [--all]
 //   --no-unique  不检查来源名（"json"）是否和作者自制仓库里已有的重名（默认检查，要扫一遍本地副本，约几秒）
+//   --zh-of=<英文包.json>  校验的是这份英文包的中文版：和它共用的来源名不算重名（中英包必须共用来源名才能配对）
 //   --all        结构不过时列出校验器报的全部错误（默认只列“最可能的原因”，改一类再重跑才会看到下一类）
 // 退出码：0 = 结构通过且没有约定警告；1 = 结构不过或有约定警告；2 = 用不了（找不到校验器、参数不对）。
 import { existsSync } from 'node:fs'
@@ -15,6 +16,15 @@ const args = process.argv.slice(2)
 const checkUnique = !args.includes('--no-unique')
 const showAll = args.includes('--all')
 const files = args.filter((a) => !a.startsWith('--'))
+// 中文版必须和英文版共用来源名（插件按文件头来源名 + 同目录配对中英包）：--zh-of=<英文包> 只放行和那份英文包共用的来源名
+const zhOf = args.find((a) => a.startsWith('--zh-of='))?.slice('--zh-of='.length)
+let sharedSources = new Set()
+if (zhOf) {
+  try { sharedSources = new Set((JSON.parse(await readFile(zhOf, 'utf8'))._meta?.sources ?? []).map((s) => s.json)) } catch (error) {
+    console.error(`--zh-of 读不了英文包：${error instanceof Error ? error.message : error}`)
+    process.exit(2)
+  }
+}
 if (!files.length) { console.error('用法：node validate.mjs <文件.json> […] [--no-unique]'); process.exit(2) }
 if (!existsSync(validatorPath)) { console.error(`找不到校验器：${validatorPath}\n（在 TRPG 助手仓库里 tools/skills 下用，或设环境变量 BREW_VALIDATOR / TRPG_REPO）`); process.exit(2) }
 const { validateBrew } = await import(pathToFileURL(validatorPath).href)
@@ -68,7 +78,7 @@ async function conventions(file, text, data) {
   if (!Array.isArray(sources) || !sources.length) out.push('_meta.sources 缺失或为空')
   else for (const s of sources) {
     if (!s?.json) out.push('某个 _meta.sources 条目没有 "json"（来源名）')
-    else if (checkUnique) {
+    else if (checkUnique && !sharedSources.has(s.json)) {
       const where = (await sourcesInPool()).get(s.json)
       // 校验的就是作者仓库里那份文件本身（同名）时不算重名
       if (where && !where.endsWith(`/${basename(file)}`)) out.push(`来源名 "${s.json}" 和作者自制仓库里 ${where} 重名，要换一个全库唯一的`)
