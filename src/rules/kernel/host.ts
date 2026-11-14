@@ -9,7 +9,7 @@
 import type { FileProvider } from '../../library/files'
 import type { LibraryView } from '../../library/revision'
 import { startAuthorFrame, type AuthorFrame, type FrameHandlers } from '../../library/runtime/host'
-import { officialSourceOf } from '../../library/sources'
+import { kernelDataSource } from '../../library/sources'
 import type { KERNEL_COMMANDS } from './frame/commands'
 import type { KernelInput } from './frame/world'
 
@@ -20,7 +20,7 @@ export type DataReader = (path: string) => Promise<string | null>
 
 /** 【库】里的英文官方原件，只读本地。 */
 export function libraryData(files: FileProvider, view?: LibraryView): DataReader {
-  const source = officialSourceOf('en')
+  const source = kernelDataSource()
   return (path) => files.get(source, path, { allowNetwork: false, ...(view ? { view } : {}) })
 }
 

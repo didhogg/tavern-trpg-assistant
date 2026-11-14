@@ -119,7 +119,8 @@ export async function precomputeSource(opts: PrecomputeOptions): Promise<Precomp
   }
   if (opts.search && source.kind === 'official') {
     const dump = await frame.call('searchIndexDump')
-    await put(db, preKey(source.id, 'search'), `${base}|${exclude}|${manage}`, { ...dump, base, exclude, manage }, opts.view)
+    // version：读的时候（ensurePrecomputed）按这一版资料核对；以前没存，每次搜索都判过期、整份重建（性能支线 2026-11-14 实测每次 2 秒多）
+    await put(db, preKey(source.id, 'search'), `${base}|${exclude}|${manage}`, { ...dump, base, exclude, manage, version: opts.view?.id ?? '' }, opts.view)
     report.search = true
     report.searchBytes = dump.json.length
   }

@@ -6,7 +6,7 @@ import type { ScopedLibrary } from './scoped'
 import type { CampaignLibrary } from './scopes'
 import type { LibraryService } from './service'
 import { SOURCES } from './sources'
-import type { LibraryRevisionStore } from './revision'
+import type { LibraryRevisionStore, LibraryView } from './revision'
 
 export function scopedRefChecker(lib: ScopedLibrary): KernelRefChecker {
   return async (refs, library) => {
@@ -28,9 +28,10 @@ export function scopedCurrentOverrides(lib: ScopedLibrary): () => Promise<Kernel
  * 当前装的数据版本记号（N1）：所有已装官方集的提交号 + 可见来源集合，所有自制包的稳定标识 + 校验值。
  * 按源登记表走（加一个源 = 登记一行），不写死中/英；中英任一套变化都会变。
  */
-export function libraryDataVersion(revisions: LibraryRevisionStore, service: LibraryService): () => Promise<KernelDataVersion> {
-  return async () => {
-    const view = await revisions.published()
+export function libraryDataVersion(revisions: LibraryRevisionStore, service: LibraryService): (at?: LibraryView) => Promise<KernelDataVersion> {
+  // at：按哪个资料版本算（开着的战役小窗用它打开时那一版；不给 = 当前发布的）
+  return async (at) => {
+    const view = at ?? await revisions.published()
     const brews: Record<string, BrewSetState> = { ...(await revisions.allBrewStates(view)) }
     for (const source of SOURCES.filter((s) => s.kind === 'brew')) {
       if (brews[source.id]?.packs) continue

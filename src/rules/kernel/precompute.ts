@@ -7,7 +7,7 @@ import type { ScopedLibrary } from '../../library/scoped'
 import { defaultCampaignLibrary } from '../../library/scopes'
 import { getSource, SOURCES } from '../../library/sources'
 import type { KernelDataVersion } from '../../schemas/kernel'
-import { KernelCache, kernelImportKey } from './cache'
+import { KernelCache, kernelFilesVersion, kernelImportKey } from './cache'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
 import { kernelEntryOf } from './entry'
@@ -119,7 +119,7 @@ export class KernelPrecompute {
       total = candidates.length
       onProgress?.({ stage: 'convert', done: 0, total })
       const cache = new KernelCache(this.opts.db)
-      const scope = { rule: this.rule(), base: fingerprint, official: version.official }
+      const scope = { rule: this.rule(), base: fingerprint, official: kernelFilesVersion(version) }
       for (const row of candidates) {
         if (signal?.aborted) { cancelled = true; break }
         const key = await kernelImportKey({ base: fingerprint, dataVersion: version, kind: row.prop === 'monster' ? 'monster' : 'build', prop: row.prop, entry: row.entry })

@@ -81,22 +81,22 @@ function a(e) {
 	if (!t) throw Error(`作者程序 ${e} 没有登记对应的官方数据源`);
 	return t;
 }
-var o = /* @__PURE__ */ new Map();
-function s(e, t, n) {
+var o = () => a("en"), s = /* @__PURE__ */ new Map();
+function c(e, t, n) {
 	return e.replaceAll("{repo}", t).replaceAll("{commit}", n);
 }
-function c(e, n) {
-	return e.mirrors.map((r) => s(r, t[e.codeSet].repo, n));
-}
 function l(e, n) {
-	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
-	return s(e.fileList, t[e.codeSet].repo, n);
+	return e.mirrors.map((r) => c(r, t[e.codeSet].repo, n));
 }
-function u(e) {
-	return o.get(e.codeSet) ?? t[e.codeSet].commit;
+function u(e, n) {
+	if (!e.fileList) throw Error(`${e.id} 没有登记文件清单地址`);
+	return c(e.fileList, t[e.codeSet].repo, n);
+}
+function d(e) {
+	return s.get(e.codeSet) ?? t[e.codeSet].commit;
 }
 // src/core/ids.ts
-function d() {
+function ee() {
 	let e = /* @__PURE__ */ new Uint8Array(16);
 	crypto.getRandomValues(e), e[6] = e[6] & 15 | 64, e[8] = e[8] & 63 | 128;
 	let t = Array.from(e, (e) => e.toString(16).padStart(2, "0"));
@@ -188,16 +188,16 @@ function g(e) {
 	if (!t) throw Error(`范围登记表里没有这套规则：${e}`);
 	return t;
 }
-function ee(e) {
+function te(e) {
 	let t = [...e].sort().join(",");
 	return t ? Object.entries(h).find(([, e]) => [...e.defaultScopes].sort().join(",") === t)?.[0] ?? null : null;
 }
-var _ = (e) => `src:${e.toLowerCase()}`, v = (e) => `ent:${e.set}:${e.prop}:${e.hash}`, te = (e) => `${e.set}|${e.prop}|${e.hash}`;
-function y(e, t) {
+var _ = (e) => `src:${e.toLowerCase()}`, v = (e) => `ent:${e.set}:${e.prop}:${e.hash}`, y = (e) => `${e.set}|${e.prop}|${e.hash}`;
+function b(e, t) {
 	let n = t.toLowerCase(), r = e.filter((e) => (e.body?._meta?.sources ?? []).some((e) => String(e?.json ?? "").toLowerCase() === n));
 	return r.length > 0 && r.every((e) => !e.head?.url && !e.body?._meta?.edition);
 }
-function b(e, t = m) {
+function ne(e, t = m) {
 	if (!e || e.classic === null) return null;
 	let n = e.classic ? "classic" : "one", r = t.filter((e) => e.edition === n).map((e) => e.id);
 	return r.length ? {
@@ -280,82 +280,82 @@ function D(e, t, n) {
 		reason: "unclassified"
 	};
 }
-var O = (e) => e.reason !== "out-of-scope" && e.reason !== "unclassified", ne = (e) => e / 2 ** 32 | 0, re = (e) => e >>> 0;
+var O = (e) => e.reason !== "out-of-scope" && e.reason !== "unclassified", k = (e) => e / 2 ** 32 | 0, re = (e) => e >>> 0;
 function ie(e, t, n, r) {
-	let i = ne(n), a = re(n);
+	let i = k(n), a = re(n);
 	e.setUint32(t, r ? a : i, r), e.setUint32(t + 4, r ? i : a, r);
 }
 // node_modules/@noble/hashes/utils.js
-function k(e) {
+function A(e) {
 	return e instanceof Uint8Array || ArrayBuffer.isView(e) && e.constructor.name === "Uint8Array" && "BYTES_PER_ELEMENT" in e && e.BYTES_PER_ELEMENT === 1;
 }
-var A = (e) => e ? `"${e}" ` : "";
-function ae(e, t = "") {
-	if (typeof e != "number") throw TypeError(A(t) + "expected number, got " + typeof e);
-	if (!Number.isSafeInteger(e) || e < 0) throw RangeError(A(t) + "expected integer >= 0, got " + e);
+var j = (e) => e ? `"${e}" ` : "";
+function M(e, t = "") {
+	if (typeof e != "number") throw TypeError(j(t) + "expected number, got " + typeof e);
+	if (!Number.isSafeInteger(e) || e < 0) throw RangeError(j(t) + "expected integer >= 0, got " + e);
 	return e;
 }
-function j(e, t, n = "") {
-	if (k(e) && (t === void 0 || e.length === t)) return e;
-	t !== void 0 && ae(t, "length");
-	let r = k(e), i = t === void 0 ? "" : ` of length ${t}`, a = r ? `length=${e.length}` : `type=${typeof e}`, o = A(n) + "expected Uint8Array" + i + ", got " + a;
+function N(e, t, n = "") {
+	if (A(e) && (t === void 0 || e.length === t)) return e;
+	t !== void 0 && M(t, "length");
+	let r = A(e), i = t === void 0 ? "" : ` of length ${t}`, a = r ? `length=${e.length}` : `type=${typeof e}`, o = j(n) + "expected Uint8Array" + i + ", got " + a;
 	throw r ? RangeError(o) : TypeError(o);
 }
-var M = (e, t) => {
+var P = (e, t) => {
 	if (typeof e != "object" || !e || Array.isArray(e)) throw TypeError((t === "object" ? "" : `"${t}" `) + "expected object, got type=" + typeof e);
-}, N = (e, t) => {
-	M(e, t);
+}, F = (e, t) => {
+	P(e, t);
 	let n = Object.getPrototypeOf(e);
 	if (n !== Object.prototype && n !== null) throw TypeError(`"${t}" expected plain object`);
 	if (Object.hasOwn(e, "__proto__")) throw TypeError(`"${t}.__proto__" is not allowed`);
 };
-function P(e, t = !0) {
+function I(e, t = !0) {
 	if (e.destroyed) throw Error("hash was destroyed");
 	if (t && e.finished) throw Error("digest() was already called");
 }
-function F(e, t) {
-	j(e, void 0, "output");
+function L(e, t) {
+	N(e, void 0, "output");
 	let n = t.outputLen;
 	if (!(e.length >= n)) throw RangeError("\"output\" expected length >= " + n);
 }
-function I(...e) {
+function R(...e) {
 	for (let t = 0; t < e.length; t++) e[t].fill(0);
 }
-function L(e) {
+function z(e) {
 	return new DataView(e.buffer, e.byteOffset, e.byteLength);
 }
-function R(e, t) {
+function B(e, t) {
 	return e << 32 - t | e >>> t;
 }
-function z(e, t) {
+function V(e, t) {
 	return e << t | e >>> 32 - t >>> 0;
 }
-var B = typeof Uint8Array.from([]).toHex == "function" && typeof Uint8Array.fromHex == "function", V = /* @__PURE__ */ Array.from({ length: 256 }, (e, t) => t.toString(16).padStart(2, "0"));
-function H(e) {
-	if (j(e), B) return e.toHex();
+var H = typeof Uint8Array.from([]).toHex == "function" && typeof Uint8Array.fromHex == "function", U = /* @__PURE__ */ Array.from({ length: 256 }, (e, t) => t.toString(16).padStart(2, "0"));
+function W(e) {
+	if (N(e), H) return e.toHex();
 	let t = "";
-	for (let n = 0; n < e.length; n++) t += V[e[n]];
+	for (let n = 0; n < e.length; n++) t += U[e[n]];
 	return t;
 }
-function U(e) {
+function G(e) {
 	if (typeof e != "string") throw TypeError("string expected");
 	let t = new TextEncoder().encode(e);
 	try {
 		return new Uint8Array(t);
 	} finally {
-		I(t);
+		R(t);
 	}
 }
-function W(e, t, n = "opts") {
-	return N(e, "defaults"), t !== void 0 && N(t, n), Object.assign(Object.create(null), e, t);
+function K(e, t, n = "opts") {
+	return F(e, "defaults"), t !== void 0 && F(t, n), Object.assign(Object.create(null), e, t);
 }
-function G(e, t = {}) {
+function q(e, t = {}) {
 	if (typeof e != "function") throw TypeError("\"hashCons\" expected function, got type=" + typeof e);
-	t = W({}, t, "info");
+	t = K({}, t, "info");
 	let n = (t, n) => e(n).update(t).digest(), r = e(void 0);
 	return n.outputLen = r.outputLen, n.blockLen = r.blockLen, n.canXOF = r.canXOF, n.create = (t) => e(t), Object.assign(n, t), Object.freeze(n);
 }
-var K = (e) => ({ oid: Uint8Array.from([
+var ae = (e) => ({ oid: Uint8Array.from([
 	6,
 	9,
 	96,
@@ -369,13 +369,13 @@ var K = (e) => ({ oid: Uint8Array.from([
 	e
 ]) });
 // node_modules/@noble/hashes/_md.js
-function q(e, t, n) {
+function J(e, t, n) {
 	return e & t ^ ~e & n;
 }
-function J(e, t, n) {
+function Y(e, t, n) {
 	return e & t ^ e & n ^ t & n;
 }
-var Y = class {
+var X = class {
 	blockLen;
 	outputLen;
 	canXOF = !1;
@@ -388,15 +388,15 @@ var Y = class {
 	pos = 0;
 	destroyed = !1;
 	constructor(e, t, n, r) {
-		this.blockLen = e, this.outputLen = t, this.padOffset = n, this.isLE = r, this.buffer = new Uint8Array(e), this.view = L(this.buffer);
+		this.blockLen = e, this.outputLen = t, this.padOffset = n, this.isLE = r, this.buffer = new Uint8Array(e), this.view = z(this.buffer);
 	}
 	update(e) {
-		P(this), j(e);
+		I(this), N(e);
 		let { view: t, buffer: n, blockLen: r } = this, i = e.length, a = !1;
 		for (let o = 0; o < i;) {
 			let s = Math.min(r - this.pos, i - o);
 			if (s === r) {
-				let t = L(e);
+				let t = z(e);
 				for (; r <= i - o; o += r) this.process(t, o);
 				a = !0;
 			} else n.set(o === 0 && s === i ? e : e.subarray(o, o + s), this.pos), this.pos += s, o += s, this.pos === r && (this.process(t, 0), this.pos = 0, a = !0);
@@ -404,10 +404,10 @@ var Y = class {
 		return this.length += e.length, a && this.roundClean(), this;
 	}
 	digestInto(e) {
-		P(this), F(e, this), this.finished = !0;
+		I(this), L(e, this), this.finished = !0;
 		let { buffer: t, view: n, blockLen: r, isLE: i } = this, { pos: a } = this;
 		t[a++] = 128, t.fill(0, a), this.padOffset > r - a && (this.process(n, 0), t.fill(0)), ie(n, r - 8, this.length * 8, i), this.process(n, 0), this.roundClean();
-		let o = e === t ? n : L(e), s = this.outputLen, c = s / 4, l = this.get();
+		let o = e === t ? n : z(e), s = this.outputLen, c = s / 4, l = this.get();
 		if (s % 4 || c > l.length) throw Error("invalid outputLen");
 		for (let e = 0; e < c; e++) o.setUint32(4 * e, l[e], i);
 	}
@@ -498,7 +498,7 @@ var Y = class {
 	2756734187,
 	3204031479,
 	3329325298
-]), X = /* @__PURE__ */ new Uint32Array(64), ce = class extends Y {
+]), Z = /* @__PURE__ */ new Uint32Array(64), ce = class extends X {
 	A = 0;
 	B = 0;
 	C = 0;
@@ -530,29 +530,29 @@ var Y = class {
 		return (e ||= new this.constructor()).set(...this.get()), this._cloneIntoMeta(e);
 	}
 	process(e, t) {
-		for (let n = 0; n < 16; n++, t += 4) X[n] = e.getUint32(t, !1);
+		for (let n = 0; n < 16; n++, t += 4) Z[n] = e.getUint32(t, !1);
 		for (let e = 16; e < 64; e++) {
-			let t = X[e - 15], n = X[e - 2], r = R(t, 7) ^ R(t, 18) ^ t >>> 3, i = R(n, 17) ^ R(n, 19) ^ n >>> 10;
-			X[e] = i + X[e - 7] + r + X[e - 16] | 0;
+			let t = Z[e - 15], n = Z[e - 2], r = B(t, 7) ^ B(t, 18) ^ t >>> 3, i = B(n, 17) ^ B(n, 19) ^ n >>> 10;
+			Z[e] = i + Z[e - 7] + r + Z[e - 16] | 0;
 		}
 		let { A: n, B: r, C: i, D: a, E: o, F: s, G: c, H: l } = this;
 		for (let e = 0; e < 64; e++) {
-			let t = R(o, 6) ^ R(o, 11) ^ R(o, 25), u = l + t + q(o, s, c) + se[e] + X[e] | 0, d = (R(n, 2) ^ R(n, 13) ^ R(n, 22)) + J(n, r, i) | 0;
+			let t = B(o, 6) ^ B(o, 11) ^ B(o, 25), u = l + t + J(o, s, c) + se[e] + Z[e] | 0, d = (B(n, 2) ^ B(n, 13) ^ B(n, 22)) + Y(n, r, i) | 0;
 			l = c, c = s, s = o, o = a + u | 0, a = i, i = r, r = n, n = u + d | 0;
 		}
 		n = n + this.A | 0, r = r + this.B | 0, i = i + this.C | 0, a = a + this.D | 0, o = o + this.E | 0, s = s + this.F | 0, c = c + this.G | 0, l = l + this.H | 0, this.set(n, r, i, a, o, s, c, l);
 	}
 	roundClean() {
-		I(X);
+		R(Z);
 	}
 	destroy() {
-		this.destroyed = !0, this.set(0, 0, 0, 0, 0, 0, 0, 0), I(this.buffer);
+		this.destroyed = !0, this.set(0, 0, 0, 0, 0, 0, 0, 0), R(this.buffer);
 	}
-}, Z = class extends ce {
+}, le = class extends ce {
 	constructor() {
 		super(32, oe);
 	}
-}, le = /* @__PURE__ */ G(() => new Z(), /* @__PURE__ */ K(1));
+}, ue = /* @__PURE__ */ q(() => new le(), /* @__PURE__ */ ae(1));
 // src/core/hash.ts
 function Q(e) {
 	if (typeof e != "object" || !e) return JSON.stringify(e) ?? "null";
@@ -561,22 +561,22 @@ function Q(e) {
 	return `{${Object.keys(t).filter((e) => t[e] !== void 0).sort().map((e) => `${JSON.stringify(e)}:${Q(t[e])}`).join(",")}}`;
 }
 function $(e) {
-	return H(le(typeof e == "string" ? U(e) : e));
+	return W(ue(typeof e == "string" ? G(e) : e));
 }
-function ue(e) {
+function de(e) {
 	return $(Q(e));
 }
 // src/library/images.ts
-function de(e, t) {
+function fe(e, t) {
 	return t ? typeof t == "string" ? e.map((e) => e + encodeURI(t.replace(/^\/+/, ""))) : t.type === "external" || t.url && !t.path ? t.url ? [t.url] : [] : t.path ? e.map((e) => e + encodeURI(t.path.replace(/^\/+/, ""))) : [] : [];
 }
-function fe(e) {
+function pe(e) {
 	return r(e).imageRoots ?? [];
 }
-function pe(e, t) {
-	return de(fe(e), t);
+function me(e, t) {
+	return fe(pe(e), t);
 }
-function me(e) {
+function he(e) {
 	return e.replace(/^\/?img\//, "");
 }
-export { f as A, x as C, _ as D, g as E, u as F, l as I, r as L, t as M, n as N, D as O, i as P, c as R, y as S, ee as T, C as _, Q as a, v as b, J as c, G as d, z as f, w as g, b as h, $ as i, d as j, p as k, H as l, m, me as n, q as o, U as p, ue as r, Y as s, pe as t, I as u, S as v, te as w, O as x, E as y, a as z };
+export { f as A, a as B, x as C, _ as D, g as E, d as F, u as I, r as L, t as M, n as N, D as O, i as P, o as R, b as S, te as T, C as _, Q as a, v as b, Y as c, q as d, V as f, w as g, ne as h, $ as i, ee as j, p as k, W as l, m, he as n, J as o, G as p, de as r, X as s, me as t, R as u, S as v, y as w, O as x, E as y, l as z };

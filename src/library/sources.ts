@@ -49,6 +49,12 @@ export function officialSourceOf(codeSet: string): SourceEntry {
 }
 
 /**
+ * 结算小窗（Plutonium）读文件用的那套官方资料：Plutonium 只认英文作者文件。
+ * 小窗的读文件入口（rules/kernel/host.ts libraryData）和换算缓存认的资料版本（revision-data.ts kernelFiles）都读这一处。
+ */
+export const kernelDataSource = (): SourceEntry => officialSourceOf('en')
+
+/**
  * 官方数据跟上游新提交（P5 B-28）：数据提交号不再恒等于登记表里的那个，更新后改成新提交。
  * 作者程序（vendor）仍是登记表里那一版；只有上游作者程序版本号一致才允许跟（official-update.ts）。
  * 启动时按安装记录恢复（hydrateCommits）；全库一律经 commitOf 取，所以改这里就都跟着变。

@@ -41,8 +41,10 @@ import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
 import { KernelPrecompute } from '../rules/kernel/precompute'
+import { kernelFilesVersion } from '../rules/kernel/cache'
 import { cardFields, cardTypes, type CardFields, type CardTypesResult } from '../rules/kernel/card-types'
 import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
+import { convertSchedule } from '../rules/kernel/convert-schedule'
 import { SOURCES, brewSourceOf, getSource } from '../library/sources'
 import { TrpgError } from './errors'
 import type { ImportDeps } from './transfer/importer'
@@ -186,8 +188,9 @@ export function createBackend(opts: BackendOptions): Backend {
     for (const codeSet of [...new Set(codeSets)]) rows.push(await precompute.run({ codeSet, signal, onProgress }))
     return rows
   }
-  // 改自制 / 房规后：停手 5 秒再补换算，只看自制和带备选的条目（P5.5 查慢）
-  const queue = new PrecomputeQueue(async (codeSet) => precompute?.run({ codeSet, mode: 'changed' }) ?? null, 5000)
+  // 后台换算排队（改自制、装资料都在这里；convert-schedule.ts）
+  const schedule = convertSchedule({ db, precompute: () => precompute, installing: () => tasks.list().some((t) => t.status === 'running' && t.kind !== 'precompute') })
+  const queue = schedule.queue
   const logs = new LogStore(db)
   // P5.5 U2：编辑只写原文就发布，停手 5 秒后后台批量解析（brew-queue.ts）
   let brewQueue: BrewParseQueue | null = null
@@ -230,13 +233,16 @@ export function createBackend(opts: BackendOptions): Backend {
       const list = planOpts.manifest ?? await files.fileList(source, view, planOpts.signal ? { signal: planOpts.signal } : {})
       return officialPlan(list, rec.owners, planOpts, { ...planOpts, indexSources: rec.indexSources, sourceFiles: rec.sourceFiles, codeSet: source.codeSet })
     },
-    precompute: async (setId, view, signal, onProgress) => {
-      const rows = await runPrecompute([getSource(setId).codeSet], signal, onProgress)
-      await service.warmEnglishPairs(setId, view) // 配对表换版本后要重建，趁下载刚完成在后台建好（P5-1 B-42）
-      return rows
-    } })
+    // 单独重跑换算的任务（startPrecompute）
+    precompute: async (setId, _view, signal, onProgress) => runPrecompute([getSource(setId).codeSet], signal, onProgress),
+    afterInstall: async (setId, view) => {
+      await service.warmEnglishPairs(setId, view) // 配对表换版本后要重建，趁下载刚完成建好（P5-1 B-42）
+      await schedule.afterInstall(setId)
+    },
+    onChange: (t) => { if (t.status === 'running' && t.kind !== 'precompute') schedule.installStarted() } })
   ready = ready.then(async () => {
     await tasks.restore()
+    await schedule.resume()
     if (await db.revisions.where('status').equals('preparing').count()) afterPublish()
   })
   const dataVersion = libraryDataVersion(revisions, service)
@@ -338,7 +344,7 @@ export function createBackend(opts: BackendOptions): Backend {
     const all = await withCounterparts(view, brewPairs, targets)
     return mergeImpacts(all, await Promise.all(all.map((t) => impactAt(view, t))))
   }
-  const reclaim = (): Promise<ReclaimReport> => reclaimLibrary({ db, revisions, operations, directory, kernelOfficial: async () => (await dataVersion()).official })
+  const reclaim = (): Promise<ReclaimReport> => reclaimLibrary({ db, revisions, operations, directory, kernelOfficial: async () => kernelFilesVersion(await dataVersion()) })
   // 连着下好几本时只在最后回收一次：发布后等 3 秒，还有任务在跑就再等
   let reclaimTimer: ReturnType<typeof setTimeout> | undefined
   afterPublish = (): void => {

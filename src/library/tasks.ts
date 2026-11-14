@@ -54,8 +54,13 @@ export interface TaskOptions {
   /** 拿到修改权后，按已装集合和目标提交生成作者计划。 */
   planOfficial?: (setId: string, opts: import('./plan').SelectionInput & { commit?: string; allSources?: boolean; knownAdventures?: string[]; installedSources?: string[]; signal?: AbortSignal; manifest?: FileList }, view: LibraryView) => Promise<import('./plan').OfficialPlan | null>
   selectUpdate?: (setId: string, commit: string, selection: import('./official-update').OfficialUpdateSelection | undefined, base: LibraryView) => Promise<NonNullable<OfficialSetState['fileOverrides']> | null>
-  /** T2：下载任务里的换算段；后端接结算内核，库层只报进度。 */
+  /** 单独重跑换算的任务（startPrecompute）；后端接结算内核，库层只报进度。 */
   precompute?: (setId: string, view: LibraryView, signal: AbortSignal, onProgress: (p: TaskState['progress']) => void) => Promise<unknown>
+  /**
+   * 官方资料发布之后、任务结束之前（性能支线 2026-11-14）：后端在这里做快的收尾（配对表预热），并把完整换算排进后台队列。
+   * 换算不在下载任务里等：书发布就能用，换算好不好另外查（后端换算队列的状态）。
+   */
+  afterInstall?: (setId: string, view: LibraryView) => Promise<void>
   onChange?: (t: TaskState) => void
   /** 发布成功后的通知（后端用它关掉旧版本的作者小窗 / 清缓存）。 */
   onPublished?: (view: LibraryView, previous: string) => void
@@ -278,10 +283,8 @@ export class DownloadTasks {
       state.revision = published.id
       await this.opts.db.derived.delete(`audit:last-failed:${setId}`)
       this.opts.onPublished?.(published, handle.base.id)
-      if (this.opts.precompute) {
-        try { state.convert = await this.opts.precompute(setId, published, signal, (p) => { void this.progress(state, p) }) }
-        catch (e) { state.convertError = msg(e) }
-      }
+      try { await this.opts.afterInstall?.(setId, published) }
+      catch (e) { state.convertError = msg(e) }
       return { result: report, status: report.settlementReady && !state.convertError ? 'done' : 'partial', revision: published.id }
     } catch (e) {
       if (!report && !signal.aborted) await this.opts.onDiagnostic?.(setId, failedInstallReport(source, e))

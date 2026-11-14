@@ -14,7 +14,7 @@ import { refKey } from '../../core/saves/split'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
 import { hashValue, sha256Hex } from '../../core/hash'
-import { KernelCache, kernelBaseKey, wrapKernelSession } from './cache'
+import { KernelCache, kernelBaseKey, kernelFilesVersion, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
 import type { KernelDataVersion } from '../../schemas/kernel'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
@@ -37,7 +37,7 @@ export interface KernelRuntimeDeps {
   fetchImpl?: typeof fetch
   timeoutMs?: number
   /** 换算缓存（S3）：本地可丢副本；不给就不缓存。 */
-  cache?: { db: LibraryDatabase; dataVersion: () => Promise<KernelDataVersion> }
+  cache?: { db: LibraryDatabase; dataVersion: (at?: LibraryView) => Promise<KernelDataVersion> }
   /** 这个战役有没有绑定结算内核（S5 进入战役时判断）。 */
   hasKernel?: (ownerKey: string) => Promise<boolean>
 }
@@ -81,8 +81,11 @@ export class KernelRuntime {
       const boot = await session.boot(input)
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
-      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, this.deps.cache!.dataVersion, campaign.rule) : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, view, dataVersion: this.deps.cache?.dataVersion ?? (async () => ({ official: '', brews: {} })) }
+      // 换算缓存的钥匙按小窗自己读的那一版资料算（view 是打开时的版本）：战役开着时补装了书，
+      // 小窗照旧用旧版文件换算，结果就记在旧版本名下，不会冒充新版本（新版本由后台换算或重开战役后补上）。
+      const versionOfView = async (): Promise<KernelDataVersion> => this.deps.cache ? this.deps.cache.dataVersion(view) : { official: '', brews: {} }
+      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, versionOfView, campaign.rule) : session
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, view, dataVersion: versionOfView }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => this.open.delete(ownerKey))
@@ -243,7 +246,7 @@ export class KernelRuntime {
         o.seeds.set(result.id, result.seed ?? actor.seed ?? actor.name)
         if (o.cache && version) {
           const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor })
-          await o.cache.put(key, result.base, { rule: o.rule, base: o.cacheBase, official: version.official })
+          await o.cache.put(key, result.base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version) })
         }
       }
     }
@@ -277,7 +280,7 @@ export class KernelRuntime {
       if (o.cache) {
         const version = await o.dataVersion()
         const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor: compact })
-        await o.cache.put(key, base, { rule: o.rule, base: o.cacheBase, official: version.official })
+        await o.cache.put(key, base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version) })
       }
       out.push(compact)
     }

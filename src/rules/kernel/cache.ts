@@ -1,5 +1,5 @@
 // P3 性能改进 S3：Plutonium 换算结果缓存。换算结果只是本地副本，丢了能重算；存档仍只存引用/选择/状态差别。
-// 条目换算钥匙 = 实际喂给 Plutonium 的条目内容摘要 + 官方数据版本 + 结算内核指纹（input.ts：manifest/设置/规则/小窗代码）。
+// 条目换算钥匙 = 实际喂给 Plutonium 的条目内容摘要 + 结算小窗读的那套官方资料的版本（kernelFiles）+ 结算内核指纹（input.ts：manifest/设置/规则/小窗代码）。
 // 不含自制包版本：结算小窗只读英文官方文件（host.ts libraryData），看不到自制包，改自制不影响官方条目的换算；
 // 自制 / 房规条目自己的内容已在条目摘要里。人物重建基准（kernelBaseKey）仍含自制包版本：房规会改条目生效版本。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 内核命令结果原样转交，形状由 commands 决定 */
@@ -15,7 +15,7 @@ export interface KernelCacheBase {
   dataVersion: () => Promise<KernelDataVersion>
 }
 
-/** 一行缓存属于哪套：规则 + 结算内核指纹 + 官方数据版本。清理时同规则下不是这一套的就是旧的。 */
+/** 一行缓存属于哪套：规则 + 结算内核指纹 + 资料版本（official 存的是 kernelFilesVersion）。清理时同规则下不是这一套的就是旧的。 */
 export interface KernelCacheScope { rule: string; base: string; official: string }
 
 /** 换算结果缓存，存在【库】数据库的 derived 表（kc: 前缀）；没有就重算，不参与存档。 */
@@ -86,6 +86,9 @@ export async function kernelBaseKey(opts: {
   })
 }
 
+/** 换算缓存认的资料版本：结算小窗实际读的那套官方资料（kernelFiles）；旧数据没有这一项时按全部官方资料算（只会多算，不会算错）。 */
+export const kernelFilesVersion = (v: KernelDataVersion): string => v.kernelFiles ?? v.official
+
 export async function kernelImportKey(opts: {
   base: string
   dataVersion: KernelDataVersion
@@ -95,7 +98,7 @@ export async function kernelImportKey(opts: {
 }): Promise<string> {
   return hashValue({
     base: opts.base,
-    official: opts.dataVersion.official,
+    official: kernelFilesVersion(opts.dataVersion),
     kind: opts.kind,
     prop: opts.prop,
     entry: hashValue(opts.entry),
@@ -131,7 +134,7 @@ export function wrapKernelSession(session: KernelSession, cache: KernelCache, ba
     const cached = await cache.get(key)
     if (cached !== null) return hit(cached)
     const result = await raw('importForBuild', prop, entry)
-    if (result.status === 'complete' && result.result) await cache.put(key, result.result, { rule, base, official: version.official })
+    if (result.status === 'complete' && result.result) await cache.put(key, result.result, { rule, base, official: kernelFilesVersion(version) })
     return result
   }
   const call = async (fn: string, ...args: any[]): Promise<any> => {

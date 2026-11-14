@@ -56,6 +56,11 @@ export type KernelActor = z.infer<typeof kernelActorSchema>
 
 export const kernelVersionSchema = z.object({
   official: z.string().default(''),
+  /**
+   * 结算小窗实际读的那套官方资料（sources.ts kernelDataSource，英文）的版本；只给换算缓存用。
+   * 另一种语言的官方资料、自制包变了，小窗读到的文件不变，换算结果也不变，所以不算进来。没有（旧数据）→ 换算缓存按 official 算。
+   */
+  kernelFiles: z.string().optional(),
   brews: z.record(z.string(), z.string()).default({}),
 })
 export type KernelDataVersion = z.infer<typeof kernelVersionSchema>
