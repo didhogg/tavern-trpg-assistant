@@ -17,23 +17,27 @@ export interface FlattenResult {
 const low = (v: unknown): string => String(v ?? '').toLowerCase()
 
 /** 把 json 里 _copy 指向 keepSources 以外来源的条目拼成完整的（json 不改，返回新的）。 */
-export async function flattenCopies(json: any, keepSources: string[]): Promise<FlattenResult> {
+export async function flattenCopies(json: any, keepSources: string[], { officialOnly = false, includedSources = [] }: { officialOnly?: boolean; includedSources?: string[] } = {}): Promise<FlattenResult> {
   await init()
   const keep = new Set(keepSources.map(low))
   const out = A.MiscUtil.copyFast(json)
   let flattened = 0
+  const expanded = new Map<string, Set<string>>()
   const failed: FlattenResult['failed'] = []
   for (const [prop, list] of Object.entries(out)) {
     if (prop.startsWith('_') || !Array.isArray(list)) continue
     for (let i = 0; i < list.length; i++) {
       const ent: any = list[i]
       const from = ent?._copy?.source
-      if (typeof from !== 'string' || keep.has(low(from))) continue
+      if (typeof from !== 'string' || keep.has(low(from)) || (officialOnly && !A.SourceUtil.isSiteSource(from))) continue
       try {
         const merged = await A.DataUtil.pDoMetaMergeSingle(prop, { dependencies: { [prop]: [from] } }, A.MiscUtil.copyFast(ent))
         if (!merged || merged._copy) throw new Error('作者没有拼出完整的一条')
         list[i] = A.DataUtil.cleanJson(merged, { isDeleteUniqueId: false })
         flattened++
+        const sources = expanded.get(prop) ?? new Set<string>()
+        sources.add(low(from))
+        expanded.set(prop, sources)
       } catch (e) {
         failed.push({ prop, name: String(ent?.name ?? ''), reason: e instanceof Error ? e.message : String(e) })
       }
@@ -42,8 +46,12 @@ export async function flattenCopies(json: any, keepSources: string[]): Promise<F
   // 抄全以后不再需要的依赖声明去掉（还有 _copy 指向那个来源的类别留着）
   const deps = out._meta?.dependencies
   if (deps) {
+    const includes = new Set([...includedSources, ...Object.values(out._meta?.includes ?? {}).flat()].map(low))
     for (const [prop, srcs] of Object.entries(deps) as Array<[string, string[]]>) {
-      const still = srcs.filter((s) => (out[prop] ?? []).some((e: any) => low(e?._copy?.source) === low(s)))
+      const still = srcs.filter((s) => (
+        (officialOnly && (!expanded.get(prop)?.has(low(s)) || includes.has(low(s)))) ||
+        (out[prop] ?? []).some((e: any) => low(e?._copy?.source) === low(s))
+      ))
       if (still.length) deps[prop] = still
       else delete deps[prop]
     }

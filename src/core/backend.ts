@@ -246,12 +246,12 @@ export function createBackend(opts: BackendOptions): Backend {
     if (await db.revisions.where('status').equals('preparing').count()) afterPublish()
   })
   const dataVersion = libraryDataVersion(revisions, service)
-  precompute = new KernelPrecompute({ pluginRoot, files, scoped, db, revisions, dataVersion, container })
+  precompute = new KernelPrecompute({ pluginRoot, files, scoped, service, db, revisions, dataVersion, container })
 
   // 结算内核要知道本战役的规则与选书；内核存档写入要结算内核拆人物。两者互相用，经闭包接上。
   let kernelSave: KernelSaveService | null = null
   const kernel = new KernelRuntime({
-    pluginRoot, files, scoped, revisions, container, cache: { db, dataVersion },
+    pluginRoot, files, scoped, service, revisions, container, cache: { db, dataVersion },
     hasKernel: async (ownerKey) => !!(kernelSave && await kernelSave.read(ownerKey)),
     campaignOf: async (ownerKey) => {
       const ws = await opts.campaign.getWorkspace(ownerKey)

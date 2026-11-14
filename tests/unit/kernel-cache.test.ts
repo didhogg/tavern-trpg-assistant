@@ -1,10 +1,10 @@
-// 换算缓存：条目钥匙不随自制包变；清理只删同规则下旧的一套。
+// 换算缓存：实际载入的自制包组成会影响换算；清理只删同规则下旧的一套。
 import { describe, expect, it } from 'vitest'
 import { LibraryDatabase } from '../../src/library/db'
 import { KernelCache, kernelBaseKey, kernelImportKey } from '../../src/rules/kernel/cache'
 
 describe('结算内核换算缓存', () => {
-  it('条目钥匙不含自制包版本（结算小窗看不到自制包）；人物重建基准钥匙含', async () => {
+  it('没参与结算的自制包版本变化不使官方换算缓存失效', async () => {
     const a = { official: 'c1', brews: { 'cn-brew:x': '1' } }
     const b = { official: 'c1', brews: { 'cn-brew:x': '2', 'cn-brew:y': '1' } }
     const entry = { name: 'Fireball', source: 'PHB' }
@@ -14,6 +14,15 @@ describe('结算内核换算缓存', () => {
       .not.toBe(await kernelImportKey({ base: 'k', dataVersion: { ...a, official: 'c2' }, kind: 'build', prop: 'spell', entry }))
     const actor = { name: 'A', refs: [], choices: {} }
     expect(await kernelBaseKey({ base: 'k', dataVersion: a, actor })).not.toBe(await kernelBaseKey({ base: 'k', dataVersion: b, actor }))
+  })
+
+  it('换算和重建缓存按实际参与结算的自制内容区分', async () => {
+    const dataVersion = { official: 'c1', brews: {} }
+    const common = { base: 'k', dataVersion }
+    const row = { ...common, kind: 'build' as const, prop: 'spell', entry: { name: 'Fireball', source: 'PHB' } }
+    const actor = { ...common, actor: { name: 'A', refs: [], choices: {} } }
+    expect(await kernelImportKey(row)).not.toBe(await kernelImportKey({ ...row, brewFingerprint: 'loaded' }))
+    expect(await kernelBaseKey(actor)).not.toBe(await kernelBaseKey({ ...actor, brewFingerprint: 'loaded' }))
   })
 
   it('sweep：删同规则下内核指纹或官方版本不同的行、没记套别的老行；别的规则不动', async () => {

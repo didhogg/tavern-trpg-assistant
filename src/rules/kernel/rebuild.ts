@@ -82,6 +82,7 @@ export async function rebuildActor(opts: {
   session: KernelSession
   library: CampaignLibrary
   actor: KernelActor
+  brewIssue?: (ref: EntryRef, altId: string | null, source: string | null) => string | null
   view?: import('../../library/revision').LibraryView
 }): Promise<RebuildResult> {
   const refs = opts.actor.refs
@@ -94,6 +95,8 @@ export async function rebuildActor(opts: {
     const ref = refs[i]
     const result = fetched[i]
     if (!result.ok) { missing.push({ ref, reason: result.reason }); continue }
+    const issue = opts.brewIssue?.(result.ref, result.version.altId, result.source)
+    if (issue) { missing.push({ ref, reason: issue }); continue }
     const k = await kernelEntryOf(opts.lib, opts.library.codeSet, result.ref as EntryRef, result.item, result.version.altId, opts.view)
     if (k.noEnglish) noEnglish.push(ref)
     entries.push({ ref, entry: k.entry })

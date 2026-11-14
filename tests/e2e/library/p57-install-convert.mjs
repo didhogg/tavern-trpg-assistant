@@ -108,7 +108,7 @@ try {
       const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
       const view = await h.revisions.published()
       const pick = (await h.scoped.query(library, 'monster', { view })).find((r) => typeof r.item?.name === 'string')
-      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
+      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
         cache: { db: h.libraryDb, dataVersion: h.dataVersion }, campaignOf: async () => ({ rule: 'dnd5e2014', library, title: 'p57' }) })
       await rt.session('p57-owner')
       window.__camp = { rt, pick, view, library }

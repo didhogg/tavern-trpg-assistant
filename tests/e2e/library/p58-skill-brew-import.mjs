@@ -141,7 +141,7 @@ try {
       await h.userDb.workspaces.clear(); await h.userDb.saves.clear()
       await h.campaign.startNewCampaign({ ...owner, ruleId: 'dnd5e2014', name: owner.ownerLabel })
       await h.kernelSave.bind(owner.ownerKey, { rule: 'dnd5e2014', kernelVersion: 1, library: lib2, dataVersion: await h.dataVersion(), overrides: [], actors: [], revision: 0, undo: [] })
-      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
+      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
         cache: { db: h.libraryDb, dataVersion: h.dataVersion }, campaignOf: async () => ({ rule: 'dnd5e2014', library: lib2, title: owner.ownerLabel }) })
       const bad = /@classes\.\.|undefined|NaN|\[object Object\]/
       const summary = async (id) => {

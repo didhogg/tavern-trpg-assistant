@@ -1,6 +1,5 @@
-// 自制子职 / 自制职业进结算内核（B，2026-11-14，驾驶员批准按「附加自制文件」方案做）。
-// 做法（src/rules/kernel/brews.ts）：开结算小窗时把库里已装的自制包名字交给 Plutonium 的设置 dataSources.localHomebrew，
-// Plutonium 经「取文件」通道按名字取自制原文，合并进它的自制管理器；之前它不认识自制来源，加子职 / 职业会去联网、断网失败。
+// 自制子职 / 自制职业进结算内核（B，2026-11-14）。
+// 战役打开时，用作者包管理器载入当前版本的自制包；断网条件下作者导入器也能找到依赖。
 // 验收：①自制子职加到人物成功（人物身上有这个子职）②自制职业（厨师职业包，真实中英文件，可选）建人物成功
 //       ③官方子职同一入口仍成功（对照）④没有明显异常值 ⑤记录耗时（结算小窗开机、第一次加子职、建职业）。断网。
 // 输入：work/p58-fixtures/ 里的试跑包；厨师职业包用 BREW_ZH / BREW_EN 指向本机两个自制仓库（只读，同 p59），没有就跳过 ②。
@@ -88,7 +87,7 @@ try {
       await h.userDb.workspaces.clear(); await h.userDb.saves.clear()
       await h.campaign.startNewCampaign({ ...owner, ruleId: 'dnd5e2014', name: owner.ownerLabel })
       await h.kernelSave.bind(owner.ownerKey, { rule: 'dnd5e2014', kernelVersion: 1, library: lib2, dataVersion: await h.dataVersion(), overrides: [], actors: [], revision: 0, undo: [] })
-      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
+      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
         cache: { db: h.libraryDb, dataVersion: h.dataVersion }, campaignOf: async () => ({ rule: 'dnd5e2014', library: lib2, title: owner.ownerLabel }) })
       const bad = /@classes\.\.|undefined|NaN|\[object Object\]/
       const summary = async (id) => {
@@ -122,6 +121,42 @@ try {
         return { status: c.status, error: c.error ?? null, summary: c.id ? await summary(c.id) : null }
       })
       await rt.closeAllExcept(null)
+      await at('precompute')
+      const preOpts = { codeSet: 'cn', mode: 'changed', limit: 2 }
+      const first = await lib.precompute.run(preOpts)
+      const again = await lib.precompute.run(preOpts)
+      out.precompute = [first, again].map(({ total, converted, cached, failed, excludedBrews }) => ({ total, converted, cached, failed, excludedBrews }))
+
+      await at('broken dependency')
+      const input = await h.kernelInput({ pluginRoot: new URL('/', location.href), rule: 'dnd5e2014', world: { id: 'p63-deps', title: 'P63 dependency test' } })
+      const view = await h.revisions.published()
+      const test = await h.startKernelSession(input, view)
+      try {
+        const make = (id, spells, sourceOfCopy) => ({
+          doc: { head: { docIdLocal: id, filename: `${id}.json` }, body: {
+            _meta: { sources: [{ json: id }], ...(sourceOfCopy ? { dependencies: { spell: [sourceOfCopy] } } : {}) },
+            spell: spells.map((spell) => ({ ...spell, source: id })),
+          } },
+          pack: { docIdLocal: id, filename: `${id}.json`, sources: [id], props: { spell: spells.length },
+            hashes: {},
+            requires: sourceOfCopy ? [{ kind: 'dependency', prop: 'spell', source: sourceOfCopy }] : [] },
+          flattened: 0, failures: [],
+        })
+        const source = test.session.frame.frame.contentWindow
+        const parent = await source.DataLoader.pCacheAndGet('spell', 'PHB', 'fireball_phb')
+        if (!parent) throw Error('没读到真实官方复制原件')
+        const good = make('KernelTestProvider', [{ ...JSON.parse(JSON.stringify(parent)), name: 'Kernel Test Parent' }])
+        const dependent = make('KernelTestDep', [{ name: 'Kernel Test Copy', _copy: { name: 'Kernel Test Parent', source: 'KernelTestProvider' } }], 'KernelTestProvider')
+        const bad = make('KernelTestBad', [{ name: 'Kernel Test Broken', _copy: { name: 'Missing PHB spell', source: 'PHB' } }], 'PHB')
+        const orphan = make('KernelTestOrphan', [{ name: 'Kernel Test Orphan', _copy: { name: 'Kernel Test Broken', source: 'KernelTestBad' } }], 'KernelTestBad')
+        const report = await test.session.call('loadBrews', [bad, orphan, dependent, good], [])
+        const processed = await source.BrewUtil2.pGetBrewProcessed()
+        out.dependencies = { loaded: report.loaded, excluded: report.excluded.map(({ docIdLocal, reason }) => ({ docIdLocal, reason })),
+          copy: processed.spell?.find((row) => row.source === 'KernelTestDep')?.level, expectedLevel: parent.level,
+          official: (await test.session.call('importForBuild', 'spell', JSON.parse(JSON.stringify(parent)))).status }
+      } finally {
+        test.session.close()
+      }
       await at('done')
     } catch (e) { out.error = String(e?.stack ?? e).slice(0, 1500) }
     return out
@@ -143,6 +178,10 @@ check('① 自制子职加到人物：完成，人物身上有「月影斥候」
 check('③ 对照：官方战士子职同一入口仍成功', r.addOfficialSub?.status === 'complete' && r.heroSummary?.subclasses?.includes('Battle Master'), JSON.stringify({ a: r.addOfficialSub, s: r.heroSummary?.subclasses }))
 if (cook) check('② 自制职业（厨师）建人物：完成，人物身上有这个职业', r.customClass?.status === 'complete' && (r.customClass?.summary?.classes ?? []).length > 0, JSON.stringify(r.customClass))
 check('④ 没有明显异常值（@classes..、undefined、NaN、[object Object]）', !(r.heroSummary?.suspicious?.length) && !(r.customClass?.summary?.suspicious?.length), JSON.stringify({ h: r.heroSummary?.suspicious, c: r.customClass?.summary?.suspicious }))
+check('后台重复换算命中同一套自制缓存', r.precompute?.[0]?.total > 0 && r.precompute?.[1]?.cached === r.precompute?.[0]?.total && r.precompute?.every((x) => !x.failed.length && !x.excludedBrews.length), JSON.stringify(r.precompute))
+check('真作者载入保留有效的跨包复制，只排除坏包和失去依赖的包，官方仍可换算',
+  r.dependencies?.loaded.includes('KernelTestDep') && r.dependencies?.loaded.includes('KernelTestProvider') && r.dependencies?.copy === r.dependencies?.expectedLevel && Number.isFinite(r.dependencies?.copy) && r.dependencies?.official === 'complete'
+  && r.dependencies?.excluded.map((x) => x.docIdLocal).sort().join(',') === 'KernelTestBad,KernelTestOrphan', JSON.stringify(r.dependencies))
 check('没有预料之外的页面报错（断网、local-set 只读错误除外）', unexpected.length === 0, unexpected.slice(0, 3).join(' | '))
 await ctx.close()
 server.close()

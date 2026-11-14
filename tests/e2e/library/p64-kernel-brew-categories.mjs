@@ -58,6 +58,9 @@ page.setDefaultTimeout(460_000)
 const pageErrors = []
 let curStep = ''
 await page.exposeFunction('p64Step', (s) => { curStep = s })
+page.on('console', (m) => {
+  if (m.type() === 'error' && !m.text().includes('小窗要求处理失败')) pageErrors.push(`[${curStep}] console: ${m.text().slice(0, 800)}`)
+})
 page.on('pageerror', (e) => pageErrors.push(`[${curStep}] ${String(e.stack ?? e)}`.slice(0, 260)))
 await page.route((u) => !u.href.startsWith(url), (route) => route.abort())
 
@@ -93,7 +96,7 @@ try {
       await h.userDb.workspaces.clear(); await h.userDb.saves.clear()
       await h.campaign.startNewCampaign({ ...owner, ruleId: 'dnd5e2014', name: owner.ownerLabel })
       await h.kernelSave.bind(owner.ownerKey, { rule: 'dnd5e2014', kernelVersion: 1, library: lib2, dataVersion: await h.dataVersion(), overrides: [], actors: [], revision: 0, undo: [] })
-      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
+      const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
         cache: { db: h.libraryDb, dataVersion: h.dataVersion }, campaignOf: async () => ({ rule: 'dnd5e2014', library: lib2, title: owner.ownerLabel }) })
       const visible = async (ref) => { const d = await h.scoped.detail(lib2, ref); return !!d && !('hidden' in d) }
       const firstOf = async (set, prop, pred) => {
@@ -122,7 +125,13 @@ try {
       out.base = { fighter: !!fighter, human: !!human, bg: !!bg }
 
       await at('open kernel')
-      let { session } = await timed('kernelOpen', () => rt.session(owner.ownerKey))
+      const opened = await timed('kernelOpen', () => rt.session(owner.ownerKey))
+      let { session } = opened
+      out.brews = opened.brews
+      const view = await h.revisions.published()
+      const stored = await view.kvGet('cn', 'HOMEBREW_2_STORAGE') ?? []
+      out.installed = stored.length
+      out.copiedSources = stored.filter((doc) => doc.body?._meta?.dependencies).flatMap((doc) => (doc.body._meta.sources ?? []).map((src) => src.json))
       // 验证用（不改 src/）：LENIENT_COPY=1 时，只在内核小窗里把作者合并的 isErrorOnMissing 放宽——找不到 _copy 的父条目就原样保留这一条，
       // 不抛错（作者合并本来就有这条非抛错分支，utils.js 5558）；官方站点 / 库的作者小窗不受影响
       if (lenient) {
@@ -156,6 +165,7 @@ try {
         await rt.closeAllExcept(null)
         session = (await timed('kernelReopen', () => rt.session(owner.ownerKey))).session
       }
+      const win = session.frame.frame.contentWindow
       const meta = await session.call('importerMeta', [...props])
       const importable = new Map(meta.map((m) => [m.prop, m.folderType]))
       out.importable = [...importable.entries()]
@@ -170,6 +180,7 @@ try {
         return { id: hero.id }
       }
       const shared = await guard(() => newHero('P64 公用战士'))
+      out.shared = shared
       const BUILD = { race: 0, background: 1, class: 2 }
       const run = async (prop, e) => {
         const folder = importable.get(prop)
@@ -208,11 +219,13 @@ try {
       }
 
       await at('merged brew')
-      const win = session.frame.frame?.contentWindow
       out.merged = await guard(async () => {
         const t = performance.now(); const p = await win.BrewUtil2.pGetBrewProcessed()
-        return { ms: Math.round(performance.now() - t), counts: Object.fromEntries(Object.entries(p ?? {}).filter(([, v]) => Array.isArray(v)).map(([k, v]) => [k, v.length])) }
+        const copyEntries = Object.entries(p ?? {}).flatMap(([prop, list]) => Array.isArray(list)
+          ? list.filter((e) => out.copiedSources.includes(e?.source) && !e._copy).map((e) => [prop, e.source, e.name]) : [])
+        return { ms: Math.round(performance.now() - t), copyEntries, counts: Object.fromEntries(Object.entries(p ?? {}).filter(([, v]) => Array.isArray(v)).map(([k, v]) => [k, v.length])) }
       })
+      out.originalsIntact = JSON.stringify(stored) === JSON.stringify(await view.kvGet('cn', 'HOMEBREW_2_STORAGE') ?? [])
       await rt.closeAllExcept(null)
       await at('done')
     } catch (e) { out.error = String(e?.stack ?? e).slice(0, 1500) }
@@ -228,7 +241,8 @@ console.log('耗时（毫秒）：', JSON.stringify(r.ms))
 if (r.screen) console.log('体检（每个包单独合并）：', JSON.stringify({ total: r.screen.total, ms: r.screen.ms, bad: r.screen.bad.map((b) => [b.sources.join('/'), b.error]) }))
 console.log('作者导入器说有导入器的类别：', r.importable.map(([p, f]) => `${p}(${f})`).join(' '))
 console.log('没有导入器的类别（不进内核，不算问题）：', r.notImportable.join(' '))
-console.log('内核里合并后的自制（BrewUtil2）：', JSON.stringify(r.merged))
+console.log('内核里合并后的自制（BrewUtil2）：', JSON.stringify(r.merged?.counts))
+console.log('结算包：', JSON.stringify({ installed: r.installed, loaded: r.brews?.loaded.length, flattened: r.brews?.flattened, excluded: r.brews?.excluded }))
 const byProp = {}
 for (const x of r.rows) (byProp[x.prop] ??= []).push(x)
 for (const [prop, list] of Object.entries(byProp)) console.log(`  ${prop.padEnd(18)}`, list.map((x) => `${x.kind}「${x.name}」${x.status}${x.error ? '（' + x.error + '）' : ''} ${x.ms}ms`).join(' | '))
@@ -241,9 +255,14 @@ const bad = customRows.filter((x) => !OK.has(x.status) && x.status !== 'skipped'
 const skippedRows = customRows.filter((x) => x.status === 'skipped')
 console.log('官方对照也不成功的类别（内核本身不支持，不算自制的问题）：', [...new Set(customRows.filter((x) => !OK.has(x.status) && x.status !== 'skipped' && controlStatuses(x.prop).has(x.status)).map((x) => x.prop))].join(' '))
 console.log('被跳过的：', JSON.stringify(skippedRows.map((x) => [x.prop, x.name, x.error])))
-check('前置：战士 / 人类 / 背景都挑到了，公用战士建成', r.base.fighter && r.base.human && r.base.bg, JSON.stringify(r.base))
+check('前置：战士 / 人类 / 背景都挑到了，公用战士建成', r.base.fighter && r.base.human && r.base.bg && !!r.shared?.id, JSON.stringify({ ...r.base, shared: r.shared }))
 check('抽检到了多个类别的自制条目（不是只有子职）', new Set(customRows.map((x) => x.prop)).size >= 5, JSON.stringify([...new Set(customRows.map((x) => x.prop))]))
 check('自制条目都进得去内核（complete / pending）；失败的列出来', bad.length === 0, JSON.stringify(bad.map((x) => [x.prop, x.name, x.status, x.error])))
+if (!ONLY_DIRS && !SKIP_DIRS.size && !process.env.SCREEN && !process.env.LENIENT_COPY) {
+  check('原来拖垮整库的来源现在都实际出现在作者合并结果里', ['TTNSP', 'GiddySpellCopy', 'GiddyVariant'].every((source) => r.merged?.copyEntries?.some(([, src]) => src === source)), JSON.stringify([...new Set(r.merged?.copyEntries?.map(([, src]) => src))]))
+  check('真实包的中文复制已展开，已装包全保留，库里原件无变化',
+    r.brews?.flattened > 0 && r.brews?.loaded?.length === r.installed && !r.brews?.excluded?.length && r.originalsIntact, JSON.stringify(r.brews?.excluded))
+}
 check('自制子职、自制职业至少各有一条成功（这次修的就是它们）', ['subclass', 'class'].every((p) => customRows.some((x) => x.prop === p && OK.has(x.status))), JSON.stringify(customRows.filter((x) => ['subclass', 'class'].includes(x.prop)).map((x) => [x.prop, x.name, x.status, x.error])))
 await ctx.close()
 server.close()

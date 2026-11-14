@@ -38,23 +38,11 @@ async function readJson<T>(pluginRoot: URL, path: string, fetchImpl: typeof fetc
 }
 
 /** 一个战役一个世界：世界编号用战役的 ownerKey，人物由重建/建卡放进去，所以启动时世界是空的。 */
-/**
- * 把「附加自制文件」清单放进 Plutonium 设置（B）。放在 import 组，让作者自己的配置迁移搬到 dataSources
- * （localHomebrew 和 isNoPrereleaseBrewIndexes 在同一张迁移表里，Bundle.js 80672）；直接写 dataSources 会被默认值盖掉。
- */
-export function withLocalHomebrew(settings: Record<string, unknown>, names: string[] | undefined): Record<string, unknown> {
-  if (!names?.length) return settings
-  const config = (settings['plutonium.config'] ?? {}) as { import?: Record<string, unknown> }
-  return { ...settings, 'plutonium.config': { ...config, import: { ...config.import, localHomebrew: names } } }
-}
-
 export async function kernelInput(opts: {
   pluginRoot: URL
   rule: string
   world: { id: string; title: string }
   fetchImpl?: typeof fetch
-  /** 库里已装的自制包名字（brews.ts）。只进给小窗的设置，不进缓存钥匙：钥匙管官方数据和小窗代码，自制包变了不该让全部换算作废。 */
-  localHomebrew?: string[]
 }): Promise<KernelInput> {
   const fetchImpl = opts.fetchImpl ?? fetch
   const kernel = ruleKernel(opts.rule)
@@ -71,7 +59,7 @@ export async function kernelInput(opts: {
     system, modules, release: manifest.release,
     world: opts.world,
     userId: 'kernelGM00000000', worldTime: 0, language: 'en.core',
-    settings: withLocalHomebrew(allSettings, opts.localHomebrew),
+    settings: allSettings,
     cacheKey,
     documents: { actors: [] },
   }

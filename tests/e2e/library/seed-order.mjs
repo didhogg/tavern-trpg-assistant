@@ -36,7 +36,7 @@ try {
     const version = await h.dataVersion()
     await h.kernelSave.bind(owner.ownerKey, { rule: 'dnd5e2014', kernelVersion: 1, library, dataVersion: version, overrides: [], actors: [], revision: 0, undo: [] })
     const mk = () => new h.KernelRuntime({ revisions: h.revisions,
-      pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
+      pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
       cache: { db: h.libraryDb, dataVersion: h.dataVersion },
       campaignOf: async (ownerKey) => ({ rule: 'dnd5e2014', library, title: ownerKey }),
     })

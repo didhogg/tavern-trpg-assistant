@@ -6,14 +6,17 @@ import type { KernelActorCompact } from '../../core/saves/kernel'
 import type { KernelRefMapper } from '../../core/saves/split'
 import type { FileProvider } from '../../library/files'
 import type { ScopedLibrary } from '../../library/scoped'
+import type { LibraryService } from '../../library/service'
 import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { CampaignLibrary } from '../../library/scopes'
 import type { KernelActor } from '../../schemas/kernel'
 import type { EntryRef } from '../../library/scopes'
 import { refKey } from '../../core/saves/split'
-import { libraryData, startKernel, type KernelSession } from './host'
+import type { KernelSession } from './host'
+import { openKernel, prepareKernelBrews } from './open'
 import { kernelInput } from './input'
-import { libraryBrews } from './brews'
+import { excludedBrewReason } from './brews'
+import type { KernelBrewReport } from './frame/brew-input'
 import { hashValue, sha256Hex } from '../../core/hash'
 import { KernelCache, kernelBaseKey, kernelFilesVersion, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
@@ -30,6 +33,7 @@ export interface KernelRuntimeDeps {
   pluginRoot: URL
   files: FileProvider
   scoped: ScopedLibrary
+  service: LibraryService
   revisions: LibraryRevisionStore
   /** 小窗挂在哪里（隐藏 iframe 的父元素）。 */
   container: () => HTMLElement
@@ -50,6 +54,9 @@ interface Open {
   seeds: Map<string, string>
   boot: unknown
   bootMs: number
+  brews: KernelBrewReport
+  brewFingerprint: string | undefined
+  brewIssue: (ref: EntryRef, altId: string | null, source: string | null) => string | null
   view: LibraryView
   cache: KernelCache | null
   cacheBase: string
@@ -62,9 +69,9 @@ export class KernelRuntime {
   constructor(private readonly deps: KernelRuntimeDeps) {}
 
   /** 打开（或复用）本战役的结算小窗。 */
-  async session(ownerKey: string): Promise<{ session: KernelSession; boot: unknown; bootMs: number }> {
+  async session(ownerKey: string): Promise<{ session: KernelSession; boot: unknown; bootMs: number; brews: KernelBrewReport }> {
     const o = await this.get(ownerKey)
-    return { session: o.session, boot: o.boot, bootMs: o.bootMs }
+    return { session: o.session, boot: o.boot, bootMs: o.bootMs, brews: o.brews }
   }
 
   private get(ownerKey: string): Promise<Open> {
@@ -74,24 +81,20 @@ export class KernelRuntime {
       const campaign = await this.deps.campaignOf(ownerKey)
       const started = performance.now()
       const view = await this.deps.revisions.published()
-      // 本战役那一套（cn / en）已装的自制，交给小窗的「附加自制文件」（brews.ts）
-      const brews = await libraryBrews(view, campaign.library.codeSet)
-      const session = await startKernel({
-        pluginRoot: this.deps.pluginRoot, container: this.deps.container(), data: libraryData(this.deps.files, view),
-        fetchImpl: this.deps.fetchImpl, timeoutMs: this.deps.timeoutMs ?? 180_000, brews,
-      })
-      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl, localHomebrew: brews.names })
-      const boot = await session.boot(input)
+      const prepared = await prepareKernelBrews(this.deps.service, view, campaign.library.codeSet)
+      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
+      const { session, boot, report, brewFingerprint } = await openKernel({ ...this.deps, view, input, ...prepared, container: this.deps.container() })
+      const brewIssue: Open['brewIssue'] = (ref, altId, source) => excludedBrewReason(prepared.brews, report.excluded, ref, altId, source)
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
       // 换算缓存的钥匙按小窗自己读的那一版资料算（view 是打开时的版本）：战役开着时补装了书，
       // 小窗照旧用旧版文件换算，结果就记在旧版本名下，不会冒充新版本（新版本由后台换算或重开战役后补上）。
       const versionOfView = async (): Promise<KernelDataVersion> => this.deps.cache ? this.deps.cache.dataVersion(view) : { official: '', brews: {} }
-      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, versionOfView, campaign.rule) : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, bootMs: Math.round(performance.now() - started), cache, cacheBase, view, dataVersion: versionOfView }
+      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, versionOfView, campaign.rule, brewFingerprint) : session
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, brews: report, brewFingerprint, brewIssue, bootMs: Math.round(performance.now() - started), cache, cacheBase, view, dataVersion: versionOfView }
     })()
     this.open.set(ownerKey, opening)
-    opening.catch(() => this.open.delete(ownerKey))
+    opening.catch(() => { if (this.open.get(ownerKey) === opening) this.open.delete(ownerKey) })
     return opening
   }
 
@@ -186,13 +189,16 @@ export class KernelRuntime {
   private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
     const lib = await this.library(ownerKey)
     const existing = this.open.get(ownerKey)
-    const view = existing ? (await existing).view : await this.deps.revisions.published()
+    const opened = existing ? await existing : null
+    const view = opened?.view ?? await this.deps.revisions.published()
     const fetched = await this.deps.scoped.fetch(lib, refs, view)
     const rows = []
     const noEnglish: EntryRef[] = []
     for (let i = 0; i < refs.length; i++) {
       const got = fetched[i]
       if (!got.ok) return { status: 'missing', error: `取不到 ${refs[i].hash}：${got.reason}`, rows: [], noEnglish: [] }
+      const issue = opened?.brewIssue(got.ref, got.version.altId, got.source)
+      if (issue) return { status: 'error', error: issue, rows: [], noEnglish: [] }
       const k = await kernelEntryOf(this.deps.scoped, lib.codeSet, got.ref as EntryRef, got.item, got.version.altId, view)
       if (k.noEnglish) noEnglish.push(refs[i])
       rows.push({ ref: refs[i], entry: k.entry })
@@ -218,7 +224,7 @@ export class KernelRuntime {
     const misses: number[] = []
     if (o.cache && version) {
       for (let i = 0; i < actors.length; i++) {
-        const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor: actors[i] })
+        const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: actors[i] })
         const base = await o.cache.get(key) as Record<string, unknown> | null
         if (base) hits.push({ index: i, base }); else misses.push(i)
       }
@@ -241,14 +247,14 @@ export class KernelRuntime {
     }
     for (const index of misses) {
       const actor = actors[index]
-      const result = await rebuildActor({ lib: this.deps.scoped, session: o.session, library: lib, actor, view: o.view })
+      const result = await rebuildActor({ lib: this.deps.scoped, session: o.session, library: lib, actor, view: o.view, brewIssue: o.brewIssue })
       results[index] = result
       if (result.status === 'complete') {
         if (!result.id || !result.base) throw new Error(`重建 ${actor.name} 没有交回人物编号或重建基准`)
         o.bases.set(result.id, result.base)
         o.seeds.set(result.id, result.seed ?? actor.seed ?? actor.name)
         if (o.cache && version) {
-          const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor })
+          const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor })
           await o.cache.put(key, result.base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version) })
         }
       }
@@ -282,7 +288,7 @@ export class KernelRuntime {
       const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: captured.result ?? {} })
       if (o.cache) {
         const version = await o.dataVersion()
-        const key = await kernelBaseKey({ base: o.cacheBase, dataVersion: version, actor: compact })
+        const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
         await o.cache.put(key, base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version) })
       }
       out.push(compact)

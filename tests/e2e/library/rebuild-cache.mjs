@@ -33,7 +33,7 @@ try {
     const runtimeOf = () => new h.KernelRuntime({ revisions: h.revisions,
       pluginRoot: new URL('/', location.href),
       files: h.files,
-      scoped: h.scoped,
+      scoped: h.scoped, service: h.service,
       container: () => document.body,
       cache: { db: h.libraryDb, dataVersion: h.dataVersion },
       campaignOf: async (ownerKey) => {

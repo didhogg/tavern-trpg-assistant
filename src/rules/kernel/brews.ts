@@ -1,36 +1,74 @@
-// 结算小窗里的自制（B，2026-11-14；探针 tests/e2e/library/p62-kernel-brew-probe.mjs 的结论）。
-// Plutonium 在 Foundry 里自己把自制管理器（BrewUtil2）的存储换成了内存（Bundle.js 82023），读自制只走一条路：
-//   设置 dataSources.localHomebrew（一串文件名，Bundle.js 77750）→ BrewUtil2.pAddBrewFromUrl(名字) 经「取文件」通道读这个名字（82357、64523）。
-// 所以这里只做两件事：① 从库里已装的自制包列出名字；② 按名字交回作者格式原文。只读库已有的存储，不新增格式、不写任何东西。
+// 战役和后台换算用同一版本、同一语言的作者包。只改交给结算小窗的临时副本。
+import type { BrewPack } from '../../library/brew-packs'
+import { requirementsOf } from '../../library/brew-health'
+import type { FlattenResult } from '../../library/runtime/frame/copy-flatten-commands'
 import type { LibraryView } from '../../library/revision'
 import { BREW_STORAGE_KEY } from '../../library/brew-storage'
+import { SOURCES, kernelDataSource } from '../../library/sources'
+import type { EntryRef } from '../../library/scopes'
+import { packAltId, packStableId } from '../../library/versions'
 
-export interface KernelBrews {
-  /** 交给 Plutonium 的「附加自制文件」清单。 */
-  names: string[]
-  /** 按名字取作者格式原文；不是这一批里的名字 → null。 */
-  text(name: string): string | null
+export interface KernelBrewDoc {
+  head: { docIdLocal: string; filename?: string | null }
+  body: Record<string, unknown>
 }
 
-interface StoredDoc { head?: { docIdLocal?: unknown }; body?: unknown }
+export interface PreparedBrew {
+  doc: KernelBrewDoc
+  pack: BrewPack
+  flattened: number
+  failures: FlattenResult['failed']
+}
 
-/** 这个版本里、这套（cn / en）已装的全部自制包。名字用库自己的包编号（docIdLocal），不写死文件名；原文用到才转成字符串。 */
-export async function libraryBrews(view: LibraryView, codeSet: string): Promise<KernelBrews> {
-  const raw = (await view.kvGet(codeSet, BREW_STORAGE_KEY)) as StoredDoc[] | null
-  const docs = new Map<string, unknown>()
-  for (const doc of Array.isArray(raw) ? raw : []) {
-    const id = doc?.head?.docIdLocal
-    if (typeof id === 'string' && id && doc.body !== undefined) docs.set(`${id}.json`, doc.body)
+export interface ExcludedBrew {
+  docIdLocal: string
+  filename: string | null
+  sources: string[]
+  reason: string
+}
+
+export async function libraryBrews(
+  view: LibraryView,
+  codeSet: string,
+  open: () => Promise<{
+    packs: BrewPack[]
+    flatten: (body: KernelBrewDoc['body'], sources: string[], includedSources: string[]) => Promise<FlattenResult>
+  }>,
+): Promise<PreparedBrew[]> {
+  const raw = await view.kvGet(codeSet, BREW_STORAGE_KEY) as KernelBrewDoc[] | null
+  if (!Array.isArray(raw) || !raw.length) return []
+  const { packs, flatten } = await open()
+  const byId = new Map(packs.map((pack) => [pack.docIdLocal, pack]))
+  const includedSources = [...new Set(packs.flatMap((pack) => requirementsOf(pack).filter((req) => req.kind === 'include').map((req) => req.source)))]
+  const out: PreparedBrew[] = []
+  for (const doc of raw) {
+    const pack = byId.get(doc?.head?.docIdLocal)
+    if (!pack) continue // 作者管理器本身就不载入没有来源的文档
+    if (codeSet === kernelDataSource().codeSet) {
+      out.push({ doc, pack, flattened: 0, failures: [] })
+      continue
+    }
+    const result = await flatten(doc.body, pack.sources, includedSources)
+    out.push({ doc: { ...doc, body: result.json }, pack, flattened: result.flattened, failures: result.failed })
   }
-  return { names: [...docs.keys()], text: (name) => (docs.has(name) ? JSON.stringify(docs.get(name)) : null) }
+  return out
 }
 
-/**
- * 小窗要的文件路径里最后一段的名字。实测（p58，2026-11-14）Plutonium 按「附加自制文件」的名字取文件时，
- * 路径就是光秃秃的名字（相对小窗目录），没有 homebrew/ 前缀，所以只看最后一段；是不是自制由 KernelBrews.text 说了算
- * （名字是库自己的包编号 + .json，不会和官方数据文件重名）。
- */
-export function brewNameOf(path: string): string | null {
-  const m = /([^/]+)$/.exec(path)
-  return m ? decodeURIComponent(m[1]) : null
+/** 按实际选中的包定位；原件按库的撞编号顺序查，避免同来源误伤另一个包。 */
+export function excludedBrewReason(
+  brews: PreparedBrew[], excluded: ExcludedBrew[], ref: EntryRef, altId: string | null, source: string | null,
+): string | null {
+  if (!excluded.length) return null
+  const findVersion = (pack: BrewPack) => (altId?.startsWith('pack:') || altId?.startsWith('doc:')) &&
+    (packAltId(packStableId(pack), pack.docIdLocal) === altId || `doc:${pack.docIdLocal}` === altId)
+  const packs = brews.map(({ pack }) => pack)
+  const original = SOURCES.some((set) => set.id === ref.set && set.kind === 'brew') && (altId === null || altId === 'base')
+  const candidates = packs.filter((pack) => (pack.hashes[ref.prop] ?? []).includes(ref.hash))
+  const provider = packs.find(findVersion) ?? (original
+    ? candidates[0]
+      ?? packs.find((pack) => source && pack.sources.some((id) => id.toLowerCase() === source.toLowerCase())
+        && !packs.some((other) => other !== pack && other.sources.some((id) => id.toLowerCase() === source.toLowerCase())))
+    : undefined)
+  const blocked = excluded.find(({ docIdLocal }) => docIdLocal === provider?.docIdLocal)
+  return blocked ? `自制包「${blocked.filename ?? blocked.sources.join('、')}」无法用于结算：${blocked.reason}` : null
 }

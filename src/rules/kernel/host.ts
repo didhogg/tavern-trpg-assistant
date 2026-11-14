@@ -4,7 +4,6 @@
 //   modules/plutonium/data/<路径> → 先问【库】的 data/<路径>（驾驶员定 A：不带 Plutonium 自带的 128MB 拷贝），
 //                                   【库】没有的（Plutonium 独有的补充文件）再读插件自带
 //   data/…               → 【库】（5etools 作者数据；中文战役喂英文对照条目，所以读英文官方原件）
-//   <包编号>.json        → 【库】已装的自制包原文（brews.ts；Plutonium 的「附加自制文件」设置经这条路读自制）
 // 作者存储只放内存：结算只算不存（上位设计 §3.1），关掉小窗就没了。
 // 世界数据怎么从存档组出来属于 P3-3；这里只留输入接口（KernelInput）。
 import type { FileProvider } from '../../library/files'
@@ -13,7 +12,8 @@ import { startAuthorFrame, type AuthorFrame, type FrameHandlers } from '../../li
 import { kernelDataSource } from '../../library/sources'
 import type { KERNEL_COMMANDS } from './frame/commands'
 import type { KernelInput } from './frame/world'
-import { brewNameOf, type KernelBrews } from './brews'
+import type { PreparedBrew } from './brews'
+import type { KernelBrewReport } from './frame/brew-input'
 
 export type { KernelInput }
 
@@ -26,14 +26,11 @@ export function libraryData(files: FileProvider, view?: LibraryView): DataReader
   return (path) => files.get(source, path, { allowNetwork: false, ...(view ? { view } : {}) })
 }
 
-export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch, brews }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch; brews?: KernelBrews }): FrameHandlers {
+export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch }): FrameHandlers {
   const kv = new Map<string, unknown>()
   const local = new Map<string, string>()
   return {
     file: async (path) => {
-      // 自制包原文：先于下面的判断；路径最后一段在库里已装的自制清单里才回，其它照旧
-      const brewName = brews ? brewNameOf(path) : null
-      if (brews && brewName !== null) { const text = brews.text(brewName); if (text !== null) return text }
       if (path.startsWith('data/')) return data(path)
       const fiveTools = /^modules\/plutonium\/data\/(.+)$/.exec(path)
       if (fiveTools) {
@@ -59,6 +56,7 @@ export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch, brews }: {
 
 type Commands = typeof KERNEL_COMMANDS & {
   boot(input: KernelInput): unknown
+  loadBrews(brews: PreparedBrew[], itemMasteries: unknown[]): KernelBrewReport
   status(): unknown
   preparedActors(): Array<{ source: Record<string, unknown>; system: Record<string, unknown> }>
 }
@@ -73,8 +71,8 @@ export interface KernelSession {
 }
 
 /** 开一个结算小窗。一个战役一个小窗（各自的世界互不相见）。 */
-export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000, brews }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number; brews?: KernelBrews }): Promise<KernelSession> {
-  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, handlers: kernelHandlers({ pluginRoot, data, fetchImpl, brews }) })
+export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000 }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number }): Promise<KernelSession> {
+  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, handlers: kernelHandlers({ pluginRoot, data, fetchImpl }) })
   // 结算小窗的指令表与作者小窗不同（frame/main.ts），宿主的类型只认作者指令，这里按结算指令表转一下类型
   const call = frame.call as unknown as (fn: string, ...args: unknown[]) => Promise<never>
   return {

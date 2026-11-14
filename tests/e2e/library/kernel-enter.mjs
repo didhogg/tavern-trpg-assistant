@@ -25,7 +25,7 @@ try {
     const { plan, monster } = await h.pickChainEntries(library)
     const kernelFrames = () => [...document.querySelectorAll('iframe')].filter((f) => (f.getAttribute('src') ?? '').includes('/vendor/foundry/frame.html')).length
     const rt = new h.KernelRuntime({ revisions: h.revisions,
-      pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
+      pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
       campaignOf: async (ownerKey) => ({ rule: 'dnd5e2014', library, title: ownerKey }),
       hasKernel: async (ownerKey) => ownerKey !== 'none',
     })

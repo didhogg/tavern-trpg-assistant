@@ -1,7 +1,6 @@
 // P3 性能改进 S3：Plutonium 换算结果缓存。换算结果只是本地副本，丢了能重算；存档仍只存引用/选择/状态差别。
 // 条目换算钥匙 = 实际喂给 Plutonium 的条目内容摘要 + 结算小窗读的那套官方资料的版本（kernelFiles）+ 结算内核指纹（input.ts：manifest/设置/规则/小窗代码）。
-// 不含自制包版本：结算小窗只读英文官方文件（host.ts libraryData），看不到自制包，改自制不影响官方条目的换算；
-// 自制 / 房规条目自己的内容已在条目摘要里。人物重建基准（kernelBaseKey）仍含自制包版本：房规会改条目生效版本。
+// 小窗载入自制时，把实际合并的包内容摘要也算进钥匙；没有自制时沿用官方换算钥匙。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 内核命令结果原样转交，形状由 commands 决定 */
 import type { LibraryDatabase } from '../../library/db'
 import type { KernelDataVersion } from '../../schemas/kernel'
@@ -71,11 +70,13 @@ export class KernelCache {
 
 export async function kernelBaseKey(opts: {
   base: string
+  brewFingerprint?: string
   dataVersion: KernelDataVersion
   actor: { id?: string; name?: string; seed?: string; refs: unknown; choices: unknown }
 }): Promise<string> {
   return hashValue({
     base: opts.base,
+    brew: opts.brewFingerprint,
     dataVersion: opts.dataVersion,
     kind: 'base',
     id: opts.actor.id ?? null,
@@ -91,6 +92,7 @@ export const kernelFilesVersion = (v: KernelDataVersion): string => v.kernelFile
 
 export async function kernelImportKey(opts: {
   base: string
+  brewFingerprint?: string
   dataVersion: KernelDataVersion
   kind: 'build' | 'monster'
   prop: string
@@ -98,6 +100,7 @@ export async function kernelImportKey(opts: {
 }): Promise<string> {
   return hashValue({
     base: opts.base,
+    brew: opts.brewFingerprint,
     official: kernelFilesVersion(opts.dataVersion),
     kind: opts.kind,
     prop: opts.prop,
@@ -125,12 +128,12 @@ const ROWS_OF: Record<string, (args: any[]) => any[]> = {
  * 给小窗包一层换算缓存：先查（装资料时已预换算好）；命中直接用，没命中才进 Plutonium 并写回。
  * 直接经 `KernelRuntime.session` 取小窗的调用方自动走这里；测试/底层探针可直接拿原始 session。
  */
-export function wrapKernelSession(session: KernelSession, cache: KernelCache, base: string, dataVersion: () => Promise<KernelDataVersion>, rule = ''): KernelSession {
+export function wrapKernelSession(session: KernelSession, cache: KernelCache, base: string, dataVersion: () => Promise<KernelDataVersion>, rule = '', brewFingerprint?: string): KernelSession {
   const raw = session.call as unknown as (fn: string, ...args: any[]) => Promise<any>
   /** 一条条目的换算结果：缓存 → 现场换算并写回。 */
   const converted = async (prop: string, entry: unknown, versionOf: () => Promise<KernelDataVersion>): Promise<any> => {
     const version = await versionOf()
-    const key = await kernelImportKey({ base, dataVersion: version, kind: prop === 'monster' ? 'monster' : 'build', prop, entry })
+    const key = await kernelImportKey({ base, brewFingerprint, dataVersion: version, kind: prop === 'monster' ? 'monster' : 'build', prop, entry })
     const cached = await cache.get(key)
     if (cached !== null) return hit(cached)
     const result = await raw('importForBuild', prop, entry)

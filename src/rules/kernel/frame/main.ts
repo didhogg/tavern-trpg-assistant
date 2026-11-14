@@ -7,6 +7,7 @@ import { assembleWorld, type KernelInput } from './world'
 import { createServer, type ChangeRecord } from './server'
 import { reseedKernel } from './seed'
 import { KERNEL_COMMANDS } from './commands'
+import { loadBrews } from './brew-input'
 
 const g = globalThis as any
 const frameToken = new URLSearchParams(location.search).get(FRAME_PARAM) ?? ''
@@ -111,6 +112,7 @@ function preparedActors(): unknown {
 const COMMANDS: Record<string, (...args: any[]) => unknown> = {
   ...KERNEL_COMMANDS,
   boot,
+  loadBrews,
   status,
   preparedActors,
   changes: () => kernel?.changes ?? [],
