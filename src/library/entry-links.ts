@@ -10,6 +10,8 @@ import { SOURCES, officialSourceOf, type SourceEntry } from './sources'
 export interface CorpusProvider {
   id: string
   source: string | null
+  /** 这本书 / 这个冒险自己的名字（作者书目里的 name）。 */
+  name?: string
   /** 在哪个数据集（自制的书在自制数据集里）；官方不写。 */
   set?: string
 }
@@ -77,10 +79,10 @@ export class EntryLinks {
         const view = viewArg ?? await this.lib.currentView()
         const frame = await this.lib.frameOf(codeSet, view)
         const out: CorpusIndex = new Map()
-        const add = (prop: string, row: { id: string; source: string | null; hash: string }, set?: string): void => {
+        const add = (prop: string, row: { id: string; source: string | null; hash: string; name?: string }, set?: string): void => {
           const into = out.get(prop) ?? out.set(prop, new Map()).get(prop)!
           const list = into.get(row.hash.toLowerCase()) ?? []
-          if (!list.some((x) => x.id === row.id && x.set === set && x.source === row.source)) list.push({ id: row.id, source: row.source, ...(set ? { set } : {}) })
+          if (!list.some((x) => x.id === row.id && x.set === set && x.source === row.source)) list.push({ id: row.id, source: row.source, ...(row.name ? { name: row.name } : {}), ...(set ? { set } : {}) })
           into.set(row.hash.toLowerCase(), list)
         }
         for (const loader of (await frame.call('loaders')).filter((l) => l.kind === 'corpus' && l.index && l.page)) {

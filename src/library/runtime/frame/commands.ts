@@ -69,10 +69,10 @@ export async function parseProp(prop: string): Promise<ParsedProp> {
 }
 
 /** 书或冒险的书目（作者的 books.json / adventures.json）：编号、来源、作者编号。 */
-export async function corpusList(index: string, prop: string, page: string): Promise<Array<{ id: string; source: string; hash: string }>> {
+export async function corpusList(index: string, prop: string, page: string): Promise<Array<{ id: string; source: string; hash: string; name?: string }>> {
   await init()
   const json = await A.DataUtil.loadJSON(`data/${index}`)
-  return (json[prop] ?? []).map((it: any) => ({ id: it.id, source: A.SourceUtil.getEntitySource(it), hash: A.UrlUtil.URL_TO_HASH_BUILDER[page](it) }))
+  return (json[prop] ?? []).map((it: any) => ({ id: it.id, source: A.SourceUtil.getEntitySource(it), hash: A.UrlUtil.URL_TO_HASH_BUILDER[page](it), ...(typeof it.name === 'string' ? { name: it.name } : {}) }))
 }
 
 /** 按本取一本书或冒险的全文（作者的 pCacheAndGet，B0 已取到过 XPHB 正文）。 */

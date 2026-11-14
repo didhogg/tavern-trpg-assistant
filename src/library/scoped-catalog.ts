@@ -43,11 +43,17 @@ export interface CatalogDeps {
   installed: (set: SourceEntry, view: LibraryView) => Promise<boolean>
   editions: (codeSet: string, sources: string[], view: LibraryView) => Promise<Record<string, EditionInfo>>
   sourceCounts: (setId: string, view: LibraryView) => Promise<Record<string, number>>
-  adventures: (set: SourceEntry, view: LibraryView) => Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>>
+  adventures: (set: SourceEntry, view: LibraryView) => Promise<Array<{ id: string; source: string; hash: string; name?: string; downloaded: boolean }>>
 }
 
-type DirItem = { name?: unknown; ENG_name?: unknown; source?: unknown }
-const dirItems = (rec: DirectoryRecord | null): DirItem[] => (rec ? [...((rec.books ?? []) as DirItem[]), ...((rec.adventures ?? []) as DirItem[])] : [])
+type DirItem = { id?: unknown; name?: unknown; ENG_name?: unknown; source?: unknown }
+/** 书按来源对，冒险按冒险编号对：有的冒险和书共用一个来源（MOT、FRAiF），按来源对会互相顶掉名字。 */
+export const nameKey = (kind: 'book' | 'adventure', source: string, id: string | null): string => (kind === 'adventure' && id ? `adventure:${id.toLowerCase()}` : source.toLowerCase())
+const dirItems = (rec: DirectoryRecord | null): Array<{ key: string; it: DirItem }> => {
+  if (!rec) return []
+  const of = (kind: 'book' | 'adventure', list: unknown[]) => (list as DirItem[]).filter((it) => typeof it.source === 'string').map((it) => ({ key: nameKey(kind, String(it.source), it.id == null ? null : String(it.id)), it }))
+  return [...of('book', rec.books ?? []), ...of('adventure', rec.adventures ?? [])]
+}
 
 /** 另一种语言的名字：本语言书目的 ENG_name，或配对语言书目（只看缓存，不联网）里同来源那本的名字；自制按已装的中英配对包。 */
 async function altNamesOf(deps: CatalogDeps, set: SourceEntry, rec: DirectoryRecord | null): Promise<Map<string, string>> {
@@ -58,8 +64,8 @@ async function altNamesOf(deps: CatalogDeps, set: SourceEntry, rec: DirectoryRec
     return out
   }
   const partner = set.pair && deps.directory ? await deps.directory.peek(getSource(set.pair).codeSet) : null
-  for (const it of dirItems(partner)) if (typeof it.source === 'string' && typeof it.name === 'string') out.set(it.source.toLowerCase(), it.name)
-  for (const it of dirItems(rec)) if (typeof it.source === 'string' && typeof it.ENG_name === 'string' && it.ENG_name !== it.name && !out.has(it.source.toLowerCase())) out.set(it.source.toLowerCase(), it.ENG_name)
+  for (const { key, it } of dirItems(partner)) if (typeof it.name === 'string') out.set(key, it.name)
+  for (const { key, it } of dirItems(rec)) if (typeof it.ENG_name === 'string' && it.ENG_name !== it.name && !out.has(key)) out.set(key, it.ENG_name)
   return out
 }
 
@@ -127,7 +133,8 @@ export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote
         rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
       }
       for (const a of adventures) {
-        const row = { kind: 'adventure' as const, set: set.id, source: a.source, id: a.id, count: advCounts.get(a.id) ?? 0, downloaded: a.downloaded, alternatives: altBySource.get(a.source.toLowerCase()) ?? 0 }
+        // 冒险用自己的名字（和书共用来源的冒险，来源全名是那本书的）
+        const row = { kind: 'adventure' as const, set: set.id, source: a.source, id: a.id, ...(a.name ? { nameHint: a.name } : {}), count: advCounts.get(a.id) ?? 0, downloaded: a.downloaded, alternatives: altBySource.get(a.source.toLowerCase()) ?? 0 }
         rows.push(rec ? { ...row, shelf: attachShelf(row, rec) } : row)
       }
     }
@@ -140,7 +147,7 @@ export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote
       const edition = known[r.source]?.edition ?? eds[r.source] ?? null
       const m = membershipOf(undefined, ctx.assigns.get(unit), autoAssignment(edition ?? undefined))
       const viewRow = viewOf(c, { entry: unit, source: unit }, m)
-      const altName = alt.get(r.set)?.get(r.pack ? r.pack.docIdLocal : r.source.toLowerCase())
+      const altName = alt.get(r.set)?.get(r.pack ? r.pack.docIdLocal : nameKey(r.kind, r.source, r.id))
       return {
         ...r, ...(altName ? { altName } : {}), name: r.nameHint ?? known[r.source]?.full ?? names[r.source]?.full ?? r.source,
         abv: known[r.source]?.abv ?? names[r.source]?.abv ?? r.source, edition, membership: m, view: viewRow, inScope: inScopeOf(viewRow),
@@ -158,7 +165,7 @@ export async function visibleSourceCounts(view: LibraryView, setId: string): Pro
 }
 
 /** 这套资料的冒险目录（作者书目 + 哪些已下载；从 scoped.ts 拆出，行为不变）。 */
-export async function adventuresOf(lib: LibraryService, set: SourceEntry, view: LibraryView): Promise<Array<{ id: string; source: string; hash: string; downloaded: boolean }>> {
+export async function adventuresOf(lib: LibraryService, set: SourceEntry, view: LibraryView): Promise<Array<{ id: string; source: string; hash: string; name?: string; downloaded: boolean }>> {
   const frame = await lib.frameOf(set.codeSet, view)
   const loader = (await frame.call('loaders')).find((l) => l.kind === 'corpus' && l.props.includes('adventureData'))
   if (!loader?.index || !loader.page) return []

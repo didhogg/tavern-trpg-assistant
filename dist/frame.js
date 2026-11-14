@@ -2096,7 +2096,8 @@ async function En(e, t, n) {
 	return await s(), ((await a.DataUtil.loadJSON(`data/${e}`))[t] ?? []).map((e) => ({
 		id: e.id,
 		source: a.SourceUtil.getEntitySource(e),
-		hash: a.UrlUtil.URL_TO_HASH_BUILDER[n](e)
+		hash: a.UrlUtil.URL_TO_HASH_BUILDER[n](e),
+		...typeof e.name == "string" ? { name: e.name } : {}
 	}));
 }
 async function Dn(e, t, n) {
