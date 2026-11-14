@@ -4,6 +4,8 @@
 //   ② ENG_name：每个顶层条目都要有（插件靠它认这是中文文件，并用它做显示、配对、英文名搜索；src/library/custom-lang.ts）；
 //      嵌套对象只要 name 译了就要有，等于英文原 name（作者中文 fork 的规则，见下面注释）。
 //   ③ （给了术语单才查）术语单里翻译的人选定的译名，有没有出现在中文版里；还没选定的列出来。只报告，不改任何文件。
+//   ④ （给了术语单才查）第三方作品译名：术语单的 ip 栏必须填完——是否涉及非 D&D 作品要判断并记依据；涉及的话每个专名要有译名、依据类别、URL、
+//      是否官方（作者 homebrew-workflow 的 Third-party IP terminology gate；联网查由翻译的人做，本脚本只核对记录齐不齐、译名用没用上）。
 // 用法：node check-translation.mjs <英文包.json> <中文版.json> [--sheet=术语单.json]
 //        [--allow-extra-key=键名] [--translated-key-path=JSON指针通配]（这两个原样转给作者脚本，各可重复；确认别处有此约定才用）
 // 退出码：0 全部通过；1 有问题；2 用不了（缺 python3 / 作者脚本 / 参数不对）。结构校验（结构定义）另用 validate.mjs 查中文版。
@@ -96,6 +98,32 @@ if (opt('sheet')) {
   if (absent.length) { bad++; console.log(`  ✗ 选定了、但中文版里没出现（可能没用上，也可能用了别的译法）：${absent.slice(0, 10).map((e) => `${e.en}→${e.chosen}`).join('、')}${absent.length > 10 ? '…' : ''}`) }
   if (noReason.length) { bad++; console.log(`  ✗ 有多个候选的词选定了但没写 reason：${noReason.slice(0, 10).map((e) => e.en).join('、')}`) }
   if (!unchosen.length && !absent.length && !noReason.length) console.log('  ✓ 全部选定，都出现在中文版里，多候选的都写了理由')
+
+  // ④ 第三方作品译名（作者 homebrew-workflow 的 Third-party IP terminology gate）：判断必须做并记录；涉及别的作品时，译名要有依据和 URL
+  console.log('④ 第三方作品译名（作者规则：先判断是否涉及非 D&D 作品；涉及就必须联网查并记录来源）')
+  const ip = sheet.ip
+  const ipBad = []
+  if (!ip || typeof ip !== 'object') ipBad.push('术语单里没有 ip 一栏（用新版 brew-terms.mjs 重新生成，或照 SKILL.md 补上）')
+  else {
+    if (typeof ip.involved !== 'boolean') ipBad.push('还没做判断：ip.involved 要填 true 或 false')
+    if (!String(ip.notes ?? '').trim()) ipBad.push('没写判断依据：ip.notes（不涉及也要写一句，作者规定要简短记录结论）')
+    if (ip.involved === true) {
+      if (!String(ip.ip ?? '').trim()) ipBad.push('涉及别的作品，但没写作品名：ip.ip')
+      const ev = Array.isArray(ip.evidence) ? ip.evidence : []
+      if (!ev.length) ipBad.push('涉及别的作品，但 ip.evidence 是空的（每个该作品的专名都要有译名依据）')
+      const bases = ['official-zh-hans', 'official-zh-hant', 'secondary-multiple', 'transliterated']
+      ev.forEach((x, i) => {
+        const tag = `evidence[${i}]（${x?.name ?? '?'}）`
+        if (!x?.name || !x?.chosen) ipBad.push(`${tag}缺 name / chosen`)
+        else if (!text.includes(x.chosen)) ipBad.push(`${tag}选定的「${x.chosen}」没出现在中文版里`)
+        if (!bases.includes(x?.basis)) ipBad.push(`${tag}basis 必须是 ${bases.join(' / ')} 之一`)
+        else if (x.basis !== 'transliterated' && !(Array.isArray(x.urls) && x.urls.length)) ipBad.push(`${tag}没有 URL（作者要求记录来源）`)
+        else if (x.basis === 'secondary-multiple' && x.urls.length < 2) ipBad.push(`${tag}依据是“多个可靠二手来源”，但 URL 不到 2 个`)
+        if (typeof x?.official !== 'boolean') ipBad.push(`${tag}official 要填 true / false（官方译名和社区通行译名要分开记）`)
+      })
+    }
+  }
+  if (ipBad.length) { bad++; for (const m of ipBad) console.log(`  ✗ ${m}`) } else console.log(`  ✓ ${ip.involved ? `涉及「${ip.ip}」，${ip.evidence.length} 个译名都有依据和来源` : '已判断不涉及别的作品，并记录了依据'}`)
 }
 
 console.log(bad ? `\n有 ${bad} 项没过` : '\n全部通过')

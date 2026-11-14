@@ -69,7 +69,16 @@ const entries = [...uses.entries()].map(([en, m]) => {
 const order = { 多个候选: 0, 没查到: 1, 候选唯一: 2 }
 entries.sort((a, b) => order[a.status] - order[b.status] || a.en.localeCompare(b.en))
 
-const sheet = { source: file, terms: glossary.file, tagsFrom: ref.from, summary: Object.fromEntries(Object.keys(order).map((s) => [s, entries.filter((e) => e.status === s).length])), entries }
+// 第三方作品判断材料（作者 homebrew-workflow 的 Third-party IP terminology gate：至少看文件名和资源标题、_meta 来源信息、署名、有代表性的条目名）。
+// 只摆材料，是否涉及别的作品由翻译的人判断（“只是类型相似”不算，认得出的作品名 / 角色 / 地点 / 生物 / 物品 / 引用的作品才算）。
+const signals = {
+  fileName: file.split('/').pop(),
+  sources: (data._meta?.sources ?? []).map((s) => ({ json: s.json, full: s.full, authors: s.authors, convertedBy: s.convertedBy, url: s.url })),
+  categories: Object.fromEntries(Object.entries(data).filter(([k, v]) => !k.startsWith('_') && !k.startsWith('$') && Array.isArray(v)).map(([k, v]) => [k, { count: v.length, sampleNames: v.map((e) => e?.name).filter((n) => typeof n === 'string').slice(0, 8) }])),
+}
+// ip：翻译的人填。involved 必须是 true / false；false 也要在 notes 里写一句依据；true 要有 evidence（每项带 URL 和依据类别）
+const ip = { involved: null, ip: null, notes: '', evidence: [] }
+const sheet = { source: file, terms: glossary.file, tagsFrom: ref.from, ipSignals: signals, ip, summary: Object.fromEntries(Object.keys(order).map((s) => [s, entries.filter((e) => e.status === s).length])), entries }
 if (opt('out')) await writeFile(opt('out'), `${JSON.stringify(sheet, null, '\t')}\n`)
 
 console.log(`英文包：${file}\n术语表：${glossary.file}；引用标签名单取自作者 render.js（${ref.tags.size} 种）\n共抽出 ${entries.length} 个词：${Object.entries(sheet.summary).map(([k, v]) => `${k} ${v}`).join('，')}\n`)
@@ -97,4 +106,9 @@ for (const status of Object.keys(order)) {
   }
   console.log('')
 }
+console.log(`## 第三方作品判断材料（作者要求翻译前先判断；详见 SKILL.md「第三方作品译名」）
+- 文件名：${signals.fileName}
+- 来源：${signals.sources.map((s) => `${s.json}｜${s.full ?? ''}｜作者 ${(s.authors ?? []).join('、')}${s.url ? `｜${s.url}` : ''}`).join('；') || '（无）'}
+${Object.entries(signals.categories).map(([k, v]) => `- ${k}（${v.count}）：${v.sampleNames.join('、')}${v.count > v.sampleNames.length ? '…' : ''}`).join('\n')}
+→ 判断后在术语单的 ip 栏填写：involved（true / false）、notes（依据）；涉及时还要 ip（作品名）和 evidence（译名 + 依据类别 + URL）\n`)
 if (opt('out')) console.log(`术语单已写入 ${opt('out')}（每项 chosen: null，由翻译的人填）`)
