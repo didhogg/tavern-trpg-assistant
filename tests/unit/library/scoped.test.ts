@@ -5,9 +5,40 @@ import { ScopedLibrary } from '../../../src/library/scoped'
 import type { LibraryService } from '../../../src/library/service'
 import { defaultCampaignLibrary } from '../../../src/library/scopes'
 import type { LibraryView } from '../../../src/library/revision'
+import { creaturesOfGroup } from '../../../src/library/legendary-creatures'
+import type { BrewPack } from '../../../src/library/brew-packs'
 
 let db: LibraryDatabase
 afterEach(async () => { await db?.delete() })
+
+describe('传奇组的反向关联', () => {
+  it('保留作者的来源与包身份，返回共享同一组的所有生物', async () => {
+    const ref = { set: 'cn-official', prop: 'legendaryGroup', hash: 'group_mm' }
+    const creature = (name: string, source: string, groupSource: string) => ({
+      hash: name, source, excluded: false, item: { name, legendaryGroup: { name: 'Group', source: groupSource } },
+    })
+    const pack = (id: string): BrewPack => ({
+      docIdLocal: id, filename: id, origin: 'import', url: null, isEditable: false, timeAdded: 0,
+      sources: ['MM'], sourceInfo: [], dependencies: null, includes: null, requires: [],
+      hashes: { monster: [id], legendaryGroup: [ref.hash] }, props: {}, entryCount: 2,
+    })
+    const packs = new Map([['cn-brew', new Map(['a', 'b'].map((id) => [id, pack(id)]))]])
+    const lib = {
+      storedItem: async () => ({ item: {}, source: 'MM' }),
+      query: async (set: string) => set === 'cn-official'
+        ? [creature('one', 'MM', 'MM'), creature('two', 'VGM', 'MM'), creature('other-edition', 'XMM', 'XMM')]
+        : [creature('a', 'MM', 'MM'), creature('b', 'MM', 'MM')],
+      frameOf: async () => ({ call: async (_: string, _prop: string, records: Array<{ source: string }>) => records.map((r) => `group_${r.source.toLowerCase()}`) }),
+    } as unknown as LibraryService
+    const view = { officialState: async () => ({ status: 'installed', sources: ['MM'] }) } as unknown as LibraryView
+    const official = await creaturesOfGroup(lib, view, { ref }, packs, new Map())
+    expect(official.map(({ name, selection }) => ({ name, selection }))).toEqual([
+      { name: 'one', selection: { original: true } }, { name: 'two', selection: { original: true } },
+    ])
+    const imported = await creaturesOfGroup(lib, view, { ref, docIdLocal: 'b' }, packs, new Map())
+    expect(imported.map(({ name, selection }) => ({ name, selection }))).toEqual([{ name: 'b', selection: { docIdLocal: 'b' } }])
+  })
+})
 
 describe('ScopedLibrary.query 管理上下文（P5 M9）', () => {
   it('一次查询只读一次房规；不随条目数线性增长', async () => {

@@ -26,6 +26,7 @@ import FeatureLevels from './FeatureLevels.vue'
 import { authorName, nameOf as itemName } from './pack-data'
 import { entryPageKey, useEntryLangStore } from '../../stores/entrylang'
 import EntryAssociations from './EntryAssociations.vue'
+import LegendaryCreatures from './LegendaryCreatures.vue'
 import ImageBlock from './ImageBlock.vue'
 import AuthorFragment from './author-fragment'
 import { imagesOf } from './entry-content'
@@ -175,7 +176,8 @@ async function load(): Promise<void> {
     void loadToken(d.item)
     void loadCounterpart(d)
     sourceLine.value = await sourceText(d.item, d.source)
-    modal.setTitle(props.pageKey ?? entryPageKey(props.entryRef, props.selection), await authorName(app.svc(), codeSet.value, props.entryRef.prop, d.item))
+    const name = await authorName(app.svc(), codeSet.value, props.entryRef.prop, d.item)
+    modal.setTitle(props.pageKey ?? entryPageKey(props.entryRef, props.selection), props.entryRef.prop === 'legendaryGroup' ? `${name} · 传奇组` : name)
   } catch (e) {
     console.error('[trpg-assistant] 读取条目失败', e)
     state.value = { kind: 'error', message: e instanceof Error ? e.message : String(e) }
@@ -229,6 +231,7 @@ async function setEnabled(next: boolean): Promise<void> {
             <div v-if="state.d.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
             <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
             <EntryVersions :key="`${entryRef.hash}-${state.d.version.altId}`" :detail="state.d" :entry-ref="state.d.ref" :preview-copy="!!selection" @changed="load" />
+            <LegendaryCreatures v-if="entryRef.prop === 'legendaryGroup'" :detail="state.d" />
             <div v-if="entity === 'pending'" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
             <!-- 作者整条渲染（§11.5）：数值块、正文、传奇组、表格都照作者 -->
             <AuthorFragment v-else-if="entity" :markup="entity" :code-set="codeSet" class="lib-entity" data-testid="entry-author" />

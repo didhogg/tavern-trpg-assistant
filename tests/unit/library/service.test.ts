@@ -3,6 +3,7 @@ import { LibraryDatabase } from '../../../src/library/db'
 import { parsedKey } from '../../../src/library/install'
 import { LibraryService } from '../../../src/library/service'
 import { LibraryRevisionStore } from '../../../src/library/revision'
+import { LibraryOperations } from '../../../src/library/operations'
 import { baseFingerprint, manageFingerprint } from '../../../src/library/cache'
 import { getSource } from '../../../src/library/sources'
 import type { AuthorFrame } from '../../../src/library/runtime/host'
@@ -186,6 +187,29 @@ describe('LibraryService.detail 只读预计算缓存', () => {
 })
 
 describe('LibraryService.englishPairs', () => {
+  it('同一个上游提交补装英文书时，重建上一库版本留下的配对表', async () => {
+    await installBoth()
+    const ops = new LibraryOperations({ db, revisions })
+    const publish = async (books: string[]) => {
+      const h = await ops.begin({ kind: 'test', set: 'en-official', codeSet: 'en' })
+      const state = { commit: 'same', status: 'installed' as const, sources: books, books, adventures: [] }
+      await ops.setTargetOfficial(h, { 'en-official': state })
+      return ops.publish(h, { official: { 'en-official': state } })
+    }
+    const svc = new LibraryService({ db, revisions, openFrame: async (_cs, ctx) => {
+      const books = await ctx?.view?.installedBooks('en-official')
+      return fakeFrame({
+        englishLocators: cnLocators,
+        englishMatch: () => books?.includes('XPHB') ? enMatches() : [],
+      })
+    } })
+    const old = await publish(['PHB'])
+    expect((await svc.englishPairs('cn-official', old)).pairs.spell).toBeUndefined()
+    const current = await publish(['PHB', 'XPHB'])
+    expect((await svc.englishPairs('cn-official', current)).pairs.spell?.a_xphb?.enHash).toBe('ea_xphb')
+    expect((await svc.englishPairs('cn-official', old)).pairs.spell).toBeUndefined()
+  })
+
   it('配对表按两边版本存进库；版本不变时直接用，不再开小窗', async () => {
     await installBoth()
     let opened = 0

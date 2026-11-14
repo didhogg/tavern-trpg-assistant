@@ -5,6 +5,7 @@ import { startStatic } from './static.mjs'
 import { buildAll, engines, work } from './chain-common.mjs'
 import { check, failures, settle } from '../helpers.mjs'
 
+setTimeout(() => process.exit(124), 300000).unref()
 if (!process.env.SKIP_BUILD) await buildAll()
 const [, type, options] = engines.find((e) => e[0] === 'chrome')
 const { server, url } = await startStatic({ port: 47342 })
@@ -42,7 +43,11 @@ async function openFirstEntry(label) {
     const oldInTools = !!sr.querySelector('.lib-dtools [aria-label="语言"]')
     return { btns, oldInTools }
   })
-  r.store = await page.evaluate((P) => { const ps = eval(P); const ref = ps._s.get('modal').top.props.entryRef; return { ref: JSON.parse(JSON.stringify(ref)), stored: ps._s.get('entrylang').get(ref) } }, P)
+  r.store = await page.evaluate((P) => {
+    const ps = eval(P)
+    const { entryRef, selection } = ps._s.get('modal').top.props
+    return { ref: JSON.parse(JSON.stringify(entryRef)), stored: ps._s.get('entrylang').get(entryRef, selection) }
+  }, P)
   console.log(label, JSON.stringify(r.store))
   await page.screenshot({ path: `${shots}/${label}.png` })
   return r

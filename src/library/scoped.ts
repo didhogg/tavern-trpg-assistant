@@ -27,6 +27,7 @@ import { groupShelf, type ShelfGroup } from './shelf'
 import type { LibraryView } from './revision'
 import type { KernelOverride } from '../schemas/kernel'
 import { detailItem } from './scoped-detail'
+import { creaturesOfGroup } from './legendary-creatures'
 export interface VersionInfo extends Chosen {
   /** 有几个备选（不含原件）。 */
   count: number
@@ -238,10 +239,14 @@ export class ScopedLibrary {
     return { parent: links.parent ? { set: ref.set, prop: ref.prop, hash: links.parent } : null, variants }
   }
 
+  async legendaryCreatures(c: CampaignLibrary, group: Pick<ScopedDetail, 'ref' | 'docIdLocal'>) {
+    const view = await this.lib.currentView()
+    const ctx = await this.context({ ...c, codeSet: getSource(group.ref.set).codeSet }, view)
+    return creaturesOfGroup(this.lib, view, group, ctx.packs, ctx.altMap)
+  }
   async storedItem(ref: EntryRef, viewArg?: LibraryView): Promise<{ item: unknown; source: string | null } | null> {
     return this.lib.storedItem(ref.set, ref.prop, ref.hash, viewArg)
   }
-
   async englishOf(ref: EntryRef, opts: { fluff?: boolean } = {}, viewArg?: LibraryView): Promise<English | null> {
     const set = SOURCES.find((s) => s.id === ref.set)
     if (!set) return null

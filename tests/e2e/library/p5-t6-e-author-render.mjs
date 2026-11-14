@@ -10,7 +10,8 @@ const profile = await mkdtemp(join(work, 'p5-t6-e-author-render-'))
 await cp(join(work, 'p5-t6-pack-audit-WST6kp'), profile, { recursive: true, filter: (p) => !p.includes('Singleton') })
 const { server, url } = await startStatic({ port: 47342 })
 const [, chrome, options] = engines[0]
-const ctx = await chrome.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 850 } })
+const width = Number(process.env.TEST_WIDTH ?? 1280)
+const ctx = await chrome.launchPersistentContext(profile, { ...options, viewport: { width, height: 850 } })
 const result = { checks: {}, info: {}, pageErrors: [] }
 const ok = (k, v, info) => { result.checks[k] = !!v; if (info !== undefined) result.info[k] = info; console.log(`${v ? 'PASS' : 'FAIL'}  ${k}${info !== undefined ? ' — ' + JSON.stringify(info) : ''}`) }
 const P = `(() => { const h = document.querySelector('#trpg-assistant-root'); return [...h.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean).config.globalProperties.$pinia })()`
@@ -75,6 +76,21 @@ try {
   const mtxt = await active().getByTestId('entry-author').innerText()
   ok('传奇组怪物：显示巢穴动作和区域效应（作者整条渲染）', /巢穴动作/.test(mtxt) && /区域效应/.test(mtxt), { name: samples.lg, len: mtxt.length })
   await page.screenshot({ path: join(profile, 'legendary.png') })
+  await close()
+
+  // 同名怪物和传奇组同时出现在搜索里：从传奇组进，也能跳到同一来源的完整怪物卡。
+  await open('底栖魔鱼', '传奇组', /\bMM\b/)
+  const group = active().getByTestId('legendary-creatures')
+  const link = group.getByRole('button', { name: '底栖魔鱼 · MM', exact: true })
+  const ready = await link.waitFor({ timeout: 10000 }).then(() => true, () => false)
+  ok('2014 传奇组：标题标明类别，关联链接保留同一来源', ready && /传奇组/.test(await page.locator('.trpg-modal__head').innerText()) && await link.count() === 1)
+  await page.screenshot({ path: join(profile, 'legendary-group.png') })
+  if (ready) {
+    await link.click()
+    const linkedBody = await active().getByTestId('entry-author').innerText()
+    ok('从传奇组打开同来源怪物：数值、巢穴动作、区域效应都在', /生命值|HP/.test(linkedBody) && /巢穴动作/.test(linkedBody) && /区域效应/.test(linkedBody) && /· MM$/.test(await active().locator('.lib-srcline').first().innerText()))
+    await page.screenshot({ path: join(profile, 'legendary-linked-monster.png') })
+  }
   await close()
 
   // 卡牌：牌面在卡牌自己的 face 字段 → 图片标签有图

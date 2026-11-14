@@ -5,10 +5,23 @@ import type { ParsedProp } from './runtime/frame/commands'
 import type { AuthorFrame } from './runtime/host'
 import { getSource, type SourceEntry } from './sources'
 import type { LibraryView } from './revision'
+import type { OfficialSetState } from './db'
+import { hashValue } from '../core/hash'
 
 export interface PairContext {
   openFrame: (codeSet: string, ctx?: { view?: LibraryView; filterIndex?: boolean }) => Promise<AuthorFrame>
   parsed: (sourceId: string, prop: string, view: LibraryView) => Promise<ParsedProp>
+}
+
+function installedContent(state: OfficialSetState) {
+  const sorted = (values: string[] | null) => values === null ? null : [...values].sort()
+  return {
+    sources: sorted(state.sources),
+    books: sorted(state.books),
+    adventures: sorted(state.adventures),
+    dependencies: sorted(state.dependencyFiles ?? []),
+    files: state.fileOverrides ?? {},
+  }
 }
 
 export async function buildEnglishPairsFor(ctx: PairContext, s: SourceEntry, view: LibraryView): Promise<EnglishPairs> {
@@ -17,7 +30,11 @@ export async function buildEnglishPairsFor(ctx: PairContext, s: SourceEntry, vie
   const [x, y] = await Promise.all([view.officialState(s.id), view.officialState(pair.id)])
   if (x?.status !== 'installed' || y?.status !== 'installed') throw new Error(`${s.id} 或 ${pair.id} 还没安装，不能配对`)
   const key = `english:${s.id}`
-  const fingerprint = `${await view.commitOf(s)}+${await view.commitOf(pair)}+gen4`
+  // 补装单本书通常不会改变上游提交号。旧版本的派生记录可以继承，但不能沿用没装齐时的配对表。
+  const fingerprint = `gen5:${hashValue([
+    [await view.commitOf(s), installedContent(x)],
+    [await view.commitOf(pair), installedContent(y)],
+  ])}`
   const saved = await view.derivedGet(key)
   if (saved?.fingerprint === fingerprint) return saved.value as EnglishPairs
   const cnFrame = await ctx.openFrame(s.codeSet, { view, filterIndex: true })
