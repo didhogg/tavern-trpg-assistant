@@ -33,15 +33,30 @@ const codeSet = computed(() => getSource(props.set).codeSet)
 
 // 书 / 冒险本身是"书"类别里的一条条目（点进去是阅读器，不在包外壳上放按钮）；官方的从书目索引找，自制的用包里带的正文
 const readers = ref<Array<{ set: string; prop: string; id: string; name: string }>>([])
+const readerError = ref<string | null>(null)
 async function loadReaders(): Promise<void> {
+  readerError.value = null
   if (props.corpora?.length) { readers.value = props.corpora.map((c) => ({ set: props.set, prop: c.prop, id: c.id, name: c.name })); return }
-  if (!props.kind) return
   try {
-    const index = await app.svc().backend.library.links.corpusIndex(codeSet.value)
+    const library = app.svc().backend.library
+    if (props.mine && props.docIdLocal) {
+      const view = await library.currentView()
+      const [packs, corpora] = await Promise.all([library.brewPacks.list(props.set, view), library.service.brewCorpora(props.set, view)])
+      const pack = packs.find((p) => p.docIdLocal === props.docIdLocal)
+      readers.value = Object.entries(corpora).flatMap(([prop, list]) => list
+        .filter((r) => pack?.hashes[prop]?.includes(r.hash))
+        .map(({ id, name }) => ({ set: props.set, prop, id, name })))
+      return
+    }
+    if (!props.kind) return
+    const index = await library.links.corpusIndex(codeSet.value)
     const found: Array<{ set: string; prop: string; id: string; name: string }> = []
     for (const [prop, m] of index) for (const providers of m.values()) { const r = providers[0]; if (r && r.source === props.source && (r.set ?? props.set) === props.set) found.push({ set: props.set, prop, id: r.id, name: props.name }) }
     readers.value = found
-  } catch (e) { console.error('[trpg-assistant] 读取书目索引失败', e) }
+  } catch (e) {
+    console.error('[trpg-assistant] 读取书目索引失败', e)
+    readerError.value = e instanceof Error ? e.message : String(e)
+  }
 }
 async function load(): Promise<void> {
   const c = lib.campaignLib
@@ -58,7 +73,7 @@ async function load(): Promise<void> {
   }
 }
 // 我的库的包：刚存的条目要等后台整理完才进列表（整理中），整理完自动重读（P5.5 u7-3 / U2）
-const pending = usePending(() => app.svc(), () => (props.mine ? [props.mine.codeSet] : []), () => void load())
+const pending = usePending(() => app.svc(), () => (props.mine ? [props.mine.codeSet] : []), () => { void load(); void loadReaders() })
 const packPending = computed(() => !!props.mine && pending.packs.value.has(props.mine.id))
 watch(() => lib.pairs, () => { if (props.mine) void pending.check() })
 onMounted(() => { void load(); void loadReaders(); if (props.mine) void pending.check() })
@@ -124,18 +139,19 @@ function edit(r: PackRow): void {
       <button v-if="mine" class="trpg-btn trpg-btn--primary" type="button" data-testid="pack-new-entry" @click="openNewEntry(mine.codeSet, { id: mine.id, name })"><Icon name="plus" :size="16" />新建条目</button>
     </div>
     <div class="lib-pills" role="group" aria-label="类别">
-      <button class="trpg-pill" type="button" :aria-pressed="cat === 'all'" @click="cat = 'all'">全部<small>{{ rows.length }}</small></button>
+      <button class="trpg-pill" type="button" :aria-pressed="cat === 'all'" @click="cat = 'all'">全部<small>{{ rows.length + readers.length }}</small></button>
       <button v-if="readers.length" class="trpg-pill" type="button" :aria-pressed="cat === 'book'" @click="cat = 'book'">书<small>{{ readers.length }}</small></button>
       <button v-for="p in pills" :key="p.prop" class="trpg-pill" type="button" :aria-pressed="cat === p.prop" @click="cat = p.prop">{{ categoryLabel(p.prop) }}<small>{{ p.n }}</small></button>
     </div>
     <ErrorBanner v-if="sortError && !failed" :text="`排序没有成功，先按原顺序显示：${sortError}`" what="排序" dismissible @dismiss="sortError = null" />
+    <ErrorBanner v-if="readerError && !failed" :text="`书目没读出来：${readerError}`" what="读取书目" :actions="[{ label: '重试', run: loadReaders }]" />
     <template v-if="failed">
       <ErrorBanner :text="`这个包没读出来：${failed}`" what="读取这个包" :actions="[{ label: '重试', run: load }]" />
       <div class="lib-state"><h3>这个包暂时读不出来</h3><p class="lib-muted">点顶部提示里的【重试】再读一次。</p></div>
     </template>
     <div v-else-if="loading && !rows.length" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
     <div v-else ref="scrollEl" class="lib-mscroll">
-      <div v-if="cat === 'book' ? false : !filtered.length && !shownReaders.length" class="lib-state"><h3>{{ q ? '没有符合的' : packPending ? '刚存的条目正在整理' : '这个包里没有可显示的条目' }}</h3><p v-if="!q && packPending" class="lib-muted">整理完就出现在这里，一般十几秒。</p><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>
+      <div v-if="!filtered.length && !shownReaders.length" class="lib-state"><h3>{{ q ? '没有符合的' : packPending ? '刚存的条目正在整理' : '这个包里没有可显示的条目' }}</h3><p v-if="!q && packPending" class="lib-muted">整理完就出现在这里，一般十几秒。</p><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>
       <div v-else-if="cat === 'book'" class="lib-list" role="list">
         <button v-for="r in shownReaders" :key="`${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
       </div>
@@ -177,6 +193,6 @@ function edit(r: PackRow): void {
         </button>
       </div>
     </div>
-    <div class="lib-count">{{ loading ? '正在读取…' : `共 ${filtered.length} 条` }}<span v-if="packPending" class="lib-pending" data-testid="pack-pending"> · <Icon name="arrow-clockwise" :size="12" />整理中：刚存的条目整理完就出现在列表里</span></div>
+    <div class="lib-count">{{ loading ? '正在读取…' : `共 ${filtered.length + shownReaders.length} 条` }}<span v-if="packPending" class="lib-pending" data-testid="pack-pending"> · <Icon name="arrow-clockwise" :size="12" />整理中：刚存的条目整理完就出现在列表里</span></div>
   </div>
 </template>
