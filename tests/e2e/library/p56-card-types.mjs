@@ -36,6 +36,12 @@ try {
     const secondMs = performance.now() - t
     const openedAgain = kernelFrames() > framesBefore
     const later = await h.cardTypes(deps, 'dnd5e2024')
+    // 第 3 步：卡型的字段 = 条目编辑器里存放类别的字段表和表单安排
+    const form = { types: (rule, cs) => h.cardTypes(deps, rule, cs), fields: (cs, p) => h.custom.fields(cs, p), plan: (cs, p) => h.custom.formPlan(cs, p) }
+    const npc = await h.cardFields(form, 'dnd5e2014', 'npc', 'cn')
+    const editor = { fields: await h.custom.fields('cn', 'monster'), plan: await h.custom.formPlan('cn', 'monster') }
+    const sameAsEditor = JSON.stringify(npc.fields) === JSON.stringify(editor.fields) && JSON.stringify(npc.plan) === JSON.stringify(editor.plan)
+    const npcSummary = { required: npc.plan?.required, common: npc.plan?.common?.length, more: npc.plan?.more?.length, labels: (npc.plan?.required ?? []).map((f) => [f, npc.fields?.labels?.[f] ?? npc.fields?.fields?.find((x) => x.name === f)?.label ?? null]) }
 
     // 全类别：库里每一只怪物都交作者导入器，数换出来的类型
     const view = await h.revisions.published()
@@ -52,7 +58,7 @@ try {
       tally[out.result.type] = (tally[out.result.type] ?? 0) + 1
     }
     session.close()
-    return { first, firstMs, second, secondMs, openedAgain, later, declared, total: rows.length, tally, failed: failed.slice(0, 10), failedCount: failed.length }
+    return { sameAsEditor, npcSummary, first, firstMs, second, secondMs, openedAgain, later, declared, total: rows.length, tally, failed: failed.slice(0, 10), failedCount: failed.length }
   })
   await writeFile(`${work}/p56-card-types-${process.env.ENGINE ?? 'chrome'}.json`, JSON.stringify({ ...r, errors }, null, 2))
   check('结算小窗读得到规则系统声明的人物类型', r.declared.length > 0, r.declared.map((d) => `${d.type}=${d.label}`).join('、'))
@@ -63,6 +69,7 @@ try {
   check('换出来的类型都在卡型里（全类别结果和卡型对得上）', Object.keys(r.tally).every((k) => r.first.types.some((x) => x.type === k && x.build.includes('store'))))
   check('第二次直接读存下的结果，不开结算内核', r.second.status === 'ready' && !r.openedAgain && JSON.stringify(r.second) === JSON.stringify(r.first), `第一次 ${Math.round(r.firstMs)}ms，第二次 ${Math.round(r.secondMs)}ms`)
   check('2024 没接结算 → no-kernel', r.later.status === 'no-kernel')
+  check('第 3 步：NPC 的字段 = 条目编辑器里怪物的字段表 + 表单安排（同一套）', r.sameAsEditor && r.npcSummary.required?.length > 0, JSON.stringify(r.npcSummary))
   check('页面没有未处理的错误', errors.length === 0, errors.slice(0, 2).join(' | '))
 } finally {
   await ctx.close()

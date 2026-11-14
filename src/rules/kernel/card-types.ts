@@ -88,3 +88,26 @@ export async function cardTypes(deps: CardTypeDeps, rule: string, codeSet = 'cn'
     session.close()
   }
 }
+
+export interface CardFields<Table, Plan> {
+  type: CardType
+  /** 存放类别的字段说明表（custom.fields：类型、可选值、中文名、控件形状）。 */
+  fields: Table
+  /** 存放类别的表单安排（custom.formPlan：必填 / 常用 / 更多、默认写法）。 */
+  plan: Plan
+}
+
+/**
+ * 一种卡型有哪些字段（给 P6 人物页）：卡型 → 存成哪一类 → 直接用条目编辑器的字段表和表单安排，不另写字段逻辑。
+ * 规则没有这种卡型时报错（不猜）。
+ */
+export async function cardFields<Table, Plan>(
+  form: { types: (rule: string, codeSet?: string) => Promise<CardTypesResult>; fields: (codeSet: string, prop: string) => Promise<Table>; plan: (codeSet: string, prop: string) => Promise<Plan> },
+  rule: string, type: string, codeSet = 'cn',
+): Promise<CardFields<Table, Plan>> {
+  const result = await form.types(rule, codeSet)
+  const card = result.types.find((t) => t.type === type)
+  if (!card) throw new Error(result.status === 'ready' ? `规则 ${rule} 没有这种卡型：${type}` : `规则 ${rule} 的卡型还读不出来（${result.status}）`)
+  const [fields, plan] = await Promise.all([form.fields(codeSet, card.store), form.plan(codeSet, card.store)])
+  return { type: card, fields, plan }
+}
