@@ -9,7 +9,7 @@ import { useLibViewStore } from '../../stores/libview'
 import Icon from '../kit/Icon.vue'
 import { loadPackRows, matchName, type PackRow } from './pack-data'
 import { openEntry, openReader } from './open'
-import { openEditMine, openNewEntry } from './edit-flow'
+import { openEditCorpus, openEditMine, openNewEntry } from './edit-flow'
 import { usePending } from './mine'
 import { useToastStore } from '../../stores/toast'
 import { categoryLabel, registeredCategories } from './registry'
@@ -130,6 +130,11 @@ function edit(r: PackRow): void {
   if (!props.mine) return
   openEditMine(app.svc(), props.mine.codeSet, { id: props.mine.id, name: props.name }, r.ref.prop, r.ref.hash).catch((e: unknown) => { console.error('[trpg-assistant] 打开编辑器失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
 }
+/** 我的库的包里「书」类别的 ✎：打开书 / 冒险的编辑页（只做自制的，官方书不能改）。 */
+function editBook(r: { prop: string; id: string }): void {
+  if (!props.mine) return
+  openEditCorpus(app.svc(), props.mine.codeSet, { id: props.mine.id, name: props.name }, r.prop, r.id, () => void loadReaders()).catch((e: unknown) => { console.error('[trpg-assistant] 打开书的编辑页失败', e); toast.error(e instanceof Error ? e.message : '没能打开') })
+}
 </script>
 
 <template>
@@ -153,7 +158,10 @@ function edit(r: PackRow): void {
     <div v-else ref="scrollEl" class="lib-mscroll">
       <div v-if="!filtered.length && !shownReaders.length" class="lib-state"><h3>{{ q ? '没有符合的' : packPending ? '刚存的条目正在整理' : '这个包里没有可显示的条目' }}</h3><p v-if="!q && packPending" class="lib-muted">整理完就出现在这里，一般十几秒。</p><button v-if="q" class="trpg-btn" type="button" @click="q = ''">清空筛选</button></div>
       <div v-else-if="cat === 'book'" class="lib-list" role="list">
-        <button v-for="r in shownReaders" :key="`${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
+        <div v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" :class="['lib-list__row', mine && 'lib-list__row--edit']" role="listitem" data-testid="book-row">
+          <button class="lib-list__open" type="button" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
+          <button v-if="mine" class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="book-edit" @click="editBook(r)"><Icon name="pencil-simple" :size="18" /></button>
+        </div>
       </div>
       <div v-else-if="cat !== 'all' && cols.length" class="lib-tablewrap" data-testid="pack-table">
         <table class="lib-table">
@@ -179,7 +187,10 @@ function edit(r: PackRow): void {
         </table>
       </div>
       <div v-else class="lib-list" role="list" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
-        <button v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" class="lib-list__row" type="button" role="listitem" data-testid="book-row" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
+        <div v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" :class="['lib-list__row', mine && 'lib-list__row--edit']" role="listitem" data-testid="book-row">
+          <button class="lib-list__open" type="button" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
+          <button v-if="mine" class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="book-edit" @click="editBook(r)"><Icon name="pencil-simple" :size="18" /></button>
+        </div>
         <template v-if="mine">
           <div v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" class="lib-list__row lib-list__row--edit" role="listitem" data-testid="mine-row">
             <button class="lib-list__open" type="button" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)"><span class="lib-name">{{ r.name }}</span><span v-if="cat === 'all'" class="trpg-badge">{{ categoryLabel(r.prop) }}</span></button>
