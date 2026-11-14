@@ -1,6 +1,6 @@
 # NEXT
 
-- **当前：P5.6 规则接入口——三步后端 ✔（2026-11-14，本地提交，未推送），停点：后端验收**。① 规则定义全部改成数据（`scopes.json` 的 rules：名字、横幅、范围、格式、`kernel` 结算适配器 + 设置、`people` 人物存放类别）；结算适配器登记 `rules/kernel/adapters.ts`（现在只有 foundry）。② 卡型 `backend.cards.types(规则)`：规则系统声明的人物类型 ∩ 能建出来的（分步建卡 / 怪物属性块经作者导入器），dnd5e2014 = 玩家角色 + 非玩家角色（中文名由翻译生成工具经作者大译名表对换）。③ `backend.cards.fields(规则, 卡型)` = 条目编辑器同一套字段表 + 表单安排。证据 `tests/e2e/library/p56-card-types.mjs`（全类别 4,942 只怪物都换成 npc，Chrome / WebKit ALL PASS）。下一步：驾驶员验收后端 → 界面（向导规则卡：没接结算的灰掉不可点）。
+- **当前：P5.6 规则接入口——三步后端 ✔（2026-11-14，本地提交，未推送），停点：后端验收**。① 规则定义全部改成数据（`scopes.json` 的 rules：名字、横幅、范围、格式、`kernel` 结算适配器 + 设置、`people` 人物存放类别）；结算适配器登记 `rules/kernel/adapters.ts`（现在只有 foundry）。② 卡型 `backend.cards.types(规则)`：规则系统声明的人物类型 ∩ 能建出来的（分步建卡 / 怪物属性块经作者导入器），dnd5e2014 = 玩家角色 + 非玩家角色（中文名由翻译生成工具经作者大译名表对换）。③ `backend.cards.fields(规则, 卡型)` 按「怎么建」分开给：非玩家角色 = `store`（怪物在条目编辑器里同一套字段表 + 表单安排）；玩家角色 = `steps.parts`（分步建卡要从库里选哪几类条目，规则数据 `kernel.build`，和存档重建读同一份，原 `rebuild.ts` 写死的 `BUILD_ITEM_PROPS` 搬过去；D2：人物只存引用 + 选择 + 状态，不给怪物结构加字段）。证据 `tests/e2e/library/p56-card-types.mjs`（全类别 4,942 只怪物都换成 npc，Chrome / WebKit ALL PASS）。向导里没接结算的版本（2024）灰掉不可点 P5 已做（`StepVersion.vue`，现按规则数据 `kernel` 判断）。下一步：驾驶员验收 P5.6 → P6 B1 人物后端总体设计（先出草案）。
 - **P5 库故障补修（待验收）**：同名传奇组详情标明类别，并按作者编号、来源和包身份链接到完整怪物卡；官方中英配对在两边的安装内容改变后自动重建，旧库可断网恢复。回归入口：`p5-t6-e-author-render.mjs`、`p5-t6-english-reopen.mjs`。
 
 ## 当前阶段：D2 数据管线重建（`docs/任务总纲.md` §2，以新版为准）
@@ -66,7 +66,8 @@
 - 不读各 `归档/` 与 `docs/probes/` 的旧报告，除非驾驶员点名。
 
 ## 等驾驶员定
-- P5.6 / P6：作者怪物结构（111 个字段）里有 `level`、`gear`、`attachedItems`，**没有职业、子职、种族、背景**；11-02 说「怪物结构加可选字段」，玩家角色这几项怎么存要在 P6 B1 定（不补字段 = 不造第二套形状）。
+- 单元测试偶发超时（2026-11-14 查明，没修）：5 个文件（brew-validate、edition-mine、formats、house-diff、undo）各自第一个测试要加载作者结构校验器，单独跑约 2 秒，整套 102 个文件并行时偶尔超过 5 秒默认上限 → 失败；重跑就过。输出 `work/p56-fix/unit-1.txt`。
+- 旧 e2e `p3-3b-full.mjs` 建卡就失败（`文件不存在：modules/plutonium/data/items-base.json`），改动前的代码同样失败（2026-11-14 用暂存核对）；和 P5.6 卡型测试当时漏带资料版本是同一类。没修；重建回归改用 `rebuild-cache`、`seed-order`（通过）。
 - `docs/开发规范.md` §5.1 的设计令牌表（旧的纸 / 酒红 / 金）和新设计系统不一致；建议改成"以 `src/ui/styles/palette.css`（由 `docs/design/p4-design-system/palettes.mjs` 生成）为准"。改规范需驾驶员批准。
 - （P5 人物界面时再定）
 - "选法术"类选择（玄奥秘法等）在界面里的做法。

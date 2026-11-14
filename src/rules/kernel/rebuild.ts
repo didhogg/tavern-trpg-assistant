@@ -9,14 +9,13 @@ import type { ScopedLibrary } from '../../library/scoped'
 import { officialSourceOf } from '../../library/sources'
 import type { KernelActor, KernelRef } from '../../schemas/kernel'
 import type { KernelSession } from './host'
+import { ruleKernel } from './adapters'
 
 /** Plutonium 的 propDroppable 与【库】类别名的登记表；加一种 = 加一行。 */
 const FLAG_PROP: Record<string, string> = {
   creature: 'monster',
 }
 
-/** 建卡时走 forNewItem 的顶层条目（会展开成长）；其余作为装备直接放进人物。 */
-const BUILD_ITEM_PROPS = new Set(['race', 'background', 'class', 'subclass', 'feat', 'optionalfeature'])
 
 export interface RebuildMissing {
   ref: KernelRef
@@ -109,9 +108,11 @@ export async function rebuildActor(opts: {
     if (result.status !== 'complete' || !payload?.data) return { status: 'error', error: result.error ?? `重建状态：${result.status}`, detail: result }
     return { status: 'complete', id: payload.id, data: payload.data, base: payload.base, seed: payload.seed, noEnglish }
   }
-  const items = entries.filter((e) => BUILD_ITEM_PROPS.has(e.ref.prop))
+  // 建卡时走成长步骤的类别 = 规则数据 kernel.build；其余作为装备直接放进人物。
+  const buildProps = new Set(ruleKernel(opts.library.rule)?.build ?? [])
+  const items = entries.filter((e) => buildProps.has(e.ref.prop))
     .map((e) => ({ prop: e.ref.prop, entry: e.entry, refKey: refKey(e.ref) }))
-  const equipment = entries.filter((e) => !BUILD_ITEM_PROPS.has(e.ref.prop))
+  const equipment = entries.filter((e) => !buildProps.has(e.ref.prop))
     .map((e) => ({ prop: e.ref.prop, entry: e.entry, refKey: refKey(e.ref) }))
   const result = await opts.session.call('rebuildCharacter', {
     name: opts.actor.name,

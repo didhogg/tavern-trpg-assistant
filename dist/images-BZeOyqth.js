@@ -152,7 +152,15 @@ var p = {
 				settings: {
 					"dnd5e.rulesVersion": "legacy",
 					"dnd5e.firstRun": !1
-				}
+				},
+				build: [
+					"race",
+					"background",
+					"class",
+					"subclass",
+					"feat",
+					"optionalfeature"
+				]
 			}
 		},
 		dnd5e2024: {

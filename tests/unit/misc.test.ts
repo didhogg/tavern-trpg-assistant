@@ -38,7 +38,7 @@ describe('规则卡', () => {
   })
   it('规则定义全部来自数据（scopes.json）：结算接没接看 kernel 写的适配器登记过没有', () => {
     expect(ruleDefinitions().map((r) => r.id)).toEqual(['dnd5e2014', 'dnd5e2024'])
-    expect(ruleKernel('dnd5e2014')).toEqual({ adapter: 'foundry', settings: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false } })
+    expect(ruleKernel('dnd5e2014')).toEqual({ adapter: 'foundry', settings: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false }, build: ['race', 'background', 'class', 'subclass', 'feat', 'optionalfeature'] })
     expect([kernelSupports('dnd5e2014'), kernelSupports('dnd5e2024'), kernelSupports('nope')]).toEqual([true, false, false])
   })
   it('重复注册同一规则报错', () => {

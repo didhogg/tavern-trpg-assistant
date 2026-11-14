@@ -36,7 +36,8 @@
         "settings": {
           "dnd5e.rulesVersion": "legacy",
           "dnd5e.firstRun": false
-        }
+        },
+        "build": ["race", "background", "class", "subclass", "feat", "optionalfeature"]
       }
     },
     "dnd5e2024": {

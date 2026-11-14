@@ -36,18 +36,21 @@ try {
     const secondMs = performance.now() - t
     const openedAgain = kernelFrames() > framesBefore
     const later = await h.cardTypes(deps, 'dnd5e2024')
-    // 第 3 步：卡型的字段 = 条目编辑器里存放类别的字段表和表单安排
+    // 第 3 步：卡型怎么填——NPC（从怪物属性块）= 条目编辑器的字段表和表单安排；玩家角色（分步建卡）= 要选哪几类条目
     const form = { types: (rule, cs) => h.cardTypes(deps, rule, cs), fields: (cs, p) => h.custom.fields(cs, p), plan: (cs, p) => h.custom.formPlan(cs, p) }
     const npc = await h.cardFields(form, 'dnd5e2014', 'npc', 'cn')
     const editor = { fields: await h.custom.fields('cn', 'monster'), plan: await h.custom.formPlan('cn', 'monster') }
-    const sameAsEditor = JSON.stringify(npc.fields) === JSON.stringify(editor.fields) && JSON.stringify(npc.plan) === JSON.stringify(editor.plan)
-    const npcSummary = { required: npc.plan?.required, common: npc.plan?.common?.length, more: npc.plan?.more?.length, labels: (npc.plan?.required ?? []).map((f) => [f, npc.fields?.labels?.[f] ?? npc.fields?.fields?.find((x) => x.name === f)?.label ?? null]) }
+    const sameAsEditor = npc.store?.prop === 'monster' && !npc.steps && JSON.stringify(npc.store.fields) === JSON.stringify(editor.fields) && JSON.stringify(npc.store.plan) === JSON.stringify(editor.plan)
+    const npcSummary = { required: npc.store?.plan?.required, common: npc.store?.plan?.common?.length, more: npc.store?.plan?.more?.length, labels: (npc.store?.plan?.required ?? []).map((f) => [f, npc.store?.fields?.labels?.[f] ?? npc.store?.fields?.fields?.find((x) => x.name === f)?.label ?? null]) }
+    const pc = await h.cardFields(form, 'dnd5e2014', 'character', 'cn')
 
     // 全类别：库里每一只怪物都交作者导入器，数换出来的类型
     const view = await h.revisions.published()
     const library = h.defaultCampaignLibrary('dnd5e2014', 'cn')
     const { session } = await h.startKernelSession(await h.kernelInput({ pluginRoot: new URL('/', location.href), rule: 'dnd5e2014', world: { id: 'p56', title: 'p56' } }), view)
     const declared = (await session.call('actorTypes', 'monster', [])).result.declared
+    // 玩家角色要选的每一类，作者导入器都能换成规则系统的物品（建卡步骤才有东西可展开）
+    const partsMeta = await session.call('importerMeta', pc.steps?.parts ?? [])
     const rows = (await h.scoped.query(library, 'monster', { view })).filter((row) => typeof row.item?.name === 'string')
     const tally = {}
     const failed = []
@@ -58,18 +61,20 @@ try {
       tally[out.result.type] = (tally[out.result.type] ?? 0) + 1
     }
     session.close()
-    return { sameAsEditor, npcSummary, first, firstMs, second, secondMs, openedAgain, later, declared, total: rows.length, tally, failed: failed.slice(0, 10), failedCount: failed.length }
+    return { sameAsEditor, npcSummary, pc, partsMeta, first, firstMs, second, secondMs, openedAgain, later, declared, total: rows.length, tally, failed: failed.slice(0, 10), failedCount: failed.length }
   })
   await writeFile(`${work}/p56-card-types-${process.env.ENGINE ?? 'chrome'}.json`, JSON.stringify({ ...r, errors }, null, 2))
   check('结算小窗读得到规则系统声明的人物类型', r.declared.length > 0, r.declared.map((d) => `${d.type}=${d.label}`).join('、'))
   check('整个怪物类别交作者导入器：没有失败', r.failedCount === 0, `共 ${r.total} 只；失败 ${r.failedCount}：${r.failed.join(' | ')}`)
   check('整个怪物类别换出来的人物类型', Object.keys(r.tally).length > 0, JSON.stringify(r.tally))
-  check('卡型 = 声明 ∩ 能建出来：角色（分步建卡）+ NPC（从怪物属性块）', r.first.status === 'ready' && JSON.stringify(r.first.types.map((x) => [x.type, x.build, x.store])) === JSON.stringify([['character', ['steps'], 'monster'], ['npc', ['store'], 'monster']]), JSON.stringify(r.first.types))
+  check('卡型 = 声明 ∩ 能建出来：角色（分步建卡，不存成条目）+ NPC（从怪物属性块）', r.first.status === 'ready' && JSON.stringify(r.first.types.map((x) => [x.type, x.build, x.store])) === JSON.stringify([['character', ['steps'], null], ['npc', ['store'], 'monster']]), JSON.stringify(r.first.types))
   check('卡型中文名来自作者大译名表：玩家角色 / 非玩家角色', JSON.stringify(r.first.types.map((x) => x.labelZh)) === JSON.stringify(['玩家角色', '非玩家角色']), JSON.stringify(r.first.types.map((x) => [x.label, x.labelZh])))
   check('换出来的类型都在卡型里（全类别结果和卡型对得上）', Object.keys(r.tally).every((k) => r.first.types.some((x) => x.type === k && x.build.includes('store'))))
   check('第二次直接读存下的结果，不开结算内核', r.second.status === 'ready' && !r.openedAgain && JSON.stringify(r.second) === JSON.stringify(r.first), `第一次 ${Math.round(r.firstMs)}ms，第二次 ${Math.round(r.secondMs)}ms`)
   check('2024 没接结算 → no-kernel', r.later.status === 'no-kernel')
   check('第 3 步：NPC 的字段 = 条目编辑器里怪物的字段表 + 表单安排（同一套）', r.sameAsEditor && r.npcSummary.required?.length > 0, JSON.stringify(r.npcSummary))
+  check('玩家角色 = 分步建卡要选的类别（规则数据 kernel.build），不给怪物字段表', !r.pc.store && JSON.stringify(r.pc.steps?.parts) === JSON.stringify(['race', 'background', 'class', 'subclass', 'feat', 'optionalfeature']), JSON.stringify(r.pc.steps))
+  check('这几类作者导入器都能换成规则系统的物品', r.partsMeta?.length === r.pc.steps?.parts?.length && r.partsMeta.every((m) => m.folderType === 'Item'), JSON.stringify(r.partsMeta))
   check('页面没有未处理的错误', errors.length === 0, errors.slice(0, 2).join(' | '))
 } finally {
   await ctx.close()

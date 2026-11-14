@@ -10,6 +10,11 @@ export interface RuleKernel {
   adapter: string
   /** 交给适配器的规则设置（Foundry 适配器 = 世界设置，例：dnd5e.rulesVersion = legacy）。 */
   settings: Record<string, unknown>
+  /**
+   * 分步建卡用到的【库】类别：这些类别的条目进人物时走规则系统的成长步骤（dnd5e forNewItem），其余当装备直接放进人物。
+   * 存档重建（kernel/rebuild.ts）和卡型字段（kernel/card-types.ts）都读这一份。
+   */
+  build: string[]
 }
 
 /**
