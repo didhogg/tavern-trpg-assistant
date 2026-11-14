@@ -23,11 +23,12 @@ const FILES = {
 }
 
 if (!process.env.SKIP_BUILD) await buildAll()
-const [, type, options] = engines[0]
+const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome' // 默认 Chrome；ENGINE=webkit 跑 WebKit
+const [, type, options] = engines[engineName === 'webkit' ? 1 : 0]
 const { server, url } = await startStatic({ port: 47340 })
-const profile = `${work}/profile-p58-chrome`
+const profile = `${work}/profile-p58-${engineName}`
 await rm(profile, { recursive: true, force: true })
-await cp(`${work}/profile-p3-1-chrome`, profile, { recursive: true })
+await cp(`${work}/profile-p3-1-${engineName}`, profile, { recursive: true })
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage()
 page.setDefaultTimeout(480_000)
@@ -199,7 +200,7 @@ try {
     return out
   }, FILES)
 } finally {
-  await writeFile(`${work}/p58-skill-brew-chrome.json`, JSON.stringify({ r, pageErrors }, null, 2))
+  await writeFile(`${work}/p58-skill-brew-${engineName}.json`, JSON.stringify({ r, pageErrors }, null, 2))
 }
 
 if (r.error) { console.log('STEP', r.step, r.error); await ctx.close(); server.close(); process.exit(1) }

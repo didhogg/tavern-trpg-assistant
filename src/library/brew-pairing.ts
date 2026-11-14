@@ -1,8 +1,9 @@
 // 自制包的中英配对（P5 G-2、G-3a）。
 // 配对规则照中文 fork 作者自己的脚本（codex-skills/5etools-json-translate/scripts/inspect_translation_scope.py 的
 // resolve_homebrew_target）：同一个目录（creature、spell…）+ 文件头里声明的来源标识（_meta.sources[].json）有交集；
-// 唯一对应才算配上，多个候选当歧义，不按文件名相似度猜。中文 fork 还要求译文与英文原件结构一致，所以配上的两个文件
-// 同类数组里的条目按下标一一对应（实测 23 对真实文件 3138 条全部对齐，ENG_name 都等于英文名），官方数据的中英配对用的是同一做法。
+// 唯一对应才算配上，多个候选当歧义，不按文件名相似度猜。中文 fork 要求译文与英文原件结构一致，所以条目先按下标取对面那条；
+// 但全量实测（2026-11，两个自制仓库 280 对、41098 条）有 18 对（1266 条）的中文版重排过顺序或条数不同，所以取到后**必须核对名字**
+// （中文条目的 ENG_name = 英文条目的 name，作者自己的英文名锚点），对不上就只在配对的包里按名字找（entry()）。
 import { BrewPacks, type BrewPack } from './brew-packs'
 import type { EntryRef } from './scopes'
 import type { LibraryService } from './service'
@@ -107,6 +108,22 @@ function rowsOf<T>(pairing: FilePairing, zh: Map<string, T>, en: Map<string, T>)
   ]
 }
 
+const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null)
+/** 按位置取到的一对，名字对得上吗：中文条目的 ENG_name = 英文条目的 name。任何一边写不出名字 → 核对不了，当对（保持按位置取）。 */
+function namesAgree(hereIsZh: boolean, mine: unknown, theirs: unknown): boolean {
+  const zh = (hereIsZh ? mine : theirs) as { ENG_name?: unknown } | null | undefined
+  const en = (hereIsZh ? theirs : mine) as { name?: unknown } | null | undefined
+  const a = text(zh?.ENG_name)
+  const b = text(en?.name)
+  return !a || !b || a === b
+}
+/** 候选这一条是不是"我要找的那条"：中文 → 英文时用我的 ENG_name 对它的 name；英文 → 中文时用我的 name 对它的 ENG_name。 */
+function sameName(hereIsZh: boolean, mine: unknown, candidate: unknown): boolean {
+  const want = text(hereIsZh ? (mine as { ENG_name?: unknown } | null)?.ENG_name : (mine as { name?: unknown } | null)?.name)
+  const got = text(hereIsZh ? (candidate as { name?: unknown } | null)?.name : (candidate as { ENG_name?: unknown } | null)?.ENG_name)
+  return !!want && want === got
+}
+
 export class BrewPairs {
   private readonly packs: BrewPacks
 
@@ -147,19 +164,25 @@ export class BrewPairs {
   }
 
   /**
-   * 一条自制条目在另一种语言里是哪一条：先找它所在的包的配对包，再按"同类数组、同一下标"取英文（中文）那条的作者编号，
-   * 并核对另一边库里真的有。同一条在几个包里（同编号挂备选）各自找，取得的结果合并去重。
+   * 一条自制条目在另一种语言里是哪一条：先找它所在的包的配对包，再按"同类数组、同一下标"取英文（中文）那条，
+   * **核对名字**（中文条目的 ENG_name = 英文条目的 name）后才采用，并核对另一边库里真的有。
+   * 位置取到的那条名字对不上（真实包里有中文版把条目重新排过序的，2026-11 实测 280 对里 18 对）：不采用，
+   * 改在**配对的那个包里**按名字找（同包同名多条就都列出，界面当有歧义）；找不到就说没有对应，不拿错的凑数。
+   * 条目没写英文名 / 没有名字（核对不了）时保持按位置取。同一条在几个包里（同编号挂备选）各自找，结果合并去重。
    */
   async entry(ref: EntryRef, opts: { docIdLocal?: string } = {}): Promise<BrewCounterpart> {
     const here = getSource(ref.set)
     const other = this.partnerOf(here)
-    const zhId = here.lang === 'zh' ? here.id : other.id
+    const hereIsZh = here.lang === 'zh'
+    const zhId = hereIsZh ? here.id : other.id
     const view = await this.lib.currentView()
     const pairs = (await this.installed(zhId, view)).filter((p) => p.zh && p.en)
     const index = async (set: SourceEntry) => new Map((await (await this.lib.frameOf(set.codeSet, view)).call('brewDocIndex')).map((d) => [d.docIdLocal, d.props]))
     const mine = await index(here)
     const theirs = await index(other)
+    const mineItem = (await this.lib.storedItem(here.id, ref.prop, ref.hash))?.item
     const refs = new Map<string, CounterpartRef>()
+    const disagree: Array<{ partner: BrewPack; rows: Array<{ hash: string | null; item: unknown }> }> = []
     let inPack = false
     let paired = false
     let shape = false
@@ -168,8 +191,8 @@ export class BrewPairs {
       const arr = props[ref.prop]
       if (!arr?.includes(ref.hash)) continue
       inPack = true
-      const pair = pairs.find((p) => (here.lang === 'zh' ? p.zh : p.en)?.docIdLocal === docId)
-      const partner = pair && (here.lang === 'zh' ? pair.en : pair.zh)
+      const pair = pairs.find((p) => (hereIsZh ? p.zh : p.en)?.docIdLocal === docId)
+      const partner = pair && (hereIsZh ? pair.en : pair.zh)
       if (!partner) continue
       paired = true
       const target = theirs.get(partner.docIdLocal)?.[ref.prop]
@@ -177,12 +200,23 @@ export class BrewPairs {
       const rows = (await this.lib.packOwnedItems(other.id, partner, view))[ref.prop] ?? []
       for (let i = 0; i < arr.length; i++) {
         const h = target[i]
-        if (arr[i] === ref.hash && h && rows.some((r) => r.hash === h)) {
-          refs.set(`${partner.docIdLocal}|${h}`, { set: other.id, prop: ref.prop, hash: h, docIdLocal: partner.docIdLocal })
-        }
+        const row = arr[i] === ref.hash && h ? rows.find((r) => r.hash === h) : undefined
+        if (!row) continue
+        if (namesAgree(hereIsZh, mineItem, row.item)) refs.set(`${partner.docIdLocal}|${h}`, { set: other.id, prop: ref.prop, hash: h as string, docIdLocal: partner.docIdLocal })
+        else disagree.push({ partner, rows })
       }
     }
     if (refs.size) return { refs: [...refs.values()], reason: null }
+    if (disagree.length) {
+      // 位置取到的名字对不上：只在配对的包里按名字找，不跨包猜
+      const found = new Map<string, CounterpartRef>()
+      for (const { partner, rows } of disagree) {
+        for (const r of rows) {
+          if (r.hash && sameName(hereIsZh, mineItem, r.item)) found.set(`${partner.docIdLocal}|${r.hash}`, { set: other.id, prop: ref.prop, hash: r.hash, docIdLocal: partner.docIdLocal })
+        }
+      }
+      return found.size ? { refs: [...found.values()], reason: null } : { refs: [], reason: 'no-counterpart' }
+    }
     const reason: BrewCounterpartReason = !inPack ? 'not-found' : !paired ? 'pack-unpaired' : shape ? 'structure-differs' : 'no-counterpart'
     if (reason === 'not-found') return { refs: [], reason }
     // 按位置对不上（自己写的条目、本地导入的、没配对的包）：改按"英文名 + 来源"找

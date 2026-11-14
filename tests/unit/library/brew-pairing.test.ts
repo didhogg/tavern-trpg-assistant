@@ -61,9 +61,11 @@ const installed: Record<string, ReturnType<typeof pack>[]> = {
     pack('zB', `${ZH}spell/Bu; 术.json`, ['B']),
     pack('zC', `${ZH}spell/Cu; 术.json`, ['C']),
     pack('zD', `${ZH}spell/Du; 术.json`, ['D']),
+    pack('zE', `${ZH}spell/Eu; 术.json`, ['E']),
+    pack('zF', `${ZH}spell/Fu; 术.json`, ['F']),
     pack('zMine', null, ['TRPGMINE'], { isEditable: true }),
   ],
-  'en-brew': [pack('eA', `${EN}spell/Au; Spell.json`, ['A']), pack('eB', `${EN}spell/Bu; Spell.json`, ['B']), pack('eC', `${EN}spell/Cu; Spell.json`, ['C']), pack('eMine', null, ['TRPGMINE'], { isEditable: true })],
+  'en-brew': [pack('eA', `${EN}spell/Au; Spell.json`, ['A']), pack('eB', `${EN}spell/Bu; Spell.json`, ['B']), pack('eC', `${EN}spell/Cu; Spell.json`, ['C']), pack('eE', `${EN}spell/Eu; Spell.json`, ['E']), pack('eF', `${EN}spell/Fu; Spell.json`, ['F']), pack('eMine', null, ['TRPGMINE'], { isEditable: true })],
 }
 const docs: Record<string, Doc[]> = {
   cn: [
@@ -71,12 +73,16 @@ const docs: Record<string, Doc[]> = {
     { docIdLocal: 'zB', sources: ['B'], props: { spell: ['x_b', 'y_b'] } },
     { docIdLocal: 'zC', sources: ['C'], props: { spell: ['p_c'] } },
     { docIdLocal: 'zD', sources: ['D'], props: { spell: ['q_d'] } },
+    { docIdLocal: 'zE', sources: ['E'], props: { spell: ['z_alpha', 'z_beta', 'z_gamma'] } },
+    { docIdLocal: 'zF', sources: ['F'], props: { spell: ['z_one', 'z_two', 'z_x'] } },
     { docIdLocal: 'zMine', sources: ['TRPGMINE'], props: { spell: ['m_mine', 'm_dup', 'm_noeng'] } },
   ],
   en: [
     { docIdLocal: 'eA', sources: ['A'], props: { spell: ['aa_a', 'bb_a', null] } },
     { docIdLocal: 'eB', sources: ['B'], props: { spell: ['xx_b'] } },
     { docIdLocal: 'eC', sources: ['C'], props: { spell: ['pp_c'] } },
+    { docIdLocal: 'eE', sources: ['E'], props: { spell: ['e_gamma', 'e_alpha', 'e_beta'] } },
+    { docIdLocal: 'eF', sources: ['F'], props: { spell: ['e_twin1', 'e_twin2', 'e_x'] } },
     { docIdLocal: 'eMine', sources: ['TRPGMINE'], props: { spell: ['e_mine', 'tw1', 'tw2'] } },
   ],
 }
@@ -87,6 +93,12 @@ const items: Record<string, { item: Record<string, unknown>; source: string | nu
   'cn-brew|spell|m_dup': named({ name: '重名术', ENG_name: 'Twin' }, 'TRPGMINE'),
   'cn-brew|spell|m_noeng': named({ name: '没英文名' }, 'TRPGMINE'),
   'en-brew|spell|e_mine': named({ name: 'My Spell' }, 'TRPGMINE'),
+  // E 包：中文版把条目重新排过序（真实的厨师职业包、万兽图志 3 就是这样）——按位置取会取到别的条目
+  'cn-brew|spell|z_alpha': named({ name: '甲', ENG_name: 'Alpha' }, 'E'), 'cn-brew|spell|z_beta': named({ name: '乙', ENG_name: 'Beta' }, 'E'), 'cn-brew|spell|z_gamma': named({ name: '丙', ENG_name: 'Gamma' }, 'E'),
+  'en-brew|spell|e_gamma': named({ name: 'Gamma' }, 'E'), 'en-brew|spell|e_alpha': named({ name: 'Alpha' }, 'E'), 'en-brew|spell|e_beta': named({ name: 'Beta' }, 'E'),
+  // F 包：包内有两条同名英文（Twin）；z_x 的英文名在英文包里根本没有；位置上都对不上
+  'cn-brew|spell|z_one': named({ name: '一', ENG_name: 'Twin' }, 'F'), 'cn-brew|spell|z_two': named({ name: '二', ENG_name: 'Two' }, 'F'), 'cn-brew|spell|z_x': named({ name: '叉', ENG_name: 'Nowhere' }, 'F'),
+  'en-brew|spell|e_twin1': named({ name: 'Two' }, 'F'), 'en-brew|spell|e_twin2': named({ name: 'Twin' }, 'F'), 'en-brew|spell|e_x': named({ name: 'Twin' }, 'F'),
   'en-brew|spell|tw1': named({ name: 'Twin' }, 'TRPGMINE'),
   'en-brew|spell|tw2': named({ name: 'Twin' }, 'TRPGMINE'),
 }
@@ -98,7 +110,7 @@ const lib = {
   storedItem: async (set: string, prop: string, hash: string) => items[`${set}|${prop}|${hash}`] ?? null,
   packOwnedItems: async (set: string, selected: { docIdLocal: string }) => {
     const doc = docs[set.split('-')[0]].find((d) => d.docIdLocal === selected.docIdLocal)
-    return { spell: (doc?.props.spell ?? []).filter((hash) => items[`${set}|spell|${hash}`]).map((hash) => ({ hash })) }
+    return { spell: (doc?.props.spell ?? []).filter((hash) => items[`${set}|spell|${hash}`]).map((hash) => ({ hash, source: items[`${set}|spell|${hash}`].source, excluded: false, item: items[`${set}|spell|${hash}`].item })) }
   },
   query: async (set: string, prop: string, { source }: { source?: string }) => Object.entries(items).filter(([k, v]) => k.startsWith(`${set}|${prop}|`) && v.source?.toLowerCase() === source?.toLowerCase()).map(([k, v]) => ({ hash: k.split('|')[2], source: v.source, item: v.item })),
   brewCatalog: async (id: string) => ({
@@ -125,7 +137,7 @@ describe('已装自制包的中英配对与条目对应（同一下标）', () =
 
   it('已装的包两两配对，自己写的（可编辑）包不参与', async () => {
     const r = await pairs.installed()
-    expect(r.filter((x) => x.status === 'paired').map((x) => [x.zh?.docIdLocal, x.en?.docIdLocal])).toEqual([['zA', 'eA'], ['zB', 'eB'], ['zC', 'eC']])
+    expect(r.filter((x) => x.status === 'paired').map((x) => [x.zh?.docIdLocal, x.en?.docIdLocal])).toEqual([['zA', 'eA'], ['zB', 'eB'], ['zC', 'eC'], ['zE', 'eE'], ['zF', 'eF']])
     expect(r.filter((x) => x.status === 'zh-only').map((x) => x.zh?.docIdLocal)).toEqual(['zD'])
     expect(r.some((x) => x.zh?.docIdLocal === 'zMine')).toBe(false)
   })
@@ -150,6 +162,27 @@ describe('已装自制包的中英配对与条目对应（同一下标）', () =
     const dup = await pairs.entry(ref('cn-brew', 'm_dup'))
     expect(dup.refs.map((r) => r.hash).sort()).toEqual(['tw1', 'tw2'])
     expect(await pairs.entry(ref('cn-brew', 'm_noeng'))).toEqual({ refs: [], reason: 'no-english-name' })
+  })
+
+  it('中文版重排过顺序：位置取到的名字对不上，就在配对的包里按名字找（中文 → 英文、英文 → 中文）', async () => {
+    // 位置：z_alpha 在第 1 位，英文第 1 位是 Gamma——不能采用
+    expect(await pairs.entry(ref('cn-brew', 'z_alpha'))).toEqual({ refs: [{ ...ref('en-brew', 'e_alpha'), docIdLocal: 'eE' }], reason: null })
+    expect(await pairs.entry(ref('cn-brew', 'z_gamma'))).toEqual({ refs: [{ ...ref('en-brew', 'e_gamma'), docIdLocal: 'eE' }], reason: null })
+    expect(await pairs.entry(ref('en-brew', 'e_beta'))).toEqual({ refs: [{ ...ref('cn-brew', 'z_beta'), docIdLocal: 'zE' }], reason: null })
+  })
+
+  it('界面带着所在的包（docIdLocal）来问也一样：重排过的包照样找对', async () => {
+    expect(await pairs.entry(ref('cn-brew', 'z_alpha'), { docIdLocal: 'zE' })).toEqual({ refs: [{ ...ref('en-brew', 'e_alpha'), docIdLocal: 'eE' }], reason: null })
+  })
+
+  it('位置对不上、名字也找不到：说没有对应，不拿位置上的错条目凑数；包内同名多条就都列出', async () => {
+    expect(await pairs.entry(ref('cn-brew', 'z_x'))).toEqual({ refs: [], reason: 'no-counterpart' })
+    const twins = await pairs.entry(ref('cn-brew', 'z_one'))
+    expect(twins.refs.map((r) => r.hash).sort()).toEqual(['e_twin2', 'e_x'])
+  })
+
+  it('核对得了才核对：条目没写英文名（或没有名字）时保持按位置取', async () => {
+    expect((await pairs.entry(ref('cn-brew', 'a_a'))).refs.map((r) => r.hash)).toEqual(['aa_a'])
   })
 
   it('不写任何东西：只读库', async () => {
