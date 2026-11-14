@@ -65,7 +65,7 @@ let r
 try {
   await page.goto(url)
   await page.waitForFunction(() => { const h = document.querySelector('#trpg-assistant-root'); const app = [...(h?.shadowRoot?.children ?? [])].map((c) => c.__vue_app__).find(Boolean); return app?.config.globalProperties.$pinia._s.get('app')?.booted })
-  r = await page.evaluate(async ({ files, props, sources }) => {
+  r = await page.evaluate(async ({ files, props, sources, lenient, screen }) => {
     const out = { step: 'start', ms: {}, import: { ok: 0, failed: [] }, rows: [], skipped: [] }
     const at = async (s) => { out.step = s; await window.p64Step(s) }
     const guard = async (fn) => { try { return await Promise.race([fn(), new Promise((_, rej) => setTimeout(() => rej(new Error('单步超过 60 秒')), 60_000))]) } catch (e) { return { thrown: String(e?.message ?? e).slice(0, 220) } } }
@@ -122,7 +122,40 @@ try {
       out.base = { fighter: !!fighter, human: !!human, bg: !!bg }
 
       await at('open kernel')
-      const { session } = await timed('kernelOpen', () => rt.session(owner.ownerKey))
+      let { session } = await timed('kernelOpen', () => rt.session(owner.ownerKey))
+      // 验证用（不改 src/）：LENIENT_COPY=1 时，只在内核小窗里把作者合并的 isErrorOnMissing 放宽——找不到 _copy 的父条目就原样保留这一条，
+      // 不抛错（作者合并本来就有这条非抛错分支，utils.js 5558）；官方站点 / 库的作者小窗不受影响
+      if (lenient) {
+        const D = session.frame.frame.contentWindow.DataUtil
+        const orig = D._pDoMetaMerge_handleCopyProp.bind(D)
+        D._pDoMetaMerge_handleCopyProp = (prop, arr, entry, options) => orig(prop, arr, entry, { ...options, isErrorOnMissing: false })
+        out.lenientApplied = true
+      }
+      // 验证用（不改 src/）：SCREEN=1 时，对每个已装自制包的副本，在内核小窗里用作者自己的合并函数 pDoMetaMerge 单独合并一次
+      // （作者自己的自制体检工具 test-homebrew-tags.js 也是一个文件一个进程单独检查），抓出合并不过的包，
+      // 然后只把好的交给内核重开（测试里包一层 published()，等于产品里「只交体检通过的包」）
+      if (screen) {
+        const view0 = await h.revisions.published()
+        const raw = (await view0.kvGet('cn', 'HOMEBREW_2_STORAGE')) ?? []
+        const win = session.frame.frame.contentWindow
+        const bad = []
+        const t = performance.now()
+        for (const d of raw) {
+          try { await win.DataUtil.pDoMetaMerge(`p64-screen-${d.head.docIdLocal}`, structuredClone(d.body), { isSkipMetaMergeCache: true }) }
+          catch (e) { bad.push({ id: String(d.head.docIdLocal), sources: (d.body?._meta?.sources ?? []).map((x) => x.json), error: String(e?.message ?? e).replace(/\n.*/s, '').slice(0, 170) }) }
+        }
+        out.screen = { total: raw.length, ms: Math.round(performance.now() - t), bad }
+        const badIds = new Set(bad.map((b) => b.id))
+        const orig = h.revisions.published.bind(h.revisions)
+        h.revisions.published = async () => {
+          const v = await orig()
+          return new Proxy(v, { get: (target, key) => (key === 'kvGet'
+            ? async (cs, k) => { const val = await target.kvGet(cs, k); return k === 'HOMEBREW_2_STORAGE' && Array.isArray(val) ? val.filter((d) => !badIds.has(String(d.head?.docIdLocal))) : val }
+            : typeof target[key] === 'function' ? target[key].bind(target) : target[key]) })
+        }
+        await rt.closeAllExcept(null)
+        session = (await timed('kernelReopen', () => rt.session(owner.ownerKey))).session
+      }
       const meta = await session.call('importerMeta', [...props])
       const importable = new Map(meta.map((m) => [m.prop, m.folderType]))
       out.importable = [...importable.entries()]
@@ -184,7 +217,7 @@ try {
       await at('done')
     } catch (e) { out.error = String(e?.stack ?? e).slice(0, 1500) }
     return out
-  }, { files: files.map(({ name, text }) => ({ name, text })), props: [...props], sources: [...sources] })
+  }, { files: files.map(({ name, text }) => ({ name, text })), props: [...props], sources: [...sources], lenient: !!process.env.LENIENT_COPY, screen: !!process.env.SCREEN })
 } finally {
   await writeFile(`${work}/p64-kernel-brew-categories-${engineName}.json`, JSON.stringify({ r, pageErrors }, null, 2))
 }
@@ -192,6 +225,7 @@ try {
 if (r?.error) { console.log('STEP', r.step, r.error); await ctx.close(); server.close(); await rm(profile, { recursive: true, force: true }); process.exit(1) }
 console.log('导入：', JSON.stringify({ ok: r.import.ok, failed: r.import.failed.length, stoppedAt: r.import.stoppedAt ?? null }), r.import.failed.slice(0, 4))
 console.log('耗时（毫秒）：', JSON.stringify(r.ms))
+if (r.screen) console.log('体检（每个包单独合并）：', JSON.stringify({ total: r.screen.total, ms: r.screen.ms, bad: r.screen.bad.map((b) => [b.sources.join('/'), b.error]) }))
 console.log('作者导入器说有导入器的类别：', r.importable.map(([p, f]) => `${p}(${f})`).join(' '))
 console.log('没有导入器的类别（不进内核，不算问题）：', r.notImportable.join(' '))
 console.log('内核里合并后的自制（BrewUtil2）：', JSON.stringify(r.merged))
