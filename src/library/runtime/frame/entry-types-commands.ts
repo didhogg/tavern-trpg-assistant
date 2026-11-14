@@ -149,8 +149,6 @@ export interface EntryTypeInfo {
   builder: boolean
   /** 作者能把文字转成这一类的转换器编号。 */
   converters: string[]
-  /** 书 / 冒险的目录类别：正文存在哪一类（bookData / adventureData）；别的类别 null。 */
-  corpus: string | null
 }
 
 /** 作者的书 / 冒险：目录类别（book / adventure）和正文类别（bookData / adventureData）成对，编号相同（UrlUtil._PAGE_TO_PROPS_CORPUS）。 */
@@ -159,7 +157,7 @@ export async function corpusPairs(): Promise<Array<{ head: string; body: string 
   return Object.values((A.UrlUtil as any)._PAGE_TO_PROPS_CORPUS ?? {}).map((x: any) => ({ head: String(x.propHead), body: String(x.propBody) }))
 }
 
-/** 作者认为能单独打开的条目类型。书 / 冒险（驾驶员 2026-11-14 定可以新建）只列目录那一类，正文跟着它编辑。 */
+/** 作者认为能单独打开的条目类型。书 / 冒险（驾驶员 2026-11-14 定可以新建）只列目录那一类，正文是它的附属部分（attached-parts.ts）。 */
 export async function entryTypes(): Promise<EntryTypeInfo[]> {
   await init()
   const U = A.UrlUtil
@@ -180,7 +178,6 @@ export async function entryTypes(): Promise<EntryTypeInfo[]> {
       group: page ? { page, name: String(U.PG_TO_NAME?.[page] ?? page) } : null,
       builder: bs.has(prop),
       converters: cs.filter((c) => c.prop === prop).map((c) => c.id),
-      corpus: pairs.find((p) => p.head === prop)?.body ?? null,
     }
   })
 }

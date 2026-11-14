@@ -31,6 +31,8 @@ export interface FormPlan {
   hidden: string[]
   /** 「背景介绍与图片」那个字段（作者 fluff：指向作者 util.json fluffObject 的）：单独一节画，不在三块里。没有 null。 */
   media: string | null
+  /** 附属部分（attached-parts.ts，书的正文）：存在哪一类、跟着主条目走的字段。编辑器多画一节；没有 null。 */
+  attached?: { prop: string; linked: string[] } | null
   at: Record<string, PlanAt>
 }
 

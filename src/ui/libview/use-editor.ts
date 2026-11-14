@@ -1,5 +1,6 @@
 // P5.5 编辑器的状态（EditorPage 用）：左右两栏（主编辑语言 / 另一语言）、JSON 文字同步、两边不一样的项、草稿自动存、撤销。
 // 数据都走后端：字段表 custom.fields、另一语言 bilingual.otherEntry、对不上 bilingual.mismatches、检查 custom.validateEntry、草稿 custom.saveDraft。
+// 附属部分（书的正文，attached-parts.ts）：表单安排给了 attached 才有，原文由 custom.attachedPart 给，和这一条一起存草稿、一起存、一起撤销。
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import type { Services } from '../../core/services'
 import type { EditSession } from './edit-flow'
@@ -21,6 +22,8 @@ export function useEditor(svc: () => Services, session: EditSession) {
   // 条目整条替换（表单每次给新对象），用 shallowRef 免得变成 Vue 的代理（代理传不进作者小窗，也不能 structuredClone）
   const ents = { main: shallowRef<Ent>(plain(session.ent)), other: shallowRef<Ent | null>(null) }
   const tables = { main: shallowRef<FormTable | null>(null), other: shallowRef<FormTable | null>(null) }
+  const attached = { main: shallowRef<Ent | null>(session.attached ? plain(session.attached) : null), other: shallowRef<Ent | null>(null) }
+  const attachedTables = { main: shallowRef<FormTable | null>(null), other: shallowRef<FormTable | null>(null) }
   /** 另一语言：found 有这一条 / none 还没有（右栏是空表单）/ ambiguous 对上好几条 / loading / error。 */
   const otherState = ref<'loading' | 'found' | 'none' | 'ambiguous' | 'error' | 'missing'>('loading')
   const otherHash = ref<string | null>(null)
@@ -33,7 +36,21 @@ export function useEditor(svc: () => Services, session: EditSession) {
   async function loadTable(side: Side): Promise<void> {
     const [t, plan] = await Promise.all([lib().custom.fields(cs[side], prop), lib().custom.formPlan(cs[side], prop).catch((e: unknown) => { console.warn('[trpg-assistant] 表单安排没读到，按字段表画', e); return null })])
     tables[side].value = t ? { ...t, plan } : null
+    const part = plan?.attached
+    if (!part) return
+    const [pt, pplan] = await Promise.all([lib().custom.fields(cs[side], part.prop), lib().custom.formPlan(cs[side], part.prop).catch(() => null)])
+    attachedTables[side].value = pt ? { ...pt, plan: pplan } : null
   }
+  /** 这一边的附属部分原文：主语言按打开的这一条（作者编号；导入来的没有 uniqueId），另一语言按对上的那一条；新的给空白。 */
+  async function loadAttached(side: Side): Promise<void> {
+    if (!tables[side].value?.plan?.attached || (side === 'main' && attached.main.value)) return
+    const pack = session.pack?.id ?? null
+    const key = side === 'main' ? (session.hash ? { hash: session.hash } : session.target.kind === 'mine' ? { uniqueId: session.target.uniqueId } : null) : otherHash.value ? { hash: otherHash.value } : null
+    const got = await lib().custom.attachedPart(cs[side], prop, pack, key)
+    attached[side].value = got?.entity ?? null
+    if (side === 'other') otherAttachedStart = JSON.stringify(attached.other.value)
+  }
+  let otherAttachedStart = ''
   // 房规（u7-13b）：右栏 English = 这个战役里生效的英文官方原文（有英文房规就是房规那一份），改了就在英文那套也建一条房规
   const otherRef = shallowRef<EntryRef | null>(null)
   const otherBase = shallowRef<Ent | null>(null)
@@ -61,13 +78,17 @@ export function useEditor(svc: () => Services, session: EditSession) {
       otherState.value = 'none'
     } catch (e) { console.error('[trpg-assistant] 读取另一语言失败', e); otherState.value = 'error' }
   }
-  const ready = Promise.all([loadTable('main'), loadTable('other').catch(() => null), loadOther()])
+  const ready = Promise.all([loadTable('main'), loadTable('other').catch(() => null), loadOther()]).then(() => Promise.all([loadAttached('main'), loadAttached('other').catch((e: unknown) => console.warn('[trpg-assistant] 另一语言的附属部分没读到', e))]))
 
   /** 另一语言这一边动过没有（新建时空表单没动就不存）。 */
-  const otherTouched = () => !!ents.other.value && JSON.stringify(ents.other.value) !== otherStart
+  const otherTouched = () => (!!ents.other.value && JSON.stringify(ents.other.value) !== otherStart) || (!!attached.other.value && JSON.stringify(attached.other.value) !== otherAttachedStart)
 
   function setEnt(side: Side, ent: Ent): void {
     ents[side].value = ent
+    dirty.value = true
+  }
+  function setAttached(side: Side, ent: Ent): void {
+    attached[side].value = ent
     dirty.value = true
   }
 
@@ -115,12 +136,12 @@ export function useEditor(svc: () => Services, session: EditSession) {
   const draftKey = ref<string | undefined>(session.draftKey)
   const draftAt = ref<number | null>(null)
   let draftTimer: ReturnType<typeof setTimeout> | null = null
-  watch([ents.main, ents.other], () => {
+  watch([ents.main, ents.other, attached.main, attached.other], () => {
     if (!dirty.value) return
     if (draftTimer) clearTimeout(draftTimer)
     draftTimer = setTimeout(async () => {
       try {
-        draftKey.value = await lib().custom.saveDraft({ codeSet: cs.main, prop, s: plain(ents.main.value), target: plain(session.target) }, draftKey.value)
+        draftKey.value = await lib().custom.saveDraft({ codeSet: cs.main, prop, s: plain(ents.main.value), ...(attached.main.value ? { a: plain(attached.main.value) } : {}), target: plain(session.target) }, draftKey.value)
         draftAt.value = Date.now()
       } catch (e) { console.warn('[trpg-assistant] 草稿没存上', e) }
     }, 1500)
@@ -151,12 +172,16 @@ export function useEditor(svc: () => Services, session: EditSession) {
   /** 存的时候交给后端的两边（中文 / 英文按资料集分）。另一语言只在动过、或本来就有的时候存。 */
   function sides() {
     const zhSide = cs.main === 'en' ? 'other' : 'main'
-    const pick = (side: Side) => (side === 'main' ? { ent: plain(ents.main.value), replaceHash: session.replaceHash } : ents.other.value && (otherTouched() || otherState.value === 'found') && otherState.value !== 'ambiguous' ? { ent: plain(ents.other.value), replaceHash: otherHash.value ?? undefined } : undefined)
+    const withPart = (side: Side) => (attached[side].value ? { attached: plain(attached[side].value!) } : {})
+    const pick = (side: Side) => (side === 'main' ? { ent: plain(ents.main.value), replaceHash: session.replaceHash, ...withPart('main') } : ents.other.value && (otherTouched() || otherState.value === 'found') && otherState.value !== 'ambiguous' ? { ent: plain(ents.other.value), replaceHash: otherHash.value ?? undefined, ...withPart('other') } : undefined)
     return { zh: pick(zhSide), en: pick(zhSide === 'main' ? 'other' : 'main') }
   }
 
   /** 另一语言打开时的样子（本来就有那一条才有；新建 / 还没有为 null）。 */
   const otherBefore = (): Ent | null => (session.house ? otherBase.value : otherState.value === 'found' && otherStart ? JSON.parse(otherStart) as Ent : null)
 
-  return { otherBefore, otherBase, houseSides, marksOf, cs, ents, tables, otherState, left, right, ready, dirty, setEnt, jsonText, jsonIssues, onJson, marks, draftAt, dropDraft, undoLeft, loadUndo, sides, otherTouched }
+  /** 撤销后重读主语言这一边的附属部分。 */
+  async function reloadAttached(): Promise<void> { attached.main.value = null; await loadAttached('main') }
+
+  return { attached, attachedTables, setAttached, reloadAttached, otherBefore, otherBase, houseSides, marksOf, cs, ents, tables, otherState, left, right, ready, dirty, setEnt, jsonText, jsonIssues, onJson, marks, draftAt, dropDraft, undoLeft, loadUndo, sides, otherTouched }
 }

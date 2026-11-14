@@ -15,7 +15,8 @@ import { SOURCES, getSource, type SourceEntry } from './sources'
 type Ent = Record<string, unknown>
 type Files = Array<{ name: string; text: string }>
 /** 一边要存的：条目 + 换哪一条（作者编号，旧条目没有 uniqueId 时）。 */
-export interface Side { ent: Ent; replaceHash?: string }
+/** 一边要存的：条目、改的是哪一条（没有 uniqueId 的按作者编号）、附属部分（书的正文，attached-parts.ts）。 */
+export interface Side { ent: Ent; replaceHash?: string; attached?: Ent }
 type Saved = Awaited<ReturnType<CustomLibrary['saveEntry']>>
 
 const brewOf = (lang: Lang): SourceEntry => {
@@ -174,7 +175,7 @@ export class BilingualLibrary {
       if (other.state === 'found' && other.entity && other.hash && other.entity.ENG_name !== enName) zh = { ent: other.entity, replaceHash: other.hash }
     }
     if (zh && enName) zh = { ...zh, ent: { ...zh.ent, ENG_name: enName } }
-    const save = (lang: Lang, s: Side) => this.saveInLanguage(codeSetOf(lang), pack, prop, s.ent, { ...opts, ...(s.replaceHash ? { replaceHash: s.replaceHash } : {}) })
+    const save = (lang: Lang, s: Side) => this.saveInLanguage(codeSetOf(lang), pack, prop, s.ent, { ...opts, ...(s.replaceHash ? { replaceHash: s.replaceHash } : {}), ...(s.attached ? { attached: s.attached } : {}) })
     const out: { zh: Saved | null; en: Saved | null } = { zh: zh ? await save('zh', zh) : null, en: null }
     if (en) {
       try { out.en = await save('en', en) } catch (e) {
@@ -185,7 +186,7 @@ export class BilingualLibrary {
   }
 
   /** C7 存另一语言：那一套里还没有这个包就先建同编号的包，再按平常的保存走（custom.saveEntry）。 */
-  async saveInLanguage(codeSet: string, pack: string, prop: string, ent: Ent, opts: { replaceHash?: string; rule?: string } = {}) {
+  async saveInLanguage(codeSet: string, pack: string, prop: string, ent: Ent, opts: { replaceHash?: string; rule?: string; attached?: Ent } = {}) {
     if (!(await this.custom.packs(codeSet)).some((p) => p.id === pack)) {
       const from = codeSetOf(otherLang(langOf(codeSet)))
       await this.addLanguage(from, pack)

@@ -46,14 +46,20 @@ export async function packPut(docIdLocal: string, prop: string, ent: any, opts: 
   return { uniqueId: e.uniqueId, hash: hashOf(prop, e), previousHash: before ? hashOf(prop, before) : null, previous: before ? { name: String(before.name ?? ''), source: String(before.source ?? '') } : null, previousEntity: before }
 }
 
-/** 从包里删条（按 uniqueId）。返回删掉的那几条原文（撤销用）。 */
-export async function packRemove(docIdLocal: string, prop: string, uniqueIds: string[]): Promise<any[]> {
+/**
+ * 从包里删条：按 uniqueId，或按作者编号 / id（导入、复制来的没有 uniqueId；书 / 冒险的正文没有作者编号，按 id）。
+ * 返回删掉的那几条原文（撤销用）；原来没有 uniqueId 的补一个，撤销时照这个加回去。
+ */
+export async function packRemove(docIdLocal: string, prop: string, uniqueIds: string[], more: { hashes?: string[]; ids?: string[] } = {}): Promise<any[]> {
   const doc = await docOf(docIdLocal)
   const list: any[] = doc.body?.[prop] ?? []
-  const ids = new Set(uniqueIds)
-  const removed = list.filter((x) => ids.has(x?.uniqueId)).map((x) => A.MiscUtil.copyFast(x))
+  const uids = new Set(uniqueIds)
+  const hashes = new Set(more.hashes ?? [])
+  const ids = new Set((more.ids ?? []).map((x) => x.toLowerCase()))
+  const hit = (x: any): boolean => uids.has(x?.uniqueId) || (hashes.size > 0 && hashes.has(hashOf(prop, x) ?? '')) || (ids.size > 0 && ids.has(String(x?.id ?? '').toLowerCase()))
+  const removed = list.filter(hit).map((x) => ({ ...A.MiscUtil.copyFast(x), uniqueId: x.uniqueId ?? A.CryptUtil.uid() }))
   if (!removed.length) return []
-  doc.body[prop] = list.filter((x) => !ids.has(x?.uniqueId))
+  doc.body[prop] = list.filter((x) => !hit(x))
   await A.BrewUtil2.pUpdateBrew(doc)
   return removed
 }

@@ -1617,18 +1617,17 @@ async function Bt() {
 		let t = a.DataUtil?.[e]?._PAGE;
 		return typeof t == "string" && t.endsWith(".html") ? t : void 0;
 	};
-	return Object.keys(e.URL_TO_HASH_BUILDER ?? {}).filter((e) => !n.has(e)).map((n) => {
-		let s = r.get(n) ?? c(n);
+	return Object.keys(e.URL_TO_HASH_BUILDER ?? {}).filter((e) => !n.has(e)).map((t) => {
+		let n = r.get(t) ?? c(t);
 		return {
-			prop: n,
-			name: String(a.Parser.getPropDisplayName(n)),
-			group: s ? {
-				page: s,
-				name: String(e.PG_TO_NAME?.[s] ?? s)
+			prop: t,
+			name: String(a.Parser.getPropDisplayName(t)),
+			group: n ? {
+				page: n,
+				name: String(e.PG_TO_NAME?.[n] ?? n)
 			} : null,
-			builder: i.has(n),
-			converters: o.filter((e) => e.prop === n).map((e) => e.id),
-			corpus: t.find((e) => e.head === n)?.body ?? null
+			builder: i.has(t),
+			converters: o.filter((e) => e.prop === t).map((e) => e.id)
 		};
 	});
 }
@@ -1783,9 +1782,12 @@ async function Yt(e, t, n, r = {}) {
 		previousEntity: c
 	};
 }
-async function Xt(e, t, n) {
-	let r = await G(e), i = r.body?.[t] ?? [], o = new Set(n), s = i.filter((e) => o.has(e?.uniqueId)).map((e) => a.MiscUtil.copyFast(e));
-	return s.length ? (r.body[t] = i.filter((e) => !o.has(e?.uniqueId)), await a.BrewUtil2.pUpdateBrew(r), s) : [];
+async function Xt(e, t, n, r = {}) {
+	let i = await G(e), o = i.body?.[t] ?? [], s = new Set(n), c = new Set(r.hashes ?? []), u = new Set((r.ids ?? []).map((e) => e.toLowerCase())), d = (e) => s.has(e?.uniqueId) || c.size > 0 && c.has(l(t, e) ?? "") || u.size > 0 && u.has(String(e?.id ?? "").toLowerCase()), f = o.filter(d).map((e) => ({
+		...a.MiscUtil.copyFast(e),
+		uniqueId: e.uniqueId ?? a.CryptUtil.uid()
+	}));
+	return f.length ? (i.body[t] = o.filter((e) => !d(e)), await a.BrewUtil2.pUpdateBrew(i), f) : [];
 }
 async function Zt(e, t, n, r) {
 	let i = await G(e), o = 0;

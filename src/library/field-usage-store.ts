@@ -3,6 +3,7 @@
 // 解析结果里没有自己的条目，改读作者原文件（小窗 rawProp：作者 DataUtil.<类别>.loadRawJSON）。
 import type { BrewField } from './brew-validate'
 import { resolve } from './field-shape-core'
+import { attachedPlan } from './attached-parts'
 import { formatOfCodeSet } from './formats'
 import { fieldUsage, ownItems, type FieldUsage } from './field-usage'
 import { formPlan, type FormPlan } from './form-plan'
@@ -99,6 +100,7 @@ async function autoFieldsIn(lib: UsageDeps, codeSet: string, prop: string): Prom
 export async function formPlanOf(lib: UsageDeps & Pick<LibraryService, 'officialInstalled'>, codeSet: string, prop: string): Promise<FormPlan | null> {
   const table = await fieldTable(lib, codeSet, prop)
   if (!table) return null
-  const [usage, auto] = await Promise.all([usageOf(lib, codeSet, prop), autoFieldsOf(lib, codeSet, prop)])
-  return formPlan(table, usage, auto?.auto ?? [])
+  const [usage, auto, part] = await Promise.all([usageOf(lib, codeSet, prop), autoFieldsOf(lib, codeSet, prop), lib.frameOf(codeSet).then((f) => attachedPlan(f, codeSet, prop))])
+  // 附属部分（书的正文）：主条目藏自动算的目录、告诉编辑器多画一节；附属部分那一类藏跟着主条目走的字段
+  return { ...formPlan(table, usage, [...(auto?.auto ?? []), ...part.hide]), attached: part.attached }
 }

@@ -10,6 +10,7 @@ import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import type { EditSession } from './edit-flow'
 import EmbeddedEntity from './EmbeddedEntity.vue'
+import AttachedSection from './AttachedSection.vue'
 import ChildrenSection from './ChildrenSection.vue'
 import EntryForm from './EntryForm.vue'
 import ConvertPage from './ConvertPage.vue'
@@ -160,7 +161,7 @@ async function undo(): Promise<void> {
   try {
     await app.svc().backend.library.custom.undo(ed.cs.main, props.session.prop, props.session.target.uniqueId)
     const got = props.session.pack ? await app.svc().backend.library.custom.packEntry(ed.cs.main, props.session.pack.id, props.session.prop, { uniqueId: props.session.target.uniqueId }) : null
-    if (got?.entity) { ed.ents.main.value = got.entity; formKey.value++ }
+    if (got?.entity) { ed.ents.main.value = got.entity; await ed.reloadAttached(); formKey.value++ }
     await ed.loadUndo()
     toast.success('已撤销一步')
   } catch (e) { console.error('[trpg-assistant] 撤销失败', e); toast.error(e instanceof Error ? e.message : '撤销没有成功') }
@@ -284,6 +285,7 @@ async function doneHouse(): Promise<void> {
         <div v-if="wide" class="lib-pane__head"><b>{{ langName(ed.cs[L]) }}{{ house ? '（房规）' : '' }}</b></div>
         <div class="lib-pane__body">
 <EntryForm :key="`L${formKey}${L}`" :table="ed.tables[L].value ?? ed.tables.main.value" :ent="ed.ents[L].value ?? {}" :detailed="session.detailed" :marks="ed.marksOf(L)" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setEnt(L, e)" @json="showJson" />
+          <AttachedSection :table="ed.attachedTables[L].value" :ent="ed.attached[L].value" :form-key="`AL${formKey}${L}`" :raw-names="ed.cs[L] === 'en'" :code-set="ed.cs[L]" @update="(e) => ed.setAttached(L, e)" />
           <ChildrenSection v-if="session.pack && L === 'main'" :code-set="ed.cs.main" :pack="session.pack" :prop="session.prop" :ent="ed.ents.main.value" :saved="session.target.kind === 'mine'" @linked="relink" />
 </div>
       </section>
@@ -297,7 +299,10 @@ async function doneHouse(): Promise<void> {
             <div v-else-if="ed.otherState.value === 'loading'" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
             <p v-else-if="ed.otherState.value === 'ambiguous'" class="lib-muted">{{ langName(ed.cs[R]) }}那套里有好几条对得上，没法确定是哪一条；这次先不改另一种语言。</p>
             <p v-else-if="ed.otherState.value === 'error'" class="lib-muted">另一种语言这次没读出来；这次先只改{{ langName(ed.cs[L]) }}。</p>
-            <EntryForm v-else-if="ed.tables[R].value && ed.ents[R].value" :key="`R${formKey}${R}`" :table="ed.tables[R].value!" :ent="ed.ents[R].value!" :detailed="session.detailed" :marks="ed.marksOf(R)" :raw-names="ed.cs[R] === 'en'" :code-set="ed.cs[R]" @update="(e) => ed.setEnt(R, e)" @json="showJson" />
+            <template v-else-if="ed.tables[R].value && ed.ents[R].value">
+              <EntryForm :key="`R${formKey}${R}`" :table="ed.tables[R].value!" :ent="ed.ents[R].value!" :detailed="session.detailed" :marks="ed.marksOf(R)" :raw-names="ed.cs[R] === 'en'" :code-set="ed.cs[R]" @update="(e) => ed.setEnt(R, e)" @json="showJson" />
+              <AttachedSection :table="ed.attachedTables[R].value" :ent="ed.attached[R].value" :form-key="`AR${formKey}${R}`" :raw-names="ed.cs[R] === 'en'" :code-set="ed.cs[R]" @update="(e) => ed.setAttached(R, e)" />
+            </template>
           </template>
           <template v-else-if="tab === 'json'">
             <JsonBox :model-value="ed.jsonText.value" :issues="ed.jsonIssues.value" :keys="ed.tables[L].value?.fields.map((f) => f.name) ?? []" :label="`${langName(ed.cs[L])}这一条的 JSON`" @update:model-value="ed.onJson" />

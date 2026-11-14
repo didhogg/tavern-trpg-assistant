@@ -1,8 +1,10 @@
 // P5.5 B8-2 写条目：存一条、删、撤销、换包、改名后搬插件记录。写到哪由 pack 决定：
 //   pack = 【我的库】一个包的身份 → 那个作者自制包（小窗 pack-commands.ts：复制整包 → 换那一条 → 作者 pUpdateBrew）；
 //   pack 不给 → 作者可编辑自制（房规；B8-6 迁移前的「我的资料」）。
+// 附属部分（书 / 冒险的正文，attached-parts.ts）在存、删、撤销里顺带一起处理，不另开入口。
 // 改名（作者编号 = 名字 + 来源）：同一次修改里把用 _copy 指向它的条目改指新名字（这个包里 + 可编辑自制里的房规），
 // 插件的归类、房规链接、各层选的版本搬到新编号。战役记录和存档里的引用不在这里改（读档检查会列出来）。
+import { attachedInfo, prepareHead, withLinked } from './attached-parts'
 import { docIdOf } from './custom-packs'
 import { autoFieldsOf } from './field-usage-store'
 import { formatOfCodeSet } from './formats'
@@ -27,8 +29,10 @@ export interface SaveOptions {
   pack?: string | null
   /** 改包里一条还没有 uniqueId 的（导入 / 复制来的）：按作者编号找到它换掉。 */
   replaceHash?: string
-  /** 同上，给没有作者编号的类别（书 / 冒险的正文）：按 id 找。 */
+  /** 同上，按 id 找（附属部分没有作者编号）。 */
   replaceId?: string
+  /** 这一类的附属部分（attached-parts.ts，例：书的正文）：给了就和这一条一起存，跟着它的 id / 来源，目录按它算。 */
+  attached?: Record<string, unknown>
 }
 
 const brewSetOf = (codeSet: string) => {
@@ -61,11 +65,21 @@ async function inStore<T>(d: EntryDeps, codeSet: string, kind: string, pack: str
 }
 
 /** 存一条（新写或改）。record：记一步撤销（撤销自己存回去时不记）。 */
-export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record, pack, replaceHash, replaceId }: SaveOptions & { record: boolean }) {
+export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: Record<string, unknown>, { rule, record, pack, replaceHash, replaceId, attached }: SaveOptions & { record: boolean }) {
   ent = await withAutoFields(d, codeSet, prop, ent, rule)
+  let body: Record<string, unknown> | null = null
+  let prepared: Record<string, unknown> | null = null
   const result = await inStore(d, codeSet, 'custom-entry', pack, async (f, doc) => {
     // 没给来源（包括写成 undefined）才用默认：包自己的来源 / 可编辑自制的「我的资料」
     const full: Record<string, unknown> = { ...ent, source: ent.source ?? (doc ? doc.own : d.mineSource.json) }
+    // 附属部分（attached-parts.ts）：先查改之前的编号，检查章名 / 编号，目录按附属部分算
+    const part = attached ? await attachedInfo(f, codeSet, prop) : null
+    if (attached && !part) throw new Error(`这一类没有附属部分：${prop}`)
+    if (part && !doc) throw new Error('带附属部分的条目只能存进【我的库】的包')
+    // 改之前那一条：按 uniqueId 找；导入来的没有 uniqueId（打开时给的是临时的），再按作者编号找
+    const was = part && doc ? (ent.uniqueId ? await f.call('packEntity', doc.id, prop, { uniqueId: String(ent.uniqueId) }) : null) ?? (replaceHash ? await f.call('packEntity', doc.id, prop, { hash: replaceHash }) : null) : null
+    const wasId = was ? String(was.entity.id ?? '') : null
+    if (part) { Object.assign(full, await prepareHead(f, prop, full, attached!, wasId)); prepared = full }
     // 新写的一条：这一类在作者结构定义里能自带版本（字段说明表 edition）就写上规则的版本（P5.5 B1）。用户自己写了就不动。
     if (rule && !ent.uniqueId && !replaceHash && !replaceId && full.edition === undefined && (await formatOfCodeSet(codeSet).fields(prop))?.edition) full.edition = ruleScopes(rule).style
     let put
@@ -78,6 +92,13 @@ export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: 
       await f.call('editableEnsureSource', d.mineSource)
       put = await f.call('editablePut', prop, full)
     }
+    // 附属部分跟着这一条存：共用字段（id、来源）从这一条抄过去；导入来的没有 uniqueId，按原来的 id 找到换掉
+    let attachedPut: { prop: string; uniqueId: string; previousEntity: Record<string, unknown> | null } | null = null
+    if (part && doc) {
+      body = withLinked({ ...attached }, full, part)
+      const got = await f.call('packPut', doc.id, part.prop, body, wasId ? { replaceId: wasId } : {})
+      attachedPut = { prop: part.prop, uniqueId: got.uniqueId, previousEntity: got.previousEntity ?? null }
+    }
     const prev = put.previous
     let retargeted = 0
     if (prev && put.previousHash !== put.hash) {
@@ -85,18 +106,25 @@ export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: 
       if (doc) retargeted += await f.call('packRetargetCopies', doc.id, prop, prev, to)
       retargeted += await f.call('editableRetargetCopies', prop, prev, to)
     }
-    return { ...put, retargeted }
+    return { ...put, retargeted, attachedPut }
   })
-  const { previousEntity, ...saved } = result.value
+  const { previousEntity, attachedPut, ...saved } = result.value
   const set = brewSetOf(codeSet).id
-  if (record) await d.manage.pushHistory(historyKey(codeSet, prop, saved.uniqueId), { at: Date.now(), prop, before: previousEntity ?? null, pack: pack ?? null })
+  // 附属部分和这一条记在同一步里（撤销一起撤回）
+  if (record) await d.manage.pushHistory(historyKey(codeSet, prop, saved.uniqueId), { at: Date.now(), prop, before: previousEntity ?? null, pack: pack ?? null, ...(attachedPut ? { attached: { prop: attachedPut.prop, before: attachedPut.previousEntity } } : {}) })
   const renamed = saved.hash && saved.previousHash && saved.previousHash !== saved.hash ? { from: { set, prop, hash: saved.previousHash }, to: { set, prop, hash: saved.hash }, retargeted: saved.retargeted } : null
   if (renamed) await carryRefs(d.manage, renamed.from, renamed.to)
   else if (saved.hash && !saved.previousHash && rule) await d.manage.setAssignment(entryUnit({ set, prop, hash: saved.hash }), { scopes: [...ruleScopes(rule).defaultScopes], global: false })
   // 解析在后台（pending）；另一种语言对上了谁要等解析完才知道，到时用 counterparts 再查
-  // 按导出后的样子查：uniqueId 是作者自制管理器内部用的，导出时作者 DataUtil.cleanJson 会删掉（书 / 冒险的结构定义不收它）
-  const { uniqueId: _internal, ...checked } = ent
-  return { ...saved, renamed, pending: true as const, issues: await d.validateEntry(codeSet, prop, checked) }
+  // 有附属部分的按算好目录的那份查；按导出后的样子查：uniqueId 是作者自制管理器内部用的，导出时作者 DataUtil.cleanJson 会删掉（书 / 冒险的结构定义不收它）
+  const { uniqueId: _internal, ...checked } = (prepared ?? ent) as Record<string, unknown>
+  const issues = await d.validateEntry(codeSet, prop, checked)
+  if (attachedPut && body) {
+    const b: Record<string, unknown> = { ...(body as Record<string, unknown>) }
+    delete b.uniqueId
+    issues.push(...await d.validateEntry(codeSet, attachedPut.prop, b))
+  }
+  return { ...saved, renamed, pending: true as const, issues, attached: attachedPut ? { prop: attachedPut.prop, uniqueId: attachedPut.uniqueId } : null }
 }
 
 /**
@@ -116,15 +144,35 @@ async function withAutoFields(d: EntryDeps, codeSet: string, prop: string, ent: 
   return out
 }
 
-/** 删条（按 uniqueId）；record：每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。返回删掉的原文。 */
-export async function remove(d: EntryDeps, codeSet: string, prop: string, uniqueIds: string[], { record, link, pack, carry }: { record: boolean; link?: HouseRuleLink; pack?: string | null; carry?: EditStep['carry'] }) {
+/** 删哪几条：作者 uniqueId，或（导入 / 复制来的还没有 uniqueId）作者编号。 */
+export type EntryKey = string | { uniqueId?: string; hash?: string }
+
+/**
+ * 删条；record：每条记一步撤销（撤销 = 用原来的 uniqueId 加回去；原来没有 uniqueId 的删时补一个）。返回删掉的原文。
+ * 这一类有附属部分（书的正文）的，同 id 的附属部分一起删，记在同一步里。
+ */
+export async function remove(d: EntryDeps, codeSet: string, prop: string, keys: EntryKey[], { record, link, pack, carry }: { record: boolean; link?: HouseRuleLink; pack?: string | null; carry?: EditStep['carry'] }) {
+  const uids = keys.flatMap((k) => (typeof k === 'string' ? [k] : k.uniqueId ? [k.uniqueId] : []))
+  const hashes = keys.flatMap((k) => (typeof k === 'object' && !k.uniqueId && k.hash ? [k.hash] : []))
+  const attachedBefore = new Map<string, NonNullable<EditStep['attached']>>()
   const result = await inStore(d, codeSet, 'custom-delete', pack, async (f, doc) => {
-    if (!doc) return f.call('editableRemove', prop, uniqueIds)
-    const removed = (await f.call('packRemove', doc.id, prop, uniqueIds)) as Array<Record<string, unknown>>
+    if (!doc) {
+      if (hashes.length) throw new Error('可编辑自制里的条目要按 uniqueId 删')
+      return f.call('editableRemove', prop, uids)
+    }
+    const removed = (await f.call('packRemove', doc.id, prop, uids, { hashes })) as Array<Record<string, unknown>>
     for (const r of removed) await f.call('linkParent', doc.id, prop, r, null) // 删从属条目：主条目引用表里去掉
+    const part = removed.length ? await attachedInfo(f, codeSet, prop) : null
+    if (part) for (const r of removed) {
+      const [b] = (await f.call('packRemove', doc.id, part.prop, [], { ids: [String(r.id ?? '')] })) as Array<Record<string, unknown>>
+      if (b) attachedBefore.set(String(r.uniqueId), { prop: part.prop, before: b })
+    }
     return removed
   })
-  if (record) for (const before of result.value) await d.manage.pushHistory(historyKey(codeSet, prop, String(before.uniqueId)), { at: Date.now(), prop, before, pack: pack ?? null, ...(link ? { link } : {}), ...(carry ? { carry } : {}) })
+  if (record) for (const before of result.value) {
+    const extra = attachedBefore.get(String(before.uniqueId))
+    await d.manage.pushHistory(historyKey(codeSet, prop, String(before.uniqueId)), { at: Date.now(), prop, before, pack: pack ?? null, ...(link ? { link } : {}), ...(carry ? { carry } : {}), ...(extra ? { attached: extra } : {}) })
+  }
   return result
 }
 
@@ -204,7 +252,8 @@ export async function undo(d: EntryDeps, codeSet: string, prop: string, uniqueId
     if (step.link) await d.manage.unlinkHouseRule(step.link.house)
     return { undone: 'created' as const, left: await left() }
   }
-  const entry = await persist(d, codeSet, prop, step.before, { record: false, pack: step.pack })
+  // 附属部分记在同一步里的，一起存回去
+  const entry = await persist(d, codeSet, prop, step.before, { record: false, pack: step.pack, ...(step.attached?.before ? { attached: step.attached.before } : {}) })
   if (step.link && entry.hash) await d.manage.linkHouseRule({ house: { ...step.link.house, hash: entry.hash }, target: step.link.target })
   if (step.carry) await carryRefs(d.manage, step.carry.to, step.carry.from)
   return { undone: 'restored' as const, entry, left: await left() }

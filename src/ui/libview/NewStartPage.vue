@@ -41,7 +41,7 @@ async function next(): Promise<void> {
   if (k === 'json') return page('json', '粘贴 JSON', JsonStartPage)
   busy.value = true
   try {
-    const ent = await app.svc().backend.library.custom.blankEntry(props.codeSet, props.type.prop)
+    const ent = await app.svc().backend.library.custom.blankEntry(props.codeSet, props.type.prop, props.pack ? { pack: props.pack.id } : {})
     if (!ent) throw new Error(`这套资料不收这一类条目：${props.type.name}`)
     openEditor({ ...base(), ent })
   } catch (e) { console.error('[trpg-assistant] 空白条目没生成', e); toast.error(e instanceof Error ? e.message : '没能开始') } finally { busy.value = false }

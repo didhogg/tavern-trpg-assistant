@@ -22,7 +22,7 @@ export async function saveDraft(manage: ManageStore, input: DraftInput, key?: st
   const k = key ?? draftKey(input)
   const was = await manage.draft(k)
   const m: EditDraft['m'] = { isModified: true, isPersisted: false, nameOriginal: was?.m.nameOriginal ?? null, styleHint: was?.m.styleHint ?? null, ...input.m }
-  await manage.putDraft(k, { at: Date.now(), codeSet: input.codeSet, prop: input.prop, s: structuredClone(input.s), m, target: input.target })
+  await manage.putDraft(k, { at: Date.now(), codeSet: input.codeSet, prop: input.prop, s: structuredClone(input.s), ...(input.a ? { a: structuredClone(input.a) } : {}), m, target: input.target })
   return k
 }
 

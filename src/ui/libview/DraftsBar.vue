@@ -23,7 +23,7 @@ const time = (at: number) => { const d = new Date(at); return `${d.getMonth() + 
 async function restore(list: Draft[]): Promise<void> {
   const c = app.svc().backend.library.custom
   // 草稿经过界面状态是响应式代理，后端 structuredClone 复制不了：先转成普通数据
-  for (const d of list) await c.saveDraft(plain({ codeSet: d.codeSet, prop: d.prop, s: d.s, target: d.target, m: d.m }), d.key)
+  for (const d of list) await c.saveDraft(plain({ codeSet: d.codeSet, prop: d.prop, s: d.s, ...(d.a ? { a: d.a } : {}), target: d.target, m: d.m }), d.key)
   emit('changed')
 }
 async function drop(list: Draft[]): Promise<void> {

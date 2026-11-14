@@ -39,6 +39,7 @@ function setup(taken: string[] = ['PHB']) {
       }
       case 'packRemove': { const d = doc(a[0]); const out = (d.body[a[1]] ?? []).filter((x: Record<string, unknown>) => a[2].includes(x.uniqueId)); d.body[a[1]] = (d.body[a[1]] ?? []).filter((x: Record<string, unknown>) => !a[2].includes(x.uniqueId)); return structuredClone(out) }
       case 'packRetargetCopies': case 'editableRetargetCopies': return 0
+      case 'corpusPairs': return [] // 作者的书 / 冒险配对表；这里的类别都没有附属部分
       case 'packRenameSource': { const s = doc(a[0]).body._meta.sources.find((x: { json: string }) => x.json === a[1]); Object.assign(s, a[2]); return undefined }
       case 'packExport': return { filename: 'x.json', body: { _meta: { ...doc(a[0]).body._meta, ...(a[1] ? { edition: a[1] } : {}) } } }
       default: return undefined

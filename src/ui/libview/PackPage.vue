@@ -7,9 +7,11 @@ import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import Icon from '../kit/Icon.vue'
+import MoreMenu from '../kit/MoreMenu.vue'
+import { askConfirm } from '../kit/confirm'
 import { loadPackRows, matchName, type PackRow } from './pack-data'
 import { openEntry, openReader } from './open'
-import { openEditCorpus, openEditMine, openNewEntry } from './edit-flow'
+import { openEditMine, openNewEntry } from './edit-flow'
 import { usePending } from './mine'
 import { useToastStore } from '../../stores/toast'
 import { categoryLabel, registeredCategories } from './registry'
@@ -32,7 +34,7 @@ const sorted = ref<PackRow[] | null>(null)
 const codeSet = computed(() => getSource(props.set).codeSet)
 
 // 书 / 冒险本身是"书"类别里的一条条目（点进去是阅读器，不在包外壳上放按钮）；官方的从书目索引找，自制的用包里带的正文
-const readers = ref<Array<{ set: string; prop: string; id: string; name: string }>>([])
+const readers = ref<Array<{ set: string; prop: string; id: string; name: string; hash?: string }>>([])
 const readerError = ref<string | null>(null)
 async function loadReaders(): Promise<void> {
   readerError.value = null
@@ -45,7 +47,7 @@ async function loadReaders(): Promise<void> {
       const pack = packs.find((p) => p.docIdLocal === props.docIdLocal)
       readers.value = Object.entries(corpora).flatMap(([prop, list]) => list
         .filter((r) => pack?.hashes[prop]?.includes(r.hash))
-        .map(({ id, name }) => ({ set: props.set, prop, id, name })))
+        .map(({ id, name, hash }) => ({ set: props.set, prop, id, name, hash })))
       return
     }
     if (!props.kind) return
@@ -125,15 +127,27 @@ watch([sortBy, dir], async () => {
 })
 watch(q, () => toTop())
 const toast = useToastStore()
-/** 我的库的包：行尾 ✎ 打开编辑器（P5.5 u7-3）。 */
-function edit(r: PackRow): void {
-  if (!props.mine) return
-  openEditMine(app.svc(), props.mine.codeSet, { id: props.mine.id, name: props.name }, r.ref.prop, r.ref.hash).catch((e: unknown) => { console.error('[trpg-assistant] 打开编辑器失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
+/** 我的库的包：行尾 ✎ 打开编辑器（P5.5 u7-3）；书 / 冒险那几行也一样。 */
+function edit(prop: string, hash: string | undefined): void {
+  if (!props.mine || !hash) return
+  openEditMine(app.svc(), props.mine.codeSet, { id: props.mine.id, name: props.name }, prop, hash).catch((e: unknown) => { console.error('[trpg-assistant] 打开编辑器失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
 }
-/** 我的库的包里「书」类别的 ✎：打开书 / 冒险的编辑页（只做自制的，官方书不能改）。 */
-function editBook(r: { prop: string; id: string }): void {
-  if (!props.mine) return
-  openEditCorpus(app.svc(), props.mine.codeSet, { id: props.mine.id, name: props.name }, r.prop, r.id, () => void loadReaders()).catch((e: unknown) => { console.error('[trpg-assistant] 打开书的编辑页失败', e); toast.error(e instanceof Error ? e.message : '没能打开') })
+/**
+ * 我的库的包：行尾 ⋯ → 删除（所有类别同一个，书 / 冒险的正文由后端一起删）。先问一次；删完提示里能撤销（custom.undo，每条一步）。
+ * 按作者编号删（导入来的条目没有 uniqueId 也能删）。
+ */
+const ROW_MENU = [{ key: 'delete', label: '删除', danger: true }]
+async function removeRow(prop: string, hash: string | undefined, name: string): Promise<void> {
+  const m = props.mine
+  if (!m || !hash) return
+  if (!(await askConfirm({ title: `删除「${name}」？`, message: '从这个包里删掉。删掉后可以在提示里撤销。', confirmLabel: '删除', cancelLabel: '先不了', danger: true }))) return
+  try {
+    const c = app.svc().backend.library.custom
+    const r = await c.deleteEntries(m.codeSet, prop, [{ hash }], { pack: m.id })
+    const reload = () => { void load(); void loadReaders() }
+    reload()
+    toast.push('undo', `已删除「${name}」`, { undo: async () => { for (const uid of r.uniqueIds) await c.undo(m.codeSet, prop, uid); reload() } })
+  } catch (e) { console.error('[trpg-assistant] 删除没成功', e); toast.error(e instanceof Error ? e.message : '没删掉') }
 }
 </script>
 
@@ -160,7 +174,8 @@ function editBook(r: { prop: string; id: string }): void {
       <div v-else-if="cat === 'book'" class="lib-list" role="list">
         <div v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" :class="['lib-list__row', mine && 'lib-list__row--edit']" role="listitem" data-testid="book-row">
           <button class="lib-list__open" type="button" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
-          <button v-if="mine" class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="book-edit" @click="editBook(r)"><Icon name="pencil-simple" :size="18" /></button>
+          <button v-if="mine" class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="book-edit" @click="edit(r.prop, r.hash)"><Icon name="pencil-simple" :size="18" /></button>
+          <MoreMenu v-if="mine" :label="r.name" :items="ROW_MENU" @select="() => removeRow(r.prop, r.hash, r.name)" />
         </div>
       </div>
       <div v-else-if="cat !== 'all' && cols.length" class="lib-tablewrap" data-testid="pack-table">
@@ -180,7 +195,7 @@ function editBook(r: { prop: string; id: string }): void {
             <tr v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}:${r.selection && 'docIdLocal' in r.selection ? r.selection.docIdLocal : ''}`" tabindex="0" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)" @keydown.enter="openEntry(r.ref, r.name, r.selection)">
               <td v-for="c in cols" :key="c.i" :class="{ 'lib-name': c.i === nameCol }">{{ cellValue(r, c) }}</td>
               <td class="lib-src">{{ r.pack ?? abv ?? r.source ?? '' }}</td>
-              <td v-if="mine" @click.stop><button class="trpg-icon-btn" type="button" :aria-label="`编辑 ${r.name}`" @click="edit(r)"><Icon name="pencil-simple" :size="16" /></button></td>
+              <td v-if="mine" @click.stop><span class="lib-inline"><button class="trpg-icon-btn" type="button" :aria-label="`编辑 ${r.name}`" @click="edit(r.ref.prop, r.ref.hash)"><Icon name="pencil-simple" :size="16" /></button><MoreMenu :label="r.name" :items="ROW_MENU" @select="() => removeRow(r.ref.prop, r.ref.hash, r.name)" /></span></td>
             </tr>
             <tr v-if="range.padBottom" aria-hidden="true" class="lib-spacer" :style="{ height: `${range.padBottom}px` }"><td :colspan="cols.length + 1" /></tr>
           </tbody>
@@ -189,12 +204,14 @@ function editBook(r: { prop: string; id: string }): void {
       <div v-else class="lib-list" role="list" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
         <div v-for="r in shownReaders" :key="`r${r.prop}:${r.id}`" :class="['lib-list__row', mine && 'lib-list__row--edit']" role="listitem" data-testid="book-row">
           <button class="lib-list__open" type="button" @click="openReader(r)"><span class="lib-name">{{ r.name }}</span><span class="trpg-badge">{{ r.prop === 'adventure' ? '冒险' : '书' }}</span></button>
-          <button v-if="mine" class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="book-edit" @click="editBook(r)"><Icon name="pencil-simple" :size="18" /></button>
+          <button v-if="mine" class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="book-edit" @click="edit(r.prop, r.hash)"><Icon name="pencil-simple" :size="18" /></button>
+          <MoreMenu v-if="mine" :label="r.name" :items="ROW_MENU" @select="() => removeRow(r.prop, r.hash, r.name)" />
         </div>
         <template v-if="mine">
           <div v-for="r in visible" :key="`${r.ref.prop}:${r.ref.hash}`" class="lib-list__row lib-list__row--edit" role="listitem" data-testid="mine-row">
             <button class="lib-list__open" type="button" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)"><span class="lib-name">{{ r.name }}</span><span v-if="cat === 'all'" class="trpg-badge">{{ categoryLabel(r.prop) }}</span></button>
-            <button class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="mine-edit" @click="edit(r)"><Icon name="pencil-simple" :size="18" /></button>
+            <button class="trpg-icon-btn lib-end" type="button" :aria-label="`编辑 ${r.name}`" data-testid="mine-edit" @click="edit(r.ref.prop, r.ref.hash)"><Icon name="pencil-simple" :size="18" /></button>
+            <MoreMenu :label="r.name" :items="ROW_MENU" @select="() => removeRow(r.ref.prop, r.ref.hash, r.name)" />
           </div>
         </template>
         <button v-for="r in mine ? [] : visible" :key="`${r.ref.prop}:${r.ref.hash}:${r.selection && 'docIdLocal' in r.selection ? r.selection.docIdLocal : ''}`" class="lib-list__row" type="button" role="listitem" :data-off="r.off" @click="openEntry(r.ref, r.name, r.selection)">

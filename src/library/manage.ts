@@ -26,6 +26,8 @@ export interface EditStep {
   pack?: string | null
   /** 换包时编号从哪变到哪：撤销这一步时插件记录（归类、房规链接、选的版本）搬回原编号。 */
   carry?: { from: EntryRef; to: EntryRef }
+  /** 这一条的附属部分（书的正文，attached-parts.ts）在这一步之前的原文；撤销时一起存回去。旧记录没有 = 不带附属部分。 */
+  attached?: { prop: string; before: Record<string, unknown> | null }
 }
 
 /**
@@ -38,6 +40,8 @@ export interface EditDraft {
   codeSet: string
   prop: string
   s: Record<string, unknown>
+  /** 附属部分（书的正文，attached-parts.ts）的草稿；旧草稿没有 = 不带附属部分。 */
+  a?: Record<string, unknown>
   m: { isModified: boolean; isPersisted: boolean; nameOriginal: string | null; styleHint: 'classic' | 'one' | null }
   /** new：新条目，存进哪个包（来源编号）；mine：改自己的条目（作者 uniqueId）；house：改官方 / 下载的条目（存成房规）。 */
   target: { kind: 'new'; pack: string | null } | { kind: 'mine'; uniqueId: string; pack?: string } | { kind: 'house'; ref: EntryRef }

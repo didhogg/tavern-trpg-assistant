@@ -14,9 +14,9 @@ import { houseNow } from './custom-raw'
 import { emptyIfMissing } from './official-missing'
 import { autoFieldsOf, formPlanOf, usageOf } from './field-usage-store'
 import { childrenOf, childStart } from './custom-children'
-import { corpusEntry, corpusStart, deleteCorpus, saveCorpus, type CorpusDeps, type CorpusDraft } from './custom-corpus'
+import { attachedPartOf, blankWithAttached } from './attached-parts'
 import { listEdits, moveEdits, type EditFilter, type EditLevel, type EditRow } from './custom-edits'
-import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type SaveOptions } from './custom-entries'
+import { historyKey, moveEntries, persist, remove, undo, type EntryDeps, type EntryKey, type SaveOptions } from './custom-entries'
 import type { BrewValidation, SchemaIssue } from './brew-validate'
 import { formatOfCampaign, formatOfCodeSet, splitRecognized } from './formats'
 import { fieldTable } from './field-values'
@@ -111,9 +111,17 @@ export class CustomLibrary {
   /** 新从属条目的起点（指向主条目的字段照主条目填）。 */
   childStart(codeSet: string, childProp: string, parentProp: string, parent: Record<string, unknown>) { return childStart(codeSet, childProp, parentProp, parent) }
 
-  /** 空白条目：只放必填字段的空值（B6）。 */
-  blankEntry(codeSet: string, prop: string) {
-    return blankEntry(codeSet, prop)
+  /** 空白条目：只放必填字段的空值（B6）；给了包，有附属部分的类别（书）按包补编号建议等默认值。 */
+  async blankEntry(codeSet: string, prop: string, opts: { pack?: string } = {}) {
+    const blank = await blankEntry(codeSet, prop)
+    const own = blank && opts.pack ? (await this.packs(codeSet)).find((p) => p.id === opts.pack)?.own.json : null
+    return blank && own ? blankWithAttached(await this.frame(codeSet), codeSet, prop, blank, own) : blank
+  }
+
+  /** 这一条的附属部分（书的正文，attached-parts.ts）：包里这一条的；新条目（不给 key）给空白；这一类没有附属部分 null。 */
+  async attachedPart(codeSet: string, prop: string, pack: string | null, key: { uniqueId?: string; hash?: string } | null = null) {
+    const f = await this.frame(codeSet)
+    return attachedPartOf(f, codeSet, prop, pack && key ? await docIdOf(f, pack) : null, key)
   }
 
   /** 作者新条目模板（作者有这一类的构建器才有；别的类别 null）。 */
@@ -215,10 +223,13 @@ export class CustomLibrary {
     return this.counterpartHint ? this.counterpartHint(ref) : null
   }
 
-  /** 删自己的条目（pack：在【我的库】哪个包里）；每条记一步撤销（撤销 = 用原来的 uniqueId 加回去）。 */
-  async deleteEntries(codeSet: string, prop: string, uniqueIds: string[], { pack }: { pack?: string | null } = {}) {
-    const r = await remove(this.entryDeps, codeSet, prop, uniqueIds, { record: true, pack: pack ?? await this.defaultPack(codeSet) })
-    return { removed: r.value.length, pending: true as const }
+  /**
+   * 删自己的条目（pack：在【我的库】哪个包里）：按 uniqueId，导入 / 复制来的还没有 uniqueId 的按作者编号；附属部分（书的正文）一起删。
+   * 每条记一步撤销；返回删掉的每一条的 uniqueId（没有的删时补上），撤销用 custom.undo。
+   */
+  async deleteEntries(codeSet: string, prop: string, keys: EntryKey[], { pack }: { pack?: string | null } = {}) {
+    const r = await remove(this.entryDeps, codeSet, prop, keys, { record: true, pack: pack ?? await this.defaultPack(codeSet) })
+    return { removed: r.value.length, uniqueIds: r.value.map((x) => String(x.uniqueId)), pending: true as const }
   }
 
   /**
@@ -245,13 +256,6 @@ export class CustomLibrary {
   }
 
   // ---- 【我的库】的包（P5.5 B8：一个包 = 作者的一个独立自制包；custom-packs.ts）----
-  // 自制书 / 冒险（custom-corpus.ts）：新建的起点、取一本、存（目录自动算）、删
-  private get corpusDeps(): CorpusDeps { return { entry: this.entryDeps, pack: this.packDeps, frame: (cs) => this.frame(cs) } }
-  corpusStart(codeSet: string, prop: string, pack: string) { return corpusStart(this.corpusDeps, codeSet, prop, pack) }
-  corpusEntry(codeSet: string, pack: string, prop: string, id: string) { return corpusEntry(this.corpusDeps, codeSet, pack, prop, id) }
-  saveCorpus(codeSet: string, prop: string, draft: CorpusDraft, opts: { pack: string; rule?: string }) { return saveCorpus(this.corpusDeps, codeSet, prop, draft, opts) }
-  deleteCorpus(codeSet: string, pack: string, prop: string, id: string) { return deleteCorpus(this.corpusDeps, codeSet, pack, prop, id) }
-
   private get packDeps(): PackDeps {
     return { lib: this.lib, manage: this.manage, packsOf: (id, view) => new BrewPacks(this.lib).list(id, view) }
   }
