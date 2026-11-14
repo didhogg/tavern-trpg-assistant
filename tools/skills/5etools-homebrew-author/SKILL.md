@@ -95,6 +95,8 @@ description: 按作者（TheGiddyLimit / 5etools）的自制数据格式，生�
 
 ## 特殊情况
 
+- **专长带属性加值（有可见的 `ability`）时，`entries` 里要有 `{"type":"list","items":[…]}` 条目（或至少一个 `type:"entries"` 的小节），只有纯字符串段落不行**。把专长的各项好处写成列表项即可（官方的 Athlete 等都是这样）。作者结构定义允许不写，**结构校验会放过**，但加到人物上时 Plutonium 会报 `Could not find object of type "list" in "entries" … when merging ability scores`（条件取自作者渲染代码 `Renderer.feat.initFullEntries`；2026-11-14 导入实测，补上 `list` 后该报错消失）。`validate.mjs` 会对这种写法给“约定警告”（作者仓库 21 个真实专长包 0 条误报）。这类专长加到人物上还会停在“等用户选属性”，官方的也一样，是正常的。
+- **自制子职 / 职业目前加不到人物上**（TRPG 助手内核的现有限制，不是写法问题）：导入、读回、显示都正常，但用“加到人物”会失败。2026-11-14 实测：同一入口加官方子职成功；你写的子职、以及作者仓库里别人写的真实自制子职都失败（Plutonium 要去自己的数据缓存取子职原始数据，内核数据源只有官方文件）。**不要为这个去改子职写法**——五种写法都试过没用。生成子职 / 职业时要如实告诉用户这个限制。导入后同名子职会出现两行（原件 + 作者加载器另造的 `_isCopy` 副本），不是重复导入。详见 `references/易错点.md` 第八节。
 - **基于现成条目改一点**（做变体）：用 `_copy` 机制，规则在 `_doc/Spec_Copy.md`；用了 `_copy` 要在 `_meta` 里声明 `dependencies` / `internalCopies`（同文件）。
 - **一个文件放多个类别**可以：顶层是 `_meta` 加多个类别数组。最小骨架（必填项取自结构定义，`_meta` 全部含义见 wiki 的 `_meta` 页）：
   ```json

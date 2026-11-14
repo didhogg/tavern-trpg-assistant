@@ -85,6 +85,16 @@ async function conventions(file, text, data) {
     }
   }
   // dateAdded / dateLastModified / edition 是结构定义自己列的必填项，校验器会拦，这里不重复
+
+  // 结构定义放过、但加到人物上会报错的专长写法（不是 README 的约定，是 Plutonium 的要求）：
+  // 作者的渲染代码（Renderer.feat.initFullEntries）对有可见 ability 的专长，先找 type:"list" 的条目；没有就找 type:"entries" 的小节，
+  // 在它前面插入“属性值提升”；两者都没有才抛 Could not find object of type "list" in "entries" … when merging ability scores。
+  // 所以条件是：有可见的 ability、entries 里既没有 list 也没有 entries 小节（只有纯字符串段落）。带 _copy 的专长没有自己的 entries，不查。
+  for (const feat of Array.isArray(data?.feat) ? data.feat : []) {
+    if (!feat || feat._copy || !Array.isArray(feat.ability) || !feat.ability.some((a) => a && !a.hidden)) continue
+    const has = Array.isArray(feat.entries) && feat.entries.some((e) => e && typeof e === 'object' && (e.type === 'list' || e.type === 'entries'))
+    if (!has) out.push(`专长「${feat.name}」有属性加值（ability），但 entries 里既没有 list 条目、也没有 type:"entries" 的小节（只有纯字符串段落）：加到人物上时 Plutonium 会报错（Could not find object of type "list"…）。把好处写成 {"type":"list","items":[…]}`)
+  }
   return out
 }
 
