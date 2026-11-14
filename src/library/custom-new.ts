@@ -36,7 +36,7 @@ export interface EntryType extends Omit<EntryTypeInfo, 'builder' | 'converters'>
   }
 }
 
-/** 能新建的类型：作者认为能单独打开的条目，且这套资料集的结构定义收这一类（有字段表）。顺序照作者。 */
+/** 能新建的类型：作者认为能单独打开的条目，且这套资料集的结构定义收这一类（有字段表）。顺序照作者。书 / 冒险带 corpus（正文类别），走单独的编辑页。 */
 export async function entryTypes(d: NewEntryDeps, codeSet: string): Promise<EntryType[]> {
   const format = formatOfCodeSet(codeSet)
   const types: EntryTypeInfo[] = await (await d.frame(codeSet)).call('entryTypes')
@@ -53,7 +53,7 @@ export async function entryTypes(d: NewEntryDeps, codeSet: string): Promise<Entr
     if (table) kept.push({ ...t, required: table.fields.filter((f) => f.required).map((f) => f.name) })
   }
   const kinds = entryKinds(kept.map((t) => t.prop), (p) => kept.find((t) => t.prop === p)?.required ?? [])
-  const out: EntryType[] = kept.map((t) => ({ prop: t.prop, name: t.name, group: t.group, ...(kinds.get(t.prop) ?? { kind: 'main' as const, parent: null }), starts: { blank: true, template: t.builder, existing: counts[t.prop] ?? 0, convert: t.converters, json: true } }))
+  const out: EntryType[] = kept.map((t) => ({ prop: t.prop, name: t.name, group: t.group, corpus: t.corpus, ...(kinds.get(t.prop) ?? { kind: 'main' as const, parent: null }), starts: { blank: true, template: t.builder, existing: counts[t.prop] ?? 0, convert: t.converters, json: true } }))
   // 作者中文名重名的补另一种语言的名字（另一种语言的小窗没装 / 打不开就用类别编号）
   const otherNames = await otherLanguageNames(d, codeSet)
   return distinctNames(out, (p) => otherNames.get(p))

@@ -94,7 +94,9 @@ export async function persist(d: EntryDeps, codeSet: string, prop: string, ent: 
   if (renamed) await carryRefs(d.manage, renamed.from, renamed.to)
   else if (saved.hash && !saved.previousHash && rule) await d.manage.setAssignment(entryUnit({ set, prop, hash: saved.hash }), { scopes: [...ruleScopes(rule).defaultScopes], global: false })
   // 解析在后台（pending）；另一种语言对上了谁要等解析完才知道，到时用 counterparts 再查
-  return { ...saved, renamed, pending: true as const, issues: await d.validateEntry(codeSet, prop, ent) }
+  // 按导出后的样子查：uniqueId 是作者自制管理器内部用的，导出时作者 DataUtil.cleanJson 会删掉（书 / 冒险的结构定义不收它）
+  const { uniqueId: _internal, ...checked } = ent
+  return { ...saved, renamed, pending: true as const, issues: await d.validateEntry(codeSet, prop, checked) }
 }
 
 /**

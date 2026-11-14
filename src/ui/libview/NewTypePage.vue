@@ -3,15 +3,18 @@ import { computed, onMounted, ref, shallowRef } from 'vue'
 import type { EntryType } from '../../library/custom-new'
 import { useAppStore } from '../../stores/app'
 import ErrorBanner from './ErrorBanner.vue'
-import { openStart } from './edit-flow'
+import { useToastStore } from '../../stores/toast'
+import { openNewCorpus, openStart } from './edit-flow'
 
 /**
  * P5.5 u7-7 新建条目 ① 选类型：搜索 + 常用（作者有构建器或转换器的）+ 按作者网站的页分组。
  * 类型、中文名、分组、起点全部来自后端 custom.entryTypes（从作者读），不手写清单。
  * 只列主条目（§16.10 2c）：从属（子职、职业特性、子种族……）在主条目编辑页里加，背景介绍与图片在每一条自己的编辑页里写。
+ * 书 / 冒险（类型带 corpus）点了直接进书的编辑页。
  */
 const props = defineProps<{ codeSet: string; pack: { id: string; name: string } }>()
 const app = useAppStore()
+const toast = useToastStore()
 const types = shallowRef<EntryType[] | null>(null)
 const error = ref<string | null>(null)
 const q = ref('')
@@ -40,7 +43,11 @@ const groups = computed(() => {
   if (other) out.set('其他', other)
   return [...out]
 })
-const pickType = (t: EntryType) => openStart(props.codeSet, props.pack, t)
+// 书 / 冒险没有别的起点可选：直接进它自己的编辑页
+async function pickType(t: EntryType): Promise<void> {
+  if (!t.corpus) return openStart(props.codeSet, props.pack, t)
+  try { await openNewCorpus(app.svc(), props.codeSet, props.pack, t) } catch (e) { console.error('[trpg-assistant] 新书没能开始', e); toast.error(e instanceof Error ? e.message : '没能开始') }
+}
 </script>
 
 <template>

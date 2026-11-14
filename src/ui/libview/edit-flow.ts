@@ -7,6 +7,7 @@ import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import { getSource } from '../../library/sources'
 import { useModalStore } from '../../stores/modal'
 import type { Ent } from './edit-json'
+import CorpusEditorPage, { type CorpusSession } from './CorpusEditorPage.vue'
 import EditorPage from './EditorPage.vue'
 import NewStartPage from './NewStartPage.vue'
 import NewTypePage from './NewTypePage.vue'
@@ -41,6 +42,26 @@ export interface EditSession {
 /** 包里 [新建条目]：选类型（弹窗里前进一页）。 */
 export function openNewEntry(codeSet: string, pack: { id: string; name: string }): void {
   useModalStore().push({ key: `new:${pack.id}`, title: '新建条目：选类型', component: markRaw(NewTypePage), variant: 'sheet', props: { codeSet, pack } })
+}
+
+/** 自制书 / 冒险的编辑页（目录 + 各章，存进包）。 */
+export function openCorpusEditor(c: CorpusSession): void {
+  useModalStore().push({ key: `corpus:${c.prop}:${Date.now()}`, title: String(c.draft.head.name ?? '') || `新${c.typeName}`, component: markRaw(CorpusEditorPage), variant: 'sheet', props: { session: c } })
+}
+
+/** 新建一本书 / 冒险：后端给起点（建议的编号、分组、日期），直接进编辑页（没有别的起点可选）。 */
+export async function openNewCorpus(s: Services, codeSet: string, pack: { id: string; name: string }, type: EntryType, onSaved?: () => void): Promise<void> {
+  if (!type.corpus) throw new Error(`${type.name}不是书或冒险`)
+  const draft = await s.backend.library.custom.corpusStart(codeSet, type.prop, pack.id)
+  openCorpusEditor({ codeSet, prop: type.prop, body: type.corpus, typeName: type.name, pack, draft, onSaved, back: 2 })
+}
+
+/** 包里「书」类别的 ✎：打开自己包里的一本。 */
+export async function openEditCorpus(s: Services, codeSet: string, pack: { id: string; name: string }, prop: string, id: string, onSaved?: () => void): Promise<void> {
+  const type = (await s.backend.library.custom.entryTypes(codeSet)).find((t) => t.prop === prop)
+  if (!type?.corpus) throw new Error(`这套资料不收这一类：${prop}`)
+  const draft = await s.backend.library.custom.corpusEntry(codeSet, pack.id, prop, id)
+  openCorpusEditor({ codeSet, prop, body: type.corpus, typeName: type.name, pack, draft, onSaved })
 }
 
 export function openStart(codeSet: string, pack: { id: string; name: string } | null, type: EntryType): void {

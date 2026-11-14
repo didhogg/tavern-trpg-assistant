@@ -156,3 +156,8 @@
 .lib-edittext { display: grid; gap: var(--sp-2); min-width: 0; }
 .lib-edittext__item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1); align-items: start; }
 .lib-edittext__add { justify-self: start; }
+
+/* 书 / 冒险编辑页的章节（CorpusEditorPage） */
+.lib-chapter { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; border-bottom: var(--border) solid var(--line); }
+.lib-chapter__head { display: flex; align-items: center; gap: var(--sp-1); }
+.lib-chapter__head .trpg-input { flex: 1; min-width: 0; font-weight: 600; }
