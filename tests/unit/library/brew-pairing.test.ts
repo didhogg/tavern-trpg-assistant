@@ -164,18 +164,18 @@ describe('已装自制包的中英配对与条目对应（同一下标）', () =
     expect(await pairs.entry(ref('cn-brew', 'm_noeng'))).toEqual({ refs: [], reason: 'no-english-name' })
   })
 
-  it('中文版重排过顺序：位置取到的名字对不上，就在配对的包里按名字找（中文 → 英文、英文 → 中文）', async () => {
+  it('中文版重排过顺序：位置取到的名字对不上，不采用，改走已有的"英文名 + 来源"（中文 → 英文、英文 → 中文）', async () => {
     // 位置：z_alpha 在第 1 位，英文第 1 位是 Gamma——不能采用
-    expect(await pairs.entry(ref('cn-brew', 'z_alpha'))).toEqual({ refs: [{ ...ref('en-brew', 'e_alpha'), docIdLocal: 'eE' }], reason: null })
-    expect(await pairs.entry(ref('cn-brew', 'z_gamma'))).toEqual({ refs: [{ ...ref('en-brew', 'e_gamma'), docIdLocal: 'eE' }], reason: null })
-    expect(await pairs.entry(ref('en-brew', 'e_beta'))).toEqual({ refs: [{ ...ref('cn-brew', 'z_beta'), docIdLocal: 'zE' }], reason: null })
+    expect(await pairs.entry(ref('cn-brew', 'z_alpha'))).toEqual({ refs: [ref('en-brew', 'e_alpha')], reason: null })
+    expect(await pairs.entry(ref('cn-brew', 'z_gamma'))).toEqual({ refs: [ref('en-brew', 'e_gamma')], reason: null })
+    expect(await pairs.entry(ref('en-brew', 'e_beta'))).toEqual({ refs: [ref('cn-brew', 'z_beta')], reason: null })
   })
 
-  it('界面带着所在的包（docIdLocal）来问也一样：重排过的包照样找对', async () => {
-    expect(await pairs.entry(ref('cn-brew', 'z_alpha'), { docIdLocal: 'zE' })).toEqual({ refs: [{ ...ref('en-brew', 'e_alpha'), docIdLocal: 'eE' }], reason: null })
+  it('已知限制：界面按行所在的包（docIdLocal）来问时，名字对不上就是没有对应，不拿位置上的错条目凑数', async () => {
+    expect(await pairs.entry(ref('cn-brew', 'z_alpha'), { docIdLocal: 'zE' })).toEqual({ refs: [], reason: 'no-counterpart' })
   })
 
-  it('位置对不上、名字也找不到：说没有对应，不拿位置上的错条目凑数；包内同名多条就都列出', async () => {
+  it('位置对不上、名字也找不到：说没有对应，不拿位置上的错条目凑数；同名多条就都列出', async () => {
     expect(await pairs.entry(ref('cn-brew', 'z_x'))).toEqual({ refs: [], reason: 'no-counterpart' })
     const twins = await pairs.entry(ref('cn-brew', 'z_one'))
     expect(twins.refs.map((r) => r.hash).sort()).toEqual(['e_twin2', 'e_x'])

@@ -117,12 +117,6 @@ function namesAgree(hereIsZh: boolean, mine: unknown, theirs: unknown): boolean 
   const b = text(en?.name)
   return !a || !b || a === b
 }
-/** 候选这一条是不是"我要找的那条"：中文 → 英文时用我的 ENG_name 对它的 name；英文 → 中文时用我的 name 对它的 ENG_name。 */
-function sameName(hereIsZh: boolean, mine: unknown, candidate: unknown): boolean {
-  const want = text(hereIsZh ? (mine as { ENG_name?: unknown } | null)?.ENG_name : (mine as { name?: unknown } | null)?.name)
-  const got = text(hereIsZh ? (candidate as { name?: unknown } | null)?.name : (candidate as { ENG_name?: unknown } | null)?.ENG_name)
-  return !!want && want === got
-}
 
 export class BrewPairs {
   private readonly packs: BrewPacks
@@ -167,7 +161,8 @@ export class BrewPairs {
    * 一条自制条目在另一种语言里是哪一条：先找它所在的包的配对包，再按"同类数组、同一下标"取英文（中文）那条，
    * **核对名字**（中文条目的 ENG_name = 英文条目的 name）后才采用，并核对另一边库里真的有。
    * 位置取到的那条名字对不上（真实包里有中文版把条目重新排过序的，2026-11 实测 280 对里 18 对）：不采用，
-   * 改在**配对的那个包里**按名字找（同包同名多条就都列出，界面当有歧义）；找不到就说没有对应，不拿错的凑数。
+   * 当作按位置没取到，改走下面已有的 byName（"英文名 + 来源"，同名多条就都列出，界面当有歧义）；找不到就说没有对应，不拿错的凑数。
+   * 已知限制：界面按行所在的包（docIdLocal，B-31 拆行）来问时 byName 不参与，重排过的包在这条路径上会是"没有对应"。
    * 条目没写英文名 / 没有名字（核对不了）时保持按位置取。同一条在几个包里（同编号挂备选）各自找，结果合并去重。
    */
   async entry(ref: EntryRef, opts: { docIdLocal?: string } = {}): Promise<BrewCounterpart> {
@@ -182,7 +177,6 @@ export class BrewPairs {
     const theirs = await index(other)
     const mineItem = (await this.lib.storedItem(here.id, ref.prop, ref.hash))?.item
     const refs = new Map<string, CounterpartRef>()
-    const disagree: Array<{ partner: BrewPack; rows: Array<{ hash: string | null; item: unknown }> }> = []
     let inPack = false
     let paired = false
     let shape = false
@@ -202,21 +196,11 @@ export class BrewPairs {
         const h = target[i]
         const row = arr[i] === ref.hash && h ? rows.find((r) => r.hash === h) : undefined
         if (!row) continue
+        // 名字对不上就当"按位置没取到"，不采用；下面落到已有的"英文名 + 来源"（byName）去找
         if (namesAgree(hereIsZh, mineItem, row.item)) refs.set(`${partner.docIdLocal}|${h}`, { set: other.id, prop: ref.prop, hash: h as string, docIdLocal: partner.docIdLocal })
-        else disagree.push({ partner, rows })
       }
     }
     if (refs.size) return { refs: [...refs.values()], reason: null }
-    if (disagree.length) {
-      // 位置取到的名字对不上：只在配对的包里按名字找，不跨包猜
-      const found = new Map<string, CounterpartRef>()
-      for (const { partner, rows } of disagree) {
-        for (const r of rows) {
-          if (r.hash && sameName(hereIsZh, mineItem, r.item)) found.set(`${partner.docIdLocal}|${r.hash}`, { set: other.id, prop: ref.prop, hash: r.hash, docIdLocal: partner.docIdLocal })
-        }
-      }
-      return found.size ? { refs: [...found.values()], reason: null } : { refs: [], reason: 'no-counterpart' }
-    }
     const reason: BrewCounterpartReason = !inPack ? 'not-found' : !paired ? 'pack-unpaired' : shape ? 'structure-differs' : 'no-counterpart'
     if (reason === 'not-found') return { refs: [], reason }
     // 按位置对不上（自己写的条目、本地导入的、没配对的包）：改按"英文名 + 来源"找
