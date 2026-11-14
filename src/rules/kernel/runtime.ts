@@ -13,6 +13,7 @@ import type { EntryRef } from '../../library/scopes'
 import { refKey } from '../../core/saves/split'
 import { libraryData, startKernel, type KernelSession } from './host'
 import { kernelInput } from './input'
+import { libraryBrews } from './brews'
 import { hashValue, sha256Hex } from '../../core/hash'
 import { KernelCache, kernelBaseKey, kernelFilesVersion, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
@@ -73,11 +74,13 @@ export class KernelRuntime {
       const campaign = await this.deps.campaignOf(ownerKey)
       const started = performance.now()
       const view = await this.deps.revisions.published()
+      // 本战役那一套（cn / en）已装的自制，交给小窗的「附加自制文件」（brews.ts）
+      const brews = await libraryBrews(view, campaign.library.codeSet)
       const session = await startKernel({
         pluginRoot: this.deps.pluginRoot, container: this.deps.container(), data: libraryData(this.deps.files, view),
-        fetchImpl: this.deps.fetchImpl, timeoutMs: this.deps.timeoutMs ?? 180_000,
+        fetchImpl: this.deps.fetchImpl, timeoutMs: this.deps.timeoutMs ?? 180_000, brews,
       })
-      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
+      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl, localHomebrew: brews.names })
       const boot = await session.boot(input)
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
