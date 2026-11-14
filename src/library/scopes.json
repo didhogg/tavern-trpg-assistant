@@ -30,6 +30,7 @@
       "showLegacy": true,
       "style": "classic",
       "format": "5etools",
+      "people": "monster",
       "kernel": {
         "adapter": "foundry",
         "settings": {
@@ -55,7 +56,8 @@
       ],
       "showLegacy": false,
       "style": "one",
-      "format": "5etools"
+      "format": "5etools",
+      "people": "monster"
     }
   }
 }

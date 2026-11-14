@@ -20,7 +20,7 @@ try {
   const r = await page.evaluate(async () => {
     const h = await import('/work/e2e-lib/harness.js')
     await h.libraryDb.derived.where('key').startsWith('kc:').delete()
-    const pre = new h.KernelPrecompute({ pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, db: h.libraryDb, dataVersion: h.dataVersion })
+    const pre = new h.KernelPrecompute({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, db: h.libraryDb, dataVersion: h.dataVersion })
     const a = await pre.run({ codeSet: 'cn', limit: 20 })
     const b = await pre.run({ codeSet: 'cn', limit: 20 })
     const rows = await h.libraryDb.derived.where('key').startsWith('kc:').toArray()

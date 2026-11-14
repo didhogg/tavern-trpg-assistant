@@ -279,9 +279,10 @@ export { KernelCache, wrapKernelSession, kernelImportKey, kernelBaseKey } from '
 export { kernelEntryOf } from '../../../src/rules/kernel/entry'
 export { KernelRuntime } from '../../../src/rules/kernel/runtime'
 export { KernelPrecompute } from '../../../src/rules/kernel/precompute'
+export { cardTypes } from '../../../src/rules/kernel/card-types'
 
-export async function startKernelSession(input: unknown): Promise<{ session: KernelSession; status: unknown }> {
-  const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files), timeoutMs: 180_000 })
+export async function startKernelSession(input: unknown, view?: Parameters<typeof libraryData>[1]): Promise<{ session: KernelSession; status: unknown }> {
+  const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files, view), timeoutMs: 180_000 })
   const status = await session.boot(input as never)
   return { session, status }
 }

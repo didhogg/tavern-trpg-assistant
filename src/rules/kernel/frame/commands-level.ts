@@ -6,6 +6,7 @@ import type { KernelActorStateLike } from '../../../core/saves/state'
 import { applyStateToActor } from './actor-state'
 import { freshSeed, reseedKernel } from './seed'
 import { importEntry, importerMeta, importerProps } from './importer'
+import { actorTypes, BUILD_ACTOR_TYPE } from './actor-types'
 import { restoreRecordedChoices } from './commands-restore'
 
 const g = globalThis as any
@@ -204,7 +205,7 @@ async function describeSteps(manager: any): Promise<any[]> {
 async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed }: { strict?: boolean; seed?: string } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
-  const created = await ActorClass.create({ name, type: 'character', system: { details: { level: 1 } } })
+  const created = await ActorClass.create({ name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } })
   for (const raw of items) {
     const source = raw?.data ?? raw
     const data = cleanItem(source)
@@ -332,7 +333,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     /** 建卡待选项：把作者转出的种族/背景/职业条目放进一个空白 1 级人物，列官方成长步骤（不改世界）。 */
     buildSteps: (itemData: any) => operate([], async () => {
       const ActorClass = g.CONFIG.Actor.documentClass
-      const blank = new ActorClass({ name: 'Build preview', type: 'character', system: { details: { level: 1 } } })
+      const blank = new ActorClass({ name: 'Build preview', type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } })
       const manager = Manager().forNewItem(blank, itemData)
       const steps = await describeSteps(manager)
       return { status: steps.length ? 'pending' : 'complete', steps }
@@ -343,6 +344,8 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     /** T2：作者登记表里真的有导入器的类别。 */
     importerProps,
     importerMeta,
+    /** P5.6 卡型：规则系统声明的人物类型 + 人物存放类别换出来的类型 + 分步建卡的类型。 */
+    actorTypes: (storeProp: string, samples: any[]) => operate([], async () => actorTypes(storeProp, samples)),
 
     /** P3-3b 重建：按引用导入作者条目 → 按记下的选择建卡 → 叠状态差别。 */
     rebuildCharacter: (plan: RebuildPlan) => operate([], async () => {

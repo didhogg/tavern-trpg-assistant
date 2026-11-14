@@ -41,6 +41,7 @@ import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
 import { KernelPrecompute } from '../rules/kernel/precompute'
+import { cardTypes, type CardTypesResult } from '../rules/kernel/card-types'
 import { PrecomputeQueue } from '../rules/kernel/precompute-queue'
 import { SOURCES, brewSourceOf, getSource } from '../library/sources'
 import { TrpgError } from './errors'
@@ -139,6 +140,8 @@ export interface Backend {
   removalSizes: (targets: RemovalTarget[]) => Promise<RemovalSizes>
   /** 回收已卸载资料和旧版本留下的空间（P5-5 §12 B3）；卸载成功后会自动做一次。 */
   reclaim: () => Promise<ReclaimReport>
+  /** 人物卡型（P5.6）：types = 这个规则有哪几种人物卡（rules/kernel/card-types.ts）。 */
+  cards: { types: (rule: string, codeSet?: string) => Promise<CardTypesResult> }
 }
 
 export interface BackendOptions {
@@ -371,5 +374,6 @@ export function createBackend(opts: BackendOptions): Backend {
   }
   const entryChangeImpact: Backend['entryChangeImpact'] = (setId, refs) => impactOfEntries({ db: opts.db, manage: scoped.manage }, setId, refs)
   const houseExistingOf: Backend['houseExisting'] = (c, refs) => houseExisting({ houseNow: (cc, t) => custom.houseNow(cc, t), impact: entryChangeImpact }, c, refs)
-  return { library, kernel, kernelSave, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim }
+  const cards: Backend['cards'] = { types: (rule, codeSet) => cardTypes({ pluginRoot, files, scoped, db, revisions, container }, rule, codeSet) }
+  return { library, kernel, kernelSave, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
 }

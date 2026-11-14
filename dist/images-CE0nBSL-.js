@@ -146,6 +146,7 @@ var p = {
 			showLegacy: !0,
 			style: "classic",
 			format: "5etools",
+			people: "monster",
 			kernel: {
 				adapter: "foundry",
 				settings: {
@@ -169,7 +170,8 @@ var p = {
 			defaultScopes: ["5e2024"],
 			showLegacy: !1,
 			style: "one",
-			format: "5etools"
+			format: "5etools",
+			people: "monster"
 		}
 	}
 }, m = p.scopes, h = p.rules;

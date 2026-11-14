@@ -46,7 +46,7 @@ try {
     await h.campaign.startNewCampaign({ ...owner, ruleId: 'dnd5e2014', name: 'T5 批量' })
     const version = await h.dataVersion()
     await h.kernelSave.bind(owner.ownerKey, { rule: 'dnd5e2014', kernelVersion: 1, library, dataVersion: version, overrides: [], actors: [], revision: 0, undo: [] })
-    const rt = new h.KernelRuntime({ pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
+    const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, container: () => document.body,
       cache: { db: h.libraryDb, dataVersion: h.dataVersion }, campaignOf: async () => ({ rule: 'dnd5e2014', library, title: owner.ownerLabel }) })
     const sample = await rt.createActors(owner.ownerKey, [normal, caster, legend, vehicle, object].filter(Boolean).map((x) => x.ref))
     const ten = monsterRows.filter((x) => !x.item.spellcasting && !x.item.legendary).slice(0, 10).map((x) => x.ref)

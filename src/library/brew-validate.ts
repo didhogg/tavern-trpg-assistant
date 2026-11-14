@@ -90,6 +90,8 @@ export interface FieldLabelTable {
   byPath?: Record<string, Record<string, string>>
   /** 供驾驶员抽查的自动生成结果，不参与表单显示。 */
   review?: { conflicts?: unknown[]; wordBuilt?: unknown[] }
+  /** 规则系统的人物类型中文名（规则系统编号 → 类型 → 中文），从规则系统语言文件的英文名经大译名表对换（P5.6）。 */
+  actorTypes?: Record<string, Record<string, string>>
 }
 let loadingFields: Promise<BrewFieldTable> | null = null
 /** 字段说明表（vendor/brew-schema/fields.js），第一次用时按网址加载，之后复用。插件目录同校验器。 */

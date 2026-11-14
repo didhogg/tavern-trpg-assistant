@@ -30,7 +30,7 @@ try {
     const version = await h.dataVersion()
     await h.kernelSave.bind(owner.ownerKey, { rule: 'dnd5e2014', kernelVersion: 1, library, dataVersion: version, overrides: [], actors: [], revision: 0, undo: [] })
     const { plan } = await h.pickChainEntries(library)
-    const runtimeOf = () => new h.KernelRuntime({
+    const runtimeOf = () => new h.KernelRuntime({ revisions: h.revisions,
       pluginRoot: new URL('/', location.href),
       files: h.files,
       scoped: h.scoped,

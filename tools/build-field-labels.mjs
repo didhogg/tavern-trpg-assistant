@@ -189,6 +189,8 @@ const variants = (wording) => {
   if (last?.endsWith('es')) out.push([...words.slice(0, -1), last.slice(0, -2)].join(' '))
   if (last?.endsWith('s')) out.push([...words.slice(0, -1), last.slice(0, -1)].join(' '))
   else out.push(`${base}s`)
+  // 连字符复合词的连写形式（Non-Player → nonplayer，大译名表多用连写）
+  if (/\w-\w/.test(String(wording))) out.push(phrase(String(wording).replace(/(\w)-(\w)/g, '$1$2').toLowerCase()))
   return [...new Set(out)]
 }
 const autoLabel = (name) => {
@@ -276,12 +278,25 @@ for (const [prop, labels] of Object.entries(byProp)) {
   }
 }
 
+// P5.6 卡型名：随插件带的规则系统（vendor/foundry/manifest.json 的 system）语言文件里登记的人物类型名（TYPES.Actor），
+// 用同一套大译名表 / 界面词表对换；对换不出来的不写（界面显示规则系统的英文原名）。
+const foundryManifest = JSON.parse(await readFile(join(root, 'vendor/foundry/manifest.json'), 'utf8'))
+const systemId = String(foundryManifest.system).split(' ')[0]
+const systemLang = JSON.parse(await readFile(join(root, `vendor/foundry/systems/${systemId}/lang/en.json`), 'utf8'))
+const actorTypes = { [systemId]: {} }
+for (const [type, wording] of Object.entries(systemLang['TYPES.Actor'] ?? {})) {
+  if (type.endsWith('Pl')) continue // 复数写法（characterPl），不是另一种类型
+  const hit = autoLabel(wording)
+  if (hit?.label) actorTypes[systemId][type] = hit.label
+}
+
 const out = {
   generatedFrom: `作者中文版 vendor/cn（makebrew + locale-data）+ 作者中文站列表页表头 + 大译名表 ${termsVersion}`,
   byProp,
   shared,
   byPath,
   review,
+  actorTypes,
 }
 await writeFile(join(root, 'vendor/brew-schema/field-labels.js'), `// 自动生成，不要手改。由 tools/build-field-labels.mjs 从作者中文版（vendor/cn）生成。\nexport default ${JSON.stringify(out)}\n`)
 const n = Object.values(byProp).reduce((a, l) => a + Object.keys(l).length, 0)
