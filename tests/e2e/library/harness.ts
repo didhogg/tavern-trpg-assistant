@@ -252,7 +252,7 @@ import { CampaignService } from '../../../src/core/saves/campaign'
 import { KernelSaveService } from '../../../src/core/saves/kernel'
 import { libraryDataVersion, scopedRefChecker, scopedCurrentOverrides } from '../../../src/library/kernel-check'
 import { RuleRegistry } from '../../../src/rules/registry'
-import { dnd5e2014 } from '../../../src/rules/dnd5e2014'
+import { ruleDefinitions } from '../../../src/rules'
 import { entryUnit } from '../../../src/library/scopes'
 import { exportSaves, estimateExport } from '../../../src/core/transfer/exporter'
 import { importSaves } from '../../../src/core/transfer/importer'
@@ -260,7 +260,7 @@ import { readSaveFile } from '../../../src/core/transfer/saveFile'
 
 export const userDb = new TrpgDatabase('p3-3-4-e2e')
 export const rules = new RuleRegistry()
-rules.register(dnd5e2014)
+rules.register(ruleDefinitions().find((r) => r.id === 'dnd5e2014')!)
 export const campaign = new CampaignService(userDb, { rules, now: () => Date.now() })
 /** 当前装的数据版本记号：用正式代码（src/library/kernel-check.ts），测试不另写一份。 */
 export const dataVersion = libraryDataVersion(revisions, service)

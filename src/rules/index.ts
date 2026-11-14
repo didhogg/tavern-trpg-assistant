@@ -1,12 +1,27 @@
-import { RuleRegistry } from './registry'
-import { dnd5e2014 } from './dnd5e2014'
-import { dnd5e2024 } from './dnd5e2024'
-import { kernelSupports } from './kernel/input'
+import registry from '../library/scopes.json'
+import { RuleRegistry, type RuleDefinition } from './registry'
+import { kernelSupports } from './kernel/adapters'
 
-/** 创建包含全部内置规则的注册表。能不能建战役看结算内核支不支持（不写死）。 */
+type RuleData = Omit<RuleDefinition, 'id'>
+
+/** 规则定义全部来自数据（library/scopes.json 的 rules）；能不能建战役看规则有没有接到登记过的结算适配器（不写死）。 */
+export function ruleDefinitions(): RuleDefinition[] {
+  return Object.entries(registry.rules as Record<string, RuleData>).map(([id, r]) => ({
+    id,
+    name: r.name,
+    nameShort: r.nameShort,
+    description: r.description,
+    family: r.family,
+    familyName: r.familyName,
+    versionLabel: r.versionLabel,
+    ...(r.defaultBanner ? { defaultBanner: r.defaultBanner } : {}),
+    ...(r.kernel ? { kernel: r.kernel } : {}),
+  }))
+}
+
+/** 创建包含全部登记规则的注册表。 */
 export function createRuleRegistry(): RuleRegistry {
   const registry = new RuleRegistry({ kernelReady: kernelSupports })
-  registry.register(dnd5e2014)
-  registry.register(dnd5e2024)
+  for (const rule of ruleDefinitions()) registry.register(rule)
   return registry
 }

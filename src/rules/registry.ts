@@ -4,8 +4,16 @@ export interface RuleBanner {
   alt: string
 }
 
+/** 这个规则用哪个结算适配器、启动时给它什么设置。没有 = 结算还没接，不能建战役。 */
+export interface RuleKernel {
+  /** 结算适配器的登记名（kernel/adapters.ts）。 */
+  adapter: string
+  /** 交给适配器的规则设置（Foundry 适配器 = 世界设置，例：dnd5e.rulesVersion = legacy）。 */
+  settings: Record<string, unknown>
+}
+
 /**
- * 规则的静态定义；规则引擎与界面配置由各规则自己的模块提供。
+ * 规则的静态定义：全部写在数据里（library/scopes.json 的 rules，P5.6），加一个规则 = 加一段数据。
  * 一条登记 = 一个规则版本（如 D&D 5e 的 2014 / 2024）；同一体系的版本用 family 归在一起，共用同一个【库】（P5-5 §13）。
  */
 export interface RuleDefinition {
@@ -21,6 +29,8 @@ export interface RuleDefinition {
   versionLabel: string
   /** 首页默认战役横幅；未提供时使用纹样底图。 */
   defaultBanner?: RuleBanner
+  /** 结算接到哪个适配器；没有 = 只登记、不能建战役。 */
+  kernel?: RuleKernel
 }
 
 export interface RuleRegistryOptions {

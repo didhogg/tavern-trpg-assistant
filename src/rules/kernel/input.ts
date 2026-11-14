@@ -3,6 +3,7 @@
 import type { KernelInput } from './frame/world'
 import { hashValue } from '../../core/hash'
 import { sha256Hex } from '../../core/hash'
+import { ruleKernel } from './adapters'
 
 interface VendorManifest {
   release: KernelInput['release']
@@ -11,14 +12,6 @@ interface VendorManifest {
   /** 模块编号 → 版本。 */
   modules: Record<string, string>
 }
-
-/** 规则档设置：2014 规则在 dnd5e 里叫 legacy。加一种规则 = 加一行。 */
-const RULE_SETTINGS: Record<string, Record<string, unknown>> = {
-  dnd5e2014: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false },
-}
-
-/** 结算内核支不支持这个规则版本（这张表里有没有它）；规则登记表据此判断能不能建战役。 */
-export const kernelSupports = (rule: string): boolean => Object.hasOwn(RULE_SETTINGS, rule)
 
 /**
  * 结算模式：结算内核只算数、不要图片（图片只存链接，见设计）。Plutonium 导入时为了给条目配图，
@@ -52,8 +45,9 @@ export async function kernelInput(opts: {
   fetchImpl?: typeof fetch
 }): Promise<KernelInput> {
   const fetchImpl = opts.fetchImpl ?? fetch
-  const settings = RULE_SETTINGS[opts.rule]
-  if (!settings) throw new Error(`结算内核还不支持这个规则：${opts.rule}`)
+  const kernel = ruleKernel(opts.rule)
+  if (!kernel) throw new Error(`结算内核还不支持这个规则：${opts.rule}`)
+  const settings = kernel.settings
   const manifest = await readJson<VendorManifest>(opts.pluginRoot, 'manifest.json', fetchImpl)
   const systemId = manifest.system.split(' ')[0]
   const system = await readJson<unknown>(opts.pluginRoot, `systems/${systemId}/system.json`, fetchImpl)

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { getCampaignBanner, PATTERN_BANNER } from '../../src/core/banner'
 import { WindowLock } from '../../src/core/windowLock'
-import { dnd5e2014 } from '../../src/rules/dnd5e2014'
 import { buildRuleCards, buildRuleFamilies, RuleRegistry } from '../../src/rules/registry'
-import { createRuleRegistry } from '../../src/rules'
+import { createRuleRegistry, ruleDefinitions } from '../../src/rules'
+import { kernelSupports, ruleKernel } from '../../src/rules/kernel/adapters'
+
+const dnd5e2014 = ruleDefinitions().find((r) => r.id === 'dnd5e2014')!
 
 describe('横幅取图', () => {
   const data = {}
@@ -33,6 +35,11 @@ describe('规则卡', () => {
   it('按体系分组：D&D 5e 一个体系两个版本', () => {
     const f = buildRuleFamilies(createRuleRegistry())
     expect(f.map((x) => [x.family, x.name, x.versions.map((v) => v.id), x.ready])).toEqual([['dnd5e', 'D&D 5e', ['dnd5e2014', 'dnd5e2024'], true]])
+  })
+  it('规则定义全部来自数据（scopes.json）：结算接没接看 kernel 写的适配器登记过没有', () => {
+    expect(ruleDefinitions().map((r) => r.id)).toEqual(['dnd5e2014', 'dnd5e2024'])
+    expect(ruleKernel('dnd5e2014')).toEqual({ adapter: 'foundry', settings: { 'dnd5e.rulesVersion': 'legacy', 'dnd5e.firstRun': false } })
+    expect([kernelSupports('dnd5e2014'), kernelSupports('dnd5e2024'), kernelSupports('nope')]).toEqual([true, false, false])
   })
   it('重复注册同一规则报错', () => {
     const r = new RuleRegistry()

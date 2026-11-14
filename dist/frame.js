@@ -1,4 +1,4 @@
-import { A as e, S as t, a as n, n as r } from "./images-DxaFec3Q.js";
+import { S as e, a as t, j as n, n as r } from "./images-bO-FmetX.js";
 import { t as i } from "./protocol-03CO7Rhf.js";
 // src/library/runtime/frame/author.ts
 var a = globalThis, o = null;
@@ -144,9 +144,9 @@ function g(e, t) {
 		}
 	};
 }
-function _(t, { tables: n = !0 } = {}) {
-	let r = a.Renderer.get(), i = e(), o = [], s = [], c = r._renderTable;
-	n && (r._renderTable = function(e, t, n, r) {
+function _(e, { tables: t = !0 } = {}) {
+	let r = a.Renderer.get(), i = n(), o = [], s = [], c = r._renderTable;
+	t && (r._renderTable = function(e, t, n, r) {
 		let a = s.push(JSON.parse(JSON.stringify(e))) - 1;
 		t[0] += `<div data-trpg-table="${i}:${a}">`, c.call(this, e, t, n, r), t[0] += "</div>";
 	});
@@ -163,14 +163,14 @@ function _(t, { tables: n = !0 } = {}) {
 						attributes: `data-trpg-link="${i}:${a}"`
 					};
 				},
-				fn: t
+				fn: e
 			}),
 			marker: i,
 			links: o,
 			tables: s
 		};
 	} finally {
-		n && (r._renderTable = c);
+		t && (r._renderTable = c);
 	}
 }
 async function v(e, { tables: t = !0 } = {}) {
@@ -837,10 +837,10 @@ var qe = (e) => import(
 	/* @vite-ignore */
 	new URL(`js/${e}`, location.href).href
 );
-async function Je(e) {
+async function Je(t) {
 	await s();
 	let n = {}, r = await a.BrewUtil2.pGetBrew();
-	for (let i of e) n[i] = a.BrewUtil2.hasSourceJson(i) && t(r, i) ? {
+	for (let i of t) n[i] = a.BrewUtil2.hasSourceJson(i) && e(r, i) ? {
 		classic: null,
 		basis: "brew-meta"
 	} : a.BrewUtil2.hasSourceJson(i) || a.PrereleaseUtil.hasSourceJson(i) ? {
@@ -1684,9 +1684,9 @@ async function Wt(e) {
 	for (let e of s) await u(e);
 	return l;
 }
-var H = () => void 0, Gt = (e, t) => {
+var H = () => void 0, Gt = (e, n) => {
 	let r = (e) => Array.isArray(e) && e.every((e) => typeof e != "object" || !e);
-	return r(e) && r(t) ? n([...e].map(String).sort()) === n([...t].map(String).sort()) : n(e) === n(t);
+	return r(e) && r(n) ? t([...e].map(String).sort()) === t([...n].map(String).sort()) : t(e) === t(n);
 };
 async function Kt(e, t, n, r) {
 	await s();

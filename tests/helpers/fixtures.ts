@@ -1,13 +1,13 @@
 import { TrpgDatabase } from '../../src/core/db'
 import { uuid } from '../../src/core/ids'
 import { RuleRegistry } from '../../src/rules/registry'
-import { dnd5e2014 } from '../../src/rules/dnd5e2014'
+import { ruleDefinitions } from '../../src/rules'
 
 export const PNG = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='), (c) => c.charCodeAt(0))
 
 export function makeRegistry(): RuleRegistry {
   const registry = new RuleRegistry()
-  registry.register(dnd5e2014)
+  registry.register(ruleDefinitions().find((r) => r.id === 'dnd5e2014')!)
   return registry
 }
 

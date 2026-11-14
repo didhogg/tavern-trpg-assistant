@@ -131,12 +131,41 @@ var p = {
 	}],
 	rules: {
 		dnd5e2014: {
+			name: "D&D 5e（2014）",
+			nameShort: "D&D 5e",
+			description: "龙与地下城第五版（2014 规则），核心规则含玩家手册、地下城主指南与怪物图鉴",
+			family: "dnd5e",
+			familyName: "D&D 5e",
+			versionLabel: "5e",
+			defaultBanner: {
+				wide: "https://a1.ax1x.com/2026/10/28/wwHs9.png",
+				narrow: "https://a1.ax1x.com/2026/10/28/wwHs9.md.png",
+				alt: "D&D 5e 默认战役横幅"
+			},
 			defaultScopes: ["5e2014"],
 			showLegacy: !0,
 			style: "classic",
-			format: "5etools"
+			format: "5etools",
+			kernel: {
+				adapter: "foundry",
+				settings: {
+					"dnd5e.rulesVersion": "legacy",
+					"dnd5e.firstRun": !1
+				}
+			}
 		},
 		dnd5e2024: {
+			name: "D&D 5e（2024）",
+			nameShort: "D&D 5.5e",
+			description: "龙与地下城第五版（2024 修订规则），核心规则含 2024 版玩家手册、地下城主指南与怪物图鉴",
+			family: "dnd5e",
+			familyName: "D&D 5e",
+			versionLabel: "5.5e",
+			defaultBanner: {
+				wide: "https://a1.ax1x.com/2026/10/28/wwHs9.png",
+				narrow: "https://a1.ax1x.com/2026/10/28/wwHs9.md.png",
+				alt: "D&D 5e 默认战役横幅"
+			},
 			defaultScopes: ["5e2024"],
 			showLegacy: !1,
 			style: "one",
@@ -540,4 +569,4 @@ function pe(e, t) {
 function me(e) {
 	return e.replace(/^\/?img\//, "");
 }
-export { d as A, x as C, _ as D, g as E, l as F, r as I, c as L, n as M, i as N, D as O, u as P, a as R, y as S, ee as T, C as _, Q as a, v as b, J as c, G as d, z as f, w as g, b as h, $ as i, t as j, f as k, H as l, m, me as n, q as o, U as p, ue as r, Y as s, pe as t, I as u, S as v, te as w, O as x, E as y };
+export { f as A, x as C, _ as D, g as E, u as F, l as I, r as L, t as M, n as N, D as O, i as P, c as R, y as S, ee as T, C as _, Q as a, v as b, J as c, G as d, z as f, w as g, b as h, $ as i, d as j, p as k, H as l, m, me as n, q as o, U as p, ue as r, Y as s, pe as t, I as u, S as v, te as w, O as x, E as y, a as z };

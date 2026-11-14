@@ -1,10 +1,61 @@
 {
   "scopes": [
-    { "id": "5e2014", "name": "5e 2014", "edition": "classic" },
-    { "id": "5e2024", "name": "5e 2024", "edition": "one" }
+    {
+      "id": "5e2014",
+      "name": "5e 2014",
+      "edition": "classic"
+    },
+    {
+      "id": "5e2024",
+      "name": "5e 2024",
+      "edition": "one"
+    }
   ],
   "rules": {
-    "dnd5e2014": { "defaultScopes": ["5e2014"], "showLegacy": true, "style": "classic", "format": "5etools" },
-    "dnd5e2024": { "defaultScopes": ["5e2024"], "showLegacy": false, "style": "one", "format": "5etools" }
+    "dnd5e2014": {
+      "name": "D&D 5e（2014）",
+      "nameShort": "D&D 5e",
+      "description": "龙与地下城第五版（2014 规则），核心规则含玩家手册、地下城主指南与怪物图鉴",
+      "family": "dnd5e",
+      "familyName": "D&D 5e",
+      "versionLabel": "5e",
+      "defaultBanner": {
+        "wide": "https://a1.ax1x.com/2026/10/28/wwHs9.png",
+        "narrow": "https://a1.ax1x.com/2026/10/28/wwHs9.md.png",
+        "alt": "D&D 5e 默认战役横幅"
+      },
+      "defaultScopes": [
+        "5e2014"
+      ],
+      "showLegacy": true,
+      "style": "classic",
+      "format": "5etools",
+      "kernel": {
+        "adapter": "foundry",
+        "settings": {
+          "dnd5e.rulesVersion": "legacy",
+          "dnd5e.firstRun": false
+        }
+      }
+    },
+    "dnd5e2024": {
+      "name": "D&D 5e（2024）",
+      "nameShort": "D&D 5.5e",
+      "description": "龙与地下城第五版（2024 修订规则），核心规则含 2024 版玩家手册、地下城主指南与怪物图鉴",
+      "family": "dnd5e",
+      "familyName": "D&D 5e",
+      "versionLabel": "5.5e",
+      "defaultBanner": {
+        "wide": "https://a1.ax1x.com/2026/10/28/wwHs9.png",
+        "narrow": "https://a1.ax1x.com/2026/10/28/wwHs9.md.png",
+        "alt": "D&D 5e 默认战役横幅"
+      },
+      "defaultScopes": [
+        "5e2024"
+      ],
+      "showLegacy": false,
+      "style": "one",
+      "format": "5etools"
+    }
   }
 }
