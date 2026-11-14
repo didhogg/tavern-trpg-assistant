@@ -1,13 +1,15 @@
 // 人物列表：并排 / 整页 / 窄屏；状态；选择模式与新建菜单。依据 P6-3（已定决定优先，见 P6-4 §9）、U6_视觉规格。
-import { card, listPage, btn, icon, P } from '../lib/parts.mjs'
+import { card, listPage, btn, icon, P, grp } from '../lib/parts.mjs'
 import { by } from '../lib/frame.mjs'
 
 const G = '列表（人物）'
 const team = (o = {}) => [
-  card({ name: '盖尔', en: 'Gale', cls: '法师 3 级', rest: '人类', tags: ['冒险者', '深水'], hp: [12, 18], temp: 3, ac: 12, extra: [['被动察觉', 10], ['速度', 30]], pinned: true, sel: o.sel ?? false, check: o.check?.[0], drag: o.drag, n: o.pins?.card }),
-  card({ name: '影心', en: 'Shadowheart', cls: '牧师 1 级', rest: '半精灵 · 诡术领域', tags: ['冒险者'], hp: [11, 11], ac: 13, extra: [['被动察觉', 13], ['速度', 30]], check: o.check?.[1] }),
-  card({ name: '雅格拉', en: 'Yagra', cls: '野蛮人 1 级', rest: '半兽人', hp: [4, 15], ac: 14, extra: [['被动察觉', 11], ['速度', 30]], warn: o.warn ? '2 项资料不可用' : '', check: o.check?.[2] }),
-  card({ name: '阿斯代伦', en: 'Astarion', cls: '游荡者 1 级', rest: '高等精灵', hp: [9, 9], ac: 14, extra: [['被动察觉', 12], ['速度', 30]], check: o.check?.[3] }),
+  grp('随行', 3),
+  card({ name: '盖尔', en: 'Gale', cls: '法师 3', rest: '人类', tags: ['法师', '学者', '专注'], hp: [12, 18], temp: 3, ac: 12, pinned: true, sel: o.sel ?? false, check: o.check?.[0], drag: o.drag, n: o.pins?.card }),
+  card({ name: '影心', en: 'Shadowheart', cls: '牧师 1', rest: '半精灵', tags: ['牧师', '诡术'], hp: [11, 11], ac: 13, check: o.check?.[1] }),
+  card({ name: '雅格拉', en: 'Yagra', cls: '野蛮人 1', rest: '半兽人', tags: ['战士', '近战'], hp: [4, 15], ac: 14, warn: o.warn ? '2 项资料不可用' : '', check: o.check?.[2] }),
+  grp('留守', 1),
+  card({ name: '阿斯代伦', en: 'Astarion', cls: '游荡者 1', rest: '高等精灵', tags: ['潜行'], hp: [9, 9], ac: 14, check: o.check?.[3] }),
 ].join('')
 
 export const screens = [
