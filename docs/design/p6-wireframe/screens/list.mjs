@@ -1,5 +1,5 @@
 // 人物列表：并排 / 整页 / 窄屏；状态；选择模式与新建菜单。依据 P6-3（已定决定优先，见 P6-4 §9）、U6_视觉规格。
-import { card, listPage, detail, btn, icon, dropdown, P } from '../lib/parts.mjs'
+import { card, listPage, btn, icon, P } from '../lib/parts.mjs'
 import { by } from '../lib/frame.mjs'
 
 const G = '列表（人物）'
@@ -12,19 +12,18 @@ const team = (o = {}) => [
 
 export const screens = [
   {
-    id: 'p6-1-list', group: G, title: '人物列表（队伍）：宽屏并排 · 中屏整页 · 窄屏', flow: 'F1 / F7（P6-3 §5.1）',
-    goal: '一眼找到人、看清生命和 AC；4–6 个玩家来回切换不用返回', primary: '[＋ 新建]（页面唯一实心主按钮）', patterns: 'Two-Panel Selector（面板 ≥720）· One-Window Drilldown · Segmented · Cards',
-    laws: 'Hick（新建 3 项）· Fitts（卡片行高 ≥114、按钮 ≥44）· Jakob（分类按钮组、名册卡片）· 位置稳定（默认手动顺序，改血不换位）',
-    diff: '1440 窗口（内容区约 760）→ 面板 ≥720，左列表 280 + 右详情；900 窗口（约 668）→ 面板 <720，整页列表，宽卡片；390 → 窄卡片，生命条与 AC 在名字下面一行。',
+    id: 'p6-1-list', group: G, title: '人物列表（队伍）：三个宽度，点一行进整页详情', flow: 'F1 / F7（P6-3 §5.1）',
+    goal: '一眼找到人、看清生命和 AC；4–6 个玩家来回切换不用返回', primary: '[＋ 新建]（页面唯一实心主按钮）', patterns: 'One-Window Drilldown（点进去看整页详情，返回保留滚动位置与筛选）· Segmented · List rows',
+    laws: 'Hick（新建菜单 3 项）· Fitts（行高 ≥76、控件高 36 / 窄屏 44）· Jakob（和库页同一套：分段标签 + 一块白板里的行）· 位置稳定（默认手动顺序，改血不换位）',
+    diff: '1440 / 900：一行里头像 · 名字与身份 · 生命 · AC · ⋯ 按固定列宽对齐；390：头像 + 名字一行，生命条与 AC 在名字下面一行。',
     notes: [
-      [1, '分类按钮组（队伍 / NPC / 敌人 / 全部）', '大号分段（高 44，图标 + 名称 + 计数）；顺序固定；选中 = 主色底；换分类不重置搜索与滚动', 'R08 · G02'],
-      [2, '[模板] [＋ 新建 ▾] [⋯]', '新建菜单 3 项：分步建卡 / 从模板（库）/ 空白人物；选了人才多出「复制所选人物」；新建归入当前标签', 'R01 · G04–G06 · G15–G17'],
+      [1, '分类分段标签（队伍 / NPC / 敌人 / 全部）', '和库页同款分段控件（高 36，带计数）；顺序固定；选中 = 主色底；换分类不重置搜索与滚动', 'R08 · G02'],
+      [2, '[＋ 新建 ▾] [⋯]', '页面唯一主按钮；新建菜单 3 项：分步建卡 / 从模板（库）/ 空白人物（**从模板只有这一个入口**，不再单独放 [模板] 按钮）；选了人才多出「复制所选人物」；新建归入当前标签', 'R01 · G04–G06 · G15–G17'],
       [3, '搜索（跨标签）· 标签 · 排序 · 选择 · 显示 4 / 共 4', '搜索默认搜全部分类，结果带分类；排序默认**手动顺序**，可选 名字 / 等级 / 修改时间；列表 ≤8 人时仍显示搜索框（人物页要找人，规范 §5.3 的 ≤8 不适用，**待你确认**）', 'R12 · G02（手动顺序要存，候选 G31）'],
-      [4, '人物卡片', '点卡片 = 并排时右边换人 / 整页时进详情；层级：头像 → 名字 → 职业等级·种族 → 生命与血条 → AC → 标签；🛈 被动察觉与速度只在「队伍」标签的宽卡片里出现', 'K2 · G01 · G07'],
-      [5, '选中行', '并排时左侧 3px 红竖条 + 嵌套底色；键盘 ↑↓ 切人', 'D24'],
-      [6, '右半详情', '见 p6-6；面板 <720 时这一栏不出现', 'D24'],
+      [4, '人物行', '点一行 = 进整页详情；层级：头像 → 名字 → 职业等级·种族 → 生命与血条 → AC；标签写成灰字「#冒险者」，不再画药丸；一行里所有列固定宽度，上下对齐', 'K2 · G01 · G07'],
+      [5, '返回', '详情页「‹ 人物」回到这里，保留滚动位置、分类、搜索与筛选；详情页头有「上一位 / 下一位」，不用回列表就能换人', 'D24（已改：不分栏）'],
     ],
-    render: (L) => ({ content: listPage({ L, tab: 0, cards: team({ sel: true, pins: { card: 4 } }), detail: detail({ split: true, L }), pins: { cats: 1, add: 2, tpl: 2, search: 3, sort: 3 } }) }),
+    render: (L) => ({ content: listPage({ L, tab: 0, cards: team({ pins: { card: 4 } }), pins: { cats: 1, add: 2, search: 3, sort: 3 } }) }),
   },
   {
     id: 'p6-2-list-states', group: G, title: '人物列表状态：空 · 搜索无结果 · 加载 · 手动排序拖动', flow: '空态 / 失败 / 加载',
@@ -53,9 +52,9 @@ export const screens = [
       [4, '登记式', '底栏动作做成登记式：以后 P9（群体伤害）、P10（全队休息）往里加，不改骨架', 'X03 · X04'],
     ],
     board: by({
-      '1440': (L) => ({ content: listPage({ L, tab: 0, cards: team({ check: [true, true, false, false] }), listOnly: true, selectBar: `<div class="pc-sel-bar">已选 2 人${btn('全选当前标签', { small: true })}${btn('退出', { small: true })}</div>`, actbar: `<div class="pc-actbar">${P(2)}${btn('移到', { ic: 'caret-down' })}${btn('复制')}${btn('存入我的库…')}<span class="pc-actbar__sep"></span>${btn('删除', { danger: true, ic: 'trash' })}</div>` }) }),
+      '1440': (L) => ({ noFab: true, content: listPage({ L, tab: 0, cards: team({ check: [true, true, false, false] }), listOnly: true, selectBar: `<div class="pc-sel-bar">已选 2 人${btn('全选当前标签', { small: true })}${btn('退出', { small: true })}</div>`, actbar: `<div class="pc-actbar">${P(2)}${btn('移到', { ic: 'caret-down' })}${btn('复制')}${btn('存入我的库…')}<span class="pc-actbar__sep"></span>${btn('删除', { danger: true, ic: 'trash' })}</div>` }) }),
       '900': (L) => ({ content: listPage({ L, tab: 0, cards: team({}), listOnly: true, newMenu: `<div class="trpg-dropdown" style="position:absolute;z-index:40;right:0;top:100%;width:200px">${['分步建卡', '从模板（库）…', '空白人物'].map((t) => `<div class="trpg-dropdown__item">${t}</div>`).join('')}</div>`, pins: { add: 3 } }) }),
-      '390': (L) => ({ content: listPage({ L, tab: 0, cards: team({ check: [true, false, false, false] }), listOnly: true, selectBar: `<div class="pc-sel-bar">已选 1 人<span style="margin-left:auto">${btn('退出', { small: true })}</span></div>`, actbar: `<div class="pc-actbar">${btn('移到', { small: true })}${btn('复制', { small: true })}${iconBtn2()}<span class="pc-actbar__sep"></span>${btn('删除', { danger: true, small: true })}</div>` }) }),
+      '390': (L) => ({ noFab: true, content: listPage({ L, tab: 0, cards: team({ check: [true, false, false, false] }), listOnly: true, selectBar: `<div class="pc-sel-bar">已选 1 人<span style="margin-left:auto">${btn('退出', { small: true })}</span></div>`, actbar: `<div class="pc-actbar">${btn('移到', { small: true })}${btn('复制', { small: true })}${iconBtn2()}<span class="pc-actbar__sep"></span>${btn('删除', { danger: true, small: true })}</div>` }) }),
     }, { '1440': '选择模式（宽）', '900': '新建菜单（选了人时多一项「复制所选人物」）', '390': '选择模式（窄）' }),
   },
 ]

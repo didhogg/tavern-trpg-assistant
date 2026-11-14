@@ -11,10 +11,10 @@ const here = dirname(fileURLToPath(import.meta.url))
 export const CSS = `${P5CSS}\n${readFileSync(join(here, '../p6.css'), 'utf8')}`
 export { PAGE_CSS }
 
-FRAMES.full = { w: 1440, h: 900, full: true, layout: 'wide', label: '视口 1440 · 插件全屏 · 宽布局（内容区约 1240）' }
-FRAMES['1440'].label = '视口 1440 · 悬浮窗 960×640 · 宽布局（内容区约 760，面板 ≥720 → 并排）'
-FRAMES['900'].label = '视口 900 · 悬浮窗 868×640 · 宽布局（内容区约 668，面板 <720 → 整页）'
-FRAMES.mid.label = '悬浮窗 600 宽 · 中布局（侧栏只有图标，内容区约 544）'
+FRAMES.full = { w: 1440, h: 900, full: true, layout: 'wide', label: '视口 1440 · 插件全屏 · 宽布局' }
+FRAMES['1440'].label = '视口 1440 · 悬浮窗 960×640 · 宽布局'
+FRAMES['900'].label = '视口 900 · 悬浮窗 868×640 · 宽布局'
+FRAMES.mid.label = '悬浮窗 600 宽 · 中布局（侧栏只有图标）'
 
 const NAV = [
   { id: 'home', label: '首页', ic: 'house' },
@@ -28,7 +28,7 @@ const tabButton = (n, s) => `<button class="trpg-tab" type="button"${s.page === 
 function chips(L, s) {
   const parts = []
   if (L !== 'narrow') parts.push(`<button class="trpg-pill trpg-chip" type="button"><span class="trpg-chip__camp">${esc(CAMP.name)}</span><span class="trpg-chip__save">/ ${esc(CAMP.save)}</span>${icon('caret-down', 14)}</button>`)
-  if (s.dirty !== false) parts.push(`<button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button">保存存档</button>`)
+  if (s.dirty) parts.push(`<button class="trpg-btn trpg-btn--small trpg-btn--primary" type="button">保存存档</button>`)
   if (L === 'narrow') parts.push(`<button class="trpg-icon-btn" type="button" aria-label="助手菜单">${icon('dots-three', 20)}</button>`)
   return `<div class="trpg-head__chips">${parts.join('')}</div>`
 }
