@@ -154,7 +154,7 @@ watch(q, () => { page.value = 0 })
       <template #row="{ item: r }">
         <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ nameOf(r) }}</div><div class="trpg-row__meta">{{ authorOf(r) }}<template v-if="r.status !== 'paired'"> · 只有{{ r.zh ? '中文' : '英文' }}</template></div></div>
         <div class="trpg-row__end">
-          <span class="trpg-badge" :data-off="!r.zh">中</span><span class="trpg-badge" :data-off="!r.en">En</span>
+          <span class="trpg-badge" :data-off="!r.zh" role="img" :aria-label="r.zh ? '有中文版' : '没有中文版'" :title="r.zh ? '有中文版' : '没有中文版'">中</span><span class="trpg-badge" :data-off="!r.en" role="img" :aria-label="r.en ? '有英文版' : '没有英文版'" :title="r.en ? '有英文版' : '没有英文版'">En</span>
           <span v-if="isInstalled(r)" class="trpg-badge" data-tone="success">已装</span>
           <button v-else class="trpg-btn trpg-btn--small" type="button" :disabled="busy.has(keyOf(r)) || preparing.has(keyOf(r))" @click="download(r)">{{ preparing.has(keyOf(r)) ? '准备中…' : busy.has(keyOf(r)) ? '下载中…' : '下载' }}</button>
         </div>

@@ -19,6 +19,8 @@
 .trpg-badge[data-tone='primary'] { background: var(--primary-tint); color: var(--primary-text); box-shadow: inset 0 0 0 1px var(--primary-tint-line); }
 .trpg-badge[data-tone='warn'] { background: var(--warn-bg); color: var(--warn-text); box-shadow: inset 0 0 0 1px var(--accent); }
 .trpg-badge[data-tone='success'] { background: var(--success-bg); color: var(--success-text); }
+/* 语言标签这类“有 / 没有”小标签的关闭态（D-5：只有一个可选时另一个变灰）：空心 + 灰 + 划线，不只靠颜色，位置不动，两列才对得齐 */
+.trpg-badge[data-off='true'] { background: transparent; color: var(--text3); box-shadow: inset 0 0 0 1px var(--line); text-decoration: line-through; }
 .trpg-badge[data-status='pass'] { color: var(--success-text); } .trpg-badge[data-status='fail'], .trpg-badge[data-status='error'] { color: var(--danger-text); }
 button.trpg-badge { border: 0; cursor: pointer; }
 .trpg-link { padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; text-decoration: underline; text-underline-offset: 3px; }
