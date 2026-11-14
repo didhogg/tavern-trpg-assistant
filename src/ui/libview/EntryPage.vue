@@ -64,11 +64,18 @@ function editThis(): void {
   openEditMine(app.svc(), m.codeSet, m.pack, d.ref.prop, d.ref.hash).catch((e: unknown) => { console.error('[trpg-assistant] 打开编辑器失败', e); toast.error(e instanceof Error ? e.message : '没能打开编辑器') })
 }
 
+/** 版本管理（条目 ⋯ 里的「管理」和【版本】标签里的按钮同一个页）。 */
+function openVersionManage(): void {
+  const d = detail.value
+  if (!d) return
+  modal.push({ key: `ovr:${props.pageKey ?? d.ref.hash}`, title: '版本管理', component: EntryOverridesPage, variant: 'sheet', props: { entryRef: d.ref, name: itemName(d.item) }, onLeave: () => void load() })
+}
+
 /** 条目 ⋯：复制成我的（P5.5 u7-6，单条进选的包）。 */
 function onEntryMenu(key: string): void {
   const d = detail.value
   if (!d) return
-  if (key === 'manage') { modal.push({ key: `ovr:${props.pageKey ?? d.ref.hash}`, title: '管理', component: EntryOverridesPage, variant: 'sheet', props: { entryRef: d.ref, name: itemName(d.item) }, onLeave: () => void load() }); return }
+  if (key === 'manage') { openVersionManage(); return }
   if (key !== 'copy') return
   modal.push({ key: `copy:${props.pageKey ?? d.ref.hash}`, title: '复制成我的', component: CopyEntryPage, variant: 'sheet', props: { entryRef: d.ref, name: itemName(d.item), onDone: (id: string, cs: string) => void openMineById(app.svc(), id, cs) } })
 }
@@ -77,7 +84,7 @@ type State = { kind: 'loading' } | { kind: 'ok'; d: ScopedDetail } | { kind: 'no
 const state = shallowRef<State>({ kind: 'loading' })
 const detail = computed(() => state.value.kind === 'ok' ? state.value.d : null)
 const tab = ref('body')
-const tabs = [['body', '正文'], ['background', '背景'], ['images', '图片'], ['related', '关联']] as const
+const tabs = [['body', '正文'], ['background', '背景'], ['images', '图片'], ['related', '关联'], ['versions', '版本']] as const
 const enabled = ref(true)
 /** 中 / En 切换：只是同一个来源的另一种语言版本（作者的配对）；对不上就灰掉。 */
 const langs = useEntryLangStore()
@@ -218,7 +225,7 @@ async function setEnabled(next: boolean): Promise<void> {
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
           <button class="trpg-icon-btn" type="button" :aria-label="mineOf ? '编辑这一条' : '改成房规（原件不动）'" :title="mineOf ? '编辑这一条' : '改成房规（原件不动）'" data-testid="entry-edit" @click="editThis"><Icon name="pencil-simple" :size="18" /></button>
-          <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }, { key: 'manage', label: '管理：覆盖与作用范围' }]" @select="onEntryMenu" />
+          <MoreMenu label="这一条" :items="[{ key: 'copy', label: '复制成我的' }, { key: 'manage', label: '版本管理' }]" @select="onEntryMenu" />
         </span>
       </div>
       <TabsRoot v-model="tab" class="lib-entrytabs">
@@ -230,7 +237,6 @@ async function setEnabled(next: boolean): Promise<void> {
             <div v-if="state.d.pending" class="lib-banner" data-testid="entry-pending"><span class="lib-pending"><Icon name="arrow-clockwise" :size="12" />更新中</span><span>刚改的内容还在后台整理，整理完这里自动换成新的。</span></div>
             <div v-if="state.d.closed" class="lib-banner"><span>这本书在本战役里是关着的，内容照常可以看。</span></div>
             <div class="lib-srcline">{{ sourceLine || '未知来源' }}</div>
-            <EntryVersions :key="`${entryRef.hash}-${state.d.version.altId}`" :detail="state.d" :entry-ref="state.d.ref" :preview-copy="!!selection" @changed="load" />
             <LegendaryCreatures v-if="entryRef.prop === 'legendaryGroup'" :detail="state.d" />
             <div v-if="entity === 'pending'" class="lib-skel" aria-busy="true"><i /><i style="width:80%" /><i style="width:60%" /></div>
             <!-- 作者整条渲染（§11.5）：数值块、正文、传奇组、表格都照作者 -->
@@ -263,6 +269,11 @@ async function setEnabled(next: boolean): Promise<void> {
         <TabsContent value="related" class="lib-mscroll">
           <div class="lib-dbody">
             <EntryAssociations v-if="tab === 'related'" :detail="state.d" :code-set="codeSet" />
+          </div>
+        </TabsContent>
+        <TabsContent value="versions" class="lib-mscroll">
+          <div class="lib-dbody">
+            <EntryVersions :key="`${entryRef.hash}-${state.d.version.altId}`" :detail="state.d" :entry-ref="state.d.ref" @changed="load" @manage="openVersionManage" />
           </div>
         </TabsContent>
       </TabsRoot>

@@ -137,6 +137,14 @@
 /* 变体 / 备选 / 覆盖 */
 .lib-versions { display: grid; gap: var(--sp-2); }
 .lib-alt-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); min-height: 36px; }
+.lib-versions__head { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+/* 版本单选行：整行都是按钮（点哪行用哪个），选中的行描边 + 实心点 */
+.lib-alt-pick { width: 100%; justify-content: flex-start; padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; min-height: 44px; }
+.lib-alt-pick[data-on='true'] { border-color: var(--primary); background: var(--primary-tint); }
+.lib-alt-pick:focus-visible { outline: 2px solid var(--focus, var(--primary)); outline-offset: 2px; }
+.lib-alt-pick__dot { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-ctrl); background: transparent; }
+.lib-alt-pick[data-on='true'] .lib-alt-pick__dot { border-color: var(--primary); background: radial-gradient(circle, var(--primary) 45%, transparent 50%); }
+.lib-alt-pick__name { min-width: 0; overflow-wrap: anywhere; }
 .lib-variants { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
 /* 虚拟滚动：行高固定且只有一个来源 --lib-row-h（useVirtual 读它），占位行不画边框 */
 .lib-table tbody tr:not(.lib-spacer) { height: var(--lib-row-h, 44px); }

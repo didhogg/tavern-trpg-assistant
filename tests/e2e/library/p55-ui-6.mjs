@@ -1,5 +1,5 @@
 // P5.5 界面第 6 批（u7-13 / 13b 房规、u7-14 覆盖管理）：书架官方条目 ✎ → 同一个编辑器改成房规（原件标签、改过、English 也能改）→
-// 预览兼保存（和原件比改了几项、作用于）→ 详情变成房规；单条 ⋯ → 管理看改了什么、整批改作用于；书架「官方」⋯ → 管理；复原。
+// 预览兼保存（和原件比改了几项、作用于）→ 详情变成房规；条目【版本】标签点选用；【版本管理】看全部版本、改作用范围、不使用、删除房规；书架「官方」⋯ → 管理（删除房规）。
 // 用法：SKIP_BUILD=1 node tests/e2e/library/p55-ui-6.mjs（截图 work/e2e-lib/p55-ui-shots/6/）
 import { check, failures, settle } from '../helpers.mjs'
 import { openLibrary, P } from './p55-ui-common.mjs'
@@ -64,22 +64,58 @@ const s1 = await state()
 await page.screenshot({ path: `${shots}/4-detail-after.png` })
 check('保存房规：中文、英文都变成房规，环节 4', s1.zh[0] === 'house' && s1.zh[1] === 4 && s1.en?.[0] === 'house' && s1.en[1] === 4, JSON.stringify(s1))
 
-// 单条 ⋯ → 管理：每一层用的是哪一份，看改了什么，挪到全局
-await page.locator('.lib-dtools .trpg-more').click()
-await page.locator('.trpg-dropdown__item', { hasText: '管理：覆盖与作用范围' }).click()
-await page.waitForSelector('[data-testid="override-row"]')
+// 条目页【版本】标签：原件 + 房规 1 平铺成单选列表，点哪个用哪个（不弹确认）；生效层级设成「当前规则」（没开战役）
+await page.evaluate((P) => { eval(P)._s.get('app').settings.library.overrideLevel = 'rule' }, P)
+await page.getByRole('tab', { name: '版本' }).click()
+await page.waitForSelector('[data-testid="alt-row"]')
+await settle(page, 400)
+await page.screenshot({ path: `${shots}/4b-versions-tab.png` })
+const rowsText = await page.getByTestId('alt-row').allInnerTexts()
+check('【版本】标签：原件、房规 1 两行，房规 1 生效中；没有旧的「复原」横条', rowsText.length === 2 && /原件/.test(rowsText[0]) && /房规 1/.test(rowsText[1]) && /生效中/.test(rowsText[1]) && !(await page.getByTestId('override-banner').count()), JSON.stringify(rowsText))
+await page.getByTestId('alt-row').first().click()
+await page.locator('.trpg-toast', { hasText: '已改用原件' }).waitFor()
+await settle(page, 1200)
+const sOrig = await state()
+check('点「原件」：马上改用原件（中文条目环节 3），没有确认弹窗', sOrig.zh[0] !== 'house' && sOrig.zh[1] === 3 && !(await page.getByTestId('confirm-page').count()), JSON.stringify(sOrig))
+await page.getByRole('tab', { name: '版本' }).click()
+await page.getByTestId('alt-row').nth(1).click()
+await page.locator('.trpg-toast', { hasText: '已改用「房规 1」' }).waitFor()
+await settle(page, 1200)
+const sHouse = await state()
+check('点「房规 1」：马上改用房规（环节 4）', sHouse.zh[0] === 'house' && sHouse.zh[1] === 4, JSON.stringify(sHouse))
+
+// 【版本】标签里的【版本管理】按钮 → 单条版本管理：全部版本、每个版本作用于哪一层、看改了什么、改层
+await page.getByRole('tab', { name: '版本' }).click()
+await page.getByTestId('versions-manage').click()
+await page.waitForSelector('[data-testid="version-row"]')
 await page.getByTestId('override-open').first().click()
 await page.waitForSelector('[data-testid="override-diff"] .lib-diff', { timeout: 30000 })
 await settle(page, 500)
-await page.screenshot({ path: `${shots}/5-entry-overrides.png` })
-const ov = await page.getByTestId('entry-overrides').innerText()
-check('单条管理：列出房规、「生效中」，展开看改了什么（环节 3 → 4）', /房规/.test(ov) && /生效中/.test(ov) && /环节/.test(ov) && /3 → 4/.test(ov), ov.replace(/\n/g, ' | ').slice(0, 300))
-await page.locator('[data-testid="overrides"] > .lib-filter .trpg-check').first().click()
-await page.getByTestId('overrides-apply').click()
-await page.locator('.trpg-toast', { hasText: '作用于全局' }).waitFor()
-await settle(page, 800)
-const ov2 = await page.getByTestId('entry-overrides').innerText()
-check('单条管理列中英两条；全选 → 选中的作用于「全局」→ 应用（两条一起挪）', (ov2.match(/作用于全局/g) ?? []).length === 2 && /Fireball/.test(ov2), ov2.replace(/\n/g, ' | ').slice(0, 300))
+await page.screenshot({ path: `${shots}/5-version-manage.png` })
+const ov = await page.getByTestId('version-manage').innerText()
+check('版本管理：每条列原件、房规 1（生效中），展开看改了什么（环节 3 → 4）；没有「复原」按钮', /原件/.test(ov) && /房规 1/.test(ov) && /生效中/.test(ov) && /3 → 4/.test(ov) && !(await page.getByTestId('override-restore').count()), ov.replace(/\n/g, ' | ').slice(0, 300))
+check('版本管理：中文、English 两条各一组', (await page.getByTestId('version-group').count()) === 2 && /Fireball/.test(ov))
+for (let i = 0; i < 2; i++) {
+  await page.getByTestId('version-row').nth(i).locator('.trpg-select-trigger').click()
+  await page.locator('.trpg-select-item', { hasText: '全局（所有战役）' }).click()
+  // 等这一行真的变了（提示条可能是上一次留下的，不能拿它当完成信号）
+  await page.waitForFunction((n) => (document.querySelector('#trpg-assistant-root')?.shadowRoot?.querySelector('[data-testid="version-manage"]')?.innerText.match(/作用于全局/g) ?? []).length >= n, i + 1)
+  await settle(page, 400)
+}
+const ov2 = await page.getByTestId('version-manage').innerText()
+check('版本管理：两条的房规 1 各自改成「作用于全局」', (ov2.match(/作用于全局/g) ?? []).length === 2, ov2.replace(/\n/g, ' | ').slice(0, 300))
+await page.getByTestId('version-row').nth(0).locator('.trpg-select-trigger').click()
+await page.locator('.trpg-select-item', { hasText: '不使用' }).click()
+await settle(page, 1200)
+const sNone = await state()
+check('版本管理：选「不使用」→ 回到原件；这个房规版本还在列表里（没被删）', sNone.zh[0] !== 'house' && /房规 1/.test(await page.getByTestId('version-manage').innerText()), JSON.stringify(sNone))
+await page.screenshot({ path: `${shots}/5b-version-none.png` })
+await page.getByTestId('version-delete').first().click()
+await page.getByTestId('confirm-page').getByRole('button', { name: '删除', exact: true }).click()
+await page.locator('.trpg-toast', { hasText: '已删除房规' }).waitFor()
+await settle(page, 2000)
+check('版本管理：删除中文那个房规 → 这一版从列表里消失（English 的还在）', (await page.getByTestId('version-row').count()) === 1 && /Fireball/.test(await page.getByTestId('version-manage').innerText()), String(await page.getByTestId('version-row').count()))
+await page.screenshot({ path: `${shots}/5c-version-deleted.png` })
 await closeAll(); await settle(page, 400)
 
 // 书架「官方」⋯ → 管理：停用和覆盖 → 房规（覆盖）里有这一条 → 复原
@@ -93,9 +129,13 @@ await settle(page, 500)
 await page.screenshot({ path: `${shots}/6-shelf-overrides.png` })
 const shelfRows = await page.getByTestId('override-row').count()
 check('书架管理：整个书架的房规（覆盖）按书分组列出', shelfRows >= 1)
-while (await page.getByTestId('override-restore').count()) { await page.getByTestId('override-restore').first().click(); await settle(page, 1200) }
+check('书架管理：房规行有「删除」，没有「复原」', (await page.getByTestId('override-delete').count()) >= 1 && !(await page.getByTestId('override-restore').count()))
+for (let i = 0; i < 4 && (await page.getByTestId('override-delete').count()); i++) { await page.getByTestId('override-delete').first().click(); await page.getByTestId('confirm-page').getByRole('button', { name: '删除', exact: true }).click(); await page.locator('.trpg-toast', { hasText: '已删除房规' }).last().waitFor(); await settle(page, 800) }
+await settle(page, 1000)
+await page.screenshot({ path: `${shots}/6b-shelf-after-delete.png` })
+check('删除房规后，书架管理列表里没有留下点了没反应的行', (await page.getByTestId('override-row').count()) === 0, (await page.getByTestId('override-row').allInnerTexts()).join(' || ').replace(/\n/g, ' | '))
 const s2 = await state()
-check('复原：回到原件（中文、英文环节 3）', s2.zh[0] !== 'house' && s2.zh[1] === 3 && s2.en?.[0] !== 'house' && s2.en?.[1] === 3, JSON.stringify(s2))
+check('删除房规：回到原件（中文、英文环节 3）', s2.zh[0] !== 'house' && s2.zh[1] === 3 && s2.en?.[0] !== 'house' && s2.en?.[1] === 3, JSON.stringify(s2))
 await closeAll(); await settle(page, 300)
 
 // 房规的草稿：改一半关掉 → 我的库 [继续] → 回到房规模式，内容在

@@ -2,11 +2,13 @@
 import type { Services } from '../../core/services'
 import type { PackPair } from '../../library/custom-lang'
 import type { MyPack } from '../../library/custom-packs'
+import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useModalStore } from '../../stores/modal'
 import { removeTarget } from './actions'
 import { codeSetOf, exportPair, packTitle, sideOf } from './mine'
 import NewPackPage from './NewPackPage.vue'
+import { importFiles } from './import-flow'
 import { openManage, openPack } from './open'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
@@ -50,7 +52,8 @@ export function packMenu(pair: PackPair, { withExport = false } = {}) {
   return [
     { key: 'manage', label: '管理' },
     { key: 'copy', label: '再复制一份' },
-    ...(!pair.en ? [{ key: 'lang', label: '加英文版' }] : !pair.zh ? [{ key: 'lang', label: '加中文版' }] : []),
+    ...(!pair.en ? [{ key: 'lang-import', label: '导入英文版文件…' }, { key: 'lang', label: '新建空的英文版（用来翻译）' }]
+      : !pair.zh ? [{ key: 'lang-import', label: '导入中文版文件…' }, { key: 'lang', label: '新建空的中文版（用来翻译）' }] : []),
     ...(withExport ? [{ key: 'export', label: '导出' }] : []),
     { key: 'rm', label: '删除…', danger: true },
   ]
@@ -62,6 +65,8 @@ export async function runPackMenu(s: Services, key: string, pair: PackPair, code
   const cs = codeSetOf(pair, pack)
   const label = packTitle(pack)
   const reload = async () => { await lib.loadPairs(s); await lib.refresh(s) }
+  // 选文件的框必须在点菜单的这一下里弹出来（不能先 await 别的），所以放在最前面
+  if (key === 'lang-import') { pickBrewFiles(async (files) => { if (await importFiles(s, cs, files, useAppStore().settings?.library.skipImportPreview ?? false, toast)) await reload() }); return }
   try {
     if (key === 'manage') { if (!useModalStore().isOpen) openMyPack(lib, pair, codeSet); openManage(packProps(lib, pair, codeSet)) }
     else if (key === 'export') await exportPair(s, pair.id, label, toast)
@@ -87,4 +92,17 @@ export async function runPackMenu(s: Services, key: string, pair: PackPair, code
     console.error('[trpg-assistant] 包的操作没有成功', key, e)
     toast.error(e instanceof Error ? e.message : '没有成功')
   }
+}
+
+/** 弹出选文件框（只收作者格式的 .json，可多选），选好后交给 onFiles；和【我的库】的导入是同一条路（预览 + 按语言分开 + 配对）。 */
+function pickBrewFiles(onFiles: (files: File[]) => Promise<void>): void {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json,application/json'
+  input.multiple = true
+  input.style.display = 'none'
+  input.addEventListener('change', () => { const files = [...(input.files ?? [])]; input.remove(); if (files.length) void onFiles(files) })
+  input.addEventListener('cancel', () => input.remove())
+  document.body.appendChild(input)
+  input.click()
 }

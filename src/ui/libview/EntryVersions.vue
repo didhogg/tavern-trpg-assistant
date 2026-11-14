@@ -3,54 +3,52 @@ import { computed } from 'vue'
 import type { ScopedDetail } from '../../library/scoped'
 import type { EntryRef } from '../../library/scopes'
 import { useAppStore } from '../../stores/app'
-import { useCampaignStore } from '../../stores/campaign'
-import { useLibViewStore } from '../../stores/libview'
-import { useToastStore } from '../../stores/toast'
 import Icon from '../kit/Icon.vue'
-import { askConfirm } from '../kit/confirm'
+import { useVersionActions } from './use-version-actions'
 
-/** 条目的变体 / 同编号版本 / 覆盖（U1f）：变体紧挨着条目显示；同编号的版本可以【覆盖】（先预览再确认），覆盖后可【复原】；生效层级来自设置（默认本战役）。 */
-const props = defineProps<{ detail: ScopedDetail | null; entryRef: EntryRef; previewCopy?: boolean }>()
-const emit = defineEmits<{ changed: [] }>()
+/**
+ * 条目的【版本】标签：原件、你保存过的房规、别的包里的同编号版本平铺成一个单选列表，点哪一行就改用哪一个（不弹确认，随时能点回去）。
+ * 生效在设置里的「覆盖层级」（默认本战役）。每个版本在哪一层生效、删除房规，都在右上的【版本管理】里。
+ */
+const props = defineProps<{ detail: ScopedDetail | null; entryRef: EntryRef }>()
+const emit = defineEmits<{ changed: []; manage: [] }>()
 const app = useAppStore()
-const lib = useLibViewStore()
-const campaign = useCampaignStore()
-const toast = useToastStore()
+const { pickHere } = useVersionActions(async () => { emit('changed') })
 
 const level = computed(() => app.settings?.library.overrideLevel ?? 'campaign')
 const levelWord = computed(() => (level.value === 'campaign' ? '本战役' : level.value === 'rule' ? '当前规则' : '全局'))
 const alts = computed(() => props.detail?.alternatives ?? [])
 const effective = computed(() => props.detail?.version.altId ?? 'base')
-const label = (a: { filename: string | null; kind: string }): string => (a.kind === 'houserule' ? '房规' : a.filename ?? '自制包')
-
-async function pick(altId: string | null, name: string): Promise<void> {
-  const c = lib.campaignLib
-  if (!c) return
-  const ok = await askConfirm({ title: altId === null ? '复原为原件？' : `用「${name}」覆盖这一条？`, message: altId === null ? '回到原件。' : `覆盖后这一条显示「${name}」的内容，生效在：${levelWord.value}。可以随时复原。`, confirmLabel: altId === null ? '复原' : '确认覆盖' })
-  if (!ok) return
-  try {
-    const lvl = level.value === 'rule' ? (`rule:${c.rule}` as const) : level.value
-    const next = await app.svc().backend.library.scoped.choose(c, props.entryRef, altId, lvl)
-    const owner = campaign.owner?.ownerKey
-    if (level.value === 'campaign') {
-      if (!owner || !lib.bound) { toast.error('先创建战役，才能在本战役里覆盖'); return }
-      const ks = app.svc().backend.kernelSave
-      await ks.setLibrary(owner, { ...(await ks.libraryOf(owner)), choices: next.choices })
-      await lib.load(app.svc(), owner)
-    }
-    toast.success(altId === null ? '已复原' : '已覆盖')
-    emit('changed')
-  } catch (e) { console.error('[trpg-assistant] 覆盖失败', e); toast.error('没有保存成功') }
-}
+const nameOf = (item: unknown): string => (typeof item === 'object' && item && typeof (item as { name?: unknown }).name === 'string' ? (item as { name: string }).name : '')
+/** 版本叫什么：房规按保存的先后编号（房规 1、房规 2…），别的包的版本用包的文件名。 */
+const rows = computed(() => {
+  let house = 0
+  const out = [{ altId: 'base', label: '原件', hint: '官方（或先装的包）里原来的内容', badge: null as string | null }]
+  for (const a of alts.value) {
+    const isHouse = a.kind === 'houserule'
+    if (isHouse) house += 1
+    out.push({ altId: a.altId, label: isHouse ? `房规 ${house}` : a.filename ?? '自制包', hint: nameOf(a.item), badge: isHouse ? null : '别的包' })
+  }
+  return out
+})
+const pick = (altId: string, label: string): void => { if (altId !== effective.value) void pickHere(props.entryRef, altId === 'base' ? null : altId, label) }
 </script>
 
 <template>
-  <div v-if="alts.length" class="lib-versions" data-testid="entry-versions">
-    <div v-if="effective !== 'base'" class="lib-banner" data-testid="override-banner"><Icon name="info" :size="16" /><span>已被覆盖（生效处：{{ detail?.version.by === 'campaign' ? '本战役' : detail?.version.by === 'global' ? '全局' : '当前规则' }}）。{{ previewCopy ? '当前页显示你点中的版本。' : '下面是覆盖后的内容。' }}</span><span class="lib-end"><button class="trpg-btn trpg-btn--small" type="button" data-testid="override-restore" @click="pick(null, '原件')"><Icon name="arrow-counter-clockwise" :size="14" />复原</button></span></div>
-    <div v-if="alts.length" class="lib-block" data-testid="alt-list">
-      <b>此条有 {{ alts.length + 1 }} 个版本</b>
-      <div class="lib-alt-row"><span>原件</span><span v-if="effective === 'base'" class="trpg-badge" data-tone="success">生效中</span><button v-else class="trpg-btn trpg-btn--small" type="button" @click="pick(null, '原件')">选用原件</button></div>
-      <div v-for="a in alts" :key="a.docIdLocal ?? a.altId" class="lib-alt-row"><span>{{ label(a) }}<span class="trpg-badge" data-tone="primary" style="margin-left: 6px">同名</span></span><span v-if="effective === a.altId" class="trpg-badge" data-tone="success">生效中</span><button v-else class="trpg-btn trpg-btn--small" type="button" :aria-label="`覆盖：用${label(a)}的版本`" title="覆盖这个项目" @click="pick(a.altId, label(a))"><Icon name="arrow-counter-clockwise" :size="14" />覆盖</button></div>
+  <div class="lib-versions" data-testid="entry-versions">
+    <div class="lib-versions__head">
+      <b>{{ alts.length ? `此条有 ${alts.length + 1} 个版本` : '这一条只有原件' }}</b>
+      <button class="trpg-btn trpg-btn--small lib-end" type="button" data-testid="versions-manage" @click="emit('manage')"><Icon name="gear" :size="14" />版本管理</button>
+    </div>
+    <p v-if="!alts.length" class="lib-muted" style="margin: 0">点条目右上角的 ✎ 改成房规，保存后的版本会出现在这里，点一下就能改用。</p>
+    <div v-else class="lib-block" role="radiogroup" aria-label="这一条用哪个版本" data-testid="alt-list">
+      <button v-for="r in rows" :key="r.altId" class="lib-alt-row lib-alt-pick" type="button" role="radio" :aria-checked="effective === r.altId" :title="r.hint || undefined" :data-on="effective === r.altId ? 'true' : undefined" data-testid="alt-row" @click="pick(r.altId, r.label)">
+        <span class="lib-alt-pick__dot" aria-hidden="true" />
+        <span class="lib-alt-pick__name">{{ r.label }}</span>
+        <span v-if="r.badge" class="trpg-badge" data-tone="primary">{{ r.badge }}</span>
+        <span v-if="effective === r.altId" class="trpg-badge lib-end" data-tone="success">生效中</span>
+      </button>
+      <span class="lib-faint" style="font-size: 12px">点一行就改用它，生效在：{{ levelWord }}。</span>
     </div>
   </div>
 </template>

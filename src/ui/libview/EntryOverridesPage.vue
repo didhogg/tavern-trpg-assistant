@@ -3,9 +3,9 @@ import { onMounted, ref } from 'vue'
 import type { EntryRef } from '../../library/scopes'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
-import OverridesList from './OverridesList.vue'
+import VersionManage from './VersionManage.vue'
 
-/** P5.5 u7-14 单条 ⋯ → 管理：这一条在每一层（本战役 → 规则 → 全局）用的是哪一份，上面的盖住下面的。 */
+/** 单条【版本管理】：这一条的全部版本，每个版本作用于哪一层（本战役 → 规则 → 全局，上面的盖住下面的），房规可删除。 */
 const props = defineProps<{ entryRef: EntryRef; name: string }>()
 const app = useAppStore()
 const lib = useLibViewStore()
@@ -22,8 +22,8 @@ onMounted(async () => {
   <div class="lib-mbody" data-testid="entry-overrides">
     <div class="lib-mscroll">
 <div class="lib-pad lib-stack">
-      <p class="lib-faint" style="margin: 0; font-size: 12px">「{{ name }}」（中文、英文两条）在每一层用的是哪一份。上面的盖住下面的：本战役 → 规则 → 全局。</p>
-      <OverridesList v-if="refs" :scope="{ kind: 'refs', refs }" />
+      <p class="lib-faint" style="margin: 0; font-size: 12px">「{{ name }}」（中文、英文两条）的全部版本，以及每个版本作用在哪一层。上面的盖住下面的：本战役 → 规则 → 全局。</p>
+      <VersionManage v-if="refs" :refs="refs" />
       <div v-else class="lib-skel" aria-busy="true"><i /></div>
     </div>
 </div>

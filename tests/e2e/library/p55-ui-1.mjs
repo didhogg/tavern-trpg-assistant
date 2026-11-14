@@ -70,10 +70,10 @@ const ruleText = await page.getByTestId('mypack-rule').innerText()
 check('管理：改名生效；规则与版本默认当前战役的规则', /5e/.test(ruleText), ruleText.replace(/\n/g, ' | '))
 await closeAll(); await settle(page, 400)
 
-// 加英文版 → 一行带「中」「En」
+// 新建空的英文版 → 一行带「中」「En」
 const row = page.locator('[data-testid="mylib-row"]', { hasText: '海盗战役（改）' }).first()
 await row.locator('.trpg-more').click()
-await page.locator('.trpg-dropdown__item', { hasText: '加英文版' }).click()
+await page.locator('.trpg-dropdown__item', { hasText: '新建空的英文版' }).click()
 await page.waitForFunction(`(${P})._s.get('library').pairs?.some((p) => p.id === 'pirate' && p.zh && p.en)`)
 await settle(page, 400)
 const rowText = await row.innerText()
