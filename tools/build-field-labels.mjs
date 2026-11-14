@@ -1,5 +1,6 @@
 // P5.5 第 5 步：字段中文名表。只从作者中文版和作者中文术语资料自动取，不手写翻译。
 //   1. 作者中文版自制编辑器（makebrew）：类别专用的字段标签，优先级最高。
+//   4. 作者中文站列表页的表头（例 adventures.html 的 data-sort="storyline">故事情节）：按作者 utils.js 登记的「页面 → 类别」对到字段，只补前面都没有中文名的。
 //   2. 作者中文界面词表（locale-data.js）：中英同键的普通词。
 //   3. 作者中文站大译名表：过滤专名类别和待讨论项，给普通字段补名。
 // 输出 vendor/brew-schema/field-labels.js。嵌套字段按“类别 + 路径”保存，避免顶层 name 的叫法污染 action[].name。
@@ -75,6 +76,32 @@ for (const file of (await readdir(dir)).filter((f) => /^makebrew-.+\.js$/.test(f
   byProp[cls[1]] = labels
 }
 
+// 作者中文站列表页的表头：页面 → 类别照作者 utils.js（PAGE_TO_PROPS、书 / 冒险的 _PAGE_TO_PROPS_CORPUS），表头的 data-sort 是字段名。
+// 只收这一类结构定义里真有的字段（translator 这种只是页面上的列，不收）；作者编辑器已经给了中文名的不动。
+const siteRoot = join(termsPath, '../..')
+const pageHeaders = {}
+try {
+  const utils = await readFile(join(cn, 'utils.js'), 'utf8')
+  const pageFile = Object.fromEntries([...utils.matchAll(/static (PG_\w+) = "([\w-]+\.html)"/g)].map((m) => [m[1], m[2]]))
+  const propsOfPage = {}
+  for (const m of utils.matchAll(/UrlUtil\.PAGE_TO_PROPS\[UrlUtil\.(PG_\w+)\] = \[([^\]]*)\]/g)) propsOfPage[m[1]] = [...m[2].matchAll(/"(\w+)"/g)].map((x) => x[1])
+  for (const m of utils.matchAll(/UrlUtil\._PAGE_TO_PROPS_CORPUS\[UrlUtil\.(PG_\w+)\] = \{propHead: "(\w+)"/g)) propsOfPage[m[1]] = [...(propsOfPage[m[1]] ?? []), m[2]]
+  // 书目 / 冒险列表页登记成阅读页的同一份（UrlUtil._PAGE_TO_PROPS_CORPUS[PG_BOOKS] = …[PG_BOOK]）
+  for (const m of utils.matchAll(/UrlUtil\._PAGE_TO_PROPS_CORPUS\[UrlUtil\.(PG_\w+)\] = UrlUtil\._PAGE_TO_PROPS_CORPUS\[UrlUtil\.(PG_\w+)\]/g)) if (propsOfPage[m[2]]) propsOfPage[m[1]] = [...(propsOfPage[m[1]] ?? []), ...propsOfPage[m[2]]]
+  for (const [pg, props] of Object.entries(propsOfPage)) {
+    if (!pageFile[pg]) continue
+    let html
+    try { html = await readFile(join(siteRoot, pageFile[pg]), 'utf8') } catch { continue }
+    const heads = Object.fromEntries([...html.matchAll(/data-sort="(\w+)"[^>]*>([^<]+)</g)].map((m) => [m[1], unescape(m[2].trim())]).filter(([, v]) => /[\u3400-\u9fff]/.test(v)))
+    for (const prop of props) {
+      const own = new Set((fields.props?.[prop]?.fields ?? []).map((f) => f.name))
+      const got = Object.fromEntries(Object.entries(heads).filter(([k]) => own.has(k)))
+      if (Object.keys(got).length) pageHeaders[prop] = { ...(pageHeaders[prop] ?? {}), ...got }
+    }
+  }
+} catch (error) {
+  console.warn(`没有读取作者中文站列表页：${error instanceof Error ? error.message : String(error)}`)
+}
 function blockOf(src, locale) {
   const marker = `"${locale}": {`
   const start = src.indexOf(marker)
@@ -204,6 +231,15 @@ for (const labels of Object.values(byProp)) for (const [k, v] of Object.entries(
 }
 for (const [k, s] of seen) if (s.v && s.n > 1) shared[k] = s.v
 
+// 列表页表头只补还没有中文名的字段，放在算共用之后：表头是那一页那一列的叫法（例 group 在书目页叫「类型」），不能变成所有类别共用。
+// 同一张表单里已经有别的字段叫这个名字的不补（规则变体页把 ruleType 也叫「类型」，和 type 重名）。
+for (const [prop, heads] of Object.entries(pageHeaders)) {
+  const labels = byProp[prop] ?? (byProp[prop] = {})
+  const own = (fields.props?.[prop]?.fields ?? []).map((f) => f.name)
+  const used = new Set(own.map((f) => labels[f] ?? shared[f]).filter(Boolean))
+  for (const [k, v] of Object.entries(heads)) if ((!labels[k] || !/[\u3400-\u9fff]/.test(labels[k])) && !used.has(v)) { labels[k] = v; used.add(v) }
+}
+
 // 嵌套字段按“类别 + 路径”保存。这里不复用顶层编辑器的专名，避免 name / type 等误套到所有层级。
 const byPath = {}
 for (const prop of Object.keys(fields.props ?? {})) {
@@ -241,7 +277,7 @@ for (const [prop, labels] of Object.entries(byProp)) {
 }
 
 const out = {
-  generatedFrom: `作者中文版 vendor/cn（makebrew + locale-data）+ 大译名表 ${termsVersion}`,
+  generatedFrom: `作者中文版 vendor/cn（makebrew + locale-data）+ 作者中文站列表页表头 + 大译名表 ${termsVersion}`,
   byProp,
   shared,
   byPath,

@@ -1,5 +1,5 @@
 // P5.5 C10 下拉 / 建议值的显示名：在作者的对照表（Parser 上「代号 → 显示名」的表，例 Parser.SP_TIME_TO_FULL：action → 动作）
-// 里找一张「这组值全都是它的键」的表，用它的值显示。几张都对得上时，取写了中文的那张（中文版小窗里），再取最小的（最贴切）。
+// 里找一张「这组值全都是它的键」的表，用它的值显示（另加作者书目分组表 SourceUtil.ADV_BOOK_GROUPS）。几张都对得上时，取写了中文的那张（中文版小窗里），再取最小的（最贴切）。
 // 一张都对不上就不给（界面显示原值）。不手写对照表。
 import { A, init } from './author'
 
@@ -15,6 +15,9 @@ function authorMaps(): Array<{ name: string; map: Record<string, string> }> {
     if (entries.length < 2 || !entries.every(([, x]) => typeof x === 'string')) continue
     maps.push({ name, map: v as Record<string, string> })
   }
+  // 书 / 冒险的分组（core → 核心、homebrew → 自制内容……）作者写成 SourceUtil.ADV_BOOK_GROUPS 这张「{group, displayName}」表，不在 Parser 上
+  const groups = (A.SourceUtil as { ADV_BOOK_GROUPS?: Array<{ group?: unknown; displayName?: unknown }> } | undefined)?.ADV_BOOK_GROUPS
+  if (Array.isArray(groups)) maps.push({ name: 'SourceUtil.ADV_BOOK_GROUPS', map: Object.fromEntries(groups.filter((g) => typeof g.group === 'string' && typeof g.displayName === 'string').map((g) => [g.group as string, g.displayName as string])) })
   return maps
 }
 

@@ -1993,7 +1993,11 @@ function mn() {
 			map: t
 		});
 	}
-	return Z;
+	let e = a.SourceUtil?.ADV_BOOK_GROUPS;
+	return Array.isArray(e) && Z.push({
+		name: "SourceUtil.ADV_BOOK_GROUPS",
+		map: Object.fromEntries(e.filter((e) => typeof e.group == "string" && typeof e.displayName == "string").map((e) => [e.group, e.displayName]))
+	}), Z;
 }
 function hn() {
 	return Object.entries(a.Parser).filter(([e, t]) => /ToCn$/.test(e) && typeof t == "function").map(([e, t]) => ({

@@ -20292,7 +20292,38 @@ var PC = {
 			overwrite: "覆盖",
 			otherSources: "其他来源",
 			resist: "伤害抗性"
-		}
+		},
+		book: {
+			id: {
+				label: "编号",
+				tip: "别的条目用 {@book} / {@adventure} 标签引用这一本时用的编号；不能和别的书或冒险重复。"
+			},
+			cover: "封面图片",
+			coverCredit: "封面作者",
+			revised: "修订时间",
+			alias: "别名",
+			parentSource: "所属来源",
+			legacy: "过期资源"
+		},
+		adventure: {
+			id: {
+				label: "编号",
+				tip: "别的条目用 {@book} / {@adventure} 标签引用这一本时用的编号；不能和别的书或冒险重复。"
+			},
+			cover: "封面图片",
+			coverCredit: "封面作者",
+			revised: "修订时间",
+			alias: "别名",
+			parentSource: "所属来源"
+		},
+		bookData: { data: {
+			label: "正文",
+			tip: "每个「小标题段」是一章：小标题就是章名；章里有名字的小节会自动列进目录。"
+		} },
+		adventureData: { data: {
+			label: "正文",
+			tip: "每个「小标题段」是一章：小标题就是章名；章里有名字的小节会自动列进目录。"
+		} }
 	},
 	byPath: {
 		monster: {
