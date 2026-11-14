@@ -1,0 +1,1464 @@
+{
+	"generatedFrom": "5etools-utils@0.17.24",
+	"props": {
+		"blocklist": {
+			"group": "主",
+			"schemaFile": null,
+			"required": [
+				"displayName",
+				"hash",
+				"category",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"adventure": {
+			"group": "主",
+			"schemaFile": "adventures.json",
+			"required": [
+				"name",
+				"id",
+				"source",
+				"group",
+				"contents",
+				"level",
+				"published",
+				"storyline"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "adventure/Sample - Giddy; Caverns of Catastrophe.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"adventureData": {
+			"group": "主",
+			"schemaFile": "corpus-shared.json",
+			"required": [
+				"id",
+				"source",
+				"data"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "adventure/Sample - Giddy; Caverns of Catastrophe.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"monster": {
+			"group": "主",
+			"schemaFile": "bestiary/bestiary.json",
+			"required": [
+				"name",
+				"size",
+				"type",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "creature/Sample - Giddy; Oaken Bolter.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"monsterFluff": {
+			"group": "配套",
+			"schemaFile": "bestiary/fluff-bestiary.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMonster": {
+			"group": "专用",
+			"schemaFile": "bestiary/foundry.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMonsterAction": {
+			"group": "专用",
+			"schemaFile": "bestiary/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"monsterName",
+				"monsterSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMonsterBonus": {
+			"group": "专用",
+			"schemaFile": "bestiary/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"monsterName",
+				"monsterSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMonsterReaction": {
+			"group": "专用",
+			"schemaFile": "bestiary/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"monsterName",
+				"monsterSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMonsterTrait": {
+			"group": "专用",
+			"schemaFile": "bestiary/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"monsterName",
+				"monsterSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMonsterLegendary": {
+			"group": "专用",
+			"schemaFile": "bestiary/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"monsterName",
+				"monsterSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMonsterMythic": {
+			"group": "专用",
+			"schemaFile": "bestiary/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"monsterName",
+				"monsterSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"legendaryGroup": {
+			"group": "主",
+			"schemaFile": "bestiary/legendarygroups.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "creature/Sample - Giddy; Oaken Bolter.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"book": {
+			"group": "主",
+			"schemaFile": "books.json",
+			"required": [
+				"name",
+				"id",
+				"source",
+				"group",
+				"published",
+				"contents"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"bookData": {
+			"group": "主",
+			"schemaFile": "corpus-shared.json",
+			"required": [
+				"id",
+				"source",
+				"data"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"class": {
+			"group": "主",
+			"schemaFile": "class/class.json",
+			"required": [
+				"name",
+				"source",
+				"classFeatures"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Class.txt",
+			"sample": "class/pippochiri; The Edgelord.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"classFluff": {
+			"group": "配套",
+			"schemaFile": "class/fluff-class.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "class/pippochiri; The Edgelord.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"foundryClass": {
+			"group": "专用",
+			"schemaFile": "class/foundry.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"subclass": {
+			"group": "主",
+			"schemaFile": "class/class.json",
+			"required": [
+				"name",
+				"shortName",
+				"source",
+				"className",
+				"classSource",
+				"subclassFeatures"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Subclass.txt",
+			"sample": "subclass/BeardedJB; Cosmic Cleric Domain.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"subclassFluff": {
+			"group": "配套",
+			"schemaFile": "class/fluff-class.json",
+			"required": [
+				"name",
+				"source",
+				"shortName",
+				"className",
+				"classSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundrySubclass": {
+			"group": "专用",
+			"schemaFile": "class/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"shortName",
+				"className",
+				"classSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"classFeature": {
+			"group": "主",
+			"schemaFile": "class/class.json",
+			"required": [
+				"name",
+				"source",
+				"className",
+				"classSource",
+				"level",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "class/pippochiri; The Edgelord.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"subclassFeature": {
+			"group": "主",
+			"schemaFile": "class/class.json",
+			"required": [
+				"name",
+				"source",
+				"className",
+				"classSource",
+				"subclassShortName",
+				"subclassSource",
+				"level",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "class/pippochiri; The Edgelord.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"foundryClassFeature": {
+			"group": "专用",
+			"schemaFile": "class/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"className",
+				"classSource",
+				"level"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundrySubclassFeature": {
+			"group": "专用",
+			"schemaFile": "class/foundry.json",
+			"required": [
+				"name",
+				"source",
+				"className",
+				"classSource",
+				"level",
+				"subclassShortName",
+				"subclassSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"spell": {
+			"group": "主",
+			"schemaFile": "spells/spells.json",
+			"required": [
+				"name",
+				"level",
+				"school",
+				"time",
+				"range",
+				"duration",
+				"entries",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "spell/Sample - Giddy; Assorted Marginalia.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"spellFluff": {
+			"group": "配套",
+			"schemaFile": "spells/fluff-spells.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"roll20Spell": {
+			"group": "专用",
+			"schemaFile": "spells/roll20.json",
+			"required": [
+				"name",
+				"source",
+				"data"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "spell/Sample - Giddy; Assorted Marginalia.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"foundrySpell": {
+			"group": "专用",
+			"schemaFile": "spells/foundry.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "spell/Sample - Giddy; The Uninspired Guide to Wizardry.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"action": {
+			"group": "主",
+			"schemaFile": "actions.json",
+			"required": [
+				"name",
+				"entries",
+				"source",
+				"page"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Action.txt",
+			"sample": "action/Sample - Giddy; Extinguish.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"foundryAction": {
+			"group": "专用",
+			"schemaFile": "foundry-actions.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"item": {
+			"group": "主",
+			"schemaFile": "items.json",
+			"required": [
+				"name",
+				"rarity",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Item.txt",
+			"sample": "item/Sample - Giddy; Hook of Butchery.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"foundryItem": {
+			"group": "专用",
+			"schemaFile": "foundry-items.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryMagicvariant": {
+			"group": "专用",
+			"schemaFile": "foundry-items.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryBaseitem": {
+			"group": "专用",
+			"schemaFile": "foundry-items.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"itemGroup": {
+			"group": "主",
+			"schemaFile": "items.json",
+			"required": [
+				"name",
+				"rarity",
+				"source",
+				"items"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"baseitem": {
+			"group": "主",
+			"schemaFile": "items-base.json",
+			"required": [
+				"name",
+				"type",
+				"rarity",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"itemProperty": {
+			"group": "主",
+			"schemaFile": "items-base.json",
+			"required": [
+				"abbreviation",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "item/Sample - Giddy; Hook of Butchery.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"itemType": {
+			"group": "主",
+			"schemaFile": "items-base.json",
+			"required": [
+				"abbreviation",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "item/Sample - Giddy; Hook of Butchery.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"itemEntry": {
+			"group": "主",
+			"schemaFile": "items-base.json",
+			"required": [],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"itemTypeAdditionalEntries": {
+			"group": "主",
+			"schemaFile": "items-base.json",
+			"required": [],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "item/Sample - Giddy; Hook of Butchery.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"itemMastery": {
+			"group": "主",
+			"schemaFile": "items-base.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"magicvariant": {
+			"group": "主",
+			"schemaFile": "magicvariants.json",
+			"required": [
+				"name",
+				"requires",
+				"inherits",
+				"rarity"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "item/Sample - Giddy; Hook of Butchery.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"linkedLootTables": {
+			"group": "主",
+			"schemaFile": "magicvariants.json",
+			"required": [],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"itemFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-items.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"background": {
+			"group": "主",
+			"schemaFile": "backgrounds.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Background.txt",
+			"sample": "background/Sample - Giddy; Farmer.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"backgroundFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-backgrounds.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryBackgroundFeature": {
+			"group": "专用",
+			"schemaFile": "foundry-backgrounds.json",
+			"required": [
+				"name",
+				"source",
+				"backgroundName",
+				"backgroundSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"charoption": {
+			"group": "主",
+			"schemaFile": "charcreationoptions.json",
+			"required": [
+				"name",
+				"entries",
+				"source",
+				"optionType"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "charoption/Sample - Giddy; Secret Antagonist.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"charoptionFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-charcreationoptions.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"condition": {
+			"group": "主",
+			"schemaFile": "conditionsdiseases.json",
+			"required": [
+				"name",
+				"entries",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Condition.txt",
+			"sample": "condition/Sample - Giddy; On Fire.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"conditionFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-conditionsdiseases.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"disease": {
+			"group": "主",
+			"schemaFile": "conditionsdiseases.json",
+			"required": [
+				"name",
+				"entries",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Disease.txt",
+			"sample": "disease/Sample - Giddy; The Shakes.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"diseaseFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-conditionsdiseases.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"status": {
+			"group": "主",
+			"schemaFile": "conditionsdiseases.json",
+			"required": [
+				"name",
+				"entries",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"statusFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-conditionsdiseases.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"cult": {
+			"group": "主",
+			"schemaFile": "cultsboons.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Cult.txt",
+			"sample": "cult/Sample - Giddy; Cult of the True Flame.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"boon": {
+			"group": "主",
+			"schemaFile": "cultsboons.json",
+			"required": [
+				"name",
+				"source",
+				"type",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Boon.txt",
+			"sample": "boon/Sample - Giddy; Dubious Gifts.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"deity": {
+			"group": "主",
+			"schemaFile": "deities.json",
+			"required": [
+				"name",
+				"pantheon",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Deity.txt",
+			"sample": "deity/Sample - Giddy; Atrophy.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"encounter": {
+			"group": "主",
+			"schemaFile": "encounters.json",
+			"required": [
+				"name",
+				"source",
+				"tables"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"feat": {
+			"group": "主",
+			"schemaFile": "feats.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Feat.txt",
+			"sample": "feat/Sample - Giddy; Magically Gifted, Whip Aficionado.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"featFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-feats.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryFeat": {
+			"group": "专用",
+			"schemaFile": "foundry-feats.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"language": {
+			"group": "主",
+			"schemaFile": "languages.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Language.txt",
+			"sample": "language/Sample - Giddy; Semaphore.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"languageFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-languages.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"makebrewCreatureTrait": {
+			"group": "主",
+			"schemaFile": "makebrew-creature.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"makebrewCreatureAction": {
+			"group": "主",
+			"schemaFile": "makebrew-creature.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"reducedItemProperty": {
+			"group": "主",
+			"schemaFile": "makecards.json",
+			"required": [
+				"abbreviation",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"reducedItemType": {
+			"group": "主",
+			"schemaFile": "makecards.json",
+			"required": [
+				"abbreviation",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"monsterfeatures": {
+			"group": "主",
+			"schemaFile": "monsterfeatures.json",
+			"required": [
+				"name",
+				"example",
+				"effect"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"name": {
+			"group": "主",
+			"schemaFile": "names.json",
+			"required": [
+				"name",
+				"source",
+				"tables"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"object": {
+			"group": "主",
+			"schemaFile": "objects.json",
+			"required": [
+				"name",
+				"source",
+				"size",
+				"objectType",
+				"hp"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Object.txt",
+			"sample": "object/Sample - Giddy; High Explosives.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"objectFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-objects.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"optionalfeature": {
+			"group": "主",
+			"schemaFile": "optionalfeatures.json",
+			"required": [
+				"name",
+				"entries",
+				"source",
+				"featureType"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__OptionalFeature.txt",
+			"sample": "optionalfeature/Sample - Giddy; Mark of Pain, Ancient Enmity.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"optionalfeatureFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-optionalfeatures.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryOptionalfeature": {
+			"group": "专用",
+			"schemaFile": "foundry-optionalfeatures.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"crochetPattern": {
+			"group": "主",
+			"schemaFile": "homecrafts.json",
+			"required": [
+				"name",
+				"source",
+				"instructions",
+				"yarn",
+				"hooks"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "crochetpattern/Sample - Lyra; Flumph.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"crochetPatternFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-homecrafts.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"psionic": {
+			"group": "主",
+			"schemaFile": "psionics.json",
+			"required": [
+				"name",
+				"source",
+				"type"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "psionic/Sample - Giddy; Black Lily Techniques.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"foundryPsionicDisciplineFocus": {
+			"group": "专用",
+			"schemaFile": "foundry-psionics.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryPsionicDisciplineActive": {
+			"group": "专用",
+			"schemaFile": "foundry-psionics.json",
+			"required": [
+				"name",
+				"source",
+				"psionicName",
+				"psionicSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"race": {
+			"group": "主",
+			"schemaFile": "races.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Race.txt",
+			"sample": "race/Sample - Giddy; Awakened Skeleton.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"subrace": {
+			"group": "主",
+			"schemaFile": "races.json",
+			"required": [
+				"name",
+				"source",
+				"raceName",
+				"raceSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryRace": {
+			"group": "专用",
+			"schemaFile": "foundry-races.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryRaceFeature": {
+			"group": "专用",
+			"schemaFile": "foundry-races.json",
+			"required": [
+				"name",
+				"source",
+				"raceName",
+				"raceSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"raceFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-races.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"recipe": {
+			"group": "主",
+			"schemaFile": "recipes.json",
+			"required": [
+				"name",
+				"source",
+				"ingredients",
+				"instructions"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "recipe/Sample - Giddy; Toast Sandwich.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"recipeFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-recipes.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"reward": {
+			"group": "主",
+			"schemaFile": "rewards.json",
+			"required": [
+				"name",
+				"source",
+				"type",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Reward.txt",
+			"sample": "reward/Sample - Giddy; Boon of Vigor.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"rewardFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-rewards.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"foundryReward": {
+			"group": "专用",
+			"schemaFile": "foundry-rewards.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"table": {
+			"group": "主",
+			"schemaFile": "tables.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 2,
+			"wikiPage": "Homebrew__TableOfReference__Table.txt",
+			"sample": "table/Sample - Giddy; Murder Evidence.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"trap": {
+			"group": "主",
+			"schemaFile": "trapshazards.json",
+			"required": [
+				"name",
+				"trapHazType",
+				"source",
+				"trigger",
+				"entries",
+				"countermeasures"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "trap/Sample - Giddy; Mounted Basilisk Head.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"trapFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-trapshazards.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"hazard": {
+			"group": "主",
+			"schemaFile": "trapshazards.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Hazard.txt",
+			"sample": "hazard/Sample - Giddy; Quicksand.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"hazardFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-trapshazards.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"variantrule": {
+			"group": "主",
+			"schemaFile": "variantrules.json",
+			"required": [
+				"name",
+				"entries",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__VariantRule.txt",
+			"sample": "variantrule/Sample - Giddy; Houserules.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"vehicle": {
+			"group": "主",
+			"schemaFile": "vehicles.json",
+			"required": [
+				"name",
+				"source",
+				"vehicleType",
+				"terrain",
+				"size",
+				"type"
+			],
+			"requiredChoices": 0,
+			"wikiPage": "Homebrew__TableOfReference__Vehicle.txt",
+			"sample": "vehicle/Sample - Giddy; Coracle.json",
+			"sampleFrom": "wiki 对照表"
+		},
+		"vehicleUpgrade": {
+			"group": "主",
+			"schemaFile": "vehicles.json",
+			"required": [
+				"name",
+				"entries",
+				"source",
+				"upgradeType"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "vehicle/Sample - Giddy; Coracle.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"foundryVehicleUpgrade": {
+			"group": "专用",
+			"schemaFile": "foundry-vehicles.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"vehicleFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-vehicles.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"skill": {
+			"group": "主",
+			"schemaFile": "skills.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"sense": {
+			"group": "主",
+			"schemaFile": "senses.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"spellList": {
+			"group": "主",
+			"schemaFile": "",
+			"required": [
+				"name",
+				"source",
+				"spellListType",
+				"spells",
+				"className",
+				"classSource"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"deck": {
+			"group": "主",
+			"schemaFile": "decks.json",
+			"required": [
+				"name",
+				"source",
+				"cards"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"card": {
+			"group": "主",
+			"schemaFile": "decks.json",
+			"required": [
+				"name",
+				"source",
+				"set"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"citation": {
+			"group": "主",
+			"schemaFile": "citations.json",
+			"required": [
+				"name",
+				"source",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"facility": {
+			"group": "主",
+			"schemaFile": "bastions.json",
+			"required": [
+				"name",
+				"source",
+				"facilityType",
+				"entries"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "facility/Sample - Giddy; Roving Junkpile.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"facilityFluff": {
+			"group": "配套",
+			"schemaFile": "fluff-bastions.json",
+			"required": [
+				"name",
+				"source"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		},
+		"encounterShape": {
+			"group": "主",
+			"schemaFile": "encounterbuilder.json",
+			"required": [
+				"name",
+				"source",
+				"shapeTemplate"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": "encounterbuilder/Sample - Giddy; Quartet and Quintet.json",
+			"sampleFrom": "Sample 样例文件"
+		},
+		"renderdemo": {
+			"group": "主",
+			"schemaFile": "renderdemo.json",
+			"required": [
+				"name",
+				"source",
+				"entry"
+			],
+			"requiredChoices": 0,
+			"wikiPage": null,
+			"sample": null,
+			"sampleFrom": null
+		}
+	}
+}
