@@ -24977,6 +24977,73 @@ var BD = (e) => RD.some((t) => t.test(e)) ? "state" : "setting", VD = (e) => {
 	async saved(e, t) {
 		return (await this.deps.saves.read(e))?.actors.find((e) => e.id === t) ?? null;
 	}
+	async load(e) {
+		let t = await this.deps.saves.read(e);
+		if (!t) return [];
+		let n = new Set((await this.prepared(e)).map((e) => String(e.source._id))), r = t.actors.filter((e) => !n.has(e.id) && !e.legacy), i = r.length ? await this.deps.runtime.rebuildMany(e, r) : [];
+		return t.actors.map((e) => {
+			if (n.has(e.id)) return {
+				id: e.id,
+				name: e.name,
+				status: "complete"
+			};
+			if (e.legacy) return {
+				id: e.id,
+				name: e.name,
+				status: "legacy"
+			};
+			let t = i[r.indexOf(e)];
+			return {
+				id: e.id,
+				name: e.name,
+				status: t.status,
+				...t.error ? { error: t.error } : {},
+				...t.missing?.length ? { missing: t.missing.map((e) => ({
+					label: e.ref.label ?? e.ref.hash,
+					reason: e.reason
+				})) } : {}
+			};
+		});
+	}
+	async roster(e) {
+		let t = await this.deps.saves.read(e);
+		if (!t) return [];
+		let n = await this.call(e, "roster");
+		if (n.status !== "complete") throw Error(`读人物列表失败：${n.error ?? n.status}`);
+		let r = new Map(n.result.map((e) => [e.id, e])), i = await this.deps.saves.check(e);
+		return t.actors.map((e) => {
+			let t = r.get(e.id), n = t?.system ?? {}, a = (t) => t ? e.refs.find((e) => e.itemId === t.id)?.label ?? t.name : null;
+			return {
+				id: e.id,
+				name: t?.name ?? e.name,
+				img: t?.img ?? null,
+				type: t?.type ?? null,
+				loaded: !!t,
+				adjustments: e.adjustments,
+				classes: (t?.items ?? []).filter((e) => e.type === "class").map((e) => ({
+					name: a(e) ?? e.name,
+					levels: e.levels
+				})),
+				race: a(t?.items.find((e) => e.type === "race")),
+				background: a(t?.items.find((e) => e.type === "background")),
+				level: n.details?.level ?? null,
+				cr: n.details?.cr ?? null,
+				hp: n.attributes?.hp ? {
+					value: n.attributes.hp.value ?? null,
+					max: n.attributes.hp.max ?? null,
+					temp: n.attributes.hp.temp ?? null
+				} : null,
+				ac: n.attributes?.ac?.value ?? null,
+				passivePerception: n.skills?.prc?.passive ?? null,
+				speed: n.attributes?.movement?.speeds?.walk ?? null,
+				conditions: t?.conditions ?? [],
+				missing: i.missing.filter((t) => t.actorId === e.id).map((e) => e.ref.label ?? e.ref.hash)
+			};
+		});
+	}
+	async prepared(e) {
+		return this.call(e, "preparedActors");
+	}
 	async sheet(e, t) {
 		let n = await this.call(e, "sheet", t);
 		if (n.status !== "complete") return n;

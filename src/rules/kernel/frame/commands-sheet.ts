@@ -40,6 +40,28 @@ function patchOf(doc: any, path: string, value: unknown, remove?: boolean): Reco
 /** 数据结构里的 JSON 化（去掉文档对象、HTML 锚点这类界面专用的东西）。 */
 const plain = (v: any): any => JSON.parse(JSON.stringify(v ?? null, (k, val) => (k === 'document' || k === 'anchor' || k === 'fields' || k === 'field' || k === 'parent') ? undefined : val))
 
+/**
+ * 引擎算好的数值（不是 toObject：toObject 只交存起来的原始值，AC、调整值、被动察觉这类算出来的值会丢）。
+ * 照对象自己的属性逐层抄成普通数据；跳过文档对象、父链接、下划线开头的内部字段与函数。
+ */
+function live(v: any, depth = 0, seen: WeakSet<object> = new WeakSet()): any {
+  if (typeof v === 'function') return undefined
+  if (v === null || typeof v !== 'object') return v
+  if (depth > 12 || seen.has(v) || v instanceof g.foundry.abstract.Document) return undefined
+  seen.add(v)
+  if (v instanceof Set) return [...v].map((x) => live(x, depth + 1, seen))
+  // Foundry 的 Collection 是 Map，但逐个取只给值；按键值对取
+  if (v instanceof Map) return Object.fromEntries([...Map.prototype.entries.call(v)].map(([k, x]) => [k, live(x, depth + 1, seen)]))
+  if (Array.isArray(v)) return v.map((x) => live(x, depth + 1, seen))
+  const out: Record<string, unknown> = {}
+  for (const k of Object.keys(v)) {
+    if (k === 'parent' || k.startsWith('_')) continue
+    const x = live(v[k], depth + 1, seen)
+    if (x !== undefined) out[k] = x
+  }
+  return out
+}
+
 /** 引擎配置窗算好的上下文（不打开窗口）：生命按职业的合计、效果加成；AC 的公式与计算。 */
 async function configContext(Cls: any, a: any, keys: string[]): Promise<Record<string, unknown> | null> {
   if (!Cls) return null
@@ -73,9 +95,9 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
       return {
         id: a.id, name: a.name, img: a.img, type: a.type,
         flags: plain(a.flags ?? {}),
-        system: plain(a.system.toObject(false)),
+        system: live(a.system),
         statuses: [...(a.statuses ?? [])],
-        items: [...a.items].map((i: any) => ({ ...itemState(i), img: i.img, sort: i.sort, system: plain(i.system.toObject(false)), labels: plain(i.labels ?? {}) })),
+        items: [...a.items].map((i: any) => ({ ...itemState(i), img: i.img, sort: i.sort, system: live(i.system), labels: plain(i.labels ?? {}) })),
         effects: [...a.allApplicableEffects()].map((e: any) => ({
           id: e.id, name: e.name, img: e.img, disabled: e.disabled, suppressed: e.isSuppressed ?? false,
           origin: e.origin ?? null, from: e.parent?.documentName === 'Item' ? { itemId: e.parent.id, name: e.parent.name } : null,
@@ -87,6 +109,13 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         },
       }
     }),
+
+    /** 人物列表：全员（或指定的人）引擎算好的数值 + 物品类别 / 名字 / 等级 + 状态效果；摘哪些字段在宿主 people.roster。 */
+    roster: (ids?: string[]) => operate([], async () => [...g.game.actors].filter((a: any) => !ids || ids.includes(a.id)).map((a: any) => ({
+      id: a.id, name: a.name, img: a.img, type: a.type, system: live(a.system),
+      items: [...a.items].filter((i: any) => ['class', 'race', 'background'].includes(i.type)).map((i: any) => ({ id: i.id, type: i.type, name: i.name, levels: i.system?.levels ?? null })),
+      conditions: [...a.effects].filter((e: any) => e.active && e.statuses?.size).map((e: any) => e.name),
+    }))),
 
     /** 统一改人物：一组改动按顺序走官方 update / 建删内嵌文档 / 状态开关。 */
     edit: (actorId: string, edits: SheetEdit[]) => operate([], async () => {

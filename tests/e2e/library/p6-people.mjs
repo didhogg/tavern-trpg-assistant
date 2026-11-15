@@ -49,8 +49,10 @@ try {
     const id = b.built.id
     out.build = { status: b.built.status, inSave: b.kernel?.actors.length, adjustments: b.kernel?.actors[0]?.adjustments }
 
-    const s0 = (await people.sheet(owner, id)).result
-    out.sheet = { hp: s0.system.attributes.hp, hpClasses: s0.breakdown.hp?.classes?.map((c) => c.total), acFormula: s0.breakdown.ac?.formulaLabel, items: s0.items.length, changed: s0.changed.length, baseKnown: s0.baseKnown }
+    const sh0 = await people.sheet(owner, id)
+    if (sh0.status !== 'complete') throw new Error(`读人物页失败：${sh0.error}\n${sh0.stack ?? ''}`)
+    const s0 = sh0.result
+    out.sheet = { detailsRace: (await rt.baseOf(owner, id))?.system?.details?.race ?? "(空)", raceSpeed: s0.items.find((i) => i.type === 'race')?.system?.movement?.walk ?? null, ac: s0.system.attributes.ac?.value ?? null, pp: s0.system.skills?.prc?.passive ?? null, strMod: s0.system.abilities?.str?.mod ?? null, hp: s0.system.attributes.hp, hpClasses: s0.breakdown.hp?.classes?.map((c) => c.total), acFormula: s0.breakdown.ac?.formulaLabel, items: s0.items.length, changed: s0.changed.length, baseKnown: s0.baseKnown }
 
     const strBase = s0.system.abilities.str.value
     const e1 = await people.edit(owner, id, [{ kind: 'set', path: 'system.abilities.str.value', value: strBase + 2 }, { kind: 'set', path: 'system.attributes.hp.bonuses.overall', value: '3' }])
@@ -107,13 +109,23 @@ try {
     const hist = await people.history(owner)
     out.history = { rows: hist.length, sample: hist.slice(0, 3).map((r) => r.actors.map((a) => `${a.name}:${a.kind}:${a.fields.length}`)) }
 
-    // 关小窗、按存档重建全员：编号不撞、HP 与存档一致
+    // 真实入口：关小窗 → 新开（像重新进战役）→ load 按存档装人 → roster 读列表；编号不撞、HP 与关前一致、改动还能接着写
     const kernel = await saves.read(owner)
     const before = Object.fromEntries(await Promise.all(kernel.actors.map(async (a) => [a.id, (await src(a.id))?.system.attributes.hp.value])))
     await rt.close(owner)
     const rt2 = mk()
-    const rebuilt = await rt2.rebuildMany(owner, kernel.actors)
-    out.reload = { statuses: rebuilt.map((x) => x.status), ids: rebuilt.map((x) => x.id), sameHp: rebuilt.every((x) => x.data?.system?.attributes?.hp?.value === before[x.id]) }
+    const saves2 = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rt2.compact(k, ids), mapRef: (k) => rt2.mapRef(k) })
+    const people2 = new h.KernelPeople({ runtime: rt2, saves: saves2 })
+    const loaded = await people2.load(owner)
+    const again = await people2.load(owner)
+    const rows = await people2.roster(owner)
+    const hero = rows.find((x) => x.id === id)
+    const wrote = await people2.act(owner, id, 'damage', id, [{ value: 1, type: 'slashing' }], [], {})
+    out.reload = { statuses: loaded.map((x) => x.status), secondLoad: again.map((x) => x.status), ids: rows.map((x) => x.id),
+      sameHp: rows.every((x) => x.hp?.value === before[x.id]),
+      hero: hero && { classes: hero.classes, race: hero.race, background: hero.background, level: hero.level, hp: hero.hp, ac: hero.ac, pp: hero.passivePerception, speed: hero.speed, cat: hero.adjustments.category, missing: hero.missing },
+      monster: rows.filter((x) => x.adjustments.category === 'enemy').map((x) => ({ name: x.name, cr: x.cr, type: x.type, loaded: x.loaded })),
+      writeAfterLoad: wrote.outcome.status === 'complete' && !!wrote.kernel }
     await rt2.close(owner)
     return out
   })
@@ -122,7 +134,7 @@ try {
   const unexplained = errors.filter((e) => !known(e))
   const checks = {
     build: r.build.status === 'complete' && r.build.inSave === 1,
-    sheet: r.sheet.baseKnown && r.sheet.changed === 0 && (r.sheet.hpClasses?.length ?? 0) > 0,
+    sheet: r.sheet.baseKnown && r.sheet.changed === 0 && (r.sheet.hpClasses?.length ?? 0) > 0 && r.sheet.ac !== null && r.sheet.pp !== null && r.sheet.strMod !== null,
     edit: r.edit.status === 'complete' && r.edit.changed.some((c) => c.path === 'system.abilities.str.value' && c.kind === 'setting'),
     locked: r.locked.status === 'error',
     revert: r.revert.status === 'complete' && r.revert.changed.length === 0,
@@ -133,7 +145,9 @@ try {
     add: r.add.copy === 'complete' && r.add.distinct && r.add.template === 'complete' && r.add.count === 4,
     purge: r.purge.afterPurge === 3 && !r.purge.frameHasCopyAfterPurge && r.purge.afterUndo === 4 && r.purge.frameBack,
     history: r.history.rows > 5,
-    reload: r.reload.statuses.every((s) => s === 'complete') && new Set(r.reload.ids).size === r.reload.ids.length && r.reload.sameHp,
+    reload: r.reload.statuses.every((s) => s === 'complete') && r.reload.secondLoad.every((s) => s === 'complete') && new Set(r.reload.ids).size === r.reload.ids.length && r.reload.sameHp,
+    roster: !!r.reload.hero && r.reload.hero.classes.length > 0 && !!r.reload.hero.race && r.reload.hero.ac !== null && r.reload.hero.pp !== null && r.reload.hero.speed > 0 && r.reload.hero.cat === 'party' && r.reload.monster.length === 2 && r.reload.monster.every((m) => m.loaded),
+    writeAfterLoad: r.reload.writeAfterLoad,
   }
   const ok = Object.values(checks).every(Boolean) && unexplained.length === 0
   await writeFile(`${work}/p6-people-${engine}.json`, JSON.stringify({ engine, ok, checks, ...r, errors, unexplained }, null, 2))

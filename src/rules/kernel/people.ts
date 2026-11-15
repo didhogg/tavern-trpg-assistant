@@ -22,6 +22,25 @@ export const PLAY_STATE: RegExp[] = [
 
 export interface ChangedField { path: string; kind: 'state' | 'setting' }
 
+/** 装人结果：legacy = 旧格式人物（只有整份内容，不能按引用重建）。 */
+export interface LoadedActor { id: string; name: string; status: 'complete' | 'missing' | 'pending' | 'error' | 'legacy'; error?: string; missing?: Array<{ label: string; reason: string }> }
+
+/** 人物列表一行；loaded = false 时数值都是 null（没装进小窗：缺资料 / 旧格式 / 出错）。 */
+/** 小窗 roster 命令交回的一人。 */
+interface LiveRow { id: string; name: string; img: string | null; type: string; system: Record<string, unknown>; items: Array<{ id: string; type: string; name: string; levels: number | null }>; conditions: string[] }
+
+export interface RosterRow {
+  id: string; name: string; img: string | null; type: string | null; loaded: boolean
+  adjustments: Record<string, unknown>
+  classes: Array<{ name: string; levels: number | null }>; race: string | null; background: string | null
+  level: number | null; cr: number | null
+  hp: { value: number | null; max: number | null; temp: number | null } | null
+  ac: number | null; passivePerception: number | null; speed: number | null
+  conditions: string[]
+  /** 读档检查里这个人缺的条目（名字）；有就在行上标「N 项资料不可用」。 */
+  missing: string[]
+}
+
 /** 两份数据逐字段比出的路径（`-=` 删除的也算）。 */
 function paths(diff: Record<string, unknown>, prefix = '', out: string[] = []): string[] {
   for (const [key, value] of Object.entries(diff)) {
@@ -51,6 +70,57 @@ export class KernelPeople {
   }
   private async saved(ownerKey: string, id: string): Promise<KernelActor | null> {
     return (await this.deps.saves.read(ownerKey))?.actors.find((a) => a.id === id) ?? null
+  }
+
+  /**
+   * 进战役 / 读档后把存档里的人装进结算小窗（调现成的 rebuildMany：基准缓存全中就一次批量建）。
+   * 已经在小窗里的不重建；旧格式人物（legacy）不能按引用重建，照实标出。每人交回：好了 / 缺资料（缺哪些、为什么）/ 出错。
+   */
+  async load(ownerKey: string): Promise<LoadedActor[]> {
+    const kernel = await this.deps.saves.read(ownerKey)
+    if (!kernel) return []
+    const present = new Set((await this.prepared(ownerKey)).map((a) => String(a.source._id)))
+    const todo = kernel.actors.filter((a) => !present.has(a.id) && !a.legacy)
+    const results = todo.length ? await this.deps.runtime.rebuildMany(ownerKey, todo) : []
+    return kernel.actors.map((a): LoadedActor => {
+      if (present.has(a.id)) return { id: a.id, name: a.name, status: 'complete' }
+      if (a.legacy) return { id: a.id, name: a.name, status: 'legacy' }
+      const r = results[todo.indexOf(a)]
+      return { id: a.id, name: a.name, status: r.status, ...(r.error ? { error: r.error } : {}),
+        ...(r.missing?.length ? { missing: r.missing.map((m) => ({ label: m.ref.label ?? m.ref.hash, reason: m.reason })) } : {}) }
+    })
+  }
+
+  /**
+   * 人物列表一次读全员（每次现算，不另存）：存档里的名单与个人调整 + 小窗里官方算好的数 + 读档检查缺的资料。
+   * 字段路径照 dnd5e 6.1 数据模型（P6-0 §2.5 已核对）；职业 / 种族 / 背景的名字用存档引用上的【库】名字（中文战役是中文）。
+   */
+  async roster(ownerKey: string): Promise<RosterRow[]> {
+    const kernel = await this.deps.saves.read(ownerKey)
+    if (!kernel) return []
+    const out = await this.call(ownerKey, 'roster')
+    if (out.status !== 'complete') throw new Error(`读人物列表失败：${out.error ?? out.status}`)
+    const byId = new Map((out.result as LiveRow[]).map((r) => [r.id, r]))
+    const check = await this.deps.saves.check(ownerKey)
+    return kernel.actors.map((a): RosterRow => {
+      const live = byId.get(a.id)
+      const sys = (live?.system ?? {}) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any -- 引擎算好的数值，按 dnd5e 路径读
+      const label = (item?: LiveRow['items'][number]): string | null => item ? a.refs.find((r) => r.itemId === item.id)?.label ?? item.name : null
+      return {
+        id: a.id, name: live?.name ?? a.name, img: live?.img ?? null, type: live?.type ?? null, loaded: !!live, adjustments: a.adjustments,
+        classes: (live?.items ?? []).filter((i) => i.type === 'class').map((i) => ({ name: label(i) ?? i.name, levels: i.levels })),
+        race: label(live?.items.find((i) => i.type === 'race')), background: label(live?.items.find((i) => i.type === 'background')),
+        level: sys.details?.level ?? null, cr: sys.details?.cr ?? null,
+        hp: sys.attributes?.hp ? { value: sys.attributes.hp.value ?? null, max: sys.attributes.hp.max ?? null, temp: sys.attributes.hp.temp ?? null } : null,
+        ac: sys.attributes?.ac?.value ?? null, passivePerception: sys.skills?.prc?.passive ?? null, speed: sys.attributes?.movement?.speeds?.walk ?? null, // 引擎算好的步行速度（已计力竭 / 状态）；movement.walk 只是原始填写值
+        conditions: live?.conditions ?? [],
+        missing: check.missing.filter((m) => m.actorId === a.id).map((m) => m.ref.label ?? m.ref.hash),
+      }
+    })
+  }
+
+  private async prepared(ownerKey: string): Promise<Array<{ source: Record<string, unknown>; system: Record<string, unknown>; name?: string }>> {
+    return this.call(ownerKey, 'preparedActors')
   }
 
   /** 读人物页：官方数值 + 分解 + 和基准不同的字段（金线只画 setting）。 */
