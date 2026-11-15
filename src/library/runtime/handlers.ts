@@ -1,5 +1,6 @@
 // 把小窗的要求接到本地库：文件 → 对应官方源的原始文件；存储 → kv 表。
 // P5 T1：读取按版本层（新层 → 父层 → 旧范围）；写只写准备版本自己的层，旧版本不受影响。
+import { isAuthorContentStorageKey } from '../brew-storage'
 import type { LibraryDatabase } from '../db'
 import type { FileProvider } from '../files'
 import type { LibraryView } from '../revision'
@@ -45,6 +46,9 @@ export function libraryHandlers({ codeSet, db, files, allowNetwork, view, kvScop
     }
     return kvScope ?? codeSet
   }
+  /** 作者同步存储的写入范围；只读版本（没开准备版本、也没指定范围）里网站偏好交 null = 不落库，自制 / 试玩稿内容键照旧报只读。 */
+  const localScope = async (key: string): Promise<string | null> =>
+    (view && !kvScope && !view.kvWriteScope(codeSet) && !isAuthorContentStorageKey(key)) ? null : `${await writeScope()}:local`
   return {
     file: async (path) => {
       const text = await files.get(source, path, { allowNetwork: allowNetwork(), ...(view ? { view } : {}), ...(writeLegacy ? { writeLegacy: true } : {}), ...(commit ? { commit } : {}), persist })
@@ -73,7 +77,9 @@ export function libraryHandlers({ codeSet, db, files, allowNetwork, view, kvScop
       }
       return out
     },
-    localSet: async (key, value) => { await db.kv.put({ scope: `${await writeScope()}:local`, key, value }) },
-    localRemove: async (key) => { await db.kv.put({ scope: `${await writeScope()}:local`, key, value: null, deleted: true }) },
+    // 阅读用的只读版本里，作者网站自己的偏好（主题、掷骰框样式、界面语言、存储自检…）只留在小窗内存，不写库、不报错（内容键见 isAuthorContentStorageKey）：
+    // 与插件无关（驾驶员 2026-11-15；P5-3 执行文档第 169 行"非内容会话写入隔离保存"）。准备版本里照常落库，装书时的写入不受影响。
+    localSet: async (key, value) => { const scope = await localScope(key); if (scope) await db.kv.put({ scope, key, value }) },
+    localRemove: async (key) => { const scope = await localScope(key); if (scope) await db.kv.put({ scope, key, value: null, deleted: true }) },
   }
 }

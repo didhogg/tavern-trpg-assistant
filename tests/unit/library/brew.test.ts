@@ -45,6 +45,19 @@ describe('作者同步存储（localStorage）存进库', () => {
   })
 })
 
+describe('只读版本里的作者同步存储（驾驶员 2026-11-15）', () => {
+  it('网站偏好只留在小窗内存，不写库、不报错；自制 / 试玩稿内容键照旧报只读', async () => {
+    // 只读的已发布版本：没有写入范围（真实已发布版本 kvWriteScope 交 null；空库里的旧版本 R0 是可写的，不能拿来测）
+    const readOnly = { kvWriteScope: () => null, kvScopes: async () => ['cn'] } as unknown as Awaited<ReturnType<typeof revisions.published>>
+    const h = libraryHandlers({ codeSet: 'cn', db, files: new FileProvider({ db }), allowNetwork: () => false, view: readOnly })
+    await h.localSet('StyleSwitcher_style', 'auto')
+    await h.localRemove('_test_storage')
+    expect(await h.localSnapshot()).not.toHaveProperty('StyleSwitcher_style')
+    await expect(h.localSet('HOMEBREW_2_STORAGE_METAS', '[]')).rejects.toThrow('只读')
+    await expect(h.localSet('PRERELEASE_STORAGE', '[]')).rejects.toThrow('只读')
+  })
+})
+
 describe('parseBrew', () => {
   it('修法 A：作者合并全部自制包失败（缺依赖）→ 记下缺的依赖、标为解析失败、不再往下解析；小窗照样关掉', async () => {
     let closed = false
