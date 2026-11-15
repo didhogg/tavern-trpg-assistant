@@ -283,7 +283,9 @@ export { KernelPrecompute } from '../../../src/rules/kernel/precompute'
 export { cardTypes, cardFields } from '../../../src/rules/kernel/card-types'
 
 export async function startKernelSession(input: unknown, view?: Parameters<typeof libraryData>[1]): Promise<{ session: KernelSession; status: unknown }> {
-  const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files, view), timeoutMs: 180_000 })
+  // 和正式代码（runtime.ts 开小窗）一样按当前发布的【库】版本读文件；P5-3 之后不给版本只能读到旧表，新装的文件读不到
+  const at = view ?? await revisions.published()
+  const session = await startKernel({ pluginRoot: new URL('/', location.href), container: document.body, data: libraryData(files, at), timeoutMs: 180_000 })
   const status = await session.boot(input as never)
   return { session, status }
 }
