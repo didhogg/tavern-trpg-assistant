@@ -1221,6 +1221,22 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* 弹窗里的表：不要外边距（确认页自己排间距） */
 .trpg-modal__page > .sh-tbl, .trpg-confirm .sh-tbl { margin: 0 0 8px; }
+
+/* 配色参考 v2（驾驶员 2026-11-15 指定，只用于线框出参考图，插件本体未改）：
+   指定色：淡米底 #F2ECE2 · 次级栏目 #EFEADF · 深红 #8B4936 · 边栏深灰 #31352E（驾驶员给的「次级边栏」也是 #31352E）。
+   其余是从这四个色按比例混出来的派生色（悬停 / 按下 / 细线 / 次要文字等），对比度已核算：
+   白字 / 深红 6.77；深红字 / 米底 5.76；正文 #31352E / 米底 10.64；次要文字 / 次级栏目 5.08；控件边框 / 米底 3.07；边栏浅字 / 边栏 10.64。
+   只覆盖浅色模式；深色模式没做。真要换插件配色，走 P4 生成器 docs/design/p4-design-system/palettes.mjs，不手改 palette.css。 */
+.ds-root {
+  --bg: #F2ECE2; --bg-side: #EFEADF; --bg-sunk: #EFEADF; --surface: #F8F5EF; --bg-hover: #E6E1D7;
+  --line: #DBD6CC; --line-ctrl: #88877F;
+  --text: #31352E; --text2: #61635B; --text3: #7E7E76;
+  --side: #31352E; --side-ink: #F2ECE2; --side-ink2: #B8B5AC; --side-hover: #3D4039; --side-active: #4A4D45; --side-line: #42453E;
+  --primary: #8B4936; --primary-hover: #975B4A; --primary-pressed: #723C2C; --primary-text: #8B4936;
+  --primary-tint: #E8DFD3; --primary-tint-line: #D9C7BA;
+  --hero-bg: #31352E; --hero-ink: #F8F5EF; --hero-ink2: #B8B5AC;
+  --danger-bg: #F8F5EF; --disabled-bg: #EFEADF; --disabled-text: #7E7E76; --focus: #8B4936;
+}
 </style></head><body><div class="wf-board ds-root" style="background:#f4f1ea">
 <h1>关掉建卡窗口之后：列表里的「建卡中」人物</h1><p class="wf-meta">新建 · 分步建卡（每一步） · 配色 A（P4 令牌）· 结构照 Tidy5e / gg-sheet-export / morii-vtt · 名字和数值是占位示例，真实显示由内核给</p>
 <div class="wf-row"><figure style="margin:0"><figcaption class="wf-cap">960 窗口</figcaption><div class="wf-host" style="width:1440px;height:900px"><div class="wf-host__chat"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="wf-host__input">酒馆输入框（宿主，不属于插件）</div><div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div><section class="trpg-window" data-layout="wide" data-fullscreen="false" style="left:240px;top:130px;width:960px;height:640px"><div class="trpg-shell"><nav class="trpg-side" aria-label="主导航"><div class="trpg-side__brand"><span class="trpg-brandmark"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="18" height="18"><path d="M192,32H64A32,32,0,0,0,32,64V192a32,32,0,0,0,32,32H192a32,32,0,0,0,32-32V64A32,32,0,0,0,192,32Zm16,160a16,16,0,0,1-16,16H64a16,16,0,0,1-16-16V64A16,16,0,0,1,64,48H192a16,16,0,0,1,16,16ZM104,92A12,12,0,1,1,92,80,12,12,0,0,1,104,92Zm72,0a12,12,0,1,1-12-12A12,12,0,0,1,176,92Zm-72,72a12,12,0,1,1-12-12A12,12,0,0,1,104,164Zm36-36a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm36,36a12,12,0,1,1-12-12A12,12,0,0,1,176,164Z"/></svg></span><span class="trpg-side__name">TRPG 跑团助手</span></div>

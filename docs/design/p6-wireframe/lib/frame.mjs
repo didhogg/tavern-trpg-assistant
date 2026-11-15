@@ -8,7 +8,7 @@ import { CSS as P5CSS, FRAMES, HOST_BAR, CAMP, PAGE_CSS } from '../../p5-wirefra
 import { esc, icon } from '../../p5-wireframe/lib/ui.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
-export const CSS = `${P5CSS}\n${readFileSync(join(here, '../p6.css'), 'utf8')}`
+export const CSS = `${P5CSS}\n${readFileSync(join(here, '../p6.css'), 'utf8')}\n${readFileSync(join(here, '../palette-v2.css'), 'utf8')}`
 export { PAGE_CSS }
 
 FRAMES.full = { w: 1440, h: 900, full: true, layout: 'wide', label: '视口 1440 · 插件全屏 · 宽布局' }

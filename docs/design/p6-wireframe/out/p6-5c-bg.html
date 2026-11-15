@@ -1221,6 +1221,22 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* 弹窗里的表：不要外边距（确认页自己排间距） */
 .trpg-modal__page > .sh-tbl, .trpg-confirm .sh-tbl { margin: 0 0 8px; }
+
+/* 配色参考 v2（驾驶员 2026-11-15 指定，只用于线框出参考图，插件本体未改）：
+   指定色：淡米底 #F2ECE2 · 次级栏目 #EFEADF · 深红 #8B4936 · 边栏深灰 #31352E（驾驶员给的「次级边栏」也是 #31352E）。
+   其余是从这四个色按比例混出来的派生色（悬停 / 按下 / 细线 / 次要文字等），对比度已核算：
+   白字 / 深红 6.77；深红字 / 米底 5.76；正文 #31352E / 米底 10.64；次要文字 / 次级栏目 5.08；控件边框 / 米底 3.07；边栏浅字 / 边栏 10.64。
+   只覆盖浅色模式；深色模式没做。真要换插件配色，走 P4 生成器 docs/design/p4-design-system/palettes.mjs，不手改 palette.css。 */
+.ds-root {
+  --bg: #F2ECE2; --bg-side: #EFEADF; --bg-sunk: #EFEADF; --surface: #F8F5EF; --bg-hover: #E6E1D7;
+  --line: #DBD6CC; --line-ctrl: #88877F;
+  --text: #31352E; --text2: #61635B; --text3: #7E7E76;
+  --side: #31352E; --side-ink: #F2ECE2; --side-ink2: #B8B5AC; --side-hover: #3D4039; --side-active: #4A4D45; --side-line: #42453E;
+  --primary: #8B4936; --primary-hover: #975B4A; --primary-pressed: #723C2C; --primary-text: #8B4936;
+  --primary-tint: #E8DFD3; --primary-tint-line: #D9C7BA;
+  --hero-bg: #31352E; --hero-ink: #F8F5EF; --hero-ink2: #B8B5AC;
+  --danger-bg: #F8F5EF; --disabled-bg: #EFEADF; --disabled-text: #7E7E76; --focus: #8B4936;
+}
 </style></head><body><div class="wf-board ds-root" style="background:#f4f1ea">
 <h1>分步建卡 ③ 背景</h1><p class="wf-meta">新建 · 分步建卡（每一步） · 配色 A（P4 令牌）· 结构照 Tidy5e / gg-sheet-export / morii-vtt · 名字和数值是占位示例，真实显示由内核给</p>
 <div class="wf-row"><figure style="margin:0"><figcaption class="wf-cap">窄屏</figcaption><div class="wf-host" style="width:390px;height:844px"><div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div><section class="trpg-window" data-layout="narrow" data-fullscreen="true" style="top:36px;left:0;right:0;bottom:0"><div class="trpg-shell"><div class="trpg-main"><header class="trpg-head"><h1 class="trpg-head__title">人物</h1><div class="trpg-head__chips"><button class="trpg-icon-btn" type="button" aria-label="助手菜单"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="20" height="20"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></svg></button></div></header>

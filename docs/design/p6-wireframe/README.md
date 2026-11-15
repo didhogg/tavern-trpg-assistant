@@ -14,6 +14,7 @@ out/<屏>.html     每屏多宽度并排 + 标注表（5 列；第 5 列「详�
 shots/<屏>.png    截图（2900 宽）
 build.mjs         node docs/design/p6-wireframe/build.mjs [--shots] [--only=p6-6]
 lib/parts.mjs     通用零件 + 列表；lib/sheet.mjs 详情页（页头 + 8 个分页）；lib/wizard.mjs 分步建卡
+palette-v2.css    配色参考 v2（驾驶员指定色 + 派生色，只在线框里覆盖插件配色；插件本体未改）
 p6.css            人物线框样式（sh- 人物、wz- 建卡向导），颜色全走 P4 令牌，0 个新颜色
 ```
 

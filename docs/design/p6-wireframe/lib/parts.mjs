@@ -15,10 +15,10 @@ export { icon, esc, btn, iconBtn, badge, seg, searchBox, mdl, mh }
 export const P = (n) => (n ? pin(n) : '')
 export const more = (n) => `<button class="sh-more" type="button" aria-label="更多">${P(n)}${icon('dots-three', 18)}</button>`
 export const dots = (n, on, kind) => `<span class="sh-dots"${kind ? ` data-kind="${kind}"` : ''}>${Array.from({ length: n }, (_, i) => `<i data-on="${i < on}"></i>`).join('')}</span>`
-export const bar = (cur, max, temp = 0, { dk } = {}) => {
+export const bar = (cur, max, temp = 0, { dk, plain } = {}) => {
   const f = Math.min(100, (cur / max) * 100)
   const t = temp ? Math.min(100 - f, (temp / max) * 100) : 0
-  return `<span class="sh-bar${dk ? ' sh-bar--dk' : ''}" role="meter" aria-valuenow="${cur}" aria-valuemax="${max}"><i style="width:${f}%"${cur / max < 0.34 ? ' data-low="true"' : ''}></i>${t ? `<u style="width:${t}%"></u>` : ''}</span>`
+  return `<span class="sh-bar${dk ? ' sh-bar--dk' : ''}" role="meter" aria-valuenow="${cur}" aria-valuemax="${max}"><i style="width:${f}%"${!plain && cur / max < 0.34 ? ' data-low="true"' : ''}></i>${t ? `<u style="width:${t}%"></u>` : ''}</span>`
 }
 export const step = (n) => `<span class="sh-step"><button type="button" aria-label="减一">${icon('minus', 12)}</button><b>${n}</b><button type="button" aria-label="加一">${icon('plus', 12)}</button></span>`
 export const filt = (items, on = 0, n) => `<span class="sh-filt" role="group">${P(n)}${items.map((t, i) => `<button type="button" aria-pressed="${i === on}">${t}</button>`).join('')}</span>`

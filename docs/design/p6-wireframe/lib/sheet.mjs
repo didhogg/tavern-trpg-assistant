@@ -27,7 +27,7 @@ ${bar(12, 18, 3, { dk: true })}${pre}
 <div>力竭 <b>0</b>　灵感 ${dots(1, 0)}</div></div></div>`
 }
 export function hero(o = {}) {
-  const xp = `<div class="sh-xp"${o.ready ? ' data-ready="true"' : ''}>${P(o.nXp)}<div><span>经验</span><b>${o.ready ? '2,700' : '900'} / 2,700</b></div>${bar(o.ready ? 2700 : 900, 2700, 0, { dk: true })}<button class="sh-dk" type="button">${o.ready ? '可以升级 · 等级管理' : '等级管理'}</button></div>`
+  const xp = `<div class="sh-xp"${o.ready ? ' data-ready="true"' : ''}>${P(o.nXp)}<div><span>经验</span><b>${o.ready ? '2,700' : '900'} / 2,700</b></div>${bar(o.ready ? 2700 : 900, 2700, 0, { dk: true, plain: true })}<button class="sh-dk" type="button">${o.ready ? '可以升级 · 等级管理' : '等级管理'}</button></div>`
   const id = `<div class="sh-hero__id"><span class="sh-pic">${icon('user', 26)}</span><div class="sh-hero__who"><div class="sh-name">${P(o.nName)}盖尔<span class="sh-star">${icon('star-fill', 18)}</span><small>Gale</small></div>
 <div class="sh-meta"><span><b>法师 3 级</b> 塑能学派</span><span>种族 <b>人类</b></span><span>背景 <b>学者</b></span><span>中立善良</span><span>中型</span></div>
 <div class="sh-hero__btns">${P(o.nCat)}<button class="sh-dk" type="button">${icon('users', 14)} 队伍 ${icon('caret-down', 12)}</button><button class="sh-dk" type="button">随行 ${icon('caret-down', 12)}</button>${o.sync ? `<button class="sh-dk" type="button">${P(o.sync)}${icon('link-simple', 14)} 3 项来源有更新</button>` : ''}</div></div>${xp}</div>`
@@ -64,7 +64,7 @@ ${tbl(ACOLS, `${sec('其他', 1, ['次数', '恢复', ''])}${tr([it('奥', '奥�
 const BCOLS = "minmax(0,1fr) 56px 96px 64px 40px 32px"
 const bagRow = (ch, name, sub, uses, qty, wt, eq, attrs = '') => tr([it(ch, name, sub), c(uses), `<span>${qty == null ? '—' : step(qty)}</span>`, c(wt), `<span>${eq == null ? '' : `<i class="sh-eq" data-on="${eq}"></i>`}</span>`, more()], attrs)
 const BN = { narrow: 'minmax(0,1fr) 96px 40px 32px', hide: '2 4' }
-const bag = (o) => `<div class="sh-info">${P(o.nEnc)}<span class="sh-enc">负重 ${bar(34, 120)}<b>34 / 120 磅</b></span><span>力量 <b>8</b></span><span>体型 <b>中型</b></span></div>
+const bag = (o) => `<div class="sh-info">${P(o.nEnc)}<span class="sh-enc">负重 ${bar(34, 120, 0, { plain: true })}<b>34 / 120 磅</b></span><span>力量 <b>8</b></span><span>体型 <b>中型</b></span></div>
 <div class="sh-tools">${searchBox('搜 物品')}${filt(['全部', '已装备', '可使用'], 0)}${iconBtn('sort-ascending', '排序')}${btn('加物品', { small: true, ic: 'plus', n: o.nAdd })}</div>
 ${tbl(BCOLS, `${sec('武器', 2, ['次数', '数量', '重量', '装备'], { add: '加武器' })}${bagRow('匕', '匕首', '简易近战 · 灵巧 投掷', '—', 1, '1 磅', true)}${bagRow('法', '法杖', '简易近战 · 双用', '—', 1, '4 磅', true)}`, '', BN)}
 ${tbl(BCOLS, `${sec('装备', 2, ['次数', '数量', '重量', '装备'], { add: '加装备' })}${bagRow('书', '法术书', '奥术法器 · 9 个法术', '—', null, '3 磅', true)}${bagRow('水', '水晶球（奥术法器）', '施法法器', '—', null, '1 磅', true)}`, '', BN)}
