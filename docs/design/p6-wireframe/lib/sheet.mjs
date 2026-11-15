@@ -2,6 +2,8 @@
 // 示例人物：盖尔（法师 3 级，智力 18）。所有数值是占位，真实值由内核给；点带框的数字 = 送去骰盘（R15）。
 import { icon, btn, iconBtn, searchBox, P, more, dots, bar, step, filt, roll, sec, it, tr, c, tbl } from './parts.mjs'
 
+export const pen = (label, n, corner) => `<button class="sh-pen${corner ? ' sh-pen--c' : ''}" type="button" aria-label="${label}" title="${label}">${P(n)}${icon('pencil-simple', 14)}</button>`
+const man = (o, k) => (o.man ?? []).includes(k)
 export const TABS = [['action', '行动'], ['stats', '数值'], ['bag', '背包'], ['spell', '法术'], ['feat', '特性'], ['effect', '效果'], ['bio', '背景'], ['note', '笔记']]
 const AB = [['力量', '−1', 8, '−1'], ['敏捷', '+2', 14, '+2'], ['体质', '+1', 12, '+1'], ['智力', '+4', 18, '+6', 1], ['感知', '+1', 12, '+3', 1], ['魅力', '+0', 10, '+0']]
 const AK = ['力', '敏', '体', '智', '感', '魅']
@@ -19,20 +21,23 @@ export const top = (o = {}) => `<div class="sh-top"><button class="trpg-btn trpg
 function hpBlock(o) {
   const edit = o.hpEdit
   const pre = edit ? `<div class="sh-hp__pre">生命 12 → <b>5</b> / 18　Enter 生效 · Esc 还原</div>` : ''
-  return `<div class="sh-hp">${P(o.nHp)}<div class="sh-hp__t"><span>生命值</span><span>${iconBtn('pencil-simple', '上限明细与手改')}</span></div>
-<div class="sh-hp3"><label>当前<span class="sh-in"${edit ? ' data-focus="true"' : ''}>${edit ? '−7' : '12'}</span></label><label>上限<span class="sh-in">18</span></label><label>临时<span class="sh-in" data-temp="true">3</span></label></div>
-${bar(12, 18, 3, { dk: true })}${pre}
-<div class="sh-hp__rows">${P(o.nDeath)}<div>死亡豁免<button class="sh-dk" type="button">掷</button></div><div>成功 ${dots(3, 0)}　失败 ${dots(3, 0, 'fail')}</div>
-<div>生命骰 <b>d6</b> ${dots(3, 3)} <b>3/3</b><button class="sh-dk" type="button">掷一颗</button></div>
-<div>力竭 <b>0</b>　灵感 ${dots(1, 0)}</div></div></div>`
+  const cur = edit ? `<span class="sh-hpin">−7</span>` : `<button class="sh-hpnow" type="button" title="点一下改当前生命">12</button>`
+  const maxT = man(o, 'hpmax') ? '20' : '18'
+  return `<div class="sh-hp">${P(o.nHp)}<div class="sh-hp__t"><span>生命值</span>${pen('手改：最大生命、生命骰', o.nPenHp)}</div>
+<div class="sh-hp__v">${cur}<span class="sh-hpmax${man(o, 'hpmax') ? ' sh-man' : ''}">/ ${maxT}</span><button class="sh-tmp" type="button" title="点一下改临时生命">+3 临时</button></div>
+${bar(12, 18, 3)}${pre}
+<div class="sh-hprows">${P(o.nDeath)}<div class="sh-hpr"><span>死亡豁免</span><span>成功 ${dots(3, 0)}&ensp;失败 ${dots(3, 0, 'fail')}</span><button class="sh-dk" type="button">掷</button></div>
+<div class="sh-hpr"><span>生命骰 d6</span><span>${dots(3, 3)} <b>3 / 3</b></span><button class="sh-dk" type="button">掷一颗</button></div>
+<div class="sh-hpr"><span>力竭</span><span><b>0</b>&ensp;&ensp;灵感 ${dots(1, 0)}</span><span></span></div></div></div>`
 }
+const popAc = () => `<div class="sh-pop"><b>已手改 14</b><span class="sh-2">自动值：12</span><span class="sh-pop__n">自动值现在是 <b>13</b>（换了装备）</span><div>${btn('回到自动', { small: true, primary: true })}${btn('采用自动值 13', { small: true })}${btn('去修改', { small: true, ic: 'pencil-simple' })}</div></div>`
 export function hero(o = {}) {
   const xp = `<div class="sh-xp"${o.ready ? ' data-ready="true"' : ''}>${P(o.nXp)}<div><span>经验</span><b>${o.ready ? '2,700' : '900'} / 2,700</b></div>${bar(o.ready ? 2700 : 900, 2700, 0, { dk: true, plain: true })}<button class="sh-dk" type="button">${o.ready ? '可以升级 · 等级管理' : '等级管理'}</button></div>`
   const id = `<div class="sh-hero__id"><span class="sh-pic">${icon('user', 26)}</span><div class="sh-hero__who"><div class="sh-name">${P(o.nName)}盖尔<span class="sh-star">${icon('star-fill', 18)}</span><small>Gale</small></div>
-<div class="sh-meta"><span><b>法师 3 级</b> 塑能学派</span><span>种族 <b>人类</b></span><span>背景 <b>学者</b></span><span>中立善良</span><span>中型</span></div>
+<div class="sh-meta"><span><b class="${man(o, 'lv') ? 'sh-man' : ''}">法师 3 级</b> 塑能学派${pen('手改：等级、升级所需经验', o.nPenLv)}</span><span>种族 <b>人类</b></span><span>背景 <b>学者</b></span><span>中立善良</span><span>中型</span></div>
 <div class="sh-hero__btns">${P(o.nCat)}<button class="sh-dk" type="button">${icon('users', 14)} 队伍 ${icon('caret-down', 12)}</button><button class="sh-dk" type="button">随行 ${icon('caret-down', 12)}</button>${o.sync ? `<button class="sh-dk" type="button">${P(o.sync)}${icon('link-simple', 14)} 3 项来源有更新</button>` : ''}</div></div>${xp}</div>`
-  const abs = `<div class="sh-abs">${P(o.nAb)}${AB.map(([k, m, v, s, p]) => `<div class="sh-ab"><small>${k}</small><b>${m}</b><span>${v}</span><em${p ? ' data-prof="true"' : ''}>${p ? '● ' : ''}豁免 ${s}</em></div>`).join('')}</div>`
-  const row = `<div class="sh-row">${abs}<div class="sh-mini"><div${o.acOvr ? ' class="sh-ovr"' : ''}><small>${P(o.nAc)}AC</small><b>${o.acOvr ? '14' : '12'}</b></div><div><small>先攻 ${icon('dice-five', 12)}</small><b>+2</b></div><div><small>速度</small><b>30 尺</b></div><div><small>熟练</small><b>+2</b></div></div>
+  const abs = `<div class="sh-abs">${P(o.nAb)}${pen('手改：初始值、加成、属性值、调整值、豁免', o.nPenAb, true)}${AB.map(([k, m, v, s, p], i) => `<div class="sh-ab"><small>${k}</small><b${i === 3 && man(o, 'int') ? ' class="sh-man"' : ''}>${i === 3 && man(o, 'int') ? '+5' : m}</b><span class="sh-ab__v">${i === 3 && man(o, 'int') ? 20 : v}</span><em${p ? ' data-prof="true"' : ''}>${p ? '● ' : ''}豁免 ${s}</em></div>`).join('')}</div>`
+  const row = `<div class="sh-row">${abs}<div class="sh-mini">${pen('手改：AC、先攻、速度、熟练、被动值、法术 DC', o.nPenCb, true)}<div><small>${P(o.nAc)}AC</small><b${o.acOvr || man(o, 'ac') ? ' class="sh-man"' : ''}>${o.acOvr || man(o, 'ac') ? '14' : '12'}</b>${o.pop === 'ac' ? popAc() : ''}</div><div><small>先攻 ${icon('dice-five', 12)}</small><b>+2</b></div><div><small>速度</small><b>30 尺</b></div><div><small>熟练</small><b>+2</b></div></div>
 <div class="sh-pass">${P(o.nPass)}<span>被动察觉 <b>11</b></span><span>被动洞悉 <b>13</b></span><span>被动调查 <b>16</b></span><span>法术豁免 DC <b>14</b></span><span>法术攻击 <b>+6</b></span></div></div>`
   return `<div class="sh-hero">${hpBlock(o)}${id}${row}</div>`
 }
@@ -42,7 +47,7 @@ export const tabs = (sel, n) => `<div class="sh-tabs" role="tablist">${P(n)}${TA
 export const dock = (o = {}) => `<div class="sh-dock"><span class="sh-dock__hp"><b>12 / 18</b>${bar(12, 18, 3)}<span class="sh-2">AC</span><b>12</b></span><span class="sh-dock__st"${o.draft ? ' data-draft="true"' : ''}>${o.draft ? '● 有未保存的编辑' : `${icon('check', 14)} 已存进当前战役`}</span><span class="sh-dock__act">${P(o.nRest)}${btn('短休')}${btn('长休')}${o.draft ? btn('保存修改', { primary: true, n: o.nSave }) : ''}</span></div>`
 
 /* ---------- 各分页 ---------- */
-const skills = (n) => tbl('', `${sec('技能', null, ['加值', '被动'], { n }).replace('<b>', '<b style="grid-column:span 3">')}${SK.map(([k, a, p]) => tr([`<i class="sh-pt" data-on="${p ?? 0}"></i>`, `<span class="sh-ab3">${AK[a]}</span>`, `<span class="sh-n">${k}</span>`, `<span class="sh-v">${roll(f(MOD[a] + (p ? 2 : 0)))}</span>`, c(10 + MOD[a] + (p ? 2 : 0))])).join('')}`, 'sh-sk')
+const skills = (n) => tbl('', `${sec('技能', null, ['加值', '被动'], { n, extra: pen('手改：熟练级别、加值') }).replace('<b>', '<b style="grid-column:span 3">')}${SK.map(([k, a, p]) => tr([`<i class="sh-pt" data-on="${p ?? 0}"></i>`, `<span class="sh-ab3">${AK[a]}</span>`, `<span class="sh-n">${k}</span>`, `<span class="sh-v">${roll(f(MOD[a] + (p ? 2 : 0)))}</span>`, c(10 + MOD[a] + (p ? 2 : 0))])).join('')}`, 'sh-sk')
 const saves = () => tbl('', `${sec('豁免', null, ['加值', '']).replace('<b>', '<b style="grid-column:span 3">')}${AB.map(([k, , , s, p]) => tr([`<i class="sh-pt" data-on="${p ? 1 : 0}"></i>`, `<span class="sh-ab3"></span>`, `<span class="sh-n">${k}</span>`, `<span class="sh-v">${roll(s)}</span>`, c('')])).join('')}`, 'sh-sk')
 const trait = (t, v, empty) => `<div class="sh-trait"><b>${t}</b><div${empty ? ' class="sh-3"' : ''}>${v}</div><button type="button" aria-label="编辑">${icon('pencil-simple', 16)}</button></div>`
 const pills = (a) => `<span class="sh-pills">${a.map((x) => `<span>${x}</span>`).join('')}</span>`
@@ -64,7 +69,7 @@ ${tbl(ACOLS, `${sec('其他', 1, ['次数', '恢复', ''])}${tr([it('奥', '奥�
 const BCOLS = "minmax(0,1fr) 56px 96px 64px 40px 32px"
 const bagRow = (ch, name, sub, uses, qty, wt, eq, attrs = '') => tr([it(ch, name, sub), c(uses), `<span>${qty == null ? '—' : step(qty)}</span>`, c(wt), `<span>${eq == null ? '' : `<i class="sh-eq" data-on="${eq}"></i>`}</span>`, more()], attrs)
 const BN = { narrow: 'minmax(0,1fr) 96px 40px 32px', hide: '2 4' }
-const bag = (o) => `<div class="sh-info">${P(o.nEnc)}<span class="sh-enc">负重 ${bar(34, 120, 0, { plain: true })}<b>34 / 120 磅</b></span><span>力量 <b>8</b></span><span>体型 <b>中型</b></span></div>
+const bag = (o) => `<div class="sh-info">${P(o.nEnc)}<span class="sh-enc">负重 ${bar(34, 120, 0, { plain: true })}<b>34 / 120 磅</b></span><span>力量 <b>8</b></span><span>体型 <b>中型</b></span>${pen('手改：负重上限')}</div>
 <div class="sh-tools">${searchBox('搜 物品')}${filt(['全部', '已装备', '可使用'], 0)}${iconBtn('sort-ascending', '排序')}${btn('加物品', { small: true, ic: 'plus', n: o.nAdd })}</div>
 ${tbl(BCOLS, `${sec('武器', 2, ['次数', '数量', '重量', '装备'], { add: '加武器' })}${bagRow('匕', '匕首', '简易近战 · 灵巧 投掷', '—', 1, '1 磅', true)}${bagRow('法', '法杖', '简易近战 · 双用', '—', 1, '4 磅', true)}`, '', BN)}
 ${tbl(BCOLS, `${sec('装备', 2, ['次数', '数量', '重量', '装备'], { add: '加装备' })}${bagRow('书', '法术书', '奥术法器 · 9 个法术', '—', null, '3 磅', true)}${bagRow('水', '水晶球（奥术法器）', '施法法器', '—', null, '1 磅', true)}`, '', BN)}
@@ -75,7 +80,7 @@ ${bagRow('口', '口粮', '冒险装备', '—', 5, '10 磅', null, ' data-sub="
 const SCOLS = 'minmax(0,1fr) 52px 64px 96px 96px 32px'
 const SN = { narrow: 'minmax(0,1fr) 76px 88px 28px', hide: '2 3' }
 const spRow = (prep, ch, name, sub, time, range, hit, eff) => tr([`<span class="sh-it">${prep == null ? '<em class="sh-prep" style="visibility:hidden"></em>' : `<em class="sh-prep" data-on="${prep}"></em>`}${it(ch, name, sub)}</span>`, c(time), c(range), `<span>${hit ? roll(hit) : '—'}</span>`, `<span>${eff ? roll(eff) : '—'}</span>`, more()])
-const spell = (o) => `<div class="sh-info">${P(o.nCast)}<span>施法属性 <b>智力</b></span><span>法术攻击 <b>+6</b></span><span>豁免 DC <b>14</b></span><span>已准备 <b>6 / 7</b></span></div>
+const spell = (o) => `<div class="sh-info">${P(o.nCast)}<span>施法属性 <b>智力</b></span><span>法术攻击 <b>+6</b></span><span>豁免 DC <b>14</b></span><span>已准备 <b>6 / 7</b></span>${pen('手改：法术豁免 DC、法术攻击加值')}</div>
 <div class="sh-tools">${searchBox('搜 法术')}${filt(['全部', '已准备', '专注', '仪式'], 0)}${btn('加法术', { small: true, ic: 'plus' })}</div>
 ${tbl(SCOLS, `${sec('戏法', 3, ['施放', '距离', '命中/DC', '效果'])}${spRow(null, '火', '火焰箭', '塑能 · 言语 姿势', '动作', '120 尺', '+6', '1d10 火焰')}${spRow(null, '手', '法师之手', '咒法', '动作', '30 尺', '', '')}${spRow(null, '光', '光亮术', '塑能', '动作', '触碰', '', '')}`, '', SN)}
 ${tbl(SCOLS, `${sec('1 环', null, ['施放', '距离', '命中/DC', '效果'], { extra: ` ${dots(4, 2)} <small>2/4</small>`, n: o.nLv })}${spRow(true, '魔', '魔法飞弹', '塑能', '动作', '120 尺', '', '3×(1d4+1)')}${spRow(true, '护', '护盾术', '防护', '反应', '自身', '', 'AC +5')}${spRow(true, '燃', '燃烧之手', '塑能', '动作', '15 尺', 'DC 14 敏', '3d6 火焰')}${spRow(true, '侦', '侦测魔法', '预言 · 专注 · 仪式', '动作', '自身', '', '')}${spRow(false, '甲', '法师护甲', '防护', '动作', '触碰', '', 'AC 13+敏')}`, '', SN)}

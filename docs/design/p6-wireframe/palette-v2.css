@@ -16,7 +16,7 @@
   --danger-text: #A33B2B; --danger-line: #A33B2B; --danger-bg: #F4ECDD; --hp-low: #A33B2B; --mark: #8A3529;
   --success-text: #4F8050; --success-bg: #F4ECDD; --hp-green: #4F8050;
   --accent: #B89A54; --accent-text: #B89A54; --on-accent: #39291A; --warn-text: #73634E; --warn-bg: #EDE3D3;
-  --focus: #B89A54; --on-primary: #FFFFFF;
+  --focus: #B89A54; --accent-light: #D8BE83; --on-primary: #FFFFFF;
   --disabled-bg: #EDE3D3; --disabled-text: #857C6E;
   --hero-bg: #30342E; --hero-ink: #F8F2E7; --hero-ink2: #D0C9BB;
 }

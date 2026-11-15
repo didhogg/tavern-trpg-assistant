@@ -1018,7 +1018,7 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* ===== 深色页头（Tidy5e 角色横幅）：左 = 生命块；右 = 身份 + 经验 / 一排 AC 盾·六属性·先攻速度熟练 / 被动 ===== */
 /* 页头改浅色（驾驶员 2026-11-15：红色只作点缀、整体简约）；只有 AC 盾保持深色 */
-.sh-hero { --hero-ink: var(--text); --hero-ink2: var(--text2); background: var(--surface); border-bottom: 1px solid var(--line); color: var(--text); padding: var(--sp-3) var(--sp-4) var(--sp-3); display: grid; gap: var(--sp-3); grid-template-columns: 256px minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: 'hp id' 'hp row'; }
+.sh-hero { --hero-ink: var(--text); --hero-ink2: var(--text2); background: var(--surface); border-bottom: 1px solid var(--line); color: var(--text); padding: var(--sp-3) var(--sp-4) var(--sp-3); display: grid; gap: var(--sp-3); grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: 'hp id' 'hp row'; }
 .sh-hero__id { grid-area: id; display: flex; gap: var(--sp-3); align-items: flex-start; min-width: 0; }
 .sh-pic { flex: none; width: 60px; height: 72px; border-radius: var(--r-sm); border: 1px solid var(--line-ctrl); display: grid; place-items: center; color: var(--text2); background: var(--bg-side); }
 .sh-hero__who { flex: 1; min-width: 0; }
@@ -1156,7 +1156,7 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
   .sh-hero { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'id' 'hp' 'row'; padding: var(--sp-3); }
   .sh-name { font-size: var(--fs-2xl); } .sh-xp { display: none; }
   .sh-abs { flex-basis: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); order: 3; }
-  .sh-mini { flex: 1; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sh-mini { flex: 1 1 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .sh-strip { padding: 6px var(--sp-3); }
 }
 
@@ -1254,6 +1254,46 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .pk-bar { flex: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 var(--sp-3); border-bottom: 1px solid var(--line); font-weight: var(--fw-semibold); }
 .pk-tabs--narrow .pk-tab { min-height: 44px; }
 
+/* ===== v9：自动值一律普通文字；改它去小铅笔页面；被手改的数带金线（驾驶员 2026-11-15，见 P6-5 流程图） ===== */
+.sh-pen { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-left: 2px; border: 0; border-radius: var(--r-sm); background: none; color: var(--text2); vertical-align: middle; position: relative; }
+.sh-pen:hover { background: var(--bg-hover); }
+.sh-abs, .sh-mini { position: relative; }
+.sh-pen--c { position: absolute; top: -12px; right: -4px; z-index: 2; width: 24px; height: 24px; margin: 0; border: 1px solid var(--line); border-radius: 50%; background: var(--bg); }
+.sh-man { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.sh-roll { display: inline; min-width: 0; padding: 0 2px; border: 0; border-radius: var(--r-xs); background: none; line-height: inherit; font: inherit; font-weight: var(--fw-semibold); color: var(--text); cursor: pointer; }
+.sh-roll:hover { background: var(--bg-hover); }
+.sh-ab > span.sh-ab__v { min-width: 0; padding: 0; border: 0; background: none; font-size: var(--fs-sm); color: var(--text2); }
+.sh-info > span { min-height: 0; padding: 0 6px 0 0; border: 0; background: none; }
+/* 生命块：大数字就是文字；点它原地改；上限是自动值（普通文字，要改去 ✎） */
+.sh-hp { padding: 12px 14px 8px; gap: 8px; }
+.sh-hp__t { font-size: var(--fs-md); font-weight: var(--fw-semibold); color: var(--text); }
+.sh-hp__t .sh-pen { margin: -4px -6px -4px 0; }
+.sh-hp__v { display: flex; align-items: baseline; gap: 8px; }
+.sh-hpnow { padding: 0 4px; margin-left: -4px; border: 0; border-radius: var(--r-sm); background: none; font: inherit; font-size: 44px; line-height: 1.1; font-weight: var(--fw-bold); color: var(--text); font-variant-numeric: tabular-nums; cursor: text; }
+.sh-hpnow:hover { background: var(--bg-hover); }
+.sh-hpin { min-width: 96px; padding: 0 8px; border: 2px solid var(--accent); border-radius: var(--r-md); background: var(--bg); font-size: 44px; line-height: 1.1; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+.sh-hpmax { font-size: var(--fs-2xl); color: var(--text2); font-variant-numeric: tabular-nums; }
+.sh-tmp { margin-left: auto; align-self: center; padding: 0 10px; min-height: 26px; border: 0; border-radius: var(--r-pill); background: var(--accent-light); color: var(--on-accent); font: inherit; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.sh-hp .sh-bar { height: 10px; border-radius: 5px; }
+.sh-hprows { display: grid; margin-top: 2px; }
+.sh-hpr { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; white-space: nowrap; align-items: center; gap: 0 8px; min-height: 38px; border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text2); }
+.sh-hpr b { color: var(--text); font-weight: var(--fw-semibold); }
+.sh-hpr .sh-dk { min-height: 28px; padding: 0 10px; }
+.sh-pop { position: absolute; z-index: 8; top: calc(100% + 6px); right: 0; width: 260px; display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg); box-shadow: var(--shadow-2); text-align: left; font-size: var(--fs-sm); }
+.sh-pop > div { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; } .sh-pop__n { color: var(--text); padding-top: 4px; border-top: 1px solid var(--line); }
+.sh-mini > div { position: relative; }
+/* 小铅笔页面（手改页）：一行一项，自动值写在项目名下面小字里 */
+.ov-tabs { display: flex; gap: 4px; padding: 10px var(--sp-4) 8px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.ov { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.ov-scroll { flex: 1; min-height: 0; overflow: auto; }
+.sh-tr > .ov-itm { text-align: left; justify-items: start; overflow: visible; white-space: normal; }
+.ov .sh-tbl { margin: var(--sp-3) var(--sp-4); }
+.ov-itm { display: grid; gap: 1px; min-width: 0; text-align: left; } .ov-itm b { font-weight: var(--fw-medium); white-space: normal; } .ov-itm small { font-size: var(--fs-xs); color: var(--text2); white-space: normal; }
+.ov-in { display: flex; align-items: center; height: 32px; padding: 0 8px; border: 1px solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--bg); font-size: var(--fs-md); color: var(--text3); font-variant-numeric: tabular-nums; }
+.ov-in[data-on='true'] { color: var(--text); font-weight: var(--fw-semibold); border-color: var(--accent); }
+.ov-foot { display: flex; align-items: center; gap: 8px; padding: 8px var(--sp-4); border-top: 1px solid var(--line); background: var(--bg); }
+.ov-note { margin: 0 var(--sp-4) var(--sp-3); font-size: var(--fs-sm); color: var(--text2); line-height: var(--lh-body); }
+
 /* 配色 v7（驾驶员 2026-11-15：严格按「正式融合配色方案」，禁止臆造、不改动）。本文件里出现的每个色号都来自该方案，没有自己混的色：
    Paper #FAF5EC · Panel #F4ECDD · Surface #EDE3D3 · Elevated #FFF9F0 · 炭灰 #30342E / 次炭灰 #3C4139 / 炭灰悬浮 #4A5045 / 炭灰结构边框 #555A4D ·
    主色 #8A3529（悬停 #A44736 · 按下 #6D291F · 浅红底 #E8D0C5）· 古铜金 #B89A54 · 成功 #4F8050 · 危险 #A33B2B ·
@@ -1272,7 +1312,7 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
   --danger-text: #A33B2B; --danger-line: #A33B2B; --danger-bg: #F4ECDD; --hp-low: #A33B2B; --mark: #8A3529;
   --success-text: #4F8050; --success-bg: #F4ECDD; --hp-green: #4F8050;
   --accent: #B89A54; --accent-text: #B89A54; --on-accent: #39291A; --warn-text: #73634E; --warn-bg: #EDE3D3;
-  --focus: #B89A54; --on-primary: #FFFFFF;
+  --focus: #B89A54; --accent-light: #D8BE83; --on-primary: #FFFFFF;
   --disabled-bg: #EDE3D3; --disabled-text: #857C6E;
   --hero-bg: #30342E; --hero-ink: #F8F2E7; --hero-ink2: #D0C9BB;
 }
