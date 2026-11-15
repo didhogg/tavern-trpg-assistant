@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useCampaignStore } from '../../stores/campaign'
 import { useModalStore } from '../../stores/modal'
 import { PAGE_TITLES, useUiStore, type PageId } from '../../stores/ui'
 import Icon from '../kit/Icon.vue'
 import ModalHost from '../kit/ModalHost.vue'
 import LibraryView from '../libview/LibraryView.vue'
+import PeopleView from '../roster/PeopleView.vue'
 import HomeView from '../views/HomeView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import { saveNow } from '../saves/actions'
@@ -15,14 +17,17 @@ import { useDrag, type Point } from './useDrag'
 
 const ui = useUiStore()
 const modal = useModalStore()
+const campaign = useCampaignStore()
 type NavItem = { id: PageId | 'library'; label: string; icon: string; bottom?: boolean }
 // 库标签：进度环 + 库页面（P5）
+// 人物页只在战役绑了结算内核时出现（决定 2026-10-29：没有战役就没有人物）
 const NAV = computed<NavItem[]>(() => [
   { id: 'home', label: '首页', icon: 'house' },
+  ...(campaign.workspace?.data?.kernel ? [{ id: 'people' as const, label: '人物', icon: 'users-three' }] : []),
   { id: 'library', label: '库', icon: 'books', bottom: true },
   { id: 'settings', label: '设置', icon: 'gear', bottom: true },
 ])
-const VIEWS = { home: HomeView, settings: SettingsView, library: LibraryView }
+const VIEWS = { home: HomeView, people: PeopleView, settings: SettingsView, library: LibraryView }
 
 const vw = ref(window.innerWidth)
 const vh = ref(window.innerHeight)
@@ -103,6 +108,8 @@ function onKey(event: KeyboardEvent): void {
 
 watch([layout, () => modal.visible], () => void nextTick(measureInsets))
 watch(layout, (v) => { ui.layout = v }, { immediate: true })
+// 切到没有结算内核的战役 / 没有战役时，人物页没有了：回首页
+watch(() => !!campaign.workspace?.data?.kernel, (bound) => { if (!bound && ui.page === 'people') ui.go('home') })
 let observer: ResizeObserver | undefined
 onMounted(() => {
   window.addEventListener('resize', onViewport)
@@ -152,7 +159,7 @@ onBeforeUnmount(() => {
           </button>
         </header>
         <div class="trpg-body" :inert="sheetOpen">
-          <main class="trpg-content" :data-flush="ui.page === 'settings' || ui.page === 'library' ? 'true' : undefined" tabindex="-1">
+          <main class="trpg-content" :data-flush="ui.page === 'settings' || ui.page === 'library' || ui.page === 'people' ? 'true' : undefined" tabindex="-1">
             <component :is="VIEWS[ui.page]" />
           </main>
           <button class="trpg-dice-btn" type="button" aria-label="掷骰" :aria-pressed="ui.diceOpen" @click="ui.diceOpen = !ui.diceOpen">

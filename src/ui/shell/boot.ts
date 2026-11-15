@@ -10,6 +10,7 @@ import { useAppStore } from '../../stores/app'
 import { useCampaignStore } from '../../stores/campaign'
 import { useDiceStore } from '../../stores/dice'
 import { useDownloadsStore } from '../../stores/downloads'
+import { useRosterStore } from '../../stores/roster'
 import { useSavesStore } from '../../stores/saves'
 import { useToastStore } from '../../stores/toast'
 
@@ -21,6 +22,7 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
   const dice = useDiceStore(pinia)
   const downloads = useDownloadsStore(pinia)
   const saves = useSavesStore(pinia)
+  const roster = useRosterStore(pinia)
   try {
     const services = createServices()
     app.setServices(services)
@@ -68,6 +70,7 @@ export async function bootApp(ctx: StContext, pinia: Pinia): Promise<() => void>
       }
       await services.backend.kernel.enter(ownerKey)
       if (seq !== kernelSeq) return
+      await roster.load() // 把存档里的人装进结算小窗，人物页打开时已就绪
     })().catch((error: unknown) => {
       console.error('[trpg-assistant] 结算内核启动失败', error)
       toast.error(`结算内核启动失败：${error instanceof Error ? error.message : String(error)}`)

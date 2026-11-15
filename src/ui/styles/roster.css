@@ -1,0 +1,56 @@
+/* P6 单元 0a 人物列表：分组条 + 成员行（照线框 p6-1 / p6-3）。只读令牌，不写色值。 */
+.pp { display: flex; flex-direction: column; min-height: 100%; }
+.pp-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-4) var(--sp-5) var(--sp-2); }
+.trpg-window[data-layout='narrow'] .pp-top { padding: var(--sp-3) var(--sp-4) var(--sp-2); }
+.pp-tabs { display: inline-flex; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); overflow: hidden; background: var(--bg-sunk); }
+.pp-tabs button { min-height: 34px; padding: 0 var(--sp-4); border: 0; background: transparent; color: var(--text); display: inline-flex; align-items: center; gap: var(--sp-1); }
+.pp-tabs button + button { border-left: var(--border) solid var(--line-ctrl); }
+.pp-tabs button small { color: var(--text2); font-size: var(--fs-xs); }
+.pp-tabs button:hover:not([aria-pressed='true']) { background: var(--bg-hover); }
+.pp-tabs button[aria-pressed='true'] { background: var(--primary); color: var(--on-primary); font-weight: var(--fw-semibold); }
+.pp-tabs button[aria-pressed='true'] small { color: inherit; opacity: .85; }
+.trpg-window[data-layout='narrow'] .pp-tabs { width: 100%; }
+.trpg-window[data-layout='narrow'] .pp-tabs button { flex: 1; justify-content: center; padding: 0 var(--sp-2); min-height: var(--hit-touch); }
+.pp-title { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-lg); }
+.pp-tools { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; }
+.pp-search { display: flex; align-items: center; gap: var(--sp-2); margin: 0 var(--sp-5) var(--sp-3); position: relative; color: var(--text2); }
+.trpg-window[data-layout='narrow'] .pp-search { margin: 0 var(--sp-4) var(--sp-3); }
+.pp-search svg { position: absolute; left: var(--sp-3); pointer-events: none; }
+.pp-search .trpg-input { padding-left: 34px; }
+.pp-error, .pp-note { display: flex; align-items: center; gap: var(--sp-2); margin: 0 var(--sp-5) var(--sp-3); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-sm); background: var(--warn-bg); color: var(--text); font-size: var(--fs-sm); }
+.pp-error { border: var(--border) solid var(--danger-line); color: var(--danger-text); background: var(--danger-bg); }
+.pp-error .trpg-btn { margin-left: auto; }
+.pp-strip { display: flex; justify-content: space-between; padding: var(--sp-1) var(--sp-5); background: var(--bg-side); border-block: var(--border) solid var(--line); color: var(--text2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.pp-strip small { margin-left: var(--sp-2); font-weight: var(--fw-regular); }
+.pp-strip span:last-child { width: 150px; text-align: center; margin-right: 96px; }
+.trpg-window[data-layout='narrow'] .pp-strip { padding-inline: var(--sp-4); }
+.trpg-window[data-layout='narrow'] .pp-strip span:last-child { display: none; }
+.pp-list { list-style: none; margin: 0; padding: 0; background: var(--surface); }
+.pp-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 150px auto; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5); border-bottom: var(--border) solid var(--line); position: relative; }
+.pp-row[data-selecting] { cursor: pointer; }
+.pp-row[data-selected] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--accent); }
+.trpg-window[data-layout='narrow'] .pp-row { grid-template-columns: 44px minmax(0, 1fr) auto; padding: var(--sp-3) var(--sp-4); }
+.trpg-window[data-layout='narrow'] .pp-hp { grid-column: 2; grid-row: 2; align-items: flex-start; flex-direction: row; gap: var(--sp-3); }
+.pp-avatar { width: 44px; height: 44px; display: grid; place-items: center; overflow: hidden; border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--bg-sunk); color: var(--text2); }
+.pp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pp-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pp-name { display: flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-lg); }
+.pp-name b { font-weight: var(--fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-name svg { color: var(--accent-text); flex: none; }
+.pp-facts { display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); color: var(--text2); font-size: var(--fs-sm); }
+.pp-facts--small { font-size: var(--fs-xs); }
+.pp-tags { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: 2px; }
+.pp-tag { display: inline-flex; align-items: center; gap: var(--sp-1); padding: 0 var(--sp-2); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-xs); background: var(--warn-bg); color: var(--text); font-size: var(--fs-xs); }
+.pp-hp { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pp-hp__num { font-size: var(--fs-md); } .pp-hp__num b { font-size: var(--fs-lg); } .pp-hp__num em { font-style: normal; color: var(--accent-text); }
+.pp-hp__none { color: var(--text3); }
+.pp-bar { display: flex; width: 100%; max-width: 150px; min-width: 80px; height: 6px; border-radius: var(--r-pill); overflow: hidden; background: var(--line); }
+.pp-bar > i { background: var(--success-text); } .pp-bar > i[data-low] { background: var(--accent); } .pp-bar > u { background: var(--accent-light, var(--accent)); }
+.pp-act { display: flex; align-items: center; gap: var(--sp-2); justify-content: flex-end; min-width: 36px; }
+.pp-skel { grid-column: 1 / -1; height: 44px; }
+.pp-empty { padding: var(--sp-8) var(--sp-5); text-align: center; color: var(--text2); display: flex; flex-direction: column; gap: var(--sp-2); align-items: center; }
+.pp-empty b { color: var(--text); font-size: var(--fs-lg); }
+.pp-selbar { position: sticky; bottom: 0; margin-top: auto; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) 84px var(--sp-3) var(--sp-5); background: var(--bg-side); border-top: var(--border) solid var(--line-ctrl); z-index: 2; }
+.pp-selbar__gap { flex: 1; }
+.pp-selbar__n { font-weight: var(--fw-semibold); margin-right: var(--sp-2); }
+.trpg-window[data-layout='narrow'] .pp-selbar { padding: var(--sp-2) 76px var(--sp-2) var(--sp-3); flex-wrap: wrap; }

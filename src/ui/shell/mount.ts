@@ -9,6 +9,7 @@ import edit from '../styles/edit.css?inline'
 import kit from '../styles/kit.css?inline'
 import library from '../styles/library.css?inline'
 import pages from '../styles/pages.css?inline'
+import roster from '../styles/roster.css?inline'
 import palette from '../styles/palette.css?inline'
 import shell from '../styles/shell.css?inline'
 import tokens from '../styles/tokens.css?inline'
@@ -22,7 +23,7 @@ export function mountApp(ctx: StContext): Pinia | null {
   host.id = HOST_ID
   const shadow = host.attachShadow({ mode: 'open' })
   const style = document.createElement('style')
-  style.textContent = [tokens, palette, base, shell, kit, pages, library, edit, author, dice].join('\n')
+  style.textContent = [tokens, palette, base, shell, kit, pages, library, roster, edit, author, dice].join('\n')
   const portal = document.createElement('div')
   portal.className = 'trpg-portal'
   const container = document.createElement('div')
