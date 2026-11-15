@@ -1,15 +1,14 @@
-/* 配色参考 v2（驾驶员 2026-11-15 指定，只用于线框出参考图，插件本体未改）：
-   指定色：淡米底 #F2ECE2 · 次级栏目 #EFEADF · 深红 #8B4936 · 边栏深灰 #31352E（驾驶员给的「次级边栏」也是 #31352E）。
-   其余是从这四个色按比例混出来的派生色（悬停 / 按下 / 细线 / 次要文字等），对比度已核算：
-   白字 / 深红 6.77；深红字 / 米底 5.76；正文 #31352E / 米底 10.64；次要文字 / 次级栏目 5.08；控件边框 / 米底 3.07；边栏浅字 / 边栏 10.64。
-   只覆盖浅色模式；深色模式没做。真要换插件配色，走 P4 生成器 docs/design/p4-design-system/palettes.mjs，不手改 palette.css。 */
+/* 配色参考 v3（驾驶员 2026-11-15）：在 v2 指定色（#F2ECE2 / #EFEADF / #8B4936 / #31352E）上，红色与整体色调饱和度调高一点（明度不变），
+   并且「外侧次级栏目」不再用近白的浅黄白，改用稍深的次级黄：卡片 / 表格行 / 顶栏 / 输入框底 = #F2EBDC，分组条 = 再深一档 #E8E2D3。
+   对比度已核算：白字 / 红 6.70；红字 / 次级黄 5.64；红字 / 分组条 5.18；正文 / 次级黄 10.43；次要文字 / 分组条 4.66；控件边框 / 次级黄 3.01；边栏浅字 / 边栏 6.11 起。
+   只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 docs/design/p4-design-system/palettes.mjs）。 */
 .ds-root {
-  --bg: #F2ECE2; --bg-side: #EFEADF; --bg-sunk: #EFEADF; --surface: #F8F5EF; --bg-hover: #E6E1D7;
-  --line: #DBD6CC; --line-ctrl: #88877F;
-  --text: #31352E; --text2: #61635B; --text3: #7E7E76;
-  --side: #31352E; --side-ink: #F2ECE2; --side-ink2: #B8B5AC; --side-hover: #3D4039; --side-active: #4A4D45; --side-line: #42453E;
-  --primary: #8B4936; --primary-hover: #975B4A; --primary-pressed: #723C2C; --primary-text: #8B4936;
-  --primary-tint: #E8DFD3; --primary-tint-line: #D9C7BA;
-  --hero-bg: #31352E; --hero-ink: #F8F5EF; --hero-ink2: #B8B5AC;
-  --danger-bg: #F8F5EF; --disabled-bg: #EFEADF; --disabled-text: #7E7E76; --focus: #8B4936;
+  --bg: #F5EDDF; --surface: #F2EBDC; --bg-side: #E8E2D3; --bg-sunk: #F5EDDF; --bg-hover: #DDD8C9;
+  --line: #D2CDBF; --line-ctrl: #89887D;
+  --text: #31362D; --text2: #62645A; --text3: #7F7F74;
+  --side: #31362D; --side-ink: #F5EDDF; --side-ink2: #BAB6AA; --side-hover: #3D4138; --side-active: #4A4E44; --side-line: #43463D;
+  --primary: #96432B; --primary-hover: #A05640; --primary-pressed: #7B3723; --primary-text: #96432B;
+  --primary-tint: #EBDECE; --primary-tint-line: #DCC3B2;
+  --hero-bg: #31362D; --hero-ink: #F2EBDC; --hero-ink2: #BAB6AA;
+  --danger-bg: #F2EBDC; --disabled-bg: #E8E2D3; --disabled-text: #7F7F74; --focus: #96432B;
 }

@@ -35,7 +35,7 @@ export const tbl = (cols, body, cls = '', { narrow, hide } = {}) => `<div class=
 const CATS = [['队伍', 4], ['NPC', 9], ['敌人', 2], ['全部', 15]]
 const cats = (sel, n) => `<span class="trpg-seg" role="group">${P(n)}${CATS.map(([t, k], i) => `<button type="button" aria-pressed="${i === sel}">${t}<small>${k}</small></button>`).join('')}</span>`
 export const MEMCOLS = ['生命', 'AC', '被动察觉', '']
-export const memSec = (title, count, { check, drag, n } = {}) => `<div class="sh-sec sh-sec--mem"${check ? ' data-check=""' : ''}${drag ? ' data-drag=""' : ''}>${check || drag ? '<span></span>' : ''}<b style="grid-column:span 2">${P(n)}${title} <small>${count}</small></b><span>生命</span><span>AC</span><span class="sh-pp">被动察觉</span><span></span></div>`
+export const memSec = (title, count, { check, drag, n } = {}) => `<div class="sh-sec sh-sec--mem"${check ? ' data-check=""' : ''}${drag ? ' data-drag=""' : ''}>${check || drag ? '<span></span>' : ''}<b style="grid-column:span 2">${P(n)}${title} <small>${count}</small></b><span>生命</span><span></span></div>`
 
 /** 成员行：头像 · 名字 + 职业等级 / 种族 + 标签 · 生命条 · AC 盾 · 被动察觉 · ⋯ */
 export function mem(o) {
@@ -43,9 +43,10 @@ export function mem(o) {
   const chk = check != null ? `<span class="trpg-check" data-on="${!!check}"><span class="trpg-check__box">${check ? icon('check', 12) : ''}</span></span>` : ''
   const handle = drag ? `<span class="sh-handle">${icon('dots-six-vertical', 18)}</span>` : ''
   const tagHtml = [...(building ? [`<span class="sh-tag" data-tone="build">建卡中 ${building}</span>`] : []), ...(warn ? [`<span class="sh-tag" data-tone="warn">${warn}</span>`] : []), ...tags.map((t) => `<span class="sh-tag">${t}</span>`)].join('')
-  const who = `<span class="sh-who"><b>${P(n)}${name}${en ? `<small>${en}</small>` : ''}</b><span>${cls ?? ''}${lv ? ` ${lv}` : ''}${race ? `<em>${race}</em>` : ''}</span>${tagHtml ? `<span class="sh-tags">${tagHtml}</span>` : ''}</span>`
+  const small = building ? '' : `<span class="sh-fine">AC <b>${ac}</b>　被动察觉 <b>${pp ?? '—'}</b></span>`
+  const who = `<span class="sh-who"><b>${P(n)}${name}${en ? `<small>${en}</small>` : ''}</b><span>${cls ?? ''}${lv ? ` ${lv}` : ''}${race ? `<em>${race}</em>` : ''}</span>${small}${tagHtml ? `<span class="sh-tags">${tagHtml}</span>` : ''}</span>`
   const hpc = building ? `<span class="sh-hpc">${btn('继续建卡', { small: true })}</span>` : `<span class="sh-hpc">${P(nHp)}<b>${hp[0]}<i> / ${hp[1]}${temp ? ` +${temp}` : ''}</i></b>${bar(hp[0], hp[1], temp)}</span>`
-  return `<div class="sh-mem"${check != null ? ` data-check="${!!check}"` : ''}${drag ? ` data-drag="${drag}"` : ''}>${chk}${handle}<span class="sh-face">${icon(enemy ? 'skull' : 'user', 22)}</span>${who}${hpc}${building ? '<span></span>' : `<span class="sh-ac">${ac}</span>`}<span class="sh-cell sh-pp">${building ? '' : pp ?? '—'}</span>${more(nMore)}</div>`
+  return `<div class="sh-mem"${check != null ? ` data-check="${!!check}"` : ''}${drag ? ` data-drag="${drag}"` : ''}>${chk}${handle}<span class="sh-face">${icon(enemy ? 'skull' : 'user', 22)}</span>${who}${hpc}${more(nMore)}</div>`
 }
 
 /** 列表页：顶行 = 分类分段 · 搜索 · [排序] [选择] [＋ 新建]；下面 = 分组表。点一行 = 进整页详情。 */

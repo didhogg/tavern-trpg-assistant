@@ -32,7 +32,7 @@ export function hero(o = {}) {
 <div class="sh-meta"><span><b>法师 3 级</b> 塑能学派</span><span>种族 <b>人类</b></span><span>背景 <b>学者</b></span><span>中立善良</span><span>中型</span></div>
 <div class="sh-hero__btns">${P(o.nCat)}<button class="sh-dk" type="button">${icon('users', 14)} 队伍 ${icon('caret-down', 12)}</button><button class="sh-dk" type="button">随行 ${icon('caret-down', 12)}</button>${o.sync ? `<button class="sh-dk" type="button">${P(o.sync)}${icon('link-simple', 14)} 3 项来源有更新</button>` : ''}</div></div>${xp}</div>`
   const abs = `<div class="sh-abs">${P(o.nAb)}${AB.map(([k, m, v, s, p]) => `<div class="sh-ab"><small>${k}</small><b>${m}</b><span>${v}</span><em${p ? ' data-prof="true"' : ''}>${p ? '● ' : ''}豁免 ${s}</em></div>`).join('')}</div>`
-  const row = `<div class="sh-row"><div class="sh-shield${o.acOvr ? ' sh-ovr' : ''}">${P(o.nAc)}<small>AC</small><b>${o.acOvr ? '14' : '12'}</b></div>${abs}<div class="sh-mini"><div><small>先攻 ${icon('dice-five', 12)}</small><b>+2</b></div><div><small>速度</small><b>30 尺</b></div><div><small>熟练</small><b>+2</b></div></div>
+  const row = `<div class="sh-row">${abs}<div class="sh-mini"><div${o.acOvr ? ' class="sh-ovr"' : ''}><small>${P(o.nAc)}AC</small><b>${o.acOvr ? '14' : '12'}</b></div><div><small>先攻 ${icon('dice-five', 12)}</small><b>+2</b></div><div><small>速度</small><b>30 尺</b></div><div><small>熟练</small><b>+2</b></div></div>
 <div class="sh-pass">${P(o.nPass)}<span>被动察觉 <b>11</b></span><span>被动洞悉 <b>13</b></span><span>被动调查 <b>16</b></span><span>法术豁免 DC <b>14</b></span><span>法术攻击 <b>+6</b></span></div></div>`
   return `<div class="sh-hero">${hpBlock(o)}${id}${row}</div>`
 }

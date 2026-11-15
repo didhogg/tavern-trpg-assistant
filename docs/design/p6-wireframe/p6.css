@@ -1,6 +1,6 @@
 /* P6 人物线框 v4（2026-11-15 重写）。结构照参考项目源码：Tidy5e（角色表 + 队伍表）、gg-sheet-export（阅读视图排版）、morii-vtt（建卡向导：左侧步骤清单）。
    需求照 P6-2；字段照内核（dnd5e 6.1 人物数据 + 建卡成长步骤）。颜色全走 P4 令牌（0 个新颜色）：
-   2026-11-15 改：整体浅色简约，红色只作点缀（选中、主按钮、生命条、法术位圆点、当前分页下划线）；分组条 = 浅米底细线；AC 盾 = 深色。
+   2026-11-15 改：整体浅色简约，红色只作点缀；分组条 = 次级黄底细线；没有 AC 盾，AC 是普通小格；头像方框。
    sh- = 人物，wz- = 建卡向导。条的宽度只为线框表达静态值，实现时用 transform（开发规范 §5.5）。 */
 .ds-root { --row-h: 36px; --sec-h: 28px; }
 .sh-2 { color: var(--text2); } .sh-3 { color: var(--text3); }
@@ -25,33 +25,33 @@
 .sh-sec > span { text-align: center; font-weight: var(--fw-regular); color: var(--text2); white-space: nowrap; }
 .sh-sec > .sh-add { justify-self: end; display: grid; place-items: center; width: 28px; height: 28px; color: var(--text2); background: none; border: 0; }
 
-.sh-mem, .sh-sec--mem { grid-template-columns: 52px minmax(0, 1fr) 150px 56px 64px 40px; column-gap: var(--sp-3); }
-.sh-mem[data-check], .sh-sec--mem[data-check] { grid-template-columns: 28px 52px minmax(0, 1fr) 150px 56px 64px 40px; }
-.sh-mem[data-drag], .sh-sec--mem[data-drag] { grid-template-columns: 20px 52px minmax(0, 1fr) 150px 56px 64px 40px; }
+/* 成员行：头像 · 名字与小字信息 · 生命 · ⋯（AC、被动察觉改成名字下面的小字，不再单独成列） */
+.sh-mem, .sh-sec--mem { grid-template-columns: 52px minmax(0, 1fr) 170px 40px; column-gap: var(--sp-3); }
+.sh-mem[data-check], .sh-sec--mem[data-check] { grid-template-columns: 28px 52px minmax(0, 1fr) 170px 40px; }
+.sh-mem[data-drag], .sh-sec--mem[data-drag] { grid-template-columns: 20px 52px minmax(0, 1fr) 170px 40px; }
 .sh-mem { display: grid; align-items: center; min-height: 64px; padding: 6px var(--sp-3); border-bottom: 1px solid var(--line); background: var(--surface); }
 .sh-mem[data-check='true'] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--primary); }
 .sh-mem[data-drag='lift'] { box-shadow: var(--shadow-2); position: relative; z-index: 2; }
-.sh-face { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--line-ctrl); background: var(--bg-side); color: var(--text2); display: grid; place-items: center; }
+.sh-face { width: 48px; height: 48px; border-radius: var(--r-sm); border: 1px solid var(--line-ctrl); background: var(--bg-side); color: var(--text2); display: grid; place-items: center; }
 .sh-who { min-width: 0; display: grid; gap: 1px; }
-.sh-who b { font-size: var(--fs-lg); font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
-.sh-who b small { font-size: var(--fs-sm); font-weight: var(--fw-regular); color: var(--text3); }
+.sh-who > b { font-size: var(--fs-lg); font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.sh-who > b small { font-size: var(--fs-sm); font-weight: var(--fw-regular); color: var(--text3); }
 .sh-who > span { font-size: var(--fs-sm); color: var(--text2); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sh-who > span em { font-style: normal; color: var(--text3); font-weight: var(--fw-regular); margin-left: 8px; }
 .sh-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 .sh-tag { font-size: var(--fs-xs); line-height: 18px; padding: 0 6px; border-radius: var(--r-xs); background: var(--bg-side); color: var(--text2); border: 1px solid var(--line); white-space: nowrap; }
 .sh-tag[data-tone='warn'] { background: var(--warn-bg); color: var(--warn-text); border-color: var(--accent); }
 .sh-tag[data-tone='build'] { background: var(--primary-tint); color: var(--primary-text); border-color: var(--primary-tint-line); }
+.sh-who > .sh-fine { font-size: var(--fs-xs); color: var(--text2); font-weight: var(--fw-regular); } .sh-fine b { color: var(--text); font-weight: var(--fw-semibold); }
 .sh-hpc { display: grid; gap: 3px; justify-items: center; }
 .sh-hpc b { font-size: var(--fs-md); font-variant-numeric: tabular-nums; } .sh-hpc b i { font-style: normal; color: var(--text2); font-weight: var(--fw-regular); }
-.sh-ac { justify-self: center; display: grid; place-items: center; width: 40px; height: 44px; clip-path: polygon(50% 0, 100% 14%, 100% 58%, 50% 100%, 0 58%, 0 14%); background: var(--text); color: var(--surface); font-weight: var(--fw-bold); font-size: var(--fs-lg); padding-bottom: 4px; }
 .sh-cell { text-align: center; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; }
 .sh-more { display: grid; place-items: center; width: 32px; height: 32px; justify-self: end; border: 0; background: none; color: var(--text2); }
 .sh-handle { color: var(--text3); display: grid; place-items: center; }
 @container sh (max-width: 560px) {
-  .sh-mem, .sh-sec--mem { grid-template-columns: 44px minmax(0, 1fr) 88px 44px 32px; column-gap: var(--sp-2); padding-left: var(--sp-2); padding-right: var(--sp-2); }
-  .sh-mem[data-check], .sh-sec--mem[data-check], .sh-mem[data-drag], .sh-sec--mem[data-drag] { grid-template-columns: 24px 44px minmax(0, 1fr) 88px 44px 32px; }
-  .sh-mem > .sh-pp, .sh-sec--mem > .sh-pp { display: none; }
-  .sh-face { width: 40px; height: 40px; } .sh-who b { font-size: var(--fs-md); }
+  .sh-mem, .sh-sec--mem { grid-template-columns: 44px minmax(0, 1fr) 88px 32px; column-gap: var(--sp-2); padding-left: var(--sp-2); padding-right: var(--sp-2); }
+  .sh-mem[data-check], .sh-sec--mem[data-check], .sh-mem[data-drag], .sh-sec--mem[data-drag] { grid-template-columns: 24px 44px minmax(0, 1fr) 88px 32px; }
+  .sh-face { width: 40px; height: 40px; } .sh-who > b { font-size: var(--fs-md); }
 }
 
 /* 条：生命（红，临时生命金色接后面）/ 负重 / 经验 */
@@ -118,15 +118,13 @@
 .sh-dots[data-kind='fail'] i[data-on='true'] { background: var(--danger-line); border-color: var(--danger-line); }
 
 .sh-row { grid-area: row; display: flex; flex-wrap: wrap; align-items: stretch; align-content: start; gap: 6px; min-width: 0; }
-.sh-shield { flex: none; width: 62px; display: grid; place-items: center; align-content: center; clip-path: polygon(50% 0, 100% 12%, 100% 60%, 50% 100%, 0 60%, 0 12%); background: var(--text); color: var(--surface); padding-bottom: 12px; }
-.sh-shield small { font-size: var(--fs-xs); font-weight: var(--fw-semibold); } .sh-shield b { font-size: 26px; line-height: 1; font-weight: var(--fw-bold); }
 .sh-abs { flex: 1 1 340px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; min-width: 0; }
 .sh-ab { display: grid; justify-items: center; gap: 1px; padding: 4px 2px 5px; border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--line); }
 .sh-ab small { font-size: var(--fs-xs); color: var(--hero-ink2); }
 .sh-ab b { font-size: var(--fs-2xl); line-height: 1.05; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
 .sh-ab span { font-size: var(--fs-xs); min-width: 26px; text-align: center; border-radius: 3px; background: var(--bg-side); border: 1px solid var(--line); }
 .sh-ab em { font-style: normal; font-size: 11px; color: var(--hero-ink2); white-space: nowrap; } .sh-ab em[data-prof='true'] { color: var(--primary-text); }
-.sh-mini { flex: 0 1 auto; display: grid; grid-template-columns: repeat(3, auto); gap: 4px; }
+.sh-mini { flex: 0 1 auto; display: grid; grid-template-columns: repeat(4, auto); gap: 4px; }
 .sh-mini > div { display: grid; justify-items: center; align-content: center; min-width: 56px; padding: 4px 6px; border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--line); }
 .sh-mini small { font-size: var(--fs-xs); color: var(--hero-ink2); } .sh-mini b { font-size: var(--fs-lg); font-weight: var(--fw-bold); white-space: nowrap; }
 .sh-pass { flex: 1 1 100%; font-size: var(--fs-sm); color: var(--hero-ink2); display: flex; gap: 14px; flex-wrap: wrap; } .sh-pass b { color: var(--hero-ink); }
