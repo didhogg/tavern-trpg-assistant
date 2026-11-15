@@ -1,94 +1,93 @@
-// 人物详情：主视图（四个宽度档）、五个分页、生命原地编辑 + 死亡豁免 + 撤销、改动记录。
-// 依据 P6-4（设计系统）与驾驶员 2026-11-02 ~ 11-04 已定决定（P6-4 §9）：死亡豁免常驻、0 血不做特殊显示、骰子图标只在先攻格与属性图例、生命原地编辑、等级管理按钮、下划线分页。
-import { detail, btn, seg } from '../lib/parts.mjs'
-import { modal as mdl, modalHead as mh } from '../../p5-wireframe/lib/ui.mjs'
+// 人物详情 v4：每个分页一屏。结构照 Tidy5e 角色表（CharacterSheetQuadroneRuntime 的分页：Sheet / Character / Inventory / Spellbook / Features / Effects / Biography / Journal）。
+// 需求：P6-2 R14–R25、R33。生命 = 原地三个框（驾驶员 2026-11-15）。
+import { detail } from '../lib/sheet.mjs'
+import { btn, icon, mdl, mh, seg, P } from '../lib/parts.mjs'
 import { by } from '../lib/frame.mjs'
 
-const G = '详情（人物）'
-const page = (L, o = {}) => ({ noFab: true, content: detail({ L, ...o }) })
-const split = page
+const G = '详情（人物）· 每个分页'
+const pg = (o) => () => ({ noFab: true, content: detail(o) })
+const tabScreen = (id, tab, title, goal, primary, laws, notes, pins = {}) => ({
+  id, group: G, title, flow: '游戏中查看 / 点检定', goal, primary, patterns: 'Tidy5e 分页：工具行（搜索 + 筛选）+ 彩色分组表', laws, notes,
+  diff: '全屏：页头 + 分页同屏；960 窗口和窄屏：已往下滚到分页（分页条吸在顶上），页头滚出去，底部固定条一直在。',
+  board: by({ full: pg({ tab, ...pins }), '1440': pg({ tab, tabsOnly: true }), '390': pg({ tab, tabsOnly: true }) },
+    { full: '全屏 1440：整页', '1440': '960 窗口：已滚到分页', '390': '窄屏：已滚到分页' }),
+})
 
 export const screens = [
   {
-    id: 'p6-6-detail', group: G, title: '人物详情主视图：第一屏全是战斗要素，下方分页，宽屏并排多栏', flow: 'F7（战斗中扣血）· F1（点检定去骰盘）',
-    goal: '进来一眼看全：身份、生命、AC / 先攻 / 速度 / 熟练、六属性与豁免、状态、法术位；往下拉到分页里要的内容', primary: '生命卡（最大最突出）；底部固定条的「短休 / 长休」', patterns: 'One-Window Drilldown · 第一屏概览 + Module Tabs · 宽屏多栏 Dashboard（容器宽度自动折成 2 栏 / 1 栏）',
-    laws: 'von Restorff（一屏一个主角：身份卡的名字与生命）· Fitts（圆点点击区 44、迷你条贴底部）· Miller（身份 / 战斗 / 属性 / 状态 / 法术位 五块）· Peak-End',
-    diff: 'full（全屏，详情约 1240 宽）：「行动」页并排 4 栏 = 行动 / 已准备法术 / 装备与物品 / 角色简介；960 / 868 窗口：2 栏，第一屏的生命卡与 AC 条并排；390：1 栏，六属性 3×2，底部固定条左边是生命 / AC 小条。',
+    id: 'p6-6-detail', group: G, title: '详情 · 行动（第一个分页）+ 整页结构', flow: '战斗中扣血 · 点检定 · 施法（R14 R15 R17）',
+    goal: '进来一眼看全：生命、AC、六属性和豁免、状态、法术位；下面「行动」表点一下就掷', primary: '生命「当前」框；行动表里带框的数字（送去骰盘）',
+    patterns: 'Tidy5e 角色表：深色横幅页头 + 分页 + 分组表；行动页左侧技能栏（Sheet 页的 Skills 侧栏）',
+    laws: 'von Restorff（生命块与 AC 盾）· Jakob（Tidy5e / D&D 角色表惯例）· Miller（页头 = 生命 / 身份 / 数值三块）· Fitts（底部固定条）· Tesler（所有加值由内核给）',
+    diff: '全屏：页头左生命块、右身份 + 经验 + 一排 AC 盾 · 六属性 · 先攻速度熟练；行动页左技能栏、右行动表。960：同结构，属性格变窄。390：页头竖排（身份 → 生命块 → 属性 3×2），行动页去掉技能栏（技能在「数值」页）。',
     notes: [
-      [1, '顶栏', '「‹ 人物」· 名字 · [‹ ›] 上一位 / 下一位 · **撤销分裂按钮**（写明撤销什么，▾ 开改动记录）· ⋯（存为模板 / 复制一个 / 移入回收站 / 给 AI 的资料）；整页只有这一个撤销', 'R22 · R25 · G22 · G13'],
-      [2, '身份', '头像（96×120，点"更换头像"）· 名字 ★（你扮演的人物）· 法师 3 · 人类 · 学者 · 阵营 · [等级管理]；「队伍成员 · 队伍名 ▾」「随行 ▾」两个下拉（随行 / 留守取代旧"营地"，2026-10-29）', 'R14 · R19 · G02 · G09'],
-      [3, '生命卡', '生命值最大最突出：当前 / 上限 + 临时 + 血条；**[伤害][治疗][临时] 三个按钮**，点伤害 = 出现数字框 + 实时预览"12 → 5 / 18"，Enter 应用、Esc 取消（走内核伤害命令，临时生命先扣，界面不算）；死亡豁免、生命骰、灵感、力竭一行常驻（0 血不特殊显示）', 'R17 · G08 · G03'],
-      [4, 'AC / 先攻 / 速度 / 熟练 + 被动', '四格并排，下面一行被动察觉 / 洞悉 / 调查；先攻格挂骰子图标（全页只有这里和属性图例有）；点 ✎ 进"读数"弹窗（来源与算法 + 手动调整 + [自动计算]）', 'R14 · R22 · G01 · G14'],
-      [5, '六属性与豁免', '一排六格：属性名 · **调整值大字（点 = 检定，送去骰盘）**· 属性值 · ● 熟练 + 豁免值；系统给所有数，用户不用自己算', 'R15 · G03 · X02（P7）'],
-      [6, '状态 · 法术位', '状态药丸（点文字 = 资料弹窗，× 移除）+ [＋ 状态]（p6-10）；法术位圆点点一下 = 一格（可视 14、点击区 44）', 'R17 · R20 · G08 · G10'],
-      [7, '分页 + 并排多栏', '行动 · 法术 · 背包 · 特性 · 数值 · 背景 · 笔记（下划线）；「行动」页宽屏并排 4 栏，容器变窄自动折成 2 栏 / 1 栏；记住上次看的分页', 'K5 · G01'],
-      [8, '底部固定条', '左：生命 / AC 小条（滚到哪都看得到）；中：「✓ 已保存」或「有未保存的编辑」；右：[短休][长休]（点后先预览）+ 有草稿才出现 [保存修改]', 'D15 · R17 · G29'],
+      [1, '顶栏', '‹ 人物 · 名字 · 上一位 / 下一位 · **撤销按钮写明撤销什么**（▾ = 改动记录 p6-14）· ⋯（存入我的库 / 复制 / 移到… / 删除）', 'R25 · R07 · R09'],
+      [2, '生命块（原地三个框）', '**当前 / 上限 / 临时 三个框就在原地**，直接点进去改：当前框里输 −7 / +5 / 12 都认，下面实时预览「12 → 5 / 18」，Enter 生效、Esc 还原；改完一条改动记录。✎ = 上限明细与手改。下面：死亡豁免（[掷]）、生命骰（[掷一颗]）、力竭、灵感', 'R17 · R23 · R15 · 驾驶员 2026-11-15'],
+      [3, '身份 · 分类 · 经验', '名字 ★ 英文名；职业等级 子职业 / 种族 / 背景 / 阵营 / 体型（字段由人物数据给）；[队伍 ▾] 换分类、[随行 ▾]；右边经验条 + [等级管理]，够经验时变金色「可以升级」', 'R08 · R09 · R19'],
+      [4, 'AC 盾 · 六属性 · 先攻 速度 熟练', '点 AC 盾 = 读数弹窗（来源明细 + 手改 + 回自动，p6-13）；属性格：大字调整值（点 = 属性检定）、小框属性值、● 熟练 + 豁免值（点 = 豁免）', 'R15 · R22'],
+      [5, '被动与施法', '被动察觉 / 洞悉 / 调查、法术豁免 DC、法术攻击，都由内核算', 'R14 · R28'],
+      [6, '状态与法术位', '状态胶囊 × 移除、[＋ 状态] 跳到「效果」页；法术位圆点点一下用一格 / 还一格', 'R17 · R20'],
+      [7, '分页', '行动 · 数值 · 背包 · 法术 · 特性 · 效果 · 背景 · 笔记（Tidy5e 的分页顺序）；分页条吸顶', 'Tidy5e'],
+      [8, '行动表', '搜索 + [全部 动作 附赠 反应 其他] 筛选；按动作类型分组；列 = 次数 · 命中/DC · 伤害/效果，**带框的数字点一下就送去骰盘**；点名字就地展开说明（火焰箭那行）', 'R15 · R16'],
+      [9, '底部固定条', '生命 / AC 小条 · 「已存进当前战役」· [短休][长休]（先预览，p6-15）；有设定草稿才多出 [保存修改]', 'R17 · R24'],
     ],
     board: by({
-      full: (L) => page(L, { undoPin: 1, namePin: 2, lvlPin: 2, hpPin: 3, deathPin: 3, combatPin: 4, abPin: 5, fxPin: 6, tabPin: 7, sync: 0 }),
-      '1440': (L) => page(L, {}),
-      '900': (L) => page(L, {}),
-      '390': (L) => page(L, {}),
-    }, { full: '全屏 1440：「行动」页并排 4 栏', '1440': '960 窗口：2 栏', '900': '868 窗口：2 栏', '390': '窄屏：1 栏 + 底部固定条' }),
+      full: pg({ nUndo: 1, nHp: 2, nName: 3, nAc: 4, nPass: 5, nFx: 6, nTabs: 7, nFilt: 8, nRest: 9 }),
+      '1440': pg({}),
+      '390': pg({}),
+    }, { full: '全屏 1440', '1440': '960 窗口（第一屏）', '390': '窄屏（第一屏）' }),
+  },
+  tabScreen('p6-7-stats', 'stats', '详情 · 数值（技能 · 豁免 · 工具 · 特质）', '查任何一个技能 / 豁免的加值并直接掷', '带框的加值（点 = 掷骰）',
+    'Jakob（Tidy5e Character 页：技能卡 + 豁免卡 + 工具卡 + 特质）· Miller（三栏三类）',
+    [[1, '技能表', '熟练点（空 / 实心 / 专精双圈 / 半熟练半圆）· 属性缩写 · 技能名 · 加值（点 = 检定）· 被动值；技能名单由数据给', 'R15 · R22'], [2, '豁免 · 工具', '同样的列；工具检定也能点', 'R15'], [3, '特质', '感官 / 语言 / 伤害抗性 / 伤害免疫 / 状态免疫 / 武器熟练 / 护甲熟练（dnd5e 人物的 traits 字段）；每行 ✎ 手改', 'R22']],
+    { nSk: 1, nTrait: 3 }),
+  tabScreen('p6-8-bag', 'bag', '详情 · 背包（钱币也是物品，背包是容器）', '数量随手加减、装备开关、用药水', '数量 [−][n][＋]',
+    'Jakob（Tidy5e Inventory：负重条 + 武器 / 装备 / 消耗品 / 容器分组）· Fitts（步进按钮）· Tesler（负重、重量由内核算）',
+    [[1, '负重', '负重条 + 力量 + 体型（内核算）', 'R28'], [2, '工具行', '搜索 + [全部 已装备 可使用] + [加物品]（从库选，加之前先预览）', 'R17 · R24'], [3, '容器', '**背包是容器类物品**：点 ▾ 展开，里面的物品缩进；**钱币就是物品**（金币 (gp)、银币 (sp) 从库里加，或自制一个货币物品），没有单独的钱币栏', 'R18'], [4, '每行', '次数 · 数量步进 · 重量 · 装备开关 · ⋯（用一次 / 移进容器 / 自制修改 / 删除）', 'R17 · R06']],
+    { nEnc: 1, nAdd: 2, nBox: 3 }),
+  tabScreen('p6-9-spell', 'spell', '详情 · 法术（按环分组，组条上就是法术位）', '施法、看法术位、准备法术', '法术位圆点 · 带框的命中 / 伤害',
+    'Jakob（Tidy5e Spellbook：按环分组，组条带法术位）· Tesler（DC / 攻击由内核给）',
+    [[1, '施法信息', '施法属性 · 法术攻击 · 豁免 DC · 已准备 6 / 7', 'R14'], [2, '1 环组条', '组条上就是这一环的法术位圆点（点一下用一格）', 'R17'], [3, '每行', '准备圆点（戏法没有）· 名字和学派 / 专注 / 仪式 · 施放 · 距离 · 命中/DC · 效果（点 = 掷）· ⋯', 'R15 · R17']],
+    { nCast: 1, nLv: 2 }),
+  tabScreen('p6-10-feat', 'feat', '详情 · 特性（职业 · 主动能力 · 职业特性 · 种族与背景）', '看有什么能力、还剩几次', '次数圆点',
+    'Jakob（Tidy5e Features：主动 / 被动分组）· Miller',
+    [[1, '职业', '职业 · 等级 · 生命骰；⋯ 里有 [等级管理]', 'R19'], [2, '主动能力', '次数圆点 + 恢复方式（短休 / 长休）', 'R17'], [3, '资料不可用', '这本书没开或卸载了：名字照常显示，下面红字「资料不可用」，人物其余照常', 'R33']],
+    { nCls: 1, nGone: 3 }),
+  tabScreen('p6-11-effect', 'effect', '详情 · 效果（状态开关 + 效果表）', '开关状态、看正在生效的效果、自定义效果', '状态按钮（点一下开 / 关）',
+    'Jakob（Tidy5e Effects：状态格 + 效果表）· Hick（状态一排按钮，不再弹窗）· Doherty（点了立刻生效）',
+    [[1, '状态', '一排状态按钮（名单由库给），点一下开 / 关，立刻生效、可撤销；力竭带等级步进；内核认识的状态自动影响数值和掷骰，不认识的只提醒', 'R17 · R20'], [2, '效果表', '生效中 / 物品与特性带来的 / 停用；列 = 来源 · 持续 · 开关', 'R20'], [3, '＋ 新建效果', '打开自制数据里**已有的效果表单**；保存进这个人物，要存进库是另一个动作', 'R21 · R06']],
+    { nCond: 1, nNew: 3 }),
+  {
+    id: 'p6-12-bio-note', group: G, title: '详情 · 背景 · 笔记', flow: '写设定 · 记笔记', goal: '人物设定一页看完；笔记按条记', primary: '各块的 ✎',
+    patterns: 'Tidy5e Biography（特征字段 + 文本块）/ Journal（多条笔记）；gg-sheet-export 的阅读排版', laws: 'Miller（字段格 + 文本块分开）',
+    notes: [[1, '特征字段', '阵营 / 种族 / 背景 / 性别 / 年龄 / 身高 / 体重 / 眼睛 / 头发 / 皮肤 / 信仰（dnd5e 人物 details 字段）', '人物数据'], [2, '文本块', '性格特点 / 理想 / 羁绊 / 缺点 / 外貌 / 传记 + 给 AI 的说明；空的写「还没写，点 ✎ 填写」', 'R14'], [3, '笔记', '左边笔记列表（标题 + 日期），右边正文；[＋] 新笔记', 'Tidy5e Journal']],
+    board: by({ full: pg({ tab: 'bio', nFields: 1 }), '1440': pg({ tab: 'note', tabsOnly: true, nNotes: 3 }), '390': pg({ tab: 'bio', tabsOnly: true }) },
+      { full: '全屏：背景', '1440': '960 窗口：笔记', '390': '窄屏：背景' }),
   },
   {
-    id: 'p6-7-pages', group: G, title: '详情的分页：法术 · 背包 · 特性 · 数值（技能）', flow: 'F1',
-    goal: '每个分页只做一件事；术语可点开资料；背包里钱币就是物品', primary: '各分页的主动作（施放 / ＋加物品）', patterns: 'Module Tabs · List · Stepper · Container tree',
-    laws: 'Jakob（官方表惯例：法术按环位分组、背包按类别分组）· Fitts（步进器 ≥44）· Tesler（数量、负重由内核给）· Hick（每页 ≤1 个主按钮）',
+    id: 'p6-13-hp-undo', group: G, title: '生命原地改 · 设定草稿 · AC 手改（读数弹窗）', flow: '扣血 · 改设定 · 手改覆盖（R17 R22 R23 R24）',
+    goal: '改血最快；设定改动不会白改；任何自动值都能手改也能回自动', primary: '生命「当前」框 / [保存修改] / [回到自动]',
+    patterns: 'In-place editing · Preview · Override with reset', laws: 'Postel（−7 / +5 / =12 / 全角 都认）· Doherty（实时预览）· Safe Exploration',
     notes: [
-      [1, '法术', '法术位圆点（点一下 = 一格）· 施法属性 / 豁免 DC / 攻击加值；戏法与已准备法术按环位分组，专注 C、仪式 R；[施放]；术语 = 虚点下划线，点开资料卡', 'R17 · G08 · G03'],
-      [2, '背包', '[＋ 加物品]（从库选）；容器可折叠、里面缩进；**钱币是物品**，不做货币栏；数量 [−][n][＋]；装备开关；负重条', 'R18 · G19'],
-      [3, '特性', '职业（含子职）与特性，带「次数 1 / 1」圆点；**库里没有对应资料的显示「资料不可用」+ 警示图标**，人物其余照常', 'R33 · G11 · G25'],
-      [4, '数值', '技能两栏（熟练点 + 属性缩写 + 加值，系统给）、被动感官、语言、工具；点方框 = 送去骰盘', 'R15 · G01 · G03'],
+      [1, '生命原地改', '直接点「当前」框输 −7：框变白、金边，下面预览「生命 12 → 5 / 18」；Enter 生效（临时生命先扣，由内核算）；Esc 还原；输入法组字时不提交', 'R17 · R23'],
+      [2, '设定草稿', '改名字、背景文字这类设定 → 进草稿，底栏变「● 有未保存的编辑」+ [保存修改]；游戏中的小操作（血、法术位、状态、数量）不进草稿，立即写进当前战役', 'R24'],
+      [3, '读数弹窗（AC）', '来源明细（内核给）+ 手改框 + [回到自动]；被手改的数字下面有金色细线', 'R22'],
     ],
     board: by({
-      '1440': (L) => split(L, { tab: 'spell', tabsOnly: true }),
-      '900': (L) => page(L, { tab: 'bag', tabsOnly: true }),
-      '390': (L) => page(L, { tab: 'feat', tabsOnly: true }),
-      mid: (L) => page(L, { tab: 'stats', tabsOnly: true }),
-    }, { '1440': '960 窗口：法术（已滚动到分页）', '900': '868 窗口：背包（已滚动到分页）', '390': '窄屏：职业与特性（含"资料不可用"，已滚动到分页）', mid: '600 窗口：数值（技能，已滚动到分页）' }),
+      '1440': pg({ hpEdit: true, nHp: 1 }),
+      '900': pg({ tab: 'bio', tabsOnly: true, draft: true, nSave: 2 }),
+      '390': pg({ hpEdit: true }),
+      mid: () => ({ noFab: true, content: detail({ acOvr: true }), overlay: mdl('dialog', mh('AC 怎么来的', { n: 3 }), `<div class="sh-tbl" style="--cols:minmax(0,1fr) 60px;margin:0"><div class="sh-sec"><b>自动算</b><span>12</span></div><div class="sh-tr"><span style="text-align:left">基础</span><span>10</span></div><div class="sh-tr"><span style="text-align:left">敏捷调整值</span><span>+2</span></div><div class="sh-tr"><span style="text-align:left">护甲：无</span><span>—</span></div></div>
+<div class="trpg-field" style="margin-top:12px"><label class="trpg-field__label">手改成</label><div class="trpg-input">14</div><p class="trpg-hint">手改后不再跟着装备变；随时可以回到自动。</p></div><div class="trpg-confirm__actions">${btn('回到自动')}${btn('用 14', { primary: true })}</div>`) }),
+    }, { '1440': '960：正在改生命（当前框里输 −7）', '900': '868：有设定草稿', '390': '窄屏：改生命', mid: '600：AC 读数弹窗（手改 / 回到自动）' }),
   },
   {
-    id: 'p6-8-hp-undo', group: G, title: '生命原地编辑 · 死亡豁免 · 撤销按钮 · 草稿', flow: 'F7 / F5',
-    goal: '战斗中改血最快；点错一键退回；设定改动不会白改', primary: '生命的「当前」框（聚焦）', patterns: 'In-place editing · Preview · Multilevel Undo · Smart Menu Item',
-    laws: 'Postel（输入 12 / −7 / +5 / =12、全角、各种减号都认）· Doherty（实时预览结果）· Peak-End（负峰值：改错能退）· Safe Exploration',
-    diff: '1440：点 ✎ 的生命编辑；900：编辑设定产生草稿（顶栏出现「有未保存的编辑」和 [保存修改]）；390：窄屏编辑。',
-    notes: [
-      [1, '✎ 生命编辑', '点 ✎ 变成「当前 / 上限 / 临时」三个框；**不做 ♥− ♥＋ 和"点数"框**（你 11-03 否决过）；在「当前」框输入 −7，下面一行实时预览「12 → 5 / 18」；Enter 才生效；Esc 还原；↑ ↓ 加减 1；禁止滚轮改值；中文输入法组合期间不提交', 'R17 · G08（走内核伤害命令，临时生命先扣，界面不自己算）'],
-      [2, '死亡豁免 / 生命骰', '常驻在生命下面；成功 = 主色实心、失败 = 墨色实心、空心 = 2px 环，「成功」「失败」文字照写；点一下动一格，每一下一条改动记录（1.5 秒内连点合并）', 'R17 · G03'],
-      [3, '撤销分裂按钮', '「↶ 撤销：盖尔 HP 12→5」写明要撤销什么；▾ 打开改动记录（p6-9）；没有可撤销的整组变灰写「没有可撤销的」；Ctrl / ⌘+Z', 'D21 · G22 · 候选 G27'],
-      [4, '草稿与保存修改', '设定类改动（名字、职业、属性、背景文字……）在各自弹窗 / ✎ 里改，进入草稿；顶栏出现「● 有未保存的编辑」和 [保存修改]（整页唯一实心主按钮）；**离开页面草稿保留（不弹框）**，列表该行标「有未保存的编辑」；**游戏中的小操作（血、法术位、状态、背包数量）不进草稿，立即写进当前战役数据并进存档**', 'D16 · decisions 2026-11-15'],
-    ],
+    id: 'p6-14-history', group: G, title: '改动记录 · 撤销到这里', flow: '点错了找回（R25）', goal: '找到那一条，看清会撤销什么，再退回', primary: '[撤销到这里]（先预览）',
+    patterns: 'Command History · Multilevel Undo · Preview', laws: 'Doherty（先预览）· Hick（每行一个动作）',
+    notes: [[1, '记录表', '谁 · 改了什么 · 旧 → 新 · 时间；可筛「只看盖尔 / 全部」；随存档保存', 'R25 · G22'], [2, '撤销到这里', '会连带撤销之后的改动 → 先出预览「会撤销 4 条」；能不能只撤一个人要查后端', 'R24 · 候选 G27']],
     board: by({
-      '1440': (L) => split(L, { hpEdit: true, hpPin: 1, deathPin: 2, undoPin: 3, undo: 'HP 12→5' }),
-      '900': (L) => page(L, { draft: true, savePin: 4, undoPin: 3 }),
-      '390': (L) => page(L, { hpEdit: true, hpPin: 1, undo: '盖尔 HP 18→12' }),
-    }, { '1440': '960 窗口：正在原地编辑生命（预览 12 → 5 / 18）', '900': '868 窗口：有未保存的编辑草稿（[保存修改]）', '390': '窄屏：生命原地编辑' }),
-  },
-  {
-    id: 'p6-9-history', group: G, title: '改动记录 · 撤销到此', flow: 'F5（点错了找回）',
-    goal: '找到那一条，看清会撤销什么，再退回', primary: '[撤销到此]（先预览）', patterns: 'Command History · Multilevel Undo · Preview',
-    laws: 'Doherty（先预览后执行）· Tesler（记录由系统维护，用户只选）· Hick（每行 1 个动作）',
-    notes: [
-      [1, '记录面板', '战役级、线性、最近 50 条（设置里可调），随存档一起保存；每条写「谁 + 什么 + 旧 → 新」；可筛「仅盖尔 / 全部人物」；手改覆盖的条目有 [回自动]', 'R22 · R23 · R25 · G14 · G22'],
-      [2, '撤销到此的预览', '撤销一条会连带撤销它之后的改动，所以先出确认页：「会撤销 4 条：盖尔 ×2、雅格拉 ×1、地精 ×1」；**能否只撤某一个人要后端查**', 'D9 · 候选 G27'],
-      [3, '连续改动合并', '同一个数 1.5 秒内连续改合并成一条；批量动作（加怪 ×3、删 5 人、套用模板、长休）一条', 'D9'],
-    ],
-    board: by({
-      '1440': (L) => ({ ...split(L, {}), overlay: histor(L) }),
-      '900': (L) => ({ ...page(L, {}), overlay: mdl('confirm', mh('撤销到此'), confirmBody()) }),
-      '390': (L) => ({ ...page(L, {}), overlay: histor(L) }),
-    }, { '1440': '改动记录面板', '900': '撤销到此：先预览', '390': '窄屏：改动记录（底部抽屉）' }),
+      '1440': () => ({ noFab: true, content: detail({}), overlay: mdl('sheet', mh('改动记录', { n: 1 }), `<div style="padding:var(--sp-4) var(--sp-5)"><div style="display:flex;gap:8px;margin-bottom:8px">${seg([{ label: '只看盖尔', on: true }, { label: '全部人物' }])}</div><div class="sh-tbl" style="--cols:70px minmax(0,1fr) 110px 54px 96px;margin:0"><div class="sh-sec"><b>谁</b><span style="text-align:left">改了什么</span><span>旧 → 新</span><span>时间</span><span></span></div>${[['盖尔', '生命', '18 → 12', '刚才'], ['盖尔', '1 环法术位', '3/4 → 2/4', '2 分钟'], ['盖尔', '加状态：中毒', '', '5 分钟'], ['盖尔', 'AC 手改', '自动 12 → 14', '9 分钟'], ['盖尔', '长休', '', '昨天']].map(([w, a, b, t], i) => `<div class="sh-tr"><span style="text-align:left">${w}</span><span style="text-align:left">${a}</span><span>${b}</span><span class="sh-2">${t}</span><span>${btn(i === 3 ? '回到自动' : '撤销到这里', { small: true, n: i === 1 ? 2 : 0 })}</span></div>`).join('')}</div>`) }),
+      '390': () => ({ noFab: true, content: detail({}), overlay: mdl('confirm', mh('撤销到这里'), `<div class="trpg-confirm"><p class="trpg-confirm__message">退回到「盖尔 1 环法术位 3/4 → 2/4」之前？之后的改动会一起退回：</p><ul class="trpg-confirm__details"><li>盖尔 生命 18 → 12</li><li>盖尔 1 环法术位</li></ul><div class="trpg-confirm__actions">${btn('取消')}${btn('撤销 2 条', { primary: true })}</div></div>`) }),
+    }, { '1440': '改动记录', '390': '撤销到这里：先预览' }),
   },
 ]
-
-function histor(L) {
-  const rows = [['盖尔', '生命', '12 → 5', '撤销到此'], ['盖尔', '1 环法术位', '●●○ → ●○○', '撤销到此'], ['地精 1–3', '加入（一条）', '', '撤销到此'], ['盖尔', 'AC 手改 14', '自动 12', '回自动'], ['盖尔', '加状态：祝福', '', '撤销到此']]
-  return mdl('sheet', mh('改动记录'), `<div style="display:grid;gap:var(--sp-3);padding:var(--sp-4) var(--sp-5)"><div class="pd-row">${seg([{ label: '仅盖尔', on: true }, { label: '全部人物' }])}<span class="pc-2" style="margin-left:auto;font-size:var(--fs-sm)">最近 50 条</span></div>
-${rows.map(([w, a, b, act]) => `<div class="trpg-row" style="min-height:48px"><div class="trpg-row__main"><div class="trpg-row__title">${w}　${a}</div><div class="trpg-row__meta">${b}</div></div>${btn(act, { small: true })}</div>`).join('')}</div>`)
-}
-function confirmBody() {
-  return `<div class="trpg-confirm"><p class="trpg-confirm__message">要退回到「盖尔 生命 12 → 5」之前吗？之后别的人物的改动也会一起退回：</p>
-<div class="trpg-confirm__section"><h4 class="trpg-confirm__h">会撤销 4 条</h4><ul class="trpg-confirm__details"><li>盖尔 ×2（生命、1 环法术位）</li><li>雅格拉 ×1（生命）</li><li>地精 ×1（加入）</li></ul></div>
-<div class="trpg-confirm__actions">${btn('取消')}${btn('撤销 4 条', { primary: true })}</div></div>`
-}

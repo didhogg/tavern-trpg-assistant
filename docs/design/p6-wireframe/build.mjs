@@ -23,7 +23,7 @@ const notes = (s) => `<table class="wf-cols5"><thead><tr><th>#</th><th>元素</t
 function board(s) {
   const frames = s.board ? s.board() : (s.frames ?? DEFAULT_FRAMES).map((k) => frameHtml(k, s)).join('')
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>${esc(s.title)} · P6 线框</title><style>${PAGE_CSS}${CSS}</style></head><body><div class="wf-board ds-root" style="background:#f4f1ea">
-<h1>${esc(s.title)}</h1><p class="wf-meta">${esc(s.group)} · 配色 A（P4）· 样式 = 插件真实样式 + P6-4 设计系统 · 内容只表达结构、层级、控件位置；名字取自 U6 视觉规格示例，数值是占位示例，真实显示由内核给</p>
+<h1>${esc(s.title)}</h1><p class="wf-meta">${esc(s.group)} · 配色 A（P4 令牌）· 结构照 Tidy5e / gg-sheet-export / morii-vtt · 名字和数值是占位示例，真实显示由内核给</p>
 <div class="wf-row">${frames}</div><div class="wf-notes">${facts(s)}${notes(s)}</div></div></body></html>`
 }
 
@@ -31,7 +31,7 @@ function index() {
   const groups = [...new Set(all.map((s) => s.group))]
   const body = groups.map((g) => `<h2>${esc(g)}</h2><div class="grid">${all.filter((s) => s.group === g).map((s) => `<a class="card" href="out/${s.id}.html"><img src="shots/${s.id}.png" alt="" loading="lazy"><span>${esc(s.title)}</span></a>`).join('')}</div>`).join('')
   return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>P6 人物线框总览</title><style>body{font-family:'PingFang SC',system-ui,sans-serif;margin:0;background:#f4f1ea;color:#3e332e}main{padding:24px 32px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}.card{display:grid;gap:6px;color:inherit;text-decoration:none;border:1px solid #d9cfbf;border-radius:10px;background:#fff;padding:8px}.card img{width:100%;border-radius:6px;border:1px solid #eee}</style></head><body><main>
-<h1>P6 人物线框（2026-11-15）</h1><p>共 ${all.length} 屏。外壳按窗口宽分档（≥720 宽 / 481–720 中 / ≤480 窄）；人物区按“面板宽”再分档：面板 ≥720 列表 + 详情并排，否则整页下钻。依据：P6-3（v2 + 已定决定优先）、P6-4 设计系统。「详细接口」一栏先留空。</p>${body}</main></body></html>`
+<h1>P6 人物线框 v4（2026-11-15）</h1><p>v4 重写：结构照参考项目源码（Tidy5e 角色表与队伍表、gg-sheet-export、morii-vtt 建卡向导），需求照 P6-2，字段照内核（dnd5e 6.1 人物数据 + 建卡步骤）。共 ${all.length} 屏。列表点一行进整页详情（不并排）。「详细接口」一栏先留空。</p>${body}</main></body></html>`
 }
 
 await rm(out, { recursive: true, force: true })
