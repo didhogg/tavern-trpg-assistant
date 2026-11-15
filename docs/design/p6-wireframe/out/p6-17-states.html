@@ -1220,20 +1220,30 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 /* 弹窗里的表：不要外边距（确认页自己排间距） */
 .trpg-modal__page > .sh-tbl, .trpg-confirm .sh-tbl { margin: 0 0 8px; }
 
-/* 配色参考 v3（驾驶员 2026-11-15）：在 v2 指定色（#F2ECE2 / #EFEADF / #8B4936 / #31352E）上，红色与整体色调饱和度调高一点（明度不变），
-   并且「外侧次级栏目」不再用近白的浅黄白，改用稍深的次级黄：卡片 / 表格行 / 顶栏 / 输入框底 = #F2EBDC，分组条 = 再深一档 #E8E2D3。
-   对比度已核算：白字 / 红 6.70；红字 / 次级黄 5.64；红字 / 分组条 5.18；正文 / 次级黄 10.43；次要文字 / 分组条 4.66；控件边框 / 次级黄 3.01；边栏浅字 / 边栏 6.11 起。
-   只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 docs/design/p4-design-system/palettes.mjs）。 */
+/* 配色参考 v4（驾驶员 2026-11-15）：在指定色（#F2ECE2 / #EFEADF / #8B4936 / #31352E）基础上：
+   ① 黄色不再加深：大片底色（页面底 / 表格行 / 卡片）比 v3 更亮 —— 页面底 #F8F0E1、行与卡片 #F9F2E5；
+   ② 次级栏目（分组条、生命块、建卡左栏、次级边栏）略深一档 #F0E5D4，和大片底拉开层次（对比度稍提高）；
+   ③ 红色再略提高饱和度并**全部统一成一个色号 #993D24**：主色、红字、危险红、低血红条、焦点环、选中竖线都是它（悬停 / 按下是它的明暗两档，只在鼠标按下时出现）；
+   ④ 细线、控件边框、次要文字比 v3 更深一点，整体对比度上调。
+   对比度（核算）：白字 / 红 6.89；红字 / 行底 6.30；红字 / 次级栏目 5.53；正文 / 行底 11.32；次要文字 / 次级栏目 5.54；控件边框 / 行底 3.80；
+   边栏浅字 / 边栏 11.04。只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 palettes.mjs）。 */
 .ds-root {
-  --bg: #F5EDDF; --surface: #F2EBDC; --bg-side: #E8E2D3; --bg-sunk: #F5EDDF; --bg-hover: #DDD8C9;
-  --line: #D2CDBF; --line-ctrl: #89887D;
-  --text: #31362D; --text2: #62645A; --text3: #7F7F74;
-  --side: #31362D; --side-ink: #F5EDDF; --side-ink2: #BAB6AA; --side-hover: #3D4138; --side-active: #4A4E44; --side-line: #43463D;
-  --primary: #96432B; --primary-hover: #A05640; --primary-pressed: #7B3723; --primary-text: #96432B;
-  --primary-tint: #EBDECE; --primary-tint-line: #DCC3B2;
-  --hero-bg: #31362D; --hero-ink: #F2EBDC; --hero-ink2: #BAB6AA;
-  --danger-bg: #F2EBDC; --disabled-bg: #E8E2D3; --disabled-text: #7F7F74; --focus: #96432B;
+  --bg: #F8F0E1; --surface: #F9F2E5; --bg-side: #F0E5D4; --bg-sunk: #F8F0E1; --bg-hover: #E7DBC6;
+  --line: #CAC2B3; --line-ctrl: #7D7D73;
+  --text: #31362D; --text2: #595B52; --text3: #79796F;
+  --side: #31362D; --side-ink: #F8F0E1; --side-ink2: #BAB6AA; --side-hover: #3D4138; --side-active: #4A4E44; --side-line: #43463D;
+  --primary: #993D24; --primary-hover: #A3503A; --primary-pressed: #7D321E; --primary-text: #993D24;
+  --danger-text: #993D24; --danger-line: #993D24; --focus: #993D24; --hp-low: #993D24; --mark: #993D24;
+  --primary-tint: #E8D6C4; --primary-tint-line: #D9B9A6;
+  --hero-bg: #31362D; --hero-ink: #F9F2E5; --hero-ink2: #BAB6AA;
+  --danger-bg: #F9F2E5; --disabled-bg: #F0E5D4; --disabled-text: #79796F;
 }
+/* 静止状态下的红都用统一色号（插件原样式里有几处静止时用了"悬停色"，这里改回） */
+.trpg-brandmark { background: var(--primary); }
+.trpg-tab[aria-current='page'] { box-shadow: inset 0 3px 0 var(--primary); }
+/* 生命条：平时中性深色，低血（< 1/3）才用统一红——红色不再大面积出现，也不会和低血混淆 */
+.sh-bar > i { background: var(--text); }
+.sh-bar > i[data-low='true'] { background: var(--danger-text); }
 </style></head><body><div class="wf-board ds-root" style="background:#f4f1ea">
 <h1>异常状态：读档摘要 · 资料不可用 · 操作失败 · 只读</h1><p class="wf-meta">弹窗与状态（人物） · 配色 A（P4 令牌）· 结构照 Tidy5e / gg-sheet-export / morii-vtt · 名字和数值是占位示例，真实显示由内核给</p>
 <div class="wf-row"><figure style="margin:0"><figcaption class="wf-cap">只读窗口</figcaption><div class="wf-host" style="width:390px;height:844px"><div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div><section class="trpg-window" data-layout="narrow" data-fullscreen="true" style="top:36px;left:0;right:0;bottom:0"><div class="trpg-shell"><div class="trpg-main"><header class="trpg-head"><h1 class="trpg-head__title">人物</h1><div class="trpg-head__chips"><button class="trpg-icon-btn" type="button" aria-label="助手菜单"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="20" height="20"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></svg></button></div></header>
