@@ -8,10 +8,13 @@ import MoreMenu from '../kit/MoreMenu.vue'
 import PeopleRow from './PeopleRow.vue'
 import PeopleSelectBar from './PeopleSelectBar.vue'
 import TemplatePage from './TemplatePage.vue'
+import WizardPage from './WizardPage.vue'
+import { useWizardStore } from '../../stores/wizard'
 
 const store = useRosterStore()
 const campaign = useCampaignStore()
 const modal = useModalStore()
+const wizard = useWizardStore()
 onMounted(() => void store.ensure())
 
 const tabs = computed(() => [...CATEGORIES.map((c) => ({ id: c.id as ListView, label: c.label })), { id: 'all' as ListView, label: '全部' }])
@@ -40,8 +43,13 @@ async function bulk(kind: 'move' | 'copy' | 'remove' | 'restore', category?: str
   if (done) store.selected = []
 }
 /** [＋新建] 菜单：做好一个加一个（现在只有从模板加入）。 */
-const NEW_ITEMS = computed(() => [{ key: 'template', label: '从模板加入…', ...(readOnly.value ? { disabled: true, reason: '另一个窗口在改' } : {}) }])
-function onNew(key: string): void {
+const off = computed(() => (readOnly.value ? { disabled: true, reason: '另一个窗口在改' } : {}))
+const NEW_ITEMS = computed(() => [{ key: 'wizard', label: '分步建卡…', ...off.value }, { key: 'template', label: '从模板加入…', ...off.value }])
+async function onNew(key: string): Promise<void> {
+  if (key === 'wizard') {
+    await wizard.open(store.view)
+    modal.open({ key: 'roster-wizard', title: '分步建卡', component: markRaw(WizardPage), variant: 'dialog', width: 920, height: 680, onLeave: () => void store.refresh() })
+  }
   if (key === 'template') modal.open({ key: 'roster-template', title: '从模板加入', component: markRaw(TemplatePage), variant: 'dialog', width: 920, height: 680, onLeave: () => void store.refresh() })
 }
 const headerMenu = computed(() => [trash.value ? { key: 'back', label: '回到人物列表' } : { key: 'trash', label: `回收站（${store.counts.trash}）` }])

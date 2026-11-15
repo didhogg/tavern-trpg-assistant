@@ -19,7 +19,9 @@ const DESCRIBERS: Record<string, (advancement: any) => Promise<Record<string, un
       cur.count++
       slots.set(slot.choiceIdx, cur)
     }
-    return slots.size ? { kind: 'trait', trait: advancement.configuration?.type ?? null, grants, slots: [...slots.values()] } : null
+    // 熟练类型：进阶配置里没写 type 时，取候选键的前缀（官方键形如 skills:acr、languages:standard:common）
+    const sample = grants[0]?.value ?? [...slots.values()][0]?.options[0]?.value
+    return slots.size ? { kind: 'trait', trait: advancement.configuration?.type ?? sample?.split(':')[0] ?? null, grants, slots: [...slots.values()] } : null
   },
   AbilityScoreImprovement: async (advancement) => {
     const c = advancement.configuration ?? {}

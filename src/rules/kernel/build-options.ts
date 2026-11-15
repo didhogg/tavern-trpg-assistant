@@ -3,8 +3,12 @@
 // 只读作者数据，不写新规则；候选从【库】取（和库页同一份数据）。
 import type { EntryRef } from '../../library/scopes'
 
+/** 额外必选项的种类（同时就是库里那一类条目的编号）：建卡界面据此区分「按数据才出现的步骤」。 */
+export const EXTRA_KINDS = ['subclass', 'feat', 'optionalfeature'] as const
+export type ExtraKind = (typeof EXTRA_KINDS)[number]
+
 export interface BuildExtra {
-  kind: 'subclass' | 'feat' | 'optionalfeature'
+  kind: ExtraKind
   /** 给玩家看的标题（子职业叫什么、可选特性叫什么）。 */
   title: string
   count: number

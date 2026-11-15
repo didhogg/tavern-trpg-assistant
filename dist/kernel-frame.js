@@ -1277,9 +1277,10 @@ var Re = (e) => ({
 			};
 			t.count++, r.set(e.choiceIdx, t);
 		}
+		let i = n[0]?.value ?? [...r.values()][0]?.options[0]?.value;
 		return r.size ? {
 			kind: "trait",
-			trait: e.configuration?.type ?? null,
+			trait: e.configuration?.type ?? i?.split(":")[0] ?? null,
 			grants: n,
 			slots: [...r.values()]
 		} : null;

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import type { EntryRef } from '../library/scopes'
-import type { LoadedActor, RosterRow } from '../rules/kernel/people'
+import type { KernelPeople, LoadedActor, RosterRow } from '../rules/kernel/people'
 import { askConfirm } from '../ui/kit/confirm'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
@@ -169,6 +169,14 @@ export const useRosterStore = defineStore('people', () => {
   }
   async function undoAdded(): Promise<void> { lastAdded.value = null; await undoSteps(1) }
 
+  /** 分步建卡创建：一次加人是存档里的一步，提示条带 [撤销]。 */
+  async function createFromWizard(plan: Parameters<KernelPeople['build']>[1], category: CategoryId): Promise<boolean> {
+    return run(`已创建「${plan.name}」`, 1, async (k) => {
+      const out = await backend().build(k, plan, { category })
+      if (!out.kernel) throw new Error(out.built.error ?? '资料不全，建不出这个人物')
+    })
+  }
+
   /** 彻底删除（只在回收站里）：先问，可撤销。 */
   async function purge(ids: string[]): Promise<boolean> {
     const yes = await askConfirm({ title: '彻底删除', message: `彻底删除${nameOf(ids)}？删除后不在回收站里，只能用提示条的「撤销」马上找回。`, confirmLabel: '彻底删除', danger: true })
@@ -177,6 +185,6 @@ export const useRosterStore = defineStore('people', () => {
 
   return {
     rows, loaded, loading, error, view, sort, query, selecting, selected, visible, counts, elsewhere, trash,
-    lastAdded, addFromTemplate, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
+    lastAdded, addFromTemplate, createFromWizard, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
   }
 })

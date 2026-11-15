@@ -45,7 +45,7 @@ try {
     const fighter = await find('class', (i) => i.name === '战士')
     const variantHuman = await find('race', (i) => String(i.name).includes('人类') && String(i.name).includes('变体'))
     const refs = ['race', 'background', 'class'].map((k) => plan[k].ref)
-    const slim = (o) => o.items.map((it) => ({ name: it.name, steps: it.steps.map((s) => ({ type: s.type, auto: s.automatic, unsupported: !!s.unsupported, slots: s.options?.slots?.map((x) => ({ count: x.count, n: x.options.length, values: x.options.map((v) => v.value) })) ?? null, kind: s.options?.kind ?? null, id: s.id, level: s.level })),
+    const slim = (o) => o.items.map((it) => ({ name: it.name, steps: it.steps.map((s) => ({ type: s.type, auto: s.automatic, unsupported: !!s.unsupported, slots: s.options?.slots?.map((x) => ({ count: x.count, n: x.options.length, values: x.options.map((v) => v.value) })) ?? null, kind: s.options?.kind ?? null, grants: s.options?.grants?.map((g) => g.value) ?? null, id: s.id, level: s.level })),
       extras: it.extras.map((x) => ({ kind: x.kind, count: x.count, title: x.title, n: x.candidates.length, names: x.candidates.slice(0, 3).map((c) => c.name) })), unsupported: it.unsupported }))
     const o1 = await people.buildOptions(owner, { items: refs })
     out.opts = { status: o1.status, error: o1.error, items: o1.items && slim(o1) }
