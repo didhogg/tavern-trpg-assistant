@@ -29,14 +29,18 @@
 .trpg-side :focus-visible, .trpg-tabs :focus-visible { box-shadow: 0 0 0 2px var(--side), 0 0 0 4px var(--side-ink2); }
 
 .trpg-main { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; background: var(--bg); }
-.trpg-head { flex: none; height: var(--head-h); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3) 0 var(--sp-5); background: var(--surface); border-bottom: var(--border) solid var(--line); cursor: grab; touch-action: none; user-select: none; }
+.trpg-head { flex: none; height: var(--head-h); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3) 0 var(--sp-5); background: var(--head-bg); color: var(--head-ink); border-bottom: var(--border) solid var(--head-line); cursor: grab; touch-action: none; user-select: none; }
 .trpg-window[data-fullscreen='true'] .trpg-head { cursor: default; }
 .trpg-window[data-layout='narrow'] .trpg-head { padding: 0 var(--sp-2) 0 var(--sp-4); }
 .trpg-head__title { flex: 1; min-width: 0; font-size: var(--fs-xl); font-weight: var(--fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trpg-head__chips { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
 .trpg-chip { max-width: 260px; cursor: pointer; }
 .trpg-chip__camp { font-weight: var(--fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.trpg-chip__save { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trpg-chip__save { color: var(--head-ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 页头（炭灰结构层）里的小控件跟页头颜色走 */
+.trpg-head .trpg-pill, .trpg-head .trpg-chip { background: transparent; color: var(--head-ink); border-color: var(--head-line); }
+.trpg-head .trpg-icon-btn { color: var(--head-ink); }
+.trpg-head .trpg-icon-btn:hover { background: var(--head-hover); color: var(--head-ink); }
 .trpg-body { position: relative; flex: 1; min-height: 0; display: flex; }
 .trpg-content { flex: 1; min-width: 0; overflow: auto; padding: var(--sp-4) var(--sp-5) 88px; outline: none; }
 .trpg-window[data-layout='narrow'] .trpg-content { padding: var(--sp-3) var(--sp-4) 88px; }

@@ -45,14 +45,17 @@ export const CANDIDATES = {
     name: 'A · 暖奶油米 · 番茄红', source: 'Radix Colors：gold + orange（底，内插）/ brown（文字）/ tomato（主色）/ red / grass / amber',
     feel: '偏暖的淡奶油米色（接近参考图的纸色），边栏是暖深灰；主色是偏橙的番茄红；点缀是柔和的烛光琥珀，只做小面积。',
     risk: '主色（番茄红）和错误色（正红）相近，所以错误永远带 ⚠ 图标 + 文字 + 红边框，不靠颜色单独表达；没有任何粉色底。底色是内插值，不是色阶原值。',
+    // 浅色 = 驾驶员 2026-11-15 定的「正式融合配色方案」（羊皮纸内容区 × 炭灰结构层 × 陶土赤红操作层 × 古铜金点缀），色号原样、不臆造；线框 v8 同款（p6-wireframe/palette-v2.css）
     light: {
-      surface: cream(1, 1, 0.5), bg: cream(2, 2, 0.5), bgSide: cream(3, 3, 0.45), bgSunk: cream(2, 2, 0.5), bgHover: cream(4, 3, 0.3), line: cream(5, 4, 0.2),
-      text: 'r:brown.12', text2: 'r:brown.11', lineCtrl: 'r:brown.9',
-      side: 'r:brown.12', sideInk: cream(2, 2, 0.5), sideInk2: 'r:brown.7', sideHover: 'm:r:brown.12|r:brown.1|0.08', sideActive: 'm:r:brown.12|r:brown.1|0.16', sideLine: 'm:r:brown.12|r:brown.1|0.14',
-      ...ladder('tomato'), primaryText: 'm:r:tomato.11|r:tomato.12|0.25', primaryTint: cream(3, 3, 0.45), primaryTintLine: cream(6, 5, 0.3),
-      heroBg: 'r:brown.12', heroInk: 'r:brown.1', heroInk2: 'r:brown.6',
-      dangerText: 'r:red.11', dangerBg: cream(1, 1, 0.5), dangerLine: 'r:red.9',
-      successText: 'r:grass.11', successBg: 'r:grass.2', warnText: 'r:amber.12', warnBg: 'r:amber.2',
+      surface: '#FFF9F0', bg: '#FFF9F0', bgSide: '#F4ECDD', bgSunk: '#FAF5EC', bgHover: '#E9DDCB', line: '#DED3C2',
+      text: '#39291A', text2: '#73634E', text3: '#857C6E', lineCtrl: '#DED3C2',
+      side: '#30342E', sideInk: '#F8F2E7', sideInk2: '#D0C9BB', sideHover: '#4A5045', sideActive: '#8A3529', sideLine: '#555A4D',
+      headBg: '#30342E', headInk: '#F8F2E7', headInk2: '#D0C9BB', headLine: '#555A4D', headHover: '#4A5045',
+      primary: '#8A3529', primaryHover: '#A44736', primaryPressed: '#6D291F', primaryText: '#8A3529', primaryTint: '#EDE3D3', primaryTintLine: '#DED3C2',
+      heroBg: '#30342E', heroInk: '#F8F2E7', heroInk2: '#D0C9BB',
+      dangerText: '#A33B2B', dangerBg: '#F4ECDD', dangerLine: '#A33B2B',
+      successText: '#4F8050', successBg: '#F4ECDD', warnText: '#73634E', warnBg: '#EDE3D3',
+      accent: '#B89A54', accentText: '#B89A54', onAccent: '#39291A', focus: '#B89A54',
     },
     dark: {
       surface: dk(5), bg: dk(4), bgSide: dk(3), bgSunk: dk(3), bgHover: dk(6), line: dk(7),
@@ -60,6 +63,7 @@ export const CANDIDATES = {
       side: dk(3), sideInk: 'r:brown-dark.12', sideInk2: 'r:brown-dark.11', sideHover: dk(4), sideActive: dk(5), sideLine: dk(5),
       ...ladderDark('tomato'), primaryText: 'm:r:tomato-dark.10|r:tomato-dark.11|0.5', primaryTint: dk(4), primaryTintLine: dk(8),
       heroBg: dk(2), heroInk: 'r:brown-dark.12', heroInk2: 'r:brown-dark.11',
+      headBg: dk(5), headInk: 'r:brown-dark.12', headInk2: 'r:brown-dark.11', headLine: dk(7), headHover: dk(6),
       dangerText: 'r:red-dark.10', dangerBg: dk(3), dangerLine: 'r:red-dark.9',
       successText: 'm:r:grass-dark.10|r:grass-dark.11|0.4', successBg: dk(3), warnText: 'm:r:amber-dark.11|r:brown-dark.11|0.5', warnBg: dk(3),
     },
@@ -72,14 +76,14 @@ const ACCENT_TEXT = { a: { light: 'm:r:amber.11|r:amber.12|0.35', dark: 'r:brown
 
 function modeMap(id, mode) {
   const m = { ...CANDIDATES[id][mode] }
-  m.text3 = m.lineCtrl // 占位 / 禁用文字复用同一个灰（交叉复用：浅色的边线灰 brown.9 = 深色的边线灰 brown-dark.9，同一个 #ad7f58）
-  m.accent = ACCENT[id][mode]
-  m.accentText = ACCENT_TEXT[id][mode]
-  m.onAccent = 'r:amber.12'
+  m.text3 ??= m.lineCtrl // 占位 / 禁用文字复用同一个灰（交叉复用：浅色的边线灰 brown.9 = 深色的边线灰 brown-dark.9，同一个 #ad7f58）
+  m.accent ??= ACCENT[id][mode]
+  m.accentText ??= ACCENT_TEXT[id][mode]
+  m.onAccent ??= 'r:amber.12'
   m.onPrimary = '#ffffff'
   m.disabledBg = m.bgSunk
   m.disabledText = m.text3
-  m.focus = mode === 'light' ? m.primary : m.primaryText
+  m.focus ??= mode === 'light' ? m.primary : m.primaryText
   return m
 }
 
@@ -96,7 +100,7 @@ const PAIRS = [
   ['sideInk', 'side', 4.5, '边栏文字'], ['sideInk2', 'side', 4.5, '边栏次要文字'], ['sideInk', 'sideActive', 4.5, '边栏选中项文字'], ['onPrimary', 'primary', 4.5, '主按钮文字（基色）'], ['onPrimary', 'primaryHover', 4.5, '主按钮文字（悬停 +1）'], ['onPrimary', 'primaryPressed', 4.5, '主按钮文字（按下 −1）'],
   ['primaryText', 'bg', 4.5, '红 / 琥珀标题与链接 / 纸色底'], ['primaryText', 'surface', 4.5, '红 / 琥珀标题与链接 / 卡片'], ['primaryText', 'primaryTint', 4.5, '选中态文字 / 选中底'],
   ['accentText', 'bg', 4.5, '琥珀文字 / 纸色底'], ['onAccent', 'accent', 4.5, '琥珀块上的文字'],
-  ['heroInk', 'heroBg', 4.5, '首页横幅文字'], ['heroInk2', 'heroBg', 4.5, '首页横幅次要文字'], ['accent', 'heroBg', 3, '横幅上的琥珀点缀（3:1）'],
+  ['headInk', 'headBg', 4.5, '页头文字'], ['headInk2', 'headBg', 4.5, '页头次要文字'], ['heroInk', 'heroBg', 4.5, '首页横幅文字'], ['heroInk2', 'heroBg', 4.5, '首页横幅次要文字'], ['accent', 'heroBg', 3, '横幅上的琥珀点缀（3:1）'],
   ['dangerText', 'dangerBg', 4.5, '错误文字'], ['successText', 'successBg', 4.5, '成功文字'], ['warnText', 'warnBg', 4.5, '提醒文字'],
   ['lineCtrl', 'surface', 3, '输入框 / 控件边线（非文字 3:1）'], ['lineCtrl', 'bg', 3, '控件边线 / 纸色底（非文字 3:1）'],
   ['disabledText', 'disabledBg', 2.2, '禁用文字仍可辨认（下限 2.2:1，不是 AA）'],

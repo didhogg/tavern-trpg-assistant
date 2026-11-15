@@ -246,10 +246,10 @@ async function designTests(page, label, { width, scheme }) {
   const narrow = width <= 480
   const css = (sel, prop) => page.locator(sel).first().evaluate((el, p) => getComputedStyle(el)[p], prop)
   const dark = scheme === 'dark'
-  check(`[${label}] 内容区底色是设计系统的米色（${dark ? '深色暖灰' : '浅奶油米'}）`, (await css('.trpg-main', 'backgroundColor')) === (dark ? 'rgb(48, 42, 36)' : 'rgb(253, 248, 240)'), await css('.trpg-main', 'backgroundColor'))
-  if (!narrow) check(`[${label}] 侧栏是暖深灰`, (await css('.trpg-side', 'backgroundColor')) === (dark ? 'rgb(38, 34, 30)' : 'rgb(62, 51, 46)'), await css('.trpg-side', 'backgroundColor'))
-  else check(`[${label}] 底部标签栏是暖深灰`, (await css('.trpg-tabs', 'backgroundColor')) === (dark ? 'rgb(38, 34, 30)' : 'rgb(62, 51, 46)'), await css('.trpg-tabs', 'backgroundColor'))
-  check(`[${label}] 骰盘按钮是番茄红主色`, (await css('.trpg-dice-btn', 'backgroundColor')) === (dark ? 'rgb(209, 52, 21)' : 'rgb(180, 49, 24)'), await css('.trpg-dice-btn', 'backgroundColor'))
+  check(`[${label}] 内容区底色是设计系统的米色（${dark ? '深色暖灰' : '浅羊皮纸色'}）`, (await css('.trpg-main', 'backgroundColor')) === (dark ? 'rgb(48, 42, 36)' : 'rgb(255, 249, 240)'), await css('.trpg-main', 'backgroundColor'))
+  if (!narrow) check(`[${label}] 侧栏是暖深灰（浅色为炭灰）`, (await css('.trpg-side', 'backgroundColor')) === (dark ? 'rgb(38, 34, 30)' : 'rgb(48, 52, 46)'), await css('.trpg-side', 'backgroundColor'))
+  else check(`[${label}] 底部标签栏是暖深灰（浅色为炭灰）`, (await css('.trpg-tabs', 'backgroundColor')) === (dark ? 'rgb(38, 34, 30)' : 'rgb(48, 52, 46)'), await css('.trpg-tabs', 'backgroundColor'))
+  check(`[${label}] 骰盘按钮是主色（浅色陶土红、深色番茄红）`, (await css('.trpg-dice-btn', 'backgroundColor')) === (dark ? 'rgb(209, 52, 21)' : 'rgb(138, 53, 41)'), await css('.trpg-dice-btn', 'backgroundColor'))
   const lib = page.getByTestId('nav-library')
   await lib.click()
   const toast = page.getByText('资料库页面将在后续版本开放')
