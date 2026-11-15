@@ -1555,6 +1555,11 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 @container sh (max-width: 900px) { .sh-vgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @container sh (max-width: 900px) { .sh-facts > div:last-child:nth-child(odd) { grid-column: 1 / -1; border-left: 0; } }
 
+/* 单选圆点（互斥选择用；开关 ━● 只给"开 / 关"） */
+.sh-rd { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line-ctrl); background: var(--surface); display: inline-block; position: relative; vertical-align: middle; }
+.sh-rd[data-on='true'] { border-color: var(--primary); }
+.sh-rd[data-on='true']::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--primary); }
+
 /* 配色 v7（驾驶员 2026-11-15：严格按「正式融合配色方案」，禁止臆造、不改动）。本文件里出现的每个色号都来自该方案，没有自己混的色：
    Paper #FAF5EC · Panel #F4ECDD · Surface #EDE3D3 · Elevated #FFF9F0 · 炭灰 #30342E / 次炭灰 #3C4139 / 炭灰悬浮 #4A5045 / 炭灰结构边框 #555A4D ·
    主色 #8A3529（悬停 #A44736 · 按下 #6D291F · 浅红底 #E8D0C5）· 古铜金 #B89A54 · 成功 #4F8050 · 危险 #A33B2B ·

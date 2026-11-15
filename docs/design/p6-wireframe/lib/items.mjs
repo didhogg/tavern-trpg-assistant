@@ -54,8 +54,8 @@ const KINDS = [
   ['充能物品（法杖 / 魔杖）', '魔法 · 稀有度 · 恢复方式（黎明 / 长休…）· 恢复量', '次数「5/7 ✎」点一下改；[使用…]', '编辑次数抽屉：已用 · 最大次数（条目）· 恢复方式 · 恢复量 · [重置为满]', 'uses.spent / max / recovery'],
   ['消耗品：药水 / 毒药 / 食物', '子类型 · 稀有度 · 次数（有就显示）', '[使用…] → 使用弹窗：目标 · 效果 · 掷骰 · 数量 −1', '使用弹窗（见本组第二屏）；用完自动销毁可勾选', 'consumable.type · uses · damage · autoDestroy'],
   ['消耗品：卷轴', '卷轴 · 法术环数 · 法术职业 · DC', '[施放…] → 施放弹窗（同法术页，选环 · 用掉卷轴）', '施放弹窗；法术不在职业列表时提示检定', 'consumable.type=scroll · 内嵌法术'],
-  ['消耗品：弹药', '弹药 · 已选为 X 弹药', '数量 [− n ＋]；[选为弹药]', '数量够不够射击由内核判断', 'consumable.type=ammo'],
-  ['工具', '工具类型 · 属性 · 熟练 / 不熟练', '[检定]（点 = 掷，熟练加值内核算）', '编辑工具：默认属性 · 额外加值 · 聊天备注', 'tool.ability · bonus · proficient'],
+  ['消耗品：弹药', '弹药 · 已选为 X 弹药', '数量 [− n ＋]；[选为弹药]', '数量不够时射击会提示', 'consumable.type=ammo'],
+  ['工具', '工具类型 · 属性 · 熟练 / 不熟练', '[检定]（点 = 掷，熟练加值已算好）', '编辑工具：默认属性 · 额外加值 · 聊天备注', 'tool.ability · bonus · proficient'],
   ['容器', '容器 · 已装 x / 容量', '[展开 / 折叠]；里面的物品缩进', '容器抽屉：容量（数量 / 体积 / 重量）· 内容器是否算重量', 'container.capacity · contents'],
   ['杂物 / 钱币 / 宝物', '杂物类型（艺术品 · 宝石 · 材料…）', '只有数量 [− n ＋]', '金币等钱币就是库里的物品，叠数量；没有钱币栏', 'loot.type · quantity'],
   ['所有物品都有', '未鉴定（红字）· 已装备 · 稀有度', '行 ⋯：编辑 · 移进容器 · 置顶 · 复制 · 删除', '数量 · 重量 · 价格 · 稀有度 · 是否鉴定 · 描述', 'quantity · weight · price · rarity · identified'],
@@ -73,6 +73,11 @@ export const useDialog = (o = {}) => mdl('confirm', mh('使用：治疗药水', 
 ${grp('', pad(`${sel('对谁使用', '自己（盖尔）')}<div class="ovr-roll" style="padding:0"><div class="ov-itm"><b>2d4 + 2</b><small>恢复生命；不会超过最大生命</small></div>${btn('掷骰', { primary: true, ic: 'dice-five', n: o.nRoll })}</div>`))}
 <div class="ovr-res" style="margin:0 0 10px"><b>2d4 + 2 = 7</b><span>生命 12 → 18 / 18（只恢复 6）　·　药水 2 → 1</span></div>
 <div class="ovd-foot"><label class="ovf-ck"><i class="sh-ckb"></i>用完自动删除这个物品</label><span style="flex:1"></span>${btn('取消')}${btn('确认使用', { primary: true, n: o.nOk })}</div></div>`)
+/** 一件物品有几种用法：先选一种；用不了时当场写原因（不弹错误框，按钮灰掉） */
+export const useChoice = (o = {}) => mdl('confirm', mh('使用：奥术法杖', { n: o.nTitle }), `<div class="ovd"><p class="ovd-sub">这件物品有几种用法，先选一种。</p>
+${grp('怎么用', [['施放火球术', '用掉 3 次', 1], ['施放魔法飞弹', '用掉 1 次', 0], ['当作法器（不消耗）', '施法时可用来代替材料', 0]].map(([a, b, v]) => `<div class="ovd-row" style="grid-template-columns:24px minmax(0,1fr)"><span><i class="sh-rd" data-on="${!!v}"></i></span><div class="ov-itm"><b>${a}</b><small>${b}</small></div></div>`).join(''))}
+<p class="sh-warn" style="margin:0 0 10px">${P(o.nWhy)}现在用不了：这件物品还剩 2 次，火球术要 3 次。想用的话先去 [改次数]，或等黎明恢复。</p>
+<div class="ovd-foot"><span style="flex:1"></span>${btn('取消')}${btn('确认使用', { primary: true, disabled: true })}</div></div>`)
 /** 充能物品：编辑次数抽屉 */
 export const chargeDrawer = (o = {}) => ruleDrawer('次数与恢复：奥术法杖', '已用几次是状态，直接改；最大次数是物品给的，看来源条目。', [
   grp('已用（直接改）', pad(`<div class="ovr-row" style="padding:0"><div class="ov-itm"><b>${P(o.nRow)}已用 / 最大</b><small>用一次点 ＋；[重置为满] = 全部恢复</small></div><span class="ovf-stepper">${btn('−', { small: true })}<b>2</b>${btn('＋', { small: true })}<i>/ 7</i></span></div><div>${btn('重置为满', { small: true })}</div>`)),

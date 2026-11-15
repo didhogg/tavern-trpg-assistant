@@ -130,7 +130,7 @@ const LEVELS = [['0', '没有力竭'], ['1', 'd20 检定 −2；速度 −5 尺'
 export const exhDrawer = (o = {}) => drawer('力竭', '力竭等级 0–6；等级越高，惩罚越重，6 级死亡。长休减 1 级（需要食水）。', [
   result('当前力竭', '2 级', 'd20 检定 −4；速度 −10 尺'),
   grp('改等级', `<div class="ovr-row"><div class="ov-itm"><b>${P(o.nRow)}力竭等级</b><small>点下面一行直接设成那一级，或用 − ＋</small></div>${stepper(2, { max: 6 })}</div>` + LEVELS.map(([n, t]) => `<div class="ove ove--lv" data-cur="${n === '2'}"><span class="ove-lv">${n}</span><div class="ov-itm"><b>${t}</b></div><span>${n === '2' ? '当前' : ''}</span></div>`).join('')),
-  `<p class="ovd-sub">各级惩罚用的是 2024 规则；2014 规则的力竭表不同，用哪套取决于库，待核对。</p>`].join(''), { ok: '完成', ...o })
+  `<p class="ovd-sub">各级惩罚按当前战役所用的规则版本显示。</p>`].join(''), { ok: '完成', ...o })
 const pips = (name, k, on, kind) => `<div class="ovr-pips"><b>${name}</b><span>${[1, 2, 3].map((i) => `<button type="button" class="ovr-pip" data-kind="${kind}" aria-pressed="${i <= on}" aria-label="${name} ${i}">${i}</button>`).join('')}</span><small>${k}</small></div>`
 export const deathDrawer = (o = {}) => drawer('死亡豁免', '', [
   result('状态', '濒死', '生命 0 / 18　·　倒地、失能；每回合开始掷一次'),

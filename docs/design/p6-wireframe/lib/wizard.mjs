@@ -70,13 +70,13 @@ ${avatarField(o.nAvatar)}
   feat: (o = {}) => o.need
     ? pick('feat', { ...o, states: { feat: 'todo' } }, { count: 4, q: '搜 专长', list: L([{ ch: '警', name: '警觉', en: 'Alert', src: 'PHB' }, { ch: '战', name: '战地施法者', en: 'War Caster', tags: ['前置'], sub: '能施展至少 1 个法术', src: 'PHB' }, { ch: '坚', name: '坚韧', en: 'Tough', src: 'PHB' }, { ch: '重', name: '重甲大师', en: 'Heavy Armor Master', sub: '重甲熟练', src: 'PHB' }], 1),
       c: { ch: '战', name: '战地施法者', en: 'War Caster', sub: '玩家手册 · 专长（你选的「人类（变体）」在 1 级给 1 个专长）', kv: [['前置', '能施展至少 1 个法术']], secs: [['效果', '专注检定优势；持武器也能做姿势成分；借机攻击可改施法术。']] } })
-    : one('feat', o, `<div class="sh-empty">${P(o.nNone)}<b>这一步不用做</b><span class="sh-2">半精灵、侍僧、牧师 1 级都没有给专长。内核没列出专长步骤时，步骤标签里这一步是灰色虚线圆。</span>${btn('去下一步', { primary: true })}</div>`),
+    : one('feat', o, `<div class="sh-empty">${P(o.nNone)}<b>这一步不用做</b><span class="sh-2">半精灵、侍僧、牧师 1 级都没有给专长，直接去下一步就行。</span>${btn('去下一步', { primary: true })}</div>`),
 
   ab: (o = {}) => one('ab', o, `<div>
 <div class="sh-tools">${P(o.nWay)}${filt(['标准数组', '购点（27 点）', '掷骰', '手填'], 0)}</div>
 <div class="wz-pool">${P(o.nPool)}还没放的数：<span>15</span><span data-used="true">14</span><span>13</span><span>12</span><span data-used="true">10</span><span>8</span></div>
 <div class="wz-ab">${[['力量', '', '', ''], ['敏捷', '', '', ''], ['体质', '14', '+1', '15 · +2'], ['智力', '', '', ''], ['感知', '10', '+1', '11 · +0'], ['魅力', '', '+2', '']].map(([k, v, add, tot]) => `<div><small>${k}</small><span class="wz-in"${v ? '' : ' data-empty="true"'}>${v || '空'}</span><em${add ? ' data-plus="true"' : ''}>种族 ${add || '—'}</em><strong>${tot || '—'}</strong></div>`).join('')}</div>
-<div class="wz-gap">${P(o.nGap)}待查后端：内核建卡计划（buildCharacter）现在只收「名字 + 条目 + 装备 + 选择」，<b>没看到基础属性值这一项</b>；这一步能不能存进人物、走哪条接口，查后端时确认（候选缺口）。</div></div>`, { states: { ab: 'todo' } }),
+</div>`, { states: { ab: 'todo' } }),
 
   eq: (o = {}) => one('eq', o, `<div>
 ${tbl('minmax(0,1fr)', sec('牧师起始装备（每组选一项）', 3, [], { n: o.nRad }))}
@@ -84,7 +84,7 @@ ${tbl('minmax(0,1fr)', sec('牧师起始装备（每组选一项）', 3, [], { n
 <div class="wz-rad"><div><i></i><span><b>甲</b>鳞甲</span></div><div data-on="true"><i></i><span><b>乙</b>皮甲</span></div><div><i></i><span><b>丙</b>链甲（需要熟练）</span></div></div>
 <div class="wz-rad"><div data-on="true"><i></i><span><b>甲</b>轻弩和 20 支弩矢</span></div><div><i></i><span><b>乙</b>任意一件简易武器 ${btn('从库里选', { small: true })}</span></div></div>
 ${tbl('minmax(0,1fr) 60px 60px', `${sec('背景给的', 6, ['数量', '重量'])}${[['圣徽', 1, '1 磅'], ['祈祷书', 1, '5 磅'], ['香', 5, '—'], ['法衣', 1, '4 磅'], ['普通衣服', 1, '3 磅'], ['金币 (gp)', 15, '0.3 磅']].map(([n, q, w]) => tr([it(n[0], n, n.startsWith('金币') ? '钱币 · 来自库' : '冒险装备'), c(q), c(w)])).join('')}`)}
-<div class="wz-gap">${P(o.nGap)}待查后端：「甲 / 乙」起始装备选项是不是由职业条目数据直接给出、内核建卡的 equipment 能不能接这些选择，查后端时确认。</div></div>`),
+</div>`),
 
   done: (o = {}) => one('done', o, `<div>
 ${tbl('120px minmax(0,1fr) 80px', `${sec('伊娃', null, ['', ''])}${[['种族', '半精灵 · 黑暗视觉 60 尺'], ['背景', '侍僧 · 洞悉 宗教 · 矮人语 天界语'], ['职业', '牧师 1 级 · 生命领域'], ['生命值', '10（8 + 体质 2）'], ['AC', '11（皮甲 + 敏捷）'], ['技能', '洞悉 医药 宗教 察觉']].map(([k, v]) => tr([`<span class="sh-2" style="text-align:left">${k}</span>`, `<span style="text-align:left">${v}</span>`, `<span><button class="trpg-link" type="button">改</button></span>`])).join('')}`)}
