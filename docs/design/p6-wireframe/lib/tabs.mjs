@@ -2,10 +2,11 @@
 // 子界面状态用 o 里的开关画出来：o.menu（filter / sort）、o.rowMenu、o.expand、o.bioEdit、o.jNew 等。
 import { icon, btn, iconBtn, searchBox, P, more, dots, bar, step, filt, roll, sec, it, tr, c, tbl } from './parts.mjs'
 import { card, skillsCard, toolsCard, pen, menu, mrel, AB, f } from './sheet.mjs'
+import { ROWS } from './items.mjs'
 
 const rowMore = (o, items) => (o.rowMenu ? mrel(more() + menu(items, { right: true })) : more())
 const MENU_ACT = [['编辑条目…'], ['置顶到收藏'], ['复制一份'], ['', 'sep'], ['删除', 'danger']]
-const MENU_BAG = [['卸下'], ['调谐'], ['移进容器…'], ['编辑条目…'], ['置顶到收藏'], ['复制一份'], ['', 'sep'], ['删除', 'danger']]
+const MENU_BAG = [['卸下'], ['编辑武器属性…'], ['选为弹药…'], ['移进容器…'], ['置顶到收藏'], ['复制一份'], ['', 'sep'], ['删除', 'danger']]
 const MENU_SPL = [['取消准备'], ['编辑条目…'], ['置顶到收藏'], ['', 'sep'], ['删除', 'danger']]
 const MENU_FEA = [['编辑条目…'], ['置顶到收藏'], ['', 'sep'], ['删除', 'danger']]
 const MENU_EFF = [['编辑效果…'], ['停用'], ['', 'sep'], ['删除', 'danger']]
@@ -29,25 +30,24 @@ ${tbl(ACOLS, `${sec('其他', 1, ['次数', '恢复', ''])}${tr([it('奥', '奥�
 
 /* ---- 2 属性（T:CharacterAttributesTab + character-attributes-tab.css：网格 左 17.5rem 窄 | 右 1fr，列间距 / 卡间距 24px；
         容器 <40rem：「技能｜豁免」「技能｜工具」「特质通栏」；<30rem：单列 技能→豁免→工具→特质） ---- */
-const saves = (o) => card('豁免', `<div class="sh-saves">${AB.map(([k, , , s, p]) => `<div class="sh-sv"><i class="sh-pt" data-on="${p ? 1 : 0}"></i><b>${k}</b><span>${roll(s)}</span></div>`).join('')}</div><div class="sh-saves sh-saves--sp"><div class="sh-sv"><span></span><b>专注</b><span>${roll('+4')}</span></div><div class="sh-sv sh-sv--n"><span></span><b>职业豁免</b><span class="sh-2">智力 · 感知</span></div></div>`, { penLabel: '手改：各项豁免', np: o.nPenSv, n: o.nSv })
+const saves = (o) => card('豁免', `<div class="sh-saves">${AB.map(([k, , , s, p]) => `<div class="sh-sv"><i class="sh-pt" data-on="${p ? 1 : 0}"></i><b>${k}</b><span>${roll(s)}</span></div>`).join('')}</div><div class="sh-saves sh-saves--sp"><div class="sh-sv"><span></span><b>专注</b><span>${roll('+4')}</span></div><div class="sh-sv sh-sv--n"><span></span><b>职业豁免</b><span class="sh-2">智力 · 感知</span></div></div>`, { penLabel: '来源条目：各项豁免', np: o.nPenSv, n: o.nSv })
 const trow = (k, v) => `<div class="sh-trait"><b>${k}</b><div>${v}</div></div>`
 const dash = '<span class="sh-3">—</span>'
-const traits = (o) => card('特质', `${trow('职业', pills(['法师 3']))}${trow('种族', pills(['人类']))}${trow('背景', pills(['学者']))}${trow('速度', '步行 30 尺')}${trow('感官', pills(['黑暗视觉 60 尺']))}${trow('语言', pills(['通用语', '精灵语', '矮人语', '龙语']))}${trow('伤害抗性', dash)}${trow('伤害免疫', dash)}${trow('易伤', dash)}${trow('状态免疫', dash)}${trow('护甲熟练', dash)}${trow('武器熟练', pills(['匕首', '飞镖', '投石索', '短棍', '轻弩']))}${trow('特殊特质', dash)}`, { penLabel: '手改：语言、感官、抗性、熟练', np: o.nPenTr, n: o.nTrait })
+const traits = (o) => card('特质', `${trow('职业', pills(['法师 3']))}${trow('种族', pills(['人类']))}${trow('背景', pills(['学者']))}${trow('速度', '步行 30 尺')}${trow('感官', pills(['黑暗视觉 60 尺']))}${trow('语言', pills(['通用语', '精灵语', '矮人语', '龙语']))}${trow('伤害抗性', dash)}${trow('伤害免疫', dash)}${trow('易伤', dash)}${trow('状态免疫', dash)}${trow('护甲熟练', dash)}${trow('武器熟练', pills(['匕首', '飞镖', '投石索', '短棍', '轻弩']))}${trow('特殊特质', dash)}`, { penLabel: '来源条目：语言、感官、抗性、熟练', np: o.nPenTr, n: o.nTrait })
 const attr = (o) => `<div class="sh-attrcols"><div class="sh-acol"><div style="grid-area:skills">${skillsCard(o)}</div><div style="grid-area:tools">${toolsCard(o)}</div></div><div class="sh-acol"><div style="grid-area:saves">${saves(o)}</div><div style="grid-area:traits">${traits(o)}</div></div></div>`
 
-/* ---- 3 背包（T:ActorInventoryTab；分组 = 物品类型，T:features/sections/Inventory.ts） ---- */
-const BCOLS = 'minmax(0,1fr) 56px 96px 64px 40px 32px'
-const BN = { narrow: 'minmax(0,1fr) 96px 40px 32px', hide: '2 4' }
-const bagRow = (ch, name, sub, uses, qty, wt, eq, mp, attrs = '') => tr([it(ch, name, sub), c(uses), `<span>${qty == null ? '—' : step(qty)}</span>`, c(wt), `<span>${eq == null ? '' : `<i class="sh-eq" data-on="${eq}"></i>`}</span>`, mp ?? more()], attrs)
-const H = ['次数', '数量', '重量', '装备']
+/* ---- 3 背包（T:ActorInventoryTab；分组 = 物品类型，T:features/sections/Inventory.ts）。每种物品有自己的状态标签和专用按钮（lib/items.mjs） ---- */
+const BCOLS = 'minmax(0,1fr) 74px 96px 62px 96px 32px'
+const BN = { narrow: 'minmax(0,1fr) 84px 84px 32px', hide: '2 4' }
+const H = ['次数 / 加值', '数量', '重量', '操作']
 const bag = (o) => `${abar(o, '搜 物品', ['已装备', '可使用'], btn('加物品', { small: true, ic: 'plus', n: o.nAdd }))}
-${card('负重', `<div class="sh-enc">${bar(34, 120, 0, { plain: true })}<b>34 / 120 磅</b><span class="sh-2">力量 8 · 中型</span></div>`, { penLabel: '手改：负重上限、调谐上限', np: o.nPenEnc, n: o.nEnc })}
-${tbl(BCOLS, `${sec('武器', 2, H, { add: '加武器' })}${bagRow('匕', '匕首', '简易近战 · 灵巧 投掷', '—', 1, '1 磅', true, rowMore(o, MENU_BAG))}${o.expand ? desc('一把短小的刃，可近战也可投掷。', ['简易', '灵巧', '投掷 20/60']) : ''}${bagRow('法', '法杖', '简易近战 · 双用', '—', 1, '4 磅', true)}`, '', BN)}
-${tbl(BCOLS, `${sec('装备', 2, H, { add: '加装备' })}${bagRow('书', '法术书', '奥术法器 · 9 个法术', '—', null, '3 磅', true)}${bagRow('水', '水晶球', '奥术法器', '—', null, '1 磅', true)}`, '', BN)}
-${tbl(BCOLS, `${sec('消耗品', 1, H, { add: '加消耗品' })}${bagRow('药', '治疗药水', '恢复 2d4+2 生命', '1 / 1', 2, '1 磅', null)}`, '', BN)}
-${tbl(BCOLS, `${sec('工具', 1, H, { add: '加工具', n: o.nTool })}${bagRow('书', '书法家工具', '工具 · 智力', '—', 1, '5 磅', null)}`, '', BN)}
-${tbl(BCOLS, `${sec('容器', 1, H, { add: '加容器', n: o.nBox })}${bagRow('▾', '背包', '容器 · 装了 4 种 · 容量 30 磅', '—', null, '5 磅', null, null, ' data-open="true"')}${bagRow('口', '口粮', '杂物', '—', 5, '10 磅', null, null, ' data-sub="true"')}${bagRow('火', '火把', '杂物', '—', 10, '10 磅', null, null, ' data-sub="true"')}${bagRow('金', '金币 (gp)', '钱币 · 来自库（钱币就是物品，没有钱币栏）', '—', 48, '0.96 磅', null, null, ' data-sub="true"')}`, '', BN)}
-<div class="sh-tabfoot"><span class="sh-2">调谐 0 / 3</span>${btn('分组设置', { small: true, ic: 'gear' })}</div>`
+${card('负重', `<div class="sh-enc">${bar(34, 120, 0, { plain: true })}<b>34 / 120 磅</b><span class="sh-2">力量 8 · 中型</span></div>`, { penLabel: '负重与调谐上限的来源条目', np: o.nPenEnc, n: o.nEnc })}
+${tbl(BCOLS, `${sec('武器', 3, H, { add: '加武器' })}${ROWS.weapon(rowMore(o, MENU_BAG)).join('')}${o.expand ? desc('一把短小的刃，可近战也可投掷。', ['简易', '灵巧', '投掷 20/60']) : ''}`, '', BN)}
+${tbl(BCOLS, `${sec('装备', 5, H, { add: '加装备' })}${ROWS.armor().join('')}${ROWS.charge().join('')}`, '', BN)}
+${tbl(BCOLS, `${sec('消耗品', 3, H, { add: '加消耗品' })}${ROWS.consumable().join('')}`, '', BN)}
+${tbl(BCOLS, `${sec('工具', 2, H, { add: '加工具', n: o.nTool })}${ROWS.tool().join('')}`, '', BN)}
+${tbl(BCOLS, `${sec('容器', 4, H, { add: '加容器', n: o.nBox })}${ROWS.box().join('')}`, '', BN)}
+<div class="sh-tabfoot"><span class="sh-2">调谐 2 / 3</span>${btn('分组设置', { small: true, ic: 'gear' })}</div>`
 
 /* ---- 4 法术（T:ActorSpellbookTab） ---- */
 const SCOLS = 'minmax(0,1fr) 52px 64px 96px 96px 32px'
@@ -56,15 +56,15 @@ const spRow = (prep, ch, name, sub, time, range, hit, eff, mp) => tr([`<span cla
 const SH = ['施放', '距离', '命中/DC', '效果']
 const spell = (o) => `${abar(o, '搜 法术', ['已准备', '专注', '仪式'])}
 ${tbl(SCOLS, `${sec('戏法', 3, SH)}${spRow(null, '火', '火焰箭', '塑能 · 言语 姿势', '动作', '120 尺', '+6', '1d10 火焰')}${spRow(null, '手', '法师之手', '咒法', '动作', '30 尺', '', '')}${spRow(null, '光', '光亮术', '塑能', '动作', '触碰', '', '')}`, '', SN)}
-${tbl(SCOLS, `${sec('1 环', null, SH, { extra: ` ${dots(4, 2)} <small>2/4</small> ${pen('手改：法术位', o.nSlotPen)}`, n: o.nLv })}${spRow(true, '魔', '魔法飞弹', '塑能', '动作', '120 尺', '', '3×(1d4+1)', rowMore(o, MENU_SPL))}${o.expand ? desc('三道魔法飞镖，各造成 1d4+1 力场伤害，必中。', ['1 环', '塑能', '动作', '120 尺', '言语 姿势']) : ''}${spRow(true, '护', '护盾术', '防护', '反应', '自身', '', 'AC +5')}${spRow(true, '燃', '燃烧之手', '塑能', '动作', '15 尺', 'DC 14 敏', '3d6 火焰')}${spRow(true, '侦', '侦测魔法', '预言 · 专注 · 仪式', '动作', '自身', '', '')}${spRow(false, '甲', '法师护甲', '防护', '动作', '触碰', '', 'AC 13+敏')}`, '', SN)}
+${tbl(SCOLS, `${sec('1 环', null, SH, { extra: ` ${dots(4, 2)} <small>2/4</small> ${pen('来源条目：法术位', o.nSlotPen)}`, n: o.nLv })}${spRow(true, '魔', '魔法飞弹', '塑能', '动作', '120 尺', '', '3×(1d4+1)', rowMore(o, MENU_SPL))}${o.expand ? desc('三道魔法飞镖，各造成 1d4+1 力场伤害，必中。', ['1 环', '塑能', '动作', '120 尺', '言语 姿势']) : ''}${spRow(true, '护', '护盾术', '防护', '反应', '自身', '', 'AC +5')}${spRow(true, '燃', '燃烧之手', '塑能', '动作', '15 尺', 'DC 14 敏', '3d6 火焰')}${spRow(true, '侦', '侦测魔法', '预言 · 专注 · 仪式', '动作', '自身', '', '')}${spRow(false, '甲', '法师护甲', '防护', '动作', '触碰', '', 'AC 13+敏')}`, '', SN)}
 ${tbl(SCOLS, `${sec('2 环', null, SH, { extra: ` ${dots(2, 1)} <small>1/2</small>` })}${spRow(true, '隐', '隐形术', '幻术 · 专注', '动作', '触碰', '', '')}${spRow(true, '朦', '朦胧步', '咒法', '附赠', '自身', '', '传送 30 尺')}`, '', SN)}
-${card('施法摘要', `<div class="sh-sum"><div><small>属性</small><b>智力</b></div><div><small>豁免 DC</small><b>14</b></div><div><small>攻击</small><b>+6</b></div><div><small>已准备</small><b>6 / 7</b></div><div><small>专注</small><b>隐形术</b></div></div>`, { penLabel: '手改：施法属性、法术豁免 DC、法术攻击加值', np: o.nPenSp, n: o.nCast })}
+${card('施法摘要', `<div class="sh-sum"><div><small>属性</small><b>智力</b></div><div><small>豁免 DC</small><b>14</b></div><div><small>攻击</small><b>+6</b></div><div><small>已准备</small><b>6 / 7</b></div><div><small>专注</small><b>隐形术</b></div></div>`, { penLabel: '来源条目：施法属性、法术豁免 DC、法术攻击加值', np: o.nPenSp, n: o.nCast })}
 <div class="sh-tabfoot">${btn('加法术', { small: true, ic: 'plus', n: o.nAddSp })}</div>`
 
 /* ---- 5 特性（T:CharacterFeaturesTab） ---- */
 const FCOLS = 'minmax(0,1fr) 72px 72px 32px'
 const feat = (o) => `${abar(o, '搜 特性', ['主动', '被动'], btn('加特性', { small: true, ic: 'plus', n: o.nAddFe }))}
-${tbl(FCOLS, `${sec('职业 · 法师', 4, ['次数', '恢复', ''], { n: o.nCls })}${tr([it('奥', '奥术恢复', '法师 1 级'), `<span>${dots(1, 1)} 1/1 ${pen('手改：次数、恢复', o.nPenUse)}</span>`, c('长休'), rowMore(o, MENU_FEA)])}${o.expand ? desc('短休时恢复已消耗的法术位，总环级不超过法师等级的一半。', ['职业特性', '长休恢复']) : ''}${tr([it('施', '施法', '法师 1 级'), c('—'), c(''), more()])}${tr([it('奥', '奥术传统', '法师 2 级'), c('—'), c(''), more()])}${tr([it('塑', '塑能学者', '塑能学派 2 级'), c('—'), c(''), more()])}`)}
+${tbl(FCOLS, `${sec('职业 · 法师', 4, ['次数', '恢复', ''], { n: o.nCls })}${tr([it('奥', '奥术恢复', '法师 1 级'), `<span>${dots(1, 1)} 1/1 ${pen('来源条目：次数、恢复', o.nPenUse)}</span>`, c('长休'), rowMore(o, MENU_FEA)])}${o.expand ? desc('短休时恢复已消耗的法术位，总环级不超过法师等级的一半。', ['职业特性', '长休恢复']) : ''}${tr([it('施', '施法', '法师 1 级'), c('—'), c(''), more()])}${tr([it('奥', '奥术传统', '法师 2 级'), c('—'), c(''), more()])}${tr([it('塑', '塑能学者', '塑能学派 2 级'), c('—'), c(''), more()])}`)}
 ${tbl(FCOLS, `${sec('种族 · 人类', 1, ['次数', '恢复', ''])}${tr([it('人', '多才多艺', '人类'), c('—'), c(''), more()])}`)}
 ${tbl(FCOLS, `${sec('背景 · 学者', 2, ['次数', '恢复', ''])}${tr([it('研', '研究者', '背景特性'), c('—'), c(''), more()])}${tr([it('!', '旧房规：书呆子', '资料不可用（这本书没开启）', { warn: true }), c('—'), c(''), more(o.nGone)])}`)}`
 
