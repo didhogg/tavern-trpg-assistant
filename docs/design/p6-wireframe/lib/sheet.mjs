@@ -30,14 +30,13 @@ ${bar(12, 18, 3)}${pre}
 <div class="sh-hpr"><span>生命骰 d6</span><span>${dots(3, 3)} <b>3 / 3</b></span><button class="sh-dk" type="button">掷一颗</button></div>
 <div class="sh-hpr"><span>力竭</span><span><b>0</b>&ensp;&ensp;灵感 ${dots(1, 0)}</span><span></span></div></div></div>`
 }
-const popAc = () => `<div class="sh-pop"><b>已手改 14</b><span class="sh-2">自动值：12</span><span class="sh-pop__n">自动值现在是 <b>13</b>（换了装备）</span><div>${btn('回到自动', { small: true, primary: true })}${btn('采用自动值 13', { small: true })}${btn('去修改', { small: true, ic: 'pencil-simple' })}</div></div>`
 export function hero(o = {}) {
   const xp = `<div class="sh-xp"${o.ready ? ' data-ready="true"' : ''}>${P(o.nXp)}<div><span>经验</span><b>${o.ready ? '2,700' : '900'} / 2,700</b></div>${bar(o.ready ? 2700 : 900, 2700, 0, { dk: true, plain: true })}<button class="sh-dk" type="button">${o.ready ? '可以升级 · 等级管理' : '等级管理'}</button></div>`
   const id = `<div class="sh-hero__id"><button class="sh-pic" type="button" title="更换头像：链接或上传">${P(o.nAv)}${icon('user', 26)}<i class="sh-pic__edit">${icon('image', 13)}</i></button><div class="sh-hero__who"><div class="sh-name">${P(o.nName)}盖尔<span class="sh-star">${icon('star-fill', 18)}</span><small>Gale</small></div>
 <div class="sh-meta"><span><b class="${man(o, 'lv') ? 'sh-man' : ''}">法师 3 级</b> 塑能学派${pen('手改：等级、升级所需经验', o.nPenLv)}</span><span>种族 <b>人类</b></span><span>背景 <b>学者</b></span><span>中立善良</span><span>中型</span></div>
 <div class="sh-hero__btns">${P(o.nCat)}<button class="sh-dk" type="button">${icon('users', 14)} 队伍 ${icon('caret-down', 12)}</button><button class="sh-dk" type="button">随行 ${icon('caret-down', 12)}</button>${o.sync ? `<button class="sh-dk" type="button">${P(o.sync)}${icon('link-simple', 14)} 3 项来源有更新</button>` : ''}</div></div>${xp}</div>`
   const abs = `<div class="sh-abs">${P(o.nAb)}${pen('手改：初始值、加成、属性值、调整值、豁免', o.nPenAb, true)}${AB.map(([k, m, v, s, p], i) => `<div class="sh-ab"><small>${k}</small><b${i === 3 && man(o, 'int') ? ' class="sh-man"' : ''}>${i === 3 && man(o, 'int') ? '+5' : m}</b><span class="sh-ab__v">${i === 3 && man(o, 'int') ? 20 : v}</span><em${p ? ' data-prof="true"' : ''}>${p ? '● ' : ''}豁免 ${s}</em></div>`).join('')}</div>`
-  const row = `<div class="sh-row">${abs}<div class="sh-mini">${pen('手改：AC、先攻、速度、熟练、被动值、法术 DC', o.nPenCb, true)}<div><small>${P(o.nAc)}AC</small><b${o.acOvr || man(o, 'ac') ? ' class="sh-man"' : ''}>${o.acOvr || man(o, 'ac') ? '14' : '12'}</b>${o.pop === 'ac' ? popAc() : ''}</div><div><small>先攻 ${icon('dice-five', 12)}</small><b>+2</b></div><div><small>速度</small><b>30 尺</b></div><div><small>熟练</small><b>+2</b></div></div>
+  const row = `<div class="sh-row">${abs}<div class="sh-mini">${pen('手改：AC、先攻、速度、熟练、被动值、法术 DC', o.nPenCb, true)}<div><small>${P(o.nAc)}AC</small><b${o.acOvr || man(o, 'ac') ? ' class="sh-man"' : ''}>${o.acOvr || man(o, 'ac') ? '14' : '12'}</b></div><div><small>先攻 ${icon('dice-five', 12)}</small><b>+2</b></div><div><small>速度</small><b>30 尺</b></div><div><small>熟练</small><b>+2</b></div></div>
 <div class="sh-pass">${P(o.nPass)}<span>被动察觉 <b>11</b></span><span>被动洞悉 <b>13</b></span><span>被动调查 <b>16</b></span><span>法术豁免 DC <b>14</b></span><span>法术攻击 <b>+6</b></span></div></div>`
   return `<div class="sh-hero">${hpBlock(o)}${id}${row}</div>`
 }
@@ -49,7 +48,7 @@ export const dock = (o = {}) => `<div class="sh-dock"><span class="sh-dock__hp">
 /* ---------- 各分页 ---------- */
 const skills = (n) => tbl('', `${sec('技能', null, ['加值', '被动'], { n, extra: pen('手改：熟练级别、加值') }).replace('<b>', '<b style="grid-column:span 3">')}${SK.map(([k, a, p]) => tr([`<i class="sh-pt" data-on="${p ?? 0}"></i>`, `<span class="sh-ab3">${AK[a]}</span>`, `<span class="sh-n">${k}</span>`, `<span class="sh-v">${roll(f(MOD[a] + (p ? 2 : 0)))}</span>`, c(10 + MOD[a] + (p ? 2 : 0))])).join('')}`, 'sh-sk')
 const saves = () => tbl('', `${sec('豁免', null, ['加值', '']).replace('<b>', '<b style="grid-column:span 3">')}${AB.map(([k, , , s, p]) => tr([`<i class="sh-pt" data-on="${p ? 1 : 0}"></i>`, `<span class="sh-ab3"></span>`, `<span class="sh-n">${k}</span>`, `<span class="sh-v">${roll(s)}</span>`, c('')])).join('')}`, 'sh-sk')
-const trait = (t, v, empty) => `<div class="sh-trait"><b>${t}</b><div${empty ? ' class="sh-3"' : ''}>${v}</div><button type="button" aria-label="编辑">${icon('pencil-simple', 16)}</button></div>`
+const trait = (t, v, empty) => `<div class="sh-trait"><b>${t}</b><div${empty ? ' class="sh-3"' : ''}>${v}</div></div>`
 const pills = (a) => `<span class="sh-pills">${a.map((x) => `<span>${x}</span>`).join('')}</span>`
 
 const ACOLS = 'minmax(0,1fr) 60px 64px 110px 32px'
@@ -103,7 +102,7 @@ ${tbl(ECOLS, `${sec('物品与特性带来的', 1, ['来源', '持续', '开关'
 ${tbl(ECOLS, `${sec('停用', 1, ['来源', '持续', '开关'])}${tr([it('甲', '法师护甲：AC 13+敏', '临时效果 · 已结束'), c('法师护甲'), c('8 小时'), '<span><i class="sh-eq" data-on="false"></i></span>', more()])}`, '', EN)}`
 
 const stats = (o) => `<div class="sh-cols3"><div>${skills(o.nSk)}</div><div>${saves()}${tbl('minmax(0,1fr) 40px 32px', `${sec('工具', 1, ['加值', ''])}${tr([it('书', '书法家工具', '智力 · 熟练'), `<span>${roll('+6')}</span>`, more()])}`)}</div>
-<div>${tbl('', `${sec('特质', null, [], { n: o.nTrait })}${trait('感官', '—', true)}${trait('语言', pills(['通用语', '精灵语', '矮人语', '龙语']))}${trait('伤害抗性', '—', true)}${trait('伤害免疫', '—', true)}${trait('状态免疫', '—', true)}${trait('武器熟练', pills(['匕首', '飞镖', '投石索', '短棍', '轻弩']))}${trait('护甲熟练', '—', true)}`)}</div></div>`
+<div>${tbl('', `${sec('特质', null, [], { n: o.nTrait, extra: pen('手改：语言、感官、抗性、熟练') })}${trait('感官', '—', true)}${trait('语言', pills(['通用语', '精灵语', '矮人语', '龙语']))}${trait('伤害抗性', '—', true)}${trait('伤害免疫', '—', true)}${trait('状态免疫', '—', true)}${trait('武器熟练', pills(['匕首', '飞镖', '投石索', '短棍', '轻弩']))}${trait('护甲熟练', '—', true)}`)}</div></div>`
 
 const FIELDS = [['阵营', '中立善良'], ['种族', '人类'], ['背景', '学者'], ['性别', '男'], ['年龄', '35'], ['身高', '5 尺 11 寸'], ['体重', '170 磅'], ['眼睛', '棕色'], ['头发', '深棕'], ['皮肤', '浅色'], ['信仰', '密斯特拉']]
 const text = (h, t) => `<div class="sh-text"><h4>${h}<button type="button" aria-label="编辑">${icon('pencil-simple', 16)}</button></h4><p${t ? '' : ' class="sh-3"'}>${t || '还没写，点 ✎ 填写'}</p></div>`

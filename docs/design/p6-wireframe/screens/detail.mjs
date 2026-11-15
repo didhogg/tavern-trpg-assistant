@@ -1,7 +1,7 @@
 // 人物详情 v4：每个分页一屏。结构照 Tidy5e 角色表（CharacterSheetQuadroneRuntime 的分页：Sheet / Character / Inventory / Spellbook / Features / Effects / Biography / Journal）。
 // 需求：P6-2 R14–R25、R33。生命 = 原地三个框（驾驶员 2026-11-15）。
 import { detail } from '../lib/sheet.mjs'
-import { ovModal } from '../lib/override.mjs'
+import { hpDrawer, lvDrawer, abDrawer, cbDrawer, skDrawer, trDrawer } from '../lib/override.mjs'
 import { avatarModal } from '../lib/avatar.mjs'
 import { btn, icon, mdl, mh, seg, P } from '../lib/parts.mjs'
 import { by } from '../lib/frame.mjs'
@@ -83,29 +83,40 @@ export const screens = [
     }, { '1440': '960：正在原地改当前生命（输入 −7）', '900': '868：有设定草稿', '390': '窄屏：原地改生命' }),
   },
   {
-    id: 'p6-13b-override', group: G, title: '小铅笔页面（手改页）：等级 · 生命 · 属性 · 战斗 · 技能', flow: '流程 A / B / E（P6-5）',
-    goal: '所有自动值在这里覆盖、复原；每一项都看得到自动值和来源', primary: '[应用]', patterns: 'Tabbed edit page · Override with reset · Preview',
-    laws: 'Tesler（自动值一直显示，用户不用记原来是多少）· Safe Exploration（随时回到自动、可撤销）· Hick（5 个分页，一页一类）· Postel',
-    diff: '宽：居中弹窗；窄：底部抽屉，列宽自动收紧。',
+    id: 'p6-13b-override', group: G, title: '手改小抽屉（一个自动模块一个）：生命 · 属性 · 战斗 · 等级', flow: '流程 A / B / E（P6-5）',
+    goal: '外面全是只读的普通文字；点模块角上的 ✎ 进这个模块自己的小抽屉，看自动值、手改、回到自动', primary: '[应用]', patterns: 'Small modal per module（宽 480，高度跟内容走）· [自动 | 手动] 二选一 · Preview',
+    laws: 'Tesler（自动值与来源一直写在项目名下面）· Safe Exploration（选「自动」就回去、可撤销）· Hick（一个抽屉只管一个模块）· Postel',
+    diff: '宽：居中小窗；窄屏：底部铺满。高度跟内容走，内容多了在窗口里滚。',
     notes: [
-      [1, '分页', '等级 · 生命 · 属性 · 战斗 · 技能；角色表每个小铅笔打开对应的那一页', 'R22'],
-      [2, '一行一项', '项目名（下面小字写自动值与来源，点「来源 ▾」看明细）· 现在显示（手改过的带金线）· 手改为（空 = 不改）· [回到自动]（没手改过则灰）', 'R22 · G14'],
-      [3, '属性页', '初始值（设定）· 加成 · 最终值 · 调整值 · 豁免加值；点一行展开；初始值是设定，最终值 / 调整值 / 豁免是自动值——都可覆盖可复原', 'R22 · 流程 E · 候选 G33'],
-      [4, '底部', '[全部回到自动（本页）]· [取消] · [应用]（写进当前战役，一条改动记录，可撤销；不用再点"保存修改"）', 'R24 · R25'],
+      [1, '一个模块一个抽屉', '生命块 ✎ → 生命抽屉；六属性那排 ✎ → 属性抽屉；AC 先攻速度熟练那排 ✎ → 战斗数值抽屉；身份行等级旁 ✎ → 等级抽屉；技能表 / 特质块各自的 ✎ → p6-13e', 'R22'],
+      [2, '一行一项', '项目名（下面小字写**自动值与来源**，「来源 ▾」看明细）· [自动 | 手动]：选「自动」= 回到自动值，选「手动」才出现可填的框；手改过的项名字带金线', 'R22 · G14 · Cloudscape / Infor / D&D Beyond 的共同点'],
+      [3, '属性抽屉', '每个属性一行（最终值）；点「展开」看 初始值（设定）· 加成 · 最终值 · 调整值 · 豁免，各项同样 [自动 | 手动]', '流程 E · 候选 G33'],
+      [4, '底部', '[全部用自动]（本抽屉）· [取消] · [应用]（立刻生效，一条改动记录，可撤销；不用再点"保存修改"）；角色表上的数字马上跟着变', 'R24 · R25 · Obsidian 的教训'],
     ],
-    board: by({ '1440': () => ({ noFab: true, content: detail({}), overlay: ovModal(1, { nTabs: 1, nRow: 2, nSec: 3, nApply: 4 }) }), '900': () => ({ noFab: true, content: detail({}), overlay: ovModal(2, { nRow: 3 }) }), '390': () => ({ noFab: true, content: detail({}), overlay: ovModal(3, {}) }), mid: () => ({ noFab: true, content: detail({}), overlay: ovModal(4, {}) }) },
-      { '1440': '960：生命页（最大生命已手改 18 → 20）', '900': '868：属性页（智力展开：最终值已手改）', '390': '窄屏：战斗页（AC 已手改）', mid: '600：技能页（奥秘已手改）' }),
+    board: by({ '1440': () => ({ noFab: true, content: detail({}), overlay: hpDrawer({ nTitle: 1, nRow: 2, nApply: 3 }) }), '900': () => ({ noFab: true, content: detail({}), overlay: abDrawer({ nRow: 4 }) }), '390': () => ({ noFab: true, content: detail({}), overlay: cbDrawer({}) }), mid: () => ({ noFab: true, content: detail({}), overlay: lvDrawer({}) }) },
+      { '1440': '960：生命抽屉（最大生命已手改 18 → 20）', '900': '868：属性抽屉（智力展开，最终值已手改）', '390': '窄屏：战斗数值抽屉（AC 已手改）', mid: '600：等级抽屉' }),
   },
   {
-    id: 'p6-13c-override-state', group: G, title: '已手改的数：金线 · 点开的小气泡（复原 / 自动值已变化）', flow: '流程 B 路 1 · 流程 D（P6-5）',
-    goal: '一眼看出哪些数被手改过；不进小铅笔页面也能一键回到自动', primary: '[回到自动]', patterns: 'Inline marker · Popover', laws: 'von Restorff（只有手改过的数有金线）· Safe Exploration',
+    id: 'p6-13e-skill-trait', group: G, title: '技能抽屉 · 特质抽屉（外面只读，进抽屉才改）', flow: '流程 A / H（P6-5）',
+    goal: '技能的熟练项、特质里的语言 / 抗性 / 熟练：平时在外面显示着不改；要改点 ✎ 进抽屉', primary: '[应用]', patterns: 'Small modal per module · Segmented（无 / 半 / 熟 / 专）· Chips with source',
+    laws: 'Miller（来源标签分块）· Safe Exploration（删掉的自动项收进「已删除」可恢复）· Jakob',
     notes: [
-      [1, '金线', '被手改的自动值（最大生命、AC、智力…）数字下面一条金色细线；其余自动值都是普通文字', 'R22'],
-      [2, '点开小气泡', '点带金线的数：「已手改 14　自动值：12」+ [回到自动] [去修改 ✎]；一条改动记录，可撤销', 'R22 · R25'],
-      [3, '自动值变了', '升级 / 换装备后自动值变化：手改值保持，气泡多一行「自动值现在是 13」+ [采用自动值 13]；不点就一直保持手改（需要后端同时给出自动值，候选 G32）', '流程 D · 候选 G32'],
+      [1, '外面', '「数值」页的技能表、特质块全是普通文字（熟练点、加值、药丸），不带编辑控件；表头 / 块头一个 ✎', 'R22'],
+      [2, '技能抽屉', '一行一个技能：名字 · 属性 · 来源写在下面（「自动 熟练 · 背景·学者」/「手动改为 专（自动 无）」）· 熟练级别 [无 | 半 | 熟 | 专] · ↺ 回到自动；改过的行名字带金线；窗口内滚动', 'R15 · R22'],
+      [3, '特质抽屉', '语言 / 感官 / 抗性 / 免疫 / 武器熟练 / 护甲熟练：药丸 + 来源小字（种族 / 背景 / 职业 / 手动添加）；× 删除、[＋ 加…] 添加；**删掉自动来的项 = 收进「已删除」，药丸变虚线带 ↺，随时恢复**；手动添加的删掉就没了（可撤销）', 'R22 · 建卡带来的内容可改'],
+      [4, '建卡填好之后', '建卡每一步选的东西（种族给的语言、背景给的技能…）自动出现在对应抽屉里，来源写「种族」「背景」…；之后删 / 加 / 改都在这里', 'R04 · R22'],
     ],
-    board: by({ full: pg({ man: ['hpmax', 'ac', 'int'], pop: 'ac', nPenCb: 3 }), '1440': pg({ man: ['hpmax', 'ac', 'int'] }), '390': pg({ man: ['hpmax', 'ac', 'int'] }) },
-      { full: '全屏：点开 AC 的小气泡', '1440': '960：金线（最大生命、AC、智力）', '390': '窄屏：金线' }),
+    board: by({ '1440': () => ({ noFab: true, content: detail({ tab: 'stats', tabsOnly: true }), overlay: skDrawer({ nRow: 1 }) }), '900': () => ({ noFab: true, content: detail({ tab: 'stats', tabsOnly: true }), overlay: trDrawer({}) }), '390': () => ({ noFab: true, content: detail({ tab: 'stats', tabsOnly: true }), overlay: skDrawer({}) }) },
+      { '1440': '960：技能抽屉（察觉手改为专精、运动手改为无）', '900': '868：特质抽屉（手动添加 + 已删除可恢复）', '390': '窄屏：技能抽屉' }),
+  },
+  {
+    id: 'p6-13c-override-state', group: G, title: '已手改的数：只有一条金线（没有悬浮提示）', flow: '流程 B（P6-5）',
+    goal: '一眼看出哪些数被手改过；想看 / 想改回，点 ✎ 进那个模块的抽屉', primary: '—', patterns: 'Inline marker（无悬停、无点击）', laws: 'von Restorff（只有手改过的数有金线）',
+    notes: [
+      [1, '金线', '被手改的自动值（最大生命、AC、智力…）数字下面一条金色细线；**没有悬浮窗、没有点击气泡**；其余自动值都是普通文字', 'R22 · 驾驶员 11-15'],
+      [2, '怎么看 / 怎么改回', '点该模块的 ✎ → 抽屉里那一项选「自动」→ [应用]；抽屉里每项都写着自动值，改回去会变成什么一目了然', 'R22 · R25'],
+    ],
+    board: by({ full: pg({ man: ['hpmax', 'ac', 'int'] }), '1440': pg({ man: ['hpmax', 'ac', 'int'] }), '390': pg({ man: ['hpmax', 'ac', 'int'] }) }, { full: '全屏：金线（最大生命、AC、智力）', '1440': '960：金线', '390': '窄屏：金线' }),
   },
   {
     id: 'p6-13d-avatar', group: G, title: '人物头像：填链接 · 直接上传', flow: '流程 G（P6-5）· 点头像换头像',
