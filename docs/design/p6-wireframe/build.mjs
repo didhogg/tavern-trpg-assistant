@@ -8,12 +8,13 @@ import { esc } from '../p5-wireframe/lib/ui.mjs'
 import { screens as list } from './screens/list.mjs'
 import { screens as create } from './screens/create.mjs'
 import { screens as det } from './screens/detail.mjs'
+import { screens as units } from './screens/units.mjs'
 import { screens as flows } from './screens/flows.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const out = join(here, 'out')
 const shots = join(here, 'shots')
-const all = [...list, ...create, ...det, ...flows]
+const all = [...list, ...create, ...det, ...units, ...flows].sort((a, z) => (a.group.match(/单元 (\d)/)?.[1] ?? 9) - (z.group.match(/单元 (\d)/)?.[1] ?? 9))
 
 const bold = (t) => String(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
 const facts = (s) => `<dl class="wf-facts"><dt>流程</dt><dd>${esc(s.flow)}</dd><dt>用户目标</dt><dd>${esc(s.goal)}</dd><dt>主动作</dt><dd>${esc(s.primary)}</dd><dt>模式栈</dt><dd>${esc(s.patterns)}</dd><dt>法则核对</dt><dd>${esc(s.laws)}</dd>${s.diff ? `<dt>三宽度差异</dt><dd>${esc(s.diff)}</dd>` : ''}</dl>`

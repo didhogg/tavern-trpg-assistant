@@ -2,7 +2,7 @@
 import { mem, memSec, listPage, btn, icon, iconBtn } from '../lib/parts.mjs'
 import { by } from '../lib/frame.mjs'
 
-const G = '列表（人物）'
+const G = '单元 0 · 人物列表（主界面 + 子界面）'
 const party = (o = {}) => `${memSec('随行', 3, { check: o.check, drag: o.drag, n: o.nSec })}
 ${mem({ name: '盖尔', en: 'Gale', cls: '法师', lv: '3 级', race: '人类', tags: ['学者'], hp: [12, 18], temp: 3, ac: 12, pp: 11, check: o.check?.[0], n: o.nRow, nHp: o.nHp, nMore: o.nMore, drag: o.drag?.[0] })}
 ${mem({ name: '影心', en: 'Shadowheart', cls: '牧师', lv: '1 级', race: '半精灵', hp: [11, 11], ac: 13, pp: 13, check: o.check?.[1], drag: o.drag?.[1] })}

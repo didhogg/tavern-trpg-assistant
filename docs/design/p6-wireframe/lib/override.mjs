@@ -37,3 +37,22 @@ export const trDrawer = (o = {}) => drawer('手改：特质', '来自建卡与�
   group('伤害抗性', chips([chip('火焰', '手动添加', { man: true })], '加抗性')),
   group('武器熟练', chips([chip('匕首', '职业'), chip('飞镖', '职业'), chip('投石索', '职业'), chip('短棍', '职业')], '加熟练')),
   group('已删除（自动来的，可恢复）', `<div class="ovd-chips">${chip('轻弩', '职业', { del: true })}</div>`)].join(''), o)
+
+/* ---------- 其余抽屉（单元清单 P6-7）：身份 · 生命骰 · 死亡豁免 · 工具 · 豁免 · 负重 / 调谐 · 法术位 · 施法摘要 · 次数 · 特征 ---------- */
+export const idDrawer = (o = {}) => drawer('手改：身份', '名字、种族、阵营、体型、类型、速度、感官（Tidy5e 的 creatureType / movement / senses 配置）。', [
+  field({ name: '名字', src: '盖尔', n: o.nRow }), field({ name: '英文名', src: 'Gale' }), field({ name: '种族', src: '人类（来自建卡）' }), field({ name: '阵营', src: '中立善良' }), field({ name: '体型', src: '中型' }),
+  field({ name: '生物类型', src: '类人' }), field({ name: '步行速度', src: '30 尺', manual: true, val: '35 尺' }), field({ name: '黑暗视觉', src: '60 尺' })].join(''), o)
+export const hdDrawer = (o = {}) => drawer('手改：生命骰', '', [field({ name: '生命骰数量', src: '3', n: o.nRow }), field({ name: '生命骰面数', src: 'd6' }), `<div class="ovd-row"><div class="ov-itm"><b>掷一颗生命骰</b><small>d6 + 体质 +1（掷完扣 1 颗，恢复生命）</small></div><span></span>${btn('掷', { small: true })}</div>`].join(''), o)
+export const deathDrawer = (o = {}) => drawer('手改：死亡豁免', '', [field({ name: '豁免加值', src: '+0', n: o.nRow }), field({ name: '成功所需次数', src: '3' }), field({ name: '失败所需次数', src: '3' })].join(''), o)
+export const toolDrawer = (o = {}) => drawer('手改：工具熟练', '工具熟练在这里；工具物品在背包的「工具」分组。', [
+  srow({ name: '书法家工具', ab: '智力', auto: 2, now: 2, src: '背景·学者', n: o.nRow }), srow({ name: '盗贼工具', ab: '敏捷', auto: 0, now: 2, src: '', man: true })].join(''), o)
+export const saveDrawer = (o = {}) => drawer('手改：豁免', '熟练级别与加值；专注豁免也在这里。', [
+  srow({ name: '力量', ab: '', auto: 0, now: 0, src: '—', n: o.nRow }), srow({ name: '敏捷', ab: '', auto: 0, now: 0, src: '—' }), srow({ name: '体质', ab: '', auto: 0, now: 0, src: '—' }),
+  srow({ name: '智力', ab: '', auto: 2, now: 2, src: '职业·法师' }), srow({ name: '感知', ab: '', auto: 2, now: 2, src: '职业·法师' }), srow({ name: '魅力', ab: '', auto: 0, now: 0, src: '—' }),
+  field({ name: '专注豁免加值', src: '+4' })].join(''), o)
+export const encDrawer = (o = {}) => drawer('手改：负重与调谐', '', [field({ name: '负重上限', src: '120 磅', hint: '来源', n: o.nRow }), field({ name: '调谐上限', src: '3' })].join(''), o)
+export const slotDrawer = (o = {}) => drawer('手改：法术位', '每一环的上限；已用的格子在法术页点圆点改。', [
+  field({ name: '1 环', src: '4', n: o.nRow }), field({ name: '2 环', src: '2', manual: true, val: 3 }), field({ name: '3 环', src: '0' })].join(''), o)
+export const spDrawer = (o = {}) => drawer('手改：施法摘要', '', [field({ name: '施法属性', src: '智力', n: o.nRow }), field({ name: '法术豁免 DC', src: '14' }), field({ name: '法术攻击加值', src: '+6' }), field({ name: '可准备数', src: '7' })].join(''), o)
+export const usesDrawer = (o = {}) => drawer('手改：次数与恢复', '奥术恢复', [field({ name: '最大次数', src: '1', n: o.nRow }), field({ name: '恢复方式', src: '长休' })].join(''), o)
+export const feaDrawer = (o = {}) => drawer('编辑：特征', '只有这两项（其余写进「外貌」文本）。', [field({ name: '性别', src: '男', n: o.nRow }), field({ name: '信仰', src: '密斯特拉' })].join(''), o)

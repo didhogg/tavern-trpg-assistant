@@ -4,7 +4,7 @@ import { row, card, tabs, tools, pickPage, pickModal, foot } from '../lib/picker
 import { wizard } from '../lib/wizard.mjs'
 import { by } from '../lib/frame.mjs'
 
-const G = '新建 · 分步建卡（每一步）'
+const G = '单元 0 · 人物列表（主界面 + 子界面）'
 const behind = (tab = 0) => listPage({ tab, body: `${memSec('随行', 1)}${mem({ name: '盖尔', en: 'Gale', cls: '法师', lv: '3 级', race: '人类', hp: [12, 18], temp: 3, ac: 12, pp: 11 })}` })
 const W = (cur, o = {}) => () => ({ noFab: true, content: behind(), overlay: wizard(cur, o) })
 const KERNEL = '步骤标签来自规则数据 kernel.build（种族 · 背景 · 职业 · 子职业 · 专长 · 可选特性）；每件条目展开哪些选择由内核 buildSteps 列出（生命值 / 熟练与技能 / 属性提升 / 给物品 / 选物品 / 子职业 / 体型），界面不写死'

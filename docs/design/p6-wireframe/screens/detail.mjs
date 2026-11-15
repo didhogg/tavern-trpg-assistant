@@ -6,10 +6,11 @@ import { avatarModal } from '../lib/avatar.mjs'
 import { btn, icon, mdl, mh, seg, P } from '../lib/parts.mjs'
 import { by } from '../lib/frame.mjs'
 
-const G = '详情（人物）· 每个分页'
+const U = (n, t) => `单元 ${n} · ${t}（主界面 + 子界面）`
+const G = U(1, '角色表外壳')
 const pg = (o) => () => ({ noFab: true, content: detail(o) })
-const tabScreen = (id, tab, title, goal, primary, laws, notes, pins = {}) => ({
-  id, group: G, title, flow: '游戏中查看 / 点检定', goal, primary, patterns: 'Tidy5e 分页：工具行（搜索 + 筛选）+ 彩色分组表', laws, notes,
+const tabScreen = (id, group, tab, title, goal, primary, laws, notes, pins = {}) => ({
+  id, group, title, flow: '游戏中查看 / 点检定', goal, primary, patterns: 'Tidy5e 分页：工具行（搜索 + 筛选）+ 彩色分组表', laws, notes,
   diff: '全屏：页头 + 分页同屏；960 窗口和窄屏：已往下滚到分页（分页条吸在顶上），页头滚出去，底部固定条一直在。',
   board: by({ full: pg({ tab, ...pins }), '1440': pg({ tab, tabsOnly: true }), '390': pg({ tab, tabsOnly: true }) },
     { full: '全屏 1440：整页', '1440': '960 窗口：已滚到分页', '390': '窄屏：已滚到分页' }),
@@ -17,7 +18,7 @@ const tabScreen = (id, tab, title, goal, primary, laws, notes, pins = {}) => ({
 
 export const screens = [
   {
-    id: 'p6-6-detail', group: G, title: '角色表整页 · 行动（逐栏对照 Tidy5e CharacterSheet.svelte）', flow: '战斗中扣血 · 点检定 · 施法（R14 R15 R17）',
+    id: 'p6-6-detail', group: G, title: '主界面 · 角色表外壳整页 · 行动（逐栏对照 Tidy5e CharacterSheet.svelte）', flow: '战斗中扣血 · 点检定 · 施法（R14 R15 R17）',
     goal: '进来一眼看全：生命、AC / 先攻、六属性与豁免、等级与熟练、速度与感官；下面按分页进各块', primary: '点生命大数字（就地改）；行动表里的命中 / 伤害（点一下掷）',
     patterns: 'Tidy5e 角色表：页头（名字行 / 副标题 / 等级块 / 战斗块 + 属性块 / 生命区）+ 标签行 + 可折叠侧栏 + 分页',
     laws: 'Jakob（和 Tidy5e / Foundry 用户的习惯一致）· Miller（页头 5 块）· von Restorff（生命最大）· Fitts（✎ 固定在每块右上角，点击区 ≥44）· Tesler（所有数值由内核算）',
@@ -39,35 +40,44 @@ export const screens = [
       '390': pg({}),
     }, { full: '全屏 1440', '1440': '960 窗口（第一屏）', '390': '窄屏（第一屏）' }),
   },
-  tabScreen('p6-7-stats', 'attr', '属性（T:CharacterAttributesTab 两列：技能卡 + 工具熟练卡 ｜ 豁免卡 + 特质卡）', '查技能、豁免、工具熟练、特质；点加值直接掷', '带加值的数（点 = 掷骰）',
+  tabScreen('p6-6b-action', U(2, '行动'), 'action', '主界面 · 行动（T:CharacterSheetTab：操作栏 + 按动作类型分组的表）', '战斗里找到能做的事并点掷', '命中 / 伤害（点一下掷）',
+    'Jakob · Fitts · Hick',
+    [[1, '操作栏', '搜索 + [A 动作][BA 附赠][R 反应] + 筛选 / 排序 / 展开 / 配置列', 'T:ItemsActionBar'], [2, '分组表', '动作 · 附赠 · 反应 · 其他；列 次数 · 命中/DC · 伤害/效果（列名取自截图，可配置）', 'T:CharacterSheetTab'], [3, '脚注', '[按行动类型 ▾] 切换分组方式', 'T:footer']],
+    { nSec: 1, nFilt: 2 }),
+  tabScreen('p6-7-stats', U(3, '属性'), 'attr', '主界面 · 属性（T:CharacterAttributesTab 两列：技能卡 + 工具熟练卡 ｜ 豁免卡 + 特质卡）', '查技能、豁免、工具熟练、特质；点加值直接掷', '带加值的数（点 = 掷骰）',
     'Jakob（Tidy5e 两列）· Miller（四张卡四类）· Proximity（卡头 + 右上 ✎ 统一）',
     [[1, '技能卡', '熟练点（空 / 半 / 实心 / 专精）· 属性缩写 · 名称 · 加值（点 = 掷）· 被动；侧栏打开时和侧栏的技能卡重复，这是 Tidy5e 的做法', 'T:SkillsCard / SkillsCardHeader · R15 · R22'], [2, '工具熟练卡', '锤子图标卡头，**工具熟练**（不是工具物品；工具物品在背包「工具」分组）；与技能卡同样式、紧接其下', 'T:ToolsCard'], [3, '豁免卡', '六项豁免（熟练点 + 加值）+ 专注；脚注写职业豁免', 'T:SavingThrowsCard（ClassSaves / concentration）'], [4, '特质卡', '职业 · 种族 · 背景 · 速度 · 感官 · 语言 · 伤害抗性 / 免疫 · 状态免疫 · 护甲 / 武器熟练 · 特殊特质', 'T:CharacterTraits / CharacterTraitPills']],
     { nSk: 1, nPenTr: 3, nTrait: 4 }),
-  tabScreen('p6-8-bag', 'bag', '背包（T:ActorInventoryTab：操作栏 + 负重 + 按物品类型分组 + 脚注）', '数量随手加减、装备开关、用药水', '数量 [−][n][＋]',
+  tabScreen('p6-8-bag', U(4, '背包'), 'bag', '主界面 · 背包（T:ActorInventoryTab：操作栏 + 负重 + 按物品类型分组 + 脚注）', '数量随手加减、装备开关、用药水', '数量 [−][n][＋]',
     'Jakob · Fitts（步进按钮）· Tesler（负重由内核算）',
     [[1, '操作栏', '搜索 + [已装备][可使用] + 筛选 / 排序 / 展开 / 配置 + [加物品]（从库选）', 'T:InventoryActionBar → ItemsActionBar'], [2, '负重行', '负重条 + 数值；卡头右上 ✎ 改负重上限', 'T:CharacterEncumbranceRow · R22'], [3, '分组', '武器 · 装备 · 消耗品 · **工具** · 容器 · 杂物（按物品类型，可加自定义分组）；容器可展开、里面缩进；**钱币就是物品，没有钱币栏**', 'T:features/sections/Inventory.ts · R18'], [4, '脚注', '调谐 0 / 3', 'T:ActorInventoryFooter']],
     { nAdd: 1, nPenEnc: 2, nTool: 3, nBox: 4 }),
-  tabScreen('p6-9-spell', 'spell', '法术（T:ActorSpellbookTab：操作栏 + 按环分组，组头带法术位 + 脚注施法摘要）', '施法、看法术位、准备法术', '法术位圆点 · 带框的命中 / 效果',
+  tabScreen('p6-9-spell', U(5, '法术'), 'spell', '主界面 · 法术（T:ActorSpellbookTab：操作栏 + 按环分组，组头带法术位 + 脚注施法摘要）', '施法、看法术位、准备法术', '法术位圆点 · 带框的命中 / 效果',
     'Jakob（法术位就在这一环的组头上）· Tesler',
     [[1, '组头法术位', '「1 环 ●●○○ 2/4 ✎」：点圆点用一格 / 还一格；✎ 改法术位', 'T:SpellSlotManagementQuadrone / SpellSlotTracker · R17'], [2, '每行', '准备圆点（戏法没有）· 名字与学派 · 施放 · 距离 · 命中/DC · 效果（点 = 掷）· ⋯', 'T:SpellTable · R15'], [3, '施法摘要卡', '属性 · 豁免 DC · 攻击 · 已准备 · 专注；卡头右上 ✎；脚注 [加法术]', 'T:SpellcastingClassSummaryCard / ActorSpellbookFooter']],
     { nSlotPen: 1, nLv: 2, nPenSp: 3, nCast: 4 }),
-  tabScreen('p6-10-feat', 'feat', '特性（T:CharacterFeaturesTab：操作栏 + 按来源分组的特性表）', '看有什么能力、还剩几次', '次数圆点',
+  tabScreen('p6-10-feat', U(6, '特性'), 'feat', '主界面 · 特性（T:CharacterFeaturesTab：操作栏 + 按来源分组的特性表）', '看有什么能力、还剩几次', '次数圆点',
     'Jakob · Miller',
     [[1, '分组', '按来源：职业 · 种族 · 背景（专长）；每组一张表，列 次数 · 恢复', 'T:FeatureTables / CharacterSheetSections（按来源分组；具体类别名未逐项核对）'], [2, '资料不可用', '这本书没开或卸载了：名字照常显示，下面红字「资料不可用」，人物其余照常', 'R33']],
     { nCls: 1, nGone: 2 }),
-  tabScreen('p6-11-effect', 'effect', '效果（T:ActorEffectsTab：状态开关 + 效果表）', '开关状态、看正在生效的效果、自定义效果', '状态按钮（点一下开 / 关）',
+  tabScreen('p6-11-effect', U(7, '效果'), 'effect', '主界面 · 效果（T:ActorEffectsTab：状态开关 + 效果表）', '开关状态、看正在生效的效果、自定义效果', '状态按钮（点一下开 / 关）',
     'Jakob · Hick · Doherty',
     [[1, '状态', '一排状态开关（含力竭步进），点一下开 / 关，立刻生效、可撤销；内核认识的状态自动影响数值和掷骰，不认识的只提醒', 'T:ActorConditionsQuadrone · R17 R20'], [2, '效果表', '生效中 / 被动 / 停用；列 来源 · 持续 · 开关；[＋ 新建效果] 用自制数据里已有的效果表单', 'T:EffectsTables（分组名未逐项核对）· R21']],
     { nCond: 1, nNew: 2 }),
   {
-    id: 'p6-12-bio-note', group: G, title: '背景 · 日志（T:CharacterBiographyTab / ActorJournalTab）', flow: '写设定 · 记日志', goal: '人物设定一页看完；日志按页记', primary: '各块的 ✎',
-    patterns: 'Tidy5e Biography（特征字段 + 性格 + 外貌 / 传记文本）/ Journal（页列表 + 正文）', laws: 'Miller（字段格 + 文本卡分开）',
-    notes: [[1, '特征', '阵营 · 性别 · 年龄 · 身高 · 体重 · 眼睛 · 皮肤 · 头发 · 信仰（9 项，来自源码 system.details.*）', 'T:CharacterBiographyTab'], [2, '文本', '性格特点 / 理想 / 羁绊 / 缺点（四项）+ 外貌 + 传记；**给 AI 的说明**是你的需求；平时只显示有内容的，✎ 才显示全部', 'T:trait ideal bond flaw appearance biography · 需求'], [3, '日志', '左边页列表 + [新页]，右边正文，上一页 / 下一页', 'T:ActorJournalTab']],
-    board: by({ full: pg({ tab: 'bio', nFields: 1 }), '1440': pg({ tab: 'note', tabsOnly: true, nNotes: 3 }), '390': pg({ tab: 'bio', tabsOnly: true }) },
-      { full: '全屏：背景', '1440': '960 窗口：日志', '390': '窄屏：背景' }),
+    id: 'p6-12-bio', group: U(8, '背景'), title: '主界面 · 背景（T:CharacterBiographyTab）', flow: '写设定', goal: '人物设定一页看完', primary: '各块的 ✎',
+    patterns: 'Tidy5e Biography：外貌 + 传记文本卡 ｜ 性格 + 特征 + 备注', laws: 'Miller（文本卡与字段分开）· Jakob',
+    notes: [[1, '特征', '只有 性别、信仰（驾驶员 11-15 去掉年龄 / 眼睛 / 皮肤 / 头发）', 'T:CharacterBiographyTab · 驾驶员'], [2, '文本卡', '外貌 · 传记 · 性格特点 · 理想 · 羁绊 · 缺点；没内容的收成「＋ 添加」', 'T:trait ideal bond flaw appearance biography'], [3, '备注', '玩家自己的备忘（原「给 AI 的说明」，已改名）', '驾驶员需求']],
+    board: by({ full: pg({ tab: 'bio', nFields: 1 }), '1440': pg({ tab: 'bio', tabsOnly: true }), '390': pg({ tab: 'bio', tabsOnly: true }) }, { full: '全屏', '1440': '960 窗口', '390': '窄屏' }),
   },
   {
-    id: 'p6-13-hp-undo', group: G, title: '生命原地改 · 设定草稿', flow: '流程 C（P6-5）· F7 / F5（R17 R23 R24）',
+    id: 'p6-12b-note', group: U(9, '日志'), title: '主界面 · 日志（T:ActorJournalTab）', flow: '记日志', goal: '按页记跑团日志', primary: '[新页]',
+    patterns: '页列表 + 正文', laws: 'Jakob · Miller',
+    notes: [[1, '页列表', '左边页列表 + [新页]', 'T:ActorJournalTab'], [2, '正文', '右边正文，上一页 / 下一页', 'T:ActorJournalTab']],
+    board: by({ full: pg({ tab: 'note', nNotes: 1 }), '1440': pg({ tab: 'note', tabsOnly: true }), '390': pg({ tab: 'note', tabsOnly: true }) }, { full: '全屏', '1440': '960 窗口', '390': '窄屏' }),
+  },
+  {
+    id: 'p6-13-hp-undo', group: G, title: '子界面 · 生命原地改 · 设定草稿', flow: '流程 C（P6-5）· F7 / F5（R17 R23 R24）',
     goal: '战斗中改血最快；设定改动不会白改', primary: '点生命大数字（原地变输入）', patterns: 'In-place editing · Preview · Multilevel Undo',
     laws: 'Postel（−7 / +5 / =12 / 全角 都认）· Doherty（实时预览）· Safe Exploration · von Restorff（生命数字最大）',
     diff: '1440：正在原地改当前生命；900：有设定草稿（[保存修改]）；390：窄屏原地改。',
@@ -84,7 +94,7 @@ export const screens = [
     }, { '1440': '960：正在原地改当前生命（输入 −7）', '900': '868：有设定草稿（标签行右端 [保存修改]）', '390': '窄屏：原地改生命', mid: '600：0 血 → 死亡豁免展开（Tidy5e DeathSavesOverlay）' }),
   },
   {
-    id: 'p6-13b-override', group: G, title: '手改小抽屉（一个自动模块一个）：生命 · 属性 · 战斗 · 等级', flow: '流程 A / B / E（P6-5）',
+    id: 'p6-13b-override', group: G, title: '子界面 · 手改小抽屉（一个自动模块一个）：生命 · 属性 · 战斗 · 等级', flow: '流程 A / B / E（P6-5）',
     goal: '外面全是只读的普通文字；点模块角上的 ✎ 进这个模块自己的小抽屉，看自动值、手改、回到自动', primary: '[应用]', patterns: 'Small modal per module（宽 480，高度跟内容走）· [自动 | 手动] 二选一 · Preview',
     laws: 'Tesler（自动值与来源一直写在项目名下面）· Safe Exploration（选「自动」就回去、可撤销）· Hick（一个抽屉只管一个模块）· Postel',
     diff: '宽：居中小窗；窄屏：底部铺满。高度跟内容走，内容多了在窗口里滚。',
@@ -98,7 +108,7 @@ export const screens = [
       { '1440': '960：生命抽屉（最大生命已手改 18 → 20）', '900': '868：属性抽屉（智力展开，最终值已手改）', '390': '窄屏：战斗数值抽屉（AC 已手改）', mid: '600：等级抽屉' }),
   },
   {
-    id: 'p6-13e-skill-trait', group: G, title: '技能抽屉 · 特质抽屉（外面只读，进抽屉才改）', flow: '流程 A / H（P6-5）',
+    id: 'p6-13e-skill-trait', group: U(3, '属性'), title: '子界面 · 技能抽屉 · 特质抽屉（外面只读，进抽屉才改）', flow: '流程 A / H（P6-5）',
     goal: '技能的熟练项、特质里的语言 / 抗性 / 熟练：平时在外面显示着不改；要改点 ✎ 进抽屉', primary: '[应用]', patterns: 'Small modal per module · Segmented（无 / 半 / 熟 / 专）· Chips with source',
     laws: 'Miller（来源标签分块）· Safe Exploration（删掉的自动项收进「已删除」可恢复）· Jakob',
     notes: [
@@ -111,7 +121,7 @@ export const screens = [
       { '1440': '960：技能抽屉（察觉手改为专精、运动手改为无）', '900': '868：特质抽屉（手动添加 + 已删除可恢复）', '390': '窄屏：技能抽屉' }),
   },
   {
-    id: 'p6-13c-override-state', group: G, title: '已手改的数：只有一条金线（没有悬浮提示）', flow: '流程 B（P6-5）',
+    id: 'p6-13c-override-state', group: G, title: '子界面 · 已手改的数：只有一条金线（没有悬浮提示）', flow: '流程 B（P6-5）',
     goal: '一眼看出哪些数被手改过；想看 / 想改回，点 ✎ 进那个模块的抽屉', primary: '—', patterns: 'Inline marker（无悬停、无点击）', laws: 'von Restorff（只有手改过的数有金线）',
     notes: [
       [1, '金线', '被手改的自动值（最大生命、AC、智力…）数字下面一条金色细线；**没有悬浮窗、没有点击气泡**；其余自动值都是普通文字', 'R22 · 驾驶员 11-15'],
@@ -120,7 +130,7 @@ export const screens = [
     board: by({ full: pg({ man: ['hpmax', 'ac', 'int'] }), '1440': pg({ man: ['hpmax', 'ac', 'int'] }), '390': pg({ man: ['hpmax', 'ac', 'int'] }) }, { full: '全屏：金线（最大生命、AC、智力）', '1440': '960：金线', '390': '窄屏：金线' }),
   },
   {
-    id: 'p6-13d-avatar', group: G, title: '人物头像：填链接 · 直接上传', flow: '流程 G（P6-5）· 点头像换头像',
+    id: 'p6-13d-avatar', group: G, title: '子界面 · 人物头像：填链接 · 直接上传', flow: '流程 G（P6-5）· 点头像换头像',
     goal: '换头像：贴图片链接，或直接上传一张图', primary: '[使用这张]', patterns: 'Segmented（链接 / 上传）· Drop zone · Preview',
     laws: 'Hick（两种方式并排，一次一个）· Postel（链接、拖拽、选文件都认）· Doherty（选好立刻预览）',
     notes: [
@@ -133,7 +143,7 @@ export const screens = [
       { '1440': '960：图片链接（已填，右边预览）', '900': '868：上传图片（已选好文件）', '390': '窄屏：上传图片（还没选）' }),
   },
   {
-    id: 'p6-14-history', group: G, title: '改动记录 · 撤销到这里', flow: '点错了找回（R25）', goal: '找到那一条，看清会撤销什么，再退回', primary: '[撤销到这里]（先预览）',
+    id: 'p6-14-history', group: G, title: '子界面 · 改动记录 · 撤销到这里', flow: '点错了找回（R25）', goal: '找到那一条，看清会撤销什么，再退回', primary: '[撤销到这里]（先预览）',
     patterns: 'Command History · Multilevel Undo · Preview', laws: 'Doherty（先预览）· Hick（每行一个动作）',
     notes: [[1, '记录表', '谁 · 改了什么 · 旧 → 新 · 时间；可筛「只看盖尔 / 全部」；随存档保存', 'R25 · G22'], [2, '撤销到这里', '会连带撤销之后的改动 → 先出预览「会撤销 4 条」；能不能只撤一个人要查后端', 'R24 · 候选 G27']],
     board: by({
