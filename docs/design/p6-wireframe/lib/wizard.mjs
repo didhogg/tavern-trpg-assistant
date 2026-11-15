@@ -3,6 +3,7 @@
 // 步骤照内核：规则数据 kernel.build（种族 · 背景 · 职业 · 子职业 · 专长 · 可选特性）；每件条目带来的选择由内核 buildSteps 列出，界面只渲染。
 // 示例人物「伊娃」= 半精灵 · 侍僧 · 牧师 1 级 · 生命领域（PHB 2014）；数值与选项都是占位示例。
 import { icon, btn, filt, P, sec, it, tr, c, tbl, step } from './parts.mjs'
+import { avatarField } from './avatar.mjs'
 import { row, card, tools, pickPage, pickModal, foot, pill } from './picker.mjs'
 
 export const STEPS = [['name', '名字'], ['race', '种族'], ['bg', '背景'], ['class', '职业'], ['sub', '子职业'], ['feat', '专长'], ['opt', '可选特性'], ['ab', '属性值'], ['eq', '装备'], ['done', '完成']]
@@ -34,7 +35,7 @@ const one = (cur, o, bodyHtml, extra = {}) => pickPage({ body: bodyHtml, top: to
 export const steps = {
   name: (o = {}) => one('name', o, `<div class="wz-form"><div class="pk-p">${P(o.nHead)}只有名字必填；后面每一步都能跳过，跳过的放进「待填」清单，之后在人物页补。</div>
 <div class="trpg-field"><label class="trpg-field__label">名字 <span class="sh-warn">*</span></label><div class="trpg-input" style="border-color:var(--primary)">伊娃</div></div>
-<div class="trpg-field"><label class="trpg-field__label">头像（图片链接，可不填）</label><div class="trpg-input"><span class="sh-3">https://…</span></div></div>
+${avatarField(o.nAvatar)}
 <div class="trpg-field"><label class="trpg-field__label">放进</label><div style="display:flex;gap:6px">${filt(['队伍', 'NPC', '敌人'], 0)}</div><p class="trpg-hint">默认是你打开建卡时所在的分类，以后可以换。</p></div></div>`),
 
   race: (o = {}) => pick('race', o, { count: 5, q: '搜 种族', list: L([

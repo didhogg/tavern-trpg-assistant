@@ -2,6 +2,7 @@
 // 需求：P6-2 R14–R25、R33。生命 = 原地三个框（驾驶员 2026-11-15）。
 import { detail } from '../lib/sheet.mjs'
 import { ovModal } from '../lib/override.mjs'
+import { avatarModal } from '../lib/avatar.mjs'
 import { btn, icon, mdl, mh, seg, P } from '../lib/parts.mjs'
 import { by } from '../lib/frame.mjs'
 
@@ -105,6 +106,19 @@ export const screens = [
     ],
     board: by({ full: pg({ man: ['hpmax', 'ac', 'int'], pop: 'ac', nPenCb: 3 }), '1440': pg({ man: ['hpmax', 'ac', 'int'] }), '390': pg({ man: ['hpmax', 'ac', 'int'] }) },
       { full: '全屏：点开 AC 的小气泡', '1440': '960：金线（最大生命、AC、智力）', '390': '窄屏：金线' }),
+  },
+  {
+    id: 'p6-13d-avatar', group: G, title: '人物头像：填链接 · 直接上传', flow: '流程 G（P6-5）· 点头像换头像',
+    goal: '换头像：贴图片链接，或直接上传一张图', primary: '[使用这张]', patterns: 'Segmented（链接 / 上传）· Drop zone · Preview',
+    laws: 'Hick（两种方式并排，一次一个）· Postel（链接、拖拽、选文件都认）· Doherty（选好立刻预览）',
+    notes: [
+      [1, '入口', '点角色表页头的头像方框（右下角有小图标），或建卡「名字」步里的 [填图片链接] / [上传图片]，都打开同一个「人物头像」窗口', 'R14'],
+      [2, '图片链接', '贴一个图片网址，右边方框预览（居中裁切成方的）；加载不出来在这一行下面写原因，输入保留', 'Postel'],
+      [3, '上传图片', '拖图片到虚线框，或 [选择文件…]；选好后立刻预览、显示文件名与大小；**上传后存在哪、有没有大小限制要查后端（候选 G34）**', '候选 G34'],
+      [4, '底部', '[移除头像]（回到默认人像）· [取消] · [使用这张]；[使用这张] 算一条改动记录，可撤销', 'R25'],
+    ],
+    board: by({ '1440': () => ({ noFab: true, content: detail({ nAv: 1 }), overlay: avatarModal(0, { nTabs: 2, nUrl: 3, nUse: 4, url: 'https://example.com/gale.png' }) }), '900': () => ({ noFab: true, content: detail({}), overlay: avatarModal(1, { nDrop: 3, file: true }) }), '390': () => ({ noFab: true, content: detail({}), overlay: avatarModal(1, {}) }) },
+      { '1440': '960：图片链接（已填，右边预览）', '900': '868：上传图片（已选好文件）', '390': '窄屏：上传图片（还没选）' }),
   },
   {
     id: 'p6-14-history', group: G, title: '改动记录 · 撤销到这里', flow: '点错了找回（R25）', goal: '找到那一条，看清会撤销什么，再退回', primary: '[撤销到这里]（先预览）',

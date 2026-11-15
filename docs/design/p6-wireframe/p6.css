@@ -359,3 +359,16 @@
 .ov-in[data-on='true'] { color: var(--text); font-weight: var(--fw-semibold); border-color: var(--accent); }
 .ov-foot { display: flex; align-items: center; gap: 8px; padding: 8px var(--sp-4); border-top: 1px solid var(--line); background: var(--bg); }
 .ov-note { margin: 0 var(--sp-4) var(--sp-3); font-size: var(--fs-sm); color: var(--text2); line-height: var(--lh-body); }
+
+/* ===== 头像：方框；可填链接，也可上传（P6-5 流程 G） ===== */
+.sh-pic { position: relative; padding: 0; cursor: pointer; font: inherit; }
+.sh-pic__edit { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--text2); display: grid; place-items: center; }
+.av-pop { display: grid; gap: 12px; padding: var(--sp-4) var(--sp-5) var(--sp-4); }
+.av-seg { display: flex; }
+.av-row { display: flex; gap: 12px; align-items: center; }
+.av-prev { flex: none; width: 96px; height: 96px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg-side); color: var(--text2); display: grid; place-items: center; overflow: hidden; }
+.av-prev__img { display: grid; place-items: center; width: 100%; height: 100%; background: var(--primary-tint); }
+.av-side { display: grid; gap: 4px; align-content: center; font-size: var(--fs-sm); }
+.av-drop { display: grid; justify-items: center; gap: 6px; padding: 22px 16px; border: 1.5px dashed var(--line-ctrl); border-radius: var(--r-md); background: var(--bg-sunk); text-align: center; color: var(--text2); }
+.av-drop b { color: var(--text); font-size: var(--fs-lg); }
+.av-act { display: flex; align-items: center; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; }
