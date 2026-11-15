@@ -52,7 +52,7 @@ ${avatarField(o.nAvatar)}
   bg: (o = {}) => pick('bg', o, { count: 4, q: '搜 背景', list: L([
     { ch: '侍', name: '侍僧', en: 'Acolyte', sub: '洞悉 宗教　语言 1', src: 'PHB' }, { ch: '学', name: '学者', en: 'Sage', sub: '奥秘 历史　语言 2', src: 'PHB' },
     { ch: '士', name: '士兵', en: 'Soldier', sub: '运动 威吓', src: 'PHB' }, { ch: '罪', name: '罪犯', en: 'Criminal', sub: '欺瞒 隐匿', src: 'PHB' }], 0),
-    c: { ch: '侍', name: '侍僧', en: 'Acolyte', sub: '玩家手册 · 背景', tags: ['特性：信仰庇护'], src: 'PHB', kv: [['技能', '洞悉、宗教'], ['语言', '任选（数据里是 1 种）'], ['起始物品', '圣徽、祈祷书、5 根香、法衣、普通衣服、金币 ×15（在「装备」步显示）']],
+    c: { ch: '侍', name: '侍僧', en: 'Acolyte', sub: '玩家手册 · 背景', tags: ['特性：信仰庇护'], src: 'PHB', kv: [['技能', '洞悉、宗教'], ['语言', '任选'], ['起始物品', '圣徽、祈祷书、5 根香、法衣、普通衣服、金币 ×15（在「装备」步显示）']],
       extra: `${ch('技能熟练', '', opts([['洞悉', 1], ['宗教', 1]]), { auto: true })}${ch('语言（选 1，共 17 种可选）', '已选好', opts([['天界语', 1], ['矮人语'], ['龙语'], ['巨人语'], ['…']]))}` } }),
 
   class: (o = {}) => pick('class', o, { count: 5, q: '搜 职业', list: L([
