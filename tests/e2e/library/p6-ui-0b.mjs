@@ -36,7 +36,7 @@ try {
     const items = ['race', 'background', 'class'].map((k) => plan[k].ref)
     await be.kernel.enter(owner)
     const a = await be.people.build(owner, { name: '盖尔', items }, { category: 'party', tags: ['学者'] })
-    const b = await be.people.build(owner, { name: '地精 1', items }, { category: 'enemy' })
+    const b = await be.people.build(owner, { name: '矿工', items }, { category: 'enemy' })
     return { a: a.built.status, b: b.built.status, n: b.kernel?.actors.length }
   }, pinia)
   check('真实建卡两个人', made.a === 'complete' && made.b === 'complete' && made.n === 2, JSON.stringify(made))
@@ -71,7 +71,7 @@ try {
   await page.locator('.trpg-modal__close').click(); await settle(page, 800)
   await page.getByTestId('pp-tab-enemy').click(); await settle(page, 400)
   const en = await page.locator('.pp-row .pp-name b').allTextContents()
-  check('敌人里有三个同名模板人物，且数值是官方算好的', en.filter((n) => /地精|Goblin/.test(n)).length >= 3 && !(await page.locator('.pp-hp__none').count()), en.join('|'))
+  check('敌人里是「地精 1 / 2 / 3」（库里的中文名按规则编号），数值是官方算好的', ['地精 1', '地精 2', '地精 3'].every((n) => en.includes(n)) && !en.some((n) => /Goblin/.test(n)) && !(await page.locator('.pp-hp__none').count()), en.join('|'))
   await shot('04-list-after')
   // 窄屏
   await page.setViewportSize({ width: 390, height: 780 }); await settle(page, 600)

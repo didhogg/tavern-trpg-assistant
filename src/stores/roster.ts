@@ -141,16 +141,13 @@ export const useRosterStore = defineStore('people', () => {
   const pin = (ids: string[], on: boolean) => run(`${on ? '已置顶' : '已取消置顶'}${nameOf(ids)}`, 1, async (k) => { await backend().adjust(k, ids, { pinned: on ? true : null }) })
   const trashed = (ids: string[], on: boolean) => run(`${on ? '已删除' : '已恢复'}${nameOf(ids)}${on ? '（可在回收站找回）' : ''}`, 1, async (k) => { await backend().adjust(k, ids, { trashed: on ? true : null }) })
 
-  /** 复制：一人一次（每次都是存档里的一步，撤销就退几步）；名字「盖尔 2」、「盖尔 3」…不和现有的重名。 */
+  /** 复制：一人一次（每次都是存档里的一步，撤销就退几步）；名字由后端按取名规则给（「盖尔 2」「地精 4」…）。 */
   async function copy(ids: string[]): Promise<boolean> {
-    const taken = new Set(rows.value.map((r) => r.name))
-    const fresh = (name: string): string => { let n = 2; while (taken.has(`${name} ${n}`)) n++; const out = `${name} ${n}`; taken.add(out); return out }
     let failed = ''
     let made = 0
     const ok = await run(`已复制${nameOf(ids)}`, ids.length, async (k) => {
       for (const id of ids) {
-        const src = rows.value.find((r) => r.id === id)
-        const out = await backend().copy(k, id, fresh(src?.name ?? '人物'))
+        const out = await backend().copy(k, id)
         if (out.kernel) made++
         else failed = (out.result as { error?: string }).error ?? '资料不全，建不出这个人物'
       }

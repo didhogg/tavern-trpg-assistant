@@ -194,7 +194,7 @@ export class KernelRuntime {
   }
 
   /** T5：批量建怪物/NPC/载具/物件；单个也走这里。换算结果由会话缓存读写。 */
-  async createActors(ownerKey: string, refs: EntryRef[]): Promise<{ status: string; actors?: any[]; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
+  async createActors(ownerKey: string, refs: EntryRef[]): Promise<{ status: string; actors?: any[]; names?: Array<string | null>; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, refs)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
@@ -208,11 +208,11 @@ export class KernelRuntime {
     if (result.status !== 'complete') return { status: result.status, error: result.error ?? `批量建状态：${result.status}`, detail: result }
     // 刚建好的样子就是重建基准（之后写进存档时按它拆差别）
     for (const row of result.result as Array<{ id: string; data: Record<string, unknown> }>) o.bases.set(row.id, row.data)
-    return { status: 'complete', actors: result.result, noEnglish: rows.noEnglish }
+    return { status: 'complete', actors: result.result, names: rows.rows.map((r) => r.name), noEnglish: rows.noEnglish }
   }
 
   /** 引用 → 【库】条目（中文战役交英文对照），给建卡/加条目/批量建共用。 */
-  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
+  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown; name: string | null }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
     const lib = await this.library(ownerKey)
     const existing = this.open.get(ownerKey)
     const opened = existing ? await existing : null
@@ -227,7 +227,9 @@ export class KernelRuntime {
       if (issue) return { status: 'error', error: issue, rows: [], noEnglish: [] }
       const k = await kernelEntryOf(this.deps.scoped, lib.codeSet, got.ref as EntryRef, got.item, got.version.altId, view)
       if (k.noEnglish) noEnglish.push(refs[i])
-      rows.push({ ref: refs[i], entry: k.entry })
+      // 显示名取库条目自己的名字（中文战役是中文）；交给结算小窗的是英文对照，建出来的人默认叫英文名
+      const shown = (got.item as { name?: unknown } | null)?.name
+      rows.push({ ref: refs[i], entry: k.entry, name: typeof shown === 'string' && shown.trim() ? shown : null })
     }
     return { status: 'complete', rows, noEnglish }
   }

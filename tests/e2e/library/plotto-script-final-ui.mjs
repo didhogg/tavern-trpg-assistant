@@ -1,0 +1,18 @@
+import { chromium } from 'playwright-core'
+const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true })
+const ctx = await browser.newContext({ viewport: { width: 1200, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] })
+const page = await ctx.newPage()
+const errors=[]
+page.on('pageerror', e => errors.push(String(e.stack ?? e)))
+page.on('console', m => { if(m.type()==='error') errors.push(m.text()) })
+await page.goto('file:///private/var/folders/sx/vrf05j997rnglkyfcrs635kc0000gn/T/opencode/plotto-ui-test/test.html')
+await page.waitForSelector('#plotto-generator-fab')
+await page.click('#plotto-generator-fab')
+await page.fill('#plotto-a','林默'); await page.fill('#plotto-b','苏晚'); await page.click('.plotto-advanced summary'); await page.fill('#plotto-others','A-2=阿七')
+await page.click('#plotto-generate')
+await page.waitForFunction(() => (document.querySelector('#plotto-output')?.value ?? '').length > 100)
+const out = await page.evaluate(() => ({text:document.querySelector('#plotto-output').value, status:document.querySelector('#plotto-status').textContent}))
+await page.click('#plotto-copy'); await page.waitForTimeout(100)
+const clip = await page.evaluate(() => navigator.clipboard.readText())
+console.log(JSON.stringify({len:out.text.length, hasA:out.text.includes('林默'), hasB:out.text.includes('苏晚'), status:out.status, clipStart:clip.slice(0,40), clipLen:clip.length, errors},null,1))
+await browser.close()

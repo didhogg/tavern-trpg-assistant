@@ -94,10 +94,10 @@ try {
     if (down.changes.length) await people.confirm(owner, down.changes)
     out.level = { up: up.outcome.status, lvUp, down: down.outcome.status, lvDown: (await src(id)).items.find((i) => i._id === cls._id).system.levels }
 
-    const cp = await people.copy(owner, id, 'P6 英雄（副本）')
+    const cp = await people.copy(owner, id) // 不给名字：后端按取名规则给
     const tpl = await people.fromTemplate(owner, monster.ref, 2, { category: 'enemy' })
     const roster = (await saves.read(owner)).actors
-    out.add = { copy: cp.result.status, copyId: cp.result.id, distinct: cp.result.id !== id, template: tpl.made.status, count: roster.length, cats: roster.map((a) => a.adjustments.category ?? null) }
+    out.add = { copy: cp.result.status, copyId: cp.result.id, distinct: cp.result.id !== id, template: tpl.made.status, count: roster.length, names: roster.map((a) => a.name), cats: roster.map((a) => a.adjustments.category ?? null) }
 
     await people.adjust(owner, [cp.result.id], { trashed: true })
     await people.purge(owner, [cp.result.id])
@@ -124,7 +124,7 @@ try {
     out.reload = { statuses: loaded.map((x) => x.status), secondLoad: again.map((x) => x.status), ids: rows.map((x) => x.id),
       sameHp: rows.every((x) => x.hp?.value === before[x.id]),
       hero: hero && { classes: hero.classes, race: hero.race, background: hero.background, level: hero.level, hp: hero.hp, ac: hero.ac, pp: hero.passivePerception, speed: hero.speed, cat: hero.adjustments.category, missing: hero.missing },
-      monster: rows.filter((x) => x.adjustments.category === 'enemy').map((x) => ({ name: x.name, cr: x.cr, type: x.type, loaded: x.loaded })),
+      monster: rows.filter((x) => x.adjustments.category === 'enemy').map((x) => ({ name: x.name, cr: x.cr, type: x.type, loaded: x.loaded })), allNames: rows.map((x) => x.name),
       writeAfterLoad: wrote.outcome.status === 'complete' && !!wrote.kernel }
     await rt2.close(owner)
     return out
@@ -143,6 +143,7 @@ try {
     cancel: r.cancel.frameAfterCancel === r.cancel.beforeRest,
     level: r.level.lvUp === r.level.lvDown + 1,
     add: r.add.copy === 'complete' && r.add.distinct && r.add.template === 'complete' && r.add.count === 4,
+    names: r.add.names.includes('P6 英雄 2') && r.add.names.filter((n) => / [12]$/.test(n) && n !== 'P6 英雄 2').length === 2 && JSON.stringify([...r.add.names].sort()) === JSON.stringify([...r.reload.allNames].sort()),
     purge: r.purge.afterPurge === 3 && !r.purge.frameHasCopyAfterPurge && r.purge.afterUndo === 4 && r.purge.frameBack,
     history: r.history.rows > 5,
     reload: r.reload.statuses.every((s) => s === 'complete') && r.reload.secondLoad.every((s) => s === 'complete') && new Set(r.reload.ids).size === r.reload.ids.length && r.reload.sameHp,

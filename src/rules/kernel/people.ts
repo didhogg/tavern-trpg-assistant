@@ -56,6 +56,27 @@ const get = (obj: unknown, path: string): unknown => path.split('.').reduce<unkn
 const itemsById = (data: Record<string, unknown> | null): Map<string, Record<string, unknown>> =>
   new Map(((data?.items ?? []) as Array<Record<string, unknown>>).map((i) => [String(i._id), i]))
 
+/**
+ * 加人时的取名规则（复制、从模板加入共用）：base 是名字，count 是要几个，taken 是存档里现有人物的名字。
+ *   没有同名、加 1 个 → 「地精」；没有同名、加 3 个 → 地精 1 / 2 / 3；
+ *   已有「盖尔」再来 1 个 → 盖尔 2；已有「地精 1~3」再加 2 个 → 地精 4 / 5。
+ */
+export function nextNames(base: string, count: number, taken: string[]): string[] {
+  const re = new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: (\\d+))?$`)
+  let max = 0
+  let plain = false
+  for (const name of taken) {
+    const m = re.exec(name)
+    if (!m) continue
+    if (m[1]) max = Math.max(max, Number(m[1])); else plain = true
+  }
+  if (!plain && !max && count === 1) return [base]
+  let n = Math.max(max, plain ? 1 : 0)
+  return Array.from({ length: count }, () => `${base} ${++n}`)
+}
+/** 复制时的名字底：「地精 1」复制出来是「地精 4」不是「地精 1 2」。 */
+const baseName = (name: string): string => name.replace(/ \d+$/, '')
+
 export class KernelPeople {
   constructor(private readonly deps: { runtime: KernelRuntime; saves: KernelSaveService }) {}
 
@@ -192,12 +213,20 @@ export class KernelPeople {
   async fromTemplate(ownerKey: string, ref: EntryRef, count = 1, adjustments: Record<string, unknown> = {}) {
     const made = await this.deps.runtime.createActors(ownerKey, Array.from({ length: Math.max(1, count) }, () => ref))
     if (made.status !== 'complete' || !made.actors) return { made, kernel: null }
-    return { made, kernel: await this.enroll(ownerKey, made.actors.map((a: { id: string }) => a.id), adjustments) }
+    const ids = made.actors.map((a: { id: string }) => a.id)
+    // 名字：库里的名字（中文战役是中文），按取名规则编号；建好后改名，基准仍是重建结果，名字作为差别写进存档（读档后还在）
+    const base = made.names?.[0]
+    if (base) {
+      const names = nextNames(base, ids.length, ((await this.deps.saves.read(ownerKey))?.actors ?? []).map((a) => a.name))
+      for (let i = 0; i < ids.length; i++) await this.call(ownerKey, 'renameActor', ids[i], names[i])
+    }
+    return { made, kernel: await this.enroll(ownerKey, ids, adjustments) }
   }
   /** 复制一个人：同样的引用 / 选择 / 状态差别，换新种子重建（读档时编号不会和原来的人撞）。 */
-  async copy(ownerKey: string, actorId: string, name: string) {
+  async copy(ownerKey: string, actorId: string, given?: string) {
     const source = await this.saved(ownerKey, actorId)
     if (!source) throw new Error(`存档里没有这个人物：${actorId}`)
+    const name = given ?? nextNames(baseName(source.name), 1, ((await this.deps.saves.read(ownerKey))?.actors ?? []).map((a) => a.name))[0]
     const copy = { ...source, name, seed: `${source.seed || source.name}~${crypto.randomUUID().slice(0, 8)}` }
     const result = await this.deps.runtime.rebuild(ownerKey, copy)
     if (result.status !== 'complete' || !result.id) return { result, kernel: null }
