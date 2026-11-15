@@ -11,14 +11,13 @@ const group = (t, body) => `<div class="ovd-grp"><h4>${t}</h4>${body}</div>`
 export const hpDrawer = (o = {}) => drawer('手改：生命', '当前生命、临时生命不在这里改——在角色表上点数字就地改。', group('', [
   field({ name: '最大生命', src: '18', hint: '来源', manual: true, val: 20, n: o.nRow }), field({ name: '生命骰数量', src: '3' }), field({ name: '生命骰面数', src: 'd6' })].join('')), o)
 export const lvDrawer = (o = {}) => drawer('手改：等级', '升级 / 降级请用 [等级管理]（会先预览）；这里是直接把显示的等级盖成别的数。', group('', [
-  field({ name: '等级', src: '3（法师 3）', n: o.nRow }), field({ name: '升级所需经验', src: '2,700' })].join('')), o)
+  field({ name: '等级', src: '3（法师 3）', n: o.nRow }), field({ name: '熟练加值', src: '+2' }), field({ name: '升级所需经验', src: '2,700' })].join('')), o)
 export const abDrawer = (o = {}) => drawer('手改：属性', '每个属性的最终值、调整值、豁免都可以覆盖；点「展开」看初始值与加成。', [
   field({ name: '力量', src: '8', hint: '展开', n: o.nRow }), field({ name: '敏捷', src: '14', hint: '展开' }), field({ name: '体质', src: '12', hint: '展开' }),
   group('智力（已展开）', [field({ name: '初始值（设定）', src: '16' }), field({ name: '加成', src: '+2（人类 +1、专长 +1）' }), field({ name: '最终值', src: '18', manual: true, val: 20 }), field({ name: '调整值', src: '+4', hint: '随最终值' }), field({ name: '豁免加值', src: '+6（调整 +4、熟练 +2）' })].join('')),
   field({ name: '感知', src: '12', hint: '展开' }), field({ name: '魅力', src: '10', hint: '展开' })].join(''), o)
-export const cbDrawer = (o = {}) => drawer('手改：战斗数值', '', [
-  field({ name: 'AC', src: '12', hint: '来源', manual: true, val: 14, n: o.nRow }), field({ name: '先攻', src: '+2' }), field({ name: '速度', src: '30 尺' }), field({ name: '熟练加值', src: '+2' }),
-  field({ name: '被动察觉', src: '11' }), field({ name: '被动洞悉', src: '13' }), field({ name: '被动调查', src: '16' }), field({ name: '法术豁免 DC', src: '14' }), field({ name: '法术攻击加值', src: '+6' }), field({ name: '负重上限', src: '120 磅' })].join(''), o)
+export const cbDrawer = (o = {}) => drawer('手改：战斗块', 'AC、先攻、专注豁免；速度、感官在特质卡，法术 DC 在施法摘要卡，各自的 ✎ 里改。', [
+  field({ name: 'AC', src: '12', hint: '来源', manual: true, val: 14, n: o.nRow }), field({ name: '先攻', src: '+2' }), field({ name: '专注豁免', src: '+4' })].join(''), o)
 
 /* 技能：外面只显示熟练点与加值，不改；进抽屉才改。每行 = 技能 · 来源 · 熟练级别 [无 | 半 | 熟 | 专] */
 const LV = ['无', '半', '熟', '专']
