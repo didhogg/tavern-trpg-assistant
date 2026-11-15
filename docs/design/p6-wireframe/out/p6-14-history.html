@@ -40,45 +40,50 @@ body { margin: 0; background: #f4f1ea; font-family: 'PingFang SC', system-ui, sa
 
 /* 自动生成：node docs/design/p4-design-system/palettes.mjs ；不要手改。配色 A（Gate 4 选定），出处与对比度见 docs/design/p4-design-system/ */
 .ds-root {
-  --surface: #fefdfc;
-  --bg: #fdf8f0;
-  --bg-side: #f8f0df;
-  --bg-sunk: #fdf8f0;
-  --bg-hover: #f0e9da;
-  --line: #e7ddca;
-  --text: #3e332e;
-  --text2: #815e46;
-  --line-ctrl: #ad7f58;
-  --side: #3e332e;
-  --side-ink: #fdf8f0;
-  --side-ink2: #dcbc9f;
-  --side-hover: #4d433e;
-  --side-active: #5d534f;
-  --side-line: #594f4b;
-  --primary: #b43118;
-  --primary-hover: #d13415;
-  --primary-pressed: #912d1b;
-  --primary-text: #b43118;
-  --primary-tint: #f8f0df;
-  --primary-tint-line: #e4d0b4;
-  --hero-bg: #3e332e;
-  --hero-ink: #fefdfc;
-  --hero-ink2: #e4cdb7;
-  --danger-text: #ce2c31;
-  --danger-bg: #fefdfc;
-  --danger-line: #e5484d;
-  --success-text: #2a7e3b;
-  --success-bg: #f5fbf5;
-  --warn-text: #4f3422;
-  --warn-bg: #fefbe9;
-  --text3: #ad7f58;
-  --accent: #e9c162;
-  --accent-text: #8b530c;
-  --on-accent: #4f3422;
+  --surface: #FFF9F0;
+  --bg: #FFF9F0;
+  --bg-side: #F4ECDD;
+  --bg-sunk: #FAF5EC;
+  --bg-hover: #E9DDCB;
+  --line: #DED3C2;
+  --text: #39291A;
+  --text2: #73634E;
+  --text3: #857C6E;
+  --line-ctrl: #DED3C2;
+  --side: #30342E;
+  --side-ink: #F8F2E7;
+  --side-ink2: #D0C9BB;
+  --side-hover: #4A5045;
+  --side-active: #8A3529;
+  --side-line: #555A4D;
+  --head-bg: #30342E;
+  --head-ink: #F8F2E7;
+  --head-ink2: #D0C9BB;
+  --head-line: #555A4D;
+  --head-hover: #4A5045;
+  --primary: #8A3529;
+  --primary-hover: #A44736;
+  --primary-pressed: #6D291F;
+  --primary-text: #8A3529;
+  --primary-tint: #EDE3D3;
+  --primary-tint-line: #DED3C2;
+  --hero-bg: #30342E;
+  --hero-ink: #F8F2E7;
+  --hero-ink2: #D0C9BB;
+  --danger-text: #A33B2B;
+  --danger-bg: #F4ECDD;
+  --danger-line: #A33B2B;
+  --success-text: #4F8050;
+  --success-bg: #F4ECDD;
+  --warn-text: #73634E;
+  --warn-bg: #EDE3D3;
+  --accent: #B89A54;
+  --accent-text: #B89A54;
+  --on-accent: #39291A;
+  --focus: #B89A54;
   --on-primary: #ffffff;
-  --disabled-bg: #fdf8f0;
-  --disabled-text: #ad7f58;
-  --focus: #b43118;
+  --disabled-bg: #FAF5EC;
+  --disabled-text: #857C6E;
 }
 @media (prefers-color-scheme: dark) {
   .ds-root {
@@ -106,6 +111,11 @@ body { margin: 0; background: #f4f1ea; font-family: 'PingFang SC', system-ui, sa
     --hero-bg: #1c1917;
     --hero-ink: #f2e1ca;
     --hero-ink2: #dbb594;
+    --head-bg: #3b332b;
+    --head-ink: #f2e1ca;
+    --head-ink2: #dbb594;
+    --head-line: #5b4d40;
+    --head-hover: #493e34;
     --danger-text: #ec5d5e;
     --danger-bg: #26221e;
     --danger-line: #e5484d;
@@ -332,14 +342,18 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .trpg-side :focus-visible, .trpg-tabs :focus-visible { box-shadow: 0 0 0 2px var(--side), 0 0 0 4px var(--side-ink2); }
 
 .trpg-main { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; background: var(--bg); }
-.trpg-head { flex: none; height: var(--head-h); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3) 0 var(--sp-5); background: var(--surface); border-bottom: var(--border) solid var(--line); cursor: grab; touch-action: none; user-select: none; }
+.trpg-head { flex: none; height: var(--head-h); display: flex; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-3) 0 var(--sp-5); background: var(--head-bg); color: var(--head-ink); border-bottom: var(--border) solid var(--head-line); cursor: grab; touch-action: none; user-select: none; }
 .trpg-window[data-fullscreen='true'] .trpg-head { cursor: default; }
 .trpg-window[data-layout='narrow'] .trpg-head { padding: 0 var(--sp-2) 0 var(--sp-4); }
 .trpg-head__title { flex: 1; min-width: 0; font-size: var(--fs-xl); font-weight: var(--fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trpg-head__chips { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
 .trpg-chip { max-width: 260px; cursor: pointer; }
 .trpg-chip__camp { font-weight: var(--fw-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.trpg-chip__save { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trpg-chip__save { color: var(--head-ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 页头（炭灰结构层）里的小控件跟页头颜色走 */
+.trpg-head .trpg-pill, .trpg-head .trpg-chip { background: transparent; color: var(--head-ink); border-color: var(--head-line); }
+.trpg-head .trpg-icon-btn { color: var(--head-ink); }
+.trpg-head .trpg-icon-btn:hover { background: var(--head-hover); color: var(--head-ink); }
 .trpg-body { position: relative; flex: 1; min-height: 0; display: flex; }
 .trpg-content { flex: 1; min-width: 0; overflow: auto; padding: var(--sp-4) var(--sp-5) 88px; outline: none; }
 .trpg-window[data-layout='narrow'] .trpg-content { padding: var(--sp-3) var(--sp-4) 88px; }
