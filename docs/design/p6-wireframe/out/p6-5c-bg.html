@@ -1220,30 +1220,34 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 /* 弹窗里的表：不要外边距（确认页自己排间距） */
 .trpg-modal__page > .sh-tbl, .trpg-confirm .sh-tbl { margin: 0 0 8px; }
 
-/* 配色参考 v4（驾驶员 2026-11-15）：在指定色（#F2ECE2 / #EFEADF / #8B4936 / #31352E）基础上：
-   ① 黄色不再加深：大片底色（页面底 / 表格行 / 卡片）比 v3 更亮 —— 页面底 #F8F0E1、行与卡片 #F9F2E5；
-   ② 次级栏目（分组条、生命块、建卡左栏、次级边栏）略深一档 #F0E5D4，和大片底拉开层次（对比度稍提高）；
-   ③ 红色再略提高饱和度并**全部统一成一个色号 #993D24**：主色、红字、危险红、低血红条、焦点环、选中竖线都是它（悬停 / 按下是它的明暗两档，只在鼠标按下时出现）；
-   ④ 细线、控件边框、次要文字比 v3 更深一点，整体对比度上调。
-   对比度（核算）：白字 / 红 6.89；红字 / 行底 6.30；红字 / 次级栏目 5.53；正文 / 行底 11.32；次要文字 / 次级栏目 5.54；控件边框 / 行底 3.80；
-   边栏浅字 / 边栏 11.04。只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 palettes.mjs）。 */
+/* 配色参考 v5（驾驶员 2026-11-15 给定方案：暖象牙白 × 陶土红棕 × 复古金棕 × 森林绿 × 深炭黑，取自 AI 生图的取样色）。
+   色号原样采用：大片底 #FBF7F0 · 卡片 / 表格行 #F7F3EB · 面板标题区 #F5EFE6 · 输入区 #F4F0E6 · 标签 / 次级栏目 #EEE6D8 · 分割线 #E9E2D6 ·
+   主按钮 #854535（悬停 #99513E，按下 #693023）· 文字 #39291A · 图标 #776650 · 成功 #4E6B3F · 生命条 #347D32 · 深色区（边栏）#1B1E1C。
+   我只做了两处调整（对比度不够）：①次要文字原色 #857C6E 在卡片上只有 3.72:1，正文级次要文字改用 #726759（4.99:1），原色保留给占位符 / 弱提示；
+   ②控件边框原方案没给，用图标色 #776650 与卡片色按 20% 混出 #91826F（3.37:1）。红色全部统一为 #854535（含低血红条、危险红、焦点环）。
+   对比度（核算）：白字 / 主按钮 7.24；主色字 / 卡片 6.54；正文 / 卡片 12.6；图标 / 卡片 4.99；绿生命条 / 卡片 4.60；边栏浅字 / 边栏 15.74。
+   只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 palettes.mjs）。 */
 .ds-root {
-  --bg: #F8F0E1; --surface: #F9F2E5; --bg-side: #F0E5D4; --bg-sunk: #F8F0E1; --bg-hover: #E7DBC6;
-  --line: #CAC2B3; --line-ctrl: #7D7D73;
-  --text: #31362D; --text2: #595B52; --text3: #79796F;
-  --side: #31362D; --side-ink: #F8F0E1; --side-ink2: #BAB6AA; --side-hover: #3D4138; --side-active: #4A4E44; --side-line: #43463D;
-  --primary: #993D24; --primary-hover: #A3503A; --primary-pressed: #7D321E; --primary-text: #993D24;
-  --danger-text: #993D24; --danger-line: #993D24; --focus: #993D24; --hp-low: #993D24; --mark: #993D24;
-  --primary-tint: #E8D6C4; --primary-tint-line: #D9B9A6;
-  --hero-bg: #31362D; --hero-ink: #F9F2E5; --hero-ink2: #BAB6AA;
-  --danger-bg: #F9F2E5; --disabled-bg: #F0E5D4; --disabled-text: #79796F;
+  --bg: #FBF7F0; --surface: #F7F3EB; --bg-side: #F5EFE6; --bg-sunk: #F4F0E6; --bg-hover: #EEE6D8;
+  --line: #E9E2D6; --line-ctrl: #91826F;
+  --text: #39291A; --text2: #726759; --text3: #857C6E;
+  --side: #1B1E1C; --side-ink: #FBF7F0; --side-ink2: #ADABA6; --side-hover: #2B2D2B; --side-active: #3A3C3A; --side-line: #313431;
+  --primary: #854535; --primary-hover: #99513E; --primary-pressed: #693023; --primary-text: #854535;
+  --danger-text: #854535; --danger-line: #854535; --focus: #854535; --hp-low: #854535; --mark: #854535;
+  --primary-tint: #E6D9CB; --primary-tint-line: #D4BEAF;
+  --success-text: #4E6B3F; --success-bg: #F7F3EB;
+  --accent: #806A48; --accent-text: #776650; --on-accent: #FBF7F0; --warn-text: #776650; --warn-bg: #EEE6D8;
+  --hero-bg: #1B1E1C; --hero-ink: #F7F3EB; --hero-ink2: #ADABA6;
+  --danger-bg: #F7F3EB; --disabled-bg: #F4F0E6; --disabled-text: #857C6E;
+  --hp-green: #347D32;
 }
-/* 静止状态下的红都用统一色号（插件原样式里有几处静止时用了"悬停色"，这里改回） */
 .trpg-brandmark { background: var(--primary); }
 .trpg-tab[aria-current='page'] { box-shadow: inset 0 3px 0 var(--primary); }
-/* 生命条：平时中性深色，低血（< 1/3）才用统一红——红色不再大面积出现，也不会和低血混淆 */
-.sh-bar > i { background: var(--text); }
+/* 生命条：森林绿；低血（< 1/3）红；临时生命金棕；经验 / 负重这类普通条用金棕 */
+.sh-bar > i { background: var(--hp-green); }
 .sh-bar > i[data-low='true'] { background: var(--danger-text); }
+.sh-bar > i[data-plain='true'] { background: var(--accent); }
+.sh-bar > u { background: var(--accent); opacity: .55; }
 </style></head><body><div class="wf-board ds-root" style="background:#f4f1ea">
 <h1>分步建卡 ③ 背景</h1><p class="wf-meta">新建 · 分步建卡（每一步） · 配色 A（P4 令牌）· 结构照 Tidy5e / gg-sheet-export / morii-vtt · 名字和数值是占位示例，真实显示由内核给</p>
 <div class="wf-row"><figure style="margin:0"><figcaption class="wf-cap">窄屏</figcaption><div class="wf-host" style="width:390px;height:844px"><div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div><section class="trpg-window" data-layout="narrow" data-fullscreen="true" style="top:36px;left:0;right:0;bottom:0"><div class="trpg-shell"><div class="trpg-main"><header class="trpg-head"><h1 class="trpg-head__title">人物</h1><div class="trpg-head__chips"><button class="trpg-icon-btn" type="button" aria-label="助手菜单"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="20" height="20"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></svg></button></div></header>
