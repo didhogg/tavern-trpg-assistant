@@ -12,6 +12,7 @@ import { createMonsterCommands } from './commands-monsters'
 import { createLevelCommands } from './commands-level'
 import { createAddCommands } from './commands-add'
 import { createBatchCommands } from './commands-batch'
+import { createOptionsCommands } from './commands-options'
 import { createSheetCommands } from './commands-sheet'
 import { settled } from './server'
 
@@ -137,6 +138,8 @@ const ADD_COMMANDS = createAddCommands(operate, actor)
 const BATCH_COMMANDS = createBatchCommands(operate)
 /** P6 人物页：读数、统一改动、检定登记表、删人。 */
 const SHEET_COMMANDS = createSheetCommands(operate, actor, rollSummary)
+/** P6 建卡选项：每件条目要玩家选的事（官方进阶算候选）。 */
+const OPTIONS_COMMANDS = createOptionsCommands(operate)
 
 // ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
 const AUTHOR_CLASSES = ['Config', 'ConfigConsts', 'VetoolsLinks', 'Vetools', 'SideDataInterfaces', 'Dnd5eUtil', 'UtilDamageTypes', 'ImplementationRegistryImportList',
@@ -176,6 +179,7 @@ export const KERNEL_COMMANDS = {
   ...ADD_COMMANDS,
   ...BATCH_COMMANDS,
   ...SHEET_COMMANDS,
+  ...OPTIONS_COMMANDS,
   /**
    * 掷一个骰式：同一串点数得到同一结果。kind 选 dnd5e 的掷骰类（d20 = D20Roll，damage = DamageRoll，basic = BasicRoll），
    * options 原样交给它（优势、精灵精准、半身人幸运、最低值、暴击等）；不给 kind 用 Foundry 的 Roll。

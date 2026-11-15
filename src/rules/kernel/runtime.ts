@@ -23,6 +23,14 @@ import type { LibraryDatabase } from '../../library/db'
 import type { KernelDataVersion } from '../../schemas/kernel'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
 import { kernelEntryOf } from './entry'
+import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-options'
+import type { BuildPick } from './frame/commands-level'
+export type { BuildPick }
+/** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
+const picksByKey = (items: EntryRef[], picks?: BuildPick[][]): Record<string, BuildPick[]> => Object.fromEntries(items.map((ref, i) => [refKey(ref), picks?.[i] ?? []]))
+
+/** 建卡选项里一件条目的结果：官方进阶的步骤（含候选）+ 作者数据里的额外必选项。 */
+export interface BuildOptionsItem { ref: EntryRef; name: string | null; steps: unknown[]; extras: ExtraWithCandidates[]; unsupported: string[] }
 
 /** Foundry 世界编号只能用字母、数字、短横线、下划线；战役的 ownerKey 形如 char:角色卡.png，按它算一个稳定编号。 */
 export function worldIdOf(ownerKey: string): string {
@@ -157,19 +165,44 @@ export class KernelRuntime {
   }
 
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
-  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]> }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
+  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][] }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, [...plan.items, ...(plan.equipment ?? [])])
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const byKey = new Map(rows.rows.map((row) => [refKey(row.ref), row]))
     const items = plan.items.map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
     const equipment = (plan.equipment ?? []).map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
-    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {} })
+    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks) })
     if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? `建卡状态：${result.status}`, detail: result }
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)
     if (data) o.bases.set(result.result.id, data)
     return { status: 'complete', id: result.result.id, seed: result.result.seed, noEnglish: rows.noEnglish }
+  }
+
+  /**
+   * 建卡选项（P6）：已选的条目（按顺序放进空白人物，带玩家已做的选择 picks）→ 每件条目现在要玩家选的事（官方进阶算候选）
+   * + 作者数据里的额外必选项（子职业 / 专长 / 可选特性，带候选）。预览用的人物不进存档。
+   */
+  async buildOptions(ownerKey: string, plan: { items: EntryRef[]; picks?: BuildPick[][] }): Promise<{ status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean }> {
+    const o = await this.get(ownerKey)
+    const rows = await this.entries(ownerKey, plan.items)
+    if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
+    const sent = rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry }))
+    const out = await o.session.call('buildOptions', { items: sent, picks: picksByKey(plan.items, plan.picks) })
+    if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
+    const lib = await this.library(ownerKey)
+    const query = (prop: string) => this.deps.scoped.query(lib, prop, { mode: 'browse' }) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
+    const items: BuildOptionsItem[] = []
+    for (let i = 0; i < rows.rows.length; i++) {
+      const row = rows.rows[i]
+      const key = sent[i].refKey
+      const found = extrasOf(row.ref.prop, row.entry as Record<string, unknown>)
+      const classNames = [row.name, String((row.entry as { name?: unknown }).name ?? '')].filter(Boolean) as string[]
+      items.push({ ref: row.ref, name: row.name, steps: (out.result.items as Array<{ refKey: string; steps: unknown[] }>).find((x) => x.refKey === key)?.steps ?? [],
+        extras: await Promise.all(found.extras.map((x) => candidatesOf(x, classNames, query))), unsupported: found.unsupported })
+    }
+    return { status: 'complete', items, complete: out.result.complete }
   }
 
   /** 给已有人物加条目；调用方只交引用。 */

@@ -105,9 +105,19 @@ async function firstChoice(flow: any): Promise<any> {
   if (type === 'AbilityScoreImprovement') {
     const fixed = Object.entries(advancement.configuration?.fixed ?? {}).filter(([, value]) => value)
     if (fixed.length) return { type: 'asi', assignments: Object.fromEntries(fixed) }
-    const key = Object.keys(flow.actor?.system?.abilities ?? {})
-      .find(ability => advancement.canImprove?.(ability) !== false)
-    return key ? { type: 'asi', assignments: { [key]: 2 } } : undefined
+    // 没有固定加值：把 points 按每项上限 cap 依次分给能加的属性（变体人类 points 2、cap 1 → 两项各 +1）
+    const points = advancement.configuration?.points ?? 0
+    const cap = advancement.configuration?.cap || points
+    const assignments: Record<string, number> = {}
+    let left = points
+    for (const key of Object.keys(flow.actor?.system?.abilities ?? advancement.actor?.system?.abilities ?? g.CONFIG?.DND5E?.abilities ?? {})) {
+      if (left <= 0) break
+      if (advancement.canImprove?.(key) === false) continue
+      const n = Math.min(cap, left)
+      assignments[key] = n
+      left -= n
+    }
+    return Object.keys(assignments).length ? { type: 'asi', assignments } : undefined
   }
 
   if (type === 'Size') return { size: advancement.configuration?.sizes?.first?.() ?? 'med' }
@@ -121,7 +131,7 @@ async function firstChoice(flow: any): Promise<any> {
  * 注意：不能把 forward 步骤标成 automatic——dnd5e 的连续自动循环只用第一步的自动值，
  * 后面的步骤会拿到错的数据（曾导致技能选择落空）。只覆盖 getAutomaticApplicationValue，让管理器逐步取值。
  */
-export async function applyManager(manager: any, values: any[] | undefined, { strict = false } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
+export async function applyManager(manager: any, values: any[] | undefined, { strict = false, picks }: { strict?: boolean; picks?: BuildPick[] } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
   if (!manager.steps.length) return { finished: true }
   for (const step of manager.steps) {
     if (step.automatic || !step.flow) continue
@@ -135,6 +145,9 @@ export async function applyManager(manager: any, values: any[] | undefined, { st
       continue
     }
     if (await step.flow.getAutomaticApplicationValue() !== false) continue
+    // 玩家这一步的选择（建卡界面给的）：值的样子就是官方进阶要的（Trait = {chosen:[..]}、能力值 = {type:'asi', assignments:{..}}）
+    const pick = picks?.find((p) => p.id === advancement.id && (p.level ?? null) === (step.flow.level ?? null))
+    if (pick) { step.flow.getAutomaticApplicationValue = async () => pick.value; continue }
     if (strict) return { finished: false, step: stepSummary(step) }
     const value = await firstChoice(step.flow)
     if (value === undefined) continue
@@ -205,7 +218,7 @@ async function describeSteps(manager: any): Promise<any[]> {
 }
 
 /** 建一张新卡：空白人物 → 种族/背景/职业（官方 forNewItem）→ 装备；没有成长步骤的顶层条目也显式放进人物。 */
-async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed }: { strict?: boolean; seed?: string } = {}): Promise<any> {
+export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, picks, onManager }: { strict?: boolean; seed?: string; picks?: Record<string, BuildPick[]>; onManager?: (info: { manager: any; key: string | null }) => Promise<void> } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
   const created = await ActorClass.create({ name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } })
@@ -217,8 +230,9 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
     g.CONFIG.Item.dataModels[data.type]?.resetData?.(data.system)
     const key = raw?.refKey ?? refKeyOf(data)
     const manager = Manager().forNewItem(created, data, { automaticApplication: true })
-    const outcome = await applyManager(manager, key ? choices[key] : undefined, { strict })
-    if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created) }
+    await onManager?.({ manager, key })
+    const outcome = await applyManager(manager, key ? choices[key] : undefined, { strict, picks: key ? picks?.[key] : undefined })
+    if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created), actor: created }
     const exists = created.items.contents.some((i: any) => i.type === data.type
       && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
     if (!exists) await created.createEmbeddedDocuments('Item', [markStandardDragDrop(cleanItem(data))])
@@ -228,11 +242,16 @@ async function buildActor(name: string, items: any[], equipment: any[], choices:
 }
 
 export interface BuildRow { prop: string; entry: any; refKey: string; itemId?: string; data?: any }
+/** 玩家在建卡里做的一次选择：哪一条进阶（id + 等级）、值是官方进阶要的样子。 */
+export interface BuildPick { id: string; level: number | null; value: any }
+
 export interface BuildPlan {
   name: string
   items: BuildRow[]
   equipment?: BuildRow[]
   choices?: Record<string, any[] | undefined>
+  /** 玩家的选择（按条目引用的键）；没给的位置仍按「第一个可选项」。 */
+  picks?: Record<string, BuildPick[]>
   /** 读档用：存档里记下的人物种子；新建卡不传，内核自己生成。 */
   seed?: string
 }
@@ -331,7 +350,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
       const equipment = []
       for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
-      const built = await buildActor(plan.name, items, equipment, plan.choices ?? {}, { strict: false, seed })
+      const built = await buildActor(plan.name, items, equipment, plan.choices ?? {}, { strict: false, seed, picks: plan.picks })
       if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }
       return { id: built.actor.id, seed, ...actorLevel(built.actor) }
     }),
