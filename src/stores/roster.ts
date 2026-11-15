@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
+import type { EntryRef } from '../library/scopes'
 import type { LoadedActor, RosterRow } from '../rules/kernel/people'
 import { askConfirm } from '../ui/kit/confirm'
 import { useAppStore } from './app'
@@ -159,6 +160,18 @@ export const useRosterStore = defineStore('people', () => {
     return ok
   }
 
+  /** 从模板（库里的怪物 / NPC）加入 count 个，放进 category；一次加人是存档里的一步。成功后记在 lastAdded，模板窗里显示「本次已加入 + 撤销」。 */
+  const lastAdded = shallowRef<{ label: string; count: number } | null>(null)
+  async function addFromTemplate(ref: EntryRef, label: string, count: number, category: CategoryId): Promise<boolean> {
+    const ok = await run(`已加入 ${label} ×${count}`, 1, async (k) => {
+      const out = await backend().fromTemplate(k, ref, count, { category })
+      if (!out.kernel) throw new Error((out.made as { error?: string }).error ?? '资料不全，建不出这个人物')
+    })
+    if (ok) lastAdded.value = { label, count }
+    return ok
+  }
+  async function undoAdded(): Promise<void> { lastAdded.value = null; await undoSteps(1) }
+
   /** 彻底删除（只在回收站里）：先问，可撤销。 */
   async function purge(ids: string[]): Promise<boolean> {
     const yes = await askConfirm({ title: '彻底删除', message: `彻底删除${nameOf(ids)}？删除后不在回收站里，只能用提示条的「撤销」马上找回。`, confirmLabel: '彻底删除', danger: true })
@@ -167,6 +180,6 @@ export const useRosterStore = defineStore('people', () => {
 
   return {
     rows, loaded, loading, error, view, sort, query, selecting, selected, visible, counts, elsewhere, trash,
-    load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
+    lastAdded, addFromTemplate, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
   }
 })

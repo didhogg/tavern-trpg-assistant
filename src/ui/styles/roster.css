@@ -54,3 +54,12 @@
 .pp-selbar__gap { flex: 1; }
 .pp-selbar__n { font-weight: var(--fw-semibold); margin-right: var(--sp-2); }
 .trpg-window[data-layout='narrow'] .pp-selbar { padding: var(--sp-2) 76px var(--sp-2) var(--sp-3); flex-wrap: wrap; }
+/* 从模板加入：左列表 · 右资料卡 · 底栏（窄屏只有列表，资料卡另开一页） */
+.tp { display: grid; grid-template-columns: minmax(240px, 5fr) 7fr; grid-template-rows: minmax(0, 1fr) auto; height: 100%; min-height: 0; }
+.trpg-window[data-layout='narrow'] .tp, .trpg-window[data-layout='mid'] .tp { grid-template-columns: 1fr; }
+.tp-list { display: flex; flex-direction: column; min-height: 0; border-right: var(--border) solid var(--line); }
+.tp-card { min-height: 0; overflow: auto; }
+.tp-row[data-picked] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--accent); }
+.tp-bar { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); background: var(--bg-side); border-top: var(--border) solid var(--line-ctrl); }
+.tp-gap { flex: 1; } .tp-lbl { color: var(--text2); font-size: var(--fs-sm); }
+.tp-added { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); }

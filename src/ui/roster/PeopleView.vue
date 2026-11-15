@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, markRaw, onMounted } from 'vue'
 import { useCampaignStore } from '../../stores/campaign'
 import { CATEGORIES, SORTS, useRosterStore, type CategoryId, type ListView } from '../../stores/roster'
 import Icon from '../kit/Icon.vue'
+import { useModalStore } from '../../stores/modal'
 import MoreMenu from '../kit/MoreMenu.vue'
 import PeopleRow from './PeopleRow.vue'
 import PeopleSelectBar from './PeopleSelectBar.vue'
+import TemplatePage from './TemplatePage.vue'
 
 const store = useRosterStore()
 const campaign = useCampaignStore()
+const modal = useModalStore()
 onMounted(() => void store.ensure())
 
 const tabs = computed(() => [...CATEGORIES.map((c) => ({ id: c.id as ListView, label: c.label })), { id: 'all' as ListView, label: '全部' }])
@@ -36,6 +39,11 @@ async function bulk(kind: 'move' | 'copy' | 'remove' | 'restore', category?: str
         : trash.value ? await store.purge(ids) : await store.trashed(ids, true)
   if (done) store.selected = []
 }
+/** [＋新建] 菜单：做好一个加一个（现在只有从模板加入）。 */
+const NEW_ITEMS = computed(() => [{ key: 'template', label: '从模板加入…', ...(readOnly.value ? { disabled: true, reason: '另一个窗口在改' } : {}) }])
+function onNew(key: string): void {
+  if (key === 'template') modal.open({ key: 'roster-template', title: '从模板加入', component: markRaw(TemplatePage), variant: 'dialog', width: 920, height: 680, onLeave: () => void store.refresh() })
+}
 const headerMenu = computed(() => [trash.value ? { key: 'back', label: '回到人物列表' } : { key: 'trash', label: `回收站（${store.counts.trash}）` }])
 </script>
 
@@ -49,6 +57,7 @@ const headerMenu = computed(() => [trash.value ? { key: 'back', label: '回到�
       <div class="pp-tools">
         <MoreMenu label="排序" :text="sortLabel" :items="SORTS.map((s) => ({ key: s.id, label: s.label }))" @select="(k) => (store.sort = k as 'manual' | 'name')" />
         <button class="trpg-btn trpg-btn--small" type="button" data-testid="pp-select" :aria-pressed="store.selecting" @click="store.toggleSelecting()">{{ store.selecting ? '完成' : '选择' }}</button>
+        <MoreMenu v-if="!trash" label="新建" text="＋ 新建" primary :items="NEW_ITEMS" @select="onNew" />
         <MoreMenu label="人物页" :items="headerMenu" @select="(k) => store.setView(k === 'back' ? 'party' : 'trash')" />
       </div>
     </div>
