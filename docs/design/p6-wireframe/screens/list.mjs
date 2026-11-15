@@ -51,17 +51,16 @@ export const screens = [
   },
   {
     id: 'p6-3-select-new', group: G, title: '多选（遭遇结束清怪）· 新建菜单', flow: '遭遇结束删怪 · 换分类（R10 · R09）',
-    goal: '全选删除一步到位，删了能撤销；新建只有一个入口', primary: '底栏 [删除]（危险色，隔开）', patterns: 'Multi-select · Action bar · Undo（不弹确认）',
-    laws: 'Fitts（危险按钮隔开）· Hick（新建 3 项）· Safe Exploration',
+    goal: '就在列表这一页里多选：每行右边多一个勾选框，底栏显示所有多选操作；不进另一个界面', primary: '底栏 [删除]（隔开，危险）', patterns: 'Inline multi-select · Bottom action bar · Undo（不弹确认）',
+    laws: 'Fitts（危险按钮隔开）· Hick（新建 3 项）· Safe Exploration · Jakob（邮件 / 文件列表的勾选习惯）',
     notes: [
-      [1, '选择模式顶条', '「已选 3 个」+ [全选这一分类] + [完成]；每行左边出现勾选框', 'R10'],
-      [2, '底栏动作', '[移到 ▾] [复制] [存入我的库…] …… [删除]；删除后顶栏撤销按钮写「撤销：删除 3 个」，不弹确认框；**不做专用"清怪"入口**', 'R09 · R10 · R25 · C7'],
-      [3, '＋新建 菜单', '分步建卡 / 从模板（库）… / 空白人物', 'R01'],
+      [1, '进入多选', '点列表顶栏的 [选择]：**不换界面**，顶栏、分类、搜索都留着；每行最右边多出一个勾选框，按钮变成 [完成]；选中的行底变浅黄 + 左侧古铜金竖线', 'R10'],
+      [2, '底栏', '勾了之后底栏出现（一直显示在列表下面）：「已选 3 个 [全选这一分类]」……[移到 ▾][复制][存入我的库…]……[删除]；以后全队休息 / 群体伤害等操作往这里登记；删除后顶栏撤销按钮写「撤销：删除 3 个」，不弹确认框；**不做专用"清怪"入口**', 'R09 · R10 · R25 · C7 · X03 · X04'],
+      [3, '＋ 新建 菜单', '分步建卡 / 从模板（库）… / 空白人物', 'R01'],
     ],
     board: by({
-      '1440': (L) => ({ noFab: true, content: listPage({ tab: 2, selbar: `<div class="sh-selbar">已选 3 个　${btn('全选这一分类', { small: true })}${btn('完成', { small: true })}</div>`, body: enemies({ check: [true, true, true] }), foot: `<div class="sh-foot">${btn('移到', { ic: 'caret-down' })}${btn('复制')}${btn('存入我的库…')}<span class="sh-foot__sp"></span>${btn('删除', { danger: true, ic: 'trash' })}</div>` }) }),
+      '1440': (L) => ({ noFab: true, content: listPage({ tab: 2, selecting: true, body: enemies({ check: [true, true, true] }), foot: `<div class="sh-foot"><b>已选 3 个</b>${btn('全选这一分类', { small: true })}<span class="sh-foot__sp"></span>${btn('移到', { ic: 'caret-down' })}${btn('复制')}${btn('存入我的库…')}${btn('删除', { danger: true, ic: 'trash' })}</div>` }) }),
       '900': (L) => ({ content: listPage({ body: party(), newMenu }) }),
-      '390': (L) => ({ noFab: true, content: listPage({ tab: 2, selbar: `<div class="sh-selbar">已选 3 个${btn('完成', { small: true })}</div>`, body: enemies({ check: [true, true, true] }), foot: `<div class="sh-foot">${btn('移到', { small: true })}${btn('复制', { small: true })}${iconBtn('dots-three', '更多')}<span class="sh-foot__sp"></span>${btn('删除', { danger: true, small: true })}</div>` }) }),
-    }, { '1440': '敌人分类：全选 3 只地精', '900': '新建菜单', '390': '窄屏多选' }),
-  },
-]
+      '390': (L) => ({ noFab: true, content: listPage({ tab: 2, selecting: true, body: enemies({ check: [true, false, false] }), foot: `<div class="sh-foot"><b>已选 1 个</b><span class="sh-foot__sp"></span>${btn('移到', { small: true })}${btn('复制', { small: true })}${iconBtn('dots-three', '更多')}${btn('删除', { danger: true, small: true })}</div>` }) }),
+    }, { '1440': '敌人分类：勾选 3 只地精（同一个列表页）', '900': '新建菜单', '390': '窄屏多选' }),
+  },]

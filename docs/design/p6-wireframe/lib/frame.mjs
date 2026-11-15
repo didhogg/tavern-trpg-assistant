@@ -14,6 +14,7 @@ export { PAGE_CSS }
 FRAMES.full = { w: 1440, h: 900, full: true, layout: 'wide', label: '视口 1440 · 插件全屏 · 宽布局' }
 FRAMES['1440'].label = '视口 1440 · 悬浮窗 960×640 · 宽布局'
 FRAMES['900'].label = '视口 900 · 悬浮窗 868×640 · 宽布局'
+FRAMES['390b'] = { ...FRAMES['390'], label: '窄屏 · 点一项之后跳到的资料卡页' }
 FRAMES.mid.label = '悬浮窗 600 宽 · 中布局（侧栏只有图标）'
 
 const NAV = [

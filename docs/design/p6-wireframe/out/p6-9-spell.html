@@ -961,10 +961,10 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* 成员行：头像 · 名字与小字信息 · 生命 · ⋯（AC、被动察觉改成名字下面的小字，不再单独成列） */
 .sh-mem, .sh-sec--mem { grid-template-columns: 52px minmax(0, 1fr) 170px 40px; column-gap: var(--sp-3); }
-.sh-mem[data-check], .sh-sec--mem[data-check] { grid-template-columns: 28px 52px minmax(0, 1fr) 170px 40px; }
+.sh-mem[data-check], .sh-sec--mem[data-check] { grid-template-columns: 52px minmax(0, 1fr) 170px 40px 28px; }  /* 多选：勾选框在每行最右边（驾驶员 2026-11-15） */
 .sh-mem[data-drag], .sh-sec--mem[data-drag] { grid-template-columns: 20px 52px minmax(0, 1fr) 170px 40px; }
 .sh-mem { display: grid; align-items: center; min-height: 64px; padding: 6px var(--sp-3); border-bottom: 1px solid var(--line); background: var(--surface); }
-.sh-mem[data-check='true'] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--primary); }
+.sh-mem[data-check='true'] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--accent); }
 .sh-mem[data-drag='lift'] { box-shadow: var(--shadow-2); position: relative; z-index: 2; }
 .sh-face { width: 48px; height: 48px; border-radius: var(--r-sm); border: 1px solid var(--line-ctrl); background: var(--bg-side); color: var(--text2); display: grid; place-items: center; }
 .sh-who { min-width: 0; display: grid; gap: 1px; }
@@ -984,7 +984,8 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .sh-handle { color: var(--text3); display: grid; place-items: center; }
 @container sh (max-width: 560px) {
   .sh-mem, .sh-sec--mem { grid-template-columns: 44px minmax(0, 1fr) 88px 32px; column-gap: var(--sp-2); padding-left: var(--sp-2); padding-right: var(--sp-2); }
-  .sh-mem[data-check], .sh-sec--mem[data-check], .sh-mem[data-drag], .sh-sec--mem[data-drag] { grid-template-columns: 24px 44px minmax(0, 1fr) 88px 32px; }
+  .sh-mem[data-check], .sh-sec--mem[data-check] { grid-template-columns: 44px minmax(0, 1fr) 88px 32px 24px; }
+  .sh-mem[data-drag], .sh-sec--mem[data-drag] { grid-template-columns: 24px 44px minmax(0, 1fr) 88px 32px; }
   .sh-face { width: 40px; height: 40px; } .sh-who > b { font-size: var(--fs-md); }
 }
 
@@ -1160,25 +1161,6 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 }
 
 /* ===== 弹窗：建卡向导（morii-vtt：左侧步骤清单 + 右侧当前步）/ 选资料（表 + 资料片） ===== */
-.wz-modal .trpg-modal__pages, .wz-modal .trpg-modal__page { padding: 0 !important; height: 100%; }
-.wz-modal .trpg-modal__page { position: relative; min-height: 480px; container: wz / inline-size; }
-.wz { position: absolute; inset: 0; display: grid; grid-template-columns: 196px minmax(0, 1fr); min-height: 0; }
-.wz[data-norail='true'] { grid-template-columns: minmax(0, 1fr); }
-.wz-rail { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-2); background: var(--bg-side); border-right: 1px solid var(--line); overflow: auto; }
-.wz-st { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 0 8px; align-items: center; min-height: 44px; padding: 3px 8px; border-radius: var(--r-sm); }
-.wz-st > i { grid-row: 1 / span 2; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-ctrl); display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: var(--fw-bold); color: var(--text2); }
-.wz-st > b { font-weight: var(--fw-medium); font-size: var(--fs-md); line-height: 1.25; } .wz-st > small { font-size: var(--fs-xs); color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
-.wz-st[data-s='done'] > i { background: var(--text); border-color: var(--text); color: var(--surface); }
-.wz-st[data-s='skip'] > small { color: var(--warn-text); font-weight: var(--fw-semibold); }
-.wz-st[data-s='none'] { color: var(--text3); } .wz-st[data-s='none'] > i { border-style: dashed; }
-.wz-st[aria-current='step'] { background: var(--surface); box-shadow: inset 3px 0 0 var(--primary), var(--shadow-1); } .wz-st[aria-current='step'] > i { border-color: var(--primary); color: var(--primary-text); }
-.wz-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.wz-head { flex: none; display: flex; align-items: baseline; gap: 4px var(--sp-3); flex-wrap: wrap; padding: var(--sp-3) var(--sp-4) 0; }
-.wz-head h2 { margin: 0; font-size: var(--fs-xl); } .wz-head p { margin: 0; font-size: var(--fs-sm); color: var(--text2); }
-.wz-body { flex: 1; min-height: 0; overflow: auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 290px); align-items: start; }
-.wz-body[data-one='true'] { grid-template-columns: minmax(0, 1fr); }
-.wz-pick { min-width: 0; }
-.wz-pick .sh-tr[aria-selected='true'] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--primary); }
 .wz-card { margin: var(--sp-2) var(--sp-3) var(--sp-3) 0; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
 .wz-card > header { padding: 8px 10px; border-bottom: 1px solid var(--line); } .wz-card > header b { font-size: var(--fs-lg); } .wz-card > header small { display: block; color: var(--text2); font-size: var(--fs-sm); }
 .wz-card dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; margin: 0; padding: 8px 10px; font-size: var(--fs-sm); } .wz-card dt { color: var(--text2); } .wz-card dd { margin: 0; }
@@ -1190,8 +1172,6 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .wz-opt { display: inline-flex; align-items: center; gap: 4px; min-height: 30px; padding: 0 10px; border: 1px solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); font-size: var(--fs-sm); white-space: nowrap; }
 .wz-opt[data-on='true'] { background: var(--text); color: var(--surface); border-color: var(--text); }
 .wz-opt[data-off='true'] { color: var(--text3); border-style: dashed; }
-.wz-foot { flex: none; display: flex; align-items: center; gap: var(--sp-2); min-height: 60px; padding: var(--sp-2) var(--sp-4); border-top: 1px solid var(--line); background: var(--surface); }
-.wz-foot__sp { flex: 1; } .wz-foot small { color: var(--text2); font-size: var(--fs-sm); }
 .wz-form { display: grid; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4) var(--sp-4); max-width: 520px; }
 .wz-ab { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; padding: 0 var(--sp-3) var(--sp-3); }
 .wz-ab > div { display: grid; justify-items: center; gap: 3px; padding: 8px 4px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
@@ -1206,9 +1186,6 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .wz-rad > div { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 0 8px; min-height: 40px; padding: 4px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
 .wz-rad > div > i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-ctrl); } .wz-rad > div[data-on='true'] { border-color: var(--primary); background: var(--primary-tint); } .wz-rad > div[data-on='true'] > i { border: 5px solid var(--primary); }
 .wz-rad b { font-weight: var(--fw-semibold); margin-right: 8px; }
-@container wz (max-width: 980px) { .wz-body { grid-template-columns: minmax(0, 1fr); } .wz-card { margin: 0 var(--sp-3) var(--sp-3); } }
-@container wz (max-width: 560px) {
-  .wz { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .wz-rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 6px; scrollbar-width: none; }
   .wz-st { flex: none; grid-template-columns: 22px auto; min-height: 40px; } .wz-st > small { display: none; }
   .wz-st:not([aria-current='step']) > b { display: none; }
@@ -1220,21 +1197,78 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 /* 弹窗里的表：不要外边距（确认页自己排间距） */
 .trpg-modal__page > .sh-tbl, .trpg-confirm .sh-tbl { margin: 0 0 8px; }
 
+/* ===== 选资料两栏页（从模板加入 / 分步建卡共用；驾驶员 2026-11-15）：左 = 列表，右 = 资料卡；无边框、细线分隔，信息密度高 ===== */
+.wz-modal .trpg-modal__pages, .wz-modal .trpg-modal__page { padding: 0 !important; height: 100%; }
+.wz-modal .trpg-modal__page { position: relative; min-height: 500px; }
+.pk { position: absolute; inset: 0; display: flex; flex-direction: column; min-height: 0; }
+.pk-top { flex: none; display: grid; gap: 8px; padding: 10px var(--sp-4) 8px; border-bottom: 1px solid var(--line); }
+.pk-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.pk-tab { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-md); background: none; color: var(--text2); font: inherit; font-size: var(--fs-md); white-space: nowrap; }
+.pk-tab small { font-size: var(--fs-xs); padding: 0 6px; line-height: 18px; border-radius: 9px; background: var(--bg-side); color: var(--text2); }
+.pk-tab[aria-selected='true'], .pk-tab[aria-current='step'] { background: var(--primary); color: var(--on-primary); font-weight: var(--fw-semibold); }
+.pk-tab[aria-selected='true'] small { background: rgb(255 249 240 / 22%); color: var(--on-primary); }
+/* 建卡步骤标签：已完成打 ✓，当前步用主色，不需要的步骤虚线 */
+.pk-step { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 7px; border-radius: var(--r-md); color: var(--text2); font-size: var(--fs-sm); white-space: nowrap; }
+.pk-step > i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line-ctrl); display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: var(--fw-bold); }
+.pk-step[data-s='done'] { color: var(--text); } .pk-step[data-s='done'] > i { background: var(--text); border-color: var(--text); color: var(--bg); }
+.pk-step[data-s='skip'] > i { border-color: var(--accent); color: var(--accent-text); background: var(--bg-side); }
+.pk-step[data-s='none'] { color: var(--text3); } .pk-step[data-s='none'] > i { border-style: dashed; }
+.pk-step[aria-current='step'] { background: var(--primary); color: var(--on-primary); font-weight: var(--fw-semibold); } .pk-step[aria-current='step'] > i { border-color: var(--on-primary); color: var(--on-primary); }
+.pk-tools { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pk-tools .lib-search { flex: 1 1 200px; min-width: 0; margin: 0; }
+.pk-tools .pk-count { margin-left: auto; font-size: var(--fs-sm); color: var(--text2); white-space: nowrap; }
+.pk-tools .pk-count button { border: 0; background: none; color: var(--primary-text); font: inherit; padding: 0 0 0 6px; }
+.pk-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.pk-body[data-one='true'] { grid-template-columns: minmax(0, 1fr); }
+.pk-body > * { min-height: 0; overflow: auto; }
+.pk-list { border-right: 1px solid var(--line); }
+.pk-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 0 10px; align-items: center; min-height: 56px; padding: 7px var(--sp-3); border-bottom: 1px solid var(--line); }
+.pk-row[aria-selected='true'] { background: var(--primary-tint); box-shadow: inset 3px 0 0 var(--accent); }
+.pk-av { width: 40px; height: 40px; border-radius: var(--r-sm); background: var(--bg-side); border: 1px solid var(--line); display: grid; place-items: center; color: var(--text2); font-weight: var(--fw-semibold); }
+.pk-main { min-width: 0; display: grid; gap: 2px; }
+.pk-main > b { font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pk-main > b small { margin-left: 6px; font-weight: var(--fw-regular); color: var(--text3); font-size: var(--fs-sm); }
+.pk-main > span { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text2); white-space: nowrap; overflow: hidden; }
+.pk-pill { font-size: var(--fs-xs); line-height: 18px; padding: 0 6px; border-radius: var(--r-xs); background: var(--bg-side); color: var(--text); font-weight: var(--fw-semibold); }
+.pk-src { font-size: var(--fs-xs); color: var(--text3); text-align: right; white-space: nowrap; }
+/* 资料卡（右栏）：就是库里的那张资料卡 */
+.pk-card { padding: var(--sp-3) var(--sp-4) var(--sp-4); display: grid; gap: 10px; align-content: start; }
+.pk-card__h { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 0 12px; align-items: start; }
+.pk-card__h .pk-av { width: 56px; height: 56px; font-size: var(--fs-xl); }
+.pk-card__h h3 { margin: 0; font-size: var(--fs-2xl); line-height: 1.2; } .pk-card__h h3 small { margin-left: 8px; font-size: var(--fs-md); font-weight: var(--fw-regular); color: var(--text2); }
+.pk-card__h p { margin: 2px 0 4px; font-size: var(--fs-sm); color: var(--text2); }
+.pk-stats { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.pk-stats > div { display: grid; justify-items: center; padding: 6px 4px; border-left: 1px solid var(--line); } .pk-stats > div:first-child { border-left: 0; }
+.pk-stats small { font-size: var(--fs-xs); color: var(--text2); } .pk-stats b { font-size: var(--fs-xl); font-weight: var(--fw-bold); }
+.pk-abs { display: grid; grid-template-columns: repeat(6, 1fr); text-align: center; font-size: var(--fs-xs); color: var(--text2); }
+.pk-abs b { display: block; font-size: var(--fs-md); color: var(--text); font-weight: var(--fw-semibold); }
+.pk-kv { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 3px 10px; margin: 0; font-size: var(--fs-sm); } .pk-kv dt { color: var(--text2); } .pk-kv dd { margin: 0; }
+.pk-sec { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text); padding-top: 6px; border-top: 1px solid var(--line); }
+.pk-p { margin: 0; font-size: var(--fs-sm); line-height: var(--lh-body); color: var(--text2); } .pk-p b { color: var(--text); }
+.pk-foot { flex: none; display: flex; align-items: center; gap: var(--sp-2); min-height: 56px; padding: 6px var(--sp-4); border-top: 1px solid var(--line); background: var(--bg); }
+.pk-foot > small { font-size: var(--fs-sm); color: var(--text2); } .pk-foot__sp { flex: 1; }
+/* 窄屏：不再两栏，改成页面跳转（列表页 → 点一项 → 资料卡页） */
+.pk[data-view='list'] .pk-body, .pk[data-view='card'] .pk-body { grid-template-columns: minmax(0, 1fr); }
+.pk[data-view='list'] .pk-list { border-right: 0; }
+.pk[data-view='card'] .pk-top { display: none; }
+.pk[data-view='card'] .pk-foot { flex-wrap: wrap; }
+.pk-bar { flex: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 var(--sp-3); border-bottom: 1px solid var(--line); font-weight: var(--fw-semibold); }
+.pk-tabs--narrow .pk-tab { min-height: 44px; }
+
 /* 配色 v7（驾驶员 2026-11-15：严格按「正式融合配色方案」，禁止臆造、不改动）。本文件里出现的每个色号都来自该方案，没有自己混的色：
    Paper #FAF5EC · Panel #F4ECDD · Surface #EDE3D3 · Elevated #FFF9F0 · 炭灰 #30342E / 次炭灰 #3C4139 / 炭灰悬浮 #4A5045 / 炭灰结构边框 #555A4D ·
    主色 #8A3529（悬停 #A44736 · 按下 #6D291F · 浅红底 #E8D0C5）· 古铜金 #B89A54 · 成功 #4F8050 · 危险 #A33B2B ·
    文字 #39291A / 次要 #73634E / 提示 #857C6E · 炭灰上文字 #F8F2E7 / #D0C9BB · 卡片边框与分割线 #DED3C2 · 次级按钮悬浮 #E9DDCB。
-   分配：大片底（页面、表格行、列表行）= Paper；卡片（生命块、属性格底）= Panel；分组条、选项底 = Surface；输入框、弹窗 = Elevated；选中 = 浅红底。
+   分配（v8，驾驶员要求底色再白一点、选中用浅黄不用浅粉）：大片底（页面、表格行、列表行）= Elevated #FFF9F0（方案里最白的）；卡片 = Paper #FAF5EC；分组条 = Panel #F4ECDD；选中行 = Surface #EDE3D3（浅黄）+ 左侧古铜金竖线；输入框、弹窗 = Elevated；生命条绿 / 黄，不用红。
    和 v6 相比删掉了我自己加的三个色（控件边框 #8E8170、金色文字 #8C7540、绿字 #3F6B40）。已知代价（方案本身的限制，未改）：
    控件边框用方案里的 #DED3C2，在 Paper 上只有约 1.2:1，比 3:1 的建议低很多；金色 #B89A54 的字 / 焦点环在 Paper 上约 2.5:1；绿 #4F8050 作文字约 3.9:1。要不要放宽这些，请你定。
    只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 palettes.mjs）。 */
 .ds-root {
-  --bg: #FAF5EC; --surface: #FAF5EC; --bg-side: #F4ECDD; --bg-sunk: #F4ECDD; --bg-hover: #E9DDCB;
+  --bg: #FFF9F0; --surface: #FFF9F0; --bg-side: #F4ECDD; --bg-sunk: #FAF5EC; --bg-hover: #E9DDCB;
   --line: #DED3C2; --line-ctrl: #DED3C2;
   --text: #39291A; --text2: #73634E; --text3: #857C6E;
   --side: #30342E; --side-ink: #F8F2E7; --side-ink2: #D0C9BB; --side-hover: #4A5045; --side-active: #8A3529; --side-line: #555A4D;
   --primary: #8A3529; --primary-hover: #A44736; --primary-pressed: #6D291F; --primary-text: #8A3529;
-  --primary-tint: #E8D0C5; --primary-tint-line: #DED3C2;
+  --primary-tint: #EDE3D3; --primary-tint-line: #DED3C2;
   --danger-text: #A33B2B; --danger-line: #A33B2B; --danger-bg: #F4ECDD; --hp-low: #A33B2B; --mark: #8A3529;
   --success-text: #4F8050; --success-bg: #F4ECDD; --hp-green: #4F8050;
   --accent: #B89A54; --accent-text: #B89A54; --on-accent: #39291A; --warn-text: #73634E; --warn-bg: #EDE3D3;
@@ -1255,16 +1289,18 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .trpg-tab[aria-current='page'] { color: #FFFFFF; box-shadow: inset 0 3px 0 #A44736; }
 .trpg-brandmark { background: #8A3529; }
 /* 内容卡片 Panel；分组条 / 选项底 Surface；输入框与弹窗 Elevated；次级按钮 Panel，悬浮 #E9DDCB */
-.sh-sec { background: #EDE3D3; }
-.sh-hp, .sh-ab, .sh-mini > div, .sh-info > span, .sh-text, .sh-fields, .sh-filt button, .wz-card, .wz-ab > div { background: #F4ECDD; }
+.sh-sec { background: #F4ECDD; }
+.sh-hp, .sh-ab, .sh-mini > div, .sh-info > span, .sh-text, .sh-fields, .sh-filt button, .wz-card, .wz-ab > div { background: #FAF5EC; }
+.sh-hp { background: #F4ECDD; }
 .lib-search, .trpg-input, .trpg-field .trpg-input, .sh-in, .trpg-modal__card, .trpg-dropdown { background: #FFF9F0; }
 .trpg-input[data-focus='true'], .sh-in[data-focus='true'] { border-color: #B89A54; border-width: 2px; }
-.trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet) { background: #F4ECDD; }
+.trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet) { background: #FAF5EC; }
 .trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet):hover { background: #E9DDCB; }
-/* 生命条：成功绿；低血危险红；临时生命 / 经验 / 负重古铜金 */
+/* 生命条（驾驶员 2026-11-15：统一绿色 / 黄色）：平时成功绿；低血（<1/3）古铜金；临时生命亮金 #D8BE83；经验 / 负重古铜金 */
 .sh-bar > i { background: #4F8050; }
-.sh-bar > i[data-low='true'] { background: #A33B2B; }
-.sh-bar > i[data-plain='true'], .sh-bar > u { background: #B89A54; }
+.sh-bar > i[data-low='true'] { background: #B89A54; }
+.sh-bar > i[data-plain='true'] { background: #B89A54; }
+.sh-bar > u { background: #D8BE83; }
 </style></head><body><div class="wf-board ds-root" style="background:#f4f1ea">
 <h1>详情 · 法术（按环分组，组条上就是法术位）</h1><p class="wf-meta">详情（人物）· 每个分页 · 配色 A（P4 令牌）· 结构照 Tidy5e / gg-sheet-export / morii-vtt · 名字和数值是占位示例，真实显示由内核给</p>
 <div class="wf-row"><figure style="margin:0"><figcaption class="wf-cap">窄屏：已滚到分页</figcaption><div class="wf-host" style="width:390px;height:844px"><div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div><section class="trpg-window" data-layout="narrow" data-fullscreen="true" style="top:36px;left:0;right:0;bottom:0"><div class="trpg-shell"><div class="trpg-main"><header class="trpg-head"><h1 class="trpg-head__title">人物</h1><div class="trpg-head__chips"><button class="trpg-icon-btn" type="button" aria-label="助手菜单"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="20" height="20"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></svg></button></div></header>

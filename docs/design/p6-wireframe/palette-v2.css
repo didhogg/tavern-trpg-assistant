@@ -2,17 +2,17 @@
    Paper #FAF5EC · Panel #F4ECDD · Surface #EDE3D3 · Elevated #FFF9F0 · 炭灰 #30342E / 次炭灰 #3C4139 / 炭灰悬浮 #4A5045 / 炭灰结构边框 #555A4D ·
    主色 #8A3529（悬停 #A44736 · 按下 #6D291F · 浅红底 #E8D0C5）· 古铜金 #B89A54 · 成功 #4F8050 · 危险 #A33B2B ·
    文字 #39291A / 次要 #73634E / 提示 #857C6E · 炭灰上文字 #F8F2E7 / #D0C9BB · 卡片边框与分割线 #DED3C2 · 次级按钮悬浮 #E9DDCB。
-   分配：大片底（页面、表格行、列表行）= Paper；卡片（生命块、属性格底）= Panel；分组条、选项底 = Surface；输入框、弹窗 = Elevated；选中 = 浅红底。
+   分配（v8，驾驶员要求底色再白一点、选中用浅黄不用浅粉）：大片底（页面、表格行、列表行）= Elevated #FFF9F0（方案里最白的）；卡片 = Paper #FAF5EC；分组条 = Panel #F4ECDD；选中行 = Surface #EDE3D3（浅黄）+ 左侧古铜金竖线；输入框、弹窗 = Elevated；生命条绿 / 黄，不用红。
    和 v6 相比删掉了我自己加的三个色（控件边框 #8E8170、金色文字 #8C7540、绿字 #3F6B40）。已知代价（方案本身的限制，未改）：
    控件边框用方案里的 #DED3C2，在 Paper 上只有约 1.2:1，比 3:1 的建议低很多；金色 #B89A54 的字 / 焦点环在 Paper 上约 2.5:1；绿 #4F8050 作文字约 3.9:1。要不要放宽这些，请你定。
    只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 palettes.mjs）。 */
 .ds-root {
-  --bg: #FAF5EC; --surface: #FAF5EC; --bg-side: #F4ECDD; --bg-sunk: #F4ECDD; --bg-hover: #E9DDCB;
+  --bg: #FFF9F0; --surface: #FFF9F0; --bg-side: #F4ECDD; --bg-sunk: #FAF5EC; --bg-hover: #E9DDCB;
   --line: #DED3C2; --line-ctrl: #DED3C2;
   --text: #39291A; --text2: #73634E; --text3: #857C6E;
   --side: #30342E; --side-ink: #F8F2E7; --side-ink2: #D0C9BB; --side-hover: #4A5045; --side-active: #8A3529; --side-line: #555A4D;
   --primary: #8A3529; --primary-hover: #A44736; --primary-pressed: #6D291F; --primary-text: #8A3529;
-  --primary-tint: #E8D0C5; --primary-tint-line: #DED3C2;
+  --primary-tint: #EDE3D3; --primary-tint-line: #DED3C2;
   --danger-text: #A33B2B; --danger-line: #A33B2B; --danger-bg: #F4ECDD; --hp-low: #A33B2B; --mark: #8A3529;
   --success-text: #4F8050; --success-bg: #F4ECDD; --hp-green: #4F8050;
   --accent: #B89A54; --accent-text: #B89A54; --on-accent: #39291A; --warn-text: #73634E; --warn-bg: #EDE3D3;
@@ -33,13 +33,15 @@
 .trpg-tab[aria-current='page'] { color: #FFFFFF; box-shadow: inset 0 3px 0 #A44736; }
 .trpg-brandmark { background: #8A3529; }
 /* 内容卡片 Panel；分组条 / 选项底 Surface；输入框与弹窗 Elevated；次级按钮 Panel，悬浮 #E9DDCB */
-.sh-sec { background: #EDE3D3; }
-.sh-hp, .sh-ab, .sh-mini > div, .sh-info > span, .sh-text, .sh-fields, .sh-filt button, .wz-card, .wz-ab > div { background: #F4ECDD; }
+.sh-sec { background: #F4ECDD; }
+.sh-hp, .sh-ab, .sh-mini > div, .sh-info > span, .sh-text, .sh-fields, .sh-filt button, .wz-card, .wz-ab > div { background: #FAF5EC; }
+.sh-hp { background: #F4ECDD; }
 .lib-search, .trpg-input, .trpg-field .trpg-input, .sh-in, .trpg-modal__card, .trpg-dropdown { background: #FFF9F0; }
 .trpg-input[data-focus='true'], .sh-in[data-focus='true'] { border-color: #B89A54; border-width: 2px; }
-.trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet) { background: #F4ECDD; }
+.trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet) { background: #FAF5EC; }
 .trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet):hover { background: #E9DDCB; }
-/* 生命条：成功绿；低血危险红；临时生命 / 经验 / 负重古铜金 */
+/* 生命条（驾驶员 2026-11-15：统一绿色 / 黄色）：平时成功绿；低血（<1/3）古铜金；临时生命亮金 #D8BE83；经验 / 负重古铜金 */
 .sh-bar > i { background: #4F8050; }
-.sh-bar > i[data-low='true'] { background: #A33B2B; }
-.sh-bar > i[data-plain='true'], .sh-bar > u { background: #B89A54; }
+.sh-bar > i[data-low='true'] { background: #B89A54; }
+.sh-bar > i[data-plain='true'] { background: #B89A54; }
+.sh-bar > u { background: #D8BE83; }
