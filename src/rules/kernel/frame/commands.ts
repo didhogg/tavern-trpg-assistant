@@ -13,6 +13,7 @@ import { createLevelCommands } from './commands-level'
 import { createAddCommands } from './commands-add'
 import { createBatchCommands } from './commands-batch'
 import { createSheetCommands } from './commands-sheet'
+import { settled } from './server'
 
 /**
  * 五种结果状态（上位设计 §3.5）：
@@ -112,7 +113,8 @@ function sourcesFor(changes: Change[]): Record<string, any[]> {
 /** 一次结算操作：统一结果格式（状态、数值、来源、变更计划、缺什么、等什么、未支持、错误）。 */
 async function operate(points: number[], run: () => Promise<any>, actors: string[] = []): Promise<any> {
   let outcome: any; let changes: Change[] = []
-  try { ({ value: outcome, changes } = await capture(() => withDice(points, () => guardRender(run)))) }
+  // 命令返回前等官方"发出去不等"的写入落地，免得它们漏出变更计划（server.ts settled）
+  try { ({ value: outcome, changes } = await capture(() => withDice(points, () => guardRender(run)).then(async (v) => { await settled(); return v }))) }
   // 失败原因交错误说明本身（上位设计 §3.5）；堆栈另放，只供排查（各浏览器格式不同，也含代码地址）
   catch (error) { return { status: 'error', error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack ?? null : null, changes } }
   const unsupported: UnsupportedItem[] = actors.flatMap(id => unsupportedFor(actor(id)))

@@ -1,6 +1,7 @@
 // e 段 + P3-3b：建卡与升级。步骤由 dnd5e 官方 AdvancementManager 计算，应用也走同一管理器；不手写成长规则。
 // 选择步骤用一张“进阶类型 → 应用数据”的登记表；P3-3b 起优先用存档记下的选择，没有记录才取第一个可选项。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
+import { settled } from './server'
 import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
 import { applyStateToActor } from './actor-state'
@@ -149,6 +150,8 @@ export async function applyManager(manager: any, values: any[] | undefined, { st
   })
   await manager.render()
   const ok = await completed
+  // 下一个管理器开始前，等这一步官方回调发出的写入落地（例如种族把 details.race 指向自己），否则会被下一步整份覆盖掉
+  if (ok) await settled()
   return ok ? { finished: true } : { finished: false, step: stepSummary(manager.step) }
 }
 

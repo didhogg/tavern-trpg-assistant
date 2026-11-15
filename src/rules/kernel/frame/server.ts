@@ -29,6 +29,23 @@ function indexEntry(document: any, fields: string[]): any {
   return entry
 }
 
+/** 已发出、还没回答的写入数（一个小窗一个本地服务）。 */
+let inFlight = 0
+
+/**
+ * 等小窗里所有写入落地：官方有些回调发出写入后不等它（例如种族物品建好后把人物的 details.race 指向自己，dnd5e race.mjs _onCreate），
+ * 连续操作时后一步会在它落地前读人物、再整份覆盖，把它盖掉；命令返回前不等，这类写入也进不了变更计划。
+ * 连续两轮宏任务都没有在路上的写入才算落地（回调里可能马上再发一个）；最多等 limitMs。
+ */
+export async function settled(limitMs = 2_000): Promise<void> {
+  const until = Date.now() + limitMs
+  let quiet = 0
+  while (quiet < 2 && Date.now() < until) {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    quiet = inFlight === 0 ? quiet + 1 : 0
+  }
+}
+
 export function createServer(socket: any, options: ServerOptions): { changes: ChangeRecord[]; calls: any[] } {
   const g = globalThis as any
   const changes: ChangeRecord[] = []
@@ -83,7 +100,8 @@ export function createServer(socket: any, options: ServerOptions): { changes: Ch
     calls.push({ event, args: payload })
     const callback = typeof args.at(-1) === 'function' ? args.at(-1) : null
     const reply = (promise: Promise<any>, wrap: (value: any) => any): void => {
-      promise.then(value => callback(wrap(value)), (error: Error) => callback({ error: { message: error.message } }))
+      inFlight++
+      promise.then(value => callback(wrap(value)), (error: Error) => callback({ error: { message: error.message } })).finally(() => { inFlight-- })
     }
     if (event === 'template') return reply(options.readText(args[0]), html => ({ html }))
     if (event === 'time') return callback({ serverTime: Date.now(), worldTime: options.worldTime })
