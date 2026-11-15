@@ -1220,51 +1220,51 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 /* 弹窗里的表：不要外边距（确认页自己排间距） */
 .trpg-modal__page > .sh-tbl, .trpg-confirm .sh-tbl { margin: 0 0 8px; }
 
-/* 配色参考 v6（驾驶员 2026-11-15 采纳 agent 的「正式融合配色方案」：暖羊皮纸内容区 × 炭灰结构层 × 陶土赤红操作层 × 古铜金点缀）。
-   取其中最后给出的「正式主题色板 + 使用规范」那一版（前面一版 Token 里主色 #7A2E26 / 炭灰 #30352F 与它不一致，没用）。
-   色号：Paper #FAF5EC（主背景）· Panel #F4ECDD（卡片 / 次级面板）· Surface #EDE3D3（选项底 / 分组条）· Elevated #FFF9F0（输入框 / 弹窗）·
-   Charcoal #30342E（顶部标题栏 / 边栏）· 炭灰悬浮 #4A5045 · 主色 #8A3529（悬停 #A44736，按下 #6D291F）· 浅红底 #E8D0C5 · 古铜金 #B89A54 · 成功绿 #4F8050 · 危险红 #A33B2B。
-   规则：边栏与顶部标题栏 = 炭灰；**边栏当前项 = 整行 #8A3529 红底 + 白字白图标**（未选中项不用红，悬停才显示 #4A5045）；输入框 #FFF9F0，焦点描边古铜金；内容卡片 #F4ECDD，选中 #E8D0C5。
-   我调整的只有三处（对比度不足）：控件边框原方案的 #B9AC96 只有 2:1，改 #8E8170（3.24:1）；金色文字（临时生命数字）加深为 #8C7540；
-   提示：①古铜金焦点环在米白上只有 2.48:1（标准 3:1），我保留你的规定并加粗到 2px，是否改深请你定；②这套把「危险红 #A33B2B」和「主色 #8A3529」分成了两个色号（上一版我统一成一个红），按这次方案走。
+/* 配色 v7（驾驶员 2026-11-15：严格按「正式融合配色方案」，禁止臆造、不改动）。本文件里出现的每个色号都来自该方案，没有自己混的色：
+   Paper #FAF5EC · Panel #F4ECDD · Surface #EDE3D3 · Elevated #FFF9F0 · 炭灰 #30342E / 次炭灰 #3C4139 / 炭灰悬浮 #4A5045 / 炭灰结构边框 #555A4D ·
+   主色 #8A3529（悬停 #A44736 · 按下 #6D291F · 浅红底 #E8D0C5）· 古铜金 #B89A54 · 成功 #4F8050 · 危险 #A33B2B ·
+   文字 #39291A / 次要 #73634E / 提示 #857C6E · 炭灰上文字 #F8F2E7 / #D0C9BB · 卡片边框与分割线 #DED3C2 · 次级按钮悬浮 #E9DDCB。
+   分配：大片底（页面、表格行、列表行）= Paper；卡片（生命块、属性格底）= Panel；分组条、选项底 = Surface；输入框、弹窗 = Elevated；选中 = 浅红底。
+   和 v6 相比删掉了我自己加的三个色（控件边框 #8E8170、金色文字 #8C7540、绿字 #3F6B40）。已知代价（方案本身的限制，未改）：
+   控件边框用方案里的 #DED3C2，在 Paper 上只有约 1.2:1，比 3:1 的建议低很多；金色 #B89A54 的字 / 焦点环在 Paper 上约 2.5:1；绿 #4F8050 作文字约 3.9:1。要不要放宽这些，请你定。
    只覆盖浅色模式；插件本体未改（正式换走 P4 生成器 palettes.mjs）。 */
 .ds-root {
-  --bg: #FAF5EC; --surface: #F4ECDD; --bg-side: #EDE3D3; --bg-sunk: #FAF5EC; --bg-hover: #E6DCCC;
-  --line: #DED3C2; --line-ctrl: #8E8170;
+  --bg: #FAF5EC; --surface: #FAF5EC; --bg-side: #F4ECDD; --bg-sunk: #F4ECDD; --bg-hover: #E9DDCB;
+  --line: #DED3C2; --line-ctrl: #DED3C2;
   --text: #39291A; --text2: #73634E; --text3: #857C6E;
   --side: #30342E; --side-ink: #F8F2E7; --side-ink2: #D0C9BB; --side-hover: #4A5045; --side-active: #8A3529; --side-line: #555A4D;
   --primary: #8A3529; --primary-hover: #A44736; --primary-pressed: #6D291F; --primary-text: #8A3529;
-  --primary-tint: #E8D0C5; --primary-tint-line: #D6B3A5;
+  --primary-tint: #E8D0C5; --primary-tint-line: #DED3C2;
   --danger-text: #A33B2B; --danger-line: #A33B2B; --danger-bg: #F4ECDD; --hp-low: #A33B2B; --mark: #8A3529;
-  --success-text: #3F6B40; --success-bg: #F4ECDD; --hp-green: #4F8050;
-  --accent: #B89A54; --accent-text: #8C7540; --on-accent: #39291A; --warn-text: #73634E; --warn-bg: #EDE3D3;
-  --focus: #B89A54;
-  --hero-bg: #30342E; --hero-ink: #F8F2E7; --hero-ink2: #D0C9BB;
+  --success-text: #4F8050; --success-bg: #F4ECDD; --hp-green: #4F8050;
+  --accent: #B89A54; --accent-text: #B89A54; --on-accent: #39291A; --warn-text: #73634E; --warn-bg: #EDE3D3;
+  --focus: #B89A54; --on-primary: #FFFFFF;
   --disabled-bg: #EDE3D3; --disabled-text: #857C6E;
+  --hero-bg: #30342E; --hero-ink: #F8F2E7; --hero-ink2: #D0C9BB;
 }
-/* —— 炭灰结构层：顶部标题栏（不随页面变化）—— */
+/* 炭灰结构层：顶部标题栏（不随页面变化） */
 .trpg-head { background: #30342E; border-bottom: 1px solid #555A4D; color: #F8F2E7; }
 .trpg-head .trpg-head__title { color: #F8F2E7; }
 .trpg-head .trpg-pill, .trpg-head .trpg-chip { background: transparent; color: #F8F2E7; border-color: #555A4D; }
 .trpg-head .trpg-chip__save { color: #D0C9BB; }
 .trpg-head .trpg-icon-btn { color: #F8F2E7; }
 .trpg-head .trpg-icon-btn:hover { background: #4A5045; }
-/* —— 边栏：当前项整行红底白字 —— */
+/* 边栏：当前项整行红底、白字、白图标；未选中不带红，悬停炭灰提亮 */
 .trpg-nav[aria-current='page'] { background: #8A3529; color: #FFFFFF; }
 .trpg-nav[aria-current='page'] svg { color: #FFFFFF; }
 .trpg-tab[aria-current='page'] { color: #FFFFFF; box-shadow: inset 0 3px 0 #A44736; }
-.trpg-brandmark { background: var(--primary); }
-/* —— 输入框 #FFF9F0，焦点描边古铜金 —— */
-.lib-search, .trpg-input, .trpg-field .trpg-input { background: #FFF9F0; }
+.trpg-brandmark { background: #8A3529; }
+/* 内容卡片 Panel；分组条 / 选项底 Surface；输入框与弹窗 Elevated；次级按钮 Panel，悬浮 #E9DDCB */
+.sh-sec { background: #EDE3D3; }
+.sh-hp, .sh-ab, .sh-mini > div, .sh-info > span, .sh-text, .sh-fields, .sh-filt button, .wz-card, .wz-ab > div { background: #F4ECDD; }
+.lib-search, .trpg-input, .trpg-field .trpg-input, .sh-in, .trpg-modal__card, .trpg-dropdown { background: #FFF9F0; }
 .trpg-input[data-focus='true'], .sh-in[data-focus='true'] { border-color: #B89A54; border-width: 2px; }
-.sh-in { background: #FFF9F0; }
-/* —— 次级按钮 #F4ECDD —— */
 .trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet) { background: #F4ECDD; }
-/* —— 生命条：成功绿；低血危险红；临时生命古铜金；经验 / 负重古铜金 —— */
-.sh-bar > i { background: var(--hp-green); }
-.sh-bar > i[data-low='true'] { background: var(--danger-text); }
-.sh-bar > i[data-plain='true'] { background: var(--accent); }
-.sh-bar > u { background: var(--accent); }
+.trpg-btn:not(.trpg-btn--primary):not(.trpg-btn--danger):not(.trpg-btn--quiet):hover { background: #E9DDCB; }
+/* 生命条：成功绿；低血危险红；临时生命 / 经验 / 负重古铜金 */
+.sh-bar > i { background: #4F8050; }
+.sh-bar > i[data-low='true'] { background: #A33B2B; }
+.sh-bar > i[data-plain='true'], .sh-bar > u { background: #B89A54; }
 </style></head><body><div class="wf-board ds-root" style="background:#f4f1ea">
 <h1>生命原地改 · 设定草稿 · AC 手改（读数弹窗）</h1><p class="wf-meta">详情（人物）· 每个分页 · 配色 A（P4 令牌）· 结构照 Tidy5e / gg-sheet-export / morii-vtt · 名字和数值是占位示例，真实显示由内核给</p>
 <div class="wf-row"><figure style="margin:0"><figcaption class="wf-cap">窄屏：改生命</figcaption><div class="wf-host" style="width:390px;height:844px"><div class="wf-host__bar">酒馆顶部栏（宿主，不属于插件）</div><section class="trpg-window" data-layout="narrow" data-fullscreen="true" style="top:36px;left:0;right:0;bottom:0"><div class="trpg-shell"><div class="trpg-main"><header class="trpg-head"><h1 class="trpg-head__title">人物</h1><div class="trpg-head__chips"><button class="trpg-icon-btn" type="button" aria-label="助手菜单"><svg class="trpg-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true" width="20" height="20"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></svg></button></div></header>
