@@ -934,7 +934,7 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 
 /* P6 人物线框 v4（2026-11-15 重写）。结构照参考项目源码：Tidy5e（角色表 + 队伍表）、gg-sheet-export（阅读视图排版）、morii-vtt（建卡向导：左侧步骤清单）。
    需求照 P6-2；字段照内核（dnd5e 6.1 人物数据 + 建卡成长步骤）。颜色全走 P4 令牌（0 个新颜色）：
-   深色页头 = --hero-bg；分组条 = --primary 实底白字（Tidy5e 的彩色分组条）；临时生命 / 熟练标记 = --accent。
+   2026-11-15 改：整体浅色简约，红色只作点缀（选中、主按钮、生命条、法术位圆点、当前分页下划线）；分组条 = 浅米底细线；AC 盾 = 深色。
    sh- = 人物，wz- = 建卡向导。条的宽度只为线框表达静态值，实现时用 transform（开发规范 §5.5）。 */
 .ds-root { --row-h: 36px; --sec-h: 28px; }
 .sh-2 { color: var(--text2); } .sh-3 { color: var(--text3); }
@@ -952,12 +952,12 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 @container sh (max-width: 900px) { .sh-ltop { flex-wrap: wrap; } .sh-ltop .lib-search { order: 5; flex: 1 1 100%; } .sh-ltop__end { margin-left: auto; } }
 @container sh (max-width: 560px) { .sh-ltop { flex-wrap: wrap; padding: var(--sp-2) var(--sp-3); } .sh-ltop .trpg-seg { order: -1; flex: 1 1 100%; display: grid; grid-template-columns: repeat(4, 1fr); } .sh-ltop .trpg-seg button { justify-content: center; min-height: 44px; } }
 
-.sh-sec { display: grid; align-items: center; min-height: var(--sec-h); padding: 0 var(--sp-3); background: var(--primary); color: var(--on-primary); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.sh-sec { display: grid; align-items: center; min-height: var(--sec-h); padding: 0 var(--sp-3); background: var(--bg-side); color: var(--text); border-bottom: 1px solid var(--line); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
 .sh-sec > b { display: flex; align-items: center; gap: 6px; font-size: var(--fs-md); white-space: nowrap; }
-.sh-sec > b small { font-weight: var(--fw-regular); opacity: .85; }
-.sh-sec > b .sh-dots { color: var(--on-primary); }
-.sh-sec > span { text-align: center; font-weight: var(--fw-medium); opacity: .92; white-space: nowrap; }
-.sh-sec > .sh-add { justify-self: end; display: grid; place-items: center; width: 28px; height: 28px; color: inherit; background: none; border: 0; }
+.sh-sec > b small { font-weight: var(--fw-regular); color: var(--text3); }
+.sh-sec > b .sh-dots { color: var(--primary); }
+.sh-sec > span { text-align: center; font-weight: var(--fw-regular); color: var(--text2); white-space: nowrap; }
+.sh-sec > .sh-add { justify-self: end; display: grid; place-items: center; width: 28px; height: 28px; color: var(--text2); background: none; border: 0; }
 
 .sh-mem, .sh-sec--mem { grid-template-columns: 52px minmax(0, 1fr) 150px 56px 64px 40px; column-gap: var(--sp-3); }
 .sh-mem[data-check], .sh-sec--mem[data-check] { grid-template-columns: 28px 52px minmax(0, 1fr) 150px 56px 64px 40px; }
@@ -969,8 +969,8 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .sh-who { min-width: 0; display: grid; gap: 1px; }
 .sh-who b { font-size: var(--fs-lg); font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
 .sh-who b small { font-size: var(--fs-sm); font-weight: var(--fw-regular); color: var(--text3); }
-.sh-who > span { font-size: var(--fs-sm); color: var(--primary-text); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sh-who > span em { font-style: normal; color: var(--text2); font-weight: var(--fw-regular); margin-left: 8px; }
+.sh-who > span { font-size: var(--fs-sm); color: var(--text2); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-who > span em { font-style: normal; color: var(--text3); font-weight: var(--fw-regular); margin-left: 8px; }
 .sh-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 .sh-tag { font-size: var(--fs-xs); line-height: 18px; padding: 0 6px; border-radius: var(--r-xs); background: var(--bg-side); color: var(--text2); border: 1px solid var(--line); white-space: nowrap; }
 .sh-tag[data-tone='warn'] { background: var(--warn-bg); color: var(--warn-text); border-color: var(--accent); }
@@ -993,7 +993,7 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .sh-bar > i { display: block; height: 100%; background: var(--primary); }
 .sh-bar > i[data-low='true'] { background: var(--danger-text); }
 .sh-bar > u { display: block; height: 100%; background: var(--accent); }
-.sh-bar--dk { background: rgb(255 255 255 / 18%); }
+.sh-bar--dk { background: var(--bg-hover); }
 
 .sh-selbar { flex: none; display: flex; align-items: center; gap: var(--sp-3); min-height: 48px; padding: 0 var(--sp-4); background: var(--primary-tint); border-bottom: 1px solid var(--primary-tint-line); font-weight: var(--fw-semibold); }
 .sh-selbar > :last-child { margin-left: auto; }
@@ -1016,9 +1016,10 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 @container sh (max-width: 560px) { .sh-undo__txt, .sh-top__name { display: none; } }
 
 /* ===== 深色页头（Tidy5e 角色横幅）：左 = 生命块；右 = 身份 + 经验 / 一排 AC 盾·六属性·先攻速度熟练 / 被动 ===== */
-.sh-hero { background: var(--hero-bg); color: var(--hero-ink); padding: var(--sp-3) var(--sp-4) var(--sp-3); display: grid; gap: var(--sp-3); grid-template-columns: 256px minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: 'hp id' 'hp row'; }
+/* 页头改浅色（驾驶员 2026-11-15：红色只作点缀、整体简约）；只有 AC 盾保持深色 */
+.sh-hero { --hero-ink: var(--text); --hero-ink2: var(--text2); background: var(--surface); border-bottom: 1px solid var(--line); color: var(--text); padding: var(--sp-3) var(--sp-4) var(--sp-3); display: grid; gap: var(--sp-3); grid-template-columns: 256px minmax(0, 1fr); grid-template-rows: auto 1fr; grid-template-areas: 'hp id' 'hp row'; }
 .sh-hero__id { grid-area: id; display: flex; gap: var(--sp-3); align-items: flex-start; min-width: 0; }
-.sh-pic { flex: none; width: 60px; height: 72px; border-radius: var(--r-sm); border: 2px solid var(--hero-ink2); display: grid; place-items: center; color: var(--hero-ink2); background: rgb(255 255 255 / 6%); }
+.sh-pic { flex: none; width: 60px; height: 72px; border-radius: var(--r-sm); border: 1px solid var(--line-ctrl); display: grid; place-items: center; color: var(--text2); background: var(--bg-side); }
 .sh-hero__who { flex: 1; min-width: 0; }
 .sh-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-3xl); line-height: 1.1; font-weight: var(--fw-bold); font-family: var(--font-serif); }
 .sh-name small { font-family: var(--font-sans); font-size: var(--fs-md); font-weight: var(--fw-regular); color: var(--hero-ink2); }
@@ -1026,22 +1027,22 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .sh-meta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 4px; font-size: var(--fs-sm); color: var(--hero-ink2); }
 .sh-meta b { color: var(--hero-ink); font-weight: var(--fw-semibold); }
 .sh-hero__btns { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-.sh-dk { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border-radius: var(--r-sm); border: 1px solid rgb(255 255 255 / 28%); background: rgb(255 255 255 / 6%); color: var(--hero-ink); font: inherit; font-size: var(--fs-sm); white-space: nowrap; }
+.sh-dk { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border-radius: var(--r-sm); border: 1px solid var(--line-ctrl); background: var(--surface); color: var(--text); font: inherit; font-size: var(--fs-sm); white-space: nowrap; }
 .sh-xp { flex: none; width: 170px; display: grid; gap: 4px; font-size: var(--fs-xs); color: var(--hero-ink2); align-self: flex-start; }
 .sh-xp > div { display: flex; justify-content: space-between; align-items: center; } .sh-xp b { color: var(--hero-ink); font-size: var(--fs-sm); }
 .sh-xp .sh-dk { justify-content: center; }
 .sh-xp[data-ready='true'] .sh-dk { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: var(--fw-semibold); }
 
-.sh-hp { grid-area: hp; align-self: start; display: grid; gap: 6px; padding: 10px 12px; border-radius: var(--r-md); background: rgb(255 255 255 / 7%); border: 1px solid rgb(255 255 255 / 14%); }
+.sh-hp { grid-area: hp; align-self: start; display: grid; gap: 6px; padding: 10px 12px; border-radius: var(--r-md); background: var(--bg-side); border: 1px solid var(--line); }
 .sh-hp__t { display: flex; align-items: center; justify-content: space-between; font-size: var(--fs-sm); color: var(--hero-ink2); }
 .sh-hp3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px; }
 .sh-hp3 label { display: grid; gap: 2px; font-size: var(--fs-xs); color: var(--hero-ink2); }
-.sh-in { height: 40px; display: flex; align-items: center; padding: 0 8px; border-radius: var(--r-sm); background: rgb(255 255 255 / 10%); color: var(--hero-ink); font-size: var(--fs-xl); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; border: 1px solid rgb(255 255 255 / 22%); }
+.sh-in { height: 40px; display: flex; align-items: center; padding: 0 8px; border-radius: var(--r-sm); background: var(--surface); color: var(--text); font-size: var(--fs-xl); font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; border: 1px solid var(--line-ctrl); }
 .sh-hp3 label:first-child .sh-in { font-size: 26px; height: 46px; }
-.sh-in[data-focus='true'] { background: var(--surface); color: var(--text); border: 2px solid var(--accent); }
-.sh-in[data-temp='true'] { color: var(--accent); }
-.sh-hp__pre { font-size: var(--fs-sm); color: var(--hero-ink); min-height: 20px; } .sh-hp__pre b { color: var(--accent); }
-.sh-hp__rows { display: grid; gap: 2px; padding-top: 6px; border-top: 1px solid rgb(255 255 255 / 14%); font-size: var(--fs-sm); color: var(--hero-ink2); }
+.sh-in[data-focus='true'] { background: var(--surface); color: var(--text); border: 2px solid var(--primary); }
+.sh-in[data-temp='true'] { color: var(--accent-text); }
+.sh-hp__pre { font-size: var(--fs-sm); color: var(--hero-ink); min-height: 20px; } .sh-hp__pre b { color: var(--primary-text); }
+.sh-hp__rows { display: grid; gap: 2px; padding-top: 6px; border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text2); }
 .sh-hp__rows > div { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 28px; } .sh-hp__rows b { color: var(--hero-ink); font-weight: var(--fw-semibold); }
 .sh-hp__rows button { margin-left: auto; }
 
@@ -1051,16 +1052,16 @@ button.trpg-hero:active:not(:disabled) { transform: none; }
 .sh-dots[data-kind='fail'] i[data-on='true'] { background: var(--danger-line); border-color: var(--danger-line); }
 
 .sh-row { grid-area: row; display: flex; flex-wrap: wrap; align-items: stretch; align-content: start; gap: 6px; min-width: 0; }
-.sh-shield { flex: none; width: 62px; display: grid; place-items: center; align-content: center; clip-path: polygon(50% 0, 100% 12%, 100% 60%, 50% 100%, 0 60%, 0 12%); background: var(--hero-ink); color: var(--hero-bg); padding-bottom: 12px; }
+.sh-shield { flex: none; width: 62px; display: grid; place-items: center; align-content: center; clip-path: polygon(50% 0, 100% 12%, 100% 60%, 50% 100%, 0 60%, 0 12%); background: var(--text); color: var(--surface); padding-bottom: 12px; }
 .sh-shield small { font-size: var(--fs-xs); font-weight: var(--fw-semibold); } .sh-shield b { font-size: 26px; line-height: 1; font-weight: var(--fw-bold); }
 .sh-abs { flex: 1 1 340px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; min-width: 0; }
-.sh-ab { display: grid; justify-items: center; gap: 1px; padding: 4px 2px 5px; border-radius: var(--r-sm); background: rgb(255 255 255 / 8%); border: 1px solid rgb(255 255 255 / 12%); }
+.sh-ab { display: grid; justify-items: center; gap: 1px; padding: 4px 2px 5px; border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--line); }
 .sh-ab small { font-size: var(--fs-xs); color: var(--hero-ink2); }
 .sh-ab b { font-size: var(--fs-2xl); line-height: 1.05; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
-.sh-ab span { font-size: var(--fs-xs); min-width: 26px; text-align: center; border-radius: 3px; background: rgb(255 255 255 / 12%); }
-.sh-ab em { font-style: normal; font-size: 11px; color: var(--hero-ink2); white-space: nowrap; } .sh-ab em[data-prof='true'] { color: var(--accent); }
+.sh-ab span { font-size: var(--fs-xs); min-width: 26px; text-align: center; border-radius: 3px; background: var(--bg-side); border: 1px solid var(--line); }
+.sh-ab em { font-style: normal; font-size: 11px; color: var(--hero-ink2); white-space: nowrap; } .sh-ab em[data-prof='true'] { color: var(--primary-text); }
 .sh-mini { flex: 0 1 auto; display: grid; grid-template-columns: repeat(3, auto); gap: 4px; }
-.sh-mini > div { display: grid; justify-items: center; align-content: center; min-width: 56px; padding: 4px 6px; border-radius: var(--r-sm); background: rgb(255 255 255 / 8%); border: 1px solid rgb(255 255 255 / 12%); }
+.sh-mini > div { display: grid; justify-items: center; align-content: center; min-width: 56px; padding: 4px 6px; border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--line); }
 .sh-mini small { font-size: var(--fs-xs); color: var(--hero-ink2); } .sh-mini b { font-size: var(--fs-lg); font-weight: var(--fw-bold); white-space: nowrap; }
 .sh-pass { flex: 1 1 100%; font-size: var(--fs-sm); color: var(--hero-ink2); display: flex; gap: 14px; flex-wrap: wrap; } .sh-pass b { color: var(--hero-ink); }
 .sh-ovr { box-shadow: inset 0 -2px 0 var(--accent); }
