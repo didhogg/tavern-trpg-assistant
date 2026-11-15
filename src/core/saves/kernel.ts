@@ -6,16 +6,17 @@ import type { CampaignService } from './campaign'
 import type { RuleRegistry } from '../../rules/registry'
 import type { SaveSlot, Workspace } from '../../schemas/campaign'
 import {
-  kernelCombatSchema, kernelCampaignSchema, kernelLibrarySchema,
+  kernelCampaignSchema, kernelLibrarySchema,
   type KernelActor, type KernelCampaign, type KernelChange, type KernelDataVersion, type KernelLibrary, type KernelOverride,
 } from '../../schemas/kernel'
 import {
   actorIdOf, applyActorChanges, applyCombatChange, isCombatChange, type KernelRefMapper,
 } from './split'
-import { clone, isObject } from './state'
+import { clone } from './state'
 import { chooseSource } from '../../library/scopes'
 
 import type { KernelActorCompact, KernelRefChecker } from './kernel-types'
+import { addActors, history, purgeActors, setAdjustments, undoLast, type HistoryRow, type RestoredActor, type RosterContext } from './kernel-roster'
 import type { DownloadSuggestion, MissingRef } from '../../library/missing-refs'
 export type { KernelActorCompact, KernelRefChecker, KernelRefResult } from './kernel-types'
 
@@ -371,27 +372,20 @@ export class KernelSaveService {
     })
   }
 
-  /** 撤销最近一次写入：同样比对修订号，恢复受影响人物与战役战斗。 */
-  async undo(ownerKey: string, expectedRevision: number): Promise<{ workspace: Workspace; kernel: KernelCampaign } | null> {
-    return this.deps.db.transaction('rw', this.deps.db.workspaces, async () => {
-      const ws = await this.deps.db.workspaces.get(ownerKey)
-      if (!ws) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
-      const kernel = this.parse(ws.data.kernel)
-      if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-      if (kernel.revision !== expectedRevision) throw new TrpgError('E_REVISION_CONFLICT', '存档已被其他窗口修改，请重新读取')
-      const last = kernel.undo.at(-1)
-      if (!last) return null
-      const nextActors = kernel.actors.map((actor) => {
-        if (!last.actorIds.includes(actor.id)) return clone(actor)
-        const saved = last.before[actor.id]
-        if (isObject(saved) && 'refs' in saved && 'state' in saved) return clone(saved) as unknown as KernelActor
-        return { ...clone(actor), state: (saved as KernelActor['state']) ?? actor.state }
-      })
-      const combat = last.combatBefore ? kernelCombatSchema.parse(last.combatBefore) : kernel.combat
-      const next: KernelCampaign = { ...kernel, actors: nextActors, combat, revision: kernel.revision + 1, undo: kernel.undo.slice(0, -1) }
-      const workspace: Workspace = { ...ws, data: { ...ws.data, kernel: next }, updatedAt: this.deps.now() }
-      await this.deps.db.workspaces.put(workspace)
-      return { workspace, kernel: next }
-    })
+  private roster(): RosterContext {
+    return { db: this.deps.db, now: this.deps.now, parse: (raw) => this.parse(raw), limit: async () => this.deps.undoLimit ? await this.deps.undoLimit() : DEFAULT_UNDO_LIMIT }
+  }
+  /** 撤销最近一次写入：恢复受影响人物与战役战斗；restored = 每个受影响的人现在的样子（给结算小窗退回用）。 */
+  async undo(ownerKey: string, expectedRevision: number): Promise<{ workspace: Workspace; kernel: KernelCampaign; restored: RestoredActor[] } | null> {
+    return undoLast(this.roster(), ownerKey, expectedRevision)
+  }
+  /** 加人（建卡 / 从模板加入 / 复制之后），adjustments 是列表信息；彻底删人；改个人调整（null = 删键）。都可撤销。 */
+  addActors(ownerKey: string, compacts: KernelActorCompact[], expectedRevision: number, adjustments: Record<string, unknown> = {}) { return addActors(this.roster(), ownerKey, compacts, expectedRevision, adjustments) }
+  purgeActors(ownerKey: string, ids: string[], expectedRevision: number) { return purgeActors(this.roster(), ownerKey, ids, expectedRevision) }
+  setAdjustments(ownerKey: string, ids: string[], patch: Record<string, unknown>, expectedRevision: number) { return setAdjustments(this.roster(), ownerKey, ids, patch, expectedRevision) }
+  /** 改动记录（新的在前），由撤销记录比出来。 */
+  async history(ownerKey: string): Promise<HistoryRow[]> {
+    const kernel = await this.read(ownerKey)
+    return kernel ? history(kernel) : []
   }
 }

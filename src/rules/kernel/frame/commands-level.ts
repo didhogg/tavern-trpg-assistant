@@ -255,11 +255,14 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       return { status: steps.length ? 'pending' : 'complete', steps }
     }, [actorId]),
 
-    /** 应用升级：自动步骤原样应用；选择步骤按“第一个可选项”登记表取值；仍无值则 pending。 */
-    levelUpApply: (actorId: string, classId: string, delta = 1) => operate([], async () => {
+    /**
+     * 应用升级 / 降级：自动步骤原样应用；玩家给了选择（values：成长编号 + 等级 + 选择数据，和建卡、读档同一种）就按选择走官方 restore；
+     * 没给的选择步骤仍按“第一个可选项”取值；仍无值则 pending。
+     */
+    levelUpApply: (actorId: string, classId: string, delta = 1, values?: any[]) => operate([], async () => {
       const a = actor(actorId)
       const manager = managerFor(a, classId, delta, { automaticApplication: true })
-      const outcome = await applyManager(manager, undefined)
+      const outcome = await applyManager(manager, values)
       if (!outcome.finished) {
         return {
           kernelStatus: 'pending',

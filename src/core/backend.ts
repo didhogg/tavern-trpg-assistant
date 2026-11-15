@@ -40,6 +40,7 @@ import { LibraryService } from '../library/service'
 import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
+import { KernelPeople } from '../rules/kernel/people'
 import { KernelPrecompute } from '../rules/kernel/precompute'
 import { kernelFilesVersion } from '../rules/kernel/cache'
 import { cardFields, cardTypes, type CardFields, type CardTypesResult } from '../rules/kernel/card-types'
@@ -122,6 +123,8 @@ export interface Backend {
   library: LibraryBackend
   kernel: KernelRuntime
   kernelSave: KernelSaveService
+  /** 人物页统一入口（P6 B1，rules/kernel/people.ts）：读人、改人、回到自动、掷骰、先预览的大操作、加人删人、撤销与改动记录。 */
+  people: KernelPeople
   /** 开局向导：wizardOptions / startCampaign（缺的资料和冒险在【库】后台下载）。 */
   starter: CampaignStarter
   /** 导出 / 导入存档文件要带的【库】那一半：完整备份里的自制 / 范围 / 房规，和导入后"依赖还在不在"的核对（P4 界面接线）。 */
@@ -385,5 +388,6 @@ export function createBackend(opts: BackendOptions): Backend {
   const houseExistingOf: Backend['houseExisting'] = (c, refs) => houseExisting({ houseNow: (cc, t) => custom.houseNow(cc, t), impact: entryChangeImpact }, c, refs)
   const types: Backend['cards']['types'] = (rule, codeSet) => cardTypes({ pluginRoot, files, scoped, db, revisions, container }, rule, codeSet)
   const cards: Backend['cards'] = { types, fields: (rule, type, codeSet) => cardFields({ types, fields: (cs, p) => custom.fields(cs, p), plan: (cs, p) => custom.formPlan(cs, p) }, rule, type, codeSet) }
-  return { library, kernel, kernelSave, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
+  const people = new KernelPeople({ runtime: kernel, saves: kernelSave })
+  return { library, kernel, kernelSave, people, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
 }

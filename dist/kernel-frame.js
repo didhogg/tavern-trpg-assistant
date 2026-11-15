@@ -269,17 +269,17 @@ function te() {
 function h(e) {
 	ee(e);
 }
-function g(e, t) {
+function ne(e, t) {
 	let n = t;
-	return `entry:${e}:${String(n?.source ?? "")}:${String(n?.name ?? "")}:${ne(JSON.stringify(t))}`;
+	return `entry:${e}:${String(n?.source ?? "")}:${String(n?.name ?? "")}:${re(JSON.stringify(t))}`;
 }
-function ne(e) {
+function re(e) {
 	let t = 2166136261;
 	for (let n = 0; n < e.length; n++) t = Math.imul(t ^ e.charCodeAt(n), 16777619);
 	return (t >>> 0).toString(16);
 }
 // src/rules/kernel/frame/writings.ts
-var re = [
+var ie = [
 	{
 		id: "midi-qol",
 		test: (e) => e.startsWith("flags.midi-qol."),
@@ -296,8 +296,8 @@ var re = [
 		reason: "宏写法：不执行任何 JS（蓝图决定 6）"
 	}
 ];
-function ie(e, t) {
-	let n = String(t.key ?? ""), r = re.find((e) => e.test(n));
+function ae(e, t) {
+	let n = String(t.key ?? ""), r = ie.find((e) => e.test(n));
 	if (r) return {
 		key: n,
 		value: t.value,
@@ -314,10 +314,10 @@ function ie(e, t) {
 		affects: n
 	};
 }
-function ae(e) {
+function oe(e) {
 	let t = [];
 	for (let n of e.allApplicableEffects()) for (let r of n.system?.changes ?? n.changes ?? []) {
-		let i = ie(e, r);
+		let i = ae(e, r);
 		i && t.push({
 			actor: e.id,
 			effect: n.uuid,
@@ -327,15 +327,15 @@ function ae(e) {
 	return t;
 }
 // src/rules/kernel/frame/commands-items.ts
-var oe = globalThis;
-function _(e) {
+var se = globalThis;
+function ce(e) {
 	return !e || e.max === void 0 || e.max === null || e.max === "" ? null : {
 		value: e.value ?? null,
 		max: e.max ?? null,
 		spent: e.spent ?? null
 	};
 }
-function v(e) {
+function g(e) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -343,16 +343,16 @@ function v(e) {
 		equipped: "equipped" in e.system ? e.system.equipped : null,
 		attuned: "attuned" in e.system ? e.system.attuned : null,
 		attunement: e.system.attunement ?? null,
-		uses: _(e.system.uses),
+		uses: ce(e.system.uses),
 		activities: e.system.activities ? [...e.system.activities].map((e) => ({
 			id: e.id,
 			name: e.name,
 			type: e.type,
-			uses: _(e.uses)
+			uses: ce(e.uses)
 		})) : []
 	};
 }
-function y(e) {
+function _(e) {
 	let t = e.system.attributes?.ac, n = e.system.attributes?.attunement;
 	return {
 		ac: t ? {
@@ -366,7 +366,7 @@ function y(e) {
 		} : null
 	};
 }
-function se(e) {
+function le(e) {
 	return e.map((e) => ({
 		formula: e.formula ?? null,
 		total: e.total ?? null,
@@ -376,25 +376,25 @@ function se(e) {
 		})) ?? []
 	}));
 }
-function ce(e, t) {
+function ue(e, t) {
 	let n = (e, n) => t(e).items.get(n, { strict: !0 });
 	return {
 		equip: (r, i, a) => e([], async () => {
 			let e = t(r), o = n(r, i);
 			return await o.update({ "system.equipped": !!a }), {
-				item: v(o),
-				actor: y(e)
+				item: g(o),
+				actor: _(e)
 			};
 		}, [r]),
 		attune: (r, i, a) => e([], async () => {
 			let e = t(r), o = n(r, i);
 			return await o.update({ "system.attuned": !!a }), {
-				item: v(o),
-				actor: y(e)
+				item: g(o),
+				actor: _(e)
 			};
 		}, [r]),
 		useItem: (t, r, i = [], a = null) => {
-			let o = [], s = oe.ui?.notifications, c = s?.error;
+			let o = [], s = se.ui?.notifications, c = s?.error;
 			return s && c && (s.error = function(e, ...t) {
 				return o.push(String(e)), c.call(this, e, ...t);
 			}), e(i, async () => {
@@ -404,7 +404,7 @@ function ce(e, t) {
 					i = await s.use({}, { configure: !1 }, { create: !1 });
 				} else i = await e.use({}, { configure: !1 }, { create: !1 });
 				return {
-					item: v(e),
+					item: g(e),
 					activity: s ? {
 						id: s.id,
 						name: s.name,
@@ -438,24 +438,24 @@ function ce(e, t) {
 					id: t.id,
 					name: t.name,
 					destroy: !0
-				})) : oe.foundry.utils.isEmpty(n.updates) || (await t.update(n.updates), i.push({
+				})) : se.foundry.utils.isEmpty(n.updates) || (await t.update(n.updates), i.push({
 					id: t.id,
 					name: t.name,
 					updates: n.updates,
-					rolls: se(n.rolls ?? [])
+					rolls: le(n.rolls ?? [])
 				})));
 			}
 			return {
 				period: r,
 				items: i,
-				actor: y(e)
+				actor: _(e)
 			};
 		}, [n])
 	};
 }
 // src/rules/kernel/frame/commands-combat.ts
-var b = globalThis;
-function le(e) {
+var v = globalThis;
+function de(e) {
 	let t = e.system.spells;
 	return t ? Object.fromEntries(Object.entries(t).map(([e, t]) => [e, {
 		value: t.value ?? null,
@@ -464,7 +464,7 @@ function le(e) {
 		type: t.type ?? null
 	}])) : null;
 }
-function x(e) {
+function y(e) {
 	let t = e.concentration?.effects;
 	return {
 		effects: t ? [...t].map((e) => ({
@@ -475,7 +475,7 @@ function x(e) {
 		limit: e.system.attributes?.concentration?.limit ?? null
 	};
 }
-function ue(e) {
+function fe(e) {
 	return {
 		statuses: e.statuses ? [...e.statuses] : [],
 		effects: e.effects.contents.map((e) => ({
@@ -486,7 +486,7 @@ function ue(e) {
 		}))
 	};
 }
-function S(e) {
+function b(e) {
 	return {
 		id: e.id,
 		name: e.name,
@@ -504,7 +504,7 @@ function S(e) {
 		}))
 	};
 }
-function de(e) {
+function pe(e) {
 	return {
 		formula: e.formula ?? null,
 		total: e.total ?? null,
@@ -516,28 +516,28 @@ function de(e) {
 		})) ?? []
 	};
 }
-function fe(e, t) {
-	let n = null, r = () => n ?? b.game.combat, i = () => {
+function me(e, t) {
+	let n = null, r = () => n ?? v.game.combat, i = () => {
 		let e = r();
 		if (!e) throw Error("No active combat");
 		return e;
 	};
 	return {
 		combatStart: (t, r = []) => e(r, async () => {
-			let e = await b.CONFIG.Combat.documentClass.create({
+			let e = await v.CONFIG.Combat.documentClass.create({
 				name: "Kernel encounter",
 				combatants: t.map((e) => ({ actorId: e }))
 			});
-			return await e.rollInitiative(e.combatants.map((e) => e.id), { dialog: !1 }), await e.startCombat(), n = e, S(e);
+			return await e.rollInitiative(e.combatants.map((e) => e.id), { dialog: !1 }), await e.startCombat(), n = e, b(e);
 		}, t),
 		combatNext: (t = []) => e(t, async () => {
 			let e = i();
-			return await e.nextTurn(), S(e);
+			return await e.nextTurn(), b(e);
 		}),
 		combatEnd: () => e([], async () => {
 			let e = i();
 			await e.endCombat();
-			let t = S(e);
+			let t = b(e);
 			return n = null, t;
 		}),
 		cast: (n, r, i, a = [], o = {}) => e(a, async () => {
@@ -545,14 +545,14 @@ function fe(e, t) {
 			if (!s) throw Error(`Item has no activity: ${i}`);
 			let c = await s.use(o, { configure: !1 }, { create: !1 });
 			return {
-				item: v(a),
+				item: g(a),
 				activity: {
 					id: s.id,
 					name: s.name,
 					type: s.type
 				},
-				slots: le(e),
-				concentration: x(e),
+				slots: de(e),
+				concentration: y(e),
 				effects: (c?.effects ?? []).map((e) => ({
 					id: e.id,
 					name: e.name,
@@ -567,36 +567,36 @@ function fe(e, t) {
 		}, [n]),
 		condition: (n, r, i = !0) => e([], async () => {
 			let e = t(n);
-			return await e.toggleStatusEffect(r, { active: i }), ue(e);
+			return await e.toggleStatusEffect(r, { active: i }), fe(e);
 		}, [n]),
 		concentrationCheck: (n, r, i = []) => e(i, async () => {
 			let e = t(n);
 			if (!e.concentration?.effects?.size) return {
 				dc: null,
 				skipped: "not concentrating",
-				concentration: x(e)
+				concentration: y(e)
 			};
 			let i = e.getConcentrationDC(r), a = await e.rollConcentration({ target: i }, { configure: !1 }, { create: !1 }), o = a?.[0] ?? null, s = o ? o.total >= i : null;
 			return s === !1 && await e.endConcentration(), {
 				dc: i,
 				success: s,
-				rolls: (a ?? []).map(de),
-				concentration: x(e)
+				rolls: (a ?? []).map(pe),
+				concentration: y(e)
 			};
 		}, [n]),
-		concentration: (n) => e([], async () => x(t(n)), [n])
+		concentration: (n) => e([], async () => y(t(n)), [n])
 	};
 }
 // src/rules/kernel/frame/importer.ts
-var C = globalThis, pe = {
+var x = globalThis, he = {
 	skillsChosenFvtt: [],
 	languagesChosenFvtt: [],
 	armorProficienciesChosenFvtt: [],
 	weaponProficienciesChosenFvtt: [],
 	toolProficienciesChosenFvtt: []
 };
-function me() {
-	let e = C.foundry?.documents?.collections?.CompendiumCollection;
+function ge() {
+	let e = x.foundry?.documents?.collections?.CompendiumCollection;
 	if (e?.prototype && !e.prototype.getDocuments.__seeded) for (let t of ["getDocuments", "getDocument"]) {
 		let n = e.prototype[t], r = function(...e) {
 			return d(`pack:${this.collection}:${t}:${JSON.stringify(e)}`, () => n.apply(this, e));
@@ -604,24 +604,24 @@ function me() {
 		r.__seeded = !0, e.prototype[t] = r;
 	}
 }
-async function w(e, t) {
-	me();
-	let n = C.game.modules.get("plutonium")?.api;
+async function S(e, t) {
+	ge();
+	let n = x.game.modules.get("plutonium")?.api;
 	if (!n?.importer) throw Error("Plutonium importer is not available");
 	let r = await n.importer.pGetImporter({ prop: e });
 	if (!r) throw Error(`No Plutonium importer for ${e}`);
 	let i = async () => {
-		let i = structuredClone(t), a = new n.importer.ImportOpts({ isTemp: !0 }), o = (e === "class" && r.pImportEntryClass ? await r.pImportEntryClass(i, a) : await r.pImportEntry(i, a, structuredClone(pe)))?.imported?.[0]?.document ?? null;
+		let i = structuredClone(t), a = new n.importer.ImportOpts({ isTemp: !0 }), o = (e === "class" && r.pImportEntryClass ? await r.pImportEntryClass(i, a) : await r.pImportEntry(i, a, structuredClone(he)))?.imported?.[0]?.document ?? null;
 		if (!o) throw Error(`Plutonium import failed for ${t?.name ?? e}`);
 		return o.toObject ? o.toObject() : o;
 	};
-	return h(g(e, t)), await i(), h(g(e, t)), i();
+	return h(ne(e, t)), await i(), h(ne(e, t)), i();
 }
-async function he(e) {
-	return (await T(e)).map((e) => e.prop);
+async function _e(e) {
+	return (await C(e)).map((e) => e.prop);
 }
-async function T(e) {
-	let t = C.game.modules.get("plutonium")?.api;
+async function C(e) {
+	let t = x.game.modules.get("plutonium")?.api;
 	if (!t?.importer) throw Error("Plutonium importer is not available");
 	let n = [];
 	for (let r of e) try {
@@ -634,7 +634,7 @@ async function T(e) {
 	return n;
 }
 // src/rules/kernel/frame/actor-state.ts
-async function E(t, n) {
+async function w(t, n) {
 	if (n) {
 		n.actor && Object.keys(n.actor).length && await t.update(n.actor);
 		for (let [r, i] of Object.entries(n.items ?? {})) {
@@ -657,8 +657,8 @@ async function E(t, n) {
 	}
 }
 // src/rules/kernel/frame/commands-monsters.ts
-var D = globalThis;
-function ge(e) {
+var T = globalThis;
+function ve(e) {
 	return Object.fromEntries(Object.entries(e.abilities ?? {}).map(([e, t]) => [e, {
 		value: t.value ?? null,
 		mod: t.mod ?? null,
@@ -666,22 +666,22 @@ function ge(e) {
 		proficient: t.proficient ?? null
 	}]));
 }
-function _e(e) {
+function ye(e) {
 	return Object.fromEntries(Object.entries(e.skills ?? {}).map(([e, t]) => [e, {
 		total: t.total ?? null,
 		passive: t.passive ?? null,
 		proficient: t.proficient ?? null
 	}]));
 }
-function ve(e) {
+function be(e) {
 	return e ? Array.isArray(e) ? e : typeof e[Symbol.iterator] == "function" ? [...e] : Object.values(e) : [];
 }
-function ye(e) {
+function xe(e) {
 	return {
 		id: e.id ?? e._id ?? null,
 		name: e.name,
 		type: e.type,
-		activities: ve(e.system?.activities).map((e) => ({
+		activities: be(e.system?.activities).map((e) => ({
 			id: e.id ?? e._id,
 			type: e.type,
 			name: e.name
@@ -692,7 +692,7 @@ function ye(e) {
 		} : null
 	};
 }
-function O(e) {
+function E(e) {
 	let t = e.toObject ? e.toObject() : e, n = e.system ?? t.system ?? {}, r = e.items?.contents ?? e.items ?? t.items ?? [];
 	return {
 		name: e.name ?? t.name,
@@ -702,8 +702,8 @@ function O(e) {
 			value: n.attributes.hp.value ?? null,
 			max: n.attributes.hp.max ?? null
 		} : null,
-		abilities: ge(n),
-		skills: _e(n),
+		abilities: ve(n),
+		skills: ye(n),
 		cr: n.details?.cr ?? null,
 		legendary: {
 			actions: n.resources?.legact ? {
@@ -715,28 +715,28 @@ function O(e) {
 				max: n.resources.legres.max ?? null
 			} : null
 		},
-		items: [...r].map(ye),
+		items: [...r].map(xe),
 		validation: e.validationFailures ?? []
 	};
 }
-async function k(e) {
-	let t = await w("monster", e);
+async function Se(e) {
+	let t = await S("monster", e);
 	return {
 		status: "complete",
 		entity: {
 			name: e.name,
 			source: e.source
 		},
-		...O(t)
+		...E(t)
 	};
 }
-function be(e) {
+function Ce(e) {
 	return {
-		importMonster: (t) => e([], async () => k(t)),
+		importMonster: (t) => e([], async () => Se(t)),
 		importMonsters: (t) => e([], async () => {
 			let e = [];
 			for (let n of t) try {
-				e.push(await k(n));
+				e.push(await Se(n));
 			} catch (t) {
 				e.push({
 					status: "error",
@@ -751,60 +751,60 @@ function be(e) {
 		}),
 		rebuildMonster: (t) => e([], async () => {
 			let e;
-			e = t.data ? structuredClone(t.data) : await w("monster", t.entry), delete e._id;
+			e = t.data ? structuredClone(t.data) : await S("monster", t.entry), delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await D.CONFIG.Actor.documentClass.create({
+			let n = await T.CONFIG.Actor.documentClass.create({
 				...e,
 				name: t.name
 			}), r = n.toObject();
-			return await E(n, t.state), {
+			return await w(n, t.state), {
 				status: "complete",
 				id: n.id,
-				...O(n),
+				...E(n),
 				data: n.toObject(),
 				base: r
 			};
 		}),
 		importMonsterData: (t) => e([], async () => ({
 			status: "complete",
-			data: await w("monster", t)
+			data: await S("monster", t)
 		})),
 		createActorFromData: (t) => e([], async () => {
 			let e = structuredClone(t);
 			delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await D.CONFIG.Actor.documentClass.create(e);
+			let n = await T.CONFIG.Actor.documentClass.create(e);
 			return {
 				status: "complete",
 				id: n.id,
-				...O(n)
+				...E(n)
 			};
 		}),
 		importMonsterActor: (t) => e([], async () => {
-			let e = await w("monster", t);
+			let e = await S("monster", t);
 			delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await D.CONFIG.Actor.documentClass.create(e);
+			let n = await T.CONFIG.Actor.documentClass.create(e);
 			return {
 				status: "complete",
 				id: n.id,
-				...O(n)
+				...E(n)
 			};
 		})
 	};
 }
 // src/rules/kernel/frame/actor-types.ts
-var A = globalThis, j = "character";
-async function xe(e, t) {
-	let n = Object.keys(A.game.system?.documentTypes?.Actor ?? {}), r = (e) => {
-		let t = A.CONFIG?.Actor?.typeLabels?.[e] ?? `TYPES.Actor.${e}`;
-		return A.game.i18n?.localize?.(t) ?? e;
-	}, i = await T([e]), a = /* @__PURE__ */ new Set();
+var D = globalThis, O = "character";
+async function we(e, t) {
+	let n = Object.keys(D.game.system?.documentTypes?.Actor ?? {}), r = (e) => {
+		let t = D.CONFIG?.Actor?.typeLabels?.[e] ?? `TYPES.Actor.${e}`;
+		return D.game.i18n?.localize?.(t) ?? e;
+	}, i = await C([e]), a = /* @__PURE__ */ new Set();
 	if (i.some((e) => e.folderType === "Actor")) for (let n of t) {
-		let t = await w(e, n);
+		let t = await S(e, n);
 		typeof t?.type == "string" && a.add(t.type);
 	}
 	return {
@@ -813,11 +813,11 @@ async function xe(e, t) {
 			label: r(e)
 		})),
 		fromStore: [...a],
-		build: j
+		build: O
 	};
 }
 // src/rules/kernel/frame/commands-restore.ts
-async function Se(e, t, n = []) {
+async function Te(e, t, n = []) {
 	for (let r of e.items) {
 		let e = r.flags?.plutonium;
 		if (!e?.propDroppable || !e.source || !e.hash) continue;
@@ -831,16 +831,16 @@ async function Se(e, t, n = []) {
 	}
 }
 // src/rules/kernel/frame/commands-level.ts
-var M = globalThis;
-function N() {
-	let e = M.dnd5e?.applications?.advancement?.AdvancementManager;
+var k = globalThis;
+function A() {
+	let e = k.dnd5e?.applications?.advancement?.AdvancementManager;
 	if (!e) throw Error("dnd5e AdvancementManager is not available");
 	return e;
 }
-function P(e, t, n, r = {}) {
-	return N().forLevelChange(e, t, n, r);
+function j(e, t, n, r = {}) {
+	return A().forLevelChange(e, t, n, r);
 }
-function F(e) {
+function M(e) {
 	return {
 		level: e.system.details?.level ?? null,
 		hp: e.system.attributes?.hp?.toObject?.() ?? e.system.attributes?.hp ?? null,
@@ -861,7 +861,7 @@ function F(e) {
 		})) ?? []
 	};
 }
-function I(e) {
+function N(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	for (let e of [
 		"_id",
@@ -873,18 +873,18 @@ function I(e) {
 	]) delete t[e];
 	return t;
 }
-function L(e) {
+function P(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
 	return t.flags ??= {}, t.flags.plutonium ??= {}, t.flags.plutonium.isStandardDragDrop = !0, t;
 }
-function Ce(e) {
+function Ee(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-function we(e) {
+function De(e) {
 	return JSON.parse(JSON.stringify(e, (e, t) => t instanceof Set ? [...t] : t));
 }
-async function Te(e) {
+async function Oe(e) {
 	let t = e.advancement, n = t.constructor?.typeName ?? t.type;
 	if (n === "HitPoints") return { [e.level]: "avg" };
 	if (n === "ItemGrant") {
@@ -901,7 +901,7 @@ async function Te(e) {
 		return { selected: (t.configuration?.pool ?? []).map((e) => e.uuid).slice(0, n) };
 	}
 	if (n === "Subclass") {
-		let e = M.game.packs.get("dnd5e.subclasses");
+		let e = k.game.packs.get("dnd5e.subclasses");
 		if (!e) return;
 		let n = (await e.getIndex({ fields: ["system.classIdentifier", "type"] })).contents?.find((e) => e.type === "subclass" && e.system?.classIdentifier === t.item?.system?.identifier);
 		return n ? `Compendium.${e.metadata.id}.Item.${n._id}` : void 0;
@@ -931,7 +931,7 @@ async function Te(e) {
 	if (n === "Size") return { size: t.configuration?.sizes?.first?.() ?? "med" };
 	if (n === "ScaleValue") return {};
 }
-async function R(e, t, { strict: n = !1 } = {}) {
+async function F(e, t, { strict: n = !1 } = {}) {
 	if (!e.steps.length) return { finished: !0 };
 	for (let r of e.steps) {
 		if (r.automatic || !r.flow) continue;
@@ -940,7 +940,7 @@ async function R(e, t, { strict: n = !1 } = {}) {
 			if (i.error) return {
 				finished: !1,
 				step: {
-					...z(r),
+					...I(r),
 					error: i.error
 				}
 			};
@@ -950,25 +950,25 @@ async function R(e, t, { strict: n = !1 } = {}) {
 		if (await r.flow.getAutomaticApplicationValue() !== !1) continue;
 		if (n) return {
 			finished: !1,
-			step: z(r)
+			step: I(r)
 		};
-		let a = await Te(r.flow);
+		let a = await Oe(r.flow);
 		a !== void 0 && (r.flow.getAutomaticApplicationValue = async () => a);
 	}
 	let r = new Promise((t) => {
-		let n = M.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
-			r === e && (M.Hooks.off(n), t(!0));
+		let n = k.Hooks.on("dnd5e.advancementManagerComplete", (r) => {
+			r === e && (k.Hooks.off(n), t(!0));
 		});
 		setTimeout(() => {
-			M.Hooks.off(n), t(!1);
+			k.Hooks.off(n), t(!1);
 		}, 3e3);
 	});
 	return await e.render(), await r ? { finished: !0 } : {
 		finished: !1,
-		step: z(e.step)
+		step: I(e.step)
 	};
 }
-function z(e) {
+function I(e) {
 	if (!e) return null;
 	let t = e.flow, n = t?.advancement;
 	return {
@@ -984,7 +984,7 @@ function z(e) {
 		} : null
 	};
 }
-async function B(e) {
+async function ke(e) {
 	let t = [];
 	for (let n of e.steps) {
 		let e = n.flow, r = e?.advancement, i = null;
@@ -1011,41 +1011,41 @@ async function B(e) {
 	}
 	return t;
 }
-async function V(e, t, n, r = {}, { strict: i = !1, seed: a } = {}) {
+async function Ae(e, t, n, r = {}, { strict: i = !1, seed: a } = {}) {
 	a !== void 0 && h(a);
-	let o = await M.CONFIG.Actor.documentClass.create({
+	let o = await k.CONFIG.Actor.documentClass.create({
 		name: e,
-		type: j,
+		type: O,
 		system: { details: { level: 1 } }
 	});
 	for (let e of t) {
-		let t = I(e?.data ?? e);
-		M.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
-		let n = e?.refKey ?? Ce(t), a = await R(N().forNewItem(o, t, { automaticApplication: !0 }), n ? r[n] : void 0, { strict: i });
+		let t = N(e?.data ?? e);
+		k.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
+		let n = e?.refKey ?? Ee(t), a = await F(A().forNewItem(o, t, { automaticApplication: !0 }), n ? r[n] : void 0, { strict: i });
 		if (!a.finished) return {
 			pending: !0,
 			step: a.step,
-			built: F(o)
+			built: M(o)
 		};
-		o.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await o.createEmbeddedDocuments("Item", [L(I(t))]);
+		o.items.contents.some((e) => e.type === t.type && e.flags?.plutonium?.hash === t.flags?.plutonium?.hash) || await o.createEmbeddedDocuments("Item", [P(N(t))]);
 	}
-	return n.length && await o.createEmbeddedDocuments("Item", n.map((e) => L(I(e?.data ?? e)))), { actor: o };
+	return n.length && await o.createEmbeddedDocuments("Item", n.map((e) => P(N(e?.data ?? e)))), { actor: o };
 }
-function Ee(e, t) {
+function je(e, t) {
 	return {
 		levelUpSteps: (n, r, i = 1) => e([], async () => {
-			let e = await B(P(t(n), r, i));
+			let e = await ke(j(t(n), r, i));
 			return {
 				status: e.length ? "pending" : "complete",
 				steps: e
 			};
 		}, [n]),
-		levelUpApply: (n, r, i = 1) => e([], async () => {
-			let e = t(n), a = P(e, r, i, { automaticApplication: !0 }), o = await R(a, void 0);
-			return o.finished ? F(e) : {
+		levelUpApply: (n, r, i = 1, a) => e([], async () => {
+			let e = t(n), o = j(e, r, i, { automaticApplication: !0 }), s = await F(o, a);
+			return s.finished ? M(e) : {
 				kernelStatus: "pending",
-				reason: a.step ? "awaiting-choice" : "advancement-manager-not-complete",
-				step: o.step
+				reason: o.step ? "awaiting-choice" : "advancement-manager-not-complete",
+				step: s.step
 			};
 		}, [n]),
 		captureChoices: (n) => e([], async () => {
@@ -1063,7 +1063,7 @@ function Ee(e, t) {
 							id: t.id,
 							type: n,
 							level: e,
-							data: we(r)
+							data: De(r)
 						});
 					} catch (r) {
 						a.push({
@@ -1083,13 +1083,13 @@ function Ee(e, t) {
 			return await e.update({
 				name: r,
 				"prototypeToken.name": r
-			}), F(e);
+			}), M(e);
 		}, [n]),
 		createActorsFromBase: (t) => e([], async () => {
-			let e = await M.CONFIG.Actor.documentClass.createDocuments(t.map((e) => structuredClone(e.base)), { keepId: !0 }), n = [];
-			for (let r = 0; r < e.length; r++) await E(e[r], t[r].state), n.push({
+			let e = await k.CONFIG.Actor.documentClass.createDocuments(t.map((e) => structuredClone(e.base)), { keepId: !0 }), n = [];
+			for (let r = 0; r < e.length; r++) await w(e[r], t[r].state), n.push({
 				id: e[r].id,
-				...F(e[r]),
+				...M(e[r]),
 				data: e[r].toObject(),
 				base: t[r].base
 			});
@@ -1098,16 +1098,16 @@ function Ee(e, t) {
 		buildCharacter: (t) => e([], async () => {
 			let e = t.seed ?? te(), n = [];
 			for (let e of t.items) n.push({
-				data: e.data ?? await w(e.prop, e.entry),
+				data: e.data ?? await S(e.prop, e.entry),
 				refKey: e.refKey,
 				itemId: e.itemId
 			});
 			let r = [];
 			for (let e of t.equipment ?? []) r.push({
-				data: e.data ?? await w(e.prop, e.entry),
+				data: e.data ?? await S(e.prop, e.entry),
 				refKey: e.refKey
 			});
-			let i = await V(t.name, n, r, t.choices ?? {}, {
+			let i = await Ae(t.name, n, r, t.choices ?? {}, {
 				strict: !1,
 				seed: e
 			});
@@ -1120,40 +1120,40 @@ function Ee(e, t) {
 			} : {
 				id: i.actor.id,
 				seed: e,
-				...F(i.actor)
+				...M(i.actor)
 			};
 		}),
 		buildSteps: (t) => e([], async () => {
-			let e = M.CONFIG.Actor.documentClass, n = new e({
+			let e = k.CONFIG.Actor.documentClass, n = new e({
 				name: "Build preview",
-				type: j,
+				type: O,
 				system: { details: { level: 1 } }
-			}), r = await B(N().forNewItem(n, t));
+			}), r = await ke(A().forNewItem(n, t));
 			return {
 				status: r.length ? "pending" : "complete",
 				steps: r
 			};
 		}),
-		importForBuild: (t, n) => e([], async () => w(t, n)),
-		importerProps: he,
-		importerMeta: T,
-		actorTypes: (t, n) => e([], async () => xe(t, n)),
+		importForBuild: (t, n) => e([], async () => S(t, n)),
+		importerProps: _e,
+		importerMeta: C,
+		actorTypes: (t, n) => e([], async () => we(t, n)),
 		rebuildCharacter: (t) => e([], async () => {
 			let e = t.seed?.trim() || t.name;
 			h(e);
 			let n = [];
 			for (let e of t.items) n.push({
-				data: e.data ?? await w(e.prop, e.entry),
+				data: e.data ?? await S(e.prop, e.entry),
 				refKey: e.refKey,
 				itemId: e.itemId
 			});
 			let r = [];
 			for (let e of t.equipment) r.push({
-				data: e.data ?? await w(e.prop, e.entry),
+				data: e.data ?? await S(e.prop, e.entry),
 				refKey: e.refKey,
 				itemId: e.itemId
 			});
-			let i = await V(t.name, n, r, t.choices, {
+			let i = await Ae(t.name, n, r, t.choices, {
 				strict: !0,
 				seed: e
 			});
@@ -1164,10 +1164,10 @@ function Ee(e, t) {
 				built: i.built
 			};
 			let a = i.actor.toObject();
-			return await E(i.actor, t.state), [...i.actor.items].filter((e) => e.type === "class").length > 1 && await Se(i.actor, t.choices, [...t.items, ...t.equipment]), {
+			return await w(i.actor, t.state), [...i.actor.items].filter((e) => e.type === "class").length > 1 && await Te(i.actor, t.choices, [...t.items, ...t.equipment]), {
 				id: i.actor.id,
 				seed: e,
-				...F(i.actor),
+				...M(i.actor),
 				data: i.actor.toObject(),
 				base: a
 			};
@@ -1175,19 +1175,19 @@ function Ee(e, t) {
 	};
 }
 // src/rules/kernel/frame/commands-add.ts
-function De(e) {
+function Me(e) {
 	let t = e?.flags?.plutonium;
 	return t?.propDroppable && t.source && t.hash ? `${t.propDroppable}|${t.source}|${t.hash}` : null;
 }
-function Oe(e, t) {
+function Ne(e, t) {
 	return { addToActor: (n, r) => e([], async () => {
 		let e = t(n), i = e.sheet;
 		if (!i?._onDropSingleItem) throw Error(`人物 ${n} 没有官方人物表单实例`);
 		let a = [];
 		for (let t of r) {
-			let n = I(t.data ? structuredClone(t.data) : await w(t.prop, t.entry)), r = new Set(e.items.map((e) => e.id)), o = N().forNewItem(e, n, { automaticApplication: !0 });
+			let n = N(t.data ? structuredClone(t.data) : await S(t.prop, t.entry)), r = new Set(e.items.map((e) => e.id)), o = A().forNewItem(e, n, { automaticApplication: !0 });
 			if (o.steps.length) {
-				let e = await R(o, t.choices, { strict: !1 });
+				let e = await F(o, t.choices, { strict: !1 });
 				if (!e.finished) return {
 					kernelStatus: "pending",
 					reason: "add-step-not-complete",
@@ -1200,31 +1200,31 @@ function Oe(e, t) {
 				let r = await e.createEmbeddedDocuments("Item", [t], { keepId: !0 });
 				a.push(...r.map((e) => e.toObject()));
 			}
-			for (let t of e.items) !r.has(t.id) && De(t) && a.push(t.toObject());
+			for (let t of e.items) !r.has(t.id) && Me(t) && a.push(t.toObject());
 		}
 		return {
-			...F(e),
+			...M(e),
 			added: a
 		};
 	}, [n]) };
 }
 // src/rules/kernel/frame/commands-batch.ts
-var ke = globalThis;
-function Ae(e, t) {
+var Pe = globalThis;
+function Fe(e, t) {
 	let n = structuredClone(e);
 	delete n._id;
 	for (let e of n.items ?? []) delete e._id;
 	for (let e of n.effects ?? []) delete e._id;
 	return t && (n.name = t), n;
 }
-function je(e) {
+function Ie(e) {
 	return { createActorsBatch: (t) => e([], async () => {
 		let e = [];
 		for (let n of t) {
-			let t = n.data ?? await w(n.prop, n.entry);
-			e.push(Ae(t, n.name));
+			let t = n.data ?? await S(n.prop, n.entry);
+			e.push(Fe(t, n.name));
 		}
-		return (await ke.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
+		return (await Pe.CONFIG.Actor.documentClass.createDocuments(e)).map((e) => ({
 			id: e.id,
 			name: e.name,
 			type: e.type,
@@ -1232,24 +1232,131 @@ function je(e) {
 		}));
 	}) };
 }
+// src/rules/kernel/frame/commands-sheet.ts
+var L = globalThis, R = { configure: !1 }, z = { create: !1 }, Le = [
+	/^_id$/,
+	/^_stats(\.|$)/,
+	/^type$/,
+	/^items(\.|$)/,
+	/^effects(\.|$)/,
+	/^flags\.plutonium(\.|$)/,
+	/^system\.advancement(\.|$)/
+];
+function Re(e, t) {
+	return !t || Le.some((e) => e.test(t)) ? !1 : t.startsWith("flags.") ? t.split(".").length >= 3 : t.startsWith("system.") ? !!e.system?.schema?.getField?.(t.slice(7)) : !!e.schema?.getField?.(t);
+}
+function B(e, t, n, r) {
+	if (!Re(e, t)) throw Error(`不能改这个字段：${t}`);
+	if (!r) return { [t]: n };
+	let i = t.lastIndexOf(".");
+	return { [`${t.slice(0, i)}.-=${t.slice(i + 1)}`]: null };
+}
+var V = (e) => JSON.parse(JSON.stringify(e ?? null, (e, t) => e === "document" || e === "anchor" || e === "fields" || e === "field" || e === "parent" ? void 0 : t));
+async function ze(e, t, n) {
+	if (!e) return null;
+	let r = new e({ document: t }), i = await r._prepareContext({ parts: [] }), a = await r._preparePartContext(Object.keys(e.PARTS ?? {})[0] ?? "config", i, {});
+	return Object.fromEntries(n.filter((e) => e in a).map((e) => [e, V(a[e])]));
+}
+var Be = {
+	ability: (e, t) => e.rollAbilityCheck({ ability: t }, R, z),
+	tool: (e, t) => e.rollToolCheck({ tool: t }, R, z),
+	death: (e) => e.rollDeathSave({}, R, z),
+	hitDie: (e, t) => e.rollHitDie(t ? { denomination: t } : {}, R, z),
+	initiative: async (e) => {
+		let t = e.getInitiativeRoll();
+		return t ? (await t.evaluate({ allowInteractive: !1 }), [t]) : null;
+	}
+};
+function Ve(e, t, n) {
+	return {
+		sheet: (n) => e([], async () => {
+			let e = t(n), r = L.dnd5e?.applications?.actor ?? {};
+			return {
+				id: e.id,
+				name: e.name,
+				img: e.img,
+				type: e.type,
+				flags: V(e.flags ?? {}),
+				system: V(e.system.toObject(!1)),
+				statuses: [...e.statuses ?? []],
+				items: [...e.items].map((e) => ({
+					...g(e),
+					img: e.img,
+					sort: e.sort,
+					system: V(e.system.toObject(!1)),
+					labels: V(e.labels ?? {})
+				})),
+				effects: [...e.allApplicableEffects()].map((e) => ({
+					id: e.id,
+					name: e.name,
+					img: e.img,
+					disabled: e.disabled,
+					suppressed: e.isSuppressed ?? !1,
+					origin: e.origin ?? null,
+					from: e.parent?.documentName === "Item" ? {
+						itemId: e.parent.id,
+						name: e.parent.name
+					} : null,
+					statuses: [...e.statuses ?? []],
+					duration: V(e.duration),
+					changes: V(e.system?.changes ?? e.changes ?? [])
+				})),
+				breakdown: {
+					hp: await ze(r.HitPointsConfig, e, [
+						"classes",
+						"ability",
+						"effects",
+						"levels"
+					]),
+					ac: await ze(r.ArmorClassConfig, e, ["calculations", "formulaLabel"])
+				}
+			};
+		}),
+		edit: (n, r) => e([], async () => {
+			let e = t(n);
+			for (let t of r) if (t.kind === "set") await e.update(B(e, t.path, t.value, t.remove));
+			else if (t.kind === "item") {
+				let n = e.items.get(t.itemId, { strict: !0 });
+				await n.update(B(n, t.path, t.value, t.remove));
+			} else if (t.kind === "itemDelete") await e.deleteEmbeddedDocuments("Item", [t.itemId]);
+			else if (t.kind === "effect") {
+				let n = e.effects.get(t.effectId, { strict: !0 });
+				await n.update(B(n, t.path, t.value, t.remove));
+			} else if (t.kind === "effectCreate") await e.createEmbeddedDocuments("ActiveEffect", [t.data]);
+			else if (t.kind === "effectDelete") await e.deleteEmbeddedDocuments("ActiveEffect", [t.effectId]);
+			else if (t.kind === "status") await e.toggleStatusEffect(t.statusId, t.levels === void 0 ? { active: t.active ?? !0 } : { levels: t.levels });
+			else throw Error(`不认识的改动：${t.kind}`);
+			return { edits: r.length };
+		}, [n]),
+		check: (r, i, a, o = []) => e(o, async () => {
+			let e = Be[i];
+			if (!e) throw Error(`没有这种检定：${i}`);
+			return (await e(t(r), a))?.map(n) ?? null;
+		}, [r]),
+		deleteActors: (t) => e([], async () => {
+			let e = t.filter((e) => L.game.actors.get(e));
+			return e.length && await L.CONFIG.Actor.documentClass.deleteDocuments(e), { deleted: e };
+		})
+	};
+}
 // src/rules/kernel/frame/commands.ts
-var H = globalThis, U = class extends Error {
+var H = globalThis, He = class extends Error {
 	request;
 	constructor(e) {
 		super("KERNEL_NEEDS_DICE"), this.request = e;
 	}
-}, Me = class extends Error {
+}, Ue = class extends Error {
 	where;
 	constructor(e) {
 		super("KERNEL_NEEDS_INPUT"), this.where = e;
 	}
 };
-function Ne(e, t) {
+function We(e, t) {
 	let n = H.CONFIG.Dice, r = n.randomUniform, i = H.foundry.dice.terms.Die.prototype, a = Object.hasOwn(i, "roll"), o = i.roll, s = 0, c = 0;
 	i.roll = function(...e) {
 		return c = this.faces, o.apply(this, e);
 	}, n.randomUniform = () => {
-		if (s >= e.length) throw new U({
+		if (s >= e.length) throw new He({
 			faces: c,
 			index: s
 		});
@@ -1264,18 +1371,18 @@ function Ne(e, t) {
 		value: e,
 		used: s
 	}), (e) => {
-		if (l(), e instanceof U) return {
+		if (l(), e instanceof He) return {
 			used: s,
 			needs: e.request
 		};
-		if (e instanceof Me) return {
+		if (e instanceof Ue) return {
 			used: s,
 			input: e.where
 		};
 		throw e;
 	});
 }
-async function Pe(e) {
+async function Ge(e) {
 	let t = H.game.socket, n = t.emit, r = [];
 	t.emit = function(e, ...t) {
 		if (e === "modifyDocument" || e === "modifyDocumentBatch") {
@@ -1302,15 +1409,15 @@ async function Pe(e) {
 		t.emit = n;
 	}
 }
-function Fe(e) {
+function Ke(e) {
 	let t = H.foundry.applications.api.ApplicationV2.prototype, n = t.render;
 	return t.render = function() {
-		throw new Me(this.constructor.name);
+		throw new Ue(this.constructor.name);
 	}, e().finally(() => {
 		t.render = n;
 	});
 }
-function W(e) {
+function U(e) {
 	return e ? {
 		formula: e.formula,
 		total: e.total,
@@ -1325,8 +1432,8 @@ function W(e) {
 		}))
 	} : null;
 }
-var G = (e) => H.game.actors.get(e, { strict: !0 });
-function Ie(e) {
+var W = (e) => H.game.actors.get(e, { strict: !0 });
+function qe(e) {
 	let t = {};
 	for (let n of e) {
 		if (n.action !== "update" || n.type !== "Actor" || n.parentUuid) continue;
@@ -1342,10 +1449,10 @@ function Ie(e) {
 	}
 	return t;
 }
-async function K(e, t, n = []) {
+async function G(e, t, n = []) {
 	let r, i = [];
 	try {
-		({value: r, changes: i} = await Pe(() => Ne(e, () => Fe(t))));
+		({value: r, changes: i} = await Ge(() => We(e, () => Ke(t))));
 	} catch (e) {
 		return {
 			status: "error",
@@ -1354,11 +1461,11 @@ async function K(e, t, n = []) {
 			changes: i
 		};
 	}
-	let a = n.flatMap((e) => ae(G(e))), o = r.value;
+	let a = n.flatMap((e) => oe(W(e))), o = r.value;
 	return {
 		status: r.needs ? "missing" : r.input ? "pending" : o?.kernelStatus ?? (a.length ? "unsupported" : "complete"),
 		result: o ?? null,
-		sources: Ie(i),
+		sources: qe(i),
 		changes: i,
 		diceUsed: r.used,
 		missing: r.needs ? { dice: r.needs } : r.missing ?? null,
@@ -1366,7 +1473,7 @@ async function K(e, t, n = []) {
 		unsupported: a
 	};
 }
-var Le = ce(K, G), Re = fe(K, G), ze = be(K), Be = Ee(K, G), Ve = Oe(K, G), He = je(K), Ue = [
+var Je = ue(G, W), Ye = me(G, W), Xe = Ce(G), Ze = je(G, W), Qe = Ne(G, W), $e = Ie(G), et = Ve(G, W, U), tt = [
 	"Config",
 	"ConfigConsts",
 	"VetoolsLinks",
@@ -1388,62 +1495,63 @@ var Le = ce(K, G), Re = fe(K, G), ze = be(K), Be = Ee(K, G), Ve = Oe(K, G), He =
 	"DataConverterClass",
 	"SourceUtil",
 	"MiscUtil"
-], We;
-function Ge() {
-	return We ??= (async () => {
-		let e = await (await fetch(new URL("modules/plutonium/js/Bundle.js", document.baseURI))).text(), t = Object.getPrototypeOf(async () => void 0).constructor, n = await new t(`${e}\n;return { ${Ue.join(", ")} };`)();
+], nt;
+function rt() {
+	return nt ??= (async () => {
+		let e = await (await fetch(new URL("modules/plutonium/js/Bundle.js", document.baseURI))).text(), t = Object.getPrototypeOf(async () => void 0).constructor, n = await new t(`${e}\n;return { ${tt.join(", ")} };`)();
 		return n.Config._CONFIG_TEMP = {
 			dataSources: { baseSiteUrl: new URL(".", document.baseURI).href },
 			misc: { rulesVersion: "classic" }
 		}, n.ConfigConsts.prePreInit({ implRegistryImportList: n.ImplementationRegistryImportList.get() }), n.Config._CONFIG = n.Config.api_getDefaults(), n.Config._CONFIG_PLAYER = n.Config._getDefaultPlayerConfig(), n.Vetools.prePreInit_preConfig(), n.VetoolsLinks.prePreInit_postConfig(), n.Vetools.prePreInit_postConfig(), n.UtilDamageTypes.init(), n.Dnd5eUtil.init(), n.Vetools.init(), n.SideDataInterfaces.init(), n;
 	})();
 }
-var q = { configure: !1 }, Ke = 15e3, J = { create: !1 }, qe = {
-	...Le,
-	...Re,
-	...ze,
-	...Be,
-	...Ve,
-	...He,
-	roll: (e, t = {}, n = [], r = {}) => K(n, async () => {
+var K = { configure: !1 }, q = 15e3, J = { create: !1 }, it = {
+	...Je,
+	...Ye,
+	...Xe,
+	...Ze,
+	...Qe,
+	...$e,
+	...et,
+	roll: (e, t = {}, n = [], r = {}) => G(n, async () => {
 		let n = {
 			basic: H.CONFIG.Dice.BasicRoll,
 			d20: H.CONFIG.Dice.D20Roll,
 			damage: H.CONFIG.Dice.DamageRoll
 		}, i = new (r.kind ? n[r.kind] : H.Roll)(e, t, r.options ? structuredClone(r.options) : void 0);
-		return await i.evaluate({ allowInteractive: !1 }), W(i);
+		return await i.evaluate({ allowInteractive: !1 }), U(i);
 	}),
-	damage: (e, t, n = [], r = {}) => K(n, async () => {
-		let n = G(e);
+	damage: (e, t, n = [], r = {}) => G(n, async () => {
+		let n = W(e);
 		return await n.applyDamage(t, r), { hp: n.system.attributes.hp.toObject?.() ?? { ...n.system.attributes.hp } };
 	}, [e]),
-	rest: (e, t, n = [], r = {}) => K(n, async () => {
-		let n = await G(e)[t === "short" ? "shortRest" : "longRest"]({
+	rest: (e, t, n = [], r = {}) => G(n, async () => {
+		let n = await W(e)[t === "short" ? "shortRest" : "longRest"]({
 			dialog: !1,
 			chat: !1,
 			...r
 		});
 		return n ? JSON.parse(JSON.stringify(n, (e, t) => e === "clone" ? void 0 : t)) : null;
 	}, [e]),
-	save: (e, t, n = []) => K(n, async () => (await G(e).rollSavingThrow({ ability: t }, q, J))?.map(W) ?? null, [e]),
-	skill: (e, t, n = []) => K(n, async () => (await G(e).rollSkill({ skill: t }, q, J))?.map(W) ?? null, [e]),
-	attack: (e, t, n = []) => K(n, async () => {
-		let n = G(e).items.get(t, { strict: !0 }).system.activities.find((e) => e.type === "attack");
+	save: (e, t, n = []) => G(n, async () => (await W(e).rollSavingThrow({ ability: t }, K, J))?.map(U) ?? null, [e]),
+	skill: (e, t, n = []) => G(n, async () => (await W(e).rollSkill({ skill: t }, K, J))?.map(U) ?? null, [e]),
+	attack: (e, t, n = []) => G(n, async () => {
+		let n = W(e).items.get(t, { strict: !0 }).system.activities.find((e) => e.type === "attack");
 		if (!n) return null;
-		let r = await n.rollAttack({}, q, J), i = await n.rollDamage({}, q, J);
+		let r = await n.rollAttack({}, K, J), i = await n.rollDamage({}, K, J);
 		return {
-			attack: r?.map(W) ?? null,
-			damage: i?.map(W) ?? null
+			attack: r?.map(U) ?? null,
+			damage: i?.map(U) ?? null
 		};
 	}, [e]),
-	attribution: (e, t) => Object.fromEntries(t.map((t) => [t, (G(e)._prepareActiveEffectAttributions(t) ?? []).map((e) => ({
+	attribution: (e, t) => Object.fromEntries(t.map((t) => [t, (W(e)._prepareActiveEffectAttributions(t) ?? []).map((e) => ({
 		label: e.label,
 		mode: e.mode,
 		value: e.value
 	}))])),
-	unsupported: () => H.game.actors.contents.flatMap((e) => ae(e)),
+	unsupported: () => H.game.actors.contents.flatMap((e) => oe(e)),
 	convert: async (e, t, n = {}) => {
-		let r = await Ge(), i = {
+		let r = await rt(), i = {
 			classFeature: r.DataConverterClassSubclassFeature,
 			subclassFeature: r.DataConverterClassSubclassFeature,
 			feat: r.DataConverterFeat,
@@ -1457,7 +1565,7 @@ var q = { configure: !1 }, Ke = 15e3, J = { create: !1 }, qe = {
 		}, a = (e) => {
 			let t;
 			return Promise.race([e, new Promise((e, n) => {
-				t = setTimeout(() => n(Error(`PROBE_TIMEOUT ${Ke}`)), Ke);
+				t = setTimeout(() => n(Error(`PROBE_TIMEOUT ${q}`)), q);
 			})]).finally(() => clearTimeout(t));
 		}, o = (e) => r.MiscUtil.copyFast(e), s = [];
 		for (let c of t) {
@@ -1493,8 +1601,8 @@ var q = { configure: !1 }, Ke = 15e3, J = { create: !1 }, qe = {
 		}
 		return s;
 	}
-}, Je = (e) => e instanceof Error ? e.message : String(e);
-async function Ye(e, r, i) {
+}, at = (e) => e instanceof Error ? e.message : String(e);
+async function ot(e, r, i) {
 	let a = (e) => e.pack.docIdLocal, o = /* @__PURE__ */ new Map();
 	if (await i(e) === null) return {
 		accepted: e,
@@ -1533,7 +1641,7 @@ async function Ye(e, r, i) {
 		errors: o
 	};
 }
-async function Xe(e, t) {
+async function st(e, t) {
 	let { BrewUtil2: n, DataUtil: r, Parser: i, Renderer: a } = globalThis;
 	await n.pGetBrew(), r.brew.pLoadSourceIndex = async () => ({}), r.prerelease.pLoadSourceIndex = async () => ({});
 	let o = a.item;
@@ -1544,7 +1652,7 @@ async function Xe(e, t) {
 		"entryMap",
 		"_additionalTypeEntriesMap",
 		"_masteryMap"
-	], l = c.map((e) => o[e]), u = new Set(Object.values(r).filter((e) => typeof e?.pMergeCopy == "function")), { accepted: d, errors: f } = await Ye(e, new Set(Object.keys(i.SOURCE_JSON_TO_FULL).map((e) => e.toLowerCase())), async (e) => {
+	], l = c.map((e) => o[e]), u = new Set(Object.values(r).filter((e) => typeof e?.pMergeCopy == "function")), { accepted: d, errors: f } = await ot(e, new Set(Object.keys(i.SOURCE_JSON_TO_FULL).map((e) => e.toLowerCase())), async (e) => {
 		let i = structuredClone(e.map((e) => e.doc)), a = "trpg-kernel-brew-check", d = [...u].map((e) => [e, e._mergeCache]), f = /* @__PURE__ */ new Set(), p = ["pLoadByMeta", "_pDoMetaMerge_handleCopyProp"].map((e) => [e, r[e]]);
 		try {
 			for (let [e] of d) e._mergeCache = {};
@@ -1579,7 +1687,7 @@ async function Xe(e, t) {
 			}
 			return null;
 		} catch (e) {
-			return Je(e);
+			return at(e);
 		} finally {
 			for (; f.size;) await Promise.allSettled(f);
 			for (let [e, t] of p) r[e] = t;
@@ -1613,10 +1721,10 @@ async function Xe(e, t) {
 	};
 }
 // src/rules/kernel/frame/main.ts
-var Y = globalThis, X = new URLSearchParams(location.search).get("frame") ?? "", Ze = Y.__trpgFrameErrors ?? [], Qe = 1, Z = /* @__PURE__ */ new Map();
-function $e(e) {
+var Y = globalThis, X = new URLSearchParams(location.search).get("frame") ?? "", ct = Y.__trpgFrameErrors ?? [], lt = 1, Z = /* @__PURE__ */ new Map();
+function ut(e) {
 	return new Promise((t, n) => {
-		let i = 1e6 + Qe++;
+		let i = 1e6 + lt++;
 		Z.set(i, {
 			resolve: t,
 			reject: n
@@ -1635,13 +1743,13 @@ addEventListener("message", (e) => {
 	let n = Z.get(t.id);
 	Z.delete(t.id), t.ok ? n.resolve(t.value) : n.reject(Error(t.error));
 });
-async function et(e) {
+async function dt(e) {
 	let t = await fetch(new URL(e, location.href));
 	if (!t.ok) throw Error(`${t.status}: ${e}`);
 	return t.text();
 }
-async function tt(e) {
-	let t = await $e({
+async function ft(e) {
+	let t = await ut({
 		op: "file",
 		path: `packs/${e}.json`
 	});
@@ -1649,7 +1757,7 @@ async function tt(e) {
 	return JSON.parse(t);
 }
 var Q;
-async function nt(e) {
+async function pt(e) {
 	if (Q) throw Error("Kernel is already booted");
 	let t = [], { foundry: n, Hooks: r } = Y;
 	h(e.seed ?? "kernel"), Y.release = new n.config.ReleaseData(e.release);
@@ -1666,8 +1774,8 @@ async function nt(e) {
 		...c(a, {
 			userId: e.userId,
 			worldTime: e.worldTime,
-			readPack: tt,
-			readText: et
+			readPack: ft,
+			readText: dt
 		}),
 		steps: t
 	};
@@ -1696,7 +1804,7 @@ async function nt(e) {
 			t.push("omit canvas");
 		}
 	}
-	Y.game = new l("game", i, a), Y.game.nue && (Y.game.nue.initialize = () => void 0), Y.game.settings.storage.get("client").setItem("core.noCanvas", "true"), await ot(`systems/${i.system.id}/dnd5e.js`);
+	Y.game = new l("game", i, a), Y.game.nue && (Y.game.nue.initialize = () => void 0), Y.game.settings.storage.get("client").setItem("core.noCanvas", "true"), await _t(`systems/${i.system.id}/dnd5e.js`);
 	for (let e of i.modules) for (let t of e.esmodules ?? []) await import(
 		/* @vite-ignore */
 		new URL(t, location.href).href
@@ -1709,9 +1817,9 @@ async function nt(e) {
 		if (Date.now() > u) throw Error("Plutonium API was not ready within 30 seconds");
 		await new Promise((e) => setTimeout(e, 50));
 	}
-	return rt();
+	return mt();
 }
-function rt() {
+function mt() {
 	let e = Y.game;
 	return {
 		release: e.release.version,
@@ -1725,10 +1833,10 @@ function rt() {
 			availability: e.availability
 		}])),
 		plutoniumApi: typeof e.modules.get("plutonium")?.api,
-		errors: [...Ze]
+		errors: [...ct]
 	};
 }
-function it() {
+function ht() {
 	return Y.game.actors.contents.map((e) => ({
 		source: e.toObject(),
 		system: e.system.toObject(!1),
@@ -1736,12 +1844,12 @@ function it() {
 		validation: e.validationFailures
 	}));
 }
-var at = {
-	...qe,
-	boot: nt,
-	loadBrews: Xe,
-	status: rt,
-	preparedActors: it,
+var gt = {
+	...it,
+	boot: pt,
+	loadBrews: st,
+	status: mt,
+	preparedActors: ht,
 	changes: () => Q?.changes ?? [],
 	calls: () => Q?.calls ?? [],
 	steps: () => Q?.steps ?? []
@@ -1755,7 +1863,7 @@ addEventListener("message", (e) => {
 		frame: X,
 		id: t.id,
 		...e
-	}, location.origin), i = at[t.fn];
+	}, location.origin), i = gt[t.fn];
 	if (!i) return n({
 		ok: !1,
 		error: `Unknown kernel command: ${t.fn}`
@@ -1768,7 +1876,7 @@ addEventListener("message", (e) => {
 		error: e instanceof Error ? e.stack ?? e.message : String(e)
 	}));
 });
-function ot(e) {
+function _t(e) {
 	return new Promise((t, n) => {
 		let r = document.createElement("script");
 		r.src = e, r.onload = () => t(), r.onerror = () => n(Error(`Failed to load ${e}`)), document.head.append(r);
@@ -1786,7 +1894,7 @@ async function $() {
 		codeSet: "foundry",
 		authorVersion: Y.foundry?.CONST?.vtt ?? null,
 		present: { foundry: !!Y.foundry?.Game },
-		errors: [...Ze]
+		errors: [...ct]
 	};
 	parent.postMessage(e, location.origin);
 }

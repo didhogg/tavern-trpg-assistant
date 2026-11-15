@@ -278,6 +278,7 @@ export { kernelInput } from '../../../src/rules/kernel/input'
 export { KernelCache, wrapKernelSession, kernelImportKey, kernelBaseKey } from '../../../src/rules/kernel/cache'
 export { kernelEntryOf } from '../../../src/rules/kernel/entry'
 export { KernelRuntime } from '../../../src/rules/kernel/runtime'
+export { KernelPeople } from '../../../src/rules/kernel/people'
 export { KernelPrecompute } from '../../../src/rules/kernel/precompute'
 export { cardTypes, cardFields } from '../../../src/rules/kernel/card-types'
 

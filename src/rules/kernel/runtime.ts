@@ -132,6 +132,30 @@ export class KernelRuntime {
     o.bases.set(actorId, data)
   }
 
+  /** 这个人物的重建基准（全是自动值）；没有记过返回 null。 */
+  async baseOf(ownerKey: string, actorId: string): Promise<Record<string, unknown> | null> {
+    return (await this.get(ownerKey)).bases.get(actorId) ?? null
+  }
+
+  /**
+   * 按存档把小窗里的人物退回去（撤销、预览后取消用）：先删掉小窗里的这个人；
+   * actor 为 null 表示存档里已经没有他（撤销"加人"）。有基准时用基准 + 状态差别直接建（不重新取条目），没有才整份重建。
+   */
+  async restore(ownerKey: string, actorId: string, actor: KernelActor | null): Promise<RebuildResult | null> {
+    const existing = this.open.get(ownerKey)
+    if (!existing) return null
+    const o = await existing
+    const deleted = await o.session.call('deleteActors', [actorId])
+    if (deleted.status !== 'complete') throw new Error(`小窗里删不掉人物 ${actorId}：${deleted.error ?? deleted.status}`)
+    if (!actor) { o.bases.delete(actorId); o.seeds.delete(actorId); return null }
+    const base = o.bases.get(actorId)
+    if (!base) return this.rebuild(ownerKey, actor)
+    const call = await o.session.call('createActorsFromBase', [{ base, state: actor.state }])
+    const row = (call.result as Array<{ id?: string; data?: Record<string, unknown> }> | null)?.[0]
+    if (call.status !== 'complete' || !row?.id || !row.data) return { status: 'error', error: call.error ?? `退回状态：${call.status}`, detail: call }
+    return { status: 'complete', id: row.id, data: row.data, base }
+  }
+
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
   async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]> }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
@@ -182,6 +206,8 @@ export class KernelRuntime {
     }
     const result = await o.session.call('createActorsBatch', prepared)
     if (result.status !== 'complete') return { status: result.status, error: result.error ?? `批量建状态：${result.status}`, detail: result }
+    // 刚建好的样子就是重建基准（之后写进存档时按它拆差别）
+    for (const row of result.result as Array<{ id: string; data: Record<string, unknown> }>) o.bases.set(row.id, row.data)
     return { status: 'complete', actors: result.result, noEnglish: rows.noEnglish }
   }
 
