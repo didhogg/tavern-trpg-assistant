@@ -64,6 +64,13 @@ try {
     const starting = { [cls.refKey]: { choice, pick: picks }, [bg.refKey]: { choice: { 1: 'a' } } }
     const b1 = await people.build(owner, { name: '带装备牧师', items: refs, blank: true, starting }, { category: 'party' })
     out.built = { status: b1.built.status, error: b1.built.error, skipped: b1.built.skipped, ...(b1.built.id ? await names(rt, b1.built.id) : {}) }
+    // 预演（后端算好给完成页）：和建出来的人一致
+    const pv = await people.startingEquipment(owner, { items: refs, starting })
+    out.preview = { status: pv.status, items: pv.preview?.sections.flatMap((x) => x.items.map((i) => `${i.label}×${i.quantity}${i.special ? '*' : ''}${i.rename ? '→' + i.rename : ''}`)), currency: pv.preview?.currency }
+    const pvGold = await people.startingEquipment(owner, { items: refs, starting: { [cls.refKey]: { gold: 140 }, [bg.refKey]: { choice: { 1: 'b' } } } })
+    out.previewGold = { status: pvGold.status, currency: pvGold.preview?.currency, classItems: pvGold.preview?.sections.find((x) => x.refKey === cls.refKey)?.items.length }
+    const pvBad = await people.startingEquipment(owner, { items: refs, starting: { [cls.refKey]: { pick: { '2.b.0.0': 'no such item|xx' } } } })
+    out.previewBad = { status: pvBad.status, hasSections: !!pvBad.sections }
     // 要钱：职业要 140 金，不要职业装备；背景照给
     const b2 = await people.build(owner, { name: '要钱牧师', items: refs, blank: true, starting: { [cls.refKey]: { gold: 140 }, [bg.refKey]: { choice: { 1: 'b' } } } }, { category: 'party' })
     out.gold = { status: b2.built.status, ...(b2.built.id ? await names(rt, b2.built.id) : {}) }
@@ -103,6 +110,17 @@ try {
       out.scope.mace = { keys: c0.choices.map((c) => c.key), excluded: o.sections.find((s) => s.prop === 'class').excluded }
       const mk0 = await pv.build(ow, { name: '没锤矛', items: refs, blank: true, starting: { [cls.refKey]: { choice: { 0: 'a' } } } }, { category: 'party' })
       out.scope.maceBuilt = { status: mk0.built.status, ...(mk0.built.id ? await names2(rtv, ow, mk0.built.id) : {}) }
+      await rtv.close(ow) }
+    { // 被停用的固定物品在类别槽前面时，列表里的位置会错开；选择键里的条目序号必须用 entry.index（原始位置）
+      const shieldHash = cls.groups.find((g) => g.index === 4).choices[0].entries.find((e) => e.uid === 'shield|phb').ref.hash
+      const { rtv, pv, ow } = await peopleFor({ ...library, exclude: [h.entryUnit({ kind: 'item', set: 'cn-official', prop: 'item', hash: shieldHash })] })
+      const o = await pv.startingEquipment(ow, { items: refs }); const sc = o.sections.find((x) => x.prop === 'class')
+      const entries4 = sc.groups.find((g) => g.index === 4).choices[0].entries
+      const holyE = entries4.find((e) => e.kind === 'category')
+      const sel4 = { [sc.refKey]: { pick: { [`4._.${holyE.index}.0`]: holyE.candidates[0].uid } } }
+      const b5 = await pv.build(ow, { name: '位置错开', items: refs, blank: true, starting: sel4 }, { category: 'party' })
+      const prev5 = await pv.startingEquipment(ow, { items: refs, starting: sel4 })
+      out.indexed = { listPos: entries4.indexOf(holyE), rawIndex: holyE.index, status: b5.built.status, items: b5.built.id ? (await names2(rtv, ow, b5.built.id)).items : null, previewHasPick: prev5.preview?.sections.some((x) => x.items.some((i) => i.label === holyE.candidates[0].label)) }
       await rtv.close(ow) }
     // —— 其他职业 / 背景：战士 + 士兵；带乐器 / 工匠工具 / 游戏套装的背景；数据里没认出的写法 ——
     const findRef = async (prop, pred) => (await h.scoped.query(library, prop, { source: 'PHB', expand: true })).find((x) => pred(x.item))?.ref
@@ -155,6 +173,10 @@ try {
     scopeFixedItem: !r.scope.mace.keys.includes('a') && r.scope.mace.excluded.includes('mace|phb') && r.scope.maceBuilt.status === 'complete' && !r.scope.maceBuilt.items.some((n) => /^Mace/.test(n)),
     fighterCategories: r.fighter.status === 'complete' && r.fighter.martial.length >= 2 && r.fighter.martial.every(([, , n]) => n > 10) && r.fighter.unsupported.length === 0,
     bgCategories: r.kindsWanted.every((k) => r.bgKinds[k] !== 'none' && r.bgKinds[k].status === 'complete' && r.bgKinds[k].n.length > 0 && r.bgKinds[k].n.every((n) => n > 3) && r.bgKinds[k].unsupported.length === 0),
+    previewMatchesBuild: r.preview.status === 'complete' && r.preview.items.length === r.built.items.length && r.preview.items.reduce((n, p) => n + Number(/×(\d+)/.exec(p)[1]), 0) === r.built.items.reduce((n, p) => n + Number(/×(\d+)/.exec(p)[1]), 0) && r.preview.items.some((p) => /×5\*/.test(p)) && gpOf(r.preview.currency) === 15,
+    previewGold: r.previewGold.status === 'complete' && gpOf(r.previewGold.currency) === 155 && r.previewGold.classItems === 0,
+    previewBadPick: r.previewBad.status === 'invalid',
+    indexSurvivesHiddenItem: r.indexed.listPos === 0 && r.indexed.rawIndex === 1 && r.indexed.status === 'complete' && r.indexed.items.some((n) => /Amulet|Emblem|Reliquary/.test(n)) && r.indexed.previewHasPick,
     noUnexplainedErrors: unexplained.length === 0,
   }
   const ok = Object.values(checks).every(Boolean)

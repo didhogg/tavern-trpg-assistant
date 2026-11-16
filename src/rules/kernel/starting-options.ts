@@ -3,7 +3,11 @@
 // 对应 Plutonium 的黑名单（UtilItemExcludedSimple）：它读作者的全局屏蔽表，插件不用这张表（设计 §2.2），改用战役范围。
 import type { KernelRefMapper } from '../../core/saves/split'
 import type { KernelRef } from '../../schemas/kernel'
-import type { EquipCandidate, EquipEntryView, EquipSection, StartingSelection } from './frame/commands-equipment'
+import type { CampaignLibrary, EntryRef } from '../../library/scopes'
+import type { ScopedLibrary } from '../../library/scoped'
+import { refKey } from '../../core/saves/split'
+import { refMapperFor } from './rebuild'
+import type { EquipCandidate, EquipEntryView, EquipSection, StartingPreview, StartingSelection } from './frame/commands-equipment'
 
 export type { StartingSelection }
 export interface Labeled { ref: KernelRef; label: string }
@@ -61,4 +65,45 @@ export function checkStarting(sections: StartingSection[], selection: Record<str
     }
   }
   return { excluded }
+}
+
+/** 预演结果给界面：每个条目会给的物品（显示名、数量、杂项标记、改名）+ 合计的钱（币种已换好）。 */
+export interface StartingPreviewView { sections: Array<{ refKey: string; items: Array<{ label: string; quantity: number; special?: boolean; rename?: string }> }>; currency: Record<string, number> | null }
+export interface StartingResult { status: string; error?: string; sections?: StartingSection[]; preview?: StartingPreviewView }
+
+interface Deps {
+  rows: Array<{ ref: EntryRef; entry: unknown }>
+  call: (fn: string, ...args: unknown[]) => Promise<{ status: string; error?: string; result?: any }> // eslint-disable-line @typescript-eslint/no-explicit-any -- 小窗命令结果原样
+  scoped: ScopedLibrary
+  library: CampaignLibrary
+}
+
+/** 起始装备选项（有选择时再带预演）：职业 / 背景写着的起始装备 → 每组选项、类别候选、金币骰式，只留本战役看得见的。 */
+export async function startingOptions(d: Deps, starting?: Record<string, StartingSelection>): Promise<StartingResult> {
+  const sent = d.rows.filter((r) => (r.entry as { startingEquipment?: unknown })?.startingEquipment).map((r) => ({ prop: r.ref.prop, refKey: refKey(r.ref), entry: r.entry }))
+  const out = await d.call('startingEquipment', sent)
+  if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
+  const mapper = await refMapperFor(d.scoped, d.library)
+  const visible = () => d.scoped.query(d.library, 'item')
+  const sections = await labelSections(out.result.sections, mapper, visible)
+  if (!starting) return { status: 'complete', sections }
+  const checked = checkStarting(sections, starting)
+  if (checked.error) return { status: 'invalid', error: checked.error, sections }
+  const shown = await d.call('startingPreview', sent, starting, checked.excluded)
+  if (shown.status !== 'complete') return { status: shown.status, error: shown.error ?? `起始装备预演状态：${shown.status}`, sections }
+  const names = new Map((await visible()).map((r) => [keyOf(r.ref), String((r.item as { name?: unknown } | undefined)?.name ?? '')]))
+  const view = shown.result as StartingPreview
+  return {
+    status: 'complete', sections,
+    preview: {
+      currency: view.currency,
+      sections: view.sections.map((s) => ({
+        refKey: s.refKey,
+        items: s.granted.map((g) => {
+          const ref = g.hash && g.source ? mapper({ propDroppable: 'item', source: g.source, hash: g.hash }) : null
+          return { label: (ref && names.get(keyOf(ref))) || g.name, quantity: g.quantity, ...(g.special ? { special: true } : {}), ...(g.displayName ? { rename: g.displayName } : {}) }
+        }),
+      })),
+    },
+  }
 }

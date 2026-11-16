@@ -12,6 +12,8 @@ const g = globalThis as any
 
 export interface EquipCandidate { uid: string; name: string; source: string; hash: string }
 export interface EquipEntryView {
+  /** 这一条在作者数据这一项里的原始位置（选择键「组.选项.条目序号.第几个」里的条目序号用它；列表里被去掉的条目不会让序号错位）。 */
+  index: number
   /** 作者数据里的原样条目。 */
   raw: unknown
   kind: 'item' | 'category' | 'special' | 'value'
@@ -75,7 +77,7 @@ export function goldExpressionOf(entry: any): string | null {
 }
 
 /** 一条起始装备写法 → 界面用的视图；认得但没有候选 → null（照 Plutonium 去掉）；不认得 → { unsupported }（不静默丢）。 */
-async function viewOf(equi: any): Promise<EquipEntryView | { unsupported: string } | null> {
+async function viewOf(equi: any): Promise<Omit<EquipEntryView, 'index'> | { unsupported: string } | null> {
   const loaded = async (uid: string) => { const [name, source] = uid.split('|'); const i = await g.DataLoader.pCacheAndGetHash(g.UrlUtil.PG_ITEMS, hashOfUid(uid)); return { uid, name: i?.name ?? name, source: i?.source ?? source, hash: hashOfUid(uid), found: !!i } }
   if (typeof equi === 'string') return { raw: equi, kind: 'item', quantity: 1, ...(await loaded(equi)) }
   if (equi.item) return { raw: equi, kind: 'item', quantity: equi.quantity || 1, ...(await loaded(equi.item)), ...(equi.displayName ? { displayName: titleCase(equi.displayName) } : {}), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
@@ -100,7 +102,7 @@ export async function sectionOf(row: StartingRow): Promise<EquipSection> {
     for (const [key, list] of Object.entries<any[]>(data[index])) {
       const views = await Promise.all(list.map(viewOf))
       for (const v of views) if (v && 'unsupported' in v) unsupported.push(`${row.entry.name}：${v.unsupported}`)
-      const entries = views.filter((e): e is EquipEntryView => !!e && !('unsupported' in e))
+      const entries = views.flatMap((e, index) => (e && !('unsupported' in e) ? [{ ...e, index }] : []))
       if (entries.length) choices.push({ key, entries })
     }
     if (choices.length) groups.push({ index, choices })
@@ -126,7 +128,7 @@ export function expand(row: StartingRow, sel: StartingSelection | undefined, exc
     if (key === undefined || !Array.isArray(group[key])) return
     group[key].forEach((equi: any, ei: number) => {
       if (typeof equi === 'string') return add(equi, undefined, 1)
-      if (equi.item) { if (equi.containsValue) cp += equi.containsValue; return add(equi.item, undefined, equi.quantity || 1, equi.displayName ? titleCase(equi.displayName) : undefined) }
+      if (equi.item) { if (equi.containsValue && !excluded.has(equi.item)) cp += equi.containsValue; return add(equi.item, undefined, equi.quantity || 1, equi.displayName ? titleCase(equi.displayName) : undefined) }
       if (equi.equipmentType || equi.equipmentTypes) {
         for (let i = 0; i < (equi.quantity || 1); i++) { const uid = sel?.pick?.[`${gi}.${key}.${ei}.${i}`]; if (uid) add(uid, undefined, 1) }
         return
@@ -171,9 +173,32 @@ export async function resolveStarting(rows: StartingRow[], selection: Record<str
   return { equipment, specials, currency: cp > 0 ? coinsOf(cp) : null, skipped }
 }
 
+export interface PreviewGranted { uid?: string; name: string; source?: string; hash?: string; special?: boolean; quantity: number; displayName?: string }
+export interface StartingPreview { sections: Array<{ refKey: string; granted: PreviewGranted[]; cp: number }>; currency: Record<string, number> | null }
+
+/** 按现在的选择预演一遍：每个条目会给哪些物品（带数量、改名）和多少钱，合计的钱换成币种；建人物时用的是同一套展开。 */
+export async function previewOf(rows: StartingRow[], selection: Record<string, StartingSelection>, excluded: Record<string, string[]> = {}): Promise<StartingPreview> {
+  const sections: StartingPreview['sections'] = []
+  let total = 0
+  for (const row of rows) {
+    const { granted, cp } = expand(row, selection[row.refKey], new Set(excluded[row.refKey] ?? []))
+    total += cp
+    const out: PreviewGranted[] = []
+    for (const it of granted) {
+      if (it.special) { out.push({ name: it.special, special: true, quantity: it.quantity }); continue }
+      const entry = await g.DataLoader.pCacheAndGetHash(g.UrlUtil.PG_ITEMS, hashOfUid(it.uid!))
+      out.push(entry ? { uid: it.uid, name: entry.name, source: entry.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](entry), quantity: it.quantity, ...(it.displayName ? { displayName: it.displayName } : {}) } : { uid: it.uid, name: it.uid!, quantity: it.quantity })
+    }
+    sections.push({ refKey: row.refKey, granted: out, cp })
+  }
+  return { sections, currency: total > 0 ? coinsOf(total) : null }
+}
+
 export function createEquipmentCommands(operate: Operate) {
   return {
     /** 职业 / 背景的起始装备选项（每组选项、类别候选、金币骰式）；只读，不改世界。 */
     startingEquipment: (rows: StartingRow[]) => operate([], async () => ({ sections: await Promise.all(rows.map(sectionOf)) })),
+    /** 按玩家现在的选择预演（物品名、数量、钱）；只读。 */
+    startingPreview: (rows: StartingRow[], selection: Record<string, StartingSelection>, excluded?: Record<string, string[]>) => operate([], async () => previewOf(rows, selection, excluded)),
   }
 }

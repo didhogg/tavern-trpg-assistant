@@ -27,7 +27,7 @@ import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-option
 import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { abilityView, checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
-import { checkStarting, labelSections, type StartingSection, type StartingSelection } from './starting-options'
+import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
 /** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
 const picksByKey = (items: EntryRef[], picks?: BuildPick[][]): Record<string, BuildPick[]> => Object.fromEntries(items.map((ref, i) => [refKey(ref), picks?.[i] ?? []]))
@@ -207,16 +207,12 @@ export class KernelRuntime {
     return { status: 'complete', id: result.result.id, seed: result.result.seed, noEnglish: rows.noEnglish }
   }
 
-  /** 起始装备选项（P6）：已选的职业 / 背景写着的起始装备 → 每组选项、类别候选、金币骰式（带本战役【库】的条目引用和显示名）。 */
-  async startingEquipment(ownerKey: string, plan: { items: EntryRef[] }): Promise<{ status: string; error?: string; sections?: StartingSection[] }> {
+  /** 起始装备选项（P6）：已选的职业 / 背景写着的起始装备 → 每组选项、类别候选、金币骰式；带 starting（玩家现在的选择）时多给预演（物品、钱）。 */
+  async startingEquipment(ownerKey: string, plan: { items: EntryRef[]; starting?: Record<string, StartingSelection> }): Promise<StartingResult> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, plan.items)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
-    const sent = rows.rows.filter((r) => (r.entry as { startingEquipment?: unknown })?.startingEquipment).map((r) => ({ prop: r.ref.prop, refKey: refKey(r.ref), entry: r.entry }))
-    const out = await o.session.call('startingEquipment', sent)
-    if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
-    const lib = await this.library(ownerKey)
-    return { status: 'complete', sections: await labelSections(out.result.sections, await refMapperFor(this.deps.scoped, lib), () => this.deps.scoped.query(lib, 'item')) }
+    return startingOptions({ rows: rows.rows, call: (fn, ...args) => (o.session.call as any)(fn, ...args), scoped: this.deps.scoped, library: await this.library(ownerKey) }, plan.starting)
   }
 
   /**
