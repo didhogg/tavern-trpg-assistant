@@ -43,14 +43,14 @@ try {
     const english = (s) => typeof s === 'string' && !CJK.test(s) && /[A-Za-z]{3}/.test(s)
     // 人物数据里要看的键：名字 / 标题 / 标签 / 备注名；flags 里是 Plutonium 的内部英文来源，不是给人看的
     const TEXT_KEYS = new Set(['name', 'title', 'label', 'displayName', 'text', 'rename'])
-    const found = new Map() // 字符串 → { where: Set<'类别:位置'>, entries: Set<'种类 名字'> }
+    const found = new Map() // 字符串 → { where: Set<'类别:位置'>, entries: Set<'种类 名字'>, byWhere: { 类别: Set<条目> } }
     const note = (str, where, entry) => {
       const s = str.trim(); if (!s) return
-      const r = found.get(s) ?? { where: new Set(), entries: new Set() }
-      r.where.add(where); r.entries.add(entry); found.set(s, r)
+      const r = found.get(s) ?? { where: new Set(), entries: new Set(), byWhere: {} }
+      r.where.add(where); r.entries.add(entry); (r.byWhere[where.split(':')[0]] ??= new Set()).add(entry); found.set(s, r)
     }
     const walk = (node, path, where, entry) => {
-      if (Array.isArray(node)) { node.forEach((x, i) => walk(x, `${path}[]`, where, entry)); return }
+      if (Array.isArray(node)) { node.forEach((x) => walk(x, `${path}[]`, where, entry)); return }
       if (!node || typeof node !== 'object') return
       // 界面显示的是同级的中文 label（候选里的 name 只是放在中文旁边的英文小提示），这种 name 不算残留
       const labelShown = typeof node.label === 'string' && CJK.test(node.label)
@@ -99,7 +99,7 @@ try {
       }
     }
     await rt.close(owner)
-    const list = [...found].map(([text, r]) => ({ text, entries: r.entries.size, where: [...r.where].slice(0, 6), sample: [...r.entries].slice(0, 4) })).sort((a, b) => b.entries - a.entries)
+    const list = [...found].map(([text, r]) => ({ text, entries: r.entries.size, where: [...r.where].slice(0, 6), sample: [...r.entries].slice(0, 4), byWhere: Object.fromEntries(Object.entries(r.byWhere).map(([k, v]) => [k, [...v].slice(0, 6)])) })).sort((a, b) => b.entries - a.entries)
     return { sources, limit, stats, count: list.length, list }
   }, { sources, limit })
   result.seconds = Math.round((Date.now() - started) / 1000)

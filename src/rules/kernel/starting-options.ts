@@ -73,8 +73,9 @@ export interface StartingPreviewView { sections: Array<{ refKey: string; items: 
 export interface StartingResult { status: string; error?: string; sections?: StartingSection[]; preview?: StartingPreviewView }
 
 interface Deps {
-  /** zh：同一编号的中文条目（交给小窗的是英文对照时才有），小窗吐出的文字统一按它换回中文（locale.ts localizeAll）。 */
-  rows: Array<{ ref: EntryRef; entry: unknown; zh?: unknown | null }>
+  rows: Array<{ ref: EntryRef; entry: unknown }>
+  /** 显示文字的中英对照（条目 + 同编号补充记录，sidecar.ts），小窗吐出的文字统一按它换回中文（locale.ts localizeAll）。 */
+  pairs: EntryPair[]
   call: (fn: string, ...args: unknown[]) => Promise<{ status: string; error?: string; result?: any }> // eslint-disable-line @typescript-eslint/no-explicit-any -- 小窗命令结果原样
   scoped: ScopedLibrary
   library: CampaignLibrary
@@ -87,15 +88,14 @@ export async function startingOptions(d: Deps, starting?: Record<string, Startin
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
   const mapper = await refMapperFor(d.scoped, d.library)
   const visible = () => d.scoped.query(d.library, 'item')
-  const pairs: EntryPair[] = d.rows.map((r) => ({ en: r.entry, zh: r.zh ?? null }))
-  const sections = await labelSections(localizeAll(out.result.sections as EquipSection[], pairs), mapper, visible)
+  const sections = await labelSections(localizeAll(out.result.sections as EquipSection[], d.pairs), mapper, visible)
   if (!starting) return { status: 'complete', sections }
   const checked = checkStarting(sections, starting)
   if (checked.error) return { status: 'invalid', error: checked.error, sections }
   const shown = await d.call('startingPreview', sent, starting, checked.excluded)
   if (shown.status !== 'complete') return { status: shown.status, error: shown.error ?? `起始装备预演状态：${shown.status}`, sections }
   const names = new Map((await visible()).map((r) => [keyOf(r.ref), String((r.item as { name?: unknown } | undefined)?.name ?? '')]))
-  const view = localizeAll(shown.result as StartingPreview, pairs)
+  const view = localizeAll(shown.result as StartingPreview, d.pairs)
   return {
     status: 'complete', sections,
     preview: {

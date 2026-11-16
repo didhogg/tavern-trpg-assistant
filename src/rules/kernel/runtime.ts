@@ -28,6 +28,7 @@ import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { abilityView, checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
 import { localizeAll } from './locale'
+import { pairsSource, type PairsOf } from './sidecar'
 import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
 /** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
@@ -73,9 +74,9 @@ interface Open {
   view: LibraryView
   cache: KernelCache | null
   cacheBase: string
-  /** 小窗语言码：换算缓存行记在这个语言名下，清理按语言分开。 */
-  cacheLang: string
+  /** 小窗语言码：换算缓存行记在这个语言名下，清理按语言分开。 */ cacheLang: string
   dataVersion: () => Promise<KernelDataVersion>
+  /** 显示文字的中英对照：条目 + 同编号的补充记录（sidecar.ts）。 */ pairsOf: PairsOf
 }
 
 export class KernelRuntime {
@@ -103,11 +104,10 @@ export class KernelRuntime {
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
       const cacheLang = kernelLangOf(input.language)
-      // 换算缓存的钥匙按小窗自己读的那一版资料算（view 是打开时的版本）：战役开着时补装了书，
-      // 小窗照旧用旧版文件换算，结果就记在旧版本名下，不会冒充新版本（新版本由后台换算或重开战役后补上）。
+      // 换算缓存钥匙按小窗打开时那一版资料算：开着时补装了书，结果仍记旧版本名下（新版本由后台换算或重开后补上）。
       const versionOfView = async (): Promise<KernelDataVersion> => this.deps.cache ? this.deps.cache.dataVersion(view) : { official: '', brews: {} }
       const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, versionOfView, campaign.rule, brewFingerprint, cacheLang) : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, brews: report, brewFingerprint, brewIssue, bootMs: Math.round(performance.now() - started), cache, cacheBase, cacheLang, view, dataVersion: versionOfView }
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, brews: report, brewFingerprint, brewIssue, bootMs: Math.round(performance.now() - started), cache, cacheBase, cacheLang, view, dataVersion: versionOfView, pairsOf: pairsSource({ files: this.deps.files, view, codeSet: campaign.library.codeSet }) }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => { if (this.open.get(ownerKey) === opening) this.open.delete(ownerKey) })
@@ -216,7 +216,7 @@ export class KernelRuntime {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, plan.items)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
-    return startingOptions({ rows: rows.rows, call: (fn, ...args) => (o.session.call as any)(fn, ...args), scoped: this.deps.scoped, library: await this.library(ownerKey) }, plan.starting)
+    return startingOptions({ rows: rows.rows, pairs: await o.pairsOf(rows.rows), call: (fn, ...args) => (o.session.call as any)(fn, ...args), scoped: this.deps.scoped, library: await this.library(ownerKey) }, plan.starting)
   }
 
   /**
@@ -232,7 +232,7 @@ export class KernelRuntime {
     if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
     const lib = await this.library(ownerKey)
     const query = (prop: string) => this.deps.scoped.query(lib, prop, { mode: 'browse' }) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
-    const shownItems = localizeAll(out.result.items, rows.rows.map((r) => ({ en: r.entry, zh: r.zh }))), items: BuildOptionsItem[] = []
+    const shownItems = localizeAll(out.result.items, await o.pairsOf(rows.rows)), items: BuildOptionsItem[] = []
     for (let i = 0; i < rows.rows.length; i++) {
       const row = rows.rows[i]
       const key = sent[i].refKey

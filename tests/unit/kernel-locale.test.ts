@@ -24,6 +24,11 @@ describe('zhAt：同编号条目同位置取中文', () => {
     expect(zhAt({ a: ['x', 'x'] }, { a: ['甲', '乙'] }, 'x')).toBeNull()
     expect(zhAt({ a: ['x', 'x'] }, { a: ['甲', '甲'] }, 'x')).toBe('甲')
   })
+  it('中英相同的位置（编号）不算译文：标题 Breath 和编号 breath 同在一条记录里', () => {
+    const en = { advancement: [{ title: 'Breath', configuration: { identifier: 'breath' } }] }
+    const zh = { advancement: [{ title: '吐息', configuration: { identifier: 'breath' } }] }
+    expect(zhAt(en, zh, 'Breath')).toBe('吐息')
+  })
   it('结构对不上（数组长短不同）的那一段不取', () => {
     expect(zhAt({ a: ['x'] }, { a: ['甲', '乙'] }, 'x')).toBeNull()
   })

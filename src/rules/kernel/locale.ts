@@ -15,7 +15,8 @@ export function zhAt(en: unknown, zh: unknown, text: string | null | undefined):
   const found = new Set<string>()
   const walk = (a: unknown, b: unknown): void => {
     if (typeof a === 'string') {
-      if (typeof b === 'string' && clean(a).toLowerCase() === want && clean(b)) found.add(clean(b))
+      // 中英两边一模一样的位置（编号、没翻的原文）不是译文，不算
+      if (typeof b === 'string' && clean(a).toLowerCase() === want && clean(b) && clean(b) !== clean(a)) found.add(clean(b))
       return
     }
     if (Array.isArray(a)) {
