@@ -95,6 +95,30 @@ try {
   check('专长候选很多（全部专长），页面写明前置条件没检查', featCount > 20 && /前置条件/.test(await page.getByTestId('wz-right').innerText()), String(featCount))
   await page.getByTestId('wz-row').first().click(); await page.getByTestId('wz-choose').click(); await settle(page, 800)
   await next()
+  // 属性值：先试购点（换方式要确认）→ 换回标准数组放满
+  await page.getByTestId('wz-abilities').waitFor(); await settle(page, 800)
+  check('步骤标签有「属性值」', (await page.getByTestId('wz-step-abilities').count()) === 1)
+  const root = page.getByTestId('wz-abilities')
+  const totals = async () => (await root.getByTestId('wz-ab-total').allTextContents()).map((t) => t.trim())
+  check('一开始没放：合计都是官方初值加种族加成，待放的数 6 个', (await root.getByTestId('wz-ab-chip').count()) === 6 && (await totals()).join() === '10,10,11,10,11,10', (await totals()).join())
+  await root.getByRole('button', { name: '购点', exact: true }).click(); await settle(page, 2500)
+  check('购点：每项从 8 开始，已用 0 / 27', /已用 0 \/ 27，剩 27/.test(await root.getByTestId('wz-ab-budget').innerText()), await root.getByTestId('wz-ab-budget').innerText())
+  await root.getByRole('button', { name: '力量 多一档' }).click(); await settle(page, 1500); await root.getByRole('button', { name: '力量 多一档' }).click(); await settle(page, 1500)
+  check('购点：力量加两档后是 10，已用 2', /已用 2 \/ 27，剩 25/.test(await root.getByTestId('wz-ab-budget').innerText()) && (await root.getByTestId('wz-ab-row-str').getByTestId('wz-ab-base').innerText()).trim() === '10', await root.getByTestId('wz-ab-budget').innerText())
+  await root.getByRole('button', { name: '标准数组', exact: true }).click()
+  await page.getByTestId('confirm-page').waitFor(); await page.getByTestId('confirm-page').getByRole('button', { name: '换' }).click(); await settle(page, 2500)
+  check('换回标准数组：已放的清空', (await root.getByTestId('wz-ab-chip').count()) === 6)
+  for (const k of ['str', 'dex', 'con', 'int', 'wis', 'cha']) {
+    await root.getByTestId('wz-ab-chip').first().click()
+    await root.getByTestId(`wz-ab-row-${k}`).getByTestId('wz-ab-place').click(); await settle(page, 2000)
+  }
+  check('数组放满：待放的数没有了', (await root.getByTestId('wz-ab-chip').count()) === 0 && /都放完了/.test(await root.getByTestId('wz-ab-pool').innerText()))
+  check('合计 = 基础 + 种族加成（后端给的数）：体质 14、感知 11', (await totals()).join() === '15,14,14,12,11,8', (await totals()).join())
+  await shot('05b-abilities')
+  await page.setViewportSize({ width: 390, height: 780 }); await settle(page, 800); await shot('05c-abilities-narrow')
+  check('窄屏属性值：没有横向滚动，数组数字按钮不小于 44px', await page.evaluate(() => { const r = document.querySelector('#trpg-assistant-root').shadowRoot; const b = r.querySelector('[data-testid=wz-ab-place]').getBoundingClientRect(); const sc = r.querySelector('[data-testid=wz-abilities]'); return sc.scrollWidth <= sc.clientWidth + 1 && b.height >= 43 }))
+  await page.setViewportSize({ width: 1280, height: 800 }); await settle(page, 800)
+  await next()
   // 完成
   await page.getByTestId('wz-done').waitFor(); await settle(page, 600)
   const doneText = await page.getByTestId('wz-done').innerText()
@@ -118,7 +142,7 @@ try {
     return { prof, wanted, abil }
   }, pinia)
   check('玩家选的技能都在人物身上', verify.wanted.length >= 3 && verify.wanted.every((k) => verify.prof.includes(k)), JSON.stringify(verify))
-  check('选的属性提升生效：体质 11、感知 11', verify.abil.con === 11 && verify.abil.wis === 11, JSON.stringify(verify.abil))
+  check('属性值进了人物：数组 15 14 13 12 10 8 加种族提升 → 力量 15 敏捷 14 体质 14 智力 12 感知 11 魅力 8', JSON.stringify(verify.abil) === JSON.stringify({ str: 15, dex: 14, con: 14, int: 12, wis: 11, cha: 8 }), JSON.stringify(verify.abil))
   // 没选满的留空：牧师只选 1 个技能（共 2 个位置），其余不替他选
   await openWizard(); await page.getByTestId('wz-name').fill('半选牧师'); await next()
   await page.waitForSelector('[data-testid=wz-row]'); await page.getByTestId('wz-search').fill('人类'); await settle(page, 500)
@@ -127,7 +151,17 @@ try {
   await page.getByTestId('wz-search').fill('牧师'); await settle(page, 400); await pickRow(/^牧师$/)
   const half = page.getByRole('group', { name: /技能候选/ }).first()
   await half.getByTestId('wz-opt').nth(0).click(); await settle(page, 1500)
-  while (!(await page.getByTestId('wz-done').count())) await next()
+  while (!(await page.getByTestId('wz-done').count())) {
+    if (await page.getByTestId('wz-abilities').count()) {
+      const ab = page.getByTestId('wz-abilities')
+      await ab.getByRole('button', { name: '手填', exact: true }).click(); await settle(page, 2500)
+      await ab.getByTestId('wz-ab-row-str').getByTestId('wz-ab-input').fill('25'); await settle(page, 2500)
+      check('手填：超出官方上限 20 时在这一项旁边写明范围', /范围 0 到 20/.test(await ab.getByTestId('wz-ab-row-str').innerText()), await ab.getByTestId('wz-ab-row-str').innerText())
+      await ab.getByTestId('wz-ab-row-str').getByTestId('wz-ab-input').fill('18'); await settle(page, 2500)
+      check('手填：改成 18 后问题消失，合计 = 18 + 种族 +1 = 19', !/范围/.test(await ab.getByTestId('wz-ab-row-str').innerText()) && (await ab.getByTestId('wz-ab-row-str').getByTestId('wz-ab-total').innerText()).trim() === '19')
+    }
+    await next()
+  }
   const halfText = await page.getByTestId('wz-done').innerText()
   check('完成页「待填」写着技能还差 1，并说明创建后会空着', /还差 1/.test(halfText) && /空着/.test(halfText), halfText.replace(/\s+/g, ' ').slice(0, 260))
   await page.getByTestId('wz-create').click()
@@ -139,6 +173,8 @@ try {
     const sheet = await be.people.sheet(camp.owner.ownerKey, row.id)
     return Object.entries(sheet.result.system.skills).filter(([, v]) => v.value >= 1).map(([k]) => k).sort()
   }, pinia)
+  const halfStr = await page.evaluate(async (P) => { const ps = eval(P); const camp = ps._s.get('campaign'); const be = ps._s.get('app').svc().backend; const row = ps._s.get('people').rows.find((r) => r.name === '半选牧师'); return (await be.people.sheet(camp.owner.ownerKey, row.id)).result.system.abilities.str.value }, pinia)
+  check('手填的力量 18 进了人物（加种族 +1 = 19）', halfStr === 19, String(halfStr))
   check('只选了 1 个：人物身上是侍僧给的 2 个 + 玩家选的 1 个，共 3 个，没有替他补', halfSkills.length === 3, JSON.stringify(halfSkills))
   // 窄屏
   await page.setViewportSize({ width: 390, height: 780 }); await settle(page, 600)

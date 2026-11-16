@@ -6,6 +6,7 @@ import { useModalStore } from '../../stores/modal'
 import { useWizardStore } from '../../stores/wizard'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
+import WizardAbilities from './WizardAbilities.vue'
 import WizardDone from './WizardDone.vue'
 import WizardPickStep from './WizardPickStep.vue'
 
@@ -32,6 +33,7 @@ async function create(): Promise<void> { if (await w.create()) modal.close() }
         <label class="trpg-field"><span class="trpg-field__label">名字 <b class="sh-warn">*</b></span><input v-model="w.name" class="trpg-input" type="text" maxlength="60" placeholder="给人物起个名字" data-testid="wz-name" data-autofocus /></label>
         <div class="trpg-field"><span class="trpg-field__label">放进</span><Segmented :model-value="w.category" label="放进哪一类" :options="CATEGORIES.map((c) => ({ value: c.id, label: c.label }))" @update:model-value="(v) => (w.category = v as CategoryId)" /></div>
       </div>
+      <WizardAbilities v-else-if="w.cur === 'abilities'" />
       <WizardDone v-else-if="last" />
       <WizardPickStep v-else :key="w.cur" :prop="w.cur" />
     </div>

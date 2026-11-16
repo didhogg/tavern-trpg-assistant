@@ -28,7 +28,12 @@ describe('checkAbilities', () => {
   })
   it('购点：花费、剩余、超预算', () => {
     const r = checkAbilities({ method: 'pointBuy', base: { str: 15, dex: 15, con: 15, int: 8, wis: 8, cha: 8 } }, KEYS, 20)
-    expect(r).toMatchObject({ ok: true, cost: 27, left: 0 })
+    expect(r).toMatchObject({ ok: true, cost: 27, left: 0, start: 8 })
+    expect(r.rows?.str).toEqual({ cost: 9, up: null, down: 14 })
+    expect(r.rows?.int).toEqual({ cost: 0, up: null, down: null })
+    const some = checkAbilities({ method: 'pointBuy', base: { str: 14, dex: 8 } }, KEYS, 20)
+    expect(some.rows?.str).toMatchObject({ cost: 7, up: 15, down: 13 })
+    expect(some.rows?.con).toEqual({ cost: null, up: 8, down: null })
     const over = checkAbilities({ method: 'pointBuy', base: { str: 15, dex: 15, con: 15, int: 15, wis: 8, cha: 8 } }, KEYS, 20)
     expect(over.problems).toEqual([{ key: null, code: 'over-budget' }])
     expect(checkAbilities({ method: 'pointBuy', base: { str: 16 } }, KEYS, 20).problems).toEqual([{ key: 'str', code: 'not-in-table' }])

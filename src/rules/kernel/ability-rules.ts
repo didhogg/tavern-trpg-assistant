@@ -26,6 +26,10 @@ export interface AbilityCheck {
   cost?: number
   budget?: number
   left?: number
+  /** 购点：起点（花费表里最小的分数），切到购点时每项从这里开始。 */
+  start?: number
+  /** 购点：每项现在花多少，以及点 [＋] / [－] 会变成几（不行 = null：不在表里，或剩的点数不够）。 */
+  rows?: Record<string, { cost: number | null; up: number | null; down: number | null }>
 }
 
 /** 检查一组基础值合不合方式的规则。keys = 全部属性键；cap = 手填上限（官方给；其余方式用不到）。 */
@@ -55,5 +59,13 @@ export function checkAbilities(plan: AbilityPlan, keys: string[], cap: number): 
     if (c === undefined) problems.push({ key: k, code: 'not-in-table' }); else cost += c
   }
   if (cost > budget) problems.push({ key: null, code: 'over-budget' })
-  return { ok: !problems.length, complete, problems, cost, budget, left: budget - cost }
+  const scores = Object.keys(costs).map(Number).sort((a, b) => a - b)
+  const left = budget - cost
+  const rows = Object.fromEntries(keys.map((k) => {
+    const v = plan.base[k]
+    if (typeof v !== 'number' || costs[v] === undefined) return [k, { cost: null, up: scores[0], down: null }]
+    const up = costs[v + 1] !== undefined && costs[v + 1] - costs[v] <= left ? v + 1 : null
+    return [k, { cost: costs[v], up, down: costs[v - 1] !== undefined ? v - 1 : null }]
+  }))
+  return { ok: !problems.length, complete, problems, cost, budget, left, start: scores[0], rows }
 }

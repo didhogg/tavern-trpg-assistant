@@ -4,7 +4,10 @@ import { refKey } from '../core/saves/split'
 import type { EntryRef } from '../library/scopes'
 import { EXTRA_KINDS } from '../rules/kernel/build-options'
 import { ruleKernel } from '../rules/kernel/adapters'
-import type { BuildOptionsItem, BuildPick } from '../rules/kernel/runtime'
+import type { AbilityMethod } from '../rules/kernel/ability-rules'
+import type { BuildAbilities, BuildOptionsItem, BuildPick } from '../rules/kernel/runtime'
+import { askConfirm } from '../ui/kit/confirm'
+import { abilityLabel } from '../ui/roster/wizard-labels'
 import { nameOf } from '../ui/libview/pack-data'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
@@ -38,6 +41,12 @@ export const useWizardStore = defineStore('wizard', () => {
   /** 玩家在每一步里的选择：条目键 → 步骤键 → 界面状态（Trait = 每个位置选了哪些值；能力值 = 每项加几点）。 */
   const sel = ref<Record<string, Record<string, any>>>({}) // eslint-disable-line @typescript-eslint/no-explicit-any -- 两种形状按 kind 区分
   const options = shallowRef<BuildOptionsItem[] | null>(null)
+  /** 属性值：方式 + 每项放了几（没放 = 没有这个键）；「基础 + 加成 = 合计」和检查结果都由后端按这两样给。 */
+  const abilMethod = ref<AbilityMethod>('standardArray')
+  const abilBase = ref<Record<string, number>>({})
+  const abil = shallowRef<BuildAbilities | null>(null)
+  /** 标准数组：手里拿着的那个数（点一项属性放进去）。 */
+  const holding = ref<number | null>(null)
   const optLoading = ref(false)
   const optError = ref<string | null>(null)
   const lists = shallowRef<Record<string, PickRow[]>>({})
@@ -59,8 +68,8 @@ export const useWizardStore = defineStore('wizard', () => {
     const candidates = all.flatMap((x) => x.candidates).map((c) => rowOf(c.ref, c.name, c.source)).filter((r) => !seen.has(r.key) && !!seen.add(r.key))
     return { title: all[0].title, count: all.reduce((n, x) => n + x.count, 0), candidates }
   }
-  const steps = computed(() => ['name', ...mainProps.value, ...build.value.filter((p) => (EXTRA_KINDS as readonly string[]).includes(p) && extra(p)), 'done'])
-  const label = (id: string): string => id === 'name' ? '名字' : id === 'done' ? '完成' : names.value[id] ?? id
+  const steps = computed(() => ['name', ...mainProps.value, ...build.value.filter((p) => (EXTRA_KINDS as readonly string[]).includes(p) && extra(p)), ...(abil.value ? ['abilities'] : []), 'done'])
+  const label = (id: string): string => id === 'name' ? '名字' : id === 'done' ? '完成' : id === 'abilities' ? '属性值' : names.value[id] ?? id
   const need = (id: string): number => (EXTRA_KINDS as readonly string[]).includes(id) ? extra(id)?.count ?? 0 : 1
 
   /** 一件条目里要玩家选的步骤（不用选的、自动的不在这里）。 */
@@ -87,19 +96,22 @@ export const useWizardStore = defineStore('wizard', () => {
   }
   const picks = computed<BuildPick[][]>(() => items.value.map((ref) => choicesOf(ref).map((s) => pickOf(ref, s)).filter((p): p is BuildPick => !!p)))
 
+  const abilPlan = () => ({ method: abilMethod.value, base: { ...abilBase.value } })
+
   async function refreshOptions(): Promise<void> {
-    const body = { items: items.value, picks: picks.value, blank: true }
+    const body = { items: items.value, picks: picks.value, blank: true, abilities: abilPlan() }
     const sent = JSON.stringify(body)
     if (sent === lastSent) return
     lastSent = sent
     const mine = ++seq
-    if (!items.value.length) { options.value = null; return }
+    if (!items.value.length) { options.value = null; abil.value = null; return }
     optLoading.value = true
     try {
       const out = await app.svc().backend.people.buildOptions(owner(), body)
       if (mine !== seq) return
       if (out.status !== 'complete' || !out.items) throw new Error(out.error ?? `读取选项失败（${out.status}）`)
       options.value = out.items
+      abil.value = out.abilities ?? null
       optError.value = null
       // 条目换了、步骤没了：丢掉对不上的选择
       for (const ref of items.value) {
@@ -118,7 +130,7 @@ export const useWizardStore = defineStore('wizard', () => {
 
   async function open(startView: string): Promise<void> {
     seq++; lastSent = ''
-    name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; options.value = null; optError.value = null; createError.value = null; creating.value = false
+    name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; options.value = null; optError.value = null; createError.value = null; creating.value = false
     category.value = CATEGORIES.some((c) => c.id === startView) ? startView as CategoryId : 'party'
     const lib = await app.svc().backend.kernelSave.libraryOf(owner())
     build.value = [...(ruleKernel(lib.rule)?.build ?? [])]
@@ -169,6 +181,30 @@ export const useWizardStore = defineStore('wizard', () => {
     void refreshOptions()
   }
 
+  const unsetAbilities = computed(() => abil.value?.rows.filter((r) => !r.set) ?? [])
+  /** 切换方式：已放的数会清掉，先问；购点从起点开始（起点由后端按规则表给）。 */
+  async function setMethod(m: AbilityMethod): Promise<void> {
+    if (m === abilMethod.value) return
+    if (Object.keys(abilBase.value).length && !(await askConfirm({ title: '换一种方式', message: '换方式会清掉已经放好的数，重新来。', confirmLabel: '换' }))) return
+    abilMethod.value = m; abilBase.value = {}; holding.value = null
+    lastSent = ''; await refreshOptions()
+    const start = abil.value?.check?.start
+    if (m === 'pointBuy' && start !== undefined) { abilBase.value = Object.fromEntries((abil.value?.rows ?? []).map((r) => [r.key, start])); await refreshOptions() }
+  }
+  /** 标准数组：拿起 / 放下一个数；点已放的属性 = 收回。 */
+  function hold(n: number): void { holding.value = holding.value === n ? null : n }
+  function place(key: string): void {
+    const next = { ...abilBase.value }
+    if (holding.value !== null) { next[key] = holding.value; holding.value = null } else if (key in next) delete next[key]; else return
+    abilBase.value = next; void refreshOptions()
+  }
+  /** 购点：到后端说的下一档 / 上一档。手填：直接写；空 = 清掉这一项。 */
+  function setBase(key: string, value: number | null): void {
+    const next = { ...abilBase.value }
+    if (value === null || Number.isNaN(value)) delete next[key]; else next[key] = value
+    abilBase.value = next; void refreshOptions()
+  }
+
   const todo = computed<Todo[]>(() => {
     const out: Todo[] = []
     for (const p of mainProps.value) if (!(chosen.value[p] ?? []).length) out.push({ text: `还没选${label(p)}`, go: p })
@@ -180,15 +216,16 @@ export const useWizardStore = defineStore('wizard', () => {
       const left = needOf(s) - haveOf(ref, s)
       if (left > 0) out.push({ text: `${optionsFor(ref)?.name ?? ''}：${s.title ?? ''} 还差 ${left}`, go: p })
     }
+    if (abil.value && unsetAbilities.value.length) out.push({ text: `属性值：还有 ${unsetAbilities.value.length} 项没放（${unsetAbilities.value.map((r) => abilityLabel(r.key)).join('、')}）`, go: 'abilities' })
     return out
   })
-  const status = (id: string): 'done' | 'todo' => id === 'name' ? (name.value.trim() ? 'done' : 'todo') : id === 'done' ? 'todo' : (chosen.value[id] ?? []).length >= need(id) ? 'done' : 'todo'
+  const status = (id: string): 'done' | 'todo' => id === 'name' ? (name.value.trim() ? 'done' : 'todo') : id === 'done' ? 'todo' : id === 'abilities' ? (abil.value?.check?.complete && abil.value.check.ok ? 'done' : 'todo') : (chosen.value[id] ?? []).length >= need(id) ? 'done' : 'todo'
 
   async function create(): Promise<boolean> {
     if (!name.value.trim()) { createError.value = '先给人物起个名字'; return false }
     creating.value = true; createError.value = null
     try {
-      const ok = await roster.createFromWizard({ name: name.value.trim(), items: items.value, picks: picks.value, blank: true }, category.value)
+      const ok = await roster.createFromWizard({ name: name.value.trim(), items: items.value, picks: picks.value, blank: true, ...(Object.keys(abilBase.value).length ? { abilities: abilPlan() } : {}) }, category.value)
       if (!ok) createError.value = '没建成，原因见提示条'
       return ok
     } finally { creating.value = false }
@@ -196,6 +233,6 @@ export const useWizardStore = defineStore('wizard', () => {
   const go = (id: string): void => { cur.value = id }
   const move = (delta: number): void => { const i = steps.value.indexOf(cur.value); cur.value = steps.value[Math.max(0, Math.min(steps.value.length - 1, i + delta))] }
 
-  return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, creating, createError, mainProps, items, steps, picks, todo,
-    open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, optionsFor, setSlot, bumpAsi, refreshOptions, create, go, move }
+  return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
+    open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, optionsFor, setSlot, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
 })
