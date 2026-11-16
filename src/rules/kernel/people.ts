@@ -211,6 +211,8 @@ export class KernelPeople {
   }
   /** 建卡选项：选中的条目现在要玩家选哪些事（官方候选）+ 额外必选项（子职业 / 专长 / 可选特性，带候选）；预览不进存档。 */
   buildOptions(ownerKey: string, plan: Parameters<KernelRuntime['buildOptions']>[1]) { return this.deps.runtime.buildOptions(ownerKey, plan) }
+  /** 起始装备选项：选中的职业 / 背景写着的起始装备（每组选项、类别候选、金币骰式）；预览不进存档。 */
+  startingEquipment(ownerKey: string, plan: Parameters<KernelRuntime['startingEquipment']>[1]) { return this.deps.runtime.startingEquipment(ownerKey, plan) }
   /** 加人：从模板（库里的怪物 / NPC）加入，count 份。 */
   async fromTemplate(ownerKey: string, ref: EntryRef, count = 1, adjustments: Record<string, unknown> = {}) {
     const made = await this.deps.runtime.createActors(ownerKey, Array.from({ length: Math.max(1, count) }, () => ref))

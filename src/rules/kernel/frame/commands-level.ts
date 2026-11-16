@@ -10,6 +10,7 @@ import { importEntry, importerMeta, importerProps } from './importer'
 import { actorTypes, BUILD_ACTOR_TYPE } from './actor-types'
 import { restoreRecordedChoices } from './commands-restore'
 import { blankChoice, firstChoice } from './commands-choice'
+import { resolveStarting, type StartingSelection } from './commands-equipment'
 
 const g = globalThis as any
 export function Manager(): any {
@@ -194,6 +195,8 @@ export interface BuildPlan {
   choices?: Record<string, any[] | undefined>
   /** 玩家的选择（按条目引用的键）；没给的位置仍按「第一个可选项」。 */
   picks?: Record<string, BuildPick[]>
+  /** 起始装备的选择（按职业 / 背景条目的键）：展开成物品（带数量）和钱，随人物建出来。 */
+  starting?: Record<string, StartingSelection>
   /** true = 玩家没选的位置留空（建卡界面用）；不给 = 取第一个可选项（模板加入）。 */
   blank?: boolean
   /** 读档用：存档里记下的人物种子；新建卡不传，内核自己生成。 */
@@ -294,9 +297,12 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
       const equipment = []
       for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
-      const built = await buildActor(plan.name, items, equipment, plan.choices ?? {}, { strict: false, seed, picks: plan.picks, blank: plan.blank })
+      const starting = plan.starting ? await resolveStarting(plan.items.filter((r) => r.entry?.startingEquipment), plan.starting) : null
+      const built = await buildActor(plan.name, items, [...equipment, ...(starting?.equipment ?? [])], plan.choices ?? {}, { strict: false, seed, picks: plan.picks, blank: plan.blank })
       if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }
-      return { id: built.actor.id, seed, initial: built.initial, ...actorLevel(built.actor) }
+      if (starting?.specials.length) await built.actor.createEmbeddedDocuments('Item', starting.specials)
+      if (starting?.currency) await built.actor.update({ 'system.currency': starting.currency })
+      return { id: built.actor.id, seed, initial: built.initial, skipped: starting?.skipped ?? [], ...actorLevel(built.actor) }
     }),
 
     /** 建卡待选项：把作者转出的种族/背景/职业条目放进一个空白 1 级人物，列官方成长步骤（不改世界）。 */

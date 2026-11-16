@@ -27,6 +27,7 @@ import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-option
 import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { checkAbilities, type AbilityCheck, type AbilityPlan } from './ability-rules'
+import { labelSections, type StartingSection, type StartingSelection } from './starting-options'
 export type { BuildPick }
 /** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
 const picksByKey = (items: EntryRef[], picks?: BuildPick[][]): Record<string, BuildPick[]> => Object.fromEntries(items.map((ref, i) => [refKey(ref), picks?.[i] ?? []]))
@@ -169,7 +170,7 @@ export class KernelRuntime {
   }
 
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
-  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
+  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan; starting?: Record<string, StartingSelection> }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     if (plan.abilities) {
       // 方式的规则（标准数组 / 购点）在这里查；手填的范围由小窗按官方上限查
@@ -181,7 +182,7 @@ export class KernelRuntime {
     const byKey = new Map(rows.rows.map((row) => [refKey(row.ref), row]))
     const items = plan.items.map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
     const equipment = (plan.equipment ?? []).map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
-    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank })
+    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank, starting: plan.starting })
     if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? `建卡状态：${result.status}`, detail: result }
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)
@@ -197,6 +198,18 @@ export class KernelRuntime {
       }
     }
     return { status: 'complete', id: result.result.id, seed: result.result.seed, noEnglish: rows.noEnglish }
+  }
+
+  /** 起始装备选项（P6）：已选的职业 / 背景写着的起始装备 → 每组选项、类别候选、金币骰式（带本战役【库】的条目引用和显示名）。 */
+  async startingEquipment(ownerKey: string, plan: { items: EntryRef[] }): Promise<{ status: string; error?: string; sections?: StartingSection[] }> {
+    const o = await this.get(ownerKey)
+    const rows = await this.entries(ownerKey, plan.items)
+    if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
+    const sent = rows.rows.filter((r) => (r.entry as { startingEquipment?: unknown })?.startingEquipment).map((r) => ({ prop: r.ref.prop, refKey: refKey(r.ref), entry: r.entry }))
+    const out = await o.session.call('startingEquipment', sent)
+    if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
+    const lib = await this.library(ownerKey)
+    return { status: 'complete', sections: await labelSections(out.result.sections, await refMapperFor(this.deps.scoped, lib), () => this.deps.scoped.query(lib, 'item', { mode: 'browse' }) as any) }
   }
 
   /**
