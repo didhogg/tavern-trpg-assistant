@@ -2,18 +2,17 @@
 // 建卡加人 → 读人物页（官方分解、和基准不同的字段）→ 手改加值 / 基础值 → 回到自动（差别消失）
 // → 扣血写入 → 撤销（小窗跟着退回，再做别的事撤掉的伤害不回来）→ 检定登记表 → 长休预览后取消（小窗按存档退回）
 // → 升级 / 降级 → 复制（新种子）→ 从模板加入怪物 → 回收站 / 彻底删除 / 撤销 → 改动记录 → 关小窗按存档重建全员。
-import { join } from 'node:path'
 import { writeFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, work } from './chain-common.mjs'
+import { buildAll, E2E_PORT, engines, freshFromBase, work } from './chain-common.mjs'
 
 const LIMIT = 8 * 60_000
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, LIMIT)
 await buildAll()
 const [, type, options] = engines[process.env.ENGINE === 'webkit' ? 1 : 0]
 const engine = process.env.ENGINE ?? 'chrome'
-const { server, url } = await startStatic({ port: 47337 })
-const ctx = await type.launchPersistentContext(join(work, `profile-p3-1-${engine}`), { ...options, viewport: { width: 1280, height: 800 } })
+const { server, url } = await startStatic({ port: E2E_PORT })
+const ctx = await type.launchPersistentContext(freshFromBase(engine, 'p6-people'), { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage()
 page.setDefaultTimeout(LIMIT)
 const errors = []

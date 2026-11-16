@@ -5,15 +5,14 @@
 //   ④ 旧存档：英文小窗建的人，存进存档，关窗后在中文小窗按存档重建——所有数字、内部编号和英文时一模一样，只有文字标签变中文。
 import { writeFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, freshProfile, work } from './chain-common.mjs'
+import { buildAll, E2E_PORT, engines, freshFromBase, work } from './chain-common.mjs'
 import { check, failures } from '../helpers.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
-const { server, url } = await startStatic({ port: 47373 })
-const profile = `${work}/profile-p6-kernellang-${engineName}`
-freshProfile(`${work}/profile-p3-1-${engineName}`, profile) // 克隆底座，跑完自动删（KEEP_PROFILE=1 保留）
+const { server, url } = await startStatic({ port: E2E_PORT })
+const profile = freshFromBase(engineName, 'p6-kernellang') // 克隆干净底座（npm run e2e:base 造），跑完自动删（KEEP_PROFILE=1 保留）
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, 8 * 60_000)
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage(); page.setDefaultTimeout(8 * 60_000)

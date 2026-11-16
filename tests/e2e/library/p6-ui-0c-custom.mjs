@@ -3,15 +3,14 @@
 // 用法：ENGINE=chrome|webkit node tests/e2e/library/p6-ui-0c-custom.mjs（SKIP_BUILD=1 跳过构建）；复制一份浏览器资料，不动共用的那份。
 import { rm, mkdir, readFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, freshProfile, work } from './chain-common.mjs'
+import { buildAll, E2E_PORT, engines, freshFromBase } from './chain-common.mjs'
 import { check, failures, settle } from '../helpers.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
-const { server, url } = await startStatic({ port: 47362 })
-const profile = `${work}/profile-p6-uicustom-${engineName}`
-freshProfile(`${work}/profile-p3-1-${engineName}`, profile) // 克隆底座，跑完自动删（KEEP_PROFILE=1 保留）
+const { server, url } = await startStatic({ port: E2E_PORT })
+const profile = freshFromBase(engineName, 'p6-uicustom') // 克隆干净底座（npm run e2e:base 造），跑完自动删（KEEP_PROFILE=1 保留）
 const shots = `${process.cwd()}/work/p6-ui/shots-0c-custom-${engineName}`
 await rm(shots, { recursive: true, force: true }); await mkdir(shots, { recursive: true })
 const killer = setTimeout(() => { console.error('超时 9 分钟'); process.exit(2) }, 9 * 60_000)

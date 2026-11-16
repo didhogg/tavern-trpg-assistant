@@ -23,6 +23,11 @@ export async function startStatic({ port = 0 } = {}) {
       res.writeHead(404).end()
     }
   })
-  await new Promise((r) => server.listen(port, '127.0.0.1', r))
+  await new Promise((resolve, reject) => {
+    server.once('error', (error) => reject(error.code === 'EADDRINUSE'
+      ? new Error(`[static] 端口 ${port} 已被占用：上一个测试可能没退出，或两个测试同时在跑（e2e 统一用同一个端口，不能同时跑）。查看：lsof -i :${port}；确认是测试进程后再结束它`)
+      : error))
+    server.listen(port, '127.0.0.1', () => { server.removeAllListeners('error'); resolve() })
+  })
   return { server, requests, url: `http://127.0.0.1:${server.address().port}/` }
 }

@@ -2,14 +2,14 @@
 // 截图 work/p6-ui/shots-0c-*/；界面验收只由驾驶员给。用法：[DARK=1] ENGINE=chrome|webkit node tests/e2e/library/p6-ui-0c.mjs
 import { rm, mkdir } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, work } from './chain-common.mjs'
+import { buildAll, E2E_PORT, engines, freshFromBase } from './chain-common.mjs'
 import { check, failures, settle } from '../helpers.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
-const { server, url } = await startStatic({ port: 47348 })
-const profile = `${work}/profile-p3-1-${engineName}` // 和 p6-people 共用：官方资料装过就不再下载
+const { server, url } = await startStatic({ port: E2E_PORT })
+const profile = freshFromBase(engineName, 'p6-ui-0c') // 克隆干净底座（npm run e2e:base 造），跑完自动删（KEEP_PROFILE=1 保留）
 const dark = process.env.DARK === '1' // DARK=1：整条流程在深色下走一遍，截图放 shots-0c-*-dark
 const shots = `${process.cwd()}/work/p6-ui/shots-0c-${engineName}${dark ? '-dark' : ''}`
 await rm(shots, { recursive: true, force: true }); await mkdir(shots, { recursive: true })

@@ -16,7 +16,8 @@
     "check": "npm run typecheck && npm run lint && npm run test",
     "test:fast": "node tools/test-fast.mjs",
     "e2e": "npm run build && node tests/e2e/smoke.mjs",
-    "clean:profiles": "node tests/e2e/library/clean-clones.mjs"
+    "clean:profiles": "node tests/e2e/library/clean-clones.mjs",
+    "e2e:base": "node tests/e2e/library/make-base.mjs"
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.1",

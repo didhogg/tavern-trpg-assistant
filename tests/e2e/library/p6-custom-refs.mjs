@@ -1,17 +1,16 @@
 // 自制包条目进人物 / 存档 / 重进战役（所有类别同一条路：作者编号 → 库引用，EntryLinks.customRefs）+ 起始装备候选含自制物品。
 // 真实插件 + 真实库 + 真实结算小窗；自制包是 work/p6-equip-pack/ 和 work/p58-fixtures/ 里的试跑包（中文 + 英文）。
 // 用法：ENGINE=chrome|webkit node tests/e2e/library/p6-custom-refs.mjs（SKIP_BUILD=1 跳过构建）；9 分钟强制结束。
-import { rm, cp, readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, work } from './chain-common.mjs'
+import { buildAll, E2E_PORT, engines, freshFromBase, work } from './chain-common.mjs'
 
 const killer = setTimeout(() => { console.error('超时 9 分钟'); process.exit(2) }, 9 * 60_000)
 if (!process.env.SKIP_BUILD) await buildAll()
 const engine = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engine)
-const { server, url } = await startStatic({ port: 47361 })
-const profile = `${work}/profile-p6-custom-${engine}`
-await rm(profile, { recursive: true, force: true }); await cp(`${work}/profile-p3-1-${engine}`, profile, { recursive: true })
+const { server, url } = await startStatic({ port: E2E_PORT })
+const profile = freshFromBase(engine, 'p6-custom') // 克隆干净底座（npm run e2e:base 造），跑完自动删（KEEP_PROFILE=1 保留）
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage(); page.setDefaultTimeout(150_000)
 const errors = []

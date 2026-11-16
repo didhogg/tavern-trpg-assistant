@@ -9,6 +9,8 @@ export const work = `${root}work/e2e-lib`
 
 // 浏览器资料副本统一从这里取（克隆、跑完自动删）；说明见 profile-clone.mjs
 export { freshProfile, sweepStale } from './profile-clone.mjs'
+// 统一端口和底座（e2e:base 造的干净底座）；说明见 e2e-base.mjs
+export { E2E_PORT, baseDir, freshFromBase } from './e2e-base.mjs'
 
 export async function buildAll() {
   await mkdir(work, { recursive: true })
