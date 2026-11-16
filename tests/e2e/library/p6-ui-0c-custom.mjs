@@ -78,6 +78,8 @@ try {
   const bad = errors.filter((e) => !/gendata-nav-adventure-book-index|plutonium|net::ERR|Failed to load resource|requires usable window dimensions|when merging ability scores|status of 404|api\/plutonium|KERNEL_NEEDS_INPUT|homebrew|unearthed-arcana/.test(e))
   check('没有未解释的页面报错', bad.length === 0, bad.join(' | ').slice(0, 600))
   clearTimeout(killer); await ctx.close(); server.close()
+  // 资料副本每份 4G 多，跑完就删（要留着看现场：KEEP_PROFILE=1）
+  if (!process.env.KEEP_PROFILE) await rm(profile, { recursive: true, force: true })
   console.log(failures.length ? `FAILED ${failures.length}` : 'ALL PASS')
   process.exit(failures.length ? 1 : 0)
 }

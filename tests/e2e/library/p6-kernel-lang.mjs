@@ -118,6 +118,8 @@ try {
   check('没有未解释的页面报错', out.errors.length === 0, out.errors.join(' | ').slice(0, 500))
   await writeFile(`${work}/p6-kernel-lang-${engineName}.json`, JSON.stringify(out, null, 1))
   clearTimeout(killer); await ctx.close(); server.close()
+  // 资料副本每份 4G 多，跑完就删（要留着看现场：KEEP_PROFILE=1）
+  if (!process.env.KEEP_PROFILE) await rm(profile, { recursive: true, force: true })
   console.log(failures.length ? `FAILED ${failures.length}` : 'ALL PASS')
   process.exit(failures.length ? 1 : 0)
 }
