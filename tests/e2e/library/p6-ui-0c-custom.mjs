@@ -1,9 +1,9 @@
 // P6 0c 收尾 ③：自制包物品在分步建卡「装备」步骤的界面里真点一次（后端候选 / 存档已由 p6-custom-refs 测过）。
 // 装中文试装备包 → 开中文战役 → 分步建卡（人类 + 侍僧 + 牧师）→ 装备步骤：「任选简易武器」下拉里搜到「测试木棍」（来源徽章是自制包）→ 点选 → 创建 → 人物里有这件。
 // 用法：ENGINE=chrome|webkit node tests/e2e/library/p6-ui-0c-custom.mjs（SKIP_BUILD=1 跳过构建）；复制一份浏览器资料，不动共用的那份。
-import { rm, cp, mkdir, readFile } from 'node:fs/promises'
+import { rm, mkdir, readFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, work } from './chain-common.mjs'
+import { buildAll, engines, freshProfile, work } from './chain-common.mjs'
 import { check, failures, settle } from '../helpers.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
@@ -11,7 +11,7 @@ const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
 const { server, url } = await startStatic({ port: 47362 })
 const profile = `${work}/profile-p6-uicustom-${engineName}`
-await rm(profile, { recursive: true, force: true }); await cp(`${work}/profile-p3-1-${engineName}`, profile, { recursive: true })
+freshProfile(`${work}/profile-p3-1-${engineName}`, profile) // 克隆底座，跑完自动删（KEEP_PROFILE=1 保留）
 const shots = `${process.cwd()}/work/p6-ui/shots-0c-custom-${engineName}`
 await rm(shots, { recursive: true, force: true }); await mkdir(shots, { recursive: true })
 const killer = setTimeout(() => { console.error('超时 9 分钟'); process.exit(2) }, 9 * 60_000)
@@ -78,8 +78,6 @@ try {
   const bad = errors.filter((e) => !/gendata-nav-adventure-book-index|plutonium|net::ERR|Failed to load resource|requires usable window dimensions|when merging ability scores|status of 404|api\/plutonium|KERNEL_NEEDS_INPUT|homebrew|unearthed-arcana/.test(e))
   check('没有未解释的页面报错', bad.length === 0, bad.join(' | ').slice(0, 600))
   clearTimeout(killer); await ctx.close(); server.close()
-  // 资料副本每份 4G 多，跑完就删（要留着看现场：KEEP_PROFILE=1）
-  if (!process.env.KEEP_PROFILE) await rm(profile, { recursive: true, force: true })
   console.log(failures.length ? `FAILED ${failures.length}` : 'ALL PASS')
   process.exit(failures.length ? 1 : 0)
 }

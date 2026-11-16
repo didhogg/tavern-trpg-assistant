@@ -7,6 +7,9 @@ import { root } from './static.mjs'
 
 export const work = `${root}work/e2e-lib`
 
+// 浏览器资料副本统一从这里取（克隆、跑完自动删）；说明见 profile-clone.mjs
+export { freshProfile, sweepStale } from './profile-clone.mjs'
+
 export async function buildAll() {
   await mkdir(work, { recursive: true })
   await build({ configFile: `${root}vite.config.ts`, root, logLevel: 'error' })

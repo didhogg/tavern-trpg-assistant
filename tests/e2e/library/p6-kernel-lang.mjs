@@ -3,9 +3,9 @@
 //   ① 中文战役的小窗语言是 zh、技能名 / 进阶标题是中文，缺的键回退英文（不报错）；② 英文战役仍是 en；
 //   ③ 语言包声明读不到（404）时中文战役退回英文，不是错误；
 //   ④ 旧存档：英文小窗建的人，存进存档，关窗后在中文小窗按存档重建——所有数字、内部编号和英文时一模一样，只有文字标签变中文。
-import { rm, cp, writeFile } from 'node:fs/promises'
+import { writeFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
-import { buildAll, engines, work } from './chain-common.mjs'
+import { buildAll, engines, freshProfile, work } from './chain-common.mjs'
 import { check, failures } from '../helpers.mjs'
 
 if (!process.env.SKIP_BUILD) await buildAll()
@@ -13,7 +13,7 @@ const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
 const { server, url } = await startStatic({ port: 47373 })
 const profile = `${work}/profile-p6-kernellang-${engineName}`
-await rm(profile, { recursive: true, force: true }); await cp(`${work}/profile-p3-1-${engineName}`, profile, { recursive: true })
+freshProfile(`${work}/profile-p3-1-${engineName}`, profile) // 克隆底座，跑完自动删（KEEP_PROFILE=1 保留）
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, 8 * 60_000)
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage(); page.setDefaultTimeout(8 * 60_000)
@@ -118,8 +118,6 @@ try {
   check('没有未解释的页面报错', out.errors.length === 0, out.errors.join(' | ').slice(0, 500))
   await writeFile(`${work}/p6-kernel-lang-${engineName}.json`, JSON.stringify(out, null, 1))
   clearTimeout(killer); await ctx.close(); server.close()
-  // 资料副本每份 4G 多，跑完就删（要留着看现场：KEEP_PROFILE=1）
-  if (!process.env.KEEP_PROFILE) await rm(profile, { recursive: true, force: true })
   console.log(failures.length ? `FAILED ${failures.length}` : 'ALL PASS')
   process.exit(failures.length ? 1 : 0)
 }

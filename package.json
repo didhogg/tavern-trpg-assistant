@@ -14,7 +14,8 @@
     "lint": "eslint src tests",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "e2e": "npm run build && node tests/e2e/smoke.mjs"
+    "e2e": "npm run build && node tests/e2e/smoke.mjs",
+    "clean:profiles": "node tests/e2e/library/clean-clones.mjs"
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.1",
