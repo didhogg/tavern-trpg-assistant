@@ -26,15 +26,14 @@ import { kernelEntryOf } from './entry'
 import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-options'
 import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
-import { checkAbilities, type AbilityCheck, type AbilityPlan } from './ability-rules'
-import { labelSections, type StartingSection, type StartingSelection } from './starting-options'
+import { abilityView, checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
+import { checkStarting, labelSections, type StartingSection, type StartingSelection } from './starting-options'
 export type { BuildPick }
 /** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
 const picksByKey = (items: EntryRef[], picks?: BuildPick[][]): Record<string, BuildPick[]> => Object.fromEntries(items.map((ref, i) => [refKey(ref), picks?.[i] ?? []]))
 
 /** 建卡选项里一件条目的结果：官方进阶的步骤（含候选）+ 作者数据里的额外必选项。 */
-/** 属性值那一步给界面的东西：每项「基础 + 加成 = 合计」（加成是种族等官方进阶给的）、官方上限、按所选方式检查的结果。 */
-export interface BuildAbilities { cap: number | null; rows: Array<{ key: string; base: number; bonus: number; total: number; set: boolean }>; check: AbilityCheck | null }
+export type BuildAbilities = AbilityView
 export interface BuildOptionsItem { ref: EntryRef; name: string | null; steps: unknown[]; extras: ExtraWithCandidates[]; unsupported: string[] }
 
 /** Foundry 世界编号只能用字母、数字、短横线、下划线；战役的 ownerKey 形如 char:角色卡.png，按它算一个稳定编号。 */
@@ -177,12 +176,20 @@ export class KernelRuntime {
       const check = checkAbilities(plan.abilities, Object.keys(plan.abilities.base), Infinity)
       if (!check.ok) return { status: 'invalid', error: `属性值不合「${plan.abilities.method}」的规则`, detail: check }
     }
+    let startingExcluded: Record<string, string[]> | undefined
+    if (plan.starting) {
+      const shown = await this.startingEquipment(ownerKey, { items: plan.items })
+      if (shown.status !== 'complete') return { status: shown.status, error: shown.error }
+      const checked = checkStarting(shown.sections ?? [], plan.starting)
+      if (checked.error) return { status: 'invalid', error: checked.error }
+      startingExcluded = checked.excluded
+    }
     const rows = await this.entries(ownerKey, [...plan.items, ...(plan.equipment ?? [])])
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const byKey = new Map(rows.rows.map((row) => [refKey(row.ref), row]))
     const items = plan.items.map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
     const equipment = (plan.equipment ?? []).map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
-    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank, starting: plan.starting })
+    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank, starting: plan.starting, startingExcluded })
     if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? `建卡状态：${result.status}`, detail: result }
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)
@@ -209,7 +216,7 @@ export class KernelRuntime {
     const out = await o.session.call('startingEquipment', sent)
     if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
     const lib = await this.library(ownerKey)
-    return { status: 'complete', sections: await labelSections(out.result.sections, await refMapperFor(this.deps.scoped, lib), () => this.deps.scoped.query(lib, 'item', { mode: 'browse' }) as any) }
+    return { status: 'complete', sections: await labelSections(out.result.sections, await refMapperFor(this.deps.scoped, lib), () => this.deps.scoped.query(lib, 'item')) }
   }
 
   /**
@@ -234,14 +241,7 @@ export class KernelRuntime {
       items.push({ ref: row.ref, name: row.name, steps: (out.result.items as Array<{ refKey: string; steps: unknown[] }>).find((x) => x.refKey === key)?.steps ?? [],
         extras: await Promise.all(found.extras.map((x) => candidatesOf(x, classNames, query))), unsupported: found.unsupported })
     }
-    const a = out.result.abilities as { initial: Record<string, number>; auto: Record<string, number>; cap: number | null }
-    const keys = Object.keys(a.initial)
-    const base = plan.abilities?.base ?? {}
-    const abilities: BuildAbilities = {
-      cap: a.cap,
-      rows: keys.map((key) => { const set = typeof base[key] === 'number'; const b = set ? (base[key] as number) : a.initial[key]; const bonus = a.auto[key] - a.initial[key]; return { key, base: b, bonus, total: b + bonus, set } }),
-      check: plan.abilities ? checkAbilities(plan.abilities, keys, a.cap ?? Infinity) : null,
-    }
+    const abilities = abilityView(out.result.abilities, plan.abilities)
     return { status: 'complete', items, complete: out.result.complete, abilities }
   }
 

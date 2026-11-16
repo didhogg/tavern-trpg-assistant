@@ -197,6 +197,8 @@ export interface BuildPlan {
   picks?: Record<string, BuildPick[]>
   /** 起始装备的选择（按职业 / 背景条目的键）：展开成物品（带数量）和钱，随人物建出来。 */
   starting?: Record<string, StartingSelection>
+  /** 起始装备里本战役看不到的物品（按条目键）：不给。 */
+  startingExcluded?: Record<string, string[]>
   /** true = 玩家没选的位置留空（建卡界面用）；不给 = 取第一个可选项（模板加入）。 */
   blank?: boolean
   /** 读档用：存档里记下的人物种子；新建卡不传，内核自己生成。 */
@@ -297,7 +299,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
       const equipment = []
       for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
-      const starting = plan.starting ? await resolveStarting(plan.items.filter((r) => r.entry?.startingEquipment), plan.starting) : null
+      const starting = plan.starting ? await resolveStarting(plan.items.filter((r) => r.entry?.startingEquipment), plan.starting, plan.startingExcluded) : null
       const built = await buildActor(plan.name, items, [...equipment, ...(starting?.equipment ?? [])], plan.choices ?? {}, { strict: false, seed, picks: plan.picks, blank: plan.blank })
       if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }
       if (starting?.specials.length) await built.actor.createEmbeddedDocuments('Item', starting.specials)

@@ -69,3 +69,16 @@ export function checkAbilities(plan: AbilityPlan, keys: string[], cap: number): 
   }))
   return { ok: !problems.length, complete, problems, cost, budget, left, start: scores[0], rows }
 }
+
+/** 属性值那一步给界面的东西：每项「基础 + 加成 = 合计」（加成 = 种族等官方进阶给的）、官方上限、按所选方式检查的结果。 */
+export interface AbilityView { cap: number | null; rows: Array<{ key: string; base: number; bonus: number; total: number; set: boolean }>; check: AbilityCheck | null }
+/** 小窗预览给的 初值 / 自动值 / 上限 + 玩家放的基础值 → 界面要的样子。 */
+export function abilityView(a: { initial: Record<string, number>; auto: Record<string, number>; cap: number | null }, plan: AbilityPlan | undefined): AbilityView {
+  const keys = Object.keys(a.initial)
+  const base = plan?.base ?? {}
+  return {
+    cap: a.cap,
+    rows: keys.map((key) => { const set = typeof base[key] === 'number'; const b = set ? (base[key] as number) : a.initial[key]; const bonus = a.auto[key] - a.initial[key]; return { key, base: b, bonus, total: b + bonus, set } }),
+    check: plan ? checkAbilities(plan, keys, a.cap ?? Infinity) : null,
+  }
+}

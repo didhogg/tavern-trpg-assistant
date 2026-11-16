@@ -72,6 +72,55 @@ try {
     out.none = { status: b3.built.status, ...(b3.built.id ? await names(rt, b3.built.id) : {}) }
     const b4 = await people.build(owner, { name: '没传牧师', items: refs, blank: true }, { category: 'party' })
     out.noStarting = { status: b4.built.status, ...(b4.built.id ? await names(rt, b4.built.id) : {}) }
+    // —— 战役范围：书 / 单条被停用，候选和固定物品跟着去掉；已停用的不能选 ——
+    let ownerN = 0
+    const peopleFor = async (lib) => {
+      const ow = `char:p6eqv${++ownerN}.png`
+      await h.campaign.startNewCampaign({ ownerKey: ow, ownerLabel: 'P6 范围', ruleId: 'dnd5e2014', name: 'P6 范围' })
+      await h.kernelSave.bind(ow, { rule: 'dnd5e2014', kernelVersion: 1, library, dataVersion: await h.dataVersion(), overrides: [], actors: [], revision: 0, undo: [] })
+      const rtv = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
+        cache: { db: h.libraryDb, dataVersion: h.dataVersion }, campaignOf: async () => ({ rule: 'dnd5e2014', library: lib, title: 'P6 人物' }) })
+      const savesv = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rtv.compact(k, ids), mapRef: (k) => rtv.mapRef(k) })
+      return { rtv, ow, pv: new h.KernelPeople({ runtime: rtv, saves: savesv }) }
+    }
+    const simpleOf = (o) => o.sections.find((s) => s.prop === 'class').groups.flatMap((g) => g.choices.flatMap((c) => c.entries)).find((e) => e.kind === 'category' && e.types.includes('weaponSimple'))
+    const clubUnit = h.entryUnit({ kind: 'item', set: 'cn-official', prop: 'item', hash: '%e7%9f%ad%e6%a3%92_phb' })
+    const maceHash = cls.groups[0].choices.find((c) => c.key === 'a').entries[0].ref.hash
+    const names2 = async (rt0, ow, i) => { const a = await h.actorData((await rt0.session(ow)).session, i); return { items: a.items.filter((x) => !['class', 'race', 'background', 'feat', 'subclass', 'spell'].includes(x.type)).map((x) => `${x.name}×${x.system?.quantity ?? 1}`).sort() } }
+    out.scope = {}
+    { const { rtv, pv, ow } = await peopleFor({ ...library, exclude: ['src:xphb', 'src:toa'] })
+      const o = await pv.startingEquipment(ow, { items: refs }); const sim = simpleOf(o)
+      out.scope.books = { status: o.status, n: sim.candidates.length, sources: [...new Set(sim.candidates.map((c) => c.source))], excluded: o.sections.find((s) => s.prop === 'class').excluded.length }
+      await rtv.close(ow) }
+    { const { rtv, pv, ow } = await peopleFor({ ...library, exclude: [clubUnit] })
+      const o = await pv.startingEquipment(ow, { items: refs }); const sim = simpleOf(o)
+      out.scope.club = { n: sim.candidates.length, hasClub: sim.candidates.some((c) => c.uid === 'club|phb'), excluded: o.sections.find((s) => s.prop === 'class').excluded }
+      const bad = await pv.build(ow, { name: '选了停用物品', items: refs, blank: true, starting: { [cls.refKey]: { pick: { [`${simple.g}.${simple.c}.${posIn(clsEntries, simple)}.0`]: 'club|phb' } } } }, { category: 'party' })
+      out.scope.clubPick = { status: bad.built.status, error: bad.built.error, kernel: bad.kernel }
+      await rtv.close(ow) }
+    { const { rtv, pv, ow } = await peopleFor({ ...library, exclude: [h.entryUnit({ kind: 'item', set: 'cn-official', prop: 'item', hash: maceHash })] })
+      const o = await pv.startingEquipment(ow, { items: refs }); const c0 = o.sections.find((s) => s.prop === 'class').groups[0]
+      out.scope.mace = { keys: c0.choices.map((c) => c.key), excluded: o.sections.find((s) => s.prop === 'class').excluded }
+      const mk0 = await pv.build(ow, { name: '没锤矛', items: refs, blank: true, starting: { [cls.refKey]: { choice: { 0: 'a' } } } }, { category: 'party' })
+      out.scope.maceBuilt = { status: mk0.built.status, ...(mk0.built.id ? await names2(rtv, ow, mk0.built.id) : {}) }
+      await rtv.close(ow) }
+    // —— 其他职业 / 背景：战士 + 士兵；带乐器 / 工匠工具 / 游戏套装的背景；数据里没认出的写法 ——
+    const findRef = async (prop, pred) => (await h.scoped.query(library, prop, { source: 'PHB', expand: true })).find((x) => pred(x.item))?.ref
+    const fighter = await findRef('class', (i) => i.name === '战士'); const soldier = await findRef('background', (i) => i.name === '士兵')
+    const o2 = await people.startingEquipment(owner, { items: [plan.race.ref, soldier, fighter] })
+    const f2 = o2.sections.find((x) => x.prop === 'class'); const e2 = (x) => x.groups.flatMap((g) => g.choices.flatMap((c) => c.entries))
+    out.fighter = { status: o2.status, martial: e2(f2).filter((e) => e.kind === 'category').map((e) => [e.types.join('+'), e.quantity, e.candidates.length]), unsupported: o2.sections.flatMap((x) => x.unsupported) }
+    const bgs = await h.scoped.query(library, 'background')
+    const kindsWanted = ['toolArtisan', 'instrumentMusical', 'setGaming']
+    out.kindsWanted = kindsWanted
+    out.bgKinds = {}
+    for (const kind of kindsWanted) {
+      const row = bgs.find((r) => JSON.stringify(r.item?.startingEquipment ?? '').includes(kind))
+      if (!row) { out.bgKinds[kind] = 'none'; continue }
+      const o3 = await people.startingEquipment(owner, { items: [plan.race.ref, row.ref, plan.class.ref] })
+      const sec = o3.sections.find((x) => x.prop === 'background')
+      out.bgKinds[kind] = { status: o3.status, n: e2(sec).filter((e) => e.kind === 'category' && e.types.includes(kind)).map((e) => e.candidates.length), unsupported: sec.unsupported }
+    }
     await rt.close(owner)
     const rt2 = mk()
     const saves2 = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rt2.compact(k, ids), mapRef: (k) => rt2.mapRef(k) })
@@ -100,6 +149,12 @@ try {
     noneOnlyFixed: r.none.status === 'complete' && !r.none.items.some((x) => /^Mace|^Warhammer|^Leather/.test(x)) && r.none.items.some((x) => /Shield/.test(x)),
     noStartingNothing: r.noStarting.items.length === 0 && gpOf(r.noStarting.currency) === 0,
     reloadKeeps: r.reload.statuses.every((s) => s === 'complete') && sameItems(r.reload.built, r.built) && sameItems(r.reload.gold, r.gold),
+    scopeBooks: r.scope.books.status === 'complete' && r.scope.books.sources.join() === 'PHB' && r.scope.books.n === 14 && r.scope.books.excluded >= 15,
+    scopeEntry: !r.scope.club.hasClub && r.scope.club.n === 28 && r.scope.club.excluded.includes('club|phb'),
+    scopePickRejected: r.scope.clubPick.status === 'invalid' && /club/.test(r.scope.clubPick.error ?? '') && r.scope.clubPick.kernel === null,
+    scopeFixedItem: !r.scope.mace.keys.includes('a') && r.scope.mace.excluded.includes('mace|phb') && r.scope.maceBuilt.status === 'complete' && !r.scope.maceBuilt.items.some((n) => /^Mace/.test(n)),
+    fighterCategories: r.fighter.status === 'complete' && r.fighter.martial.length >= 2 && r.fighter.martial.every(([, , n]) => n > 10) && r.fighter.unsupported.length === 0,
+    bgCategories: r.kindsWanted.every((k) => r.bgKinds[k] !== 'none' && r.bgKinds[k].status === 'complete' && r.bgKinds[k].n.length > 0 && r.bgKinds[k].n.every((n) => n > 3) && r.bgKinds[k].unsupported.length === 0),
     noUnexplainedErrors: unexplained.length === 0,
   }
   const ok = Object.values(checks).every(Boolean)

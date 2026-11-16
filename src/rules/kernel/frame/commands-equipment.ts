@@ -27,6 +27,8 @@ export interface EquipEntryView {
 export interface EquipSection {
   refKey: string; prop: string; name: string; source: string
   groups: Array<{ index: number; choices: Array<{ key: string; entries: EquipEntryView[] }> }>
+  /** 作者写法里这一版不认识的条目（原样节选）；不静默丢。 */
+  unsupported: string[]
   /** 起始金币的骰式（作者 goldAlternative）；没有 = 这个条目不给金币选项。 */
   goldExpression: string | null
 }
@@ -70,7 +72,8 @@ export function goldExpressionOf(entry: any): string | null {
   return !Number.isNaN(Number(`${alt}`.trim())) ? `${alt}`.trim() : null
 }
 
-async function viewOf(equi: any): Promise<EquipEntryView | null> {
+/** 一条起始装备写法 → 界面用的视图；认得但没有候选 → null（照 Plutonium 去掉）；不认得 → { unsupported }（不静默丢）。 */
+async function viewOf(equi: any): Promise<EquipEntryView | { unsupported: string } | null> {
   const loaded = async (uid: string) => { const [name, source] = uid.split('|'); const i = await g.DataLoader.pCacheAndGetHash(g.UrlUtil.PG_ITEMS, hashOfUid(uid)); return { uid, name: i?.name ?? name, source: i?.source ?? source, hash: hashOfUid(uid), found: !!i } }
   if (typeof equi === 'string') return { raw: equi, kind: 'item', quantity: 1, ...(await loaded(equi)) }
   if (equi.item) return { raw: equi, kind: 'item', quantity: equi.quantity || 1, ...(await loaded(equi.item)), ...(equi.displayName ? { displayName: titleCase(equi.displayName) } : {}), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
@@ -82,32 +85,36 @@ async function viewOf(equi: any): Promise<EquipEntryView | null> {
   }
   if (equi.special) return { raw: equi, kind: 'special', quantity: equi.quantity || 1, text: titleCase(equi.special), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
   if (equi.value) return { raw: equi, kind: 'value', quantity: 1, cp: equi.value }
-  return null
+  return { unsupported: JSON.stringify(equi).slice(0, 120) }
 }
 
 /** 一个条目的起始装备选项；原组序号保留（展开时按同一序号取，不会错位）。 */
 export async function sectionOf(row: StartingRow): Promise<EquipSection> {
   const groups: EquipSection['groups'] = []
+  const unsupported: string[] = []
   const data = groupsOf(row.entry)
   for (let index = 0; index < data.length; index++) {
     const choices = []
     for (const [key, list] of Object.entries<any[]>(data[index])) {
-      const entries = (await Promise.all(list.map(viewOf))).filter((e): e is EquipEntryView => !!e)
+      const views = await Promise.all(list.map(viewOf))
+      for (const v of views) if (v && 'unsupported' in v) unsupported.push(`${row.entry.name}：${v.unsupported}`)
+      const entries = views.filter((e): e is EquipEntryView => !!e && !('unsupported' in e))
       if (entries.length) choices.push({ key, entries })
     }
     if (choices.length) groups.push({ index, choices })
   }
-  return { refKey: row.refKey, prop: row.prop, name: row.entry.name, source: row.entry.source, groups, goldExpression: goldExpressionOf(row.entry) }
+  return { refKey: row.refKey, prop: row.prop, name: row.entry.name, source: row.entry.source, groups, unsupported, goldExpression: goldExpressionOf(row.entry) }
 }
 
 export interface Granted { uid?: string; special?: string; page?: number; source?: string; quantity: number; displayName?: string }
 
 /** 按选择展开：要钱 → 只给钱；否则逐组取选中的一项，类别槽取玩家选的物品，同一件合并数量，铜币合计。没选的组不给（留空）。 */
-export function expand(row: StartingRow, sel: StartingSelection | undefined): { granted: Granted[]; cp: number } {
+export function expand(row: StartingRow, sel: StartingSelection | undefined, excluded: ReadonlySet<string> = new Set()): { granted: Granted[]; cp: number } {
   const out: Granted[] = []
   let cp = 0
   if (sel?.gold != null) return { granted: out, cp: Math.round(sel.gold * 100) }
   const add = (uid: string | undefined, special: string | undefined, quantity: number, displayName?: string) => {
+    if (uid && excluded.has(uid)) return // 本战役资料范围里没有这件物品（书 / 包 / 单条被停用）
     const same = out.find((o) => o.uid === uid && o.special === special && o.displayName === displayName)
     if (same) same.quantity += quantity; else out.push({ ...(uid ? { uid } : {}), ...(special ? { special, source: row.entry.source, page: row.entry.page } : {}), quantity, ...(displayName ? { displayName } : {}) })
   }
@@ -140,13 +147,13 @@ export function coinsOf(cp: number): Record<string, number> {
 }
 
 /** 选择 → 要加进人物的物品数据（带数量、改名）、杂项假物品和钱；找不到的物品跳过并记在 skipped。 */
-export async function resolveStarting(rows: StartingRow[], selection: Record<string, StartingSelection>): Promise<{ equipment: any[]; specials: any[]; currency: Record<string, number> | null; skipped: string[] }> {
+export async function resolveStarting(rows: StartingRow[], selection: Record<string, StartingSelection>, excluded: Record<string, string[]> = {}): Promise<{ equipment: any[]; specials: any[]; currency: Record<string, number> | null; skipped: string[] }> {
   const equipment: any[] = []
   const specials: any[] = []
   const skipped: string[] = []
   let cp = 0
   for (const row of rows) {
-    const { granted, cp: rowCp } = expand(row, selection[row.refKey])
+    const { granted, cp: rowCp } = expand(row, selection[row.refKey], new Set(excluded[row.refKey] ?? []))
     cp += rowCp
     for (const it of granted) {
       let entry: any
