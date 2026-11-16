@@ -25,11 +25,15 @@ import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult
 import { kernelEntryOf } from './entry'
 import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-options'
 import type { BuildPick } from './frame/commands-level'
+import type { SheetEdit } from './frame/commands-sheet'
+import { checkAbilities, type AbilityCheck, type AbilityPlan } from './ability-rules'
 export type { BuildPick }
 /** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
 const picksByKey = (items: EntryRef[], picks?: BuildPick[][]): Record<string, BuildPick[]> => Object.fromEntries(items.map((ref, i) => [refKey(ref), picks?.[i] ?? []]))
 
 /** 建卡选项里一件条目的结果：官方进阶的步骤（含候选）+ 作者数据里的额外必选项。 */
+/** 属性值那一步给界面的东西：每项「基础 + 加成 = 合计」（加成是种族等官方进阶给的）、官方上限、按所选方式检查的结果。 */
+export interface BuildAbilities { cap: number | null; rows: Array<{ key: string; base: number; bonus: number; total: number; set: boolean }>; check: AbilityCheck | null }
 export interface BuildOptionsItem { ref: EntryRef; name: string | null; steps: unknown[]; extras: ExtraWithCandidates[]; unsupported: string[] }
 
 /** Foundry 世界编号只能用字母、数字、短横线、下划线；战役的 ownerKey 形如 char:角色卡.png，按它算一个稳定编号。 */
@@ -165,8 +169,13 @@ export class KernelRuntime {
   }
 
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
-  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][]; blank?: boolean }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
+  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
+    if (plan.abilities) {
+      // 方式的规则（标准数组 / 购点）在这里查；手填的范围由小窗按官方上限查
+      const check = checkAbilities(plan.abilities, Object.keys(plan.abilities.base), Infinity)
+      if (!check.ok) return { status: 'invalid', error: `属性值不合「${plan.abilities.method}」的规则`, detail: check }
+    }
     const rows = await this.entries(ownerKey, [...plan.items, ...(plan.equipment ?? [])])
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const byKey = new Map(rows.rows.map((row) => [refKey(row.ref), row]))
@@ -177,6 +186,16 @@ export class KernelRuntime {
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)
     if (data) o.bases.set(result.result.id, data)
+    // 基础值：放在重建基准（全是自动值）之后，作为对属性值的改动存进存档（和手改一样，「回到自动」就回到 初值 + 种族加成）
+    if (plan.abilities) {
+      const initial = result.result.initial as Record<string, number>
+      const edits = Object.entries(plan.abilities.base).filter(([k, v]) => typeof v === 'number' && k in initial)
+        .map(([k, v]): SheetEdit => ({ kind: 'set', path: `system.abilities.${k}.value`, value: ((data as any)?.system?.abilities?.[k]?.value ?? initial[k]) + (v as number) - initial[k] }))
+      if (edits.length) {
+        const done = await o.session.call('edit', result.result.id, edits)
+        if (done.status !== 'complete') return { status: done.status, error: done.error ?? `写入基础值状态：${done.status}`, detail: done }
+      }
+    }
     return { status: 'complete', id: result.result.id, seed: result.result.seed, noEnglish: rows.noEnglish }
   }
 
@@ -184,7 +203,7 @@ export class KernelRuntime {
    * 建卡选项（P6）：已选的条目（按顺序放进空白人物，带玩家已做的选择 picks）→ 每件条目现在要玩家选的事（官方进阶算候选）
    * + 作者数据里的额外必选项（子职业 / 专长 / 可选特性，带候选）。预览用的人物不进存档。
    */
-  async buildOptions(ownerKey: string, plan: { items: EntryRef[]; picks?: BuildPick[][]; blank?: boolean }): Promise<{ status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean }> {
+  async buildOptions(ownerKey: string, plan: { items: EntryRef[]; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan }): Promise<{ status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean; abilities?: BuildAbilities }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, plan.items)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
@@ -202,7 +221,15 @@ export class KernelRuntime {
       items.push({ ref: row.ref, name: row.name, steps: (out.result.items as Array<{ refKey: string; steps: unknown[] }>).find((x) => x.refKey === key)?.steps ?? [],
         extras: await Promise.all(found.extras.map((x) => candidatesOf(x, classNames, query))), unsupported: found.unsupported })
     }
-    return { status: 'complete', items, complete: out.result.complete }
+    const a = out.result.abilities as { initial: Record<string, number>; auto: Record<string, number>; cap: number | null }
+    const keys = Object.keys(a.initial)
+    const base = plan.abilities?.base ?? {}
+    const abilities: BuildAbilities = {
+      cap: a.cap,
+      rows: keys.map((key) => { const set = typeof base[key] === 'number'; const b = set ? (base[key] as number) : a.initial[key]; const bonus = a.auto[key] - a.initial[key]; return { key, base: b, bonus, total: b + bonus, set } }),
+      check: plan.abilities ? checkAbilities(plan.abilities, keys, a.cap ?? Infinity) : null,
+    }
+    return { status: 'complete', items, complete: out.result.complete, abilities }
   }
 
   /** 给已有人物加条目；调用方只交引用。 */

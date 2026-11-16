@@ -154,10 +154,16 @@ async function describeSteps(manager: any): Promise<any[]> {
 }
 
 /** 建一张新卡：空白人物 → 种族/背景/职业（官方 forNewItem）→ 装备；没有成长步骤的顶层条目也显式放进人物。 */
+/** 人物现在每项属性的值（官方 system.abilities[k].value）。 */
+export function abilityValues(actor: any): Record<string, number> {
+  return Object.fromEntries(Object.entries(actor.system?.abilities ?? {}).map(([k, v]: [string, any]) => [k, v.value]))
+}
+
 export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, picks, blank = false, onManager }: { strict?: boolean; seed?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; onManager?: (info: { manager: any; key: string | null }) => Promise<void> } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
   const created = await ActorClass.create({ name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } })
+  const initial = abilityValues(created)
   for (const raw of items) {
     const source = raw?.data ?? raw
     const data = cleanItem(source)
@@ -168,13 +174,13 @@ export async function buildActor(name: string, items: any[], equipment: any[], c
     const manager = Manager().forNewItem(created, data, { automaticApplication: true })
     await onManager?.({ manager, key })
     const outcome = await applyManager(manager, key ? choices[key] : undefined, { strict, blank, picks: key ? picks?.[key] : undefined })
-    if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created), actor: created }
+    if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created), actor: created, initial }
     const exists = created.items.contents.some((i: any) => i.type === data.type
       && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
     if (!exists) await created.createEmbeddedDocuments('Item', [markStandardDragDrop(cleanItem(data))])
   }
   if (equipment.length) await created.createEmbeddedDocuments('Item', equipment.map(item => markStandardDragDrop(cleanItem(item?.data ?? item))))
-  return { actor: created }
+  return { actor: created, initial }
 }
 
 export interface BuildRow { prop: string; entry: any; refKey: string; itemId?: string; data?: any }
@@ -290,7 +296,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
       const built = await buildActor(plan.name, items, equipment, plan.choices ?? {}, { strict: false, seed, picks: plan.picks, blank: plan.blank })
       if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }
-      return { id: built.actor.id, seed, ...actorLevel(built.actor) }
+      return { id: built.actor.id, seed, initial: built.initial, ...actorLevel(built.actor) }
     }),
 
     /** 建卡待选项：把作者转出的种族/背景/职业条目放进一个空白 1 级人物，列官方成长步骤（不改世界）。 */

@@ -69,12 +69,22 @@ try {
     const autoB = await people.build(owner, { name: '自动牧师', items: refs }, { category: 'party' })
     out.blankBuilt = { status: blankB.built.status, skills: await profs(rt, blankB.built.id), half: await profs(rt, halfB.built.id), auto: await profs(rt, autoB.built.id) }
     out.blankOpts = (await people.buildOptions(owner, { items: refs, blank: true })).status
+    // 属性值：标准数组放进去，种族加成在上面；预览给「基础 + 加成 = 合计」；违规拒绝；重进战役值不变
+    const arr = { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 }
+    const prev = await people.buildOptions(owner, { items: refs, blank: true, abilities: { method: 'standardArray', base: arr } })
+    const prevBad = await people.buildOptions(owner, { items: refs, blank: true, abilities: { method: 'manual', base: { str: 99, dex: 1.5 } } })
+    const prevNone = await people.buildOptions(owner, { items: refs, blank: true })
+    const abil = async (rt0, i) => Object.fromEntries(Object.entries((await h.actorData((await rt0.session(owner)).session, i)).system.abilities).map(([k, v]) => [k, v.value]))
+    const bAbil = await people.build(owner, { name: '数组牧师', items: refs, blank: true, abilities: { method: 'standardArray', base: arr } }, { category: 'party' })
+    const bBad = await people.build(owner, { name: '重复', items: refs, blank: true, abilities: { method: 'standardArray', base: { str: 15, dex: 15 } } }, { category: 'party' })
+    out.abil = { rows: prev.abilities.rows, check: prev.abilities.check, cap: prev.abilities.cap, bad: prevBad.abilities.check.problems, noneRows: prevNone.abilities.rows.map((r) => [r.base, r.set]), built: bAbil.built.status, values: await abil(rt, bAbil.built.id), badStatus: bBad.built.status, badKernel: bBad.kernel }
     out.worldActors = (await saves.read(owner)).actors.length
     await rt.close(owner)
     const rt2 = mk()
     const saves2 = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rt2.compact(k, ids), mapRef: (k) => rt2.mapRef(k) })
     const people2 = new h.KernelPeople({ runtime: rt2, saves: saves2 })
     const loaded = await people2.load(owner)
+    out.abilReload = await abil(rt2, bAbil.built.id)
     out.reload = { statuses: loaded.map((x) => x.status), skills: await profs(rt2, id), blank: await profs(rt2, blankB.built.id), half: await profs(rt2, halfB.built.id) }
     await rt2.close(owner)
     return out
@@ -101,7 +111,13 @@ try {
     blankHalfPick: r.blankBuilt.half.join() === 'his,ins,rel',
     autoStillFills: r.blankBuilt.auto.length > r.blankBuilt.skills.length,
     blankReloadKeeps: r.reload.blank.join() === 'ins,rel' && r.reload.half.join() === 'his,ins,rel',
-    previewActorsGone: r.worldActors === 4,
+    previewActorsGone: r.worldActors === 5,
+    abilityPreview: r.abil.rows.every((x) => x.total === x.base + x.bonus && x.set) && r.abil.rows.some((x) => x.bonus > 0) && r.abil.check.ok && r.abil.check.complete && r.abil.cap > 0,
+    abilityNoBaseKeepsInitial: r.abil.noneRows.every(([b, set]) => !set && b === 10),
+    abilityBadFlagged: r.abil.bad.some((x) => x.key === 'str' && x.code === 'out-of-range') && r.abil.bad.some((x) => x.key === 'dex' && x.code === 'not-integer'),
+    abilityBuilt: r.abil.built === 'complete' && r.abil.rows.every((x) => r.abil.values[x.key] === x.total),
+    abilityReloadKeeps: JSON.stringify(r.abilReload) === JSON.stringify(r.abil.values),
+    abilityViolationRejected: r.abil.badStatus === 'invalid' && r.abil.badKernel === null,
     reloadKeepsPick: r.reload.statuses.every((s) => s === 'complete') && ['his', 'med'].every((k) => r.reload.skills.includes(k)) && JSON.stringify(r.reload.skills) === JSON.stringify(r.built.skills),
     noUnexplainedErrors: unexplained.length === 0,
   }

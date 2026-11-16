@@ -3,7 +3,7 @@
 // 要玩家选、又没登记的进阶标 unsupported，绝不漏掉还说「选完了」（整体设计 §3.4 / §3.5）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 import type { Operate } from './commands-items'
-import { buildActor, type BuildPlan } from './commands-level'
+import { abilityValues, buildActor, type BuildPlan } from './commands-level'
 import { importEntry } from './importer'
 
 const plainOption = (o: any) => ({ value: String(o.value), label: String(o.label ?? o.value), ...(o.group ? { group: String(o.group) } : {}) })
@@ -59,7 +59,9 @@ export function createOptionsCommands(operate: Operate) {
         strict: false, picks: plan.picks, blank: plan.blank,
         onManager: async ({ manager, key }) => { described.push({ refKey: key, steps: await describeSteps(manager) }) },
       })
-      try { return { items: described, complete: !built.pending } } finally { await (built.actor ?? built.created)?.delete?.() }
+      const actor = built.actor ?? built.created
+      // 属性：初值、种族等加成后的自动值、官方上限；界面的「基础 + 加成 = 合计」由主线按这三样算
+      try { return { items: described, complete: !built.pending, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null } } } finally { await (built.actor ?? built.created)?.delete?.() }
     }),
   }
 }
