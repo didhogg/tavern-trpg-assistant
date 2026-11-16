@@ -37,8 +37,22 @@ export interface RebuildResult {
   detail?: unknown
 }
 
-/** 作者编号（Plutonium flags）→ 本战役【库】条目。 */
+/**
+ * 作者编号（Plutonium flags 的 类别 + 编号）→ 本战役【库】条目。
+ * 先查这一套自制包（所有类别一视同仁，见 EntryLinks.customRefs），查不到再按官方来源对（中文战役走中英对照）。
+ */
 export async function refMapperFor(lib: ScopedLibrary, library: CampaignLibrary): Promise<KernelRefMapper> {
+  const custom = await lib.links.customRefs(library.codeSet)
+  const propOf = (flags: { propDroppable?: string }) => flags.propDroppable ? FLAG_PROP[flags.propDroppable] ?? flags.propDroppable : null
+  const official = await officialMapperFor(lib, library)
+  return (flags) => {
+    const prop = propOf(flags)
+    const mine = prop && flags.hash ? custom.get(`${prop}|${flags.hash}`) : undefined
+    return mine ? { kind: flags.propDroppable!, ...mine } : official(flags)
+  }
+}
+
+async function officialMapperFor(lib: ScopedLibrary, library: CampaignLibrary): Promise<KernelRefMapper> {
   const source = officialSourceOf(library.codeSet)
   if (source.lang !== 'zh') {
     return (flags) => {

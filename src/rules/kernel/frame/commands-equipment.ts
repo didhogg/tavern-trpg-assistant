@@ -49,8 +49,10 @@ const hashOfUid = (uid: string): string => { const [name, source] = uid.split('|
 const candidate = (item: any): EquipCandidate => ({ uid: uidOf(item), name: item.name, source: item.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](item) })
 const titleCase = (text: string): string => g.Renderer.stripTags(text).toTitleCase()
 
+/** 作者加载器的三块来源：官方、预发布、自制包（读哪些由本战役装了什么决定，这里一块都不挑；本战役看得见哪些在主线按战役范围筛）。 */
+const LOAD_SPACES = ['pCacheAndGetAllSite', 'pCacheAndGetAllPrerelease', 'pCacheAndGetAllBrew']
 let cache: any[] | null = null
-const allItems = async (): Promise<any[]> => (cache ??= await g.DataLoader.pCacheAndGetAllSite('item'))
+const allItems = async (): Promise<any[]> => (cache ??= (await Promise.all(LOAD_SPACES.map(async (fn) => (await g.DataLoader[fn]('item')) ?? []))).flat())
 
 /** 某个类别码的候选物品（按名字排序）。 */
 export async function candidatesFor(type: string): Promise<EquipCandidate[]> {

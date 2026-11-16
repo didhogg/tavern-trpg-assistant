@@ -1,6 +1,7 @@
 // 条目之间的"定位"（P5 B-05 / T4）：给 类别 + 作者编号，找出它在哪个包里（官方 / 自制 / 书与冒险全文 / 文档）。
 // 搜索命中分流（B-01）和术语跳转（B-04）都用它。只读库，不改任何东西。
 // P5 T4：书 / 冒险正文保留多个提供者（官方 + 自制），不再让后写的 Map.set 顶掉官方。
+import { BrewPacks } from './brew-packs'
 import { DocumentStore } from './documents'
 import type { TagMeta } from './runtime/frame/tag-commands'
 import type { LibraryService } from './service'
@@ -139,6 +140,26 @@ export class EntryLinks {
       }
     }
     return null
+  }
+
+  /**
+   * 这一套自制包里的全部条目：「类别|作者编号」→ 库引用。所有类别、所有包一视同仁（不认类别名）。
+   * 结算小窗里的人物带着作者编号（Plutonium flags 的 类别 + 编号），存档要把它对回库条目；官方来源另有对照，这里只管自制。
+   * 含战役里已停用的条目：人物身上已有的东西，存档不因为停用就存不下。
+   */
+  async customRefs(codeSet: string, viewArg?: LibraryView): Promise<Map<string, { set: string; prop: string; hash: string }>> {
+    const view = viewArg ?? await this.lib.currentView()
+    const out = new Map<string, { set: string; prop: string; hash: string }>()
+    for (const set of SOURCES.filter((s) => s.codeSet === codeSet && s.kind === 'brew')) {
+      if (!(await view.brewState(set.id)) && !(await view.derivedGet(`audit:${set.id}`))) continue
+      const packs = await new BrewPacks(this.lib).list(set.id, view).catch(() => [])
+      for (const pack of packs) {
+        for (const [prop, rows] of Object.entries(await this.lib.packOwnedItems(set.id, pack, view))) {
+          for (const r of rows) if (r.hash) out.set(`${prop}|${r.hash}`, { set: set.id, prop, hash: r.hash })
+        }
+      }
+    }
+    return out
   }
 
   async resolveTag(codeSet: string, tag: string, text: string, viewArg?: LibraryView): Promise<ResolvedTag | null> {
