@@ -27,6 +27,7 @@ import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-option
 import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { abilityView, checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
+import { localizeAll } from './locale'
 import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
 /** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
@@ -231,13 +232,14 @@ export class KernelRuntime {
     if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
     const lib = await this.library(ownerKey)
     const query = (prop: string) => this.deps.scoped.query(lib, prop, { mode: 'browse' }) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
-    const items: BuildOptionsItem[] = []
+    const shownItems = localizeAll(out.result.items, rows.rows.map((r) => ({ en: r.entry, zh: r.zh }))), items: BuildOptionsItem[] = []
     for (let i = 0; i < rows.rows.length; i++) {
       const row = rows.rows[i]
       const key = sent[i].refKey
       const found = extrasOf(row.ref.prop, row.entry as Record<string, unknown>)
       const classNames = [row.name, String((row.entry as { name?: unknown }).name ?? '')].filter(Boolean) as string[]
-      items.push({ ref: row.ref, name: row.name, steps: (out.result.items as Array<{ refKey: string; steps: unknown[] }>).find((x) => x.refKey === key)?.steps ?? [],
+      const steps = (shownItems as Array<{ refKey: string; steps: unknown[] }>).find((x) => x.refKey === key)?.steps ?? []
+      items.push({ ref: row.ref, name: row.name, steps: steps,
         extras: await Promise.all(found.extras.map((x) => candidatesOf(x, classNames, query))), unsupported: found.unsupported })
     }
     const abilities = abilityView(out.result.abilities, plan.abilities)
@@ -283,8 +285,8 @@ export class KernelRuntime {
     return { status: 'complete', actors: result.result, names: rows.rows.map((r) => r.name), noEnglish: rows.noEnglish }
   }
 
-  /** 引用 → 【库】条目（中文战役交英文对照），给建卡/加条目/批量建共用。 */
-  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown; name: string | null }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
+  /** 引用 → 【库】条目（中文战役交英文对照，zh 带同一编号的中文条目给 locale.ts 换显示文字），建卡/加条目/批量建共用。 */
+  private async entries(ownerKey: string, refs: EntryRef[]): Promise<{ status: 'complete'; rows: Array<{ ref: EntryRef; entry: unknown; zh: unknown | null; name: string | null }>; noEnglish: EntryRef[] } | { status: 'missing' | 'error'; error: string; rows: []; noEnglish: [] }> {
     const lib = await this.library(ownerKey)
     const existing = this.open.get(ownerKey)
     const opened = existing ? await existing : null
@@ -301,7 +303,7 @@ export class KernelRuntime {
       if (k.noEnglish) noEnglish.push(refs[i])
       // 显示名取库条目自己的名字（中文战役是中文）；交给结算小窗的是英文对照，建出来的人默认叫英文名
       const shown = (got.item as { name?: unknown } | null)?.name
-      rows.push({ ref: refs[i], entry: k.entry, name: typeof shown === 'string' && shown.trim() ? shown : null })
+      rows.push({ ref: refs[i], entry: k.entry, zh: k.entry === got.item ? null : got.item, name: typeof shown === 'string' && shown.trim() ? shown : null })
     }
     return { status: 'complete', rows, noEnglish }
   }

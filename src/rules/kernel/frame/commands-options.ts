@@ -29,6 +29,18 @@ const DESCRIBERS: Record<string, (advancement: any) => Promise<Record<string, un
     return c.points ? { kind: 'asi', points: c.points, cap: c.cap ?? null, fixed, locked: [...(c.locked ?? [])] } : null
   },
 }
+/**
+ * Trait 进阶的标题：Plutonium 写死英文（Skills / Saving Throws …），不用它；
+ * 按它授予内容的编号前缀（skills: / saves: / languages: …）取官方类别名（官方多语言，中文战役即中文）。
+ */
+function traitTitle(advancement: any): string | null {
+  const c = advancement.configuration ?? {}
+  const keys = [...(c.grants ?? []), ...[...(c.choices ?? [])].flatMap((x: any) => [...(x?.pool ?? [])])]
+  const type = c.type || keys.map((k: unknown) => String(k).split(':')[0]).find(Boolean)
+  const key = type ? (globalThis as any).CONFIG?.DND5E?.traits?.[type]?.labels?.title : null
+  return key ? (globalThis as any).game.i18n.localize(key) : null
+}
+
 /** 本来就不用玩家选的进阶类型（没登记、也不算「未支持」）。 */
 const NO_CHOICE = new Set(['HitPoints', 'ScaleValue', 'Size', 'ItemGrant', 'Subclass'])
 
@@ -43,7 +55,7 @@ async function describeSteps(manager: any): Promise<any[]> {
     let unsupported = false
     if (DESCRIBERS[type]) options = await DESCRIBERS[type](advancement)
     else if (!automatic && !NO_CHOICE.has(type)) unsupported = true
-    out.push({ id: advancement.id, level: step.flow.level ?? null, type, title: advancement.title ?? null, automatic, options, ...(unsupported ? { unsupported: true } : {}) })
+    out.push({ id: advancement.id, level: step.flow.level ?? null, type, title: (type === 'Trait' ? traitTitle(advancement) : null) ?? advancement.title ?? null, automatic, options, ...(unsupported ? { unsupported: true } : {}) })
   }
   return out
 }

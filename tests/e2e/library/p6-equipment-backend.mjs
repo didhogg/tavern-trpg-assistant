@@ -157,7 +157,7 @@ try {
     classGold: r.shape.gold === '5d4 * 10' && r.shape.bgGold === null,
     simpleCandidates: r.cat.simple?.n > 10 && r.cat.simple.first.every(([, label]) => !!label),
     holyCandidates: r.cat.holy?.n > 0 && r.cat.holy.names.every((u) => !u.startsWith('holy symbol')),
-    bgShape: r.bg.some((e) => e.kind === 'special' && /Incense/i.test(e.text) && e.qty === 5) && r.bg.some((e) => e.kind === 'item' && e.cp === 1500) && r.bg.some((e) => e.kind === 'item' && e.dn),
+    bgShape: r.bg.some((e) => e.kind === 'special' && /[一-鿿]/.test(e.text) && e.qty === 5) && r.bg.some((e) => e.kind === 'item' && e.cp === 1500) && r.bg.some((e) => e.kind === 'item' && e.dn),
     labelsAndRefs: r.fixedLabel.length > 0 && r.fixedLabel.every(([, label]) => !!label),
     builtItems: r.built.status === 'complete' && ['Mace×1', 'Leather Armor×1', "Priest's Pack×1", 'Sticks of Incense×5', 'Vestments×1', 'Club×1', 'Amulet×1', 'Shield×1', 'Prayer Book×1'].every((n) => r.built.items.includes(n)) && !r.built.items.some((n) => /^Warhammer|^Scale|^Chain/.test(n)),
     builtCurrency: gpOf(r.built.currency) === 15,
