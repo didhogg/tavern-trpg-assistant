@@ -14,8 +14,16 @@ export interface KernelCacheBase {
   dataVersion: () => Promise<KernelDataVersion>
 }
 
-/** 一行缓存属于哪套：规则 + 结算内核指纹 + 资料版本（official 存的是 kernelFilesVersion）。清理时同规则下不是这一套的就是旧的。 */
-export interface KernelCacheScope { rule: string; base: string; official: string }
+/**
+ * 一行缓存属于哪套：规则 + 语言 + 结算内核指纹 + 资料版本（official 存的是 kernelFilesVersion）。
+ * 清理时「同规则、同语言」下不是这一套的就是旧的；不同语言的行互不清理（中文战役和英文战役的小窗各有各的钥匙，不能互相清掉）。
+ * lang 缺省 = 英文（没记语言的老行都是英文小窗换的）。
+ */
+export interface KernelCacheScope { rule: string; base: string; official: string; lang?: string }
+
+/** 小窗语言设置（例 zh.core）里的语言码。 */
+export const kernelLangOf = (language: string): string => language.split('.')[0]
+const langOfScope = (s: { lang?: string }): string => s.lang ?? 'en'
 
 /** 换算结果缓存，存在【库】数据库的 derived 表（kc: 前缀）；没有就重算，不参与存档。 */
 export class KernelCache {
@@ -60,7 +68,7 @@ export class KernelCache {
     for (const prefix of ['kc:', 'kc-failed:']) {
       await this.db.derived.where('key').startsWith(prefix).each((rec) => {
         const s = (rec.value as { scope?: KernelCacheScope } | undefined)?.scope
-        if (!s || (s.rule === scope.rule && (s.base !== scope.base || s.official !== scope.official))) stale.push(rec.key)
+        if (!s || (s.rule === scope.rule && langOfScope(s) === langOfScope(scope) && (s.base !== scope.base || s.official !== scope.official))) stale.push(rec.key)
       })
     }
     await this.db.derived.bulkDelete(stale)
@@ -128,7 +136,7 @@ const ROWS_OF: Record<string, (args: any[]) => any[]> = {
  * 给小窗包一层换算缓存：先查（装资料时已预换算好）；命中直接用，没命中才进 Plutonium 并写回。
  * 直接经 `KernelRuntime.session` 取小窗的调用方自动走这里；测试/底层探针可直接拿原始 session。
  */
-export function wrapKernelSession(session: KernelSession, cache: KernelCache, base: string, dataVersion: () => Promise<KernelDataVersion>, rule = '', brewFingerprint?: string): KernelSession {
+export function wrapKernelSession(session: KernelSession, cache: KernelCache, base: string, dataVersion: () => Promise<KernelDataVersion>, rule = '', brewFingerprint?: string, lang = 'en'): KernelSession {
   const raw = session.call as unknown as (fn: string, ...args: any[]) => Promise<any>
   /** 一条条目的换算结果：缓存 → 现场换算并写回。 */
   const converted = async (prop: string, entry: unknown, versionOf: () => Promise<KernelDataVersion>): Promise<any> => {
@@ -137,7 +145,7 @@ export function wrapKernelSession(session: KernelSession, cache: KernelCache, ba
     const cached = await cache.get(key)
     if (cached !== null) return hit(cached)
     const result = await raw('importForBuild', prop, entry)
-    if (result.status === 'complete' && result.result) await cache.put(key, result.result, { rule, base, official: kernelFilesVersion(version) })
+    if (result.status === 'complete' && result.result) await cache.put(key, result.result, { rule, base, official: kernelFilesVersion(version), lang })
     return result
   }
   const call = async (fn: string, ...args: any[]): Promise<any> => {

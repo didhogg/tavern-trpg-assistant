@@ -4,6 +4,8 @@ import type { KernelInput } from './frame/world'
 import { hashValue } from '../../core/hash'
 import { sha256Hex } from '../../core/hash'
 import { ruleKernel } from './adapters'
+import { officialSourceOf } from '../../library/sources'
+import { applyLangPack, readLangPacks } from './lang-packs'
 
 interface VendorManifest {
   release: KernelInput['release']
@@ -42,6 +44,8 @@ export async function kernelInput(opts: {
   pluginRoot: URL
   rule: string
   world: { id: string; title: string }
+  /** 战役的资料集（cn / en）：决定小窗的界面语言（登记表里这套官方数据的 lang）。不给 = 英文。 */
+  codeSet?: string
   fetchImpl?: typeof fetch
 }): Promise<KernelInput> {
   const fetchImpl = opts.fetchImpl ?? fetch
@@ -52,13 +56,15 @@ export async function kernelInput(opts: {
   const systemId = manifest.system.split(' ')[0]
   const system = await readJson<unknown>(opts.pluginRoot, `systems/${systemId}/system.json`, fetchImpl)
   const modules = await Promise.all(Object.keys(manifest.modules).map((id) => readJson<unknown>(opts.pluginRoot, `modules/${id}/module.json`, fetchImpl)))
+  // 小窗的界面语言：这套资料集的语言有语言包就登记进清单（官方客户端缺的键回退英文），没有就和以前一样是英文
+  const { language, packHash } = applyLangPack(opts.codeSet ? officialSourceOf(opts.codeSet).lang : 'en', await readLangPacks(opts.pluginRoot, fetchImpl), system, modules)
   const allSettings = { ...KERNEL_MODE_SETTINGS, ...settings }
   const frame = await (await fetchImpl(new URL('dist/kernel-frame.js', opts.pluginRoot))).text()
-  const cacheKey = hashValue({ release: manifest.release, system: manifest.system, modules: manifest.modules, settings: allSettings, rule: opts.rule, frame: sha256Hex(frame) })
+  const cacheKey = hashValue({ release: manifest.release, system: manifest.system, modules: manifest.modules, settings: allSettings, rule: opts.rule, frame: sha256Hex(frame), lang: packHash })
   return {
     system, modules, release: manifest.release,
     world: opts.world,
-    userId: 'kernelGM00000000', worldTime: 0, language: 'en.core',
+    userId: 'kernelGM00000000', worldTime: 0, language,
     settings: allSettings,
     cacheKey,
     documents: { actors: [] },

@@ -1,0 +1,87 @@
+{
+ "generatedFrom": "terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3",
+ "lang": "zh",
+ "packs": [
+  {
+   "package": "system:dnd5e",
+   "total": 4108,
+   "translated": 1143,
+   "conflicts": 4,
+   "groupsWithCategory": 67,
+   "conflictList": [
+    {
+     "key": "TYPES.RegionBehavior.dnd5e.antimagic",
+     "en": "Antimagic",
+     "candidates": [
+      {
+       "zh": "反魔法 ",
+       "category": ""
+      },
+      {
+       "zh": "反魔法",
+       "category": ""
+      }
+     ]
+    },
+    {
+     "key": "DND5E.Armor",
+     "en": "Armor",
+     "candidates": [
+      {
+       "zh": " 护甲",
+       "category": ""
+      },
+      {
+       "zh": "护甲",
+       "category": ""
+      }
+     ]
+    },
+    {
+     "key": "DND5E.TRAVEL.Type.Air",
+     "en": "Air",
+     "candidates": [
+      {
+       "zh": "风",
+       "category": "normal"
+      },
+      {
+       "zh": "空气",
+       "category": "normal"
+      }
+     ]
+    },
+    {
+     "key": "EFFECT.DND5E.StatusAntimagic",
+     "en": "Antimagic",
+     "candidates": [
+      {
+       "zh": "反魔法 ",
+       "category": ""
+      },
+      {
+       "zh": "反魔法",
+       "category": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "package": "module:lib-wrapper",
+   "total": 77,
+   "translated": 7,
+   "conflicts": 0,
+   "groupsWithCategory": 1,
+   "conflictList": []
+  },
+  {
+   "package": "module:plutonium",
+   "total": 6,
+   "translated": 2,
+   "conflicts": 0,
+   "groupsWithCategory": 0,
+   "conflictList": []
+  }
+ ]
+}

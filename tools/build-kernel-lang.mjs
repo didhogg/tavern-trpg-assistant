@@ -1,0 +1,101 @@
+// 结算小窗的中文语言文件：官方客户端按「系统 / 模块清单里登记的语言文件」给界面文字（技能名、语言名、进阶标题、状态名……）。
+// 现在只有英文；这里从作者「大译名表」自动生成中文文件，不手写任何译文：
+//   · 对每个已装包（vendor/foundry/manifest.json 里的系统和模块），按它自己清单里登记的英文文件逐条翻；
+//   · 整句完全相同（忽略大小写和首尾空格）才翻，对不上的留空——官方客户端缺哪个键就自动回退英文；
+//   · 同一个英文有几种中文：同一组兄弟键（同一个上级路径，例如全是语言名）里多数词属于哪个分类，整组就优先取那个分类
+//     （Giant 在语言名一组里是「巨人语」，不是生物「巨人」）；仍有几种 → 不翻，记进复核清单，不替人挑。
+// 产出（都是生成的，不手改）：
+//   <包目录>/lang/zh.json                    各包的中文语言文件
+//   vendor/foundry/lang-packs.json           声明：有哪些语言包、每包哪些文件、内容摘要（插件按它登记，不写死语言名单）
+//   vendor/foundry/lang-packs.review.json    复核清单（冲突、统计），不进运行时
+// 译名表换版本或 dnd5e 换版本后重跑：npm run gen:kernel-lang   （译名表位置见 tools/lib/terms.mjs）
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { choose, loadTerms } from './lib/terms.mjs'
+
+const root = fileURLToPath(new URL('..', import.meta.url))
+const foundry = join(root, 'vendor/foundry')
+const arg = (name, fallback) => process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback
+const LANG = arg('lang', 'zh')
+const LANG_NAME = arg('name', '中文')
+/** 一组里某个分类要覆盖多大比例的「有译法的成员」才算这组的分类（语言名一组几乎全是语言分类）。 */
+const GROUP_SHARE = 0.6
+const GROUP_MIN = 3
+
+const { candidates, version } = await loadTerms()
+if (!candidates.size) { console.error('译名表没读到，不生成（避免产出空的语言包）。'); process.exit(1) }
+
+const manifest = JSON.parse(await readFile(join(foundry, 'manifest.json'), 'utf8'))
+const packages = [
+  { type: 'system', id: manifest.system.split(' ')[0], dir: `systems/${manifest.system.split(' ')[0]}`, file: 'system.json' },
+  ...Object.keys(manifest.modules).map((id) => ({ type: 'module', id, dir: `modules/${id}`, file: 'module.json' })),
+]
+
+const leaves = (obj, path = '', out = []) => {
+  for (const [k, v] of Object.entries(obj)) {
+    const key = path ? `${path}.${k}` : k
+    if (v && typeof v === 'object') leaves(v, key, out)
+    else if (typeof v === 'string') out.push({ key, text: v })
+  }
+  return out
+}
+const parentOf = (key) => key.slice(0, Math.max(0, key.lastIndexOf('.')))
+
+/** 每个上级路径下的成员里，哪个分类覆盖得最多（要够多才算）；平手取靠前的分类。 */
+function groupCategories(list) {
+  const groups = new Map()
+  for (const { key, text } of list) {
+    const c = candidates.get(text.trim().toLowerCase())
+    if (!c) continue
+    const g = groups.get(parentOf(key)) ?? { members: 0, byCategory: new Map() }
+    g.members++
+    for (const cat of new Set(c.map((x) => x.category))) g.byCategory.set(cat, (g.byCategory.get(cat) ?? 0) + 1)
+    groups.set(parentOf(key), g)
+  }
+  const out = new Map()
+  for (const [parent, g] of groups) {
+    if (g.members < GROUP_MIN) continue
+    const best = [...g.byCategory].sort((a, b) => b[1] - a[1])[0]
+    if (best && best[1] / g.members >= GROUP_SHARE) out.set(parent, best[0])
+  }
+  return out
+}
+
+const files = []
+const review = { generatedFrom: version, lang: LANG, packs: [] }
+for (const pkg of packages) {
+  const pkgManifest = JSON.parse(await readFile(join(foundry, pkg.dir, pkg.file), 'utf8'))
+  const en = (pkgManifest.languages ?? []).find((l) => l.lang === 'en')
+  if (!en) continue
+  const source = JSON.parse(await readFile(join(foundry, pkg.dir, en.path), 'utf8'))
+  const list = leaves(source)
+  const cats = groupCategories(list)
+  const flat = {}
+  const conflicts = []
+  for (const { key, text } of list) {
+    const all = candidates.get(text.trim().toLowerCase())
+    if (!all) continue
+    const preferred = cats.get(parentOf(key))
+    const inGroup = preferred === undefined ? [] : all.filter((x) => x.category === preferred)
+    const picked = choose(inGroup.length ? inGroup : all)
+    if (picked?.label) flat[key] = picked.label
+    else conflicts.push({ key, en: text, candidates: picked?.candidates.map((x) => ({ zh: x.zh, category: x.category })) ?? [] })
+  }
+  const zhPath = en.path.replace(/en\.json$/, `${LANG}.json`)
+  review.packs.push({ package: `${pkg.type}:${pkg.id}`, total: list.length, translated: Object.keys(flat).length, conflicts: conflicts.length, groupsWithCategory: cats.size, conflictList: conflicts.slice(0, 300) })
+  if (!Object.keys(flat).length) continue
+  // 平铺的点号键：官方客户端读语言文件时会 expandObject，和嵌套写法等价
+  const body = JSON.stringify(flat, null, 1) + '\n'
+  await mkdir(join(foundry, pkg.dir, zhPath, '..'), { recursive: true })
+  await writeFile(join(foundry, pkg.dir, zhPath), body)
+  files.push({ package: pkg.type, id: pkg.id, path: zhPath, sha256: createHash('sha256').update(body).digest('hex') })
+}
+
+const hash = createHash('sha256').update(files.map((f) => `${f.package}:${f.id}:${f.path}:${f.sha256}`).sort().join('\n')).digest('hex')
+const declaration = { generatedFrom: `大译名表 ${version}`, packs: { [LANG]: { name: LANG_NAME, hash, files } } }
+await writeFile(join(foundry, 'lang-packs.json'), JSON.stringify(declaration, null, 1) + '\n')
+await writeFile(join(foundry, 'lang-packs.review.json'), JSON.stringify(review, null, 1) + '\n')
+for (const p of review.packs) console.log(`${p.package}：${p.total} 条，翻了 ${p.translated}，冲突不翻 ${p.conflicts}，有分类的组 ${p.groupsWithCategory}`)
+console.log(`语言包 ${LANG}：${files.length} 个文件，摘要 ${hash.slice(0, 12)} → vendor/foundry/lang-packs.json`)

@@ -43,6 +43,26 @@ describe('结算内核换算缓存', () => {
     await db.delete()
   })
 
+  it('sweep：不同语言的行互不清理；没记语言的老行算英文', async () => {
+    const db = new LibraryDatabase(`test-kc-${Math.random()}`)
+    const cache = new KernelCache(db)
+    const zh = { rule: 'dnd5e2014', base: 'kz', official: 'c1', lang: 'zh' }
+    const en = { rule: 'dnd5e2014', base: 'ke', official: 'c1', lang: 'en' }
+    await cache.put('zhNow', { a: 1 }, zh)
+    await cache.put('zhOld', { a: 1 }, { ...zh, base: 'kz0' })
+    await cache.put('enNow', { a: 1 }, en)
+    // 老行没记语言：当英文，英文的指纹没变就是当前这一套
+    await cache.put('legacyEn', { a: 1 }, { rule: 'dnd5e2014', base: 'ke', official: 'c1' })
+    expect(await cache.sweep(zh)).toBe(1)
+    expect((await db.derived.toArray()).map((r) => r.key).sort()).toEqual(['kc:enNow', 'kc:legacyEn', 'kc:zhNow'])
+    // 英文那边清理：只清英文的旧行，中文的不动
+    await cache.put('enOld', { a: 1 }, { ...en, base: 'ke0' })
+    expect(await cache.sweep(en)).toBe(1)
+    expect((await db.derived.toArray()).map((r) => r.key).sort()).toEqual(['kc:enNow', 'kc:legacyEn', 'kc:zhNow'])
+    db.close()
+    await db.delete()
+  })
+
   it('state 只看有没有、是不是失败行；失败行读出来是 null；之后换成功了失败记录跟着删；sweep 一并清旧失败记录', async () => {
     const db = new LibraryDatabase(`test-kc-${Math.random()}`)
     const cache = new KernelCache(db)

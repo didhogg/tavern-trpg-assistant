@@ -1,0 +1,9 @@
+{
+ "lib-wrapper.settings.yes": "是",
+ "lib-wrapper.settings.save": "豁免",
+ "lib-wrapper.settings.reload": "弹容",
+ "lib-wrapper.settings.log-verbosity.choices.all": "所有",
+ "lib-wrapper.settings.log-verbosity.choices.info": "消息",
+ "lib-wrapper.settings.menu.priorities.package-inactive": "无法行动",
+ "lib-wrapper.packages.unknown-title": "未知"
+}

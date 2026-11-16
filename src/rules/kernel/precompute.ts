@@ -8,7 +8,7 @@ import type { LibraryService } from '../../library/service'
 import { defaultCampaignLibrary } from '../../library/scopes'
 import { getSource, SOURCES } from '../../library/sources'
 import type { KernelDataVersion } from '../../schemas/kernel'
-import { KernelCache, kernelFilesVersion, kernelImportKey } from './cache'
+import { KernelCache, kernelFilesVersion, kernelImportKey, kernelLangOf } from './cache'
 import type { KernelSession } from './host'
 import { openKernel, prepareKernelBrews } from './open'
 import { excludedBrewReason, type ExcludedBrew } from './brews'
@@ -134,7 +134,7 @@ export class KernelPrecompute {
       total = candidates.length
       onProgress?.({ stage: 'convert', done: 0, total })
       const cache = new KernelCache(this.opts.db)
-      const scope = { rule: this.rule(), base: fingerprint, official: kernelFilesVersion(version) }
+      const scope = { rule: this.rule(), base: fingerprint, official: kernelFilesVersion(version), lang: kernelLangOf(input.language) }
       for (const row of candidates) {
         if (signal?.aborted) break
         const issue = excludedBrewReason(prepared.brews, excludedBrews, row.ref, row.altId, row.source)
@@ -202,7 +202,7 @@ export class KernelPrecompute {
 
   /** 编译一次结算内核输入；T2 的指纹与现场换算共用。 */
   private async input(codeSet: string) {
-    return kernelInput({ pluginRoot: this.opts.pluginRoot, rule: this.rule(), world: { id: `precompute-${codeSet}`, title: `precompute ${codeSet}` }, fetchImpl: this.opts.fetchImpl })
+    return kernelInput({ pluginRoot: this.opts.pluginRoot, rule: this.rule(), codeSet, world: { id: `precompute-${codeSet}`, title: `precompute ${codeSet}` }, fetchImpl: this.opts.fetchImpl })
   }
 
   /** 从已解析数据的类别 + 本战役可见条目里收集；类别由作者登记表确认，不写类别清单。 */

@@ -18,7 +18,7 @@ import { kernelInput } from './input'
 import { excludedBrewReason } from './brews'
 import type { KernelBrewReport } from './frame/brew-input'
 import { hashValue, sha256Hex } from '../../core/hash'
-import { KernelCache, kernelBaseKey, kernelFilesVersion, wrapKernelSession } from './cache'
+import { KernelCache, kernelBaseKey, kernelFilesVersion, kernelLangOf, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
 import type { KernelDataVersion } from '../../schemas/kernel'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
@@ -72,6 +72,8 @@ interface Open {
   view: LibraryView
   cache: KernelCache | null
   cacheBase: string
+  /** 小窗语言码：换算缓存行记在这个语言名下，清理按语言分开。 */
+  cacheLang: string
   dataVersion: () => Promise<KernelDataVersion>
 }
 
@@ -94,16 +96,17 @@ export class KernelRuntime {
       const started = performance.now()
       const view = await this.deps.revisions.published()
       const prepared = await prepareKernelBrews(this.deps.service, view, campaign.library.codeSet)
-      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
+      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, codeSet: campaign.library.codeSet, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
       const { session, boot, report, brewFingerprint } = await openKernel({ ...this.deps, view, input, ...prepared, container: this.deps.container() })
       const brewIssue: Open['brewIssue'] = (ref, altId, source) => excludedBrewReason(prepared.brews, report.excluded, ref, altId, source)
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
+      const cacheLang = kernelLangOf(input.language)
       // 换算缓存的钥匙按小窗自己读的那一版资料算（view 是打开时的版本）：战役开着时补装了书，
       // 小窗照旧用旧版文件换算，结果就记在旧版本名下，不会冒充新版本（新版本由后台换算或重开战役后补上）。
       const versionOfView = async (): Promise<KernelDataVersion> => this.deps.cache ? this.deps.cache.dataVersion(view) : { official: '', brews: {} }
-      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, versionOfView, campaign.rule, brewFingerprint) : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, brews: report, brewFingerprint, brewIssue, bootMs: Math.round(performance.now() - started), cache, cacheBase, view, dataVersion: versionOfView }
+      const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, versionOfView, campaign.rule, brewFingerprint, cacheLang) : session
+      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, brews: report, brewFingerprint, brewIssue, bootMs: Math.round(performance.now() - started), cache, cacheBase, cacheLang, view, dataVersion: versionOfView }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => { if (this.open.get(ownerKey) === opening) this.open.delete(ownerKey) })
@@ -352,7 +355,7 @@ export class KernelRuntime {
         o.seeds.set(result.id, result.seed ?? actor.seed ?? actor.name)
         if (o.cache && version) {
           const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor })
-          await o.cache.put(key, result.base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version) })
+          await o.cache.put(key, result.base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
         }
       }
     }
@@ -386,7 +389,7 @@ export class KernelRuntime {
       if (o.cache) {
         const version = await o.dataVersion()
         const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
-        await o.cache.put(key, base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version) })
+        await o.cache.put(key, base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
       }
       out.push(compact)
     }

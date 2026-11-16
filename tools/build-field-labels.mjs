@@ -9,14 +9,12 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { choose, loadTerms, termsPath } from './lib/terms.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const cn = join(root, 'vendor/cn/js')
 const fields = (await import(join(root, 'vendor/brew-schema/fields.js'))).default
 
-const termsDefault = '/Users/xxx/tavern-trpg-data-next/_upstream/cn/docs/terms-20261015-105551.json'
-const termsArg = process.argv.find((arg) => arg.startsWith('--terms='))?.slice('--terms='.length)
-const termsPath = termsArg || process.env.TAVERN_TERMS_FILE || termsDefault
 
 // 结构定义里出现过的全部字段名（顶层 + 往下拆出来的），界面词表只收对得上的。
 const known = new Set()
@@ -142,34 +140,11 @@ for (const [key, en] of Object.entries(enLocale)) {
   localeTerms.push({ en, zh, source: `作者界面词表 ${key}` })
 }
 
-const TERM_CATEGORIES = new Set(['', 'variantrule', 'normal', 'other', 'bestiary', 'creature', 'language', 'itemMastery'])
-const CATEGORY_RANK = new Map(['', 'normal', 'variantrule', 'bestiary', 'creature', 'language', 'itemMastery', 'other'].map((x, i) => [x, i]))
-const termCandidates = new Map()
-let termsVersion = '未加载'
-try {
-  const raw = JSON.parse(await readFile(termsPath, 'utf8'))
-  const fileName = termsPath.split('/').at(-1) ?? termsPath
-  termsVersion = raw.version ? `${fileName}@${raw.version}` : fileName
-  for (const item of raw.items ?? []) {
-    if (item.to_be_discussed || !TERM_CATEGORIES.has(item.category ?? '') || !item.en || !item.cn) continue
-    const key = String(item.en).trim().toLowerCase()
-    const list = termCandidates.get(key) ?? []
-    list.push({ en: item.en, zh: item.cn, category: item.category ?? '', source: `大译名表 ${item.category || '常规'}` })
-    termCandidates.set(key, list)
-  }
-} catch (error) {
-  console.warn(`没有读取作者大译名表 ${termsPath}：${error instanceof Error ? error.message : String(error)}`)
-}
+// 译名表的读取和取舍（分类白名单、同名取最靠前分类、仍有多种就记冲突）在 tools/lib/terms.mjs，和结算小窗语言文件工具共用。
+const { candidates: termCandidates, version: termsVersion } = await loadTerms()
 
 const phrase = (value) => String(value).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase()
 const localeCandidates = localeTerms.map((x) => ({ ...x, key: phrase(x.en) }))
-const choose = (items) => {
-  if (!items.length) return null
-  const bestRank = Math.min(...items.map((x) => CATEGORY_RANK.get(x.category ?? '') ?? 99))
-  const best = items.filter((x) => (CATEGORY_RANK.get(x.category ?? '') ?? 99) === bestRank)
-  const values = [...new Set(best.map((x) => x.zh))]
-  return { label: values.length === 1 ? values[0] : null, candidates: best }
-}
 const lookup = (wording) => {
   const key = phrase(wording)
   if (!key) return null

@@ -1,0 +1,29 @@
+{
+ "generatedFrom": "大译名表 terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3",
+ "packs": {
+  "zh": {
+   "name": "中文",
+   "hash": "e8c9b4de63c5382cc93068dd0f505fdf7451fbb74716dbddbc33cbf1fc431cc7",
+   "files": [
+    {
+     "package": "system",
+     "id": "dnd5e",
+     "path": "lang/zh.json",
+     "sha256": "6c09d2388f150f773753313a80f0a4d0feb2f6334e2c78fc9c9e4a7ffb08ae34"
+    },
+    {
+     "package": "module",
+     "id": "lib-wrapper",
+     "path": "lang/zh.json",
+     "sha256": "980e62557680d7896abebddcf63b4a9b3e8f8586fede6d6bf402558da7a36449"
+    },
+    {
+     "package": "module",
+     "id": "plutonium",
+     "path": "lang/zh.json",
+     "sha256": "1bae8b0c3127dbaf253624e8909b79bbcd3dcac078ed9960ca5905412be8ea0d"
+    }
+   ]
+  }
+ }
+}
