@@ -73,9 +73,9 @@ export const useWizardStore = defineStore('wizard', () => {
     if (!v) return 0
     return step.options.kind === 'asi' ? Object.values(v as Record<string, number>).reduce((n, x) => n + x, 0) : (v as string[][]).reduce((n, s) => n + s.length, 0)
   }
-  /** 这一步选满了就交给后端的选择（官方进阶要的样子）；没选满 = 不交，后端取第一个可选项。 */
+  /** 这一步玩家已选的（选了几个交几个，官方进阶要的样子）；一个都没选 = 不交，后端留空。 */
   function pickOf(ref: EntryRef, step: ChoiceStep): BuildPick | null {
-    if (haveOf(ref, step) < needOf(step)) return null
+    if (haveOf(ref, step) === 0) return null
     const v = sel.value[refKey(ref)][stepKey(step)]
     if (step.options.kind === 'asi') {
       const assignments: Record<string, number> = { ...(step.options.fixed as Record<string, number>) }
@@ -88,7 +88,7 @@ export const useWizardStore = defineStore('wizard', () => {
   const picks = computed<BuildPick[][]>(() => items.value.map((ref) => choicesOf(ref).map((s) => pickOf(ref, s)).filter((p): p is BuildPick => !!p)))
 
   async function refreshOptions(): Promise<void> {
-    const body = { items: items.value, picks: picks.value }
+    const body = { items: items.value, picks: picks.value, blank: true }
     const sent = JSON.stringify(body)
     if (sent === lastSent) return
     lastSent = sent
@@ -188,7 +188,7 @@ export const useWizardStore = defineStore('wizard', () => {
     if (!name.value.trim()) { createError.value = '先给人物起个名字'; return false }
     creating.value = true; createError.value = null
     try {
-      const ok = await roster.createFromWizard({ name: name.value.trim(), items: items.value, picks: picks.value }, category.value)
+      const ok = await roster.createFromWizard({ name: name.value.trim(), items: items.value, picks: picks.value, blank: true }, category.value)
       if (!ok) createError.value = '没建成，原因见提示条'
       return ok
     } finally { creating.value = false }

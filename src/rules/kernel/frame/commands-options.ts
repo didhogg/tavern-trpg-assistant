@@ -51,12 +51,12 @@ async function describeSteps(manager: any): Promise<any[]> {
 export function createOptionsCommands(operate: Operate) {
   return {
     /** 按已选的条目（和已做的选择 picks）一件件放进空白人物，列出每件条目现在要玩家选的事；预览用的人物用完删掉。 */
-    buildOptions: (plan: Pick<BuildPlan, 'items' | 'picks' | 'choices'>) => operate([], async () => {
+    buildOptions: (plan: Pick<BuildPlan, 'items' | 'picks' | 'choices' | 'blank'>) => operate([], async () => {
       const items = []
       for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
       const described: Array<{ refKey: string | null; steps: any[] }> = []
       const built = await buildActor('选项预览', items, [], plan.choices ?? {}, {
-        strict: false, picks: plan.picks,
+        strict: false, picks: plan.picks, blank: plan.blank,
         onManager: async ({ manager, key }) => { described.push({ refKey: key, steps: await describeSteps(manager) }) },
       })
       try { return { items: described, complete: !built.pending } } finally { await (built.actor ?? built.created)?.delete?.() }

@@ -63,13 +63,19 @@ try {
     const id = b.built.id
     const profs = async (rt0, i) => { const s = (await h.actorData((await rt0.session(owner)).session, i)).system.skills; return Object.entries(s).filter(([, v]) => v.value >= 1).map(([k]) => k).sort() }
     out.built = { status: b.built.status, skills: await profs(rt, id) }
+    // 留空：不给选择 + blank → 只有固定授予（侍僧的洞悉 / 宗教），职业技能位空着；选一个只多一个；重进战役仍是这样
+    const blankB = await people.build(owner, { name: '留空牧师', items: refs, blank: true }, { category: 'party' })
+    const halfB = await people.build(owner, { name: '半选牧师', items: refs, blank: true, picks: [[], [], [{ id: skillStep.id, level: skillStep.level, value: { chosen: ['skills:his'] } }]] }, { category: 'party' })
+    const autoB = await people.build(owner, { name: '自动牧师', items: refs }, { category: 'party' })
+    out.blankBuilt = { status: blankB.built.status, skills: await profs(rt, blankB.built.id), half: await profs(rt, halfB.built.id), auto: await profs(rt, autoB.built.id) }
+    out.blankOpts = (await people.buildOptions(owner, { items: refs, blank: true })).status
     out.worldActors = (await saves.read(owner)).actors.length
     await rt.close(owner)
     const rt2 = mk()
     const saves2 = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rt2.compact(k, ids), mapRef: (k) => rt2.mapRef(k) })
     const people2 = new h.KernelPeople({ runtime: rt2, saves: saves2 })
     const loaded = await people2.load(owner)
-    out.reload = { statuses: loaded.map((x) => x.status), skills: await profs(rt2, id) }
+    out.reload = { statuses: loaded.map((x) => x.status), skills: await profs(rt2, id), blank: await profs(rt2, blankB.built.id), half: await profs(rt2, halfB.built.id) }
     await rt2.close(owner)
     return out
   })
@@ -91,7 +97,11 @@ try {
     variantHumanBuilds: r.vhBuild.status === 'complete', // 以前没给属性选择时官方管理器弹窗、建卡 pending（默认值违反每项上限）
     pickNarrowsOptions: r.afterPick.status === 'complete',
     builtWithPick: r.built.status === 'complete' && ['his', 'med'].every((k) => r.built.skills.includes(k)),
-    previewActorsGone: r.worldActors === 1,
+    blankLeavesEmpty: r.blankBuilt.status === 'complete' && r.blankBuilt.skills.join() === 'ins,rel' && r.blankOpts === 'complete',
+    blankHalfPick: r.blankBuilt.half.join() === 'his,ins,rel',
+    autoStillFills: r.blankBuilt.auto.length > r.blankBuilt.skills.length,
+    blankReloadKeeps: r.reload.blank.join() === 'ins,rel' && r.reload.half.join() === 'his,ins,rel',
+    previewActorsGone: r.worldActors === 4,
     reloadKeepsPick: r.reload.statuses.every((s) => s === 'complete') && ['his', 'med'].every((k) => r.reload.skills.includes(k)) && JSON.stringify(r.reload.skills) === JSON.stringify(r.built.skills),
     noUnexplainedErrors: unexplained.length === 0,
   }

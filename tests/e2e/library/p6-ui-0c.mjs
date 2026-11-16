@@ -119,6 +119,27 @@ try {
   }, pinia)
   check('玩家选的技能都在人物身上', verify.wanted.length >= 3 && verify.wanted.every((k) => verify.prof.includes(k)), JSON.stringify(verify))
   check('选的属性提升生效：体质 11、感知 11', verify.abil.con === 11 && verify.abil.wis === 11, JSON.stringify(verify.abil))
+  // 没选满的留空：牧师只选 1 个技能（共 2 个位置），其余不替他选
+  await openWizard(); await page.getByTestId('wz-name').fill('半选牧师'); await next()
+  await page.waitForSelector('[data-testid=wz-row]'); await page.getByTestId('wz-search').fill('人类'); await settle(page, 500)
+  await pickRow(/^人类$/); await next()
+  await page.getByTestId('wz-search').fill('侍僧'); await settle(page, 400); await pickRow(/侍僧/); await next()
+  await page.getByTestId('wz-search').fill('牧师'); await settle(page, 400); await pickRow(/^牧师$/)
+  const half = page.getByRole('group', { name: /技能候选/ }).first()
+  await half.getByTestId('wz-opt').nth(0).click(); await settle(page, 1500)
+  while (!(await page.getByTestId('wz-done').count())) await next()
+  const halfText = await page.getByTestId('wz-done').innerText()
+  check('完成页「待填」写着技能还差 1，并说明创建后会空着', /还差 1/.test(halfText) && /空着/.test(halfText), halfText.replace(/\s+/g, ' ').slice(0, 260))
+  await page.getByTestId('wz-create').click()
+  await page.waitForFunction(() => ![...document.querySelector('#trpg-assistant-root').shadowRoot.querySelectorAll('[data-testid=wizard-page]')].length, null, { timeout: 120000 })
+  await page.waitForSelector('.pp-row', { timeout: 60000 }); await settle(page, 1200)
+  const halfSkills = await page.evaluate(async (P) => {
+    const ps = eval(P); const camp = ps._s.get('campaign'); const be = ps._s.get('app').svc().backend
+    const row = ps._s.get('people').rows.find((r) => r.name === '半选牧师')
+    const sheet = await be.people.sheet(camp.owner.ownerKey, row.id)
+    return Object.entries(sheet.result.system.skills).filter(([, v]) => v.value >= 1).map(([k]) => k).sort()
+  }, pinia)
+  check('只选了 1 个：人物身上是侍僧给的 2 个 + 玩家选的 1 个，共 3 个，没有替他补', halfSkills.length === 3, JSON.stringify(halfSkills))
   // 窄屏
   await page.setViewportSize({ width: 390, height: 780 }); await settle(page, 600)
   await page.locator('.trpg-tabs').getByRole('button', { name: '人物' }).click(); await settle(page, 400)

@@ -165,14 +165,14 @@ export class KernelRuntime {
   }
 
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
-  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][] }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
+  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][]; blank?: boolean }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, [...plan.items, ...(plan.equipment ?? [])])
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const byKey = new Map(rows.rows.map((row) => [refKey(row.ref), row]))
     const items = plan.items.map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
     const equipment = (plan.equipment ?? []).map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
-    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks) })
+    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank })
     if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? `建卡状态：${result.status}`, detail: result }
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)
@@ -184,12 +184,12 @@ export class KernelRuntime {
    * 建卡选项（P6）：已选的条目（按顺序放进空白人物，带玩家已做的选择 picks）→ 每件条目现在要玩家选的事（官方进阶算候选）
    * + 作者数据里的额外必选项（子职业 / 专长 / 可选特性，带候选）。预览用的人物不进存档。
    */
-  async buildOptions(ownerKey: string, plan: { items: EntryRef[]; picks?: BuildPick[][] }): Promise<{ status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean }> {
+  async buildOptions(ownerKey: string, plan: { items: EntryRef[]; picks?: BuildPick[][]; blank?: boolean }): Promise<{ status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, plan.items)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
     const sent = rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry }))
-    const out = await o.session.call('buildOptions', { items: sent, picks: picksByKey(plan.items, plan.picks) })
+    const out = await o.session.call('buildOptions', { items: sent, picks: picksByKey(plan.items, plan.picks), blank: plan.blank })
     if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
     const lib = await this.library(ownerKey)
     const query = (prop: string) => this.deps.scoped.query(lib, prop, { mode: 'browse' }) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
