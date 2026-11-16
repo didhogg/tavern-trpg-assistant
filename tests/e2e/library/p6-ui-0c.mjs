@@ -1,5 +1,5 @@
 // P6 单元 0c 分步建卡（真实插件界面 + 真实库 + 真实结算小窗）：新建 → 分步建卡 → 名字 → 变体人类（属性 / 技能 / 语言）→ 侍僧 → 牧师（技能候选只剩 3）→ 子职业 → 专长 → 完成创建 → 列表里有这个人、选择写进了人物；中途关窗丢掉；窄屏。
-// 截图 work/p6-ui/shots-0c-*/；界面验收只由驾驶员给。用法：ENGINE=chrome|webkit node tests/e2e/library/p6-ui-0a.mjs
+// 截图 work/p6-ui/shots-0c-*/；界面验收只由驾驶员给。用法：[DARK=1] ENGINE=chrome|webkit node tests/e2e/library/p6-ui-0c.mjs
 import { rm, mkdir } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
 import { buildAll, engines, work } from './chain-common.mjs'
@@ -10,11 +10,13 @@ const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
 const { server, url } = await startStatic({ port: 47348 })
 const profile = `${work}/profile-p3-1-${engineName}` // 和 p6-people 共用：官方资料装过就不再下载
-const shots = `${process.cwd()}/work/p6-ui/shots-0c-${engineName}`
+const dark = process.env.DARK === '1' // DARK=1：整条流程在深色下走一遍，截图放 shots-0c-*-dark
+const shots = `${process.cwd()}/work/p6-ui/shots-0c-${engineName}${dark ? '-dark' : ''}`
 await rm(shots, { recursive: true, force: true }); await mkdir(shots, { recursive: true })
 const killer = setTimeout(() => { console.error('超时 9 分钟'); process.exit(2) }, 9 * 60_000)
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage()
+if (dark) await page.emulateMedia({ colorScheme: 'dark' })
 page.setDefaultTimeout(90_000)
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e.message ?? e).slice(0, 300)))

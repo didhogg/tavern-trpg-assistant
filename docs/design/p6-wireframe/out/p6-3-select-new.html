@@ -247,7 +247,8 @@ textarea.trpg-input { min-height: 72px; padding: var(--sp-2) var(--sp-3); resize
 .trpg-combo__input { flex: 1; min-width: 0; min-height: var(--hit); padding: 4px var(--sp-3); border: 0; background: transparent; color: var(--text); }
 .trpg-combo__input:focus-visible { box-shadow: none; }
 .trpg-combo__anchor:focus-within { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus); }
-.trpg-combo__content { width: var(--reka-combobox-trigger-width); min-width: 260px; }
+.trpg-combo__content { width: var(--reka-combobox-trigger-width); min-width: 260px; display: flex; flex-direction: column; max-height: min(320px, var(--reka-combobox-content-available-height, 320px)); }
+.trpg-combo__content .trpg-select-viewport { flex: 1; min-height: 0; max-height: none; }
 .trpg-combo__count { padding: 6px var(--sp-3); border-bottom: var(--border) solid var(--line); color: var(--text2); font-size: var(--fs-sm); }
 .trpg-combo__empty { padding: var(--sp-3); color: var(--text2); }
 .trpg-tip { position: relative; display: inline-flex; max-width: 100%; } .trpg-tip.is-inline { display: inline; }

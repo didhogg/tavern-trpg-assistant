@@ -4,7 +4,6 @@
 // 示例人物「伊娃」= 人类（变体）· 侍僧 · 牧师 1 级 · 生命领域（PHB 2014）；名字与数值是占位示例，**选项的数量与形状取自 people.buildOptions 实测**（2026-11-15：牧师 + 龙裔 + 侍僧 / 战士 / 变体人类，见 NEXT）：
 // 步骤标签里的「子职业 · 专长 · 可选特性」只有数据里写着才出现；候选已排除人物身上已有的；戏法 / 准备法术不在建卡里（官方进阶里只是自动的数值），建好后在人物页「法术」里选。
 import { icon, btn, filt, P, sec, it, tr, c, tbl, step } from './parts.mjs'
-import { avatarField } from './avatar.mjs'
 import { row, card, tools, pickPage, pickModal, foot, pill } from './picker.mjs'
 
 export const STEPS = [['name', '名字'], ['race', '种族'], ['bg', '背景'], ['class', '职业'], ['sub', '子职业'], ['feat', '专长'], ['opt', '可选特性'], ['ab', '属性值'], ['eq', '装备'], ['done', '完成']]
@@ -16,7 +15,7 @@ export function stepTabs(cur, states = {}, n) {
     return `<span class="pk-step" data-s="${s}"${i === ci ? ' aria-current="step"' : ''}><i>${s === 'done' ? icon('check', 12) : i + 1}</i>${name}</span>`
   }).join('')}</div>`
 }
-const wfoot = (o = {}) => foot(`${P(o.n)}${o.first || o.last ? '' : btn('跳过此步', { quiet: true })}<small>关掉窗口 = 存成「建卡中」人物，不丢</small><span class="pk-foot__sp"></span>${o.first ? '' : btn('上一步', { ic: 'caret-left' })}${o.last ? btn('创建伊娃', { primary: true, n: o.nGo }) : btn('下一步', { primary: true })}`)
+const wfoot = (o = {}) => foot(`${P(o.n)}${o.first || o.last ? '' : btn('跳过此步', { quiet: true })}<small>关窗 = 丢掉</small><span class="pk-foot__sp"></span>${o.first ? '' : btn('上一步', { ic: 'caret-left' })}${o.last ? btn('创建伊娃', { primary: true, n: o.nGo }) : btn('下一步', { primary: true })}`)
 const cfoot = (name) => foot(`${btn('选「' + name + '」并下一步', { primary: true })}`)
 const opts = (a) => `<div class="wz-opts">${a.map(([t, on, off]) => `<span class="wz-opt"${on ? ' data-on="true"' : ''}${off ? ' data-off="true"' : ''}>${on ? icon('check', 12) : ''}${t}</span>`).join('')}</div>`
 /** 它要你做的选择（内核 buildSteps 的一步）；auto = 内核自动定 */
@@ -36,7 +35,6 @@ const one = (cur, o, bodyHtml, extra = {}) => pickPage({ body: bodyHtml, top: to
 export const steps = {
   name: (o = {}) => one('name', o, `<div class="wz-form"><div class="pk-p">${P(o.nHead)}只有名字必填；后面每一步都能跳过，跳过的放进「待填」清单，之后在人物页补。</div>
 <div class="trpg-field"><label class="trpg-field__label">名字 <span class="sh-warn">*</span></label><div class="trpg-input" style="border-color:var(--primary)">伊娃</div></div>
-${avatarField(o.nAvatar)}
 <div class="trpg-field"><label class="trpg-field__label">放进</label><div style="display:flex;gap:6px">${filt(['队伍', 'NPC', '敌人'], 0)}</div><p class="trpg-hint">默认是你打开建卡时所在的分类，以后可以换。</p></div></div>`),
 
   race: (o = {}) => pick('race', o, { count: 5, q: '搜 种族', list: L([
@@ -76,22 +74,27 @@ ${avatarField(o.nAvatar)}
     c: { ch: '箭', name: '箭术', en: 'Archery', sub: '战士 · 战斗风格（战士 1 级给 1 个；候选按特性类型 FS:F 从库里取）', n: o.nCard, secs: [['效果', '你用远程武器进行的攻击检定获得 +2 加值。']] } }),
 
   ab: (o = {}) => one('ab', o, `<div>
-<div class="sh-tools">${P(o.nWay)}${filt(['标准数组', '购点（27 点）', '掷骰', '手填'], 0)}</div>
-<div class="wz-pool">${P(o.nPool)}还没放的数：<span>15</span><span data-used="true">14</span><span>13</span><span>12</span><span data-used="true">10</span><span>8</span></div>
-<div class="wz-ab">${[['力量', '', '', ''], ['敏捷', '', '', ''], ['体质', '14', '+1', '15 · +2'], ['智力', '', '', ''], ['感知', '10', '+1', '11 · +0'], ['魅力', '', '', '']].map(([k, v, add, tot]) => `<div><small>${k}</small><span class="wz-in"${v ? '' : ' data-empty="true"'}>${v || '空'}</span><em${add ? ' data-plus="true"' : ''}>种族 ${add || '—'}</em><strong>${tot || '—'}</strong></div>`).join('')}</div>
+<div class="sh-tools">${P(o.nWay)}<span class="sh-2">怎么定属性？</span>${filt(['标准数组', '购点', '手填'], 0)}</div>
+<div class="wz-pool">${P(o.nPool)}待放的数：<span>15</span><span data-used="true">14</span><span>13</span><span>12</span><span data-used="true">10</span><span>8</span><small>点一个数，再点一项属性放进去；点已放的收回</small></div>
+<div class="wz-ab">${[['力量', '', '', ''], ['敏捷', '', '', ''], ['体质', '14', '+1', '15'], ['智力', '', '', ''], ['感知', '10', '+1', '11'], ['魅力', '', '', '']].map(([k, v, add, tot]) => `<div><small>${k}</small><span class="wz-in"${v ? '' : ' data-empty="true"'}>${v || '空'}</span><em${add ? ' data-plus="true"' : ''}>种族等加成 ${add || '—'}</em><strong>${tot || '—'}</strong></div>`).join('')}</div>
+<p class="trpg-hint" style="margin:0 var(--sp-3)">${P(o.nGap)}没放的属性，创建后是官方初值加加成（合计里淡色的数）。</p>
 </div>`, { states: { ab: 'todo' } }),
 
   eq: (o = {}) => one('eq', o, `<div>
-${tbl('minmax(0,1fr)', sec('牧师起始装备（每组选一项）', 3, [], { n: o.nRad }))}
-<div class="wz-rad"><div data-on="true"><i></i><span><b>甲</b>硬头锤</span></div><div><i></i><span><b>乙</b>战锤（需要熟练）</span></div></div>
-<div class="wz-rad"><div><i></i><span><b>甲</b>鳞甲</span></div><div data-on="true"><i></i><span><b>乙</b>皮甲</span></div><div><i></i><span><b>丙</b>链甲（需要熟练）</span></div></div>
-<div class="wz-rad"><div data-on="true"><i></i><span><b>甲</b>轻弩和 20 支弩矢</span></div><div><i></i><span><b>乙</b>任意一件简易武器 ${btn('从库里选', { small: true })}</span></div></div>
-${tbl('minmax(0,1fr) 60px 60px', `${sec('背景给的', 6, ['数量', '重量'])}${[['圣徽', 1, '1 磅'], ['祈祷书', 1, '5 磅'], ['香', 5, '—'], ['法衣', 1, '4 磅'], ['普通衣服', 1, '3 磅'], ['金币 (gp)', 15, '0.3 磅']].map(([n, q, w]) => tr([it(n[0], n, n.startsWith('金币') ? '钱币 · 来自库' : '冒险装备'), c(q), c(w)])).join('')}`)}
+${tbl('minmax(0,1fr)', sec('来自：牧师', 3, [], { n: o.nRad }))}
+<div class="wz-rad"><div><i></i><span>轻弩　弩矢(20)</span></div><div data-on="true"><i></i><span>任选简易武器 <span class="trpg-badge">短棒 ▾</span> <small>清除</small></span></div></div>
+<div class="wz-rad"><div data-on="true"><i></i><span>祭司套组</span></div><div><i></i><span>探索套组</span></div></div>
+${tbl('minmax(0,1fr) 60px', `${sec('固定给', 2, ['数量'])}${[['盾牌', 1, ''], ['任选圣徽（下拉选一个）', 1, '']].map(([n, q, t]) => tr([it(n[0], n, '作者数据原样'), c(q)])).join('')}`)}
+${tbl('minmax(0,1fr)', sec('来自：博德之门侍僧', 5, []))}
+${tbl('minmax(0,1fr) 60px', `${sec('固定给', 5, ['数量'])}${[['圣徽 → Holy Symbol (…)', 1, ''], ['Sticks of Incense', 5, '杂项'], ['Vestments', 1, '杂项'], ['普通服装', 1, ''], ['小包', 1, '含钱']].map(([n, q, t]) => tr([it(n[0], n + (t ? '　【' + t + '】' : ''), '名字和杂项文字照作者数据原样（英文）'), c(q)])).join('')}`)}
+<div class="wz-rad">${P(o.nGap)}<div><i></i><span><b>不要装备，改拿起始金币</b>（骰式 5d4 * 10）　[掷 5d4 * 10] 或自己填；勾上后这一段的选择变灰</span></div></div>
+<p class="trpg-hint" style="margin:0 var(--sp-3)">现在选的会给：16 件物品，钱 1 铂 5 金（后端算好）</p>
 </div>`),
 
   done: (o = {}) => one('done', o, `<div>
 ${tbl('120px minmax(0,1fr) 80px', `${sec('伊娃', null, ['', ''])}${[['种族', '人类（变体）· 体质 +1 感知 +1'], ['背景', '侍僧 · 洞悉 宗教 · 天界语'], ['职业', '牧师 1 级 · 生命领域'], ['专长', '警觉'], ['生命值', '10（8 + 体质 2）'], ['技能', '洞悉 宗教 历史 医药 察觉']].map(([k, v]) => tr([`<span class="sh-2" style="text-align:left">${k}</span>`, `<span style="text-align:left">${v}</span>`, `<span><button class="trpg-link" type="button">改</button></span>`])).join('')}`)}
+${tbl('120px minmax(0,1fr) 80px', `${sec('装备', null, ['', ''])}${tr([`<span class="sh-2" style="text-align:left">牧师</span>`, `<span style="text-align:left">6 种物品（硬头锤、皮甲、短棒、祭司套组、盾牌、护符）</span>`, `<span></span>`])}${tr([`<span class="sh-2" style="text-align:left">钱</span>`, `<span style="text-align:left">1 铂 5 金</span>`, `<span></span>`])}`)}
 ${tbl('minmax(0,1fr) 120px', `${sec('待填', 2, ['', ''], { n: o.nTodo })}${tr([it('!', '属性值：力量、敏捷、智力、魅力还没放', ''), `<span>${btn('去填', { small: true })}</span>`])}${tr([it('!', '人类（变体）：语言还差 1', '种族'), `<span>${btn('去填', { small: true })}</span>`])}`)}
-<p class="trpg-hint" style="margin:0 var(--sp-3)">创建后直接打开伊娃的人物页；创建算一条改动记录，可撤销。</p></div>`, { states: { ab: 'skip' } }),
+<p class="trpg-hint" style="margin:0 var(--sp-3)">不填也能创建：没选的位置创建后会空着，不会替你选。创建后伊娃出现在列表里，提示条带 [撤销]。</p></div>`, { states: { ab: 'skip' } }),
 }
 export const wizard = (cur, o = {}) => pickModal('分步建卡', '', steps[cur](o), { view: o.view, n: o.nTitle })
