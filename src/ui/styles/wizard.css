@@ -59,3 +59,29 @@
 .trpg-window[data-layout='narrow'] .wz-ab__cell, .trpg-window[data-layout='narrow'] .wz-ab__ipt { min-height: 44px; }
 .trpg-window[data-layout='narrow'] .wz-ab__tbl th, .trpg-window[data-layout='narrow'] .wz-ab__tbl td { padding: var(--sp-2) var(--sp-1); }
 .wz-ab__head { position: sticky; top: calc(var(--sp-4) * -1); z-index: 2; display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-2) 0; background: var(--surface); }
+/* 装备步骤 */
+.wz-eq { padding: var(--sp-4) var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); overflow: auto; }
+.wz-eqs { border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.wz-eqs > summary { cursor: pointer; padding: var(--sp-3) var(--sp-4); font-weight: var(--fw-semibold); min-height: 44px; display: flex; align-items: center; }
+.wz-eqs__body { padding: 0 var(--sp-4) var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-3); }
+.wz-eqs__body[data-gold] .wz-eqg { opacity: .55; }
+.wz-eqg { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.wz-eqg__h { padding: 0; color: var(--text2); font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.wz-eqg__fixed { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); }
+.wz-eqo { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); min-height: 44px; border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--bg-sunk); cursor: pointer; }
+.wz-eqo:hover { background: var(--bg-hover); }
+.wz-eqo[data-on] { border-color: var(--primary); background: var(--surface); }
+.wz-eqo input[type='radio'] { flex: none; accent-color: var(--primary); }
+.wz-eqo__list { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-4); min-width: 0; }
+.wz-eqe { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); }
+.wz-eqe__q { color: var(--text2); } .wz-eqe__m { color: var(--text2); font-size: var(--fs-sm); }
+.wz-eqe__slot { display: inline-flex; align-items: center; gap: var(--sp-1); min-width: 180px; }
+.wz-eqgold { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3); border: var(--border) dashed var(--line-ctrl); border-radius: var(--r-sm); }
+.wz-eqgold__on { display: flex; align-items: center; gap: var(--sp-2); min-height: 36px; } .wz-eqgold__on small { color: var(--text2); }
+.wz-eqgold__row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); }
+.wz-eqgold__ipt { width: 96px; }
+.wz-eq__sum { padding: var(--sp-3); border-top: var(--border) solid var(--line); }
+.wz-eqdone { display: flex; flex-direction: column; gap: var(--sp-1); }
+.trpg-window[data-layout='narrow'] .wz-eq { padding: var(--sp-3); }
+.trpg-window[data-layout='narrow'] .wz-eqe__slot { min-width: 0; width: 100%; }
+.trpg-window[data-layout='narrow'] .wz-eqgold__row .trpg-btn, .trpg-window[data-layout='narrow'] .wz-eqgold__ipt { min-height: 44px; }

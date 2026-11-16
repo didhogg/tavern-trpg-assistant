@@ -8,6 +8,7 @@ import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import WizardAbilities from './WizardAbilities.vue'
 import WizardDone from './WizardDone.vue'
+import WizardEquipment from './WizardEquipment.vue'
 import WizardPickStep from './WizardPickStep.vue'
 
 /** 分步建卡：步骤标签（照规则数据 + 后端「额外必选项」，子职业 / 专长 / 可选特性有才出现）· 每步一页 · 上一步 / 下一步。关掉窗口 = 直接丢掉。 */
@@ -34,6 +35,7 @@ async function create(): Promise<void> { if (await w.create()) modal.close() }
         <div class="trpg-field"><span class="trpg-field__label">放进</span><Segmented :model-value="w.category" label="放进哪一类" :options="CATEGORIES.map((c) => ({ value: c.id, label: c.label }))" @update:model-value="(v) => (w.category = v as CategoryId)" /></div>
       </div>
       <WizardAbilities v-else-if="w.cur === 'abilities'" />
+      <WizardEquipment v-else-if="w.cur === 'equipment'" />
       <WizardDone v-else-if="last" />
       <WizardPickStep v-else :key="w.cur" :prop="w.cur" />
     </div>

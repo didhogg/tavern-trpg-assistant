@@ -103,7 +103,7 @@ try {
   check('一开始没放：合计都是官方初值加种族加成，待放的数 6 个', (await root.getByTestId('wz-ab-chip').count()) === 6 && (await totals()).join() === '10,10,11,10,11,10', (await totals()).join())
   await root.getByRole('button', { name: '购点', exact: true }).click(); await settle(page, 2500)
   check('购点：每项从 8 开始，已用 0 / 27', /已用 0 \/ 27，剩 27/.test(await root.getByTestId('wz-ab-budget').innerText()), await root.getByTestId('wz-ab-budget').innerText())
-  await root.getByRole('button', { name: '力量 多一档' }).click(); await settle(page, 1500); await root.getByRole('button', { name: '力量 多一档' }).click(); await settle(page, 1500)
+  await root.getByRole('button', { name: '力量 多一档' }).click(); await root.getByTestId('wz-ab-budget').filter({ hasText: '已用 1 /' }).waitFor(); await root.getByRole('button', { name: '力量 多一档' }).click(); await root.getByTestId('wz-ab-budget').filter({ hasText: '已用 2 /' }).waitFor(); await settle(page, 500)
   check('购点：力量加两档后是 10，已用 2', /已用 2 \/ 27，剩 25/.test(await root.getByTestId('wz-ab-budget').innerText()) && (await root.getByTestId('wz-ab-row-str').getByTestId('wz-ab-base').innerText()).trim() === '10', await root.getByTestId('wz-ab-budget').innerText())
   await root.getByRole('button', { name: '标准数组', exact: true }).click()
   await page.getByTestId('confirm-page').waitFor(); await page.getByTestId('confirm-page').getByRole('button', { name: '换' }).click(); await settle(page, 2500)
@@ -115,13 +115,43 @@ try {
   check('数组放满：待放的数没有了', (await root.getByTestId('wz-ab-chip').count()) === 0 && /都放完了/.test(await root.getByTestId('wz-ab-pool').innerText()))
   check('合计 = 基础 + 种族加成（后端给的数）：体质 14、感知 11', (await totals()).join() === '15,14,14,12,11,8', (await totals()).join())
   await shot('05b-abilities')
-  await page.setViewportSize({ width: 390, height: 780 }); await settle(page, 800); await shot('05c-abilities-narrow')
-  check('窄屏属性值：没有横向滚动，数组数字按钮不小于 44px', await page.evaluate(() => { const r = document.querySelector('#trpg-assistant-root').shadowRoot; const b = r.querySelector('[data-testid=wz-ab-place]').getBoundingClientRect(); const sc = r.querySelector('[data-testid=wz-abilities]'); return sc.scrollWidth <= sc.clientWidth + 1 && b.height >= 43 }))
-  await page.setViewportSize({ width: 1280, height: 800 }); await settle(page, 800)
+  await next()
+  // 装备：牧师 + 侍僧的起始装备（后端算好，界面只选）
+  await page.getByTestId('wz-equipment').waitFor(); await settle(page, 1500)
+  const eqRoot = page.getByTestId('wz-equipment')
+  check('步骤标签有「装备」，在属性值之后', (await page.getByTestId('wz-step-equipment').count()) === 1)
+  check('两段：来自牧师、来自侍僧', (await eqRoot.getByTestId('wz-eq-section').count()) === 2 && /来自：.*牧师/.test((await eqRoot.getByTestId('wz-eq-section').allInnerTexts()).join('|')) && /来自：.*侍僧/.test((await eqRoot.getByTestId('wz-eq-section').allInnerTexts()).join('|')), await eqRoot.getByTestId('wz-eq-section').allInnerTexts().then((a) => a.map((t) => t.slice(0, 20)).join('|')))
+  const sec = (n) => eqRoot.getByTestId('wz-eq-section').filter({ hasText: n === 0 ? '来自：牧师' : '来自：博德之门侍僧' })
+  const optIn = (n, re) => sec(n).getByTestId('wz-eq-option').filter({ hasText: re }).first()
+  const sumText = async () => (await eqRoot.getByTestId('wz-eq-sum').innerText()).replace(/\s+/g, ' ')
+  await optIn(0, /硬头锤/).getByRole('radio').check(); await optIn(0, /皮甲/).getByRole('radio').check(); await optIn(0, /祭司套组/).getByRole('radio').check(); await optIn(1, /书籍/).getByRole('radio').check(); await settle(page, 1500)
+  check('选了 3 组（点单选）后高亮 3 个；任选简易武器那一项还没选', (await sec(0).locator('[data-testid=wz-eq-option][data-on]').count()) === 3)
+  // 类别槽：真点开下拉、搜名字、点选项（任选简易武器；圣徽类）
+  const slotSimple = page.getByRole('combobox', { name: /简易武器，第 1 个/ })
+  await slotSimple.click(); await settle(page, 600)
+  const nSimple = Number(((await page.locator('.trpg-combo__count').innerText()).match(/共 (\d+) 条/) ?? [])[1] ?? 0)
+  await page.getByRole('option').filter({ hasText: '短棒' }).first().click(); await settle(page, 1500)
+  check('类别槽下拉里有简易武器候选（共 N 条，多于 10），点选了短棒', nSimple > 10, String(nSimple))
+  check('在类别槽里选东西 = 自动选中那一项（4 项都高亮了）', (await sec(0).locator('[data-testid=wz-eq-option][data-on]').count()) === 4)
+  const slotHoly = page.getByRole('combobox', { name: /圣徽，第 1 个/ })
+  await slotHoly.click(); await settle(page, 600); await page.getByRole('option').first().click(); await settle(page, 1800)
+  const s1 = await sumText()
+  check('合计由后端给：件数 + 钱（1 铂 5 金）', /\d+ 件物品/.test(s1) && /1 铂 5 金/.test(s1), s1)
+  // 起始金币：勾上 → 这一段的选择变灰、可掷骰；取消 → 恢复
+  await sec(0).getByTestId('wz-eq-gold-on').check(); await settle(page, 800)
+  check('勾了「改拿金币」：这一段的选项组不能点', (await sec(0).locator('fieldset[disabled]').count()) >= 1)
+  await sec(0).getByTestId('wz-eq-roll').click(); await settle(page, 2500)
+  const note = await sec(0).getByTestId('wz-eq-gold-note').innerText().catch(() => '')
+  const s2 = await sumText()
+  check('掷骰：显示点数和金币数，合计里的钱跟着变（职业不给装备，只剩背景的）', /掷 .* = \d+/.test(note) && /\d+ 金/.test(note) && s2 !== s1, `${note} | ${s2}`)
+  await sec(0).getByTestId('wz-eq-gold-on').uncheck(); await settle(page, 1800)
+  check('取消金币：选择保留，合计恢复', (await sumText()) === s1 && (await sec(0).locator('[data-testid=wz-eq-option][data-on]').count()) === 4, await sumText())
+  await shot('05d-equipment')
   await next()
   // 完成
   await page.getByTestId('wz-done').waitFor(); await settle(page, 600)
   const doneText = await page.getByTestId('wz-done').innerText()
+  check('完成页有「装备」小结和钱', (await page.getByTestId('wz-eq-done').count()) === 1 && /钱：1 铂 5 金/.test(await page.getByTestId('wz-eq-done').innerText()))
   check('完成页写着名字、种族、背景、职业、子职业、专长', ['伊娃', '种族', '背景', '职业'].every((t) => doneText.includes(t)), doneText.replace(/\s+/g, ' ').slice(0, 200))
   await shot('06-done')
   await page.getByTestId('wz-create').click()
@@ -139,9 +169,11 @@ try {
     const prof = Object.entries(sheet.result.system.skills).filter(([, v]) => v.value >= 1).map(([k]) => k)
     const wanted = wz.picks.flat().flatMap((p) => p.value.chosen ?? []).filter((v) => v.startsWith('skills:')).map((v) => v.slice(7))
     const abil = Object.fromEntries(Object.entries(sheet.result.system.abilities).map(([k, v]) => [k, v.value]))
-    return { prof, wanted, abil }
+    const eqItems = sheet.result.items.map((i) => i.name)
+    return { prof, wanted, abil, eqItems, currency: sheet.result.system.currency }
   }, pinia)
   check('玩家选的技能都在人物身上', verify.wanted.length >= 3 && verify.wanted.every((k) => verify.prof.includes(k)), JSON.stringify(verify))
+  check('起始装备进了人物：锤矛、皮甲、短棒、祭司套组、盾牌、香 + 钱 15 金', ['Mace', 'Leather Armor', 'Club', "Priest's Pack", 'Shield', 'Sticks of Incense'].every((n) => verify.eqItems.includes(n)) && (verify.currency.pp * 10 + verify.currency.gp) === 15, JSON.stringify([verify.eqItems.length, verify.currency]))
   check('属性值进了人物：数组 15 14 13 12 10 8 加种族提升 → 力量 15 敏捷 14 体质 14 智力 12 感知 11 魅力 8', JSON.stringify(verify.abil) === JSON.stringify({ str: 15, dex: 14, con: 14, int: 12, wis: 11, cha: 8 }), JSON.stringify(verify.abil))
   // 没选满的留空：牧师只选 1 个技能（共 2 个位置），其余不替他选
   await openWizard(); await page.getByTestId('wz-name').fill('半选牧师'); await next()
@@ -159,6 +191,13 @@ try {
       check('手填：超出官方上限 20 时在这一项旁边写明范围', /范围 0 到 20/.test(await ab.getByTestId('wz-ab-row-str').innerText()), await ab.getByTestId('wz-ab-row-str').innerText())
       await ab.getByTestId('wz-ab-row-str').getByTestId('wz-ab-input').fill('18'); await settle(page, 2500)
       check('手填：改成 18 后问题消失，合计 = 18 + 种族 +1 = 19', !/范围/.test(await ab.getByTestId('wz-ab-row-str').innerText()) && (await ab.getByTestId('wz-ab-row-str').getByTestId('wz-ab-total').innerText()).trim() === '19')
+      // 窄屏：属性值（窗口缩小后不会自己变大，所以放在这条流程里，后面的步骤和创建都在窄窗口里走）
+      await page.setViewportSize({ width: 390, height: 780 }); await settle(page, 800); await shot('05c-abilities-narrow')
+      check('窄屏属性值：没有横向滚动，输入框不小于 44px', await page.evaluate(() => { const r = document.querySelector('#trpg-assistant-root').shadowRoot; const sc = r.querySelector('[data-testid=wz-abilities]'); const i = r.querySelector('[data-testid=wz-ab-input]').getBoundingClientRect(); return sc.scrollWidth <= sc.clientWidth + 1 && i.height >= 43 }))
+    }
+    if (await page.getByTestId('wz-equipment').count()) {
+      await settle(page, 1500); await shot('05e-equipment-narrow')
+      check('窄屏装备：没有横向滚动，下拉和单选行不小于 44px', await page.evaluate(() => { const r = document.querySelector('#trpg-assistant-root').shadowRoot; const e = r.querySelector('[data-testid=wz-equipment]'); const o = r.querySelector('[data-testid=wz-eq-option]').getBoundingClientRect(); return e.scrollWidth <= e.clientWidth + 1 && o.height >= 43 }))
     }
     await next()
   }

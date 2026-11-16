@@ -8,6 +8,7 @@ import type { AbilityMethod } from '../rules/kernel/ability-rules'
 import type { BuildAbilities, BuildOptionsItem, BuildPick } from '../rules/kernel/runtime'
 import { askConfirm } from '../ui/kit/confirm'
 import { abilityLabel } from '../ui/roster/wizard-labels'
+import { createEquipment } from './wizard-equipment'
 import { nameOf } from '../ui/libview/pack-data'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
@@ -59,6 +60,7 @@ export const useWizardStore = defineStore('wizard', () => {
   const mainProps = computed(() => build.value.filter((p) => !(EXTRA_KINDS as readonly string[]).includes(p)))
   const items = computed<EntryRef[]>(() => build.value.flatMap((p) => chosen.value[p] ?? []))
   const optionsFor = (ref: EntryRef): BuildOptionsItem | null => options.value?.find((i) => refKey(i.ref) === refKey(ref)) ?? null
+  const equip = createEquipment({ items, owner, nameOf: (key) => { const ref = items.value.find((r) => refKey(r) === key); return (ref && optionsFor(ref)?.name) || key } })
 
   /** 某种额外必选项（按数据）：要选几个、候选是谁；没有 = 这一步不出现。 */
   function extra(prop: string): { title: string; count: number; candidates: PickRow[] } | null {
@@ -68,8 +70,8 @@ export const useWizardStore = defineStore('wizard', () => {
     const candidates = all.flatMap((x) => x.candidates).map((c) => rowOf(c.ref, c.name, c.source)).filter((r) => !seen.has(r.key) && !!seen.add(r.key))
     return { title: all[0].title, count: all.reduce((n, x) => n + x.count, 0), candidates }
   }
-  const steps = computed(() => ['name', ...mainProps.value, ...build.value.filter((p) => (EXTRA_KINDS as readonly string[]).includes(p) && extra(p)), ...(abil.value ? ['abilities'] : []), 'done'])
-  const label = (id: string): string => id === 'name' ? '名字' : id === 'done' ? '完成' : id === 'abilities' ? '属性值' : names.value[id] ?? id
+  const steps = computed(() => ['name', ...mainProps.value, ...build.value.filter((p) => (EXTRA_KINDS as readonly string[]).includes(p) && extra(p)), ...(abil.value ? ['abilities'] : []), ...(equip.sections.value.length ? ['equipment'] : []), 'done'])
+  const label = (id: string): string => id === 'name' ? '名字' : id === 'done' ? '完成' : id === 'abilities' ? '属性值' : id === 'equipment' ? '装备' : names.value[id] ?? id
   const need = (id: string): number => (EXTRA_KINDS as readonly string[]).includes(id) ? extra(id)?.count ?? 0 : 1
 
   /** 一件条目里要玩家选的步骤（不用选的、自动的不在这里）。 */
@@ -130,7 +132,7 @@ export const useWizardStore = defineStore('wizard', () => {
 
   async function open(startView: string): Promise<void> {
     seq++; lastSent = ''
-    name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; options.value = null; optError.value = null; createError.value = null; creating.value = false
+    name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; equip.reset(); options.value = null; optError.value = null; createError.value = null; creating.value = false
     category.value = CATEGORIES.some((c) => c.id === startView) ? startView as CategoryId : 'party'
     const lib = await app.svc().backend.kernelSave.libraryOf(owner())
     build.value = [...(ruleKernel(lib.rule)?.build ?? [])]
@@ -157,7 +159,7 @@ export const useWizardStore = defineStore('wizard', () => {
     chosen.value = { ...chosen.value, [prop]: has ? now.filter((r) => refKey(r) !== row.key) : count === 1 ? [row.ref] : now.length < count ? [...now, row.ref] : now }
     // 换了人：他的旧选择不要
     for (const k of Object.keys(sel.value)) if (!items.value.some((r) => refKey(r) === k)) delete sel.value[k]
-    void refreshOptions()
+    void refreshOptions(); void equip.refresh()
   }
   const isChosen = (prop: string, key: string): boolean => (chosen.value[prop] ?? []).some((r) => refKey(r) === key)
 
@@ -217,15 +219,16 @@ export const useWizardStore = defineStore('wizard', () => {
       if (left > 0) out.push({ text: `${optionsFor(ref)?.name ?? ''}：${s.title ?? ''} 还差 ${left}`, go: p })
     }
     if (abil.value && unsetAbilities.value.length) out.push({ text: `属性值：还有 ${unsetAbilities.value.length} 项没放（${unsetAbilities.value.map((r) => abilityLabel(r.key)).join('、')}）`, go: 'abilities' })
+    for (const t of equip.todo.value) out.push({ text: t.text, go: 'equipment' })
     return out
   })
-  const status = (id: string): 'done' | 'todo' => id === 'name' ? (name.value.trim() ? 'done' : 'todo') : id === 'done' ? 'todo' : id === 'abilities' ? (abil.value?.check?.complete && abil.value.check.ok ? 'done' : 'todo') : (chosen.value[id] ?? []).length >= need(id) ? 'done' : 'todo'
+  const status = (id: string): 'done' | 'todo' => id === 'name' ? (name.value.trim() ? 'done' : 'todo') : id === 'done' ? 'todo' : id === 'abilities' ? (abil.value?.check?.complete && abil.value.check.ok ? 'done' : 'todo') : id === 'equipment' ? (!equip.todo.value.length ? 'done' : 'todo') : (chosen.value[id] ?? []).length >= need(id) ? 'done' : 'todo'
 
   async function create(): Promise<boolean> {
     if (!name.value.trim()) { createError.value = '先给人物起个名字'; return false }
     creating.value = true; createError.value = null
     try {
-      const ok = await roster.createFromWizard({ name: name.value.trim(), items: items.value, picks: picks.value, blank: true, ...(Object.keys(abilBase.value).length ? { abilities: abilPlan() } : {}) }, category.value)
+      const ok = await roster.createFromWizard({ name: name.value.trim(), items: items.value, picks: picks.value, blank: true, starting: equip.forBuild(), ...(Object.keys(abilBase.value).length ? { abilities: abilPlan() } : {}) }, category.value)
       if (!ok) createError.value = '没建成，原因见提示条'
       return ok
     } finally { creating.value = false }
@@ -233,6 +236,6 @@ export const useWizardStore = defineStore('wizard', () => {
   const go = (id: string): void => { cur.value = id }
   const move = (delta: number): void => { const i = steps.value.indexOf(cur.value); cur.value = steps.value[Math.max(0, Math.min(steps.value.length - 1, i + delta))] }
 
-  return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
+  return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, equip, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
     open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, optionsFor, setSlot, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
 })
