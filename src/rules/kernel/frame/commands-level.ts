@@ -12,6 +12,7 @@ import { restoreRecordedChoices } from './commands-restore'
 import { blankChoice, firstChoice } from './commands-choice'
 import { resolveStarting, type StartingSelection } from './commands-equipment'
 import { checkedBuildTrait, fillBuildTraits, isBuildTrait } from './build-traits'
+import { stripTraitOrigins } from './trait-origins'
 
 const g = globalThis as any
 export function Manager(): any {
@@ -41,6 +42,7 @@ export function actorLevel(actor: any): any {
 export function cleanItem(item: any): any {
   const data = item?.toObject ? item.toObject() : structuredClone(item)
   for (const key of ['_id', '_key', 'folder', 'sort', 'ownership', '_stats']) delete data[key]
+  stripTraitOrigins(data)
   return data
 }
 
@@ -187,7 +189,7 @@ export async function buildActor(name: string, items: any[], equipment: any[], c
     const key = raw?.refKey ?? refKeyOf(data)
     const recorded = key ? choices[key] : undefined
     const useBuildTraits = key && (!strict || recorded?.some((value) => isBuildTrait(value.id)))
-    const unsupported = useBuildTraits ? await fillBuildTraits(data, raw, key, created.items.some((item: any) => item.type === 'class')) : []
+    const unsupported = useBuildTraits ? await fillBuildTraits(data, raw, key, created.items.some((item: any) => item.type === 'class'), strict ? recorded?.map(value => value.id) : undefined) : []
     if (key && unsupported.length) missingTraits.push({ refKey: key, titles: unsupported })
     const removed = [...(recorded ?? []), ...(key ? picks?.[key] ?? [] : [])].find((value) => isBuildTrait(value.id) && !(value.id in (data.system?.advancement ?? {})))
     if (removed) return { pending: true, step: { error: '存档中的建卡步骤已变更', id: removed.id, refKey: key }, built: actorLevel(created), actor: created, initial, missingTraits }

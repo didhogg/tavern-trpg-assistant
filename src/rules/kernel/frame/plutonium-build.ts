@@ -11,6 +11,8 @@ const EXPORTS = [
   'Charactermancer_Class_Util',
   'Charactermancer_OtherProficiencySelect',
   'Charactermancer_ImmResVulnSelect',
+  'UtilAdvancementsEntry',
+  'UtilAdvancements',
   'ComponentUiUtil',
   'veE',
 ]

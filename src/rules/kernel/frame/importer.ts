@@ -8,6 +8,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者条目和 dnd5e 文档没有类型声明。 */
 import { reseedKernel, entrySeed } from './seed'
 import { withSeed } from './random'
+import { traceTraitOrigins } from './trait-origins'
 
 const g = globalThis as any
 
@@ -37,7 +38,16 @@ function isolatePackLoads(): void {
   }
 }
 
-export async function importEntry(prop: string, entry: any): Promise<any> {
+let importTail: Promise<void> = Promise.resolve()
+
+export function importEntry(prop: string, entry: any): Promise<any> {
+  // Imports share the author's caches, the deterministic seed and the temporary provenance hooks.
+  const task = importTail.then(() => convertEntry(prop, entry))
+  importTail = task.then(() => undefined, () => undefined)
+  return task
+}
+
+async function convertEntry(prop: string, entry: any): Promise<any> {
   isolatePackLoads()
   const api = g.game.modules.get('plutonium')?.api
   if (!api?.importer) throw Error('Plutonium importer is not available')
@@ -57,7 +67,7 @@ export async function importEntry(prop: string, entry: any): Promise<any> {
   reseedKernel(entrySeed(prop, entry))
   await once()
   reseedKernel(entrySeed(prop, entry))
-  return once()
+  return traceTraitOrigins(once)
 }
 
 /** 同一入口的交回数据版本：T2 预计算、T4 加条目、T5 批量建都用它。 */

@@ -50,7 +50,8 @@ async function describeSteps(manager: any): Promise<any[]> {
     let unsupported = false
     if (DESCRIBERS[type]) options = await DESCRIBERS[type](advancement)
     else if (!automatic && !NO_CHOICE.has(type)) unsupported = true
-    out.push({ id: advancement.id, level: step.flow.level ?? null, type, title: (type === 'Trait' ? traitTitle(advancement) : null) ?? advancement.title ?? null, automatic, options, ...(unsupported ? { unsupported: true } : {}) })
+    out.push({ id: advancement.id, level: step.flow.level ?? null, type, title: (type === 'Trait' ? traitTitle(advancement) : null) ?? advancement.title ?? null,
+      ...(type === 'Trait' && advancement.hint ? { hint: advancement.hint } : {}), automatic, options, ...(unsupported ? { unsupported: true } : {}) })
   }
   return out
 }

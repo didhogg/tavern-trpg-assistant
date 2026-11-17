@@ -7,6 +7,7 @@ import { plutoniumBuild } from './plutonium-build'
 import { BUILD_ACTOR_TYPE } from './actor-types'
 import { withSeed } from './random'
 import { titleOfKeys, traitTypeOfActorPath, traitTypeTitle } from './trait-title'
+import { traitOrigins } from './trait-origins'
 
 const g = globalThis as any
 const PREFIX = 'P6Tr'
@@ -14,9 +15,9 @@ export const isBuildTrait = (id: unknown): boolean => typeof id === 'string' && 
 const idOf = (...parts: unknown[]): string => PREFIX + hashValue(parts).slice(0, 12)
 
 type KeySet = Set<string>
-type AuthorSlot = { count: number; options: Array<{ select: () => void; clear: () => void }> }
+type AuthorSlot = { count: number; hints?: string[]; options: Array<{ select: () => void; clear: () => void }> }
 type NativeSlot = { count: number; pool: string[] }
-type NativeTraits = { grants: string[]; choices: NativeSlot[]; withheld: number }
+type NativeTraits = { grants: string[]; choices: NativeSlot[]; hints: string[]; withheld: number }
 const unique = (keys: Iterable<string>): string[] => [...new Set(keys)].sort()
 
 /** 把固定给予与可选位置分开校验。一个已选条目只能占一个位置。 */
@@ -40,9 +41,10 @@ async function checkTrait(adv: any, value: any): Promise<{ chosen: string[] } | 
     assigned.set(i, key)
     return true
   })
-  const elective = unique(chosen.filter((key) => !fixed.has(key)))
+  const elective = chosen.filter((key) => !fixed.has(key))
+  if (elective.length !== new Set(elective).size) return null
   if (!elective.every((key) => place(key, new Set()))) return null
-  return { chosen: [...grants, ...elective] }
+  return { chosen: [...grants, ...elective.sort()] }
 }
 
 /** 官方多选控件给自定义界面提供的 rowMetas：候选和写入键都由它自己生成。 */
@@ -59,6 +61,7 @@ function proficiencySlots(api: Record<string, any>, component: any, cleanup: Arr
     cleanup.push(meta.cleanup)
     return {
       count: slot.count,
+      hints: grouped?.valueGroups?.map((row: any) => row.text).filter(Boolean),
       options: meta.rowMetas.map((row: any) => ({
         select: () => { component._state[row.propIsActive] = true },
         clear: () => { component._state[row.propIsActive] = false },
@@ -120,7 +123,7 @@ async function nativeTraits(api: Record<string, any>, blank: any, group: any, cl
     if (distinct.length >= slot.count) choices.push({ count: slot.count, pool: distinct })
     else withheld += distinct.length
   }
-  return { grants: unique(fixed), choices, withheld }
+  return { grants: unique(fixed), choices, hints: [...new Set(slots.flatMap(slot => slot.hints ?? []))], withheld }
 }
 
 const emptyTrait = (adv: any): boolean => adv.type === 'Trait' && !adv.configuration?.grants?.length && !adv.configuration?.grants?.size
@@ -132,14 +135,16 @@ async function existingTraits(data: any, level: number, multiclass: boolean) {
   const records = (Object.values(data.system?.advancement ?? {}) as any[]).filter((adv) => adv.type === 'Trait' && !emptyTrait(adv)
     && (adv.level ?? 0) === level && (adv.configuration?.mode ?? 'default') === 'default'
     && (!adv.classRestriction || adv.classRestriction === (multiclass ? 'secondary' : 'primary')))
-  const grants = new Set<string>(records.flatMap((adv) => [...(adv.configuration?.grants ?? [])]))
-  const slots = await Promise.all(records.flatMap((adv) => (adv.configuration?.choices ?? []).map(async (slot: any) => {
-    const pool = [...(slot.pool ?? [])]
-    const hasWildcard = pool.some((key: string) => key.includes('*'))
-    const expanded = hasWildcard ? await trait.mixedChoices(new Set(pool)) : null
-    return { count: slot.count ?? 1, pool: new Set<string>(expanded?.asSet?.() ?? pool) }
+  return Promise.all(records.map(async (adv) => ({
+    id: adv._id as string,
+    grants: [...(adv.configuration?.grants ?? [])] as string[],
+    slots: await Promise.all((adv.configuration?.choices ?? []).map(async (slot: any) => {
+      const pool = [...(slot.pool ?? [])]
+      const hasWildcard = pool.some((key: string) => key.includes('*'))
+      const expanded = hasWildcard ? await trait.mixedChoices(new Set(pool)) : null
+      return { count: slot.count ?? 1, pool: new Set<string>(expanded?.asSet?.() ?? pool) }
+    })) as Array<{ count: number; pool: KeySet }>,
   })))
-  return { grants, slots }
 }
 
 function missingSlots(generated: NativeSlot[], existing: Array<{ count: number; pool: KeySet }>): NativeSlot[] | null {
@@ -158,11 +163,11 @@ function missingSlots(generated: NativeSlot[], existing: Array<{ count: number; 
 const labelOf = (group: any, keys: string[] = []): string => traitTypeTitle(traitTypeOfActorPath(group._propPathActorExistingProficiencies))
   || titleOfKeys(keys) || group._title || group._subComps[0]?.modalTitle || group._prop
 
-export function fillBuildTraits(data: any, row: { prop?: string; entry?: any }, ref: string, multiclass: boolean): Promise<string[]> {
-  return withSeed(`build-traits:fill:${ref}:${multiclass}`, () => fill(data, row, ref, multiclass))
+export function fillBuildTraits(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, replay?: string[]): Promise<string[]> {
+  return withSeed(`build-traits:fill:${ref}:${multiclass}`, () => fill(data, row, ref, multiclass, replay))
 }
 
-async function fill(data: any, row: { prop?: string; entry?: any }, ref: string, multiclass: boolean): Promise<string[]> {
+async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, replay?: string[]): Promise<string[]> {
   if (!row.entry) return []
   const api = plutoniumBuild
   if (!api) return ['当前 Plutonium 版本缺少已验证的建卡接线']
@@ -182,6 +187,8 @@ async function fill(data: any, row: { prop?: string; entry?: any }, ref: string,
   })
   const groups = component._subCompManagers.filter((group: any) => group instanceof api.CharactermancerFeatureSubCompManagerProficiencyOtherBase)
   const existing = await existingTraits(data, level, multiclass)
+  const origins = traitOrigins(row.data ?? data)
+  const replaced = new Set<string>()
   const diagnostics: string[] = []
   const fresh: Record<string, unknown> = {}
   try {
@@ -193,14 +200,32 @@ async function fill(data: any, row: { prop?: string; entry?: any }, ref: string,
         const traits = await nativeTraits(api, blank, group, cleanup)
         if (!traits) { diagnostics.push(labelOf(group)); continue }
         if (traits.withheld) diagnostics.push(`${labelOf(group, [...traits.grants, ...traits.choices.flatMap((c) => c.pool)])}（${traits.withheld} 项候选暂无法按原生进阶保存）`)
-        const grants = traits.grants.filter((key) => !existing.grants.has(key))
-        const choices = missingSlots(traits.choices, existing.slots)
+        // Plutonium 的分组从 entity 或 entryData 取输入。主职/兼职即使字段同名也须核对内容。
+        const input = hashValue(entry[group._prop] || entry.entryData?.[group._prop])
+        const own = existing.filter(({ id }) => origins[id]?.field === group._prop && origins[id]?.input === input)
+        const ownGrants = new Set(own.flatMap((record) => record.grants))
+        const ownSlots = own.flatMap((record) => record.slots)
+        const unchanged = ownGrants.size === traits.grants.length && traits.grants.every((key) => ownGrants.has(key))
+          && ownSlots.length === traits.choices.length && missingSlots(traits.choices, ownSlots)?.length === 0
+        const fixId = idOf(ref, group._prop, level, multiclass, 'origin')
+        // 只处理已经存在、但导入时损失信息的选择位。固定授予或作者只能部分表达的组，仍按原路径补齐。
+        const replace = ownSlots.length > 0 && !unchanged && !traits.withheld && (!replay || replay.includes(fixId))
+        const other = replace ? existing.filter((record) => !own.includes(record)) : existing
+        const otherGrants = new Set(other.flatMap((record) => record.grants))
+        const otherSlots = other.flatMap((record) => record.slots)
+        const grants = traits.grants.filter((key) => !otherGrants.has(key))
+        const choices = replace ? traits.choices : missingSlots(traits.choices, otherSlots)
+        const authoredOverlap = replace && traits.choices.some((slot) => otherSlots.some((other) => slot.pool.some((key) => other.pool.has(key))))
+        if (authoredOverlap) { diagnostics.push(`${labelOf(group)}（与资料附带的进阶重叠，已保留原进阶）`); continue }
         if (!choices) { diagnostics.push(labelOf(group)); continue }
         if (!grants.length && !choices.length) continue
-        const id = idOf(ref, group._prop, level, multiclass)
+        if (replace) for (const record of own) replaced.add(record.id)
+        // A replacement has its own stable ID so cold replays of earlier saves keep their original steps.
+        const id = replace ? fixId : idOf(ref, group._prop, level, multiclass)
         fresh[id] = {
           _id: id, type: 'Trait', level,
           ...(row.prop === 'class' ? { classRestriction: multiclass ? 'secondary' : 'primary' } : {}),
+          ...(replace && traits.hints.length ? { hint: traits.hints.join('\n') } : {}),
           configuration: { mode: 'default', grants, choices, allowReplacements: false }, value: {},
         }
       } catch (e) {
@@ -212,7 +237,7 @@ async function fill(data: any, row: { prop?: string; entry?: any }, ref: string,
     }
   } finally { component.unregisterSourceTracking() }
   if (data.system) {
-    const native = Object.fromEntries(Object.entries(data.system.advancement ?? {}).filter(([, adv]) => !emptyTrait(adv)))
+    const native = Object.fromEntries(Object.entries(data.system.advancement ?? {}).filter(([id, adv]) => !replaced.has(id) && !emptyTrait(adv)))
     data.system.advancement = { ...native, ...fresh }
   }
   return unique(diagnostics)
