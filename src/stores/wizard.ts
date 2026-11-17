@@ -132,6 +132,7 @@ export const useWizardStore = defineStore('wizard', () => {
 
   async function open(startView: string): Promise<void> {
     seq++; lastSent = ''
+    lists.value = {} // 候选列表每次打开重读：本战役开关、换战役后要跟全局搜索一致
     name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; equip.reset(); options.value = null; optError.value = null; createError.value = null; creating.value = false
     category.value = CATEGORIES.some((c) => c.id === startView) ? startView as CategoryId : 'party'
     const lib = await app.svc().backend.kernelSave.libraryOf(owner())
@@ -142,11 +143,11 @@ export const useWizardStore = defineStore('wizard', () => {
     } catch (e) { console.error('[trpg-assistant] 读取类别名失败', e); names.value = {} }
   }
 
-  /** 库里这一类的全部条目（种族 / 背景 / 职业）；读过就缓存。 */
+  /** 本战役能选的这一类条目（种族 / 背景 / 职业）：和全局搜索同一个查询，关着的不出现；读过就缓存。 */
   async function loadList(prop: string): Promise<PickRow[]> {
     if (lists.value[prop]) return lists.value[prop]
     const lib = await app.svc().backend.kernelSave.libraryOf(owner())
-    const rows = await app.svc().backend.library.scoped.query(lib, prop, { mode: 'browse' })
+    const rows = await app.svc().backend.library.scoped.query(lib, prop)
     const out = rows.map((r) => rowOf(r.ref, nameOf(r.item), (r.source as string | null) ?? null)).sort((a, b) => a.name.localeCompare(b.name, 'zh'))
     lists.value = { ...lists.value, [prop]: out }
     return out

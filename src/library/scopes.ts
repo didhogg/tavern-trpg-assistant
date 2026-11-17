@@ -2,6 +2,7 @@
 // 范围是插件自己的管理数据（登记在 scopes.json，加一个范围 = 加一行），不写进作者内容。
 // 初始归类只用作者的判断（SourceUtil.isClassicSource，经小窗 editionOf），作者判断不了的进"未归类"，不猜。
 import registry from './scopes.json'
+import type { VariantInfo } from './versions'
 
 export interface ScopeDef {
   id: string
@@ -160,6 +161,24 @@ export function viewOf(c: CampaignLibrary, units: { entry: string; source: strin
   if (m.assignment.global) return { visible: true, reason: 'global' }
   if (m.assignment.scopes.some((s) => c.scopes.includes(s))) return { visible: true, reason: 'scope' }
   return { visible: true, reason: 'out-of-scope' }
+}
+
+/** 一个自制包在本战役开没开：它声明的来源有一个开着就算开（与包开关同一口径：关包 = 关它声明的全部来源）。 */
+export function packVisible(c: CampaignLibrary, sources: string[]): boolean {
+  return !sources.length || sources.some((s) => viewOf(c, { entry: '', source: sourceUnit(s) }, membershipOf(undefined, undefined, null)).visible)
+}
+
+type Packs = Map<string, Map<string, { sources?: string[] }>>
+
+/** 展开同编号版本时（全局搜索、按类别列）：提供这个版本的自制包在本战役关着，就不列出。驾驶员 2026-11-17：关着的只是搜不到、选不到，
+ *  详情照看、已在人物身上的照常结算；生效标记不改（本战役选用的版本来自关着的包时，原件也不标「生效中」）。 */
+export function openOnly<V extends { variant: VariantInfo }>(list: V[], c: CampaignLibrary, packs: Packs): V[] {
+  return list.filter((v) => {
+    const doc = v.variant.kind === 'collision' ? v.variant.docIdLocal : null
+    if (!doc) return true
+    const pack = [...packs.values()].find((m) => m.has(doc))?.get(doc)
+    return packVisible(c, pack?.sources ?? [])
+  })
 }
 
 /** 只按范围算本来看不看得到（向导的默认勾选用）：范围外、未归类的不算。 */

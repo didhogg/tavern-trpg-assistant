@@ -8,7 +8,7 @@ import { ManageStore, type ChoiceLevel, type HouseRuleLink } from './manage'
 import type { DetailResult, English, EnglishPairs, LibraryService, QueryRow } from './service'
 import type { EditionInfo } from './runtime/frame/edit-commands'
 import {
-  autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, refKey, sourceUnit, viewOf,
+  autoAssignment, BUILTIN_SCOPES, entryUnit, membershipOf, openOnly, refKey, sourceUnit, viewOf,
   type Assignment, type CampaignLibrary, type EntryRef, type EntrySelection, type Membership, type ScopeDef, type ViewReason,
 } from './scopes'
 import { SOURCES, getSource, officialSourceOf, type SourceEntry } from './sources'
@@ -221,7 +221,7 @@ export class ScopedLibrary {
           ...(pack ? { pack: { docIdLocal: pack.docIdLocal, filename: pack.filename, stableId: packUrl(pack), sources: pack.sources } } : {}),
         }
         if (expand && pack) rows.push({ ...row, variant: packVariant(chosen.altId, alts, pack.docIdLocal, altId !== null) })
-        else if (expand) rows.push(...expandVariants(row, r.item, alts))
+        else if (expand) rows.push(...(mode === 'browse' ? expandVariants(row, r.item, alts) : openOnly(expandVariants(row, r.item, alts), c, ctx.packs)))
         else rows.push(row)
       }
     }
@@ -313,7 +313,7 @@ export class ScopedLibrary {
       const collisions = h.target.kind === 'entry' ? (await this.alternativesOf(h.ref, ctx)).filter((a) => a.kind === 'collision') : []
       if (!collisions.length) { out.push(h); continue }
       const { chosen } = this.version(refKey(h.ref), collisions, ctx, c.choices)
-      for (const v of variantsOf(chosen.altId, collisions)) out.push({ ...h, doc: v.source ? { ...h.doc, s: v.source } : h.doc, variant: v.variant })
+      for (const v of openOnly(variantsOf(chosen.altId, collisions), c, ctx.packs)) out.push({ ...h, doc: v.source ? { ...h.doc, s: v.source } : h.doc, variant: v.variant })
     }
     return out
   }

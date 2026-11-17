@@ -44,7 +44,7 @@ async function load(): Promise<void> {
     const lib = await app.svc().backend.kernelSave.libraryOf(key)
     const prop = peopleProp(lib.rule)
     if (!prop) throw new Error('这个规则没有可当模板的条目')
-    const list = await app.svc().backend.library.scoped.query(lib, prop, { mode: 'browse' })
+    const list = await app.svc().backend.library.scoped.query(lib, prop)
     rows.value = list.map((row) => ({ row, name: nameOf(row.item) })).sort((a, b) => a.name.localeCompare(b.name, 'zh'))
   } catch (e) { console.error('[trpg-assistant] 读取模板失败', e); error.value = e instanceof Error ? e.message : String(e) }
 }

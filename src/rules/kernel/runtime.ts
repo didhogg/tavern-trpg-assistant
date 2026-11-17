@@ -231,7 +231,7 @@ export class KernelRuntime {
     const out = await o.session.call('buildOptions', { items: sent, picks: picksByKey(plan.items, plan.picks), blank: plan.blank })
     if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
     const lib = await this.library(ownerKey)
-    const query = (prop: string) => this.deps.scoped.query(lib, prop, { mode: 'browse' }) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
+    const query = (prop: string) => this.deps.scoped.query(lib, prop) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
     const shownItems = await nameAll(localizeAll(out.result.items, await o.pairsOf(rows.rows)), await namerFor(this.deps.scoped, lib)), items: BuildOptionsItem[] = []
     for (let i = 0; i < rows.rows.length; i++) {
       const row = rows.rows[i]
