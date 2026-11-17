@@ -40,8 +40,9 @@ export interface FrameExtra {
 }
 export interface FrameExtras { extras: FrameExtra[]; blocked: string[] }
 
-/** Assign each selected reference to exactly one compatible place, including when pools overlap. */
-export function checkBuildExtras(groups: ExtraWithCandidates[], selected: EntryRef[]): string | null {
+/** 额外选择复核：每个选了的条目要能放进一个对得上的组（组之间候选可交叉）。
+ *  wrong = 选错（关掉的、不合条件、不属于任何一组）→ 不能创建；missing = 还没选完 → 照样能创建，空位留空（驾驶员 11-16 定「没选的留空」）。 */
+export function checkBuildExtras(groups: ExtraWithCandidates[], selected: EntryRef[]): { wrong: string | null; missing: string | null } {
   const slots = groups.flatMap(group => Array.from({ length: group.count }, () => ({
     title: group.title,
     allowed: new Set(group.candidates.map(candidate => refKey(candidate.ref))),
@@ -57,8 +58,8 @@ export function checkBuildExtras(groups: ExtraWithCandidates[], selected: EntryR
   })
   const choices = selected.filter(ref => (EXTRA_KINDS as readonly string[]).includes(ref.prop)).map(refKey)
   if (new Set(choices).size !== choices.length || !choices.every(key => place(key, new Set()))) {
-    return '额外选项已关闭、不符合条件，或不属于需要选择的那一组'
+    return { wrong: '额外选项已关闭、不符合条件，或不属于需要选择的那一组', missing: null }
   }
   const missing = slots.find((_slot, index) => !assigned.has(index))
-  return missing ? `还有必选项没有选完：${missing.title}` : null
+  return { wrong: null, missing: missing ? `还有必选项没有选完：${missing.title}` : null }
 }

@@ -67,7 +67,7 @@ try {
     if (made.built.id) {
       const state = await saves.read(owner)
       await rt.close(owner)
-      const restored = await rt.rebuild(owner, state.actors[0])
+      const restored = await rt.rebuild(owner, state.actors.find(a => a.id === made.built.id))
       out.restored = restored.status
       out.restoredFeats = (restored.data?.items ?? []).filter(item => item.flags?.plutonium?.propDroppable === 'feat').length
     }
@@ -90,7 +90,7 @@ try {
   assert.match(result.originTitle, /起源/)
   assert.equal(result.conditionRetained, true)
   assert.equal(result.levelGated, true)
-  assert.equal(result.missing, 'pending')
+  assert.equal(result.missing, 'complete', '少选照样能建，空位留空（驾驶员 11-16 定）')
   assert.equal(result.wrongGroup, 'pending')
   assert.equal(result.built, 'complete')
   assert.equal(result.restored, 'complete')

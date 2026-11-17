@@ -231,7 +231,9 @@ export class KernelPeople {
     const source = await this.saved(ownerKey, actorId)
     if (!source) throw new Error(`存档里没有这个人物：${actorId}`)
     const name = given ?? nextNames(baseName(source.name), 1, ((await this.deps.saves.read(ownerKey))?.actors ?? []).map((a) => a.name))[0]
-    const copy = { ...source, name, seed: `${source.seed || source.name}~${crypto.randomUUID().slice(0, 8)}` }
+    // 复制品不带原人物编号：重建会沿用存档编号（冷读档编号不变），带着就和原人物撞成同一个
+    const { id: _sourceId, ...rest } = source
+    const copy = { ...rest, name, seed: `${source.seed || source.name}~${crypto.randomUUID().slice(0, 8)}` }
     const result = await this.deps.runtime.rebuild(ownerKey, copy)
     if (result.status !== 'complete' || !result.id) return { result, kernel: null }
     if (copy.name !== (result.data as { name?: string } | undefined)?.name) await this.call(ownerKey, 'renameActor', result.id, name)

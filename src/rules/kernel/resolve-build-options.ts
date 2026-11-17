@@ -92,6 +92,8 @@ export async function resolveBuildOptions(deps: {
     const reminders = pendingRequirements.map(c => `${c.name}的前置条件请核对：${c.requirement}`)
     return { ref: row.ref, name: row.name, steps: described?.steps ?? [], extras, unsupported: [...(described?.unsupported ?? []), ...(described?.blocked ?? []), ...reminders] }
   })
-  const extraIssue = extraBlocked[0] ?? checkBuildExtras(resultItems.flatMap(row => row.extras), plan.items)
-  return { status: 'complete', items: resultItems, complete: out.result.complete && !extraIssue, abilities: abilityView(out.result.abilities, plan.abilities), extraIssue }
+  // 只有「选错」拦创建；没选完、这一组还选不了（已列在 unsupported）都留空照样能建
+  const check = checkBuildExtras(resultItems.flatMap(row => row.extras), plan.items)
+  const complete = out.result.complete && !check.wrong && !check.missing && !extraBlocked.length
+  return { status: 'complete', items: resultItems, complete, abilities: abilityView(out.result.abilities, plan.abilities), extraIssue: check.wrong }
 }

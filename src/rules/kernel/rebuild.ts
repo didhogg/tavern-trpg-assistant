@@ -8,6 +8,8 @@ import type { EntryRef, CampaignLibrary } from '../../library/scopes'
 import type { ScopedLibrary } from '../../library/scoped'
 import { officialSourceOf } from '../../library/sources'
 import type { KernelActor, KernelRef } from '../../schemas/kernel'
+/** 重建的人物：带编号 = 读档沿用存档编号；不带 = 新人物（复制品）由小窗起新编号。 */
+export type RebuildInput = Omit<KernelActor, 'id'> & { id?: string }
 import type { KernelSession } from './host'
 import { ruleKernel } from './adapters'
 
@@ -95,7 +97,7 @@ export async function rebuildActor(opts: {
   lib: ScopedLibrary
   session: KernelSession
   library: CampaignLibrary
-  actor: KernelActor
+  actor: RebuildInput
   brewIssue?: (ref: EntryRef, altId: string | null, source: string | null) => string | null
   view?: import('../../library/revision').LibraryView
 }): Promise<RebuildResult> {

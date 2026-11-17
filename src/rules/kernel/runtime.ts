@@ -19,7 +19,7 @@ import type { KernelBrewReport } from './frame/brew-input'
 import { hashValue, sha256Hex } from '../../core/hash'
 import { KernelCache, kernelBaseKey, kernelFilesVersion, kernelLangOf, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
-import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
+import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildInput, type RebuildResult } from './rebuild'
 import { kernelEntryOf } from './entry'
 import { resolveBuildOptions, traitItemScope, type BuildOptionPlan, type BuildOptionsResult } from './resolve-build-options'
 import type { BuildPick } from './frame/commands-level'
@@ -295,7 +295,7 @@ export class KernelRuntime {
   }
 
   /** 按存档里的引用 / 选择 / 状态把一个人物重建进小窗（内部走批量入口）。 */
-  async rebuild(ownerKey: string, actor: KernelActor, library?: CampaignLibrary): Promise<RebuildResult> {
+  async rebuild(ownerKey: string, actor: RebuildInput, library?: CampaignLibrary): Promise<RebuildResult> {
     return (await this.rebuildMany(ownerKey, [actor], library))[0]
   }
 
@@ -303,7 +303,7 @@ export class KernelRuntime {
    * 读档：人物重建基准全部命中时，一次 createDocuments 批量建（保留编号），再叠状态差别；
    * 某个没命中，只给这个人物重新换算（S2 保证编号一致）并把基准存回缓存。
    */
-  async rebuildMany(ownerKey: string, actors: KernelActor[], library?: CampaignLibrary): Promise<RebuildResult[]> {
+  async rebuildMany(ownerKey: string, actors: RebuildInput[], library?: CampaignLibrary): Promise<RebuildResult[]> {
     const o = await this.get(ownerKey)
     const lib = library ?? await this.library(ownerKey)
     const version = o.cache ? await o.dataVersion() : null
