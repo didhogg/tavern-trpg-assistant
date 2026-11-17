@@ -20,7 +20,7 @@ const names = (prop: string): string => (w.chosen[prop] ?? []).map((r) => w.opti
     <div v-if="w.equip.preview" class="wz-eqdone" data-testid="wz-eq-done">
       <b>装备</b>
       <p v-for="s in w.equip.preview.sections" :key="s.refKey" class="wz-note">{{ w.equip.nameOf(s.refKey) }}：{{ s.items.length }} 种物品<template v-if="s.items.length">（{{ s.items.map((i) => `${i.label}${i.quantity > 1 ? '×' + i.quantity : ''}`).join('、') }}）</template></p>
-      <p class="wz-note">钱：{{ currencyText(w.equip.preview.currency) }}</p>
+      <p class="wz-note">钱：{{ currencyText(w.equip.preview.currency, w.equip.currencies) }}</p>
     </div>
     <div v-if="w.todo.length" class="wz-todo" data-testid="wz-todo">
       <b>待填（{{ w.todo.length }}）</b>

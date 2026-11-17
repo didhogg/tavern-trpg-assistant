@@ -65,7 +65,8 @@ export function checkStarting(sections: StartingSection[], selection: Record<str
 
 /** 预演结果给界面：每个条目会给的物品（显示名、数量、杂项标记、改名）+ 合计的钱（币种已换好）。 */
 export interface StartingPreviewView { sections: Array<{ refKey: string; items: Array<{ label: string; quantity: number; special?: boolean; rename?: string }> }>; currency: Record<string, number> | null }
-export interface StartingResult { status: string; error?: string; sections?: StartingSection[]; preview?: StartingPreviewView }
+/** currencies = 币种编号 → 名字（dnd5e 币种登记），界面显示钱时按它取名字。 */
+export interface StartingResult { status: string; error?: string; sections?: StartingSection[]; preview?: StartingPreviewView; currencies?: Record<string, string> }
 
 interface Deps {
   rows: Array<{ ref: EntryRef; entry: unknown }>
@@ -83,14 +84,15 @@ export async function startingOptions(d: Deps, starting?: Record<string, Startin
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
   const namer = await namerFor(d.scoped, d.library)
   const sections = await labelSections(localizeAll(out.result.sections as EquipSection[], d.pairs), namer)
-  if (!starting) return { status: 'complete', sections }
+  const currencies = (out.result.currencies ?? {}) as Record<string, string>
+  if (!starting) return { status: 'complete', sections, currencies }
   const checked = checkStarting(sections, starting)
   if (checked.error) return { status: 'invalid', error: checked.error, sections }
   const shown = await d.call('startingPreview', sent, starting, checked.excluded)
   if (shown.status !== 'complete') return { status: shown.status, error: shown.error ?? `起始装备预演状态：${shown.status}`, sections }
   const view = localizeAll(shown.result as StartingPreview, d.pairs)
   return {
-    status: 'complete', sections,
+    status: 'complete', sections, currencies,
     preview: {
       currency: view.currency,
       sections: await Promise.all(view.sections.map(async (s) => ({

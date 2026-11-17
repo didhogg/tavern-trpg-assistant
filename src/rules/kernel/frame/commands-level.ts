@@ -1,6 +1,7 @@
 // e 段 + P3-3b：建卡与升级。步骤由 dnd5e 官方 AdvancementManager 计算，应用也走同一管理器；不手写成长规则。
 // 选择步骤用一张“进阶类型 → 应用数据”的登记表；P3-3b 起优先用存档记下的选择，没有记录才取第一个可选项。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
+import { asiValue } from './asi'
 import { settled } from './server'
 import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
@@ -98,7 +99,13 @@ export async function applyManager(manager: any, values: any[] | undefined, { st
     }
     if (await step.flow.getAutomaticApplicationValue() !== false) continue
     // 玩家这一步的选择（建卡界面给的）：值的样子就是官方进阶要的（Trait = {chosen:[..]}、能力值 = {type:'asi', assignments:{..}}）
-    if (pick) { step.flow.getAutomaticApplicationValue = async () => pick.value; continue }
+    if (pick) {
+      // 属性提升：界面只交玩家加的点，固定加值合并和检查在 asi.ts
+      const value = pick.value?.type === 'asi' ? asiValue(advancement, pick.value) : pick.value
+      if (!value) return { finished: false, step: { ...stepSummary(step), error: '属性提升的选择不合规' } }
+      step.flow.getAutomaticApplicationValue = async () => value
+      continue
+    }
     if (strict) return { finished: false, step: stepSummary(step) }
     const value = (blank ? await blankChoice(step.flow) : undefined) ?? await firstChoice(step.flow)
     if (value === undefined) continue
@@ -174,7 +181,7 @@ export function abilityValues(actor: any): Record<string, number> {
   return Object.fromEntries(Object.entries(actor.system?.abilities ?? {}).map(([k, v]: [string, any]) => [k, v.value]))
 }
 
-export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, id, picks, blank = false, onManager }: { strict?: boolean; seed?: string; id?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; onManager?: (info: { manager: any; key: string | null; unsupported: string[] }) => Promise<void> } = {}): Promise<any> {
+export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, id, picks, blank = false, onManager }: { strict?: boolean; seed?: string; id?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; onManager?: (info: { manager: any; key: string | null; unsupported: string[]; picks?: BuildPick[] }) => Promise<void> } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
   const created = await ActorClass.create({ ...(id ? { _id: id } : {}), name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } }, { keepId: !!id })
@@ -194,7 +201,7 @@ export async function buildActor(name: string, items: any[], equipment: any[], c
     const removed = [...(recorded ?? []), ...(key ? picks?.[key] ?? [] : [])].find((value) => isBuildTrait(value.id) && !(value.id in (data.system?.advancement ?? {})))
     if (removed) return { pending: true, step: { error: '存档中的建卡步骤已变更', id: removed.id, refKey: key }, built: actorLevel(created), actor: created, initial, missingTraits }
     const manager = Manager().forNewItem(created, data, { automaticApplication: true })
-    await onManager?.({ manager, key, unsupported })
+    await onManager?.({ manager, key, unsupported, picks: key ? picks?.[key] : undefined })
     const outcome = await applyManager(manager, recorded, { strict, blank, picks: key ? picks?.[key] : undefined })
     if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created), actor: created, initial, missingTraits }
     const exists = created.items.contents.some((i: any) => i.type === data.type

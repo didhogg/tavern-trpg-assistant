@@ -24,6 +24,8 @@ export function createEquipment(deps: { items: ComputedRef<EntryRef[]>; owner: (
 
   const sections = computed<StartingSection[]>(() => result.value?.sections ?? [])
   const preview = computed(() => result.value?.preview ?? null)
+  /** 币种编号 → 名字（后端按 dnd5e 币种登记给）。 */
+  const currencies = computed<Record<string, string>>(() => result.value?.currencies ?? {})
   const sectionOf = (key: string): StartingSection | undefined => sections.value.find((s) => s.refKey === key)
 
   async function refresh(): Promise<void> {
@@ -105,5 +107,5 @@ export function createEquipment(deps: { items: ComputedRef<EntryRef[]>; owner: (
   /** 交给 people.build 的 starting：没碰过也要交（固定给的物品照给，没选的组留空）。 */
   const forBuild = (): Record<string, StartingSelection> | undefined => sections.value.length ? JSON.parse(JSON.stringify(sel.value)) : undefined
 
-  return { nameOf: deps.nameOf, sel, result, sections, preview, loading, error, goldNote, todo, refresh, retry, reset, sectionOf, groupKeys, chosenKey, isOption, slotKey, pickedAt, goldOf, chooseOption, pickSlot, setGold, rollGold, forBuild }
+  return { nameOf: deps.nameOf, sel, result, sections, preview, currencies, loading, error, goldNote, todo, refresh, retry, reset, sectionOf, groupKeys, chosenKey, isOption, slotKey, pickedAt, goldOf, chooseOption, pickSlot, setGold, rollGold, forBuild }
 }

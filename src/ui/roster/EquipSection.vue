@@ -38,9 +38,9 @@ function onGoldInput(e: Event): void { const raw = (e.target as HTMLInputElement
         <div v-if="goldOn" class="wz-eqgold__row">
           <button type="button" class="trpg-btn" data-testid="wz-eq-roll" @click="eq.rollGold(key, section.goldExpression!)">掷 {{ section.goldExpression }}</button>
           <span class="wz-note">或自己填</span>
-          <input class="trpg-input wz-eqgold__ipt" type="number" min="0" step="1" inputmode="numeric" :value="gold || ''" aria-label="起始金币（金）" data-testid="wz-eq-gold-input" @input="onGoldInput" />
-          <span class="wz-note">金</span>
-          <b v-if="gold" data-testid="wz-eq-gold-note">{{ eq.goldNote[key] ? `${eq.goldNote[key]}：` : '' }}{{ gold }} 金</b>
+          <input class="trpg-input wz-eqgold__ipt" type="number" min="0" step="1" inputmode="numeric" :value="gold || ''" :aria-label="`起始金币（${section.goldUnit ?? ''}）`" data-testid="wz-eq-gold-input" @input="onGoldInput" />
+          <span class="wz-note">{{ section.goldUnit }}</span>
+          <b v-if="gold" data-testid="wz-eq-gold-note">{{ eq.goldNote[key] ? `${eq.goldNote[key]}：` : '' }}{{ gold }} {{ section.goldUnit }}</b>
           <button v-if="gold" type="button" class="trpg-btn trpg-btn--small" @click="eq.setGold(key, 0)">清除</button>
         </div>
       </div>

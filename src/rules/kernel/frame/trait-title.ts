@@ -1,11 +1,18 @@
 // Trait 类熟练的标题按编号取（类别 skills / tool / languages / dr …，进阶模式 expertise / mastery …）：dnd5e 自己的 traits、traitModes 登记 + 官方多语言（中文战役即中文）。
-// 建卡步骤标题、「建卡里还选不了」的提示都用这一处，不用 Plutonium 写死的英文标题。
+// 建卡步骤标题、「建卡里还选不了」的提示、属性名、币种名都用这一处（不用 Plutonium 写死的英文标题；界面不查表）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 const g = globalThis as any
 const localize = (key: string | undefined): string | null => (key ? g.game.i18n.localize(key) : null)
 const joined = (titles: Array<string | null>): string | null => {
   const out = [...new Set(titles.filter((t): t is string => !!t))]
   return out.length ? out.join('、') : null
+}
+
+/** 编号 → 名字：dnd5e 某张登记表（abilities、currencies …）里每项的 label，已按当前语言本地化。 */
+export function registryLabels(registry: string): Record<string, string> {
+  const table = g.CONFIG?.DND5E?.[registry] ?? {}
+  const text = (v: any): string => localize(typeof v === 'string' ? v : v?.label) ?? ''
+  return Object.fromEntries(Object.entries(table).map(([k, v]) => [k, text(v) || k]))
 }
 
 /** 类别编号 → 标题；不认识的类别 → null。 */

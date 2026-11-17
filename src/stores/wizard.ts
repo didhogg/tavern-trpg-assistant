@@ -7,7 +7,6 @@ import { ruleKernel } from '../rules/kernel/adapters'
 import type { AbilityMethod } from '../rules/kernel/ability-rules'
 import type { BuildAbilities, BuildOptionsItem, BuildPick } from '../rules/kernel/runtime'
 import { askConfirm } from '../ui/kit/confirm'
-import { abilityLabel } from '../ui/roster/wizard-labels'
 import { createEquipment } from './wizard-equipment'
 import { nameOf } from '../ui/libview/pack-data'
 import { useAppStore } from './app'
@@ -17,7 +16,7 @@ import { CATEGORIES, useRosterStore, type CategoryId } from './roster'
 /** 一条能选的条目（库里取，或后端给的候选）。 */
 export interface PickRow { key: string; ref: EntryRef; name: string; source: string | null }
 /** 一件条目带来的一步（后端 buildOptions 的 steps 里要玩家选的那些）。 */
-export interface ChoiceStep { id: string; level: number | null; type: string; title: string | null; options: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any -- 后端按进阶类型给的选项，界面按 kind 读
+export interface ChoiceStep { id: string; level: number | null; type: string; title: string | null; hint?: string; options: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any -- 后端按进阶类型给的选项，界面按 kind 读
 export interface Todo { text: string; go: string }
 
 const stepKey = (s: { id: string; level: number | null }): string => `${s.id}@${s.level ?? ''}`
@@ -84,15 +83,15 @@ export const useWizardStore = defineStore('wizard', () => {
     if (!v) return 0
     return step.options.kind === 'asi' ? Object.values(v as Record<string, number>).reduce((n, x) => n + x, 0) : (v as string[][]).reduce((n, s) => n + s.length, 0)
   }
-  /** 这一步玩家已选的（选了几个交几个，官方进阶要的样子）；一个都没选 = 不交，后端留空。 */
+  /** 玩家在这一步的选择（界面读它，不自己拼键）：候选类 = 每个位置选了哪些；属性提升 = 每项加几点。 */
+  const selOf = (ref: EntryRef, step: ChoiceStep): any => sel.value[refKey(ref)]?.[stepKey(step)] // eslint-disable-line @typescript-eslint/no-explicit-any -- 两种形状按 kind 区分
+  /** 还差几个：属性提升按后端算好的剩余点数；候选类按玩家点了几个。 */
+  const leftOf = (ref: EntryRef, step: ChoiceStep): number => step.options.kind === 'asi' ? Number(step.options.left) : needOf(step) - haveOf(ref, step)
+  /** 这一步玩家已选的（选了几个交几个）；一个都没选 = 不交，后端留空。属性提升只交玩家加的点，固定加值由后端合并。 */
   function pickOf(ref: EntryRef, step: ChoiceStep): BuildPick | null {
     if (haveOf(ref, step) === 0) return null
     const v = sel.value[refKey(ref)][stepKey(step)]
-    if (step.options.kind === 'asi') {
-      const assignments: Record<string, number> = { ...(step.options.fixed as Record<string, number>) }
-      for (const [k, n] of Object.entries(v as Record<string, number>)) if (n) assignments[k] = (assignments[k] ?? 0) + n
-      return { id: step.id, level: step.level, value: { type: 'asi', assignments } }
-    }
+    if (step.options.kind === 'asi') return { id: step.id, level: step.level, value: { type: 'asi', chosen: { ...(v as Record<string, number>) } } }
     const grants = (step.options.grants as Array<{ value: string }>).map((g) => g.value)
     return { id: step.id, level: step.level, value: { chosen: [...grants, ...(v as string[][]).flat()] } }
   }
@@ -173,13 +172,13 @@ export const useWizardStore = defineStore('wizard', () => {
     sel.value = { ...sel.value, [k]: { ...(sel.value[k] ?? {}), [sk]: cur0 } }
     void refreshOptions()
   }
+  /** 属性提升加 / 减一点；能不能加由后端每行的 canAdd / canRemove 定（界面按它停用按钮）。 */
   function bumpAsi(ref: EntryRef, step: ChoiceStep, ability: string, delta: number): void {
     const k = refKey(ref); const sk = stepKey(step)
     const now: Record<string, number> = { ...(sel.value[k]?.[sk] ?? {}) }
-    const cap = Number(step.options.cap) || Number(step.options.points)
-    const next = (now[ability] ?? 0) + delta
-    if (next < 0 || next > cap || haveOf(ref, step) + delta > Number(step.options.points)) return
-    now[ability] = next
+    const row = (step.options.rows as Array<{ key: string; canAdd: boolean; canRemove: boolean }>).find((r) => r.key === ability)
+    if (!row || (delta > 0 ? !row.canAdd : !row.canRemove)) return
+    now[ability] = (now[ability] ?? 0) + delta
     sel.value = { ...sel.value, [k]: { ...(sel.value[k] ?? {}), [sk]: now } }
     void refreshOptions()
   }
@@ -216,10 +215,10 @@ export const useWizardStore = defineStore('wizard', () => {
       if (e && (chosen.value[p] ?? []).length < e.count) out.push({ text: `${label(p)}还差 ${e.count - (chosen.value[p] ?? []).length} 个`, go: p })
     }
     for (const p of build.value) for (const ref of chosen.value[p] ?? []) for (const s of choicesOf(ref)) {
-      const left = needOf(s) - haveOf(ref, s)
+      const left = leftOf(ref, s)
       if (left > 0) out.push({ text: `${optionsFor(ref)?.name ?? ''}：${s.title ?? ''} 还差 ${left}`, go: p })
     }
-    if (abil.value && unsetAbilities.value.length) out.push({ text: `属性值：还有 ${unsetAbilities.value.length} 项没放（${unsetAbilities.value.map((r) => abilityLabel(r.key)).join('、')}）`, go: 'abilities' })
+    if (abil.value && unsetAbilities.value.length) out.push({ text: `属性值：还有 ${unsetAbilities.value.length} 项没放（${unsetAbilities.value.map((r) => r.label).join('、')}）`, go: 'abilities' })
     for (const t of equip.todo.value) out.push({ text: t.text, go: 'equipment' })
     return out
   })
@@ -238,5 +237,5 @@ export const useWizardStore = defineStore('wizard', () => {
   const move = (delta: number): void => { const i = steps.value.indexOf(cur.value); cur.value = steps.value[Math.max(0, Math.min(steps.value.length - 1, i + delta))] }
 
   return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, equip, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
-    open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, optionsFor, setSlot, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
+    open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, leftOf, selOf, optionsFor, setSlot, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
 })

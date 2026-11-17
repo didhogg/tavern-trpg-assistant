@@ -4,7 +4,7 @@ import type { AbilityMethod } from '../../rules/kernel/ability-rules'
 import { useWizardStore } from '../../stores/wizard'
 import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
-import { abilityLabel, METHOD_LABELS, problemLabel } from './wizard-labels'
+import { METHOD_LABELS, problemLabel } from './wizard-labels'
 
 /** 属性值：方式（标准数组 / 购点 / 手填）+ 每项「基础 + 加成 = 合计」。规则、加成、检查全由后端给，这里只摆放和记玩家放了什么。 */
 const w = useWizardStore()
@@ -43,19 +43,19 @@ const onInput = (key: string, e: Event): void => {
       <thead><tr><th scope="col">属性</th><th scope="col">基础</th><th scope="col">种族等加成</th><th scope="col">合计</th><th v-if="w.abilMethod === 'pointBuy'" scope="col">这一档花</th></tr></thead>
       <tbody>
         <tr v-for="r in rows" :key="r.key" :data-testid="`wz-ab-row-${r.key}`">
-          <th scope="row">{{ abilityLabel(r.key) }}</th>
+          <th scope="row">{{ r.label }}</th>
           <td>
             <template v-if="w.abilMethod === 'standardArray'">
-              <button type="button" class="wz-ab__cell" :data-set="r.set || undefined" :data-ready="w.holding !== null || undefined" :aria-label="`${abilityLabel(r.key)}：${r.set ? `现在是 ${r.base}，点一下收回` : w.holding !== null ? `放入 ${w.holding}` : '还没放'}`" data-testid="wz-ab-place" @click="w.place(r.key)">{{ r.set ? r.base : '—' }}</button>
+              <button type="button" class="wz-ab__cell" :data-set="r.set || undefined" :data-ready="w.holding !== null || undefined" :aria-label="`${r.label}：${r.set ? `现在是 ${r.base}，点一下收回` : w.holding !== null ? `放入 ${w.holding}` : '还没放'}`" data-testid="wz-ab-place" @click="w.place(r.key)">{{ r.set ? r.base : '—' }}</button>
             </template>
             <template v-else-if="w.abilMethod === 'pointBuy'">
               <span class="wz-ab__step">
-                <button type="button" class="trpg-icon-btn" :aria-label="`${abilityLabel(r.key)} 少一档`" :disabled="check?.rows?.[r.key]?.down == null" @click="w.setBase(r.key, check!.rows![r.key].down!)"><Icon name="minus" :size="14" /></button>
+                <button type="button" class="trpg-icon-btn" :aria-label="`${r.label} 少一档`" :disabled="w.optLoading || check?.rows?.[r.key]?.down == null" @click="w.setBase(r.key, check!.rows![r.key].down!)"><Icon name="minus" :size="14" /></button>
                 <b data-testid="wz-ab-base">{{ r.set ? r.base : '—' }}</b>
-                <button type="button" class="trpg-icon-btn" :aria-label="`${abilityLabel(r.key)} 多一档`" :disabled="check?.rows?.[r.key]?.up == null" @click="w.setBase(r.key, check!.rows![r.key].up!)"><Icon name="plus" :size="14" /></button>
+                <button type="button" class="trpg-icon-btn" :aria-label="`${r.label} 多一档`" :disabled="w.optLoading || check?.rows?.[r.key]?.up == null" @click="w.setBase(r.key, check!.rows![r.key].up!)"><Icon name="plus" :size="14" /></button>
               </span>
             </template>
-            <input v-else class="trpg-input wz-ab__ipt" type="number" inputmode="numeric" step="1" :value="r.set ? r.base : ''" :aria-label="`${abilityLabel(r.key)} 基础值`" data-testid="wz-ab-input" @input="onInput(r.key, $event)" />
+            <input v-else class="trpg-input wz-ab__ipt" type="number" inputmode="numeric" step="1" :value="r.set ? r.base : ''" :aria-label="`${r.label} 基础值`" data-testid="wz-ab-input" @input="onInput(r.key, $event)" />
             <div v-if="problemsOf(r.key).length" class="wz-ab__err" role="alert">{{ problemsOf(r.key).join('、') }}</div>
           </td>
           <td>{{ r.bonus > 0 ? `+${r.bonus}` : r.bonus }}</td>

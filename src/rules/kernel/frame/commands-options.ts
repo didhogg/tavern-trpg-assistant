@@ -7,17 +7,24 @@ import { abilityValues, buildActor, type BuildPlan } from './commands-level'
 import { importEntry } from './importer'
 import { authorIdsOf } from './author-ids'
 import { traitTitle } from './trait-title'
+import { asiView, type AsiChoice } from './asi'
+import { registryLabels } from './trait-title'
+import type { BuildPick } from './commands-level'
 
-const plainOption = (o: any) => ({ value: String(o.value), label: String(o.label ?? o.value), ...(o.group ? { group: String(o.group) } : {}) })
+type Option = { value: string; label: string; path: string[] }
+/** dnd5e 的候选树（SelectChoices：类别 → 子类别 → 候选）→ 平铺候选，每项带所在分组路径（从外到里，分组名是 dnd5e 自己的类别名）。 */
+const flatChoices = (choices: any, path: string[] = []): Option[] => Object.entries(choices ?? {}).flatMap(([value, data]: [string, any]) => data?.children
+  ? flatChoices(data.children, [...path, String(data.label ?? value)])
+  : [{ value, label: String(data?.label ?? value), path }])
 
-/** 进阶类型 → 「这一步要玩家选什么」。返回 null = 这一步不用玩家选。 */
-const DESCRIBERS: Record<string, (advancement: any) => Promise<Record<string, unknown> | null>> = {
+/** 进阶类型 → 「这一步要玩家选什么」。返回 null = 这一步不用玩家选。pick = 玩家这一步已做的选择（界面交来的原样）。 */
+const DESCRIBERS: Record<string, (advancement: any, pick: unknown) => Promise<Record<string, unknown> | null>> = {
   Trait: async (advancement) => {
     const { available } = await advancement.unfulfilledChoices()
-    const grants = available.filter((slot: any) => slot.type === 'grant').flatMap((slot: any) => [...slot.choices.asOptions()].map(plainOption))
-    const slots = new Map<number, { count: number; options: ReturnType<typeof plainOption>[] }>()
+    const grants = available.filter((slot: any) => slot.type === 'grant').flatMap((slot: any) => flatChoices(slot.choices))
+    const slots = new Map<number, { count: number; options: Option[] }>()
     for (const slot of available.filter((s: any) => s.type === 'choice')) {
-      const cur = slots.get(slot.choiceIdx) ?? { count: 0, options: [...slot.choices.asOptions()].map(plainOption) }
+      const cur = slots.get(slot.choiceIdx) ?? { count: 0, options: flatChoices(slot.choices) }
       cur.count++
       slots.set(slot.choiceIdx, cur)
     }
@@ -30,16 +37,12 @@ const DESCRIBERS: Record<string, (advancement: any) => Promise<Record<string, un
     const withId = <T extends { value: string }>(o: T) => (ids[o.value] ? { ...o, author: ids[o.value] } : o)
     return { kind: 'trait', trait: advancement.configuration?.type ?? sample?.split(':')[0] ?? null, grants: grants.map(withId), slots: shown.map((s) => ({ ...s, options: s.options.map(withId) })) }
   },
-  AbilityScoreImprovement: async (advancement) => {
-    const c = advancement.configuration ?? {}
-    const fixed = Object.fromEntries(Object.entries(c.fixed ?? {}).filter(([, v]) => v))
-    return c.points ? { kind: 'asi', points: c.points, cap: c.cap ?? null, fixed, locked: [...(c.locked ?? [])] } : null
-  },
+  AbilityScoreImprovement: async (advancement, pick) => asiView(advancement, pick as AsiChoice | undefined),
 }
 /** 本来就不用玩家选的进阶类型（没登记、也不算「未支持」）。 */
 const NO_CHOICE = new Set(['HitPoints', 'ScaleValue', 'Size', 'ItemGrant', 'Subclass'])
 
-async function describeSteps(manager: any): Promise<any[]> {
+async function describeSteps(manager: any, picks: BuildPick[] = []): Promise<any[]> {
   const out = []
   for (const step of manager.steps) {
     const advancement = step.flow?.advancement
@@ -48,7 +51,8 @@ async function describeSteps(manager: any): Promise<any[]> {
     const automatic = (await step.flow.getAutomaticApplicationValue?.()) !== false
     let options: Record<string, unknown> | null = null
     let unsupported = false
-    if (DESCRIBERS[type]) options = await DESCRIBERS[type](advancement)
+    const pick = picks.find((p) => p.id === advancement.id && (p.level ?? null) === (step.flow.level ?? null))?.value
+    if (DESCRIBERS[type]) options = await DESCRIBERS[type](advancement, pick)
     else if (!automatic && !NO_CHOICE.has(type)) unsupported = true
     out.push({ id: advancement.id, level: step.flow.level ?? null, type, title: (type === 'Trait' ? traitTitle(advancement) : null) ?? advancement.title ?? null,
       ...(type === 'Trait' && advancement.hint ? { hint: advancement.hint } : {}), automatic, options, ...(unsupported ? { unsupported: true } : {}) })
@@ -65,11 +69,11 @@ export function createOptionsCommands(operate: Operate) {
       const described: Array<{ refKey: string | null; steps: any[]; unsupported: string[] }> = []
       const built = await buildActor('选项预览', items, [], plan.choices ?? {}, {
         strict: false, picks: plan.picks, blank: plan.blank,
-        onManager: async ({ manager, key, unsupported }) => { described.push({ refKey: key, steps: await describeSteps(manager), unsupported }) },
+        onManager: async ({ manager, key, unsupported, picks }) => { described.push({ refKey: key, steps: await describeSteps(manager, picks), unsupported }) },
       })
       const actor = built.actor ?? built.created
       // 属性：初值、种族等加成后的自动值、官方上限；界面的「基础 + 加成 = 合计」由主线按这三样算
-      try { return { items: described, complete: !built.pending && !built.missingTraits.length, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null } } } finally { await (built.actor ?? built.created)?.delete?.() }
+      try { return { items: described, complete: !built.pending && !built.missingTraits.length, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null, labels: registryLabels('abilities') } } } finally { await (built.actor ?? built.created)?.delete?.() }
     }),
   }
 }

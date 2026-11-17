@@ -20,6 +20,6 @@ onMounted(() => void eq.refresh())
     <div v-else-if="eq.loading && !sections.length" class="lib-skel" aria-busy="true"><i /><i style="width:70%" /></div>
     <p v-if="unsupported.length" class="wz-err" role="alert">有 {{ unsupported.length }} 条起始装备这一版不认识，已跳过：{{ unsupported.join('；') }}</p>
     <EquipSection v-for="s in sections" :key="s.refKey" :section="s" />
-    <div v-if="eq.preview" class="wz-eq__sum" data-testid="wz-eq-sum" aria-live="polite">现在选的会给：<b>{{ count }}</b> 件物品，钱 <b>{{ currencyText(eq.preview.currency) }}</b><span v-if="eq.loading" class="wz-note">（更新中…）</span></div>
+    <div v-if="eq.preview" class="wz-eq__sum" data-testid="wz-eq-sum" aria-live="polite">现在选的会给：<b>{{ count }}</b> 件物品，钱 <b>{{ currencyText(eq.preview.currency, eq.currencies) }}</b><span v-if="eq.loading" class="wz-note">（更新中…）</span></div>
   </div>
 </template>
