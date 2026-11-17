@@ -3,6 +3,7 @@
 import { hashValue } from '../../../core/hash'
 import { plutoniumBuild } from './plutonium-build'
 import { BUILD_ACTOR_TYPE } from './actor-types'
+import { titleOfKeys, traitTypeOfActorPath, traitTypeTitle } from './trait-title'
 
 const g = globalThis as any
 const PREFIX = 'P6Tr'
@@ -146,7 +147,9 @@ function missingSlots(generated: NativeSlot[], existing: Array<{ count: number; 
   return out
 }
 
-const labelOf = (group: any): string => group._title || group._subComps[0]?.modalTitle || group._prop
+/** 提示用的标题：按类别编号取（与步骤标题同一处，trait-title.ts）——分组自己登记的类别，或这组候选实际涉及的类别；都认不出才用作者分组的原标题。 */
+const labelOf = (group: any, keys: string[] = []): string => traitTypeTitle(traitTypeOfActorPath(group._propPathActorExistingProficiencies))
+  || titleOfKeys(keys) || group._title || group._subComps[0]?.modalTitle || group._prop
 
 export async function fillBuildTraits(data: any, row: { prop?: string; entry?: any }, ref: string, multiclass: boolean): Promise<string[]> {
   if (!row.entry) return []
@@ -178,7 +181,7 @@ export async function fillBuildTraits(data: any, row: { prop?: string; entry?: a
         if (!group._subComps[0]) continue
         const traits = await nativeTraits(api, blank, group, cleanup)
         if (!traits) { diagnostics.push(labelOf(group)); continue }
-        if (traits.withheld) diagnostics.push(`${labelOf(group)}（${traits.withheld} 项候选暂无法按原生进阶保存）`)
+        if (traits.withheld) diagnostics.push(`${labelOf(group, [...traits.grants, ...traits.choices.flatMap((c) => c.pool)])}（${traits.withheld} 项候选暂无法按原生进阶保存）`)
         const grants = traits.grants.filter((key) => !existing.grants.has(key))
         const choices = missingSlots(traits.choices, existing.slots)
         if (!choices) { diagnostics.push(labelOf(group)); continue }

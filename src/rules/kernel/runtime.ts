@@ -8,9 +8,8 @@ import type { FileProvider } from '../../library/files'
 import type { ScopedLibrary } from '../../library/scoped'
 import type { LibraryService } from '../../library/service'
 import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
-import type { CampaignLibrary } from '../../library/scopes'
+import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { KernelActor } from '../../schemas/kernel'
-import type { EntryRef } from '../../library/scopes'
 import { refKey } from '../../core/saves/split'
 import type { KernelSession } from './host'
 import { openKernel, prepareKernelBrews } from './open'
@@ -28,6 +27,7 @@ import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { abilityView, checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
 import { localizeAll } from './locale'
+import { nameAll, namerFor } from './naming'
 import { pairsSource, type PairsOf } from './sidecar'
 import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
@@ -232,7 +232,7 @@ export class KernelRuntime {
     if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
     const lib = await this.library(ownerKey)
     const query = (prop: string) => this.deps.scoped.query(lib, prop, { mode: 'browse' }) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
-    const shownItems = localizeAll(out.result.items, await o.pairsOf(rows.rows)), items: BuildOptionsItem[] = []
+    const shownItems = await nameAll(localizeAll(out.result.items, await o.pairsOf(rows.rows)), await namerFor(this.deps.scoped, lib)), items: BuildOptionsItem[] = []
     for (let i = 0; i < rows.rows.length; i++) {
       const row = rows.rows[i]
       const key = sent[i].refKey

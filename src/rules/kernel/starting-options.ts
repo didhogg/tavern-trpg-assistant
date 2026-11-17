@@ -1,12 +1,11 @@
 // 建卡「起始装备」给界面的结果：小窗算出的分组（英文名、作者编号）→ 对上本战役【库】里看得见的条目，补引用和显示名（中文战役显示中文名）。
 // 本战役看不见的物品（书 / 包 / 单条被停用，或库里没有）一律去掉，列在 excluded 里；看得见的以战役范围的查询为准（和库页同一套，P5 B-19）。
 // 对应 Plutonium 的黑名单（UtilItemExcludedSimple）：它读作者的全局屏蔽表，插件不用这张表（设计 §2.2），改用战役范围。
-import type { KernelRefMapper } from '../../core/saves/split'
 import type { KernelRef } from '../../schemas/kernel'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { ScopedLibrary } from '../../library/scoped'
 import { refKey } from '../../core/saves/split'
-import { refMapperFor } from './rebuild'
+import { namerFor, type Namer } from './naming'
 import type { EquipCandidate, EquipEntryView, EquipSection, StartingPreview, StartingSelection } from './frame/commands-equipment'
 import { localizeAll, type EntryPair } from './locale'
 
@@ -20,19 +19,15 @@ export type StartingSection = Omit<EquipSection, 'groups'> & {
   excluded: string[]
 }
 
-type Row = { ref: { set: string; prop: string; hash: string }; item?: unknown }
-const keyOf = (r: { set: string; prop: string; hash: string }): string => `${r.set}|${r.prop}|${r.hash}`
-
-/** visibleRows：本战役看得见的物品（战役范围的查询，不是浏览模式）。 */
-export async function labelSections(sections: EquipSection[], mapper: KernelRefMapper, visibleRows: () => Promise<Row[]>): Promise<StartingSection[]> {
-  const names = new Map((await visibleRows()).map((r) => [keyOf(r.ref), String((r.item as { name?: unknown } | undefined)?.name ?? '')]))
+/** 名字统一走起名出口（naming.ts）：作者编号 → 存档同一个换算 → 本战役看得见的库条目名。看不见 = 去掉、记进 excluded。 */
+export async function labelSections(sections: EquipSection[], namer: Namer): Promise<StartingSection[]> {
   const out: StartingSection[] = []
   for (const s of sections) {
     const excluded: string[] = []
-    const label = (c: { uid: string; source: string; hash: string; name: string }): Labeled | null => {
-      const ref = mapper({ propDroppable: 'item', source: c.source, hash: c.hash })
-      if (!ref || !names.has(keyOf(ref))) { excluded.push(c.uid); return null }
-      return { ref, label: names.get(keyOf(ref)) || c.name }
+    const label = async (c: { uid: string; source: string; hash: string; name: string }): Promise<Labeled | null> => {
+      const named = await namer({ propDroppable: 'item', source: c.source, hash: c.hash })
+      if (!named) { excluded.push(c.uid); return null }
+      return { ref: named.ref, label: named.label || c.name }
     }
     const groups: StartingSection['groups'] = []
     for (const g of s.groups) {
@@ -41,9 +36,9 @@ export async function labelSections(sections: EquipSection[], mapper: KernelRefM
         const entries: LabeledEntry[] = []
         for (const e of c.entries) {
           const { candidates, ...rest } = e
-          if (e.uid) { const l = label({ uid: e.uid, source: e.source ?? '', hash: e.hash ?? '', name: e.name ?? '' }); if (!l) continue; entries.push({ ...rest, ...l }); continue }
+          if (e.uid) { const l = await label({ uid: e.uid, source: e.source ?? '', hash: e.hash ?? '', name: e.name ?? '' }); if (!l) continue; entries.push({ ...rest, ...l }); continue }
           if (!candidates) { entries.push(rest); continue }
-          const kept = candidates.flatMap((k) => { const l = label(k); return l ? [{ ...k, ...l }] : [] })
+          const kept = (await Promise.all(candidates.map(async (k) => { const l = await label(k); return l ? [{ ...k, ...l }] : [] }))).flat()
           if (kept.length) entries.push({ ...rest, candidates: kept })
         }
         if (entries.length) choices.push({ key: c.key, entries })
@@ -86,27 +81,25 @@ export async function startingOptions(d: Deps, starting?: Record<string, Startin
   const sent = d.rows.filter((r) => (r.entry as { startingEquipment?: unknown })?.startingEquipment).map((r) => ({ prop: r.ref.prop, refKey: refKey(r.ref), entry: r.entry }))
   const out = await d.call('startingEquipment', sent)
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
-  const mapper = await refMapperFor(d.scoped, d.library)
-  const visible = () => d.scoped.query(d.library, 'item')
-  const sections = await labelSections(localizeAll(out.result.sections as EquipSection[], d.pairs), mapper, visible)
+  const namer = await namerFor(d.scoped, d.library)
+  const sections = await labelSections(localizeAll(out.result.sections as EquipSection[], d.pairs), namer)
   if (!starting) return { status: 'complete', sections }
   const checked = checkStarting(sections, starting)
   if (checked.error) return { status: 'invalid', error: checked.error, sections }
   const shown = await d.call('startingPreview', sent, starting, checked.excluded)
   if (shown.status !== 'complete') return { status: shown.status, error: shown.error ?? `起始装备预演状态：${shown.status}`, sections }
-  const names = new Map((await visible()).map((r) => [keyOf(r.ref), String((r.item as { name?: unknown } | undefined)?.name ?? '')]))
   const view = localizeAll(shown.result as StartingPreview, d.pairs)
   return {
     status: 'complete', sections,
     preview: {
       currency: view.currency,
-      sections: view.sections.map((s) => ({
+      sections: await Promise.all(view.sections.map(async (s) => ({
         refKey: s.refKey,
-        items: s.granted.map((g) => {
-          const ref = g.hash && g.source ? mapper({ propDroppable: 'item', source: g.source, hash: g.hash }) : null
-          return { label: (ref && names.get(keyOf(ref))) || g.name, quantity: g.quantity, ...(g.special ? { special: true } : {}), ...(g.displayName ? { rename: g.displayName } : {}) }
-        }),
-      })),
+        items: await Promise.all(s.granted.map(async (g) => {
+          const named = g.hash && g.source ? await namer({ propDroppable: 'item', source: g.source, hash: g.hash }) : null
+          return { label: named?.label || g.name, quantity: g.quantity, ...(g.special ? { special: true } : {}), ...(g.displayName ? { rename: g.displayName } : {}) }
+        })),
+      }))),
     },
   }
 }
