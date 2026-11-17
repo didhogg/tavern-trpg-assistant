@@ -8,19 +8,23 @@ import { refKey } from '../../core/saves/split'
 import { namerFor, type Namer } from './naming'
 import type { EquipCandidate, EquipEntryView, EquipSection, StartingPreview, StartingSelection } from './frame/commands-equipment'
 import { localizeAll, type EntryPair } from './locale'
+import { authorTextFor } from './author-text'
+import type { LibraryService } from '../../library/service'
 
 export type { StartingSelection }
 export interface Labeled { ref: KernelRef; label: string }
 export type LabeledCandidate = EquipCandidate & Labeled
 export type LabeledEntry = Omit<EquipEntryView, 'candidates'> & Partial<Labeled> & { candidates?: LabeledCandidate[] }
 export type StartingSection = Omit<EquipSection, 'groups'> & {
+  /** 起始金币的单位名（作者币种表，中文战役即中文）；没有金币选项 = null。 */
+  goldUnit: string | null
   groups: Array<{ index: number; choices: Array<{ key: string; entries: LabeledEntry[] }> }>
   /** 本战役看不到、已去掉的物品（作者的 名字|来源）；固定给的被停用 = 不给，候选被停用 = 不能选。 */
   excluded: string[]
 }
 
 /** 名字统一走起名出口（naming.ts）：作者编号 → 存档同一个换算 → 本战役看得见的库条目名。看不见 = 去掉、记进 excluded。 */
-export async function labelSections(sections: EquipSection[], namer: Namer): Promise<StartingSection[]> {
+export async function labelSections(sections: EquipSection[], namer: Namer, currencies: Record<string, string> = {}): Promise<StartingSection[]> {
   const out: StartingSection[] = []
   for (const s of sections) {
     const excluded: string[] = []
@@ -45,7 +49,7 @@ export async function labelSections(sections: EquipSection[], namer: Namer): Pro
       }
       if (choices.length) groups.push({ index: g.index, choices })
     }
-    out.push({ ...s, groups, excluded: [...new Set(excluded)] })
+    out.push({ ...s, groups, excluded: [...new Set(excluded)], goldUnit: s.goldCoin ? currencies[s.goldCoin] ?? s.goldCoin : null })
   }
   return out
 }
@@ -65,7 +69,7 @@ export function checkStarting(sections: StartingSection[], selection: Record<str
 
 /** 预演结果给界面：每个条目会给的物品（显示名、数量、杂项标记、改名）+ 合计的钱（币种已换好）。 */
 export interface StartingPreviewView { sections: Array<{ refKey: string; items: Array<{ label: string; quantity: number; special?: boolean; rename?: string }> }>; currency: Record<string, number> | null }
-/** currencies = 币种编号 → 名字（dnd5e 币种登记），界面显示钱时按它取名字。 */
+/** currencies = 作者币种编号 → 名字（作者 Parser 的币种表，经本战役作者小窗：中文战役即中文），界面显示钱时按它取名字。 */
 export interface StartingResult { status: string; error?: string; sections?: StartingSection[]; preview?: StartingPreviewView; currencies?: Record<string, string> }
 
 interface Deps {
@@ -75,6 +79,8 @@ interface Deps {
   call: (fn: string, ...args: unknown[]) => Promise<{ status: string; error?: string; result?: any }> // eslint-disable-line @typescript-eslint/no-explicit-any -- 小窗命令结果原样
   scoped: ScopedLibrary
   library: CampaignLibrary
+  /** 本战役的作者小窗来源（币种名按作者币种表取，author-text.ts）。 */
+  service: Pick<LibraryService, 'frameOf'>
 }
 
 /** 起始装备选项（有选择时再带预演）：职业 / 背景写着的起始装备 → 每组选项、类别候选、金币骰式，只留本战役看得见的。 */
@@ -83,8 +89,8 @@ export async function startingOptions(d: Deps, starting?: Record<string, Startin
   const out = await d.call('startingEquipment', sent)
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
   const namer = await namerFor(d.scoped, d.library)
-  const sections = await labelSections(localizeAll(out.result.sections as EquipSection[], d.pairs), namer)
-  const currencies = (out.result.currencies ?? {}) as Record<string, string>
+  const currencies = await authorTextFor(d.service, d.library.codeSet).labels((out.result.coins ?? []) as string[])
+  const sections = await labelSections(localizeAll(out.result.sections as EquipSection[], d.pairs), namer, currencies)
   if (!starting) return { status: 'complete', sections, currencies }
   const checked = checkStarting(sections, starting)
   if (checked.error) return { status: 'invalid', error: checked.error, sections }

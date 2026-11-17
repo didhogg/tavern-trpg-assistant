@@ -16,6 +16,7 @@ const busy = computed(() => w.optLoading)
 <template>
   <div class="wz-ch" data-testid="wz-ch-asi">
     <b>{{ step.title ?? '属性提升' }}（{{ step.options.points }} 点<template v-if="step.options.cap < step.options.points">，每项最多 +{{ step.options.cap }}</template>）<small :data-done="left === 0 || undefined">{{ left === 0 ? '已分好' : `还剩 ${left} 点` }}</small></b>
+    <p v-if="step.hint" class="wz-note wz-hint" data-testid="wz-hint">{{ step.hint }}</p>
     <div class="wz-asi">
       <div v-for="r in rows" :key="r.key" class="wz-asi__row">
         <span>{{ r.label }}<small v-if="r.fixed" class="wz-asi__fix">固定 +{{ r.fixed }}</small></span>

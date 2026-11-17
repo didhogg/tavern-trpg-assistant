@@ -23,6 +23,8 @@ page.on('pageerror', (e) => errors.push(String(e.message ?? e).slice(0, 300)))
 page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text().slice(0, 300)}`) })
 const shot = (name) => page.screenshot({ path: `${shots}/${name}.png` })
 const pinia = `(() => { const h = document.querySelector('#trpg-assistant-root'); return [...h.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean).config.globalProperties.$pinia })()`
+// 建卡后端在算（每次改动都会重算）：等它算完再读画面，不靠固定等几秒
+const idle = () => page.waitForFunction((P) => !eval(P)._s.get('wizard').optLoading, pinia, { timeout: 60000 })
 try {
   await page.goto(url)
   await page.waitForFunction(`!!(${pinia})._s.get('app')?.booted`)
@@ -62,9 +64,12 @@ try {
   await page.getByTestId('wz-choices').first().waitFor({ timeout: 120000 }); await settle(page, 800)
   check('选了变体人类后：出现属性提升和技能、语言的选择', (await page.getByTestId('wz-ch-asi').count()) === 1 && (await page.getByTestId('wz-ch-trait').count()) >= 2)
   check('选了变体人类后步骤标签多出「专长」（数据里写着专长 1 个）', (await page.getByTestId('wz-step-feat').count()) === 1)
+  const hintText = (await page.getByTestId('wz-hint').allInnerTexts()).join(' | ')
+  check('语言那一步的说明按作者代码同一位置取：中文战役是中文，没有英文句子', /[㐀-鿿]/.test(hintText) && !/permission/i.test(hintText), hintText)
   await shot('02-race')
+  await page.getByTestId('wz-hint').first().scrollIntoViewIfNeeded(); await settle(page, 300); await shot('02b-race-hint')
   // 属性提升：能不能加由后端每行给（每次点完等后端回来再判断）
-  await page.getByRole('button', { name: '体质 多 1' }).click(); await settle(page, 1500); await page.getByRole('button', { name: '感知 多 1' }).click(); await settle(page, 1500)
+  await page.getByRole('button', { name: '体质 多 1' }).click(); await settle(page, 300); await idle(); await page.getByRole('button', { name: '感知 多 1' }).click(); await settle(page, 300); await idle()
   check('属性提升：每项最多 +1，选满 2 点后别的加号不能点', (await page.getByRole('button', { name: '力量 多 1' }).isDisabled()) && (await page.getByRole('button', { name: '体质 多 1' }).isDisabled()))
   const skillGroup = page.getByRole('group', { name: /技能熟练候选/ }); const langGroup = page.getByRole('group', { name: /语言候选/ })
   await skillGroup.getByTestId('wz-opt').first().click(); await langGroup.getByTestId('wz-opt').first().click(); await settle(page, 1500)
@@ -119,16 +124,16 @@ try {
   const root = page.getByTestId('wz-abilities')
   const totals = async () => (await root.getByTestId('wz-ab-total').allTextContents()).map((t) => t.trim())
   check('一开始没放：合计都是官方初值加种族加成，待放的数 6 个', (await root.getByTestId('wz-ab-chip').count()) === 6 && (await totals()).join() === '10,10,11,10,11,10', (await totals()).join())
-  await root.getByRole('button', { name: '购点', exact: true }).click(); await settle(page, 2500)
+  await root.getByRole('button', { name: '购点', exact: true }).click(); await settle(page, 300); await idle()
   check('购点：每项从 8 开始，已用 0 / 27', /已用 0 \/ 27，剩 27/.test(await root.getByTestId('wz-ab-budget').innerText()), await root.getByTestId('wz-ab-budget').innerText())
   await root.getByRole('button', { name: '力量 多一档' }).click(); await root.getByTestId('wz-ab-budget').filter({ hasText: '已用 1 /' }).waitFor(); await root.getByRole('button', { name: '力量 多一档' }).click(); await root.getByTestId('wz-ab-budget').filter({ hasText: '已用 2 /' }).waitFor(); await settle(page, 500)
   check('购点：力量加两档后是 10，已用 2', /已用 2 \/ 27，剩 25/.test(await root.getByTestId('wz-ab-budget').innerText()) && (await root.getByTestId('wz-ab-row-str').getByTestId('wz-ab-base').innerText()).trim() === '10', await root.getByTestId('wz-ab-budget').innerText())
   await root.getByRole('button', { name: '标准数组', exact: true }).click()
-  await page.getByTestId('confirm-page').waitFor(); await page.getByTestId('confirm-page').getByRole('button', { name: '换' }).click(); await settle(page, 2500)
+  await page.getByTestId('confirm-page').waitFor(); await page.getByTestId('confirm-page').getByRole('button', { name: '换' }).click(); await settle(page, 300); await idle()
   check('换回标准数组：已放的清空', (await root.getByTestId('wz-ab-chip').count()) === 6)
   for (const k of ['str', 'dex', 'con', 'int', 'wis', 'cha']) {
     await root.getByTestId('wz-ab-chip').first().click()
-    await root.getByTestId(`wz-ab-row-${k}`).getByTestId('wz-ab-place').click(); await settle(page, 2000)
+    await root.getByTestId(`wz-ab-row-${k}`).getByTestId('wz-ab-place').click(); await settle(page, 300); await idle()
   }
   check('数组放满：待放的数没有了', (await root.getByTestId('wz-ab-chip').count()) === 0 && /都放完了/.test(await root.getByTestId('wz-ab-pool').innerText()))
   check('合计 = 基础 + 种族加成（后端给的数）：体质 14、感知 11', (await totals()).join() === '15,14,14,12,11,8', (await totals()).join())
@@ -154,7 +159,7 @@ try {
   const slotHoly = page.getByRole('combobox', { name: /圣徽，第 1 个/ })
   await slotHoly.click(); await settle(page, 600); await page.getByRole('option').first().click(); await settle(page, 1800)
   const s1 = await sumText()
-  check('合计由后端给：件数 + 钱（1 铂 5 金，币种名后端给）', /\d+ 件物品/.test(s1) && /钱 1 \S+ 5 \S+/.test(s1), s1)
+  check('合计由后端给：件数 + 钱（1 铂 5 金；币种名按作者币种表，中文战役是中文）', /\d+ 件物品/.test(s1) && /钱 1 \S*[㐀-鿿]\S* 5 \S*[㐀-鿿]/.test(s1), s1)
   // 起始金币：勾上 → 这一段的选择变灰、可掷骰；取消 → 恢复
   await sec(0).getByTestId('wz-eq-gold-on').check(); await settle(page, 800)
   check('勾了「改拿金币」：这一段的选项组不能点', (await sec(0).locator('fieldset[disabled]').count()) >= 1)
@@ -169,7 +174,7 @@ try {
   // 完成
   await page.getByTestId('wz-done').waitFor(); await settle(page, 600)
   const doneText = await page.getByTestId('wz-done').innerText()
-  check('完成页有「装备」小结和钱', (await page.getByTestId('wz-eq-done').count()) === 1 && /钱：1 \S+ 5 \S+/.test(await page.getByTestId('wz-eq-done').innerText()))
+  check('完成页有「装备」小结和钱', (await page.getByTestId('wz-eq-done').count()) === 1 && /钱：1 \S*[㐀-鿿]\S* 5 \S*[㐀-鿿]/.test(await page.getByTestId('wz-eq-done').innerText()))
   check('完成页写着名字、种族、背景、职业、子职业、专长', ['伊娃', '种族', '背景', '职业'].every((t) => doneText.includes(t)), doneText.replace(/\s+/g, ' ').slice(0, 200))
   await shot('06-done')
   await page.getByTestId('wz-create').click()

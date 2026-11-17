@@ -9,7 +9,7 @@ import type { ScopedLibrary } from '../../library/scoped'
 import type { LibraryService } from '../../library/service'
 import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
-import type { KernelActor } from '../../schemas/kernel'
+import type { KernelActor, KernelDataVersion } from '../../schemas/kernel'
 import { refKey } from '../../core/saves/split'
 import type { KernelSession } from './host'
 import { openKernel, prepareKernelBrews } from './open'
@@ -19,7 +19,6 @@ import type { KernelBrewReport } from './frame/brew-input'
 import { hashValue, sha256Hex } from '../../core/hash'
 import { KernelCache, kernelBaseKey, kernelFilesVersion, kernelLangOf, wrapKernelSession } from './cache'
 import type { LibraryDatabase } from '../../library/db'
-import type { KernelDataVersion } from '../../schemas/kernel'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
 import { kernelEntryOf } from './entry'
 import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-options'
@@ -28,6 +27,7 @@ import type { SheetEdit } from './frame/commands-sheet'
 import { abilityView, checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
 import { localizeAll } from './locale'
 import { nameAll, namerFor } from './naming'
+import { authorTextFor, localizeHints } from './author-text'
 import { pairsSource, type PairsOf } from './sidecar'
 import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
@@ -216,7 +216,7 @@ export class KernelRuntime {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, plan.items)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
-    return startingOptions({ rows: rows.rows, pairs: await o.pairsOf(rows.rows), call: (fn, ...args) => (o.session.call as any)(fn, ...args), scoped: this.deps.scoped, library: await this.library(ownerKey) }, plan.starting)
+    return startingOptions({ rows: rows.rows, pairs: await o.pairsOf(rows.rows), call: (fn, ...args) => (o.session.call as any)(fn, ...args), scoped: this.deps.scoped, library: await this.library(ownerKey), service: this.deps.service }, plan.starting)
   }
 
   /**
@@ -232,7 +232,7 @@ export class KernelRuntime {
     if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
     const lib = await this.library(ownerKey)
     const query = (prop: string) => this.deps.scoped.query(lib, prop) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
-    const shownItems = await nameAll(localizeAll(out.result.items, await o.pairsOf(rows.rows)), await namerFor(this.deps.scoped, lib)), items: BuildOptionsItem[] = []
+    const shownItems = await localizeHints(await nameAll(localizeAll(out.result.items, await o.pairsOf(rows.rows)), await namerFor(this.deps.scoped, lib)), authorTextFor(this.deps.service, lib.codeSet)), items: BuildOptionsItem[] = []
     for (let i = 0; i < rows.rows.length; i++) {
       const row = rows.rows[i]
       const key = sent[i].refKey

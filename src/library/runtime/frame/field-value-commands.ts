@@ -57,3 +57,12 @@ export async function valueLabels(lists: string[][]): Promise<Array<Record<strin
     return Object.fromEntries(values.map((v) => [v, best[v]]))
   })
 }
+
+/** 作者代码里某个位置的文字（结算小窗在英文作者代码里找出的位置，例 ['Renderer','generic',…,'hint']）：本小窗是哪种语言就给哪种；不是文字 → null。 */
+export async function authorAt(paths: string[][]): Promise<Array<string | null>> {
+  await init()
+  return paths.map((path) => {
+    const value = path.reduce<unknown>((node, key) => (node && (typeof node === 'object' || typeof node === 'function') ? (node as Record<string, unknown>)[key] : undefined), A as unknown)
+    return typeof value === 'string' ? value : null
+  })
+}

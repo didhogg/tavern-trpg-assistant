@@ -6,7 +6,7 @@ import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
 import { METHOD_LABELS, problemLabel } from './wizard-labels'
 
-/** 属性值：方式（标准数组 / 购点 / 手填）+ 每项「基础 + 加成 = 合计」。规则、加成、检查全由后端给，这里只摆放和记玩家放了什么。 */
+/** 属性值：方式（标准数组 / 购点 / 手填）+ 每项「基础 + 加成 = 合计」。规则、加成、检查全由后端给，这里只摆放和记玩家放了什么；后端算数期间按钮停用（不点到旧数）。 */
 const w = useWizardStore()
 const check = computed(() => w.abil?.check ?? null)
 const rows = computed(() => w.abil?.rows ?? [])
@@ -28,7 +28,7 @@ const onInput = (key: string, e: Event): void => {
 
     <div v-if="w.abilMethod === 'standardArray'" class="wz-ab__pool" data-testid="wz-ab-pool">
       <span class="wz-note">待放的数：</span>
-      <button v-for="(n, i) in check?.pool ?? []" :key="`${n}-${i}`" type="button" class="wz-opt" :data-on="w.holding === n || undefined" data-testid="wz-ab-chip" :aria-pressed="w.holding === n" @click="w.hold(n)">{{ n }}</button>
+      <button v-for="(n, i) in check?.pool ?? []" :key="`${n}-${i}`" type="button" class="wz-opt" :data-on="w.holding === n || undefined" data-testid="wz-ab-chip" :aria-pressed="w.holding === n" :disabled="w.optLoading" @click="w.hold(n)">{{ n }}</button>
       <span v-if="!(check?.pool ?? []).length" class="wz-note">都放完了</span>
       <span v-else class="wz-note">点一个数，再点一项属性放进去；点已放的属性可收回。</span>
     </div>
@@ -46,7 +46,7 @@ const onInput = (key: string, e: Event): void => {
           <th scope="row">{{ r.label }}</th>
           <td>
             <template v-if="w.abilMethod === 'standardArray'">
-              <button type="button" class="wz-ab__cell" :data-set="r.set || undefined" :data-ready="w.holding !== null || undefined" :aria-label="`${r.label}：${r.set ? `现在是 ${r.base}，点一下收回` : w.holding !== null ? `放入 ${w.holding}` : '还没放'}`" data-testid="wz-ab-place" @click="w.place(r.key)">{{ r.set ? r.base : '—' }}</button>
+              <button type="button" class="wz-ab__cell" :data-set="r.set || undefined" :data-ready="w.holding !== null || undefined" :aria-label="`${r.label}：${r.set ? `现在是 ${r.base}，点一下收回` : w.holding !== null ? `放入 ${w.holding}` : '还没放'}`" data-testid="wz-ab-place" :disabled="w.optLoading" @click="w.place(r.key)">{{ r.set ? r.base : '—' }}</button>
             </template>
             <template v-else-if="w.abilMethod === 'pointBuy'">
               <span class="wz-ab__step">

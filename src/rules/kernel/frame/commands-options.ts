@@ -9,6 +9,7 @@ import { authorIdsOf } from './author-ids'
 import { traitTitle } from './trait-title'
 import { asiView, type AsiChoice } from './asi'
 import { registryLabels } from './trait-title'
+import { authorTextPath } from './author-text'
 import type { BuildPick } from './commands-level'
 
 type Option = { value: string; label: string; path: string[] }
@@ -55,7 +56,7 @@ async function describeSteps(manager: any, picks: BuildPick[] = []): Promise<any
     if (DESCRIBERS[type]) options = await DESCRIBERS[type](advancement, pick)
     else if (!automatic && !NO_CHOICE.has(type)) unsupported = true
     out.push({ id: advancement.id, level: step.flow.level ?? null, type, title: (type === 'Trait' ? traitTitle(advancement) : null) ?? advancement.title ?? null,
-      ...(type === 'Trait' && advancement.hint ? { hint: advancement.hint } : {}), automatic, options, ...(unsupported ? { unsupported: true } : {}) })
+      ...(type === 'Trait' && advancement.hint ? { hints: String(advancement.hint).split('\n').map((text) => ({ text, at: authorTextPath(text) })) } : {}), automatic, options, ...(unsupported ? { unsupported: true } : {}) })
   }
   return out
 }

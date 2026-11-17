@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者条目和 Plutonium 文档没有类型声明。 */
 import type { Operate } from './commands-items'
 import { importEntry } from './importer'
-import { registryLabels } from './trait-title'
 import { EQUIPMENT_EXPANDERS, EQUIPMENT_PREDICATES } from '../equipment-rules'
 
 const g = globalThis as any
@@ -34,8 +33,8 @@ export interface EquipSection {
   unsupported: string[]
   /** 起始金币的骰式（作者 goldAlternative）；没有 = 这个条目不给金币选项。 */
   goldExpression: string | null
-  /** 起始金币的单位名（dnd5e 币种登记里的金币）；没有金币选项 = null。 */
-  goldUnit: string | null
+  /** 起始金币的作者币种编号（gp）；没有金币选项 = null。 */
+  goldCoin: string | null
 }
 /** 玩家在一个条目（职业 / 背景）上的选择。choice：组序号 → 选了哪一项（只有一项的组自动取）；pick：类别槽 → 选的物品 uid；gold：要钱不要装备（金币数）。 */
 export interface StartingSelection { choice?: Record<string, string>; pick?: Record<string, string>; gold?: number | null }
@@ -110,9 +109,9 @@ export async function sectionOf(row: StartingRow): Promise<EquipSection> {
     }
     if (choices.length) groups.push({ index, choices })
   }
-  // 起始金币以金币计（照 Plutonium：玩家填的数 × 100 铜，见 expand）；单位名取 dnd5e 币种登记
+  // 起始金币以金币计（照 Plutonium：玩家填的数 × 100 铜，见 expand），交作者币种编号；名字由主线按作者币种表取
   const goldExpression = goldExpressionOf(row.entry)
-  return { refKey: row.refKey, prop: row.prop, name: row.entry.name, source: row.entry.source, groups, unsupported, goldExpression, goldUnit: goldExpression ? registryLabels('currencies').gp ?? null : null }
+  return { refKey: row.refKey, prop: row.prop, name: row.entry.name, source: row.entry.source, groups, unsupported, goldExpression, goldCoin: goldExpression ? 'gp' : null }
 }
 
 export interface Granted { uid?: string; special?: string; page?: number; source?: string; quantity: number; displayName?: string }
@@ -202,7 +201,7 @@ export async function previewOf(rows: StartingRow[], selection: Record<string, S
 export function createEquipmentCommands(operate: Operate) {
   return {
     /** 职业 / 背景的起始装备选项（每组选项、类别候选、金币骰式）；只读，不改世界。 */
-    startingEquipment: (rows: StartingRow[]) => operate([], async () => ({ sections: await Promise.all(rows.map(sectionOf)), currencies: registryLabels('currencies') })),
+    startingEquipment: (rows: StartingRow[]) => operate([], async () => ({ sections: await Promise.all(rows.map(sectionOf)), coins: [...(g.Parser?.COIN_ABVS ?? [])] })),
     /** 按玩家现在的选择预演（物品名、数量、钱）；只读。 */
     startingPreview: (rows: StartingRow[], selection: Record<string, StartingSelection>, excluded?: Record<string, string[]>) => operate([], async () => previewOf(rows, selection, excluded)),
   }

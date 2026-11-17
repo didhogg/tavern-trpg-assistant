@@ -41,6 +41,7 @@
 .wz-pk__h { margin: var(--sp-1) 0 0; font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text); }
 .wz-pk__sub > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text); }
 .wz-pk__sub > .wz-opts { padding: 0 0 var(--sp-2) var(--sp-4); }
+.wz-hint { white-space: pre-line; }
 .wz-asi__fix { margin-left: var(--sp-1); color: var(--text2); font-size: var(--fs-xs); }
 /* 建卡里还选不了的，统一列一块（WizardChoices.vue） */
 .wz-notyet { padding: var(--sp-2) var(--sp-3); border-left: 3px solid var(--warn); background: var(--warn-bg); color: var(--warn-text); font-size: var(--fs-sm); }

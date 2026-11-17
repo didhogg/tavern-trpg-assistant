@@ -1,5 +1,5 @@
 // Trait 类熟练的标题按编号取（类别 skills / tool / languages / dr …，进阶模式 expertise / mastery …）：dnd5e 自己的 traits、traitModes 登记 + 官方多语言（中文战役即中文）。
-// 建卡步骤标题、「建卡里还选不了」的提示、属性名、币种名都用这一处（不用 Plutonium 写死的英文标题；界面不查表）。
+// 建卡步骤标题、「建卡里还选不了」的提示、属性名都用这一处（不用 Plutonium 写死的英文标题；界面不查表）。作者代码产出的文字（币种、分组说明）走 kernel/author-text.ts。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 const g = globalThis as any
 const localize = (key: string | undefined): string | null => (key ? g.game.i18n.localize(key) : null)
