@@ -2,6 +2,8 @@
 // 不写新规则：候选都来自 dnd5e 官方进阶的接口（Trait.unfulfilledChoices、进阶 configuration）；写法登记表——加一种进阶 = 加一行；
 // 要玩家选、又没登记的进阶标 unsupported，绝不漏掉还说「选完了」（整体设计 §3.4 / §3.5）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
+import type { ExtraPools } from '../build-options'
+import { describeBuildExtras } from './build-extras'
 import type { Operate } from './commands-items'
 import { abilityValues, buildActor, type BuildPlan } from './commands-level'
 import { importEntry } from './importer'
@@ -64,7 +66,7 @@ async function describeSteps(manager: any, picks: BuildPick[] = []): Promise<any
 export function createOptionsCommands(operate: Operate) {
   return {
     /** 按已选的条目（和已做的选择 picks）一件件放进空白人物，列出每件条目现在要玩家选的事；预览用的人物用完删掉。 */
-    buildOptions: (plan: Pick<BuildPlan, 'items' | 'picks' | 'choices' | 'blank'>) => operate([], async () => {
+    buildOptions: (plan: Pick<BuildPlan, 'items' | 'picks' | 'choices' | 'blank'> & { extraPools?: ExtraPools; local?: Record<string, unknown> }) => operate([], async () => {
       const items = []
       for (const row of plan.items) items.push({ ...row, data: row.data ?? await importEntry(row.prop, row.entry) })
       const described: Array<{ refKey: string | null; steps: any[]; unsupported: string[] }> = []
@@ -74,7 +76,12 @@ export function createOptionsCommands(operate: Operate) {
       })
       const actor = built.actor ?? built.created
       // 属性：初值、种族等加成后的自动值、官方上限；界面的「基础 + 加成 = 合计」由主线按这三样算
-      try { return { items: described, complete: !built.pending && !built.missingTraits.length, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null, labels: registryLabels('abilities') } } } finally { await (built.actor ?? built.created)?.delete?.() }
+      try {
+        const extras = plan.extraPools && Object.keys(plan.extraPools).length ? await describeBuildExtras(plan.items, plan.extraPools, actor, plan.local ?? {}) : []
+        const byKey = new Map(described.map(row => [row.refKey, row]))
+        const views = extras.length ? extras.map(row => ({ steps: [], unsupported: [], ...byKey.get(row.refKey), ...row })) : described
+        return { items: views, complete: !built.pending && !built.missingTraits.length, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null, labels: registryLabels('abilities') } }
+      } finally { await (built.actor ?? built.created)?.delete?.() }
     }),
   }
 }

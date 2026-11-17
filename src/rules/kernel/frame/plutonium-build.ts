@@ -5,6 +5,12 @@ import { sha256Hex } from '../../../core/hash'
 const BUNDLE_SHA = '05e6e89fe53681d238db3024a23a24268dc69993b72ebe16591a6a3d8df98cf5'
 const EXPORTS = [
   'Charactermancer_FeatureOptionsSelect',
+  'Charactermancer_AdditionalFeatsSelect',
+  'StatGenUtilAdditionalFeats',
+  'DataPrimerFauxFeatureClassSubclassFeat',
+  'DataPrimerFauxFeatureClassSubclassOptionalfeature',
+  'UtilDataConverter',
+  'Config',
   'Charactermancer_AvailableProficiencyManager',
   'CharactermancerFeatureSubCompManagerProficiencyOtherBase',
   'Charactermancer_ItemMasteries_Util',

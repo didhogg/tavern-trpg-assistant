@@ -172,7 +172,7 @@ export const useRosterStore = defineStore('people', () => {
   /** 分步建卡创建：一次加人是存档里的一步，提示条带 [撤销]。 */
   async function createFromWizard(plan: Parameters<KernelPeople['build']>[1], category: CategoryId): Promise<boolean> {
     return run(`已创建「${plan.name}」`, 1, async (k) => {
-      const out = await backend().build(k, plan, { category })
+      const out = await backend().build(k, { ...plan, requireExtras: true }, { category })
       if (!out.kernel) throw new Error(out.built.error ?? '资料不全，建不出这个人物')
     })
   }

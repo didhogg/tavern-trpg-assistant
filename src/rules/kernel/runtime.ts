@@ -21,13 +21,10 @@ import { KernelCache, kernelBaseKey, kernelFilesVersion, kernelLangOf, wrapKerne
 import type { LibraryDatabase } from '../../library/db'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
 import { kernelEntryOf } from './entry'
-import { candidatesOf, extrasOf, type ExtraWithCandidates } from './build-options'
+import { resolveBuildOptions, type BuildOptionPlan, type BuildOptionsResult } from './resolve-build-options'
 import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
-import { abilityView, checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
-import { localizeAll } from './locale'
-import { nameAll, namerFor } from './naming'
-import { authorTextFor, localizeHints } from './author-text'
+import { checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
 import { pairsSource, type PairsOf } from './sidecar'
 import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
@@ -36,7 +33,7 @@ const picksByKey = (items: EntryRef[], picks?: BuildPick[][]): Record<string, Bu
 
 /** 建卡选项里一件条目的结果：官方进阶的步骤（含候选）+ 作者数据里的额外必选项。 */
 export type BuildAbilities = AbilityView
-export interface BuildOptionsItem { ref: EntryRef; name: string | null; steps: unknown[]; extras: ExtraWithCandidates[]; unsupported: string[] }
+export type { BuildOptionsItem } from './resolve-build-options'
 
 /** Foundry 世界编号只能用字母、数字、短横线、下划线；战役的 ownerKey 形如 char:角色卡.png，按它算一个稳定编号。 */
 export function worldIdOf(ownerKey: string): string {
@@ -173,12 +170,17 @@ export class KernelRuntime {
   }
 
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
-  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan; starting?: Record<string, StartingSelection> }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
+  async buildCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; equipment?: EntryRef[]; choices?: Record<string, unknown[]>; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan; starting?: Record<string, StartingSelection>; requireExtras?: boolean }): Promise<{ status: string; id?: string; seed?: string; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     if (plan.abilities) {
       // 方式的规则（标准数组 / 购点）在这里查；手填的范围由小窗按官方上限查
       const check = checkAbilities(plan.abilities, Object.keys(plan.abilities.base), Infinity)
       if (!check.ok) return { status: 'invalid', error: `属性值不合「${plan.abilities.method}」的规则`, detail: check }
+    }
+    if (plan.requireExtras) {
+      const preview = await this.buildOptions(ownerKey, plan)
+      if (preview.status !== 'complete' || !preview.items) return { status: preview.status, error: preview.error, detail: preview.detail }
+      if (preview.extraIssue) return { status: 'pending', error: preview.extraIssue }
     }
     let startingExcluded: Record<string, string[]> | undefined
     if (plan.starting) {
@@ -223,27 +225,11 @@ export class KernelRuntime {
    * 建卡选项（P6）：已选的条目（按顺序放进空白人物，带玩家已做的选择 picks）→ 每件条目现在要玩家选的事（官方进阶算候选）
    * + 作者数据里的额外必选项（子职业 / 专长 / 可选特性，带候选）。预览用的人物不进存档。
    */
-  async buildOptions(ownerKey: string, plan: { items: EntryRef[]; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan }): Promise<{ status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean; abilities?: BuildAbilities }> {
+  async buildOptions(ownerKey: string, plan: BuildOptionPlan): Promise<BuildOptionsResult> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, plan.items)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
-    const sent = rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry }))
-    const out = await o.session.call('buildOptions', { items: sent, picks: picksByKey(plan.items, plan.picks), blank: plan.blank })
-    if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
-    const lib = await this.library(ownerKey)
-    const query = (prop: string) => this.deps.scoped.query(lib, prop) as Promise<Array<{ ref: EntryRef; item: Record<string, unknown>; source?: string | null }>>
-    const shownItems = await localizeHints(await nameAll(localizeAll(out.result.items, await o.pairsOf(rows.rows)), await namerFor(this.deps.scoped, lib)), authorTextFor(this.deps.service, lib.codeSet)), items: BuildOptionsItem[] = []
-    for (let i = 0; i < rows.rows.length; i++) {
-      const row = rows.rows[i]
-      const key = sent[i].refKey
-      const found = extrasOf(row.ref.prop, row.entry as Record<string, unknown>)
-      const classNames = [row.name, String((row.entry as { name?: unknown }).name ?? '')].filter(Boolean) as string[]
-      const described = (shownItems as Array<{ refKey: string; steps: unknown[]; unsupported?: string[] }>).find((x) => x.refKey === key)
-      items.push({ ref: row.ref, name: row.name, steps: described?.steps ?? [],
-        extras: await Promise.all(found.extras.map((x) => candidatesOf(x, classNames, query))), unsupported: [...found.unsupported, ...(described?.unsupported ?? [])] })
-    }
-    const abilities = abilityView(out.result.abilities, plan.abilities)
-    return { status: 'complete', items, complete: out.result.complete, abilities }
+    return resolveBuildOptions({ ...o, scoped: this.deps.scoped, service: this.deps.service, library: await this.library(ownerKey) }, plan, rows.rows, picksByKey(plan.items, plan.picks))
   }
 
   /** 给已有人物加条目；调用方只交引用。 */
