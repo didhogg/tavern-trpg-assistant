@@ -6,7 +6,7 @@ import { hashValue } from '../../../core/hash'
 import { plutoniumBuild } from './plutonium-build'
 import { BUILD_ACTOR_TYPE } from './actor-types'
 import { withSeed } from './random'
-import { titleOfKeys, traitTypeOfActorPath, traitTypeTitle } from './trait-title'
+import { groupTitle } from './trait-title'
 import { traitOrigins } from './trait-origins'
 
 const g = globalThis as any
@@ -159,9 +159,9 @@ function missingSlots(generated: NativeSlot[], existing: Array<{ count: number; 
   return out
 }
 
-/** 提示用的标题：按类别编号取（与步骤标题同一处，trait-title.ts）——分组自己登记的类别，或这组候选实际涉及的类别；都认不出才用作者分组的原标题。 */
-const labelOf = (group: any, keys: string[] = []): string => traitTypeTitle(traitTypeOfActorPath(group._propPathActorExistingProficiencies))
-  || titleOfKeys(keys) || group._title || group._subComps[0]?.modalTitle || group._prop
+/** 提示用的标题：按编号认（与步骤标题同一处，trait-title.ts groupTitle）；都认不出才用作者分组的原标题。siblings = 同一批分组（混合分组按它们认类别）。 */
+const labelOf = (group: any, siblings: any[], keys: string[] = []): string => groupTitle(group, siblings, keys)
+  || group._title || group._subComps[0]?.modalTitle || group._prop
 
 export function fillBuildTraits(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, replay?: string[]): Promise<string[]> {
   return withSeed(`build-traits:fill:${ref}:${multiclass}`, () => fill(data, row, ref, multiclass, replay))
@@ -198,8 +198,8 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         await group._pInitSubComp({ ix: 0, selectedLinkedEntityInfos: features })
         if (!group._subComps[0]) continue
         const traits = await nativeTraits(api, blank, group, cleanup)
-        if (!traits) { diagnostics.push(labelOf(group)); continue }
-        if (traits.withheld) diagnostics.push(`${labelOf(group, [...traits.grants, ...traits.choices.flatMap((c) => c.pool)])}（${traits.withheld} 项候选暂无法按原生进阶保存）`)
+        if (!traits) { diagnostics.push(labelOf(group, groups)); continue }
+        if (traits.withheld) diagnostics.push(`${labelOf(group, groups, [...traits.grants, ...traits.choices.flatMap((c) => c.pool)])}（${traits.withheld} 项候选暂无法按原生进阶保存）`)
         // Plutonium 的分组从 entity 或 entryData 取输入。主职/兼职即使字段同名也须核对内容。
         const input = hashValue(entry[group._prop] || entry.entryData?.[group._prop])
         const own = existing.filter(({ id }) => origins[id]?.field === group._prop && origins[id]?.input === input)
@@ -216,8 +216,8 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         const grants = traits.grants.filter((key) => !otherGrants.has(key))
         const choices = replace ? traits.choices : missingSlots(traits.choices, otherSlots)
         const authoredOverlap = replace && traits.choices.some((slot) => otherSlots.some((other) => slot.pool.some((key) => other.pool.has(key))))
-        if (authoredOverlap) { diagnostics.push(`${labelOf(group)}（与资料附带的进阶重叠，已保留原进阶）`); continue }
-        if (!choices) { diagnostics.push(labelOf(group)); continue }
+        if (authoredOverlap) { diagnostics.push(`${labelOf(group, groups)}（与资料附带的进阶重叠，已保留原进阶）`); continue }
+        if (!choices) { diagnostics.push(labelOf(group, groups)); continue }
         if (!grants.length && !choices.length) continue
         if (replace) for (const record of own) replaced.add(record.id)
         // A replacement has its own stable ID so cold replays of earlier saves keep their original steps.
@@ -230,7 +230,7 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         }
       } catch (e) {
         console.warn('[trpg-assistant] 建卡进阶暂无法处理', ref, group._prop, e)
-        diagnostics.push(labelOf(group))
+        diagnostics.push(labelOf(group, groups))
       } finally {
         for (const remove of cleanup) remove()
       }
