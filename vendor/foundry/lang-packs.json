@@ -1,15 +1,15 @@
 {
- "generatedFrom": "大译名表 terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3",
+ "generatedFrom": "大译名表 terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3；社区 5e_chn@910a980",
  "packs": {
   "zh": {
    "name": "中文",
-   "hash": "e8c9b4de63c5382cc93068dd0f505fdf7451fbb74716dbddbc33cbf1fc431cc7",
+   "hash": "a38c7b565d839b55fac2ca59322b0fd4d923aff49db911ec109d0941545b7fec",
    "files": [
     {
      "package": "system",
      "id": "dnd5e",
      "path": "lang/zh.json",
-     "sha256": "6c09d2388f150f773753313a80f0a4d0feb2f6334e2c78fc9c9e4a7ffb08ae34"
+     "sha256": "33c460abfa003ee3d7864dafff14698663f25fe9ea61fb82b03a9f459e82119e"
     },
     {
      "package": "module",

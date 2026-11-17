@@ -1,12 +1,17 @@
 {
  "generatedFrom": "terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3",
+ "community": [
+  "5e_chn@910a980"
+ ],
+ "communityDir": "/Users/xxx/tavern-trpg-data-next/_upstream/foundry-lang",
  "lang": "zh",
  "packs": [
   {
    "package": "system:dnd5e",
    "total": 4108,
-   "translated": 1143,
-   "conflicts": 4,
+   "translated": 3984,
+   "fromCommunity": 3965,
+   "conflicts": 2,
    "groupsWithCategory": 67,
    "conflictList": [
     {
@@ -24,34 +29,6 @@
      ]
     },
     {
-     "key": "DND5E.Armor",
-     "en": "Armor",
-     "candidates": [
-      {
-       "zh": " 护甲",
-       "category": ""
-      },
-      {
-       "zh": "护甲",
-       "category": ""
-      }
-     ]
-    },
-    {
-     "key": "DND5E.TRAVEL.Type.Air",
-     "en": "Air",
-     "candidates": [
-      {
-       "zh": "风",
-       "category": "normal"
-      },
-      {
-       "zh": "空气",
-       "category": "normal"
-      }
-     ]
-    },
-    {
      "key": "EFFECT.DND5E.StatusAntimagic",
      "en": "Antimagic",
      "candidates": [
@@ -65,23 +42,1754 @@
       }
      ]
     }
+   ],
+   "differsFromTerms": 287,
+   "differsList": [
+    {
+     "key": "DOCUMENT.Activity",
+     "en": "Activity",
+     "community": "行动",
+     "terms": "用途"
+    },
+    {
+     "key": "TYPES.Actor.character",
+     "en": "Player Character",
+     "community": "PC",
+     "terms": "玩家角色"
+    },
+    {
+     "key": "TYPES.Actor.characterPl",
+     "en": "Player Characters",
+     "community": "PC",
+     "terms": "玩家角色"
+    },
+    {
+     "key": "TYPES.Actor.groupPl",
+     "en": "Groups",
+     "community": "小队",
+     "terms": "结伙"
+    },
+    {
+     "key": "TYPES.Actor.npcPl",
+     "en": "Non-Player Characters",
+     "community": "NPC",
+     "terms": "非玩家角色"
+    },
+    {
+     "key": "TYPES.ActiveEffect.enchantment",
+     "en": "Enchantment",
+     "community": "附魔",
+     "terms": "惑控"
+    },
+    {
+     "key": "TYPES.ActiveEffect.enchantmentPl",
+     "en": "Enchantments",
+     "community": "附魔",
+     "terms": "魔艺"
+    },
+    {
+     "key": "TYPES.Item.subclass",
+     "en": "Subclass",
+     "community": "子职业",
+     "terms": "子职"
+    },
+    {
+     "key": "TYPES.Item.subclassPl",
+     "en": "Subclasses",
+     "community": "子职业",
+     "terms": "子职"
+    },
+    {
+     "key": "DND5E.AbilityScoreShort",
+     "en": "Score",
+     "community": "值",
+     "terms": "属性值"
+    },
+    {
+     "key": "DND5E.ActionHeal",
+     "en": "Heal",
+     "community": "治疗",
+     "terms": "医疗术"
+    },
+    {
+     "key": "DND5E.ActionUtil",
+     "en": "Utility",
+     "community": "效用",
+     "terms": "实用性"
+    },
+    {
+     "key": "DND5E.ACTIVATION.FIELDS.activation.label",
+     "en": "Activation",
+     "community": "激活",
+     "terms": "激活效应"
+    },
+    {
+     "key": "DND5E.ACTIVITY.Title.one",
+     "en": "Activity",
+     "community": "行动",
+     "terms": "用途"
+    },
+    {
+     "key": "DND5E.ACTIVITY.FIELDS.visibility.label",
+     "en": "Visibility",
+     "community": "可见性",
+     "terms": "能见度"
+    },
+    {
+     "key": "DND5E.ACTIVITY.SECTIONS.Activation",
+     "en": "Activation",
+     "community": "激活",
+     "terms": "激活效应"
+    },
+    {
+     "key": "DND5E.ACTIVITY.SECTIONS.Identity",
+     "en": "Identity",
+     "community": "标识",
+     "terms": "身份"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.HitPoints.Average",
+     "en": "Average",
+     "community": "取期望",
+     "terms": "中等"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.ItemChoice.FIELDS.type.Any",
+     "en": "Anything",
+     "community": "任一物品",
+     "terms": "任何东西"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.ItemGrant.FIELDS.items.label",
+     "en": "Items",
+     "community": "物品",
+     "terms": "物件"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.ScaleValue.Type.Dice.FIELDS.number.label",
+     "en": "Number",
+     "community": "数量",
+     "terms": "数值"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.ScaleValue.Type.Dice.Label",
+     "en": "Dice",
+     "community": "骰数",
+     "terms": "骰子"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.ScaleValue.Type.String.FIELDS.value.label",
+     "en": "Value",
+     "community": "值",
+     "terms": "价值"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.ScaleValue.Type.String.Label",
+     "en": "Anything",
+     "community": "所有",
+     "terms": "任何东西"
+    },
+    {
+     "key": "DND5E.ADVANCEMENT.SPELLCONFIG.FIELDS.spell.prepared.label",
+     "en": "Preparation",
+     "community": "准备",
+     "terms": "预备"
+    },
+    {
+     "key": "DND5E.AreaOfEffect.Description.Height",
+     "en": "high",
+     "community": "高度",
+     "terms": "高等"
+    },
+    {
+     "key": "DND5E.AreaOfEffect.Size.Label",
+     "en": "Size",
+     "community": "尺寸",
+     "terms": "体型"
+    },
+    {
+     "key": "DND5E.AreaOfEffect.Size.Thickness",
+     "en": "Thickness",
+     "community": "厚度",
+     "terms": "浓度"
+    },
+    {
+     "key": "DND5E.ARMORCLASS.FIELDS.attributes.ac.formulas.element.shielded.label",
+     "en": "Shielded",
+     "community": "持盾",
+     "terms": "庇护"
+    },
+    {
+     "key": "DND5E.ArmorClass",
+     "en": "Armor Class",
+     "community": "AC",
+     "terms": "护甲等级"
+    },
+    {
+     "key": "DND5E.ArmorLightProficiency",
+     "en": "Light",
+     "community": "轻型",
+     "terms": "光线"
+    },
+    {
+     "key": "DND5E.ArmorMediumProficiency",
+     "en": "Medium",
+     "community": "中型",
+     "terms": "中等"
+    },
+    {
+     "key": "DND5E.ATTACK.Classification.Unarmed",
+     "en": "Unarmed",
+     "community": "徒手",
+     "terms": "徒手攻击"
+    },
+    {
+     "key": "DND5E.ATTACK.FIELDS.attack.abilities.label",
+     "en": "Ability Options",
+     "community": "可用属性",
+     "terms": "能力选项"
+    },
+    {
+     "key": "DND5E.ATTACK.Mode.Ranged",
+     "en": "Ranged",
+     "community": "射程",
+     "terms": "远程"
+    },
+    {
+     "key": "DND5E.Automatic",
+     "en": "Automatic",
+     "community": "自动化",
+     "terms": "自动"
+    },
+    {
+     "key": "DND5E.Award.Distribution.Split",
+     "en": "Split",
+     "community": "分割",
+     "terms": "分裂"
+    },
+    {
+     "key": "DND5E.Bonds",
+     "en": "Bonds",
+     "community": "羁绊",
+     "terms": "牵绊"
+    },
+    {
+     "key": "DND5E.CALENDAR.Component.Month",
+     "en": "Month",
+     "community": "月",
+     "terms": "月份"
+    },
+    {
+     "key": "DND5E.CALENDAR.Configuration.Name",
+     "en": "Calendar",
+     "community": "日历",
+     "terms": "历法"
+    },
+    {
+     "key": "DND5E.CALENDAR.FIELDS.calendar.label",
+     "en": "Calendar",
+     "community": "日历",
+     "terms": "历法"
+    },
+    {
+     "key": "DND5E.CALENDAR.Formatters.ApproximateTime.Dawn",
+     "en": "Dawn",
+     "community": "黎明",
+     "terms": "拂晓"
+    },
+    {
+     "key": "DND5E.CALENDAR.Formatters.ApproximateTime.Night",
+     "en": "Night",
+     "community": "夜晚",
+     "terms": "黑夜"
+    },
+    {
+     "key": "DND5E.CALENDAR.Greyhawk.Month.Reaping",
+     "en": "Reaping",
+     "community": "收割之月",
+     "terms": "收割"
+    },
+    {
+     "key": "DND5E.CALENDAR.Greyhawk.Month.Harvester",
+     "en": "Harvester",
+     "community": "收获之月",
+     "terms": "收割者"
+    },
+    {
+     "key": "DND5E.CALENDAR.Harptos.Festival.Shieldmeet",
+     "en": "Shieldmeet",
+     "community": "盾会节",
+     "terms": "盾会日"
+    },
+    {
+     "key": "DND5E.CALENDAR.Harptos.Month.Hammer",
+     "en": "Hammer",
+     "community": "哈莫",
+     "terms": "哈蒙"
+    },
+    {
+     "key": "DND5E.CALENDAR.Harptos.Season.Winter",
+     "en": "Winter",
+     "community": "东",
+     "terms": "冬"
+    },
+    {
+     "key": "DND5E.CAST.Title",
+     "en": "Cast",
+     "community": "施法",
+     "terms": "施放"
+    },
+    {
+     "key": "DND5E.Challenge",
+     "en": "Challenge",
+     "community": "挑战",
+     "terms": "挑战等级"
+    },
+    {
+     "key": "DND5E.CHATMESSAGE.Deltas.Recovery",
+     "en": "Recovery",
+     "community": "恢复",
+     "terms": "康复"
+    },
+    {
+     "key": "DND5E.CHATMESSAGE.Row.Items",
+     "en": "Items",
+     "community": "物品",
+     "terms": "物件"
+    },
+    {
+     "key": "DND5E.CLASS.FIELDS.primaryAbility.value.label",
+     "en": "Primary Ability",
+     "community": "主要属性",
+     "terms": "关键属性"
+    },
+    {
+     "key": "DND5E.CompendiumBrowser.Column.Source",
+     "en": "Source",
+     "community": "资源",
+     "terms": "来源"
+    },
+    {
+     "key": "DND5E.CompendiumBrowser.Tabs.Item.other",
+     "en": "Items",
+     "community": "物品",
+     "terms": "物件"
+    },
+    {
+     "key": "DND5E.ComponentMaterial",
+     "en": "Material",
+     "community": "材料",
+     "terms": "材质"
+    },
+    {
+     "key": "DND5E.Components",
+     "en": "Components",
+     "community": "材料",
+     "terms": "成分"
+    },
+    {
+     "key": "DND5E.ContextMenuActionDuplicate",
+     "en": "Duplicate",
+     "community": "复制",
+     "terms": "复制术"
+    },
+    {
+     "key": "DND5E.ContextMenuActionCharge",
+     "en": "Charge",
+     "community": "充能",
+     "terms": "冲锋"
+    },
+    {
+     "key": "DND5E.ContextMenuActionView",
+     "en": "View",
+     "community": "查看",
+     "terms": "观念"
+    },
+    {
+     "key": "DND5E.ConDiseased",
+     "en": "Diseased",
+     "community": "疾病",
+     "terms": "染病"
+    },
+    {
+     "key": "DND5E.CONCENTRATION.Action.Break",
+     "en": "Break Concentration",
+     "community": "打断专注",
+     "terms": "打破专注"
+    },
+    {
+     "key": "DND5E.CONCENTRATION.Action.End",
+     "en": "End Concentration",
+     "community": "结束专注",
+     "terms": "终止专注"
+    },
+    {
+     "key": "DND5E.ConsumeMaterial",
+     "en": "Material",
+     "community": "材料",
+     "terms": "材质"
+    },
+    {
+     "key": "DND5E.CONSUMABLE.Category.Poison",
+     "en": "Poison",
+     "community": "毒药",
+     "terms": "毒素"
+    },
+    {
+     "key": "DND5E.CONSUMABLE.Type.Ammunition.Arrow",
+     "en": "Arrow",
+     "community": "箭矢",
+     "terms": "箭"
+    },
+    {
+     "key": "DND5E.CONSUMABLE.Type.Ammunition.Needle",
+     "en": "Needle",
+     "community": "吹矢",
+     "terms": "针"
+    },
+    {
+     "key": "DND5E.CONSUMABLE.Type.Food.Label",
+     "en": "Food",
+     "community": "食物",
+     "terms": "进食"
+    },
+    {
+     "key": "DND5E.CONSUMABLE.Type.Poison.Label",
+     "en": "Poison",
+     "community": "毒药",
+     "terms": "毒素"
+    },
+    {
+     "key": "DND5E.CONSUMABLE.Type.Poison.Injury",
+     "en": "Injury",
+     "community": "损伤",
+     "terms": "伤口"
+    },
+    {
+     "key": "DND5E.CONSUMPTION.Scaling.Automatic",
+     "en": "Automatic",
+     "community": "自动化",
+     "terms": "自动"
+    },
+    {
+     "key": "DND5E.CONSUMPTION.Scaling.SlotLevel",
+     "en": "Slot Level",
+     "community": "环位等级",
+     "terms": "法术位环阶"
+    },
+    {
+     "key": "DND5E.CONSUMPTION.Type.Material.Label",
+     "en": "Material",
+     "community": "材料",
+     "terms": "材质"
+    },
+    {
+     "key": "DND5E.CoverHalf",
+     "en": "Half",
+     "community": "半身掩护",
+     "terms": "一半"
+    },
+    {
+     "key": "DND5E.CoverTotal",
+     "en": "Total",
+     "community": "全身掩护",
+     "terms": "全部"
+    },
+    {
+     "key": "DND5E.Cost",
+     "en": "Cost",
+     "community": "费用",
+     "terms": "花费"
+    },
+    {
+     "key": "DND5E.CreatureCelestial",
+     "en": "Celestial",
+     "community": "天族",
+     "terms": "天界"
+    },
+    {
+     "key": "DND5E.CreatureDragon",
+     "en": "Dragon",
+     "community": "龙类",
+     "terms": "龙"
+    },
+    {
+     "key": "DND5E.CreatureDragonPl",
+     "en": "Dragons",
+     "community": "龙类",
+     "terms": "龙"
+    },
+    {
+     "key": "DND5E.CreatureHumanoidPl",
+     "en": "Humanoids",
+     "community": "类人",
+     "terms": "类人生物"
+    },
+    {
+     "key": "DND5E.CriticalHit",
+     "en": "Critical Hit",
+     "community": "重击命中",
+     "terms": "重击"
+    },
+    {
+     "key": "DND5E.CurrencyCP",
+     "en": "Copper",
+     "community": "CP",
+     "terms": "科帕"
+    },
+    {
+     "key": "DND5E.CurrencyEP",
+     "en": "Electrum",
+     "community": "EP",
+     "terms": "银金"
+    },
+    {
+     "key": "DND5E.CurrencyGP",
+     "en": "Gold",
+     "community": "GP",
+     "terms": "金"
+    },
+    {
+     "key": "DND5E.CurrencyPP",
+     "en": "Platinum",
+     "community": "PP",
+     "terms": "铂金"
+    },
+    {
+     "key": "DND5E.CurrencySP",
+     "en": "Silver",
+     "community": "SP",
+     "terms": "银"
+    },
+    {
+     "key": "DND5E.CurrencyManager.Transfer.All",
+     "en": "All",
+     "community": "全部",
+     "terms": "所有"
+    },
+    {
+     "key": "DND5E.DAMAGE.FIELDS.damage.parts.FIELDS.scaling.number.abbr",
+     "en": "Dice",
+     "community": "骰数",
+     "terms": "骰子"
+    },
+    {
+     "key": "DND5E.DamageApplication.Section.Multiplier",
+     "en": "Multiplier",
+     "community": "倍率",
+     "terms": "倍数"
+    },
+    {
+     "key": "DND5E.Dawn",
+     "en": "Dawn",
+     "community": "黎明",
+     "terms": "拂晓"
+    },
+    {
+     "key": "DND5E.Day",
+     "en": "Day",
+     "community": "日",
+     "terms": "天"
+    },
+    {
+     "key": "DND5E.DeathSaveSuccesses",
+     "en": "Successes",
+     "community": "成功",
+     "terms": "成功次数"
+    },
+    {
+     "key": "DND5E.DeathSavingThrow",
+     "en": "Death Saving Throw",
+     "community": "死亡豁免",
+     "terms": "死亡豁免检定"
+    },
+    {
+     "key": "DND5E.Details",
+     "en": "Details",
+     "community": "详情",
+     "terms": "细节"
+    },
+    {
+     "key": "DND5E.Dimensions",
+     "en": "Dimensions",
+     "community": "维度",
+     "terms": "尺寸"
+    },
+    {
+     "key": "DND5E.DistTouch",
+     "en": "Touch",
+     "community": "触及",
+     "terms": "触碰"
+    },
+    {
+     "key": "DND5E.DurationTime",
+     "en": "Time",
+     "community": "时长",
+     "terms": "时间"
+    },
+    {
+     "key": "DND5E.EFFECT.BASE.FIELDS.changes.element.conditions.label",
+     "en": "Change Conditions",
+     "community": "变更条件",
+     "terms": "改变状态"
+    },
+    {
+     "key": "DND5E.EFFECT.BASE.FIELDS.changes.element.phase.label",
+     "en": "Phase",
+     "community": "阶段",
+     "terms": "虚相"
+    },
+    {
+     "key": "DND5E.EFFECT.BASE.FIELDS.changes.element.value.label",
+     "en": "Value",
+     "community": "值",
+     "terms": "价值"
+    },
+    {
+     "key": "DND5E.EFFECT.BASE.FIELDS.magical.label",
+     "en": "Magical",
+     "community": "魔法效应",
+     "terms": "魔法"
+    },
+    {
+     "key": "DND5E.EFFECT.Change.Label",
+     "en": "Change",
+     "community": "变更",
+     "terms": "变化"
+    },
+    {
+     "key": "DND5E.EFFECT.Replacement.NoChange",
+     "en": "No Change",
+     "community": "不替换",
+     "terms": "无变化"
+    },
+    {
+     "key": "DND5E.EFFECT.Replacement.Origin",
+     "en": "Origin",
+     "community": "来源",
+     "terms": "起源"
+    },
+    {
+     "key": "DND5E.EFFECT.Status.Inactive",
+     "en": "Inactive",
+     "community": "未激活",
+     "terms": "无法行动"
+    },
+    {
+     "key": "DND5E.ENCHANT.SECTIONS.Enchantments",
+     "en": "Enchantments",
+     "community": "附魔",
+     "terms": "魔艺"
+    },
+    {
+     "key": "DND5E.ENCHANTMENT.Category.General",
+     "en": "Enchantments",
+     "community": "附魔",
+     "terms": "魔艺"
+    },
+    {
+     "key": "DND5E.ENCHANTMENT.FIELDS.magical.label",
+     "en": "Magical",
+     "community": "魔法附魔",
+     "terms": "魔法"
+    },
+    {
+     "key": "DND5E.ENCHANTMENT.Label",
+     "en": "Enchantment",
+     "community": "附魔",
+     "terms": "惑控"
+    },
+    {
+     "key": "DND5E.ENCHANTMENT.Period.AtWill",
+     "en": "At Will",
+     "community": "任意",
+     "terms": "随意"
+    },
+    {
+     "key": "DND5E.ENCOUNTER.Tab.Members",
+     "en": "Members",
+     "community": "角色",
+     "terms": "成员"
+    },
+    {
+     "key": "DND5E.EquipmentHeavy",
+     "en": "Heavy Armor",
+     "community": "重型护甲",
+     "terms": "重甲"
+    },
+    {
+     "key": "DND5E.EquipmentLight",
+     "en": "Light Armor",
+     "community": "轻型护甲",
+     "terms": "轻甲"
+    },
+    {
+     "key": "DND5E.EquipmentMedium",
+     "en": "Medium Armor",
+     "community": "中型护甲",
+     "terms": "中甲"
+    },
+    {
+     "key": "DND5E.FACILITY.Costs.Label",
+     "en": "Costs",
+     "community": "花费",
+     "terms": "成本"
+    },
+    {
+     "key": "DND5E.FACILITY.FIELDS.order.label",
+     "en": "Order",
+     "community": "指令",
+     "terms": "秩序"
+    },
+    {
+     "key": "DND5E.FACILITY.FIELDS.progress.max.label",
+     "en": "Total",
+     "community": "总计",
+     "terms": "全部"
+    },
+    {
+     "key": "DND5E.FACILITY.FIELDS.size.label",
+     "en": "Size",
+     "community": "大小",
+     "terms": "体型"
+    },
+    {
+     "key": "DND5E.FACILITY.FIELDS.trade.stock.value.label",
+     "en": "Value",
+     "community": "库存数",
+     "terms": "价值"
+    },
+    {
+     "key": "DND5E.FACILITY.Goods",
+     "en": "Goods",
+     "community": "货物",
+     "terms": "商品"
+    },
+    {
+     "key": "DND5E.FACILITY.Occupants",
+     "en": "Occupants",
+     "community": "住户",
+     "terms": "居住者"
+    },
+    {
+     "key": "DND5E.FACILITY.Orders.Label",
+     "en": "Orders",
+     "community": "指令",
+     "terms": "命令"
+    },
+    {
+     "key": "DND5E.FACILITY.Orders.change.inf",
+     "en": "Change",
+     "community": "改变",
+     "terms": "变化"
+    },
+    {
+     "key": "DND5E.FACILITY.Orders.craft.present",
+     "en": "Crafting",
+     "community": "制造中",
+     "terms": "手作"
+    },
+    {
+     "key": "DND5E.FACILITY.Orders.enlarge.inf",
+     "en": "Enlarge",
+     "community": "扩大",
+     "terms": "变巨"
+    },
+    {
+     "key": "DND5E.FACILITY.Orders.research.inf",
+     "en": "Research",
+     "community": "调查",
+     "terms": "研究"
+    },
+    {
+     "key": "DND5E.FACILITY.Orders.research.present",
+     "en": "Researching",
+     "community": "调查中",
+     "terms": "深入调查"
+    },
+    {
+     "key": "DND5E.FACILITY.Orders.trade.present",
+     "en": "Trading",
+     "community": "贸易中",
+     "terms": "贸易"
+    },
+    {
+     "key": "DND5E.FACILITY.Progress",
+     "en": "Progress",
+     "community": "发展",
+     "terms": "进展"
+    },
+    {
+     "key": "DND5E.FACILITY.Types.Special.Sanctuary",
+     "en": "Sanctuary",
+     "community": "圣坛",
+     "terms": "庇护"
+    },
+    {
+     "key": "DND5E.FACILITY.Types.Special.Stable",
+     "en": "Stable",
+     "community": "马厩",
+     "terms": "伤势稳定"
+    },
+    {
+     "key": "DND5E.FACILITY.Types.Special.Archive",
+     "en": "Archive",
+     "community": "档案室",
+     "terms": "档案馆"
+    },
+    {
+     "key": "DND5E.FACILITY.Types.Special.MeditationChamber",
+     "en": "Meditation Chamber",
+     "community": "冥想间",
+     "terms": "冥想室"
+    },
+    {
+     "key": "DND5E.FACILITY.Types.Special.Menagerie",
+     "en": "Menagerie",
+     "community": "兽栏",
+     "terms": "动物园"
+    },
+    {
+     "key": "DND5E.FALLING.MovementAction",
+     "en": "Fall",
+     "community": "坠落",
+     "terms": "秋"
+    },
+    {
+     "key": "DND5E.Feature.Class.PsionicPower",
+     "en": "Psionic Power",
+     "community": "灵能",
+     "terms": "灵能力量"
+    },
+    {
+     "key": "DND5E.Feature.Class.SuperiorHuntersDefense",
+     "en": "Superior Hunter's Defense",
+     "community": "高阶防守战术",
+     "terms": "高效防守战术"
+    },
+    {
+     "key": "DND5E.Feature.SupernaturalGift.Charm",
+     "en": "Charm",
+     "community": "护咒",
+     "terms": "魅惑"
+    },
+    {
+     "key": "DND5E.Focus.Label",
+     "en": "Spellcasting Focus",
+     "community": "施法法器",
+     "terms": "法器"
+    },
+    {
+     "key": "DND5E.Loot.Gear",
+     "en": "Adventuring Gear",
+     "community": "冒险装备",
+     "terms": "冒险用品"
+    },
+    {
+     "key": "DND5E.Loot.Material",
+     "en": "Material",
+     "community": "材料",
+     "terms": "材质"
+    },
+    {
+     "key": "DND5E.Flaws",
+     "en": "Flaws",
+     "community": "缺点",
+     "terms": "缺陷"
+    },
+    {
+     "key": "DND5E.Feats",
+     "en": "Feats",
+     "community": "特性",
+     "terms": "专长"
+    },
+    {
+     "key": "DND5E.FlagsPowerfulBuild",
+     "en": "Powerful Build",
+     "community": "身强力壮",
+     "terms": "强力构筑"
+    },
+    {
+     "key": "DND5E.FlagsReliableTalent",
+     "en": "Reliable Talent",
+     "community": "可靠才能（盗贼）",
+     "terms": "可靠才能"
+    },
+    {
+     "key": "DND5E.Group.Challenge",
+     "en": "Challenge",
+     "community": "挑战",
+     "terms": "挑战等级"
+    },
+    {
+     "key": "DND5E.Habitat.Categories.Grassland",
+     "en": "Grassland",
+     "community": "草原",
+     "terms": "草地"
+    },
+    {
+     "key": "DND5E.Habitat.Categories.Hill",
+     "en": "Hill",
+     "community": "山丘",
+     "terms": "丘陵"
+    },
+    {
+     "key": "DND5E.Habitat.Categories.Mountain",
+     "en": "Mountain",
+     "community": "山脉",
+     "terms": "山地"
+    },
+    {
+     "key": "DND5E.Hair",
+     "en": "Hair",
+     "community": "发色",
+     "terms": "毛发"
+    },
+    {
+     "key": "DND5E.HEAL.Title",
+     "en": "Heal",
+     "community": "治疗",
+     "terms": "医疗术"
+    },
+    {
+     "key": "DND5E.HEAL.Type.HealingShort",
+     "en": "Healing",
+     "community": "治疗",
+     "terms": "治愈"
+    },
+    {
+     "key": "DND5E.HitPointsCurrent",
+     "en": "Current Hit Points",
+     "community": "当前 HP",
+     "terms": "当前生命值"
+    },
+    {
+     "key": "DND5E.HitPointsTemp",
+     "en": "Temporary Hit Points",
+     "community": "临时 HP",
+     "terms": "临时生命值"
+    },
+    {
+     "key": "DND5E.Identify",
+     "en": "Identify",
+     "community": "鉴定",
+     "terms": "鉴定术"
+    },
+    {
+     "key": "DND5E.ItemActivation",
+     "en": "Activation",
+     "community": "激活",
+     "terms": "激活效应"
+    },
+    {
+     "key": "DND5E.Items",
+     "en": "Items",
+     "community": "物品",
+     "terms": "物件"
+    },
+    {
+     "key": "DND5E.ItemWeaponProperties",
+     "en": "Weapon Properties",
+     "community": "武器属性",
+     "terms": "武器词条"
+    },
+    {
+     "key": "DND5E.ITEM.Category.Label",
+     "en": "Category",
+     "community": "分类",
+     "terms": "类别"
+    },
+    {
+     "key": "DND5E.ITEM.Property.Focus",
+     "en": "Focus",
+     "community": "法器",
+     "terms": "专注"
+    },
+    {
+     "key": "DND5E.ITEM.Property.Light",
+     "en": "Light",
+     "community": "轻型",
+     "terms": "光线"
+    },
+    {
+     "key": "DND5E.ITEM.Property.Material",
+     "en": "Material",
+     "community": "材料",
+     "terms": "材质"
+    },
+    {
+     "key": "DND5E.ITEM.Rarity.Mundane",
+     "en": "Mundane",
+     "community": "非魔法",
+     "terms": "平凡的"
+    },
+    {
+     "key": "DND5E.ITEM.Rarity.Varies",
+     "en": "Varies",
+     "community": "多种稀有度",
+     "terms": "多类"
+    },
+    {
+     "key": "DND5E.ITEM.SECTIONS.Details",
+     "en": "Details",
+     "community": "详情",
+     "terms": "细节"
+    },
+    {
+     "key": "DND5E.Language.Language.Aarakocra",
+     "en": "Aarakocra",
+     "community": "阿拉寇拉语",
+     "terms": "鸟羽人语"
+    },
+    {
+     "key": "DND5E.Language.Language.Auran",
+     "en": "Auran",
+     "community": "气族语",
+     "terms": "风族语"
+    },
+    {
+     "key": "DND5E.Language.Language.Gnoll",
+     "en": "Gnoll",
+     "community": "豺狼人语",
+     "terms": "鬣狗语"
+    },
+    {
+     "key": "DND5E.Loyalty",
+     "en": "Loyalty",
+     "community": "忠诚度",
+     "terms": "忠诚"
+    },
+    {
+     "key": "DND5E.Materials",
+     "en": "Materials",
+     "community": "材料",
+     "terms": "材质"
+    },
+    {
+     "key": "DND5E.Multiplier",
+     "en": "Multiplier",
+     "community": "乘数",
+     "terms": "倍数"
+    },
+    {
+     "key": "DND5E.Normal",
+     "en": "Normal",
+     "community": "常规",
+     "terms": "正常"
+    },
+    {
+     "key": "DND5E.Notes",
+     "en": "Notes",
+     "community": "笔记",
+     "terms": "备注"
+    },
+    {
+     "key": "DND5E.NPC.FIELDS.attributes.price.label",
+     "en": "Cost",
+     "community": "费用",
+     "terms": "花费"
+    },
+    {
+     "key": "DND5E.NUMBER.3",
+     "en": "three",
+     "community": "3",
+     "terms": "三"
+    },
+    {
+     "key": "DND5E.NUMBER.4",
+     "en": "four",
+     "community": "4",
+     "terms": "四"
+    },
+    {
+     "key": "DND5E.NUMBER.5",
+     "en": "five",
+     "community": "5",
+     "terms": "五"
+    },
+    {
+     "key": "DND5E.NUMBER.6",
+     "en": "six",
+     "community": "6",
+     "terms": "六"
+    },
+    {
+     "key": "DND5E.NUMBER.7",
+     "en": "seven",
+     "community": "7",
+     "terms": "七"
+    },
+    {
+     "key": "DND5E.NUMBER.8",
+     "en": "eight",
+     "community": "8",
+     "terms": "八"
+    },
+    {
+     "key": "DND5E.NUMBER.9",
+     "en": "nine",
+     "community": "9",
+     "terms": "九"
+    },
+    {
+     "key": "DND5E.Number",
+     "en": "Number",
+     "community": "数量",
+     "terms": "数值"
+    },
+    {
+     "key": "DND5E.PersonalityTraits",
+     "en": "Personality Traits",
+     "community": "个性",
+     "terms": "个性特点"
+    },
+    {
+     "key": "DND5E.PIETY.Label",
+     "en": "Piety",
+     "community": "虔信值",
+     "terms": "虔信"
+    },
+    {
+     "key": "DND5E.Preparation",
+     "en": "Preparation",
+     "community": "准备",
+     "terms": "预备"
+    },
+    {
+     "key": "DND5E.Prerequisites.FIELDS.prerequisites.label",
+     "en": "Prerequisites",
+     "community": "先决条件",
+     "terms": "先决"
+    },
+    {
+     "key": "DND5E.ProficiencyOther",
+     "en": "Other",
+     "community": "其他熟练",
+     "terms": "其他"
+    },
+    {
+     "key": "DND5E.Properties",
+     "en": "Properties",
+     "community": "属性",
+     "terms": "词条"
+    },
+    {
+     "key": "DND5E.PropertyTotal",
+     "en": "Total",
+     "community": "总计",
+     "terms": "全部"
+    },
+    {
+     "key": "DND5E.RANGE.FIELDS.range.label",
+     "en": "Range",
+     "community": "射程",
+     "terms": "范围"
+    },
+    {
+     "key": "DND5E.Range",
+     "en": "Range",
+     "community": "射程",
+     "terms": "范围"
+    },
+    {
+     "key": "DND5E.Recovery",
+     "en": "Recovery",
+     "community": "恢复",
+     "terms": "康复"
+    },
+    {
+     "key": "DND5E.REGIONBEHAVIORS.DIFFICULTTERRAIN.Type.Ice",
+     "en": "Slippery Ice",
+     "community": "光滑冰面",
+     "terms": "湿滑冰面"
+    },
+    {
+     "key": "DND5E.REGIONBEHAVIORS.DIFFICULTTERRAIN.Type.Nonmagical",
+     "en": "Nonmagical",
+     "community": "非魔法",
+     "terms": "非魔法的"
+    },
+    {
+     "key": "DND5E.REGIONBEHAVIORS.ROTATEAREA.FIELDS.lights.ids.label",
+     "en": "Lights",
+     "community": "光源",
+     "terms": "灯光"
+    },
+    {
+     "key": "DND5E.REGIONBEHAVIORS.ROTATEAREA.FIELDS.walls.ids.label",
+     "en": "Walls",
+     "community": "墙体",
+     "terms": "墙壁"
+    },
+    {
+     "key": "DND5E.Requirements",
+     "en": "Requirements",
+     "community": "需求",
+     "terms": "要求"
+    },
+    {
+     "key": "DND5E.REST.Duration.Label",
+     "en": "Duration",
+     "community": "时长",
+     "terms": "持续时间"
+    },
+    {
+     "key": "DND5E.MOVEMENT.Type.Jump",
+     "en": "Jump",
+     "community": "跳跃",
+     "terms": "跳跃术"
+    },
+    {
+     "key": "DND5E.MOVEMENT.Type.Walk",
+     "en": "Walk",
+     "community": "步行",
+     "terms": "走"
+    },
+    {
+     "key": "DND5E.SAVE.FIELDS.damage.onSave.Half",
+     "en": "Half Damage",
+     "community": "半数伤害",
+     "terms": "伤害减半"
+    },
+    {
+     "key": "DND5E.SenseTremorsense",
+     "en": "Tremorsense",
+     "community": "颤动感知",
+     "terms": "震颤感知"
+    },
+    {
+     "key": "DND5E.SenseTruesight",
+     "en": "Truesight",
+     "community": "真视",
+     "terms": "真实视觉"
+    },
+    {
+     "key": "DND5E.SheetModePlay",
+     "en": "Play",
+     "community": "游玩",
+     "terms": "打出"
+    },
+    {
+     "key": "DND5E.SchoolAbj",
+     "en": "Abjuration",
+     "community": "防护系",
+     "terms": "防护"
+    },
+    {
+     "key": "DND5E.SchoolCon",
+     "en": "Conjuration",
+     "community": "咒法系",
+     "terms": "咒法"
+    },
+    {
+     "key": "DND5E.SchoolEnc",
+     "en": "Enchantment",
+     "community": "惑控系",
+     "terms": "惑控"
+    },
+    {
+     "key": "DND5E.SchoolEvo",
+     "en": "Evocation",
+     "community": "塑能系",
+     "terms": "塑能"
+    },
+    {
+     "key": "DND5E.SchoolIll",
+     "en": "Illusion",
+     "community": "幻术系",
+     "terms": "幻术"
+    },
+    {
+     "key": "DND5E.SchoolNec",
+     "en": "Necromancy",
+     "community": "死灵系",
+     "terms": "死灵"
+    },
+    {
+     "key": "DND5E.SchoolTrs",
+     "en": "Transmutation",
+     "community": "变化系",
+     "terms": "变化"
+    },
+    {
+     "key": "DND5E.SizeMedium",
+     "en": "Medium",
+     "community": "中型",
+     "terms": "中等"
+    },
+    {
+     "key": "DND5E.Skin",
+     "en": "Skin",
+     "community": "肤色",
+     "terms": "皮肤"
+    },
+    {
+     "key": "DND5E.SOURCE.FIELDS.source.book.label",
+     "en": "Book",
+     "community": "规则书",
+     "terms": "书"
+    },
+    {
+     "key": "DND5E.Spellcasting",
+     "en": "Spellcasting",
+     "community": "施法方式",
+     "terms": "施法"
+    },
+    {
+     "key": "DND5E.SpellComponent",
+     "en": "Spell Component",
+     "community": "法术成分",
+     "terms": "施法成分"
+    },
+    {
+     "key": "DND5E.SpellHeader.Range",
+     "en": "Range",
+     "community": "射程",
+     "terms": "范围"
+    },
+    {
+     "key": "DND5E.SpellPrepInnate",
+     "en": "Innate Spellcasting",
+     "community": "天生法术",
+     "terms": "天生施法"
+    },
+    {
+     "key": "DND5E.SplitStack.Action",
+     "en": "Split",
+     "community": "拆分",
+     "terms": "分裂"
+    },
+    {
+     "key": "DND5E.StartingEquipment.Wealth.Label",
+     "en": "Starting Wealth",
+     "community": "初始资金",
+     "terms": "起始财富"
+    },
+    {
+     "key": "DND5E.Summary",
+     "en": "Summary",
+     "community": "概要",
+     "terms": "概述"
+    },
+    {
+     "key": "DND5E.SUMMON.FIELDS.bonuses.attackDamage.label",
+     "en": "Bonus Attack Damage",
+     "community": "攻击伤害加值",
+     "terms": "额外攻击伤害"
+    },
+    {
+     "key": "DND5E.SUMMON.FIELDS.bonuses.healing.label",
+     "en": "Bonus Healing",
+     "community": "治疗加值",
+     "terms": "额外治疗"
+    },
+    {
+     "key": "DND5E.TABLEOFCONTENTS.FIELDS.order.label",
+     "en": "Order",
+     "community": "顺序",
+     "terms": "秩序"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Enemy.Label",
+     "en": "Enemy",
+     "community": "敌人",
+     "terms": "仇敌"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Enemy.Counted.one",
+     "en": "enemy",
+     "community": "敌人",
+     "terms": "仇敌"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Ring.Label",
+     "en": "Ring",
+     "community": "环形",
+     "terms": "戒指"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Ring.Counted.one",
+     "en": "ring",
+     "community": "环形",
+     "terms": "戒指"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Ring.Counted.other",
+     "en": "rings",
+     "community": "环形",
+     "terms": "戒指"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Square.Counted.other",
+     "en": "squares",
+     "community": "方形",
+     "terms": "方格"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Wall.Label",
+     "en": "Wall",
+     "community": "墙形",
+     "terms": "墙"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Wall.Counted.one",
+     "en": "wall",
+     "community": "墙形",
+     "terms": "墙"
+    },
+    {
+     "key": "DND5E.TARGET.Type.Wall.Counted.other",
+     "en": "walls",
+     "community": "墙形",
+     "terms": "墙壁"
+    },
+    {
+     "key": "DND5E.TargetTypeIndividual",
+     "en": "Individual",
+     "community": "单体",
+     "terms": "个体"
+    },
+    {
+     "key": "DND5E.TimeMonth",
+     "en": "Months",
+     "community": "月",
+     "terms": "月历"
+    },
+    {
+     "key": "DND5E.TimeRound",
+     "en": "Rounds",
+     "community": "轮",
+     "terms": "回合"
+    },
+    {
+     "key": "DND5E.TRAIT.Armor.one",
+     "en": "Armor Training",
+     "community": "护甲训练",
+     "terms": "护甲受训"
+    },
+    {
+     "key": "DND5E.TRAIT.Armor.other",
+     "en": "Armor Training",
+     "community": "护甲训练",
+     "terms": "护甲受训"
+    },
+    {
+     "key": "DND5E.TRAIT.Armor.title",
+     "en": "Armor Training",
+     "community": "护甲训练",
+     "terms": "护甲受训"
+    },
+    {
+     "key": "DND5E.TRAIT.ArmorLegacy.one",
+     "en": "Armor Proficiency",
+     "community": "护甲熟练",
+     "terms": "护甲熟练项"
+    },
+    {
+     "key": "DND5E.TRAIT.Save.other",
+     "en": "Saving Throw Proficiencies",
+     "community": "豁免熟练",
+     "terms": "豁免检定熟练"
+    },
+    {
+     "key": "DND5E.TRAIT.Save.title",
+     "en": "Saving Throw Proficiencies",
+     "community": "豁免熟练",
+     "terms": "豁免检定熟练"
+    },
+    {
+     "key": "DND5E.TRAIT.Tool.other",
+     "en": "Tool Proficiencies",
+     "community": "工具熟练",
+     "terms": "工具熟练项"
+    },
+    {
+     "key": "DND5E.TRAIT.Tool.title",
+     "en": "Tool Proficiencies",
+     "community": "工具熟练",
+     "terms": "工具熟练项"
+    },
+    {
+     "key": "DND5E.TRANSFORM.Preset.WildShape.Label",
+     "en": "Wild Shape",
+     "community": "荒野变形",
+     "terms": "荒野形态"
+    },
+    {
+     "key": "DND5E.TRANSFORM.Setting.FIELDS.keep.label",
+     "en": "Keep",
+     "community": "保留",
+     "terms": "堡垒"
+    },
+    {
+     "key": "DND5E.TRANSFORM.Setting.Keep.Vision.Label",
+     "en": "Vision",
+     "community": "视觉",
+     "terms": "感官"
+    },
+    {
+     "key": "DND5E.TRAVEL.Pace.Normal",
+     "en": "Normal",
+     "community": "中速",
+     "terms": "正常"
+    },
+    {
+     "key": "DND5E.TRAVEL.Pace.Slow",
+     "en": "Slow",
+     "community": "慢速",
+     "terms": "减速"
+    },
+    {
+     "key": "DND5E.TRAVEL.Type.Land",
+     "en": "Land",
+     "community": "陆行",
+     "terms": "大地"
+    },
+    {
+     "key": "DND5E.TRAVEL.Type.Water",
+     "en": "Water",
+     "community": "水路",
+     "terms": "水"
+    },
+    {
+     "key": "DND5E.Treasure.Categories.Individual",
+     "en": "Individual",
+     "community": "独特",
+     "terms": "个体"
+    },
+    {
+     "key": "DND5E.UNITS.DISTANCE.Mile.Template",
+     "en": "mile",
+     "community": "里",
+     "terms": "英里"
+    },
+    {
+     "key": "DND5E.UNITS.TIME.Month.Label",
+     "en": "Month",
+     "community": "月",
+     "terms": "月份"
+    },
+    {
+     "key": "DND5E.USAGE.SECTION.Creation",
+     "en": "Creation",
+     "community": "造物",
+     "terms": "创造"
+    },
+    {
+     "key": "DND5E.USES.Recovery.Period.Dawn.Label",
+     "en": "Dawn",
+     "community": "黎明",
+     "terms": "拂晓"
+    },
+    {
+     "key": "DND5E.USES.Recovery.Period.Day.Label",
+     "en": "Day",
+     "community": "日",
+     "terms": "天"
+    },
+    {
+     "key": "DND5E.Value",
+     "en": "Value",
+     "community": "数值",
+     "terms": "价值"
+    },
+    {
+     "key": "DND5E.VEHICLE.FIELDS.attributes.actions.stations.label",
+     "en": "Action Stations",
+     "community": "战斗岗位",
+     "terms": "操作台"
+    },
+    {
+     "key": "DND5E.VEHICLE.Mishap.Threshold.label",
+     "en": "Mishap Threshold",
+     "community": "遇难阈值",
+     "terms": "厄运阀值"
+    },
+    {
+     "key": "DND5E.VEHICLE.Type.Land.label",
+     "en": "Land Vehicle",
+     "community": "陆运载具",
+     "terms": "陆地载具"
+    },
+    {
+     "key": "DND5E.WEAPON.Mastery.Slow",
+     "en": "Slow",
+     "community": "缓速",
+     "terms": "减速"
+    },
+    {
+     "key": "DND5E.WeaponImprov",
+     "en": "Improvised",
+     "community": "临时武器",
+     "terms": "临时"
+    },
+    {
+     "key": "DND5E.WeaponMartialProficiency",
+     "en": "Martial",
+     "community": "军用武器",
+     "terms": "军用"
+    },
+    {
+     "key": "DND5E.WeaponSimpleProficiency",
+     "en": "Simple",
+     "community": "简易武器",
+     "terms": "简易"
+    },
+    {
+     "key": "DND5E.Weight",
+     "en": "Weight",
+     "community": "体重",
+     "terms": "重量"
+    },
+    {
+     "key": "EFFECT.DND5E.StatusBleeding",
+     "en": "Bleeding",
+     "community": "失血",
+     "terms": "流血"
+    },
+    {
+     "key": "EFFECT.DND5E.StatusConcentrating",
+     "en": "Concentrating",
+     "community": "专注",
+     "terms": "专注于"
+    },
+    {
+     "key": "EFFECT.DND5E.StatusCursed",
+     "en": "Cursed",
+     "community": "被诅咒",
+     "terms": "诅咒"
+    },
+    {
+     "key": "EFFECT.DND5E.StatusHiding",
+     "en": "Hiding",
+     "community": "隐匿",
+     "terms": "躲藏"
+    },
+    {
+     "key": "EFFECT.DND5E.StatusSleeping",
+     "en": "Sleeping",
+     "community": "睡眠",
+     "terms": "沉睡"
+    },
+    {
+     "key": "EFFECT.DND5E.StatusStable",
+     "en": "Stable",
+     "community": "稳定",
+     "terms": "伤势稳定"
+    },
+    {
+     "key": "EFFECT.DND5E.StatusSurprised",
+     "en": "Surprised",
+     "community": "惊讶",
+     "terms": "突袭"
+    },
+    {
+     "key": "JOURNALENTRYPAGE.DND5E.Class.FIELDS.description.value.label",
+     "en": "Introduction",
+     "community": "介绍",
+     "terms": "简介"
+    },
+    {
+     "key": "JOURNALENTRYPAGE.DND5E.Class.FIELDS.style.label",
+     "en": "Style",
+     "community": "样式",
+     "terms": "风格"
+    },
+    {
+     "key": "JOURNALENTRYPAGE.DND5E.Class.SpellSlotLevel",
+     "en": "Slot Level",
+     "community": "环阶",
+     "terms": "法术位环阶"
+    },
+    {
+     "key": "JOURNALENTRYPAGE.DND5E.Class.Style.Legacy",
+     "en": "Legacy",
+     "community": "旧版",
+     "terms": "遗赠"
+    },
+    {
+     "key": "JOURNALENTRYPAGE.DND5E.Class.Style.Modern",
+     "en": "Modern",
+     "community": "新版",
+     "terms": "现代"
+    },
+    {
+     "key": "JOURNALENTRYPAGE.DND5E.Subclass.FIELDS.description.value.label",
+     "en": "Introduction",
+     "community": "引言",
+     "terms": "简介"
+    },
+    {
+     "key": "JOURNALENTRYPAGE.DND5E.Subclass.FIELDS.style.label",
+     "en": "Style",
+     "community": "样式",
+     "terms": "风格"
+    },
+    {
+     "key": "SETTINGS.DND5E.CHATLOG.Options.dark",
+     "en": "Dark",
+     "community": "深色",
+     "terms": "黑暗"
+    },
+    {
+     "key": "SETTINGS.DND5E.CHATLOG.Options.light",
+     "en": "Light",
+     "community": "浅色",
+     "terms": "光线"
+    },
+    {
+     "key": "SETTINGS.DND5E.COMBAT.InitiativeScore.Name",
+     "en": "Initiative Score",
+     "community": "先攻值",
+     "terms": "先攻定值"
+    },
+    {
+     "key": "SETTINGS.DND5E.ENCOUNTERS.EncounterPlacementBehavior.None",
+     "en": "Do Nothing",
+     "community": "不执行操作",
+     "terms": "什么都不做"
+    },
+    {
+     "key": "SETTINGS.DND5E.LOYALTY.Name",
+     "en": "Loyalty Score",
+     "community": "忠诚度",
+     "terms": "忠诚值"
+    },
+    {
+     "key": "SETTINGS.DND5E.VARIANT.Name",
+     "en": "Variant Rules",
+     "community": "规则变体",
+     "terms": "变体规则"
+    },
+    {
+     "key": "SETTINGS.DND5E.VISIBILITY.Name",
+     "en": "Visibility",
+     "community": "可见性",
+     "terms": "能见度"
+    }
    ]
   },
   {
    "package": "module:lib-wrapper",
    "total": 77,
    "translated": 7,
+   "fromCommunity": 0,
    "conflicts": 0,
    "groupsWithCategory": 1,
-   "conflictList": []
+   "conflictList": [],
+   "differsFromTerms": 0,
+   "differsList": []
   },
   {
    "package": "module:plutonium",
    "total": 6,
    "translated": 2,
+   "fromCommunity": 0,
    "conflicts": 0,
    "groupsWithCategory": 0,
-   "conflictList": []
+   "conflictList": [],
+   "differsFromTerms": 0,
+   "differsList": []
   }
  ]
 }

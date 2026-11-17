@@ -31,6 +31,7 @@
 | dnd5e 系统 6.1.0（`systems/dnd5e/`、`packs/`） | 2014 规则实现与 SRD 资料包 | 代码 MIT（版权 Andrew Clayton，原文随附 `systems/dnd5e/LICENSE.txt`）；SRD 5.1 内容 CC BY 4.0 |
 | libWrapper 1.13.5.1（`modules/lib-wrapper/`） | Plutonium 依赖 | LGPL-3.0；许可原文随附 `modules/lib-wrapper/LICENSE`，未修改 |
 | Plutonium 2.20.1.v14（`modules/plutonium/`，仅录到的文件） | 把 5etools 条目转成 dnd5e 数据 | 原包 `module.json` 标为 UNLICENSED（未授予开源许可）；随插件带属驾驶员判断承担的风险 |
+| 社区翻译 5e_chn（FVTT-CN，提交 `910a980`，[仓库](https://github.com/fvtt-cn/5e_chn)） | 结算小窗 dnd5e 界面文字的中文：生成工具按同一编号取进 `systems/dnd5e/lang/zh.json`（原文件放仓库外，不随插件带） | 仓库未声明许可证（2026-11-17 查）；随插件带它的译文属驾驶员判断承担的风险 |
 
 5etools 条目本身不随插件带：Plutonium 读 5etools 数据时由玩家安装的【库】回答。
 

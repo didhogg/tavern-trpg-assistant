@@ -1,7 +1,8 @@
 // 结算小窗的中文语言文件：官方客户端按「系统 / 模块清单里登记的语言文件」给界面文字（技能名、语言名、进阶标题、状态名……）。
-// 现在只有英文；这里从作者「大译名表」自动生成中文文件，不手写任何译文：
+// 现在只有英文；这里自动生成中文文件，不手写任何译文：
 //   · 对每个已装包（vendor/foundry/manifest.json 里的系统和模块），按它自己清单里登记的英文文件逐条翻；
-//   · 整句完全相同（忽略大小写和首尾空格）才翻，对不上的留空——官方客户端缺哪个键就自动回退英文；
+//   · 同一编号先用社区翻译模块（按同一套编号逐条翻好的，如 5e_chn；读法见 tools/lib/community-langs.mjs，驾驶员 2026-11-17 定：两边不同时听社区）；
+//   · 社区没有的编号，再从作者「大译名表」配：整句完全相同（忽略大小写和首尾空格）才翻，对不上的留空——官方客户端缺哪个键就自动回退英文；
 //   · 同一个英文有几种中文：同一组兄弟键（同一个上级路径，例如全是语言名）里多数词属于哪个分类，整组就优先取那个分类
 //     （Giant 在语言名一组里是「巨人语」，不是生物「巨人」）；仍有几种 → 不翻，记进复核清单，不替人挑。
 // 产出（都是生成的，不手改）：
@@ -14,6 +15,7 @@ import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { choose, loadTerms } from './lib/terms.mjs'
+import { communityDir, loadCommunity } from './lib/community-langs.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const foundry = join(root, 'vendor/foundry')
@@ -26,6 +28,9 @@ const GROUP_MIN = 3
 
 const { candidates, version } = await loadTerms()
 if (!candidates.size) { console.error('译名表没读到，不生成（避免产出空的语言包）。'); process.exit(1) }
+
+const community = await loadCommunity({ lang: LANG, name: LANG_NAME })
+const communityFrom = [...new Set([...community.values()].flat().map((c) => c.from))]
 
 const manifest = JSON.parse(await readFile(join(foundry, 'manifest.json'), 'utf8'))
 const packages = [
@@ -64,7 +69,7 @@ function groupCategories(list) {
 }
 
 const files = []
-const review = { generatedFrom: version, lang: LANG, packs: [] }
+const review = { generatedFrom: version, community: communityFrom, communityDir, lang: LANG, packs: [] }
 for (const pkg of packages) {
   const pkgManifest = JSON.parse(await readFile(join(foundry, pkg.dir, pkg.file), 'utf8'))
   const en = (pkgManifest.languages ?? []).find((l) => l.lang === 'en')
@@ -74,17 +79,28 @@ for (const pkg of packages) {
   const cats = groupCategories(list)
   const flat = {}
   const conflicts = []
+  const differs = []
+  let fromCommunity = 0
+  // 社区翻译：同一编号、有字、和英文原文不同才算翻了
+  const communityOf = (key, text) => (community.get(pkg.id) ?? []).map((c) => c.texts[key]).find((v) => typeof v === 'string' && v.trim() && v.trim() !== text.trim())
   for (const { key, text } of list) {
     const all = candidates.get(text.trim().toLowerCase())
+    const preferred = all ? cats.get(parentOf(key)) : undefined
+    const inGroup = preferred === undefined || !all ? [] : all.filter((x) => x.category === preferred)
+    const picked = all ? choose(inGroup.length ? inGroup : all) : null
+    const shared = communityOf(key, text)
+    if (shared) {
+      flat[key] = shared
+      fromCommunity++
+      if (picked?.label && picked.label !== shared) differs.push({ key, en: text, community: shared, terms: picked.label })
+      continue
+    }
     if (!all) continue
-    const preferred = cats.get(parentOf(key))
-    const inGroup = preferred === undefined ? [] : all.filter((x) => x.category === preferred)
-    const picked = choose(inGroup.length ? inGroup : all)
     if (picked?.label) flat[key] = picked.label
     else conflicts.push({ key, en: text, candidates: picked?.candidates.map((x) => ({ zh: x.zh, category: x.category })) ?? [] })
   }
   const zhPath = en.path.replace(/en\.json$/, `${LANG}.json`)
-  review.packs.push({ package: `${pkg.type}:${pkg.id}`, total: list.length, translated: Object.keys(flat).length, conflicts: conflicts.length, groupsWithCategory: cats.size, conflictList: conflicts.slice(0, 300) })
+  review.packs.push({ package: `${pkg.type}:${pkg.id}`, total: list.length, translated: Object.keys(flat).length, fromCommunity, conflicts: conflicts.length, groupsWithCategory: cats.size, conflictList: conflicts.slice(0, 300), differsFromTerms: differs.length, differsList: differs })
   if (!Object.keys(flat).length) continue
   // 平铺的点号键：官方客户端读语言文件时会 expandObject，和嵌套写法等价
   const body = JSON.stringify(flat, null, 1) + '\n'
@@ -94,8 +110,8 @@ for (const pkg of packages) {
 }
 
 const hash = createHash('sha256').update(files.map((f) => `${f.package}:${f.id}:${f.path}:${f.sha256}`).sort().join('\n')).digest('hex')
-const declaration = { generatedFrom: `大译名表 ${version}`, packs: { [LANG]: { name: LANG_NAME, hash, files } } }
+const declaration = { generatedFrom: [`大译名表 ${version}`, ...communityFrom.map((x) => `社区 ${x}`)].join('；'), packs: { [LANG]: { name: LANG_NAME, hash, files } } }
 await writeFile(join(foundry, 'lang-packs.json'), JSON.stringify(declaration, null, 1) + '\n')
 await writeFile(join(foundry, 'lang-packs.review.json'), JSON.stringify(review, null, 1) + '\n')
-for (const p of review.packs) console.log(`${p.package}：${p.total} 条，翻了 ${p.translated}，冲突不翻 ${p.conflicts}，有分类的组 ${p.groupsWithCategory}`)
+for (const p of review.packs) console.log(`${p.package}：${p.total} 条，翻了 ${p.translated}（社区 ${p.fromCommunity}），冲突不翻 ${p.conflicts}，与译名表译法不同 ${p.differsFromTerms}，有分类的组 ${p.groupsWithCategory}`)
 console.log(`语言包 ${LANG}：${files.length} 个文件，摘要 ${hash.slice(0, 12)} → vendor/foundry/lang-packs.json`)
