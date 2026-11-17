@@ -39,6 +39,7 @@ export const useWizardStore = defineStore('wizard', () => {
   const cur = ref('name')
   const chosen = ref<Record<string, EntryRef[]>>({})
   /** 玩家在每一步里的选择：条目键 → 步骤键 → 界面状态（Trait = 每个位置选了哪些值；能力值 = 每项加几点）。 */
+  const traitPlan = ref<Record<string, string>>({})
   const sel = ref<Record<string, Record<string, any>>>({}) // eslint-disable-line @typescript-eslint/no-explicit-any -- 两种形状按 kind 区分
   const options = shallowRef<BuildOptionsItem[] | null>(null)
   /** 属性值：方式 + 每项放了几（没放 = 没有这个键）；「基础 + 加成 = 合计」和检查结果都由后端按这两样给。 */
@@ -89,7 +90,10 @@ export const useWizardStore = defineStore('wizard', () => {
   const leftOf = (ref: EntryRef, step: ChoiceStep): number => step.options.kind === 'asi' ? Number(step.options.left) : needOf(step) - haveOf(ref, step)
   /** 这一步玩家已选的（选了几个交几个）；一个都没选 = 不交，后端留空。属性提升只交玩家加的点，固定加值由后端合并。 */
   function pickOf(ref: EntryRef, step: ChoiceStep): BuildPick | null {
-    if (haveOf(ref, step) === 0) return null
+    const plan = step.options.plans?.[0]?.id
+    const preferred = plan && traitPlan.value[`${refKey(ref)}|${plan}`]
+    if (preferred && preferred !== step.id) return { id: preferred, level: step.level, value: { chosen: [] } }
+    if (haveOf(ref, step) === 0) return preferred ? { id: step.id, level: step.level, value: { chosen: [] } } : null
     const v = sel.value[refKey(ref)][stepKey(step)]
     if (step.options.kind === 'asi') return { id: step.id, level: step.level, value: { type: 'asi', chosen: { ...(v as Record<string, number>) } } }
     const grants = (step.options.grants as Array<{ value: string }>).map((g) => g.value)
@@ -132,7 +136,7 @@ export const useWizardStore = defineStore('wizard', () => {
   async function open(startView: string): Promise<void> {
     seq++; lastSent = ''
     lists.value = {} // 候选列表每次打开重读：本战役开关、换战役后要跟全局搜索一致
-    name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; equip.reset(); options.value = null; optError.value = null; createError.value = null; creating.value = false
+    name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; traitPlan.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; equip.reset(); options.value = null; optError.value = null; createError.value = null; creating.value = false
     category.value = CATEGORIES.some((c) => c.id === startView) ? startView as CategoryId : 'party'
     const lib = await app.svc().backend.kernelSave.libraryOf(owner())
     build.value = [...(ruleKernel(lib.rule)?.build ?? [])]
@@ -162,6 +166,14 @@ export const useWizardStore = defineStore('wizard', () => {
     void refreshOptions(); void equip.refresh()
   }
   const isChosen = (prop: string, key: string): boolean => (chosen.value[prop] ?? []).some((r) => refKey(r) === key)
+
+  function setTraitPlan(ref: EntryRef, step: ChoiceStep, id: string): void {
+    if (!step.options.plans?.some((plan: { id: string }) => plan.id === id)) return
+    const key = refKey(ref)
+    traitPlan.value = { ...traitPlan.value, [`${key}|${step.options.plans[0].id}`]: id }
+    if (sel.value[key]) delete sel.value[key][stepKey(step)]
+    void refreshOptions()
+  }
 
   function setSlot(ref: EntryRef, step: ChoiceStep, slot: number, value: string): void {
     const k = refKey(ref); const sk = stepKey(step)
@@ -237,5 +249,5 @@ export const useWizardStore = defineStore('wizard', () => {
   const move = (delta: number): void => { const i = steps.value.indexOf(cur.value); cur.value = steps.value[Math.max(0, Math.min(steps.value.length - 1, i + delta))] }
 
   return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, equip, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
-    open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, leftOf, selOf, optionsFor, setSlot, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
+    open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, leftOf, selOf, optionsFor, setSlot, setTraitPlan, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
 })

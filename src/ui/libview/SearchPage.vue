@@ -9,11 +9,14 @@ import Checkbox from '../kit/Checkbox.vue'
 import GroupCheck from '../kit/GroupCheck.vue'
 import Icon from '../kit/Icon.vue'
 import { openEntry, openReader } from './open'
-import { hitCategories, hitCategoryKey, hitCategoryLabel, hitName, hitSource, loadAllHits, searchScopeGroups, withoutUnchecked, type ScopeRow } from './search-data'
+import { useCategoryNames } from './useCategoryNames'
+import { isRegisteredCategory } from './registry'
+import { hitCategories, hitCategoryKey, hitName, hitSource, loadAllHits, searchScopeGroups, withoutUnchecked, type ScopeRow } from './search-data'
 
 /** 全库数据搜索（U2b）：和包弹窗同一种弹窗，多一个可折叠的"书目范围"。默认折叠、折叠状态记住；默认全勾已开启的书，取消勾选只对这次搜索有效。 */
 const app = useAppStore()
 const lib = useLibViewStore()
+const categoryLabel = useCategoryNames()
 const OPEN_KEY = 'search:books:open'
 
 const q = ref('')
@@ -83,7 +86,7 @@ onMounted(() => void run())
 onBeforeUnmount(() => clearTimeout(timer))
 
 const visibleHits = computed(() => withoutUnchecked(hits.value, unchecked.value))
-const pills = computed(() => hitCategories(visibleHits.value))
+const pills = computed(() => hitCategories(visibleHits.value, categoryLabel))
 const list = computed(() => (cat.value === 'all' ? visibleHits.value : visibleHits.value.filter((h) => hitCategoryKey(h) === cat.value)))
 const { range, toTop } = useVirtual(scrollEl, computed(() => list.value.length))
 const windowed = computed(() => list.value.slice(range.value.start, range.value.end))
@@ -128,7 +131,7 @@ function open(h: ScopedSearchHit): void {
       <div v-else class="lib-list" role="list" data-testid="search-results" :style="{ paddingTop: `${range.padTop}px`, paddingBottom: `${range.padBottom}px` }">
         <button v-for="(h, i) in windowed" :key="`${h.ref.set}:${h.ref.prop}:${h.ref.hash}:${h.variant?.altId ?? ''}:${range.start + i}`" class="lib-list__row" type="button" role="listitem" @click="open(h)">
           <span class="lib-name">{{ hitName(h) }}</span>
-          <span class="trpg-badge">{{ hitCategoryLabel(h) }}</span>
+          <span class="trpg-badge">{{ isRegisteredCategory(h.prop) ? categoryLabel(h.prop) : '其他' }}</span>
           <span v-if="h.variant" class="trpg-badge" data-tone="primary">同名</span>
           <span class="lib-src lib-end">{{ h.variant?.pack ?? hitSource(h) ?? '' }}</span>
         </button>

@@ -16,11 +16,14 @@ const EXPORTS = [
   'Charactermancer_ItemMasteries_Util',
   'Charactermancer_Class_Util',
   'Charactermancer_OtherProficiencySelect',
+  'Charactermancer_ExpertiseSelect',
   'Charactermancer_ImmResVulnSelect',
   'UtilAdvancementsEntry',
   'UtilAdvancements',
   'ComponentUiUtil',
   'veE',
+  'EQUIPMENT_TYPE_EXPANDERS',
+  'UtilEntityItem',
 ]
 
 export let plutoniumBuild: Record<string, any> | null = null

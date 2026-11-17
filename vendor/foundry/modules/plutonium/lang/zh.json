@@ -1,4 +1,22 @@
 {
  "PLUT.Name": "名称",
- "PLUT.Type": "类型"
+ "PLUT.Type": "类型",
+ "TRPGAssistant.EquipmentType.weapon": "武器",
+ "TRPGAssistant.EquipmentType.weaponSimple": "简易武器",
+ "TRPGAssistant.EquipmentType.weaponSimpleMelee": "简易近战武器",
+ "TRPGAssistant.EquipmentType.weaponSimpleRanged": "简易远程武器",
+ "TRPGAssistant.EquipmentType.weaponMartial": "军用武器",
+ "TRPGAssistant.EquipmentType.weaponMartialMelee": "军用近战武器",
+ "TRPGAssistant.EquipmentType.weaponMartialRanged": "军用远程武器",
+ "TRPGAssistant.EquipmentType.weaponMelee": "近战武器",
+ "TRPGAssistant.EquipmentType.weaponRanged": "远程武器",
+ "TRPGAssistant.EquipmentType.instrumentMusical": "乐器",
+ "TRPGAssistant.EquipmentType.armorLight": "轻甲",
+ "TRPGAssistant.EquipmentType.armorMedium": "中甲",
+ "TRPGAssistant.EquipmentType.armorHeavy": "重甲",
+ "TRPGAssistant.EquipmentType.focusSpellcastingArcane": "奥术法器",
+ "TRPGAssistant.EquipmentType.focusSpellcastingDruidic": "德鲁伊法器",
+ "TRPGAssistant.EquipmentType.focusSpellcastingHoly": "圣徽",
+ "TRPGAssistant.EquipmentType.setGaming": "赌具",
+ "TRPGAssistant.EquipmentType.toolArtisan": "工匠工具"
 }

@@ -6,7 +6,8 @@ import { hashValue } from '../../../core/hash'
 import { plutoniumBuild } from './plutonium-build'
 import { BUILD_ACTOR_TYPE } from './actor-types'
 import { withSeed } from './random'
-import { groupTitle } from './trait-title'
+import { groupTitle, titleOfKeys } from './trait-title'
+import { readTraitPlans, type NativeSlot } from './trait-plans'
 import { traitOrigins } from './trait-origins'
 
 const g = globalThis as any
@@ -15,9 +16,13 @@ export const isBuildTrait = (id: unknown): boolean => typeof id === 'string' && 
 const idOf = (...parts: unknown[]): string => PREFIX + hashValue(parts).slice(0, 12)
 
 type KeySet = Set<string>
-type AuthorSlot = { count: number; hints?: string[]; options: Array<{ select: () => void; clear: () => void }> }
-type NativeSlot = { count: number; pool: string[] }
-type NativeTraits = { grants: string[]; choices: NativeSlot[]; hints: string[]; withheld: number }
+export type TraitPlanChoice = { id: string; label: string }
+export type TraitPlans = Map<string, TraitPlanChoice[]>
+export type ExpertiseViews = Map<string, any>
+type ActorTraits = {
+  actor?: any; plans?: TraitPlans; picks?: Array<{ id: string; value: any }>
+  previous?: Array<{ id: string; data: any }>; replay?: string[]; scope?: Set<string>; expertise?: ExpertiseViews
+}
 const unique = (keys: Iterable<string>): string[] => [...new Set(keys)].sort()
 
 /** 把固定给予与可选位置分开校验。一个已选条目只能占一个位置。 */
@@ -47,85 +52,6 @@ async function checkTrait(adv: any, value: any): Promise<{ chosen: string[] } | 
   return { chosen: [...grants, ...elective.sort()] }
 }
 
-/** 官方多选控件给自定义界面提供的 rowMetas：候选和写入键都由它自己生成。 */
-function proficiencySlots(api: Record<string, any>, component: any, cleanup: Array<() => void>): AuthorSlot[] | null {
-  const [set, ...alternatives] = component._available
-  if (!set || alternatives.length || set.all?.length || set.choose?.some((slot: any) => slot.fromFilter)) return null
-  return (set.choose ?? []).map((slot: any, ixChoose: number) => {
-    const { propState } = component._getPropsChooseFrom({ ixChoose })
-    const grouped = component._getChooseFromGroupMeta(slot)
-    const meta = api.ComponentUiUtil.getMetaWrpMultipleChoice(component, propState, {
-      count: slot.count, ...(grouped?.valueGroups ? { valueGroups: grouped.valueGroups } : { values: slot.from }),
-      fnDisplay: () => '',
-    })
-    cleanup.push(meta.cleanup)
-    return {
-      count: slot.count,
-      hints: grouped?.valueGroups?.map((row: any) => row.text).filter(Boolean),
-      options: meta.rowMetas.map((row: any) => ({
-        select: () => { component._state[row.propIsActive] = true },
-        clear: () => { component._state[row.propIsActive] = false },
-      })),
-    }
-  })
-}
-
-/** 作者的抗性选择使用一棵勾选树，初始化后显式读取空树，避免取到作者构造时的默认全选。 */
-function resistanceSlots(api: Record<string, any>, component: any): AuthorSlot[] | null {
-  component.render(api.veE(document.createElement('div')))
-  const nodes = component._lastChoiceMeta.children.filter((node: any) => node.children)
-  if (nodes.some((node: any) => !node.children.every((option: any) => option.isChoosable))) return null
-  const update = () => { component._state.readonly_selectedValues = component._getOutputObject() }
-  update()
-  return nodes.map((node: any) => ({
-    count: node.count,
-    options: node.children.map((option: any) => ({
-      select: () => { option.setActive(true); update() },
-      clear: () => { option.setActive(false); update() },
-    })),
-  }))
-}
-
-async function authorKeys(api: Record<string, any>, blank: any, group: any): Promise<KeySet | null> {
-  const update = {}
-  const form = await group._subComps[0].pGetFormData()
-  await api.Charactermancer_FeatureOptionsSelect.pDoApplyProficiencyFormDataToActorUpdate(blank, update, { data: { [group._propFormDatas]: [form] } })
-  const trait = g.dnd5e.documents.Trait
-  const paths = Object.keys(g.CONFIG.DND5E.traits).filter((type) => g.foundry.utils.hasProperty(update, trait.actorKeyPath(type)))
-  if (paths.some((type) => g.foundry.utils.getProperty(update, trait.actorKeyPath(type))?.custom)) return null
-  if (!paths.length) return new Set()
-  const actor = blank.clone(update)
-  const values = (await Promise.all(paths.map((type) => trait.actorValues(actor, type)))).flatMap((record) => Object.entries(record))
-  return values.some(([, v]) => v && v !== 1) ? null : new Set(values.filter(([, v]) => v === 1).map(([key]) => key))
-}
-
-async function nativeTraits(api: Record<string, any>, blank: any, group: any, cleanup: Array<() => void>): Promise<NativeTraits | null> {
-  const comp = group._subComps[0]
-  const slots = comp instanceof api.Charactermancer_OtherProficiencySelect
-    ? proficiencySlots(api, comp, cleanup)
-    : comp instanceof api.Charactermancer_ImmResVulnSelect ? resistanceSlots(api, comp) : null
-  if (!slots) return null
-  const fixed = await authorKeys(api, blank, group)
-  if (!fixed) return null
-  const choices: NativeSlot[] = []
-  let withheld = 0
-  for (const slot of slots) {
-    const pool: string[] = []
-    for (const option of slot.options) {
-      option.select()
-      let keys: KeySet | null
-      try { keys = await authorKeys(api, blank, group) } finally { option.clear() }
-      const gained = [...(keys ?? [])].filter((key) => !fixed.has(key))
-      if (gained.length === 1) pool.push(gained[0])
-      else withheld++
-    }
-    const distinct = unique(pool)
-    if (distinct.length >= slot.count) choices.push({ count: slot.count, pool: distinct })
-    else withheld += distinct.length
-  }
-  return { grants: unique(fixed), choices, hints: [...new Set(slots.flatMap(slot => slot.hints ?? []))], withheld }
-}
-
 const emptyTrait = (adv: any): boolean => adv.type === 'Trait' && !adv.configuration?.grants?.length && !adv.configuration?.grants?.size
   && !adv.configuration?.choices?.length
 
@@ -133,10 +59,10 @@ const emptyTrait = (adv: any): boolean => adv.type === 'Trait' && !adv.configura
 async function existingTraits(data: any, level: number, multiclass: boolean) {
   const trait = g.dnd5e.documents.Trait
   const records = (Object.values(data.system?.advancement ?? {}) as any[]).filter((adv) => adv.type === 'Trait' && !emptyTrait(adv)
-    && (adv.level ?? 0) === level && (adv.configuration?.mode ?? 'default') === 'default'
+    && (adv.level ?? 0) === level
     && (!adv.classRestriction || adv.classRestriction === (multiclass ? 'secondary' : 'primary')))
   return Promise.all(records.map(async (adv) => ({
-    id: adv._id as string,
+    id: adv._id as string, mode: adv.configuration?.mode ?? 'default',
     grants: [...(adv.configuration?.grants ?? [])] as string[],
     slots: await Promise.all((adv.configuration?.choices ?? []).map(async (slot: any) => {
       const pool = [...(slot.pool ?? [])]
@@ -159,15 +85,30 @@ function missingSlots(generated: NativeSlot[], existing: Array<{ count: number; 
   return out
 }
 
+// Earlier training on the same Item is pending until the advancement manager runs.
+async function withPriorTraining(actor: any, data: any, records: Record<string, unknown>, context: ActorTraits, level: number) {
+  const clone = actor.clone()
+  const item = new g.CONFIG.Item.documentClass({ ...data, system: { ...data.system, advancement: records } }, { parent: clone })
+  for (const adv of item.advancement.byType.Trait ?? []) {
+    if (adv.configuration.mode !== 'default' || adv.level !== level) continue
+    const recorded = context.previous?.find(pick => pick.id === adv.id)?.data
+    const pick = context.picks?.find(pick => pick.id === adv.id)?.value
+    const value = await checkTrait(adv, recorded ?? pick)
+    if (value?.chosen.length) await adv.apply(level, value)
+  }
+  return clone
+}
+
 /** 提示用的标题：按编号认（与步骤标题同一处，trait-title.ts groupTitle）；都认不出才用作者分组的原标题。siblings = 同一批分组（混合分组按它们认类别）。 */
 const labelOf = (group: any, siblings: any[], keys: string[] = []): string => groupTitle(group, siblings, keys)
   || group._title || group._subComps[0]?.modalTitle || group._prop
 
-export function fillBuildTraits(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, replay?: string[]): Promise<string[]> {
-  return withSeed(`build-traits:fill:${ref}:${multiclass}`, () => fill(data, row, ref, multiclass, replay))
+export function fillBuildTraits(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, context: ActorTraits = {}): Promise<string[]> {
+  return withSeed(`build-traits:fill:${ref}:${multiclass}`, () => fill(data, row, ref, multiclass, context))
 }
 
-async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, replay?: string[]): Promise<string[]> {
+async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, context: ActorTraits): Promise<string[]> {
+  const { replay, picks, plans, actor, scope, expertise } = context
   if (!row.entry) return []
   const api = plutoniumBuild
   if (!api) return ['当前 Plutonium 版本缺少已验证的建卡接线']
@@ -193,24 +134,39 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
   const fresh: Record<string, unknown> = {}
   try {
     for (const group of groups) {
-      const cleanup: Array<() => void> = []
       try {
         await group._pInitSubComp({ ix: 0, selectedLinkedEntityInfos: features })
         if (!group._subComps[0]) continue
-        const traits = await nativeTraits(api, blank, group, cleanup)
-        if (!traits) { diagnostics.push(labelOf(group, groups)); continue }
-        if (traits.withheld) diagnostics.push(`${labelOf(group, groups, [...traits.grants, ...traits.choices.flatMap((c) => c.pool)])}（${traits.withheld} 项候选暂无法按原生进阶保存）`)
+        const isExpertise = actor && group._subComps[0] instanceof api.Charactermancer_ExpertiseSelect
+        const trained = isExpertise ? await withPriorTraining(actor, data, {
+          ...Object.fromEntries(Object.entries(data.system?.advancement ?? {}).filter(([id]) => !replaced.has(id))), ...fresh,
+        }, context, level) : actor
+        const versions = await readTraitPlans(api, blank, group, trained, scope)
+        if (!versions.length) { diagnostics.push(labelOf(group, groups)); continue }
+        const newIds = versions.map(({ index }) => idOf(ref, group._prop, level, multiclass, 'author-plan', index))
+        const known = replay ?? picks?.map(pick => pick.id)
+        const selected = newIds.findIndex(id => known?.includes(id))
+        const at = selected < 0 ? 0 : selected
+        const traits = versions[at]
+        if (traits.extended && replay && selected < 0) continue
+        const options = versions.map((plan, i) => ({
+          id: newIds[i],
+          label: plan.choices.map(slot => `${titleOfKeys(slot.pool) ?? labelOf(group, groups)} ×${slot.count}`).join(' + ')
+            || titleOfKeys(plan.grants) || labelOf(group, groups),
+        }))
+        if (traits.withheld.length) diagnostics.push(`${labelOf(group, groups)}（暂时无法加到人物卡：${unique(traits.withheld).join('、')}）`)
         // Plutonium 的分组从 entity 或 entryData 取输入。主职/兼职即使字段同名也须核对内容。
         const input = hashValue(entry[group._prop] || entry.entryData?.[group._prop])
-        const own = existing.filter(({ id }) => origins[id]?.field === group._prop && origins[id]?.input === input)
+        const comparable = existing.filter(record => record.mode === traits.mode)
+        const own = comparable.filter(({ id }) => origins[id]?.field === group._prop && origins[id]?.input === input)
         const ownGrants = new Set(own.flatMap((record) => record.grants))
         const ownSlots = own.flatMap((record) => record.slots)
         const unchanged = ownGrants.size === traits.grants.length && traits.grants.every((key) => ownGrants.has(key))
           && ownSlots.length === traits.choices.length && missingSlots(traits.choices, ownSlots)?.length === 0
         const fixId = idOf(ref, group._prop, level, multiclass, 'origin')
         // 只处理已经存在、但导入时损失信息的选择位。固定授予或作者只能部分表达的组，仍按原路径补齐。
-        const replace = ownSlots.length > 0 && !unchanged && !traits.withheld && (!replay || replay.includes(fixId))
-        const other = replace ? existing.filter((record) => !own.includes(record)) : existing
+        const replace = ownSlots.length > 0 && !unchanged && !traits.withheld.length && (!replay || replay.includes(traits.extended ? newIds[at] : fixId))
+        const other = replace ? comparable.filter((record) => !own.includes(record)) : comparable
         const otherGrants = new Set(other.flatMap((record) => record.grants))
         const otherSlots = other.flatMap((record) => record.slots)
         const grants = traits.grants.filter((key) => !otherGrants.has(key))
@@ -221,18 +177,21 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         if (!grants.length && !choices.length) continue
         if (replace) for (const record of own) replaced.add(record.id)
         // A replacement has its own stable ID so cold replays of earlier saves keep their original steps.
-        const id = replace ? fixId : idOf(ref, group._prop, level, multiclass)
+        const id = traits.extended ? newIds[at] : replace ? fixId : idOf(ref, group._prop, level, multiclass)
+        if (options.length > 1) plans?.set(id, options)
         fresh[id] = {
           _id: id, type: 'Trait', level,
           ...(row.prop === 'class' ? { classRestriction: multiclass ? 'secondary' : 'primary' } : {}),
           ...(replace && traits.hints.length ? { hint: traits.hints.join('\n') } : {}),
-          configuration: { mode: 'default', grants, choices, allowReplacements: false }, value: {},
+          configuration: { mode: traits.mode, grants, choices, allowReplacements: false }, value: {},
+        }
+        if (isExpertise && expertise) {
+          const item = new g.CONFIG.Item.documentClass({ ...data, system: { ...data.system, advancement: { [id]: fresh[id] } } }, { parent: trained })
+          expertise.set(id, item.advancement.byId[id])
         }
       } catch (e) {
         console.warn('[trpg-assistant] 建卡进阶暂无法处理', ref, group._prop, e)
         diagnostics.push(labelOf(group, groups))
-      } finally {
-        for (const remove of cleanup) remove()
       }
     }
   } finally { component.unregisterSourceTracking() }

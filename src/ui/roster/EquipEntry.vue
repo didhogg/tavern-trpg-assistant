@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import type { LabeledEntry } from '../../rules/kernel/starting-options'
 import { useWizardStore } from '../../stores/wizard'
 import Combobox, { type ComboOption } from '../kit/Combobox.vue'
-import { equipmentTypeLabel } from './wizard-labels'
 
 /** 起始装备的一条：物品（库里的名字 + 数量 + 作者数据里的改名）/ 杂项（库里没有的，名字原样）/ 类别（任选一件：每个槽一个可搜索下拉）/ 钱。 */
 const props = defineProps<{ section: string; group: number; choice: string; entry: LabeledEntry; disabled: boolean }>()
@@ -15,7 +14,7 @@ function pick(key: string, uid: string | null): void {
 }
 const options = computed<ComboOption[]>(() => (props.entry.candidates ?? []).map((c) => ({ value: c.uid, label: c.label, en: c.label === c.name ? undefined : c.name, badge: c.source })))
 const slots = computed(() => Array.from({ length: props.entry.quantity }, (_, n) => ({ n, key: eq.slotKey(props.group, props.choice, props.entry.index, n) })))
-const typeName = computed(() => (props.entry.types ?? []).map(equipmentTypeLabel).join(' 或 '))
+const typeName = computed(() => (props.entry.typeNames ?? props.entry.types ?? []).join(' 或 '))
 </script>
 
 <template>

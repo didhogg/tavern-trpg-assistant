@@ -3,13 +3,15 @@
 // 建卡加人 → 读人物页（官方分解、和基准不同的字段）→ 手改加值 / 基础值 → 回到自动（差别消失）
 // → 扣血写入 → 撤销（小窗跟着退回，再做别的事撤掉的伤害不回来）→ 检定登记表 → 长休预览后取消（小窗按存档退回）
 // → 升级 / 降级 → 复制（新种子）→ 从模板加入怪物 → 回收站 / 彻底删除 / 撤销 → 改动记录 → 关小窗按存档重建全员。
-import { writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { startStatic } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase, work } from './chain-common.mjs'
 
 const LIMIT = 8 * 60_000
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, LIMIT)
-await buildAll()
+const dist = process.env.P6_TEST_DIST
+if (!dist) await buildAll()
 const [, type, options] = engines[process.env.ENGINE === 'webkit' ? 1 : 0]
 const engine = process.env.ENGINE ?? 'chrome'
 const { server, url } = await startStatic({ port: E2E_PORT })
@@ -20,6 +22,11 @@ const errors = []
 page.on('pageerror', (e) => errors.push(e.stack ?? String(e)))
 page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`) })
 try {
+  if (dist) await ctx.route(request => request.href.startsWith(url) && (/^\/dist\//.test(request.pathname) || request.pathname.endsWith('/harness.js')), async (route) => {
+    const path = new URL(route.request().url()).pathname
+    const name = path.startsWith('/dist/') ? path.slice('/dist/'.length) : 'harness.js'
+    await route.fulfill({ body: await readFile(join(dist, name)), contentType: 'application/javascript' })
+  })
   await page.goto(url)
   const r = await page.evaluate(async () => {
     const h = await import('/work/e2e-lib/harness.js')
@@ -40,6 +47,10 @@ try {
     const saves = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rt.compact(k, ids), mapRef: (k) => rt.mapRef(k) })
     const people = new h.KernelPeople({ runtime: rt, saves })
     const out = {}
+    const labels = await (await h.service.frameOf('cn')).call('valueLabels', [['monster', 'tableGroup']], 'category')
+    out.authorLabels = labels[0]
+    const authorFields = await (await h.service.frameOf('cn')).call('authorFields', 'class', { proficiency: ['int', 'wis'] })
+    out.savesLine = authorFields.lines.find((line) => line.label === '豁免熟练')?.value
     const refs = ['race', 'background', 'class'].map((k) => plan[k].ref)
     const opts = await people.startingEquipment(owner, { items: refs })
     out.status = opts.status; out.error = opts.error
@@ -50,13 +61,12 @@ try {
     const clsEntries = cls ? flat(cls) : []; const bgEntries = bg ? flat(bg) : []
     const simple = clsEntries.find((e) => e.kind === 'category' && e.types.includes('weaponSimple'))
     const holy = clsEntries.find((e) => e.kind === 'category' && e.types.includes('focusSpellcastingHoly'))
-    out.cat = { simple: simple && { g: simple.g, c: simple.c, n: simple.candidates.length, first: simple.candidates.slice(0, 3).map((x) => [x.uid, x.label, !!x.ref]) }, holy: holy && { g: holy.g, c: holy.c, n: holy.candidates.length, names: holy.candidates.map((x) => x.uid) } }
+    out.cat = { simple: simple && { g: simple.g, c: simple.c, n: simple.candidates.length, label: simple.typeNames?.join(), first: simple.candidates.slice(0, 3).map((x) => [x.uid, x.label, !!x.ref]) }, holy: holy && { g: holy.g, c: holy.c, n: holy.candidates.length, label: holy.typeNames?.join(), names: holy.candidates.map((x) => x.uid) } }
     out.bg = bgEntries.map((e) => ({ g: e.g, c: e.c, kind: e.kind, text: e.text ?? e.uid, qty: e.quantity, cp: e.cp, dn: e.displayName, label: e.label, ref: e.ref ? 'ref' : null }))
     out.fixedLabel = clsEntries.filter((e) => e.kind === 'item').slice(0, 4).map((e) => [e.uid, e.label, !!e.ref])
     const names = async (rt0, i) => { const a = await h.actorData((await rt0.session(owner)).session, i); return { items: a.items.filter((x) => !['class', 'race', 'background', 'feat', 'subclass', 'spell'].includes(x.type)).map((x) => `${x.name}×${x.system?.quantity ?? 1}`).sort(), currency: a.system.currency } }
     // 选择：武器 a 锤矛、护甲 b 皮甲、第三组 b（任选简易武器：候选第一件）、第四组 a 祭司背包、第五组固定（盾牌 + 圣徽类别候选第一件）；背景选 a 祈祷书
     const choice = { 0: 'a', 1: 'b', 2: 'b', 3: 'a' }
-    const pick = { [`${simple.g}.${simple.c}.${clsEntries.indexOf(simple) - clsEntries.filter((e) => e.g === simple.g && e.c === simple.c)[0] ? 0 : 0}.0`]: simple.candidates[0].uid }
     // 类别槽的键 = 组序号.选项键.条目序号.第几个：条目序号是它在这一项里的位置
     const posIn = (list, e) => list.filter((x) => x.g === e.g && x.c === e.c).indexOf(e)
     const picks = { [`${simple.g}.${simple.c}.${posIn(clsEntries, simple)}.0`]: simple.candidates[0].uid, [`${holy.g}.${holy.c}.${posIn(clsEntries, holy)}.0`]: holy.candidates[0].uid }
@@ -154,6 +164,8 @@ try {
   const checks = {
     optionsOk: r.status === 'complete' && [...r.shape.sections].sort().join() === 'background,class',
     classShape: r.shape.clsGroups?.length === 5 && r.shape.clsGroups[2].join() === 'a,b' && r.shape.clsGroups[4].join() === '_',
+    libraryLabels: r.authorLabels?.monster === '怪物' && r.authorLabels?.tableGroup === '表格' && r.savesLine === '智力、感知',
+    categoryLabels: r.cat.simple?.label === '简易武器' && r.cat.holy?.label === '圣徽',
     classGold: r.shape.gold === '5d4 * 10' && r.shape.bgGold === null,
     simpleCandidates: r.cat.simple?.n > 10 && r.cat.simple.first.every(([, label]) => !!label),
     holyCandidates: r.cat.holy?.n > 0 && r.cat.holy.names.every((u) => !u.startsWith('holy symbol')),

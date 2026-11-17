@@ -14,11 +14,13 @@ import { openEntry, openReader } from './open'
 import { openEditMine, openNewEntry } from './edit-flow'
 import { usePending } from './mine'
 import { useToastStore } from '../../stores/toast'
-import { categoryLabel, registeredCategories } from './registry'
+import { registeredCategories } from './registry'
+import { useCategoryNames } from './useCategoryNames'
 
 /** 包 / 书弹窗的列表页（U1a + U3）：搜索与类别药丸始终显示；选"全部"平铺；点行弹窗内换成详情。不出现"书目来源"勾选（进包就是只看这个来源）。 */
 const props = defineProps<{ set: string; source: string; name: string; abv?: string; kind?: 'book' | 'adventure'; corpora?: Array<{ prop: string; id: string; name: string }>; docIdLocal?: string; mine?: { id: string; codeSet: string } }>()
 const app = useAppStore()
+const categoryLabel = useCategoryNames()
 const lib = useLibViewStore()
 
 const rows = shallowRef<PackRow[]>([])

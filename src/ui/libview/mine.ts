@@ -4,7 +4,6 @@ import type { Services } from '../../core/services'
 import type { PackPair } from '../../library/custom-lang'
 import type { MyPack } from '../../library/custom-packs'
 import { BUILTIN_SCOPES } from '../../library/scopes'
-import { categoryLabel } from './registry'
 
 type Toast = { success: (m: string) => void; error: (m: string) => void }
 
@@ -19,8 +18,8 @@ export const packTitle = (p: MyPack): string => p.own.full ?? p.own.json
 export const copiedFrom = (p: MyPack): string | null => (p.sourceInfo.length > 1 ? p.sourceInfo.slice(0, -1).map((s) => s.full ?? s.json).join('、') : null)
 
 /** 每类几条：「法术 3 · 怪物 12」，类别多时只列前几类。 */
-export function catsText(p: MyPack, max = 4): string {
-  const parts = Object.entries(p.props).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([prop, n]) => `${categoryLabel(prop) ?? prop} ${n}`)
+export function catsText(p: MyPack, categoryLabel: (prop: string) => string, max = 4): string {
+  const parts = Object.entries(p.props).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([prop, n]) => `${categoryLabel(prop)} ${n}`)
   if (!parts.length) return '还没有条目'
   return parts.length > max ? `${parts.slice(0, max).join(' · ')} 等 ${parts.length} 类` : parts.join(' · ')
 }

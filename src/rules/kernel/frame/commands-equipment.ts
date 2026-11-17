@@ -2,11 +2,11 @@
 // 按玩家的选择展开成要加进人物的物品（带数量）和钱。逻辑照 Plutonium（EquipmentCompPredefined、EquipmentCurrencyManager）：
 //   item / 字符串 → 这件物品；equipmentType → 玩家在候选里选；special → 一件「杂项」假物品（名字 = 文字，类型 OTH，稀有度 unknown）；
 //   containsValue / value（铜币）→ 加到人物的钱；不要装备时 = 起始金币（goldAlternative 的骰式或玩家填的数）。
-// 物品加载、类型拆解、「普通物品」判断、骰式、币值换算都调作者 / Plutonium 在小窗里的函数；类别 → 物品筛选见 equipment-rules.ts。
+// 物品加载、类型拆解、「普通物品」判断、骰式、币值换算都调作者 / Plutonium 在小窗里的函数；类别名与候选取 Plutonium 的类别登记。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者条目和 Plutonium 文档没有类型声明。 */
 import type { Operate } from './commands-items'
 import { importEntry } from './importer'
-import { EQUIPMENT_EXPANDERS, EQUIPMENT_PREDICATES } from '../equipment-rules'
+import { plutoniumBuild } from './plutonium-build'
 
 const g = globalThis as any
 
@@ -24,6 +24,7 @@ export interface EquipEntryView {
   cp?: number
   text?: string
   types?: string[]
+  typeNames?: string[]
   candidates?: EquipCandidate[]
 }
 export interface EquipSection {
@@ -40,14 +41,6 @@ export interface EquipSection {
 export interface StartingSelection { choice?: Record<string, string>; pick?: Record<string, string>; gold?: number | null }
 export interface StartingRow { prop: string; refKey: string; entry: any }
 
-const abv = (item: any): string | null => item.type ? g.DataUtil.itemType.unpackUid(item.type).abbreviation : null
-const test = (name: string, item: any): boolean => {
-  const p = EQUIPMENT_PREDICATES[name]
-  if (!p) throw Error(`没登记的装备判断：${name}`)
-  return 'abv' in p ? p.abv.some((k) => abv(item) === g.Parser[`ITM_TYP_ABV__${k}`]) : item[p.field[0]] === p.field[1]
-}
-/** Plutonium UtilEntityItem.isStartingEquipmentItem：普通物品、不是通用变体、有价格、不是基础物品的派生。 */
-const isStartingItem = (item: any): boolean => g.Renderer.item.isMundane(item) && !item.genericVariant && item.value != null && item.baseItem == null
 const uidOf = (item: any): string => g.DataUtil.proxy.getUid('item', item)
 const hashOfUid = (uid: string): string => { const [name, source] = uid.split('|'); return g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS]({ name, source }) }
 const candidate = (item: any): EquipCandidate => ({ uid: uidOf(item), name: item.name, source: item.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](item) })
@@ -58,12 +51,23 @@ const LOAD_SPACES = ['pCacheAndGetAllSite', 'pCacheAndGetAllPrerelease', 'pCache
 let cache: any[] | null = null
 const allItems = async (): Promise<any[]> => (cache ??= (await Promise.all(LOAD_SPACES.map(async (fn) => (await g.DataLoader[fn]('item')) ?? []))).flat())
 
-/** 某个类别码的候选物品（按名字排序）。 */
+const expanderOf = (type: string) => {
+  const expanders = plutoniumBuild?.EQUIPMENT_TYPE_EXPANDERS
+  return expanders && Object.hasOwn(expanders, type) ? expanders[type] : null
+}
+
+function typeName(type: string): string {
+  const key = `TRPGAssistant.EquipmentType.${type}`
+  const translated = g.game.i18n.localize(key)
+  return translated === key ? expanderOf(type)?.name ?? type : translated
+}
+
+/** 筛选由作者类别完成；屏蔽走战役资料范围，由主线处理。 */
 export async function candidatesFor(type: string): Promise<EquipCandidate[]> {
-  const rule = EQUIPMENT_EXPANDERS[type]
+  const rule = expanderOf(type)
   if (!rule) return []
-  return (await allItems()).filter(isStartingItem).filter((i) => rule.every((n) => test(n, i)))
-    .sort((a, b) => String(a.name).localeCompare(String(b.name))).map(candidate)
+  const eligible = (await allItems()).filter((item) => plutoniumBuild!.UtilEntityItem.isStartingEquipmentItem(item))
+  return rule._getAvailableItems({ itemDatas: eligible }).sort((a: any, b: any) => String(a.name).localeCompare(String(b.name))).map(candidate)
 }
 
 /** 条目里的起始装备分组：职业 = startingEquipment.defaultData；背景 = startingEquipment 本身（分组数组）。 */
@@ -85,9 +89,10 @@ async function viewOf(equi: any): Promise<Omit<EquipEntryView, 'index'> | { unsu
   if (equi.item) return { raw: equi, kind: 'item', quantity: equi.quantity || 1, ...(await loaded(equi.item)), ...(equi.displayName ? { displayName: titleCase(equi.displayName) } : {}), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
   const types: string[] = equi.equipmentTypes ?? (equi.equipmentType ? [equi.equipmentType] : [])
   if (types.length) {
+    if (!types.every(expanderOf)) return { unsupported: types.filter((type) => !expanderOf(type)).join('、') }
     const seen = new Set<string>()
     const candidates = (await Promise.all(types.map(candidatesFor))).flat().filter((c) => !seen.has(c.uid) && !!seen.add(c.uid))
-    return candidates.length ? { raw: equi, kind: 'category', quantity: equi.quantity || 1, types, candidates } : null
+    return candidates.length ? { raw: equi, kind: 'category', quantity: equi.quantity || 1, types, typeNames: types.map(typeName), candidates } : null
   }
   if (equi.special) return { raw: equi, kind: 'special', quantity: equi.quantity || 1, text: titleCase(equi.special), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
   if (equi.value) return { raw: equi, kind: 'value', quantity: 1, cp: equi.value }

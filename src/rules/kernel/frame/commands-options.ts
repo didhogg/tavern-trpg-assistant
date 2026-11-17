@@ -13,6 +13,7 @@ import { asiView, type AsiChoice } from './asi'
 import { registryLabels } from './trait-title'
 import { authorTextPath } from './author-text'
 import type { BuildPick } from './commands-level'
+import type { ExpertiseViews, TraitPlans } from './build-traits'
 
 type Option = { value: string; label: string; path: string[] }
 /** dnd5e 的候选树（SelectChoices：类别 → 子类别 → 候选）→ 平铺候选，每项带所在分组路径（从外到里，分组名是 dnd5e 自己的类别名）。 */
@@ -21,8 +22,8 @@ const flatChoices = (choices: any, path: string[] = []): Option[] => Object.entr
   : [{ value, label: String(data?.label ?? value), path }])
 
 /** 进阶类型 → 「这一步要玩家选什么」。返回 null = 这一步不用玩家选。pick = 玩家这一步已做的选择（界面交来的原样）。 */
-const DESCRIBERS: Record<string, (advancement: any, pick: unknown) => Promise<Record<string, unknown> | null>> = {
-  Trait: async (advancement) => {
+const DESCRIBERS: Record<string, (advancement: any, pick: unknown, plans: TraitPlans) => Promise<Record<string, unknown> | null>> = {
+  Trait: async (advancement, _pick, plans) => {
     const { available } = await advancement.unfulfilledChoices()
     const grants = available.filter((slot: any) => slot.type === 'grant').flatMap((slot: any) => flatChoices(slot.choices))
     const slots = new Map<number, { count: number; options: Option[] }>()
@@ -33,19 +34,20 @@ const DESCRIBERS: Record<string, (advancement: any, pick: unknown) => Promise<Re
     }
     // 熟练类型：进阶配置里没写 type 时，取候选键的前缀（官方键形如 skills:acr、languages:standard:common）
     const sample = grants[0]?.value ?? [...slots.values()][0]?.options[0]?.value
-    if (!slots.size) return null
+    const variants = plans.get(advancement.id)
+    if (!slots.size && !variants) return null
     // 每项带上作者编号（主线按它起名，naming.ts）；不起名
     const shown = [...slots.values()]
     const ids = await authorIdsOf([...grants, ...shown.flatMap((s) => s.options)].map((o) => o.value))
     const withId = <T extends { value: string }>(o: T) => (ids[o.value] ? { ...o, author: ids[o.value] } : o)
-    return { kind: 'trait', trait: advancement.configuration?.type ?? sample?.split(':')[0] ?? null, grants: grants.map(withId), slots: shown.map((s) => ({ ...s, options: s.options.map(withId) })) }
+    return { kind: 'trait', trait: advancement.configuration?.type ?? sample?.split(':')[0] ?? null, grants: grants.map(withId), slots: shown.map((s) => ({ ...s, options: s.options.map(withId) })), ...(variants ? { plans: variants } : {}) }
   },
   AbilityScoreImprovement: async (advancement, pick) => asiView(advancement, pick as AsiChoice | undefined),
 }
 /** 本来就不用玩家选的进阶类型（没登记、也不算「未支持」）。 */
 const NO_CHOICE = new Set(['HitPoints', 'ScaleValue', 'Size', 'ItemGrant', 'Subclass'])
 
-async function describeSteps(manager: any, picks: BuildPick[] = []): Promise<any[]> {
+async function describeSteps(manager: any, picks: BuildPick[] = [], plans: TraitPlans, expertise: ExpertiseViews): Promise<any[]> {
   const out = []
   for (const step of manager.steps) {
     const advancement = step.flow?.advancement
@@ -55,7 +57,7 @@ async function describeSteps(manager: any, picks: BuildPick[] = []): Promise<any
     let options: Record<string, unknown> | null = null
     let unsupported = false
     const pick = picks.find((p) => p.id === advancement.id && (p.level ?? null) === (step.flow.level ?? null))?.value
-    if (DESCRIBERS[type]) options = await DESCRIBERS[type](advancement, pick)
+    if (DESCRIBERS[type]) options = await DESCRIBERS[type](expertise.get(advancement.id) ?? advancement, pick, plans)
     else if (!automatic && !NO_CHOICE.has(type)) unsupported = true
     out.push({ id: advancement.id, level: step.flow.level ?? null, type, title: (type === 'Trait' ? traitTitle(advancement) : null) ?? advancement.title ?? null,
       ...(type === 'Trait' && advancement.hint ? { hints: String(advancement.hint).split('\n').map((text) => ({ text, at: authorTextPath(text) })) } : {}), automatic, options, ...(unsupported ? { unsupported: true } : {}) })
@@ -66,13 +68,13 @@ async function describeSteps(manager: any, picks: BuildPick[] = []): Promise<any
 export function createOptionsCommands(operate: Operate) {
   return {
     /** 按已选的条目（和已做的选择 picks）一件件放进空白人物，列出每件条目现在要玩家选的事；预览用的人物用完删掉。 */
-    buildOptions: (plan: Pick<BuildPlan, 'items' | 'picks' | 'choices' | 'blank'> & { extraPools?: ExtraPools; local?: Record<string, unknown> }) => operate([], async () => {
+    buildOptions: (plan: Pick<BuildPlan, 'items' | 'picks' | 'choices' | 'blank' | 'traitScope'> & { extraPools?: ExtraPools; local?: Record<string, unknown> }) => operate([], async () => {
       const items = []
       for (const row of plan.items) items.push({ ...row, data: row.data ?? await importEntry(row.prop, row.entry) })
       const described: Array<{ refKey: string | null; steps: any[]; unsupported: string[] }> = []
       const built = await buildActor('选项预览', items, [], plan.choices ?? {}, {
-        strict: false, picks: plan.picks, blank: plan.blank,
-        onManager: async ({ manager, key, unsupported, picks }) => { described.push({ refKey: key, steps: await describeSteps(manager, picks), unsupported }) },
+        strict: false, picks: plan.picks, blank: plan.blank, traitScope: plan.traitScope,
+        onManager: async ({ manager, key, unsupported, picks, traitPlans, expertise }) => { described.push({ refKey: key, steps: await describeSteps(manager, picks, traitPlans, expertise), unsupported }) },
       })
       const actor = built.actor ?? built.created
       // 属性：初值、种族等加成后的自动值、官方上限；界面的「基础 + 加成 = 合计」由主线按这三样算

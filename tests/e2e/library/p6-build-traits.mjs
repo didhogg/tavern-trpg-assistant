@@ -48,7 +48,7 @@ try {
       const data = await h.actorData(session, id)
       const list = (k) => [...(data.system.traits[k]?.value ?? [])].sort()
       const proficient = (values) => Object.entries(values ?? {}).filter(([, v]) => v.value > 0).map(([k]) => k).sort()
-      return { tools: proficient(data.system.tools), skills: proficient(data.system.skills), dr: list('dr'), di: list('di'), ci: list('ci'), armor: list('armorProf'), weapon: list('weaponProf'), languages: list('languages') }
+      return { tools: proficient(data.system.tools), skills: proficient(data.system.skills), dr: list('dr'), di: list('di'), ci: list('ci'), armor: list('armorProf'), weapon: list('weaponProf'), languages: list('languages'), expert: Object.entries(data.system.skills).filter(([, v]) => v.value === 2).map(([key]) => key) }
     }
     const inspect = async (ref) => {
       const r = await active.people.buildOptions(owner, { items: [ref], blank: true })
@@ -90,7 +90,54 @@ try {
     out.skilledOptions = await inspect(skilled)
     const skilledMixed = has(out.skilledOptions, 'tool:art:brewer')
     out.skilled = skilledMixed ? await create(active, skilled, '混选技能和工具', skilledMixed, ['tool:art:brewer', 'skills:ste', 'skills:ins']) : null
-    out.filtered = await inspect(await find('race', 'Hobgoblin', 'VGM'))
+    const hobgoblin = await find('race', 'Hobgoblin', 'VGM')
+    out.filtered = await inspect(hobgoblin)
+    out.filteredWeapons = out.filtered.steps.find(step => step.options?.trait === 'weapon')
+    const offWeapon = out.filteredWeapons?.options?.slots.flatMap(slot => slot.options).find(option => option.value === 'weapon:mar:longsword')
+    if (offWeapon) {
+      const ref = await find('item', 'Longsword', 'PHB')
+      const exclude = library.exclude
+      library.exclude = [...exclude, h.entryUnit(ref)]
+      const limited = await inspect(hobgoblin)
+      out.filteredExclusion = { gone: !has(limited, offWeapon.value), stillHasWeapons: limited.steps.some(step => step.options?.trait === 'weapon') }
+      library.exclude = exclude
+    }
+    const customBg = await find('background', 'Custom Background', 'PHB')
+    const customRow = await inspect(customBg)
+    const custom = customRow.steps.find(step => step.options?.plans?.length)
+    out.customPlans = custom?.options.plans
+    if (custom) {
+      const alt = custom.options.plans.at(-1)
+      const other = await active.people.buildOptions(owner, { items: [customBg], picks: [[{ id: alt.id, level: custom.level, value: { chosen: [] } }]], blank: true })
+      const otherStep = other.items?.[0].steps.find(step => step.id === alt.id)
+      out.customAlt = otherStep?.options.slots.map(slot => slot.count)
+      const selected = otherStep?.options.slots[0]?.options[0]?.value
+      if (selected) out.custom = await create(active, customBg, '自定义工具方案', otherStep, [selected])
+    }
+    const monk = await find('class', 'Monk', 'XPHB')
+    const monkSteps = await inspect(monk)
+    out.monkToolPlans = monkSteps.steps.find(step => step.options?.plans?.length)?.options.plans
+    out.monk = await create(active, monk, '武僧整组获武器熟练')
+    const expert = await find('feat', 'Skill Expert', 'XPHB')
+    const ordinary = await find('background', 'Acolyte', 'PHB')
+    const withExpert = await active.people.buildOptions(owner, { items: [ordinary, expert], blank: true })
+    const expertStep = withExpert.items?.[1]?.steps.find(step => step.title === 'Expertise')
+    out.expertOptions = expertStep?.options?.slots.flatMap(slot => slot.options.map(option => option.value)) ?? []
+    if (out.expertOptions.includes('skills:ins')) {
+      const b = await active.people.build(owner, { items: [ordinary, expert], name: '专精', picks: [[], [{ id: expertStep.id, level: expertStep.level, value: { chosen: ['skills:ins'] } }]], blank: true }, { category: 'party' })
+      if (b.built.id) out.expert = { id: b.built.id, values: await traits(active.rt, b.built.id) }
+    }
+    const ownSkill = has(await inspect(expert), 'skills:acr')
+    if (ownSkill) {
+      const picks = [{ id: ownSkill.id, level: ownSkill.level, value: { chosen: ['skills:acr'] } }]
+      const withOwn = await active.people.buildOptions(owner, { items: [expert], picks: [picks], blank: true })
+      const ownExpert = has({ steps: withOwn.items?.[0]?.steps.filter(step => step.title === 'Expertise') ?? [] }, 'skills:acr')
+      if (ownExpert) {
+        picks.push({ id: ownExpert.id, level: ownExpert.level, value: { chosen: ['skills:acr'] } })
+        const self = await active.people.build(owner, { items: [expert], name: '专长自己的技能专精', picks: [picks], blank: true }, { category: 'party' })
+        out.selfExpert = self.built.id ? { id: self.built.id, values: await traits(active.rt, self.built.id) } : self.built
+      }
+    }
     const criminalOptions = await inspect(await find('background', 'Criminal', 'PHB'))
     out.partialToolChoice = has(criminalOptions, 'tool:game:dice')?.options.slots[0].count ?? 0
     const lang = (row) => row.steps.filter((step) => step.options?.trait === 'languages')
@@ -150,7 +197,7 @@ try {
     const cold = mk()
     out.statuses = await cold.people.load(owner)
     out.restored = {}
-    for (const key of ['dwarf', 'changed', 'blank', 'dragon', 'dragonBlank', 'as', 'armored', 'immune', 'barbarian', 'fighter', 'secondary', 'artisan', 'skilled', 'acolyte', 'acolyteBlank', 'feylost']) {
+    for (const key of ['dwarf', 'changed', 'blank', 'dragon', 'dragonBlank', 'as', 'armored', 'immune', 'barbarian', 'fighter', 'secondary', 'artisan', 'skilled', 'acolyte', 'acolyteBlank', 'feylost', 'custom', 'expert', 'selfExpert', 'monk']) {
       const restored = out.statuses[stored.actors.findIndex((a) => a.id === out[key]?.id)]
       if (restored?.status === 'complete') out.restored[key] = await traits(cold.rt, restored.id)
     }
@@ -189,7 +236,18 @@ try {
   assert.deepEqual(results.artisan.values.tools, ['brewer'])
   assert.deepEqual(results.skilled.values.tools, ['brewer'])
   assert.deepEqual(results.skilled.values.skills, ['ins', 'ste'])
-  assert.ok(results.filtered.unsupported.length)
+  assert.deepEqual(results.filteredExclusion, { gone: true, stillHasWeapons: true })
+  assert.ok(results.filteredWeapons?.options?.slots.some(slot => slot.count === 2 && slot.options.length >= 2))
+  assert.equal(results.customPlans?.length, 3)
+  assert.deepEqual(results.customAlt, [1])
+  assert.equal(results.custom?.values.tools.length, 1)
+  assert.equal(results.monkToolPlans?.length, 2)
+  assert.ok(results.monk?.values.weapon.some(key => key.includes('scimitar')), JSON.stringify(results.monk))
+  assert.deepEqual(results.restored.monk, results.monk.values)
+  assert.ok(results.expertOptions.includes('skills:ins') && !results.expertOptions.includes('skills:acr'))
+  assert.ok(results.selfExpert?.values?.expert.includes('acr'), JSON.stringify(results.selfExpert ?? {}))
+  assert.deepEqual(results.restored.selfExpert, results.selfExpert.values)
+  assert.deepEqual(results.expert?.values.expert, ['ins'])
   assert.ok(results.invalid.reason)
   assert.ok(results.statuses.every((r) => r.status === 'complete'))
   assert.ok(results.keptActorIds)

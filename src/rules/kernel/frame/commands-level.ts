@@ -12,7 +12,7 @@ import { actorTypes, BUILD_ACTOR_TYPE } from './actor-types'
 import { restoreRecordedChoices } from './commands-restore'
 import { blankChoice, firstChoice } from './commands-choice'
 import { resolveStarting, type StartingSelection } from './commands-equipment'
-import { checkedBuildTrait, fillBuildTraits, isBuildTrait } from './build-traits'
+import { checkedBuildTrait, fillBuildTraits, isBuildTrait, type TraitPlans, type ExpertiseViews } from './build-traits'
 import { stripTraitOrigins } from './trait-origins'
 
 const g = globalThis as any
@@ -72,7 +72,7 @@ function storable(data: any): any {
  * 注意：不能把 forward 步骤标成 automatic——dnd5e 的连续自动循环只用第一步的自动值，
  * 后面的步骤会拿到错的数据（曾导致技能选择落空）。只覆盖 getAutomaticApplicationValue，让管理器逐步取值。
  */
-export async function applyManager(manager: any, values: any[] | undefined, { strict = false, picks, blank = false }: { strict?: boolean; picks?: BuildPick[]; blank?: boolean } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
+export async function applyManager(manager: any, values: any[] | undefined, { strict = false, picks, blank = false, expertise }: { strict?: boolean; picks?: BuildPick[]; blank?: boolean; expertise?: ExpertiseViews } = {}): Promise<{ finished: true } | { finished: false; step: any }> {
   if (!manager.steps.length) return { finished: true }
   for (const step of manager.steps) {
     if (step.automatic || !step.flow) continue
@@ -81,7 +81,7 @@ export async function applyManager(manager: any, values: any[] | undefined, { st
     const pick = picks?.find((p) => p.id === advancement.id && (p.level ?? null) === (step.flow.level ?? null))
     if (isBuildTrait(advancement.id)) {
       if (recorded?.error || (strict && !recorded)) return { finished: false, step: { ...stepSummary(step), error: recorded?.error } }
-      const value = await checkedBuildTrait(advancement, recorded?.data ?? pick?.value)
+      const value = await checkedBuildTrait(expertise?.get(advancement.id) ?? advancement, recorded?.data ?? pick?.value)
       if (!value) return { finished: false, step: { ...stepSummary(step), error: '建卡选择已不在当前候选内' } }
       if (recorded) {
         step.type = 'restore'
@@ -181,10 +181,11 @@ export function abilityValues(actor: any): Record<string, number> {
   return Object.fromEntries(Object.entries(actor.system?.abilities ?? {}).map(([k, v]: [string, any]) => [k, v.value]))
 }
 
-export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, id, picks, blank = false, onManager }: { strict?: boolean; seed?: string; id?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; onManager?: (info: { manager: any; key: string | null; unsupported: string[]; picks?: BuildPick[] }) => Promise<void> } = {}): Promise<any> {
+export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, id, picks, blank = false, traitScope, onManager }: { strict?: boolean; seed?: string; id?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; traitScope?: string[]; onManager?: (info: { manager: any; key: string | null; unsupported: string[]; picks?: BuildPick[]; traitPlans: TraitPlans; expertise: ExpertiseViews }) => Promise<void> } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
   const created = await ActorClass.create({ ...(id ? { _id: id } : {}), name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } }, { keepId: !!id })
+  const scope = traitScope ? new Set(traitScope) : undefined
   const initial = abilityValues(created)
   const missingTraits: Array<{ refKey: string; titles: string[] }> = []
   for (const raw of items) {
@@ -196,13 +197,18 @@ export async function buildActor(name: string, items: any[], equipment: any[], c
     const key = raw?.refKey ?? refKeyOf(data)
     const recorded = key ? choices[key] : undefined
     const useBuildTraits = key && (!strict || recorded?.some((value) => isBuildTrait(value.id)))
-    const unsupported = useBuildTraits ? await fillBuildTraits(data, raw, key, created.items.some((item: any) => item.type === 'class'), strict ? recorded?.map(value => value.id) : undefined) : []
+    const traitPlans: TraitPlans = new Map()
+    const expertise: ExpertiseViews = new Map()
+    const itemPicks = key ? picks?.[key] : undefined
+    const unsupported = useBuildTraits ? await fillBuildTraits(data, raw, key, created.items.some((item: any) => item.type === 'class'), {
+      actor: created, plans: traitPlans, scope, picks: itemPicks, previous: recorded, expertise, replay: strict ? recorded?.map(value => value.id) : undefined,
+    }) : []
     if (key && unsupported.length) missingTraits.push({ refKey: key, titles: unsupported })
     const removed = [...(recorded ?? []), ...(key ? picks?.[key] ?? [] : [])].find((value) => isBuildTrait(value.id) && !(value.id in (data.system?.advancement ?? {})))
     if (removed) return { pending: true, step: { error: '存档中的建卡步骤已变更', id: removed.id, refKey: key }, built: actorLevel(created), actor: created, initial, missingTraits }
     const manager = Manager().forNewItem(created, data, { automaticApplication: true })
-    await onManager?.({ manager, key, unsupported, picks: key ? picks?.[key] : undefined })
-    const outcome = await applyManager(manager, recorded, { strict, blank, picks: key ? picks?.[key] : undefined })
+    await onManager?.({ manager, key, unsupported, picks: itemPicks, traitPlans, expertise })
+    const outcome = await applyManager(manager, recorded, { strict, blank, picks: itemPicks, expertise })
     if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created), actor: created, initial, missingTraits }
     const exists = created.items.contents.some((i: any) => i.type === data.type
       && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
@@ -229,6 +235,7 @@ export interface BuildPlan {
   startingExcluded?: Record<string, string[]>
   /** true = 玩家没选的位置留空（建卡界面用）；不给 = 取第一个可选项（模板加入）。 */
   blank?: boolean
+  traitScope?: string[]
   /** 读档用：存档里记下的人物种子；新建卡不传，内核自己生成。 */
   seed?: string
 }
@@ -329,7 +336,7 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       const equipment = []
       for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
       const starting = plan.starting ? await resolveStarting(plan.items.filter((r) => r.entry?.startingEquipment), plan.starting, plan.startingExcluded) : null
-      const built = await buildActor(plan.name, items, [...equipment, ...(starting?.equipment ?? [])], plan.choices ?? {}, { strict: false, seed, picks: plan.picks, blank: plan.blank })
+      const built = await buildActor(plan.name, items, [...equipment, ...(starting?.equipment ?? [])], plan.choices ?? {}, { strict: false, seed, picks: plan.picks, blank: plan.blank, traitScope: plan.traitScope })
       if (built.pending) {
         await built.actor.delete()
         return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }

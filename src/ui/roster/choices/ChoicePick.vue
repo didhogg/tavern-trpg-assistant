@@ -50,6 +50,14 @@ const labelOf = (slot: number, value: string): string => slots.value[slot].optio
 <template>
   <div class="wz-ch" data-testid="wz-ch-trait">
     <b>{{ step.title ?? '选择' }}（选 {{ w.needOf(step) }}）<small :data-done="left === 0 || undefined">{{ left === 0 ? '已选好' : `还差 ${left}` }}</small></b>
+    <label v-if="step.options.plans?.length">
+      熟练方案
+      <select
+        class="trpg-input" :value="step.id" :disabled="w.optLoading" data-testid="wz-trait-plan"
+        @change="w.setTraitPlan(itemRef, step, ($event.target as HTMLSelectElement).value)">
+        <option v-for="plan in step.options.plans" :key="plan.id" :value="plan.id">{{ plan.label }}</option>
+      </select>
+    </label>
     <p v-if="step.hint" class="wz-note wz-hint" data-testid="wz-hint">{{ step.hint }}</p>
     <div v-if="step.options.grants.length" class="wz-given">已给：{{ step.options.grants.map((g: Option) => g.label).join('、') }}</div>
     <input v-if="total > FILTER" v-model="query" class="trpg-input wz-pk__q" type="search" :placeholder="`在 ${total} 项里筛选`" :aria-label="`筛选${step.title ?? ''}候选`" data-testid="wz-pk-filter" />

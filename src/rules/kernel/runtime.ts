@@ -21,7 +21,7 @@ import { KernelCache, kernelBaseKey, kernelFilesVersion, kernelLangOf, wrapKerne
 import type { LibraryDatabase } from '../../library/db'
 import { actorData, compactActor, rebuildActor, refMapperFor, type RebuildResult } from './rebuild'
 import { kernelEntryOf } from './entry'
-import { resolveBuildOptions, type BuildOptionPlan, type BuildOptionsResult } from './resolve-build-options'
+import { resolveBuildOptions, traitItemScope, type BuildOptionPlan, type BuildOptionsResult } from './resolve-build-options'
 import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
@@ -195,7 +195,7 @@ export class KernelRuntime {
     const byKey = new Map(rows.rows.map((row) => [refKey(row.ref), row]))
     const items = plan.items.map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
     const equipment = (plan.equipment ?? []).map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
-    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank, starting: plan.starting, startingExcluded })
+    const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank, starting: plan.starting, startingExcluded, traitScope: await traitItemScope(this.deps.scoped, await this.library(ownerKey), o.view, rows.rows) })
     if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? result.result?.step?.error ?? `建卡状态：${result.status}`, detail: result }
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)

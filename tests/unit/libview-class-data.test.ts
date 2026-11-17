@@ -19,7 +19,7 @@ describe('职业页纯处理', () => {
     expect(t.rows[0]).toEqual([1, '+2', '奥术回想，施法', 3])
   })
   it('摘要：生命骰与豁免熟练', () => {
-    expect(classLines(cls)).toEqual([{ label: '生命骰', value: '1d6' }, { label: '豁免熟练', value: '智力、感知' }])
+    expect(classLines(cls)).toEqual([{ label: '生命骰', value: '1d6' }])
   })
   it('读不到就空', () => { expect(classLines(null)).toEqual([]); expect(classTable(null).rows.length).toBe(20) })
 })

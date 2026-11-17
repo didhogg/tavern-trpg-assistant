@@ -68,6 +68,13 @@ function groupCategories(list) {
   return out
 }
 
+async function equipmentLabels(pkg) {
+  const bundle = await readFile(join(foundry, pkg.dir, 'js/Bundle.js'), 'utf8')
+  const rows = [...bundle.matchAll(/class _EquipmentTypeExpander_\w+ extends _EquipmentTypeExpanderBase \{\s*name = "([^"]+)";\s*equipmentType = "(\w+)";/g)]
+  if (!rows.length) throw Error('没读到 Plutonium 的起始装备类别登记')
+  return rows.map(([, text, code]) => ({ key: `TRPGAssistant.EquipmentType.${code}`, text, isEquipment: true }))
+}
+
 const files = []
 const review = { generatedFrom: version, community: communityFrom, communityDir, lang: LANG, packs: [] }
 for (const pkg of packages) {
@@ -76,6 +83,7 @@ for (const pkg of packages) {
   if (!en) continue
   const source = JSON.parse(await readFile(join(foundry, pkg.dir, en.path), 'utf8'))
   const list = leaves(source)
+  if (pkg.id === 'plutonium') list.push(...await equipmentLabels(pkg))
   const cats = groupCategories(list)
   const flat = {}
   const conflicts = []
@@ -83,8 +91,10 @@ for (const pkg of packages) {
   let fromCommunity = 0
   // 社区翻译：同一编号、有字、和英文原文不同才算翻了
   const communityOf = (key, text) => (community.get(pkg.id) ?? []).map((c) => c.texts[key]).find((v) => typeof v === 'string' && v.trim() && v.trim() !== text.trim())
-  for (const { key, text } of list) {
-    const all = candidates.get(text.trim().toLowerCase())
+  for (const { key, text, isEquipment } of list) {
+    const term = text.trim().toLowerCase()
+    // 类别登记用单数，译名表也可能只收规则书里的复数（原词优先）。
+    const all = candidates.get(term) ?? (isEquipment ? candidates.get(`${term}s`) : undefined)
     const preferred = all ? cats.get(parentOf(key)) : undefined
     const inGroup = preferred === undefined || !all ? [] : all.filter((x) => x.category === preferred)
     const picked = all ? choose(inGroup.length ? inGroup : all) : null

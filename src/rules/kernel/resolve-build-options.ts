@@ -30,6 +30,21 @@ function neededPools(rows: EntryRow[]): ExtraKind[] {
   return [...kinds]
 }
 
+// The author decides which items match the filter. The campaign decides which of those can be selected.
+export async function traitItemScope(scoped: ScopedLibrary, library: CampaignLibrary, view: LibraryView, rows: Array<{ entry: unknown }>): Promise<string[] | undefined> {
+  function hasFilter(value: unknown): boolean {
+    if (!value || typeof value !== 'object') return false
+    if ('fromFilter' in value && typeof value.fromFilter === 'string') return true
+    return Object.values(value).some(hasFilter)
+  }
+  if (!rows.some(({ entry }) => hasFilter(entry))) return undefined
+  const items = await scoped.query(library, 'item', { view })
+  return [...new Set(items.flatMap(({ item, source }) => {
+    const local = item as { name?: string; ENG_name?: string; source?: string }
+    return [local.name, local.ENG_name].filter(Boolean).map(name => `${name}|${local.source ?? source}`.toLowerCase())
+  }))]
+}
+
 export async function resolveBuildOptions(deps: {
   session: KernelSession
   scoped: ScopedLibrary
@@ -53,7 +68,7 @@ export async function resolveBuildOptions(deps: {
   })))
   const items = rows.map(row => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry }))
   const local = Object.fromEntries(rows.flatMap(row => row.zh ? [[refKey(row.ref), row.zh]] : []))
-  const out = await deps.session.call('buildOptions', { items, picks, blank: plan.blank, extraPools: pools, local })
+  const out = await deps.session.call('buildOptions', { items, picks, blank: plan.blank, extraPools: pools, local, traitScope: await traitItemScope(scoped, library, view, rows) })
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
   const author = authorTextFor(deps.service, library.codeSet)
   const shown = await localizeHints(await nameAll(localizeAll(out.result.items, await deps.pairsOf(rows)), await namerFor(scoped, library)), author) as FrameRow[]

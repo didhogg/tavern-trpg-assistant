@@ -15,7 +15,7 @@ describe('全库搜索的纯处理', () => {
     expect(withoutUnchecked(hits, new Set()).length).toBe(3)
   })
   it('类别药丸：登记的用中文名，没登记的归其他，按条数排', () => {
-    const cats = hitCategories([{ prop: 'spell' }, { prop: 'spell' }, { prop: 'zzz' }])
+    const cats = hitCategories([{ prop: 'spell' }, { prop: 'spell' }, { prop: 'zzz' }], (prop) => prop === 'spell' ? '法术' : prop)
     expect(cats).toEqual([{ key: 'spell', label: '法术', n: 2 }, { key: 'other', label: '其他', n: 1 }])
   })
 })

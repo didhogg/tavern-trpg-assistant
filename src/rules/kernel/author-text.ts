@@ -6,7 +6,7 @@ import type { LibraryService } from '../../library/service'
 
 export interface AuthorText {
   /** 一组编号 → 名字；作者没有覆盖这组编号的表 → 空表（调用方显示编号）。 */
-  labels(values: string[]): Promise<Record<string, string>>
+  labels(values: string[], kind?: 'category'): Promise<Record<string, string>>
   /** 一组位置 → 文字；取不到的给 null。 */
   at(paths: string[][]): Promise<Array<string | null>>
 }
@@ -18,7 +18,7 @@ export function authorTextFor(service: Pick<LibraryService, 'frameOf'>, codeSet:
   const frame = () => service.frameOf(codeSet)
   const keyOf = (path: string[]) => `${codeSet}\u0000${path.join('\u0000')}`
   return {
-    labels: async (values) => (values.length ? ((await (await frame()).call('valueLabels', [values]))[0] ?? {}) : {}),
+    labels: async (values, kind) => (values.length ? ((await (await frame()).call('valueLabels', [values], kind))[0] ?? {}) : {}),
     at: async (paths) => {
       const missing = paths.filter((p) => !atCache.has(keyOf(p)))
       if (missing.length) { const got = await (await frame()).call('authorAt', missing); missing.forEach((p, i) => atCache.set(keyOf(p), got[i] ?? null)) }

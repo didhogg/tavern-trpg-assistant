@@ -1,6 +1,5 @@
 // 职业页（U9d）的纯处理：把作者已按等级展开的特性分到各级、拼职业表的行。数据形状：class.classFeatures = 每级一组特性对象（带 level / name / entries），
 // class.classTableGroups = [{ title?, colLabels, rows }]（每行对应一级），subclass.subclassFeatures 同样展开。
-import { ABILITIES } from './statblock'
 
 export interface Feature { name: string; level: number; entries: unknown }
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -45,14 +44,11 @@ export function classTable(cls: unknown, pb: string[] | null = null, subclass?: 
   return { head, rows }
 }
 
-/** 摘要：生命骰、豁免熟练（能力代号用登记表翻成中文）。 */
+/** 摘要：生命骰；豁免熟练由作者的摘要字段给出。 */
 export function classLines(cls: unknown): Array<{ label: string; value: string }> {
   const o = isObj(cls) ? cls : {}
   const out: Array<{ label: string; value: string }> = []
   const hd = o.hd
   if (isObj(hd) && typeof hd.number === 'number' && typeof hd.faces === 'number') out.push({ label: '生命骰', value: `${hd.number}d${hd.faces}` })
-  const names = new Map(ABILITIES)
-  const prof = (Array.isArray(o.proficiency) ? o.proficiency : []).map((p) => names.get(String(p)) ?? String(p))
-  if (prof.length) out.push({ label: '豁免熟练', value: prof.join('、') })
   return out
 }

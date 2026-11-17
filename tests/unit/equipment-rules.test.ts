@@ -1,28 +1,17 @@
-// 起始装备类别登记表 = Plutonium 原文：十八个类别码、每类别用哪些判断、每个判断看什么，逐项核对。
+// 译名由作者类别登记和译名表生成。上游增减类别时，这里能查到产物过期。
 import { readFileSync } from 'node:fs'
-import { describe, expect, it } from 'vitest'
-import { EQUIPMENT_EXPANDERS, EQUIPMENT_PREDICATES } from '../../src/rules/kernel/equipment-rules'
+import { expect, it } from 'vitest'
 
-const bundle = readFileSync('vendor/foundry/modules/plutonium/js/Bundle.js', 'utf8')
-const block = bundle.slice(bundle.indexOf('class _EquipmentTypeExpanderBase'), bundle.indexOf('const EQUIPMENT_TYPE_EXPANDERS'))
-
-describe('起始装备类别 = Plutonium 原文', () => {
-  it('类别码和每类别的判断一致', () => {
-    const found: Record<string, string[]> = {}
-    for (const m of block.matchAll(/class _EquipmentTypeExpander_\w+ extends _EquipmentTypeExpanderBase \{[\s\S]*?equipmentType = "(\w+)";[\s\S]*?\.filter\(item => ([^)]*\)[^;]*)\);/g)) {
-      found[m[1]] = [...m[2].matchAll(/this\._(\w+)\(item\)/g)].map((x) => `is${x[1].replace(/^is/, '')}`)
-    }
-    expect(Object.keys(found).length).toBe(18)
-    expect(EQUIPMENT_EXPANDERS).toEqual(found)
-  })
-  it('每个判断看的类型缩写 / 字段和原文一致', () => {
-    const found: Record<string, unknown> = {}
-    for (const m of block.matchAll(/\t_is(\w+) \(item\) \{([\s\S]*?)\n\t\}/g)) {
-      const body = m[2]
-      const abv = [...body.matchAll(/Parser\.ITM_TYP_ABV__(\w+)/g)].map((x) => x[1])
-      const field = /item\.(\w+) === "(\w+)"/.exec(body)
-      found[`is${m[1]}`] = abv.length ? { abv } : field ? { field: [field[1], field[2]] } : body.trim()
-    }
-    expect(EQUIPMENT_PREDICATES).toEqual(found)
-  })
+it('Plutonium 的已登记起始装备类别都有中文语言包键', () => {
+  const root = 'vendor/foundry/modules/plutonium'
+  const script = readFileSync(`${root}/js/Bundle.js`, 'utf8')
+  const registration = script.match(/const EQUIPMENT_TYPE_EXPANDERS = Object.fromEntries\(\[([\s\S]+?)\]/)?.[1] ?? ''
+  const classes = [...registration.matchAll(/_EquipmentTypeExpander_(\w+)/g)].map(([, name]) => name)
+  const labels = JSON.parse(readFileSync(`${root}/lang/zh.json`, 'utf8'))
+  const prefix = 'TRPGAssistant.EquipmentType.'
+  const keys = Object.keys(labels).filter(key => key.startsWith(prefix)).map(key => key.slice(prefix.length))
+  expect(classes.length).toBeGreaterThan(0)
+  expect(keys.sort()).toEqual(classes.sort())
+  expect(labels[prefix + 'weaponSimpleRanged']).toBe('简易远程武器')
+  expect(labels[prefix + 'toolArtisan']).toBe('工匠工具')
 })

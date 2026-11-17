@@ -45,8 +45,15 @@ function convertedLabels(values: string[]): Record<string, string> | null {
 }
 
 /** 每组值给一张「值 → 显示名」（对不上的组给 null）。 */
-export async function valueLabels(lists: string[][]): Promise<Array<Record<string, string> | null>> {
+export async function valueLabels(lists: string[][], kind?: 'category'): Promise<Array<Record<string, string> | null>> {
   await init()
+  if (kind === 'category') {
+    const byProp = new Map(Object.entries(A.Parser.CAT_ID_TO_PROP).map(([id, prop]) => [prop, id]))
+    return lists.map((values) => Object.fromEntries(values.map((prop) => {
+      const id = byProp.get(prop)
+      return [prop, A.Parser.PROP_TO_DISPLAY_NAME[prop] ?? (id ? A.Parser.pageCategoryToFull(Number(id)) : A.Parser.getPropDisplayName(prop))]
+    })))
+  }
   const all = authorMaps()
   return lists.map((values) => {
     if (!values.length) return null

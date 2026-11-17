@@ -3,7 +3,6 @@ import type { EntryRef } from '../library/scopes'
 import { authorDice } from '../library/runtime/dice'
 import type { StartingResult, StartingSection, StartingSelection } from '../rules/kernel/starting-options'
 import { useAppStore } from './app'
-import { equipmentTypeLabel } from '../ui/roster/wizard-labels'
 
 export interface EquipTodo { text: string }
 
@@ -97,7 +96,7 @@ export function createEquipment(deps: { items: ComputedRef<EntryRef[]>; owner: (
         }
         for (const e of g.choices.find((c) => c.key === k)?.entries ?? []) {
           if (e.kind !== 'category') continue
-          for (let i = 0; i < e.quantity; i++) if (!pickedAt(s.refKey, slotKey(g.index, k, e.index, i))) out.push({ text: `${who}：任选${(e.types ?? []).map(equipmentTypeLabel).join('或')} 还没选` })
+          for (let i = 0; i < e.quantity; i++) if (!pickedAt(s.refKey, slotKey(g.index, k, e.index, i))) out.push({ text: `${who}：任选${(e.typeNames ?? e.types ?? []).join('或')} 还没选` })
         }
       }
     }

@@ -24,6 +24,7 @@ const RULES: Record<string, Rule> = {
     const p = c.startingProficiencies ?? {}
     const hint = { styleHint: c.edition ?? 'classic' }
     return [
+      ['豁免熟练', Array.isArray(c.proficiency) ? c.proficiency.map((p: string) => A.Parser.attAbvToFull(p)) : ''],
       ['护甲受训', p.armor ? A.Renderer.class.getRenderedArmorProfs(p.armor, hint) : ''],
       ['武器熟练', p.weapons ? A.Renderer.class.getRenderedWeaponProfs(p.weapons, hint) : ''],
       ['工具熟练', p.tools ? A.Renderer.class.getRenderedToolProfs(p.tools, hint) : ''],

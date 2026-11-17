@@ -6,7 +6,7 @@ import type { CatalogRow } from '../../library/scoped'
 import type { ShelfGroup } from '../../library/shelf'
 import { SOURCES } from '../../library/sources'
 import { authorName } from './pack-data'
-import { categoryLabel, registeredCategories } from './registry'
+import { isRegisteredCategory, registeredCategories } from './registry'
 
 /** 作者索引里一条原样：cn 中文名、n 名称。读不到显示「未知」。 */
 export const hitName = (h: Pick<ScopedSearchHit, 'doc'>): string => String(h.doc.cn ?? h.doc.n ?? '未知')
@@ -18,13 +18,12 @@ export function withoutUnchecked<T extends Pick<ScopedSearchHit, 'doc'>>(hits: T
 }
 
 /** 命中里出现过的类别（带条数）；没登记的类别归"其他"。 */
-export function hitCategories(hits: Array<Pick<ScopedSearchHit, 'prop'>>): Array<{ key: string; label: string; n: number }> {
+export function hitCategories(hits: Array<Pick<ScopedSearchHit, 'prop'>>, labelOf: (prop: string) => string): Array<{ key: string; label: string; n: number }> {
   const count = new Map<string, number>()
-  for (const h of hits) { const key = categoryLabel(h.prop) ? h.prop : 'other'; count.set(key, (count.get(key) ?? 0) + 1) }
-  return [...count].map(([key, n]) => ({ key, label: key === 'other' ? '其他' : (categoryLabel(key) as string), n })).sort((a, b) => b.n - a.n)
+  for (const h of hits) { const key = hitCategoryKey(h); count.set(key, (count.get(key) ?? 0) + 1) }
+  return [...count].map(([key, n]) => ({ key, label: key === 'other' ? '其他' : labelOf(key), n })).sort((a, b) => b.n - a.n)
 }
-export const hitCategoryKey = (h: Pick<ScopedSearchHit, 'prop'>): string => (categoryLabel(h.prop) ? h.prop : 'other')
-export const hitCategoryLabel = (h: Pick<ScopedSearchHit, 'prop'>): string => categoryLabel(h.prop) ?? '其他'
+export const hitCategoryKey = (h: Pick<ScopedSearchHit, 'prop'>): string => (isRegisteredCategory(h.prop) ? h.prop : 'other')
 
 /**
  * 没输入关键字时显示本战役看得见的全部条目（和包弹窗同一种取法：每类一次作者查询，分批并行，边取边给界面）。

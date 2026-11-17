@@ -6,12 +6,13 @@ import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import { useToastStore } from '../../stores/toast'
 import { downloadOfficialBook, installBrewSources } from './deps-flow'
-import { categoryLabel } from './registry'
+import { useCategoryNames } from './useCategoryNames'
 
 /** 自制包的依赖（按作者程序：缺了这个包读不出）。只排版后端 packHealth 的结果；管理页（书架的包、我的库的包）共用。 */
 const props = defineProps<{ set: string; docIdLocal: string }>()
 const emit = defineEmits<{ missing: [n: number] }>()
 const app = useAppStore()
+const categoryLabel = useCategoryNames()
 const lib = useLibViewStore()
 const toast = useToastStore()
 const health = ref<PackHealth | null>(null)
@@ -41,7 +42,7 @@ defineExpose({ load })
   <p v-else-if="!health?.requires.length" class="lib-muted">这个包不依赖别的包。</p>
   <ul v-else class="trpg-list" data-testid="manage-deps">
     <li v-for="d in health.requires" :key="d.source" class="trpg-row">
-      <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ depName(d) }}</div><div class="trpg-row__meta">提供：{{ d.props.map((p) => categoryLabel(p) ?? p).join('、') }}</div></div>
+      <div class="trpg-row__main"><div class="trpg-row__title lib-name">{{ depName(d) }}</div><div class="trpg-row__meta">提供：{{ d.props.map((p) => categoryLabel(p)).join('、') }}</div></div>
       <div class="trpg-row__end">
         <span v-if="d.ok" class="trpg-badge" data-tone="success">已装</span>
         <template v-else>

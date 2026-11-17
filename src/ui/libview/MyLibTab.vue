@@ -15,7 +15,7 @@ import { importFiles } from './import-flow'
 import { catsText, copiedFrom, exportPair, packTitle, sideOf, usePending, versionTag } from './mine'
 import { openMyPack, openNewPack, packMenu, runPackMenu } from './mine-actions'
 import { openDraft } from './edit-flow'
-import { categoryLabel } from './registry'
+import { useCategoryNames } from './useCategoryNames'
 import type { EditDraft } from '../../library/manage'
 
 /**
@@ -23,6 +23,7 @@ import type { EditDraft } from '../../library/manage'
  * 从下载页装的包在书架；想改就在书架 ⋯ → 复制成我的。
  */
 const app = useAppStore()
+const categoryLabel = useCategoryNames()
 const lib = useLibViewStore()
 const campaign = useCampaignStore()
 const toast = useToastStore()
@@ -49,7 +50,7 @@ const drafts = ref<Array<EditDraft & { key: string }>>([])
 async function loadDrafts(): Promise<void> {
   try { drafts.value = (await Promise.all(['cn', 'en'].map((c) => app.svc().backend.library.custom.drafts(c)))).flat().sort((a, b) => b.at - a.at) } catch (e) { console.warn('[trpg-assistant] 读取草稿没成功', e) }
 }
-const draftName = (d: EditDraft) => `${String(d.s.name ?? '') || '未命名'}（${categoryLabel(d.prop) ?? d.prop}）`
+const draftName = (d: EditDraft) => `${String(d.s.name ?? '') || '未命名'}（${categoryLabel(d.prop)}）`
 function continueDraft(key: string): void {
   const d = drafts.value.find((x) => x.key === key)
   if (d) openDraft(app.svc(), d, (id) => { const p = lib.pairs?.find((x) => x.id === id); return p ? packTitle(sideOf(p, d.codeSet)) : null }, lib.campaignLib).catch((e: unknown) => { console.error('[trpg-assistant] 接着改草稿失败', e); toast.error(e instanceof Error ? e.message : '没能打开草稿') })
@@ -106,7 +107,7 @@ const onMenu = (p: PackPair, key: string) => runPackMenu(app.svc(), key, p, code
               <span class="lib-langs" :title="p.zh && p.en ? '中文、英文两个文件' : p.zh ? '只有中文' : '只有英文'"><span v-if="p.zh" class="trpg-badge" data-tone="info">中</span><span v-if="p.en" class="trpg-badge" data-tone="info">En</span></span>
               <span v-if="isPending(p)" class="lib-pending" data-testid="mylib-pending"><Icon name="arrow-clockwise" :size="12" />整理中</span>
             </div>
-            <div class="lib-pack__cats">{{ copiedFrom(pack(p)) ? `复制自 ${copiedFrom(pack(p))} · ` : '' }}{{ catsText(pack(p)) }}</div>
+            <div class="lib-pack__cats">{{ copiedFrom(pack(p)) ? `复制自 ${copiedFrom(pack(p))} · ` : '' }}{{ catsText(pack(p), categoryLabel) }}</div>
             <div v-if="!p.zh || !p.en" class="lib-faint" style="font-size: 12px" data-testid="mylib-onelang">{{ oneLang(p) }}</div>
           </div>
           <div class="trpg-row__end">
