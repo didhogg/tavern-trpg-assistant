@@ -77,6 +77,11 @@ export function createServer(socket: any, options: ServerOptions): { changes: Ch
         const data = structuredClone(source)
         // 与服务器一致：未要求保留编号时一律发新编号。
         if (!operation.keepId || !data._id) data._id = `kernel${String(++sequence).padStart(10, '0')}`
+        else {
+          // 读档保留旧编号。后续自动发号不能再次分配这一号。
+          const restored = /^kernel(\d{10})$/.exec(data._id)
+          if (restored) sequence = Math.max(sequence, Number(restored[1]))
+        }
         return data
       })
       if (!parentUuid) store.push(...created)

@@ -8,6 +8,7 @@ import { createServer, type ChangeRecord } from './server'
 import { reseedKernel } from './seed'
 import { KERNEL_COMMANDS } from './commands'
 import { loadBrews } from './brew-input'
+import { loadKernelModule } from './plutonium-build'
 
 const g = globalThis as any
 const frameToken = new URLSearchParams(location.search).get(FRAME_PARAM) ?? ''
@@ -79,7 +80,7 @@ async function boot(input: KernelInput): Promise<unknown> {
   // 官方声明的 client 设置，放客户端存储才生效。
   g.game.settings.storage.get('client').setItem('core.noCanvas', 'true')
   await loadClassic(`systems/${data.system.id}/dnd5e.js`)
-  for (const m of data.modules) for (const path of m.esmodules ?? []) await import(/* @vite-ignore */ new URL(path, location.href).href)
+  for (const m of data.modules) for (const path of m.esmodules ?? []) await loadKernelModule(new URL(path, location.href))
   Hooks.once('setup', () => {
     // 只关闭显示用的日历 HUD；时间规则仍由官方程序执行。
     if (g.CONFIG.DND5E?.calendar) g.CONFIG.DND5E.calendar.application = null

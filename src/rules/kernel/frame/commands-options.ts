@@ -65,15 +65,15 @@ export function createOptionsCommands(operate: Operate) {
     /** 按已选的条目（和已做的选择 picks）一件件放进空白人物，列出每件条目现在要玩家选的事；预览用的人物用完删掉。 */
     buildOptions: (plan: Pick<BuildPlan, 'items' | 'picks' | 'choices' | 'blank'>) => operate([], async () => {
       const items = []
-      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
-      const described: Array<{ refKey: string | null; steps: any[] }> = []
+      for (const row of plan.items) items.push({ ...row, data: row.data ?? await importEntry(row.prop, row.entry) })
+      const described: Array<{ refKey: string | null; steps: any[]; unsupported: string[] }> = []
       const built = await buildActor('选项预览', items, [], plan.choices ?? {}, {
         strict: false, picks: plan.picks, blank: plan.blank,
-        onManager: async ({ manager, key }) => { described.push({ refKey: key, steps: await describeSteps(manager) }) },
+        onManager: async ({ manager, key, unsupported }) => { described.push({ refKey: key, steps: await describeSteps(manager), unsupported }) },
       })
       const actor = built.actor ?? built.created
       // 属性：初值、种族等加成后的自动值、官方上限；界面的「基础 + 加成 = 合计」由主线按这三样算
-      try { return { items: described, complete: !built.pending, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null } } } finally { await (built.actor ?? built.created)?.delete?.() }
+      try { return { items: described, complete: !built.pending && !built.missingTraits.length, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null } } } finally { await (built.actor ?? built.created)?.delete?.() }
     }),
   }
 }

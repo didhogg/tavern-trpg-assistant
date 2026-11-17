@@ -11,6 +11,7 @@ import { actorTypes, BUILD_ACTOR_TYPE } from './actor-types'
 import { restoreRecordedChoices } from './commands-restore'
 import { blankChoice, firstChoice } from './commands-choice'
 import { resolveStarting, type StartingSelection } from './commands-equipment'
+import { checkedBuildTrait, fillBuildTraits, isBuildTrait } from './build-traits'
 
 const g = globalThis as any
 export function Manager(): any {
@@ -74,6 +75,18 @@ export async function applyManager(manager: any, values: any[] | undefined, { st
     if (step.automatic || !step.flow) continue
     const advancement = step.flow.advancement
     const recorded = values?.find((v: any) => v.id === advancement.id && v.level === step.flow.level)
+    const pick = picks?.find((p) => p.id === advancement.id && (p.level ?? null) === (step.flow.level ?? null))
+    if (isBuildTrait(advancement.id)) {
+      if (recorded?.error || (strict && !recorded)) return { finished: false, step: { ...stepSummary(step), error: recorded?.error } }
+      const value = await checkedBuildTrait(advancement, recorded?.data ?? pick?.value)
+      if (!value) return { finished: false, step: { ...stepSummary(step), error: '建卡选择已不在当前候选内' } }
+      if (recorded) {
+        step.type = 'restore'
+        step.flow.retainedData = value
+        step.automatic = true
+      } else step.flow.getAutomaticApplicationValue = async () => value
+      continue
+    }
     if (recorded) {
       if (recorded.error) return { finished: false, step: { ...stepSummary(step), error: recorded.error } }
       step.type = 'restore'
@@ -83,7 +96,6 @@ export async function applyManager(manager: any, values: any[] | undefined, { st
     }
     if (await step.flow.getAutomaticApplicationValue() !== false) continue
     // 玩家这一步的选择（建卡界面给的）：值的样子就是官方进阶要的（Trait = {chosen:[..]}、能力值 = {type:'asi', assignments:{..}}）
-    const pick = picks?.find((p) => p.id === advancement.id && (p.level ?? null) === (step.flow.level ?? null))
     if (pick) { step.flow.getAutomaticApplicationValue = async () => pick.value; continue }
     if (strict) return { finished: false, step: stepSummary(step) }
     const value = (blank ? await blankChoice(step.flow) : undefined) ?? await firstChoice(step.flow)
@@ -160,11 +172,12 @@ export function abilityValues(actor: any): Record<string, number> {
   return Object.fromEntries(Object.entries(actor.system?.abilities ?? {}).map(([k, v]: [string, any]) => [k, v.value]))
 }
 
-export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, picks, blank = false, onManager }: { strict?: boolean; seed?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; onManager?: (info: { manager: any; key: string | null }) => Promise<void> } = {}): Promise<any> {
+export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, id, picks, blank = false, onManager }: { strict?: boolean; seed?: string; id?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; onManager?: (info: { manager: any; key: string | null; unsupported: string[] }) => Promise<void> } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
-  const created = await ActorClass.create({ name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } })
+  const created = await ActorClass.create({ ...(id ? { _id: id } : {}), name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } }, { keepId: !!id })
   const initial = abilityValues(created)
+  const missingTraits: Array<{ refKey: string; titles: string[] }> = []
   for (const raw of items) {
     const source = raw?.data ?? raw
     const data = cleanItem(source)
@@ -172,16 +185,22 @@ export async function buildActor(name: string, items: any[], equipment: any[], c
     // 用 dnd5e 自己清理“人物做过的选择”的官方入口（物品拖出人物时同样调用），让成长从头走。
     g.CONFIG.Item.dataModels[data.type]?.resetData?.(data.system)
     const key = raw?.refKey ?? refKeyOf(data)
+    const recorded = key ? choices[key] : undefined
+    const useBuildTraits = key && (!strict || recorded?.some((value) => isBuildTrait(value.id)))
+    const unsupported = useBuildTraits ? await fillBuildTraits(data, raw, key, created.items.some((item: any) => item.type === 'class')) : []
+    if (key && unsupported.length) missingTraits.push({ refKey: key, titles: unsupported })
+    const removed = [...(recorded ?? []), ...(key ? picks?.[key] ?? [] : [])].find((value) => isBuildTrait(value.id) && !(value.id in (data.system?.advancement ?? {})))
+    if (removed) return { pending: true, step: { error: '存档中的建卡步骤已变更', id: removed.id, refKey: key }, built: actorLevel(created), actor: created, initial, missingTraits }
     const manager = Manager().forNewItem(created, data, { automaticApplication: true })
-    await onManager?.({ manager, key })
-    const outcome = await applyManager(manager, key ? choices[key] : undefined, { strict, blank, picks: key ? picks?.[key] : undefined })
-    if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created), actor: created, initial }
+    await onManager?.({ manager, key, unsupported })
+    const outcome = await applyManager(manager, recorded, { strict, blank, picks: key ? picks?.[key] : undefined })
+    if (!outcome.finished) return { pending: true, step: outcome.step, built: actorLevel(created), actor: created, initial, missingTraits }
     const exists = created.items.contents.some((i: any) => i.type === data.type
       && i.flags?.plutonium?.hash === data.flags?.plutonium?.hash)
     if (!exists) await created.createEmbeddedDocuments('Item', [markStandardDragDrop(cleanItem(data))])
   }
   if (equipment.length) await created.createEmbeddedDocuments('Item', equipment.map(item => markStandardDragDrop(cleanItem(item?.data ?? item))))
-  return { actor: created, initial }
+  return { actor: created, initial, missingTraits }
 }
 
 export interface BuildRow { prop: string; entry: any; refKey: string; itemId?: string; data?: any }
@@ -206,6 +225,7 @@ export interface BuildPlan {
 }
 
 export interface RebuildPlan {
+  id?: string
   name: string
   /** 顶层条目（种族/背景/职业/其他有作者编号的东西），按人物里的顺序。 */
   items: Array<{ prop: string; entry: any; refKey: string; itemId?: string; data?: any }>
@@ -296,15 +316,18 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     buildCharacter: (plan: BuildPlan) => operate([], async () => {
       const seed = plan.seed ?? freshSeed()
       const items = []
-      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
+      for (const row of plan.items) items.push({ ...row, data: row.data ?? await importEntry(row.prop, row.entry) })
       const equipment = []
       for (const row of plan.equipment ?? []) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey })
       const starting = plan.starting ? await resolveStarting(plan.items.filter((r) => r.entry?.startingEquipment), plan.starting, plan.startingExcluded) : null
       const built = await buildActor(plan.name, items, [...equipment, ...(starting?.equipment ?? [])], plan.choices ?? {}, { strict: false, seed, picks: plan.picks, blank: plan.blank })
-      if (built.pending) return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }
+      if (built.pending) {
+        await built.actor.delete()
+        return { kernelStatus: 'pending', reason: 'build-step-not-complete', seed, step: built.step, built: built.built }
+      }
       if (starting?.specials.length) await built.actor.createEmbeddedDocuments('Item', starting.specials)
       if (starting?.currency) await built.actor.update({ 'system.currency': starting.currency })
-      return { id: built.actor.id, seed, initial: built.initial, skipped: starting?.skipped ?? [], ...actorLevel(built.actor) }
+      return { id: built.actor.id, seed, initial: built.initial, skipped: starting?.skipped ?? [], missingTraits: built.missingTraits, ...actorLevel(built.actor) }
     }),
 
     /** 建卡待选项：把作者转出的种族/背景/职业条目放进一个空白 1 级人物，列官方成长步骤（不改世界）。 */
@@ -329,11 +352,14 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       const seed = plan.seed?.trim() || plan.name
       reseedKernel(seed)
       const items = []
-      for (const row of plan.items) items.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
+      for (const row of plan.items) items.push({ ...row, data: row.data ?? await importEntry(row.prop, row.entry) })
       const equipment = []
       for (const row of plan.equipment) equipment.push({ data: row.data ?? await importEntry(row.prop, row.entry), refKey: row.refKey, itemId: row.itemId })
-      const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true, seed })
-      if (built.pending) return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
+      const built = await buildActor(plan.name, items, equipment, plan.choices, { strict: true, seed, id: plan.id })
+      if (built.pending) {
+        await built.actor.delete()
+        return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
+      }
       const base = built.actor.toObject()
       await applyStateToActor(built.actor, plan.state)
       if ([...built.actor.items].filter((item: any) => item.type === 'class').length > 1) await restoreRecordedChoices(built.actor, plan.choices, [...plan.items, ...plan.equipment])

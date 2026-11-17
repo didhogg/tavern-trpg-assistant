@@ -194,7 +194,7 @@ export class KernelRuntime {
     const items = plan.items.map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
     const equipment = (plan.equipment ?? []).map((ref) => ({ prop: ref.prop, refKey: refKey(ref), entry: byKey.get(refKey(ref))!.entry }))
     const result = await o.session.call('buildCharacter', { name: plan.name, items, equipment, choices: plan.choices ?? {}, picks: picksByKey(plan.items, plan.picks), blank: plan.blank, starting: plan.starting, startingExcluded })
-    if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? `建卡状态：${result.status}`, detail: result }
+    if (result.status !== 'complete' || !result.result?.id) return { status: result.status, error: result.error ?? result.result?.step?.error ?? `建卡状态：${result.status}`, detail: result }
     o.seeds.set(result.result.id, result.result.seed)
     const data = await actorData(o.session, result.result.id)
     if (data) o.bases.set(result.result.id, data)
@@ -208,7 +208,7 @@ export class KernelRuntime {
         if (done.status !== 'complete') return { status: done.status, error: done.error ?? `写入基础值状态：${done.status}`, detail: done }
       }
     }
-    return { status: 'complete', id: result.result.id, seed: result.result.seed, noEnglish: rows.noEnglish }
+    return { status: 'complete', id: result.result.id, seed: result.result.seed, noEnglish: rows.noEnglish, ...(result.result.missingTraits?.length ? { detail: { missingTraits: result.result.missingTraits } } : {}) }
   }
 
   /** 起始装备选项（P6）：已选的职业 / 背景写着的起始装备 → 每组选项、类别候选、金币骰式；带 starting（玩家现在的选择）时多给预演（物品、钱）。 */
@@ -238,9 +238,9 @@ export class KernelRuntime {
       const key = sent[i].refKey
       const found = extrasOf(row.ref.prop, row.entry as Record<string, unknown>)
       const classNames = [row.name, String((row.entry as { name?: unknown }).name ?? '')].filter(Boolean) as string[]
-      const steps = (shownItems as Array<{ refKey: string; steps: unknown[] }>).find((x) => x.refKey === key)?.steps ?? []
-      items.push({ ref: row.ref, name: row.name, steps: steps,
-        extras: await Promise.all(found.extras.map((x) => candidatesOf(x, classNames, query))), unsupported: found.unsupported })
+      const described = (shownItems as Array<{ refKey: string; steps: unknown[]; unsupported?: string[] }>).find((x) => x.refKey === key)
+      items.push({ ref: row.ref, name: row.name, steps: described?.steps ?? [],
+        extras: await Promise.all(found.extras.map((x) => candidatesOf(x, classNames, query))), unsupported: [...found.unsupported, ...(described?.unsupported ?? [])] })
     }
     const abilities = abilityView(out.result.abilities, plan.abilities)
     return { status: 'complete', items, complete: out.result.complete, abilities }

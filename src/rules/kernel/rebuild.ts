@@ -132,6 +132,7 @@ export async function rebuildActor(opts: {
   const equipment = entries.filter((e) => !buildProps.has(e.ref.prop))
     .map((e) => ({ prop: e.ref.prop, entry: e.entry, refKey: refKey(e.ref) }))
   const result = await opts.session.call('rebuildCharacter', {
+    id: opts.actor.id,
     name: opts.actor.name,
     seed: opts.actor.seed || opts.actor.name,
     items,
