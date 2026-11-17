@@ -1,8 +1,11 @@
 // P6：作者组件计算固定给予和选择；dnd5e 回读自己的编号，再按原生 Trait 进阶存取。
+// 这里的计算是旁路（渲染作者组件、建临时人物会抽随机数），一律在旁路随机序列上跑（random.ts withSeed，与读资料包同一规则）：
+// 建卡一定跑、冷读档不一定跑，若占用主序列，同一人物重建后物品编号会错开。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者组件和官方文档没有类型声明 */
 import { hashValue } from '../../../core/hash'
 import { plutoniumBuild } from './plutonium-build'
 import { BUILD_ACTOR_TYPE } from './actor-types'
+import { withSeed } from './random'
 import { titleOfKeys, traitTypeOfActorPath, traitTypeTitle } from './trait-title'
 
 const g = globalThis as any
@@ -17,7 +20,11 @@ type NativeTraits = { grants: string[]; choices: NativeSlot[]; withheld: number 
 const unique = (keys: Iterable<string>): string[] => [...new Set(keys)].sort()
 
 /** 把固定给予与可选位置分开校验。一个已选条目只能占一个位置。 */
-export async function checkedBuildTrait(adv: any, value: any): Promise<{ chosen: string[] } | null> {
+export function checkedBuildTrait(adv: any, value: any): Promise<{ chosen: string[] } | null> {
+  return withSeed(`build-traits:check:${adv?._id}`, () => checkTrait(adv, value))
+}
+
+async function checkTrait(adv: any, value: any): Promise<{ chosen: string[] } | null> {
   const { available } = await adv.unfulfilledChoices()
   const grants = new Set<string>(available.filter((slot: any) => slot.type === 'grant').flatMap((slot: any) => [...slot.choices.asSet()]))
   const fixed = new Set<string>([...grants, ...(adv.configuration.grants ?? [])])
@@ -151,7 +158,11 @@ function missingSlots(generated: NativeSlot[], existing: Array<{ count: number; 
 const labelOf = (group: any, keys: string[] = []): string => traitTypeTitle(traitTypeOfActorPath(group._propPathActorExistingProficiencies))
   || titleOfKeys(keys) || group._title || group._subComps[0]?.modalTitle || group._prop
 
-export async function fillBuildTraits(data: any, row: { prop?: string; entry?: any }, ref: string, multiclass: boolean): Promise<string[]> {
+export function fillBuildTraits(data: any, row: { prop?: string; entry?: any }, ref: string, multiclass: boolean): Promise<string[]> {
+  return withSeed(`build-traits:fill:${ref}:${multiclass}`, () => fill(data, row, ref, multiclass))
+}
+
+async function fill(data: any, row: { prop?: string; entry?: any }, ref: string, multiclass: boolean): Promise<string[]> {
   if (!row.entry) return []
   const api = plutoniumBuild
   if (!api) return ['当前 Plutonium 版本缺少已验证的建卡接线']
