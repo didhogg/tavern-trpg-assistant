@@ -33,33 +33,3 @@ export function zhAt(en: unknown, zh: unknown, text: string | null | undefined):
 
 /** 同一编号的英文 / 中文条目（中文为 null = 交给小窗的本来就是中文条目，不用换）。 */
 export interface EntryPair { en: unknown; zh: unknown | null }
-
-
-/** 显示用的文字字段（登记一处，所有类型共用）；编号类字段（uid、value、hash、refKey…）一律不碰。 */
-export const TEXT_FIELDS = new Set(['name', 'title', 'label', 'text', 'displayName', 'rename'])
-
-/**
- * 小窗交回结果的统一出口：整棵结果里每个显示文字字段，按「同编号条目 + 位置」换中文。
- * 不分条目类型、不分界面；原样数据（raw）不动。
- */
-export function localizeAll<T>(value: T, pairs: EntryPair[]): T {
-  const live = pairs.filter((p) => p.zh !== null && p.zh !== undefined)
-  if (!live.length) return value
-  const one = (pick: (p: EntryPair) => string | null): string | null => {
-    const got = new Set(live.map(pick).filter((x): x is string => !!x))
-    return got.size === 1 ? [...got][0] : null
-  }
-  const walk = (node: unknown): unknown => {
-    if (Array.isArray(node)) return node.map(walk)
-    if (!node || typeof node !== 'object') return node
-    const src = node as Record<string, unknown>
-    const out: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(src)) {
-      if (k === 'raw') out[k] = v
-      else if (typeof v === 'string' && TEXT_FIELDS.has(k)) out[k] = one((p) => zhAt(p.en, p.zh, v)) ?? v
-      else out[k] = walk(v)
-    }
-    return out
-  }
-  return walk(value) as T
-}

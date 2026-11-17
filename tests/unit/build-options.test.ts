@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { checkBuildExtras, type ExtraWithCandidates } from '../../src/rules/kernel/build-options'
+import { checkBuildExtras } from '../../src/rules/kernel/build-options'
 
 const ref = (hash: string, prop = 'feat') => ({ set: 'cn-official', prop, hash })
-const group = (id: string, count: number, hashes: string[]): ExtraWithCandidates => ({
-  id, title: id, kind: 'feat', count, candidates: hashes.map(hash => ({ ref: ref(hash), name: hash, source: 'XPHB' })),
-})
+// 复核读的是过了显示出口的组（组名已是成品文字）
+const group = (id: string, count: number, hashes: string[]) => ({ id, title: id, kind: 'feat', count, candidates: hashes.map(hash => ({ ref: ref(hash), source: 'XPHB' })) })
 
 describe('建卡额外选择复核', () => {
   it('每组有自己的候选，不能拿两项起源专长替代战斗风格', () => {

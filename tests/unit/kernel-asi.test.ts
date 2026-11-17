@@ -28,13 +28,13 @@ describe('registryLabels', () => {
 })
 
 describe('asiView', () => {
-  it('每行带名字、固定加值、能不能加减；剩余点数按玩家已加的算', () => {
+  it('每行带名字（标明来自 dnd5e 语言包）、固定加值、能不能加减；剩余点数按玩家已加的算', () => {
     const v = asiView(fixedPlus, { type: 'asi', chosen: { dex: 1 } }) as { left: number; rows: Array<Record<string, unknown>> }
     expect(v.left).toBe(0)
     expect(v.rows).toEqual([
-      { key: 'str', label: '力量', fixed: 2, chosen: 0, canAdd: false, canRemove: false },
-      { key: 'dex', label: '敏捷', fixed: 0, chosen: 1, canAdd: false, canRemove: true },
-      { key: 'con', label: '体质', fixed: 0, chosen: 0, canAdd: false, canRemove: false },
+      { key: 'str', label: { $t: 'system', text: '力量' }, fixed: 2, chosen: 0, canAdd: false, canRemove: false },
+      { key: 'dex', label: { $t: 'system', text: '敏捷' }, fixed: 0, chosen: 1, canAdd: false, canRemove: true },
+      { key: 'con', label: { $t: 'system', text: '体质' }, fixed: 0, chosen: 0, canAdd: false, canRemove: false },
     ])
   })
   it('每项上限、锁定项：到上限或锁定就不能再加', () => {

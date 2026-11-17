@@ -1,7 +1,9 @@
 // 中文战役「英文残留审计」（只读）：在真实结算小窗里，对官方的种族 / 背景 / 职业 / 专长各自单独建一个人，
 // 再扫描三处「给人看的文字」里有没有不含中文的字符串，按字符串汇总（出现在哪些条目、哪一类位置）：
-//   ① 人物数据里的名字 / 标题（物品名、进阶标题……，不含 flags）；② 建卡选项（people.buildOptions）里每一步的标题、候选名、「暂未支持」提示；
-//   ③ 起始装备（people.startingEquipment）的选项文字 + 按默认选择的预演。
+//   ① 人物数据里的名字 / 标题（物品名、进阶标题……，不含 flags）；② 建卡选项（people.buildOptions）里每一步的标题、说明、候选名、「暂未支持」提示，
+//   额外选择（子职业 / 专长 / 可选特性）的组名、候选名、前置条件，选上带条件的候选后的「请核对」提醒；
+//   ③ 起始装备（people.startingEquipment）的选项文字 + 按默认选择的预演；
+//   另记显示出口自己报的「没翻到」（结果里的 untranslated），按出现位置汇总。
 // 这是验收工具：改前跑一遍出清单，改后再跑对比。不改仓库任何数据，不设通过 / 失败（退出码 0），结果写 work/e2e-lib/p6-lang-audit-<内核>.json。
 // 用法：ENGINE=chrome|webkit node tests/e2e/library/p6-lang-audit.mjs   （SKIP_BUILD=1 跳过构建；AUDIT_SOURCES=PHB,XPHB 改范围；AUDIT_LIMIT=每类最多条数，默认不限）
 import { writeFile } from 'node:fs/promises'
@@ -61,7 +63,7 @@ try {
       }
     }
 
-    const stats = { built: 0, buildFailed: [], optionsFailed: [], startingFailed: [], previewFailed: [] }
+    const stats = { built: 0, requirements: 0, buildFailed: [], optionsFailed: [], startingFailed: [], previewFailed: [] }
     const rowsOf = async (prop) => (await h.scoped.query(library, prop, { expand: true })).filter((r) => sources.includes(r.item?.source))
     const props = ['race', 'background', 'class', 'feat']
     let n = 0
@@ -81,24 +83,45 @@ try {
           for (const it of items) walk(it, 'item', `人物数据:${it.type}`, entry)
           stats.built++
         } else stats.buildFailed.push(`${entry}：${b.status} ${String(b.error ?? '').slice(0, 80)}`)
-        // ② 建卡选项的步骤标题
-        const o = await people.buildOptions(owner, { items: [row.ref], blank: true }).catch((e) => ({ status: 'throw', error: String(e) }))
-        if (o.status === 'complete') for (const it of o.items ?? []) {
-          for (const s of it.steps ?? []) {
-            if (english(s.title)) note(s.title, `建卡选项:步骤标题(${s.type})`, entry)
-            if (s.options) walk(s.options, 'options', `建卡选项:候选(${s.type})`, entry)
+        // ② 建卡选项：步骤、额外选择；带前置条件的候选再选上一个，扫「请核对」提醒
+        const scanOptions = (o) => {
+          for (const it of o.items ?? []) {
+            for (const s of it.steps ?? []) {
+              if (english(s.title)) note(s.title, `建卡选项:步骤标题(${s.type})`, entry)
+              if (english(s.hint)) note(s.hint, `建卡选项:步骤说明(${s.type})`, entry)
+              if (s.options) walk(s.options, 'options', `建卡选项:候选(${s.type})`, entry)
+            }
+            for (const x of it.extras ?? []) {
+              if (english(x.title)) note(x.title, `建卡选项:额外选择组名(${x.kind})`, entry)
+              for (const c of x.candidates ?? []) {
+                if (english(c.name)) note(c.name, `建卡选项:额外选择候选名(${x.kind})`, entry)
+                if (english(c.requirement)) note(c.requirement, `建卡选项:前置条件(${x.kind})`, entry)
+              }
+            }
+            for (const u of it.unsupported ?? []) if (english(u)) note(u, '建卡选项:暂未支持 / 请核对提示', entry)
           }
-          for (const u of it.unsupported ?? []) if (english(u)) note(u, '建卡选项:暂未支持提示', entry)
+          for (const t of o.untranslated ?? []) note(t, '显示出口:没翻到(建卡选项)', entry)
+        }
+        const o = await people.buildOptions(owner, { items: [row.ref], blank: true }).catch((e) => ({ status: 'throw', error: String(e) }))
+        if (o.status === 'complete') {
+          scanOptions(o)
+          stats.requirements += (o.items ?? []).flatMap((it) => it.extras ?? []).flatMap((x) => x.candidates).filter((c) => c.requirement).length
+          const checked = (o.items ?? []).flatMap((it) => it.extras ?? []).flatMap((x) => x.candidates).find((c) => c.requirement)
+          if (checked) {
+            const o2 = await people.buildOptions(owner, { items: [row.ref, checked.ref], blank: true }).catch((e) => ({ status: 'throw', error: String(e) }))
+            if (o2.status === 'complete') scanOptions(o2)
+          }
         } else stats.optionsFailed.push(`${entry}：${o.status}`)
         // ③ 起始装备选项 + 默认选择的预演（只有职业 / 背景写着起始装备）
         if (prop === 'class' || prop === 'background') {
           const sx = await people.startingEquipment(owner, { items: [row.ref] }).catch((e) => ({ status: 'throw', error: String(e) }))
           if (sx.status === 'complete') {
             for (const sec of sx.sections ?? []) walk(sec.groups, 'groups', '起始装备选项', entry)
+            for (const t of sx.untranslated ?? []) note(t, '显示出口:没翻到(起始装备)', entry)
             const starting = {}
             for (const sec of sx.sections ?? []) starting[sec.refKey] = { choice: Object.fromEntries((sec.groups ?? []).filter((g) => g.choices.length > 1).map((g) => [g.index, g.choices[0].key])) }
             const pv = await people.startingEquipment(owner, { items: [row.ref], starting }).catch((e) => ({ status: 'throw', error: String(e) }))
-            if (pv.status === 'complete') walk(pv.preview, 'preview', '起始装备预演', entry); else stats.previewFailed.push(`${entry}：${pv.status}`)
+            if (pv.status === 'complete') { walk(pv.preview, 'preview', '起始装备预演', entry); for (const t of pv.untranslated ?? []) note(t, '显示出口:没翻到(起始装备)', entry) } else stats.previewFailed.push(`${entry}：${pv.status}`)
           } else stats.startingFailed.push(`${entry}：${sx.status}`)
         }
         if (++n % 20 === 0) { await rt.close(owner); await rt.session(owner); console.log(`[audit] 已处理 ${n} 条，目前 ${found.size} 个不同的英文串`) }
@@ -111,6 +134,7 @@ try {
   result.seconds = Math.round((Date.now() - started) / 1000)
   await writeFile(`${work}/p6-lang-audit-${engineName}.json`, JSON.stringify(result, null, 1))
   const s = result.stats
+  console.log(`带前置条件的候选共 ${s.requirements} 个（其文字都已扫描）`)
   console.log(`审计范围 ${result.sources.join('/')}，建成 ${s.built} 个人；建失败 ${s.buildFailed.length}、选项失败 ${s.optionsFailed.length}、装备失败 ${s.startingFailed.length}、预演失败 ${s.previewFailed.length}；耗时 ${result.seconds} 秒`)
   console.log(`没有中文的字符串共 ${result.count} 个（出现在越多条目里越靠前）：`)
   for (const x of result.list.slice(0, 60)) console.log(`  ${String(x.entries).padStart(4)}  ${x.text}   ← ${x.where[0]}`)

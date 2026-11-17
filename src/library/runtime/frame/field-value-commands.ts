@@ -73,3 +73,12 @@ export async function authorAt(paths: string[][]): Promise<Array<string | null>>
     return typeof value === 'string' ? value : null
   })
 }
+
+/** 作者数据里的前置条件（prerequisite 数组）→ 作者自己的渲染（Renderer.utils.prerequisite.getText，不带「先决条件：」前缀）；本小窗是哪种语言就给哪种。 */
+export async function prerequisiteText(list: unknown[]): Promise<Array<string | null>> {
+  await init()
+  return list.map((prerequisite) => {
+    const text = Array.isArray(prerequisite) ? A.Renderer.utils.prerequisite.getText(prerequisite, { isSkipPrefix: true }) : null
+    return typeof text === 'string' && text.trim() ? text.trim() : null
+  })
+}

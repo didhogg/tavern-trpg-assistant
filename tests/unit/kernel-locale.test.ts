@@ -1,6 +1,6 @@
 // 中文战役显示文字：同一编号的中英条目，按「英文版里的位置 → 中文版同一位置」换回中文（src/rules/kernel/locale.ts）。
 import { describe, expect, it } from 'vitest'
-import { localizeAll, zhAt } from '../../src/rules/kernel/locale'
+import { zhAt } from '../../src/rules/kernel/locale'
 
 // 作者数据原样节选（侍僧 PHB、牧师 PHB 的中英两版）
 const acolyteEn = { name: 'Acolyte', startingEquipment: [{ _: [{ item: 'holy symbol|phb', displayName: 'holy symbol (a gift to you when you entered the priesthood)' }, { special: 'sticks of incense', quantity: 5 }, { special: 'vestments' }] }] }
@@ -31,31 +31,5 @@ describe('zhAt：同编号条目同位置取中文', () => {
   })
   it('结构对不上（数组长短不同）的那一段不取', () => {
     expect(zhAt({ a: ['x'] }, { a: ['甲', '乙'] }, 'x')).toBeNull()
-  })
-})
-
-describe('localizeAll：小窗结果统一出口（不分类型）', () => {
-  const pairs = [{ en: acolyteEn, zh: acolyteZh }, { en: clericEn, zh: clericZh }]
-  // 小窗交回的形状原样节选：起始装备选项 + 建卡步骤
-  const result = {
-    sections: [{ refKey: 'k', groups: [{ index: 0, choices: [{ key: '_', entries: [
-      { index: 0, kind: 'item', uid: 'holy symbol|phb', displayName: 'Holy Symbol (A Gift to You When You Entered the Priesthood)', raw: { displayName: 'holy symbol (a gift to you when you entered the priesthood)' } },
-      { index: 1, kind: 'special', quantity: 5, text: 'Sticks of Incense' },
-    ] }] }] }],
-    steps: [{ type: 'ScaleValue', title: 'Cantrips Known' }, { type: 'Trait', title: 'Saving Throws', value: 'skills:his' }],
-  }
-  it('显示文字换中文，编号字段和原样数据不动', () => {
-    const out = localizeAll(result, pairs)
-    const [e0, e1] = out.sections[0].groups[0].choices[0].entries
-    expect(e0.displayName).toBe('圣徽（出任神职时的礼物）')
-    expect(e0.uid).toBe('holy symbol|phb')
-    expect(e0.raw?.displayName).toBe('holy symbol (a gift to you when you entered the priesthood)')
-    expect(e1.text).toBe('熏香')
-    expect(out.steps[0].title).toBe('已知戏法')
-    expect(out.steps[1].title).toBe('Saving Throws')
-    expect(out.steps[1].value).toBe('skills:his')
-  })
-  it('没有中文条目（英文战役 / 本来就交中文）→ 原样返回', () => {
-    expect(localizeAll(result, [{ en: acolyteEn, zh: null }])).toBe(result)
   })
 })

@@ -7,10 +7,12 @@
 import type { Operate } from './commands-items'
 import { importEntry } from './importer'
 import { plutoniumBuild } from './plutonium-build'
+import { asData, fromAuthor, fromEntry, named, plugin, sys, type FrameText } from '../shown'
 
 const g = globalThis as any
 
-export interface EquipCandidate { uid: string; name: string; source: string; hash: string }
+/** 一件物品：name 是显示名（作者编号 → 主线取本战役库里的名字）；uid / source / hash 是数据。 */
+export interface EquipCandidate { uid: string; name: FrameText; source: string; hash: string }
 export interface EquipEntryView {
   /** 这一条在作者数据这一项里的原始位置（选择键「组.选项.条目序号.第几个」里的条目序号用它；列表里被去掉的条目不会让序号错位）。 */
   index: number
@@ -18,20 +20,21 @@ export interface EquipEntryView {
   raw: unknown
   kind: 'item' | 'category' | 'special' | 'value'
   quantity: number
-  uid?: string; name?: string; source?: string; hash?: string; found?: boolean
-  displayName?: string
+  uid?: string; name?: FrameText; source?: string; hash?: string; found?: boolean
+  /** 作者写的改名（条目原文）。 */
+  displayName?: FrameText
   /** 铜币：袋子里的钱（containsValue）或单独的 value 条目。 */
   cp?: number
-  text?: string
+  text?: FrameText
   types?: string[]
-  typeNames?: string[]
+  typeNames?: FrameText[]
   candidates?: EquipCandidate[]
 }
 export interface EquipSection {
-  refKey: string; prop: string; name: string; source: string
+  refKey: string; prop: string; name: FrameText; source: string
   groups: Array<{ index: number; choices: Array<{ key: string; entries: EquipEntryView[] }> }>
   /** 作者写法里这一版不认识的条目（原样节选）；不静默丢。 */
-  unsupported: string[]
+  unsupported: FrameText[]
   /** 起始金币的骰式（作者 goldAlternative）；没有 = 这个条目不给金币选项。 */
   goldExpression: string | null
   /** 起始金币的作者币种编号（gp）；没有金币选项 = null。 */
@@ -42,8 +45,10 @@ export interface StartingSelection { choice?: Record<string, string>; pick?: Rec
 export interface StartingRow { prop: string; refKey: string; entry: any }
 
 const uidOf = (item: any): string => g.DataUtil.proxy.getUid('item', item)
+/** 物品显示名：带作者编号，主线按编号取本战役库里的名字。 */
+const itemName = (name: string, source: string, hash: string): FrameText => named(name, { propDroppable: 'item', source, hash })
 const hashOfUid = (uid: string): string => { const [name, source] = uid.split('|'); return g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS]({ name, source }) }
-const candidate = (item: any): EquipCandidate => ({ uid: uidOf(item), name: item.name, source: item.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](item) })
+const candidate = (item: any): EquipCandidate => { const hash = g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](item); return { uid: uidOf(item), name: itemName(item.name, item.source, hash), source: item.source, hash } }
 const titleCase = (text: string): string => g.Renderer.stripTags(text).toTitleCase()
 
 /** 作者加载器的三块来源：官方、预发布、自制包（读哪些由本战役装了什么决定，这里一块都不挑；本战役看得见哪些在主线按战役范围筛）。 */
@@ -56,10 +61,11 @@ const expanderOf = (type: string) => {
   return expanders && Object.hasOwn(expanders, type) ? expanders[type] : null
 }
 
-function typeName(type: string): string {
+/** 类别名：语言包里生成好的（system）；没有就用 Plutonium 类别登记的原名（作者代码里的字，找不到位置 = 显示原文、记作没翻到）。 */
+function typeName(type: string): FrameText {
   const key = `TRPGAssistant.EquipmentType.${type}`
   const translated = g.game.i18n.localize(key)
-  return translated === key ? expanderOf(type)?.name ?? type : translated
+  return translated === key ? fromAuthor(String(expanderOf(type)?.name ?? type), null) : sys(translated)
 }
 
 /** 筛选由作者类别完成；屏蔽走战役资料范围，由主线处理。 */
@@ -84,9 +90,9 @@ export function goldExpressionOf(entry: any): string | null {
 
 /** 一条起始装备写法 → 界面用的视图；认得但没有候选 → null（照 Plutonium 去掉）；不认得 → { unsupported }（不静默丢）。 */
 async function viewOf(equi: any): Promise<Omit<EquipEntryView, 'index'> | { unsupported: string } | null> {
-  const loaded = async (uid: string) => { const [name, source] = uid.split('|'); const i = await g.DataLoader.pCacheAndGetHash(g.UrlUtil.PG_ITEMS, hashOfUid(uid)); return { uid, name: i?.name ?? name, source: i?.source ?? source, hash: hashOfUid(uid), found: !!i } }
+  const loaded = async (uid: string) => { const [name, source] = uid.split('|'); const i = await g.DataLoader.pCacheAndGetHash(g.UrlUtil.PG_ITEMS, hashOfUid(uid)); return { uid, name: itemName(i?.name ?? name, i?.source ?? source, hashOfUid(uid)), source: i?.source ?? source, hash: hashOfUid(uid), found: !!i } }
   if (typeof equi === 'string') return { raw: equi, kind: 'item', quantity: 1, ...(await loaded(equi)) }
-  if (equi.item) return { raw: equi, kind: 'item', quantity: equi.quantity || 1, ...(await loaded(equi.item)), ...(equi.displayName ? { displayName: titleCase(equi.displayName) } : {}), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
+  if (equi.item) return { raw: equi, kind: 'item', quantity: equi.quantity || 1, ...(await loaded(equi.item)), ...(equi.displayName ? { displayName: fromEntry(titleCase(equi.displayName)) } : {}), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
   const types: string[] = equi.equipmentTypes ?? (equi.equipmentType ? [equi.equipmentType] : [])
   if (types.length) {
     if (!types.every(expanderOf)) return { unsupported: types.filter((type) => !expanderOf(type)).join('、') }
@@ -94,7 +100,7 @@ async function viewOf(equi: any): Promise<Omit<EquipEntryView, 'index'> | { unsu
     const candidates = (await Promise.all(types.map(candidatesFor))).flat().filter((c) => !seen.has(c.uid) && !!seen.add(c.uid))
     return candidates.length ? { raw: equi, kind: 'category', quantity: equi.quantity || 1, types, typeNames: types.map(typeName), candidates } : null
   }
-  if (equi.special) return { raw: equi, kind: 'special', quantity: equi.quantity || 1, text: titleCase(equi.special), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
+  if (equi.special) return { raw: equi, kind: 'special', quantity: equi.quantity || 1, text: fromEntry(titleCase(equi.special)), ...(equi.containsValue ? { cp: equi.containsValue } : {}) }
   if (equi.value) return { raw: equi, kind: 'value', quantity: 1, cp: equi.value }
   return { unsupported: JSON.stringify(equi).slice(0, 120) }
 }
@@ -102,13 +108,13 @@ async function viewOf(equi: any): Promise<Omit<EquipEntryView, 'index'> | { unsu
 /** 一个条目的起始装备选项；原组序号保留（展开时按同一序号取，不会错位）。 */
 export async function sectionOf(row: StartingRow): Promise<EquipSection> {
   const groups: EquipSection['groups'] = []
-  const unsupported: string[] = []
+  const unsupported: FrameText[] = []
   const data = groupsOf(row.entry)
   for (let index = 0; index < data.length; index++) {
     const choices = []
     for (const [key, list] of Object.entries<any[]>(data[index])) {
       const views = await Promise.all(list.map(viewOf))
-      for (const v of views) if (v && 'unsupported' in v) unsupported.push(`${row.entry.name}：${v.unsupported}`)
+      for (const v of views) if (v && 'unsupported' in v) unsupported.push(plugin('{0}：{1}', fromEntry(String(row.entry.name)), asData(v.unsupported)))
       const entries = views.flatMap((e, index) => (e && !('unsupported' in e) ? [{ ...e, index }] : []))
       if (entries.length) choices.push({ key, entries })
     }
@@ -116,7 +122,7 @@ export async function sectionOf(row: StartingRow): Promise<EquipSection> {
   }
   // 起始金币以金币计（照 Plutonium：玩家填的数 × 100 铜，见 expand），交作者币种编号；名字由主线按作者币种表取
   const goldExpression = goldExpressionOf(row.entry)
-  return { refKey: row.refKey, prop: row.prop, name: row.entry.name, source: row.entry.source, groups, unsupported, goldExpression, goldCoin: goldExpression ? 'gp' : null }
+  return { refKey: row.refKey, prop: row.prop, name: fromEntry(String(row.entry.name)), source: row.entry.source, groups, unsupported, goldExpression, goldCoin: goldExpression ? 'gp' : null }
 }
 
 export interface Granted { uid?: string; special?: string; page?: number; source?: string; quantity: number; displayName?: string }
@@ -182,7 +188,7 @@ export async function resolveStarting(rows: StartingRow[], selection: Record<str
   return { equipment, specials, currency: cp > 0 ? coinsOf(cp) : null, skipped }
 }
 
-export interface PreviewGranted { uid?: string; name: string; source?: string; hash?: string; special?: boolean; quantity: number; displayName?: string }
+export interface PreviewGranted { uid?: string; name: FrameText; source?: string; hash?: string; special?: boolean; quantity: number; displayName?: FrameText }
 export interface StartingPreview { sections: Array<{ refKey: string; granted: PreviewGranted[]; cp: number }>; currency: Record<string, number> | null }
 
 /** 按现在的选择预演一遍：每个条目会给哪些物品（带数量、改名）和多少钱，合计的钱换成币种；建人物时用的是同一套展开。 */
@@ -194,9 +200,10 @@ export async function previewOf(rows: StartingRow[], selection: Record<string, S
     total += cp
     const out: PreviewGranted[] = []
     for (const it of granted) {
-      if (it.special) { out.push({ name: it.special, special: true, quantity: it.quantity }); continue }
+      if (it.special) { out.push({ name: fromEntry(it.special), special: true, quantity: it.quantity }); continue }
       const entry = await g.DataLoader.pCacheAndGetHash(g.UrlUtil.PG_ITEMS, hashOfUid(it.uid!))
-      out.push(entry ? { uid: it.uid, name: entry.name, source: entry.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](entry), quantity: it.quantity, ...(it.displayName ? { displayName: it.displayName } : {}) } : { uid: it.uid, name: it.uid!, quantity: it.quantity })
+      const hash = entry ? g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](entry) : undefined
+      out.push(entry ? { uid: it.uid, name: itemName(entry.name, entry.source, hash), source: entry.source, hash, quantity: it.quantity, ...(it.displayName ? { displayName: fromEntry(it.displayName) } : {}) } : { uid: it.uid, name: asData(it.uid!), quantity: it.quantity })
     }
     sections.push({ refKey: row.refKey, granted: out, cp })
   }

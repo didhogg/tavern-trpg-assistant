@@ -1,22 +1,23 @@
 import { refKey } from '../../core/saves/split'
 import type { EntryRef } from '../../library/scopes'
+import type { FrameText } from './shown'
 
 /** The library kinds the existing build wizard presents as separate steps. */
 export const EXTRA_KINDS = ['subclass', 'feat', 'optionalfeature'] as const
 export type ExtraKind = (typeof EXTRA_KINDS)[number]
 
+/** 额外选择的候选（经显示出口前）：名字是本战役库里的名字；前置条件是「要玩家核对」的标记，显示出口用本战役生效条目的原始条件、本战役作者代码渲染。 */
 export interface ExtraCandidate {
   ref: EntryRef
-  name: string
+  name: FrameText
   source: string | null
-  /** Upstream prerequisite text where the engine could not decide eligibility. */
-  requirement?: string
+  requirement?: FrameText
 }
 
 export interface ExtraWithCandidates {
   id: string
   kind: ExtraKind
-  title: string
+  title: FrameText
   count: number
   candidates: ExtraCandidate[]
   unfiltered?: boolean
@@ -33,16 +34,16 @@ export type ExtraPools = Partial<Record<ExtraKind, ExtraPoolRow[]>>
 export interface FrameExtra {
   id: string
   kind: ExtraKind
-  title: string
+  title: FrameText
   count: number
-  candidates: Array<{ key: string; requirement?: string }>
-  labels?: Array<{ at: string[]; text: string }>
+  /** needsCheck：作者条件里有原生规则判断不了的部分，要玩家自己核对。 */
+  candidates: Array<{ key: string; needsCheck?: true }>
 }
-export interface FrameExtras { extras: FrameExtra[]; blocked: string[] }
+export interface FrameExtras { extras: FrameExtra[]; blocked: FrameText[] }
 
 /** 额外选择复核：每个选了的条目要能放进一个对得上的组（组之间候选可交叉）。
  *  wrong = 选错（关掉的、不合条件、不属于任何一组）→ 不能创建；missing = 还没选完 → 照样能创建，空位留空（驾驶员 11-16 定「没选的留空」）。 */
-export function checkBuildExtras(groups: ExtraWithCandidates[], selected: EntryRef[]): { wrong: string | null; missing: string | null } {
+export function checkBuildExtras(groups: Array<{ title: string; count: number; candidates: Array<{ ref: EntryRef }> }>, selected: EntryRef[]): { wrong: string | null; missing: string | null } {
   const slots = groups.flatMap(group => Array.from({ length: group.count }, () => ({
     title: group.title,
     allowed: new Set(group.candidates.map(candidate => refKey(candidate.ref))),

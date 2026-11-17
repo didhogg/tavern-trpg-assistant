@@ -9,6 +9,8 @@ import { withSeed } from './random'
 import { groupTitle, titleOfKeys } from './trait-title'
 import { readTraitPlans, type NativeSlot } from './trait-plans'
 import { traitOrigins } from './trait-origins'
+import { authorTextPath } from './author-text'
+import { fromAuthor, joined, named, plugin, sys, type FrameText } from '../shown'
 
 const g = globalThis as any
 const PREFIX = 'P6Tr'
@@ -16,14 +18,13 @@ export const isBuildTrait = (id: unknown): boolean => typeof id === 'string' && 
 const idOf = (...parts: unknown[]): string => PREFIX + hashValue(parts).slice(0, 12)
 
 type KeySet = Set<string>
-export type TraitPlanChoice = { id: string; label: string }
+export type TraitPlanChoice = { id: string; label: FrameText }
 export type TraitPlans = Map<string, TraitPlanChoice[]>
 export type ExpertiseViews = Map<string, any>
 type ActorTraits = {
   actor?: any; plans?: TraitPlans; picks?: Array<{ id: string; value: any }>
   previous?: Array<{ id: string; data: any }>; replay?: string[]; scope?: Set<string>; expertise?: ExpertiseViews
 }
-const unique = (keys: Iterable<string>): string[] => [...new Set(keys)].sort()
 
 /** 把固定给予与可选位置分开校验。一个已选条目只能占一个位置。 */
 export function checkedBuildTrait(adv: any, value: any): Promise<{ chosen: string[] } | null> {
@@ -99,19 +100,25 @@ async function withPriorTraining(actor: any, data: any, records: Record<string, 
   return clone
 }
 
-/** 提示用的标题：按编号认（与步骤标题同一处，trait-title.ts groupTitle）；都认不出才用作者分组的原标题。siblings = 同一批分组（混合分组按它们认类别）。 */
-const labelOf = (group: any, siblings: any[], keys: string[] = []): string => groupTitle(group, siblings, keys)
-  || group._title || group._subComps[0]?.modalTitle || group._prop
+/** Plutonium 自己写的文字（分组标题、候选名）：交主线按作者代码同位置取本战役语言（找不到位置 = 显示原文并记作没翻到）。 */
+const authorText = (text: string): FrameText => fromAuthor(text, authorTextPath(text))
+/** 提示用的标题：按编号认（dnd5e 语言包，与步骤标题同一处 trait-title.ts groupTitle）；都认不出才用作者分组的原标题。siblings = 同一批分组（混合分组按它们认类别）。 */
+const labelOf = (group: any, siblings: any[], keys: string[] = []): FrameText => {
+  const title = groupTitle(group, siblings, keys)
+  return title ? sys(title) : authorText(String(group._title || group._subComps[0]?.modalTitle || group._prop))
+}
+/** 提示去重（同一句只说一次）。 */
+const uniqueTexts = (list: FrameText[]): FrameText[] => [...new Map(list.map((t) => [JSON.stringify(t), t])).values()]
 
-export function fillBuildTraits(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, context: ActorTraits = {}): Promise<string[]> {
+export function fillBuildTraits(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, context: ActorTraits = {}): Promise<FrameText[]> {
   return withSeed(`build-traits:fill:${ref}:${multiclass}`, () => fill(data, row, ref, multiclass, context))
 }
 
-async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, context: ActorTraits): Promise<string[]> {
+async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, ref: string, multiclass: boolean, context: ActorTraits): Promise<FrameText[]> {
   const { replay, picks, plans, actor, scope, expertise } = context
   if (!row.entry) return []
   const api = plutoniumBuild
-  if (!api) return ['当前 Plutonium 版本缺少已验证的建卡接线']
+  if (!api) return [plugin('当前 Plutonium 版本缺少已验证的建卡接线')]
   const level = row.prop === 'class' ? 1 : 0
   const entry = row.prop === 'class'
     ? api.Charactermancer_Class_Util.getStandardProficiencies(multiclass
@@ -130,7 +137,7 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
   const existing = await existingTraits(data, level, multiclass)
   const origins = traitOrigins(row.data ?? data)
   const replaced = new Set<string>()
-  const diagnostics: string[] = []
+  const diagnostics: FrameText[] = []
   const fresh: Record<string, unknown> = {}
   try {
     for (const group of groups) {
@@ -151,10 +158,13 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         if (traits.extended && replay && selected < 0) continue
         const options = versions.map((plan, i) => ({
           id: newIds[i],
-          label: plan.choices.map(slot => `${titleOfKeys(slot.pool) ?? labelOf(group, groups)} ×${slot.count}`).join(' + ')
-            || titleOfKeys(plan.grants) || labelOf(group, groups),
+          label: plan.choices.length
+            ? joined(plan.choices.map(slot => plugin(`{0} ×${slot.count}`, titleOfKeys(slot.pool) ? sys(titleOfKeys(slot.pool)!) : labelOf(group, groups))), ' + ')
+            : titleOfKeys(plan.grants) ? sys(titleOfKeys(plan.grants)!) : labelOf(group, groups),
         }))
-        if (traits.withheld.length) diagnostics.push(`${labelOf(group, groups)}（暂时无法加到人物卡：${unique(traits.withheld).join('、')}）`)
+        // 存不进的候选：是作者物品的按编号取本战役库名（取不到算没翻到），其余是 Plutonium 自己写的字
+        const withheld = [...new Map(traits.withheld.map((w) => [w.label, w])).values()].sort((a, b) => a.label.localeCompare(b.label))
+        if (withheld.length) diagnostics.push(plugin('{0}（暂时无法加到人物卡：{1}）', labelOf(group, groups), joined(withheld.map((w) => (w.id ? named(w.label, w.id, true) : authorText(w.label))), '、')))
         // Plutonium 的分组从 entity 或 entryData 取输入。主职/兼职即使字段同名也须核对内容。
         const input = hashValue(entry[group._prop] || entry.entryData?.[group._prop])
         const comparable = existing.filter(record => record.mode === traits.mode)
@@ -172,7 +182,7 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         const grants = traits.grants.filter((key) => !otherGrants.has(key))
         const choices = replace ? traits.choices : missingSlots(traits.choices, otherSlots)
         const authoredOverlap = replace && traits.choices.some((slot) => otherSlots.some((other) => slot.pool.some((key) => other.pool.has(key))))
-        if (authoredOverlap) { diagnostics.push(`${labelOf(group, groups)}（与资料附带的进阶重叠，已保留原进阶）`); continue }
+        if (authoredOverlap) { diagnostics.push(plugin('{0}（与资料附带的进阶重叠，已保留原进阶）', labelOf(group, groups))); continue }
         if (!choices) { diagnostics.push(labelOf(group, groups)); continue }
         if (!grants.length && !choices.length) continue
         if (replace) for (const record of own) replaced.add(record.id)
@@ -199,5 +209,5 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
     const native = Object.fromEntries(Object.entries(data.system.advancement ?? {}).filter(([id, adv]) => !replaced.has(id) && !emptyTrait(adv)))
     data.system.advancement = { ...native, ...fresh }
   }
-  return unique(diagnostics)
+  return uniqueTexts(diagnostics)
 }

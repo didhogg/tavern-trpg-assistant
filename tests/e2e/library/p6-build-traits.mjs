@@ -192,7 +192,7 @@ try {
       ...withAuthored, foundryAdvancement: [{ ...withAuthored.foundryAdvancement[0], name: 'Authored Language Choice', configuration: { grants: [], choices: [{ count: 1, pool: [dwarfLanguage, elvish] }] } }],
     }
     const conflict = (await session.call('buildOptions', { items: [{ prop: acolyte.prop, entry: competing, refKey: 'authored-conflict' }], blank: true })).result.items[0]
-    out.sidecarConflict = { original: lang(conflict).some(s => s.id === sideId), warned: conflict.unsupported.some(msg => msg.includes('与资料附带的进阶重叠')) }
+    out.sidecarConflict = { original: lang(conflict).some(s => s.id === sideId), warned: conflict.unsupported.some(msg => msg?.$t === 'plugin' && msg.text.includes('与资料附带的进阶重叠')) } // 直接读小窗原始结果：提示是标了来路的插件说明句
     await active.rt.close(owner)
     const cold = mk()
     out.statuses = await cold.people.load(owner)

@@ -76,6 +76,8 @@ try {
   const n2 = await listCount()
   check('点标签切到另一组：左边换成这一组自己的候选（条数不同）', n2 > 0 && n2 !== n1, `${n1} → ${n2}`)
   await page.getByTestId('wz-row').first().click(); await page.getByTestId('wz-choose').click(); await settle(page, 600); await idle()
+  const reqText = (await page.getByTestId('wz-requirement').count()) ? await page.getByTestId('wz-requirement').innerText() : ''
+  check('选中带条件的候选：前置条件是本战役语言（中文），不是英文原句', /前置条件：[^（]*[㐀-鿿]/.test(reqText) && !/Fighting Style/.test(reqText), reqText)
   const t2 = await tabTexts()
   check('两组都选了：两个标签都是 1/1，「专长」步骤打勾', t2.every((t) => /1\/1$/.test(t)) && (await page.getByTestId('wz-step-feat').getAttribute('data-s')) === 'done', t2.join(' | '))
   await shot('02-both-picked')

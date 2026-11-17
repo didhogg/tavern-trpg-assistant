@@ -1,9 +1,13 @@
 // Keep the author's plans separate. For each candidate, use the author's form and apply path,
 // then read the native dnd5e key off the temporary actor.
 /* eslint-disable @typescript-eslint/no-explicit-any -- upstream runtime objects */
+import type { KernelRefFlags } from '../../../core/saves/split'
 type Api = Record<string, any>
 type Cleanup = Array<() => void>
-type Option = { label: string; select: () => void; clear: () => void }
+/** id：候选是作者物品时的作者编号（主线按编号取本战役库里的名字）。 */
+type Option = { label: string; id?: KernelRefFlags; select: () => void; clear: () => void }
+/** 存不进原生进阶的候选：名字 + 作者编号（是物品时）。 */
+export type Withheld = { label: string; id?: KernelRefFlags }
 type Slot = { count: number; hints?: string[]; options: Option[] }
 export type NativeSlot = { count: number; pool: string[] }
 interface Plan {
@@ -13,13 +17,21 @@ interface Plan {
   grants: string[]
   choices: NativeSlot[]
   hints: string[]
-  withheld: string[]
+  withheld: Withheld[]
 }
 const g = globalThis as any
 
-function setOption(component: any, key: string, value: any, label: string): Option {
+function setOption(component: any, key: string, value: any, label: string, id?: KernelRefFlags): Option {
   const previous = component._state[key]
-  return { label, select: () => { component._state[key] = value }, clear: () => { component._state[key] = previous } }
+  return { label, ...(id ? { id } : {}), select: () => { component._state[key] = value }, clear: () => { component._state[key] = previous } }
+}
+/** 作者物品 → 作者编号（与 Plutonium 写进物品 flags 同形）。 */
+const itemId = (entity: { name: string; source: string }): KernelRefFlags => ({ propDroppable: 'item', source: entity.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](entity) })
+/** 作者熟练值里写的物品（名字 或 名字|来源）→ 作者自己的拆法补来源 → 作者编号；不是物品写法的给 undefined。 */
+const valueItemId = (value: unknown): KernelRefFlags | undefined => {
+  if (typeof value !== 'string' || !value) return undefined
+  const { name, source } = g.DataUtil.proxy.unpackUid('item', value, 'item')
+  return name && source ? itemId({ name, source }) : undefined
 }
 
 function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, scope?: Set<string>): Slot[] {
@@ -27,7 +39,7 @@ function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, 
     if (slot.fromFilter) {
       const { propState } = component._getPropsChooseFromFilter({ ixChoose, ixCount: 0 })
       const from = component._modalFilterItemsFvtt.getEntitiesMatchingFilterExpression({ filterExpression: slot.fromFilter })
-      return { count: slot.count, options: from.filter((entry: any) => !scope || scope.has(`${entry.name}|${entry.source}`.toLowerCase())).map((entry: any) => setOption(component, propState, { prop: slot.prop, name: g.DataUtil.generic.getUid(entry) }, entry.name)) }
+      return { count: slot.count, options: from.filter((entry: any) => !scope || scope.has(`${entry.name}|${entry.source}`.toLowerCase())).map((entry: any) => setOption(component, propState, { prop: slot.prop, name: g.DataUtil.generic.getUid(entry) }, entry.name, itemId(entry))) }
     }
     const { propState } = component._getPropsChooseFrom({ ixChoose })
     const grouped = component._getChooseFromGroupMeta(slot)
@@ -39,7 +51,7 @@ function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, 
     const list = grouped?.valueGroupsFlat ?? slot.from
     return {
       count: slot.count, hints: grouped?.valueGroups?.map((row: any) => row.text).filter(Boolean),
-      options: meta.rowMetas.map((row: any, i: number) => setOption(component, row.propIsActive, true, list[i]?.name ?? String(i + 1))),
+      options: meta.rowMetas.map((row: any, i: number) => setOption(component, row.propIsActive, true, list[i]?.name ?? String(i + 1), valueItemId(list[i]?.name))),
     }
   })
 }
@@ -80,11 +92,11 @@ async function authorKeys(api: Api, actor: any, group: any, rank: number) {
   const paths = Object.keys(g.CONFIG.DND5E.traits).filter((type) => g.foundry.utils.hasProperty(update, trait.actorKeyPath(type)))
   const changed = actor.clone(update)
   const keys = new Set<string>()
-  const notes: string[] = []
+  const notes: Withheld[] = []
   for (const type of paths) {
     const path = trait.actorKeyPath(type)
     const custom = g.foundry.utils.getProperty(update, path)?.custom
-    if (custom) notes.push(custom)
+    if (custom) notes.push({ label: String(custom) })
     const before = await trait.actorValues(actor, type)
     const after = await trait.actorValues(changed, type)
     for (const [key, value] of Object.entries(after)) if (value === rank && before[key] !== rank) keys.add(key)
@@ -105,11 +117,11 @@ async function nativePlan(api: Api, actor: any, group: any, slots: Slot[], index
         const result = await authorKeys(api, actor, group, rank)
         const gained = [...result.keys].filter(key => !fixed.keys.has(key))
         if (gained.length === 1) pool.add(gained[0])
-        else if (option.label) withheld.push(option.label)
+        else if (option.label) withheld.push({ label: option.label, ...(option.id ? { id: option.id } : {}) })
       } finally { option.clear() }
     }
     if (pool.size >= slot.count || (expertise && !slot.options.length)) choices.push({ count: slot.count, pool: [...pool].sort() })
-    else if (slot.options.length) withheld.push(...slot.options.map(option => option.label).filter(Boolean))
+    else if (slot.options.length) withheld.push(...slot.options.filter(option => option.label).map(option => ({ label: option.label, ...(option.id ? { id: option.id } : {}) })))
   }
   return { index, extended, mode: expertise ? (fixed.keys.size ? 'forcedExpertise' : 'expertise') : 'default',
     grants: [...fixed.keys].sort(), choices, hints: [...new Set(slots.flatMap(slot => slot.hints ?? []))], withheld }

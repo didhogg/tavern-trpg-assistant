@@ -37,22 +37,3 @@ export function namerOf(mapper: KernelRefMapper, rowsOf: (prop: string) => Promi
 export async function namerFor(scoped: ScopedLibrary, library: CampaignLibrary): Promise<Namer> {
   return namerOf(await refMapperFor(scoped, library), (prop) => scoped.query(library, prop) as Promise<Row[]>)
 }
-
-const isId = (v: unknown): v is KernelRefFlags => !!v && typeof v === 'object' && typeof (v as KernelRefFlags).hash === 'string'
-
-/** 整棵结果里带作者编号（author 字段）的节点：label 换成库里的名字、补上 ref；对不上的原样留着。 */
-export async function nameAll<T>(value: T, namer: Namer): Promise<T> {
-  const walk = async (node: unknown): Promise<unknown> => {
-    if (Array.isArray(node)) return Promise.all(node.map(walk))
-    if (!node || typeof node !== 'object') return node
-    const src = node as Record<string, unknown>
-    const out: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(src)) out[k] = k === 'author' ? v : await walk(v)
-    if (isId(src.author)) {
-      const named = await namer(src.author)
-      if (named) { out.label = named.label; out.ref = named.ref }
-    }
-    return out
-  }
-  return walk(value) as Promise<T>
-}

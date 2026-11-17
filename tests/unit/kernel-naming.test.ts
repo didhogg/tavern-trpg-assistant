@@ -1,6 +1,6 @@
 // 起名出口（src/rules/kernel/naming.ts）：作者编号 → 存档同一个换算 → 本战役看得见的库条目名；不分类型。
 import { describe, expect, it } from 'vitest'
-import { nameAll, namerOf } from '../../src/rules/kernel/naming'
+import { namerOf } from '../../src/rules/kernel/naming'
 import type { KernelRefFlags } from '../../src/core/saves/split'
 
 // 小窗交回的形状原样节选：工具候选带作者编号，技能候选没有
@@ -39,22 +39,5 @@ describe('namerOf', () => {
     const namer = namerOf(mapper, rowsOf)
     await namer(brewer); await namer(homebrew)
     expect(asked).toEqual(['item'])
-  })
-})
-
-describe('nameAll：整棵结果里带作者编号的节点换名', () => {
-  const result = { items: [{ steps: [{ title: '工具熟练项', options: { slots: [{ count: 1, options: [
-    { value: 'tool:art:brewer', label: "Brewer's Supplies", author: brewer },
-    { value: 'tool:art:smith', label: "Smith's Tools", author: hidden },
-    { value: 'skills:arc', label: '奥秘' },
-  ] }] } }] }] }
-  it('对上的换成库名并补 ref；对不上的和没有编号的原样', async () => {
-    const out = await nameAll(result, namerOf(mapper, rowsOf))
-    const [a, b, c] = out.items[0].steps[0].options.slots[0].options as Array<{ label: string; ref?: unknown; author?: unknown }>
-    expect(a.label).toBe('酿酒工具')
-    expect(a.ref).toEqual({ kind: 'item', set: 'cn-official', prop: 'item', hash: "brewer's%20supplies_phb" })
-    expect(b.label).toBe("Smith's Tools")
-    expect(c).toEqual({ value: 'skills:arc', label: '奥秘' })
-    expect(out.items[0].steps[0].title).toBe('工具熟练项')
   })
 })

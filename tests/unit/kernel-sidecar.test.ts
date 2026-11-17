@@ -1,7 +1,8 @@
-// 显示文字对照：条目本身 + 同编号的 Foundry 补充记录（src/rules/kernel/sidecar.ts），交给统一出口 localizeAll。
+// 显示文字对照：条目本身 + 同编号的 Foundry 补充记录（src/rules/kernel/sidecar.ts），交给显示出口 display.ts。
 import { describe, expect, it } from 'vitest'
 import { belongs, isSidecar, pairsSource, sidecarPairsOf } from '../../src/rules/kernel/sidecar'
-import { localizeAll } from '../../src/rules/kernel/locale'
+import { display } from '../../src/rules/kernel/display'
+import { fromEntry } from '../../src/rules/kernel/shown'
 import { kernelDataSource, officialSourceOf } from '../../src/library/sources'
 import type { FileProvider } from '../../src/library/files'
 
@@ -45,10 +46,11 @@ describe('同编号配对', () => {
     expect(pairs).toHaveLength(2)
     expect(pairs.every((p) => (p.zh as { className?: string }).className !== '野蛮人')).toBe(true)
   })
-  it('交给统一出口：补充文件里的数值行标题换成中文', () => {
+  it('交给显示出口：补充文件里的数值行标题换成中文', async () => {
     const pairs = sidecarPairsOf(sideEn, sideZh, { en: monkEn, zh: monkZh })
-    const out = localizeAll({ steps: [{ type: 'ScaleValue', title: 'Martial Arts Die' }] }, pairs)
-    expect(out.steps[0].title).toBe('武艺骰')
+    const author = { labels: async () => ({}), at: async (p: string[][]) => p.map(() => null), requirements: async (r: unknown[]) => r.map(() => null) }
+    const out = await display({ steps: [{ type: 'ScaleValue', title: fromEntry('Martial Arts Die') }] }, { translate: true, pairs, namer: async () => null, author })
+    expect(out.value.steps[0].title).toBe('武艺骰')
   })
 })
 

@@ -4,20 +4,28 @@ import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { LibraryService } from '../../library/service'
 import type { LibraryView } from '../../library/revision'
 import { checkBuildExtras, type ExtraCandidate, type ExtraKind, type ExtraPools, type ExtraWithCandidates, type FrameExtras } from './build-options'
-import { authorTextFor, localizeHints } from './author-text'
+import { authorTextFor } from './author-text'
 import { kernelEntryOf } from './entry'
 import type { KernelSession } from './host'
-import { localizeAll } from './locale'
-import { nameAll, namerFor } from './naming'
+import { namerFor } from './naming'
+import { display } from './display'
+import { fromLibrary, plugin, requirementOf, type Displayed, type FrameText } from './shown'
+import type { FrameStep } from './frame/commands-options'
+import { kernelDataSource } from '../../library/sources'
 import type { PairsOf } from './sidecar'
 import { abilityView, type AbilityPlan, type AbilityView } from './ability-rules'
 import type { BuildPick } from './frame/commands-level'
 
 export interface BuildOptionPlan { items: EntryRef[]; picks?: BuildPick[][]; blank?: boolean; abilities?: AbilityPlan }
-export interface BuildOptionsItem { ref: EntryRef; name: string | null; steps: unknown[]; extras: ExtraWithCandidates[]; unsupported: string[] }
-export interface BuildOptionsResult { status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean; abilities?: AbilityView; extraIssue?: string | null }
+/** 经显示出口前的一件条目（文字都是 FrameText）。 */
+interface FrameItem { ref: EntryRef; name: FrameText | null; steps: FrameStep[]; extras: ExtraWithCandidates[]; unsupported: FrameText[] }
+/** 给界面的一件条目：文字都是过了显示出口的 Shown。 */
+export type BuildOptionsItem = Displayed<FrameItem>
+/** untranslated：显示出口没取到本战役语言、显示了原文的文字（语言审计按它数）。 */
+export interface BuildOptionsResult { status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean; abilities?: AbilityView; extraIssue?: string | null; untranslated?: string[] }
 type EntryRow = { ref: EntryRef; entry: unknown; zh: unknown | null; name: string | null }
-type FrameRow = Partial<FrameExtras> & { refKey: string; steps: unknown[]; unsupported: string[] }
+type FrameRow = Partial<FrameExtras> & { refKey: string; steps: FrameStep[]; unsupported: FrameText[] }
+type FrameAbilities = { initial: Record<string, number>; auto: Record<string, number>; cap: number | null; labels: Record<string, FrameText> }
 
 function neededPools(rows: EntryRow[]): ExtraKind[] {
   const kinds = new Set<ExtraKind>()
@@ -54,7 +62,9 @@ export async function resolveBuildOptions(deps: {
   pairsOf: PairsOf
 }, plan: BuildOptionPlan, rows: EntryRow[], picks: Record<string, BuildPick[]>): Promise<BuildOptionsResult> {
   const { scoped, library, view } = deps
-  const names = new Map<string, ExtraCandidate>()
+  const names = new Map<string, { ref: EntryRef; name: string; source: string | null }>()
+  /** 候选编号 → 本战役库里生效的这一条的原始前置条件（房规改过就是改过的）。 */
+  const prerequisites = new Map<string, unknown>()
   const pools: ExtraPools = Object.fromEntries(await Promise.all(neededPools(rows).map(async kind => {
     const available = await scoped.query(library, kind, { view })
     const pool = await Promise.all(available.map(async row => {
@@ -62,6 +72,7 @@ export async function resolveBuildOptions(deps: {
       const local = row.item as Record<string, unknown>
       const { entry } = await kernelEntryOf(scoped, library.codeSet, row.ref, row.item, row.version.altId, view)
       names.set(key, { ref: row.ref, name: typeof local.name === 'string' ? local.name : row.ref.hash, source: row.source })
+      if (local.prerequisite !== undefined) prerequisites.set(key, local.prerequisite)
       return { key, entry: entry as Record<string, unknown>, ...(kind === 'subclass' && entry !== local ? { local } : {}) }
     }))
     return [kind, pool]
@@ -70,30 +81,34 @@ export async function resolveBuildOptions(deps: {
   const local = Object.fromEntries(rows.flatMap(row => row.zh ? [[refKey(row.ref), row.zh]] : []))
   const out = await deps.session.call('buildOptions', { items, picks, blank: plan.blank, extraPools: pools, local, traitScope: await traitItemScope(scoped, library, view, rows) })
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `建卡选项状态：${out.status}`, detail: out }
-  const author = authorTextFor(deps.service, library.codeSet)
-  const shown = await localizeHints(await nameAll(localizeAll(out.result.items, await deps.pairsOf(rows)), await namerFor(scoped, library)), author) as FrameRow[]
-  const byKey = new Map(shown.map(row => [row.refKey, row]))
-  const extraBlocked = shown.flatMap(row => row.blocked ?? [])
+  const frameRows = out.result.items as FrameRow[]
+  const byKey = new Map(frameRows.map(row => [row.refKey, row]))
+  const extraBlocked = frameRows.flatMap(row => row.blocked ?? [])
   const selected = new Set(plan.items.map(refKey))
-  const labels = shown.flatMap(row => (row.extras ?? []).flatMap(group => group.labels ?? []))
-  const translations = await author.at(labels.map(label => label.at))
-  const titles = new Map(labels.map((label, i) => [label.at.join('.'), translations[i] ?? label.text]))
-  const resultItems: BuildOptionsItem[] = rows.map(row => {
+  const frameItems: FrameItem[] = rows.map(row => {
     const described = byKey.get(refKey(row.ref))
-    const extras = (described?.extras ?? []).map(({ labels, ...group }) => {
-      const candidates = group.candidates.flatMap(({ key, requirement }) => {
-        const candidate = names.get(key)
-        return candidate ? [{ ...candidate, ...(requirement ? { requirement } : {}) }] : []
+    const extras: ExtraWithCandidates[] = (described?.extras ?? []).map(group => {
+      const candidates: ExtraCandidate[] = group.candidates.flatMap(({ key, needsCheck }) => {
+        const hit = names.get(key)
+        return hit ? [{ ref: hit.ref, name: fromLibrary(hit.name), source: hit.source, ...(needsCheck ? { requirement: requirementOf(key) } : {}) }] : []
       })
-      const title = labels?.map(label => titles.get(label.at.join('.'))).join(' · ') || group.title
-      return { ...group, title, candidates, ...(candidates.some(c => c.requirement) ? { unfiltered: true } : {}) }
+      return { ...group, candidates, ...(candidates.some(c => c.requirement) ? { unfiltered: true } : {}) }
     })
-    const pendingRequirements = extras.flatMap(group => group.candidates.filter(c => c.requirement && selected.has(refKey(c.ref))))
-    const reminders = pendingRequirements.map(c => `${c.name}的前置条件请核对：${c.requirement}`)
-    return { ref: row.ref, name: row.name, steps: described?.steps ?? [], extras, unsupported: [...(described?.unsupported ?? []), ...(described?.blocked ?? []), ...reminders] }
+    const reminders = extras.flatMap(group => group.candidates.filter(c => c.requirement && selected.has(refKey(c.ref))))
+      .map(c => plugin('{0}的前置条件请核对：{1}', c.name, c.requirement!))
+    return { ref: row.ref, name: row.name === null ? null : fromLibrary(row.name), steps: described?.steps ?? [], extras, unsupported: [...(described?.unsupported ?? []), ...(described?.blocked ?? []), ...reminders] }
   })
+  // 唯一的显示出口：所有文字按来路换成本战役语言（display.ts）
+  const shown = await display({ items: frameItems, abilities: out.result.abilities as FrameAbilities }, {
+    translate: library.codeSet !== kernelDataSource().codeSet,
+    pairs: await deps.pairsOf(rows),
+    namer: await namerFor(scoped, library),
+    author: authorTextFor(deps.service, library.codeSet),
+    requirementOf: key => prerequisites.get(key),
+  })
+  const resultItems = shown.value.items
   // 只有「选错」拦创建；没选完、这一组还选不了（已列在 unsupported）都留空照样能建
   const check = checkBuildExtras(resultItems.flatMap(row => row.extras), plan.items)
   const complete = out.result.complete && !check.wrong && !check.missing && !extraBlocked.length
-  return { status: 'complete', items: resultItems, complete, abilities: abilityView(out.result.abilities, plan.abilities), extraIssue: check.wrong }
+  return { status: 'complete', items: resultItems, complete, abilities: abilityView(shown.value.abilities, plan.abilities), extraIssue: check.wrong, ...(shown.missed.length ? { untranslated: shown.missed } : {}) }
 }

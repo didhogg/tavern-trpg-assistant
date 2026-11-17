@@ -1,6 +1,7 @@
 // e 段 + P3-3b：建卡与升级。步骤由 dnd5e 官方 AdvancementManager 计算，应用也走同一管理器；不手写成长规则。
 // 选择步骤用一张“进阶类型 → 应用数据”的登记表；P3-3b 起优先用存档记下的选择，没有记录才取第一个可选项。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
+import type { FrameText } from '../shown'
 import { asiValue } from './asi'
 import { settled } from './server'
 import type { ActorGetter, Operate } from './commands-items'
@@ -181,13 +182,13 @@ export function abilityValues(actor: any): Record<string, number> {
   return Object.fromEntries(Object.entries(actor.system?.abilities ?? {}).map(([k, v]: [string, any]) => [k, v.value]))
 }
 
-export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, id, picks, blank = false, traitScope, onManager }: { strict?: boolean; seed?: string; id?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; traitScope?: string[]; onManager?: (info: { manager: any; key: string | null; unsupported: string[]; picks?: BuildPick[]; traitPlans: TraitPlans; expertise: ExpertiseViews }) => Promise<void> } = {}): Promise<any> {
+export async function buildActor(name: string, items: any[], equipment: any[], choices: Record<string, any[] | undefined> = {}, { strict = false, seed, id, picks, blank = false, traitScope, onManager }: { strict?: boolean; seed?: string; id?: string; picks?: Record<string, BuildPick[]>; blank?: boolean; traitScope?: string[]; onManager?: (info: { manager: any; key: string | null; unsupported: FrameText[]; picks?: BuildPick[]; traitPlans: TraitPlans; expertise: ExpertiseViews }) => Promise<void> } = {}): Promise<any> {
   if (seed !== undefined) reseedKernel(seed)
   const ActorClass = g.CONFIG.Actor.documentClass
   const created = await ActorClass.create({ ...(id ? { _id: id } : {}), name, type: BUILD_ACTOR_TYPE, system: { details: { level: 1 } } }, { keepId: !!id })
   const scope = traitScope ? new Set(traitScope) : undefined
   const initial = abilityValues(created)
-  const missingTraits: Array<{ refKey: string; titles: string[] }> = []
+  const missingTraits: Array<{ refKey: string; titles: FrameText[] }> = []
   for (const raw of items) {
     const source = raw?.data ?? raw
     const data = cleanItem(source)

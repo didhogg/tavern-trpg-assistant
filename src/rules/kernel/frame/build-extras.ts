@@ -4,6 +4,7 @@
 import type { ExtraKind, ExtraPoolRow, ExtraPools, FrameExtra, FrameExtras } from '../build-options'
 import type { BuildRow } from './commands-level'
 import { plutoniumBuild } from './plutonium-build'
+import { fromAuthor, fromEntry, joined, plugin, sys } from '../shown'
 
 const g = globalThis as any
 type Api = Record<string, any>
@@ -44,7 +45,7 @@ function classOptions(api: Api, row: BuildRow, pools: ExtraPools, level: number,
     const ownerIds = new Set([cls, local].filter(Boolean).map(id => g.UrlUtil.URL_TO_HASH_BUILDER.class(id)))
     const candidates = (pools.subclass ?? []).filter(candidate => [candidate.entry, candidate.local].filter(Boolean).some(sc =>
       ownerIds.has(g.UrlUtil.URL_TO_HASH_BUILDER.class({ name: sc!.className, source: sc!.classSource }))))
-    out.extras.push({ id: `${row.refKey}|subclass|${level}`, kind: 'subclass', title: cls.subclassTitle ?? g.game.i18n.localize('DND5E.ADVANCEMENT.Subclass.Title'), count: 1, candidates: candidates.map(({ key }) => ({ key })) })
+    out.extras.push({ id: `${row.refKey}|subclass|${level}`, kind: 'subclass', title: cls.subclassTitle ? fromEntry(String(cls.subclassTitle)) : sys(g.game.i18n.localize('DND5E.ADVANCEMENT.Subclass.Title')), count: 1, candidates: candidates.map(({ key }) => ({ key })) })
   }
 }
 
@@ -62,9 +63,9 @@ function progressionOptions(api: Api, row: BuildRow, pools: ExtraPools, level: n
       const feature = makeGroup.apply(this, args)
       if (feature.level === level && args[5] > 0) {
         const required = args[6] as unknown[]
-        if (required.length) out.blocked.push(`${feature.name}：这组包含固定选项，暂时无法在这里应用`)
+        if (required.length) out.blocked.push(plugin('{0}：这组包含固定选项，暂时无法在这里应用', fromEntry(String(feature.name))))
         else out.extras.push({
-          id: `${row.refKey}|${field}|${level}|${ordinal++}`, kind, title: feature.name, count: args[5],
+          id: `${row.refKey}|${field}|${level}|${ordinal++}`, kind, title: fromEntry(String(feature.name)), count: args[5],
           candidates: feature.linkedEntityInfos.flatMap(({ entity }: any) => {
             const candidate = candidates.get(identify(entity))
             return candidate ? [{ key: candidate.key }] : []
@@ -89,7 +90,7 @@ async function featOptions(api: Api, row: BuildRow, pool: ExtraPoolRow[], getMod
   const available = row.entry.feats
   if (api.StatGenUtilAdditionalFeats.isNoChoice(available)) return
   if (available.length !== 1) {
-    out.blocked.push('专长有多套备选方案，建卡暂时无法在方案间切换')
+    out.blocked.push(plugin('专长有多套备选方案，建卡暂时无法在方案间切换'))
     return
   }
   const modal = await getModal()
@@ -102,13 +103,13 @@ async function featOptions(api: Api, row: BuildRow, pool: ExtraPoolRow[], getMod
   chooser._render_renderPtChooseFromFilter = ({ count, filterExpression, titleNote, featsAdditionType }: any) => {
     const results: Array<{ name: string; source: string; category?: string }> = modal.getEntitiesMatchingFilterExpression({ filterExpression })
     const category = titleNote ? [...new Set(results.map(entry => entry.category).filter((code): code is string => !!code))] : []
-    const title = g.Parser.getPropDisplayName('feat')
-    const labels = [
-      { at: ['Parser', 'CAT_ID_TO_FULL', String(g.Parser.CAT_ID_FEAT)], text: title },
-      ...category.map(code => ({ at: ['Parser', 'FEAT_CATEGORY_TO_FULL', code], text: g.Parser.featCategoryToFull(code) })),
-    ]
+    // 组名：作者 Parser 表里的「专长」+ 类别名（起源…），按作者代码同位置取本战役语言
+    const title = joined([
+      fromAuthor(g.Parser.getPropDisplayName('feat'), ['Parser', 'CAT_ID_TO_FULL', String(g.Parser.CAT_ID_FEAT)]),
+      ...category.map(code => fromAuthor(g.Parser.featCategoryToFull(code), ['Parser', 'FEAT_CATEGORY_TO_FULL', code])),
+    ], ' · ')
     out.extras.push({
-      id: `${row.refKey}|feats|${featsAdditionType}`, kind: 'feat', title, count, labels,
+      id: `${row.refKey}|feats|${featsAdditionType}`, kind: 'feat', title, count,
       candidates: results.flatMap(entry => {
         const candidate = feats.get(idOf('feat')(entry))
         return candidate ? [{ key: candidate.key }] : []
@@ -131,7 +132,8 @@ function applyPrerequisites(api: Api, group: FrameExtra, actor: any, entries: Ma
       const item = new g.CONFIG.Item.documentClass({ name: entry?.name, type: 'feat', system: { prerequisites: { level } } })
       return item.system.assertPrerequisites(actor) === true
     }
-    candidate.requirement = g.Renderer.utils.prerequisite.getText(prerequisites, { isSkipPrefix: true }) || JSON.stringify(prerequisites)
+    // 判断不了的条件只标「要核对」；文字由主线按本战役生效条目、本战役作者代码渲染（不在这里用英文作者代码拼句子）
+    candidate.needsCheck = true
     return true
   })
 }
