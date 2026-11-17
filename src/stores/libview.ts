@@ -59,16 +59,14 @@ export const useLibViewStore = defineStore('library', () => {
       let lib: CampaignLibrary | null = null
       if (ownerKey && (await ks.read(ownerKey))) lib = (await ks.libraryOf(ownerKey)) as CampaignLibrary
       const current = lib ?? defaultCampaignLibrary(s.rules.list()[0]?.id ?? 'dnd5e2014', DEFAULT_PREFETCH_CODE_SETS[0])
-      const next = await s.backend.library.scoped.shelf(current)
-      const brew = brewSetId(current.codeSet)
-      const imported = brew ? (await s.backend.library.brewPacks.list(brew)).filter((p) => p.origin === 'import') : []
+      const next = await s.backend.library.scoped.shelf(current, undefined, { allDownloads: true })
       const missing = !(await s.backend.library.service.officialInstalled(current.codeSet))
       if (mine !== seq) return
       officialMissing.value = missing
       bound.value = !!lib
       campaignLib.value = current
       shelf.value = next
-      minePacks.value = imported
+      minePacks.value = next.minePacks
     } catch (e) {
       if (mine === seq) error.value = e instanceof Error ? e.message : String(e)
       console.error('[trpg-assistant] 读取书架失败', e)

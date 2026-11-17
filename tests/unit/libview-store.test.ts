@@ -13,8 +13,7 @@ function services(reads: string[]): Services {
       kernelSave: { read: async (k: string) => { reads.push(k); return { rule: 'dnd5e2014' } }, libraryOf: async () => lib },
       library: {
         service: { officialInstalled: async () => true },
-        scoped: { shelf: async () => ({ groups: [], booksError: null, adventuresError: null }) },
-        brewPacks: { list: async () => [] },
+        scoped: { shelf: async () => ({ groups: [], booksError: null, adventuresError: null, minePacks: [] }) },
       },
     },
   } as unknown as Services

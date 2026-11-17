@@ -2,6 +2,7 @@
 import type { Services } from '../../core/services'
 import type { ScopedRow } from '../../library/scoped'
 import type { EntryRef, EntrySelection, CampaignLibrary } from '../../library/scopes'
+import { getSource } from '../../library/sources'
 import { registeredCategories } from './registry'
 
 export interface PackRow {
@@ -41,6 +42,8 @@ const BATCH = 6
  */
 export async function loadPackRows(s: Services, c: CampaignLibrary, setId: string, source: string, onPart?: (rows: PackRow[]) => void, packDocIdLocal?: string): Promise<PackRow[]> {
   const lib = s.backend.library
+  const codeSet = getSource(setId).codeSet
+  const scope = { ...c, codeSet }
   const view = await lib.currentView()
   let counts: Record<string, number>
   if (packDocIdLocal) {
@@ -52,7 +55,7 @@ export async function loadPackRows(s: Services, c: CampaignLibrary, setId: strin
   const opts = packDocIdLocal ? { packDocIdLocal, expand: true, mode: 'browse' as const, view } : { source, expand: true, mode: 'browse' as const, view }
   const rows: PackRow[] = []
   for (let i = 0; i < props.length; i += BATCH) {
-    const parts = await Promise.all(props.slice(i, i + BATCH).map(async (prop) => Promise.all((await lib.scoped.query(c, prop, opts)).filter((r) => r.ref.set === setId || !!packDocIdLocal).map(async (r) => toRow(prop, r, await authorName(s, c.codeSet, prop, r.item))))))
+    const parts = await Promise.all(props.slice(i, i + BATCH).map(async (prop) => Promise.all((await lib.scoped.query(scope, prop, opts)).filter((r) => r.ref.set === setId || !!packDocIdLocal).map(async (r) => toRow(prop, r, await authorName(s, codeSet, prop, r.item))))))
     for (const part of parts) rows.push(...part)
     onPart?.([...rows])
   }

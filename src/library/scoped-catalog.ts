@@ -5,10 +5,10 @@ import type { LibraryView } from './revision'
 import type { EditionInfo } from './runtime/frame/edit-commands'
 import { autoAssignment, inScopeOf, membershipOf, sourceUnit, viewOf, type Assignment, type CampaignLibrary, type Membership, type ViewReason } from './scopes'
 import type { SourceEntry } from './sources'
-import { attachShelf, directoryRows, type ShelfInfo } from './shelf'
-import { BrewPack } from './brew-packs'
-import { BrewPairs } from './brew-pairing'
-import { getSource } from './sources'
+import { attachShelf, directoryRows, groupShelf, type ShelfInfo } from './shelf'
+import { BrewPacks, type BrewPack } from './brew-packs'
+import { BrewPairs, pairInstalledBrews } from './brew-pairing'
+import { brewSourceOf, getSource } from './sources'
 import { parsedKey } from './install'
 import { sourceCountsAll } from './installed-sources'
 
@@ -39,7 +39,8 @@ export interface CatalogDeps {
   lib: LibraryService
   directory?: BookDirectory
   sourcesFor: (codeSet: string) => SourceEntry[]
-  context: (c: CampaignLibrary, view: LibraryView) => Promise<{ altMap: Map<string, { source: string | null }>; assigns: Map<string, Assignment>; packs: Map<string, Map<string, BrewPack>> }>
+  assignments: () => Promise<Map<string, Assignment>>
+  alternatives: (codeSet: string, view: LibraryView) => Promise<Map<string, { source: string | null }>>
   installed: (set: SourceEntry, view: LibraryView) => Promise<boolean>
   editions: (codeSet: string, sources: string[], view: LibraryView) => Promise<Record<string, EditionInfo>>
   sourceCounts: (setId: string, view: LibraryView) => Promise<Record<string, number>>
@@ -56,11 +57,16 @@ const dirItems = (rec: DirectoryRecord | null): Array<{ key: string; it: DirItem
 }
 
 /** 另一种语言的名字：本语言书目的 ENG_name，或配对语言书目（只看缓存，不联网）里同来源那本的名字；自制按已装的中英配对包。 */
-async function altNamesOf(deps: CatalogDeps, set: SourceEntry, rec: DirectoryRecord | null): Promise<Map<string, string>> {
+async function altNamesOf(deps: CatalogDeps, set: SourceEntry, rec: DirectoryRecord | null, view: LibraryView): Promise<Map<string, string>> {
   const out = new Map<string, string>()
   if (set.kind === 'brew') {
     if (!set.pair) return out
-    for (const p of await new BrewPairs(deps.lib).installed(set.id)) if (p.zh && p.en?.filename) out.set(p.zh.docIdLocal, p.en.filename)
+    const isZh = set.lang === 'zh'
+    for (const p of await new BrewPairs(deps.lib).installed(isZh ? set.id : set.pair, view)) {
+      const here = isZh ? p.zh : p.en
+      const other = isZh ? p.en : p.zh
+      if (here && other?.filename) out.set(here.docIdLocal, other.filename)
+    }
     return out
   }
   const partner = set.pair && deps.directory ? await deps.directory.peek(getSource(set.pair).codeSet) : null
@@ -69,34 +75,43 @@ async function altNamesOf(deps: CatalogDeps, set: SourceEntry, rec: DirectoryRec
   return out
 }
 
-  /** 书目行。默认只列已装好的数据集；remote = true 时没装的官方数据集也列。 */
-export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote = false, record, view: viewArg }: { remote?: boolean; record?: DirectoryRecord; view?: LibraryView } = {}): Promise<CatalogRow[]> {
+export interface CatalogOptions {
+  remote?: boolean
+  record?: DirectoryRecord
+  view?: LibraryView
+  brew?: { packs: BrewPack[]; altNames: Map<string, string> }
+}
+
+/** 书目行。默认只列已装好的数据集；remote = true 时没装的官方数据集也列。 */
+export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote = false, record, view: viewArg, brew }: CatalogOptions = {}): Promise<CatalogRow[]> {
     if (remote && !deps.directory) throw new Error('没有接书目入口')
     const view = await (viewArg ? Promise.resolve(viewArg) : deps.lib.currentView())
-    const ctx = await deps.context(c, view)
+    const [assigns, alts] = await Promise.all([deps.assignments(), deps.alternatives(c.codeSet, view)])
     const altBySource = new Map<string, number>()
-    for (const r of ctx.altMap.values()) if (r.source) altBySource.set(r.source.toLowerCase(), (altBySource.get(r.source.toLowerCase()) ?? 0) + 1)
-    const rows: Array<Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'inScope'> & { nameHint?: string }> = []
+    for (const r of alts.values()) if (r.source) altBySource.set(r.source.toLowerCase(), (altBySource.get(r.source.toLowerCase()) ?? 0) + 1)
+    const rows: Array<Omit<CatalogRow, 'name' | 'abv' | 'edition' | 'membership' | 'view' | 'inScope'> & { nameHint?: string; abvHint?: string }> = []
     const alt = new Map<string, Map<string, string>>()
     const known: Record<string, { full: string; abv: string; edition: EditionInfo }> = {}
     for (const set of deps.sourcesFor(c.codeSet)) {
-      const isInstalled = await deps.installed(set, view)
       const rec = remote && set.kind === 'official' ? (record ?? await deps.directory!.get(c.codeSet)) : null
       if (rec) Object.assign(known, rec.sources)
-      try { alt.set(set.id, await altNamesOf(deps, set, rec ?? (set.kind === 'official' && deps.directory ? await deps.directory.peek(c.codeSet) : null))) } catch (e) { console.warn('[trpg-assistant] 另一语言书名读取失败', set.id, e) }
-      if (!isInstalled) {
+      if (set.kind === 'brew' && brew) alt.set(set.id, brew.altNames)
+      else try { alt.set(set.id, await altNamesOf(deps, set, rec ?? (set.kind === 'official' && deps.directory ? await deps.directory.peek(c.codeSet) : null), view)) } catch (e) { console.warn('[trpg-assistant] 另一语言书名读取失败', set.id, e) }
+      if (!(set.kind === 'brew' && brew) && !(await deps.installed(set, view))) {
         if (rec) for (const r of directoryRows(set.id, rec)) rows.push({ ...r, alternatives: altBySource.get(r.source.toLowerCase()) ?? 0 })
         continue
       }
       if (set.kind === 'brew') {
         // 自制：一行 = 一个真实作者包（同一来源多个包不再合并 / 猜第一个）
-        const packs = [...(ctx.packs.get(set.id)?.values() ?? [])]
+        const packs = brew?.packs ?? await new BrewPacks(deps.lib).list(set.id, view).catch(() => [])
+        if (!packs.length) continue
         const brewBooks = await deps.lib.brewCorpora(set.id, view)
         for (const pack of packs) {
           const sources = pack.sources.length ? pack.sources : [pack.filename ?? pack.docIdLocal]
           const corpora = Object.entries(brewBooks).flatMap(([prop, list]) => list.filter((b) => sources.some((s) => s.toLowerCase() === b.source.toLowerCase())).map((b) => ({ prop, id: b.id, name: b.name })))
           rows.push({
             kind: 'book', set: set.id, source: sources[0], id: null, nameHint: pack.filename ?? sources[0], count: pack.entryCount, downloaded: true,
+            abvHint: pack.sourceInfo.find((s) => s.json === sources[0])?.abbreviation ?? undefined,
             alternatives: sources.reduce((n, s) => n + (altBySource.get(s.toLowerCase()) ?? 0), 0), ...(corpora.length ? { corpora } : {}),
             pack: { docIdLocal: pack.docIdLocal, filename: pack.filename, stableId: packUrl(pack), sources },
           })
@@ -140,21 +155,63 @@ export async function catalogFor(deps: CatalogDeps, c: CampaignLibrary, { remote
     }
     const sources = [...new Set(rows.map((r) => r.source))]
     const rest = sources.filter((s) => !known[s])
-    const names = rest.length ? await (await deps.lib.frameOf(c.codeSet, view)).call('sourceNames', rest) : {}
-    const eds = rest.length ? await deps.editions(c.codeSet, rest, view) : {}
+    const canRead = rest.length && (!brew || await deps.lib.officialInstalled(c.codeSet, view))
+    const names = canRead ? await (await deps.lib.frameOf(c.codeSet, view)).call('sourceNames', rest) : {}
+    const eds = canRead ? await deps.editions(c.codeSet, rest, view) : {}
     return rows.map((r) => {
       const unit = sourceUnit(r.source)
       const edition = known[r.source]?.edition ?? eds[r.source] ?? null
-      const m = membershipOf(undefined, ctx.assigns.get(unit), autoAssignment(edition ?? undefined))
+      const m = membershipOf(undefined, assigns.get(unit), autoAssignment(edition ?? undefined))
       const viewRow = viewOf(c, { entry: unit, source: unit }, m)
       const altName = alt.get(r.set)?.get(r.pack ? r.pack.docIdLocal : nameKey(r.kind, r.source, r.id))
       return {
         ...r, ...(altName ? { altName } : {}), name: r.nameHint ?? known[r.source]?.full ?? names[r.source]?.full ?? r.source,
-        abv: known[r.source]?.abv ?? names[r.source]?.abv ?? r.source, edition, membership: m, view: viewRow, inScope: inScopeOf(viewRow),
+        abv: known[r.source]?.abv ?? names[r.source]?.abv ?? r.abvHint ?? r.source, edition, membership: m, view: viewRow, inScope: inScopeOf(viewRow),
       }
     })
   }
 
+/** 书架以当前语言展示配对包，同时列出另一语言独有的在线下载包。 */
+export async function shelfCatalog(deps: CatalogDeps, c: CampaignLibrary, viewArg?: LibraryView, allDownloads = false) {
+  const view = viewArg ?? await deps.lib.currentView()
+  const record = await deps.directory!.get(c.codeSet)
+  const here = brewSourceOf(c.codeSet)
+  const other = getSource(here.pair ?? here.id)
+  const brewPacks = new BrewPacks(deps.lib)
+  const errors: string[] = []
+  const list = async (set: SourceEntry): Promise<BrewPack[]> => {
+    try { return await brewPacks.list(set.id, view) } catch (e) {
+      if (set.id === here.id || allDownloads) errors.push(`${set.id}：${e instanceof Error ? e.message : String(e)}`)
+      return []
+    }
+  }
+  const [own, counterpart] = await Promise.all([list(here), here.id === other.id ? Promise.resolve([]) : list(other)])
+  const mineIsZh = here.lang === 'zh'
+  const pair = (mine: BrewPack[], theirs: BrewPack[]) => mineIsZh
+    ? pairInstalledBrews(mine, theirs, here, other)
+    : pairInstalledBrews(theirs, mine, other, here)
+  const primaryNames = new Map<string, string>()
+  for (const { zh, en } of pair(own, counterpart)) {
+    const current = mineIsZh ? zh : en
+    const opposite = mineIsZh ? en : zh
+    if (current && opposite?.filename) primaryNames.set(current.docIdLocal, opposite.filename)
+  }
+  const rows = await catalogFor(deps, c, { remote: true, record, view, brew: { packs: own, altNames: primaryNames } })
+  if (allDownloads) {
+    const downloaded = (packs: BrewPack[]) => packs.filter((p) => p.origin === 'download')
+    const extra = pair(downloaded(own), downloaded(counterpart)).flatMap(({ zh, en }) => {
+      const current = mineIsZh ? zh : en
+      const opposite = mineIsZh ? en : zh
+      return !current && opposite ? [opposite] : []
+    })
+    if (extra.length) {
+      const counterpartRows = await catalogFor({ ...deps, sourcesFor: () => [other] }, { ...c, codeSet: other.codeSet }, { view, brew: { packs: extra, altNames: new Map() } })
+      rows.push(...counterpartRows)
+    }
+  }
+  const groups = record.groups.some((g) => g.group === 'homebrew') ? record.groups : [...record.groups, { group: 'homebrew', displayName: '自制内容' }]
+  return { groups: groupShelf(rows, groups), booksError: record.errors.books, adventuresError: record.errors.adventures, brewError: errors.join('；') || null, minePacks: own.filter((p) => p.origin === 'import') }
+}
 
 /** 这套资料每个来源几条，只留这个库版本里看得到的来源（从 scoped.ts 拆出，行为不变）。 */
 export async function visibleSourceCounts(view: LibraryView, setId: string): Promise<Record<string, number>> {
