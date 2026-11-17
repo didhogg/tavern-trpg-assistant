@@ -15,6 +15,12 @@
 .wz-err { margin: 0; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--danger-line); border-radius: var(--r-sm); background: var(--danger-bg); color: var(--danger-text); font-size: var(--fs-sm); }
 .wz-pick { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(220px, 5fr) 7fr; }
 .trpg-window[data-layout='narrow'] .wz-pick, .trpg-window[data-layout='mid'] .wz-pick { grid-template-columns: 1fr; grid-template-rows: minmax(190px, 40%) minmax(0, 1fr); }
+.wz-pick[data-bar] { grid-template-rows: auto minmax(0, 1fr); }
+.trpg-window[data-layout='narrow'] .wz-pick[data-bar], .trpg-window[data-layout='mid'] .wz-pick[data-bar] { grid-template-rows: auto minmax(190px, 40%) minmax(0, 1fr); }
+/* 额外必选项的组名标签：横跨两栏；窄屏放不下时横向滑动，不换行 */
+.wz-groups { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); min-width: 0; }
+.wz-groups .trpg-seg { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+.wz-groups .trpg-seg button { white-space: nowrap; }
 .wz-left { display: flex; flex-direction: column; min-height: 0; border-right: var(--border) solid var(--line); }
 .wz-list { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 .wz-right { min-height: 0; overflow: auto; display: flex; flex-direction: column; }

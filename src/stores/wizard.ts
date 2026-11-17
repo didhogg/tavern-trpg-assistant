@@ -14,7 +14,9 @@ import { useCampaignStore } from './campaign'
 import { CATEGORIES, useRosterStore, type CategoryId } from './roster'
 
 /** 一条能选的条目（库里取，或后端给的候选）。 */
-export interface PickRow { key: string; ref: EntryRef; name: string; source: string | null }
+export interface PickRow { key: string; ref: EntryRef; name: string; source: string | null; requirement?: string }
+/** 额外必选项的一组（后端给组名、来自哪件条目、选几个、候选）：同一类可以有几组（起源专长 / 战斗风格），每组各选各的。 */
+export interface ExtraGroup { key: string; title: string; from: string | null; count: number; candidates: PickRow[]; unfiltered: boolean }
 /** 一件条目带来的一步（后端 buildOptions 的 steps 里要玩家选的那些）。 */
 export interface ChoiceStep { id: string; level: number | null; type: string; title: string | null; hint?: string; options: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any -- 后端按进阶类型给的选项，界面按 kind 读
 export interface Todo { text: string; go: string }
@@ -38,6 +40,8 @@ export const useWizardStore = defineStore('wizard', () => {
   const category = ref<CategoryId>('party')
   const cur = ref('name')
   const chosen = ref<Record<string, EntryRef[]>>({})
+  /** 额外必选项每组选了谁：组键 → 条目键；chosen 里这一类 = 各组合起来（创建时一起交，后端按组复核）。 */
+  const extraSel = ref<Record<string, string[]>>({})
   /** 玩家在每一步里的选择：条目键 → 步骤键 → 界面状态（Trait = 每个位置选了哪些值；能力值 = 每项加几点）。 */
   const traitPlan = ref<Record<string, string>>({})
   const sel = ref<Record<string, Record<string, any>>>({}) // eslint-disable-line @typescript-eslint/no-explicit-any -- 两种形状按 kind 区分
@@ -62,13 +66,32 @@ export const useWizardStore = defineStore('wizard', () => {
   const optionsFor = (ref: EntryRef): BuildOptionsItem | null => options.value?.find((i) => refKey(i.ref) === refKey(ref)) ?? null
   const equip = createEquipment({ items, owner, nameOf: (key) => { const ref = items.value.find((r) => refKey(r) === key); return (ref && optionsFor(ref)?.name) || key } })
 
-  /** 某种额外必选项（按数据）：要选几个、候选是谁；没有 = 这一步不出现。 */
-  function extra(prop: string): { title: string; count: number; candidates: PickRow[] } | null {
-    const all = (options.value ?? []).flatMap((i) => i.extras.filter((x) => x.kind === prop))
-    if (!all.length) return null
-    const seen = new Set<string>()
-    const candidates = all.flatMap((x) => x.candidates).map((c) => rowOf(c.ref, c.name, c.source)).filter((r) => !seen.has(r.key) && !!seen.add(r.key))
-    return { title: all[0].title, count: all.reduce((n, x) => n + x.count, 0), candidates }
+  /** 某种额外必选项（按数据）：分几组、每组选几个、候选是谁，全按后端给；没有 = 这一步不出现。 */
+  function extra(prop: string): { count: number; groups: ExtraGroup[] } | null {
+    const groups = (options.value ?? []).flatMap((i) => i.extras.filter((x) => x.kind === prop).map((x): ExtraGroup => ({
+      key: `${refKey(i.ref)}|${x.id}`, title: x.title, from: i.name, count: x.count, unfiltered: !!x.unfiltered,
+      candidates: x.candidates.map((c) => ({ ...rowOf(c.ref, c.name, c.source), ...(c.requirement ? { requirement: c.requirement } : {}) })),
+    })))
+    return groups.length ? { count: groups.reduce((n, g) => n + g.count, 0), groups } : null
+  }
+  const pickedIn = (group: ExtraGroup): string[] => extraSel.value[group.key] ?? []
+  /** 这一条已经在同一类的哪一组里选了（同一条不能占两组）。 */
+  const takenBy = (prop: string, key: string): ExtraGroup | null => extra(prop)?.groups.find((g) => pickedIn(g).includes(key)) ?? null
+  /** 按后端现在给的组整理：组没了、候选没了（关掉 / 换了职业）的选择丢掉；再合成 chosen。改了就返回 true。 */
+  function syncExtras(): boolean {
+    let changed = false
+    for (const p of build.value) {
+      if (!(EXTRA_KINDS as readonly string[]).includes(p)) continue
+      const groups = extra(p)?.groups ?? []
+      const refs: EntryRef[] = []
+      for (const g of groups) for (const k of pickedIn(g)) { const row = g.candidates.find((c) => c.key === k); if (row) refs.push(row.ref) }
+      const before = (chosen.value[p] ?? []).map(refKey).join()
+      if (refs.map(refKey).join() !== before) changed = true
+      if (refs.length) chosen.value = { ...chosen.value, [p]: refs }; else if (chosen.value[p]) { const next = { ...chosen.value }; delete next[p]; chosen.value = next }
+    }
+    const live = new Set(build.value.flatMap((p) => extra(p)?.groups.map((g) => g.key) ?? []))
+    for (const k of Object.keys(extraSel.value)) if (!live.has(k)) { delete extraSel.value[k]; changed = true }
+    return changed
   }
   const steps = computed(() => ['name', ...mainProps.value, ...build.value.filter((p) => (EXTRA_KINDS as readonly string[]).includes(p) && extra(p)), ...(abil.value ? ['abilities'] : []), ...(equip.sections.value.length ? ['equipment'] : []), 'done'])
   const label = (id: string): string => id === 'name' ? '名字' : id === 'done' ? '完成' : id === 'abilities' ? '属性值' : id === 'equipment' ? '装备' : names.value[id] ?? id
@@ -124,8 +147,8 @@ export const useWizardStore = defineStore('wizard', () => {
         const mineSel = sel.value[refKey(ref)] ?? {}
         for (const k of Object.keys(mineSel)) if (!keep.has(k)) delete mineSel[k]
       }
-      // 额外必选项没了（换了职业）：丢掉已选的子职业 / 专长 / 可选特性
-      for (const p of build.value) if ((EXTRA_KINDS as readonly string[]).includes(p) && !extra(p)) delete chosen.value[p]
+      // 额外必选项的组或候选没了（换了职业 / 关掉了）：丢掉对不上的选择，再按新选择重算一次
+      if (syncExtras()) void refreshOptions()
     } catch (e) {
       if (mine === seq) { optError.value = e instanceof Error ? e.message : String(e); lastSent = '' }
     } finally {
@@ -136,7 +159,7 @@ export const useWizardStore = defineStore('wizard', () => {
   async function open(startView: string): Promise<void> {
     seq++; lastSent = ''
     lists.value = {} // 候选列表每次打开重读：本战役开关、换战役后要跟全局搜索一致
-    name.value = ''; cur.value = 'name'; chosen.value = {}; sel.value = {}; traitPlan.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; equip.reset(); options.value = null; optError.value = null; createError.value = null; creating.value = false
+    name.value = ''; cur.value = 'name'; chosen.value = {}; extraSel.value = {}; sel.value = {}; traitPlan.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; equip.reset(); options.value = null; optError.value = null; createError.value = null; creating.value = false
     category.value = CATEGORIES.some((c) => c.id === startView) ? startView as CategoryId : 'party'
     const lib = await app.svc().backend.kernelSave.libraryOf(owner())
     build.value = [...(ruleKernel(lib.rule)?.build ?? [])]
@@ -162,6 +185,16 @@ export const useWizardStore = defineStore('wizard', () => {
     const has = now.some((r) => refKey(r) === row.key)
     chosen.value = { ...chosen.value, [prop]: has ? now.filter((r) => refKey(r) !== row.key) : count === 1 ? [row.ref] : now.length < count ? [...now, row.ref] : now }
     // 换了人：他的旧选择不要
+    for (const k of Object.keys(sel.value)) if (!items.value.some((r) => refKey(r) === k)) delete sel.value[k]
+    void refreshOptions(); void equip.refresh()
+  }
+  /** 额外必选项：在某一组里选 / 取消选一条（这一组选 1 个时换掉原来的；同一条已在别的组里选了就不动）。 */
+  function chooseExtra(prop: string, group: ExtraGroup, row: PickRow): void {
+    const now = pickedIn(group)
+    const owner = takenBy(prop, row.key)
+    if (owner && owner.key !== group.key) return
+    extraSel.value = { ...extraSel.value, [group.key]: now.includes(row.key) ? now.filter((k) => k !== row.key) : group.count === 1 ? [row.key] : now.length < group.count ? [...now, row.key] : now }
+    syncExtras()
     for (const k of Object.keys(sel.value)) if (!items.value.some((r) => refKey(r) === k)) delete sel.value[k]
     void refreshOptions(); void equip.refresh()
   }
@@ -223,8 +256,8 @@ export const useWizardStore = defineStore('wizard', () => {
     const out: Todo[] = []
     for (const p of mainProps.value) if (!(chosen.value[p] ?? []).length) out.push({ text: `还没选${label(p)}`, go: p })
     for (const p of build.value) {
-      const e = (EXTRA_KINDS as readonly string[]).includes(p) ? extra(p) : null
-      if (e && (chosen.value[p] ?? []).length < e.count) out.push({ text: `${label(p)}还差 ${e.count - (chosen.value[p] ?? []).length} 个`, go: p })
+      const groups = (EXTRA_KINDS as readonly string[]).includes(p) ? extra(p)?.groups ?? [] : []
+      for (const g of groups) if (pickedIn(g).length < g.count) out.push({ text: `${g.title}还差 ${g.count - pickedIn(g).length} 个`, go: p })
     }
     for (const p of build.value) for (const ref of chosen.value[p] ?? []) for (const s of choicesOf(ref)) {
       const left = leftOf(ref, s)
@@ -234,7 +267,7 @@ export const useWizardStore = defineStore('wizard', () => {
     for (const t of equip.todo.value) out.push({ text: t.text, go: 'equipment' })
     return out
   })
-  const status = (id: string): 'done' | 'todo' => id === 'name' ? (name.value.trim() ? 'done' : 'todo') : id === 'done' ? 'todo' : id === 'abilities' ? (abil.value?.check?.complete && abil.value.check.ok ? 'done' : 'todo') : id === 'equipment' ? (!equip.todo.value.length ? 'done' : 'todo') : (chosen.value[id] ?? []).length >= need(id) ? 'done' : 'todo'
+  const status = (id: string): 'done' | 'todo' => id === 'name' ? (name.value.trim() ? 'done' : 'todo') : id === 'done' ? 'todo' : id === 'abilities' ? (abil.value?.check?.complete && abil.value.check.ok ? 'done' : 'todo') : id === 'equipment' ? (!equip.todo.value.length ? 'done' : 'todo') : (EXTRA_KINDS as readonly string[]).includes(id) ? ((extra(id)?.groups ?? []).every((g) => pickedIn(g).length >= g.count) ? 'done' : 'todo') : (chosen.value[id] ?? []).length >= need(id) ? 'done' : 'todo'
 
   async function create(): Promise<boolean> {
     if (!name.value.trim()) { createError.value = '先给人物起个名字'; return false }
@@ -249,5 +282,5 @@ export const useWizardStore = defineStore('wizard', () => {
   const move = (delta: number): void => { const i = steps.value.indexOf(cur.value); cur.value = steps.value[Math.max(0, Math.min(steps.value.length - 1, i + delta))] }
 
   return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, equip, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
-    open, loadList, choose, isChosen, extra, label, status, choicesOf, needOf, haveOf, leftOf, selOf, optionsFor, setSlot, setTraitPlan, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
+    open, loadList, choose, chooseExtra, pickedIn, takenBy, isChosen, extra, label, status, choicesOf, needOf, haveOf, leftOf, selOf, optionsFor, setSlot, setTraitPlan, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
 })

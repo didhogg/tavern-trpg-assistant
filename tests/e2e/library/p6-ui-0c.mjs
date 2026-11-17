@@ -100,7 +100,7 @@ try {
   // 专长
   await page.waitForSelector('[data-testid=wz-row]'); await settle(page, 400)
   const featCount = Number(((await page.locator('.wz-list .lib-count').innerText()).match(/共 (\d+) 条/) ?? [])[1] ?? 0)
-  check('专长候选很多（全部专长），页面写明前置条件没检查', featCount > 20 && /前置条件/.test(await page.getByTestId('wz-right').innerText()), String(featCount))
+  check('专长候选很多，页面写明有的前置条件要自己核对', featCount > 20 && /前置条件/.test(await page.getByTestId('wz-right').innerText()), String(featCount))
   // 选「熟习」：58 项技能 / 工具候选按后端给的分组摆（技能熟练 / 工具熟练 ▸ 工匠工具…），大组收起，多于 20 项有筛选；后端说还选不了的列在最后一块
   await page.getByTestId('wz-search').fill('熟习'); await settle(page, 500)
   await pickRow(/^熟习$/); await settle(page, 1500)
