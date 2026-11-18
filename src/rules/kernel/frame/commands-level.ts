@@ -6,7 +6,8 @@ import { asiValue } from './asi'
 import { settled } from './server'
 import type { ActorGetter, Operate } from './commands-items'
 import type { KernelActorStateLike } from '../../../core/saves/state'
-import { applyStateToActor } from './actor-state'
+import { prepareActor } from './actor-state'
+import { advancementRows, type OffRow } from './off'
 import { freshSeed, reseedKernel } from './seed'
 import { importEntry, importerMeta, importerProps } from './importer'
 import { actorTypes, BUILD_ACTOR_TYPE } from './actor-types'
@@ -250,6 +251,8 @@ export interface RebuildPlan {
   /** refKey → 官方 Advancement#reverse 记下的恢复数据。 */
   choices: Record<string, any[] | undefined>
   state?: KernelActorStateLike
+  /** 取下安排（off.ts）。 */
+  off?: OffRow[]
   /** 这个人物自己的种子；不给就用名字。 */
   seed?: string
 }
@@ -283,29 +286,17 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
 
     /** 用官方 Advancement#reverse 记下人物身上每个进阶的选择（在克隆人物上做，不动现场）。 */
     captureChoices: (actorId: string) => operate([], async () => {
-      const source = actor(actorId)
-      const clone = source.clone()
-      const level = clone.system.details?.level ?? 1
+      const clone = actor(actorId).clone()
       const out: Record<string, any[]> = {}
-      const items = Array.from(clone.items) as any[]
-      for (const item of items) {
-        const flags = item.flags?.plutonium
-        if (!flags?.propDroppable || !flags.source || !flags.hash) continue
-        const key = `${flags.propDroppable}|${flags.source}|${flags.hash}`
-        const rows = []
-        for (const advancement of Object.values(item.advancement?.byId ?? {}) as any[]) {
-          for (const advLevel of (advancement.levels ?? [])) {
-            if (advLevel > level && advLevel !== 0) continue
-            const type = advancement.constructor?.typeName ?? advancement.type
-            try {
-              const reversed = await advancement.reverse(advLevel)
-              if (reversed !== undefined && reversed !== null) rows.push({ id: advancement.id, type, level: advLevel, data: storable(reversed) })
-            } catch (error) {
-              rows.push({ id: advancement.id, type, level: advLevel, error: error instanceof Error ? error.message : String(error) })
-            }
-          }
+      // 和取下（off.ts）同一个认法：哪件作者条目、哪条成长、哪一级
+      for (const row of advancementRows(clone)) {
+        const advancement = row.item.advancement.byId[row.adv.id]
+        try {
+          const reversed = await advancement.reverse(row.level)
+          if (reversed !== undefined && reversed !== null) (out[row.key] ??= []).push({ id: row.adv.id, type: row.type, level: row.level, data: storable(reversed) })
+        } catch (error) {
+          (out[row.key] ??= []).push({ id: row.adv.id, type: row.type, level: row.level, error: error instanceof Error ? error.message : String(error) })
         }
-        if (rows.length) out[key] = rows
       }
       return out
     }, [actorId]),
@@ -318,13 +309,17 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
     }, [actorId]),
 
     /** 读档全部命中缓存：一次 createDocuments 批量建（保留编号），再逐个叠状态差别。 */
-    createActorsFromBase: (rows: Array<{ base: any; state?: KernelActorStateLike }>) => operate([], async () => {
+    createActorsFromBase: (rows: Array<{ base: any; state?: KernelActorStateLike; off?: OffRow[] }>) => operate([], async () => {
       const ActorClass = g.CONFIG.Actor.documentClass
       const created = await ActorClass.createDocuments(rows.map((row) => structuredClone(row.base)), { keepId: true })
       const out = []
       for (let i = 0; i < created.length; i++) {
-        await applyStateToActor(created[i], rows[i].state)
-        out.push({ id: created[i].id, ...actorLevel(created[i]), data: created[i].toObject(), base: rows[i].base })
+        const prepared = await prepareActor(created[i], rows[i].off, rows[i].state)
+        if (prepared.problems.length) {
+          await ActorClass.deleteDocuments(created.map((a: any) => a.id))
+          return { kernelStatus: 'error', problems: prepared.problems }
+        }
+        out.push({ id: created[i].id, ...actorLevel(created[i]), data: created[i].toObject(), base: rows[i].base, view: prepared.view, offChoices: prepared.choices })
       }
       return out
     }),
@@ -377,10 +372,12 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
         await built.actor.delete()
         return { kernelStatus: 'pending', reason: 'rebuild-step-not-complete', step: built.step, built: built.built }
       }
-      const base = built.actor.toObject()
-      await applyStateToActor(built.actor, plan.state)
+      // 多职业补回记下的成长记录：只改记录本身，属于完整基准，放在存基准之前（之后会被取下 / 叠状态的顺序打乱）
       if ([...built.actor.items].filter((item: any) => item.type === 'class').length > 1) await restoreRecordedChoices(built.actor, plan.choices, [...plan.items, ...plan.equipment])
-      return { id: built.actor.id, seed, ...actorLevel(built.actor), data: built.actor.toObject(), base }
+      const base = built.actor.toObject()
+      const prepared = await prepareActor(built.actor, plan.off, plan.state)
+      if (prepared.problems.length) { await built.actor.delete(); return { kernelStatus: 'error', problems: prepared.problems } }
+      return { id: built.actor.id, seed, ...actorLevel(built.actor), data: built.actor.toObject(), base, view: prepared.view, offChoices: prepared.choices }
     }),
   }
 }

@@ -2,7 +2,8 @@
 
 export async function offScenarios(page) {
   const step1 = await page.evaluate(async () => {
-    const { h, owner, rt, people } = globalThis.offEnv()
+    globalThis.offE ??= globalThis.offEnv()
+    const { h, owner, rt, people } = globalThis.offE
     const refs = await Promise.all([globalThis.offFind('race', 'Dwarf'), globalThis.offFind('background', 'Acolyte'), globalThis.offFind('class', 'Fighter'), globalThis.offFind('feat', 'Alert')])
     const made = await people.build(owner, { name: 'Off proof', items: refs, blank: true })
     if (made.built.status !== 'complete') throw Error(JSON.stringify(made.built))

@@ -15,6 +15,6 @@ export interface KernelRefResult {
 
 export type KernelRefChecker = (refs: Array<{ set: string; prop: string; hash: string }>, library: KernelLibrary) => Promise<KernelRefResult[]>
 
-/** 只交回人物段，不碰 adjustments/dice/legacy。 */
-export type KernelActorCompact = Pick<KernelActor, 'id' | 'name' | 'seed' | 'refs' | 'choices' | 'state'>
+/** 小窗拆回的人物段，不碰 adjustments/dice/legacy；off 只在加人（复制）时带上，平时写入保留存档里原有的取下安排。 */
+export type KernelActorCompact = Pick<KernelActor, 'id' | 'name' | 'seed' | 'refs' | 'choices' | 'state'> & { off?: KernelActor['off'] }
 

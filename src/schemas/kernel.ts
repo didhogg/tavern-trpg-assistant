@@ -38,6 +38,18 @@ export const kernelActorStateSchema = z.object({
 })
 export type KernelActorState = z.infer<typeof kernelActorStateSchema>
 
+/**
+ * 人物的取下安排（P6）：一行 = 一项暂时不用的自动项目。只记作者来源（Plutonium 标记 prop|source|hash）
+ * + 可选的成长编号 / 等级 / 子项（作者数据自己的键）；只写来源 = 整件取下。原始来源与原始选择不动，装回 = 删掉这一行。
+ */
+export const kernelOffRowSchema = z.object({
+  ref: z.string().min(1),
+  advancement: z.string().min(1).optional(),
+  level: z.number().int().optional(),
+  part: z.string().min(1).optional(),
+})
+export type KernelOffRow = z.infer<typeof kernelOffRowSchema>
+
 export const kernelActorSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
@@ -47,6 +59,8 @@ export const kernelActorSchema = z.object({
   choices: z.record(z.string(), z.unknown()).default({}),
   state: kernelActorStateSchema.default({ actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }),
   adjustments: z.record(z.string(), z.unknown()).default({}),
+  /** 取下安排；旧存档没有 = 什么都没取下。 */
+  off: z.array(kernelOffRowSchema).default([]),
   dice: z.array(z.number().int()).default([]),
   /** 旧格式（整份条目全文）原样保留；不丢、不猜。 */
   legacy: z.boolean().default(false),

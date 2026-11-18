@@ -239,11 +239,36 @@ export class KernelPeople {
     const result = await this.deps.runtime.rebuild(ownerKey, copy)
     if (result.status !== 'complete' || !result.id) return { result, kernel: null }
     if (copy.name !== (result.data as { name?: string } | undefined)?.name) await this.call(ownerKey, 'renameActor', result.id, name)
-    return { result, kernel: await this.enroll(ownerKey, [result.id], source.adjustments) }
+    return { result, kernel: await this.enroll(ownerKey, [result.id], source.adjustments, source.off) }
   }
-  private async enroll(ownerKey: string, ids: string[], adjustments: Record<string, unknown>) {
-    const compacts: KernelActorCompact[] = await this.deps.runtime.compact(ownerKey, ids)
+  private async enroll(ownerKey: string, ids: string[], adjustments: Record<string, unknown>, off: KernelActor['off'] = []) {
+    const compacts: KernelActorCompact[] = (await this.deps.runtime.compact(ownerKey, ids)).map((c) => ({ ...c, off }))
     return (await this.deps.saves.addActors(ownerKey, compacts, await this.rev(ownerKey), adjustments)).kernel
+  }
+
+  /**
+   * 取下 / 装回自动项目：off = 这个人新的完整取下安排（装回 = 去掉那一行）。
+   * 先在小窗里按新安排从完整基准重新准备（原始来源与选择不动），成功才把安排和按它拆好的人物一次写进存档（一条撤销）；
+   * 准备不成（指向不存在 / 还不能取下的项，problems 写原因）或写存档失败（期间别处改过），小窗按存档退回，存档不变。
+   */
+  async setOff(ownerKey: string, actorId: string, off: KernelActor['off']) {
+    const saved = await this.saved(ownerKey, actorId)
+    if (!saved) throw new Error(`存档里没有这个人物：${actorId}`)
+    const rev = await this.rev(ownerKey)
+    const back = async () => { await this.deps.runtime.restore(ownerKey, actorId, await this.saved(ownerKey, actorId)) }
+    const tried = await this.deps.runtime.restore(ownerKey, actorId, { ...saved, off })
+    if (tried?.status !== 'complete') {
+      await back()
+      const problems = ((tried?.detail as { result?: { problems?: unknown[] } } | undefined)?.result?.problems ?? []) as Array<{ off: KernelActor['off'][number]; reason: string }>
+      return { ok: false as const, error: tried?.error ?? '取下没有完成', problems, kernel: null }
+    }
+    try {
+      const [compact] = await this.deps.runtime.compact(ownerKey, [actorId])
+      return { ok: true as const, problems: [], kernel: (await this.deps.saves.setOff(ownerKey, compact, off, rev)).kernel }
+    } catch (error) {
+      await back()
+      throw error
+    }
   }
 
   /** 列表信息（分类、标签、置顶、回收站、排序）：改人物的个人调整，可撤销。 */

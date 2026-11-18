@@ -28,8 +28,12 @@ export interface RebuildResult {
   status: 'complete' | 'missing' | 'pending' | 'error'
   id?: string
   data?: Record<string, unknown>
-  /** 没叠状态差别的重建基准（同一批编号）。 */
+  /** 没叠状态差别的重建基准（同一批编号；完整，取下之前）。 */
   base?: Record<string, unknown>
+  /** 按取下安排处理后、叠状态前的视图；没有取下时不给（= base）。 */
+  view?: Record<string, unknown>
+  /** 取下时作者 reverse 记下的原始选择（prepared.ts protect 用）。 */
+  offChoices?: Record<string, Array<{ id: string; type: string; level: number; data: unknown }>>
   missing?: RebuildMissing[]
   seed?: string
   /** 交的是中文条目的引用（房规 / 备选生效，或没有英文对照），出处标“无英文对照”。 */
@@ -141,11 +145,12 @@ export async function rebuildActor(opts: {
     equipment,
     choices: opts.actor.choices as Record<string, unknown[] | undefined>,
     state: opts.actor.state,
+    off: opts.actor.off,
   })
   if (result.status === 'pending') return { status: 'pending', error: '重建需要玩家选择' }
-  const payload = result.result as { id?: string; seed?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
+  const payload = result.result as { id?: string; seed?: string; data?: Record<string, unknown>; base?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: RebuildResult['offChoices'] } | null
   if (result.status !== 'complete' || !payload?.data) return { status: 'error', error: result.error ?? `重建状态：${result.status}`, detail: result }
-  return { status: 'complete', id: payload.id, data: payload.data, base: payload.base, noEnglish }
+  return { status: 'complete', id: payload.id, data: payload.data, base: payload.base, view: payload.view, offChoices: payload.offChoices, noEnglish }
 }
 
 /** 当前完整人物 + 重建基准 + 官方 reverse 选择 → 存档要的引用/选择/状态差别。 */

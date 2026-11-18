@@ -46,7 +46,7 @@ export function addActors(ctx: RosterContext, ownerKey: string, compacts: Kernel
     const added = compacts.map((c) => {
       if (taken.has(c.id)) throw new TrpgError('E_ACTOR_EXISTS', `存档里已经有这个人物：${c.id}`)
       before[c.id] = null
-      return { ...clone(c), adjustments: clone(adjustments), dice: [], legacy: false } as KernelActor
+      return { ...clone(c), off: clone(c.off ?? []), adjustments: clone(adjustments), dice: [], legacy: false } as KernelActor
     })
     return { actors: [...kernel.actors.map(clone), ...added], before }
   })
@@ -73,6 +73,21 @@ export function setAdjustments(ctx: RosterContext, ownerKey: string, ids: string
       return { ...clone(a), adjustments }
     })
     return { actors, before }
+  })
+}
+
+/**
+ * 改取下安排（P6）：取下安排 + 按新安排重新拆好的人物段一起写，一条撤销；版本对不上就不写（期间别处改过）。
+ * 只换引用 / 选择 / 状态 / 取下安排，个人调整、骰点不动。
+ */
+export function setOff(ctx: RosterContext, ownerKey: string, compact: KernelActorCompact, off: KernelActor['off'], expectedRevision: number) {
+  return write(ctx, ownerKey, expectedRevision, (kernel) => {
+    const index = kernel.actors.findIndex((a) => a.id === compact.id)
+    if (index < 0) throw new TrpgError('E_NOT_FOUND', `存档里没有这个人物：${compact.id}`)
+    const old = kernel.actors[index]
+    const actors = kernel.actors.map(clone)
+    actors[index] = { ...clone(old), refs: clone(compact.refs), choices: clone(compact.choices), state: clone(compact.state), off: clone(off) }
+    return { actors, before: { [old.id]: clone(old) } }
   })
 }
 

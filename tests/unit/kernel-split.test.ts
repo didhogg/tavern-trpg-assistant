@@ -96,7 +96,7 @@ describe('P3-3b 战斗：战役层只存一份', () => {
     expect(combat).toMatchObject({ id: 'combat1', name: '遭遇', round: 1, turn: 0, active: true })
     expect(combat.combatants.map((c) => [c.actorId, c.initiative])).toEqual([['hero', 20], ['monster', 3]])
 
-    const actor: KernelActor = { id: 'hero', name: '英雄', seed: '英雄', refs: [], choices: {}, state: { actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }, adjustments: {}, dice: [], legacy: false }
+    const actor: KernelActor = { id: 'hero', name: '英雄', seed: '英雄', refs: [], choices: {}, state: { actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }, adjustments: {}, off: [], dice: [], legacy: false }
     const kernel = kernelCampaignSchema.parse({
       rule: 'dnd5e2014', kernelVersion: 1,
       library: { rule: 'dnd5e2014', codeSet: 'cn', scopes: [], include: [], exclude: [], choices: {} },
@@ -115,7 +115,7 @@ describe('P6 物品里的效果：改动认得出属于哪个人物', () => {
     expect(actorIdOf(change('Actor.actor1.Item.item1'))).toBe('actor1')
   })
   it('没有小窗时不把物品里的效果错记成人物直属效果', () => {
-    const actor = { id: 'actor1', name: 'x', seed: '', refs: [], choices: {}, state: { actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }, adjustments: {}, dice: [], legacy: false } as KernelActor
+    const actor = { id: 'actor1', name: 'x', seed: '', refs: [], choices: {}, state: { actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }, adjustments: {}, off: [], dice: [], legacy: false } as KernelActor
     expect(() => applyActorChange(actor, change('Actor.actor1.Item.item1'), mapRef)).toThrow(/物品里的效果/)
     expect(applyActorChange(actor, change('Actor.actor1'), mapRef).state.effects.fx1).toEqual({ _id: 'fx1', disabled: true })
   })

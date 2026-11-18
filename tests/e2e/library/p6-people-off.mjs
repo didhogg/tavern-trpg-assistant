@@ -1,11 +1,13 @@
 // P6 人物「取下 / 装回」与操作判定（真实结算小窗；Chrome，ENGINE=webkit 换 WebKit；上限 8 分钟）。
 // 第 1 步：未支持检测只看官方实际应用的改动 —— 停用的作者效果不拖垮无关操作；物品里的效果经正式入口停用、保存、冷读回、撤销；
 //         真不支持的写法（midi-qol）照旧报出来，但操作照常写入；dnd5e 自己接管的写法（items.hidden）不误报。
+// 第 2 步：取下 / 装回（p6-people-off-step2.mjs），最后整页刷新从 IndexedDB 读回。
 // 来自探路（docs/handoff/P6_自动项目取下装回_探路与统一入口预览.md）当时的反例，这里要求正向通过。
 import { writeFile } from 'node:fs/promises'
 import { startStatic } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase, work } from './chain-common.mjs'
 import { offScenarios } from './p6-people-off-steps.mjs'
+import { offStep2, step2Checks } from './p6-people-off-step2.mjs'
 
 const LIMIT = 8 * 60_000
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, LIMIT)
@@ -21,17 +23,20 @@ page.on('pageerror', (e) => errors.push(e.stack ?? String(e)))
 page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`) })
 try {
   await page.goto(url)
-  await page.evaluate(async () => {
+  // 第一次：装资料、清库、开战役；整页刷新后只重新接线（不清库），读的是 IndexedDB 里的存档
+  const env = (fresh) => page.evaluate(async (fresh) => {
     const h = await import('/work/e2e-lib/harness.js')
-    for (const id of ['cn-official', 'en-official']) {
-      const audit = await h.offlineAudit(id)
-      if (audit.set?.status !== 'installed' || audit.ok !== audit.planFiles) await h.install(id)
-    }
-    await h.userDb.workspaces.clear(); await h.userDb.saves.clear()
-    const library = h.defaultCampaignLibrary('dnd5e2014', 'en')
     const owner = 'char:p6-people-off.png'
-    await h.campaign.startNewCampaign({ ownerKey: owner, ownerLabel: 'P6 取下', ruleId: library.rule, name: 'P6 取下' })
-    await h.kernelSave.bind(owner, { rule: library.rule, kernelVersion: 1, library, dataVersion: await h.dataVersion(), overrides: [], actors: [], revision: 0, undo: [] })
+    const library = h.defaultCampaignLibrary('dnd5e2014', 'en')
+    if (fresh) {
+      for (const id of ['cn-official', 'en-official']) {
+        const audit = await h.offlineAudit(id)
+        if (audit.set?.status !== 'installed' || audit.ok !== audit.planFiles) await h.install(id)
+      }
+      await h.userDb.workspaces.clear(); await h.userDb.saves.clear()
+      await h.campaign.startNewCampaign({ ownerKey: owner, ownerLabel: 'P6 取下', ruleId: library.rule, name: 'P6 取下' })
+      await h.kernelSave.bind(owner, { rule: library.rule, kernelVersion: 1, library, dataVersion: await h.dataVersion(), overrides: [], actors: [], revision: 0, undo: [] })
+    }
     // 和 backend.ts 同样的接线；带换算缓存（读档命中缓存的路径也要测）
     globalThis.offEnv = () => {
       const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
@@ -45,8 +50,23 @@ try {
       if (!row) throw Error(`缺测试条目 ${prop} ${name}`)
       return row.ref
     }
-  })
+  }, fresh)
+  await env(true)
   const r = await offScenarios(page)
+  r.step2 = await offStep2(page)
+  Object.assign(r.checks, step2Checks(r.step2))
+  // 整页刷新：页面里的对象全部销毁，重新打开 IndexedDB 读档
+  await page.reload()
+  await env(false)
+  r.reload = await page.evaluate(async (expect) => {
+    const { h, owner, rt, saves, people } = globalThis.offEnv()
+    const loaded = await people.load(owner)
+    const prc = (await h.actorData((await rt.session(owner)).session, expect.id)).system.skills.prc.value
+    const off = (await saves.read(owner)).actors.find((a) => a.id === expect.id).off
+    await rt.close(owner)
+    return { loaded: loaded.map((l) => l.status), prc, off }
+  }, r.step2.reloadExpect)
+  r.checks.pageReloadKeepsOff = r.reload.loaded.every((x) => x === 'complete') && r.reload.prc === r.step2.reloadExpect.prc && r.reload.prc === 0 && r.reload.off.length === 2
   const known = (e) => e.includes('gendata-nav-adventure-book-index.json') || e.includes('requires usable window dimensions') || e.includes('status of 404') || e.includes('api/plutonium')
     || e.includes('KERNEL_NEEDS_INPUT') || /homebrew|unearthed-arcana/.test(e)
   const unexplained = errors.filter((e) => !known(e))

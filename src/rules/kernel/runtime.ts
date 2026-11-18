@@ -12,6 +12,7 @@ import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { KernelActor, KernelDataVersion } from '../../schemas/kernel'
 import { refKey } from '../../core/saves/split'
 import { executed, type KernelSession } from './host'
+import { PreparedActors, type OffChoices } from './prepared'
 import { openKernel, prepareKernelBrews } from './open'
 import { kernelInput } from './input'
 import { excludedBrewReason } from './brews'
@@ -61,7 +62,8 @@ export interface KernelRuntimeDeps {
 interface Open {
   session: KernelSession
   rule: string
-  bases: Map<string, Record<string, unknown>>
+  /** 每个人的完整基准 / 取下后视图 / 原始选择（prepared.ts）。 */
+  bases: PreparedActors
   seeds: Map<string, string>
   boot: unknown
   bootMs: number
@@ -104,7 +106,7 @@ export class KernelRuntime {
       // 换算缓存钥匙按小窗打开时那一版资料算：开着时补装了书，结果仍记旧版本名下（新版本由后台换算或重开后补上）。
       const versionOfView = async (): Promise<KernelDataVersion> => this.deps.cache ? this.deps.cache.dataVersion(view) : { official: '', brews: {} }
       const wrapped = cache ? wrapKernelSession(session, cache, cacheBase, versionOfView, campaign.rule, brewFingerprint, cacheLang) : session
-      return { session: wrapped, rule: campaign.rule, bases: new Map(), seeds: new Map(), boot, brews: report, brewFingerprint, brewIssue, bootMs: Math.round(performance.now() - started), cache, cacheBase, cacheLang, view, dataVersion: versionOfView, pairsOf: pairsSource({ files: this.deps.files, view, codeSet: campaign.library.codeSet }) }
+      return { session: wrapped, rule: campaign.rule, bases: new PreparedActors(), seeds: new Map(), boot, brews: report, brewFingerprint, brewIssue, bootMs: Math.round(performance.now() - started), cache, cacheBase, cacheLang, view, dataVersion: versionOfView, pairsOf: pairsSource({ files: this.deps.files, view, codeSet: campaign.library.codeSet }) }
     })()
     this.open.set(ownerKey, opening)
     opening.catch(() => { if (this.open.get(ownerKey) === opening) this.open.delete(ownerKey) })
@@ -147,7 +149,7 @@ export class KernelRuntime {
 
   /** 这个人物的重建基准（全是自动值）；没有记过返回 null。 */
   async baseOf(ownerKey: string, actorId: string): Promise<Record<string, unknown> | null> {
-    return (await this.get(ownerKey)).bases.get(actorId) ?? null
+    return (await this.get(ownerKey)).bases.view(actorId)
   }
 
   /**
@@ -161,12 +163,13 @@ export class KernelRuntime {
     const deleted = await o.session.call('deleteActors', [actorId])
     if (deleted.status !== 'complete') throw new Error(`小窗里删不掉人物 ${actorId}：${deleted.error ?? deleted.status}`)
     if (!actor) { o.bases.delete(actorId); o.seeds.delete(actorId); return null }
-    const base = o.bases.get(actorId)
+    const base = o.bases.base(actorId)
     if (!base) return this.rebuild(ownerKey, actor)
-    const call = await o.session.call('createActorsFromBase', [{ base, state: actor.state }])
-    const row = (call.result as Array<{ id?: string; data?: Record<string, unknown> }> | null)?.[0]
+    const call = await o.session.call('createActorsFromBase', [{ base, state: actor.state, off: actor.off }])
+    const row = (call.result as Array<{ id?: string; data?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: OffChoices }> | null)?.[0]
     if (call.status !== 'complete' || !row?.id || !row.data) return { status: 'error', error: call.error ?? `退回状态：${call.status}`, detail: call }
-    return { status: 'complete', id: row.id, data: row.data, base }
+    o.bases.set(row.id, base, row.view, row.offChoices)
+    return { status: 'complete', id: row.id, data: row.data, base, view: row.view }
   }
 
   /** 新建人物：调用方只交引用与选择；条目由【库】取，种子与建卡在内核里完成。 */
@@ -239,16 +242,10 @@ export class KernelRuntime {
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const result = await o.session.call('addToActor', actorId, rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry })))
     if (!executed(result.status)) return { status: result.status, error: result.error ?? `加条目状态：${result.status}`, detail: result }
-    const base = o.bases.get(actorId)
-    if (base && Array.isArray(result.result?.added) && Array.isArray((base as any).items)) {
+    if (o.bases.has(actorId) && Array.isArray(result.result?.added)) {
       const current = await actorData(o.session, actorId)
       const byId = new Map(((current?.items ?? []) as any[]).map((item: any) => [item._id, item]))
-      for (const item of result.result.added) {
-        const actual = byId.get(item._id) ?? item
-        const index = (base as any).items.findIndex((row: any) => row._id === actual._id)
-        if (index >= 0) (base as any).items[index] = actual
-        else (base as any).items.push(actual)
-      }
+      o.bases.addItems(actorId, result.result.added.map((item: any) => byId.get(item._id) ?? item))
     }
     return { status: 'complete', result: result.result, noEnglish: rows.noEnglish }
   }
@@ -320,16 +317,16 @@ export class KernelRuntime {
       for (let i = 0; i < actors.length; i++) misses.push(i)
     }
     if (hits.length) {
-      const call = await o.session.call('createActorsFromBase', hits.map((h) => ({ base: h.base, state: actors[h.index].state })))
-      const list = (call.result ?? []) as Array<{ id?: string; data?: Record<string, unknown>; base?: Record<string, unknown> }>
+      const call = await o.session.call('createActorsFromBase', hits.map((h) => ({ base: h.base, state: actors[h.index].state, off: actors[h.index].off })))
+      const list = (call.result ?? []) as Array<{ id?: string; data?: Record<string, unknown>; base?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: OffChoices }>
       if (call.status !== 'complete' || list.length !== hits.length) {
         for (const h of hits) results[h.index] = { status: 'error', error: call.error ?? `批量重建状态：${call.status}`, detail: call }
       } else {
         hits.forEach((h, j) => {
           const row = list[j]
           if (!row?.id || !row.data) { results[h.index] = { status: 'error', error: '批量重建没有交回人物数据' }; return }
-          results[h.index] = { status: 'complete', id: row.id, data: row.data, base: row.base ?? h.base }
-          o.bases.set(row.id, row.base ?? h.base)
+          results[h.index] = { status: 'complete', id: row.id, data: row.data, base: row.base ?? h.base, view: row.view }
+          o.bases.set(row.id, row.base ?? h.base, row.view, row.offChoices)
         })
       }
     }
@@ -339,7 +336,7 @@ export class KernelRuntime {
       results[index] = result
       if (result.status === 'complete') {
         if (!result.id || !result.base) throw new Error(`重建 ${actor.name} 没有交回人物编号或重建基准`)
-        o.bases.set(result.id, result.base)
+        o.bases.set(result.id, result.base, result.view, result.offChoices)
         o.seeds.set(result.id, result.seed ?? actor.seed ?? actor.name)
         if (o.cache && version) {
           const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor })
@@ -366,18 +363,20 @@ export class KernelRuntime {
     const library = await this.library(ownerKey)
     const out: KernelActorCompact[] = []
     for (const id of ids) {
-      const base = o.bases.get(id)
-      if (!base) throw new Error(`人物 ${id} 没有重建基准：先建卡后记住，或从存档重建`)
+      const base = o.bases.view(id)
+      const full = o.bases.base(id)
+      if (!base || !full) throw new Error(`人物 ${id} 没有重建基准：先建卡后记住，或从存档重建`)
       const current = await actorData(o.session, id)
       if (!current) throw new Error(`结算小窗里没有这个人物：${id}`)
       const captured = await o.session.call('captureChoices', id)
       if (!executed(captured.status)) throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
       const name = typeof current.name === 'string' ? current.name : id
-      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: captured.result ?? {} })
+      // 差别相对取下后的视图算；取下时动过的成长用原始选择（不让「当前没应用」写成「原来没选」）
+      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: o.bases.protect(id, captured.result ?? {}) })
       if (o.cache) {
         const version = await o.dataVersion()
         const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
-        await o.cache.put(key, base, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
+        await o.cache.put(key, full, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
       }
       out.push(compact)
     }
