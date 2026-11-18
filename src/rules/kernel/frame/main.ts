@@ -9,6 +9,7 @@ import { reseedKernel } from './seed'
 import { KERNEL_COMMANDS } from './commands'
 import { loadBrews } from './brew-input'
 import { loadKernelModule } from './plutonium-build'
+import { redirectModuleFiles } from './module-roots'
 import { installUnsupportedRecorder } from './writings'
 
 const g = globalThis as any
@@ -51,6 +52,7 @@ async function boot(input: KernelInput): Promise<unknown> {
   const steps: string[] = []
   const { foundry, Hooks } = g
   reseedKernel(input.seed ?? 'kernel')
+  redirectModuleFiles(input.moduleRoots)
   // 版本信息必须先建：包对象构造时就要判断可用性。
   g.release = new foundry.config.ReleaseData(input.release)
   const data = assembleWorld(input)

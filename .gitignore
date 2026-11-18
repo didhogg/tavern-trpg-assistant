@@ -5,3 +5,5 @@ node_modules/
 .oil-ui/
 tools/data/out/
 work/
+# 私人完整版作者程序（只给驾驶员本机用，禁止提交 / 推送；插件找不到就用 vendor/foundry 里的公开版）
+vendor/private/

@@ -6,11 +6,12 @@
 import type { KernelActorCompact, KernelSaveService } from '../../core/saves/kernel'
 import { isObject, jsonDiff } from '../../core/saves/state'
 import type { EntryRef } from '../../library/scopes'
-import type { KernelActor, KernelChange } from '../../schemas/kernel'
+import { kernelActorSchema, type KernelActor, type KernelChange } from '../../schemas/kernel'
 import type { SheetEdit } from './frame/commands-sheet'
 import { executed } from './host'
 import type { KernelRuntime } from './runtime'
 import type { DraftWatcher } from './drafts'
+import type { KernelNativeBuild } from './native-build'
 
 /**
  * 游戏中会变的状态（不是手改设定，不画金线）。登记表：加一种 = 加一行，按 dnd5e 6.1 数据路径匹配。
@@ -87,7 +88,7 @@ const withBase = (kernel: { bases?: Record<string, Record<string, unknown>> }, a
 }
 
 export class KernelPeople {
-  constructor(private readonly deps: { runtime: KernelRuntime; saves: KernelSaveService }) {}
+  constructor(private readonly deps: { runtime: KernelRuntime; saves: KernelSaveService; native?: KernelNativeBuild }) {}
 
   private async rev(ownerKey: string): Promise<number> {
     const k = await this.deps.saves.read(ownerKey)
@@ -259,6 +260,21 @@ export class KernelPeople {
     const { made, kernel } = await this.draftCommit(ownerKey, id, plan.name, adjustments)
     return { made: { status: 'complete' as const, ...made }, kernel }
   }
+  /**
+   * 加人：作者完整建卡器（P6 第 2 段）。建卡专用小窗里作者从头建好整个人（native-build.ts），
+   * 收进存档走和复制 B′ 人物同一条路：完整人物建回日常小窗 → 写进存档（完整数据进战役层 bases）。玩家取消 / 没建成 = 存档不变。
+   */
+  async buildNative(ownerKey: string, name: string, adjustments: Record<string, unknown> = {}) {
+    if (!this.deps.native) throw new Error('这个插件没有接建卡专用小窗')
+    const built = await this.deps.native.run(ownerKey, name)
+    if (built.status !== 'built') return { built, kernel: null }
+    const { id: _blank, ...blank } = kernelActorSchema.parse({ id: 'native', name, seed: built.seed })
+    const result = await this.deps.runtime.rebuild(ownerKey, { ...blank, base: built.data })
+    if (result.status !== 'complete' || !result.id) return { built: { status: 'error' as const, error: result.error ?? '建好的人物放不回结算小窗' }, kernel: null }
+    return { built, id: result.id, kernel: await this.enroll(ownerKey, [result.id], adjustments, [], { [result.id]: result.base ?? built.data }) }
+  }
+  /** 放弃正在进行的完整建卡（关掉建卡专用小窗）。 */
+  stopNative(ownerKey: string) { this.deps.native?.stop(ownerKey) }
   /** 复制一个人：同样的引用 / 选择 / 状态差别，换新种子重建（读档时编号不会和原来的人撞）；B′ 人物拷贝完整数据换新编号。 */
   async copy(ownerKey: string, actorId: string, given?: string) {
     const source = await this.saved(ownerKey, actorId)

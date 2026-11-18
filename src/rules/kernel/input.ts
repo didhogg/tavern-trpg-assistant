@@ -47,6 +47,8 @@ export async function kernelInput(opts: {
   /** 战役的资料集（cn / en）：决定小窗的界面语言（登记表里这套官方数据的 lang）。不给 = 英文。 */
   codeSet?: string
   fetchImpl?: typeof fetch
+  /** 建卡专用小窗：本机私人文件夹（vendor/private/modules/<编号>/，不进 git）里有的模块用它（完整版），没有的照旧用插件自带的。 */
+  privateModules?: boolean
 }): Promise<KernelInput> {
   const fetchImpl = opts.fetchImpl ?? fetch
   const kernel = ruleKernel(opts.rule)
@@ -55,13 +57,22 @@ export async function kernelInput(opts: {
   const manifest = await readJson<VendorManifest>(opts.pluginRoot, 'manifest.json', fetchImpl)
   const systemId = manifest.system.split(' ')[0]
   const system = await readJson<unknown>(opts.pluginRoot, `systems/${systemId}/system.json`, fetchImpl)
-  const modules = await Promise.all(Object.keys(manifest.modules).map((id) => readJson<unknown>(opts.pluginRoot, `modules/${id}/module.json`, fetchImpl)))
+  const moduleRoots: Record<string, string> = {}
+  const modules = await Promise.all(Object.keys(manifest.modules).map(async (id) => {
+    const root = `../private/modules/${id}/`
+    const own = opts.privateModules ? await fetchImpl(new URL(`vendor/foundry/${root}module.json`, opts.pluginRoot)) : null
+    if (own?.ok) { moduleRoots[id] = root; return own.json() as Promise<unknown> }
+    return readJson<unknown>(opts.pluginRoot, `modules/${id}/module.json`, fetchImpl)
+  }))
   // 小窗的界面语言：这套资料集的语言有语言包就登记进清单（官方客户端缺的键回退英文），没有就和以前一样是英文
   const { language, packHash } = applyLangPack(opts.codeSet ? officialSourceOf(opts.codeSet).lang : 'en', await readLangPacks(opts.pluginRoot, fetchImpl), system, modules)
   const allSettings = { ...KERNEL_MODE_SETTINGS, ...settings }
   const frame = await (await fetchImpl(new URL('dist/kernel-frame.js', opts.pluginRoot))).text()
-  const cacheKey = hashValue({ release: manifest.release, system: manifest.system, modules: manifest.modules, settings: allSettings, rule: opts.rule, frame: sha256Hex(frame), lang: packHash })
+  // 换算缓存按小窗实际跑的模块版本算（私人完整版和自带公开版不混用缓存）
+  const versions = Object.fromEntries(modules.map((m) => [(m as { id: string }).id, (m as { version?: string }).version ?? '']))
+  const cacheKey = hashValue({ release: manifest.release, system: manifest.system, modules: Object.keys(moduleRoots).length ? versions : manifest.modules, settings: allSettings, rule: opts.rule, frame: sha256Hex(frame), lang: packHash })
   return {
+    ...(Object.keys(moduleRoots).length ? { moduleRoots } : {}),
     system, modules, release: manifest.release,
     world: opts.world,
     userId: 'kernelGM00000000', worldTime: 0, language,

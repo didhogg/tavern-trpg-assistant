@@ -7,6 +7,8 @@ export interface KernelInput {
   system: any
   /** 启用模块的 module.json 原文。 */
   modules: any[]
+  /** 模块编号 → 程序文件夹（相对 frame.html）：本机私人完整版在别处时登记在这里（input.ts），小窗按它取文件（module-roots.ts）。 */
+  moduleRoots?: Record<string, string>
   release: { generation: number; build: number; channel: string; node_version: number }
   world: { id: string; title: string }
   userId: string

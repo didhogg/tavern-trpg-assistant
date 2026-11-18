@@ -41,6 +41,7 @@ import { DownloadTasks } from '../library/tasks'
 import type { RuleRegistry } from '../rules/registry'
 import { KernelRuntime } from '../rules/kernel/runtime'
 import { KernelPeople } from '../rules/kernel/people'
+import { KernelNativeBuild } from '../rules/kernel/native-build'
 import { KernelPrecompute } from '../rules/kernel/precompute'
 import { kernelFilesVersion } from '../rules/kernel/cache'
 import { cardFields, cardTypes, type CardFields, type CardTypesResult } from '../rules/kernel/card-types'
@@ -255,17 +256,16 @@ export function createBackend(opts: BackendOptions): Backend {
 
   // 结算内核要知道本战役的规则与选书；内核存档写入要结算内核拆人物。两者互相用，经闭包接上。
   let kernelSave: KernelSaveService | null = null
-  const kernel = new KernelRuntime({
-    pluginRoot, files, scoped, service, revisions, container, cache: { db, dataVersion },
-    hasKernel: async (ownerKey) => !!(kernelSave && await kernelSave.read(ownerKey)),
-    campaignOf: async (ownerKey) => {
-      const ws = await opts.campaign.getWorkspace(ownerKey)
-      if (!ws) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
-      const bound = kernelSave ? await kernelSave.read(ownerKey) : null
-      if (!bound) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
-      return { rule: bound.rule, library: (await kernelSave!.libraryOf(ownerKey)) as CampaignLibrary, title: ws.ownerLabel }
-    },
-  })
+  const campaignOf = async (ownerKey: string) => {
+    const ws = await opts.campaign.getWorkspace(ownerKey)
+    if (!ws) throw new TrpgError('E_NO_WORKSPACE', '还没有当前战役')
+    const bound = kernelSave ? await kernelSave.read(ownerKey) : null
+    if (!bound) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
+    return { rule: bound.rule, library: (await kernelSave!.libraryOf(ownerKey)) as CampaignLibrary, title: ws.ownerLabel }
+  }
+  const kernel = new KernelRuntime({ pluginRoot, files, scoped, service, revisions, container, cache: { db, dataVersion }, campaignOf, hasKernel: async (ownerKey) => !!(kernelSave && await kernelSave.read(ownerKey)) })
+  // P6 第 2 段：建卡专用小窗（本机私人完整版作者建卡器），和日常小窗同一套战役输入
+  const native = new KernelNativeBuild({ pluginRoot, files, scoped, service, revisions, container, campaignOf })
   kernelSave = new KernelSaveService({
     db: opts.db, campaign: opts.campaign, rules: opts.rules, now: opts.now,
     checkRefs: scopedRefChecker(scoped),
@@ -390,6 +390,6 @@ export function createBackend(opts: BackendOptions): Backend {
   const houseExistingOf: Backend['houseExisting'] = (c, refs) => houseExisting({ houseNow: (cc, t) => custom.houseNow(cc, t), impact: entryChangeImpact }, c, refs)
   const types: Backend['cards']['types'] = (rule, codeSet) => cardTypes({ pluginRoot, files, scoped, db, revisions, container }, rule, codeSet)
   const cards: Backend['cards'] = { types, fields: (rule, type, codeSet) => cardFields({ types, fields: (cs, p) => custom.fields(cs, p), plan: (cs, p) => custom.formPlan(cs, p) }, rule, type, codeSet) }
-  const people = new KernelPeople({ runtime: kernel, saves: kernelSave })
+  const people = new KernelPeople({ runtime: kernel, saves: kernelSave, native })
   return { library, texts: service.texts, kernel, kernelSave, people, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
 }

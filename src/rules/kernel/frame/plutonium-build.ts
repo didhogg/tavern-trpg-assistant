@@ -37,7 +37,8 @@ export async function loadKernelModule(url: URL): Promise<void> {
   if (!response.ok) throw Error(`读取 Plutonium 失败：${response.status}`)
   const text = await response.text()
   if (sha256Hex(text) !== BUNDLE_SHA) {
-    await import(/* @vite-ignore */ url.href)
+    // 别的版本（例如本机私人完整版，module-roots.ts 改道过）：按实际取到的地址原样加载，不附加出口
+    await import(/* @vite-ignore */ response.url || url.href)
     return
   }
   // 临时模块没有脚本原来的相对目录。此版本唯一的相对 import 是作者的编辑器，

@@ -16,6 +16,7 @@ import { createOptionsCommands } from './commands-options'
 import { createEquipmentCommands } from './commands-equipment'
 import { createSheetCommands } from './commands-sheet'
 import { createImportCommands } from './commands-import'
+import { createNativeCommands } from './commands-native'
 import { settled } from './server'
 
 /**
@@ -146,6 +147,8 @@ const OPTIONS_COMMANDS = createOptionsCommands(operate)
 const EQUIPMENT_COMMANDS = createEquipmentCommands(operate)
 /** P6 建卡走作者整机（Plutonium「导入到人物」）。 */
 const IMPORT_COMMANDS = createImportCommands(operate)
+/** P6 第 2 段：建卡专用小窗跑作者完整建卡器。 */
+const NATIVE_COMMANDS = createNativeCommands(operate)
 
 // ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
 const AUTHOR_CLASSES = ['Config', 'ConfigConsts', 'VetoolsLinks', 'Vetools', 'SideDataInterfaces', 'Dnd5eUtil', 'UtilDamageTypes', 'ImplementationRegistryImportList',
@@ -179,6 +182,7 @@ const NO_MESSAGE = { create: false }
 
 export const KERNEL_COMMANDS = {
   ...IMPORT_COMMANDS,
+  ...NATIVE_COMMANDS,
   ...ITEM_COMMANDS,
   ...COMBAT_COMMANDS,
   ...MONSTER_COMMANDS,
