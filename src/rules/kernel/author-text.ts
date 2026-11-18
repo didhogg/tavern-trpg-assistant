@@ -1,39 +1,39 @@
-// 作者代码产出的显示文字，统一到本战役的作者小窗（中文战役 = 中文作者代码，英文战役 = 英文）取：
-//   按编号：作者 Parser 的「编号 → 名字」表（小窗 valueLabels，和 P5.5 字段下拉同一个出口），例 币种 gp → 金币；
-//   按位置：结算小窗在英文作者代码里找出的位置（frame/author-text.ts），小窗同一位置取文字，例 语言分组说明；
-//   按原始数据渲染：作者自己的渲染函数（本战役语言的作者代码），例 前置条件。
-// 取不到就原样显示，不写对照表。
+// 统一取字入口：显示出口一批提交所有出处；这里隐藏两个小窗的调用及静态配置缓存。
+// 作者配置仍由原有 valueLabels 自动识别；不登记种族、职业、熟练或装备的中文表。
 import type { LibraryService } from '../../library/service'
+import type { TextQuery } from '../../library/runtime/text-query'
+export type { TextQuery }
 
-export interface AuthorText {
-  /** 一组编号 → 名字；作者没有覆盖这组编号的表 → 空表（调用方显示编号）。 */
-  labels(values: string[], kind?: 'category'): Promise<Record<string, string>>
-  /** 一组位置 → 文字；取不到的给 null。 */
-  at(paths: string[][]): Promise<Array<string | null>>
-  /** 一组原始前置条件（作者数据 prerequisite）→ 作者渲染的一句话；没有 / 渲染不出 → null。 */
-  requirements(raws: unknown[]): Promise<Array<string | null>>
-}
+export interface AuthorText { resolve(requests: TextQuery[]): Promise<Array<string | null>> }
+const cache = new Map<string, string | null>()
 
-/** 作者代码里的文字一次会话里不变：按「代码语言 + 位置」记住，建卡每次刷新不用再问小窗。 */
-const atCache = new Map<string, string | null>()
-
-export function authorTextFor(service: Pick<LibraryService, 'frameOf'>, codeSet: string): AuthorText {
-  const frame = () => service.frameOf(codeSet)
-  const keyOf = (path: string[]) => `${codeSet}\u0000${path.join('\u0000')}`
-  return {
-    labels: async (values, kind) => (values.length ? ((await (await frame()).call('valueLabels', [values], kind))[0] ?? {}) : {}),
-    at: async (paths) => {
-      const missing = paths.filter((p) => !atCache.has(keyOf(p)))
-      if (missing.length) { const got = await (await frame()).call('authorAt', missing); missing.forEach((p, i) => atCache.set(keyOf(p), got[i] ?? null)) }
-      return paths.map((p) => atCache.get(keyOf(p)) ?? null)
-    },
-    requirements: async (raws) => {
-      const live = raws.map((r, i) => [r, i] as const).filter(([r]) => Array.isArray(r) && r.length)
-      if (!live.length) return raws.map(() => null)
-      const got: Array<string | null> = await (await frame()).call('prerequisiteText', live.map(([r]) => r))
-      const out: Array<string | null> = raws.map(() => null)
-      live.forEach(([, i], n) => { out[i] = got[n] || null })
-      return out
-    },
-  }
+export function authorTextFor(service: Pick<LibraryService, 'frameOf'>, codeSet: string,
+  system: (keys: string[]) => Promise<Array<string | null>> = async keys => keys.map(() => null)) {
+  const reader: AuthorText = { resolve: async requests => {
+    const out: Array<string | null> = requests.map(() => null)
+    const local = requests.map((q, i) => ({ q, i })).filter((row): row is { q: Extract<TextQuery, { source: 'system' }>; i: number } => row.q.source === 'system')
+    if (local.length) { const got = await system(local.map(({ q }) => q.key)); local.forEach(({ i }, n) => { out[i] = got[n] ?? null }) }
+    const pending = new Map<string, { q: Exclude<TextQuery, { source: 'system' }>; positions: number[] }>()
+    requests.forEach((q, i) => {
+      if (q.source === 'system') return
+      const key = `${codeSet}\u0000${JSON.stringify(q)}`
+      if (q.source !== 'requirement' && cache.has(key)) { out[i] = cache.get(key)!; return }
+      const row = pending.get(key) ?? { q, positions: [] }; row.positions.push(i); pending.set(key, row)
+    })
+    if (pending.size) {
+      const rows = [...pending]
+      const got: Array<string | null> = await (await service.frameOf(codeSet)).call('authorTexts', rows.map(([, row]) => row.q))
+      rows.forEach(([key, { q, positions }], n) => {
+        const text = got[n] ?? null
+        if (q.source !== 'requirement') cache.set(key, text)
+        positions.forEach(i => { out[i] = text })
+      })
+    }
+    return out
+  } }
+  // 已有库分类名调用的兼容方法；同样经过唯一批量命令，不另接通道。
+  return { ...reader, labels: async (values: string[], kind?: 'category'): Promise<Record<string, string>> => {
+    const got = await reader.resolve(values.map(key => ({ source: 'value', key, group: values, ...(kind ? { kind } : {}) })))
+    return Object.fromEntries(values.flatMap((key, i) => got[i] ? [[key, got[i]!]] : []))
+  } }
 }

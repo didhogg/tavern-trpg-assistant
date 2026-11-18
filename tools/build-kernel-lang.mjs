@@ -15,6 +15,7 @@ import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { choose, loadTerms } from './lib/terms.mjs'
+import { upstreamMessages } from './lib/upstream-messages.mjs'
 import { communityDir, loadCommunity } from './lib/community-langs.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -75,15 +76,16 @@ async function equipmentLabels(pkg) {
   return rows.map(([, text, code]) => ({ key: `TRPGAssistant.EquipmentType.${code}`, text, isEquipment: true }))
 }
 
+const upstream = await upstreamMessages(foundry)
 const files = []
-const review = { generatedFrom: version, community: communityFrom, communityDir, lang: LANG, packs: [] }
+const review = { generatedFrom: version, community: communityFrom, communityDir, lang: LANG, packs: [], upstreamMessages: [] }
 for (const pkg of packages) {
   const pkgManifest = JSON.parse(await readFile(join(foundry, pkg.dir, pkg.file), 'utf8'))
   const en = (pkgManifest.languages ?? []).find((l) => l.lang === 'en')
   if (!en) continue
   const source = JSON.parse(await readFile(join(foundry, pkg.dir, en.path), 'utf8'))
   const list = leaves(source)
-  if (pkg.id === 'plutonium') list.push(...await equipmentLabels(pkg))
+  if (pkg.id === 'plutonium') list.push(...await equipmentLabels(pkg), ...upstream)
   const cats = groupCategories(list)
   const flat = {}
   const conflicts = []
@@ -109,6 +111,7 @@ for (const pkg of packages) {
     if (picked?.label) flat[key] = picked.label
     else conflicts.push({ key, en: text, candidates: picked?.candidates.map((x) => ({ zh: x.zh, category: x.category })) ?? [] })
   }
+  if (pkg.id === 'plutonium') review.upstreamMessages = upstream.map(row => ({ ...row, origins: row.origins.slice(0, 3), translation: flat[row.key] ?? null }))
   const zhPath = en.path.replace(/en\.json$/, `${LANG}.json`)
   review.packs.push({ package: `${pkg.type}:${pkg.id}`, total: list.length, translated: Object.keys(flat).length, fromCommunity, conflicts: conflicts.length, groupsWithCategory: cats.size, conflictList: conflicts.slice(0, 300), differsFromTerms: differs.length, differsList: differs })
   if (!Object.keys(flat).length) continue

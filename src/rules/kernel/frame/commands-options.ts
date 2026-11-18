@@ -2,6 +2,7 @@
 // 不写新规则：候选都来自 dnd5e 官方进阶的接口（Trait.unfulfilledChoices、进阶 configuration）；写法登记表——加一种进阶 = 加一行；
 // 要玩家选、又没登记的进阶标 unsupported，绝不漏掉还说「选完了」（整体设计 §3.4 / §3.5）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
+import { systemText, generatedText } from './system-text'
 import type { ExtraPools } from '../build-options'
 import { describeBuildExtras } from './build-extras'
 import type { Operate } from './commands-items'
@@ -15,23 +16,24 @@ import { authorTextPath } from './author-text'
 import type { BuildPick } from './commands-level'
 import type { ExpertiseViews, TraitPlans } from './build-traits'
 import type { KernelRefFlags } from '../../../core/saves/split'
-import { fromAuthor, fromEntry, joined, named, sys, type FrameText } from '../shown'
+import { fromAuthor, fromEntry, joined, named, type FrameText } from '../shown'
 
 /** 一个候选：显示名是 dnd5e 语言包的字；带作者编号的，主线按编号取本战役库里的名字（author 留着给主线补 ref）。 */
 export type Option = { value: string; label: FrameText; path: FrameText[]; author?: KernelRefFlags }
+type NativeOption = Omit<Option, 'label'> & { label: string }
 /** 小窗交回的一步（显示文字全是 FrameText，主线经显示出口换成品）。 */
 export interface FrameStep { id: string; level: number | null; type: string; title: FrameText | null; hint?: FrameText; automatic: boolean; options: Record<string, unknown> | null; unsupported?: true }
 /** dnd5e 的候选树（SelectChoices：类别 → 子类别 → 候选）→ 平铺候选，每项带所在分组路径（从外到里，分组名是 dnd5e 自己的类别名）。 */
-const flatChoices = (choices: any, path: FrameText[] = []): Option[] => Object.entries(choices ?? {}).flatMap(([value, data]: [string, any]) => data?.children
-  ? flatChoices(data.children, [...path, sys(String(data.label ?? value))])
-  : [{ value, label: sys(String(data?.label ?? value)), path }])
+const flatChoices = (choices: any, path: FrameText[] = []): NativeOption[] => Object.entries(choices ?? {}).flatMap(([value, data]: [string, any]) => data?.children
+  ? flatChoices(data.children, [...path, systemText(String(data.label ?? value))])
+  : [{ value, label: String(data?.label ?? value), path }])
 
 /** 进阶类型 → 「这一步要玩家选什么」。返回 null = 这一步不用玩家选。pick = 玩家这一步已做的选择（界面交来的原样）。 */
 const DESCRIBERS: Record<string, (advancement: any, pick: unknown, plans: TraitPlans) => Promise<Record<string, unknown> | null>> = {
   Trait: async (advancement, _pick, plans) => {
     const { available } = await advancement.unfulfilledChoices()
     const grants = available.filter((slot: any) => slot.type === 'grant').flatMap((slot: any) => flatChoices(slot.choices))
-    const slots = new Map<number, { count: number; options: Option[] }>()
+    const slots = new Map<number, { count: number; options: NativeOption[] }>()
     for (const slot of available.filter((s: any) => s.type === 'choice')) {
       const cur = slots.get(slot.choiceIdx) ?? { count: 0, options: flatChoices(slot.choices) }
       cur.count++
@@ -39,12 +41,17 @@ const DESCRIBERS: Record<string, (advancement: any, pick: unknown, plans: TraitP
     }
     // 熟练类型：进阶配置里没写 type 时，取候选键的前缀（官方键形如 skills:acr、languages:standard:common）
     const sample = grants[0]?.value ?? [...slots.values()][0]?.options[0]?.value
-    const variants = plans.get(advancement.id)
+    const meta = plans.get(advancement.id)
+    const variants = meta?.choices.length ? meta.choices : undefined
     if (!slots.size && !variants) return null
     // 每项带上作者编号（主线按它起名，naming.ts）；不起名
     const shown = [...slots.values()]
     const ids = await authorIdsOf([...grants, ...shown.flatMap((s) => s.options)].map((o) => o.value))
-    const withId = (o: Option): Option => (ids[o.value] ? { ...o, label: named((o.label as { text: string }).text, ids[o.value]), author: ids[o.value] } : o)
+    const withId = (o: NativeOption): Option => {
+      const label = meta?.names.get(o.value) ?? (ids[o.value] ? named(o.label, ids[o.value], true) : systemText(o.label))
+      const refs = label.$t === 'name' ? label.ids : []
+      return { ...o, label, ...(refs.length === 1 ? { author: refs[0] } : {}) }
+    }
     return { kind: 'trait', trait: advancement.configuration?.type ?? sample?.split(':')[0] ?? null, grants: grants.map(withId), slots: shown.map((s) => ({ ...s, options: s.options.map(withId) })), ...(variants ? { plans: variants } : {}) }
   },
   AbilityScoreImprovement: async (advancement, pick) => asiView(advancement, pick as AsiChoice | undefined),
@@ -69,7 +76,7 @@ async function describeSteps(manager: any, picks: BuildPick[] = [], plans: Trait
     const own = type === 'Trait' ? traitTitle(advancement) : null
     const written = advancement._source?.name || advancement._source?.title
     const shownName = advancement.name ?? advancement.title
-    const title = own ? sys(own) : written ? fromEntry(String(written)) : shownName ? sys(String(shownName)) : null
+    const title = own ? systemText(own) : written ? fromEntry(String(written), generatedText(String(written))) : shownName ? systemText(String(shownName)) : null
     // 说明：Plutonium 用作者代码里写死的句子拼的，每句按作者代码同位置取
     const hint = type === 'Trait' && advancement.hint ? joined(String(advancement.hint).split('\n').map((text) => fromAuthor(text, authorTextPath(text))), '\n') : undefined
     out.push({ id: advancement.id, level: step.flow.level ?? null, type, title, ...(hint ? { hint } : {}), automatic, options, ...(unsupported ? { unsupported: true as const } : {}) })
@@ -94,7 +101,7 @@ export function createOptionsCommands(operate: Operate) {
         const extras = plan.extraPools && Object.keys(plan.extraPools).length ? await describeBuildExtras(plan.items, plan.extraPools, actor, plan.local ?? {}) : []
         const byKey = new Map(described.map(row => [row.refKey, row]))
         const views = extras.length ? extras.map(row => ({ steps: [], unsupported: [], ...byKey.get(row.refKey), ...row })) : described
-        return { items: views, complete: !built.pending && !built.missingTraits.length, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null, labels: Object.fromEntries(Object.entries(registryLabels('abilities')).map(([k, v]) => [k, sys(v)])) } }
+        return { items: views, complete: !built.pending && !built.missingTraits.length, abilities: { initial: built.initial, auto: abilityValues(actor), cap: (globalThis as any).CONFIG?.DND5E?.maxAbilityScore ?? null, labels: Object.fromEntries(Object.entries(registryLabels('abilities')).map(([k, v]) => [k, systemText(v)])) } }
       } finally { await (built.actor ?? built.created)?.delete?.() }
     }),
   }

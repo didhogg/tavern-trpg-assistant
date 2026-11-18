@@ -48,7 +48,7 @@ describe('同编号配对', () => {
   })
   it('交给显示出口：补充文件里的数值行标题换成中文', async () => {
     const pairs = sidecarPairsOf(sideEn, sideZh, { en: monkEn, zh: monkZh })
-    const author = { labels: async () => ({}), at: async (p: string[][]) => p.map(() => null), requirements: async (r: unknown[]) => r.map(() => null) }
+    const author = { resolve: async (requests: unknown[]) => requests.map(() => null) }
     const out = await display({ steps: [{ type: 'ScaleValue', title: fromEntry('Martial Arts Die') }] }, { translate: true, pairs, namer: async () => null, author })
     expect(out.value.steps[0].title).toBe('武艺骰')
   })

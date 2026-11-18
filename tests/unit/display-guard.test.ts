@@ -16,8 +16,18 @@ describe('显示出口守卫', () => {
     const bad = all.filter((f) => f.path !== 'rules/kernel/display.ts' && /as\s+Shown\b|<Shown>/.test(f.text)).map((f) => f.path)
     expect(bad).toEqual([])
   })
+  it('语言包身份只由读取实际字典的入口产生', () => {
+    const bad = all.filter(f => f.path !== 'rules/kernel/frame/system-text.ts' && /\{\s*\$t:\s*['"]system['"]\s*,/.test(f.text)).map(f => f.path)
+    expect(bad).toEqual([])
+  })
   it('结算小窗的代码不引用显示出口（小窗只标来路）', () => {
     const bad = all.filter((f) => f.path.startsWith('rules/kernel/frame/') && /from ['"]\.\.\/display['"]/.test(f.text)).map((f) => f.path)
+    expect(bad).toEqual([])
+  })
+  it('建卡显示不能另接作者专用命令，批量入口只在统一取字模块调用', () => {
+    const kernel = all.filter(f => f.path.startsWith('rules/kernel/'))
+    const bad = kernel.filter(f => /\.call\(['"](?:authorAt|valueLabels|prerequisiteText|proficiencyTexts)['"]/.test(f.text)
+      || (f.path !== 'rules/kernel/author-text.ts' && /\.call\(['"]authorTexts['"]/.test(f.text))).map(f => f.path)
     expect(bad).toEqual([])
   })
 })

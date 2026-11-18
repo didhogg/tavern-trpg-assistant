@@ -8,7 +8,7 @@ import { authorTextFor } from './author-text'
 import { kernelEntryOf } from './entry'
 import type { KernelSession } from './host'
 import { namerFor } from './naming'
-import { display } from './display'
+import { display, type DisplayIssue } from './display'
 import { fromLibrary, plugin, requirementOf, type Displayed, type FrameText } from './shown'
 import type { FrameStep } from './frame/commands-options'
 import { kernelDataSource } from '../../library/sources'
@@ -22,7 +22,7 @@ interface FrameItem { ref: EntryRef; name: FrameText | null; steps: FrameStep[];
 /** 给界面的一件条目：文字都是过了显示出口的 Shown。 */
 export type BuildOptionsItem = Displayed<FrameItem>
 /** untranslated：显示出口没取到本战役语言、显示了原文的文字（语言审计按它数）。 */
-export interface BuildOptionsResult { status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean; abilities?: AbilityView; extraIssue?: string | null; untranslated?: string[] }
+export interface BuildOptionsResult { status: string; error?: string; detail?: unknown; items?: BuildOptionsItem[]; complete?: boolean; abilities?: AbilityView; extraIssue?: string | null; untranslated?: string[]; displayIssues?: DisplayIssue[] }
 type EntryRow = { ref: EntryRef; entry: unknown; zh: unknown | null; name: string | null }
 type FrameRow = Partial<FrameExtras> & { refKey: string; steps: FrameStep[]; unsupported: FrameText[] }
 type FrameAbilities = { initial: Record<string, number>; auto: Record<string, number>; cap: number | null; labels: Record<string, FrameText> }
@@ -103,12 +103,12 @@ export async function resolveBuildOptions(deps: {
     translate: library.codeSet !== kernelDataSource().codeSet,
     pairs: await deps.pairsOf(rows),
     namer: await namerFor(scoped, library),
-    author: authorTextFor(deps.service, library.codeSet),
+    author: authorTextFor(deps.service, library.codeSet, async keys => (await deps.session.call('displaySystemTexts', keys)).result),
     requirementOf: key => prerequisites.get(key),
   })
   const resultItems = shown.value.items
   // 只有「选错」拦创建；没选完、这一组还选不了（已列在 unsupported）都留空照样能建
   const check = checkBuildExtras(resultItems.flatMap(row => row.extras), plan.items)
   const complete = out.result.complete && !check.wrong && !check.missing && !extraBlocked.length
-  return { status: 'complete', items: resultItems, complete, abilities: abilityView(shown.value.abilities, plan.abilities), extraIssue: check.wrong, ...(shown.missed.length ? { untranslated: shown.missed } : {}) }
+  return { status: 'complete', items: resultItems, complete, abilities: abilityView(shown.value.abilities, plan.abilities), extraIssue: check.wrong, ...(shown.missed.length ? { untranslated: shown.missed, displayIssues: shown.issues } : {}) }
 }

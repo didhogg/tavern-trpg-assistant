@@ -1,92 +1,109 @@
-// 显示出口（建卡选项、起始装备交给界面之前必须经过这里，一处）：小窗交回的结果里每段 FrameText（shown.ts）
-// 按它的来路接现有出口换成本战役语言的成品 Shown；其余数据原样。界面拿到的结果类型是 Displayed<…>，
-// 文字字段只能是 Shown —— 只有本文件能做出 Shown（守卫测试 display-guard 查这一点）。
-// 取不到（位置不唯一、库里没有、作者代码没有这段）就显示原文，记进 missed，语言审计按它数，不悄悄放行。
+// 建卡和起始装备的唯一显示出口。身份与语言键均在这里核对；失败保留原文和诊断依据。
 import type { KernelRefFlags } from '../../core/saves/split'
-import type { AuthorText } from './author-text'
+import type { AuthorText, TextQuery } from './author-text'
 import { zhAt, type EntryPair } from './locale'
 import type { Namer } from './naming'
 import { isFrameText, type Displayed, type FrameText, type Shown } from './shown'
 
 export interface DisplayContext {
-  /** 本战役语言和小窗出字的语言不同（中文战役）= 条目原文、作者代码文字要换。 */
   translate: boolean
-  /** 同编号条目的英文 / 本战役语言两份（条目原文按位置换）。 */
   pairs: EntryPair[]
   namer: Namer
   author: AuthorText
-  /** 候选编号 → 本战役库里生效的那一条的原始前置条件（没有 = undefined）。 */
   requirementOf?: (key: string) => unknown
 }
-export interface DisplayResult<T> { value: Displayed<T>; missed: string[] }
+export interface DisplayIssue {
+  text: string
+  kind: FrameText['$t']
+  reason: 'language-key-missing' | 'reference-unavailable' | 'ambiguous-name' | 'entry-position-unresolved' | 'author-position-unresolved' | 'author-rule-unresolved' | 'requirement-unavailable'
+  path: string
+  key?: string
+  ids?: KernelRefFlags[]
+}
+export interface DisplayResult<T> { value: Displayed<T>; missed: string[]; issues: DisplayIssue[] }
+type Resolution = { text: string | null; reason: DisplayIssue['reason'] }
 
 const isId = (v: unknown): v is KernelRefFlags => !!v && typeof v === 'object' && typeof (v as KernelRefFlags).hash === 'string'
 const mint = (s: string): Shown => s as Shown
-
-/** 条目原文：所有同编号条目里按位置找，几份给出同一个译文才算（和原 localizeAll 同一规则）。 */
 function entryText(text: string, pairs: EntryPair[]): string | null {
-  const got = new Set(pairs.filter((p) => p.zh !== null && p.zh !== undefined).map((p) => zhAt(p.en, p.zh, text)).filter((x): x is string => !!x))
+  const got = new Set(pairs.filter(p => p.zh != null).map(p => zhAt(p.en, p.zh, text)).filter((x): x is string => !!x))
   return got.size === 1 ? [...got][0] : null
 }
 
 export async function display<T>(value: T, ctx: DisplayContext): Promise<DisplayResult<T>> {
-  const leaves: FrameText[] = []
-  const collect = (node: unknown): void => {
-    if (Array.isArray(node)) { node.forEach(collect); return }
+  const paths = new Map<FrameText, string>()
+  const collect = (node: unknown, path = ''): void => {
+    if (Array.isArray(node)) { node.forEach((v, i) => collect(v, `${path}[${i}]`)); return }
     if (!node || typeof node !== 'object') return
     if (isFrameText(node)) {
-      leaves.push(node)
-      if (node.$t === 'plugin') node.args?.forEach(collect)
-      if (node.$t === 'join') node.parts.forEach(collect)
+      paths.set(node, path)
+      if (node.$t === 'plugin') node.args?.forEach((v, i) => collect(v, `${path}.args[${i}]`))
+      if (node.$t === 'join') node.parts.forEach((v, i) => collect(v, `${path}.parts[${i}]`))
+      if ((node.$t === 'entry' || node.$t === 'value') && node.fallback) collect(node.fallback, `${path}.fallback`)
       return
     }
-    Object.values(node).forEach(collect)
+    Object.entries(node).filter(([key]) => key !== 'raw' && key !== 'author').forEach(([key, v]) => collect(v, path ? `${path}.${key}` : key))
   }
   collect(value)
-
-  // 批量取：作者代码位置、前置条件、名字
-  const authorLeaves = leaves.filter((l): l is Extract<FrameText, { $t: 'author' }> => l.$t === 'author' && !!l.at && ctx.translate)
-  const authorGot = await ctx.author.at(authorLeaves.map((l) => l.at!))
-  const reqLeaves = leaves.filter((l): l is Extract<FrameText, { $t: 'requirement' }> => l.$t === 'requirement')
-  const reqRaw = reqLeaves.map((l) => ctx.requirementOf?.(l.key))
-  const reqGot = await ctx.author.requirements(reqRaw)
-  const nameLeaves = leaves.filter((l): l is Extract<FrameText, { $t: 'name' }> => l.$t === 'name')
-  const nameGot = await Promise.all(nameLeaves.map((l) => ctx.namer(l.id)))
-
-  const missed: string[] = []
-  const resolved = new Map<FrameText, string>()
-  const miss = (text: string): string => { missed.push(text); return text }
-  authorLeaves.forEach((l, i) => resolved.set(l, authorGot[i] ?? miss(l.text)))
-  reqLeaves.forEach((l, i) => resolved.set(l, reqGot[i] ?? miss(`前置条件（${l.key}）`)))
-  nameLeaves.forEach((l, i) => resolved.set(l, nameGot[i]?.label || (l.strict && ctx.translate ? miss(l.text) : l.text)))
-  const textOf = (l: FrameText): string => {
-    const done = resolved.get(l)
-    if (done !== undefined) return done
+  const leaves = [...paths.keys()]
+  const resolved = new Map<FrameText, Resolution>()
+  // 自动从完整结果收集请求；一个出口、一次提交，与条目种类无关。
+  const queryOf = (l: FrameText): { query: TextQuery; reason: DisplayIssue['reason'] } | null => {
     switch (l.$t) {
-      case 'system': case 'library': case 'data': return l.text
-      case 'entry': return ctx.translate ? entryText(l.text, ctx.pairs) ?? miss(l.text) : l.text
-      case 'author': return ctx.translate ? miss(l.text) : l.text // 没有位置：作者代码里找不到这段
-      case 'plugin': return l.text.replace(/\{(\d+)\}/g, (_, i: string) => (l.args?.[Number(i)] ? textOf(l.args[Number(i)]) : ''))
-      case 'join': return l.parts.map(textOf).filter(Boolean).join(l.sep)
-      default: return ''
+      case 'system': return { query: { source: 'system', key: l.key }, reason: 'language-key-missing' }
+      case 'author': return ctx.translate && l.at ? { query: { source: 'author', path: l.at }, reason: 'author-position-unresolved' } : null
+      case 'value': return { query: { source: 'value', key: l.text, group: l.group }, reason: 'author-rule-unresolved' }
+      case 'proficiency': return { query: { source: 'proficiency', key: l.key, count: l.count }, reason: 'author-rule-unresolved' }
+      case 'requirement': return { query: { source: 'requirement', raw: ctx.requirementOf?.(l.key) }, reason: 'requirement-unavailable' }
+      default: return null
     }
   }
+  const pending = leaves.flatMap(l => { const query = queryOf(l); return query ? [{ leaf: l, ...query }] : [] })
+  const got = pending.length ? await ctx.author.resolve(pending.map(row => row.query)) : []
+  pending.forEach((row, i) => resolved.set(row.leaf, { text: got[i] ?? null, reason: row.reason }))
+  const names = leaves.filter((l): l is Extract<FrameText, { $t: 'name' }> => l.$t === 'name')
+  const nameGot = await Promise.all(names.map(l => Promise.all(l.ids.map(id => ctx.namer(id)))))
+  names.forEach((l, i) => {
+    const labels = new Set(nameGot[i].map(hit => hit?.label).filter(Boolean))
+    const complete = nameGot[i].length > 0 && nameGot[i].every(hit => !!hit?.label)
+    resolved.set(l, { text: complete && labels.size === 1 ? [...labels][0]! : null, reason: labels.size > 1 ? 'ambiguous-name' : 'reference-unavailable' })
+  })
 
-  // 换成品：FrameText → Shown；带作者编号（author 字段）的节点补上库里的 ref（原 nameAll 的另一半）
-  const refs = new Map<KernelRefFlags, Awaited<ReturnType<Namer>>>()
-  nameLeaves.forEach((l, i) => refs.set(l.id, nameGot[i]))
+  const issues: DisplayIssue[] = []
+  const miss = (l: FrameText, reason: DisplayIssue['reason']): string => {
+    const text = l.$t === 'requirement' ? `前置条件（${l.key}）` : 'text' in l ? l.text : ''
+    issues.push({ text, kind: l.$t, reason, path: paths.get(l) ?? '', ...('key' in l ? { key: l.key } : {}), ...(l.$t === 'name' ? { ids: l.ids } : {}) })
+    return text
+  }
+  const textOf = (l: FrameText): string => {
+    const done = resolved.get(l)
+    if (done?.text != null) return done.text
+    switch (l.$t) {
+      case 'library': case 'data': return l.text
+      case 'entry': return ctx.translate ? entryText(l.text, ctx.pairs) ?? (l.fallback ? textOf(l.fallback) : miss(l, 'entry-position-unresolved')) : l.text
+      case 'author': return ctx.translate ? miss(l, 'author-position-unresolved') : l.text
+      case 'name': return ctx.translate && l.strict ? miss(l, done!.reason) : l.text
+      case 'system': return ctx.translate ? miss(l, 'language-key-missing') : l.text
+      case 'proficiency': return miss(l, 'author-rule-unresolved')
+      case 'value': return l.fallback ? textOf(l.fallback) : miss(l, 'author-rule-unresolved')
+      case 'requirement': return miss(l, 'requirement-unavailable')
+      case 'plugin': return l.text.replace(/\{(\d+)\}/g, (_, i: string) => l.args?.[Number(i)] ? textOf(l.args[Number(i)]) : '')
+      case 'join': return l.parts.map(textOf).filter(Boolean).join(l.sep)
+    }
+  }
   const rebuild = async (node: unknown): Promise<unknown> => {
     if (Array.isArray(node)) return Promise.all(node.map(rebuild))
     if (!node || typeof node !== 'object') return node
     if (isFrameText(node)) return mint(textOf(node))
     const src = node as Record<string, unknown>
     const out: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(src)) out[k] = k === 'author' || k === 'raw' ? v : await rebuild(v)
+    for (const [key, v] of Object.entries(src)) out[key] = key === 'author' || key === 'raw' ? v : await rebuild(v)
     if (isId(src.author)) {
-      const hit = refs.has(src.author) ? refs.get(src.author) : await ctx.namer(src.author)
+      const hit = await ctx.namer(src.author)
       if (hit) out.ref = hit.ref
     }
     return out
   }
-  return { value: await rebuild(value) as Displayed<T>, missed: [...new Set(missed)] }
+  const shown = await rebuild(value) as Displayed<T>
+  return { value: shown, missed: [...new Set(issues.map(i => i.text))], issues: [...new Map(issues.map(i => [JSON.stringify(i), i])).values()] }
 }

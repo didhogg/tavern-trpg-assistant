@@ -6,24 +6,30 @@
 //   另记显示出口自己报的「没翻到」（结果里的 untranslated），按出现位置汇总。
 // 这是验收工具：改前跑一遍出清单，改后再跑对比。不改仓库任何数据，不设通过 / 失败（退出码 0），结果写 work/e2e-lib/p6-lang-audit-<内核>.json。
 // 用法：ENGINE=chrome|webkit node tests/e2e/library/p6-lang-audit.mjs   （SKIP_BUILD=1 跳过构建；AUDIT_SOURCES=PHB,XPHB 改范围；AUDIT_LIMIT=每类最多条数，默认不限）
-import { writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { startStatic } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase, work } from './chain-common.mjs'
 
-if (!process.env.SKIP_BUILD) await buildAll()
+const dist = process.env.P6_TEST_DIST
+if (!dist && !process.env.SKIP_BUILD) await buildAll()
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
 const sources = (process.env.AUDIT_SOURCES ?? 'PHB,XPHB').split(',')
 const limit = Number(process.env.AUDIT_LIMIT ?? 0)
 const { server, url } = await startStatic({ port: E2E_PORT })
 const profile = freshFromBase(engineName, 'p6-langaudit')
-const killer = setTimeout(() => { console.error('超时 9 分钟'); process.exit(2) }, 9 * 60_000)
+const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, 8 * 60_000)
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
-const page = await ctx.newPage(); page.setDefaultTimeout(9 * 60_000)
+const page = await ctx.newPage(); page.setDefaultTimeout(8 * 60_000)
 page.on('pageerror', (e) => console.error('pageerror', String(e.message ?? e).slice(0, 200)))
 page.on('console', (m) => { if (m.text().startsWith('[audit]')) console.log(m.text()) })
 const started = Date.now()
 try {
+  if (dist) await ctx.route(u => u.href.startsWith(url) && (/^\/dist\//.test(u.pathname) || u.pathname.endsWith('/harness.js')), async route => {
+    const path = new URL(route.request().url()).pathname
+    await route.fulfill({ body: await readFile(join(dist, path.startsWith('/dist/') ? path.slice(6) : 'harness.js')), contentType: 'application/javascript' })
+  })
   await page.goto(url)
   const result = await page.evaluate(async ({ sources, limit }) => {
     const h = await import('/work/e2e-lib/harness.js')
@@ -63,6 +69,7 @@ try {
       }
     }
 
+    const requirementRefs = new Map()
     const stats = { built: 0, requirements: 0, buildFailed: [], optionsFailed: [], startingFailed: [], previewFailed: [] }
     const rowsOf = async (prop) => (await h.scoped.query(library, prop, { expand: true })).filter((r) => sources.includes(r.item?.source))
     const props = ['race', 'background', 'class', 'feat']
@@ -95,12 +102,15 @@ try {
               if (english(x.title)) note(x.title, `建卡选项:额外选择组名(${x.kind})`, entry)
               for (const c of x.candidates ?? []) {
                 if (english(c.name)) note(c.name, `建卡选项:额外选择候选名(${x.kind})`, entry)
-                if (english(c.requirement)) note(c.requirement, `建卡选项:前置条件(${x.kind})`, entry)
+                if (english(c.requirement)) {
+                  note(c.requirement, `建卡选项:前置条件(${x.kind})`, entry)
+                  requirementRefs.set(JSON.stringify(c.ref), { ref: c.ref, rendered: c.requirement })
+                }
               }
             }
             for (const u of it.unsupported ?? []) if (english(u)) note(u, '建卡选项:暂未支持 / 请核对提示', entry)
           }
-          for (const t of o.untranslated ?? []) note(t, '显示出口:没翻到(建卡选项)', entry)
+          for (const issue of o.displayIssues ?? []) note(issue.text, `显示出口:${issue.reason}(${issue.kind}:${issue.key ?? issue.path})`, entry)
         }
         const o = await people.buildOptions(owner, { items: [row.ref], blank: true }).catch((e) => ({ status: 'throw', error: String(e) }))
         if (o.status === 'complete') {
@@ -117,26 +127,36 @@ try {
           const sx = await people.startingEquipment(owner, { items: [row.ref] }).catch((e) => ({ status: 'throw', error: String(e) }))
           if (sx.status === 'complete') {
             for (const sec of sx.sections ?? []) walk(sec.groups, 'groups', '起始装备选项', entry)
-            for (const t of sx.untranslated ?? []) note(t, '显示出口:没翻到(起始装备)', entry)
+            for (const issue of sx.displayIssues ?? []) note(issue.text, `显示出口:${issue.reason}(${issue.kind}:${issue.key ?? issue.path})`, entry)
             const starting = {}
             for (const sec of sx.sections ?? []) starting[sec.refKey] = { choice: Object.fromEntries((sec.groups ?? []).filter((g) => g.choices.length > 1).map((g) => [g.index, g.choices[0].key])) }
             const pv = await people.startingEquipment(owner, { items: [row.ref], starting }).catch((e) => ({ status: 'throw', error: String(e) }))
-            if (pv.status === 'complete') { walk(pv.preview, 'preview', '起始装备预演', entry); for (const t of pv.untranslated ?? []) note(t, '显示出口:没翻到(起始装备)', entry) } else stats.previewFailed.push(`${entry}：${pv.status}`)
+            if (pv.status === 'complete') { walk(pv.preview, 'preview', '起始装备预演', entry); for (const issue of pv.displayIssues ?? []) note(issue.text, `显示出口:${issue.reason}(${issue.kind}:${issue.key ?? issue.path})`, entry) } else stats.previewFailed.push(`${entry}：${pv.status}`)
           } else stats.startingFailed.push(`${entry}：${sx.status}`)
         }
         if (++n % 20 === 0) { await rt.close(owner); await rt.session(owner); console.log(`[audit] 已处理 ${n} 条，目前 ${found.size} 个不同的英文串`) }
       }
     }
+    // 保留前置条件的本战役原始数据，区分“作者原文就是英文”和“取字接口没接上”。
+    const rawRequirements = []
+    for (const prop of new Set([...requirementRefs.values()].map(row => row.ref.prop))) {
+      const local = await h.scoped.query(library, prop, { expand: true })
+      for (const row of requirementRefs.values()) {
+        if (row.ref.prop !== prop) continue
+        const source = local.find(hit => hit.ref.set === row.ref.set && hit.ref.hash === row.ref.hash)
+        rawRequirements.push({ ...row, name: source?.item.name, prerequisite: source?.item.prerequisite })
+      }
+    }
     await rt.close(owner)
     const list = [...found].map(([text, r]) => ({ text, entries: r.entries.size, where: [...r.where].slice(0, 6), sample: [...r.entries].slice(0, 4), byWhere: Object.fromEntries(Object.entries(r.byWhere).map(([k, v]) => [k, [...v].slice(0, 6)])) })).sort((a, b) => b.entries - a.entries)
-    return { sources, limit, stats, count: list.length, list }
+    return { sources, limit, stats, count: list.length, list, rawRequirements }
   }, { sources, limit })
   result.seconds = Math.round((Date.now() - started) / 1000)
-  await writeFile(`${work}/p6-lang-audit-${engineName}.json`, JSON.stringify(result, null, 1))
+  await writeFile(process.env.AUDIT_OUTPUT ?? `${work}/p6-lang-audit-${engineName}.json`, JSON.stringify(result, null, 1))
   const s = result.stats
   console.log(`带前置条件的候选共 ${s.requirements} 个（其文字都已扫描）`)
   console.log(`审计范围 ${result.sources.join('/')}，建成 ${s.built} 个人；建失败 ${s.buildFailed.length}、选项失败 ${s.optionsFailed.length}、装备失败 ${s.startingFailed.length}、预演失败 ${s.previewFailed.length}；耗时 ${result.seconds} 秒`)
-  console.log(`没有中文的字符串共 ${result.count} 个（出现在越多条目里越靠前）：`)
+  console.log(`待核查的显示文字共 ${result.count} 个（包含缺口的实际原因）（出现在越多条目里越靠前）：`)
   for (const x of result.list.slice(0, 60)) console.log(`  ${String(x.entries).padStart(4)}  ${x.text}   ← ${x.where[0]}`)
 } catch (e) {
   console.error('审计流程中断：', String(e?.stack ?? e).slice(0, 900))

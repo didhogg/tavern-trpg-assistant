@@ -4,10 +4,11 @@
 //   containsValue / value（铜币）→ 加到人物的钱；不要装备时 = 起始金币（goldAlternative 的骰式或玩家填的数）。
 // 物品加载、类型拆解、「普通物品」判断、骰式、币值换算都调作者 / Plutonium 在小窗里的函数；类别名与候选取 Plutonium 的类别登记。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者条目和 Plutonium 文档没有类型声明。 */
+import { systemText } from './system-text'
 import type { Operate } from './commands-items'
 import { importEntry } from './importer'
 import { plutoniumBuild } from './plutonium-build'
-import { asData, fromAuthor, fromEntry, named, plugin, sys, type FrameText } from '../shown'
+import { asData, fromAuthor, fromEntry, named, plugin, type FrameText } from '../shown'
 
 const g = globalThis as any
 
@@ -65,7 +66,7 @@ const expanderOf = (type: string) => {
 function typeName(type: string): FrameText {
   const key = `TRPGAssistant.EquipmentType.${type}`
   const translated = g.game.i18n.localize(key)
-  return translated === key ? fromAuthor(String(expanderOf(type)?.name ?? type), null) : sys(translated)
+  return translated === key ? fromAuthor(String(expanderOf(type)?.name ?? type), null) : systemText(translated)
 }
 
 /** 筛选由作者类别完成；屏蔽走战役资料范围，由主线处理。 */

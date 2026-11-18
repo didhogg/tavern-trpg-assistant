@@ -10,7 +10,7 @@ import type { EquipCandidate, EquipEntryView, EquipSection, StartingPreview, Sta
 import type { EntryPair } from './locale'
 import { authorTextFor } from './author-text'
 import type { LibraryService } from '../../library/service'
-import { display } from './display'
+import { display, type DisplayIssue } from './display'
 import { fromLibrary, type Displayed, type FrameText } from './shown'
 import { kernelDataSource } from '../../library/sources'
 
@@ -80,7 +80,7 @@ type PreviewFrame = { sections: Array<{ refKey: string; items: Array<{ label: Fr
 export type StartingPreviewView = Displayed<PreviewFrame>
 /** currencies = 作者币种编号 → 名字（作者 Parser 的币种表，经本战役作者小窗：中文战役即中文），界面显示钱时按它取名字。
  *  untranslated：显示出口没取到本战役语言、显示了原文的文字（语言审计按它数）。 */
-export interface StartingResult { status: string; error?: string; sections?: StartingSection[]; preview?: StartingPreviewView; currencies?: Displayed<Record<string, FrameText>>; untranslated?: string[] }
+export interface StartingResult { status: string; error?: string; sections?: StartingSection[]; preview?: StartingPreviewView; currencies?: Displayed<Record<string, FrameText>>; untranslated?: string[]; displayIssues?: DisplayIssue[] }
 
 interface Deps {
   rows: Array<{ ref: EntryRef; entry: unknown }>
@@ -99,14 +99,16 @@ export async function startingOptions(d: Deps, starting?: Record<string, Startin
   const out = await d.call('startingEquipment', sent)
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
   const namer = await namerFor(d.scoped, d.library)
-  const author = authorTextFor(d.service, d.library.codeSet)
-  const coinNames = await author.labels((out.result.coins ?? []) as string[])
+  const author = authorTextFor(d.service, d.library.codeSet, async keys => (await d.call('displaySystemTexts', keys)).result as Array<string | null>)
+  const coins = (out.result.coins ?? []) as string[]
+  const labels = await author.resolve(coins.map(key => ({ source: 'value', key, group: coins })))
+  const coinNames = Object.fromEntries(coins.flatMap((key, i) => labels[i] ? [[key, labels[i]!]] : []))
   const framed = await labelSections(out.result.sections as EquipSection[], namer, coinNames)
   const currencyFrame = Object.fromEntries(Object.entries(coinNames).map(([k, v]) => [k, fromLibrary(v)]))
   const ctx = { translate: d.library.codeSet !== kernelDataSource().codeSet, pairs: d.pairs, namer, author }
   const shown = await display({ sections: framed, currencies: currencyFrame }, ctx)
   const { sections, currencies } = shown.value
-  const untranslated = (more: string[] = []) => { const all = [...new Set([...shown.missed, ...more])]; return all.length ? { untranslated: all } : {} }
+  const untranslated = (more: string[] = [], issues: DisplayIssue[] = []) => { const all = [...new Set([...shown.missed, ...more])]; return all.length ? { untranslated: all, displayIssues: [...shown.issues, ...issues] } : {} }
   if (!starting) return { status: 'complete', sections, currencies, ...untranslated() }
   const checked = checkStarting(sections, starting)
   if (checked.error) return { status: 'invalid', error: checked.error, sections }
@@ -118,5 +120,5 @@ export async function startingOptions(d: Deps, starting?: Record<string, Startin
     sections: raw.sections.map((s) => ({ refKey: s.refKey, items: s.granted.map((g) => ({ label: g.name, quantity: g.quantity, ...(g.special ? { special: true } : {}), ...(g.displayName ? { rename: g.displayName } : {}) })) })),
   }
   const preview = await display(previewFrame, ctx)
-  return { status: 'complete', sections, currencies, preview: preview.value, ...untranslated(preview.missed) }
+  return { status: 'complete', sections, currencies, preview: preview.value, ...untranslated(preview.missed, preview.issues) }
 }

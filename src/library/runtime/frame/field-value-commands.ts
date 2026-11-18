@@ -2,6 +2,7 @@
 // 里找一张「这组值全都是它的键」的表，用它的值显示（另加作者书目分组表 SourceUtil.ADV_BOOK_GROUPS）。几张都对得上时，取写了中文的那张（中文版小窗里），再取最小的（最贴切）。
 // 一张都对不上就不给（界面显示原值）。不手写对照表。
 import { A, init } from './author'
+import type { AuthorTextQuery } from '../text-query'
 
 const HAN = /[㐀-鿿]/
 
@@ -81,4 +82,22 @@ export async function prerequisiteText(list: unknown[]): Promise<Array<string | 
     const text = Array.isArray(prerequisite) ? A.Renderer.utils.prerequisite.getText(prerequisite, { isSkipPrefix: true }) : null
     return typeof text === 'string' && text.trim() ? text.trim() : null
   })
+}
+
+/** 统一批量取字：来源登记自动分派，内部转调已有作者入口；不按条目类别接线。 */
+export async function authorTexts(requests: AuthorTextQuery[]): Promise<Array<string | null>> {
+  await init()
+  const groups = new Map<string, Promise<Record<string, string> | null>>()
+  const handlers: { [K in AuthorTextQuery['source']]: (q: Extract<AuthorTextQuery, { source: K }>) => Promise<string | null> } = {
+    author: async q => (await authorAt([q.path]))[0] ?? null,
+    requirement: async q => (await prerequisiteText([q.raw]))[0] ?? null,
+    proficiency: async q => A.Renderer.generic.getMappedAnyProficiency({ keyAny: q.key, countRaw: q.count })?.name ?? null,
+    value: async q => {
+      const key = JSON.stringify([q.group, q.kind])
+      if (!groups.has(key)) groups.set(key, valueLabels([q.group], q.kind).then(rows => rows[0]))
+      return (await groups.get(key))?.[q.key] ?? null
+    },
+  }
+  const run = <K extends AuthorTextQuery['source']>(q: Extract<AuthorTextQuery, { source: K }>) => handlers[q.source](q)
+  return Promise.all(requests.map(q => run(q)))
 }

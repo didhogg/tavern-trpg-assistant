@@ -1,7 +1,7 @@
 // 显示名统一按作者编号取（主线 naming.ts）：小窗只负责把 dnd5e 编号换回作者编号，不起名。
 // 换法全用作者自己的通路，不建对照表：把这个编号放进一个空白人物 → Plutonium 读人物现有熟练（getExisting，作者名）
 // → Plutonium 渲染这个熟练（_getRenderedStatic，作者链接）→ 链接上的作者编号（页面 + 来源 + hash，与 Plutonium 写进物品的 flags 同形）。
-// 换不出（没有作者链接、对上多个）→ 不给，主线显示原名。
+// 多个来源保留全部作者链接，主线核对译名是否一致；没有链接时保留待解析状态。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者组件和官方文档没有类型声明 */
 import type { KernelRefFlags } from '../../../core/saves/split'
 import { plutoniumBuild } from './plutonium-build'
@@ -24,15 +24,15 @@ export function authorIdFromHtml(html: string, pageToProps: Record<string, strin
   return page && hash && propDroppable ? { page, source, hash, propDroppable } : null
 }
 
-/** 每个 dnd5e 编号（如 tool:art:brewer）对应的作者编号；换不出的不在结果里。 */
-export async function authorIdsOf(keys: Iterable<string>): Promise<Record<string, KernelRefFlags>> {
+/** 每个 dnd5e 编号对应的全部作者编号；来源多解完整交回。 */
+export async function authorIdsOf(keys: Iterable<string>): Promise<Record<string, KernelRefFlags[]>> {
   const api = plutoniumBuild
   const trait = g.dnd5e?.documents?.Trait
   if (!api || !trait) return {}
   const select = api.Charactermancer_OtherProficiencySelect
   const availableProficiencyManager = await api.Charactermancer_AvailableProficiencyManager.pGetInstance()
   const blank = new g.CONFIG.Actor.documentClass({ name: 'Author ids', type: BUILD_ACTOR_TYPE })
-  const out: Record<string, KernelRefFlags> = {}
+  const out: Record<string, KernelRefFlags[]> = {}
   for (const key of new Set(keys)) {
     try {
       const type = key.split(':')[0]
@@ -43,10 +43,12 @@ export async function authorIdsOf(keys: Iterable<string>): Promise<Record<string
       const existing = select.getExisting(select.getExistingFvttFromActor(actor), { availableProficiencyManager })
       const found = Object.entries(existing ?? {}).flatMap(([prop, names]: [string, any]) =>
         Object.entries(names ?? {}).filter(([name, v]) => name !== 'other' && v).map(([name]) => ({ prop, name })))
-      if (found.length !== 1) continue
-      const html = select._getRenderedStatic({ ...found[0], availableProficiencyManager })
-      const id = typeof html === 'string' ? authorIdFromHtml(html, g.UrlUtil.PAGE_TO_PROPS ?? {}) : null
-      if (id) out[key] = id
+      const ids = found.flatMap(value => {
+        const html = select._getRenderedStatic({ ...value, availableProficiencyManager })
+        const id = typeof html === 'string' ? authorIdFromHtml(html, g.UrlUtil.PAGE_TO_PROPS ?? {}) : null
+        return id ? [id] : []
+      })
+      if (ids.length) out[key] = ids
     } catch (e) {
       console.warn('[trpg-assistant] 作者编号换不出', key, e)
     }

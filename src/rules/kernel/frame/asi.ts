@@ -1,8 +1,8 @@
 // 属性提升（dnd5e AbilityScoreImprovement 进阶）：界面只交「玩家在每项加了几点」，固定加值的合并、每项上限、点数检查都在这里。
 // 名字取 dnd5e 自己的属性登记（CONFIG.DND5E.abilities，中文战役即中文），界面不查表。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
+import { systemText } from './system-text'
 import { registryLabels } from './trait-title'
-import { sys } from '../shown'
 
 const g = globalThis as any
 
@@ -39,7 +39,7 @@ export function asiView(advancement: any, pick: AsiChoice | undefined): Record<s
     kind: 'asi', points: c.points, cap: c.cap, left,
     rows: Object.keys(labels).map((key) => {
       const n = chosen[key] ?? 0
-      return { key, label: sys(labels[key]), fixed: c.fixed[key] ?? 0, chosen: n, canAdd: !c.locked.has(key) && left > 0 && n < c.cap, canRemove: n > 0 }
+      return { key, label: systemText(labels[key]), fixed: c.fixed[key] ?? 0, chosen: n, canAdd: !c.locked.has(key) && left > 0 && n < c.cap, canRemove: n > 0 }
     }),
   }
 }

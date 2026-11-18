@@ -2,12 +2,15 @@
 // then read the native dnd5e key off the temporary actor.
 /* eslint-disable @typescript-eslint/no-explicit-any -- upstream runtime objects */
 import type { KernelRefFlags } from '../../../core/saves/split'
+import { named, valueText, type FrameText } from '../shown'
+import { proficiencyNames } from './proficiency-text'
+import { systemText } from './system-text'
 type Api = Record<string, any>
 type Cleanup = Array<() => void>
-/** id：候选是作者物品时的作者编号（主线按编号取本战役库里的名字）。 */
-type Option = { label: string; id?: KernelRefFlags; select: () => void; clear: () => void }
+/** text 保留作者编号或规则代码，数值仍由作者的选择和写入接口决定。 */
+type Option = { label: string; text?: FrameText; select: () => void; clear: () => void }
 /** 存不进原生进阶的候选：名字 + 作者编号（是物品时）。 */
-export type Withheld = { label: string; id?: KernelRefFlags }
+export type Withheld = { label: string; text?: FrameText }
 type Slot = { count: number; hints?: string[]; options: Option[] }
 export type NativeSlot = { count: number; pool: string[] }
 interface Plan {
@@ -18,28 +21,23 @@ interface Plan {
   choices: NativeSlot[]
   hints: string[]
   withheld: Withheld[]
+  names: Map<string, FrameText>
 }
 const g = globalThis as any
 
-function setOption(component: any, key: string, value: any, label: string, id?: KernelRefFlags): Option {
+function setOption(component: any, key: string, value: any, label: string, text?: FrameText): Option {
   const previous = component._state[key]
-  return { label, ...(id ? { id } : {}), select: () => { component._state[key] = value }, clear: () => { component._state[key] = previous } }
+  return { label, ...(text ? { text } : {}), select: () => { component._state[key] = value }, clear: () => { component._state[key] = previous } }
 }
 /** 作者物品 → 作者编号（与 Plutonium 写进物品 flags 同形）。 */
 const itemId = (entity: { name: string; source: string }): KernelRefFlags => ({ propDroppable: 'item', source: entity.source, hash: g.UrlUtil.URL_TO_HASH_BUILDER[g.UrlUtil.PG_ITEMS](entity) })
-/** 作者熟练值里写的物品（名字 或 名字|来源）→ 作者自己的拆法补来源 → 作者编号；不是物品写法的给 undefined。 */
-const valueItemId = (value: unknown): KernelRefFlags | undefined => {
-  if (typeof value !== 'string' || !value) return undefined
-  const { name, source } = g.DataUtil.proxy.unpackUid('item', value, 'item')
-  return name && source ? itemId({ name, source }) : undefined
-}
 
 function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, scope?: Set<string>): Slot[] {
   return (set.choose ?? []).map((slot: any, ixChoose: number) => {
     if (slot.fromFilter) {
       const { propState } = component._getPropsChooseFromFilter({ ixChoose, ixCount: 0 })
       const from = component._modalFilterItemsFvtt.getEntitiesMatchingFilterExpression({ filterExpression: slot.fromFilter })
-      return { count: slot.count, options: from.filter((entry: any) => !scope || scope.has(`${entry.name}|${entry.source}`.toLowerCase())).map((entry: any) => setOption(component, propState, { prop: slot.prop, name: g.DataUtil.generic.getUid(entry) }, entry.name, itemId(entry))) }
+      return { count: slot.count, options: from.filter((entry: any) => !scope || scope.has(`${entry.name}|${entry.source}`.toLowerCase())).map((entry: any) => setOption(component, propState, { prop: slot.prop, name: g.DataUtil.generic.getUid(entry) }, entry.name, named(entry.name, itemId(entry), true))) }
     }
     const { propState } = component._getPropsChooseFrom({ ixChoose })
     const grouped = component._getChooseFromGroupMeta(slot)
@@ -49,9 +47,10 @@ function proficiencySlots(api: Api, component: any, set: any, cleanup: Cleanup, 
     })
     cleanup.push(meta.cleanup)
     const list = grouped?.valueGroupsFlat ?? slot.from
+    const names = proficiencyNames(api, component._availableProficiencyManager, list)
     return {
       count: slot.count, hints: grouped?.valueGroups?.map((row: any) => row.text).filter(Boolean),
-      options: meta.rowMetas.map((row: any, i: number) => setOption(component, row.propIsActive, true, list[i]?.name ?? String(i + 1), valueItemId(list[i]?.name))),
+      options: meta.rowMetas.map((row: any, i: number) => setOption(component, row.propIsActive, true, list[i]?.name ?? String(i + 1), names[i])),
     }
   })
 }
@@ -96,7 +95,7 @@ async function authorKeys(api: Api, actor: any, group: any, rank: number) {
   for (const type of paths) {
     const path = trait.actorKeyPath(type)
     const custom = g.foundry.utils.getProperty(update, path)?.custom
-    if (custom) notes.push({ label: String(custom) })
+    if (custom) notes.push({ label: String(custom), text: systemText(String(custom)) })
     const before = await trait.actorValues(actor, type)
     const after = await trait.actorValues(changed, type)
     for (const [key, value] of Object.entries(after)) if (value === rank && before[key] !== rank) keys.add(key)
@@ -109,22 +108,29 @@ async function nativePlan(api: Api, actor: any, group: any, slots: Slot[], index
   const fixed = await authorKeys(api, actor, group, rank)
   const choices: NativeSlot[] = []
   const withheld = [...fixed.notes]
+  const names = new Map<string, FrameText>()
   for (const slot of slots) {
     const pool = new Set<string>()
     for (const option of slot.options) {
+      const text = option.text ?? valueText(option.label, slot.options.map(row => row.label), systemText(option.label))
       option.select()
       try {
         const result = await authorKeys(api, actor, group, rank)
         const gained = [...result.keys].filter(key => !fixed.keys.has(key))
-        if (gained.length === 1) pool.add(gained[0])
-        else if (option.label) withheld.push({ label: option.label, ...(option.id ? { id: option.id } : {}) })
+        if (gained.length === 1) {
+          const key = gained[0]
+          pool.add(key)
+          const prev = names.get(key)
+          names.set(key, prev?.$t === 'name' && text.$t === 'name' ? named(option.label, [...prev.ids, ...text.ids], true) : text)
+        }
+        else if (option.label) withheld.push({ label: option.label, text })
       } finally { option.clear() }
     }
     if (pool.size >= slot.count || (expertise && !slot.options.length)) choices.push({ count: slot.count, pool: [...pool].sort() })
-    else if (slot.options.length) withheld.push(...slot.options.filter(option => option.label).map(option => ({ label: option.label, ...(option.id ? { id: option.id } : {}) })))
+    else if (slot.options.length) withheld.push(...slot.options.filter(option => option.label).map(option => ({ label: option.label, text: option.text ?? valueText(option.label, slot.options.map(row => row.label), systemText(option.label)) })))
   }
   return { index, extended, mode: expertise ? (fixed.keys.size ? 'forcedExpertise' : 'expertise') : 'default',
-    grants: [...fixed.keys].sort(), choices, hints: [...new Set(slots.flatMap(slot => slot.hints ?? []))], withheld }
+    grants: [...fixed.keys].sort(), choices, names, hints: [...new Set(slots.flatMap(slot => slot.hints ?? []))], withheld }
 }
 
 export async function readTraitPlans(api: Api, blank: any, group: any, current: any, visible?: Set<string>): Promise<Plan[]> {

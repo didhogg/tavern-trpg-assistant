@@ -11,7 +11,8 @@ beforeAll(() => {
     abilities: { str: { label: 'A.str' }, dex: { label: 'A.dex' }, con: { label: 'A.con' } },
     currencies: { gp: { label: 'C.gp' }, sp: { label: 'C.sp' } },
   } }
-  g.game = { i18n: { localize: (k: string) => ({ 'A.str': '力量', 'A.dex': '敏捷', 'A.con': '体质', 'C.gp': 'GP' } as Record<string, string>)[k] ?? k } }
+  const translations = { A: { str: '力量', dex: '敏捷', con: '体质' }, C: { gp: 'GP' } }
+  g.game = { i18n: { translations, has: (k: string) => ['A.str', 'A.dex', 'A.con', 'C.gp'].includes(k), localize: (k: string) => ({ 'A.str': '力量', 'A.dex': '敏捷', 'A.con': '体质', 'C.gp': 'GP' } as Record<string, string>)[k] ?? k } }
 })
 afterAll(() => Object.assign(g, saved))
 
@@ -32,9 +33,9 @@ describe('asiView', () => {
     const v = asiView(fixedPlus, { type: 'asi', chosen: { dex: 1 } }) as { left: number; rows: Array<Record<string, unknown>> }
     expect(v.left).toBe(0)
     expect(v.rows).toEqual([
-      { key: 'str', label: { $t: 'system', text: '力量' }, fixed: 2, chosen: 0, canAdd: false, canRemove: false },
-      { key: 'dex', label: { $t: 'system', text: '敏捷' }, fixed: 0, chosen: 1, canAdd: false, canRemove: true },
-      { key: 'con', label: { $t: 'system', text: '体质' }, fixed: 0, chosen: 0, canAdd: false, canRemove: false },
+      { key: 'str', label: { $t: 'system', key: 'A.str', text: '力量' }, fixed: 2, chosen: 0, canAdd: false, canRemove: false },
+      { key: 'dex', label: { $t: 'system', key: 'A.dex', text: '敏捷' }, fixed: 0, chosen: 1, canAdd: false, canRemove: true },
+      { key: 'con', label: { $t: 'system', key: 'A.con', text: '体质' }, fixed: 0, chosen: 0, canAdd: false, canRemove: false },
     ])
   })
   it('每项上限、锁定项：到上限或锁定就不能再加', () => {

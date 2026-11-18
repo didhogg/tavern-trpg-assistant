@@ -2,6 +2,7 @@
 // 这里的计算是旁路（渲染作者组件、建临时人物会抽随机数），一律在旁路随机序列上跑（random.ts withSeed，与读资料包同一规则）：
 // 建卡一定跑、冷读档不一定跑，若占用主序列，同一人物重建后物品编号会错开。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者组件和官方文档没有类型声明 */
+import { systemText } from './system-text'
 import { hashValue } from '../../../core/hash'
 import { plutoniumBuild } from './plutonium-build'
 import { BUILD_ACTOR_TYPE } from './actor-types'
@@ -10,7 +11,7 @@ import { groupTitle, titleOfKeys } from './trait-title'
 import { readTraitPlans, type NativeSlot } from './trait-plans'
 import { traitOrigins } from './trait-origins'
 import { authorTextPath } from './author-text'
-import { fromAuthor, joined, named, plugin, sys, type FrameText } from '../shown'
+import { fromAuthor, joined, plugin, type FrameText } from '../shown'
 
 const g = globalThis as any
 const PREFIX = 'P6Tr'
@@ -19,7 +20,7 @@ const idOf = (...parts: unknown[]): string => PREFIX + hashValue(parts).slice(0,
 
 type KeySet = Set<string>
 export type TraitPlanChoice = { id: string; label: FrameText }
-export type TraitPlans = Map<string, TraitPlanChoice[]>
+export type TraitPlans = Map<string, { choices: TraitPlanChoice[]; names: Map<string, FrameText> }>
 export type ExpertiseViews = Map<string, any>
 type ActorTraits = {
   actor?: any; plans?: TraitPlans; picks?: Array<{ id: string; value: any }>
@@ -105,7 +106,7 @@ const authorText = (text: string): FrameText => fromAuthor(text, authorTextPath(
 /** 提示用的标题：按编号认（dnd5e 语言包，与步骤标题同一处 trait-title.ts groupTitle）；都认不出才用作者分组的原标题。siblings = 同一批分组（混合分组按它们认类别）。 */
 const labelOf = (group: any, siblings: any[], keys: string[] = []): FrameText => {
   const title = groupTitle(group, siblings, keys)
-  return title ? sys(title) : authorText(String(group._title || group._subComps[0]?.modalTitle || group._prop))
+  return title ? systemText(title) : authorText(String(group._title || group._subComps[0]?.modalTitle || group._prop))
 }
 /** 提示去重（同一句只说一次）。 */
 const uniqueTexts = (list: FrameText[]): FrameText[] => [...new Map(list.map((t) => [JSON.stringify(t), t])).values()]
@@ -159,12 +160,12 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         const options = versions.map((plan, i) => ({
           id: newIds[i],
           label: plan.choices.length
-            ? joined(plan.choices.map(slot => plugin(`{0} ×${slot.count}`, titleOfKeys(slot.pool) ? sys(titleOfKeys(slot.pool)!) : labelOf(group, groups))), ' + ')
-            : titleOfKeys(plan.grants) ? sys(titleOfKeys(plan.grants)!) : labelOf(group, groups),
+            ? joined(plan.choices.map(slot => plugin(`{0} ×${slot.count}`, titleOfKeys(slot.pool) ? systemText(titleOfKeys(slot.pool)!) : labelOf(group, groups))), ' + ')
+            : titleOfKeys(plan.grants) ? systemText(titleOfKeys(plan.grants)!) : labelOf(group, groups),
         }))
         // 存不进的候选：是作者物品的按编号取本战役库名（取不到算没翻到），其余是 Plutonium 自己写的字
         const withheld = [...new Map(traits.withheld.map((w) => [w.label, w])).values()].sort((a, b) => a.label.localeCompare(b.label))
-        if (withheld.length) diagnostics.push(plugin('{0}（暂时无法加到人物卡：{1}）', labelOf(group, groups), joined(withheld.map((w) => (w.id ? named(w.label, w.id, true) : authorText(w.label))), '、')))
+        if (withheld.length) diagnostics.push(plugin('{0}（暂时无法加到人物卡：{1}）', labelOf(group, groups), joined(withheld.map(w => w.text ?? authorText(w.label)), '、')))
         // Plutonium 的分组从 entity 或 entryData 取输入。主职/兼职即使字段同名也须核对内容。
         const input = hashValue(entry[group._prop] || entry.entryData?.[group._prop])
         const comparable = existing.filter(record => record.mode === traits.mode)
@@ -184,11 +185,14 @@ async function fill(data: any, row: { prop?: string; entry?: any; data?: any }, 
         const authoredOverlap = replace && traits.choices.some((slot) => otherSlots.some((other) => slot.pool.some((key) => other.pool.has(key))))
         if (authoredOverlap) { diagnostics.push(plugin('{0}（与资料附带的进阶重叠，已保留原进阶）', labelOf(group, groups))); continue }
         if (!choices) { diagnostics.push(labelOf(group, groups)); continue }
-        if (!grants.length && !choices.length) continue
+        if (!grants.length && !choices.length) {
+          for (const record of own) plans?.set(record.id, { choices: [], names: traits.names })
+          continue
+        }
         if (replace) for (const record of own) replaced.add(record.id)
         // A replacement has its own stable ID so cold replays of earlier saves keep their original steps.
         const id = traits.extended ? newIds[at] : replace ? fixId : idOf(ref, group._prop, level, multiclass)
-        if (options.length > 1) plans?.set(id, options)
+        plans?.set(id, { choices: options.length > 1 ? options : [], names: traits.names })
         fresh[id] = {
           _id: id, type: 'Trait', level,
           ...(row.prop === 'class' ? { classRestriction: multiclass ? 'secondary' : 'primary' } : {}),

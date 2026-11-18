@@ -1,11 +1,13 @@
 // P6 人物（一）额外选择按组选（真实插件界面 + 真实库 + 真实结算小窗）：2024 人类 + 2024 战士 → 专长这一步出现两个组名标签（起源专长 / 战斗风格，组名后端给）→ 点标签切换、每组各选 1 → 完成页没有专长待填 → 创建 → 人物身上两个专长；窄屏标签不撑破。
 // 截图 work/p6-ui/shots-0c-*/；界面验收只由驾驶员给。用法：ENGINE=chrome|webkit node tests/e2e/library/p6-ui-0c-groups.mjs
-import { rm, mkdir } from 'node:fs/promises'
+import { rm, mkdir, readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { startStatic } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase } from './chain-common.mjs'
 import { check, failures, settle } from '../helpers.mjs'
 
-if (!process.env.SKIP_BUILD) await buildAll()
+const dist = process.env.P6_TEST_DIST
+if (!dist && !process.env.SKIP_BUILD) await buildAll()
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const [, type, options] = engines.find((e) => e[0] === engineName)
 const { server, url } = await startStatic({ port: E2E_PORT })
@@ -13,7 +15,7 @@ const profile = freshFromBase(engineName, 'p6-ui-0c-groups') // 克隆干净底�
 const dark = process.env.DARK === '1' // DARK=1：整条流程在深色下走一遍，截图放 shots-0c-*-dark
 const shots = `${process.cwd()}/work/p6-ui/shots-0c-groups-${engineName}${dark ? '-dark' : ''}`
 await rm(shots, { recursive: true, force: true }); await mkdir(shots, { recursive: true })
-const killer = setTimeout(() => { console.error('超时 9 分钟'); process.exit(2) }, 9 * 60_000)
+const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, 8 * 60_000)
 const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage()
 if (dark) await page.emulateMedia({ colorScheme: 'dark' })
@@ -26,6 +28,10 @@ const pinia = `(() => { const h = document.querySelector('#trpg-assistant-root')
 // 建卡后端在算（每次改动都会重算）：等它算完再读画面，不靠固定等几秒
 const idle = () => page.waitForFunction((P) => !eval(P)._s.get('wizard').optLoading, pinia, { timeout: 60000 })
 try {
+  if (dist) await ctx.route(u => u.href.startsWith(url) && (/^\/dist\//.test(u.pathname) || u.pathname.endsWith('/harness.js')), async route => {
+    const path = new URL(route.request().url()).pathname
+    await route.fulfill({ body: await readFile(join(dist, path.startsWith('/dist/') ? path.slice(6) : 'harness.js')), contentType: 'application/javascript' })
+  })
   await page.goto(url)
   await page.waitForFunction(`!!(${pinia})._s.get('app')?.booted`)
   await page.locator('.trpg-ball').click(); await settle(page, 500)

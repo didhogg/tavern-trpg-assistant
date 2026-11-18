@@ -1,10 +1,11 @@
 // Plutonium owns the opening levels, option counts, category filters and source identities.
 // The adapter supplies campaign-visible rows and reads the author's result without opening its dialogs.
 /* eslint-disable @typescript-eslint/no-explicit-any -- Plutonium and Foundry do not ship types for these internals. */
+import { systemText } from './system-text'
 import type { ExtraKind, ExtraPoolRow, ExtraPools, FrameExtra, FrameExtras } from '../build-options'
 import type { BuildRow } from './commands-level'
 import { plutoniumBuild } from './plutonium-build'
-import { fromAuthor, fromEntry, joined, plugin, sys } from '../shown'
+import { fromAuthor, fromEntry, joined, plugin } from '../shown'
 
 const g = globalThis as any
 type Api = Record<string, any>
@@ -45,7 +46,7 @@ function classOptions(api: Api, row: BuildRow, pools: ExtraPools, level: number,
     const ownerIds = new Set([cls, local].filter(Boolean).map(id => g.UrlUtil.URL_TO_HASH_BUILDER.class(id)))
     const candidates = (pools.subclass ?? []).filter(candidate => [candidate.entry, candidate.local].filter(Boolean).some(sc =>
       ownerIds.has(g.UrlUtil.URL_TO_HASH_BUILDER.class({ name: sc!.className, source: sc!.classSource }))))
-    out.extras.push({ id: `${row.refKey}|subclass|${level}`, kind: 'subclass', title: cls.subclassTitle ? fromEntry(String(cls.subclassTitle)) : sys(g.game.i18n.localize('DND5E.ADVANCEMENT.Subclass.Title')), count: 1, candidates: candidates.map(({ key }) => ({ key })) })
+    out.extras.push({ id: `${row.refKey}|subclass|${level}`, kind: 'subclass', title: cls.subclassTitle ? fromEntry(String(cls.subclassTitle)) : systemText(g.game.i18n.localize('DND5E.ADVANCEMENT.Subclass.Title')), count: 1, candidates: candidates.map(({ key }) => ({ key })) })
   }
 }
 
