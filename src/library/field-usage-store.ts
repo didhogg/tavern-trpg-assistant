@@ -97,7 +97,7 @@ async function autoFieldsIn(lib: UsageDeps, codeSet: string, prop: string): Prom
 }
 
 /** 表单安排（§16.10 2b，form-plan.ts）：字段表 + 官方用法统计 + 自动字段。不认识的类别 null。 */
-export async function formPlanOf(lib: UsageDeps & Pick<LibraryService, 'officialInstalled'>, codeSet: string, prop: string): Promise<FormPlan | null> {
+export async function formPlanOf(lib: UsageDeps & Pick<LibraryService, 'officialInstalled' | 'texts'>, codeSet: string, prop: string): Promise<FormPlan | null> {
   const table = await fieldTable(lib, codeSet, prop)
   if (!table) return null
   const [usage, auto, part] = await Promise.all([usageOf(lib, codeSet, prop), autoFieldsOf(lib, codeSet, prop), lib.frameOf(codeSet).then((f) => attachedPlan(f, codeSet, prop))])

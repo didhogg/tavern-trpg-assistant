@@ -139,7 +139,7 @@ import { LibraryService } from '../../../src/library/service'
 import { BookDirectory } from '../../../src/library/directory'
 
 /** 库服务（界面将来的唯一入口）。安装会另开小窗，所以安装后要 service.reset()。 */
-export const service = new LibraryService({ db, revisions, operations, openFrame: openLocalFrame })
+export const service = new LibraryService({ db, revisions, operations, openFrame: openLocalFrame, pluginRoot: new URL('/', location.href) })
 export const libraryDb = db
 
 // ---- B2-8a 审计第 3、4 层 ----

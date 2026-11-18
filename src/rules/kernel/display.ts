@@ -1,6 +1,6 @@
 // 建卡和起始装备的唯一显示出口。身份与语言键均在这里核对；失败保留原文和诊断依据。
 import type { KernelRefFlags } from '../../core/saves/split'
-import type { AuthorText, TextQuery } from './author-text'
+import type { TextReader, TextQuery } from '../../library/texts'
 import { zhAt, type EntryPair } from './locale'
 import type { Namer } from './naming'
 import { isFrameText, type Displayed, type FrameText, type Shown } from './shown'
@@ -9,7 +9,7 @@ export interface DisplayContext {
   translate: boolean
   pairs: EntryPair[]
   namer: Namer
-  author: AuthorText
+  author: TextReader
   requirementOf?: (key: string) => unknown
 }
 export interface DisplayIssue {

@@ -4,7 +4,6 @@ import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { LibraryService } from '../../library/service'
 import type { LibraryView } from '../../library/revision'
 import { checkBuildExtras, type ExtraCandidate, type ExtraKind, type ExtraPools, type ExtraWithCandidates, type FrameExtras } from './build-options'
-import { authorTextFor } from './author-text'
 import { kernelEntryOf } from './entry'
 import type { KernelSession } from './host'
 import { namerFor } from './naming'
@@ -103,7 +102,7 @@ export async function resolveBuildOptions(deps: {
     translate: library.codeSet !== kernelDataSource().codeSet,
     pairs: await deps.pairsOf(rows),
     namer: await namerFor(scoped, library),
-    author: authorTextFor(deps.service, library.codeSet, async keys => (await deps.session.call('displaySystemTexts', keys)).result),
+    author: deps.service.texts.reader(library.codeSet),
     requirementOf: key => prerequisites.get(key),
   })
   const resultItems = shown.value.items

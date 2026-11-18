@@ -1,6 +1,6 @@
 // 作者代码里写死的显示文字（例：语言分组说明「With your DM's permission…」，在作者 Renderer.generic 的静态对象里）：
 // 结算小窗跑的是 Plutonium 带的英文作者代码，这里只找出这段文字在作者代码里的位置；主线到本战役的作者小窗（中文战役 = 中文作者代码）
-// 同一位置取文字（kernel/author-text.ts）。和 locale.ts 同一个原理：英文版找位置，中文版同位置取；位置不唯一 / 找不到 → null，原样显示。
+// 同一位置取文字（library/texts.ts）。和 locale.ts 同一个原理：英文版找位置，中文版同位置取；位置不唯一 / 找不到 → null，原样显示。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者代码是没有类型的 JS。 */
 const g = globalThis as any
 /** 作者放显示文字的全局对象（Parser 的对照表另有 valueLabels 按编号取）。 */

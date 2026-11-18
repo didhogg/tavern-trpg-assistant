@@ -48,8 +48,8 @@ describe('字段说明表（B4）', () => {
   it('按资料集的数据格式取：custom.fields = 格式登记表的 + 下拉 / 建议值的显示名（小窗按作者对照表给，P5.5 C10）；不认识的类别给 null', async () => {
     const codeSet = Object.keys(CODE_SETS)[1] ?? Object.keys(CODE_SETS)[0]
     let asked: string[][] = []
-    const frame = { call: async (fn: string, lists: string[][]) => { expect(fn).toBe('valueLabels'); asked = lists; return lists.map((l) => (l.includes('action') ? { action: '动作' } : null)) } }
-    const custom = new CustomLibrary({ frameOf: async () => frame } as never, {} as never, {} as never)
+    const texts = { values: async (cs: string, lists: string[][]) => { expect(cs).toBe(codeSet); asked = lists; return lists.map((l) => (l.includes('action') ? { action: '动作' } : null)) } }
+    const custom = new CustomLibrary({ texts } as never, {} as never, {} as never)
     const got = (await custom.fields(codeSet, 'spell'))!
     const raw = (await formatOfCodeSet(codeSet).fields('spell'))!
     expect(got.fields.map((f) => f.name)).toEqual(raw.fields.map((f) => f.name))

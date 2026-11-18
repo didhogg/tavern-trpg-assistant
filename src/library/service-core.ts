@@ -2,6 +2,8 @@
 // 自制 / 体检那一部分在 service.ts（LibraryService 继承这个类；P5.5 收尾按单文件 400 行拆开，行为不变）。
 // P5 T1/T3：每次读取绑定一个库版本；装 / 改 / 删都走“准备版本 → 发布”，不再提前改活动数据。
 import { EMBEDDED_PROP, EmbeddedTables } from './embedded-tables'
+import { TextService } from './texts'
+import { TextPacks } from './text-packs'
 import { ParsedMemo } from './parsed-memo'
 import type { LogSink } from './logs'
 import { brewCorporaKey, type BrewCorpora, type BrewParseReport } from './brew'
@@ -33,6 +35,9 @@ export interface FrameContext {
   signal?: AbortSignal
 }
 export interface LibraryServiceOptions {
+  /** 公共取字读取的插件语言文件根目录。 */
+  pluginRoot?: URL
+  textFetch?: typeof fetch
   db: LibraryDatabase
   revisions: LibraryRevisionStore
   /** 开一个只读本地的作者小窗；view 给了就绑定这个库版本。 */
@@ -53,8 +58,11 @@ export class LibraryServiceCore {
   private readonly packEntries = new PackEntries()
   private readonly parsedMemo: ParsedMemo
   private readonly embedded: EmbeddedTables
+  readonly texts: TextService
   readonly operations: LibraryOperations
   constructor(protected readonly opts: LibraryServiceOptions) {
+    const packs = new TextPacks(opts.pluginRoot ?? new URL('../', import.meta.url), opts.textFetch)
+    this.texts = new TextService(cs => this.frameOf(cs), (cs, keys) => packs.resolve(cs, keys))
     this.parsedMemo = new ParsedMemo(opts.db)
     this.embedded = new EmbeddedTables(opts.db, (cs, view) => this.frame(cs, view))
     this.operations = opts.operations ?? new LibraryOperations({ db: opts.db, revisions: opts.revisions })

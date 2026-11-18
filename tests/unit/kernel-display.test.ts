@@ -1,6 +1,6 @@
 // 显示出口（src/rules/kernel/display.ts）：小窗交回的每段文字按来路换成本战役语言；取不到显示原文并记进 missed。
 import { describe, expect, it } from 'vitest'
-import type { TextQuery } from '../../src/rules/kernel/author-text'
+import type { TextQuery } from '../../src/library/texts'
 import { display } from '../../src/rules/kernel/display'
 import { asData, fromAuthor, fromEntry, fromLibrary, joined, named, plugin, requirementOf, valueText } from '../../src/rules/kernel/shown'
 import { namerOf } from '../../src/rules/kernel/naming'

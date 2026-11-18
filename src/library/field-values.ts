@@ -17,7 +17,7 @@ function valueLists(shape: FieldShape | undefined, out: Array<{ shape: FieldShap
 }
 
 /** 带显示名的字段表（formats.fields + 作者对照表）。 */
-export function fieldTable(lib: Pick<LibraryService, 'frameOf'>, codeSet: string, prop: string): Promise<FieldTable | null> {
+export function fieldTable(lib: Pick<LibraryService, 'texts'>, codeSet: string, prop: string): Promise<FieldTable | null> {
   const key = `${codeSet}|${prop}`
   let got = cache.get(key)
   if (!got) {
@@ -29,7 +29,7 @@ export function fieldTable(lib: Pick<LibraryService, 'frameOf'>, codeSet: string
       for (const f of t.fields) valueLists(f.shape, lists)
       for (const d of Object.values(t.defs)) valueLists(d, lists)
       if (lists.length) {
-        const labels = await (await lib.frameOf(codeSet)).call('valueLabels', lists.map((l) => l.values))
+        const labels = await lib.texts.values(codeSet, lists.map((l) => l.values))
         lists.forEach((l, i) => { if (labels[i]) l.shape.labels = labels[i]! })
       }
       return t

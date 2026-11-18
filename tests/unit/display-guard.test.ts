@@ -24,10 +24,14 @@ describe('显示出口守卫', () => {
     const bad = all.filter((f) => f.path.startsWith('rules/kernel/frame/') && /from ['"]\.\.\/display['"]/.test(f.text)).map((f) => f.path)
     expect(bad).toEqual([])
   })
-  it('建卡显示不能另接作者专用命令，批量入口只在统一取字模块调用', () => {
-    const kernel = all.filter(f => f.path.startsWith('rules/kernel/'))
-    const bad = kernel.filter(f => /\.call\(['"](?:authorAt|valueLabels|prerequisiteText|proficiencyTexts)['"]/.test(f.text)
-      || (f.path !== 'rules/kernel/author-text.ts' && /\.call\(['"]authorTexts['"]/.test(f.text))).map(f => f.path)
+  it('所有业务不能另接作者专用命令，批量入口只在公共取字服务调用', () => {
+    const kernel = all.filter(f => !f.path.startsWith('library/runtime/'))
+    const bad = kernel.filter(f => /\.call\(['"](?:authorAt|valueLabels|prerequisiteText|proficiencyTexts|displaySystemTexts)['"]/.test(f.text)
+      || (f.path !== 'library/texts.ts' && /\.call\(['"]authorTexts['"]/.test(f.text))).map(f => f.path)
+    expect(bad).toEqual([])
+  })
+  it('公共取字服务只在库服务中构建一次，业务不能另建自己的实例', () => {
+    const bad = all.filter(f => f.path !== 'library/service-core.ts' && /new\s+(?:TextService|TextPacks)\s*\(/.test(f.text)).map(f => f.path)
     expect(bad).toEqual([])
   })
 })

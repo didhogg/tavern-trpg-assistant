@@ -8,7 +8,6 @@ import { refKey } from '../../core/saves/split'
 import { namerFor, type Namer } from './naming'
 import type { EquipCandidate, EquipEntryView, EquipSection, StartingPreview, StartingSelection } from './frame/commands-equipment'
 import type { EntryPair } from './locale'
-import { authorTextFor } from './author-text'
 import type { LibraryService } from '../../library/service'
 import { display, type DisplayIssue } from './display'
 import { fromLibrary, type Displayed, type FrameText } from './shown'
@@ -89,8 +88,8 @@ interface Deps {
   call: (fn: string, ...args: unknown[]) => Promise<{ status: string; error?: string; result?: any }> // eslint-disable-line @typescript-eslint/no-explicit-any -- 小窗命令结果原样
   scoped: ScopedLibrary
   library: CampaignLibrary
-  /** 本战役的作者小窗来源（币种名按作者币种表取，author-text.ts）。 */
-  service: Pick<LibraryService, 'frameOf'>
+  /** 本战役的作者小窗来源（币种名按作者币种表取，library/texts.ts）。 */
+  service: Pick<LibraryService, 'texts'>
 }
 
 /** 起始装备选项（有选择时再带预演）：职业 / 背景写着的起始装备 → 每组选项、类别候选、金币骰式，只留本战役看得见的；文字只经显示出口。 */
@@ -99,7 +98,7 @@ export async function startingOptions(d: Deps, starting?: Record<string, Startin
   const out = await d.call('startingEquipment', sent)
   if (out.status !== 'complete') return { status: out.status, error: out.error ?? `起始装备状态：${out.status}` }
   const namer = await namerFor(d.scoped, d.library)
-  const author = authorTextFor(d.service, d.library.codeSet, async keys => (await d.call('displaySystemTexts', keys)).result as Array<string | null>)
+  const author = d.service.texts.reader(d.library.codeSet)
   const coins = (out.result.coins ?? []) as string[]
   const labels = await author.resolve(coins.map(key => ({ source: 'value', key, group: coins })))
   const coinNames = Object.fromEntries(coins.flatMap((key, i) => labels[i] ? [[key, labels[i]!]] : []))

@@ -39,6 +39,12 @@ try {
   const made = await page.evaluate(async (P) => {
     for (const id of ['cn-official', 'en-official']) { const h0 = await import('/work/e2e-lib/harness.js'); const a = await h0.offlineAudit(id); if (a.set?.status !== 'installed' || a.ok !== a.planFiles) await h0.install(id) }
     const ps = eval(P); const camp = ps._s.get('campaign'); const app = ps._s.get('app')
+    const backend = app.svc().backend
+    if (backend.texts !== backend.library.service.texts) throw Error('总后端和库业务没有共用同一取字服务')
+    const labels = (await backend.texts.values('cn', [['spell', 'item']], 'category'))[0]
+    if (!labels?.spell || !labels?.item || !/[㐀-鿿]/.test(labels.spell)) throw Error('库分类未通过公共取字服务')
+    const fields = await backend.library.custom.fields('cn', 'spell')
+    if (!JSON.stringify(fields).includes('"action":"动作"')) throw Error('编辑器候选值未通过公共取字服务')
     await camp.startWith((s) => s.backend.starter.startCampaign({ ...camp.owner, ruleId: 'dnd5e2014', name: '建卡测试', codeSet: 'cn' }))
     await app.svc().backend.kernel.enter(camp.owner.ownerKey)
     return true

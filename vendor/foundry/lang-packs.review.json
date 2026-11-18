@@ -1783,7 +1783,7 @@
   {
    "package": "module:plutonium",
    "total": 1100,
-   "translated": 231,
+   "translated": 232,
    "fromCommunity": 0,
    "conflicts": 0,
    "groupsWithCategory": 2,
@@ -4830,7 +4830,7 @@
    "origins": [
     "modules/plutonium/js/Bundle.js:106122"
    ],
-   "translation": null
+   "translation": "法术准备上限"
   },
   {
    "key": "TRPGAssistant.UpstreamText.53d28251c9c809aa7d9586fa",
@@ -10783,6 +10783,16 @@
     "dnd5e.races.json:A69KxdH1renVPrQV.system.advancement.eAv9eLr0ackU7WO2.title"
    ],
    "translation": "敏锐感官"
+  }
+ ],
+ "approvedOverrides": [
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Max Prepared Spells",
+   "translation": "法术准备上限",
+   "approval": "驾驶员 2026-11-18 明确指定；仅此一项手写例外",
+   "key": "TRPGAssistant.UpstreamText.53c3659f28da2e53f969f902"
   }
  ]
 }

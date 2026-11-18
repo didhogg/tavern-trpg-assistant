@@ -43,12 +43,3 @@ export function systemText(text: string, key?: string): FrameText {
 export function generatedText(text: string): FrameText {
   return { $t: 'system', key: `TRPGAssistant.UpstreamText.${sha256Hex(normalize(text)).slice(0, 24)}`, text }
 }
-
-/** 显示出口批量查键。明确区分本语言缺键与英文回退。 */
-export function displaySystemTexts(keys: string[]): { status: string; result: Array<string | null> } {
-  const i18n = g.game.i18n
-  return { status: 'complete', result: keys.map(key => {
-    const local = g.foundry.utils.getProperty(i18n.translations, key)
-    return typeof local === 'string' ? local : i18n.lang === 'en' && i18n.has(key) ? i18n.localize(key) : null
-  }) }
-}

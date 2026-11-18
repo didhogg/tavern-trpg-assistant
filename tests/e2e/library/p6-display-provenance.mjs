@@ -29,9 +29,10 @@ try {
     await h.kernelSave.bind(owner, { rule: library.rule, kernelVersion: 1, library, dataVersion: await h.dataVersion(), overrides: [], actors: [], revision: 0, undo: [] })
     const rt = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body, campaignOf: async () => ({ rule: library.rule, library, title: '显示来源' }) })
     const saves = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rt.compact(k, ids), mapRef: k => rt.mapRef(k) })
+    const direct = await h.service.texts.resolve(language, [{ source: 'system', key: 'TRPGAssistant.UpstreamText.53c3659f28da2e53f969f902' }, { source: 'system', key: 'DND5E.WeaponImprov' }])
     const people = new h.KernelPeople({ runtime: rt, saves })
     const pools = {}
-    const out = { samples: [] }
+    const out = { samples: [], direct }
     let master
     for (const [prop, name, source] of [
       ['feat', 'Weapon Master', 'PHB'], ['background', 'Criminal', 'PHB'],
@@ -71,13 +72,15 @@ try {
   assert.ok(choices.every(option => option.value.startsWith('weapon:')), '改动了结算编号')
   assert.equal(master.untranslated.length, 0)
   if (language === 'cn') {
+    assert.deepEqual(result.direct, ['法术准备上限', '临时武器'])
     assert.ok(choices.every(option => /[㐀-鿿]/.test(option.label)), '武器名仍漏过中文出口')
     assert.ok(criminal.unsupported.some(text => text.includes('整副三龙牌')))
     assert.ok(guild.unsupported.some(text => text.includes('任意一个工匠工具')))
     assert.ok(tavern.unsupported.some(text => text.includes('临时武器')))
     assert.ok(bard.steps.some(step => /激励骰/.test(step.title)))
     assert.ok(monk.steps.some(step => step.title === '武艺骰'))
-    assert.ok(prepared.issues.some(issue => issue.text === 'Max Prepared Spells' && issue.reason === 'language-key-missing' && issue.key.startsWith('TRPGAssistant.UpstreamText.')))
+    assert.ok(prepared.steps.some(step => step.title === '法术准备上限'))
+    assert.deepEqual(prepared.untranslated, [])
     assert.ok(prepared.issues.every(issue => issue.path && issue.reason))
     for (const sample of result.samples.slice(7)) {
       assert.deepEqual(sample.untranslated, [], sample.name + ' 把作者配置编号误当成品文字')

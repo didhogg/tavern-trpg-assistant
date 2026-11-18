@@ -1,4 +1,3 @@
-import { displaySystemTexts } from './system-text'
 // 结算命令：只按顺序调用 dnd5e / Plutonium / Foundry 的官方入口（蓝图 §3.2～§3.6）。
 // 同一份代码既在插件结算小窗里跑，也注入演示站官方原件页面跑，两边结果直接逐项比较（tests/e2e/kernel/scenarios.mjs）。
 // 不弹窗、不发聊天消息；骰点只从传入的“已掷点数”取；写入经数据库后端记成变更计划，不保存。
@@ -175,7 +174,6 @@ const CONVERT_TIMEOUT_MS = 15_000
 const NO_MESSAGE = { create: false }
 
 export const KERNEL_COMMANDS = {
-  displaySystemTexts,
   ...ITEM_COMMANDS,
   ...COMBAT_COMMANDS,
   ...MONSTER_COMMANDS,

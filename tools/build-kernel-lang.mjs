@@ -1,5 +1,5 @@
 // 结算小窗的中文语言文件：官方客户端按「系统 / 模块清单里登记的语言文件」给界面文字（技能名、语言名、进阶标题、状态名……）。
-// 现在只有英文；这里自动生成中文文件，不手写任何译文：
+// 沿用作者词表和社区语言键生成；驾驶员明确批准的单项译文放 approved-translations.json：
 //   · 对每个已装包（vendor/foundry/manifest.json 里的系统和模块），按它自己清单里登记的英文文件逐条翻；
 //   · 同一编号先用社区翻译模块（按同一套编号逐条翻好的，如 5e_chn；读法见 tools/lib/community-langs.mjs，驾驶员 2026-11-17 定：两边不同时听社区）；
 //   · 社区没有的编号，再从作者「大译名表」配：整句完全相同（忽略大小写和首尾空格）才翻，对不上的留空——官方客户端缺哪个键就自动回退英文；
@@ -76,9 +76,11 @@ async function equipmentLabels(pkg) {
   return rows.map(([, text, code]) => ({ key: `TRPGAssistant.EquipmentType.${code}`, text, isEquipment: true }))
 }
 
+const approved = JSON.parse(await readFile(join(root, 'tools/approved-translations.json'), 'utf8'))
+const applied = []
 const upstream = await upstreamMessages(foundry)
 const files = []
-const review = { generatedFrom: version, community: communityFrom, communityDir, lang: LANG, packs: [], upstreamMessages: [] }
+const review = { generatedFrom: version, community: communityFrom, communityDir, lang: LANG, packs: [], upstreamMessages: [], approvedOverrides: applied }
 for (const pkg of packages) {
   const pkgManifest = JSON.parse(await readFile(join(foundry, pkg.dir, pkg.file), 'utf8'))
   const en = (pkgManifest.languages ?? []).find((l) => l.lang === 'en')
@@ -94,6 +96,8 @@ for (const pkg of packages) {
   // 社区翻译：同一编号、有字、和英文原文不同才算翻了
   const communityOf = (key, text) => (community.get(pkg.id) ?? []).map((c) => c.texts[key]).find((v) => typeof v === 'string' && v.trim() && v.trim() !== text.trim())
   for (const { key, text, isEquipment } of list) {
+    const override = approved.find(row => row.lang === LANG && row.package === pkg.id && row.text === text)
+    if (override) { flat[key] = override.translation; applied.push({ ...override, key }); continue }
     const term = text.trim().toLowerCase()
     // 类别登记用单数，译名表也可能只收规则书里的复数（原词优先）。
     const all = candidates.get(term) ?? (isEquipment ? candidates.get(`${term}s`) : undefined)

@@ -120,6 +120,8 @@ export interface LibraryBackend {
 }
 
 export interface Backend {
+  /** 所有业务共用的显示取字：编号、语言包、作者文字只接这里。 */
+  texts: LibraryService['texts']
   library: LibraryBackend
   kernel: KernelRuntime
   kernelSave: KernelSaveService
@@ -198,7 +200,7 @@ export function createBackend(opts: BackendOptions): Backend {
   // P5.5 U2：编辑只写原文就发布，停手 5 秒后后台批量解析（brew-queue.ts）
   let brewQueue: BrewParseQueue | null = null
   const service = new LibraryService({
-    db, revisions, operations, openFrame, onDataChanged: async (codeSet) => queue.trigger(codeSet), onLog: logs.sink(),
+    db, revisions, operations, openFrame, pluginRoot, onDataChanged: async (codeSet) => queue.trigger(codeSet), onLog: logs.sink(),
     beforeBrewWrite: async (codeSet) => { await brewQueue?.yield(codeSet) },
     onBrewDirty: (codeSet) => brewQueue?.trigger(codeSet),
   })
@@ -389,5 +391,5 @@ export function createBackend(opts: BackendOptions): Backend {
   const types: Backend['cards']['types'] = (rule, codeSet) => cardTypes({ pluginRoot, files, scoped, db, revisions, container }, rule, codeSet)
   const cards: Backend['cards'] = { types, fields: (rule, type, codeSet) => cardFields({ types, fields: (cs, p) => custom.fields(cs, p), plan: (cs, p) => custom.formPlan(cs, p) }, rule, type, codeSet) }
   const people = new KernelPeople({ runtime: kernel, saves: kernelSave })
-  return { library, kernel, kernelSave, people, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
+  return { library, texts: service.texts, kernel, kernelSave, people, starter, transfer, removalImpact, entryChangeImpact, houseExisting: houseExistingOf, removalExecute, removalImpactMany, removalExecuteMany, removalSizes: removalSizesOf, reclaim, cards }
 }
