@@ -44,7 +44,8 @@ const stripCollections = (data: Record<string, unknown>): Record<string, unknown
   return out
 }
 
-function refsOf(data: Record<string, unknown>, mapRef: KernelRefMapper): KernelRef[] {
+/** stored = 这个人按 B′ 存完整数据（读档不按引用重建）：引用只作来源记录，对不上【库】的跳过，不当错误。 */
+function refsOf(data: Record<string, unknown>, mapRef: KernelRefMapper, stored = false): KernelRef[] {
   const actorFlags = isObject(data.flags) && isObject(data.flags.plutonium) ? data.flags.plutonium as KernelRefFlags : null
   if (actorFlags?.source && actorFlags?.hash && (actorFlags.page === 'bestiary.html' || actorFlags.propDroppable === 'creature' || data.type !== 'character')) {
     const ref = mapRef({ ...actorFlags, propDroppable: 'creature' })
@@ -58,14 +59,17 @@ function refsOf(data: Record<string, unknown>, mapRef: KernelRefMapper): KernelR
     const flags = isObject(item.flags) && isObject(item.flags.plutonium) ? item.flags.plutonium as KernelRefFlags : null
     if (!flags) continue
     const ref = mapRef(flags)
-    if (!ref) throw new Error(`无法把作者编号对应到【库】条目：${flags.source}/${flags.hash}`)
+    if (!ref) { if (stored) continue; throw new Error(`无法把作者编号对应到【库】条目：${flags.source}/${flags.hash}`) }
     out.push({ ...ref, itemId: item._id, label: ref.label ?? (typeof item.name === 'string' ? item.name : undefined) })
   }
   return out
 }
 
-/** 完整人物 + 重建基准 → 引用 / 选择 / 状态差别。choices 来自官方 Advancement#reverse。 */
-export function splitActor(current: KernelActorData, rebuilt: KernelActorData, mapRef: KernelRefMapper, choices: Record<string, unknown>, diff: KernelDiff = jsonDiff): {
+/**
+ * 完整人物 + 重建基准 → 引用 / 选择 / 状态差别。choices 来自官方 Advancement#reverse。
+ * stored = 这个人按 B′ 存完整数据：读档直接按存下的数据建回，所以新加的物品整份存进状态（不靠引用重建）。
+ */
+export function splitActor(current: KernelActorData, rebuilt: KernelActorData, mapRef: KernelRefMapper, choices: Record<string, unknown>, diff: KernelDiff = jsonDiff, stored = false): {
   refs: KernelRef[]
   choices: Record<string, unknown>
   state: KernelActorState
@@ -74,7 +78,7 @@ export function splitActor(current: KernelActorData, rebuilt: KernelActorData, m
   const base = rebuilt.data
   const state: KernelActorState = kernelActorStateSchema.parse({})
   state.actor = diff(stripCollections(base), stripCollections(data))
-  const refs = refsOf(data, mapRef)
+  const refs = refsOf(data, mapRef, stored)
   const keyById = new Map<string, string>()
   for (const ref of refs) if (ref.itemId) { const key = stateKeyOfRef(ref); if (key) keyById.set(ref.itemId, key) }
   const baseItems = byId(base.items)
@@ -84,8 +88,8 @@ export function splitActor(current: KernelActorData, rebuilt: KernelActorData, m
     const flags = isObject(item.flags) && isObject(item.flags.plutonium) ? item.flags.plutonium as KernelRefFlags : null
     const key = stateKeyOfFlags(flags) ?? keyById.get(id) ?? id
     if (!before) {
-      // 有作者引用的新增物品：重建时按 refs 重新建出来，不把整份内容塞进 state。
-      if (!key.startsWith('ref:')) state.itemAdded.push(clone(item))
+      // 有作者引用的新增物品：按引用重建的人，重建时按 refs 重新建出来，不把整份内容塞进 state；B′ 人物整份存
+      if (stored || !key.startsWith('ref:')) state.itemAdded.push(clone(item))
       continue
     }
     const d = diff(before, item)

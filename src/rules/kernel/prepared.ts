@@ -7,15 +7,17 @@
 export type ActorData = Record<string, unknown>
 export type OffChoices = Record<string, Array<{ id: string; type: string; level: number; data: unknown }>>
 
-interface Entry { base: ActorData; view: ActorData | null; choices: OffChoices }
+interface Entry { base: ActorData; view: ActorData | null; choices: OffChoices; stored: boolean }
 
 export class PreparedActors {
   private readonly rows = new Map<string, Entry>()
 
-  /** 记一个人：没给 view（没有取下）= 视图就是基准。 */
-  set(id: string, base: ActorData, view?: ActorData | null, choices?: OffChoices | null): void {
-    this.rows.set(id, { base, view: view ?? null, choices: choices ?? {} })
+  /** 记一个人：没给 view（没有取下）= 视图就是基准；stored = 基准是存档里的完整数据（B′，作者整机建的人）。 */
+  set(id: string, base: ActorData, view?: ActorData | null, choices?: OffChoices | null, stored = this.rows.get(id)?.stored ?? false): void {
+    this.rows.set(id, { base, view: view ?? null, choices: choices ?? {}, stored })
   }
+  /** 这个人按 B′ 存完整数据（读档直接建回，不按引用重建、不抓成长选择）。 */
+  isStored(id: string): boolean { return this.rows.get(id)?.stored ?? false }
   delete(id: string): void { this.rows.delete(id) }
   has(id: string): boolean { return this.rows.has(id) }
   /** 完整基准（缓存、重新准备用）。 */

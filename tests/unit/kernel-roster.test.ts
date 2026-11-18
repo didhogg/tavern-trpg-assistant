@@ -38,6 +38,20 @@ describe('P6 B1 人物名单与撤销', () => {
     })
   })
 
+  it('B′：加人带完整数据时进战役层 bases，不进人物记录与撤销快照；撤销加人后读档不再取它', async () => {
+    await withDb(async (db) => {
+      const s = await service(db)
+      const base = { _id: 'a2', name: '人物a2', items: Array.from({ length: 30 }, (_, i) => ({ _id: `i${i}`, name: '特性'.repeat(50) })) }
+      const { kernel } = await s.addActors(OWNER.ownerKey, [{ ...actor('a2', 7), base }], 0)
+      expect(kernel.bases.a2).toEqual(base)
+      expect('base' in kernel.actors[1]).toBe(false)
+      expect(JSON.stringify(kernel.undo.at(-1)).includes('特性')).toBe(false)
+      const later = await s.setAdjustments(OWNER.ownerKey, ['a2'], { pinned: true }, kernel.revision)
+      expect(later.kernel.bases.a2).toEqual(base)
+      expect(JSON.stringify(later.kernel.undo.at(-1)).includes('特性')).toBe(false)
+    })
+  })
+
   it('同编号不能重复加', async () => {
     await withDb(async (db) => {
       const s = await service(db)

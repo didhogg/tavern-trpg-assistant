@@ -15,6 +15,7 @@ import { createBatchCommands } from './commands-batch'
 import { createOptionsCommands } from './commands-options'
 import { createEquipmentCommands } from './commands-equipment'
 import { createSheetCommands } from './commands-sheet'
+import { createImportCommands } from './commands-import'
 import { settled } from './server'
 
 /**
@@ -113,10 +114,11 @@ function sourcesFor(changes: Change[]): Record<string, any[]> {
 }
 
 /** 一次结算操作：统一结果格式（状态、数值、来源、变更计划、缺什么、等什么、未支持、错误）。 */
-async function operate(points: number[], run: () => Promise<any>, actors: string[] = []): Promise<any> {
+/** ui = 这条命令要让作者窗口显示给玩家（作者整机建卡）；其余命令一显示窗口就停下（蓝图 §3.4 兜底）。 */
+async function operate(points: number[], run: () => Promise<any>, actors: string[] = [], { ui = false }: { ui?: boolean } = {}): Promise<any> {
   let outcome: any; let changes: Change[] = []
   // 命令返回前等官方"发出去不等"的写入落地，免得它们漏出变更计划（server.ts settled）
-  try { ({ value: outcome, changes } = await capture(() => withDice(points, () => guardRender(run)).then(async (v) => { await settled(); return v }))) }
+  try { ({ value: outcome, changes } = await capture(() => withDice(points, () => (ui ? run() : guardRender(run))).then(async (v) => { await settled(); return v }))) }
   // 失败原因交错误说明本身（上位设计 §3.5）；堆栈另放，只供排查（各浏览器格式不同，也含代码地址）
   catch (error) { return { status: 'error', error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack ?? null : null, changes } }
   const unsupported: UnsupportedItem[] = actors.flatMap(id => unsupportedFor(actor(id)))
@@ -142,6 +144,8 @@ const SHEET_COMMANDS = createSheetCommands(operate, actor, rollSummary)
 /** P6 建卡选项：每件条目要玩家选的事（官方进阶算候选）。 */
 const OPTIONS_COMMANDS = createOptionsCommands(operate)
 const EQUIPMENT_COMMANDS = createEquipmentCommands(operate)
+/** P6 建卡走作者整机（Plutonium「导入到人物」）。 */
+const IMPORT_COMMANDS = createImportCommands(operate)
 
 // ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
 const AUTHOR_CLASSES = ['Config', 'ConfigConsts', 'VetoolsLinks', 'Vetools', 'SideDataInterfaces', 'Dnd5eUtil', 'UtilDamageTypes', 'ImplementationRegistryImportList',
@@ -174,6 +178,7 @@ const CONVERT_TIMEOUT_MS = 15_000
 const NO_MESSAGE = { create: false }
 
 export const KERNEL_COMMANDS = {
+  ...IMPORT_COMMANDS,
   ...ITEM_COMMANDS,
   ...COMBAT_COMMANDS,
   ...MONSTER_COMMANDS,

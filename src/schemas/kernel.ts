@@ -135,6 +135,12 @@ export const kernelCampaignSchema = z.object({
   dataVersion: kernelVersionSchema.default({ official: '', brews: {} }),
   overrides: z.array(kernelOverrideSchema).default([]),
   actors: z.array(kernelActorSchema).default([]),
+  /**
+   * 作者整机建好的人物完整数据（驾驶员定 C1 = B′：人物存数据 + 记录来源）：人物编号 → 建好时的整份人物。
+   * 读档直接按它建回，不重跑作者流程；人物记录里只放来源、改动、取下安排。放在战役层，撤销快照不含它（每份约 100–200KB）。
+   * 旧人物没有这一项，照旧按引用 + 选择重建。
+   */
+  bases: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
   combat: kernelCombatSchema.default({ id: null, name: '', round: 0, turn: null, active: false, combatants: [] }),
   revision: z.number().int().nonnegative().default(0),
   undo: z.array(kernelUndoSchema).default([]),

@@ -60,7 +60,6 @@ async function chain(): Promise<void> {
   const monster = await timed(steps, '加怪物（正式入口：批量建）', () => kernel.createActors(OWNER.ownerKey, [picked.monster.ref]),
     (r) => r.status === 'complete' && !!r.actors?.[0]?.id, (r) => ({ status: r.status, error: r.error }))
   const monsterId = monster.actors![0].id as string
-  await kernel.remember(OWNER.ownerKey, monsterId)
 
   await timed(steps, '人物写进存档（只存引用）', async () => {
     const actors = await kernel.compact(OWNER.ownerKey, [heroId, monsterId])

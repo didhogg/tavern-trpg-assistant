@@ -9,7 +9,8 @@ import type { ScopedLibrary } from '../../library/scoped'
 import { officialSourceOf } from '../../library/sources'
 import type { KernelActor, KernelRef } from '../../schemas/kernel'
 /** 重建的人物：带编号 = 读档沿用存档编号；不带 = 新人物（复制品）由小窗起新编号。 */
-export type RebuildInput = Omit<KernelActor, 'id'> & { id?: string }
+/** base = 存档战役层里这个人的完整数据（B′）：有就直接按它建回，不按引用重建。 */
+export type RebuildInput = Omit<KernelActor, 'id'> & { id?: string; base?: Record<string, unknown> }
 import type { KernelSession } from './host'
 import { ruleKernel } from './adapters'
 
@@ -162,6 +163,8 @@ export async function compactActor(opts: {
   current: Record<string, unknown>
   base: Record<string, unknown>
   choices: Record<string, unknown>
+  /** 按 B′ 存完整数据的人（splitActor stored）。 */
+  stored?: boolean
 }): Promise<KernelActorCompact> {
   const mapper = await refMapperFor(opts.lib, opts.library)
   const split = splitActor(
@@ -169,6 +172,8 @@ export async function compactActor(opts: {
     { id: opts.actor.id, name: opts.actor.name, data: opts.base },
     mapper,
     opts.choices,
+    undefined,
+    opts.stored,
   )
   for (const ref of split.refs) {
     const stored = await opts.lib.storedItem(ref)

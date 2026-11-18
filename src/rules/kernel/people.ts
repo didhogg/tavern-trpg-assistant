@@ -78,6 +78,13 @@ export function nextNames(base: string, count: number, taken: string[]): string[
 /** 复制时的名字底：「地精 1」复制出来是「地精 4」不是「地精 1 2」。 */
 const baseName = (name: string): string => name.replace(/ \d+$/, '')
 
+type Saved = KernelActor & { base?: Record<string, unknown> }
+/** 存档人物带上战役层的 B′ 完整数据（有的话）。 */
+const withBase = (kernel: { bases?: Record<string, Record<string, unknown>> }, actor: KernelActor): Saved => {
+  const base = kernel.bases?.[actor.id]
+  return base ? { ...actor, base } : actor
+}
+
 export class KernelPeople {
   constructor(private readonly deps: { runtime: KernelRuntime; saves: KernelSaveService }) {}
 
@@ -90,8 +97,11 @@ export class KernelPeople {
     const { session } = await this.deps.runtime.session(ownerKey)
     return (session.call as unknown as (fn: string, ...args: unknown[]) => Promise<unknown>)(fn, ...args)
   }
-  private async saved(ownerKey: string, id: string): Promise<KernelActor | null> {
-    return (await this.deps.saves.read(ownerKey))?.actors.find((a) => a.id === id) ?? null
+  /** 存档里的这个人；B′ 人物带上战役层的完整数据（base），退回 / 读档 / 取下都从它建回。 */
+  private async saved(ownerKey: string, id: string): Promise<Saved | null> {
+    const kernel = await this.deps.saves.read(ownerKey)
+    const actor = kernel?.actors.find((a) => a.id === id)
+    return kernel && actor ? withBase(kernel, actor) : null
   }
 
   /**
@@ -103,7 +113,7 @@ export class KernelPeople {
     if (!kernel) return []
     const present = new Set((await this.prepared(ownerKey)).map((a) => String(a.source._id)))
     const todo = kernel.actors.filter((a) => !present.has(a.id) && !a.legacy)
-    const results = todo.length ? await this.deps.runtime.rebuildMany(ownerKey, todo) : []
+    const results = todo.length ? await this.deps.runtime.rebuildMany(ownerKey, todo.map((a) => withBase(kernel, a))) : []
     return kernel.actors.map((a): LoadedActor => {
       if (present.has(a.id)) return { id: a.id, name: a.name, status: 'complete' }
       if (a.legacy) return { id: a.id, name: a.name, status: 'legacy' }
@@ -228,21 +238,32 @@ export class KernelPeople {
     }
     return { made, kernel: await this.enroll(ownerKey, ids, adjustments) }
   }
-  /** 复制一个人：同样的引用 / 选择 / 状态差别，换新种子重建（读档时编号不会和原来的人撞）。 */
+  /**
+   * 加人：作者整机建卡（Plutonium「导入到人物」，条目按顺序：种族 → 背景 → 职业 → 子职业 …），作者要问玩家时显示作者窗口。
+   * 建好的整份人物按 B′ 存进存档（战役层 bases）；读档直接建回。adjustments = 列表信息（分类等）。
+   */
+  async create(ownerKey: string, plan: { name: string; items: EntryRef[]; level?: number }, adjustments: Record<string, unknown> = {}) {
+    const made = await this.deps.runtime.importCharacter(ownerKey, plan)
+    if (made.status !== 'complete' || !made.id || !made.data) return { made, kernel: null }
+    return { made, kernel: await this.enroll(ownerKey, [made.id], adjustments, [], { [made.id]: made.data }) }
+  }
+  /** 复制一个人：同样的引用 / 选择 / 状态差别，换新种子重建（读档时编号不会和原来的人撞）；B′ 人物拷贝完整数据换新编号。 */
   async copy(ownerKey: string, actorId: string, given?: string) {
     const source = await this.saved(ownerKey, actorId)
     if (!source) throw new Error(`存档里没有这个人物：${actorId}`)
     const name = given ?? nextNames(baseName(source.name), 1, ((await this.deps.saves.read(ownerKey))?.actors ?? []).map((a) => a.name))[0]
     // 复制品不带原人物编号：重建会沿用存档编号（冷读档编号不变），带着就和原人物撞成同一个
-    const { id: _sourceId, ...rest } = source
-    const copy = { ...rest, name, seed: `${source.seed || source.name}~${crypto.randomUUID().slice(0, 8)}` }
+    const { id: _sourceId, base: sourceBase, ...rest } = source
+    const base = sourceBase ? { ...structuredClone(sourceBase), _id: crypto.randomUUID().replace(/-/g, '').slice(0, 16), name } : undefined
+    const copy = { ...rest, name, seed: `${source.seed || source.name}~${crypto.randomUUID().slice(0, 8)}`, ...(base ? { base } : {}) }
     const result = await this.deps.runtime.rebuild(ownerKey, copy)
     if (result.status !== 'complete' || !result.id) return { result, kernel: null }
     if (copy.name !== (result.data as { name?: string } | undefined)?.name) await this.call(ownerKey, 'renameActor', result.id, name)
-    return { result, kernel: await this.enroll(ownerKey, [result.id], source.adjustments, source.off) }
+    return { result, kernel: await this.enroll(ownerKey, [result.id], source.adjustments, source.off, base ? { [result.id]: base } : {}) }
   }
-  private async enroll(ownerKey: string, ids: string[], adjustments: Record<string, unknown>, off: KernelActor['off'] = []) {
-    const compacts: KernelActorCompact[] = (await this.deps.runtime.compact(ownerKey, ids)).map((c) => ({ ...c, off }))
+  /** 写进存档；bases = B′ 人物的完整数据（进战役层，不进人物记录）。 */
+  private async enroll(ownerKey: string, ids: string[], adjustments: Record<string, unknown>, off: KernelActor['off'] = [], bases: Record<string, Record<string, unknown>> = {}) {
+    const compacts: KernelActorCompact[] = (await this.deps.runtime.compact(ownerKey, ids)).map((c) => ({ ...c, off, ...(bases[c.id] ? { base: bases[c.id] } : {}) }))
     return (await this.deps.saves.addActors(ownerKey, compacts, await this.rev(ownerKey), adjustments)).kernel
   }
 
@@ -286,7 +307,7 @@ export class KernelPeople {
   async undo(ownerKey: string) {
     const done = await this.deps.saves.undo(ownerKey, await this.rev(ownerKey))
     if (!done) return null
-    for (const row of done.restored) await this.deps.runtime.restore(ownerKey, row.id, row.actor)
+    for (const row of done.restored) await this.deps.runtime.restore(ownerKey, row.id, row.actor && withBase(done.kernel, row.actor))
     return done.kernel
   }
   /** 撤销到这里：一步一步撤，直到那次写入之前（revision = 改动记录里那一行的 revision）。 */

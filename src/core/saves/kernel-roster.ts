@@ -19,7 +19,7 @@ export interface RosterContext {
 export interface RestoredActor { id: string; actor: KernelActor | null }
 
 async function write<T>(ctx: RosterContext, ownerKey: string, expectedRevision: number,
-  change: (kernel: KernelCampaign) => { actors: KernelActor[]; before: Record<string, unknown>; extra?: T }): Promise<{ workspace: Workspace; kernel: KernelCampaign; extra?: T }> {
+  change: (kernel: KernelCampaign) => { actors: KernelActor[]; before: Record<string, unknown>; extra?: T; bases?: Record<string, Record<string, unknown>> }): Promise<{ workspace: Workspace; kernel: KernelCampaign; extra?: T }> {
   const limit = await ctx.limit()
   return ctx.db.transaction('rw', ctx.db.workspaces, async () => {
     const ws = await ctx.db.workspaces.get(ownerKey)
@@ -27,9 +27,10 @@ async function write<T>(ctx: RosterContext, ownerKey: string, expectedRevision: 
     const kernel = ctx.parse(ws.data.kernel)
     if (!kernel) throw new TrpgError('E_NO_KERNEL', '这个战役还没有绑定结算内核')
     if (kernel.revision !== expectedRevision) throw new TrpgError('E_REVISION_CONFLICT', '存档已被其他窗口修改，请重新读取')
-    const { actors, before, extra } = change(kernel)
+    const { actors, before, extra, bases } = change(kernel)
     const next: KernelCampaign = {
-      ...kernel, actors, revision: kernel.revision + 1,
+      // bases（B′ 完整人物数据）只增不减：撤销加人后留着无害，读档只取存档里还有的人
+      ...kernel, actors, bases: bases ? { ...kernel.bases, ...bases } : kernel.bases, revision: kernel.revision + 1,
       undo: [...kernel.undo, { at: ctx.now(), revision: kernel.revision, actorIds: Object.keys(before), before }].slice(-limit),
     }
     const workspace: Workspace = { ...ws, data: { ...ws.data, kernel: next }, updatedAt: ctx.now() }
@@ -43,12 +44,14 @@ export function addActors(ctx: RosterContext, ownerKey: string, compacts: Kernel
   return write(ctx, ownerKey, expectedRevision, (kernel) => {
     const taken = new Set(kernel.actors.map((a) => a.id))
     const before: Record<string, unknown> = {}
-    const added = compacts.map((c) => {
+    const bases: Record<string, Record<string, unknown>> = {}
+    const added = compacts.map(({ base, ...c }) => {
       if (taken.has(c.id)) throw new TrpgError('E_ACTOR_EXISTS', `存档里已经有这个人物：${c.id}`)
       before[c.id] = null
+      if (base) bases[c.id] = clone(base)
       return { ...clone(c), off: clone(c.off ?? []), adjustments: clone(adjustments), dice: [], legacy: false } as KernelActor
     })
-    return { actors: [...kernel.actors.map(clone), ...added], before }
+    return { actors: [...kernel.actors.map(clone), ...added], before, bases }
   })
 }
 

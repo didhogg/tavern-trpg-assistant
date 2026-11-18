@@ -4,7 +4,7 @@
 
 const g = globalThis as any
 
-export type Operate = (points: number[], run: () => Promise<any>, actors?: string[]) => Promise<any>
+export type Operate = (points: number[], run: () => Promise<any>, actors?: string[], opts?: { ui?: boolean }) => Promise<any>
 export type ActorGetter = (id: string) => any
 
 /** 只把官方 uses 字段的现状交回；max 为空表示这件物品没有次数。 */
