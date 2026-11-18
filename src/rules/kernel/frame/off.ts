@@ -1,55 +1,24 @@
 // P6 自动项目「取下 / 装回」：在人物准备的汇合处（建好完整基准之后、叠游戏状态之前）按人物的取下安排处理。
 // 三条路径都经过这里：重建（rebuildCharacter）、读档命中缓存与撤销 / 取消退回（createActorsFromBase）。
 //
-//   完整基准（原始来源 + 原始选择，原样保留，缓存也存这一份）
-//        │ 取下安排
-//        ▼
-//   受影响的成长按原作者 reverse 全部退回（倒序）→ 按原顺序恢复：整条取下的跳过；取下子项的从原数据里去掉那几项；
-//   能重判固定授予的（集合并入、可重复应用）再让作者重新判断一次 —— 同名熟练有两个来源时，取下一份另一份仍在
-//        │
-//        ▼
-//   取下后的人物视图（存档差别相对它算）→ 再叠游戏状态
-//
-// 不替作者算「减几点、删哪项」：只决定哪些原始数据交回作者的 restore / apply。
-// 子项的身份用作者数据自己的键（熟练：chosen 里的 skills:prc；属性提升：属性键），不按名字。
-// 成长类型登记表：加一种 = 加一行；没登记的类型不能取下，会给出原因，不猜。
+// 一律用作者（dnd5e）自己的取下 / 装回程序，不分类型另写规则：
+//   成长  取下 = 作者 reverse（一条成长的某一级）；装回 = 作者 restore（用作者 reverse 交回的原数据）
+//   单项  作者 reverse 的单项选项（熟练类按键 key、授予 / 选择物品按 uuid；作者没给单项程序的类型只能整条取下）
+//   效果  作者的「停用」
+//   重叠  同一类成长有好几个来源时（精灵、水手都给察觉），作者建卡时会去重；所以恢复后让作者重新判断
+//         固定授予（automaticApplicationValue → apply），被去重的另一来源回来；单项取下时还有别的生效来源给同一项就不取
+// 授予 / 选择物品也一样：作者 reverse 交回物品原数据，restore 按原编号放回。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 
-/** 一条取下记录：作者来源（Plutonium 标记 prop|source|hash）+ 可选的成长编号 / 等级 / 子项。只写来源 = 整件取下。 */
-export interface OffRow { ref: string; advancement?: string; level?: number; part?: string }
+const g = globalThis as any
 
-interface PartRule {
-  /**
-   * 这条成长能给哪些子项（作者键）：作者配置里的固定授予 + 记下的选择。不能只看记下的结果——
-   * 同名熟练有两个来源时，作者建卡会去重，第二个来源的记录里可能没有这一项。
-   */
-  parts: (adv: any) => string[]
-  /** 去掉这些子项后的数据（给作者 restore / apply）。 */
-  without: (value: any, drop: Set<string>) => any
-  /** 作者 apply 是集合并入、可重复应用：恢复后再让作者重判固定授予（被去重的另一来源会回来）。 */
-  refresh: boolean
-}
+/**
+ * 一条取下记录：作者来源（Plutonium 标记 prop|source|hash）+ 可选的成长编号 / 等级 / 单项键，或这件条目上的效果编号。
+ * 只写来源 = 整件取下（这件条目的成长、效果都取下，条目本身由作者的「隐藏」挡住使用）。
+ */
+export interface OffRow { ref: string; advancement?: string; level?: number; part?: string; effect?: string }
 
-const keysOf = (v: any): string[] => [...(v?.chosen ?? [])].map(String)
-const plainOf = (v: any): any => JSON.parse(JSON.stringify(v ?? null, (_k, x) => (x instanceof Set ? [...x] : x)))
-export const OFF_TYPES: Record<string, PartRule> = {
-  Trait: {
-    parts: (adv) => [...new Set([...keysOf(plainOf(adv.value)), ...(plainOf(adv.configuration)?.grants ?? []).map(String)])],
-    without: (v, drop) => ({ ...v, chosen: keysOf(v).filter((k) => !drop.has(k)) }),
-    refresh: true,
-  },
-  AbilityScoreImprovement: {
-    // 选专长那种（type = feat）会授予物品，取下要连物品一起处理，暂不登记：只认属性分配
-    parts: (adv) => {
-      const value = plainOf(adv.value), fixed = plainOf(adv.configuration)?.fixed ?? {}
-      return [...new Set([...(value?.type === 'asi' ? Object.keys(value.assignments ?? {}) : []), ...Object.keys(fixed).filter((k) => fixed[k])])]
-    },
-    without: (v, drop) => ({ ...v, assignments: Object.fromEntries(Object.entries(v?.assignments ?? {}).filter(([k]) => !drop.has(k))) }),
-    refresh: false,
-  },
-}
-
-/** 取下记录里的「整件」：控制隐藏的效果用固定编号，读档、撤销重算时是同一个，不会多出一份。 */
+/** 整件取下时挡住条目使用的作者「隐藏」：控制效果用固定编号，读档、撤销重算时是同一个，不会多出一份。 */
 export const OFF_CONTROLLER_ID = 'trpgOffHidden000'
 
 export const flagsKey = (item: any): string | null => {
@@ -57,6 +26,7 @@ export const flagsKey = (item: any): string | null => {
   return f?.propDroppable && f.source && f.hash ? `${f.propDroppable}|${f.source}|${f.hash}` : null
 }
 const typeOf = (adv: any): string => adv.constructor?.typeName ?? adv.type
+const plain = (data: any): any => JSON.parse(JSON.stringify(data ?? null, (_k, v) => (v instanceof Set ? [...v] : v)))
 
 export interface AdvRow { item: any; key: string; adv: any; type: string; level: number }
 
@@ -74,72 +44,83 @@ export function advancementRows(actor: any): AdvRow[] {
   return rows
 }
 
-const storable = (data: any): any => JSON.parse(JSON.stringify(data ?? null, (_k, v) => (v instanceof Set ? [...v] : v)))
-const matches = (row: AdvRow, off: OffRow): boolean => off.ref === row.key && (off.advancement === undefined || off.advancement === row.adv.id) && (off.level === undefined || off.level === row.level)
+const matches = (row: AdvRow, off: OffRow): boolean => off.ref === row.key && off.advancement === row.adv.id && (off.level === undefined || off.level === row.level)
+/**
+ * 作者记录的单项（作者 reverse 的单项选项认的那个身份）：
+ *   熟练类 = 记下的键 + 配置里的固定授予（去重后记录里可能没有，配置里有）；
+ *   授予 / 选择物品 = 作者存放授予记录的地方（advancement.storagePath）里的物品来源编号。
+ * 作者没有这两种记录的成长 = 没有单项程序，只能整条取下（null）。
+ */
+const keysOf = (adv: any, level: number): string[] | null => {
+  const value = plain(adv.value), config = plain(adv.configuration)
+  if (Array.isArray(value?.chosen)) return [...new Set([...value.chosen, ...(Array.isArray(config?.grants) ? config.grants : [])].map(String))]
+  const path = typeof adv.storagePath === 'function' ? adv.storagePath(level) : null
+  const added = path ? plain(g.foundry.utils.getProperty(adv, path)) : null
+  return added && typeof added === 'object' ? Object.values(added).filter((v): v is string => typeof v === 'string') : null
+}
+/** 交给作者 reverse 的单项选项：熟练类认 key，授予 / 选择物品认 uuid（各认各的，另一个不看）。 */
+const partOption = (part: string): Record<string, string> => ({ key: part, uuid: part })
 
-/** 原始选择（取下前作者 reverse 记下的）：按作者来源 → 行；保存时用它保护原始选择，不让「当前没应用」覆盖「原来选过」。 */
+/** 原始选择（取下前作者 reverse 交回的）：按作者来源 → 行；保存时用它保护原始选择，不让「当前没应用」覆盖「原来选过」。 */
 export type OffChoices = Record<string, Array<{ id: string; type: string; level: number; data: any }>>
 
 export interface OffResult { applied: boolean; choices: OffChoices; problems: Array<{ off: OffRow; reason: string }> }
 
-/** 检查取下记录：指向的条目 / 成长在不在、类型能不能取下、子项在不在。 */
+/** 检查取下记录：指向的条目 / 成长 / 效果在不在、是不是物品类成长、单项作者有没有按键取下的程序。 */
 function check(actor: any, rows: AdvRow[], off: OffRow[]): OffResult['problems'] {
   const problems: OffResult['problems'] = []
   for (const o of off) {
-    if (![...actor.items].some((i: any) => flagsKey(i) === o.ref)) { problems.push({ off: o, reason: '人物身上没有这件作者条目' }); continue }
+    const item = [...actor.items].find((i: any) => flagsKey(i) === o.ref)
+    if (!item) { problems.push({ off: o, reason: '人物身上没有这件作者条目' }); continue }
+    if (o.effect !== undefined) { if (!item.effects.has(o.effect)) problems.push({ off: o, reason: '这件条目上没有这个效果' }); continue }
     if (o.advancement === undefined) continue
     const hit = rows.filter((r) => matches(r, o))
     if (!hit.length) { problems.push({ off: o, reason: '这件条目没有这一条成长' }); continue }
-    const unknown = hit.find((r) => !OFF_TYPES[r.type])
-    if (unknown) { problems.push({ off: o, reason: `「${unknown.type}」类成长还不能取下` }); continue }
-    if (o.part !== undefined && !hit.some((r) => OFF_TYPES[r.type].parts(r.adv).includes(o.part!))) problems.push({ off: o, reason: '这条成长没有这个子项' })
+    if (o.part !== undefined && !hit.some((r) => keysOf(r.adv, r.level)?.includes(o.part!))) {
+      problems.push({ off: o, reason: hit.every((r) => keysOf(r.adv, r.level) === null) ? '作者这类成长没有按单项取下的程序，只能整条取下' : '这条成长没有这一项' })
+    }
   }
   return problems
 }
 
-/** 整件取下要隐藏的物品：条目本身 + 它的成长授予的物品（作者记录 value.added 里出现、且在人物身上的编号）。 */
-function hiddenIds(actor: any, whole: Set<string>): string[] {
-  const ids = new Set<string>()
-  const walk = (v: any): void => { if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) { if (actor.items.has(k)) ids.add(k); walk(x) } }
-  for (const item of actor.items) {
-    if (!whole.has(flagsKey(item) ?? '')) continue
-    ids.add(item.id)
-    for (const adv of Object.values(item.advancement?.byId ?? {}) as any[]) walk(storable(adv.value)?.added)
-  }
-  return [...ids]
-}
-
-/** 按取下安排处理人物（只改内存里的作者文档，和作者 reverse / restore 同一种写法）；没有取下记录什么都不做。 */
+/** 按取下安排处理人物（只改内存里的作者文档，全用作者自己的程序）；没有取下记录什么都不做。 */
 export async function applyOff(actor: any, off: OffRow[] | undefined): Promise<OffResult> {
   if (!off?.length) return { applied: false, choices: {}, problems: [] }
   const rows = advancementRows(actor)
   const problems = check(actor, rows, off)
   if (problems.length) return { applied: false, choices: {}, problems }
-  const whole = new Set(off.filter((o) => o.advancement === undefined).map((o) => o.ref))
-  const offOf = (r: AdvRow): OffRow[] => off.filter((o) => (o.advancement === undefined ? o.ref === r.key : matches(r, o)))
-  const touched = new Set(rows.filter((r) => OFF_TYPES[r.type] && offOf(r).length).map((r) => r.type))
-  const target = rows.filter((r) => touched.has(r.type))
+  const whole = new Set(off.filter((o) => o.advancement === undefined && o.effect === undefined).map((o) => o.ref))
+  const offOf = (r: AdvRow): OffRow[] => (whole.has(r.key) ? [{ ref: r.key }] : off.filter((o) => matches(r, o)))
+  // 碰到的成长类别：同一类的所有来源一起交作者退回、恢复、重判（重叠只会发生在同一类成长之间）
+  const touched = new Set(rows.filter((r) => offOf(r).length).map((r) => r.adv.constructor))
+  const target = rows.filter((r) => touched.has(r.adv.constructor))
   const retained: Array<AdvRow & { data: any }> = []
-  for (const row of [...target].reverse()) retained.unshift({ ...row, data: storable(await row.adv.reverse(row.level)) })
+  for (const row of [...target].reverse()) retained.unshift({ ...row, data: plain(await row.adv.reverse(row.level)) })
   const choices: OffChoices = {}
   for (const row of retained) {
     (choices[row.key] ??= []).push({ id: row.adv.id, type: row.type, level: row.level, data: row.data })
-    const offs = offOf(row)
-    if (offs.some((o) => o.part === undefined)) continue
-    const rule = OFF_TYPES[row.type]
-    const drop = new Set(offs.map((o) => o.part!))
-    await row.adv.restore(row.level, drop.size ? rule.without(row.data, drop) : row.data)
-    if (!rule.refresh) continue
-    const auto = await row.adv.automaticApplicationValue(row.level, { initial: true })
-    if (auto) await row.adv.apply(row.level, drop.size ? rule.without(auto, drop) : auto)
+    if (!offOf(row).some((o) => o.part === undefined)) await row.adv.restore(row.level, row.data)
   }
-  const hide = hiddenIds(actor, whole)
-  // 隐藏只挡条目的使用 / 恢复；它自带的效果在同一轮准备里已经算进人物，所以用作者原生的「停用」一并关掉（视图里，装回从完整基准重来）
-  for (const id of hide) for (const effect of actor.items.get(id)?.effects ?? []) effect.updateSource({ disabled: true })
-  if (hide.length) {
+  // 作者重判：没整条取下的成长都交作者重新判断固定授予（被去重的另一来源回来）
+  const active = retained.filter((row) => !offOf(row).some((o) => o.part === undefined))
+  for (const row of active) {
+    const auto = await row.adv.automaticApplicationValue(row.level, { initial: true })
+    if (auto) await row.adv.apply(row.level, auto)
+  }
+  // 单项取下：还有别的生效来源给同一项就不取（读作者自己的记录判断谁给了这一项），否则交作者的单项取下程序
+  const offParts = (row: AdvRow): Set<string> => new Set(offOf(row).flatMap((o) => (o.part === undefined ? [] : [o.part])))
+  for (const row of active) for (const part of offParts(row)) {
+    const elsewhere = active.some((other) => other !== row && !offParts(other).has(part) && (keysOf(other.adv, other.level) ?? []).includes(part))
+    if (!elsewhere) await row.adv.reverse(row.level, partOption(part))
+  }
+  // 效果：作者的「停用」；整件取下 = 这件条目的效果全部停用 + 作者「隐藏」挡住条目使用
+  for (const o of off) if (o.effect !== undefined) [...actor.items].find((i: any) => flagsKey(i) === o.ref)?.effects.get(o.effect)?.updateSource({ disabled: true })
+  const hidden = [...actor.items].filter((i: any) => whole.has(flagsKey(i) ?? ''))
+  for (const item of hidden) for (const effect of item.effects) effect.updateSource({ disabled: true })
+  if (hidden.length) {
     await actor.createEmbeddedDocuments('ActiveEffect', [{
       _id: OFF_CONTROLLER_ID, name: 'TRPG 已取下', type: 'base', transfer: false, flags: { trpg: { offController: true } },
-      system: { changes: hide.map((id) => ({ key: 'items.hidden', type: 'add', value: id, priority: 0 })) },
+      system: { changes: hidden.map((i: any) => ({ key: 'items.hidden', type: 'add', value: i.id, priority: 0 })) },
     }], { keepId: true })
   }
   actor.reset()

@@ -40,13 +40,15 @@ export type KernelActorState = z.infer<typeof kernelActorStateSchema>
 
 /**
  * 人物的取下安排（P6）：一行 = 一项暂时不用的自动项目。只记作者来源（Plutonium 标记 prop|source|hash）
- * + 可选的成长编号 / 等级 / 子项（作者数据自己的键）；只写来源 = 整件取下。原始来源与原始选择不动，装回 = 删掉这一行。
+ * + 可选的成长编号 / 等级 / 单项（作者按键记录的键），或这件条目上的效果编号；只写来源 = 整件取下。原始来源与原始选择不动，装回 = 删掉这一行。
  */
 export const kernelOffRowSchema = z.object({
   ref: z.string().min(1),
   advancement: z.string().min(1).optional(),
   level: z.number().int().optional(),
   part: z.string().min(1).optional(),
+  /** 这件条目上的一个效果（作者的「停用」）。 */
+  effect: z.string().min(1).optional(),
 })
 export type KernelOffRow = z.infer<typeof kernelOffRowSchema>
 
