@@ -1,0 +1,34 @@
+<div class="ve-flex-col ve-window ve-min-h-0 ve-h-100">
+	<div class="ve-flex-v-stretch ve-input-group ve-input-group--top ve-no-shrink">
+		<input type="search" class="search ve-w-100 ve-form-control ve-h-initial" placeholder="Find {{titleSearch}}...">
+		<button class="ve-btn ve-btn-5et veapp__btn-list-reset" name="btn-reset">Reset</button>
+	</div>
+	<div class="ve-flex-v-stretch ve-input-group ve-input-group--bottom ve-mb-1 ve-no-shrink" data-name="wrp-btns-sort">
+		<button class="ve-btn ve-btn-5et ve-col-7-5 sort" data-sort="name">Name</button>
+		<button class="ve-btn ve-btn-5et ve-col-1-5 sort" data-sort="source">Source</button>
+
+		<button class="ve-btn ve-btn-5et ve-col-3" disabled>Import As</button>
+	</div>
+
+	<div class="veapp__list ve-mb-1 ve-h-100">
+		{{#each rows}}
+			<label class="ve-w-100 ve-flex-v-center ve-pb-1p veapp__list-row veapp__list-row-hoverable ve-min-h-24p">
+				<span class="ve-col-7-5 ve-pl-1">{{name}}</span>
+				<span class="ve-col-1-5 ve-text-center {{sourceClassName}}" title="{{sourceLong}}">{{sourceShort}}</span>
+
+				<div class="ve-col-3 ve-flex-v-center">
+					<select class="ve-w-100 ve-mx-1 ve-input-xs veapp__sel-row-inline ve-form-control" name="sel-foundry-type">
+						<option value="-1" title="Default">&mdash;</option>
+						{{#each foundryTypes}}
+							<option value="{{ix}}" title="{{displayName}} (&quot;{{type}}&quot;)">{{displayName}}</option>
+						{{/each}}
+					</select>
+					</div>
+			</label>
+		{{/each}}
+	</div>
+
+	<div class="ve-no-shrink">
+		<button class="ve-btn ve-btn-5et ve-btn-primary ve-w-100" name="btn-run">Import</button>
+	</div>
+</div>

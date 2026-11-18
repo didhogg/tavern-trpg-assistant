@@ -40,6 +40,33 @@ for (const path of [...wanted].sort()) {
   copied.push(path)
 }
 
+// 整包带的模块（P6 建卡改走作者「导入到人物」整机：作者窗口、模板、样式、图标都要用，不再「读到才录」）。
+// 只列不带的目录与原因；其余原样拷贝。lang/zh.json 是插件生成的中文语言包（tools/build-kernel-lang.mjs），保留。
+const WHOLE_PACKAGES = {
+  plutonium: {
+    skip: {
+      data: '5etools 数据由【库】回答（驾驶员定 A）；【库】没有的补充文件按上面的录制清单带',
+      search: '作者检索索引，导入到人物用不到',
+      server: 'Plutonium 后端插件，不在浏览器里跑',
+      'rivet.zip': '浏览器扩展', 'rivet_chrome.zip': '浏览器扩展', 'mod-template': '作者给别人写模块的模板',
+    },
+    keep: ['lang/zh.json'],
+  },
+}
+for (const [id, rule] of Object.entries(WHOLE_PACKAGES)) {
+  const from = moduleRoots[id]
+  for (const path of await readdir(from, { recursive: true, withFileTypes: false })) {
+    const top = path.split(sep)[0]
+    if (top in rule.skip || rule.keep.includes(path.split(sep).join('/'))) continue
+    const src = join(from, path)
+    if ((await import('node:fs')).statSync(src).isDirectory()) continue
+    const to = join(vendor, 'modules', id, path)
+    await mkdir(dirname(to), { recursive: true })
+    await copyFile(src, to)
+    copied.push(`modules/${id}/${path.split(sep).join('/')}`)
+  }
+}
+
 const manifestPath = join(vendor, 'manifest.json')
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
 manifest.kernelData = { packs, moduleFiles: copied, recordedFrom: lists.sort() }

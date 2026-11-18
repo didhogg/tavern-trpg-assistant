@@ -1,0 +1,103 @@
+<div class="ve-flex-col ve-h-100 ve-window ve-min-h-0">
+	{{#if isMultipleCorpora}}
+		<label class="ve-flex-v-center">
+			<span class="ve-mr-1 ve-no-wrap">Select {{titleSearch}}:</span>
+			<select name="sel-corpus" class="ve-form-control">
+				{{#each corpusHandlebarsMetas}}
+					<option value="{{@index}}" {{#unless @index}}selected{{/unless}}>{{name}}</option>
+				{{/each}}
+			</select>
+		</label>
+
+		<hr class="ve-hr-2 ve-hr--heavy">
+	{{/if}}
+
+	{{#each corpusHandlebarsMetas}}
+		<div class="ve-flex-col ve-h-100 ve-min-h-0 ve-w-100 {{#if @index}}ve-hidden{{/if}}" data-name="wrp-corpus-{{@index}}">
+			<h3 class="ve-mb-1 imp-advbk__header ve-bold ve-b-0">Importing: {{name}}</h3>
+
+			<div class="ve-my-1">
+				Text will be imported to your <span class="ve-clickable ve-bold" onclick="ui.sidebar.changeTab('journal', 'primary')">Journal Entries</span> tab.
+			</div>
+			<div class="ve-my-1">
+				Each other entity will be added to the game using the importer appropriate for that entity, and the resulting document will be linked from the imported text.
+			</div>
+
+			<label class="ve-w-100 ve-split-v-center ve-my-1">
+				<span class="ve-mr-2"><b>Text</b></span>
+				<input type="checkbox" name="cb-journal-entries" checked>
+			</label>
+
+			<hr class="ve-hr-1">
+
+			{{#if tagSections.length}}
+				<div class="ve-my-1 ve-split-v-center">
+					<div class="ve-mr-5 ve-muted"><b><i>Attached Data</i></b></div>
+					<label class="ve-flex-h-right">
+						<input type="checkbox" data-type="god" checked title="Select All">
+					</label>
+				</div>
+			{{else}}
+				<div class="ve-my-1"><i class="ve-muted">There is no attached data available for import.</i></div>
+			{{/if}}
+
+			<div class="ve-flex-col ve-min-h-0 ve-overflow-y-auto">
+				{{#each tagSections}}
+					{{#if (ne @index 0)}}<hr class="ve-hr-1 ve-hr--dotted">{{/if}}
+
+					<div class="ve-flex-v-center 100 ve-mt-1">
+						<label class="ve-w-100 ve-mr-2 imp-advbk__sect-header ve-split-v-center">
+							<span class="ve-mr-2 ve-bold">{{displayName}}</span>
+							<input type="checkbox" data-tag="{{tag}}" data-type="all" checked title="Select All">
+						</label>
+						<div class="ve-no-shrink">
+							<button class="ve-btn ve-btn-xs" title="Set folder path for {{toLowerCase displayName}} import" data-type="configure-tag" data-tag="{{tag}}">
+								<span class="fas fa-fw fa-sitemap"></span>
+							</button>
+						</div>
+					</div>
+
+					<div class="ve-w-100 ve-flex-wrap">
+						{{#each sources}}
+							<label class="ve-flex-v-center ve-my-1 ve-mr-1 imp-advbk__wrp-cb-source">
+								<span class="ve-mr-1 {{sourceClassName}}" title="{{sourceLong}}">{{sourceShort}}</span>
+								<input type="checkbox" class="ve-mr-1" data-tag="{{../tag}}" data-source="{{source}}" checked>
+								<span class="ve-muted">({{count}})</span>
+							</label>
+						{{/each}}
+					</div>
+				{{/each}}
+
+				{{#each imageGroupSections}}
+					{{#if (or ../tagSections (ne @index 0))}}<hr class="ve-hr-1 ve-hr--dotted">{{/if}}
+
+					<div class="ve-flex-v-center 100 ve-mt-1">
+						<label class="ve-w-100 ve-mr-2 imp-advbk__sect-header ve-split-v-center">
+							<span class="ve-mr-2 ve-bold">{{groupNamePlural}}</span>
+							<input type="checkbox" data-image-group="{{group}}" data-type="all" checked title="Select All">
+						</label>
+						<div class="ve-no-shrink">
+							<button class="ve-btn ve-btn-xs" title="Set folder path for {{toLowerCase groupNamePlural}} import" data-type="configure-image">
+								<span class="fas fa-fw fa-sitemap"></span>
+							</button>
+						</div>
+					</div>
+
+					<div class="ve-w-100 ve-flex-wrap">
+						{{#each imageTypeMetas}}
+							<label class="ve-flex-v-center ve-my-1 ve-mr-1 imp-advbk__wrp-cb-source">
+								<span class="ve-mr-1">{{displayName}}</span>
+								<input type="checkbox" class="ve-mr-1" data-image-group="{{../group}}" data-image-type="{{imageType}}" checked>
+								<span class="ve-muted">({{count}})</span>
+							</label>
+						{{/each}}
+					</div>
+				{{/each}}
+			</div>
+		</div>
+	{{/each}}
+
+	<div class="ve-no-shrink ve-mt-auto">
+		<button class="ve-btn ve-btn-5et ve-btn-primary ve-w-100" name="btn-run">Import</button>
+	</div>
+</div>

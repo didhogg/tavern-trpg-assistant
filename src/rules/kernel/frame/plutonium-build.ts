@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 锁定的作者模块没有类型声明 */
 import { sha256Hex } from '../../../core/hash'
 
-const BUNDLE_SHA = '05e6e89fe53681d238db3024a23a24268dc69993b72ebe16591a6a3d8df98cf5'
+const BUNDLE_SHA = '13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245'
 const EXPORTS = [
   'Charactermancer_FeatureOptionsSelect',
   'Charactermancer_AdditionalFeatsSelect',

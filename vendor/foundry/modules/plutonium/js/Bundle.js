@@ -911,6 +911,8 @@ Parser.itemRechargeToFull = function (recharge) {
 Parser.ITEM_MISC_TAG_TO_FULL = {
 	"CF/W": "Creates Food/Water",
 	"CNS": "Consumable",
+	"DRK": "Drink",
+	"FOD": "Food",
 	"TT": "Trinket Table",
 };
 Parser.itemMiscTagToFull = function (type) {
@@ -3344,6 +3346,8 @@ Parser.SRC_FFotR = "FFotR";
 Parser.SRC_RHW = "RHW";
 Parser.SRC_AU = "AU";
 Parser.SRC_AUD = "AUD";
+Parser.SRC_WoW = "WoW";
+Parser.SRC_ICC = "ICC";
 
 Parser.SRC_TD = "TD";
 Parser.SRC_SCREEN = "Screen";
@@ -3388,8 +3392,7 @@ Parser.SRC_BQDD = "BQDD";
 Parser.SRC_SoS = "SoS";
 Parser.SRC_RWG = "RWG";
 Parser.SRC_PL = "PL";
-Parser.SRC_WoW = "WoW";
-Parser.SRC_ICC = "ICC";
+Parser.SRC_DDE = "DDE";
 
 Parser.SRC_PS_PREFIX = "PS";
 
@@ -3558,6 +3561,9 @@ Parser.SOURCE_JSON_TO_FULL[Parser.SRC_FFotR] = "Fated Flight of the Recluse";
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_RHW] = "Ravenloft: The Horrors Within";
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_AU] = "Arcana Unleashed";
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_AUD] = "Arcana Unleashed: Deadfall";
+Parser.SOURCE_JSON_TO_FULL[Parser.SRC_WoW] = "D&D: World of Warcraft";
+Parser.SOURCE_JSON_TO_FULL[Parser.SRC_ICC] = "World of Warcraft: Icecrown Citadel";
+
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_TD] = "Tarot Deck";
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_SCREEN] = "Dungeon Master's Screen";
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_SCREEN_WILDERNESS_KIT] = "Dungeon Master's Screen: Wilderness Kit";
@@ -3615,8 +3621,7 @@ Parser.SOURCE_JSON_TO_FULL[Parser.SRC_BQDD] = "Borderlands Quest: Dagger Danger!
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_SoS] = "Shadows of Sithicus";
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_RWG] = "Red Wizards' Gambit";
 Parser.SOURCE_JSON_TO_FULL[Parser.SRC_PL] = "Project_Lamordia";
-Parser.SOURCE_JSON_TO_FULL[Parser.SRC_WoW] = "D&D: World of Warcraft";
-Parser.SOURCE_JSON_TO_FULL[Parser.SRC_ICC] = "World of Warcraft: Icecrown Citadel";
+Parser.SOURCE_JSON_TO_FULL[Parser.SRC_DDE] = "World of Warcraft: Deadmines Dungeon";
 
 Parser.SOURCE_JSON_TO_ABV = {};
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_PHB] = "PHB'14";
@@ -3749,6 +3754,9 @@ Parser.SOURCE_JSON_TO_ABV[Parser.SRC_FFotR] = "FFotR";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_RHW] = "RHW";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_AU] = "AU";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_AUD] = "AUD";
+Parser.SOURCE_JSON_TO_ABV[Parser.SRC_WoW] = "WoW";
+Parser.SOURCE_JSON_TO_ABV[Parser.SRC_ICC] = "ICC";
+
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_TD] = "TD";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_SCREEN] = "Scr'14";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_SCREEN_WILDERNESS_KIT] = "ScrWild";
@@ -3806,8 +3814,7 @@ Parser.SOURCE_JSON_TO_ABV[Parser.SRC_BQDD] = "BQDD";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_SoS] = "SoS";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_RWG] = "RWG";
 Parser.SOURCE_JSON_TO_ABV[Parser.SRC_PL] = "PL";
-Parser.SOURCE_JSON_TO_ABV[Parser.SRC_WoW] = "WoW";
-Parser.SOURCE_JSON_TO_ABV[Parser.SRC_ICC] = "ICC";
+Parser.SOURCE_JSON_TO_ABV[Parser.SRC_DDE] = "DDE";
 
 Parser.SOURCE_JSON_TO_DATE = {};
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_PHB] = "2014-08-19";
@@ -3939,6 +3946,9 @@ Parser.SOURCE_JSON_TO_DATE[Parser.SRC_FFotR] = "2025-12-09";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_RHW] = "2026-06-16";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_AU] = "2026-09-15";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_AUD] = "2026-09-15";
+Parser.SOURCE_JSON_TO_DATE[Parser.SRC_WoW] = "2026-11-17";
+Parser.SOURCE_JSON_TO_DATE[Parser.SRC_ICC] = "2026-11-17";
+
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_TD] = "2022-05-24";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_SCREEN] = "2015-01-20";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_SCREEN_WILDERNESS_KIT] = "2020-11-17";
@@ -3996,8 +4006,7 @@ Parser.SOURCE_JSON_TO_DATE[Parser.SRC_BQDD] = "2026-05-28";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_SoS] = "2026-05-29";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_RWG] = "2026-09-15";
 Parser.SOURCE_JSON_TO_DATE[Parser.SRC_PL] = "2026-10-13";
-Parser.SOURCE_JSON_TO_DATE[Parser.SRC_WoW] = "2026-11-17";
-Parser.SOURCE_JSON_TO_DATE[Parser.SRC_ICC] = "2026-11-17";
+Parser.SOURCE_JSON_TO_DATE[Parser.SRC_DDE] = "2026-11-03";
 
 // region Source categories
 Parser.SOURCES_ADVENTURES = new Set([
@@ -4105,6 +4114,7 @@ Parser.SOURCES_ADVENTURES = new Set([
 	Parser.SRC_SoS,
 	Parser.SRC_RWG,
 	Parser.SRC_PL,
+	Parser.SRC_DDE,
 	Parser.SRC_ICC,
 ]);
 Parser.SOURCES_CORE_SUPPLEMENTS = new Set(Object.keys(Parser.SOURCE_JSON_TO_FULL).filter(it => !Parser.SOURCES_ADVENTURES.has(it)));
@@ -4158,6 +4168,7 @@ Parser.SOURCES_NON_STANDARD_WOTC = new Set([
 	Parser.SRC_SoS,
 	Parser.SRC_RWG,
 	Parser.SRC_PL,
+	Parser.SRC_DDE,
 ]);
 Parser.SOURCES_PARTNERED_WOTC = new Set([
 	/*
@@ -4299,6 +4310,11 @@ Parser.SOURCES_NON_FR = new Set([
 	Parser.SRC_EFA,
 	Parser.SRC_FFotR,
 	Parser.SRC_PL,
+	Parser.SRC_WoW,
+	Parser.SRC_ICC,
+]);
+
+Parser.SOURCES_UNIVERSES_BEYOND = new Set([
 	Parser.SRC_WoW,
 	Parser.SRC_ICC,
 ]);
@@ -4479,6 +4495,7 @@ Parser.SOURCES_AVAILABLE_DOCS_ADVENTURE = {};
 	Parser.SRC_AUD,
 	Parser.SRC_RWG,
 	Parser.SRC_SoS,
+	Parser.SRC_DDE,
 	Parser.SRC_ICC,
 ].forEach(src => {
 	Parser.SOURCES_AVAILABLE_DOCS_ADVENTURE[src] = src;
@@ -4685,7 +4702,7 @@ Parser.mapGridTypeToFull = function (gridType) {
 
 // in deployment, `IS_DEPLOYED = "<version number>";` should be set below.
 globalThis.IS_DEPLOYED = undefined;
-globalThis.VERSION_NUMBER = /* 5ETOOLS_VERSION__OPEN */"2.40.0"/* 5ETOOLS_VERSION__CLOSE */;
+globalThis.VERSION_NUMBER = /* 5ETOOLS_VERSION__OPEN */"2.41.1"/* 5ETOOLS_VERSION__CLOSE */;
 globalThis.DEPLOYED_IMG_ROOT = undefined;
 // for the roll20 script to set
 globalThis.IS_VTT = false;
@@ -5302,6 +5319,11 @@ globalThis.SourceUtil = class {
 			|| SourceUtil.isPrereleaseSource(source);
 	}
 
+	static isUniversesBeyondSource (source) {
+		if (source == null) return false;
+		return Parser.SOURCES_UNIVERSES_BEYOND.has(source);
+	}
+
 	static isPartneredSourceWotc (source) {
 		if (source == null) return false;
 		if (Parser.SOURCES_PARTNERED_WOTC.has(source)) return true;
@@ -5343,12 +5365,14 @@ globalThis.SourceUtil = class {
 
 	static FILTER_GROUP_STANDARD = 0;
 	static FILTER_GROUP_PARTNERED = 1;
-	static FILTER_GROUP_NON_STANDARD = 2;
-	static FILTER_GROUP_PRERELEASE = 3;
-	static FILTER_GROUP_HOMEBREW = 4;
+	static FILTER_GROUP_UNIVERSES_BEYOND = 2;
+	static FILTER_GROUP_NON_STANDARD = 3;
+	static FILTER_GROUP_PRERELEASE = 4;
+	static FILTER_GROUP_HOMEBREW = 5;
 
 	static getFilterGroup (source) {
 		if (source instanceof FilterItem) source = source.item;
+		if (SourceUtil.isUniversesBeyondSource(source)) return SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND;
 		if (SourceUtil.isPartneredSourceWotc(source)) return SourceUtil.FILTER_GROUP_PARTNERED;
 		if (typeof PrereleaseUtil !== "undefined" && PrereleaseUtil.hasSourceJson(source)) return SourceUtil.FILTER_GROUP_PRERELEASE;
 		if (typeof BrewUtil2 !== "undefined" && BrewUtil2.hasSourceJson(source)) return SourceUtil.FILTER_GROUP_HOMEBREW;
@@ -5358,6 +5382,7 @@ globalThis.SourceUtil = class {
 
 	static getFilterGroupName (group) {
 		switch (group) {
+			case SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND: return "Universes Beyond";
 			case SourceUtil.FILTER_GROUP_NON_STANDARD: return "Other";
 			case SourceUtil.FILTER_GROUP_PRERELEASE: return "Prerelease";
 			case SourceUtil.FILTER_GROUP_HOMEBREW: return "Homebrew";
@@ -21702,7 +21727,8 @@ globalThis.Renderer = class {
 		this._tagExportDict = null;
 		this._roll20Ids = null;
 		this._trackTitles = {enabled: false, titles: {}};
-		this._enumerateTitlesRel = {enabled: false, titles: {}};
+		this._isEnumerateTitlesRel = false;
+		this._relativeTitles = new Renderer.utils.TitleRelativeIndexTracker();
 		this._isHeaderIndexIncludeTableCaptions = false;
 		this._isHeaderIndexIncludeImageTitles = false;
 		this._isRenderHeaderIndex = true;
@@ -21810,7 +21836,7 @@ globalThis.Renderer = class {
 	resetHeaderIndex () {
 		this._headerIndex = 1;
 		this._trackTitles.titles = {};
-		this._enumerateTitlesRel.titles = {};
+		this._relativeTitles.reset();
 		return this;
 	}
 
@@ -21891,16 +21917,15 @@ globalThis.Renderer = class {
 	 * This identifier is stored in `data-title-relative-index`
 	 */
 	setEnumerateTitlesRel (bool) {
-		this._enumerateTitlesRel.enabled = bool;
+		this._isEnumerateTitlesRel = bool;
 		return this;
 	}
 
-	_getEnumeratedTitleRel (name) {
-		if (this._enumerateTitlesRel.enabled && name) {
-			const clean = name.toLowerCase();
-			this._enumerateTitlesRel.titles[clean] = this._enumerateTitlesRel.titles[clean] || 0;
-			return `data-title-relative-index="${this._enumerateTitlesRel.titles[clean]++}"`;
-		} else return "";
+	_getEnumeratedTitleRel (entry) {
+		if (!this._isEnumerateTitlesRel) return "";
+
+		const meta = this._relativeTitles.getNextMetaForEntry(entry);
+		return meta ? `data-title-relative-index="${meta.ixTitleRel}"` : "";
 	}
 
 	setTrackTitles (bool) {
@@ -21917,11 +21942,15 @@ globalThis.Renderer = class {
 		// Invert it such that we have a map of `{"<name>": ["data-title-index-0", ..., "data-title-index-n"]}`
 		const trackedTitlesInverse = {};
 		Object.entries(this._trackTitles.titles || {}).forEach(([titleIx, titleName]) => {
-			if (isStripTags) titleName = Renderer.stripTags(titleName);
-			titleName = titleName.toLowerCase().trim();
+			titleName = Renderer.utils.TitleRelativeIndexTracker.getCleanName(titleName, {isStripTags});
 			(trackedTitlesInverse[titleName] = trackedTitlesInverse[titleName] || []).push(titleIx);
 		});
 		return trackedTitlesInverse;
+	}
+
+	_handleTrackEntryTitle (entry) {
+		const name = Renderer.utils.TitleRelativeIndexTracker.getEntryName(entry);
+		if (name != null) this._handleTrackTitles(name);
 	}
 
 	_handleTrackTitles (name, {isTable = false, isImage = false} = {}) {
@@ -21932,7 +21961,7 @@ globalThis.Renderer = class {
 	}
 
 	_handleTrackDepth (entry, depth) {
-		if (!entry.name || !this._depthTracker) return;
+		if (!this._depthTracker || !Renderer.utils.getEntryDisplayName(entry)) return;
 
 		this._lastDepthTrackerInheritedProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		if (entry.source) this._lastDepthTrackerInheritedProps.source = entry.source;
@@ -22660,7 +22689,7 @@ globalThis.Renderer = class {
 	}
 
 	_renderEntriesSubtypes (entry, textStack, meta, options, incDepth) {
-		const displayName = entry._displayName || entry.name;
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
 		const isInlineTitle = meta.depth >= 2;
 
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
@@ -22704,7 +22733,7 @@ globalThis.Renderer = class {
 		const styleString = this._renderEntriesSubtypes_getStyleString({entry, meta, isNamed: !!displayName});
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 
 		const headerSpan = this._renderEntriesSubtypes_getHeaderSpan({
 			entry,
@@ -22742,7 +22771,7 @@ globalThis.Renderer = class {
 		const styleString = this._renderEntriesSubtypes_getStyleString({entry, meta, isInlineTitle: true, isNamed: !!displayName});
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 
 		const headerSpan = this._renderEntriesSubtypes_getHeaderSpan({
 			entry,
@@ -22773,7 +22802,8 @@ globalThis.Renderer = class {
 	}
 
 	_renderEntriesSubtypes_getDataString (entry, {isCollapsibleChild = false} = {}) {
-		const displayName = entry._displayName || entry.name;
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		let dataString = "";
 		if (displayName) dataString += ` data-roll-name-ancestor="${Renderer.stripTags(displayName).qq()}"`;
 		if (isCollapsibleChild) dataString += `data-rd-is-collapsible-child="true"`;
@@ -22801,14 +22831,14 @@ globalThis.Renderer = class {
 	}) {
 		if (!displayName) return "";
 
-		const type = entry.type || "entries";
+		const type = Renderer.utils.getRenderableEntryType(entry);
 
 		const headerClass = `ve-rd__h--${meta.depth + 1}${isInset ? "-inset" : ""}`; // adjust as the CSS is 0..4 rather than -1..3
 		const pluginDataNamePrefix = this._applyPlugins_getAll(`${type}_namePrefix`, {textStack, meta, options}, {input: entry});
 
 		const ptText = `${pluginDataNamePrefix.join("")}${this.render({type: "inline", entries: [displayName]})}${isAddPeriod ? "." : ""}`;
 
-		return `<${headerTag} class="ve-rd__h ${headerClass}" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}> <span class="entry-title-inner ${!pagePart && entry.source ? `ve-help-subtle` : ""}"${!pagePart && entry.source ? ` title="Source: ${Parser.sourceJsonToFull(entry.source)}${entry.page ? `, p${entry.page}` : ""}"` : ""}>${ptText}</span>${partPageExpandCollapse}</${headerTag}> `;
+		return `<${headerTag} class="ve-rd__h ${headerClass}" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}> <span class="entry-title-inner ${!pagePart && entry.source ? `ve-help-subtle` : ""}"${!pagePart && entry.source ? ` title="Source: ${Parser.sourceJsonToFull(entry.source)}${entry.page ? `, p${entry.page}` : ""}"` : ""}>${ptText}</span>${partPageExpandCollapse}</${headerTag}> `;
 	}
 
 	_renderEntriesSubtypes_renderPreReqText (entry, textStack, meta) {
@@ -22827,7 +22857,7 @@ globalThis.Renderer = class {
 
 	_renderEntriesSubtypes_getStyleString ({entry, meta, isNamed = false, isInlineTitle = false}) {
 		const styleClasses = ["ve-rd__b"];
-		styleClasses.push(this._getStyleClass(entry.type || "entries", entry));
+		styleClasses.push(this._getStyleClass(Renderer.utils.getRenderableEntryType(entry), entry));
 		if (isNamed) styleClasses.push("ve-rd__b--named");
 		if (isInlineTitle) {
 			if (this._subVariant) styleClasses.push(Renderer.HEAD_2_SUB_VARIANT);
@@ -22842,7 +22872,7 @@ globalThis.Renderer = class {
 		if (!entry.entries) return;
 		entry.entries = entry.entries.sort((a, b) => a.name && b.name ? SortUtil.ascSort(a.name, b.name) : a.name ? -1 : b.name ? 1 : 0);
 
-		if (entry.style && entry.style === "list-hang-notitle") {
+		if (Renderer.utils.getRenderableEntryType(entry) === "list") {
 			const fauxEntry = {
 				type: "list",
 				style: "list-hang-notitle",
@@ -22855,8 +22885,10 @@ globalThis.Renderer = class {
 					return out;
 				}),
 			};
-			this._renderList(fauxEntry, textStack, meta, options);
-		} else this._renderEntriesSubtypes(entry, textStack, meta, options, false);
+			return this._renderList(fauxEntry, textStack, meta, options);
+		}
+
+		return this._renderEntriesSubtypes(entry, textStack, meta, options, false);
 	}
 
 	_renderList (entry, textStack, meta, options) {
@@ -22915,7 +22947,7 @@ globalThis.Renderer = class {
 	}
 
 	_renderInset (entry, textStack, meta, options) {
-		const displayName = entry.name?.trim();
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry, {isCollapsibleChild: !displayName});
 		textStack[0] += `<${this.wrapperTag} class="${this._renderInset_getCssClasses(entry, textStack, meta, options)}" ${dataString}>`;
@@ -22928,7 +22960,7 @@ globalThis.Renderer = class {
 		const partPageExpandCollapse = `<span class="ve-flex-vh-center">${[pagePart, partExpandCollapse].filter(Boolean).join("")}</span>`;
 
 		if (displayName != null) {
-			if (Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+			this._handleTrackEntryTitle(entry);
 
 			const cacheDepth = meta.depth;
 			meta.depth = 1;
@@ -22965,7 +22997,7 @@ globalThis.Renderer = class {
 	}
 
 	_renderInsetReadaloud (entry, textStack, meta, options) {
-		const displayName = entry.name?.trim();
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
 
 		const dataString = this._renderEntriesSubtypes_getDataString(entry, {isCollapsibleChild: !displayName});
 		textStack[0] += `<${this.wrapperTag} class="${this._renderInset_getCssClasses(entry, textStack, meta, options)}" ${dataString}>`;
@@ -22978,7 +23010,7 @@ globalThis.Renderer = class {
 		const partPageExpandCollapse = `<span class="ve-flex-vh-center">${[pagePart, partExpandCollapse].filter(Boolean).join("")}</span>`;
 
 		if (displayName != null) {
-			if (Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+			this._handleTrackEntryTitle(entry);
 
 			const cacheDepth = meta.depth;
 			meta.depth = 1;
@@ -23013,9 +23045,11 @@ globalThis.Renderer = class {
 	}
 
 	_renderVariant (entry, textStack, meta, options) {
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 1);
 
@@ -23032,7 +23066,7 @@ globalThis.Renderer = class {
 			textStack,
 			meta,
 			options,
-			displayName: entry.name ? `Variant: ${entry.name}` : "Variant",
+			displayName: displayName ? `Variant: ${displayName}` : "Variant",
 			headerTag: `h4`,
 			pagePart,
 			partPageExpandCollapse,
@@ -23056,14 +23090,18 @@ globalThis.Renderer = class {
 	}
 
 	_renderVariantInner (entry, textStack, meta, options) {
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 1);
 
 		textStack[0] += `<${this.wrapperTag} class="ve-rd__b-inset-inner" ${dataString}>`;
-		textStack[0] += `<span class="ve-rd__h ve-rd__h--2-inset" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}><h4 class="entry-title-inner">${entry.name}</h4></span>`;
+		if (displayName != null) {
+			textStack[0] += `<span class="ve-rd__h ve-rd__h--2-inset" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}><h4 class="entry-title-inner">${this.render(displayName)}</h4></span>`;
+		}
 		const len = entry.entries.length;
 		for (let i = 0; i < len; ++i) {
 			const cacheDepth = meta.depth;
@@ -23081,7 +23119,7 @@ globalThis.Renderer = class {
 		// pretend this is an inline-header'd entry, but set a flag so we know not to add bold
 		this._subVariant = true;
 		const fauxEntry = entry;
-		fauxEntry.type = "entries";
+		fauxEntry.type = Renderer.utils.getRenderableEntryType(entry);
 		const cacheDepth = meta.depth;
 		meta.depth = 3;
 		this._recursiveRender(fauxEntry, textStack, meta, {prefix: "<p>", suffix: "</p>"});
@@ -23318,11 +23356,11 @@ globalThis.Renderer = class {
 	_renderActions (entry, textStack, meta, options) {
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 
-		if (entry.name != null && Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
+		this._handleTrackEntryTitle(entry);
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 2);
 
-		const headerSpan = `<span class="ve-rd__h ve-rd__h--3" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}><span class="entry-title-inner">${entry.name}.</span></span> `;
+		const headerSpan = `<span class="ve-rd__h ve-rd__h--3" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}><span class="entry-title-inner">${entry.name}.</span></span> `;
 
 		textStack[0] += `<${this.wrapperTag} class="${Renderer.HEAD_2}" ${dataString}>`;
 		if (entry.entries) {
@@ -23358,9 +23396,10 @@ globalThis.Renderer = class {
 
 	_renderItemSubtypes (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
+		this._handleTrackEntryTitle(entry);
 		textStack[0] += `<p class="ve-rd__p-list-item" ${entry.name ? `data-roll-name-ancestor="${Renderer.stripTags(entry.name).qq()}"` : ""}>`;
 		if (entry.name) {
-			textStack[0] += `<span class="${entry.type === "itemSub" ? "ve-italic" : "ve-bold"} ve-rd__list-item-name">${this.render(entry.name)}${this._renderItemSubtypes_isAddPeriod(entry) ? "." : ""}</span> `;
+			textStack[0] += `<span class="${entry.type === "itemSub" ? "ve-italic" : "ve-bold"} ve-rd__list-item-name" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}>${this.render(entry.name)}${this._renderItemSubtypes_isAddPeriod(entry) ? "." : ""}</span> `;
 		}
 		if (entry.entry) this._recursiveRender(entry.entry, textStack, meta);
 		else if (entry.entries) {
@@ -23386,10 +23425,13 @@ globalThis.Renderer = class {
 	_renderItemSpell (entry, textStack, meta, options) {
 		this._renderPrefix(entry, textStack, meta, options);
 
+		this._handleTrackEntryTitle(entry);
+		const titleAttributes = entry.name ? `${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}` : "";
+
 		const tempStack = [""];
 		this._recursiveRender(entry.name || "", tempStack, meta);
 
-		this._recursiveRender(entry.entry, textStack, meta, {prefix: `<p>${tempStack.join("")} `, suffix: "</p>"});
+		this._recursiveRender(entry.entry, textStack, meta, {prefix: `<p ${titleAttributes}>${tempStack.join("")} `, suffix: "</p>"});
 		this._renderSuffix(entry, textStack, meta, options);
 	}
 
@@ -23628,15 +23670,17 @@ globalThis.Renderer = class {
 	}
 
 	_renderFlowBlock (entry, textStack, meta, options) {
+		const displayName = Renderer.utils.getEntryDisplayName(entry);
+
 		const dataString = this._renderEntriesSubtypes_getDataString(entry);
 		textStack[0] += `<${this.wrapperTag} class="ve-rd__b-special ve-rd__b-flow ve-text-center" ${dataString}>`;
 
 		const cachedLastDepthTrackerProps = MiscUtil.copyFast(this._lastDepthTrackerInheritedProps);
 		this._handleTrackDepth(entry, 1);
 
-		if (entry.name != null) {
-			if (Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[entry.type]) this._handleTrackTitles(entry.name);
-			textStack[0] += `<span class="ve-rd__h ve-rd__h--2-flow-block" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry.name)}><h4 class="entry-title-inner">${this.render({type: "inline", entries: [entry.name]})}</h4></span>`;
+		if (displayName != null) {
+			this._handleTrackEntryTitle(entry);
+			textStack[0] += `<span class="ve-rd__h ve-rd__h--2-flow-block" ${this._getRenderedTitleIndexAttribute()} ${this._getEnumeratedTitleRel(entry)}><h4 class="entry-title-inner">${this.render({type: "inline", entries: [displayName]})}</h4></span>`;
 		}
 		if (entry.entries) {
 			const len = entry.entries.length;
@@ -24346,6 +24390,9 @@ Renderer.ENTRIES_WITH_ENUMERATED_TITLES = [
 	{type: "optfeature", key: "entries", depthIncrement: 1},
 	{type: "patron", key: "entries"},
 	{type: "image", propTitle: "title"},
+	{type: "item"},
+	{type: "itemSub"},
+	{type: "itemSpell"},
 ];
 
 Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP = Renderer.ENTRIES_WITH_ENUMERATED_TITLES.mergeMap(it => ({[it.type]: it}));
@@ -25028,6 +25075,51 @@ Renderer._cache = class {
 };
 
 Renderer.utils = class {
+	static getEntryDisplayName (entry) {
+		return (entry._displayName || entry.name)?.trim() || null;
+	}
+
+	static getRenderableEntryType (entry) {
+		if (!entry.type) return "entries";
+
+		// `variantSub` is rendered as an `entries` block
+		if (entry.type === "variantSub") return "entries";
+
+		if (entry.type === "options" && entry.style === "list-hang-notitle") return "list";
+
+		return entry.type;
+	}
+
+	static TitleRelativeIndexTracker = class {
+		static getEntryName (entry) {
+			const type = Renderer.utils.getRenderableEntryType(entry);
+			const meta = Renderer.ENTRIES_WITH_ENUMERATED_TITLES_LOOKUP[type];
+			if (!meta || meta.propTitle) return null;
+
+			return entry.name || null;
+		}
+
+		static getCleanName (name, {isStripTags = true} = {}) {
+			return (isStripTags ? Renderer.stripTags(name) : name).toLowerCase().trim();
+		}
+
+		_nameToCount = Object.create(null);
+
+		reset () { this._nameToCount = Object.create(null); }
+
+		getNextMetaForEntry (entry) {
+			const name = this.constructor.getEntryName(entry);
+			return name == null ? null : this.getNextMeta(name);
+		}
+
+		getNextMeta (name) {
+			const nameClean = this.constructor.getCleanName(name);
+			const ixTitleRel = this._nameToCount[nameClean] || 0;
+			this._nameToCount[nameClean] = ixTitleRel + 1;
+			return {nameClean, ixTitleRel};
+		}
+	};
+
 	static getBorderTr (optText = null) {
 		return `<tr><th class="ve-tbl-border" colspan="6">${optText || ""}</th></tr>`;
 	}
@@ -25889,7 +25981,7 @@ Renderer.utils = class {
 					}
 
 					const prereqsToJoin = Object.entries(pr)
-						.filter(([k]) => !prereqsShared[k])
+						.filter(([k]) => !(k in prereqsShared))
 						.sort(([kA], [kB]) => this._WEIGHTS[kA] - this._WEIGHTS[kB])
 						.map(([k, v]) => {
 							if (k === "note" || blocklistKeys?.has(k)) return false;
@@ -26270,38 +26362,40 @@ Renderer.utils = class {
 			}
 
 			const parts = v.map(obj => {
-				return Object.entries(obj).map(([profType, prof]) => {
-					switch (profType) {
-						case "armor": {
-							if (prof === "shield") {
-								if (isListMode) return styleHint === "classic" ? `Prof ${prof}` : `${prof.toTitleCase()} Trai.`;
-								return styleHint === "classic" ? `Proficiency with ${prof}s` : `${prof.toTitleCase()} Training`;
-							}
+				return Object.entries(obj)
+					.map(([profType, prof]) => {
+						switch (profType) {
+							case "armor": {
+								if (prof === "shield") {
+									if (isListMode) return styleHint === "classic" ? `Prof ${prof}` : `${prof.toTitleCase()} Trai.`;
+									return styleHint === "classic" ? `Proficiency with ${prof}s` : `${prof.toTitleCase()} Training`;
+								}
 
-							if (isListMode) return styleHint === "classic" ? `Prof ${Parser.armorFullToAbv(prof)} armor` : `${Parser.armorFullToAbv(prof).toTitleCase()} Armor Trai.`;
-							return styleHint === "classic" ? `Proficiency with ${prof} armor` : `${prof.toTitleCase()} Armor Training`;
+								if (isListMode) return styleHint === "classic" ? `Prof ${Parser.armorFullToAbv(prof)} armor` : `${Parser.armorFullToAbv(prof).toTitleCase()} Armor Trai.`;
+								return styleHint === "classic" ? `Proficiency with ${prof} armor` : `${prof.toTitleCase()} Armor Training`;
+							}
+							case "weapon": {
+								return isListMode ? `Prof ${Parser.weaponFullToAbv(prof)} weapon` : `Proficiency with a ${prof} weapon`;
+							}
+							case "weaponGroup": {
+								return isListMode ? `Prof ${Parser.weaponFullToAbv(prof)} weapons` : `${prof.toTitleCase()} Weapon Proficiency`;
+							}
+							case "skill": {
+								if (prof === true) return isListMode ? `Skill Proficiency` : `Proficiency in a skill`;
+								return isListMode
+									? prof.map(skill => skill.toTitleCase()).join("+")
+									: `Proficiency in the ${prof.map(skill => `{@skill ${skill.toTitleCase()}}`).joinConjunct(", ", " and ")} skill${prof.length === 1 ? "" : "s"}`;
+							}
+							case "tool": {
+								if (prof === true) return isListMode ? "Tool Proficiency" : "Proficiency with a Tool";
+								return isListMode
+									? prof.map(tool => tool.toTitleCase()).join("+")
+									: `Proficiency with ${prof.map(tool => tool.toTitleCase()).joinConjunct(", ", " and ")}`;
+							}
+							default: throw new Error(`Unhandled proficiency type: "${profType}"`);
 						}
-						case "weapon": {
-							return isListMode ? `Prof ${Parser.weaponFullToAbv(prof)} weapon` : `Proficiency with a ${prof} weapon`;
-						}
-						case "weaponGroup": {
-							return isListMode ? `Prof ${Parser.weaponFullToAbv(prof)} weapons` : `${prof.toTitleCase()} Weapon Proficiency`;
-						}
-						case "skill": {
-							if (prof === true) return isListMode ? `Skill Proficiency` : `Proficiency in a skill`;
-							return isListMode
-								? prof.map(skill => skill.toTitleCase()).join("+")
-								: `Proficiency in the ${prof.map(skill => `{@skill ${skill.toTitleCase()}}`).joinConjunct(", ", " and ")} skill${prof.length === 1 ? "" : "s"}`;
-						}
-						case "tool": {
-							if (prof === true) return isListMode ? "Tool Proficiency" : "Proficiency with a Tool";
-							return isListMode
-								? prof.map(tool => tool.toTitleCase()).join("+")
-								: `Proficiency with ${prof.map(tool => tool.toTitleCase()).joinConjunct(", ", " and ")}`;
-						}
-						default: throw new Error(`Unhandled proficiency type: "${profType}"`);
-					}
-				});
+					})
+					.joinConjunct(isListMode ? "+" : ", ", isListMode ? "+" : " and ");
 			});
 			return isListMode ? parts.join("/") : parts.joinConjunct(", ", " or ");
 		}
@@ -28175,7 +28269,7 @@ Renderer.tag = class {
 
 		getHref (bookRender, area) {
 			if (!area) return `javascript:void(0)`;
-			return `#${bookRender.curBookId},${area.chapter},${UrlUtil.encodeForHash(area.entry.name)},0`;
+			return `#${bookRender.curBookId},${area.chapter},${UrlUtil.encodeForHash(Renderer.stripTags(area.entry.name))},${area.ixTitleRelChapter ?? 0}`;
 		}
 	};
 
@@ -32457,7 +32551,7 @@ Renderer.monster = class {
 
 		const prefix = mon.isNamedCreature ? "" : isTitleCase || isSentenceCase ? "The " : "the ";
 		if (shortName === true) return `${prefix}${name}`;
-		else if (shortName) return `${prefix}${!prefix && isTitleCase ? shortName.toTitleCase() : shortName.toLowerCase()}`;
+		else if (shortName) return `${prefix}${!prefix && isTitleCase ? shortName.toTitleCase() : (mon.isNamedCreature ? shortName : shortName.toLowerCase())}`;
 
 		const out = Renderer.monster.getShortNameFromName(name, {isNamedCreature: mon.isNamedCreature});
 		return `${prefix}${out}`;
@@ -36702,8 +36796,8 @@ Renderer.language = class {
 Renderer.adventureBook = class {
 	static getEntryIdLookup (bookData, {isSilent = false} = {}) {
 		const out = {};
-		const titlesRel = {};
-		const titlesRelChapter = {};
+		const titlesRel = new Renderer.utils.TitleRelativeIndexTracker();
+		const titlesRelChapter = new Renderer.utils.TitleRelativeIndexTracker();
 
 		let chapIx;
 		const depthStack = [];
@@ -36724,6 +36818,10 @@ Renderer.adventureBook = class {
 						);
 					});
 
+				// Eagerly generate title rel info, to correctly match renderer indexing
+				const metaTitleRel = titlesRel.getNextMetaForEntry(obj);
+				const metaTitleRelChapter = titlesRelChapter.getNextMetaForEntry(obj);
+
 				if (!obj.id) return obj;
 
 				if (out[obj.id]) {
@@ -36739,18 +36837,11 @@ Renderer.adventureBook = class {
 
 				if (obj.name) {
 					out[obj.id].name = obj.name;
-
-					const cleanName = obj.name.toLowerCase();
-					out[obj.id].nameClean = cleanName;
-
-					// Relative title index for full-book mode
-					titlesRel[cleanName] = titlesRel[cleanName] || 0;
-					out[obj.id].ixTitleRel = titlesRel[cleanName]++;
-
-					// Relative title index per-chapter
-					MiscUtil.getOrSet(titlesRelChapter, chapIx, cleanName, -1);
-					out[obj.id].ixTitleRelChapter = ++titlesRelChapter[chapIx][cleanName];
+					out[obj.id].nameClean = metaTitleRel?.nameClean ?? Renderer.utils.TitleRelativeIndexTracker.getCleanName(obj.name);
 				}
+
+				if (metaTitleRel != null) out[obj.id].ixTitleRel = metaTitleRel.ixTitleRel;
+				if (metaTitleRelChapter != null) out[obj.id].ixTitleRelChapter = metaTitleRelChapter.ixTitleRel;
 
 				return obj;
 			},
@@ -36766,6 +36857,7 @@ Renderer.adventureBook = class {
 
 		bookData.forEach((chap, _chapIx) => {
 			chapIx = _chapIx;
+			titlesRelChapter.reset();
 			MiscUtil.getWalker({
 				isNoModification: true,
 				keyBlocklist: new Set(["mapParent"]),
@@ -46198,6 +46290,7 @@ let PageFilterBase$1 = class PageFilterBase {
 		//   - "Deselect Prerelease Content Sources by Default"
 		//   - "Deselect Homebrew Sources by Default"
 		return PageFilterBase.defaultSourceSelFnStandardPartnered(val)
+			|| SourceUtil.getFilterGroup(val) === SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND
 			|| SourceUtil.getFilterGroup(val) === SourceUtil.FILTER_GROUP_PRERELEASE
 			|| SourceUtil.getFilterGroup(val) === SourceUtil.FILTER_GROUP_HOMEBREW;
 	}
@@ -46312,6 +46405,10 @@ let PageFilterBase$1 = class PageFilterBase {
 			});
 	}
 
+	static isReskin (ent) {
+		return !!ent.reskinOf?.length;
+	}
+
 	static getListAliases (ent) {
 		return (ent.alias || []).map(it => `"${it}"`).join(",");
 	}
@@ -46345,6 +46442,7 @@ let PageFilterBase$1 = class PageFilterBase {
 		if (this._hasSoundClip(ent)) ent._fMisc.push("Has Pronunciation Audio");
 
 		if (this.isReprinted(ent)) ent._fMisc.push("Reprinted");
+		if (this.isReskin(ent)) ent._fMisc.push("Reskin");
 
 		if (ent.tokenCustom) ent._fMisc.push("Has Custom/Unofficial Token");
 		if (ent.tokenCredit) ent._fMisc.push("Has Token Credit");
@@ -48719,6 +48817,7 @@ let FilterBox$1 = class FilterBox extends ProxyBase {
 				if (isPrereleaseDefaultHidden || isBrewDefaultHidden) {
 					const selFnAlt = (val) => {
 						return PageFilterBase.defaultSourceSelFnStandardPartnered(val)
+							|| SourceUtil.getFilterGroup(val) === SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND
 							|| (SourceUtil.getFilterGroup(val) === SourceUtil.FILTER_GROUP_PRERELEASE && !isPrereleaseDefaultHidden)
 							|| (SourceUtil.getFilterGroup(val) === SourceUtil.FILTER_GROUP_HOMEBREW && !isBrewDefaultHidden);
 					};
@@ -49887,7 +49986,7 @@ let Filter$1 = class Filter extends FilterBase {
 		return items ? items.map(it => this._getAsFilterItem(it)) : null;
 	}
 
-	static _getEntryVal_getFIlterItemItem (entryVal) {
+	static _getEntryVal_getFilterItemItem (entryVal) {
 		return entryVal != null && typeof entryVal === "object"
 			? entryVal.item
 			: entryVal;
@@ -50322,6 +50421,53 @@ let Filter$1 = class Filter extends FilterBase {
 	}
 
 	setValue (k, v) { this._state[k] = v; }
+
+	/**
+	 * Relax filters until every `entryVal` is displayed.
+	 */
+	setPillsToDisplay (entryVals) {
+		const getIsDisplayed = () => {
+			const values = this.getValues();
+			return entryVals.every(entryVal => this.toDisplay(values, entryVal));
+		};
+
+		if (getIsDisplayed()) return true;
+
+		// TODO(Future) complex cases -- punt
+		if (this.__meta.combineBlue !== "or" || this.__meta.combineRed !== "or") return false;
+
+		const mappedEntryVals = entryVals.map(entryVal => this._toDisplay_getMappedEntryVal(entryVal));
+		const flatEntryVals = mappedEntryVals.flat();
+		const filterItems = [...new Set(flatEntryVals.map(it => Filter._getEntryVal_getFilterItemItem(it)))]
+			.filter(it => this.__itemsSet.has(it));
+
+		// First pass: reset red-excludes states
+		flatEntryVals
+			.filter(entryVal => !Filter._getEntryVal_isIgnoreRed(entryVal))
+			.map(entryVal => Filter._getEntryVal_getFilterItemItem(entryVal))
+			.filter(entryVal => this._state[entryVal] === PILL_STATE__NO)
+			.forEach(entryVal => this._state[entryVal] = PILL_STATE__IGNORE);
+		if (getIsDisplayed()) return true;
+
+		// "No value" will never match blue-includes, so clear current includes
+		if (mappedEntryVals.some(entryVal => !entryVal.length)) {
+			this._items
+				.filter(it => this._state[it.item] === PILL_STATE__YES)
+				.forEach(it => this._state[it.item] = PILL_STATE__IGNORE);
+
+			return getIsDisplayed();
+		}
+
+		// Second pass: set blue-includes states
+		for (const item of filterItems) {
+			if (this._state[item] !== PILL_STATE__IGNORE) continue;
+
+			this._state[item] = PILL_STATE__YES;
+			if (getIsDisplayed()) return true;
+		}
+
+		return false;
+	}
 
 	_mutNextState_resetNestsHidden ({tgt}) {
 		if (!this._nests) return;
@@ -51068,7 +51214,7 @@ let Filter$1 = class Filter extends FilterBase {
 
 		if (this._umbrellaExcludes && this._umbrellaExcludes.some(it => filterState[it.item])) return ptrCacheIsUmbrella._ = false;
 
-		return ptrCacheIsUmbrella._ = this._umbrellaItems.some(u => entryVal.some(it => Filter._getEntryVal_getFIlterItemItem(it) === u.item))
+		return ptrCacheIsUmbrella._ = this._umbrellaItems.some(u => entryVal.some(it => Filter._getEntryVal_getFilterItemItem(it) === u.item))
 			&& (this._umbrellaItems.some(u => filterState[u.item] === PILL_STATE__IGNORE) || this._umbrellaItems.some(u => filterState[u.item] === PILL_STATE__YES));
 	}
 
@@ -51094,7 +51240,7 @@ let Filter$1 = class Filter extends FilterBase {
 			.filter(fi => {
 				if (stateRequired === PILL_STATE__NO && Filter._getEntryVal_isIgnoreRed(fi)) return false;
 
-				const filterItemItem = Filter._getEntryVal_getFIlterItemItem(fi);
+				const filterItemItem = Filter._getEntryVal_getFilterItemItem(fi);
 
 				if (seenItems[filterItemItem]) return false;
 				seenItems[filterItemItem] = true;
@@ -51125,7 +51271,7 @@ let Filter$1 = class Filter extends FilterBase {
 				if (totals.yes === 0) display = true;
 
 				// if any are 1 (blue) include if they match
-				display = display || entryVal.some(fi => filterState[Filter._getEntryVal_getFIlterItemItem(fi)] === PILL_STATE__YES || this._toDisplay_isUmbrella({entryVal, filterState, ptrCacheIsUmbrella}));
+				display = display || entryVal.some(fi => filterState[Filter._getEntryVal_getFilterItemItem(fi)] === PILL_STATE__YES || this._toDisplay_isUmbrella({entryVal, filterState, ptrCacheIsUmbrella}));
 
 				break;
 			}
@@ -51150,7 +51296,7 @@ let Filter$1 = class Filter extends FilterBase {
 		switch (filterState._combineRed) {
 			case "or": {
 				// if any are 2 (red) exclude if they match
-				hide = hide || entryVal.some(fi => !Filter._getEntryVal_isIgnoreRed(fi) && filterState[Filter._getEntryVal_getFIlterItemItem(fi)] === PILL_STATE__NO);
+				hide = hide || entryVal.some(fi => !Filter._getEntryVal_isIgnoreRed(fi) && filterState[Filter._getEntryVal_getFilterItemItem(fi)] === PILL_STATE__NO);
 
 				break;
 			}
@@ -51576,8 +51722,8 @@ let SourceFilter$1 = class SourceFilter extends Filter$1 {
 	}
 
 	static _SORT_ITEMS_MINI (a, b) {
-		const valA = BrewUtil2.hasSourceJson(a.item) ? 2 : (SourceUtil.isNonstandardSource(a.item) || PrereleaseUtil.hasSourceJson(a.item)) ? 1 : 0;
-		const valB = BrewUtil2.hasSourceJson(b.item) ? 2 : (SourceUtil.isNonstandardSource(b.item) || PrereleaseUtil.hasSourceJson(b.item)) ? 1 : 0;
+		const valA = SourceUtil.getFilterGroup(a.item);
+		const valB = SourceUtil.getFilterGroup(b.item);
 		return SortUtil.ascSort(valA, valB)
 			|| SortUtil.ascSortLower(Parser.sourceJsonToAbv(a.item), Parser.sourceJsonToAbv(b.item))
 			|| SourceFilter._SORT_ITEMS(a, b);
@@ -51592,6 +51738,7 @@ let SourceFilter$1 = class SourceFilter extends Filter$1 {
 		const group = SourceUtil.getFilterGroup(item);
 		switch (group) {
 			case SourceUtil.FILTER_GROUP_STANDARD: return `<span class="glyphicon glyphicon-book"></span>`;
+			case SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND: return `<span title="(Universes Beyond)" class="glyphicon glyphicon-globe"></span>`;
 			case SourceUtil.FILTER_GROUP_NON_STANDARD: return `<span title="(Other)" class="glyphicon glyphicon-file"></span>`;
 			case SourceUtil.FILTER_GROUP_PARTNERED: return `<span title="(Partnered)" class="glyphicon glyphicon-star-empty"></span>`;
 			case SourceUtil.FILTER_GROUP_PRERELEASE: return `<span title="(Prerelease)" class="glyphicon glyphicon-wrench"></span>`;
@@ -51662,7 +51809,7 @@ let SourceFilter$1 = class SourceFilter extends Filter$1 {
 		const btnAdventures = veE({
 			tag: "button",
 			clazz: `ve-btn ve-btn-default ve-w-100 ${opts.isMulti ? "ve-btn-xxs" : "ve-btn-xs"}`,
-			title: `SHIFT to add to existing selection; ALT to intersect; CTRL to include UA`,
+			title: `SHIFT to add to existing selection; ALT to intersect; CTRL to include UA/etc.`,
 			html: `Adventures`,
 			click: evt => this._doSetPinsAdventures({isIncludeUnofficial: EventUtil.isCtrlMetaKey(evt), isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt)}),
 		});
@@ -51711,6 +51858,11 @@ let SourceFilter$1 = class SourceFilter extends Filter$1 {
 			new ContextUtil.Action(
 				"Select All Partnered Sources",
 				(evt) => this._doSetPinsPartnered({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
+				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
+			),
+			new ContextUtil.Action(
+				"Select All Universes Beyond Sources",
+				(evt) => this._doSetPinsUniversesBeyond({isAdditive: evt.shiftKey, isIntersection: EventUtil.isAltOptionKey(evt), isExclusive: EventUtil.isCtrlMetaKey(evt)}),
 				{title: this.constructor._TITLE_CONTEXT_SOURCE_SET},
 			),
 			new ContextUtil.Action(
@@ -51835,6 +51987,10 @@ let SourceFilter$1 = class SourceFilter extends Filter$1 {
 		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_PARTNERED});
 	}
 
+	_doSetPinsUniversesBeyond (opts) {
+		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_UNIVERSES_BEYOND});
+	}
+
 	_doSetPinsNonStandard (opts) {
 		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.getFilterGroup(k) === SourceUtil.FILTER_GROUP_NON_STANDARD});
 	}
@@ -51844,11 +52000,19 @@ let SourceFilter$1 = class SourceFilter extends Filter$1 {
 	}
 
 	_doSetPinsSupplements ({isIncludeUnofficial = false, ...opts} = {}) {
-		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.isCoreOrSupplement(k) && (isIncludeUnofficial || !SourceUtil.isNonstandardSource(k))});
+		this._doSetPins({
+			...opts,
+			fnIsMatch: k => SourceUtil.isCoreOrSupplement(k)
+				&& (isIncludeUnofficial || (!SourceUtil.isNonstandardSource(k) && !SourceUtil.isUniversesBeyondSource(k))),
+		});
 	}
 
 	_doSetPinsAdventures ({isIncludeUnofficial = false, ...opts} = {}) {
-		this._doSetPins({...opts, fnIsMatch: k => SourceUtil.isAdventure(k) && (isIncludeUnofficial || !SourceUtil.isNonstandardSource(k))});
+		this._doSetPins({
+			...opts,
+			fnIsMatch: k => SourceUtil.isAdventure(k)
+				&& (isIncludeUnofficial || (!SourceUtil.isNonstandardSource(k) && !SourceUtil.isUniversesBeyondSource(k))),
+		});
 	}
 
 	_doSetPinsHomebrew (opts) {
@@ -54574,7 +54738,7 @@ let PageFilterClassesBase$1 = class PageFilterClassesBase extends PageFilterBase
 		this._miscFilter = new Filter({
 			header: "Miscellaneous",
 			items: ["Reprinted", "Sidekick", "Legacy"],
-			deselFn: (it) => { return it === "Reprinted" || it === "Sidekick"; },
+			deselFn: (it) => { return ["Reprinted", "Sidekick", "Reskin"].includes(it); },
 			displayFnMini: it => it === "Reprinted" ? "Repr." : it,
 			displayFnTitle: it => it === "Reprinted" ? it : "",
 			isMiscFilter: true,
@@ -54621,6 +54785,11 @@ let PageFilterClassesBase$1 = class PageFilterClassesBase extends PageFilterBase
 			sc.shortName = sc.shortName || sc.name; // ensure shortName
 
 			this._mutateForFilters_commonMisc(sc);
+
+			// Retain subclasses when blue-misc-filtering classes
+			if (cls.isHero) sc._fMisc.push("Hero Class");
+			if (this.isReskin(cls) && !sc._fMisc.includes("Reskin")) sc._fMisc.push("Reskin");
+
 			this._mutateForFilters_commonSources(sc);
 		});
 
@@ -54637,6 +54806,7 @@ let PageFilterClassesBase$1 = class PageFilterClassesBase extends PageFilterBase
 		cls._fPrimaryAbility = this._mutateForFilters_getFilterPrimaryAbility(cls);
 
 		if (cls.isSidekick) cls._fMisc.push("Sidekick");
+		if (cls.isHero) cls._fMisc.push("Hero Class");
 	}
 
 	_addEntrySourcesToFilter (entry) { this._addEntrySourcesToFilter_walk(entry); }
@@ -54706,9 +54876,8 @@ let PageFilterClassesBase$1 = class PageFilterClassesBase extends PageFilterBase
 			.some(sc => this.isSubclassVisible(f, cls, sc));
 	}
 
-	isSubclassVisible (f, cls, sc) {
-		return this._filterBox.toDisplayByFilters(
-			f,
+	_getSubclassFilterToValueTuples (sc) {
+		return [
 			{
 				filter: this._sourceFilter,
 				value: sc._fSources,
@@ -54717,6 +54886,21 @@ let PageFilterClassesBase$1 = class PageFilterClassesBase extends PageFilterBase
 				filter: this._miscFilter,
 				value: sc._fMisc,
 			},
+		];
+	}
+
+	doSetSubclassesVisible (subclasses) {
+		subclasses
+			.forEach(sc => {
+				this._getSubclassFilterToValueTuples(sc)
+					.forEach(({filter, value}) => filter.setPillsToDisplay([value]));
+			});
+	}
+
+	isSubclassVisible (f, cls, sc) {
+		return this._filterBox.toDisplayByFilters(
+			f,
+			...this._getSubclassFilterToValueTuples(sc),
 		);
 	}
 
@@ -62014,7 +62198,10 @@ class UtilsFoundryItem {
 		// Try to process various equipment-sounding item names as equipment (e.g. gloves, bracers)
 		if (this._ITEM_EQUIPMENT_NAME_RES.some(it => it.test(item.name))) return this._TYPE_EQUIPMENT;
 
-		if (item.miscTags?.includes("CNS")) return this._TYPE_CONSUMABLE;
+		if (
+			(item.type && DataUtil.itemType.unpackUid(item.type).abbreviation === Parser.ITM_TYP_ABV__FOOD_AND_DRINK)
+			|| ["CNS", "FOD", "DRK"].some(it => !!item.miscTags?.includes(it))
+		) return this._TYPE_CONSUMABLE;
 
 		// Classify light-producing items as "equipment", which can be equipped
 		if (item.light?.length) return this._TYPE_EQUIPMENT;
@@ -69082,6 +69269,12 @@ let ScaleSpellSummonedCreature$1 = class ScaleSpellSummonedCreature extends Scal
 		this._mutSimpleSpecialHp(mon);
 	}
 
+	static _scale_genericEntries_getSimplifiedDice ({str, summonSpellLevel}) {
+		return str
+			.replace(/\bsummonSpellLevel\b/g, () => summonSpellLevel)
+			.replace(/\(([\d\s+*/.-]+)\)(?=d\d)/g, (_, expression) => MiscUtil.expEval(expression));
+	}
+
 	static _scale_genericEntries (mon, toSpellLevel, state, prop) {
 		if (!mon[prop]) return;
 		mon[prop] = ScaleSpellSummonedCreature._WALKER.walk(
@@ -69107,10 +69300,22 @@ let ScaleSpellSummonedCreature$1 = class ScaleSpellSummonedCreature extends Scal
 								.join(" ");
 						})
 						// "{@damage 1d8 + 3 + summonSpellLevel}"
-						.replace(/{@(?:dice|damage|hit|d20) [^}]+}/g, (...m) => {
-							return m[0]
-								.replace(/\bsummonSpellLevel\b/g, (...n) => toSpellLevel)
-							;
+						.replace(/{@(?<tag>dice|damage|hit|d20) (?<text>[^}]+)}/g, (...m) => {
+							const {tag, text} = m.at(-1);
+
+							const parts = Renderer.splitTagByPipe(text);
+							const [, displayText] = parts;
+
+							const isScaledRoll = /\bsummonSpellLevel\b/.test(parts[0]);
+							if (!isScaledRoll) return m[0].replace(/\bsummonSpellLevel\b/g, () => toSpellLevel);
+
+							const partsNxt = MiscUtil.copyFast(parts);
+							partsNxt[0] = this._scale_genericEntries_getSimplifiedDice({str: partsNxt[0], summonSpellLevel: toSpellLevel});
+
+							const simplifiedBase = !displayText ? null : this._scale_genericEntries_getSimplifiedDice({str: parts[0], summonSpellLevel: mon.summonedBySpellLevel});
+							if (displayText && simplifiedBase === displayText) partsNxt[1] = "";
+
+							return `{@${tag} ${partsNxt.join("|")}}`.replace(/\bsummonSpellLevel\b/g, () => toSpellLevel);
 						})
 					;
 
@@ -97491,7 +97696,7 @@ class DataConverterTable extends DataConverterJournal {
 		// format: "12+"
 		const mPlus = /^(\d+)\s*\+$/.exec(cellClean);
 		rangeLow = Number(mPlus[1]);
-		rangeHigh = rangeLow;
+		rangeHigh = Math.max(rangeLow, this._getHighestRoll(toRoll));
 
 		return {rangeLow, rangeHigh};
 	}
@@ -119699,6 +119904,11 @@ class DataConverterItem extends DataConverter {
 		// https://github.com/foundryvtt/dnd5e/pull/6713#issuecomment-4176894298
 		if (isGear) out.add("gear");
 
+		if (UtilVersions.getSystemVersion().isVersionSixOnePlus) {
+			if (item.miscTags?.includes("FOD")) out.add("nutritious");
+			if (item.miscTags?.includes("DRK")) out.add("hydrating");
+		}
+
 		return [...out]
 			.sort(SortUtil.ascSortLower);
 	}
@@ -119759,7 +119969,7 @@ class DataConverterItem extends DataConverter {
 			}
 
 			case UtilDocumentItemItem.TYPE_CONSUMABLE: {
-				out.value = (item.poison ? "poison" : DataConverterItem._ITEM_TYPE_TO_CONSUMABLE_TYPE[itemTypeAbv]) || "";
+				out.value = this._getItemSystemType_getConsumableValue({item, itemTypeAbv});
 
 				const subtype = this._getItemSystemType_getConsumableSubtype({item, systemTypeValue: out.value});
 				if (subtype != null) out.subtype = subtype;
@@ -119778,6 +119988,13 @@ class DataConverterItem extends DataConverter {
 
 			default: throw new Error("Unimplemented!");
 		}
+	}
+
+	static _getItemSystemType_getConsumableValue ({item, itemTypeAbv}) {
+		if (item.poison) return "poison";
+		if (DataConverterItem._ITEM_TYPE_TO_CONSUMABLE_TYPE[itemTypeAbv]) return DataConverterItem._ITEM_TYPE_TO_CONSUMABLE_TYPE[itemTypeAbv];
+		if (["FOD", "DRK"].some(it => !!item.miscTags?.includes(it))) return "food";
+		return "";
 	}
 
 	static _getItemSystemType_getConsumableSubtype ({item, systemTypeValue}) {
@@ -120552,6 +120769,7 @@ DataConverterItem._ITEM_TYPE_TO_ARMOR_TYPE = {
 DataConverterItem._ITEM_TYPE_TO_CONSUMABLE_TYPE = {
 	[Parser.ITM_TYP_ABV__AMMUNITION]: "ammo",
 	[Parser.ITM_TYP_ABV__AMMUNITION_FUTURISTIC]: "ammo",
+	[Parser.ITM_TYP_ABV__FOOD_AND_DRINK]: "food",
 	[Parser.ITM_TYP_ABV__POTION]: "potion",
 	[Parser.ITM_TYP_ABV__SCROLL]: "scroll",
 	[Parser.ITM_TYP_ABV__WAND]: "wand",
@@ -133115,9 +133333,8 @@ class ImporterCharacter extends ImporterBase {
 	}
 
 	_doMergeExistingGenericTraitsData ({actorSource, actorUpdate, actorDataPaths}) {
-		actorDataPaths.forEach(actorDataPath => {
-			const actorUpdatePath = actorDataPath.slice(1);
-			const fromActor = MiscUtil.get(actorSource, ...actorDataPath);
+		actorDataPaths.forEach(actorUpdatePath => {
+			const fromActor = MiscUtil.get(actorSource, ...actorUpdatePath);
 			const fromUpdate = MiscUtil.get(actorUpdate, ...actorUpdatePath);
 			if (!fromActor && !fromUpdate) return;
 			if (!fromActor && fromUpdate) return;
@@ -135594,6 +135811,8 @@ class ImporterActor extends ImporterBase {
 			},
 		);
 
+		MiscUtil.set(actorData, "system", "identifier", imp.name.slugify({strict: true}));
+
 		const additionalSystem = this.constructor._SideDataInterface
 			? await this.constructor._SideDataInterface.pGetSystemSideLoaded(imp, {documentType: this._actorType})
 			: null;
@@ -135727,13 +135946,13 @@ class ImporterActor extends ImporterBase {
 		// Handle any post-item item updates; switch to using the "real" actor, which has IDs populated on items
 		await this._pImportEntry_pHandlePostItemItemUpdates(actorImported, importOpts, dataBuilderOpts);
 
-		await this._pImportEntry_pAddToTargetTableIfRequired([model.actor], model.duplicateMeta, importOpts);
+		await this._pImportEntry_pAddToTargetTableIfRequired([actorImported], model.duplicateMeta, importOpts);
 
 		return new ImportSummary({
 			status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
 			imported: [
 				new ImportedDocument({
-					document: model.actor,
+					document: actorImported,
 				}),
 			],
 			entity: imp,
@@ -142938,7 +143157,7 @@ class ImporterItem extends ImporterBase {
 				//   For the rest, leave it blank; we will dynamically fill it later based on the imported first item's ID.
 				const containerId = i === 0 ? importOpts.container?.id : null;
 
-				const quantity = it.quantity || 1;
+				const quantity = (it.quantity || 1) * (opts.quantity ?? item.quantity ?? 1);
 
 				if (it.item || typeof it === "string") {
 					let [name, source] = (it.item || it).split("|");
@@ -143095,12 +143314,14 @@ class ImporterItem extends ImporterBase {
 	_pImportEntry_pImportToActor_getExistingCurrencyItem ({importOpts, itemData = null, isForce = false}) {
 		if (!isForce && itemData?.flags?.[SharedConsts.MODULE_ID]?.type !== DataConverterItem.FLAG_TYPE__CURRENCY) return null;
 
+		const containerId = itemData ? itemData.system.container : importOpts.container?.id;
+
 		// Use the first item found (i.e. `.find` rather than `.filter`)
 		return importOpts.actor.items.contents
 			.find(sheetItem => {
 				return sheetItem.flags?.[SharedConsts.MODULE_ID]?.type === DataConverterItem.FLAG_TYPE__CURRENCY
 					&& sheetItem.flags?.[SharedConsts.MODULE_ID]?.currency
-					&& MiscUtil.isNearStrictlyEqual(sheetItem.system.container, importOpts.container?.id);
+					&& MiscUtil.isNearStrictlyEqual(sheetItem.system.container, containerId);
 			});
 	}
 
@@ -143111,7 +143332,7 @@ class ImporterItem extends ImporterBase {
 		const matchingItem = importOpts.actor.items.contents.find(sheetItem => {
 			if (sheetItem.type !== itemData.type) return false;
 
-			if (!MiscUtil.isNearStrictlyEqual(sheetItem.system.container, importOpts.container?.id)) return false;
+			if (!MiscUtil.isNearStrictlyEqual(sheetItem.system.container, itemData.system.container)) return false;
 
 			const isMatchingSource = !Config.get("import", "isStrictMatching")
 				|| (UtilDocumentSource.getDocumentSourceReadOnly(sheetItem).source || "").toLowerCase() === (UtilDocumentSource.getDocumentSourceReadOnly(itemData).source || "").toLowerCase();
@@ -153221,15 +153442,9 @@ class ImporterRollableTable extends ImporterBase {
 		const tables = this._pImportEntry_getTablesFromGroup(tg);
 		const rollableTables = [];
 
-		let cntSkipped = 0;
 		for (const tbl of tables) {
 			const importSummary = await this.pImportEntry(tbl, importOpts);
 			if (importSummary.imported) rollableTables.push(...importSummary.imported.map(it => it.document).filter(Boolean));
-			else if (importSummary.existing) cntSkipped++;
-		}
-
-		if (!rollableTables.length && cntSkipped) {
-			return new ImportSummary({status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE, entity: tg});
 		}
 
 		const journalData = DataConverterTable.getTableGroupJournal(
@@ -153259,8 +153474,17 @@ class ImporterRollableTable extends ImporterBase {
 			});
 		}
 
+		const duplicateMeta = this._getDuplicateMeta({name: journalData.name, gameProp: "journal", importOpts});
+		if (duplicateMeta?.isSkip) {
+			return new ImportSummary({
+				status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
+				imported: [new ImportedDocument({isExisting: true, document: duplicateMeta.existing})],
+				entity: tg,
+			});
+		}
+
 		return this._pImportEntry_pImportToDirectoryGeneric_toDirectory({
-			duplicateMeta: this._getDuplicateMeta({name: journalData.name, gameProp: "journal", importOpts}),
+			duplicateMeta,
 			docData: journalData,
 			toImport: tg,
 			Clazz: JournalEntry,
@@ -155052,7 +155276,10 @@ class DataConverterVehicle extends DataConverter {
 	}
 
 	static _getShipMovement_ship (veh) {
-		const movementFvtt = {speeds: {}};
+		const movementFvtt = {
+			speeds: {},
+			units: Config.getMetricUnitDistance({configGroup: "importVehicle", originalUnit: Parser.UNT_FEET}),
+		};
 
 		(veh.movement || []).forEach(move => {
 			this._doPopulateMovementToSpeedMap(move, "locomotion", movementFvtt);
@@ -155062,9 +155289,8 @@ class DataConverterVehicle extends DataConverter {
 		if (!Object.keys(movementFvtt.speeds).length && veh.pace && typeof veh.pace === "number" && veh.terrain?.length) {
 			veh.terrain.forEach(ter => {
 				const speedProp = this._getMovementTypeFromTerrain(ter);
-				movementFvtt.speeds[speedProp] = Config.getMetricNumberDistance({configGroup: "importVehicle", originalUnit: Parser.UNT_MILES, originalValue: veh.pace});
+				movementFvtt.speeds[speedProp] = Config.getMetricNumberDistance({configGroup: "importVehicle", originalUnit: Parser.UNT_FEET, originalValue: veh.pace * 10});
 			});
-			movementFvtt.units = Config.getMetricUnitDistance({configGroup: "importVehicle", originalUnit: "mi"});
 		}
 
 		// Replace the default "30 foot walking speed" if we have no walking speed
@@ -155122,7 +155348,7 @@ class DataConverterVehicle extends DataConverter {
 				spd.entries,
 				{
 					string: (str) => {
-						str.replace(/speed (\d+) ft\./g, (...m) => {
+						str.replace(/(?:^|speed )(\d+) ft\./g, (...m) => {
 							const speed = Config.getMetricNumberDistance({configGroup: "importVehicle", originalUnit: Parser.UNT_FEET, originalValue: Number(m[1])});
 							movementFvtt.speeds[speedProp] = Math.max(speed, movementFvtt.speeds[speedProp] || 0);
 						});
@@ -155160,6 +155386,42 @@ class DataConverterVehicle extends DataConverter {
 
 	static _getShipMovement_fromStandardSpeed (veh) {
 		return this.getMovement(veh.speed, {configGroup: "importVehicle"});
+	}
+	// endregion
+
+	// region Travel
+	static getShipTravel (veh) {
+		if (veh.pace == null) return null;
+
+		const paceByMode = typeof veh.pace === "number"
+			? Object.fromEntries((veh.terrain || [])
+				.map(terrain => (
+					[
+						this._getMovementTypeFromTerrain(terrain),
+						veh.pace,
+					]
+				)))
+			: Object.fromEntries(
+				Object.entries(veh.pace)
+					.map(([mode, pace]) => (
+						[
+							mode,
+							typeof pace === "number" ? pace : Parser.vulgarToNumber(pace),
+						]
+					)),
+			);
+
+		const units = Config.isUseMetricDistance({configGroup: "importVehicle"}) ? "kph" : "mph";
+
+		const speeds = {};
+		Object.entries(paceByMode)
+			.forEach(([mode, pace]) => {
+				const travelType = CONFIG.DND5E.movementTypes[mode]?.travel || "land";
+				const speed = game.dnd5e.utils.convertTravelSpeed(pace, "mph", {to: units}).value;
+				speeds[travelType] = Math.max(speeds[travelType] || 0, speed);
+			});
+
+		return {speeds, units};
 	}
 	// endregion
 }
@@ -156306,7 +156568,14 @@ class ImporterObject extends ImporterActor {
 		out.movement = DataConverter.getMovement(obj.speed || {walk: 0}, {configGroup: this._configGroup});
 
 		if (typeof obj.ac === "number") {
-			out.ac = {flat: obj.ac, motionless: `${obj.ac}`};
+			out.ac = {
+				...SystemDnd5eAcUtil.getVersionCompatibleCreatureAc(SystemDnd5eAcUtil.getCreatureAc({
+					flat: obj.ac,
+					calcs: [],
+					override: obj.ac,
+				})),
+				motionless: `${obj.ac}`,
+			};
 		}
 
 		if (typeof obj.hp === "number") {
@@ -156584,6 +156853,8 @@ class ImporterVehicle extends ImporterActor {
 		out.spelldc = null;
 
 		out.movement = DataConverterVehicle.getShipMovement(veh);
+		const travel = DataConverterVehicle.getShipTravel(veh);
+		if (travel) out.travel = travel;
 
 		switch (veh.vehicleType) {
 			case "INFWAR": {
@@ -156605,7 +156876,8 @@ class ImporterVehicle extends ImporterActor {
 
 				out.actions = {
 					stations: true,
-					value: 0,
+					max: 0,
+					spent: 0,
 					thresholds: {
 						0: 0,
 						1: 0,
@@ -156639,7 +156911,7 @@ class ImporterVehicle extends ImporterActor {
 					mt: null,
 				};
 
-				let actionsValue = 0;
+				let actionsMax = 0;
 				const actionThresholds = {
 					0: 0,
 					1: 0,
@@ -156647,16 +156919,20 @@ class ImporterVehicle extends ImporterActor {
 				};
 				if (veh.actionThresholds) {
 					Object.entries(veh.actionThresholds)
+						.filter(([actions]) => Number(actions) > 0)
 						.sort(([ka], [kb]) => SortUtil.ascSort(Number(kb), Number(ka)))
 						.slice(0, 3) // FVTT supports a max of 3, so take the highest
+						.reverse()
 						.forEach(([actions, crew], i) => {
+							actionsMax = i + 1;
 							actionThresholds[i] = crew;
 						});
 				}
 
 				out.actions = {
 					stations: false,
-					value: actionsValue,
+					max: actionsMax,
+					spent: 0,
 					thresholds: actionThresholds,
 				};
 
@@ -156670,6 +156946,15 @@ class ImporterVehicle extends ImporterActor {
 
 			default: throw new Error(`Unhandled vehicle type "${veh.vehicleType}"`);
 		}
+
+		out.ac = {
+			...SystemDnd5eAcUtil.getVersionCompatibleCreatureAc(SystemDnd5eAcUtil.getCreatureAc({
+				flat: out.ac.flat,
+				calcs: [],
+				override: out.ac.flat ?? 0,
+			})),
+			motionless: out.ac.motionless,
+		};
 
 		sys.attributes = out;
 	}
@@ -159573,6 +159858,93 @@ var ImporterAdventureBook$1 = /*#__PURE__*/Object.freeze({
 });
 
 class UtilEntityAdventureBook {
+	static _getJournalHeadingMeta (entry, {depth, isOptionsList = false}) {
+		const type = isOptionsList ? "item" : entry.type || "entries";
+		const name = Renderer.utils.getEntryDisplayName(entry);
+
+		switch (type) {
+			case "section":
+				return {name, depth: 0};
+
+			case "entries":
+			case "optfeature":
+				return {name: depth < 2 ? name : null, depth: Math.min(depth + 1, 2)};
+
+			case "options":
+				if (Renderer.utils.getRenderableEntryType(entry) === "list") return {depth, isOptionsList: true};
+				return {name: depth < 2 ? name : null, depth: Math.min(depth, 2)};
+
+			case "patron":
+				return {name: depth < 2 ? name : null, depth: Math.min(depth, 2)};
+
+			case "inset":
+			case "insetReadaloud":
+				return {name, depth: 2};
+
+			case "variant":
+				return {name: name ? `Variant: ${name}` : "Variant", depth: 2};
+			case "variantInner":
+				return {name, depth: 2};
+			case "variantSub":
+				return {depth: 2};
+
+			case "flowBlock":
+				return {name, depth: 2};
+
+			default:
+				return {depth};
+		}
+	}
+
+	static getEntryIdToJournalAnchor (data) {
+		const out = {};
+
+		const walker = MiscUtil.getWalker({
+			isNoModification: true,
+			keyBlocklist: new Set([
+				...MiscUtil.GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST,
+				"mapParent",
+				"statblockData",
+				"data",
+				"href",
+			]),
+		});
+
+		data
+			.forEach(chapter => {
+				const slugs = new Set();
+				const stack = [{depth: 0, anchor: ""}];
+
+				walker.walk(MiscUtil.copyFast(chapter), {
+					object: entry => {
+						const parent = stack.at(-1);
+						const meta = this._getJournalHeadingMeta(entry, parent);
+
+						let anchor = parent.anchor;
+						if (meta.name != null) {
+							const slug = JournalEntryPage.slugifyHeading(Renderer.stripTags(meta.name));
+							anchor = slug;
+
+							for (let i = 1; slugs.has(anchor); ++i) anchor = `${slug}$${i}`;
+							slugs.add(anchor);
+						}
+
+						if (entry.id) out[entry.id] = anchor;
+
+						stack.push({...meta, anchor});
+
+						if (!parent.isOptionsList && entry.type === "options" && entry.entries) {
+							entry.entries.sort((a, b) => SortUtil.ascSort(a.name || "", b.name || ""));
+						}
+					},
+					postObject: () => stack.pop(),
+				});
+			});
+		return out;
+	}
+
+	/* -------------------------------------------- */
+
 	static getPageId ({ixChapter}) {
 		return `${ixChapter}`.padStart(16, "0");
 	}
@@ -159853,16 +160225,15 @@ class DataConverterAdventureBook extends DataConverterJournal {
 	static _getAdventureBookFlags ({indexData}) { throw new Error("Unimplemented!"); }
 
 	static _getVetAreaIdToFoundryMeta ({data, idJournalEntry}) {
-		const lookup = Renderer.adventureBook.getEntryIdLookup(data);
+		const entryIdLookup = Renderer.adventureBook.getEntryIdLookup(data);
+		const entryIdToJournalAnchor = UtilEntityAdventureBook.getEntryIdToJournalAnchor(data);
 
 		return Object.fromEntries(
-			Object.entries(lookup)
+			Object.entries(entryIdLookup)
 				.map(([areaId, lookupMeta]) => {
 					const idPage = UtilEntityAdventureBook.getPageId({ixChapter: lookupMeta.chapter});
 
-					const idPartAnchor = lookupMeta.name
-						? `${JournalEntryPage.slugifyHeading(lookupMeta.name)}${lookupMeta.ixTitleRelChapter ? `$${lookupMeta.ixTitleRelChapter}` : ""}`
-						: "";
+					const idPartAnchor = entryIdToJournalAnchor[areaId] || "";
 
 					const idPartRelative = [
 						UtilEntityAdventureBook.getPageId({ixChapter: lookupMeta.chapter}),
@@ -180164,6 +180535,7 @@ class ContentUpdaterConsts {
 				...Consts.USER_DATA_TRACKING_KEYS__ACTOR,
 
 				"prototypeToken.name",
+				"prototypeToken.displayName",
 				"prototypeToken.actorLink",
 				"prototypeToken.texture.src",
 			],
@@ -187477,6 +187849,52 @@ class Patcher_GameKeyboard {
 		game.keybindings.set(SharedConsts.MODULE_ID, Patcher_GameKeyboard._ACTION_DISMISS, [{key: "Escape"}]);
 	}
 
+	static async _pCloseApplications (win) {
+		const appsOpen = UtilApplications.getOpenAppsSortedByZindex({isFilterInvalid: true})
+			.filter(app => {
+				// Do not close applications hosted in another window.
+				if (UtilApplications.getAppElement(app)?.ownerDocument.defaultView !== win) return false;
+
+				// Do not close the window's primary application.
+				if (app instanceof foundry.applications.api.ApplicationV2 && app.window.windowId === app.id) return false;
+				// Do not close popped-out camera views.
+				if (app instanceof foundry.applications.apps.av.CameraPopout) return false;
+
+				if (app.isEscapeable != null && !app.isEscapeable) return false;
+
+				if (
+					UtilCompat.isSimpleCalendarActive()
+					&& IntegrationSimpleCalendar.isSimpleCalendarApp(app)
+					&& IntegrationSimpleCalendar.isPersistentOpen()
+				) return false;
+
+				if (
+					UtilCompat.isModulTerrainHeightToolsActive()
+					&& IntegrationTerrainHeightTools.isTerrainStackViewerApp(app)
+				) return false;
+
+				if (
+					UtilCompat.isMonksCombatDetailsActive()
+					&& IntegrationMonksTokenBar.isIgnoreWindowCloseEsc(app)
+				) return false;
+
+				if (
+					UtilCompat.isMonksTokenBarActive()
+					&& IntegrationMonksTokenBar.isIgnoreWindowCloseEsc(app)
+				) return false;
+
+				return true;
+			});
+		// Close the topmost app, falling back if it refuses to close.
+		while (appsOpen.length) {
+			const app = appsOpen.pop();
+			const isClosedPlut = await app.close({closeKey: true});
+			// Confirm an application actually closed
+			if (isClosedPlut || !app.rendered) return true;
+		}
+		return false;
+	}
+
 	static _init_registerKeybindEsc () {
 		game.keybindings.register(
 			SharedConsts.MODULE_ID,
@@ -187485,22 +187903,11 @@ class Patcher_GameKeyboard {
 				name: "KEYBINDINGS.Dismiss",
 				hint: `An improved version of Foundry's built-in binding. Bind the "Escape" key to (in this order): de-select active input fields; de-select selected canvas elements; close context menus; close individual windows in most-recently-active-first order; toggle the main menu.`,
 				onDown: async (context) => {
-					const {event} = context;
+					const win = context.event.view ?? foundry.applications.detached.focused ?? window;
+					if (win !== window) return Patcher_GameKeyboard._pCloseApplications(win);
 
 					// Plutonium: If there are modals open, let the modal handle the keypress
 					if (UiUtil._MODAL_STACK && UiUtil._MODAL_STACK.length) return true;
-
-					// Case 1 - close the main menu
-					if (ui.menu?.rendered) {
-						await ui.menu.toggle();
-						return true;
-					}
-
-					// Plutonium: Make ESC de-focus input fields
-					if (document.hasFocus() && Patcher_GameKeyboard._ELEMENTS_WITH_FOCUS.has(event.target.nodeName)) {
-						event.target.blur();
-						return true;
-					}
 
 					// Cancel current drag workflow
 					if (canvas.currentMouseManager) {
@@ -187511,6 +187918,18 @@ class Patcher_GameKeyboard {
 
 					// Save fog of war if there are pending changes
 					if (canvas.ready) canvas.fog.commit();
+
+					// Case 1 - close the main menu
+					if (ui.menu?.rendered) {
+						await ui.menu.toggle();
+						return true;
+					}
+
+					// Plutonium: Make ESC de-focus input fields
+					if (document.hasFocus() && Patcher_GameKeyboard._ELEMENTS_WITH_FOCUS.has(context.event.target.nodeName)) {
+						context.event.target.blur();
+						return true;
+					}
 
 					// Case 2 - dismiss an open context menu
 					if (ui.context?.element) {
@@ -187537,46 +187956,9 @@ class Patcher_GameKeyboard {
 
 					// [Originally "Case 4"]
 					// Case 5 - close open UI windows
-					const appsOpen = UtilApplications.getOpenAppsSortedByZindex({isFilterInvalid: true})
-						.filter(app => {
-							if (app instanceof foundry.applications.apps.av.CameraPopout) return false;
+					if (await Patcher_GameKeyboard._pCloseApplications(win)) return true;
 
-							if (app.isEscapeable != null && !app.isEscapeable) return false;
-
-							if (
-								UtilCompat.isSimpleCalendarActive()
-								&& IntegrationSimpleCalendar.isSimpleCalendarApp(app)
-								&& IntegrationSimpleCalendar.isPersistentOpen()
-							) return false;
-
-							if (
-								UtilCompat.isModulTerrainHeightToolsActive()
-								&& IntegrationTerrainHeightTools.isTerrainStackViewerApp(app)
-							) return false;
-
-							if (
-								UtilCompat.isMonksCombatDetailsActive()
-								&& IntegrationMonksTokenBar.isIgnoreWindowCloseEsc(app)
-							) return false;
-
-							if (
-								UtilCompat.isMonksTokenBarActive()
-								&& IntegrationMonksTokenBar.isIgnoreWindowCloseEsc(app)
-							) return false;
-
-							return true;
-						});
-					if (appsOpen.length) {
-						// Close the topmost app
-						while (appsOpen.length) {
-							const app = appsOpen.pop();
-							const isClosedPlut = await app.close({closeKey: true});
-							// Confirm an application actually closed
-							if (isClosedPlut || !app.rendered) return true;
-						}
-					}
-
-					// Case 9 - open the main menu
+					// Case 6 - open the main menu
 					ui.menu.toggle();
 
 					// Save the fog immediately rather than waiting for the 3s debounced save as part of commitFog.

@@ -78,7 +78,8 @@ export async function assets() {
     if (path.endsWith('.hbs')) templates[`systems/dnd5e/templates/${path}`] = await readFile(join(systemRoot, 'templates', path), 'utf8')
   }
   const moduleRoots = { 'lib-wrapper': join(root, 'work/ref-extra/built/lib-wrapper'),
-    plutonium: join(reference, 'plutonium-next-master/plutonium') }
+    // Plutonium 原包：参考库只留压缩包（plutonium-next-master/plutonium.zip），解到 work/ref-extra/plutonium 再读（参考库只读）
+    plutonium: join(root, 'work/ref-extra/plutonium') }
   const modules = await Promise.all(Object.values(moduleRoots).map(async path => serverPackageData(JSON.parse(await readFile(join(path, 'module.json'), 'utf8')), 'module')))
   for (const [id, dir] of Object.entries(moduleRoots)) for (const path of await readdir(dir, { recursive: true })) {
     if (/\.(hbs|html)$/.test(path)) templates[`modules/${id}/${path}`] = await readFile(join(dir, path), 'utf8')
