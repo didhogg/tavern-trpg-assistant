@@ -26,6 +26,8 @@ export type FrameRequestBody =
   /** 作者的同步存储（localStorage）写了一项 / 删了一项：插件存进库，下次开小窗时经 iframe 的 name 交回。 */
   | { op: 'local-set'; key: string; value: string }
   | { op: 'local-remove'; key: string }
+  /** 作者程序要问玩家（建卡问答桥，结算小窗 frame/ask-bridge.ts）：问题原样交给插件，插件交回玩家的回答。 */
+  | { op: 'ask'; question: unknown }
 
 export type FrameRequest = { channel: typeof CHANNEL; type: 'request'; frame: string; id: number } & FrameRequestBody
 

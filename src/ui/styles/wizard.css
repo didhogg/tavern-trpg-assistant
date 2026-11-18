@@ -52,6 +52,11 @@
 /* 建卡里还选不了的，统一列一块（WizardChoices.vue） */
 .wz-notyet { padding: var(--sp-2) var(--sp-3); border-left: 3px solid var(--warn); background: var(--warn-bg); color: var(--warn-text); font-size: var(--fs-sm); }
 .wz-notyet ul { margin: var(--sp-1) 0 0; padding-left: var(--sp-4); }
+/* 作者问过的（建卡问答桥）：一问一行，打勾 + 问题 + 玩家的回答 */
+.wz-asked { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.wz-asked li { display: flex; align-items: baseline; gap: var(--sp-2); color: var(--text2); font-size: var(--fs-sm); }
+.wz-asked b { color: var(--text); font-weight: 600; }
+.wz-ask-foot { display: flex; justify-content: flex-end; gap: var(--sp-2); }
 .wz-asi { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--sp-2); }
 .wz-asi__row { display: flex; align-items: center; gap: var(--sp-2); } .wz-asi__row span { flex: 1; } .wz-asi__row b { min-width: 1.5em; text-align: center; }
 .wz-done h3 { margin: 0; font-size: var(--fs-xl); }

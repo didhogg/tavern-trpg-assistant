@@ -10,6 +10,7 @@ import type { KernelActor, KernelChange } from '../../schemas/kernel'
 import type { SheetEdit } from './frame/commands-sheet'
 import { executed } from './host'
 import type { KernelRuntime } from './runtime'
+import type { DraftWatcher } from './drafts'
 
 /**
  * 游戏中会变的状态（不是手改设定，不画金线）。登记表：加一种 = 加一行，按 dnd5e 6.1 数据路径匹配。
@@ -239,13 +240,24 @@ export class KernelPeople {
     return { made, kernel: await this.enroll(ownerKey, ids, adjustments) }
   }
   /**
-   * 加人：作者整机建卡（Plutonium「导入到人物」，条目按顺序：种族 → 背景 → 职业 → 子职业 …），作者要问玩家时显示作者窗口。
-   * 建好的整份人物按 B′ 存进存档（战役层 bases）；读档直接建回。adjustments = 列表信息（分类等）。
+   * 加人：作者整机建卡（Plutonium「导入到人物」），一个草稿人一步步建（drafts.ts）：
+   *   draftOpen 开草稿人 → draftSet 交选中的条目（种族 → 背景 → 职业…，作者开的窗口交给 watcher 摆到建卡页）→ draftCommit 收下并存档 / draftClose 丢掉。
+   * 收下的整份人物按 B′ 存进存档（战役层 bases）；读档直接建回。adjustments = 列表信息（分类等）。
    */
-  async create(ownerKey: string, plan: { name: string; items: EntryRef[]; level?: number }, adjustments: Record<string, unknown> = {}) {
-    const made = await this.deps.runtime.importCharacter(ownerKey, plan)
-    if (made.status !== 'complete' || !made.id || !made.data) return { made, kernel: null }
+  draftOpen(ownerKey: string, name: string) { return this.deps.runtime.drafts.open(ownerKey, name) }
+  draftSet(ownerKey: string, id: string, items: EntryRef[], watcher: DraftWatcher, level?: number) { return this.deps.runtime.drafts.set(ownerKey, id, items, watcher, level) }
+  draftClose(ownerKey: string, id: string) { return this.deps.runtime.drafts.close(ownerKey, id) }
+  async draftCommit(ownerKey: string, id: string, name: string, adjustments: Record<string, unknown> = {}) {
+    const made = await this.deps.runtime.takeDraft(ownerKey, id, name)
     return { made, kernel: await this.enroll(ownerKey, [made.id], adjustments, [], { [made.id]: made.data }) }
+  }
+  /** 一次建好（同一条路：开 → 交全部条目 → 收下）；没建成就丢掉草稿人。 */
+  async create(ownerKey: string, plan: { name: string; items: EntryRef[]; level?: number }, watcher: DraftWatcher, adjustments: Record<string, unknown> = {}) {
+    const id = await this.draftOpen(ownerKey, plan.name)
+    const set = await this.draftSet(ownerKey, id, plan.items, watcher, plan.level)
+    if (set.status !== 'complete') { await this.draftClose(ownerKey, id); return { made: set, kernel: null } }
+    const { made, kernel } = await this.draftCommit(ownerKey, id, plan.name, adjustments)
+    return { made: { status: 'complete' as const, ...made }, kernel }
   }
   /** 复制一个人：同样的引用 / 选择 / 状态差别，换新种子重建（读档时编号不会和原来的人撞）；B′ 人物拷贝完整数据换新编号。 */
   async copy(ownerKey: string, actorId: string, given?: string) {

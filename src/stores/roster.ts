@@ -177,6 +177,11 @@ export const useRosterStore = defineStore('people', () => {
     })
   }
 
+  /** 分步建卡（作者整机）：收下草稿人存进存档。 */
+  async function createFromDraft(id: string, name: string, category: CategoryId): Promise<boolean> {
+    return run(`已创建「${name}」`, 1, async (k) => { await backend().draftCommit(k, id, name, { category }) })
+  }
+
   /** 彻底删除（只在回收站里）：先问，可撤销。 */
   async function purge(ids: string[]): Promise<boolean> {
     const yes = await askConfirm({ title: '彻底删除', message: `彻底删除${nameOf(ids)}？删除后不在回收站里，只能用提示条的「撤销」马上找回。`, confirmLabel: '彻底删除', danger: true })
@@ -185,6 +190,6 @@ export const useRosterStore = defineStore('people', () => {
 
   return {
     rows, loaded, loading, error, view, sort, query, selecting, selected, visible, counts, elsewhere, trash,
-    lastAdded, addFromTemplate, createFromWizard, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
+    lastAdded, addFromTemplate, createFromWizard, createFromDraft, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
   }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount } from 'vue'
 import { CATEGORIES, type CategoryId } from '../../stores/roster'
 import { useCampaignStore } from '../../stores/campaign'
 import { useModalStore } from '../../stores/modal'
@@ -17,7 +17,8 @@ const modal = useModalStore()
 const campaign = useCampaignStore()
 const idx = computed(() => w.steps.indexOf(w.cur))
 const last = computed(() => w.cur === 'done')
-onMounted(() => void w.refreshOptions())
+// 关掉窗口 = 丢掉草稿人（创建成功时已收下，这里只清空）
+onBeforeUnmount(() => { void w.author.reset() })
 async function create(): Promise<void> { if (await w.create()) modal.close() }
 </script>
 

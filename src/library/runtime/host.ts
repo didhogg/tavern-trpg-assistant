@@ -12,6 +12,8 @@ export interface FrameHandlers {
   localSnapshot(): Promise<Record<string, string>>
   localSet(key: string, value: string): Promise<void>
   localRemove(key: string): Promise<void>
+  /** 作者要问玩家时怎么回答（只有结算小窗的建卡问答桥会问；没给就报错）。 */
+  ask?(question: unknown): Promise<unknown>
 }
 
 export interface AuthorFrame {
@@ -47,6 +49,9 @@ async function answer(handlers: FrameHandlers, req: FrameRequest): Promise<unkno
     case 'kv-remove': return handlers.kvRemove(req.key)
     case 'local-set': return handlers.localSet(req.key, req.value)
     case 'local-remove': return handlers.localRemove(req.key)
+    case 'ask':
+      if (!handlers.ask) throw new Error('这个小窗没有接作者提问')
+      return handlers.ask(req.question)
   }
 }
 

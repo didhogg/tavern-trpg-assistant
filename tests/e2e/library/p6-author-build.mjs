@@ -1,5 +1,5 @@
 // P6 建卡走作者整机（Plutonium「导入到人物」）+ 存档 B′（存完整数据）真实验证（Chrome；ENGINE=webkit 换 WebKit；上限 8 分钟）。
-// 中文战役：人类 + 侍僧 + 牧师 1 级。作者窗口由测试助手按默认值点「确定」（产品里由玩家在作者窗口里答，第 2 段 A）。
+// 中文战役：人类 + 侍僧 + 牧师 1 级。作者开的窗口经作者窗口桥交出来（产品里整个搬到建卡页）；测试助手像玩家一样在作者窗口里点作者自己的确定 / 是。
 // 查：特性 / 授予链接 / 法术 / 起始装备进人物；存档人物记录不含完整数据、战役层 bases 有、撤销快照不含；名单中文；
 //     扣血 → 关小窗读档（按完整数据建回）→ 撤销；整件取下背景（作者 reverse 退回授予的特性）/ 装回；复制；整页刷新读回。
 import { writeFile } from 'node:fs/promises'
@@ -39,24 +39,9 @@ const env = (fresh) => page.evaluate(async (fresh) => {
   await rt.session(owner)
 }, fresh)
 
-// 测试助手：像玩家一样操作作者窗口（按默认值点确定 / 是）；只在测试里用
-const autoAnswer = () => page.frames().find((f) => f.url().includes('/vendor/foundry/frame')).evaluate(() => {
-  if (globalThis.__autoAnswer) return
-  globalThis.__autoAnswer = []
-  const press = (app) => setTimeout(() => {
-    const el = app.element ?? app._element?.[0]
-    const btn = el && ([...el.querySelectorAll('button')].find((b) => /^(OK|Yes|Confirm|Import|Save|Submit)$/i.test(b.textContent.trim())) ?? el.querySelector('.ve-btn-primary'))
-    globalThis.__autoAnswer.push(`${app.title ?? app.options?.window?.title ?? app.constructor.name}`)
-    btn?.click()
-  }, 200)
-  Hooks.on('renderApplicationV2', press)
-  Hooks.on('renderApplication', press)
-})
-
 try {
   await page.goto(url)
   await env(true)
-  await autoAnswer()
   const r = await page.evaluate(async () => {
     const { h, owner, library, rt, saves, people } = globalThis.ab
     // 中文库条目编号按中文名生成；按条目带的英文名找
@@ -69,7 +54,15 @@ try {
     const items = [await ref('race', 'Human'), await ref('background', 'Acolyte'), await ref('class', 'Cleric')]
     const data = async (id) => h.actorData((await rt.session(owner)).session, id)
     const out = {}
-    const made = await people.create(owner, { name: '整机牧师', items }, { category: 'party' })
+    // 作者窗口：测试助手像玩家一样点作者自己的按钮（只在测试里用；产品里由玩家在建卡页答）
+    const asked = []
+    const watcher = {
+      open: (win) => { asked.push({ prop: win.ref.prop, title: win.title, styles: win.styles.length, closed: false, token: win.token })
+        setTimeout(() => { const n = win.node(); const b = n && ([...n.querySelectorAll('button')].find((x) => /^(OK|Yes|Confirm|Use Default|Import|Save|Submit)$/i.test(x.textContent.trim())) ?? n.querySelector('.ve-btn-primary')); b?.click() }, 300) },
+      closed: (token) => { const row = asked.find((x) => x.token === token); if (row) row.closed = true },
+    }
+    globalThis.abAsked = asked
+    const made = await people.create(owner, { name: '整机牧师', items }, watcher, { category: 'party' })
     if (made.made.status !== 'complete') return { fatal: made.made }
     const id = made.made.id
     const a0 = await data(id)
@@ -109,7 +102,7 @@ try {
     return out
   })
   if (r.fatal) throw Error(`建卡没完成：${JSON.stringify(r.fatal).slice(0, 600)}`)
-  const answered = await page.frames().find((f) => f.url().includes('/vendor/foundry/frame')).evaluate(() => globalThis.__autoAnswer)
+  const answered = await page.evaluate(() => globalThis.abAsked)
   // 整页刷新：页面里的对象全部销毁，从 IndexedDB 读档
   await page.reload()
   await env(false)
@@ -131,6 +124,8 @@ try {
     undo: r.undo.hp === r.cold.hp0 && r.undo.undoEntryBytes < 20_000,
     wholeOff: r.off.ok && r.off.granted > 0 && r.off.grantedGone && r.off.backOk && r.off.grantedBack,
     copy: r.copy.status === 'complete' && r.copy.distinct && r.copy.items === r.expect.items && r.copy.hasBase,
+    // 作者窗口桥：作者开的窗口都交出来了（带作者声明的样式表），每个都在作者窗口里答完关掉
+    windowsThroughBridge: answered.length >= 5 && answered.every((q) => q.closed && q.styles > 0),
     pageReload: r.reload.loaded.every((x) => x === 'complete') && r.reload.items === r.expect.items && r.reload.hp === r.expect.hp,
   }
   const known = (e) => e.includes('gendata-nav-adventure-book-index.json') || e.includes('requires usable window dimensions') || e.includes('status of 404') || e.includes('api/plutonium')

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { refKey } from '../core/saves/split'
 import type { EntryRef } from '../library/scopes'
 import { EXTRA_KINDS } from '../rules/kernel/build-options'
@@ -8,6 +8,7 @@ import type { AbilityMethod } from '../rules/kernel/ability-rules'
 import type { BuildAbilities, BuildOptionsItem, BuildPick } from '../rules/kernel/runtime'
 import { askConfirm } from '../ui/kit/confirm'
 import { createEquipment } from './wizard-equipment'
+import { createAuthorDraft } from './wizard-author'
 import { nameOf } from '../ui/libview/pack-data'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
@@ -65,6 +66,10 @@ export const useWizardStore = defineStore('wizard', () => {
   const items = computed<EntryRef[]>(() => build.value.flatMap((p) => chosen.value[p] ?? []))
   const optionsFor = (ref: EntryRef): BuildOptionsItem | null => options.value?.find((i) => refKey(i.ref) === refKey(ref)) ?? null
   const equip = createEquipment({ items, owner, nameOf: (key) => { const ref = items.value.find((r) => refKey(r) === key); return (ref && optionsFor(ref)?.name) || key } })
+  /** 作者整机：选中的全部条目按建卡顺序交后端草稿人导入，作者开的窗口搬到那件条目右边（wizard-author.ts）。 */
+  const mainItems = computed<EntryRef[]>(() => mainProps.value.flatMap((p) => chosen.value[p] ?? []))
+  const author = createAuthorDraft({ items: mainItems, owner, name: () => name.value })
+  watch(() => mainItems.value.map(refKey).join('|'), () => { void author.sync() })
 
   /** 某种额外必选项（按数据）：分几组、每组选几个、候选是谁，全按后端给；没有 = 这一步不出现。 */
   function extra(prop: string): { count: number; groups: ExtraGroup[] } | null {
@@ -93,7 +98,8 @@ export const useWizardStore = defineStore('wizard', () => {
     for (const k of Object.keys(extraSel.value)) if (!live.has(k)) { delete extraSel.value[k]; changed = true }
     return changed
   }
-  const steps = computed(() => ['name', ...mainProps.value, ...build.value.filter((p) => (EXTRA_KINDS as readonly string[]).includes(p) && extra(p)), ...(abil.value ? ['abilities'] : []), ...(equip.sections.value.length ? ['equipment'] : []), 'done'])
+  // 作者整机：属性值、专长、可选特性、装备等都由作者导入时开窗口问（在那件条目的右边答），不再单独成步
+  const steps = computed(() => ['name', ...mainProps.value, 'done'])
   const label = (id: string): string => id === 'name' ? '名字' : id === 'done' ? '完成' : id === 'abilities' ? '属性值' : id === 'equipment' ? '装备' : names.value[id] ?? id
   const need = (id: string): number => (EXTRA_KINDS as readonly string[]).includes(id) ? extra(id)?.count ?? 0 : 1
 
@@ -159,6 +165,7 @@ export const useWizardStore = defineStore('wizard', () => {
   async function open(startView: string): Promise<void> {
     seq++; lastSent = ''
     lists.value = {} // 候选列表每次打开重读：本战役开关、换战役后要跟全局搜索一致
+    void author.reset()
     name.value = ''; cur.value = 'name'; chosen.value = {}; extraSel.value = {}; sel.value = {}; traitPlan.value = {}; abilMethod.value = 'standardArray'; abilBase.value = {}; abil.value = null; holding.value = null; equip.reset(); options.value = null; optError.value = null; createError.value = null; creating.value = false
     category.value = CATEGORIES.some((c) => c.id === startView) ? startView as CategoryId : 'party'
     const lib = await app.svc().backend.kernelSave.libraryOf(owner())
@@ -184,9 +191,6 @@ export const useWizardStore = defineStore('wizard', () => {
     const now = chosen.value[prop] ?? []
     const has = now.some((r) => refKey(r) === row.key)
     chosen.value = { ...chosen.value, [prop]: has ? now.filter((r) => refKey(r) !== row.key) : count === 1 ? [row.ref] : now.length < count ? [...now, row.ref] : now }
-    // 换了人：他的旧选择不要
-    for (const k of Object.keys(sel.value)) if (!items.value.some((r) => refKey(r) === k)) delete sel.value[k]
-    void refreshOptions(); void equip.refresh()
   }
   /** 额外必选项：在某一组里选 / 取消选一条（这一组选 1 个时换掉原来的；同一条已在别的组里选了就不动）。 */
   function chooseExtra(prop: string, group: ExtraGroup, row: PickRow): void {
@@ -196,7 +200,7 @@ export const useWizardStore = defineStore('wizard', () => {
     extraSel.value = { ...extraSel.value, [group.key]: now.includes(row.key) ? now.filter((k) => k !== row.key) : group.count === 1 ? [row.key] : now.length < group.count ? [...now, row.key] : now }
     syncExtras()
     for (const k of Object.keys(sel.value)) if (!items.value.some((r) => refKey(r) === k)) delete sel.value[k]
-    void refreshOptions(); void equip.refresh()
+    void refreshOptions()
   }
   const isChosen = (prop: string, key: string): boolean => (chosen.value[prop] ?? []).some((r) => refKey(r) === key)
 
@@ -255,25 +259,20 @@ export const useWizardStore = defineStore('wizard', () => {
   const todo = computed<Todo[]>(() => {
     const out: Todo[] = []
     for (const p of mainProps.value) if (!(chosen.value[p] ?? []).length) out.push({ text: `还没选${label(p)}`, go: p })
-    for (const p of build.value) {
-      const groups = (EXTRA_KINDS as readonly string[]).includes(p) ? extra(p)?.groups ?? [] : []
-      for (const g of groups) if (pickedIn(g).length < g.count) out.push({ text: `${g.title}还差 ${g.count - pickedIn(g).length} 个`, go: p })
-    }
-    for (const p of build.value) for (const ref of chosen.value[p] ?? []) for (const s of choicesOf(ref)) {
-      const left = leftOf(ref, s)
-      if (left > 0) out.push({ text: `${optionsFor(ref)?.name ?? ''}：${s.title ?? ''} 还差 ${left}`, go: p })
-    }
-    if (abil.value && unsetAbilities.value.length) out.push({ text: `属性值：还有 ${unsetAbilities.value.length} 项没放（${unsetAbilities.value.map((r) => r.label).join('、')}）`, go: 'abilities' })
-    for (const t of equip.todo.value) out.push({ text: t.text, go: 'equipment' })
+    // 作者开着的窗口：在那件条目的右边答
+    for (const x of author.open()) out.push({ text: `${x.win.title}：作者在问，还没答`, go: x.win.ref.prop })
     return out
   })
   const status = (id: string): 'done' | 'todo' => id === 'name' ? (name.value.trim() ? 'done' : 'todo') : id === 'done' ? 'todo' : id === 'abilities' ? (abil.value?.check?.complete && abil.value.check.ok ? 'done' : 'todo') : id === 'equipment' ? (!equip.todo.value.length ? 'done' : 'todo') : (EXTRA_KINDS as readonly string[]).includes(id) ? ((extra(id)?.groups ?? []).every((g) => pickedIn(g).length >= g.count) ? 'done' : 'todo') : (chosen.value[id] ?? []).length >= need(id) ? 'done' : 'todo'
 
   async function create(): Promise<boolean> {
     if (!name.value.trim()) { createError.value = '先给人物起个名字'; return false }
+    if (author.busy.value || author.open().length) { createError.value = '作者还在问，先把右边的问题答完'; return false }
     creating.value = true; createError.value = null
     try {
-      const ok = await roster.createFromWizard({ name: name.value.trim(), items: items.value, picks: picks.value, blank: true, starting: equip.forBuild(), ...(Object.keys(abilBase.value).length ? { abilities: abilPlan() } : {}) }, category.value)
+      const id = await author.take()
+      if (!id) { createError.value = '还没选好种族 / 背景 / 职业，或作者导入没完成'; return false }
+      const ok = await roster.createFromDraft(id, name.value.trim(), category.value)
       if (!ok) createError.value = '没建成，原因见提示条'
       return ok
     } finally { creating.value = false }
@@ -281,6 +280,6 @@ export const useWizardStore = defineStore('wizard', () => {
   const go = (id: string): void => { cur.value = id }
   const move = (delta: number): void => { const i = steps.value.indexOf(cur.value); cur.value = steps.value[Math.max(0, Math.min(steps.value.length - 1, i + delta))] }
 
-  return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, equip, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
+  return { build, names, name, category, cur, chosen, sel, options, optLoading, optError, lists, equip, author, abilMethod, abilBase, abil, holding, unsetAbilities, creating, createError, mainProps, items, steps, picks, todo,
     open, loadList, choose, chooseExtra, pickedIn, takenBy, isChosen, extra, label, status, choicesOf, needOf, haveOf, leftOf, selOf, optionsFor, setSlot, setTraitPlan, bumpAsi, setMethod, hold, place, setBase, refreshOptions, create, go, move }
 })

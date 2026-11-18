@@ -26,7 +26,7 @@ export function libraryData(files: FileProvider, view?: LibraryView): DataReader
   return (path) => files.get(source, path, { allowNetwork: false, ...(view ? { view } : {}) })
 }
 
-export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch }): FrameHandlers {
+export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch, ask }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch; ask?: (question: unknown) => Promise<unknown> }): FrameHandlers {
   const kv = new Map<string, unknown>()
   const local = new Map<string, string>()
   return {
@@ -51,6 +51,7 @@ export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch }: { plugin
     localSnapshot: async () => Object.fromEntries(local),
     localSet: async (key, value) => { local.set(key, value) },
     localRemove: async (key) => { local.delete(key) },
+    ...(ask ? { ask } : {}),
   }
 }
 
@@ -77,8 +78,8 @@ export interface KernelSession {
 }
 
 /** 开一个结算小窗。一个战役一个小窗（各自的世界互不相见）。 */
-export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000 }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number }): Promise<KernelSession> {
-  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, handlers: kernelHandlers({ pluginRoot, data, fetchImpl }) })
+export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000, ask }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number; ask?: (question: unknown) => Promise<unknown> }): Promise<KernelSession> {
+  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, handlers: kernelHandlers({ pluginRoot, data, fetchImpl, ask }) })
   // 结算小窗的指令表与作者小窗不同（frame/main.ts），宿主的类型只认作者指令，这里按结算指令表转一下类型
   const call = frame.call as unknown as (fn: string, ...args: unknown[]) => Promise<never>
   return {

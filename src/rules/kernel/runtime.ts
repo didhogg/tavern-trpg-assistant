@@ -14,6 +14,7 @@ import { refKey } from '../../core/saves/split'
 import { executed, type KernelSession } from './host'
 import { PreparedActors, type OffChoices } from './prepared'
 import { openKernel, prepareKernelBrews } from './open'
+import { KernelDrafts } from './drafts'
 import { kernelInput } from './input'
 import { excludedBrewReason } from './brews'
 import type { KernelBrewReport } from './frame/brew-input'
@@ -81,7 +82,12 @@ interface Open {
 export class KernelRuntime {
   private readonly open = new Map<string, Promise<Open>>()
 
-  constructor(private readonly deps: KernelRuntimeDeps) {}
+  /** P6 建卡草稿人：作者整机导入，作者的提问交给建卡页（drafts.ts）。 */
+  readonly drafts: KernelDrafts
+
+  constructor(private readonly deps: KernelRuntimeDeps) {
+    this.drafts = new KernelDrafts({ open: (k) => this.get(k), entries: (k, refs) => this.entries(k, refs), library: (k) => this.library(k), scoped: deps.scoped, service: deps.service })
+  }
 
   /** 打开（或复用）本战役的结算小窗。 */
   async session(ownerKey: string): Promise<{ session: KernelSession; boot: unknown; bootMs: number; brews: KernelBrewReport }> {
@@ -98,7 +104,7 @@ export class KernelRuntime {
       const view = await this.deps.revisions.published()
       const prepared = await prepareKernelBrews(this.deps.service, view, campaign.library.codeSet)
       const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, codeSet: campaign.library.codeSet, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
-      const { session, boot, report, brewFingerprint } = await openKernel({ ...this.deps, view, input, ...prepared, container: this.deps.container() })
+      const { session, boot, report, brewFingerprint } = await openKernel({ ...this.deps, view, input, ...prepared, container: this.deps.container(), ask: (question) => this.drafts.answer(ownerKey, question) })
       const brewIssue: Open['brewIssue'] = (ref, altId, source) => excludedBrewReason(prepared.brews, report.excluded, ref, altId, source)
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)
@@ -145,19 +151,13 @@ export class KernelRuntime {
     if (!data) throw new Error(`结算小窗里没有这个人物：${actorId}`)
     o.bases.set(actorId, data)
   }
-  /** P6 建卡走作者整机：条目按顺序交小窗「导入到人物」（作者要问玩家时显示作者窗口）；建好的整份人物记为完整基准（B′）。 */
-  async importCharacter(ownerKey: string, plan: { name: string; items: EntryRef[]; level?: number }): Promise<{ status: string; id?: string; data?: Record<string, unknown>; error?: string; detail?: unknown }> {
+  /** 收下草稿人（drafts.ts）：建好的整份人物记为完整基准（B′），交回整份数据。 */
+  async takeDraft(ownerKey: string, id: string, name: string): Promise<{ id: string; data: Record<string, unknown> }> {
     const o = await this.get(ownerKey)
-    const rows = await this.entries(ownerKey, plan.items)
-    if (rows.status !== 'complete') return { status: rows.status, error: rows.error }
-    const levels = Array.from({ length: Math.max(1, plan.level ?? 1) }, (_, i) => i + 1)
-    const seed = `${plan.name}~${crypto.randomUUID().slice(0, 8)}`
-    const call = await o.session.call('importCharacter', { name: plan.name, seed, rows: rows.rows.map((r) => ({ prop: r.ref.prop, entry: r.entry, ...(r.ref.prop === 'class' ? { levels } : {}) })) })
-    const out = call.result as { id?: string; data?: Record<string, unknown>; reason?: string; prop?: string; name?: string } | null
-    if (call.status !== 'complete' || !out?.id || !out.data) return { status: call.status, error: call.error ?? `作者导入没完成（${out?.prop ?? ''} ${out?.name ?? ''}：${out?.reason ?? ''}）`, detail: call }
-    o.bases.set(out.id, out.data, null, null, true)
-    o.seeds.set(out.id, seed)
-    return { status: 'complete', id: out.id, data: out.data }
+    const taken = await this.drafts.take(ownerKey, id, name)
+    o.bases.set(taken.id, taken.data, null, null, true)
+    o.seeds.set(taken.id, taken.seed)
+    return { id: taken.id, data: taken.data }
   }
 
   /** 这个人物的重建基准（全是自动值）；没有记过返回 null。 */
