@@ -1,7 +1,7 @@
 // p6-people-off.mjs 第 2 步场景：取下 / 装回经正式入口 people.setOff。
 // 同名熟练两个来源（精灵 + 水手都给察觉）、子项粒度、三轮循环、原始选择不变、命中缓存读回、撤销、
 // 指向不对 / 没有这一项的退回、期间别处改过存档退回、复制带上安排、属性提升（作者无单项程序 → 整条）、
-// 整件取下、单个效果停用、体型、生命值。全部走作者自己的取下 / 装回程序。
+// 整件取下、单个效果停用、体型、生命值、属性提升单项、种族整件（速度 / 体型）、只取下黑暗视觉。全部走作者自己的取下 / 装回程序。
 // 授予 / 选择物品类成长同样走作者程序，但 5etools 经 Plutonium 建出的人身上没有这类成长（特性直接是物品），暂无实例可测。
 
 export async function offStep2(page) {
@@ -84,9 +84,9 @@ export async function offStep2(page) {
     await people.edit(owner, first, [{ kind: 'effect', itemId: alert._id, effectId: alert.effects[0]._id, path: 'disabled', value: false }])
     const init = async () => (await people.check(owner, first, 'initiative', undefined, [10])).outcome.result?.[0]?.total
     out.asi = { con: f0.system.abilities.con.value, init: await init() }
-    // 属性提升：作者没有按单项取下的程序 → 单项被拒；整条取下用作者 reverse
+    // 属性提升单项：作者记录（assignments）里去掉体质，交作者 restore
     const asiPart = await people.setOff(owner, first, [{ ref: key(dwarf), advancement: asi._id, part: 'con' }])
-    out.asi.part = { ok: asiPart.ok, reasons: asiPart.problems.map((p) => p.reason) }
+    out.asi.part = { ok: asiPart.ok, problems: asiPart.problems, con: (await data(first)).system.abilities.con.value }
     const conOff = await people.setOff(owner, first, [{ ref: key(dwarf), advancement: asi._id }, { ref: key(alert) }])
     const f1 = await data(first)
     out.asi.off = { ok: conOff.ok, problems: conOff.problems, con: f1.system.abilities.con.value, init: await init(), alertKept: f1.items.some((i) => i._id === alert._id) }
@@ -113,6 +113,20 @@ export async function offStep2(page) {
     const s2 = await data(sid)
     out.size = { start: s0.system.traits.size, ok: sizeOff.ok, problems: sizeOff.problems, off: s1.system.traits.size, back: s2.system.traits.size,
       hpStart: (await people.sheet(owner, sid)).result.system.attributes.hp.max, hpOk: hpOff.ok, hpOffMax }
+    // 种族整件取下：作者指向种族的字段不指它 → 作者按默认算速度 / 类型；体型成长不给
+    const sp = (a) => ({ walk: a.system.attributes.movement.walk ?? a.system.attributes.movement.speeds?.walk ?? null, size: a.system.traits.size, type: a.system.details.type?.value ?? null })
+    const raceStart = sp(await (await session()).call('sheet', sid).then((x) => x.result))
+    const raceOff = await people.setOff(owner, sid, [{ ref: key(race) }])
+    const raceNow = sp((await people.sheet(owner, sid)).result)
+    await people.setOff(owner, sid, [])
+    out.race = { ok: raceOff.ok, problems: raceOff.problems, start: raceStart, ...raceNow, back: sp((await people.sheet(owner, sid)).result) }
+    // 只取下精灵的黑暗视觉：作者从种族条目读的这一项不给，速度照旧
+    const ranges = (x) => x.system.attributes.senses.ranges?.darkvision ?? x.system.attributes.senses.darkvision ?? 0
+    const elfSheet0 = (await people.sheet(owner, id)).result
+    const darkOff = await people.setOff(owner, id, [{ ref: key(elf), part: 'system.senses.ranges.darkvision' }])
+    const elfSheet1 = (await people.sheet(owner, id)).result
+    await people.setOff(owner, id, [])
+    out.dark = { ok: darkOff.ok, problems: darkOff.problems, start: ranges(elfSheet0), off: ranges(elfSheet1), startWalk: sp(elfSheet0).walk, walk: sp(elfSheet1).walk, back: ranges((await people.sheet(owner, id)).result) }
     // 留一个取下状态给整页刷新后检查
     await people.setOff(owner, id, [elfOff, sailorPrc])
     globalThis.offReload = { id, prc: await prof(id, 'prc') }
@@ -138,7 +152,9 @@ export function step2Checks(r) {
     rejectLeavesSave: r.reject.unchanged && r.reject.stillThere && r.reject.ath === 0,
     conflictNoHalfWrite: !!r.conflict.error && r.conflict.off.length === 1 && r.conflict.pinned === true && r.conflict.ath === 0,
     copyCarriesOff: r.copy.status === 'complete' && r.copy.off.length === 1 && r.copy.ath === 0,
-    asiPartNoAuthorProgram: r.asi.part.ok === false && r.asi.part.reasons.some((x) => x.includes('整条')),
+    asiPartOff: r.asi.part.ok && r.asi.part.con === r.asi.con - 2,
+    raceWholeOff: r.race.ok && r.race.walk === 0 && r.race.start.walk > 0 && r.race.size === 'med' && r.race.back.walk === r.race.start.walk && r.race.back.size === r.race.start.size,
+    raceDarkvisionOff: r.dark.ok && r.dark.start > 0 && r.dark.off === 0 && r.dark.walk === r.dark.startWalk && r.dark.back === r.dark.start,
     asiRowOff: r.asi.off.ok && r.asi.off.con === r.asi.con - 2 && r.asi.on.ok && r.asi.on.con === r.asi.con,
     effectOff: r.effect.ok && r.effect.init < r.asi.init && r.effect.back === r.asi.init,
     sizeOff: r.size.ok && r.size.start !== 'med' && r.size.off === 'med' && r.size.back === r.size.start,
