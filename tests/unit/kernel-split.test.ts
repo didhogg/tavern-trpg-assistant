@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  applyActorState, applyCombatChange, applyKernelChanges, emptyCombat, jsonDiff, refKey, splitActor,
+  actorIdOf, applyActorChange, applyActorState, applyCombatChange, applyKernelChanges, emptyCombat, jsonDiff, refKey, splitActor,
   type KernelRefMapper,
 } from '../../src/core/saves/split'
 import { kernelCampaignSchema, type KernelActor, type KernelChange } from '../../src/schemas/kernel'
@@ -105,5 +105,18 @@ describe('P3-3b 战斗：战役层只存一份', () => {
     const next = applyKernelChanges(kernel, changes, mapRef)
     expect(next.combat).toMatchObject({ id: 'combat1', round: 1 })
     expect(next.actors[0].state.actor).toEqual({})
+  })
+})
+
+describe('P6 物品里的效果：改动认得出属于哪个人物', () => {
+  const change = (parentUuid: string): KernelChange => ({ action: 'update', type: 'ActiveEffect', pack: null, parentUuid, data: { _id: 'fx1', disabled: true } })
+  it('父级是人物身上的物品时，取人物编号（不是整串）', () => {
+    expect(actorIdOf(change('Actor.actor1'))).toBe('actor1')
+    expect(actorIdOf(change('Actor.actor1.Item.item1'))).toBe('actor1')
+  })
+  it('没有小窗时不把物品里的效果错记成人物直属效果', () => {
+    const actor = { id: 'actor1', name: 'x', seed: '', refs: [], choices: {}, state: { actor: {}, items: {}, effects: {}, itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }, adjustments: {}, dice: [], legacy: false } as KernelActor
+    expect(() => applyActorChange(actor, change('Actor.actor1.Item.item1'), mapRef)).toThrow(/物品里的效果/)
+    expect(applyActorChange(actor, change('Actor.actor1'), mapRef).state.effects.fx1).toEqual({ _id: 'fx1', disabled: true })
   })
 })

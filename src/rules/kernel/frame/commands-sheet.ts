@@ -9,14 +9,17 @@ const g = globalThis as any
 const NO_DIALOG = { configure: false }
 const NO_MESSAGE = { create: false }
 
-/** 改动一条：set = 设成 value；remove = 删掉这个键（基准里没有的字段回到"没有"）。 */
+/**
+ * 改动一条：set = 设成 value；remove = 删掉这个键（基准里没有的字段回到"没有"）。
+ * 效果的三种改法共用一个定位：带 itemId = 那件物品里的效果（专长、装备自带的），不带 = 人物直属效果。
+ */
 export type SheetEdit =
   | { kind: 'set'; path: string; value?: unknown; remove?: boolean }
   | { kind: 'item'; itemId: string; path: string; value?: unknown; remove?: boolean }
   | { kind: 'itemDelete'; itemId: string }
-  | { kind: 'effect'; effectId: string; path: string; value?: unknown; remove?: boolean }
-  | { kind: 'effectCreate'; data: Record<string, unknown> }
-  | { kind: 'effectDelete'; effectId: string }
+  | { kind: 'effect'; effectId: string; itemId?: string; path: string; value?: unknown; remove?: boolean }
+  | { kind: 'effectCreate'; itemId?: string; data: Record<string, unknown> }
+  | { kind: 'effectDelete'; effectId: string; itemId?: string }
   | { kind: 'status'; statusId: string; active?: boolean; levels?: number }
 
 const LOCKED = [/^_id$/, /^_stats(\.|$)/, /^type$/, /^items(\.|$)/, /^effects(\.|$)/, /^flags\.plutonium(\.|$)/, /^system\.advancement(\.|$)/]
@@ -36,6 +39,9 @@ function patchOf(doc: any, path: string, value: unknown, remove?: boolean): Reco
   const cut = path.lastIndexOf('.')
   return { [`${path.slice(0, cut)}.-=${path.slice(cut + 1)}`]: null }
 }
+
+/** 效果挂在谁身上：人物，或人物身上的某件物品（按编号找，不按名字）。 */
+const effectHost = (a: any, itemId?: string): any => itemId ? a.items.get(itemId, { strict: true }) : a
 
 /** 数据结构里的 JSON 化（去掉文档对象、HTML 锚点这类界面专用的东西）。 */
 const plain = (v: any): any => JSON.parse(JSON.stringify(v ?? null, (k, val) => (k === 'document' || k === 'anchor' || k === 'fields' || k === 'field' || k === 'parent') ? undefined : val))
@@ -124,9 +130,9 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         if (e.kind === 'set') await a.update(patchOf(a, e.path, e.value, e.remove))
         else if (e.kind === 'item') { const item = a.items.get(e.itemId, { strict: true }); await item.update(patchOf(item, e.path, e.value, e.remove)) }
         else if (e.kind === 'itemDelete') await a.deleteEmbeddedDocuments('Item', [e.itemId])
-        else if (e.kind === 'effect') { const fx = a.effects.get(e.effectId, { strict: true }); await fx.update(patchOf(fx, e.path, e.value, e.remove)) }
-        else if (e.kind === 'effectCreate') await a.createEmbeddedDocuments('ActiveEffect', [e.data])
-        else if (e.kind === 'effectDelete') await a.deleteEmbeddedDocuments('ActiveEffect', [e.effectId])
+        else if (e.kind === 'effect') { const fx = effectHost(a, e.itemId).effects.get(e.effectId, { strict: true }); await fx.update(patchOf(fx, e.path, e.value, e.remove)) }
+        else if (e.kind === 'effectCreate') await effectHost(a, e.itemId).createEmbeddedDocuments('ActiveEffect', [e.data])
+        else if (e.kind === 'effectDelete') await effectHost(a, e.itemId).deleteEmbeddedDocuments('ActiveEffect', [e.effectId])
         else if (e.kind === 'status') await a.toggleStatusEffect(e.statusId, e.levels !== undefined ? { levels: e.levels } : { active: e.active ?? true })
         else throw Error(`不认识的改动：${(e as any).kind}`)
       }

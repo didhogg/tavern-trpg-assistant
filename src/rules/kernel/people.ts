@@ -8,6 +8,7 @@ import { isObject, jsonDiff } from '../../core/saves/state'
 import type { EntryRef } from '../../library/scopes'
 import type { KernelActor, KernelChange } from '../../schemas/kernel'
 import type { SheetEdit } from './frame/commands-sheet'
+import { executed } from './host'
 import type { KernelRuntime } from './runtime'
 
 /**
@@ -166,7 +167,8 @@ export class KernelPeople {
   async act(ownerKey: string, actorId: string, fn: string, ...args: unknown[]) {
     const outcome = await this.call(ownerKey, fn, ...args)
     const changes = (outcome.changes ?? []) as KernelChange[]
-    if (outcome.status !== 'complete') { if (changes.length) await this.cancel(ownerKey, [actorId]); return { outcome, kernel: null } }
+    // 没算完（缺骰 / 等选择 / 出错）才退回；unsupported = 已算完 + 未支持提示，照常写入，提示随 outcome 交回
+    if (!executed(outcome.status)) { if (changes.length) await this.cancel(ownerKey, [actorId]); return { outcome, kernel: null } }
     const kernel = changes.length ? (await this.deps.saves.apply(ownerKey, changes, await this.rev(ownerKey))).kernel : null
     return { outcome, kernel }
   }

@@ -9,6 +9,7 @@ import { reseedKernel } from './seed'
 import { KERNEL_COMMANDS } from './commands'
 import { loadBrews } from './brew-input'
 import { loadKernelModule } from './plutonium-build'
+import { installUnsupportedRecorder } from './writings'
 
 const g = globalThis as any
 const frameToken = new URLSearchParams(location.search).get(FRAME_PARAM) ?? ''
@@ -84,6 +85,8 @@ async function boot(input: KernelInput): Promise<unknown> {
   Hooks.once('setup', () => {
     // 只关闭显示用的日历 HUD；时间规则仍由官方程序执行。
     if (g.CONFIG.DND5E?.calendar) g.CONFIG.DND5E.calendar.application = null
+    // 未支持检测：在官方实际应用效果时旁观记录（writings.ts）；人物准备数据前装好。
+    installUnsupportedRecorder()
   })
   await g.game.initialize()
   // 模块接口在各自 ready 处理末尾才赋值（Plutonium 是异步的）；等启用模块的接口就绪再报告。

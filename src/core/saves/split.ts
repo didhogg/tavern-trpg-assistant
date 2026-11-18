@@ -186,8 +186,9 @@ export function isCombatChange(change: KernelChange): boolean {
   return change.type === 'Combat' || change.type === 'Combatant'
 }
 
+/** 改动属于哪个人物：父级是人物（Actor.<编号>）或人物身上的物品（Actor.<编号>.Item.<编号>，物品里的效果）都取人物编号。 */
 export function actorIdOf(change: KernelChange): string | null {
-  if (change.parentUuid?.startsWith('Actor.')) return change.parentUuid.slice('Actor.'.length)
+  if (change.parentUuid?.startsWith('Actor.')) return change.parentUuid.split('.')[1] || null
   if (change.type === 'Actor' && isObject(change.data) && typeof change.data._id === 'string') return change.data._id
   return null
 }
@@ -236,6 +237,7 @@ export function applyActorChange(actor: KernelActor, change: KernelChange, mapRe
     return next
   }
   if (change.type === 'ActiveEffect') {
+    if (change.parentUuid?.includes('.Item.')) throw new Error('没有 compactActors：物品里的效果改动不能直接叠进人物段')
     const id = typeof data._id === 'string' ? data._id : null
     if (change.action === 'delete') {
       const ids = Array.isArray(change.data) ? change.data.filter((v): v is string => typeof v === 'string') : id ? [id] : []

@@ -61,6 +61,12 @@ type Commands = typeof KERNEL_COMMANDS & {
   preparedActors(): Array<{ source: Record<string, unknown>; system: Record<string, unknown> }>
 }
 
+/**
+ * 结算命令算没算完（蓝图五种状态）：complete = 完整；unsupported = 已算完，另附官方实际用到的未支持写法（提示，不是失败）。
+ * missing / pending / error 才是没算完。人物的改动、保存、加条目都按这一条判断，不各写各的。
+ */
+export const executed = (status: unknown): boolean => status === 'complete' || status === 'unsupported'
+
 export interface KernelSession {
   frame: AuthorFrame
   /** 启动世界（官方 Game.initialize，见 frame/main.ts）。 */

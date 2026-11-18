@@ -11,7 +11,7 @@ import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { KernelActor, KernelDataVersion } from '../../schemas/kernel'
 import { refKey } from '../../core/saves/split'
-import type { KernelSession } from './host'
+import { executed, type KernelSession } from './host'
 import { openKernel, prepareKernelBrews } from './open'
 import { kernelInput } from './input'
 import { excludedBrewReason } from './brews'
@@ -238,7 +238,7 @@ export class KernelRuntime {
     const rows = await this.entries(ownerKey, refs)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const result = await o.session.call('addToActor', actorId, rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry })))
-    if (result.status !== 'complete') return { status: result.status, error: result.error ?? `加条目状态：${result.status}`, detail: result }
+    if (!executed(result.status)) return { status: result.status, error: result.error ?? `加条目状态：${result.status}`, detail: result }
     const base = o.bases.get(actorId)
     if (base && Array.isArray(result.result?.added) && Array.isArray((base as any).items)) {
       const current = await actorData(o.session, actorId)
@@ -371,7 +371,7 @@ export class KernelRuntime {
       const current = await actorData(o.session, id)
       if (!current) throw new Error(`结算小窗里没有这个人物：${id}`)
       const captured = await o.session.call('captureChoices', id)
-      if (captured.status !== 'complete') throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
+      if (!executed(captured.status)) throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
       const name = typeof current.name === 'string' ? current.name : id
       const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: captured.result ?? {} })
       if (o.cache) {
