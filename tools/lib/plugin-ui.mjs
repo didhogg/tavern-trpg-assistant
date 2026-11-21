@@ -37,12 +37,15 @@ export function pluginUiStats(rows) {
 }
 
 /**
- * review 行和现有键撞车（同编号、不同译文）：不覆盖，交给复核清单。
+ * review 行和现有键撞车（同编号、不同译文）：不覆盖，交给复核清单。已批的按批过的译文比。
  */
-export function pluginUiKeyCollisions(flat, rows) {
+export function pluginUiKeyCollisions(flat, rows, approved = []) {
   return rows
     .filter((row) => row.status === 'review')
-    .map((row) => ({ key: upstreamKey(row.text), text: row.text, existing: flat[upstreamKey(row.text)], draft: row.translation, from: row.from }))
+    .map((row) => {
+      const override = approved.find((item) => item.lang === PLUGIN_UI.lang && item.package === PLUGIN_UI.package && item.text === row.text)
+      return { key: upstreamKey(row.text), text: row.text, existing: flat[upstreamKey(row.text)], draft: override?.translation ?? row.translation, from: override ? 'approved-translations' : row.from }
+    })
     .filter((row) => row.existing !== undefined && row.existing !== row.draft)
 }
 

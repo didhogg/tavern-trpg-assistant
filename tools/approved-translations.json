@@ -5,5 +5,194 @@
     "text": "Max Prepared Spells",
     "translation": "法术准备上限",
     "approval": "驾驶员 2026-11-18 明确指定；仅此一项手写例外"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "– or –",
+    "translation": "— 或 —",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Alternatively,",
+    "translation": "或者，",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "and skip to the shop.",
+    "translation": "并直接进入商店。",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Book",
+    "translation": "书",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Category",
+    "translation": "类别",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Characteristics",
+    "translation": "特征",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Customizing Your Origin",
+    "translation": "定制你的出身",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Equipment",
+    "translation": "装备",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Gaming Set",
+    "translation": "游戏套组",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Heavy armor",
+    "translation": "重甲",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Heavy Armor",
+    "translation": "重甲",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Legendary",
+    "translation": "传说",
+    "approval": "驾驶员 2026-11-21 指定用“传说”（与非普通、珍稀同一套稀有度译法）"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Light armor",
+    "translation": "轻甲",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Light Armor",
+    "translation": "轻甲",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Long",
+    "translation": "远",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Medium armor",
+    "translation": "中甲",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Medium Armor",
+    "translation": "中甲",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Mod.",
+    "translation": "调整值",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Normal",
+    "translation": "常规",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Origin (Background)",
+    "translation": "出身（背景）",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Origin (Other)",
+    "translation": "出身（其他）",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Origin (Species)",
+    "translation": "出身（种族）",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Other",
+    "translation": "其他",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Point Cost",
+    "translation": "花费点数",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Ranged",
+    "translation": "远程",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Touch",
+    "translation": "触碰",
+    "approval": "驾驶员 2026-11-21 批复核清单：照推荐"
+  },
+  {
+    "lang": "zh",
+    "package": "plutonium",
+    "text": "Ability Score Increase.",
+    "translation": "属性值加成",
+    "approval": "驾驶员 2026-11-21 批：与不带句号的同名键统一为现有“属性值加成”"
   }
 ]

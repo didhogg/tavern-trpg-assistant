@@ -41,6 +41,11 @@ describe('作者界面字底稿', () => {
     const got = pluginUiKeyCollisions({ [key]: '花费' }, [row('Cost', '费用', 'review')])
     expect(got).toEqual([{ key, text: 'Cost', existing: '花费', draft: '费用', from: 'agent' }])
   })
+  it('驾驶员已批的译文和现有键一样时，不算撞车', () => {
+    const key = upstreamKey('Legendary')
+    const approved = [{ lang: 'zh', package: 'plutonium', text: 'Legendary', translation: '传说' }]
+    expect(pluginUiKeyCollisions({ [key]: '传说' }, [row('Legendary', '传奇', 'review')], approved)).toEqual([])
+  })
   it('只取本语言、本包的底稿行；统计来源', () => {
     const rows = pluginUiRows([row('A', '甲'), { ...row('B', '乙'), lang: 'en' }])
     expect(rows).toHaveLength(1)

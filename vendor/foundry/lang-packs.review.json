@@ -1783,7 +1783,7 @@
   {
    "package": "module:plutonium",
    "total": 1099,
-   "translated": 510,
+   "translated": 532,
    "fromCommunity": 0,
    "conflicts": 0,
    "groupsWithCategory": 2,
@@ -2265,7 +2265,7 @@
    "origins": [
     "modules/plutonium/js/Bundle.js:29002"
    ],
-   "translation": "属性值提升"
+   "translation": "属性值加成"
   },
   {
    "key": "TRPGAssistant.UpstreamText.0dfe2550c1c408e0912f36f0",
@@ -10782,10 +10782,58 @@
   {
    "lang": "zh",
    "package": "plutonium",
+   "text": "Light Armor",
+   "translation": "轻甲",
+   "approval": "驾驶员 2026-11-21 批复核清单：照推荐",
+   "key": "TRPGAssistant.EquipmentType.armorLight"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Medium Armor",
+   "translation": "中甲",
+   "approval": "驾驶员 2026-11-21 批复核清单：照推荐",
+   "key": "TRPGAssistant.EquipmentType.armorMedium"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Heavy Armor",
+   "translation": "重甲",
+   "approval": "驾驶员 2026-11-21 批复核清单：照推荐",
+   "key": "TRPGAssistant.EquipmentType.armorHeavy"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Gaming Set",
+   "translation": "游戏套组",
+   "approval": "驾驶员 2026-11-21 批复核清单：照推荐",
+   "key": "TRPGAssistant.EquipmentType.setGaming"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Ability Score Increase.",
+   "translation": "属性值加成",
+   "approval": "驾驶员 2026-11-21 批：与不带句号的同名键统一为现有“属性值加成”",
+   "key": "TRPGAssistant.UpstreamText.0df9818be466a85038549848"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
    "text": "Max Prepared Spells",
    "translation": "法术准备上限",
    "approval": "驾驶员 2026-11-18 明确指定；仅此一项手写例外",
    "key": "TRPGAssistant.UpstreamText.53c3659f28da2e53f969f902"
+  },
+  {
+   "lang": "zh",
+   "package": "plutonium",
+   "text": "Category",
+   "translation": "类别",
+   "approval": "驾驶员 2026-11-21 批复核清单：照推荐",
+   "key": "TRPGAssistant.UpstreamText.edb2cd3b74c999af70f0b705"
   }
  ],
  "pluginUi": {
@@ -10896,9 +10944,9 @@
    "dnd5e:DND5E.ComponentVerbal": 1,
    "dnd5e:DND5E.AbilityWis": 1
   },
-  "included": 278,
-  "sharedWithUpstream": 31,
-  "approvedOverrides": 0,
+  "included": 299,
+  "sharedWithUpstream": 36,
+  "approvedOverrides": 22,
   "conflicts": [
    {
     "key": "TRPGAssistant.UpstreamText.f7d56801c471e0fd66bdf351",
@@ -10973,21 +11021,6 @@
   ],
   "reviewRows": [
    {
-    "text": "– or –",
-    "translation": "— 或 —",
-    "from": "agent",
-    "seen": [
-     "2014:previous-probe"
-    ],
-    "candidates": [
-     {
-      "zh": "— 或 —",
-      "from": "agent"
-     }
-    ],
-    "note": "半句拼接：与 “Alternatively,” / “and skip to the shop.” 连读；截图见交付报告。"
-   },
-   {
     "text": "Ability Score Increase",
     "translation": "属性值提升",
     "from": "agent",
@@ -11005,40 +11038,6 @@
      }
     ],
     "note": "复核：中文站 / 译名表分别给“属性值提升 / 属性值加成”。"
-   },
-   {
-    "text": "Alternatively,",
-    "translation": "或者，",
-    "from": "agent",
-    "seen": [
-     "2014:Starting Equipment",
-     "2014:previous-probe",
-     "2024:Starting Equipment"
-    ],
-    "candidates": [
-     {
-      "zh": "或者，",
-      "from": "agent"
-     }
-    ],
-    "note": "半句拼接：与 “– or –” / “and skip to the shop.” 连读；截图见交付报告。"
-   },
-   {
-    "text": "and skip to the shop.",
-    "translation": "并直接进入商店。",
-    "from": "agent",
-    "seen": [
-     "2014:Starting Equipment",
-     "2014:previous-probe",
-     "2024:Starting Equipment"
-    ],
-    "candidates": [
-     {
-      "zh": "并直接进入商店。",
-      "from": "agent"
-     }
-    ],
-    "note": "半句拼接：与 “Alternatively,” / “– or –” 连读；截图见交付报告。"
    },
    {
     "text": "Armor Training",
@@ -11069,84 +11068,6 @@
      }
     ],
     "note": "复核：dnd5e 作“护甲训练”，译名表作“护甲受训”。"
-   },
-   {
-    "text": "Book",
-    "translation": "书",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2024:Equipment Shop"
-    ],
-    "candidates": [
-     {
-      "zh": "规则书",
-      "from": "dnd5e:DND5E.SOURCE.FIELDS.source.book.label"
-     },
-     {
-      "zh": "书",
-      "from": "terms:bestiary"
-     },
-     {
-      "zh": "书籍",
-      "from": "site:js/parser.js"
-     }
-    ],
-    "note": "复核：列头“书 / 规则书 / 书籍”。"
-   },
-   {
-    "text": "Category",
-    "translation": "类别",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "类别",
-      "from": "dnd5e:DND5E.FACILITY.FIELDS.type.value.label"
-     },
-     {
-      "zh": "分类",
-      "from": "dnd5e:DND5E.ITEM.Category.Label"
-     },
-     {
-      "zh": "类别",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "分类",
-      "from": "site:js/utils-brew/utils-brew-ui-manage-editable-contents.js"
-     }
-    ],
-    "note": "复核：列头“类别 / 分类”。"
-   },
-   {
-    "text": "Characteristics",
-    "translation": "特征",
-    "from": "agent",
-    "seen": [
-     "2014:Origin (Background)",
-     "2024:Origin (Background)"
-    ],
-    "candidates": [
-     {
-      "zh": "性格",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "特征",
-      "from": "agent"
-     }
-    ],
-    "note": "复核：背景表头；中文站作“性格”，这里更像“特征”。"
    },
    {
     "text": "Cost",
@@ -11184,48 +11105,6 @@
     "note": "复核：与现有 232 键同编号，现有译文“花费”；不覆盖。"
    },
    {
-    "text": "Customizing Your Origin",
-    "translation": "定制你的出身",
-    "from": "terms:常规",
-    "seen": [
-     "2014:previous-probe"
-    ],
-    "candidates": [
-     {
-      "zh": "定制你的出身",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：中文站 / 译名表作“定制你的出身”；保留待驾驶员确认。"
-   },
-   {
-    "text": "Equipment",
-    "translation": "装备",
-    "from": "dnd5e:TYPES.Item.equipment",
-    "seen": [
-     "2014:previous-probe"
-    ],
-    "candidates": [
-     {
-      "zh": "装备",
-      "from": "dnd5e:TYPES.Item.equipment"
-     },
-     {
-      "zh": "装备",
-      "from": "dnd5e:TYPES.Item.equipmentPl"
-     },
-     {
-      "zh": "装备",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "器具",
-      "from": "site:js/render-recipes.js"
-     }
-    ],
-    "note": "复核：中文站作“器具”，dnd5e / 译名表作“装备”；按任务书 3.2 第 1 条取“装备”。"
-   },
-   {
     "text": "Exotic Languages",
     "translation": "异域语言",
     "from": "agent",
@@ -11248,114 +11127,6 @@
      }
     ],
     "note": "复核：dnd5e 作“特种语言”，中文站作“异域语言”。"
-   },
-   {
-    "text": "Gaming Set",
-    "translation": "游戏套组",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "赌具",
-      "from": "dnd5e:DND5E.ToolGamingSet"
-     },
-     {
-      "zh": "赌具",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "游戏套组",
-      "from": "agent"
-     }
-    ],
-    "note": "复核：dnd5e 作“赌具”，这里是装备类别。"
-   },
-   {
-    "text": "Heavy armor",
-    "translation": "重甲",
-    "from": "agent",
-    "seen": [
-     "2014:Add Another Class",
-     "2014:Class",
-     "2024:Add Another Class",
-     "2024:Class"
-    ],
-    "candidates": [
-     {
-      "zh": "重型护甲",
-      "from": "dnd5e:DND5E.EquipmentHeavy"
-     },
-     {
-      "zh": "重甲",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：dnd5e 作“重型护甲”，译名表作“重甲”。"
-   },
-   {
-    "text": "Heavy Armor",
-    "translation": "重甲",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "重型护甲",
-      "from": "dnd5e:DND5E.EquipmentHeavy"
-     },
-     {
-      "zh": "重甲",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：dnd5e 作“重型护甲”，译名表作“重甲”；取“重甲”。"
-   },
-   {
-    "text": "Legendary",
-    "translation": "传奇",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "传说",
-      "from": "dnd5e:DND5E.ITEM.Rarity.Legendary"
-     },
-     {
-      "zh": "传说",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "传奇",
-      "from": "site:js/filter-bestiary.js"
-     }
-    ],
-    "note": "复核：dnd5e 作“传说”，中文站 / 常用作“传奇”。"
    },
    {
     "text": "Light",
@@ -11386,354 +11157,6 @@
      }
     ],
     "note": "复核：现有键译文“光线”；这里应是“轻型”，不覆盖，待驾驶员定。"
-   },
-   {
-    "text": "Light armor",
-    "translation": "轻甲",
-    "from": "agent",
-    "seen": [
-     "2014:Add Another Class",
-     "2014:Class",
-     "2024:Add Another Class",
-     "2024:Class"
-    ],
-    "candidates": [
-     {
-      "zh": "轻型护甲",
-      "from": "dnd5e:DND5E.EquipmentLight"
-     },
-     {
-      "zh": "轻甲",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：dnd5e 作“轻型护甲”，译名表作“轻甲”。"
-   },
-   {
-    "text": "Light Armor",
-    "translation": "轻甲",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "轻型护甲",
-      "from": "dnd5e:DND5E.EquipmentLight"
-     },
-     {
-      "zh": "轻甲",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：dnd5e 作“轻型护甲”，译名表作“轻甲”；取“轻甲”。"
-   },
-   {
-    "text": "Long",
-    "translation": "远",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "长度",
-      "from": "dnd5e:DND5E.AreaOfEffect.Description.Length"
-     },
-     {
-      "zh": "最大",
-      "from": "dnd5e:DND5E.Long"
-     },
-     {
-      "zh": "远",
-      "from": "agent"
-     }
-    ],
-    "note": "复核：射程分类“远 / 长”；与 Normal 成对。"
-   },
-   {
-    "text": "Medium armor",
-    "translation": "中甲",
-    "from": "agent",
-    "seen": [
-     "2014:Add Another Class",
-     "2014:Class",
-     "2024:Add Another Class",
-     "2024:Class"
-    ],
-    "candidates": [
-     {
-      "zh": "中型护甲",
-      "from": "dnd5e:DND5E.EquipmentMedium"
-     },
-     {
-      "zh": "中甲",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：dnd5e 作“中型护甲”，译名表作“中甲”。"
-   },
-   {
-    "text": "Medium Armor",
-    "translation": "中甲",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "中型护甲",
-      "from": "dnd5e:DND5E.EquipmentMedium"
-     },
-     {
-      "zh": "中甲",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：dnd5e 作“中型护甲”，译名表作“中甲”；取“中甲”。"
-   },
-   {
-    "text": "Mod.",
-    "translation": "调整值",
-    "from": "agent",
-    "seen": [
-     "2014:Abilities",
-     "2014:previous-probe",
-     "2024:Abilities"
-    ],
-    "candidates": [
-     {
-      "zh": "调整值",
-      "from": "agent"
-     }
-    ],
-    "note": "复核：中文站作“调整”，译名表作“调整值”；取“调整值”。"
-   },
-   {
-    "text": "Normal",
-    "translation": "常规",
-    "from": "agent",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "常规",
-      "from": "dnd5e:DND5E.Normal"
-     },
-     {
-      "zh": "中速",
-      "from": "dnd5e:DND5E.TRAVEL.Pace.Normal"
-     },
-     {
-      "zh": "正常",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：射程分类“常规 / 正常 / 中速”。"
-   },
-   {
-    "text": "Origin (Background)",
-    "translation": "出身（背景）",
-    "from": "agent",
-    "seen": [
-     "2014:Abilities",
-     "2014:Add Another Class",
-     "2014:Build Complete",
-     "2014:Builder",
-     "2014:Class",
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Origin (Background)",
-     "2014:Origin (Other)",
-     "2014:Origin (Species)",
-     "2014:Spells",
-     "2014:Starting Equipment",
-     "2014:previous-probe",
-     "2024:Abilities",
-     "2024:Add Another Class",
-     "2024:Build Complete",
-     "2024:Builder",
-     "2024:Class",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Origin (Background)",
-     "2024:Origin (Other)",
-     "2024:Origin (Species)",
-     "2024:Spells",
-     "2024:Starting Equipment"
-    ],
-    "candidates": [
-     {
-      "zh": "出身（背景）",
-      "from": "agent"
-     }
-    ],
-    "note": "复核：出身 / 起源；本页是“背景”页。"
-   },
-   {
-    "text": "Origin (Other)",
-    "translation": "出身（其他）",
-    "from": "agent",
-    "seen": [
-     "2014:Abilities",
-     "2014:Add Another Class",
-     "2014:Build Complete",
-     "2014:Builder",
-     "2014:Class",
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Origin (Background)",
-     "2014:Origin (Other)",
-     "2014:Origin (Species)",
-     "2014:Spells",
-     "2014:Starting Equipment",
-     "2014:previous-probe",
-     "2024:Abilities",
-     "2024:Add Another Class",
-     "2024:Build Complete",
-     "2024:Builder",
-     "2024:Class",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Origin (Background)",
-     "2024:Origin (Other)",
-     "2024:Origin (Species)",
-     "2024:Spells",
-     "2024:Starting Equipment"
-    ],
-    "candidates": [
-     {
-      "zh": "出身（其他）",
-      "from": "agent"
-     }
-    ],
-    "note": "复核：出身 / 起源；本页是“其他”页。"
-   },
-   {
-    "text": "Origin (Species)",
-    "translation": "出身（种族）",
-    "from": "agent",
-    "seen": [
-     "2014:Abilities",
-     "2014:Add Another Class",
-     "2014:Build Complete",
-     "2014:Builder",
-     "2014:Class",
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Origin (Background)",
-     "2014:Origin (Other)",
-     "2014:Origin (Species)",
-     "2014:Spells",
-     "2014:Starting Equipment",
-     "2014:previous-probe",
-     "2024:Abilities",
-     "2024:Add Another Class",
-     "2024:Build Complete",
-     "2024:Builder",
-     "2024:Class",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Origin (Background)",
-     "2024:Origin (Other)",
-     "2024:Origin (Species)",
-     "2024:Spells",
-     "2024:Starting Equipment"
-    ],
-    "candidates": [
-     {
-      "zh": "出身（种族）",
-      "from": "agent"
-     }
-    ],
-    "note": "复核：出身 / 起源；本页是“种族”页。"
-   },
-   {
-    "text": "Other",
-    "translation": "其他",
-    "from": "dnd5e:DND5E.ActionOther",
-    "seen": [
-     "2014:Equipment Shop",
-     "2014:Feats",
-     "2014:Finalize",
-     "2014:Spells",
-     "2014:previous-probe",
-     "2024:Equipment Shop",
-     "2024:Feats",
-     "2024:Finalize",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "其他",
-      "from": "dnd5e:DND5E.ActionOther"
-     },
-     {
-      "zh": "其他熟练",
-      "from": "dnd5e:DND5E.ProficiencyOther"
-     },
-     {
-      "zh": "其他",
-      "from": "terms:常规"
-     }
-    ],
-    "note": "复核：中文站作“其他的”，按钮取“其他”。"
-   },
-   {
-    "text": "Point Cost",
-    "translation": "花费点数",
-    "from": "agent",
-    "seen": [
-     "2014:Abilities",
-     "2014:previous-probe",
-     "2024:Abilities"
-    ],
-    "candidates": [
-     {
-      "zh": "购点法",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "花费点数",
-      "from": "site:js/statgen/statgen-ui.js"
-     }
-    ],
-    "note": "复核：中文站作“花费点数”，译名表作“购点法”。"
    },
    {
     "text": "Range",
@@ -11768,36 +11191,6 @@
      }
     ],
     "note": "复核：现有键译文“范围”；这里应是“射程”，不覆盖。"
-   },
-   {
-    "text": "Ranged",
-    "translation": "远程",
-    "from": "agent",
-    "seen": [
-     "2014:Feats",
-     "2014:Spells",
-     "2024:Feats",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "射程",
-      "from": "dnd5e:DND5E.ATTACK.Mode.Ranged"
-     },
-     {
-      "zh": "远程",
-      "from": "dnd5e:DND5E.ATTACK.Type.Ranged"
-     },
-     {
-      "zh": "远程",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "远程",
-      "from": "site:js/parser.js"
-     }
-    ],
-    "note": "复核：攻击方式“远程 / 射程”。"
    },
    {
     "text": "Saving Throw Proficiencies",
@@ -11912,32 +11305,6 @@
      }
     ],
     "note": "复核：法术列头“施法时间 / 时间”。"
-   },
-   {
-    "text": "Touch",
-    "translation": "触碰",
-    "from": "agent",
-    "seen": [
-     "2014:Feats",
-     "2014:Spells",
-     "2024:Feats",
-     "2024:Spells"
-    ],
-    "candidates": [
-     {
-      "zh": "触及",
-      "from": "dnd5e:DND5E.DistTouch"
-     },
-     {
-      "zh": "触碰",
-      "from": "terms:常规"
-     },
-     {
-      "zh": "触及",
-      "from": "site:js/parser.js"
-     }
-    ],
-    "note": "复核：中文站 / dnd5e 作“触碰 / 触及”。"
    },
    {
     "text": "Weapon Proficiencies",

@@ -122,7 +122,7 @@ for (const pkg of packages) {
   if (pkg.id === 'plutonium' && LANG === 'zh') {
     const ui = applyPluginUi(flat, uiDraft, approved)
     Object.assign(flat, ui.flat)
-    const keyCollisions = pluginUiKeyCollisions(flat, uiDraft)
+    const keyCollisions = pluginUiKeyCollisions(flat, uiDraft, approved)
     review.pluginUi = {
       ...uiStats,
       included: ui.added.length,
