@@ -138,9 +138,9 @@ try {
     const want = [colorOf('--primary'), colorOf('--primary-hover')]
     return { nightMode: document.body.classList.contains('ve-night-mode'), dayMode: document.body.classList.contains('ve-day-mode'), core: sheets.filter((h) => /\/vendor\/foundry\/css\//.test(h)).length, author: sheets.some((h) => /\/vendor\/private\/modules\/plutonium\/css\/main\.css$/.test(h)), themeLast: sheets.at(-1) === 'theme', primaryButton: finalize ? want.includes(getComputedStyle(finalize).backgroundColor) : null }
   })
-  // 作者可缩放的主窗口打开时铺满小窗（四边各留 8 像素）
-  checks.fit = await frame.evaluate(() => { const r = [...document.querySelectorAll('.application')].find((e) => e.offsetParent)?.getBoundingClientRect(); return r && { left: Math.round(r.left), top: Math.round(r.top), right: Math.round(innerWidth - r.right), bottom: Math.round(innerHeight - r.bottom) } })
-  assert(checks.fit && Object.values(checks.fit).every((v) => Math.abs(v - 8) <= 1), `主窗口没铺满：${JSON.stringify(checks.fit)}`)
+  // 作者可缩放的主窗口打开时铺满小窗（不留边，去掉标题栏和建卡页连成一页）
+  checks.fit = await frame.evaluate(() => { const r = [...document.querySelectorAll('.application')].filter((e) => e.offsetParent).map((e) => e.getBoundingClientRect()).sort((a, b) => b.width * b.height - a.width * a.height)[0]; return r && { left: Math.round(r.left), top: Math.round(r.top), right: Math.round(innerWidth - r.right), bottom: Math.round(innerHeight - r.bottom) } })
+  assert(checks.fit && Object.values(checks.fit).every((v) => Math.abs(v) <= 1), `主窗口没铺满：${JSON.stringify(checks.fit)}`)
   assert(checks.styles.nightMode === (scheme === 'dark') && checks.styles.dayMode === (scheme !== 'dark') && checks.styles.core === 1 && checks.styles.author && checks.styles.themeLast && checks.styles.primaryButton, `样式没挂对：${JSON.stringify(checks.styles)}`)
   checks.language = await frame.evaluate(() => game.i18n.lang)
   assert.equal(checks.language, 'zh')
@@ -249,12 +249,12 @@ try {
   const reopened = await page.evaluate(async (id) => { await nb.rt.close(nb.owner); await nb.people.load(nb.owner); return nb.h.actorData((await nb.rt.session(nb.owner)).session, id) }, built.id)
   assert.deepEqual(reopened, a); checks.reopen = 'exact'
 
-  // ③ 取消：再开一次，来源窗口确认后直接关掉作者建卡器
+  // ③ 取消：再开一次，来源窗口确认后放弃（产品里是关掉新建人物弹窗 = stopNative；主窗口没有作者标题栏和关闭钮）
   const frame2 = await startBuild('取消的人')
   await frame2.getByRole('button', { name: label('Confirm'), exact: true }).click()
   await frame2.getByRole('button', { name: label('Finalize'), exact: true }).waitFor()
   await shot('08-cancel-open')
-  await closeAuthorWindows(frame2)
+  await page.evaluate(() => nb.people.stopNative(nb.owner))
   checks.cancel = await page.evaluate(async () => ({ run: await globalThis.nbRun, actors: (await nb.saves.read(nb.owner)).actors.length, frames: document.querySelectorAll('iframe[data-trpg-author-frame="foundry"]').length }))
   assert.equal(checks.cancel.run.status, 'cancelled'); assert.equal(checks.cancel.actors, 1); assert.equal(checks.cancel.frames, 1)
 

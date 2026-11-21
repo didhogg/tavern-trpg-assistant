@@ -7,7 +7,7 @@ import { frameTheme } from '../../src/rules/kernel/frame/display'
 const read = (name: string) => readFileSync(new URL(`../../src/ui/styles/${name}`, import.meta.url), 'utf8')
 
 describe('建卡小窗插件主题', () => {
-  const css = frameTheme(['tokens.css', 'palette.css', 'build-frame.css'].map(read))
+  const css = frameTheme(['tokens.css', 'palette.css', 'build-frame.css', 'build-frame-controls.css'].map(read))
   it('设计变量挂在 :root，没有只对影子层有意义的写法', () => {
     expect(css).not.toMatch(/:host\b/)
     expect(css).not.toMatch(/all:\s*initial/)

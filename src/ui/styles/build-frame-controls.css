@@ -1,0 +1,80 @@
+/*
+ * 建卡专用小窗 · 作者界面控件做成原来分步建卡界面的样子（驾驶员 2026-11-22 批准对照表；参考 work/p6-ui/shots-0c-webkit/ 与旧 wizard.css）。
+ * 只认作者界面通用的结构与类名（作者自己的约定：页签 ve-ui-tab__*、下拉 ve-ui-sel2__*、列表行 veapp__list-row、
+ * 分段 = 以 hr.ve-hr-2 开头的块、底栏 = 带主按钮的那一排），不按窗口种类、不按某一页写规则。挂在 build-frame.css 之后。
+ */
+
+/* ── 窗口：主窗口（作者开成最大、小窗铺满的那个，display.ts 加 trpg-main）不要标题栏，和弹窗连成一页 ── */
+.application.trpg-main { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+.application.trpg-main > .window-header { display: none !important; }
+.application.trpg-main > .window-content { padding: 0 !important; }
+/* 其余作者小窗 = 插件弹窗：浅色标题、✕（Foundry 的图标字体没带，用文字 ✕） */
+.application:not(.trpg-main) > .window-header { background: var(--surface) !important; color: var(--text) !important; border-bottom: var(--border) solid var(--line) !important; min-height: 52px; padding: 0 var(--sp-3) 0 var(--sp-5) !important; }
+.application:not(.trpg-main) .window-title { font-size: var(--fs-xl) !important; }
+.window-header [data-action='close'] { color: var(--text2) !important; font-size: 0 !important; width: 32px; height: 32px; border-radius: var(--r-sm); }
+.window-header [data-action='close']::before { content: '✕'; font: 16px/1 var(--font-sans); }
+.window-header [data-action='close']:hover { background: var(--bg-hover) !important; color: var(--text) !important; }
+
+/* ── 页签 → 步骤胶囊（自动编号；当前步实心主色）。作者不记“哪步已完成”，所以没有 ✓ ── */
+.ve-ui-tab__wrp-tab-heads--border { display: flex !important; flex-wrap: wrap; gap: var(--sp-1); padding: var(--sp-3) var(--sp-4) !important; border: 0 !important; border-bottom: var(--border) solid var(--line) !important; counter-reset: trpg-step; background: var(--surface) !important; }
+.window-content .ve-ui-tab__btn-tab-head { counter-increment: trpg-step; display: inline-flex !important; align-items: center; gap: var(--sp-2); min-height: 32px !important; padding: 0 var(--sp-3) !important; border: 0 !important; border-radius: var(--r-pill) !important; background: transparent !important; color: var(--text2) !important; font-size: var(--fs-sm) !important; width: auto !important; transition: none !important; }
+.window-content .ve-ui-tab__btn-tab-head::before { content: counter(trpg-step); width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 50%; border: var(--border) solid var(--line-ctrl); font-size: var(--fs-xs); }
+.window-content .ve-ui-tab__btn-tab-head:hover { background: var(--bg-hover) !important; }
+.window-content .ve-ui-tab__btn-tab-head.ve-active { background: var(--primary) !important; color: var(--on-primary) !important; font-weight: var(--fw-semibold); }
+.window-content .ve-ui-tab__btn-tab-head.ve-active::before { border-color: currentColor; }
+
+/* ── 底栏（带主按钮的那一排）→ 浅底操作栏：上一步 / 下一步描边，主按钮实心 ── */
+.window-content hr.ve-hr-1.ve-w-100:has(+ .ve-flex-h-right) { display: none; }
+.window-content .ve-flex-h-right.ve-no-shrink:has(> .ve-btn-primary) { gap: var(--sp-2); padding: var(--sp-3) var(--sp-4) !important; background: var(--bg-side) !important; border-top: var(--border) solid var(--line-ctrl); }
+.window-content .ve-flex-h-right.ve-no-shrink:has(> .ve-btn-primary) .ve-btn { min-height: var(--hit) !important; padding: 0 var(--sp-5) !important; font-size: var(--fs-md) !important; font-weight: var(--fw-semibold); }
+.window-content .ve-flex-h-right.ve-no-shrink:has(> .ve-btn-primary) .ve-btn-group { gap: var(--sp-2); }
+.window-content .ve-flex-h-right.ve-no-shrink:has(> .ve-btn-primary) .ve-vr-2 { display: none; }
+
+/* ── 分段（以 hr.ve-hr-2 开头的块）→ 浅色圆角卡片 ── */
+.window-content .ve-flex-col:has(> hr.ve-hr-2:first-child) { margin: var(--sp-2) 0; padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--bg-sunk) !important; }
+.window-content .ve-flex-col > hr.ve-hr-2:first-child { display: none; }
+.window-content .ve-bold { font-weight: var(--fw-semibold); }
+
+/* ── 作者的左右栏、列表区底色 → 插件面板；去掉一切隔行底色 ── */
+.window-content .veapp__bg-foundry { background: var(--surface) !important; }
+.window-content .stripe-even, .window-content .stripe-odd, .window-content .stripe-odd-table tr, .window-content .ve-cls-tbl__stripe-odd, .window-content .stripe-odd-table tbody tr:nth-child(odd) { background: transparent !important; }
+
+/* ── 勾选 / 单选：原生控件（Foundry 自绘的方块要图标字体，没带）+ 整行做成选项卡，选中主色边框浅底 ── */
+.window-content input[type=checkbox], .window-content input[type=radio] { appearance: auto !important; -webkit-appearance: auto !important; width: 16px !important; height: 16px !important; margin: 0; background: none !important; border: 0 !important; accent-color: var(--primary); }
+.window-content input[type=checkbox]::before, .window-content input[type=checkbox]::after, .window-content input[type=radio]::before, .window-content input[type=radio]::after { content: none !important; display: none !important; }
+.window-content label:has(> label > input[type=checkbox]), .window-content label:has(> label > input[type=radio]) { margin: 0 0 var(--sp-1); padding: var(--sp-1) var(--sp-2) !important; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface) !important; cursor: pointer; }
+.window-content label:has(> label > input:checked) { border-color: var(--primary); background: var(--primary-tint) !important; }
+
+/* ── 列表行（等级表、法术表等 veapp__list-row / manc__list-row）→ 原来的列表行：细分隔线、悬停、选中左竖条 ── */
+.window-content .veapp__list-row, .window-content .manc__list-row { min-height: 36px; align-items: center; border-bottom: var(--border) solid var(--line); background: var(--surface) !important; }
+.window-content .veapp__list-row-hoverable:hover, .window-content .manc__list-row:hover { background: var(--bg-hover) !important; }
+.window-content .veapp__list-row:has(input:checked) { background: var(--primary-tint) !important; box-shadow: inset 3px 0 0 var(--primary); font-weight: var(--fw-semibold); }
+/* 列表的列头（作者用一排按钮当表头）→ 原来表格的浅表头文字 */
+.window-content .ve-input-group:has(> .ve-btn-5et) > .ve-btn, .window-content .sortlabel .ve-btn, .window-content .ve-btn.sort { background: var(--bg-sunk) !important; border-color: var(--line) !important; border-radius: 0 !important; color: var(--text2) !important; font-size: var(--fs-xs) !important; font-weight: var(--fw-semibold); }
+
+/* ── 小开关按钮（学会 / 准备、筛选小胶囊、作者的 ve-active 按钮）→ 原来的选项块：选中实心主色 ── */
+.window-content .manc-sp__btn-learn-spell, .window-content .manc-sp__btn-prepare, .window-content .ve-fltr__mini-pill { border-radius: var(--r-sm) !important; }
+.window-content .manc-sp__btn-learn-spell.ve-active, .window-content .manc-sp__btn-prepare.ve-active, .window-content .ve-btn.ve-active:not(.ve-ui-tab__btn-tab-head) { background: var(--primary) !important; border-color: var(--primary) !important; color: var(--on-primary) !important; }
+.window-content .ve-fltr__mini-pill { background: var(--primary-tint) !important; border: var(--border) solid var(--primary-tint-line) !important; color: var(--primary-text) !important; }
+
+/* ── 选条目的下拉（ve-ui-sel2）→ 原来的搜索框 + 列表 ── */
+.window-content .ve-ui-sel2__ipt-display, .window-content .ve-ui-sel2__ipt-search { min-height: var(--hit) !important; padding: 0 var(--sp-3) !important; background: var(--surface) !important; color: var(--text) !important; font-size: var(--fs-md) !important; }
+.window-content .ve-ui-sel2__wrp-options { background: var(--surface) !important; border: var(--border) solid var(--line-ctrl) !important; border-radius: var(--r-sm); box-shadow: var(--shadow-2); z-index: 20; }
+.window-content .ve-ui-sel2__disp-option { min-height: 40px; padding: 0 var(--sp-4) !important; border-bottom: var(--border) solid var(--line); background: var(--surface) !important; color: var(--text) !important; font-weight: var(--fw-semibold); }
+.window-content .ve-ui-sel2__disp-option:hover, .window-content .ve-ui-sel2__disp-option:focus { background: var(--bg-hover) !important; outline: 0; box-shadow: inset 3px 0 0 var(--primary); }
+
+/* ── 作者正文排版：小型大写衬线标题、表格 → 插件的标题和表格 ── */
+.window-content .ve-rd__h, .window-content .entry-title-inner, .window-content .ve-rd__h .entry-title-inner { font-family: var(--font-sans) !important; font-variant: normal !important; font-weight: var(--fw-semibold) !important; letter-spacing: 0 !important; color: var(--text) !important; }
+.window-content table th, .window-content .ve-rd__table thead th, .window-content .ve-cls-tbl th { background: var(--bg-sunk) !important; color: var(--text2) !important; font-weight: var(--fw-semibold); font-size: var(--fs-xs); }
+.window-content table td, .window-content table th { border: 0 !important; border-bottom: var(--border) solid var(--line) !important; padding: var(--sp-1) var(--sp-2); }
+.window-content table { background: var(--surface) !important; color: var(--text) !important; font-family: var(--font-sans) !important; border-color: var(--line) !important; }
+.window-content table tr { background: transparent !important; }
+.window-content .ve-tbl-border { background: var(--line) !important; }
+/* 资料卡标题（作者 ve-stats 资料块的名字和来源）→ 原来右栏卡片的标题：无衬线半粗、来源小字 */
+.window-content .ve-stats__th-name { background: var(--surface) !important; border-bottom: var(--border) solid var(--line) !important; }
+.window-content .ve-stats__h-name { font-family: var(--font-sans) !important; font-variant: normal !important; font-size: var(--fs-lg) !important; font-weight: var(--fw-semibold) !important; color: var(--text) !important; }
+.window-content .ve-stats__wrp-h-source, .window-content .ve-stats__wrp-h-source a { font-family: var(--font-sans) !important; font-size: var(--fs-xs) !important; color: var(--text3) !important; }
+/* 主窗口各页签的内容区：和原来分步建卡一样左右留边（页签条、底栏仍通栏） */
+.application.trpg-main .ve-ui-tab__wrp-tab-body { padding: var(--sp-3) var(--sp-4) !important; border: 0 !important; background: var(--surface) !important; }
+/* 只读 / 停用的输入框 → 插件的凹陷底 */
+.window-content input[readonly], .window-content input:disabled { background: var(--bg-sunk) !important; border-color: var(--line) !important; color: var(--text2) !important; }

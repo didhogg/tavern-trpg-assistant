@@ -97,7 +97,7 @@ try {
   await shot('03-complete')
   // 玩家关掉作者的完成窗 → 建卡结束 → 收进存档、弹窗关上
   for (let i = 0; i < 12 && await page.getByTestId('build-page').count(); i++) {
-    await frame.locator('[data-action="close"]').last().click({ force: true, timeout: 3000 }).catch((e) => { if (!/detached|not attached|closed|Timeout|Target/i.test(e.message)) throw e })
+    await frame.locator('[data-action="close"]:visible').last().click({ force: true, timeout: 3000 }).catch((e) => { if (!/detached|not attached|closed|Timeout|Target/i.test(e.message)) throw e })
     await page.waitForTimeout(800)
   }
   await page.getByTestId('build-page').waitFor({ state: 'detached', timeout: 60_000 })

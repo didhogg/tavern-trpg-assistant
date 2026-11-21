@@ -7,12 +7,13 @@
 import tokens from '../../../ui/styles/tokens.css?inline'
 import palette from '../../../ui/styles/palette.css?inline'
 import theme from '../../../ui/styles/build-frame.css?inline'
+import controls from '../../../ui/styles/build-frame-controls.css?inline'
 import { moduleUrl } from './module-roots'
 
 const g = globalThis as any
 
 /** 插件的设计变量原本写在插件影子层的 :host 上；小窗是整页，换到 :root，去掉只对影子层有意义的两项。 */
-export function frameTheme(parts: string[] = [tokens, palette, theme]): string {
+export function frameTheme(parts: string[] = [tokens, palette, theme, controls]): string {
   return parts.join('\n')
     .replace(/:host\b/g, ':root')
     .replace(/^\s*all:\s*initial;\s*$/m, '')
@@ -35,27 +36,39 @@ function link(href: string): Promise<void> {
   })
 }
 
-/** 作者样式里的纹理底图（羊皮纸等）统一去掉，露出插件面板底色。按样式属性认，不按类名。 */
-function dropBackgroundImages(rules: CSSRuleList): number {
-  let dropped = 0
+/** 颜色类属性：作者在这些上写的 !important 降成普通优先级（见下）。 */
+const COLOR_PROPS = ['background', 'background-color', 'color', 'border-color', 'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color', 'box-shadow']
+/**
+ * 让作者样式“只管排版、不管长相”（按样式属性认，不按类名）：
+ *   · 纹理底图（羊皮纸等）去掉，露出插件面板底色；
+ *   · 作者分层样式（@layer vetools 等）里颜色类属性的 !important 降成普通：按 CSS 层叠规则，分层的 !important 比不分层的还强，
+ *     不降的话插件主题（不分层）盖不住作者的隔行底色、文字色。排版类属性（宽高、边距、显示方式）不动。
+ */
+function relaxAuthorRules(rules: CSSRuleList): void {
   for (const rule of Array.from(rules)) {
     const style = (rule as CSSStyleRule).style
-    if (style?.backgroundImage?.includes('url(')) { style.backgroundImage = 'none'; dropped++ }
+    if (style) {
+      if (style.backgroundImage?.includes('url(')) style.backgroundImage = 'none'
+      for (const prop of COLOR_PROPS) if (style.getPropertyPriority(prop) === 'important') style.setProperty(prop, style.getPropertyValue(prop))
+    }
     const inner = (rule as CSSGroupingRule).cssRules
-    if (inner) dropped += dropBackgroundImages(inner)
+    if (inner) relaxAuthorRules(inner)
   }
-  return dropped
 }
 
 /**
  * 作者开成“尽量大”的窗口铺满小窗（驾驶员 2026-11-21 选 B）。作者的写法：要尽量大的窗口，高度用 Util.getMaxWindowHeight（视口高 − 160，
  * 给 Foundry 自己的工具栏留位置），宽度用 getMaxWindowWidth（视口宽 − 250，给 Foundry 侧栏留位置）；嵌在插件里没有这些，就用 Foundry 公开的
- * setPosition 铺满。认法照作者的约定：可缩放（Foundry 窗口选项 window.resizable）且第一次画出来时高度已到作者的最大高度；小的选择框、确认框照作者原样。
+ * setPosition 铺满。认法照作者的约定：可缩放（Foundry 窗口选项 window.resizable）且第一次画出来时高度正好是作者的最大高度（getMaxWindowHeight 的结果）。
+ * 宽度不作数（作者给各窗口的宽度上限不同，640～1400）；用“正好等于”而不是“不小于”，因为作者固定高度的弹窗（例如 640 高的进度窗）在矮的小窗里
+ * 会被 Foundry 压到视口高，不等于作者最大高度。小的选择框、确认框、进度窗照作者原样。
  * 只在第一次画出来时铺，玩家之后自己拖动、缩放不会被改回；小窗尺寸变了（插件窗口缩放）再把这些窗口铺一次。
  */
-const FIT_MARGIN = 8
+const FIT_MARGIN = 0
 /** 作者 Util._HEIGHT_MAX_OFFSET（作者模块内部常量，外面读不到；版本更新时对照作者程序）。 */
 const AUTHOR_HEIGHT_RESERVE = 160
+/** 作者 getMaxWindowHeight() 的结果（视口高减预留，但不小于预留值本身）。 */
+const authorMaxHeight = () => Math.max(AUTHOR_HEIGHT_RESERVE, document.documentElement.clientHeight - AUTHOR_HEIGHT_RESERVE)
 const fitted = new WeakSet<object>()
 function fitWindow(app: any): void {
   app.setPosition({ left: FIT_MARGIN, top: FIT_MARGIN, width: innerWidth - FIT_MARGIN * 2, height: innerHeight - FIT_MARGIN * 2 })
@@ -63,8 +76,10 @@ function fitWindow(app: any): void {
 function fitResizableWindows(): void {
   g.Hooks.on('renderApplicationV2', (app: any, _element: unknown, _context: unknown, options: any) => {
     if (!options?.isFirstRender || !app?.options?.window?.resizable) return
-    if (Number(app.position?.height) < innerHeight - AUTHOR_HEIGHT_RESERVE - 2) return
+    if (Math.abs(Number(app.position?.height) - authorMaxHeight()) > 2) return
     fitted.add(app)
+    // 主窗口：去掉标题栏、和建卡页连成一页（build-frame-controls.css .trpg-main）
+    app.element?.classList.add('trpg-main')
     fitWindow(app)
   })
   let timer = 0
@@ -88,7 +103,7 @@ export async function applyDisplayStyles(display: { styles: string[] }, roots: R
     await link(href)
     if (core.has(href)) return
     const sheet = [...document.styleSheets].find((s) => s.href === href)
-    if (sheet) dropBackgroundImages(sheet.cssRules)
+    if (sheet) relaxAuthorRules(sheet.cssRules)
   })
   const style = document.createElement('style')
   style.dataset.trpgTheme = 'build'

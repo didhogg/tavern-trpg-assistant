@@ -25,7 +25,11 @@ body, .application, .window-app {
   --color-text-dark-primary: var(--text);
   /* Foundry 给自己底部工具栏留的高（窗口最高 = 视口 − 1.5 × 这个值）；嵌在插件里没有工具栏 */
   --hotbar-height: 0px;
+  /* 原生勾选框、单选框、滚动条按插件亮暗画（Foundry 默认按它自己的深色主题画成黑块） */
+  --color-scheme: light;
 }
+@media (prefers-color-scheme: dark) { body, .application, .window-app { --color-scheme: dark; } }
+.application, .window-app { color-scheme: var(--color-scheme) !important; }
 
 /* ② 窗口外观：插件的面板（圆角、细边、阴影），标题栏用插件页头的颜色 */
 .application, .window-app {
@@ -68,4 +72,3 @@ body, .application, .window-app {
 .window-content input[type=checkbox], .window-content input[type=radio] { accent-color: var(--primary); }
 .window-content button:focus-visible, .window-content input:focus-visible, .window-content select:focus-visible, .window-content textarea:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: 1px; }
 .window-content .ve-muted, .window-content .ve-text-muted { color: var(--text2) !important; }
-.glyphicon { display: none !important; } /* 作者的图标字体没随插件带：只显示按钮文字 */
