@@ -45,7 +45,7 @@ try {
   await page.waitForSelector('.pp-row .pp-name'); await settle(page, 600)
   await page.getByRole('button', { name: '新建', exact: true }).click()
   const items = await page.getByRole('menuitem').allTextContents()
-  check('新建菜单只有做好的两项：分步建卡、从模板加入', items.length === 2 && /分步建卡/.test(items[0]) && /从模板加入/.test(items[1]), items.join('|'))
+  check('新建菜单两项：新建人物、从模板加入', items.length === 2 && /新建人物/.test(items[0]) && /从模板加入/.test(items[1]), items.join('|'))
   await page.getByRole('menuitem', { name: /从模板加入/ }).click()
   await page.getByTestId('template-page').waitFor()
   await page.waitForSelector('[data-testid=tp-row]'); await settle(page, 800)

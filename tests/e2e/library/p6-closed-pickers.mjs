@@ -29,8 +29,7 @@ const PROBE = `
   const search = await be.library.scoped.search(lib, '刺剑')
   const fire = await be.library.scoped.search(lib, '火球术', { expand: true })
   const fireByType = await be.library.scoped.query(lib, 'spell', { source: 'PHB', expand: true })
-  const w = ps._s.get('wizard'); await w.open('party')
-  const races = await w.loadList('race')
+  const races = await be.library.scoped.query(lib, 'race') // 选种族的列表（和全局搜索同一份结果）
   const opts = await be.people.buildOptions(owner, { items: [r.human, r.acolyte, r.fighter], blank: true })
   const cands = (opts.items ?? []).flatMap((it) => (it.extras ?? []).flatMap((x) => x.candidates ?? []))
   const detail = await be.library.scoped.detail(lib, r.rapier, { browse: true }) // 和详情页同一个调用（EntryPage.vue）
@@ -38,7 +37,7 @@ const PROBE = `
     searchRapier: has(search, r.rapier),
     fireballPackVariant: fire.some((h) => h.variant?.docIdLocal === r.packDoc),
     fireballPackVariantByType: fireByType.some((h) => h.variant?.docIdLocal === r.packDoc),
-    wizardHalfOrc: has(races, r.halfOrc),
+    raceHalfOrc: has(races, r.halfOrc),
     extrasArchery: has(cands, r.archery),
     extrasCount: cands.length,
     detailRapier: detail && !('hidden' in detail) ? { closed: !!detail.closed } : detail,
@@ -81,9 +80,6 @@ try {
   check('造数据：找到全部测试条目，自制包的火球术成了同编号版本', Object.values(out.refs).every(Boolean), JSON.stringify(out.refs))
   await page.locator('.trpg-window nav').getByRole('button', { name: '人物', exact: true }).click()
   await page.waitForSelector('[data-testid=people-view]'); await settle(page, 600)
-  // 建卡窗口开一次，让建卡的数据仓库建起来（之后直接调它的 open / loadList，和界面同一条路）
-  await page.getByRole('button', { name: '新建', exact: true }).click(); await page.getByRole('menuitem', { name: /分步建卡/ }).click()
-  await page.getByTestId('wizard-page').waitFor(); await page.locator('.trpg-modal__close').click(); await settle(page, 500)
 
   const ATTACK = `
     const sheet = await be.people.sheet(owner, arg.id)
@@ -101,7 +97,7 @@ try {
 
   out.open1 = await ev(PROBE, { refs: out.refs })
   out.open1.template = await templateGoblinsMM()
-  const shown = (p) => p.searchRapier && p.fireballPackVariant && p.fireballPackVariantByType && p.wizardHalfOrc && p.extrasArchery && p.template > 0
+  const shown = (p) => p.searchRapier && p.fireballPackVariant && p.fireballPackVariantByType && p.raceHalfOrc && p.extrasArchery && p.template > 0
   check('开着时：各入口都能选到（刺剑、自制火球术版本、半兽人、箭术、MM 地精）', shown(out.open1), JSON.stringify(out.open1))
 
   // ---- 关掉：单条三个、整本 MM、自制包（它声明的来源）----
@@ -116,7 +112,7 @@ try {
   const c = out.closed
   check('关掉后全局搜索搜不到刺剑', !c.searchRapier, JSON.stringify(c))
   check('关掉自制包后，全局搜索和按类别列都不再列出它的火球术版本', !c.fireballPackVariant && !c.fireballPackVariantByType, JSON.stringify(c))
-  check('关掉后建卡种族列表里没有半兽人', !c.wizardHalfOrc, JSON.stringify(c))
+  check('关掉后选种族的列表里没有半兽人', !c.raceHalfOrc, JSON.stringify(c))
   check('关掉后建卡额外候选里没有箭术（其他候选照常）', !c.extrasArchery && c.extrasCount > 0, JSON.stringify(c))
   check('关掉 MM 后从模板加入搜不到 MM 的地精', c.template === 0, String(c.template))
   check('关掉后点详情照常能看（标「已关闭」）', c.detailRapier?.closed === true, JSON.stringify(c.detailRapier))

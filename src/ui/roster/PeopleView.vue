@@ -8,13 +8,11 @@ import MoreMenu from '../kit/MoreMenu.vue'
 import PeopleRow from './PeopleRow.vue'
 import PeopleSelectBar from './PeopleSelectBar.vue'
 import TemplatePage from './TemplatePage.vue'
-import WizardPage from './WizardPage.vue'
-import { useWizardStore } from '../../stores/wizard'
+import BuildPage from './BuildPage.vue'
 
 const store = useRosterStore()
 const campaign = useCampaignStore()
 const modal = useModalStore()
-const wizard = useWizardStore()
 onMounted(() => void store.ensure())
 
 const tabs = computed(() => [...CATEGORIES.map((c) => ({ id: c.id as ListView, label: c.label })), { id: 'all' as ListView, label: '全部' }])
@@ -42,13 +40,13 @@ async function bulk(kind: 'move' | 'copy' | 'remove' | 'restore', category?: str
         : trash.value ? await store.purge(ids) : await store.trashed(ids, true)
   if (done) store.selected = []
 }
-/** [＋新建] 菜单：做好一个加一个（现在只有从模板加入）。 */
+/** [＋新建] 菜单：新建人物（作者完整建卡器，整页接管）、从模板加入。 */
 const off = computed(() => (readOnly.value ? { disabled: true, reason: '另一个窗口在改' } : {}))
-const NEW_ITEMS = computed(() => [{ key: 'wizard', label: '分步建卡…', ...off.value }, { key: 'template', label: '从模板加入…', ...off.value }])
+const NEW_ITEMS = computed(() => [{ key: 'native', label: '新建人物…', ...off.value }, { key: 'template', label: '从模板加入…', ...off.value }])
 async function onNew(key: string): Promise<void> {
-  if (key === 'wizard') {
-    await wizard.open(store.view)
-    modal.open({ key: 'roster-wizard', title: '分步建卡', component: markRaw(WizardPage), variant: 'dialog', width: 920, height: 680, onLeave: () => void store.refresh() })
+  if (key === 'native') {
+    const category = CATEGORIES.some((c) => c.id === store.view) ? (store.view as CategoryId) : 'party'
+    modal.open({ key: 'roster-build', title: '新建人物', component: markRaw(BuildPage), props: { category }, variant: 'dialog' })
   }
   if (key === 'template') modal.open({ key: 'roster-template', title: '从模板加入', component: markRaw(TemplatePage), variant: 'dialog', width: 920, height: 680, onLeave: () => void store.refresh() })
 }

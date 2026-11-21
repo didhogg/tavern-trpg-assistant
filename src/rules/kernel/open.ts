@@ -30,8 +30,6 @@ export async function openKernel(opts: {
   input: KernelInput
   brews: PreparedBrew[]
   itemMasteries: unknown[]
-  /** 作者在建卡时要问玩家（frame/ask-bridge.ts）：交给运行时转给正在建卡的界面。 */
-  ask?: (question: unknown) => Promise<unknown>
   /** 建卡专用小窗给玩家看（铺满 container）。 */
   visible?: boolean
 }): Promise<{ session: KernelSession; boot: unknown; report: KernelBrewReport; brewFingerprint: string | undefined; brewFiles: string[] }> {

@@ -29,7 +29,7 @@ export function libraryData(files: FileProvider, view?: LibraryView): DataReader
   return (path) => files.get(source, path, { allowNetwork: false, ...(view ? { view } : {}) })
 }
 
-export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch, ask, moduleRoots = {}, brewFiles }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch; ask?: (question: unknown) => Promise<unknown>; moduleRoots?: Record<string, string>; brewFiles?: ReadonlyMap<string, string> }): FrameHandlers {
+export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch, moduleRoots = {}, brewFiles }: { pluginRoot: URL; data: DataReader; fetchImpl?: typeof fetch; moduleRoots?: Record<string, string>; brewFiles?: ReadonlyMap<string, string> }): FrameHandlers {
   /** 插件文件：登记了私人文件夹的模块先到那里取（和小窗里 module-roots.ts 同一条登记），没有再取自带的。 */
   const pluginFile = async (path: string): Promise<Response> => {
     const id = /^modules\/([^/]+)\//.exec(path)?.[1]
@@ -66,7 +66,6 @@ export function kernelHandlers({ pluginRoot, data, fetchImpl = fetch, ask, modul
     localSnapshot: async () => Object.fromEntries(local),
     localSet: async (key, value) => { local.set(key, value) },
     localRemove: async (key) => { local.delete(key) },
-    ...(ask ? { ask } : {}),
   }
 }
 
@@ -93,8 +92,8 @@ export interface KernelSession {
 }
 
 /** 开一个结算小窗。一个战役一个小窗（各自的世界互不相见）。 */
-export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000, ask, moduleRoots, brewFiles, visible }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number; ask?: (question: unknown) => Promise<unknown>; moduleRoots?: Record<string, string>; brewFiles?: ReadonlyMap<string, string>; visible?: boolean }): Promise<KernelSession> {
-  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, visible, handlers: kernelHandlers({ pluginRoot, data, fetchImpl, ask, moduleRoots, brewFiles }) })
+export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000, moduleRoots, brewFiles, visible }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number; moduleRoots?: Record<string, string>; brewFiles?: ReadonlyMap<string, string>; visible?: boolean }): Promise<KernelSession> {
+  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, visible, handlers: kernelHandlers({ pluginRoot, data, fetchImpl, moduleRoots, brewFiles }) })
   // 结算小窗的指令表与作者小窗不同（frame/main.ts），宿主的类型只认作者指令，这里按结算指令表转一下类型
   const call = frame.call as unknown as (fn: string, ...args: unknown[]) => Promise<never>
   return {

@@ -12,7 +12,8 @@ export { freshProfile, sweepStale } from './profile-clone.mjs'
 // 统一端口和底座（e2e:base 造的干净底座）；说明见 e2e-base.mjs
 export { E2E_PORT, baseDir, freshFromBase } from './e2e-base.mjs'
 
-export async function buildAll({ outDir } = {}) {
+// E2E_DIST=目录：构建到别处、不动工作区原有的 dist（startStatic 同一个变量）
+export async function buildAll({ outDir = process.env.E2E_DIST } = {}) {
   await mkdir(work, { recursive: true })
   await build({ configFile: `${root}vite.config.ts`, root, logLevel: 'error', ...(outDir ? { build: { outDir } } : {}) })
   await build({ configFile: false, root, logLevel: 'error', build: {

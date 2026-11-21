@@ -87,8 +87,6 @@
     }
     return p
   }
-  // 作者要问玩家：问题经同一条传话通道交给插件（建卡问答桥 frame/ask-bridge.ts 用）
-  g.__trpgAsk = (question: unknown): Promise<unknown> => request({ op: 'ask', question })
   g.__trpgStorageFlush = async (): Promise<string[]> => {
     await Promise.allSettled([...pendingWrites])
     return [...storageErrors]

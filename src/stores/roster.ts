@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import type { EntryRef } from '../library/scopes'
-import type { KernelPeople, LoadedActor, RosterRow } from '../rules/kernel/people'
+import type { LoadedActor, RosterRow } from '../rules/kernel/people'
 import { askConfirm } from '../ui/kit/confirm'
 import { useAppStore } from './app'
 import { useCampaignStore } from './campaign'
@@ -169,17 +169,31 @@ export const useRosterStore = defineStore('people', () => {
   }
   async function undoAdded(): Promise<void> { lastAdded.value = null; await undoSteps(1) }
 
-  /** 分步建卡创建：一次加人是存档里的一步，提示条带 [撤销]。 */
-  async function createFromWizard(plan: Parameters<KernelPeople['build']>[1], category: CategoryId): Promise<boolean> {
-    return run(`已创建「${plan.name}」`, 1, async (k) => {
-      const out = await backend().build(k, { ...plan, requireExtras: true }, { category })
-      if (!out.kernel) throw new Error(out.built.error ?? '资料不全，建不出这个人物')
-    })
+  /**
+   * 新建人物（作者完整建卡器，P6）：建卡专用小窗铺在 slot 里给玩家用，作者建好 → 收进存档（一次加人是存档里的一步，提示条带 [撤销]）。
+   * 玩家在作者里关窗 = 取消，存档不变、不提示。
+   */
+  async function createNative(name: string, category: CategoryId, slot: HTMLElement): Promise<'built' | 'cancelled' | 'failed'> {
+    const key = ownerKey()
+    if (!key) return 'failed'
+    if (campaign.readOnly) { toast.error(readOnlyReason); return 'failed' }
+    try {
+      const out = await backend().buildNative(key, name, { category }, slot)
+      if (out.built.status === 'cancelled') return 'cancelled'
+      if (!out.kernel) throw new Error(out.built.error ?? '建好的人物没能放进存档')
+    } catch (e) {
+      toast.error(`新建人物失败：${e instanceof Error ? e.message : String(e)}`)
+      await refresh()
+      return 'failed'
+    }
+    await refresh()
+    toast.undoable(`已创建「${name}」`, () => undoSteps(1))
+    return 'built'
   }
-
-  /** 分步建卡（作者整机）：收下草稿人存进存档。 */
-  async function createFromDraft(id: string, name: string, category: CategoryId): Promise<boolean> {
-    return run(`已创建「${name}」`, 1, async (k) => { await backend().draftCommit(k, id, name, { category }) })
+  /** 放弃正在进行的新建人物（关掉建卡专用小窗）。 */
+  function stopNative(): void {
+    const key = ownerKey()
+    if (key) backend().stopNative(key)
   }
 
   /** 彻底删除（只在回收站里）：先问，可撤销。 */
@@ -190,6 +204,6 @@ export const useRosterStore = defineStore('people', () => {
 
   return {
     rows, loaded, loading, error, view, sort, query, selecting, selected, visible, counts, elsewhere, trash,
-    lastAdded, addFromTemplate, createFromWizard, createFromDraft, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
+    lastAdded, addFromTemplate, createNative, stopNative, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
   }
 })

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 export const root = fileURLToPath(new URL('../../../', import.meta.url))
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8' }
 
-export async function startStatic({ port = 0, distDir } = {}) {
+export async function startStatic({ port = 0, distDir = process.env.E2E_DIST } = {}) {
   const requests = []
   const server = createServer(async (req, res) => {
     const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname))
