@@ -23,6 +23,8 @@ body, .application, .window-app {
   --table-header-text-color: var(--text); --table-row-color-even: var(--bg-sunk); --table-row-color-odd: transparent; --table-row-color-highlight: var(--primary-tint);
   --content-link-background: var(--primary-tint); --content-link-border-color: var(--primary-tint-line); --content-link-text-color: var(--primary-text); --content-link-icon-color: var(--primary-text);
   --color-text-dark-primary: var(--text);
+  /* Foundry 给自己底部工具栏留的高（窗口最高 = 视口 − 1.5 × 这个值）；嵌在插件里没有工具栏 */
+  --hotbar-height: 0px;
 }
 
 /* ② 窗口外观：插件的面板（圆角、细边、阴影），标题栏用插件页头的颜色 */

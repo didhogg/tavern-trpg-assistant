@@ -86,7 +86,7 @@ async function startBuild(name) {
   await page.evaluate((name) => {
     document.getElementById('build-slot')?.remove()
     const slot = Object.assign(document.createElement('div'), { id: 'build-slot' })
-    slot.style.cssText = 'position:fixed;inset:0;z-index:10'
+    slot.style.cssText = 'position:fixed;inset:0;z-index:2147483000' // 盖过测试宿主的骰子悬浮球（真实插件里建卡小窗在插件窗口内）
     document.body.append(slot)
     globalThis.nbRun = nb.people.buildNative(nb.owner, name, { category: 'party' }, slot).then((r) => (globalThis.nbBuilt = r.built.data ?? null, { status: r.built.status, error: r.built.error ?? null, id: r.id ?? null, excluded: r.built.excluded ?? null, unpaired: r.built.unpaired?.length ?? null }))
   }, name)
@@ -138,6 +138,9 @@ try {
     const want = [colorOf('--primary'), colorOf('--primary-hover')]
     return { nightMode: document.body.classList.contains('ve-night-mode'), dayMode: document.body.classList.contains('ve-day-mode'), core: sheets.filter((h) => /\/vendor\/foundry\/css\//.test(h)).length, author: sheets.some((h) => /\/vendor\/private\/modules\/plutonium\/css\/main\.css$/.test(h)), themeLast: sheets.at(-1) === 'theme', primaryButton: finalize ? want.includes(getComputedStyle(finalize).backgroundColor) : null }
   })
+  // 作者可缩放的主窗口打开时铺满小窗（四边各留 8 像素）
+  checks.fit = await frame.evaluate(() => { const r = [...document.querySelectorAll('.application')].find((e) => e.offsetParent)?.getBoundingClientRect(); return r && { left: Math.round(r.left), top: Math.round(r.top), right: Math.round(innerWidth - r.right), bottom: Math.round(innerHeight - r.bottom) } })
+  assert(checks.fit && Object.values(checks.fit).every((v) => Math.abs(v - 8) <= 1), `主窗口没铺满：${JSON.stringify(checks.fit)}`)
   assert(checks.styles.nightMode === (scheme === 'dark') && checks.styles.dayMode === (scheme !== 'dark') && checks.styles.core === 1 && checks.styles.author && checks.styles.themeLast && checks.styles.primaryButton, `样式没挂对：${JSON.stringify(checks.styles)}`)
   checks.language = await frame.evaluate(() => game.i18n.lang)
   assert.equal(checks.language, 'zh')

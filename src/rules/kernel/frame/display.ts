@@ -2,7 +2,7 @@
 //   ① Foundry 核心样式表（manifest 登记，tools/vendor-foundry-css.mjs）：窗口怎么摆——浮动、层叠、排列辅助类、表单结构；
 //   ② 系统 / 模块自己声明的样式（作者排版：页签、左右栏、表格的位置），按 module-roots 同一条改道取本机私人完整版的那份；
 //   ③ 插件主题：插件的设计变量（tokens / palette，跟随系统亮色、深色）+ ui/styles/build-frame.css（字体、配色、按钮、输入框、窗口外观）。
-// 只认 Foundry 窗口和作者界面通用的元素与类名，不按窗口种类写规则；窗口大小、位置照作者和 Foundry 自己算的。
+// 只认 Foundry 窗口和作者界面通用的元素与类名，不按窗口种类写规则；作者可缩放的窗口打开时铺满小窗（fitResizableWindows），其余窗口位置照作者和 Foundry 自己算。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方全局对象没有类型声明。 */
 import tokens from '../../../ui/styles/tokens.css?inline'
 import palette from '../../../ui/styles/palette.css?inline'
@@ -47,8 +47,36 @@ function dropBackgroundImages(rules: CSSRuleList): number {
   return dropped
 }
 
+/**
+ * 作者开成“尽量大”的窗口铺满小窗（驾驶员 2026-11-21 选 B）。作者的写法：要尽量大的窗口，高度用 Util.getMaxWindowHeight（视口高 − 160，
+ * 给 Foundry 自己的工具栏留位置），宽度用 getMaxWindowWidth（视口宽 − 250，给 Foundry 侧栏留位置）；嵌在插件里没有这些，就用 Foundry 公开的
+ * setPosition 铺满。认法照作者的约定：可缩放（Foundry 窗口选项 window.resizable）且第一次画出来时高度已到作者的最大高度；小的选择框、确认框照作者原样。
+ * 只在第一次画出来时铺，玩家之后自己拖动、缩放不会被改回；小窗尺寸变了（插件窗口缩放）再把这些窗口铺一次。
+ */
+const FIT_MARGIN = 8
+/** 作者 Util._HEIGHT_MAX_OFFSET（作者模块内部常量，外面读不到；版本更新时对照作者程序）。 */
+const AUTHOR_HEIGHT_RESERVE = 160
+const fitted = new WeakSet<object>()
+function fitWindow(app: any): void {
+  app.setPosition({ left: FIT_MARGIN, top: FIT_MARGIN, width: innerWidth - FIT_MARGIN * 2, height: innerHeight - FIT_MARGIN * 2 })
+}
+function fitResizableWindows(): void {
+  g.Hooks.on('renderApplicationV2', (app: any, _element: unknown, _context: unknown, options: any) => {
+    if (!options?.isFirstRender || !app?.options?.window?.resizable) return
+    if (Number(app.position?.height) < innerHeight - AUTHOR_HEIGHT_RESERVE - 2) return
+    fitted.add(app)
+    fitWindow(app)
+  })
+  let timer = 0
+  addEventListener('resize', () => {
+    clearTimeout(timer)
+    timer = setTimeout(() => { for (const app of g.foundry.applications.instances.values()) if (app.rendered && fitted.has(app)) fitWindow(app) }, 150) as unknown as number
+  })
+}
+
 /** 小窗启动完成后挂样式（frame/main.ts）。按顺序同步插入，三层的先后不受加载快慢影响。 */
 export async function applyDisplayStyles(display: { styles: string[] }, roots: Record<string, string> | undefined): Promise<void> {
+  fitResizableWindows()
   const packages = [g.game.system, ...g.game.modules.filter((m: any) => m.active)]
   const declared = packages.flatMap((p: any) => [...(p.styles ?? [])].map((s: any) => String(s.src ?? s)))
   const hrefs = [...display.styles, ...declared].map((path) => {
