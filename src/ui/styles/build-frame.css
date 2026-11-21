@@ -1,0 +1,69 @@
+/*
+ * 建卡专用小窗 · 插件主题（驾驶员 2026-11-21：作者界面的样子不要，套插件自己的主题）。由 rules/kernel/frame/display.ts 挂在小窗最后，
+ * 前面是 Foundry 核心样式（窗口怎么摆）和作者样式（排版）。这里只管“长什么样”：
+ *   ① 把 Foundry 自己的主题变量（窗口、表单、表格都读它们）换成插件的设计变量（tokens.css / palette.css，跟随系统亮色、深色）；
+ *   ② 窗口外观、作者界面通用控件换成插件的字体、配色、按钮、输入框。
+ * 不按窗口种类写规则，只认 Foundry 窗口和作者界面通用的元素与类名；窗口大小、位置不动（作者和 Foundry 自己算）。
+ */
+html, body { background: var(--bg) !important; color: var(--text); font-family: var(--font-sans); font-size: var(--fs-md); line-height: var(--lh-ui); color-scheme: light; }
+@media (prefers-color-scheme: dark) { html, body { color-scheme: dark; } }
+
+/* ① Foundry 的主题变量 → 插件的设计变量 */
+body, .application, .window-app {
+  --background: var(--surface);
+  --color-header-background: var(--head-bg);
+  --color-border: var(--line);
+  --color-tabs-border: var(--line);
+  --color-fieldset-border: var(--line);
+  --color-form-hint: var(--text3); --color-form-hint-hover: var(--text2);
+  --color-form-label: var(--text2); --color-form-label-hover: var(--text);
+  --color-text-emphatic: var(--text); --color-text-primary: var(--text); --color-text-secondary: var(--text2); --color-text-subtle: var(--text3);
+  --color-text-selection: var(--text); --color-text-selection-bg: var(--primary-tint);
+  --table-background-color: var(--surface); --table-header-bg-color: var(--bg-sunk); --table-header-border-color: var(--line);
+  --table-header-text-color: var(--text); --table-row-color-even: var(--bg-sunk); --table-row-color-odd: transparent; --table-row-color-highlight: var(--primary-tint);
+  --content-link-background: var(--primary-tint); --content-link-border-color: var(--primary-tint-line); --content-link-text-color: var(--primary-text); --content-link-icon-color: var(--primary-text);
+  --color-text-dark-primary: var(--text);
+}
+
+/* ② 窗口外观：插件的面板（圆角、细边、阴影），标题栏用插件页头的颜色 */
+.application, .window-app {
+  background: var(--surface) !important; color: var(--text) !important; font-family: var(--font-sans) !important;
+  border: var(--border) solid var(--line) !important; border-radius: var(--r-lg) !important; box-shadow: var(--shadow-3) !important; overflow: hidden;
+}
+.application .window-header, .window-app .window-header {
+  background: var(--head-bg) !important; color: var(--head-ink) !important; border: 0 !important; border-bottom: var(--border) solid var(--head-line) !important;
+  font-family: var(--font-sans) !important; font-size: var(--fs-md) !important; padding: 0 var(--sp-3) !important; min-height: var(--hit);
+}
+.window-title { font-family: var(--font-sans) !important; font-size: var(--fs-md) !important; font-weight: var(--fw-semibold) !important; color: inherit !important; }
+.window-header button, .window-header .header-control, .window-header a {
+  background: transparent !important; border: 0 !important; box-shadow: none !important; color: var(--head-ink2) !important; min-height: 0 !important;
+}
+.window-header button:hover, .window-header .header-control:hover, .window-header a:hover { color: var(--head-ink) !important; background: var(--head-hover) !important; }
+.window-content { background: var(--surface) !important; color: var(--text) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; font-family: var(--font-sans) !important; font-size: var(--fs-md) !important; }
+.window-resize-handle { filter: none !important; opacity: .5; }
+/* 作者窗口内容区自带的羊皮纸 / 夜间纹理底（作者通用容器类）换成插件面板底色 */
+.ve-app-window, .ve-window, .ve-ui-modal__overlay, .ve-hwin, .ve-ui-tab-side__wrp-tab { background: var(--surface) !important; color: var(--text) !important; }
+
+/* 作者界面通用元素：和插件控件同一套样子 */
+.window-content a { color: var(--primary-text) !important; }
+.window-content hr { border: 0 !important; border-top: var(--border) solid var(--line) !important; background: none !important; }
+.window-content h1, .window-content h2, .window-content h3, .window-content h4, .window-content h5 { color: var(--text) !important; font-family: var(--font-sans) !important; border: 0; text-shadow: none !important; }
+.window-content table, .window-content th, .window-content td { color: var(--text) !important; border-color: var(--line) !important; }
+.window-content button, .window-content .ve-btn {
+  font: inherit; font-size: var(--fs-sm) !important; min-height: 30px; padding: 0 var(--sp-3);
+  border: var(--border) solid var(--line-ctrl) !important; border-radius: var(--r-sm) !important;
+  background: var(--surface) !important; background-image: none !important; color: var(--text) !important; box-shadow: none !important; text-shadow: none !important; cursor: pointer;
+}
+.window-content button:hover, .window-content .ve-btn:hover { background: var(--bg-hover) !important; }
+.window-content .ve-btn-primary, .window-content button.ve-btn-primary { background: var(--primary) !important; border-color: var(--primary) !important; color: var(--on-primary) !important; }
+.window-content .ve-btn-primary:hover { background: var(--primary-hover) !important; }
+.window-content .ve-btn.active, .window-content button.active { background: var(--primary-tint) !important; border-color: var(--primary-tint-line) !important; color: var(--primary-text) !important; }
+.window-content button:disabled, .window-content .ve-btn:disabled { opacity: .5; cursor: default; }
+.window-content input[type=text], .window-content input[type=number], .window-content input[type=search], .window-content select, .window-content textarea {
+  font: inherit; font-size: var(--fs-sm) !important; color: var(--text) !important; background: var(--surface) !important;
+  border: var(--border) solid var(--line-ctrl) !important; border-radius: var(--r-sm) !important; box-shadow: none !important; min-height: 30px;
+}
+.window-content input[type=checkbox], .window-content input[type=radio] { accent-color: var(--primary); }
+.window-content button:focus-visible, .window-content input:focus-visible, .window-content select:focus-visible, .window-content textarea:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: 1px; }
+.window-content .ve-muted, .window-content .ve-text-muted { color: var(--text2) !important; }
+.glyphicon { display: none !important; } /* 作者的图标字体没随插件带：只显示按钮文字 */

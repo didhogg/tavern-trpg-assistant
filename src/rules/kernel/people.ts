@@ -264,9 +264,9 @@ export class KernelPeople {
    * 加人：作者完整建卡器（P6 第 2 段）。建卡专用小窗里作者从头建好整个人（native-build.ts），
    * 收进存档走和复制 B′ 人物同一条路：完整人物建回日常小窗 → 写进存档（完整数据进战役层 bases）。玩家取消 / 没建成 = 存档不变。
    */
-  async buildNative(ownerKey: string, name: string, adjustments: Record<string, unknown> = {}) {
+  async buildNative(ownerKey: string, name: string, adjustments: Record<string, unknown> = {}, slot?: HTMLElement) {
     if (!this.deps.native) throw new Error('这个插件没有接建卡专用小窗')
-    const built = await this.deps.native.run(ownerKey, name)
+    const built = await this.deps.native.run(ownerKey, name, slot)
     if (built.status !== 'built') return { built, kernel: null }
     const { id: _blank, ...blank } = kernelActorSchema.parse({ id: 'native', name, seed: built.seed })
     const result = await this.deps.runtime.rebuild(ownerKey, { ...blank, base: built.data })

@@ -18,6 +18,8 @@ export interface KernelInput {
   seed?: string
   /** 规则版本等世界设置（键 → 值）。 */
   settings: Record<string, unknown>
+  /** 给玩家看的小窗（建卡专用小窗）：启动时先挂 Foundry 核心样式（styles，manifest 登记），再挂系统 / 模块声明的样式，最后盖插件主题（frame/display.ts）。 */
+  display?: { styles: string[] }
   /** 内核输入摘要（换算缓存的钥匙之一）。 */
   cacheKey?: string
   documents: { actors?: any[]; items?: any[]; folders?: any[]; combats?: any[]; scenes?: any[]; journal?: any[]; tables?: any[]; macros?: any[] }

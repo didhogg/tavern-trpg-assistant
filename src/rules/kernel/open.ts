@@ -32,6 +32,8 @@ export async function openKernel(opts: {
   itemMasteries: unknown[]
   /** 作者在建卡时要问玩家（frame/ask-bridge.ts）：交给运行时转给正在建卡的界面。 */
   ask?: (question: unknown) => Promise<unknown>
+  /** 建卡专用小窗给玩家看（铺满 container）。 */
+  visible?: boolean
 }): Promise<{ session: KernelSession; boot: unknown; report: KernelBrewReport; brewFingerprint: string | undefined; brewFiles: string[] }> {
   // 作者收下的自制包按文件供应（host.ts file）：作者自己的「额外自制文件」入口按地址读（建卡专用小窗登记，commands-native.ts）
   const brewFiles = new Map<string, string>()

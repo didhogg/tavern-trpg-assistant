@@ -32,10 +32,13 @@ const distDir = join(root, 'work/p6-zh-pack/test-dist')
 await buildAll({ outDir: distDir })
 const engine = process.env.ENGINE ?? 'chrome'
 const [, type, options] = engines[engine === 'webkit' ? 1 : 0]
-const shots = join(root, `work/p6-zh-pack/native-${engine}-${dataSet}-${localized ? 'zh' : 'original'}`)
+// 承载检查：W / H 换视口宽高，COLOR_SCHEME=dark 看深色（插件主题跟随系统）
+const W = Number(process.env.W ?? 1280), H = Number(process.env.H ?? 900), scheme = process.env.COLOR_SCHEME ?? 'light'
+const look = W === 1280 && H === 900 && scheme === 'light' ? '' : `-${W}x${H}-${scheme}`
+const shots = join(root, `work/p6-zh-pack/native-${engine}-${dataSet}-${localized ? 'zh' : 'original'}${look}`)
 await mkdir(shots, { recursive: true })
 const { server, url } = await startStatic({ port: E2E_PORT, distDir })
-const ctx = await type.launchPersistentContext(freshFromBase(engine, 'p6-native-build'), { ...options, viewport: { width: 1280, height: 900 } })
+const ctx = await type.launchPersistentContext(freshFromBase(engine, 'p6-native-build'), { ...options, viewport: { width: W, height: H }, colorScheme: scheme })
 if (stale) await ctx.route('**/vendor/private/lang/zh/modules/plutonium/js/fingerprints.json', (route) => route.fulfill({ json: { original: 'stale' } }))
 const page = await ctx.newPage()
 const warnings = []
@@ -78,11 +81,14 @@ const env = (fresh) => page.evaluate(async ({ fresh, dataSet }) => {
   await rt.session(owner)
 }, { fresh, dataSet })
 
-/** 开始一次建卡（不等它结束），拿到建卡专用小窗；测试里把它铺满页面、挂上作者声明的样式（产品里的承载是第 3 段）。 */
+/** 开始一次建卡（不等它结束），拿到建卡专用小窗：和产品一样交给页面上的一块位置（铺满视口），样式由小窗自己挂（frame/display.ts）。 */
 async function startBuild(name) {
   await page.evaluate((name) => {
-    globalThis.showBuild = true
-    globalThis.nbRun = nb.people.buildNative(nb.owner, name, { category: 'party' }).then((r) => (globalThis.nbBuilt = r.built.data ?? null, { status: r.built.status, error: r.built.error ?? null, id: r.id ?? null, excluded: r.built.excluded ?? null, unpaired: r.built.unpaired?.length ?? null }))
+    document.getElementById('build-slot')?.remove()
+    const slot = Object.assign(document.createElement('div'), { id: 'build-slot' })
+    slot.style.cssText = 'position:fixed;inset:0;z-index:10'
+    document.body.append(slot)
+    globalThis.nbRun = nb.people.buildNative(nb.owner, name, { category: 'party' }, slot).then((r) => (globalThis.nbBuilt = r.built.data ?? null, { status: r.built.status, error: r.built.error ?? null, id: r.id ?? null, excluded: r.built.excluded ?? null, unpaired: r.built.unpaired?.length ?? null }))
   }, name)
   let frame
   await page.waitForFunction(() => document.querySelectorAll('iframe[data-trpg-author-frame="foundry"]').length >= 2)
@@ -94,10 +100,6 @@ async function startBuild(name) {
     if (!frame) await page.waitForTimeout(500)
   }
   assert(frame, '没找到建卡专用小窗')
-  await frame.evaluate(async () => {
-    const styles = [game.system, ...game.modules.filter((m) => m.active)].flatMap((p) => [...(p.styles ?? [])].map((s) => new URL(String(s.src ?? s), location.href).href))
-    await Promise.all(styles.map((href) => new Promise((resolve) => { const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href }); l.onload = l.onerror = resolve; document.head.append(l) })))
-  })
   await frame.getByRole('button', { name: label('Confirm'), exact: true }).waitFor()
   return frame
 }
@@ -113,12 +115,6 @@ async function closeAuthorWindows(frame) {
 
 try {
   await page.goto(url)
-  await page.evaluate(() => new MutationObserver((records) => {
-    for (const r of records) for (const n of r.addedNodes) if (n instanceof HTMLIFrameElement && n.dataset.trpgAuthorFrame === 'foundry' && globalThis.showBuild) {
-      n.style.cssText = 'position:fixed;inset:0;width:1280px;height:900px;border:0;visibility:visible;pointer-events:auto;z-index:10'
-      n.removeAttribute('aria-hidden')
-    }
-  }).observe(document.body, { childList: true }))
   await env(true)
 
   // ① 范围：先看后端算出的屏蔽名单
@@ -134,6 +130,15 @@ try {
   await shot('00-source-window')
   await frame.getByRole('button', { name: label('Confirm'), exact: true }).click()
   await frame.getByRole('button', { name: label('Finalize'), exact: true }).waitFor()
+  // 样式三层都挂上了：Foundry 核心样式、作者样式（私人完整版那份）、插件主题最后；作者的主按钮是插件主色
+  checks.styles = await frame.evaluate(() => {
+    const sheets = [...document.styleSheets].map((s) => s.href ?? (s.ownerNode?.dataset?.trpgTheme ? 'theme' : 'inline'))
+    const finalize = [...document.querySelectorAll('button.ve-btn-primary')].find((b) => b.offsetParent)
+    const colorOf = (name) => { const p = Object.assign(document.createElement('div'), { style: `color:var(${name})` }); document.body.append(p); const c = getComputedStyle(p).color; p.remove(); return c }
+    const want = [colorOf('--primary'), colorOf('--primary-hover')]
+    return { nightMode: document.body.classList.contains('ve-night-mode'), dayMode: document.body.classList.contains('ve-day-mode'), core: sheets.filter((h) => /\/vendor\/foundry\/css\//.test(h)).length, author: sheets.some((h) => /\/vendor\/private\/modules\/plutonium\/css\/main\.css$/.test(h)), themeLast: sheets.at(-1) === 'theme', primaryButton: finalize ? want.includes(getComputedStyle(finalize).backgroundColor) : null }
+  })
+  assert(checks.styles.nightMode === (scheme === 'dark') && checks.styles.dayMode === (scheme !== 'dark') && checks.styles.core === 1 && checks.styles.author && checks.styles.themeLast && checks.styles.primaryButton, `样式没挂对：${JSON.stringify(checks.styles)}`)
   checks.language = await frame.evaluate(() => game.i18n.lang)
   assert.equal(checks.language, 'zh')
   checks.localizedLoaded = localizedResponses.includes(200)

@@ -11,6 +11,7 @@ import { loadBrews } from './brew-input'
 import { loadKernelModule } from './plutonium-build'
 import { redirectModuleFiles } from './module-roots'
 import { installUnsupportedRecorder } from './writings'
+import { applyDisplayStyles, FOLLOW_SYSTEM_COLOR_SCHEME } from './display'
 
 const g = globalThis as any
 const frameToken = new URLSearchParams(location.search).get(FRAME_PARAM) ?? ''
@@ -78,10 +79,13 @@ async function boot(input: KernelInput): Promise<unknown> {
     async initializeCanvas(): Promise<void> { steps.push('omit canvas') }
   }
   g.game = new KernelGame('game', data, socket)
+  // 分辨率 / 浏览器版本提示是给 Foundry 自己那套桌面界面的（至少 1366×768）；小窗嵌在插件里，不适用
+  g.game.issues._detectUsabilityIssues = () => { steps.push('omit usability warnings') }
   // 结算小窗不要新手引导/欢迎场景：那是界面，而且会向服务器取我们没带的默认场景。
   if (g.game.nue) g.game.nue.initialize = () => undefined
   // 官方声明的 client 设置，放客户端存储才生效。
   g.game.settings.storage.get('client').setItem('core.noCanvas', 'true')
+  if (input.display) g.game.settings.storage.get('client').setItem('core.uiConfig', FOLLOW_SYSTEM_COLOR_SCHEME)
   await loadClassic(`systems/${data.system.id}/dnd5e.js`)
   const usePrivateZh = !!input.moduleRoots?.plutonium && input.language === 'zh.core'
   for (const m of data.modules) for (const path of m.esmodules ?? []) await loadKernelModule(new URL(path, location.href), usePrivateZh)
@@ -92,6 +96,8 @@ async function boot(input: KernelInput): Promise<unknown> {
     installUnsupportedRecorder()
   })
   await g.game.initialize()
+  // 建卡专用小窗给玩家看：挂 Foundry 核心样式、作者样式和插件主题（display.ts）；日常结算小窗不挂
+  if (input.display) await applyDisplayStyles(input.display, input.moduleRoots)
   // 模块接口在各自 ready 处理末尾才赋值（Plutonium 是异步的）；等启用模块的接口就绪再报告。
   const deadline = Date.now() + 30_000
   while (data.modules.some((m: any) => m.id === 'plutonium') && typeof g.game.modules.get('plutonium')?.api !== 'object') {

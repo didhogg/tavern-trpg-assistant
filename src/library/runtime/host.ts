@@ -35,6 +35,8 @@ export interface StartOptions {
   handlers: FrameHandlers
   timeoutMs?: number
   signal?: AbortSignal
+  /** 给玩家看的小窗（建卡专用小窗放进页面上的位置）：铺满 container；不给 = 隐藏小窗，只在后台跑。 */
+  visible?: boolean
 }
 
 export function frameUrl(pluginRoot: URL, codeSet: string): URL {
@@ -55,16 +57,19 @@ async function answer(handlers: FrameHandlers, req: FrameRequest): Promise<unkno
   }
 }
 
-export async function startAuthorFrame({ codeSet, pluginRoot, container, handlers, timeoutMs = 60_000, signal }: StartOptions): Promise<AuthorFrame> {
+export async function startAuthorFrame({ codeSet, pluginRoot, container, handlers, timeoutMs = 60_000, signal, visible = false }: StartOptions): Promise<AuthorFrame> {
   signal?.throwIfAborted()
   const frame = document.createElement('iframe')
   // 作者同步存储上次的内容经 name 交给小窗（小窗里 early.ts 在作者脚本之前读出，读完清掉 name）
   frame.name = LOCAL_SNAPSHOT_PREFIX + JSON.stringify(await handlers.localSnapshot())
   signal?.throwIfAborted()
   frame.dataset.trpgAuthorFrame = codeSet
-  frame.setAttribute('aria-hidden', 'true')
-  frame.tabIndex = -1
-  frame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden;pointer-events:none'
+  if (visible) frame.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;display:block'
+  else {
+    frame.setAttribute('aria-hidden', 'true')
+    frame.tabIndex = -1
+    frame.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden;pointer-events:none'
+  }
   const url = frameUrl(pluginRoot, codeSet)
   const token = `${codeSet}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
   url.searchParams.set(FRAME_PARAM, token)

@@ -13,6 +13,8 @@ interface VendorManifest {
   system: string
   /** 模块编号 → 版本。 */
   modules: Record<string, string>
+  /** Foundry 核心样式表（tools/vendor-foundry-css.mjs 登记）。 */
+  styles?: string[]
 }
 
 /**
@@ -51,6 +53,8 @@ export async function kernelInput(opts: {
   fetchImpl?: typeof fetch
   /** 建卡专用小窗：本机私人文件夹（vendor/private/modules/<编号>/，不进 git）里有的模块用它（完整版），没有的照旧用插件自带的。 */
   privateModules?: boolean
+  /** 小窗给玩家看（建卡专用小窗）：带上 Foundry 核心样式表的登记，小窗启动时挂样式和插件主题。 */
+  display?: boolean
 }): Promise<KernelInput> {
   const fetchImpl = opts.fetchImpl ?? fetch
   const kernel = ruleKernel(opts.rule)
@@ -76,6 +80,7 @@ export async function kernelInput(opts: {
   const cacheKey = hashValue({ release: manifest.release, system: manifest.system, modules: Object.keys(moduleRoots).length ? versions : manifest.modules, settings: allSettings, rule: opts.rule, frame: sha256Hex(frame), lang: packHash })
   return {
     ...(Object.keys(moduleRoots).length ? { moduleRoots } : {}),
+    ...(opts.display ? { display: { styles: manifest.styles ?? [] } } : {}),
     system, modules, release: manifest.release,
     world: opts.world,
     userId: 'kernelGM00000000', worldTime: 0, language,

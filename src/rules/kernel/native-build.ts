@@ -40,17 +40,20 @@ export class KernelNativeBuild {
 
   constructor(private readonly deps: NativeBuildDeps) {}
 
-  /** 跑一次作者完整建卡器（同一战役同一时刻只建一个）。 */
-  async run(ownerKey: string, name: string): Promise<NativeBuildResult> {
+  /**
+   * 跑一次作者完整建卡器（同一战役同一时刻只建一个）。
+   * slot = 页面上给建卡用的位置：小窗铺满它、给玩家看，并挂上 Foundry 核心样式与插件主题（frame/display.ts）；不给 = 隐藏小窗。
+   */
+  async run(ownerKey: string, name: string, slot?: HTMLElement): Promise<NativeBuildResult> {
     if (this.running.has(ownerKey)) return { status: 'error', error: '这个战役已经在建卡' }
     this.running.set(ownerKey, null)
     try {
       const campaign = await this.deps.campaignOf(ownerKey)
       const view = await this.deps.revisions.published()
-      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, uiLanguage: 'zh', world: { id: buildWorldOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl, privateModules: true })
+      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, uiLanguage: 'zh', world: { id: buildWorldOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl, privateModules: true, display: !!slot })
       if (!input.moduleRoots) return { status: 'error', error: '本机没有私人完整版作者程序（vendor/private/modules/plutonium/），完整建卡器用不了' }
       const prepared = await prepareKernelBrews(this.deps.service, view, campaign.library.codeSet)
-      const { session, report, brewFiles } = await openKernel({ ...this.deps, view, input, ...prepared, container: this.deps.container() })
+      const { session, report, brewFiles } = await openKernel({ ...this.deps, view, input, ...prepared, container: slot ?? this.deps.container(), visible: !!slot })
       if (!this.running.has(ownerKey)) { session.close(); return { status: 'cancelled' } }
       this.running.set(ownerKey, session)
       try {

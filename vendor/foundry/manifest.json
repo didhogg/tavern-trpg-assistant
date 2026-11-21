@@ -29,6 +29,7 @@
  ],
  "entry": "scripts/foundry.mjs",
  "files": [
+  "css/foundry2.css",
   "lang/en.json",
   "modules/lib-wrapper/lang/en.json",
   "modules/lib-wrapper/lib-wrapper.js",
@@ -1100,5 +1101,8 @@
    "module-files-convert-webkit.json",
    "module-files-monster-reference.json"
   ]
- }
+ },
+ "styles": [
+  "css/foundry2.css"
+ ]
 }
