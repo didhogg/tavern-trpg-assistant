@@ -7,12 +7,14 @@ import { fileURLToPath } from 'node:url'
 export const root = fileURLToPath(new URL('../../../', import.meta.url))
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8' }
 
-export async function startStatic({ port = 0 } = {}) {
+export async function startStatic({ port = 0, distDir } = {}) {
   const requests = []
   const server = createServer(async (req, res) => {
     const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname))
     requests.push({ path, status: 0 })
-    const file = join(root, path === '/' ? '/tests/e2e/mock-host.html' : path)
+    const file = distDir && path.startsWith('/dist/')
+      ? join(distDir, path.slice('/dist/'.length))
+      : join(root, path === '/' ? '/tests/e2e/mock-host.html' : path)
     if (!file.startsWith(root)) return res.writeHead(403).end()
     try {
       const body = await readFile(file)

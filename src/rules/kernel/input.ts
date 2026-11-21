@@ -44,8 +44,10 @@ export async function kernelInput(opts: {
   pluginRoot: URL
   rule: string
   world: { id: string; title: string }
-  /** 战役的资料集（cn / en）：决定小窗的界面语言（登记表里这套官方数据的 lang）。不给 = 英文。 */
+  /** 战役资料集。日常小窗仍从资料集取默认显示语言。 */
   codeSet?: string
+  /** 完整建卡器的界面语言可以独立于资料语言。 */
+  uiLanguage?: string
   fetchImpl?: typeof fetch
   /** 建卡专用小窗：本机私人文件夹（vendor/private/modules/<编号>/，不进 git）里有的模块用它（完整版），没有的照旧用插件自带的。 */
   privateModules?: boolean
@@ -65,7 +67,8 @@ export async function kernelInput(opts: {
     return readJson<unknown>(opts.pluginRoot, `modules/${id}/module.json`, fetchImpl)
   }))
   // 小窗的界面语言：这套资料集的语言有语言包就登记进清单（官方客户端缺的键回退英文），没有就和以前一样是英文
-  const { language, packHash } = applyLangPack(opts.codeSet ? officialSourceOf(opts.codeSet).lang : 'en', await readLangPacks(opts.pluginRoot, fetchImpl), system, modules)
+  const uiLanguage = opts.uiLanguage ?? (opts.codeSet ? officialSourceOf(opts.codeSet).lang : 'en')
+  const { language, packHash } = applyLangPack(uiLanguage, await readLangPacks(opts.pluginRoot, fetchImpl), system, modules)
   const allSettings = { ...KERNEL_MODE_SETTINGS, ...settings }
   const frame = await (await fetchImpl(new URL('dist/kernel-frame.js', opts.pluginRoot))).text()
   // 换算缓存按小窗实际跑的模块版本算（私人完整版和自带公开版不混用缓存）

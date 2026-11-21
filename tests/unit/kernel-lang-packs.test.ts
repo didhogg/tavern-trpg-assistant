@@ -47,6 +47,11 @@ const root = new URL('http://localhost/')
 const base = { pluginRoot: root, rule: 'dnd5e2014', world: { id: 'w', title: 't' } }
 
 describe('kernelInput 的语言', () => {
+  it('建卡界面可以指定中文，英文资料的小窗默认语言仍是英文', async () => {
+    const englishData = { ...base, codeSet: 'en', fetchImpl: fakeFetch(packs) }
+    expect((await kernelInput({ ...englishData, uiLanguage: 'zh' })).language).toBe('zh.core')
+    expect((await kernelInput(englishData)).language).toBe('en.core')
+  })
   it('中文战役：登记中文包、小窗语言 zh；英文战役和不给资料集：en.core，钥匙和以前完全一样', async () => {
     const f = fakeFetch(packs)
     const cn = await kernelInput({ ...base, codeSet: 'cn', fetchImpl: f })

@@ -12,9 +12,9 @@ export { freshProfile, sweepStale } from './profile-clone.mjs'
 // 统一端口和底座（e2e:base 造的干净底座）；说明见 e2e-base.mjs
 export { E2E_PORT, baseDir, freshFromBase } from './e2e-base.mjs'
 
-export async function buildAll() {
+export async function buildAll({ outDir } = {}) {
   await mkdir(work, { recursive: true })
-  await build({ configFile: `${root}vite.config.ts`, root, logLevel: 'error' })
+  await build({ configFile: `${root}vite.config.ts`, root, logLevel: 'error', ...(outDir ? { build: { outDir } } : {}) })
   await build({ configFile: false, root, logLevel: 'error', build: {
     lib: { entry: `${root}tests/e2e/library/harness.ts`, formats: ['es'], fileName: () => 'harness.js' },
     outDir: work, emptyOutDir: false,

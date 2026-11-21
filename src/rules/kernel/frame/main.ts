@@ -83,7 +83,8 @@ async function boot(input: KernelInput): Promise<unknown> {
   // 官方声明的 client 设置，放客户端存储才生效。
   g.game.settings.storage.get('client').setItem('core.noCanvas', 'true')
   await loadClassic(`systems/${data.system.id}/dnd5e.js`)
-  for (const m of data.modules) for (const path of m.esmodules ?? []) await loadKernelModule(new URL(path, location.href))
+  const usePrivateZh = !!input.moduleRoots?.plutonium && input.language === 'zh.core'
+  for (const m of data.modules) for (const path of m.esmodules ?? []) await loadKernelModule(new URL(path, location.href), usePrivateZh)
   Hooks.once('setup', () => {
     // 只关闭显示用的日历 HUD；时间规则仍由官方程序执行。
     if (g.CONFIG.DND5E?.calendar) g.CONFIG.DND5E.calendar.application = null

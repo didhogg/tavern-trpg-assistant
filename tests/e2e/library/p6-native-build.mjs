@@ -1,44 +1,66 @@
-// P6 第 2 段：建卡专用小窗跑作者完整建卡器（本机私人完整版），真实插件后台（Chrome；ENGINE=webkit 换 WebKit；上限 8 分钟）。
+// P6 完整建卡器：真实插件后台（Chrome；ENGINE=webkit 换 WebKit；上限 8 分钟）。
+// NATIVE_DATA=cn 使用中文资料集；NATIVE_ORIGINAL=1 模拟指纹失效、对照私人英文原件。
 // 本机没有 vendor/private/modules/plutonium/（私人完整版，不进 git）就跳过并说明。
 // 查：① 本战役关掉一本书（XGE）和一个条目（PHB 半兽人），作者建卡器的候选里都没有；2014 战役看不到 2024 职业；
 //     ② 像玩家一样在作者原界面建一个 3 级生命领域牧师（标准数组、技能、语言、装备、法术）→ 收进存档 → 日常小窗里一致 → 关小窗读档、整页刷新读回一致；
 //     ③ 再开一次建卡，中途关掉作者窗口 = 取消，存档不变；建卡期间日常小窗照常能用，且日常小窗不装屏蔽名单。
 // 测试里点的是玩家输入（选哪个职业、分哪些属性），不是建卡规则。
 import assert from 'node:assert/strict'
-import { access, mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { startStatic, root } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase, work } from './chain-common.mjs'
+import { nativeTranslations } from '../../../tools/lib/plutonium-zh.mjs'
 
 try { await access(join(root, 'vendor/private/modules/plutonium/module.json')) } catch {
   console.log('跳过：本机没有私人完整版（vendor/private/modules/plutonium/）'); process.exit(0)
 }
+const dataSet = process.env.NATIVE_DATA ?? 'en'
+assert(['cn', 'en'].includes(dataSet))
+const stale = process.env.NATIVE_ORIGINAL === '1'
+const hasLocalized = await access(join(root, 'vendor/private/lang/zh/modules/plutonium/js/fingerprints.json')).then(() => true, (error) => {
+  if (error.code !== 'ENOENT') throw error
+  return false
+})
+const localized = hasLocalized && !stale
+const readJson = async (path) => JSON.parse(await readFile(join(root, path), 'utf8'))
+const translations = nativeTranslations(await readJson('tools/plutonium-ui-translations.json'), await readJson('tools/approved-translations.json'))
+const label = (text) => localized ? translations.get(text) ?? text : text
 const LIMIT = 8 * 60_000
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, LIMIT)
-await buildAll()
+const distDir = join(root, 'work/p6-zh-pack/test-dist')
+await buildAll({ outDir: distDir })
 const engine = process.env.ENGINE ?? 'chrome'
 const [, type, options] = engines[engine === 'webkit' ? 1 : 0]
-const shots = join(root, `work/p6-native/shots-${engine}`)
+const shots = join(root, `work/p6-zh-pack/native-${engine}-${dataSet}-${localized ? 'zh' : 'original'}`)
 await mkdir(shots, { recursive: true })
-const { server, url } = await startStatic({ port: E2E_PORT })
+const { server, url } = await startStatic({ port: E2E_PORT, distDir })
 const ctx = await type.launchPersistentContext(freshFromBase(engine, 'p6-native-build'), { ...options, viewport: { width: 1280, height: 900 } })
+if (stale) await ctx.route('**/vendor/private/lang/zh/modules/plutonium/js/fingerprints.json', (route) => route.fulfill({ json: { original: 'stale' } }))
 const page = await ctx.newPage()
+const warnings = []
+const localizedResponses = []
+page.on('console', (msg) => { if (msg.type() === 'warning' && msg.text().includes('gen:plutonium-zh')) warnings.push(msg.text()) })
+page.on('response', (response) => {
+  if (new URL(response.url()).pathname === '/vendor/private/lang/zh/modules/plutonium/js/Bundle.js') localizedResponses.push(response.status())
+})
 page.setDefaultTimeout(120_000)
 const errors = []
 page.on('pageerror', (e) => errors.push(e.stack ?? String(e)))
 const shot = (name) => page.screenshot({ path: join(shots, `${name}.png`) })
 const checks = {}
 
-const env = (fresh) => page.evaluate(async (fresh) => {
+const env = (fresh) => page.evaluate(async ({ fresh, dataSet }) => {
   const h = await import('/work/e2e-lib/harness.js')
   const owner = 'char:p6-native-build.png'
-  let library = h.defaultCampaignLibrary('dnd5e2014', 'en')
+  let library = h.defaultCampaignLibrary('dnd5e2014', dataSet)
   if (fresh) {
-    const audit = await h.offlineAudit('en-official')
-    if (audit.set?.status !== 'installed' || audit.ok !== audit.planFiles) await h.install('en-official')
+    const set = `${dataSet}-official`
+    const audit = await h.offlineAudit(set)
+    if (audit.set?.status !== 'installed' || audit.ok !== audit.planFiles) await h.install(set)
     await h.userDb.workspaces.clear(); await h.userDb.saves.clear()
     // 本战役关掉一本书和一个条目（玩家在资料范围里做的事）
-    const halfOrc = (await h.scoped.query(library, 'race', { source: 'PHB', mode: 'browse' })).find((r) => r.item.name === 'Half-Orc')
+    const halfOrc = (await h.scoped.query(library, 'race', { source: 'PHB', mode: 'browse' })).find((r) => (r.item.ENG_name ?? r.item.name) === 'Half-Orc')
     if (!halfOrc) throw Error('缺测试条目 PHB 半兽人')
     library = { ...library, ...h.chooseSource(library, 'XGE', false) }
     library = { ...library, ...h.chooseEntry(library, halfOrc.ref, false) }
@@ -54,7 +76,7 @@ const env = (fresh) => page.evaluate(async (fresh) => {
   const native = new h.KernelNativeBuild(deps)
   globalThis.nb = { h, owner, library, rt, saves, native, people: new h.KernelPeople({ runtime: rt, saves, native }) }
   await rt.session(owner)
-}, fresh)
+}, { fresh, dataSet })
 
 /** 开始一次建卡（不等它结束），拿到建卡专用小窗；测试里把它铺满页面、挂上作者声明的样式（产品里的承载是第 3 段）。 */
 async function startBuild(name) {
@@ -76,7 +98,7 @@ async function startBuild(name) {
     const styles = [game.system, ...game.modules.filter((m) => m.active)].flatMap((p) => [...(p.styles ?? [])].map((s) => new URL(String(s.src ?? s), location.href).href))
     await Promise.all(styles.map((href) => new Promise((resolve) => { const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href }); l.onload = l.onerror = resolve; document.head.append(l) })))
   })
-  await frame.getByRole('button', { name: 'Confirm', exact: true }).waitFor()
+  await frame.getByRole('button', { name: label('Confirm'), exact: true }).waitFor()
   return frame
 }
 
@@ -104,14 +126,19 @@ try {
     const view = await nb.h.revisions.published()
     const { rows, unpaired } = await nb.h.campaignExcludes({ scoped: nb.h.scoped, service: nb.h.service }, nb.library, view)
     const has = (category, test) => rows.some((r) => r.category === category && test(r))
-    return { rows: rows.length, unpaired: unpaired.length, halfOrc: has('race', (r) => /half-orc/i.test(r.hash) && r.source === 'PHB'), xgeSubclass: has('subclass', (r) => r.source === 'XGE'), clericVisible: (await nb.h.scoped.query(nb.library, 'class', { view })).filter((r) => r.item.name === 'Cleric').length }
+    return { rows: rows.length, unpaired: unpaired.length, halfOrc: has('race', (r) => /half-orc/i.test(r.hash) && r.source === 'PHB'), xgeSubclass: has('subclass', (r) => r.source === 'XGE'), clericVisible: (await nb.h.scoped.query(nb.library, 'class', { view })).filter((r) => (r.item.ENG_name ?? r.item.name) === 'Cleric').length }
   })
   assert(checks.excludes.halfOrc && checks.excludes.xgeSubclass, `屏蔽名单不全：${JSON.stringify(checks.excludes)}`)
 
   const frame = await startBuild('原生建卡验证人物')
   await shot('00-source-window')
-  await frame.getByRole('button', { name: 'Confirm', exact: true }).click()
-  await frame.getByRole('button', { name: 'Finalize', exact: true }).waitFor()
+  await frame.getByRole('button', { name: label('Confirm'), exact: true }).click()
+  await frame.getByRole('button', { name: label('Finalize'), exact: true }).waitFor()
+  checks.language = await frame.evaluate(() => game.i18n.lang)
+  assert.equal(checks.language, 'zh')
+  checks.localizedLoaded = localizedResponses.includes(200)
+  assert.equal(checks.localizedLoaded, localized)
+  if (stale) assert(warnings.length, '原包指纹不匹配时应说明回退')
   // 作者自带的默认名单两边都有；本战役的行只在建卡小窗（日常小窗关着的条目照样要能结算）
   const key = (r) => `${r.hash}|${r.category}|${r.source}`.toLowerCase()
   const buildList = (await frame.evaluate(() => ExcludeUtil.getList())).map(key)
@@ -164,7 +191,7 @@ try {
   for (const [index, label] of ['14', '12', '13', '10', '15', '8'].entries()) await frame.locator('select:visible').nth(index + 1).selectOption({ label })
   await shot('04-abilities')
   await frame.getByRole('button', { name: 'Starting Equipment', exact: true }).click()
-  await frame.getByTitle('Choose an Item', { exact: true }).last().click()
+  await frame.getByTitle(label('Choose an Item'), { exact: true }).last().click()
   await frame.getByText('Amulet', { exact: true }).last().locator('..').getByRole('button').click()
   await shot('05-equipment')
   await frame.getByRole('button', { name: 'Spells', exact: true }).click()
@@ -173,8 +200,14 @@ try {
   await shot('06-spells')
   // 建卡期间日常小窗照常能用
   checks.dailyDuringBuild = await page.evaluate(async () => (await nb.rt.session(nb.owner)).session.call('status').then((s) => !!s))
-  await frame.getByRole('button', { name: 'Finalize', exact: true }).click()
-  await frame.getByText('OK', { exact: true }).click()
+  if (localized) {
+    for (const name of ['Origin (Other)', 'Equipment Shop', 'Feats']) {
+      await frame.getByRole('button', { name, exact: true }).click()
+      await shot(`06-${name.toLowerCase().replace(/\W+/g, '-')}`)
+    }
+  }
+  await frame.getByRole('button', { name: label('Finalize'), exact: true }).click()
+  await frame.getByText(label('OK'), { exact: true }).click()
   await frame.getByText('Build complete.', { exact: true }).waitFor({ state: 'visible', timeout: 90_000 })
   await shot('07-build-complete')
   await closeAuthorWindows(frame)
@@ -210,8 +243,8 @@ try {
 
   // ③ 取消：再开一次，来源窗口确认后直接关掉作者建卡器
   const frame2 = await startBuild('取消的人')
-  await frame2.getByRole('button', { name: 'Confirm', exact: true }).click()
-  await frame2.getByRole('button', { name: 'Finalize', exact: true }).waitFor()
+  await frame2.getByRole('button', { name: label('Confirm'), exact: true }).click()
+  await frame2.getByRole('button', { name: label('Finalize'), exact: true }).waitFor()
   await shot('08-cancel-open')
   await closeAuthorWindows(frame2)
   checks.cancel = await page.evaluate(async () => ({ run: await globalThis.nbRun, actors: (await nb.saves.read(nb.owner)).actors.length, frames: document.querySelectorAll('iframe[data-trpg-author-frame="foundry"]').length }))

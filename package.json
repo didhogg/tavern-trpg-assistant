@@ -8,6 +8,7 @@
     "gen:brew-validator": "node tools/vendor-brew-schema.mjs && node tools/build-brew-validator.mjs && node tools/build-brew-fields.mjs && node tools/build-field-labels.mjs",
     "gen:field-labels": "node tools/build-field-labels.mjs",
     "gen:kernel-lang": "node tools/build-kernel-lang.mjs",
+    "gen:plutonium-zh": "node tools/build-plutonium-zh.mjs",
     "dev": "vite build --watch",
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",

@@ -47,7 +47,7 @@ export class KernelNativeBuild {
     try {
       const campaign = await this.deps.campaignOf(ownerKey)
       const view = await this.deps.revisions.published()
-      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, codeSet: campaign.library.codeSet, world: { id: buildWorldOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl, privateModules: true })
+      const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, uiLanguage: 'zh', world: { id: buildWorldOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl, privateModules: true })
       if (!input.moduleRoots) return { status: 'error', error: '本机没有私人完整版作者程序（vendor/private/modules/plutonium/），完整建卡器用不了' }
       const prepared = await prepareKernelBrews(this.deps.service, view, campaign.library.codeSet)
       const { session, report, brewFiles } = await openKernel({ ...this.deps, view, input, ...prepared, container: this.deps.container() })

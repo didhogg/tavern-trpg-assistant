@@ -8,17 +8,26 @@ import { access, mkdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { startStatic, root } from './static.mjs'
 import { buildAll, E2E_PORT, engines, freshFromBase } from './chain-common.mjs'
+import { nativeTranslations } from '../../../tools/lib/plutonium-zh.mjs'
 
 try { await access(join(root, 'vendor/private/modules/plutonium/module.json')) } catch {
   console.log('跳过：本机没有私人完整版（vendor/private/modules/plutonium/）'); process.exit(0)
 }
+const readJson = async (path) => JSON.parse(await readFile(join(root, path), 'utf8'))
+const translations = nativeTranslations(await readJson('tools/plutonium-ui-translations.json'), await readJson('tools/approved-translations.json'))
+const button = (frame, text) => {
+  const source = frame.getByRole('button', { name: text, exact: true })
+  const localized = translations.get(text)
+  return localized ? source.or(frame.getByRole('button', { name: localized, exact: true })) : source
+}
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, 8 * 60_000)
-await buildAll()
+const distDir = join(root, 'work/p6-zh-pack/test-dist')
+await buildAll({ outDir: distDir })
 const engine = process.env.ENGINE ?? 'chrome'
 const [, type, options] = engines[engine === 'webkit' ? 1 : 0]
-const shots = join(root, `work/p6-native/brew-${engine}`)
+const shots = join(root, `work/p6-zh-pack/brew-${engine}`)
 await mkdir(shots, { recursive: true })
-const { server, url } = await startStatic({ port: E2E_PORT })
+const { server, url } = await startStatic({ port: E2E_PORT, distDir })
 const ctx = await type.launchPersistentContext(freshFromBase(engine, 'p6-native-brew'), { ...options, viewport: { width: 1280, height: 900 } })
 const page = await ctx.newPage()
 page.setDefaultTimeout(120_000)
@@ -74,7 +83,7 @@ try {
     const styles = [game.system, ...game.modules.filter((m) => m.active)].flatMap((p) => [...(p.styles ?? [])].map((s) => new URL(String(s.src ?? s), location.href).href))
     await Promise.all(styles.map((href) => new Promise((resolve) => { const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href }); l.onload = l.onerror = resolve; document.head.append(l) })))
   })
-  await frame.getByRole('button', { name: 'Confirm', exact: true }).waitFor()
+  await button(frame, 'Confirm').waitFor()
 
   // ① 作者来源窗口：本地自制一行就是本战役的包
   const brewRow = frame.locator('label.imp-wiz__row').filter({ has: frame.locator('.ve-source-category-homebrew--local') })
@@ -86,8 +95,8 @@ try {
   await brewRow.click({ modifiers: ['ControlOrMeta'] })
   checks.selected = await frame.locator('label.imp-wiz__row.list-multi-selected').allInnerTexts()
   assert.equal(checks.selected.length, 2, `该选上 5etools + 自制包：${checks.selected}`)
-  await frame.getByRole('button', { name: 'Confirm', exact: true }).click()
-  await frame.getByRole('button', { name: 'Finalize', exact: true }).waitFor()
+  await button(frame, 'Confirm').click()
+  await button(frame, 'Finalize').waitFor()
   const search = frame.locator('.ve-ui-sel2__ipt-search:visible')
   const options = async (index, term) => {
     await search.nth(index).fill(term)
@@ -111,8 +120,10 @@ try {
   await pick(race)
   await shot('03-species')
   // ③ Finalize（其余选择留空，作者问「确定吗」→ OK）
-  await frame.getByRole('button', { name: 'Finalize', exact: true }).click()
-  await frame.locator('button:visible').filter({ hasText: /^\W*OK\s*$/ }).click()
+  await button(frame, 'Finalize').click()
+  const ok = frame.getByText('OK', { exact: true })
+  const localizedOk = translations.get('OK')
+  await (localizedOk ? ok.or(frame.getByText(localizedOk, { exact: true })) : ok).click({ timeout: 20_000 })
   await frame.getByText('Build complete.', { exact: true }).waitFor({ state: 'visible', timeout: 90_000 })
   // 玩家关掉作者开着的窗口（作者的关闭钮），这次建卡才结束（同 p6-native-build）
   for (let i = 0; i < 12; i++) {
