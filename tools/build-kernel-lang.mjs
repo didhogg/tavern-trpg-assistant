@@ -1,5 +1,6 @@
 // 结算小窗的中文语言文件：官方客户端按「系统 / 模块清单里登记的语言文件」给界面文字（技能名、语言名、进阶标题、状态名……）。
-// 沿用作者词表和社区语言键生成；驾驶员明确批准的单项译文放 approved-translations.json：
+// 沿用作者词表和社区语言键生成；作者建卡器界面字另有底稿 tools/plutonium-ui-translations.json（只把 final 行并进来）；
+// 驾驶员明确批准的单项译文放 approved-translations.json：
 //   · 对每个已装包（vendor/foundry/manifest.json 里的系统和模块），按它自己清单里登记的英文文件逐条翻；
 //   · 同一编号先用社区翻译模块（按同一套编号逐条翻好的，如 5e_chn；读法见 tools/lib/community-langs.mjs，驾驶员 2026-11-17 定：两边不同时听社区）；
 //   · 社区没有的编号，再从作者「大译名表」配：整句完全相同（忽略大小写和首尾空格）才翻，对不上的留空——官方客户端缺哪个键就自动回退英文；
@@ -16,6 +17,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { choose, loadTerms } from './lib/terms.mjs'
 import { upstreamMessages } from './lib/upstream-messages.mjs'
+import { applyPluginUi, pluginUiKeyCollisions, pluginUiRows, pluginUiStats } from './lib/plugin-ui.mjs'
 import { communityDir, loadCommunity } from './lib/community-langs.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
@@ -77,6 +79,8 @@ async function equipmentLabels(pkg) {
 }
 
 const approved = JSON.parse(await readFile(join(root, 'tools/approved-translations.json'), 'utf8'))
+const uiDraft = LANG === 'zh' ? pluginUiRows(JSON.parse(await readFile(join(root, 'tools/plutonium-ui-translations.json'), 'utf8'))) : []
+const uiStats = pluginUiStats(uiDraft)
 const applied = []
 const upstream = await upstreamMessages(foundry)
 const files = []
@@ -115,7 +119,22 @@ for (const pkg of packages) {
     if (picked?.label) flat[key] = picked.label
     else conflicts.push({ key, en: text, candidates: picked?.candidates.map((x) => ({ zh: x.zh, category: x.category })) ?? [] })
   }
-  if (pkg.id === 'plutonium') review.upstreamMessages = upstream.map(row => ({ ...row, origins: row.origins.slice(0, 3), translation: flat[row.key] ?? null }))
+  if (pkg.id === 'plutonium' && LANG === 'zh') {
+    const ui = applyPluginUi(flat, uiDraft, approved)
+    Object.assign(flat, ui.flat)
+    const keyCollisions = pluginUiKeyCollisions(flat, uiDraft)
+    review.pluginUi = {
+      ...uiStats,
+      included: ui.added.length,
+      sharedWithUpstream: ui.shared,
+      approvedOverrides: ui.approvedRows,
+      conflicts: [...ui.conflicts, ...keyCollisions],
+      reviewRows: uiDraft
+        .filter((row) => row.status === 'review' && !approved.some((item) => item.lang === LANG && item.package === pkg.id && item.text === row.text))
+        .map((row) => ({ text: row.text, translation: row.translation, from: row.from, seen: row.seen, candidates: row.candidates, note: row.note })),
+    }
+    review.upstreamMessages = upstream.map(row => ({ ...row, origins: row.origins.slice(0, 3), translation: flat[row.key] ?? null }))
+  }
   const zhPath = en.path.replace(/en\.json$/, `${LANG}.json`)
   review.packs.push({ package: `${pkg.type}:${pkg.id}`, total: list.length, translated: Object.keys(flat).length, fromCommunity, conflicts: conflicts.length, groupsWithCategory: cats.size, conflictList: conflicts.slice(0, 300), differsFromTerms: differs.length, differsList: differs })
   if (!Object.keys(flat).length) continue
@@ -131,4 +150,5 @@ const declaration = { generatedFrom: [`大译名表 ${version}`, ...communityFro
 await writeFile(join(foundry, 'lang-packs.json'), JSON.stringify(declaration, null, 1) + '\n')
 await writeFile(join(foundry, 'lang-packs.review.json'), JSON.stringify(review, null, 1) + '\n')
 for (const p of review.packs) console.log(`${p.package}：${p.total} 条，翻了 ${p.translated}（社区 ${p.fromCommunity}），冲突不翻 ${p.conflicts}，与译名表译法不同 ${p.differsFromTerms}，有分类的组 ${p.groupsWithCategory}`)
+if (review.pluginUi) console.log(`plutonium 界面字：底稿 ${review.pluginUi.total} 条，final ${review.pluginUi.final}，review ${review.pluginUi.review}，并入 ${review.pluginUi.included}，与已有键共用 ${review.pluginUi.sharedWithUpstream}，冲突 ${review.pluginUi.conflicts.length}`)
 console.log(`语言包 ${LANG}：${files.length} 个文件，摘要 ${hash.slice(0, 12)} → vendor/foundry/lang-packs.json`)
