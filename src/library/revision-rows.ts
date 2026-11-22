@@ -111,15 +111,41 @@ export class RevisionRows {
   }
 }
 
-/** 沿父链的作者存储作用域（新 → 旧，最后是旧库基础作用域），带上作用域属于哪个版本（基础作用域为 null）。和 kvScopes 同顺序、同去重。 */
-export function kvScopeChain(chain: RevisionRecord[], codeSet: string): Array<{ scope: string; owner: RevisionRecord | null }> {
-  const out: Array<{ scope: string; owner: RevisionRecord | null }> = []
-  const seen = new Set<string>()
+/**
+ * 沿父链的作者存储作用域（新 → 旧，最后是旧库基础作用域），带上作用域属于哪个版本（基础作用域为 null）。和 kvScopes 同顺序、同去重。
+ * top = 排在最前的额外作用域（作者小窗指定的写入范围、隔离副本），照常直接读库。
+ */
+export function kvScopeChain(chain: RevisionRecord[], codeSet: string, top?: string): KvScopeLink[] {
+  const out: KvScopeLink[] = top ? [{ scope: top, owner: null }] : []
+  const seen = new Set<string>(top ? [top] : [])
   for (const rev of chain) {
     if (!rev.kvScope || rev.kvCodeSet !== codeSet || seen.has(rev.kvScope)) continue
     seen.add(rev.kvScope)
     out.push({ scope: rev.kvScope, owner: rev.legacy ? null : rev })
   }
   if (!seen.has(codeSet)) out.push({ scope: codeSet, owner: null })
+  return out
+}
+
+export type KvScopeLink = { scope: string; owner: RevisionRecord | null }
+
+/** 在作用域链（新 → 旧）上，找这个键最近的一行：版本库、作者小窗存储桥、隔离副本都走这一份。 */
+export async function kvChainRow(rows: RevisionRows, chain: KvScopeLink[], key: string): Promise<KvRecord | undefined> {
+  for (const { scope, owner } of chain) {
+    const rec = await rows.kvRow(scope, key, owner)
+    if (rec) return rec
+  }
+  return undefined
+}
+
+/** 把作用域链（新 → 旧）上某一后缀（'' 或 ':local'）的全部行合并：新层盖旧层，删除记号挡住旧层。 */
+export async function kvChainMerged(rows: RevisionRows, chain: KvScopeLink[], suffix: '' | ':local'): Promise<Map<string, unknown>> {
+  const out = new Map<string, unknown>()
+  for (const { scope, owner } of [...chain].reverse()) {
+    for (const row of await rows.kvRowsOf(scope + suffix, owner)) {
+      if (row.deleted) out.delete(row.key)
+      else out.set(row.key, row.value)
+    }
+  }
   return out
 }

@@ -5,6 +5,7 @@ import { hashValue } from '../core/hash'
 import { uuid } from '../core/ids'
 import type { LibraryDatabase } from './db'
 import type { LibraryView } from './revision'
+import { kvChainMerged, kvScopeChain } from './revision-rows'
 import { parsedKey } from './install'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { AuthorFrame } from './runtime/host'
@@ -77,15 +78,9 @@ export interface BuildAltOptions extends Isolation {
 async function withIsolatedBrew<T>(opts: Isolation, docs: StoredBrew[], read: (frame: AuthorFrame) => Promise<T>): Promise<T> {
   const { db, source, view } = opts
   const scope = `${source.codeSet}:iso:${uuid()}`
-  const scopes = [...(await view.kvScopes(source.codeSet))].reverse()
-  const copy = async (suffix: string): Promise<void> => {
-    const merged = new Map<string, unknown>()
-    for (const parent of scopes) {
-      for (const row of await db.kv.where('scope').equals(parent + suffix).toArray()) {
-        if (row.deleted) merged.delete(row.key)
-        else merged.set(row.key, row.value)
-      }
-    }
+  const chain = kvScopeChain(await view.chain(), source.codeSet)
+  const copy = async (suffix: '' | ':local'): Promise<void> => {
+    const merged = await kvChainMerged(view.store.rows, chain, suffix)
     if (!suffix) merged.set(BREW_STORAGE_KEY, docs)
     if (merged.size) await db.kv.bulkPut([...merged].map(([key, value]) => ({ scope: scope + suffix, key, value })))
   }

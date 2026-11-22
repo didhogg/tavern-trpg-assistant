@@ -6,6 +6,7 @@ import type { AuthorFrame } from '../../../src/library/runtime/host'
 import type { ParsedProp } from '../../../src/library/runtime/frame/commands'
 import { getSource } from '../../../src/library/sources'
 import { LibraryRevisionStore } from '../../../src/library/revision'
+import { RevisionRows } from '../../../src/library/revision-rows'
 
 // 假小窗：作者函数本身在 e2e（tests/e2e/library/p3-1.mjs）里用真程序测
 function fakeFrame(answers: Record<string, (...args: unknown[]) => unknown>, onClose?: () => void): AuthorFrame {
@@ -126,7 +127,7 @@ describe('按包归属的作者隔离', () => {
       doc('nested', 3, { _meta: { sources: [{ json: 'E' }] } }),
       doc('unrelated', 4, { _meta: { sources: [{ json: 'F' }] } }),
     ]
-    const view = { kvScopes: async () => ['cn'], kvGet: async () => stored } as never
+    const view = { chain: async () => [], store: { rows: new RevisionRows(db) }, kvGet: async () => stored } as never
     const scopes: string[] = []
     const openFrameIn = async (scope: string) => {
       scopes.push(scope)

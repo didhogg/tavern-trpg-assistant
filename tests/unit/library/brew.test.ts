@@ -8,6 +8,7 @@ import type { AuthorFrame } from '../../../src/library/runtime/host'
 import { LibraryService } from '../../../src/library/service'
 import { getSource } from '../../../src/library/sources'
 import { LibraryRevisionStore } from '../../../src/library/revision'
+import { RevisionRows } from '../../../src/library/revision-rows'
 
 // 假小窗：只回答用到的指令；作者函数本身在 e2e（tests/e2e/library/b2-7-brew.mjs）里用真程序测
 function fakeFrame(answers: Record<string, (...args: unknown[]) => unknown>, onClose?: () => void): AuthorFrame {
@@ -48,7 +49,7 @@ describe('作者同步存储（localStorage）存进库', () => {
 describe('只读版本里的作者同步存储（驾驶员 2026-11-15）', () => {
   it('网站偏好只留在小窗内存，不写库、不报错；自制 / 试玩稿内容键照旧报只读', async () => {
     // 只读的已发布版本：没有写入范围（真实已发布版本 kvWriteScope 交 null；空库里的旧版本 R0 是可写的，不能拿来测）
-    const readOnly = { kvWriteScope: () => null, kvScopes: async () => ['cn'] } as unknown as Awaited<ReturnType<typeof revisions.published>>
+    const readOnly = { kvWriteScope: () => null, chain: async () => [], store: { rows: new RevisionRows(db) } } as unknown as Awaited<ReturnType<typeof revisions.published>>
     const h = libraryHandlers({ codeSet: 'cn', db, files: new FileProvider({ db }), allowNetwork: () => false, view: readOnly })
     await h.localSet('StyleSwitcher_style', 'auto')
     await h.localRemove('_test_storage')

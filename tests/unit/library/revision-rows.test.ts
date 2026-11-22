@@ -4,6 +4,8 @@ import { LibraryDatabase } from '../../../src/library/db'
 import { LibraryOperations } from '../../../src/library/operations'
 import { LibraryRevisionStore } from '../../../src/library/revision'
 import { getSource } from '../../../src/library/sources'
+import { FileProvider } from '../../../src/library/files'
+import { libraryHandlers } from '../../../src/library/runtime/handlers'
 
 let db: LibraryDatabase
 afterEach(async () => { await db?.delete() })
@@ -55,6 +57,33 @@ describe('版本行内存索引', () => {
     await db.fileVersions.get(['x', 'y', 'z'])
     await db.kv.get(['cn', 'K'])
     expect(counts).toEqual({ fileVersions: 1, kv: 1 })
+  })
+
+  it('作者小窗的存储桥（kvGet / localSnapshot）走同一套查找：长父链上也不逐层读库', async () => {
+    const { revisions, operations } = await setup()
+    const first = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await first.target.kvSet('cn', 'K', 'v1')
+    await first.target.localSet('cn', 'L', 'x')
+    await operations.publish(first, {})
+    for (let i = 0; i < 30; i++) {
+      const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+      await h.target.kvSet('cn', `K${i}`, i)
+      await operations.publish(h, {})
+    }
+    const view = await revisions.published()
+    const handlers = libraryHandlers({ codeSet: 'cn', db, files: new FileProvider({ db }), allowNetwork: () => false, view })
+    expect(await handlers.kvGet('K')).toBe('v1')
+    const counts = countGets()
+    let getAlls = 0
+    const where = db.kv.where.bind(db.kv)
+    db.kv.where = ((...a: Parameters<typeof where>) => { getAlls++; return where(...a) }) as typeof where
+    for (let i = 0; i < 5; i++) {
+      expect(await handlers.kvGet('K')).toBe('v1')
+      expect(await handlers.localSnapshot()).toEqual({ L: 'x' })
+    }
+    // 每次只剩旧库基础作用域 cn 那一层直接读库（K 在新层就找到了，所以 kvGet 不读；localSnapshot 读基础层 cn:local 一次）
+    expect(counts.kv).toBe(0)
+    expect(getAlls).toBe(5)
   })
 
   it('读过整表之后才发布的版本、准备中的版本都读到最新内容', async () => {

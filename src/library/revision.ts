@@ -8,7 +8,7 @@ import type {
 import { CODE_SETS, SOURCES, type SourceEntry } from './sources'
 import { dataVersionOf } from './revision-data'
 import { fileGet, filePaths, filePut, fileRemove, fileSha, filterIndexFromChain, type FileRead } from './revision-files'
-import { RevisionRows, kvScopeChain } from './revision-rows'
+import { RevisionRows, kvChainMerged, kvChainRow, kvScopeChain } from './revision-rows'
 import type { KernelDataVersion } from '../schemas/kernel'
 
 export const LEGACY_REVISION = 'rev-legacy'
@@ -331,16 +331,8 @@ export class LibraryRevisionStore {
     return null
   }
 
-  private async kvRecord(view: LibraryView, codeSet: string, key: string): Promise<{ scope: string; value: unknown; deleted?: boolean } | null> {
-    for (const { scope, owner } of kvScopeChain(await view.chain(), codeSet)) {
-      const rec = await this.rows.kvRow(scope, key, owner)
-      if (rec) return { scope, value: rec.value, ...(rec.deleted ? { deleted: true } : {}) }
-    }
-    return null
-  }
-
   async kvGet(view: LibraryView, codeSet: string, key: string): Promise<unknown> {
-    const rec = await this.kvRecord(view, codeSet, key)
+    const rec = await kvChainRow(this.rows, kvScopeChain(await view.chain(), codeSet), key)
     return rec && !rec.deleted ? rec.value : null
   }
 
@@ -357,15 +349,8 @@ export class LibraryRevisionStore {
   }
 
   async localSnapshot(view: LibraryView, codeSet: string): Promise<Record<string, string>> {
-    const out: Record<string, string> = {}
-    for (const { scope, owner } of kvScopeChain(await view.chain(), codeSet).reverse()) {
-      const rows = await this.rows.kvRowsOf(`${scope}:local`, owner)
-      for (const row of rows) {
-        if (row.deleted) delete out[row.key]
-        else out[row.key] = String(row.value ?? '')
-      }
-    }
-    return out
+    const merged = await kvChainMerged(this.rows, kvScopeChain(await view.chain(), codeSet), ':local')
+    return Object.fromEntries([...merged].map(([k, v]) => [k, String(v ?? '')]))
   }
 
   async localSet(view: LibraryView, codeSet: string, key: string, value: string): Promise<void> {
