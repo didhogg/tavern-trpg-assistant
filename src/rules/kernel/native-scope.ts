@@ -9,7 +9,12 @@ import type { LibraryView } from '../../library/revision'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import { officialSourceOf } from '../../library/sources'
 import type { ExcludeRow } from './frame/commands-native'
-import type { NativePickLabels } from './frame/native-builder-ui'
+import type { NativeLabel, NativePresentation } from './native-presentation'
+
+// 作者有时为浏览器额外生成「本相」等资料卡。原作者同时保留 _rawName，
+// 让展示用途的原型卡可与真正进入建卡候选的记录区分开。
+type LabelEntry = { name?: string; ENG_name?: string; _rawName?: string; classSource?: string }
+const displayIdentity = (item: LabelEntry): string => `${!!item._rawName}|${item.classSource ?? ''}`
 
 export interface CampaignExcludes {
   rows: ExcludeRow[]
@@ -36,30 +41,49 @@ export async function campaignExcludes(deps: { scoped: ScopedLibrary; service: L
   return { rows, unpaired }
 }
 
-/** 只传库中已开启的条目的显示名。真正候选、过滤和选择结果仍由正在运行的作者控件决定。 */
-export async function nativePickLabels(deps: { scoped: ScopedLibrary; service: LibraryService }, c: CampaignLibrary, view: LibraryView): Promise<NativePickLabels> {
+/** 用已发布资料和中英配对取显示名。作者实例自己判断有哪些候选。 */
+export async function nativePresentation(deps: { scoped: ScopedLibrary; service: LibraryService }, c: CampaignLibrary, view: LibraryView): Promise<NativePresentation> {
   const official = officialSourceOf(c.codeSet)
   const chinese = officialSourceOf('cn')
   const hasChinese = await deps.service.officialInstalled(chinese.codeSet, view)
   const pairs: EnglishPairs['pairs'] = hasChinese ? (await deps.scoped.englishPairs(chinese.codeSet, view)).pairs : {}
-  const labels = await Promise.all(['race', 'background', 'class', 'subclass'].map(async (prop) => {
+  const choices = ['race', 'background', 'class', 'subclass', 'feat', 'optionalfeature', 'spell', 'item']
+  const names = new Map<string, Set<string>>()
+  const labels = await Promise.all([...choices, 'classFeature', 'subclassFeature', 'language'].map(async (prop) => {
     const visible = await deps.scoped.query(c, prop, { view })
-    const cnNames = new Map<string, string>()
+    const cnNames = new Map<string, Array<{ label: NativeLabel; identity: string }>>()
     if (official.lang !== 'zh' && hasChinese) {
-      // 中文名只作显示。是否可选仍由当前资料集的 visible 行和小窗的作者筛选共同决定。
       for (const row of await deps.scoped.query({ ...c, codeSet: chinese.codeSet }, prop, { view, mode: 'browse' })) {
-        const paired = pairs[prop]?.[row.ref.hash]
-        const name = (row.item as { name?: string } | null)?.name
-        if (paired && name) cnNames.set(paired.enHash, name)
+        const paired = row.ref.set === chinese.id && pairs[prop]?.[row.ref.hash]
+        const item = row.item as LabelEntry | null
+        if (!paired || !item?.name) continue
+        const matches = cnNames.get(paired.enHash) ?? []
+        matches.push({ label: { name: item.name, ref: row.ref }, identity: displayIdentity(item) })
+        cnNames.set(paired.enHash, matches)
       }
     }
-    const list: Array<[string, string]> = []
+    const list: Array<[string, NativeLabel]> = []
     for (const row of visible) {
       const nativeHash = official.lang === 'zh' && row.ref.set === official.id ? pairs[prop]?.[row.ref.hash]?.enHash : row.ref.hash
-      const name = (row.item as { name?: string } | null)?.name
-      if (nativeHash && name) list.push([nativeHash, row.ref.set === official.id ? cnNames.get(nativeHash) ?? name : name])
+      const item = row.item as LabelEntry | null
+      if (!nativeHash || !item?.name) continue
+      const matches = row.ref.set === official.id ? cnNames.get(nativeHash) : undefined
+      const sameKind = matches?.filter((candidate) => candidate.identity === displayIdentity(item))
+      const counterpart = sameKind?.length === 1 ? sameKind[0].label : undefined
+      const label = counterpart ?? { name: item.name, ref: row.ref, ...(row.pack ? { selection: { docIdLocal: row.pack.docIdLocal } } : {}) }
+      if (choices.includes(prop)) list.push([nativeHash, label])
+      const en = official.lang === 'zh' ? item.ENG_name : item.name
+      if (en) {
+        const key = en.trim().toLowerCase()
+        const values = names.get(key) ?? new Set<string>()
+        values.add(label.name)
+        names.set(key, values)
+      }
     }
     return [prop, Object.fromEntries(list)] as const
   }))
-  return Object.fromEntries(labels)
+  return {
+    labels: Object.fromEntries(labels),
+    terms: Object.fromEntries([...names].flatMap(([key, values]) => values.size === 1 ? [[key, [...values][0]]] : [])),
+  }
 }

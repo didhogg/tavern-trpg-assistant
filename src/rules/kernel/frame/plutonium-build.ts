@@ -50,7 +50,7 @@ export async function loadKernelModule(url: URL, usePrivateZh = false): Promise<
       : null
     if (actualUrl.href === privateBundle.href && digest === NATIVE_BUILDER_SHA) {
       const { nativeBuilder } = await importBundle(localized ?? text, actualUrl,
-        '\nexport const nativeBuilder = { ActorCharactermancer, ComponentUiUtil, Charactermancer_Util };\n')
+        '\nexport const nativeBuilder = { ActorCharactermancer, ComponentUiUtil, Charactermancer_Util, Charactermancer_Spell_Level, Charactermancer_AvailableEquipmentInfo };\n')
       nativeBuilderAuthor = nativeBuilder
     } else if (localized !== null) await importBundle(localized, actualUrl)
     else await import(/* @vite-ignore */ actualUrl.href)

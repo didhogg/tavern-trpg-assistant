@@ -92,8 +92,10 @@ export interface KernelSession {
 }
 
 /** 开一个结算小窗。一个战役一个小窗（各自的世界互不相见）。 */
-export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000, moduleRoots, brewFiles, visible }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number; moduleRoots?: Record<string, string>; brewFiles?: ReadonlyMap<string, string>; visible?: boolean }): Promise<KernelSession> {
-  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, visible, handlers: kernelHandlers({ pluginRoot, data, fetchImpl, moduleRoots, brewFiles }) })
+export async function startKernel({ pluginRoot, container, data, fetchImpl, timeoutMs = 120_000, moduleRoots, brewFiles, visible, buildCard }: { pluginRoot: URL; container: HTMLElement; data: DataReader; fetchImpl?: typeof fetch; timeoutMs?: number; moduleRoots?: Record<string, string>; brewFiles?: ReadonlyMap<string, string>; visible?: boolean; buildCard?: FrameHandlers['buildCard'] }): Promise<KernelSession> {
+  const handlers = kernelHandlers({ pluginRoot, data, fetchImpl, moduleRoots, brewFiles })
+  if (buildCard) handlers.buildCard = buildCard
+  const frame = await startAuthorFrame({ codeSet: 'foundry', pluginRoot, container, timeoutMs, visible, handlers })
   // 结算小窗的指令表与作者小窗不同（frame/main.ts），宿主的类型只认作者指令，这里按结算指令表转一下类型
   const call = frame.call as unknown as (fn: string, ...args: unknown[]) => Promise<never>
   return {

@@ -7,13 +7,15 @@
 import type { FileProvider } from '../../library/files'
 import type { ScopedLibrary } from '../../library/scoped'
 import type { LibraryService } from '../../library/service'
-import type { LibraryRevisionStore } from '../../library/revision'
+import type { LibraryRevisionStore, LibraryView } from '../../library/revision'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { KernelSession } from './host'
 import { kernelInput } from './input'
 import { openKernel, prepareKernelBrews } from './open'
-import { campaignExcludes, nativePickLabels } from './native-scope'
+import { campaignExcludes, nativePresentation } from './native-scope'
 import type { KernelBrewReport } from './frame/brew-input'
+import { getSource } from '../../library/sources'
+import type { NativeCardPreview, NativeLabel, NativePresentation } from './native-presentation'
 
 export interface NativeBuildDeps {
   pluginRoot: URL
@@ -40,6 +42,19 @@ export class KernelNativeBuild {
 
   constructor(private readonly deps: NativeBuildDeps) {}
 
+  private async preview(label: NativeLabel, library: CampaignLibrary, view: LibraryView): Promise<NativeCardPreview | null> {
+    const { ref } = label
+    const source = getSource(ref.set)
+    const detail = await this.deps.scoped.detail(library, ref, { view, browse: true, selection: label.selection })
+    if (!detail || !('item' in detail)) return null
+    const frame = await this.deps.service.frameOf(source.codeSet, view)
+    const markup = await frame.call('renderEntity', ref.prop, detail.item)
+    if (!markup?.html) return null
+    const content = new DOMParser().parseFromString(markup.html, 'text/html')
+    const text = (content.body.textContent ?? '').replace(/\s+/g, ' ').trim()
+    return { text: text.length > 540 ? `${text.slice(0, 540)}…` : text, chinese: source.lang === 'zh' }
+  }
+
   /**
    * 跑一次作者完整建卡器（同一战役同一时刻只建一个）。
    * slot = 页面上给建卡用的位置：小窗铺满它、给玩家看，并挂上 Foundry 核心样式与插件主题（frame/display.ts）；不给 = 隐藏小窗。
@@ -53,21 +68,33 @@ export class KernelNativeBuild {
       const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, uiLanguage: 'zh', world: { id: buildWorldOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl, privateModules: true, display: !!slot })
       if (!input.moduleRoots) return { status: 'error', error: '本机没有私人完整版作者程序（vendor/private/modules/plutonium/），完整建卡器用不了' }
       const prepared = await prepareKernelBrews(this.deps.service, view, campaign.library.codeSet)
-      const { session, report, brewFiles } = await openKernel({ ...this.deps, view, input, ...prepared, container: slot ?? this.deps.container(), visible: !!slot })
+      let presentation: NativePresentation | undefined
+      const { session, report, brewFiles } = await openKernel({
+        ...this.deps, view, input, ...prepared, container: slot ?? this.deps.container(), visible: !!slot,
+        buildCard: slot ? async (prop, hash, open) => {
+          const group = presentation && Object.hasOwn(presentation.labels, prop) && presentation.labels[prop]
+          const label = group && Object.hasOwn(group, hash) && group[hash]
+          if (!label) return null
+          if (!open) return this.preview(label, campaign.library, view)
+          slot.dispatchEvent(new CustomEvent('trpg-build-card', { detail: label }))
+          return true
+        } : undefined,
+      })
       if (!this.running.has(ownerKey)) { session.close(); return { status: 'cancelled' } }
       this.running.set(ownerKey, session)
       try {
         const [excludes, labels] = await Promise.all([
           campaignExcludes(this.deps, campaign.library, view),
-          slot ? nativePickLabels(this.deps, campaign.library, view) : undefined,
+          slot ? nativePresentation(this.deps, campaign.library, view) : undefined,
         ])
+        presentation = labels
         const identity = crypto.randomUUID().replaceAll('-', '')
         const seed = `${name}~${identity}`
         // 每个建卡小窗的本地发号从头开始，人物要移进同一个日常小窗，所以在出生时给唯一编号。
         const start = await session.call('draftStart', { name, seed, id: identity.slice(0, 16) })
         const id = (start.result as { id?: string } | null)?.id
         if (start.status !== 'complete' || !id) return { status: 'error', error: `开不了草稿人：${start.error ?? start.status}` }
-        const call = await session.call('nativeBuild', { id, excludes: excludes.rows, brewFiles, labels })
+        const call = await session.call('nativeBuild', { id, excludes: excludes.rows, brewFiles, presentation })
         const out = call.result as { built?: boolean; data?: Record<string, unknown> } | null
         if (call.status !== 'complete') return { status: 'error', error: call.error ?? `作者建卡没完成（${call.status}）` }
         if (!out?.built || !out.data) return { status: 'cancelled' }

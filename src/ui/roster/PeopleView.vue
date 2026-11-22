@@ -46,7 +46,7 @@ const NEW_ITEMS = computed(() => [{ key: 'native', label: '新建人物…', ...
 async function onNew(key: string): Promise<void> {
   if (key === 'native') {
     const category = CATEGORIES.some((c) => c.id === store.view) ? (store.view as CategoryId) : 'party'
-    modal.open({ key: 'roster-build', title: '新建人物', component: markRaw(BuildPage), props: { category }, variant: 'dialog' })
+    modal.open({ key: 'roster-build', title: '分步建卡', component: markRaw(BuildPage), props: { category }, variant: 'dialog', width: 640, height: 600 })
   }
   if (key === 'template') modal.open({ key: 'roster-template', title: '从模板加入', component: markRaw(TemplatePage), variant: 'dialog', width: 920, height: 680, onLeave: () => void store.refresh() })
 }

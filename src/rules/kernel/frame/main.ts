@@ -3,6 +3,7 @@
 // ③ 按官方 Game.initialize 启动，省去画布、键鼠、音视频与界面渲染。规则计算全部是 dnd5e / Plutonium 原代码。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方全局对象没有类型声明。 */
 import { CHANNEL, FRAME_PARAM, type FrameCall, type FrameReady, type FrameResult } from '../../../library/runtime/protocol'
+import { request } from './request'
 import { assembleWorld, type KernelInput } from './world'
 import { createServer, type ChangeRecord } from './server'
 import { reseedKernel } from './seed'
@@ -16,25 +17,6 @@ import { applyDisplayStyles, FOLLOW_SYSTEM_COLOR_SCHEME } from './display'
 const g = globalThis as any
 const frameToken = new URLSearchParams(location.search).get(FRAME_PARAM) ?? ''
 const errors: string[] = g.__trpgFrameErrors ?? []
-let nextId = 1
-const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>()
-
-function request(body: Record<string, unknown>): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    const id = 1_000_000 + nextId++
-    pending.set(id, { resolve, reject })
-    parent.postMessage({ channel: CHANNEL, type: 'request', frame: frameToken, id, ...body }, location.origin)
-  })
-}
-addEventListener('message', event => {
-  const d = event.data
-  if (event.source !== parent || d?.channel !== CHANNEL || d.type !== 'response' || !pending.has(d.id)) return
-  const p = pending.get(d.id)!
-  pending.delete(d.id)
-  if (d.ok) p.resolve(d.value)
-  else p.reject(new Error(d.error))
-})
-
 async function readText(path: string): Promise<string> {
   const response = await fetch(new URL(path, location.href))
   if (!response.ok) throw Error(`${response.status}: ${path}`)

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from 'vue'
+import type { NativeLabel } from '../../rules/kernel/native-presentation'
 import { useCampaignStore } from '../../stores/campaign'
 import { useModalStore } from '../../stores/modal'
 import { CATEGORIES, useRosterStore, type CategoryId } from '../../stores/roster'
-import Icon from '../kit/Icon.vue'
 import Segmented from '../kit/Segmented.vue'
+import { openEntry } from '../libview/open'
 
 /** 0c 的名字页和建卡位置。后续每步继续使用同一个作者建卡实例。 */
 const props = defineProps<{ category?: CategoryId }>()
@@ -16,6 +17,11 @@ const name = ref('新人物')
 const dest = ref<CategoryId>(props.category ?? 'party')
 const state = ref<'form' | 'building' | 'failed'>('form')
 const slot = ref<HTMLElement | null>(null)
+
+function showCard(event: Event): void {
+  const label = (event as CustomEvent<NativeLabel>).detail
+  if (state.value === 'building' && label?.ref) openEntry(label.ref, label.name, label.selection)
+}
 
 async function start(): Promise<void> {
   if (!slot.value || !name.value.trim()) return
@@ -33,15 +39,15 @@ onBeforeUnmount(() => { if (state.value === 'building') roster.stopNative() })
 <template>
   <div class="bp" data-testid="build-page">
     <form v-if="state !== 'building'" class="bp-form" @submit.prevent="start">
+      <nav class="bp-first-step" aria-label="建卡步骤"><span aria-current="step">① 名字</span></nav>
       <label class="bp-name"><span>名字</span><input v-model="name" class="trpg-input" type="text" maxlength="60" aria-label="人物名字" data-autofocus data-testid="bp-name" /></label>
       <span class="bp-lbl">放进</span>
       <Segmented v-model="dest" label="放进哪一类" :options="CATEGORIES.map((c) => ({ value: c.id, label: c.label }))" />
-      <button class="trpg-btn trpg-btn--primary" type="submit" :disabled="!name.trim() || campaign.readOnly" data-testid="bp-start"><Icon name="plus" :size="14" />开始建卡</button>
-      <p v-if="state === 'failed'" class="bp-error" role="alert"><Icon name="warning" :size="16" />这次没建成，原因见提示条。可以改一下再点「开始建卡」。</p>
+      <p v-if="state === 'failed'" class="bp-error" role="alert">这次没建成，原因见提示条。可以重试。</p>
+      <footer class="bp-first-footer"><button class="trpg-btn trpg-btn--primary" type="submit" :disabled="!name.trim() || campaign.readOnly" data-testid="bp-start">下一步</button></footer>
     </form>
-    <p v-else class="bp-doing" data-testid="bp-doing">正在为「{{ name.trim() }}」建卡。确认创建后才会写入存档。</p>
-    <div ref="slot" class="bp-slot" :data-active="state === 'building' || undefined" data-testid="bp-slot">
-      <p v-if="state !== 'building'" class="bp-hint">点「开始建卡」后，建卡器会出现在这里。</p>
+    <div v-show="state === 'building'" ref="slot" class="bp-slot" data-testid="bp-slot" @trpg-build-card="showCard">
+      <p class="bp-hint" role="status">正在准备建卡资料…</p>
     </div>
   </div>
 </template>

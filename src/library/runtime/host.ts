@@ -5,6 +5,7 @@ import { CHANNEL, FRAME_PARAM, LOCAL_SNAPSHOT_PREFIX, isFrameMessage, type Frame
 /** 小窗要东西时插件怎么回答。文件不存在回答 null。 */
 export interface FrameHandlers {
   file(path: string): Promise<string | null>
+  buildCard?(prop: string, hash: string, open: boolean): Promise<unknown>
   kvGet(key: string): Promise<unknown>
   kvSet(key: string, value: unknown): Promise<void>
   kvRemove(key: string): Promise<void>
@@ -44,6 +45,7 @@ export function frameUrl(pluginRoot: URL, codeSet: string): URL {
 async function answer(handlers: FrameHandlers, req: FrameRequest): Promise<unknown> {
   switch (req.op) {
     case 'file': return handlers.file(req.path)
+    case 'build-card': return handlers.buildCard?.(req.prop, req.hash, req.open)
     case 'kv-get': return handlers.kvGet(req.key)
     case 'kv-set': return handlers.kvSet(req.key, req.value)
     case 'kv-remove': return handlers.kvRemove(req.key)

@@ -1,5 +1,5 @@
 // P6 0c：从人物菜单按玩家方式建完整角色、保存、取消、连续新建和冷读。
-// BUILD_CASE=brew 改用本战役自制种族与子职；BUILD_DATA=en 使资料集改为英文。
+// BUILD_CASE=brew 改用本战役自制种族与子职；BUILD_DATA=en 使资料集改为英文；BUILD_THEME=dark 看深色。
 // 本机没有 vendor/private/modules/plutonium/（私人完整版，不进 git）就跳过。用法：ENGINE=chrome|webkit [W=1280 H=900] node tests/e2e/library/p6-build-page.mjs
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -17,18 +17,19 @@ const translations = nativeTranslations(await readJson('tools/plutonium-ui-trans
 const label = (text) => localized ? translations.get(text) ?? text : text
 
 const killer = setTimeout(() => { console.error('超时 8 分钟'); process.exit(2) }, 8 * 60_000)
-const distDir = join(root, 'work/p6-0c-live/dist')
+const distDir = join(root, 'work/p6-0c-restore/dist')
 if (!process.env.SKIP_BUILD) await buildAll({ outDir: distDir })
 const engineName = process.env.ENGINE === 'webkit' ? 'webkit' : 'chrome'
 const variant = process.env.BUILD_CASE ?? 'classic'
 const dataSet = process.env.BUILD_DATA ?? 'cn'
+const theme = process.env.BUILD_THEME === 'dark' ? 'dark' : 'light'
 const W = Number(process.env.W ?? 1280), H = Number(process.env.H ?? 900)
 const [, type, options] = engines.find((e) => e[0] === engineName)
 const { server, url } = await startStatic({ port: E2E_PORT, distDir })
 const profile = freshFromBase(engineName, 'p6-build-page')
-const shots = join(root, `work/p6-0c-live/${engineName}-${W}${variant === 'classic' ? '' : `-${variant}`}${dataSet === 'cn' ? '' : `-${dataSet}`}`)
+const shots = join(root, `work/p6-0c-restore/${engineName}-${W}${variant === 'classic' ? '' : `-${variant}`}${dataSet === 'cn' ? '' : `-${dataSet}`}${theme === 'dark' ? '-dark' : ''}`)
 await mkdir(shots, { recursive: true })
-const ctx = await type.launchPersistentContext(profile, { ...options, viewport: { width: W, height: H } })
+const ctx = await type.launchPersistentContext(profile, { ...options, colorScheme: theme, viewport: { width: W, height: H } })
 const page = await ctx.newPage()
 page.setDefaultTimeout(120_000)
 const errors = []
@@ -71,17 +72,25 @@ async function startFromMenu(name) {
 
 async function buildOne(name, capture) {
   const frame = await startFromMenu(name)
-  const step = (text) => frame.getByRole('navigation', { name: '建卡步骤' }).getByRole('button', { name: text, exact: true }).click()
+  const step = (text) => frame.getByRole('navigation', { name: '建卡步骤' }).getByRole('button').filter({ has: frame.getByText(text, { exact: true }) }).click()
   const pick = async (category, value, source = 'PHB') => {
     await frame.getByRole('searchbox', { name: `搜索${category}`, exact: true }).fill(value)
-    await frame.locator(`button.p6-picker-row[data-source="${source}"]`).filter({ hasText: new RegExp(`^${value}\\s*${source}$`) }).click()
+    const row = frame.locator(`button.p6-picker-row[data-source="${source}"]`).filter({ hasText: new RegExp(`^${value}\\s*${source}$`) })
+    await row.click()
+    if (capture && category === '种族') {
+      check('左栏点选只预览，正式选择前没有打勾', await row.getAttribute('aria-pressed') === 'false')
+      await frame.getByRole('button', { name: '看资料卡', exact: true }).click()
+      await page.getByRole('button', { name: '返回：分步建卡', exact: true }).click()
+      await page.locator('.trpg-page-leave-active').waitFor({ state: 'detached' })
+      check('看库资料卡再返回仍保留未确认预览', await row.isVisible() && await row.getAttribute('aria-pressed') === 'false')
+    }
+    await frame.getByRole('button', { name: '选它', exact: true }).click()
+    await frame.getByRole('button', { name: '取消选它', exact: true }).waitFor()
   }
-  const narrow = await frame.evaluate(() => matchMedia('(max-width: 620px)').matches)
-  const details = async () => {
-    if (narrow) await frame.getByRole('button', { name: '查看选择与资料', exact: true }).click()
-  }
+  const level = frame.getByLabel('目标等级', { exact: true })
+  const chooseLevel = () => level.selectOption('3')
   const finish = async () => {
-    await frame.getByRole('button', { name: '创建人物', exact: true }).click()
+    await frame.getByRole('button', { name: /^创建「/ }).click()
     await frame.getByText(label('OK'), { exact: true }).click()
     await frame.getByText('Build complete.', { exact: true }).waitFor({ state: 'visible', timeout: 90_000 })
     await frame.locator('[data-action="close"]:visible').last().click()
@@ -89,15 +98,20 @@ async function buildOne(name, capture) {
   }
   const assign = async () => {
     await step('属性值')
-    await frame.locator('select:visible').selectOption({ label: label('Standard Array') })
+    const mode = (value) => frame.getByRole('group', { name: '怎么定属性' }).getByRole('button', { name: value, exact: true })
+    await mode(label('Point Buy')).click()
+    check('点购点显示作者购点界面', await mode(label('Point Buy')).getAttribute('aria-pressed') === 'true')
+    await frame.getByRole('button', { name: label('Standard Array'), exact: true }).click()
     for (const [index, value] of ['14', '12', '13', '10', '15', '8'].entries()) {
-      await frame.locator('select:visible').nth(index + 1).selectOption({ label: value })
+      await frame.locator('select:visible').nth(index).selectOption({ label: value })
     }
   }
   const takeEquipment = async (name, position) => {
     const controls = frame.getByTitle(label('Choose an Item'), { exact: true })
     await controls[position]().click()
-    await frame.getByText(name, { exact: true }).last().locator('..').getByRole('button').click()
+    await frame.getByRole('searchbox', { name: '搜索装备', exact: true }).fill(name)
+    if (capture) await shot('04a-equipment-picker')
+    await frame.locator(`.p6-equip-picker-list [data-uid^="${name}|" i]`).first().click()
   }
   if (variant === 'brew') {
     await pick('种族', '月影猫人', 'TestRunPack')
@@ -105,56 +119,57 @@ async function buildOne(name, capture) {
     await pick('背景', '侍僧')
     await step('职业')
     await pick('职业', '战士')
+    await chooseLevel()
+    await step('子职')
     await pick('子职业', '月影斥候', 'TestRunPack')
-    await details()
-    await frame.locator('label:visible').filter({ has: frame.locator('input[type=radio]') }).nth(2).click()
     await shot('02-class')
     await assign()
-    await step('起始装备')
+    await step('装备')
     await takeEquipment('Longsword', 'first')
-    await step('检查后创建')
+    await step('完成')
     await shot('06-review')
     await finish()
     return
   }
   await pick('种族', '人类')
-  await details()
   await frame.locator('.p6-builder-step:visible input[type=checkbox]').nth(2).check()
   if (capture) await shot('01-species')
   await step('背景')
   await pick('背景', '侍僧')
-  await details()
   await frame.locator('.p6-builder-step:visible input[type=checkbox]').nth(3).check()
   await frame.locator('.p6-builder-step:visible input[type=checkbox]').nth(4).check()
   await step('职业')
   await pick('职业', '牧师')
+  await chooseLevel()
+  await step('子职')
   await pick('子职业', '生命领域')
-  await details()
+  await step('职业')
   await frame.locator('.p6-builder-step:visible input[type=checkbox]').nth(0).check()
   await frame.locator('.p6-builder-step:visible input[type=checkbox]').nth(2).check()
-  await frame.locator('label:visible').filter({ has: frame.locator('input[type=radio]') }).nth(2).click()
   if (capture) await shot('02-class')
-  await step('检查后创建')
-  await frame.getByRole('button', { name: '创建人物', exact: true }).click()
+  await step('专长')
+  check('专长步有作者自己的可用选项', await frame.locator('.p6-builder-step:visible .p6-native-body button:visible:not([disabled])').count() > 0)
+  await step('完成')
+  await frame.getByRole('button', { name: /^创建「/ }).click()
   check('待填属性会阻止创建并回到属性页', await frame.locator('.p6-builder-feedback').textContent() === '待选属性分配方式')
   await assign()
   if (capture) await shot('03-abilities')
-  await step('起始装备')
+  await step('装备')
   await takeEquipment('Amulet', 'last')
   if (capture) await shot('04-equipment')
   await step('法术')
-  for (const spell of ['Guidance', 'Light', 'Sacred Flame']) {
-    await frame.getByText(spell, { exact: true }).first().locator('..').getByRole('button', { name: 'Learn', exact: true }).click()
+  for (const spell of ['guidance', 'light', 'sacred%20flame']) {
+    await frame.locator(`[data-p6-spell="${spell}_phb"]`).first().getByRole('button', { name: '学习', exact: true }).click()
   }
-  for (const spell of ['Command', 'Detect Magic', 'Guiding Bolt', 'Healing Word', 'Aid', 'Hold Person']) {
-    await frame.getByText(spell, { exact: true }).first().locator('..').getByRole('button', { name: 'Prep.', exact: true }).click()
+  for (const spell of ['command', 'detect%20magic', 'guiding%20bolt', 'healing%20word', 'aid', 'hold%20person']) {
+    await frame.locator(`[data-p6-spell="${spell}_phb"]`).first().getByRole('button', { name: '准备', exact: true }).click()
   }
   if (capture) await shot('05-spells')
-  await step('检查后创建')
-  check('完成页能回到职业选项', await frame.getByRole('button', { name: /职业.*牧师/ }).isVisible())
-  await frame.getByRole('button', { name: /职业.*牧师/ }).click()
-  check('回头查看仍选中本来的职业', await frame.getByRole('button', { name: /^牧师\s*PHB$/ }).getAttribute('aria-pressed') === 'true')
-  await step('检查后创建')
+  await step('完成')
+  check('完成页显示职业和已选等级', await frame.locator('.p6-builder-summary').getByText('牧师 · 3 级', { exact: true }).isVisible())
+  await step('职业')
+  check('回头查看仍选中本来的职业', await frame.locator('.p6-picker-row:visible[data-source=PHB]').filter({ hasText: '牧师' }).getAttribute('aria-pressed') === 'true')
+  await step('完成')
   if (capture) await shot('06-review')
   await finish()
 }
@@ -242,6 +257,7 @@ try {
         width: innerWidth, title: document.querySelector('.p6-builder-tab[aria-current]')?.textContent,
         layout: tab && [getComputedStyle(tab).display, getComputedStyle(tab).gridTemplateColumns],
         lists: [...tab?.querySelectorAll('.p6-picker') ?? []].map((x) => [x.querySelector('h3')?.textContent, x.textContent?.trim().slice(0, 480)]),
+        selects: [...tab?.querySelectorAll('select') ?? []].filter((el) => el.getClientRects().length).map((el) => [el.getAttribute('aria-label'), el.value]),
       }
     }).catch(() => null)
     if (info?.title) console.log(JSON.stringify(info))

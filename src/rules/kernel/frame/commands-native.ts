@@ -8,8 +8,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 作者运行时对象没有类型声明。 */
 import type { Operate } from './commands-items'
 import { settled } from './server'
-import { installNativeBuilderUi, type NativePickLabels } from './native-builder-ui'
+import { installNativeBuilderUi } from './native-builder-ui'
 import { nativeBuilderAuthor } from './plutonium-build'
+import type { NativePresentation } from '../native-presentation'
 
 const g = globalThis as any
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -20,12 +21,12 @@ export interface ExcludeRow { displayName: string; hash: string; category: strin
 export function createNativeCommands(operate: Operate) {
   return {
     /** 跑作者完整建卡器建这个草稿人；交回 built + 整份人物（没建 = 玩家取消）。 */
-    nativeBuild: (plan: { id: string; excludes: ExcludeRow[]; brewFiles: string[]; labels?: NativePickLabels }) => operate([], async () => {
+    nativeBuild: (plan: { id: string; excludes: ExcludeRow[]; brewFiles: string[]; presentation?: NativePresentation }) => operate([], async () => {
       const api = g.game.modules.get('plutonium')?.api
       if (typeof api?.charactermancer?.pOpen !== 'function') throw Error('这份 Plutonium 没有完整建卡器（需要本机私人完整版，放在 vendor/private/modules/plutonium/）')
       const actor = g.game.actors.get(plan.id)
       if (!actor) throw Error(`草稿人不在：${plan.id}`)
-      if (plan.labels && !nativeBuilderAuthor) throw Error('当前私人完整版和分步建卡支持的版本不一致')
+      if (plan.presentation && !nativeBuilderAuthor) throw Error('当前私人完整版和分步建卡支持的版本不一致')
       // 作者自己的默认名单保留，本战役的行追加在后面（作者公开的取名单 / 设名单入口；
       // 作者的 pExtendList 要先有它内部的查询缓存，启动后那份缓存可能还没建，所以不用它）
       await g.ExcludeUtil.pInitialise()
@@ -34,7 +35,7 @@ export function createNativeCommands(operate: Operate) {
       const frameDir = new URL('.', location.href).href
       if (await api.config.setValue('dataSources', 'localHomebrew', plan.brewFiles.map((path) => frameDir + path)) === false) throw Error('作者不让登记本战役自制包（dataSources.localHomebrew）')
       const before = JSON.stringify(actor.toObject())
-      const builder = nativeBuilderAuthor && installNativeBuilderUi(nativeBuilderAuthor, plan.labels)
+      const builder = nativeBuilderAuthor && installNativeBuilderUi(nativeBuilderAuthor, plan.presentation)
       const open = new Set<any>()
       let wake: () => void = () => undefined
       const rendered = g.Hooks.on('renderApplicationV2', (app: any) => { open.add(app) })

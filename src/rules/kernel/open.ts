@@ -8,6 +8,7 @@ import { libraryBrews, type PreparedBrew } from './brews'
 import { BREW_FILE_DIR, libraryData, startKernel, type KernelInput, type KernelSession } from './host'
 import type { FileProvider } from '../../library/files'
 import type { KernelBrewReport } from './frame/brew-input'
+import type { FrameHandlers } from '../../library/runtime/host'
 
 export async function prepareKernelBrews(service: LibraryService, view: LibraryView, codeSet: string): Promise<{ brews: PreparedBrew[]; itemMasteries: unknown[] }> {
   const brews = await libraryBrews(view, codeSet, async () => ({
@@ -32,6 +33,7 @@ export async function openKernel(opts: {
   itemMasteries: unknown[]
   /** 建卡专用小窗给玩家看（铺满 container）。 */
   visible?: boolean
+  buildCard?: FrameHandlers['buildCard']
 }): Promise<{ session: KernelSession; boot: unknown; report: KernelBrewReport; brewFingerprint: string | undefined; brewFiles: string[] }> {
   // 作者收下的自制包按文件供应（host.ts file）：作者自己的「额外自制文件」入口按地址读（建卡专用小窗登记，commands-native.ts）
   const brewFiles = new Map<string, string>()

@@ -63,18 +63,17 @@
 .tp-bar { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); background: var(--bg-side); border-top: var(--border) solid var(--line-ctrl); }
 .tp-gap { flex: 1; } .tp-lbl { color: var(--text2); font-size: var(--fs-sm); }
 .tp-added { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); }
-/* P6 新建人物（整页接管）：上面一条表单 / 进行中说明，下面铺建卡专用小窗（作者完整建卡器，插件主题在小窗里，见 build-frame.css）。 */
+/* P6 分步建卡：沿用 0c 的弹窗尺寸和名字页，后续步骤在建卡专用小窗中。 */
 .bp { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.bp-form { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: var(--border) solid var(--line); }
-.bp-name { display: inline-flex; align-items: center; gap: var(--sp-2); }
-.bp-name .trpg-input { width: 200px; }
+.bp-form { flex: 1; display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5); }
+.bp-first-step { padding: var(--sp-2) 0; border-bottom: var(--border) solid var(--line); }
+.bp-first-step span { display: inline-flex; border-radius: var(--r-pill); background: var(--primary); color: var(--on-primary); padding: var(--sp-1) var(--sp-3); }
+.bp-name { display: flex; flex-direction: column; gap: var(--sp-2); }
 .bp-lbl { color: var(--text2); }
-.bp-error { flex-basis: 100%; display: flex; align-items: center; gap: var(--sp-2); margin: 0; color: var(--danger-text); font-size: var(--fs-sm); }
-.bp-doing { flex: none; margin: 0; padding: var(--sp-2) var(--sp-4); border-bottom: var(--border) solid var(--line); color: var(--text2); font-size: var(--fs-sm); }
-.bp-slot { flex: 1; position: relative; min-height: 480px; background: var(--bg); }
-.bp-hint { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--text3); }
-.trpg-window[data-layout='narrow'] .bp-name .trpg-input { width: 140px; }
-/* 整页接管：弹窗里是新建人物页时，卡片铺满插件窗口（同 pages.css 里开局向导的 :has 写法），页面不留内边距 */
-.trpg-modal:has(.bp) { padding: var(--sp-2); }
-.trpg-modal:has(.bp) .trpg-modal__card { width: 100%; height: 100%; }
+.bp-form .trpg-seg { align-self: flex-start; }
+.bp-error { color: var(--danger-text); font-size: var(--fs-sm); }
+.bp-first-footer { margin-top: auto; display: flex; justify-content: flex-end; padding-top: var(--sp-3); }
+.bp-slot { flex: 1; position: relative; min-height: 0; background: var(--surface); }
+.bp-hint { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--text2); }
 .trpg-modal__page:has(.bp) { padding: 0; overflow: hidden; }
+.trpg-modal:has(.bp) .trpg-page-leave-active { pointer-events: none; }

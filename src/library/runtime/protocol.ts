@@ -20,6 +20,7 @@ export interface FrameReady {
 /** 小窗 → 插件：作者程序要一个文件，或要读写它自己的存储。 */
 export type FrameRequestBody =
   | { op: 'file'; path: string }
+  | { op: 'build-card'; prop: string; hash: string; open: boolean }
   | { op: 'kv-get'; key: string }
   | { op: 'kv-set'; key: string; value: unknown }
   | { op: 'kv-remove'; key: string }
