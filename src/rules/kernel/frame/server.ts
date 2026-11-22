@@ -24,7 +24,8 @@ function indexEntry(document: any, fields: string[]): any {
     let target = entry
     const leaf = parts.pop() as string
     for (const key of parts) target = target[key] ??= {}
-    target[leaf] = value
+    // 索引字段可能重叠，调用方也可能改索引结果。嵌套值从只读原件复制出来。
+    target[leaf] = typeof value === 'object' && value !== null ? structuredClone(value) : value
   }
   return entry
 }
@@ -51,10 +52,22 @@ export function createServer(socket: any, options: ServerOptions): { changes: Ch
   const changes: ChangeRecord[] = []
   const calls: any[] = []
   const temporary = new Map<string, any[]>()
+  const officialPacks = new Map<string, Promise<any[]>>()
   const world = new Map<string, any[]>()
   let sequence = 0
   const emit = socket.emit.bind(socket)
-  const packDocuments = async (id: string): Promise<any[]> => temporary.get(id) ?? options.readPack(id)
+  const packDocuments = async (id: string): Promise<any[]> => {
+    const mutable = temporary.get(id)
+    if (mutable) return mutable
+    // Foundry 启动时会并行索取同一份资料包的多种索引。共用本世界的读取与解析结果，失败可重试。
+    let pending = officialPacks.get(id)
+    if (!pending) {
+      pending = options.readPack(id)
+      officialPacks.set(id, pending)
+      void pending.catch(() => { officialPacks.delete(id) })
+    }
+    return pending
+  }
 
   async function modifyDocument(request: any): Promise<any> {
     const operation = request.operation
