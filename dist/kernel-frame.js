@@ -127,7 +127,7 @@ function te(e, t) {
 		if (i === void 0) continue;
 		let a = n, o = t.pop();
 		for (let e of t) a = a[e] ??= {};
-		a[o] = i;
+		a[o] = typeof i == "object" && i ? structuredClone(i) : i;
 	}
 	return n;
 }
@@ -137,31 +137,38 @@ async function C(e = 2e3) {
 	for (; n < 2 && Date.now() < t;) await new Promise((e) => setTimeout(e, 0)), n = S === 0 ? n + 1 : 0;
 }
 function w(e, t) {
-	let n = globalThis, r = [], i = [], a = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map(), s = 0, c = e.emit.bind(e), l = async (e) => a.get(e) ?? t.readPack(e);
-	async function u(e) {
+	let n = globalThis, r = [], i = [], a = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map(), s = /* @__PURE__ */ new Map(), c = 0, l = e.emit.bind(e), u = async (e) => {
+		let n = a.get(e);
+		if (n) return n;
+		let r = o.get(e);
+		return r || (r = t.readPack(e), o.set(e, r), r.catch(() => {
+			o.delete(e);
+		})), r;
+	};
+	async function d(e) {
 		let t = e.operation, n = t.pack ?? null;
 		if (e.action === "get") {
 			if (!n) return [];
 			let e = t.query ?? {};
 			if (Object.keys(e).some((e) => e !== "_id")) throw Error(`Unsupported pack query: ${JSON.stringify(e)}`);
-			let r = await l(n), i = e._id ? r.filter((t) => t._id === e._id) : r;
+			let r = await u(n), i = e._id ? r.filter((t) => t._id === e._id) : r;
 			if (!t.index) return structuredClone(i);
 			if (!Array.isArray(t.indexFields)) throw Error("Official index request has no fields");
 			return i.map((e) => te(e, t.indexFields));
 		}
 		if (n && !a.has(n)) throw Error(`Original pack is read-only: ${n}`);
-		let i = t.parentUuid ?? null, c = n ? a.get(n) : o.get(e.type) ?? o.set(e.type, []).get(e.type);
+		let i = t.parentUuid ?? null, o = n ? a.get(n) : s.get(e.type) ?? s.set(e.type, []).get(e.type);
 		if (e.action === "create") {
 			let a = t.data.map((e) => {
 				let n = structuredClone(e);
-				if (!t.keepId || !n._id) n._id = `kernel${String(++s).padStart(10, "0")}`;
+				if (!t.keepId || !n._id) n._id = `kernel${String(++c).padStart(10, "0")}`;
 				else {
 					let e = /^kernel(\d{10})$/.exec(n._id);
-					e && (s = Math.max(s, Number(e[1])));
+					e && (c = Math.max(c, Number(e[1])));
 				}
 				return n;
 			});
-			i || c.push(...a);
+			i || o.push(...a);
 			for (let t of a) r.push({
 				action: "create",
 				type: e.type,
@@ -199,19 +206,19 @@ function w(e, t) {
 			event: e,
 			args: o
 		});
-		let s = typeof r.at(-1) == "function" ? r.at(-1) : null, l = (e, t) => {
+		let s = typeof r.at(-1) == "function" ? r.at(-1) : null, c = (e, t) => {
 			S++, e.then((e) => s(t(e)), (e) => s({ error: { message: e.message } })).finally(() => {
 				S--;
 			});
 		};
-		if (e === "template") return l(t.readText(r[0]), (e) => ({ html: e }));
+		if (e === "template") return c(t.readText(r[0]), (e) => ({ html: e }));
 		if (e === "time") return s({
 			serverTime: Date.now(),
 			worldTime: t.worldTime
 		});
 		if (e === "modifyDocument") {
 			let e = o[0];
-			return l(u(e), (n) => ({
+			return c(d(e), (n) => ({
 				...e,
 				userId: t.userId,
 				result: n
@@ -219,10 +226,10 @@ function w(e, t) {
 		}
 		if (e === "modifyDocumentBatch") {
 			let e = o[0];
-			return l(Promise.all(e.map(async (e) => ({
+			return c(Promise.all(e.map(async (e) => ({
 				...e,
 				userId: t.userId,
-				result: await u(e)
+				result: await d(e)
 			}))), (e) => ({ results: e }));
 		}
 		if (e === "manageCompendium") {
@@ -245,7 +252,7 @@ function w(e, t) {
 				}
 			});
 		}
-		return s ? s({ error: { message: `Unsupported server request: ${e}` } }) : c(e, ...r);
+		return s ? s({ error: { message: `Unsupported server request: ${e}` } }) : l(e, ...r);
 	}, {
 		changes: r,
 		calls: i
