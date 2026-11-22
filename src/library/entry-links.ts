@@ -1,6 +1,7 @@
 // 条目之间的"定位"（P5 B-05 / T4）：给 类别 + 作者编号，找出它在哪个包里（官方 / 自制 / 书与冒险全文 / 文档）。
 // 搜索命中分流（B-01）和术语跳转（B-04）都用它。只读库，不改任何东西。
 // P5 T4：书 / 冒险正文保留多个提供者（官方 + 自制），不再让后写的 Map.set 顶掉官方。
+import { hashValue } from '../core/hash'
 import { BrewPacks } from './brew-packs'
 import { DocumentStore } from './documents'
 import type { TagMeta } from './runtime/frame/tag-commands'
@@ -62,13 +63,19 @@ export interface ResolvedTag {
   located: Located | null
 }
 
+type CustomRef = { set: string; prop: string; hash: string }
+const CUSTOM_REFS_KEY = (codeSet: string): string => `customRefs:${codeSet}`
+
 export class EntryLinks {
   private readonly corpora = new Map<string, Promise<CorpusIndex>>()
+  /** customRefs 的内存副本：数据版本记号 + 作者程序那一套 → 结果。 */
+  private readonly customMemo = new Map<string, Promise<Map<string, CustomRef>>>()
 
   constructor(private readonly lib: LibraryService, readonly docs: DocumentStore) {}
 
   reset(): void {
     this.corpora.clear()
+    this.customMemo.clear()
   }
 
   /** 作者书目里每一本书、每个冒险的编号、来源（读本地 books.json / adventures.json），以及自制里的书。 */
@@ -147,9 +154,34 @@ export class EntryLinks {
    * 结算小窗里的人物带着作者编号（Plutonium flags 的 类别 + 编号），存档要把它对回库条目；官方来源另有对照，这里只管自制。
    * 含战役里已停用的条目：人物身上已有的东西，存档不因为停用就存不下。
    */
-  async customRefs(codeSet: string, viewArg?: LibraryView): Promise<Map<string, { set: string; prop: string; hash: string }>> {
+  async customRefs(codeSet: string, viewArg?: LibraryView): Promise<Map<string, CustomRef>> {
     const view = viewArg ?? await this.lib.currentView()
-    const out = new Map<string, { set: string; prop: string; hash: string }>()
+    // 只取决于库的数据版本（官方 / 自制任何一边变了记号就变）：同一记号只算一次，存进库里（和备选表同一种派生结果），内存再留一份。
+    // 驾驶员 2026-11-22：每次加人都把全部自制包逐包开隔离小窗解析一遍（真机 24 包、11 秒）。
+    // 旧格式自制状态（包记录为 null，现场读作者存储）不进记号：不存库，只按这个库版本记在内存
+    const legacyBrews = Object.values(await view.store.allBrewStates(view)).some((s) => s.packs === null)
+    const fingerprint = legacyBrews ? null : hashValue(await view.dataVersion())
+    const memoKey = `${fingerprint ?? `view:${view.id}`}|${codeSet}`
+    let pending = this.customMemo.get(memoKey)
+    if (!pending) {
+      pending = this.customRefsStored(codeSet, view, fingerprint)
+      this.customMemo.set(memoKey, pending)
+      pending.catch(() => this.customMemo.delete(memoKey))
+    }
+    return pending
+  }
+
+  private async customRefsStored(codeSet: string, view: LibraryView, fingerprint: string | null): Promise<Map<string, CustomRef>> {
+    if (fingerprint === null) return this.customRefsBuild(codeSet, view)
+    const stored = await view.derivedGet(CUSTOM_REFS_KEY(codeSet))
+    if (stored?.fingerprint === fingerprint && Array.isArray(stored.value)) return new Map(stored.value as Array<[string, CustomRef]>)
+    const out = await this.customRefsBuild(codeSet, view)
+    await view.derivedPut(CUSTOM_REFS_KEY(codeSet), fingerprint, [...out]).catch((e: unknown) => console.warn('[trpg-assistant] 自制编号对照没存进库（下次重算）', e))
+    return out
+  }
+
+  private async customRefsBuild(codeSet: string, view: LibraryView): Promise<Map<string, CustomRef>> {
+    const out = new Map<string, CustomRef>()
     for (const set of SOURCES.filter((s) => s.codeSet === codeSet && s.kind === 'brew')) {
       if (!(await view.brewState(set.id)) && !(await view.derivedGet(`audit:${set.id}`))) continue
       const packs = await new BrewPacks(this.lib).list(set.id, view).catch(() => [])

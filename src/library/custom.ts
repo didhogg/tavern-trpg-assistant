@@ -29,6 +29,7 @@ import type { ChoiceLevel, ManageStore } from './manage'
 import type { ParsedProp } from './runtime/frame/commands'
 import type { LibraryService } from './service'
 import type { ScopedLibrary } from './scoped'
+import { kvChainMerged, kvScopeChain } from './revision-rows'
 import registry from './custom.json'
 import { refKey, ruleScopes, type CampaignLibrary, type EntryRef } from './scopes'
 import { officialSourceOf, SOURCES, type SourceEntry } from './sources'
@@ -364,8 +365,7 @@ export class CustomLibrary {
     const replaces = importReplaces(await (await this.frame(codeSet)).call('brewDocIndex'), files)
     const scope = `${codeSet}:preview:${Date.now()}`
     const view = await this.lib.currentView()
-    const merged = new Map<string, unknown>()
-    for (const s of [...(await view.kvScopes(codeSet))].reverse()) for (const row of await this.db.kv.where('scope').equals(s).toArray()) { if (row.deleted) merged.delete(row.key); else merged.set(row.key, row.value) }
+    const merged = await kvChainMerged(view.store.rows, kvScopeChain(await view.chain(), codeSet), '') // 和版本库同一套沿链合并（revision-rows.ts）
     await this.db.kv.bulkPut([...merged].map(([key, value]) => ({ scope, key, value })))
     const f = await this.lib.openFrameIn(codeSet, scope, view)
     try {
