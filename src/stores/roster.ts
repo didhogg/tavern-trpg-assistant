@@ -55,7 +55,8 @@ export const useRosterStore = defineStore('people', () => {
     loading.value = true
     inflight = (async () => {
       try {
-        const results = await backend().load(key)
+        // 装人可能顺带写存档：经存档层，写完读回当前数据
+        const results = await campaign.backendWrite((k) => backend().load(k))
         loaded.value = Object.fromEntries(results.map((r) => [r.id, r]))
         rows.value = await backend().roster(key)
         error.value = null
@@ -112,12 +113,12 @@ export const useRosterStore = defineStore('people', () => {
   function toggle(id: string): void { selected.value = selected.value.includes(id) ? selected.value.filter((x) => x !== id) : [...selected.value, id] }
   const selectAllVisible = (): void => { selected.value = visible.value.map((r) => r.id) }
 
-  // ---- 写：每一步先写存档，再刷新，提示条带 [撤销] ----
+  // ---- 写：每一步都经存档层 backendWrite（先写掉未写入的改动，后端写完读回当前数据），再刷新列表，提示条带 [撤销] ----
   const readOnlyReason = '另一个窗口正在使用助手，这里只能查看'
   async function undoSteps(n: number): Promise<void> {
     const key = ownerKey()
     if (!key) return
-    try { for (let i = 0; i < n; i++) await backend().undo(key) } catch (e) { toast.error(`撤销失败：${e instanceof Error ? e.message : String(e)}`) }
+    try { await campaign.backendWrite(async (k) => { for (let i = 0; i < n; i++) await backend().undo(k) }) } catch (e) { toast.error(`撤销失败：${e instanceof Error ? e.message : String(e)}`) }
     await refresh()
   }
   async function run(message: string, steps: number, action: (key: string) => Promise<void>): Promise<boolean> {
@@ -125,7 +126,7 @@ export const useRosterStore = defineStore('people', () => {
     if (!key) return false
     if (campaign.readOnly) { toast.error(readOnlyReason); return false }
     try {
-      await action(key)
+      await campaign.backendWrite(action)
     } catch (e) {
       toast.error(`${message}失败：${e instanceof Error ? e.message : String(e)}`)
       await refresh()
@@ -178,7 +179,7 @@ export const useRosterStore = defineStore('people', () => {
     if (!key) return 'failed'
     if (campaign.readOnly) { toast.error(readOnlyReason); return 'failed' }
     try {
-      const out = await backend().buildNative(key, name, { category }, slot)
+      const out = await campaign.backendWrite((k) => backend().buildNative(k, name, { category }, slot))
       if (out.built.status === 'cancelled') return 'cancelled'
       if (!out.kernel) throw new Error(out.built.error ?? '建好的人物没能放进存档')
     } catch (e) {

@@ -29165,6 +29165,16 @@ var SA = xA("app", () => {
 		return await g(), e(u(), n.value.ownerKey);
 	}
 	async function w(e) {
+		if (!n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
+		let t = n.value.ownerKey;
+		await g();
+		try {
+			return await e(t);
+		} finally {
+			n.value?.ownerKey === t && f(await u().campaign.getWorkspace(t));
+		}
+	}
+	async function T(e) {
 		if (d(), !n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
 		await g();
 		let t = await e(u(), n.value.ownerKey);
@@ -29178,7 +29188,8 @@ var SA = xA("app", () => {
 		dirty: o,
 		hasCampaign: s,
 		currentSave: c,
-		mutate: w,
+		mutate: T,
+		backendWrite: w,
 		inspect: C,
 		init: m,
 		switchOwner: h,
@@ -30005,8 +30016,8 @@ var QA = [
 		let e = m();
 		return !e || !t.workspace?.data?.kernel ? (r.value = [], i.value = {}, s.value = null, Promise.resolve()) : (a.value = !0, p = (async () => {
 			try {
-				let t = await g().load(e);
-				i.value = Object.fromEntries(t.map((e) => [e.id, e])), r.value = await g().roster(e), o.value = null, s.value = h();
+				let n = await t.backendWrite((e) => g().load(e));
+				i.value = Object.fromEntries(n.map((e) => [e.id, e])), r.value = await g().roster(e), o.value = null, s.value = h();
 			} catch (e) {
 				o.value = e instanceof Error ? e.message : String(e);
 			} finally {
@@ -30064,10 +30075,11 @@ var QA = [
 		f.value = T.value.map((e) => e.id);
 	}, te = "另一个窗口正在使用助手，这里只能查看";
 	async function ne(e) {
-		let t = m();
-		if (t) {
+		if (m()) {
 			try {
-				for (let n = 0; n < e; n++) await g().undo(t);
+				await t.backendWrite(async (t) => {
+					for (let n = 0; n < e; n++) await g().undo(t);
+				});
 			} catch (e) {
 				n.error(`撤销失败：${e instanceof Error ? e.message : String(e)}`);
 			}
@@ -30075,11 +30087,10 @@ var QA = [
 		}
 	}
 	async function re(e, r, i) {
-		let a = m();
-		if (!a) return !1;
+		if (!m()) return !1;
 		if (t.readOnly) return n.error(te), !1;
 		try {
-			await i(a);
+			await t.backendWrite(i);
 		} catch (t) {
 			return n.error(`${e}失败：${t instanceof Error ? t.message : String(t)}`), await y(), !1;
 		}
@@ -30117,13 +30128,12 @@ var QA = [
 		le.value = null, await ne(1);
 	}
 	async function fe(e, r, i) {
-		let a = m();
-		if (!a) return "failed";
+		if (!m()) return "failed";
 		if (t.readOnly) return n.error(te), "failed";
 		try {
-			let t = await g().buildNative(a, e, { category: r }, i);
-			if (t.built.status === "cancelled") return "cancelled";
-			if (!t.kernel) throw Error(t.built.error ?? "建好的人物没能放进存档");
+			let n = await t.backendWrite((t) => g().buildNative(t, e, { category: r }, i));
+			if (n.built.status === "cancelled") return "cancelled";
+			if (!n.kernel) throw Error(n.built.error ?? "建好的人物没能放进存档");
 		} catch (e) {
 			return n.error(`新建人物失败：${e instanceof Error ? e.message : String(e)}`), await y(), "failed";
 		}

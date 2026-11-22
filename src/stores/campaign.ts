@@ -136,6 +136,23 @@ export const useCampaignStore = defineStore('campaign', () => {
     return action(svc(), owner.value.ownerKey)
   }
 
+  /**
+   * 后端直接写当前数据（人物名单、结算内核存档……）都经这里：存档层是当前数据唯一的内存持有者。
+   * 先把未写入的改动写掉；后端写完（成功或失败）后从存储读回当前数据交回这里——
+   * 否则之后的保存 / 延迟写入会拿内存里的旧数据盖掉后端刚写的（驾驶员 2026-11-22：加人后点保存人消失、显示“已是最新”）。
+   * 只读窗口不写（flush 自己跳过）；能不能写由调用方先判断。
+   */
+  async function backendWrite<T>(action: (ownerKey: string) => Promise<T>): Promise<T> {
+    if (!owner.value) throw new TrpgError('E_NO_WORKSPACE', '请先在酒馆中打开一个聊天')
+    const key = owner.value.ownerKey
+    await flush()
+    try {
+      return await action(key)
+    } finally {
+      if (owner.value?.ownerKey === key) adopt(await svc().campaign.getWorkspace(key))
+    }
+  }
+
   /** 经服务修改当前数据（启停扩展、规则选项、修改版等）：先把未写入的改动写掉，结果直接成为当前状态。 */
   async function mutate<T extends { workspace: Workspace }>(action: (s: Services, ownerKey: string) => Promise<T>): Promise<T> {
     guardWrite()
@@ -146,5 +163,5 @@ export const useCampaignStore = defineStore('campaign', () => {
     return result
   }
 
-  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, startWith, save, branch, load }
+  return { owner, workspace, readOnly, ready, dirty, hasCampaign, currentSave, mutate, backendWrite, inspect, init, switchOwner, refreshCurrentSave, flush, updateData, startNew, startWith, save, branch, load }
 })
