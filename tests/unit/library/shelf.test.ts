@@ -1,10 +1,13 @@
 // 书架：作者书目字段原样摆进行里；按作者分组表排序；书目取不到时的错误；缓存。
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { BookDirectory, type DirectoryRecord } from '../../../src/library/directory'
 import { attachShelf, directoryRows, groupShelf } from '../../../src/library/shelf'
-import { catalogFor } from '../../../src/library/scoped-catalog'
+import { catalogFor, shelfCatalog, type CatalogDeps } from '../../../src/library/scoped-catalog'
 import type { CatalogRow } from '../../../src/library/scoped'
 import { LibraryDatabase } from '../../../src/library/db'
+import { BrewPacks, type BrewPack } from '../../../src/library/brew-packs'
+import { defaultCampaignLibrary } from '../../../src/library/scopes'
+import { SOURCES } from '../../../src/library/sources'
 
 const GROUPS = [{ group: 'core', displayName: '核心' }, { group: 'supplement', displayName: '官方出版物' }, { group: 'homebrew', displayName: '自制内容' }, { group: 'other', displayName: '杂项' }]
 const REC: DirectoryRecord = {
@@ -74,7 +77,7 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
     const deps = {
       lib: { currentView: async () => view, frameOf: async () => ({ call: async () => ({}) }), brewCorpora: async () => ({}) },
       sourcesFor: () => [{ id: 'cn-official', kind: 'official', codeSet: 'cn', lang: 'zh', mirrors: [] }],
-      context: async () => ({ altMap: new Map(), assigns: new Map(), packs: new Map() }),
+      assignments: async () => new Map(), alternatives: async () => new Map(),
       directory: { get: async () => REC },
       installed: async () => true, editions: async () => ({}), sourceCounts: async () => ({ PHB: 2 }), adventures: async () => [],
     } as never
@@ -87,7 +90,7 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
     const deps = {
       lib: { currentView: async () => view, frameOf: async () => ({ call: async () => ({}) }), brewCorpora: async () => ({}) },
       sourcesFor: () => [{ id: 'cn-official', kind: 'official', codeSet: 'cn', lang: 'zh', mirrors: [] }],
-      context: async () => ({ altMap: new Map(), assigns: new Map(), packs: new Map() }),
+      assignments: async () => new Map(), alternatives: async () => new Map(),
       directory: { get: async () => REC },
       installed: async () => true, editions: async () => ({}), sourceCounts: async () => ({ PHB: 2, lmop: 7, Generic: 3 }),
       adventures: async () => [{ id: 'LMoP', source: 'LMoP', hash: 'lmop', downloaded: true }],
@@ -105,7 +108,7 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
     const mk = (codeSet: string, setId: string, pair: string, rec: DirectoryRecord) => ({
       lib: { currentView: async () => view, frameOf: async () => ({ call: async () => ({}) }), brewCorpora: async () => ({}) },
       sourcesFor: () => [{ id: setId, kind: 'official', codeSet, lang: codeSet === 'cn' ? 'zh' : 'en', mirrors: [], pair }],
-      context: async () => ({ altMap: new Map(), assigns: new Map(), packs: new Map() }),
+      assignments: async () => new Map(), alternatives: async () => new Map(),
       directory: { get: async () => rec, peek: async (cs: string) => { peeked.push(cs); return cs === 'cn' ? cnRec : cs === 'en' ? enRec : null } },
       installed: async () => true, editions: async () => ({}), sourceCounts: async () => ({}), adventures: async () => [],
     }) as never
@@ -116,6 +119,60 @@ const withDb = async (run: (db: LibraryDatabase) => Promise<void>) => {
     expect(en.find((r) => r.source === 'XX')?.altName).toBeUndefined()
     expect(peeked).toContain('cn')
   })
+
+describe('书架的已下载自制包', () => {
+  const view = { id: 'published' } as never
+  const deps = {
+    lib: { currentView: async () => view, brewCorpora: async () => ({}), officialInstalled: async () => false },
+    directory: { get: async () => REC, peek: async () => null },
+    sourcesFor: (codeSet: string) => SOURCES.filter((s) => s.codeSet === codeSet),
+    assignments: async () => new Map(), alternatives: async () => new Map(), installed: async () => false,
+  } as unknown as CatalogDeps
+  const pack = (name: string, source: string, set: string, origin: BrewPack['origin'] = 'download'): BrewPack => ({
+    docIdLocal: name, filename: name, url: origin === 'download' ? `${SOURCES.find((s) => s.id === set)!.mirrors[0]}feat/${name}.json` : null, origin,
+    isEditable: false, timeAdded: 0, sources: [source], sourceInfo: [], dependencies: null, includes: null,
+    requires: [], props: { feat: 1 }, hashes: {}, entryCount: 1,
+  })
+  const cn = [pack('中文版', 'shared', 'cn-brew'), pack('仅中文', 'zh', 'cn-brew'), pack('导入', 'mixed', 'cn-brew', 'import')]
+  const en = [pack('English edition', 'shared', 'en-brew'), pack('English only', 'en', 'en-brew'), pack('Mixed download', 'mixed', 'en-brew'), pack('Local English', 'local', 'en-brew', 'import')]
+  const rowsOf = (r: Awaited<ReturnType<typeof shelfCatalog>>) => r.groups.find((g) => g.group === 'homebrew')?.books ?? []
+
+  it('配对的下载包合成当前语言一行，单语包保留所属资料集，本地导入不挡住在线包', async () => {
+    const list = vi.spyOn(BrewPacks.prototype, 'list').mockImplementation(async (set) => set === 'cn-brew' ? cn : en)
+    try {
+      const zhShelf = await shelfCatalog(deps, defaultCampaignLibrary('dnd5e2014', 'cn'), view, true)
+      const zhRows = rowsOf(zhShelf)
+      expect(zhRows).toHaveLength(5)
+      expect(zhRows).toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: '中文版', altName: 'English edition', set: 'cn-brew' }),
+        expect.objectContaining({ name: 'English only', set: 'en-brew', pack: expect.objectContaining({ docIdLocal: 'English only' }) }),
+        expect.objectContaining({ name: 'Mixed download', set: 'en-brew' }),
+      ]))
+      expect(zhShelf.minePacks).toEqual([cn[2]])
+      expect(list.mock.calls).toEqual([['cn-brew', view], ['en-brew', view]])
+      const enShelf = await shelfCatalog(deps, defaultCampaignLibrary('dnd5e2014', 'en'), view, true)
+      expect(rowsOf(enShelf)).toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: 'English edition', altName: '中文版', set: 'en-brew' }),
+        expect.objectContaining({ name: '仅中文', set: 'cn-brew' }),
+      ]))
+      expect(rowsOf(enShelf).some((r) => r.name === '中文版')).toBe(false)
+      const wizard = await shelfCatalog(deps, defaultCampaignLibrary('dnd5e2014', 'cn'), view)
+      expect(rowsOf(wizard).map((r) => r.set)).toEqual(['cn-brew', 'cn-brew', 'cn-brew'])
+    } finally { list.mockRestore() }
+  })
+
+  it('当前语言清单读取失败，另一语言的下载包仍可见', async () => {
+    const list = vi.spyOn(BrewPacks.prototype, 'list').mockImplementation(async (set) => {
+      if (set === 'cn-brew') throw new Error('清单损坏')
+      return en
+    })
+    try {
+      const result = await shelfCatalog(deps, defaultCampaignLibrary('dnd5e2014', 'cn'), view, true)
+      expect(result.brewError).toBe('cn-brew：清单损坏')
+      expect(rowsOf(result)).toHaveLength(3)
+    } finally { list.mockRestore() }
+  })
+})
 
 describe('BookDirectory', () => {
   it('没装：开联网一次性小窗读完就关；带冒险文件路径；结果存缓存，第二次不再开小窗；peek 只看缓存', () => withDb(async (db) => {

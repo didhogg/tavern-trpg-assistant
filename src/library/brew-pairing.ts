@@ -108,6 +108,15 @@ function rowsOf<T>(pairing: FilePairing, zh: Map<string, T>, en: Map<string, T>)
   ]
 }
 
+/** 已装包配对：目录从下载网址里取，可编辑包不参与。 */
+export function pairInstalledBrews(zhPacks: BrewPack[], enPacks: BrewPack[], zhSet: SourceEntry, enSet: SourceEntry): InstalledPair[] {
+  const byId = (packs: BrewPack[]) => new Map(packs.filter((p) => !p.isEditable).map((p) => [p.docIdLocal, p]))
+  const zh = byId(zhPacks)
+  const en = byId(enPacks)
+  const pairable = (m: Map<string, BrewPack>, set: SourceEntry): PairableFile[] => [...m.values()].map((p) => ({ key: p.docIdLocal, dir: dirOfUrl(p.url, set), sources: p.sources }))
+  return rowsOf(pairBrewFiles(pairable(zh, zhSet), pairable(en, enSet)), zh, en)
+}
+
 const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null)
 /** 按位置取到的一对，名字对得上吗：中文条目的 ENG_name = 英文条目的 name。任何一边写不出名字 → 核对不了，当对（保持按位置取）。 */
 function namesAgree(hereIsZh: boolean, mine: unknown, theirs: unknown): boolean {
@@ -150,11 +159,8 @@ export class BrewPairs {
   async installed(zhId = 'cn-brew', view?: LibraryView): Promise<InstalledPair[]> {
     const zhSet = getSource(zhId)
     const enSet = this.partnerOf(zhSet)
-    const side = async (set: SourceEntry): Promise<Map<string, BrewPack>> => new Map((await this.packs.list(set.id, view)).filter((p) => !p.isEditable).map((p) => [p.docIdLocal, p]))
-    const zh = await side(zhSet)
-    const en = await side(enSet)
-    const pairable = (m: Map<string, BrewPack>, set: SourceEntry): PairableFile[] => [...m.values()].map((p) => ({ key: p.docIdLocal, dir: dirOfUrl(p.url, set), sources: p.sources }))
-    return rowsOf(pairBrewFiles(pairable(zh, zhSet), pairable(en, enSet)), zh, en)
+    const [zh, en] = await Promise.all([this.packs.list(zhSet.id, view), this.packs.list(enSet.id, view)])
+    return pairInstalledBrews(zh, en, zhSet, enSet)
   }
 
   /**

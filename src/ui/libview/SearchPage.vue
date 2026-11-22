@@ -3,6 +3,7 @@ import ErrorBanner from './ErrorBanner.vue'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useVirtual } from './useVirtual'
 import type { ScopedSearchHit } from '../../library/scoped-search'
+import { getSource } from '../../library/sources'
 import { useAppStore } from '../../stores/app'
 import { useLibViewStore } from '../../stores/libview'
 import Checkbox from '../kit/Checkbox.vue'
@@ -35,7 +36,7 @@ async function setExpanded(open: boolean): Promise<void> {
 }
 
 // 已安装并已开启的书 / 包：和书架、我的库同一份登记（作者分组 + 自制内容 + 我的库），P5-5 §11.3
-const groups = computed(() => searchScopeGroups(lib.shelf?.groups ?? [], new Set(lib.minePacks.map((p) => p.docIdLocal)), (r) => r.view.visible))
+const groups = computed(() => searchScopeGroups(lib.shelf?.groups ?? [], new Set(lib.minePacks.map((p) => p.docIdLocal)), (r) => r.view.visible && getSource(r.set).codeSet === lib.campaignLib?.codeSet))
 const allRows = computed(() => groups.value.flatMap((g) => g.rows))
 const isChecked = (r: ScopeRow): boolean => !r.sources.every((x) => unchecked.value.has(x))
 const total = computed(() => allRows.value.length)

@@ -15,15 +15,14 @@ import { SOURCES, getSource, officialSourceOf, type SourceEntry } from './source
 import { chooseVersion, expandVariants, packChoiceKey, pickChoice, variantsOf, type Alternative, type Chosen, type VariantInfo } from './versions'
 export type { VariantInfo } from './versions'
 import { hashValue } from '../core/hash'
-import type { BookDirectory, DirectoryRecord } from './directory'
+import type { BookDirectory } from './directory'
 import { BrewPacks, type BrewPack } from './brew-packs'
-import { adventuresOf, catalogFor, packUrl, visibleSourceCounts, type CatalogRow } from './scoped-catalog'
+import { adventuresOf, catalogFor, packUrl, shelfCatalog, visibleSourceCounts, type CatalogDeps, type CatalogOptions, type CatalogRow } from './scoped-catalog'
 export type { CatalogRow } from './scoped-catalog'
 import { DocumentStore } from './documents'
 import { variantLinks, type VariantLink } from './variants'
 import { EntryLinks, type Located, type ResolvedTag } from './entry-links'
 import { scopedSearch, type ScopedSearchHit } from './scoped-search'
-import { groupShelf, type ShelfGroup } from './shelf'
 import type { LibraryView } from './revision'
 import type { KernelOverride } from '../schemas/kernel'
 import { detailItem } from './scoped-detail'
@@ -344,24 +343,19 @@ export class ScopedLibrary {
     return { ...r, view: at ? { visible: at.visible, reason: at.reason, alternatives: at.alternatives } : null }
   }
 
-  /** 书目行（实现在 scoped-catalog.ts）。 */
-  async catalog(c: CampaignLibrary, { remote = false, record, view: viewArg }: { remote?: boolean; record?: DirectoryRecord; view?: LibraryView } = {}): Promise<CatalogRow[]> {
-    return catalogFor({
+  private catalogDeps(): CatalogDeps {
+    return {
       lib: this.lib, ...(this.directory ? { directory: this.directory } : {}),
-      sourcesFor: (cs) => this.setsOf(cs), context: (cc, v) => this.context(cc, v),
+      sourcesFor: (cs) => this.setsOf(cs), assignments: () => this.manage.assignments(), alternatives: (cs, v) => this.alts(cs, v),
       installed: (set, v) => this.installed(set, v), editions: (cs, ss, v) => this.editions(cs, ss, v),
       sourceCounts: (id, v) => this.sourceCounts(id, v), adventures: (set, v) => this.adventures(set, v),
-    }, c, { remote, ...(record ? { record } : {}), ...(viewArg ? { view: viewArg } : {}) })
-  }
-  async shelf(c: CampaignLibrary, view?: LibraryView): Promise<{ groups: ShelfGroup[]; booksError: string | null; adventuresError: string | null; brewError: string | null }> {
-    const record = await this.directory!.get(c.codeSet)
-    const rows = await this.catalog(c, { remote: true, record, ...(view ? { view } : {}) })
-    let brewError: string | null = null
-    const v = view ?? await this.lib.currentView()
-    for (const set of this.setsOf(c.codeSet).filter((s) => s.kind === 'brew')) {
-      try { await new BrewPacks(this.lib).list(set.id, v) } catch (e) { brewError = brewError ?? `${set.id}：${e instanceof Error ? e.message : String(e)}` }
     }
-    return { groups: groupShelf(rows, record.groups), booksError: record.errors.books, adventuresError: record.errors.adventures, brewError }
+  }
+  catalog(c: CampaignLibrary, opts?: CatalogOptions): Promise<CatalogRow[]> {
+    return catalogFor(this.catalogDeps(), c, opts)
+  }
+  shelf(c: CampaignLibrary, view?: LibraryView, { allDownloads = false } = {}) {
+    return shelfCatalog(this.catalogDeps(), c, view, allDownloads)
   }
   private sourceCounts(setId: string, view: LibraryView): Promise<Record<string, number>> { return visibleSourceCounts(view, setId) }
   /** 这套资料的冒险目录（实现在 scoped-catalog.ts）。 */
