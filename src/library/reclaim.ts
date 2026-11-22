@@ -33,7 +33,9 @@ const jsonBytes = (v: unknown): number => { try { return JSON.stringify(v ?? nul
 
 export async function reclaimLibrary(deps: { db: LibraryDatabase; revisions: LibraryRevisionStore; operations: LibraryOperations; directory: BookDirectory; kernelOfficial?: () => Promise<string> }): Promise<ReclaimReport> {
   const { db, revisions, operations, directory } = deps
-  return operations.withLock(async (renew) => {
+  // 回收会删已发布版本里被盖住的旧行：结束后（含中途失败）作废版本行的内存索引
+  try {
+    return await operations.withLock(async (renew) => {
     const report: ReclaimReport = { bytes: 0, fileContents: 0, fileVersions: 0, legacyFiles: 0, derived: 0, kv: 0, kernelCache: 0, notes: [] }
     const view = await revisions.published()
     const chain = await view.chain() // 新 → 旧，最后是旧版 R0
@@ -175,5 +177,8 @@ export async function reclaimLibrary(deps: { db: LibraryDatabase; revisions: Lib
       report.kernelCache = stale.length
     }
     return report
-  })
+    })
+  } finally {
+    revisions.rows.reset()
+  }
 }

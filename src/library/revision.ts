@@ -8,6 +8,7 @@ import type {
 import { CODE_SETS, SOURCES, type SourceEntry } from './sources'
 import { dataVersionOf } from './revision-data'
 import { fileGet, filePaths, filePut, fileRemove, fileSha, filterIndexFromChain, type FileRead } from './revision-files'
+import { RevisionRows, kvScopeChain } from './revision-rows'
 import type { KernelDataVersion } from '../schemas/kernel'
 
 export const LEGACY_REVISION = 'rev-legacy'
@@ -78,7 +79,10 @@ export class LibraryRevisionStore {
   private readonly viewCache = new Map<string, LibraryView>()
   private legacyReady: Promise<void> | null = null
 
-  constructor(readonly db: LibraryDatabase) {}
+  /** 已发布版本的文件版本 / 作者存储行的内存索引（沿父链查找不再逐层读库）。 */
+  readonly rows: RevisionRows
+
+  constructor(readonly db: LibraryDatabase) { this.rows = new RevisionRows(db) }
 
   /** 第一次打开 v4：把现有 files / derived / kv / sets 接成只读 R0。只读，不搬数据。 */
   ensureLegacy(): Promise<void> {
@@ -328,8 +332,8 @@ export class LibraryRevisionStore {
   }
 
   private async kvRecord(view: LibraryView, codeSet: string, key: string): Promise<{ scope: string; value: unknown; deleted?: boolean } | null> {
-    for (const scope of await view.kvScopes(codeSet)) {
-      const rec = await this.db.kv.get([scope, key])
+    for (const { scope, owner } of kvScopeChain(await view.chain(), codeSet)) {
+      const rec = await this.rows.kvRow(scope, key, owner)
       if (rec) return { scope, value: rec.value, ...(rec.deleted ? { deleted: true } : {}) }
     }
     return null
@@ -354,8 +358,8 @@ export class LibraryRevisionStore {
 
   async localSnapshot(view: LibraryView, codeSet: string): Promise<Record<string, string>> {
     const out: Record<string, string> = {}
-    for (const scope of [...(await view.kvScopes(codeSet))].reverse()) {
-      const rows = await this.db.kv.where('scope').equals(`${scope}:local`).toArray()
+    for (const { scope, owner } of kvScopeChain(await view.chain(), codeSet).reverse()) {
+      const rows = await this.rows.kvRowsOf(`${scope}:local`, owner)
       for (const row of rows) {
         if (row.deleted) delete out[row.key]
         else out[row.key] = String(row.value ?? '')
