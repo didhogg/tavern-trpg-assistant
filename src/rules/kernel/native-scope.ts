@@ -4,11 +4,12 @@
 // 中文战役换成作者看到的英文对照编号（englishPairs，和建卡交作者英文对照同一份配对）。
 // 类别不写清单：按这套官方资料实际有的全部类别逐类查。
 import type { ScopedLibrary } from '../../library/scoped'
-import type { LibraryService } from '../../library/service'
+import type { EnglishPairs, LibraryService } from '../../library/service'
 import type { LibraryView } from '../../library/revision'
 import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import { officialSourceOf } from '../../library/sources'
 import type { ExcludeRow } from './frame/commands-native'
+import type { NativePickLabels } from './frame/native-builder-ui'
 
 export interface CampaignExcludes {
   rows: ExcludeRow[]
@@ -33,4 +34,32 @@ export async function campaignExcludes(deps: { scoped: ScopedLibrary; service: L
     }
   }
   return { rows, unpaired }
+}
+
+/** 只传库中已开启的条目的显示名。真正候选、过滤和选择结果仍由正在运行的作者控件决定。 */
+export async function nativePickLabels(deps: { scoped: ScopedLibrary; service: LibraryService }, c: CampaignLibrary, view: LibraryView): Promise<NativePickLabels> {
+  const official = officialSourceOf(c.codeSet)
+  const chinese = officialSourceOf('cn')
+  const hasChinese = await deps.service.officialInstalled(chinese.codeSet, view)
+  const pairs: EnglishPairs['pairs'] = hasChinese ? (await deps.scoped.englishPairs(chinese.codeSet, view)).pairs : {}
+  const labels = await Promise.all(['race', 'background', 'class', 'subclass'].map(async (prop) => {
+    const visible = await deps.scoped.query(c, prop, { view })
+    const cnNames = new Map<string, string>()
+    if (official.lang !== 'zh' && hasChinese) {
+      // 中文名只作显示。是否可选仍由当前资料集的 visible 行和小窗的作者筛选共同决定。
+      for (const row of await deps.scoped.query({ ...c, codeSet: chinese.codeSet }, prop, { view, mode: 'browse' })) {
+        const paired = pairs[prop]?.[row.ref.hash]
+        const name = (row.item as { name?: string } | null)?.name
+        if (paired && name) cnNames.set(paired.enHash, name)
+      }
+    }
+    const list: Array<[string, string]> = []
+    for (const row of visible) {
+      const nativeHash = official.lang === 'zh' && row.ref.set === official.id ? pairs[prop]?.[row.ref.hash]?.enHash : row.ref.hash
+      const name = (row.item as { name?: string } | null)?.name
+      if (nativeHash && name) list.push([nativeHash, row.ref.set === official.id ? cnNames.get(nativeHash) ?? name : name])
+    }
+    return [prop, Object.fromEntries(list)] as const
+  }))
+  return Object.fromEntries(labels)
 }

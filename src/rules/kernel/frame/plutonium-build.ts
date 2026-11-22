@@ -2,8 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 锁定的作者模块没有类型声明 */
 import { sha256Hex } from '../../../core/hash'
 import { readPrivatePlutoniumZh } from './plutonium-zh'
+import type { NativeBuilderAuthor } from './native-builder-ui'
 
 const BUNDLE_SHA = '13b1a03b99eab99f4b078e11075c7092c175a365d076d5319914f376c583e245'
+const NATIVE_BUILDER_SHA = '608e0a5497354d1937c3d3e780f85a103c4ddffb846d4bb1cdcfb00bdffb0bf2'
 const EXPORTS = [
   'Charactermancer_FeatureOptionsSelect',
   'Charactermancer_AdditionalFeatsSelect',
@@ -28,6 +30,7 @@ const EXPORTS = [
 ]
 
 export let plutoniumBuild: Record<string, any> | null = null
+export let nativeBuilderAuthor: NativeBuilderAuthor | undefined
 
 export async function loadKernelModule(url: URL, usePrivateZh = false): Promise<void> {
   if (!url.pathname.endsWith('/modules/plutonium/js/Bundle.js')) {
@@ -38,13 +41,18 @@ export async function loadKernelModule(url: URL, usePrivateZh = false): Promise<
   if (!response.ok) throw Error(`读取 Plutonium 失败：${response.status}`)
   const text = await response.text()
   const actualUrl = new URL(response.url || url.href)
-  if (sha256Hex(text) !== BUNDLE_SHA) {
+  const digest = sha256Hex(text)
+  if (digest !== BUNDLE_SHA) {
     // 只有中文建卡小窗可以加载经指纹校验的本机中文构建。模块的其他文件仍按原路径读取。
     const privateBundle = new URL('../private/modules/plutonium/js/Bundle.js', location.href)
     const localized = usePrivateZh && actualUrl.href === privateBundle.href
       ? await readPrivatePlutoniumZh(text, new URL('../private/lang/zh/modules/plutonium/js/', location.href))
       : null
-    if (localized !== null) await importBundle(localized, actualUrl)
+    if (actualUrl.href === privateBundle.href && digest === NATIVE_BUILDER_SHA) {
+      const { nativeBuilder } = await importBundle(localized ?? text, actualUrl,
+        '\nexport const nativeBuilder = { ActorCharactermancer, ComponentUiUtil, Charactermancer_Util };\n')
+      nativeBuilderAuthor = nativeBuilder
+    } else if (localized !== null) await importBundle(localized, actualUrl)
     else await import(/* @vite-ignore */ actualUrl.href)
     return
   }

@@ -8,12 +8,13 @@ import tokens from '../../../ui/styles/tokens.css?inline'
 import palette from '../../../ui/styles/palette.css?inline'
 import theme from '../../../ui/styles/build-frame.css?inline'
 import controls from '../../../ui/styles/build-frame-controls.css?inline'
+import builder from '../../../ui/styles/build-wizard.css?inline'
 import { moduleUrl } from './module-roots'
 
 const g = globalThis as any
 
 /** 插件的设计变量原本写在插件影子层的 :host 上；小窗是整页，换到 :root，去掉只对影子层有意义的两项。 */
-export function frameTheme(parts: string[] = [tokens, palette, theme, controls]): string {
+export function frameTheme(parts: string[] = [tokens, palette, theme, controls, builder]): string {
   return parts.join('\n')
     .replace(/:host\b/g, ':root')
     .replace(/^\s*all:\s*initial;\s*$/m, '')

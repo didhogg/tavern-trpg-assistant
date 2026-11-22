@@ -12,7 +12,7 @@ import type { CampaignLibrary, EntryRef } from '../../library/scopes'
 import type { KernelSession } from './host'
 import { kernelInput } from './input'
 import { openKernel, prepareKernelBrews } from './open'
-import { campaignExcludes } from './native-scope'
+import { campaignExcludes, nativePickLabels } from './native-scope'
 import type { KernelBrewReport } from './frame/brew-input'
 
 export interface NativeBuildDeps {
@@ -57,12 +57,17 @@ export class KernelNativeBuild {
       if (!this.running.has(ownerKey)) { session.close(); return { status: 'cancelled' } }
       this.running.set(ownerKey, session)
       try {
-        const excludes = await campaignExcludes(this.deps, campaign.library, view)
-        const seed = `${name}~${crypto.randomUUID().slice(0, 8)}`
-        const start = await session.call('draftStart', { name, seed })
+        const [excludes, labels] = await Promise.all([
+          campaignExcludes(this.deps, campaign.library, view),
+          slot ? nativePickLabels(this.deps, campaign.library, view) : undefined,
+        ])
+        const identity = crypto.randomUUID().replaceAll('-', '')
+        const seed = `${name}~${identity}`
+        // 每个建卡小窗的本地发号从头开始，人物要移进同一个日常小窗，所以在出生时给唯一编号。
+        const start = await session.call('draftStart', { name, seed, id: identity.slice(0, 16) })
         const id = (start.result as { id?: string } | null)?.id
         if (start.status !== 'complete' || !id) return { status: 'error', error: `开不了草稿人：${start.error ?? start.status}` }
-        const call = await session.call('nativeBuild', { id, excludes: excludes.rows, brewFiles })
+        const call = await session.call('nativeBuild', { id, excludes: excludes.rows, brewFiles, labels })
         const out = call.result as { built?: boolean; data?: Record<string, unknown> } | null
         if (call.status !== 'complete') return { status: 'error', error: call.error ?? `作者建卡没完成（${call.status}）` }
         if (!out?.built || !out.data) return { status: 'cancelled' }
