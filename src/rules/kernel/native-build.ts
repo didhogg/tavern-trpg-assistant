@@ -15,6 +15,7 @@ import { openKernel, prepareKernelBrews } from './open'
 import { campaignExcludes, nativePresentation } from './native-scope'
 import type { KernelBrewReport } from './frame/brew-input'
 import { getSource } from '../../library/sources'
+import { inertMarkup } from '../../library/author-markup-rules'
 import type { NativeCardPreview, NativeLabel, NativePresentation } from './native-presentation'
 
 export interface NativeBuildDeps {
@@ -50,9 +51,8 @@ export class KernelNativeBuild {
     const frame = await this.deps.service.frameOf(source.codeSet, view)
     const markup = await frame.call('renderEntity', ref.prop, detail.item)
     if (!markup?.html) return null
-    const content = new DOMParser().parseFromString(markup.html, 'text/html')
-    const text = (content.body.textContent ?? '').replace(/\s+/g, ' ').trim()
-    return { text: text.length > 540 ? `${text.slice(0, 540)}…` : text, chinese: source.lang === 'zh' }
+    // 建卡右栏就是库里同一张资料卡（线框 p6-5b～5h）：整张交过去，只读，链接不可点。
+    return { html: inertMarkup(markup.html), chinese: source.lang === 'zh' }
   }
 
   /**
@@ -71,13 +71,10 @@ export class KernelNativeBuild {
       let presentation: NativePresentation | undefined
       const { session, report, brewFiles } = await openKernel({
         ...this.deps, view, input, ...prepared, container: slot ?? this.deps.container(), visible: !!slot,
-        buildCard: slot ? async (prop, hash, open) => {
+        buildCard: slot ? async (prop, hash) => {
           const group = presentation && Object.hasOwn(presentation.labels, prop) && presentation.labels[prop]
           const label = group && Object.hasOwn(group, hash) && group[hash]
-          if (!label) return null
-          if (!open) return this.preview(label, campaign.library, view)
-          slot.dispatchEvent(new CustomEvent('trpg-build-card', { detail: label }))
-          return true
+          return label ? this.preview(label, campaign.library, view) : null
         } : undefined,
       })
       if (!this.running.has(ownerKey)) { session.close(); return { status: 'cancelled' } }

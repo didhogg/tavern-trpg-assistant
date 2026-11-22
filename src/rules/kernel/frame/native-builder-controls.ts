@@ -89,11 +89,21 @@ export function bindAuthorControls(author: NativeBuilderAuthor, presentation: Na
     status.setAttribute('aria-live', 'polite')
     meta.ele.classList.add('p6-choice-group')
     meta.ele.classList.remove('ve-flex-col')
-    for (const row of meta.rowMetas) row.cb.closest('label')?.parentElement?.classList.add('p6-choice-option')
+    for (const row of meta.rowMetas) {
+      const option = row.cb.closest('label')?.parentElement
+      if (!option) continue
+      option.classList.add('p6-choice-option')
+      // 选项块按内容宽度排；作者的 12 格栅栏宽度（ve-col-*，分层 !important，样式盖不过）会把勾选框压到字上
+      for (const part of option.children) part.classList.remove(...[...part.classList].filter((name) => name.startsWith('ve-col-')))
+    }
     meta.ele.prepend(status)
     const paint = () => {
-      const remaining = opts.count - meta.rowMetas.filter((row: any) => row.cb.checked).length
-      status.textContent = remaining > 0 ? `选 ${opts.count} 项 · 还差 ${remaining} 项` : `已选好 · ${opts.count} 项`
+      const picked: string[] = meta.rowMetas.filter((row: any) => row.cb.checked)
+        .map((row: any) => row.cb.closest('label')?.parentElement?.querySelector('.ve-inline-flex-v-center')?.textContent?.trim() ?? '')
+        .filter(Boolean)
+      const remaining = opts.count - picked.length
+      const names = picked.length ? ` · 已选：${picked.join('、')}` : ''
+      status.textContent = (remaining > 0 ? `选 ${opts.count} 项 · 还差 ${remaining} 项` : `已选好 ${opts.count} 项`) + names
       status.dataset.done = String(remaining <= 0)
       status.dataset.missing = String(Math.max(0, remaining))
       if (meta.ele.isConnected && !meta.ele.closest('.application:not(.trpg-main)')) {
@@ -135,6 +145,9 @@ export function mountAbilityModes(root: HTMLElement, model: any, presentation: N
   const header = root.querySelector<HTMLElement>('.ve-statgen-shared__wrp-header')
   const select = header?.querySelector('select')
   const statgen = model.compAbility.compStatgen
+  // 每次刷新都把作者当前的定属性方式记到这一步上（样式按它藏购点余额等），不只在第一次挂按钮时记
+  const stage = root.closest<HTMLElement>('.p6-builder-attributes')
+  if (stage) stage.dataset.mode = statgen.getMode()
   if (!header || !select || header.querySelector('.p6-ability-methods')) return
   const methods = element('div', 'p6-ability-methods p6-builder-ui')
   methods.setAttribute('role', 'group')

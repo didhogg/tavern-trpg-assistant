@@ -1,4 +1,5 @@
 // 同一个作者入口负责所有类别槽。保留作者候选及返回值，选择后由原调用方收下 UID。
+// 呈现 = 贴在按钮下面的下拉（旧 0c 的「任选简易武器 [短棒 ▾] 清除」），不另开窗、不展开框中框（驾驶员 2026-11-22）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 私人完整版未提供类型声明。 */
 import type { NativePresentation } from '../native-presentation'
 import { button, element } from './native-builder-elements'
@@ -40,6 +41,7 @@ export function bindEquipmentPicker(author: any, presentation: NativePresentatio
         document.removeEventListener('pointerdown', outside, true)
         close = undefined
         panel.remove()
+        anchor?.setAttribute('aria-expanded', 'false')
         anchor?.focus()
         resolve([ok, uid])
       }
@@ -64,10 +66,11 @@ export function bindEquipmentPicker(author: any, presentation: NativePresentatio
       }
       search.addEventListener('input', draw)
       panel.addEventListener('keydown', (event) => { if (event.key === 'Escape') { event.stopPropagation(); finish(false) } })
-      const tools = element('div', 'p6-equip-picker-tools')
-      tools.append(button('清除选择', () => finish(true)), button('取消', () => finish(false)))
-      panel.append(tools)
-      scope.append(panel)
+      panel.append(button('清除这一格', () => finish(true), 'p6-equip-picker-clear'))
+      panel.setAttribute('role', 'dialog')
+      panel.setAttribute('aria-label', anchor.title || '选择一件物品')
+      anchor.setAttribute('aria-expanded', 'true')
+      anchor.after(panel)
       document.addEventListener('pointerdown', outside, true)
       draw()
       search.focus()

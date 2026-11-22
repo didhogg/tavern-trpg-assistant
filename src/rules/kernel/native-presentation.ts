@@ -13,7 +13,8 @@ export interface NativePresentation {
   terms: Record<string, string>
 }
 
+/** 建卡右栏的资料卡：库里同一张卡的只读排版（inertMarkup 清过）。 */
 export interface NativeCardPreview {
-  text: string
+  html: string
   chinese: boolean
 }

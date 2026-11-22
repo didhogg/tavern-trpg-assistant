@@ -31,7 +31,8 @@
 .window-content .ve-flex-h-right.ve-no-shrink:has(> .ve-btn-primary) .ve-vr-2 { display: none; }
 
 /* ── 分段（以 hr.ve-hr-2 开头的块）→ 浅色圆角卡片 ── */
-.window-content .ve-flex-col:has(> hr.ve-hr-2:first-child) { margin: var(--sp-2) 0; padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--bg-sunk) !important; }
+/* 只留一层：分段之间一条细线，不再画框（驾驶员 2026-11-22：不要框套框） */
+.window-content .ve-flex-col:has(> hr.ve-hr-2:first-child) { margin: 0; padding: var(--sp-3) 0; border: 0; border-top: var(--border) solid var(--line); border-radius: 0; background: transparent !important; }
 .window-content .ve-flex-col > hr.ve-hr-2:first-child { display: none; }
 .window-content .ve-bold { font-weight: var(--fw-semibold); }
 
@@ -42,8 +43,8 @@
 /* ── 勾选 / 单选：原生控件（Foundry 自绘的方块要图标字体，没带）+ 整行做成选项卡，选中主色边框浅底 ── */
 .window-content input[type=checkbox], .window-content input[type=radio] { appearance: auto !important; -webkit-appearance: auto !important; width: 16px !important; height: 16px !important; margin: 0; background: none !important; border: 0 !important; accent-color: var(--primary); }
 .window-content input[type=checkbox]::before, .window-content input[type=checkbox]::after, .window-content input[type=radio]::before, .window-content input[type=radio]::after { content: none !important; display: none !important; }
-.window-content label:has(> label > input[type=checkbox]), .window-content label:has(> label > input[type=radio]) { margin: 0 0 var(--sp-1); padding: var(--sp-1) var(--sp-2) !important; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface) !important; cursor: pointer; }
-.window-content label:has(> label > input:checked) { border-color: var(--primary); background: var(--primary-tint) !important; }
+.window-content label:not(.p6-choice-option):has(> label > input[type=checkbox]), .window-content label:not(.p6-choice-option):has(> label > input[type=radio]) { margin: 0 0 var(--sp-1); padding: var(--sp-1) var(--sp-2) !important; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface) !important; cursor: pointer; }
+.window-content label:not(.p6-choice-option):has(> label > input:checked) { border-color: var(--primary); background: var(--primary-tint) !important; }
 
 /* ── 列表行（等级表、法术表等 veapp__list-row / manc__list-row）→ 原来的列表行：细分隔线、悬停、选中左竖条 ── */
 .window-content .veapp__list-row, .window-content .manc__list-row { min-height: 36px; align-items: center; border-bottom: var(--border) solid var(--line); background: var(--surface) !important; }

@@ -25,7 +25,6 @@
 .p6-builder-selection { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; flex: none; padding: var(--sp-2) var(--sp-3); position: sticky; top: 0; z-index: 2; background: var(--surface); border-bottom: var(--border) solid var(--line); }
 .p6-builder-selection-title { flex: 1; margin: 0; min-width: 4em; font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
 .p6-builder-selection .p6-builder-btn { min-height: 32px !important; }
-.p6-builder-brief { margin: var(--sp-1) 0 0; padding: var(--sp-3) var(--sp-4); color: var(--text2); border-top: var(--border) solid var(--line); font-size: var(--fs-sm); line-height: 1.65; }
 .p6-builder-split .p6-native-body > .ve-flex { flex-direction: column; height: auto !important; }
 .p6-builder-split .p6-native-body > .ve-flex > .ve-flex-col { width: 100% !important; overflow: visible !important; }
 .p6-builder-split .p6-native-body > .ve-flex > .ve-vr-1,
@@ -52,15 +51,8 @@
 .p6-builder-todo-row { display: flex; justify-content: space-between; gap: var(--sp-2); align-items: center; padding-top: var(--sp-2); }
 .p6-level { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-1) 0; }
 .p6-level select { width: auto; min-height: 34px; padding: 0 var(--sp-3); }
-.p6-choice-group { gap: var(--sp-1); padding: var(--sp-2) !important; border: var(--border) solid var(--line); border-radius: var(--r-sm); min-height: 0 !important; }
 .p6-choice-progress { color: var(--accent-text); width: 100%; }
 .p6-choice-progress[data-done='true'] { color: var(--success-text); }
-.p6-choice-option { min-height: 33px; cursor: pointer; border-radius: var(--r-sm); }
-.p6-choice-option:has(input:checked) { background: var(--primary-tint) !important; }
-.p6-choice-option input { accent-color: var(--primary); }
-.p6-builder-equipment .imp-cls__wrp-equi-group { border: var(--border) solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2) !important; }
-.p6-builder-equipment .imp-cls__wrp-equi-group > div { padding: var(--sp-2); min-height: var(--hit); border-radius: var(--r-sm); }
-.p6-builder-equipment .imp-cls__wrp-equi-group > div:has(.ve-active) { background: var(--primary-tint); }
 .p6-builder button[title]:has(> .fa-magnifying-glass:only-child) { width: auto !important; padding-inline: var(--sp-2) !important; }
 .p6-builder button[title]:has(> .fa-magnifying-glass:only-child)::after { content: attr(title); }
 .window-content button.ve-btn-xxs:has(> .fa-check:only-child) { width: auto !important; padding-inline: var(--sp-2) !important; }
@@ -75,25 +67,85 @@
 .p6-builder-spells .manc__list-row > :nth-child(7) { width: auto !important; flex: 0 0 4.5em; text-align: right !important; }
 .p6-builder-spells .manc__list-row > :last-child { width: auto !important; flex: none; display: flex; gap: var(--sp-1); }
 @media (max-width: 520px) {
-  .p6-builder .p6-builder-split:not(.p6-builder-inactive) { grid-template-columns: 1fr; grid-template-rows: minmax(136px, 38%) minmax(0, 1fr); }
-  .p6-builder-rail { border-right: 0; border-bottom: var(--border) solid var(--line); }
+  .p6-builder-rail { border-right: 0; }
   .p6-builder-nav, .p6-builder-footer { padding-inline: var(--sp-3); }
-  .p6-builder-brief { display: none; }
   .p6-builder-review { padding-inline: var(--sp-3); }
   .p6-builder-attributes .p6-native-body { padding-inline: var(--sp-2); overflow-x: auto; }
   .p6-builder-attributes .ve-statgen-pb__cell { min-width: 0 !important; }
   .p6-builder-attributes .ve-statgen-shared__ipt:not(.ve-statgen-pb__ipt-budget) { width: 41px !important; padding-inline: var(--sp-1) !important; }
   .p6-builder-attributes select.ve-statgen-shared__ipt { appearance: none; text-align: center; padding-inline: 0 !important; }
 }
-.p6-equip-picker { background: var(--surface); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); margin-top: var(--sp-2); display: flex; flex-direction: column; }
-.p6-equip-picker-list { max-height: 184px; overflow: auto; }
-.p6-equip-picker-tools { display: flex; justify-content: flex-end; gap: var(--sp-2); padding: var(--sp-2); }
 .p6-choice-instruction { display: none !important; }
-.p6-choice-group { display: flex; flex-wrap: wrap; align-items: center; }
-.p6-choice-group > .ve-flex-v-center:not(.p6-choice-option), .p6-choice-group > hr { width: 100% !important; }
-.p6-choice-option { width: auto !important; padding-inline: var(--sp-2); border: var(--border) solid var(--line-ctrl); }
-.p6-choice-option > label, .p6-choice-option > div { width: auto !important; }
-.p6-choice-option input { margin-right: var(--sp-1); }
 .p6-ability-methods { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
 .p6-builder-attributes .ve-statgen-shared__wrp-header { gap: var(--sp-3); flex-wrap: wrap; }
 .p6-builder-attributes:not([data-mode='pointbuy']) .ve-mobile-sm__flex-col.ve-mb-2:has(.ve-statgen-pb__ipt-budget) { display: none !important; }
+
+/* ── 弹窗里不再弹东西（驾驶员 2026-11-22）：作者会开新窗的入口一律不出现，链接只当文字 ── */
+.p6-builder [onmouseover*='Renderer.hover'], .p6-builder [onclick*='Renderer.hover'] { pointer-events: none !important; color: inherit !important; text-decoration: none !important; cursor: inherit !important; }
+.p6-builder button:has(> .glyphicon-filter), .p6-builder .veapp__btn-filter, .p6-builder button:has(> .glyphicon-resize-small),
+.p6-builder .ve-fltr__mini-view, .p6-builder .ve-btn-group:has(> button > .glyphicon-refresh) { display: none !important; }
+/* 作者原来的“选择种族 [筛选][下拉]”一行：下拉已换成左栏，这一行（连标题）不再出现 */
+.p6-builder .ve-btn-group:has(.ve-ui-sel2__wrp[style*='none']), .p6-builder .ve-bold:has(+ .ve-btn-group .ve-ui-sel2__wrp[style*='none']) { display: none !important; }
+/* 法术来源和左栏来源同一个样子（灰色小字，不像链接） */
+.p6-builder-spells .manc__list-row > :nth-child(7), .p6-builder-spells .manc__list-row > :nth-child(7) * { color: var(--text3) !important; font-size: var(--fs-xs); }
+
+/* ── 右栏资料卡：库里同一张卡，只读，放在选择下面 ── */
+.p6-builder-card { padding: var(--sp-3) var(--sp-4) var(--sp-5); border-top: var(--border) solid var(--line); color: var(--text); font-size: var(--fs-sm); line-height: 1.65; }
+.p6-builder-card > table { width: 100%; border: 0 !important; }
+.p6-builder-card td, .p6-builder-card th { border: 0 !important; padding: var(--sp-1) 0 !important; }
+.p6-builder-card-note { margin: 0 0 var(--sp-2); color: var(--text2); }
+
+/* ── 多选（技能、语言等）→ 旧 0c 的选项块：整块可点，选中实心 ✓，选不了变灰 ── */
+.p6-builder .p6-choice-group { display: flex !important; flex-wrap: wrap; align-items: center; gap: var(--sp-2); min-height: 0 !important; height: auto !important; padding: 0 !important; border: 0 !important; background: none !important; overflow: visible !important; }
+.p6-builder .p6-choice-group > :not(.p6-choice-option) { flex-basis: 100%; width: 100% !important; }
+.p6-builder .p6-choice-group > hr { margin: var(--sp-1) 0; }
+.p6-builder .p6-choice-progress { color: var(--accent-text); font-size: var(--fs-xs); }
+.p6-builder .p6-choice-progress[data-done='true'] { color: var(--success-text); }
+.p6-builder .p6-choice-option { position: relative; flex: none; white-space: nowrap; justify-content: flex-start !important; display: inline-flex !important; align-items: center; gap: var(--sp-1); width: auto !important; min-height: 36px; margin: 0 !important; padding: 0 var(--sp-3) !important; border: var(--border) solid var(--line-ctrl) !important; border-radius: var(--r-sm); background: var(--surface) !important; color: var(--text); cursor: pointer; }
+.p6-builder .p6-choice-option > label:has(> input) { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden; clip-path: inset(50%); margin: 0; padding: 0; }
+.p6-builder .p6-choice-option > div, .p6-builder .p6-choice-option .ve-w-100 { width: auto !important; max-width: none !important; flex: none !important; padding: 0 !important; white-space: nowrap; }
+.p6-builder .p6-choice-option .ve-help { border-bottom: 0 !important; text-decoration: none !important; }
+.p6-builder .p6-choice-option:hover { background: var(--bg-hover) !important; }
+.p6-builder .p6-choice-option:has(input:checked) { background: var(--primary) !important; border-color: var(--primary) !important; color: var(--on-primary); }
+.p6-builder .p6-choice-option:has(input:checked)::before { content: '✓'; font-size: var(--fs-xs); }
+.p6-builder .p6-choice-option:has(input:checked) .ve-muted { color: inherit !important; opacity: .8; }
+.p6-builder .p6-choice-option:has(input:disabled):not(:has(input:checked)) { background: var(--disabled-bg) !important; color: var(--disabled-text); cursor: not-allowed; }
+.p6-builder .p6-choice-option:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* 作者的“别处已有熟练”标记（图标字体没带，只剩空括号）→ 写成字 */
+.p6-builder .p6-choice-option .veapp__msg-warning:empty { display: none; }
+.p6-builder .p6-choice-option .veapp__msg-warning:has(.fa-check) { display: none !important; }
+.p6-builder .p6-choice-option:has(.veapp__msg-warning .fa-check)::after { content: '已有'; margin-left: var(--sp-1); color: var(--text3); font-size: var(--fs-xs); }
+
+/* ── 起始装备 → 旧 0c 的单选行：圆点 + 整行可点；只有一项的组是“固定给”，不画圆点 ── */
+.p6-builder-equipment .imp-cls__wrp-equi-group { margin: 0 !important; padding: var(--sp-3) 0 !important; border: 0 !important; border-top: var(--border) solid var(--line) !important; background: none !important; gap: var(--sp-2); }
+.p6-builder-equipment .imp-cls__wrp-equi-group > div { position: relative; justify-content: flex-start !important; min-height: var(--hit); padding: var(--sp-2) var(--sp-3) var(--sp-2) 40px; border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); background: var(--surface); }
+.p6-builder-equipment .imp-cls__wrp-equi-group > div:has(> .ve-active) { border-color: var(--primary); background: var(--primary-tint); }
+.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key, .p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key.ve-active { position: absolute !important; inset: 0; z-index: 0; width: auto !important; height: auto !important; margin: 0 !important; border: 0 !important; border-radius: var(--r-sm) !important; background: transparent !important; font-size: 0 !important; color: transparent !important; box-shadow: none !important; }
+.p6-builder-equipment .imp-cls__disp-equi-choice-key::before { content: ''; position: absolute; left: var(--sp-3); top: 50%; width: 16px; height: 16px; margin-top: -8px; border: 2px solid var(--line-ctrl); border-radius: 50%; box-sizing: border-box; }
+.p6-builder-equipment .imp-cls__disp-equi-choice-key.ve-active::before { border: 5px solid var(--primary); }
+.p6-builder-equipment .imp-cls__disp-equi-choice-key:focus-visible { outline: 2px solid var(--focus) !important; }
+.p6-builder-equipment .imp-cls__wrp-equi-group > div > .ve-w-100 { position: relative; z-index: 1; pointer-events: none; }
+.p6-builder-equipment .imp-cls__wrp-equi-group > div > .ve-w-100 :is(button, input, select) { pointer-events: auto; }
+/* 作者把“没得选、固定给”的组的按钮设成停用：不画圆点，整行是浅底说明行 */
+.p6-builder-equipment .imp-cls__wrp-equi-group > div:has(> .imp-cls__disp-equi-choice-key:disabled) { padding-left: var(--sp-3); border-color: var(--line); background: var(--bg-sunk); }
+.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled { display: none !important; visibility: hidden !important; }
+.p6-builder-equipment .imp-cls__wrp-equi-group .ve-btn.imp-cls__disp-equi-choice-key:disabled::before { content: none !important; }
+/* “选择一件物品”按钮 → 下拉框外观（当前值 + ▾） */
+.p6-builder-equipment button:has(> .fa-magnifying-glass) { display: inline-flex !important; align-items: center; gap: var(--sp-1); width: auto !important; min-height: 32px; padding: 0 var(--sp-2) !important; border: var(--border) solid var(--line-ctrl) !important; border-radius: var(--r-sm) !important; background: var(--surface) !important; color: var(--text) !important; }
+.p6-builder-equipment button:has(> .fa-magnifying-glass) > .fa-magnifying-glass { display: none; }
+.p6-builder-equipment button:has(> .fa-magnifying-glass)::after { content: attr(title) ' ▾' !important; }
+/* 下拉：贴在按钮下面，选完自动收起；Esc 或点外面关 */
+.p6-equip-picker { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; width: min(340px, 100%); display: flex; flex-direction: column; pointer-events: auto; background: var(--surface); border: var(--border) solid var(--line-ctrl); border-radius: var(--r-sm); box-shadow: var(--shadow-2); }
+.p6-builder-equipment .imp-cls__wrp-equi-group > div > .ve-w-100:has(.p6-equip-picker) { z-index: 20; }
+.p6-equip-picker .p6-picker-search { margin: var(--sp-2); }
+.p6-equip-picker-list { max-height: 220px; overflow: auto; border-top: var(--border) solid var(--line); }
+.p6-builder button.p6-equip-picker-clear { align-self: flex-start; min-height: 32px; margin: var(--sp-1) var(--sp-2); padding: 0 var(--sp-2); border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+
+/* ── 窄屏：同一个弹窗里先列表、点一项换成资料卡页（线框 390 / 390b） ── */
+.p6-builder-to-list { display: none; }
+@media (max-width: 520px) {
+  .p6-builder .p6-builder-split:not(.p6-builder-inactive) { grid-template-columns: 1fr !important; grid-template-rows: minmax(0, 1fr) !important; }
+  .p6-builder-split[data-view='list'] > .p6-builder-panel, .p6-builder-split[data-view='card'] > .p6-builder-rail { display: none !important; }
+  .p6-builder-split .p6-builder-rail { border-bottom: 0; }
+  .p6-builder button.p6-builder-to-list { display: inline-flex; align-items: center; border: 0 !important; background: none !important; padding: 0 var(--sp-1) !important; color: var(--primary-text); }
+}

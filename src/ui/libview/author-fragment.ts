@@ -5,9 +5,8 @@ import { useAppStore } from '../../stores/app'
 import { useToastStore } from '../../stores/toast'
 import ContentLink from './ContentLink.vue'
 import RollTable from './RollTable.vue'
+import { MARKUP_ATTRS, MARKUP_DISCARDED as discarded, MARKUP_ELEMENTS as elements, markupClass } from '../../library/author-markup-rules'
 
-const elements = new Set('p div span strong b i em u s del small sub sup br hr ul ol li dl dt dd blockquote h2 h3 h4 h5 h6 table caption colgroup col thead tbody tfoot tr th td details summary'.split(' '))
-const discarded = new Set('script style template iframe object embed link meta base svg math form input button'.split(' '))
 
 function externalUrl(value: string): string | null {
   try {
@@ -86,10 +85,10 @@ export default defineComponent({
         const heading = node.querySelector('.ve-rd__h-inner')?.textContent
         if (heading) attrs['data-reader-heading'] = heading
       }
-      // 作者的版式类名（ve-* / stats*）带过来，由 author.css 按作者规则排版；其他类名不带
-      const cls = (node.getAttribute('class') ?? '').split(/\s+/).filter((c) => /^(ve-|stats|stripe-|small-caps$|bold$|no-wrap$|w100$)/.test(c)).join(' ')
+      // 作者的版式类名带过来，由 author.css 按作者规则排版（规则见 author-markup-rules）
+      const cls = markupClass(node.getAttribute('class'))
       if (cls) attrs.class = cls
-      for (const name of ['colspan', 'rowspan', 'span', 'start', 'title']) {
+      for (const name of MARKUP_ATTRS) {
         const value = node.getAttribute(name)
         if (value !== null) attrs[name] = value
       }

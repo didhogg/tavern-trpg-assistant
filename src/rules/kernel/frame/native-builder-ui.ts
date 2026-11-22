@@ -40,27 +40,23 @@ function makeStep(tab: NativeTab) {
   const heading = element('div', 'p6-builder-selection p6-builder-ui')
   const title = element('h2', 'p6-builder-selection-title')
   const form = element('div', 'p6-native-body')
-  const brief = element('p', 'p6-builder-brief p6-builder-ui')
+  // 右栏 = 库里同一张资料卡（只读），放在要你做的选择下面；不再另开资料页（驾驶员 2026-11-22）。
+  const brief = element('div', 'p6-builder-card p6-builder-ui')
   const source = element('small', 'p6-picker-source')
   let picker: Picker | undefined
   const action = button('选它', () => picker?.toggle(), 'p6-builder-btn p6-builder-primary')
-  const open = button('看资料卡', () => {
-    const row = picker?.preview()
-    if (!picker || !row) return
-    void request({ op: 'build-card', prop: picker.category, hash: row.hash, open: true }).catch((error) => {
-      brief.textContent = `无法打开资料卡：${String(error)}`
-    })
-  })
+  // 窄屏：同一个弹窗里列表页 ⇄ 资料卡页（线框 390 / 390b），宽屏两栏时这个按钮不显示
+  const toList = button('‹ 列表', () => { section.dataset.view = 'list' }, 'p6-builder-btn p6-builder-to-list')
   form.append(...section.childNodes)
-  heading.append(title, source, action, open)
+  heading.append(toList, title, source, action)
   panel.append(heading, form, brief)
   section.append(rail, panel)
-  return { tab, rail, form, heading, title, brief, source, action, open, focus: (card?: Picker) => { picker = card } }
+  return { tab, rail, form, heading, title, brief, source, action, focus: (card?: Picker) => { picker = card } }
 }
 type Step = ReturnType<typeof makeStep>
 
 function usePreview(step: Step, card: Picker | undefined): void {
-  const { heading, title, brief, form, source, action, open } = step
+  const { heading, title, brief, form, source, action } = step
   step.focus(card)
   const preview = card?.preview()
   const chosen = card?.chosen()
@@ -72,7 +68,6 @@ function usePreview(step: Step, card: Picker | undefined): void {
   title.textContent = preview?.label.name ?? (card ? `选择${label}` : '')
   source.textContent = preview?.source ?? ''
   action.hidden = !preview
-  open.hidden = !preview
   if (!preview || !card) {
     delete brief.dataset.entry
     brief.textContent = card ? '请从左栏选择一条资料。' : ''
@@ -84,13 +79,15 @@ function usePreview(step: Step, card: Picker | undefined): void {
   if (brief.dataset.entry === key) return
   brief.dataset.entry = key
   brief.textContent = '正在读取资料…'
-  void request({ op: 'build-card', prop: card.category, hash: preview.hash, open: false })
+  void request({ op: 'build-card', prop: card.category, hash: preview.hash })
     .then((value) => {
       if (brief.dataset.entry !== key) return
       const data = value as NativeCardPreview | null
-      brief.textContent = data?.text ? `${data.chinese ? '' : '仅有英文资料 · '}${data.text}` : '点击「看资料卡」查看详情。'
+      if (!data?.html) { brief.textContent = '这一条没有资料卡正文。'; return }
+      // 主程序已按资料卡的同一份规则清成只读排版（author-markup-rules.inertMarkup）
+      brief.innerHTML = `${data.chinese ? '' : '<p class="p6-builder-card-note">这一条只有英文资料。</p>'}${data.html}`
     })
-    .catch(() => { if (brief.dataset.entry === key) brief.textContent = '预览读取失败，可打开资料卡。' })
+    .catch(() => { if (brief.dataset.entry === key) brief.textContent = '资料卡读取失败，关掉重开建卡再试。' })
 }
 
 function renderWizard(model: any, target: HTMLElement, pickers: Picker[], presentation: NativePresentation, save: () => Promise<void>): () => void {
@@ -123,6 +120,7 @@ function renderWizard(model: any, target: HTMLElement, pickers: Picker[], presen
   let shopOpen = false
   let busy = false
   let pendingRefresh = 0
+  let viewFor: Page | null | undefined
   const focused = new Map<string, Picker>()
   const next = button('下一步', () => move(1), 'p6-builder-btn p6-builder-primary')
   const back = button('上一步', () => move(-1))
@@ -290,6 +288,8 @@ function renderWizard(model: any, target: HTMLElement, pickers: Picker[], presen
     const shown = previous && matches.includes(previous) ? previous : matches[0]
     step.rail.hidden = !shown
     step.tab.wrpTab.classList.toggle('p6-builder-split', !!shown)
+    // 窄屏刚进这一步：已经选好的直接看资料卡页，没选的先看列表页（职业 / 子职共用一个作者页，所以按步骤算）
+    if (viewFor !== active) { viewFor = active; step.tab.wrpTab.dataset.view = shown?.chosen() ? 'card' : 'list' }
     step.tab.wrpTab.classList.toggle('p6-builder-spells', active.label === '法术')
     step.tab.wrpTab.classList.toggle('p6-builder-attributes', active.label === '属性值')
     step.tab.wrpTab.classList.toggle('p6-builder-equipment', !!active.shop && !shopOpen)
@@ -305,6 +305,8 @@ function renderWizard(model: any, target: HTMLElement, pickers: Picker[], presen
   function focusPicker(event: Event): void {
     const picker = pickers.find((candidate) => candidate.element === event.target)
     if (picker) focused.set(picker.category, picker)
+    const section = (event.target as HTMLElement).closest<HTMLElement>('.p6-builder-step')
+    if (section) section.dataset.view = 'card'
   }
   const observer = new MutationObserver(schedule)
   for (const step of layout.values()) observer.observe(step.form, { childList: true, subtree: true })

@@ -56,6 +56,21 @@ function relaxAuthorRules(rules: CSSRuleList): void {
     if (inner) relaxAuthorRules(inner)
   }
 }
+/**
+ * 作者自己的“藏起来”（.ve-hidden）要压过作者自己的手机排版类（.ve-mobile-sm__flex-col 也写了 display !important，
+ * 而且在同一层更靠后的块里，窄屏会把藏起来的块重新撑开）：在声明 .ve-hidden 的那一层的最后一个块末尾，原样再声明一次，同层后写的赢。
+ * 只认作者自己的 .ve-hidden 写法，不按某个控件写。
+ */
+function keepAuthorHidden(sheet: CSSStyleSheet): void {
+  const hides = (rules: CSSRuleList) => Array.from(rules).some((r) => (r as CSSStyleRule).selectorText === '.ve-hidden')
+  const blocks = Array.from(sheet.cssRules).filter((r): r is CSSLayerBlockRule => typeof CSSLayerBlockRule !== 'undefined' && r instanceof CSSLayerBlockRule)
+  const layers = new Set(blocks.filter((b) => hides(b.cssRules)).map((b) => b.name))
+  for (const name of layers) {
+    const last = blocks.filter((b) => b.name === name).at(-1)
+    last?.insertRule('.ve-hidden { display: none !important; }', last.cssRules.length)
+  }
+  if (hides(sheet.cssRules)) sheet.insertRule('.ve-hidden { display: none !important; }', sheet.cssRules.length)
+}
 
 /**
  * 作者开成“尽量大”的窗口铺满小窗（驾驶员 2026-11-21 选 B）。作者的写法：要尽量大的窗口，高度用 Util.getMaxWindowHeight（视口高 − 160，
@@ -104,7 +119,7 @@ export async function applyDisplayStyles(display: { styles: string[] }, roots: R
     await link(href)
     if (core.has(href)) return
     const sheet = [...document.styleSheets].find((s) => s.href === href)
-    if (sheet) relaxAuthorRules(sheet.cssRules)
+    if (sheet) { relaxAuthorRules(sheet.cssRules); keepAuthorHidden(sheet) }
   })
   const style = document.createElement('style')
   style.dataset.trpgTheme = 'build'
