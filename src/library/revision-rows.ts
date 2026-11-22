@@ -1,4 +1,4 @@
-// 已发布版本的“文件版本”和“作者存储”行，记在内存里查（真机性能，2026-11-22 驾驶员批准）。
+// 已发布版本的“文件版本”“作者存储”行和“解析结果”键目录，记在内存里查（真机性能，2026-11-22 驾驶员批准）。
 //
 // 读一个文件 / 一个作者存储键要沿父链逐个版本找。真机实测：版本链 217 层，从模板加入一个人物对库读写 8 万多次，
 // TauriTavern（macOS WKWebView）的 IndexedDB 每次都跨进程，合计十几秒；测试浏览器的数据库在同进程，看不出来。
@@ -11,6 +11,8 @@ import type { FileVersionRecord, KvRecord, LibraryDatabase, RevisionRecord } fro
 
 const frozen = (rev: Pick<RevisionRecord, 'status'>): boolean => rev.status === 'published' || rev.status === 'superseded'
 const fileKey = (source: string, path: string): string => `${source}\u0000${path}`
+/** 和 revision.ts derivedKey 同一写法：新版本的解析结果键 = rev:<版本编号>:<逻辑键>。 */
+const derivedPrefix = (revision: string): string => `rev:${revision}:`
 
 type Rows<T> = Map<string, T>
 
@@ -19,6 +21,8 @@ export class RevisionRows {
   private files: Promise<Map<string, Rows<FileVersionRecord>>> | null = null
   /** 作用域 → （键 → 行）；只放属于已发布版本的作用域（含它的 `:local`）。 */
   private kv: Promise<Map<string, Rows<KvRecord>>> | null = null
+  /** 版本编号 → 这一版写过的解析结果键（只记键，不记内容：解析结果表很大）；只放已发布的非旧库版本。 */
+  private derived: Promise<Map<string, Set<string>>> | null = null
 
   constructor(private readonly db: LibraryDatabase) {}
 
@@ -46,6 +50,26 @@ export class RevisionRows {
     return rows ? [...rows.values()] : this.db.kv.where('scope').equals(scope).toArray()
   }
 
+  /** 这一版写过哪些解析结果键；null = 不在内存（准备版本 / 旧库 R0），调用方照常直接读库。 */
+  async derivedKeysOf(rev: RevisionRecord): Promise<Set<string> | null> {
+    if (rev.legacy) return null
+    this.derived ??= this.loadDerived()
+    const all = await this.derived
+    const hit = all.get(rev.id)
+    if (hit) return hit
+    const fresh = await this.db.revisions.get(rev.id)
+    if (!fresh || !frozen(fresh)) return null
+    const prefix = derivedPrefix(rev.id)
+    const keys = new Set((await this.db.derived.where('key').startsWith(prefix).primaryKeys()).map((k) => k.slice(prefix.length)))
+    all.set(rev.id, keys)
+    return keys
+  }
+
+  /** 解析结果写到某版本后同步键目录（没记的版本不用管）。 */
+  async wroteDerived(revision: string, key: string): Promise<void> {
+    (await this.derived)?.get(revision)?.add(key)
+  }
+
   /** 写入后同步内存（只影响已记下的版本；没记的不用管，下次照常读库）。作者存储只写准备版本或基础作用域，都不进内存，不需要同步。 */
   async wroteFile(row: FileVersionRecord): Promise<void> {
     const rows = (await this.files)?.get(row.revision)
@@ -56,6 +80,7 @@ export class RevisionRows {
   reset(): void {
     this.files = null
     this.kv = null
+    this.derived = null
   }
 
   private async fileRows(rev: RevisionRecord): Promise<Rows<FileVersionRecord> | null> {
@@ -92,6 +117,19 @@ export class RevisionRows {
       const out = new Map<string, Rows<FileVersionRecord>>()
       for (const id of done) out.set(id, new Map())
       for (const row of await db.fileVersions.toArray()) out.get(row.revision)?.set(fileKey(row.source, row.path), row)
+      return out
+    })
+  }
+
+  private async loadDerived(): Promise<Map<string, Set<string>>> {
+    const { db } = this
+    return db.transaction('r', [db.revisions, db.derived], async () => {
+      const out = new Map<string, Set<string>>()
+      for (const rev of await db.revisions.toArray()) if (frozen(rev) && !rev.legacy) out.set(rev.id, new Set())
+      for (const key of await db.derived.toCollection().primaryKeys()) {
+        const m = /^rev:([^:]+):/.exec(key)
+        if (m) out.get(m[1])?.add(key.slice(m[0].length))
+      }
       return out
     })
   }

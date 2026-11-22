@@ -264,6 +264,9 @@ export class LibraryRevisionStore {
 
   async derivedGet(view: LibraryView, key: string): Promise<DerivedRecord | undefined> {
     for (const rev of await view.chain()) {
+      // 已发布版本先查键目录（内存），这一版没写过这个键就不读库
+      const keys = await this.rows.derivedKeysOf(rev)
+      if (keys && !keys.has(key)) continue
       const rec = await this.db.derived.get(this.derivedKey(this.viewOf(rev), key))
       if (!rec) continue
       return rec.deleted ? undefined : rec
@@ -273,6 +276,7 @@ export class LibraryRevisionStore {
 
   async derivedPut(view: LibraryView, key: string, fingerprint: string, value: unknown): Promise<void> {
     await this.db.derived.put({ key: this.derivedKey(view, key), fingerprint, value, savedAt: Date.now() })
+    if (!view.legacy) await this.rows.wroteDerived(view.id, key)
   }
 
   async derivedDelete(view: LibraryView, key: string): Promise<void> {
@@ -281,6 +285,7 @@ export class LibraryRevisionStore {
       return
     }
     await this.db.derived.put({ key: this.derivedKey(view, key), fingerprint: '', value: null, deleted: true, savedAt: Date.now() })
+    await this.rows.wroteDerived(view.id, key)
   }
 
   /** 沿父链读某一前缀的全部逻辑键；新版本的同名键盖住旧版本，删除记号会挡住父层。 */

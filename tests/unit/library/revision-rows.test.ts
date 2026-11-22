@@ -86,6 +86,35 @@ describe('版本行内存索引', () => {
     expect(getAlls).toBe(5)
   })
 
+  it('解析结果：长父链上按键目录直接读那一层，结果与逐层读一致（含删除记号、后写入）', async () => {
+    const { revisions, operations } = await setup()
+    const first = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await first.target.derivedPut('parsed:x', 'f1', { v: 1 })
+    await first.target.derivedPut('parsed:gone', 'f1', { v: 1 })
+    await operations.publish(first, {})
+    for (let i = 0; i < 30; i++) {
+      const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+      await h.target.derivedPut(`parsed:o${i}`, 'f', i)
+      if (i === 10) await h.target.derivedDelete('parsed:gone')
+      await operations.publish(h, {})
+    }
+    const view = await revisions.published()
+    expect((await view.derivedGet('parsed:x'))?.value).toEqual({ v: 1 })
+    let gets = 0
+    const get = db.derived.get.bind(db.derived)
+    db.derived.get = ((...a: Parameters<typeof get>) => { gets++; return get(...a) }) as typeof get
+    expect((await view.derivedGet('parsed:x'))?.value).toEqual({ v: 1 })
+    expect(await view.derivedGet('parsed:gone')).toBeUndefined()
+    expect(await view.derivedGet('parsed:none')).toBeUndefined()
+    // x：直接读第 1 版那一行；gone：读到删除记号那一版；none：只读旧库 R0 一次
+    expect(gets).toBe(3)
+    const h = await operations.begin({ kind: 'test', set: 'cn-official', codeSet: 'cn' })
+    await h.target.derivedPut('parsed:x', 'f2', { v: 2 })
+    const v2 = await operations.publish(h, {})
+    expect((await v2.derivedGet('parsed:x'))?.value).toEqual({ v: 2 })
+    expect((await view.derivedGet('parsed:x'))?.value).toEqual({ v: 1 })
+  })
+
   it('读过整表之后才发布的版本、准备中的版本都读到最新内容', async () => {
     const { revisions, operations } = await setup()
     const source = getSource('cn-official')
