@@ -42,8 +42,9 @@ try {
     const { plan } = await h.pickChainEntries(await be.kernelSave.libraryOf(owner), 'barbarian')
     const items = ['race', 'background', 'class'].map((k) => plan[k].ref)
     await be.kernel.enter(owner)
-    const a = await be.people.build(owner, { name: '盖尔', items }, { category: 'party', tags: ['学者'] })
-    const b = await be.people.build(owner, { name: '地精 1', items }, { category: 'enemy' })
+    // 经存档层写，和真实界面一致（直接调后端会让存档层内存里的当前数据过期，之后的写入用旧数据盖掉新加的人）
+    const a = await camp.backendWrite((k) => be.people.build(k, { name: '盖尔', items }, { category: 'party', tags: ['学者'] }))
+    const b = await camp.backendWrite((k) => be.people.build(k, { name: '地精 1', items }, { category: 'enemy' }))
     return { a: a.built.status, b: b.built.status, n: b.kernel?.actors.length }
   }, pinia)
   check('真实建卡两个人', made.a === 'complete' && made.b === 'complete' && made.n === 2, JSON.stringify(made))

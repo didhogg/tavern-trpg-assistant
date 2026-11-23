@@ -9,10 +9,13 @@ import PeopleRow from './PeopleRow.vue'
 import PeopleSelectBar from './PeopleSelectBar.vue'
 import TemplatePage from './TemplatePage.vue'
 import BuildPage from './BuildPage.vue'
+import PersonPage from '../person/PersonPage.vue'
+import { usePersonStore } from '../../stores/person'
 
 const store = useRosterStore()
 const campaign = useCampaignStore()
 const modal = useModalStore()
+const person = usePersonStore()
 onMounted(() => void store.ensure())
 
 const tabs = computed(() => [...CATEGORIES.map((c) => ({ id: c.id as ListView, label: c.label })), { id: 'all' as ListView, label: '全部' }])
@@ -54,7 +57,8 @@ const headerMenu = computed(() => [trash.value ? { key: 'back', label: '回到�
 </script>
 
 <template>
-  <div class="pp" data-testid="people-view">
+  <PersonPage v-if="person.id" />
+  <div v-else class="pp" data-testid="people-view">
     <div class="pp-top">
       <div v-if="trash" class="pp-title"><button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" @click="store.setView('party')"><Icon name="caret-left" :size="14" />人物</button><b>回收站</b></div>
       <div v-else class="pp-tabs" role="group" aria-label="人物分类">
@@ -79,7 +83,7 @@ const headerMenu = computed(() => [trash.value ? { key: 'back', label: '回到�
       <ul v-if="store.visible.length" class="pp-list" data-testid="pp-list">
         <PeopleRow
           v-for="r in store.visible" :key="r.id" :row="r" :info="store.loaded[r.id]" :selecting="store.selecting" :selected="store.selected.includes(r.id)" :trash="trash" :read-only="readOnly"
-          @toggle="store.toggle(r.id)" @menu="(k) => onMenu(r.id, k)" @retry="store.load()" />
+          @toggle="store.toggle(r.id)" @menu="(k) => onMenu(r.id, k)" @retry="store.load()" @open="person.open(r.id)" />
       </ul>
       <div v-else class="pp-empty">
         <b>{{ store.query ? '没有找到' : trash ? '回收站是空的' : `${stripTitle}里还没有人物` }}</b>

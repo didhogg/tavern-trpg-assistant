@@ -7,7 +7,7 @@ import Icon from '../kit/Icon.vue'
 import MoreMenu, { type MenuItem } from '../kit/MoreMenu.vue'
 
 const props = defineProps<{ row: RosterRow; info?: LoadedActor; selecting: boolean; selected: boolean; trash: boolean; readOnly: boolean }>()
-const emit = defineEmits<{ toggle: []; menu: [key: string]; retry: [] }>()
+const emit = defineEmits<{ toggle: []; menu: [key: string]; retry: []; open: [] }>()
 
 /** 挑战等级的写法（官方数据里是小数）。 */
 const CR_TEXT: Record<number, string> = { 0.125: '1/8', 0.25: '1/4', 0.5: '1/2' }
@@ -31,11 +31,16 @@ const items = computed<MenuItem[]>(() => {
     { key: 'trash', label: '删除', danger: true, ...off },
   ]
 })
-function onRowClick(): void { if (props.selecting) emit('toggle') }
+/** 选择状态下点一行 = 勾选；平时点一行 = 打开人物详情（行里的按钮、⋯ 菜单各管各的）。 */
+function onRowClick(e: MouseEvent): void {
+  if (props.selecting) { emit('toggle'); return }
+  if ((e.target as HTMLElement | null)?.closest('button, a, input, [role="menu"]')) return
+  emit('open')
+}
 </script>
 
 <template>
-  <li class="pp-row" :data-selected="selected || undefined" :data-selecting="selecting || undefined" @click="onRowClick">
+  <li class="pp-row" :data-selected="selected || undefined" :data-selecting="selecting || undefined" data-testid="pp-row" @click="onRowClick">
     <span class="pp-avatar" aria-hidden="true">
       <img v-if="src" :src="src" alt="" @error="broken = true" />
       <Icon v-else :name="row.type === 'character' || row.type === null ? 'user' : 'skull'" :size="22" />
