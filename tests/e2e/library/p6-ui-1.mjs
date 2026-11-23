@@ -95,7 +95,7 @@ try {
 
   // ---- 身份 / 头像 ----
   await page.getByTestId('ps-ident-edit').click(); await page.getByTestId('ps-drawer-identity').waitFor()
-  await page.getByTestId('ps-drawer-identity').getByLabel('英文名（选填）').fill('Gale'); await shot('06-drawer-identity')
+  await page.getByTestId('ps-drawer-identity').getByLabel(/英文名/).fill('Gale'); await shot('06-drawer-identity')
   await page.getByTestId('ps-drawer-identity').getByRole('button', { name: '保存' }).click(); await settle(page, 1500)
   check('英文名显示在名字旁', /Gale/.test(await page.locator('.ps-name-line').innerText()))
   await page.getByTestId('ps-portrait').click(); await page.getByTestId('ps-drawer-avatar').waitFor()

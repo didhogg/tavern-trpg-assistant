@@ -85,15 +85,12 @@ interface Open {
 
 export class KernelRuntime {
   private readonly open = new Map<string, Promise<Open>>()
-
   constructor(private readonly deps: KernelRuntimeDeps) {}
-
   /** 打开（或复用）本战役的结算小窗。 */
   async session(ownerKey: string): Promise<{ session: KernelSession; boot: unknown; bootMs: number; brews: KernelBrewReport }> {
     const o = await this.get(ownerKey)
     return { session: o.session, boot: o.boot, bootMs: o.bootMs, brews: o.brews }
   }
-
   private get(ownerKey: string): Promise<Open> {
     const existing = this.open.get(ownerKey)
     if (existing) return existing
@@ -377,14 +374,26 @@ export class KernelRuntime {
     const library = await this.library(ownerKey)
     const out: KernelActorCompact[] = []
     for (const id of ids) {
-      // P6-R：存完整人物数据（唯一真数据），引用只作说明；差别为空、不取下
+      const base = o.bases.view(id)
+      const full = o.bases.base(id)
+      if (!base || !full) throw new Error(`人物 ${id} 没有重建基准：先建卡后记住，或从存档重建`)
       const current = await actorData(o.session, id)
       if (!current) throw new Error(`结算小窗里没有这个人物：${id}`)
+      const stored = o.bases.isStored(id) // B′ 人物读档按完整数据建回，不需要成长选择
+      const captured = stored ? { status: 'complete', result: {} } : await o.session.call('captureChoices', id)
+      if (!executed(captured.status)) throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
       const name = typeof current.name === 'string' ? current.name : id
-      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base: current, choices: {}, stored: true })
-      o.bases.set(id, current, null, null, true)
-      out.push({ ...compact, doc: current, off: [] })
+      // 差别相对取下后的视图算；取下时动过的成长用原始选择（不让「当前没应用」写成「原来没选」）
+      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: o.bases.protect(id, captured.result ?? {}), stored })
+      if (o.cache && !stored) {
+        const version = await o.dataVersion()
+        const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
+        await o.cache.put(key, full, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
+      }
+      // P6-R：另存完整人物数据（读档 / 撤销按它建回）；引用、选择、差别照旧留着，完整数据缺了也能按引用重建
+      out.push({ ...compact, doc: current })
     }
     return out
   }
+
 }
