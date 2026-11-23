@@ -150,6 +150,9 @@ var m = {
 			items: "item",
 			spells: "spell",
 			feats: "feat",
+			races: "race",
+			backgrounds: "background",
+			classes: "class",
 			kernel: {
 				adapter: "foundry",
 				settings: {
@@ -185,7 +188,10 @@ var m = {
 			people: "monster",
 			items: "item",
 			spells: "spell",
-			feats: "feat"
+			feats: "feat",
+			races: "race",
+			backgrounds: "background",
+			classes: "class"
 		}
 	}
 }, h = m.scopes, g = m.rules;

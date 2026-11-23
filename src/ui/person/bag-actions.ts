@@ -10,6 +10,7 @@ export function useItemWrites() {
     attune: (name: string, id: string, on: boolean) => set(`${on ? '同调' : '取消同调'}${name}`, id, 'system.attuned', on),
     /** 剩余次数设为 value（官方存的是“已用”）。 */
     uses: (name: string, id: string, value: number, max: number) => set(`${name} 剩余次数 ${value}`, id, 'system.uses.spent', Math.min(max, Math.max(0, max - value))),
-    remove: (name: string, id: string) => person.edit(`删除了${name}`, [{ kind: 'itemDelete', itemId: id }]),
+    /** 删除走官方拿掉（带成长的条目把成长一起退回）。 */
+    remove: (name: string, id: string) => person.remove(`删除了${name}`, id),
   }
 }

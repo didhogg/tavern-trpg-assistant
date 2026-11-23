@@ -43,5 +43,21 @@ export function createAddCommands(operate: Operate, actor: ActorGetter) {
       }
       return { ...actorLevel(a), added }
     }, [actorId]),
+
+    /**
+     * 从人物身上拿掉一件条目（P6-R）：走 dnd5e 官方“删除带成长的条目”（AdvancementManager.forDeletedItem：把它带来的成长
+     * 一步步退回，最后删掉它；职业 = 全部等级退回）；没有成长的直接删。和官方表上删条目一样，不手写要退回什么。
+     */
+    removeItem: (actorId: string, itemId: string) => operate([], async () => {
+      const a = actor(actorId)
+      const item = a.items.get(itemId)
+      if (!item) throw Error(`人物身上没有这件：${itemId}`)
+      const manager = Manager().forDeletedItem(a, itemId, { automaticApplication: true })
+      if (manager.steps.length) {
+        const outcome = await applyManager(manager, undefined)
+        if (!outcome.finished) return { kernelStatus: 'pending', reason: 'remove-step-not-complete', step: outcome.step, pending: { step: outcome.step } }
+      } else await item.delete()
+      return { ...actorLevel(a), removed: itemId }
+    }, [actorId]),
   }
 }

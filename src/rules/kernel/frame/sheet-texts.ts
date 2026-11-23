@@ -1,6 +1,7 @@
 // 人物页显示文字的出处（小窗这一头，只标来路，不取字；取字在主线唯一出口 kernel/display.ts）：物品 / 特性名按作者编号。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 import { fromEntry, named, type EntryAt, type FrameText } from '../shown'
+import { nameText } from './registry-keys'
 
 const g = globalThis as any
 
@@ -50,5 +51,7 @@ export function itemText(i: any, entries: unknown[]): { name: FrameText; author?
     return { name: named(i.name, author), author }
   }
   const at = typeof f?.hash === 'string' ? locate(entries, f.hash, String(i.name ?? '')) : null
-  return { name: fromEntry(i.name, undefined, at ?? undefined) }
+  if (at) return { name: fromEntry(i.name, undefined, at) }
+  // 没有作者编号、也不在条目里的（作者 / dnd5e 自己加的东西，如“徒手打击”）：dnd5e 语言包里有同样英文原文的键就按它取
+  return { name: nameText(String(i.name ?? ''), null) ?? fromEntry(i.name) }
 }

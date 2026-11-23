@@ -56,7 +56,7 @@ export function features(s: PersonSheet): Array<{ key: string; label: string; ro
 }
 /** 职业（特性页顶上的职业卡）：名字、等级、子职业、生命骰。 */
 export function classCards(s: PersonSheet): Array<{ id: string; name: string; levels: number; hd: string; ref?: unknown }> {
-  return list<any>(parts(s).features?.classes).map((c) => ({ id: String(c.id), name: String(c.name ?? ''), levels: Number(raw(s, c.id)?.system?.levels ?? 0), hd: raw(s, c.id)?.system?.hd?.denomination ? `d${raw(s, c.id).system.hd.denomination}` : '', ref: c.ref }))
+  return list<any>(parts(s).features?.classes).map((c) => ({ id: String(c.id), name: String(c.name ?? ''), levels: Number(raw(s, c.id)?.system?.levels ?? 0), hd: String(raw(s, c.id)?.system?.hd?.denomination ?? ''), ref: c.ref }))
 }
 
 // ---- 效果 ----

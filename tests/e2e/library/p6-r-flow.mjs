@@ -112,6 +112,28 @@ try {
   check('⑨ 加法术：法术页出现火焰箭', /火焰箭/.test(await page.getByTestId('ps-spells').innerText()))
   await shot('06-spells')
 
+  // ⑪ 身份抽屉：空白人物选种族、背景、职业 → 等级管理升一级 → 换种族
+  const pick = async (testid, query) => {
+    await page.getByTestId('ps-ident-edit').click(); await page.getByTestId('ps-drawer-identity').waitFor(); await settle(page, 500)
+    await page.getByTestId(testid).click(); await page.getByTestId('item-pick').waitFor()
+    await page.getByTestId('ip-search').fill(query); await settle(page, 800)
+    await page.getByTestId('ip-row').first().click(); await settle(page, 600); await page.getByTestId('ip-add').click()
+    await page.getByTestId('item-pick').waitFor({ state: 'detached', timeout: 120_000 }); await settle(page, 1500)
+  }
+  await pick('ps-id-race', '精灵')
+  check('⑪ 选种族：名字行 / 事实表出现「精灵」', /精灵/.test(await page.getByTestId('ps-head').innerText()))
+  await pick('ps-id-bg', '侍僧')
+  check('⑪ 选背景：出现「侍僧」', /侍僧/.test(await page.getByTestId('ps-facts').innerText()))
+  await pick('ps-id-class', '战士')
+  check('⑪ 选职业：名字行「战士 1」', /战士 1/.test(await page.getByTestId('ps-sub').innerText()), await page.getByTestId('ps-sub').innerText())
+  await shot('07-identity-built')
+  await page.getByTestId('ps-level').getByRole('button', { name: '等级管理' }).click(); await page.getByRole('menuitem', { name: /升一级/ }).click(); await settle(page, 2500)
+  check('⑪ 等级管理升一级：战士 2', /战士 2/.test(await page.getByTestId('ps-sub').innerText()), await page.getByTestId('ps-sub').innerText())
+  await pick('ps-id-race', '矮人')
+  const facts = await page.getByTestId('ps-facts').innerText()
+  check('⑪ 换种族：矮人进来、精灵没了', /矮人/.test(facts) && !/精灵/.test(facts), facts.replace(/\s+/g, ' '))
+  await shot('08-race-changed')
+
   // ⑩ 连续撤销到底（把加人也撤掉）：列表里没有这个人，界面不报错；不留读不出来的卡
   const steps = await page.evaluate(async (P) => (await eval(P)._s.get('app').svc().backend.kernelSave.read(eval(P)._s.get('campaign').owner.ownerKey)).undo.length, pinia)
   for (let i = 0; i < steps; i++) { if (!(await page.getByTestId('ps-undo').count())) break; await undo() }

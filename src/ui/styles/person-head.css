@@ -92,3 +92,6 @@
 .ps-ability span { color: var(--text2); font-size: var(--fs-sm); }
 .ps-ability em { margin-top: 2px; padding-top: 4px; border-top: var(--border) solid var(--line); align-self: stretch; text-align: center; font-style: normal; color: var(--text2); font-size: var(--fs-xs); white-space: nowrap; }
 .ps-ability em[data-prof] { color: var(--primary); }
+.ps-blank-cta { display: grid; gap: 2px; justify-items: start; padding: var(--sp-2) var(--sp-3); border: var(--border) dashed var(--accent); border-radius: var(--r-md); background: var(--bg-sunk); color: var(--text); text-align: left; cursor: pointer; }
+.ps-blank-cta span { color: var(--text2); font-size: var(--fs-sm); }
+.ps-blank-cta:hover:not(:disabled) { border-style: solid; }

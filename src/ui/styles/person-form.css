@@ -44,3 +44,6 @@
 .trpg-window[data-layout='narrow'] .pf-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
 .trpg-window[data-layout='narrow'] .pf-body { padding: var(--sp-3); }
 .trpg-window[data-layout='narrow'] .pf-foot { padding: var(--sp-3); }
+.pf-id-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3) 0; }
+.pf-id-actions .pf-add { margin: 0; }
+.pf-id-note { padding: var(--sp-2) var(--sp-3) var(--sp-3); font-size: var(--fs-xs); }

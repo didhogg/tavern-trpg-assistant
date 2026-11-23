@@ -12,8 +12,11 @@ import EntryPage from '../libview/EntryPage.vue'
 import { openEntry } from '../libview/open'
 import { pickKey, usePickList } from '../libview/usePickList'
 
-const props = withDefaults(defineProps<{ kind?: AddKind }>(), { kind: 'items' })
-const WORDS: Record<AddKind, { what: string; verb: string; eg: string }> = { items: { what: '物品', verb: '加进背包', eg: '治疗药水' }, spells: { what: '法术', verb: '加进法术书', eg: '火焰箭' }, feats: { what: '专长', verb: '加给这个人', eg: '警觉' } }
+const props = withDefaults(defineProps<{ kind?: AddKind; replace?: { id: string; name: string } }>(), { kind: 'items', replace: undefined })
+const WORDS: Record<AddKind, { what: string; verb: string; eg: string }> = {
+  items: { what: '物品', verb: '加进背包', eg: '治疗药水' }, spells: { what: '法术', verb: '加进法术书', eg: '火焰箭' }, feats: { what: '专长', verb: '加给这个人', eg: '警觉' },
+  races: { what: '种族', verb: '用这个种族', eg: '精灵' }, backgrounds: { what: '背景', verb: '用这个背景', eg: '侍僧' }, classes: { what: '职业', verb: '加这个职业', eg: '战士' },
+}
 const words = computed(() => WORDS[props.kind])
 const person = usePersonStore()
 const modal = useModalStore()
@@ -32,7 +35,8 @@ async function add(): Promise<void> {
   if (!cur || adding.value) return
   adding.value = true
   try {
-    if (await person.add(`加了${cur.name}`, [cur.row.ref])) modal.close()
+    const ok = props.replace ? await person.replace(`把${props.replace.name}换成${cur.name}`, props.replace.id, cur.row.ref) : await person.add(`加了${cur.name}`, [cur.row.ref])
+    if (ok) modal.close()
   } finally { adding.value = false }
 }
 const CardPane = markRaw(EntryPage)

@@ -4,6 +4,7 @@ import { markRaw } from 'vue'
 import { useModalStore } from '../../stores/modal'
 import FieldEditor from './FieldEditor.vue'
 import ItemPickPage from './ItemPickPage.vue'
+import LevelPage from './LevelPage.vue'
 import type { AddKind } from '../../rules/kernel/card-types'
 
 export interface FieldsOpts { hint?: string; total?: { label: string; value: string }; addKey?: string; names?: Record<string, string>; width?: number }
@@ -13,7 +14,12 @@ export function openFields(title: string, target: { itemId?: string; path: strin
 }
 
 /** 从库里给人物加东西（物品 / 法术 / 专长），和「从模板加入」同一个两栏页。 */
-export function openPick(kind: AddKind): void {
-  const title = { items: '加物品', spells: '加法术', feats: '加专长' }[kind]
-  useModalStore().open({ key: `person-pick:${kind}`, title, component: markRaw(ItemPickPage), props: { kind }, variant: 'dialog', width: 920, height: 680 })
+export function openPick(kind: AddKind, replace?: { id: string; name: string }): void {
+  const title = replace ? `换掉「${replace.name}」` : { items: '加物品', spells: '加法术', feats: '加专长', races: '选种族', backgrounds: '选背景', classes: '加职业' }[kind]
+  useModalStore().open({ key: `person-pick:${kind}`, title, component: markRaw(ItemPickPage), props: { kind, replace }, variant: 'dialog', width: 920, height: 680 })
+}
+
+/** 用作者完整建卡器改这个人（升级 / 兼职 / 要做选择的成长；空白人物从头建）。 */
+export function openLevel(title = '用建卡器升级 / 调整'): void {
+  useModalStore().open({ key: 'person-level-native', title, component: markRaw(LevelPage), variant: 'dialog', width: 1100, height: 900 })
 }

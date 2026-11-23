@@ -103,6 +103,33 @@ export const usePersonStore = defineStore('person', () => {
   const rest = (type: 'short' | 'long') => write(type === 'short' ? '短休' : '长休', (k) => backend().act(k, id.value!, 'rest', id.value!, type, [], {}))
   /** 某个职业升 / 降一级（官方成长流程）；要玩家做选择的成长会报“没有完成”。 */
   const level = (label: string, classId: string, delta: 1 | -1) => write(label, (k) => backend().act(k, id.value!, 'levelUpApply', id.value!, classId, delta))
+  /** 拿掉一件条目（官方退回它带来的成长再删）。 */
+  const remove = (label: string, itemId: string) => write(label, (k) => backend().remove(k, id.value!, itemId))
+  /** 换掉一件条目（换种族 / 背景）：官方拿掉旧的 + 加新的，一条撤销。 */
+  const replace = (label: string, oldItemId: string, ref: EntryRef) => write(label, async (k) => {
+    const r = await backend().replace(k, id.value!, oldItemId, ref)
+    return { outcome: { status: r.added.status, error: r.added.error } }
+  })
+  /** 用作者完整建卡器改这个人（升级、兼职、带选择的成长；空白人物 = 从头建）：完成 = 一条撤销，取消 = 不变。 */
+  async function levelNative(slot: HTMLElement): Promise<'done' | 'cancelled' | 'failed'> {
+    const key = ownerKey()
+    const who = id.value
+    if (!key || !who) return 'failed'
+    if (campaign.readOnly) { toast.error('另一个窗口正在使用助手，这里只能查看'); return 'failed' }
+    try {
+      const out = await serial(() => campaign.backendWrite((k) => backend().levelNative(k, who, slot)))
+      if (out.built.status === 'cancelled') return 'cancelled'
+      if (!out.kernel) throw new Error(('error' in out.built && out.built.error) || '没有改成')
+    } catch (e) {
+      toast.error(`建卡器没改成：${message(e)}`)
+      await reload()
+      return 'failed'
+    }
+    await Promise.all([reload(), roster.refresh()])
+    toast.undoable('用建卡器改了这个人', () => undo())
+    return 'done'
+  }
+  const stopNative = (): void => { const key = ownerKey(); if (key) backend().stopNative(key) }
   /** 个人调整（英文名、分类……）。 */
   const adjust = (label: string, patch: Record<string, unknown>) => write(label, (k) => backend().adjust(k, [id.value!], patch))
 
@@ -146,5 +173,5 @@ export const usePersonStore = defineStore('person', () => {
     return out.result as ShownFieldInfo
   }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, adjust, fields, rest, level, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, remove, replace, adjust, fields, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

@@ -14,7 +14,7 @@ import HpBlock from './HpBlock.vue'
 import VitalDrawers from './VitalDrawers.vue'
 import IdentityDrawer from './IdentityDrawer.vue'
 import AvatarDrawer from './AvatarDrawer.vue'
-import { openFields } from './edit-open'
+import { openFields, openLevel } from './edit-open'
 import { alignment, background, classes, creatureType, crText, deathShown, isNpc, legendary, named, senses, showExperience, signed, size, species, speeds } from './view'
 
 const person = usePersonStore()
@@ -68,7 +68,7 @@ const xp = computed(() => sys.value.details?.xp ?? null)
 
 const VITAL_TITLES = { hitDice: '生命骰', exhaustion: '力竭', death: '死亡豁免' } as const
 const openVital = (kind: keyof typeof VITAL_TITLES): void => modal.open({ key: `person-${kind}`, title: VITAL_TITLES[kind], component: markRaw(VitalDrawers), props: { kind }, variant: 'dialog', width: 480, height: 420 })
-const openIdentity = () => modal.open({ key: 'person-identity', title: '身份', component: markRaw(IdentityDrawer), variant: 'dialog', width: 480, height: 460 })
+const openIdentity = () => modal.open({ key: 'person-identity', title: '身份', component: markRaw(IdentityDrawer), variant: 'dialog', width: 560, height: 620 })
 const openAvatar = () => modal.open({ key: 'person-avatar', title: '人物头像', component: markRaw(AvatarDrawer), variant: 'dialog', width: 560, height: 420 })
 const toggleInspiration = () => person.edit(sys.value.attributes.inspiration ? '取消灵感' : '获得灵感', [{ kind: 'set', path: 'system.attributes.inspiration', value: !sys.value.attributes.inspiration }])
 const togglePin = () => person.row && roster.pin([person.row.id], !pinned.value)
@@ -82,11 +82,16 @@ const editAbilities = () => openFields('属性值', { path: 'system.abilities' }
 const editLevel = () => (npc.value
   ? openFields('挑战等级与经验', { path: 'system.details.cr' })
   : openFields('经验', { path: 'system.details.xp' }, { total: { label: '等级', value: String(sys.value.details.level ?? '') } }))
-const levelItems = computed(() => classes(s.value).flatMap((c) => [
-  { key: `up:${c.id}`, label: `${c.name} 升一级`, disabled: ro.value },
-  { key: `down:${c.id}`, label: `${c.name} 降一级`, disabled: ro.value || (c.levels ?? 0) <= 1 },
-]))
+// 等级管理：作者建卡器（升级、兼职、带选择的成长，职业特性一起加）在最上面；下面是每个职业的快速升 / 降一级（官方成长，自动选第一项）
+const levelItems = computed(() => [
+  { key: 'native', label: classes(s.value).length ? '用建卡器升级 / 兼职…' : '用建卡器建这个人…', disabled: ro.value },
+  ...classes(s.value).flatMap((c) => [
+    { key: `up:${c.id}`, label: `${c.name} 快速升一级`, disabled: ro.value },
+    { key: `down:${c.id}`, label: `${c.name} 降一级`, disabled: ro.value || (c.levels ?? 0) <= 1 },
+  ]),
+])
 function onLevel(key: string): void {
+  if (key === 'native') { openLevel(classes(s.value).length ? '用建卡器升级 / 兼职' : '用建卡器建这个人'); return }
   const [dir, id] = key.split(':')
   const c = classes(s.value).find((x) => x.id === id)
   if (c) void person.level(`${c.name}${dir === 'up' ? '升' : '降'}一级`, id, dir === 'up' ? 1 : -1)
@@ -108,6 +113,9 @@ function onLevel(key: string): void {
         <button class="ps-pen ps-pen--inline" type="button" aria-label="改身份" :disabled="ro" data-testid="ps-ident-edit" @click="openIdentity"><Icon name="pencil-simple" :size="14" /></button>
       </div>
       <p class="ps-sub" data-testid="ps-sub"><span v-for="(t, i) in subtitle" :key="t" :class="{ 'ps-sub-strong': i === 0 }">{{ t }}</span></p>
+      <button v-if="!npc && !classes(s).length" class="ps-blank-cta" type="button" :disabled="ro" data-testid="ps-blank-build" @click="openLevel('用建卡器建这个人')">
+        <b>这个人还是空白的</b><span>用建卡器建：种族、背景、职业、属性一起选，特性都会加上</span>
+      </button>
       <div class="ps-rests">
         <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-short-rest" @click="person.rest('short')">短休</button>
         <button class="trpg-btn trpg-btn--small" type="button" :disabled="ro" data-testid="ps-long-rest" @click="person.rest('long')">长休</button>
@@ -136,7 +144,7 @@ function onLevel(key: string): void {
         <span v-if="leg.act.length"><small>传奇动作</small><i v-for="p in leg.act" :key="p.n" class="ps-dot" :data-on="p.filled || undefined" :title="p.label" /></span>
         <span v-if="leg.res.length"><small>传奇抗性</small><i v-for="p in leg.res" :key="p.n" class="ps-dot" :data-on="p.filled || undefined" :title="p.label" /></span>
       </div>
-      <div v-if="levelItems.length" class="ps-level-foot"><MoreMenu label="等级管理" text="等级管理" :items="levelItems" @select="onLevel" /></div>
+      <div v-if="!npc" class="ps-level-foot"><MoreMenu label="等级管理" text="等级管理" :items="levelItems" @select="onLevel" /></div>
     </div>
 
     <dl class="ps-facts" data-testid="ps-facts">

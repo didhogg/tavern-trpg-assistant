@@ -17,5 +17,11 @@ export function createImportCommands(operate: Operate) {
       const actor = await ActorClass().create({ ...(plan.id ? { _id: plan.id } : {}), name: plan.name, type: BUILD_ACTOR_TYPE }, { keepId: !!plan.id })
       return { id: actor.id, data: actor.toObject() }
     }),
+    /** P6-R：把一个已有人物的完整数据原样放进建卡小窗（保留编号），交作者建卡器接着改（有等级 = 作者的升级模式）。 */
+    draftLoad: (plan: { data: Record<string, unknown>; seed: string }) => operate([], async () => {
+      reseedKernel(plan.seed)
+      const actor = await ActorClass().create(structuredClone(plan.data), { keepId: true })
+      return { id: actor.id, data: actor.toObject() }
+    }),
   }
 }

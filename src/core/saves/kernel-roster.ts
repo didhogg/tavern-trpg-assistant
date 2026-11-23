@@ -102,6 +102,18 @@ export function setOff(ctx: RosterContext, ownerKey: string, compact: KernelActo
   })
 }
 
+/** 整个换掉一个人（P6-R：作者建卡器升级 / 调整完成后）：人物段换成新拆好的（含完整数据），个人调整、骰点不动；一条撤销。 */
+export function replaceActor(ctx: RosterContext, ownerKey: string, compact: KernelActorCompact, expectedRevision: number) {
+  return write(ctx, ownerKey, expectedRevision, (kernel) => {
+    const index = kernel.actors.findIndex((a) => a.id === compact.id)
+    if (index < 0) throw new TrpgError('E_NOT_FOUND', `存档里没有这个人物：${compact.id}`)
+    const old = kernel.actors[index]
+    const actors = kernel.actors.map(clone)
+    actors[index] = { ...clone(old), ...clone(compact), adjustments: clone(old.adjustments), dice: clone(old.dice) }
+    return { actors, before: { [old.id]: clone(old) } }
+  })
+}
+
 /** 撤销最近一次写入：恢复受影响人物（加人的撤销 = 拿掉，删人的撤销 = 放回）与战役战斗；交回每个人现在的样子。 */
 export async function undoLast(ctx: RosterContext, ownerKey: string, expectedRevision: number): Promise<{ workspace: Workspace; kernel: KernelCampaign; restored: RestoredActor[] } | null> {
   return ctx.db.transaction('rw', ctx.db.workspaces, async () => {

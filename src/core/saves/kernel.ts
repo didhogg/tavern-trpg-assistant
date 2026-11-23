@@ -16,7 +16,7 @@ import { clone } from './state'
 import { chooseSource } from '../../library/scopes'
 
 import type { KernelActorCompact, KernelRefChecker } from './kernel-types'
-import { addActors, history, purgeActors, setAdjustments, setOff, undoLast, type HistoryRow, type RestoredActor, type RosterContext } from './kernel-roster'
+import { addActors, history, purgeActors, replaceActor, setAdjustments, setOff, undoLast, type HistoryRow, type RestoredActor, type RosterContext } from './kernel-roster'
 import type { DownloadSuggestion, MissingRef } from '../../library/missing-refs'
 export type { KernelActorCompact, KernelRefChecker, KernelRefResult } from './kernel-types'
 
@@ -384,6 +384,7 @@ export class KernelSaveService {
   purgeActors(ownerKey: string, ids: string[], expectedRevision: number) { return purgeActors(this.roster(), ownerKey, ids, expectedRevision) }
   setAdjustments(ownerKey: string, ids: string[], patch: Record<string, unknown>, expectedRevision: number) { return setAdjustments(this.roster(), ownerKey, ids, patch, expectedRevision) }
   setOff(ownerKey: string, compact: KernelActorCompact, off: KernelActor['off'], expectedRevision: number) { return setOff(this.roster(), ownerKey, compact, off, expectedRevision) }
+  replaceActor(ownerKey: string, compact: KernelActorCompact, expectedRevision: number) { return replaceActor(this.roster(), ownerKey, compact, expectedRevision) }
   /** 改动记录（新的在前），由撤销记录比出来。 */
   async history(ownerKey: string): Promise<HistoryRow[]> {
     const kernel = await this.read(ownerKey)

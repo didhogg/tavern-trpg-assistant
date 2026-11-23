@@ -11,6 +11,9 @@ import type { FieldNode } from './frame/commands-fields'
 import type { SheetEdit } from './frame/commands-sheet'
 import type { Displayed, FrameText } from './shown'
 import { executed } from './host'
+import { actorData } from './rebuild'
+import { baseName, nextNames } from './people-names'
+export { nextNames } from './people-names'
 import type { KernelRuntime } from './runtime'
 import type { KernelNativeBuild } from './native-build'
 
@@ -60,27 +63,6 @@ export interface RosterRow {
 const get = (obj: unknown, path: string): unknown => path.split('.').reduce<unknown>((v, k) => isObject(v) ? (v as Record<string, unknown>)[k] : undefined, obj)
 const itemsById = (data: Record<string, unknown> | null): Map<string, Record<string, unknown>> =>
   new Map(((data?.items ?? []) as Array<Record<string, unknown>>).map((i) => [String(i._id), i]))
-
-/**
- * 加人时的取名规则（复制、从模板加入共用）：base 是名字，count 是要几个，taken 是存档里现有人物的名字。
- *   没有同名、加 1 个 → 「地精」；没有同名、加 3 个 → 地精 1 / 2 / 3；
- *   已有「盖尔」再来 1 个 → 盖尔 2；已有「地精 1~3」再加 2 个 → 地精 4 / 5。
- */
-export function nextNames(base: string, count: number, taken: string[]): string[] {
-  const re = new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: (\\d+))?$`)
-  let max = 0
-  let plain = false
-  for (const name of taken) {
-    const m = re.exec(name)
-    if (!m) continue
-    if (m[1]) max = Math.max(max, Number(m[1])); else plain = true
-  }
-  if (!plain && !max && count === 1) return [base]
-  let n = Math.max(max, plain ? 1 : 0)
-  return Array.from({ length: count }, () => `${base} ${++n}`)
-}
-/** 复制时的名字底：「地精 1」复制出来是「地精 4」不是「地精 1 2」。 */
-const baseName = (name: string): string => name.replace(/ \d+$/, '')
 
 type Saved = KernelActor & { base?: Record<string, unknown> }
 /** 存档人物带上战役层的 B′ 完整数据（有的话）。 */
@@ -219,6 +201,18 @@ export class KernelPeople {
     return { added, kernel }
   }
 
+  /** 拿掉一件条目（官方退回它带来的成长再删），一条可撤销改动。 */
+  remove(ownerKey: string, actorId: string, itemId: string) { return this.act(ownerKey, actorId, 'removeItem', actorId, itemId) }
+  /** 换掉一件条目（换种族 / 换背景）：先官方拿掉旧的，再加新的；两步合成一条可撤销改动，哪步没成都按存档退回。 */
+  async replace(ownerKey: string, actorId: string, oldItemId: string, ref: EntryRef) {
+    const removed = await this.call(ownerKey, 'removeItem', actorId, oldItemId)
+    if (!executed(removed.status)) { await this.cancel(ownerKey, [actorId]); return { added: { status: removed.status, error: removed.error }, kernel: null } }
+    const added = await this.deps.runtime.addToActor(ownerKey, actorId, [ref])
+    if (added.status !== 'complete') { await this.cancel(ownerKey, [actorId]); return { added, kernel: null } }
+    const changes = [...(removed.changes ?? []), ...(added.changes ?? [])] as KernelChange[]
+    return { added, kernel: changes.length ? (await this.deps.saves.apply(ownerKey, changes, await this.rev(ownerKey))).kernel : null }
+  }
+
   /** 统一改人物（字段 / 加值 / 覆盖 / 物品 / 效果 / 状态与力竭级数）。 */
   edit(ownerKey: string, actorId: string, edits: SheetEdit[]) { return this.act(ownerKey, actorId, 'edit', actorId, edits) }
 
@@ -286,6 +280,29 @@ export class KernelPeople {
     const result = await this.deps.runtime.rebuild(ownerKey, { ...blank, base: built.data })
     if (result.status !== 'complete' || !result.id) return { built: { status: 'error' as const, error: result.error ?? '建好的人物放不回结算小窗' }, kernel: null }
     return { built, id: result.id, kernel: await this.enroll(ownerKey, [result.id], adjustments, [], { [result.id]: result.base ?? built.data }) }
+  }
+  /**
+   * 用作者完整建卡器改一个已有的人（P6-R：升级、兼职、带选择的成长；空白人物没等级 = 作者从头建）：
+   * 把这个人现在的完整数据放进建卡小窗交作者改，作者完成后整份换回日常小窗、写进存档 = 一条撤销；玩家取消 = 什么都不变。
+   */
+  async levelNative(ownerKey: string, actorId: string, slot?: HTMLElement) {
+    if (!this.deps.native) throw new Error('这个插件没有接建卡专用小窗')
+    const saved = await this.saved(ownerKey, actorId)
+    if (!saved) throw new Error(`存档里没有这个人物：${actorId}`)
+    const { session } = await this.deps.runtime.session(ownerKey)
+    const current = await actorData(session, actorId)
+    if (!current) throw new Error(`结算小窗里没有这个人物：${actorId}`)
+    const built = await this.deps.native.run(ownerKey, saved.name, slot, current)
+    if (built.status !== 'built') return { built, kernel: null }
+    const rev = await this.rev(ownerKey)
+    const empty = kernelActorSchema.shape.state.parse(undefined)
+    const back = async () => { await this.deps.runtime.restore(ownerKey, actorId, await this.saved(ownerKey, actorId)) }
+    const put = await this.deps.runtime.restore(ownerKey, actorId, { ...saved, doc: built.data, base: built.data, state: empty, off: [] })
+    if (put?.status !== 'complete') { await back(); return { built: { status: 'error' as const, error: put?.error ?? '改好的人物放不回结算小窗' }, kernel: null } }
+    try {
+      const [compact] = await this.deps.runtime.compact(ownerKey, [actorId])
+      return { built, kernel: (await this.deps.saves.replaceActor(ownerKey, compact, rev)).kernel }
+    } catch (error) { await back(); throw error }
   }
   /** 放弃正在进行的完整建卡（关掉建卡专用小窗）。 */
   stopNative(ownerKey: string) { this.deps.native?.stop(ownerKey) }

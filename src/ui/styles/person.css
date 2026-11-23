@@ -94,7 +94,6 @@
 .ps-pills { padding: 0 0 var(--sp-3); flex-wrap: wrap; overflow: visible; }
 .ps-act-rec { display: block; color: var(--text2); font-size: var(--fs-xs); }
 /* B 批：背包 */
-.ps-enc { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); font-size: var(--fs-sm); }
 .ps-enc-bar { flex: 1 1 auto; max-width: 320px; height: 8px; border-radius: var(--r-pill); background: var(--line); overflow: hidden; }
 .ps-enc-bar i { display: block; height: 100%; background: var(--primary); }
 .ps-enc-bar[data-over] i { background: var(--danger-text); }

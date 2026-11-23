@@ -59,7 +59,7 @@ export class KernelNativeBuild {
    * 跑一次作者完整建卡器（同一战役同一时刻只建一个）。
    * slot = 页面上给建卡用的位置：小窗铺满它、给玩家看，并挂上 Foundry 核心样式与插件主题（frame/display.ts）；不给 = 隐藏小窗。
    */
-  async run(ownerKey: string, name: string, slot?: HTMLElement): Promise<NativeBuildResult> {
+  async run(ownerKey: string, name: string, slot?: HTMLElement, from?: Record<string, unknown>): Promise<NativeBuildResult> {
     if (this.running.has(ownerKey)) return { status: 'error', error: '这个战役已经在建卡' }
     this.running.set(ownerKey, null)
     try {
@@ -88,7 +88,8 @@ export class KernelNativeBuild {
         const identity = crypto.randomUUID().replaceAll('-', '')
         const seed = `${name}~${identity}`
         // 每个建卡小窗的本地发号从头开始，人物要移进同一个日常小窗，所以在出生时给唯一编号。
-        const start = await session.call('draftStart', { name, seed, id: identity.slice(0, 16) })
+        // from = 已有人物的完整数据（P6-R 升级 / 调整）：原样放进去交作者接着改；没有 = 新开空白草稿人
+        const start = from ? await session.call('draftLoad', { data: from, seed }) : await session.call('draftStart', { name, seed, id: identity.slice(0, 16) })
         const id = (start.result as { id?: string } | null)?.id
         if (start.status !== 'complete' || !id) return { status: 'error', error: `开不了草稿人：${start.error ?? start.status}` }
         const call = await session.call('nativeBuild', { id, excludes: excludes.rows, brewFiles, presentation })

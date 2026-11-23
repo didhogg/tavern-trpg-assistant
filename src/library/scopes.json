@@ -30,7 +30,7 @@
       "showLegacy": true,
       "style": "classic",
       "format": "5etools",
-      "people": "monster", "items": "item", "spells": "spell", "feats": "feat",
+      "people": "monster", "items": "item", "spells": "spell", "feats": "feat", "races": "race", "backgrounds": "background", "classes": "class",
       "kernel": {
         "adapter": "foundry",
         "settings": {
@@ -58,7 +58,7 @@
       "showLegacy": false,
       "style": "one",
       "format": "5etools",
-      "people": "monster", "items": "item", "spells": "spell", "feats": "feat"
+      "people": "monster", "items": "item", "spells": "spell", "feats": "feat", "races": "race", "backgrounds": "background", "classes": "class"
     }
   }
 }
