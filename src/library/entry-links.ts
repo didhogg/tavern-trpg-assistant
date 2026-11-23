@@ -1,9 +1,11 @@
 // 条目之间的"定位"（P5 B-05 / T4）：给 类别 + 作者编号，找出它在哪个包里（官方 / 自制 / 书与冒险全文 / 文档）。
 // 搜索命中分流（B-01）和术语跳转（B-04）都用它。只读库，不改任何东西。
 // P5 T4：书 / 冒险正文保留多个提供者（官方 + 自制），不再让后写的 Map.set 顶掉官方。
-import { hashValue } from '../core/hash'
-import { BrewPacks } from './brew-packs'
+import { altsKey, type AltIndex } from './alternatives'
+import type { BrewParseReport } from './brew'
 import { DocumentStore } from './documents'
+import { parsedKey } from './install'
+import type { ParsedProp } from './runtime/frame/commands'
 import type { TagMeta } from './runtime/frame/tag-commands'
 import type { LibraryService } from './service'
 import type { LibraryView } from './revision'
@@ -64,11 +66,10 @@ export interface ResolvedTag {
 }
 
 type CustomRef = { set: string; prop: string; hash: string }
-const CUSTOM_REFS_KEY = (codeSet: string): string => `customRefs:${codeSet}`
 
 export class EntryLinks {
   private readonly corpora = new Map<string, Promise<CorpusIndex>>()
-  /** customRefs 的内存副本：数据版本记号 + 作者程序那一套 → 结果。 */
+  /** customRefs 的内存副本：库版本 + 作者程序那一套 → 结果。 */
   private readonly customMemo = new Map<string, Promise<Map<string, CustomRef>>>()
 
   constructor(private readonly lib: LibraryService, readonly docs: DocumentStore) {}
@@ -150,46 +151,38 @@ export class EntryLinks {
   }
 
   /**
-   * 这一套自制包里的全部条目：「类别|作者编号」→ 库引用。所有类别、所有包一视同仁（不认类别名）。
+   * 这一套自制里的全部条目：「类别|作者编号」→ 库引用。所有类别一视同仁（不认类别名）。
    * 结算小窗里的人物带着作者编号（Plutonium flags 的 类别 + 编号），存档要把它对回库条目；官方来源另有对照，这里只管自制。
    * 含战役里已停用的条目：人物身上已有的东西，存档不因为停用就存不下。
+   *
+   * 取自装包时作者对整套自制的解析结果（parseBrew 存的 parsed:<自制>:<类别>，类别以那次解析报告登记的为准），
+   * 和库打开条目（storedItem）同一份——存档能指向的就是库能打开的；再加上和官方同编号、解析结果里换成官方的那些（备选表的目标）。
+   * 驾驶员 2026-11-22～23：原来逐包开隔离作者小窗重解析（真机 24 包、11 秒），还漏了跨包生成的魔法变体、自制子职等 1265 条。
    */
   async customRefs(codeSet: string, viewArg?: LibraryView): Promise<Map<string, CustomRef>> {
     const view = viewArg ?? await this.lib.currentView()
-    // 只取决于库的数据版本（官方 / 自制任何一边变了记号就变）：同一记号只算一次，存进库里（和备选表同一种派生结果），内存再留一份。
-    // 驾驶员 2026-11-22：每次加人都把全部自制包逐包开隔离小窗解析一遍（真机 24 包、11 秒）。
-    // 旧格式自制状态（包记录为 null，现场读作者存储）不进记号：不存库，只按这个库版本记在内存
-    const legacyBrews = Object.values(await view.store.allBrewStates(view)).some((s) => s.packs === null)
-    const fingerprint = legacyBrews ? null : hashValue(await view.dataVersion())
-    const memoKey = `${fingerprint ?? `view:${view.id}`}|${codeSet}`
+    const memoKey = `${view.id}|${codeSet}`
     let pending = this.customMemo.get(memoKey)
     if (!pending) {
-      pending = this.customRefsStored(codeSet, view, fingerprint)
+      pending = this.customRefsOf(codeSet, view)
       this.customMemo.set(memoKey, pending)
       pending.catch(() => this.customMemo.delete(memoKey))
     }
     return pending
   }
 
-  private async customRefsStored(codeSet: string, view: LibraryView, fingerprint: string | null): Promise<Map<string, CustomRef>> {
-    if (fingerprint === null) return this.customRefsBuild(codeSet, view)
-    const stored = await view.derivedGet(CUSTOM_REFS_KEY(codeSet))
-    if (stored?.fingerprint === fingerprint && Array.isArray(stored.value)) return new Map(stored.value as Array<[string, CustomRef]>)
-    const out = await this.customRefsBuild(codeSet, view)
-    await view.derivedPut(CUSTOM_REFS_KEY(codeSet), fingerprint, [...out]).catch((e: unknown) => console.warn('[trpg-assistant] 自制编号对照没存进库（下次重算）', e))
-    return out
-  }
-
-  private async customRefsBuild(codeSet: string, view: LibraryView): Promise<Map<string, CustomRef>> {
+  private async customRefsOf(codeSet: string, view: LibraryView): Promise<Map<string, CustomRef>> {
     const out = new Map<string, CustomRef>()
+    const add = (set: string, prop: string, hash: string): void => { out.set(`${prop}|${hash}`, { set, prop, hash }) }
     for (const set of SOURCES.filter((s) => s.codeSet === codeSet && s.kind === 'brew')) {
-      if (!(await view.brewState(set.id)) && !(await view.derivedGet(`audit:${set.id}`))) continue
-      const packs = await new BrewPacks(this.lib).list(set.id, view).catch(() => [])
-      for (const pack of packs) {
-        for (const [prop, rows] of Object.entries(await this.lib.packOwnedItems(set.id, pack, view))) {
-          for (const r of rows) if (r.hash) out.set(`${prop}|${r.hash}`, { set: set.id, prop, hash: r.hash })
-        }
+      // 没有解析报告 = 这套自制没解析过，库里也打不开它的条目
+      const report = (await view.derivedGet(`audit:${set.id}`))?.value as BrewParseReport | undefined
+      for (const prop of Object.keys(report?.parse.props ?? {})) {
+        const parsed = (await view.derivedGet(parsedKey(set.id, prop)))?.value as ParsedProp | undefined
+        for (const hash of parsed?.hashes ?? []) if (hash) add(set.id, prop, hash)
       }
+      const alts = (await view.derivedGet(altsKey(set.id)))?.value as AltIndex | undefined
+      for (const { target } of Object.values(alts?.targets ?? {})) add(set.id, target.prop, target.hash)
     }
     return out
   }

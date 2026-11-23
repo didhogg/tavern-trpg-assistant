@@ -28,7 +28,7 @@ async function readPack(id: string): Promise<any[]> {
   return JSON.parse(text)
 }
 
-let kernel: { changes: ChangeRecord[]; calls: any[]; steps: string[] } | undefined
+let kernel: { changes: ChangeRecord[]; calls: any[]; reserve(ids: Iterable<string>): void; steps: string[] } | undefined
 
 async function boot(input: KernelInput): Promise<unknown> {
   if (kernel) throw Error('Kernel is already booted')
@@ -110,6 +110,8 @@ const COMMANDS: Record<string, (...args: any[]) => unknown> = {
   loadBrews,
   status,
   preparedActors,
+  /** 存档已用过的人物编号：开机后先登记，新发的编号从它们后面开始，不会和还没装回（或装不回）小窗的人撞（驾驶员 2026-11-23）。 */
+  reserveActorIds: (ids: string[]) => { if (!kernel) throw Error('Kernel is not booted'); kernel.reserve(ids) },
   changes: () => kernel?.changes ?? [],
   calls: () => kernel?.calls ?? [],
   steps: () => kernel?.steps ?? [],

@@ -73,6 +73,7 @@ type Commands = typeof KERNEL_COMMANDS & {
   boot(input: KernelInput): unknown
   loadBrews(brews: PreparedBrew[], itemMasteries: unknown[]): KernelBrewReport
   status(): unknown
+  reserveActorIds(ids: string[]): void
   preparedActors(): Array<{ source: Record<string, unknown>; system: Record<string, unknown> }>
 }
 

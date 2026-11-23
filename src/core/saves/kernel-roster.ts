@@ -39,6 +39,14 @@ async function write<T>(ctx: RosterContext, ownerKey: string, expectedRevision: 
   })
 }
 
+/**
+ * 存档用过的全部人物编号：名单上的、留着完整数据的（撤销加人后 bases 还在）、撤销能放回的。
+ * 结算小窗开机后先登记这些编号，新人不会拿到它们（否则加人撞号失败，或撤销时放回的人和新人同号、套上别人的完整数据）。
+ */
+export function usedActorIds(kernel: KernelCampaign): string[] {
+  return [...new Set([...kernel.actors.map((a) => a.id), ...Object.keys(kernel.bases ?? {}), ...kernel.undo.flatMap((u) => u.actorIds)])]
+}
+
 /** 加人：建卡、从模板加入、复制之后调用；撤销 = 把他从存档拿掉。 */
 export function addActors(ctx: RosterContext, ownerKey: string, compacts: KernelActorCompact[], expectedRevision: number, adjustments: Record<string, unknown> = {}) {
   return write(ctx, ownerKey, expectedRevision, (kernel) => {

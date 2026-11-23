@@ -5714,7 +5714,7 @@ var ute = async (e, t, n) => {
 }, fte = (e) => {
 	let t = Cf(e), n = (e, r, i, a) => t(e, r, i, Sf(n, a));
 	return n;
-}, pte = (e) => {
+}, Of = (e) => {
 	let t = wf(e), n = async (e, r, i, a) => {
 		let o = i ? {
 			...i,
@@ -5723,66 +5723,66 @@ var ute = async (e, t, n) => {
 		return await t(e, r, o, Sf(n, a));
 	};
 	return n;
-}, Of = (e) => {
+}, kf = (e) => {
 	let t = wf(e), n = async (e, r, i, a) => await t(e, r, i, Sf(n, a));
 	return n;
-}, kf = (e) => (t, n, r) => {
+}, Af = (e) => (t, n, r) => {
 	let i = r ? {
 		...r,
 		direction: "backward"
 	} : { direction: "backward" };
 	return Tf(e)(t, n, i);
-}, Af = (e) => (t, n, r) => Tf(e)(t, n, r), jf = (e) => async (t, n, r) => {
+}, jf = (e) => (t, n, r) => Tf(e)(t, n, r), Mf = (e) => async (t, n, r) => {
 	let i = r ? {
 		...r,
 		direction: "backward"
 	} : { direction: "backward" };
 	return Df(e)(t, n, i);
-}, Mf = (e) => async (t, n, r) => Df(e)(t, n, r), Nf = /^[cC][0-9a-z]{6,}$/, Pf = /^[0-9a-z]+$/, Ff = /^[0-7][0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{25}$/, If = /^[0-9a-vA-V]{20}$/, Lf = /^[A-Za-z0-9]{27}$/, Rf = /^[a-zA-Z0-9_-]{21}$/;
-function zf(e) {
+}, Nf = (e) => async (t, n, r) => Df(e)(t, n, r), Pf = /^[cC][0-9a-z]{6,}$/, Ff = /^[0-9a-z]+$/, If = /^[0-7][0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{25}$/, Lf = /^[0-9a-vA-V]{20}$/, Rf = /^[A-Za-z0-9]{27}$/, zf = /^[a-zA-Z0-9_-]{21}$/;
+function Bf(e) {
 	return RegExp(`^[a-zA-Z0-9_-]{${e}}$`);
 }
-var Bf = /^P(?:(\d+W)|(?!.*W)(?=\d|T\d)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+([.,]\d+)?S)?)?)$/, Vf = /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/, Hf = (e) => e ? RegExp(`^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${e}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`) : /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/, Uf = /^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$/, Wf = "^(?=[\\s\\S]*[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u20E3])[\\p{Extended_Pictographic}\\p{Emoji_Component}]+$";
-function Gf() {
-	return new RegExp(Wf, "u");
+var Vf = /^P(?:(\d+W)|(?!.*W)(?=\d|T\d)(\d+Y)?(\d+M)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+([.,]\d+)?S)?)?)$/, Hf = /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/, Uf = (e) => e ? RegExp(`^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${e}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`) : /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/, Wf = /^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$/, Gf = "^(?=[\\s\\S]*[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u20E3])[\\p{Extended_Pictographic}\\p{Emoji_Component}]+$";
+function Kf() {
+	return new RegExp(Gf, "u");
 }
-var Kf = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/, qf = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/, Jf = /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/([0-9]|[1-2][0-9]|3[0-2])$/, Yf = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/, Xf = /^$|^(?:[0-9a-zA-Z+/]{4})*(?:(?:[0-9a-zA-Z+/]{2}==)|(?:[0-9a-zA-Z+/]{3}=))?$/, Zf = /^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2,3})?$/, Qf = /^https?$/, $f = /^\+[1-9]\d{6,14}$/, ep = "(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))";
-function tp(e) {
+var qf = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/, Jf = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/, Yf = /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/([0-9]|[1-2][0-9]|3[0-2])$/, Xf = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))\/(12[0-8]|1[01][0-9]|[1-9]?[0-9])$/, Zf = /^$|^(?:[0-9a-zA-Z+/]{4})*(?:(?:[0-9a-zA-Z+/]{2}==)|(?:[0-9a-zA-Z+/]{3}=))?$/, Qf = /^(?:[A-Za-z0-9_-]{4})*(?:[A-Za-z0-9_-]{2,3})?$/, $f = /^https?$/, ep = /^\+[1-9]\d{6,14}$/, tp = "(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))";
+function np(e) {
 	return RegExp(`^${e}$`);
 }
-var np = /*@__PURE__*/ tp(ep);
-function rp(e) {
+var rp = /*@__PURE__*/ np(tp);
+function ip(e) {
 	let t = "(?:[01]\\d|2[0-3]):[0-5]\\d";
 	return typeof e.precision == "number" ? e.precision === -1 ? `${t}` : e.precision === 0 ? `${t}:[0-5]\\d` : `${t}:[0-5]\\d\\.\\d{${e.precision}}` : e.seconds ? `${t}:[0-5]\\d(?:\\.\\d+)?` : `${t}(?::[0-5]\\d(?:\\.\\d+)?)?`;
 }
-function ip(e) {
-	return RegExp(`^${rp(e)}$`);
-}
 function ap(e) {
+	return RegExp(`^${ip(e)}$`);
+}
+function op(e) {
 	let t = ["Z"];
 	e.offset && t.push("([+-](?:[01]\\d|2[0-3]):[0-5]\\d)");
-	let n = `${rp({
+	let n = `${ip({
 		precision: e.precision,
 		seconds: !0
-	})}(?:${t.join("|")})`, r = e.local ? `${n}|${rp({ precision: e.precision })}` : n;
-	return RegExp(`^${ep}T(?:${r})$`);
+	})}(?:${t.join("|")})`, r = e.local ? `${n}|${ip({ precision: e.precision })}` : n;
+	return RegExp(`^${tp}T(?:${r})$`);
 }
-var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:true|false)$/i, up = /^[^A-Z]*$/, dp = /^[^a-z]*$/, fp = /*@__PURE__*/ q("$ZodCheck", (e, t) => {
+var sp = /^[\s\S]{0,}$/, cp = /^-?\d+$/, lp = /^-?\d+(?:\.\d+)?$/, up = /^(?:true|false)$/i, dp = /^[^A-Z]*$/, fp = /^[^a-z]*$/, pp = /*@__PURE__*/ q("$ZodCheck", (e, t) => {
 	var n;
 	e._zod ??= {}, e._zod.def = t, (n = e._zod).onattach ?? (n.onattach = []);
-}), pp = (e) => {
+}), mp = (e) => {
 	let t = e.value;
 	return !Cd(t) && t.length !== void 0;
-}, mp = {
+}, hp = {
 	number: "number",
 	bigint: "bigint",
 	object: "date"
-}, hp = /*@__PURE__*/ q("$ZodCheckLessThan", (e, t) => {
-	fp.init(e, t);
-	let n = mp[typeof t.value];
+}, gp = /*@__PURE__*/ q("$ZodCheckLessThan", (e, t) => {
+	pp.init(e, t);
+	let n = hp[typeof t.value];
 	e._zod.check = (r) => {
 		(t.inclusive ? r.value <= t.value : r.value < t.value) || r.issues.push({
-			origin: mp[typeof r.value] ?? n,
+			origin: hp[typeof r.value] ?? n,
 			code: "too_big",
 			maximum: typeof t.value == "object" ? t.value.getTime() : t.value,
 			input: r.value,
@@ -5791,12 +5791,12 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), gp = /*@__PURE__*/ q("$ZodCheckGreaterThan", (e, t) => {
-	fp.init(e, t);
-	let n = mp[typeof t.value];
+}), _p = /*@__PURE__*/ q("$ZodCheckGreaterThan", (e, t) => {
+	pp.init(e, t);
+	let n = hp[typeof t.value];
 	e._zod.check = (r) => {
 		(t.inclusive ? r.value >= t.value : r.value > t.value) || r.issues.push({
-			origin: mp[typeof r.value] ?? n,
+			origin: hp[typeof r.value] ?? n,
 			code: "too_small",
 			minimum: typeof t.value == "object" ? t.value.getTime() : t.value,
 			input: r.value,
@@ -5805,8 +5805,8 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), _p = /*@__PURE__*/ q("$ZodCheckMultipleOf", (e, t) => {
-	fp.init(e, t), e._zod.check = (n) => {
+}), vp = /*@__PURE__*/ q("$ZodCheckMultipleOf", (e, t) => {
+	pp.init(e, t), e._zod.check = (n) => {
 		if (typeof n.value != typeof t.value) throw Error("Cannot mix number and bigint in multiple_of check.");
 		(typeof n.value == "bigint" ? t.value !== BigInt(0) && n.value % t.value === BigInt(0) : Td(n.value, t.value) === 0) || n.issues.push({
 			origin: typeof n.value,
@@ -5817,8 +5817,8 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), vp = /*@__PURE__*/ q("$ZodCheckNumberFormat", (e, t) => {
-	fp.init(e, t), t.format = t.format || "float64";
+}), yp = /*@__PURE__*/ q("$ZodCheckNumberFormat", (e, t) => {
+	pp.init(e, t), t.format = t.format || "float64";
 	let n = t.format?.includes("int"), r = n ? "int" : "number", [i, a] = qd[t.format];
 	e._zod.check = (o) => {
 		let s = o.value;
@@ -5875,9 +5875,9 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), yp = /*@__PURE__*/ q("$ZodCheckMaxLength", (e, t) => {
+}), bp = /*@__PURE__*/ q("$ZodCheckMaxLength", (e, t) => {
 	var n;
-	fp.init(e, t), (n = e._zod.def).when ?? (n.when = pp), e._zod.check = (n) => {
+	pp.init(e, t), (n = e._zod.def).when ?? (n.when = mp), e._zod.check = (n) => {
 		let r = n.value, i = r.length;
 		if ((typeof r == "string" && i > t.maximum ? rf(r) : i) <= t.maximum) return;
 		let a = af(r);
@@ -5891,9 +5891,9 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), bp = /*@__PURE__*/ q("$ZodCheckMinLength", (e, t) => {
+}), xp = /*@__PURE__*/ q("$ZodCheckMinLength", (e, t) => {
 	var n;
-	fp.init(e, t), (n = e._zod.def).when ?? (n.when = pp), e._zod.check = (n) => {
+	pp.init(e, t), (n = e._zod.def).when ?? (n.when = mp), e._zod.check = (n) => {
 		let r = n.value, i = r.length;
 		if ((typeof r == "string" && i >= t.minimum && i < t.minimum * 2 ? rf(r) : i) >= t.minimum) return;
 		let a = af(r);
@@ -5907,9 +5907,9 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), xp = /*@__PURE__*/ q("$ZodCheckLengthEquals", (e, t) => {
+}), Sp = /*@__PURE__*/ q("$ZodCheckLengthEquals", (e, t) => {
 	var n;
-	fp.init(e, t), (n = e._zod.def).when ?? (n.when = pp), e._zod.check = (n) => {
+	pp.init(e, t), (n = e._zod.def).when ?? (n.when = mp), e._zod.check = (n) => {
 		let r = n.value, i = r.length, a = typeof r == "string" && i >= t.length && i <= t.length * 2 ? rf(r) : i;
 		if (a === t.length) return;
 		let o = af(r), s = a > t.length;
@@ -5929,9 +5929,9 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), Sp = /*@__PURE__*/ q("$ZodCheckStringFormat", (e, t) => {
+}), Cp = /*@__PURE__*/ q("$ZodCheckStringFormat", (e, t) => {
 	var n, r;
-	fp.init(e, t), t.pattern ? (n = e._zod).check ?? (n.check = (n) => {
+	pp.init(e, t), t.pattern ? (n = e._zod).check ?? (n.check = (n) => {
 		t.pattern.lastIndex = 0, !t.pattern.test(n.value) && n.issues.push({
 			origin: "string",
 			code: "invalid_format",
@@ -5942,8 +5942,8 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	}) : (r = e._zod).check ?? (r.check = () => {});
-}), Cp = /*@__PURE__*/ q("$ZodCheckRegex", (e, t) => {
-	Sp.init(e, t), e._zod.check = (n) => {
+}), wp = /*@__PURE__*/ q("$ZodCheckRegex", (e, t) => {
+	Cp.init(e, t), e._zod.check = (n) => {
 		t.pattern.lastIndex = 0, !t.pattern.test(n.value) && n.issues.push({
 			origin: "string",
 			code: "invalid_format",
@@ -5954,12 +5954,12 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), wp = /*@__PURE__*/ q("$ZodCheckLowerCase", (e, t) => {
-	t.pattern ??= up, Sp.init(e, t);
-}), Tp = /*@__PURE__*/ q("$ZodCheckUpperCase", (e, t) => {
-	t.pattern ??= dp, Sp.init(e, t);
-}), Ep = /*@__PURE__*/ q("$ZodCheckIncludes", (e, t) => {
-	fp.init(e, t);
+}), Tp = /*@__PURE__*/ q("$ZodCheckLowerCase", (e, t) => {
+	t.pattern ??= dp, Cp.init(e, t);
+}), Ep = /*@__PURE__*/ q("$ZodCheckUpperCase", (e, t) => {
+	t.pattern ??= fp, Cp.init(e, t);
+}), Dp = /*@__PURE__*/ q("$ZodCheckIncludes", (e, t) => {
+	pp.init(e, t);
 	let n = Hd(t.includes);
 	t.pattern = new RegExp(typeof t.position == "number" ? `^.{${t.position},}${n}` : n), e._zod.check = (n) => {
 		n.value.includes(t.includes, t.position) || n.issues.push({
@@ -5972,8 +5972,8 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), Dp = /*@__PURE__*/ q("$ZodCheckStartsWith", (e, t) => {
-	fp.init(e, t);
+}), Op = /*@__PURE__*/ q("$ZodCheckStartsWith", (e, t) => {
+	pp.init(e, t);
 	let n = RegExp(`^${Hd(t.prefix)}.*`);
 	t.pattern ??= n, e._zod.check = (n) => {
 		n.value.startsWith(t.prefix) || n.issues.push({
@@ -5986,8 +5986,8 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), Op = /*@__PURE__*/ q("$ZodCheckEndsWith", (e, t) => {
-	fp.init(e, t);
+}), kp = /*@__PURE__*/ q("$ZodCheckEndsWith", (e, t) => {
+	pp.init(e, t);
 	let n = RegExp(`.*${Hd(t.suffix)}$`);
 	t.pattern ??= n, e._zod.check = (n) => {
 		n.value.endsWith(t.suffix) || n.issues.push({
@@ -6000,11 +6000,11 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 			continue: !t.abort
 		});
 	};
-}), kp = /*@__PURE__*/ q("$ZodCheckOverwrite", (e, t) => {
-	fp.init(e, t), e._zod.check = (e) => {
+}), Ap = /*@__PURE__*/ q("$ZodCheckOverwrite", (e, t) => {
+	pp.init(e, t), e._zod.check = (e) => {
 		e.value = t.tx(e.value);
 	};
-}), Ap = class {
+}), jp = class {
 	constructor(e = [], t = {}) {
 		this.content = [], this.indent = 0, this.args = e, this.closed = t;
 	}
@@ -6028,13 +6028,13 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 		let e = Function, t = this?.content ?? [""];
 		return new e(...Object.keys(this.closed), `return function (${this.args.join(", ")}) {\n${t.join("\n")}\n};`)(...Object.values(this.closed));
 	}
-}, jp = {
+}, Mp = {
 	major: 4,
 	minor: 6,
 	patch: 7
-}, Mp = /*@__PURE__*/ q("$ZodType", (e, t) => {
+}, Np = /*@__PURE__*/ q("$ZodType", (e, t) => {
 	var n;
-	e ??= {}, e._zod.def = t, e._zod.bag = e._zod.bag || {}, e._zod.version = jp;
+	e ??= {}, e._zod.def = t, e._zod.bag = e._zod.bag || {}, e._zod.version = Mp;
 	let r = e._zod.def.checks, i = e._zod.traits.has("$ZodCheck") ? [e, ...r ?? []] : r?.length ? [...r] : [];
 	for (let t of i) for (let n of t._zod.onattach) n(e);
 	if (i.length === 0) (n = e._zod).deferred ?? (n.deferred = []), e._zod.deferred?.push(() => {
@@ -6090,20 +6090,20 @@ var op = /^[\s\S]{0,}$/, sp = /^-?\d+$/, cp = /^-?\d+(?:\.\d+)?$/, lp = /^(?:tru
 	}
 }, {
 	get "~standard"() {
-		return cf(this, "~standard", Fp(this));
+		return cf(this, "~standard", Ip(this));
 	},
 	set "~standard"(e) {
 		sf(this, "~standard", e);
 	}
-}), Np = (e, t) => e.issues.length ? { issues: e.issues.map((e) => nf(e, t, yf())) } : { value: e.value };
-async function Pp(e, t) {
+}), Pp = (e, t) => e.issues.length ? { issues: e.issues.map((e) => nf(e, t, yf())) } : { value: e.value };
+async function Fp(e, t) {
 	let n = { async: !0 };
-	return Np(await e._zod.run({
+	return Pp(await e._zod.run({
 		value: t,
 		issues: []
 	}, n), n);
 }
-function Fp(e) {
+function Ip(e) {
 	return {
 		validate: (t) => {
 			let n = { async: !1 };
@@ -6112,16 +6112,16 @@ function Fp(e) {
 					value: t,
 					issues: []
 				}, n);
-				if (!(r instanceof Promise)) return Np(r, n);
+				if (!(r instanceof Promise)) return Pp(r, n);
 			} catch {}
-			return Pp(e, t);
+			return Fp(e, t);
 		},
 		vendor: "zod",
 		version: 1
 	};
 }
-var Ip = /*@__PURE__*/ q("$ZodString", (e, t) => {
-	Mp.init(e, t), e._zod.pattern = t.pattern ?? op, e._zod.parse = (n, r) => {
+var Lp = /*@__PURE__*/ q("$ZodString", (e, t) => {
+	Np.init(e, t), e._zod.pattern = t.pattern ?? sp, e._zod.parse = (n, r) => {
 		if (t.coerce) try {
 			n.value = String(n.value);
 		} catch {}
@@ -6132,11 +6132,11 @@ var Ip = /*@__PURE__*/ q("$ZodString", (e, t) => {
 			inst: e
 		}), n;
 	};
-}), Lp = /*@__PURE__*/ q("$ZodStringFormat", (e, t) => {
-	Sp.init(e, t), Ip.init(e, t);
-}), Rp = /*@__PURE__*/ q("$ZodGUID", (e, t) => {
-	t.pattern ??= Vf, Lp.init(e, t);
-}), zp = /*@__PURE__*/ q("$ZodUUID", (e, t) => {
+}), Rp = /*@__PURE__*/ q("$ZodStringFormat", (e, t) => {
+	Cp.init(e, t), Lp.init(e, t);
+}), zp = /*@__PURE__*/ q("$ZodGUID", (e, t) => {
+	t.pattern ??= Hf, Rp.init(e, t);
+}), Bp = /*@__PURE__*/ q("$ZodUUID", (e, t) => {
 	if (t.version) {
 		let e = {
 			v1: 1,
@@ -6149,24 +6149,24 @@ var Ip = /*@__PURE__*/ q("$ZodString", (e, t) => {
 			v8: 8
 		}[t.version];
 		if (e === void 0) throw Error(`Invalid UUID version: "${t.version}"`);
-		t.pattern ??= Hf(e);
-	} else t.pattern ??= Hf();
-	Lp.init(e, t);
-}), Bp = /*@__PURE__*/ q("$ZodEmail", (e, t) => {
-	t.pattern ??= Uf, Lp.init(e, t);
+		t.pattern ??= Uf(e);
+	} else t.pattern ??= Uf();
+	Rp.init(e, t);
+}), Vp = /*@__PURE__*/ q("$ZodEmail", (e, t) => {
+	t.pattern ??= Wf, Rp.init(e, t);
 });
-function Vp(e) {
+function Hp(e) {
 	try {
 		return typeof URL < "u" && typeof URL.canParse == "function" ? URL.canParse(e) : (new URL(e), !0);
 	} catch {
 		return !1;
 	}
 }
-function Hp(e, t) {
-	return !("normalize" in t) && !("hostname" in t) && !("protocol" in t) ? Vp(e) || 2 : Up(e, t);
-}
 function Up(e, t) {
-	if (!t.normalize && t.protocol?.source === Qf.source && !/^https?:\/\//i.test(e)) return 1;
+	return !("normalize" in t) && !("hostname" in t) && !("protocol" in t) ? Hp(e) || 2 : Wp(e, t);
+}
+function Wp(e, t) {
+	if (!t.normalize && t.protocol?.source === $f.source && !/^https?:\/\//i.test(e)) return 1;
 	try {
 		if (typeof URL < "u") {
 			let t = URL;
@@ -6177,20 +6177,20 @@ function Up(e, t) {
 		return 2;
 	}
 }
-var Wp = /[\t\n\r]/g;
-function Gp(e) {
-	return e.replace(Wp, "");
-}
-function Kp(e, t) {
-	return t.lastIndex = 0, t.test(e.hostname);
+var Gp = /[\t\n\r]/g;
+function Kp(e) {
+	return e.replace(Gp, "");
 }
 function qp(e, t) {
+	return t.lastIndex = 0, t.test(e.hostname);
+}
+function Jp(e, t) {
 	return t.lastIndex = 0, t.test(e.protocol.endsWith(":") ? e.protocol.slice(0, -1) : e.protocol);
 }
-var Jp = /*@__PURE__*/ q("$ZodURL", (e, t) => {
-	Lp.init(e, t), e._zod.check = (n) => {
+var Yp = /*@__PURE__*/ q("$ZodURL", (e, t) => {
+	Rp.init(e, t), e._zod.check = (n) => {
 		try {
-			let r = n.value.trim(), i = Hp(r, t);
+			let r = n.value.trim(), i = Up(r, t);
 			if (i === 1) {
 				n.issues.push({
 					code: "invalid_format",
@@ -6213,10 +6213,10 @@ var Jp = /*@__PURE__*/ q("$ZodURL", (e, t) => {
 				return;
 			}
 			if (i === !0) {
-				n.value = Gp(r);
+				n.value = Kp(r);
 				return;
 			}
-			t.hostname && !Kp(i, t.hostname) && n.issues.push({
+			t.hostname && !qp(i, t.hostname) && n.issues.push({
 				code: "invalid_format",
 				format: "url",
 				note: "Invalid hostname",
@@ -6224,7 +6224,7 @@ var Jp = /*@__PURE__*/ q("$ZodURL", (e, t) => {
 				input: n.value,
 				inst: e,
 				continue: !t.abort
-			}), t.protocol && !qp(i, t.protocol) && n.issues.push({
+			}), t.protocol && !Jp(i, t.protocol) && n.issues.push({
 				code: "invalid_format",
 				format: "url",
 				note: "Invalid protocol",
@@ -6232,7 +6232,7 @@ var Jp = /*@__PURE__*/ q("$ZodURL", (e, t) => {
 				input: n.value,
 				inst: e,
 				continue: !t.abort
-			}), n.value = t.normalize ? i.href : Gp(r);
+			}), n.value = t.normalize ? i.href : Kp(r);
 			return;
 		} catch {
 			n.issues.push({
@@ -6244,38 +6244,38 @@ var Jp = /*@__PURE__*/ q("$ZodURL", (e, t) => {
 			});
 		}
 	};
-}), Yp = /*@__PURE__*/ q("$ZodEmoji", (e, t) => {
-	t.pattern ??= Gf(), Lp.init(e, t);
-}), Xp = /*@__PURE__*/ q("$ZodNanoID", (e, t) => {
+}), Xp = /*@__PURE__*/ q("$ZodEmoji", (e, t) => {
+	t.pattern ??= Kf(), Rp.init(e, t);
+}), Zp = /*@__PURE__*/ q("$ZodNanoID", (e, t) => {
 	if (t.length !== void 0 && (!Number.isInteger(t.length) || t.length < 1)) throw Error(`Invalid nanoid length: ${t.length}`);
-	t.pattern ??= t.length === void 0 ? Rf : zf(t.length), Lp.init(e, t);
-}), Zp = /*@__PURE__*/ q("$ZodCUID", (e, t) => {
-	t.pattern ??= Nf, Lp.init(e, t);
-}), Qp = /*@__PURE__*/ q("$ZodCUID2", (e, t) => {
-	t.pattern ??= Pf, Lp.init(e, t);
-}), $p = /*@__PURE__*/ q("$ZodULID", (e, t) => {
-	t.pattern ??= Ff, Lp.init(e, t);
-}), em = /*@__PURE__*/ q("$ZodXID", (e, t) => {
-	t.pattern ??= If, Lp.init(e, t);
-}), tm = /*@__PURE__*/ q("$ZodKSUID", (e, t) => {
-	t.pattern ??= Lf, Lp.init(e, t);
-}), nm = /*@__PURE__*/ q("$ZodISODateTime", (e, t) => {
-	t.pattern ??= ap(t), Lp.init(e, t);
-}), rm = /*@__PURE__*/ q("$ZodISODate", (e, t) => {
-	t.pattern ??= np, Lp.init(e, t);
-}), im = /*@__PURE__*/ q("$ZodISOTime", (e, t) => {
-	t.pattern ??= ip(t), Lp.init(e, t);
-}), am = /*@__PURE__*/ q("$ZodISODuration", (e, t) => {
-	t.pattern ??= Bf, Lp.init(e, t);
-}), om = /*@__PURE__*/ q("$ZodIPv4", (e, t) => {
-	t.pattern ??= Kf, Lp.init(e, t);
-}), sm = /^[0-9a-fA-F:.]+$/;
-function cm(e) {
-	return sm.test(e) ? Vp(`http://[${e}]`) : !1;
+	t.pattern ??= t.length === void 0 ? zf : Bf(t.length), Rp.init(e, t);
+}), Qp = /*@__PURE__*/ q("$ZodCUID", (e, t) => {
+	t.pattern ??= Pf, Rp.init(e, t);
+}), $p = /*@__PURE__*/ q("$ZodCUID2", (e, t) => {
+	t.pattern ??= Ff, Rp.init(e, t);
+}), em = /*@__PURE__*/ q("$ZodULID", (e, t) => {
+	t.pattern ??= If, Rp.init(e, t);
+}), tm = /*@__PURE__*/ q("$ZodXID", (e, t) => {
+	t.pattern ??= Lf, Rp.init(e, t);
+}), nm = /*@__PURE__*/ q("$ZodKSUID", (e, t) => {
+	t.pattern ??= Rf, Rp.init(e, t);
+}), rm = /*@__PURE__*/ q("$ZodISODateTime", (e, t) => {
+	t.pattern ??= op(t), Rp.init(e, t);
+}), im = /*@__PURE__*/ q("$ZodISODate", (e, t) => {
+	t.pattern ??= rp, Rp.init(e, t);
+}), am = /*@__PURE__*/ q("$ZodISOTime", (e, t) => {
+	t.pattern ??= ap(t), Rp.init(e, t);
+}), om = /*@__PURE__*/ q("$ZodISODuration", (e, t) => {
+	t.pattern ??= Vf, Rp.init(e, t);
+}), sm = /*@__PURE__*/ q("$ZodIPv4", (e, t) => {
+	t.pattern ??= qf, Rp.init(e, t);
+}), cm = /^[0-9a-fA-F:.]+$/;
+function lm(e) {
+	return cm.test(e) ? Hp(`http://[${e}]`) : !1;
 }
-var lm = /*@__PURE__*/ q("$ZodIPv6", (e, t) => {
-	t.pattern ??= qf, Lp.init(e, t), e._zod.check = (n) => {
-		cm(n.value) || n.issues.push({
+var um = /*@__PURE__*/ q("$ZodIPv6", (e, t) => {
+	t.pattern ??= Jf, Rp.init(e, t), e._zod.check = (n) => {
+		lm(n.value) || n.issues.push({
 			code: "invalid_format",
 			format: "ipv6",
 			input: n.value,
@@ -6283,20 +6283,20 @@ var lm = /*@__PURE__*/ q("$ZodIPv6", (e, t) => {
 			continue: !t.abort
 		});
 	};
-}), um = /*@__PURE__*/ q("$ZodCIDRv4", (e, t) => {
-	t.pattern ??= Jf, Lp.init(e, t);
+}), dm = /*@__PURE__*/ q("$ZodCIDRv4", (e, t) => {
+	t.pattern ??= Yf, Rp.init(e, t);
 });
-function dm(e) {
+function fm(e) {
 	let t = e.split("/");
 	if (t.length !== 2) return !1;
 	let [n, r] = t;
 	if (!r) return !1;
 	let i = Number(r);
-	return `${i}` !== r || i < 0 || i > 128 ? !1 : cm(n);
+	return `${i}` !== r || i < 0 || i > 128 ? !1 : lm(n);
 }
-var fm = /*@__PURE__*/ q("$ZodCIDRv6", (e, t) => {
-	t.pattern ??= Yf, Lp.init(e, t), e._zod.check = (n) => {
-		dm(n.value) || n.issues.push({
+var pm = /*@__PURE__*/ q("$ZodCIDRv6", (e, t) => {
+	t.pattern ??= Xf, Rp.init(e, t), e._zod.check = (n) => {
+		fm(n.value) || n.issues.push({
 			code: "invalid_format",
 			format: "cidrv6",
 			input: n.value,
@@ -6305,7 +6305,7 @@ var fm = /*@__PURE__*/ q("$ZodCIDRv6", (e, t) => {
 		});
 	};
 });
-function pm(e) {
+function mm(e) {
 	if (e === "") return !0;
 	if (/\s/.test(e) || e.length % 4 != 0) return !1;
 	try {
@@ -6314,9 +6314,9 @@ function pm(e) {
 		return !1;
 	}
 }
-var mm = /^[0-9a-zA-Z+/]*={0,2}$/, hm = /*@__PURE__*/ q("$ZodBase64", (e, t) => {
-	t.pattern ??= mm, Lp.init(e, t), e._zod.check = (n) => {
-		pm(n.value) || n.issues.push({
+var hm = /^[0-9a-zA-Z+/]*={0,2}$/, gm = /*@__PURE__*/ q("$ZodBase64", (e, t) => {
+	t.pattern ??= hm, Rp.init(e, t), e._zod.check = (n) => {
+		mm(n.value) || n.issues.push({
 			code: "invalid_format",
 			format: "base64",
 			input: n.value,
@@ -6324,15 +6324,15 @@ var mm = /^[0-9a-zA-Z+/]*={0,2}$/, hm = /*@__PURE__*/ q("$ZodBase64", (e, t) => 
 			continue: !t.abort
 		});
 	};
-}), gm = /^[A-Za-z0-9_-]*$/;
-function _m(e) {
-	if (!gm.test(e)) return !1;
+}), _m = /^[A-Za-z0-9_-]*$/;
+function vm(e) {
+	if (!_m.test(e)) return !1;
 	let t = e.replace(/[-_]/g, (e) => e === "-" ? "+" : "/");
-	return pm(t.padEnd(Math.ceil(t.length / 4) * 4, "="));
+	return mm(t.padEnd(Math.ceil(t.length / 4) * 4, "="));
 }
-var vm = /*@__PURE__*/ q("$ZodBase64URL", (e, t) => {
-	t.pattern ??= gm, Lp.init(e, t), e._zod.check = (n) => {
-		_m(n.value) || n.issues.push({
+var ym = /*@__PURE__*/ q("$ZodBase64URL", (e, t) => {
+	t.pattern ??= _m, Rp.init(e, t), e._zod.check = (n) => {
+		vm(n.value) || n.issues.push({
 			code: "invalid_format",
 			format: "base64url",
 			input: n.value,
@@ -6340,10 +6340,10 @@ var vm = /*@__PURE__*/ q("$ZodBase64URL", (e, t) => {
 			continue: !t.abort
 		});
 	};
-}), ym = /*@__PURE__*/ q("$ZodE164", (e, t) => {
-	t.pattern ??= $f, Lp.init(e, t);
+}), bm = /*@__PURE__*/ q("$ZodE164", (e, t) => {
+	t.pattern ??= ep, Rp.init(e, t);
 });
-function bm(e, t = null) {
+function xm(e, t = null) {
 	try {
 		let n = e.split(".");
 		if (n.length !== 3) return !1;
@@ -6355,9 +6355,9 @@ function bm(e, t = null) {
 		return !1;
 	}
 }
-var xm = /*@__PURE__*/ q("$ZodJWT", (e, t) => {
-	Lp.init(e, t), e._zod.check = (n) => {
-		bm(n.value, t.alg) || n.issues.push({
+var Sm = /*@__PURE__*/ q("$ZodJWT", (e, t) => {
+	Rp.init(e, t), e._zod.check = (n) => {
+		xm(n.value, t.alg) || n.issues.push({
 			code: "invalid_format",
 			format: "jwt",
 			input: n.value,
@@ -6365,8 +6365,8 @@ var xm = /*@__PURE__*/ q("$ZodJWT", (e, t) => {
 			continue: !t.abort
 		});
 	};
-}), Sm = /*@__PURE__*/ q("$ZodNumber", (e, t) => {
-	Mp.init(e, t), e._zod.pattern = cp, e._zod.parse = (n, r) => {
+}), Cm = /*@__PURE__*/ q("$ZodNumber", (e, t) => {
+	Np.init(e, t), e._zod.pattern = lp, e._zod.parse = (n, r) => {
 		if (t.coerce) try {
 			n.value = Number(n.value);
 		} catch {}
@@ -6381,10 +6381,10 @@ var xm = /*@__PURE__*/ q("$ZodJWT", (e, t) => {
 			...a ? { received: a } : {}
 		}), n;
 	};
-}), Cm = /*@__PURE__*/ q("$ZodNumberFormat", (e, t) => {
-	vp.init(e, t), Sm.init(e, t);
-}), wm = /*@__PURE__*/ q("$ZodBoolean", (e, t) => {
-	Mp.init(e, t), e._zod.pattern = lp, e._zod.parse = (n, r) => {
+}), wm = /*@__PURE__*/ q("$ZodNumberFormat", (e, t) => {
+	yp.init(e, t), Cm.init(e, t);
+}), Tm = /*@__PURE__*/ q("$ZodBoolean", (e, t) => {
+	Np.init(e, t), e._zod.pattern = up, e._zod.parse = (n, r) => {
 		if (t.coerce) try {
 			n.value = !!n.value;
 		} catch {}
@@ -6396,17 +6396,17 @@ var xm = /*@__PURE__*/ q("$ZodJWT", (e, t) => {
 			inst: e
 		}), n;
 	};
-}), Tm = /*@__PURE__*/ q("$ZodUnknown", (e, t) => {
-	Mp.init(e, t), e._zod.parse = (e) => e;
-}), Em = /*@__PURE__*/ q("$ZodNever", (e, t) => {
-	Mp.init(e, t), e._zod.parse = (t, n) => (t.issues.push({
+}), Em = /*@__PURE__*/ q("$ZodUnknown", (e, t) => {
+	Np.init(e, t), e._zod.parse = (e) => e;
+}), Dm = /*@__PURE__*/ q("$ZodNever", (e, t) => {
+	Np.init(e, t), e._zod.parse = (t, n) => (t.issues.push({
 		expected: "never",
 		code: "invalid_type",
 		input: t.value,
 		inst: e
 	}), t);
 });
-function Dm(e, t) {
+function Om(e, t) {
 	let n = ef(e._zod.def.checks);
 	if (!n.length) return;
 	let r = Math.min(...n.map((e) => e[0])), i = e._zod.parse;
@@ -6421,12 +6421,12 @@ function Dm(e, t) {
 		return i(n, a);
 	};
 }
-var Om = (e) => Array.isArray(e) ? e.length : -1;
-function km(e, t, n) {
+var km = (e) => Array.isArray(e) ? e.length : -1;
+function Am(e, t, n) {
 	e.issues.length && t.issues.push(...Qd(n, e.issues)), t.value[n] = e.value;
 }
-var Am = /*@__PURE__*/ q("$ZodArray", (e, t) => {
-	Mp.init(e, t);
+var jm = /*@__PURE__*/ q("$ZodArray", (e, t) => {
+	Np.init(e, t);
 	let n = vf.memoizer;
 	n?.attach(e), e._zod.parse = (r, i) => {
 		let a = r.value;
@@ -6443,13 +6443,13 @@ var Am = /*@__PURE__*/ q("$ZodArray", (e, t) => {
 				value: n,
 				issues: []
 			}, i);
-			if (c instanceof Promise) o.push(c.then((t) => km(t, r, e)));
-			else if (km(c, r, e), s && c.issues.length !== 0 && Zd(c)) break;
+			if (c instanceof Promise) o.push(c.then((t) => Am(t, r, e)));
+			else if (Am(c, r, e), s && c.issues.length !== 0 && Zd(c)) break;
 		}
 		return o.length ? Promise.all(o).then(() => r) : r;
-	}, Dm(e, Om);
+	}, Om(e, km);
 });
-function jm(e, t, n, r, i, a) {
+function Mm(e, t, n, r, i, a) {
 	let o = n in r, s = a === "optional";
 	if (o || !s || i !== "optional") {
 		if (e.issues.length) {
@@ -6464,9 +6464,9 @@ function jm(e, t, n, r, i, a) {
 		}) : e.value === void 0 ? (o || i === "defaulted" && !s) && (t.value[n] = void 0) : t.value[n] = e.value;
 	}
 }
-var Mm = [];
-function Nm(e) {
-	let t = Object.keys(e.shape), n = Object.getOwnPropertySymbols(e.shape), r = n.length ? n : Mm, i = r.length ? [...t, ...r] : t;
+var Nm = [];
+function Pm(e) {
+	let t = Object.keys(e.shape), n = Object.getOwnPropertySymbols(e.shape), r = n.length ? n : Nm, i = r.length ? [...t, ...r] : t;
 	for (let t of i) if (!e.shape?.[t]?._zod?.traits?.has("$ZodType")) throw Error(`Invalid element at key "${String(t)}": expected a Zod schema`);
 	let a = Kd(e.shape);
 	return {
@@ -6478,7 +6478,7 @@ function Nm(e) {
 		optionalKeys: new Set(a)
 	};
 }
-function Pm(e, t, n, r, i, a, o) {
+function Fm(e, t, n, r, i, a, o) {
 	let s = [], c = i.keySet, l = i.catchall._zod, u = l.def.type, d = l.optin, f = l.optout, p = 0;
 	for (let i in t) {
 		if (o && n.issues.length !== p) {
@@ -6498,7 +6498,7 @@ function Pm(e, t, n, r, i, a, o) {
 			value: t[i],
 			issues: []
 		}, r);
-		a instanceof Promise ? e.push(a.then((e) => jm(e, n, i, t, d, f))) : jm(a, n, i, t, d, f);
+		a instanceof Promise ? e.push(a.then((e) => Mm(e, n, i, t, d, f))) : Mm(a, n, i, t, d, f);
 	}
 	return s.length && n.issues.push({
 		code: "unrecognized_keys",
@@ -6508,8 +6508,8 @@ function Pm(e, t, n, r, i, a, o) {
 		continue: !0
 	}), e.length ? Promise.all(e).then(() => n) : n;
 }
-var Fm = /*@__PURE__*/ q("$ZodObject", (e, t) => {
-	Mp.init(e, t);
+var Im = /*@__PURE__*/ q("$ZodObject", (e, t) => {
+	Np.init(e, t);
 	let n = Object.getOwnPropertyDescriptor(t, "shape"), r = n?.get ? n.get.raw : t.shape ?? {};
 	if (r) {
 		let e = () => {
@@ -6518,7 +6518,7 @@ var Fm = /*@__PURE__*/ q("$ZodObject", (e, t) => {
 		};
 		e.raw = r, Object.defineProperty(t, "shape", { get: e });
 	}
-	let i = Sd(() => Nm(t));
+	let i = Sd(() => Pm(t));
 	ff(e, "propValues", (e) => {
 		let t = e.def.shape, n = {};
 		for (let e in t) {
@@ -6553,14 +6553,14 @@ var Fm = /*@__PURE__*/ q("$ZodObject", (e, t) => {
 				value: r[e],
 				issues: []
 			}, n);
-			s instanceof Promise ? l.push(s.then((n) => jm(n, t, e, r, a, o))) : jm(s, t, e, r, a, o);
+			s instanceof Promise ? l.push(s.then((n) => Mm(n, t, e, r, a, o))) : Mm(s, t, e, r, a, o);
 		}
-		return o ? Pm(l, r, t, n, i.value, e, d === !0) : l.length ? Promise.all(l).then(() => t) : t;
+		return o ? Fm(l, r, t, n, i.value, e, d === !0) : l.length ? Promise.all(l).then(() => t) : t;
 	};
-}), Im = /*@__PURE__*/ q("$ZodObjectJIT", (e, t) => {
-	Fm.init(e, t);
-	let n = e._zod.parse, r = Sd(() => Nm(t)), i = vf.memoizer, a = (t) => {
-		let n = r.value, a = n.symbolKeys, o = new Ap(["payload", "ctx"], {
+}), Lm = /*@__PURE__*/ q("$ZodObjectJIT", (e, t) => {
+	Im.init(e, t);
+	let n = e._zod.parse, r = Sd(() => Pm(t)), i = vf.memoizer, a = (t) => {
+		let n = r.value, a = n.symbolKeys, o = new jp(["payload", "ctx"], {
 			shape: t,
 			inst: e,
 			memo: i,
@@ -6633,7 +6633,7 @@ var Fm = /*@__PURE__*/ q("$ZodObject", (e, t) => {
 	e._zod.parse = (i, f) => {
 		d ??= r.value;
 		let p = i.value;
-		return s(p) ? c && l && f?.async === !1 && f.jitless !== !0 ? (o ||= a(t.shape), i = o(i, f), u ? Pm([], p, i, f, d, e, f?.abortEarly === !0) : i) : n(i, f) : (i.issues.push({
+		return s(p) ? c && l && f?.async === !1 && f.jitless !== !0 ? (o ||= a(t.shape), i = o(i, f), u ? Fm([], p, i, f, d, e, f?.abortEarly === !0) : i) : n(i, f) : (i.issues.push({
 			expected: "object",
 			code: "invalid_type",
 			input: p,
@@ -6641,7 +6641,7 @@ var Fm = /*@__PURE__*/ q("$ZodObject", (e, t) => {
 		}), i);
 	};
 });
-function Lm(e, t, n, r) {
+function Rm(e, t, n, r) {
 	for (let n of e) if (n.issues.length === 0) return t.value = n.value, t;
 	let i = e.filter((e) => !Zd(e));
 	return i.length === 1 ? (t.value = i[0].value, i[0]) : (t.issues.push({
@@ -6651,8 +6651,8 @@ function Lm(e, t, n, r) {
 		errors: e.map((e) => e.issues.map((e) => nf(e, r, yf())))
 	}), t);
 }
-var Rm = /*@__PURE__*/ q("$ZodUnion", (e, t) => {
-	Mp.init(e, t), ff(e, "optin", (e) => e.def.options.some((e) => e._zod.optin === "defaulted") ? "defaulted" : e.def.options.some((e) => e._zod.optin !== void 0) ? "optional" : void 0), ff(e, "optout", (e) => e.def.options.some((e) => e._zod.optout === "optional") ? "optional" : void 0), ff(e, "values", (e) => {
+var zm = /*@__PURE__*/ q("$ZodUnion", (e, t) => {
+	Np.init(e, t), ff(e, "optin", (e) => e.def.options.some((e) => e._zod.optin === "defaulted") ? "defaulted" : e.def.options.some((e) => e._zod.optin !== void 0) ? "optional" : void 0), ff(e, "optout", (e) => e.def.options.some((e) => e._zod.optout === "optional") ? "optional" : void 0), ff(e, "values", (e) => {
 		if (e.def.options.every((e) => e._zod.values)) return new Set(e.def.options.flatMap((e) => Array.from(e._zod.values)));
 	}), ff(e, "pattern", (e) => {
 		if (e.def.options.every((e) => e._zod.pattern)) {
@@ -6675,10 +6675,10 @@ var Rm = /*@__PURE__*/ q("$ZodUnion", (e, t) => {
 				o.push(t);
 			}
 		}
-		return a ? Promise.all(o).then((t) => Lm(t, r, e, i)) : Lm(o, r, e, i);
+		return a ? Promise.all(o).then((t) => Rm(t, r, e, i)) : Rm(o, r, e, i);
 	};
-}), zm = /*@__PURE__*/ q("$ZodIntersection", (e, t) => {
-	Mp.init(e, t), e._zod.parse = (e, n) => {
+}), Bm = /*@__PURE__*/ q("$ZodIntersection", (e, t) => {
+	Np.init(e, t), e._zod.parse = (e, n) => {
 		let r = e.value, i = t.left._zod.run({
 			value: r,
 			issues: []
@@ -6686,10 +6686,10 @@ var Rm = /*@__PURE__*/ q("$ZodUnion", (e, t) => {
 			value: r,
 			issues: []
 		}, n);
-		return i instanceof Promise || a instanceof Promise ? Promise.all([i, a]).then(([t, n]) => Vm(e, t, n)) : Vm(e, i, a);
+		return i instanceof Promise || a instanceof Promise ? Promise.all([i, a]).then(([t, n]) => Hm(e, t, n)) : Hm(e, i, a);
 	};
 });
-function Bm(e, t) {
+function Vm(e, t) {
 	if (e === t || e instanceof Date && t instanceof Date && +e == +t) return {
 		valid: !0,
 		data: e
@@ -6702,7 +6702,7 @@ function Bm(e, t) {
 		Object.prototype.hasOwnProperty.call(i, "__proto__") && delete i.__proto__;
 		for (let n of r) {
 			if (n === "__proto__") continue;
-			let r = Bm(e[n], t[n]);
+			let r = Vm(e[n], t[n]);
 			if (!r.valid) return {
 				valid: !1,
 				mergeErrorPath: [n, ...r.mergeErrorPath]
@@ -6721,7 +6721,7 @@ function Bm(e, t) {
 		};
 		let n = [];
 		for (let r = 0; r < e.length; r++) {
-			let i = e[r], a = t[r], o = Bm(i, a);
+			let i = e[r], a = t[r], o = Vm(i, a);
 			if (!o.valid) return {
 				valid: !1,
 				mergeErrorPath: [r, ...o.mergeErrorPath]
@@ -6738,7 +6738,7 @@ function Bm(e, t) {
 		mergeErrorPath: []
 	};
 }
-function Vm(e, t, n) {
+function Hm(e, t, n) {
 	let r = /* @__PURE__ */ new Map(), i, a = /* @__PURE__ */ new Map(), o = (e, t) => {
 		let n;
 		if (e.code === "unrecognized_keys" && !e.path?.length) i ??= e, n = e.keys;
@@ -6760,15 +6760,15 @@ function Vm(e, t, n) {
 		});
 		for (let n of s) !t.includes(n) && a.has(n) && e.issues.push(a.get(n));
 	}
-	let c = Bm(t.value, n.value);
+	let c = Vm(t.value, n.value);
 	if (!c.valid) {
 		if (Zd(e)) return e;
 		throw Error(`Unmergable intersection. Error path: ${JSON.stringify(c.mergeErrorPath)}`);
 	}
 	return e.value = c.data, e;
 }
-var Hm = /*@__PURE__*/ q("$ZodRecord", (e, t) => {
-	Mp.init(e, t);
+var Um = /*@__PURE__*/ q("$ZodRecord", (e, t) => {
+	Np.init(e, t);
 	let n = vf.memoizer;
 	n?.attach(e), e._zod.parse = (r, i) => {
 		let a = r.value;
@@ -6834,7 +6834,7 @@ var Hm = /*@__PURE__*/ q("$ZodRecord", (e, t) => {
 					issues: []
 				}, i);
 				if (l instanceof Promise) throw Error("Async schemas not supported in object keys currently");
-				if (typeof n == "string" && cp.test(n) && l.issues.length) {
+				if (typeof n == "string" && lp.test(n) && l.issues.length) {
 					let e = t.keyType._zod.run({
 						value: Number(n),
 						issues: []
@@ -6873,8 +6873,8 @@ var Hm = /*@__PURE__*/ q("$ZodRecord", (e, t) => {
 		}
 		return o.length ? Promise.all(o).then(() => r) : r;
 	};
-}), Um = /*@__PURE__*/ q("$ZodEnum", (e, t) => {
-	Mp.init(e, t);
+}), Wm = /*@__PURE__*/ q("$ZodEnum", (e, t) => {
+	Np.init(e, t);
 	let n = vd(t.entries), r = new Set(n);
 	e._zod.values = r, ff(e, "pattern", (e) => {
 		let t = vd(e.def.entries).filter((e) => Vd.has(typeof e));
@@ -6888,8 +6888,8 @@ var Hm = /*@__PURE__*/ q("$ZodRecord", (e, t) => {
 			inst: e
 		}), t;
 	};
-}), Wm = /*@__PURE__*/ q("$ZodTransform", (e, t) => {
-	Mp.init(e, t), e._zod.optin = "optional", vf.memoizer?.guard(e), e._zod.parse = (n, r) => {
+}), Gm = /*@__PURE__*/ q("$ZodTransform", (e, t) => {
+	Np.init(e, t), e._zod.optin = "optional", vf.memoizer?.guard(e), e._zod.parse = (n, r) => {
 		if (r.direction === "backward") throw new _f(e.constructor.name);
 		let i = t.transform(n.value, n);
 		if (r.async) return (i instanceof Promise ? i : Promise.resolve(i)).then((e) => (n.value = e, n));
@@ -6897,11 +6897,11 @@ var Hm = /*@__PURE__*/ q("$ZodRecord", (e, t) => {
 		return n.value = i, n;
 	};
 });
-function Gm(e, t) {
+function Km(e, t) {
 	return e.value = t.issues.length ? void 0 : t.value, e;
 }
-var Km = /*@__PURE__*/ q("$ZodOptional", (e, t) => {
-	Mp.init(e, t), ff(e, "optin", (e) => e.def.innerType._zod.optin === "defaulted" ? "defaulted" : "optional"), e._zod.optout = "optional", ff(e, "values", (e) => {
+var qm = /*@__PURE__*/ q("$ZodOptional", (e, t) => {
+	Np.init(e, t), ff(e, "optin", (e) => e.def.innerType._zod.optin === "defaulted" ? "defaulted" : "optional"), e._zod.optout = "optional", ff(e, "values", (e) => {
 		let t = e.def.innerType._zod.values;
 		return t ? /* @__PURE__ */ new Set([...t, void 0]) : void 0;
 	}), ff(e, "pattern", (e) => {
@@ -6914,40 +6914,40 @@ var Km = /*@__PURE__*/ q("$ZodOptional", (e, t) => {
 				value: e.value,
 				issues: []
 			}, n);
-			return r instanceof Promise ? r.then((t) => Gm(e, t)) : Gm(e, r);
+			return r instanceof Promise ? r.then((t) => Km(e, t)) : Km(e, r);
 		}
 		return t.innerType._zod.run(e, n);
 	};
-}), qm = /*@__PURE__*/ q("$ZodExactOptional", (e, t) => {
-	Km.init(e, t), ff(e, "values", (e) => e.def.innerType._zod.values), ff(e, "pattern", (e) => e.def.innerType._zod.pattern), e._zod.parse = (e, n) => t.innerType._zod.run(e, n);
-}), Jm = /*@__PURE__*/ q("$ZodNullable", (e, t) => {
-	Mp.init(e, t), ff(e, "optin", (e) => e.def.innerType._zod.optin), ff(e, "optout", (e) => e.def.innerType._zod.optout), ff(e, "pattern", (e) => {
+}), Jm = /*@__PURE__*/ q("$ZodExactOptional", (e, t) => {
+	qm.init(e, t), ff(e, "values", (e) => e.def.innerType._zod.values), ff(e, "pattern", (e) => e.def.innerType._zod.pattern), e._zod.parse = (e, n) => t.innerType._zod.run(e, n);
+}), Ym = /*@__PURE__*/ q("$ZodNullable", (e, t) => {
+	Np.init(e, t), ff(e, "optin", (e) => e.def.innerType._zod.optin), ff(e, "optout", (e) => e.def.innerType._zod.optout), ff(e, "pattern", (e) => {
 		let t = e.def.innerType._zod.pattern;
 		return t ? RegExp(`^(${wd(t.source)}|null)$`) : void 0;
 	}), ff(e, "values", (e) => e.def.innerType._zod.values ? /* @__PURE__ */ new Set([...e.def.innerType._zod.values, null]) : void 0), e._zod.parse = (e, n) => e.value === null ? e : t.innerType._zod.run(e, n);
-}), Ym = /*@__PURE__*/ q("$ZodDefault", (e, t) => {
-	Mp.init(e, t), e._zod.optin = "defaulted", ff(e, "values", (e) => e.def.innerType._zod.values), e._zod.parse = (e, n) => {
+}), Xm = /*@__PURE__*/ q("$ZodDefault", (e, t) => {
+	Np.init(e, t), e._zod.optin = "defaulted", ff(e, "values", (e) => e.def.innerType._zod.values), e._zod.parse = (e, n) => {
 		if (n.direction === "backward") return t.innerType._zod.run(e, n);
 		if (e.value === void 0) return e.value = t.defaultValue, e;
 		let r = t.innerType._zod.run(e, n);
-		return r instanceof Promise ? r.then((e) => Xm(e, t)) : Xm(r, t);
+		return r instanceof Promise ? r.then((e) => Zm(e, t)) : Zm(r, t);
 	};
 });
-function Xm(e, t) {
+function Zm(e, t) {
 	return e.value === void 0 && (e.value = t.defaultValue), e;
 }
-var Zm = /*@__PURE__*/ q("$ZodPrefault", (e, t) => {
-	Mp.init(e, t), e._zod.optin = "defaulted", ff(e, "values", (e) => e.def.innerType._zod.values), e._zod.parse = (e, n) => (n.direction === "backward" || e.value === void 0 && (e.value = t.defaultValue), t.innerType._zod.run(e, n));
-}), Qm = /*@__PURE__*/ q("$ZodNonOptional", (e, t) => {
-	Mp.init(e, t), ff(e, "values", (e) => {
+var Qm = /*@__PURE__*/ q("$ZodPrefault", (e, t) => {
+	Np.init(e, t), e._zod.optin = "defaulted", ff(e, "values", (e) => e.def.innerType._zod.values), e._zod.parse = (e, n) => (n.direction === "backward" || e.value === void 0 && (e.value = t.defaultValue), t.innerType._zod.run(e, n));
+}), $m = /*@__PURE__*/ q("$ZodNonOptional", (e, t) => {
+	Np.init(e, t), ff(e, "values", (e) => {
 		let t = e.def.innerType._zod.values;
 		return t ? new Set([...t].filter((e) => e !== void 0)) : void 0;
 	}), e._zod.parse = (n, r) => {
 		let i = t.innerType._zod.run(n, r);
-		return i instanceof Promise ? i.then((t) => $m(t, e)) : $m(i, e);
+		return i instanceof Promise ? i.then((t) => eh(t, e)) : eh(i, e);
 	};
 });
-function $m(e, t) {
+function eh(e, t) {
 	return !e.issues.length && e.value === void 0 && e.issues.push({
 		code: "invalid_type",
 		expected: "nonoptional",
@@ -6955,7 +6955,7 @@ function $m(e, t) {
 		inst: t
 	}), e;
 }
-function eh(e, t, n, r) {
+function th(e, t, n, r) {
 	return t.issues.length ? (e.value = n.catchValue({
 		...t,
 		value: e.value,
@@ -6963,49 +6963,49 @@ function eh(e, t, n, r) {
 		input: e.value
 	}), e) : (e.value = t.value, t.memo && (e.memo = !0), e);
 }
-var th = /*@__PURE__*/ q("$ZodCatch", (e, t) => {
-	Mp.init(e, t), ff(e, "optin", (e) => e.def.innerType._zod.optin === "defaulted" ? "defaulted" : "optional"), ff(e, "optout", (e) => e.def.innerType._zod.optout), ff(e, "values", (e) => e.def.innerType._zod.values), e._zod.parse = (e, n) => {
+var nh = /*@__PURE__*/ q("$ZodCatch", (e, t) => {
+	Np.init(e, t), ff(e, "optin", (e) => e.def.innerType._zod.optin === "defaulted" ? "defaulted" : "optional"), ff(e, "optout", (e) => e.def.innerType._zod.optout), ff(e, "values", (e) => e.def.innerType._zod.values), e._zod.parse = (e, n) => {
 		if (n.direction === "backward") return t.innerType._zod.run(e, n);
 		let r = t.innerType._zod.run({
 			value: e.value,
 			issues: []
 		}, n);
-		return r instanceof Promise ? r.then((r) => eh(e, r, t, n)) : eh(e, r, t, n);
+		return r instanceof Promise ? r.then((r) => th(e, r, t, n)) : th(e, r, t, n);
 	};
-}), nh = /*@__PURE__*/ q("$ZodPipe", (e, t) => {
-	Mp.init(e, t), ff(e, "values", (e) => e.def.in._zod.values), ff(e, "optin", (e) => e.def.in._zod.optin), ff(e, "optout", (e) => e.def.out._zod.optout), ff(e, "propValues", (e) => e.def.in._zod.propValues), e._zod.parse = (e, n) => {
+}), rh = /*@__PURE__*/ q("$ZodPipe", (e, t) => {
+	Np.init(e, t), ff(e, "values", (e) => e.def.in._zod.values), ff(e, "optin", (e) => e.def.in._zod.optin), ff(e, "optout", (e) => e.def.out._zod.optout), ff(e, "propValues", (e) => e.def.in._zod.propValues), e._zod.parse = (e, n) => {
 		if (n.direction === "backward") {
 			let r = t.out._zod.run(e, n);
-			return r instanceof Promise ? r.then((e) => rh(e, t.in, n)) : rh(r, t.in, n);
+			return r instanceof Promise ? r.then((e) => ih(e, t.in, n)) : ih(r, t.in, n);
 		}
 		let r = t.in._zod.run(e, n);
-		return r instanceof Promise ? r.then((e) => rh(e, t.out, n)) : rh(r, t.out, n);
+		return r instanceof Promise ? r.then((e) => ih(e, t.out, n)) : ih(r, t.out, n);
 	};
 });
-function rh(e, t, n) {
+function ih(e, t, n) {
 	return e.issues.some((e) => e.code !== "unrecognized_keys") ? (e.aborted = !0, e) : t._zod.run({
 		value: e.value,
 		issues: e.issues
 	}, n);
 }
-var ih = /*@__PURE__*/ q("$ZodReadonly", (e, t) => {
-	Mp.init(e, t), ff(e, "propValues", (e) => e.def.innerType._zod.propValues), ff(e, "values", (e) => e.def.innerType._zod.values), ff(e, "optin", (e) => e.def.innerType?._zod?.optin), ff(e, "optout", (e) => e.def.innerType?._zod?.optout), e._zod.parse = (e, n) => {
+var ah = /*@__PURE__*/ q("$ZodReadonly", (e, t) => {
+	Np.init(e, t), ff(e, "propValues", (e) => e.def.innerType._zod.propValues), ff(e, "values", (e) => e.def.innerType._zod.values), ff(e, "optin", (e) => e.def.innerType?._zod?.optin), ff(e, "optout", (e) => e.def.innerType?._zod?.optout), e._zod.parse = (e, n) => {
 		if (n.direction === "backward") return t.innerType._zod.run(e, n);
 		let r = t.innerType._zod.run(e, n);
-		return r instanceof Promise ? r.then(ah) : ah(r);
+		return r instanceof Promise ? r.then(oh) : oh(r);
 	};
 });
-function ah(e) {
+function oh(e) {
 	return e.memo || (e.value = Object.freeze(e.value)), e;
 }
-var oh = /*@__PURE__*/ q("$ZodCustom", (e, t) => {
-	fp.init(e, t), Mp.init(e, t), e._zod.parse = (e, t) => e, e._zod.check = (n) => {
+var sh = /*@__PURE__*/ q("$ZodCustom", (e, t) => {
+	pp.init(e, t), Np.init(e, t), e._zod.parse = (e, t) => e, e._zod.check = (n) => {
 		let r = n.value, i = t.fn(r);
-		if (i instanceof Promise) return i.then((t) => sh(t, n, r, e));
-		sh(i, n, r, e);
+		if (i instanceof Promise) return i.then((t) => ch(t, n, r, e));
+		ch(i, n, r, e);
 	};
 });
-function sh(e, t, n, r) {
+function ch(e, t, n, r) {
 	if (!e) {
 		let e = {
 			code: "custom",
@@ -7018,37 +7018,37 @@ function sh(e, t, n, r) {
 	}
 }
 // node_modules/zod/v4/core/memoizer.js
-var ch = class extends Error {
+var lh = class extends Error {
 	constructor() {
 		super("Cannot parse a reference cycle that closes through a transform"), this.name = "ZodCyclicError";
 	}
-}, lh = "~memo", uh = [];
-function dh(e) {
+}, uh = "~memo", dh = [];
+function fh(e) {
 	return typeof e == "object" && !!e;
 }
-function fh(e) {
+function ph(e) {
 	return e.map((e) => e.path ? {
 		...e,
 		path: e.path.slice()
 	} : { ...e });
 }
-var ph = /*@__PURE__*/ new WeakMap(), mh = 0, hh = 1, gh = 2;
-function _h(e, t, n) {
-	let r = ph.get(e);
-	if (r !== void 0) return r ? gh : mh;
-	if (t.has(e)) return gh;
+var mh = /*@__PURE__*/ new WeakMap(), hh = 0, gh = 1, _h = 2;
+function vh(e, t, n) {
+	let r = mh.get(e);
+	if (r !== void 0) return r ? _h : hh;
+	if (t.has(e)) return _h;
 	t.add(e);
-	let i = mh, a = (e) => {
-		if (i !== gh && e?._zod) {
-			let r = _h(e, t, n);
+	let i = hh, a = (e) => {
+		if (i !== _h && e?._zod) {
+			let r = vh(e, t, n);
 			r > i && (i = r);
 		}
 	}, o = (e, r) => {
-		let i = mh;
+		let i = hh;
 		for (let a of Reflect.ownKeys(e)) {
 			let o = Object.getOwnPropertyDescriptor(e, a);
 			if (r && !o.enumerable) continue;
-			let s = o.get ? hh : o.value?._zod ? _h(o.value, t, n) : mh;
+			let s = o.get ? gh : o.value?._zod ? vh(o.value, t, n) : hh;
 			s > i && (i = s);
 		}
 		return i;
@@ -7058,7 +7058,7 @@ function _h(e, t, n) {
 	switch (c.type) {
 		case "object": {
 			let e = Dd(c);
-			s(e ? o(e, !0) : hh), a(c.catchall);
+			s(e ? o(e, !0) : gh), a(c.catchall);
 			break;
 		}
 		case "array":
@@ -7100,7 +7100,7 @@ function _h(e, t, n) {
 			break;
 		case "lazy": {
 			let r = c._cachedInner ?? (n ? e._zod.innerType : void 0);
-			s(r ? _h(r, t, !1) : hh);
+			s(r ? vh(r, t, !1) : gh);
 			break;
 		}
 		case "template_literal":
@@ -7133,31 +7133,31 @@ function _h(e, t, n) {
 			}
 		}
 	}
-	return t.delete(e), vh(e, i);
-}
-function vh(e, t) {
-	return t !== hh && ph.set(e, t === gh), t;
+	return t.delete(e), yh(e, i);
 }
 function yh(e, t) {
+	return t !== gh && mh.set(e, t === _h), t;
+}
+function bh(e, t) {
 	let n = e.buckets.get(t);
 	return n || (n = /* @__PURE__ */ new WeakMap(), e.buckets.set(t, n)), n;
 }
-var bh, xh = [], Sh = {
+var xh, Sh = [], Ch = {
 	alloc(e, t, n) {
-		let r = bh;
+		let r = xh;
 		if (!r) return n;
-		bh = void 0;
+		xh = void 0;
 		let i = {
 			value: n,
 			issues: null
 		};
-		return r.set(t.value, i), xh.push(i), n;
+		return r.set(t.value, i), Sh.push(i), n;
 	},
 	guard(e) {
 		var t;
 		(t = e._zod).deferred ?? (t.deferred = []), e._zod.deferred.push(() => {
 			let t = e._zod.parse, n = (e, n) => {
-				if (n.direction !== "backward" && wh(n, e.value)) throw new ch();
+				if (n.direction !== "backward" && Th(n, e.value)) throw new lh();
 				return t(e, n);
 			};
 			e._zod.parse = n, e._zod.run === t && (e._zod.run = n);
@@ -7169,40 +7169,40 @@ var bh, xh = [], Sh = {
 		(t = e._zod).deferred ?? (t.deferred = []), e._zod.deferred.push(() => {
 			let t = e._zod.parse, o = (s, c) => {
 				if (n === void 0) {
-					let i = _h(e, /* @__PURE__ */ new Set(), !1);
-					if (i === mh) return e._zod.parse = t, e._zod.run === o && (e._zod.run = t), t(s, c);
-					i === gh || r ? n = !0 : r = !0;
+					let i = vh(e, /* @__PURE__ */ new Set(), !1);
+					if (i === hh) return e._zod.parse = t, e._zod.run === o && (e._zod.run = t), t(s, c);
+					i === _h || r ? n = !0 : r = !0;
 				}
 				let l = s.value;
-				if (!dh(l)) return t(s, c);
-				let u = c[lh];
+				if (!fh(l)) return t(s, c);
+				let u = c[uh];
 				u || (u = {
 					buckets: /* @__PURE__ */ new WeakMap(),
 					backEdges: void 0
-				}, c[lh] = u);
+				}, c[uh] = u);
 				let d;
-				i === c ? d = a : (d = yh(u, e), i = c, a = d);
+				i === c ? d = a : (d = bh(u, e), i = c, a = d);
 				let f = d.get(l);
-				if (f) return s.value = f.value, f.issues ? f.issues.length && s.issues.push(...fh(f.issues)) : (s.memo = !0, u.backEdges ?? (u.backEdges = /* @__PURE__ */ new WeakSet()), u.backEdges.add(f.value)), s;
-				bh = d;
-				let p = xh.length, m = t(s, c);
-				bh = void 0;
-				let h = xh.length > p ? xh.pop() : void 0;
-				return m instanceof Promise ? m.then((e) => (h && (h.issues = e.issues.length ? fh(e.issues) : uh), e)) : (h && (h.issues = m.issues.length ? fh(m.issues) : uh), m);
+				if (f) return s.value = f.value, f.issues ? f.issues.length && s.issues.push(...ph(f.issues)) : (s.memo = !0, u.backEdges ?? (u.backEdges = /* @__PURE__ */ new WeakSet()), u.backEdges.add(f.value)), s;
+				xh = d;
+				let p = Sh.length, m = t(s, c);
+				xh = void 0;
+				let h = Sh.length > p ? Sh.pop() : void 0;
+				return m instanceof Promise ? m.then((e) => (h && (h.issues = e.issues.length ? ph(e.issues) : dh), e)) : (h && (h.issues = m.issues.length ? ph(m.issues) : dh), m);
 			};
 			e._zod.parse = o, e._zod.run === t && (e._zod.run = o);
 		});
 	}
 };
-function Ch() {
-	return Sh;
+function wh() {
+	return Ch;
 }
-function wh(e, t) {
-	let n = e[lh]?.backEdges;
-	return n !== void 0 && dh(t) && n.has(t);
+function Th(e, t) {
+	let n = e[uh]?.backEdges;
+	return n !== void 0 && fh(t) && n.has(t);
 }
 // node_modules/zod/v4/locales/en.js
-var Th = () => {
+var Eh = () => {
 	let e = {
 		string: {
 			unit: "characters",
@@ -7290,11 +7290,11 @@ var Th = () => {
 		}
 	};
 };
-function Eh() {
-	return { localeError: Th() };
+function Dh() {
+	return { localeError: Eh() };
 }
 // node_modules/zod/v4/core/registries.js
-var Dh, Oh = class {
+var Oh, kh = class {
 	constructor() {
 		this._map = /* @__PURE__ */ new WeakMap(), this._idmap = /* @__PURE__ */ new Map();
 	}
@@ -7326,24 +7326,24 @@ var Dh, Oh = class {
 		return this._map.has(e);
 	}
 };
-function kh() {
-	return new Oh();
+function Ah() {
+	return new kh();
 }
-(Dh = globalThis).__zod_globalRegistry ?? (Dh.__zod_globalRegistry = kh());
-var Ah = globalThis.__zod_globalRegistry;
+(Oh = globalThis).__zod_globalRegistry ?? (Oh.__zod_globalRegistry = Ah());
+var jh = globalThis.__zod_globalRegistry;
 // node_modules/zod/v4/core/api.js
-function jh(e) {
+function Mh(e) {
 	return e.checks &&= [...e.checks], e;
 }
 // @__NO_SIDE_EFFECTS__
-function Mh(e, t) {
-	return new e(jh({
+function Nh(e, t) {
+	return new e(Mh({
 		type: "string",
 		...Wd(t)
 	}));
 }
 // @__NO_SIDE_EFFECTS__
-function Nh(e, t) {
+function Ph(e, t) {
 	return new e({
 		type: "string",
 		format: "email",
@@ -7353,20 +7353,10 @@ function Nh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Ph(e, t) {
-	return new e({
-		type: "string",
-		format: "guid",
-		check: "string_format",
-		abort: !1,
-		...Wd(t)
-	});
-}
-// @__NO_SIDE_EFFECTS__
 function Fh(e, t) {
 	return new e({
 		type: "string",
-		format: "uuid",
+		format: "guid",
 		check: "string_format",
 		abort: !1,
 		...Wd(t)
@@ -7379,7 +7369,6 @@ function Ih(e, t) {
 		format: "uuid",
 		check: "string_format",
 		abort: !1,
-		version: "v4",
 		...Wd(t)
 	});
 }
@@ -7390,7 +7379,7 @@ function Lh(e, t) {
 		format: "uuid",
 		check: "string_format",
 		abort: !1,
-		version: "v6",
+		version: "v4",
 		...Wd(t)
 	});
 }
@@ -7401,12 +7390,23 @@ function Rh(e, t) {
 		format: "uuid",
 		check: "string_format",
 		abort: !1,
-		version: "v7",
+		version: "v6",
 		...Wd(t)
 	});
 }
 // @__NO_SIDE_EFFECTS__
 function zh(e, t) {
+	return new e({
+		type: "string",
+		format: "uuid",
+		check: "string_format",
+		abort: !1,
+		version: "v7",
+		...Wd(t)
+	});
+}
+// @__NO_SIDE_EFFECTS__
+function Bh(e, t) {
 	return new e({
 		type: "string",
 		format: "url",
@@ -7416,7 +7416,7 @@ function zh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Bh(e, t) {
+function Vh(e, t) {
 	return new e({
 		type: "string",
 		format: "emoji",
@@ -7426,7 +7426,7 @@ function Bh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Vh(e, t) {
+function Hh(e, t) {
 	return new e({
 		type: "string",
 		format: "nanoid",
@@ -7436,7 +7436,7 @@ function Vh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Hh(e, t) {
+function Uh(e, t) {
 	return new e({
 		type: "string",
 		format: "cuid",
@@ -7446,7 +7446,7 @@ function Hh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Uh(e, t) {
+function Wh(e, t) {
 	return new e({
 		type: "string",
 		format: "cuid2",
@@ -7456,7 +7456,7 @@ function Uh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Wh(e, t) {
+function Gh(e, t) {
 	return new e({
 		type: "string",
 		format: "ulid",
@@ -7466,7 +7466,7 @@ function Wh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Gh(e, t) {
+function Kh(e, t) {
 	return new e({
 		type: "string",
 		format: "xid",
@@ -7476,7 +7476,7 @@ function Gh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Kh(e, t) {
+function qh(e, t) {
 	return new e({
 		type: "string",
 		format: "ksuid",
@@ -7486,7 +7486,7 @@ function Kh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function qh(e, t) {
+function Jh(e, t) {
 	return new e({
 		type: "string",
 		format: "ipv4",
@@ -7496,7 +7496,7 @@ function qh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Jh(e, t) {
+function Yh(e, t) {
 	return new e({
 		type: "string",
 		format: "ipv6",
@@ -7506,7 +7506,7 @@ function Jh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Yh(e, t) {
+function Xh(e, t) {
 	return new e({
 		type: "string",
 		format: "cidrv4",
@@ -7516,7 +7516,7 @@ function Yh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Xh(e, t) {
+function Zh(e, t) {
 	return new e({
 		type: "string",
 		format: "cidrv6",
@@ -7526,7 +7526,7 @@ function Xh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Zh(e, t) {
+function Qh(e, t) {
 	return new e({
 		type: "string",
 		format: "base64",
@@ -7536,7 +7536,7 @@ function Zh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Qh(e, t) {
+function $h(e, t) {
 	return new e({
 		type: "string",
 		format: "base64url",
@@ -7546,7 +7546,7 @@ function Qh(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function $h(e, t) {
+function eg(e, t) {
 	return new e({
 		type: "string",
 		format: "e164",
@@ -7556,7 +7556,7 @@ function $h(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function eg(e, t) {
+function tg(e, t) {
 	return new e({
 		type: "string",
 		format: "jwt",
@@ -7566,7 +7566,7 @@ function eg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function tg(e, t) {
+function ng(e, t) {
 	return new e({
 		type: "string",
 		format: "datetime",
@@ -7578,7 +7578,7 @@ function tg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function ng(e, t) {
+function rg(e, t) {
 	return new e({
 		type: "string",
 		format: "date",
@@ -7587,7 +7587,7 @@ function ng(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function rg(e, t) {
+function ig(e, t) {
 	return new e({
 		type: "string",
 		format: "time",
@@ -7597,7 +7597,7 @@ function rg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function ig(e, t) {
+function ag(e, t) {
 	return new e({
 		type: "string",
 		format: "duration",
@@ -7606,15 +7606,15 @@ function ig(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function ag(e, t) {
-	return new e(jh({
+function og(e, t) {
+	return new e(Mh({
 		type: "number",
 		checks: [],
 		...Wd(t)
 	}));
 }
 // @__NO_SIDE_EFFECTS__
-function og(e, t) {
+function sg(e, t) {
 	return new e({
 		type: "number",
 		check: "number_format",
@@ -7624,44 +7624,44 @@ function og(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function sg(e, t) {
+function cg(e, t) {
 	return new e({
 		type: "boolean",
 		...Wd(t)
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function cg(e) {
+function lg(e) {
 	return new e({ type: "unknown" });
 }
 // @__NO_SIDE_EFFECTS__
-function lg(e, t) {
+function ug(e, t) {
 	return new e({
 		type: "never",
 		...Wd(t)
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function ug(e, t) {
-	return new hp({
+function dg(e, t) {
+	return new gp({
 		check: "less_than",
 		...Wd(t),
 		value: e,
 		inclusive: !1
-	});
-}
-// @__NO_SIDE_EFFECTS__
-function dg(e, t) {
-	return new hp({
-		check: "less_than",
-		...Wd(t),
-		value: e,
-		inclusive: !0
 	});
 }
 // @__NO_SIDE_EFFECTS__
 function fg(e, t) {
 	return new gp({
+		check: "less_than",
+		...Wd(t),
+		value: e,
+		inclusive: !0
+	});
+}
+// @__NO_SIDE_EFFECTS__
+function pg(e, t) {
+	return new _p({
 		check: "greater_than",
 		...Wd(t),
 		value: e,
@@ -7669,8 +7669,8 @@ function fg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function pg(e, t) {
-	return new gp({
+function mg(e, t) {
+	return new _p({
 		check: "greater_than",
 		...Wd(t),
 		value: e,
@@ -7678,40 +7678,40 @@ function pg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function mg(e, t) {
-	return new _p({
+function hg(e, t) {
+	return new vp({
 		check: "multiple_of",
 		...Wd(t),
 		value: e
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function hg(e, t) {
-	return new yp({
+function gg(e, t) {
+	return new bp({
 		check: "max_length",
 		...Wd(t),
 		maximum: e
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function gg(e, t) {
-	return new bp({
+function _g(e, t) {
+	return new xp({
 		check: "min_length",
 		...Wd(t),
 		minimum: e
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function _g(e, t) {
-	return new xp({
+function vg(e, t) {
+	return new Sp({
 		check: "length_equals",
 		...Wd(t),
 		length: e
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function vg(e, t) {
-	return new Cp({
+function yg(e, t) {
+	return new wp({
 		check: "string_format",
 		format: "regex",
 		...Wd(t),
@@ -7719,24 +7719,24 @@ function vg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function yg(e) {
-	return new wp({
+function bg(e) {
+	return new Tp({
 		check: "string_format",
 		format: "lowercase",
 		...Wd(e)
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function bg(e) {
-	return new Tp({
+function xg(e) {
+	return new Ep({
 		check: "string_format",
 		format: "uppercase",
 		...Wd(e)
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function xg(e, t) {
-	return new Ep({
+function Sg(e, t) {
+	return new Dp({
 		check: "string_format",
 		format: "includes",
 		...Wd(t),
@@ -7744,8 +7744,8 @@ function xg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Sg(e, t) {
-	return new Dp({
+function Cg(e, t) {
+	return new Op({
 		check: "string_format",
 		format: "starts_with",
 		...Wd(t),
@@ -7753,8 +7753,8 @@ function Sg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Cg(e, t) {
-	return new Op({
+function wg(e, t) {
+	return new kp({
 		check: "string_format",
 		format: "ends_with",
 		...Wd(t),
@@ -7762,34 +7762,34 @@ function Cg(e, t) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function wg(e) {
-	return new kp({
+function Tg(e) {
+	return new Ap({
 		check: "overwrite",
 		tx: e
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Tg(e) {
-	return /* @__PURE__ */ wg((t) => t.normalize(e));
-}
-// @__NO_SIDE_EFFECTS__
-function Eg() {
-	return /* @__PURE__ */ wg((e) => e.trim());
+function Eg(e) {
+	return /* @__PURE__ */ Tg((t) => t.normalize(e));
 }
 // @__NO_SIDE_EFFECTS__
 function Dg() {
-	return /* @__PURE__ */ wg((e) => e.toLowerCase());
+	return /* @__PURE__ */ Tg((e) => e.trim());
 }
 // @__NO_SIDE_EFFECTS__
 function Og() {
-	return /* @__PURE__ */ wg((e) => e.toUpperCase());
+	return /* @__PURE__ */ Tg((e) => e.toLowerCase());
 }
 // @__NO_SIDE_EFFECTS__
 function kg() {
-	return /* @__PURE__ */ wg((e) => Fd(e));
+	return /* @__PURE__ */ Tg((e) => e.toUpperCase());
 }
 // @__NO_SIDE_EFFECTS__
-function Ag(e, t, n) {
+function Ag() {
+	return /* @__PURE__ */ Tg((e) => Fd(e));
+}
+// @__NO_SIDE_EFFECTS__
+function jg(e, t, n) {
 	return new e({
 		type: "array",
 		element: t,
@@ -7797,7 +7797,7 @@ function Ag(e, t, n) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function jg(e, t, n) {
+function Mg(e, t, n) {
 	return new e({
 		type: "custom",
 		check: "custom",
@@ -7806,8 +7806,8 @@ function jg(e, t, n) {
 	});
 }
 // @__NO_SIDE_EFFECTS__
-function Mg(e, t) {
-	let n = /* @__PURE__ */ Ng((t) => (t.addIssue = (e) => {
+function Ng(e, t) {
+	let n = /* @__PURE__ */ Pg((t) => (t.addIssue = (e) => {
 		if (typeof e == "string") t.issues.push(of(e, t.value, n._zod.def));
 		else {
 			let r = e;
@@ -7817,23 +7817,23 @@ function Mg(e, t) {
 	return n;
 }
 // @__NO_SIDE_EFFECTS__
-function Ng(e, t) {
-	let n = new fp({
+function Pg(e, t) {
+	let n = new pp({
 		check: "custom",
 		...Wd(t)
 	});
 	return n._zod.check = e, n;
 }
 // node_modules/zod/v4/core/to-json-schema.js
-function Pg(e, ...t) {
+function Fg(e, ...t) {
 	for (let n of t) for (let t of Reflect.ownKeys(n)) Object.prototype.propertyIsEnumerable.call(n, t) && Ed(e, t, n[t]);
 	return e;
 }
-function Fg(e) {
+function Ig(e) {
 	let t = e?.target ?? "draft-2020-12";
 	return t === "draft-4" && (t = "draft-04"), t === "draft-7" && (t = "draft-07"), {
 		processors: e.processors ?? {},
-		metadataRegistry: e?.metadata ?? Ah,
+		metadataRegistry: e?.metadata ?? jh,
 		target: t,
 		unrepresentable: e?.unrepresentable ?? "throw",
 		override: e?.override ?? (() => {}),
@@ -7849,7 +7849,7 @@ function Fg(e) {
 		external: e?.external ?? void 0
 	};
 }
-function Ig(e, t, n, r, i) {
+function Lg(e, t, n, r, i) {
 	let a = typeof t.unrepresentable == "function" ? t.unrepresentable({
 		zodSchema: e,
 		path: r.path,
@@ -7859,7 +7859,7 @@ function Ig(e, t, n, r, i) {
 	if (a === void 0 || a === "throw") throw Error(i);
 	return Object.assign(n, a), !0;
 }
-function Lg(e, t, n = {
+function Rg(e, t, n = {
 	path: [],
 	schemaPath: []
 }) {
@@ -7888,15 +7888,15 @@ function Lg(e, t, n = {
 			a(e, t, n, r);
 		}
 		let a = e._zod.parent;
-		a && (o.ref ||= a, Lg(a, t, r), t.seen.get(a).isParent = !0);
+		a && (o.ref ||= a, Rg(a, t, r), t.seen.get(a).isParent = !0);
 	}
 	let c = t.metadataRegistry.get(e);
-	return c && Pg(o.schema, c), t.io === "input" && qg(e) && (delete o.schema.examples, delete o.schema.default), t.io === "input" && "_prefault" in o.schema && ((r = o.schema).default ?? (r.default = o.schema._prefault)), delete o.schema._prefault, t.seen.get(e).schema;
+	return c && Fg(o.schema, c), t.io === "input" && Jg(e) && (delete o.schema.examples, delete o.schema.default), t.io === "input" && "_prefault" in o.schema && ((r = o.schema).default ?? (r.default = o.schema._prefault)), delete o.schema._prefault, t.seen.get(e).schema;
 }
-function Rg(e) {
+function zg(e) {
 	return e.replace(/~/g, "~0").replace(/\//g, "~1");
 }
-function zg(e, t) {
+function Bg(e, t) {
 	let n = e.seen.get(t);
 	if (!n) throw Error("Unprocessed schema. This is a bug in Zod.");
 	if (e.external && e.sharedDefsExtractedFor === e.external) return;
@@ -7917,7 +7917,7 @@ function zg(e, t) {
 			let a = t[1].defId ?? t[1].schema.id ?? `schema${e.counter++}`;
 			return t[1].defId = a, {
 				defId: a,
-				ref: `${i("__shared")}#/${r}/${Rg(a)}`
+				ref: `${i("__shared")}#/${r}/${zg(a)}`
 			};
 		}
 		let i = `#/${r}/`;
@@ -7925,7 +7925,7 @@ function zg(e, t) {
 		let a = t[1].schema.id ?? `__schema${e.counter++}`;
 		return {
 			defId: a,
-			ref: i + Rg(a)
+			ref: i + zg(a)
 		};
 	}, a = (e) => {
 		if (e[1].schema.$ref) return;
@@ -7957,13 +7957,13 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
 	}
 	e.external && (e.sharedDefsExtractedFor = e.external);
 }
-function Bg(e) {
+function Vg(e) {
 	let t = e.anyOf;
 	if (!Array.isArray(t) || t.length === 0 || e.type !== void 0) return;
 	let n = [];
 	for (let e of t) {
 		if (!e || typeof e != "object") return;
-		Bg(e);
+		Vg(e);
 		let t = Object.keys(e);
 		if (t.length !== 1 || t[0] !== "type") return;
 		let r = e.type;
@@ -7974,21 +7974,21 @@ function Bg(e) {
 	}
 	delete e.anyOf, e.type = n.length === 1 ? n[0] : n;
 }
-var Vg = /* @__PURE__ */ new Set([
+var Hg = /* @__PURE__ */ new Set([
 	"type",
 	"properties",
 	"required",
 	"additionalProperties"
-]), Hg = ["oneOf", "anyOf"];
-function Ug(e) {
+]), Ug = ["oneOf", "anyOf"];
+function Wg(e) {
 	let t = e.additionalProperties;
 	return t === void 0 || t === !1 || typeof t != "object" || !t ? null : Object.keys(t).length ? t : null;
 }
-function Wg(e) {
+function Gg(e) {
 	let t = [];
 	for (let n of e) {
 		if (typeof n != "object" || n.type !== "object") return null;
-		for (let e in n) if (!Vg.has(e)) return null;
+		for (let e in n) if (!Hg.has(e)) return null;
 		t.push(n);
 	}
 	let n = {}, r = /* @__PURE__ */ new Set();
@@ -7997,10 +7997,10 @@ function Wg(e) {
 			if (Object.prototype.hasOwnProperty.call(n, r)) continue;
 			let e = [];
 			for (let n of t) {
-				let t = n.properties?.[r] ?? Ug(n);
+				let t = n.properties?.[r] ?? Wg(n);
 				t != null && (e.some((e) => JSON.stringify(e) === JSON.stringify(t)) || e.push(t));
 			}
-			Ed(n, r, e.length === 1 ? e[0] : Wg(e) ?? { allOf: e });
+			Ed(n, r, e.length === 1 ? e[0] : Gg(e) ?? { allOf: e });
 		}
 		for (let t of e.required ?? []) r.add(t);
 	}
@@ -8012,29 +8012,29 @@ function Wg(e) {
 	else {
 		let e = [];
 		for (let n of t) {
-			let t = Ug(n);
+			let t = Wg(n);
 			t && !e.some((e) => JSON.stringify(e) === JSON.stringify(t)) && e.push(t);
 		}
 		e.length === 1 ? i.additionalProperties = e[0] : e.length > 1 && (i.additionalProperties = { allOf: e });
 	}
 	return i;
 }
-function Gg(e) {
+function Kg(e) {
 	let t = e.allOf;
 	if (!Array.isArray(t) || t.length < 2) return;
-	for (let t of Vg) if (t in e) return;
-	let n = t.filter((e) => Hg.some((t) => Array.isArray(e[t]))), r = null;
-	if (!n.length) r = Wg(t);
+	for (let t of Hg) if (t in e) return;
+	let n = t.filter((e) => Ug.some((t) => Array.isArray(e[t]))), r = null;
+	if (!n.length) r = Gg(t);
 	else {
-		let e = n[0], i = Hg.find((t) => Array.isArray(e[t]));
+		let e = n[0], i = Ug.find((t) => Array.isArray(e[t]));
 		if (Object.keys(e).length !== 1) return;
-		let a = t.filter((t) => t !== e), o = e[i].map((e) => Wg([...a, e]));
+		let a = t.filter((t) => t !== e), o = e[i].map((e) => Gg([...a, e]));
 		if (o.some((e) => !e)) return;
 		r = { [i]: o };
 	}
-	r && (delete e.allOf, Pg(e, r));
+	r && (delete e.allOf, Fg(e, r));
 }
-function Kg(e, t) {
+function qg(e, t) {
 	let n = e.seen.get(t);
 	if (!n) throw Error("Unprocessed schema. This is a bug in Zod.");
 	let r = (t) => {
@@ -8044,7 +8044,7 @@ function Kg(e, t) {
 		if (n.ref = null, o) {
 			r(o);
 			let n = e.seen.get(o), s = n.schema;
-			if (s.$ref && (e.target === "draft-07" || e.target === "draft-04" || e.target === "openapi-3.0") ? (i.allOf = i.allOf ?? [], i.allOf.push(s)) : Pg(i, s), Pg(i, a), t._zod.parent === o) for (let e in i) e !== "$ref" && e !== "allOf" && (e in a || delete i[e]);
+			if (s.$ref && (e.target === "draft-07" || e.target === "draft-04" || e.target === "openapi-3.0") ? (i.allOf = i.allOf ?? [], i.allOf.push(s)) : Fg(i, s), Fg(i, a), t._zod.parent === o) for (let e in i) e !== "$ref" && e !== "allOf" && (e in a || delete i[e]);
 			if (s.$ref && n.def) for (let e in i) e !== "$ref" && e !== "allOf" && e in n.def && JSON.stringify(i[e]) === JSON.stringify(n.def[e]) && delete i[e];
 		}
 		let s = t._zod.parent;
@@ -8061,7 +8061,7 @@ function Kg(e, t) {
 	};
 	if (!e.external || e.sharedEmitDoneFor !== e.external) {
 		for (let t of [...e.seen.entries()].reverse()) r(t[0]);
-		if (e.target !== "openapi-3.0") for (let t of e.seen.entries()) Bg(t[1].def ?? t[1].schema);
+		if (e.target !== "openapi-3.0") for (let t of e.seen.entries()) Vg(t[1].def ?? t[1].schema);
 		for (let t of e.deferred) t();
 		if (e.intersections.length) {
 			let t = /* @__PURE__ */ new Map();
@@ -8071,7 +8071,7 @@ function Kg(e, t) {
 				let r = t.get(n);
 				r ? r.push(e) : t.set(n, [e]);
 			}
-			for (let n of e.intersections) for (let e of t.get(n) ?? []) Gg(e);
+			for (let n of e.intersections) for (let e of t.get(n) ?? []) Kg(e);
 		}
 	}
 	let i = {};
@@ -8080,7 +8080,7 @@ function Kg(e, t) {
 		if (!n) throw Error("Schema is missing an `id` property");
 		i.$id = e.external.uri(n);
 	}
-	Pg(i, n.defId ? n.schema : n.def ?? n.schema);
+	Fg(i, n.defId ? n.schema : n.def ?? n.schema);
 	let a = e.metadataRegistry.get(t)?.id;
 	a !== void 0 && i.id === a && delete i.id;
 	let o = e.external?.defs ?? {};
@@ -8095,8 +8095,8 @@ function Kg(e, t) {
 			value: {
 				...t["~standard"],
 				jsonSchema: {
-					input: Yg(t, "input", e.processors),
-					output: Yg(t, "output", e.processors)
+					input: Xg(t, "input", e.processors),
+					output: Xg(t, "output", e.processors)
 				}
 			},
 			enumerable: !1,
@@ -8106,144 +8106,144 @@ function Kg(e, t) {
 		throw Error("Error converting schema to JSON.");
 	}
 }
-function qg(e, t) {
+function Jg(e, t) {
 	let n = t ?? { seen: /* @__PURE__ */ new Set() };
 	if (n.seen.has(e)) return !1;
 	n.seen.add(e);
 	let r = e._zod.def;
 	if (r.type === "transform") return !0;
-	if (r.type === "array") return qg(r.element, n);
-	if (r.type === "set") return qg(r.valueType, n);
-	if (r.type === "lazy") return qg(r.getter(), n);
-	if (r.type === "promise" || r.type === "optional" || r.type === "nonoptional" || r.type === "nullable" || r.type === "readonly" || r.type === "default" || r.type === "prefault" || r.type === "catch") return qg(r.innerType, n);
-	if (r.type === "intersection") return qg(r.left, n) || qg(r.right, n);
-	if (r.type === "record" || r.type === "map") return qg(r.keyType, n) || qg(r.valueType, n);
-	if (r.type === "pipe") return e._zod.traits.has("$ZodCodec") ? !0 : qg(r.in, n) || qg(r.out, n);
+	if (r.type === "array") return Jg(r.element, n);
+	if (r.type === "set") return Jg(r.valueType, n);
+	if (r.type === "lazy") return Jg(r.getter(), n);
+	if (r.type === "promise" || r.type === "optional" || r.type === "nonoptional" || r.type === "nullable" || r.type === "readonly" || r.type === "default" || r.type === "prefault" || r.type === "catch") return Jg(r.innerType, n);
+	if (r.type === "intersection") return Jg(r.left, n) || Jg(r.right, n);
+	if (r.type === "record" || r.type === "map") return Jg(r.keyType, n) || Jg(r.valueType, n);
+	if (r.type === "pipe") return e._zod.traits.has("$ZodCodec") ? !0 : Jg(r.in, n) || Jg(r.out, n);
 	if (r.type === "object") {
-		for (let e in r.shape) if (qg(r.shape[e], n)) return !0;
+		for (let e in r.shape) if (Jg(r.shape[e], n)) return !0;
 		return !1;
 	}
 	if (r.type === "union") {
-		for (let e of r.options) if (qg(e, n)) return !0;
+		for (let e of r.options) if (Jg(e, n)) return !0;
 		return !1;
 	}
 	if (r.type === "tuple") {
-		for (let e of r.items) if (qg(e, n)) return !0;
-		return !!(r.rest && qg(r.rest, n));
+		for (let e of r.items) if (Jg(e, n)) return !0;
+		return !!(r.rest && Jg(r.rest, n));
 	}
 	return !1;
 }
-var Jg = (e, t = {}) => (n) => {
-	let r = Fg({
+var Yg = (e, t = {}) => (n) => {
+	let r = Ig({
 		...n,
 		processors: t
 	});
-	return Lg(e, r), zg(r, e), Kg(r, e);
-}, Yg = (e, t, n = {}) => (r) => {
-	let { libraryOptions: i, target: a } = r ?? {}, o = Fg({
+	return Rg(e, r), Bg(r, e), qg(r, e);
+}, Xg = (e, t, n = {}) => (r) => {
+	let { libraryOptions: i, target: a } = r ?? {}, o = Ig({
 		...i ?? {},
 		target: a,
 		io: t,
 		processors: n
 	});
-	return Lg(e, o), zg(o, e), Kg(o, e);
-}, Xg = (e, t, n) => {
-	(e[t] === void 0 || n > e[t]) && (e[t] = n);
+	return Rg(e, o), Bg(o, e), qg(o, e);
 }, Zg = (e, t, n) => {
+	(e[t] === void 0 || n > e[t]) && (e[t] = n);
+}, Qg = (e, t, n) => {
 	(e[t] === void 0 || n < e[t]) && (e[t] = n);
-}, Qg = (e, t) => {
-	Xg(e, "minimum", t), Zg(e, "maximum", t);
 }, $g = (e, t) => {
-	e.multipleOf ??= [], e.multipleOf.includes(t) || e.multipleOf.push(t);
+	Zg(e, "minimum", t), Qg(e, "maximum", t);
 }, e_ = (e, t) => {
-	e.patterns ??= /* @__PURE__ */ new Set(), e.patterns.add(t);
+	e.multipleOf ??= [], e.multipleOf.includes(t) || e.multipleOf.push(t);
 }, t_ = (e, t) => {
-	e.mime = e.mime ? e.mime.filter((e) => t.includes(e)) : [...t];
+	e.patterns ??= /* @__PURE__ */ new Set(), e.patterns.add(t);
 }, n_ = (e, t) => {
+	e.mime = e.mime ? e.mime.filter((e) => t.includes(e)) : [...t];
+}, r_ = (e, t) => {
 	e.format = t, t.includes("int") && (e.isInt = !0);
-}, r_ = (e, t) => Xg(e, "minimum", t.minimum), i_ = (e, t) => Zg(e, "maximum", t.maximum), a_ = (e) => (t, n) => {
-	n_(t, n.format);
+}, i_ = (e, t) => Zg(e, "minimum", t.minimum), a_ = (e, t) => Qg(e, "maximum", t.maximum), o_ = (e) => (t, n) => {
+	r_(t, n.format);
 	let [r, i] = e[n.format];
-	Xg(t, "minimum", r), Zg(t, "maximum", i);
-}, o_ = {
-	greater_than: (e, t) => Xg(e, t.inclusive ? "minimum" : "exclusiveMinimum", t.value),
-	less_than: (e, t) => Zg(e, t.inclusive ? "maximum" : "exclusiveMaximum", t.value),
-	multiple_of: (e, t) => $g(e, t.value),
-	number_format: a_(qd),
-	bigint_format: a_(Fee),
-	min_length: r_,
-	max_length: i_,
-	length_equals: (e, t) => Qg(e, t.length),
-	min_size: r_,
-	max_size: i_,
-	size_equals: (e, t) => Qg(e, t.size),
+	Zg(t, "minimum", r), Qg(t, "maximum", i);
+}, s_ = {
+	greater_than: (e, t) => Zg(e, t.inclusive ? "minimum" : "exclusiveMinimum", t.value),
+	less_than: (e, t) => Qg(e, t.inclusive ? "maximum" : "exclusiveMaximum", t.value),
+	multiple_of: (e, t) => e_(e, t.value),
+	number_format: o_(qd),
+	bigint_format: o_(Fee),
+	min_length: i_,
+	max_length: a_,
+	length_equals: (e, t) => $g(e, t.length),
+	min_size: i_,
+	max_size: a_,
+	size_equals: (e, t) => $g(e, t.size),
 	string_format: (e, t) => {
-		n_(e, t.format), t.pattern && e_(e, t.pattern), (t.format === "base64" || t.format === "base64url") && (e.contentEncoding = t.format), (t.local || t.precision === -1) && (e.laxFormat = !0);
+		r_(e, t.format), t.pattern && t_(e, t.pattern), (t.format === "base64" || t.format === "base64url") && (e.contentEncoding = t.format), (t.local || t.precision === -1) && (e.laxFormat = !0);
 	},
-	mime_type: (e, t) => t_(e, t.mime)
+	mime_type: (e, t) => n_(e, t.mime)
 };
-function s_(e) {
+function c_(e) {
 	let t = {}, n = e._zod.def, r = e._zod.traits.has("$ZodCheck") ? [e, ...n.checks ?? []] : n.checks ?? [];
-	for (let e of r) o_[e._zod.def.check]?.(t, e._zod.def);
+	for (let e of r) s_[e._zod.def.check]?.(t, e._zod.def);
 	let i = e._zod.bag;
-	i.minimum !== void 0 && Xg(t, "minimum", i.minimum), i.exclusiveMinimum !== void 0 && Xg(t, "exclusiveMinimum", i.exclusiveMinimum), i.maximum !== void 0 && Zg(t, "maximum", i.maximum), i.exclusiveMaximum !== void 0 && Zg(t, "exclusiveMaximum", i.exclusiveMaximum), i.multipleOf !== void 0 && $g(t, i.multipleOf), i.format !== void 0 && (t.format ??= i.format, i.format.includes("int") && (t.isInt = !0)), i.mime && t_(t, i.mime);
-	for (let e of i.patterns ?? []) e_(t, e);
+	i.minimum !== void 0 && Zg(t, "minimum", i.minimum), i.exclusiveMinimum !== void 0 && Zg(t, "exclusiveMinimum", i.exclusiveMinimum), i.maximum !== void 0 && Qg(t, "maximum", i.maximum), i.exclusiveMaximum !== void 0 && Qg(t, "exclusiveMaximum", i.exclusiveMaximum), i.multipleOf !== void 0 && e_(t, i.multipleOf), i.format !== void 0 && (t.format ??= i.format, i.format.includes("int") && (t.isInt = !0)), i.mime && n_(t, i.mime);
+	for (let e of i.patterns ?? []) t_(t, e);
 	return t;
 }
-var c_ = {
+var l_ = {
 	guid: "uuid",
 	url: "uri",
 	datetime: "date-time",
 	json_string: "json-string",
 	regex: ""
-}, l_ = /* @__PURE__ */ new Map([[mm, Xf], [gm, Zf]]), u_ = (e) => l_.get(e) ?? e, d_ = (e, t, n, r) => {
+}, u_ = /* @__PURE__ */ new Map([[hm, Zf], [_m, Qf]]), d_ = (e) => u_.get(e) ?? e, f_ = (e, t, n, r) => {
 	let i = n;
 	i.type = "string";
-	let { minimum: a, maximum: o, format: s, patterns: c, contentEncoding: l, laxFormat: u } = s_(e);
-	if (typeof a == "number" && (i.minLength = a), typeof o == "number" && (i.maxLength = o), s && (i.format = c_[s] ?? s, i.format === "" && delete i.format, (s === "time" || u) && delete i.format), l && (i.contentEncoding = l), c && c.size > 0) {
-		let e = [...c].map(u_);
+	let { minimum: a, maximum: o, format: s, patterns: c, contentEncoding: l, laxFormat: u } = c_(e);
+	if (typeof a == "number" && (i.minLength = a), typeof o == "number" && (i.maxLength = o), s && (i.format = l_[s] ?? s, i.format === "" && delete i.format, (s === "time" || u) && delete i.format), l && (i.contentEncoding = l), c && c.size > 0) {
+		let e = [...c].map(d_);
 		e.length === 1 ? i.pattern = e[0].source : e.length > 1 && (i.allOf = [...e.map((e) => ({
 			...t.target === "draft-07" || t.target === "draft-04" || t.target === "openapi-3.0" ? { type: "string" } : {},
 			pattern: e.source
 		}))]);
 	}
-}, f_ = (e, t, n, r) => {
-	let i = n, { minimum: a, maximum: o, multipleOf: s, exclusiveMaximum: c, exclusiveMinimum: l, isInt: u } = s_(e);
+}, p_ = (e, t, n, r) => {
+	let i = n, { minimum: a, maximum: o, multipleOf: s, exclusiveMaximum: c, exclusiveMinimum: l, isInt: u } = c_(e);
 	i.type = u ? "integer" : "number";
 	let d = typeof l == "number" && l >= (a ?? -Infinity), f = typeof c == "number" && c <= (o ?? Infinity), p = t.target === "draft-04" || t.target === "openapi-3.0";
 	if (d ? p ? (i.minimum = l, i.exclusiveMinimum = !0) : i.exclusiveMinimum = l : typeof a == "number" && (i.minimum = a), f ? p ? (i.maximum = c, i.exclusiveMaximum = !0) : i.exclusiveMaximum = c : typeof o == "number" && (i.maximum = o), s) {
 		let n = /* @__PURE__ */ new Set();
-		for (let a of s) Number.isFinite(a) && a !== 0 ? n.add(Math.abs(a)) : Ig(e, t, i, r, `A multipleOf divisor of ${a} cannot be represented in JSON Schema`);
+		for (let a of s) Number.isFinite(a) && a !== 0 ? n.add(Math.abs(a)) : Lg(e, t, i, r, `A multipleOf divisor of ${a} cannot be represented in JSON Schema`);
 		let [a, ...o] = n;
 		a !== void 0 && (i.multipleOf = a), o.length && (i.allOf = [...i.allOf ?? [], ...o.map((e) => ({ multipleOf: e }))]);
 	}
-}, p_ = (e, t, n, r) => {
-	n.type = "boolean";
 }, m_ = (e, t, n, r) => {
-	n.not = {};
+	n.type = "boolean";
 }, h_ = (e, t, n, r) => {
+	n.not = {};
+}, g_ = (e, t, n, r) => {
 	let i = e._zod.def, a = vd(i.entries);
 	a.length === 0 ? n.not = {} : (a.every((e) => typeof e == "number") && (n.type = "number"), a.every((e) => typeof e == "string") && (n.type = "string"), n.enum = a);
-}, g_ = (e, t, n, r) => {
-	Ig(e, t, n, r, "Custom types cannot be represented in JSON Schema");
 }, __ = (e, t, n, r) => {
-	Ig(e, t, n, r, "Transforms cannot be represented in JSON Schema");
+	Lg(e, t, n, r, "Custom types cannot be represented in JSON Schema");
 }, v_ = (e, t, n, r) => {
-	let i = n, a = e._zod.def, { minimum: o, maximum: s } = s_(e);
-	typeof o == "number" && (i.minItems = o), typeof s == "number" && (i.maxItems = s), i.type = "array", i.items = Lg(a.element, t, {
+	Lg(e, t, n, r, "Transforms cannot be represented in JSON Schema");
+}, y_ = (e, t, n, r) => {
+	let i = n, a = e._zod.def, { minimum: o, maximum: s } = c_(e);
+	typeof o == "number" && (i.minItems = o), typeof s == "number" && (i.maxItems = s), i.type = "array", i.items = Rg(a.element, t, {
 		...r,
 		path: [...r.path, "items"]
 	});
 };
-function y_(e) {
+function b_(e) {
 	let t = e._zod.def;
-	return t.type === "pipe" && t.in._zod.traits.has("$ZodTransform") ? y_(t.out) : t.type === "catch" ? y_(t.innerType) : e._zod.optin;
+	return t.type === "pipe" && t.in._zod.traits.has("$ZodTransform") ? b_(t.out) : t.type === "catch" ? b_(t.innerType) : e._zod.optin;
 }
-var b_ = (e, t, n, r) => {
+var x_ = (e, t, n, r) => {
 	let i = n, a = e._zod.def, o = a.shape;
-	if (Object.getOwnPropertySymbols(o).length && Ig(e, t, i, r, "Symbol keys cannot be represented in JSON Schema")) return;
+	if (Object.getOwnPropertySymbols(o).length && Lg(e, t, i, r, "Symbol keys cannot be represented in JSON Schema")) return;
 	i.type = "object", i.properties = {};
-	for (let e in o) Ed(i.properties, e, Lg(o[e], t, {
+	for (let e in o) Ed(i.properties, e, Rg(o[e], t, {
 		...r,
 		path: [
 			...r.path,
@@ -8254,14 +8254,14 @@ var b_ = (e, t, n, r) => {
 	let s = [];
 	for (let e of Object.keys(o)) {
 		let n = a.shape[e];
-		(t.io === "input" ? y_(n) === void 0 : n._zod.optout === void 0) && s.push(e);
+		(t.io === "input" ? b_(n) === void 0 : n._zod.optout === void 0) && s.push(e);
 	}
-	s.length > 0 && (i.required = s), a.catchall?._zod.def.type === "never" ? i.additionalProperties = !1 : a.catchall ? a.catchall && (i.additionalProperties = Lg(a.catchall, t, {
+	s.length > 0 && (i.required = s), a.catchall?._zod.def.type === "never" ? i.additionalProperties = !1 : a.catchall ? a.catchall && (i.additionalProperties = Rg(a.catchall, t, {
 		...r,
 		path: [...r.path, "additionalProperties"]
 	})) : t.io === "output" && (i.additionalProperties = !1);
-}, x_ = (e, t, n, r) => {
-	let i = e._zod.def, a = i.inclusive === !1, o = i.options.map((e, n) => Lg(e, t, {
+}, S_ = (e, t, n, r) => {
+	let i = e._zod.def, a = i.inclusive === !1, o = i.options.map((e, n) => Rg(e, t, {
 		...r,
 		path: [
 			...r.path,
@@ -8270,15 +8270,15 @@ var b_ = (e, t, n, r) => {
 		]
 	}));
 	a ? n.oneOf = o : n.anyOf = o;
-}, S_ = (e, t, n, r) => {
-	let i = e._zod.def, a = Lg(i.left, t, {
+}, C_ = (e, t, n, r) => {
+	let i = e._zod.def, a = Rg(i.left, t, {
 		...r,
 		path: [
 			...r.path,
 			"allOf",
 			0
 		]
-	}), o = Lg(i.right, t, {
+	}), o = Rg(i.right, t, {
 		...r,
 		path: [
 			...r.path,
@@ -8288,19 +8288,19 @@ var b_ = (e, t, n, r) => {
 	}), s = (e) => "allOf" in e && Object.keys(e).length === 1, c = [...s(a) ? a.allOf : [a], ...s(o) ? o.allOf : [o]];
 	n.allOf = c, t.intersections.push(c);
 };
-function C_(e, t, n) {
+function w_(e, t, n) {
 	if (t.$ref) {
 		if (n.has(t)) return t;
 		n.add(t);
 		let r = e.get(t)?.def;
 		if (!r) return t;
-		let i = C_(e, r, n);
+		let i = w_(e, r, n);
 		return i === r ? t : i;
 	}
 	for (let r of ["anyOf", "oneOf"]) {
 		let i = t[r];
 		if (!Array.isArray(i)) continue;
-		let a = i.map((t) => C_(e, t, n));
+		let a = i.map((t) => w_(e, t, n));
 		a.some((e, t) => e !== i[t]) && (t = {
 			...t,
 			[r]: a
@@ -8309,17 +8309,17 @@ function C_(e, t, n) {
 	let r = Array.isArray(t.type) ? t.type : [t.type], i = !r.includes("string") && r.some((e) => e === "number" || e === "integer"), a = t.enum ?? (t.const === void 0 ? void 0 : [t.const]);
 	if (!i && !a?.some((e) => typeof e == "number")) return t;
 	let { minimum: o, maximum: s, exclusiveMinimum: c, exclusiveMaximum: l, multipleOf: u, format: d, id: f, ...p } = t;
-	return p.enum ? p.enum = p.enum.map((e) => typeof e == "number" ? String(e) : e) : typeof p.const == "number" && (p.const = String(p.const)), i && (p.type = "string", a || (p.pattern = (r.includes("number") ? cp : sp).source)), p;
+	return p.enum ? p.enum = p.enum.map((e) => typeof e == "number" ? String(e) : e) : typeof p.const == "number" && (p.const = String(p.const)), i && (p.type = "string", a || (p.pattern = (r.includes("number") ? lp : cp).source)), p;
 }
-var w_ = /* @__PURE__ */ new WeakMap();
-function T_(e) {
+var T_ = /* @__PURE__ */ new WeakMap();
+function E_(e) {
 	let t = /* @__PURE__ */ new Map();
 	for (let n of e.seen.values()) n.def && !t.has(n.schema) && t.set(n.schema, n);
 	let n = /* @__PURE__ */ new Map();
-	for (let r of w_.get(e) ?? []) {
+	for (let r of T_.get(e) ?? []) {
 		let i = e.seen.get(r), a = (i?.def ?? i?.schema)?.propertyNames;
 		if (!a || a === !0 || n.has(a)) continue;
-		let o = C_(t, a, /* @__PURE__ */ new Set());
+		let o = w_(t, a, /* @__PURE__ */ new Set());
 		o !== a && n.set(a, o);
 	}
 	if (n.size) for (let t of e.seen.values()) for (let e of [t.schema, t.def]) {
@@ -8327,12 +8327,12 @@ function T_(e) {
 		t && (e.propertyNames = t);
 	}
 }
-var E_ = (e, t, n, r) => {
+var D_ = (e, t, n, r) => {
 	let i = n, a = e._zod.def;
 	i.type = "object";
-	let o = a.keyType, s = s_(o).patterns;
+	let o = a.keyType, s = c_(o).patterns;
 	if (a.mode === "loose" && s && s.size > 0) {
-		let e = Lg(a.valueType, t, {
+		let e = Rg(a.valueType, t, {
 			...r,
 			path: [
 				...r.path,
@@ -8341,83 +8341,83 @@ var E_ = (e, t, n, r) => {
 			]
 		});
 		i.patternProperties = {};
-		for (let t of s) Ed(i.patternProperties, u_(t).source, e);
+		for (let t of s) Ed(i.patternProperties, d_(t).source, e);
 	} else {
 		if (t.target === "draft-07" || t.target === "draft-2020-12") {
-			i.propertyNames = Lg(a.keyType, t, {
+			i.propertyNames = Rg(a.keyType, t, {
 				...r,
 				path: [...r.path, "propertyNames"]
 			});
-			let n = w_.get(t);
-			n || (n = [], w_.set(t, n), t.deferred.push(() => T_(t))), n.push(e);
+			let n = T_.get(t);
+			n || (n = [], T_.set(t, n), t.deferred.push(() => E_(t))), n.push(e);
 		}
-		i.additionalProperties = Lg(a.valueType, t, {
+		i.additionalProperties = Rg(a.valueType, t, {
 			...r,
 			path: [...r.path, "additionalProperties"]
 		});
 	}
-	let c = o._zod.values, l = t.io === "input" && y_(a.valueType) !== void 0;
+	let c = o._zod.values, l = t.io === "input" && b_(a.valueType) !== void 0;
 	if (c && !a.partial && !l) {
 		let e = [...c].filter((e) => typeof e == "string" || typeof e == "number");
 		e.length > 0 && (i.required = e.map(String));
 	}
-}, D_ = (e, t, n, r) => {
-	let i = e._zod.def, a = Lg(i.innerType, t, r), o = t.seen.get(e);
-	t.target === "openapi-3.0" ? (o.ref = i.innerType, n.nullable = !0) : n.anyOf = [a, { type: "null" }];
 }, O_ = (e, t, n, r) => {
+	let i = e._zod.def, a = Rg(i.innerType, t, r), o = t.seen.get(e);
+	t.target === "openapi-3.0" ? (o.ref = i.innerType, n.nullable = !0) : n.anyOf = [a, { type: "null" }];
+}, k_ = (e, t, n, r) => {
 	let i = e._zod.def;
-	Lg(i.innerType, t, r);
+	Rg(i.innerType, t, r);
 	let a = t.seen.get(e);
 	a.ref = i.innerType;
-}, k_ = Symbol();
-function A_(e, t, n, r, i) {
+}, A_ = Symbol();
+function j_(e, t, n, r, i) {
 	let a = !1, o = JSON.stringify(e, (e, t) => typeof t == "bigint" ? (a = !0, null) : t);
-	return a ? (Ig(t, n, r, i, "BigInt defaults cannot be represented in JSON Schema"), k_) : JSON.parse(o);
+	return a ? (Lg(t, n, r, i, "BigInt defaults cannot be represented in JSON Schema"), A_) : JSON.parse(o);
 }
-var j_ = (e, t, n, r) => {
+var M_ = (e, t, n, r) => {
 	let i = e._zod.def;
-	Lg(i.innerType, t, r);
+	Rg(i.innerType, t, r);
 	let a = t.seen.get(e);
 	a.ref = i.innerType;
-	let o = A_(i.defaultValue, e, t, n, r);
-	o !== k_ && (n.default = o);
-}, M_ = (e, t, n, r) => {
-	let i = e._zod.def;
-	Lg(i.innerType, t, r);
-	let a = t.seen.get(e);
-	if (a.ref = i.innerType, t.io !== "input") return;
-	let o = A_(i.defaultValue, e, t, n, r);
-	o !== k_ && (n._prefault = o);
+	let o = j_(i.defaultValue, e, t, n, r);
+	o !== A_ && (n.default = o);
 }, N_ = (e, t, n, r) => {
 	let i = e._zod.def;
-	Lg(i.innerType, t, r);
+	Rg(i.innerType, t, r);
+	let a = t.seen.get(e);
+	if (a.ref = i.innerType, t.io !== "input") return;
+	let o = j_(i.defaultValue, e, t, n, r);
+	o !== A_ && (n._prefault = o);
+}, P_ = (e, t, n, r) => {
+	let i = e._zod.def;
+	Rg(i.innerType, t, r);
 	let a = t.seen.get(e);
 	a.ref = i.innerType;
 	let o;
 	try {
 		o = i.catchValue(void 0);
 	} catch {
-		Ig(e, t, n, r, "Dynamic catch values are not supported in JSON Schema");
+		Lg(e, t, n, r, "Dynamic catch values are not supported in JSON Schema");
 		return;
 	}
 	n.default = o;
-}, P_ = (e, t, n, r) => {
+}, F_ = (e, t, n, r) => {
 	let i = e._zod.def, a = i.in._zod.traits.has("$ZodTransform"), o = t.io === "input" ? a ? i.out : i.in : i.out;
-	Lg(o, t, r);
+	Rg(o, t, r);
 	let s = t.seen.get(e);
 	s.ref = o;
-}, F_ = (e, t, n, r) => {
-	let i = e._zod.def;
-	Lg(i.innerType, t, r);
-	let a = t.seen.get(e);
-	a.ref = i.innerType, n.readOnly = !0;
 }, I_ = (e, t, n, r) => {
 	let i = e._zod.def;
-	Lg(i.innerType, t, r);
+	Rg(i.innerType, t, r);
+	let a = t.seen.get(e);
+	a.ref = i.innerType, n.readOnly = !0;
+}, L_ = (e, t, n, r) => {
+	let i = e._zod.def;
+	Rg(i.innerType, t, r);
 	let a = t.seen.get(e);
 	a.ref = i.innerType;
-}, L_ = /* @__PURE__ */ new WeakSet([Object.prototype, Error.prototype]);
-function R_(e, t, n) {
+}, R_ = /* @__PURE__ */ new WeakSet([Object.prototype, Error.prototype]);
+function z_(e, t, n) {
 	Object.defineProperty(e, t, {
 		configurable: !0,
 		enumerable: !1,
@@ -8438,12 +8438,12 @@ function R_(e, t, n) {
 		}
 	});
 }
-var z_ = /*@__PURE__*/ q("ZodError", (e, t) => {
+var B_ = /*@__PURE__*/ q("ZodError", (e, t) => {
 	nte.init(e, t), e.name = "ZodError";
 	let n = Object.getPrototypeOf(e);
-	L_.has(n) || (L_.add(n), R_(n, "format", (e) => (t) => ate(e, t)), R_(n, "flatten", (e) => (t) => ite(e, t)), R_(n, "addIssue", (e) => (t) => {
+	R_.has(n) || (R_.add(n), z_(n, "format", (e) => (t) => ate(e, t)), z_(n, "flatten", (e) => (t) => ite(e, t)), z_(n, "addIssue", (e) => (t) => {
 		e.issues.push(t), e.message = JSON.stringify(e.issues, bd, 2);
-	}), R_(n, "addIssues", (e) => (t) => {
+	}), z_(n, "addIssues", (e) => (t) => {
 		e.issues.push(...t), e.message = JSON.stringify(e.issues, bd, 2);
 	}), Object.defineProperty(n, "isEmpty", {
 		configurable: !0,
@@ -8452,15 +8452,15 @@ var z_ = /*@__PURE__*/ q("ZodError", (e, t) => {
 			return this.issues.length === 0;
 		}
 	}));
-}, void 0, { Parent: Error }), B_ = /* @__PURE__ */ Cf(z_), V_ = /* @__PURE__ */ wf(z_), H_ = /* @__PURE__ */ Tf(z_), U_ = /* @__PURE__ */ Df(z_), W_ = /* @__PURE__ */ dte(z_), G_ = /* @__PURE__ */ fte(z_), K_ = /* @__PURE__ */ pte(z_), q_ = /* @__PURE__ */ Of(z_), J_ = /* @__PURE__ */ kf(z_), Y_ = /* @__PURE__ */ Af(z_), X_ = /* @__PURE__ */ jf(z_), Z_ = /* @__PURE__ */ Mf(z_);
+}, void 0, { Parent: Error }), V_ = /* @__PURE__ */ Cf(B_), H_ = /* @__PURE__ */ wf(B_), U_ = /* @__PURE__ */ Tf(B_), W_ = /* @__PURE__ */ Df(B_), G_ = /* @__PURE__ */ dte(B_), K_ = /* @__PURE__ */ fte(B_), q_ = /* @__PURE__ */ Of(B_), J_ = /* @__PURE__ */ kf(B_), Y_ = /* @__PURE__ */ Af(B_), X_ = /* @__PURE__ */ jf(B_), Z_ = /* @__PURE__ */ Mf(B_), Q_ = /* @__PURE__ */ Nf(B_);
 // node_modules/zod/v4/classic/schemas.js
-function Q_() {
-	vf.localeError || yf(Eh());
-}
 function $_() {
-	vf.memoizer || yf({ memoizer: Ch() });
+	vf.localeError || yf(Dh());
 }
-var ev = /*@__PURE__*/ q("ZodType", (e, t) => (Q_(), Mp.init(e, t), e.def = t, e.type = t.type, e), {
+function ev() {
+	vf.memoizer || yf({ memoizer: wh() });
+}
+var tv = /*@__PURE__*/ q("ZodType", (e, t) => ($_(), Np.init(e, t), e.def = t, e.type = t.type, e), {
 	check(...e) {
 		let t = this.def;
 		return this.clone(Nd(t, { checks: [...t.checks ?? [], ...e.map((e) => typeof e == "function" ? { _zod: {
@@ -8482,64 +8482,64 @@ var ev = /*@__PURE__*/ q("ZodType", (e, t) => (Q_(), Mp.init(e, t), e.def = t, e
 		return e.add(this, t), this;
 	},
 	refine(e, t) {
-		return this.check(rne(e, t));
-	},
-	superRefine(e, t) {
 		return this.check(ine(e, t));
 	},
+	superRefine(e, t) {
+		return this.check(ane(e, t));
+	},
 	overwrite(e) {
-		return this.check(/* @__PURE__ */ wg(e));
+		return this.check(/* @__PURE__ */ Tg(e));
 	},
 	optional() {
-		return Cv(this);
+		return Sv(this);
 	},
 	exactOptional() {
-		return Wte(this);
+		return Gte(this);
 	},
 	nullable() {
-		return Tv(this);
+		return wv(this);
 	},
 	nullish() {
-		return Cv(Tv(this));
+		return Sv(wv(this));
 	},
 	nonoptional(e) {
-		return Xte(this, e);
+		return Zte(this, e);
 	},
 	array() {
-		return hv(this);
+		return mv(this);
 	},
 	or(e) {
-		return zte([this, e]);
+		return Bte([this, e]);
 	},
 	and(e) {
-		return Vte(this, e);
+		return Hte(this, e);
 	},
 	transform(e) {
-		return Dv(this, Ute(e));
+		return Ev(this, Wte(e));
 	},
 	default(e) {
-		return qte(this, e);
+		return Jte(this, e);
 	},
 	prefault(e) {
-		return Yte(this, e);
+		return Xte(this, e);
 	},
 	catch(e) {
-		return Qte(this, e);
+		return $te(this, e);
 	},
 	pipe(e) {
-		return Dv(this, e);
+		return Ev(this, e);
 	},
 	readonly() {
-		return tne(this);
+		return nne(this);
 	},
 	describe(e) {
 		let t = this.clone();
-		return Ah.add(t, { description: e }), t;
+		return jh.add(t, { description: e }), t;
 	},
 	meta(...e) {
-		if (e.length === 0) return Ah.get(this);
+		if (e.length === 0) return jh.get(this);
 		let t = this.clone();
-		return Ah.add(t, e[0]), t;
+		return jh.add(t, e[0]), t;
 	},
 	isOptional() {
 		return this.safeParse(void 0).success;
@@ -8552,10 +8552,10 @@ var ev = /*@__PURE__*/ q("ZodType", (e, t) => (Q_(), Mp.init(e, t), e.def = t, e
 	},
 	get "~standard"() {
 		return cf(this, "~standard", {
-			...Fp(this),
+			...Ip(this),
 			jsonSchema: {
-				input: Yg(this, "input"),
-				output: Yg(this, "output")
+				input: Xg(this, "input"),
+				output: Xg(this, "output")
 			}
 		});
 	},
@@ -8563,16 +8563,16 @@ var ev = /*@__PURE__*/ q("ZodType", (e, t) => (Q_(), Mp.init(e, t), e.def = t, e
 		sf(this, "~standard", e);
 	},
 	parse: function e(t, n) {
-		return B_(this, t, n, { callee: e });
+		return V_(this, t, n, { callee: e });
 	},
 	parseAsync: async function e(t, n) {
-		return await V_(this, t, n, { callee: e });
+		return await H_(this, t, n, { callee: e });
 	},
 	safeParse(e, t) {
-		return H_(this, e, t);
+		return U_(this, e, t);
 	},
 	async safeParseAsync(e, t) {
-		return U_(this, e, t);
+		return W_(this, e, t);
 	},
 	get spa() {
 		return this?.safeParseAsync;
@@ -8587,352 +8587,352 @@ var ev = /*@__PURE__*/ q("ZodType", (e, t) => (Q_(), Mp.init(e, t), e.def = t, e
 		return ute(this, e, t);
 	},
 	encode: function e(t, n) {
-		return W_(this, t, n, { callee: e });
-	},
-	decode: function e(t, n) {
 		return G_(this, t, n, { callee: e });
 	},
-	encodeAsync: async function e(t, n) {
-		return await K_(this, t, n, { callee: e });
+	decode: function e(t, n) {
+		return K_(this, t, n, { callee: e });
 	},
-	decodeAsync: async function e(t, n) {
+	encodeAsync: async function e(t, n) {
 		return await q_(this, t, n, { callee: e });
 	},
-	safeEncode(e, t) {
-		return J_(this, e, t);
+	decodeAsync: async function e(t, n) {
+		return await J_(this, t, n, { callee: e });
 	},
-	safeDecode(e, t) {
+	safeEncode(e, t) {
 		return Y_(this, e, t);
 	},
-	async safeEncodeAsync(e, t) {
+	safeDecode(e, t) {
 		return X_(this, e, t);
 	},
-	async safeDecodeAsync(e, t) {
+	async safeEncodeAsync(e, t) {
 		return Z_(this, e, t);
 	},
+	async safeDecodeAsync(e, t) {
+		return Q_(this, e, t);
+	},
 	toJSONSchema(e) {
-		return Jg(this, {})(e);
+		return Yg(this, {})(e);
 	},
 	get description() {
-		return Ah.get(this)?.description;
+		return jh.get(this)?.description;
 	},
 	get _def() {
 		return this._zod.def;
 	}
-}), tv = /*@__PURE__*/ q("_ZodString", (e, t) => {
-	Ip.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => d_(e, t, n, r);
+}), nv = /*@__PURE__*/ q("_ZodString", (e, t) => {
+	Lp.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => f_(e, t, n, r);
 }, /*@__PURE__*/ lf({
-	format: (e) => s_(e).format ?? null,
-	minLength: (e) => s_(e).minimum ?? null,
-	maxLength: (e) => s_(e).maximum ?? null
+	format: (e) => c_(e).format ?? null,
+	minLength: (e) => c_(e).minimum ?? null,
+	maxLength: (e) => c_(e).maximum ?? null
 }, {
 	regex(...e) {
-		return this.check(/* @__PURE__ */ vg(...e));
+		return this.check(/* @__PURE__ */ yg(...e));
 	},
 	includes(...e) {
-		return this.check(/* @__PURE__ */ xg(...e));
-	},
-	startsWith(...e) {
 		return this.check(/* @__PURE__ */ Sg(...e));
 	},
-	endsWith(...e) {
+	startsWith(...e) {
 		return this.check(/* @__PURE__ */ Cg(...e));
 	},
+	endsWith(...e) {
+		return this.check(/* @__PURE__ */ wg(...e));
+	},
 	min(...e) {
-		return this.check(/* @__PURE__ */ gg(...e));
-	},
-	max(...e) {
-		return this.check(/* @__PURE__ */ hg(...e));
-	},
-	length(...e) {
 		return this.check(/* @__PURE__ */ _g(...e));
 	},
+	max(...e) {
+		return this.check(/* @__PURE__ */ gg(...e));
+	},
+	length(...e) {
+		return this.check(/* @__PURE__ */ vg(...e));
+	},
 	nonempty(...e) {
-		return this.check(/* @__PURE__ */ gg(1, ...e));
+		return this.check(/* @__PURE__ */ _g(1, ...e));
 	},
 	lowercase(e) {
-		return this.check(/* @__PURE__ */ yg(e));
-	},
-	uppercase(e) {
 		return this.check(/* @__PURE__ */ bg(e));
 	},
+	uppercase(e) {
+		return this.check(/* @__PURE__ */ xg(e));
+	},
 	trim() {
-		return this.check(/* @__PURE__ */ Eg());
-	},
-	normalize(...e) {
-		return this.check(/* @__PURE__ */ Tg(...e));
-	},
-	toLowerCase() {
 		return this.check(/* @__PURE__ */ Dg());
 	},
-	toUpperCase() {
+	normalize(...e) {
+		return this.check(/* @__PURE__ */ Eg(...e));
+	},
+	toLowerCase() {
 		return this.check(/* @__PURE__ */ Og());
 	},
-	slugify() {
+	toUpperCase() {
 		return this.check(/* @__PURE__ */ kg());
+	},
+	slugify() {
+		return this.check(/* @__PURE__ */ Ag());
 	}
-})), nv = /*@__PURE__*/ q("ZodString", (e, t) => {
-	Ip.init(e, t), tv.init(e, t);
+})), rv = /*@__PURE__*/ q("ZodString", (e, t) => {
+	Lp.init(e, t), nv.init(e, t);
 }, {
 	email(e) {
-		return this.check(/* @__PURE__ */ Nh(cv, e));
-	},
-	url(e) {
-		return this.check(/* @__PURE__ */ zh(hte, e));
-	},
-	jwt(e) {
-		return this.check(/* @__PURE__ */ eg(Ate, e));
-	},
-	emoji(e) {
-		return this.check(/* @__PURE__ */ Bh(gte, e));
-	},
-	guid(e) {
 		return this.check(/* @__PURE__ */ Ph(mte, e));
 	},
-	uuid(e) {
-		return this.check(/* @__PURE__ */ Fh(lv, e));
+	url(e) {
+		return this.check(/* @__PURE__ */ Bh(gte, e));
 	},
-	uuidv4(e) {
-		return this.check(/* @__PURE__ */ Ih(lv, e));
+	jwt(e) {
+		return this.check(/* @__PURE__ */ tg(jte, e));
 	},
-	uuidv6(e) {
-		return this.check(/* @__PURE__ */ Lh(lv, e));
-	},
-	uuidv7(e) {
-		return this.check(/* @__PURE__ */ Rh(lv, e));
-	},
-	nanoid(e) {
+	emoji(e) {
 		return this.check(/* @__PURE__ */ Vh(_te, e));
 	},
-	cuid(e) {
+	guid(e) {
+		return this.check(/* @__PURE__ */ Fh(hte, e));
+	},
+	uuid(e) {
+		return this.check(/* @__PURE__ */ Ih(cv, e));
+	},
+	uuidv4(e) {
+		return this.check(/* @__PURE__ */ Lh(cv, e));
+	},
+	uuidv6(e) {
+		return this.check(/* @__PURE__ */ Rh(cv, e));
+	},
+	uuidv7(e) {
+		return this.check(/* @__PURE__ */ zh(cv, e));
+	},
+	nanoid(e) {
 		return this.check(/* @__PURE__ */ Hh(vte, e));
 	},
-	cuid2(e) {
+	cuid(e) {
 		return this.check(/* @__PURE__ */ Uh(yte, e));
 	},
-	ulid(e) {
+	cuid2(e) {
 		return this.check(/* @__PURE__ */ Wh(bte, e));
 	},
-	base64(e) {
-		return this.check(/* @__PURE__ */ Zh(Dte, e));
-	},
-	base64url(e) {
-		return this.check(/* @__PURE__ */ Qh(Ote, e));
-	},
-	xid(e) {
+	ulid(e) {
 		return this.check(/* @__PURE__ */ Gh(xte, e));
 	},
-	ksuid(e) {
-		return this.check(/* @__PURE__ */ Kh(Ste, e));
+	base64(e) {
+		return this.check(/* @__PURE__ */ Qh(Ote, e));
 	},
-	ipv4(e) {
-		return this.check(/* @__PURE__ */ qh(Cte, e));
-	},
-	ipv6(e) {
-		return this.check(/* @__PURE__ */ Jh(wte, e));
-	},
-	cidrv4(e) {
-		return this.check(/* @__PURE__ */ Yh(Tte, e));
-	},
-	cidrv6(e) {
-		return this.check(/* @__PURE__ */ Xh(Ete, e));
-	},
-	e164(e) {
+	base64url(e) {
 		return this.check(/* @__PURE__ */ $h(kte, e));
 	},
-	datetime(e) {
-		return this.check(/* @__PURE__ */ tg(iv, e));
+	xid(e) {
+		return this.check(/* @__PURE__ */ Kh(Ste, e));
 	},
-	date(e) {
+	ksuid(e) {
+		return this.check(/* @__PURE__ */ qh(Cte, e));
+	},
+	ipv4(e) {
+		return this.check(/* @__PURE__ */ Jh(wte, e));
+	},
+	ipv6(e) {
+		return this.check(/* @__PURE__ */ Yh(Tte, e));
+	},
+	cidrv4(e) {
+		return this.check(/* @__PURE__ */ Xh(Ete, e));
+	},
+	cidrv6(e) {
+		return this.check(/* @__PURE__ */ Zh(Dte, e));
+	},
+	e164(e) {
+		return this.check(/* @__PURE__ */ eg(Ate, e));
+	},
+	datetime(e) {
 		return this.check(/* @__PURE__ */ ng(av, e));
 	},
-	time(e) {
+	date(e) {
 		return this.check(/* @__PURE__ */ rg(ov, e));
 	},
-	duration(e) {
+	time(e) {
 		return this.check(/* @__PURE__ */ ig(sv, e));
+	},
+	duration(e) {
+		return this.check(/* @__PURE__ */ ag(pte, e));
 	}
 });
 function J(e) {
-	return /* @__PURE__ */ Mh(nv, e);
+	return /* @__PURE__ */ Nh(rv, e);
 }
-var rv = /*@__PURE__*/ q("ZodStringFormat", (e, t) => {
-	Lp.init(e, t), tv.init(e, t);
-}), iv = /*@__PURE__*/ q("ZodISODateTime", (e, t) => {
-	nm.init(e, t), rv.init(e, t);
-}), av = /*@__PURE__*/ q("ZodISODate", (e, t) => {
-	rm.init(e, t), rv.init(e, t);
-}), ov = /*@__PURE__*/ q("ZodISOTime", (e, t) => {
-	im.init(e, t), rv.init(e, t);
-}), sv = /*@__PURE__*/ q("ZodISODuration", (e, t) => {
-	am.init(e, t), rv.init(e, t);
-}), cv = /*@__PURE__*/ q("ZodEmail", (e, t) => {
-	Bp.init(e, t), rv.init(e, t);
-}), mte = /*@__PURE__*/ q("ZodGUID", (e, t) => {
-	Rp.init(e, t), rv.init(e, t);
-}), lv = /*@__PURE__*/ q("ZodUUID", (e, t) => {
-	zp.init(e, t), rv.init(e, t);
-}), hte = /*@__PURE__*/ q("ZodURL", (e, t) => {
-	Jp.init(e, t), rv.init(e, t);
-}), gte = /*@__PURE__*/ q("ZodEmoji", (e, t) => {
-	Yp.init(e, t), rv.init(e, t);
-}), _te = /*@__PURE__*/ q("ZodNanoID", (e, t) => {
-	Xp.init(e, t), rv.init(e, t);
-}), vte = /*@__PURE__*/ q("ZodCUID", (e, t) => {
-	Zp.init(e, t), rv.init(e, t);
-}), yte = /*@__PURE__*/ q("ZodCUID2", (e, t) => {
-	Qp.init(e, t), rv.init(e, t);
-}), bte = /*@__PURE__*/ q("ZodULID", (e, t) => {
-	$p.init(e, t), rv.init(e, t);
-}), xte = /*@__PURE__*/ q("ZodXID", (e, t) => {
-	em.init(e, t), rv.init(e, t);
-}), Ste = /*@__PURE__*/ q("ZodKSUID", (e, t) => {
-	tm.init(e, t), rv.init(e, t);
-}), Cte = /*@__PURE__*/ q("ZodIPv4", (e, t) => {
-	om.init(e, t), rv.init(e, t);
-}), wte = /*@__PURE__*/ q("ZodIPv6", (e, t) => {
-	lm.init(e, t), rv.init(e, t);
-}), Tte = /*@__PURE__*/ q("ZodCIDRv4", (e, t) => {
-	um.init(e, t), rv.init(e, t);
-}), Ete = /*@__PURE__*/ q("ZodCIDRv6", (e, t) => {
-	fm.init(e, t), rv.init(e, t);
-}), Dte = /*@__PURE__*/ q("ZodBase64", (e, t) => {
-	hm.init(e, t), rv.init(e, t);
-}), Ote = /*@__PURE__*/ q("ZodBase64URL", (e, t) => {
-	vm.init(e, t), rv.init(e, t);
-}), kte = /*@__PURE__*/ q("ZodE164", (e, t) => {
-	ym.init(e, t), rv.init(e, t);
-}), Ate = /*@__PURE__*/ q("ZodJWT", (e, t) => {
-	xm.init(e, t), rv.init(e, t);
-}), uv = /*@__PURE__*/ q("ZodNumber", (e, t) => {
-	Sm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => f_(e, t, n, r), e.isFinite = !0;
+var iv = /*@__PURE__*/ q("ZodStringFormat", (e, t) => {
+	Rp.init(e, t), nv.init(e, t);
+}), av = /*@__PURE__*/ q("ZodISODateTime", (e, t) => {
+	rm.init(e, t), iv.init(e, t);
+}), ov = /*@__PURE__*/ q("ZodISODate", (e, t) => {
+	im.init(e, t), iv.init(e, t);
+}), sv = /*@__PURE__*/ q("ZodISOTime", (e, t) => {
+	am.init(e, t), iv.init(e, t);
+}), pte = /*@__PURE__*/ q("ZodISODuration", (e, t) => {
+	om.init(e, t), iv.init(e, t);
+}), mte = /*@__PURE__*/ q("ZodEmail", (e, t) => {
+	Vp.init(e, t), iv.init(e, t);
+}), hte = /*@__PURE__*/ q("ZodGUID", (e, t) => {
+	zp.init(e, t), iv.init(e, t);
+}), cv = /*@__PURE__*/ q("ZodUUID", (e, t) => {
+	Bp.init(e, t), iv.init(e, t);
+}), gte = /*@__PURE__*/ q("ZodURL", (e, t) => {
+	Yp.init(e, t), iv.init(e, t);
+}), _te = /*@__PURE__*/ q("ZodEmoji", (e, t) => {
+	Xp.init(e, t), iv.init(e, t);
+}), vte = /*@__PURE__*/ q("ZodNanoID", (e, t) => {
+	Zp.init(e, t), iv.init(e, t);
+}), yte = /*@__PURE__*/ q("ZodCUID", (e, t) => {
+	Qp.init(e, t), iv.init(e, t);
+}), bte = /*@__PURE__*/ q("ZodCUID2", (e, t) => {
+	$p.init(e, t), iv.init(e, t);
+}), xte = /*@__PURE__*/ q("ZodULID", (e, t) => {
+	em.init(e, t), iv.init(e, t);
+}), Ste = /*@__PURE__*/ q("ZodXID", (e, t) => {
+	tm.init(e, t), iv.init(e, t);
+}), Cte = /*@__PURE__*/ q("ZodKSUID", (e, t) => {
+	nm.init(e, t), iv.init(e, t);
+}), wte = /*@__PURE__*/ q("ZodIPv4", (e, t) => {
+	sm.init(e, t), iv.init(e, t);
+}), Tte = /*@__PURE__*/ q("ZodIPv6", (e, t) => {
+	um.init(e, t), iv.init(e, t);
+}), Ete = /*@__PURE__*/ q("ZodCIDRv4", (e, t) => {
+	dm.init(e, t), iv.init(e, t);
+}), Dte = /*@__PURE__*/ q("ZodCIDRv6", (e, t) => {
+	pm.init(e, t), iv.init(e, t);
+}), Ote = /*@__PURE__*/ q("ZodBase64", (e, t) => {
+	gm.init(e, t), iv.init(e, t);
+}), kte = /*@__PURE__*/ q("ZodBase64URL", (e, t) => {
+	ym.init(e, t), iv.init(e, t);
+}), Ate = /*@__PURE__*/ q("ZodE164", (e, t) => {
+	bm.init(e, t), iv.init(e, t);
+}), jte = /*@__PURE__*/ q("ZodJWT", (e, t) => {
+	Sm.init(e, t), iv.init(e, t);
+}), lv = /*@__PURE__*/ q("ZodNumber", (e, t) => {
+	Cm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => p_(e, t, n, r), e.isFinite = !0;
 }, /*@__PURE__*/ lf({
 	minValue: (e) => {
-		let { minimum: t, exclusiveMinimum: n } = s_(e);
+		let { minimum: t, exclusiveMinimum: n } = c_(e);
 		return Math.max(t ?? -Infinity, n ?? -Infinity);
 	},
 	maxValue: (e) => {
-		let { maximum: t, exclusiveMaximum: n } = s_(e);
+		let { maximum: t, exclusiveMaximum: n } = c_(e);
 		return Math.min(t ?? Infinity, n ?? Infinity);
 	},
 	isInt: (e) => {
-		let { isInt: t, multipleOf: n } = s_(e);
+		let { isInt: t, multipleOf: n } = c_(e);
 		return !!t || !!n?.some(Number.isSafeInteger);
 	},
-	format: (e) => s_(e).format ?? null
+	format: (e) => c_(e).format ?? null
 }, {
 	gt(e, t) {
-		return this.check(/* @__PURE__ */ fg(e, t));
+		return this.check(/* @__PURE__ */ pg(e, t));
 	},
 	gte(e, t) {
-		return this.check(/* @__PURE__ */ pg(e, t));
+		return this.check(/* @__PURE__ */ mg(e, t));
 	},
 	min(e, t) {
-		return this.check(/* @__PURE__ */ pg(e, t));
+		return this.check(/* @__PURE__ */ mg(e, t));
 	},
 	lt(e, t) {
-		return this.check(/* @__PURE__ */ ug(e, t));
+		return this.check(/* @__PURE__ */ dg(e, t));
 	},
 	lte(e, t) {
-		return this.check(/* @__PURE__ */ dg(e, t));
+		return this.check(/* @__PURE__ */ fg(e, t));
 	},
 	max(e, t) {
-		return this.check(/* @__PURE__ */ dg(e, t));
+		return this.check(/* @__PURE__ */ fg(e, t));
 	},
 	int(e) {
-		return this.check(fv(e));
+		return this.check(dv(e));
 	},
 	safe(e) {
-		return this.check(fv(e));
+		return this.check(dv(e));
 	},
 	positive(e) {
-		return this.check(/* @__PURE__ */ fg(0, e));
-	},
-	nonnegative(e) {
 		return this.check(/* @__PURE__ */ pg(0, e));
 	},
-	negative(e) {
-		return this.check(/* @__PURE__ */ ug(0, e));
+	nonnegative(e) {
+		return this.check(/* @__PURE__ */ mg(0, e));
 	},
-	nonpositive(e) {
+	negative(e) {
 		return this.check(/* @__PURE__ */ dg(0, e));
 	},
+	nonpositive(e) {
+		return this.check(/* @__PURE__ */ fg(0, e));
+	},
 	multipleOf(e, t) {
-		return this.check(/* @__PURE__ */ mg(e, t));
+		return this.check(/* @__PURE__ */ hg(e, t));
 	},
 	step(e, t) {
-		return this.check(/* @__PURE__ */ mg(e, t));
+		return this.check(/* @__PURE__ */ hg(e, t));
 	},
 	finite() {
 		return this;
 	}
 }));
+function uv(e) {
+	return /* @__PURE__ */ og(lv, e);
+}
+var Mte = /*@__PURE__*/ q("ZodNumberFormat", (e, t) => {
+	wm.init(e, t), lv.init(e, t);
+});
 function dv(e) {
-	return /* @__PURE__ */ ag(uv, e);
-}
-var jte = /*@__PURE__*/ q("ZodNumberFormat", (e, t) => {
-	Cm.init(e, t), uv.init(e, t);
-});
-function fv(e) {
-	return /* @__PURE__ */ og(jte, e);
-}
-var Mte = /*@__PURE__*/ q("ZodBoolean", (e, t) => {
-	wm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => p_(e, t, n, r);
-});
-function pv(e) {
 	return /* @__PURE__ */ sg(Mte, e);
 }
-var Nte = /*@__PURE__*/ q("ZodUnknown", (e, t) => {
-	Tm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (e, t, n) => void 0;
+var Nte = /*@__PURE__*/ q("ZodBoolean", (e, t) => {
+	Tm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => m_(e, t, n, r);
 });
-function mv() {
-	return /* @__PURE__ */ cg(Nte);
+function fv(e) {
+	return /* @__PURE__ */ cg(Nte, e);
 }
-var Pte = /*@__PURE__*/ q("ZodNever", (e, t) => {
-	Em.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => m_(e, t, n, r);
+var Pte = /*@__PURE__*/ q("ZodUnknown", (e, t) => {
+	Em.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (e, t, n) => void 0;
 });
-function Fte(e) {
-	return /* @__PURE__ */ lg(Pte, e);
+function pv() {
+	return /* @__PURE__ */ lg(Pte);
 }
-var Ite = /*@__PURE__*/ q("ZodArray", (e, t) => {
-	$_(), Am.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => v_(e, t, n, r), e.element = t.element;
+var Fte = /*@__PURE__*/ q("ZodNever", (e, t) => {
+	Dm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => h_(e, t, n, r);
+});
+function Ite(e) {
+	return /* @__PURE__ */ ug(Fte, e);
+}
+var Lte = /*@__PURE__*/ q("ZodArray", (e, t) => {
+	ev(), jm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => y_(e, t, n, r), e.element = t.element;
 }, {
 	min(e, t) {
-		return this.check(/* @__PURE__ */ gg(e, t));
+		return this.check(/* @__PURE__ */ _g(e, t));
 	},
 	nonempty(e) {
-		return this.check(/* @__PURE__ */ gg(1, e));
+		return this.check(/* @__PURE__ */ _g(1, e));
 	},
 	max(e, t) {
-		return this.check(/* @__PURE__ */ hg(e, t));
+		return this.check(/* @__PURE__ */ gg(e, t));
 	},
 	length(e, t) {
-		return this.check(/* @__PURE__ */ _g(e, t));
+		return this.check(/* @__PURE__ */ vg(e, t));
 	},
 	unwrap() {
 		return this.element;
 	}
 });
-function hv(e, t) {
-	return /* @__PURE__ */ Ag(Ite, e, t);
+function mv(e, t) {
+	return /* @__PURE__ */ jg(Lte, e, t);
 }
-var gv = /*@__PURE__*/ q("ZodObject", (e, t) => {
-	$_(), Im.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => b_(e, t, n, r), Yee(e, "shape", (e) => e._zod.def.shape, !1);
+var hv = /*@__PURE__*/ q("ZodObject", (e, t) => {
+	ev(), Lm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => x_(e, t, n, r), Yee(e, "shape", (e) => e._zod.def.shape, !1);
 }, {
 	keyof() {
-		return xv(Object.keys(this._zod.def.shape));
+		return bv(Object.keys(this._zod.def.shape));
 	},
 	catchall(e) {
 		return this.clone(Nd(this._zod.def, { catchall: e }));
 	},
 	passthrough() {
-		return this.clone(Nd(this._zod.def, { catchall: mv() }));
+		return this.clone(Nd(this._zod.def, { catchall: pv() }));
 	},
 	loose() {
-		return this.clone(Nd(this._zod.def, { catchall: mv() }));
+		return this.clone(Nd(this._zod.def, { catchall: pv() }));
 	},
 	strict() {
-		return this.clone(Nd(this._zod.def, { catchall: Fte() }));
+		return this.clone(Nd(this._zod.def, { catchall: Ite() }));
 	},
 	strip() {
 		return this.clone(Nd(this._zod.def, { catchall: void 0 }));
@@ -8953,74 +8953,74 @@ var gv = /*@__PURE__*/ q("ZodObject", (e, t) => {
 		return Lee(this, e);
 	},
 	partial(...e) {
-		return Xd(Sv, this, e[0]);
+		return Xd(xv, this, e[0]);
 	},
 	exactPartial(...e) {
-		return Xd(wv, this, e[0], "exactPartial");
+		return Xd(Cv, this, e[0], "exactPartial");
 	},
 	required(...e) {
-		return Vee(Ev, this, e[0]);
+		return Vee(Tv, this, e[0]);
 	}
 });
-function _v(e, t) {
-	return new gv({
+function gv(e, t) {
+	return new hv({
 		type: "object",
 		shape: e ?? {},
 		...Wd(t)
 	});
 }
-function Lte(e, t) {
-	return new gv({
+function Rte(e, t) {
+	return new hv({
 		type: "object",
 		shape: e,
-		catchall: mv(),
+		catchall: pv(),
 		...Wd(t)
 	});
 }
-var Rte = /*@__PURE__*/ q("ZodUnion", (e, t) => {
-	Rm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => x_(e, t, n, r), e.options = t.options;
+var zte = /*@__PURE__*/ q("ZodUnion", (e, t) => {
+	zm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => S_(e, t, n, r), e.options = t.options;
 });
-function zte(e, t) {
-	return new Rte({
+function Bte(e, t) {
+	return new zte({
 		type: "union",
 		options: e,
 		...Wd(t)
 	});
 }
-var Bte = /*@__PURE__*/ q("ZodIntersection", (e, t) => {
-	zm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => S_(e, t, n, r);
+var Vte = /*@__PURE__*/ q("ZodIntersection", (e, t) => {
+	Bm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => C_(e, t, n, r);
 });
-function Vte(e, t) {
-	return new Bte({
+function Hte(e, t) {
+	return new Vte({
 		type: "intersection",
 		left: e,
 		right: t
 	});
 }
-var vv = /*@__PURE__*/ q("ZodRecord", (e, t) => {
-	$_(), Hm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => E_(e, t, n, r), e.keyType = t.keyType, e.valueType = t.valueType;
+var _v = /*@__PURE__*/ q("ZodRecord", (e, t) => {
+	ev(), Um.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => D_(e, t, n, r), e.keyType = t.keyType, e.valueType = t.valueType;
 });
-function yv(e, t, n) {
-	return !t || !t._zod ? new vv({
+function vv(e, t, n) {
+	return !t || !t._zod ? new _v({
 		type: "record",
 		keyType: J(),
 		valueType: e,
 		...Wd(t)
-	}) : new vv({
+	}) : new _v({
 		type: "record",
 		keyType: e,
 		valueType: t,
 		...Wd(n)
 	});
 }
-var bv = /*@__PURE__*/ q("ZodEnum", (e, t) => {
-	Um.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => h_(e, t, n, r), e.enum = t.entries, e.options = [...e._zod.values];
+var yv = /*@__PURE__*/ q("ZodEnum", (e, t) => {
+	Wm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => g_(e, t, n, r), e.enum = t.entries, e.options = [...e._zod.values];
 	let n = new Set(Object.keys(t.entries));
 	e.extract = (e, r) => {
 		let i = {};
 		for (let r of e) if (n.has(r)) i[r] = t.entries[r];
 		else throw Error(`Key ${r} not found in enum`);
-		return new bv({
+		return new yv({
 			...t,
 			checks: [],
 			...Wd(r),
@@ -9030,7 +9030,7 @@ var bv = /*@__PURE__*/ q("ZodEnum", (e, t) => {
 		let i = { ...t.entries };
 		for (let t of e) if (n.has(t)) delete i[t];
 		else throw Error(`Key ${t} not found in enum`);
-		return new bv({
+		return new yv({
 			...t,
 			checks: [],
 			...Wd(r),
@@ -9038,15 +9038,15 @@ var bv = /*@__PURE__*/ q("ZodEnum", (e, t) => {
 		});
 	};
 });
-function xv(e, t) {
-	return new bv({
+function bv(e, t) {
+	return new yv({
 		type: "enum",
 		entries: Array.isArray(e) ? Object.fromEntries(e.map((e) => [e, e])) : e,
 		...Wd(t)
 	});
 }
-var Hte = /*@__PURE__*/ q("ZodTransform", (e, t) => {
-	$_(), Wm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => __(e, t, n, r), e._zod.parse = (n, r) => {
+var Ute = /*@__PURE__*/ q("ZodTransform", (e, t) => {
+	ev(), Gm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => v_(e, t, n, r), e._zod.parse = (n, r) => {
 		if (r.direction === "backward") throw new _f(e.constructor.name);
 		n.addIssue = (r) => {
 			if (typeof r == "string") n.issues.push(of(r, n.value, t));
@@ -9059,44 +9059,44 @@ var Hte = /*@__PURE__*/ q("ZodTransform", (e, t) => {
 		return i instanceof Promise ? i.then((e) => (n.value = e, n)) : (n.value = i, n);
 	};
 });
-function Ute(e) {
-	return new Hte({
+function Wte(e) {
+	return new Ute({
 		type: "transform",
 		transform: e
 	});
 }
-var Sv = /*@__PURE__*/ q("ZodOptional", (e, t) => {
-	Km.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => I_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
+var xv = /*@__PURE__*/ q("ZodOptional", (e, t) => {
+	qm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => L_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
 });
-function Cv(e) {
-	return new Sv({
+function Sv(e) {
+	return new xv({
 		type: "optional",
 		innerType: e
 	});
 }
-var wv = /*@__PURE__*/ q("ZodExactOptional", (e, t) => {
-	qm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => I_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
+var Cv = /*@__PURE__*/ q("ZodExactOptional", (e, t) => {
+	Jm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => L_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
 });
-function Wte(e) {
-	return new wv({
+function Gte(e) {
+	return new Cv({
 		type: "optional",
 		innerType: e
 	});
 }
-var Gte = /*@__PURE__*/ q("ZodNullable", (e, t) => {
-	Jm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => D_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
+var Kte = /*@__PURE__*/ q("ZodNullable", (e, t) => {
+	Ym.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => O_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
 });
-function Tv(e) {
-	return new Gte({
+function wv(e) {
+	return new Kte({
 		type: "nullable",
 		innerType: e
 	});
 }
-var Kte = /*@__PURE__*/ q("ZodDefault", (e, t) => {
-	Ym.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => j_(e, t, n, r), e.unwrap = () => e._zod.def.innerType, e.removeDefault = e.unwrap;
+var qte = /*@__PURE__*/ q("ZodDefault", (e, t) => {
+	Xm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => M_(e, t, n, r), e.unwrap = () => e._zod.def.innerType, e.removeDefault = e.unwrap;
 });
-function qte(e, t) {
-	return new Kte({
+function Jte(e, t) {
+	return new qte({
 		type: "default",
 		innerType: e,
 		get defaultValue() {
@@ -9104,11 +9104,11 @@ function qte(e, t) {
 		}
 	});
 }
-var Jte = /*@__PURE__*/ q("ZodPrefault", (e, t) => {
-	Zm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => M_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
+var Yte = /*@__PURE__*/ q("ZodPrefault", (e, t) => {
+	Qm.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => N_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
 });
-function Yte(e, t) {
-	return new Jte({
+function Xte(e, t) {
+	return new Yte({
 		type: "prefault",
 		innerType: e,
 		get defaultValue() {
@@ -9116,128 +9116,128 @@ function Yte(e, t) {
 		}
 	});
 }
-var Ev = /*@__PURE__*/ q("ZodNonOptional", (e, t) => {
-	Qm.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => O_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
+var Tv = /*@__PURE__*/ q("ZodNonOptional", (e, t) => {
+	$m.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => k_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
 });
-function Xte(e, t) {
-	return new Ev({
+function Zte(e, t) {
+	return new Tv({
 		type: "nonoptional",
 		innerType: e,
 		...Wd(t)
 	});
 }
-var Zte = /*@__PURE__*/ q("ZodCatch", (e, t) => {
-	th.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => N_(e, t, n, r), e.unwrap = () => e._zod.def.innerType, e.removeCatch = e.unwrap;
+var Qte = /*@__PURE__*/ q("ZodCatch", (e, t) => {
+	nh.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => P_(e, t, n, r), e.unwrap = () => e._zod.def.innerType, e.removeCatch = e.unwrap;
 });
-function Qte(e, t) {
-	return new Zte({
+function $te(e, t) {
+	return new Qte({
 		type: "catch",
 		innerType: e,
 		catchValue: typeof t == "function" ? t : Zee(t)
 	});
 }
-var $te = /*@__PURE__*/ q("ZodPipe", (e, t) => {
-	nh.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => P_(e, t, n, r), e.in = t.in, e.out = t.out;
+var ene = /*@__PURE__*/ q("ZodPipe", (e, t) => {
+	rh.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => F_(e, t, n, r), e.in = t.in, e.out = t.out;
 });
-function Dv(e, t) {
-	return new $te({
+function Ev(e, t) {
+	return new ene({
 		type: "pipe",
 		in: e,
 		out: t
 	});
 }
-var ene = /*@__PURE__*/ q("ZodReadonly", (e, t) => {
-	ih.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => F_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
+var tne = /*@__PURE__*/ q("ZodReadonly", (e, t) => {
+	ah.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => I_(e, t, n, r), e.unwrap = () => e._zod.def.innerType;
 });
-function tne(e) {
-	return new ene({
+function nne(e) {
+	return new tne({
 		type: "readonly",
 		innerType: e
 	});
 }
-var nne = /*@__PURE__*/ q("ZodCustom", (e, t) => {
-	oh.init(e, t), ev.init(e, t), e._zod.processJSONSchema = (t, n, r) => g_(e, t, n, r);
+var rne = /*@__PURE__*/ q("ZodCustom", (e, t) => {
+	sh.init(e, t), tv.init(e, t), e._zod.processJSONSchema = (t, n, r) => __(e, t, n, r);
 });
-function rne(e, t = {}) {
-	return /* @__PURE__ */ jg(nne, e, t);
+function ine(e, t = {}) {
+	return /* @__PURE__ */ Mg(rne, e, t);
 }
-function ine(e, t) {
-	return /* @__PURE__ */ Mg(e, t);
+function ane(e, t) {
+	return /* @__PURE__ */ Ng(e, t);
 }
 // src/schemas/common.ts
-var Ov = {
+var Dv = {
 	workspace: 9,
 	save: 9
-}, kv = J().regex(/^[a-z0-9][a-z0-9-]*$/, "必须是小写字母、数字与短横线").max(64);
+}, Ov = J().regex(/^[a-z0-9][a-z0-9-]*$/, "必须是小写字母、数字与短横线").max(64);
 J().regex(/^\d+\.\d+\.\d+$/, "必须是 x.y.z 形式的版本号");
-var Av = dv().int().nonnegative(), jv = Lte({}), ane = _v({
+var kv = uv().int().nonnegative(), Av = Rte({}), one = gv({
 	ownerKey: J().min(1),
 	ownerLabel: J(),
-	ruleId: kv,
+	ruleId: Ov,
 	currentSaveId: J().nullable(),
 	campaignId: J().optional(),
-	data: jv,
+	data: Av,
 	savedHash: J(),
-	schemaVersion: dv().int(),
-	updatedAt: Av
-}), one = _v({
-	partyNames: hv(J()).default([]),
-	partyCount: dv().int().nonnegative().default(0),
+	schemaVersion: uv().int(),
+	updatedAt: kv
+}), sne = gv({
+	partyNames: mv(J()).default([]),
+	partyCount: uv().int().nonnegative().default(0),
 	location: J().optional(),
-	round: dv().int().optional()
-}), sne = xv([
+	round: uv().int().optional()
+}), cne = bv([
 	"读档前",
 	"新存档前",
 	"切换规则前",
 	"恢复备份前",
 	"改动模组前"
-]), cne = _v({
+]), lne = gv({
 	id: J().min(1),
 	ownerKey: J().min(1),
 	ownerLabel: J(),
-	ruleId: kv,
+	ruleId: Ov,
 	name: J().min(1).max(80),
 	note: J().max(400).default(""),
-	kind: xv(["manual", "auto"]),
-	autoReason: sne.optional(),
+	kind: bv(["manual", "auto"]),
+	autoReason: cne.optional(),
 	branchedFrom: J().optional(),
 	campaignId: J().optional(),
-	createdAt: Av,
-	updatedAt: Av,
-	deletedAt: Av.optional(),
-	summary: one,
-	snapshot: jv,
+	createdAt: kv,
+	updatedAt: kv,
+	deletedAt: kv.optional(),
+	summary: sne,
+	snapshot: Av,
 	hash: J(),
-	schemaVersion: dv().int()
-}), Mv = _v({
+	schemaVersion: uv().int()
+}), jv = gv({
 	groupBy: J().min(1).default("group"),
-	collapsed: hv(J()).default([]),
-	skipImportPreview: pv().default(!1),
-	skipRemovePrompt: pv().default(!1),
-	skipDependencyPrompt: pv().default(!1),
+	collapsed: mv(J()).default([]),
+	skipImportPreview: fv().default(!1),
+	skipRemovePrompt: fv().default(!1),
+	skipDependencyPrompt: fv().default(!1),
 	lang: J().min(1).default("cn"),
-	overrideLevel: xv([
+	overrideLevel: bv([
 		"campaign",
 		"rule",
 		"global"
 	]).default("campaign")
-}), Nv = _v({
-	reminderDays: dv().int().nonnegative().default(7),
-	reminderSaves: dv().int().nonnegative().default(10),
-	skipAutoSaveOnLoad: pv().default(!1),
-	undoLimit: dv().int().min(1).max(500).default(50),
-	library: Mv.default(() => Mv.parse({}))
-}), Pv = _v({
-	lastExportAt: Av.nullable().default(null),
-	savesSinceExport: dv().int().nonnegative().default(0),
-	persistRequested: pv().default(!1),
-	persistGranted: pv().default(!1)
-}), lne = 864e5;
-function une(e) {
+}), Mv = gv({
+	reminderDays: uv().int().nonnegative().default(7),
+	reminderSaves: uv().int().nonnegative().default(10),
+	skipAutoSaveOnLoad: fv().default(!1),
+	undoLimit: uv().int().min(1).max(500).default(50),
+	library: jv.default(() => jv.parse({}))
+}), Nv = gv({
+	lastExportAt: kv.nullable().default(null),
+	savesSinceExport: uv().int().nonnegative().default(0),
+	persistRequested: fv().default(!1),
+	persistGranted: fv().default(!1)
+}), une = 864e5;
+function dne(e) {
 	return e < 1024 ? `${e} B` : e < 1048576 ? `${Math.ceil(e / 1024)} KB` : `${(e / 1024 / 1024).toFixed(1)} MB`;
 }
-function dne(e, t, n, r) {
-	let i = r === void 0 ? "" : ` · 约 ${une(r)}`;
+function fne(e, t, n, r) {
+	let i = r === void 0 ? "" : ` · 约 ${dne(r)}`;
 	if (e.lastExportAt === null) return {
 		kind: "never",
 		daysSince: null,
@@ -9245,7 +9245,7 @@ function dne(e, t, n, r) {
 		...r === void 0 ? {} : { estimatedBytes: r },
 		text: `还没有导出过备份${i}`
 	};
-	let a = Math.max(0, Math.floor((n - e.lastExportAt) / lne)), o = t.reminderDays > 0 && a >= t.reminderDays || t.reminderSaves > 0 && e.savesSinceExport >= t.reminderSaves, s = a === 0 ? "今天" : `${a} 天前`, c = (o ? `建议导出备份 · 上次完整备份：${s}，之后保存 ${e.savesSinceExport} 次` : `上次完整备份：${s} · 之后保存 ${e.savesSinceExport} 次`) + i;
+	let a = Math.max(0, Math.floor((n - e.lastExportAt) / une)), o = t.reminderDays > 0 && a >= t.reminderDays || t.reminderSaves > 0 && e.savesSinceExport >= t.reminderSaves, s = a === 0 ? "今天" : `${a} 天前`, c = (o ? `建议导出备份 · 上次完整备份：${s}，之后保存 ${e.savesSinceExport} 次` : `上次完整备份：${s} · 之后保存 ${e.savesSinceExport} 次`) + i;
 	return {
 		kind: o ? "due" : "ok",
 		daysSince: a,
@@ -9254,22 +9254,22 @@ function dne(e, t, n, r) {
 		text: c
 	};
 }
+async function Pv(e) {
+	return Nv.parse(await e.getMeta("backup") ?? {});
+}
 async function Fv(e) {
-	return Pv.parse(await e.getMeta("backup") ?? {});
+	return Mv.parse(await e.getMeta("settings") ?? {});
 }
-async function Iv(e) {
-	return Nv.parse(await e.getMeta("settings") ?? {});
-}
-async function fne(e, t) {
-	let n = await Fv(e);
+async function pne(e, t) {
+	let n = await Pv(e);
 	await e.setMeta("backup", {
 		...n,
 		lastExportAt: t,
 		savesSinceExport: 0
 	});
 }
-async function pne(e, t = globalThis.navigator?.storage) {
-	let n = await Fv(e);
+async function mne(e, t = globalThis.navigator?.storage) {
+	let n = await Pv(e);
 	if (n.persistRequested) return n;
 	let r = t?.persist ? await t.persist() : !1, i = {
 		...n,
@@ -9279,7 +9279,7 @@ async function pne(e, t = globalThis.navigator?.storage) {
 	return await e.setMeta("backup", i), i;
 }
 // src/library/prefetch.ts
-var Lv = (e) => e instanceof Error ? e.message : String(e), mne = class {
+var Iv = (e) => e instanceof Error ? e.message : String(e), hne = class {
 	deps;
 	running = null;
 	constructor(e) {
@@ -9307,7 +9307,7 @@ var Lv = (e) => e instanceof Error ? e.message : String(e), mne = class {
 				let r = await this.deps.directory.get(t);
 				r.errors.books || r.errors.adventures ? e.errors.push(r.errors.books ?? r.errors.adventures) : e.fetched.push(n);
 			} catch (t) {
-				e.errors.push(`${n}：${Lv(t)}`);
+				e.errors.push(`${n}：${Iv(t)}`);
 			}
 		}
 		for (let n of t.filter((e) => e.kind === "official")) {
@@ -9319,16 +9319,16 @@ var Lv = (e) => e instanceof Error ? e.message : String(e), mne = class {
 				}
 				await this.deps.files.fileList(n), e.fetched.push(t);
 			} catch (n) {
-				e.errors.push(`${t}：${Lv(n)}`);
+				e.errors.push(`${t}：${Iv(n)}`);
 			}
 		}
 		return e;
 	}
 };
-function hne(e = globalThis) {
+function gne(e = globalThis) {
 	return e.__TRPG_PREFETCH__ === void 0 ? !e.navigator?.webdriver && e.navigator?.onLine !== !1 : e.__TRPG_PREFETCH__;
 }
-function gne(e, { delayMs: t = 3e3, allowed: n = hne() } = {}) {
+function _ne(e, { delayMs: t = 3e3, allowed: n = gne() } = {}) {
 	if (!n) return () => void 0;
 	let r = setTimeout(() => {
 		e.run().then((e) => {
@@ -9341,9 +9341,9 @@ function gne(e, { delayMs: t = 3e3, allowed: n = hne() } = {}) {
 	}, t);
 	return () => clearTimeout(r);
 }
-var Rv = [n("cn-official").codeSet];
+var Lv = [n("cn-official").codeSet];
 // src/core/house-existing.ts
-async function _ne(e, t, n) {
+async function vne(e, t, n) {
 	let [r, i] = await Promise.all([n.zh ? e.houseNow(t, n.zh) : null, n.en ? e.houseNow(t, n.en) : null]), a = r?.house ? r : i?.house ? i : null;
 	if (!a?.house || !a.level) return null;
 	let o = await e.impact(a.house.set, [{
@@ -9364,13 +9364,13 @@ async function _ne(e, t, n) {
 	};
 }
 // src/core/errors.ts
-var zv = class extends Error {
+var Rv = class extends Error {
 	code;
 	details;
 	constructor(e, t, n) {
 		super(t), this.name = "TrpgError", this.code = e, this.details = n;
 	}
-}, Bv = _v({
+}, zv = gv({
 	kind: J().min(1),
 	set: J().min(1),
 	prop: J().min(1),
@@ -9378,34 +9378,34 @@ var zv = class extends Error {
 	label: J().optional(),
 	author: J().optional(),
 	itemId: J().optional()
-}), Vv = _v({
+}), Bv = gv({
 	rule: J().min(1),
 	codeSet: J().min(1),
-	scopes: hv(J()).default([]),
-	include: hv(J()).default([]),
-	exclude: hv(J()).default([]),
-	choices: yv(J(), J()).default({})
-}), Hv = _v({
-	actor: yv(J(), mv()).default({}),
-	items: yv(J(), yv(J(), mv())).default({}),
-	effects: yv(J(), yv(J(), mv())).default({}),
-	itemAdded: hv(yv(J(), mv())).default([]),
-	itemRemoved: hv(J()).default([]),
-	effectAdded: hv(yv(J(), mv())).default([]),
-	effectRemoved: hv(J()).default([])
-}), vne = _v({
+	scopes: mv(J()).default([]),
+	include: mv(J()).default([]),
+	exclude: mv(J()).default([]),
+	choices: vv(J(), J()).default({})
+}), Vv = gv({
+	actor: vv(J(), pv()).default({}),
+	items: vv(J(), vv(J(), pv())).default({}),
+	effects: vv(J(), vv(J(), pv())).default({}),
+	itemAdded: mv(vv(J(), pv())).default([]),
+	itemRemoved: mv(J()).default([]),
+	effectAdded: mv(vv(J(), pv())).default([]),
+	effectRemoved: mv(J()).default([])
+}), yne = gv({
 	ref: J().min(1),
 	advancement: J().min(1).optional(),
-	level: dv().int().optional(),
+	level: uv().int().optional(),
 	part: J().min(1).optional(),
 	effect: J().min(1).optional()
-}), Uv = _v({
+}), Hv = gv({
 	id: J().min(1),
 	name: J(),
 	seed: J().default(""),
-	refs: hv(Bv).default([]),
-	choices: yv(J(), mv()).default({}),
-	state: Hv.default({
+	refs: mv(zv).default([]),
+	choices: vv(J(), pv()).default({}),
+	state: Vv.default({
 		actor: {},
 		items: {},
 		effects: {},
@@ -9414,18 +9414,18 @@ var zv = class extends Error {
 		effectAdded: [],
 		effectRemoved: []
 	}),
-	adjustments: yv(J(), mv()).default({}),
-	off: hv(vne).default([]),
-	dice: hv(dv().int()).default([]),
-	legacy: pv().default(!1),
-	legacyState: yv(J(), mv()).optional()
-}), yne = _v({
+	adjustments: vv(J(), pv()).default({}),
+	off: mv(yne).default([]),
+	dice: mv(uv().int()).default([]),
+	legacy: fv().default(!1),
+	legacyState: vv(J(), pv()).optional()
+}), bne = gv({
 	official: J().default(""),
 	kernelFiles: J().optional(),
-	brews: yv(J(), J()).default({})
+	brews: vv(J(), J()).default({})
 });
-_v({
-	action: xv([
+gv({
+	action: bv([
 		"create",
 		"update",
 		"delete"
@@ -9433,44 +9433,44 @@ _v({
 	type: J().min(1),
 	pack: J().nullable().default(null),
 	parentUuid: J().nullable().default(null),
-	data: mv()
+	data: pv()
 });
-var bne = _v({
-	at: dv().int().nonnegative(),
-	revision: dv().int().nonnegative(),
-	actorIds: hv(J()),
-	before: yv(J(), mv()),
-	combatBefore: yv(J(), mv()).optional()
-}), xne = _v({
-	target: Bv,
-	house: Bv,
+var xne = gv({
+	at: uv().int().nonnegative(),
+	revision: uv().int().nonnegative(),
+	actorIds: mv(J()),
+	before: vv(J(), pv()),
+	combatBefore: vv(J(), pv()).optional()
+}), Sne = gv({
+	target: zv,
+	house: zv,
 	digest: J()
-}), Sne = _v({
+}), Cne = gv({
 	id: J().min(1),
 	actorId: J().min(1),
 	name: J().optional(),
-	initiative: dv().nullable().default(null),
-	defeated: pv().default(!1),
-	hidden: pv().default(!1)
-}), Wv = _v({
+	initiative: uv().nullable().default(null),
+	defeated: fv().default(!1),
+	hidden: fv().default(!1)
+}), Uv = gv({
 	id: J().nullable().default(null),
 	name: J().default(""),
-	round: dv().int().nonnegative().default(0),
-	turn: dv().int().nullable().default(null),
-	active: pv().default(!1),
-	combatants: hv(Sne).default([])
-}), Gv = _v({
+	round: uv().int().nonnegative().default(0),
+	turn: uv().int().nullable().default(null),
+	active: fv().default(!1),
+	combatants: mv(Cne).default([])
+}), Wv = gv({
 	rule: J().min(1),
-	kernelVersion: dv().int().nonnegative(),
-	library: Vv,
-	dataVersion: yne.default({
+	kernelVersion: uv().int().nonnegative(),
+	library: Bv,
+	dataVersion: bne.default({
 		official: "",
 		brews: {}
 	}),
-	overrides: hv(xne).default([]),
-	actors: hv(Uv).default([]),
-	bases: yv(J(), yv(J(), mv())).default({}),
-	combat: Wv.default({
+	overrides: mv(Sne).default([]),
+	actors: mv(Hv).default([]),
+	bases: vv(J(), vv(J(), pv())).default({}),
+	combat: Uv.default({
 		id: null,
 		name: "",
 		round: 0,
@@ -9478,24 +9478,24 @@ var bne = _v({
 		active: !1,
 		combatants: []
 	}),
-	revision: dv().int().nonnegative().default(0),
-	undo: hv(bne).default([]),
-	legacy: pv().default(!1)
+	revision: uv().int().nonnegative().default(0),
+	undo: mv(xne).default([]),
+	legacy: fv().default(!1)
 });
 // src/core/saves/split.ts
-function Kv(e) {
+function Gv(e) {
 	return `${e.set}|${e.prop}|${e.hash}`;
 }
-var qv = (e) => {
+var Kv = (e) => {
 	let t = /* @__PURE__ */ new Map();
 	if (!Array.isArray(e)) return t;
 	for (let n of e) de(n) && typeof n._id == "string" && t.set(n._id, n);
 	return t;
-}, Jv = (e) => {
+}, qv = (e) => {
 	let t = k(e);
 	return delete t.items, delete t.effects, t;
 };
-function Cne(e, t, n = !1) {
+function wne(e, t, n = !1) {
 	let r = de(e.flags) && de(e.flags.plutonium) ? e.flags.plutonium : null;
 	if (r?.source && r?.hash && (r.page === "bestiary.html" || r.propDroppable === "creature" || e.type !== "character")) {
 		let n = t({
@@ -9527,15 +9527,15 @@ function Cne(e, t, n = !1) {
 	}
 	return i;
 }
-function wne(e, t, n, r, i = te, a = !1) {
-	let o = e.data, s = t.data, c = Hv.parse({});
-	c.actor = i(Jv(s), Jv(o));
-	let l = Cne(o, n, a), u = /* @__PURE__ */ new Map();
+function Tne(e, t, n, r, i = te, a = !1) {
+	let o = e.data, s = t.data, c = Vv.parse({});
+	c.actor = i(qv(s), qv(o));
+	let l = wne(o, n, a), u = /* @__PURE__ */ new Map();
 	for (let e of l) if (e.itemId) {
 		let t = O(e);
 		t && u.set(e.itemId, t);
 	}
-	let d = qv(s.items), f = qv(o.items);
+	let d = Kv(s.items), f = Kv(o.items);
 	for (let [e, t] of f) {
 		let n = d.get(e), r = de(t.flags) && de(t.flags.plutonium) ? t.flags.plutonium : null, o = ee(r) ?? u.get(e) ?? e;
 		if (!n) {
@@ -9550,7 +9550,7 @@ function wne(e, t, n, r, i = te, a = !1) {
 		let r = de(t.flags) && de(t.flags.plutonium) ? t.flags.plutonium : null, i = ee(r), a = r ? n(r) : null;
 		c.itemRemoved.push(i ?? O(a) ?? e);
 	}
-	let p = qv(s.effects), m = qv(o.effects);
+	let p = Kv(s.effects), m = Kv(o.effects);
 	for (let [e, t] of m) {
 		let n = p.get(e);
 		if (!n) {
@@ -9567,7 +9567,7 @@ function wne(e, t, n, r, i = te, a = !1) {
 		state: c
 	};
 }
-function Tne() {
+function Ene() {
 	return {
 		id: null,
 		name: "",
@@ -9577,7 +9577,7 @@ function Tne() {
 		combatants: []
 	};
 }
-var Yv = (e) => typeof e._id != "string" || typeof e.actorId != "string" ? null : {
+var Jv = (e) => typeof e._id != "string" || typeof e.actorId != "string" ? null : {
 	id: e._id,
 	actorId: e.actorId,
 	name: typeof e.name == "string" ? e.name : void 0,
@@ -9585,14 +9585,14 @@ var Yv = (e) => typeof e._id != "string" || typeof e.actorId != "string" ? null 
 	defeated: e.defeated === !0,
 	hidden: e.hidden === !0
 };
-function Xv(e, t) {
+function Yv(e, t) {
 	let n = k(e), r = de(t.data) ? t.data : {};
 	if (t.type === "Combat") {
-		if (t.action === "delete") return Tne();
-		if (t.action === "create") return n.id = typeof r._id == "string" ? r._id : null, n.name = typeof r.name == "string" ? r.name : n.name, n.round = typeof r.round == "number" ? r.round : 0, n.turn = typeof r.turn == "number" ? r.turn : null, n.active = r.active === !0, n.combatants = Array.isArray(r.combatants) ? r.combatants.map(Yv).filter((e) => !!e) : [], n;
+		if (t.action === "delete") return Ene();
+		if (t.action === "create") return n.id = typeof r._id == "string" ? r._id : null, n.name = typeof r.name == "string" ? r.name : n.name, n.round = typeof r.round == "number" ? r.round : 0, n.turn = typeof r.turn == "number" ? r.turn : null, n.active = r.active === !0, n.combatants = Array.isArray(r.combatants) ? r.combatants.map(Jv).filter((e) => !!e) : [], n;
 		if (typeof r._id == "string" && (n.id = r._id), typeof r.name == "string" && (n.name = r.name), typeof r.round == "number" && (n.round = r.round), (typeof r.turn == "number" || r.turn === null) && (n.turn = r.turn), typeof r.active == "boolean" && (n.active = r.active), Array.isArray(r.combatants)) for (let e of r.combatants) {
 			if (!de(e)) continue;
-			let t = Yv(e);
+			let t = Jv(e);
 			if (!t) continue;
 			let r = n.combatants.findIndex((e) => e.id === t.id);
 			r < 0 ? n.combatants.push(t) : n.combatants[r] = {
@@ -9608,7 +9608,7 @@ function Xv(e, t) {
 		let e = Array.isArray(t.data) ? t.data.filter((e) => typeof e == "string") : i ? [i] : [];
 		return n.combatants = n.combatants.filter((t) => !e.includes(t.id)), n;
 	}
-	let a = Yv({
+	let a = Jv({
 		...r,
 		_id: i ?? r._id,
 		actorId: r.actorId ?? n.combatants.find((e) => e.id === i)?.actorId
@@ -9620,21 +9620,21 @@ function Xv(e, t) {
 		...a
 	}, n;
 }
-function Zv(e) {
+function Xv(e) {
 	return e.type === "Combat" || e.type === "Combatant";
 }
-function Qv(e) {
+function Zv(e) {
 	return e.parentUuid?.startsWith("Actor.") ? e.parentUuid.split(".")[1] || null : e.type === "Actor" && de(e.data) && typeof e.data._id == "string" ? e.data._id : null;
 }
-function Ene(e, t) {
+function Dne(e, t) {
 	fe(e, t);
 }
-function Dne(e, t, n) {
+function One(e, t, n) {
 	let r = k(e), i = r.state, a = de(t.data) ? t.data : {};
 	if (t.type === "Actor") {
 		if (t.action === "delete") return i.actor = { __deleted: !0 }, r;
 		if (t.action === "create") throw Error("没有 compactActors：不能把 Actor.create 直接塞进存档");
-		return Ene(i.actor, a), r;
+		return Dne(i.actor, a), r;
 	}
 	if (t.type === "Item") {
 		let e = typeof a._id == "string" ? a._id : null;
@@ -9674,20 +9674,20 @@ function Dne(e, t, n) {
 	}
 	return r;
 }
-function $v(e, t, n) {
+function Qv(e, t, n) {
 	let r = k(e);
-	for (let e of t) Zv(e) || (r = Dne(r, e, n));
+	for (let e of t) Xv(e) || (r = One(r, e, n));
 	return r;
 }
 // src/core/saves/kernel-roster.ts
-async function ey(e, t, n, r) {
+async function $v(e, t, n, r) {
 	let i = await e.limit();
 	return e.db.transaction("rw", e.db.workspaces, async () => {
 		let a = await e.db.workspaces.get(t);
-		if (!a) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+		if (!a) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 		let o = e.parse(a.data.kernel);
-		if (!o) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
-		if (o.revision !== n) throw new zv("E_REVISION_CONFLICT", "存档已被其他窗口修改，请重新读取");
+		if (!o) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+		if (o.revision !== n) throw new Rv("E_REVISION_CONFLICT", "存档已被其他窗口修改，请重新读取");
 		let { actors: s, before: c, extra: l, bases: u } = r(o), d = {
 			...o,
 			actors: s,
@@ -9717,10 +9717,17 @@ async function ey(e, t, n, r) {
 		};
 	});
 }
-function One(e, t, n, r, i = {}) {
-	return ey(e, t, r, (e) => {
+function kne(e) {
+	return [.../* @__PURE__ */ new Set([
+		...e.actors.map((e) => e.id),
+		...Object.keys(e.bases ?? {}),
+		...e.undo.flatMap((e) => e.actorIds)
+	])];
+}
+function Ane(e, t, n, r, i = {}) {
+	return $v(e, t, r, (e) => {
 		let t = new Set(e.actors.map((e) => e.id)), r = {}, a = {}, o = n.map(({ base: e, ...n }) => {
-			if (t.has(n.id)) throw new zv("E_ACTOR_EXISTS", `存档里已经有这个人物：${n.id}`);
+			if (t.has(n.id)) throw new Rv("E_ACTOR_EXISTS", `存档里已经有这个人物：${n.id}`);
 			return r[n.id] = null, e && (a[n.id] = k(e)), {
 				...k(n),
 				off: k(n.off ?? []),
@@ -9736,8 +9743,8 @@ function One(e, t, n, r, i = {}) {
 		};
 	});
 }
-function kne(e, t, n, r) {
-	return ey(e, t, r, (e) => {
+function jne(e, t, n, r) {
+	return $v(e, t, r, (e) => {
 		let t = {};
 		for (let r of e.actors) n.includes(r.id) && (t[r.id] = k(r));
 		return {
@@ -9746,8 +9753,8 @@ function kne(e, t, n, r) {
 		};
 	});
 }
-function Ane(e, t, n, r, i) {
-	return ey(e, t, i, (e) => {
+function Mne(e, t, n, r, i) {
+	return $v(e, t, i, (e) => {
 		let t = {};
 		return {
 			actors: e.actors.map((e) => {
@@ -9764,10 +9771,10 @@ function Ane(e, t, n, r, i) {
 		};
 	});
 }
-function jne(e, t, n, r, i) {
-	return ey(e, t, i, (e) => {
+function Nne(e, t, n, r, i) {
+	return $v(e, t, i, (e) => {
 		let t = e.actors.findIndex((e) => e.id === n.id);
-		if (t < 0) throw new zv("E_NOT_FOUND", `存档里没有这个人物：${n.id}`);
+		if (t < 0) throw new Rv("E_NOT_FOUND", `存档里没有这个人物：${n.id}`);
 		let i = e.actors[t], a = e.actors.map(k);
 		return a[t] = {
 			...k(i),
@@ -9781,13 +9788,13 @@ function jne(e, t, n, r, i) {
 		};
 	});
 }
-async function Mne(e, t, n) {
+async function Pne(e, t, n) {
 	return e.db.transaction("rw", e.db.workspaces, async () => {
 		let r = await e.db.workspaces.get(t);
-		if (!r) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+		if (!r) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 		let i = e.parse(r.data.kernel);
-		if (!i) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
-		if (i.revision !== n) throw new zv("E_REVISION_CONFLICT", "存档已被其他窗口修改，请重新读取");
+		if (!i) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+		if (i.revision !== n) throw new Rv("E_REVISION_CONFLICT", "存档已被其他窗口修改，请重新读取");
 		let a = i.undo.at(-1);
 		if (!a) return null;
 		let o = i.actors.map(k);
@@ -9798,7 +9805,7 @@ async function Mne(e, t, n) {
 				state: t ?? o[n].state
 			});
 		}
-		let s = a.combatBefore ? Wv.parse(a.combatBefore) : i.combat, c = {
+		let s = a.combatBefore ? Uv.parse(a.combatBefore) : i.combat, c = {
 			...i,
 			actors: o,
 			combat: s,
@@ -9822,17 +9829,17 @@ async function Mne(e, t, n) {
 		};
 	});
 }
-function ty(e, t, n, r, i) {
+function ey(e, t, n, r, i) {
 	for (let [a, o] of Object.entries(e)) {
 		let e = a.startsWith("-="), s = e ? a.slice(2) : a, c = r ? `${r}.${s}` : s, l = de(t) ? t[s] : void 0, u = e ? void 0 : de(n) ? n[s] : void 0;
-		!e && de(o) && de(l) && de(u) ? ty(o, l, u, c, i) : i.push({
+		!e && de(o) && de(l) && de(u) ? ey(o, l, u, c, i) : i.push({
 			path: c,
 			from: k(l),
 			to: k(u)
 		});
 	}
 }
-function Nne(e) {
+function Fne(e) {
 	let t = new Map(e.actors.map((e) => [e.id, e])), n = [];
 	for (let r of [...e.undo].reverse()) {
 		let e = {
@@ -9864,7 +9871,7 @@ function Nne(e) {
 					state: e.state,
 					adjustments: e.adjustments
 				}), r = [];
-				ty(te(t(o), t(i)), t(o), t(i), "", r), e.actors.push({
+				ey(te(t(o), t(i)), t(o), t(i), "", r), e.actors.push({
 					id: n,
 					name: s,
 					kind: "changed",
@@ -9878,14 +9885,14 @@ function Nne(e) {
 	return n;
 }
 // src/core/migrate.ts
-var ny = (e) => !!e && typeof e == "object" && !Array.isArray(e);
-function ry(e, t) {
-	let n = ny(e[t]) ? e[t] : null, r = n && ny(n.kernel) ? n.kernel : null;
+var ty = (e) => !!e && typeof e == "object" && !Array.isArray(e);
+function ny(e, t) {
+	let n = ty(e[t]) ? e[t] : null, r = n && ty(n.kernel) ? n.kernel : null;
 	if (!n || !r) return e;
 	let i = Array.isArray(r.actors) ? r.actors : [], a = r.legacy === !0, o = i.map((e) => {
-		if (!ny(e)) return e;
+		if (!ty(e)) return e;
 		let t = e.state;
-		return !ny(t) || !(Array.isArray(t.items) || Array.isArray(t.effects) || Array.isArray(t.actor)) ? e : (a = !0, {
+		return !ty(t) || !(Array.isArray(t.items) || Array.isArray(t.effects) || Array.isArray(t.actor)) ? e : (a = !0, {
 			...e,
 			state: {},
 			legacy: !0,
@@ -9904,10 +9911,10 @@ function ry(e, t) {
 		}
 	};
 }
-function iy(e, t) {
-	let n = ny(e[t]) ? e[t] : null, r = n && ny(n.kernel) ? n.kernel : null;
+function ry(e, t) {
+	let n = ty(e[t]) ? e[t] : null, r = n && ty(n.kernel) ? n.kernel : null;
 	if (!n || !r || !Array.isArray(r.actors)) return e;
-	let i = r.actors.map((e) => ny(e) ? {
+	let i = r.actors.map((e) => ty(e) ? {
 		...e,
 		seed: typeof e.seed == "string" && e.seed ? e.seed : String(e.name ?? e.id ?? "")
 	} : e);
@@ -9922,15 +9929,15 @@ function iy(e, t) {
 		}
 	};
 }
-function ay(e, t) {
-	let n = ny(e[t]) ? e[t] : null, r = n && ny(n.kernel) ? n.kernel : null;
+function iy(e, t) {
+	let n = ty(e[t]) ? e[t] : null, r = n && ty(n.kernel) ? n.kernel : null;
 	if (!n || !r || !Array.isArray(r.actors)) return e;
 	let i = r.actors.map((e) => {
-		if (!ny(e) || !ny(e.state) || !Array.isArray(e.refs)) return e;
+		if (!ty(e) || !ty(e.state) || !Array.isArray(e.refs)) return e;
 		let t = /* @__PURE__ */ new Map();
-		for (let n of e.refs) ny(n) && typeof n.itemId == "string" && typeof n.kind == "string" && typeof n.hash == "string" && t.set(n.itemId, `ref:${n.kind}|${n.hash}`);
+		for (let n of e.refs) ty(n) && typeof n.itemId == "string" && typeof n.kind == "string" && typeof n.hash == "string" && t.set(n.itemId, `ref:${n.kind}|${n.hash}`);
 		if (!t.size) return e;
-		let n = e.state, r = ny(n.items) ? n.items : {}, i = {};
+		let n = e.state, r = ty(n.items) ? n.items : {}, i = {};
 		for (let [e, n] of Object.entries(r)) i[t.get(e) ?? e] = n;
 		let a = Array.isArray(n.itemRemoved) ? n.itemRemoved.map((e) => typeof e == "string" ? t.get(e) ?? e : e) : n.itemRemoved;
 		return {
@@ -9953,38 +9960,38 @@ function ay(e, t) {
 		}
 	};
 }
-var Pne = {
+var Ine = {
 	workspace: {
 		4: (e) => e,
-		5: (e) => ry(e, "data"),
-		6: (e) => iy(e, "data"),
-		7: (e) => ay(e, "data"),
+		5: (e) => ny(e, "data"),
+		6: (e) => ry(e, "data"),
+		7: (e) => iy(e, "data"),
 		8: (e) => e
 	},
 	save: {
 		4: (e) => e,
-		5: (e) => ry(e, "snapshot"),
-		6: (e) => iy(e, "snapshot"),
-		7: (e) => ay(e, "snapshot"),
+		5: (e) => ny(e, "snapshot"),
+		6: (e) => ry(e, "snapshot"),
+		7: (e) => iy(e, "snapshot"),
 		8: (e) => e
 	}
-}, Fne = "这个存档由更新版本的扩展创建，请先更新扩展";
-function oy(e, t, n = {}) {
-	let r = n.current ?? Ov[e], i = n.migrations ?? Pne[e], a = Number(t.schemaVersion);
-	if (!Number.isInteger(a) || a < 0) throw new zv("E_BAD_VERSION", "文件内容损坏：缺少有效的版本号");
-	if (a > r) throw new zv("E_NEWER_DATA", Fne, {
+}, Lne = "这个存档由更新版本的扩展创建，请先更新扩展";
+function ay(e, t, n = {}) {
+	let r = n.current ?? Dv[e], i = n.migrations ?? Ine[e], a = Number(t.schemaVersion);
+	if (!Number.isInteger(a) || a < 0) throw new Rv("E_BAD_VERSION", "文件内容损坏：缺少有效的版本号");
+	if (a > r) throw new Rv("E_NEWER_DATA", Lne, {
 		kind: e,
 		version: a,
 		current: r
 	});
-	if (!n.migrations && a < 4) throw new zv("E_OLD_DATA", "这是旧版扩展的存档（旧扩展包格式），新版不再读取", {
+	if (!n.migrations && a < 4) throw new Rv("E_OLD_DATA", "这是旧版扩展的存档（旧扩展包格式），新版不再读取", {
 		kind: e,
 		version: a
 	});
 	let o = t;
 	for (; a < r;) {
 		let t = i[a];
-		if (!t) throw new zv("E_BAD_VERSION", `无法升级版本 ${a} 的数据`, {
+		if (!t) throw new Rv("E_BAD_VERSION", `无法升级版本 ${a} 的数据`, {
 			kind: e,
 			version: a
 		});
@@ -9996,13 +10003,13 @@ function oy(e, t, n = {}) {
 	return o;
 }
 // src/core/saves/helpers.ts
-function sy(e) {
+function oy(e) {
 	return pe({ d: e });
 }
-function cy(e) {
-	return e.savedHash !== sy(e.data);
+function sy(e) {
+	return e.savedHash !== oy(e.data);
 }
-function Ine(e, t) {
+function Rne(e, t) {
 	return t.reduce((t, n) => ({
 		...t,
 		...n(e)
@@ -10011,29 +10018,29 @@ function Ine(e, t) {
 		partyCount: 0
 	});
 }
-function ly(e) {
+function cy(e) {
 	let t = e.trim();
-	if (t.length < 1 || t.length > 40) throw new zv("E_BAD_NAME", "存档名需要 1–40 个字");
+	if (t.length < 1 || t.length > 40) throw new Rv("E_BAD_NAME", "存档名需要 1–40 个字");
 	return t;
 }
-function uy(e, t, n = (e) => ` ${e}`) {
+function ly(e, t, n = (e) => ` ${e}`) {
 	if (!t.has(e)) return e;
 	for (let r = 2;; r++) {
 		let i = `${e}${n(r)}`;
 		if (!t.has(i)) return i;
 	}
 }
-function dy(e) {
-	return oy("save", e);
+function uy(e) {
+	return ay("save", e);
 }
-function Lne(e) {
-	return oy("workspace", e);
+function zne(e) {
+	return ay("workspace", e);
 }
-function fy(e, t) {
+function dy(e, t) {
 	return t.updatedAt - e.updatedAt || t.createdAt - e.createdAt || e.id.localeCompare(t.id);
 }
 // src/core/saves/view.ts
-var py = (e, t) => ({
+var fy = (e, t) => ({
 	id: e.id,
 	name: e.name,
 	note: e.note,
@@ -10043,18 +10050,18 @@ var py = (e, t) => ({
 	parentId: t,
 	updatedAt: e.updatedAt,
 	summary: e.summary
-}), my = (e) => `campaignLibrary:${e}`;
-function hy(e, t) {
-	return t.campaignId ?? gy(e, t.id);
+}), py = (e) => `campaignLibrary:${e}`;
+function my(e, t) {
+	return t.campaignId ?? hy(e, t.id);
 }
-function gy(e, t) {
+function hy(e, t) {
 	let n = e.filter((e) => e.kind === "manual" && e.deletedAt === void 0), r = new Map(n.map((e) => [e.id, e])), i = r.get(t);
 	if (!i) return null;
 	let a = /* @__PURE__ */ new Set([i.id]);
 	for (let e = i.branchedFrom; e && e !== i.id && r.has(e) && !a.has(e); e = i.branchedFrom) a.add(e), i = r.get(e);
 	return i.id;
 }
-function Rne(e, t) {
+function Bne(e, t) {
 	let n = e.filter((e) => e.kind === "manual" && e.deletedAt === void 0), r = new Map(n.map((e) => [e.id, e])), i = (e) => e.branchedFrom && e.branchedFrom !== e.id && r.has(e.branchedFrom) ? e.branchedFrom : null, a = (e) => {
 		let t = /* @__PURE__ */ new Set([e.id]), n = e;
 		for (let e = i(n); e && !t.has(e); e = i(n)) t.add(e), n = r.get(e);
@@ -10069,8 +10076,8 @@ function Rne(e, t) {
 		if (e === c?.id) continue;
 		let a = r.get(e);
 		a.ruleId === t.ruleId && u.push({
-			root: py(a, null),
-			members: [...n].sort(fy).map((e) => py(e, i(e))),
+			root: fy(a, null),
+			members: [...n].sort(dy).map((e) => fy(e, i(e))),
 			saves: n.length,
 			updatedAt: Math.max(...n.map((e) => e.updatedAt)),
 			sameCard: a.ownerKey === t.ownerKey
@@ -10080,9 +10087,9 @@ function Rne(e, t) {
 	let d = n.filter((e) => e.ruleId === t.ruleId);
 	return {
 		name: c?.name ?? null,
-		root: c ? py(c, null) : null,
-		current: s ? py(s, i(s)) : null,
-		branches: l.filter((e) => e.id !== c?.id).sort(fy).map((e) => py(e, i(e))),
+		root: c ? fy(c, null) : null,
+		current: s ? fy(s, i(s)) : null,
+		branches: l.filter((e) => e.id !== c?.id).sort(dy).map((e) => fy(e, i(e))),
 		otherCampaigns: u,
 		counts: {
 			tree: l.length,
@@ -10095,27 +10102,27 @@ function Rne(e, t) {
 	};
 }
 // src/core/saves/kernel.ts
-var _y = 50, zne = class {
+var gy = 50, Vne = class {
 	deps;
 	constructor(e) {
 		this.deps = e;
 	}
 	async refMapper(e) {
 		return this.deps.mapRef ? this.deps.mapRef(e) : () => {
-			throw new zv("E_NO_REF_MAPPER", "没有提供作者编号到【库】条目的对照");
+			throw new Rv("E_NO_REF_MAPPER", "没有提供作者编号到【库】条目的对照");
 		};
 	}
 	async workspace(e) {
 		let t = await this.deps.campaign.getWorkspace(e);
-		if (!t) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+		if (!t) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 		return t;
 	}
 	parse(e) {
 		if (!e) return null;
 		try {
-			return Gv.parse(e);
+			return Wv.parse(e);
 		} catch {
-			throw new zv("E_BAD_KERNEL", "存档里的结算内核段损坏");
+			throw new Rv("E_BAD_KERNEL", "存档里的结算内核段损坏");
 		}
 	}
 	async read(e) {
@@ -10123,36 +10130,36 @@ var _y = 50, zne = class {
 		return this.parse(t.data.kernel);
 	}
 	async bind(e, t) {
-		let n = await this.workspace(e), r = this.parse(t) ?? Gv.parse(t);
-		if (r.rule !== n.ruleId) throw new zv("E_RULE_MISMATCH", `结算内核规则 ${r.rule} 与战役规则 ${n.ruleId} 不一致`);
+		let n = await this.workspace(e), r = this.parse(t) ?? Wv.parse(t);
+		if (r.rule !== n.ruleId) throw new Rv("E_RULE_MISMATCH", `结算内核规则 ${r.rule} 与战役规则 ${n.ruleId} 不一致`);
 		return await this.deps.campaign.updateData(e, (e) => ({
 			...e,
 			kernel: r,
 			library: r.library
-		})), await this.deps.db.setMeta(my(await this.deps.campaign.campaignIdOf(e)), r.library), r;
+		})), await this.deps.db.setMeta(py(await this.deps.campaign.campaignIdOf(e)), r.library), r;
 	}
 	async libraryOf(e) {
 		let t = await this.workspace(e), n = this.parse(t.data.kernel);
-		if (!n) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+		if (!n) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
 		return this.libraryAt(await this.deps.campaign.campaignIdOf(e), t.data.library ?? n.library);
 	}
 	async libraryOfSave(e) {
 		let t = e.snapshot, n = this.parse(t.kernel);
-		if (!n) throw new zv("E_NO_KERNEL", "这个存档没有绑定结算内核");
+		if (!n) throw new Rv("E_NO_KERNEL", "这个存档没有绑定结算内核");
 		return this.libraryAt(e.campaignId ?? await this.deps.campaign.campaignIdOfSaveId(e.id), t.library ?? n.library);
 	}
 	async libraryAt(e, t) {
-		if (!e) return Vv.parse(t);
-		let n = await this.deps.db.getMeta(my(e));
-		if (n) return Vv.parse(n);
-		let r = Vv.parse(t);
-		return await this.deps.db.setMeta(my(e), r), r;
+		if (!e) return Bv.parse(t);
+		let n = await this.deps.db.getMeta(py(e));
+		if (n) return Bv.parse(n);
+		let r = Bv.parse(t);
+		return await this.deps.db.setMeta(py(e), r), r;
 	}
 	async setLibrary(e, t) {
 		let n = await this.workspace(e), r = this.parse(n.data.kernel);
-		if (!r) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
-		let i = Vv.parse(t);
-		return await this.deps.db.setMeta(my(await this.deps.campaign.campaignIdOf(e)), i), {
+		if (!r) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+		let i = Bv.parse(t);
+		return await this.deps.db.setMeta(py(await this.deps.campaign.campaignIdOf(e)), i), {
 			...r,
 			library: i
 		};
@@ -10199,7 +10206,7 @@ var _y = 50, zne = class {
 	}
 	async checkSaveInner(e) {
 		let t = await this.deps.campaign.getSave(e);
-		if (!t || t.deletedAt !== void 0) throw new zv("E_NOT_FOUND", "没有找到这个存档");
+		if (!t || t.deletedAt !== void 0) throw new Rv("E_NOT_FOUND", "没有找到这个存档");
 		let n = t.snapshot, r = this.parse(n.kernel);
 		return r ? this.checkKernel(r, await this.libraryOfSave(t)) : this.unboundCheck();
 	}
@@ -10347,9 +10354,9 @@ var _y = 50, zne = class {
 	}
 	async preview(e, t) {
 		let n = await this.read(e);
-		if (!n) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+		if (!n) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
 		let r = await this.refMapper(e), i = t.map((e) => {
-			let t = Qv(e), i = n.actors.find((e) => e.id === t) ?? null, a = Zv(e) ? k(n.combat) : i ? k(i.state) : null, o = Zv(e) ? Xv(n.combat, e) : i ? $v(i, [e], r).state : null;
+			let t = Zv(e), i = n.actors.find((e) => e.id === t) ?? null, a = Xv(e) ? k(n.combat) : i ? k(i.state) : null, o = Xv(e) ? Yv(n.combat, e) : i ? Qv(i, [e], r).state : null;
 			return {
 				actorId: t,
 				actorName: i?.name ?? null,
@@ -10364,27 +10371,27 @@ var _y = 50, zne = class {
 		};
 	}
 	async apply(e, t, n) {
-		if (!await this.read(e)) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
-		let r = [...new Set(t.map(Qv).filter((e) => !!e))], i = this.deps.compactActors && r.length ? await this.deps.compactActors(e, r) : [], a = await this.refMapper(e), o = new Map(i.map((e) => [e.id, e])), s = this.deps.undoLimit ? await this.deps.undoLimit() : _y;
+		if (!await this.read(e)) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+		let r = [...new Set(t.map(Zv).filter((e) => !!e))], i = this.deps.compactActors && r.length ? await this.deps.compactActors(e, r) : [], a = await this.refMapper(e), o = new Map(i.map((e) => [e.id, e])), s = this.deps.undoLimit ? await this.deps.undoLimit() : gy;
 		return this.deps.db.transaction("rw", this.deps.db.workspaces, async () => {
 			let r = await this.deps.db.workspaces.get(e);
-			if (!r) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+			if (!r) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 			let i = this.parse(r.data.kernel);
-			if (!i) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
-			if (i.revision !== n) throw new zv("E_REVISION_CONFLICT", "存档已被其他窗口修改，请重新预览");
+			if (!i) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+			if (i.revision !== n) throw new Rv("E_REVISION_CONFLICT", "存档已被其他窗口修改，请重新预览");
 			let c = {}, l = i.actors.map((e) => k(e)), u = k(i.combat), d = !1;
 			for (let e of t) {
-				if (Zv(e)) {
-					u = Xv(u, e), d = !0;
+				if (Xv(e)) {
+					u = Yv(u, e), d = !0;
 					continue;
 				}
-				let t = Qv(e);
+				let t = Zv(e);
 				if (!t) continue;
 				let n = l.findIndex((e) => e.id === t);
 				if (n < 0) continue;
 				t in c || (c[t] = k(l[n]));
 				let r = o.get(t);
-				if (this.deps.compactActors && !r) throw new zv("E_NO_COMPACTOR", `没有拿到人物 ${t} 的重建结果`);
+				if (this.deps.compactActors && !r) throw new Rv("E_NO_COMPACTOR", `没有拿到人物 ${t} 的重建结果`);
 				if (r) {
 					let e = l[n];
 					l[n] = {
@@ -10395,7 +10402,7 @@ var _y = 50, zne = class {
 						legacy: e.legacy,
 						legacyState: e.legacyState
 					};
-				} else l[n] = $v(l[n], [e], a);
+				} else l[n] = Qv(l[n], [e], a);
 			}
 			let f = {
 				...i,
@@ -10428,29 +10435,29 @@ var _y = 50, zne = class {
 			db: this.deps.db,
 			now: this.deps.now,
 			parse: (e) => this.parse(e),
-			limit: async () => this.deps.undoLimit ? await this.deps.undoLimit() : _y
+			limit: async () => this.deps.undoLimit ? await this.deps.undoLimit() : gy
 		};
 	}
 	async undo(e, t) {
-		return Mne(this.roster(), e, t);
+		return Pne(this.roster(), e, t);
 	}
 	addActors(e, t, n, r = {}) {
-		return One(this.roster(), e, t, n, r);
-	}
-	purgeActors(e, t, n) {
-		return kne(this.roster(), e, t, n);
-	}
-	setAdjustments(e, t, n, r) {
 		return Ane(this.roster(), e, t, n, r);
 	}
+	purgeActors(e, t, n) {
+		return jne(this.roster(), e, t, n);
+	}
+	setAdjustments(e, t, n, r) {
+		return Mne(this.roster(), e, t, n, r);
+	}
 	setOff(e, t, n, r) {
-		return jne(this.roster(), e, t, n, r);
+		return Nne(this.roster(), e, t, n, r);
 	}
 	async history(e) {
 		let t = await this.read(e);
-		return t ? Nne(t) : [];
+		return t ? Fne(t) : [];
 	}
-}, vy = /* @__PURE__ */ Le((/* @__PURE__ */ Pe(((e, t, n) => {
+}, _y = /* @__PURE__ */ Le((/* @__PURE__ */ Pe(((e, t, n) => {
 	(function(n, r) {
 		typeof e == "object" && t !== void 0 ? t.exports = r() : typeof define == "function" && define.amd ? define(r) : (n = typeof globalThis < "u" ? globalThis : n || self, n.Dexie = r());
 	})(n, (function() {
@@ -14706,9 +14713,9 @@ var _y = 50, zne = class {
 			replacePrefix: Ni
 		}), { default: xi }), xi;
 	}));
-})))(), 1), yy = Symbol.for("Dexie"), by = globalThis[yy] || (globalThis[yy] = vy.default);
-if (vy.default.semVer !== by.semVer) throw Error(`Two different versions of Dexie loaded in the same app: ${vy.default.semVer} and ${by.semVer}`);
-var { liveQuery: Bne, mergeRanges: Vne, rangesOverlap: Hne, RangeSet: Une, cmp: Wne, Entity: Gne, PropModification: Kne, replacePrefix: qne, add: Jne, remove: Yne, DexieYProvider: Xne } = by, Zne = "tavern-trpg-library", xy = class extends by {
+})))(), 1), vy = Symbol.for("Dexie"), yy = globalThis[vy] || (globalThis[vy] = _y.default);
+if (_y.default.semVer !== yy.semVer) throw Error(`Two different versions of Dexie loaded in the same app: ${_y.default.semVer} and ${yy.semVer}`);
+var { liveQuery: Hne, mergeRanges: Une, rangesOverlap: Wne, RangeSet: Gne, cmp: Kne, Entity: qne, PropModification: Jne, replacePrefix: Yne, add: Xne, remove: Zne, DexieYProvider: Qne } = yy, $ne = "tavern-trpg-library", by = class extends yy {
 	files;
 	kv;
 	sets;
@@ -14720,7 +14727,7 @@ var { liveQuery: Bne, mergeRanges: Vne, rangesOverlap: Hne, RangeSet: Une, cmp: 
 	fileContents;
 	ops;
 	locks;
-	constructor(e = Zne) {
+	constructor(e = $ne) {
 		super(e), this.version(1).stores({
 			files: "[source+path], source",
 			kv: "[scope+key], scope",
@@ -14737,7 +14744,7 @@ var { liveQuery: Bne, mergeRanges: Vne, rangesOverlap: Hne, RangeSet: Une, cmp: 
 	}
 };
 // src/library/revision-data.ts
-function Sy(e, t) {
+function xy(e, t) {
 	let n = (t) => Object.entries(e).filter(([e, n]) => n.status === "installed" && t(e)).sort(([e], [t]) => e.localeCompare(t)).map(([e, t]) => {
 		let n = `${e}:${t.commit}:${t.sources ? [...t.sources].sort().join(",") : "*"}`, r = Object.entries(t.fileOverrides ?? {}).sort(([e], [t]) => e.localeCompare(t));
 		return r.length ? `${n}:${pe(r)}` : n;
@@ -14749,7 +14756,7 @@ function Sy(e, t) {
 		brews: s
 	};
 }
-async function Qne(e, n) {
+async function Sy(e, n) {
 	let r = await e.sets.toArray();
 	for (let t of r) {
 		let r = String(t.id);
@@ -14896,7 +14903,7 @@ var Cy = "library", wy = 6e5, Ty = 75e3, Ey = 1e4, Dy = "trpg-library:exited-dow
 		}, s = {
 			...a,
 			...t.brews ?? {}
-		}, c = Sy(o, s), l = this.now();
+		}, c = xy(o, s), l = this.now();
 		await n.transaction("rw", [
 			n.revisions,
 			n.state,
@@ -15035,7 +15042,7 @@ var Cy = "library", wy = 6e5, Ty = 75e3, Ey = 1e4, Dy = "trpg-library:exited-dow
 		return this.opts.db.ops.orderBy("updatedAt").reverse().toArray();
 	}
 	async mirrorSets(e) {
-		await Qne(this.opts.db, e);
+		await Sy(this.opts.db, e);
 	}
 	async withLock(e) {
 		let t = Ay();
@@ -15867,7 +15874,7 @@ var ab = "rev-legacy", ob = "rev:", sb = () => [...crypto.getRandomValues(/* @__
 		return Xy(e, t, n, r);
 	}
 	async dataVersion(e, t, n) {
-		return !n && !t && e.revision.dataVersion ? e.revision.dataVersion : Sy(n ?? await this.allOfficialStates(e), t ?? await this.allBrewStates(e));
+		return !n && !t && e.revision.dataVersion ? e.revision.dataVersion : xy(n ?? await this.allOfficialStates(e), t ?? await this.allBrewStates(e));
 	}
 }, ub = /* @__PURE__ */ Uint32Array.from([
 	1732584193,
@@ -18604,7 +18611,7 @@ function PS(e, t, n) {
 }
 // src/core/removal-impact.ts
 var FS = (e) => new Set([...e].map((e) => e.toLowerCase())), IS = (e) => {
-	let t = e?.kernel, n = t ? Gv.safeParse(t) : null;
+	let t = e?.kernel, n = t ? Wv.safeParse(t) : null;
 	return n?.success ? n.data : null;
 };
 function LS(e, t, r, i) {
@@ -18740,11 +18747,11 @@ async function VS(e, t) {
 }
 async function HS(e, t) {
 	let n = (await e.manage.houseRules()).filter((e) => RS(t, e.house) || RS(t, e.target)), r = (await e.manage.allChoices({ packs: !0 })).filter((e) => t.altIds.has(e.altId) || RS(t, BS(e.target))), i = await e.db.saves.toArray(), a = async (t, n) => {
-		let r = t ? await e.db.getMeta(my(t)) : void 0, i = r ? Vv.safeParse(r) : null;
+		let r = t ? await e.db.getMeta(py(t)) : void 0, i = r ? Bv.safeParse(r) : null;
 		return i?.success ? i.data : n.library;
 	}, o = [];
 	for (let n of await e.db.workspaces.toArray()) {
-		let e = IS(n.data), r = e ? zS(e, await a(n.campaignId ?? (n.currentSaveId ? gy(i, n.currentSaveId) : null), e), t) : [];
+		let e = IS(n.data), r = e ? zS(e, await a(n.campaignId ?? (n.currentSaveId ? hy(i, n.currentSaveId) : null), e), t) : [];
 		r.length && o.push({
 			ownerKey: n.ownerKey,
 			ownerLabel: n.ownerLabel,
@@ -18756,7 +18763,7 @@ async function HS(e, t) {
 		});
 	}
 	for (let e of i) {
-		let n = IS(e.snapshot), r = n ? zS(n, await a(hy(i, e), n), t) : [];
+		let n = IS(e.snapshot), r = n ? zS(n, await a(my(i, e), n), t) : [];
 		r.length && o.push({
 			ownerKey: e.ownerKey,
 			ownerLabel: e.ownerLabel,
@@ -18915,180 +18922,8 @@ var WS = (e) => ({
 			sharedBy: 0
 		} : WS("no-counterpart");
 	}
-};
-// src/library/entry-links.ts
-function KS(e, t) {
-	for (let n of t) {
-		if (e !== n && !e.startsWith(`${n},`)) continue;
-		let [, t, ...r] = e.split(","), i = t !== void 0 && t !== "" && Number.isInteger(Number(t)) ? Number(t) : null, a = null;
-		if (r.length) try {
-			a = decodeURIComponent(r.join(","));
-		} catch {
-			a = r.join(",");
-		}
-		return {
-			id: n,
-			chapter: i,
-			header: a
-		};
-	}
-	return null;
-}
-var qS = (e) => `customRefs:${e}`, JS = class {
-	lib;
-	docs;
-	corpora = /* @__PURE__ */ new Map();
-	customMemo = /* @__PURE__ */ new Map();
-	constructor(e, t) {
-		this.lib = e, this.docs = t;
-	}
-	reset() {
-		this.corpora.clear(), this.customMemo.clear();
-	}
-	corpusIndex(e, n) {
-		let r = `${n?.id ?? "current"}:${e}`, i = this.corpora.get(r);
-		return i || (i = (async () => {
-			let r = n ?? await this.lib.currentView(), i = await this.lib.frameOf(e, r), a = /* @__PURE__ */ new Map(), o = (e, t, n) => {
-				let r = a.get(e) ?? a.set(e, /* @__PURE__ */ new Map()).get(e), i = r.get(t.hash.toLowerCase()) ?? [];
-				i.some((e) => e.id === t.id && e.set === n && e.source === t.source) || i.push({
-					id: t.id,
-					source: t.source,
-					...t.name ? { name: t.name } : {},
-					...n ? { set: n } : {}
-				}), r.set(t.hash.toLowerCase(), i);
-			};
-			for (let e of (await i.call("loaders")).filter((e) => e.kind === "corpus" && e.index && e.page)) {
-				let t = e.props[0];
-				for (let n of await i.call("corpusList", e.index, t, e.page)) o(t, n);
-			}
-			for (let n of t.filter((t) => t.codeSet === e && t.kind === "brew")) if (await r.brewState(n.id) || await r.derivedGet(`audit:${n.id}`)) for (let [e, t] of Object.entries(await this.lib.brewCorpora(n.id, r))) for (let r of t) o(e, r, n.id);
-			return a;
-		})(), i.catch(() => this.corpora.delete(r)), this.corpora.set(r, i)), i;
-	}
-	async documentIds(t, n) {
-		let r = n ?? await this.lib.currentView();
-		return (await this.docs.list(e(t), r)).map((e) => e.id);
-	}
-	async locate(n, r, i, a) {
-		let o = a ?? await this.lib.currentView(), s = e(n);
-		if (r === "document") {
-			let e = KS(i, await this.documentIds(n, o));
-			return e ? {
-				kind: "document",
-				set: s.id,
-				prop: r,
-				hash: i,
-				source: null,
-				id: e.id
-			} : null;
-		}
-		let c = (await this.corpusIndex(n, o)).get(r)?.get(i.toLowerCase()) ?? [];
-		for (let e of c) {
-			if (e.set) {
-				if (!await o.brewState(e.set) && !await o.derivedGet(`audit:${e.set}`)) continue;
-				return {
-					kind: "corpus",
-					set: e.set,
-					prop: r,
-					hash: i,
-					source: e.source,
-					id: e.id,
-					providers: c
-				};
-			}
-			let t = await o.officialState(s.id);
-			if (t?.status !== "installed") continue;
-			let n = r === "adventure" ? t.adventures : t.books;
-			if (!n || n.includes(e.id)) return {
-				kind: "corpus",
-				set: s.id,
-				prop: r,
-				hash: i,
-				source: e.source,
-				id: e.id,
-				providers: c
-			};
-		}
-		let l = [s, ...t.filter((e) => e.codeSet === n && e.kind === "brew")];
-		for (let e of l) {
-			if (e.id === s.id) {
-				if ((await o.officialState(e.id))?.status !== "installed") continue;
-			} else if (!await o.brewState(e.id) && !await o.derivedGet(`audit:${e.id}`)) continue;
-			let t = await this.lib.storedItem(e.id, r, i, o);
-			if (t) {
-				let n = e.id === s.id && typeof o.visibleSources == "function" ? await o.visibleSources(e.id) : null;
-				if (n && t.source && !n.some((e) => e.toLowerCase() === t.source.toLowerCase())) continue;
-				return {
-					kind: "entry",
-					set: e.id,
-					prop: r,
-					hash: i,
-					source: t.source,
-					id: null
-				};
-			}
-		}
-		return null;
-	}
-	async customRefs(e, t) {
-		let n = t ?? await this.lib.currentView(), r = Object.values(await n.store.allBrewStates(n)).some((e) => e.packs === null) ? null : pe(await n.dataVersion()), i = `${r ?? `view:${n.id}`}|${e}`, a = this.customMemo.get(i);
-		return a || (a = this.customRefsStored(e, n, r), this.customMemo.set(i, a), a.catch(() => this.customMemo.delete(i))), a;
-	}
-	async customRefsStored(e, t, n) {
-		if (n === null) return this.customRefsBuild(e, t);
-		let r = await t.derivedGet(qS(e));
-		if (r?.fingerprint === n && Array.isArray(r.value)) return new Map(r.value);
-		let i = await this.customRefsBuild(e, t);
-		return await t.derivedPut(qS(e), n, [...i]).catch((e) => console.warn("[trpg-assistant] 自制编号对照没存进库（下次重算）", e)), i;
-	}
-	async customRefsBuild(e, n) {
-		let r = /* @__PURE__ */ new Map();
-		for (let i of t.filter((t) => t.codeSet === e && t.kind === "brew")) {
-			if (!await n.brewState(i.id) && !await n.derivedGet(`audit:${i.id}`)) continue;
-			let e = await new Ax(this.lib).list(i.id, n).catch(() => []);
-			for (let t of e) for (let [e, a] of Object.entries(await this.lib.packOwnedItems(i.id, t, n))) for (let t of a) t.hash && r.set(`${e}|${t.hash}`, {
-				set: i.id,
-				prop: e,
-				hash: t.hash
-			});
-		}
-		return r;
-	}
-	async resolveTag(e, t, n, r) {
-		let i = r ?? await this.lib.currentView(), a = await (await this.lib.frameOf(e, i)).call("tagMeta", t, n);
-		return a ? this.resolveMeta(e, a, i) : null;
-	}
-	async resolveMeta(e, t, n) {
-		let r = n ?? await this.lib.currentView(), i = null;
-		for (let n of [...t.props, "document"]) if (i = await this.locate(e, n, t.hash, r), i) break;
-		let a = i?.kind === "document" ? KS(t.hash, [i.id]) : null, o = t.part ?? (a ? {
-			chapter: a.chapter,
-			section: a.header
-		} : null);
-		return {
-			tag: t.tag,
-			name: t.name,
-			displayText: t.displayText,
-			source: t.source,
-			page: t.page,
-			hash: t.hash,
-			...o ? { part: o } : {},
-			located: i
-		};
-	}
-};
-// src/library/scoped-choices.ts
-async function YS(e, t, n, r, i) {
-	if (i !== "campaign") return await e.setChoice(i, n, r), t;
-	let a = { ...t.choices };
-	return r === null ? delete a[n] : a[n] = r, {
-		...t,
-		choices: a
-	};
-}
-// src/library/alternatives.ts
-var XS = "HOMEBREW_2_STORAGE", ZS = (e) => `alts:${e}`, QS = (e, t) => `alt-items:${e}:${t}`;
-function $S(e, t) {
+}, KS = "HOMEBREW_2_STORAGE", qS = (e) => `alts:${e}`, JS = (e, t) => `alt-items:${e}:${t}`;
+function YS(e, t) {
 	let n = /* @__PURE__ */ new Set([e]), r = (e) => {
 		let i = e.body._meta, a = new Set([
 			...Object.values(i?.dependencies ?? {}).flat(),
@@ -19099,10 +18934,10 @@ function $S(e, t) {
 	};
 	return r(e), [...t.filter((t) => t !== e && n.has(t)), e];
 }
-async function eC(e, t, n) {
+async function XS(e, t, n) {
 	let { db: r, source: i, view: a } = e, o = `${i.codeSet}:iso:${E()}`, s = nb(await a.chain(), i.codeSet), c = async (e) => {
 		let n = await ib(a.store.rows, s, e);
-		e || n.set(XS, t), n.size && await r.kv.bulkPut([...n].map(([t, n]) => ({
+		e || n.set(KS, t), n.size && await r.kv.bulkPut([...n].map(([t, n]) => ({
 			scope: o + e,
 			key: t,
 			value: n
@@ -19114,7 +18949,7 @@ async function eC(e, t, n) {
 		l?.close(), await r.kv.where("scope").anyOf(o, `${o}:local`).delete();
 	}
 }
-async function tC(t) {
+async function ZS(t) {
 	let { source: n, frame: r } = t, i = e(n.codeSet), a = await r.call("brewDocIndex"), o = {}, s = /* @__PURE__ */ new Map();
 	for (let e of new Set(a.flatMap((e) => Object.keys(e.props)))) {
 		let n = await t.view.derivedGet(ax(i.id, e));
@@ -19125,8 +18960,8 @@ async function tC(t) {
 		targets: {},
 		errors: []
 	};
-	if (!c.length) return await t.view.derivedPut(ZS(n.id), "brew", l), l;
-	let u = await t.view.kvGet(n.codeSet, XS) ?? [], d = new Map(u.map((e) => [e.head.docIdLocal, e])), f = /* @__PURE__ */ new Map(), p = (e, t, n) => (f.get(e) ?? f.set(e, []).get(e)).push({
+	if (!c.length) return await t.view.derivedPut(qS(n.id), "brew", l), l;
+	let u = await t.view.kvGet(n.codeSet, KS) ?? [], d = new Map(u.map((e) => [e.head.docIdLocal, e])), f = /* @__PURE__ */ new Map(), p = (e, t, n) => (f.get(e) ?? f.set(e, []).get(e)).push({
 		prop: t,
 		hash: n
 	});
@@ -19138,15 +18973,15 @@ async function tC(t) {
 	for (let [e, r] of f) {
 		let i = d.get(e);
 		if (i) try {
-			let a = $S(i, u), o = pe({
+			let a = YS(i, u), o = pe({
 				docs: a.map((e) => e.body),
 				official: h
-			}), s = QS(n.id, e), c = await t.view.derivedGet(s), l = c?.fingerprint === o ? c.value : null;
+			}), s = JS(n.id, e), c = await t.view.derivedGet(s), l = c?.fingerprint === o ? c.value : null;
 			if (l?.asked && r.every((e) => l.asked.includes(`${e.prop}|${e.hash}`))) {
 				m.set(e, l.items);
 				continue;
 			}
-			let d = await eC(t, a, (e) => e.call("brewItemsByHash", r));
+			let d = await XS(t, a, (e) => e.call("brewItemsByHash", r));
 			m.set(e, d), await t.view.derivedPut(s, o, {
 				asked: r.map((e) => `${e.prop}|${e.hash}`),
 				items: d
@@ -19214,20 +19049,189 @@ async function tC(t) {
 		}
 	}
 	for (let [e, r] of v) await t.view.derivedPut(ax(n.id, e), "brew", r);
-	return await t.view.derivedPut(ZS(n.id), "brew", l), l;
+	return await t.view.derivedPut(qS(n.id), "brew", l), l;
 }
-async function nC(e, t, n) {
-	let r = await e.view.kvGet(e.source.codeSet, XS) ?? [], i = r.find((e) => e.head.docIdLocal === t);
-	return i ? eC(e, $S(i, r), n) : null;
+async function QS(e, t, n) {
+	let r = await e.view.kvGet(e.source.codeSet, KS) ?? [], i = r.find((e) => e.head.docIdLocal === t);
+	return i ? XS(e, YS(i, r), n) : null;
 }
-async function rC(e, t, n) {
-	return Object.keys(n).length ? await nC(e, t, (e) => e.call("brewPackRows", n)) ?? {} : {};
+async function $S(e, t, n) {
+	return Object.keys(n).length ? await QS(e, t, (e) => e.call("brewPackRows", n)) ?? {} : {};
 }
-function iC(e, t, n, r) {
-	return nC(e, t, (e) => e.call("fluffOf", n, r));
+function eC(e, t, n, r) {
+	return QS(e, t, (e) => e.call("fluffOf", n, r));
+}
+// src/library/entry-links.ts
+function tC(e, t) {
+	for (let n of t) {
+		if (e !== n && !e.startsWith(`${n},`)) continue;
+		let [, t, ...r] = e.split(","), i = t !== void 0 && t !== "" && Number.isInteger(Number(t)) ? Number(t) : null, a = null;
+		if (r.length) try {
+			a = decodeURIComponent(r.join(","));
+		} catch {
+			a = r.join(",");
+		}
+		return {
+			id: n,
+			chapter: i,
+			header: a
+		};
+	}
+	return null;
+}
+var nC = class {
+	lib;
+	docs;
+	corpora = /* @__PURE__ */ new Map();
+	customMemo = /* @__PURE__ */ new Map();
+	constructor(e, t) {
+		this.lib = e, this.docs = t;
+	}
+	reset() {
+		this.corpora.clear(), this.customMemo.clear();
+	}
+	corpusIndex(e, n) {
+		let r = `${n?.id ?? "current"}:${e}`, i = this.corpora.get(r);
+		return i || (i = (async () => {
+			let r = n ?? await this.lib.currentView(), i = await this.lib.frameOf(e, r), a = /* @__PURE__ */ new Map(), o = (e, t, n) => {
+				let r = a.get(e) ?? a.set(e, /* @__PURE__ */ new Map()).get(e), i = r.get(t.hash.toLowerCase()) ?? [];
+				i.some((e) => e.id === t.id && e.set === n && e.source === t.source) || i.push({
+					id: t.id,
+					source: t.source,
+					...t.name ? { name: t.name } : {},
+					...n ? { set: n } : {}
+				}), r.set(t.hash.toLowerCase(), i);
+			};
+			for (let e of (await i.call("loaders")).filter((e) => e.kind === "corpus" && e.index && e.page)) {
+				let t = e.props[0];
+				for (let n of await i.call("corpusList", e.index, t, e.page)) o(t, n);
+			}
+			for (let n of t.filter((t) => t.codeSet === e && t.kind === "brew")) if (await r.brewState(n.id) || await r.derivedGet(`audit:${n.id}`)) for (let [e, t] of Object.entries(await this.lib.brewCorpora(n.id, r))) for (let r of t) o(e, r, n.id);
+			return a;
+		})(), i.catch(() => this.corpora.delete(r)), this.corpora.set(r, i)), i;
+	}
+	async documentIds(t, n) {
+		let r = n ?? await this.lib.currentView();
+		return (await this.docs.list(e(t), r)).map((e) => e.id);
+	}
+	async locate(n, r, i, a) {
+		let o = a ?? await this.lib.currentView(), s = e(n);
+		if (r === "document") {
+			let e = tC(i, await this.documentIds(n, o));
+			return e ? {
+				kind: "document",
+				set: s.id,
+				prop: r,
+				hash: i,
+				source: null,
+				id: e.id
+			} : null;
+		}
+		let c = (await this.corpusIndex(n, o)).get(r)?.get(i.toLowerCase()) ?? [];
+		for (let e of c) {
+			if (e.set) {
+				if (!await o.brewState(e.set) && !await o.derivedGet(`audit:${e.set}`)) continue;
+				return {
+					kind: "corpus",
+					set: e.set,
+					prop: r,
+					hash: i,
+					source: e.source,
+					id: e.id,
+					providers: c
+				};
+			}
+			let t = await o.officialState(s.id);
+			if (t?.status !== "installed") continue;
+			let n = r === "adventure" ? t.adventures : t.books;
+			if (!n || n.includes(e.id)) return {
+				kind: "corpus",
+				set: s.id,
+				prop: r,
+				hash: i,
+				source: e.source,
+				id: e.id,
+				providers: c
+			};
+		}
+		let l = [s, ...t.filter((e) => e.codeSet === n && e.kind === "brew")];
+		for (let e of l) {
+			if (e.id === s.id) {
+				if ((await o.officialState(e.id))?.status !== "installed") continue;
+			} else if (!await o.brewState(e.id) && !await o.derivedGet(`audit:${e.id}`)) continue;
+			let t = await this.lib.storedItem(e.id, r, i, o);
+			if (t) {
+				let n = e.id === s.id && typeof o.visibleSources == "function" ? await o.visibleSources(e.id) : null;
+				if (n && t.source && !n.some((e) => e.toLowerCase() === t.source.toLowerCase())) continue;
+				return {
+					kind: "entry",
+					set: e.id,
+					prop: r,
+					hash: i,
+					source: t.source,
+					id: null
+				};
+			}
+		}
+		return null;
+	}
+	async customRefs(e, t) {
+		let n = t ?? await this.lib.currentView(), r = `${n.id}|${e}`, i = this.customMemo.get(r);
+		return i || (i = this.customRefsOf(e, n), this.customMemo.set(r, i), i.catch(() => this.customMemo.delete(r))), i;
+	}
+	async customRefsOf(e, n) {
+		let r = /* @__PURE__ */ new Map(), i = (e, t, n) => {
+			r.set(`${t}|${n}`, {
+				set: e,
+				prop: t,
+				hash: n
+			});
+		};
+		for (let r of t.filter((t) => t.codeSet === e && t.kind === "brew")) {
+			let e = (await n.derivedGet(`audit:${r.id}`))?.value;
+			for (let t of Object.keys(e?.parse.props ?? {})) {
+				let e = (await n.derivedGet(ax(r.id, t)))?.value;
+				for (let n of e?.hashes ?? []) n && i(r.id, t, n);
+			}
+			let t = (await n.derivedGet(qS(r.id)))?.value;
+			for (let { target: e } of Object.values(t?.targets ?? {})) i(r.id, e.prop, e.hash);
+		}
+		return r;
+	}
+	async resolveTag(e, t, n, r) {
+		let i = r ?? await this.lib.currentView(), a = await (await this.lib.frameOf(e, i)).call("tagMeta", t, n);
+		return a ? this.resolveMeta(e, a, i) : null;
+	}
+	async resolveMeta(e, t, n) {
+		let r = n ?? await this.lib.currentView(), i = null;
+		for (let n of [...t.props, "document"]) if (i = await this.locate(e, n, t.hash, r), i) break;
+		let a = i?.kind === "document" ? tC(t.hash, [i.id]) : null, o = t.part ?? (a ? {
+			chapter: a.chapter,
+			section: a.header
+		} : null);
+		return {
+			tag: t.tag,
+			name: t.name,
+			displayText: t.displayText,
+			source: t.source,
+			page: t.page,
+			hash: t.hash,
+			...o ? { part: o } : {},
+			located: i
+		};
+	}
+};
+// src/library/scoped-choices.ts
+async function rC(e, t, n, r, i) {
+	if (i !== "campaign") return await e.setChoice(i, n, r), t;
+	let a = { ...t.choices };
+	return r === null ? delete a[n] : a[n] = r, {
+		...t,
+		choices: a
+	};
 }
 // src/library/pack-target.ts
-function aC(t, n, r, i) {
+function iC(t, n, r, i) {
 	let a = {
 		...t,
 		set: e(n).id
@@ -19244,14 +19248,14 @@ function aC(t, n, r, i) {
 		altId: null
 	};
 }
-function oC(e, t, n, r) {
+function aC(e, t, n, r) {
 	let i = NS(e, t).find(({ variant: e }) => r ? e.docIdLocal === n : e.kind === "base")?.variant;
 	return !i || !r ? i : {
 		...i,
 		effective: t.find((t) => t.altId === e)?.docIdLocal === n
 	};
 }
-var sC = class {
+var oC = class {
 	db;
 	constructor(e) {
 		this.db = e;
@@ -19353,7 +19357,7 @@ var sC = class {
 	}
 };
 // src/library/shelf.ts
-function cC(e, t) {
+function sC(e, t) {
 	let n = String(t.group ?? "other");
 	return {
 		id: String(t.id),
@@ -19368,7 +19372,7 @@ function cC(e, t) {
 		cover: t.cover ?? null
 	};
 }
-function lC(e, t) {
+function cC(e, t) {
 	return [...t.books.map((n) => ({
 		kind: "book",
 		set: e,
@@ -19376,7 +19380,7 @@ function lC(e, t) {
 		id: String(n.id),
 		count: 0,
 		downloaded: !1,
-		shelf: cC(t, n)
+		shelf: sC(t, n)
 	})), ...t.adventures.map((n) => ({
 		kind: "adventure",
 		set: e,
@@ -19385,37 +19389,37 @@ function lC(e, t) {
 		...typeof n.name == "string" ? { nameHint: n.name } : {},
 		count: 0,
 		downloaded: !1,
-		shelf: cC(t, n)
+		shelf: sC(t, n)
 	}))];
 }
-function uC(e, t) {
+function lC(e, t) {
 	let n = e.kind === "adventure" ? t.adventures.find((t) => String(t.id) === e.id) : t.books.find((t) => String(t.source) === e.source);
-	return n ? cC(t, n) : null;
+	return n ? sC(t, n) : null;
 }
-var dC = (e, t) => (e.shelf?.published ?? "9999").localeCompare(t.shelf?.published ?? "9999") || e.name.localeCompare(t.name), fC = (e) => n(e.set).kind === "brew" ? "homebrew" : "other";
-function pC(e, t) {
+var uC = (e, t) => (e.shelf?.published ?? "9999").localeCompare(t.shelf?.published ?? "9999") || e.name.localeCompare(t.name), dC = (e) => n(e.set).kind === "brew" ? "homebrew" : "other";
+function fC(e, t) {
 	let n = [], r = new Set(t.map((e) => e.group));
 	for (let i of t) {
-		let t = e.filter((e) => (e.shelf && r.has(e.shelf.group) ? e.shelf.group : fC(e)) === i.group);
+		let t = e.filter((e) => (e.shelf && r.has(e.shelf.group) ? e.shelf.group : dC(e)) === i.group);
 		t.length && n.push({
 			group: i.group,
 			name: i.displayName,
-			books: t.filter((e) => e.kind === "book").sort(dC),
-			adventures: t.filter((e) => e.kind === "adventure").sort(dC)
+			books: t.filter((e) => e.kind === "book").sort(uC),
+			adventures: t.filter((e) => e.kind === "adventure").sort(uC)
 		});
 	}
 	return n;
 }
 // src/library/scoped-catalog.ts
-var mC = (e) => e.url ?? (e.sources.length ? [...e.sources].map((e) => e.toLowerCase()).sort().join(" :: ") : null), hC = (e, t, n) => e === "adventure" && n ? `adventure:${n.toLowerCase()}` : t.toLowerCase(), gC = (e) => {
+var pC = (e) => e.url ?? (e.sources.length ? [...e.sources].map((e) => e.toLowerCase()).sort().join(" :: ") : null), mC = (e, t, n) => e === "adventure" && n ? `adventure:${n.toLowerCase()}` : t.toLowerCase(), hC = (e) => {
 	if (!e) return [];
 	let t = (e, t) => t.filter((e) => typeof e.source == "string").map((t) => ({
-		key: hC(e, String(t.source), t.id == null ? null : String(t.id)),
+		key: mC(e, String(t.source), t.id == null ? null : String(t.id)),
 		it: t
 	}));
 	return [...t("book", e.books ?? []), ...t("adventure", e.adventures ?? [])];
 };
-async function _C(e, t, r, i) {
+async function gC(e, t, r, i) {
 	let a = /* @__PURE__ */ new Map();
 	if (t.kind === "brew") {
 		if (!t.pair) return a;
@@ -19427,11 +19431,11 @@ async function _C(e, t, r, i) {
 		return a;
 	}
 	let o = t.pair && e.directory ? await e.directory.peek(n(t.pair).codeSet) : null;
-	for (let { key: e, it: t } of gC(o)) typeof t.name == "string" && a.set(e, t.name);
-	for (let { key: e, it: t } of gC(r)) typeof t.ENG_name == "string" && t.ENG_name !== t.name && !a.has(e) && a.set(e, t.ENG_name);
+	for (let { key: e, it: t } of hC(o)) typeof t.name == "string" && a.set(e, t.name);
+	for (let { key: e, it: t } of hC(r)) typeof t.ENG_name == "string" && t.ENG_name !== t.name && !a.has(e) && a.set(e, t.ENG_name);
 	return a;
 }
-async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
+async function _C(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 	if (n && !e.directory) throw Error("没有接书目入口");
 	let o = await (i ? Promise.resolve(i) : e.lib.currentView()), [c, l] = await Promise.all([e.assignments(), e.alternatives(t.codeSet, o)]), u = /* @__PURE__ */ new Map();
 	for (let e of l.values()) e.source && u.set(e.source.toLowerCase(), (u.get(e.source.toLowerCase()) ?? 0) + 1);
@@ -19440,12 +19444,12 @@ async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 		let s = n && i.kind === "official" ? r ?? await e.directory.get(t.codeSet) : null;
 		if (s && Object.assign(h, s.sources), i.kind === "brew" && a) p.set(i.id, a.altNames);
 		else try {
-			p.set(i.id, await _C(e, i, s ?? (i.kind === "official" && e.directory ? await e.directory.peek(t.codeSet) : null), o));
+			p.set(i.id, await gC(e, i, s ?? (i.kind === "official" && e.directory ? await e.directory.peek(t.codeSet) : null), o));
 		} catch (e) {
 			console.warn("[trpg-assistant] 另一语言书名读取失败", i.id, e);
 		}
 		if (!(i.kind === "brew" && a) && !await e.installed(i, o)) {
-			if (s) for (let e of lC(i.id, s)) f.push({
+			if (s) for (let e of cC(i.id, s)) f.push({
 				...e,
 				alternatives: u.get(e.source.toLowerCase()) ?? 0
 			});
@@ -19475,7 +19479,7 @@ async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 					pack: {
 						docIdLocal: e.docIdLocal,
 						filename: e.filename,
-						stableId: mC(e),
+						stableId: pC(e),
 						sources: t
 					}
 				});
@@ -19498,7 +19502,7 @@ async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 			};
 			f.push(s ? {
 				...a,
-				shelf: uC(a, s)
+				shelf: lC(a, s)
 			} : a);
 		}
 		let g = await e.adventures(i, o), _ = new Map(g.map((e) => [e.source.toLowerCase(), e])), v = /* @__PURE__ */ new Map();
@@ -19521,7 +19525,7 @@ async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 			};
 			f.push(s ? {
 				...r,
-				shelf: uC(r, s)
+				shelf: lC(r, s)
 			} : r);
 		}
 		for (let e of g) {
@@ -19537,7 +19541,7 @@ async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 			};
 			f.push(s ? {
 				...t,
-				shelf: uC(t, s)
+				shelf: lC(t, s)
 			} : t);
 		}
 	}
@@ -19546,7 +19550,7 @@ async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 		let n = s(e.source), r = h[e.source]?.edition ?? y[e.source] ?? null, i = d(void 0, c.get(n), m(r ?? void 0)), a = w(t, {
 			entry: n,
 			source: n
-		}, i), o = p.get(e.set)?.get(e.pack ? e.pack.docIdLocal : hC(e.kind, e.source, e.id));
+		}, i), o = p.get(e.set)?.get(e.pack ? e.pack.docIdLocal : mC(e.kind, e.source, e.id));
 		return {
 			...e,
 			...o ? { altName: o } : {},
@@ -19559,7 +19563,7 @@ async function vC(e, t, { remote: n = !1, record: r, view: i, brew: a } = {}) {
 		};
 	});
 }
-async function yC(e, t, r, i = !1) {
+async function vC(e, t, r, i = !1) {
 	let a = r ?? await e.lib.currentView(), o = await e.directory.get(t.codeSet), s = T(t.codeSet), c = n(s.pair ?? s.id), l = new Ax(e.lib), u = [], d = async (e) => {
 		try {
 			return await l.list(e.id, a);
@@ -19571,7 +19575,7 @@ async function yC(e, t, r, i = !1) {
 		let n = m ? e : t, r = m ? t : e;
 		n && r?.filename && g.set(n.docIdLocal, r.filename);
 	}
-	let _ = await vC(e, t, {
+	let _ = await _C(e, t, {
 		remote: !0,
 		record: o,
 		view: a,
@@ -19586,7 +19590,7 @@ async function yC(e, t, r, i = !1) {
 			return !n && r ? [r] : [];
 		});
 		if (r.length) {
-			let n = await vC({
+			let n = await _C({
 				...e,
 				sourcesFor: () => [c]
 			}, {
@@ -19603,7 +19607,7 @@ async function yC(e, t, r, i = !1) {
 		}
 	}
 	return {
-		groups: pC(_, o.groups.some((e) => e.group === "homebrew") ? o.groups : [...o.groups, {
+		groups: fC(_, o.groups.some((e) => e.group === "homebrew") ? o.groups : [...o.groups, {
 			group: "homebrew",
 			displayName: "自制内容"
 		}]),
@@ -19613,12 +19617,12 @@ async function yC(e, t, r, i = !1) {
 		minePacks: f.filter((e) => e.origin === "import")
 	};
 }
-async function bC(e, t) {
+async function yC(e, t) {
 	let n = await e.visibleSources(t), r = await oS(e, t);
 	if (n) for (let e of Object.keys(r)) n.some((t) => t.toLowerCase() === e.toLowerCase()) || delete r[e];
 	return r;
 }
-async function xC(e, t, n) {
+async function bC(e, t, n) {
 	let r = await e.frameOf(t.codeSet, n), i = (await r.call("loaders")).find((e) => e.kind === "corpus" && e.props.includes("adventureData"));
 	if (!i?.index || !i.page) return [];
 	let a = await n.installedAdventures(t.id), o = [];
@@ -19632,27 +19636,27 @@ async function xC(e, t, n) {
 	return o;
 }
 // src/library/english-generated.ts
-var SC = (e) => String(e ?? "").toLowerCase();
-function CC(e) {
+var xC = (e) => String(e ?? "").toLowerCase();
+function SC(e) {
 	return typeof e?._versionBase_hash == "string" ? "version" : e?._isSubRace && e._baseName ? "subrace" : e?.genericVariant?.name && typeof e.baseItem == "string" ? "variant" : null;
 }
-function wC(e, t, n) {
+function CC(e, t, n) {
 	if (t === "version") return e._versionBase_hash;
-	if (t === "subrace") return n.get(`${SC(e._baseName)}|${SC(e._baseSource ?? e.source)}`) ?? null;
+	if (t === "subrace") return n.get(`${xC(e._baseName)}|${xC(e._baseSource ?? e.source)}`) ?? null;
 	let [r, i] = String(e.baseItem).split("|");
-	return n.get(`${SC(r)}|${SC(i)}`) ?? null;
+	return n.get(`${xC(r)}|${xC(i)}`) ?? null;
 }
-function TC(e, t) {
+function wC(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let t of [!0, !1]) e.items.forEach((r, i) => {
 		let a = e.hashes[i];
-		!CC(r) === t && r?.name && a && n.set(`${SC(r._rawName ?? r.name)}|${SC(r.source)}`, a);
+		!SC(r) === t && r?.name && a && n.set(`${xC(r._rawName ?? r.name)}|${xC(r.source)}`, a);
 	});
 	let r = [];
 	return e.items.forEach((i, a) => {
-		let o = CC(i), s = e.hashes[a];
+		let o = SC(i), s = e.hashes[a];
 		if (!o || !s) return;
-		let c = wC(i, o, n), l = c ? t(c) : null;
+		let c = CC(i, o, n), l = c ? t(c) : null;
 		c && l && r.push({
 			hash: s,
 			kind: o,
@@ -19662,29 +19666,29 @@ function TC(e, t) {
 		});
 	}), r;
 }
-var EC = (e) => `${SC(e.it.genericVariant.name)}|${SC(e.it.genericVariant.source)}`;
-function DC(e, t, n, r, i = {}) {
-	let a = i.templates ?? [], o = new Map(a.filter((e) => e.eng).map((e) => [`${SC(e.name)}|${SC(e.source)}`, `${SC(e.eng)}|${SC(e.source)}`])), s = new Set(n.hashes.filter((e) => !!e)), c = (t) => {
+var TC = (e) => `${xC(e.it.genericVariant.name)}|${xC(e.it.genericVariant.source)}`;
+function EC(e, t, n, r, i = {}) {
+	let a = i.templates ?? [], o = new Map(a.filter((e) => e.eng).map((e) => [`${xC(e.name)}|${xC(e.source)}`, `${xC(e.eng)}|${xC(e.source)}`])), s = new Set(n.hashes.filter((e) => !!e)), c = (t) => {
 		let n = r[e]?.[t]?.enHash;
 		return n && s.has(n) ? n : null;
-	}, l = TC(n, (e) => e), u = {
-		generated: t.items.filter((e) => CC(e)).length,
+	}, l = wC(n, (e) => e), u = {
+		generated: t.items.filter((e) => SC(e)).length,
 		paired: 0,
 		kept: 0,
 		unmatched: 0,
 		noMother: 0
 	}, d = /* @__PURE__ */ new Set();
-	for (let e of TC(t, () => "any")) c(e.hash) && (d.add(e.hash), u.kept++);
-	let f = (e, t) => `${e.kind}|${e.mother}|${SC(e.it.source)}|${t ?? ""}`, p = /* @__PURE__ */ new Map();
+	for (let e of wC(t, () => "any")) c(e.hash) && (d.add(e.hash), u.kept++);
+	let f = (e, t) => `${e.kind}|${e.mother}|${xC(e.it.source)}|${t ?? ""}`, p = /* @__PURE__ */ new Map();
 	for (let e of l) {
-		let t = f(e, e.kind === "variant" ? EC(e) : null);
+		let t = f(e, e.kind === "variant" ? TC(e) : null);
 		p.set(t, [...p.get(t) ?? [], e]);
 	}
-	let m = (e) => SC(e.kind === "subrace" ? e.it._subraceName : e.it.name);
+	let m = (e) => xC(e.kind === "subrace" ? e.it._subraceName : e.it.name);
 	for (let n = 0; n < 2; n++) {
-		let n = TC(t, c), a = /* @__PURE__ */ new Map();
+		let n = wC(t, c), a = /* @__PURE__ */ new Map();
 		for (let e of n) {
-			let t = e.kind === "variant" ? o.get(EC(e)) ?? null : null;
+			let t = e.kind === "variant" ? o.get(TC(e)) ?? null : null;
 			if (e.kind === "variant" && !t) continue;
 			let n = f(e, t);
 			a.set(n, [...a.get(n) ?? [], e]);
@@ -19695,7 +19699,7 @@ function DC(e, t, n, r, i = {}) {
 				if (d.has(t.hash)) continue;
 				let o, s = t.kind === "version" ? i.versions?.cn[e]?.[t.ownMother] : void 0, c = t.kind === "version" ? i.versions?.en[e]?.[t.mother] : void 0, l = s?.indexOf(t.hash) ?? -1;
 				if (s && c && s.length === c.length && l >= 0 && (o = a.find((e) => e.hash === c[l])), !o && n.length === 1 && a.length === 1 && (o = a[0]), !o) {
-					let e = a.filter((e) => m(e) === SC(t.it.ENG_name));
+					let e = a.filter((e) => m(e) === xC(t.it.ENG_name));
 					e.length === 1 && (o = e[0]);
 				}
 				o && ((r[e] ??= {})[t.hash] = {
@@ -19706,20 +19710,20 @@ function DC(e, t, n, r, i = {}) {
 			}
 		}
 	}
-	return u.noMother = u.generated - TC(t, c).length, u.unmatched = u.generated - d.size - u.noMother, u;
+	return u.noMother = u.generated - wC(t, c).length, u.unmatched = u.generated - d.size - u.noMother, u;
 }
-async function OC(e, t) {
+async function DC(e, t) {
 	let n = [];
 	for (let r of Object.keys(e)) {
 		let [e, i] = await Promise.all([t.parsed("cn", r), t.parsed("en", r)]);
-		e && i && e.items.some((e) => CC(e)) && n.push({
+		e && i && e.items.some((e) => SC(e)) && n.push({
 			prop: r,
 			cn: e,
 			en: i
 		});
 	}
-	let r = n.filter((e) => e.cn.items.some((e) => CC(e) === "version")).map((e) => e.prop), i = {
-		templates: n.some((e) => e.cn.items.some((e) => CC(e) === "variant")) ? await t.templates() : [],
+	let r = n.filter((e) => e.cn.items.some((e) => SC(e) === "version")).map((e) => e.prop), i = {
+		templates: n.some((e) => e.cn.items.some((e) => SC(e) === "variant")) ? await t.templates() : [],
 		versions: r.length ? {
 			cn: await t.versions("cn", r),
 			en: await t.versions("en", r)
@@ -19728,25 +19732,25 @@ async function OC(e, t) {
 			en: {}
 		}
 	}, a = {};
-	for (let t of n) a[t.prop] = DC(t.prop, t.cn, t.en, e, i);
+	for (let t of n) a[t.prop] = EC(t.prop, t.cn, t.en, e, i);
 	return a;
 }
 // src/library/variants.ts
-var kC = /* @__PURE__ */ new WeakMap();
-function AC(e) {
-	let t = kC.get(e);
+var OC = /* @__PURE__ */ new WeakMap();
+function kC(e) {
+	let t = OC.get(e);
 	if (!t) {
-		let n = TC(e, (e) => e), r = /* @__PURE__ */ new Map();
+		let n = wC(e, (e) => e), r = /* @__PURE__ */ new Map();
 		for (let e of n) r.set(e.mother, [...r.get(e.mother) ?? [], e]);
 		t = {
 			byMother: r,
 			byHash: new Map(n.map((e) => [e.hash, e]))
-		}, kC.set(e, t);
+		}, OC.set(e, t);
 	}
 	return t;
 }
-function jC(e, t) {
-	let n = AC(e), r = (t) => e.sources[e.hashes.indexOf(t)] ?? null;
+function AC(e, t) {
+	let n = kC(e), r = (t) => e.sources[e.hashes.indexOf(t)] ?? null;
 	return {
 		parent: n.byHash.get(t)?.mother ?? null,
 		variants: (n.byMother.get(t) ?? []).map((e) => ({
@@ -19758,8 +19762,8 @@ function jC(e, t) {
 	};
 }
 // src/library/scoped-search.ts
-function MC(e, t, n) {
-	let r = String(e.doc.u ?? ""), i = KS(r, n);
+function jC(e, t, n) {
+	let r = String(e.doc.u ?? ""), i = tC(r, n);
 	if (i) return {
 		target: {
 			kind: "document",
@@ -19787,7 +19791,7 @@ function MC(e, t, n) {
 		hash: r
 	};
 }
-async function NC(e, t, n) {
+async function MC(e, t, n) {
 	let r = e.sets.find((e) => e.kind === "official");
 	if (!r || !await e.installed(r)) return [];
 	let i = await e.lib.search(r.id, n, {
@@ -19795,7 +19799,7 @@ async function NC(e, t, n) {
 		view: e.view
 	}), a = await e.links.corpusIndex(t.codeSet, e.view), o = await e.links.documentIds(t.codeSet, e.view), s = await e.assignments(), c = await e.houseUnits(), l = [];
 	for (let n of i) {
-		let i = MC(n, a, o);
+		let i = jC(n, a, o);
 		if (!i) continue;
 		let u = typeof n.doc.s == "string" ? n.doc.s : null, d = i.target.kind === "entry" ? await e.links.locate(t.codeSet, n.prop, i.hash, e.view) : {
 			set: i.target.kind === "corpus" && i.target.set ? i.target.set : r.id,
@@ -19828,7 +19832,7 @@ async function NC(e, t, n) {
 	return l;
 }
 // src/library/scoped-detail.ts
-async function PC(e, t, r, i, a, o, s, c) {
+async function NC(e, t, r, i, a, o, s, c) {
 	let l = c ? void 0 : a.find((e) => e.altId === o.altId), u = c && "docIdLocal" in c ? c.docIdLocal : l?.docIdLocal, d = await e.detail(t.set, t.prop, t.hash, void 0, s), f = i && i.base !== "official" ? i.base : void 0, p = u ?? (l ? void 0 : f);
 	if (p) {
 		for (let [i, a] of r) {
@@ -19860,20 +19864,20 @@ async function PC(e, t, r, i, a, o, s, c) {
 	};
 }
 // src/library/service-read.ts
-async function FC(e, t) {
+async function PC(e, t) {
 	let r = n(t);
 	if (r.kind !== "official") return;
 	let i = await e.officialState(r.id);
 	if (i && i.status !== "installed") throw Error(`${r.id} 已经卸载；旧版本仍可读，要读请重新下载`);
 }
-async function IC(e, t, r) {
+async function FC(e, t, r) {
 	if (!r || n(t).kind !== "official") return !0;
 	let i = await e.officialState(t);
 	return i ? i.status === "installed" ? !i.sources || i.sources.some((e) => e.toLowerCase() === r.toLowerCase()) : !1 : !0;
 }
 // src/library/legendary-creatures.ts
-async function LC(t, r, i, a, o) {
-	let s = n(i.ref.set), c = s.codeSet, l = e(c).id, u = new Map([...a.values()].flatMap((e) => [...e])), d = await t.storedItem(l, i.ref.prop, i.ref.hash, r), f = d && await IC(r, l, d.source), p = [...u.values()].filter((e) => e.hashes[i.ref.prop]?.includes(i.ref.hash)), m = i.docIdLocal ?? (s.kind === "brew" && p.length === 1 ? p[0].docIdLocal : void 0);
+async function IC(t, r, i, a, o) {
+	let s = n(i.ref.set), c = s.codeSet, l = e(c).id, u = new Map([...a.values()].flatMap((e) => [...e])), d = await t.storedItem(l, i.ref.prop, i.ref.hash, r), f = d && await FC(r, l, d.source), p = [...u.values()].filter((e) => e.hashes[i.ref.prop]?.includes(i.ref.hash)), m = i.docIdLocal ?? (s.kind === "brew" && p.length === 1 ? p[0].docIdLocal : void 0);
 	if (s.kind === "brew" && !m) return [];
 	let h = new Set(p.map((e) => e.docIdLocal)), g = [...f ? [void 0] : [], ...h];
 	function v(e) {
@@ -19925,14 +19929,14 @@ async function LC(t, r, i, a, o) {
 	}));
 }
 // src/library/scoped.ts
-var RC = class {
+var LC = class {
 	lib;
 	directory;
 	links;
 	manage;
 	editionCache = /* @__PURE__ */ new Map();
-	constructor(e, t, n, r = new JS(e, new Wb(t))) {
-		this.lib = e, this.directory = n, this.links = r, this.manage = new sC(t);
+	constructor(e, t, n, r = new nC(e, new Wb(t))) {
+		this.lib = e, this.directory = n, this.links = r, this.manage = new oC(t);
 	}
 	setsOf(e) {
 		return t.filter((t) => t.codeSet === e);
@@ -19985,7 +19989,7 @@ var RC = class {
 	async alts(e, t) {
 		let n = /* @__PURE__ */ new Map();
 		for (let r of this.setsOf(e).filter((e) => e.kind === "brew")) {
-			let e = (await t.derivedGet(ZS(r.id)))?.value;
+			let e = (await t.derivedGet(qS(r.id)))?.value;
 			for (let [t, r] of Object.entries(e?.targets ?? {})) n.set(t, r);
 		}
 		return n;
@@ -20077,7 +20081,7 @@ var RC = class {
 					set: o.id,
 					prop: t,
 					hash: n.hash
-				}, { ref: f, altId: p } = d ? aC(a, o.codeSet, d.docIdLocal, c.altMap) : {
+				}, { ref: f, altId: p } = d ? iC(a, o.codeSet, d.docIdLocal, c.altMap) : {
 					ref: a,
 					altId: null
 				};
@@ -20094,20 +20098,20 @@ var RC = class {
 					...d ? { pack: {
 						docIdLocal: d.docIdLocal,
 						filename: d.filename,
-						stableId: mC(d),
+						stableId: pC(d),
 						sources: d.sources
 					} } : {}
 				};
 				r && d ? l.push({
 					...b,
-					variant: oC(g.altId, h, d.docIdLocal, p !== null)
+					variant: aC(g.altId, h, d.docIdLocal, p !== null)
 				}) : r ? l.push(...i === "browse" ? PS(b, n.item, h) : y(PS(b, n.item, h), e, c.packs)) : l.push(b);
 			}
 		}
 		return l;
 	}
 	async variantsOf(e, t, n) {
-		let r = await (n ? Promise.resolve(n) : this.lib.currentView()), i = jC(await this.lib.parsed(t.set, t.prop, r), t.hash), a = await this.manage.assignments(), o = [];
+		let r = await (n ? Promise.resolve(n) : this.lib.currentView()), i = AC(await this.lib.parsed(t.set, t.prop, r), t.hash), a = await this.manage.assignments(), o = [];
 		for (let n of i.variants) {
 			let i = {
 				set: t.set,
@@ -20133,7 +20137,7 @@ var RC = class {
 			...e,
 			codeSet: n(t.ref.set).codeSet
 		}, r);
-		return LC(this.lib, r, t, i.packs, i.altMap);
+		return IC(this.lib, r, t, i.packs, i.altMap);
 	}
 	async storedItem(e, t) {
 		return this.lib.storedItem(e.set, e.prop, e.hash, t);
@@ -20153,8 +20157,8 @@ var RC = class {
 			...e,
 			codeSet: n(r.set).codeSet
 		}, l = await this.context(c, s);
-		o && "docIdLocal" in o && (r = aC(r, c.codeSet, o.docIdLocal, l.altMap).ref);
-		let u = _(r), d = await this.alternativesOf(r, l), { chosen: f } = this.version(u, d, l, e.choices), p = await PC(this.lib, r, l.packs, l.altMap.get(u), d, f, s, o);
+		o && "docIdLocal" in o && (r = iC(r, c.codeSet, o.docIdLocal, l.altMap).ref);
+		let u = _(r), d = await this.alternativesOf(r, l), { chosen: f } = this.version(u, d, l, e.choices), p = await NC(this.lib, r, l.packs, l.altMap.get(u), d, f, s, o);
 		if (!p) return null;
 		let m = await this.viewFor(c, r, p.source, l.assigns, s);
 		if (!m.visible && !i) return { hidden: m.reason };
@@ -20236,7 +20240,7 @@ var RC = class {
 		return s;
 	}
 	searchHits(e, t, n) {
-		return NC({
+		return MC({
 			lib: this.lib,
 			links: this.links,
 			sets: this.setsOf(e.codeSet),
@@ -20294,16 +20298,16 @@ var RC = class {
 		};
 	}
 	catalog(e, t) {
-		return vC(this.catalogDeps(), e, t);
+		return _C(this.catalogDeps(), e, t);
 	}
 	shelf(e, t, { allDownloads: n = !1 } = {}) {
-		return yC(this.catalogDeps(), e, t, n);
+		return vC(this.catalogDeps(), e, t, n);
 	}
 	sourceCounts(e, t) {
-		return bC(t, e);
+		return yC(t, e);
 	}
 	async adventures(e, t) {
-		return xC(this.lib, e, t ?? await this.lib.currentView());
+		return bC(this.lib, e, t ?? await this.lib.currentView());
 	}
 	async previewAssignment(e, t, n, r) {
 		let i = await (r ? Promise.resolve(r) : this.lib.currentView()), a = await this.manage.assignments(), o = t.startsWith("src:") ? t.slice(4) : null, s = o ? m((await this.editions(e, [o], i))[o]) : null;
@@ -20317,16 +20321,16 @@ var RC = class {
 		return this.manage.setAssignment(e, t);
 	}
 	choose(e, t, n, r = "campaign") {
-		return YS(this.manage, e, _(t), n, r);
+		return rC(this.manage, e, _(t), n, r);
 	}
 	async choosePack(e, t, n, r = "campaign") {
 		let i = e;
-		for (let e of t) i = await YS(this.manage, i, OS(e), n, r);
+		for (let e of t) i = await rC(this.manage, i, OS(e), n, r);
 		return i;
 	}
 };
 // src/library/custom-raw.ts
-async function zC(e, t) {
+async function RC(e, t) {
 	let r = n(t.set);
 	if (r.kind === "official") {
 		let n = await e.lib.storedItem(t.set, t.prop, t.hash);
@@ -20347,39 +20351,39 @@ async function zC(e, t) {
 	}
 	return null;
 }
-var BC = (e) => {
+var zC = (e) => {
 	let t = e._copy?._mod ?? {};
 	return [.../* @__PURE__ */ new Set([...Object.keys(e), ...Object.keys(t)])].filter((e) => !e.startsWith("_") && e !== "source" && e !== "uniqueId");
 };
-function VC(e, t, n) {
-	return BC(t).filter((t) => Te(e[t] ?? null) !== Te(n[t] ?? null)).map((t) => ({
+function BC(e, t, n) {
+	return zC(t).filter((t) => Te(e[t] ?? null) !== Te(n[t] ?? null)).map((t) => ({
 		field: t,
 		before: e[t],
 		after: t in n ? n[t] : null
 	})).sort((e, t) => e.field.localeCompare(t.field));
 }
-function HC(e, t, n) {
-	let r = new Set(BC(t)), i = { ...n };
+function VC(e, t, n) {
+	let r = new Set(zC(t)), i = { ...n };
 	for (let [t, n] of Object.entries(e)) !(t in i) && !r.has(t) && (i[t] = n);
 	return i;
 }
-async function UC(e, t, r) {
-	let i = await e.lib.frameOf(n(t.set).codeSet), [a, o] = await Promise.all([zC(e, t), zC(e, r)]);
+async function HC(e, t, r) {
+	let i = await e.lib.frameOf(n(t.set).codeSet), [a, o] = await Promise.all([RC(e, t), RC(e, r)]);
 	if (!a || !o) return null;
 	let s = await i.call("cleanEntity", a.entity), c = o.entity, l = await i.call("mergeOne", t.prop, c);
 	return {
 		raw: c,
 		item: l,
 		base: s,
-		start: HC(s, c, l),
-		changes: VC(s, c, l)
+		start: VC(s, c, l),
+		changes: BC(s, c, l)
 	};
 }
-var WC = (e, t) => jS(e.rule, t);
-async function GC(e, t, r) {
-	let i = n(r.set).codeSet, a = await e.lib.frameOf(i), o = await zC(e, r);
+var UC = (e, t) => jS(e.rule, t);
+async function WC(e, t, r) {
+	let i = n(r.set).codeSet, a = await e.lib.frameOf(i), o = await RC(e, r);
 	if (!o) throw Error("找不到这一条");
-	let s = await a.call("cleanEntity", o.entity), c = (await e.edits({ refs: [r] }, t)).filter((e) => e.ref.set === r.set && e.ref.hash === r.hash && WC(t, e.level) >= 0).sort((e, n) => WC(t, e.level) - WC(t, n.level))[0], l = (e, t, n) => ({
+	let s = await a.call("cleanEntity", o.entity), c = (await e.edits({ refs: [r] }, t)).filter((e) => e.ref.set === r.set && e.ref.hash === r.hash && UC(t, e.level) >= 0).sort((e, n) => UC(t, e.level) - UC(t, n.level))[0], l = (e, t, n) => ({
 		altId: e,
 		house: null,
 		level: t,
@@ -20395,7 +20399,7 @@ async function GC(e, t, r) {
 			set: e.houseSet(i),
 			prop: r.prop,
 			hash: c.altId.slice(6)
-		}, n = await UC(e, r, t);
+		}, n = await HC(e, r, t);
 		return n ? {
 			altId: c.altId,
 			house: t,
@@ -20407,9 +20411,9 @@ async function GC(e, t, r) {
 	return l(c.altId, c.level, u && !("hidden" in u) ? u.item : s);
 }
 // src/library/copy-source.ts
-var KC = (e) => String(e ?? "").toLowerCase(), qC = (e) => !!e && typeof e == "object" && !Array.isArray(e);
-async function JC(e) {
-	let t = await e.lib.frameOf(e.official.codeSet), n = await t.call("loaders"), r = new Set(n.filter((e) => e.kind === "corpus").flatMap((e) => e.props.slice(1))), i = new Set(n.flatMap((e) => e.props).filter((e) => !e.startsWith("raw_") && !r.has(e))), o = KC(e.source), s = {}, c = [], l = new Set(e.view ? await e.view.filePaths(e.official) : (await e.db.files.where("source").equals(e.official.id).toArray()).map((e) => e.path));
+var GC = (e) => String(e ?? "").toLowerCase(), KC = (e) => !!e && typeof e == "object" && !Array.isArray(e);
+async function qC(e) {
+	let t = await e.lib.frameOf(e.official.codeSet), n = await t.call("loaders"), r = new Set(n.filter((e) => e.kind === "corpus").flatMap((e) => e.props.slice(1))), i = new Set(n.flatMap((e) => e.props).filter((e) => !e.startsWith("raw_") && !r.has(e))), o = GC(e.source), s = {}, c = [], l = new Set(e.view ? await e.view.filePaths(e.official) : (await e.db.files.where("source").equals(e.official.id).toArray()).map((e) => e.path));
 	for (let t of await e.authorFiles()) {
 		if (!l.has(t) || t.startsWith("data/generated/") || t.startsWith("data/adventure/") || t.startsWith("data/book/")) continue;
 		let n = e.view ? (await e.view.fileGet(e.official, t))?.text : (await e.db.files.get([e.official.id, t]))?.text;
@@ -20424,9 +20428,9 @@ async function JC(e) {
 			});
 			continue;
 		}
-		if (qC(r)) for (let [e, t] of Object.entries(r)) {
+		if (KC(r)) for (let [e, t] of Object.entries(r)) {
 			if (!i.has(e) || !Array.isArray(t)) continue;
-			let n = t.filter((e) => qC(e) && KC(e.source) === o);
+			let n = t.filter((e) => KC(e) && GC(e.source) === o);
 			n.length && (s[e] = [...s[e] ?? [], ...n]);
 		}
 	}
@@ -20447,7 +20451,7 @@ async function JC(e) {
 			else try {
 				let e = JSON.parse(l)[i];
 				if (!Array.isArray(e)) throw Error(`没有 ${i}`);
-				s[i] = [...s[i] ?? [], ...e.filter(qC)], u.push({
+				s[i] = [...s[i] ?? [], ...e.filter(KC)], u.push({
 					prop: n,
 					id: a
 				});
@@ -20480,7 +20484,7 @@ async function JC(e) {
 	let m = {}, h = /* @__PURE__ */ new Set();
 	for (let [e, t] of Object.entries(d)) for (let n of t) {
 		let t = n?._copy?.source;
-		typeof t == "string" && (KC(t) === o ? h.add(e) : (m[e] ?? []).some((e) => KC(e) === KC(t)) || (m[e] ??= []).push(t));
+		typeof t == "string" && (GC(t) === o ? h.add(e) : (m[e] ?? []).some((e) => GC(e) === GC(t)) || (m[e] ??= []).push(t));
 	}
 	let g = (await t.call("sourceNames", [e.source]))[e.source], _ = (await t.call("editionOf", [e.source]))[e.source], v = Math.floor(Date.now() / 1e3);
 	return {
@@ -20510,14 +20514,14 @@ async function JC(e) {
 	};
 }
 // src/library/custom-packs.ts
-var YC = /^[A-Za-z0-9_-]+$/, XC = (e) => {
+var JC = /^[A-Za-z0-9_-]+$/, YC = (e) => {
 	let n = t.find((t) => t.kind === "brew" && t.codeSet === e);
 	if (!n) throw Error(`作者程序 ${e} 没有登记自制数据集`);
 	return n;
 };
-async function ZC(e, t, n) {
+async function XC(e, t, n) {
 	let r = await e.manage.assignments();
-	return (await e.packsOf(XC(t).id, n)).filter((e) => e.origin === "import" && e.sourceInfo.length).map((e) => {
+	return (await e.packsOf(YC(t).id, n)).filter((e) => e.origin === "import" && e.sourceInfo.length).map((e) => {
 		let t = e.sourceInfo[e.sourceInfo.length - 1], n = [...r.get(s(t.json))?.scopes ?? []];
 		return {
 			...e,
@@ -20528,22 +20532,22 @@ async function ZC(e, t, n) {
 		};
 	});
 }
-async function QC(e, t, n, r) {
-	let i = (await ZC(e, t)).find((e) => e.id === n);
+async function ZC(e, t, n, r) {
+	let i = (await XC(e, t)).find((e) => e.id === n);
 	if (!i) throw Error(`【我的库】里没有这个包：${n}`);
 	await e.manage.setAssignment(s(i.own.json), r ? {
 		scopes: [...f(r).defaultScopes],
 		global: !1
 	} : null);
 }
-async function $C(e, t) {
+async function QC(e, t) {
 	let n = (await e.call("brewDocIndex")).find((e) => !e.isEditable && !e.url && (TS({ sources: e.sources }) ?? e.docIdLocal) === t);
 	if (!n) throw Error(`【我的库】里没有这个包：${t}`);
 	return n.docIdLocal;
 }
-async function ew(e, t, n, { rule: r } = {}) {
+async function $C(e, t, n, { rule: r } = {}) {
 	let i = n.json.trim();
-	if (!YC.test(i)) throw Error("包的编号只能用英文字母、数字、下划线和短横线");
+	if (!JC.test(i)) throw Error("包的编号只能用英文字母、数字、下划线和短横线");
 	if (!n.full.trim()) throw Error("包要有名字");
 	if (await (await e.lib.frameOf(t)).call("sourceTaken", i)) throw Error(`编号 ${i} 已经有书或包在用了，换一个`);
 	let a = {
@@ -20559,7 +20563,7 @@ async function ew(e, t, n, { rule: r } = {}) {
 		dateAdded: o,
 		dateLastModified: o,
 		...r ? { edition: f(r).style } : {}
-	} }, l = await e.lib.brewImport(XC(t).id, [{
+	} }, l = await e.lib.brewImport(YC(t).id, [{
 		name: `${i}.json`,
 		text: JSON.stringify(c)
 	}]);
@@ -20572,53 +20576,53 @@ async function ew(e, t, n, { rule: r } = {}) {
 		id: TS({ sources: [i] })
 	};
 }
-async function tw(e, t, n, r) {
-	let i = (await ZC(e, t)).find((e) => e.id === n);
+async function ew(e, t, n, r) {
+	let i = (await XC(e, t)).find((e) => e.id === n);
 	if (!i) throw Error(`【我的库】里没有这个包：${n}`);
 	await e.lib.writeAuthor(t, "custom-pack-rename", async (a) => {
-		let o = await e.lib.frameOf(t, a), s = await $C(o, n);
+		let o = await e.lib.frameOf(t, a), s = await QC(o, n);
 		return await o.call("packRenameSource", s, i.own.json, r), {
 			value: null,
 			touched: [s]
 		};
 	});
 }
-function nw(e) {
+function tw(e) {
 	let t = new Set(e.scopes.map((e) => b.find((t) => t.id === e)?.edition).filter(Boolean));
 	return t.size === 1 ? [...t][0] : void 0;
 }
+async function nw(e, t, n) {
+	let r = (await XC(e, t)).find((e) => e.id === n);
+	if (!r) throw Error(`【我的库】里没有这个包：${n}`);
+	return (await e.lib.frameOf(t)).call("packExport", r.docIdLocal, tw(r));
+}
 async function rw(e, t, n) {
-	let r = (await ZC(e, t)).find((e) => e.id === n);
+	let r = (await XC(e, t)).find((e) => e.id === n);
 	if (!r) throw Error(`【我的库】里没有这个包：${n}`);
-	return (await e.lib.frameOf(t)).call("packExport", r.docIdLocal, nw(r));
+	return e.lib.brewDelete(YC(t).id, [r.docIdLocal]);
 }
-async function iw(e, t, n) {
-	let r = (await ZC(e, t)).find((e) => e.id === n);
-	if (!r) throw Error(`【我的库】里没有这个包：${n}`);
-	return e.lib.brewDelete(XC(t).id, [r.docIdLocal]);
+var iw = (e) => `last-pack:${e}`;
+async function aw(e, t, n) {
+	await e.manage.setMeta(iw(t), n);
 }
-var aw = (e) => `last-pack:${e}`;
-async function ow(e, t, n) {
-	await e.manage.setMeta(aw(t), n);
-}
-async function sw(e, t) {
-	let n = await e.manage.meta(aw(t));
-	return n && (await ZC(e, t)).some((e) => e.id === n) ? n : null;
+async function ow(e, t) {
+	let n = await e.manage.meta(iw(t));
+	return n && (await XC(e, t)).some((e) => e.id === n) ? n : null;
 }
 // src/library/field-shape-core.ts
-function cw(e, t) {
+function sw(e, t) {
 	if (!e.some((e) => e.name === "colLabels")) return null;
 	let n = e.find((e) => e.name === "rows" || e.name === "rowsSpellProgression");
 	if (!n?.shape) return null;
-	let r = lw(n.shape, t);
+	let r = cw(n.shape, t);
 	if (r.c !== "list") return null;
-	let i = lw(r.of, t), a = i.c === "pick" ? i.branches.map((e) => lw(e.shape, t)).find((e) => e.c === "list") : i;
+	let i = cw(r.of, t), a = i.c === "pick" ? i.branches.map((e) => cw(e.shape, t)).find((e) => e.c === "list") : i;
 	return a?.c === "list" ? {
 		rows: n.name,
-		numeric: lw(a.of, t).c === "number"
+		numeric: cw(a.of, t).c === "number"
 	} : null;
 }
-function lw(e, t) {
+function cw(e, t) {
 	let n = e;
 	for (let e = 0; e < 8 && "ref" in n; e++) n = t[n.ref] ?? {
 		c: "json",
@@ -20629,10 +20633,10 @@ function lw(e, t) {
 		why: "结构套得太深"
 	} : n;
 }
-function uw(e, t, n) {
+function lw(e, t, n) {
 	if (t === void 0) return 0;
 	let r = (e) => {
-		let r = lw(e, n);
+		let r = cw(e, n);
 		return typeof t == "string" ? r.c === "text" || r.c === "entries" || r.c === "select" && r.enum.includes(t) : typeof t == "number" ? r.c === "number" || r.c === "select" && r.enum.includes(t) : typeof t == "boolean" ? r.c === "switch" || r.c === "const" : Array.isArray(t) ? r.c === "list" || r.c === "multiselect" : t && typeof t == "object" ? r.c === "group" || r.c === "map" || r.c === "json" : !1;
 	};
 	if (t && typeof t == "object" && !Array.isArray(t)) {
@@ -20643,8 +20647,8 @@ function uw(e, t, n) {
 	return i >= 0 ? i : 0;
 }
 // src/library/entry-kinds.ts
-var dw = /* @__PURE__ */ new Set(["renderdemo", "citation"]);
-function fw(e, t) {
+var uw = /* @__PURE__ */ new Set(["renderdemo", "citation"]);
+function dw(e, t) {
 	let n = new Set(e), r = /* @__PURE__ */ new Map(), i = (e) => {
 		let r = new Set(t(e));
 		return [...n].filter((t) => t !== e && (r.has(`${t}Name`) || r.has(`${t}ShortName`)));
@@ -20669,7 +20673,7 @@ function fw(e, t) {
 	}
 	return r;
 }
-function pw(e, t) {
+function fw(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let t of e) n.set(t.name, (n.get(t.name) ?? 0) + 1);
 	return e.map((e) => (n.get(e.name) ?? 0) > 1 ? {
@@ -20677,7 +20681,7 @@ function pw(e, t) {
 		name: `${e.name}（${t(e.prop) ?? e.prop}）`
 	} : e);
 }
-var mw = {
+var pw = {
 	shared: {
 		entries: "说明",
 		from: "来源",
@@ -20813,8 +20817,8 @@ var mw = {
 	}
 };
 // src/library/formats.ts
-function hw(e) {
-	let t = mw, n = {}, r = {}, i = (e, t) => {
+function mw(e) {
+	let t = pw, n = {}, r = {}, i = (e, t) => {
 		t !== void 0 && (n[e] = t, typeof t == "object" && t.tip && (r[e] = t.tip));
 	}, a = t;
 	if (a.shared || a.byProp) {
@@ -20827,7 +20831,7 @@ function hw(e) {
 		tips: r
 	};
 }
-var gw = (e) => !!e && typeof e == "object" && !Array.isArray(e), _w = {
+var hw = (e) => !!e && typeof e == "object" && !Array.isArray(e), gw = {
 	id: "5etools",
 	name: "5etools 自制格式",
 	validate: (e) => aS(e),
@@ -20852,7 +20856,7 @@ var gw = (e) => !!e && typeof e == "object" && !Array.isArray(e), _w = {
 			}]
 		})).issues.filter((t) => t.path.startsWith(`/${e}/0`));
 	},
-	recognize: (e) => gw(e) && gw(e._meta) && Array.isArray(e._meta.sources),
+	recognize: (e) => hw(e) && hw(e._meta) && Array.isArray(e._meta.sources),
 	async fields(e) {
 		let [t, n] = await Promise.all([Zx(), $x()]), r = t.props[e];
 		if (!r) return null;
@@ -20861,7 +20865,7 @@ var gw = (e) => !!e && typeof e == "object" && !Array.isArray(e), _w = {
 			...n.byProp[e] ?? {}
 		}, a = n.byPath?.[e] ?? {};
 		for (let [e, t] of Object.entries(a)) i[e] = t;
-		let o = hw(e);
+		let o = mw(e);
 		for (let [e, t] of Object.entries(o.labels)) {
 			let n = typeof t == "string" ? t : t.label;
 			n && (!i[e] || e in o.labels) && (i[e] = n);
@@ -20877,26 +20881,26 @@ var gw = (e) => !!e && typeof e == "object" && !Array.isArray(e), _w = {
 			tips: o.tips
 		};
 	}
-}, vw = { [_w.id]: _w }, yw = [(e) => {
-	let t = (Array.isArray(e) ? e : [e]).map((e) => gw(e) && gw(e._stats) ? e._stats.systemId : null).find((e) => typeof e == "string" && e);
+}, _w = { [gw.id]: gw }, vw = [(e) => {
+	let t = (Array.isArray(e) ? e : [e]).map((e) => hw(e) && hw(e._stats) ? e._stats.systemId : null).find((e) => typeof e == "string" && e);
 	return t ? `这是 Foundry VTT（规则系统 ${String(t)}）导出的数据` : null;
 }];
-function bw(e) {
-	let t = vw[e];
+function yw(e) {
+	let t = _w[e];
 	if (!t) throw Error(`没有登记这种数据格式：${e}`);
 	return t;
 }
-function xw(e) {
+function bw(e) {
 	let t = a[e]?.format;
 	if (!t) throw Error(`资料集 ${e} 没有登记数据格式`);
-	return bw(t);
+	return yw(t);
 }
-function Sw(e) {
-	let t = f(e.rule).format, n = xw(e.codeSet);
+function xw(e) {
+	let t = f(e.rule).format, n = bw(e.codeSet);
 	if (n.id !== t) throw Error(`规则 ${e.rule} 的资料是 ${t} 格式，资料集 ${e.codeSet} 是 ${n.id} 格式，不能混用`);
 	return n;
 }
-function Cw(e, t) {
+function Sw(e, t) {
 	let n;
 	try {
 		n = JSON.parse(t);
@@ -20905,13 +20909,13 @@ function Cw(e, t) {
 	}
 	return e.recognize(n) ? { ok: !0 } : {
 		ok: !1,
-		reason: `${yw.map((e) => e(n)).find(Boolean) ?? "不是认得的数据格式"}；这里只收${e.name}（需要 _meta.sources）`
+		reason: `${vw.map((e) => e(n)).find(Boolean) ?? "不是认得的数据格式"}；这里只收${e.name}（需要 _meta.sources）`
 	};
 }
-function ww(e, t) {
+function Cw(e, t) {
 	let n = [], r = [];
 	for (let i of t) {
-		let t = Cw(e, i.text);
+		let t = Sw(e, i.text);
 		t.ok ? n.push(i) : r.push({
 			name: i.name,
 			reason: t.reason
@@ -20923,8 +20927,8 @@ function ww(e, t) {
 	};
 }
 // src/library/custom-new.ts
-async function Tw(e, n) {
-	let r = xw(n), i = await (await e.frame(n)).call("entryTypes"), a = {};
+async function ww(e, n) {
+	let r = bw(n), i = await (await e.frame(n)).call("entryTypes"), a = {};
 	for (let r of t.filter((e) => e.codeSet === n)) {
 		let t;
 		try {
@@ -20936,14 +20940,14 @@ async function Tw(e, n) {
 	}
 	let o = [];
 	for (let e of i) {
-		if (dw.has(e.prop)) continue;
+		if (uw.has(e.prop)) continue;
 		let t = await r.fields(e.prop);
 		t && o.push({
 			...e,
 			required: t.fields.filter((e) => e.required).map((e) => e.name)
 		});
 	}
-	let s = fw(o.map((e) => e.prop), (e) => o.find((t) => t.prop === e)?.required ?? []), c = o.map((e) => ({
+	let s = dw(o.map((e) => e.prop), (e) => o.find((t) => t.prop === e)?.required ?? []), c = o.map((e) => ({
 		prop: e.prop,
 		name: e.name,
 		group: e.group,
@@ -20958,10 +20962,10 @@ async function Tw(e, n) {
 			convert: e.converters,
 			json: !0
 		}
-	})), l = await Ew(e, n);
-	return pw(c, (e) => l.get(e));
+	})), l = await Tw(e, n);
+	return fw(c, (e) => l.get(e));
 }
-async function Ew(e, n) {
+async function Tw(e, n) {
 	let r = t.find((e) => e.kind === "official" && e.codeSet !== n)?.codeSet;
 	if (!r) return /* @__PURE__ */ new Map();
 	try {
@@ -20971,7 +20975,7 @@ async function Ew(e, n) {
 		return console.debug("[trpg-assistant] 另一种语言的类型名没取到，重名的用类别编号区分", e), /* @__PURE__ */ new Map();
 	}
 }
-function Dw(e) {
+function Ew(e) {
 	if (e.enum?.length) return e.enum[0];
 	switch (e.types[0]) {
 		case "string": return "";
@@ -20983,31 +20987,31 @@ function Dw(e) {
 		default: return null;
 	}
 }
-async function Ow(e, t) {
-	let n = await xw(e).fields(t);
+async function Dw(e, t) {
+	let n = await bw(e).fields(t);
 	if (!n) return null;
-	let r = (e) => !!e.shape && ["pick", "group"].includes(lw(e.shape, n.defs ?? {}).c);
-	return Object.fromEntries(n.fields.filter((e) => e.required && e.name !== "source" && !r(e)).map((e) => [e.name, Dw(e)]));
+	let r = (e) => !!e.shape && ["pick", "group"].includes(cw(e.shape, n.defs ?? {}).c);
+	return Object.fromEntries(n.fields.filter((e) => e.required && e.name !== "source" && !r(e)).map((e) => [e.name, Ew(e)]));
 }
 // src/library/corpus-contents.ts
-var kw = (e) => !!e && typeof e == "object" && !Array.isArray(e), Aw = (e) => kw(e) && typeof e.name == "string" && e.name.trim() ? e.name : null, jw = (e) => typeof e == "string" ? e : e.header;
-function Mw(e, t = /* @__PURE__ */ new Set()) {
+var Ow = (e) => !!e && typeof e == "object" && !Array.isArray(e), kw = (e) => Ow(e) && typeof e.name == "string" && e.name.trim() ? e.name : null, Aw = (e) => typeof e == "string" ? e : e.header;
+function jw(e, t = /* @__PURE__ */ new Set()) {
 	if (!Array.isArray(e)) return t;
 	for (let n of e) {
-		let e = Aw(n);
-		e && t.add(e), kw(n) && (Mw(n.entries, t), Mw(n.items, t));
+		let e = kw(n);
+		e && t.add(e), Ow(n) && (jw(n.entries, t), jw(n.items, t));
 	}
 	return t;
 }
-function Nw(e) {
-	return e.flatMap((e, t) => Aw(e) ? [] : [t + 1]);
+function Mw(e) {
+	return e.flatMap((e, t) => kw(e) ? [] : [t + 1]);
 }
-function Pw(e, t) {
-	let n = (Array.isArray(t) ? t : []).filter((e) => kw(e) && typeof e.name == "string");
+function Nw(e, t) {
+	let n = (Array.isArray(t) ? t : []).filter((e) => Ow(e) && typeof e.name == "string");
 	return e.map((e) => {
-		let t = Aw(e) ?? "", r = kw(e) ? e.entries : void 0, i = n.find((e) => e.name === t);
+		let t = kw(e) ?? "", r = Ow(e) ? e.entries : void 0, i = n.find((e) => e.name === t);
 		if (i) {
-			let e = Mw(r), t = (i.headers ?? []).filter((t) => e.has(jw(t)));
+			let e = jw(r), t = (i.headers ?? []).filter((t) => e.has(Aw(t)));
 			if (t.length) return {
 				...i,
 				headers: t
@@ -21015,7 +21019,7 @@ function Pw(e, t) {
 			let { headers: n, ...a } = i;
 			return a;
 		}
-		let a = (Array.isArray(r) ? r : []).map(Aw).filter((e) => !!e);
+		let a = (Array.isArray(r) ? r : []).map(kw).filter((e) => !!e);
 		return a.length ? {
 			name: t,
 			headers: a
@@ -21023,11 +21027,11 @@ function Pw(e, t) {
 	});
 }
 // src/library/attached-parts.ts
-var Fw = async (e, t) => (await xw(e).fields(t))?.fields ?? null;
-async function Iw(e, t, n) {
+var Pw = async (e, t) => (await bw(e).fields(t))?.fields ?? null;
+async function Fw(e, t, n) {
 	let r = (await e.call("corpusPairs")).find((e) => e.head === n);
 	if (!r) return null;
-	let [i, a] = await Promise.all([Fw(t, n), Fw(t, r.body)]);
+	let [i, a] = await Promise.all([Pw(t, n), Pw(t, r.body)]);
 	if (!i || !a) return null;
 	let o = new Set(i.map((e) => e.name));
 	return {
@@ -21035,68 +21039,68 @@ async function Iw(e, t, n) {
 		linked: a.map((e) => e.name).filter((e) => o.has(e))
 	};
 }
-async function Lw(e, t) {
+async function Iw(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	for (let r of (await e.call("loaders")).filter((e) => e.kind === "corpus" && e.index && e.page && e.props[0] === t)) for (let i of await e.call("corpusList", r.index, t, r.page)) n.add(String(i.id).toLowerCase());
 	for (let r of await e.call("brewRaw", null)) for (let e of r.body?.[t] ?? []) e?.id && n.add(String(e.id).toLowerCase());
 	return n;
 }
-async function Rw(e, t, n, r) {
-	let i = await Lw(e, n), a = r;
+async function Lw(e, t, n, r) {
+	let i = await Iw(e, n), a = r;
 	for (let e = 2; i.has(a.toLowerCase()); e++) a = `${r}-${e}`;
-	let o = await Fw(t, n) ?? [], s = o.find((e) => e.name === "group");
+	let o = await Pw(t, n) ?? [], s = o.find((e) => e.name === "group");
 	return {
 		id: a,
 		...s?.enum?.includes("homebrew") ? { group: "homebrew" } : {},
 		...o.some((e) => e.name === "published") ? { published: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) } : {}
 	};
 }
-async function zw(e, t, n, r, i) {
-	let a = Array.isArray(r.data) ? r.data : [], o = Nw(a);
+async function Rw(e, t, n, r, i) {
+	let a = Array.isArray(r.data) ? r.data : [], o = Mw(a);
 	if (o.length) throw Error(`第 ${o.join("、")} 章没有章名`);
 	let s = String(n.id ?? "").trim();
 	if (!s) throw Error("编号没填");
-	if ((!i || i.toLowerCase() !== s.toLowerCase()) && (await Lw(e, t)).has(s.toLowerCase())) throw Error(`编号 ${s} 已经有同类的条目在用，换一个`);
+	if ((!i || i.toLowerCase() !== s.toLowerCase()) && (await Iw(e, t)).has(s.toLowerCase())) throw Error(`编号 ${s} 已经有同类的条目在用，换一个`);
 	return {
 		...n,
 		id: s,
-		contents: Pw(a, n.contents)
+		contents: Nw(a, n.contents)
 	};
 }
-var Bw = (e, t, n) => ({
+var zw = (e, t, n) => ({
 	...e,
 	...Object.fromEntries(n.linked.filter((e) => t[e] !== void 0).map((e) => [e, t[e]]))
-}), Vw = (e, t) => Object.fromEntries(Object.entries(e).filter(([e]) => !t.linked.includes(e))), Hw = ["contents"];
-async function Uw(e, t, n) {
-	let r = await Iw(e, t, n);
+}), Bw = (e, t) => Object.fromEntries(Object.entries(e).filter(([e]) => !t.linked.includes(e))), Vw = ["contents"];
+async function Hw(e, t, n) {
+	let r = await Fw(e, t, n);
 	if (r) return {
-		hide: Hw,
+		hide: Vw,
 		attached: r
 	};
 	let i = (await e.call("corpusPairs")).find((e) => e.body === n);
 	return {
-		hide: (i ? await Iw(e, t, i.head) : null)?.linked ?? [],
+		hide: (i ? await Fw(e, t, i.head) : null)?.linked ?? [],
 		attached: null
 	};
 }
-async function Ww(e, t, n, r, i) {
-	return await Iw(e, t, n) ? {
-		...Object.fromEntries(Object.entries(r).filter(([e]) => !Hw.includes(e))),
-		...await Rw(e, t, n, i)
+async function Uw(e, t, n, r, i) {
+	return await Fw(e, t, n) ? {
+		...Object.fromEntries(Object.entries(r).filter(([e]) => !Vw.includes(e))),
+		...await Lw(e, t, n, i)
 	} : r;
 }
-async function Gw(e, t, n, r, i) {
-	let a = await Iw(e, t, n);
+async function Ww(e, t, n, r, i) {
+	let a = await Fw(e, t, n);
 	if (!a) return null;
-	let o = Vw(await Ow(t, a.prop) ?? {}, a), s = r && i ? await e.call("packEntity", r, n, i) : null, c = s?.entity?.id ? await e.call("packEntity", r, a.prop, { id: String(s.entity.id) }) : null;
+	let o = Bw(await Dw(t, a.prop) ?? {}, a), s = r && i ? await e.call("packEntity", r, n, i) : null, c = s?.entity?.id ? await e.call("packEntity", r, a.prop, { id: String(s.entity.id) }) : null;
 	return {
 		...a,
-		entity: c ? Vw(c.entity, a) : o
+		entity: c ? Bw(c.entity, a) : o
 	};
 }
 // src/library/field-usage.ts
-var Kw = 6, qw = 12, Jw = 6;
-function Yw(e, t, n) {
+var Gw = 6, Kw = 12, qw = 6;
+function Jw(e, t, n) {
 	let r = {}, i = (e) => r[e] ??= { n: 0 }, a = (e, t) => {
 		e[t] = (e[t] ?? 0) + 1;
 	}, o = (e, t) => {
@@ -21105,10 +21109,10 @@ function Yw(e, t, n) {
 		let r = JSON.stringify(t);
 		n.vals.set(r, (n.vals.get(r) ?? 0) + 1);
 	}, s = (e, t, r, c) => {
-		if (t === void 0 || c > Kw) return;
-		let l = lw(e, n), u = i(r);
+		if (t === void 0 || c > Gw) return;
+		let l = cw(e, n), u = i(r);
 		if (u.n++, l.c === "pick") {
-			let e = uw(l, t, n);
+			let e = lw(l, t, n);
 			a(u.branches ??= {}, e);
 			let i = l.branches[e];
 			i && (u.n--, s(i.shape, t, r, c));
@@ -21117,7 +21121,7 @@ function Yw(e, t, n) {
 			n !== void 0 && (a(u.sub ??= {}, e.name), s(e.shape, n, `${r}.${e.name}`, c + 1));
 		}
 		else if ((l.c === "list" || l.c === "multiselect") && Array.isArray(t)) {
-			if (t.length && t.length <= Jw && t.every((e) => typeof e == "string" || typeof e == "number") && o(r, t), l.c === "list") for (let e of t) s(l.of, e, `${r}[]`, c + 1);
+			if (t.length && t.length <= qw && t.every((e) => typeof e == "string" || typeof e == "number") && o(r, t), l.c === "list") for (let e of t) s(l.of, e, `${r}[]`, c + 1);
 		} else if (l.c === "map" && t && typeof t == "object" && !Array.isArray(t)) for (let e of Object.values(t)) s(l.of, e, `${r}{}`, c + 1);
 		else l.c !== "select" && l.c !== "text" && l.c !== "number" || typeof t != "string" && typeof t != "number" || o(r, t);
 	}, c = {}, l = t.filter((e) => !e.internal && e.shape);
@@ -21130,7 +21134,7 @@ function Yw(e, t, n) {
 		let { vals: n, ...r } = t;
 		u[e] = n ? {
 			...r,
-			values: [...n].sort((e, t) => t[1] - e[1]).slice(0, qw)
+			values: [...n].sort((e, t) => t[1] - e[1]).slice(0, Kw)
 		} : r;
 	}
 	return {
@@ -21139,32 +21143,32 @@ function Yw(e, t, n) {
 		at: u
 	};
 }
-var Xw = (e) => e.filter((e) => !!e && typeof e == "object" && !Array.isArray(e) && !("_copy" in e)), Zw = .1, Qw = .05, $w = /* @__PURE__ */ new Set(["source", "edition"]);
-function eT(e, t, n) {
+var Yw = (e) => e.filter((e) => !!e && typeof e == "object" && !Array.isArray(e) && !("_copy" in e)), Xw = .1, Zw = .05, Qw = /* @__PURE__ */ new Set(["source", "edition"]);
+function $w(e, t, n) {
 	let r = /^([^.[{]+)(.*)$/.exec(n), i = r && e.find((e) => e.name === r[1]);
 	if (!r || !i?.shape) return null;
-	let a = lw(i.shape, t);
+	let a = cw(i.shape, t);
 	for (let e of r[2].match(/\.[^.[{]+|\[\]|\{\}/g) ?? []) {
 		let n = (r) => {
 			if (r.c === "pick") {
 				for (let e of r.branches) {
-					let r = n(lw(e.shape, t));
+					let r = n(cw(e.shape, t));
 					if (r) return r;
 				}
 				return null;
 			}
-			if (e === "[]") return r.c === "list" ? lw(r.of, t) : null;
-			if (e === "{}") return r.c === "map" ? lw(r.of, t) : null;
+			if (e === "[]") return r.c === "list" ? cw(r.of, t) : null;
+			if (e === "{}") return r.c === "map" ? cw(r.of, t) : null;
 			if (r.c !== "group") return null;
 			let i = r.props.find((t) => t.name === e.slice(1));
-			return i ? lw(i.shape, t) : null;
+			return i ? cw(i.shape, t) : null;
 		}, r = n(a);
 		if (!r) return null;
 		a = r;
 	}
 	return a;
 }
-var tT = (e) => /([^.[{\]}]+)(?:\[\]|\{\})*$/.exec(e)?.[1] ?? e, nT = {
+var eT = (e) => /([^.[{\]}]+)(?:\[\]|\{\})*$/.exec(e)?.[1] ?? e, tT = {
 	text: "自己写",
 	number: "填数字",
 	switch: "是 / 否",
@@ -21178,41 +21182,41 @@ var tT = (e) => /([^.[{\]}]+)(?:\[\]|\{\})*$/.exec(e)?.[1] ?? e, nT = {
 	group: "一组",
 	pick: "几种写法"
 };
-function rT(e, t, n, r = "", i = "") {
-	let a = e.branches.map((e) => lw(e.shape, t)), o = (e) => e.c === "group" ? e.props.map((e) => e.name) : [], s = a.map((e, t) => {
-		if (e.c !== "group") return nT[e.c] ?? "其他";
+function nT(e, t, n, r = "", i = "") {
+	let a = e.branches.map((e) => cw(e.shape, t)), o = (e) => e.c === "group" ? e.props.map((e) => e.name) : [], s = a.map((e, t) => {
+		if (e.c !== "group") return tT[e.c] ?? "其他";
 		let s = new Set(a.flatMap((e, n) => n === t ? [] : o(e))), c = o(e).filter((e) => !s.has(e)), l = c.filter((e) => e !== r).length ? c.filter((e) => e !== r) : c;
-		return l.length ? `带${l.slice(0, 3).map((e) => n(e, i ? `${i}.${e}` : e)).join("、")}` : nT.group;
+		return l.length ? `带${l.slice(0, 3).map((e) => n(e, i ? `${i}.${e}` : e)).join("、")}` : tT.group;
 	});
 	return s.map((e, t) => s.indexOf(e) !== t || s.lastIndexOf(e) !== t ? `${e}（${s.slice(0, t + 1).filter((t) => t === e).length}）` : e);
 }
-function iT(e, t, n) {
-	let r = (t, n = t) => e.labels[n] ?? e.labels[t] ?? t, i = e.fields.filter((e) => !e.internal && (e.publish || $w.has(e.name) || n.includes(e.name))).map((e) => e.name), a = (t) => {
-		let n = t.shape ? lw(t.shape, e.defs) : null;
+function rT(e, t, n) {
+	let r = (t, n = t) => e.labels[n] ?? e.labels[t] ?? t, i = e.fields.filter((e) => !e.internal && (e.publish || Qw.has(e.name) || n.includes(e.name))).map((e) => e.name), a = (t) => {
+		let n = t.shape ? cw(t.shape, e.defs) : null;
 		return !!n && n.c === "pick" && n.branches.some((e) => "ref" in e.shape && /fluffObject$/.test(e.shape.ref));
 	}, o = e.fields.find((e) => !e.internal && !i.includes(e.name) && a(e))?.name ?? null, s = e.fields.filter((e) => !e.internal && e.shape && !i.includes(e.name) && e.name !== o), c = (e) => t?.items ? (t.fields[e.name] ?? 0) / t.items : 0, l = (e, t) => c(t) - c(e), u = s.filter((e) => !e.required), d = {};
 	for (let [n, i] of Object.entries(t?.at ?? {})) {
-		let t = eT(e.fields, e.defs, n);
+		let t = $w(e.fields, e.defs, n);
 		if (!t) continue;
 		let a = {};
 		if (t.c === "pick") {
 			let o = (e) => i.branches?.[e] ?? 0;
 			a.order = t.branches.map((e, t) => t).sort((e, t) => o(t) - o(e) || e - t);
 			let s = t.branches.reduce((e, t, n) => e + o(n), 0);
-			a.alt = a.order.filter((e) => !s || o(e) / s >= Qw), a.names = rT(t, e.defs, r, tT(n), n);
+			a.alt = a.order.filter((e) => !s || o(e) / s >= Zw), a.names = nT(t, e.defs, r, eT(n), n);
 		}
-		let o = t.c === "group" ? [t] : t.c === "pick" ? t.branches.map((t) => lw(t.shape, e.defs)).filter((e) => e.c === "group") : [];
+		let o = t.c === "group" ? [t] : t.c === "pick" ? t.branches.map((t) => cw(t.shape, e.defs)).filter((e) => e.c === "group") : [];
 		if (o.length && i.n) {
-			let e = o.flatMap((e) => e.props.filter((e) => !e.required && (i.sub?.[e.name] ?? 0) / i.n < Zw).map((e) => e.name));
+			let e = o.flatMap((e) => e.props.filter((e) => !e.required && (i.sub?.[e.name] ?? 0) / i.n < Xw).map((e) => e.name));
 			e.length && (a.rare = [...new Set(e)]);
 		}
 		i.values?.length && (a.values = i.values.map(([e]) => JSON.parse(e))), Object.keys(a).length && (d[n] = a);
 	}
 	let f = (t, n, i = 0) => {
 		if (!t || i > 6) return;
-		let a = lw(t, e.defs);
+		let a = cw(t, e.defs);
 		if (a.c === "pick") {
-			d[n] ??= {}, d[n].names ??= rT(a, e.defs, r, tT(n), n), d[n].order ??= a.branches.map((e, t) => t), d[n].alt ??= d[n].order;
+			d[n] ??= {}, d[n].names ??= nT(a, e.defs, r, eT(n), n), d[n].order ??= a.branches.map((e, t) => t), d[n].alt ??= d[n].order;
 			for (let e of a.branches) f(e.shape, n, i + 1);
 		} else if (a.c === "group") for (let e of a.props) f(e.shape, `${n}.${e.name}`, i + 1);
 		else a.c === "list" ? f(a.of, `${n}[]`, i + 1) : a.c === "map" && f(a.of, `${n}{}`, i + 1);
@@ -21220,16 +21224,16 @@ function iT(e, t, n) {
 	for (let e of s) f(e.shape, e.name);
 	return {
 		required: s.filter((e) => e.required).map((e) => e.name),
-		common: u.filter((e) => c(e) >= Zw).sort(l).map((e) => e.name),
-		more: u.filter((e) => c(e) < Zw).sort((e, t) => l(e, t) || e.name.localeCompare(t.name)).map((e) => e.name),
+		common: u.filter((e) => c(e) >= Xw).sort(l).map((e) => e.name),
+		more: u.filter((e) => c(e) < Xw).sort((e, t) => l(e, t) || e.name.localeCompare(t.name)).map((e) => e.name),
 		hidden: i,
 		media: o,
 		at: d
 	};
 }
 // src/library/field-values.ts
-var aT = /* @__PURE__ */ new Map();
-function oT(e, t) {
+var iT = /* @__PURE__ */ new Map();
+function aT(e, t) {
 	if (!(!e || "ref" in e)) {
 		if ((e.c === "select" || e.c === "multiselect") && e.enum.every((e) => typeof e == "string")) t.push({
 			shape: e,
@@ -21239,19 +21243,19 @@ function oT(e, t) {
 			shape: e,
 			values: e.suggest
 		});
-		else if (e.c === "list" || e.c === "map") oT(e.of, t);
-		else if (e.c === "group") for (let n of e.props) oT(n.shape, t);
-		else if (e.c === "pick") for (let n of e.branches) oT(n.shape, t);
+		else if (e.c === "list" || e.c === "map") aT(e.of, t);
+		else if (e.c === "group") for (let n of e.props) aT(n.shape, t);
+		else if (e.c === "pick") for (let n of e.branches) aT(n.shape, t);
 	}
 }
-function sT(e, t, n) {
-	let r = `${t}|${n}`, i = aT.get(r);
+function oT(e, t, n) {
+	let r = `${t}|${n}`, i = iT.get(r);
 	return i || (i = (async () => {
-		let r = await xw(t).fields(n);
+		let r = await bw(t).fields(n);
 		if (!r) return null;
 		let i = structuredClone(r), a = [];
-		for (let e of i.fields) oT(e.shape, a);
-		for (let e of Object.values(i.defs)) oT(e, a);
+		for (let e of i.fields) aT(e.shape, a);
+		for (let e of Object.values(i.defs)) aT(e, a);
 		if (a.length) {
 			let n = await e.texts.values(t, a.map((e) => e.values));
 			a.forEach((e, t) => {
@@ -21260,16 +21264,16 @@ function sT(e, t, n) {
 		}
 		return i;
 	})().catch((e) => {
-		throw aT.delete(r), e;
-	}), aT.set(r, i)), i;
+		throw iT.delete(r), e;
+	}), iT.set(r, i)), i;
 }
 // src/library/field-usage-store.ts
-var cT = "usage-v1";
-async function lT(e, n, r) {
-	let i = t.find((e) => e.kind === "official" && e.codeSet === n), a = await xw(n).fields(r);
+var sT = "usage-v1";
+async function cT(e, n, r) {
+	let i = t.find((e) => e.kind === "official" && e.codeSet === n), a = await bw(n).fields(r);
 	if (!i || !a) return null;
 	let o = await e.currentView(), s = `usage:${i.id}:${r}`, c = await o.derivedGet(s);
-	if (c && c.fingerprint === cT) return c.value;
+	if (c && c.fingerprint === sT) return c.value;
 	let l = (await Tx(async () => {
 		let t = [];
 		try {
@@ -21277,19 +21281,19 @@ async function lT(e, n, r) {
 		} catch (e) {
 			console.debug(`[trpg-assistant] ${r} 没有作者解析结果，改读作者原文件`, e);
 		}
-		return t.length || (t = await (await e.frameOf(n, o)).call("rawProp", r) ?? []), [Yw(Xw(t), a.fields, a.defs ?? {})];
+		return t.length || (t = await (await e.frameOf(n, o)).call("rawProp", r) ?? []), [Jw(Yw(t), a.fields, a.defs ?? {})];
 	}))[0] ?? null;
-	return l && await o.derivedPut(s, cT, l), l;
+	return l && await o.derivedPut(s, sT, l), l;
 }
-var uT = "auto-v4", dT = 30, fT = 3, pT = .8;
-async function mT(e, t, n) {
-	return t !== "en" && await e.officialInstalled("en").catch(() => !1) ? hT(e, "en", n) : hT(e, t, n);
+var lT = "auto-v4", uT = 30, dT = 3, fT = .8;
+async function pT(e, t, n) {
+	return t !== "en" && await e.officialInstalled("en").catch(() => !1) ? mT(e, "en", n) : mT(e, t, n);
 }
-async function hT(e, n, r) {
-	let i = t.find((e) => e.kind === "official" && e.codeSet === n), a = await xw(n).fields(r);
+async function mT(e, n, r) {
+	let i = t.find((e) => e.kind === "official" && e.codeSet === n), a = await bw(n).fields(r);
 	if (!i || !a) return null;
 	let o = await e.currentView(), s = `autofields:${i.id}:${r}`, c = await o.derivedGet(s);
-	if (c && c.fingerprint === uT) return c.value;
+	if (c && c.fingerprint === lT) return c.value;
 	let l = (await Tx(async () => {
 		let t = [];
 		try {
@@ -21297,44 +21301,44 @@ async function hT(e, n, r) {
 		} catch (e) {
 			console.debug(`[trpg-assistant] ${r} 没有作者解析结果，自动字段没法实测`, e);
 		}
-		let s = Xw(t), c = Math.max(1, Math.floor(s.length / dT)), l = s.filter((e, t) => t % c === 0).slice(0, dT), u = /* @__PURE__ */ new Set([
+		let s = Yw(t), c = Math.max(1, Math.floor(s.length / uT)), l = s.filter((e, t) => t % c === 0).slice(0, uT), u = /* @__PURE__ */ new Set([
 			"switch",
 			"const",
 			"select",
 			"text"
 		]), d = (e) => {
 			if (!e.shape) return !1;
-			let t = lw(e.shape, a.defs ?? {});
-			return t.c === "multiselect" || u.has(t.c) ? !0 : t.c === "list" && u.has(lw(t.of, a.defs ?? {}).c);
+			let t = cw(e.shape, a.defs ?? {});
+			return t.c === "multiselect" || u.has(t.c) ? !0 : t.c === "list" && u.has(cw(t.of, a.defs ?? {}).c);
 		}, f = a.fields.filter((e) => !e.internal && !e.publish && !e.required && d(e)).map((e) => e.name), p = await (await e.frameOf(n, o)).call("autoFieldProbe", r, l, f), m = p.fields;
 		return [{
 			calls: p.calls,
 			detail: m,
-			auto: Object.entries(m).filter(([, e]) => e.tried >= fT && e.back / e.tried >= pT).map(([e]) => e).sort()
+			auto: Object.entries(m).filter(([, e]) => e.tried >= dT && e.back / e.tried >= fT).map(([e]) => e).sort()
 		}];
 	}))[0] ?? null;
-	return l && await o.derivedPut(s, uT, l), l;
+	return l && await o.derivedPut(s, lT, l), l;
 }
-async function gT(e, t, n) {
-	let r = await sT(e, t, n);
+async function hT(e, t, n) {
+	let r = await oT(e, t, n);
 	if (!r) return null;
 	let [i, a, o] = await Promise.all([
-		lT(e, t, n),
-		mT(e, t, n),
-		e.frameOf(t).then((e) => Uw(e, t, n))
+		cT(e, t, n),
+		pT(e, t, n),
+		e.frameOf(t).then((e) => Hw(e, t, n))
 	]);
 	return {
-		...iT(r, i, [...a?.auto ?? [], ...o.hide]),
+		...rT(r, i, [...a?.auto ?? [], ...o.hide]),
 		attached: o.attached
 	};
 }
 // src/library/custom-entries.ts
-var _T = (e) => {
+var gT = (e) => {
 	let n = t.find((t) => t.kind === "brew" && t.codeSet === e);
 	if (!n) throw Error(`作者程序 ${e} 没有登记自制数据集`);
 	return n;
-}, vT = (e, t, n) => `${_T(e).id}|${t}|${n}`;
-async function yT(e, t, n, r, i) {
+}, _T = (e, t, n) => `${gT(e).id}|${t}|${n}`;
+async function vT(e, t, n, r, i) {
 	return e.lib.writeAuthor(t, n, async (n) => {
 		let a = await e.lib.frameOf(t, n), o = await a.call("brewDocIndex") ?? [];
 		if (!r) {
@@ -21344,7 +21348,7 @@ async function yT(e, t, n, r, i) {
 				touched: t ? [t] : []
 			};
 		}
-		let s = await $C(a, r), c = o.find((e) => e.docIdLocal === s)?.sources.at(-1);
+		let s = await QC(a, r), c = o.find((e) => e.docIdLocal === s)?.sources.at(-1);
 		if (!c) throw Error("这个包的包头没有来源");
 		return {
 			value: await i(a, {
@@ -21355,17 +21359,17 @@ async function yT(e, t, n, r, i) {
 		};
 	});
 }
-async function bT(e, t, n, r, { rule: i, record: a, pack: o, replaceHash: s, replaceId: c, attached: l }) {
-	r = await xT(e, t, n, r, i);
-	let u = null, d = null, { previousEntity: p, attachedPut: m, ...h } = (await yT(e, t, "custom-entry", o, async (a, o) => {
+async function yT(e, t, n, r, { rule: i, record: a, pack: o, replaceHash: s, replaceId: c, attached: l }) {
+	r = await bT(e, t, n, r, i);
+	let u = null, d = null, { previousEntity: p, attachedPut: m, ...h } = (await vT(e, t, "custom-entry", o, async (a, o) => {
 		let p = {
 			...r,
 			source: r.source ?? (o ? o.own : e.mineSource.json)
-		}, m = l ? await Iw(a, t, n) : null;
+		}, m = l ? await Fw(a, t, n) : null;
 		if (l && !m) throw Error(`这一类没有附属部分：${n}`);
 		if (m && !o) throw Error("带附属部分的条目只能存进【我的库】的包");
 		let h = m && o ? (r.uniqueId ? await a.call("packEntity", o.id, n, { uniqueId: String(r.uniqueId) }) : null) ?? (s ? await a.call("packEntity", o.id, n, { hash: s }) : null) : null, g = h ? String(h.entity.id ?? "") : null;
-		m && (Object.assign(p, await zw(a, n, p, l, g)), d = p), i && !r.uniqueId && !s && !c && p.edition === void 0 && (await xw(t).fields(n))?.edition && (p.edition = f(i).style);
+		m && (Object.assign(p, await Rw(a, n, p, l, g)), d = p), i && !r.uniqueId && !s && !c && p.edition === void 0 && (await bw(t).fields(n))?.edition && (p.edition = f(i).style);
 		let _;
 		o ? (_ = await a.call("packPut", o.id, n, p, {
 			...s ? { replaceHash: s } : {},
@@ -21373,7 +21377,7 @@ async function bT(e, t, n, r, { rule: i, record: a, pack: o, replaceHash: s, rep
 		}), await a.call("linkParent", o.id, n, _.previousEntity ?? null, p)) : (await a.call("editableEnsureSource", e.mineSource), _ = await a.call("editablePut", n, p));
 		let v = null;
 		if (m && o) {
-			u = Bw({ ...l }, p, m);
+			u = zw({ ...l }, p, m);
 			let e = await a.call("packPut", o.id, m.prop, u, g ? { replaceId: g } : {});
 			v = {
 				prop: m.prop,
@@ -21394,8 +21398,8 @@ async function bT(e, t, n, r, { rule: i, record: a, pack: o, replaceHash: s, rep
 			retargeted: b,
 			attachedPut: v
 		};
-	})).value, _ = _T(t).id;
-	a && await e.manage.pushHistory(vT(t, n, h.uniqueId), {
+	})).value, _ = gT(t).id;
+	a && await e.manage.pushHistory(_T(t, n, h.uniqueId), {
 		at: Date.now(),
 		prop: n,
 		before: p ?? null,
@@ -21418,7 +21422,7 @@ async function bT(e, t, n, r, { rule: i, record: a, pack: o, replaceHash: s, rep
 		},
 		retargeted: h.retargeted
 	} : null;
-	v ? await CT(e.manage, v.from, v.to) : h.hash && !h.previousHash && i && await e.manage.setAssignment(g({
+	v ? await ST(e.manage, v.from, v.to) : h.hash && !h.previousHash && i && await e.manage.setAssignment(g({
 		set: _,
 		prop: n,
 		hash: h.hash
@@ -21442,23 +21446,23 @@ async function bT(e, t, n, r, { rule: i, record: a, pack: o, replaceHash: s, rep
 		} : null
 	};
 }
-async function xT(e, t, n, r, i) {
+async function bT(e, t, n, r, i) {
 	if (t !== "en") return r;
-	let a = (await mT(e.lib, t, n))?.auto ?? [];
+	let a = (await pT(e.lib, t, n))?.auto ?? [];
 	if (!a.length) return r;
 	let o = await (await e.lib.frameOf(t)).call("autoTag", n, r, a, i ? f(i).style : void 0), s = { ...r };
 	for (let [e, t] of Object.entries(o)) t === null || Array.isArray(t) && !t.length ? delete s[e] : s[e] = t;
 	return s;
 }
-async function ST(e, t, n, r, { record: i, link: a, pack: o, carry: s }) {
-	let c = r.flatMap((e) => typeof e == "string" ? [e] : e.uniqueId ? [e.uniqueId] : []), l = r.flatMap((e) => typeof e == "object" && !e.uniqueId && e.hash ? [e.hash] : []), u = /* @__PURE__ */ new Map(), d = await yT(e, t, "custom-delete", o, async (e, r) => {
+async function xT(e, t, n, r, { record: i, link: a, pack: o, carry: s }) {
+	let c = r.flatMap((e) => typeof e == "string" ? [e] : e.uniqueId ? [e.uniqueId] : []), l = r.flatMap((e) => typeof e == "object" && !e.uniqueId && e.hash ? [e.hash] : []), u = /* @__PURE__ */ new Map(), d = await vT(e, t, "custom-delete", o, async (e, r) => {
 		if (!r) {
 			if (l.length) throw Error("可编辑自制里的条目要按 uniqueId 删");
 			return e.call("editableRemove", n, c);
 		}
 		let i = await e.call("packRemove", r.id, n, c, { hashes: l });
 		for (let t of i) await e.call("linkParent", r.id, n, t, null);
-		let a = i.length ? await Iw(e, t, n) : null;
+		let a = i.length ? await Fw(e, t, n) : null;
 		if (a) for (let t of i) {
 			let [n] = await e.call("packRemove", r.id, a.prop, [], { ids: [String(t.id ?? "")] });
 			n && u.set(String(t.uniqueId), {
@@ -21470,7 +21474,7 @@ async function ST(e, t, n, r, { record: i, link: a, pack: o, carry: s }) {
 	});
 	if (i) for (let r of d.value) {
 		let i = u.get(String(r.uniqueId));
-		await e.manage.pushHistory(vT(t, n, String(r.uniqueId)), {
+		await e.manage.pushHistory(_T(t, n, String(r.uniqueId)), {
 			at: Date.now(),
 			prop: n,
 			before: r,
@@ -21482,7 +21486,7 @@ async function ST(e, t, n, r, { record: i, link: a, pack: o, carry: s }) {
 	}
 	return d;
 }
-async function CT(e, t, n) {
+async function ST(e, t, n) {
 	let r = g(t), i = (await e.assignments()).get(r);
 	i && (await e.setAssignment(g(n), i), await e.setAssignment(r, null));
 	let a = (e) => _(e) === _(t);
@@ -21499,10 +21503,10 @@ async function CT(e, t, n) {
 		r.target === _(t) ? (await e.setChoice(i, r.target, null), await e.setChoice(i, _(n), a)) : a !== r.altId && await e.setChoice(i, r.target, a);
 	}
 }
-async function wT(e, t, n, r, i, a) {
+async function CT(e, t, n, r, i, a) {
 	if (i === a) return [];
-	let o = _T(t).id, s = await e.lib.writeAuthor(t, "custom-move", async (o) => {
-		let s = await e.lib.frameOf(t, o), c = await $C(s, i), l = await $C(s, a), u = (await s.call("brewDocIndex")).find((e) => e.docIdLocal === l)?.sources.at(-1);
+	let o = gT(t).id, s = await e.lib.writeAuthor(t, "custom-move", async (o) => {
+		let s = await e.lib.frameOf(t, o), c = await QC(s, i), l = await QC(s, a), u = (await s.call("brewDocIndex")).find((e) => e.docIdLocal === l)?.sources.at(-1);
 		if (!u) throw Error("目标包的包头没有来源");
 		let d = [];
 		for (let e of r) {
@@ -21555,33 +21559,33 @@ async function wT(e, t, n, r, i, a) {
 				hash: r.newHash
 			}
 		} : void 0;
-		await e.manage.pushHistory(vT(t, n, r.uniqueId), {
+		await e.manage.pushHistory(_T(t, n, r.uniqueId), {
 			at: Date.now(),
 			prop: n,
 			before: null,
 			pack: a
-		}), await e.manage.pushHistory(vT(t, n, r.uniqueId), {
+		}), await e.manage.pushHistory(_T(t, n, r.uniqueId), {
 			at: Date.now(),
 			prop: n,
 			before: r.before,
 			pack: i,
 			...s ? { carry: s } : {}
-		}), s && await CT(e.manage, s.from, s.to);
+		}), s && await ST(e.manage, s.from, s.to);
 	}
 	return s.value.map(({ before: e, ...t }) => t);
 }
-async function TT(e, t, n, r) {
-	let i = await e.manage.popHistory(vT(t, n, r));
+async function wT(e, t, n, r) {
+	let i = await e.manage.popHistory(_T(t, n, r));
 	if (!i) throw Error("这一条没有可以撤销的修改");
-	let a = async () => (await e.manage.history(vT(t, n, r))).length;
-	if (i.before === null) return await ST(e, t, n, [r], {
+	let a = async () => (await e.manage.history(_T(t, n, r))).length;
+	if (i.before === null) return await xT(e, t, n, [r], {
 		record: !1,
 		pack: i.pack
 	}), i.link && await e.manage.unlinkHouseRule(i.link.house), {
 		undone: "created",
 		left: await a()
 	};
-	let o = await bT(e, t, n, i.before, {
+	let o = await yT(e, t, n, i.before, {
 		record: !1,
 		pack: i.pack,
 		...i.attached?.before ? { attached: i.attached.before } : {}
@@ -21592,19 +21596,19 @@ async function TT(e, t, n, r) {
 			hash: o.hash
 		},
 		target: i.link.target
-	}), i.carry && await CT(e.manage, i.carry.to, i.carry.from), {
+	}), i.carry && await ST(e.manage, i.carry.to, i.carry.from), {
 		undone: "restored",
 		entry: o,
 		left: await a()
 	};
 }
 // src/library/custom-copy.ts
-var ET = (e) => String(e ?? "").toLowerCase(), DT = (e) => {
+var TT = (e) => String(e ?? "").toLowerCase(), ET = (e) => {
 	let n = t.find((t) => t.kind === "brew" && t.codeSet === e);
 	if (!n) throw Error(`作者程序 ${e} 没有登记自制数据集`);
 	return n;
 };
-async function OT(e, t) {
+async function DT(e, t) {
 	let n = await e.lib.currentView(), r = `${t}:author-files:${Date.now()}`;
 	await e.db.kv.put({
 		scope: r,
@@ -21620,24 +21624,24 @@ async function OT(e, t) {
 		i.close(), await e.db.kv.where("scope").anyOf(r, `${r}:local`).delete();
 	}
 }
-function kT(e, t) {
-	return Object.entries(e).some(([e, n]) => !e.startsWith("_") && Array.isArray(n) && n.some((e) => ET(e?.source) === ET(t)));
+function OT(e, t) {
+	return Object.entries(e).some(([e, n]) => !e.startsWith("_") && Array.isArray(n) && n.some((e) => TT(e?.source) === TT(t)));
 }
-async function AT(t, n, r) {
+async function kT(t, n, r) {
 	let i = await t.lib.frameOf(n), a, o = {}, c, l;
 	if (r.kind === "source") {
-		let i = await JC({
+		let i = await qC({
 			db: t.db,
 			lib: t.lib,
 			official: e(n),
 			source: r.source,
 			view: await t.lib.currentView(),
-			authorFiles: () => OT(t, n)
+			authorFiles: () => DT(t, n)
 		});
 		if (!Object.values(i.counts).some((e) => e > 0) && !i.corpora.length) throw Error(`官方资料里没有来源 ${r.source} 的内容可复制（还没下载？）`);
 		a = i.json, o = i.counts, c = i.flattened, l = i.flattenFailed;
 	} else {
-		let e = (await ZC(t, n)).find((e) => e.docIdLocal === r.docIdLocal) ? await i.call("packExport", r.docIdLocal) : await t.exportBrew(n, r.docIdLocal);
+		let e = (await XC(t, n)).find((e) => e.docIdLocal === r.docIdLocal) ? await i.call("packExport", r.docIdLocal) : await t.exportBrew(n, r.docIdLocal);
 		if (!e) throw Error("取不到这个包的内容");
 		a = structuredClone(e.body);
 		for (let [e, t] of Object.entries(a)) !e.startsWith("_") && Array.isArray(t) && (o[e] = t.length);
@@ -21646,7 +21650,7 @@ async function AT(t, n, r) {
 	}
 	let u = a._meta ??= {}, d = u.sources ?? [];
 	if (!d.length) throw Error("这个包的包头没有来源，作者认不出它");
-	let f = kT(a, d[d.length - 1].json) ? d : d.slice(0, -1), p = f[f.length - 1], m = p.json.replace(/[^A-Za-z0-9_-]/g, "") || "PACK", h = 1;
+	let f = OT(a, d[d.length - 1].json) ? d : d.slice(0, -1), p = f[f.length - 1], m = p.json.replace(/[^A-Za-z0-9_-]/g, "") || "PACK", h = 1;
 	for (; await i.call("sourceTaken", `${m}_COPY${h}`);) h++;
 	let g = {
 		json: `${m}_COPY${h}`,
@@ -21661,7 +21665,7 @@ async function AT(t, n, r) {
 		let e = (await i.call("editionOf", [p.json]))[p.json];
 		e && e.classic !== null && (v = b.filter((t) => t.edition === (e.classic ? "classic" : "one")).map((e) => e.id));
 	}
-	let y = await t.lib.brewImport(DT(n).id, [{
+	let y = await t.lib.brewImport(ET(n).id, [{
 		name: `${g.json}.json`,
 		text: JSON.stringify(a)
 	}]);
@@ -21679,12 +21683,12 @@ async function AT(t, n, r) {
 		parse: y.parse
 	};
 }
-async function jT(n, r, i, a, o = {}) {
+async function AT(n, r, i, a, o = {}) {
 	let s;
 	if (t.find((e) => e.id === i.set)?.kind === "official") {
 		let t = await n.lib.storedItem(i.set, i.prop, i.hash);
 		if (!t?.source) throw Error("找不到这一条或它没有来源");
-		s = (await JC({
+		s = (await qC({
 			db: n.db,
 			lib: n.lib,
 			official: e(r),
@@ -21694,40 +21698,40 @@ async function jT(n, r, i, a, o = {}) {
 				hash: i.hash
 			},
 			view: await n.lib.currentView(),
-			authorFiles: () => OT(n, r)
+			authorFiles: () => DT(n, r)
 		})).json[i.prop]?.[0];
-	} else s = (await zC(n, i))?.entity, s &&= await (await n.lib.frameOf(r)).call("cleanEntity", s);
+	} else s = (await RC(n, i))?.entity, s &&= await (await n.lib.frameOf(r)).call("cleanEntity", s);
 	if (!s) throw Error("找不到这一条的原文");
 	let { source: c, uniqueId: l, ...u } = s, d = typeof u._copy?.source == "string" ? { [i.prop]: [String(u._copy.source)] } : null;
 	return d && await n.lib.writeAuthor(r, "custom-pack-deps", async (e) => {
-		let t = await n.lib.frameOf(r, e), i = await $C(t, a);
+		let t = await n.lib.frameOf(r, e), i = await QC(t, a);
 		return await t.call("packAddDependencies", i, d), {
 			value: null,
 			touched: [i]
 		};
-	}), bT(n.entries, r, i.prop, u, {
+	}), yT(n.entries, r, i.prop, u, {
 		record: !0,
 		pack: a,
 		...o.rule ? { rule: o.rule } : {}
 	});
 }
 // src/library/custom-migrate.ts
-var MT = (e) => `p55-b8-migrated:${e}`, NT = (e) => String(e ?? "").toLowerCase();
-async function PT(t, n) {
-	if (await t.manage.meta(MT(n))) return null;
+var jT = (e) => `p55-b8-migrated:${e}`, MT = (e) => String(e ?? "").toLowerCase();
+async function NT(t, n) {
+	if (await t.manage.meta(jT(n))) return null;
 	let r = {
 		moved: [],
 		fixed: []
-	}, i = await t.lib.frameOf(n), a = await i.call("brewDocIndex"), o = ((a.some((e) => e.isEditable) ? (await i.call("editableDoc")).body ?? {} : {})._meta?.sources ?? []).filter((e) => NT(e.json) !== NT(t.houseSource)), s = a.filter((e) => !e.isEditable && !e.url && e.sources.length), c = [];
+	}, i = await t.lib.frameOf(n), a = await i.call("brewDocIndex"), o = ((a.some((e) => e.isEditable) ? (await i.call("editableDoc")).body ?? {} : {})._meta?.sources ?? []).filter((e) => MT(e.json) !== MT(t.houseSource)), s = a.filter((e) => !e.isEditable && !e.url && e.sources.length), c = [];
 	for (let e of s) (await i.call("officialSourcesOf", e.sources)).length === e.sources.length && c.push(e);
 	let l = [];
 	if (c.length) {
-		let r = await t.lib.currentView(), i = e(n), a = new Set(await OT(t, n)), o = new Set(c.flatMap((e) => e.sources.map(NT)));
+		let r = await t.lib.currentView(), i = e(n), a = new Set(await DT(t, n)), o = new Set(c.flatMap((e) => e.sources.map(MT)));
 		for (let e of await r.filePaths(i)) {
 			if (!e.startsWith("data/") || !e.endsWith(".json") || a.has(e) || /^data\/(generated|book|adventure)\//.test(e)) continue;
 			let t = (await r.fileGet(i, e))?.text;
 			if (t != null) try {
-				for (let e of Object.values(JSON.parse(t))) if (Array.isArray(e)) for (let t of e) o.has(NT(t?.source)) && l.push(JSON.stringify(t));
+				for (let e of Object.values(JSON.parse(t))) if (Array.isArray(e)) for (let t of e) o.has(MT(t?.source)) && l.push(JSON.stringify(t));
 			} catch {}
 		}
 	}
@@ -21784,14 +21788,14 @@ async function PT(t, n) {
 			}
 		});
 	}
-	return await t.manage.setMeta(MT(n), {
+	return await t.manage.setMeta(jT(n), {
 		at: Date.now(),
 		...r
 	}), r;
 }
-var FT = (e) => `p55-c1-flattened:${e}`;
-async function IT(e, t) {
-	if (await e.manage.meta(FT(t))) return null;
+var PT = (e) => `p55-c1-flattened:${e}`;
+async function FT(e, t) {
+	if (await e.manage.meta(PT(t))) return null;
 	let n = (await (await e.lib.frameOf(t)).call("brewDocIndex")).filter((e) => !e.isEditable && !e.url && e.sources.length), r = [];
 	return n.length && await e.lib.writeAuthor(t, "p55-c1-flatten", async (i) => {
 		let a = await e.lib.frameOf(t, i), o = [];
@@ -21807,13 +21811,13 @@ async function IT(e, t) {
 			value: null,
 			touched: o
 		};
-	}), await e.manage.setMeta(FT(t), {
+	}), await e.manage.setMeta(PT(t), {
 		at: Date.now(),
 		report: r
 	}), r;
 }
 // src/library/import-replace.ts
-function LT(e) {
+function IT(e) {
 	try {
 		let t = (JSON.parse(e)?._meta?.sources ?? []).map((e) => String(e?.json ?? "")).filter(Boolean);
 		return t.length ? t : null;
@@ -21821,7 +21825,7 @@ function LT(e) {
 		return null;
 	}
 }
-function RT(e, t) {
+function LT(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let t of e) {
 		if (t.isEditable) continue;
@@ -21833,7 +21837,7 @@ function RT(e, t) {
 	}
 	let r = [];
 	for (let e of t) {
-		let t = LT(e.text), i = t ? TS({ sources: t }) : null, a = i ? n.get(i) : void 0;
+		let t = IT(e.text), i = t ? TS({ sources: t }) : null, a = i ? n.get(i) : void 0;
 		i && a && r.push({
 			file: e.name,
 			pack: i,
@@ -21845,10 +21849,10 @@ function RT(e, t) {
 	return r;
 }
 // src/library/custom-backup.ts
-var zT = "HOMEBREW_2_STORAGE", BT = "PRERELEASE_STORAGE";
-async function VT(e) {
+var RT = "HOMEBREW_2_STORAGE", zT = "PRERELEASE_STORAGE";
+async function BT(e) {
 	let n = {}, r = await e.lib.currentView();
-	for (let e of t.filter((e) => e.kind === "brew")) for (let [t, i] of [[zT, ""], [BT, "prerelease/"]]) {
+	for (let e of t.filter((e) => e.kind === "brew")) for (let [t, i] of [[RT, ""], [zT, "prerelease/"]]) {
 		let a = await r.kvGet(e.codeSet, t);
 		for (let t of Array.isArray(a) ? a : []) {
 			let r = String(t.head?.docIdLocal ?? "");
@@ -21857,9 +21861,9 @@ async function VT(e) {
 			n[`brew/${e.codeSet}/${i}${a}`] = JSON.stringify(t.body);
 		}
 	}
-	return n["scopes.json"] = JSON.stringify(await UT(e)), n["house-rules.json"] = JSON.stringify(await e.manage.houseRules()), n;
+	return n["scopes.json"] = JSON.stringify(await HT(e)), n["house-rules.json"] = JSON.stringify(await e.manage.houseRules()), n;
 }
-async function HT(e, n) {
+async function VT(e, n) {
 	let r = [], i = 0, a = 0, o = 0;
 	for (let [a, o] of Object.entries(n)) {
 		if (!a.startsWith("brew/")) continue;
@@ -21878,7 +21882,7 @@ async function HT(e, n) {
 	}
 	let s = n["scopes.json"];
 	if (s) try {
-		let t = await WT(e, JSON.parse(s));
+		let t = await UT(e, JSON.parse(s));
 		a = t.scopes + t.assignments;
 	} catch (e) {
 		r.push(`scopes.json: ${e instanceof Error ? e.message : String(e)}`);
@@ -21897,7 +21901,7 @@ async function HT(e, n) {
 		errors: r
 	};
 }
-async function UT(e, t) {
+async function HT(e, t) {
 	let n = await e.manage.assignments(), r = Object.fromEntries([...n].filter(([e]) => !t || t.includes(e)));
 	return {
 		format: "trpg-library-scopes",
@@ -21906,7 +21910,7 @@ async function UT(e, t) {
 		assignments: r
 	};
 }
-async function WT(e, t) {
+async function UT(e, t) {
 	if (t.format !== "trpg-library-scopes" || t.version !== 1) throw Error("不是范围设置文件，或版本不认识");
 	for (let n of t.scopes) await e.manage.addScope(n);
 	for (let [n, r] of Object.entries(t.assignments)) await e.manage.setAssignment(n, r);
@@ -21916,14 +21920,14 @@ async function WT(e, t) {
 	};
 }
 // src/library/custom-drafts.ts
-function GT(e) {
+function WT(e) {
 	let t = e.target.kind === "mine" ? `mine:${e.target.uniqueId}` : e.target.kind === "house" ? `house:${_(e.target.ref)}` : `new:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 	return `${e.codeSet}|${e.prop}|${t}`;
 }
-async function KT(e, t, n) {
+async function GT(e, t, n) {
 	if (!t.s || typeof t.s != "object" || Array.isArray(t.s)) throw Error("草稿里的条目要是一个 JSON 对象");
-	if (!await xw(t.codeSet).fields(t.prop)) throw Error(`这套资料不收这一类条目：${t.prop}`);
-	let r = n ?? GT(t), i = await e.draft(r), a = {
+	if (!await bw(t.codeSet).fields(t.prop)) throw Error(`这套资料不收这一类条目：${t.prop}`);
+	let r = n ?? WT(t), i = await e.draft(r), a = {
 		isModified: !0,
 		isPersisted: !1,
 		nameOriginal: i?.m.nameOriginal ?? null,
@@ -21940,41 +21944,41 @@ async function KT(e, t, n) {
 		target: t.target
 	}), r;
 }
-async function qT(e, t) {
+async function KT(e, t) {
 	return [...await e.drafts()].map(([e, t]) => ({
 		key: e,
 		...t
 	})).filter((e) => !t || e.codeSet === t).sort((e, t) => t.at - e.at);
 }
 // src/library/house-diff.ts
-var JT = /* @__PURE__ */ new Set(["source"]);
-function YT(e, t) {
+var qT = /* @__PURE__ */ new Set(["source"]);
+function JT(e, t) {
 	let n = {};
-	for (let r of /* @__PURE__ */ new Set([...Object.keys(e), ...Object.keys(t)])) JT.has(r) || r === "_copy" || (!(r in t) || t[r] === void 0 ? r in e && (n[r] = null) : r in e && Te(e[r]) === Te(t[r]) || (n[r] = t[r]));
+	for (let r of /* @__PURE__ */ new Set([...Object.keys(e), ...Object.keys(t)])) qT.has(r) || r === "_copy" || (!(r in t) || t[r] === void 0 ? r in e && (n[r] = null) : r in e && Te(e[r]) === Te(t[r]) || (n[r] = t[r]));
 	return n;
 }
-function XT(e, t) {
-	return Object.entries(YT(e, t)).map(([t, n]) => ({
+function YT(e, t) {
+	return Object.entries(JT(e, t)).map(([t, n]) => ({
 		field: t,
 		before: e[t],
 		after: n
 	})).sort((e, t) => e.field.localeCompare(t.field));
 }
 // src/library/custom-house.ts
-async function ZT(e, t, n, r, { activate: i = !0, replace: a } = {}) {
-	Sw(t);
-	let o = await zC(e, n);
+async function XT(e, t, n, r, { activate: i = !0, replace: a } = {}) {
+	xw(t);
+	let o = await RC(e, n);
 	if (!o) throw Error(`找不到要改的条目：${_(n)}`);
 	let s = o.entity;
 	if (!s.name || !s.source) throw Error(`原件没有名字或来源，作者的 _copy 指不到它：${_(n)}`);
 	let c = s.source, l = await e.manage.houseRules(), u = a ? l.find((e) => _(e.house) === _(a) && _(e.target) === _(n)) : void 0;
 	if (a && !u) throw Error("要改的房规不是这一条条目的房规，或者已经删掉了");
-	let d = u ? await zC(e, u.house) : null;
+	let d = u ? await RC(e, u.house) : null;
 	if (u && !d?.uniqueId) throw Error("作者的可编辑自制里找不到要改的那条房规");
 	let p = d ? String(d.entity.name ?? "") : void 0, m = await e.lib.frameOf(t.codeSet), h = (await m.call("brewDocIndex") ?? []).find((e) => e.isEditable)?.docIdLocal, v = (h ? (await m.call("brewRaw", [h]))[0]?.body : null) ?? {}, y = new Set((v[n.prop] ?? []).filter((t) => String(t?.source).toLowerCase() === e.houseSource.json.toLowerCase() && t?.uniqueId !== d?.uniqueId).map((e) => String(e?.name ?? ""))), b = {};
 	if (r.edited) {
 		let [e, t] = await Promise.all([m.call("cleanEntity", s), m.call("cleanEntity", r.edited)]);
-		if (b = YT(e, t), !Object.keys(b).length) throw Error("和原件一样，没有改动，不用存房规");
+		if (b = JT(e, t), !Object.keys(b).length) throw Error("和原件一样，没有改动，不用存房规");
 	}
 	let { name: x, ...S } = b, C = typeof x == "string" && x ? x : p ?? s.name, w = y.has(C) ? `${C}（${s.source}）` : C, T = r.entity ? {
 		...r.entity,
@@ -22007,18 +22011,18 @@ async function ZT(e, t, n, r, { activate: i = !0, replace: a } = {}) {
 		prop: n.prop,
 		hash: E.hash
 	};
-	u ? (await e.manage.pushHistory(vT(t.codeSet, n.prop, E.uniqueId), {
+	u ? (await e.manage.pushHistory(_T(t.codeSet, n.prop, E.uniqueId), {
 		at: Date.now(),
 		prop: n.prop,
 		before: E.previousEntity ?? null,
 		pack: null
-	}), _(D) !== _(u.house) && await CT(e.manage, u.house, D)) : (await e.manage.setAssignment(g(D), {
+	}), _(D) !== _(u.house) && await ST(e.manage, u.house, D)) : (await e.manage.setAssignment(g(D), {
 		scopes: [...f(t.rule).defaultScopes],
 		global: !1
 	}), await e.manage.linkHouseRule({
 		house: D,
 		target: n
-	}), await e.manage.pushHistory(vT(t.codeSet, n.prop, E.uniqueId), {
+	}), await e.manage.pushHistory(_T(t.codeSet, n.prop, E.uniqueId), {
 		at: Date.now(),
 		prop: n.prop,
 		before: null,
@@ -22038,18 +22042,18 @@ async function ZT(e, t, n, r, { activate: i = !0, replace: a } = {}) {
 	};
 }
 // src/library/custom-children.ts
-async function QT(e, t, n, r, i) {
+async function ZT(e, t, n, r, i) {
 	let a = (await e.types(t)).filter((e) => e.kind === "child" && e.parent === r);
 	if (!a.length) return [];
-	let o = await e.frame(t), s = await o.call("packChildren", await $C(o, n), r, i, a.map((e) => e.prop));
+	let o = await e.frame(t), s = await o.call("packChildren", await QC(o, n), r, i, a.map((e) => e.prop));
 	return a.map((e) => ({
 		prop: e.prop,
 		name: e.name,
 		items: s[e.prop] ?? []
 	}));
 }
-async function $T(e, t, n, r) {
-	let [i, a] = await Promise.all([Ow(e, t), xw(e).fields(t)]);
+async function QT(e, t, n, r) {
+	let [i, a] = await Promise.all([Dw(e, t), bw(e).fields(t)]);
 	if (!i || !a) return null;
 	let o = { ...i };
 	for (let e of a.fields) {
@@ -22061,7 +22065,7 @@ async function $T(e, t, n, r) {
 	return o;
 }
 // src/library/custom-edits.ts
-var eE = (e) => e === "base" ? "base" : e.startsWith("house:") ? "house" : e.startsWith("pack:") || e.startsWith("doc:") ? "pack" : "other", tE = (e) => {
+var $T = (e) => e === "base" ? "base" : e.startsWith("house:") ? "house" : e.startsWith("pack:") || e.startsWith("doc:") ? "pack" : "other", eE = (e) => {
 	let [t, n, ...r] = e.split("|");
 	return {
 		set: t,
@@ -22069,7 +22073,7 @@ var eE = (e) => e === "base" ? "base" : e.startsWith("house:") ? "house" : e.sta
 		hash: r.join("|")
 	};
 };
-async function nE(e, t = {}, n) {
+async function tE(e, t = {}, n) {
 	let r = [...Object.entries(n?.choices ?? {}).filter(([e]) => !kS(e)).map(([e, t]) => ({
 		level: "campaign",
 		target: e,
@@ -22080,14 +22084,14 @@ async function nE(e, t = {}, n) {
 	}))], i = t.sources ? new Set(t.sources.map((e) => e.toLowerCase())) : null, a = new Set(t.altIds ?? []), o = t.refs ? new Set(t.refs.map(_)) : null, s = [];
 	for (let t of r) {
 		if (o && !o.has(t.target)) continue;
-		let n = tE(t.target), r = await e.storedItem(n), c = r?.source ?? null;
+		let n = eE(t.target), r = await e.storedItem(n), c = r?.source ?? null;
 		if (i && !(c && i.has(c.toLowerCase())) && !a.has(t.altId)) continue;
 		let l = r?.item?.name;
 		s.push({
 			level: t.level,
 			ref: n,
 			altId: t.altId,
-			kind: eE(t.altId),
+			kind: $T(t.altId),
 			name: typeof l == "string" ? l : null,
 			source: c,
 			active: !1
@@ -22106,15 +22110,15 @@ async function nE(e, t = {}, n) {
 	}
 	return s;
 }
-async function rE(e, t, n, r) {
+async function nE(e, t, n, r) {
 	let i = t;
 	for (let t of n) t.level !== r && (i = await e.choose(i, t.ref, null, t.level), i = await e.choose(i, t.ref, t.altId, r));
 	return i;
 }
-async function iE(e, t, r) {
+async function rE(e, t, r) {
 	let i = n(r.ref.set).codeSet;
 	if (r.altId.startsWith("house:")) {
-		let t = await UC(e, r.ref, {
+		let t = await HC(e, r.ref, {
 			set: e.houseSet(i),
 			prop: r.ref.prop,
 			hash: r.altId.slice(6)
@@ -22143,7 +22147,7 @@ async function iE(e, t, r) {
 	};
 }
 // src/library/custom.ts
-var aE = { sources: {
+var iE = { sources: {
 	house: {
 		json: "TRPGHOUSE",
 		full: "我的房规",
@@ -22154,11 +22158,11 @@ var aE = { sources: {
 		full: "我的资料",
 		abbreviation: "我的"
 	}
-} }.sources, oE = (e) => {
+} }.sources, aE = (e) => {
 	let n = t.find((t) => t.kind === "brew" && t.codeSet === e);
 	if (!n) throw Error(`作者程序 ${e} 没有登记自制数据集`);
 	return n;
-}, sE = class {
+}, oE = class {
 	lib;
 	scoped;
 	db;
@@ -22174,28 +22178,28 @@ var aE = { sources: {
 		return this.lib.frameOf(e);
 	}
 	validate(e, t) {
-		return xw(e).validate(t);
+		return bw(e).validate(t);
 	}
 	validateEntry(e, t, n) {
-		return xw(e).validateEntry(t, n, aE.mine);
+		return bw(e).validateEntry(t, n, iE.mine);
 	}
 	fields(e, t) {
-		return sT(this.lib, e, t);
+		return oT(this.lib, e, t);
 	}
 	usage(e, t) {
-		return lT(this.lib, e, t);
+		return cT(this.lib, e, t);
 	}
 	autoFields(e, t) {
-		return mT(this.lib, e, t);
+		return pT(this.lib, e, t);
 	}
 	formPlan(e, t) {
-		return gT(this.lib, e, t);
+		return hT(this.lib, e, t);
 	}
 	saveDraft(e, t) {
-		return KT(this.manage, e, t);
+		return GT(this.manage, e, t);
 	}
 	drafts(e) {
-		return qT(this.manage, e);
+		return KT(this.manage, e);
 	}
 	draft(e) {
 		return this.manage.draft(e);
@@ -22211,25 +22215,25 @@ var aE = { sources: {
 	}
 	entryTypes(e) {
 		let t = this.typesMemo.get(e);
-		return t || (t = Tw(this.newDeps, e), t.catch(() => this.typesMemo.delete(e)), this.typesMemo.set(e, t)), t;
+		return t || (t = ww(this.newDeps, e), t.catch(() => this.typesMemo.delete(e)), this.typesMemo.set(e, t)), t;
 	}
 	typesMemo = /* @__PURE__ */ new Map();
 	children(e, t, n, r) {
-		return QT({
+		return ZT({
 			frame: (e) => this.frame(e),
 			types: (e) => this.entryTypes(e)
 		}, e, t, n, r);
 	}
 	childStart(e, t, n, r) {
-		return $T(e, t, n, r);
+		return QT(e, t, n, r);
 	}
 	async blankEntry(e, t, n = {}) {
-		let r = await Ow(e, t), i = r && n.pack ? (await this.packs(e)).find((e) => e.id === n.pack)?.own.json : null;
-		return r && i ? Ww(await this.frame(e), e, t, r, i) : r;
+		let r = await Dw(e, t), i = r && n.pack ? (await this.packs(e)).find((e) => e.id === n.pack)?.own.json : null;
+		return r && i ? Uw(await this.frame(e), e, t, r, i) : r;
 	}
 	async attachedPart(e, t, n, r = null) {
 		let i = await this.frame(e);
-		return Gw(i, e, t, n && r ? await $C(i, n) : null, r);
+		return Ww(i, e, t, n && r ? await QC(i, n) : null, r);
 	}
 	async template(e, t) {
 		return (await this.frame(e)).call("entryTemplate", t);
@@ -22247,62 +22251,62 @@ var aE = { sources: {
 		return (await this.frame(e)).call("markdownBlocks", t, n);
 	}
 	async convert(e, t, n, r) {
-		return Sw(e), (await this.frame(e.codeSet)).call("convertText", t, n, r, {
-			source: aE.mine.json,
+		return xw(e), (await this.frame(e.codeSet)).call("convertText", t, n, r, {
+			source: iE.mine.json,
 			styleHint: f(e.rule).style
 		});
 	}
 	async saveEntry(e, t, n, r = {}) {
-		let i = await bT(this.entryDeps, e, t, n, {
+		let i = await yT(this.entryDeps, e, t, n, {
 			...r,
 			pack: r.pack ?? await this.defaultPack(e),
 			record: !0
 		});
-		return r.pack && await ow(this.packDeps, e, r.pack), i;
+		return r.pack && await aw(this.packDeps, e, r.pack), i;
 	}
 	async changes(e, t, n) {
 		if (!t) return [];
 		let r = await this.frame(e), [i, a] = await Promise.all([r.call("cleanEntity", t), r.call("cleanEntity", n)]);
-		return XT(i, a);
+		return YT(i, a);
 	}
 	async suggestedPack(e) {
-		return await sw(this.packDeps, e) ?? this.defaultPack(e);
+		return await ow(this.packDeps, e) ?? this.defaultPack(e);
 	}
 	edits(e = {}, t) {
-		return nE(this.scoped, e, t);
+		return tE(this.scoped, e, t);
 	}
 	async packEdits(e, t, n) {
 		let r = (await this.packs(e)).find((e) => e.id === t);
 		if (!r) throw Error(`【我的库】里没有这个包：${t}`);
-		return nE(this.scoped, {
+		return tE(this.scoped, {
 			sources: r.sources,
 			altIds: [ES(r.id, r.docIdLocal)]
 		}, n);
 	}
 	moveEdits(e, t, n) {
-		return rE(this.scoped, e, t, n);
+		return nE(this.scoped, e, t, n);
 	}
 	async ensureMigrated(e) {
-		let t = await PT({
+		let t = await NT({
 			db: this.db,
 			lib: this.lib,
 			manage: this.manage,
-			houseSource: aE.house.json
+			houseSource: iE.house.json
 		}, e);
-		return await IT({
+		return await FT({
 			lib: this.lib,
 			manage: this.manage
 		}, e), t;
 	}
 	async defaultPack(e) {
-		let t = (await this.packs(e)).find((e) => e.own.json.toLowerCase() === aE.mine.json.toLowerCase());
-		return t ? t.id : (await ew(this.packDeps, e, aE.mine)).id;
+		let t = (await this.packs(e)).find((e) => e.own.json.toLowerCase() === iE.mine.json.toLowerCase());
+		return t ? t.id : (await $C(this.packDeps, e, iE.mine)).id;
 	}
 	get entryDeps() {
 		return {
 			lib: this.lib,
 			manage: this.manage,
-			mineSource: aE.mine,
+			mineSource: iE.mine,
 			validateEntry: (e, t, n) => this.validateEntry(e, t, n)
 		};
 	}
@@ -22310,7 +22314,7 @@ var aE = { sources: {
 		return this.counterpartHint ? this.counterpartHint(e) : null;
 	}
 	async deleteEntries(e, t, n, { pack: r } = {}) {
-		let i = await ST(this.entryDeps, e, t, n, {
+		let i = await xT(this.entryDeps, e, t, n, {
 			record: !0,
 			pack: r ?? await this.defaultPack(e)
 		});
@@ -22328,10 +22332,10 @@ var aE = { sources: {
 		};
 	}
 	async undoSteps(e, t, n) {
-		return (await this.manage.history(vT(e, t, n))).length;
+		return (await this.manage.history(_T(e, t, n))).length;
 	}
 	undo(e, t, n) {
-		return TT(this.entryDeps, e, t, n);
+		return wT(this.entryDeps, e, t, n);
 	}
 	get packDeps() {
 		return {
@@ -22341,26 +22345,26 @@ var aE = { sources: {
 		};
 	}
 	async createPack(e, t, n = {}) {
-		return await this.ensureMigrated(e), ew(this.packDeps, e, t, n);
+		return await this.ensureMigrated(e), $C(this.packDeps, e, t, n);
 	}
 	async packs(e) {
-		return Tx(async () => (await this.ensureMigrated(e), ZC(this.packDeps, e)));
+		return Tx(async () => (await this.ensureMigrated(e), XC(this.packDeps, e)));
 	}
 	setPackRule(e, t, n) {
-		return QC(this.packDeps, e, t, n);
+		return ZC(this.packDeps, e, t, n);
 	}
 	renamePack(e, t, n) {
-		return tw(this.packDeps, e, t, n);
+		return ew(this.packDeps, e, t, n);
 	}
 	exportPack(e, t) {
-		return rw(this.packDeps, e, t);
+		return nw(this.packDeps, e, t);
 	}
 	deletePack(e, t) {
-		return iw(this.packDeps, e, t);
+		return rw(this.packDeps, e, t);
 	}
 	async packEntry(e, t, n, r) {
 		let i = await this.frame(e);
-		return i.call("packEntity", await $C(i, t), n, r);
+		return i.call("packEntity", await QC(i, t), n, r);
 	}
 	async choosePack(e, t, { on: n = !0, level: r = "campaign" } = {}) {
 		let i = (await this.packs(e.codeSet)).find((e) => e.id === t);
@@ -22368,28 +22372,28 @@ var aE = { sources: {
 		return this.scoped.choosePack(e, i.sources, n ? ES(i.id, i.docIdLocal) : null, r);
 	}
 	moveEntries(e, t, n, r, i) {
-		return wT(this.entryDeps, e, t, n, r, i);
+		return CT(this.entryDeps, e, t, n, r, i);
 	}
 	houseNow(e, t) {
-		return GC({
+		return WC({
 			lib: this.lib,
 			edits: (e, t) => this.edits(e, t),
 			detail: (...e) => this.scoped.detail(...e),
-			houseSet: (e) => oE(e).id
+			houseSet: (e) => aE(e).id
 		}, e, t);
 	}
 	createHouseRule(e, t, n, r = {}) {
-		return ZT({
+		return XT({
 			lib: this.lib,
 			manage: this.manage,
 			choose: (e, t, n) => this.scoped.choose(e, t, n),
-			houseSource: aE.house,
-			houseSet: (e) => oE(e).id
+			houseSource: iE.house,
+			houseSet: (e) => aE(e).id
 		}, e, t, n, r);
 	}
 	async deleteHouseRule(e, t, n) {
 		let r = (await this.manage.houseRules()).find((e) => _(e.house) === _(t));
-		return await ST(this.entryDeps, e, t.prop, [n], {
+		return await xT(this.entryDeps, e, t.prop, [n], {
 			record: !0,
 			...r ? { link: r } : {}
 		}), await this.manage.unlinkHouseRule(t), { pending: !0 };
@@ -22405,14 +22409,14 @@ var aE = { sources: {
 		};
 		if (t.kind === "entry") {
 			if (!n.pack) throw Error("选一个【我的库】里的包，把这一条存进去");
-			let i = await jT(r, e, t.ref, n.pack, n.rule ? { rule: n.rule } : {});
-			return await ow(this.packDeps, e, n.pack), this.scoped.reset(), {
+			let i = await AT(r, e, t.ref, n.pack, n.rule ? { rule: n.rule } : {});
+			return await aw(this.packDeps, e, n.pack), this.scoped.reset(), {
 				kind: "entry",
 				pack: n.pack,
 				...i
 			};
 		}
-		let i = await AT(r, e, t);
+		let i = await kT(r, e, t);
 		return this.scoped.reset(), {
 			kind: "pack",
 			...i
@@ -22430,16 +22434,16 @@ var aE = { sources: {
 		}
 	}
 	exportBackup() {
-		return VT(this.backupDeps);
+		return BT(this.backupDeps);
 	}
 	importBackup(e) {
-		return HT(this.backupDeps, e);
+		return VT(this.backupDeps, e);
 	}
 	exportScopes(e) {
-		return UT(this.backupDeps, e);
+		return HT(this.backupDeps, e);
 	}
 	importScopes(e) {
-		return WT(this.backupDeps, e);
+		return UT(this.backupDeps, e);
 	}
 	get backupDeps() {
 		return {
@@ -22449,9 +22453,9 @@ var aE = { sources: {
 		};
 	}
 	async previewImport(t, n) {
-		let r = oE(t), i = xw(t), { accepted: a, rejected: o } = ww(i, n);
+		let r = aE(t), i = bw(t), { accepted: a, rejected: o } = Cw(i, n);
 		n = a;
-		let s = RT(await (await this.frame(t)).call("brewDocIndex"), n), c = `${t}:preview:${Date.now()}`, l = await this.lib.currentView(), u = await ib(l.store.rows, nb(await l.chain(), t), "");
+		let s = LT(await (await this.frame(t)).call("brewDocIndex"), n), c = `${t}:preview:${Date.now()}`, l = await this.lib.currentView(), u = await ib(l.store.rows, nb(await l.chain(), t), "");
 		await this.db.kv.bulkPut([...u].map(([e, t]) => ({
 			scope: c,
 			key: e,
@@ -22490,56 +22494,56 @@ var aE = { sources: {
 			d.close(), await this.db.kv.where("scope").anyOf(c, `${c}:local`).delete();
 		}
 	}
-}, cE = /* @__PURE__ */ new Set([
+}, sE = /* @__PURE__ */ new Set([
 	"source",
 	"page",
 	"uniqueId",
 	"ENG_name",
 	"translator",
 	"name"
-]), lE = (e) => e == null || e === "" || Array.isArray(e) && !e.length || typeof e == "object" && !!e && !Array.isArray(e) && !Object.keys(e).length;
-function uE(e, t, n, r) {
+]), cE = (e) => e == null || e === "" || Array.isArray(e) && !e.length || typeof e == "object" && !!e && !Array.isArray(e) && !Object.keys(e).length;
+function lE(e, t, n, r) {
 	let i = { ...e };
-	for (let [e, n] of Object.entries(t)) cE.has(e) || e.startsWith("_") || (r === "all" || lE(i[e])) && (i[e] = structuredClone(n));
-	return n === "zh" ? typeof t.name == "string" && (r === "all" || lE(i.ENG_name)) && (i.ENG_name = t.name) : typeof t.ENG_name == "string" && (r === "all" || lE(i.name)) && (i.name = t.ENG_name), i;
+	for (let [e, n] of Object.entries(t)) sE.has(e) || e.startsWith("_") || (r === "all" || cE(i[e])) && (i[e] = structuredClone(n));
+	return n === "zh" ? typeof t.name == "string" && (r === "all" || cE(i.ENG_name)) && (i.ENG_name = t.name) : typeof t.ENG_name == "string" && (r === "all" || cE(i.name)) && (i.name = t.ENG_name), i;
 }
-function dE(e, t, n) {
+function uE(e, t, n) {
 	return {
-		onlyEmpty: XT(e, uE(e, t, n, "onlyEmpty")),
-		all: XT(e, uE(e, t, n, "all"))
+		onlyEmpty: YT(e, lE(e, t, n, "onlyEmpty")),
+		all: YT(e, lE(e, t, n, "all"))
 	};
 }
-var fE = /* @__PURE__ */ new Set([
+var dE = /* @__PURE__ */ new Set([
 	"number",
 	"switch",
 	"select",
 	"multiselect",
 	"const"
 ]);
-function pE(e, t, n = /* @__PURE__ */ new Set()) {
-	return e ? "ref" in e ? !n.has(e.ref) && (n.add(e.ref), pE(t[e.ref], t, n)) : fE.has(e.c) ? !0 : e.c === "list" || e.c === "map" ? pE(e.of, t, n) : e.c === "group" && e.props.length > 0 && e.props.every((e) => pE(e.shape, t, n)) : !1;
+function fE(e, t, n = /* @__PURE__ */ new Set()) {
+	return e ? "ref" in e ? !n.has(e.ref) && (n.add(e.ref), fE(t[e.ref], t, n)) : dE.has(e.c) ? !0 : e.c === "list" || e.c === "map" ? fE(e.of, t, n) : e.c === "group" && e.props.length > 0 && e.props.every((e) => fE(e.shape, t, n)) : !1;
 }
-function mE(e, t, n, r) {
-	return n.filter((n) => pE(n.shape, r) && !lE(e[n.name]) && !lE(t[n.name]) && Te(e[n.name]) !== Te(t[n.name])).map((e) => e.name);
+function pE(e, t, n, r) {
+	return n.filter((n) => fE(n.shape, r) && !cE(e[n.name]) && !cE(t[n.name]) && Te(e[n.name]) !== Te(t[n.name])).map((e) => e.name);
 }
 // src/library/custom-lang.ts
-var hE = (e) => {
+var mE = (e) => {
 	let n = t.find((t) => t.kind === "brew" && t.lang === e);
 	if (!n) throw Error(`没有登记${e === "zh" ? "中文" : "英文"}自制数据集`);
 	return n;
-}, gE = (e) => {
+}, hE = (e) => {
 	let n = t.find((t) => t.kind === "brew" && t.codeSet === e);
 	if (!n?.lang) throw Error(`作者程序 ${e} 没有登记自制数据集`);
 	return n.lang;
-}, _E = (e) => e === "zh" ? "en" : "zh", vE = (e) => hE(e).codeSet;
-function yE(e) {
+}, gE = (e) => e === "zh" ? "en" : "zh", _E = (e) => mE(e).codeSet;
+function vE(e) {
 	if (!e || typeof e != "object") return "en";
 	let t = e;
 	if (Array.isArray(t._meta?.translators)) return "zh";
 	for (let [e, n] of Object.entries(t)) if (!e.startsWith("_") && Array.isArray(n) && n.some((e) => e && typeof e == "object" && typeof e.ENG_name == "string")) return "zh";
 	return "en";
 }
-var bE = class {
+var yE = class {
 	custom;
 	lib;
 	brewPairs;
@@ -22549,8 +22553,8 @@ var bE = class {
 		this.custom = e, this.lib = t, this.brewPairs = n, this.counterparts = r, this.scoped = i;
 	}
 	async packs() {
-		let [e, t] = await Promise.all([this.custom.packs(vE("zh")), this.custom.packs(vE("en"))]), n = new Map(e.map((e) => [e.docIdLocal, e])), r = new Map(t.map((e) => [e.docIdLocal, e])), i = [], a = /* @__PURE__ */ new Set();
-		for (let o of e.length && t.length ? await this.brewPairs.installed(hE("zh").id) : []) {
+		let [e, t] = await Promise.all([this.custom.packs(_E("zh")), this.custom.packs(_E("en"))]), n = new Map(e.map((e) => [e.docIdLocal, e])), r = new Map(t.map((e) => [e.docIdLocal, e])), i = [], a = /* @__PURE__ */ new Set();
+		for (let o of e.length && t.length ? await this.brewPairs.installed(mE("zh").id) : []) {
 			let e = o.zh ? n.get(o.zh.docIdLocal) : void 0, t = o.en ? r.get(o.en.docIdLocal) : void 0;
 			o.status === "paired" && e && t && (i.push({
 				id: e.id,
@@ -22571,7 +22575,7 @@ var bE = class {
 		return i;
 	}
 	async addLanguage(e, t) {
-		let n = vE(_E(gE(e)));
+		let n = _E(gE(hE(e)));
 		if ((await this.custom.packs(n)).some((e) => e.id === t)) return {
 			codeSet: n,
 			id: t
@@ -22581,7 +22585,7 @@ var bE = class {
 			...i.edition ? { edition: i.edition } : {},
 			dateAdded: a,
 			dateLastModified: a
-		} }, s = await this.lib.brewImport(hE(gE(n)).id, [{
+		} }, s = await this.lib.brewImport(mE(hE(n)).id, [{
 			name: r.filename ?? `${t}.json`,
 			text: JSON.stringify(o)
 		}]);
@@ -22595,8 +22599,8 @@ var bE = class {
 		let t = [];
 		for (let [n, r] of this.split(e)) t.push({
 			lang: n,
-			codeSet: vE(n),
-			preview: await this.custom.previewImport(vE(n), r)
+			codeSet: _E(n),
+			preview: await this.custom.previewImport(_E(n), r)
 		});
 		return t;
 	}
@@ -22604,8 +22608,8 @@ var bE = class {
 		let t = [];
 		for (let [n, r] of this.split(e)) t.push({
 			lang: n,
-			codeSet: vE(n),
-			result: await this.lib.brewImport(hE(n).id, r)
+			codeSet: _E(n),
+			result: await this.lib.brewImport(mE(n).id, r)
 		});
 		return t;
 	}
@@ -22614,7 +22618,7 @@ var bE = class {
 		for (let n of e) {
 			let e;
 			try {
-				e = yE(JSON.parse(n.text));
+				e = vE(JSON.parse(n.text));
 			} catch {
 				e = "en";
 			}
@@ -22624,9 +22628,9 @@ var bE = class {
 	}
 	async exportBoth(e) {
 		let t = [];
-		for (let n of ["zh", "en"]) (await this.custom.packs(vE(n))).some((t) => t.id === e) && t.push({
+		for (let n of ["zh", "en"]) (await this.custom.packs(_E(n))).some((t) => t.id === e) && t.push({
 			lang: n,
-			...await this.custom.exportPack(vE(n), e)
+			...await this.custom.exportPack(_E(n), e)
 		});
 		return t;
 	}
@@ -22640,7 +22644,7 @@ var bE = class {
 		};
 	}
 	async counterpartOf(e, t, n) {
-		let r = hE(gE(e)), i = await this.counterparts.counterpart({
+		let r = mE(hE(e)), i = await this.counterparts.counterpart({
 			set: r.id,
 			prop: t,
 			hash: n
@@ -22657,7 +22661,7 @@ var bE = class {
 			hash: null,
 			reason: null
 		};
-		let o = a[0], s = vE(_E(r.lang)), c = await this.lib.frameOf(s), l = o.docIdLocal ?? (await c.call("brewDocIndex")).find((e) => !e.isEditable && (e.props[t] ?? []).includes(o.hash))?.docIdLocal, u = l ? await c.call("packEntity", l, t, { hash: o.hash }) : null;
+		let o = a[0], s = _E(gE(r.lang)), c = await this.lib.frameOf(s), l = o.docIdLocal ?? (await c.call("brewDocIndex")).find((e) => !e.isEditable && (e.props[t] ?? []).includes(o.hash))?.docIdLocal, u = l ? await c.call("packEntity", l, t, { hash: o.hash }) : null;
 		return u ? {
 			state: "found",
 			entity: u.entity,
@@ -22675,7 +22679,7 @@ var bE = class {
 		if (!i && !a) throw Error("中文、英文都没有要存的");
 		let o = typeof a?.ent.name == "string" && a.ent.name.trim() ? a.ent.name : null;
 		if (!i && a?.replaceHash && o) {
-			let e = await this.counterpartOf(vE("en"), t, a.replaceHash);
+			let e = await this.counterpartOf(_E("en"), t, a.replaceHash);
 			e.state === "found" && e.entity && e.hash && e.entity.ENG_name !== o && (i = {
 				ent: e.entity,
 				replaceHash: e.hash
@@ -22688,7 +22692,7 @@ var bE = class {
 				ENG_name: o
 			}
 		});
-		let s = (n, i) => this.saveInLanguage(vE(n), e, t, i.ent, {
+		let s = (n, i) => this.saveInLanguage(_E(n), e, t, i.ent, {
 			...r,
 			...i.replaceHash ? { replaceHash: i.replaceHash } : {},
 			...i.attached ? { attached: i.attached } : {}
@@ -22705,7 +22709,7 @@ var bE = class {
 	}
 	async saveInLanguage(e, t, n, r, i = {}) {
 		if (!(await this.custom.packs(e)).some((e) => e.id === t)) {
-			let n = vE(_E(gE(e)));
+			let n = _E(gE(hE(e)));
 			await this.addLanguage(n, t);
 		}
 		return this.custom.saveEntry(e, n, r, {
@@ -22714,14 +22718,14 @@ var bE = class {
 		});
 	}
 	fillPlan(e, t, n) {
-		return dE(t, n, gE(e));
+		return uE(t, n, hE(e));
 	}
 	fill(e, t, n, r) {
-		return uE(t, n, gE(e), r);
+		return lE(t, n, hE(e), r);
 	}
 	async mismatches(e, t, n, r) {
 		let i = await this.custom.fields(e, t);
-		return i ? mE(n, r, i.fields, i.defs) : [];
+		return i ? pE(n, r, i.fields, i.defs) : [];
 	}
 	async houseRuleBoth(e, t) {
 		let r = {
@@ -22765,8 +22769,8 @@ var bE = class {
 			start: o.start
 		};
 	}
-}, xE = (e) => `corpora:${e}`, SE = (e) => e instanceof Error ? e.message : String(e);
-async function CE({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) {
+}, bE = (e) => `corpora:${e}`, xE = (e) => e instanceof Error ? e.message : String(e);
+async function SE({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) {
 	let a = Date.now(), o = {
 		source: e.id,
 		installed: [],
@@ -22786,8 +22790,8 @@ async function CE({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) {
 	for (let t of [
 		`parsed:${e.id}:`,
 		`pre:${e.id}:`,
-		xE(e.id),
-		ZS(e.id)
+		bE(e.id),
+		qS(e.id)
 	]) {
 		let e = await n.derivedKeys(t);
 		for (let t of e.keys()) await n.derivedDelete(t);
@@ -22811,14 +22815,14 @@ async function CE({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) {
 				} catch (e) {
 					i.failed.push({
 						id: o.id,
-						error: SE(e)
+						error: xE(e)
 					});
 				}
 				a.length && (s[r] = a);
 			} catch (e) {
 				o.parse.errors.push({
 					prop: r,
-					error: SE(e)
+					error: xE(e)
 				});
 			}
 		} else for (let r of t.props) if (!r.startsWith("raw_")) try {
@@ -22831,11 +22835,11 @@ async function CE({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) {
 		} catch (e) {
 			o.parse.errors.push({
 				prop: r,
-				error: SE(e)
+				error: xE(e)
 			});
 		}
-		await n.derivedPut(xE(e.id), "brew", s), o.parse.authorErrors = await c.call("frameErrors");
-		let a = await tC({
+		await n.derivedPut(bE(e.id), "brew", s), o.parse.authorErrors = await c.call("frameErrors");
+		let a = await ZS({
 			source: e,
 			db: t,
 			view: n,
@@ -22857,7 +22861,7 @@ async function CE({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) {
 				search: !1
 			});
 		} catch (e) {
-			o.precomputeError = SE(e);
+			o.precomputeError = xE(e);
 		}
 	} finally {
 		c.close();
@@ -22865,14 +22869,14 @@ async function CE({ source: e, db: t, view: n, openFrame: r, openFrameIn: i }) {
 	return o.ms = Date.now() - a, await n.derivedPut(`audit:${e.id}`, "brew", o), o;
 }
 // src/library/service-brew.ts
-var wE = (e) => {
+var CE = (e) => {
 	let n = t.find((t) => t.id === e);
 	if (!n || n.kind !== "brew") throw Error(`${e} 不是自制源`);
 	return n;
 };
-async function TE(t, n, r, i) {
+async function wE(t, n, r, i) {
 	i?.throwIfAborted();
-	let a = await CE({
+	let a = await SE({
 		source: n,
 		db: t.db,
 		view: r,
@@ -22890,31 +22894,31 @@ async function TE(t, n, r, i) {
 	});
 	return i?.throwIfAborted(), await Pb(t.db, e(n.codeSet).id, ["search"], r), a;
 }
-var EE = class extends Error {
+var TE = class extends Error {
 	setId;
 	missing;
 	constructor(e, t, n) {
 		super(`缺依赖包 ${t.map((e) => e.source).join("、") || "（未知）"}，这次改动已取消，原有内容没有变化（${n.slice(0, 160)}）`), this.setId = e, this.name = "BrewDependencyError", this.missing = t;
 	}
 };
-function DE(e, t) {
-	if (t.parse.missingDeps) throw new EE(e.id, t.parse.missingDeps, t.parse.errors[0]?.error ?? "");
+function EE(e, t) {
+	if (t.parse.missingDeps) throw new TE(e.id, t.parse.missingDeps, t.parse.errors[0]?.error ?? "");
 	if (t.parse.errors.length || Object.values(t.parse.corpora ?? {}).some((e) => e.failed.length)) {
 		let e = t.parse.errors[0]?.error ?? Object.values(t.parse.corpora ?? {}).flatMap((e) => e.failed)[0]?.error ?? "自制解析失败";
 		throw Error(`自制解析失败，没有发布：${e}`);
 	}
 }
-async function OE(e, t, n, r) {
-	let i = wE(t), a = await e.frame(i.codeSet, r), o = await a.call("brewDelete", n), s = await a.call("storageFlush");
+async function DE(e, t, n, r) {
+	let i = CE(t), a = await e.frame(i.codeSet, r), o = await a.call("brewDelete", n), s = await a.call("storageFlush");
 	if (s.length) throw Error(s[0]);
-	let c = await TE(e, i, r);
-	return DE(i, c), {
+	let c = await wE(e, i, r);
+	return EE(i, c), {
 		value: o,
 		parse: c,
-		packs: kE(c)
+		packs: OE(c)
 	};
 }
-var kE = (e) => AE(e.installed), AE = (e) => e.map((e) => {
+var OE = (e) => kE(e.installed), kE = (e) => e.map((e) => {
 	let t = String(e.docIdLocal ?? ""), n = typeof e.url == "string" ? e.url : null, r = String(e.checksum ?? e.version ?? e.dateAdded ?? e.filename ?? "");
 	return {
 		docIdLocal: t,
@@ -22922,7 +22926,7 @@ var kE = (e) => AE(e.installed), AE = (e) => e.map((e) => {
 		checksum: r
 	};
 });
-function jE(e, t, n) {
+function AE(e, t, n) {
 	let r = e.onLog;
 	if (r) {
 		for (let e of n.parse.errors) r({
@@ -22957,10 +22961,10 @@ function jE(e, t, n) {
 		});
 	}
 }
-async function ME(e, t, n, r) {
-	DE(t, r);
+async function jE(e, t, n, r) {
+	EE(t, r);
 	let i = r.alternatives.errors.length > 0 || !!r.precomputeError, a = await e.operations.publish(n, {
-		brews: { [t.id]: { packs: kE(r) } },
+		brews: { [t.id]: { packs: OE(r) } },
 		result: r,
 		status: i ? "partial" : "done"
 	});
@@ -22974,9 +22978,9 @@ async function ME(e, t, n, r) {
 			message: n instanceof Error ? n.message : String(n)
 		});
 	}
-	return jE(e, t, r), e.onPublished?.(a, n.base.id), a;
+	return AE(e, t, r), e.onPublished?.(a, n.base.id), a;
 }
-async function NE(e, t, n = 18e4) {
+async function ME(e, t, n = 18e4) {
 	let r, i = new Promise((e, i) => {
 		r = setTimeout(() => i(/* @__PURE__ */ Error(`${t}超过 ${n / 1e3} 秒没有响应，已作废这次准备，请重试`)), n);
 	});
@@ -22986,7 +22990,7 @@ async function NE(e, t, n = 18e4) {
 		clearTimeout(r);
 	}
 }
-async function PE(e, n, r, i, a) {
+async function NE(e, n, r, i, a) {
 	let o = t.find((e) => e.kind === "brew" && e.codeSet === n);
 	if (!o) throw Error(`作者程序 ${n} 没有登记自制数据集`);
 	let s = await e.operations.begin({
@@ -23006,17 +23010,17 @@ async function PE(e, n, r, i, a) {
 		} finally {
 			r.close();
 		}
-		let c = await TE(e, o, s.target, a);
+		let c = await wE(e, o, s.target, a);
 		return {
 			value: t,
 			parse: c,
-			view: await ME(e, o, s, c)
+			view: await jE(e, o, s, c)
 		};
 	} catch (t) {
 		throw await e.operations.abort(s, t), t;
 	}
 }
-async function FE(e, n, r, i) {
+async function PE(e, n, r, i) {
 	let a = t.find((e) => e.kind === "brew" && e.codeSet === n);
 	if (!a) throw Error(`作者程序 ${n} 没有登记自制数据集`);
 	await e.beforeWrite?.(n);
@@ -23039,7 +23043,7 @@ async function FE(e, n, r, i) {
 		}
 		let l = await o.base.brewState(a.id), u = new Set(c.map((e) => String(e.docIdLocal ?? ""))), d = [.../* @__PURE__ */ new Set([...l?.dirty ?? [], ...r])].filter((e) => u.has(e)), f = await e.operations.publish(o, {
 			brews: { [a.id]: {
-				packs: AE(c),
+				packs: kE(c),
 				dirty: d
 			} },
 			result: {
@@ -23057,8 +23061,8 @@ async function FE(e, n, r, i) {
 		throw await e.operations.abort(o, t), t;
 	}
 }
-async function IE(e, t, n, r, i, a, o, s) {
-	let c = wE(t), l = await e.operations.begin({
+async function FE(e, t, n, r, i, a, o, s) {
+	let c = CE(t), l = await e.operations.begin({
 		kind: n,
 		set: c.id,
 		codeSet: c.codeSet,
@@ -23078,7 +23082,7 @@ async function IE(e, t, n, r, i, a, o, s) {
 			signal: o
 		}), n;
 		try {
-			if (n = await NE(() => i(t), r), a(n)) {
+			if (n = await ME(() => i(t), r), a(n)) {
 				let e = await t.call("storageFlush");
 				if (e.length) throw Error(e[0]);
 			}
@@ -23090,9 +23094,9 @@ async function IE(e, t, n, r, i, a, o, s) {
 			parse: null
 		};
 		await u("parse", 1);
-		let s = await TE(e, c, l.target, o);
+		let s = await wE(e, c, l.target, o);
 		await u("publish", 2);
-		let d = await ME(e, c, l, s);
+		let d = await jE(e, c, l, s);
 		return {
 			...n,
 			parse: s,
@@ -23102,8 +23106,8 @@ async function IE(e, t, n, r, i, a, o, s) {
 		throw await e.operations.abort(l, t), t;
 	}
 }
-async function LE(e, t, n, r, i) {
-	let a = await IE(e, t, "brew-add", "下载自制包", async (r) => {
+async function IE(e, t, n, r, i) {
+	let a = await FE(e, t, "brew-add", "下载自制包", async (r) => {
 		let i = await r.call("brewAddUrl", n);
 		if (!i.value.length) throw e.onLog?.({
 			level: "error",
@@ -23119,12 +23123,12 @@ async function LE(e, t, n, r, i) {
 		parse: a.parse
 	};
 }
-function RE(e, t, n, r) {
-	return IE(e, t, "brew-deps", "下载缺的依赖包", (e) => e.call("brewAddSources", n), (e) => !!e.value.added.length, r);
+function LE(e, t, n, r) {
+	return FE(e, t, "brew-deps", "下载缺的依赖包", (e) => e.call("brewAddSources", n), (e) => !!e.value.added.length, r);
 }
-var zE = (e) => e.value.added.length > 0 || e.errors.length === 0;
-async function BE(e, t, n) {
-	let r = wE(t), { accepted: i, rejected: a } = ww(xw(r.codeSet), n);
+var RE = (e) => e.value.added.length > 0 || e.errors.length === 0;
+async function zE(e, t, n) {
+	let r = CE(t), { accepted: i, rejected: a } = Cw(bw(r.codeSet), n);
 	if (!i.length) throw Error(`没有可以导入的文件：${a.map((e) => `${e.name}：${e.reason}`).join("；")}`);
 	let o = await e.operations.begin({
 		kind: "brew-import",
@@ -23132,7 +23136,7 @@ async function BE(e, t, n) {
 		codeSet: r.codeSet
 	});
 	try {
-		let t = await (await e.frame(r.codeSet, o.target)).call("brewAddFiles", i), n = zE(t);
+		let t = await (await e.frame(r.codeSet, o.target)).call("brewAddFiles", i), n = RE(t);
 		n && t.errors.length && e.onLog?.({
 			level: "warn",
 			source: r.id,
@@ -23140,7 +23144,7 @@ async function BE(e, t, n) {
 			message: `导入成功，作者程序另报了 ${t.errors.length} 条错`,
 			detail: t.errors
 		});
-		let s = await TE(e, r, o.target), c = await ME(e, r, o, s);
+		let s = await wE(e, r, o.target), c = await jE(e, r, o, s);
 		return {
 			...t,
 			ok: n,
@@ -23152,14 +23156,14 @@ async function BE(e, t, n) {
 		throw await e.operations.abort(o, t), t;
 	}
 }
-async function VE(e, t, n, r) {
-	let i = wE(t), a = !r, o = r ?? await e.operations.begin({
+async function BE(e, t, n, r) {
+	let i = CE(t), a = !r, o = r ?? await e.operations.begin({
 		kind: "brew-delete",
 		set: i.id,
 		codeSet: i.codeSet
 	});
 	try {
-		let { value: r, parse: a } = await OE(e, t, n, o.target), s = await ME(e, i, o, a);
+		let { value: r, parse: a } = await DE(e, t, n, o.target), s = await jE(e, i, o, a);
 		return {
 			...r,
 			parse: a,
@@ -23169,28 +23173,28 @@ async function VE(e, t, n, r) {
 		throw a && await e.operations.abort(o, t), t;
 	}
 }
-function HE(e, t, n = null, r) {
-	return IE(e, t, "brew-pull", "更新自制包", async (e) => {
+function VE(e, t, n = null, r) {
+	return FE(e, t, "brew-pull", "更新自制包", async (e) => {
 		let t = await e.call("brewPull", n);
 		if (!t.value.length && t.errors.length) throw Error(t.errors[0]);
 		return t;
 	}, (e) => !!e.value.length, r);
 }
 // src/library/health.ts
-var UE = 50;
-function WE(e, t, n, r, i, a = {}) {
+var HE = 50;
+function UE(e, t, n, r, i, a = {}) {
 	return {
 		source: e,
 		check: t,
 		level: n,
 		title: r,
 		count: i.length,
-		details: i.slice(0, UE),
+		details: i.slice(0, HE),
 		...a
 	};
 }
-var GE = (e, t) => e.length ? t : "ok";
-function KE(e, { value: t, stale: n }) {
+var WE = (e, t) => e.length ? t : "ok";
+function GE(e, { value: t, stale: n }) {
 	let r = n ? { stale: n } : {}, i = Object.entries(t.parse.corpora).flatMap(([e, t]) => t.failed.map((t) => ({
 		prop: e,
 		...t
@@ -23203,11 +23207,11 @@ function KE(e, { value: t, stale: n }) {
 		...t
 	}));
 	return [
-		WE(e, "download", GE(t.download.failed, "error"), "下载失败的文件", t.download.failed, {
+		UE(e, "download", WE(t.download.failed, "error"), "下载失败的文件", t.download.failed, {
 			layer: 1,
 			...r
 		}),
-		WE(e, "mirror", GE([...t.mirror.missing, ...t.mirror.mismatched], "error"), `本地和云端对不上的文件（核对了 ${t.mirror.checked} 个）`, [...t.mirror.missing.map((e) => ({
+		UE(e, "mirror", WE([...t.mirror.missing, ...t.mirror.mismatched], "error"), `本地和云端对不上的文件（核对了 ${t.mirror.checked} 个）`, [...t.mirror.missing.map((e) => ({
 			path: e,
 			problem: "missing"
 		})), ...t.mirror.mismatched.map((e) => ({
@@ -23217,31 +23221,31 @@ function KE(e, { value: t, stale: n }) {
 			layer: 1,
 			...r
 		}),
-		WE(e, "parse", GE([...t.parse.errors, ...i], "error"), `作者加载器解析出错的类别或书（解析了 ${Object.keys(t.parse.props).length} 类）`, [...t.parse.errors, ...i], {
+		UE(e, "parse", WE([...t.parse.errors, ...i], "error"), `作者加载器解析出错的类别或书（解析了 ${Object.keys(t.parse.props).length} 类）`, [...t.parse.errors, ...i], {
 			layer: 2,
 			...r
 		}),
-		WE(e, "no-hash", GE(a, "warn"), "作者编号规则算不出编号的条目（按类别）", a, {
+		UE(e, "no-hash", WE(a, "warn"), "作者编号规则算不出编号的条目（按类别）", a, {
 			layer: 2,
 			...r
 		}),
-		WE(e, "not-run", GE(t.parse.notRun, "info"), "没有整类解析的（作者规则，附原因）", t.parse.notRun, {
+		UE(e, "not-run", WE(t.parse.notRun, "info"), "没有整类解析的（作者规则，附原因）", t.parse.notRun, {
 			layer: 2,
 			...r
 		}),
-		WE(e, "index", GE(o, "info"), "解析结果和作者搜索索引的差异（辅助参考，不当作漏解析的证明）", o, {
+		UE(e, "index", WE(o, "info"), "解析结果和作者搜索索引的差异（辅助参考，不当作漏解析的证明）", o, {
 			layer: 5,
 			...r
 		})
 	];
 }
-function qE(e, { value: t, stale: n }) {
+function KE(e, { value: t, stale: n }) {
 	let r = n ? { stale: n } : {}, i = {};
 	for (let e of t.unpaired) i[e.reason] = (i[e.reason] ?? 0) + 1;
 	let a = Object.values(t.props).reduce((e, t) => e + t.total, 0), o = Object.values(t.props).reduce((e, t) => e + t.paired, 0);
-	return [WE(e, "english", GE(t.unpaired, "info"), `没配上英文的条目（${o}/${a} 配上；按原因：${Object.entries(i).map(([e, t]) => `${e} ${t}`).join("、") || "无"}）`, t.unpaired, r), WE(e, "english-name", GE(t.nameMismatch, "warn"), "配上的中英两条里，中文的英文名和英文条目名字不一样（只列不改）", t.nameMismatch, r)];
+	return [UE(e, "english", WE(t.unpaired, "info"), `没配上英文的条目（${o}/${a} 配上；按原因：${Object.entries(i).map(([e, t]) => `${e} ${t}`).join("、") || "无"}）`, t.unpaired, r), UE(e, "english-name", WE(t.nameMismatch, "warn"), "配上的中英两条里，中文的英文名和英文条目名字不一样（只列不改）", t.nameMismatch, r)];
 }
-function JE(e, { value: t, stale: n }) {
+function qE(e, { value: t, stale: n }) {
 	let r = { ...n ? { stale: n } : {} }, i = Object.entries(t.layer3).filter(([, e]) => e.d.rawOnly + e.d.parsedOnly + e.d.rawNoHash).map(([e, t]) => ({
 		prop: e,
 		rawOnly: t.d.rawOnly,
@@ -23254,52 +23258,52 @@ function JE(e, { value: t, stale: n }) {
 		count: n.count,
 		samples: n.samples
 	})));
-	return [WE(e, "layer3", GE(i, "warn"), `审计第 3 层（不漏）：原始和解析后对不上、又没有解析标记能解释的（按类别；结构定义 ${t.schemaVersion}）`, i, {
+	return [UE(e, "layer3", WE(i, "warn"), `审计第 3 层（不漏）：原始和解析后对不上、又没有解析标记能解释的（按类别；结构定义 ${t.schemaVersion}）`, i, {
 		layer: 3,
 		...r
-	}), WE(e, "layer4", GE(a, "warn"), "审计第 4 层（只有解析处不同）：解析前后不一样、又不是加载器加的字段或带解析标记的（按类别、字段）", a, {
+	}), UE(e, "layer4", WE(a, "warn"), "审计第 4 层（只有解析处不同）：解析前后不一样、又不是加载器加的字段或带解析标记的（按类别、字段）", a, {
 		layer: 4,
 		...r
 	})];
 }
-function YE(e) {
+function JE(e) {
 	let t = e.source.id, n = [];
 	if (e.brew) {
 		let { value: r, stale: i } = e.brew, a = Object.entries(r.parse.corpora ?? {}).flatMap(([e, t]) => t.failed.map((t) => ({
 			prop: e,
 			...t
 		}))), o = i ? { stale: i } : {};
-		n.push(WE(t, "brew-parse", GE([...r.parse.errors, ...a], "error"), `自制内容解析出错的类别或书（已装 ${r.installed.length} 个包）`, [...r.parse.errors, ...a], {
+		n.push(UE(t, "brew-parse", WE([...r.parse.errors, ...a], "error"), `自制内容解析出错的类别或书（已装 ${r.installed.length} 个包）`, [...r.parse.errors, ...a], {
 			layer: 2,
 			...o
-		}), WE(t, "brew-author-errors", GE(r.parse.authorErrors, "warn"), "解析时作者报的错（自制内容本身的问题，例如引用了找不到的条目）", r.parse.authorErrors, o), WE(t, "not-run", GE(r.parse.notRun, "info"), "没有解析的（附原因）", r.parse.notRun, o));
+		}), UE(t, "brew-author-errors", WE(r.parse.authorErrors, "warn"), "解析时作者报的错（自制内容本身的问题，例如引用了找不到的条目）", r.parse.authorErrors, o), UE(t, "not-run", WE(r.parse.notRun, "info"), "没有解析的（附原因）", r.parse.notRun, o));
 		let s = r.alternatives ?? {
 			targets: 0,
 			errors: []
 		};
-		n.push(WE(t, "brew-alternatives", "info", `和官方或先装的包同编号、挂成备选的条目：${s.targets} 条（原件照常生效，用户选了才换）`, [], {
+		n.push(UE(t, "brew-alternatives", "info", `和官方或先装的包同编号、挂成备选的条目：${s.targets} 条（原件照常生效，用户选了才换）`, [], {
 			count: s.targets,
 			...o
-		})), s.errors.length && n.push(WE(t, "brew-alternatives-errors", "warn", "同编号的条目，取备选版本失败的", s.errors, o));
+		})), s.errors.length && n.push(UE(t, "brew-alternatives-errors", "warn", "同编号的条目，取备选版本失败的", s.errors, o));
 	}
-	if (e.officialMissing && n.push(WE(t, "brew-skipped", "info", `${e.officialMissing} 还没安装，作者程序开不起来，自制的检查跳过`, [])), e.brewStorage) {
+	if (e.officialMissing && n.push(UE(t, "brew-skipped", "info", `${e.officialMissing} 还没安装，作者程序开不起来，自制的检查跳过`, [])), e.brewStorage) {
 		let r = e.brewStorage.filter((e) => !e.shown);
-		n.push(WE(t, "brew-hidden", GE(r, "warn"), "存进了作者包管理器、但作者不显示也不加载的包（作者规则：没有来源 _meta.sources 的包被滤掉）", r));
+		n.push(UE(t, "brew-hidden", WE(r, "warn"), "存进了作者包管理器、但作者不显示也不加载的包（作者规则：没有来源 _meta.sources 的包被滤掉）", r));
 	}
 	if (e.brewStorage && e.brewSourceCounts) {
 		let r = e.brewSourceCounts, i = e.brewStorage.filter((e) => e.shown && e.sources.every((e) => !r[e.toLowerCase()])).map((e) => ({
 			...e.head,
 			sources: e.sources
 		}));
-		n.push(WE(t, "brew-empty", GE(i, "warn"), "显示了、但它声明的来源一条内容都没解析出来的包", i));
+		n.push(UE(t, "brew-empty", WE(i, "warn"), "显示了、但它声明的来源一条内容都没解析出来的包", i));
 	}
 	return n;
 }
-function XE(e) {
+function YE(e) {
 	let t = e.source.id, n = [];
-	return !e.installed && e.source.kind === "official" ? (n.push(WE(t, "not-installed", "info", "还没安装", [])), e.install && n.push(...KE(t, e.install)), n) : (e.install && n.push(...KE(t, e.install)), e.english ? n.push(...qE(t, e.english)) : e.source.pair && e.installed && n.push(WE(t, "english", "info", "还没算中英配对覆盖率", [])), e.layers34 ? n.push(...JE(t, e.layers34)) : e.source.kind === "official" && n.push(WE(t, "layer3", "info", "审计第 3、4 层只在验证程序里跑（要用作者结构定义 5etools-utils，不随插件发布），这里没有结果", [], { layer: 3 })), e.source.kind === "brew" && n.push(...YE(e)), n);
+	return !e.installed && e.source.kind === "official" ? (n.push(UE(t, "not-installed", "info", "还没安装", [])), e.install && n.push(...GE(t, e.install)), n) : (e.install && n.push(...GE(t, e.install)), e.english ? n.push(...KE(t, e.english)) : e.source.pair && e.installed && n.push(UE(t, "english", "info", "还没算中英配对覆盖率", [])), e.layers34 ? n.push(...qE(t, e.layers34)) : e.source.kind === "official" && n.push(UE(t, "layer3", "info", "审计第 3、4 层只在验证程序里跑（要用作者结构定义 5etools-utils，不随插件发布），这里没有结果", [], { layer: 3 })), e.source.kind === "brew" && n.push(...JE(e)), n);
 }
-function ZE(e, t = Date.now()) {
+function XE(e, t = Date.now()) {
 	let n = {
 		ok: 0,
 		info: 0,
@@ -23314,7 +23318,7 @@ function ZE(e, t = Date.now()) {
 	};
 }
 // src/library/service-health.ts
-async function QE(e, t, r) {
+async function ZE(e, t, r) {
 	let i = n(t), a = await e.englishPairs(i.id, r), o = new Set(a.unmatched.map((e) => `${e.prop}\u0000${e.hash}`)), s = {
 		source: i.id,
 		pair: a.pair,
@@ -23352,7 +23356,7 @@ async function QE(e, t, r) {
 	}
 	return await r.derivedPut(`audit:english:${i.id}`, `${await r.commitOf(i)}+${await r.commitOf(n(a.pair))}`, s), s;
 }
-async function $E(r, i) {
+async function QE(r, i) {
 	let a = [];
 	for (let o of t) try {
 		let t = await i.commitOf(o), s = o.kind === "official" ? await i.officialState(o.id) : null, c = o.pair ? await i.commitOf(n(o.pair)) : "", l = {
@@ -23363,7 +23367,7 @@ async function $E(r, i) {
 			english: await r.stored(`audit:english:${o.id}`, (e) => e === `${t}+${c}`, i),
 			layers34: await r.stored(`audit:layers34:${o.id}`, (e) => e.startsWith(`${t}+`), i)
 		};
-		o.kind === "brew" && (await i.officialState(e(o.codeSet).id))?.status !== "installed" ? l.officialMissing = e(o.codeSet).id : o.kind === "brew" && (l.brewStorage = await (await r.frame(o.codeSet, i)).call("brewStorage"), l.brewSourceCounts = await r.brewSourceCounts(o.id, i)), a.push(...XE(l));
+		o.kind === "brew" && (await i.officialState(e(o.codeSet).id))?.status !== "installed" ? l.officialMissing = e(o.codeSet).id : o.kind === "brew" && (l.brewStorage = await (await r.frame(o.codeSet, i)).call("brewStorage"), l.brewSourceCounts = await r.brewSourceCounts(o.id, i)), a.push(...YE(l));
 	} catch (e) {
 		a.push({
 			source: o.id,
@@ -23374,19 +23378,19 @@ async function $E(r, i) {
 			details: [e instanceof Error ? e.message : String(e)]
 		});
 	}
-	return ZE(a);
+	return XE(a);
 }
-async function eD(e, t, n) {
+async function $E(e, t, n) {
 	let r = await e.derivedGet(t);
 	return r ? {
 		value: r.value,
 		stale: !n(r.fingerprint)
 	} : void 0;
 }
-async function tD(t, n) {
+async function eD(t, n) {
 	return (await t.officialState(e(n).id))?.status === "installed";
 }
-async function nD(e, t, r) {
+async function tD(e, t, r) {
 	let i = n(t);
 	if (!i.pair) return;
 	let a = n(i.pair), [o, s] = await Promise.all([r.officialState(i.id), r.officialState(a.id)]);
@@ -23402,7 +23406,7 @@ async function nD(e, t, r) {
 	}
 }
 // src/library/texts.ts
-var rD = class {
+var nD = class {
 	frameOf;
 	system;
 	cache = /* @__PURE__ */ new Map();
@@ -23459,13 +23463,13 @@ var rD = class {
 			return a += e.length, t.length ? Object.fromEntries(t) : null;
 		});
 	}
-}, iD = (e, t = "", n = {}) => {
+}, rD = (e, t = "", n = {}) => {
 	for (let [r, i] of Object.entries(e)) {
 		let e = t ? `${t}.${r}` : r;
-		typeof i == "string" ? n[e] = i : i && typeof i == "object" && iD(i, e, n);
+		typeof i == "string" ? n[e] = i : i && typeof i == "object" && rD(i, e, n);
 	}
 	return n;
-}, aD = class {
+}, iD = class {
 	root;
 	fetchImpl;
 	dictionaries = /* @__PURE__ */ new Map();
@@ -23494,7 +23498,7 @@ var rD = class {
 				}
 			}
 			let i = await Promise.all(r.map((e) => this.json(e)));
-			return Object.assign({}, ...i.map((e) => iD(e)));
+			return Object.assign({}, ...i.map((e) => rD(e)));
 		})();
 		return this.dictionaries.set(e, n), n.catch(() => {
 			this.dictionaries.get(e) === n && this.dictionaries.delete(e);
@@ -23506,13 +23510,13 @@ var rD = class {
 		let r = await this.dictionary(n);
 		return t.map((e) => r[e] ?? null);
 	}
-}, oD = 4, sD = class {
+}, aD = 4, oD = class {
 	db;
 	memo = /* @__PURE__ */ new Map();
 	constructor(e) {
 		this.db = e;
 		let t = `idb://${e.name}/derived/`;
-		by.on("storagemutated", (e) => {
+		yy.on("storagemutated", (e) => {
 			Object.keys(e).some((e) => e.startsWith(t)) && this.memo.clear();
 		});
 	}
@@ -23520,11 +23524,11 @@ var rD = class {
 		let n = `${t?.id ?? "legacy"}:${e}`, r = this.memo.get(n);
 		if (r) return this.memo.delete(n), this.memo.set(n, r), r;
 		let i = (t ? t.derivedGet(e) : this.db.derived.get(e)).then((e) => e?.value);
-		return i.catch(() => this.memo.delete(n)), this.memo.set(n, i), this.memo.size > oD && this.memo.delete(this.memo.keys().next().value), i;
+		return i.catch(() => this.memo.delete(n)), this.memo.set(n, i), this.memo.size > aD && this.memo.delete(this.memo.keys().next().value), i;
 	}
 };
 // src/library/service-english.ts
-function cD(e) {
+function sD(e) {
 	let t = (e) => e === null ? null : [...e].sort();
 	return {
 		sources: t(e.sources),
@@ -23534,11 +23538,11 @@ function cD(e) {
 		files: e.fileOverrides ?? {}
 	};
 }
-async function lD(e, t, r) {
+async function cD(e, t, r) {
 	if (!t.pair) throw Error(`${t.id} 没有登记配对的另一种语言`);
 	let i = n(t.pair), [a, o] = await Promise.all([r.officialState(t.id), r.officialState(i.id)]);
 	if (a?.status !== "installed" || o?.status !== "installed") throw Error(`${t.id} 或 ${i.id} 还没安装，不能配对`);
-	let s = `english:${t.id}`, c = `gen5:${pe([[await r.commitOf(t), cD(a)], [await r.commitOf(i), cD(o)]])}`, l = await r.derivedGet(s);
+	let s = `english:${t.id}`, c = `gen5:${pe([[await r.commitOf(t), sD(a)], [await r.commitOf(i), sD(o)]])}`, l = await r.derivedGet(s);
 	if (l?.fingerprint === c) return l.value;
 	let u = await e.openFrame(t.codeSet, {
 		view: r,
@@ -23567,7 +23571,7 @@ async function lD(e, t, r) {
 			hash: e.hash,
 			...e.error ? { error: e.error } : {}
 		});
-		return l.generated = await OC(l.pairs, {
+		return l.generated = await DC(l.pairs, {
 			parsed: (n, a) => e.parsed(n === "cn" ? t.id : i.id, a, r).catch(() => null),
 			templates: () => u.call("variantTemplateNames"),
 			versions: (e, t) => (e === "cn" ? u : d).call("versionOrder", t)
@@ -23577,9 +23581,9 @@ async function lD(e, t, r) {
 	}
 }
 // src/library/service-tables.ts
-async function uD(e, t, r, i, a) {
+async function lD(e, t, r, i, a) {
 	let o = a ?? await e.currentView();
-	await FC(o, t);
+	await PC(o, t);
 	let s = n(t), c, l = null;
 	if (i && (r === "book" || r === "adventure")) {
 		let e = await o.derivedGet(ax(t, r, i));
@@ -23593,21 +23597,21 @@ async function uD(e, t, r, i, a) {
 	} else s.kind === "brew" && (c = (await e.parsed(t, r, o)).items.filter((e) => !!e));
 	return (await e.frameOf(s.codeSet, o)).call("extractTables", r, c, l);
 }
-var dD = [
+var uD = [
 	"table",
 	"tableGroup",
 	Gb
-], fD = /* @__PURE__ */ new WeakMap();
-async function pD(e, t, r) {
-	let i = `${r.id}:${t}`, a = fD.get(e);
-	a || fD.set(e, a = /* @__PURE__ */ new Map());
+], dD = /* @__PURE__ */ new WeakMap();
+async function fD(e, t, r) {
+	let i = `${r.id}:${t}`, a = dD.get(e);
+	a || dD.set(e, a = /* @__PURE__ */ new Map());
 	let o = a.get(i);
 	if (!o) {
 		o = (async () => {
 			let i = n(t), a = `${await r.commitOf(i)}|${r.id}`, o = await r.derivedGet(`tableRefs:${t}`);
 			if (o && o.fingerprint === a) return o.value;
 			let s = await e.frameOf(i.codeSet, r), c = {};
-			for (let n of dD) {
+			for (let n of uD) {
 				let i;
 				try {
 					i = await e.parsed(t, n, r);
@@ -23635,8 +23639,8 @@ async function pD(e, t, r) {
 	}
 	return o;
 }
-async function mD(e, r, i, a, o, s) {
-	let c = o ?? await e.currentView(), l = n(r), u = await e.frameOf(l.codeSet, c), d = s === void 0 ? await uD(e, r, i, a, c) : await u.call("extractTables", i, [s]), f = s;
+async function pD(e, r, i, a, o, s) {
+	let c = o ?? await e.currentView(), l = n(r), u = await e.frameOf(l.codeSet, c), d = s === void 0 ? await lD(e, r, i, a, c) : await u.call("extractTables", i, [s]), f = s;
 	if (f === void 0 && i !== "book" && i !== "adventure") {
 		let t = await e.parsed(r, i, c);
 		f = t.items[t.hashes.indexOf(a)] ?? null;
@@ -23646,7 +23650,7 @@ async function mD(e, r, i, a, o, s) {
 		let [n] = await u.call("tagRefs", [f]);
 		for (let r of n ?? []) {
 			let [n, i] = r.split("|");
-			if (dD.includes(n)) for (let r of t.filter((e) => e.codeSet === l.codeSet)) try {
+			if (uD.includes(n)) for (let r of t.filter((e) => e.codeSet === l.codeSet)) try {
 				let t = await e.parsed(r.id, n, c), a = t.hashes.indexOf(i);
 				if (a >= 0) {
 					p.push({
@@ -23667,7 +23671,7 @@ async function mD(e, r, i, a, o, s) {
 	for (let n of t.filter((e) => e.codeSet === l.codeSet)) {
 		let t;
 		try {
-			await FC(c, n.id), t = await pD(e, n.id, c);
+			await PC(c, n.id), t = await fD(e, n.id, c);
 		} catch (e) {
 			console.debug("[trpg-assistant] 关联表：这一套没装或读不出，跳过", n.id, e);
 			continue;
@@ -23685,14 +23689,14 @@ async function mD(e, r, i, a, o, s) {
 	};
 }
 // src/library/pack-entries.ts
-var hD = 4, gD = class {
+var mD = 4, hD = class {
 	entries = /* @__PURE__ */ new Map();
 	get(e, t) {
 		let n = `${e.view.id}|${e.source.id}|${t.docIdLocal}`, r = this.entries.get(n);
 		if (r) return this.entries.delete(n), this.entries.set(n, r), r;
 		let i = this.read(e, t);
 		return this.entries.set(n, i), i.then(() => {
-			if (this.entries.size <= hD) return;
+			if (this.entries.size <= mD) return;
 			let e = this.entries.keys().next().value;
 			e && this.entries.delete(e);
 		}, () => {
@@ -23700,7 +23704,7 @@ var hD = 4, gD = class {
 		}), i;
 	}
 	async read(e, t) {
-		let [n, r] = await Promise.all([rC(e, t.docIdLocal, t.hashes), e.view.derivedGet(ZS(e.source.id))]), i = r?.value;
+		let [n, r] = await Promise.all([$S(e, t.docIdLocal, t.hashes), e.view.derivedGet(qS(e.source.id))]), i = r?.value;
 		for (let { target: e, source: r, alts: a } of Object.values(i?.targets ?? {})) {
 			let i = a.find((e) => e.docIdLocal === t.docIdLocal);
 			if (!i) continue;
@@ -23717,7 +23721,7 @@ var hD = 4, gD = class {
 	async detail(e, t, n, r) {
 		let i = (await this.get(e, t))[n]?.find((e) => e.hash === r);
 		if (!i) return null;
-		let a = await iC(e, t.docIdLocal, n, i.item);
+		let a = await eC(e, t.docIdLocal, n, i.item);
 		return a ? {
 			...i,
 			...a,
@@ -23734,15 +23738,15 @@ var hD = 4, gD = class {
 	}
 };
 // src/library/service-english-entry.ts
-async function _D(e, t, n) {
+async function gD(e, t, n) {
 	let [r, i] = await Promise.all([n.officialState(e.id), n.officialState(t.id)]);
 	return r?.status === "installed" && i?.status === "installed";
 }
-async function vD(e, t, r, i, { fluff: a = !0, view: o } = {}) {
+async function _D(e, t, r, i, { fluff: a = !0, view: o } = {}) {
 	let s = o ?? await e.currentView();
 	if (!t.pair) return null;
 	let c = n(t.pair);
-	if (!await _D(t, c, s)) return { status: "not-installed" };
+	if (!await gD(t, c, s)) return { status: "not-installed" };
 	let l = (await e.englishPairs(t.id, s)).pairs[r]?.[i];
 	if (!l) return { status: "not-paired" };
 	let u = await e.storedItem(c.id, r, l.enHash, s);
@@ -23760,20 +23764,20 @@ async function vD(e, t, r, i, { fluff: a = !0, view: o } = {}) {
 	};
 }
 // src/library/service-core.ts
-var yD = class {
+var vD = class {
 	opts;
 	frames = /* @__PURE__ */ new Map();
 	pairsCache = /* @__PURE__ */ new Map();
 	searchLoaded = /* @__PURE__ */ new Map();
-	packEntries = new gD();
+	packEntries = new hD();
 	parsedMemo;
 	embedded;
 	texts;
 	operations;
 	constructor(e) {
 		this.opts = e;
-		let t = new aD(e.pluginRoot ?? new URL("../", "" + import.meta.url), e.textFetch);
-		this.texts = new rD((e) => this.frameOf(e), (e, n) => t.resolve(e, n)), this.parsedMemo = new sD(e.db), this.embedded = new Zb(e.db, (e, t) => this.frame(e, t)), this.operations = e.operations ?? new jy({
+		let t = new iD(e.pluginRoot ?? new URL("../", "" + import.meta.url), e.textFetch);
+		this.texts = new nD((e) => this.frameOf(e), (e, n) => t.resolve(e, n)), this.parsedMemo = new oD(e.db), this.embedded = new Zb(e.db, (e, t) => this.frame(e, t)), this.operations = e.operations ?? new jy({
 			db: e.db,
 			revisions: e.revisions
 		});
@@ -23788,7 +23792,7 @@ var yD = class {
 		return this.frame(e, await this.view(t));
 	}
 	async gatedOpen(e, t) {
-		if (!await tD(t.view ?? await this.currentView(), e)) throw new Cx(e);
+		if (!await eD(t.view ?? await this.currentView(), e)) throw new Cx(e);
 		return this.opts.openFrame(e, t);
 	}
 	frame(e, t) {
@@ -23859,7 +23863,7 @@ var yD = class {
 	}
 	async parsed(e, t, r) {
 		let i = await this.view(r);
-		if (await FC(i, e), t === "embeddedTable") return this.embedded.ensure(e, i);
+		if (await PC(i, e), t === "embeddedTable") return this.embedded.ensure(e, i);
 		let a = await this.parsedMemo.get(ax(e, t), i), o = a === void 0 ? void 0 : { value: a };
 		if (!o && n(e).kind === "brew") {
 			let n = await i.derivedGet(`audit:${e}`), r = (n?.value)?.parse.errors ?? [];
@@ -23879,13 +23883,13 @@ var yD = class {
 	}
 	async categories(e, t) {
 		let n = await this.view(t);
-		await FC(n, e);
+		await PC(n, e);
 		let r = await this.report(e, n);
 		return Object.fromEntries(Object.entries(r.parse.props).map(([e, t]) => [e, t.count]));
 	}
 	async query(e, t, { source: n, includeExcluded: r = !1, view: i } = {}) {
 		let a = await this.view(i);
-		await FC(a, e);
+		await PC(a, e);
 		let o = await a.officialState(e), s = o?.status === "installed" && o.sources ? new Set(o.sources.map((e) => e.toLowerCase())) : null, c = n?.toLowerCase(), l = (e) => (c === void 0 || e?.toLowerCase() === c) && (!s || !e || s.has(e.toLowerCase()));
 		if (t === "embeddedTable") {
 			let n = await this.parsed(e, t, a);
@@ -23914,11 +23918,11 @@ var yD = class {
 		}), f;
 	}
 	async brewCorpora(e, t) {
-		return (await (await this.view(t)).derivedGet(xE(e)))?.value ?? {};
+		return (await (await this.view(t)).derivedGet(bE(e)))?.value ?? {};
 	}
 	async corpus(e, t, n, r) {
 		let i = await this.view(r);
-		if (await FC(i, e), t === "book" || t === "adventure") {
+		if (await PC(i, e), t === "book" || t === "adventure") {
 			let r = t === "book" ? await i.installedBooks(e) : await i.installedAdventures(e);
 			if (r && !r.includes(n)) throw Error(`${e} 没有安装这本${t === "book" ? "书" : "冒险"}：${n}`);
 		}
@@ -23934,20 +23938,20 @@ var yD = class {
 		} : null;
 	}
 	tables(e, t, n, r) {
-		return uD(this, e, t, n, r);
+		return lD(this, e, t, n, r);
 	}
 	relatedTables(e, t, n, r, i) {
-		return mD(this, e, t, n, r, i);
+		return pD(this, e, t, n, r, i);
 	}
 	async detail(e, t, r, i, a) {
 		let o = await this.view(a);
-		await FC(o, e), await this.ensure(e, {
+		await PC(o, e), await this.ensure(e, {
 			prop: t,
 			fluff: !0,
 			excluded: !0
 		}, o);
 		let s = await this.storedItem(e, t, r, o);
-		if (!s || !await IC(o, e, s.source)) return null;
+		if (!s || !await FC(o, e, s.source)) return null;
 		let c = await Fb(this.opts.db, e, t, r, o), l = await Ib(this.opts.db, e, t, o);
 		return {
 			item: s.item,
@@ -23965,14 +23969,14 @@ var yD = class {
 		return Fb(this.opts.db, e, t, n, i);
 	}
 	english(e, t, n, r = {}) {
-		return vD(this, e, t, n, r);
+		return _D(this, e, t, n, r);
 	}
 	englishPairs(e, t) {
 		return this.view(t).then((t) => {
 			let r = `${t.id}:${e}`, i = this.pairsCache.get(r);
 			if (!i) {
 				let a = n(e);
-				i = lD(this.englishContext(), a, t), i.catch(() => this.pairsCache.delete(r)), this.pairsCache.set(r, i);
+				i = cD(this.englishContext(), a, t), i.catch(() => this.pairsCache.delete(r)), this.pairsCache.set(r, i);
 			}
 			return i;
 		});
@@ -23985,7 +23989,7 @@ var yD = class {
 	}
 	async search(e, t, { showLegacy: r, view: i } = {}) {
 		let a = await this.view(i);
-		await FC(a, e), await this.ensure(e, { search: !0 }, a);
+		await PC(a, e), await this.ensure(e, { search: !0 }, a);
 		let o = n(e), s = await this.frame(o.codeSet, a), c = await Lb(this.opts.db, e, a);
 		if (c) {
 			let t = `${String(c.base ?? "")}|${String(c.exclude ?? "")}|${String(c.manage ?? "")}|${a.id}`;
@@ -24037,7 +24041,7 @@ var yD = class {
 			throw await this.operations.abort(a, e), e;
 		}
 	}
-}, bD = class extends yD {
+}, yD = class extends vD {
 	brewContext() {
 		return {
 			db: this.opts.db,
@@ -24069,42 +24073,42 @@ var yD = class {
 	}
 	async reparseBrew(e, t) {
 		let n = this.brewSource(e);
-		return (await PE(this.brewContext(), n.codeSet, "brew-reparse", async () => null, t)).parse;
+		return (await NE(this.brewContext(), n.codeSet, "brew-reparse", async () => null, t)).parse;
 	}
 	async writeAuthor(e, t, n) {
-		return FE(this.brewContext(), e, t, n);
+		return PE(this.brewContext(), e, t, n);
 	}
 	async brewDirty(e, t) {
 		return (await (await this.view(t)).brewState(e))?.dirty ?? [];
 	}
 	async mutateAuthor(e, t, n) {
-		return PE(this.brewContext(), e, t, n);
+		return NE(this.brewContext(), e, t, n);
 	}
 	async brewAddUrl(e, t, n, r) {
-		return LE(this.brewContext(), e, t, n, r);
+		return IE(this.brewContext(), e, t, n, r);
 	}
 	async brewInstallSources(e, t, n) {
-		return RE(this.brewContext(), e, t, n);
+		return LE(this.brewContext(), e, t, n);
 	}
 	async brewImport(e, t) {
-		return BE(this.brewContext(), e, t);
+		return zE(this.brewContext(), e, t);
 	}
 	deleteBrewsInView(e, t, n) {
-		return OE(this.brewContext(), e, t, n);
+		return DE(this.brewContext(), e, t, n);
 	}
 	async brewDelete(e, t, n) {
-		return VE(this.brewContext(), e, t, n);
+		return BE(this.brewContext(), e, t, n);
 	}
 	async brewCheckUpdates(e, t = null) {
 		let n = await this.currentView();
 		return (await this.frame(this.brewSource(e).codeSet, n)).call("brewCheckUpdates", t);
 	}
 	async brewPull(e, t = null, n) {
-		return HE(this.brewContext(), e, t, n);
+		return VE(this.brewContext(), e, t, n);
 	}
 	async englishCoverage(e, t) {
 		let n = await this.view(t);
-		return QE(this.healthContext(), e, n);
+		return ZE(this.healthContext(), e, n);
 	}
 	healthContext() {
 		return {
@@ -24112,13 +24116,13 @@ var yD = class {
 			parsed: (e, t, n) => this.parsed(e, t, n),
 			englishPairs: (e, t) => this.englishPairs(e, t),
 			frame: (e, t) => this.frame(e, t),
-			stored: (e, t, n) => eD(n, e, t),
+			stored: (e, t, n) => $E(n, e, t),
 			brewSourceCounts: (e, t) => this.brewSourceCounts(e, t)
 		};
 	}
 	async health(e) {
 		let t = await this.view(e);
-		return $E(this.healthContext(), t);
+		return QE(this.healthContext(), t);
 	}
 	async brewSourceCounts(e, t) {
 		let n = `parsed:${e}:`;
@@ -24128,22 +24132,22 @@ var yD = class {
 		})), n, { lower: !0 });
 	}
 	async officialInstalled(e, t) {
-		return tD(await this.view(t), e);
+		return eD(await this.view(t), e);
 	}
 	async warmEnglishPairs(e, t) {
-		await nD({
+		await tD({
 			englishPairs: (e, t) => this.englishPairs(e, t),
 			...this.opts.onLog ? { onLog: this.opts.onLog } : {}
 		}, e, await this.view(t));
 	}
-}, xD = (e) => e instanceof Error ? e.message : String(e), SD = (e) => e == null ? "all" : [...new Set(e)].sort().join(","), CD = (e) => [
+}, bD = (e) => e instanceof Error ? e.message : String(e), xD = (e) => e == null ? "all" : [...new Set(e)].sort().join(","), SD = (e) => [
 	`commit=${e.commit ?? "current"}`,
-	`books=${SD(e.books)}`,
-	`sources=${SD(e.sources)}`,
-	`adventures=${SD(e.adventures)}`,
-	`updateBooks=${SD(e.updateSelection?.bookIds)}`,
-	`updateAdventures=${SD(e.updateSelection?.adventureIds)}`
-].join(";"), wD = class {
+	`books=${xD(e.books)}`,
+	`sources=${xD(e.sources)}`,
+	`adventures=${xD(e.adventures)}`,
+	`updateBooks=${xD(e.updateSelection?.bookIds)}`,
+	`updateAdventures=${xD(e.updateSelection?.adventureIds)}`
+].join(";"), CD = class {
 	opts;
 	tasks = /* @__PURE__ */ new Map();
 	handles = /* @__PURE__ */ new Map();
@@ -24220,7 +24224,7 @@ var yD = class {
 				s.result = e.result, s.revision = e.revision ?? s.revision, s.status = o.signal.aborted ? "cancelled" : e.status ?? "done";
 			} catch (r) {
 				let i = await this.opts.operations.get(s.id).catch(() => void 0);
-				s.status = o.signal.aborted || i?.status === "cancelled" ? "cancelled" : "failed", s.error = xD(r), s.status === "failed" && this.opts.onLog?.({
+				s.status = o.signal.aborted || i?.status === "cancelled" ? "cancelled" : "failed", s.error = bD(r), s.status === "failed" && this.opts.onLog?.({
 					level: "error",
 					source: t,
 					kind: `task:${e}`,
@@ -24231,7 +24235,7 @@ var yD = class {
 					}
 				});
 			}
-			return o.signal.reason?.name === "NetworkError" && s.result?.publishable !== !0 && (s.status = "failed", s.error = xD(o.signal.reason)), s.convertError && this.opts.onLog?.({
+			return o.signal.reason?.name === "NetworkError" && s.result?.publishable !== !0 && (s.status = "failed", s.error = bD(o.signal.reason)), s.convertError && this.opts.onLog?.({
 				level: "warn",
 				source: t,
 				kind: "task:convert",
@@ -24250,7 +24254,7 @@ var yD = class {
 		n && await this.opts.operations.progress(n, t);
 	}
 	startOfficial(e, t = {}) {
-		return this.start("official", e, CD(t), (e, n) => this.install(e, n, t));
+		return this.start("official", e, SD(t), (e, n) => this.install(e, n, t));
 	}
 	startBrew(e, t, n) {
 		return this.start("brew", e, t, async (e, t) => {
@@ -24384,7 +24388,7 @@ var yD = class {
 			try {
 				await this.opts.afterInstall?.(i, b);
 			} catch (t) {
-				e.convertError = xD(t);
+				e.convertError = bD(t);
 			}
 			return {
 				result: s,
@@ -24409,15 +24413,15 @@ var yD = class {
 			};
 		});
 	}
-}, TD = "brews/";
-function ED(e, t) {
+}, wD = "brews/";
+function TD(e, t) {
 	let n = i();
 	return (r) => e.get(n, r, {
 		allowNetwork: !1,
 		...t ? { view: t } : {}
 	});
 }
-function DD({ pluginRoot: e, data: t, fetchImpl: n = fetch, moduleRoots: r = {}, brewFiles: i }) {
+function ED({ pluginRoot: e, data: t, fetchImpl: n = fetch, moduleRoots: r = {}, brewFiles: i }) {
 	let a = async (t) => {
 		let i = /^modules\/([^/]+)\//.exec(t)?.[1], a = i ? r[i] : void 0;
 		if (a) {
@@ -24459,9 +24463,9 @@ function DD({ pluginRoot: e, data: t, fetchImpl: n = fetch, moduleRoots: r = {},
 		}
 	};
 }
-var OD = (e) => e === "complete" || e === "unsupported";
-async function kD({ pluginRoot: e, container: t, data: n, fetchImpl: r, timeoutMs: i = 12e4, moduleRoots: a, brewFiles: o, visible: s, buildCard: c }) {
-	let l = DD({
+var DD = (e) => e === "complete" || e === "unsupported";
+async function OD({ pluginRoot: e, container: t, data: n, fetchImpl: r, timeoutMs: i = 12e4, moduleRoots: a, brewFiles: o, visible: s, buildCard: c }) {
+	let l = ED({
 		pluginRoot: e,
 		data: n,
 		fetchImpl: r,
@@ -24485,7 +24489,7 @@ async function kD({ pluginRoot: e, container: t, data: n, fetchImpl: r, timeoutM
 	};
 }
 // src/rules/kernel/prepared.ts
-var AD = class {
+var kD = class {
 	rows = /* @__PURE__ */ new Map();
 	set(e, t, n, r, i = this.rows.get(e)?.stored ?? !1) {
 		this.rows.set(e, {
@@ -24535,7 +24539,7 @@ var AD = class {
 	}
 };
 // src/rules/kernel/brews.ts
-async function jD(e, t, n) {
+async function AD(e, t, n) {
 	let r = await e.kvGet(t, _x);
 	if (!Array.isArray(r) || !r.length) return [];
 	let { packs: a, flatten: o } = await n(), s = new Map(a.map((e) => [e.docIdLocal, e])), c = [...new Set(a.flatMap((e) => re(e).filter((e) => e.kind === "include").map((e) => e.source)))], l = [];
@@ -24564,14 +24568,14 @@ async function jD(e, t, n) {
 	}
 	return l;
 }
-function MD(e, n, r, i, a) {
+function jD(e, n, r, i, a) {
 	if (!n.length) return null;
 	let o = (e) => (i?.startsWith("pack:") || i?.startsWith("doc:")) && (ES(TS(e), e.docIdLocal) === i || `doc:${e.docIdLocal}` === i), s = e.map(({ pack: e }) => e), c = t.some((e) => e.id === r.set && e.kind === "brew") && (i === null || i === "base"), l = s.filter((e) => (e.hashes[r.prop] ?? []).includes(r.hash)), u = s.find(o) ?? (c ? l[0] ?? s.find((e) => a && e.sources.some((e) => e.toLowerCase() === a.toLowerCase()) && !s.some((t) => t !== e && t.sources.some((e) => e.toLowerCase() === a.toLowerCase()))) : void 0), d = n.find(({ docIdLocal: e }) => e === u?.docIdLocal);
 	return d ? `自制包「${d.filename ?? d.sources.join("、")}」无法用于结算：${d.reason}` : null;
 }
 // src/rules/kernel/open.ts
-async function ND(e, t, n) {
-	let r = await jD(t, n, async () => ({
+async function MD(e, t, n) {
+	let r = await AD(t, n, async () => ({
 		packs: await new Ax(e).list(T(n).id, t),
 		flatten: async (r, i, a) => (await e.frameOf(n, t)).call("flattenCopies", r, i, {
 			officialOnly: !0,
@@ -24583,16 +24587,16 @@ async function ND(e, t, n) {
 		itemMasteries: r.length && n !== i().codeSet ? (await (await e.frameOf(n, t)).call("parseProp", "itemMastery")).items : []
 	};
 }
-async function PD(e) {
-	let t = /* @__PURE__ */ new Map(), n = await kD({
+async function ND(e) {
+	let t = /* @__PURE__ */ new Map(), n = await OD({
 		...e,
-		data: ED(e.files, e.view),
+		data: TD(e.files, e.view),
 		timeoutMs: e.timeoutMs ?? 18e4,
 		moduleRoots: e.input.moduleRoots,
 		brewFiles: t
 	});
 	try {
-		let { boot: r, report: i } = await NE(async () => ({
+		let { boot: r, report: i } = await ME(async () => ({
 			boot: await n.boot(e.input),
 			report: e.brews.length ? await n.call("loadBrews", e.brews, e.itemMasteries) : {
 				loaded: [],
@@ -24600,7 +24604,7 @@ async function PD(e) {
 				excluded: []
 			}
 		}), "准备结算资料", e.timeoutMs), a = new Set(i.loaded), o = e.brews.filter(({ doc: e }) => a.has(e.head.docIdLocal)), s = o.map(({ doc: e }) => e.body);
-		for (let { doc: e } of o) t.set(`${TD}${e.head.docIdLocal}/${(e.head.filename || `${e.head.docIdLocal}.json`).replace(/[\\/]/g, "_")}`, JSON.stringify(e.body));
+		for (let { doc: e } of o) t.set(`${wD}${e.head.docIdLocal}/${(e.head.filename || `${e.head.docIdLocal}.json`).replace(/[\\/]/g, "_")}`, JSON.stringify(e.body));
 		return {
 			session: n,
 			boot: r,
@@ -24613,20 +24617,20 @@ async function PD(e) {
 	}
 }
 // src/rules/kernel/adapters.ts
-var FD = ["foundry"], ID = D.rules;
-function LD(e) {
-	let t = ID[e]?.kernel;
-	return t && FD.includes(t.adapter) ? t : null;
+var PD = ["foundry"], FD = D.rules;
+function ID(e) {
+	let t = FD[e]?.kernel;
+	return t && PD.includes(t.adapter) ? t : null;
 }
-var RD = (e) => LD(e) !== null;
+var LD = (e) => ID(e) !== null;
 // src/rules/kernel/lang-packs.ts
-async function zD(e, t) {
+async function RD(e, t) {
 	let n = await t(new URL("vendor/foundry/lang-packs.json", e));
 	if (n.status === 404) return { packs: {} };
 	if (!n.ok) throw Error(`读取结算内核语言包声明失败（${n.status}）`);
 	return { packs: (await n.json()).packs ?? {} };
 }
-function BD(e, t, n, r) {
+function zD(e, t, n, r) {
 	let i = t.packs[e];
 	if (!i) return { language: "en.core" };
 	for (let t of i.files) {
@@ -24646,7 +24650,7 @@ function BD(e, t, n, r) {
 	};
 }
 // src/rules/kernel/input.ts
-var VD = { "plutonium.config": {
+var BD = { "plutonium.config": {
 	import: {
 		isSkipCompendiumImageFetch: !0,
 		isNoPrereleaseBrewIndexes: !0
@@ -24655,19 +24659,19 @@ var VD = { "plutonium.config": {
 	importVehicle: { isUseTokenImageAsPortrait: !0 },
 	importObject: { isUseTokenImageAsPortrait: !0 }
 } };
-async function HD(e, t, n) {
+async function VD(e, t, n) {
 	let r = await n(new URL(`vendor/foundry/${t}`, e));
 	if (!r.ok) throw Error(`读取结算内核文件失败（${r.status}）：${t}`);
 	return r.json();
 }
-async function UD(t) {
-	let n = t.fetchImpl ?? fetch, r = LD(t.rule);
+async function HD(t) {
+	let n = t.fetchImpl ?? fetch, r = ID(t.rule);
 	if (!r) throw Error(`结算内核还不支持这个规则：${t.rule}`);
-	let i = r.settings, a = await HD(t.pluginRoot, "manifest.json", n), o = a.system.split(" ")[0], s = await HD(t.pluginRoot, `systems/${o}/system.json`, n), c = {}, l = await Promise.all(Object.keys(a.modules).map(async (e) => {
+	let i = r.settings, a = await VD(t.pluginRoot, "manifest.json", n), o = a.system.split(" ")[0], s = await VD(t.pluginRoot, `systems/${o}/system.json`, n), c = {}, l = await Promise.all(Object.keys(a.modules).map(async (e) => {
 		let r = `../private/modules/${e}/`, i = t.privateModules ? await n(new URL(`vendor/foundry/${r}module.json`, t.pluginRoot)) : null;
-		return i?.ok ? (c[e] = r, i.json()) : HD(t.pluginRoot, `modules/${e}/module.json`, n);
-	})), { language: u, packHash: d } = BD(t.uiLanguage ?? (t.codeSet ? e(t.codeSet).lang : "en"), await zD(t.pluginRoot, n), s, l), f = {
-		...VD,
+		return i?.ok ? (c[e] = r, i.json()) : VD(t.pluginRoot, `modules/${e}/module.json`, n);
+	})), { language: u, packHash: d } = zD(t.uiLanguage ?? (t.codeSet ? e(t.codeSet).lang : "en"), await RD(t.pluginRoot, n), s, l), f = {
+		...BD,
 		...i
 	}, p = await (await n(new URL("dist/kernel-frame.js", t.pluginRoot))).text(), m = Object.fromEntries(l.map((e) => [e.id, e.version ?? ""])), h = pe({
 		release: a.release,
@@ -24694,23 +24698,23 @@ async function UD(t) {
 	};
 }
 // src/core/compress.ts
-async function WD(e) {
+async function UD(e) {
 	let t = new Blob([e]).stream().pipeThrough(new CompressionStream("gzip"));
 	return new Uint8Array(await new Response(t).arrayBuffer());
 }
-async function GD(e) {
+async function WD(e) {
 	let t = new Blob([e]).stream().pipeThrough(new DecompressionStream("gzip"));
 	return new Response(t).text();
 }
 // src/rules/kernel/cache.ts
-var KD = (e) => e.split(".")[0], qD = (e) => e.lang ?? "en", JD = class {
+var GD = (e) => e.split(".")[0], KD = (e) => e.lang ?? "en", qD = class {
 	db;
 	constructor(e) {
 		this.db = e;
 	}
 	async get(e) {
 		let t = (await this.db.derived.get(`kc:${e}`))?.value;
-		return t ? t.z ? JSON.parse(await GD(t.z)) : "data" in t ? t.data ?? null : null : null;
+		return t ? t.z ? JSON.parse(await WD(t.z)) : "data" in t ? t.data ?? null : null : null;
 	}
 	async state(e) {
 		return await this.db.derived.where("key").equals(`kc:${e}`).count() ? await this.db.derived.where("key").equals(`kc-failed:${e}`).count() ? "failed" : "done" : "missing";
@@ -24737,7 +24741,7 @@ var KD = (e) => e.split(".")[0], qD = (e) => e.lang ?? "en", JD = class {
 		}]);
 	}
 	async put(e, t, n) {
-		let r = JSON.stringify(t), i = await WD(r);
+		let r = JSON.stringify(t), i = await UD(r);
 		return await this.db.derived.put({
 			key: `kc:${e}`,
 			fingerprint: e,
@@ -24757,12 +24761,12 @@ var KD = (e) => e.split(".")[0], qD = (e) => e.lang ?? "en", JD = class {
 		let t = [];
 		for (let n of ["kc:", "kc-failed:"]) await this.db.derived.where("key").startsWith(n).each((n) => {
 			let r = n.value?.scope;
-			r && (r.rule !== e.rule || qD(r) !== qD(e) || r.base === e.base && r.official === e.official) || t.push(n.key);
+			r && (r.rule !== e.rule || KD(r) !== KD(e) || r.base === e.base && r.official === e.official) || t.push(n.key);
 		});
 		return await this.db.derived.bulkDelete(t), t.length;
 	}
 };
-async function YD(e) {
+async function JD(e) {
 	return pe({
 		base: e.base,
 		brew: e.brewFingerprint,
@@ -24775,18 +24779,18 @@ async function YD(e) {
 		choices: e.actor.choices
 	});
 }
-var XD = (e) => e.kernelFiles ?? e.official;
-async function ZD(e) {
+var YD = (e) => e.kernelFiles ?? e.official;
+async function XD(e) {
 	return pe({
 		base: e.base,
 		brew: e.brewFingerprint,
-		official: XD(e.dataVersion),
+		official: YD(e.dataVersion),
 		kind: e.kind,
 		prop: e.prop,
 		entry: pe(e.entry)
 	});
 }
-var QD = (e) => ({
+var ZD = (e) => ({
 	status: "complete",
 	result: e,
 	sources: {},
@@ -24795,15 +24799,15 @@ var QD = (e) => ({
 	missing: null,
 	pending: null,
 	unsupported: []
-}), $D = {
+}), QD = {
 	buildCharacter: (e) => [...e[0]?.items ?? [], ...e[0]?.equipment ?? []],
 	rebuildCharacter: (e) => [...e[0]?.items ?? [], ...e[0]?.equipment ?? []],
 	addToActor: (e) => e[1] ?? [],
 	createActorsBatch: (e) => e[0] ?? []
 };
-function eO(e, t, n, r, i = "", a, o = "en") {
+function $D(e, t, n, r, i = "", a, o = "en") {
 	let s = e.call, c = async (e, r, c) => {
-		let l = await c(), u = await ZD({
+		let l = await c(), u = await XD({
 			base: n,
 			brewFingerprint: a,
 			dataVersion: l,
@@ -24811,12 +24815,12 @@ function eO(e, t, n, r, i = "", a, o = "en") {
 			prop: e,
 			entry: r
 		}), d = await t.get(u);
-		if (d !== null) return QD(d);
+		if (d !== null) return ZD(d);
 		let f = await s("importForBuild", e, r);
 		return f.status === "complete" && f.result && await t.put(u, f.result, {
 			rule: i,
 			base: n,
-			official: XD(l),
+			official: YD(l),
 			lang: o
 		}), f;
 	}, l = async (e, ...t) => {
@@ -24829,7 +24833,7 @@ function eO(e, t, n, r, i = "", a, o = "en") {
 				data: r.result
 			}) : s("createActorFromData", r.result);
 		}
-		let a = $D[e]?.(t);
+		let a = QD[e]?.(t);
 		for (let e of a ?? []) {
 			if (e.data || !e.entry) continue;
 			let t = await c(e.prop, e.entry, i);
@@ -24844,7 +24848,7 @@ function eO(e, t, n, r, i = "", a, o = "en") {
 	};
 }
 // src/rules/kernel/entry.ts
-async function tO(t, n, r, i, a, o) {
+async function eO(t, n, r, i, a, o) {
 	if (e(n).lang !== "zh") return {
 		entry: i,
 		noEnglish: !1
@@ -24865,9 +24869,9 @@ async function tO(t, n, r, i, a, o) {
 	};
 }
 // src/rules/kernel/rebuild.ts
-var nO = { creature: "monster" };
-async function rO(e, t) {
-	let n = await e.links.customRefs(t.codeSet), r = (e) => e.propDroppable ? nO[e.propDroppable] ?? e.propDroppable : null, i = await iO(e, t);
+var tO = { creature: "monster" };
+async function nO(e, t) {
+	let n = await e.links.customRefs(t.codeSet), r = (e) => e.propDroppable ? tO[e.propDroppable] ?? e.propDroppable : null, i = await rO(e, t);
 	return (e) => {
 		let t = r(e), a = t && e.hash ? n.get(`${t}|${e.hash}`) : void 0;
 		return a ? {
@@ -24876,10 +24880,10 @@ async function rO(e, t) {
 		} : i(e);
 	};
 }
-async function iO(t, n) {
+async function rO(t, n) {
 	let r = e(n.codeSet);
 	if (r.lang !== "zh") return (e) => {
-		let t = e.propDroppable ? nO[e.propDroppable] ?? e.propDroppable : null;
+		let t = e.propDroppable ? tO[e.propDroppable] ?? e.propDroppable : null;
 		return t && e.source && e.hash ? {
 			kind: e.propDroppable,
 			set: r.id,
@@ -24890,7 +24894,7 @@ async function iO(t, n) {
 	let i = await t.englishPairs(n.codeSet).catch(() => null), a = /* @__PURE__ */ new Map();
 	if (i) for (let [e, t] of Object.entries(i.pairs)) for (let [n, r] of Object.entries(t)) a.set(`${e}|${r.enHash}`, n);
 	return (e) => {
-		let t = e.propDroppable ? nO[e.propDroppable] ?? e.propDroppable : null;
+		let t = e.propDroppable ? tO[e.propDroppable] ?? e.propDroppable : null;
 		if (!t || !e.source || !e.hash) return null;
 		let n = a.get(`${t}|${e.hash}`);
 		return n ? {
@@ -24901,10 +24905,10 @@ async function iO(t, n) {
 		} : null;
 	};
 }
-async function aO(e, t) {
+async function iO(e, t) {
 	return (await e.call("preparedActors")).find((e) => e.source._id === t)?.source ?? null;
 }
-async function oO(e) {
+async function aO(e) {
 	let t = e.actor.refs;
 	if (!t.length) return {
 		status: "error",
@@ -24932,7 +24936,7 @@ async function oO(e) {
 			});
 			continue;
 		}
-		let u = await tO(e.lib, e.library.codeSet, c.ref, c.item, c.version.altId, e.view);
+		let u = await eO(e.lib, e.library.codeSet, c.ref, c.item, c.version.altId, e.view);
 		u.noEnglish && a.push(s), i.push({
 			ref: s,
 			entry: u.entry
@@ -24971,14 +24975,14 @@ async function oO(e) {
 			noEnglish: a
 		};
 	}
-	let s = new Set(LD(e.library.rule)?.build ?? []), c = i.filter((e) => s.has(e.ref.prop)).map((e) => ({
+	let s = new Set(ID(e.library.rule)?.build ?? []), c = i.filter((e) => s.has(e.ref.prop)).map((e) => ({
 		prop: e.ref.prop,
 		entry: e.entry,
-		refKey: Kv(e.ref)
+		refKey: Gv(e.ref)
 	})), l = i.filter((e) => !s.has(e.ref.prop)).map((e) => ({
 		prop: e.ref.prop,
 		entry: e.entry,
-		refKey: Kv(e.ref)
+		refKey: Gv(e.ref)
 	})), u = await e.session.call("rebuildCharacter", {
 		id: e.actor.id,
 		name: e.actor.name,
@@ -25008,8 +25012,8 @@ async function oO(e) {
 		noEnglish: a
 	};
 }
-async function sO(e) {
-	let t = await rO(e.lib, e.library), n = wne({
+async function oO(e) {
+	let t = await nO(e.lib, e.library), n = Tne({
 		id: e.actor.id,
 		name: e.actor.name,
 		data: e.current
@@ -25025,7 +25029,7 @@ async function sO(e) {
 	let r = Array.isArray(e.current.items) ? e.current.items : [], i = /* @__PURE__ */ new Map();
 	for (let e of n.refs) {
 		let t = r.find((t) => t._id === e.itemId), n = t && typeof t.flags == "object" && t.flags ? t.flags.plutonium : void 0;
-		n?.propDroppable && n.source && n.hash && i.set(`${n.propDroppable}|${n.source}|${n.hash}`, Kv(e));
+		n?.propDroppable && n.source && n.hash && i.set(`${n.propDroppable}|${n.source}|${n.hash}`, Gv(e));
 	}
 	let a = {};
 	for (let [e, t] of Object.entries(n.choices)) {
@@ -25042,21 +25046,21 @@ async function sO(e) {
 	};
 }
 // src/rules/kernel/build-options.ts
-var cO = [
+var sO = [
 	"subclass",
 	"feat",
 	"optionalfeature"
 ];
-function lO(e, t) {
+function cO(e, t) {
 	let n = e.flatMap((e) => Array.from({ length: e.count }, () => ({
 		title: e.title,
-		allowed: new Set(e.candidates.map((e) => Kv(e.ref)))
+		allowed: new Set(e.candidates.map((e) => Gv(e.ref)))
 	}))), r = /* @__PURE__ */ new Map(), i = (e, t) => n.some((n, a) => {
 		if (t.has(a) || !n.allowed.has(e)) return !1;
 		t.add(a);
 		let o = r.get(a);
 		return o && !i(o, t) ? !1 : (r.set(a, e), !0);
-	}), a = t.filter((e) => cO.includes(e.prop)).map(Kv);
+	}), a = t.filter((e) => sO.includes(e.prop)).map(Gv);
 	if (new Set(a).size !== a.length || !a.every((e) => i(e, /* @__PURE__ */ new Set()))) return {
 		wrong: "额外选项已关闭、不符合条件，或不属于需要选择的那一组",
 		missing: null
@@ -25068,48 +25072,48 @@ function lO(e, t) {
 	};
 }
 // src/rules/kernel/naming.ts
-var uO = (e) => `${e.set}|${e.prop}|${e.hash}`;
-function dO(e, t) {
+var lO = (e) => `${e.set}|${e.prop}|${e.hash}`;
+function uO(e, t) {
 	let n = /* @__PURE__ */ new Map(), r = (e) => {
 		let r = n.get(e);
-		return r || (r = t(e).then((e) => new Map(e.map((e) => [uO(e.ref), String(e.item?.name ?? "")]))), n.set(e, r)), r;
+		return r || (r = t(e).then((e) => new Map(e.map((e) => [lO(e.ref), String(e.item?.name ?? "")]))), n.set(e, r)), r;
 	};
 	return async (t) => {
 		let n = e(t);
 		if (!n) return null;
-		let i = (await r(n.prop)).get(uO(n));
+		let i = (await r(n.prop)).get(lO(n));
 		return i === void 0 ? null : {
 			ref: n,
 			label: i
 		};
 	};
 }
-async function fO(e, t) {
-	return dO(await rO(e, t), (n) => e.query(t, n));
+async function dO(e, t) {
+	return uO(await nO(e, t), (n) => e.query(t, n));
 }
 // src/rules/kernel/locale.ts
-var pO = /^\{@\w+ ([^|}]*)(?:\|[^}]*)?\}$/, mO = (e) => {
+var fO = /^\{@\w+ ([^|}]*)(?:\|[^}]*)?\}$/, pO = (e) => {
 	let t = e.trim();
-	return (pO.exec(t)?.[1] ?? t).trim();
+	return (fO.exec(t)?.[1] ?? t).trim();
 };
-function hO(e, t, n) {
+function mO(e, t, n) {
 	if (!n || t == null) return null;
-	let r = mO(n).toLowerCase();
+	let r = pO(n).toLowerCase();
 	if (!r) return null;
 	let i = /* @__PURE__ */ new Set(), a = (e, t) => {
-		if (typeof e == "string") typeof t == "string" && mO(e).toLowerCase() === r && mO(t) && mO(t) !== mO(e) && i.add(mO(t));
+		if (typeof e == "string") typeof t == "string" && pO(e).toLowerCase() === r && pO(t) && pO(t) !== pO(e) && i.add(pO(t));
 		else if (Array.isArray(e)) Array.isArray(t) && e.length === t.length && e.forEach((e, n) => a(e, t[n]));
 		else if (e && typeof e == "object" && t && typeof t == "object" && !Array.isArray(t)) for (let [n, r] of Object.entries(e)) n in t && a(r, t[n]);
 	};
 	return a(e, t), i.size === 1 ? [...i][0] : null;
 }
 // src/rules/kernel/display.ts
-var gO = (e) => !!e && typeof e == "object" && typeof e.hash == "string", _O = (e) => e;
-function vO(e, t) {
-	let n = new Set(t.filter((e) => e.zh != null).map((t) => hO(t.en, t.zh, e)).filter((e) => !!e));
+var hO = (e) => !!e && typeof e == "object" && typeof e.hash == "string", gO = (e) => e;
+function _O(e, t) {
+	let n = new Set(t.filter((e) => e.zh != null).map((t) => mO(t.en, t.zh, e)).filter((e) => !!e));
 	return n.size === 1 ? [...n][0] : null;
 }
-async function yO(e, t) {
+async function vO(e, t) {
 	let n = /* @__PURE__ */ new Map(), r = (e, t = "") => {
 		Array.isArray(e) ? e.forEach((e, n) => r(e, `${t}[${n}]`)) : e && typeof e == "object" && (ce(e) ? (n.set(e, t), e.$t === "plugin" && e.args?.forEach((e, n) => r(e, `${t}.args[${n}]`)), e.$t === "join" && e.parts.forEach((e, n) => r(e, `${t}.parts[${n}]`)), (e.$t === "entry" || e.$t === "value") && e.fallback && r(e.fallback, `${t}.fallback`)) : Object.entries(e).filter(([e]) => e !== "raw" && e !== "author").forEach(([e, n]) => r(n, t ? `${t}.${e}` : e)));
 	};
@@ -25190,7 +25194,7 @@ async function yO(e, t) {
 		switch (e.$t) {
 			case "library":
 			case "data": return e.text;
-			case "entry": return t.translate ? vO(e.text, t.pairs) ?? (e.fallback ? p(e.fallback) : f(e, "entry-position-unresolved")) : e.text;
+			case "entry": return t.translate ? _O(e.text, t.pairs) ?? (e.fallback ? p(e.fallback) : f(e, "entry-position-unresolved")) : e.text;
 			case "author": return t.translate ? f(e, "author-position-unresolved") : e.text;
 			case "name": return t.translate && e.strict ? f(e, n.reason) : e.text;
 			case "system": return t.translate ? f(e, "language-key-missing") : e.text;
@@ -25203,10 +25207,10 @@ async function yO(e, t) {
 	}, m = async (e) => {
 		if (Array.isArray(e)) return Promise.all(e.map(m));
 		if (!e || typeof e != "object") return e;
-		if (ce(e)) return _O(p(e));
+		if (ce(e)) return gO(p(e));
 		let n = e, r = {};
 		for (let [e, t] of Object.entries(n)) r[e] = e === "author" || e === "raw" ? t : await m(t);
-		if (gO(n.author)) {
+		if (hO(n.author)) {
 			let e = await t.namer(n.author);
 			e && (r.ref = e.ref);
 		}
@@ -25219,7 +25223,7 @@ async function yO(e, t) {
 	};
 }
 // src/rules/kernel/ability-rules.ts
-var bO = {
+var yO = {
 	standardArray: [
 		15,
 		14,
@@ -25242,7 +25246,7 @@ var bO = {
 		}
 	}
 };
-function xO(e, t, n) {
+function bO(e, t, n) {
 	let r = [], i = t.filter((t) => typeof e.base[t] == "number"), a = i.length === t.length, o = (t) => e.base[t];
 	for (let e of i) Number.isInteger(o(e)) || r.push({
 		key: e,
@@ -25261,7 +25265,7 @@ function xO(e, t, n) {
 		};
 	}
 	if (e.method === "standardArray") {
-		let e = [...bO.standardArray];
+		let e = [...yO.standardArray];
 		for (let t of s) {
 			let n = e.indexOf(o(t));
 			n < 0 ? r.push({
@@ -25276,7 +25280,7 @@ function xO(e, t, n) {
 			pool: e.sort((e, t) => t - e)
 		};
 	}
-	let { budget: c, costs: l } = bO.pointBuy, u = 0;
+	let { budget: c, costs: l } = yO.pointBuy, u = 0;
 	for (let e of s) {
 		let t = l[o(e)];
 		t === void 0 ? r.push({
@@ -25313,7 +25317,7 @@ function xO(e, t, n) {
 		rows: p
 	};
 }
-function SO(e, t) {
+function xO(e, t) {
 	let n = Object.keys(e.initial), r = t?.base ?? {};
 	return {
 		cap: e.cap,
@@ -25328,11 +25332,11 @@ function SO(e, t) {
 				set: n
 			};
 		}),
-		check: t ? xO(t, n, e.cap ?? Infinity) : null
+		check: t ? bO(t, n, e.cap ?? Infinity) : null
 	};
 }
 // src/rules/kernel/resolve-build-options.ts
-function CO(e) {
+function SO(e) {
 	let t = /* @__PURE__ */ new Set();
 	for (let { ref: n, entry: r } of e) {
 		let e = r;
@@ -25340,7 +25344,7 @@ function CO(e) {
 	}
 	return [...t];
 }
-async function wO(e, t, n, r) {
+async function CO(e, t, n, r) {
 	function i(e) {
 		return !e || typeof e != "object" ? !1 : "fromFilter" in e && typeof e.fromFilter == "string" || Object.values(e).some(i);
 	}
@@ -25351,11 +25355,11 @@ async function wO(e, t, n, r) {
 		return [n.name, n.ENG_name].filter(Boolean).map((e) => `${e}|${n.source ?? t}`.toLowerCase());
 	}))];
 }
-async function TO(e, t, n, r) {
-	let { scoped: a, library: o, view: s } = e, c = /* @__PURE__ */ new Map(), l = /* @__PURE__ */ new Map(), u = Object.fromEntries(await Promise.all(CO(n).map(async (e) => {
+async function wO(e, t, n, r) {
+	let { scoped: a, library: o, view: s } = e, c = /* @__PURE__ */ new Map(), l = /* @__PURE__ */ new Map(), u = Object.fromEntries(await Promise.all(SO(n).map(async (e) => {
 		let t = await a.query(o, e, { view: s });
 		return [e, await Promise.all(t.map(async (t) => {
-			let n = Kv(t.ref), r = t.item, { entry: i } = await tO(a, o.codeSet, t.ref, t.item, t.version.altId, s);
+			let n = Gv(t.ref), r = t.item, { entry: i } = await eO(a, o.codeSet, t.ref, t.item, t.version.altId, s);
 			return c.set(n, {
 				ref: t.ref,
 				name: typeof r.name == "string" ? r.name : t.ref.hash,
@@ -25368,24 +25372,24 @@ async function TO(e, t, n, r) {
 		}))];
 	}))), d = n.map((e) => ({
 		prop: e.ref.prop,
-		refKey: Kv(e.ref),
+		refKey: Gv(e.ref),
 		entry: e.entry
-	})), f = Object.fromEntries(n.flatMap((e) => e.zh ? [[Kv(e.ref), e.zh]] : [])), p = await e.session.call("buildOptions", {
+	})), f = Object.fromEntries(n.flatMap((e) => e.zh ? [[Gv(e.ref), e.zh]] : [])), p = await e.session.call("buildOptions", {
 		items: d,
 		picks: r,
 		blank: t.blank,
 		extraPools: u,
 		local: f,
-		traitScope: await wO(a, o, s, n)
+		traitScope: await CO(a, o, s, n)
 	});
 	if (p.status !== "complete") return {
 		status: p.status,
 		error: p.error ?? `建卡选项状态：${p.status}`,
 		detail: p
 	};
-	let m = p.result.items, h = new Map(m.map((e) => [e.refKey, e])), g = m.flatMap((e) => e.blocked ?? []), _ = new Set(t.items.map(Kv)), v = await yO({
+	let m = p.result.items, h = new Map(m.map((e) => [e.refKey, e])), g = m.flatMap((e) => e.blocked ?? []), _ = new Set(t.items.map(Gv)), v = await vO({
 		items: n.map((e) => {
-			let t = h.get(Kv(e.ref)), n = (t?.extras ?? []).map((e) => {
+			let t = h.get(Gv(e.ref)), n = (t?.extras ?? []).map((e) => {
 				let t = e.candidates.flatMap(({ key: e, needsCheck: t }) => {
 					let n = c.get(e);
 					return n ? [{
@@ -25400,7 +25404,7 @@ async function TO(e, t, n, r) {
 					candidates: t,
 					...t.some((e) => e.requirement) ? { unfiltered: !0 } : {}
 				};
-			}), r = n.flatMap((e) => e.candidates.filter((e) => e.requirement && _.has(Kv(e.ref)))).map((e) => ue("{0}的前置条件请核对：{1}", e.name, e.requirement));
+			}), r = n.flatMap((e) => e.candidates.filter((e) => e.requirement && _.has(Gv(e.ref)))).map((e) => ue("{0}的前置条件请核对：{1}", e.name, e.requirement));
 			return {
 				ref: e.ref,
 				name: e.name === null ? null : se(e.name),
@@ -25417,15 +25421,15 @@ async function TO(e, t, n, r) {
 	}, {
 		translate: o.codeSet !== i().codeSet,
 		pairs: await e.pairsOf(n),
-		namer: await fO(a, o),
+		namer: await dO(a, o),
 		author: e.service.texts.reader(o.codeSet),
 		requirementOf: (e) => l.get(e)
-	}), y = v.value.items, b = lO(y.flatMap((e) => e.extras), t.items);
+	}), y = v.value.items, b = cO(y.flatMap((e) => e.extras), t.items);
 	return {
 		status: "complete",
 		items: y,
 		complete: p.result.complete && !b.wrong && !b.missing && !g.length,
-		abilities: SO(v.value.abilities, t.abilities),
+		abilities: xO(v.value.abilities, t.abilities),
 		extraIssue: b.wrong,
 		...v.missed.length ? {
 			untranslated: v.missed,
@@ -25434,32 +25438,32 @@ async function TO(e, t, n, r) {
 	};
 }
 // src/rules/kernel/sidecar.ts
-var EO = (e) => /^data\/(?:[^/]+\/foundry|foundry-[^/]+)\.json$/.test(e), DO = [
+var TO = (e) => /^data\/(?:[^/]+\/foundry|foundry-[^/]+)\.json$/.test(e), EO = [
 	["className", "classSource"],
 	["raceName", "raceSource"],
 	["subclassShortName", "subclassSource"]
 ];
-function OO(e, t) {
+function DO(e, t) {
 	if (e.name === t.name && e.source === t.source) return !0;
 	let n = [t.name, t.shortName].filter((e) => typeof e == "string");
-	return DO.some(([r, i]) => n.includes(e[r]) && e[i] === t.source);
+	return EO.some(([r, i]) => n.includes(e[r]) && e[i] === t.source);
 }
-var kO = (e, t) => [
+var OO = (e, t) => [
 	e,
 	t.ENG_name ?? t.name,
 	t.source,
 	t.level ?? ""
 ].join("|");
-function AO(e, t, n) {
+function kO(e, t, n) {
 	let r = n.en, i = n.zh, a = [];
 	for (let [n, o] of Object.entries(e)) {
 		let e = t[n];
 		if (!Array.isArray(o) || !Array.isArray(e)) continue;
 		let s = /* @__PURE__ */ new Map();
-		for (let t of e) t && OO(t, i) && s.set(kO(n, t), [...s.get(kO(n, t)) ?? [], t]);
+		for (let t of e) t && DO(t, i) && s.set(OO(n, t), [...s.get(OO(n, t)) ?? [], t]);
 		for (let e of o) {
-			if (!e || !OO(e, r)) continue;
-			let t = s.get(kO(n, e));
+			if (!e || !DO(e, r)) continue;
+			let t = s.get(OO(n, e));
 			t?.length === 1 && a.push({
 				en: e,
 				zh: t[0]
@@ -25468,7 +25472,7 @@ function AO(e, t, n) {
 	}
 	return a;
 }
-function jO(t) {
+function AO(t) {
 	let n = e(t.codeSet), r = /* @__PURE__ */ new Map(), a = null, o = (e) => (r.has(e) || r.set(e, (async () => {
 		let [r, a] = await Promise.all([i(), n].map((n) => t.files.get(n, e, {
 			allowNetwork: !1,
@@ -25486,16 +25490,16 @@ function jO(t) {
 		})), s = r.filter((e) => e.zh !== null && e.zh !== void 0);
 		if (!s.length || n.id === i().id) return r;
 		let c = [...r];
-		a ??= t.files.cachedFileList(i(), t.view).then((e) => Object.keys(e ?? {}).filter(EO).sort());
+		a ??= t.files.cachedFileList(i(), t.view).then((e) => Object.keys(e ?? {}).filter(TO).sort());
 		for (let e of await a) {
 			let t = await o(e);
-			if (t) for (let e of s) c.push(...AO(t.en, t.zh, e));
+			if (t) for (let e of s) c.push(...kO(t.en, t.zh, e));
 		}
 		return c;
 	};
 }
 // src/rules/kernel/starting-options.ts
-async function MO(e, t, n = {}) {
+async function jO(e, t, n = {}) {
 	let r = [];
 	for (let i of e) {
 		let e = [], a = async (n) => {
@@ -25564,7 +25568,7 @@ async function MO(e, t, n = {}) {
 	}
 	return r;
 }
-function NO(e, t) {
+function MO(e, t) {
 	let n = {};
 	for (let r of e) {
 		n[r.refKey] = r.excluded;
@@ -25576,26 +25580,26 @@ function NO(e, t) {
 	}
 	return { excluded: n };
 }
-async function PO(e, t) {
+async function NO(e, t) {
 	let n = e.rows.filter((e) => e.entry?.startingEquipment).map((e) => ({
 		prop: e.ref.prop,
-		refKey: Kv(e.ref),
+		refKey: Gv(e.ref),
 		entry: e.entry
 	})), r = await e.call("startingEquipment", n);
 	if (r.status !== "complete") return {
 		status: r.status,
 		error: r.error ?? `起始装备状态：${r.status}`
 	};
-	let a = await fO(e.scoped, e.library), o = e.service.texts.reader(e.library.codeSet), s = r.result.coins ?? [], c = await o.resolve(s.map((e) => ({
+	let a = await dO(e.scoped, e.library), o = e.service.texts.reader(e.library.codeSet), s = r.result.coins ?? [], c = await o.resolve(s.map((e) => ({
 		source: "value",
 		key: e,
 		group: s
-	}))), l = Object.fromEntries(s.flatMap((e, t) => c[t] ? [[e, c[t]]] : [])), u = await MO(r.result.sections, a, l), d = Object.fromEntries(Object.entries(l).map(([e, t]) => [e, se(t)])), f = {
+	}))), l = Object.fromEntries(s.flatMap((e, t) => c[t] ? [[e, c[t]]] : [])), u = await jO(r.result.sections, a, l), d = Object.fromEntries(Object.entries(l).map(([e, t]) => [e, se(t)])), f = {
 		translate: e.library.codeSet !== i().codeSet,
 		pairs: e.pairs,
 		namer: a,
 		author: o
-	}, p = await yO({
+	}, p = await vO({
 		sections: u,
 		currencies: d
 	}, f), { sections: m, currencies: h } = p.value, g = (e = [], t = []) => {
@@ -25611,7 +25615,7 @@ async function PO(e, t) {
 		currencies: h,
 		...g()
 	};
-	let _ = NO(m, t);
+	let _ = MO(m, t);
 	if (_.error) return {
 		status: "invalid",
 		error: _.error,
@@ -25623,7 +25627,7 @@ async function PO(e, t) {
 		error: v.error ?? `起始装备预演状态：${v.status}`,
 		sections: m
 	};
-	let y = v.result, b = await yO({
+	let y = v.result, b = await vO({
 		currency: y.currency,
 		sections: y.sections.map((e) => ({
 			refKey: e.refKey,
@@ -25644,11 +25648,11 @@ async function PO(e, t) {
 	};
 }
 // src/rules/kernel/runtime.ts
-var FO = (e, t) => Object.fromEntries(e.map((e, n) => [Kv(e), t?.[n] ?? []]));
-function IO(e) {
+var PO = (e, t) => Object.fromEntries(e.map((e, n) => [Gv(e), t?.[n] ?? []]));
+function FO(e) {
 	return `trpg-${Se(e).slice(0, 16)}`;
 }
-var LO = class {
+var IO = class {
 	deps;
 	open = /* @__PURE__ */ new Map();
 	constructor(e) {
@@ -25667,29 +25671,31 @@ var LO = class {
 		let t = this.open.get(e);
 		if (t) return t;
 		let n = (async () => {
-			let t = await this.deps.campaignOf(e), n = performance.now(), r = await this.deps.revisions.published(), i = await ND(this.deps.service, r, t.library.codeSet), a = await UD({
+			let t = await this.deps.campaignOf(e), n = performance.now(), r = await this.deps.revisions.published(), i = await MD(this.deps.service, r, t.library.codeSet), a = await HD({
 				pluginRoot: this.deps.pluginRoot,
 				rule: t.rule,
 				codeSet: t.library.codeSet,
 				world: {
-					id: IO(e),
+					id: FO(e),
 					title: t.title
 				},
 				fetchImpl: this.deps.fetchImpl
-			}), { session: o, boot: s, report: c, brewFingerprint: l } = await PD({
+			}), { session: o, boot: s, report: c, brewFingerprint: l } = await ND({
 				...this.deps,
 				view: r,
 				input: a,
 				...i,
 				container: this.deps.container()
-			}), u = (e, t, n) => MD(i.brews, c.excluded, e, t, n), d = this.deps.cache ? new JD(this.deps.cache.db) : null, f = a.cacheKey ?? pe(a), p = KD(a.language), m = async () => this.deps.cache ? this.deps.cache.dataVersion(r) : {
+			});
+			t.usedActorIds?.length && await o.call("reserveActorIds", t.usedActorIds);
+			let u = (e, t, n) => jD(i.brews, c.excluded, e, t, n), d = this.deps.cache ? new qD(this.deps.cache.db) : null, f = a.cacheKey ?? pe(a), p = GD(a.language), m = async () => this.deps.cache ? this.deps.cache.dataVersion(r) : {
 				official: "",
 				brews: {}
 			};
 			return {
-				session: d ? eO(o, d, f, m, t.rule, l, p) : o,
+				session: d ? $D(o, d, f, m, t.rule, l, p) : o,
 				rule: t.rule,
-				bases: new AD(),
+				bases: new kD(),
 				seeds: /* @__PURE__ */ new Map(),
 				boot: s,
 				brews: c,
@@ -25701,7 +25707,7 @@ var LO = class {
 				cacheLang: p,
 				view: r,
 				dataVersion: m,
-				pairsOf: jO({
+				pairsOf: AO({
 					files: this.deps.files,
 					view: r,
 					codeSet: t.library.codeSet
@@ -25723,7 +25729,7 @@ var LO = class {
 		t && (this.open.delete(e), (await t).session.close());
 	}
 	async remember(e, t) {
-		let n = await this.get(e), r = await aO(n.session, t);
+		let n = await this.get(e), r = await iO(n.session, t);
 		if (!r) throw Error(`结算小窗里没有这个人物：${t}`);
 		n.bases.set(t, r);
 	}
@@ -25758,7 +25764,7 @@ var LO = class {
 	async buildCharacter(e, t) {
 		let n = await this.get(e);
 		if (t.abilities) {
-			let e = xO(t.abilities, Object.keys(t.abilities.base), Infinity);
+			let e = bO(t.abilities, Object.keys(t.abilities.base), Infinity);
 			if (!e.ok) return {
 				status: "invalid",
 				error: `属性值不合「${t.abilities.method}」的规则`,
@@ -25784,7 +25790,7 @@ var LO = class {
 				status: n.status,
 				error: n.error
 			};
-			let i = NO(n.sections ?? [], t.starting);
+			let i = MO(n.sections ?? [], t.starting);
 			if (i.error) return {
 				status: "invalid",
 				error: i.error
@@ -25797,24 +25803,24 @@ var LO = class {
 			error: i.error,
 			detail: i
 		};
-		let a = new Map(i.rows.map((e) => [Kv(e.ref), e])), o = t.items.map((e) => ({
+		let a = new Map(i.rows.map((e) => [Gv(e.ref), e])), o = t.items.map((e) => ({
 			prop: e.prop,
-			refKey: Kv(e),
-			entry: a.get(Kv(e)).entry
+			refKey: Gv(e),
+			entry: a.get(Gv(e)).entry
 		})), s = (t.equipment ?? []).map((e) => ({
 			prop: e.prop,
-			refKey: Kv(e),
-			entry: a.get(Kv(e)).entry
+			refKey: Gv(e),
+			entry: a.get(Gv(e)).entry
 		})), c = await n.session.call("buildCharacter", {
 			name: t.name,
 			items: o,
 			equipment: s,
 			choices: t.choices ?? {},
-			picks: FO(t.items, t.picks),
+			picks: PO(t.items, t.picks),
 			blank: t.blank,
 			starting: t.starting,
 			startingExcluded: r,
-			traitScope: await wO(this.deps.scoped, await this.library(e), n.view, i.rows)
+			traitScope: await CO(this.deps.scoped, await this.library(e), n.view, i.rows)
 		});
 		if (c.status !== "complete" || !c.result?.id) return {
 			status: c.status,
@@ -25822,7 +25828,7 @@ var LO = class {
 			detail: c
 		};
 		n.seeds.set(c.result.id, c.result.seed);
-		let l = await aO(n.session, c.result.id);
+		let l = await iO(n.session, c.result.id);
 		if (l && n.bases.set(c.result.id, l), t.abilities) {
 			let e = c.result.initial, r = Object.entries(t.abilities.base).filter(([t, n]) => typeof n == "number" && t in e).map(([t, n]) => ({
 				kind: "set",
@@ -25848,7 +25854,7 @@ var LO = class {
 	}
 	async startingEquipment(e, t) {
 		let n = await this.get(e), r = await this.entries(e, t.items);
-		return r.status === "complete" ? PO({
+		return r.status === "complete" ? NO({
 			rows: r.rows,
 			pairs: await n.pairsOf(r.rows),
 			call: (e, ...t) => n.session.call(e, ...t),
@@ -25862,12 +25868,12 @@ var LO = class {
 	}
 	async buildOptions(e, t) {
 		let n = await this.get(e), r = await this.entries(e, t.items);
-		return r.status === "complete" ? TO({
+		return r.status === "complete" ? wO({
 			...n,
 			scoped: this.deps.scoped,
 			service: this.deps.service,
 			library: await this.library(e)
-		}, t, r.rows, FO(t.items, t.picks)) : {
+		}, t, r.rows, PO(t.items, t.picks)) : {
 			status: r.status,
 			error: r.error
 		};
@@ -25881,16 +25887,16 @@ var LO = class {
 		};
 		let a = await r.session.call("addToActor", t, i.rows.map((e) => ({
 			prop: e.ref.prop,
-			refKey: Kv(e.ref),
+			refKey: Gv(e.ref),
 			entry: e.entry
 		})));
-		if (!OD(a.status)) return {
+		if (!DD(a.status)) return {
 			status: a.status,
 			error: a.error ?? `加条目状态：${a.status}`,
 			detail: a
 		};
 		if (r.bases.has(t) && !r.bases.isStored(t) && Array.isArray(a.result?.added)) {
-			let e = await aO(r.session, t), n = new Map((e?.items ?? []).map((e) => [e._id, e]));
+			let e = await iO(r.session, t), n = new Map((e?.items ?? []).map((e) => [e._id, e]));
 			r.bases.addItems(t, a.result.added.map((e) => n.get(e._id) ?? e));
 		}
 		return {
@@ -25951,7 +25957,7 @@ var LO = class {
 				rows: [],
 				noEnglish: []
 			};
-			let u = await tO(this.deps.scoped, n.codeSet, r.ref, r.item, r.version.altId, a);
+			let u = await eO(this.deps.scoped, n.codeSet, r.ref, r.item, r.version.altId, a);
 			u.noEnglish && c.push(t[e]);
 			let d = r.item?.name;
 			s.push({
@@ -25985,7 +25991,7 @@ var LO = class {
 				c.push(e);
 				continue;
 			}
-			let i = await r.cache.get(await YD({
+			let i = await r.cache.get(await JD({
 				base: r.cacheBase,
 				brewFingerprint: r.brewFingerprint,
 				dataVersion: a,
@@ -26022,7 +26028,7 @@ var LO = class {
 			});
 		}
 		for (let e of c) {
-			let n = t[e], s = await oO({
+			let n = t[e], s = await aO({
 				lib: this.deps.scoped,
 				session: r.session,
 				library: i,
@@ -26033,7 +26039,7 @@ var LO = class {
 			if (o[e] = s, s.status === "complete") {
 				if (!s.id || !s.base) throw Error(`重建 ${n.name} 没有交回人物编号或重建基准`);
 				if (r.bases.set(s.id, s.base, s.view, s.offChoices), r.seeds.set(s.id, s.seed ?? n.seed ?? n.name), r.cache && a) {
-					let e = await YD({
+					let e = await JD({
 						base: r.cacheBase,
 						brewFingerprint: r.brewFingerprint,
 						dataVersion: a,
@@ -26042,7 +26048,7 @@ var LO = class {
 					await r.cache.put(e, s.base, {
 						rule: r.rule,
 						base: r.cacheBase,
-						official: XD(a),
+						official: YD(a),
 						lang: r.cacheLang
 					});
 				}
@@ -26054,21 +26060,21 @@ var LO = class {
 		return (await this.deps.campaignOf(e)).library;
 	}
 	async mapRef(e) {
-		return rO(this.deps.scoped, await this.library(e));
+		return nO(this.deps.scoped, await this.library(e));
 	}
 	async compact(e, t) {
 		let n = await this.get(e), r = await this.library(e), i = [];
 		for (let e of t) {
 			let t = n.bases.view(e), a = n.bases.base(e);
 			if (!t || !a) throw Error(`人物 ${e} 没有重建基准：先建卡后记住，或从存档重建`);
-			let o = await aO(n.session, e);
+			let o = await iO(n.session, e);
 			if (!o) throw Error(`结算小窗里没有这个人物：${e}`);
 			let s = n.bases.isStored(e), c = s ? {
 				status: "complete",
 				result: {}
 			} : await n.session.call("captureChoices", e);
-			if (!OD(c.status)) throw Error(`记下 ${e} 的成长选择失败：${c.error ?? c.status}`);
-			let l = typeof o.name == "string" ? o.name : e, u = await sO({
+			if (!DD(c.status)) throw Error(`记下 ${e} 的成长选择失败：${c.error ?? c.status}`);
+			let l = typeof o.name == "string" ? o.name : e, u = await oO({
 				lib: this.deps.scoped,
 				library: r,
 				actor: {
@@ -26082,7 +26088,7 @@ var LO = class {
 				stored: s
 			});
 			if (n.cache && !s) {
-				let e = await n.dataVersion(), t = await YD({
+				let e = await n.dataVersion(), t = await JD({
 					base: n.cacheBase,
 					brewFingerprint: n.brewFingerprint,
 					dataVersion: e,
@@ -26091,7 +26097,7 @@ var LO = class {
 				await n.cache.put(t, a, {
 					rule: n.rule,
 					base: n.cacheBase,
-					official: XD(e),
+					official: YD(e),
 					lang: n.cacheLang
 				});
 			}
@@ -26099,7 +26105,7 @@ var LO = class {
 		}
 		return i;
 	}
-}, RO = [
+}, LO = [
 	/^system\.attributes\.hp\.(value|temp|tempmax)$/,
 	/^system\.attributes\.death\./,
 	/^system\.attributes\.(inspiration|exhaustion)$/,
@@ -26110,18 +26116,18 @@ var LO = class {
 	/^system\.(uses\.spent|quantity|equipped|attuned|prepared|container|hd\.spent)$/,
 	/^system\.activities\.[^.]+\.uses\.spent$/
 ];
-function zO(e, t = "", n = []) {
+function RO(e, t = "", n = []) {
 	for (let [r, i] of Object.entries(e)) {
 		let e = t ? `${t}.${r.replace(/^-=/, "")}` : r.replace(/^-=/, "");
-		!r.startsWith("-=") && de(i) && Object.keys(i).length ? zO(i, e, n) : n.push(e);
+		!r.startsWith("-=") && de(i) && Object.keys(i).length ? RO(i, e, n) : n.push(e);
 	}
 	return n;
 }
-var BO = (e) => RO.some((t) => t.test(e)) ? "state" : "setting", VO = (e) => {
+var zO = (e) => LO.some((t) => t.test(e)) ? "state" : "setting", BO = (e) => {
 	let t = { ...e };
 	return delete t.items, delete t.effects, delete t._stats, t;
-}, HO = (e, t) => t.split(".").reduce((e, t) => de(e) ? e[t] : void 0, e), UO = (e) => new Map((e?.items ?? []).map((e) => [String(e._id), e]));
-function WO(e, t, n) {
+}, VO = (e, t) => t.split(".").reduce((e, t) => de(e) ? e[t] : void 0, e), HO = (e) => new Map((e?.items ?? []).map((e) => [String(e._id), e]));
+function UO(e, t, n) {
 	let r = RegExp(`^${e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?: (\\d+))?$`), i = 0, a = !1;
 	for (let e of n) {
 		let t = r.exec(e);
@@ -26131,13 +26137,13 @@ function WO(e, t, n) {
 	let o = Math.max(i, +!!a);
 	return Array.from({ length: t }, () => `${e} ${++o}`);
 }
-var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
+var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 	let n = e.bases?.[t.id];
 	return n ? {
 		...t,
 		base: n
 	} : t;
-}, qO = class {
+}, KO = class {
 	deps;
 	constructor(e) {
 		this.deps = e;
@@ -26153,12 +26159,12 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 	}
 	async saved(e, t) {
 		let n = await this.deps.saves.read(e), r = n?.actors.find((e) => e.id === t);
-		return n && r ? KO(n, r) : null;
+		return n && r ? GO(n, r) : null;
 	}
 	async load(e) {
 		let t = await this.deps.saves.read(e);
 		if (!t) return [];
-		let n = new Set((await this.prepared(e)).map((e) => String(e.source._id))), r = t.actors.filter((e) => !n.has(e.id) && !e.legacy), i = r.length ? await this.deps.runtime.rebuildMany(e, r.map((e) => KO(t, e))) : [];
+		let n = new Set((await this.prepared(e)).map((e) => String(e.source._id))), r = t.actors.filter((e) => !n.has(e.id) && !e.legacy), i = r.length ? await this.deps.runtime.rebuildMany(e, r.map((e) => GO(t, e))) : [];
 		return t.actors.map((e) => {
 			if (n.has(e.id)) return {
 				id: e.id,
@@ -26225,16 +26231,16 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 	async sheet(e, t) {
 		let n = await this.call(e, "sheet", t);
 		if (n.status !== "complete") return n;
-		let r = await this.deps.runtime.baseOf(e, t), i = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, a = r && i ? zO(te(VO(r), VO(i))).map((e) => ({
+		let r = await this.deps.runtime.baseOf(e, t), i = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, a = r && i ? RO(te(BO(r), BO(i))).map((e) => ({
 			path: e,
-			kind: BO(e)
-		})) : [], o = {}, s = UO(r);
-		for (let [e, t] of UO(i)) {
+			kind: zO(e)
+		})) : [], o = {}, s = HO(r);
+		for (let [e, t] of HO(i)) {
 			let n = s.get(e);
 			if (!n) continue;
-			let r = zO(te(n, t)).filter((e) => !e.startsWith("_stats")).map((e) => ({
+			let r = RO(te(n, t)).filter((e) => !e.startsWith("_stats")).map((e) => ({
 				path: e,
-				kind: BO(e)
+				kind: zO(e)
 			}));
 			r.length && (o[e] = r);
 		}
@@ -26250,7 +26256,7 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 	}
 	async act(e, t, n, ...r) {
 		let i = await this.call(e, n, ...r), a = i.changes ?? [];
-		return OD(i.status) ? {
+		return DD(i.status) ? {
 			outcome: i,
 			kernel: a.length ? (await this.deps.saves.apply(e, a, await this.rev(e))).kernel : null
 		} : (a.length && await this.cancel(e, [t]), {
@@ -26265,7 +26271,7 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 		let i = await this.deps.runtime.baseOf(e, t);
 		if (!i) throw Error(`没有 ${t} 的重建基准，先读档或重开战役`);
 		let a = n.map((e) => {
-			let t = HO(i, e);
+			let t = VO(i, e);
 			return t === void 0 ? {
 				kind: "set",
 				path: e,
@@ -26275,9 +26281,9 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 				path: e,
 				value: t
 			};
-		}), o = UO(i);
+		}), o = HO(i);
 		for (let [e, t] of Object.entries(r)) for (let n of t) {
-			let t = HO(o.get(e), n);
+			let t = VO(o.get(e), n);
 			a.push(t === void 0 ? {
 				kind: "item",
 				itemId: e,
@@ -26334,7 +26340,7 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 		};
 		let a = i.actors.map((e) => e.id), o = i.names?.[0];
 		if (o) {
-			let t = WO(o, a.length, ((await this.deps.saves.read(e))?.actors ?? []).map((e) => e.name));
+			let t = UO(o, a.length, ((await this.deps.saves.read(e))?.actors ?? []).map((e) => e.name));
 			for (let n = 0; n < a.length; n++) await this.call(e, "renameActor", a[n], t[n]);
 		}
 		return {
@@ -26349,7 +26355,7 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 			built: i,
 			kernel: null
 		};
-		let { id: a, ...o } = Uv.parse({
+		let { id: a, ...o } = Hv.parse({
 			id: "native",
 			name: t,
 			seed: i.seed
@@ -26375,7 +26381,7 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 	async copy(e, t, n) {
 		let r = await this.saved(e, t);
 		if (!r) throw Error(`存档里没有这个人物：${t}`);
-		let i = n ?? WO(GO(r.name), 1, ((await this.deps.saves.read(e))?.actors ?? []).map((e) => e.name))[0], { id: a, base: o, ...s } = r, c = o ? {
+		let i = n ?? UO(WO(r.name), 1, ((await this.deps.saves.read(e))?.actors ?? []).map((e) => e.name))[0], { id: a, base: o, ...s } = r, c = o ? {
 			...structuredClone(o),
 			_id: crypto.randomUUID().replace(/-/g, "").slice(0, 16),
 			name: i
@@ -26442,7 +26448,7 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 	async undo(e) {
 		let t = await this.deps.saves.undo(e, await this.rev(e));
 		if (!t) return null;
-		for (let n of t.restored) await this.deps.runtime.restore(e, n.id, n.actor && KO(t.kernel, n.actor));
+		for (let n of t.restored) await this.deps.runtime.restore(e, n.id, n.actor && GO(t.kernel, n.actor));
 		return t.kernel;
 	}
 	async undoTo(e, t) {
@@ -26453,8 +26459,8 @@ var GO = (e) => e.replace(/ \d+$/, ""), KO = (e, t) => {
 	history(e) {
 		return this.deps.saves.history(e);
 	}
-}, JO = (e) => `${!!e._rawName}|${e.classSource ?? ""}`;
-async function YO(t, n, r) {
+}, qO = (e) => `${!!e._rawName}|${e.classSource ?? ""}`;
+async function JO(t, n, r) {
 	let i = e(n.codeSet), a = i.lang === "zh" ? (await t.scoped.englishPairs(n.codeSet, r)).pairs : null, o = Object.keys(await t.service.categories(i.id, r)), s = [], c = [];
 	for (let e of o) for (let o of await t.scoped.query(n, e, {
 		mode: "browse",
@@ -26474,7 +26480,7 @@ async function YO(t, n, r) {
 		unpaired: c
 	};
 }
-async function XO(t, n, r) {
+async function YO(t, n, r) {
 	let i = e(n.codeSet), a = e("cn"), o = await t.service.officialInstalled(a.codeSet, r), s = o ? (await t.scoped.englishPairs(a.codeSet, r)).pairs : {}, c = [
 		"race",
 		"background",
@@ -26506,14 +26512,14 @@ async function XO(t, n, r) {
 					name: n.name,
 					ref: i.ref
 				},
-				identity: JO(n)
+				identity: qO(n)
 			}), d.set(t.enHash, r);
 		}
 		let f = [];
 		for (let t of u) {
 			let n = i.lang === "zh" && t.ref.set === i.id ? s[e]?.[t.ref.hash]?.enHash : t.ref.hash, r = t.item;
 			if (!n || !r?.name) continue;
-			let a = (t.ref.set === i.id ? d.get(n) : void 0)?.filter((e) => e.identity === JO(r)), o = (a?.length === 1 ? a[0].label : void 0) ?? {
+			let a = (t.ref.set === i.id ? d.get(n) : void 0)?.filter((e) => e.identity === qO(r)), o = (a?.length === 1 ? a[0].label : void 0) ?? {
 				name: r.name,
 				ref: t.ref,
 				...t.pack ? { selection: { docIdLocal: t.pack.docIdLocal } } : {}
@@ -26533,14 +26539,14 @@ async function XO(t, n, r) {
 	};
 }
 // src/library/author-markup-rules.ts
-var ZO = new Set("p div span strong b i em u s del small sub sup br hr ul ol li dl dt dd blockquote h2 h3 h4 h5 h6 table caption colgroup col thead tbody tfoot tr th td details summary".split(" ")), QO = new Set("script style template iframe object embed link meta base svg math form input button".split(" ")), $O = (e) => (e ?? "").split(/\s+/).filter((e) => /^(ve-|stats|stripe-|small-caps$|bold$|no-wrap$|w100$)/.test(e)).join(" "), ek = [
+var XO = new Set("p div span strong b i em u s del small sub sup br hr ul ol li dl dt dd blockquote h2 h3 h4 h5 h6 table caption colgroup col thead tbody tfoot tr th td details summary".split(" ")), ZO = new Set("script style template iframe object embed link meta base svg math form input button".split(" ")), QO = (e) => (e ?? "").split(/\s+/).filter((e) => /^(ve-|stats|stripe-|small-caps$|bold$|no-wrap$|w100$)/.test(e)).join(" "), $O = [
 	"colspan",
 	"rowspan",
 	"span",
 	"start",
 	"title"
 ];
-function tk(e) {
+function ek(e) {
 	let t = document.createElement("template");
 	t.innerHTML = e;
 	let n = document.createElement("template"), r = (e, t) => {
@@ -26548,12 +26554,12 @@ function tk(e) {
 			t.appendChild(document.createTextNode(e.textContent ?? ""));
 			return;
 		}
-		if (!(e instanceof Element) || QO.has(e.localName) || e.hasAttribute("data-rd-h-toggle-button") || e.hasAttribute("data-rd-h-special-toggle-button")) return;
+		if (!(e instanceof Element) || ZO.has(e.localName) || e.hasAttribute("data-rd-h-toggle-button") || e.hasAttribute("data-rd-h-special-toggle-button")) return;
 		let n = t;
-		if (ZO.has(e.localName)) {
-			let r = document.createElement(e.localName), i = $O(e.getAttribute("class"));
+		if (XO.has(e.localName)) {
+			let r = document.createElement(e.localName), i = QO(e.getAttribute("class"));
 			i && (r.className = i);
-			for (let t of ek) {
+			for (let t of $O) {
 				let n = e.getAttribute(t);
 				n !== null && r.setAttribute(t, n);
 			}
@@ -26565,7 +26571,7 @@ function tk(e) {
 	return n.innerHTML;
 }
 // src/rules/kernel/native-build.ts
-var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >>> 0, 7).toString(36)}`, rk = class {
+var tk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >>> 0, 7).toString(36)}`, nk = class {
 	deps;
 	running = /* @__PURE__ */ new Map();
 	constructor(e) {
@@ -26580,7 +26586,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 		if (!o || !("item" in o)) return null;
 		let s = await (await this.deps.service.frameOf(a.codeSet, r)).call("renderEntity", i.prop, o.item);
 		return s?.html ? {
-			html: tk(s.html),
+			html: ek(s.html),
 			chinese: a.lang === "zh"
 		} : null;
 	}
@@ -26591,12 +26597,12 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 		};
 		this.running.set(e, null);
 		try {
-			let r = await this.deps.campaignOf(e), i = await this.deps.revisions.published(), a = await UD({
+			let r = await this.deps.campaignOf(e), i = await this.deps.revisions.published(), a = await HD({
 				pluginRoot: this.deps.pluginRoot,
 				rule: r.rule,
 				uiLanguage: "zh",
 				world: {
-					id: nk(e),
+					id: tk(e),
 					title: r.title
 				},
 				fetchImpl: this.deps.fetchImpl,
@@ -26607,7 +26613,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 				status: "error",
 				error: "本机没有私人完整版作者程序（vendor/private/modules/plutonium/），完整建卡器用不了"
 			};
-			let o = await ND(this.deps.service, i, r.library.codeSet), s, { session: c, report: l, brewFiles: u } = await PD({
+			let o = await MD(this.deps.service, i, r.library.codeSet), s, { session: c, report: l, brewFiles: u } = await ND({
 				...this.deps,
 				view: i,
 				input: a,
@@ -26622,7 +26628,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 			if (!this.running.has(e)) return c.close(), { status: "cancelled" };
 			this.running.set(e, c);
 			try {
-				let [e, a] = await Promise.all([YO(this.deps, r.library, i), n ? XO(this.deps, r.library, i) : void 0]);
+				let [e, a] = await Promise.all([JO(this.deps, r.library, i), n ? YO(this.deps, r.library, i) : void 0]);
 				s = a;
 				let o = crypto.randomUUID().replaceAll("-", ""), d = `${t}~${o}`, f = await c.call("draftStart", {
 					name: t,
@@ -26664,7 +26670,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 		let t = this.running.get(e);
 		this.running.delete(e), t?.close();
 	}
-}, ik = (e) => e instanceof Error ? e.message : String(e), ak = class {
+}, rk = (e) => e instanceof Error ? e.message : String(e), ik = class {
 	opts;
 	constructor(e) {
 		this.opts = e;
@@ -26717,7 +26723,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 			cancelled: !0
 		});
 		if (n?.aborted) return h();
-		let g = await ND(this.opts.service, s, e);
+		let g = await MD(this.opts.service, s, e);
 		if (n?.aborted) return h();
 		let _, v = [], y = null, b = async () => {
 			if (y) return y;
@@ -26726,7 +26732,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 				done: 0,
 				total: 0
 			});
-			let e = await PD({
+			let e = await ND({
 				...this.opts,
 				view: s,
 				input: c,
@@ -26747,15 +26753,15 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 				done: 0,
 				total: x
 			});
-			let m = new JD(this.opts.db), ee = {
+			let m = new qD(this.opts.db), ee = {
 				rule: this.rule(),
 				base: l,
-				official: XD(u),
-				lang: KD(c.language)
+				official: YD(u),
+				lang: GD(c.language)
 			};
 			for (let e of p) {
 				if (n?.aborted) break;
-				let t = MD(g.brews, v, e.ref, e.altId, e.source);
+				let t = jD(g.brews, v, e.ref, e.altId, e.source);
 				if (t) {
 					O.push({
 						prop: e.prop,
@@ -26769,7 +26775,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 					});
 					continue;
 				}
-				let i = await ZD({
+				let i = await XD({
 					base: l,
 					brewFingerprint: _,
 					dataVersion: u,
@@ -26793,8 +26799,8 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 						O.push({
 							prop: e.prop,
 							name: e.name,
-							error: ik(t)
-						}), await m.putFailed(i, ik(t), ee);
+							error: rk(t)
+						}), await m.putFailed(i, rk(t), ee);
 					}
 					S++, S % 10 == 0 && r?.({
 						stage: "convert",
@@ -26885,7 +26891,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 		return new Set([...o].filter((e) => l[e]));
 	}
 	async input(e) {
-		return UD({
+		return HD({
 			pluginRoot: this.opts.pluginRoot,
 			rule: this.rule(),
 			codeSet: e,
@@ -26907,7 +26913,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 				if (s === "changed" && n(a.ref.set).kind !== "brew" && a.version.count === 0) continue;
 				let e = a.item;
 				if (typeof e?.name != "string" || !e.name) continue;
-				let u = await tO(this.opts.scoped, c.codeSet, a.ref, a.item, a.version.altId, r);
+				let u = await eO(this.opts.scoped, c.codeSet, a.ref, a.item, a.version.altId, r);
 				if (u.noEnglish && i.push({
 					prop: t,
 					name: e.name,
@@ -26923,7 +26929,7 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 					let n = await this.opts.scoped.detail(c, a.ref, { view: r });
 					for (let o of n && !("hidden" in n) ? n.alternatives : []) {
 						if (o.item === a.item) continue;
-						let n = await tO(this.opts.scoped, c.codeSet, a.ref, o.item, o.altId, r);
+						let n = await eO(this.opts.scoped, c.codeSet, a.ref, o.item, o.altId, r);
 						n.noEnglish && i.push({
 							prop: t,
 							name: e.name,
@@ -26943,14 +26949,14 @@ var nk = (e) => `trpg-build-${[...e].reduce((e, t) => e * 31 + t.charCodeAt(0) >
 		}
 		return l;
 	}
-}, ok = D.rules, sk = (e) => ok[e]?.people ?? null;
-async function ck(e, t, n = "cn") {
-	let r = sk(t);
-	if (!LD(t) || !r) return {
+}, ak = D.rules, ok = (e) => ak[e]?.people ?? null;
+async function sk(e, t, n = "cn") {
+	let r = ok(t);
+	if (!ID(t) || !r) return {
 		status: "no-kernel",
 		types: []
 	};
-	let i = await UD({
+	let i = await HD({
 		pluginRoot: e.pluginRoot,
 		rule: t,
 		world: {
@@ -26977,10 +26983,10 @@ async function ck(e, t, n = "cn") {
 		status: "no-data",
 		types: []
 	};
-	let p = (await tO(e.scoped, d.codeSet, f.ref, f.item, f.version.altId, u)).entry, m = await kD({
+	let p = (await eO(e.scoped, d.codeSet, f.ref, f.item, f.version.altId, u)).entry, m = await OD({
 		pluginRoot: e.pluginRoot,
 		container: e.container?.() ?? document.body,
-		data: ED(e.files, u),
+		data: TD(e.files, u),
 		fetchImpl: e.fetchImpl,
 		timeoutMs: e.timeoutMs ?? 18e4
 	});
@@ -27003,7 +27009,7 @@ async function ck(e, t, n = "cn") {
 		m.close();
 	}
 }
-async function lk(e, t, n, r = "cn") {
+async function ck(e, t, n, r = "cn") {
 	let i = await e.types(t, r), a = i.types.find((e) => e.type === n);
 	if (!a) throw Error(i.status === "ready" ? `规则 ${t} 没有这种卡型：${n}` : `规则 ${t} 的卡型还读不出来（${i.status}）`);
 	let o = { type: a };
@@ -27015,10 +27021,10 @@ async function lk(e, t, n, r = "cn") {
 			plan: n
 		};
 	}
-	return a.build.includes("steps") && (o.steps = { parts: [...LD(t)?.build ?? []] }), o;
+	return a.build.includes("steps") && (o.steps = { parts: [...ID(t)?.build ?? []] }), o;
 }
 // src/rules/kernel/precompute-queue.ts
-var uk = class {
+var lk = class {
 	run;
 	quietMs;
 	hold;
@@ -27093,9 +27099,9 @@ var uk = class {
 			}
 		}
 	}
-}, dk = "kc-pending:";
-function fk(e) {
-	let r = (e) => `${dk}${e}`, a = new uk(async (t, n, i) => {
+}, uk = "kc-pending:";
+function dk(e) {
+	let r = (e) => `${uk}${e}`, a = new lk(async (t, n, i) => {
 		let a = await e.precompute()?.run({
 			codeSet: t,
 			mode: n,
@@ -27116,12 +27122,12 @@ function fk(e) {
 		},
 		installStarted: () => a.interrupt(),
 		async resume() {
-			await e.db.derived.where("key").startsWith(dk).each((e) => a.trigger(e.key.slice(11), "full"));
+			await e.db.derived.where("key").startsWith(uk).each((e) => a.trigger(e.key.slice(11), "full"));
 		}
 	};
 }
 // src/library/download-estimate.ts
-var pk = (e) => e instanceof Error ? e.message : String(e), mk = (e) => e.some((e) => e === null) ? null : e.reduce((e, t) => e + t, 0), hk = class {
+var fk = (e) => e instanceof Error ? e.message : String(e), pk = (e) => e.some((e) => e === null) ? null : e.reduce((e, t) => e + t, 0), mk = class {
 	deps;
 	constructor(e) {
 		this.deps = e;
@@ -27132,7 +27138,7 @@ var pk = (e) => e instanceof Error ? e.message : String(e), mk = (e) => e.some((
 		try {
 			return await this.deps.files.fileList(a, i);
 		} catch (t) {
-			return r.push(`文件清单（${e}）取不到：${pk(t)}`), null;
+			return r.push(`文件清单（${e}）取不到：${fk(t)}`), null;
 		}
 	}
 	async missingBytes(e, t, r, i) {
@@ -27243,10 +27249,10 @@ var pk = (e) => e instanceof Error ? e.message : String(e), mk = (e) => e.some((
 			});
 		}
 		let s = {
-			bytes: mk(a.map((e) => e.bytes)),
+			bytes: pk(a.map((e) => e.bytes)),
 			sets: a
 		}, c = {
-			bytes: mk(o.map((e) => e.bytes)),
+			bytes: pk(o.map((e) => e.bytes)),
 			items: o
 		}, l = s.bytes === null || c.bytes === null ? null : s.bytes + c.bytes;
 		return {
@@ -27257,14 +27263,14 @@ var pk = (e) => e instanceof Error ? e.message : String(e), mk = (e) => e.some((
 			errors: [...new Set(r)]
 		};
 	}
-}, gk = "冒险正文要先有同一套官方资料：先下载或勾选至少一本官方书";
-async function _k(e, n = {}) {
+}, hk = "冒险正文要先有同一套官方资料：先下载或勾选至少一本官方书";
+async function gk(e, n = {}) {
 	let r = /* @__PURE__ */ new Set([...(n.picks ?? []).map((e) => e.set), ...n.wholeSets ?? []]), i = {};
 	for (let n of t.filter((e) => e.kind === "official")) {
 		let t = (await e.officialState(n.id))?.status === "installed" || r.has(n.id);
 		i[n.id] = {
 			adventures: t,
-			reason: t ? null : gk
+			reason: t ? null : hk
 		};
 	}
 	return {
@@ -27273,14 +27279,14 @@ async function _k(e, n = {}) {
 	};
 }
 // src/core/start-campaign.ts
-var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r {
+var _k = 1, vk = (e) => e instanceof Error ? e.message : String(e), yk = class r {
 	deps;
 	constructor(e) {
 		this.deps = e;
 	}
 	libraryOf(e, t, n = {}) {
 		let r = x(e, t);
-		return Vv.parse({
+		return Bv.parse({
 			...r,
 			scopes: n.scopes ?? r.scopes,
 			include: n.include ?? r.include,
@@ -27292,7 +27298,7 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 		return [.../* @__PURE__ */ new Set([e(t).id, e("en").id])];
 	}
 	static selectionOf(e) {
-		for (let t of e) if (n(t.set).kind !== "official") throw new zv("E_BAD_CONTENT", `只能勾选官方资料：${t.set}`);
+		for (let t of e) if (n(t.set).kind !== "official") throw new Rv("E_BAD_CONTENT", `只能勾选官方资料：${t.set}`);
 		return {
 			books: [...new Set(e.flatMap((e) => e.book ? [e.book] : []))],
 			sources: [...new Set(e.map((e) => e.source))]
@@ -27307,7 +27313,7 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 	}
 	estimateDownload(e, t) {
 		let { db: n, files: i, directory: a, revisions: o } = this.deps.library, s = e.picks && !e.picks.length ? [] : this.neededSets(e.codeSet), c = e.picks?.length ? r.selectionOf(e.picks) : null, l = (e) => Object.fromEntries(s.map((t) => [t, e]));
-		return new hk({
+		return new mk({
 			db: n,
 			files: i,
 			directory: a,
@@ -27322,7 +27328,7 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 		}, t);
 	}
 	async checkSelection(e = {}) {
-		return _k(await this.deps.library.revisions.published(), e);
+		return gk(await this.deps.library.revisions.published(), e);
 	}
 	async dataStatus() {
 		let { db: e, files: n, revisions: r } = this.deps.library, i = await r.published(), a = [];
@@ -27346,10 +27352,10 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 	}
 	async wizardOptions(e, t, n = {}) {
 		let r = this.deps.rules.get(e);
-		if (!r) throw new zv("E_RULE_MISSING", `没有这套规则：${e}`);
+		if (!r) throw new Rv("E_RULE_MISSING", `没有这套规则：${e}`);
 		let i = this.libraryOf(e, t, n), { scoped: a } = this.deps.library, o = await a.shelf(i).catch((e) => ({
 			groups: [],
-			booksError: yk(e),
+			booksError: vk(e),
 			adventuresError: null,
 			brewError: null
 		})), s = o.groups, c = o.booksError, l = o.adventuresError, u = o.brewError, d = await this.deps.corePacks(), p = await this.dataStatus();
@@ -27375,19 +27381,19 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 	}
 	async startCampaign(e) {
 		let { campaign: t, rules: i } = this.deps, { scoped: a, tasks: o, dataVersion: s } = this.deps.library, c = i.get(e.ruleId);
-		if (!c) throw new zv("E_RULE_MISSING", `没有这套规则：${e.ruleId}`);
-		if (!i.ready(e.ruleId)) throw new zv("E_RULE_UNSUPPORTED", `「${c.name}」的结算规则还没接入，暂时不能建战役；这一版的资料可以先在【库】里下载。`);
-		let l = ly(e.name), u = e.picks?.length ? r.selectionOf(e.picks) : null, d = !!e.picks && !e.picks.length, f = await this.deps.corePacks();
-		if (!f.ok) throw new zv("E_CORE_MISSING", this.coreMessage(f));
+		if (!c) throw new Rv("E_RULE_MISSING", `没有这套规则：${e.ruleId}`);
+		if (!i.ready(e.ruleId)) throw new Rv("E_RULE_UNSUPPORTED", `「${c.name}」的结算规则还没接入，暂时不能建战役；这一版的资料可以先在【库】里下载。`);
+		let l = cy(e.name), u = e.picks?.length ? r.selectionOf(e.picks) : null, d = !!e.picks && !e.picks.length, f = await this.deps.corePacks();
+		if (!f.ok) throw new Rv("E_CORE_MISSING", this.coreMessage(f));
 		let p = this.neededSets(e.codeSet), m = await this.checkSelection({
 			picks: e.picks,
 			adventures: e.adventures,
 			wholeSets: e.picks ? [] : p
 		});
-		if (m.drop.length) throw new zv("E_NEEDS_OFFICIAL", `${m.drop.map((e) => e.id).join("、")}：${m.sets[m.drop[0].set]?.reason ?? ""}`);
-		let h = this.libraryOf(e.ruleId, e.codeSet, e.library), g = Gv.parse({
+		if (m.drop.length) throw new Rv("E_NEEDS_OFFICIAL", `${m.drop.map((e) => e.id).join("、")}：${m.sets[m.drop[0].set]?.reason ?? ""}`);
+		let h = this.libraryOf(e.ruleId, e.codeSet, e.library), g = Wv.parse({
 			rule: e.ruleId,
-			kernelVersion: vk,
+			kernelVersion: _k,
 			library: h,
 			dataVersion: await s(),
 			overrides: await a.activeOverrides(),
@@ -27448,7 +27454,7 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 					for (let e of await Promise.all(x)) e.status !== "done" && b.push(`${e.kind} ${e.set}${e.item ? `/${e.item}` : ""}：${e.error ?? e.status}`);
 					await Promise.all(C), S.size && await this.refreshFreshVersion(e.ownerKey, v.id);
 				} catch (e) {
-					b.push(yk(e));
+					b.push(vk(e));
 				}
 				return { errors: b };
 			})()
@@ -27460,7 +27466,7 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 		let a = await r.read(e);
 		!a || a.revision !== 0 || a.actors.length || a.undo.length || await r.save(e);
 	}
-}, xk = (e) => e instanceof Error ? e.message : String(e), Sk = "v4", Ck = class {
+}, bk = (e) => e instanceof Error ? e.message : String(e), xk = "v4", Sk = class {
 	opts;
 	inflight = /* @__PURE__ */ new Map();
 	constructor(e) {
@@ -27469,7 +27475,7 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 	async keyOf(t, n) {
 		let r = e(t), i = this.opts.view ? await this.opts.view() : null, a = n ?? (i ? await i.commitOf(r) : o(r));
 		return {
-			key: `directory:${Sk}:${r.id}@${a}`,
+			key: `directory:${xk}:${r.id}@${a}`,
 			commit: a,
 			sourceId: r.id
 		};
@@ -27523,7 +27529,7 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 				persist: !1
 			} : void 0);
 		} catch (e) {
-			return l(xk(e));
+			return l(bk(e));
 		}
 		try {
 			let e = (await p.call("loaders")).filter((e) => e.kind === "corpus" && e.index), n = e.map((e) => ({
@@ -27592,14 +27598,14 @@ var vk = 1, yk = (e) => e instanceof Error ? e.message : String(e), bk = class r
 				savedAt: Date.now()
 			}), h;
 		} catch (e) {
-			return l(p.failures.length ? `${xk(e)}（${p.failures[0]}）` : xk(e));
+			return l(p.failures.length ? `${bk(e)}（${p.failures[0]}）` : bk(e));
 		} finally {
 			p.close();
 		}
 	}
 };
 // src/library/pack-health.ts
-async function wk(r, i, a) {
+async function Ck(r, i, a) {
 	let o = await r.revisions.published(), s = n(i).codeSet, c = await r.brewPacks.list(i, o), l = /* @__PURE__ */ new Set();
 	for (let e of t.filter((e) => e.kind === "official" && e.codeSet === s)) for (let t of await sS(o, e.id)) l.add(t.toLowerCase());
 	let u = await r.directory.peek(s), d = e(s).id, f = /* @__PURE__ */ new Map();
@@ -27636,7 +27642,7 @@ async function wk(r, i, a) {
 		};
 	});
 }
-async function Tk(r, i, a) {
+async function wk(r, i, a) {
 	let o = n(i).codeSet, s = await (await r.frame(o)).call("brewDependencyPreview", a);
 	if (!s.value) throw Error(s.errors[0] ?? "取不到这个包的文件");
 	let c = await r.revisions.published(), l = /* @__PURE__ */ new Set();
@@ -27665,7 +27671,7 @@ async function Tk(r, i, a) {
 	};
 }
 // src/library/hash-source.ts
-function Ek(e, t) {
+function Tk(e, t) {
 	let n = (e) => {
 		try {
 			return decodeURIComponent(e).toLowerCase();
@@ -27685,14 +27691,14 @@ function Ek(e, t) {
 	return null;
 }
 // src/library/missing-refs.ts
-var Dk = (e) => {
+var Ek = (e) => {
 	try {
 		return decodeURIComponent(e);
 	} catch {
 		return e;
 	}
 };
-async function Ok(e, r) {
+async function Dk(e, r) {
 	let i = await e.revisions.published(), a = /* @__PURE__ */ new Map(), o = [], s = (e, t, n) => {
 		let r = a.get(e) ?? {
 			...t,
@@ -27718,7 +27724,7 @@ async function Ok(e, r) {
 		if (!r) continue;
 		if (r.kind === "official") {
 			await d(r.id);
-			let e = Ek(n.hash, c.get(r.id)), t = e ? l.get(r.id).get(e.toLowerCase()) ?? null : null;
+			let e = Tk(n.hash, c.get(r.id)), t = e ? l.get(r.id).get(e.toLowerCase()) ?? null : null;
 			if (e && u.get(r.id).has(e.toLowerCase())) {
 				o.push(n);
 				continue;
@@ -27732,7 +27738,7 @@ async function Ok(e, r) {
 		}
 		let f = (await e.brewPacks.list(r.id, i)).find((e) => (e.hashes[n.prop] ?? []).includes(n.hash));
 		if (f) {
-			let [i] = await wk(e, r.id, f.docIdLocal), c = i?.missing ?? [];
+			let [i] = await Ck(e, r.id, f.docIdLocal), c = i?.missing ?? [];
 			if (!c.length) {
 				o.push(n);
 				continue;
@@ -27763,7 +27769,7 @@ async function Ok(e, r) {
 			}
 			continue;
 		}
-		let p = n.hash.split(/[_,~:=]/).filter(Boolean), m = p.length > 1 ? p[p.length - 1] : null, h = m ? Dk(m) : null;
+		let p = n.hash.split(/[_,~:=]/).filter(Boolean), m = p.length > 1 ? p[p.length - 1] : null, h = m ? Ek(m) : null;
 		s(`b|${r.id}|src:${h ?? "?"}`, {
 			set: r.id,
 			kind: "brew",
@@ -27777,7 +27783,7 @@ async function Ok(e, r) {
 	};
 }
 // src/rules/kernel/core-pack.ts
-async function kk(e, t, n) {
+async function Ok(e, t, n) {
 	try {
 		let r = await n(new URL(`vendor/foundry/${t}`, e));
 		return r.ok ? await r.json() : null;
@@ -27785,7 +27791,7 @@ async function kk(e, t, n) {
 		return null;
 	}
 }
-async function Ak(e, t, n) {
+async function kk(e, t, n) {
 	let r = new URL(`vendor/foundry/${t}`, e);
 	try {
 		let e = await n(r, { method: "HEAD" });
@@ -27794,22 +27800,22 @@ async function Ak(e, t, n) {
 		return !1;
 	}
 }
-async function jk({ pluginRoot: e, fetchImpl: t = fetch }) {
-	let n = await kk(e, "manifest.json", t);
+async function Ak({ pluginRoot: e, fetchImpl: t = fetch }) {
+	let n = await Ok(e, "manifest.json", t);
 	if (!n) return {
 		ok: !1,
 		system: "",
 		total: 0,
 		missing: ["manifest.json"]
 	};
-	let r = n.system.split(" ")[0], i = await kk(e, `systems/${r}/system.json`, t);
+	let r = n.system.split(" ")[0], i = await Ok(e, `systems/${r}/system.json`, t);
 	if (!i?.packs) return {
 		ok: !1,
 		system: r,
 		total: 0,
 		missing: [`systems/${r}/system.json`]
 	};
-	let a = i.packs.map((e) => `packs/${r}.${e.name}.json`), o = await Promise.all(a.map((n) => Ak(e, n, t))), s = a.filter((e, t) => !o[t]);
+	let a = i.packs.map((e) => `packs/${r}.${e.name}.json`), o = await Promise.all(a.map((n) => kk(e, n, t))), s = a.filter((e, t) => !o[t]);
 	return {
 		ok: s.length === 0,
 		system: r,
@@ -27818,7 +27824,7 @@ async function jk({ pluginRoot: e, fetchImpl: t = fetch }) {
 	};
 }
 // src/library/brew-queue.ts
-var Mk = class {
+var jk = class {
 	run;
 	quietMs;
 	timers = /* @__PURE__ */ new Map();
@@ -27870,11 +27876,11 @@ var Mk = class {
 			done: n
 		});
 	}
-}, Nk = () => new URL("../", "" + import.meta.url);
-function Pk(e) {
-	let r = e.pluginRoot ?? Nk();
+}, Mk = () => new URL("../", "" + import.meta.url);
+function Nk(e) {
+	let r = e.pluginRoot ?? Mk();
 	Yx(r);
-	let i = e.container ?? (() => document.body), a = new xy(e.libraryDbName), o = new lb(a), s = () => {}, c = new jy({
+	let i = e.container ?? (() => document.body), a = new by(e.libraryDbName), o = new lb(a), s = () => {}, c = new jy({
 		db: a,
 		revisions: o,
 		onPublished: () => s(),
@@ -27905,11 +27911,11 @@ function Pk(e) {
 			onProgress: n
 		}));
 		return r;
-	}, m = fk({
+	}, m = dk({
 		db: a,
 		precompute: () => f,
 		installing: () => ne.list().some((e) => e.status === "running" && e.kind !== "precompute")
-	}), h = m.queue, g = new wb(a), _ = null, v = new bD({
+	}), h = m.queue, g = new wb(a), _ = null, v = new yD({
 		db: a,
 		revisions: o,
 		operations: c,
@@ -27921,7 +27927,7 @@ function Pk(e) {
 			await _?.yield(e);
 		},
 		onBrewDirty: (e) => _?.trigger(e)
-	}), y = new Ck({
+	}), y = new Sk({
 		db: a,
 		view: () => o.published(),
 		localFrame: async (e) => {
@@ -27953,8 +27959,8 @@ function Pk(e) {
 				})
 			});
 		}
-	}), b = new Wb(a), C = new JS(v, b), w = new RC(v, a, y, C);
-	_ = new Mk(async (e, n) => {
+	}), b = new Wb(a), C = new nC(v, b), w = new LC(v, a, y, C);
+	_ = new jk(async (e, n) => {
 		let r = t.find((t) => t.kind === "brew" && t.codeSet === e);
 		if (!r || !(await v.brewDirty(r.id)).length) return {
 			codeSet: e,
@@ -27969,7 +27975,7 @@ function Pk(e) {
 		files: u,
 		directory: y,
 		startOfficial: (e, t) => ne.startOfficial(e, t)
-	}), O = new gx(v), ee = new GS(v, E), k = new sE(v, w, a, (e) => ee.counterpart(e), (e) => _?.busy(e) ?? !1), te = new bE(k, v, E, ee, w), ne = new wD({
+	}), O = new gx(v), ee = new GS(v, E), k = new oE(v, w, a, (e) => ee.counterpart(e), (e) => _?.busy(e) ?? !1), te = new yE(k, v, E, ee, w), ne = new CD({
 		db: a,
 		revisions: o,
 		operations: c,
@@ -28014,7 +28020,7 @@ function Pk(e) {
 		await ne.restore(), await m.resume(), await a.revisions.where("status").equals("preparing").count() && s();
 	});
 	let re = xb(o, v);
-	f = new ak({
+	f = new ik({
 		pluginRoot: r,
 		files: u,
 		scoped: w,
@@ -28026,15 +28032,16 @@ function Pk(e) {
 	});
 	let ie = null, ae = async (t) => {
 		let n = await e.campaign.getWorkspace(t);
-		if (!n) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+		if (!n) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 		let r = ie ? await ie.read(t) : null;
-		if (!r) throw new zv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
+		if (!r) throw new Rv("E_NO_KERNEL", "这个战役还没有绑定结算内核");
 		return {
 			rule: r.rule,
 			library: await ie.libraryOf(t),
-			title: n.ownerLabel
+			title: n.ownerLabel,
+			usedActorIds: kne(r)
 		};
-	}, oe = new LO({
+	}, oe = new IO({
 		pluginRoot: r,
 		files: u,
 		scoped: w,
@@ -28047,7 +28054,7 @@ function Pk(e) {
 		},
 		campaignOf: ae,
 		hasKernel: async (e) => !!(ie && await ie.read(e))
-	}), se = new rk({
+	}), se = new nk({
 		pluginRoot: r,
 		files: u,
 		scoped: w,
@@ -28056,13 +28063,13 @@ function Pk(e) {
 		container: i,
 		campaignOf: ae
 	});
-	ie = new zne({
+	ie = new Vne({
 		db: e.db,
 		campaign: e.campaign,
 		rules: e.rules,
 		now: e.now,
 		checkRefs: yb(w),
-		suggestDownloads: (e) => Ok({
+		suggestDownloads: (e) => Dk({
 			brewPacks: le,
 			directory: y,
 			revisions: o
@@ -28071,13 +28078,13 @@ function Pk(e) {
 		currentOverrides: bb(w),
 		mapRef: (e) => oe.mapRef(e),
 		compactActors: (e, t) => oe.compact(e, t),
-		undoLimit: async () => (await Iv(e.db)).undoLimit,
+		undoLimit: async () => (await Fv(e.db)).undoLimit,
 		onLog: g.sink()
 	});
-	let ce = new mne({
+	let ce = new hne({
 		files: u,
 		directory: y,
-		codeSets: Rv
+		codeSets: Lv
 	}), le = new Ax(v), ue = new Px({
 		startOfficial: (e, t) => ne.startOfficial(e, t),
 		startAdventure: (e, t) => ne.startAdventure(e, t),
@@ -28120,7 +28127,7 @@ function Pk(e) {
 		brewPairs: E,
 		custom: k,
 		bilingual: te,
-		editChanges: (e, t) => iE({
+		editChanges: (e, t) => rE({
 			detail: (...e) => w.detail(...e),
 			changes: (...e) => k.changes(...e),
 			lib: v,
@@ -28128,22 +28135,22 @@ function Pk(e) {
 		}, e, t),
 		tasks: ne,
 		directory: y,
-		packHealth: (e, t) => wk({
+		packHealth: (e, t) => Ck({
 			brewPacks: le,
 			directory: y,
 			revisions: o
 		}, e, t),
-		brewDependencyPreview: (e, t) => Tk({
+		brewDependencyPreview: (e, t) => wk({
 			frame: (e) => v.frameOf(e),
 			directory: y,
 			revisions: o
 		}, e, t),
-		suggestDownloads: (e) => Ok({
+		suggestDownloads: (e) => Dk({
 			brewPacks: le,
 			directory: y,
 			revisions: o
 		}, e),
-		estimate: (e, t) => new hk({
+		estimate: (e, t) => new mk({
 			db: a,
 			files: u,
 			directory: y,
@@ -28154,18 +28161,18 @@ function Pk(e) {
 		precomputeQueue: h,
 		brewQueue: _,
 		dataVersion: re
-	}, fe = new bk({
+	}, fe = new yk({
 		campaign: e.campaign,
 		kernelSave: ie,
 		rules: e.rules,
-		corePacks: () => jk({ pluginRoot: r }),
+		corePacks: () => Ak({ pluginRoot: r }),
 		library: de
 	}), pe = {
 		library: {
 			exportFiles: () => k.exportBackup(),
 			importFiles: (e) => k.importBackup(e)
 		},
-		checkRefs: (t) => w.fetch(x(e.rules.list()[0]?.id ?? "dnd5e2014", Rv[0]), t)
+		checkRefs: (t) => w.fetch(x(e.rules.list()[0]?.id ?? "dnd5e2014", Lv[0]), t)
 	}, me = (e) => t.find((t) => t.kind === "brew" && t.codeSet === e)?.id ?? `${e}-brew`, he = async (r, i, a = r.id) => {
 		if (i.kind === "official") {
 			let e = i.setIds ?? [i.setId], t = await Promise.all(e.map((e) => r.officialState(e)));
@@ -28208,7 +28215,7 @@ function Pk(e) {
 		revisions: o,
 		operations: c,
 		directory: y,
-		kernelOfficial: async () => XD(await re())
+		kernelOfficial: async () => YD(await re())
 	}), ye;
 	s = () => {
 		clearTimeout(ye), ye = setTimeout(() => {
@@ -28271,10 +28278,10 @@ function Pk(e) {
 	}, Te = (t, n) => US({
 		db: e.db,
 		manage: w.manage
-	}, t, n), Ee = (e, t) => _ne({
+	}, t, n), Ee = (e, t) => vne({
 		houseNow: (e, t) => k.houseNow(e, t),
 		impact: Te
-	}, e, t), De = (e, t) => ck({
+	}, e, t), De = (e, t) => sk({
 		pluginRoot: r,
 		files: u,
 		scoped: w,
@@ -28283,12 +28290,12 @@ function Pk(e) {
 		container: i
 	}, e, t), Oe = {
 		types: De,
-		fields: (e, t, n) => lk({
+		fields: (e, t, n) => ck({
 			types: De,
 			fields: (e, t) => k.fields(e, t),
 			plan: (e, t) => k.formPlan(e, t)
 		}, e, t, n)
-	}, ke = new qO({
+	}, ke = new KO({
 		runtime: oe,
 		saves: ie,
 		native: se
@@ -28313,12 +28320,12 @@ function Pk(e) {
 	};
 }
 // src/core/db.ts
-var Fk = "tavern-trpg-assistant", Ik = class extends by {
+var Pk = "tavern-trpg-assistant", Fk = class extends yy {
 	blobs;
 	workspaces;
 	saves;
 	meta;
-	constructor(e = Fk) {
+	constructor(e = Pk) {
 		super(e), this.version(1).stores({
 			packs: "id, ruleId, kind, name",
 			entries: "[packId+entryId], packId, [ruleId+type]",
@@ -28355,7 +28362,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 			value: t
 		});
 	}
-}, Lk = class {
+}, Ik = class {
 	db;
 	deps;
 	uuid;
@@ -28365,42 +28372,42 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	async getWorkspace(e) {
 		let t = await this.db.workspaces.get(e);
 		if (!t) return null;
-		let n = Lne(t);
+		let n = zne(t);
 		return n !== t && await this.db.workspaces.put(n), n;
 	}
 	isDirty(e) {
-		return cy(e);
+		return sy(e);
 	}
 	async getSave(e) {
 		let t = await this.db.saves.get(e);
-		return t ? dy(t) : null;
+		return t ? uy(t) : null;
 	}
 	async listManual(e, t) {
-		return (await this.db.saves.where("ruleId").equals(e.ruleId).toArray()).map(dy).filter((n) => n.kind === "manual" && n.deletedAt === void 0 && (t === "all" || n.ownerKey === e.ownerKey)).sort(fy);
+		return (await this.db.saves.where("ruleId").equals(e.ruleId).toArray()).map(uy).filter((n) => n.kind === "manual" && n.deletedAt === void 0 && (t === "all" || n.ownerKey === e.ownerKey)).sort(dy);
 	}
 	async listAuto(e, t) {
-		return (await this.db.saves.where("[ownerKey+ruleId]").equals([e, t]).toArray()).map(dy).filter((e) => e.kind === "auto").sort(fy);
+		return (await this.db.saves.where("[ownerKey+ruleId]").equals([e, t]).toArray()).map(uy).filter((e) => e.kind === "auto").sort(dy);
 	}
 	async listDeleted(e) {
-		return (await this.db.saves.where("ruleId").equals(e).toArray()).map(dy).filter((e) => e.deletedAt !== void 0).sort((e, t) => (t.deletedAt ?? 0) - (e.deletedAt ?? 0));
+		return (await this.db.saves.where("ruleId").equals(e).toArray()).map(uy).filter((e) => e.deletedAt !== void 0).sort((e, t) => (t.deletedAt ?? 0) - (e.deletedAt ?? 0));
 	}
 	async listOtherRules(e) {
-		return (await this.db.saves.toArray()).map(dy).filter((t) => t.ruleId !== e && t.kind === "manual" && t.deletedAt === void 0).sort(fy);
+		return (await this.db.saves.toArray()).map(uy).filter((t) => t.ruleId !== e && t.kind === "manual" && t.deletedAt === void 0).sort(dy);
 	}
 	async getCampaignView(e, t) {
-		let n = (await this.db.saves.toArray()).map(dy), r = await this.db.workspaces.get(e);
-		return Rne(n, {
+		let n = (await this.db.saves.toArray()).map(uy), r = await this.db.workspaces.get(e);
+		return Bne(n, {
 			ownerKey: e,
 			ruleId: t,
 			currentSaveId: r && r.ruleId === t ? r.currentSaveId : null
 		});
 	}
 	async campaignRootOf(e) {
-		return gy((await this.db.saves.toArray()).map(dy), e);
+		return hy((await this.db.saves.toArray()).map(uy), e);
 	}
 	async campaignIdOfSaveId(e) {
-		let t = (await this.db.saves.toArray()).map(dy), n = t.find((t) => t.id === e);
-		return n ? hy(t, n) : null;
+		let t = (await this.db.saves.toArray()).map(uy), n = t.find((t) => t.id === e);
+		return n ? my(t, n) : null;
 	}
 	async campaignIdOf(e) {
 		return this.db.transaction("rw", [this.db.workspaces, this.db.saves], async () => {
@@ -28415,7 +28422,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	}
 	async startNewCampaign(e) {
 		this.requireRule(e.ruleId);
-		let t = ly(e.name);
+		let t = cy(e.name);
 		return this.db.transaction("rw", [
 			this.db.workspaces,
 			this.db.saves,
@@ -28430,7 +28437,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 				currentSaveId: null,
 				data: r,
 				savedHash: "",
-				schemaVersion: Ov.workspace,
+				schemaVersion: Dv.workspace,
 				updatedAt: this.deps.now()
 			}, a = this.uuid();
 			i.campaignId = a;
@@ -28453,7 +28460,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 			this.db.meta
 		], async () => {
 			let t = await this.requireWorkspace(e);
-			if (!cy(t)) return {
+			if (!sy(t)) return {
 				changed: !1,
 				workspace: t
 			};
@@ -28486,7 +28493,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 			this.db.saves,
 			this.db.meta
 		], async () => {
-			let n = await this.requireWorkspace(e), r = n.currentSaveId ? await this.getSave(n.currentSaveId) : null, i = await this.manualNames(n.ownerKey, n.ruleId), a = t === void 0 ? uy(`${r?.name ?? "存档"} 分支`, i) : ly(t), o = await this.buildSave(n, {
+			let n = await this.requireWorkspace(e), r = n.currentSaveId ? await this.getSave(n.currentSaveId) : null, i = await this.manualNames(n.ownerKey, n.ruleId), a = t === void 0 ? ly(`${r?.name ?? "存档"} 分支`, i) : cy(t), o = await this.buildSave(n, {
 				id: this.uuid(),
 				name: a,
 				note: "",
@@ -28506,31 +28513,31 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	}
 	async loadSave(e, t, n = {}) {
 		let r = await this.getSave(t);
-		if (!r || r.deletedAt !== void 0) throw new zv("E_NOT_FOUND", "没有找到这个存档");
+		if (!r || r.deletedAt !== void 0) throw new Rv("E_NOT_FOUND", "没有找到这个存档");
 		return this.requireRule(r.ruleId), n.precheck && await n.precheck(r), this.db.transaction("rw", [
 			this.db.workspaces,
 			this.db.saves,
 			this.db.meta
 		], async () => {
 			let t = await this.getWorkspace(e.ownerKey), i = !!t && t.ruleId !== r.ruleId;
-			if (i && !n.allowRuleSwitch) throw new zv("E_RULE_SWITCH_REQUIRED", "这个存档属于其他规则，需要确认切换规则");
+			if (i && !n.allowRuleSwitch) throw new Rv("E_RULE_SWITCH_REQUIRED", "这个存档属于其他规则，需要确认切换规则");
 			t && !n.skipAutoSave && await this.writeAutoSave(t, i ? "切换规则前" : "读档前");
 			let a = r;
 			if (r.ownerKey !== e.ownerKey) {
-				let t = await this.manualNames(e.ownerKey, r.ruleId), n = this.deps.now(), i = this.uuid(), o = hy((await this.db.saves.toArray()).map(dy), r);
+				let t = await this.manualNames(e.ownerKey, r.ruleId), n = this.deps.now(), i = this.uuid(), o = my((await this.db.saves.toArray()).map(uy), r);
 				a = {
 					...r,
 					id: i,
 					campaignId: i,
 					ownerKey: e.ownerKey,
 					ownerLabel: e.ownerLabel,
-					name: uy(`${r.name}（来自 ${r.ownerLabel}）`, t),
+					name: ly(`${r.name}（来自 ${r.ownerLabel}）`, t),
 					branchedFrom: void 0,
 					createdAt: n,
 					updatedAt: n
 				}, await this.db.saves.put(a), await this.copyLibrary(o, i);
 			}
-			let o = a.campaignId ?? hy((await this.db.saves.toArray()).map(dy), a) ?? void 0, s = {
+			let o = a.campaignId ?? my((await this.db.saves.toArray()).map(uy), a) ?? void 0, s = {
 				ownerKey: e.ownerKey,
 				ownerLabel: e.ownerLabel,
 				ruleId: a.ruleId,
@@ -28538,7 +28545,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 				...o ? { campaignId: o } : {},
 				data: structuredClone(a.snapshot),
 				savedHash: a.hash,
-				schemaVersion: Ov.workspace,
+				schemaVersion: Dv.workspace,
 				updatedAt: this.deps.now()
 			};
 			return await this.db.workspaces.put(s), s;
@@ -28546,9 +28553,9 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	}
 	async deleteSave(e) {
 		let t = await this.getSave(e);
-		if (!t) throw new zv("E_NOT_FOUND", "没有找到这个存档");
-		if (t.kind === "auto") throw new zv("E_AUTO_NOT_DELETABLE", "自动存档会自动滚动保留，不能单独删除");
-		if ((await this.db.workspaces.get(t.ownerKey))?.currentSaveId === t.id) throw new zv("E_SAVE_IN_USE", "正在使用的存档不能删除，请先读取或新建其他存档");
+		if (!t) throw new Rv("E_NOT_FOUND", "没有找到这个存档");
+		if (t.kind === "auto") throw new Rv("E_AUTO_NOT_DELETABLE", "自动存档会自动滚动保留，不能单独删除");
+		if ((await this.db.workspaces.get(t.ownerKey))?.currentSaveId === t.id) throw new Rv("E_SAVE_IN_USE", "正在使用的存档不能删除，请先读取或新建其他存档");
 		let n = {
 			...t,
 			deletedAt: this.deps.now()
@@ -28557,10 +28564,10 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	}
 	async restoreSave(e) {
 		let t = await this.getSave(e);
-		if (!t || t.deletedAt === void 0) throw new zv("E_NOT_FOUND", "没有找到这个已删除的存档");
+		if (!t || t.deletedAt === void 0) throw new Rv("E_NOT_FOUND", "没有找到这个已删除的存档");
 		let { deletedAt: n, ...r } = t, i = await this.manualNames(t.ownerKey, t.ruleId), a = {
 			...r,
-			name: uy(t.name, i, (e) => `（恢复 ${e}）`)
+			name: ly(t.name, i, (e) => `（恢复 ${e}）`)
 		};
 		return await this.db.saves.put(a), a;
 	}
@@ -28570,21 +28577,21 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 		return t;
 	}
 	async renameSave(e, t) {
-		return this.patchManual(e, { name: ly(t) });
+		return this.patchManual(e, { name: cy(t) });
 	}
 	async setNote(e, t) {
 		return this.patchManual(e, { note: t.slice(0, 200) });
 	}
 	async saveAutoAsManual(e) {
 		let t = await this.getSave(e);
-		if (!t || t.kind !== "auto") throw new zv("E_NOT_FOUND", "没有找到这个自动存档");
+		if (!t || t.kind !== "auto") throw new Rv("E_NOT_FOUND", "没有找到这个自动存档");
 		let n = await this.manualNames(t.ownerKey, t.ruleId), r = this.deps.now(), i = new Date(t.createdAt), a = `${i.getMonth() + 1}月${i.getDate()}日 ${String(i.getHours()).padStart(2, "0")}:${String(i.getMinutes()).padStart(2, "0")}`, o = this.uuid(), s = {
 			...t,
 			id: o,
 			campaignId: o,
 			kind: "manual",
 			autoReason: void 0,
-			name: uy(`自动存档 · ${a}`, n),
+			name: ly(`自动存档 · ${a}`, n),
 			createdAt: r,
 			updatedAt: r
 		};
@@ -28636,10 +28643,10 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 			...e.campaignId ? { campaignId: e.campaignId } : {},
 			createdAt: n,
 			updatedAt: n,
-			summary: Ine(e.data, this.deps.summaryContributors ?? []),
+			summary: Rne(e.data, this.deps.summaryContributors ?? []),
 			snapshot: structuredClone(e.data),
-			hash: sy(e.data),
-			schemaVersion: Ov.save
+			hash: oy(e.data),
+			schemaVersion: Dv.save
 		};
 	}
 	async manualNames(e, t) {
@@ -28648,11 +28655,11 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	}
 	async copyLibrary(e, t) {
 		if (!e) return;
-		let n = await this.db.getMeta(my(e));
-		n !== void 0 && await this.db.setMeta(my(t), structuredClone(n));
+		let n = await this.db.getMeta(py(e));
+		n !== void 0 && await this.db.setMeta(py(t), structuredClone(n));
 	}
 	async bumpSaves() {
-		let e = Pv.parse(await this.db.getMeta("backup") ?? {});
+		let e = Nv.parse(await this.db.getMeta("backup") ?? {});
 		await this.db.setMeta("backup", {
 			...e,
 			savesSinceExport: e.savesSinceExport + 1
@@ -28660,8 +28667,8 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	}
 	async patchManual(e, t) {
 		let n = await this.getSave(e);
-		if (!n || n.deletedAt !== void 0) throw new zv("E_NOT_FOUND", "没有找到这个存档");
-		if (n.kind === "auto") throw new zv("E_AUTO_NOT_DELETABLE", "自动存档不能改名或加备注");
+		if (!n || n.deletedAt !== void 0) throw new Rv("E_NOT_FOUND", "没有找到这个存档");
+		if (n.kind === "auto") throw new Rv("E_AUTO_NOT_DELETABLE", "自动存档不能改名或加备注");
 		let r = {
 			...n,
 			...t
@@ -28670,15 +28677,15 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 	}
 	async requireWorkspace(e) {
 		let t = await this.getWorkspace(e);
-		if (!t) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+		if (!t) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 		return t;
 	}
 	requireRule(e) {
 		let t = this.deps.rules.get(e);
-		if (!t) throw new zv("E_RULE_MISSING", `需要先安装规则『${e}』`);
+		if (!t) throw new Rv("E_RULE_MISSING", `需要先安装规则『${e}』`);
 		return t;
 	}
-}, Rk = class {
+}, Lk = class {
 	name;
 	id;
 	channel = null;
@@ -28716,7 +28723,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 			e.type === "hello" && this.send("here");
 		}
 	}
-}, zk = class {
+}, Rk = class {
 	opts;
 	rules = /* @__PURE__ */ new Map();
 	constructor(e = {}) {
@@ -28739,7 +28746,7 @@ var Fk = "tavern-trpg-assistant", Ik = class extends by {
 		return this.rules.has(e) && (this.opts.kernelReady?.(e) ?? !0);
 	}
 };
-function Bk(e) {
+function zk(e) {
 	return e.list().map((t) => ({
 		id: t.id,
 		name: t.name,
@@ -28751,9 +28758,9 @@ function Bk(e) {
 		status: e.ready(t.id) ? "installed" : "coming"
 	}));
 }
-function Vk(e) {
+function Bk(e) {
 	let t = /* @__PURE__ */ new Map();
-	for (let n of Bk(e)) {
+	for (let n of zk(e)) {
 		let e = t.get(n.family) ?? {
 			family: n.family,
 			name: n.familyName,
@@ -28765,7 +28772,7 @@ function Vk(e) {
 	return [...t.values()];
 }
 // src/rules/index.ts
-function Hk() {
+function Vk() {
 	return Object.entries(D.rules).map(([e, t]) => ({
 		id: e,
 		name: t.name,
@@ -28778,19 +28785,19 @@ function Hk() {
 		...t.kernel ? { kernel: t.kernel } : {}
 	}));
 }
-function Uk() {
-	let e = new zk({ kernelReady: RD });
-	for (let t of Hk()) e.register(t);
+function Hk() {
+	let e = new Rk({ kernelReady: LD });
+	for (let t of Vk()) e.register(t);
 	return e;
 }
 // src/core/services.ts
-var Wk = "0.6.0";
-function Gk(e = {}) {
-	let t = e.now ?? Date.now, n = e.rules ?? Uk(), r = new Ik(e.dbName ?? "tavern-trpg-assistant"), i = new Lk(r, {
+var Uk = "0.6.0";
+function Wk(e = {}) {
+	let t = e.now ?? Date.now, n = e.rules ?? Hk(), r = new Fk(e.dbName ?? "tavern-trpg-assistant"), i = new Ik(r, {
 		rules: n,
 		now: t,
 		...e.campaign
-	}), a = Pk({
+	}), a = Nk({
 		db: r,
 		campaign: i,
 		rules: n,
@@ -28801,29 +28808,29 @@ function Gk(e = {}) {
 		db: r,
 		rules: n,
 		campaign: i,
-		lock: new Rk(),
+		lock: new Lk(),
 		now: t,
 		backend: a
 	};
 }
 // node_modules/pinia/dist/pinia.js
-var Kk = typeof window < "u", qk, Jk = (e) => qk = e, Yk = Symbol();
-function Xk(e) {
+var Gk = typeof window < "u", Kk, qk = (e) => Kk = e, Jk = Symbol();
+function Yk(e) {
 	return e && typeof e == "object" && Object.prototype.toString.call(e) === "[object Object]" && typeof e.toJSON != "function";
 }
-var Zk = typeof window == "object" && window.window === window ? window : typeof self == "object" && self.self === self ? self : typeof global == "object" && global.global === global ? global : typeof globalThis == "object" ? globalThis : { HTMLElement: null };
-function Qk(e, { autoBom: t = !1 } = {}) {
+var Xk = typeof window == "object" && window.window === window ? window : typeof self == "object" && self.self === self ? self : typeof global == "object" && global.global === global ? global : typeof globalThis == "object" ? globalThis : { HTMLElement: null };
+function Zk(e, { autoBom: t = !1 } = {}) {
 	return t && /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(e.type) ? new Blob(["﻿", e], { type: e.type }) : e;
 }
-function $k(e, t, n) {
+function Qk(e, t, n) {
 	let r = new XMLHttpRequest();
 	r.open("GET", e), r.responseType = "blob", r.onload = function() {
-		iA(r.response, t, n);
+		rA(r.response, t, n);
 	}, r.onerror = function() {
 		console.error("could not download file");
 	}, r.send();
 }
-function eA(e) {
+function $k(e) {
 	let t = new XMLHttpRequest();
 	t.open("HEAD", e, !1);
 	try {
@@ -28831,7 +28838,7 @@ function eA(e) {
 	} catch {}
 	return t.status >= 200 && t.status <= 299;
 }
-function tA(e) {
+function eA(e) {
 	try {
 		e.dispatchEvent(new MouseEvent("click"));
 	} catch {
@@ -28854,30 +28861,30 @@ function tA(e) {
 		e.dispatchEvent(t);
 	}
 }
-var nA = typeof navigator == "object" ? navigator : { userAgent: "" }, rA = /Macintosh/.test(nA.userAgent) && /AppleWebKit/.test(nA.userAgent) && !/Safari/.test(nA.userAgent), iA = Kk ? typeof HTMLAnchorElement < "u" && "download" in HTMLAnchorElement.prototype && !rA ? aA : "msSaveOrOpenBlob" in nA ? oA : sA : () => {};
-function aA(e, t = "download", n) {
+var tA = typeof navigator == "object" ? navigator : { userAgent: "" }, nA = /Macintosh/.test(tA.userAgent) && /AppleWebKit/.test(tA.userAgent) && !/Safari/.test(tA.userAgent), rA = Gk ? typeof HTMLAnchorElement < "u" && "download" in HTMLAnchorElement.prototype && !nA ? iA : "msSaveOrOpenBlob" in tA ? aA : oA : () => {};
+function iA(e, t = "download", n) {
 	let r = document.createElement("a");
-	r.download = t, r.rel = "noopener", typeof e == "string" ? (r.href = e, r.origin === location.origin ? tA(r) : eA(r.href) ? $k(e, t, n) : (r.target = "_blank", tA(r))) : (r.href = URL.createObjectURL(e), setTimeout(function() {
+	r.download = t, r.rel = "noopener", typeof e == "string" ? (r.href = e, r.origin === location.origin ? eA(r) : $k(r.href) ? Qk(e, t, n) : (r.target = "_blank", eA(r))) : (r.href = URL.createObjectURL(e), setTimeout(function() {
 		URL.revokeObjectURL(r.href);
 	}, 4e4), setTimeout(function() {
-		tA(r);
+		eA(r);
 	}, 0));
 }
-function oA(e, t = "download", n) {
+function aA(e, t = "download", n) {
 	if (typeof e == "string") {
-		if (eA(e)) $k(e, t, n);
+		if ($k(e)) Qk(e, t, n);
 		else {
 			let t = document.createElement("a");
 			t.href = e, t.target = "_blank", setTimeout(function() {
-				tA(t);
+				eA(t);
 			});
 		}
-	} else navigator.msSaveOrOpenBlob(Qk(e, n), t);
+	} else navigator.msSaveOrOpenBlob(Zk(e, n), t);
 }
-function sA(e, t, n, r) {
-	if (r ||= open("", "_blank"), r && (r.document.title = r.document.body.innerText = "downloading..."), typeof e == "string") return $k(e, t, n);
-	let i = e.type === "application/octet-stream", a = /constructor/i.test(String(Zk.HTMLElement)) || "safari" in Zk, o = /CriOS\/[\d]+/.test(navigator.userAgent);
-	if ((o || i && a || rA) && typeof FileReader < "u") {
+function oA(e, t, n, r) {
+	if (r ||= open("", "_blank"), r && (r.document.title = r.document.body.innerText = "downloading..."), typeof e == "string") return Qk(e, t, n);
+	let i = e.type === "application/octet-stream", a = /constructor/i.test(String(Xk.HTMLElement)) || "safari" in Xk, o = /CriOS\/[\d]+/.test(navigator.userAgent);
+	if ((o || i && a || nA) && typeof FileReader < "u") {
 		let t = new FileReader();
 		t.onloadend = function() {
 			let e = t.result;
@@ -28891,11 +28898,11 @@ function sA(e, t, n, r) {
 		}, 4e4);
 	}
 }
-var { assign: $ne } = Object;
-function cA() {
+var { assign: ere } = Object;
+function sA() {
 	let e = en(!0), t = e.run(() => /* @__PURE__ */ M({})), n = [], r = [], i = kr({
 		install(e) {
-			Jk(i), i._a = e, e.provide(Yk, i), e.config.globalProperties.$pinia = i, r.forEach((e) => n.push(e)), r = [];
+			qk(i), i._a = e, e.provide(Jk, i), e.config.globalProperties.$pinia = i, r.forEach((e) => n.push(e)), r = [];
 		},
 		use(e) {
 			return this._a ? n.push(e) : r.push(e), this;
@@ -28908,56 +28915,56 @@ function cA() {
 	});
 	return i;
 }
-var lA = () => {};
-function uA(e, t, n, r = lA) {
+var cA = () => {};
+function lA(e, t, n, r = cA) {
 	e.add(t);
 	let i = () => {
 		e.delete(t) && r();
 	};
 	return !n && tn() && nn(i), i;
 }
-function dA(e, ...t) {
+function uA(e, ...t) {
 	e.forEach((e) => {
 		e(...t);
 	});
 }
-var fA = (e) => e(), pA = Symbol(), mA = Symbol();
-function hA(e, t) {
+var dA = (e) => e(), fA = Symbol(), pA = Symbol();
+function mA(e, t) {
 	e instanceof Map && t instanceof Map ? t.forEach((t, n) => e.set(n, t)) : e instanceof Set && t instanceof Set && t.forEach(e.add, e);
 	for (let n in t) {
 		if (!Object.hasOwn(t, n)) continue;
 		let r = t[n], i = e[n];
-		if (Xk(i) && Xk(r) && Object.hasOwn(e, n) && !/* @__PURE__ */ Mr(r) && !/* @__PURE__ */ wr(r)) {
-			e[n] = hA(i, r);
+		if (Yk(i) && Yk(r) && Object.hasOwn(e, n) && !/* @__PURE__ */ Mr(r) && !/* @__PURE__ */ wr(r)) {
+			e[n] = mA(i, r);
 			let t = (/* @__PURE__ */ Or(e))[n];
 			/* @__PURE__ */ Mr(t) && /* @__PURE__ */ Er(t) && Ir(t);
 		} else e[n] = r;
 	}
 	return e;
 }
-var gA = Symbol();
-function _A(e) {
-	return !e || typeof e != "object" || !Object.hasOwn(e, gA);
+var hA = Symbol();
+function gA(e) {
+	return !e || typeof e != "object" || !Object.hasOwn(e, hA);
 }
-var { assign: vA } = Object;
-function yA(e) {
+var { assign: _A } = Object;
+function vA(e) {
 	return !!(/* @__PURE__ */ Mr(e) && e.effect);
 }
-function bA(e, t, n, r) {
+function yA(e, t, n, r) {
 	let { state: i, actions: a, getters: o } = t, s = n.state.value[e], c;
 	function l() {
 		return s || 
 		/* istanbul ignore if */
-		(n.state.value[e] = i ? i() : {}), vA(/* @__PURE__ */ Hr(n.state.value[e]), a, Object.keys(o || {}).reduce((t, r) => (t[r] = kr(K(() => {
-			Jk(n);
+		(n.state.value[e] = i ? i() : {}), _A(/* @__PURE__ */ Hr(n.state.value[e]), a, Object.keys(o || {}).reduce((t, r) => (t[r] = kr(K(() => {
+			qk(n);
 			let t = n._s.get(e);
 			return o[r].call(t, t);
 		})), t), {}));
 	}
-	return c = xA(e, l, t, n, r, !0), c;
+	return c = bA(e, l, t, n, r, !0), c;
 }
-function xA(e, t, n = {}, r, i, a) {
-	let o, s = vA({ actions: {} }, n), c = { deep: !0 }, l, u, d = /* @__PURE__ */ new Set(), f = /* @__PURE__ */ new Set(), p, m = r.state.value[e];
+function bA(e, t, n = {}, r, i, a) {
+	let o, s = _A({ actions: {} }, n), c = { deep: !0 }, l, u, d = /* @__PURE__ */ new Set(), f = /* @__PURE__ */ new Set(), p, m = r.state.value[e];
 	!a && !m && 
 	/* istanbul ignore if */
 	(r.state.value[e] = {});
@@ -28968,7 +28975,7 @@ function xA(e, t, n = {}, r, i, a) {
 			type: "patch function",
 			storeId: e,
 			events: p
-		}) : (hA(r.state.value[e], t), n = {
+		}) : (mA(r.state.value[e], t), n = {
 			type: "patch object",
 			payload: t,
 			storeId: e,
@@ -28977,21 +28984,21 @@ function xA(e, t, n = {}, r, i, a) {
 		let i = h = Symbol();
 		xi().then(() => {
 			h === i && (l = !0);
-		}), u = !0, dA(d, n, r.state.value[e]);
+		}), u = !0, uA(d, n, r.state.value[e]);
 	}
 	let _ = a ? function() {
 		let { state: e } = n, t = e ? e() : {};
 		this.$patch((e) => {
-			vA(e, t);
+			_A(e, t);
 		});
-	} : lA;
+	} : cA;
 	function v() {
 		o.stop(), d.clear(), f.clear(), r._s.delete(e);
 	}
 	let y = (t, n = "") => {
-		if (pA in t) return t[mA] = n, t;
+		if (fA in t) return t[pA] = n, t;
 		let i = function() {
-			Jk(r);
+			qk(r);
 			let n = Array.from(arguments), a = /* @__PURE__ */ new Set(), o = /* @__PURE__ */ new Set();
 			function s(e) {
 				a.add(e);
@@ -28999,9 +29006,9 @@ function xA(e, t, n = {}, r, i, a) {
 			function c(e) {
 				o.add(e);
 			}
-			dA(f, {
+			uA(f, {
 				args: n,
-				name: i[mA],
+				name: i[pA],
 				store: b,
 				after: s,
 				onError: c
@@ -29010,41 +29017,41 @@ function xA(e, t, n = {}, r, i, a) {
 			try {
 				l = t.apply(this && this.$id === e ? this : b, n);
 			} catch (e) {
-				throw dA(o, e), e;
+				throw uA(o, e), e;
 			}
-			return l instanceof Promise ? l.then((e) => (dA(a, e), e)).catch((e) => (dA(o, e), Promise.reject(e))) : (dA(a, l), l);
+			return l instanceof Promise ? l.then((e) => (uA(a, e), e)).catch((e) => (uA(o, e), Promise.reject(e))) : (uA(a, l), l);
 		};
-		return i[pA] = !0, i[mA] = n, i;
+		return i[fA] = !0, i[pA] = n, i;
 	}, b = /* @__PURE__ */ yr({
 		_p: r,
 		$id: e,
-		$onAction: uA.bind(null, f),
+		$onAction: lA.bind(null, f),
 		$patch: g,
 		$reset: _,
 		$subscribe(t, n = {}) {
-			if (d.has(t)) return lA;
-			let i = uA(d, t, n.detached, () => a()), a = o.run(() => F(() => r.state.value[e], (r) => {
+			if (d.has(t)) return cA;
+			let i = lA(d, t, n.detached, () => a()), a = o.run(() => F(() => r.state.value[e], (r) => {
 				(n.flush === "sync" ? u : l) && t({
 					storeId: e,
 					type: "direct",
 					events: p
 				}, r);
-			}, vA({}, c, n)));
+			}, _A({}, c, n)));
 			return i;
 		},
 		$dispose: v
 	});
 	r._s.set(e, b);
-	let x = (r._a && r._a.runWithContext || fA)(() => r._e.run(() => (o = en()).run(() => t({ action: y }))));
+	let x = (r._a && r._a.runWithContext || dA)(() => r._e.run(() => (o = en()).run(() => t({ action: y }))));
 	for (let t in x) {
 		let n = x[t];
-		/* @__PURE__ */ Mr(n) && !yA(n) || /* @__PURE__ */ wr(n) ? a || (m && _A(n) && (/* @__PURE__ */ Mr(n) ? n.value = m[t] : ((n instanceof Set || n instanceof Map) && n.clear(), hA(n, m[t]))), r.state.value[e][t] = n) : typeof n == "function" && (x[t] = y(n, t), s.actions[t] = n);
+		/* @__PURE__ */ Mr(n) && !vA(n) || /* @__PURE__ */ wr(n) ? a || (m && gA(n) && (/* @__PURE__ */ Mr(n) ? n.value = m[t] : ((n instanceof Set || n instanceof Map) && n.clear(), mA(n, m[t]))), r.state.value[e][t] = n) : typeof n == "function" && (x[t] = y(n, t), s.actions[t] = n);
 	}
-	return vA(b, x), vA(/* @__PURE__ */ Or(b), x), Object.defineProperty(b, "$state", {
+	return _A(b, x), _A(/* @__PURE__ */ Or(b), x), Object.defineProperty(b, "$state", {
 		get: () => r.state.value[e],
 		set: (e) => {
 			g((t) => {
-				vA(t, e);
+				_A(t, e);
 			});
 		}
 	}), r._p.forEach((e) => {
@@ -29054,20 +29061,20 @@ function xA(e, t, n = {}, r, i, a) {
 			pinia: r,
 			options: s
 		}));
-		vA(b, t);
+		_A(b, t);
 	}), m && a && n.hydrate && n.hydrate(b.$state, m), l = !0, u = !0, b;
 }
-function SA(e, t, n) {
+function xA(e, t, n) {
 	let r, i = typeof t == "function";
 	r = i ? n : t;
 	function a(n, a) {
 		let o = Wi();
-		return n ||= o ? Ui(Yk, null) : null, n && Jk(n), n = qk, n._s.has(e) || (i ? xA(e, t, r, n) : bA(e, r, n)), n._s.get(e);
+		return n ||= o ? Ui(Jk, null) : null, n && qk(n), n = Kk, n._s.has(e) || (i ? bA(e, t, r, n) : yA(e, r, n)), n._s.get(e);
 	}
 	return a.$id = e, a;
 }
 // src/stores/app.ts
-var CA = SA("app", () => {
+var SA = xA("app", () => {
 	let e = /* @__PURE__ */ Nr(null), t = /* @__PURE__ */ M(!1), n = /* @__PURE__ */ M(""), r = /* @__PURE__ */ M(null), i = /* @__PURE__ */ M(null);
 	function a() {
 		if (!e.value) throw Error("助手尚未启动完成");
@@ -29077,19 +29084,19 @@ var CA = SA("app", () => {
 		e.value = t;
 	}
 	async function s() {
-		let e = await Iv(a().db);
+		let e = await Fv(a().db);
 		return r.value = e, e;
 	}
 	async function c(e) {
-		let t = Nv.parse({
-			...await Iv(a().db),
+		let t = Mv.parse({
+			...await Fv(a().db),
 			...e
 		});
 		await a().db.setMeta("settings", t), r.value = t;
 	}
 	async function l() {
-		let e = a(), [t, n] = await Promise.all([Fv(e.db), Iv(e.db)]);
-		r.value = n, i.value = dne(t, n, e.now());
+		let e = a(), [t, n] = await Promise.all([Pv(e.db), Fv(e.db)]);
+		r.value = n, i.value = fne(t, n, e.now());
 	}
 	return {
 		services: e,
@@ -29103,17 +29110,17 @@ var CA = SA("app", () => {
 		updateSettings: c,
 		refreshBackup: l
 	};
-}), ere = 500, wA = SA("campaign", () => {
+}), tre = 500, CA = xA("campaign", () => {
 	let e = null, t, n = /* @__PURE__ */ Nr(null), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ M(!1), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M(!1), s = K(() => r.value !== null), c = /* @__PURE__ */ Nr(null), l = 0;
 	function u() {
 		if (!e) throw Error("存档服务尚未初始化");
 		return e;
 	}
 	function d() {
-		if (i.value) throw new zv("E_READ_ONLY", "另一个窗口正在使用助手，此窗口为只读");
+		if (i.value) throw new Rv("E_READ_ONLY", "另一个窗口正在使用助手，此窗口为只读");
 	}
 	function f(e) {
-		r.value = e, o.value = e ? cy(e) : !1;
+		r.value = e, o.value = e ? sy(e) : !1;
 	}
 	async function p() {
 		let t = ++l, n = r.value?.currentSaveId, i = n && e ? await e.campaign.getSave(n) : null;
@@ -29131,14 +29138,14 @@ var CA = SA("app", () => {
 		t !== void 0 && (clearTimeout(t), t = void 0), r.value && !i.value && await u().campaign.putWorkspace(r.value);
 	}
 	function _(e) {
-		if (d(), !r.value) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+		if (d(), !r.value) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 		f({
 			...r.value,
 			data: e(r.value.data)
-		}), t !== void 0 && clearTimeout(t), t = setTimeout(() => void g(), ere);
+		}), t !== void 0 && clearTimeout(t), t = setTimeout(() => void g(), tre);
 	}
 	async function v(e) {
-		if (d(), !n.value) throw new zv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
+		if (d(), !n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
 		await g();
 		let t = await u().campaign.startNewCampaign({
 			...n.value,
@@ -29147,7 +29154,7 @@ var CA = SA("app", () => {
 		return f(t.workspace), t.save;
 	}
 	async function y(e) {
-		if (d(), !n.value) throw new zv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
+		if (d(), !n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
 		await g();
 		let t = await e(u());
 		return f(t.workspace), {
@@ -29162,21 +29169,21 @@ var CA = SA("app", () => {
 		return f(t.workspace), t.changed;
 	}
 	async function x(e) {
-		if (d(), !n.value) throw new zv("E_NO_WORKSPACE", "还没有当前战役");
+		if (d(), !n.value) throw new Rv("E_NO_WORKSPACE", "还没有当前战役");
 		await g();
 		let t = await u().campaign.branch(n.value.ownerKey, e);
 		return f(t.workspace), t.save;
 	}
 	async function S(e, t = {}) {
-		if (d(), !n.value) throw new zv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
+		if (d(), !n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
 		await g(), f(await u().campaign.loadSave(n.value, e, t));
 	}
 	async function C(e) {
-		if (!n.value) throw new zv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
+		if (!n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
 		return await g(), e(u(), n.value.ownerKey);
 	}
 	async function w(e) {
-		if (!n.value) throw new zv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
+		if (!n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
 		let t = n.value.ownerKey;
 		await g();
 		try {
@@ -29186,7 +29193,7 @@ var CA = SA("app", () => {
 		}
 	}
 	async function T(e) {
-		if (d(), !n.value) throw new zv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
+		if (d(), !n.value) throw new Rv("E_NO_WORKSPACE", "请先在酒馆中打开一个聊天");
 		await g();
 		let t = await e(u(), n.value.ownerKey);
 		return f(t.workspace), t;
@@ -29215,14 +29222,14 @@ var CA = SA("app", () => {
 	};
 });
 // src/host/input.ts
-function TA(e) {
+function wA(e) {
 	let t = Be();
 	if (!t) return !1;
 	let n = t.value, r = n ? `${n}${n.endsWith("\n") ? "" : "\n"}${e}` : e;
 	return Ge(t, r), t.value === r;
 }
 // src/host/clipboard.ts
-async function EA(e) {
+async function TA(e) {
 	try {
 		return await navigator.clipboard.writeText(e), !0;
 	} catch (e) {
@@ -29237,34 +29244,34 @@ async function EA(e) {
 	}
 }
 // src/library/runtime/dice.ts
-var DA = "en", OA = null;
-function kA() {
-	return OA ??= (async () => {
-		let e = new xy(), t = new vb({ db: e });
+var EA = "en", DA = null;
+function OA() {
+	return DA ??= (async () => {
+		let e = new by(), t = new vb({ db: e });
 		return Sx({
-			codeSet: DA,
+			codeSet: EA,
 			pluginRoot: new URL("../", "" + import.meta.url),
 			container: document.body,
 			handlers: yx({
-				codeSet: DA,
+				codeSet: EA,
 				db: e,
 				files: t,
 				allowNetwork: () => !1
 			})
 		});
 	})().catch((e) => {
-		throw OA = null, e;
-	}), OA;
+		throw DA = null, e;
+	}), DA;
 }
-var AA = {
-	read: async (e) => (await kA()).call("diceRead", e),
-	roll: async (e, t) => (await kA()).call("diceRoll", e, t)
-}, tre = {
+var kA = {
+	read: async (e) => (await OA()).call("diceRead", e),
+	roll: async (e, t) => (await OA()).call("diceRoll", e, t)
+}, nre = {
 	normal: "",
 	adv: " 优势",
 	dis: " 劣势"
 };
-function nre(e, t) {
+function rre(e, t) {
 	let { groups: n, mod: r, mode: i } = e, a = n?.reduce((e, t) => e + (t.pair ? 2 : t.count), 0);
 	if (n && a === t.used.length) {
 		let e = [], a = [], o = 0, s, c = !1, l = r;
@@ -29309,15 +29316,15 @@ function nre(e, t) {
 		detail: t.text ?? ""
 	};
 }
-function rre(e) {
-	return `${e.expression}${tre[e.mode]} = ${e.total}（${e.detail}）`;
+function ire(e) {
+	return `${e.expression}${nre[e.mode]} = ${e.total}（${e.detail}）`;
 }
-function jA(e, t) {
+function AA(e, t) {
 	let n = t.trim().replace(/-{2,}/g, "—").replace(/[<>]/g, "");
 	return `<!-- [掷骰] ${n ? `${n}：` : ""}${e} -->`;
 }
 // src/rules/dice/builder.ts
-var MA = [
+var jA = [
 	4,
 	6,
 	8,
@@ -29325,11 +29332,11 @@ var MA = [
 	12,
 	20,
 	100
-], NA = {
+], MA = {
 	dice: [],
 	mod: 0
 };
-function ire(e, t) {
+function are(e, t) {
 	let n = [];
 	for (let t of e) {
 		let e = n.find((e) => e.sides === t.sides && e.sign === t.sign);
@@ -29340,13 +29347,13 @@ function ire(e, t) {
 		mod: t
 	};
 }
-var PA = (e) => [...e.dice].sort((e, t) => t.sign - e.sign || e.sides - t.sides);
-function FA(e) {
-	let t = PA(e).map((e, t) => `${t === 0 ? e.sign === -1 ? "-" : "" : e.sign === -1 ? "- " : "+ "}${e.count}d${e.sides}`).join(" ");
+var NA = (e) => [...e.dice].sort((e, t) => t.sign - e.sign || e.sides - t.sides);
+function PA(e) {
+	let t = NA(e).map((e, t) => `${t === 0 ? e.sign === -1 ? "-" : "" : e.sign === -1 ? "- " : "+ "}${e.count}d${e.sides}`).join(" ");
 	return e.mod && (t += `${t ? " " : ""}${e.mod > 0 ? t ? "+ " : "+" : "- "}${Math.abs(e.mod)}`), t;
 }
-function are(e, t) {
-	let n = PA(e).map((e) => ({
+function ore(e, t) {
+	let n = NA(e).map((e) => ({
 		...e,
 		pair: t !== "normal" && e.sides === 20 && e.count === 1 && e.sign === 1
 	})), r = n.map((e, n) => `${e.sign === -1 ? "-" : n === 0 ? "" : "+"}${e.pair ? `2d20${t === "adv" ? "kh1" : "kl1"}` : `${e.count}d${e.sides}`}`);
@@ -29355,7 +29362,7 @@ function are(e, t) {
 		groups: n
 	};
 }
-function ore(e, t) {
+function sre(e, t) {
 	let n = e.dice.map((e) => ({ ...e })), r = n.find((e) => e.sides === t && e.sign === 1);
 	return r ? r.count = Math.min(100, r.count + 1) : n.push({
 		count: 1,
@@ -29366,7 +29373,7 @@ function ore(e, t) {
 		dice: n
 	};
 }
-function sre(e, t) {
+function cre(e, t) {
 	return {
 		...e,
 		dice: e.dice.map((e) => e.sides === t && e.sign === 1 ? {
@@ -29375,28 +29382,28 @@ function sre(e, t) {
 		} : { ...e }).filter((e) => e.count > 0)
 	};
 }
-function cre(e, t, n = -20, r = 30) {
+function lre(e, t, n = -20, r = 30) {
 	return {
 		...e,
 		mod: Math.min(r, Math.max(n, e.mod + t))
 	};
 }
-function IA(e, t) {
+function FA(e, t) {
 	return e.dice.filter((e) => e.sides === t && e.sign === 1).reduce((e, t) => e + t.count, 0);
 }
-function lre(e) {
+function ure(e) {
 	let t = e.dice.filter((e) => e.sides === 20);
 	return t.length === 1 && t[0].count === 1 && t[0].sign === 1;
 }
-function ure(e) {
+function dre(e) {
 	return e.dice.reduce((e, t) => e + t.count, 0);
 }
-function LA(e) {
+function IA(e) {
 	let t = e || 20;
-	return MA.find((e) => t <= e) ?? 100;
+	return jA.find((e) => t <= e) ?? 100;
 }
-var RA = "trpg-assistant:dice", zA = (e) => e ? `${RA}:${e}` : RA;
-function BA(e) {
+var LA = "trpg-assistant:dice", RA = (e) => e ? `${LA}:${e}` : LA;
+function zA(e) {
 	let t = {
 		history: [],
 		text: "",
@@ -29404,7 +29411,7 @@ function BA(e) {
 		note: ""
 	};
 	try {
-		let n = localStorage.getItem(zA(e));
+		let n = localStorage.getItem(RA(e));
 		if (!n) return t;
 		let r = JSON.parse(n);
 		return {
@@ -29417,17 +29424,17 @@ function BA(e) {
 		return console.warn("[trpg-assistant] 读取掷骰记录失败", e), t;
 	}
 }
-var VA = SA("dice", () => {
-	let e = null, t = AA, n = null, r = 1, i = 0, a = Promise.resolve(), o, s = BA(null), c = /* @__PURE__ */ M(s.text), l = /* @__PURE__ */ M(s.mode), u = /* @__PURE__ */ M(s.note), d = /* @__PURE__ */ M(s.history), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ Nr(null), m = /* @__PURE__ */ M("idle"), h = /* @__PURE__ */ M(!1), g = /* @__PURE__ */ Nr({
+var BA = xA("dice", () => {
+	let e = null, t = kA, n = null, r = 1, i = 0, a = Promise.resolve(), o, s = zA(null), c = /* @__PURE__ */ M(s.text), l = /* @__PURE__ */ M(s.mode), u = /* @__PURE__ */ M(s.note), d = /* @__PURE__ */ M(s.history), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ Nr(null), m = /* @__PURE__ */ M("idle"), h = /* @__PURE__ */ M(!1), g = /* @__PURE__ */ Nr({
 		ok: !0,
-		builder: NA
-	}), _ = /* @__PURE__ */ M(!1), v = /* @__PURE__ */ M(""), y = K(() => g.value.ok ? v.value : g.value.error), b = K(() => g.value.ok && g.value.builder || NA), x = K(() => g.value.ok && !!g.value.builder && lre(g.value.builder)), S = K(() => g.value.ok && (!g.value.builder || ure(g.value.builder) > 0));
+		builder: MA
+	}), _ = /* @__PURE__ */ M(!1), v = /* @__PURE__ */ M(""), y = K(() => g.value.ok ? v.value : g.value.error), b = K(() => g.value.ok && g.value.builder || MA), x = K(() => g.value.ok && !!g.value.builder && ure(g.value.builder)), S = K(() => g.value.ok && (!g.value.builder || dre(g.value.builder) > 0));
 	function C() {
 		let e = ++i, n = c.value;
 		_.value = !0, v.value = "", a = t.read(n).then((t) => {
 			e === i && (g.value = t.ok ? t.simple ? {
 				ok: !0,
-				builder: ire(t.dice, t.mod)
+				builder: are(t.dice, t.mod)
 			} : {
 				ok: !0,
 				builder: null
@@ -29446,7 +29453,7 @@ var VA = SA("dice", () => {
 	}
 	function w() {
 		try {
-			localStorage.setItem(zA(e), JSON.stringify({
+			localStorage.setItem(RA(e), JSON.stringify({
 				history: d.value,
 				text: c.value,
 				mode: l.value,
@@ -29458,13 +29465,13 @@ var VA = SA("dice", () => {
 	}
 	function T(t) {
 		e = t;
-		let n = BA(t);
+		let n = zA(t);
 		d.value = n.history, c.value = n.text, l.value = n.mode, u.value = n.note, f.value = null, p.value = null, C();
 	}
 	let E = (e) => {
 		n = e;
 	}, D = (e) => {
-		t = e ?? AA, C();
+		t = e ?? kA, C();
 	};
 	function O(e, t) {
 		c.value = e, w(), C(), t && (g.value = {
@@ -29473,15 +29480,15 @@ var VA = SA("dice", () => {
 		});
 	}
 	let ee = (e, t) => {
-		let n = g.value.ok ? g.value.builder : NA;
+		let n = g.value.ok ? g.value.builder : MA;
 		if (n) {
 			let t = e(n);
-			O(FA(t), t);
+			O(PA(t), t);
 		} else t && O(t());
-	}, k = (e) => ee((t) => ore(t, e), () => `${c.value.trim()} + 1d${e}`), te = (e) => ee((t) => sre(t, e)), ne = (e) => ee((t) => cre(t, e)), re = () => {
+	}, k = (e) => ee((t) => sre(t, e), () => `${c.value.trim()} + 1d${e}`), te = (e) => ee((t) => cre(t, e)), ne = (e) => ee((t) => lre(t, e)), re = () => {
 		c.value = "", l.value = "normal", w(), C(), g.value = {
 			ok: !0,
-			builder: NA
+			builder: MA
 		};
 	}, ie = (e) => O(e);
 	function ae(e) {
@@ -29492,10 +29499,10 @@ var VA = SA("dice", () => {
 	}
 	async function se() {
 		if (await a, !S.value || !g.value.ok) return null;
-		let e = x.value ? l.value : "normal", i = g.value.builder, o = i ? are(i, e) : {
+		let e = x.value ? l.value : "normal", i = g.value.builder, o = i ? ore(i, e) : {
 			formula: c.value,
 			groups: null
-		}, s = i ? FA(i) : c.value.trim(), _;
+		}, s = i ? PA(i) : c.value.trim(), _;
 		try {
 			_ = await t.roll(o.formula, n ?? void 0);
 		} catch (e) {
@@ -29503,7 +29510,7 @@ var VA = SA("dice", () => {
 		}
 		if (_.status !== "complete") return v.value = _.status === "missing" ? `已给的骰点不够，还要一颗 d${_.missing.dice.max}` : _.status === "unsupported" ? _.reason : `掷骰出错：${_.error}`, null;
 		v.value = "";
-		let y = nre({
+		let y = rre({
 			formula: o.formula,
 			groups: o.groups,
 			mod: i?.mod ?? 0,
@@ -29516,7 +29523,7 @@ var VA = SA("dice", () => {
 			formula: s,
 			mode: e,
 			total: y.total,
-			line: rre(y),
+			line: ire(y),
 			...y.natural ? { natural: y.natural } : {}
 		};
 		return f.value = b, p.value = y, d.value = [b, ...d.value].slice(0, 20), m.value = "idle", h.value = !1, w(), b;
@@ -29527,14 +29534,14 @@ var VA = SA("dice", () => {
 	function le() {
 		d.value = [], w();
 	}
-	let ue = (e) => jA(e.line, u.value.trim() || e.note);
+	let ue = (e) => AA(e.line, u.value.trim() || e.note);
 	function de() {
 		if (!f.value) return !1;
-		let e = TA(ue(f.value));
+		let e = wA(ue(f.value));
 		return m.value = e ? "done" : "failed", o !== void 0 && clearTimeout(o), e && (o = setTimeout(() => m.value = "idle", 2e3)), e;
 	}
 	async function fe() {
-		return f.value ? (h.value = await EA(ue(f.value)), h.value) : !1;
+		return f.value ? (h.value = await TA(ue(f.value)), h.value) : !1;
 	}
 	return {
 		text: c,
@@ -29567,13 +29574,13 @@ var VA = SA("dice", () => {
 		copy: fe,
 		commentOf: ue
 	};
-}), dre = {
+}), fre = {
 	success: 4e3,
 	info: 4e3,
 	undo: 6e3,
 	error: 8e3,
 	status: 6e3
-}, HA = SA("toast", () => {
+}, VA = xA("toast", () => {
 	let e = /* @__PURE__ */ M([]), t = /* @__PURE__ */ new Map(), n = 1;
 	function r(n) {
 		let r = t.get(n);
@@ -29595,7 +29602,7 @@ var VA = SA("dice", () => {
 			message: a,
 			...c
 		}]; e.value.length > 3;) r(e.value[0].id);
-		return i(s, dre[t]), s;
+		return i(s, fre[t]), s;
 	}
 	function o(e) {
 		let n = t.get(e);
@@ -29627,7 +29634,7 @@ var VA = SA("dice", () => {
 		undoable: f,
 		error: (e) => a("error", e)
 	};
-}), UA = SA("libnotice", () => {
+}), HA = xA("libnotice", () => {
 	let e = /* @__PURE__ */ Nr([]);
 	function t(t) {
 		e.value = [...e.value.filter((e) => e.key !== t.key), t];
@@ -29640,7 +29647,7 @@ var VA = SA("dice", () => {
 		show: t,
 		dismiss: n
 	};
-}), WA = SA("updates", () => {
+}), UA = xA("updates", () => {
 	let e = /* @__PURE__ */ M(!1), t = /* @__PURE__ */ Nr([]), n = /* @__PURE__ */ Nr([]), r = K(() => t.value.filter((e) => e.status === "available")), i = (e) => !!(e.added || e.changed || e.removed || e.shared), a = K(() => r.value.reduce((e, t) => e + Math.max(1, (t.objects ?? []).filter(i).length), 0) + n.value.length);
 	function o(e, r) {
 		t.value = e, n.value = r;
@@ -29680,7 +29687,7 @@ var VA = SA("dice", () => {
 				changed: e
 			} : t);
 		} else l(e);
-		let c = UA(), u = c.notices.find((e) => e.key === "update:available");
+		let c = HA(), u = c.notices.find((e) => e.key === "update:available");
 		a.value ? u && c.show({
 			...u,
 			text: `有 ${a.value} 项资料可以更新；有更新的书 / 包在书架上标了【有更新】。`
@@ -29698,7 +29705,7 @@ var VA = SA("dice", () => {
 		done: l,
 		published: u
 	};
-}), GA = [
+}), WA = [
 	{
 		label: "下载文件",
 		stages: [
@@ -29726,15 +29733,15 @@ var VA = SA("dice", () => {
 		label: "准备结算",
 		stages: ["open-kernel", "convert"]
 	}
-], fre = (e) => {
-	let t = GA.findIndex((t) => t.stages.includes(e));
+], pre = (e) => {
+	let t = WA.findIndex((t) => t.stages.includes(e));
 	return t < 0 ? 1 : t;
 };
-function KA(e, n = []) {
+function GA(e, n = []) {
 	let r = t.find((t) => t.id === e)?.lang, i = r === "zh" ? "（中文）" : r === "en" ? "（英文）" : "";
 	return n.length ? `${n[0]}${n.length > 1 ? `等 ${n.length} 本` : ""}${i}` : `整套官方资料${i}`;
 }
-function pre(e, t) {
+function mre(e, t) {
 	let n = new Map(e.item?.split(";").map((e) => e.split("=", 2)) ?? []);
 	return ([
 		"updateBooks",
@@ -29743,18 +29750,18 @@ function pre(e, t) {
 		"sources"
 	].map((e) => n.get(e)).find((e) => e && e !== "all")?.split(",") ?? []).map((n) => t.get(`${e.set}/${n.toLowerCase()}`) ?? n);
 }
-function mre(e, t) {
+function hre(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let t of e) t.kind !== "precompute" && n.set(`${t.kind}:${t.set}/${t.item ?? "all"}`, t);
 	let r = [];
 	for (let [e, i] of n) {
 		if (i.kind === "precompute" || i.status !== "running" && i.status !== "failed") continue;
-		let { stage: n, done: a, total: o } = i.progress, s = t.get(`task:${i.id}`) ?? (i.kind === "official" ? KA(i.set, pre(i, t)) : i.kind === "brew" ? "自制包" : `冒险《${t.get(`${i.set}/${i.item?.toLowerCase()}`) ?? i.item ?? ""}》`), c = fre(n), l = o > 0 ? Math.min(1, a / o) : null, u = i.status === "running" && l !== null ? i.kind === "brew" ? l : (c + l) / GA.length : null;
+		let { stage: n, done: a, total: o } = i.progress, s = t.get(`task:${i.id}`) ?? (i.kind === "official" ? GA(i.set, mre(i, t)) : i.kind === "brew" ? "自制包" : `冒险《${t.get(`${i.set}/${i.item?.toLowerCase()}`) ?? i.item ?? ""}》`), c = pre(n), l = o > 0 ? Math.min(1, a / o) : null, u = i.status === "running" && l !== null ? i.kind === "brew" ? l : (c + l) / WA.length : null;
 		r.push({
 			key: e,
 			kind: i.kind,
 			label: s,
-			stage: i.kind === "brew" && n !== "start" ? n : GA[c].label,
+			stage: i.kind === "brew" && n !== "start" ? n : WA[c].label,
 			status: i.status,
 			error: i.error,
 			pct: u,
@@ -29765,7 +29772,7 @@ function mre(e, t) {
 	}
 	return r;
 }
-var qA = SA("downloads", () => {
+var KA = xA("downloads", () => {
 	let e = /* @__PURE__ */ Nr([]), t = /* @__PURE__ */ new Map(), n = /* @__PURE__ */ M(!1), r = /* @__PURE__ */ new Set(), i = /* @__PURE__ */ new Set(), a = null, o, s, c = /* @__PURE__ */ Nr(/* @__PURE__ */ new Set());
 	async function l(e, t, n, r, i, a) {
 		let o = "";
@@ -29776,7 +29783,7 @@ var qA = SA("downloads", () => {
 		let s = await e.wait(o);
 		return x(), s;
 	}
-	let u = K(() => mre(e.value, t)), d = K(() => u.value.filter((e) => e.status === "running")), f = K(() => u.value.filter((e) => e.status === "failed" && !c.value.has(e.taskId))), p = K(() => d.value.length), m = K(() => {
+	let u = K(() => hre(e.value, t)), d = K(() => u.value.filter((e) => e.status === "running")), f = K(() => u.value.filter((e) => e.status === "failed" && !c.value.has(e.taskId))), p = K(() => d.value.length), m = K(() => {
 		let e = d.value.map((e) => e.pct).filter((e) => e !== null);
 		return e.length ? e.reduce((e, t) => e + t, 0) / e.length : 0;
 	}), h = K(() => d.value.length ? d.value.every((e) => e.pct === null) ? "spin" : "running" : n.value ? "done" : "none");
@@ -29799,10 +29806,10 @@ var qA = SA("downloads", () => {
 		for (let t of e.value) {
 			if (t.kind !== "official" || i.has(t.id)) continue;
 			let e = t.result?.update;
-			e && (WA().published(t.set, e.target, e.selection), i.add(t.id));
+			e && (UA().published(t.set, e.target, e.selection), i.add(t.id));
 		}
 		let t = new Set(e.value.filter((e) => e.status === "running").map((e) => e.id)), o = [...r].filter((e) => !t.has(e)).map((t) => e.value.find((e) => e.id === t));
-		r.size && !t.size && o.length && o.every((e) => e?.status === "done") && (n.value = !0, HA().success("资料已就绪"), clearTimeout(s), s = setTimeout(() => {
+		r.size && !t.size && o.length && o.every((e) => e?.status === "done") && (n.value = !0, VA().success("资料已就绪"), clearTimeout(s), s = setTimeout(() => {
 			n.value = !1;
 		}, 2e3)), r = t;
 	}
@@ -29828,12 +29835,12 @@ var qA = SA("downloads", () => {
 		trackBrew: l,
 		dismiss: g
 	};
-}), hre = {
+}), gre = {
 	home: "首页",
 	people: "人物",
 	settings: "设置",
 	library: "库"
-}, JA = SA("ui", () => {
+}, qA = xA("ui", () => {
 	let e = /* @__PURE__ */ M(!1), t = /* @__PURE__ */ M("home"), n = /* @__PURE__ */ M(!1), r = /* @__PURE__ */ M("wide");
 	function i(e) {
 		t.value = e;
@@ -29845,8 +29852,8 @@ var qA = SA("downloads", () => {
 		layout: r,
 		go: i
 	};
-}), YA = SA("modal", () => {
-	let e = /* @__PURE__ */ Nr([]), t = /* @__PURE__ */ Nr("forward"), n = JA(), r = /* @__PURE__ */ M(null), i = K(() => e.value.length > 0), a = K(() => e.value[e.value.length - 1]), o = K(() => e.value.length), s = K(() => e.value[0]?.variant ?? "dialog"), c = K(() => e.value.length > 0 && (s.value !== "sheet" || r.value === n.page));
+}), JA = xA("modal", () => {
+	let e = /* @__PURE__ */ Nr([]), t = /* @__PURE__ */ Nr("forward"), n = qA(), r = /* @__PURE__ */ M(null), i = K(() => e.value.length > 0), a = K(() => e.value[e.value.length - 1]), o = K(() => e.value.length), s = K(() => e.value[0]?.variant ?? "dialog"), c = K(() => e.value.length > 0 && (s.value !== "sheet" || r.value === n.page));
 	function l(e) {
 		e?.onLeave?.();
 	}
@@ -29925,8 +29932,8 @@ var qA = SA("downloads", () => {
 	};
 });
 // src/ui/kit/choice.ts
-function XA(e, t) {
-	let n = YA();
+function YA(e, t) {
+	let n = JA();
 	return new Promise((r) => {
 		let i = !1, a = {
 			key: e.key,
@@ -29944,18 +29951,18 @@ function XA(e, t) {
 	});
 }
 // src/ui/kit/ConfirmPage.vue?vue&type=script&setup=true&lang.ts
-var gre = {
+var _re = {
 	class: "trpg-confirm",
 	"data-testid": "confirm-page"
-}, _re = { class: "trpg-confirm__message" }, vre = {
+}, vre = { class: "trpg-confirm__message" }, yre = {
 	key: 0,
 	class: "trpg-confirm__scroll",
 	"data-testid": "confirm-details",
 	tabindex: "0"
-}, yre = {
+}, bre = {
 	key: 0,
 	class: "trpg-confirm__details"
-}, bre = ["data-tone"], xre = { class: "trpg-confirm__h" }, Sre = { class: "trpg-confirm__details" }, Cre = { class: "trpg-confirm__actions" }, wre = ["data-autofocus"], Tre = ["data-autofocus"], Ere = /* @__PURE__ */ I({
+}, xre = ["data-tone"], Sre = { class: "trpg-confirm__h" }, Cre = { class: "trpg-confirm__details" }, wre = { class: "trpg-confirm__actions" }, Tre = ["data-autofocus"], Ere = ["data-autofocus"], Dre = /* @__PURE__ */ I({
 	__name: "ConfirmPage",
 	props: {
 		message: {},
@@ -29968,32 +29975,32 @@ var gre = {
 	},
 	setup(e) {
 		let t = e;
-		return (e, n) => (z(), B("div", gre, [
-			H("p", _re, j(t.message), 1),
-			t.details?.length || t.sections?.length ? (z(), B("div", vre, [t.details?.length ? (z(), B("ul", yre, [(z(!0), B(R, null, L(t.details, (e) => (z(), B("li", { key: e }, j(e), 1))), 128))])) : G("", !0), (z(!0), B(R, null, L(t.sections, (e) => (z(), B("section", {
+		return (e, n) => (z(), B("div", _re, [
+			H("p", vre, j(t.message), 1),
+			t.details?.length || t.sections?.length ? (z(), B("div", yre, [t.details?.length ? (z(), B("ul", bre, [(z(!0), B(R, null, L(t.details, (e) => (z(), B("li", { key: e }, j(e), 1))), 128))])) : G("", !0), (z(!0), B(R, null, L(t.sections, (e) => (z(), B("section", {
 				key: e.title,
 				class: "trpg-confirm__section",
 				"data-tone": e.tone ?? "info"
-			}, [H("h4", xre, [W(j(e.title), 1), H("small", null, j(e.items.length), 1)]), H("ul", Sre, [(z(!0), B(R, null, L(e.items, (e, t) => (z(), B("li", { key: t }, j(e), 1))), 128))])], 8, bre))), 128))])) : G("", !0),
-			H("div", Cre, [H("button", {
+			}, [H("h4", Sre, [W(j(e.title), 1), H("small", null, j(e.items.length), 1)]), H("ul", Cre, [(z(!0), B(R, null, L(e.items, (e, t) => (z(), B("li", { key: t }, j(e), 1))), 128))])], 8, xre))), 128))])) : G("", !0),
+			H("div", wre, [H("button", {
 				class: "trpg-btn",
 				type: "button",
 				"data-autofocus": t.danger ? "" : void 0,
 				onClick: n[0] ||= (e) => t.onAnswer(!1)
-			}, j(t.cancelLabel ?? "取消"), 9, wre), H("button", {
+			}, j(t.cancelLabel ?? "取消"), 9, Tre), H("button", {
 				class: Rt(["trpg-btn", t.danger ? "trpg-btn--danger" : "trpg-btn--primary"]),
 				type: "button",
 				"data-autofocus": t.danger ? void 0 : "",
 				onClick: n[1] ||= (e) => t.onAnswer(!0)
-			}, j(t.confirmLabel), 11, Tre)])
+			}, j(t.confirmLabel), 11, Ere)])
 		]));
 	}
-}), Dre = 0;
-function ZA(e) {
-	return XA({
-		key: `confirm:${++Dre}`,
+}), Ore = 0;
+function XA(e) {
+	return YA({
+		key: `confirm:${++Ore}`,
 		title: e.title,
-		component: kr(Ere),
+		component: kr(Dre),
 		props: (t) => ({
 			...e,
 			onAnswer: t
@@ -30001,7 +30008,7 @@ function ZA(e) {
 	}, !1);
 }
 // src/stores/roster.ts
-var QA = [
+var ZA = [
 	{
 		id: "party",
 		label: "队伍"
@@ -30014,14 +30021,14 @@ var QA = [
 		id: "enemy",
 		label: "敌人"
 	}
-], $A = [{
+], QA = [{
 	id: "manual",
 	label: "手动"
 }, {
 	id: "name",
 	label: "名字"
-}], Ore = (e) => QA.some((t) => t.id === e), ej = (e) => Ore(e.adjustments.category) ? e.adjustments.category : e.type === "character" || e.type === null ? "party" : "npc", tj = (e) => e.adjustments.trashed === !0, nj = (e) => e.adjustments.pinned === !0, kre = (e) => Array.isArray(e.adjustments.tags) ? e.adjustments.tags.map(String) : [], rj = SA("people", () => {
-	let e = CA(), t = wA(), n = HA(), r = /* @__PURE__ */ Nr([]), i = /* @__PURE__ */ Nr({}), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(null), c = /* @__PURE__ */ M("party"), l = /* @__PURE__ */ M("manual"), u = /* @__PURE__ */ M(""), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M([]), p = null, m = () => t.owner?.ownerKey ?? null, h = () => `${m() ?? ""}|${t.workspace?.currentSaveId ?? ""}`, g = () => e.svc().backend.people;
+}], kre = (e) => ZA.some((t) => t.id === e), $A = (e) => kre(e.adjustments.category) ? e.adjustments.category : e.type === "character" || e.type === null ? "party" : "npc", ej = (e) => e.adjustments.trashed === !0, tj = (e) => e.adjustments.pinned === !0, Are = (e) => Array.isArray(e.adjustments.tags) ? e.adjustments.tags.map(String) : [], nj = xA("people", () => {
+	let e = SA(), t = CA(), n = VA(), r = /* @__PURE__ */ Nr([]), i = /* @__PURE__ */ Nr({}), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(null), c = /* @__PURE__ */ M("party"), l = /* @__PURE__ */ M("manual"), u = /* @__PURE__ */ M(""), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M([]), p = null, m = () => t.owner?.ownerKey ?? null, h = () => `${m() ?? ""}|${t.workspace?.currentSaveId ?? ""}`, g = () => e.svc().backend.people;
 	function _() {
 		if (p) return p;
 		let e = m();
@@ -30048,29 +30055,29 @@ var QA = [
 			o.value = e instanceof Error ? e.message : String(e);
 		}
 	}
-	let b = K(() => r.value.filter((e) => !tj(e))), x = K(() => r.value.filter(tj)), S = K(() => ({
+	let b = K(() => r.value.filter((e) => !ej(e))), x = K(() => r.value.filter(ej)), S = K(() => ({
 		all: b.value.length,
 		trash: x.value.length,
-		...Object.fromEntries(QA.map((e) => [e.id, b.value.filter((t) => ej(t) === e.id).length]))
+		...Object.fromEntries(ZA.map((e) => [e.id, b.value.filter((t) => $A(t) === e.id).length]))
 	})), C = (e, t) => !t || [
 		e.name,
 		e.race ?? "",
 		e.background ?? "",
 		...e.classes.map((e) => e.name),
-		...kre(e)
+		...Are(e)
 	].some((e) => e.toLowerCase().includes(t)), w = (e) => {
 		let t = l.value === "name" ? [...e].sort((e, t) => e.name.localeCompare(t.name, "zh")) : e;
-		return [...t.filter(nj), ...t.filter((e) => !nj(e))];
+		return [...t.filter(tj), ...t.filter((e) => !tj(e))];
 	}, T = K(() => {
 		let e = u.value.trim().toLowerCase();
 		if (c.value === "trash") return w(x.value.filter((t) => C(t, e)));
 		let t = b.value.filter((t) => C(t, e));
-		return w(c.value === "all" ? t : t.filter((e) => ej(e) === c.value));
+		return w(c.value === "all" ? t : t.filter((e) => $A(e) === c.value));
 	}), E = K(() => {
 		let e = u.value.trim().toLowerCase();
-		return !e || c.value === "all" || c.value === "trash" || T.value.length ? null : QA.map((t) => ({
+		return !e || c.value === "all" || c.value === "trash" || T.value.length ? null : ZA.map((t) => ({
 			...t,
-			n: b.value.filter((n) => ej(n) === t.id && C(n, e)).length
+			n: b.value.filter((n) => $A(n) === t.id && C(n, e)).length
 		})).find((e) => e.id !== c.value && e.n > 0) ?? null;
 	});
 	function D(e) {
@@ -30107,7 +30114,7 @@ var QA = [
 		}
 		return await y(), n.undoable(e, () => ne(r)), !0;
 	}
-	let ie = (e) => e.length === 1 ? `「${r.value.find((t) => t.id === e[0])?.name ?? ""}」` : `${e.length} 个人物`, ae = (e, t) => re(`已把${ie(e)}移到${QA.find((e) => e.id === t)?.label}`, 1, async (n) => {
+	let ie = (e) => e.length === 1 ? `「${r.value.find((t) => t.id === e[0])?.name ?? ""}」` : `${e.length} 个人物`, ae = (e, t) => re(`已把${ie(e)}移到${ZA.find((e) => e.id === t)?.label}`, 1, async (n) => {
 		await g().adjust(n, e, { category: t });
 	}), oe = (e, t) => re(`${t ? "已置顶" : "已取消置顶"}${ie(e)}`, 1, async (n) => {
 		await g().adjust(n, e, { pinned: t ? !0 : null });
@@ -30155,7 +30162,7 @@ var QA = [
 		e && g().stopNative(e);
 	}
 	async function me(e) {
-		return await ZA({
+		return await XA({
 			title: "彻底删除",
 			message: `彻底删除${ie(e)}？删除后不在回收站里，只能用提示条的「撤销」马上找回。`,
 			confirmLabel: "彻底删除",
@@ -30196,8 +30203,8 @@ var QA = [
 		copy: ce,
 		purge: me
 	};
-}), ij = SA("saves", () => {
-	let e = CA(), t = wA(), n = /* @__PURE__ */ Nr(null), r = /* @__PURE__ */ Nr([]), i = /* @__PURE__ */ M([]), a = /* @__PURE__ */ M([]), o = /* @__PURE__ */ M([]), s = /* @__PURE__ */ M(!1), c = 0;
+}), rj = xA("saves", () => {
+	let e = SA(), t = CA(), n = /* @__PURE__ */ Nr(null), r = /* @__PURE__ */ Nr([]), i = /* @__PURE__ */ M([]), a = /* @__PURE__ */ M([]), o = /* @__PURE__ */ M([]), s = /* @__PURE__ */ M(!1), c = 0;
 	async function l() {
 		let r = ++c, i = t.workspace, a = i ? await e.svc().campaign.getCampaignView(i.ownerKey, i.ruleId) : null;
 		r === c && (n.value = a);
@@ -30252,11 +30259,11 @@ var QA = [
 	};
 });
 // src/ui/shell/boot.ts
-async function Are(e, t) {
-	let n = CA(t), r = HA(t), i = wA(t), a = VA(t), o = qA(t), s = ij(t), c = rj(t);
+async function jre(e, t) {
+	let n = SA(t), r = VA(t), i = CA(t), a = BA(t), o = KA(t), s = rj(t), c = nj(t);
 	try {
-		let e = Gk();
-		n.setServices(e), await e.backend.library.ready, await pne(e.db), await n.refreshBackup();
+		let e = Wk();
+		n.setServices(e), await e.backend.library.ready, await mne(e.db), await n.refreshBackup();
 		let t = l(ze());
 		await i.init(e, t), a.setOwner(t?.ownerKey ?? null), n.booted = !0;
 	} catch (e) {
@@ -30280,7 +30287,7 @@ async function Are(e, t) {
 		})().catch((e) => {
 			console.error("[trpg-assistant] 结算内核启动失败", e), r.error(`结算内核启动失败：${e instanceof Error ? e.message : String(e)}`);
 		});
-	}, g = gne(n.svc().backend.library.prefetch);
+	}, g = _ne(n.svc().backend.library.prefetch);
 	h();
 	let _ = F(() => [
 		i.owner?.ownerKey ?? "",
@@ -30299,7 +30306,7 @@ async function Are(e, t) {
 	};
 }
 // src/stores/banners.ts
-var aj = SA("banners", () => {
+var ij = xA("banners", () => {
 	let e = /* @__PURE__ */ Nr([]), t = 1;
 	function n() {
 		return t++;
@@ -30317,7 +30324,7 @@ var aj = SA("banners", () => {
 		set: r,
 		remove: i
 	};
-}), jre = {
+}), Mre = {
 	user: "<path d=\"M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.51-31.9,48-50.59,80.57-50.59s62.06,18.69,80.57,50.59a8,8,0,0,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z\"/>",
 	users: "<path d=\"M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z\"/>",
 	tag: "<path d=\"M243.31,136,144,36.69A15.86,15.86,0,0,0,132.69,32H40a8,8,0,0,0-8,8v92.69A15.86,15.86,0,0,0,36.69,144L136,243.31a16,16,0,0,0,22.63,0l84.68-84.68a16,16,0,0,0,0-22.63Zm-96,96L48,132.69V48h84.69L232,147.31ZM96,84A12,12,0,1,1,84,72,12,12,0,0,1,96,84Z\"/>",
@@ -30367,7 +30374,7 @@ var aj = SA("banners", () => {
 	image: "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z\"/>",
 	"list-bullets": "<path d=\"M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z\"/>",
 	table: "<path d=\"M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM40,112H80v32H40Zm56,0H216v32H96ZM216,64V96H40V64ZM40,160H80v32H40Zm176,32H96V160H216v32Z\"/>"
-}, Mre = [
+}, Nre = [
 	"width",
 	"height",
 	"innerHTML"
@@ -30378,7 +30385,7 @@ var aj = SA("banners", () => {
 		size: {}
 	},
 	setup(e) {
-		let t = e, n = K(() => jre[t.name] ?? ""), r = K(() => `${t.size ?? 18}px`);
+		let t = e, n = K(() => Mre[t.name] ?? ""), r = K(() => `${t.size ?? 18}px`);
 		return (e, t) => (z(), B("svg", {
 			class: "trpg-icon",
 			viewBox: "0 0 256 256",
@@ -30388,15 +30395,15 @@ var aj = SA("banners", () => {
 			width: r.value,
 			height: r.value,
 			innerHTML: n.value
-		}, null, 8, Mre));
+		}, null, 8, Nre));
 	}
-}), Nre = {
+}), Pre = {
 	class: "lib-mbody",
 	"data-testid": "error-detail"
-}, Pre = { class: "lib-dbody" }, Fre = {
+}, Fre = { class: "lib-dbody" }, Ire = {
 	class: "lib-muted",
 	style: { margin: "0" }
-}, Ire = { class: "lib-errdetail" }, Lre = /* @__PURE__ */ I({
+}, Lre = { class: "lib-errdetail" }, Rre = /* @__PURE__ */ I({
 	__name: "ErrorDetailPage",
 	props: {
 		text: {},
@@ -30405,11 +30412,11 @@ var aj = SA("banners", () => {
 	setup(e) {
 		let t = e, n = /* @__PURE__ */ M("idle");
 		async function r() {
-			n.value = await EA(t.text) ? "ok" : "fail";
+			n.value = await TA(t.text) ? "ok" : "fail";
 		}
-		return (t, i) => (z(), B("div", Nre, [H("div", Pre, [
-			H("p", Fre, j(e.what ? `${e.what}时的原始报错` : "原始报错") + "。可以复制下来发给开发者；同一份也记在 设置 → 库 → 日志。", 1),
-			H("pre", Ire, j(e.text), 1),
+		return (t, i) => (z(), B("div", Pre, [H("div", Fre, [
+			H("p", Ire, j(e.what ? `${e.what}时的原始报错` : "原始报错") + "。可以复制下来发给开发者；同一份也记在 设置 → 库 → 日志。", 1),
+			H("pre", Lre, j(e.text), 1),
 			H("div", null, [H("button", {
 				class: "trpg-btn trpg-btn--small",
 				type: "button",
@@ -30420,38 +30427,38 @@ var aj = SA("banners", () => {
 			}), W(j(n.value === "ok" ? "已复制" : n.value === "fail" ? "没能复制，请手动选中" : "复制"), 1)])])
 		])]));
 	}
-}), oj = /(Error\b|Exception|@\S+:\d+|\bat \S|https?:\/\/|\.js\b|\.json\b|tauri:|\n)/;
-function sj(e, t = 80) {
+}), aj = /(Error\b|Exception|@\S+:\d+|\bat \S|https?:\/\/|\.js\b|\.json\b|tauri:|\n)/;
+function oj(e, t = 80) {
 	let n = String(e ?? "").trim();
 	if (!n) return "原因未知";
 	let r = n.split("："), i = [];
 	for (let e of r) {
-		if (oj.test(e) && i.length) break;
-		i.push(oj.test(e) ? e.split("\n")[0].replace(/^(\w*Error|Exception):\s*/, "") : e);
+		if (aj.test(e) && i.length) break;
+		i.push(aj.test(e) ? e.split("\n")[0].replace(/^(\w*Error|Exception):\s*/, "") : e);
 	}
 	let a = i.join("：").replace(/\s+/g, " ").trim();
 	return a.length > t ? `${a.slice(0, t)}…` : a || "原因未知";
 }
-var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
+var zre = (e) => !!e && oj(e, 1e4) !== String(e).trim(), Bre = {
 	key: 0,
 	class: "trpg-toasts__banners",
 	"data-testid": "download-banners"
-}, Bre = ["data-testid"], Vre = ["title"], Hre = ["onClick"], Ure = ["data-testid", "onClick"], Wre = ["onClick"], Gre = ["aria-expanded"], Kre = [
+}, Vre = ["data-testid"], Hre = ["title"], Ure = ["onClick"], Wre = ["data-testid", "onClick"], Gre = ["onClick"], Kre = ["aria-expanded"], qre = [
 	"data-kind",
 	"onClick",
 	"onPointerenter",
 	"onPointerleave",
 	"onFocusin",
 	"onFocusout"
-], qre = { class: "trpg-toast__text" }, Jre = ["onClick"], Yre = ["onClick"], Xre = { key: 3 }, Zre = /* @__PURE__ */ I({
+], Jre = { class: "trpg-toast__text" }, Yre = ["onClick"], Xre = ["onClick"], Zre = { key: 3 }, Qre = /* @__PURE__ */ I({
 	__name: "ToastHost",
 	setup(e) {
-		let t = HA(), n = aj(), r = YA(), i = /* @__PURE__ */ M(!1), a = K(() => [...n.banners].sort((e, t) => t.id - e.id)), o = K(() => i.value ? a.value : a.value.slice(0, 1)), s = 0;
+		let t = VA(), n = ij(), r = JA(), i = /* @__PURE__ */ M(!1), a = K(() => [...n.banners].sort((e, t) => t.id - e.id)), o = K(() => i.value ? a.value : a.value.slice(0, 1)), s = 0;
 		function c(e) {
 			r.push({
 				key: `error-detail:${++s}:${r.depth}`,
 				title: "出错详情",
-				component: Lre,
+				component: Rre,
 				props: {
 					text: e.text,
 					what: e.what
@@ -30480,7 +30487,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 		}), mo(() => window.removeEventListener("resize", d)), (e, n) => (z(), B("div", {
 			class: "trpg-toasts",
 			style: Nt({ "--trpg-host-top": `${u.value}px` })
-		}, [a.value.length ? (z(), B("div", zre, [U(Cu, { name: "trpg-toast" }, {
+		}, [a.value.length ? (z(), B("div", Bre, [U(Cu, { name: "trpg-toast" }, {
 			default: P(() => [(z(!0), B(R, null, L(o.value, (e) => (z(), B("div", {
 				key: e.id,
 				class: "trpg-toast trpg-toast--banner",
@@ -30495,21 +30502,21 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 				H("span", {
 					class: "trpg-toast__text",
 					title: e.text
-				}, j(N(sj)(e.text)), 9, Vre),
-				N(Rre)(e.text) ? (z(), B("button", {
+				}, j(N(oj)(e.text)), 9, Hre),
+				N(zre)(e.text) ? (z(), B("button", {
 					key: 0,
 					class: "trpg-toast__btn",
 					type: "button",
 					"data-testid": "error-detail-open",
 					onClick: (t) => c(e)
-				}, "详情", 8, Hre)) : G("", !0),
+				}, "详情", 8, Ure)) : G("", !0),
 				(z(!0), B(R, null, L(e.actions, (e) => (z(), B("button", {
 					key: e.label,
 					class: "trpg-toast__btn",
 					type: "button",
 					"data-testid": e.testid,
 					onClick: (t) => e.run()
-				}, j(e.label), 9, Ure))), 128)),
+				}, j(e.label), 9, Wre))), 128)),
 				e.dismiss ? (z(), B("button", {
 					key: 1,
 					class: "trpg-toast__btn",
@@ -30519,8 +30526,8 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 				}, [U(Y, {
 					name: "x",
 					size: 14
-				})], 8, Wre)) : G("", !0)
-			], 8, Bre))), 128))]),
+				})], 8, Gre)) : G("", !0)
+			], 8, Vre))), 128))]),
 			_: 1
 		}), a.value.length > 1 ? (z(), B("button", {
 			key: 0,
@@ -30533,7 +30540,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 		}, [U(Y, {
 			name: i.value ? "minus" : "caret-down",
 			size: 14
-		}, null, 8, ["name"]), W(j(i.value ? "收起" : `还有 ${a.value.length - 1} 条提示`), 1)], 8, Gre)) : G("", !0)])) : G("", !0), U(Cu, {
+		}, null, 8, ["name"]), W(j(i.value ? "收起" : `还有 ${a.value.length - 1} 条提示`), 1)], 8, Kre)) : G("", !0)])) : G("", !0), U(Cu, {
 			name: "trpg-toast",
 			tag: "div",
 			class: "trpg-toasts__list",
@@ -30559,25 +30566,25 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 					name: "check-circle",
 					size: 16
 				})) : G("", !0),
-				H("span", qre, j(e.message), 1),
+				H("span", Jre, j(e.message), 1),
 				e.undo ? (z(), B("button", {
 					key: 2,
 					class: "trpg-toast__btn",
 					type: "button",
 					onClick: ed((n) => N(t).runUndo(e.id), ["stop"])
-				}, "撤销", 8, Jre)) : G("", !0),
+				}, "撤销", 8, Yre)) : G("", !0),
 				(z(!0), B(R, null, L(e.actions ?? [], (n, r) => (z(), B("button", {
 					key: r,
 					class: "trpg-toast__btn",
 					type: "button",
 					onClick: ed((r) => N(t).runAction(e.id, n), ["stop"])
-				}, j(n.label), 9, Yre))), 128)),
-				!e.undo && !e.actions?.length ? (z(), B("small", Xre, "点击关闭")) : G("", !0)
-			], 40, Kre))), 128))]),
+				}, j(n.label), 9, Xre))), 128)),
+				!e.undo && !e.actions?.length ? (z(), B("small", Zre, "点击关闭")) : G("", !0)
+			], 40, qre))), 128))]),
 			_: 1
 		})], 4));
 	}
-}), cj = SA("library", () => {
+}), sj = xA("library", () => {
 	let e = /* @__PURE__ */ Nr(null), n = /* @__PURE__ */ M(!1), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ Nr([]), a = (e) => t.find((t) => t.kind === "brew" && t.codeSet === e)?.id ?? null, o = /* @__PURE__ */ M(!1), s = /* @__PURE__ */ Nr(null), c = /* @__PURE__ */ M(null), l = 0;
 	async function u(e) {
 		let t = ++l;
@@ -30596,7 +30603,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 		try {
 			let c = t.backend.kernelSave, l = null;
 			a && await c.read(a) && (l = await c.libraryOf(a));
-			let u = l ?? x(t.rules.list()[0]?.id ?? "dnd5e2014", Rv[0]), d = await t.backend.library.scoped.shelf(u, void 0, { allDownloads: !0 }), f = !await t.backend.library.service.officialInstalled(u.codeSet);
+			let u = l ?? x(t.rules.list()[0]?.id ?? "dnd5e2014", Lv[0]), d = await t.backend.library.scoped.shelf(u, void 0, { allDownloads: !0 }), f = !await t.backend.library.service.officialInstalled(u.codeSet);
 			if (s !== p) return;
 			o.value = f, n.value = !!l, e.value = u, r.value = d, i.value = d.minePacks;
 		} catch (e) {
@@ -30606,7 +30613,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 		}
 	}
 	function h(e) {
-		let t = wA();
+		let t = CA();
 		return m(e, t.hasCampaign ? t.owner?.ownerKey ?? null : null);
 	}
 	async function g(e, t, n, r) {
@@ -30641,7 +30648,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 		refresh: h,
 		toggleSource: g
 	};
-}), Qre = { hidden: "" }, lj = /* @__PURE__ */ I({
+}), $re = { hidden: "" }, cj = /* @__PURE__ */ I({
 	inheritAttrs: !1,
 	__name: "ErrorBanner",
 	props: {
@@ -30652,7 +30659,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 	},
 	emits: ["dismiss"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = Uo(), a = aj(), o = a.add();
+		let n = e, r = t, i = Uo(), a = ij(), o = a.add();
 		return F(() => {
 			let e = i["data-testid"];
 			return {
@@ -30663,13 +30670,13 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 				...n.dismissible ? { dismiss: () => r("dismiss") } : {},
 				...typeof e == "string" ? { testid: e } : {}
 			};
-		}, (e) => a.set(e), { immediate: !0 }), mo(() => a.remove(o)), (e, t) => (z(), B("span", Qre));
+		}, (e) => a.set(e), { immediate: !0 }), mo(() => a.remove(o)), (e, t) => (z(), B("span", $re));
 	}
-}), $re = /* @__PURE__ */ I({
+}), eie = /* @__PURE__ */ I({
 	__name: "DownloadBanners",
 	props: { libraryOpen: { type: Boolean } },
 	setup(e) {
-		let t = CA(), n = e, r = qA(), i = UA(), a = cj();
+		let t = SA(), n = e, r = KA(), i = HA(), a = sj();
 		function o(e) {
 			let n = r.retryOf(e);
 			if (n) return n;
@@ -30730,7 +30737,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 				};
 			})
 		]);
-		return (e, t) => (z(!0), B(R, null, L(c.value, (e) => (z(), V(lj, {
+		return (e, t) => (z(!0), B(R, null, L(c.value, (e) => (z(), V(cj, {
 			key: e.key,
 			text: e.text,
 			what: e.what,
@@ -30747,19 +30754,19 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 			"onDismiss"
 		]))), 128));
 	}
-}), eie = {
+}), tie = {
 	class: "trpg-die",
 	viewBox: "0 0 100 100",
 	"aria-hidden": "true",
 	focusable: "false"
-}, tie = {
+}, nie = {
 	key: 0,
 	points: "50,8 94,86 6,86"
-}, nie = {
+}, rie = {
 	key: 1,
 	class: "trpg-die__body",
 	d: "M24 14h52a10 10 0 0 1 10 10v52a10 10 0 0 1-10 10H24a10 10 0 0 1-10-10V24a10 10 0 0 1 10-10z"
-}, rie = ["y", "font-size"], uj = /* @__PURE__ */ I({
+}, iie = ["y", "font-size"], lj = /* @__PURE__ */ I({
 	__name: "DieIcon",
 	props: {
 		sides: {},
@@ -30775,7 +30782,7 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 			20,
 			100
 		].find((e) => t.sides <= e) ?? 100), r = K(() => t.value === void 0 ? "" : String(t.value)), i = K(() => r.value.length >= 3 ? 24 : r.value.length === 2 ? 32 : 38), a = K(() => n.value === 4 ? 64 : 53);
-		return (e, t) => (z(), B("svg", eie, [n.value === 4 ? (z(), B("polygon", tie)) : n.value === 6 ? (z(), B("path", nie)) : n.value === 8 ? (z(), B(R, { key: 2 }, [t[0] ||= H("polygon", { points: "50,6 92,50 50,94 8,50" }, null, -1), t[1] ||= H("path", {
+		return (e, t) => (z(), B("svg", tie, [n.value === 4 ? (z(), B("polygon", nie)) : n.value === 6 ? (z(), B("path", rie)) : n.value === 8 ? (z(), B(R, { key: 2 }, [t[0] ||= H("polygon", { points: "50,6 92,50 50,94 8,50" }, null, -1), t[1] ||= H("path", {
 			class: "trpg-die__facet",
 			d: "M8 50h84"
 		}, null, -1)], 64)) : n.value === 10 || n.value === 100 ? (z(), B(R, { key: 3 }, [t[2] ||= H("polygon", { points: "50,5 91,38 50,95 9,38" }, null, -1), t[3] ||= H("path", {
@@ -30794,11 +30801,11 @@ var Rre = (e) => !!e && sj(e, 1e4) !== String(e).trim(), zre = {
 			"font-size": i.value,
 			"text-anchor": "middle",
 			"dominant-baseline": "central"
-		}, j(r.value), 9, rie)) : G("", !0)]));
+		}, j(r.value), 9, iie)) : G("", !0)]));
 	}
 });
 // src/ui/shell/storage.ts
-function dj(e, t) {
+function uj(e, t) {
 	try {
 		let n = localStorage.getItem(e);
 		if (!n) return t;
@@ -30808,7 +30815,7 @@ function dj(e, t) {
 		return console.warn("[trpg-assistant] 读取窗口位置失败", e), t;
 	}
 }
-function fj(e, t) {
+function dj(e, t) {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch (e) {
@@ -30816,10 +30823,10 @@ function fj(e, t) {
 	}
 }
 // src/ui/shell/useDrag.ts
-function pj(e, t, n) {
+function fj(e, t, n) {
 	return Math.min(Math.max(e, t), Math.max(t, n));
 }
-function mj(e) {
+function pj(e) {
 	let t = e.threshold ?? 5;
 	function n(n) {
 		if (n.button !== 0) return;
@@ -30833,8 +30840,8 @@ function mj(e) {
 			c = !0;
 			let { w: l, h: u } = e.size();
 			e.position.value = {
-				x: (typeof e.lockX == "function" ? e.lockX() : e.lockX) ? s.x : pj(s.x + r, 0, window.innerWidth - l),
-				y: pj(s.y + i, 0, window.innerHeight - u - (e.bottomGap?.() ?? 0))
+				x: (typeof e.lockX == "function" ? e.lockX() : e.lockX) ? s.x : fj(s.x + r, 0, window.innerWidth - l),
+				y: fj(s.y + i, 0, window.innerHeight - u - (e.bottomGap?.() ?? 0))
 			};
 		}, u = (t) => {
 			i.removeEventListener("pointermove", l), i.removeEventListener("pointerup", u), i.removeEventListener("pointercancel", u), i.hasPointerCapture(t.pointerId) && i.releasePointerCapture(t.pointerId), c ? e.onEnd?.() : e.onTap?.();
@@ -30844,58 +30851,58 @@ function mj(e) {
 	return { onPointerDown: n };
 }
 // src/ui/shell/DiceTray.vue?vue&type=script&setup=true&lang.ts
-var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "trpg-dice__main" }, sie = { class: "trpg-dice__body" }, cie = { class: "trpg-dice__row" }, lie = [
+var aie = ["data-narrow"], oie = { class: "trpg-dice__shell" }, sie = { class: "trpg-dice__main" }, cie = { class: "trpg-dice__body" }, lie = { class: "trpg-dice__row" }, uie = [
 	"value",
 	"aria-invalid",
 	"onKeydown"
-], uie = ["disabled"], die = {
+], die = ["disabled"], fie = {
 	class: "trpg-field__error trpg-dice__err",
 	role: "alert"
-}, fie = {
+}, pie = {
 	class: "trpg-dice__faces",
 	role: "group",
 	"aria-label": "骰子"
-}, pie = [
+}, mie = [
 	"data-n",
 	"aria-label",
 	"onClick"
-], mie = {
+], hie = {
 	key: 0,
 	class: "trpg-dice__cnt"
-}, hie = ["aria-label", "onClick"], gie = { class: "trpg-dice__adjust" }, _ie = {
+}, gie = ["aria-label", "onClick"], _ie = { class: "trpg-dice__adjust" }, vie = {
 	class: "trpg-dice__step",
 	role: "group",
 	"aria-label": "加减值"
-}, vie = { "data-testid": "dice-mod" }, yie = [
+}, yie = { "data-testid": "dice-mod" }, bie = [
 	"disabled",
 	"aria-pressed",
 	"onClick"
-], bie = {
+], xie = {
 	class: "trpg-dice__small",
 	"data-testid": "dice-hint"
-}, xie = ["disabled", "title"], Sie = {
+}, Sie = ["disabled", "title"], Cie = {
 	class: "trpg-dice__result",
 	"aria-label": "结果",
 	"aria-live": "polite"
-}, Cie = {
+}, wie = {
 	class: "trpg-dice__line",
 	"data-testid": "dice-line"
-}, wie = ["data-tone"], Tie = {
+}, Tie = ["data-tone"], Eie = {
 	class: "trpg-sr-only",
 	"data-testid": "dice-total"
-}, Eie = { class: "trpg-dice__minis" }, Die = {
+}, Die = { class: "trpg-dice__minis" }, Oie = {
 	key: 0,
 	class: "trpg-dice__const"
-}, Oie = ["title"], kie = { class: "trpg-dice__send" }, Aie = ["value"], jie = ["disabled"], Mie = ["disabled"], Nie = { "aria-label": "最近记录" }, Pie = ["aria-expanded"], Fie = {
+}, kie = ["title"], Aie = { class: "trpg-dice__send" }, jie = ["value"], Mie = ["disabled"], Nie = ["disabled"], Pie = { "aria-label": "最近记录" }, Fie = ["aria-expanded"], Iie = {
 	key: 0,
 	class: "trpg-dice__list"
-}, Iie = ["aria-label", "onClick"], Lie = {
+}, Lie = ["aria-label", "onClick"], Rie = {
 	key: 1,
 	class: "trpg-dice__clear"
-}, Rie = /* @__PURE__ */ I({
+}, zie = /* @__PURE__ */ I({
 	__name: "DiceTray",
 	setup(e) {
-		let t = (e) => e.dice.reduce((e, t) => Math.max(e, t.sides), 0), n = JA(), r = VA(), i = [
+		let t = (e) => e.dice.reduce((e, t) => Math.max(e, t.sides), 0), n = qA(), r = BA(), i = [
 			{
 				value: "adv",
 				label: "优势"
@@ -30908,7 +30915,7 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 				value: "dis",
 				label: "劣势"
 			}
-		], a = typeof matchMedia == "function" && matchMedia("(prefers-reduced-motion: reduce)").matches, o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(window.innerWidth), c = /* @__PURE__ */ M(window.innerHeight), l = K(() => s.value <= 480), u = /* @__PURE__ */ M(dj("trpg-assistant:dice", {
+		], a = typeof matchMedia == "function" && matchMedia("(prefers-reduced-motion: reduce)").matches, o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(window.innerWidth), c = /* @__PURE__ */ M(window.innerHeight), l = K(() => s.value <= 480), u = /* @__PURE__ */ M(uj("trpg-assistant:dice", {
 			x: Math.max(8, window.innerWidth - 384),
 			y: Math.max(8, window.innerHeight - 700)
 		})), d = /* @__PURE__ */ M(!1), f = () => l.value ? 64 : 0, p = () => ({
@@ -30923,12 +30930,12 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 				y: Math.min(Math.max(u.value.y, 0), Math.max(0, c.value - t - f()))
 			};
 		}
-		let h = mj({
+		let h = pj({
 			position: u,
 			size: p,
 			lockX: () => l.value,
 			bottomGap: f,
-			onEnd: () => fj("trpg-assistant:dice", u.value)
+			onEnd: () => dj("trpg-assistant:dice", u.value)
 		}), g = K(() => l.value ? {
 			left: "4vw",
 			width: "92vw",
@@ -30945,7 +30952,7 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 		let _ = /* @__PURE__ */ M(!1), v = /* @__PURE__ */ M(null), y = /* @__PURE__ */ M(20), b;
 		async function x() {
 			if (_.value || !r.canRoll) return;
-			let e = v.value, n = LA(t(r.builder)), i = Date.now();
+			let e = v.value, n = IA(t(r.builder)), i = Date.now();
 			_.value = !0, v.value = null, a || (y.value = Math.ceil(Math.random() * n), b = setInterval(() => y.value = Math.ceil(Math.random() * n), 70));
 			let o = await r.roll(), s = () => {
 				clearInterval(b), _.value = !1, v.value = o ? o.id : e;
@@ -30955,7 +30962,7 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 		let S = K(() => r.last && r.lastResult && v.value === r.last.id ? {
 			rec: r.last,
 			result: r.lastResult
-		} : null), C = K(() => !S.value || _.value ? LA(t(r.builder)) : LA(Math.max(0, ...S.value.result.dice.map((e) => e.sides)))), w = K(() => r.history.filter((e) => !(_.value && e.id === r.last?.id))), T = K(() => {
+		} : null), C = K(() => !S.value || _.value ? IA(t(r.builder)) : IA(Math.max(0, ...S.value.result.dice.map((e) => e.sides)))), w = K(() => r.history.filter((e) => !(_.value && e.id === r.last?.id))), T = K(() => {
 			if (!S.value) return [];
 			let e = [];
 			return S.value.result.dice.forEach((t, n) => e.push({
@@ -31002,10 +31009,10 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 				name: "x",
 				size: 18
 			})])
-		], 32), H("div", aie, [H("div", oie, [H("div", sie, [
+		], 32), H("div", oie, [H("div", sie, [H("div", cie, [
 			H("div", null, [
 				t[13] ||= H("div", { class: "trpg-dice__lbl" }, [H("label", { for: "trpg-dice-formula" }, "骰式"), H("span", null, "点下面的骰子加进骰式，也可以直接写")], -1),
-				H("div", cie, [H("input", {
+				H("div", lie, [H("input", {
 					id: "trpg-dice-formula",
 					value: N(r).text,
 					class: "trpg-input trpg-dice__formula",
@@ -31016,42 +31023,42 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 					"aria-invalid": !!N(r).error,
 					onInput: te,
 					onKeydown: [t[2] ||= ed(() => {}, ["stop"]), nd(ed(x, ["prevent"]), ["enter"])]
-				}, null, 40, lie), H("button", {
+				}, null, 40, uie), H("button", {
 					class: "trpg-btn trpg-btn--quiet",
 					type: "button",
 					disabled: !N(r).text,
 					onClick: t[3] ||= (e) => N(r).clear()
-				}, "清空", 8, uie)]),
-				H("div", die, j(N(r).error), 1)
+				}, "清空", 8, die)]),
+				H("div", fie, j(N(r).error), 1)
 			]),
-			H("div", fie, [(z(!0), B(R, null, L(N(MA), (e) => (z(), B("div", {
+			H("div", pie, [(z(!0), B(R, null, L(N(jA), (e) => (z(), B("div", {
 				key: e,
 				class: "trpg-dice__face"
 			}, [H("button", {
 				class: "trpg-dice__die",
 				type: "button",
-				"data-n": N(IA)(N(r).builder, e),
-				"aria-label": `加一颗 d${e}${N(IA)(N(r).builder, e) ? `，现有 ${N(IA)(N(r).builder, e)} 颗` : ""}`,
+				"data-n": N(FA)(N(r).builder, e),
+				"aria-label": `加一颗 d${e}${N(FA)(N(r).builder, e) ? `，现有 ${N(FA)(N(r).builder, e)} 颗` : ""}`,
 				onClick: (t) => N(r).addOne(e)
 			}, [
-				U(uj, { sides: e }, null, 8, ["sides"]),
+				U(lj, { sides: e }, null, 8, ["sides"]),
 				H("span", null, "d" + j(e), 1),
-				N(IA)(N(r).builder, e) ? (z(), B("span", mie, "×" + j(N(IA)(N(r).builder, e)), 1)) : G("", !0)
-			], 8, pie), N(IA)(N(r).builder, e) ? (z(), B("button", {
+				N(FA)(N(r).builder, e) ? (z(), B("span", hie, "×" + j(N(FA)(N(r).builder, e)), 1)) : G("", !0)
+			], 8, mie), N(FA)(N(r).builder, e) ? (z(), B("button", {
 				key: 0,
 				class: "trpg-dice__minus",
 				type: "button",
 				"aria-label": `减一颗 d${e}`,
 				onClick: (t) => N(r).removeOne(e)
-			}, "−", 8, hie)) : G("", !0)]))), 128))]),
-			H("div", gie, [H("div", _ie, [
+			}, "−", 8, gie)) : G("", !0)]))), 128))]),
+			H("div", _ie, [H("div", vie, [
 				t[14] ||= H("span", { class: "trpg-dice__small" }, "加减值", -1),
 				H("button", {
 					type: "button",
 					"aria-label": "减 1",
 					onClick: t[4] ||= (e) => N(r).step(-1)
 				}, "−"),
-				H("output", vie, j(D.value), 1),
+				H("output", yie, j(D.value), 1),
 				H("button", {
 					type: "button",
 					"aria-label": "加 1",
@@ -31067,7 +31074,7 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 				disabled: !N(r).canMode,
 				"aria-pressed": (N(r).canMode ? N(r).mode : "normal") === e.value,
 				onClick: (t) => N(r).setMode(e.value)
-			}, j(e.label), 9, yie)), 64))], 2), H("div", bie, j(k.value), 1)])]),
+			}, j(e.label), 9, bie)), 64))], 2), H("div", xie, j(k.value), 1)])]),
 			H("button", {
 				class: "trpg-btn trpg-btn--primary trpg-dice__roll",
 				type: "button",
@@ -31078,8 +31085,8 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 			}, [U(Y, {
 				name: "dice-five",
 				size: 22
-			}), t[15] ||= W("掷骰", -1)], 8, xie),
-			H("section", Sie, [
+			}), t[15] ||= W("掷骰", -1)], 8, Sie),
+			H("section", Cie, [
 				H("div", {
 					class: Rt(["trpg-dice__hero", {
 						"is-rolling": _.value,
@@ -31087,25 +31094,25 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 						"is-nat1": S.value?.rec.natural === 1
 					}]),
 					"data-testid": "dice-hero"
-				}, [U(uj, {
+				}, [U(lj, {
 					sides: C.value,
 					value: _.value ? y.value : S.value?.rec.total
 				}, null, 8, ["sides", "value"])], 2),
-				H("div", Cie, [S.value ? (z(), B(R, { key: 0 }, [W(j(S.value.rec.line) + " ", 1), S.value.rec.natural ? (z(), B("span", {
+				H("div", wie, [S.value ? (z(), B(R, { key: 0 }, [W(j(S.value.rec.line) + " ", 1), S.value.rec.natural ? (z(), B("span", {
 					key: 0,
 					class: "trpg-badge",
 					"data-tone": S.value.rec.natural === 20 ? "gold" : "danger"
-				}, "天然 " + j(S.value.rec.natural), 9, wie)) : G("", !0)], 64)) : _.value ? G("", !0) : (z(), B(R, { key: 1 }, [W("点「掷骰」，结果会落在这里")], 64))]),
-				H("span", Tie, j(S.value?.rec.total), 1),
-				H("div", Eie, [(z(!0), B(R, null, L(T.value, (e) => (z(), B(R, { key: e.key }, [e.kind === "const" ? (z(), B("span", Die, j(E(e.value)), 1)) : (z(), B("span", {
+				}, "天然 " + j(S.value.rec.natural), 9, Tie)) : G("", !0)], 64)) : _.value ? G("", !0) : (z(), B(R, { key: 1 }, [W("点「掷骰」，结果会落在这里")], 64))]),
+				H("span", Eie, j(S.value?.rec.total), 1),
+				H("div", Die, [(z(!0), B(R, null, L(T.value, (e) => (z(), B(R, { key: e.key }, [e.kind === "const" ? (z(), B("span", Oie, j(E(e.value)), 1)) : (z(), B("span", {
 					key: 1,
 					class: Rt(["trpg-dice__mini", { "is-dim": e.dim }]),
 					title: e.dim ? "没有采用" : void 0
-				}, [U(uj, {
+				}, [U(lj, {
 					sides: e.sides,
 					value: e.value
-				}, null, 8, ["sides", "value"])], 10, Oie))], 64))), 128))]),
-				H("div", kie, [
+				}, null, 8, ["sides", "value"])], 10, kie))], 64))), 128))]),
+				H("div", Aie, [
 					H("input", {
 						value: N(r).note,
 						class: "trpg-input",
@@ -31115,22 +31122,22 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 						autocomplete: "off",
 						onInput: t[6] ||= (e) => N(r).setNote(e.target.value),
 						onKeydown: t[7] ||= ed(() => {}, ["stop"])
-					}, null, 40, Aie),
+					}, null, 40, jie),
 					H("button", {
 						class: "trpg-btn trpg-btn--primary",
 						type: "button",
 						disabled: !S.value,
 						onClick: t[8] ||= (e) => N(r).fill()
-					}, j(O.value), 9, jie),
+					}, j(O.value), 9, Mie),
 					H("button", {
 						class: "trpg-btn",
 						type: "button",
 						disabled: !S.value,
 						onClick: t[9] ||= (e) => N(r).copy()
-					}, j(N(r).copied ? "已复制 ✓" : "复制"), 9, Mie)
+					}, j(N(r).copied ? "已复制 ✓" : "复制"), 9, Nie)
 				])
 			]),
-			H("section", Nie, [H("button", {
+			H("section", Pie, [H("button", {
 				class: "trpg-dice__recent",
 				type: "button",
 				"aria-expanded": d.value,
@@ -31138,7 +31145,7 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 			}, [H("span", null, [W("最近 " + j(w.value.length) + " 次", 1), w.value.length ? (z(), B(R, { key: 0 }, [t[16] ||= W(" · 上一次 ", -1), H("b", null, j(w.value[0].total), 1)], 64)) : G("", !0)]), U(Y, {
 				name: d.value ? "caret-down" : "caret-right",
 				size: 14
-			}, null, 8, ["name"])], 8, Pie), d.value ? (z(), B(R, { key: 0 }, [w.value.length ? (z(), B("ul", Fie, [(z(!0), B(R, null, L(w.value, (e) => (z(), B("li", { key: e.id }, [H("button", {
+			}, null, 8, ["name"])], 8, Fie), d.value ? (z(), B(R, { key: 0 }, [w.value.length ? (z(), B("ul", Iie, [(z(!0), B(R, null, L(w.value, (e) => (z(), B("li", { key: e.id }, [H("button", {
 				type: "button",
 				"aria-label": `载入骰式 ${e.formula}`,
 				onClick: (t) => ne(e)
@@ -31146,39 +31153,39 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 				H("b", null, j(e.total), 1),
 				H("span", null, [W(j(e.formula), 1), e.note ? (z(), B(R, { key: 0 }, [W(" · " + j(e.note), 1)], 64)) : G("", !0)]),
 				H("time", null, j(ee(e.at)), 1)
-			], 8, Iie)]))), 128))])) : G("", !0), w.value.length ? (z(), B("div", Lie, [H("button", {
+			], 8, Lie)]))), 128))])) : G("", !0), w.value.length ? (z(), B("div", Rie, [H("button", {
 				class: "trpg-btn trpg-btn--quiet trpg-btn--small",
 				type: "button",
 				onClick: t[11] ||= (e) => N(r).clearHistory()
 			}, "清空记录")])) : G("", !0)], 64)) : G("", !0)])
-		])])])], 12, iie)) : G("", !0);
+		])])])], 12, aie)) : G("", !0);
 	}
-}), zie = ["aria-expanded"], hj = 48, Bie = /* @__PURE__ */ I({
+}), Bie = ["aria-expanded"], mj = 48, Vie = /* @__PURE__ */ I({
 	__name: "FloatingBall",
 	setup(e) {
-		let t = JA(), n = /* @__PURE__ */ M(dj("trpg-assistant:ball", {
+		let t = qA(), n = /* @__PURE__ */ M(uj("trpg-assistant:ball", {
 			x: 16,
 			y: Math.round(window.innerHeight / 2)
 		}));
 		function r() {
 			n.value = {
-				x: Math.min(Math.max(n.value.x, 0), Math.max(0, window.innerWidth - hj)),
-				y: Math.min(Math.max(n.value.y, 0), Math.max(0, window.innerHeight - hj))
+				x: Math.min(Math.max(n.value.x, 0), Math.max(0, window.innerWidth - mj)),
+				y: Math.min(Math.max(n.value.y, 0), Math.max(0, window.innerHeight - mj))
 			};
 		}
 		uo(() => {
 			r(), window.addEventListener("resize", r);
 		}), mo(() => window.removeEventListener("resize", r));
-		let i = mj({
+		let i = pj({
 			position: n,
 			size: () => ({
-				w: hj,
-				h: hj
+				w: mj,
+				h: mj
 			}),
 			onTap: () => {
 				t.windowOpen = !t.windowOpen;
 			},
-			onEnd: () => fj("trpg-assistant:ball", n.value)
+			onEnd: () => dj("trpg-assistant:ball", n.value)
 		}), a = K(() => ({
 			left: `${n.value.x}px`,
 			top: `${n.value.y}px`
@@ -31194,16 +31201,16 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 		}, [U(Y, {
 			name: "dice-five",
 			size: 26
-		})], 44, zie));
+		})], 44, Bie));
 	}
-}), Vie = ["data-variant"], Hie = ["data-sized"], Uie = {
+}), Hie = ["data-variant"], Uie = ["data-sized"], Wie = {
 	key: 0,
 	class: "trpg-modal__head"
-}, Wie = ["aria-label"], Gie = ["inert", "aria-hidden"], gj = "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex=\"-1\"])", Kie = /* @__PURE__ */ I({
+}, Gie = ["aria-label"], Kie = ["inert", "aria-hidden"], hj = "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex=\"-1\"])", qie = /* @__PURE__ */ I({
 	__name: "ModalHost",
 	emits: ["drag"],
 	setup(e, { emit: t }) {
-		let n = t, r = YA(), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M(null), o = `trpg-modal-title-${Math.random().toString(36).slice(2, 8)}`, s = null, c = [], l = /* @__PURE__ */ new Map(), u = K(() => r.depth > 1 ? r.stack[r.depth - 2].title : ""), d = null;
+		let n = t, r = JA(), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M(null), o = `trpg-modal-title-${Math.random().toString(36).slice(2, 8)}`, s = null, c = [], l = /* @__PURE__ */ new Map(), u = K(() => r.depth > 1 ? r.stack[r.depth - 2].title : ""), d = null;
 		function f(e) {
 			let t = e.composedPath()[0];
 			d = t instanceof HTMLElement ? t.closest("button, a[href], input, select, textarea, [tabindex]") : null;
@@ -31218,11 +31225,11 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 		}
 		function h() {
 			let e = a.value;
-			return e ? [e.querySelector(".trpg-modal__head"), e.querySelector(".trpg-modal__page:not(.is-under)")].flatMap((e) => e ? [...e.querySelectorAll(gj)] : []).filter((e) => e.getClientRects().length > 0 && e.tabIndex >= 0 && e.getAttribute("aria-hidden") !== "true") : [];
+			return e ? [e.querySelector(".trpg-modal__head"), e.querySelector(".trpg-modal__page:not(.is-under)")].flatMap((e) => e ? [...e.querySelectorAll(hj)] : []).filter((e) => e.getClientRects().length > 0 && e.tabIndex >= 0 && e.getAttribute("aria-hidden") !== "true") : [];
 		}
 		function g() {
 			let e = a.value?.querySelector(".trpg-modal__page:not(.is-under)");
-			(e?.querySelector("[data-autofocus]") ?? e?.querySelector(gj) ?? a.value)?.focus({ preventScroll: !0 });
+			(e?.querySelector("[data-autofocus]") ?? e?.querySelector(hj) ?? a.value)?.focus({ preventScroll: !0 });
 		}
 		function _() {
 			return a.value ? [...a.value.querySelectorAll(".trpg-modal__page")] : [];
@@ -31295,7 +31302,7 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 				class: "trpg-sheet-grip",
 				"aria-hidden": "true"
 			}, null, -1),
-			N(r).top?.bare ? G("", !0) : (z(), B("header", Uie, [
+			N(r).top?.bare ? G("", !0) : (z(), B("header", Wie, [
 				N(r).depth > 1 ? (z(), B("button", {
 					key: 0,
 					class: "trpg-modal__back",
@@ -31305,7 +31312,7 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 				}, [U(Y, {
 					name: "caret-left",
 					size: 16
-				}), H("span", null, j(u.value), 1)], 8, Wie)) : G("", !0),
+				}), H("span", null, j(u.value), 1)], 8, Gie)) : G("", !0),
 				H("h2", {
 					id: o,
 					class: "trpg-modal__title"
@@ -31331,12 +31338,12 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 					class: Rt(["trpg-modal__page", { "is-under": t < N(r).depth - 1 }]),
 					inert: t < N(r).depth - 1,
 					"aria-hidden": t < N(r).depth - 1 ? "true" : void 0
-				}, [(z(), V(Co(e.component), kc({ ref_for: !0 }, e.props), null, 16))], 10, Gie))), 128))]),
+				}, [(z(), V(Co(e.component), kc({ ref_for: !0 }, e.props), null, 16))], 10, Kie))), 128))]),
 				_: 1
 			})
-		], 12, Hie)], 40, Vie)), [[Vl, N(r).visible]]) : G("", !0)], 512));
+		], 12, Uie)], 40, Hie)), [[Vl, N(r).visible]]) : G("", !0)], 512));
 	}
-}), _j = SA("brewcatalog", () => {
+}), gj = xA("brewcatalog", () => {
 	let e = /* @__PURE__ */ Nr(null), t = /* @__PURE__ */ M({
 		zh: [],
 		en: []
@@ -31365,12 +31372,12 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 		load: a,
 		prefetch: o
 	};
-}), qie = ["aria-label"], Jie = [
+}), Jie = ["aria-label"], Yie = [
 	"aria-pressed",
 	"disabled",
 	"title",
 	"onClick"
-], vj = /* @__PURE__ */ I({
+], _j = /* @__PURE__ */ I({
 	__name: "Segmented",
 	props: /*@__PURE__*/ qo({
 		options: {},
@@ -31393,24 +31400,24 @@ var iie = ["data-narrow"], aie = { class: "trpg-dice__shell" }, oie = { class: "
 			disabled: e.disabled,
 			title: e.disabled ? e.hint : void 0,
 			onClick: (n) => t.value = e.value
-		}, j(e.label), 9, Jie))), 128))], 8, qie));
+		}, j(e.label), 9, Yie))), 128))], 8, Jie));
 	}
 });
 // src/stores/entrylang.ts
-function yj(e, t) {
+function vj(e, t) {
 	let n = `entry:${e.set}:${e.prop}:${e.hash}`;
 	return t ? `${n}:${"docIdLocal" in t ? `pack:${t.docIdLocal}` : "original"}` : n;
 }
-var bj = SA("entrylang", () => {
+var yj = xA("entrylang", () => {
 	let e = /* @__PURE__ */ M({});
 	function t(t, n, r) {
 		e.value = {
 			...e.value,
-			[yj(t, r)]: n
+			[vj(t, r)]: n
 		};
 	}
 	function n(t, n) {
-		return e.value[yj(t, n)] ?? null;
+		return e.value[vj(t, n)] ?? null;
 	}
 	return {
 		byKey: e,
@@ -31419,33 +31426,33 @@ var bj = SA("entrylang", () => {
 	};
 });
 // node_modules/ohash/dist/_chunks/is-equal.mjs
-function xj(e) {
-	return typeof e == "string" ? `'${e}'` : new Xie().serialize(e);
+function bj(e) {
+	return typeof e == "string" ? `'${e}'` : new Zie().serialize(e);
 }
-var Yie = " _-,;:!?.'\"()[]{}@*/\\&#%`^+<=>|~$0123456789abcdefghijklmnopqrstuvwxyz", Sj = /*@__PURE__*/ (function() {
+var Xie = " _-,;:!?.'\"()[]{}@*/\\&#%`^+<=>|~$0123456789abcdefghijklmnopqrstuvwxyz", xj = /*@__PURE__*/ (function() {
 	let e = /* @__PURE__ */ new Uint8Array(128);
-	for (let t = 0; t < 69; t++) e[Yie.charCodeAt(t)] = t + 1;
+	for (let t = 0; t < 69; t++) e[Xie.charCodeAt(t)] = t + 1;
 	for (let t = 65; t <= 90; t++) e[t] = e[t + 32];
 	return e;
 })();
-function Cj(e, t) {
+function Sj(e, t) {
 	if (e === t) return 0;
 	let n = Math.min(e.length, t.length), r = 0;
 	for (let i = 0; i < n; i++) {
 		let n = e.charCodeAt(i), a = t.charCodeAt(i);
 		if (n === a) continue;
-		let o = n < 128 && Sj[n] ? Sj[n] : n + 128, s = a < 128 && Sj[a] ? Sj[a] : a + 128;
+		let o = n < 128 && xj[n] ? xj[n] : n + 128, s = a < 128 && xj[a] ? xj[a] : a + 128;
 		if (o !== s) return o < s ? -1 : 1;
 		r === 0 && (r = n > a ? -1 : 1);
 	}
 	return e.length === t.length ? r : e.length < t.length ? -1 : 1;
 }
-var Xie = /*@__PURE__*/ (function() {
+var Zie = /*@__PURE__*/ (function() {
 	class e {
 		#e = /* @__PURE__ */ new Map();
 		compare(e, t) {
 			let n = typeof e, r = typeof t;
-			return n === "string" && r === "string" ? Cj(e, t) : n === "number" && r === "number" ? e - t : Cj(this.serialize(e, !0), this.serialize(t, !0));
+			return n === "string" && r === "string" ? Sj(e, t) : n === "number" && r === "number" ? e - t : Sj(this.serialize(e, !0), this.serialize(t, !0));
 		}
 		serialize(e, t) {
 			if (e === null) return "null";
@@ -31466,7 +31473,7 @@ var Xie = /*@__PURE__*/ (function() {
 				let t = e.toJSON();
 				return r + (typeof t == "object" && t ? this.$object(t) : `(${this.serialize(t)})`);
 			}
-			let i = Object.keys(e).sort(Cj), a = `${r}{`;
+			let i = Object.keys(e).sort(Sj), a = `${r}{`;
 			for (let t = 0; t < i.length; t++) {
 				let n = i[t];
 				a += `${n}:${this.serialize(e[n])}`, t < i.length - 1 && (a += ",");
@@ -31542,22 +31549,22 @@ var Xie = /*@__PURE__*/ (function() {
 	};
 	return e;
 })();
-function wj(e, t) {
-	return e === t || xj(e) === xj(t);
+function Cj(e, t) {
+	return e === t || bj(e) === bj(t);
 }
 // node_modules/reka-ui/dist/shared/arrays.js
-function Zie(e, t, n) {
-	let r = e.findIndex((e) => wj(e, t)), i = e.findIndex((e) => wj(e, n));
+function Qie(e, t, n) {
+	let r = e.findIndex((e) => Cj(e, t)), i = e.findIndex((e) => Cj(e, n));
 	if (r === -1 || i === -1) return [];
 	let [a, o] = [r, i].sort((e, t) => e - t);
 	return e.slice(a, o + 1);
 }
 // node_modules/reka-ui/dist/shared/clamp.js
-function Tj(e, t = -Infinity, n = Infinity) {
+function wj(e, t = -Infinity, n = Infinity) {
 	return Math.min(n, Math.max(t, e));
 }
 // node_modules/reka-ui/dist/shared/createContext.js
-function Ej(e, t) {
+function Tj(e, t) {
 	let n = typeof e == "string" && !t ? `${e}Context` : t, r = Symbol(n);
 	return [(t) => {
 		let n = Ui(r, t);
@@ -31566,14 +31573,14 @@ function Ej(e, t) {
 	}, (e) => (Hi(r, e), e)];
 }
 // node_modules/reka-ui/dist/shared/getActiveElement.js
-function Dj() {
+function Ej() {
 	let e = document.activeElement;
 	if (e == null) return null;
 	for (; e != null && e.shadowRoot != null && e.shadowRoot.activeElement != null;) e = e.shadowRoot.activeElement;
 	return e;
 }
 // node_modules/reka-ui/dist/shared/handleAndDispatchCustomEvent.js
-function Oj(e, t, n) {
+function Dj(e, t, n) {
 	let r = n.originalEvent.target, i = new CustomEvent(e, {
 		bubbles: !1,
 		cancelable: !0,
@@ -31582,14 +31589,14 @@ function Oj(e, t, n) {
 	t && r.addEventListener(e, t, { once: !0 }), r.dispatchEvent(i);
 }
 // node_modules/reka-ui/dist/shared/nullish.js
-function kj(e) {
+function Oj(e) {
 	return e == null;
 }
 // node_modules/@vueuse/shared/dist/index.js
-function Aj(e, t) {
+function kj(e, t) {
 	return tn() ? (nn(e, t), !0) : !1;
 }
-function jj() {
+function Aj() {
 	let e = /* @__PURE__ */ new Set(), t = (t) => {
 		e.delete(t);
 	};
@@ -31597,7 +31604,7 @@ function jj() {
 		on: (n) => {
 			e.add(n);
 			let r = () => t(n);
-			return Aj(r), { off: r };
+			return kj(r), { off: r };
 		},
 		off: t,
 		trigger: (...t) => Promise.all(Array.from(e).map((e) => e(...t))),
@@ -31606,31 +31613,31 @@ function jj() {
 		}
 	};
 }
-function Qie(e) {
+function $ie(e) {
 	let t = !1, n, r = en(!0);
 	return ((...i) => (t ||= (n = r.run(() => e(...i)), !0), n));
 }
-var Mj = typeof window < "u" && typeof document < "u";
+var jj = typeof window < "u" && typeof document < "u";
 typeof WorkerGlobalScope < "u" && globalThis instanceof WorkerGlobalScope;
-var $ie = (e) => e !== void 0, eae = Object.prototype.toString, tae = (e) => eae.call(e) === "[object Object]", Nj = /* #__PURE__ */ nae();
-function nae() {
+var eae = (e) => e !== void 0, tae = Object.prototype.toString, nae = (e) => tae.call(e) === "[object Object]", Mj = /* #__PURE__ */ rae();
+function rae() {
 	var e, t;
-	return Mj && !!((e = window) != null && (e = e.navigator) != null && e.userAgent) && (/iP(?:ad|hone|od)/.test(window.navigator.userAgent) || ((t = window) == null || (t = t.navigator) == null ? void 0 : t.maxTouchPoints) > 2 && /iPad|Macintosh/.test(window?.navigator.userAgent));
+	return jj && !!((e = window) != null && (e = e.navigator) != null && e.userAgent) && (/iP(?:ad|hone|od)/.test(window.navigator.userAgent) || ((t = window) == null || (t = t.navigator) == null ? void 0 : t.maxTouchPoints) > 2 && /iPad|Macintosh/.test(window?.navigator.userAgent));
 }
-function Pj(e) {
+function Nj(e) {
 	return Array.isArray(e) ? e : [e];
 }
-function rae(e) {
+function iae(e) {
 	return e || Ic();
 }
-function Fj(e) {
-	if (!Mj) return e;
+function Pj(e) {
+	if (!jj) return e;
 	let t = 0, n, r, i = () => {
 		--t, r && t <= 0 && (r.stop(), n = void 0, r = void 0);
 	};
-	return ((...a) => (t += 1, r || (r = en(!0), n = r.run(() => e(...a))), Aj(i), n));
+	return ((...a) => (t += 1, r || (r = en(!0), n = r.run(() => e(...a))), kj(i), n));
 }
-function iae(e) {
+function aae(e) {
 	return /* @__PURE__ */ yr(/* @__PURE__ */ Mr(e) ? new Proxy({}, {
 		get(t, n, r) {
 			return N(Reflect.get(e.value, n, r));
@@ -31655,19 +31662,19 @@ function iae(e) {
 		}
 	}) : e);
 }
-function aae(e) {
-	return iae(K(e));
+function oae(e) {
+	return aae(K(e));
 }
-function Ij(e, ...t) {
+function Fj(e, ...t) {
 	let n = t.flat(), r = n[0];
-	return aae(() => Object.fromEntries(typeof r == "function" ? Object.entries(/* @__PURE__ */ Hr(e)).filter(([e, t]) => !r(Lr(t), e)) : Object.entries(/* @__PURE__ */ Hr(e)).filter((e) => !n.includes(e[0]))));
+	return oae(() => Object.fromEntries(typeof r == "function" ? Object.entries(/* @__PURE__ */ Hr(e)).filter(([e, t]) => !r(Lr(t), e)) : Object.entries(/* @__PURE__ */ Hr(e)).filter((e) => !n.includes(e[0]))));
 }
-function Lj(e, t = 1e4) {
+function Ij(e, t = 1e4) {
 	return Vr((n, r) => {
 		let i = Lr(e), a, o = () => setTimeout(() => {
 			i = Lr(e), r();
 		}, Lr(t));
-		return Aj(() => {
+		return kj(() => {
 			clearTimeout(a);
 		}), {
 			get() {
@@ -31679,71 +31686,71 @@ function Lj(e, t = 1e4) {
 		};
 	});
 }
-function oae(e, t) {
-	rae(t) && mo(e, t);
+function sae(e, t) {
+	iae(t) && mo(e, t);
 }
-function sae(e, t, n) {
+function cae(e, t, n) {
 	return F(e, t, {
 		...n,
 		immediate: !0
 	});
 }
 // node_modules/@vueuse/core/dist/index.js
-var Rj = Mj ? window : void 0;
-Mj && window.document, Mj && window.navigator, Mj && window.location;
-function zj(e) {
+var Lj = jj ? window : void 0;
+jj && window.document, jj && window.navigator, jj && window.location;
+function Rj(e) {
 	let t = Lr(e);
 	return t?.$el ?? t;
 }
-function Bj(...e) {
+function zj(...e) {
 	let t = (e, t, n, r) => (e.addEventListener(t, n, r), () => e.removeEventListener(t, n, r)), n = K(() => {
-		let t = Pj(Lr(e[0])).filter((e) => e != null);
+		let t = Nj(Lr(e[0])).filter((e) => e != null);
 		return t.every((e) => typeof e != "string") ? t : void 0;
 	});
-	return sae(() => [
-		n.value?.map((e) => zj(e)) ?? [Rj].filter((e) => e != null),
-		Pj(Lr(n.value ? e[1] : e[0])),
-		Pj(N(n.value ? e[2] : e[1])),
+	return cae(() => [
+		n.value?.map((e) => Rj(e)) ?? [Lj].filter((e) => e != null),
+		Nj(Lr(n.value ? e[1] : e[0])),
+		Nj(N(n.value ? e[2] : e[1])),
 		Lr(n.value ? e[3] : e[2])
 	], ([e, n, r, i], a, o) => {
 		if (!e?.length || !n?.length || !r?.length) return;
-		let s = tae(i) ? { ...i } : i, c = e.flatMap((e) => n.flatMap((n) => r.map((r) => t(e, n, r, s))));
+		let s = nae(i) ? { ...i } : i, c = e.flatMap((e) => n.flatMap((n) => r.map((r) => t(e, n, r, s))));
 		o(() => {
 			c.forEach((e) => e());
 		});
 	}, { flush: "post" });
 }
-function Vj() {
+function Bj() {
 	let e = /* @__PURE__ */ Nr(!1), t = Ic();
 	return t && uo(() => {
 		e.value = !0;
 	}, t), e;
 }
 /* @__NO_SIDE_EFFECTS__ */
-function cae(e) {
-	let t = Vj();
+function lae(e) {
+	let t = Bj();
 	return K(() => (t.value, !!e()));
 }
-function lae(e) {
+function uae(e) {
 	return typeof e == "function" ? e : typeof e == "string" ? (t) => t.key === e : Array.isArray(e) ? (t) => e.includes(t.key) : () => !0;
 }
-function uae(...e) {
+function dae(...e) {
 	let t, n, r = {};
 	e.length === 3 ? (t = e[0], n = e[1], r = e[2]) : e.length === 2 ? typeof e[1] == "object" ? (t = !0, n = e[0], r = e[1]) : (t = e[0], n = e[1]) : (t = !0, n = e[0]);
-	let { target: i = Rj, eventName: a = "keydown", passive: o = !1, dedupe: s = !1 } = r, c = lae(t);
-	return Bj(i, a, (e) => {
+	let { target: i = Lj, eventName: a = "keydown", passive: o = !1, dedupe: s = !1 } = r, c = uae(t);
+	return zj(i, a, (e) => {
 		e.repeat && Lr(s) || c(e) && n(e);
 	}, o);
 }
-function dae(e) {
+function fae(e) {
 	return JSON.parse(JSON.stringify(e));
 }
-function fae(e, t, n = {}) {
-	let { window: r = Rj, ...i } = n, a, o = /* @__PURE__ */ cae(() => r && "ResizeObserver" in r), s = () => {
+function pae(e, t, n = {}) {
+	let { window: r = Lj, ...i } = n, a, o = /* @__PURE__ */ lae(() => r && "ResizeObserver" in r), s = () => {
 		a &&= (a.disconnect(), void 0);
 	}, c = F(K(() => {
 		let t = Lr(e);
-		return Array.isArray(t) ? t.map((e) => zj(e)) : [zj(t)];
+		return Array.isArray(t) ? t.map((e) => Rj(e)) : [Rj(t)];
 	}), (e) => {
 		if (s(), o.value && r) {
 			a = new ResizeObserver(t);
@@ -31755,16 +31762,16 @@ function fae(e, t, n = {}) {
 	}), l = () => {
 		s(), c();
 	};
-	return Aj(l), {
+	return kj(l), {
 		isSupported: o,
 		stop: l
 	};
 }
-function Hj(e, t, n, r = {}) {
+function Vj(e, t, n, r = {}) {
 	var i, a;
 	let { clone: o = !1, passive: s = !1, eventName: c, deep: l = !1, defaultValue: u, shouldEmit: d } = r, f = Ic(), p = n || f?.emit || (f == null || (i = f.$emit) == null ? void 0 : i.bind(f)) || (f == null || (a = f.proxy) == null || (a = a.$emit) == null ? void 0 : a.bind(f?.proxy)), m = c;
 	t ||= "modelValue", m ||= `update:${t.toString()}`;
-	let h = (e) => o ? typeof o == "function" ? o(e) : dae(e) : e, g = () => $ie(e[t]) ? h(e[t]) : u, _ = (e) => {
+	let h = (e) => o ? typeof o == "function" ? o(e) : fae(e) : e, g = () => eae(e[t]) ? h(e[t]) : u, _ = (e) => {
 		d ? d(e) && p(m, e) : p(m, e);
 	};
 	if (s) {
@@ -31785,13 +31792,13 @@ function Hj(e, t, n, r = {}) {
 	});
 }
 // node_modules/reka-ui/dist/shared/renderSlotFragments.js
-function Uj(e) {
-	return e ? e.flatMap((e) => e.type === R ? Uj(e.children) : [e]) : [];
+function Hj(e) {
+	return e ? e.flatMap((e) => e.type === R ? Hj(e.children) : [e]) : [];
 }
 // node_modules/reka-ui/dist/shared/useArrowNavigation.js
-var pae = ["INPUT", "TEXTAREA"];
-function Wj(e, t, n, r = {}) {
-	if (!t || r.enableIgnoredElement && pae.includes(t.nodeName)) return null;
+var mae = ["INPUT", "TEXTAREA"];
+function Uj(e, t, n, r = {}) {
+	if (!t || r.enableIgnoredElement && mae.includes(t.nodeName)) return null;
 	let { arrowKeyOptions: i = "both", attributeName: a = "[data-reka-collection-item]", itemsArray: o = [], loop: s = !0, dir: c = "ltr", preventScroll: l = !0, focus: u = !1 } = r, [d, f, p, m, h, g] = [
 		e.key === "ArrowRight",
 		e.key === "ArrowLeft",
@@ -31805,59 +31812,59 @@ function Wj(e, t, n, r = {}) {
 	if (!y.length) return null;
 	l && e.preventDefault();
 	let b = null;
-	return v || _ ? b = Gj(y, t, {
+	return v || _ ? b = Wj(y, t, {
 		goForward: _ ? m : c === "ltr" ? d : f,
 		loop: s
 	}) : h ? b = y.at(0) || null : g && (b = y.at(-1) || null), u && b?.focus(), b;
 }
-function Gj(e, t, n, r = e.includes(t) ? e.length : e.length + 1) {
+function Wj(e, t, n, r = e.includes(t) ? e.length : e.length + 1) {
 	if (--r === 0) return null;
 	let i = e.indexOf(t), a;
 	if (a = i === -1 ? n.goForward ? 0 : e.length - 1 : n.goForward ? i + 1 : i - 1, !n.loop && (a < 0 || a >= e.length)) return null;
 	let o = e[(a + e.length) % e.length];
-	return o ? o.hasAttribute("disabled") && o.getAttribute("disabled") !== "false" ? Gj(e, o, n, r) : o : null;
+	return o ? o.hasAttribute("disabled") && o.getAttribute("disabled") !== "false" ? Wj(e, o, n, r) : o : null;
 }
 // node_modules/reka-ui/dist/ConfigProvider/ConfigProvider.js
-var [Kj, mae] = /*#__PURE__*/ Ej("ConfigProvider"), qj = /* @__PURE__ */ new WeakMap();
-function Jj(e, t) {
-	let n = qj.get(e);
+var [Gj, hae] = /*#__PURE__*/ Tj("ConfigProvider"), Kj = /* @__PURE__ */ new WeakMap();
+function qj(e, t) {
+	let n = Kj.get(e);
 	n || (n = {
 		owners: /* @__PURE__ */ new Set(),
 		original: e.body.style.pointerEvents
-	}, qj.set(e, n)), n.owners.add(t), e.body.style.pointerEvents = "none";
+	}, Kj.set(e, n)), n.owners.add(t), e.body.style.pointerEvents = "none";
 }
-function Yj(e, t) {
-	let n = qj.get(e);
-	n?.owners.delete(t) && n.owners.size === 0 && (qj.delete(e), e.body.style.pointerEvents = n.original);
+function Jj(e, t) {
+	let n = Kj.get(e);
+	n?.owners.delete(t) && n.owners.size === 0 && (Kj.delete(e), e.body.style.pointerEvents = n.original);
 }
 // node_modules/defu/dist/defu.mjs
-function Xj(e) {
+function Yj(e) {
 	if (typeof e != "object" || !e) return !1;
 	let t = Object.getPrototypeOf(e);
 	return t !== null && t !== Object.prototype && Object.getPrototypeOf(t) !== null || Symbol.iterator in e ? !1 : Symbol.toStringTag in e ? Object.prototype.toString.call(e) === "[object Module]" : !0;
 }
-function Zj(e, t, n = ".", r) {
-	if (!Xj(t)) return Zj(e, {}, n, r);
+function Xj(e, t, n = ".", r) {
+	if (!Yj(t)) return Xj(e, {}, n, r);
 	let i = { ...t };
 	for (let t of Object.keys(e)) {
 		if (t === "__proto__" || t === "constructor") continue;
 		let a = e[t];
-		a != null && (r && r(i, t, a, n) || (i[t] = Array.isArray(a) && Array.isArray(i[t]) ? [...a, ...i[t]] : Xj(a) && Xj(i[t]) ? Zj(a, i[t], (n ? `${n}.` : "") + t.toString(), r) : a));
+		a != null && (r && r(i, t, a, n) || (i[t] = Array.isArray(a) && Array.isArray(i[t]) ? [...a, ...i[t]] : Yj(a) && Yj(i[t]) ? Xj(a, i[t], (n ? `${n}.` : "") + t.toString(), r) : a));
 	}
 	return i;
 }
-function hae(e) {
-	return (...t) => t.reduce((t, n) => Zj(t, n, "", e), {});
+function gae(e) {
+	return (...t) => t.reduce((t, n) => Xj(t, n, "", e), {});
 }
-var gae = hae(), Qj = Symbol("useBodyScrollLock"), _ae = Fj(() => {
+var _ae = gae(), Zj = Symbol("useBodyScrollLock"), vae = Pj(() => {
 	let e = /* @__PURE__ */ M(/* @__PURE__ */ new Map()), t = /* @__PURE__ */ M(), n = K(() => {
 		for (let t of e.value.values()) if (t) return !0;
 		return !1;
-	}), r = Kj({ scrollBody: /* @__PURE__ */ M(!0) }), i = null, a = () => {
-		document.body.style.paddingRight = "", document.body.style.marginRight = "", Yj(document, Qj), document.documentElement.style.removeProperty("--scrollbar-width"), document.body.style.overflow = t.value ?? "", Nj && i?.(), t.value = void 0;
+	}), r = Gj({ scrollBody: /* @__PURE__ */ M(!0) }), i = null, a = () => {
+		document.body.style.paddingRight = "", document.body.style.marginRight = "", Jj(document, Zj), document.documentElement.style.removeProperty("--scrollbar-width"), document.body.style.overflow = t.value ?? "", Mj && i?.(), t.value = void 0;
 	};
 	return F(n, (e, o) => {
-		if (!Mj) return;
+		if (!jj) return;
 		if (!e) {
 			o && a();
 			return;
@@ -31866,56 +31873,56 @@ var gae = hae(), Qj = Symbol("useBodyScrollLock"), _ae = Fj(() => {
 		let s = window.innerWidth - document.documentElement.clientWidth, c = {
 			padding: s,
 			margin: 0
-		}, l = r.scrollBody?.value ? typeof r.scrollBody.value == "object" ? gae({
+		}, l = r.scrollBody?.value ? typeof r.scrollBody.value == "object" ? _ae({
 			padding: r.scrollBody.value.padding === !0 ? s : r.scrollBody.value.padding,
 			margin: r.scrollBody.value.margin === !0 ? s : r.scrollBody.value.margin
 		}, c) : c : {
 			padding: 0,
 			margin: 0
 		};
-		s > 0 && (document.body.style.paddingRight = typeof l.padding == "number" ? `${l.padding}px` : String(l.padding), document.body.style.marginRight = typeof l.margin == "number" ? `${l.margin}px` : String(l.margin), document.documentElement.style.setProperty("--scrollbar-width", `${s}px`), document.body.style.overflow = "hidden"), Nj && (i = Bj(document, "touchmove", (e) => vae(e), { passive: !1 })), xi(() => {
-			n.value && (Jj(document, Qj), document.body.style.overflow = "hidden");
+		s > 0 && (document.body.style.paddingRight = typeof l.padding == "number" ? `${l.padding}px` : String(l.padding), document.body.style.marginRight = typeof l.margin == "number" ? `${l.margin}px` : String(l.margin), document.documentElement.style.setProperty("--scrollbar-width", `${s}px`), document.body.style.overflow = "hidden"), Mj && (i = zj(document, "touchmove", (e) => yae(e), { passive: !1 })), xi(() => {
+			n.value && (qj(document, Zj), document.body.style.overflow = "hidden");
 		});
 	}, {
 		immediate: !0,
 		flush: "sync"
 	}), e;
 });
-function $j(e) {
-	let t = Math.random().toString(36).substring(2, 7), n = _ae();
+function Qj(e) {
+	let t = Math.random().toString(36).substring(2, 7), n = vae();
 	n.value.set(t, e ?? !1);
 	let r = K({
 		get: () => n.value.get(t) ?? !1,
 		set: (e) => n.value.set(t, e)
 	});
-	return oae(() => {
+	return sae(() => {
 		n.value.delete(t);
 	}), r;
 }
-function eM(e) {
+function $j(e) {
 	let t = window.getComputedStyle(e);
 	if (t.overflowX === "scroll" || t.overflowY === "scroll" || t.overflowX === "auto" && e.clientWidth < e.scrollWidth || t.overflowY === "auto" && e.clientHeight < e.scrollHeight) return !0;
 	{
 		let t = e.parentNode;
-		return !(t instanceof Element) || t.tagName === "BODY" ? !1 : eM(t);
+		return !(t instanceof Element) || t.tagName === "BODY" ? !1 : $j(t);
 	}
 }
-function vae(e) {
+function yae(e) {
 	let t = e || window.event, n = t.target;
-	return n instanceof Element && eM(n) ? !1 : t.touches.length > 1 || (t.preventDefault && t.cancelable && t.preventDefault(), !1);
+	return n instanceof Element && $j(n) ? !1 : t.touches.length > 1 || (t.preventDefault && t.cancelable && t.preventDefault(), !1);
 }
 // node_modules/reka-ui/dist/shared/useComposing.js
-var yae = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Bopomofo}]/u, bae = /android/i;
-function xae() {
-	return typeof navigator < "u" && bae.test(navigator.userAgent);
+var bae = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Bopomofo}]/u, xae = /android/i;
+function Sae() {
+	return typeof navigator < "u" && xae.test(navigator.userAgent);
 }
-function tM(e) {
+function eM(e) {
 	let t = /* @__PURE__ */ M(!1), n = /* @__PURE__ */ M(!0), r = /* @__PURE__ */ M(!1), i = K(() => t.value && n.value);
 	function a() {
 		t.value = !0, n.value = !0, r.value = !1;
 	}
 	function o(e) {
-		e.data && (yae.test(e.data) ? (n.value = !0, r.value = !0) : xae() && !r.value && (n.value = !1));
+		e.data && (bae.test(e.data) ? (n.value = !0, r.value = !0) : Sae() && !r.value && (n.value = !1));
 	}
 	function s(n) {
 		xi(() => {
@@ -31931,19 +31938,19 @@ function tM(e) {
 	};
 }
 // node_modules/reka-ui/dist/shared/useDirection.js
-function nM(e) {
-	let t = Kj({ dir: /* @__PURE__ */ M("ltr") });
+function tM(e) {
+	let t = Gj({ dir: /* @__PURE__ */ M("ltr") });
 	return K(() => e?.value || t.dir?.value || "ltr");
 }
 // node_modules/reka-ui/dist/shared/useEmitAsProps.js
-function rM(e) {
+function nM(e) {
 	let t = Ic(), n = t?.type.emits, r = {};
 	return n?.length || console.warn(`No emitted event found. Please check component: ${t?.type.__name}`), n?.forEach((t) => {
 		r[wt(bt(t))] = (...n) => e(t, ...n);
 	}), r;
 }
 // node_modules/reka-ui/dist/shared/useFilter.js
-function Sae(e) {
+function Cae(e) {
 	let t = K(() => N(e)), n = K(() => new Intl.Collator("en", {
 		usage: "search",
 		...t.value
@@ -31963,32 +31970,32 @@ function Sae(e) {
 	};
 }
 // node_modules/reka-ui/dist/shared/useFocusGuards.js
-var iM = 0;
-function aM() {
+var rM = 0;
+function iM() {
 	qi((e) => {
-		if (!Mj) return;
+		if (!jj) return;
 		let t = document.querySelectorAll("[data-reka-focus-guard]");
-		document.body.insertAdjacentElement("afterbegin", t[0] ?? oM()), document.body.insertAdjacentElement("beforeend", t[1] ?? oM()), iM++, e(() => {
-			iM === 1 && document.querySelectorAll("[data-reka-focus-guard]").forEach((e) => e.remove()), iM--;
+		document.body.insertAdjacentElement("afterbegin", t[0] ?? aM()), document.body.insertAdjacentElement("beforeend", t[1] ?? aM()), rM++, e(() => {
+			rM === 1 && document.querySelectorAll("[data-reka-focus-guard]").forEach((e) => e.remove()), rM--;
 		});
 	});
 }
-function oM() {
+function aM() {
 	let e = document.createElement("span");
 	return e.setAttribute("data-reka-focus-guard", ""), e.tabIndex = 0, e.style.outline = "none", e.style.opacity = "0", e.style.position = "fixed", e.style.pointerEvents = "none", e;
 }
 // node_modules/reka-ui/dist/shared/useFormControl.js
-function sM(e) {
-	return K(() => !Lr(e) || !!zj(e)?.closest("form"));
+function oM(e) {
+	return K(() => !Lr(e) || !!Rj(e)?.closest("form"));
 }
 // node_modules/reka-ui/dist/shared/useForwardExpose.js
-function cM() {
+function sM() {
 	let e = Ic(), t = /* @__PURE__ */ M(), n = K(() => r());
 	po(() => {
 		n.value !== r() && Ir(t);
 	});
 	function r() {
-		return t.value && "$el" in t.value && ["#text", "#comment"].includes(t.value.$el.nodeName) ? t.value.$el.nextElementSibling : zj(t);
+		return t.value && "$el" in t.value && ["#text", "#comment"].includes(t.value.$el.nodeName) ? t.value.$el.nextElementSibling : Rj(t);
 	}
 	let i = Object.assign({}, e.exposed), a = {};
 	for (let t in e.props) Object.defineProperty(a, t, {
@@ -32028,7 +32035,7 @@ function cM() {
 	};
 }
 // node_modules/reka-ui/dist/shared/useForwardProps.js
-function lM(e) {
+function cM(e) {
 	let t = Ic(), n = Object.keys(t?.type.props ?? {}).reduce((e, n) => {
 		let r = (t?.type.props[n]).default;
 		return r !== void 0 && (e[n] = r), e;
@@ -32044,30 +32051,30 @@ function lM(e) {
 	});
 }
 // node_modules/reka-ui/dist/shared/useForwardPropsEmits.js
-function uM(e, t) {
-	let n = lM(e), r = t ? rM(t) : {};
+function lM(e, t) {
+	let n = cM(e), r = t ? nM(t) : {};
 	return K(() => ({
 		...n.value,
 		...r
 	}));
 }
 // node_modules/aria-hidden/dist/es2015/index.js
-var Cae = function(e) {
+var wae = function(e) {
 	return typeof document > "u" ? null : (Array.isArray(e) ? e[0] : e).ownerDocument.body;
-}, dM = /* @__PURE__ */ new WeakMap(), fM = /* @__PURE__ */ new WeakMap(), pM = {}, mM = 0, hM = function(e) {
-	return e && (e.host || hM(e.parentNode));
-}, wae = function(e, t) {
+}, uM = /* @__PURE__ */ new WeakMap(), dM = /* @__PURE__ */ new WeakMap(), fM = {}, pM = 0, mM = function(e) {
+	return e && (e.host || mM(e.parentNode));
+}, Tae = function(e, t) {
 	return t.map(function(t) {
 		if (e.contains(t)) return t;
-		var n = hM(t);
+		var n = mM(t);
 		return n && e.contains(n) ? n : (console.error("aria-hidden", t, "in not contained inside", e, ". Doing nothing"), null);
 	}).filter(function(e) {
 		return !!e;
 	});
-}, Tae = function(e, t, n, r) {
-	var i = wae(t, Array.isArray(e) ? e : [e]);
-	pM[n] || (pM[n] = /* @__PURE__ */ new WeakMap());
-	var a = pM[n], o = [], s = /* @__PURE__ */ new Set(), c = new Set(i), l = function(e) {
+}, Eae = function(e, t, n, r) {
+	var i = Tae(t, Array.isArray(e) ? e : [e]);
+	fM[n] || (fM[n] = /* @__PURE__ */ new WeakMap());
+	var a = fM[n], o = [], s = /* @__PURE__ */ new Set(), c = new Set(i), l = function(e) {
 		e && !s.has(e) && (s.add(e), l(e.parentNode));
 	};
 	i.forEach(l);
@@ -32075,48 +32082,48 @@ var Cae = function(e) {
 		e && !c.has(e) && Array.prototype.forEach.call(e.children, function(e) {
 			if (s.has(e)) u(e);
 			else try {
-				var t = e.getAttribute(r), i = t !== null && t !== "false", c = (dM.get(e) || 0) + 1, l = (a.get(e) || 0) + 1;
-				dM.set(e, c), a.set(e, l), o.push(e), c === 1 && i && fM.set(e, !0), l === 1 && e.setAttribute(n, "true"), i || e.setAttribute(r, "true");
+				var t = e.getAttribute(r), i = t !== null && t !== "false", c = (uM.get(e) || 0) + 1, l = (a.get(e) || 0) + 1;
+				uM.set(e, c), a.set(e, l), o.push(e), c === 1 && i && dM.set(e, !0), l === 1 && e.setAttribute(n, "true"), i || e.setAttribute(r, "true");
 			} catch (t) {
 				console.error("aria-hidden: cannot operate on ", e, t);
 			}
 		});
 	};
-	return u(t), s.clear(), mM++, function() {
+	return u(t), s.clear(), pM++, function() {
 		o.forEach(function(e) {
-			var t = dM.get(e) - 1, i = a.get(e) - 1;
-			dM.set(e, t), a.set(e, i), t || (fM.has(e) || e.removeAttribute(r), fM.delete(e)), i || e.removeAttribute(n);
-		}), mM--, mM || (dM = /* @__PURE__ */ new WeakMap(), dM = /* @__PURE__ */ new WeakMap(), fM = /* @__PURE__ */ new WeakMap(), pM = {});
+			var t = uM.get(e) - 1, i = a.get(e) - 1;
+			uM.set(e, t), a.set(e, i), t || (dM.has(e) || e.removeAttribute(r), dM.delete(e)), i || e.removeAttribute(n);
+		}), pM--, pM || (uM = /* @__PURE__ */ new WeakMap(), uM = /* @__PURE__ */ new WeakMap(), dM = /* @__PURE__ */ new WeakMap(), fM = {});
 	};
-}, Eae = function(e, t, n) {
+}, Dae = function(e, t, n) {
 	n === void 0 && (n = "data-aria-hidden");
-	var r = Array.from(Array.isArray(e) ? e : [e]), i = t || Cae(e);
-	return i ? (r.push.apply(r, Array.from(i.querySelectorAll("[aria-live], script"))), Tae(r, i, n, "aria-hidden")) : function() {
+	var r = Array.from(Array.isArray(e) ? e : [e]), i = t || wae(e);
+	return i ? (r.push.apply(r, Array.from(i.querySelectorAll("[aria-live], script"))), Eae(r, i, n, "aria-hidden")) : function() {
 		return null;
 	};
 };
 // node_modules/reka-ui/dist/shared/useHideOthers.js
-function gM(e) {
+function hM(e) {
 	let t;
-	F(() => zj(e), (e) => {
+	F(() => Rj(e), (e) => {
 		let n = !1;
 		try {
 			n = !!e?.closest("[popover]:not(:popover-open)");
 		} catch {}
-		e && !n ? t = Eae(e) : t && t();
+		e && !n ? t = Dae(e) : t && t();
 	}), ho(() => {
 		t && t();
 	});
 }
 // node_modules/reka-ui/dist/shared/useId.js
-var Dae = 0;
-function _M(e, t = "reka") {
+var Oae = 0;
+function gM(e, t = "reka") {
 	if (e) return e;
-	let n, r = Kj({ useId: void 0 });
-	return n = r.useId ? r.useId() : "useId" in gd ? Oa?.() : `${++Dae}`, t ? `${t}-${n}` : n;
+	let n, r = Gj({ useId: void 0 });
+	return n = r.useId ? r.useId() : "useId" in gd ? Oa?.() : `${++Oae}`, t ? `${t}-${n}` : n;
 }
 // node_modules/reka-ui/dist/shared/useKbd.js
-function Oae() {
+function kae() {
 	return {
 		ALT: "Alt",
 		ARROW_DOWN: "ArrowDown",
@@ -32155,10 +32162,10 @@ function Oae() {
 	};
 }
 // node_modules/reka-ui/dist/shared/useSize.js
-function kae(e) {
+function Aae(e) {
 	let t = /* @__PURE__ */ M(), n = K(() => t.value?.width ?? 0), r = K(() => t.value?.height ?? 0), i;
 	return uo(() => {
-		let n = zj(e);
+		let n = Rj(e);
 		n ? (t.value = {
 			width: n.offsetWidth,
 			height: n.offsetHeight
@@ -32182,7 +32189,7 @@ function kae(e) {
 	};
 }
 // node_modules/reka-ui/dist/shared/useStateMachine.js
-function Aae(e, t) {
+function jae(e, t) {
 	let n = /* @__PURE__ */ M(e);
 	function r(e) {
 		return t[n.value][e] ?? n.value;
@@ -32195,17 +32202,17 @@ function Aae(e, t) {
 	};
 }
 // node_modules/reka-ui/dist/shared/useTypeahead.js
-function vM(e) {
-	let t = Lj("", 1e3);
+function _M(e) {
+	let t = Ij("", 1e3);
 	return {
 		search: t,
 		handleTypeaheadSearch: (n, r) => {
 			if (t.value += n, e) e(n);
 			else {
-				let e = Dj(), n = r.map((e) => ({
+				let e = Ej(), n = r.map((e) => ({
 					...e,
 					textValue: e.value?.textValue ?? e.ref.textContent?.trim() ?? ""
-				})), i = n.find((t) => t.ref === e), a = jae(n.map((e) => e.textValue), t.value, i?.textValue), o = n.find((e) => e.textValue === a);
+				})), i = n.find((t) => t.ref === e), a = Mae(n.map((e) => e.textValue), t.value, i?.textValue), o = n.find((e) => e.textValue === a);
 				return o && o.ref.focus(), o?.ref;
 			}
 		},
@@ -32214,18 +32221,18 @@ function vM(e) {
 		}
 	};
 }
-function yM(e, t) {
+function vM(e, t) {
 	return e.map((n, r) => e[(t + r) % e.length]);
 }
-function jae(e, t, n) {
-	let r = t.length > 1 && Array.from(t).every((e) => e === t[0]) ? t[0] : t, i = n ? e.indexOf(n) : -1, a = yM(e, Math.max(i, 0));
+function Mae(e, t, n) {
+	let r = t.length > 1 && Array.from(t).every((e) => e === t[0]) ? t[0] : t, i = n ? e.indexOf(n) : -1, a = vM(e, Math.max(i, 0));
 	r.length === 1 && (a = a.filter((e) => e !== n));
 	let o = a.find((e) => e.toLowerCase().startsWith(r.toLowerCase()));
 	return o === n ? void 0 : o;
 }
 // node_modules/reka-ui/dist/Presence/usePresence.js
-function Mae(e, t) {
-	let n = /* @__PURE__ */ M({}), r = /* @__PURE__ */ M("none"), i = /* @__PURE__ */ M(e), a = e.value ? "mounted" : "unmounted", o, s = t.value?.ownerDocument.defaultView ?? Rj, { state: c, dispatch: l } = Aae(a, {
+function Nae(e, t) {
+	let n = /* @__PURE__ */ M({}), r = /* @__PURE__ */ M("none"), i = /* @__PURE__ */ M(e), a = e.value ? "mounted" : "unmounted", o, s = t.value?.ownerDocument.defaultView ?? Lj, { state: c, dispatch: l } = jae(a, {
 		mounted: {
 			UNMOUNT: "unmounted",
 			ANIMATION_OUT: "unmountSuspended"
@@ -32236,7 +32243,7 @@ function Mae(e, t) {
 		},
 		unmounted: { MOUNT: "mounted" }
 	}), u = (e) => {
-		if (Mj) {
+		if (jj) {
 			let n = new CustomEvent(e, {
 				bubbles: !1,
 				cancelable: !1
@@ -32247,13 +32254,13 @@ function Mae(e, t) {
 	F(e, async (e, i) => {
 		let a = i !== e;
 		if (await xi(), a) {
-			let a = r.value, o = bM(t.value);
+			let a = r.value, o = yM(t.value);
 			e ? (l("MOUNT"), u("enter"), o === "none" && u("after-enter")) : o === "none" || o === "undefined" || n.value?.display === "none" ? (l("UNMOUNT"), u("leave"), u("after-leave")) : i && a !== o ? (l("ANIMATION_OUT"), u("leave")) : (l("UNMOUNT"), u("after-leave"));
 		}
 	}, { immediate: !0 });
 	let d = (e) => {
 		if (e.target !== t.value) return;
-		let n = bM(t.value), r = n.includes(CSS.escape(e.animationName)), a = c.value === "mounted" ? "enter" : "leave";
+		let n = yM(t.value), r = n.includes(CSS.escape(e.animationName)), a = c.value === "mounted" ? "enter" : "leave";
 		if (r && (u(`after-${a}`), l("ANIMATION_END"), !i.value)) {
 			let e = t.value.style.animationFillMode;
 			t.value.style.animationFillMode = "forwards", o = s?.setTimeout(() => {
@@ -32262,22 +32269,22 @@ function Mae(e, t) {
 		}
 		n === "none" && l("ANIMATION_END");
 	}, f = (e) => {
-		e.target === t.value && (r.value = bM(t.value));
+		e.target === t.value && (r.value = yM(t.value));
 	}, p = F(t, (e, t) => {
 		e ? (n.value = getComputedStyle(e), e.addEventListener("animationstart", f), e.addEventListener("animationcancel", d), e.addEventListener("animationend", d)) : (l("ANIMATION_END"), o !== void 0 && s?.clearTimeout(o), t?.removeEventListener("animationstart", f), t?.removeEventListener("animationcancel", d), t?.removeEventListener("animationend", d));
 	}, { immediate: !0 }), m = F(c, () => {
-		let e = bM(t.value);
+		let e = yM(t.value);
 		r.value = c.value === "mounted" ? e : "none";
 	});
 	return ho(() => {
 		p(), m(), t.value && (t.value.removeEventListener("animationstart", f), t.value.removeEventListener("animationcancel", d), t.value.removeEventListener("animationend", d)), o !== void 0 && s?.clearTimeout(o);
 	}), { isPresent: K(() => ["mounted", "unmountSuspended"].includes(c.value)) };
 }
-function bM(e) {
+function yM(e) {
 	return e && getComputedStyle(e).animationName || "none";
 }
 // node_modules/reka-ui/dist/Presence/Presence.js
-var xM = /*#__PURE__*/ I({
+var bM = /*#__PURE__*/ I({
 	name: "Presence",
 	props: {
 		present: {
@@ -32288,10 +32295,10 @@ var xM = /*#__PURE__*/ I({
 	},
 	slots: {},
 	setup(e, { slots: t, expose: n }) {
-		let { present: r, forceMount: i } = /* @__PURE__ */ Hr(e), a = /* @__PURE__ */ M(), { isPresent: o } = Mae(r, a);
+		let { present: r, forceMount: i } = /* @__PURE__ */ Hr(e), a = /* @__PURE__ */ M(), { isPresent: o } = Nae(r, a);
 		n({ present: o });
 		let s = t.default({ present: o.value });
-		s = Uj(s || []);
+		s = Hj(s || []);
 		let c = Ic();
 		if (s && s?.length > 1) {
 			let e = c?.parent?.type.name ? `<${c.parent.type.name} />` : "component";
@@ -32304,17 +32311,17 @@ var xM = /*#__PURE__*/ I({
 			].join("\n"));
 		}
 		return () => i.value || r.value || o.value ? nl(t.default({ present: o.value })[0], { ref: (e) => {
-			let t = zj(e);
+			let t = Rj(e);
 			return t?.hasAttribute === void 0 || (t?.hasAttribute("data-reka-popper-content-wrapper") ? a.value = t.firstElementChild : a.value = t), t;
 		} }) : null;
 	}
-}), SM = /*#__PURE__*/ I({
+}), xM = /*#__PURE__*/ I({
 	name: "PrimitiveSlot",
 	inheritAttrs: !1,
 	setup(e, { attrs: t, slots: n }) {
 		return () => {
 			if (!n.default) return null;
-			let e = Uj(n.default()), r = e.findIndex((e) => e.type !== dc);
+			let e = Hj(n.default()), r = e.findIndex((e) => e.type !== dc);
 			if (r === -1) return e;
 			let i = e[r];
 			delete i.props?.ref;
@@ -32325,11 +32332,11 @@ var xM = /*#__PURE__*/ I({
 			return e.length === 1 ? o : (e[r] = o, e);
 		};
 	}
-}), Nae = [
+}), Pae = [
 	"area",
 	"img",
 	"input"
-], CM = /*#__PURE__*/ I({
+], SM = /*#__PURE__*/ I({
 	name: "Primitive",
 	inheritAttrs: !1,
 	props: {
@@ -32344,43 +32351,43 @@ var xM = /*#__PURE__*/ I({
 	},
 	setup(e, { attrs: t, slots: n }) {
 		let r = e.asChild ? "template" : e.as;
-		return typeof r == "string" && Nae.includes(r) ? () => nl(r, t) : r === "template" ? () => nl(SM, t, { default: n.default }) : () => nl(e.as, t, { default: n.default });
+		return typeof r == "string" && Pae.includes(r) ? () => nl(r, t) : r === "template" ? () => nl(xM, t, { default: n.default }) : () => nl(e.as, t, { default: n.default });
 	}
 });
 // node_modules/reka-ui/dist/Primitive/usePrimitiveElement.js
-function wM() {
+function CM() {
 	let e = /* @__PURE__ */ M();
 	return {
 		primitiveElement: e,
-		currentElement: K(() => ["#text", "#comment"].includes(e.value?.$el.nodeName) ? e.value?.$el.nextElementSibling : zj(e))
+		currentElement: K(() => ["#text", "#comment"].includes(e.value?.$el.nodeName) ? e.value?.$el.nextElementSibling : Rj(e))
 	};
 }
 // node_modules/reka-ui/dist/DismissableLayer/utils.js
-var Pae = "dismissableLayer.pointerDownOutside", Fae = "dismissableLayer.focusOutside";
-function Iae(e) {
+var Fae = "dismissableLayer.pointerDownOutside", Iae = "dismissableLayer.focusOutside";
+function Lae(e) {
 	if (typeof e != "object" || !e) return !1;
 	let t = e.ownerDocument?.defaultView;
 	return typeof Element < "u" && e instanceof Element || !!t && e instanceof t.Element;
 }
-function TM(e, t) {
-	if (!Iae(t)) return !1;
+function wM(e, t) {
+	if (!Lae(t)) return !1;
 	if (e.contains(t)) return !0;
 	let n = t.closest("[data-dismissable-layer]"), r = e.dataset.dismissableLayer === "" ? e : e.querySelector("[data-dismissable-layer]"), i = Array.from(e.ownerDocument.querySelectorAll("[data-dismissable-layer]"));
 	return !!(n && (r === n || i.indexOf(r) < i.indexOf(n)));
 }
-function Lae(e, t, n = !0) {
+function Rae(e, t, n = !0) {
 	let r = /* @__PURE__ */ M(!1), i = /* @__PURE__ */ M(() => {});
 	return qi((a) => {
-		if (!Mj || !Lr(n)) return;
+		if (!jj || !Lr(n)) return;
 		let o = t?.value?.ownerDocument ?? globalThis.document, s = async (n) => {
 			let a = n.target;
 			if (t?.value && a) {
-				if (TM(t.value, a)) o.removeEventListener("click", i.value), r.value = !1;
+				if (wM(t.value, a)) o.removeEventListener("click", i.value), r.value = !1;
 				else {
 					if (n.target && !r.value) {
 						let t = { originalEvent: n };
 						function r() {
-							Oj(Pae, e, t);
+							Dj(Fae, e, t);
 						}
 						n.pointerType === "touch" ? (o.removeEventListener("click", i.value), i.value = r, o.addEventListener("click", i.value, { once: !0 })) : r();
 					} else o.removeEventListener("click", i.value);
@@ -32397,15 +32404,15 @@ function Lae(e, t, n = !0) {
 		Lr(n) && (r.value = !0);
 	} };
 }
-function Rae(e, t, n = !0) {
+function zae(e, t, n = !0) {
 	let r = /* @__PURE__ */ M(!1);
 	return qi((i) => {
-		if (!Mj || !Lr(n)) return;
+		if (!jj || !Lr(n)) return;
 		let a = t?.value?.ownerDocument ?? globalThis.document, o = async (n) => {
 			if (!t?.value) return;
 			await xi(), await xi();
 			let i = n.target;
-			t.value && i && !TM(t.value, i) && n.target && !r.value && Oj(Fae, e, { originalEvent: n });
+			t.value && i && !wM(t.value, i) && n.target && !r.value && Dj(Iae, e, { originalEvent: n });
 		};
 		a.addEventListener("focusin", o), i(() => a.removeEventListener("focusin", o));
 	}), {
@@ -32418,11 +32425,11 @@ function Rae(e, t, n = !0) {
 	};
 }
 // node_modules/reka-ui/dist/DismissableLayer/context.js
-var EM = /*#__PURE__*/ yr({
+var TM = /*#__PURE__*/ yr({
 	layersRoot: /* @__PURE__ */ new Set(),
 	layersWithOutsidePointerEventsDisabled: /* @__PURE__ */ new Set(),
 	branches: /* @__PURE__ */ new Set()
-}), DM = /* @__PURE__ */ I({
+}), EM = /* @__PURE__ */ I({
 	__name: "DismissableLayer",
 	props: {
 		disableOutsidePointerEvents: {
@@ -32452,17 +32459,17 @@ var EM = /*#__PURE__*/ yr({
 		"dismiss"
 	],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { forwardRef: i, currentElement: a } = cM(), o = K(() => a.value?.ownerDocument ?? globalThis.document), s = K(() => EM.layersRoot), c = K(() => a.value ? Array.from(s.value).indexOf(a.value) : -1), l = K(() => EM.layersWithOutsidePointerEventsDisabled.size > 0), u = K(() => {
-			let e = Array.from(s.value), [t] = [...EM.layersWithOutsidePointerEventsDisabled].slice(-1), n = e.indexOf(t);
+		let n = e, r = t, { forwardRef: i, currentElement: a } = sM(), o = K(() => a.value?.ownerDocument ?? globalThis.document), s = K(() => TM.layersRoot), c = K(() => a.value ? Array.from(s.value).indexOf(a.value) : -1), l = K(() => TM.layersWithOutsidePointerEventsDisabled.size > 0), u = K(() => {
+			let e = Array.from(s.value), [t] = [...TM.layersWithOutsidePointerEventsDisabled].slice(-1), n = e.indexOf(t);
 			return c.value >= n;
-		}), d = Lae(async (e) => {
-			let t = [...EM.branches].some((t) => t?.contains(e.target));
+		}), d = Rae(async (e) => {
+			let t = [...TM.branches].some((t) => t?.contains(e.target));
 			n.present && u.value && !t && (r("pointerDownOutside", e), r("interactOutside", e), await xi(), e.defaultPrevented || r("dismiss"));
-		}, a, () => n.present), f = Rae((e) => {
-			let t = [...EM.branches].some((t) => t?.contains(e.target));
+		}, a, () => n.present), f = zae((e) => {
+			let t = [...TM.branches].some((t) => t?.contains(e.target));
 			n.present && !t && (r("focusOutside", e), r("interactOutside", e), e.defaultPrevented || r("dismiss"));
 		}, a);
-		return uae("Escape", (e) => {
+		return dae("Escape", (e) => {
 			n.present && c.value === s.value.size - 1 && (r("escapeKeyDown", e), e.defaultPrevented || r("dismiss"));
 		}, { target: () => o.value?.defaultView ?? globalThis.window }), F([
 			a,
@@ -32471,8 +32478,8 @@ var EM = /*#__PURE__*/ yr({
 		], ([e, t, n], r, i) => {
 			if (e && n && t) {
 				let t = e.ownerDocument;
-				Jj(t, e), EM.layersWithOutsidePointerEventsDisabled.add(e), i(() => {
-					EM.layersWithOutsidePointerEventsDisabled.delete(e), Yj(t, e);
+				qj(t, e), TM.layersWithOutsidePointerEventsDisabled.add(e), i(() => {
+					TM.layersWithOutsidePointerEventsDisabled.delete(e), Jj(t, e);
 				});
 			}
 		}, { immediate: !0 }), F([a, () => n.present], ([e, t], n, r) => {
@@ -32481,9 +32488,9 @@ var EM = /*#__PURE__*/ yr({
 			}));
 		}, { immediate: !0 }), qi((e) => {
 			e(() => {
-				a.value && (s.value.delete(a.value), EM.layersWithOutsidePointerEventsDisabled.delete(a.value));
+				a.value && (s.value.delete(a.value), TM.layersWithOutsidePointerEventsDisabled.delete(a.value));
 			});
-		}), (t, n) => (z(), V(N(CM), {
+		}), (t, n) => (z(), V(N(SM), {
 			ref: N(i),
 			"as-child": e.asChild,
 			as: e.as,
@@ -32504,29 +32511,29 @@ var EM = /*#__PURE__*/ yr({
 			"onPointerdownCapture"
 		]));
 	}
-}), zae = Qie(() => /* @__PURE__ */ M([]));
-function Bae() {
-	let e = zae();
+}), Bae = $ie(() => /* @__PURE__ */ M([]));
+function Vae() {
+	let e = Bae();
 	return {
 		add(t) {
 			let n = e.value[0];
-			t !== n && n?.pause(), e.value = OM(e.value, t), e.value.unshift(t);
+			t !== n && n?.pause(), e.value = DM(e.value, t), e.value.unshift(t);
 		},
 		remove(t) {
-			e.value = OM(e.value, t), e.value[0]?.resume();
+			e.value = DM(e.value, t), e.value[0]?.resume();
 		}
 	};
 }
-function OM(e, t) {
+function DM(e, t) {
 	let n = [...e], r = n.indexOf(t);
 	return r !== -1 && n.splice(r, 1), n;
 }
 // node_modules/reka-ui/dist/FocusScope/utils.js
-var kM = "focusScope.autoFocusOnMount", AM = "focusScope.autoFocusOnUnmount", jM = {
+var OM = "focusScope.autoFocusOnMount", kM = "focusScope.autoFocusOnUnmount", AM = {
 	bubbles: !1,
 	cancelable: !0
 };
-function Vae(e, t) {
+function Hae(e, t) {
 	let n = t;
 	for (; n;) {
 		if (e.contains(n)) return !0;
@@ -32534,15 +32541,15 @@ function Vae(e, t) {
 	}
 	return !1;
 }
-function Hae(e, { select: t = !1 } = {}) {
-	let n = Dj();
-	for (let r of e) if (PM(r, { select: t }), Dj() !== n) return !0;
+function Uae(e, { select: t = !1 } = {}) {
+	let n = Ej();
+	for (let r of e) if (NM(r, { select: t }), Ej() !== n) return !0;
 }
-function Uae(e) {
-	let t = MM(e);
-	return [NM(t, e), NM(t.reverse(), e)];
+function Wae(e) {
+	let t = jM(e);
+	return [MM(t, e), MM(t.reverse(), e)];
 }
-function MM(e) {
+function jM(e) {
 	let t = [], n = document.createTreeWalker(e, NodeFilter.SHOW_ELEMENT, { acceptNode: (e) => {
 		let t = e.tagName === "INPUT" && e.type === "hidden";
 		return e.disabled || e.hidden || t ? NodeFilter.FILTER_SKIP : e.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
@@ -32550,10 +32557,10 @@ function MM(e) {
 	for (; n.nextNode();) t.push(n.currentNode);
 	return t.sort((e, t) => e.tabIndex === t.tabIndex ? 0 : e.tabIndex === 0 ? 1 : t.tabIndex === 0 ? -1 : e.tabIndex - t.tabIndex);
 }
-function NM(e, t) {
-	for (let n of e) if (!Wae(n, { upTo: t })) return n;
+function MM(e, t) {
+	for (let n of e) if (!Gae(n, { upTo: t })) return n;
 }
-function Wae(e, { upTo: t }) {
+function Gae(e, { upTo: t }) {
 	if (getComputedStyle(e).visibility === "hidden") return !0;
 	for (; e;) {
 		if (t !== void 0 && e === t) return !1;
@@ -32562,17 +32569,17 @@ function Wae(e, { upTo: t }) {
 	}
 	return !1;
 }
-function Gae(e) {
+function Kae(e) {
 	return e instanceof HTMLInputElement && "select" in e;
 }
-function PM(e, { select: t = !1 } = {}) {
+function NM(e, { select: t = !1 } = {}) {
 	if (e && e.focus) {
-		let n = Dj();
-		e.focus({ preventScroll: !0 }), e !== n && Gae(e) && t && e.select();
+		let n = Ej();
+		e.focus({ preventScroll: !0 }), e !== n && Kae(e) && t && e.select();
 	}
 }
 // node_modules/reka-ui/dist/FocusScope/FocusScope.js
-var FM = /* @__PURE__ */ I({
+var PM = /* @__PURE__ */ I({
 	__name: "FocusScope",
 	props: {
 		loop: {
@@ -32601,7 +32608,7 @@ var FM = /* @__PURE__ */ I({
 	},
 	emits: ["mountAutoFocus", "unmountAutoFocus"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { currentRef: i, currentElement: a } = cM(), o = /* @__PURE__ */ M(null), s = Bae(), c = /*#__PURE__*/ yr({
+		let n = e, r = t, { currentRef: i, currentElement: a } = sM(), o = /* @__PURE__ */ M(null), s = Vae(), c = /*#__PURE__*/ yr({
 			paused: !1,
 			pause() {
 				this.paused = !0;
@@ -32611,30 +32618,30 @@ var FM = /* @__PURE__ */ I({
 			}
 		});
 		qi((e) => {
-			if (!Mj) return;
+			if (!jj) return;
 			let t = a.value;
 			if (!n.trapped) return;
 			let r = t?.ownerDocument ?? document, i = t ? t.getRootNode() : r;
 			function s(e) {
 				if (c.paused || !t) return;
 				let n = e.target;
-				t.contains(n) ? o.value = n : PM(o.value, { select: !0 });
+				t.contains(n) ? o.value = n : NM(o.value, { select: !0 });
 			}
 			function l(e) {
 				if (c.paused || !t) return;
 				let n = e.relatedTarget;
-				n !== null && (t.contains(n) || PM(o.value, { select: !0 }));
+				n !== null && (t.contains(n) || NM(o.value, { select: !0 }));
 			}
 			function u(e) {
 				let n = o.value;
 				if (n === null || !e.some((e) => e.removedNodes.length > 0)) return;
-				let r = Dj();
-				r && t.contains(r) || t.contains(n) || PM(t);
+				let r = Ej();
+				r && t.contains(r) || t.contains(n) || NM(t);
 			}
 			function d(e) {
 				if (c.paused || !t) return;
 				let n = e.composedPath()[0];
-				Vae(t, n) || PM(o.value, { select: !0 });
+				Hae(t, n) || NM(o.value, { select: !0 });
 			}
 			i.addEventListener("focusin", s), i.addEventListener("focusout", l), i !== r && r.addEventListener("focusin", d);
 			let f = new MutationObserver(u);
@@ -32646,24 +32653,24 @@ var FM = /* @__PURE__ */ I({
 			});
 		});
 		function l(e, t) {
-			let n = new CustomEvent(kM, jM), i = (e) => r("mountAutoFocus", e);
-			e.addEventListener(kM, i), e.dispatchEvent(n), e.removeEventListener(kM, i), n.defaultPrevented || (Hae(MM(e), { select: !0 }), Dj() === t && PM(e));
+			let n = new CustomEvent(OM, AM), i = (e) => r("mountAutoFocus", e);
+			e.addEventListener(OM, i), e.dispatchEvent(n), e.removeEventListener(OM, i), n.defaultPrevented || (Uae(jM(e), { select: !0 }), Ej() === t && NM(e));
 		}
 		qi(async (e) => {
 			let t = a.value;
 			if (await xi(), !t) return;
 			n.present !== !1 && s.add(c);
-			let i = Dj();
+			let i = Ej();
 			!t.contains(i) && n.present !== !1 && l(t, i), e(() => {
-				let e = new CustomEvent(AM, jM), n = (e) => {
+				let e = new CustomEvent(kM, AM), n = (e) => {
 					r("unmountAutoFocus", e);
 				};
-				t.addEventListener(AM, n), t.dispatchEvent(e), t.setAttribute("data-focus-scope-unmounting", ""), setTimeout(() => {
-					e.defaultPrevented || PM(i ?? document.body, { select: !0 }), t.removeEventListener(AM, n), s.remove(c), t.removeAttribute("data-focus-scope-unmounting");
+				t.addEventListener(kM, n), t.dispatchEvent(e), t.setAttribute("data-focus-scope-unmounting", ""), setTimeout(() => {
+					e.defaultPrevented || NM(i ?? document.body, { select: !0 }), t.removeEventListener(kM, n), s.remove(c), t.removeAttribute("data-focus-scope-unmounting");
 				}, 0);
 			});
 		}), F(() => n.present, async (e, t) => {
-			if (!Mj) return;
+			if (!jj) return;
 			if (e === !1 && t === !0) {
 				s.remove(c);
 				return;
@@ -32672,18 +32679,18 @@ var FM = /* @__PURE__ */ I({
 			s.add(c), await xi();
 			let n = a.value;
 			if (!n) return;
-			let r = Dj();
+			let r = Ej();
 			n.contains(r) || l(n, r);
 		});
 		function u(e) {
 			if (!n.loop && !n.trapped || c.paused) return;
-			let t = e.key === "Tab" && !e.altKey && !e.ctrlKey && !e.metaKey, r = Dj();
+			let t = e.key === "Tab" && !e.altKey && !e.ctrlKey && !e.metaKey, r = Ej();
 			if (t && r) {
-				let t = e.currentTarget, [i, a] = Uae(t);
-				i && a ? !e.shiftKey && r === a ? (e.preventDefault(), n.loop && PM(i, { select: !0 })) : e.shiftKey && r === i && (e.preventDefault(), n.loop && PM(a, { select: !0 })) : r === t && e.preventDefault();
+				let t = e.currentTarget, [i, a] = Wae(t);
+				i && a ? !e.shiftKey && r === a ? (e.preventDefault(), n.loop && NM(i, { select: !0 })) : e.shiftKey && r === i && (e.preventDefault(), n.loop && NM(a, { select: !0 })) : r === t && e.preventDefault();
 			}
 		}
-		return (t, n) => (z(), V(N(CM), {
+		return (t, n) => (z(), V(N(SM), {
 			ref_key: "currentRef",
 			ref: i,
 			tabindex: "-1",
@@ -32695,28 +32702,28 @@ var FM = /* @__PURE__ */ I({
 			_: 3
 		}, 8, ["as-child", "as"]));
 	}
-}), Kae = "menu.itemSelect", IM = ["Enter", " "], qae = [
+}), qae = "menu.itemSelect", FM = ["Enter", " "], Jae = [
 	"ArrowDown",
 	"PageUp",
 	"Home"
-], LM = [
+], IM = [
 	"ArrowUp",
 	"PageDown",
 	"End"
-], Jae = [...qae, ...LM];
-[...IM], [...IM];
-function Yae(e) {
+], Yae = [...Jae, ...IM];
+[...FM], [...FM];
+function Xae(e) {
 	return e ? "open" : "closed";
 }
-function Xae(e) {
+function Zae(e) {
 	let { onEntryFocus: t, onEntryFocusOnce: n, ...r } = e;
 	return r;
 }
-function RM(e) {
-	let t = Dj();
-	for (let n of e) if (n === t || (n.focus(), Dj() !== t)) return;
+function LM(e) {
+	let t = Ej();
+	for (let n of e) if (n === t || (n.focus(), Ej() !== t)) return;
 }
-function Zae(e, t) {
+function Qae(e, t) {
 	let { x: n, y: r } = e, i = !1;
 	for (let e = 0, a = t.length - 1; e < t.length; a = e++) {
 		let o = t[e].x, s = t[e].y, c = t[a].x, l = t[a].y;
@@ -32724,17 +32731,17 @@ function Zae(e, t) {
 	}
 	return i;
 }
-function Qae(e, t) {
-	return t ? Zae({
+function $ae(e, t) {
+	return t ? Qae({
 		x: e.clientX,
 		y: e.clientY
 	}, t) : !1;
 }
-function zM(e) {
+function RM(e) {
 	return e.pointerType === "mouse";
 }
 // node_modules/reka-ui/dist/Teleport/Teleport.js
-var BM = /* @__PURE__ */ I({
+var zM = /* @__PURE__ */ I({
 	__name: "Teleport",
 	props: {
 		to: {
@@ -32755,7 +32762,7 @@ var BM = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let t = e, n = Kj({}), r = K(() => t.to ?? n.teleportTo?.value ?? "body"), i = Vj();
+		let t = e, n = Gj({}), r = K(() => t.to ?? n.teleportTo?.value ?? "body"), i = Bj();
 		return (t, n) => N(i) || e.forceMount ? (z(), V(ua, {
 			key: 0,
 			to: r.value,
@@ -32767,8 +32774,8 @@ var BM = /* @__PURE__ */ I({
 			"defer"
 		])) : G("v-if", !0);
 	}
-}), VM = "data-reka-collection-item";
-function HM(e = {}) {
+}), BM = "data-reka-collection-item";
+function VM(e = {}) {
 	let { key: t = "", isProvider: n = !1 } = e, r = `${t}CollectionProvider`, i;
 	n ? (i = {
 		collectionRef: /* @__PURE__ */ M(),
@@ -32781,16 +32788,16 @@ function HM(e = {}) {
 	}, o = (e = !1) => {
 		let t = i.collectionRef.value;
 		if (!t) return [];
-		let n = Array.from(t.querySelectorAll(`[${VM}]`)), r = new Map(n.map((e, t) => [e, t])), a = Array.from(i.itemMap.value.values()).sort((e, t) => (r.get(e.ref) ?? -1) - (r.get(t.ref) ?? -1));
+		let n = Array.from(t.querySelectorAll(`[${BM}]`)), r = new Map(n.map((e, t) => [e, t])), a = Array.from(i.itemMap.value.values()).sort((e, t) => (r.get(e.ref) ?? -1) - (r.get(t.ref) ?? -1));
 		return e ? a : a.filter((e) => e.ref.dataset.disabled !== "");
 	}, s = /*#__PURE__*/ I({
 		name: "CollectionSlot",
 		inheritAttrs: !1,
 		setup(e, { slots: t, attrs: n }) {
-			let { primitiveElement: r, currentElement: a } = wM();
+			let { primitiveElement: r, currentElement: a } = CM();
 			return F(a, () => {
 				i.collectionRef.value = a.value;
-			}), () => nl(SM, {
+			}), () => nl(xM, {
 				ref: r,
 				...n
 			}, t);
@@ -32800,7 +32807,7 @@ function HM(e = {}) {
 		inheritAttrs: !1,
 		props: { value: { validator: () => !0 } },
 		setup(e, { slots: t, attrs: n }) {
-			let { primitiveElement: r, currentElement: a } = wM();
+			let { primitiveElement: r, currentElement: a } = CM();
 			return qi((t) => {
 				if (a.value) {
 					let n = kr(a.value);
@@ -32809,9 +32816,9 @@ function HM(e = {}) {
 						value: e.value
 					}), t(() => i.itemMap.value.delete(n));
 				}
-			}), () => nl(SM, {
+			}), () => nl(xM, {
 				...n,
-				[VM]: "",
+				[BM]: "",
 				ref: r
 			}, t);
 		}
@@ -32826,7 +32833,7 @@ function HM(e = {}) {
 	};
 }
 // node_modules/reka-ui/dist/VisuallyHidden/VisuallyHidden.js
-var UM = /* @__PURE__ */ I({
+var HM = /* @__PURE__ */ I({
 	__name: "VisuallyHidden",
 	props: {
 		feature: {
@@ -32845,7 +32852,7 @@ var UM = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		return (t, n) => (z(), V(N(CM), {
+		return (t, n) => (z(), V(N(SM), {
 			as: e.as,
 			"as-child": e.asChild,
 			"aria-hidden": e.feature === "fully-hidden" ? "true" : void 0,
@@ -32877,7 +32884,7 @@ var UM = /* @__PURE__ */ I({
 			"tabindex"
 		]));
 	}
-}), WM = /* @__PURE__ */ I({
+}), UM = /* @__PURE__ */ I({
 	inheritAttrs: !1,
 	__name: "VisuallyHiddenInputBubble",
 	props: {
@@ -32909,7 +32916,7 @@ var UM = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let t = e, { primitiveElement: n, currentElement: r } = wM();
+		let t = e, { primitiveElement: n, currentElement: r } = CM();
 		return F(K(() => t.checked ?? t.value), (e, t) => {
 			if (!r.value) return;
 			let n = r.value, i = window.HTMLInputElement.prototype, a = Object.getOwnPropertyDescriptor(i, "value").set;
@@ -32917,7 +32924,7 @@ var UM = /* @__PURE__ */ I({
 				let t = new Event("input", { bubbles: !0 }), r = new Event("change", { bubbles: !0 });
 				a.call(n, e), n.dispatchEvent(t), n.dispatchEvent(r);
 			}
-		}), (e, r) => (z(), V(UM, kc({
+		}), (e, r) => (z(), V(HM, kc({
 			ref_key: "primitiveElement",
 			ref: n
 		}, {
@@ -32925,7 +32932,7 @@ var UM = /* @__PURE__ */ I({
 			...e.$attrs
 		}, { as: "input" }), null, 16));
 	}
-}), $ae = /* @__PURE__ */ I({
+}), eoe = /* @__PURE__ */ I({
 	inheritAttrs: !1,
 	__name: "VisuallyHiddenInput",
 	props: {
@@ -32970,13 +32977,13 @@ var UM = /* @__PURE__ */ I({
 			name: `${t.name}[${e}]`,
 			value: n
 		})) : []);
-		return (i, a) => (z(), B(R, null, [G(" We render single input if it's required "), n.value ? (z(), V(WM, kc({ key: e.name }, {
+		return (i, a) => (z(), B(R, null, [G(" We render single input if it's required "), n.value ? (z(), V(UM, kc({ key: e.name }, {
 			...t,
 			...i.$attrs
 		}, {
 			name: e.name,
 			value: e.value
-		}), null, 16, ["name", "value"])) : (z(!0), B(R, { key: 1 }, L(r.value, (e) => (z(), V(WM, kc({ key: e.name }, { ref_for: !0 }, {
+		}), null, 16, ["name", "value"])) : (z(!0), B(R, { key: 1 }, L(r.value, (e) => (z(), V(UM, kc({ key: e.name }, { ref_for: !0 }, {
 			...t,
 			...i.$attrs
 		}, {
@@ -32986,17 +32993,17 @@ var UM = /* @__PURE__ */ I({
 	}
 });
 // node_modules/reka-ui/dist/Listbox/utils.js
-function eoe(e, t, n) {
-	return e === void 0 ? !1 : Array.isArray(e) ? e.some((e) => GM(e, t, n)) : GM(e, t, n);
+function toe(e, t, n) {
+	return e === void 0 ? !1 : Array.isArray(e) ? e.some((e) => WM(e, t, n)) : WM(e, t, n);
 }
-function GM(e, t, n) {
-	return e === void 0 || t === void 0 ? !1 : typeof e == "string" ? e === t : typeof n == "function" ? n(e, t) : typeof n == "string" ? e?.[n] === t?.[n] : wj(e, t);
+function WM(e, t, n) {
+	return e === void 0 || t === void 0 ? !1 : typeof e == "string" ? e === t : typeof n == "function" ? n(e, t) : typeof n == "string" ? e?.[n] === t?.[n] : Cj(e, t);
 }
 // node_modules/reka-ui/dist/RovingFocus/utils.js
-var toe = "rovingFocusGroup.onEntryFocus", noe = {
+var noe = "rovingFocusGroup.onEntryFocus", roe = {
 	bubbles: !1,
 	cancelable: !0
-}, roe = {
+}, ioe = {
 	ArrowLeft: "prev",
 	ArrowUp: "prev",
 	ArrowRight: "next",
@@ -33006,22 +33013,22 @@ var toe = "rovingFocusGroup.onEntryFocus", noe = {
 	PageDown: "last",
 	End: "last"
 };
-function ioe(e, t) {
+function aoe(e, t) {
 	return t === "rtl" ? e === "ArrowLeft" ? "ArrowRight" : e === "ArrowRight" ? "ArrowLeft" : e : e;
 }
-function KM(e, t, n) {
-	let r = ioe(e.key, n);
-	if (!(t === "vertical" && ["ArrowLeft", "ArrowRight"].includes(r)) && !(t === "horizontal" && ["ArrowUp", "ArrowDown"].includes(r))) return roe[r];
+function GM(e, t, n) {
+	let r = aoe(e.key, n);
+	if (!(t === "vertical" && ["ArrowLeft", "ArrowRight"].includes(r)) && !(t === "horizontal" && ["ArrowUp", "ArrowDown"].includes(r))) return ioe[r];
 }
-function qM(e, t = !1) {
-	let n = Dj();
-	for (let r of e) if (r === n || (r.focus({ preventScroll: t }), Dj() !== n)) return;
+function KM(e, t = !1) {
+	let n = Ej();
+	for (let r of e) if (r === n || (r.focus({ preventScroll: t }), Ej() !== n)) return;
 }
-function aoe(e, t) {
+function ooe(e, t) {
 	return e.map((n, r) => e[(t + r) % e.length]);
 }
 // node_modules/reka-ui/dist/Listbox/ListboxRoot.js
-var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("ListboxHighlightScroll"), coe = /* @__PURE__ */ I({
+var [qM, soe] = /*#__PURE__*/ Tj("ListboxRoot"), [coe, JM] = /*#__PURE__*/ Tj("ListboxHighlightScroll"), loe = /* @__PURE__ */ I({
 	__name: "ListboxRoot",
 	props: {
 		modelValue: {
@@ -33090,26 +33097,26 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 		"leave"
 	],
 	setup(e, { expose: t, emit: n }) {
-		let r = e, i = n, { multiple: a, highlightOnHover: o, loop: s, orientation: c, disabled: l, selectionBehavior: u, dir: d } = /* @__PURE__ */ Hr(r), { getItems: f, getItem: p } = HM({ isProvider: !0 }), { handleTypeaheadSearch: m } = vM(), { primitiveElement: h, currentElement: g } = wM(), _ = Oae(), v = nM(d), y = soe(null);
-		YM({
+		let r = e, i = n, { multiple: a, highlightOnHover: o, loop: s, orientation: c, disabled: l, selectionBehavior: u, dir: d } = /* @__PURE__ */ Hr(r), { getItems: f, getItem: p } = VM({ isProvider: !0 }), { handleTypeaheadSearch: m } = _M(), { primitiveElement: h, currentElement: g } = CM(), _ = kae(), v = tM(d), y = coe(null);
+		JM({
 			suppressHighlightScroll: /* @__PURE__ */ M(!1),
 			onHighlightScrollRequest: () => {}
 		});
-		let b = sM(g), x = /* @__PURE__ */ M(), S = /* @__PURE__ */ M(!1), C = /* @__PURE__ */ M(!0), w = Hj(r, "modelValue", i, {
+		let b = oM(g), x = /* @__PURE__ */ M(), S = /* @__PURE__ */ M(!1), C = /* @__PURE__ */ M(!0), w = Vj(r, "modelValue", i, {
 			defaultValue: r.defaultValue ?? (a.value ? [] : void 0),
 			passive: r.modelValue === void 0,
 			deep: !0
 		});
 		function T(e) {
 			if (S.value = !0, r.multiple) {
-				let t = Array.isArray(w.value) ? [...w.value] : [], n = t.findIndex((t) => GM(t, e, r.by));
+				let t = Array.isArray(w.value) ? [...w.value] : [], n = t.findIndex((t) => WM(t, e, r.by));
 				r.selectionBehavior === "toggle" ? (n === -1 ? t.push(e) : t.splice(n, 1), w.value = t) : (w.value = [e], x.value = e);
-			} else r.selectionBehavior === "toggle" && GM(w.value, e, r.by) ? w.value = void 0 : w.value = e;
+			} else r.selectionBehavior === "toggle" && WM(w.value, e, r.by) ? w.value = void 0 : w.value = e;
 			setTimeout(() => {
 				S.value = !1;
 			}, 1);
 		}
-		let E = /* @__PURE__ */ M(null), D = /* @__PURE__ */ M(null), O = /* @__PURE__ */ M(!1), ee = /* @__PURE__ */ M(!1), k = jj(), te = jj(), ne = jj();
+		let E = /* @__PURE__ */ M(null), D = /* @__PURE__ */ M(null), O = /* @__PURE__ */ M(!1), ee = /* @__PURE__ */ M(!1), k = Aj(), te = Aj(), ne = Aj();
 		function re() {
 			return f().map((e) => e.ref).filter((e) => e.dataset.disabled !== "");
 		}
@@ -33127,7 +33134,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 		function ae(e) {
 			if (O.value) ne.trigger(e);
 			else {
-				let t = f().find((t) => GM(t.value, e, r.by));
+				let t = f().find((t) => WM(t.value, e, r.by));
 				t && (E.value = t.ref, ie(t.ref));
 			}
 		}
@@ -33194,7 +33201,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			return e === "next" ? r === i : r === 1;
 		}
 		function me(e) {
-			let t = KM(e, c.value, v.value);
+			let t = GM(e, c.value, v.value);
 			if (!t) return;
 			let n = re();
 			if (E.value) {
@@ -33225,12 +33232,12 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			if (!O.value && r.selectionBehavior === "replace" && a.value && Array.isArray(w.value) && (!e.altKey && !e.ctrlKey && !e.metaKey || e.shiftKey) && e.shiftKey) {
 				let n = f().filter((e) => e.ref.dataset.disabled !== ""), r = n.find((e) => e.ref === t)?.value;
 				if (e.key === _.END ? r = n.at(-1)?.value : e.key === _.HOME && (r = n[0]?.value), !r || !x.value) return;
-				let i = Zie(n.map((e) => e.value), x.value, r);
+				let i = Qie(n.map((e) => e.value), x.value, r);
 				w.value = i;
 			}
 		}
 		async function ge(e, t = !0) {
-			if (Mj) {
+			if (jj) {
 				if (await xi(), O.value) k.trigger({
 					event: e,
 					scroll: t
@@ -33258,7 +33265,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			highlightFirstItem: ue,
 			highlightSelected: ge,
 			getItems: f
-		}), ooe({
+		}), soe({
 			modelValue: w,
 			onValueChange: T,
 			multiple: a,
@@ -33285,7 +33292,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			onCompositionStart: ce,
 			onCompositionEnd: le,
 			highlightFirstItem: ue
-		}), (t, n) => (z(), V(N(CM), {
+		}), (t, n) => (z(), V(N(SM), {
 			ref_key: "primitiveElement",
 			ref: h,
 			as: e.as,
@@ -33298,7 +33305,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 				await xi(), E.value && N(g) && !N(g).contains(t) && de(e);
 			}
 		}, {
-			default: P(() => [Do(t.$slots, "default", { modelValue: N(w) }), N(b) && e.name ? (z(), V(N($ae), {
+			default: P(() => [Do(t.$slots, "default", { modelValue: N(w) }), N(b) && e.name ? (z(), V(N(eoe), {
 				key: 0,
 				name: e.name,
 				value: N(w),
@@ -33318,7 +33325,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			"data-disabled"
 		]));
 	}
-}), loe = /* @__PURE__ */ I({
+}), uoe = /* @__PURE__ */ I({
 	__name: "ListboxContent",
 	props: {
 		asChild: {
@@ -33331,9 +33338,9 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 		}
 	},
 	setup(e) {
-		let { CollectionSlot: t } = HM(), n = JM(), r = Lj(!1, 10);
+		let { CollectionSlot: t } = VM(), n = qM(), r = Ij(!1, 10);
 		return (i, a) => (z(), V(N(t), null, {
-			default: P(() => [U(N(CM), {
+			default: P(() => [U(N(SM), {
 				role: "listbox",
 				as: e.as,
 				"as-child": e.asChild,
@@ -33374,7 +33381,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			_: 3
 		}));
 	}
-}), uoe = /* @__PURE__ */ I({
+}), doe = /* @__PURE__ */ I({
 	__name: "ListboxFilter",
 	props: {
 		modelValue: {
@@ -33401,10 +33408,10 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 	},
 	emits: ["update:modelValue"],
 	setup(e, { emit: t }) {
-		let n = e, r = Hj(n, "modelValue", t, {
+		let n = e, r = Vj(n, "modelValue", t, {
 			defaultValue: "",
 			passive: n.modelValue === void 0
-		}), i = JM(), { primitiveElement: a, currentElement: o } = wM(), s = K(() => n.disabled || i.disabled.value || !1), c = /* @__PURE__ */ M();
+		}), i = qM(), { primitiveElement: a, currentElement: o } = CM(), s = K(() => n.disabled || i.disabled.value || !1), c = /* @__PURE__ */ M();
 		Yi(() => c.value = i.highlightedElement.value?.id), uo(() => {
 			i.focusable.value = !1, setTimeout(() => {
 				n.autoFocus && o.value?.focus();
@@ -33412,7 +33419,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 		}), ho(() => {
 			i.focusable.value = !0;
 		});
-		let { isComposing: l, shouldDeferInput: u, handleCompositionStart: d, handleCompositionUpdate: f, handleCompositionEnd: p } = tM((e) => {
+		let { isComposing: l, shouldDeferInput: u, handleCompositionStart: d, handleCompositionUpdate: f, handleCompositionEnd: p } = eM((e) => {
 			r.value = e.target.value, i.onCompositionEnd(), i.highlightFirstItem();
 		});
 		function m() {
@@ -33427,7 +33434,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 		function _(e) {
 			l.value || i.onKeydownEnter(e);
 		}
-		return (t, n) => (z(), V(N(CM), {
+		return (t, n) => (z(), V(N(SM), {
 			ref_key: "primitiveElement",
 			ref: a,
 			as: e.as,
@@ -33463,7 +33470,7 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			"onCompositionend"
 		]));
 	}
-}), doe = "listbox.select", [foe, poe] = /*#__PURE__*/ Ej("ListboxItem"), moe = /* @__PURE__ */ I({
+}), foe = "listbox.select", [poe, moe] = /*#__PURE__*/ Tj("ListboxItem"), hoe = /* @__PURE__ */ I({
 	__name: "ListboxItem",
 	props: {
 		value: {
@@ -33486,24 +33493,24 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 	},
 	emits: ["select"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = _M(void 0, "reka-listbox-item"), { CollectionItem: a } = HM(), { forwardRef: o, currentElement: s } = cM(), c = JM(), l = K(() => s.value != null && s.value === c.highlightedElement.value), u = K(() => eoe(c.modelValue.value, n.value, c.by)), d = K(() => c.disabled.value || n.disabled);
+		let n = e, r = t, i = gM(void 0, "reka-listbox-item"), { CollectionItem: a } = VM(), { forwardRef: o, currentElement: s } = sM(), c = qM(), l = K(() => s.value != null && s.value === c.highlightedElement.value), u = K(() => toe(c.modelValue.value, n.value, c.by)), d = K(() => c.disabled.value || n.disabled);
 		async function f(e) {
 			r("select", e), !e?.defaultPrevented && !d.value && e && (c.onValueChange(n.value), c.changeHighlight(s.value));
 		}
 		function p(e) {
-			Oj(doe, f, {
+			Dj(foe, f, {
 				originalEvent: e,
 				value: n.value
 			});
 		}
-		return poe({ isSelected: u }), (t, n) => (z(), V(N(a), { value: e.value }, {
+		return moe({ isSelected: u }), (t, n) => (z(), V(N(a), { value: e.value }, {
 			default: P(() => [il([
 				l.value,
 				u.value,
 				d.value,
 				N(c).focusable.value,
 				...Object.entries(t.$attrs).flat()
-			], () => U(N(CM), kc({ id: N(i) }, t.$attrs, {
+			], () => U(N(SM), kc({ id: N(i) }, t.$attrs, {
 				ref: N(o),
 				role: "option",
 				tabindex: N(c).focusable.value ? l.value ? "0" : "-1" : -1,
@@ -33537,17 +33544,17 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 			_: 3
 		}, 8, ["value"]));
 	}
-}), [XM, hoe] = /*#__PURE__*/ Ej("PopperRoot"), ZM = /* @__PURE__ */ I({
+}), [YM, goe] = /*#__PURE__*/ Tj("PopperRoot"), XM = /* @__PURE__ */ I({
 	inheritAttrs: !1,
 	__name: "PopperRoot",
 	setup(e) {
 		let t = /* @__PURE__ */ M();
-		return hoe({
+		return goe({
 			anchor: t,
 			onAnchorChange: (e) => t.value = e
 		}), (e, t) => Do(e.$slots, "default");
 	}
-}), QM = /* @__PURE__ */ I({
+}), ZM = /* @__PURE__ */ I({
 	__name: "PopperAnchor",
 	props: {
 		reference: {
@@ -33564,10 +33571,10 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 		}
 	},
 	setup(e) {
-		let t = e, { forwardRef: n, currentElement: r } = cM(), i = XM();
+		let t = e, { forwardRef: n, currentElement: r } = sM(), i = YM();
 		return Ji(() => {
 			i.onAnchorChange(t.reference ?? r.value);
-		}), (t, r) => (z(), V(N(CM), {
+		}), (t, r) => (z(), V(N(SM), {
 			ref: N(n),
 			as: e.as,
 			"as-child": e.asChild
@@ -33578,15 +33585,15 @@ var [JM, ooe] = /*#__PURE__*/ Ej("ListboxRoot"), [soe, YM] = /*#__PURE__*/ Ej("L
 	}
 });
 // node_modules/reka-ui/dist/Popper/utils.js
-function goe(e) {
+function _oe(e) {
 	return e !== null;
 }
-function _oe(e) {
+function voe(e) {
 	return {
 		name: "transformOrigin",
 		options: e,
 		fn(t) {
-			let { placement: n, rects: r, middlewareData: i } = t, a = i.arrow?.centerOffset !== 0, o = a ? 0 : e.arrowWidth, s = a ? 0 : e.arrowHeight, [c, l] = $M(n), u = {
+			let { placement: n, rects: r, middlewareData: i } = t, a = i.arrow?.centerOffset !== 0, o = a ? 0 : e.arrowWidth, s = a ? 0 : e.arrowHeight, [c, l] = QM(n), u = {
 				start: e.dir === "rtl" ? "100%" : "0%",
 				center: "50%",
 				end: e.dir === "rtl" ? "0%" : "100%"
@@ -33602,85 +33609,85 @@ function _oe(e) {
 		}
 	};
 }
-function $M(e) {
+function QM(e) {
 	let [t, n = "center"] = e.split("-");
 	return [t, n];
 }
 // node_modules/@floating-ui/utils/dist/floating-ui.utils.mjs
-var voe = [
+var yoe = [
 	"top",
 	"right",
 	"bottom",
 	"left"
-], eN = Math.min, tN = Math.max, nN = Math.round, rN = Math.floor, iN = (e) => ({
+], $M = Math.min, eN = Math.max, tN = Math.round, nN = Math.floor, rN = (e) => ({
 	x: e,
 	y: e
-}), yoe = {
+}), boe = {
 	left: "right",
 	right: "left",
 	bottom: "top",
 	top: "bottom"
 };
-function aN(e, t, n) {
-	return tN(e, eN(t, n));
+function iN(e, t, n) {
+	return eN(e, $M(t, n));
 }
-function oN(e, t) {
+function aN(e, t) {
 	return typeof e == "function" ? e(t) : e;
 }
-function sN(e) {
+function oN(e) {
 	return e.split("-")[0];
 }
-function cN(e) {
+function sN(e) {
 	return e.split("-")[1];
 }
-function lN(e) {
+function cN(e) {
 	return e === "x" ? "y" : "x";
 }
-function uN(e) {
+function lN(e) {
 	return e === "y" ? "height" : "width";
 }
-function dN(e) {
+function uN(e) {
 	let t = e[0];
 	return t === "t" || t === "b" ? "y" : "x";
 }
-function fN(e) {
-	return lN(dN(e));
+function dN(e) {
+	return cN(uN(e));
 }
-function boe(e, t, n) {
+function xoe(e, t, n) {
 	n === void 0 && (n = !1);
-	let r = cN(e), i = fN(e), a = uN(i), o = i === "x" ? r === (n ? "end" : "start") ? "right" : "left" : r === "start" ? "bottom" : "top";
-	return t.reference[a] > t.floating[a] && (o = gN(o)), [o, gN(o)];
+	let r = sN(e), i = dN(e), a = lN(i), o = i === "x" ? r === (n ? "end" : "start") ? "right" : "left" : r === "start" ? "bottom" : "top";
+	return t.reference[a] > t.floating[a] && (o = hN(o)), [o, hN(o)];
 }
-function xoe(e) {
-	let t = gN(e);
+function Soe(e) {
+	let t = hN(e);
 	return [
-		pN(e),
+		fN(e),
 		t,
-		pN(t)
+		fN(t)
 	];
 }
-function pN(e) {
+function fN(e) {
 	return e.includes("start") ? e.replace("start", "end") : e.replace("end", "start");
 }
-var mN = ["left", "right"], hN = ["right", "left"], Soe = ["top", "bottom"], Coe = ["bottom", "top"];
-function woe(e, t, n) {
+var pN = ["left", "right"], mN = ["right", "left"], Coe = ["top", "bottom"], woe = ["bottom", "top"];
+function Toe(e, t, n) {
 	switch (e) {
 		case "top":
-		case "bottom": return n ? t ? hN : mN : t ? mN : hN;
+		case "bottom": return n ? t ? mN : pN : t ? pN : mN;
 		case "left":
-		case "right": return t ? Soe : Coe;
+		case "right": return t ? Coe : woe;
 		default: return [];
 	}
 }
-function Toe(e, t, n, r) {
-	let i = cN(e), a = woe(sN(e), n === "start", r);
-	return i && (a = a.map((e) => e + "-" + i), t && (a = a.concat(a.map(pN)))), a;
+function Eoe(e, t, n, r) {
+	let i = sN(e), a = Toe(oN(e), n === "start", r);
+	return i && (a = a.map((e) => e + "-" + i), t && (a = a.concat(a.map(fN)))), a;
 }
-function gN(e) {
-	let t = sN(e);
-	return yoe[t] + e.slice(t.length);
+function hN(e) {
+	let t = oN(e);
+	return boe[t] + e.slice(t.length);
 }
-function Eoe(e) {
+function Doe(e) {
 	return {
 		top: e.top ?? 0,
 		right: e.right ?? 0,
@@ -33688,15 +33695,15 @@ function Eoe(e) {
 		left: e.left ?? 0
 	};
 }
-function _N(e) {
+function gN(e) {
 	return typeof e == "number" ? {
 		top: e,
 		right: e,
 		bottom: e,
 		left: e
-	} : Eoe(e);
+	} : Doe(e);
 }
-function vN(e) {
+function _N(e) {
 	let { x: t, y: n, width: r, height: i } = e;
 	return {
 		width: r,
@@ -33710,8 +33717,8 @@ function vN(e) {
 	};
 }
 // node_modules/@floating-ui/core/dist/floating-ui.core.mjs
-function yN(e, t, n) {
-	let { reference: r, floating: i } = e, a = dN(t), o = fN(t), s = uN(o), c = sN(t), l = a === "y", u = r.x + r.width / 2 - i.width / 2, d = r.y + r.height / 2 - i.height / 2, f = r[s] / 2 - i[s] / 2, p;
+function vN(e, t, n) {
+	let { reference: r, floating: i } = e, a = uN(t), o = dN(t), s = lN(o), c = oN(t), l = a === "y", u = r.x + r.width / 2 - i.width / 2, d = r.y + r.height / 2 - i.height / 2, f = r[s] / 2 - i[s] / 2, p;
 	switch (c) {
 		case "top":
 			p = {
@@ -33742,12 +33749,12 @@ function yN(e, t, n) {
 			y: r.y
 		};
 	}
-	let m = cN(t);
+	let m = sN(t);
 	return m && (p[o] += f * (m === "end" ? 1 : -1) * (n && l ? -1 : 1)), p;
 }
-async function Doe(e, t) {
+async function Ooe(e, t) {
 	t === void 0 && (t = {});
-	let { x: n, y: r, platform: i, rects: a, elements: o, strategy: s } = e, { boundary: c = "clippingAncestors", rootBoundary: l = "viewport", elementContext: u = "floating", altBoundary: d = !1, padding: f = 0 } = oN(t, e), p = _N(f), m = o[d ? u === "floating" ? "reference" : "floating" : u], h = vN(await i.getClippingRect({
+	let { x: n, y: r, platform: i, rects: a, elements: o, strategy: s } = e, { boundary: c = "clippingAncestors", rootBoundary: l = "viewport", elementContext: u = "floating", altBoundary: d = !1, padding: f = 0 } = aN(t, e), p = gN(f), m = o[d ? u === "floating" ? "reference" : "floating" : u], h = _N(await i.getClippingRect({
 		element: await (i.isElement == null ? void 0 : i.isElement(m)) ?? !0 ? m : m.contextElement || await (i.getDocumentElement == null ? void 0 : i.getDocumentElement(o.floating)),
 		boundary: c,
 		rootBoundary: l,
@@ -33760,7 +33767,7 @@ async function Doe(e, t) {
 	} : a.reference, _ = await (i.getOffsetParent == null ? void 0 : i.getOffsetParent(o.floating)), v = await (i.isElement == null ? void 0 : i.isElement(_)) && await (i.getScale == null ? void 0 : i.getScale(_)) || {
 		x: 1,
 		y: 1
-	}, y = vN(i.convertOffsetParentRelativeRectToViewportRelativeRect ? await i.convertOffsetParentRelativeRectToViewportRelativeRect({
+	}, y = _N(i.convertOffsetParentRelativeRectToViewportRelativeRect ? await i.convertOffsetParentRelativeRectToViewportRelativeRect({
 		elements: o,
 		rect: g,
 		offsetParent: _,
@@ -33773,15 +33780,15 @@ async function Doe(e, t) {
 		right: (y.right - h.right + p.right) / v.x
 	};
 }
-var Ooe = 50, koe = async (e, t, n) => {
+var koe = 50, Aoe = async (e, t, n) => {
 	let { placement: r = "bottom", strategy: i = "absolute", middleware: a = [], platform: o } = n, s = o.detectOverflow ? o : {
 		...o,
-		detectOverflow: Doe
+		detectOverflow: Ooe
 	}, c = await (o.isRTL == null ? void 0 : o.isRTL(t)), l = await o.getElementRects({
 		reference: e,
 		floating: t,
 		strategy: i
-	}), { x: u, y: d } = yN(l, r, c), f = r, p = 0, m = {};
+	}), { x: u, y: d } = vN(l, r, c), f = r, p = 0, m = {};
 	for (let n = 0; n < a.length; n++) {
 		let h = a[n];
 		if (!h) continue;
@@ -33802,11 +33809,11 @@ var Ooe = 50, koe = async (e, t, n) => {
 		u = v ?? u, d = y ?? d, m[g] = {
 			...m[g],
 			...b
-		}, x && p < Ooe && (p++, typeof x == "object" && (x.placement && (f = x.placement), x.rects && (l = x.rects === !0 ? await o.getElementRects({
+		}, x && p < koe && (p++, typeof x == "object" && (x.placement && (f = x.placement), x.rects && (l = x.rects === !0 ? await o.getElementRects({
 			reference: e,
 			floating: t,
 			strategy: i
-		}) : x.rects), {x: u, y: d} = yN(l, f, c)), n = -1);
+		}) : x.rects), {x: u, y: d} = vN(l, f, c)), n = -1);
 	}
 	return {
 		x: u,
@@ -33815,18 +33822,18 @@ var Ooe = 50, koe = async (e, t, n) => {
 		strategy: i,
 		middlewareData: m
 	};
-}, Aoe = (e) => ({
+}, joe = (e) => ({
 	name: "arrow",
 	options: e,
 	async fn(t) {
-		let { x: n, y: r, placement: i, rects: a, platform: o, elements: s, middlewareData: c } = t, { element: l, padding: u = 0 } = oN(e, t) || {};
+		let { x: n, y: r, placement: i, rects: a, platform: o, elements: s, middlewareData: c } = t, { element: l, padding: u = 0 } = aN(e, t) || {};
 		if (l == null) return {};
-		let d = _N(u), f = {
+		let d = gN(u), f = {
 			x: n,
 			y: r
-		}, p = fN(i), m = uN(p), h = await o.getDimensions(l), g = p === "y", _ = g ? "top" : "left", v = g ? "bottom" : "right", y = g ? "clientHeight" : "clientWidth", b = a.reference[m] + a.reference[p] - f[p] - a.floating[m], x = f[p] - a.reference[p], S = await (o.getOffsetParent == null ? void 0 : o.getOffsetParent(l)), C = S ? S[y] : 0;
+		}, p = dN(i), m = lN(p), h = await o.getDimensions(l), g = p === "y", _ = g ? "top" : "left", v = g ? "bottom" : "right", y = g ? "clientHeight" : "clientWidth", b = a.reference[m] + a.reference[p] - f[p] - a.floating[m], x = f[p] - a.reference[p], S = await (o.getOffsetParent == null ? void 0 : o.getOffsetParent(l)), C = S ? S[y] : 0;
 		C && await (o.isElement == null ? void 0 : o.isElement(S)) || (C = s.floating[y] || a.floating[m]);
-		let w = b / 2 - x / 2, T = C / 2 - h[m] / 2 - 1, E = eN(d[_], T), D = eN(d[v], T), O = C - h[m] - D, ee = C / 2 - h[m] / 2 + w, k = aN(E, ee, O), te = !c.arrow && cN(i) != null && ee !== k && a.reference[m] / 2 - (ee < E ? E : D) - h[m] / 2 < 0, ne = te ? ee < E ? ee - E : ee - O : 0;
+		let w = b / 2 - x / 2, T = C / 2 - h[m] / 2 - 1, E = $M(d[_], T), D = $M(d[v], T), O = C - h[m] - D, ee = C / 2 - h[m] / 2 + w, k = iN(E, ee, O), te = !c.arrow && sN(i) != null && ee !== k && a.reference[m] / 2 - (ee < E ? E : D) - h[m] / 2 < 0, ne = te ? ee < E ? ee - E : ee - O : 0;
 		return {
 			[p]: f[p] + ne,
 			data: {
@@ -33837,19 +33844,19 @@ var Ooe = 50, koe = async (e, t, n) => {
 			reset: te
 		};
 	}
-}), joe = function(e) {
+}), Moe = function(e) {
 	return e === void 0 && (e = {}), {
 		name: "flip",
 		options: e,
 		async fn(t) {
 			var n;
-			let { placement: r, middlewareData: i, rects: a, initialPlacement: o, platform: s, elements: c } = t, { mainAxis: l = !0, crossAxis: u = !0, fallbackPlacements: d, fallbackStrategy: f = "bestFit", fallbackAxisSideDirection: p = "none", flipAlignment: m = !0, ...h } = oN(e, t);
+			let { placement: r, middlewareData: i, rects: a, initialPlacement: o, platform: s, elements: c } = t, { mainAxis: l = !0, crossAxis: u = !0, fallbackPlacements: d, fallbackStrategy: f = "bestFit", fallbackAxisSideDirection: p = "none", flipAlignment: m = !0, ...h } = aN(e, t);
 			if ((n = i.arrow) != null && n.alignmentOffset) return {};
-			let g = sN(r), _ = dN(o), v = sN(o) === o, y = await (s.isRTL == null ? void 0 : s.isRTL(c.floating)), b = d || (v || !m ? [gN(o)] : xoe(o)), x = p !== "none";
-			!d && x && b.push(...Toe(o, m, p, y));
+			let g = oN(r), _ = uN(o), v = oN(o) === o, y = await (s.isRTL == null ? void 0 : s.isRTL(c.floating)), b = d || (v || !m ? [hN(o)] : Soe(o)), x = p !== "none";
+			!d && x && b.push(...Eoe(o, m, p, y));
 			let S = [o, ...b], C = await s.detectOverflow(t, h), w = [], T = i.flip?.overflows || [];
 			if (l && w.push(C[g]), u) {
-				let e = boe(r, a, y);
+				let e = xoe(r, a, y);
 				w.push(C[e[0]], C[e[1]]);
 			}
 			if (T = [...T, {
@@ -33857,7 +33864,7 @@ var Ooe = 50, koe = async (e, t, n) => {
 				overflows: w
 			}], !w.every((e) => e <= 0)) {
 				let e = (i.flip?.index || 0) + 1, t = S[e];
-				if (t && (u !== "alignment" || _ === dN(t) || T.every((e) => dN(e.placement) !== _ || e.overflows[0] > 0))) return {
+				if (t && (u !== "alignment" || _ === uN(t) || T.every((e) => uN(e.placement) !== _ || e.overflows[0] > 0))) return {
 					data: {
 						index: e,
 						overflows: T
@@ -33869,7 +33876,7 @@ var Ooe = 50, koe = async (e, t, n) => {
 					case "bestFit": {
 						let e = T.filter((e) => {
 							if (x) {
-								let t = dN(e.placement);
+								let t = uN(e.placement);
 								return t === _ || t === "y";
 							}
 							return !0;
@@ -33885,7 +33892,7 @@ var Ooe = 50, koe = async (e, t, n) => {
 		}
 	};
 };
-function bN(e, t) {
+function yN(e, t) {
 	return {
 		top: e.top - t.height,
 		right: e.right - t.width,
@@ -33893,34 +33900,34 @@ function bN(e, t) {
 		left: e.left - t.width
 	};
 }
-function xN(e) {
-	return voe.some((t) => e[t] >= 0);
+function bN(e) {
+	return yoe.some((t) => e[t] >= 0);
 }
-var Moe = function(e) {
+var xN = function(e) {
 	return e === void 0 && (e = {}), {
 		name: "hide",
 		options: e,
 		async fn(t) {
-			let { rects: n, platform: r } = t, { strategy: i = "referenceHidden", ...a } = oN(e, t);
+			let { rects: n, platform: r } = t, { strategy: i = "referenceHidden", ...a } = aN(e, t);
 			switch (i) {
 				case "referenceHidden": {
-					let e = bN(await r.detectOverflow(t, {
+					let e = yN(await r.detectOverflow(t, {
 						...a,
 						elementContext: "reference"
 					}), n.reference);
 					return { data: {
 						referenceHiddenOffsets: e,
-						referenceHidden: xN(e)
+						referenceHidden: bN(e)
 					} };
 				}
 				case "escaped": {
-					let e = bN(await r.detectOverflow(t, {
+					let e = yN(await r.detectOverflow(t, {
 						...a,
 						altBoundary: !0
 					}), n.floating);
 					return { data: {
 						escapedOffsets: e,
-						escaped: xN(e)
+						escaped: bN(e)
 					} };
 				}
 				default: return {};
@@ -33929,7 +33936,7 @@ var Moe = function(e) {
 	};
 }, SN = /*#__PURE__*/ new Set(["left", "top"]);
 async function CN(e, t) {
-	let { placement: n, platform: r, elements: i } = e, a = await (r.isRTL == null ? void 0 : r.isRTL(i.floating)), o = sN(n), s = cN(n), c = dN(n) === "y", l = SN.has(o) ? -1 : 1, u = a && c ? -1 : 1, d = oN(t, e), { mainAxis: f, crossAxis: p, alignmentAxis: m } = typeof d == "number" ? {
+	let { placement: n, platform: r, elements: i } = e, a = await (r.isRTL == null ? void 0 : r.isRTL(i.floating)), o = oN(n), s = sN(n), c = uN(n) === "y", l = SN.has(o) ? -1 : 1, u = a && c ? -1 : 1, d = aN(t, e), { mainAxis: f, crossAxis: p, alignmentAxis: m } = typeof d == "number" ? {
 		mainAxis: d,
 		crossAxis: 0,
 		alignmentAxis: null
@@ -33974,10 +33981,10 @@ var wN = function(e) {
 					x: t,
 					y: n
 				};
-			} }, ...l } = oN(e, t), u = {
+			} }, ...l } = aN(e, t), u = {
 				x: n,
 				y: r
-			}, d = await a.detectOverflow(t, l), f = dN(i), p = lN(f), m = u[p], h = u[f], g = (e, t) => aN(t + d[e === "y" ? "top" : "left"], t, t - d[e === "y" ? "bottom" : "right"]);
+			}, d = await a.detectOverflow(t, l), f = uN(i), p = cN(f), m = u[p], h = u[f], g = (e, t) => iN(t + d[e === "y" ? "top" : "left"], t, t - d[e === "y" ? "bottom" : "right"]);
 			o && (m = g(p, m)), s && (h = g(f, h));
 			let _ = c.fn({
 				...t,
@@ -34001,10 +34008,10 @@ var wN = function(e) {
 	return e === void 0 && (e = {}), {
 		options: e,
 		fn(t) {
-			let { x: n, y: r, placement: i, rects: a, middlewareData: o } = t, { offset: s = 0, mainAxis: c = !0, crossAxis: l = !0 } = oN(e, t), u = {
+			let { x: n, y: r, placement: i, rects: a, middlewareData: o } = t, { offset: s = 0, mainAxis: c = !0, crossAxis: l = !0 } = aN(e, t), u = {
 				x: n,
 				y: r
-			}, d = dN(i), f = lN(d), p = u[f], m = u[d], h = oN(s, t), g = typeof h == "number" ? {
+			}, d = uN(i), f = cN(d), p = u[f], m = u[d], h = aN(s, t), g = typeof h == "number" ? {
 				mainAxis: h,
 				crossAxis: 0
 			} : {
@@ -34016,7 +34023,7 @@ var wN = function(e) {
 				p < t ? p = t : p > n && (p = n);
 			}
 			if (l) {
-				let e = f === "y" ? "width" : "height", t = SN.has(sN(i)), n = a.reference[d] - a.floating[e] + (t && o.offset?.[d] || 0) + (t ? 0 : g.crossAxis), r = a.reference[d] + a.reference[e] + (t ? 0 : o.offset?.[d] || 0) - (t ? g.crossAxis : 0);
+				let e = f === "y" ? "width" : "height", t = SN.has(oN(i)), n = a.reference[d] - a.floating[e] + (t && o.offset?.[d] || 0) + (t ? 0 : g.crossAxis), r = a.reference[d] + a.reference[e] + (t ? 0 : o.offset?.[d] || 0) - (t ? g.crossAxis : 0);
 				m < n ? m = n : m > r && (m = r);
 			}
 			return {
@@ -34030,10 +34037,10 @@ var wN = function(e) {
 		name: "size",
 		options: e,
 		async fn(t) {
-			let { placement: n, rects: r, platform: i, elements: a } = t, { apply: o = () => {}, ...s } = oN(e, t), c = await i.detectOverflow(t, s), l = sN(n), u = cN(n), d = dN(n) === "y", { width: f, height: p } = r.floating, m, h;
+			let { placement: n, rects: r, platform: i, elements: a } = t, { apply: o = () => {}, ...s } = aN(e, t), c = await i.detectOverflow(t, s), l = oN(n), u = sN(n), d = uN(n) === "y", { width: f, height: p } = r.floating, m, h;
 			l === "top" || l === "bottom" ? (m = l, h = u === (await (i.isRTL == null ? void 0 : i.isRTL(a.floating)) ? "start" : "end") ? "left" : "right") : (h = l, m = u === "end" ? "top" : "bottom");
-			let g = p - c.top - c.bottom, _ = f - c.left - c.right, v = eN(p - c[m], g), y = eN(f - c[h], _), b = t.middlewareData.shift, x = !b, S = v, C = y;
-			b != null && b.enabled.x && (C = _), b != null && b.enabled.y && (S = g), x && !u && (d ? C = f - 2 * tN(c.left, c.right) : S = p - 2 * tN(c.top, c.bottom)), await o({
+			let g = p - c.top - c.bottom, _ = f - c.left - c.right, v = $M(p - c[m], g), y = $M(f - c[h], _), b = t.middlewareData.shift, x = !b, S = v, C = y;
+			b != null && b.enabled.x && (C = _), b != null && b.enabled.y && (S = g), x && !u && (d ? C = f - 2 * eN(c.left, c.right) : S = p - 2 * eN(c.top, c.bottom)), await o({
 				...t,
 				availableWidth: C,
 				availableHeight: S
@@ -34141,7 +34148,7 @@ function QN(e) {
 }
 // node_modules/@floating-ui/dom/dist/floating-ui.dom.mjs
 function $N(e) {
-	let t = qN(e), n = parseFloat(t.width) || 0, r = parseFloat(t.height) || 0, i = PN(e), a = i ? e.offsetWidth : n, o = i ? e.offsetHeight : r, s = nN(n) !== a || nN(r) !== o;
+	let t = qN(e), n = parseFloat(t.width) || 0, r = parseFloat(t.height) || 0, i = PN(e), a = i ? e.offsetWidth : n, o = i ? e.offsetHeight : r, s = tN(n) !== a || tN(r) !== o;
 	return s && (n = a, r = o), {
 		width: n,
 		height: r,
@@ -34153,14 +34160,14 @@ function eP(e) {
 }
 function tP(e) {
 	let t = eP(e);
-	if (!PN(t)) return iN(1);
-	let n = t.getBoundingClientRect(), { width: r, height: i, $: a } = $N(t), o = (a ? nN(n.width) : n.width) / r, s = (a ? nN(n.height) : n.height) / i;
+	if (!PN(t)) return rN(1);
+	let n = t.getBoundingClientRect(), { width: r, height: i, $: a } = $N(t), o = (a ? tN(n.width) : n.width) / r, s = (a ? tN(n.height) : n.height) / i;
 	return o && Number.isFinite(o) || (o = 1), s && Number.isFinite(s) || (s = 1), {
 		x: o,
 		y: s
 	};
 }
-var nP = /*#__PURE__*/ iN(0);
+var nP = /*#__PURE__*/ rN(0);
 function rP(e) {
 	let t = AN(e);
 	return !GN() || !t.visualViewport ? nP : {
@@ -34173,9 +34180,9 @@ function iP(e, t, n) {
 }
 function aP(e, t, n, r) {
 	t === void 0 && (t = !1), n === void 0 && (n = !1);
-	let i = e.getBoundingClientRect(), a = eP(e), o = iN(1);
+	let i = e.getBoundingClientRect(), a = eP(e), o = rN(1);
 	t && (r ? NN(r) && (o = tP(r)) : o = tP(e));
-	let s = iP(a, n, r) ? rP(a) : iN(0), c = (i.left + s.x) / o.x, l = (i.top + s.y) / o.y, u = i.width / o.x, d = i.height / o.y;
+	let s = iP(a, n, r) ? rP(a) : rN(0), c = (i.left + s.x) / o.x, l = (i.top + s.y) / o.y, u = i.width / o.x, d = i.height / o.y;
 	if (a && r) {
 		let e = AN(a), t = NN(r) ? AN(r) : r, n = e, i = QN(n);
 		for (; i && t !== n;) {
@@ -34183,7 +34190,7 @@ function aP(e, t, n, r) {
 			c *= e.x, l *= e.y, u *= e.x, d *= e.y, c += a, l += o, n = AN(i), i = QN(n);
 		}
 	}
-	return vN({
+	return _N({
 		width: u,
 		height: d,
 		x: c,
@@ -34207,12 +34214,12 @@ function cP(e) {
 	let c = {
 		scrollLeft: 0,
 		scrollTop: 0
-	}, l = iN(1), u = iN(0), d = PN(r);
+	}, l = rN(1), u = rN(0), d = PN(r);
 	if ((d || !a) && ((kN(r) !== "body" || IN(o)) && (c = JN(r)), d)) {
 		let e = aP(r);
 		l = tP(r), u.x = e.x + r.clientLeft, u.y = e.y + r.clientTop;
 	}
-	let f = o && !d && !a ? sP(o, c) : iN(0);
+	let f = o && !d && !a ? sP(o, c) : rN(0);
 	return {
 		width: n.width * l.x,
 		height: n.height * l.y,
@@ -34224,8 +34231,8 @@ function lP(e) {
 	return e.getClientRects ? Array.from(e.getClientRects()) : [];
 }
 function uP(e) {
-	let t = JN(e), n = e.ownerDocument.body, r = tN(e.scrollWidth, e.clientWidth, n.scrollWidth, n.clientWidth), i = tN(e.scrollHeight, e.clientHeight, n.scrollHeight, n.clientHeight), a = -t.scrollLeft + oP(e), o = -t.scrollTop;
-	return qN(n).direction === "rtl" && (a += tN(e.clientWidth, n.clientWidth) - r), {
+	let t = JN(e), n = e.ownerDocument.body, r = eN(e.scrollWidth, e.clientWidth, n.scrollWidth, n.clientWidth), i = eN(e.scrollHeight, e.clientHeight, n.scrollHeight, n.clientHeight), a = -t.scrollLeft + oP(e), o = -t.scrollTop;
+	return qN(n).direction === "rtl" && (a += eN(e.clientWidth, n.clientWidth) - r), {
 		width: r,
 		height: i,
 		x: a,
@@ -34274,7 +34281,7 @@ function mP(e, t, n) {
 			height: t.height
 		};
 	}
-	return vN(r);
+	return _N(r);
 }
 function hP(e, t) {
 	let n = t.get(e);
@@ -34290,7 +34297,7 @@ function gP(e) {
 	let { element: t, boundary: n, rootBoundary: r, strategy: i } = e, a = [...n === "clippingAncestors" ? RN(t) ? [] : hP(t, this._c) : [].concat(n), r], o = mP(t, a[0], i), s = o.top, c = o.right, l = o.bottom, u = o.left;
 	for (let e = 1; e < a.length; e++) {
 		let n = mP(t, a[e], i);
-		s = tN(n.top, s), c = eN(n.right, c), l = eN(n.bottom, l), u = tN(n.left, u);
+		s = eN(n.top, s), c = $M(n.right, c), l = $M(n.bottom, l), u = eN(n.left, u);
 	}
 	return {
 		width: c - u,
@@ -34310,13 +34317,13 @@ function vP(e, t, n) {
 	let r = PN(t), i = jN(t), a = n === "fixed", o = aP(e, !0, a, t), s = {
 		scrollLeft: 0,
 		scrollTop: 0
-	}, c = iN(0);
+	}, c = rN(0);
 	if ((r || !a) && ((kN(t) !== "body" || IN(i)) && (s = JN(t)), r)) {
 		let e = aP(t, !0, a, t);
 		c.x = e.x + t.clientLeft, c.y = e.y + t.clientTop;
 	}
 	!r && i && (c.x = oP(i));
-	let l = i && !r && !a ? sP(i, s) : iN(0);
+	let l = i && !r && !a ? sP(i, s) : rN(0);
 	return {
 		x: o.left + s.scrollLeft - c.x - l.x,
 		y: o.top + s.scrollTop - c.y - l.y,
@@ -34388,9 +34395,9 @@ function EP(e, t, n) {
 		n === void 0 && (n = !1), c === void 0 && (c = 1), o();
 		let l = e.getBoundingClientRect(), { left: u, top: d, width: f, height: p } = l;
 		if (n || t(), !f || !p) return;
-		let m = rN(d), h = rN(a.clientWidth - (u + f)), g = rN(a.clientHeight - (d + p)), _ = rN(u), v = {
+		let m = nN(d), h = nN(a.clientWidth - (u + f)), g = nN(a.clientHeight - (d + p)), _ = nN(u), v = {
 			rootMargin: -m + "px " + -h + "px " + -g + "px " + -_ + "px",
-			threshold: tN(0, eN(1, c)) || 1
+			threshold: eN(0, $M(1, c)) || 1
 		}, y = !0;
 		function b(t) {
 			let n = t[0].intersectionRatio;
@@ -34445,13 +34452,13 @@ function DP(e, t, n, r) {
 		}), d?.(), (e = p) == null || e.disconnect(), p = null, c && cancelAnimationFrame(m);
 	};
 }
-var OP = wN, kP = TN, AP = joe, jP = DN, MP = Moe, NP = Aoe, PP = EN, FP = (e, t, n) => {
+var OP = wN, kP = TN, AP = Moe, jP = DN, MP = xN, NP = joe, PP = EN, FP = (e, t, n) => {
 	let r = /* @__PURE__ */ new Map(), i = n ?? {}, a = {
 		...wP,
 		...i.platform,
 		_c: r
 	};
-	return koe(e, t, {
+	return Aoe(e, t, {
 		...i,
 		platform: a
 	});
@@ -34561,7 +34568,7 @@ var HP = ["dir"], UP = {
 	positionStrategy: "fixed",
 	updatePositionStrategy: "optimized",
 	prioritizePosition: !1
-}, [Noe, WP] = /*#__PURE__*/ Ej("PopperContent"), GP = /* @__PURE__ */ I({
+}, [Noe, WP] = /*#__PURE__*/ Tj("PopperContent"), GP = /* @__PURE__ */ I({
 	inheritAttrs: !1,
 	__name: "PopperContent",
 	props: /* @__PURE__ */ Ko({
@@ -34656,7 +34663,7 @@ var HP = ["dir"], UP = {
 	}, { ...UP }),
 	emits: ["placed"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = XM(), { forwardRef: a, currentElement: o } = cM(), s = nM(K(() => n.dir)), c = /* @__PURE__ */ M(), l = /* @__PURE__ */ M(), { width: u, height: d } = kae(l), f = K(() => n.side + (n.align === "center" ? "" : `-${n.align}`)), p = K(() => typeof n.collisionPadding == "number" ? n.collisionPadding : {
+		let n = e, r = t, i = YM(), { forwardRef: a, currentElement: o } = sM(), s = tM(K(() => n.dir)), c = /* @__PURE__ */ M(), l = /* @__PURE__ */ M(), { width: u, height: d } = Aae(l), f = K(() => n.side + (n.align === "center" ? "" : `-${n.align}`)), p = K(() => typeof n.collisionPadding == "number" ? n.collisionPadding : {
 			top: 0,
 			right: 0,
 			bottom: 0,
@@ -34664,7 +34671,7 @@ var HP = ["dir"], UP = {
 			...n.collisionPadding
 		}), m = K(() => Array.isArray(n.collisionBoundary) ? n.collisionBoundary : [n.collisionBoundary]), h = K(() => ({
 			padding: p.value,
-			boundary: m.value.filter(goe),
+			boundary: m.value.filter(_oe),
 			altBoundary: m.value.length > 0
 		})), g = K(() => ({
 			mainAxis: n.sideFlip,
@@ -34699,7 +34706,7 @@ var HP = ["dir"], UP = {
 				element: l.value,
 				padding: n.arrowPadding
 			}),
-			_oe({
+			voe({
 				arrowWidth: u.value,
 				arrowHeight: d.value,
 				dir: s.value
@@ -34716,7 +34723,7 @@ var HP = ["dir"], UP = {
 				animationFrame: n.updatePositionStrategy === "always"
 			}),
 			middleware: _
-		}), C = K(() => $M(y.value)[0]), w = K(() => $M(y.value)[1]);
+		}), C = K(() => QM(y.value)[0]), w = K(() => QM(y.value)[1]);
 		Ji(() => {
 			b.value && r("placed");
 		});
@@ -34756,7 +34763,7 @@ var HP = ["dir"], UP = {
 			N(b),
 			...Object.values(e.$attrs),
 			...n.memoDependencies
-		], () => (z(), V(N(CM), kc({
+		], () => (z(), V(N(SM), kc({
 			key: 0,
 			ref: N(a)
 		}, e.$attrs, {
@@ -34774,7 +34781,7 @@ var HP = ["dir"], UP = {
 			"data-side",
 			"data-align",
 			"style"
-		])), t, 0) : (z(), V(N(CM), kc({
+		])), t, 0) : (z(), V(N(SM), kc({
 			key: 1,
 			ref: N(a)
 		}, e.$attrs, {
@@ -34800,7 +34807,7 @@ var HP = ["dir"], UP = {
 // node_modules/reka-ui/dist/Combobox/useComboboxContentPositioning.js
 function KP(e) {
 	let t = /* @__PURE__ */ M("inline"), n = /* @__PURE__ */ M(!1), r = /* @__PURE__ */ M(), i = K(() => t.value === "popper" && !n.value), a;
-	YM({
+	JM({
 		suppressHighlightScroll: i,
 		onHighlightScrollRequest(e) {
 			a = e;
@@ -34825,7 +34832,7 @@ function KP(e) {
 	};
 }
 // node_modules/reka-ui/dist/Combobox/ComboboxRoot.js
-var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
+var [qP, JP] = /*#__PURE__*/ Tj("ComboboxRoot"), YP = /* @__PURE__ */ I({
 	__name: "ComboboxRoot",
 	props: {
 		open: {
@@ -34927,11 +34934,11 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 		"update:open"
 	],
 	setup(e, { expose: t, emit: n }) {
-		let r = e, i = n, { primitiveElement: a, currentElement: o } = wM(), { multiple: s, disabled: c, ignoreFilter: l, resetSearchTermOnSelect: u, openOnFocus: d, openOnClick: f, dir: p, resetModelValueOnClear: m, highlightOnHover: h, loop: g, unmountOnHide: _ } = /* @__PURE__ */ Hr(r), v = nM(p), y = Hj(r, "modelValue", i, {
+		let r = e, i = n, { primitiveElement: a, currentElement: o } = CM(), { multiple: s, disabled: c, ignoreFilter: l, resetSearchTermOnSelect: u, openOnFocus: d, openOnClick: f, dir: p, resetModelValueOnClear: m, highlightOnHover: h, loop: g, unmountOnHide: _ } = /* @__PURE__ */ Hr(r), v = tM(p), y = Vj(r, "modelValue", i, {
 			defaultValue: r.defaultValue ?? (s.value ? [] : void 0),
 			passive: r.modelValue === void 0,
 			deep: !0
-		}), b = Hj(r, "open", i, {
+		}), b = Vj(r, "open", i, {
 			defaultValue: r.defaultOpen,
 			passive: r.open === void 0
 		});
@@ -34940,7 +34947,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 				!e && r.resetSearchTermOnBlur && S.trigger();
 			}, 1));
 		}
-		let S = jj(), C = /* @__PURE__ */ M(!1), w = /* @__PURE__ */ M(!1), T = /* @__PURE__ */ M(), E = /* @__PURE__ */ M(), D = K(() => a.value?.highlightedElement ?? void 0), O = KP(b), ee = /* @__PURE__ */ M(/* @__PURE__ */ new Map()), k = /* @__PURE__ */ M(/* @__PURE__ */ new Map()), { contains: te } = Sae({ sensitivity: "base" }), ne = /* @__PURE__ */ M(""), re = K((e) => {
+		let S = Aj(), C = /* @__PURE__ */ M(!1), w = /* @__PURE__ */ M(!1), T = /* @__PURE__ */ M(), E = /* @__PURE__ */ M(), D = K(() => a.value?.highlightedElement ?? void 0), O = KP(b), ee = /* @__PURE__ */ M(/* @__PURE__ */ new Map()), k = /* @__PURE__ */ M(/* @__PURE__ */ new Map()), { contains: te } = Cae({ sensitivity: "base" }), ne = /* @__PURE__ */ M(""), re = K((e) => {
 			if (!ne.value || r.ignoreFilter || w.value) return {
 				count: ee.value.size,
 				items: e?.items ?? /* @__PURE__ */ new Map(),
@@ -34996,8 +35003,8 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 			openOnClick: f,
 			resetModelValueOnClear: m,
 			unmountOnHide: _
-		}), (t, n) => (z(), V(N(ZM), null, {
-			default: P(() => [U(N(coe), kc({
+		}), (t, n) => (z(), V(N(XM), null, {
+			default: P(() => [U(N(loe), kc({
 				ref_key: "primitiveElement",
 				ref: a
 			}, t.$attrs, {
@@ -35055,12 +35062,12 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let { forwardRef: t } = cM();
-		return (n, r) => (z(), V(N(QM), {
+		let { forwardRef: t } = sM();
+		return (n, r) => (z(), V(N(ZM), {
 			"as-child": "",
 			reference: e.reference
 		}, {
-			default: P(() => [U(N(CM), kc({
+			default: P(() => [U(N(SM), kc({
 				ref: N(t),
 				"as-child": e.asChild,
 				as: e.as
@@ -35071,7 +35078,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 			_: 3
 		}, 8, ["reference"]));
 	}
-}), [Poe, ZP] = /*#__PURE__*/ Ej("ComboboxContent"), QP = /* @__PURE__ */ I({
+}), [Poe, ZP] = /*#__PURE__*/ Tj("ComboboxContent"), QP = /* @__PURE__ */ I({
 	__name: "ComboboxContentImpl",
 	props: {
 		position: {
@@ -35194,9 +35201,9 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 	setup(e, { emit: t }) {
 		let n = e, r = t, { position: i } = /* @__PURE__ */ Hr(n), a = qP(), o = Symbol("ComboboxContent");
 		F(i, (e) => a.onContentPositionChange(o, e), { immediate: !0 });
-		let s = K(() => a.ignoreFilter.value ? a.allItems.value.size === 0 : a.filterState.value.count === 0), { forwardRef: c, currentElement: l } = cM(), u = $j(n.present && n.bodyLock);
-		F([() => n.present, () => n.bodyLock], ([e, t]) => u.value = e && t), aM(), gM(K(() => n.present ? a.parentElement.value : void 0));
-		let d = lM(K(() => {
+		let s = K(() => a.ignoreFilter.value ? a.allItems.value.size === 0 : a.filterState.value.count === 0), { forwardRef: c, currentElement: l } = sM(), u = Qj(n.present && n.bodyLock);
+		F([() => n.present, () => n.bodyLock], ([e, t]) => u.value = e && t), iM(), hM(K(() => n.present ? a.parentElement.value : void 0));
+		let d = cM(K(() => {
 			if (n.position === "popper") {
 				let { present: e, ...t } = n;
 				return t;
@@ -35216,11 +35223,11 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 			a.inputElement.value && (p.value = l.value.contains(a.inputElement.value), n.present && p.value && a.inputElement.value.focus());
 		}), F(() => n.present, async (e, t) => {
 			if (e || !t) return;
-			let n = Dj();
+			let n = Ej();
 			n && l.value.contains(n) && (await xi(), a.triggerElement.value?.focus());
 		}), ho(() => {
 			a.onContentUnmount(o);
-			let e = Dj();
+			let e = Ej();
 			p.value && (!e || e === document.body) && a.triggerElement.value?.focus();
 		});
 		function m(e) {
@@ -35229,14 +35236,14 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 			return !!t && !!a.parentElement.value?.contains(t);
 		}
 		let h = { placed: () => a.onContentPlaced(o) };
-		return (t, o) => (z(), V(N(loe), { "as-child": "" }, {
-			default: P(() => [U(N(FM), {
+		return (t, o) => (z(), V(N(uoe), { "as-child": "" }, {
+			default: P(() => [U(N(PM), {
 				"as-child": "",
 				present: n.present,
 				onMountAutoFocus: o[5] ||= ed(() => {}, ["prevent"]),
 				onUnmountAutoFocus: o[6] ||= ed(() => {}, ["prevent"])
 			}, {
-				default: P(() => [U(N(DM), {
+				default: P(() => [U(N(EM), {
 					"as-child": "",
 					present: n.present,
 					"disable-outside-pointer-events": e.disableOutsidePointerEvents,
@@ -35250,7 +35257,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 						m(e.target) && e.preventDefault(), r("pointerDownOutside", e);
 					}
 				}, {
-					default: P(() => [(z(), V(Co(N(i) === "popper" ? N(GP) : N(CM)), kc({
+					default: P(() => [(z(), V(Co(N(i) === "popper" ? N(GP) : N(SM)), kc({
 						...t.$attrs,
 						...N(d)
 					}, {
@@ -35401,8 +35408,8 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 		"interactOutside"
 	],
 	setup(e, { emit: t }) {
-		let n = uM(e, t), { forwardRef: r } = cM(), i = qP();
-		return i.contentId ||= _M(void 0, "reka-combobox-content"), (t, a) => (z(), V(N(xM), {
+		let n = lM(e, t), { forwardRef: r } = sM(), i = qP();
+		return i.contentId ||= gM(void 0, "reka-combobox-content"), (t, a) => (z(), V(N(bM), {
 			present: e.forceMount || N(i).open.value,
 			"force-mount": e.forceMount || !N(i).unmountOnHide.value
 		}, {
@@ -35433,12 +35440,12 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 	},
 	setup(e) {
 		let t = e, n = qP(), r = K(() => n.ignoreFilter.value ? n.allItems.value.size === 0 : n.filterState.value.count === 0);
-		return (e, n) => r.value ? (z(), V(N(CM), zt(kc({ key: 0 }, t)), {
+		return (e, n) => r.value ? (z(), V(N(SM), zt(kc({ key: 0 }, t)), {
 			default: P(() => [Do(e.$slots, "default", {}, () => [n[0] ||= W("No options", -1)])]),
 			_: 3
 		}, 16)) : G("v-if", !0);
 	}
-}), [tF, Foe] = /*#__PURE__*/ Ej("ComboboxGroup"), nF = /* @__PURE__ */ I({
+}), [tF, Foe] = /*#__PURE__*/ Tj("ComboboxGroup"), nF = /* @__PURE__ */ I({
 	__name: "ComboboxInput",
 	props: {
 		displayValue: {
@@ -35469,11 +35476,11 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 	},
 	emits: ["update:modelValue"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = qP(), a = JM(), { primitiveElement: o, currentElement: s } = wM(), c = Hj(n, "modelValue", r, { passive: n.modelValue === void 0 });
+		let n = e, r = t, i = qP(), a = qM(), { primitiveElement: o, currentElement: s } = CM(), c = Vj(n, "modelValue", r, { passive: n.modelValue === void 0 });
 		uo(() => {
 			s.value && i.onInputElementChange(s.value);
 		});
-		let { isComposing: l, shouldDeferInput: u, handleCompositionStart: d, handleCompositionUpdate: f, handleCompositionEnd: p } = tM((e) => {
+		let { isComposing: l, shouldDeferInput: u, handleCompositionStart: d, handleCompositionUpdate: f, handleCompositionEnd: p } = eM((e) => {
 			let t = e.target;
 			t && h(t.value);
 		});
@@ -35520,7 +35527,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 			deep: !0
 		}), F(i.filterState, (e, t) => {
 			!i.isVirtual.value && t.count === 0 && a.highlightFirstItem();
-		}), (t, n) => (z(), V(N(uoe), {
+		}), (t, n) => (z(), V(N(doe), {
 			ref_key: "primitiveElement",
 			ref: o,
 			modelValue: N(c),
@@ -35584,7 +35591,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 	},
 	emits: ["select"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = _M(void 0, "reka-combobox-item"), a = qP(), o = tF(null), { primitiveElement: s, currentElement: c } = wM();
+		let n = e, r = t, i = gM(void 0, "reka-combobox-item"), a = qP(), o = tF(null), { primitiveElement: s, currentElement: c } = CM();
 		if (n.value === "") throw Error("A <ComboboxItem /> must have a value prop that is not an empty string. This is because the Combobox value can be set to an empty string to clear the selection and show the placeholder.");
 		let l = K(() => {
 			if (a.isVirtual.value || a.ignoreFilter.value || !a.filterSearch.value) return !0;
@@ -35608,7 +35615,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 			n.as,
 			n.asChild,
 			...Object.values(t.$attrs)
-		], () => (z(), V(N(moe), kc({ key: 0 }, n, {
+		], () => (z(), V(N(hoe), kc({ key: 0 }, n, {
 			id: N(i),
 			ref_key: "primitiveElement",
 			ref: s,
@@ -35643,7 +35650,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 	},
 	setup(e) {
 		let t = e;
-		return (e, n) => (z(), V(N(BM), zt(Cc(t)), {
+		return (e, n) => (z(), V(N(zM), zt(Cc(t)), {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
 		}, 16));
@@ -35666,10 +35673,10 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let t = e, { forwardRef: n, currentElement: r } = cM(), i = qP(), a = K(() => t.disabled || i.disabled.value || !1);
+		let t = e, { forwardRef: n, currentElement: r } = sM(), i = qP(), a = K(() => t.disabled || i.disabled.value || !1);
 		return uo(() => {
 			r.value && i.onTriggerElementChange(r.value);
-		}), (r, o) => (z(), V(N(CM), kc(t, {
+		}), (r, o) => (z(), V(N(SM), kc(t, {
 			ref: N(n),
 			type: e.as === "button" ? "button" : void 0,
 			tabindex: "-1",
@@ -35698,7 +35705,7 @@ var [qP, JP] = /*#__PURE__*/ Ej("ComboboxRoot"), YP = /* @__PURE__ */ I({
 });
 // node_modules/reka-ui/dist/shared/useNonce.js
 function oF(e) {
-	let t = Kj({ nonce: /* @__PURE__ */ M() });
+	let t = Gj({ nonce: /* @__PURE__ */ M() });
 	return K(() => e?.value || t.nonce?.value);
 }
 // node_modules/reka-ui/dist/Combobox/ComboboxViewport.js
@@ -35719,8 +35726,8 @@ var sF = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let t = e, { forwardRef: n } = cM(), { nonce: r } = /* @__PURE__ */ Hr(t), i = oF(r), a = qP();
-		return (e, r) => (z(), B(R, null, [U(N(CM), kc({
+		let t = e, { forwardRef: n } = sM(), { nonce: r } = /* @__PURE__ */ Hr(t), i = oF(r), a = qP();
+		return (e, r) => (z(), B(R, null, [U(N(SM), kc({
 			...e.$attrs,
 			...t
 		}, {
@@ -35735,7 +35742,7 @@ var sF = /* @__PURE__ */ I({
 		}), {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
-		}, 16, ["style"]), U(N(CM), {
+		}, 16, ["style"]), U(N(SM), {
 			as: "style",
 			nonce: N(i)
 		}, {
@@ -35743,7 +35750,7 @@ var sF = /* @__PURE__ */ I({
 			_: 1
 		}, 8, ["nonce"])], 64));
 	}
-}), [cF, lF] = /*#__PURE__*/ Ej("RovingFocusGroup"), uF = /* @__PURE__ */ I({
+}), [cF, lF] = /*#__PURE__*/ Tj("RovingFocusGroup"), uF = /* @__PURE__ */ I({
 	__name: "RovingFocusGroup",
 	props: {
 		orientation: {
@@ -35784,17 +35791,17 @@ var sF = /* @__PURE__ */ I({
 	},
 	emits: ["entryFocus", "update:currentTabStopId"],
 	setup(e, { expose: t, emit: n }) {
-		let r = e, i = n, { loop: a, orientation: o, dir: s } = /* @__PURE__ */ Hr(r), c = nM(s), l = Hj(r, "currentTabStopId", i, {
+		let r = e, i = n, { loop: a, orientation: o, dir: s } = /* @__PURE__ */ Hr(r), c = tM(s), l = Vj(r, "currentTabStopId", i, {
 			defaultValue: r.defaultCurrentTabStopId,
 			passive: r.currentTabStopId === void 0
-		}), u = /* @__PURE__ */ M(!1), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M(0), { getItems: p, CollectionSlot: m } = HM({ isProvider: !0 });
+		}), u = /* @__PURE__ */ M(!1), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M(0), { getItems: p, CollectionSlot: m } = VM({ isProvider: !0 });
 		function h(e) {
 			let t = !d.value;
 			if (e.currentTarget && e.target === e.currentTarget && t && !u.value) {
-				let t = new CustomEvent(toe, noe);
+				let t = new CustomEvent(noe, roe);
 				if (e.currentTarget.dispatchEvent(t), i("entryFocus", t), !t.defaultPrevented) {
 					let e = p().map((e) => e.ref).filter((e) => e.dataset.disabled !== "");
-					qM([
+					KM([
 						e.find((e) => e.getAttribute("data-active") === ""),
 						e.find((e) => e.getAttribute("data-highlighted") === ""),
 						e.find((e) => e.id === l.value),
@@ -35827,7 +35834,7 @@ var sF = /* @__PURE__ */ I({
 				f.value--;
 			}
 		}), (t, n) => (z(), V(N(m), null, {
-			default: P(() => [U(N(CM), {
+			default: P(() => [U(N(SM), {
 				tabindex: u.value || f.value === 0 ? -1 : 0,
 				"data-orientation": N(o),
 				as: e.as,
@@ -35882,7 +35889,7 @@ var sF = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let t = e, n = cF(), r = _M(), i = K(() => t.tabStopId || r), a = K(() => n.currentTabStopId.value === i.value), { getItems: o, CollectionItem: s } = HM();
+		let t = e, n = cF(), r = gM(), i = K(() => t.tabStopId || r), a = K(() => n.currentTabStopId.value === i.value), { getItems: o, CollectionItem: s } = VM();
 		uo(() => {
 			t.focusable && n.onFocusableItemAdd();
 		}), ho(() => {
@@ -35897,7 +35904,7 @@ var sF = /* @__PURE__ */ I({
 				return;
 			}
 			if (e.target !== e.currentTarget) return;
-			let r = KM(e, n.orientation.value, n.dir.value);
+			let r = GM(e, n.orientation.value, n.dir.value);
 			if (r !== void 0) {
 				if (e.metaKey || e.ctrlKey || e.altKey || !t.allowShiftKey && e.shiftKey) return;
 				e.preventDefault();
@@ -35906,23 +35913,23 @@ var sF = /* @__PURE__ */ I({
 				else if (r === "prev" || r === "next") {
 					r === "prev" && i.reverse();
 					let t = i.indexOf(e.currentTarget);
-					i = n.loop.value ? aoe(i, t + 1) : i.slice(t + 1);
+					i = n.loop.value ? ooe(i, t + 1) : i.slice(t + 1);
 				}
-				xi(() => qM(i));
+				xi(() => KM(i));
 			}
 		}
-		let { forwardRef: l, currentElement: u } = cM(), d = /* @__PURE__ */ Nr();
+		let { forwardRef: l, currentElement: u } = sM(), d = /* @__PURE__ */ Nr();
 		F(u, (e) => {
 			d.value = e;
 		}, {
 			immediate: !0,
 			flush: "post"
-		}), Bj(d, "keydown", c);
+		}), zj(d, "keydown", c);
 		function f(e) {
 			d.value = e.currentTarget;
 		}
 		return (t, r) => (z(), V(N(s), null, {
-			default: P(() => [U(N(CM), {
+			default: P(() => [U(N(SM), {
 				ref: N(l),
 				tabindex: a.value ? 0 : -1,
 				"data-orientation": N(n).orientation.value,
@@ -35949,7 +35956,7 @@ var sF = /* @__PURE__ */ I({
 			_: 3
 		}));
 	}
-}), [fF, Ioe] = /*#__PURE__*/ Ej("FieldRoot"), pF = /* @__PURE__ */ I({
+}), [fF, Ioe] = /*#__PURE__*/ Tj("FieldRoot"), pF = /* @__PURE__ */ I({
 	__name: "MenuAnchor",
 	props: {
 		reference: {
@@ -35967,7 +35974,7 @@ var sF = /* @__PURE__ */ I({
 	},
 	setup(e) {
 		let t = e;
-		return (e, n) => (z(), V(N(QM), zt(Cc(t)), {
+		return (e, n) => (z(), V(N(ZM), zt(Cc(t)), {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
 		}, 16));
@@ -35977,12 +35984,12 @@ var sF = /* @__PURE__ */ I({
 function mF() {
 	let e = /* @__PURE__ */ M(!1);
 	return uo(() => {
-		Bj("keydown", () => {
+		zj("keydown", () => {
 			e.value = !0;
 		}, {
 			capture: !0,
 			passive: !0
-		}), Bj(["pointerdown", "pointermove"], () => {
+		}), zj(["pointerdown", "pointermove"], () => {
 			e.value = !1;
 		}, {
 			capture: !0,
@@ -35990,7 +35997,7 @@ function mF() {
 		});
 	}), e;
 }
-var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuContext"), [vF, yF] = /*#__PURE__*/ Ej("MenuRoot"), bF = /* @__PURE__ */ I({
+var hF = Pj(mF), [gF, _F] = /*#__PURE__*/ Tj(["MenuRoot", "MenuSub"], "MenuContext"), [vF, yF] = /*#__PURE__*/ Tj("MenuRoot"), bF = /* @__PURE__ */ I({
 	__name: "MenuRoot",
 	props: {
 		open: {
@@ -36010,7 +36017,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	},
 	emits: ["update:open"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { modal: i, dir: a } = /* @__PURE__ */ Hr(n), o = nM(a), s = Hj(n, "open", r), c = /* @__PURE__ */ M(), l = hF();
+		let n = e, r = t, { modal: i, dir: a } = /* @__PURE__ */ Hr(n), o = tM(a), s = Vj(n, "open", r), c = /* @__PURE__ */ M(), l = hF();
 		return _F({
 			open: s,
 			onOpenChange: (e) => {
@@ -36027,12 +36034,12 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			isUsingKeyboardRef: l,
 			dir: o,
 			modal: i
-		}), (e, t) => (z(), V(N(ZM), null, {
+		}), (e, t) => (z(), V(N(XM), null, {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
 		}));
 	}
-}), [xF, SF] = /*#__PURE__*/ Ej("MenuContent"), CF = /* @__PURE__ */ I({
+}), [xF, SF] = /*#__PURE__*/ Tj("MenuContent"), CF = /* @__PURE__ */ I({
 	__name: "MenuContentImpl",
 	props: /* @__PURE__ */ Ko({
 		loop: {
@@ -36148,10 +36155,10 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	],
 	setup(e, { emit: t }) {
 		let n = e, r = t, i = gF(), a = vF(), { trapFocus: o, disableOutsidePointerEvents: s, loop: c } = /* @__PURE__ */ Hr(n);
-		aM(), $j(s.value);
-		let l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M(0), d = /* @__PURE__ */ M(0), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M("right"), m = /* @__PURE__ */ M(0), h = /* @__PURE__ */ M(null), g = /* @__PURE__ */ M(), { forwardRef: _, currentElement: v } = cM(), { handleTypeaheadSearch: y } = vM(), b = /* @__PURE__ */ M();
+		iM(), Qj(s.value);
+		let l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M(0), d = /* @__PURE__ */ M(0), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M("right"), m = /* @__PURE__ */ M(0), h = /* @__PURE__ */ M(null), g = /* @__PURE__ */ M(), { forwardRef: _, currentElement: v } = sM(), { handleTypeaheadSearch: y } = _M(), b = /* @__PURE__ */ M();
 		function x(e) {
-			let t = Wj(e, b.value || Dj(), v.value, {
+			let t = Uj(e, b.value || Ej(), v.value, {
 				loop: c.value,
 				arrowKeyOptions: "vertical",
 				dir: a?.dir.value,
@@ -36175,14 +36182,14 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			window.clearTimeout(u.value);
 		});
 		function T(e) {
-			return p.value === f.value?.side && Qae(e, f.value?.area);
+			return p.value === f.value?.side && $ae(e, f.value?.area);
 		}
 		async function E(e) {
 			r("openAutoFocus", e), !e.defaultPrevented && (e.preventDefault(), v.value?.focus({ preventScroll: !0 }));
 		}
 		function D(e) {
 			if (e.defaultPrevented) return;
-			let t = e.target, n = t.closest("[data-reka-menu-content]") === e.currentTarget, r = ["input", "textarea"].includes(t.tagName.toLowerCase()), i = e.ctrlKey || e.altKey || e.metaKey, o = e.key.length === 1, s = Wj(e, Dj(), v.value, {
+			let t = e.target, n = t.closest("[data-reka-menu-content]") === e.currentTarget, r = ["input", "textarea"].includes(t.tagName.toLowerCase()), i = e.ctrlKey || e.altKey || e.metaKey, o = e.key.length === 1, s = Uj(e, Ej(), v.value, {
 				loop: c.value,
 				arrowKeyOptions: "vertical",
 				dir: a?.dir.value,
@@ -36192,16 +36199,16 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			if (s) return s?.focus();
 			if (e.code === "Space") return;
 			let l = g.value?.getItems() ?? [];
-			if (n && (e.key === "Tab" && a.modal.value && e.preventDefault(), !i && o && !r && y(e.key, l)), e.target !== v.value || !Jae.includes(e.key)) return;
+			if (n && (e.key === "Tab" && a.modal.value && e.preventDefault(), !i && o && !r && y(e.key, l)), e.target !== v.value || !Yae.includes(e.key)) return;
 			e.preventDefault();
 			let u = [...l.map((e) => e.ref)];
-			LM.includes(e.key) && u.reverse(), RM(u);
+			IM.includes(e.key) && u.reverse(), LM(u);
 		}
 		function O(e) {
 			e?.currentTarget?.contains?.(e.target) || (window.clearTimeout(u.value), l.value = "");
 		}
 		function ee(e) {
-			if (!zM(e)) return;
+			if (!RM(e)) return;
 			let t = e.target, n = m.value !== e.clientX;
 			if ((e?.currentTarget)?.contains(t) && n) {
 				let t = e.clientX > m.value ? "right" : "left";
@@ -36209,11 +36216,11 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			}
 		}
 		function k(e) {
-			zM(e) && C.value && C.value.focus();
+			RM(e) && C.value && C.value.focus();
 		}
 		return SF({
 			onItemEnter: (e) => !!T(e),
-			onItemLeave: (e) => T(e) ? !0 : (["INPUT", "TEXTAREA"].includes(Dj()?.tagName || "") || v.value?.focus(), h.value = null, !1),
+			onItemLeave: (e) => T(e) ? !0 : (["INPUT", "TEXTAREA"].includes(Ej()?.tagName || "") || v.value?.focus(), h.value = null, !1),
 			onTriggerLeave: (e) => !!T(e),
 			searchRef: l,
 			highlightedElement: b,
@@ -36228,13 +36235,13 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			onPointerGraceIntentChange: (e) => {
 				f.value = e;
 			}
-		}), (t, n) => (z(), V(N(FM), {
+		}), (t, n) => (z(), V(N(PM), {
 			"as-child": "",
 			trapped: N(o),
 			onMountAutoFocus: E,
 			onUnmountAutoFocus: n[7] ||= (e) => r("closeAutoFocus", e)
 		}, {
-			default: P(() => [U(N(DM), {
+			default: P(() => [U(N(EM), {
 				"as-child": "",
 				"disable-outside-pointer-events": N(s),
 				onEscapeKeyDown: n[2] ||= (e) => r("escapeKeyDown", e),
@@ -36263,7 +36270,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 						"as-child": e.asChild,
 						"aria-orientation": "vertical",
 						"data-reka-menu-content": "",
-						"data-state": N(Yae)(N(i).open.value),
+						"data-state": N(Xae)(N(i).open.value),
 						dir: N(a).dir.value,
 						side: e.side,
 						"side-offset": e.sideOffset,
@@ -36339,21 +36346,21 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		}
 	},
 	setup(e) {
-		let t = e, n = xF(), { forwardRef: r, currentElement: i } = cM(), { CollectionItem: a } = HM(), o = /* @__PURE__ */ M(!1), s = K(() => o.value || i.value != null && n.highlightedElement.value === i.value);
+		let t = e, n = xF(), { forwardRef: r, currentElement: i } = sM(), { CollectionItem: a } = VM(), o = /* @__PURE__ */ M(!1), s = K(() => o.value || i.value != null && n.highlightedElement.value === i.value);
 		async function c(e) {
-			if (!e.defaultPrevented && zM(e)) {
+			if (!e.defaultPrevented && RM(e)) {
 				if (t.disabled) n.onItemLeave(e);
 				else if (!n.onItemEnter(e)) {
 					let t = e.currentTarget;
-					n.highlightedElement.value = t, ["INPUT", "TEXTAREA"].includes(Dj()?.tagName || "") || t.focus({ preventScroll: !0 });
+					n.highlightedElement.value = t, ["INPUT", "TEXTAREA"].includes(Ej()?.tagName || "") || t.focus({ preventScroll: !0 });
 				}
 			}
 		}
 		async function l(e) {
-			await xi(), !e.defaultPrevented && zM(e) && n.highlightedElement.value === i.value && !n.onItemLeave(e) && n.highlightedElement.value === i.value && (n.highlightedElement.value = void 0);
+			await xi(), !e.defaultPrevented && RM(e) && n.highlightedElement.value === i.value && !n.onItemLeave(e) && n.highlightedElement.value === i.value && (n.highlightedElement.value = void 0);
 		}
 		return (t, i) => (z(), V(N(a), { value: { textValue: e.textValue } }, {
-			default: P(() => [U(N(CM), kc({
+			default: P(() => [U(N(SM), kc({
 				ref: N(r),
 				role: "menuitem",
 				tabindex: "-1"
@@ -36407,11 +36414,11 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	},
 	emits: ["select"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { forwardRef: i, currentElement: a } = cM(), o = vF(), s = xF(), c = /* @__PURE__ */ M(!1);
+		let n = e, r = t, { forwardRef: i, currentElement: a } = sM(), o = vF(), s = xF(), c = /* @__PURE__ */ M(!1);
 		async function l() {
 			let e = a.value;
 			if (!n.disabled && e) {
-				let e = new CustomEvent(Kae, {
+				let e = new CustomEvent(qae, {
 					bubbles: !0,
 					cancelable: !0
 				});
@@ -36429,7 +36436,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			},
 			onKeydown: r[2] ||= async (t) => {
 				let n = N(s).searchRef.value !== "";
-				e.disabled || n && t.key === " " || N(IM).includes(t.key) && (t.currentTarget?.click(), t.preventDefault());
+				e.disabled || n && t.key === " " || N(FM).includes(t.key) && (t.currentTarget?.click(), t.preventDefault());
 			}
 		}), {
 			default: P(() => [Do(t.$slots, "default")]),
@@ -36538,8 +36545,8 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		"closeAutoFocus"
 	],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = uM(n, r), a = gF(), { forwardRef: o, currentElement: s } = cM();
-		return gM(s), (e, t) => (z(), V(CF, kc(N(i), {
+		let n = e, r = t, i = lM(n, r), a = gF(), { forwardRef: o, currentElement: s } = sM();
+		return hM(s), (e, t) => (z(), V(CF, kc(N(i), {
 			ref: N(o),
 			"trap-focus": N(a).open.value,
 			"disable-outside-pointer-events": N(a).open.value,
@@ -36653,7 +36660,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		"closeAutoFocus"
 	],
 	setup(e, { emit: t }) {
-		let n = uM(e, t), r = gF();
+		let n = lM(e, t), r = gF();
 		return (e, t) => (z(), V(CF, kc(N(n), {
 			"trap-focus": !1,
 			"disable-outside-pointer-events": !1,
@@ -36770,8 +36777,8 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		"closeAutoFocus"
 	],
 	setup(e, { emit: t }) {
-		let n = uM(e, t), r = gF(), i = vF();
-		return (t, a) => (z(), V(N(xM), { present: e.forceMount || N(r).open.value }, {
+		let n = lM(e, t), r = gF(), i = vF();
+		return (t, a) => (z(), V(N(bM), { present: e.forceMount || N(r).open.value }, {
 			default: P(() => [N(i).modal.value ? (z(), V(EF, zt(kc({ key: 0 }, {
 				...t.$attrs,
 				...N(n)
@@ -36810,12 +36817,12 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	},
 	setup(e) {
 		let t = e;
-		return (e, n) => (z(), V(N(BM), zt(Cc(t)), {
+		return (e, n) => (z(), V(N(zM), zt(Cc(t)), {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
 		}, 16));
 	}
-}), [AF, jF] = /*#__PURE__*/ Ej("PopoverRoot"), MF = /* @__PURE__ */ I({
+}), [AF, jF] = /*#__PURE__*/ Tj("PopoverRoot"), MF = /* @__PURE__ */ I({
 	__name: "PopoverRoot",
 	props: {
 		defaultOpen: {
@@ -36836,7 +36843,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	},
 	emits: ["update:open"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { modal: i } = /* @__PURE__ */ Hr(n), a = Hj(n, "open", r, {
+		let n = e, r = t, { modal: i } = /* @__PURE__ */ Hr(n), a = Vj(n, "open", r, {
 			defaultValue: n.defaultOpen,
 			passive: n.open === void 0
 		});
@@ -36853,7 +36860,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			},
 			triggerElement: /* @__PURE__ */ M(),
 			hasCustomAnchor: /* @__PURE__ */ M(!1)
-		}), (e, t) => (z(), V(N(ZM), null, {
+		}), (e, t) => (z(), V(N(XM), null, {
 			default: P(() => [Do(e.$slots, "default", {
 				open: N(a),
 				close: () => a.value = !1
@@ -36970,15 +36977,15 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		"closeAutoFocus"
 	],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = lM(Ij(n, "trapFocus", "disableOutsidePointerEvents")), { forwardRef: a } = cM(), o = AF();
-		return aM(), (t, n) => (z(), V(N(FM), {
+		let n = e, r = t, i = cM(Fj(n, "trapFocus", "disableOutsidePointerEvents")), { forwardRef: a } = sM(), o = AF();
+		return iM(), (t, n) => (z(), V(N(PM), {
 			"as-child": "",
 			loop: "",
 			trapped: e.trapFocus,
 			onMountAutoFocus: n[5] ||= (e) => r("openAutoFocus", e),
 			onUnmountAutoFocus: n[6] ||= (e) => r("closeAutoFocus", e)
 		}, {
-			default: P(() => [U(N(DM), {
+			default: P(() => [U(N(EM), {
 				"as-child": "",
 				"disable-outside-pointer-events": e.disableOutsidePointerEvents,
 				onPointerDownOutside: n[0] ||= (e) => r("pointerDownOutside", e),
@@ -37119,9 +37126,9 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	],
 	setup(e, { emit: t }) {
 		let n = e, r = t, i = AF(), a = /* @__PURE__ */ M(!1);
-		$j(!0);
-		let o = uM(n, r), { forwardRef: s, currentElement: c } = cM();
-		return gM(c), (e, t) => (z(), V(NF, kc(N(o), {
+		Qj(!0);
+		let o = lM(n, r), { forwardRef: s, currentElement: c } = sM();
+		return hM(c), (e, t) => (z(), V(NF, kc(N(o), {
 			ref: N(s),
 			"trap-focus": N(i).open.value,
 			"disable-outside-pointer-events": "",
@@ -37244,7 +37251,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		"closeAutoFocus"
 	],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = AF(), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M(!1), s = uM(n, r);
+		let n = e, r = t, i = AF(), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M(!1), s = lM(n, r);
 		return (e, t) => (z(), V(NF, kc(N(s), {
 			"trap-focus": !1,
 			"disable-outside-pointer-events": !1,
@@ -37370,8 +37377,8 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		"closeAutoFocus"
 	],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = AF(), a = uM(n, r), { forwardRef: o } = cM();
-		return i.contentId ||= _M(void 0, "reka-popover-content"), (t, n) => (z(), V(N(xM), { present: e.forceMount || N(i).open.value }, {
+		let n = e, r = t, i = AF(), a = lM(n, r), { forwardRef: o } = sM();
+		return i.contentId ||= gM(void 0, "reka-popover-content"), (t, n) => (z(), V(N(bM), { present: e.forceMount || N(i).open.value }, {
 			default: P(() => [N(i).modal.value ? (z(), V(PF, kc({ key: 0 }, N(a), { ref: N(o) }), {
 				default: P(() => [Do(t.$slots, "default")]),
 				_: 3
@@ -37404,7 +37411,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	},
 	setup(e) {
 		let t = e;
-		return (e, n) => (z(), V(N(BM), zt(Cc(t)), {
+		return (e, n) => (z(), V(N(zM), zt(Cc(t)), {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
 		}, 16));
@@ -37423,11 +37430,11 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		}
 	},
 	setup(e) {
-		let t = e, n = AF(), { forwardRef: r, currentElement: i } = cM();
-		return n.triggerId ||= _M(void 0, "reka-popover-trigger"), n.contentId ||= _M(void 0, "reka-popover-content"), uo(() => {
+		let t = e, n = AF(), { forwardRef: r, currentElement: i } = sM();
+		return n.triggerId ||= gM(void 0, "reka-popover-trigger"), n.contentId ||= gM(void 0, "reka-popover-content"), uo(() => {
 			n.triggerElement.value = i.value;
-		}), (i, a) => (z(), V(Co(N(n).hasCustomAnchor.value ? N(CM) : N(QM)), { "as-child": "" }, {
-			default: P(() => [U(N(CM), {
+		}), (i, a) => (z(), V(Co(N(n).hasCustomAnchor.value ? N(SM) : N(ZM)), { "as-child": "" }, {
+			default: P(() => [U(N(SM), {
 				id: N(n).triggerId,
 				ref: N(r),
 				type: e.as === "button" ? "button" : void 0,
@@ -37454,7 +37461,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			_: 3
 		}));
 	}
-}), [zF, BF] = /*#__PURE__*/ Ej("DropdownMenuRoot"), VF = /* @__PURE__ */ I({
+}), [zF, BF] = /*#__PURE__*/ Tj("DropdownMenuRoot"), VF = /* @__PURE__ */ I({
 	__name: "DropdownMenuRoot",
 	props: {
 		defaultOpen: {
@@ -37479,11 +37486,11 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	emits: ["update:open"],
 	setup(e, { emit: t }) {
 		let n = e, r = t;
-		cM();
-		let i = Hj(n, "open", r, {
+		sM();
+		let i = Vj(n, "open", r, {
 			defaultValue: n.defaultOpen,
 			passive: n.open === void 0
-		}), a = /* @__PURE__ */ M(), { modal: o, dir: s } = /* @__PURE__ */ Hr(n), c = nM(s);
+		}), a = /* @__PURE__ */ M(), { modal: o, dir: s } = /* @__PURE__ */ Hr(n), c = tM(s);
 		return BF({
 			open: i,
 			onOpenChange: (e) => {
@@ -37617,15 +37624,15 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		"closeAutoFocus"
 	],
 	setup(e, { emit: t }) {
-		let n = uM(e, t);
-		cM();
+		let n = lM(e, t);
+		sM();
 		let r = zF(), i = /* @__PURE__ */ M(!1);
 		function a(e) {
 			e.defaultPrevented || (i.value || setTimeout(() => {
 				r.triggerElement.value?.focus();
 			}, 0), i.value = !1, e.preventDefault());
 		}
-		return r.contentId ||= _M(void 0, "reka-dropdown-menu-content"), (e, t) => (z(), V(N(OF), kc({
+		return r.contentId ||= gM(void 0, "reka-dropdown-menu-content"), (e, t) => (z(), V(N(OF), kc({
 			id: N(r).contentId,
 			"aria-labelledby": N(r)?.triggerId,
 			style: {
@@ -37637,7 +37644,7 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 			}
 		}, {
 			...N(n),
-			...N(Xae)(e.$attrs)
+			...N(Zae)(e.$attrs)
 		}, {
 			onCloseAutoFocus: a,
 			onInteractOutside: t[0] ||= (e) => {
@@ -37672,8 +37679,8 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 	},
 	emits: ["select"],
 	setup(e, { emit: t }) {
-		let n = e, r = rM(t);
-		return cM(), (e, t) => (z(), V(N(TF), zt(Cc({
+		let n = e, r = nM(t);
+		return sM(), (e, t) => (z(), V(N(TF), zt(Cc({
 			...n,
 			...N(r)
 		})), {
@@ -37726,11 +37733,11 @@ var hF = Fj(mF), [gF, _F] = /*#__PURE__*/ Ej(["MenuRoot", "MenuSub"], "MenuConte
 		}
 	},
 	setup(e) {
-		let t = e, n = zF(), { forwardRef: r, currentElement: i } = cM();
+		let t = e, n = zF(), { forwardRef: r, currentElement: i } = sM();
 		return uo(() => {
 			n.triggerElement = i;
-		}), n.triggerId ||= _M(void 0, "reka-dropdown-menu-trigger"), (i, a) => (z(), V(N(pF), { "as-child": "" }, {
-			default: P(() => [U(N(CM), {
+		}), n.triggerId ||= gM(void 0, "reka-dropdown-menu-trigger"), (i, a) => (z(), V(N(pF), { "as-child": "" }, {
+			default: P(() => [U(N(SM), {
 				id: N(n).triggerId,
 				ref: N(r),
 				type: e.as === "button" ? "button" : void 0,
@@ -37783,13 +37790,13 @@ function JF(e, t, n) {
 	return e === void 0 ? !1 : Array.isArray(e) ? e.some((e) => YF(e, t, n)) : YF(e, t, n);
 }
 function YF(e, t, n) {
-	return e === void 0 || t === void 0 ? !1 : typeof e == "string" ? e === t : typeof n == "function" ? n(e, t) : typeof n == "string" ? e?.[n] === t?.[n] : wj(e, t);
+	return e === void 0 || t === void 0 ? !1 : typeof e == "string" ? e === t : typeof n == "function" ? n(e, t) : typeof n == "string" ? e?.[n] === t?.[n] : Cj(e, t);
 }
 function XF(e) {
 	return e == null || e === "" || Array.isArray(e) && e.length === 0;
 }
 // node_modules/reka-ui/dist/Select/SelectRoot.js
-var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__ */ I({
+var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Tj("SelectRoot"), eI = /* @__PURE__ */ I({
 	inheritAttrs: !1,
 	__name: "SelectRoot",
 	props: {
@@ -37847,21 +37854,21 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 	},
 	emits: ["update:modelValue", "update:open"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { multiple: i, dir: a } = /* @__PURE__ */ Hr(n), o = fF(null), s = K(() => n.name ?? o?.name.value), c = K(() => o ? n.required || o.required.value : n.required), l = K(() => !!(n.disabled || o?.disabled.value)), u = Hj(n, "modelValue", r, {
+		let n = e, r = t, { multiple: i, dir: a } = /* @__PURE__ */ Hr(n), o = fF(null), s = K(() => n.name ?? o?.name.value), c = K(() => o ? n.required || o.required.value : n.required), l = K(() => !!(n.disabled || o?.disabled.value)), u = Vj(n, "modelValue", r, {
 			defaultValue: n.defaultValue ?? (i.value ? [] : void 0),
 			passive: n.modelValue === void 0,
 			deep: !0
-		}), d = Hj(n, "open", r, {
+		}), d = Vj(n, "open", r, {
 			defaultValue: n.defaultOpen,
 			passive: n.open === void 0
 		}), f = /* @__PURE__ */ M(), p = /* @__PURE__ */ M(), m = /* @__PURE__ */ M({
 			x: 0,
 			y: 0
-		}), h = K(() => i.value && Array.isArray(u.value) ? u.value?.length === 0 : kj(u.value));
+		}), h = K(() => i.value && Array.isArray(u.value) ? u.value?.length === 0 : Oj(u.value));
 		F(u, () => {
 			o?.reportControlState({ filled: !h.value });
-		}), HM({ isProvider: !0 });
-		let g = nM(a), _ = sM(f), v = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), y = K(() => Array.from(v.value).map((e) => e.value).join(";"));
+		}), VM({ isProvider: !0 });
+		let g = tM(a), _ = oM(f), v = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), y = K(() => Array.from(v.value).map((e) => e.value).join(";"));
 		function b(e) {
 			let t;
 			if (i.value) {
@@ -37905,7 +37912,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 				let t = x(e.value);
 				t && v.value.delete(t);
 			}
-		}), (t, n) => (z(), V(N(ZM), null, {
+		}), (t, n) => (z(), V(N(XM), null, {
 			default: P(() => [Do(t.$slots, "default", {
 				modelValue: N(u),
 				open: N(d)
@@ -37920,7 +37927,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 				disabled: l.value,
 				value: N(u)
 			}, {
-				default: P(() => [N(kj)(N(u)) ? (z(), B("option", {
+				default: P(() => [N(Oj)(N(u)) ? (z(), B("option", {
 					key: 0,
 					value: e.nullableValue
 				}, null, 8, ZF)) : G("v-if", !0), (z(!0), B(R, null, L(Array.from(v.value), (e) => (z(), B("option", kc({ key: e.value ?? "" }, { ref_for: !0 }, e), null, 16))), 128))]),
@@ -37988,7 +37995,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		function i(e) {
 			r.onValueChange(e.target.value);
 		}
-		return (e, r) => (z(), V(N(UM), { "as-child": "" }, {
+		return (e, r) => (z(), V(N(HM), { "as-child": "" }, {
 			default: P(() => [H("select", kc({
 				ref_key: "selectElement",
 				ref: n
@@ -38091,7 +38098,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		}
 	},
 	setup(e) {
-		let t = lM(e);
+		let t = cM(e);
 		return (e, n) => (z(), V(N(GP), kc(N(t), { style: {
 			boxSizing: "border-box",
 			"--reka-select-content-transform-origin": "var(--reka-popper-transform-origin)",
@@ -38108,7 +38115,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 	onViewportChange: () => {},
 	itemTextRefCallback: () => {},
 	itemRefCallback: () => {}
-}, [iI, aI] = /*#__PURE__*/ Ej("SelectContent"), oI = /* @__PURE__ */ I({
+}, [iI, aI] = /*#__PURE__*/ Tj("SelectContent"), oI = /* @__PURE__ */ I({
 	__name: "SelectContentImpl",
 	props: {
 		position: {
@@ -38227,12 +38234,12 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 	],
 	setup(e, { emit: t }) {
 		let n = e, r = t, i = QF();
-		aM(), $j(n.bodyLock);
-		let { CollectionSlot: a, getItems: o } = HM(), s = /* @__PURE__ */ M();
-		gM(s);
-		let { search: c, handleTypeaheadSearch: l } = vM(), u = /* @__PURE__ */ M(), d = /* @__PURE__ */ M(), f = /* @__PURE__ */ M(), p = /* @__PURE__ */ M(!1), m = /* @__PURE__ */ M(!1), h = /* @__PURE__ */ M(!1);
+		iM(), Qj(n.bodyLock);
+		let { CollectionSlot: a, getItems: o } = VM(), s = /* @__PURE__ */ M();
+		hM(s);
+		let { search: c, handleTypeaheadSearch: l } = _M(), u = /* @__PURE__ */ M(), d = /* @__PURE__ */ M(), f = /* @__PURE__ */ M(), p = /* @__PURE__ */ M(!1), m = /* @__PURE__ */ M(!1), h = /* @__PURE__ */ M(!1);
 		function g() {
-			d.value && s.value && RM([d.value, s.value]);
+			d.value && s.value && LM([d.value, s.value]);
 		}
 		F(p, () => {
 			g();
@@ -38273,12 +38280,12 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 				let t = [...o().map((e) => e.ref)];
 				if (["ArrowUp", "End"].includes(e.key) && (t = t.slice().reverse()), ["ArrowUp", "ArrowDown"].includes(e.key)) {
 					let r = e.target, i = t.indexOf(r);
-					t = n.loop ? yM(t, i + 1) : t.slice(i + 1);
+					t = n.loop ? vM(t, i + 1) : t.slice(i + 1);
 				}
-				setTimeout(() => RM(t)), e.preventDefault();
+				setTimeout(() => LM(t)), e.preventDefault();
 			}
 		}
-		let b = Ij(n, "loop"), x = lM(K(() => n.position === "popper" ? b : {}).value);
+		let b = Fj(n, "loop"), x = cM(K(() => n.position === "popper" ? b : {}).value);
 		return aI({
 			content: s,
 			viewport: u,
@@ -38307,14 +38314,14 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			isPositioned: p,
 			searchRef: c
 		}), (t, n) => (z(), V(N(a), null, {
-			default: P(() => [U(N(FM), {
+			default: P(() => [U(N(PM), {
 				"as-child": "",
 				onMountAutoFocus: n[6] ||= ed(() => {}, ["prevent"]),
 				onUnmountAutoFocus: n[7] ||= (e) => {
 					r("closeAutoFocus", e), !e.defaultPrevented && (N(i).triggerElement.value?.focus({ preventScroll: !0 }), e.preventDefault());
 				}
 			}, {
-				default: P(() => [U(N(DM), {
+				default: P(() => [U(N(EM), {
 					"as-child": "",
 					"disable-outside-pointer-events": e.disableOutsidePointerEvents,
 					onFocusOutside: n[2] ||= ed(() => {}, ["prevent"]),
@@ -38329,7 +38336,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 						id: N(i).contentId,
 						ref: (e) => {
 							if (!e) return;
-							let t = N(zj)(e);
+							let t = N(Rj)(e);
 							t?.hasAttribute("data-reka-popper-content-wrapper") ? s.value = t.firstElementChild : s.value = t;
 						},
 						role: "listbox",
@@ -38359,7 +38366,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			_: 3
 		}));
 	}
-}), [sI, cI] = /*#__PURE__*/ Ej("SelectItemAlignedPosition"), lI = /* @__PURE__ */ I({
+}), [sI, cI] = /*#__PURE__*/ Tj("SelectItemAlignedPosition"), lI = /* @__PURE__ */ I({
 	inheritAttrs: !1,
 	__name: "SelectItemAlignedPosition",
 	props: {
@@ -38374,15 +38381,15 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 	},
 	emits: ["placed"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { getItems: i } = HM(), a = QF(), o = iI(), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(!0), l = /* @__PURE__ */ M(), { forwardRef: u, currentElement: d } = cM(), { viewport: f, selectedItem: p, selectedItemText: m, focusSelectedItem: h } = o;
+		let n = e, r = t, { getItems: i } = VM(), a = QF(), o = iI(), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(!0), l = /* @__PURE__ */ M(), { forwardRef: u, currentElement: d } = sM(), { viewport: f, selectedItem: p, selectedItemText: m, focusSelectedItem: h } = o;
 		function g() {
 			if (a.triggerElement.value && a.valueElement.value && l.value && d.value && f?.value && p?.value && m?.value) {
 				let e = a.triggerElement.value.getBoundingClientRect(), t = d.value.getBoundingClientRect(), n = a.valueElement.value.getBoundingClientRect(), o = m.value.getBoundingClientRect();
 				if (a.dir.value !== "rtl") {
-					let r = o.left - t.left, i = n.left - r, a = e.left - i, s = e.width + a, c = Math.max(s, t.width), u = window.innerWidth - 10, d = Tj(i, 10, Math.max(10, u - c));
+					let r = o.left - t.left, i = n.left - r, a = e.left - i, s = e.width + a, c = Math.max(s, t.width), u = window.innerWidth - 10, d = wj(i, 10, Math.max(10, u - c));
 					l.value.style.minWidth = `${s}px`, l.value.style.left = `${d}px`;
 				} else {
-					let r = t.right - o.right, i = window.innerWidth - n.right - r, a = window.innerWidth - e.right - i, s = e.width + a, c = Math.max(s, t.width), u = window.innerWidth - 10, d = Tj(i, 10, Math.max(10, u - c));
+					let r = t.right - o.right, i = window.innerWidth - n.right - r, a = window.innerWidth - e.right - i, s = e.width + a, c = Math.max(s, t.width), u = window.innerWidth - 10, d = wj(i, 10, Math.max(10, u - c));
 					l.value.style.minWidth = `${s}px`, l.value.style.right = `${d}px`;
 				}
 				let c = i().map((e) => e.ref), u = window.innerHeight - 20, h = f.value.scrollHeight, g = window.getComputedStyle(d.value), _ = Number.parseInt(g.borderTopWidth, 10), v = Number.parseInt(g.paddingTop, 10), y = Number.parseInt(g.borderBottomWidth, 10), b = Number.parseInt(g.paddingBottom, 10), x = _ + v + h + b + y, S = Math.min(p.value.offsetHeight * 5, x), C = window.getComputedStyle(f.value), w = Number.parseInt(C.paddingTop, 10), T = Number.parseInt(C.paddingBottom, 10), E = e.top + e.height / 2 - 10, D = u - E, O = p.value.offsetHeight / 2, ee = p.value.offsetTop + O, k = _ + v + ee, te = x - k;
@@ -38407,7 +38414,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		function v(e) {
 			e && c.value === !0 && (g(), h?.(), c.value = !1);
 		}
-		return fae(a.triggerElement, () => {
+		return pae(a.triggerElement, () => {
 			g();
 		}), cI({
 			contentWrapper: l,
@@ -38422,7 +38429,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 				position: "fixed",
 				zIndex: _.value
 			})
-		}, [U(N(CM), kc({
+		}, [U(N(SM), kc({
 			ref: N(u),
 			style: {
 				boxSizing: "border-box",
@@ -38565,7 +38572,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		"pointerDownOutside"
 	],
 	setup(e, { emit: t }) {
-		let n = e, r = uM(n, t), i = QF(), a = /* @__PURE__ */ M();
+		let n = e, r = lM(n, t), i = QF(), a = /* @__PURE__ */ M();
 		uo(() => {
 			a.value = new DocumentFragment();
 		});
@@ -38577,7 +38584,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			u(), l = setTimeout(() => {
 				c.value = s.value, l = void 0;
 			}), n(u);
-		}), ho(u), (e, t) => s.value || c.value || o.value?.present ? (z(), V(N(xM), {
+		}), ho(u), (e, t) => s.value || c.value || o.value?.present ? (z(), V(N(bM), {
 			key: 0,
 			ref_key: "presenceRef",
 			ref: o,
@@ -38596,7 +38603,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			_: 3
 		}, 8, ["context"])], 8, ["to"]))])) : G("v-if", !0);
 	}
-}), [pI, mI] = /*#__PURE__*/ Ej("SelectItem"), hI = /* @__PURE__ */ I({
+}), [pI, mI] = /*#__PURE__*/ Tj("SelectItem"), hI = /* @__PURE__ */ I({
 	__name: "SelectItem",
 	props: {
 		value: {
@@ -38622,9 +38629,9 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 	},
 	emits: ["select"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { disabled: i } = /* @__PURE__ */ Hr(n), a = QF(), o = iI(), { forwardRef: s, currentElement: c } = cM(), { CollectionItem: l } = HM(), u = K(() => JF(a.modelValue?.value, n.value, a.by)), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M(n.textValue ?? ""), p = _M(void 0, "reka-select-item-text");
+		let n = e, r = t, { disabled: i } = /* @__PURE__ */ Hr(n), a = QF(), o = iI(), { forwardRef: s, currentElement: c } = sM(), { CollectionItem: l } = VM(), u = K(() => JF(a.modelValue?.value, n.value, a.by)), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M(n.textValue ?? ""), p = gM(void 0, "reka-select-item-text");
 		async function m(e) {
-			e.defaultPrevented || Oj("select.select", h, {
+			e.defaultPrevented || Dj("select.select", h, {
 				originalEvent: e,
 				value: n.value
 			});
@@ -38636,7 +38643,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			await xi(), !e.defaultPrevented && (i.value ? o.onItemLeave?.() : e.currentTarget?.focus({ preventScroll: !0 }));
 		}
 		async function _(e) {
-			await xi(), !e.defaultPrevented && e.currentTarget === Dj() && o.onItemLeave?.();
+			await xi(), !e.defaultPrevented && e.currentTarget === Ej() && o.onItemLeave?.();
 		}
 		async function v(e) {
 			await xi(), e.defaultPrevented || o.searchRef?.value !== "" && e.key === " " || (qF.includes(e.key) && m(e), e.key === " " && e.preventDefault());
@@ -38653,7 +38660,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 				f.value = ((f.value || e?.textContent) ?? "").trim();
 			}
 		}), (t, n) => (z(), V(N(l), { value: { textValue: f.value } }, {
-			default: P(() => [U(N(CM), {
+			default: P(() => [U(N(SM), {
 				ref: N(s),
 				role: "option",
 				"aria-labelledby": N(p),
@@ -38707,7 +38714,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		}
 	},
 	setup(e) {
-		let t = e, n = QF(), r = iI(), i = pI(), { forwardRef: a, currentElement: o } = cM(), s = K(() => ({
+		let t = e, n = QF(), r = iI(), i = pI(), { forwardRef: a, currentElement: o } = sM(), s = K(() => ({
 			value: i.value,
 			disabled: i.disabled.value,
 			textContent: o.value?.textContent ?? i.value?.toString() ?? ""
@@ -38716,7 +38723,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			o.value && (i.onItemTextChange(o.value), r.itemTextRefCallback(o.value, i.value, i.disabled.value), n.onOptionAdd(s.value));
 		}), ho(() => {
 			n.onOptionRemove(s.value);
-		}), (e, n) => (z(), V(N(CM), kc({
+		}), (e, n) => (z(), V(N(SM), kc({
 			id: N(i).textId,
 			ref: N(a)
 		}, {
@@ -38749,7 +38756,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 	},
 	setup(e) {
 		let t = e;
-		return (e, n) => (z(), V(N(BM), zt(Cc(t)), {
+		return (e, n) => (z(), V(N(zM), zt(Cc(t)), {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
 		}, 16));
@@ -38776,8 +38783,8 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		}
 	},
 	setup(e) {
-		let t = e, n = QF(), { forwardRef: r, currentElement: i } = cM(), a = K(() => n.disabled?.value || t.disabled);
-		n.contentId ||= _M(void 0, "reka-select-content"), uo(() => {
+		let t = e, n = QF(), { forwardRef: r, currentElement: i } = sM(), a = K(() => n.disabled?.value || t.disabled);
+		n.contentId ||= gM(void 0, "reka-select-content"), uo(() => {
 			n.onTriggerChange(i.value);
 		});
 		let o = fF(null), s = Uo();
@@ -38809,7 +38816,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 				required: () => !!n.required?.value
 			});
 		}), mo(() => f?.());
-		let { getItems: p } = HM(), { search: m, handleTypeaheadSearch: h, resetTypeahead: g } = vM();
+		let { getItems: p } = VM(), { search: m, handleTypeaheadSearch: h, resetTypeahead: g } = _M();
 		function _() {
 			a.value || (n.onOpenChange(!0), g());
 		}
@@ -38843,11 +38850,11 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			let t = m.value !== "";
 			!(e.ctrlKey || e.altKey || e.metaKey) && e.key.length === 1 && h(e.key, p()), !(t && e.key === " ") && KF.includes(e.key) && (_(), e.preventDefault());
 		}
-		return (t, i) => (z(), V(N(QM), {
+		return (t, i) => (z(), V(N(ZM), {
 			"as-child": "",
 			reference: e.reference
 		}, {
-			default: P(() => [U(N(CM), kc(l(), {
+			default: P(() => [U(N(SM), kc(l(), {
 				ref: N(r),
 				role: "combobox",
 				type: e.as === "button" ? "button" : void 0,
@@ -38907,7 +38914,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		}
 	},
 	setup(e) {
-		let t = e, { forwardRef: n, currentElement: r } = cM(), i = QF();
+		let t = e, { forwardRef: n, currentElement: r } = sM(), i = QF();
 		uo(() => {
 			i.valueElement = r;
 		});
@@ -38915,7 +38922,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			let e = [], t = Array.from(i.optionsSet.value), n = (e) => t.find((t) => JF(e, t.value, i.by));
 			return e = Array.isArray(i.modelValue.value) ? i.modelValue.value.map((e) => n(e)?.textContent ?? "") : [n(i.modelValue.value)?.textContent ?? ""], e.filter(Boolean);
 		}), o = K(() => a.value.length ? a.value.join(", ") : t.placeholder);
-		return (r, s) => (z(), V(N(CM), {
+		return (r, s) => (z(), V(N(SM), {
 			ref: N(n),
 			as: e.as,
 			"as-child": e.asChild,
@@ -38950,7 +38957,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		}
 	},
 	setup(e) {
-		let t = e, { nonce: n } = /* @__PURE__ */ Hr(t), r = oF(n), i = iI(), a = i.position === "item-aligned" ? sI() : void 0, { forwardRef: o, currentElement: s } = cM();
+		let t = e, { nonce: n } = /* @__PURE__ */ Hr(t), r = oF(n), i = iI(), a = i.position === "item-aligned" ? sI() : void 0, { forwardRef: o, currentElement: s } = sM();
 		uo(() => {
 			i?.onViewportChange(s.value);
 		});
@@ -38969,7 +38976,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			}
 			c.value = t.scrollTop;
 		}
-		return (e, n) => (z(), B(R, null, [U(N(CM), kc({
+		return (e, n) => (z(), B(R, null, [U(N(SM), kc({
 			ref: N(o),
 			"data-reka-select-viewport": "",
 			role: "presentation"
@@ -38986,7 +38993,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 		}), {
 			default: P(() => [Do(e.$slots, "default")]),
 			_: 3
-		}, 16), U(N(CM), {
+		}, 16), U(N(SM), {
 			as: "style",
 			nonce: N(r)
 		}, {
@@ -38994,7 +39001,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			_: 1
 		}, 8, ["nonce"])], 64));
 	}
-}), [xI, SI] = /*#__PURE__*/ Ej("TabsRoot"), CI = /* @__PURE__ */ I({
+}), [xI, SI] = /*#__PURE__*/ Tj("TabsRoot"), CI = /* @__PURE__ */ I({
 	__name: "TabsRoot",
 	props: {
 		defaultValue: {
@@ -39035,9 +39042,9 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 	},
 	emits: ["update:modelValue"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, { orientation: i, unmountOnHide: a, dir: o } = /* @__PURE__ */ Hr(n), s = nM(o);
-		cM();
-		let c = Hj(n, "modelValue", r, {
+		let n = e, r = t, { orientation: i, unmountOnHide: a, dir: o } = /* @__PURE__ */ Hr(n), s = tM(o);
+		sM();
+		let c = Vj(n, "modelValue", r, {
 			defaultValue: n.defaultValue,
 			passive: n.modelValue === void 0
 		}), l = /* @__PURE__ */ M(), u = /* @__PURE__ */ Nr(/* @__PURE__ */ new Set());
@@ -39050,7 +39057,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 			dir: s,
 			unmountOnHide: a,
 			activationMode: n.activationMode,
-			baseId: _M(void 0, "reka-tabs"),
+			baseId: gM(void 0, "reka-tabs"),
 			tabsList: l,
 			contentIds: u,
 			registerContent: (e) => {
@@ -39060,7 +39067,7 @@ var ZF = ["value"], [QF, $F] = /*#__PURE__*/ Ej("SelectRoot"), eI = /* @__PURE__
 				let t = new Set(u.value);
 				t.delete(e), u.value = t;
 			}
-		}), (t, n) => (z(), V(N(CM), {
+		}), (t, n) => (z(), V(N(SM), {
 			dir: N(s),
 			"data-orientation": N(i),
 			"as-child": e.asChild,
@@ -39105,18 +39112,18 @@ var EI = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let t = e, { forwardRef: n } = cM(), r = xI(), i = K(() => wI(r.baseId, t.value)), a = K(() => TI(r.baseId, t.value)), o = K(() => t.value === r.modelValue.value), s = /* @__PURE__ */ M(o.value);
+		let t = e, { forwardRef: n } = sM(), r = xI(), i = K(() => wI(r.baseId, t.value)), a = K(() => TI(r.baseId, t.value)), o = K(() => t.value === r.modelValue.value), s = /* @__PURE__ */ M(o.value);
 		return uo(() => {
 			r.registerContent(t.value), requestAnimationFrame(() => {
 				s.value = !1;
 			});
 		}), mo(() => {
 			r.unregisterContent(t.value);
-		}), (t, c) => (z(), V(N(xM), {
+		}), (t, c) => (z(), V(N(bM), {
 			present: e.forceMount || o.value,
 			"force-mount": ""
 		}, {
-			default: P(({ present: c }) => [U(N(CM), {
+			default: P(({ present: c }) => [U(N(SM), {
 				id: a.value,
 				ref: N(n),
 				"as-child": e.asChild,
@@ -39162,14 +39169,14 @@ var EI = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let { loop: t } = /* @__PURE__ */ Hr(e), { forwardRef: n, currentElement: r } = cM(), i = xI();
+		let { loop: t } = /* @__PURE__ */ Hr(e), { forwardRef: n, currentElement: r } = sM(), i = xI();
 		return i.tabsList = r, (r, a) => (z(), V(N(uF), {
 			"as-child": "",
 			orientation: N(i).orientation.value,
 			dir: N(i).dir.value,
 			loop: N(t)
 		}, {
-			default: P(() => [U(N(CM), {
+			default: P(() => [U(N(SM), {
 				ref: N(n),
 				role: "tablist",
 				"as-child": e.asChild,
@@ -39213,13 +39220,13 @@ var EI = /* @__PURE__ */ I({
 		}
 	},
 	setup(e) {
-		let t = e, { forwardRef: n } = cM(), r = xI(), i = K(() => wI(r.baseId, t.value)), a = K(() => r.contentIds.value.has(t.value) ? TI(r.baseId, t.value) : void 0), o = K(() => t.value === r.modelValue.value);
+		let t = e, { forwardRef: n } = sM(), r = xI(), i = K(() => wI(r.baseId, t.value)), a = K(() => r.contentIds.value.has(t.value) ? TI(r.baseId, t.value) : void 0), o = K(() => t.value === r.modelValue.value);
 		return (t, s) => (z(), V(N(dF), {
 			"as-child": "",
 			focusable: !e.disabled,
 			active: o.value
 		}, {
-			default: P(() => [U(N(CM), {
+			default: P(() => [U(N(SM), {
 				id: i.value,
 				ref: N(n),
 				role: "tab",
@@ -39597,7 +39604,7 @@ function eL(e, t) {
 	return `${t === void 0 ? "" : QI(t)}${r}：${n.join("；")}${i.length ? `（${i.join("，")}）` : ""}`;
 }
 function tL(e, t) {
-	return jA(t.rolls.map((e) => `${e.formula} = ${e.total}`).join("，"), eL(t, e));
+	return AA(t.rolls.map((e) => `${e.formula} = ${e.total}`).join("，"), eL(t, e));
 }
 var nL = (e) => JSON.parse(JSON.stringify(e)), rL = async (e, t) => e.backend.library.service.frameOf(t);
 async function iL(e, t, n) {
@@ -39619,7 +39626,7 @@ var oL = ["title"], sL = /* @__PURE__ */ I({
 		label: {}
 	},
 	setup(e) {
-		let n = e, r = CA(), i = HA(), a = /* @__PURE__ */ M(null), o = t.find((e) => e.kind === "official" && e.codeSet === n.codeSet)?.id ?? null;
+		let n = e, r = SA(), i = VA(), a = /* @__PURE__ */ M(null), o = t.find((e) => e.kind === "official" && e.codeSet === n.codeSet)?.id ?? null;
 		function s() {
 			o && n.target.hash && h5({
 				set: o,
@@ -39652,11 +39659,11 @@ var oL = ["title"], sL = /* @__PURE__ */ I({
 					i.info(e.status === "choose" || e.status === "needs-input" ? "这张表需要选骰法或填数，请点进表格再掷" : "这张表现在掷不了");
 					return;
 				}
-				let t = tL(ZI(a.value) || n.label, e), o = await EA(t);
+				let t = tL(ZI(a.value) || n.label, e), o = await TA(t);
 				i.push("success", o ? "已复制到剪贴板，可直接粘贴到酒馆输入框" : "掷好了，但没能复制，请点【填入酒馆输入框】", { actions: [{
 					label: "填入酒馆输入框",
 					run: () => {
-						TA(t) || i.error("没能填进酒馆输入框");
+						wA(t) || i.error("没能填进酒馆输入框");
 					}
 				}] });
 			} catch (e) {
@@ -39733,7 +39740,7 @@ var oL = ["title"], sL = /* @__PURE__ */ I({
 		codeSet: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = /* @__PURE__ */ M(!1), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M([]), o = /* @__PURE__ */ M("idle"), s = K(() => Array.isArray(t.table.rows) ? t.table.rows.map((e) => Array.isArray(e) ? e : Array.isArray(e?.row) ? e.row : []) : []), c = K(() => Array.isArray(t.table.colLabels) ? t.table.colLabels : []), l = K(() => ZI(t.table)), u = K(() => i.value?.status === "complete" ? i.value.rolls.map((e) => e.rowIndex).filter((e) => e !== null) : []);
+		let t = e, n = SA(), r = /* @__PURE__ */ M(!1), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M([]), o = /* @__PURE__ */ M("idle"), s = K(() => Array.isArray(t.table.rows) ? t.table.rows.map((e) => Array.isArray(e) ? e : Array.isArray(e?.row) ? e.row : []) : []), c = K(() => Array.isArray(t.table.colLabels) ? t.table.colLabels : []), l = K(() => ZI(t.table)), u = K(() => i.value?.status === "complete" ? i.value.rolls.map((e) => e.rowIndex).filter((e) => e !== null) : []);
 		uo(async () => {
 			r.value = await iL(n.svc(), t.codeSet, t.table);
 		});
@@ -39755,10 +39762,10 @@ var oL = ["title"], sL = /* @__PURE__ */ I({
 		}
 		let g = K(() => i.value?.status === "complete" ? i.value : null);
 		async function _() {
-			g.value && (o.value = await EA(tL(l.value, g.value)) ? "copied" : "failed");
+			g.value && (o.value = await TA(tL(l.value, g.value)) ? "copied" : "failed");
 		}
 		function v() {
-			g.value && (o.value = TA(tL(l.value, g.value)) ? "filled" : "failed");
+			g.value && (o.value = wA(tL(l.value, g.value)) ? "filled" : "failed");
 		}
 		return (t, n) => (z(), B("div", cL, [d.value ? (z(), B(R, { key: 0 }, [r.value ? (z(), B("div", lL, [H("button", {
 			class: "lib-dice",
@@ -39915,7 +39922,7 @@ var OL = /* @__PURE__ */ I({
 		inline: Boolean
 	},
 	setup(e) {
-		let t = CA(), n = HA(), r = /* @__PURE__ */ Nr({}), i = /* @__PURE__ */ Nr([]);
+		let t = SA(), n = VA(), r = /* @__PURE__ */ Nr({}), i = /* @__PURE__ */ Nr([]);
 		F(() => [e.markup, e.codeSet], ([e, n], a, o) => {
 			let s = !0;
 			o(() => {
@@ -39937,7 +39944,7 @@ var OL = /* @__PURE__ */ I({
 		}, { immediate: !0 });
 		function a(t, i) {
 			if (t.nodeType === Node.TEXT_NODE) return t.textContent;
-			if (!(t instanceof Element) || QO.has(t.localName) || t.hasAttribute("data-rd-h-toggle-button") || t.hasAttribute("data-rd-h-special-toggle-button")) return null;
+			if (!(t instanceof Element) || ZO.has(t.localName) || t.hasAttribute("data-rd-h-toggle-button") || t.hasAttribute("data-rd-h-special-toggle-button")) return null;
 			let o = t.getAttribute("data-trpg-table");
 			if (o?.startsWith(`${e.markup.marker}:`)) {
 				let t = e.markup.tables?.[Number(o.slice(e.markup.marker.length + 1))];
@@ -39974,15 +39981,15 @@ var OL = /* @__PURE__ */ I({
 				}, s);
 			}
 			let l = t.localName;
-			if (!ZO.has(l)) return s;
+			if (!XO.has(l)) return s;
 			let u = { key: i };
 			if (t.hasAttribute("data-title-index")) {
 				let e = t.querySelector(".ve-rd__h-inner")?.textContent;
 				e && (u["data-reader-heading"] = e);
 			}
-			let d = $O(t.getAttribute("class"));
+			let d = QO(t.getAttribute("class"));
 			d && (u.class = d);
-			for (let e of ek) {
+			for (let e of $O) {
 				let n = t.getAttribute(e);
 				n !== null && (u[e] = n);
 			}
@@ -39997,7 +40004,7 @@ var OL = /* @__PURE__ */ I({
 		codeSet: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = HA(), i = /* @__PURE__ */ M([]), a = /* @__PURE__ */ M({}), o = 0;
+		let t = e, n = SA(), r = VA(), i = /* @__PURE__ */ M([]), a = /* @__PURE__ */ M({}), o = 0;
 		async function s() {
 			let e = ++o;
 			i.value = HI(t.text), a.value = {}, await Promise.all(i.value.map(async (r, i) => {
@@ -40055,7 +40062,7 @@ var OL = /* @__PURE__ */ I({
 		codeSet: {}
 	},
 	setup(t) {
-		let n = t, r = CA(), i = /* @__PURE__ */ M("closed"), a = /* @__PURE__ */ M(""), o = K(() => typeof n.block.title == "string" ? n.block.title : ""), s = K(() => typeof n.block.credit == "string" ? n.block.credit : ""), c = K(() => r.svc().backend.library.images.urls(e(n.codeSet).id, n.block.href));
+		let n = t, r = SA(), i = /* @__PURE__ */ M("closed"), a = /* @__PURE__ */ M(""), o = K(() => typeof n.block.title == "string" ? n.block.title : ""), s = K(() => typeof n.block.credit == "string" ? n.block.credit : ""), c = K(() => r.svc().backend.library.images.urls(e(n.codeSet).id, n.block.href));
 		function l(e) {
 			return new Promise((t) => {
 				let n = new Image();
@@ -40113,7 +40120,7 @@ var OL = /* @__PURE__ */ I({
 		codeSet: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = K(() => {
+		let t = e, n = SA(), r = K(() => {
 			let e = t.block;
 			return e && typeof e == "object" && "type" in e && [
 				"abilityDc",
@@ -40159,7 +40166,7 @@ var OL = /* @__PURE__ */ I({
 		codeSet: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ M("loading");
+		let t = e, n = SA(), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ M("loading");
 		F(() => [
 			t.prop,
 			t.item,
@@ -40199,7 +40206,7 @@ var OL = /* @__PURE__ */ I({
 		codeSet: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M(String(t.block.displayName ?? t.block.name ?? "")), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(!t.block.collapsed), l = /* @__PURE__ */ Nr(null), u = null, d;
+		let t = e, n = SA(), r = sj(), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M(String(t.block.displayName ?? t.block.name ?? "")), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(!t.block.collapsed), l = /* @__PURE__ */ Nr(null), u = null, d;
 		function f() {
 			if (u) return u;
 			let e = r.campaignLib, i = JSON.parse(JSON.stringify(t.block)), c = `${t.codeSet}|${e?.codeSet ?? ""}|${JSON.stringify(i)}`, l = eR.get(c);
@@ -40499,7 +40506,7 @@ var OL = /* @__PURE__ */ I({
 		pb: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = K(() => BI(t.item, t.pb ?? null, l.value?.item)), a = K(() => [...VI(t.item), ...t.authorLines ?? []]), o = K(() => zI(RI(t.item.classFeatures))), s = /* @__PURE__ */ M([]), c = /* @__PURE__ */ M("只看职业"), l = K(() => s.value.find((e) => e.name === c.value) ?? null), u = K(() => String(t.item.subclassTitle ?? "子职业"));
+		let t = e, n = SA(), r = sj(), i = K(() => BI(t.item, t.pb ?? null, l.value?.item)), a = K(() => [...VI(t.item), ...t.authorLines ?? []]), o = K(() => zI(RI(t.item.classFeatures))), s = /* @__PURE__ */ M([]), c = /* @__PURE__ */ M("只看职业"), l = K(() => s.value.find((e) => e.name === c.value) ?? null), u = K(() => String(t.item.subclassTitle ?? "子职业"));
 		return uo(async () => {
 			let e = r.campaignLib, i = t.item;
 			if (e) try {
@@ -40681,7 +40688,7 @@ async function HR(e, t, r, i) {
 }
 // src/ui/libview/use-version-actions.ts
 function UR(e) {
-	let t = CA(), n = cj(), r = wA(), i = HA(), a = (e) => e === "none" ? "不使用" : e === "campaign" ? "本战役" : e === "global" ? "全局" : `规则：${t.svc().rules.get(e.replace(/^rule:/, ""))?.name ?? e.replace(/^rule:/, "")}`;
+	let t = SA(), n = sj(), r = CA(), i = VA(), a = (e) => e === "none" ? "不使用" : e === "campaign" ? "本战役" : e === "global" ? "全局" : `规则：${t.svc().rules.get(e.replace(/^rule:/, ""))?.name ?? e.replace(/^rule:/, "")}`;
 	async function o(e) {
 		let i = r.owner?.ownerKey;
 		if (n.bound && i) {
@@ -40708,7 +40715,7 @@ function UR(e) {
 		let a = r.filter((e) => e.house);
 		if (!a.length) return !1;
 		let s = [...new Set(a.map((e) => e.name ?? ""))].join("、");
-		if (!await ZA({
+		if (!await XA({
 			title: a.length > 1 ? `删除这 ${a.length} 个房规？` : `删除房规「${s}」？`,
 			message: "删除后，用到它的地方回到原件。别的版本和原件不受影响。",
 			confirmLabel: "删除",
@@ -40795,7 +40802,7 @@ var GR = {
 	},
 	emits: ["changed", "manage"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = CA(), { pickHere: a } = UR(async () => {
+		let n = e, r = t, i = SA(), { pickHere: a } = UR(async () => {
 			r("changed");
 		}), o = K(() => i.settings?.library.overrideLevel ?? "campaign"), s = K(() => o.value === "campaign" ? "本战役" : o.value === "rule" ? "当前规则" : "全局"), c = K(() => n.detail?.alternatives ?? []), l = K(() => n.detail?.version.altId ?? "base"), u = (e) => typeof e == "object" && e && typeof e.name == "string" ? e.name : "", d = K(() => {
 			let e = 0, t = [{
@@ -40988,13 +40995,13 @@ var GR = {
 });
 // src/ui/libview/deps-flow.ts
 async function wz(e, t) {
-	let n = qA(), r = await e.backend.library.downloads.official(t.set, { books: [t.id] });
-	for (let i of r.tasks) n.rememberTask(i.taskId, KA(i.setId, [t.name]), () => void wz(e, t).catch((e) => console.error("[trpg-assistant] 下载失败", e)));
+	let n = KA(), r = await e.backend.library.downloads.official(t.set, { books: [t.id] });
+	for (let i of r.tasks) n.rememberTask(i.taskId, GA(i.setId, [t.name]), () => void wz(e, t).catch((e) => console.error("[trpg-assistant] 下载失败", e)));
 	n.refresh();
 }
 async function Tz(e, t, n, r, i, a) {
 	let o = [...n].map(String), s = null;
-	return (await qA().trackBrew(e.backend.library.tasks, t, `deps:${t}:${o.join(",")}`, r, async (n, c) => {
+	return (await KA().trackBrew(e.backend.library.tasks, t, `deps:${t}:${o.join(",")}`, r, async (n, c) => {
 		let l;
 		try {
 			l = (await e.backend.library.downloads.brewSources(t, o, c)).result;
@@ -41009,7 +41016,7 @@ async function Ez(e, t, n, r, i) {
 	let a = [];
 	for (let t of n) a.push(await e.backend.library.brewDependencyPreview(t.setId, t.url));
 	if (!a.some((e) => e.brew.length || e.official.length || e.unknown.length)) return [];
-	let o = await XA({
+	let o = await YA({
 		key: `deps:${t}`,
 		title: "一起下载的依赖",
 		component: kr(Cz),
@@ -41028,7 +41035,7 @@ async function Ez(e, t, n, r, i) {
 var Dz = (e) => !!e && typeof e == "object" && e.name === "BrewDependencyError" && Array.isArray(e.missing), Oz = (e, t) => (e ?? t).replace(/\.json$/, "").replace(/^[^;]+;\s*/, "");
 async function kz(e, t, n, r, i) {
 	console.error(`[trpg-assistant] ${n}没有成功`, t);
-	let a = UA(), o = `err:${n}`, s = () => a.dismiss(o);
+	let a = HA(), o = `err:${n}`, s = () => a.dismiss(o);
 	if (!Dz(t)) {
 		let e = t instanceof Error ? t.message : String(t);
 		a.show({
@@ -41095,7 +41102,7 @@ var Az = {
 	props: { entryRef: {} },
 	emits: ["retry"],
 	setup(e, { emit: r }) {
-		let i = e, a = r, o = CA(), s = cj(), c = HA(), l = /* @__PURE__ */ M(!0), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M(null), m = !1;
+		let i = e, a = r, o = SA(), s = sj(), c = VA(), l = /* @__PURE__ */ M(!0), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M(null), m = !1;
 		async function h() {
 			let e = u.value;
 			if (e?.sources?.length) {
@@ -41140,7 +41147,7 @@ var Az = {
 				name: e.name
 			}).catch((e) => console.error("[trpg-assistant] 开始下载失败", e)), c.success(`已开始下载《${e.name}》，下好后再打开这一条`)) : f.value = "现在没有网络，连上后再试");
 		}
-		return (e, t) => (z(), B("div", Az, [l.value ? (z(), B("div", jz, [...t[0] ||= [H("i", { style: { width: "60%" } }, null, -1), H("i", { style: { width: "40%" } }, null, -1)]])) : p.value ? (z(), B(R, { key: 1 }, [t[1] ||= H("h3", null, "库里没有这一条", -1), U(lj, {
+		return (e, t) => (z(), B("div", Az, [l.value ? (z(), B("div", jz, [...t[0] ||= [H("i", { style: { width: "60%" } }, null, -1), H("i", { style: { width: "40%" } }, null, -1)]])) : p.value ? (z(), B(R, { key: 1 }, [t[1] ||= H("h3", null, "库里没有这一条", -1), U(cj, {
 			text: `查不出它该从哪里补：${p.value}`,
 			what: "查找缺的资料",
 			actions: [{
@@ -41150,7 +41157,7 @@ var Az = {
 		}, null, 8, ["text", "actions"])], 64)) : u.value?.kind === "brew" && u.value.via ? (z(), B(R, { key: 2 }, [
 			H("h3", null, j(d.value ? "正在拉取依赖包…" : "这一条需要依赖包"), 1),
 			H("p", Mz, "所在的包「" + j(u.value.via.replace(/\.json$/, "")) + "」缺依赖包：" + j(u.value.sources?.join("、")) + "。缺了它，这个包读不出来。", 1),
-			f.value && !d.value ? (z(), V(lj, {
+			f.value && !d.value ? (z(), V(cj, {
 				key: 0,
 				text: `没拉到依赖包：${f.value}`,
 				what: "拉取依赖包",
@@ -41163,7 +41170,7 @@ var Az = {
 		], 64)) : u.value?.kind === "brew" ? (z(), B(R, { key: 3 }, [
 			t[3] ||= H("h3", null, "这一条来自没装的自制包", -1),
 			H("p", Pz, "来源：" + j(u.value.sources?.join("、") || "未知"), 1),
-			f.value ? (z(), V(lj, {
+			f.value ? (z(), V(cj, {
 				key: 0,
 				text: f.value,
 				what: "下载这个包"
@@ -41177,7 +41184,7 @@ var Az = {
 		], 64)) : u.value?.kind === "official" && u.value.book ? (z(), B(R, { key: 4 }, [
 			H("h3", null, "这一条在《" + j(u.value.book.name) + "》里", 1),
 			H("p", Iz, "这本" + j(u.value.book.kind === "adventure" ? "冒险" : "书") + "还没下载。", 1),
-			f.value ? (z(), V(lj, {
+			f.value ? (z(), V(cj, {
 				key: 0,
 				text: f.value,
 				what: "下载这本书"
@@ -41192,7 +41199,7 @@ var Az = {
 			size: 16
 		}), H("span", null, j(u.value?.kind === "official" ? "查不出它在哪本书或哪个包里，可到【下载】页找找。" : "它所在的书或包已经装着，可能是上游删掉或改了编号，重新下载也补不回来。"), 1)])], 64))]));
 	}
-}), zz = () => (cj().shelf?.groups ?? []).flatMap((e) => [...e.books, ...e.adventures]);
+}), zz = () => (sj().shelf?.groups ?? []).flatMap((e) => [...e.books, ...e.adventures]);
 function Bz(e) {
 	return zz().find((t) => t.pack?.docIdLocal === e) ?? null;
 }
@@ -41200,7 +41207,7 @@ function Vz(e, t, n) {
 	return zz().find((r) => r.set === e && (r.id === n || !!r.corpora?.some((e) => e.prop === t && e.id === n))) ?? null;
 }
 function Hz(e) {
-	let [t, n] = YA().stack;
+	let [t, n] = JA().stack;
 	if (!t?.key.startsWith("pack:") || !e || n?.key !== e) return null;
 	let r = t.props;
 	return r?.set ? r.docIdLocal ? Bz(r.docIdLocal) : zz().find((e) => e.set === r.set && e.source === r.source) ?? null : null;
@@ -41208,7 +41215,7 @@ function Hz(e) {
 var Uz = (e) => !!e && /^https?:\/\//i.test(e);
 async function Wz(e, t, r) {
 	if (!navigator.onLine) return { error: "现在没有网络，连上后再试" };
-	let i = qA();
+	let i = KA();
 	if (n(t.set).kind === "official") {
 		let n = e.backend.library.downloads;
 		if (t.kind === "adventure" && !t.id) return { error: "作者目录没有这项冒险的编号" };
@@ -41216,7 +41223,7 @@ async function Wz(e, t, r) {
 			books: t.id ? [t.id] : [],
 			sources: [t.source]
 		});
-		for (let n of a.tasks) i.rememberTask(n.taskId, t.kind === "adventure" ? `冒险《${t.name}》` : KA(n.setId, [t.name]), () => void Wz(e, t, r));
+		for (let n of a.tasks) i.rememberTask(n.taskId, t.kind === "adventure" ? `冒险《${t.name}》` : GA(n.setId, [t.name]), () => void Wz(e, t, r));
 		return i.refresh(), {
 			error: null,
 			taskId: a.tasks[0].taskId
@@ -41234,7 +41241,7 @@ async function Wz(e, t, r) {
 		let c = s.failed.find((e) => e.setId === t.set);
 		if (c) return console.error("[trpg-assistant] 重新下载自制包失败", c.error), o = c.error instanceof Error ? c.error.message : String(c.error), o;
 		for (let e of s.failed) console.warn("[trpg-assistant] 另一种语言的包没装上", e.setId, e.error);
-		return await cj().refresh(e), null;
+		return await sj().refresh(e), null;
 	}, () => void Wz(e, t, r));
 	return s.status === "done" && !o && r?.(), { error: s.status === "cancelled" ? null : s.error ?? o };
 }
@@ -41258,7 +41265,7 @@ var Gz = {
 	},
 	emits: ["done"],
 	setup(e, { emit: t }) {
-		let r = e, i = t, a = CA(), o = qA(), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(null), l = K(() => !!c.value), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(null), f = K(() => n(r.owner.set).kind === "official"), p = K(() => f.value ? r.owner.kind === "adventure" ? "冒险" : "书" : "包"), m = K(() => r.owner.downloaded ? `重新下载这个${p.value}` : `下载这本${p.value}`);
+		let r = e, i = t, a = SA(), o = KA(), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(null), l = K(() => !!c.value), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(null), f = K(() => n(r.owner.set).kind === "official"), p = K(() => f.value ? r.owner.kind === "adventure" ? "冒险" : "书" : "包"), m = K(() => r.owner.downloaded ? `重新下载这个${p.value}` : `下载这本${p.value}`);
 		async function h() {
 			s.value = !0, u.value = null, d.value = null;
 			try {
@@ -41275,7 +41282,7 @@ var Gz = {
 		}), (t, n) => (z(), B("div", Gz, [
 			H("h3", null, j(e.title), 1),
 			H("p", Kz, "《" + j(e.owner.name) + "》" + j(e.owner.downloaded ? "在本地缺了这部分资料。重新下载一次可以恢复原状。" : "还没下载。"), 1),
-			u.value ? (z(), V(lj, {
+			u.value ? (z(), V(cj, {
 				key: 0,
 				text: d.value && d.value !== u.value ? `${u.value}：${d.value}` : u.value,
 				what: m.value
@@ -41328,7 +41335,7 @@ var Gz = {
 		codeSet: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = /* @__PURE__ */ Nr(null), a = /* @__PURE__ */ M([]), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M([]), c = /* @__PURE__ */ M(!0);
+		let t = e, n = SA(), r = sj(), i = /* @__PURE__ */ Nr(null), a = /* @__PURE__ */ M([]), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M([]), c = /* @__PURE__ */ M(!0);
 		async function l() {
 			c.value = !0, s.value = [];
 			let e = n.svc().backend.library, l = t.detail.ref, u = [e.service.relatedTables(l.set, l.prop, l.hash, void 0, t.detail.item).then((e) => {
@@ -41354,7 +41361,7 @@ var Gz = {
 		}
 		return uo(l), (t, n) => (z(), B(R, null, [
 			c.value ? (z(), B("p", Qz, "正在查找关联资料…")) : G("", !0),
-			s.value.length ? (z(), V(lj, {
+			s.value.length ? (z(), V(cj, {
 				key: 1,
 				text: `关联资料没查全：${s.value.join("；")}`,
 				what: "查找关联资料",
@@ -41420,7 +41427,7 @@ var Gz = {
 	__name: "LegendaryCreatures",
 	props: { detail: {} },
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = /* @__PURE__ */ Nr({ kind: "loading" }), a = 0;
+		let t = e, n = SA(), r = sj(), i = /* @__PURE__ */ Nr({ kind: "loading" }), a = 0;
 		async function o() {
 			let e = ++a, o = r.campaignLib;
 			if (!o) i.value = { kind: "error" };
@@ -41437,7 +41444,7 @@ var Gz = {
 				}
 			}
 		}
-		return F(() => t.detail, o, { immediate: !0 }), (e, t) => (z(), B("section", uB, [t[0] ||= H("h3", null, "引用此传奇组的怪物", -1), i.value.kind === "loading" ? (z(), B("p", dB, "正在查找引用此传奇组的怪物…")) : i.value.kind === "error" ? (z(), V(lj, {
+		return F(() => t.detail, o, { immediate: !0 }), (e, t) => (z(), B("section", uB, [t[0] ||= H("h3", null, "引用此传奇组的怪物", -1), i.value.kind === "loading" ? (z(), B("p", dB, "正在查找引用此传奇组的怪物…")) : i.value.kind === "error" ? (z(), V(cj, {
 			key: 1,
 			text: "没能查出引用此传奇组的怪物。",
 			what: "读取关联怪物",
@@ -41566,7 +41573,7 @@ var OB = { class: "lib-dialog__body" }, kB = { class: "trpg-field" }, AB = { cla
 		inline: { type: Boolean }
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = YA(), a = HA(), o = /* @__PURE__ */ M(""), s = /* @__PURE__ */ M(""), c = /* @__PURE__ */ M(""), l = K(() => SB(n.svc()).filter((e) => e.value)), u = /* @__PURE__ */ M(r.campaignLib?.rule ?? l.value[0]?.value ?? ""), d = /* @__PURE__ */ M(null), f = /* @__PURE__ */ M(!1), p = /* @__PURE__ */ M(!1);
+		let t = e, n = SA(), r = sj(), i = JA(), a = VA(), o = /* @__PURE__ */ M(""), s = /* @__PURE__ */ M(""), c = /* @__PURE__ */ M(""), l = K(() => SB(n.svc()).filter((e) => e.value)), u = /* @__PURE__ */ M(r.campaignLib?.rule ?? l.value[0]?.value ?? ""), d = /* @__PURE__ */ M(null), f = /* @__PURE__ */ M(!1), p = /* @__PURE__ */ M(!1);
 		F(o, (e) => {
 			p.value || (s.value = e.trim() ? EB(e) : "");
 		});
@@ -41669,7 +41676,7 @@ var OB = { class: "lib-dialog__body" }, kB = { class: "trpg-field" }, AB = { cla
 		onDone: { type: Function }
 	},
 	setup(e) {
-		let t = e, r = CA(), i = cj(), a = YA(), o = HA(), s = K(() => n(t.entryRef.set).codeSet), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M(!1), d = /* @__PURE__ */ M(null);
+		let t = e, r = SA(), i = sj(), a = JA(), o = VA(), s = K(() => n(t.entryRef.set).codeSet), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M(!1), d = /* @__PURE__ */ M(null);
 		async function f(e) {
 			try {
 				let t = r.svc().backend.library.custom, n = e ?? await t.suggestedPack(s.value);
@@ -41759,7 +41766,7 @@ var OB = { class: "lib-dialog__body" }, kB = { class: "trpg-field" }, AB = { cla
 });
 // src/ui/libview/use-edit-diff.ts
 function YB() {
-	let e = CA(), t = cj(), r = /* @__PURE__ */ M(null), i = /* @__PURE__ */ Nr({}), a = /* @__PURE__ */ Nr({});
+	let e = SA(), t = sj(), r = /* @__PURE__ */ M(null), i = /* @__PURE__ */ Nr({}), a = /* @__PURE__ */ Nr({});
 	async function o(o, s) {
 		if (r.value = r.value === o ? null : o, r.value !== o || i.value[o]) return;
 		i.value = {
@@ -41852,7 +41859,7 @@ var ZB = {
 	__name: "VersionManage",
 	props: { refs: {} },
 	setup(e, { expose: t }) {
-		let r = e, i = CA(), a = cj(), o = /* @__PURE__ */ Nr(null), s = /* @__PURE__ */ M(null), { open: c, diffs: l, toggle: u, labelOf: d } = YB();
+		let r = e, i = SA(), a = sj(), o = /* @__PURE__ */ Nr(null), s = /* @__PURE__ */ M(null), { open: c, diffs: l, toggle: u, labelOf: d } = YB();
 		async function f() {
 			s.value = null;
 			let e = a.campaignLib;
@@ -41969,7 +41976,7 @@ var ZB = {
 		name: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = /* @__PURE__ */ M(null);
+		let t = e, n = SA(), r = sj(), i = /* @__PURE__ */ M(null);
 		return uo(async () => {
 			let e = null;
 			try {
@@ -42073,7 +42080,7 @@ async function RV(e, t, n, r, i) {
 	let a = t.every((e) => e.kind === "official"), o = a ? "卸载" : "删除", s = n.length === 1 ? `《${n[0]}》` : `选中的 ${n.length} 项`;
 	for (let c = 0; c < 2; c++) try {
 		let [l, u] = await Promise.all([e.backend.removalImpactMany(t), e.backend.removalSizes(t).catch(() => null)]), d = LV(l, t);
-		if ((!r || l.packs.some((e) => e.mustRemove) || c > 0 || n.length > 1) && !await ZA({
+		if ((!r || l.packs.some((e) => e.mustRemove) || c > 0 || n.length > 1) && !await XA({
 			title: `${o}${s}？`,
 			message: [
 				c > 0 ? "刚才的预览之后资料有变化，下面是重新算的影响。" : "",
@@ -42091,7 +42098,7 @@ async function RV(e, t, n, r, i) {
 		let a = r instanceof Error ? r.message : String(r);
 		if (c === 0 && /重新预览/.test(a)) continue;
 		let l = r.remaining;
-		return await cj().refresh(e), await kz(e, r, `${o}${s}`, i, () => void RV(e, l?.length ? l : t, n, !1, i)), !1;
+		return await sj().refresh(e), await kz(e, r, `${o}${s}`, i, () => void RV(e, l?.length ? l : t, n, !1, i)), !1;
 	}
 	return !1;
 }
@@ -42102,7 +42109,7 @@ function BV(e, t, n, r) {
 	return RV(e, [FV(t)], [t.name], n, r);
 }
 async function VV(e, t, r, i) {
-	if (!await ZA({
+	if (!await XA({
 		title: "复制成我的",
 		message: `把《${t.name}》整本复制一份，放进【我的库】成为一个新包：`,
 		details: [
@@ -42112,7 +42119,7 @@ async function VV(e, t, r, i) {
 		],
 		confirmLabel: "复制"
 	})) return !1;
-	let a = HA(), o = a.push("status", `正在复制《${t.name}》…大书要十几秒`);
+	let a = VA(), o = a.push("status", `正在复制《${t.name}》…大书要十几秒`);
 	try {
 		let s = n(t.set).codeSet, c;
 		if (n(t.set).kind === "official") c = await e.backend.library.custom.saveToMine(s, {
@@ -42130,7 +42137,7 @@ async function VV(e, t, r, i) {
 		return a.dismiss(o), a.push("success", `已复制成我的：${c.full ?? t.name}`, i ? { actions: [{
 			label: "打开",
 			run: () => i(c.id)
-		}] } : void 0), await cj().loadPairs(e), !0;
+		}] } : void 0), await sj().loadPairs(e), !0;
 	} catch (e) {
 		return a.dismiss(o), console.error("[trpg-assistant] 复制成我的失败", e), r.error(e instanceof Error ? e.message : "复制没有成功"), !1;
 	}
@@ -42160,7 +42167,7 @@ var HV = {
 		onAnswer: { type: Function }
 	},
 	setup(e) {
-		let t = e, n = CA(), r = HA(), i = K(() => t.groups.flatMap((e) => e.preview.replaces.map((t) => ({
+		let t = e, n = SA(), r = VA(), i = K(() => t.groups.flatMap((e) => e.preview.replaces.map((t) => ({
 			...t,
 			codeSet: e.codeSet
 		})))), a = K(() => t.groups.flatMap((e) => e.preview.structure.map((t) => {
@@ -42247,7 +42254,7 @@ async function aH(e, t, n, r, i) {
 			name: e.name,
 			text: await e.text()
 		}))), o = await a.previewImport(t), s = o.some((e) => e.preview.replaces.length);
-		if ((!r || s) && !await XA({
+		if ((!r || s) && !await YA({
 			key: "confirm:import",
 			title: "导入预览",
 			component: kr(iH),
@@ -42282,14 +42289,14 @@ function sH(e, t, n) {
 	m5(oH(e, t, n));
 }
 async function cH(e, t, n) {
-	let r = cj();
+	let r = sj();
 	r.pairs?.some((e) => e.id === t) || await r.loadPairs(e);
 	let i = r.pairs?.find((e) => e.id === t);
 	i && sH(r, i, n);
 }
 function lH(e, t) {
-	let n = cj();
-	YA().open({
+	let n = sj();
+	JA().open({
 		key: "newpack",
 		title: "新建包",
 		component: zB,
@@ -42341,14 +42348,14 @@ function uH(e, { withExport: t = !1 } = {}) {
 	];
 }
 async function dH(e, t, n, r, i, a = !1) {
-	let o = cj(), s = _B(n, r), c = vB(n, s), l = yB(s), u = async () => {
+	let o = sj(), s = _B(n, r), c = vB(n, s), l = yB(s), u = async () => {
 		await o.loadPairs(e), await o.refresh(e);
 	};
 	if (t === "lang-import") fH(async (t) => {
-		await aH(e, c, t, CA().settings?.library.skipImportPreview ?? !1, i) && await u();
+		await aH(e, c, t, SA().settings?.library.skipImportPreview ?? !1, i) && await u();
 	});
 	else try {
-		if (t === "manage") YA().isOpen || sH(o, n, r), g5(oH(o, n, r));
+		if (t === "manage") JA().isOpen || sH(o, n, r), g5(oH(o, n, r));
 		else if (t === "export") await TB(e, n.id, l, i);
 		else if (t === "copy") {
 			let t = await e.backend.library.custom.saveToMine(c, {
@@ -42366,7 +42373,7 @@ async function dH(e, t, n, r, i, a = !1) {
 				kind: "brew",
 				setId: r,
 				docIdLocals: [s.docIdLocal]
-			}, t.length > 1 ? `${l}（中文、英文）` : l, a, i) && (YA().isOpen && YA().close(!0), await u());
+			}, t.length > 1 ? `${l}（中文、英文）` : l, a, i) && (JA().isOpen && JA().close(!0), await u());
 		}
 	} catch (e) {
 		console.error("[trpg-assistant] 包的操作没有成功", t, e), i.error(e instanceof Error ? e.message : "没有成功");
@@ -42557,7 +42564,7 @@ var pH = {
 		onAnswer: { type: Function }
 	},
 	setup(e) {
-		let t = e, n = CA(), r = /* @__PURE__ */ M(""), i = /* @__PURE__ */ Nr(null), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M(""), s = K(() => i.value?.text === r.value ? i.value.blocks : null);
+		let t = e, n = SA(), r = /* @__PURE__ */ M(""), i = /* @__PURE__ */ Nr(null), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M(""), s = K(() => i.value?.text === r.value ? i.value.blocks : null);
 		async function c() {
 			if (a.value || !r.value.trim()) return;
 			a.value = !0, o.value = "", i.value = null;
@@ -42606,7 +42613,7 @@ var pH = {
 	}
 }), BH = Symbol("trpg-entry-codeset"), VH = Symbol("trpg-form-plan");
 function HH(e) {
-	return XA({
+	return YA({
 		key: "paste-entries",
 		title: "粘贴文字转成正文",
 		component: kr(zH),
@@ -42873,7 +42880,7 @@ var UH = [
 });
 // src/ui/libview/field-shape.ts
 function oU(e, t) {
-	let n = lw(e, t);
+	let n = cw(e, t);
 	switch (n.c) {
 		case "number": return 0;
 		case "switch": return !1;
@@ -42900,7 +42907,7 @@ var sU = {
 	entries: "正文",
 	json: "JSON",
 	pick: "几种写法"
-}, cU = (e, t) => sU[lw(e, t).c] ?? "其他";
+}, cU = (e, t) => sU[cw(e, t).c] ?? "其他";
 function lU(e) {
 	return e == null || e === "" ? !0 : Array.isArray(e) ? e.length === 0 : typeof e == "object" && Object.keys(e).length === 0;
 }
@@ -42964,7 +42971,7 @@ var uU = {
 		let n = e, r = t, i = K(() => (n.depth ?? 0) > 6 ? {
 			c: "json",
 			why: "套得太深"
-		} : lw(n.shape, n.defs)), a = K(() => i.value.c === "group" ? cw(i.value.props, n.defs) : null), o = K(() => (n.depth ?? 0) + 1), s = (e) => r("update", e), c = (e, t) => n.labels[t] ?? n.labels[e] ?? e, l = (e, t) => n.tips?.[t] ?? n.tips?.[e], u = (e) => c(e, n.path ?? n.name), d = Ui(VH, /* @__PURE__ */ M({})), f = K(() => d.value[n.path ?? n.name] ?? {}), p = (e) => `${n.path ?? n.name}${e}`;
+		} : cw(n.shape, n.defs)), a = K(() => i.value.c === "group" ? sw(i.value.props, n.defs) : null), o = K(() => (n.depth ?? 0) + 1), s = (e) => r("update", e), c = (e, t) => n.labels[t] ?? n.labels[e] ?? e, l = (e, t) => n.tips?.[t] ?? n.tips?.[e], u = (e) => c(e, n.path ?? n.name), d = Ui(VH, /* @__PURE__ */ M({})), f = K(() => d.value[n.path ?? n.name] ?? {}), p = (e) => `${n.path ?? n.name}${e}`;
 		function m(e, t) {
 			let n = (f.value.values ?? []).map((e) => JSON.stringify(e)), r = (e) => {
 				let r = n.indexOf(JSON.stringify(t(e)));
@@ -43001,7 +43008,7 @@ var uU = {
 			s(t.length ? t : void 0);
 		}, ee = () => {
 			i.value.c === "list" && s([...C.value, oU(i.value.of, n.defs)]);
-		}, k = K(() => i.value.c === "list" && lw(i.value.of, n.defs).c === "entries"), te = CA(), ne = Ui(BH, /* @__PURE__ */ M("cn")), re = /* @__PURE__ */ M(!1), ie = /* @__PURE__ */ M(null);
+		}, k = K(() => i.value.c === "list" && cw(i.value.of, n.defs).c === "entries"), te = SA(), ne = Ui(BH, /* @__PURE__ */ M("cn")), re = /* @__PURE__ */ M(!1), ie = /* @__PURE__ */ M(null);
 		async function ae(e) {
 			re.value = !0, ie.value = null;
 			try {
@@ -43034,12 +43041,12 @@ var uU = {
 			let e = le.value.trim();
 			e && i.value.c === "map" && (se(e, oU(i.value.of, n.defs)), le.value = "");
 		}
-		let de = K(() => i.value.c === "pick" ? n.value === void 0 ? f.value.order?.[0] ?? 0 : uw(i.value, n.value, n.defs) : 0), fe = (e) => f.value.names?.[e] ?? (i.value.c === "pick" ? cU(i.value.branches[e].shape, n.defs) : ""), pe = K(() => {
+		let de = K(() => i.value.c === "pick" ? n.value === void 0 ? f.value.order?.[0] ?? 0 : lw(i.value, n.value, n.defs) : 0), fe = (e) => f.value.names?.[e] ?? (i.value.c === "pick" ? cU(i.value.branches[e].shape, n.defs) : ""), pe = K(() => {
 			if (i.value.c !== "pick") return [];
 			let e = i.value.branches.map((e, t) => t), t = new Set(f.value.alt ?? f.value.order ?? e);
 			return i.value.branches.forEach((e, r) => {
-				let i = lw(e.shape, n.defs);
-				i.c === "group" && cw(i.props, n.defs) && t.add(r);
+				let i = cw(e.shape, n.defs);
+				i.c === "group" && sw(i.props, n.defs) && t.add(r);
 			}), [...t].filter((e) => e !== he.value).map((e) => ({
 				key: String(e),
 				label: fe(e)
@@ -43048,13 +43055,13 @@ var uU = {
 			let e = me.value;
 			if (e === null || i.value.c !== "pick") return de.value;
 			let t = i.value.branches[e], r = i.value.branches[de.value].keys.every((e) => t.keys.includes(e) || w.value[e] === void 0);
-			return lU(n.value) || r && lw(t.shape, n.defs).c === "group" ? e : de.value;
+			return lU(n.value) || r && cw(t.shape, n.defs).c === "group" ? e : de.value;
 		});
 		function ge(e) {
 			let t = Number(e);
 			if (i.value.c !== "pick" || t === he.value) return;
-			let r = lw(i.value.branches[t].shape, n.defs), a = lw(i.value.branches[he.value].shape, n.defs);
-			me.value = t, r.c === "group" && a.c === "group" && cw(r.props, n.defs) && cw(a.props, n.defs) ? s(Object.fromEntries(r.props.filter((e) => w.value[e.name] !== void 0).map((e) => [e.name, w.value[e.name]]))) : s(oU(i.value.branches[t].shape, n.defs));
+			let r = cw(i.value.branches[t].shape, n.defs), a = cw(i.value.branches[he.value].shape, n.defs);
+			me.value = t, r.c === "group" && a.c === "group" && sw(r.props, n.defs) && sw(a.props, n.defs) ? s(Object.fromEntries(r.props.filter((e) => w.value[e.name] !== void 0).map((e) => [e.name, w.value[e.name]]))) : s(oU(i.value.branches[t].shape, n.defs));
 		}
 		let _e = /* @__PURE__ */ M(!1), ve = K(() => new Set(f.value.rare ?? [])), ye = K(() => i.value.c === "group" ? i.value.props.filter((e) => (!a.value || !["colLabels", "colLabelRows"].includes(e.name)) && (_e.value || !ve.value.has(e.name) || w.value[e.name] !== void 0)) : []), be = /* @__PURE__ */ new Set([
 			"text",
@@ -43063,11 +43070,11 @@ var uU = {
 			"switch",
 			"const"
 		]), xe = (e, t) => {
-			let r = lw(e, n.defs);
-			return be.has(r.c) || r.c === "pick" && be.has(lw(r.branches[d.value[t]?.order?.[0] ?? 0].shape, n.defs).c);
+			let r = cw(e, n.defs);
+			return be.has(r.c) || r.c === "pick" && be.has(cw(r.branches[d.value[t]?.order?.[0] ?? 0].shape, n.defs).c);
 		}, Se = K(() => ye.value.length > 1 && ye.value.length <= 3 && ye.value.every((e) => xe(e.shape, p(`.${e.name}`)))), Ce = K(() => /([^.[{\]}]+)(?:\[\]|\{\})*$/.exec(n.path ?? n.name)?.[1] ?? n.name), we = K(() => i.value.c === "group" ? i.value.props.filter((e) => ve.value.has(e.name) && w.value[e.name] === void 0) : []), Te = K(() => {
 			if (i.value.c !== "list") return null;
-			let e = lw(i.value.of, n.defs), t = e.c === "select" ? e : e.c === "pick" ? e.branches.map((e) => lw(e.shape, n.defs)).find((e) => e.c === "select") : void 0;
+			let e = cw(i.value.of, n.defs), t = e.c === "select" ? e : e.c === "pick" ? e.branches.map((e) => cw(e.shape, n.defs)).find((e) => e.c === "select") : void 0;
 			return t && t.c === "select" ? t : null;
 		}), Ee = K(() => Te.value ? (f.value.values ?? []).filter((e) => Array.isArray(e)) : []), De = (e) => e.map((e) => Te.value?.labels?.[String(e)] ?? String(e)).join(" "), Oe = /* @__PURE__ */ M(!1), ke = K(() => {
 			if (Oe.value) return BU;
@@ -43473,7 +43480,7 @@ var uU = {
 	setup(e, { emit: t }) {
 		let n = e;
 		Hi(BH, K(() => n.codeSet ?? "cn")), Hi(VH, K(() => n.table.plan?.at ?? {}));
-		let r = t, i = K(() => new Map(n.table.fields.filter((e) => !e.internal && e.shape).map((e) => [e.name, e]))), a = (e) => e.map((e) => i.value.get(e)).filter((e) => !!e), o = K(() => n.table.plan ?? null), s = K(() => cw(n.table.fields, n.table.defs)), c = K(() => n.table.requiredChoices ?? []), l = K(() => {
+		let r = t, i = K(() => new Map(n.table.fields.filter((e) => !e.internal && e.shape).map((e) => [e.name, e]))), a = (e) => e.map((e) => i.value.get(e)).filter((e) => !!e), o = K(() => n.table.plan ?? null), s = K(() => sw(n.table.fields, n.table.defs)), c = K(() => n.table.requiredChoices ?? []), l = K(() => {
 			let e = c.value.findIndex((e) => Object.keys(e.fixed).length && Object.entries(e.fixed).every(([e, t]) => n.ent[e] === t));
 			return e >= 0 ? e : Math.max(0, c.value.findIndex((e) => e.fields.every((e) => n.ent[e] !== void 0)));
 		}), u = K(() => new Set(c.value[l.value]?.fields ?? [])), d = K(() => new Set(c.value.flatMap((e) => [...e.fields, ...Object.keys(e.fixed)]))), f = (e) => !d.value.has(e.name) && !(s.value && (!c.value.length || u.value.has(s.value.rows)) && ["colLabels", "colLabelRows"].includes(e.name)), p = K(() => [...(o.value ? a(o.value.required) : [...i.value.values()].filter((e) => e.required && e.name !== "source")).filter(f), ...a([...u.value])]), m = K(() => o.value ? a(o.value.common).filter(f) : []), h = K(() => (o.value ? a(o.value.more) : [...i.value.values()].filter((e) => !e.required && e.name !== "source")).filter(f)), g = K(() => c.value.map((e, t) => ({
@@ -43484,7 +43491,7 @@ var uU = {
 			let t = c.value[l.value], i = c.value[Number(e)];
 			if (!t || !i || t === i) return;
 			let a = t.fields.filter((e) => !i.fields.includes(e));
-			if (a.some((e) => !lU(n.ent[e])) && !await ZA({
+			if (a.some((e) => !lU(n.ent[e])) && !await XA({
 				title: "切换表格写法？",
 				message: "切换会清除当前写法的表格内容。",
 				confirmLabel: "切换"
@@ -43497,16 +43504,16 @@ var uU = {
 			r("update", o);
 		}
 		let v = new Set(Object.keys(n.ent).filter((e) => !lU(n.ent[e]))), y = K(() => h.value.filter((e) => v.has(e.name))), b = (e) => {
-			let t = lw(e.shape, n.table.defs);
-			return (t.c === "pick" ? lw(t.branches[n.table.plan?.at[e.name]?.order?.[0] ?? 0]?.shape ?? t, n.table.defs) : t).c === "number";
+			let t = cw(e.shape, n.table.defs);
+			return (t.c === "pick" ? cw(t.branches[n.table.plan?.at[e.name]?.order?.[0] ?? 0]?.shape ?? t, n.table.defs) : t).c === "number";
 		}, x = K(() => o.value?.media ?? null), S = K(() => {
-			let e = x.value ? n.table.fields.find((e) => e.name === x.value) : null, t = e?.shape ? lw(e.shape, n.table.defs) : null, r = t?.c === "pick" ? t.branches.map((e) => lw(e.shape, n.table.defs)).find((e) => e.c === "group" && e.props.length) : null;
+			let e = x.value ? n.table.fields.find((e) => e.name === x.value) : null, t = e?.shape ? cw(e.shape, n.table.defs) : null, r = t?.c === "pick" ? t.branches.map((e) => cw(e.shape, n.table.defs)).find((e) => e.c === "group" && e.props.length) : null;
 			return r?.c === "group" ? r.props : [];
 		}), C = K(() => {
 			let e = x.value ? n.ent[x.value] : void 0;
 			return e && typeof e == "object" && !Array.isArray(e) ? e : {};
 		}), w = (e) => {
-			let t = lw(e.shape, n.table.defs), r = t.c === "list" ? lw(t.of, n.table.defs).c : t.c;
+			let t = cw(e.shape, n.table.defs), r = t.c === "list" ? cw(t.of, n.table.defs).c : t.c;
 			return r === "image" ? "图片（填网址，只存网址不存图）" : r === "entries" ? "介绍" : e.shape && "description" in e.shape ? String(e.shape.description ?? "") : "";
 		};
 		function T(e, t) {
@@ -43542,7 +43549,7 @@ var uU = {
 			inert: e.readonly || void 0,
 			"data-testid": "entry-form"
 		}, [
-			c.value.length > 1 ? (z(), B("div", UU, [U(vj, {
+			c.value.length > 1 ? (z(), B("div", UU, [U(_j, {
 				"model-value": String(l.value),
 				label: "表格写法",
 				options: g.value,
@@ -43751,7 +43758,7 @@ var uU = {
 	},
 	emits: ["linked"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = CA(), a = HA(), o = /* @__PURE__ */ Nr(null), s = /* @__PURE__ */ M(null);
+		let n = e, r = t, i = SA(), a = VA(), o = /* @__PURE__ */ Nr(null), s = /* @__PURE__ */ M(null);
 		async function c() {
 			s.value = null;
 			try {
@@ -43854,7 +43861,7 @@ var uU = {
 		onUse: { type: Function }
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = YA(), a = JA(), o = {
+		let t = e, n = SA(), r = sj(), i = JA(), a = qA(), o = {
 			txt: "文字",
 			md: "Markdown",
 			html: "HTML"
@@ -43937,7 +43944,7 @@ var uU = {
 					"options"
 				])) : G("", !0),
 				_.value && _.value.modes.length > 1 ? (z(), B("span", gW, "格式")) : G("", !0),
-				_.value && _.value.modes.length > 1 ? (z(), V(vj, {
+				_.value && _.value.modes.length > 1 ? (z(), V(_j, {
 					key: 2,
 					"model-value": l.value,
 					label: "格式",
@@ -43956,7 +43963,7 @@ var uU = {
 					onClick: x
 				}, "填入作者示例", 8, vW)])
 			]),
-			C.value ? (z(), B("div", yW, [U(vj, {
+			C.value ? (z(), B("div", yW, [U(_j, {
 				modelValue: m.value,
 				"onUpdate:modelValue": n[1] ||= (e) => m.value = e,
 				label: "文字转条目",
@@ -43969,7 +43976,7 @@ var uU = {
 				}]
 			}, null, 8, ["modelValue"])])) : G("", !0),
 			e.onUse ? (z(), B("p", bW, "确认后会替换这一栏的表单。另一种语言会保留。")) : G("", !0),
-			f.value ? (z(), V(lj, {
+			f.value ? (z(), V(cj, {
 				key: 2,
 				text: f.value,
 				what: "文字转条目",
@@ -44057,7 +44064,7 @@ var uU = {
 		onPick: { type: Function }
 	},
 	setup(e) {
-		let t = e, n = YA(), r = /* @__PURE__ */ M(t.plan.onlyEmpty.length ? "onlyEmpty" : "all"), i = (e) => t.plan[e];
+		let t = e, n = JA(), r = /* @__PURE__ */ M(t.plan.onlyEmpty.length ? "onlyEmpty" : "all"), i = (e) => t.plan[e];
 		function a() {
 			t.onPick(r.value), n.pop();
 		}
@@ -59672,7 +59679,7 @@ var Qle = {
 	__name: "SavePage",
 	props: { ctx: {} },
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = YA(), a = () => n.svc().backend.library, o = /* @__PURE__ */ Nr({
+		let t = e, n = SA(), r = sj(), i = JA(), a = () => n.svc().backend.library, o = /* @__PURE__ */ Nr({
 			main: [],
 			other: []
 		}), s = /* @__PURE__ */ Nr([]), c = /* @__PURE__ */ M(!1), l = /* @__PURE__ */ M(!0), u = /* @__PURE__ */ Nr(null), d = /* @__PURE__ */ M(!1), f = /* @__PURE__ */ M(t.ctx.pack?.id ?? ""), p = K(() => (r.pairs ?? []).map((e) => ({
@@ -59782,7 +59789,7 @@ var Qle = {
 					class: "lib-diff",
 					"data-testid": "save-diff"
 				}, [(z(!0), B(R, null, L(o.value[t], (n) => (z(), B("li", { key: n.field }, [H("code", null, j(g.value.length > 1 ? `${N(W8)(e.ctx[t].cs)} · ` : "") + j(e.ctx.labelOf(e.ctx[t].cs)(n.field)), 1), H("span", null, [n.before === void 0 ? G("", !0) : (z(), B("s", cue, j(N(XB)(n.before)), 1)), W(j(n.before === void 0 ? "" : " → ") + j(N(XB)(n.after)), 1)])]))), 128))])), [[Vl, o.value[t].length]])), 128)) : G("", !0),
-				e.ctx.house?.existing ? (z(), B("div", lue, [H("span", uue, [H("b", null, "这一条已经有你的房规" + j(e.ctx.house.existing.where.length ? `，用在 ${e.ctx.house.existing.where.length} 处` : ""), 1), U(vj, {
+				e.ctx.house?.existing ? (z(), B("div", lue, [H("span", uue, [H("b", null, "这一条已经有你的房规" + j(e.ctx.house.existing.where.length ? `，用在 ${e.ctx.house.existing.where.length} 处` : ""), 1), U(_j, {
 					modelValue: v.value,
 					"onUpdate:modelValue": n[3] ||= (e) => v.value = e,
 					label: "已有房规时怎么存",
@@ -59876,7 +59883,7 @@ var Qle = {
 	__name: "EditorPage",
 	props: { session: {} },
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = YA(), a = HA(), o = wA(), s = Zle(() => n.svc(), t.session), c = /* @__PURE__ */ M(!1), l = /* @__PURE__ */ M(null);
+		let t = e, n = SA(), r = sj(), i = JA(), a = VA(), o = CA(), s = Zle(() => n.svc(), t.session), c = /* @__PURE__ */ M(!1), l = /* @__PURE__ */ M(null);
 		uo(() => s.ready.then(() => {
 			c.value = !0;
 		}, (e) => {
@@ -60029,7 +60036,7 @@ var Qle = {
 			}
 		}
 		async function se() {
-			(!s.dirty.value || await ZA({
+			(!s.dirty.value || await XA({
 				title: "放弃修改？",
 				message: "还有没保存的改动。草稿会留着，之后可以在我的库顶上 [继续]。",
 				confirmLabel: "放弃",
@@ -60226,7 +60233,7 @@ var Qle = {
 				key: 2,
 				class: Rt(d.value ? "lib-split" : "lib-vsplit")
 			}, [
-				d.value ? G("", !0) : (z(), B("div", Oue, [U(vj, {
+				d.value ? G("", !0) : (z(), B("div", Oue, [U(_j, {
 					modelValue: T.value,
 					"onUpdate:modelValue": n[1] ||= (e) => T.value = e,
 					label: "看哪一栏",
@@ -60281,7 +60288,7 @@ var Qle = {
 						"saved"
 					])) : G("", !0)
 				])], 512), [[Vl, d.value || C.value]]),
-				Bi(H("section", Nue, [d.value ? (z(), B("div", Pue, [U(vj, {
+				Bi(H("section", Nue, [d.value ? (z(), B("div", Pue, [U(_j, {
 					modelValue: _.value,
 					"onUpdate:modelValue": n[4] ||= (e) => _.value = e,
 					label: "右栏",
@@ -60405,7 +60412,7 @@ var Qle = {
 	__name: "JsonStartPage",
 	props: { session: {} },
 	setup(e) {
-		let t = e, n = CA(), r = /* @__PURE__ */ M("ent" in t.session ? B8(t.session.ent) : "{\n  \"name\": \"\"\n}"), i = /* @__PURE__ */ M([]), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M([]), s = /* @__PURE__ */ M(null);
+		let t = e, n = SA(), r = /* @__PURE__ */ M("ent" in t.session ? B8(t.session.ent) : "{\n  \"name\": \"\"\n}"), i = /* @__PURE__ */ M([]), a = /* @__PURE__ */ M(!1), o = /* @__PURE__ */ M([]), s = /* @__PURE__ */ M(null);
 		uo(async () => {
 			try {
 				o.value = ((await n.svc().backend.library.custom.fields(t.session.codeSet, t.session.prop))?.fields ?? []).filter((e) => !e.internal).map((e) => e.name);
@@ -60474,7 +60481,7 @@ var Qle = {
 		name: {}
 	},
 	setup(e) {
-		let t = YA();
+		let t = JA();
 		function n(e) {
 			let t = {};
 			for (let [n, r] of Object.entries(structuredClone(e))) !n.startsWith("_") && n !== "uniqueId" && (t[n] = r);
@@ -60559,7 +60566,7 @@ var ode = {
 		type: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = YA(), a = /* @__PURE__ */ Nr(null), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(""), c = /* @__PURE__ */ M(null);
+		let t = e, n = SA(), r = sj(), i = JA(), a = /* @__PURE__ */ Nr(null), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M(""), c = /* @__PURE__ */ M(null);
 		async function l() {
 			let e = r.campaignLib;
 			if (e) {
@@ -60602,7 +60609,7 @@ var ode = {
 				"aria-label": `搜${e.type.name}`,
 				"data-autofocus": ""
 			}, null, 8, cde), [[zu, s.value]])]),
-			o.value ? (z(), V(lj, {
+			o.value ? (z(), V(cj, {
 				key: 0,
 				text: `没读出来：${o.value}`,
 				what: "读取已有条目",
@@ -60648,7 +60655,7 @@ var ode = {
 		type: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = YA(), i = /* @__PURE__ */ Nr(null), a = /* @__PURE__ */ M(null);
+		let t = e, n = SA(), r = JA(), i = /* @__PURE__ */ Nr(null), a = /* @__PURE__ */ M(null);
 		async function o() {
 			a.value = null;
 			try {
@@ -60665,7 +60672,7 @@ var ode = {
 				detailed: !0
 			});
 		};
-		return (t, n) => (z(), B("div", gde, [H("div", _de, [H("div", vde, [H("div", yde, [H("span", null, "详细表单用的是作者编辑器里「新" + j(e.type.name) + "」这一份：全部字段展开，预先填好下面这些内容。", 1)]), a.value ? (z(), V(lj, {
+		return (t, n) => (z(), B("div", gde, [H("div", _de, [H("div", vde, [H("div", yde, [H("span", null, "详细表单用的是作者编辑器里「新" + j(e.type.name) + "」这一份：全部字段展开，预先填好下面这些内容。", 1)]), a.value ? (z(), V(cj, {
 			key: 0,
 			text: a.value,
 			what: "读取作者模板",
@@ -60705,7 +60712,7 @@ var ode = {
 		type: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = YA(), i = HA(), a = K(() => {
+		let t = e, n = SA(), r = JA(), i = VA(), a = K(() => {
 			let e = t.type.starts, n = [{
 				key: "blank",
 				title: "简易表单",
@@ -60818,7 +60825,7 @@ var ode = {
 		pack: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M("");
+		let t = e, n = SA(), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ M(null), a = /* @__PURE__ */ M("");
 		async function o() {
 			i.value = null;
 			try {
@@ -60851,7 +60858,7 @@ var ode = {
 			placeholder: r.value ? `搜类型（${c.value.length} 类）` : "搜类型",
 			"aria-label": "搜类型",
 			"data-autofocus": ""
-		}, null, 8, Lde), [[zu, a.value]])]), H("div", Rde, [H("div", zde, [i.value ? (z(), V(lj, {
+		}, null, 8, Lde), [[zu, a.value]])]), H("div", Rde, [H("div", zde, [i.value ? (z(), V(cj, {
 			key: 0,
 			text: `类型没读出来：${i.value}`,
 			what: "读取类型",
@@ -60888,7 +60895,7 @@ var ode = {
 });
 // src/ui/libview/edit-flow.ts
 function Zde(e, t) {
-	YA().push({
+	JA().push({
 		key: `new:${t.id}`,
 		title: "新建条目：选类型",
 		component: kr(Xde),
@@ -60900,7 +60907,7 @@ function Zde(e, t) {
 	});
 }
 function Qde(e, t, n) {
-	YA().push({
+	JA().push({
 		key: `start:${n.prop}`,
 		title: `新建${n.name}：从哪开始`,
 		component: kr(Pde),
@@ -60920,7 +60927,7 @@ function q8(e) {
 			ent: n
 		};
 	}
-	YA().push({
+	JA().push({
 		key: `edit:${e.prop}:${Date.now()}`,
 		title: String(e.ent.name ?? "") || `新${e.typeName}`,
 		component: kr(Kue),
@@ -61062,7 +61069,7 @@ var efe = {
 		pageKey: {}
 	},
 	setup(e) {
-		let t = e, r = CA(), i = cj(), a = wA(), o = YA(), s = HA(), l = K(() => {
+		let t = e, r = SA(), i = sj(), a = CA(), o = JA(), s = VA(), l = K(() => {
 			let e = m.value?.docIdLocal, t = e ? i.pairs?.find((t) => t.zh?.docIdLocal === e || t.en?.docIdLocal === e) : null;
 			if (!t) return null;
 			let n = t.en?.docIdLocal === e ? "en" : "cn";
@@ -61126,7 +61133,7 @@ var efe = {
 			["images", "图片"],
 			["related", "关联"],
 			["versions", "版本"]
-		], _ = /* @__PURE__ */ M(!0), v = bj(), y = {
+		], _ = /* @__PURE__ */ M(!0), v = yj(), y = {
 			"not-installed": "另一种语言的资料还没装",
 			"not-paired": "作者没给这一条配另一种语言",
 			"not-found": "另一种语言里找不到这一条",
@@ -61238,7 +61245,7 @@ var efe = {
 					p.value.kind === "ok" && p.value.d === i && re();
 				}), te(i.item), O(i.item), k(i.item), b(i), S.value = await ne(i.item, i.source);
 				let a = await IR(r.svc(), x.value, t.entryRef.prop, i.item);
-				o.setTitle(t.pageKey ?? yj(t.entryRef, t.selection), t.entryRef.prop === "legendaryGroup" ? `${a} · 传奇组` : a);
+				o.setTitle(t.pageKey ?? vj(t.entryRef, t.selection), t.entryRef.prop === "legendaryGroup" ? `${a} · 传奇组` : a);
 			} catch (e) {
 				console.error("[trpg-assistant] 读取条目失败", e), p.value = {
 					kind: "error",
@@ -61294,7 +61301,7 @@ var efe = {
 			title: "这一条读不出来",
 			detail: p.value.message,
 			onDone: re
-		}, null, 8, ["owner", "detail"])) : p.value.kind === "error" ? (z(), B(R, { key: 4 }, [U(lj, {
+		}, null, 8, ["owner", "detail"])) : p.value.kind === "error" ? (z(), B(R, { key: 4 }, [U(cj, {
 			text: `这一条没读出来：${p.value.message}`,
 			what: "读取这一条",
 			actions: [{
@@ -61411,7 +61418,7 @@ var efe = {
 					value: "background",
 					class: "lib-mscroll"
 				}, {
-					default: P(() => [H("div", pfe, [p.value.d.fluffError ? (z(), B(R, { key: 0 }, [U(lj, {
+					default: P(() => [H("div", pfe, [p.value.d.fluffError ? (z(), B(R, { key: 0 }, [U(cj, {
 						text: `这次没能读取背景：${p.value.d.fluffError}`,
 						what: "读取背景",
 						actions: [{
@@ -61433,7 +61440,7 @@ var efe = {
 						key: t,
 						block: e,
 						"code-set": x.value
-					}, null, 8, ["block", "code-set"]))), 128))])) : p.value.d.fluffError ? (z(), B(R, { key: 1 }, [U(lj, {
+					}, null, 8, ["block", "code-set"]))), 128))])) : p.value.d.fluffError ? (z(), B(R, { key: 1 }, [U(cj, {
 						text: `这次没能读取配图：${p.value.d.fluffError}`,
 						what: "读取配图",
 						actions: [{
@@ -61488,7 +61495,7 @@ var efe = {
 		selection: {}
 	},
 	setup(e) {
-		let t = e, r = bj(), i = K(() => n(t.entryRef.set).lang === "zh" ? "zh" : "en"), a = K(() => r.get(t.entryRef, t.selection)), o = K(() => !!a.value?.other), s = K(() => !a.value || a.value.loading ? "正在找另一种语言…" : a.value.reason ?? "另一种语言里没有这一条");
+		let t = e, r = yj(), i = K(() => n(t.entryRef.set).lang === "zh" ? "zh" : "en"), a = K(() => r.get(t.entryRef, t.selection)), o = K(() => !!a.value?.other), s = K(() => !a.value || a.value.loading ? "正在找另一种语言…" : a.value.reason ?? "另一种语言里没有这一条");
 		function c(e) {
 			if (e === i.value || !a.value?.other) return;
 			let { docIdLocal: n, ...r } = a.value.other;
@@ -61510,7 +61517,7 @@ var efe = {
 			onClick: (t) => c(e.v)
 		}, j(e.t), 9, xfe)), 64))]));
 	}
-}), $8 = SA("readerPosition", () => {
+}), $8 = xA("readerPosition", () => {
 	let e = /* @__PURE__ */ M({});
 	function t(t, n) {
 		e.value = {
@@ -61553,7 +61560,7 @@ var efe = {
 		part: {}
 	},
 	setup(e) {
-		let t = e, r = CA(), i = $8(), a = K(() => n(t.set).lang === "zh" ? "zh" : "en"), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M("正在找另一种语言…"), c = {
+		let t = e, r = SA(), i = $8(), a = K(() => n(t.set).lang === "zh" ? "zh" : "en"), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M("正在找另一种语言…"), c = {
 			"not-installed": "另一种语言的资料还没装",
 			"not-found": "另一种语言里这本还没下载",
 			"no-counterpart": "另一种语言里没有这本",
@@ -61618,10 +61625,10 @@ async function wfe(e) {
 		prop: e,
 		name: t
 	})), r = n.filter(({ name: e }) => n.filter((t) => t.name === e).length > 1).map(({ prop: e }) => e), i = r.length ? (await e.values("en", [r], "category").catch(() => []))[0] ?? {} : {};
-	return Object.fromEntries(pw(n, (e) => i[e] && Object.values(i).filter((t) => t === i[e]).length === 1 ? i[e] : void 0).map(({ prop: e, name: t }) => [e, t]));
+	return Object.fromEntries(fw(n, (e) => i[e] && Object.values(i).filter((t) => t === i[e]).length === 1 ? i[e] : void 0).map(({ prop: e, name: t }) => [e, t]));
 }
 function n5() {
-	let e = CA(), t = /* @__PURE__ */ Nr({});
+	let e = SA(), t = /* @__PURE__ */ Nr({});
 	return uo(async () => {
 		let n = e.svc().backend.texts, r = t5.get(n);
 		r || (r = wfe(n), t5.set(n, r));
@@ -61660,7 +61667,7 @@ var Tfe = {
 	},
 	emits: ["missing"],
 	setup(e, { expose: t, emit: n }) {
-		let r = e, i = n, a = CA(), o = n5(), s = cj(), c = HA(), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(!0), f = /* @__PURE__ */ M(null);
+		let r = e, i = n, a = SA(), o = n5(), s = sj(), c = VA(), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(!0), f = /* @__PURE__ */ M(null);
 		async function p() {
 			u.value = null;
 			try {
@@ -61687,7 +61694,7 @@ var Tfe = {
 			}
 		}
 		let h = (e) => e.kind === "official" ? `《${e.book?.name ?? e.source}》（官方书）` : e.provider?.replace(/\.json$/, "") ?? e.source;
-		return t({ load: p }), (e, t) => d.value ? (z(), B("div", Tfe, [...t[0] ||= [H("i", null, null, -1), H("i", { style: { width: "70%" } }, null, -1)]])) : u.value ? (z(), B(R, { key: 1 }, [U(lj, {
+		return t({ load: p }), (e, t) => d.value ? (z(), B("div", Tfe, [...t[0] ||= [H("i", null, null, -1), H("i", { style: { width: "70%" } }, null, -1)]])) : u.value ? (z(), B(R, { key: 1 }, [U(cj, {
 			text: `依赖读不出来：${u.value}`,
 			what: "读取依赖",
 			actions: [{
@@ -61757,7 +61764,7 @@ var Tfe = {
 	__name: "OverridesList",
 	props: { scope: {} },
 	setup(e, { expose: t }) {
-		let n = e, r = CA(), i = cj(), a = /* @__PURE__ */ Nr(null), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M("all"), { open: c, diffs: l, toggle: u, labelOf: d } = YB(), f = K(() => i.campaignLib), p = (e) => e.startsWith("rule:") ? `规则：${r.svc().rules.get(e.slice(5))?.name ?? e.slice(5)}` : Pfe(e), m = (e) => `${e.level}|${e.ref.set}|${e.ref.prop}|${e.ref.hash}`;
+		let n = e, r = SA(), i = sj(), a = /* @__PURE__ */ Nr(null), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M("all"), { open: c, diffs: l, toggle: u, labelOf: d } = YB(), f = K(() => i.campaignLib), p = (e) => e.startsWith("rule:") ? `规则：${r.svc().rules.get(e.slice(5))?.name ?? e.slice(5)}` : Pfe(e), m = (e) => `${e.level}|${e.ref.set}|${e.ref.prop}|${e.ref.hash}`;
 		async function h() {
 			o.value = null;
 			try {
@@ -61833,7 +61840,7 @@ var Tfe = {
 					default: P(() => [...t[5] ||= [W("全选", -1)]]),
 					_: 1
 				}, 8, ["model-value", "indeterminate"]),
-				U(vj, {
+				U(_j, {
 					modelValue: s.value,
 					"onUpdate:modelValue": t[0] ||= (e) => s.value = e,
 					label: "种类",
@@ -61957,7 +61964,7 @@ var Tfe = {
 		docIdLocal: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = wA(), a = HA(), o = /* @__PURE__ */ M("disabled"), s = /* @__PURE__ */ M(0), l = /* @__PURE__ */ M([]), d = /* @__PURE__ */ M(!0), f = K(() => r.bound && !!i.owner);
+		let t = e, n = SA(), r = sj(), i = CA(), a = VA(), o = /* @__PURE__ */ M("disabled"), s = /* @__PURE__ */ M(0), l = /* @__PURE__ */ M([]), d = /* @__PURE__ */ M(!0), f = K(() => r.bound && !!i.owner);
 		async function p() {
 			d.value = !0;
 			try {
@@ -61989,7 +61996,7 @@ var Tfe = {
 			await t.setLibrary(e, o), a.success("已复原"), await r.load(n.svc(), e), await p();
 		}
 		return (t, n) => (z(), B("div", ape, [
-			H("div", ope, [U(vj, {
+			H("div", ope, [U(_j, {
 				modelValue: o.value,
 				"onUpdate:modelValue": n[0] ||= (e) => o.value = e,
 				label: "管理分区",
@@ -62067,7 +62074,7 @@ var Tfe = {
 		mine: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = HA(), a = /* @__PURE__ */ M("name"), o = /* @__PURE__ */ M(0), s = K(() => r.pairs?.find((e) => e.id === t.mine.id) ?? null), c = K(() => (t.mine.codeSet === "en" ? s.value?.en : s.value?.zh) ?? null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M("");
+		let t = e, n = SA(), r = sj(), i = VA(), a = /* @__PURE__ */ M("name"), o = /* @__PURE__ */ M(0), s = K(() => r.pairs?.find((e) => e.id === t.mine.id) ?? null), c = K(() => (t.mine.codeSet === "en" ? s.value?.en : s.value?.zh) ?? null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M("");
 		F(c, (e) => {
 			e && (l.value = e.own.full ?? "", u.value = e.own.abbreviation ?? "");
 		}, { immediate: !0 });
@@ -62104,7 +62111,7 @@ var Tfe = {
 			s.value && dH(n.svc(), e, s.value, t.mine.codeSet, i, n.settings?.library.skipRemovePrompt ?? !1);
 		};
 		return (t, n) => (z(), B("div", hpe, [
-			H("div", gpe, [U(vj, {
+			H("div", gpe, [U(_j, {
 				modelValue: a.value,
 				"onUpdate:modelValue": n[0] ||= (e) => a.value = e,
 				label: "管理分区",
@@ -62229,7 +62236,7 @@ var Tfe = {
 		mine: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = wA(), a = HA(), o = K(() => r.pairs?.find((e) => e.id === t.mine.id) ?? null), s = K(() => (t.mine.codeSet === "en" ? o.value?.en : o.value?.zh) ?? null), c = K(() => !!s.value && r.bound && s.value.sources.some((e) => r.shelf?.groups.some((t) => [...t.books, ...t.adventures].some((t) => t.source === e && t.view.visible))));
+		let t = e, n = SA(), r = sj(), i = CA(), a = VA(), o = K(() => r.pairs?.find((e) => e.id === t.mine.id) ?? null), s = K(() => (t.mine.codeSet === "en" ? o.value?.en : o.value?.zh) ?? null), c = K(() => !!s.value && r.bound && s.value.sources.some((e) => r.shelf?.groups.some((t) => [...t.books, ...t.adventures].some((t) => t.source === e && t.view.visible))));
 		async function l(e) {
 			let t = i.owner?.ownerKey;
 			if (t && r.bound && s.value) try {
@@ -62266,7 +62273,7 @@ var Tfe = {
 		docIdLocal: {}
 	},
 	setup(e) {
-		let t = e, n = CA(), r = cj(), i = wA(), a = HA(), o = K(() => r.shelf?.groups.flatMap((e) => [...e.books, ...e.adventures]).find((e) => e.set === t.set && (t.docIdLocal ? e.pack?.docIdLocal === t.docIdLocal : e.source === t.source))), s = K(() => o.value?.view.visible ?? !1);
+		let t = e, n = SA(), r = sj(), i = CA(), a = VA(), o = K(() => r.shelf?.groups.flatMap((e) => [...e.books, ...e.adventures]).find((e) => e.set === t.set && (t.docIdLocal ? e.pack?.docIdLocal === t.docIdLocal : e.source === t.source))), s = K(() => o.value?.view.visible ?? !1);
 		async function c(e) {
 			e === "manage" ? g5({
 				set: t.set,
@@ -62359,7 +62366,7 @@ var Tfe = {
 		mine: {}
 	},
 	setup(e) {
-		let t = e, r = CA(), i = n5(), a = cj(), o = /* @__PURE__ */ Nr([]), s = /* @__PURE__ */ M(!0), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M("all"), d = /* @__PURE__ */ M("none"), f = /* @__PURE__ */ M("asc"), p = /* @__PURE__ */ M(null), m = /* @__PURE__ */ M(null), h = /* @__PURE__ */ M(null), g = K(() => n(t.set).codeSet), _ = /* @__PURE__ */ M([]), v = /* @__PURE__ */ M(null);
+		let t = e, r = SA(), i = n5(), a = sj(), o = /* @__PURE__ */ Nr([]), s = /* @__PURE__ */ M(!0), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M("all"), d = /* @__PURE__ */ M("none"), f = /* @__PURE__ */ M("asc"), p = /* @__PURE__ */ M(null), m = /* @__PURE__ */ M(null), h = /* @__PURE__ */ M(null), g = K(() => n(t.set).codeSet), _ = /* @__PURE__ */ M([]), v = /* @__PURE__ */ M(null);
 		async function y() {
 			if (v.value = null, t.corpora?.length) _.value = t.corpora.map((e) => ({
 				set: t.set,
@@ -62455,7 +62462,7 @@ var Tfe = {
 				console.error("[trpg-assistant] 排序失败", e), ie.value = e instanceof Error ? e.message : String(e), h.value = null;
 			}
 		}), F(l, () => O());
-		let ae = HA();
+		let ae = VA();
 		function oe(e, n) {
 			t.mine && n && Y8(r.svc(), t.mine.codeSet, {
 				id: t.mine.id,
@@ -62471,7 +62478,7 @@ var Tfe = {
 		}];
 		async function ce(e, n, i) {
 			let a = t.mine;
-			if (a && n && await ZA({
+			if (a && n && await XA({
 				title: `删除「${i}」？`,
 				message: "从这个包里删掉。删掉后可以在提示里撤销。",
 				confirmLabel: "删除",
@@ -62532,14 +62539,14 @@ var Tfe = {
 					onClick: (t) => u.value = e.prop
 				}, [W(j(N(i)(e.prop)), 1), H("small", null, j(e.n), 1)], 8, Bpe))), 128))
 			]),
-			ie.value && !c.value ? (z(), V(lj, {
+			ie.value && !c.value ? (z(), V(cj, {
 				key: 0,
 				text: `排序没有成功，先按原顺序显示：${ie.value}`,
 				what: "排序",
 				dismissible: "",
 				onDismiss: n[4] ||= (e) => ie.value = null
 			}, null, 8, ["text"])) : G("", !0),
-			v.value && !c.value ? (z(), V(lj, {
+			v.value && !c.value ? (z(), V(cj, {
 				key: 1,
 				text: `书目没读出来：${v.value}`,
 				what: "读取书目",
@@ -62548,7 +62555,7 @@ var Tfe = {
 					run: y
 				}]
 			}, null, 8, ["text", "actions"])) : G("", !0),
-			c.value ? (z(), B(R, { key: 2 }, [U(lj, {
+			c.value ? (z(), B(R, { key: 2 }, [U(cj, {
 				text: `这个包没读出来：${c.value}`,
 				what: "读取这个包",
 				actions: [{
@@ -62822,7 +62829,7 @@ var Sme = {
 		readerKey: {}
 	},
 	setup(e) {
-		let t = e, r = CA(), i = YA(), a = $8(), o = /* @__PURE__ */ Nr({ kind: "loading" }), s = /* @__PURE__ */ M(0), c = /* @__PURE__ */ M(!1), l = /* @__PURE__ */ M(0), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(null), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M(""), m = K(() => n(t.set).codeSet), h = () => window.matchMedia("(max-width: 480px)").matches;
+		let t = e, r = SA(), i = JA(), a = $8(), o = /* @__PURE__ */ Nr({ kind: "loading" }), s = /* @__PURE__ */ M(0), c = /* @__PURE__ */ M(!1), l = /* @__PURE__ */ M(0), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(null), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M(""), m = K(() => n(t.set).codeSet), h = () => window.matchMedia("(max-width: 480px)").matches;
 		async function g() {
 			o.value = { kind: "loading" };
 			try {
@@ -62939,7 +62946,7 @@ var Sme = {
 			"owner",
 			"title",
 			"detail"
-		])) : o.value.kind === "error" ? (z(), B(R, { key: 2 }, [U(lj, {
+		])) : o.value.kind === "error" ? (z(), B(R, { key: 2 }, [U(cj, {
 			text: `这本书没读出来：${o.value.message}`,
 			what: "读取这本书",
 			actions: [{
@@ -63136,7 +63143,7 @@ var Ume = {
 }, lhe = { class: "lib-src lib-end" }, uhe = { class: "lib-count" }, p5 = "search:books:open", dhe = /* @__PURE__ */ I({
 	__name: "SearchPage",
 	setup(e) {
-		let t = CA(), r = cj(), i = n5(), a = /* @__PURE__ */ M(""), o = /* @__PURE__ */ Nr([]), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M("all"), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), f = K(() => (t.settings?.library.collapsed ?? []).includes(p5));
+		let t = SA(), r = sj(), i = n5(), a = /* @__PURE__ */ M(""), o = /* @__PURE__ */ Nr([]), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M("all"), u = /* @__PURE__ */ M(null), d = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), f = K(() => (t.settings?.library.collapsed ?? []).includes(p5));
 		async function p(e) {
 			if (!t.settings || e === f.value) return;
 			let n = t.settings.library.collapsed.filter((e) => e !== p5);
@@ -63271,7 +63278,7 @@ var Ume = {
 				ref_key: "scrollEl",
 				ref: u,
 				class: "lib-mscroll"
-			}, [c.value ? (z(), B(R, { key: 0 }, [U(lj, {
+			}, [c.value ? (z(), B(R, { key: 0 }, [U(cj, {
 				text: `搜索没有成功：${c.value}`,
 				what: "搜索",
 				actions: [{
@@ -63310,7 +63317,7 @@ var Ume = {
 });
 // src/ui/libview/open.ts
 function m5(e) {
-	YA().open({
+	JA().open({
 		key: `pack:${e.set}:${e.docIdLocal ?? e.source}`,
 		title: e.name,
 		component: bme,
@@ -63320,7 +63327,7 @@ function m5(e) {
 	});
 }
 function h5(e, t = "", n) {
-	let r = YA(), i = `${yj(e, n)}:page:${r.depth}`;
+	let r = JA(), i = `${vj(e, n)}:page:${r.depth}`;
 	r.push({
 		key: i,
 		title: t,
@@ -63335,7 +63342,7 @@ function h5(e, t = "", n) {
 	});
 }
 function fhe() {
-	YA().open({
+	JA().open({
 		key: "search",
 		title: "全库数据搜索",
 		component: dhe,
@@ -63343,7 +63350,7 @@ function fhe() {
 	});
 }
 function g5(e) {
-	YA().push({
+	JA().push({
 		key: `manage:${e.set}:${e.docIdLocal ?? e.source}`,
 		title: `管理 · ${e.name}`,
 		component: e.mine ? kpe : mpe,
@@ -63352,7 +63359,7 @@ function g5(e) {
 	});
 }
 function _5(e) {
-	let t = YA(), n = `reader:${e.set}:${e.prop}:${e.id}:${t.depth}`;
+	let t = JA(), n = `reader:${e.set}:${e.prop}:${e.id}:${t.depth}`;
 	t.push({
 		key: n,
 		title: e.name,
@@ -63366,7 +63373,7 @@ function _5(e) {
 	});
 }
 function phe(e) {
-	let t = YA(), n = `reader:${e.set}:${e.prop}:${e.id}:${Math.max(0, t.depth - 1)}`;
+	let t = JA(), n = `reader:${e.set}:${e.prop}:${e.id}:${Math.max(0, t.depth - 1)}`;
 	t.replace({
 		key: n,
 		title: e.name,
@@ -63380,7 +63387,7 @@ function phe(e) {
 	});
 }
 function mhe(e, t = "", n) {
-	let r = YA(), i = `${yj(e, n)}:page:${Math.max(0, r.depth - 1)}`;
+	let r = JA(), i = `${vj(e, n)}:page:${Math.max(0, r.depth - 1)}`;
 	r.replace({
 		key: i,
 		title: t,
@@ -63572,7 +63579,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 }, Uhe = ["disabled", "onClick"], Whe = { class: "lib-count" }, Ghe = { class: "lib-end" }, Khe = ["disabled"], qhe = ["disabled"], Jhe = { class: "lib-muted" }, Yhe = { class: "lib-end" }, Xhe = ["disabled", "onClick"], Zhe = ["disabled"], y5 = 40, Qhe = /* @__PURE__ */ I({
 	__name: "BrewCatalog",
 	setup(e) {
-		let t = CA(), r = cj(), i = HA(), a = qA(), o = _j(), s = K(() => o.rows), c = K(() => o.errors), l = K(() => o.loading), u = /* @__PURE__ */ M(""), d = /* @__PURE__ */ M(0), f = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), p = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), m = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), h = K(() => r.campaignLib?.codeSet ?? "cn"), g = K(() => r.brewSetId(h.value) ?? "cn-brew"), _ = (e) => e ? String(e.name ?? e.path.split("/").pop() ?? e.path).replace(/\.json$/, "") : "", v = (e) => _(e.zh) || _(e.en), y = (e) => {
+		let t = SA(), r = sj(), i = VA(), a = KA(), o = gj(), s = K(() => o.rows), c = K(() => o.errors), l = K(() => o.loading), u = /* @__PURE__ */ M(""), d = /* @__PURE__ */ M(0), f = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), p = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), m = /* @__PURE__ */ M(/* @__PURE__ */ new Set()), h = K(() => r.campaignLib?.codeSet ?? "cn"), g = K(() => r.brewSetId(h.value) ?? "cn-brew"), _ = (e) => e ? String(e.name ?? e.path.split("/").pop() ?? e.path).replace(/\.json$/, "") : "", v = (e) => _(e.zh) || _(e.en), y = (e) => {
 			let t = (e.zh ?? e.en)?.authors;
 			return Array.isArray(t) ? t.join("、") : "";
 		}, b = (e) => `${e.zh?.path ?? ""}|${e.en?.path ?? ""}`, x = K(() => (s.value ?? []).filter((e) => !u.value.trim() || `${v(e)}${y(e)}`.toLowerCase().includes(u.value.trim().toLowerCase()))), S = K(() => x.value.slice(d.value * y5, (d.value + 1) * y5)), C = (e) => [e.zh, e.en].filter((e) => !!e).every((e) => m.value.has(e.urlDownload));
@@ -63587,7 +63594,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 		uo(() => {
 			T();
 		});
-		let E = UA();
+		let E = HA();
 		F(() => [
 			s.value,
 			c.value.zh.length,
@@ -63645,7 +63652,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 		}
 		async function ie() {
 			let e = x.value.filter((e) => !C(e));
-			e.length && await ZA({
+			e.length && await XA({
 				title: `下载${u.value.trim() ? "搜到的" : "全部"} ${e.length} 个自制包？`,
 				message: "会在后台一个一个下载，依赖包按作者程序自动一起装；进度见【库】标志。包很多时会花比较久。",
 				confirmLabel: `下载 ${e.length} 个`
@@ -63870,7 +63877,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 ], wge = { class: "lib-muted" }, Tge = { class: "lib-end" }, Ege = ["disabled", "onClick"], Dge = ["disabled"], Oge = /* @__PURE__ */ I({
 	__name: "DownloadTab",
 	setup(e) {
-		let t = CA(), r = cj(), i = qA(), a = HA(), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M("all"), c = [
+		let t = SA(), r = sj(), i = KA(), a = VA(), o = /* @__PURE__ */ M(null), s = /* @__PURE__ */ M("all"), c = [
 			{
 				value: "all",
 				label: "全部"
@@ -63922,7 +63929,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 			}
 		}
 		uo(() => void te());
-		let ne = UA();
+		let ne = HA();
 		F(o, (e) => {
 			e ? ne.show({
 				key: "download-status",
@@ -63950,7 +63957,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 							books: o,
 							sources: s
 						});
-						for (let e of n.tasks) i.rememberTask(e.taskId, KA(e.setId, t.map((e) => e.name)), () => void u());
+						for (let e of n.tasks) i.rememberTask(e.taskId, GA(e.setId, t.map((e) => e.name)), () => void u());
 						let a = n.tasks[0].taskId, c = new Map(w.value);
 						for (let e of t) c.set(d(e), a);
 						w.value = c, i.refresh();
@@ -63982,7 +63989,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 			t.length && ie(t), n.length && ae(n);
 		}
 		async function se() {
-			let e = b.value.filter((e) => e.kind === "book" && !e.downloaded), t = b.value.filter((e) => e.kind === "adventure" && !e.downloaded), n = t.filter(g), r = await XA({
+			let e = b.value.filter((e) => e.kind === "book" && !e.downloaded), t = b.value.filter((e) => e.kind === "adventure" && !e.downloaded), n = t.filter(g), r = await YA({
 				key: "download-all",
 				title: "下载全部",
 				component: kr(age),
@@ -64127,7 +64134,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 	},
 	emits: ["continue", "changed"],
 	setup(e, { emit: t }) {
-		let n = e, r = t, i = CA(), a = HA(), o = /* @__PURE__ */ M(!1), s = (e) => {
+		let n = e, r = t, i = SA(), a = VA(), o = /* @__PURE__ */ M(!1), s = (e) => {
 			let t = new Date(e);
 			return `${t.getMonth() + 1}-${t.getDate()} ${t.toTimeString().slice(0, 5)}`;
 		};
@@ -64153,7 +64160,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 			}
 		}
 		async function u() {
-			await ZA({
+			await XA({
 				title: `放弃全部 ${n.drafts.length} 份草稿？`,
 				message: "草稿里没保存的改动都会丢掉，已经存好的条目不受影响。放弃后可以在提示里撤销。",
 				confirmLabel: "全部放弃",
@@ -64259,7 +64266,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 }, i_e = { class: "trpg-row__end" }, a_e = ["onClick"], o_e = /* @__PURE__ */ I({
 	__name: "MyLibTab",
 	setup(e) {
-		let t = CA(), n = n5(), r = cj(), i = wA(), a = HA(), o = JA(), s = /* @__PURE__ */ M(""), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(!1), u = K(() => r.campaignLib?.codeSet ?? "cn"), d = K(() => o.layout === "narrow"), f = DB(() => t.svc(), () => ["cn", "en"], () => void S()), p = K(() => {
+		let t = SA(), n = n5(), r = sj(), i = CA(), a = VA(), o = qA(), s = /* @__PURE__ */ M(""), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(!1), u = K(() => r.campaignLib?.codeSet ?? "cn"), d = K(() => o.layout === "narrow"), f = DB(() => t.svc(), () => ["cn", "en"], () => void S()), p = K(() => {
 			let e = s.value.trim().toLowerCase();
 			return (r.pairs ?? []).filter((t) => !e || [t.zh, t.en].some((t) => t && `${t.own.full ?? ""}${t.own.json}${t.filename ?? ""}`.toLowerCase().includes(e)));
 		}), m = (e) => _B(e, u.value), h = (e) => f.packs.value.has(e.id), g = (e) => e.zh ? "只导入了中文版，没找到这个包的 English 版" : "只导入了 English 版，没找到这个包的中文版", _ = (e) => r.bound && m(e).sources.some((e) => r.shelf?.groups.some((t) => [...t.books, ...t.adventures].some((t) => t.source === e && t.view.visible))), v = /* @__PURE__ */ M([]);
@@ -64351,7 +64358,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 				onContinue: x,
 				onChanged: y
 			}, null, 8, ["drafts", "narrow"])) : G("", !0),
-			N(f).failed.value ? (z(), V(lj, {
+			N(f).failed.value ? (z(), V(cj, {
 				key: 1,
 				text: `后台整理没成功：${N(f).failed.value}。你存的内容都在。`,
 				what: "后台整理",
@@ -64361,7 +64368,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 				}],
 				"data-testid": "mylib-parse-failed"
 			}, null, 8, ["text", "actions"])) : G("", !0),
-			N(r).pairsError ? (z(), V(lj, {
+			N(r).pairsError ? (z(), V(cj, {
 				key: 2,
 				text: `我的库没读出来：${N(r).pairsError}`,
 				what: "读取我的库",
@@ -64517,7 +64524,7 @@ var hhe = ["data-testid"], ghe = { class: "lib-dlsec__head" }, _he = { class: "l
 	}
 }), b5 = "update:checking";
 async function x5(n, r, i) {
-	let a = n.backend.library, o = WA(), s = UA();
+	let a = n.backend.library, o = UA(), s = HA();
 	if (o.checking) return !1;
 	o.checking = !0, s.show({
 		key: b5,
@@ -64552,7 +64559,7 @@ async function x5(n, r, i) {
 var l_e = (e) => (e.objects ?? []).filter((e) => e.added || e.changed || e.removed || e.shared);
 async function S5(e, t, n, r) {
 	let i = l_e(t);
-	if (await ZA({
+	if (await XA({
 		title: "这次要整批更新",
 		message: `${n ? `${n}。` : ""}这一套官方资料会一起更新下面这些书 / 冒险，共要下载约 ${AV(t.changed?.bytes ?? 0)}。更新期间书架照常可用，失败会保留旧版本。`,
 		sections: [{
@@ -64563,13 +64570,13 @@ async function S5(e, t, n, r) {
 		confirmLabel: "整批更新"
 	})) try {
 		let { task: n } = await e.backend.library.updates.apply(t.setId), a = i.length ? `更新《${i[0].name || i[0].id}》${i.length > 1 ? `等 ${i.length} 项` : ""}` : "更新共用资料";
-		qA().rememberTask(n, a, () => void S5(e, t, null, r)), r.success("已开始更新，进度见【库】标志");
+		KA().rememberTask(n, a, () => void S5(e, t, null, r)), r.success("已开始更新，进度见【库】标志");
 	} catch (n) {
-		n instanceof lx ? (WA().published(t.setId, t.latest), r.info(n.message)) : await kz(e, n, "更新官方资料", r);
+		n instanceof lx ? (UA().published(t.setId, t.latest), r.info(n.message)) : await kz(e, n, "更新官方资料", r);
 	}
 }
 async function C5(e, t, n) {
-	let r = WA(), i = qA(), a = r.brewOf(t.pack?.docIdLocal);
+	let r = UA(), i = KA(), a = r.brewOf(t.pack?.docIdLocal);
 	if (a) {
 		let o = `更新《${t.name}》`;
 		await i.trackBrew(e.backend.library.tasks, a.setId, `update:${a.docIdLocal}`, o, async (i, s) => {
@@ -64592,12 +64599,12 @@ async function C5(e, t, n) {
 	}
 }
 async function u_e(e, t) {
-	let n = WA();
-	UA().dismiss("update:available");
+	let n = UA();
+	HA().dismiss("update:available");
 	for (let r of [...n.available]) await S5(e, r, null, t);
 	for (let r of [...n.brew]) {
 		let i = `更新《${(r.filename ?? r.docIdLocal).replace(/\.json$/, "")}》`;
-		await qA().trackBrew(e.backend.library.tasks, r.setId, `update:${r.docIdLocal}`, i, async (a, o) => {
+		await KA().trackBrew(e.backend.library.tasks, r.setId, `update:${r.docIdLocal}`, i, async (a, o) => {
 			try {
 				return await e.backend.library.service.brewPull(r.setId, [r.docIdLocal], o), o.throwIfAborted(), n.done(r.setId, r.docIdLocal), null;
 			} catch (n) {
@@ -64650,7 +64657,7 @@ var d_e = {
 }, P_e = { class: "lib-muted" }, F_e = { class: "lib-end" }, I_e = ["disabled", "title"], L_e = ["disabled", "title"], R_e = ["disabled"], z_e = /* @__PURE__ */ I({
 	__name: "ShelfTab",
 	setup(t) {
-		let r = CA(), i = cj(), a = wA(), o = HA(), s = WA(), c = qA(), l = (e) => !!(s.brewOf(e.pack?.docIdLocal) || s.officialOf(e.set, e.kind, e.id, e.source)), u = (e) => c.items.some((t) => t.status === "running" && (t.key === `update:${e.pack?.docIdLocal}` || t.label === `更新《${e.name}》`)), d = /* @__PURE__ */ M(""), f = (e) => n(e.set).kind === "brew" ? "brew" : "official", p = K(() => new Set(i.minePacks.map((e) => e.docIdLocal))), m = (e) => (e.downloaded || e.kind === "adventure" && e.count > 0) && !(e.pack && p.value.has(e.pack.docIdLocal)) && (!d.value.trim() || `${e.name} ${e.altName ?? ""} ${e.abv}`.toLowerCase().includes(d.value.trim().toLowerCase())), h = (e) => r.settings?.library.groupBy === "kind" ? [{
+		let r = SA(), i = sj(), a = CA(), o = VA(), s = UA(), c = KA(), l = (e) => !!(s.brewOf(e.pack?.docIdLocal) || s.officialOf(e.set, e.kind, e.id, e.source)), u = (e) => c.items.some((t) => t.status === "running" && (t.key === `update:${e.pack?.docIdLocal}` || t.label === `更新《${e.name}》`)), d = /* @__PURE__ */ M(""), f = (e) => n(e.set).kind === "brew" ? "brew" : "official", p = K(() => new Set(i.minePacks.map((e) => e.docIdLocal))), m = (e) => (e.downloaded || e.kind === "adventure" && e.count > 0) && !(e.pack && p.value.has(e.pack.docIdLocal)) && (!d.value.trim() || `${e.name} ${e.altName ?? ""} ${e.abv}`.toLowerCase().includes(d.value.trim().toLowerCase())), h = (e) => r.settings?.library.groupBy === "kind" ? [{
 			group: "books",
 			name: "书",
 			books: e.flatMap((e) => e.books),
@@ -64952,7 +64959,7 @@ var d_e = {
 }, V_e = { class: "lib-top" }, H_e = { class: "lib-end" }, U_e = /* @__PURE__ */ I({
 	__name: "LibraryView",
 	setup(t) {
-		let n = CA(), r = wA(), i = cj(), a = /* @__PURE__ */ M("shelf");
+		let n = SA(), r = CA(), i = sj(), a = /* @__PURE__ */ M("shelf");
 		function o() {
 			n.booted && i.refresh(n.svc());
 		}
@@ -64963,7 +64970,7 @@ var d_e = {
 		}
 		function c() {
 			setTimeout(() => {
-				n.booted && _j().prefetch(n.svc(), i.brewSetId(i.campaignLib?.codeSet ?? "cn") ?? "cn-brew");
+				n.booted && gj().prefetch(n.svc(), i.brewSetId(i.campaignLib?.codeSet ?? "cn") ?? "cn-brew");
 			}, 800);
 		}
 		uo(() => {
@@ -64973,10 +64980,10 @@ var d_e = {
 			r.hasCampaign,
 			r.currentSave?.id
 		], o);
-		let l = qA(), u = 0;
+		let l = KA(), u = 0;
 		return F(() => l.running.length, (e) => {
 			e < u && o(), u = e;
-		}, { immediate: !0 }), (e, t) => (z(), B("div", B_e, [H("div", V_e, [U(vj, {
+		}, { immediate: !0 }), (e, t) => (z(), B("div", B_e, [H("div", V_e, [U(_j, {
 			modelValue: a.value,
 			"onUpdate:modelValue": t[0] ||= (e) => a.value = e,
 			label: "库的分区",
@@ -65047,11 +65054,11 @@ var d_e = {
 			} : {};
 			return [
 				{
-					key: nj(n.row) ? "unpin" : "pin",
-					label: nj(n.row) ? "取消置顶" : "置顶",
+					key: tj(n.row) ? "unpin" : "pin",
+					label: tj(n.row) ? "取消置顶" : "置顶",
 					...e
 				},
-				...QA.filter((e) => e.id !== ej(n.row)).map((t) => ({
+				...ZA.filter((e) => e.id !== $A(n.row)).map((t) => ({
 					key: `move:${t.id}`,
 					label: `移到${t.label}`,
 					...e
@@ -65089,7 +65096,7 @@ var d_e = {
 				size: 22
 			}, null, 8, ["name"]))]),
 			H("div", q_e, [
-				H("div", J_e, [H("b", null, j(e.row.name), 1), N(nj)(e.row) ? (z(), V(Y, {
+				H("div", J_e, [H("b", null, j(e.row.name), 1), N(tj)(e.row) ? (z(), V(Y, {
 					key: 0,
 					name: "push-pin-fill",
 					size: 12
@@ -65213,7 +65220,7 @@ var d_e = {
 				U(AI, {
 					label: "移到",
 					text: "移到",
-					items: N(QA).map((t) => ({
+					items: N(ZA).map((t) => ({
 						key: t.id,
 						label: t.label,
 						disabled: e.disabled || !e.count
@@ -65297,13 +65304,13 @@ var d_e = {
 }, Lve = ["disabled"], Rve = ["disabled"], zve = /* @__PURE__ */ I({
 	__name: "TemplatePage",
 	setup(e) {
-		let t = CA(), n = wA(), r = rj(), i = JA(), a = cj(), o = /* @__PURE__ */ Nr(null), s = /* @__PURE__ */ M(null), c = /* @__PURE__ */ M(""), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M(1), d = /* @__PURE__ */ M(QA.some((e) => e.id === r.view) ? r.view : "enemy"), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M(!1), m = K(() => i.layout === "wide"), h = (e) => `${e.ref.set}:${e.ref.prop}:${e.ref.hash}:${e.pack?.docIdLocal ?? ""}`;
+		let t = SA(), n = CA(), r = nj(), i = qA(), a = sj(), o = /* @__PURE__ */ Nr(null), s = /* @__PURE__ */ M(null), c = /* @__PURE__ */ M(""), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M(1), d = /* @__PURE__ */ M(ZA.some((e) => e.id === r.view) ? r.view : "enemy"), f = /* @__PURE__ */ M(null), p = /* @__PURE__ */ M(!1), m = K(() => i.layout === "wide"), h = (e) => `${e.ref.set}:${e.ref.prop}:${e.ref.hash}:${e.pack?.docIdLocal ?? ""}`;
 		async function g() {
 			s.value = null;
 			try {
 				let e = n.owner?.ownerKey;
 				if (!e) throw Error("还没有当前战役");
-				let r = await t.svc().backend.kernelSave.libraryOf(e), i = sk(r.rule);
+				let r = await t.svc().backend.kernelSave.libraryOf(e), i = ok(r.rule);
 				if (!i) throw Error("这个规则没有可当模板的条目");
 				let a = await t.svc().backend.library.scoped.query(r, i);
 				o.value = a.map((e) => ({
@@ -65348,7 +65355,7 @@ var d_e = {
 					"data-autofocus": "",
 					"data-testid": "tp-search"
 				}, null, 512), [[zu, c.value]])]),
-				s.value ? (z(), V(lj, {
+				s.value ? (z(), V(cj, {
 					key: 0,
 					text: `没读出来：${s.value}`,
 					what: "读取模板",
@@ -65400,11 +65407,11 @@ var d_e = {
 					onClick: t[2] ||= (e) => x.value && N(h5)(x.value, v.value?.name)
 				}, "看资料卡", 8, Lve)),
 				t[8] ||= H("span", { class: "tp-lbl" }, "放进", -1),
-				U(vj, {
+				U(_j, {
 					modelValue: d.value,
 					"onUpdate:modelValue": t[3] ||= (e) => d.value = e,
 					label: "放进哪一类",
-					options: N(QA).map((e) => ({
+					options: N(ZA).map((e) => ({
 						value: e.id,
 						label: e.label
 					}))
@@ -65446,7 +65453,7 @@ var d_e = {
 	__name: "BuildPage",
 	props: { category: {} },
 	setup(e) {
-		let t = e, n = rj(), r = wA(), i = YA(), a = /* @__PURE__ */ M("新人物"), o = /* @__PURE__ */ M(t.category ?? "party"), s = /* @__PURE__ */ M("form"), c = /* @__PURE__ */ M(null);
+		let t = e, n = nj(), r = CA(), i = JA(), a = /* @__PURE__ */ M("新人物"), o = /* @__PURE__ */ M(t.category ?? "party"), s = /* @__PURE__ */ M("form"), c = /* @__PURE__ */ M(null);
 		async function l() {
 			c.value && a.value.trim() && (s.value = "building", await n.createNative(a.value.trim(), o.value, c.value) === "failed" ? s.value = "failed" : (s.value = "form", i.close(!0)));
 		}
@@ -65471,11 +65478,11 @@ var d_e = {
 				"data-testid": "bp-name"
 			}, null, 512), [[zu, a.value]])]),
 			t[4] ||= H("span", { class: "bp-lbl" }, "放进", -1),
-			U(vj, {
+			U(_j, {
 				modelValue: o.value,
 				"onUpdate:modelValue": t[1] ||= (e) => o.value = e,
 				label: "放进哪一类",
-				options: N(QA).map((e) => ({
+				options: N(ZA).map((e) => ({
 					value: e.id,
 					label: e.label
 				}))
@@ -65536,15 +65543,15 @@ var d_e = {
 }, sye = { key: 0 }, cye = { key: 1 }, lye = /* @__PURE__ */ I({
 	__name: "PeopleView",
 	setup(e) {
-		let t = rj(), n = wA(), r = YA();
+		let t = nj(), n = CA(), r = JA();
 		uo(() => void t.ensure());
-		let i = K(() => [...QA.map((e) => ({
+		let i = K(() => [...ZA.map((e) => ({
 			id: e.id,
 			label: e.label
 		})), {
 			id: "all",
 			label: "全部"
-		}]), a = K(() => t.view === "trash"), o = K(() => n.readOnly), s = K(() => t.loading && !t.rows.length), c = K(() => a.value ? "回收站" : i.value.find((e) => e.id === t.view)?.label ?? ""), l = K(() => `排序：${$A.find((e) => e.id === t.sort)?.label}`), u = K(() => !t.loading && !t.error && !t.rows.length);
+		}]), a = K(() => t.view === "trash"), o = K(() => n.readOnly), s = K(() => t.loading && !t.rows.length), c = K(() => a.value ? "回收站" : i.value.find((e) => e.id === t.view)?.label ?? ""), l = K(() => `排序：${QA.find((e) => e.id === t.sort)?.label}`), u = K(() => !t.loading && !t.error && !t.rows.length);
 		async function d(e, n) {
 			n === "pin" || n === "unpin" ? await t.pin([e], n === "pin") : n === "copy" ? await t.copy([e]) : n === "trash" ? await t.trashed([e], !0) : n === "restore" ? await t.trashed([e], !1) : n === "purge" ? await t.purge([e]) : n.startsWith("move:") && await t.move([e], n.slice(5));
 		}
@@ -65566,7 +65573,7 @@ var d_e = {
 		}]);
 		async function h(e) {
 			if (e === "native") {
-				let e = QA.some((e) => e.id === t.view) ? t.view : "party";
+				let e = ZA.some((e) => e.id === t.view) ? t.view : "party";
 				r.open({
 					key: "roster-build",
 					title: "分步建卡",
@@ -65612,7 +65619,7 @@ var d_e = {
 				U(AI, {
 					label: "排序",
 					text: l.value,
-					items: N($A).map((e) => ({
+					items: N(QA).map((e) => ({
 						key: e.id,
 						label: e.label
 					})),
@@ -66713,9 +66720,9 @@ function v7(e) {
 	return rbe.find((t) => t.test(e))?.mime;
 }
 function ibe(e, t) {
-	if (t.length > 10485760) throw new zv("E_BAD_CONTENT", `文件内容损坏：图片「${e}」过大`);
+	if (t.length > 10485760) throw new Rv("E_BAD_CONTENT", `文件内容损坏：图片「${e}」过大`);
 	let n = v7(t);
-	if (!n) throw new zv("E_BAD_CONTENT", `文件内容损坏：图片「${e}」不合法`);
+	if (!n) throw new Rv("E_BAD_CONTENT", `文件内容损坏：图片「${e}」不合法`);
 	return n;
 }
 // src/core/files/zip.ts
@@ -66723,7 +66730,7 @@ function abe(e) {
 	try {
 		return nbe(e);
 	} catch {
-		throw new zv("E_NOT_ZIP", "无法识别：这不是 TRPG 跑团助手的文件");
+		throw new Rv("E_NOT_ZIP", "无法识别：这不是 TRPG 跑团助手的文件");
 	}
 }
 function obe(e) {
@@ -66742,31 +66749,31 @@ function y7(e, t) {
 	if (n) try {
 		return JSON.parse(h7(n));
 	} catch {
-		throw new zv("E_BAD_CONTENT", `文件内容损坏：${t} 无法解析`);
+		throw new Rv("E_BAD_CONTENT", `文件内容损坏：${t} 无法解析`);
 	}
 }
 // src/core/transfer/saveFile.ts
-var sbe = _v({
-	format: xv(["trpg-save", "trpg-backup"]),
-	formatVersion: dv().int().positive(),
+var sbe = gv({
+	format: bv(["trpg-save", "trpg-backup"]),
+	formatVersion: uv().int().positive(),
 	appVersion: J(),
 	exportedAt: J(),
-	ruleIds: hv(J()),
-	dependencies: hv(_v({
+	ruleIds: mv(J()),
+	dependencies: mv(gv({
 		set: J(),
 		prop: J(),
 		hash: J(),
 		rule: J().optional()
 	})).default([]),
-	kernelVersions: hv(_v({
+	kernelVersions: mv(gv({
 		saveId: J(),
 		rule: J(),
 		official: J(),
-		brews: yv(J(), J())
+		brews: vv(J(), J())
 	})).default([])
 });
 function b7(e) {
-	return new zv("E_BAD_CONTENT", `文件内容损坏：${e}`);
+	return new Rv("E_BAD_CONTENT", `文件内容损坏：${e}`);
 }
 function x7(e) {
 	return e?.path.map(String).join(".") || "整体";
@@ -66776,7 +66783,7 @@ function S7(e, t, n, r) {
 	for (let a of Object.keys(e).filter((e) => e.startsWith(t) && e.endsWith(".json")).sort()) {
 		let t = y7(e, a);
 		if (!t || typeof t != "object") throw b7(`${a} 不是有效的记录`);
-		let o = r.safeParse(oy(n, t));
+		let o = r.safeParse(ay(n, t));
 		if (!o.success) throw b7(`${a} 的 ${x7(o.error.issues[0])} 不合法`);
 		i.push(o.data);
 	}
@@ -66784,7 +66791,7 @@ function S7(e, t, n, r) {
 }
 function cbe(e) {
 	let t = abe(e), n = t["trpg-manifest.json"];
-	if (!n) throw new zv("E_NO_MANIFEST", "无法识别：缺少说明文件，可能不是本扩展导出的文件");
+	if (!n) throw new Rv("E_NO_MANIFEST", "无法识别：缺少说明文件，可能不是本扩展导出的文件");
 	let r;
 	try {
 		r = JSON.parse(h7(n));
@@ -66792,15 +66799,15 @@ function cbe(e) {
 		throw b7("说明文件无法解析");
 	}
 	let i = r;
-	if (i.format === "trpg-pack") throw new zv("E_UNKNOWN_FORMAT", "这是旧版的扩展包文件（.trpgpack），新版已不再使用；自制内容请用【库】导入作者格式的文件");
-	if (i.format !== "trpg-save" && i.format !== "trpg-backup") throw new zv("E_UNKNOWN_FORMAT", "无法识别：未知的文件类型");
-	if (typeof i.formatVersion != "number" || i.formatVersion > 4) throw new zv("E_NEWER_FORMAT", "这个文件由更新版本的扩展创建，请先更新扩展");
-	if (i.formatVersion < 3) throw new zv("E_OLD_DATA", "这是旧版扩展导出的存档（旧扩展包格式），新版不再读取");
+	if (i.format === "trpg-pack") throw new Rv("E_UNKNOWN_FORMAT", "这是旧版的扩展包文件（.trpgpack），新版已不再使用；自制内容请用【库】导入作者格式的文件");
+	if (i.format !== "trpg-save" && i.format !== "trpg-backup") throw new Rv("E_UNKNOWN_FORMAT", "无法识别：未知的文件类型");
+	if (typeof i.formatVersion != "number" || i.formatVersion > 4) throw new Rv("E_NEWER_FORMAT", "这个文件由更新版本的扩展创建，请先更新扩展");
+	if (i.formatVersion < 3) throw new Rv("E_OLD_DATA", "这是旧版扩展导出的存档（旧扩展包格式），新版不再读取");
 	let a = sbe.safeParse(r);
 	if (!a.success) throw b7(`说明文件的 ${x7(a.error.issues[0])} 不合法`);
-	let o = S7(t, "saves/", "save", cne), s = S7(t, "workspaces/", "workspace", ane), c, l = y7(t, "settings.json");
+	let o = S7(t, "saves/", "save", lne), s = S7(t, "workspaces/", "workspace", one), c, l = y7(t, "settings.json");
 	if (l !== void 0) {
-		let e = Nv.safeParse(l);
+		let e = Mv.safeParse(l);
 		if (!e.success) throw b7(`settings.json 的 ${x7(e.error.issues[0])} 不合法`);
 		c = e.data;
 	}
@@ -66890,7 +66897,7 @@ async function dbe(e, t, n) {
 		if (m) {
 			for (let t of (await r.saves.toArray()).filter((t) => e.hasRule(t.ruleId))) await r.saves.delete(t.id);
 			for (let e of g) await r.workspaces.delete(e.ownerKey);
-			t.settings && await r.setMeta("settings", Nv.parse(t.settings));
+			t.settings && await r.setMeta("settings", Mv.parse(t.settings));
 		}
 		let _ = m ? o : o.filter((e) => s.has(e.id));
 		for (let e of _) (m || !await r.saves.get(e.id)) && (await r.saves.put(e), c++);
@@ -66922,14 +66929,14 @@ var fbe = {
 	__name: "SavePreview",
 	props: { rec: {} },
 	setup(e) {
-		let t = e, n = CA(), r = wA(), i = YA(), a = ij(), o = HA(), s = K(() => lbe(t.rec, (e) => n.svc().rules.has(e))), c = /* @__PURE__ */ M(s.value.filter((e) => e.selectable).map((e) => e.save.id)), l = /* @__PURE__ */ M("merge"), u = /* @__PURE__ */ M(!1), d = K(() => t.rec.type === "backup"), f = (e) => n.svc().rules.get(e)?.nameShort ?? e, p = K(() => d.value && l.value === "overwrite" ? s.value.filter((e) => e.selectable).length : c.value.length), m = K(() => d.value ? `完整备份 · ${t.rec.saves.length} 个存档` : `存档文件 · ${t.rec.saves.length} 个存档`);
+		let t = e, n = SA(), r = CA(), i = JA(), a = rj(), o = VA(), s = K(() => lbe(t.rec, (e) => n.svc().rules.has(e))), c = /* @__PURE__ */ M(s.value.filter((e) => e.selectable).map((e) => e.save.id)), l = /* @__PURE__ */ M("merge"), u = /* @__PURE__ */ M(!1), d = K(() => t.rec.type === "backup"), f = (e) => n.svc().rules.get(e)?.nameShort ?? e, p = K(() => d.value && l.value === "overwrite" ? s.value.filter((e) => e.selectable).length : c.value.length), m = K(() => d.value ? `完整备份 · ${t.rec.saves.length} 个存档` : `存档文件 · ${t.rec.saves.length} 个存档`);
 		function h(e, t) {
 			c.value = t ? [...c.value, e] : c.value.filter((t) => t !== e);
 		}
 		async function g() {
 			let e = r.owner;
 			if (!e) o.error("请先在酒馆中打开一个聊天");
-			else if (!d.value || l.value !== "overwrite" || await ZA({
+			else if (!d.value || l.value !== "overwrite" || await XA({
 				title: "覆盖并恢复",
 				message: "先写入自动存档，再用备份替换全部存档、当前数据与设置。",
 				confirmLabel: "覆盖并恢复",
@@ -66959,7 +66966,7 @@ var fbe = {
 		}
 		return (e, t) => (z(), B("div", fbe, [
 			H("p", pbe, "✓ 已识别：" + j(m.value), 1),
-			d.value ? (z(), B("div", mbe, [U(vj, {
+			d.value ? (z(), B("div", mbe, [U(_j, {
 				modelValue: l.value,
 				"onUpdate:modelValue": t[0] ||= (e) => l.value = e,
 				label: "恢复方式",
@@ -67016,12 +67023,12 @@ var fbe = {
 	__name: "ImportPage",
 	props: { file: {} },
 	setup(e) {
-		let t = e, n = YA(), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ M(""), a = /* @__PURE__ */ M(null);
+		let t = e, n = JA(), r = /* @__PURE__ */ Nr(null), i = /* @__PURE__ */ M(""), a = /* @__PURE__ */ M(null);
 		uo(async () => {
 			try {
 				r.value = cbe(new Uint8Array(await t.file.arrayBuffer()));
 			} catch (e) {
-				e instanceof zv || console.error("[trpg-assistant] 识别文件失败", e), i.value = MV(e);
+				e instanceof Rv || console.error("[trpg-assistant] 识别文件失败", e), i.value = MV(e);
 			}
 		});
 		function o(e) {
@@ -67067,7 +67074,7 @@ var fbe = {
 	__name: "ImportResultPage",
 	props: { result: {} },
 	setup(e) {
-		let t = YA();
+		let t = JA();
 		return (n, r) => (z(), B("div", Abe, [
 			H("p", jbe, [
 				U(Y, {
@@ -67104,7 +67111,7 @@ var fbe = {
 });
 // src/ui/imports/openImport.ts
 function C7(e) {
-	YA().open({
+	JA().open({
 		key: "import",
 		title: "导入文件",
 		component: kr(kbe),
@@ -67113,7 +67120,7 @@ function C7(e) {
 	});
 }
 function Bbe(e) {
-	YA().open({
+	JA().open({
 		key: "import-result",
 		title: "导入结果",
 		component: kr(zbe),
@@ -67170,7 +67177,7 @@ function Wbe(e) {
 async function T7(e, t) {
 	if (t.type === "save") {
 		let n = await e.saves.get(t.saveId);
-		if (!n || n.deletedAt !== void 0) throw new zv("E_NOT_FOUND", "没有找到这个存档");
+		if (!n || n.deletedAt !== void 0) throw new Rv("E_NOT_FOUND", "没有找到这个存档");
 		return [n];
 	}
 	return (await e.saves.toArray()).filter((e) => e.deletedAt === void 0);
@@ -67194,7 +67201,7 @@ async function Kbe(e, t) {
 	if (t.type === "backup") {
 		i = await e.db.workspaces.toArray();
 		for (let e of i) r[`workspaces/${encodeURIComponent(e.ownerKey)}.json`] = JSON.stringify(e);
-		if (r["settings.json"] = JSON.stringify(await Iv(e.db)), e.library) {
+		if (r["settings.json"] = JSON.stringify(await Fv(e.db)), e.library) {
 			let t = await e.library.exportFiles();
 			for (let [e, n] of Object.entries(t)) r[`library/${e}`] = n;
 		}
@@ -67229,13 +67236,13 @@ var Jbe = { class: "page-stack" }, Ybe = { class: "trpg-field" }, Xbe = { class:
 	__name: "ExportPage",
 	props: { saveId: {} },
 	setup(e) {
-		let t = e, n = CA(), r = wA(), i = YA(), a = HA(), o = /* @__PURE__ */ M(t.saveId ?? r.currentSave?.id ?? ""), s = /* @__PURE__ */ M(t.saveId || r.currentSave ? "save" : "backup"), c = /* @__PURE__ */ M("存档"), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M(!1), d = K(() => s.value === "backup" ? { type: "backup" } : {
+		let t = e, n = SA(), r = CA(), i = JA(), a = VA(), o = /* @__PURE__ */ M(t.saveId ?? r.currentSave?.id ?? ""), s = /* @__PURE__ */ M(t.saveId || r.currentSave ? "save" : "backup"), c = /* @__PURE__ */ M("存档"), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M(!1), d = K(() => s.value === "backup" ? { type: "backup" } : {
 			type: "save",
 			saveId: o.value
 		}), f = () => ({
 			db: n.svc().db,
 			now: n.svc().now,
-			appVersion: Wk,
+			appVersion: Uk,
 			library: n.svc().backend.transfer.library
 		}), p = K(() => AV(l.value?.saveBytes ?? 0)), m = K(() => new Date(n.svc().now()).toISOString().slice(0, 10)), h = K(() => s.value === "backup" ? `TRPG备份_${m.value}.trpgsave` : `${c.value.replace(/\s+/g, "_")}_${m.value}.trpgsave`);
 		async function g() {
@@ -67250,7 +67257,7 @@ var Jbe = { class: "page-stack" }, Ybe = { class: "trpg-field" }, Xbe = { class:
 			u.value = !0;
 			try {
 				let { bytes: e, filename: t } = await Kbe(f(), d.value);
-				qbe(e, t), s.value === "backup" && (await fne(n.svc().db, n.svc().now()), await n.refreshBackup()), a.success(`已导出「${t}」`), i.close(!0);
+				qbe(e, t), s.value === "backup" && (await pne(n.svc().db, n.svc().now()), await n.refreshBackup()), a.success(`已导出「${t}」`), i.close(!0);
 			} catch (e) {
 				console.error("[trpg-assistant] 导出失败", e), a.error(`导出失败：${MV(e)}`);
 			} finally {
@@ -67258,7 +67265,7 @@ var Jbe = { class: "page-stack" }, Ybe = { class: "trpg-field" }, Xbe = { class:
 			}
 		}
 		return (e, t) => (z(), B("div", Jbe, [
-			H("div", Ybe, [t[2] ||= H("span", { class: "trpg-field__label" }, "范围", -1), U(vj, {
+			H("div", Ybe, [t[2] ||= H("span", { class: "trpg-field__label" }, "范围", -1), U(_j, {
 				modelValue: s.value,
 				"onUpdate:modelValue": t[0] ||= (e) => s.value = e,
 				label: "导出范围",
@@ -67286,7 +67293,7 @@ var Jbe = { class: "page-stack" }, Ybe = { class: "trpg-field" }, Xbe = { class:
 });
 // src/ui/saves/fileActions.ts
 function E7(e) {
-	YA().open({
+	JA().open({
 		key: "export",
 		title: "导出",
 		component: kr($be),
@@ -67430,7 +67437,7 @@ var exe = {
 }, Fxe = { class: "trpg-drawer__bottom" }, Ixe = ["disabled"], Lxe = ["disabled"], Rxe = /* @__PURE__ */ I({
 	__name: "SaveDrawerPage",
 	setup(e) {
-		let t = CA(), n = wA(), r = ij(), i = HA(), a = /* @__PURE__ */ M(null), o = /* @__PURE__ */ M(!1);
+		let t = SA(), n = CA(), r = rj(), i = VA(), a = /* @__PURE__ */ M(null), o = /* @__PURE__ */ M(!1);
 		uo(() => void r.refresh().catch((e) => console.error("[trpg-assistant] 读取存档列表失败", e)));
 		let s = K(() => n.currentSave), c = K(() => r.view), l = K(() => t.services?.rules), u = (e) => l.value?.get(e)?.nameShort ?? e, d = (e) => !!l.value?.has(e), f = K(() => c.value?.root ? [c.value.root, ...c.value.branches] : []), p = K(() => c.value?.otherCampaigns ?? []), m = K(() => r.byRule.flatMap((e) => e.view.otherCampaigns.map((t) => ({
 			ruleId: e.ruleId,
@@ -67450,7 +67457,7 @@ var exe = {
 		}
 		async function _(e, t) {
 			let n = t.filter((t) => t.parentId === e.id);
-			(!n.length || await ZA({
+			(!n.length || await XA({
 				title: `删除「${e.name}」？`,
 				message: `「${e.name}」会进入"最近删除"，可以随时恢复。`,
 				details: [`它下面的分支${n.map((e) => `「${e.name}」`).join("")}会变成独立战役，内容不会丢。`],
@@ -67459,7 +67466,7 @@ var exe = {
 			})) && await h(() => r.remove(e.id), "删除失败") && i.undoable(`已删除「${e.name}」`, async () => void await h(() => r.restore(e.id), "撤销失败"));
 		}
 		async function v(e, t) {
-			await ZA({
+			await XA({
 				title: "彻底删除存档",
 				message: `「${t}」将被永久删除，无法恢复。`,
 				confirmLabel: "彻底删除",
@@ -67468,7 +67475,7 @@ var exe = {
 		}
 		async function y() {
 			let e = r.deleted.length;
-			await ZA({
+			await XA({
 				title: "清空最近删除",
 				message: `最近删除中的 ${e} 个存档将被永久删除，无法恢复。`,
 				confirmLabel: "彻底删除",
@@ -67688,7 +67695,7 @@ var exe = {
 	__name: "LoadConfirmPage",
 	props: { save: {} },
 	setup(e) {
-		let t = e, r = CA(), i = wA(), a = YA(), o = ij(), s = HA(), c = /* @__PURE__ */ Nr(null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M(!1), d = /* @__PURE__ */ M(!0), f = K(() => r.settings?.skipAutoSaveOnLoad ?? !1), p = K(() => r.svc().rules), m = (e) => p.value.get(e)?.name ?? e, h = K(() => !!i.workspace && i.workspace.ruleId !== t.save.ruleId), g = K(() => i.hasCampaign && i.dirty), _ = K(() => !!i.owner && t.save.ownerKey !== i.owner.ownerKey), v = K(() => !p.value.has(t.save.ruleId) || !!c.value?.ruleMissing), y = K(() => !!c.value?.plan.versionChanged), b = /* @__PURE__ */ M({}), x = /* @__PURE__ */ M({}), S = K(() => c.value?.plan ?? null), C = (e) => `${e.set}|${e.book?.id ?? ""}|${(e.sources ?? []).join(",")}|${e.via ?? ""}`, w = (e) => b.value[C(e)] ?? !0, T = (e) => e.kind === "official" ? e.book ? `《${e.book.name}》` : `${n(e.set).codeSet === "en" ? "英文" : "中文"}官方资料（查不出在哪本书，只能整套下载）` : e.via ? `依赖包 ${(e.sources ?? []).join("、")}（「${e.via.replace(/\.json$/, "")}」缺了它读不出）` : e.sources?.length ? `自制包（来源 ${e.sources.join("、")}）` : "自制包（查不出来源）", E = {
+		let t = e, r = SA(), i = CA(), a = JA(), o = rj(), s = VA(), c = /* @__PURE__ */ Nr(null), l = /* @__PURE__ */ M(""), u = /* @__PURE__ */ M(!1), d = /* @__PURE__ */ M(!0), f = K(() => r.settings?.skipAutoSaveOnLoad ?? !1), p = K(() => r.svc().rules), m = (e) => p.value.get(e)?.name ?? e, h = K(() => !!i.workspace && i.workspace.ruleId !== t.save.ruleId), g = K(() => i.hasCampaign && i.dirty), _ = K(() => !!i.owner && t.save.ownerKey !== i.owner.ownerKey), v = K(() => !p.value.has(t.save.ruleId) || !!c.value?.ruleMissing), y = K(() => !!c.value?.plan.versionChanged), b = /* @__PURE__ */ M({}), x = /* @__PURE__ */ M({}), S = K(() => c.value?.plan ?? null), C = (e) => `${e.set}|${e.book?.id ?? ""}|${(e.sources ?? []).join(",")}|${e.via ?? ""}`, w = (e) => b.value[C(e)] ?? !0, T = (e) => e.kind === "official" ? e.book ? `《${e.book.name}》` : `${n(e.set).codeSet === "en" ? "英文" : "中文"}官方资料（查不出在哪本书，只能整套下载）` : e.via ? `依赖包 ${(e.sources ?? []).join("、")}（「${e.via.replace(/\.json$/, "")}」缺了它读不出）` : e.sources?.length ? `自制包（来源 ${e.sources.join("、")}）` : "自制包（查不出来源）", E = {
 			"not-installed": "资料没装",
 			"not-found": "资料里没有这一条"
 		};
@@ -67726,7 +67733,7 @@ var exe = {
 					let l = c.value?.missing.length ?? 0;
 					s.success(`已读取「${t.save.name}」${l ? `（有 ${l} 项资料缺失）` : ""}`), a.close(!0);
 				} catch (e) {
-					console.error("[trpg-assistant] 读取存档失败", e), s.error(e instanceof zv ? e.message : `读取失败：${MV(e)}`);
+					console.error("[trpg-assistant] 读取存档失败", e), s.error(e instanceof Rv ? e.message : `读取失败：${MV(e)}`);
 				} finally {
 					u.value = !1;
 				}
@@ -67834,7 +67841,7 @@ var exe = {
 			onClick: O
 		}, j(u.value ? "正在读取…" : "读取"), 9, iSe)])]));
 	}
-}), O7 = Rv[0], k7 = () => ({
+}), O7 = Lv[0], k7 = () => ({
 	step: 1,
 	family: "",
 	ruleId: "",
@@ -68030,7 +68037,7 @@ var pSe = {
 }, ESe = "当前拉取不到书目，请之后再去库里添加", DSe = /* @__PURE__ */ I({
 	__name: "StepData",
 	setup(e) {
-		let t = CA(), n = K(() => A7.value), r = K(() => !!n.value && (n.value.catalogUnavailable || !n.value.shelf.some((e) => e.books.length || e.adventures.length))), i = [
+		let t = SA(), n = K(() => A7.value), r = K(() => !!n.value && (n.value.catalogUnavailable || !n.value.shelf.some((e) => e.books.length || e.adventures.length))), i = [
 			{
 				value: "all",
 				label: "全部"
@@ -68076,7 +68083,7 @@ var pSe = {
 			H("div", hSe, [N($).loading && !n.value ? (z(), B("div", gSe, [N($).showLoading ? (z(), B(R, { key: 0 }, [f[3] ||= H("span", {
 				class: "trpg-spinner",
 				"aria-hidden": "true"
-			}, null, -1), f[4] ||= W("正在读取中…", -1)], 64)) : G("", !0)])) : r.value ? (z(), B("p", _Se, j(ESe))) : n.value ? (z(), B(R, { key: 2 }, [H("div", vSe, [U(vj, {
+			}, null, -1), f[4] ||= W("正在读取中…", -1)], 64)) : G("", !0)])) : r.value ? (z(), B("p", _Se, j(ESe))) : n.value ? (z(), B(R, { key: 2 }, [H("div", vSe, [U(_j, {
 				modelValue: N($).filter,
 				"onUpdate:modelValue": f[1] ||= (e) => N($).filter = e,
 				options: i,
@@ -68164,7 +68171,7 @@ var pSe = {
 	__name: "StepName",
 	emits: ["submit"],
 	setup(e, { emit: t }) {
-		let n = t, r = CA(), i = wA(), a = ij(), o = /* @__PURE__ */ M(null), s = K(() => r.svc().rules.get($.ruleId)), c = K(() => $.name.trim().length > 40), l = K(() => $.name.trim().length === 0), u = K(() => l.value || c.value), d = K(() => I7("data")), f = K(() => I7("adv")), p = K(() => s.value ? `${s.value.familyName} · 版本 ${s.value.versionLabel}` : A7.value?.rule.name ?? ""), m = K(() => N7("book").length), h = K(() => N7("adventure").length), g = K(() => i.hasCampaign ? a.view?.name ?? i.currentSave?.name ?? null : null);
+		let n = t, r = SA(), i = CA(), a = rj(), o = /* @__PURE__ */ M(null), s = K(() => r.svc().rules.get($.ruleId)), c = K(() => $.name.trim().length > 40), l = K(() => $.name.trim().length === 0), u = K(() => l.value || c.value), d = K(() => I7("data")), f = K(() => I7("adv")), p = K(() => s.value ? `${s.value.familyName} · 版本 ${s.value.versionLabel}` : A7.value?.rule.name ?? ""), m = K(() => N7("book").length), h = K(() => N7("adventure").length), g = K(() => i.hasCampaign ? a.view?.name ?? i.currentSave?.name ?? null : null);
 		return uo(() => {
 			if (!$.nameEdited || !$.name) {
 				let e = new Date(r.svc().now());
@@ -68239,7 +68246,7 @@ var pSe = {
 }, GSe = /* @__PURE__ */ I({
 	__name: "StepRule",
 	setup(e) {
-		let t = CA(), n = K(() => Vk(t.svc().rules));
+		let t = SA(), n = K(() => Bk(t.svc().rules));
 		function r(e) {
 			if (!e.ready || ($.family = e.family, e.versions.some((e) => e.id === $.ruleId))) return;
 			let n = e.versions.find((e) => e.status === "installed");
@@ -68282,7 +68289,7 @@ var pSe = {
 }, XSe = { class: "trpg-rulecard__body" }, ZSe = { class: "trpg-term" }, QSe = { class: "trpg-field__hint" }, $Se = { class: "trpg-field__hint" }, eCe = /* @__PURE__ */ I({
 	__name: "StepVersion",
 	setup(e) {
-		let t = CA(), n = K(() => Vk(t.svc().rules).find((e) => e.family === $.family)?.versions ?? []);
+		let t = SA(), n = K(() => Bk(t.svc().rules).find((e) => e.family === $.family)?.versions ?? []);
 		function r(e) {
 			e.status === "installed" && K7(t.svc(), e.id, e.versionLabel);
 		}
@@ -68322,7 +68329,7 @@ var pSe = {
 }, oCe = { class: "trpg-wizard__body" }, sCe = { class: "trpg-wizard__foot" }, cCe = ["disabled"], lCe = ["disabled"], uCe = /* @__PURE__ */ I({
 	__name: "WizardPage",
 	setup(e) {
-		let t = CA(), r = wA(), i = qA(), a = YA(), o = HA(), s = JA(), c = /* @__PURE__ */ M(!1), l = [
+		let t = SA(), r = CA(), i = KA(), a = JA(), o = VA(), s = qA(), c = /* @__PURE__ */ M(!1), l = [
 			{
 				n: 1,
 				label: "规则"
@@ -68341,7 +68348,7 @@ var pSe = {
 			}
 		], u = K(() => $.name.trim().length > 0 && $.name.trim().length <= 40), d = K(() => !!A7.value?.blockingError), f = K(() => t.svc().rules.ready($.ruleId)), p = K(() => $.step === 1 ? !!$.family : $.step === 2 ? !!$.ruleId && f.value : $.step === 3 ? !d.value : $.step !== 4 || u.value && !c.value), m = K(() => l.find((e) => e.n === $.step)?.label);
 		uo(() => {
-			let e = Vk(t.svc().rules).filter((e) => e.ready);
+			let e = Bk(t.svc().rules).filter((e) => e.ready);
 			if (!$.family && e.length === 1) {
 				$.family = e[0].family;
 				let n = e[0].versions.find((e) => e.status === "installed");
@@ -68422,7 +68429,7 @@ var pSe = {
 });
 // src/ui/saves/actions.ts
 function Y7() {
-	YA().open({
+	JA().open({
 		key: "saves",
 		title: "存档",
 		component: kr(Rxe),
@@ -68430,7 +68437,7 @@ function Y7() {
 	});
 }
 function X7() {
-	oSe(), YA().open({
+	oSe(), JA().open({
 		key: "wizard",
 		title: "开始新冒险",
 		component: kr(uCe),
@@ -68438,16 +68445,16 @@ function X7() {
 	});
 }
 async function Z7() {
-	let e = wA(), t = HA();
+	let e = CA(), t = VA();
 	if (e.hasCampaign && !e.readOnly) try {
 		let n = await e.save();
-		await CA().refreshBackup(), t.success(n ? "已保存存档" : "已是最新");
+		await SA().refreshBackup(), t.success(n ? "已保存存档" : "已是最新");
 	} catch (e) {
 		console.error("[trpg-assistant] 保存存档失败", e), t.error(`保存存档失败：${MV(e)}`);
 	}
 }
 function Q7(e) {
-	wA().readOnly || YA().push({
+	CA().readOnly || JA().push({
 		key: `load:${e.id}`,
 		title: `读取「${e.name}」`,
 		component: kr(aSe),
@@ -68464,7 +68471,7 @@ var dCe = { class: "page-stack" }, fCe = {
 }, mCe = { class: "trpg-banner__line" }, hCe = ["data-dirty"], gCe = { class: "trpg-banner__foot" }, _Ce = ["disabled"], vCe = { class: "trpg-empty" }, yCe = /* @__PURE__ */ I({
 	__name: "HomeCampaign",
 	setup(e) {
-		let t = CA(), n = wA(), r = ij(), i = JA(), a = K(() => n.workspace ? t.svc().rules.get(n.workspace.ruleId) : void 0), o = K(() => r.view?.name ?? n.currentSave?.name ?? "战役"), s = K(() => n.currentSave?.name ?? "存档"), c = K(() => n.dirty ? "● 有未保存到存档的改动" : n.currentSave ? `存档已保存 ${kV(n.currentSave.updatedAt)}` : "");
+		let t = SA(), n = CA(), r = rj(), i = qA(), a = K(() => n.workspace ? t.svc().rules.get(n.workspace.ruleId) : void 0), o = K(() => r.view?.name ?? n.currentSave?.name ?? "战役"), s = K(() => n.currentSave?.name ?? "存档"), c = K(() => n.dirty ? "● 有未保存到存档的改动" : n.currentSave ? `存档已保存 ${kV(n.currentSave.updatedAt)}` : "");
 		return (e, t) => (z(), B("div", dCe, [H("section", fCe, [
 			U(T5),
 			H("button", {
@@ -68528,7 +68535,7 @@ var dCe = { class: "page-stack" }, fCe = {
 }, OCe = /* @__PURE__ */ I({
 	__name: "HomeEmpty",
 	setup(e) {
-		let t = wA(), n = CA(), r = ij(), i = /* @__PURE__ */ M(0);
+		let t = CA(), n = SA(), r = rj(), i = /* @__PURE__ */ M(0);
 		return uo(async () => {
 			i.value = await r.count(), await n.refreshBackup();
 		}), (e, n) => (z(), B("div", bCe, [N(t).owner ? (z(), B(R, { key: 0 }, [
@@ -68578,7 +68585,7 @@ var dCe = { class: "page-stack" }, fCe = {
 }, jCe = /* @__PURE__ */ I({
 	__name: "HomeView",
 	setup(e) {
-		let t = CA(), n = wA();
+		let t = SA(), n = CA();
 		return (e, r) => N(t).bootError ? (z(), B("p", kCe, "无法打开本机存储：" + j(N(t).bootError), 1)) : !N(t).booted || !N(n).ready ? (z(), B("div", ACe, [...r[0] ||= [H("div", {
 			class: "trpg-skeleton",
 			style: { height: "140px" }
@@ -68593,7 +68600,7 @@ var dCe = { class: "page-stack" }, fCe = {
 }, NCe = ["data-testid"], PCe = { class: "trpg-field__hint" }, FCe = /* @__PURE__ */ I({
 	__name: "BackupSettings",
 	setup(e) {
-		let t = CA(), n = HA(), r = K(() => t.settings ?? Nv.parse({})), i = Nv.parse({}), a = [
+		let t = SA(), n = VA(), r = K(() => t.settings ?? Mv.parse({})), i = Mv.parse({}), a = [
 			{
 				key: "reminderDays",
 				title: "多少天没导出备份就提醒",
@@ -68718,7 +68725,7 @@ var dCe = { class: "page-stack" }, fCe = {
 }, rwe = { class: "trpg-badge" }, iwe = { class: "lib-end lib-src" }, awe = { class: "lib-fold__body" }, owe = /* @__PURE__ */ I({
 	__name: "LibSettings",
 	setup(e) {
-		let t = CA(), n = HA(), r = /* @__PURE__ */ M("prefs"), i = K(() => t.settings?.library);
+		let t = SA(), n = VA(), r = /* @__PURE__ */ M("prefs"), i = K(() => t.settings?.library);
 		uo(() => void (t.settings ? null : t.refreshSettings().catch((e) => console.error("[trpg-assistant] 读取设置失败", e))));
 		async function a(e) {
 			if (t.settings) try {
@@ -68763,7 +68770,7 @@ var dCe = { class: "page-stack" }, fCe = {
 		function v(e) {
 			e && (r.value = e, e === "logs" && d());
 		}
-		return (e, t) => (z(), B("div", ICe, [H("div", LCe, [U(vj, {
+		return (e, t) => (z(), B("div", ICe, [H("div", LCe, [U(_j, {
 			"model-value": r.value,
 			label: "库设置分区",
 			options: [
@@ -68784,7 +68791,7 @@ var dCe = { class: "page-stack" }, fCe = {
 		}, null, 8, ["model-value"])]), r.value === "prefs" && i.value ? (z(), B("div", RCe, [
 			H("div", zCe, [
 				t[5] ||= H("b", null, "分类方式", -1),
-				U(vj, {
+				U(_j, {
 					"model-value": i.value.groupBy,
 					label: "书架分类方式",
 					options: [{
@@ -68800,7 +68807,7 @@ var dCe = { class: "page-stack" }, fCe = {
 			]),
 			H("div", BCe, [
 				t[7] ||= H("b", null, "编辑 / 覆盖默认作用于", -1),
-				U(vj, {
+				U(_j, {
 					"model-value": i.value.overrideLevel,
 					label: "编辑覆盖默认层级",
 					options: [
@@ -69054,7 +69061,7 @@ function a9(e, t, n = "", r = [], i = 20) {
 // src/probes/services.ts
 var o9 = null;
 function s9() {
-	return o9 ??= Gk({ dbName: "tavern-trpg-probe" }), o9;
+	return o9 ??= Wk({ dbName: "tavern-trpg-probe" }), o9;
 }
 // src/probes/backendProbe.ts
 var c9 = "backend-p3", l9 = "P3 全线后端真机验证", u9 = {
@@ -69082,7 +69089,7 @@ async function fwe() {
 		...u9,
 		ruleId: d9,
 		name: l9
-	}), r.bind(u9.ownerKey, Gv.parse({
+	}), r.bind(u9.ownerKey, Wv.parse({
 		rule: d9,
 		kernelVersion: 1,
 		library: a,
@@ -69116,7 +69123,7 @@ async function fwe() {
 	await p9(i, "人物写进存档（只存引用）", async () => {
 		let e = await n.compact(u9.ownerKey, [l, u]), t = await r.read(u9.ownerKey);
 		if (!t) throw Error("绑定丢了");
-		return r.bind(u9.ownerKey, Gv.parse({
+		return r.bind(u9.ownerKey, Wv.parse({
 			...t,
 			actors: e.map((e) => ({
 				...e,
@@ -69942,7 +69949,7 @@ var Fwe = {
 	__name: "LabModalPage",
 	props: { level: {} },
 	setup(e) {
-		let t = e, n = YA();
+		let t = e, n = JA();
 		function r() {
 			n.push({
 				key: `lab:${t.level + 1}`,
@@ -69952,7 +69959,7 @@ var Fwe = {
 			});
 		}
 		async function i() {
-			await ZA({
+			await XA({
 				title: "测试确认",
 				message: "这是弹窗内的确认页，「‹」或 Esc 即取消。",
 				confirmLabel: "确认"
@@ -70024,7 +70031,7 @@ var Fwe = {
 			label: `法术-${String(t + 1).padStart(3, "0")}`,
 			en: `Spell ${t + 1}`,
 			badge: t % 2 ? "PHB" : "XGE"
-		})), u = /* @__PURE__ */ M(["队伍成员", "风暴岛"]), d = /* @__PURE__ */ M(""), f = YA(), p = HA();
+		})), u = /* @__PURE__ */ M(["队伍成员", "风暴岛"]), d = /* @__PURE__ */ M(""), f = JA(), p = VA();
 		function m() {
 			f.open({
 				key: "lab:1",
@@ -70034,7 +70041,7 @@ var Fwe = {
 			});
 		}
 		async function h() {
-			let e = await ZA({
+			let e = await XA({
 				title: "卸载演示",
 				message: "确定要卸载吗？",
 				confirmLabel: "卸载",
@@ -70081,7 +70088,7 @@ var Fwe = {
 					}, null, 8, ["modelValue"])
 				]),
 				H("div", Jwe, [
-					U(vj, {
+					U(_j, {
 						modelValue: i.value,
 						"onUpdate:modelValue": f[2] ||= (e) => i.value = e,
 						label: "分段按钮",
@@ -70286,7 +70293,7 @@ var Fwe = {
 }, kTe = { class: "trpg-group trpg-group--first" }, ATe = /* @__PURE__ */ I({
 	__name: "SettingsView",
 	setup(e) {
-		let t = Ui("stCtx"), n = /* @__PURE__ */ M(null), r = CA();
+		let t = Ui("stCtx"), n = /* @__PURE__ */ M(null), r = SA();
 		uo(() => void (r.booted && r.refreshSettings().catch((e) => console.error("[trpg-assistant] 读取设置失败", e))));
 		let i = [
 			{
@@ -70307,7 +70314,7 @@ var Fwe = {
 			{
 				id: "about",
 				title: "关于",
-				line: `版本 ${Wk} · 开源许可与致谢`
+				line: `版本 ${Uk} · 开源许可与致谢`
 			}
 		], a = {
 			backup: "备份与撤销",
@@ -70343,7 +70350,7 @@ var Fwe = {
 				key: 0,
 				ctx: N(t)
 			}, null, 8, ["ctx"])) : G("", !0)])) : (z(), B("div", OTe, [
-				H("h3", kTe, "TRPG 跑团助手 " + j(N(Wk)), 1),
+				H("h3", kTe, "TRPG 跑团助手 " + j(N(Uk)), 1),
 				r[2] ||= H("p", { class: "page-intro" }, "代码以 AGPL-3.0 许可发布，源码在 GitHub：didhogg/tavern-trpg-assistant。", -1),
 				r[3] ||= H("p", { class: "page-intro" }, "界面图标：Phosphor Icons（MIT）。规则数据的来源与许可见各条目的出处标注与随包附带的数据声明。", -1)
 			]))
@@ -70353,7 +70360,7 @@ var Fwe = {
 	__name: "HeaderChips",
 	props: { layout: {} },
 	setup(e) {
-		let t = e, n = CA(), r = wA(), i = ij(), a = HA(), o = JA(), s = K(() => n.booted && r.hasCampaign), c = K(() => [...s.value ? [{
+		let t = e, n = SA(), r = CA(), i = rj(), a = VA(), o = qA(), s = K(() => n.booted && r.hasCampaign), c = K(() => [...s.value ? [{
 			key: "saves",
 			label: "存档"
 		}] : [], {
@@ -70477,7 +70484,7 @@ var Fwe = {
 		labeled: { type: Boolean }
 	},
 	setup(e) {
-		let t = e, n = CA(), r = qA(), i = JA(), a = UA(), o = Ui("portalTarget", void 0), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M({
+		let t = e, n = SA(), r = KA(), i = qA(), a = HA(), o = Ui("portalTarget", void 0), s = /* @__PURE__ */ M(!1), c = /* @__PURE__ */ M(null), l = /* @__PURE__ */ M(null), u = /* @__PURE__ */ M({
 			left: 0,
 			top: 0
 		}), d;
@@ -70700,7 +70707,7 @@ var ZTe = ["data-layout", "data-fullscreen"], QTe = ["inert"], $Te = {
 }, hEe = ["aria-current", "onClick"], gEe = /* @__PURE__ */ I({
 	__name: "MainWindow",
 	setup(e) {
-		let t = JA(), n = YA(), r = wA(), i = K(() => [
+		let t = qA(), n = JA(), r = CA(), i = K(() => [
 			{
 				id: "home",
 				label: "首页",
@@ -70733,7 +70740,7 @@ var ZTe = ["data-layout", "data-fullscreen"], QTe = ["inert"], $Te = {
 			top: `${c.value.y}px`,
 			width: `${c.value.w}px`,
 			height: `${c.value.h}px`
-		}), m = K(() => hre[t.page]), h = /* @__PURE__ */ M({
+		}), m = K(() => gre[t.page]), h = /* @__PURE__ */ M({
 			left: 0,
 			bottom: 0
 		});
@@ -70747,7 +70754,7 @@ var ZTe = ["data-layout", "data-fullscreen"], QTe = ["inert"], $Te = {
 		let _ = K(() => ({
 			"--trpg-sheet-left": `${h.value.left}px`,
 			"--trpg-sheet-bottom": `${h.value.bottom}px`
-		})), v = K(() => n.visible && n.variant === "sheet"), y = K(() => n.visible && n.variant !== "sheet"), b = K(() => i.value.filter((e) => !e.bottom)), x = K(() => i.value.filter((e) => e.bottom)), S = mj({
+		})), v = K(() => n.visible && n.variant === "sheet"), y = K(() => n.visible && n.variant !== "sheet"), b = K(() => i.value.filter((e) => !e.bottom)), x = K(() => i.value.filter((e) => e.bottom)), S = pj({
 			position: K({
 				get: () => ({
 					x: c.value.x,
@@ -70903,7 +70910,7 @@ var ZTe = ["data-layout", "data-fullscreen"], QTe = ["inert"], $Te = {
 					size: 22
 				}, null, 8, ["name"]), H("span", null, j(e.label), 1)], 8, hEe))], 64))), 128))])) : G("", !0)
 			])], 8, QTe),
-			U(Kie, { onDrag: C }),
+			U(qie, { onDrag: C }),
 			d.value ? G("", !0) : (z(), B("div", {
 				key: 0,
 				class: "trpg-resize",
@@ -70921,13 +70928,13 @@ var ZTe = ["data-layout", "data-fullscreen"], QTe = ["inert"], $Te = {
 	setup(e) {
 		let t = e;
 		Hi("portalTarget", t.portalTarget), Hi("stCtx", t.ctx);
-		let n = JA();
+		let n = qA();
 		return (e, t) => (z(), B("div", _Ee, [
-			U(Bie),
+			U(Vie),
 			N(n).windowOpen ? (z(), V(gEe, { key: 0 })) : G("", !0),
-			U(Rie),
-			U($re, { "library-open": N(n).windowOpen && N(n).page === "library" }, null, 8, ["library-open"]),
-			U(Zre)
+			U(zie),
+			U(eie, { "library-open": N(n).windowOpen && N(n).page === "library" }, null, 8, ["library-open"]),
+			U(Qre)
 		]));
 	}
 }), yEe = ".lib-author-block .ve-hidden,.lib-author-block .ve-print__hidden{display:none!important}.lib-author-block .ve-text-center{text-align:center}.lib-author-block .ve-text-right{text-align:right}.lib-author-block .ve-text-left{text-align:left}.lib-author-block .ve-bold,.lib-author-block .bold{font-weight:var(--fw-semibold)}.lib-author-block .ve-italic{font-style:italic}.lib-author-block .ve-muted{color:var(--text2)}.lib-author-block .small-caps,.lib-author-block .ve-small-caps{font-variant:small-caps}.lib-author-block .no-wrap,.lib-author-block .ve-no-wrap{white-space:nowrap}.lib-author-block .ve-flex{display:flex}.lib-author-block .ve-flex-col{flex-direction:column;display:flex}.lib-author-block .ve-flex-v-center{align-items:center;display:flex}.lib-author-block .ve-flex-vh-center{justify-content:center;align-items:center;display:flex}.lib-author-block .ve-split,.lib-author-block .ve-split-v-center{justify-content:space-between;align-items:center;gap:var(--sp-2);display:flex}.lib-author-block .ve-grow,.lib-author-block .ve-flex-1{flex:1 1 0;min-width:0}.lib-author-block .ve-flex-2{flex:2 1 0;min-width:0}.lib-author-block .ve-pl-2{padding-left:.5rem}.lib-author-block .ve-pr-2{padding-right:.5rem}.lib-author-block .ve-pb-2{padding-bottom:.5rem}.lib-author-block .ve-min-w-25{min-width:25%}.lib-author-block .ve-br-1p{border-right:var(--border) solid var(--line)}.lib-author-block .ve-mt-1{margin-top:.25rem}.lib-author-block .ve-mt-4{margin-top:1.5rem}.lib-author-block .ve-mb-1{margin-bottom:.25rem}.lib-author-block .ve-mb-1p{margin-bottom:1px}.lib-author-block .ve-mb-2{margin-bottom:.5rem}.lib-author-block .ve-overflow-x-auto{overflow-x:auto}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root{flex-direction:column}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root>.ve-br-1p{padding-right:0;padding-bottom:var(--sp-2);border-right:0;border-bottom:var(--border) solid var(--line)}.trpg-window[data-layout=narrow] .lib-author-block .ve-rd-plaintext__wrp-root>.ve-pl-2{padding-left:0;padding-top:var(--sp-2)}.lib-author-block .ve-w-100,.lib-author-block .w100{width:100%}.lib-author-block .ve-table-layout-fixed{table-layout:fixed}.lib-author-block .ve-col-1{width:8.3333%}.lib-author-block .ve-col-2{width:16.6667%}.lib-author-block .ve-col-2-3{width:19.1667%}.lib-author-block .ve-col-3{width:25%}.lib-author-block .ve-col-4{width:33.3333%}.lib-author-block .ve-col-5{width:41.6667%}.lib-author-block .ve-col-5-5{width:45.8333%}.lib-author-block .ve-col-6{width:50%}.lib-author-block .ve-col-10{width:83.3333%}.lib-author-block .ve-col-11{width:91.6667%}.lib-author-block .ve-col-12{width:100%}.lib-entity table{border-collapse:collapse;width:100%}.lib-entity th,.lib-entity td{padding:2px var(--sp-1);vertical-align:top;text-align:left;border:0}.lib-entity .ve-stats__sect-header-inner{margin-top:var(--sp-3);border-bottom:var(--border) solid var(--primary-tint-line);color:var(--primary-text);font-weight:var(--fw-semibold);font-variant:small-caps;padding-bottom:2px;display:block}.lib-entity .ve-stats__sect-row-inner{padding-top:var(--sp-2)}.lib-entity .ve-tbl-border{background:var(--primary-tint-line);height:2px;padding:0}.lib-entity .ve-tbl-divider{background:var(--line);height:1px;padding:0}.lib-entity [class*=ve-stats__disp-as-score]{background:var(--bg-sunk);text-align:center}.lib-entity [class*=ve-stats__disp-as-bonus]{background:var(--primary-tint);text-align:center}.lib-entity [class*=stats-tbl-ability-scores__lbl]{text-align:center;color:var(--text2);font-size:var(--fs-xs)}.lib-author-block .ve-rd__h--1{font-size:var(--fs-lg);font-weight:var(--fw-bold)}.lib-author-block .ve-rd__h--2{font-weight:var(--fw-bold)}.lib-author-block .ve-rd__h--3{font-weight:var(--fw-bold);font-style:italic}.lib-author-block ul.ve-rd__list-hang-notitle{padding:0;list-style:none}.lib-author-block .ve-rd__wrp-embedded-data{border:var(--border) solid var(--line);border-radius:var(--r-sm);margin:var(--sp-2) 0}.lib-author-block .ve-rd__b-inset{border:var(--border) solid var(--line);border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);margin:var(--sp-2) 0;background:var(--bg-sunk)}.lib-author-block .ve-rd__quote{font-style:italic}", bEe = "*,:before,:after{box-sizing:border-box}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}:where(h1,h2,h3,h4,p,ul,ol,dl,dd){margin:0;padding:0}:where(ul,ol){list-style:none}:focus-visible{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus);border-radius:var(--r-sm);outline:none}.trpg-sr-only{clip:rect(0 0 0 0);white-space:nowrap;border:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}.trpg-icon{vertical-align:-.2em;flex:none;display:inline-block}@media (prefers-reduced-motion:reduce){*,:before,:after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}", xEe = ".trpg-dice{z-index:30;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);width:360px;max-height:calc(100dvh - 16px);box-shadow:var(--shadow-3);flex-direction:column;display:flex;position:fixed;overflow:hidden}.trpg-dice__head{background:var(--side);min-height:44px;color:var(--side-ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;align-items:center;gap:8px;padding:0 6px 0 14px;display:flex}.trpg-dice__title{font-family:var(--font-serif);flex:1;font-size:16px}.trpg-dice__body{gap:14px;padding:14px 12px;display:grid;overflow-y:auto}.trpg-dice__lbl{color:var(--text2);justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;font-size:12.5px;display:flex}.trpg-dice__row{align-items:center;gap:8px;display:flex}.trpg-dice__formula{min-height:44px;font-family:var(--font-serif);letter-spacing:.02em;font-size:20px}.trpg-dice__formula[aria-invalid=true]{border-color:var(--danger-line)}.trpg-dice__err{min-height:18px;margin-top:4px}.trpg-dice__faces{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;display:grid}.trpg-dice__face{min-width:0;position:relative}.trpg-dice__die{border:1px solid var(--line);background:var(--surface);width:100%;min-height:58px;color:var(--text);border-radius:8px;align-content:center;justify-items:center;gap:2px;padding:4px 0 3px;font-size:12px;display:grid;position:relative}.trpg-dice__die:hover{border-color:var(--primary)}.trpg-dice__die[data-n]:not([data-n=\"0\"]){border-color:var(--primary);background:var(--bg-side)}.trpg-dice__die .trpg-die{width:28px;height:28px}.trpg-dice__cnt{background:var(--primary);min-width:20px;height:20px;color:var(--on-primary);font-variant-numeric:tabular-nums;border-radius:10px;padding:0 5px;font-size:12px;line-height:20px;position:absolute;top:-6px;right:-4px}.trpg-dice__minus{border:1px solid var(--line);background:var(--surface);width:22px;height:22px;color:var(--text);border-radius:50%;padding:0;font-size:14px;line-height:18px;position:absolute;top:-8px;left:-6px}.trpg-dice__minus:after{content:\"\";position:absolute;inset:-10px}.trpg-die polygon,.trpg-die .trpg-die__body{fill:var(--surface);stroke:var(--text2);stroke-width:3px;stroke-linejoin:round}.trpg-die .trpg-die__facet{fill:none;stroke:var(--line);stroke-width:2px;stroke-linejoin:round}.trpg-die text{fill:var(--text);font-family:var(--font-serif);font-weight:600}.trpg-dice__die .trpg-die polygon,.trpg-dice__die .trpg-die .trpg-die__body{fill:none}.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die polygon,.trpg-dice__die[data-n]:not([data-n=\"0\"]) .trpg-die .trpg-die__body{stroke:var(--primary)}.trpg-dice__adjust{flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px 16px;display:flex}.trpg-dice__step{align-items:center;gap:4px;display:inline-flex}.trpg-dice__step button{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);width:40px;height:40px;color:var(--text);font-size:18px}.trpg-dice__step output{text-align:center;font-variant-numeric:tabular-nums;min-width:2.6em;font-weight:600}.trpg-dice__small{color:var(--text2);font-size:12px}.trpg-dice__step .trpg-dice__small{margin-right:4px}.trpg-dice .trpg-seg button{min-height:40px}.trpg-seg.is-off{opacity:.45}.trpg-seg.is-off button{cursor:not-allowed}.trpg-dice__roll{width:100%;min-height:54px;font-family:var(--font-serif);letter-spacing:.3em;text-indent:.3em;font-size:19px}.trpg-dice__result{border:1px solid var(--line);background:var(--surface);border-radius:10px;justify-items:center;gap:8px;padding:14px 12px 12px;display:grid}.trpg-dice__hero{width:124px;height:124px}.trpg-dice__hero .trpg-die{width:100%;height:100%;overflow:visible}.trpg-dice__hero.is-rolling .trpg-die{animation:.46s ease-in-out trpg-tumble}.trpg-dice__hero.is-nat20 .trpg-die polygon,.trpg-dice__hero.is-nat20 .trpg-die .trpg-die__body{stroke:var(--accent);stroke-width:5px;fill:color-mix(in srgb, var(--accent) 22%, var(--surface))}.trpg-dice__hero.is-nat1 .trpg-die polygon,.trpg-dice__hero.is-nat1 .trpg-die .trpg-die__body{stroke:var(--danger-line);stroke-width:5px;fill:color-mix(in srgb, var(--danger-line) 18%, var(--surface))}.trpg-dice__line{min-height:22px;color:var(--text2);text-align:center;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.trpg-dice__minis{flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:36px;display:flex}.trpg-dice__mini{width:38px;height:38px}.trpg-dice__mini.is-dim{opacity:.35}.trpg-dice__mini .trpg-die{width:100%;height:100%}.trpg-dice__const{background:var(--bg-side);border:1px solid var(--line);font-variant-numeric:tabular-nums;border-radius:15px;place-items:center;min-width:38px;height:30px;padding:0 8px;font-weight:600;display:inline-grid}.trpg-dice__send{grid-template-columns:1.5fr 1fr;gap:8px;width:100%;display:grid}.trpg-dice__send .trpg-input{grid-column:1/-1}.trpg-dice__send .trpg-btn{min-height:44px}.trpg-dice__recent{border:1px solid var(--line);width:100%;min-height:44px;color:var(--text2);text-align:left;background:0 0;border-radius:8px;justify-content:space-between;align-items:center;gap:8px;padding:0 10px;display:flex}.trpg-dice__recent b{color:var(--text);font-family:var(--font-serif);font-size:16px}.trpg-dice__list{max-height:180px;margin:4px 0 0;padding:0;list-style:none;overflow-y:auto}.trpg-dice__list button{border:0;border-bottom:1px solid var(--line);text-align:left;background:0 0;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:4px 10px;display:flex}.trpg-dice__list button:hover{background:var(--bg-side)}.trpg-dice__list b{min-width:2em;font-family:var(--font-serif);font-size:17px}.trpg-dice__list span{overflow-wrap:anywhere;min-width:0;color:var(--text2);flex:1;font-size:13px}.trpg-dice__list time{color:var(--text2);font-size:12px}.trpg-dice__clear{justify-content:flex-end;display:flex}@keyframes trpg-tumble{0%{transform:rotate(0)scale(1)}45%{transform:rotate(200deg)scale(.88)}to{transform:rotate(360deg)scale(1)}}.trpg-dice__shell{flex:1;min-height:0;display:flex}.trpg-dice__main{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-dice__main>.trpg-dice__body{overflow-y:auto}.trpg-dice[data-narrow=true]{max-height:calc(100dvh - 76px)}.trpg-dice[data-narrow=true] .trpg-dice__shell{flex-direction:column}.trpg-rp{background:var(--surface);flex-direction:column;flex:1;min-height:0;display:flex}.trpg-rp__body{flex:1;align-content:start;gap:8px;min-height:0;padding:8px 14px;display:grid;overflow-y:auto}.trpg-rp .trpg-seg{width:fit-content;max-width:100%}.trpg-rp .trpg-seg button{min-height:32px;padding:2px 12px}.trpg-rp__sec{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);gap:6px;padding-bottom:8px;display:grid}.trpg-rp__sec:last-child{border-bottom:0}.trpg-rp__sec h4{color:var(--text2);margin:0;font-size:12px;font-weight:600}.trpg-rp__title{font:700 17px/1.3 var(--font-serif);margin:0}.trpg-rp__pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;display:grid}.trpg-rp__rows{gap:0;margin:0;padding:0;list-style:none;display:grid}.trpg-rp__row{border-bottom:1px dotted color-mix(in srgb, var(--line) 60%, transparent);align-items:center;gap:8px;min-height:30px;font-size:14px;display:flex}.trpg-rp__row:last-child{border-bottom:0}.trpg-rp__row>span{flex:1;min-width:0}.trpg-rp__row b{font-variant-numeric:tabular-nums}.trpg-rp__row.is-off{opacity:.4;text-decoration:line-through}.trpg-rp__hint{color:var(--text2);font-size:12px;font-weight:400}.trpg-rp__warn{background:color-mix(in srgb, var(--accent) 16%, var(--surface));border-radius:8px;margin:0;padding:6px 10px;font-size:13px}.trpg-rp__addrow{gap:4px;display:flex}.trpg-rp__form{grid-template-columns:1fr 1fr auto;align-items:center;gap:6px;display:grid}.trpg-rp__form .trpg-field__error{grid-column:1/-1}.trpg-rp__passive{color:var(--text2);align-items:center;gap:8px;font-size:13px;display:flex}.trpg-rp__dc{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.trpg-input.trpg-rp__dcnum{text-align:center;width:72px;min-height:44px;font:700 22px var(--font-serif);flex:none}.trpg-rp__round{border:1px solid var(--line);background:var(--surface);border-radius:50%;place-items:center;width:34px;height:34px;padding:0;display:inline-grid}.trpg-rp__chips{flex-wrap:wrap;gap:6px;width:100%;display:flex}.trpg-rp__chip{border:1px solid var(--line);background:var(--surface);font-variant-numeric:tabular-nums;border-radius:8px;width:40px;height:34px;padding:0}.trpg-rp__chip[aria-pressed=true]{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.trpg-rp__contest{gap:8px;display:grid}.trpg-rp__final{margin:0;font-size:14px;font-weight:600}.trpg-rp__final .trpg-rp__hint{margin-top:2px;display:block}.trpg-rp__foot{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--surface);flex:none;gap:8px;display:grid}.trpg-rp__formula{margin:0;font:700 15px ui-monospace,SF Mono,Menlo,monospace}.trpg-rp__result{border:1px dashed var(--line);border-radius:10px;align-items:center;gap:14px;height:104px;padding:0 14px;display:flex;overflow:hidden}.trpg-rp__total{border:2px solid var(--line-ctrl);min-width:64px;height:64px;font:700 28px var(--font-serif);border-radius:14px;place-items:center;padding:0 6px;display:inline-grid}.trpg-rp__verdict{gap:2px;min-width:0;display:grid}.trpg-rp__verdict span{font:700 15px var(--font-serif)}.trpg-rp__verdict .is-pass,.trpg-rp__verdict .is-win{color:var(--primary)}.trpg-rp__verdict .is-fail,.trpg-rp__verdict .is-lose{color:var(--danger-line)}.trpg-rp__verdict small{color:var(--text2);overflow-wrap:anywhere;font-size:12.5px}.trpg-rp__roll{width:100%;min-height:46px;font:700 17px var(--font-serif);letter-spacing:.2em}.trpg-rp input[type=checkbox]{appearance:none;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;border-radius:6px;flex:none;width:22px;height:22px;margin:0;position:relative}.trpg-rp input[type=checkbox]:checked{background:var(--primary);border-color:var(--primary)}.trpg-rp input[type=checkbox]:checked:after{content:\"\";border:solid var(--on-primary);border-width:0 2px 2px 0;width:6px;height:11px;position:absolute;top:2px;left:6px;transform:rotate(45deg)}.trpg-rp__act{align-items:center;gap:12px;display:flex}.trpg-rp__act .trpg-rp__formula{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-rp__act .trpg-rp__roll{flex:none;width:auto;min-width:140px;padding:0 22px}.trpg-rp__result{height:92px}.trpg-rp__sec h4{color:var(--text);font-size:13px}.trpg-rp__body{padding-bottom:20px}.trpg-input.trpg-rp__dcnum{appearance:textfield;box-shadow:none}.trpg-rp__dcnum::-webkit-inner-spin-button{appearance:none;margin:0}.trpg-rp__dcnum::-webkit-outer-spin-button{appearance:none;margin:0}.trpg-rp__roll{letter-spacing:.08em}.trpg-rp__result.is-empty{height:44px}.trpg-rp__dcline{color:var(--text2);margin:0;font-size:12.5px}", SEe = ".lib-stack{gap:var(--sp-3);align-content:start;display:grid}.lib-file{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);padding:var(--sp-3) var(--sp-4);gap:var(--sp-2);display:grid}.lib-file__top{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-kv{gap:4px var(--sp-4);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-kv b{color:var(--text);font-weight:var(--fw-semibold)}.lib-pack{gap:2px;min-width:0;display:grid}.lib-pack__cats{color:var(--text2);font-size:var(--fs-sm)}.lib-drafts{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--bg-sunk);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-drafts>span:not(.lib-end){flex:160px;min-width:0}.lib-pending{color:var(--text2);font-size:var(--fs-xs);font-weight:var(--fw-regular);align-items:center;gap:4px;display:inline-flex}.lib-pending .trpg-icon{animation:1.2s linear infinite lib-spin}@keyframes lib-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.lib-pending .trpg-icon{animation:none}}.lib-form{gap:var(--sp-3);align-content:start;display:grid}.lib-form .trpg-field{margin-bottom:0}.lib-ebar{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-top:var(--border) solid var(--line);background:var(--surface);flex-wrap:wrap;flex:none;display:flex}.lib-dialog{flex-direction:column;flex:1;min-height:0;display:flex}.lib-dialog__body{gap:var(--sp-3);flex:1;align-content:start;min-height:0;display:grid;overflow:auto}.lib-dialog__body .trpg-field{margin-bottom:0}.lib-locked{background:var(--bg-sunk);color:var(--text3);justify-content:space-between;align-items:center;display:flex}.lib-langs{gap:4px;display:inline-flex}.lib-form__sec{font-size:var(--fs-xs);color:var(--text2);font-weight:var(--fw-semibold);padding-bottom:var(--sp-1)}.lib-types{gap:var(--sp-1);display:grid}.lib-tgroup{gap:var(--sp-2);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);flex-wrap:wrap;align-items:baseline;padding:6px 0;display:flex}.lib-tgroup>b{min-width:96px;color:var(--text2);font-weight:var(--fw-semibold)}.lib-tgroup__items{gap:4px var(--sp-3);flex-wrap:wrap;flex:1;min-width:0;display:flex}.lib-choice{gap:var(--sp-2);display:grid}.lib-choice>label{gap:2px var(--sp-2);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);cursor:pointer;grid-template-columns:20px 1fr;display:grid}.lib-choice>label[data-on=true]{box-shadow:inset 0 0 0 2px var(--primary)}.lib-choice>label>span:last-child{color:var(--text2);font-size:var(--fs-sm);grid-column:2}.lib-choice__radio{accent-color:var(--primary);margin:3px 0 0}.lib-etop{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);color:var(--text2);flex-wrap:wrap;flex:none;display:flex}.lib-two{gap:var(--sp-3);min-height:0;padding:var(--sp-3) var(--sp-4);flex:1;grid-template-columns:1fr 1fr;display:grid}.lib-two>div{gap:var(--sp-2);flex-direction:column;min-height:0;display:flex}.lib-lines{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);min-height:0;padding:var(--sp-2) var(--sp-3);font-size:var(--fs-sm);align-content:start;gap:var(--sp-2);flex:1;display:grid;overflow:auto}.lib-convert__in{resize:none;min-height:160px;font:13px/1.6 var(--font-sans);padding:var(--sp-2) var(--sp-3);flex:1}.lib-jsonwrap{min-height:0;padding:var(--sp-3) var(--sp-4) 0;flex-direction:column;flex:1;display:flex}.lib-cmhost{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);flex-direction:column;flex:1;min-height:160px;display:flex;overflow:hidden}.lib-cmhost .cm-editor{flex:1;min-height:0;font:12px/1.6 ui-monospace,Menlo,monospace}.lib-cmhost .cm-editor.cm-focused{outline:none}.lib-cmhost .cm-scroller{overflow:auto}.lib-cmhost .cm-gutters{background:var(--bg-sunk);border-right:var(--border) solid var(--line);color:var(--text3)}.lib-cmhost .cm-tooltip{font-family:var(--font-sans)}.lib-cm__err{padding:var(--sp-2) var(--sp-4) 0;flex:none;gap:6px;display:grid}.trpg-window[data-layout=narrow] .lib-two{grid-template-columns:1fr}.lib-two:has(>div:only-child){grid-template-columns:1fr}.lib-pills--wrap{flex-wrap:wrap;padding-inline:0;overflow:visible}.trpg-modal[data-variant=sheet] .trpg-modal__card:has(.trpg-modal__page:not(.is-under) .lib-editor){width:94%;height:92%}.lib-editor{min-height:0}.lib-split{flex:1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0;display:grid}.lib-split>.lib-pane+.lib-pane{border-left:var(--border) solid var(--line)}.lib-vsplit{flex-direction:column;flex:1;min-height:0;display:flex}.lib-vsplit>.lib-pane{flex:1;min-height:0}.lib-vsplit>.lib-pane__head{overflow-x:auto}.lib-pane{flex-direction:column;min-width:0;min-height:0;display:flex}.lib-pane--side{background:var(--bg-sunk)}.lib-pane__head{align-items:center;gap:var(--sp-2);min-height:44px;padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);flex:none;display:flex}.lib-pane__head .trpg-seg button{white-space:nowrap;min-height:30px;padding-inline:var(--sp-3)}.lib-pane__head>.lib-faint{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.lib-pane__body{min-height:0;padding:var(--sp-3) var(--sp-4) var(--sp-5);flex-direction:column;flex:1;display:flex;overflow:auto}.lib-tform{gap:var(--sp-3);align-content:start;display:grid}.lib-tfield{gap:4px;min-width:0;display:grid}.lib-tfield>label{font-size:var(--fs-sm);font-weight:var(--fw-semibold);align-items:center;gap:6px;display:flex}.lib-tfield>label small{color:var(--danger-text)}.lib-lname{align-items:center;gap:4px;display:inline-flex}.lib-lname[data-en]{font-family:ui-monospace,Menlo,monospace;font-weight:var(--fw-regular)}.lib-tip{color:var(--text3);cursor:help;display:inline-flex}.lib-mark{background:var(--warn-bg);color:var(--warn-text);font:500 11px/16px var(--font-sans);white-space:nowrap;box-shadow:inset 0 0 0 1px var(--accent);border-radius:999px;padding:1px 8px}.lib-tfield[data-diff=true]>.trpg-input,.lib-tfield[data-diff=true]>.trpg-select-trigger,.lib-tfield[data-diff=true]>.lib-inline .trpg-select-trigger{border-color:var(--accent);box-shadow:0 0 0 3px var(--warn-bg)}.lib-fsec{margin-top:var(--sp-2);border-bottom:var(--border) solid var(--line);color:var(--text2);font-size:12px;font-weight:var(--fw-semibold);padding-bottom:4px}.lib-more{align-items:center;gap:var(--sp-2);padding:var(--sp-2) 0;border:0;border-top:var(--border) dashed var(--line);color:var(--text2);font-size:var(--fs-sm);text-align:left;cursor:pointer;background:0 0;display:flex}.lib-tojson{width:fit-content;padding:6px var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);color:var(--text2);font-size:var(--fs-sm);cursor:pointer;border:0;align-items:center;gap:6px;display:inline-flex}.lib-pane--side .lib-tojson{background:var(--surface)}.lib-inline{gap:var(--sp-2);flex-wrap:wrap;align-items:center;min-width:0;display:flex}.lib-inline>.trpg-input{flex:120px;width:auto;min-width:0}.lib-inline>.trpg-select-trigger{flex:140px;width:auto}.lib-rep{gap:var(--sp-2);display:grid}.lib-rep__row{gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-sm);background:var(--bg-sunk);align-items:flex-start;display:flex}.lib-pane--side .lib-rep__row{background:var(--surface)}.lib-rep__row>b{padding-top:7px;font-size:12px}.lib-rep__body{gap:var(--sp-2);flex:1;min-width:0;display:grid}.lib-grp{gap:var(--sp-2);padding-left:var(--sp-2);border-left:2px solid var(--line);display:grid}.lib-rep__body>.lib-grp{border-left:0;padding-left:0}.lib-checks{gap:var(--sp-2) var(--sp-4);flex-wrap:wrap;align-items:center;padding-top:4px;display:flex}.lib-num{width:96px}.lib-para{resize:vertical;width:100%;min-height:64px;font:inherit;padding:var(--sp-2) var(--sp-3);line-height:1.6}.lib-mono{font-family:ui-monospace,Menlo,monospace}.lib-seg--small button{min-height:26px;padding:0 var(--sp-3);font-size:12px}.lib-fillopt{padding:var(--sp-3);border-radius:var(--r-md);border:var(--border) solid var(--line);background:var(--surface);cursor:pointer;gap:6px;display:grid}.lib-fillopt[data-on=true]{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}.lib-diff{font-size:var(--fs-sm);gap:6px;margin:0;padding:0;list-style:none;display:grid}.lib-diff li{gap:var(--sp-2);padding:6px var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);grid-template-columns:minmax(80px,128px) 1fr;display:grid}.lib-diff code{font:12px var(--font-sans);font-weight:var(--fw-semibold)}.lib-diff s{color:var(--text3)}.lib-pane__body>.lib-cmhost{min-height:280px}.lib-list__row--edit{align-items:center;gap:var(--sp-2);padding-block:0;display:flex}.lib-list__open{align-items:center;gap:var(--sp-2);min-width:0;color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:inherit;background:0 0;border:0;flex:1;padding:0;display:flex}.lib-pane__head>.trpg-seg{flex:none}.lib-notes{background:var(--bg-sunk);width:fit-content;color:var(--text2);cursor:pointer;border:0;border-radius:999px;align-items:center;gap:6px;padding:4px 10px;font-size:12px;display:inline-flex}.lib-sum{gap:var(--sp-2);max-height:45%;padding:var(--sp-3) var(--sp-4);border-top:var(--border) solid var(--line);background:var(--surface);flex:none;display:grid;overflow:auto}.lib-sum__row{align-items:center;gap:var(--sp-3);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-sum__row>.trpg-select-trigger{width:auto;min-width:200px}.lib-sum__choice{font-size:var(--fs-sm);gap:4px;display:grid}.lib-crow{gap:var(--sp-2);padding:7px var(--sp-2);border-bottom:var(--border) solid var(--line);font-size:var(--fs-sm);grid-template-columns:minmax(64px,96px) minmax(0,1fr) auto;align-items:start;display:grid}.lib-crow>b{font-weight:var(--fw-semibold);color:var(--text2);padding-top:2px;font-size:12px}.lib-crow[data-diff=true]{background:var(--warn-bg);border-radius:var(--r-sm)}.lib-crow small{color:var(--warn-text);font-size:11px;display:block}.lib-edits{margin:0;padding:0;list-style:none;display:grid}.lib-erow{gap:var(--sp-2);padding:var(--sp-2) 0;border-bottom:var(--border) solid var(--line);display:grid}.lib-erow[data-off=true]{opacity:.65}.lib-erow__top{align-items:center;gap:var(--sp-2);flex-wrap:wrap;display:flex}.lib-erow__name{font-weight:var(--fw-semibold)}.lib-erow__meta{color:var(--text2);flex:200px;min-width:0;font-size:12px}.lib-erow__top .trpg-select-trigger{width:auto;min-width:120px}.lib-erow__body{gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);margin-left:26px;display:grid}.lib-housenote{color:var(--text);align-items:center;gap:4px;display:inline-flex}.lib-erow__top>.trpg-check,[data-testid=overrides]>.lib-filter>.trpg-check{flex:none;width:auto;margin:0}.lib-erow__top>.lib-end{flex:100%;justify-content:flex-end}.lib-erow__top>.lib-end .trpg-select-trigger{flex:0 200px;width:auto}.lib-block{gap:4px;display:grid}.lib-block__bar{flex-wrap:wrap;gap:2px;display:flex}.lib-block__bar .trpg-btn{min-height:28px}.lib-pick{gap:var(--sp-1);display:grid}.lib-pick>.trpg-btn,.lib-subs{justify-self:start}.lib-numrow{gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;display:flex}.lib-numrow>.lib-tfield{width:7.5em}.lib-row1{display:contents}.lib-grp--row{align-items:flex-end;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;display:flex}.lib-grp--row>.lib-tfield{flex:8em}.lib-img{gap:var(--sp-1);display:grid}.lib-img__thumb{object-fit:contain;border-radius:var(--r-sm);border:var(--border) solid var(--line);background:var(--bg-sunk);max-width:160px;max-height:120px}.lib-fhint{margin:calc(-1 * var(--sp-2)) 0 0;font-size:12px}.lib-children{gap:var(--sp-2);margin-top:var(--sp-4);display:grid}.lib-children__grp{gap:var(--sp-1);display:grid}.lib-children__items{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.lib-typehint{margin-top:var(--sp-3);gap:2px;font-size:12px;display:grid}.lib-typehint p{margin:0}.lib-editgrid{gap:var(--sp-2);min-width:0;display:grid}.lib-editgrid__scroll{border:var(--border) solid var(--line);border-radius:var(--r-sm);overflow-x:auto}.lib-editgrid table{border-collapse:collapse;width:100%}.lib-editgrid td,.lib-editgrid th{border:var(--border) solid var(--line);text-align:start;min-width:84px;padding:3px}.lib-editgrid th{background:var(--bg-sunk)}.lib-editgrid td .trpg-input,.lib-editgrid th .trpg-input{width:100%;min-width:0}.lib-editgrid th .trpg-input{font-weight:var(--fw-semibold)}.lib-editgrid td .trpg-btn,.lib-editgrid th .trpg-btn{white-space:normal}.lib-editgrid .lib-editgrid__actions{text-align:center;width:1%;min-width:0}.lib-edittext{gap:var(--sp-2);min-width:0;display:grid}.lib-edittext__item{gap:var(--sp-1);grid-template-columns:minmax(0,1fr) auto;align-items:start;display:grid}.lib-edittext__add{justify-self:start}.lib-attached{margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:var(--border) solid var(--line)}", CEe = ".trpg-btn{min-height:var(--hit);padding:0 var(--sp-4);justify-content:center;align-items:center;gap:var(--sp-2);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-weight:var(--fw-medium);white-space:nowrap;transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std), transform var(--dur-press) var(--ease-out);display:inline-flex}.trpg-btn:hover:not(:disabled){background:var(--bg-hover)}.trpg-btn:active:not(:disabled){transform:translateY(1px)}.trpg-btn--primary{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold);border-color:#0000}.trpg-btn--primary:hover:not(:disabled){background:var(--primary-hover)}.trpg-btn--primary:active:not(:disabled){background:var(--primary-pressed)}.trpg-btn--danger{color:var(--danger-text);border:2px solid var(--danger-line);background:var(--surface)}.trpg-btn--quiet{background:0 0;border-color:#0000}.trpg-btn--small{min-height:28px;padding:0 var(--sp-3);font-size:var(--fs-sm)}.trpg-btn:disabled{background:var(--disabled-bg);border-color:var(--line);color:var(--disabled-text);cursor:not-allowed}.trpg-btn--primary:disabled{background:var(--line);color:var(--text2)}.trpg-window[data-layout=narrow] .trpg-btn:not(.trpg-btn--small){min-height:var(--hit-touch)}.trpg-icon-btn{width:var(--hit);height:var(--hit);min-width:var(--hit);border-radius:var(--r-sm);color:var(--text2);transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0;place-items:center;padding:0;display:inline-grid}.trpg-icon-btn:hover{background:var(--bg-hover);color:var(--text)}.trpg-window[data-layout=narrow] .trpg-icon-btn{width:var(--hit-touch);height:var(--hit-touch)}.trpg-pill{align-items:center;gap:var(--sp-1);min-height:30px;padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-pill);background:var(--surface);font-size:var(--fs-sm);display:inline-flex}.trpg-badge,.trpg-tag{padding:1px var(--sp-2);border-radius:var(--r-xs);background:var(--bg-side);color:var(--text2);font-size:var(--fs-xs);white-space:nowrap;border:0;align-items:center;gap:4px;line-height:1.6;display:inline-flex}.trpg-badge[data-tone=primary]{background:var(--primary-tint);color:var(--primary-text);box-shadow:inset 0 0 0 1px var(--primary-tint-line)}.trpg-badge[data-tone=warn]{background:var(--warn-bg);color:var(--warn-text);box-shadow:inset 0 0 0 1px var(--accent)}.trpg-badge[data-tone=success]{background:var(--success-bg);color:var(--success-text)}.trpg-badge[data-off=true]{color:var(--text3);box-shadow:inset 0 0 0 1px var(--line);background:0 0;text-decoration:line-through}.trpg-badge[data-status=pass]{color:var(--success-text)}.trpg-badge[data-status=fail],.trpg-badge[data-status=error]{color:var(--danger-text)}button.trpg-badge{cursor:pointer;border:0}.trpg-link{color:var(--primary-text);font:inherit;text-underline-offset:3px;background:0 0;border:0;padding:0;text-decoration:underline}.trpg-link--hl{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:0 var(--sp-3);border-radius:var(--r-sm);background:var(--primary-tint);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std);text-decoration:none;display:inline-flex}.trpg-link--hl:hover{background:var(--primary-tint-line)}.trpg-term{color:inherit;font-family:var(--font-serif);font-weight:var(--fw-semibold);text-align:left;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;-webkit-text-decoration-color:var(--text3);text-decoration-color:var(--text3);text-underline-offset:4px;background:0 0;border:0;padding:0;display:inline}.trpg-hint{margin:0 0 var(--sp-3);font-size:var(--fs-sm);color:var(--text2);line-height:var(--lh-body)}.trpg-group{margin:var(--sp-4) 0 var(--sp-2);font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text2)}.trpg-group--first{margin-top:0}.trpg-empty{gap:var(--sp-2);padding:var(--sp-4);border:var(--border) dashed var(--line-ctrl);border-radius:var(--r-md);background:var(--bg-sunk);color:var(--text2);justify-items:start;display:grid}.trpg-loading{gap:var(--sp-3);padding:32px var(--sp-3);color:var(--text2);justify-content:center;align-items:center;display:flex}.trpg-spinner{border:3px solid var(--line);border-top-color:var(--primary);width:22px;height:22px;animation:trpg-spin var(--dur-spin) linear infinite;border-radius:50%;flex:none;display:inline-block}.trpg-skeleton{border-radius:var(--r-xs);background:linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side));opacity:.7;height:14px}.trpg-list{margin:0;padding:0;list-style:none}.trpg-row{align-items:center;gap:var(--sp-3);min-height:52px;padding:6px var(--sp-1);border-bottom:var(--border) solid var(--line);display:flex}.trpg-row__main{flex:1;min-width:0}.trpg-row__title{font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-row__meta{color:var(--text2);font-size:var(--fs-sm)}.trpg-row__end{align-items:center;gap:var(--sp-2);flex:none;display:flex}.trpg-field{gap:var(--sp-1);margin-bottom:var(--sp-4);display:grid}.trpg-field__label{font-weight:var(--fw-semibold)}.trpg-field__hint{font-size:var(--fs-xs);color:var(--text2)}.trpg-field__err{font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--danger-text);align-items:center;gap:4px;display:inline-flex}.trpg-input{width:100%;min-height:var(--hit);padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);transition:border-color var(--dur-fast) var(--ease-std);display:block}textarea.trpg-input{min-height:72px;padding:var(--sp-2) var(--sp-3);resize:vertical}.trpg-input:hover:not(:disabled){border-color:var(--text2)}.trpg-input[aria-invalid=true]{border:2px solid var(--danger-line)}.trpg-input:disabled{background:var(--disabled-bg);color:var(--disabled-text)}.trpg-check{align-items:center;gap:var(--sp-2);min-height:var(--hit);cursor:pointer;display:inline-flex;position:relative}.trpg-check input{opacity:0;width:100%;height:100%;cursor:inherit;margin:0;position:absolute;inset:0}.trpg-check__box{border:var(--border-strong) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--surface);color:#0000;width:18px;height:18px;transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);flex:none;place-items:center;display:grid}.trpg-check[data-on=true] .trpg-check__box{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.trpg-check[data-dl=true] .trpg-check__box{background:var(--text3);border-color:var(--text3);color:var(--surface)}.trpg-check[data-dl=true]{color:var(--text2)}.trpg-check[data-disabled=true] .trpg-check__box{opacity:.35}.trpg-groupcheck{min-width:var(--hit);min-height:var(--hit);cursor:pointer;background:0 0;border:0;flex:none;place-items:center;padding:0;display:inline-grid}.trpg-groupcheck__box{border:var(--border-strong) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--surface);width:18px;height:18px;color:var(--on-primary);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);place-items:center;line-height:1;display:grid}.trpg-groupcheck[aria-checked=true] .trpg-groupcheck__box,.trpg-groupcheck[aria-checked=mixed] .trpg-groupcheck__box{background:var(--primary);border-color:var(--primary)}.trpg-groupcheck:disabled{opacity:.4;cursor:not-allowed}.trpg-groupcheck:focus-visible{outline:2px solid var(--focus);outline-offset:1px}.trpg-check[data-disabled=true]{cursor:not-allowed}.trpg-check[data-disabled=true]:not([data-dl=true]){opacity:.75}.trpg-check input:focus-visible~.trpg-check__box{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus)}.trpg-dl{margin-left:var(--sp-2);padding:0 var(--sp-2);border-radius:var(--r-xs);background:var(--bg-side);color:var(--text2);font-size:var(--fs-xs);align-items:center;gap:3px;display:inline-flex}.trpg-switch-wrap{color:var(--text2);min-height:var(--hit-touch);align-items:center;gap:6px;display:inline-flex}.trpg-switch{border-radius:var(--r-pill);background:var(--line-ctrl);width:40px;height:22px;transition:background var(--dur-fast) var(--ease-std);border:0;flex:none;padding:0;position:relative}.trpg-switch:before{content:\"\";background:var(--surface);width:16px;height:16px;box-shadow:var(--shadow-1);transition:transform var(--dur-fast) var(--ease-out);border-radius:50%;position:absolute;top:3px;left:3px}.trpg-switch[data-on=true]{background:var(--primary)}.trpg-switch[data-on=true]:before{transform:translate(18px)}.trpg-switch:disabled{opacity:.55;cursor:not-allowed}.trpg-stepper{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);align-items:stretch;display:inline-flex;overflow:hidden}.trpg-stepper__btn{min-width:36px;min-height:36px;padding:0 var(--sp-2);color:var(--text);background:0 0;border:0;place-items:center;display:grid}.trpg-stepper__btn:hover:not(:disabled){background:var(--bg-hover)}.trpg-stepper__btn:disabled{color:var(--disabled-text);cursor:not-allowed}.trpg-stepper__val{min-width:72px;font-weight:var(--fw-semibold);border-inline:var(--border) solid var(--line);place-items:center;display:grid}.trpg-ctrl{align-items:center;gap:var(--sp-3);display:inline-flex}.trpg-ctrl--off .trpg-stepper{opacity:.5;background:var(--disabled-bg)}.trpg-seg{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);display:inline-flex;overflow:hidden}.trpg-seg button{min-height:34px;padding:2px var(--sp-4);color:var(--text);background:0 0;border:0}.trpg-seg button+button{border-left:var(--border) solid var(--line-ctrl)}.trpg-seg button:hover:not(:disabled):not([aria-pressed=true]){background:var(--bg-hover)}.trpg-seg button[aria-pressed=true]{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.trpg-seg button:disabled{opacity:.4;cursor:not-allowed}.trpg-select-trigger{justify-content:space-between;align-items:center;gap:var(--sp-2);width:100%;min-height:var(--hit);padding:0 var(--sp-3);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);color:var(--text);display:inline-flex}.trpg-select-content,.trpg-dropdown,.trpg-popover{z-index:100003;background:var(--surface);color:var(--text);border:var(--border) solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-2)}.trpg-select-content{min-width:var(--reka-select-trigger-width,160px);max-height:min(320px, var(--reka-select-content-available-height));overflow:hidden}.trpg-select-viewport{max-height:inherit;padding:var(--sp-1);overflow-y:auto}.trpg-select-item,.trpg-dropdown__item{justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:40px;padding:4px var(--sp-3);border-radius:var(--r-xs);cursor:pointer;color:var(--text);display:flex}.trpg-dropdown{padding:var(--sp-1);min-width:168px}.trpg-select-item[data-highlighted],.trpg-dropdown__item[data-highlighted]{background:var(--bg-hover);outline:none}.trpg-select-item[data-state=checked]{font-weight:var(--fw-semibold);color:var(--primary-text)}.trpg-dropdown__item--danger{color:var(--danger-text)}.trpg-dropdown__item[data-disabled]{opacity:.5;cursor:not-allowed}.trpg-dropdown__reason{font-size:var(--fs-xs);color:var(--text2)}.trpg-popover{width:min(320px,92vw);padding:var(--sp-3)}.trpg-combo__anchor{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--surface);align-items:center;display:flex}.trpg-combo__input{min-width:0;min-height:var(--hit);padding:4px var(--sp-3);color:var(--text);background:0 0;border:0;flex:1}.trpg-combo__input:focus-visible{box-shadow:none}.trpg-combo__anchor:focus-within{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--focus)}.trpg-combo__content{width:var(--reka-combobox-trigger-width);min-width:260px;max-height:min(320px, var(--reka-combobox-content-available-height,320px));flex-direction:column;display:flex}.trpg-combo__content .trpg-select-viewport{flex:1;min-height:0;max-height:none}.trpg-combo__count{padding:6px var(--sp-3);border-bottom:var(--border) solid var(--line);color:var(--text2);font-size:var(--fs-sm)}.trpg-combo__empty{padding:var(--sp-3);color:var(--text2)}.trpg-tip{max-width:100%;display:inline-flex;position:relative}.trpg-tip.is-inline{display:inline}.trpg-tip__bubble{z-index:100004;max-width:260px;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--hero-bg);color:var(--hero-ink);font-size:var(--fs-sm);text-align:left;white-space:pre-line;pointer-events:none;box-shadow:var(--shadow-2);animation:trpg-fade var(--dur-base) var(--ease-out);gap:1px;line-height:1.5;display:grid;position:fixed}.trpg-modal-root{display:contents}.trpg-modal{z-index:var(--z-modal);padding:var(--sp-5);background:color-mix(in srgb, var(--text) 46%, transparent);animation:trpg-fade var(--dur-base) var(--ease-out);justify-content:center;align-items:center;display:flex;position:absolute;inset:0}.trpg-modal__card{background:var(--surface);border-radius:var(--r-lg);width:min(640px,100%);height:min(600px,100%);min-height:0;max-height:100%;box-shadow:var(--shadow-3);animation:trpg-rise var(--dur-slow) var(--ease-out);flex-direction:column;display:flex;overflow:hidden}.trpg-modal[data-variant=drawer]{justify-content:flex-end;padding:0}.trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:var(--r-lg) 0 0 var(--r-lg);width:min(440px,100%);height:100%;animation:trpg-slide var(--dur-slow) var(--ease-out)}.trpg-modal[data-variant=confirm] .trpg-modal__card{width:min(440px,100%);height:auto}@keyframes trpg-rise{0%{opacity:0;transform:translateY(10px)scale(.985)}}@keyframes trpg-slide{0%{opacity:0;transform:translate(32px)}}@keyframes trpg-sheet{0%{opacity:0;transform:translateY(100%)}}.trpg-modal__head{align-items:center;gap:var(--sp-3);min-height:52px;padding:var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-5);border-bottom:var(--border) solid var(--line);flex:none;display:flex}.trpg-modal__title{min-width:0;font-size:var(--fs-xl);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.trpg-modal__back{max-width:40%;min-height:var(--hit);margin-left:calc(-1 * var(--sp-3));padding:0 var(--sp-2);border-radius:var(--r-sm);color:var(--primary-text);font-weight:var(--fw-semibold);white-space:nowrap;background:0 0;border:0;align-items:center;gap:2px;display:inline-flex}.trpg-modal__back span{text-overflow:ellipsis;overflow:hidden}.trpg-modal__back:hover{background:var(--bg-hover)}.trpg-sheet-grip{background:var(--line-ctrl);opacity:.5;border-radius:3px;width:44px;height:5px;margin:8px auto 0;display:none}.trpg-modal__pages{flex:1;min-height:0;position:relative}.trpg-modal[data-variant=confirm] .trpg-modal__pages{flex-direction:column;flex:0 auto;display:flex}.trpg-modal__page{min-height:0;padding:var(--sp-4) var(--sp-5) var(--sp-5);transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s;flex-direction:column;display:flex;position:absolute;inset:0;overflow:auto}.trpg-modal[data-variant=confirm] .trpg-modal__page{flex:0 auto;position:relative;overflow:hidden}.trpg-modal__page.is-under{opacity:0;visibility:hidden;transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std), visibility 0s var(--dur-fast);transform:translate(-24px)}.trpg-page-enter-from,.trpg-page-leave-to{opacity:0;transform:translate(24px)}.trpg-page-enter-active,.trpg-page-leave-active{transition:opacity var(--dur-fast) var(--ease-std), transform var(--dur-fast) var(--ease-std)}.trpg-modal[data-variant=confirm] .trpg-page-leave-active{position:absolute;inset:0}.trpg-window[data-layout=narrow] .trpg-modal{background:var(--surface);align-items:stretch;padding:0}.trpg-window[data-layout=narrow] .trpg-modal__card{border-radius:0;width:100%;height:100%}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-modal__card{border-radius:14px 14px 0 0;height:88%;animation-name:trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=drawer] .trpg-sheet-grip{display:block}.trpg-window[data-layout=mid] .trpg-modal[data-variant=drawer] .trpg-modal__card{width:min(440px,100%)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=confirm] .trpg-modal__card{border-radius:14px 14px 0 0;height:auto;animation-name:trpg-sheet}.trpg-confirm{gap:var(--sp-3);flex-direction:column;min-height:0;max-height:100%;display:flex}.trpg-modal[data-variant=sheet] .trpg-confirm{height:100%;padding:var(--sp-4) var(--sp-5) var(--sp-5)}.trpg-confirm__message{flex:none}.trpg-confirm__scroll{gap:var(--sp-3);min-height:0;padding-right:var(--sp-1);overscroll-behavior:contain;flex:0 auto;align-content:start;display:grid;overflow:auto}.trpg-confirm__section{gap:var(--sp-1);padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);display:grid}.trpg-confirm__section[data-tone=must]{border-color:var(--danger-line);background:var(--danger-bg)}.trpg-confirm__section[data-tone=must] .trpg-confirm__h{color:var(--danger-text)}.trpg-confirm__h{font-size:var(--fs-sm);font-weight:var(--fw-semibold);margin:0}.trpg-confirm__h small{margin-left:var(--sp-2);color:var(--text3);font-weight:400}.trpg-confirm__details{padding-left:var(--sp-5);color:var(--text2);overflow-wrap:anywhere;list-style:outside}.trpg-confirm__actions{justify-content:flex-end;gap:var(--sp-2);margin-top:var(--sp-1);padding-top:var(--sp-2);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-confirm__actions--stack{flex-wrap:wrap}.trpg-window[data-layout=narrow] .trpg-confirm__actions{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-confirm__actions .trpg-btn{width:100%}.trpg-warn{color:var(--warn-text)}.page-stack{gap:var(--sp-4);align-content:start;display:grid}.page-intro{color:var(--text2)}.trpg-info__line{margin:0}.trpg-modal[data-variant=sheet]{left:var(--trpg-sheet-left,0px);bottom:var(--trpg-sheet-bottom,0px)}.trpg-modal[data-variant=sheet] .trpg-modal__card{width:68%;min-width:min(480px,100%);height:70%;min-height:min(520px,100%)}.trpg-modal{cursor:grab}.trpg-modal__card{cursor:auto}.trpg-modal[data-variant=sheet] .trpg-modal__page{padding:0;overflow:hidden}.trpg-modal[data-variant=sheet] .trpg-modal__title{font-family:var(--font-serif)}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet]{background:color-mix(in srgb, var(--text) 46%, transparent);align-items:flex-end}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet] .trpg-modal__card{border-radius:14px 14px 0 0;height:88%;animation-name:trpg-sheet}.trpg-window[data-layout=narrow] .trpg-modal[data-variant=sheet] .trpg-sheet-grip{display:block}", wEe = ".lib-page{flex-direction:column;height:100%;min-height:0;display:flex}.lib-top{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);flex-wrap:wrap;flex:none;display:flex}.trpg-window[data-layout=narrow] .lib-top{padding:var(--sp-2) var(--sp-3);gap:var(--sp-2)}.lib-end{align-items:center;gap:var(--sp-2);flex:none;margin-left:auto;display:flex}.lib-scroll{min-height:0;padding:0 var(--sp-4) var(--sp-8,72px);flex:1;overflow:auto}.trpg-window[data-layout=narrow] .lib-scroll{padding:0 var(--sp-3) 72px}.lib-sec{align-items:center;gap:var(--sp-2);padding:var(--sp-3) 0 var(--sp-1);font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--text2);display:flex}.lib-muted{color:var(--text2)}.lib-faint{color:var(--text3)}.lib-src{color:var(--text3);font-size:var(--fs-xs);font-weight:var(--fw-regular);font-family:var(--font-sans)}.lib-name{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-family:var(--font-serif);font-weight:var(--fw-semibold);text-align:left;color:inherit;font-size:inherit;background:0 0;border:0;flex:1;padding:0;overflow:hidden}.lib-name:hover{text-underline-offset:4px;-webkit-text-decoration:underline dotted;text-decoration:underline dotted}.trpg-shelf__row[data-off=true] .lib-name{color:var(--text2);font-weight:var(--fw-regular)}.lib-alt-name{margin-left:var(--sp-2);color:var(--text3);font-family:var(--font-sans,inherit);font-weight:var(--fw-regular);font-size:var(--fs-sm)}.lib-rowmeta{color:var(--text2);font-size:var(--fs-xs);white-space:nowrap}.trpg-window[data-layout=narrow] .lib-rowmeta{display:none}.trpg-shelf+.lib-sec{margin-top:var(--sp-2)}.lib-shelfbox{flex:none;min-height:0;overflow:hidden}.lib-banner{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);background:var(--primary-tint);color:var(--primary-text);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-banner>span:first-of-type:not(.trpg-spinner),.lib-banner>.trpg-spinner+span{overflow-wrap:anywhere;flex:140px;min-width:0}.lib-banner>.trpg-spinner{flex:none}.lib-banner--warn{background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 2px var(--danger-line)}.lib-mbody{flex-direction:column;height:100%;min-height:0;display:flex}.lib-mscroll{--lib-row-h:44px;flex:1;min-height:0;overflow:auto}.trpg-window[data-layout=narrow] .lib-mscroll{--lib-row-h:48px}.lib-filter{align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4) var(--sp-2);flex-wrap:wrap;flex:none;display:flex}.lib-filter .trpg-input{flex:160px;min-width:140px}.lib-pills{gap:var(--sp-2);padding:0 var(--sp-4) var(--sp-2);flex:none;display:flex;overflow-x:auto}.lib-pills .trpg-pill{background:var(--surface);cursor:pointer;flex:none}.lib-pills .trpg-pill[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.lib-pills .trpg-pill small{font-size:var(--fs-xs);opacity:.8;margin-left:4px}.lib-list{border-top:var(--border) solid var(--line);align-content:start;display:grid}.lib-list__row{align-items:center;gap:var(--sp-3);min-height:44px;padding:4px var(--sp-4);border:0;border-bottom:var(--border) solid var(--line);background:var(--surface);text-align:left;color:var(--text);font:inherit;cursor:pointer;width:100%;display:flex}.lib-list__row:hover{background:var(--bg-hover)}.lib-list__row .lib-name{font-weight:var(--fw-semibold)}.lib-list__row[data-off=true] .lib-name{color:var(--text3)}.lib-count{padding:var(--sp-2) var(--sp-4);color:var(--text2);font-size:var(--fs-xs);gap:var(--sp-3);flex:none;align-items:center;display:flex}.lib-state{gap:var(--sp-2);padding:var(--sp-6) var(--sp-5);justify-items:start;display:grid}.lib-state h3{font-size:var(--fs-lg);font-weight:var(--fw-semibold);margin:0}.lib-skel{gap:var(--sp-2);padding:var(--sp-4);display:grid}.lib-skel i{background:linear-gradient(90deg, var(--bg-side), var(--line), var(--bg-side));opacity:.7;border-radius:4px;height:14px;display:block}.lib-dtools{align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-sunk);flex-wrap:wrap;flex:none;display:flex}.lib-entrytabs{flex-direction:column;flex:1;min-height:0;display:flex}.lib-entrytabs__list{flex:none;padding-block-start:var(--sp-2)}.lib-entrytabs__list [data-state=active]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.lib-entrytabs>[hidden]{display:none}.lib-class-table tr>:first-child{background:var(--bg-sunk);position:sticky;left:0}.lib-class-table td{white-space:normal}.lib-class-picker{margin-block-end:var(--sp-3)}.lib-dbody{padding:var(--sp-4) var(--sp-5) var(--sp-6);gap:var(--sp-3);line-height:var(--lh-body);align-content:start;display:grid}.trpg-window[data-layout=narrow] .lib-dbody{padding:var(--sp-4) var(--sp-4) var(--sp-6)}.lib-dbody p{margin:0}.lib-dbody h3{margin:var(--sp-2) 0 0;font-size:var(--fs-md);font-weight:var(--fw-semibold)}.lib-srcline{color:var(--text3);font-size:var(--fs-xs)}.lib-sumline{gap:2px var(--sp-4);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.lib-sumline b{color:var(--text);font-weight:var(--fw-semibold)}.lib-block{gap:var(--sp-1);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk);display:grid}.lib-rtable{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}.lib-rtable th,.lib-rtable td{border:var(--border) solid var(--line);text-align:left;vertical-align:top;padding:6px 10px}.lib-rtable th{background:var(--bg-sunk);white-space:nowrap}.lib-tablewrap{overflow:auto}.lib-list-ul{gap:var(--sp-1);margin:0;padding-left:1.4em;display:grid}.lib-quote{padding-left:var(--sp-3);border-left:3px solid var(--line-ctrl);color:var(--text2);margin:0}.lib-inset{padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk);gap:var(--sp-2);display:grid}.lib-dice{color:var(--primary-text);font:inherit;line-height:inherit;text-underline-offset:3px;white-space:nowrap;cursor:pointer;background:0 0;border:0;padding:0;text-decoration:underline;text-decoration-thickness:1px;display:inline}.lib-dice:hover{text-decoration-thickness:2px}.lib-fold{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--bg-sunk)}.lib-fold>summary{align-items:center;gap:var(--sp-2);min-height:40px;padding:0 var(--sp-3);cursor:pointer;list-style:none;display:flex}.lib-fold__body{padding:0 var(--sp-3) var(--sp-3);font-size:var(--fs-sm);overflow:auto}.lib-headsw{flex:none;align-items:center;gap:6px;display:inline-flex}.lib-sortbar{align-items:center;gap:var(--sp-2);padding:0 var(--sp-4) var(--sp-2);font-size:var(--fs-sm);color:var(--text2);flex-wrap:wrap;display:flex}.lib-table{border-collapse:separate;border-spacing:0;width:100%;font-size:var(--fs-sm)}.lib-table th{z-index:2;text-align:left;white-space:nowrap;font-weight:var(--fw-semibold);color:var(--text2);background:var(--bg-sunk);border-bottom:var(--border) solid var(--line);padding:0 10px;position:sticky;top:0}.lib-th{min-height:36px;color:var(--text);font:inherit;font-weight:var(--fw-semibold);cursor:pointer;background:0 0;border:0;align-items:center;gap:2px;padding:0;display:inline-flex}.lib-table td{white-space:nowrap;border-bottom:var(--border) solid var(--line);background:var(--surface);padding:8px 10px}.lib-table tbody tr{cursor:pointer}.lib-table tbody tr:hover td{background:var(--bg-hover)}.lib-table td.lib-name{font-weight:var(--fw-semibold);text-overflow:ellipsis;max-width:220px;overflow:hidden}.lib-table tr[data-off=true] td{color:var(--text3)}.lib-table th:first-child,.lib-table td:first-child{z-index:1;position:sticky;left:0}.lib-table th:first-child{z-index:3}.trpg-window[data-layout=narrow] .lib-table td{padding:12px 10px}.lib-sortable{opacity:.35}.lib-fold--bar{margin:0 var(--sp-4) var(--sp-2)}.lib-fold--bar>summary small{color:var(--text2);font-weight:var(--fw-regular)}.lib-fold--bar .lib-fold__body{gap:var(--sp-2);max-height:220px;display:grid}.lib-dlcard{gap:var(--sp-2);margin-top:var(--sp-3);padding:var(--sp-4);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.lib-dlcard__top{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-title{font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.lib-rbar{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);border-bottom:var(--border) solid var(--line);background:var(--bg-sunk);flex:none;display:flex}.lib-read{flex:1;grid-template-columns:1fr;min-height:0;display:grid}.lib-read[data-toc=true]{grid-template-columns:200px 1fr}.trpg-window[data-layout=narrow] .lib-read[data-toc=true]{grid-template-columns:1fr}.trpg-window[data-layout=narrow] .lib-read[data-toc=true] main{display:none}.lib-read>aside{border-right:var(--border) solid var(--line);background:var(--bg-sunk);overflow:auto}.lib-toc{align-content:start;display:grid}.lib-toc summary{padding:var(--sp-2) var(--sp-3);font-weight:var(--fw-semibold);cursor:pointer}.lib-toc details>button{width:100%}.lib-toc .lib-toc__section[data-depth=true]{padding-inline-start:var(--sp-5)}.lib-toc__chapter{align-items:center;gap:var(--sp-1);width:100%;min-width:0;min-height:40px;padding:0 var(--sp-3);color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;background:0 0;border:0;border-left:3px solid #0000;display:flex}.lib-toc__chapter span{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.lib-toc__chapter:hover{background:var(--bg-hover)}.lib-toc__chapter[aria-current=true]{border-left-color:var(--primary);background:var(--primary-tint)}.lib-toc__sections{grid-template-rows:1fr;display:grid}.lib-toc__inner{min-height:0;display:grid;overflow:hidden}.lib-toc-drop-enter-active,.lib-toc-drop-leave-active{transition:grid-template-rows var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out)}.lib-toc-drop-enter-from,.lib-toc-drop-leave-to{opacity:0;grid-template-rows:0fr}.lib-toc__caret{transition:transform var(--dur-base) var(--ease-out);flex:none}.lib-toc__chapter[aria-expanded=true] .lib-toc__caret{transform:rotate(90deg)}@media (prefers-reduced-motion:reduce){.lib-toc-drop-enter-active,.lib-toc-drop-leave-active,.lib-toc__caret{transition:none}}[data-reader-current]{background:var(--primary-tint)}.lib-author-block{overflow-wrap:anywhere;min-width:0;display:flow-root}.lib-author-block table{border-collapse:collapse;width:100%}.lib-author-block table.ve-rd__table th,.lib-author-block table.ve-rd__table td{border:var(--border) solid var(--line);padding:var(--sp-2)}.lib-roll-outcome{margin-block:var(--sp-2)}.lib-toc button{min-height:40px;padding:0 var(--sp-3);text-align:left;color:var(--text);font:inherit;cursor:pointer;background:0 0;border:0;border-left:3px solid #0000;align-items:center;display:flex}.lib-toc button[aria-current=true]{border-left-color:var(--primary);background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-sec-block{gap:var(--sp-3);display:grid}.lib-stat{display:grid}.lib-stat>div{gap:var(--sp-3);border-bottom:1px dotted var(--line);font-size:var(--fs-sm);grid-template-columns:72px 1fr;padding:5px 0;display:grid}.lib-stat>div>span:first-child{color:var(--text2)}.lib-abil{gap:var(--sp-2);text-align:center;padding:var(--sp-2) 0;grid-template-columns:repeat(6,1fr);display:grid}.trpg-window[data-layout=narrow] .lib-abil{grid-template-columns:repeat(3,1fr)}.lib-abil>div{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);font-size:var(--fs-sm);padding:4px 2px}.lib-abil small{color:var(--text2);font-size:var(--fs-xs);display:block}.lib-rtable tr[data-hit=true] td{background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-rolltable{gap:var(--sp-2);display:grid}.lib-numbox{align-items:center;gap:var(--sp-2);display:inline-flex}.lib-versions{gap:var(--sp-2);display:grid}.lib-alt-row{justify-content:space-between;align-items:center;gap:var(--sp-3);min-height:36px;display:flex}.lib-versions__head{align-items:center;gap:var(--sp-3);flex-wrap:wrap;display:flex}.lib-alt-pick{width:100%;padding:var(--sp-2) var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);font:inherit;text-align:left;cursor:pointer;justify-content:flex-start;min-height:44px}.lib-alt-pick[data-on=true]{border-color:var(--primary);background:var(--primary-tint)}.lib-alt-pick:focus-visible{outline:2px solid var(--focus,var(--primary));outline-offset:2px}.lib-alt-pick__dot{border:2px solid var(--line-ctrl);background:0 0;border-radius:50%;flex:none;width:14px;height:14px}.lib-alt-pick[data-on=true] .lib-alt-pick__dot{border-color:var(--primary);background:radial-gradient(circle, var(--primary) 45%, transparent 50%)}.lib-alt-pick__name{overflow-wrap:anywhere;min-width:0}.lib-variants{gap:var(--sp-1) var(--sp-3);flex-wrap:wrap;display:flex}.lib-table tbody tr:not(.lib-spacer){height:var(--lib-row-h,44px)}.lib-table tr.lib-spacer,.lib-table tr.lib-spacer td{cursor:default;background:0 0;border:0;padding:0}.lib-list__row{height:var(--lib-row-h,44px);box-sizing:border-box}.lib-table td{box-sizing:border-box;text-overflow:ellipsis;overflow:hidden}.lib-pad{padding:var(--sp-4) var(--sp-5) 72px;gap:var(--sp-3);align-content:start;display:grid}.trpg-window[data-layout=narrow] .lib-pad{padding:var(--sp-4) var(--sp-4) 72px}.lib-pad .trpg-check,.lib-fold__body .trpg-check{border-bottom:var(--border) solid var(--line);align-items:center;width:100%;min-height:40px;display:flex}.lib-img{margin:var(--sp-2) 0;gap:var(--sp-1);display:grid}.lib-img__open{align-items:center;gap:var(--sp-2);color:inherit;font:inherit;cursor:pointer;background:0 0;border:0;justify-self:start;padding:2px 0;display:inline-flex}.lib-img__open .lib-img__label{text-underline-offset:4px;font-family:var(--font-serif);font-weight:var(--fw-semibold);-webkit-text-decoration:underline dotted;text-decoration:underline dotted}.lib-img__pic{border-radius:var(--r-md);max-width:100%;height:auto;display:block}.lib-img__err{align-items:center;gap:var(--sp-2);margin:0;display:flex}.lib-gallery{gap:var(--sp-3);grid-template-columns:repeat(auto-fill,minmax(160px,1fr));display:grid}.lib-hr{border:0;border-top:var(--border) solid var(--line);margin:var(--sp-3) 0}.lib-bar{background:var(--line);vertical-align:middle;border-radius:3px;flex:none;width:96px;height:6px;display:inline-block;position:relative;overflow:hidden}.lib-bar>i{background:var(--primary);transition:width var(--dur-base) var(--ease-std);border-radius:3px;position:absolute;top:0;bottom:0;left:0}.lib-bar[data-indet=true]>i{width:36%;animation:1.2s ease-in-out infinite alternate lib-bar-slide}@keyframes lib-bar-slide{0%{left:0}to{left:64%}}.lib-dling{align-items:center;gap:var(--sp-2);display:inline-flex}.lib-banner>.lib-bar{margin-left:auto}@media (prefers-reduced-motion:reduce){.lib-bar[data-indet=true]>i{animation:none;left:32%}}.trpg-shelf__row{content-visibility:auto;contain-intrinsic-size:auto 48px}.lib-ability{text-align:center;font-weight:var(--fw-semibold);margin:var(--sp-2) 0}.lib-embedded{margin:var(--sp-3) 0;border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);overflow:hidden}.lib-embedded__head{align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-3) var(--sp-1) var(--sp-1);background:var(--primary-tint);border-bottom:var(--border) solid var(--line);font-family:var(--font-serif);display:flex}.lib-embedded__head small{font-family:var(--font-sans,inherit);margin-left:auto}.lib-embedded[data-fluff=true] .lib-embedded__head{background:var(--bg)}.lib-embedded>div,.lib-embedded__body{padding:var(--sp-2) var(--sp-3)}.lib-embedded .lib-embedded__body{padding:0}.lib-embedded h4{margin:var(--sp-2) 0 var(--sp-1);font-size:var(--fs-md,1rem)}.lib-inline{display:inline}.lib-filter--top{z-index:3;padding:var(--sp-3) 0 var(--sp-2);background:var(--bg);position:sticky;top:0}.lib-dlsec{gap:var(--sp-2);min-width:0;margin-top:var(--sp-4);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.lib-dlsec__head{align-items:center;gap:var(--sp-2) var(--sp-3);flex-wrap:wrap;min-width:0;display:flex}.lib-dlsec__head .lib-title{flex:1 0 auto}.lib-dlsec__tools{gap:var(--sp-2);flex-wrap:wrap;flex:280px;justify-content:flex-end;align-items:center;min-width:0;display:flex}.lib-dlsec__tools .trpg-input{flex:auto;min-width:0;max-width:320px}.trpg-window[data-layout=wide] .lib-dlsec__tools{flex-wrap:nowrap}.lib-dlsec__tools .trpg-btn{white-space:nowrap;flex:none}.lib-dlsec__bar{align-items:center;gap:var(--sp-2);flex-wrap:wrap;display:flex}.lib-dlsec__bar .lib-banner{flex:100%}.lib-dlsec__list{min-width:0}.lib-dlsec__empty{padding:var(--sp-2) 0;margin:0}.lib-dlgrp{border-top:var(--border) solid var(--line);min-width:0}.lib-dlgrp:first-child{border-top:0}.lib-dlgrp__sum{align-items:center;gap:var(--sp-2);min-height:var(--hit);display:flex}.lib-dlgrp__btn{align-items:center;gap:var(--sp-1);min-height:var(--hit);color:var(--text);font:inherit;font-weight:var(--fw-semibold);text-align:left;cursor:pointer;background:0 0;border:0;flex:1;padding:0;display:inline-flex}.lib-dlgrp__btn small{margin-left:var(--sp-2);color:var(--text3);font-weight:var(--fw-regular)}.lib-dlgrp__rows{min-width:0;margin:0 0 var(--sp-2)}.lib-dlgrp__rows .trpg-row{gap:var(--sp-2)}.lib-dlgrp__rows .trpg-row[data-selected=true]{background:var(--primary-tint)}.lib-selbar{z-index:2;align-items:center;gap:var(--sp-2);min-width:0;padding:var(--sp-2) var(--sp-3);margin:0 calc(-1 * var(--sp-3)) calc(-1 * var(--sp-3));border-top:var(--border) solid var(--line);background:var(--surface);box-shadow:0 -4px 10px color-mix(in srgb, var(--text) 8%, transparent);border-radius:0 0 var(--r-md) var(--r-md);flex-wrap:wrap;display:flex;position:sticky;bottom:0}.lib-selbar .lib-end{justify-content:flex-end;gap:var(--sp-2);flex-wrap:wrap;flex:auto;min-width:0;display:inline-flex}.lib-selbar>.lib-muted{min-width:0}.lib-selbar{padding-right:calc(var(--sp-3) + 64px)}.lib-scroll:has(.lib-selbar){padding-bottom:0}.lib-scroll:has(.lib-selbar) .lib-dlsec{padding-bottom:var(--sp-3)}.trpg-window[data-layout=narrow] .lib-dlsec__head .lib-title{flex:100%}.trpg-window[data-layout=narrow] .lib-dlsec__tools{flex:100%;justify-content:flex-start}.trpg-window[data-layout=narrow] .lib-dlsec__tools .trpg-input{flex:100%;max-width:none}.trpg-window[data-layout=narrow] .lib-dlsec__tools .trpg-btn{flex:0 auto}.trpg-window[data-layout=narrow] .lib-selbar .lib-end{flex:100%;justify-content:flex-start}.trpg-window[data-layout=narrow] .lib-selbar .lib-end .trpg-btn{flex:120px}.trpg-window[data-layout=narrow] .lib-scroll:has(.lib-selbar){padding-bottom:0}.lib-langsw{border:var(--border) solid var(--line);border-radius:var(--r-pill);background:var(--surface);box-shadow:inset 0 1px 3px color-mix(in srgb, var(--text) 12%, transparent);flex:none;padding:2px;display:inline-flex}.lib-langsw__btn{min-width:44px;min-height:28px;padding:0 var(--sp-3);border-radius:var(--r-pill);color:var(--text2);font:inherit;font-size:var(--fs-sm);font-weight:var(--fw-semibold);cursor:pointer;transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0}.lib-langsw__btn:hover:not(:disabled):not([aria-pressed=true]){background:var(--bg-hover);color:var(--text)}.lib-langsw__btn[aria-pressed=true]{background:var(--primary);color:var(--on-primary);cursor:default}.lib-langsw__btn:disabled{opacity:.4;cursor:not-allowed}.lib-langsw__btn:focus-visible{outline:2px solid var(--focus,var(--primary));outline-offset:1px}.lib-deadlink{-webkit-text-decoration:underline dashed var(--text3);text-decoration:underline dashed var(--text3);text-underline-offset:3px;cursor:help;color:var(--text2)}.lib-deadlink__q{color:var(--text3);margin-left:1px;font-size:.7em}.lib-author-table table{border-collapse:collapse;width:100%;font-size:var(--fs-sm)}.lib-author-table th,.lib-author-table td{border:var(--border) solid var(--line);text-align:left;vertical-align:top;padding:6px 10px}.lib-author-table th{background:var(--bg-sunk)}.lib-author-table caption{color:var(--text2);font-size:var(--fs-sm);text-align:left;padding-bottom:var(--sp-1)}.lib-author-table tr[data-hit=true] td{background:var(--primary-tint);font-weight:var(--fw-semibold)}.lib-rolltable__bar{margin-bottom:var(--sp-1);justify-content:flex-end;display:flex}.trpg-shelf__row .trpg-check.lib-rowpick{flex:none}.lib-errdetail{padding:var(--sp-3);border-radius:var(--r-sm);background:var(--bg-sunk);font-size:var(--fs-xs);white-space:pre-wrap;overflow-wrap:anywhere;-webkit-user-select:text;user-select:text;max-height:50vh;margin:0;overflow:auto}.lib-draftlist{margin:calc(-1 * var(--sp-2)) 0 var(--sp-3);padding:var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--surface);gap:2px;display:grid}.lib-draftlist__row{align-items:center;gap:var(--sp-2);min-height:40px;display:flex}.lib-draftlist__name{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.lib-draftlist__foot{padding-top:var(--sp-1);border-top:var(--border) solid var(--line);justify-content:flex-end;display:flex}", TEe = ".trpg-hero,.trpg-banner{gap:var(--sp-1);width:100%;min-height:168px;padding:var(--sp-6);border-radius:var(--r-lg);background:var(--hero-bg);color:var(--hero-ink);text-align:left;box-shadow:var(--shadow-2);transition:box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);border:0;align-content:end;display:grid;position:relative;overflow:hidden}button.trpg-hero:hover:not(:disabled){box-shadow:var(--shadow-3);transform:translateY(-1px)}button.trpg-hero:active:not(:disabled){transform:none}.trpg-window[data-layout=narrow] .trpg-hero,.trpg-window[data-layout=narrow] .trpg-banner{min-height:140px;padding:var(--sp-5) var(--sp-4)}.trpg-hero--idle{background:var(--bg-side);color:var(--text);box-shadow:none}.trpg-hero--idle .trpg-hero__sub{color:var(--text2)}.trpg-hero--off{opacity:.55;cursor:not-allowed;box-shadow:none}.trpg-hero__art{pointer-events:none;width:100%;height:100%;position:absolute;inset:0}.trpg-hero__art .far{fill:color-mix(in srgb, var(--hero-ink) 9%, var(--hero-bg))}.trpg-hero__art .mid{fill:color-mix(in srgb, var(--hero-ink) 14%, var(--hero-bg))}.trpg-hero__art .near{fill:color-mix(in srgb, var(--hero-ink) 20%, var(--hero-bg))}.trpg-hero__art .castle{fill:color-mix(in srgb, var(--hero-ink) 28%, var(--hero-bg))}.trpg-hero__art .lit,.trpg-hero__art .moon{fill:var(--accent)}.trpg-hero__art .moon{opacity:.85}.trpg-hero__title,.trpg-hero__sub,.trpg-hero__go,.trpg-banner__title,.trpg-banner__line,.trpg-banner__go{position:relative}.trpg-hero__title,.trpg-banner__title{font-size:var(--fs-3xl);font-weight:var(--fw-bold);line-height:var(--lh-tight);overflow-wrap:anywhere}.trpg-window[data-layout=narrow] .trpg-hero__title,.trpg-window[data-layout=narrow] .trpg-banner__title{font-size:var(--fs-2xl)}.trpg-hero__sub{color:var(--hero-ink2);max-width:30em}.trpg-hero__go{margin-top:var(--sp-3);justify-self:start;align-items:center;gap:var(--sp-2);padding:7px var(--sp-4);border-radius:var(--r-sm);background:var(--primary-hover);color:var(--on-primary);font-weight:var(--fw-semibold);display:inline-flex}.trpg-banner{align-content:space-between;gap:var(--sp-3)}.trpg-banner__main{gap:var(--sp-1);color:inherit;text-align:left;background:0 0;border:0;padding:0;display:grid;position:relative}.trpg-banner__main:focus-visible{box-shadow:0 0 0 2px var(--hero-bg), 0 0 0 4px var(--accent)}.trpg-banner__foot{justify-content:space-between;align-items:center;gap:var(--sp-3);display:flex;position:relative}.trpg-banner__new{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:0 var(--sp-4);border-radius:var(--r-sm);background:var(--primary-hover);color:var(--on-primary);font-weight:var(--fw-semibold);transition:background var(--dur-fast) var(--ease-std);border:0;display:inline-flex}.trpg-banner__new:hover:not(:disabled){background:var(--primary)}.trpg-banner__new:disabled{background:var(--line);color:var(--text2);cursor:not-allowed}.trpg-banner__line{gap:var(--sp-1) var(--sp-4);color:var(--hero-ink2);flex-wrap:wrap;display:flex}.trpg-banner__state[data-dirty=true]{color:var(--accent);font-weight:var(--fw-semibold)}.trpg-banner__go{font-size:var(--fs-sm);color:var(--hero-ink2);background:0 0;border:0;align-items:center;gap:2px;padding:0;display:inline-flex}.trpg-linkcard{gap:var(--sp-3);width:100%;min-height:var(--hit-touch);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);text-align:left;box-shadow:var(--shadow-1);transition:border-color var(--dur-fast) var(--ease-std), background var(--dur-fast) var(--ease-std);grid-template-columns:auto 1fr auto;align-items:center;display:grid}.trpg-linkcard:hover{background:var(--bg-hover);border-color:var(--line-ctrl)}.trpg-linkcard__icon{border-radius:var(--r-sm);background:var(--primary-tint);width:36px;height:36px;color:var(--primary-text);place-items:center;display:grid}.trpg-linkcard__text{display:grid}.trpg-linkcard__text b{font-weight:var(--fw-semibold)}.trpg-linkcard__text small{color:var(--text2);font-size:var(--fs-xs)}.trpg-linkcard__go{color:var(--text2);font-size:var(--fs-sm);white-space:nowrap;align-items:center;gap:2px;display:inline-flex}.trpg-modal[data-variant=dialog] .trpg-modal__page:has(.trpg-wizard){overflow:hidden}.trpg-wizard{flex-direction:column;flex:1;min-height:0;display:flex}.trpg-steps{margin:0 0 var(--sp-4);gap:var(--sp-2);grid-template-columns:repeat(4,1fr);display:grid}.trpg-steps li{border-bottom:3px solid var(--line);color:var(--text2);align-items:center;display:flex}.trpg-steps li[data-state=done]{border-color:var(--primary-tint-line);color:var(--text)}.trpg-steps li[data-state=current]{border-color:var(--primary);color:var(--text);font-weight:var(--fw-semibold)}.trpg-steps button{align-items:center;gap:var(--sp-2);width:100%;min-height:var(--hit);padding:var(--sp-1) 0;color:inherit;text-align:left;font-weight:inherit;background:0 0;border:0;display:flex}.trpg-steps button:disabled{cursor:default}.trpg-steps li[data-state=done] button:not(:disabled):hover .trpg-steps__n{background:var(--primary-tint-line)}.trpg-steps__n{border:var(--border-strong) solid currentColor;width:22px;height:22px;font-size:var(--fs-xs);border-radius:50%;flex:none;place-items:center;display:grid}.trpg-steps li[data-state=current] .trpg-steps__n{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.trpg-steps li[data-state=done] .trpg-steps__n{background:var(--primary-tint);border-color:var(--primary-tint-line);color:var(--primary-text)}.trpg-steps__compact{margin:0 0 var(--sp-2);font-weight:var(--fw-semibold);display:none}.trpg-window[data-layout=narrow] .trpg-steps{display:none}.trpg-window[data-layout=narrow] .trpg-steps__compact{display:block}.trpg-wizard__title{margin:0 0 var(--sp-3);font-size:var(--fs-xl);font-weight:var(--fw-semibold)}.trpg-wizard__filters{align-items:center;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-3);flex-wrap:wrap;display:flex}.trpg-wizard__filters .trpg-input{flex:160px;min-width:0}.trpg-wizard__picked{margin:var(--sp-3) 0 0;font-weight:var(--fw-semibold);flex:none}.trpg-wizard__body{flex-direction:column;flex:1;min-height:0;display:flex;overflow:auto}.trpg-wizard__foot{justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-4);margin-top:var(--sp-3);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-window[data-layout=narrow] .trpg-wizard__foot{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-wizard__foot .trpg-btn{width:100%}.trpg-rulecard{gap:var(--sp-3);padding:var(--sp-4);border:2px solid var(--primary);border-radius:var(--r-md);background:var(--primary-tint);cursor:pointer;display:flex}.trpg-rulecard[aria-disabled=true]{border-color:var(--line);background:var(--surface);opacity:.6;cursor:default}.trpg-rulecard__mark{color:var(--primary-text);line-height:1.5}.trpg-rulecard__body{gap:var(--sp-1);justify-items:start;display:grid}.trpg-field--grow{flex-direction:column;flex:1;min-height:0;margin-bottom:0;display:flex}.trpg-shelf{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-md);background:var(--surface);flex:1;align-content:start;min-height:180px;overflow:auto}.trpg-shelf__group{border-bottom:var(--border) solid var(--line)}.trpg-shelf__group:last-child{border-bottom:0}.trpg-shelf__sum{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:var(--sp-1) var(--sp-3);font-weight:var(--fw-semibold);background:var(--bg-sunk);cursor:pointer;list-style:none;display:flex}.trpg-shelf__sum::-webkit-details-marker{display:none}.trpg-shelf__group:not([open]) .trpg-shelf__chev-open,.trpg-shelf__group[open] .trpg-shelf__chev-closed{display:none}.trpg-shelf__sum small{font-weight:var(--fw-regular);color:var(--text2);margin-left:auto}.trpg-shelf__row{align-items:center;gap:var(--sp-3);min-height:40px;padding:0 var(--sp-3);border-top:var(--border) solid var(--line);transition:background var(--dur-fast) var(--ease-std);display:flex}.trpg-shelf__row:hover{background:var(--bg-hover)}.trpg-shelf__row small{color:var(--text2);white-space:nowrap;margin-left:auto}.trpg-shelf__row .trpg-check{flex:1;min-width:0}.trpg-summary{gap:var(--sp-1);margin-top:var(--sp-4);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);background:var(--bg-sunk);border:var(--border) solid var(--line);display:grid}.trpg-summary b{font-size:var(--fs-lg);font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-drawer{gap:var(--sp-3);flex-direction:column;flex:1;min-height:0;display:flex;position:relative}.trpg-drawer__current{gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border:var(--border) solid var(--primary-tint-line);border-radius:var(--r-md);background:var(--primary-tint);display:grid}.trpg-drawer__title{font-weight:var(--fw-semibold);font-size:var(--fs-lg);overflow-wrap:anywhere}.trpg-drawer__buttons{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.trpg-drawer__body{gap:var(--sp-2);flex:1;align-content:start;min-height:0;display:grid;overflow:auto}.trpg-drawer__bottom{gap:var(--sp-2);padding-top:var(--sp-3);border-top:var(--border) solid var(--line);flex:none;display:flex}.trpg-drawer__bottom--confirm{justify-content:flex-end}.trpg-window[data-layout=narrow] .trpg-drawer__bottom--confirm{flex-direction:column-reverse}.trpg-window[data-layout=narrow] .trpg-drawer__bottom--confirm .trpg-btn{width:100%}.trpg-drawer[data-dragging=true]:after{content:\"松开以导入\";z-index:5;border:2px dashed var(--primary);border-radius:var(--r-md);background:color-mix(in srgb, var(--bg) 88%, transparent);color:var(--primary-text);font-weight:var(--fw-semibold);place-items:center;display:grid;position:absolute;inset:0}.trpg-camp{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);box-shadow:var(--shadow-1)}.trpg-camp>summary{gap:var(--sp-2);padding:var(--sp-3);cursor:pointer;grid-template-columns:auto 1fr auto;align-items:center;list-style:none;display:grid}.trpg-camp>summary::-webkit-details-marker{display:none}.trpg-camp:not([open]) .trpg-camp__chev-open,.trpg-camp[open] .trpg-camp__chev-closed{display:none}.trpg-camp__name{font-weight:var(--fw-semibold);font-size:var(--fs-lg);overflow-wrap:anywhere;min-width:0;display:grid}.trpg-camp__name small{font-weight:var(--fw-regular);font-size:var(--fs-xs);color:var(--text2)}.trpg-saves{padding:0 var(--sp-2) var(--sp-2);gap:4px;margin:0;list-style:none;display:grid}.trpg-saves li{align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);border:2px solid #0000;display:flex}.trpg-saves li[data-current=true]{border-color:var(--primary);background:var(--primary-tint)}.trpg-saves__main{flex:1;min-width:0;display:grid}.trpg-saves__top{gap:var(--sp-2);flex-wrap:wrap;align-items:center;display:flex}.trpg-saves__top b{font-weight:var(--fw-semibold);overflow-wrap:anywhere}.trpg-saves__meta{font-size:var(--fs-xs);color:var(--text2);overflow-wrap:anywhere}.trpg-saves__end{align-items:center;gap:var(--sp-1);flex:none;display:flex}.trpg-saves__rename{flex:1;min-width:0;min-height:32px}.trpg-saves__renamerow{align-items:center;gap:var(--sp-1);min-width:0;display:flex}.trpg-saves__renamebtns{flex:none;gap:2px;display:inline-flex}.trpg-saves__noteedit{gap:var(--sp-2);margin-top:var(--sp-1);display:grid}.trpg-saves__noteactions{justify-content:flex-end;gap:var(--sp-2);display:flex}.trpg-fold{border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface)}.trpg-fold>summary{align-items:center;gap:var(--sp-2);min-height:var(--hit);padding:var(--sp-1) var(--sp-3);font-weight:var(--fw-semibold);cursor:pointer;list-style:none;display:flex}.trpg-fold>summary::-webkit-details-marker{display:none}.trpg-fold:not([open]) .trpg-fold__chev-open,.trpg-fold[open] .trpg-fold__chev-closed{display:none}.trpg-fold>summary small{font-weight:var(--fw-regular);color:var(--text2);margin-left:auto}.trpg-fold__actions{gap:var(--sp-2);padding:var(--sp-1) var(--sp-3) var(--sp-3);flex-wrap:wrap;display:flex}.trpg-checks{gap:var(--sp-2);display:grid}.trpg-checks>div{gap:var(--sp-1);padding:var(--sp-3);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);display:grid}.trpg-checks>div[data-kind=block]{border:2px solid var(--danger-line)}.trpg-checks b{gap:var(--sp-2);font-weight:var(--fw-semibold);align-items:center;display:flex}.trpg-checks .trpg-check{min-height:32px}.trpg-menu{display:grid}.trpg-menu__row{gap:2px var(--sp-3);width:100%;min-height:60px;padding:var(--sp-3) var(--sp-5);border:0;border-bottom:var(--border) solid var(--line);color:var(--text);text-align:left;transition:background var(--dur-fast) var(--ease-std);background:0 0;border-radius:0;grid-template-columns:1fr auto;align-items:center;display:grid}.trpg-window[data-layout=narrow] .trpg-menu__row{min-height:68px;padding:var(--sp-3) var(--sp-4)}.trpg-menu__row:last-child{border-bottom:0}.trpg-menu__row:hover{background:var(--bg-hover)}.trpg-menu__row b{font-weight:var(--fw-semibold)}.trpg-menu__row small{color:var(--text2);grid-column:1}.trpg-menu__row>span{color:var(--text2);grid-area:1/2/span 2;display:grid}.trpg-back{min-height:var(--hit-touch);padding:0 var(--sp-5);color:var(--primary-text);font-weight:var(--fw-semibold);background:0 0;border:0;align-items:center;gap:2px;display:inline-flex}.trpg-pagehead{padding:0 var(--sp-5) var(--sp-2);font-size:var(--fs-xl);font-weight:var(--fw-semibold)}.trpg-settings{display:grid}.trpg-settings__row{gap:4px var(--sp-4);padding:var(--sp-4) var(--sp-5);border-bottom:var(--border) solid var(--line);grid-template-columns:1fr auto;align-items:center;display:grid}.trpg-settings__row:last-child{border-bottom:0}.trpg-settings__row .trpg-field__hint{grid-column:1}.trpg-window[data-layout=narrow] .trpg-settings__row{padding:var(--sp-4);grid-template-columns:1fr}.trpg-window[data-layout=narrow] .trpg-settings__row>.trpg-stepper,.trpg-window[data-layout=narrow] .trpg-settings__row>.trpg-ctrl{justify-self:start}.trpg-diag,.trpg-about{padding:0 var(--sp-5)}.trpg-window[data-layout=narrow] .trpg-diag,.trpg-window[data-layout=narrow] .trpg-about{padding:0 var(--sp-4)}.probe{padding:var(--sp-3) 0;border-bottom:var(--border) solid var(--line)}.probe__head{justify-content:space-between;align-items:center;gap:var(--sp-2);display:flex}.probe__title{font-size:var(--fs-lg);font-weight:var(--fw-semibold)}.probe__hint{margin:var(--sp-1) 0;color:var(--text2);font-size:var(--fs-sm)}.probe__summary{margin:var(--sp-1) 0}.probe__actions{gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap;display:flex}.probe pre{max-height:200px;margin:var(--sp-2) 0 0;padding:var(--sp-2);background:var(--surface);border:var(--border) solid var(--line);border-radius:var(--r-sm);font-size:var(--fs-xs);white-space:pre-wrap;word-break:break-all;overflow:auto}.probe summary{cursor:pointer;color:var(--text2);font-size:var(--fs-sm)}.report-bar{gap:var(--sp-2);padding:var(--sp-3) 0;flex-wrap:wrap;align-items:center;display:flex}.trpg-import__ok{color:var(--success-text);font-weight:var(--fw-semibold)}", EEe = ".pp{flex-direction:column;min-height:100%;display:flex}.pp-top{justify-content:space-between;align-items:center;gap:var(--sp-3);padding:var(--sp-4) var(--sp-5) var(--sp-2);flex-wrap:wrap;display:flex}.trpg-window[data-layout=narrow] .pp-top{padding:var(--sp-3) var(--sp-4) var(--sp-2)}.pp-tabs{border:var(--border) solid var(--line-ctrl);border-radius:var(--r-sm);background:var(--bg-sunk);display:inline-flex;overflow:hidden}.pp-tabs button{min-height:34px;padding:0 var(--sp-4);color:var(--text);align-items:center;gap:var(--sp-1);background:0 0;border:0;display:inline-flex}.pp-tabs button+button{border-left:var(--border) solid var(--line-ctrl)}.pp-tabs button small{color:var(--text2);font-size:var(--fs-xs)}.pp-tabs button:hover:not([aria-pressed=true]){background:var(--bg-hover)}.pp-tabs button[aria-pressed=true]{background:var(--primary);color:var(--on-primary);font-weight:var(--fw-semibold)}.pp-tabs button[aria-pressed=true] small{color:inherit;opacity:.85}.trpg-window[data-layout=narrow] .pp-tabs{width:100%}.trpg-window[data-layout=narrow] .pp-tabs button{padding:0 var(--sp-2);min-height:var(--hit-touch);flex:1;justify-content:center}.pp-title{align-items:center;gap:var(--sp-2);font-size:var(--fs-lg);display:flex}.pp-tools{align-items:center;gap:var(--sp-2);margin-left:auto;display:flex}.pp-search{align-items:center;gap:var(--sp-2);margin:0 var(--sp-5) var(--sp-3);color:var(--text2);display:flex;position:relative}.trpg-window[data-layout=narrow] .pp-search{margin:0 var(--sp-4) var(--sp-3)}.pp-search svg{left:var(--sp-3);pointer-events:none;position:absolute}.pp-search .trpg-input{padding-left:34px}.pp-error,.pp-note{align-items:center;gap:var(--sp-2);margin:0 var(--sp-5) var(--sp-3);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);background:var(--warn-bg);color:var(--text);font-size:var(--fs-sm);display:flex}.pp-error{border:var(--border) solid var(--danger-line);color:var(--danger-text);background:var(--danger-bg)}.pp-error .trpg-btn{margin-left:auto}.pp-strip{padding:var(--sp-1) var(--sp-5);background:var(--bg-side);border-block:var(--border) solid var(--line);color:var(--text2);font-size:var(--fs-sm);font-weight:var(--fw-semibold);justify-content:space-between;display:flex}.pp-strip small{margin-left:var(--sp-2);font-weight:var(--fw-regular)}.pp-strip span:last-child{text-align:center;width:150px;margin-right:96px}.trpg-window[data-layout=narrow] .pp-strip{padding-inline:var(--sp-4)}.trpg-window[data-layout=narrow] .pp-strip span:last-child{display:none}.pp-list{background:var(--surface);margin:0;padding:0;list-style:none}.pp-row{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);border-bottom:var(--border) solid var(--line);grid-template-columns:44px minmax(0,1fr) 150px auto;display:grid;position:relative}.pp-row[data-selecting]{cursor:pointer}.pp-row[data-selected]{background:var(--primary-tint);box-shadow:inset 3px 0 0 var(--accent)}.trpg-window[data-layout=narrow] .pp-row{padding:var(--sp-3) var(--sp-4);grid-template-columns:44px minmax(0,1fr) auto}.trpg-window[data-layout=narrow] .pp-hp{align-items:flex-start;gap:var(--sp-3);flex-direction:row;grid-area:2/2}.pp-avatar{border:var(--border) solid var(--line);border-radius:var(--r-sm);background:var(--bg-sunk);width:44px;height:44px;color:var(--text2);place-items:center;display:grid;overflow:hidden}.pp-avatar img{object-fit:cover;width:100%;height:100%}.pp-main{flex-direction:column;gap:2px;min-width:0;display:flex}.pp-name{align-items:center;gap:var(--sp-1);font-size:var(--fs-lg);display:flex}.pp-name b{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.pp-name svg{color:var(--accent-text);flex:none}.pp-facts{gap:0 var(--sp-3);color:var(--text2);font-size:var(--fs-sm);flex-wrap:wrap;display:flex}.pp-facts--small{font-size:var(--fs-xs)}.pp-tags{align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin-top:2px;display:flex}.pp-tag{align-items:center;gap:var(--sp-1);padding:0 var(--sp-2);border:var(--border) solid var(--line-ctrl);border-radius:var(--r-xs);background:var(--warn-bg);color:var(--text);font-size:var(--fs-xs);display:inline-flex}.pp-hp{flex-direction:column;align-items:center;gap:4px;display:flex}.pp-hp__num{font-size:var(--fs-md)}.pp-hp__num b{font-size:var(--fs-lg)}.pp-hp__num em{color:var(--accent-text);font-style:normal}.pp-hp__none{color:var(--text3)}.pp-bar{border-radius:var(--r-pill);background:var(--line);width:100%;min-width:80px;max-width:150px;height:6px;display:flex;overflow:hidden}.pp-bar>i{background:var(--success-text)}.pp-bar>i[data-low]{background:var(--accent)}.pp-bar>u{background:var(--accent-light,var(--accent))}.pp-act{align-items:center;gap:var(--sp-2);justify-content:flex-end;min-width:36px;display:flex}.pp-skel{grid-column:1/-1;height:44px}.pp-empty{padding:var(--sp-8) var(--sp-5);text-align:center;color:var(--text2);gap:var(--sp-2);flex-direction:column;align-items:center;display:flex}.pp-empty b{color:var(--text);font-size:var(--fs-lg)}.pp-selbar{align-items:center;gap:var(--sp-2);padding:var(--sp-3) 84px var(--sp-3) var(--sp-5);background:var(--bg-side);border-top:var(--border) solid var(--line-ctrl);z-index:2;margin-top:auto;display:flex;position:sticky;bottom:0}.pp-selbar__gap{flex:1}.pp-selbar__n{font-weight:var(--fw-semibold);margin-right:var(--sp-2)}.trpg-window[data-layout=narrow] .pp-selbar{padding:var(--sp-2) 76px var(--sp-2) var(--sp-3);flex-wrap:wrap}.tp{grid-template-rows:minmax(0,1fr) auto;grid-template-columns:minmax(240px,5fr) 7fr;height:100%;min-height:0;display:grid}.trpg-window[data-layout=narrow] .tp,.trpg-window[data-layout=mid] .tp{grid-template-columns:1fr}.tp-list{border-right:var(--border) solid var(--line);flex-direction:column;min-height:0;display:flex}.tp-card{min-height:0;overflow:auto}.tp-row[data-picked]{background:var(--primary-tint);box-shadow:inset 3px 0 0 var(--accent)}.tp-bar{align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);background:var(--bg-side);border-top:var(--border) solid var(--line-ctrl);flex-wrap:wrap;grid-column:1/-1;display:flex}.tp-gap{flex:1}.tp-lbl{color:var(--text2);font-size:var(--fs-sm)}.tp-added{align-items:center;gap:var(--sp-2);font-size:var(--fs-sm);display:inline-flex}.bp{flex-direction:column;height:100%;min-height:0;display:flex}.bp-form{gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);flex-direction:column;flex:1;display:flex}.bp-first-step{padding:var(--sp-2) 0;border-bottom:var(--border) solid var(--line)}.bp-first-step span{border-radius:var(--r-pill);background:var(--primary);color:var(--on-primary);padding:var(--sp-1) var(--sp-3);display:inline-flex}.bp-name{gap:var(--sp-2);flex-direction:column;display:flex}.bp-lbl{color:var(--text2)}.bp-form .trpg-seg{align-self:flex-start}.bp-error{color:var(--danger-text);font-size:var(--fs-sm)}.bp-first-footer{padding-top:var(--sp-3);justify-content:flex-end;margin-top:auto;display:flex}.bp-slot{background:var(--surface);flex:1;min-height:0;position:relative}.bp-hint{color:var(--text2);place-items:center;margin:0;display:grid;position:absolute;inset:0}.trpg-modal__page:has(.bp){padding:0;overflow:hidden}.trpg-modal:has(.bp) .trpg-page-leave-active{pointer-events:none}.trpg-window:not([data-layout=narrow]) .trpg-modal:has(.bp) .trpg-modal__card{width:min(880px,100%);height:min(680px,100%)}", DEe = ".trpg-root{z-index:100000;width:0;height:0;position:fixed;top:0;left:0}.trpg-ball{background:var(--primary);width:48px;height:48px;color:var(--on-primary);box-shadow:var(--shadow-2);cursor:grab;touch-action:none;transition:background var(--dur-fast) var(--ease-std);border:0;border-radius:50%;place-items:center;padding:0;display:grid;position:fixed}.trpg-ball:hover{background:var(--primary-hover)}.trpg-ball:active{background:var(--primary-pressed)}.trpg-window{background:var(--bg);border:var(--border) solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-3);color:var(--text);display:flex;position:fixed;overflow:hidden}.trpg-window[data-fullscreen=true]{border:0;border-radius:0;height:100dvh;inset:0}.trpg-shell{flex:1;min-width:0;min-height:0;display:flex}.trpg-window[data-layout=narrow] .trpg-shell{padding-top:env(safe-area-inset-top);background:var(--surface)}.trpg-side{z-index:5;width:var(--side-w);padding-bottom:var(--sp-2);background:var(--side);color:var(--side-ink);border-right:var(--border) solid var(--side-line);flex-direction:column;flex:none;display:flex;position:relative}.trpg-window[data-layout=mid] .trpg-side{width:56px}.trpg-side__brand{height:var(--head-h);align-items:center;gap:var(--sp-2);padding:0 var(--sp-4);font-weight:var(--fw-semibold);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;display:flex}.trpg-window[data-layout=mid] .trpg-side__brand{justify-content:center;padding:0}.trpg-brandmark{border-radius:var(--r-sm);background:var(--primary-hover);width:28px;height:28px;color:var(--on-primary);flex:none;place-items:center;display:grid}.trpg-side__list{padding:var(--sp-2);gap:2px;margin:0;display:grid}.trpg-side__list li{position:relative}.trpg-side__bottom{margin-top:auto}.trpg-nav{width:100%;min-height:var(--hit-touch);align-items:center;gap:var(--sp-3);padding:0 var(--sp-3);border-radius:var(--r-sm);color:var(--side-ink2);text-align:left;transition:background var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std);background:0 0;border:0;display:flex}.trpg-window[data-layout=mid] .trpg-nav{justify-content:center;padding:0}.trpg-nav:hover{background:var(--side-hover);color:var(--side-ink)}.trpg-nav:active{background:var(--side-active)}.trpg-nav[aria-current=page]{background:var(--side-active);color:var(--side-ink);font-weight:var(--fw-semibold);box-shadow:inset 3px 0 0 var(--primary-hover)}.trpg-side :focus-visible,.trpg-tabs :focus-visible{box-shadow:0 0 0 2px var(--side), 0 0 0 4px var(--side-ink2)}.trpg-main{background:var(--bg);flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.trpg-head{height:var(--head-h);align-items:center;gap:var(--sp-3);padding:0 var(--sp-3) 0 var(--sp-5);background:var(--head-bg);color:var(--head-ink);border-bottom:var(--border) solid var(--head-line);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;flex:none;display:flex}.trpg-window[data-fullscreen=true] .trpg-head{cursor:default}.trpg-window[data-layout=narrow] .trpg-head{padding:0 var(--sp-2) 0 var(--sp-4)}.trpg-head__title{min-width:0;font-size:var(--fs-xl);font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;flex:1;overflow:hidden}.trpg-head__chips{align-items:center;gap:var(--sp-2);min-width:0;display:flex}.trpg-chip{cursor:pointer;max-width:260px}.trpg-chip__camp{font-weight:var(--fw-semibold);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-chip__save{color:var(--head-ink2);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-head .trpg-pill,.trpg-head .trpg-chip{color:var(--head-ink);border-color:var(--head-line);background:0 0}.trpg-head .trpg-icon-btn{color:var(--head-ink)}.trpg-head .trpg-icon-btn:hover{background:var(--head-hover);color:var(--head-ink)}.trpg-body{flex:1;min-height:0;display:flex;position:relative}.trpg-content{min-width:0;padding:var(--sp-4) var(--sp-5) 88px;outline:none;flex:1;overflow:auto}.trpg-window[data-layout=narrow] .trpg-content{padding:var(--sp-3) var(--sp-4) 88px}.trpg-content[data-flush=true],.trpg-window[data-layout=narrow] .trpg-content[data-flush=true]{padding:0}.trpg-dice-btn{right:var(--sp-5);bottom:var(--sp-5);z-index:6;background:var(--primary);width:52px;height:52px;color:var(--on-primary);box-shadow:var(--shadow-2);transition:transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-std);border:0;border-radius:50%;place-items:center;padding:0;display:grid;position:absolute}.trpg-window[data-layout=narrow] .trpg-dice-btn{right:var(--sp-4);bottom:var(--sp-4)}.trpg-dice-btn:hover{background:var(--primary-hover);transform:translateY(-1px)}.trpg-dice-btn:active{background:var(--primary-pressed);transform:none}.trpg-dice-btn[aria-pressed=true]{box-shadow:0 0 0 3px var(--surface), 0 0 0 5px var(--primary), var(--shadow-2)}.trpg-tabs{background:var(--side);height:56px;color:var(--side-ink2);padding-bottom:env(safe-area-inset-bottom);box-sizing:content-box;flex:none;display:flex}.trpg-tab{min-width:64px;color:inherit;font-size:var(--fs-xs);background:0 0;border:0;flex-direction:column;flex:1;justify-content:center;align-items:center;gap:2px;display:flex;position:relative}.trpg-tab[aria-current=page]{color:var(--side-ink);box-shadow:inset 0 3px 0 var(--primary-hover)}.trpg-resize{z-index:30;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg, transparent 50%, var(--line-ctrl) 50%, var(--line-ctrl) 58%, transparent 58%, transparent 70%, var(--line-ctrl) 70%, var(--line-ctrl) 78%, transparent 78%);opacity:.6;width:22px;height:22px;position:absolute;bottom:0;right:0}.trpg-libmark{flex:none;width:30px;height:30px;display:inline-flex;position:relative}.trpg-libmark__icon{place-items:center;width:30px;height:30px;display:inline-grid;position:relative}.trpg-libmark__icon>.trpg-ring{position:absolute;inset:0}.trpg-count{border-radius:var(--r-pill);background:var(--accent);min-width:16px;height:16px;color:var(--side);font-size:10px;line-height:16px;font-weight:var(--fw-semibold);text-align:center;box-sizing:border-box;pointer-events:none;padding:0 4px;position:absolute;bottom:-3px;right:-5px}.trpg-ring{flex:none;place-items:center;display:inline-grid;position:relative}.trpg-ring svg{display:block}.trpg-ring [data-part=track]{stroke:var(--line-ctrl)}.trpg-ring [data-part=arc]{stroke:var(--primary);transition:stroke-dasharray var(--dur-ring) var(--ease-std)}.trpg-ring[data-state=spin] svg{animation:trpg-spin var(--dur-spin) linear infinite}.trpg-ring__badge{background:var(--accent);min-width:14px;height:14px;color:var(--on-accent);font-size:10px;font-weight:var(--fw-bold);border-radius:50%;place-items:center;line-height:1;display:grid;position:absolute;top:-4px;right:-4px}.trpg-side .trpg-ring [data-part=track],.trpg-tabs .trpg-ring [data-part=track]{stroke:var(--side-hover)}.trpg-side .trpg-ring [data-part=arc],.trpg-tabs .trpg-ring [data-part=arc]{stroke:var(--accent)}.trpg-pop{z-index:100003;overflow-wrap:anywhere;width:min(320px,100vw - 16px);max-height:min(60vh,420px);padding:var(--sp-2) var(--sp-3) var(--sp-3);gap:var(--sp-2);border:var(--border) solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);box-shadow:var(--shadow-3);animation:trpg-fade var(--dur-fast) var(--ease-out);text-align:left;font-weight:var(--fw-regular);display:grid;position:fixed;overflow:auto}.trpg-pop h3{font-size:var(--fs-sm);color:var(--text2);font-weight:var(--fw-semibold);margin:0}.trpg-pop__row{gap:var(--sp-2);padding-top:var(--sp-2);border-top:var(--border) solid var(--line);grid-template-columns:26px minmax(0,1fr) auto;align-items:center;display:grid}.trpg-pop__row:first-of-type{border-top:0;padding-top:0}.trpg-pop__ring{width:26px;height:26px;display:inline-flex}.trpg-pop__main{min-width:0;display:grid}.trpg-pop__main b{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-pop__main small{color:var(--text2);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.trpg-pop__row[data-status=failed] .trpg-pop__main small{color:var(--danger-text);white-space:normal;-webkit-line-clamp:2;-webkit-box-orient:vertical;display:-webkit-box;overflow:hidden}.trpg-pop__acts{gap:var(--sp-1);align-items:center;display:inline-flex}.trpg-pop__foot{justify-content:flex-end;display:flex}@keyframes trpg-fade{0%{opacity:0}}@keyframes trpg-spin{to{transform:rotate(360deg)}}.trpg-toasts{left:0;right:0;top:var(--trpg-host-top,48px);z-index:var(--z-toast);justify-items:center;gap:var(--sp-2);padding:0 var(--sp-3);pointer-events:none;display:grid;position:fixed}.trpg-toast{pointer-events:auto;align-items:center;gap:var(--sp-3);max-width:min(92vw,520px);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-md);background:var(--hero-bg);color:var(--hero-ink);box-shadow:var(--shadow-2);cursor:pointer;display:flex}.trpg-toast[data-kind=error]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-2), inset 0 0 0 2px var(--danger-line)}.trpg-toast[data-kind=error] .trpg-icon{color:var(--danger-text)}.trpg-toast[data-kind=success] .trpg-icon{color:var(--accent)}.trpg-toasts__banners,.trpg-toasts__list{justify-items:center;gap:var(--sp-2);display:grid}.trpg-toasts__banners{max-height:60vh;padding:var(--sp-1);overflow:auto}.trpg-toast--banner{cursor:default;width:min(92vw,520px)}.trpg-toast--more{justify-self:center;gap:var(--sp-1);padding:2px var(--sp-3);font:inherit;font-size:var(--fs-xs);border:0}.trpg-toast__text{overflow-wrap:anywhere;flex:1;min-width:0}.trpg-toast small{color:var(--hero-ink2);white-space:nowrap}.trpg-toast[data-kind=error] small{color:var(--text2)}.trpg-toast__btn{color:var(--accent);font-weight:var(--fw-semibold);min-height:32px;padding:0 var(--sp-2);background:0 0;border:0}.trpg-toast[data-kind=error] .trpg-toast__btn{color:var(--primary-text)}.trpg-toast-enter-active{animation:trpg-drop var(--dur-base) var(--ease-out)}.trpg-toast-leave-active{transition:opacity var(--dur-fast) var(--ease-in), transform var(--dur-fast) var(--ease-in)}.trpg-toast-leave-to{opacity:0;transform:translateY(-6px)}@keyframes trpg-drop{0%{opacity:0;transform:translateY(-8px)}}", $9 = "trpg-assistant-root";
@@ -70953,7 +70960,7 @@ function OEe(e) {
 	i.className = "trpg-portal";
 	let a = document.createElement("div");
 	n.append(r, a, i), document.body.appendChild(t);
-	let o = cA();
+	let o = sA();
 	return ud(vEe, {
 		ctx: e,
 		portalTarget: i
@@ -70964,7 +70971,7 @@ async function kEe() {
 	if (window.__trpgAssistantBooted) return;
 	window.__trpgAssistantBooted = !0, await Ve();
 	let e = ze(), t = OEe(e);
-	t && await Are(e, t);
+	t && await jre(e, t);
 }
 kEe().catch((e) => {
 	window.__trpgAssistantBooted = !1, console.error("[trpg-assistant] 启动失败", e);

@@ -50,7 +50,8 @@ export interface KernelRuntimeDeps {
   /** 小窗挂在哪里（隐藏 iframe 的父元素）。 */
   container: () => HTMLElement
   /** 本战役的规则与选书（从存档的内核段读）。 */
-  campaignOf: (ownerKey: string) => Promise<{ rule: string; library: CampaignLibrary; title: string }>
+  /** usedActorIds：存档用过的人物编号（core/saves/kernel-roster.ts usedActorIds），开机后登记进小窗。 */
+  campaignOf: (ownerKey: string) => Promise<{ rule: string; library: CampaignLibrary; title: string; usedActorIds?: string[] }>
   fetchImpl?: typeof fetch
   timeoutMs?: number
   /** 换算缓存（S3）：本地可丢副本；不给就不缓存。 */
@@ -99,6 +100,8 @@ export class KernelRuntime {
       const prepared = await prepareKernelBrews(this.deps.service, view, campaign.library.codeSet)
       const input = await kernelInput({ pluginRoot: this.deps.pluginRoot, rule: campaign.rule, codeSet: campaign.library.codeSet, world: { id: worldIdOf(ownerKey), title: campaign.title }, fetchImpl: this.deps.fetchImpl })
       const { session, boot, report, brewFingerprint } = await openKernel({ ...this.deps, view, input, ...prepared, container: this.deps.container() })
+      // 先登记存档用过的编号，再做任何建人：装回存档的人是另一路（load），可能还没做完或装不回（驾驶员 2026-11-23：刷新后第一次加人“存档里已经有这个人物”）
+      if (campaign.usedActorIds?.length) await session.call('reserveActorIds', campaign.usedActorIds)
       const brewIssue: Open['brewIssue'] = (ref, altId, source) => excludedBrewReason(prepared.brews, report.excluded, ref, altId, source)
       const cache = this.deps.cache ? new KernelCache(this.deps.cache.db) : null
       const cacheBase = input.cacheKey ?? hashValue(input)

@@ -47,7 +47,7 @@ export async function settled(limitMs = 2_000): Promise<void> {
   }
 }
 
-export function createServer(socket: any, options: ServerOptions): { changes: ChangeRecord[]; calls: any[] } {
+export function createServer(socket: any, options: ServerOptions): { changes: ChangeRecord[]; calls: any[]; reserve(ids: Iterable<string>): void } {
   const g = globalThis as any
   const changes: ChangeRecord[] = []
   const calls: any[] = []
@@ -55,6 +55,13 @@ export function createServer(socket: any, options: ServerOptions): { changes: Ch
   const officialPacks = new Map<string, Promise<any[]>>()
   const world = new Map<string, any[]>()
   let sequence = 0
+  /** 这些编号已经有人用（读档装回的、存档记着的）：之后自动发号从它们后面开始。只认本服务自己发的 kernel+10 位数字。 */
+  const reserve = (ids: Iterable<string>): void => {
+    for (const id of ids) {
+      const used = /^kernel(\d{10})$/.exec(id)
+      if (used) sequence = Math.max(sequence, Number(used[1]))
+    }
+  }
   const emit = socket.emit.bind(socket)
   const packDocuments = async (id: string): Promise<any[]> => {
     const mutable = temporary.get(id)
@@ -90,11 +97,7 @@ export function createServer(socket: any, options: ServerOptions): { changes: Ch
         const data = structuredClone(source)
         // 与服务器一致：未要求保留编号时一律发新编号。
         if (!operation.keepId || !data._id) data._id = `kernel${String(++sequence).padStart(10, '0')}`
-        else {
-          // 读档保留旧编号。后续自动发号不能再次分配这一号。
-          const restored = /^kernel(\d{10})$/.exec(data._id)
-          if (restored) sequence = Math.max(sequence, Number(restored[1]))
-        }
+        else reserve([data._id]) // 读档保留旧编号。后续自动发号不能再次分配这一号。
         return data
       })
       if (!parentUuid) store.push(...created)
@@ -144,5 +147,5 @@ export function createServer(socket: any, options: ServerOptions): { changes: Ch
     if (!callback) return emit(event, ...args)
     return callback({ error: { message: `Unsupported server request: ${event}` } })
   }
-  return { changes, calls }
+  return { changes, calls, reserve }
 }
