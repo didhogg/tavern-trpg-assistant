@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// 人物详情页头（线框 p6-6，照 Tidy5e 角色表；P6-R）：头像 · 身份（名字 ★ 英文名 ✎ / 职业种族阵营 / 短休 长休）· 等级卡 ✎
-//   · 事实表（种族 背景 体型 类型 速度 感官 法术）· 生命卡 ✎ · 战斗卡（AC 先攻 专注）✎ · 属性卡 ✎。
+// 人物详情页头（线框 p6-6，照 Tidy5e 角色表；P6-R）。两行：
+//   上：头像 | 身份（名字 ★ 英文名 ✎ / 职业等级 阵营 / 事实行：种族 背景 体型 类型 速度 感官 法术 / 短休 长休）| 等级卡 ✎
+//   下：生命卡 ✎ | 战斗卡（AC 先攻 专注）✎ | 属性卡 ✎（按页面宽度：三块并排 / 属性单独一排 / 竖排）。
 // 每张卡右上角 ✎ 固定，打开这一块的来源条目抽屉（通用编辑窗口，字段按官方定义生成）；数都取读数，界面不算数。
 import { computed, markRaw, ref } from 'vue'
 import { usePersonStore } from '../../stores/person'
@@ -33,7 +34,8 @@ const abilityNames = computed(() => Object.fromEntries(Object.keys(g.value?.tabl
 
 const subtitle = computed(() => {
   const cls = classes(s.value).map((c) => (c.levels ? `${c.name} ${c.levels}` : c.name))
-  return [...cls, npc.value ? creatureType(s.value, g.value) : species(s.value)?.name, npc.value ? size(s.value, g.value) : null, alignment(s.value)].filter(Boolean) as string[]
+  // 种族、体型、类型在下面的事实行里，这里不重复
+  return [...cls, alignment(s.value)].filter(Boolean) as string[]
 })
 interface Fact { label: string; text: string; ref?: unknown; parts?: string[]; edit?: () => void }
 const facts = computed(() => {
@@ -100,6 +102,7 @@ function onLevel(key: string): void {
 
 <template>
   <section class="ps-head" data-testid="ps-head">
+   <div class="ps-top">
     <button class="ps-portrait" type="button" :disabled="ro" aria-label="换头像" data-testid="ps-portrait" @click="openAvatar">
       <img v-if="avatar" :src="avatar" alt="" @error="broken = true"><Icon v-else name="user" :size="44" />
       <span class="ps-portrait-badge" aria-hidden="true"><Icon name="image" :size="12" /></span>
@@ -112,7 +115,20 @@ function onLevel(key: string): void {
         <small v-if="english" class="ps-english">{{ english }}</small>
         <button class="ps-pen ps-pen--inline" type="button" aria-label="改身份" :disabled="ro" data-testid="ps-ident-edit" @click="openIdentity"><Icon name="pencil-simple" :size="14" /></button>
       </div>
-      <p class="ps-sub" data-testid="ps-sub"><span v-for="(t, i) in subtitle" :key="t" :class="{ 'ps-sub-strong': i === 0 }">{{ t }}</span></p>
+      <p v-if="subtitle.length" class="ps-sub" data-testid="ps-sub"><span v-for="(t, i) in subtitle" :key="t" :class="{ 'ps-sub-strong': i === 0 }">{{ t }}</span></p>
+      <dl class="ps-facts" data-testid="ps-facts">
+        <div v-for="f in facts" :key="f.label" class="ps-fact">
+          <dt>{{ f.label }}</dt>
+          <dd>
+            <Term v-if="f.ref" :label="`查看${f.text}`" @open="openEntry(f.ref as never, f.text)">{{ f.text }}</Term>
+            <button v-else-if="f.edit" class="ps-fact-btn" type="button" :disabled="ro" :aria-label="`改${f.label}`" @click="f.edit()">
+              <template v-if="f.parts?.length"><span v-for="(p, i) in f.parts" :key="i" class="ps-fact-part">{{ p }}</span></template>
+              <template v-else>{{ f.text }}</template>
+            </button>
+            <template v-else>{{ f.text }}</template>
+          </dd>
+        </div>
+      </dl>
       <button v-if="!npc && !classes(s).length" class="ps-blank-cta" type="button" :disabled="ro" data-testid="ps-blank-build" @click="openLevel('用建卡器建这个人')">
         <b>这个人还是空白的</b><span>用建卡器建：种族、背景、职业、属性一起选，特性都会加上</span>
       </button>
@@ -146,22 +162,10 @@ function onLevel(key: string): void {
       </div>
       <div v-if="!npc" class="ps-level-foot"><MoreMenu label="等级管理" text="等级管理" :items="levelItems" @select="onLevel" /></div>
     </div>
+</div>
 
-    <dl class="ps-facts" data-testid="ps-facts">
-      <div v-for="f in facts" :key="f.label" class="ps-fact">
-        <dt>{{ f.label }}</dt>
-        <dd>
-          <Term v-if="f.ref" :label="`查看${f.text}`" @open="openEntry(f.ref as never, f.text)">{{ f.text }}</Term>
-          <button v-else-if="f.edit" class="ps-fact-btn" type="button" :disabled="ro" @click="f.edit()">
-            <template v-if="f.parts?.length"><span v-for="(p, i) in f.parts" :key="i" class="ps-fact-part">{{ p }}</span></template>
-            <template v-else>{{ f.text }}</template>
-          </button>
-          <template v-else>{{ f.text }}</template>
-        </dd>
-      </div>
-    </dl>
-
-    <div class="ps-card ps-vitals">
+   <div class="ps-mid">
+<div class="ps-card ps-vitals">
       <button class="ps-pen" type="button" aria-label="改最大生命" :disabled="ro" data-testid="ps-hp-edit" @click="editHp"><Icon name="pencil-simple" :size="14" /></button>
       <small class="ps-card-label">生命值</small>
       <HpBlock />
@@ -174,7 +178,6 @@ function onLevel(key: string): void {
       </div>
     </div>
 
-    <div class="ps-stats">
       <div class="ps-card ps-combat" data-testid="ps-combat">
         <button class="ps-pen" type="button" aria-label="改护甲等级" :disabled="ro" @click="editAc"><Icon name="pencil-simple" :size="14" /></button>
         <button class="ps-box" type="button" data-testid="ps-ac" @click="editAc"><small>AC</small><b>{{ sys.attributes.ac?.value }}</b></button>
@@ -185,9 +188,9 @@ function onLevel(key: string): void {
         <button class="ps-pen" type="button" aria-label="改属性值" :disabled="ro" data-testid="ps-abilities-edit" @click="editAbilities"><Icon name="pencil-simple" :size="14" /></button>
         <button v-for="a in abilities" :key="a.key" class="ps-ability" type="button" :data-testid="`ps-ability-${a.key}`" @click="editAbility(a.key)">
           <small>{{ a.label }}</small><b>{{ signed(a.mod) }}</b><span>{{ a.value }}</span>
-          <em :data-prof="a.proficient || undefined">{{ a.proficient ? '● ' : '' }}豁免 {{ signed(a.save) }}</em>
+          <em :data-prof="a.proficient || undefined" :title="a.proficient ? '豁免熟练' : undefined">豁免 {{ signed(a.save) }}</em>
         </button>
       </div>
-    </div>
+   </div>
   </section>
 </template>

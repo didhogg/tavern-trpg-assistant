@@ -7,6 +7,7 @@ import Segmented from '../kit/Segmented.vue'
 import SelectField from '../kit/SelectField.vue'
 import Switch from '../kit/Switch.vue'
 import TagPill from '../kit/TagPill.vue'
+import Icon from '../kit/Icon.vue'
 
 defineOptions({ name: 'FieldTree' })
 const props = defineProps<{ node: ShownField; depth?: number; readOnly?: boolean; names?: Record<string, string> }>()
@@ -20,6 +21,8 @@ const leaves = computed(() => (props.node.children ?? []).filter((c) => !c.child
 const groups = computed(() => (props.node.children ?? []).filter((c) => c.children && hasEditable(c)))
 const options = (n: ShownField) => (n.choices ?? []).map((c) => ({ value: String(c.value), label: String(c.label) }))
 // 选项少、名字短：分段按钮一眼看完；否则下拉
+/** 有名字的分组默认收起（点组名展开）；整个窗口只有这一组时直接展开。属性值 = 六项一行一个、点开再展开（线框 p6-13b）。 */
+const openByDefault = computed(() => !(props.depth ?? 0) && groups.value.length === 1 && !leaves.value.length)
 const segmented = (n: ShownField): boolean => (n.choices?.length ?? 0) > 0 && (n.choices?.length ?? 0) <= 4 && options(n).every((o) => o.label.length <= 5)
 const asList = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : [])
 function toggle(path: string, value: string): void {
@@ -60,9 +63,14 @@ const id = (path: string): string => `pf-${path.replace(/[^\w]/g, '-')}`
         </div>
       </div>
     </template>
-    <section v-for="grp in groups" :key="grp.path" class="pf-group" :data-plain="!groupName(grp) || undefined" :data-depth="depth ?? 0">
-      <h4 v-if="groupName(grp)" class="pf-group-title">{{ groupName(grp) }}</h4>
-      <FieldTree :node="grp" :depth="(depth ?? 0) + 1" :read-only="readOnly" :names="names" />
-    </section>
+    <template v-for="grp in groups" :key="grp.path">
+      <details v-if="groupName(grp)" class="pf-group" :open="openByDefault" :data-depth="depth ?? 0" :data-path="grp.path">
+        <summary class="pf-group-title"><Icon name="caret-right" :size="12" />{{ groupName(grp) }}</summary>
+        <FieldTree :node="grp" :depth="(depth ?? 0) + 1" :read-only="readOnly" :names="names" />
+      </details>
+      <section v-else class="pf-group" data-plain :data-depth="depth ?? 0">
+        <FieldTree :node="grp" :depth="(depth ?? 0) + 1" :read-only="readOnly" :names="names" />
+      </section>
+    </template>
   </div>
 </template>

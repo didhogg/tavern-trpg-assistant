@@ -1,6 +1,9 @@
 /* P6-R 模块的来源条目抽屉（通用编辑窗口，线框 p6-13b / u5-slots）：总数卡 · 组成 · 条目 · 已移除 · 底值；底栏固定。只用色板变量。 */
 .pf { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-.pf-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: var(--sp-4) var(--sp-5); display: grid; gap: var(--sp-4); align-content: start; }
+/* 行高一律按内容（max-content）：带裁切的块在高度受限的格子里会被压扁（自动最小高度 = 0），内容被切掉而外层不出滚动条（11-24 驾驶员：编辑框滚不动） */
+.pf-body { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: var(--sp-4) var(--sp-5); display: grid; grid-auto-rows: max-content; gap: var(--sp-4); align-content: start; }
+/* 表单自己管内边距和底栏：外层弹窗页不再叠一层，底栏才能贴满宽度 */
+.trpg-modal__page:has(> .pf) { padding: 0; overflow: hidden; }
 .pf-intro { margin: 0; color: var(--text2); font-size: var(--fs-sm); line-height: var(--lh-body); }
 .pf-total { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border: var(--border) solid var(--line); border-top: 3px solid var(--accent); border-radius: var(--r-sm); background: var(--bg-sunk); }
 .pf-total span { color: var(--text2); font-size: var(--fs-sm); }
@@ -21,7 +24,8 @@
 .pf-removed .pf-entry { grid-template-columns: minmax(0, 1fr) auto auto auto; color: var(--text2); }
 .pf-add { margin: var(--sp-2) var(--sp-3); }
 .pf-add-row { display: grid; grid-template-columns: minmax(0, 1fr) 88px auto; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-top: var(--border) solid var(--line); }
-.pf-base .pf-fields { padding: var(--sp-2) var(--sp-3) var(--sp-3); }
+/* 只给最外层留边：嵌套的字段组不再一层层往里缩、也不叠空白 */
+.pf-base > .pf-fields { padding: var(--sp-2) var(--sp-3) var(--sp-3); }
 .pf-fields { display: grid; gap: var(--sp-2); }
 .pf-row { display: grid; grid-template-columns: minmax(0, 11em) minmax(0, 1fr); align-items: center; gap: var(--sp-3); min-height: 40px; }
 .pf-row[data-kind='html'], .pf-row[data-kind='multi'], .pf-row[data-kind='tags'] { align-items: start; }
@@ -35,9 +39,18 @@
 .pf-chip { cursor: pointer; background: var(--surface); }
 .pf-chip[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .pf-tag-input { flex: 1 1 140px; min-width: 120px; }
-.pf-group { display: grid; gap: var(--sp-2); padding-top: var(--sp-2); border-top: var(--border) solid var(--line); }
-.pf-group[data-plain] { padding-top: 0; border-top: 0; }
-.pf-group-title { margin: 0; font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--text2); }
+.pf-group { border-top: var(--border) solid var(--line); }
+.pf-group[data-plain] { border-top: 0; }
+.pf-group > .pf-fields { padding: 0 0 var(--sp-3); }
+.pf-group[data-plain] > .pf-fields { padding: 0; }
+.pf-group > .pf-fields > .pf-group[data-plain] { margin-top: var(--sp-1); }
+/* 可折叠组：组名一整行可点，左边小三角，展开时转下 */
+.pf-group-title { display: flex; align-items: center; gap: var(--sp-2); min-height: 40px; margin: 0; list-style: none; cursor: pointer; font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text); }
+.pf-group-title::-webkit-details-marker { display: none; }
+.pf-group-title:hover { color: var(--primary-text); }
+.pf-group-title svg { color: var(--text2); transition: transform var(--dur-fast) var(--ease-std); }
+.pf-group[open] > .pf-group-title svg { transform: rotate(90deg); }
+.pf-group[data-depth='1'] > .pf-group-title, .pf-group[data-depth='2'] > .pf-group-title { font-weight: var(--fw-regular); color: var(--text2); }
 .pf-foot { flex: none; display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-5); border-top: var(--border) solid var(--line); background: var(--surface); }
 .pf-gap { flex: 1; }
 .pf-count { color: var(--text2); font-size: var(--fs-xs); }
@@ -47,3 +60,5 @@
 .pf-id-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3) 0; }
 .pf-id-actions .pf-add { margin: 0; }
 .pf-id-note { padding: var(--sp-2) var(--sp-3) var(--sp-3); font-size: var(--fs-xs); }
+.pf-base > .pf-fields > .pf-group:first-child { border-top: 0; }
+.pf-formula { max-width: 280px; }
