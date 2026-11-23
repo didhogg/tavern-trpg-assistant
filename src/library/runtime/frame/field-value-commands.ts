@@ -3,6 +3,7 @@
 // 一张都对不上就不给（界面显示原值）。不手写对照表。
 import { A, init } from './author'
 import type { AuthorTextQuery } from '../text-query'
+import { renderText } from './entry-commands'
 
 const HAN = /[㐀-鿿]/
 
@@ -91,6 +92,7 @@ export async function authorTexts(requests: AuthorTextQuery[]): Promise<Array<st
   const handlers: { [K in AuthorTextQuery['source']]: (q: Extract<AuthorTextQuery, { source: K }>) => Promise<string | null> } = {
     author: async q => (await authorAt([q.path]))[0] ?? null,
     requirement: async q => (await prerequisiteText([q.raw]))[0] ?? null,
+    render: async q => (await renderText(q.text)) || null,
     proficiency: async q => A.Renderer.generic.getMappedAnyProficiency({ keyAny: q.key, countRaw: q.count })?.name ?? null,
     value: async q => {
       const key = JSON.stringify([q.group, q.kind])

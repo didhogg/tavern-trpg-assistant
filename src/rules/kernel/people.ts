@@ -164,11 +164,12 @@ export class KernelPeople {
 
   /** 读人物页：官方数值 + 分解 + 和基准不同的字段（金线只画 setting）。 */
   async sheet(ownerKey: string, actorId: string) {
-    const out = await this.call(ownerKey, 'sheet', actorId)
-    if (out.status !== 'complete') return out
-    // 显示文字过唯一出口：物品 / 特性 / 效果名换成本战役语言，带作者编号的配上库条目（ref）
+    // 显示文字过唯一出口：物品 / 特性 / 效果名换成本战役语言，带作者编号的配上库条目（ref）；怪物动作等由小窗按作者编号在条目里定位
     const refs = ((await this.saved(ownerKey, actorId))?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
-    const shown = await this.deps.runtime.display(ownerKey, refs, out.result.shown)
+    const shownBy = await this.deps.runtime.displayFor(ownerKey, refs)
+    const out = await this.call(ownerKey, 'sheet', actorId, shownBy.entries)
+    if (out.status !== 'complete') return out
+    const shown = await shownBy.show(out.result.shown)
     const base = await this.deps.runtime.baseOf(ownerKey, actorId)
     const current = ((await this.call(ownerKey, 'preparedActors')) as Array<{ source: Record<string, unknown> }>).find((a) => a.source._id === actorId)?.source ?? null
     const changed: ChangedField[] = base && current ? paths(jsonDiff(strip(base), strip(current))).map((path) => ({ path, kind: kindOf(path) })) : []
@@ -190,7 +191,7 @@ export class KernelPeople {
       pending = (async () => {
         const out = await this.call(ownerKey, 'glossary')
         if (out.status !== 'complete') throw new Error(out.error ?? `取编号名字失败：${out.status}`)
-        const shown = await this.deps.runtime.display(ownerKey, [], out.result as FrameGlossary)
+        const shown = await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result as FrameGlossary)
         return { ...shown.value, ...(shown.missed.length ? { untranslated: shown.missed } : {}) }
       })()
       this.glossaries.set(ownerKey, pending)

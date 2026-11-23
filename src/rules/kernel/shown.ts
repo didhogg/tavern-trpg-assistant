@@ -5,7 +5,8 @@
 // 来路只有这几种，每种都接现有的统一出口（不写对照表）：
 //   system      实际语言键：出口重新查本战役小窗语言包，缺键记诊断
 //   library     本战役这边已经出好的字（库里条目的名字、作者小窗按编号取的名字）：本来就是本战役语言，原样用
-//   entry       条目里的原文：英文版同编号条目里的位置 → 本战役语言版同一位置（locale.ts zhAt）
+//   entry       条目里的原文：英文版同编号条目里的位置 → 本战役语言版同一位置（locale.ts zhAt）；带 at = 已按作者编号定好位置，
+//               取本战役语言版同一处的原文交作者渲染器（作者改写过的名字，例如去掉充能后缀的怪物动作，也能取到）
 //   author      作者代码里写死的文字：英文作者代码里的位置 → 本战役作者小窗同一位置（library/texts.ts）
 //   name        带作者完整编号的名字：编号 → 本战役库名；多个来源保留全部编号，只合并共同译名；
 //               strict = text 是作者原文（不是语言包的字），取不到算没翻到
@@ -18,9 +19,9 @@
 import type { KernelRefFlags } from '../../core/saves/split'
 
 export type FrameText =
-  | { $t: 'system'; text: string; key: string }
+  | { $t: 'system'; text: string; key: string; fallback?: FrameText }
   | { $t: 'library'; text: string }
-  | { $t: 'entry'; text: string; fallback?: FrameText }
+  | { $t: 'entry'; text: string; fallback?: FrameText; at?: EntryAt }
   | { $t: 'author'; text: string; at: string[] | null }
   | { $t: 'name'; text: string; ids: KernelRefFlags[]; strict?: true }
   | { $t: 'proficiency'; text: string; key: string; count: number }
@@ -29,6 +30,9 @@ export type FrameText =
   | { $t: 'data'; text: string }
   | { $t: 'plugin'; text: string; args?: FrameText[] }
   | { $t: 'join'; parts: FrameText[]; sep: string }
+
+/** 文字在第几个条目（主线交给小窗的条目顺序）里的哪个位置；有它就按位置取本战役语言版同一处，不再比对文字。 */
+export interface EntryAt { entry: number; path: Array<string | number> }
 
 declare const shownBrand: unique symbol
 /** 过了显示出口的文字（本战役语言；取不到的显示原文并记进 missed）。 */
@@ -44,7 +48,7 @@ export const isFrameText = (v: unknown): v is FrameText => !!v && typeof v === '
 
 // 小窗里标来路的写法（只做标记，不取字）
 export const fromLibrary = (text: string): FrameText => ({ $t: 'library', text })
-export const fromEntry = (text: string, fallback?: FrameText): FrameText => ({ $t: 'entry', text, ...(fallback ? { fallback } : {}) })
+export const fromEntry = (text: string, fallback?: FrameText, at?: EntryAt): FrameText => ({ $t: 'entry', text, ...(fallback ? { fallback } : {}), ...(at ? { at } : {}) })
 export const fromAuthor = (text: string, at: string[] | null): FrameText => ({ $t: 'author', text, at })
 export function named(text: string, id: KernelRefFlags | KernelRefFlags[], strict = false): FrameText {
   const ids = [...new Map((Array.isArray(id) ? id : [id]).map(ref => [`${ref.propDroppable}|${ref.source?.toLowerCase()}|${ref.hash}`, ref])).values()]

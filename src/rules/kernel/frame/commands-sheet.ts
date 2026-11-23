@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 
 import { itemState, type ActorGetter, type Operate } from './commands-items'
-import { fromEntry, named, type FrameText } from '../shown'
-import { systemText } from './system-text'
+import { fromAuthor, fromEntry, named, type EntryAt, type FrameText } from '../shown'
+import { nameText, registryCaptured, statusKey, tableNames } from './registry-keys'
 
 const g = globalThis as any
 const NO_DIALOG = { configure: false }
@@ -88,29 +88,44 @@ function live(v: any, depth = 0, seen: WeakSet<object> = new WeakSet()): any {
   return out
 }
 
-/** 物品 / 特性名：带作者编号的按编号取本战役库名（并交编号给出口配库条目）；没编号的（怪物的动作、传奇动作…）取它在条目原文里的位置。 */
-function itemText(i: any): { name: FrameText; author?: { propDroppable: string; source?: string; hash: string } } {
+/**
+ * 作者导入怪物动作 / 特性 / 传奇动作时记下的编号（flags.plutonium.hash = 名字编号_所属条目编号…）→ 它在英文条目里的位置。
+ * 用作者同一套 Renderer.stripTags + UrlUtil.encodeForHash 给条目里每个带名字的对象算编号来对，不比对文字、不认类别名。
+ * 传奇动作作者先剥掉末尾的“(Costs N Actions)”再算编号：精确对不上时再试“去掉末尾一个括号”。都只认唯一一个，否则不定位。
+ */
+function locate(entries: unknown[], hash: string): EntryAt | null {
+  const exact: EntryAt[] = []
+  const trimmed: EntryAt[] = []
+  const id = (text: string): string => String(g.UrlUtil.encodeForHash(text))
+  const walk = (node: any, entry: number, path: Array<string | number>): void => {
+    if (Array.isArray(node)) { node.forEach((x, i) => walk(x, entry, [...path, i])); return }
+    if (!node || typeof node !== 'object') return
+    if (path.length && typeof node.name === 'string') {
+      const plain = String(g.Renderer.stripTags(node.name))
+      const cut = plain.replace(/\s*\([^()]*\)\s*$/, '')
+      if (hash.startsWith(`${id(plain)}_`)) exact.push({ entry, path: [...path, 'name'] })
+      else if (cut !== plain && hash.startsWith(`${id(cut)}_`)) trimmed.push({ entry, path: [...path, 'name'] })
+    }
+    for (const [k, v] of Object.entries(node)) if (v && typeof v === 'object') walk(v, entry, [...path, k])
+  }
+  entries.forEach((e, i) => walk(e, i, []))
+  return exact.length === 1 ? exact[0] : !exact.length && trimmed.length === 1 ? trimmed[0] : null
+}
+
+/**
+ * 物品 / 特性名：带作者编号的按编号取本战役库名（并交编号给出口配库条目）；
+ * 怪物动作等（作者只记了名字编号）按编号在条目里定位，取本战役语言版同一处；都没有就按原文位置找（zhAt）。
+ */
+function itemText(i: any, entries: unknown[]): { name: FrameText; author?: { propDroppable: string; source?: string; hash: string } } {
   const f = i.flags?.plutonium
   if (f?.propDroppable && typeof f.hash === 'string') {
     const author = { propDroppable: f.propDroppable, ...(f.source ? { source: f.source } : {}), hash: f.hash }
     return { name: named(i.name, author), author }
   }
-  return { name: fromEntry(i.name) }
+  const at = typeof f?.hash === 'string' ? locate(entries, f.hash) : null
+  return { name: fromEntry(i.name, undefined, at ?? undefined) }
 }
 
-/** 引擎登记表里一张表的显示名：编号 → 语言键（含 children 一层层往下）；对不上语言键的值（公式、图标路径…）自然不收。 */
-function registryNames(table: any, out: Record<string, FrameText> = {}): Record<string, FrameText> {
-  if (!table || typeof table !== 'object' || Array.isArray(table)) return out
-  for (const [code, v] of Object.entries(table) as Array<[string, any]>) {
-    const label = typeof v === 'string' ? v : typeof v?.label === 'string' ? v.label : null
-    if (label) {
-      const t = g.game.i18n.has(label) ? systemText(g.game.i18n.localize(label), label) : systemText(label)
-      if (t.$t === 'system') out[code] = t
-    }
-    if (v?.children) registryNames(v.children, out)
-  }
-  return out
-}
 
 /** 引擎配置窗算好的上下文（不打开窗口）：生命按职业的合计、效果加成；AC 的公式与计算。 */
 async function configContext(Cls: any, a: any, keys: string[]): Promise<Record<string, unknown> | null> {
@@ -139,7 +154,8 @@ const CHECKS: Record<string, (a: any, key?: string) => Promise<any[] | null>> = 
 export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSummary: (roll: any) => any) {
   return {
     /** 人物页读数：官方准备后的数值 + 物品 / 效果 + 生命与 AC 的官方分解；界面只显示，不算。 */
-    sheet: (actorId: string) => operate([], async () => {
+    /** entries = 这个人引用的英文条目（主线给，顺序与显示出口的条目一致），用来给怪物动作等定位。 */
+    sheet: (actorId: string, entries: unknown[] = []) => operate([], async () => {
       const a = actor(actorId)
       const apps = g.dnd5e?.applications?.actor ?? {}
       return {
@@ -155,8 +171,9 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         })),
         // 界面显示的文字：标好来路，主线交唯一显示出口（kernel/display.ts）换成本战役语言；数值与编号照上面原样
         shown: {
-          items: [...a.items].map((i: any) => ({ id: i.id, ...itemText(i) })),
-          effects: [...a.allApplicableEffects()].map((e: any) => { const t = systemText(e.name); return { id: e.id, name: t.$t === 'system' ? t : fromEntry(e.name) } }),
+          items: [...a.items].map((i: any) => ({ id: i.id, ...itemText(i, entries) })),
+          // 效果名：状态这类登记过的名字按名字键取；其余（物品自带的效果）按条目原文位置
+          effects: [...a.allApplicableEffects()].map((e: any) => ({ id: e.id, name: nameText(String(e.name ?? ''), null) ?? fromEntry(e.name) })),
         },
         breakdown: {
           hp: await configContext(apps.HitPointsConfig, a, ['classes', 'ability', 'effects', 'levels']),
@@ -200,8 +217,11 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
      * 加上能开关的状态（名字 + 图标）。界面拿编号查这里，不自己写名字。
      */
     glossary: () => operate([], async () => {
-      const tables = Object.fromEntries(Object.entries(g.CONFIG.DND5E ?? {}).map(([name, t]) => [name, registryNames(t)]).filter(([, rows]) => Object.keys(rows as object).length))
-      const statuses = (g.CONFIG.statusEffects ?? []).map((s: any) => ({ id: s.id, name: systemText(String(s.name ?? s.id)), img: s.img ?? null }))
+      if (!registryCaptured()) throw Error('开机时没有记下登记表原值（registry-keys.ts）')
+      const tables = Object.fromEntries(Object.entries(g.CONFIG.DND5E ?? {}).map(([name, t]) => [name, tableNames(name, t)]).filter(([, rows]) => Object.keys(rows as object).length))
+      // 状态清单按运行时最终的列表（dnd5e 开机后才把自己的状态加进去）；名字找不到语言键的照样列出、记为没翻到，不悄悄丢掉
+      const statuses = (g.CONFIG.statusEffects ?? []).flatMap((s: any) => typeof s?.name === 'string'
+        ? [{ id: s.id, name: nameText(s.name, statusKey(s.id)) ?? fromAuthor(s.name, null), img: s.img ?? null }] : [])
       return { tables, statuses }
     }),
 

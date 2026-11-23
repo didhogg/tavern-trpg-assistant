@@ -56,7 +56,7 @@ try {
     // 详情页对账 B1 / B2 / B5（2026-11-23）：显示文字过唯一出口、现算的值读得到、编号名字整表
     const gl = await people.glossary(owner)
     out.shown = { items: s0.shown.items.map((i) => [i.name, !!i.ref]), untranslated: s0.untranslated ?? [], hd: s0.system.attributes.hd,
-      fire: gl.tables.damageTypes?.fire, common: gl.tables.languages?.common, tiny: gl.tables.actorSizes?.tiny, statuses: gl.statuses.length, poisoned: gl.statuses.find((x) => x.id === 'poisoned')?.name, tables: Object.keys(gl.tables).length, glUntranslated: gl.untranslated ?? [], sheetBytes: JSON.stringify(s0).length }
+      fire: gl.tables.damageTypes?.fire, common: gl.tables.languages?.common, tiny: gl.tables.actorSizes?.tiny, statuses: gl.statuses.length, poisoned: gl.statuses.find((x) => x.id === 'poisoned')?.name, tables: Object.keys(gl.tables).length, glUntranslated: gl.untranslated ?? [], codeTables: ['defaultAbilities', 'weaponProficienciesMap', 'weaponTypeMap'].filter((t) => gl.tables[t]), fullCaster: gl.tables.spellProgression?.full, sheetBytes: JSON.stringify(s0).length }
     const strBase = s0.system.abilities.str.value
     const e1 = await people.edit(owner, id, [{ kind: 'set', path: 'system.abilities.str.value', value: strBase + 2 }, { kind: 'set', path: 'system.attributes.hp.bonuses.overall', value: '3' }])
     const s1 = (await people.sheet(owner, id)).result
@@ -142,6 +142,14 @@ try {
     const monsterSheet = await people3.sheet(owner, rows.find((x) => x.adjustments.category === 'enemy').id)
     out.cold = { statuses: cold.map((x) => x.status), savedIds, inFrame, monsterSheet: monsterSheet.status,
       monsterNames: monsterSheet.result?.shown.items.map((i) => i.name), monsterUntranslated: monsterSheet.result?.untranslated ?? [] }
+    // 作者改写过名字的怪物动作（去掉充能 / 每日次数 / 消耗动作后缀）：按作者编号定位后取中文（驾驶员 2026-11-23 定方案 A）
+    const pool = await h.scoped.query(library, 'monster')
+    const suffixed = pool.find((r) => r.source === 'MM' && r.item.legendary?.length && (r.item.action ?? []).some((a) => /\{@recharge/.test(a.name ?? '')))
+    const added = await people3.fromTemplate(owner, suffixed.ref, 1, { category: 'enemy' })
+    const sid = added.made.actors[0].id
+    const ss = await people3.sheet(owner, sid)
+    const flagsOf = new Map((await (async () => { const l = await (await rt3.session(owner)).session.call('preparedActors'); return (l.result ?? l) })()).find((a) => a.source._id === sid).source.items.map((i) => [i._id, i.flags?.plutonium?.page ?? null]))
+    out.suffixed = { name: suffixed.item.name, rows: ss.result.shown.items.map((i) => [flagsOf.get(i.id), i.name]), untranslated: ss.result.untranslated ?? [] }
     await rt3.close(owner)
     return out
   })
@@ -166,8 +174,10 @@ try {
     reload: r.reload.statuses.every((s) => s === 'complete') && r.reload.secondLoad.every((s) => s === 'complete') && new Set(r.reload.ids).size === r.reload.ids.length && r.reload.sameHp,
     roster: !!r.reload.hero && r.reload.hero.classes.length > 0 && !!r.reload.hero.race && r.reload.hero.ac !== null && r.reload.hero.pp !== null && r.reload.hero.speed > 0 && r.reload.hero.cat === 'party' && r.reload.monster.length === 2 && r.reload.monster.every((m) => m.loaded),
     writeAfterLoad: r.reload.writeAfterLoad,
+    glossaryKinds: r.shown.codeTables.length === 0 && han(r.shown.fullCaster),
     shown: r.shown.items.length > 0 && r.shown.items.every(([name, ref]) => han(name) && ref) && han(r.shown.fire) && han(r.shown.common) && han(r.shown.tiny) && r.shown.statuses > 5 && han(r.shown.poisoned)
       && Number.isInteger(r.shown.hd?.value) && Number.isInteger(r.shown.hd?.max) && r.shown.hd.max > 0,
+    suffixedNames: r.suffixed.rows.filter(([page]) => /^monster(Action|Trait|Legendary)$/.test(page ?? '')).every(([, name]) => han(name)) && r.suffixed.rows.some(([page]) => page === 'monsterLegendary'),
     monsterNames: (r.cold.monsterNames ?? []).length > 0 && r.cold.monsterNames.filter(han).length >= r.cold.monsterNames.length / 2,
     coldIds: r.cold.statuses.every((x) => x === 'complete') && r.cold.savedIds.every((x) => r.cold.inFrame.includes(x)) && r.cold.monsterSheet === 'complete',
   }

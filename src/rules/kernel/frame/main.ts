@@ -12,6 +12,7 @@ import { loadBrews } from './brew-input'
 import { loadKernelModule } from './plutonium-build'
 import { redirectModuleFiles } from './module-roots'
 import { installUnsupportedRecorder } from './writings'
+import { captureRegistryKeys } from './registry-keys'
 import { applyDisplayStyles, FOLLOW_SYSTEM_COLOR_SCHEME } from './display'
 
 const g = globalThis as any
@@ -71,6 +72,8 @@ async function boot(input: KernelInput): Promise<unknown> {
   await loadClassic(`systems/${data.system.id}/dnd5e.js`)
   const usePrivateZh = !!input.moduleRoots?.plutonium && input.language === 'zh.core'
   for (const m of data.modules) for (const path of m.esmodules ?? []) await loadKernelModule(new URL(path, location.href), usePrivateZh)
+  // 登记表的原值（语言键）要在 dnd5e 的 i18nInit 翻译之前记下：名字表靠它分清名字和编号（registry-keys.ts）
+  Hooks.once('init', captureRegistryKeys)
   Hooks.once('setup', () => {
     // 只关闭显示用的日历 HUD；时间规则仍由官方程序执行。
     if (g.CONFIG.DND5E?.calendar) g.CONFIG.DND5E.calendar.application = null

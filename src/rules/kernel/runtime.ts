@@ -352,13 +352,13 @@ export class KernelRuntime {
     return results
   }
 
-  /** 唯一显示出口（display.ts）用在本战役的小窗结果上；refs = 这些文字出自哪些条目（怪物动作名等按条目原文位置取字）。 */
-  async display<T>(ownerKey: string, refs: EntryRef[], value: T): Promise<DisplayResult<T>> {
+  /** 唯一显示出口（display.ts）用在本战役的小窗结果上；refs = 文字出自哪些条目。entries = 交给小窗定位用的英文条目，show 按同一顺序取本战役语言版。 */
+  async displayFor(ownerKey: string, refs: EntryRef[]): Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }> {
     const o = await this.get(ownerKey)
     const library = await this.library(ownerKey)
-    const rows = refs.length ? await this.entries(ownerKey, refs) : null
-    return display(value, { translate: library.codeSet !== kernelDataSource().codeSet, pairs: rows?.status === 'complete' ? await o.pairsOf(rows.rows) : [],
-      namer: await namerFor(this.deps.scoped, library), author: this.deps.service.texts.reader(library.codeSet) })
+    const rows = refs.length ? await this.entries(ownerKey, refs).then((got) => got.status === 'complete' ? got.rows : []) : []
+    const ctx = { translate: library.codeSet !== kernelDataSource().codeSet, pairs: await o.pairsOf(rows), entries: rows, namer: await namerFor(this.deps.scoped, library), author: this.deps.service.texts.reader(library.codeSet) }
+    return { entries: rows.map((r) => r.entry), show: (value) => display(value, ctx) }
   }
 
   /** 本战役现在的选书（每次现读，关书/开书后立刻生效）。 */

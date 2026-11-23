@@ -64,10 +64,11 @@ function d(e, t, n, r) {
 var f = (e) => !!e && typeof e == "object" && typeof e.$t == "string", p = (e) => ({
 	$t: "library",
 	text: e
-}), m = (e, t) => ({
+}), m = (e, t, n) => ({
 	$t: "entry",
 	text: e,
-	...t ? { fallback: t } : {}
+	...t ? { fallback: t } : {},
+	...n ? { at: n } : {}
 }), h = (e, t) => ({
 	$t: "author",
 	text: e,

@@ -11,6 +11,8 @@ export interface DisplayContext {
   namer: Namer
   author: TextReader
   requirementOf?: (key: string) => unknown
+  /** 带位置的条目原文（FrameText entry.at）按这里取本战役语言版：entries[at.entry].zh 里 at.path 那一处。 */
+  entries?: Array<{ zh: unknown | null }>
 }
 export interface DisplayIssue {
   text: string
@@ -39,7 +41,7 @@ export async function display<T>(value: T, ctx: DisplayContext): Promise<Display
       paths.set(node, path)
       if (node.$t === 'plugin') node.args?.forEach((v, i) => collect(v, `${path}.args[${i}]`))
       if (node.$t === 'join') node.parts.forEach((v, i) => collect(v, `${path}.parts[${i}]`))
-      if ((node.$t === 'entry' || node.$t === 'value') && node.fallback) collect(node.fallback, `${path}.fallback`)
+      if ((node.$t === 'entry' || node.$t === 'value' || node.$t === 'system') && node.fallback) collect(node.fallback, `${path}.fallback`)
       return
     }
     Object.entries(node).filter(([key]) => key !== 'raw' && key !== 'author').forEach(([key, v]) => collect(v, path ? `${path}.${key}` : key))
@@ -55,6 +57,11 @@ export async function display<T>(value: T, ctx: DisplayContext): Promise<Display
       case 'value': return { query: { source: 'value', key: l.text, group: l.group }, reason: 'author-rule-unresolved' }
       case 'proficiency': return { query: { source: 'proficiency', key: l.key, count: l.count }, reason: 'author-rule-unresolved' }
       case 'requirement': return { query: { source: 'requirement', raw: ctx.requirementOf?.(l.key) }, reason: 'requirement-unavailable' }
+      case 'entry': {
+        if (!ctx.translate || !l.at) return null
+        const raw = l.at.path.reduce<unknown>((v, k) => (v && typeof v === 'object' ? (v as Record<string | number, unknown>)[k] : undefined), ctx.entries?.[l.at.entry]?.zh)
+        return typeof raw === 'string' && raw.trim() ? { query: { source: 'render', text: raw }, reason: 'entry-position-unresolved' } : null
+      }
       default: return null
     }
   }
@@ -83,7 +90,7 @@ export async function display<T>(value: T, ctx: DisplayContext): Promise<Display
       case 'entry': return ctx.translate ? entryText(l.text, ctx.pairs) ?? (l.fallback ? textOf(l.fallback) : miss(l, 'entry-position-unresolved')) : l.text
       case 'author': return ctx.translate ? miss(l, 'author-position-unresolved') : l.text
       case 'name': return ctx.translate && l.strict ? miss(l, done!.reason) : l.text
-      case 'system': return ctx.translate ? miss(l, 'language-key-missing') : l.text
+      case 'system': return ctx.translate ? (l.fallback ? textOf(l.fallback) : miss(l, 'language-key-missing')) : l.text
       case 'proficiency': return miss(l, 'author-rule-unresolved')
       case 'value': return l.fallback ? textOf(l.fallback) : miss(l, 'author-rule-unresolved')
       case 'requirement': return miss(l, 'requirement-unavailable')

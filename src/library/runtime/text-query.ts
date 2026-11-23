@@ -5,4 +5,6 @@ export type TextQuery =
   | { source: 'value'; key: string; group: string[]; kind?: 'category' }
   | { source: 'proficiency'; key: string; count: number }
   | { source: 'requirement'; raw: unknown }
+  /** 一段带作者标签的原文（{@recharge 5} 等），交本战役作者渲染器渲染成纯文字。 */
+  | { source: 'render'; text: string }
 export type AuthorTextQuery = Exclude<TextQuery, { source: 'system' }>

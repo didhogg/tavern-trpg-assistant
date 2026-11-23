@@ -1,5 +1,5 @@
 import { A as e, C as t, D as n, E as r, O as i, S as a, T as o, _ as s, a as c, b as l, c as u, f as d, g as f, h as p, i as m, k as h, l as g, m as _, o as v, p as y, r as b, s as x, t as S, u as C, v as w, w as T, x as E, y as D } from "./images-CQIVUeK7.js";
-import { C as O, S as ee, _ as k, b as te, f as ne, g as re, h as ie, m as ae, n as oe, o as se, s as ce, t as le, u as ue, v as de, x as fe } from "./tokens-DRn-Ztq4.js";
+import { C as O, S as ee, _ as k, b as te, f as ne, g as re, h as ie, m as ae, n as oe, o as se, s as ce, t as le, u as ue, v as de, x as fe } from "./tokens-mrWHxYSh.js";
 import { a as pe, c as me, d as he, f as ge, h as _e, i as ve, l as ye, m as be, n as xe, o as Se, p as Ce, r as we, s as Te, t as Ee, u as De } from "./protocol-CoIo3UiI.js";
 // \0rolldown/runtime.js
 var Oe = Object.create, ke = Object.defineProperty, Ae = Object.getOwnPropertyDescriptor, je = Object.getOwnPropertyNames, Me = Object.getPrototypeOf, Ne = Object.prototype.hasOwnProperty, Pe = (e, t) => () => (t || (e((t = { exports: {} }).exports, t, t.exports), e = null), t.exports), Fe = (e, t) => {
@@ -25116,7 +25116,7 @@ function _O(e, t) {
 }
 async function vO(e, t) {
 	let n = /* @__PURE__ */ new Map(), r = (e, t = "") => {
-		Array.isArray(e) ? e.forEach((e, n) => r(e, `${t}[${n}]`)) : e && typeof e == "object" && (ce(e) ? (n.set(e, t), e.$t === "plugin" && e.args?.forEach((e, n) => r(e, `${t}.args[${n}]`)), e.$t === "join" && e.parts.forEach((e, n) => r(e, `${t}.parts[${n}]`)), (e.$t === "entry" || e.$t === "value") && e.fallback && r(e.fallback, `${t}.fallback`)) : Object.entries(e).filter(([e]) => e !== "raw" && e !== "author").forEach(([e, n]) => r(n, t ? `${t}.${e}` : e)));
+		Array.isArray(e) ? e.forEach((e, n) => r(e, `${t}[${n}]`)) : e && typeof e == "object" && (ce(e) ? (n.set(e, t), e.$t === "plugin" && e.args?.forEach((e, n) => r(e, `${t}.args[${n}]`)), e.$t === "join" && e.parts.forEach((e, n) => r(e, `${t}.parts[${n}]`)), (e.$t === "entry" || e.$t === "value" || e.$t === "system") && e.fallback && r(e.fallback, `${t}.fallback`)) : Object.entries(e).filter(([e]) => e !== "raw" && e !== "author").forEach(([e, n]) => r(n, t ? `${t}.${e}` : e)));
 	};
 	r(e);
 	let i = [...n.keys()], a = /* @__PURE__ */ new Map(), o = (e) => {
@@ -25158,6 +25158,17 @@ async function vO(e, t) {
 				},
 				reason: "requirement-unavailable"
 			};
+			case "entry": {
+				if (!t.translate || !e.at) return null;
+				let n = e.at.path.reduce((e, t) => e && typeof e == "object" ? e[t] : void 0, t.entries?.[e.at.entry]?.zh);
+				return typeof n == "string" && n.trim() ? {
+					query: {
+						source: "render",
+						text: n
+					},
+					reason: "entry-position-unresolved"
+				} : null;
+			}
 			default: return null;
 		}
 	}, s = i.flatMap((e) => {
@@ -25198,7 +25209,7 @@ async function vO(e, t) {
 			case "entry": return t.translate ? _O(e.text, t.pairs) ?? (e.fallback ? p(e.fallback) : f(e, "entry-position-unresolved")) : e.text;
 			case "author": return t.translate ? f(e, "author-position-unresolved") : e.text;
 			case "name": return t.translate && e.strict ? f(e, n.reason) : e.text;
-			case "system": return t.translate ? f(e, "language-key-missing") : e.text;
+			case "system": return t.translate ? e.fallback ? p(e.fallback) : f(e, "language-key-missing") : e.text;
 			case "proficiency": return f(e, "author-rule-unresolved");
 			case "value": return e.fallback ? p(e.fallback) : f(e, "author-rule-unresolved");
 			case "requirement": return f(e, "requirement-unavailable");
@@ -26059,14 +26070,18 @@ var IO = class {
 		}
 		return o;
 	}
-	async display(e, t, n) {
-		let r = await this.get(e), a = await this.library(e), o = t.length ? await this.entries(e, t) : null;
-		return vO(n, {
-			translate: a.codeSet !== i().codeSet,
-			pairs: o?.status === "complete" ? await r.pairsOf(o.rows) : [],
-			namer: await dO(this.deps.scoped, a),
-			author: this.deps.service.texts.reader(a.codeSet)
-		});
+	async displayFor(e, t) {
+		let n = await this.get(e), r = await this.library(e), a = t.length ? await this.entries(e, t).then((e) => e.status === "complete" ? e.rows : []) : [], o = {
+			translate: r.codeSet !== i().codeSet,
+			pairs: await n.pairsOf(a),
+			entries: a,
+			namer: await dO(this.deps.scoped, r),
+			author: this.deps.service.texts.reader(r.codeSet)
+		};
+		return {
+			entries: a.map((e) => e.entry),
+			show: (e) => vO(e, o)
+		};
 	}
 	async library(e) {
 		return (await this.deps.campaignOf(e)).library;
@@ -26242,34 +26257,34 @@ var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 		return this.call(e, "preparedActors");
 	}
 	async sheet(e, t) {
-		let n = await this.call(e, "sheet", t);
-		if (n.status !== "complete") return n;
-		let r = ((await this.saved(e, t))?.refs ?? []).map((e) => ({
+		let n = ((await this.saved(e, t))?.refs ?? []).map((e) => ({
 			set: e.set,
 			prop: e.prop,
 			hash: e.hash
-		})), i = await this.deps.runtime.display(e, r, n.result.shown), a = await this.deps.runtime.baseOf(e, t), o = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, s = a && o ? RO(te(BO(a), BO(o))).map((e) => ({
+		})), r = await this.deps.runtime.displayFor(e, n), i = await this.call(e, "sheet", t, r.entries);
+		if (i.status !== "complete") return i;
+		let a = await r.show(i.result.shown), o = await this.deps.runtime.baseOf(e, t), s = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, c = o && s ? RO(te(BO(o), BO(s))).map((e) => ({
 			path: e,
 			kind: zO(e)
-		})) : [], c = {}, l = HO(a);
-		for (let [e, t] of HO(o)) {
-			let n = l.get(e);
+		})) : [], l = {}, u = HO(o);
+		for (let [e, t] of HO(s)) {
+			let n = u.get(e);
 			if (!n) continue;
 			let r = RO(te(n, t)).filter((e) => !e.startsWith("_stats")).map((e) => ({
 				path: e,
 				kind: zO(e)
 			}));
-			r.length && (c[e] = r);
+			r.length && (l[e] = r);
 		}
 		return {
-			...n,
+			...i,
 			result: {
-				...n.result,
-				shown: i.value,
-				changed: s,
-				changedItems: c,
-				baseKnown: !!a,
-				...i.missed.length ? { untranslated: i.missed } : {}
+				...i.result,
+				shown: a.value,
+				changed: c,
+				changedItems: l,
+				baseKnown: !!o,
+				...a.missed.length ? { untranslated: a.missed } : {}
 			}
 		};
 	}
@@ -26278,7 +26293,7 @@ var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 		return t || (t = (async () => {
 			let t = await this.call(e, "glossary");
 			if (t.status !== "complete") throw Error(t.error ?? `取编号名字失败：${t.status}`);
-			let n = await this.deps.runtime.display(e, [], t.result);
+			let n = await (await this.deps.runtime.displayFor(e, [])).show(t.result);
 			return {
 				...n.value,
 				...n.missed.length ? { untranslated: n.missed } : {}
