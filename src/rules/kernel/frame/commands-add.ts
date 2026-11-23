@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 import type { ActorGetter, Operate } from './commands-items'
 import { importEntry } from './importer'
-import { applyManager, actorLevel, cleanItem, Manager } from './commands-level'
+import { applyManager, actorLevel, cleanItem, Manager, markStandardDragDrop } from './commands-level'
 
 const g = globalThis as any
 
@@ -24,7 +24,8 @@ export function createAddCommands(operate: Operate, actor: ActorGetter) {
       const added: any[] = []
       for (const row of rows) {
         // 外层缓存层（cache.ts）通常已给好换算结果；没给才现场换算
-        const data = cleanItem(row.data ? structuredClone(row.data) : await importEntry(row.prop, row.entry))
+        // 打上作者的“普通拖放”标记（作者自己的口子）：不然作者的拖放钩子会拦下这次创建、在看不见的小窗里弹“用导入器吗”，东西悄悄丢掉（11-24 真机）
+        const data = markStandardDragDrop(cleanItem(row.data ? structuredClone(row.data) : await importEntry(row.prop, row.entry)))
         const before = new Set(a.items.map((item: any) => item.id))
         const manager = Manager().forNewItem(a, data, { automaticApplication: true })
         if (manager.steps.length) {

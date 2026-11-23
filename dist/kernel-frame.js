@@ -1,11 +1,11 @@
 import { a as e, c as t, d as n, g as r, i, l as a, m as o, n as s, p as c, r as l, t as u, u as d, y as f } from "./tokens-mrWHxYSh.js";
 import { a as p, o as m, t as h } from "./protocol-CoIo3UiI.js";
 // src/rules/kernel/frame/request.ts
-var g = new URLSearchParams(location.search).get("frame") ?? "", _ = 1, v = /* @__PURE__ */ new Map();
-function y(e) {
+var g = new URLSearchParams(location.search).get("frame") ?? "", ee = 1, _ = /* @__PURE__ */ new Map();
+function v(e) {
 	return new Promise((t, n) => {
-		let r = 1e6 + _++;
-		v.set(r, {
+		let r = 1e6 + ee++;
+		_.set(r, {
 			resolve: t,
 			reject: n
 		}), parent.postMessage({
@@ -19,19 +19,19 @@ function y(e) {
 }
 addEventListener("message", (e) => {
 	let t = e.data;
-	if (e.source !== parent || t?.channel !== "trpg-library" || t.type !== "response" || !v.has(t.id)) return;
-	let n = v.get(t.id);
-	v.delete(t.id), t.ok ? n.resolve(t.value) : n.reject(Error(t.error));
+	if (e.source !== parent || t?.channel !== "trpg-library" || t.type !== "response" || !_.has(t.id)) return;
+	let n = _.get(t.id);
+	_.delete(t.id), t.ok ? n.resolve(t.value) : n.reject(Error(t.error));
 });
 // src/rules/kernel/packages.ts
-var b = [
+var y = [
 	"esmodules",
 	"scripts",
 	"styles"
 ];
-function x(e, t) {
+function b(e, t) {
 	let n = `${t}s/${e.id}/`, r = (e) => /^(?:[a-z]+:)?\/\//i.test(e) || e.startsWith(n) ? e : n + e.replace(/^\.?\//, ""), i = structuredClone(e);
-	for (let e of b) {
+	for (let e of y) {
 		let t = i[e];
 		Array.isArray(t) && (i[e] = t.map((e) => typeof e == "string" ? r(e) : {
 			...e,
@@ -44,9 +44,9 @@ function x(e, t) {
 	}))), i;
 }
 // src/rules/kernel/frame/world.ts
-function ee(e) {
-	let { CONST: t, CONFIG: n, foundry: r } = globalThis, i = x(e.system, "system"), a = e.modules.map((e) => ({
-		...x(e, "module"),
+function te(e) {
+	let { CONST: t, CONFIG: n, foundry: r } = globalThis, i = b(e.system, "system"), a = e.modules.map((e) => ({
+		...b(e, "module"),
 		active: !0
 	})), o = `${e.release.generation}.${e.release.build}`, s = {
 		coreVersion: o,
@@ -114,7 +114,7 @@ function ee(e) {
 	};
 }
 // src/rules/kernel/frame/server.ts
-function te(e, t) {
+function ne(e, t) {
 	let n = {};
 	for (let r of t) {
 		let t = r.split(".");
@@ -131,12 +131,12 @@ function te(e, t) {
 	}
 	return n;
 }
-var S = 0;
-async function C(e = 2e3) {
+var x = 0;
+async function S(e = 2e3) {
 	let t = Date.now() + e, n = 0;
-	for (; n < 2 && Date.now() < t;) await new Promise((e) => setTimeout(e, 0)), n = S === 0 ? n + 1 : 0;
+	for (; n < 2 && Date.now() < t;) await new Promise((e) => setTimeout(e, 0)), n = x === 0 ? n + 1 : 0;
 }
-function w(e, t) {
+function C(e, t) {
 	let n = globalThis, r = [], i = [], a = /* @__PURE__ */ new Map(), o = /* @__PURE__ */ new Map(), s = /* @__PURE__ */ new Map(), c = 0, l = (e) => {
 		for (let t of e) {
 			let e = /^kernel(\d{10})$/.exec(t);
@@ -159,7 +159,7 @@ function w(e, t) {
 			let r = await d(n), i = e._id ? r.filter((t) => t._id === e._id) : r;
 			if (!t.index) return structuredClone(i);
 			if (!Array.isArray(t.indexFields)) throw Error("Official index request has no fields");
-			return i.map((e) => te(e, t.indexFields));
+			return i.map((e) => ne(e, t.indexFields));
 		}
 		if (n && !a.has(n)) throw Error(`Original pack is read-only: ${n}`);
 		let i = t.parentUuid ?? null, o = n ? a.get(n) : s.get(e.type) ?? s.set(e.type, []).get(e.type);
@@ -207,8 +207,8 @@ function w(e, t) {
 			args: o
 		});
 		let s = typeof r.at(-1) == "function" ? r.at(-1) : null, c = (e, t) => {
-			S++, e.then((e) => s(t(e)), (e) => s({ error: { message: e.message } })).finally(() => {
-				S--;
+			x++, e.then((e) => s(t(e)), (e) => s({ error: { message: e.message } })).finally(() => {
+				x--;
 			});
 		};
 		if (e === "template") return c(t.readText(r[0]), (e) => ({ html: e }));
@@ -260,17 +260,17 @@ function w(e, t) {
 	};
 }
 // src/rules/kernel/frame/random.ts
-var T = null, E = null;
-function D(e, t) {
-	return E ? E(e, t) : t();
+var w = null, T = null;
+function E(e, t) {
+	return T ? T(e, t) : t();
 }
-function ne(e) {
+function re(e) {
 	let t = 2166136261;
 	for (let n = 0; n < e.length; n++) t = Math.imul(t ^ e.charCodeAt(n), 16777619);
 	return t >>> 0;
 }
-function O(e) {
-	T = e.crypto.getRandomValues.bind(e.crypto);
+function D(e) {
+	w = e.crypto.getRandomValues.bind(e.crypto);
 	let t = 0, n = () => {
 		t = t + 1831565813 >>> 0;
 		let e = t;
@@ -288,41 +288,41 @@ function O(e) {
 		},
 		configurable: !0,
 		writable: !0
-	}), E = async (e, n) => {
+	}), T = async (e, n) => {
 		let r = t;
-		t = ne(e);
+		t = re(e);
 		try {
 			return await n();
 		} finally {
 			t = r;
 		}
 	}, (e) => {
-		t = ne(e);
+		t = re(e);
 	};
 }
-function k() {
+function O() {
 	let e = /* @__PURE__ */ new Uint32Array(4);
-	return T ? T(e) : crypto.getRandomValues(e), Array.from(e, (e) => e.toString(16).padStart(8, "0")).join("");
+	return w ? w(e) : crypto.getRandomValues(e), Array.from(e, (e) => e.toString(16).padStart(8, "0")).join("");
 }
 // src/rules/kernel/frame/seed.ts
-var A = O(globalThis);
-function re() {
-	return k();
+var k = D(globalThis);
+function ie() {
+	return O();
 }
-function j(e) {
-	A(e);
+function A(e) {
+	k(e);
 }
-function ie(e, t) {
+function ae(e, t) {
 	let n = t;
-	return `entry:${e}:${String(n?.source ?? "")}:${String(n?.name ?? "")}:${ae(JSON.stringify(t))}`;
+	return `entry:${e}:${String(n?.source ?? "")}:${String(n?.name ?? "")}:${oe(JSON.stringify(t))}`;
 }
-function ae(e) {
+function oe(e) {
 	let t = 2166136261;
 	for (let n = 0; n < e.length; n++) t = Math.imul(t ^ e.charCodeAt(n), 16777619);
 	return (t >>> 0).toString(16);
 }
 // src/rules/kernel/frame/writings.ts
-var M = [
+var j = [
 	{
 		id: "midi-qol",
 		test: (e) => e.startsWith("flags.midi-qol."),
@@ -338,13 +338,13 @@ var M = [
 		test: (e) => e.startsWith("macro."),
 		reason: "宏写法：不执行任何 JS（蓝图决定 6）"
 	}
-], oe = {
+], se = {
 	rule: "no-target",
 	reason: "目标路径既没有数据字段，人物身上也没有这个属性；原代码写进去也没有规则读取"
-}, N = globalThis, se = /* @__PURE__ */ new WeakMap(), ce = !1, le = (e) => e?.documentName === "Actor";
+}, M = globalThis, ce = /* @__PURE__ */ new WeakMap(), le = !1, N = (e) => e?.documentName === "Actor";
 function ue(e, t, n) {
-	let r = String(t.effect?.uuid ?? ""), i = String(t.key ?? ""), a = se.get(e);
-	a || se.set(e, a = /* @__PURE__ */ new Map()), a.has(`${r}|${i}`) || a.set(`${r}|${i}`, {
+	let r = String(t.effect?.uuid ?? ""), i = String(t.key ?? ""), a = ce.get(e);
+	a || ce.set(e, a = /* @__PURE__ */ new Map()), a.has(`${r}|${i}`) || a.set(`${r}|${i}`, {
 		actor: e.id,
 		effect: r,
 		key: i,
@@ -355,17 +355,17 @@ function ue(e, t, n) {
 	});
 }
 function de() {
-	if (ce) return;
-	let e = N.CONFIG?.ActiveEffect?.documentClass, t = N.CONFIG?.Actor?.documentClass;
+	if (le) return;
+	let e = M.CONFIG?.ActiveEffect?.documentClass, t = M.CONFIG?.Actor?.documentClass;
 	if (!e || !t) return;
-	ce = !0;
+	le = !0;
 	let n = t.prototype.applyActiveEffects;
 	t.prototype.applyActiveEffects = function(e, ...t) {
-		return (e === "initial" || e === void 0) && se.set(this, /* @__PURE__ */ new Map()), n.call(this, e, ...t);
+		return (e === "initial" || e === void 0) && ce.set(this, /* @__PURE__ */ new Map()), n.call(this, e, ...t);
 	};
 	let r = e.applyChange;
 	e.applyChange = function(e, t, ...n) {
-		let i = le(e) && t?.effect ? M.find((e) => e.test(String(t.key ?? ""))) : void 0;
+		let i = N(e) && t?.effect ? j.find((e) => e.test(String(t.key ?? ""))) : void 0;
 		return i && ue(e, t, {
 			rule: i.id,
 			reason: i.reason
@@ -373,11 +373,11 @@ function de() {
 	};
 	let i = e._applyChangeUnguided;
 	e._applyChangeUnguided = function(e, t, ...n) {
-		return le(e) && t?.effect && N.foundry.utils.getProperty(e, t.key) === void 0 && !M.some((e) => e.test(String(t.key ?? ""))) && ue(e, t, oe), i.call(this, e, t, ...n);
+		return N(e) && t?.effect && M.foundry.utils.getProperty(e, t.key) === void 0 && !j.some((e) => e.test(String(t.key ?? ""))) && ue(e, t, se), i.call(this, e, t, ...n);
 	};
 }
 function fe(e) {
-	return de(), se.has(e) || e.reset(), [...se.get(e)?.values() ?? []];
+	return de(), ce.has(e) || e.reset(), [...ce.get(e)?.values() ?? []];
 }
 // src/rules/kernel/frame/commands-items.ts
 var pe = globalThis;
@@ -793,7 +793,7 @@ function Ve() {
 	let e = ze.foundry?.documents?.collections?.CompendiumCollection;
 	if (e?.prototype && !e.prototype.getDocuments.__seeded) for (let t of ["getDocuments", "getDocument"]) {
 		let n = e.prototype[t], r = function(...e) {
-			return D(`pack:${this.collection}:${t}:${JSON.stringify(e)}`, () => n.apply(this, e));
+			return E(`pack:${this.collection}:${t}:${JSON.stringify(e)}`, () => n.apply(this, e));
 		};
 		r.__seeded = !0, e.prototype[t] = r;
 	}
@@ -814,7 +814,7 @@ async function Ue(e, t) {
 		if (!o) throw Error(`Plutonium import failed for ${t?.name ?? e}`);
 		return o.toObject ? o.toObject() : o;
 	};
-	return j(ie(e, t)), await i(), j(ie(e, t)), Re(i);
+	return A(ae(e, t)), await i(), A(ae(e, t)), Re(i);
 }
 async function We(e) {
 	return (await Ge(e)).map((e) => e.prop);
@@ -1919,7 +1919,7 @@ function zn(e) {
 // src/rules/kernel/frame/build-traits.ts
 var Bn = globalThis, Vn = "P6Tr", Hn = (e) => typeof e == "string" && /^P6Tr[0-9a-f]{12}$/.test(e), Un = (...e) => Vn + p(e).slice(0, 12);
 function Wn(e, t) {
-	return D(`build-traits:check:${e?._id}`, () => Gn(e, t));
+	return E(`build-traits:check:${e?._id}`, () => Gn(e, t));
 }
 async function Gn(e, t) {
 	let { available: n } = await e.unfulfilledChoices(), r = new Set(n.filter((e) => e.type === "grant").flatMap((e) => [...e.choices.asSet()])), i = /* @__PURE__ */ new Set([...r, ...e.configuration.grants ?? []]), a = n.filter((e) => e.type === "choice").map((e) => e.choices.asSet()), o = t?.chosen ?? [];
@@ -1980,7 +1980,7 @@ var Xn = (e) => i(e, zn(e)), Zn = (e, t, n = []) => {
 	return r ? L(r) : Xn(String(e._title || e._subComps[0]?.modalTitle || e._prop));
 }, Qn = (e) => [...new Map(e.map((e) => [JSON.stringify(e), e])).values()];
 function $n(e, t, n, r, i = {}) {
-	return D(`build-traits:fill:${n}:${r}`, () => er(e, t, n, r, i));
+	return E(`build-traits:fill:${n}:${r}`, () => er(e, t, n, r, i));
 }
 async function er(e, n, r, i, a) {
 	let { replay: o, picks: s, plans: c, actor: l, scope: u, expertise: f } = a;
@@ -1990,95 +1990,95 @@ async function er(e, n, r, i, a) {
 	let h = +(n.prop === "class"), g = n.prop === "class" ? m.Charactermancer_Class_Util.getStandardProficiencies(i ? n.entry.multiclassing?.proficienciesGained ?? {} : {
 		proficiency: n.entry.proficiency,
 		...n.entry.startingProficiencies
-	}) : structuredClone(n.entry), _ = new Bn.CONFIG.Actor.documentClass({
+	}) : structuredClone(n.entry), ee = new Bn.CONFIG.Actor.documentClass({
 		name: "Trait preview",
 		type: Gt
-	}), v = [{ entity: g }], y = await m.Charactermancer_AvailableProficiencyManager.pGetInstance(), b = new m.Charactermancer_FeatureOptionsSelect({
-		actor: _,
-		optionsSet: v,
+	}), _ = [{ entity: g }], v = await m.Charactermancer_AvailableProficiencyManager.pGetInstance(), y = new m.Charactermancer_FeatureOptionsSelect({
+		actor: ee,
+		optionsSet: _,
 		level: h,
 		modalFilterSpells: {},
-		availableProficiencyManager: y
-	}), x = b._subCompManagers.filter((e) => e instanceof m.CharactermancerFeatureSubCompManagerProficiencyOtherBase), ee = await qn(e, h, i), te = Pe(n.data ?? e), S = /* @__PURE__ */ new Set(), C = [], w = {};
+		availableProficiencyManager: v
+	}), b = y._subCompManagers.filter((e) => e instanceof m.CharactermancerFeatureSubCompManagerProficiencyOtherBase), te = await qn(e, h, i), ne = Pe(n.data ?? e), x = /* @__PURE__ */ new Set(), S = [], C = {};
 	try {
-		for (let y of x) try {
-			if (await y._pInitSubComp({
+		for (let v of b) try {
+			if (await v._pInitSubComp({
 				ix: 0,
-				selectedLinkedEntityInfos: v
-			}), !y._subComps[0]) continue;
-			let b = l && y._subComps[0] instanceof m.Charactermancer_ExpertiseSelect, T = b ? await Yn(l, e, {
-				...Object.fromEntries(Object.entries(e.system?.advancement ?? {}).filter(([e]) => !S.has(e))),
-				...w
-			}, a, h) : l, E = await Nn(m, _, y, T, u);
-			if (!E.length) {
-				C.push(Zn(y, x));
+				selectedLinkedEntityInfos: _
+			}), !v._subComps[0]) continue;
+			let y = l && v._subComps[0] instanceof m.Charactermancer_ExpertiseSelect, w = y ? await Yn(l, e, {
+				...Object.fromEntries(Object.entries(e.system?.advancement ?? {}).filter(([e]) => !x.has(e))),
+				...C
+			}, a, h) : l, T = await Nn(m, ee, v, w, u);
+			if (!T.length) {
+				S.push(Zn(v, b));
 				continue;
 			}
-			let D = E.map(({ index: e }) => Un(r, y._prop, h, i, "author-plan", e)), ne = o ?? s?.map((e) => e.id), O = D.findIndex((e) => ne?.includes(e)), k = O < 0 ? 0 : O, A = E[k];
-			if (A.extended && o && O < 0) continue;
-			let re = E.map((e, n) => ({
-				id: D[n],
-				label: e.choices.length ? t(e.choices.map((e) => d(`{0} ×${e.count}`, It(e.pool) ? L(It(e.pool)) : Zn(y, x))), " + ") : It(e.grants) ? L(It(e.grants)) : Zn(y, x)
-			})), j = [...new Map(A.withheld.map((e) => [e.label, e])).values()].sort((e, t) => e.label.localeCompare(t.label));
-			j.length && C.push(d("{0}（暂时无法加到人物卡：{1}）", Zn(y, x), t(j.map((e) => e.text ?? Xn(e.label)), "、")));
-			let ie = p(g[y._prop] || g.entryData?.[y._prop]), ae = ee.filter((e) => e.mode === A.mode), M = ae.filter(({ id: e }) => te[e]?.field === y._prop && te[e]?.input === ie), oe = new Set(M.flatMap((e) => e.grants)), N = M.flatMap((e) => e.slots), se = oe.size === A.grants.length && A.grants.every((e) => oe.has(e)) && N.length === A.choices.length && Jn(A.choices, N)?.length === 0, ce = Un(r, y._prop, h, i, "origin"), le = N.length > 0 && !se && !A.withheld.length && (!o || o.includes(A.extended ? D[k] : ce)), ue = le ? ae.filter((e) => !M.includes(e)) : ae, de = new Set(ue.flatMap((e) => e.grants)), fe = ue.flatMap((e) => e.slots), pe = A.grants.filter((e) => !de.has(e)), me = le ? A.choices : Jn(A.choices, fe);
-			if (le && A.choices.some((e) => fe.some((t) => e.pool.some((e) => t.pool.has(e))))) {
-				C.push(d("{0}（与资料附带的进阶重叠，已保留原进阶）", Zn(y, x)));
+			let E = T.map(({ index: e }) => Un(r, v._prop, h, i, "author-plan", e)), re = o ?? s?.map((e) => e.id), D = E.findIndex((e) => re?.includes(e)), O = D < 0 ? 0 : D, k = T[O];
+			if (k.extended && o && D < 0) continue;
+			let ie = T.map((e, n) => ({
+				id: E[n],
+				label: e.choices.length ? t(e.choices.map((e) => d(`{0} ×${e.count}`, It(e.pool) ? L(It(e.pool)) : Zn(v, b))), " + ") : It(e.grants) ? L(It(e.grants)) : Zn(v, b)
+			})), A = [...new Map(k.withheld.map((e) => [e.label, e])).values()].sort((e, t) => e.label.localeCompare(t.label));
+			A.length && S.push(d("{0}（暂时无法加到人物卡：{1}）", Zn(v, b), t(A.map((e) => e.text ?? Xn(e.label)), "、")));
+			let ae = p(g[v._prop] || g.entryData?.[v._prop]), oe = te.filter((e) => e.mode === k.mode), j = oe.filter(({ id: e }) => ne[e]?.field === v._prop && ne[e]?.input === ae), se = new Set(j.flatMap((e) => e.grants)), M = j.flatMap((e) => e.slots), ce = se.size === k.grants.length && k.grants.every((e) => se.has(e)) && M.length === k.choices.length && Jn(k.choices, M)?.length === 0, le = Un(r, v._prop, h, i, "origin"), N = M.length > 0 && !ce && !k.withheld.length && (!o || o.includes(k.extended ? E[O] : le)), ue = N ? oe.filter((e) => !j.includes(e)) : oe, de = new Set(ue.flatMap((e) => e.grants)), fe = ue.flatMap((e) => e.slots), pe = k.grants.filter((e) => !de.has(e)), me = N ? k.choices : Jn(k.choices, fe);
+			if (N && k.choices.some((e) => fe.some((t) => e.pool.some((e) => t.pool.has(e))))) {
+				S.push(d("{0}（与资料附带的进阶重叠，已保留原进阶）", Zn(v, b)));
 				continue;
 			}
 			if (!me) {
-				C.push(Zn(y, x));
+				S.push(Zn(v, b));
 				continue;
 			}
 			if (!pe.length && !me.length) {
-				for (let e of M) c?.set(e.id, {
+				for (let e of j) c?.set(e.id, {
 					choices: [],
-					names: A.names
+					names: k.names
 				});
 				continue;
 			}
-			if (le) for (let e of M) S.add(e.id);
-			let P = A.extended ? D[k] : le ? ce : Un(r, y._prop, h, i);
+			if (N) for (let e of j) x.add(e.id);
+			let P = k.extended ? E[O] : N ? le : Un(r, v._prop, h, i);
 			if (c?.set(P, {
-				choices: re.length > 1 ? re : [],
-				names: A.names
-			}), w[P] = {
+				choices: ie.length > 1 ? ie : [],
+				names: k.names
+			}), C[P] = {
 				_id: P,
 				type: "Trait",
 				level: h,
 				...n.prop === "class" ? { classRestriction: i ? "secondary" : "primary" } : {},
-				...le && A.hints.length ? { hint: A.hints.join("\n") } : {},
+				...N && k.hints.length ? { hint: k.hints.join("\n") } : {},
 				configuration: {
-					mode: A.mode,
+					mode: k.mode,
 					grants: pe,
 					choices: me,
 					allowReplacements: !1
 				},
 				value: {}
-			}, b && f) {
+			}, y && f) {
 				let t = new Bn.CONFIG.Item.documentClass({
 					...e,
 					system: {
 						...e.system,
-						advancement: { [P]: w[P] }
+						advancement: { [P]: C[P] }
 					}
-				}, { parent: T });
+				}, { parent: w });
 				f.set(P, t.advancement.byId[P]);
 			}
 		} catch (e) {
-			console.warn("[trpg-assistant] 建卡进阶暂无法处理", r, y._prop, e), C.push(Zn(y, x));
+			console.warn("[trpg-assistant] 建卡进阶暂无法处理", r, v._prop, e), S.push(Zn(v, b));
 		}
 	} finally {
-		b.unregisterSourceTracking();
+		y.unregisterSourceTracking();
 	}
 	if (e.system) {
-		let t = Object.fromEntries(Object.entries(e.system.advancement ?? {}).filter(([e, t]) => !S.has(e) && !Kn(t)));
+		let t = Object.fromEntries(Object.entries(e.system.advancement ?? {}).filter(([e, t]) => !x.has(e) && !Kn(t)));
 		e.system.advancement = {
 			...t,
-			...w
+			...C
 		};
 	}
-	return Qn(C);
+	return Qn(S);
 }
 // src/rules/kernel/frame/commands-level.ts
 var z = globalThis;
@@ -2121,7 +2121,7 @@ function rr(e) {
 		"ownership",
 		"_stats"
 	]) delete t[e];
-	return Fe(t), t;
+	return t.system && "container" in t.system && (t.system.container = null), Fe(t), t;
 }
 function ir(e) {
 	let t = e?.toObject ? e.toObject() : structuredClone(e);
@@ -2199,7 +2199,7 @@ async function sr(e, t, { strict: n = !1, picks: r, blank: i = !1, expertise: a 
 	});
 	await e.render();
 	let s = await o;
-	return s && await C(), s ? { finished: !0 } : {
+	return s && await S(), s ? { finished: !0 } : {
 		finished: !1,
 		step: cr(e.step)
 	};
@@ -2251,7 +2251,7 @@ function ur(e) {
 	return Object.fromEntries(Object.entries(e.system?.abilities ?? {}).map(([e, t]) => [e, t.value]));
 }
 async function dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, blank: c = !1, traitScope: l, onManager: u } = {}) {
-	a !== void 0 && j(a);
+	a !== void 0 && A(a);
 	let d = await z.CONFIG.Actor.documentClass.create({
 		...o ? { _id: o } : {},
 		name: e,
@@ -2261,7 +2261,7 @@ async function dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 	for (let e of t) {
 		let t = rr(e?.data ?? e);
 		z.CONFIG.Item.dataModels[t.type]?.resetData?.(t.system);
-		let n = e?.refKey ?? ar(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => Hn(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, _ = o ? await $n(t, e, n, d.items.some((e) => e.type === "class"), {
+		let n = e?.refKey ?? ar(t), a = n ? r[n] : void 0, o = n && (!i || a?.some((e) => Hn(e.id))), l = /* @__PURE__ */ new Map(), h = /* @__PURE__ */ new Map(), g = n ? s?.[n] : void 0, ee = o ? await $n(t, e, n, d.items.some((e) => e.type === "class"), {
 			actor: d,
 			plans: l,
 			scope: f,
@@ -2270,16 +2270,16 @@ async function dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 			expertise: h,
 			replay: i ? a?.map((e) => e.id) : void 0
 		}) : [];
-		n && _.length && m.push({
+		n && ee.length && m.push({
 			refKey: n,
-			titles: _
+			titles: ee
 		});
-		let v = [...a ?? [], ...n ? s?.[n] ?? [] : []].find((e) => Hn(e.id) && !(e.id in (t.system?.advancement ?? {})));
-		if (v) return {
+		let _ = [...a ?? [], ...n ? s?.[n] ?? [] : []].find((e) => Hn(e.id) && !(e.id in (t.system?.advancement ?? {})));
+		if (_) return {
 			pending: !0,
 			step: {
 				error: "存档中的建卡步骤已变更",
-				id: v.id,
+				id: _.id,
 				refKey: n
 			},
 			built: B(d),
@@ -2287,24 +2287,24 @@ async function dr(e, t, n, r = {}, { strict: i = !1, seed: a, id: o, picks: s, b
 			initial: p,
 			missingTraits: m
 		};
-		let y = tr().forNewItem(d, t, { automaticApplication: !0 });
+		let v = tr().forNewItem(d, t, { automaticApplication: !0 });
 		await u?.({
-			manager: y,
+			manager: v,
 			key: n,
-			unsupported: _,
+			unsupported: ee,
 			picks: g,
 			traitPlans: l,
 			expertise: h
 		});
-		let b = await sr(y, a, {
+		let y = await sr(v, a, {
 			strict: i,
 			blank: c,
 			picks: g,
 			expertise: h
 		});
-		if (!b.finished) return {
+		if (!y.finished) return {
 			pending: !0,
-			step: b.step,
+			step: y.step,
 			built: B(d),
 			actor: d,
 			initial: p,
@@ -2388,7 +2388,7 @@ function fr(e, t) {
 			return r;
 		}),
 		buildCharacter: (t) => e([], async () => {
-			let e = t.seed ?? re(), n = [];
+			let e = t.seed ?? ie(), n = [];
 			for (let e of t.items) n.push({
 				...e,
 				data: e.data ?? await I(e.prop, e.entry)
@@ -2437,7 +2437,7 @@ function fr(e, t) {
 		actorTypes: (t, n) => e([], async () => Kt(t, n)),
 		rebuildCharacter: (t) => e([], async () => {
 			let e = t.seed?.trim() || t.name;
-			j(e);
+			A(e);
 			let n = [];
 			for (let e of t.items) n.push({
 				...e,
@@ -2490,7 +2490,7 @@ function hr(e, t) {
 			if (!i?._onDropSingleItem) throw Error(`人物 ${n} 没有官方人物表单实例`);
 			let a = [];
 			for (let t of r) {
-				let n = rr(t.data ? structuredClone(t.data) : await I(t.prop, t.entry)), r = new Set(e.items.map((e) => e.id)), o = tr().forNewItem(e, n, { automaticApplication: !0 });
+				let n = ir(rr(t.data ? structuredClone(t.data) : await I(t.prop, t.entry))), r = new Set(e.items.map((e) => e.id)), o = tr().forNewItem(e, n, { automaticApplication: !0 });
 				if (o.steps.length) {
 					let e = await sr(o, t.choices, { strict: !1 });
 					if (!e.finished) return {
@@ -2758,13 +2758,13 @@ async function Mr(n, r = [], a, o) {
 		if (!n) continue;
 		let l = n.constructor?.typeName ?? n.type, u = await c.flow.getAutomaticApplicationValue?.() !== !1, d = null, f = !1, p = r.find((e) => e.id === n.id && (e.level ?? null) === (c.flow.level ?? null))?.value;
 		Ar[l] ? d = await Ar[l](o.get(n.id) ?? n, p, a) : !u && !jr.has(l) && (f = !0);
-		let m = l === "Trait" ? Rt(n) : null, h = n._source?.name || n._source?.title, g = n.name ?? n.title, _ = m ? L(m) : h ? e(String(h), Dt(String(h))) : g ? L(String(g)) : null, v = l === "Trait" && n.hint ? t(String(n.hint).split("\n").map((e) => i(e, zn(e))), "\n") : void 0;
+		let m = l === "Trait" ? Rt(n) : null, h = n._source?.name || n._source?.title, g = n.name ?? n.title, ee = m ? L(m) : h ? e(String(h), Dt(String(h))) : g ? L(String(g)) : null, _ = l === "Trait" && n.hint ? t(String(n.hint).split("\n").map((e) => i(e, zn(e))), "\n") : void 0;
 		s.push({
 			id: n.id,
 			level: c.flow.level ?? null,
 			type: l,
-			title: _,
-			...v ? { hint: v } : {},
+			title: ee,
+			..._ ? { hint: _ } : {},
 			automatic: u,
 			options: d,
 			...f ? { unsupported: !0 } : {}
@@ -3353,7 +3353,7 @@ var Si = globalThis, Ci = () => Si.CONFIG.Actor.documentClass;
 function wi(e) {
 	return {
 		draftStart: (t) => e([], async () => {
-			j(t.seed);
+			A(t.seed);
 			let e = await Ci().create({
 				...t.id ? { _id: t.id } : {},
 				name: t.name,
@@ -3365,7 +3365,7 @@ function wi(e) {
 			};
 		}),
 		draftLoad: (t) => e([], async () => {
-			j(t.seed);
+			A(t.seed);
 			let e = await Ci().create(structuredClone(t.data), { keepId: !0 });
 			return {
 				id: e.id,
@@ -3790,7 +3790,7 @@ function Gi(e, t) {
 	}
 	s.textContent = u ? "取消选它" : "选它", s.disabled = t.disabled();
 	let f = `${t.category}|${c.hash}`;
-	i.dataset.entry !== f && (i.dataset.entry = f, i.textContent = "正在读取资料…", y({
+	i.dataset.entry !== f && (i.dataset.entry = f, i.textContent = "正在读取资料…", v({
 		op: "build-card",
 		prop: t.category,
 		hash: c.hash
@@ -3816,18 +3816,18 @@ function Ki(e, t, n, r, i) {
 	d.after(p);
 	let m = q("span", "p6-builder-spell-status"), h = q("div", "p6-builder-footer p6-builder-ui"), g = q("p", "p6-builder-feedback");
 	g.setAttribute("aria-live", "polite");
-	let _ = q("small", "p6-builder-hint", "关掉窗口会丢掉这次选择");
-	h.append(_, g), t.append(h);
-	let v = c[0], y = !1, b = !1, x = 0, ee, te = /* @__PURE__ */ new Map(), S = J("下一步", () => ne(1), "p6-builder-btn p6-builder-primary"), C = J("上一步", () => ne(-1)), w = String(e._actor?.name ?? ""), T = J(w ? `创建「${w}」` : "创建人物", () => {
-		ie();
+	let ee = q("small", "p6-builder-hint", "关掉窗口会丢掉这次选择");
+	h.append(ee, g), t.append(h);
+	let _ = c[0], v = !1, y = !1, b = 0, te, ne = /* @__PURE__ */ new Map(), x = J("下一步", () => re(1), "p6-builder-btn p6-builder-primary"), S = J("上一步", () => re(-1)), C = String(e._actor?.name ?? ""), w = J(C ? `创建「${C}」` : "创建人物", () => {
+		ae();
 	}, "p6-builder-btn p6-builder-primary");
-	h.append(C, S, T);
-	let E = new Map([...c, null].map((e) => {
-		let t = J("", () => k(e), "p6-builder-tab");
+	h.append(S, x, w);
+	let T = new Map([...c, null].map((e) => {
+		let t = J("", () => O(e), "p6-builder-tab");
 		return t.append(q("i"), q("span", "", e?.label ?? "完成")), [e, t];
 	}));
-	d.append(q("span", "p6-builder-tab p6-builder-past", "✓ 名字"), ...E.values());
-	function D(t) {
+	d.append(q("span", "p6-builder-tab p6-builder-past", "✓ 名字"), ...T.values());
+	function E(t) {
 		let r = o.get(t.name);
 		if (!r) return !1;
 		switch (t.optional) {
@@ -3837,112 +3837,112 @@ function Ki(e, t, n, r, i) {
 			default: return !0;
 		}
 	}
-	function ne(e) {
-		let t = [...c.filter(D), null], n = t[t.indexOf(v) + e];
-		n !== void 0 && k(n);
+	function re(e) {
+		let t = [...c.filter(E), null], n = t[t.indexOf(_) + e];
+		n !== void 0 && O(n);
 	}
-	function O(e) {
+	function D(e) {
 		return e.label === "装备" ? "起始装备" : e.label;
 	}
-	function k(e) {
-		if (b || e && !D(e)) return;
-		if (v = e, y = !1, g.textContent = "", p.replaceChildren(), p.hidden = !e?.shop && e?.label !== "法术", e?.shop) {
+	function O(e) {
+		if (y || e && !E(e)) return;
+		if (_ = e, v = !1, g.textContent = "", p.replaceChildren(), p.hidden = !e?.shop && e?.label !== "法术", e?.shop) {
 			let e = J("起始装备", () => {
-				y = !1, A();
+				v = !1, k();
 			}), t = J("装备商店", () => {
-				y = !0, A();
+				v = !0, k();
 			});
 			p.append(e, t);
 		}
-		e?.label === "法术" && p.append(m), A();
-		let t = E.get(e);
+		e?.label === "法术" && p.append(m), k();
+		let t = T.get(e);
 		(t && t.offsetLeft + t.offsetWidth > d.scrollLeft + d.clientWidth || t && t.offsetLeft < d.scrollLeft) && (d.scrollLeft = t.offsetLeft);
 	}
-	function A() {
-		let t = v && (y ? v.shop : v.name), n = t ? o.get(t) : void 0;
+	function k() {
+		let t = _ && (v ? _.shop : _.name), n = t ? o.get(t) : void 0;
 		for (let e of o.values()) e.tab.wrpTab.classList.toggle("p6-builder-inactive", e !== n);
-		n && e.activeTab_ !== n.tab && (e.activeTab_ = n.tab), f.hidden = !!v, S.hidden = !v, T.hidden = !!v, C.disabled = v === c[0];
-		for (let [e, t] of [...p.children].entries()) t.setAttribute("aria-pressed", String(!!e === y));
-		ae();
+		n && e.activeTab_ !== n.tab && (e.activeTab_ = n.tab), f.hidden = !!_, x.hidden = !_, w.hidden = !!_, S.disabled = _ === c[0];
+		for (let [e, t] of [...p.children].entries()) t.setAttribute("aria-pressed", String(!!e === v));
+		oe();
 	}
-	function re() {
+	function ie() {
 		let t = Ti(e), r = q("dl", "p6-builder-summary"), i = q("div", "p6-builder-todo"), a = q("div", "p6-builder-todo");
-		for (let e of c.filter(D)) {
-			let o = t.get(O(e)), s = n.filter((t) => t.category === e.prop).flatMap((e) => e.chosen()?.label.name ?? []);
+		for (let e of c.filter(E)) {
+			let o = t.get(D(e)), s = n.filter((t) => t.category === e.prop).flatMap((e) => e.chosen()?.label.name ?? []);
 			(s.length || o?.text) && r.append(q("dt", "", e.label), q("dd", "", [...s, o?.text].filter(Boolean).join(" · ")));
 			let c = o?.pending || e.prop && !s.length;
 			if (c || o?.text.includes("可继续选择")) {
 				let t = q("div", "p6-builder-todo-row");
-				t.append(q("span", "", c ? o?.text ?? `还没选${e.label}` : o?.text), J("去填", () => k(e))), (o?.pending ? i : a).append(t);
+				t.append(q("span", "", c ? o?.text ?? `还没选${e.label}` : o?.text), J("去填", () => O(e))), (o?.pending ? i : a).append(t);
 			}
-			for (let t of j(e)) {
+			for (let t of A(e)) {
 				if (Number(t.dataset.missing) < 1) continue;
 				let n = q("div", "p6-builder-todo-row");
-				n.append(q("span", "", `${e.label} · ${t.textContent}`), J("去填", () => k(e))), a.append(n);
+				n.append(q("span", "", `${e.label} · ${t.textContent}`), J("去填", () => O(e))), a.append(n);
 			}
 		}
-		f.replaceChildren(q("h2", "", w || "检查后创建"), r);
+		f.replaceChildren(q("h2", "", C || "检查后创建"), r);
 		for (let [e, t] of [[i, "创建前要处理"], [a, "还可以选择"]]) e.childElementCount && (e.prepend(q("b", "", `${t}（${e.childElementCount}）`)), f.append(e));
 	}
-	function j(e) {
+	function A(e) {
 		return e.prop === "subclass" ? [] : [...o.get(e.name)?.form.querySelectorAll(".p6-choice-progress") ?? []].filter((e) => !e.closest(".ve-hidden"));
 	}
-	async function ie() {
-		if (b) return;
-		let t = Ti(e), n = c.filter(D).find((e) => t.get(O(e))?.pending), r = t.get("装备商店");
+	async function ae() {
+		if (y) return;
+		let t = Ti(e), n = c.filter(E).find((e) => t.get(D(e))?.pending), r = t.get("装备商店");
 		if (n || r?.pending) {
 			let e = n ?? c.find((e) => e.shop);
-			k(e), !n && r?.pending && (y = !0, A()), g.textContent = (n ? t.get(O(e))?.text : r?.text) ?? "";
+			O(e), !n && r?.pending && (v = !0, k()), g.textContent = (n ? t.get(D(e))?.text : r?.text) ?? "";
 		} else {
-			b = !0, T.disabled = !0;
+			y = !0, w.disabled = !0;
 			try {
 				await i();
 			} catch (e) {
 				g.textContent = e instanceof Error ? e.message : "作者建卡失败";
 			} finally {
-				b = !1, T.disabled = !1;
+				y = !1, w.disabled = !1;
 			}
 		}
 	}
-	function ae() {
+	function oe() {
 		Fi(e);
 		for (let e = n.length - 1; e >= 0; e--) n[e].anchor.isConnected || (n[e].element.remove(), n.splice(e, 1));
 		let t = Ti(e), i = 1;
 		m.textContent = t.get("法术")?.text ?? "本次可在下方选择法术";
-		for (let [e, r] of E) {
-			r.hidden = !!e && !D(e), e === v ? r.setAttribute("aria-current", "step") : r.removeAttribute("aria-current");
-			let a = e && n.some((t) => t.category === e.prop && t.chosen()), o = e && t.get(O(e)), s = !!(o?.pending === !1 || o && !o.pending && !o.text.includes("可继续选择") || a && !o) && !!e && j(e).every((e) => e.dataset.done === "true");
-			r.dataset.done = String(s), r.hidden || (i += 1, r.firstElementChild.textContent = s && e !== v ? "✓" : String(i));
+		for (let [e, r] of T) {
+			r.hidden = !!e && !E(e), e === _ ? r.setAttribute("aria-current", "step") : r.removeAttribute("aria-current");
+			let a = e && n.some((t) => t.category === e.prop && t.chosen()), o = e && t.get(D(e)), s = !!(o?.pending === !1 || o && !o.pending && !o.text.includes("可继续选择") || a && !o) && !!e && A(e).every((e) => e.dataset.done === "true");
+			r.dataset.done = String(s), r.hidden || (i += 1, r.firstElementChild.textContent = s && e !== _ ? "✓" : String(i));
 		}
-		if (!v) {
-			re();
+		if (!_) {
+			ie();
 			return;
 		}
-		let a = o.get(y ? v.shop : v.name);
+		let a = o.get(v ? _.shop : _.name);
 		if (!a) return;
 		let s = n.filter((e) => a.form.contains(e.anchor));
-		for (let e of s) e.element.isConnected || e.mount(a.rail), e.element.hidden = e.category !== v.prop;
-		let c = s.filter((e) => e.category === v.prop), l = te.get(v.prop ?? ""), u = l && c.includes(l) ? l : c[0];
-		a.rail.hidden = !u, a.tab.wrpTab.classList.toggle("p6-builder-split", !!u), ee !== v && (ee = v, a.tab.wrpTab.dataset.view = u?.chosen() ? "card" : "list"), a.tab.wrpTab.classList.toggle("p6-builder-spells", v.label === "法术"), a.tab.wrpTab.classList.toggle("p6-builder-attributes", v.label === "属性值"), a.tab.wrpTab.classList.toggle("p6-builder-equipment", !!v.shop && !y), Gi(a, u), ji(a.form, r), v.label === "属性值" && Ni(a.form, e, r);
+		for (let e of s) e.element.isConnected || e.mount(a.rail), e.element.hidden = e.category !== _.prop;
+		let c = s.filter((e) => e.category === _.prop), l = ne.get(_.prop ?? ""), u = l && c.includes(l) ? l : c[0];
+		a.rail.hidden = !u, a.tab.wrpTab.classList.toggle("p6-builder-split", !!u), te !== _ && (te = _, a.tab.wrpTab.dataset.view = u?.chosen() ? "card" : "list"), a.tab.wrpTab.classList.toggle("p6-builder-spells", _.label === "法术"), a.tab.wrpTab.classList.toggle("p6-builder-attributes", _.label === "属性值"), a.tab.wrpTab.classList.toggle("p6-builder-equipment", !!_.shop && !v), Gi(a, u), ji(a.form, r), _.label === "属性值" && Ni(a.form, e, r);
 	}
-	function M() {
-		x ||= requestAnimationFrame(() => {
-			x = 0, ae();
+	function j() {
+		b ||= requestAnimationFrame(() => {
+			b = 0, oe();
 		});
 	}
-	function oe(e) {
+	function se(e) {
 		let t = n.find((t) => t.element === e.target);
-		t && te.set(t.category, t);
+		t && ne.set(t.category, t);
 		let r = e.target.closest(".p6-builder-step");
 		r && (r.dataset.view = "card");
 	}
-	let N = new MutationObserver(M);
-	for (let e of o.values()) N.observe(e.form, {
+	let M = new MutationObserver(j);
+	for (let e of o.values()) M.observe(e.form, {
 		childList: !0,
 		subtree: !0
 	});
-	return t.addEventListener("p6-picker-change", M), t.addEventListener("p6-picker-preview", oe), t.addEventListener("p6-choice-change", M), t.addEventListener("change", M), t.addEventListener("click", M), k(v), () => {
-		N.disconnect(), cancelAnimationFrame(x), t.removeEventListener("p6-picker-change", M), t.removeEventListener("p6-picker-preview", oe), t.removeEventListener("p6-choice-change", M), t.removeEventListener("change", M), t.removeEventListener("click", M);
+	return t.addEventListener("p6-picker-change", j), t.addEventListener("p6-picker-preview", se), t.addEventListener("p6-choice-change", j), t.addEventListener("change", j), t.addEventListener("click", j), O(_), () => {
+		M.disconnect(), cancelAnimationFrame(b), t.removeEventListener("p6-picker-change", j), t.removeEventListener("p6-picker-preview", se), t.removeEventListener("p6-choice-change", j), t.removeEventListener("change", j), t.removeEventListener("click", j);
 	};
 }
 function qi(e, t) {
@@ -3997,7 +3997,7 @@ function Yi(e) {
 		} finally {
 			Y.Hooks.off("renderApplicationV2", c), Y.Hooks.off("closeApplicationV2", l), a?.close();
 		}
-		await C();
+		await S();
 		let u = n.toObject(), d = a?.error();
 		if (d) throw d;
 		return (a ? a.completed() : JSON.stringify(u) !== i) ? {
@@ -4119,7 +4119,7 @@ function na(e) {
 async function Q(e, t, n = [], { ui: r = !1 } = {}) {
 	let i, a = [];
 	try {
-		({value: i, changes: a} = await $i(() => Qi(e, () => r ? t() : ea(t)).then(async (e) => (await C(), e))));
+		({value: i, changes: a} = await $i(() => Qi(e, () => r ? t() : ea(t)).then(async (e) => (await S(), e))));
 	} catch (e) {
 		return {
 			status: "error",
@@ -4511,7 +4511,7 @@ async function qa(e) {
 	return t.text();
 }
 async function Ja(e) {
-	let t = await y({
+	let t = await v({
 		op: "file",
 		path: `packs/${e}.json`
 	});
@@ -4522,8 +4522,8 @@ var Ya;
 async function Xa(e) {
 	if (Ya) throw Error("Kernel is already booted");
 	let t = [], { foundry: n, Hooks: r } = $;
-	j(e.seed ?? "kernel"), Da(e.moduleRoots), $.release = new n.config.ReleaseData(e.release);
-	let i = ee(e);
+	A(e.seed ?? "kernel"), Da(e.moduleRoots), $.release = new n.config.ReleaseData(e.release);
+	let i = te(e);
 	$.packages = {
 		System: new n.utils.Collection([[i.system.id, new n.packages.System(i.system)]]),
 		Module: new n.utils.Collection(i.modules.map((e) => [e.id, new n.packages.Module(e)]))
@@ -4533,7 +4533,7 @@ async function Xa(e) {
 		forceNew: !0
 	});
 	Ya = {
-		...w(a, {
+		...C(a, {
 			userId: e.userId,
 			worldTime: e.worldTime,
 			readPack: Ja,

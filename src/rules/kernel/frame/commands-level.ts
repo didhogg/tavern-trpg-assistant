@@ -45,12 +45,15 @@ export function actorLevel(actor: any): any {
 export function cleanItem(item: any): any {
   const data = item?.toObject ? item.toObject() : structuredClone(item)
   for (const key of ['_id', '_key', 'folder', 'sort', 'ownership', '_stats']) delete data[key]
+  // 放进哪个容器（system.container）也只在原来的地方有效：作者导入时可能带着别处容器的编号（11-24 真机：火把带着某个背包的编号，
+  // 放到人物身上找不到那个容器，官方建物品时悄悄丢掉）；放到新人物身上一律不在容器里
+  if (data.system && 'container' in data.system) data.system.container = null
   stripTraitOrigins(data)
   return data
 }
 
 /** 小窗里把作者条目重新放进人物时，告诉 Plutonium 这是普通物品，不要弹“用导入器吗”。 */
-function markStandardDragDrop(item: any): any {
+export function markStandardDragDrop(item: any): any {
   const data = item?.toObject ? item.toObject() : structuredClone(item)
   data.flags ??= {}
   data.flags.plutonium ??= {}
