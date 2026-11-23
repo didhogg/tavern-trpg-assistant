@@ -21,6 +21,8 @@ export const PLAY_STATE: RegExp[] = [
   /^system\.attributes\.hp\.(value|temp|tempmax)$/, /^system\.attributes\.death\./, /^system\.attributes\.(inspiration|exhaustion)$/,
   /^system\.spells\.[^.]+\.value$/, /^system\.resources\.[^.]+\.value$/, /^system\.currency\./, /^system\.details\.xp\./,
   /^system\.(uses\.spent|quantity|equipped|attuned|prepared|container|hd\.spent)$/, /^system\.activities\.[^.]+\.uses\.spent$/,
+  // 怪物（dnd5e NPC）的生命骰已用、传奇动作 / 传奇抗性已用（dnd5e 6.1 npc.mjs）
+  /^system\.attributes\.hd\.spent$/, /^system\.resources\.[^.]+\.spent$/,
 ]
 
 export interface ChangedField { path: string; kind: 'state' | 'setting' }
@@ -169,7 +171,8 @@ export class KernelPeople {
     const shownBy = await this.deps.runtime.displayFor(ownerKey, refs)
     const out = await this.call(ownerKey, 'sheet', actorId, shownBy.entries)
     if (out.status !== 'complete') return out
-    const shown = await shownBy.show(out.result.shown)
+    // 物品 / 效果名和官方显示数据（view）一起过唯一显示出口
+    const shown = await shownBy.show({ shown: out.result.shown, view: out.result.view })
     const base = await this.deps.runtime.baseOf(ownerKey, actorId)
     const current = ((await this.call(ownerKey, 'preparedActors')) as Array<{ source: Record<string, unknown> }>).find((a) => a.source._id === actorId)?.source ?? null
     const changed: ChangedField[] = base && current ? paths(jsonDiff(strip(base), strip(current))).map((path) => ({ path, kind: kindOf(path) })) : []
@@ -181,7 +184,7 @@ export class KernelPeople {
       const list = paths(jsonDiff(was, item)).filter((p) => !p.startsWith('_stats')).map((path) => ({ path, kind: kindOf(path) }))
       if (list.length) items[id] = list
     }
-    return { ...out, result: { ...out.result, shown: shown.value, changed, changedItems: items, baseKnown: !!base, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
+    return { ...out, result: { ...out.result, shown: shown.value.shown, view: shown.value.view, changed, changedItems: items, baseKnown: !!base, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
   }
 
   /** 编号的显示名（伤害类型、语言、体型、技能、物品属性……整表 + 能开关的状态），过唯一出口；本战役只取一次。 */
@@ -349,5 +352,18 @@ export class KernelPeople {
     while (kernel && (kernel.undo.at(-1)?.revision ?? -1) >= revision) kernel = await this.undo(ownerKey) ?? null
     return kernel
   }
-  history(ownerKey: string) { return this.deps.saves.history(ownerKey) }
+  /** 改动记录；每个字段带上中文字段名（label）和物品名（item），都过唯一显示出口；取不到的不带。 */
+  async history(ownerKey: string) {
+    const rows = await this.deps.saves.history(ownerKey)
+    const asks = rows.flatMap((r) => r.actors.flatMap((a) => a.fields.map((f) => ({ actorId: a.id, path: f.path }))))
+    if (!asks.length) return rows
+    const out = await this.call(ownerKey, 'fieldLabels', asks)
+    if (out.status !== 'complete') return rows
+    const shown = await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result as Array<{ field: FrameText; item?: FrameText } | null>)
+    let i = 0
+    return rows.map((r) => ({ ...r, actors: r.actors.map((a) => ({ ...a, fields: a.fields.map((f) => {
+      const got = shown.value[i++]
+      return got ? { ...f, label: got.field, ...(got.item ? { item: got.item } : {}) } : f
+    }) })) }))
+  }
 }

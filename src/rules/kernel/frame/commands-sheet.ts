@@ -4,7 +4,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 
 import { itemState, type ActorGetter, type Operate } from './commands-items'
-import { fromAuthor, fromEntry, named, type EntryAt, type FrameText } from '../shown'
+import { fromAuthor, fromEntry } from '../shown'
+import { itemText } from './sheet-texts'
+import { itemForStateKey } from '../../../core/saves/state'
+import { sheetView } from './sheet-view'
 import { nameText, registryCaptured, statusKey, tableNames } from './registry-keys'
 
 const g = globalThis as any
@@ -88,56 +91,6 @@ function live(v: any, depth = 0, seen: WeakSet<object> = new WeakSet()): any {
   return out
 }
 
-/**
- * 作者导入怪物动作 / 特性 / 传奇动作时记下的编号（flags.plutonium.hash = 名字编号_所属条目编号…）→ 它在英文条目里的位置。
- * 用作者同一套 Renderer.stripTags + UrlUtil.encodeForHash 给条目里每个带名字的对象算编号来对，不比对文字、不认类别名。
- * 传奇动作作者先剥掉末尾的“(Costs N Actions)”再算编号：精确对不上时再试“去掉末尾一个括号 / 句末标点”；
- * 巢穴动作列表项没名字，作者截开头当名字：再试“物品名是这段话的开头”。每一档都只认唯一一个，否则不定位。
- */
-function locate(entries: unknown[], hash: string, itemName: string): EntryAt | null {
-  const exact: EntryAt[] = []
-  const trimmed: EntryAt[] = []
-  const opening: EntryAt[] = []
-  const id = (text: string): string => String(g.UrlUtil.encodeForHash(text))
-  // 没名字的一段话（巢穴动作）：作者只从“列表”的列表项里取（getListItems），截开头几个词当名字、末尾加“...”→ 用物品名对列表项的开头
-  const head = itemName.replace(/\s*\.\.\.$/, '').trim().toLowerCase()
-  const walk = (node: any, entry: number, path: Array<string | number>, inList = false): void => {
-    if (Array.isArray(node)) { node.forEach((x, i) => walk(x, entry, [...path, i], inList)); return }
-    if (typeof node === 'string') {
-      if (inList && head.length >= 8 && String(g.Renderer.stripTags(node)).trim().toLowerCase().startsWith(head)) opening.push({ entry, path })
-      return
-    }
-    if (!node || typeof node !== 'object') return
-    if (path.length && typeof node.name === 'string') {
-      const plain = String(g.Renderer.stripTags(node.name))
-      // 作者改名去掉的末尾：一个括号（每日次数、消耗动作）或句末标点
-      const cut = plain.replace(/\s*\([^()]*\)\s*$/, '').replace(/\s*[.?!]$/, '')
-      if (hash.startsWith(`${id(plain)}_`)) exact.push({ entry, path: [...path, 'name'] })
-      else if (cut !== plain && hash.startsWith(`${id(cut)}_`)) trimmed.push({ entry, path: [...path, 'name'] })
-    }
-    for (const [k, v] of Object.entries(node)) if (v && typeof v === 'object') walk(v, entry, [...path, k], node.type === 'list' && k === 'items')
-  }
-  entries.forEach((e, i) => walk(e, i, []))
-  if (exact.length) return exact.length === 1 ? exact[0] : null
-  if (trimmed.length) return trimmed.length === 1 ? trimmed[0] : null
-  return opening.length === 1 ? opening[0] : null
-}
-
-/**
- * 物品 / 特性名：带作者编号的按编号取本战役库名（并交编号给出口配库条目）；
- * 怪物动作等（作者只记了名字编号）按编号在条目里定位，取本战役语言版同一处；都没有就按原文位置找（zhAt）。
- */
-function itemText(i: any, entries: unknown[]): { name: FrameText; author?: { propDroppable: string; source?: string; hash: string } } {
-  const f = i.flags?.plutonium
-  if (f?.propDroppable && typeof f.hash === 'string') {
-    const author = { propDroppable: f.propDroppable, ...(f.source ? { source: f.source } : {}), hash: f.hash }
-    return { name: named(i.name, author), author }
-  }
-  const at = typeof f?.hash === 'string' ? locate(entries, f.hash, String(i.name ?? '')) : null
-  return { name: fromEntry(i.name, undefined, at ?? undefined) }
-}
-
-
 /** 引擎配置窗算好的上下文（不打开窗口）：生命按职业的合计、效果加成；AC 的公式与计算。 */
 async function configContext(Cls: any, a: any, keys: string[]): Promise<Record<string, unknown> | null> {
   if (!Cls) return null
@@ -186,6 +139,8 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
           // 效果名：状态这类登记过的名字按名字键取；其余（物品自带的效果）按条目原文位置
           effects: [...a.allApplicableEffects()].map((e: any) => ({ id: e.id, name: nameText(String(e.name ?? ''), null) ?? fromEntry(e.name) })),
         },
+        // 官方角色表 / NPC 表自己的显示数据（sheet-view.ts），界面显示读这一份
+        view: await sheetView(a, entries),
         breakdown: {
           hp: await configContext(apps.HitPointsConfig, a, ['classes', 'ability', 'effects', 'levels']),
           ac: await configContext(apps.ArmorClassConfig, a, ['calculations', 'formulaLabel']),
@@ -235,6 +190,28 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         ? [{ id: s.id, name: nameText(s.name, statusKey(s.id)) ?? fromAuthor(s.name, null), img: s.img ?? null }] : [])
       return { tables, statuses }
     }),
+
+    /**
+     * 改动记录的字段名：存档人物段里的路径（state.actor.… / state.items.<编号>.…）→ dnd5e 数据结构里这个字段自带的名字
+     * （字段没写名字就用最近一个有名字的上级字段）；物品的再带上物品名。插件自己的字段（adjustments.…）不在这里。
+     */
+    fieldLabels: (rows: Array<{ actorId: string; path: string }>) => operate([], async () => rows.map(({ actorId, path }) => {
+      const a = g.game.actors.get(actorId)
+      // 存档里物品按状态键记（新存档 ref:类别|作者编号，旧存档物品编号），和读档同一个认法（core/saves/state.ts）
+      const m = /^state\.(?:actor|items\.(.+?))\.((?:system|name|img|flags)(?:\..*)?)$/.exec(path)
+      if (!a || !m) return null
+      const doc = m[1] ? itemForStateKey([...a.items], m[1]) as any : a
+      if (!doc) return null
+      const parts = m[2].split('.')
+      for (let n = parts.length; n > 0; n--) {
+        const p = parts.slice(0, n).join('.')
+        const label = (p.startsWith('system.') ? doc.system?.schema?.getField(p.slice(7)) : doc.schema?.getField(p))?.label
+        if (typeof label !== 'string' || !label) continue
+        const field = g.game.i18n.has(label) ? { $t: 'system', key: label, text: g.game.i18n.localize(label) } : nameText(label, null) ?? fromAuthor(label, null)
+        return { field, ...(m[1] ? { item: itemText(doc, []).name } : {}) }
+      }
+      return null
+    })),
 
     /** 从小窗里删掉人物（删人、撤销加人、按存档退回前用）。 */
     deleteActors: (ids: string[]) => operate([], async () => {

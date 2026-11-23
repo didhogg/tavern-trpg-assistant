@@ -48,6 +48,8 @@ function keysOfText(text: string): string[] {
       }
     }
     walk(i18n.translations, [])
+    // 小窗界面语言是中文时，英文原文在英文后备里（作者把编号拼成的英文短语，如阵营“Neutral Evil”，按它找到 dnd5e 自己的键）
+    walk(i18n._fallback, [])
     index = exactIndex = { i18n, byText }
   }
   return (index.byText.get(text) ?? []).filter((k) => i18n.has(k))
@@ -72,6 +74,12 @@ export function tableNames(name: string, table: any): Record<string, FrameText> 
     if (t) out[code] = t
   }
   return out
+}
+
+/** 引擎登记表里的全部编号（各表的编号 + 状态编号）：这些值是编号，不是给人看的文字。 */
+export function registryCodes(): Set<string> {
+  if (!captured) return new Set()
+  return new Set([...Object.values(captured.tables).flatMap((rows) => Object.keys(rows)), ...Object.keys(captured.statuses)])
 }
 
 /** 开机时记下的状态原值（状态名的真实键）。 */

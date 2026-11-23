@@ -26161,7 +26161,9 @@ var IO = class {
 	/^system\.currency\./,
 	/^system\.details\.xp\./,
 	/^system\.(uses\.spent|quantity|equipped|attuned|prepared|container|hd\.spent)$/,
-	/^system\.activities\.[^.]+\.uses\.spent$/
+	/^system\.activities\.[^.]+\.uses\.spent$/,
+	/^system\.attributes\.hd\.spent$/,
+	/^system\.resources\.[^.]+\.spent$/
 ];
 function RO(e, t = "", n = []) {
 	for (let [r, i] of Object.entries(e)) {
@@ -26283,7 +26285,10 @@ var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 			hash: e.hash
 		})), r = await this.deps.runtime.displayFor(e, n), i = await this.call(e, "sheet", t, r.entries);
 		if (i.status !== "complete") return i;
-		let a = await r.show(i.result.shown), o = await this.deps.runtime.baseOf(e, t), s = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, c = o && s ? RO(te(BO(o), BO(s))).map((e) => ({
+		let a = await r.show({
+			shown: i.result.shown,
+			view: i.result.view
+		}), o = await this.deps.runtime.baseOf(e, t), s = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, c = o && s ? RO(te(BO(o), BO(s))).map((e) => ({
 			path: e,
 			kind: zO(e)
 		})) : [], l = {}, u = HO(o);
@@ -26300,7 +26305,8 @@ var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 			...i,
 			result: {
 				...i.result,
-				shown: a.value,
+				shown: a.value.shown,
+				view: a.value.view,
 				changed: c,
 				changedItems: l,
 				baseKnown: !!o,
@@ -26522,8 +26528,29 @@ var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 		for (; n && (n.undo.at(-1)?.revision ?? -1) >= t;) n = await this.undo(e) ?? null;
 		return n;
 	}
-	history(e) {
-		return this.deps.saves.history(e);
+	async history(e) {
+		let t = await this.deps.saves.history(e), n = t.flatMap((e) => e.actors.flatMap((e) => e.fields.map((t) => ({
+			actorId: e.id,
+			path: t.path
+		}))));
+		if (!n.length) return t;
+		let r = await this.call(e, "fieldLabels", n);
+		if (r.status !== "complete") return t;
+		let i = await (await this.deps.runtime.displayFor(e, [])).show(r.result), a = 0;
+		return t.map((e) => ({
+			...e,
+			actors: e.actors.map((e) => ({
+				...e,
+				fields: e.fields.map((e) => {
+					let t = i.value[a++];
+					return t ? {
+						...e,
+						label: t.field,
+						...t.item ? { item: t.item } : {}
+					} : e;
+				})
+			}))
+		}));
 	}
 }, qO = (e) => `${!!e._rawName}|${e.classSource ?? ""}`;
 async function JO(t, n, r) {

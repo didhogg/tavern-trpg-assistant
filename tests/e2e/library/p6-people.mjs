@@ -57,6 +57,9 @@ try {
     const gl = await people.glossary(owner)
     out.shown = { items: s0.shown.items.map((i) => [i.name, !!i.ref]), untranslated: s0.untranslated ?? [], hd: s0.system.attributes.hd,
       fire: gl.tables.damageTypes?.fire, common: gl.tables.languages?.common, tiny: gl.tables.actorSizes?.tiny, statuses: gl.statuses.length, poisoned: gl.statuses.find((x) => x.id === 'poisoned')?.name, tables: Object.keys(gl.tables).length, glUntranslated: gl.untranslated ?? [], codeTables: ['defaultAbilities', 'weaponProficienciesMap', 'weaponTypeMap'].filter((t) => gl.tables[t]), fullCaster: gl.tables.spellProgression?.full, sheetBytes: JSON.stringify(s0).length }
+    // 官方角色表的显示数据（sheet-view.ts，2026-11-23）：有、原始编号没被换、不留 DND5E. 语言键原文
+    const keysLeft = (v) => { const out = []; const walk = (x) => { if (typeof x === 'string') { if (/^DND5E\.[A-Za-z][\w.]*[A-Za-z0-9]$/.test(x)) out.push(x) } else if (x && typeof x === 'object') Object.values(x).forEach(walk) }; walk(v); return out }
+    out.view = { sheet: s0.view?.sheet, parts: Object.keys(s0.view?.parts ?? {}), rawAbility: s0.system.skills.acr.ability, keysLeft: keysLeft(s0.view).slice(0, 5), bytes: JSON.stringify(s0.view ?? null).length }
     const strBase = s0.system.abilities.str.value
     const e1 = await people.edit(owner, id, [{ kind: 'set', path: 'system.abilities.str.value', value: strBase + 2 }, { kind: 'set', path: 'system.attributes.hp.bonuses.overall', value: '3' }])
     const s1 = (await people.sheet(owner, id)).result
@@ -110,7 +113,7 @@ try {
     out.purge = { afterPurge, frameHasCopyAfterPurge: frameHasCopy, afterUndo: (await saves.read(owner)).actors.length, frameBack: !!(await src(cp.result.id)) }
 
     const hist = await people.history(owner)
-    out.history = { rows: hist.length, sample: hist.slice(0, 3).map((r) => r.actors.map((a) => `${a.name}:${a.kind}:${a.fields.length}`)) }
+    out.history = { rows: hist.length, sample: hist.slice(0, 3).map((r) => r.actors.map((a) => `${a.name}:${a.kind}:${a.fields.length}`)), labels: hist.flatMap((r) => r.actors.flatMap((a) => a.fields.filter((f) => /^state\.(actor|items\.[^]+?)\.system\./.test(f.path)).map((f) => [f.path, f.label ?? null]))).slice(0, 8) }
 
     // 真实入口：关小窗 → 新开（像重新进战役）→ load 按存档装人 → roster 读列表；编号不撞、HP 与关前一致、改动还能接着写
     const kernel = await saves.read(owner)
@@ -149,7 +152,10 @@ try {
     const sid = added.made.actors[0].id
     const ss = await people3.sheet(owner, sid)
     const flagsOf = new Map((await (async () => { const l = await (await rt3.session(owner)).session.call('preparedActors'); return (l.result ?? l) })()).find((a) => a.source._id === sid).source.items.map((i) => [i._id, i.flags?.plutonium?.page ?? null]))
-    out.suffixed = { name: suffixed.item.name, rows: ss.result.shown.items.map((i) => [flagsOf.get(i.id), i.name]), untranslated: ss.result.untranslated ?? [] }
+    out.suffixed = { name: suffixed.item.name, rows: ss.result.shown.items.map((i) => [flagsOf.get(i.id), i.name]), untranslated: ss.result.untranslated ?? [],
+      sheet: ss.result.view?.sheet, alignment: ss.result.view?.base?.system?.details?.alignment, rawAlignment: ss.result.system.details.alignment, keysLeft: keysLeft(ss.result.view).slice(0, 5) }
+    await people3.edit(owner, sid, [{ kind: 'set', path: 'system.attributes.hd.spent', value: 1 }])
+    out.suffixed.hdSpentKind = (await people3.sheet(owner, sid)).result.changed.find((c) => c.path === 'system.attributes.hd.spent')?.kind ?? null
     await rt3.close(owner)
     return out
   })
@@ -174,6 +180,10 @@ try {
     reload: r.reload.statuses.every((s) => s === 'complete') && r.reload.secondLoad.every((s) => s === 'complete') && new Set(r.reload.ids).size === r.reload.ids.length && r.reload.sameHp,
     roster: !!r.reload.hero && r.reload.hero.classes.length > 0 && !!r.reload.hero.race && r.reload.hero.ac !== null && r.reload.hero.pp !== null && r.reload.hero.speed > 0 && r.reload.hero.cat === 'party' && r.reload.monster.length === 2 && r.reload.monster.every((m) => m.loaded),
     writeAfterLoad: r.reload.writeAfterLoad,
+    view: r.view.sheet === 'CharacterActorSheet' && r.view.parts.includes('header') && r.view.rawAbility === 'dex' && r.view.keysLeft.length === 0,
+    monsterView: r.suffixed.sheet === 'NPCActorSheet' && han(r.suffixed.alignment) && !han(r.suffixed.rawAlignment) && r.suffixed.keysLeft.length === 0,
+    historyLabels: r.history.labels.length > 0 && r.history.labels.every(([, label]) => han(label)),
+    npcPlayState: r.suffixed.hdSpentKind === 'state',
     glossaryKinds: r.shown.codeTables.length === 0 && han(r.shown.fullCaster),
     shown: r.shown.items.length > 0 && r.shown.items.every(([name, ref]) => han(name) && ref) && han(r.shown.fire) && han(r.shown.common) && han(r.shown.tiny) && r.shown.statuses > 5 && han(r.shown.poisoned)
       && Number.isInteger(r.shown.hd?.value) && Number.isInteger(r.shown.hd?.max) && r.shown.hd.max > 0,
