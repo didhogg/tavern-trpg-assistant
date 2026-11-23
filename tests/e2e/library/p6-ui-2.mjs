@@ -66,9 +66,9 @@ try {
   await shot('02-pc-action-open')
   await page.getByTestId('ps-actions-search').fill('不会有这个名字'); await settle(page, 300)
   check('搜不到时说明', /没有符合的行动/.test(await page.getByTestId('ps-actions').innerText()))
-  await page.getByTestId('ps-actions-search').fill(''); await page.getByTestId('ps-actions-only-action').click(); await settle(page, 300)
-  check('「只看 动作」只剩动作组', (await page.locator('.ps-act-table').count()) === 1)
-  await page.getByTestId('ps-actions-only-action').click(); await settle(page, 300)
+  await page.getByTestId('ps-actions-search').fill(''); await page.getByTestId('ps-actions').getByTestId('ps-pill-action').click(); await settle(page, 300)
+  check('标签「动作」（同资料库）只剩动作组', (await page.locator('.ps-act-table').count()) === 1)
+  await page.getByTestId('ps-actions').getByTestId('ps-pill-all').click(); await settle(page, 300)
 
   // ---- 玩家角色 · 属性 ----
   await page.getByTestId('ps-tab-attr').click(); await page.getByTestId('ps-attr').waitFor(); await settle(page, 500)

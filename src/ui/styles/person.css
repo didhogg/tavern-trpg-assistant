@@ -138,10 +138,32 @@
 .ps-fact-part { display: inline-block; white-space: nowrap; margin-right: var(--sp-3); }
 /* 各组的表列宽一致（上下对齐） */
 .ps-act-table { table-layout: fixed; }
-.ps-act-table thead th:nth-child(2) { width: 13%; }
+.ps-act-table thead th:nth-child(2) { width: 112px; }
 .ps-act-table thead th:nth-child(3) { width: 20%; }
 .ps-act-table thead th:nth-child(4) { width: 30%; }
 .ps-act-table td:last-child { white-space: normal; }
 .trpg-window[data-layout='narrow'] .ps-act-table thead th:nth-child(2) { width: 24%; }
 .trpg-window[data-layout='narrow'] .ps-act-table thead th:nth-child(3) { width: 34%; }
 .ps-box { white-space: nowrap; margin: 1px var(--sp-1) 1px 0; }
+/* 标签筛选（同资料库）在页内：不要库页的左右内边距 */
+.ps-pills { padding: 0 0 var(--sp-3); }
+.ps-act-rec { display: block; color: var(--text2); font-size: var(--fs-xs); }
+/* B 批：背包 */
+.ps-enc { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); font-size: var(--fs-sm); }
+.ps-enc-bar { flex: 1 1 auto; max-width: 320px; height: 8px; border-radius: var(--r-pill); background: var(--line); overflow: hidden; }
+.ps-enc-bar i { display: block; height: 100%; background: var(--primary); }
+.ps-enc-bar[data-over] i { background: var(--danger-text); }
+.ps-bag-table thead th:nth-child(2) { width: 104px; }
+.ps-bag-table thead th:nth-child(3) { width: 116px; }
+.ps-bag-tags { display: flex; flex-wrap: wrap; gap: 2px var(--sp-2); color: var(--text2); font-size: var(--fs-xs); margin-top: 2px; }
+.ps-tag { padding: 0 var(--sp-1); border: var(--border) solid var(--line); border-radius: var(--r-xs); }
+.ps-tag--on { background: var(--text); color: var(--surface); border-color: var(--text); }
+.ps-tag--gold { border-color: var(--accent); }
+.ps-bag-row[data-depth] th { padding-left: var(--sp-5); }
+.ps-bag-act { text-align: right; white-space: nowrap; }
+.ps-bag-act > * { vertical-align: middle; }
+.ps-bag-foot { color: var(--text2); font-size: var(--fs-sm); text-align: right; }
+.ps-bag-uses { display: inline-flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); font-size: var(--fs-xs); color: var(--text2); }
+/* 表格里的加减按钮做小一号，免得挤掉别的列 */
+.ps-act-table .trpg-stepper__btn { min-width: 26px; min-height: 28px; padding: 0; }
+.ps-act-table .trpg-stepper__val { min-width: 2.6em; padding: 0 var(--sp-1); font-size: var(--fs-sm); }

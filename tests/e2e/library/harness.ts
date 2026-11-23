@@ -323,5 +323,15 @@ export async function pickChainEntries(library: ReturnType<typeof defaultCampaig
   return { plan, monster }
 }
 
+/** 背包测试用的几件物品：护甲、药水、容器、要调谐的魔法物品。 */
+export async function pickBagEntries(library: ReturnType<typeof defaultCampaignLibrary>): Promise<Record<string, ChainRow>> {
+  return {
+    armor: await takeEntry(library, 'item', 'PHB', it => it.type === 'LA' || it.type === 'MA'),
+    potion: await takeEntry(library, 'item', 'DMG', it => it.type === 'P' && it.name === '治疗药水'),
+    pack: await takeEntry(library, 'item', 'PHB', it => !!it.containerCapacity),
+    magic: await takeEntry(library, 'item', 'DMG', it => !!it.reqAttune && it.wondrous === true),
+  }
+}
+
 // 探测脚本用：作者预载规则与源登记表
 export { getSource }

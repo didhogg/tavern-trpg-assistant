@@ -16,6 +16,7 @@ import HistoryDrawer from './HistoryDrawer.vue'
 import SkillList from './SkillList.vue'
 import ActionsTab from './ActionsTab.vue'
 import AttributesTab from './AttributesTab.vue'
+import BagTab from './BagTab.vue'
 import { skills } from './view'
 
 const person = usePersonStore()
@@ -94,6 +95,7 @@ const missing = computed(() => person.row?.missing ?? [])
         <section class="ps-tab" role="tabpanel" :data-testid="`ps-panel-${tab}`">
           <ActionsTab v-if="tab === 'action'" />
           <AttributesTab v-else-if="tab === 'attr'" />
+          <BagTab v-else-if="tab === 'bag'" />
           <p v-else class="ps-drawer-note">这一页还在做。</p>
         </section>
       </div>
