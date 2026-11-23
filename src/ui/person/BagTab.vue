@@ -1,17 +1,14 @@
 <script setup lang="ts">
 // 背包页（线框 p6-8，B 批）：搜索 + 和资料库同一种标签筛选 · 负重 · 按物品类型分组的表 · 脚注同调数。
-import { computed, markRaw, ref } from 'vue'
-import { useModalStore } from '../../stores/modal'
+import { computed, ref } from 'vue'
 import Icon from '../kit/Icon.vue'
-import ItemPickPage from './ItemPickPage.vue'
+import { openPick } from './edit-open'
 import { usePersonStore } from '../../stores/person'
 import BagRows from './BagRows.vue'
 import FilterPills from './FilterPills.vue'
 import { bag, named, type BagRow } from './view'
 
 const person = usePersonStore()
-const modal = useModalStore()
-const openPick = () => modal.open({ key: 'person-item-pick', title: '加物品', component: markRaw(ItemPickPage), variant: 'dialog', width: 920, height: 680 })
 const data = computed(() => {
   const b = person.sheet ? bag(person.sheet) : { groups: [], units: '' }
   // 重量单位名查名字表（官方的单位表）
@@ -39,7 +36,7 @@ const att = computed(() => person.sheet?.system.attributes?.attunement)
     <div class="ps-actions-bar">
       <input v-model="query" class="trpg-input ps-actions-search" type="search" placeholder="搜物品" aria-label="搜物品" data-testid="ps-bag-search">
       <span class="tp-gap" />
-      <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="person.readOnly" data-testid="ps-bag-add" @click="openPick"><Icon name="plus" :size="14" />加物品</button>
+      <button class="trpg-btn trpg-btn--primary trpg-btn--small" type="button" :disabled="person.readOnly" data-testid="ps-bag-add" @click="openPick('items')"><Icon name="plus" :size="14" />加物品</button>
     </div>
     <FilterPills v-if="pills.length" v-model="cat" :options="pills" :total="total" label="物品类型" />
     <div v-if="enc && enc.max" class="ps-enc" data-testid="ps-enc">

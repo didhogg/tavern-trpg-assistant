@@ -148,6 +148,8 @@ var m = {
 			format: "5etools",
 			people: "monster",
 			items: "item",
+			spells: "spell",
+			feats: "feat",
 			kernel: {
 				adapter: "foundry",
 				settings: {
@@ -181,7 +183,9 @@ var m = {
 			style: "one",
 			format: "5etools",
 			people: "monster",
-			items: "item"
+			items: "item",
+			spells: "spell",
+			feats: "feat"
 		}
 	}
 }, h = m.scopes, g = m.rules;

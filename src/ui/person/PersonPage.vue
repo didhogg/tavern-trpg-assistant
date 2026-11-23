@@ -10,6 +10,7 @@ import { useCampaignStore } from '../../stores/campaign'
 import { useLibViewStore } from '../../stores/libview'
 import { CATEGORIES, categoryOf, useRosterStore, type CategoryId } from '../../stores/roster'
 import Icon from '../kit/Icon.vue'
+import Segmented from '../kit/Segmented.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import PersonHeader from './PersonHeader.vue'
 import HistoryDrawer from './HistoryDrawer.vue'
@@ -17,7 +18,13 @@ import SkillList from './SkillList.vue'
 import ActionsTab from './ActionsTab.vue'
 import AttributesTab from './AttributesTab.vue'
 import BagTab from './BagTab.vue'
+import SpellsTab from './SpellsTab.vue'
+import FeaturesTab from './FeaturesTab.vue'
+import EffectsTab from './EffectsTab.vue'
+import BioTab from './BioTab.vue'
+import NotesTab from './NotesTab.vue'
 import { skills } from './view'
+import { openFields } from './edit-open'
 
 const person = usePersonStore()
 const roster = useRosterStore()
@@ -55,6 +62,14 @@ async function onMore(key: string): Promise<void> {
 }
 const openHistory = () => modal.open({ key: 'person-history', title: '改动记录', component: markRaw(HistoryDrawer), variant: 'dialog', width: 560, height: 600 })
 const skillRows = computed(() => (person.sheet ? skills(person.sheet) : []))
+const sideTab = ref('skills')
+const skillNames = computed(() => Object.fromEntries(skillRows.value.map((k) => [k.key, k.label])))
+// 收藏 = 官方 system.favorites（物品按 .Item.编号 记）；名字取过了出口的物品名
+const favRows = computed(() => {
+  const names = new Map(((person.sheet?.shown?.items ?? []) as Array<{ id: string; name: string }>).map((i) => [i.id, String(i.name)]))
+  return ((person.sheet?.system.favorites ?? []) as Array<{ type: string; id: string }>).map((f) => ({ fav: f.id, id: f.id.replace(/^\.Item\./, ''), name: names.get(f.id.replace(/^\.Item\./, '')) ?? '' })).filter((f) => f.name)
+})
+const unfav = (id: string) => person.edit('取消收藏', [{ kind: 'set', path: 'system.favorites', value: ((person.sheet?.system.favorites ?? []) as Array<{ id: string }>).filter((f) => f.id !== id) }])
 const missing = computed(() => person.row?.missing ?? [])
 </script>
 
@@ -88,15 +103,31 @@ const missing = computed(() => person.row?.missing ?? [])
       </div>
       <div class="ps-body" :data-side="sideOpen || undefined">
         <aside v-if="sideOpen" class="ps-side" data-testid="ps-side">
-          <h3>技能</h3>
-          <p v-if="!skillRows.length" class="ps-drawer-note">没有列出的技能。</p>
-          <SkillList v-else :rows="skillRows" testid="ps-side-skills" />
+          <Segmented v-model="sideTab" label="侧栏" :options="[{ value: 'skills', label: '技能' }, { value: 'favs', label: '收藏' }]" />
+          <template v-if="sideTab === 'skills'">
+            <div class="ps-side-head"><b>技能</b><small>加值</small><small>被动</small><button class="trpg-icon-btn" type="button" aria-label="改技能熟练" :disabled="person.readOnly" @click="openFields('技能', { path: 'system.skills' }, { names: skillNames, width: 620 })"><Icon name="pencil-simple" :size="13" /></button></div>
+            <p v-if="!skillRows.length" class="ps-drawer-note">没有列出的技能。</p>
+            <SkillList v-else :rows="skillRows" testid="ps-side-skills" />
+          </template>
+          <template v-else>
+            <p v-if="!favRows.length" class="ps-drawer-note">还没有收藏。在各页行末的 ⋯ 里点「收藏到侧栏」。</p>
+            <ul v-else class="ps-favs" data-testid="ps-favs">
+              <li v-for="f in favRows" :key="f.id">
+<span class="ps-initial">{{ f.name.slice(0, 1) }}</span><span class="ps-fav-name">{{ f.name }}</span>
+                <button class="trpg-icon-btn" type="button" :aria-label="`取消收藏${f.name}`" :disabled="person.readOnly" @click="unfav(f.fav)"><Icon name="x" :size="12" /></button>
+</li>
+            </ul>
+          </template>
         </aside>
         <section class="ps-tab" role="tabpanel" :data-testid="`ps-panel-${tab}`">
           <ActionsTab v-if="tab === 'action'" />
           <AttributesTab v-else-if="tab === 'attr'" />
           <BagTab v-else-if="tab === 'bag'" />
-          <p v-else class="ps-drawer-note">这一页还在做。</p>
+          <SpellsTab v-else-if="tab === 'spell'" />
+          <FeaturesTab v-else-if="tab === 'feat'" />
+          <EffectsTab v-else-if="tab === 'effect'" />
+          <BioTab v-else-if="tab === 'bio'" />
+          <NotesTab v-else-if="tab === 'note'" />
         </section>
       </div>
     </template>

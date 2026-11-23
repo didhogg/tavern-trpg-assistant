@@ -9,7 +9,7 @@
 //         → 英文原文对应的语言键（作者拼的英文短语）或条目原文同位置的中文。
 //   其余原样（图标、样式名、编号、数字）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档 / 程序窗口对象没有类型声明。 */
-import { fromEntry, type FrameText } from '../shown'
+import { asData, fromEntry, joined, type FrameText } from '../shown'
 import { nameText, registryCodes } from './registry-keys'
 import { itemText } from './sheet-texts'
 
@@ -64,18 +64,41 @@ function copy(v: any, entries: unknown[], skip: Set<object>, seen: Set<object> =
   }
 }
 
-/** 给抄好的数据里剩下的文字标出处（①③）；已经是出处的（②物品名）不动。 */
-function mark(v: any, texts: Set<string>, codes: Set<string>): any {
+/** 人物身上物品的原名（结算小窗里是英文）→ 物品名的出处；长的在前，免得短名先匹配到长名里。 */
+type Names = Array<{ re: RegExp; text: FrameText }>
+function itemNames(a: any, entries: unknown[]): Names {
+  const seen = new Set<string>()
+  return [...a.items].map((i: any) => String(i.name ?? '')).filter((n) => n.length >= 3 && /[A-Za-z]/.test(n) && !seen.has(n) && seen.add(n))
+    .sort((x, y) => y.length - x.length)
+    .map((n) => ({ re: new RegExp(`(?<![A-Za-z])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`), text: itemText([...a.items].find((i: any) => i.name === n), entries).name }))
+}
+/** ④ 官方拼好的句子里嵌着物品原名（“Cleric 施法”“Cleric • V、S”）：名字那段按物品出处取本战役语言，其余原样。 */
+function embedded(v: string, names: Names): FrameText | null {
+  if (!/[A-Za-z]/.test(v)) return null
+  for (const { re, text } of names) {
+    const m = re.exec(v)
+    if (!m) continue
+    const before = v.slice(0, m.index)
+    const after = v.slice(m.index + m[0].length)
+    const rest = (s: string): FrameText[] => (s ? [embedded(s, names) ?? asData(s)] : [])
+    return joined([...rest(before), text, ...rest(after)], '')
+  }
+  return null
+}
+
+/** 给抄好的数据里剩下的文字标出处（①③④）；已经是出处的（②物品名）不动。 */
+function mark(v: any, texts: Set<string>, codes: Set<string>, names: Names): any {
   if (typeof v === 'string') {
-    if (v.includes('.') && !/\s/.test(v) && g.game.i18n.has(v)) return { $t: 'system', key: v, text: g.game.i18n.localize(v) } satisfies FrameText
+    // ① 语言键：带点的键，或 Foundry 自己的单词键（"None" 这类，官方已拼进显示数据但没翻）
+    if (((v.includes('.') && !/\s/.test(v)) || /^[A-Z][A-Za-z]{2,}$/.test(v)) && g.game.i18n.has(v)) return { $t: 'system', key: v, text: g.game.i18n.localize(v) } satisfies FrameText
     // 只有数字、符号的（页码、年份）不是给人读的文字
     if (texts.has(v) && !codes.has(v) && /\p{L}/u.test(v)) return nameText(v, null) ?? fromEntry(v)
-    return v
+    return embedded(v, names) ?? v
   }
   if (!v || typeof v !== 'object') return v
   if (typeof v.$t === 'string') return v
-  if (Array.isArray(v)) return v.map((x) => mark(x, texts, codes))
-  return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === 'author' ? x : mark(x, texts, codes)]))
+  if (Array.isArray(v)) return v.map((x) => mark(x, texts, codes, names))
+  return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === 'author' ? x : mark(x, texts, codes, names)]))
 }
 
 /** 官方显示数据：base = 共用部分；parts[部分] = 这个部分多出来的；itemContext = 每件物品的显示数据。 */
@@ -97,7 +120,8 @@ export async function sheetView(a: any, entries: unknown[]): Promise<{ sheet: st
   const skip = new Set<object>([a._source].filter(Boolean))
   // 行动页：按动作类型分组用官方 NPC 表自己的“特性”部分；玩家角色也走它（驾驶员 11-23 批 G1）
   out.actions = await actionsOf(a, app, out)
-  return { sheet: app.constructor.name, base: mark(copy(base, entries, skip), texts, codes), parts: mark(copy(out, entries, skip), texts, codes) }
+  const names = itemNames(a, entries)
+  return { sheet: app.constructor.name, base: mark(copy(base, entries, skip), texts, codes, names), parts: mark(copy(out, entries, skip), texts, codes, names) }
 }
 
 /** 官方 NPC 表“特性”部分的分组（每件物品的次数、命中、豁免 DC 在共用部分的 itemContext，两种表算法相同）。怪物直接用本表已算好的。 */

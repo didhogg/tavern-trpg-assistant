@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
-import type { Glossary } from '../rules/kernel/people'
+import type { Glossary, ShownFieldInfo } from '../rules/kernel/people'
 import type { EntryRef } from '../library/scopes'
 import type { SheetEdit } from '../rules/kernel/frame/commands-sheet'
 import type { KernelChange } from '../schemas/kernel'
@@ -99,6 +99,10 @@ export const usePersonStore = defineStore('person', () => {
     const r = await backend().add(k, id.value!, refs)
     return { outcome: { status: r.added.status, error: r.added.error } }
   })
+  /** 短休 / 长休（官方休息，不弹官方窗口；需要掷骰的部分等 P7）。 */
+  const rest = (type: 'short' | 'long') => write(type === 'short' ? '短休' : '长休', (k) => backend().act(k, id.value!, 'rest', id.value!, type, [], {}))
+  /** 某个职业升 / 降一级（官方成长流程）；要玩家做选择的成长会报“没有完成”。 */
+  const level = (label: string, classId: string, delta: 1 | -1) => write(label, (k) => backend().act(k, id.value!, 'levelUpApply', id.value!, classId, delta))
   /** 个人调整（英文名、分类……）。 */
   const adjust = (label: string, patch: Record<string, unknown>) => write(label, (k) => backend().adjust(k, [id.value!], patch))
 
@@ -119,13 +123,28 @@ export const usePersonStore = defineStore('person', () => {
 
   async function undo(): Promise<void> {
     try { await serial(() => campaign.backendWrite((k) => backend().undo(k))) } catch (e) { toast.error(`撤销失败：${message(e)}`) }
-    await Promise.all([reload(), roster.refresh()])
+    await afterUndo()
   }
   async function undoTo(revision: number): Promise<void> {
     try { await serial(() => campaign.backendWrite((k) => backend().undoTo(k, revision))) } catch (e) { toast.error(`撤销失败：${message(e)}`) }
-    await Promise.all([reload(), roster.refresh()])
+    await afterUndo()
+  }
+  /** 撤销后先刷名单：撤到加人之前，这个人已不在名单里 → 关掉详情回列表（不去读一个不存在的人）。 */
+  async function afterUndo(): Promise<void> {
+    await roster.refresh()
+    if (id.value && !roster.rows.some((r) => r.id === id.value)) { close(); return }
+    await reload()
   }
   const history = async () => { const key = ownerKey(); return key ? serial(() => backend().history(key)) : [] }
+  /** 编辑窗口：一块字段的官方定义 + 改到它的效果（P6-R）；读不出来交回 null 并提示原因。 */
+  async function fields(target: { itemId?: string; path: string }): Promise<ShownFieldInfo | null> {
+    const key = ownerKey()
+    if (!key || !id.value) return null
+    const who = id.value
+    const out = await serial(() => backend().fields(key, who, target))
+    if (out.status !== 'complete') { toast.error(`读不出这一块：${out.error ?? out.status}`); return null }
+    return out.result as ShownFieldInfo
+  }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, adjust, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, adjust, fields, rest, level, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

@@ -16,7 +16,7 @@ export interface KernelRefResult {
 export type KernelRefChecker = (refs: Array<{ set: string; prop: string; hash: string }>, library: KernelLibrary) => Promise<KernelRefResult[]>
 
 /** 小窗拆回的人物段，不碰 adjustments/dice/legacy；off 只在加人（复制）时带上，平时写入保留存档里原有的取下安排。 */
-export type KernelActorCompact = Pick<KernelActor, 'id' | 'name' | 'seed' | 'refs' | 'choices' | 'state'> & {
+export type KernelActorCompact = Pick<KernelActor, 'id' | 'name' | 'seed' | 'refs' | 'choices' | 'state' | 'doc'> & {
   off?: KernelActor['off']
   /** 作者整机建好的完整人物（B′）；只在加人时带，写进战役层 bases，不进人物记录。 */
   base?: Record<string, unknown>

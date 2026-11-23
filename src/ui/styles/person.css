@@ -8,61 +8,6 @@
 
 .ps-skeleton { margin: var(--sp-5); padding: var(--sp-6) var(--sp-5); border: var(--border) dashed var(--line); border-radius: var(--r-sm); color: var(--text2); }
 
-/* 页头：宽屏两列（左 头像 + 生命，右 名字 / 等级 / 事实 / 战斗 / 属性）；窄屏一块一块竖着排 */
-.ps-head { display: grid; grid-template-columns: 180px minmax(0, 1fr); grid-template-areas: 'portrait ident' 'portrait level' 'vitals facts' 'vitals stats'; align-items: start; gap: var(--sp-3) var(--sp-5); padding: var(--sp-5); background: var(--bg-side); border-bottom: var(--border) solid var(--line); }
-.trpg-window[data-layout='narrow'] .ps-head { grid-template-columns: 72px minmax(0, 1fr); grid-template-areas: 'portrait ident' 'vitals vitals' 'level level' 'facts facts' 'stats stats'; padding: var(--sp-4); }
-.ps-stats { grid-area: stats; display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--sp-3); min-width: 0; }
-.ps-portrait { grid-area: portrait; width: 100%; aspect-ratio: 1; display: grid; place-items: center; padding: 0; overflow: hidden; border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--bg-sunk); color: var(--text2); cursor: pointer; }
-.ps-portrait img { width: 100%; height: 100%; object-fit: cover; }
-.ps-ident { grid-area: ident; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
-.ps-name { display: inline-flex; align-items: baseline; gap: var(--sp-2); padding: 0; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
-.ps-name b { font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
-.ps-name small { color: var(--text2); }
-.ps-name:hover b { text-decoration: underline; text-decoration-color: var(--accent); }
-.ps-sub { display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); margin: 0; color: var(--text2); }
-
-.ps-level { grid-area: level; display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sp-2) var(--sp-4); }
-.ps-level > div, .ps-combat > div { display: flex; flex-direction: column; }
-.ps-level small, .ps-combat small, .ps-ability small { color: var(--text2); font-size: var(--fs-xs); }
-.ps-level b { font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
-.ps-insp { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: 32px; padding: 0 var(--sp-3); border: var(--border) solid var(--line-ctrl); border-radius: 999px; background: var(--surface); color: var(--text); cursor: pointer; }
-.ps-insp[aria-pressed='true'] { border-color: var(--accent); color: var(--accent-text); }
-.ps-xp { flex-basis: 100%; gap: var(--sp-1); }
-.ps-bar i, .ps-hp-bar i { display: block; height: 100%; background: var(--primary); border-radius: inherit; }
-.ps-xp .ps-bar, .ps-hp-bar { display: block; height: 6px; padding: 0; border: 0; background: var(--bg-sunk); border-radius: 999px; overflow: hidden; position: static; }
-.ps-leg { display: flex; flex-direction: column; gap: var(--sp-1); }
-.ps-leg span { display: inline-flex; align-items: center; gap: var(--sp-1); }
-.ps-dot { width: 10px; height: 10px; border-radius: 50%; border: var(--border) solid var(--primary); }
-.ps-dot[data-on] { background: var(--primary); }
-
-/* 生命区：当前生命最大（von Restorff），点它原地改 */
-.ps-vitals { grid-area: vitals; display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
-.ps-hp-line { display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap; }
-.ps-hp-now { font-size: 2rem; font-weight: var(--fw-semibold); line-height: 1.1; min-width: 44px; padding: 0 var(--sp-1); border: var(--border) solid transparent; border-radius: var(--r-sm); background: none; color: var(--text); cursor: text; }
-.ps-hp-now:hover:not(:disabled) { border-color: var(--line-ctrl); }
-.ps-hp-input { width: 96px; font-size: 1.5rem; padding: 0 var(--sp-2); border: var(--border) solid var(--accent); border-radius: var(--r-sm); background: var(--surface); color: var(--text); }
-.ps-hp-input--temp { width: 64px; font-size: var(--fs-md); }
-.ps-hp-max { color: var(--text2); font-size: var(--fs-lg); }
-.ps-hp-temp { padding: 2px var(--sp-2); border: var(--border) solid var(--accent); border-radius: 999px; background: var(--bg-sunk); color: var(--accent-text); font-size: var(--fs-sm); cursor: pointer; }
-.ps-hp-temp[data-empty] { border-style: dashed; border-color: var(--line-ctrl); background: none; color: var(--text2); }
-.ps-hp-hint { margin: 0; color: var(--text2); font-size: var(--fs-sm); }
-.ps-vital-btns { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.ps-vital-btns [data-alert] { border-color: var(--danger-line); color: var(--danger-text); }
-
-.ps-facts { grid-area: facts; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-2) var(--sp-4); margin: 0; }
-.ps-facts dt { color: var(--text2); font-size: var(--fs-xs); }
-.ps-facts dd { margin: 0; }
-.ps-combat { display: flex; gap: var(--sp-2); }
-.ps-combat > div { min-width: 72px; padding: var(--sp-2) var(--sp-3); border: var(--border) solid var(--line); border-top: 3px solid var(--accent); border-radius: var(--r-sm); background: var(--surface); }
-.ps-combat b { font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
-.ps-abilities { flex: 1 1 360px; min-width: 0; display: grid; grid-template-columns: repeat(6, minmax(56px, 1fr)); gap: var(--sp-2); }
-.trpg-window[data-layout='narrow'] .ps-abilities { flex-basis: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.ps-ability { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--sp-2); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
-.ps-ability b { font-size: var(--fs-xl); font-weight: var(--fw-semibold); }
-.ps-ability span { color: var(--text2); font-size: var(--fs-sm); }
-.ps-ability em { font-style: normal; color: var(--text2); font-size: var(--fs-xs); white-space: nowrap; }
-.ps-ability em[data-prof] { color: var(--primary); }
-
 /* 分页条 + 侧栏 */
 .ps-tabs { display: flex; align-items: stretch; gap: 0; overflow-x: auto; border-bottom: var(--border) solid var(--line); background: var(--surface); position: sticky; top: 49px; z-index: 1; }
 .ps-tabs button { flex: none; min-height: 40px; padding: 0 var(--sp-4); border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text); cursor: pointer; }
@@ -79,7 +24,7 @@
 .ps-skill-ab { text-align: left; }
 .ps-prof { color: var(--text2); }
 .ps-prof[data-level='1'], .ps-prof[data-level='2'] { color: var(--primary); }
-.ps-tab { padding: var(--sp-5); }
+.ps-tab { padding: var(--sp-5); container: pstab / inline-size; min-width: 0; }
 
 /* 抽屉（弹窗里的一页） */
 .ps-drawer { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); }
@@ -126,7 +71,7 @@
 .trpg-window[data-layout='narrow'] .ps-act-table tbody th { width: auto; }
 /* A 批：属性页 */
 .ps-attr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
-.trpg-window[data-layout='narrow'] .ps-attr { grid-template-columns: minmax(0, 1fr); }
+@container pstab (max-width: 640px) { .ps-attr { grid-template-columns: minmax(0, 1fr); } }
 .ps-attr-col { display: grid; gap: var(--sp-5); min-width: 0; }
 .ps-card h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-md); padding-bottom: var(--sp-1); border-bottom: var(--border) solid var(--line); }
 .ps-saves { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--sp-4); }
@@ -146,7 +91,7 @@
 .trpg-window[data-layout='narrow'] .ps-act-table thead th:nth-child(3) { width: 34%; }
 .ps-box { white-space: nowrap; margin: 1px var(--sp-1) 1px 0; }
 /* 标签筛选（同资料库）在页内：不要库页的左右内边距 */
-.ps-pills { padding: 0 0 var(--sp-3); }
+.ps-pills { padding: 0 0 var(--sp-3); flex-wrap: wrap; overflow: visible; }
 .ps-act-rec { display: block; color: var(--text2); font-size: var(--fs-xs); }
 /* B 批：背包 */
 .ps-enc { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); font-size: var(--fs-sm); }
@@ -167,3 +112,14 @@
 /* 表格里的加减按钮做小一号，免得挤掉别的列 */
 .ps-act-table .trpg-stepper__btn { min-width: 26px; min-height: 28px; padding: 0; }
 .ps-act-table .trpg-stepper__val { min-width: 2.6em; padding: 0 var(--sp-1); font-size: var(--fs-sm); }
+/* 侧栏：[技能 | 收藏]（线框 p6-6 ⑧） */
+.ps-side .trpg-seg { width: 100%; margin-bottom: var(--sp-3); }
+.ps-side .trpg-seg button { flex: 1; }
+.ps-side-head { display: grid; grid-template-columns: minmax(0, 1fr) 3em 2.6em 28px; align-items: center; gap: var(--sp-1); padding-bottom: var(--sp-1); border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.ps-side-head small { color: var(--text2); font-size: var(--fs-xs); text-align: right; }
+.ps-favs { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-1); }
+.ps-favs li { display: flex; align-items: center; gap: var(--sp-2); min-height: 36px; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.ps-fav-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-attr .ps-card { padding: var(--sp-3) var(--sp-4); }
+
+@container pstab (max-width: 420px) { .ps-bag-table thead th:nth-child(2) { width: 96px; } .ps-bag-table thead th:nth-child(3) { width: 112px; } .ps-bag-act .trpg-btn { padding: 0 var(--sp-2); } }

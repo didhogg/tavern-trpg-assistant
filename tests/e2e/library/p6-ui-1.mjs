@@ -87,17 +87,17 @@ try {
   check('生命骰用掉一颗', (await page.getByTestId('ps-hd').innerText()) !== hdBefore, `${hdBefore} → ${await page.getByTestId('ps-hd').innerText()}`)
   await page.getByTestId('ps-exh').click(); await page.getByTestId('ps-drawer-exhaustion').waitFor(); await settle(page, 800); await shot('04-drawer-exh')
   await page.getByRole('button', { name: '多一级' }).click(); await settle(page, 1500); await closeModal()
-  check('力竭 1 级', /力竭 1 级/.test(await page.getByTestId('ps-exh').innerText()))
+  check('力竭 1 级', /力竭\s*1 级/.test(await page.getByTestId('ps-exh').innerText()))
   await page.getByTestId('ps-death').click(); await page.getByTestId('ps-drawer-death').waitFor()
   await page.getByTestId('ps-drawer-death').getByRole('group', { name: '死亡豁免成功' }).getByRole('button', { name: '设为 2' }).click(); await settle(page, 1500); await shot('05-drawer-death')
   await closeModal()
   check('死亡豁免成功 2', /成功 2/.test(await page.getByTestId('ps-death').innerText()))
 
   // ---- 身份 / 头像 ----
-  await page.getByTestId('ps-name').click(); await page.getByTestId('ps-drawer-identity').waitFor()
+  await page.getByTestId('ps-ident-edit').click(); await page.getByTestId('ps-drawer-identity').waitFor()
   await page.getByTestId('ps-drawer-identity').getByLabel('英文名（选填）').fill('Gale'); await shot('06-drawer-identity')
   await page.getByTestId('ps-drawer-identity').getByRole('button', { name: '保存' }).click(); await settle(page, 1500)
-  check('英文名显示在名字旁', /Gale/.test(await page.getByTestId('ps-name').innerText()))
+  check('英文名显示在名字旁', /Gale/.test(await page.locator('.ps-name-line').innerText()))
   await page.getByTestId('ps-portrait').click(); await page.getByTestId('ps-drawer-avatar').waitFor()
   await page.getByTestId('ps-drawer-avatar').getByLabel('图片链接').fill('不是网址'); await settle(page, 300)
   check('头像：不是网址时说明原因、[使用这张]灰掉', /http/.test(await page.getByTestId('ps-drawer-avatar').innerText()) && await page.getByRole('button', { name: '使用这张' }).isDisabled())
@@ -105,7 +105,7 @@ try {
 
   // ---- 撤销 / 改动记录 ----
   await page.getByTestId('ps-undo').click(); await settle(page, 1500)
-  check('撤销一步：英文名回到空', !/Gale/.test(await page.getByTestId('ps-name').innerText()))
+  check('撤销一步：英文名回到空', !/Gale/.test(await page.locator('.ps-name-line').innerText()))
   await page.getByTestId('ps-history').click(); await page.getByTestId('ps-drawer-history').waitFor(); await settle(page, 1200); await shot('08-history')
   const hist = await page.getByTestId('ps-drawer-history').innerText()
   check('改动记录：中文字段名（当前 HP / 临时 HP 一类）', /HP|生命/.test(hist) && /撤销到这里/.test(hist) && !/system\./.test(hist), hist.replace(/\s+/g, ' ').slice(0, 300))

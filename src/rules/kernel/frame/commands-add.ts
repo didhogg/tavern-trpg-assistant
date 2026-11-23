@@ -7,6 +7,8 @@ import type { ActorGetter, Operate } from './commands-items'
 import { importEntry } from './importer'
 import { applyManager, actorLevel, cleanItem, Manager } from './commands-level'
 
+const g = globalThis as any
+
 function flagsOf(item: any): string | null {
   const f = item?.flags?.plutonium
   return f?.propDroppable && f.source && f.hash ? `${f.propDroppable}|${f.source}|${f.hash}` : null
@@ -29,7 +31,8 @@ export function createAddCommands(operate: Operate, actor: ActorGetter) {
           const outcome = await applyManager(manager, row.choices, { strict: false })
           if (!outcome.finished) return { kernelStatus: 'pending', reason: 'add-step-not-complete', step: outcome.step, pending: { step: outcome.step } }
         } else {
-          const returned = await sheet._onDropSingleItem(null, data)
+          // 官方拖放会看“放在了哪一段”（法术按 event.target 找所在的环 / 施法方式）；给一个不在任何一段里的目标 = 放在表上空白处，走官方默认
+          const returned = await sheet._onDropSingleItem({ target: g.document.createElement('div') }, data)
           if (returned === false || returned === undefined) continue
           const created = await a.createEmbeddedDocuments('Item', [returned], { keepId: true })
           added.push(...created.map((item: any) => item.toObject()))

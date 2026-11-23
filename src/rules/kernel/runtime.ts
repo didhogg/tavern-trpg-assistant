@@ -169,7 +169,7 @@ export class KernelRuntime {
     const deleted = await o.session.call('deleteActors', [actorId])
     if (deleted.status !== 'complete') throw new Error(`小窗里删不掉人物 ${actorId}：${deleted.error ?? deleted.status}`)
     if (!actor) { o.bases.delete(actorId); o.seeds.delete(actorId); return null }
-    const base = (actor.base ? o.bases.base(actorId) : o.bases.baseFor(actorId, actor.refs)) ?? actor.base ?? null
+    const base = actor.base ?? o.bases.baseFor(actorId, actor.refs) ?? null
     if (!base) return this.rebuild(ownerKey, actor)
     const call = await o.session.call('createActorsFromBase', [{ base, id: actorId, state: actor.state, off: actor.off }])
     const row = (call.result as Array<{ id?: string; data?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: OffChoices }> | null)?.[0]
@@ -377,23 +377,13 @@ export class KernelRuntime {
     const library = await this.library(ownerKey)
     const out: KernelActorCompact[] = []
     for (const id of ids) {
-      const base = o.bases.view(id)
-      const full = o.bases.base(id)
-      if (!base || !full) throw new Error(`人物 ${id} 没有重建基准：先建卡后记住，或从存档重建`)
+      // P6-R：存完整人物数据（唯一真数据），引用只作说明；差别为空、不取下
       const current = await actorData(o.session, id)
       if (!current) throw new Error(`结算小窗里没有这个人物：${id}`)
-      const stored = o.bases.isStored(id) // B′ 人物读档按完整数据建回，不需要成长选择
-      const captured = stored ? { status: 'complete', result: {} } : await o.session.call('captureChoices', id)
-      if (!executed(captured.status)) throw new Error(`记下 ${id} 的成长选择失败：${captured.error ?? captured.status}`)
       const name = typeof current.name === 'string' ? current.name : id
-      // 差别相对取下后的视图算；取下时动过的成长用原始选择（不让「当前没应用」写成「原来没选」）
-      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base, choices: o.bases.protect(id, captured.result ?? {}), stored })
-      if (o.cache && !stored) {
-        const version = await o.dataVersion()
-        const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
-        await o.cache.put(key, full, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
-      }
-      out.push(compact)
+      const compact = await compactActor({ lib: this.deps.scoped, library, actor: { id, name }, seed: o.seeds.get(id) ?? name, current, base: current, choices: {}, stored: true })
+      o.bases.set(id, current, null, null, true)
+      out.push({ ...compact, doc: current, off: [] })
     }
     return out
   }

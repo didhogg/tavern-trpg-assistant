@@ -4,9 +4,10 @@
 //  小操作：小窗执行 → 立刻写存档（可撤销）          大操作：小窗执行 → 预览 → [确认] 写存档 / [取消] 按存档退回
 //  撤销：存档退一步 → 小窗里受影响的人按存档退回     回到自动：小窗里把字段改回基准值 → 写存档时差别自然消失
 import type { KernelActorCompact, KernelSaveService } from '../../core/saves/kernel'
-import { isObject, jsonDiff } from '../../core/saves/state'
+import { isObject } from '../../core/saves/state'
 import type { EntryRef } from '../../library/scopes'
 import { kernelActorSchema, type KernelActor, type KernelChange } from '../../schemas/kernel'
+import type { FieldNode } from './frame/commands-fields'
 import type { SheetEdit } from './frame/commands-sheet'
 import type { Displayed, FrameText } from './shown'
 import { executed } from './host'
@@ -30,6 +31,12 @@ export interface ChangedField { path: string; kind: 'state' | 'setting' }
 /** 小窗交回的编号名字（未过出口）；Glossary = 过了唯一显示出口的成品：tables[登记表名][编号] = 名字，statuses = 能开关的状态。 */
 interface FrameGlossary { tables: Record<string, Record<string, FrameText>>; statuses: Array<{ id: string; name: FrameText; img: string | null }> }
 export type Glossary = Displayed<FrameGlossary> & { untranslated?: string[] }
+/** 编辑窗口信息（小窗原样，FrameText 过出口后成字）。 */
+/** 改到某一块的效果（一条效果里的一项改动）：manual = 人物页“添加条目”加的手动效果。 */
+export interface FieldEffect { effect: string; itemId: string | null; name: FrameText | null; origin: FrameText | null; active: boolean; disabled: boolean; manual: boolean; key: string; keyLabel: FrameText | null; mode: FrameText | null; modeCode: number; value: string }
+export interface FieldInfo { tree: FieldNode | null; effects: FieldEffect[]; attribution: string | null; derived: unknown; modes: Array<{ value: number; label: FrameText }> }
+export type ShownField = Displayed<FieldNode>
+export type ShownFieldInfo = Displayed<FieldInfo>
 
 /** 装人结果：legacy = 旧格式人物（只有整份内容，不能按引用重建）。 */
 export interface LoadedActor { id: string; name: string; status: 'complete' | 'missing' | 'pending' | 'error' | 'legacy'; error?: string; missing?: Array<{ label: string; reason: string }> }
@@ -50,17 +57,6 @@ export interface RosterRow {
   missing: string[]
 }
 
-/** 两份数据逐字段比出的路径（`-=` 删除的也算）。 */
-function paths(diff: Record<string, unknown>, prefix = '', out: string[] = []): string[] {
-  for (const [key, value] of Object.entries(diff)) {
-    const path = prefix ? `${prefix}.${key.replace(/^-=/, '')}` : key.replace(/^-=/, '')
-    if (!key.startsWith('-=') && isObject(value) && Object.keys(value).length) paths(value as Record<string, unknown>, path, out)
-    else out.push(path)
-  }
-  return out
-}
-const kindOf = (path: string): ChangedField['kind'] => PLAY_STATE.some((re) => re.test(path)) ? 'state' : 'setting'
-const strip = (data: Record<string, unknown>): Record<string, unknown> => { const out = { ...data }; delete out.items; delete out.effects; delete out._stats; return out }
 const get = (obj: unknown, path: string): unknown => path.split('.').reduce<unknown>((v, k) => isObject(v) ? (v as Record<string, unknown>)[k] : undefined, obj)
 const itemsById = (data: Record<string, unknown> | null): Map<string, Record<string, unknown>> =>
   new Map(((data?.items ?? []) as Array<Record<string, unknown>>).map((i) => [String(i._id), i]))
@@ -89,6 +85,8 @@ const baseName = (name: string): string => name.replace(/ \d+$/, '')
 type Saved = KernelActor & { base?: Record<string, unknown> }
 /** 存档人物带上战役层的 B′ 完整数据（有的话）。 */
 const withBase = (kernel: { bases?: Record<string, Record<string, unknown>> }, actor: KernelActor): Saved => {
+  // P6-R：有完整数据就只按它建回（差别为空、不取下）
+  if (actor.doc) return { ...actor, base: actor.doc, state: kernelActorSchema.shape.state.parse(undefined), off: [] }
   const base = kernel.bases?.[actor.id]
   return base ? { ...actor, base } : actor
 }
@@ -164,7 +162,7 @@ export class KernelPeople {
     return this.call(ownerKey, 'preparedActors')
   }
 
-  /** 读人物页：官方数值 + 分解 + 和基准不同的字段（金线只画 setting）。 */
+  /** 读人物页：官方数值 + 官方显示数据（过唯一出口）。 */
   async sheet(ownerKey: string, actorId: string) {
     // 显示文字过唯一出口：物品 / 特性 / 效果名换成本战役语言，带作者编号的配上库条目（ref）；怪物动作等由小窗按作者编号在条目里定位
     const refs = ((await this.saved(ownerKey, actorId))?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
@@ -173,18 +171,17 @@ export class KernelPeople {
     if (out.status !== 'complete') return out
     // 物品 / 效果名和官方显示数据（view）一起过唯一显示出口
     const shown = await shownBy.show({ shown: out.result.shown, view: out.result.view })
-    const base = await this.deps.runtime.baseOf(ownerKey, actorId)
-    const current = ((await this.call(ownerKey, 'preparedActors')) as Array<{ source: Record<string, unknown> }>).find((a) => a.source._id === actorId)?.source ?? null
-    const changed: ChangedField[] = base && current ? paths(jsonDiff(strip(base), strip(current))).map((path) => ({ path, kind: kindOf(path) })) : []
-    const items: Record<string, ChangedField[]> = {}
-    const baseItems = itemsById(base)
-    for (const [id, item] of itemsById(current)) {
-      const was = baseItems.get(id)
-      if (!was) continue
-      const list = paths(jsonDiff(was, item)).filter((p) => !p.startsWith('_stats')).map((path) => ({ path, kind: kindOf(path) }))
-      if (list.length) items[id] = list
-    }
-    return { ...out, result: { ...out.result, shown: shown.value.shown, view: shown.value.view, changed, changedItems: items, baseKnown: !!base, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
+    // P6-R：人物存完整数据，没有“自动基准”可比，金线不再有（changed 留空给旧调用方）
+    const changed: ChangedField[] = []
+    return { ...out, result: { ...out.result, shown: shown.value.shown, view: shown.value.view, changed, changedItems: {} as Record<string, ChangedField[]>, baseKnown: true, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
+  }
+
+  /** 编辑窗口：一块字段的官方定义（名字 / 种类 / 选项 / 底值）+ 改到它的效果 + 官方明细（P6-R），过唯一出口。 */
+  async fields(ownerKey: string, actorId: string, target: { itemId?: string; path: string }) {
+    const out = await this.call(ownerKey, 'fieldInfo', actorId, target)
+    if (out.status !== 'complete') return out
+    const shown = await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result as FieldInfo)
+    return { ...out, result: shown.value }
   }
 
   /** 编号的显示名（伤害类型、语言、体型、技能、物品属性……整表 + 能开关的状态），过唯一出口；本战役只取一次。 */

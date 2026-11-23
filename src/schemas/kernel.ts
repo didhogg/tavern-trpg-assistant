@@ -64,6 +64,8 @@ export const kernelActorSchema = z.object({
   /** 取下安排；旧存档没有 = 什么都没取下。 */
   off: z.array(kernelOffRowSchema).default([]),
   dice: z.array(z.number().int()).default([]),
+  /** P6-R（照 DiceCloud）：人物的完整数据（dnd5e actor.toObject()）= 唯一真数据；有它就按它建回，不按引用重建。旧存档没有，第一次写入时补上。 */
+  doc: z.record(z.string(), z.unknown()).optional(),
   /** 旧格式（整份条目全文）原样保留；不丢、不猜。 */
   legacy: z.boolean().default(false),
   legacyState: z.record(z.string(), z.unknown()).optional(),

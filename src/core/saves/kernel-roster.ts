@@ -153,6 +153,13 @@ function flatten(diff: Record<string, unknown>, from: unknown, to: unknown, pref
   }
 }
 
+/** 完整人物数据（P6-R doc）摆成和差别同样的形状：人物本身 / 物品按编号 / 效果按编号，改动记录照旧按字段比。 */
+function docView(doc: Record<string, unknown>): KernelActor['state'] {
+  const { items, effects, _stats, ...actor } = doc as Record<string, unknown> & { items?: Array<Record<string, unknown>>; effects?: Array<Record<string, unknown>> }
+  const byId = (rows: Array<Record<string, unknown>> = []) => Object.fromEntries(rows.map((r) => { const { _stats: _s, ...rest } = r; return [String(r._id), rest] }))
+  return { actor, items: byId(items), effects: byId(effects), itemAdded: [], itemRemoved: [], effectAdded: [], effectRemoved: [] }
+}
+
 /** 改动记录（新的在前）：按撤销记录里"改前的人物"和下一次的样子逐字段比出来，不另存一份记录。 */
 export function history(kernel: KernelCampaign): HistoryRow[] {
   const state = new Map<string, KernelActor | null>(kernel.actors.map((a) => [a.id, a]))
@@ -167,7 +174,7 @@ export function history(kernel: KernelCampaign): HistoryRow[] {
       if (!before) row.actors.push({ id, name, kind: 'added', fields: [] })
       else if (!after) row.actors.push({ id, name, kind: 'removed', fields: [] })
       else {
-        const pick = (a: KernelActor) => ({ name: a.name, state: a.state, adjustments: a.adjustments })
+        const pick = (a: KernelActor) => ({ name: a.name, state: a.doc ? docView(a.doc) : a.state, adjustments: a.adjustments })
         const fields: HistoryRow['actors'][number]['fields'] = []
         flatten(jsonDiff(pick(before), pick(after)), pick(before), pick(after), '', fields)
         row.actors.push({ id, name, kind: 'changed', fields })

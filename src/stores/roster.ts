@@ -169,6 +169,16 @@ export const useRosterStore = defineStore('people', () => {
     return ok
   }
   async function undoAdded(): Promise<void> { lastAdded.value = null; await undoSteps(1) }
+  /** 空白人物（P6-R，照 DiceCloud）：一份默认的玩家角色，之后在详情页里填；返回新人物编号。 */
+  async function addBlank(name: string, category: CategoryId): Promise<string | null> {
+    let id: string | null = null
+    await run(`已新建 ${name}`, 1, async (k) => {
+      const out = await backend().build(k, { name, items: [] }, { category })
+      if (!out.kernel || !out.built.id) throw new Error(out.built.error ?? '空白人物没建出来')
+      id = out.built.id
+    })
+    return id
+  }
 
   /**
    * 新建人物（作者完整建卡器，P6）：建卡专用小窗铺在 slot 里给玩家用，作者建好 → 收进存档（一次加人是存档里的一步，提示条带 [撤销]）。
@@ -205,6 +215,6 @@ export const useRosterStore = defineStore('people', () => {
 
   return {
     rows, loaded, loading, error, view, sort, query, selecting, selected, visible, counts, elsewhere, trash,
-    lastAdded, addFromTemplate, createNative, stopNative, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
+    lastAdded, addFromTemplate, addBlank, createNative, stopNative, undoAdded, load, ensure, refresh, setView, toggleSelecting, toggle, selectAllVisible, move, pin, trashed, copy, purge,
   }
 })

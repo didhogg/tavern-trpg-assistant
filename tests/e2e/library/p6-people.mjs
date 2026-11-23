@@ -42,7 +42,8 @@ try {
     const session = (await rt.session(owner)).session
     const src = async (id) => h.actorData(session, id)
     const savedActor = async (id) => (await saves.read(owner)).actors.find((a) => a.id === id)
-    const savedHp = async (id) => (await savedActor(id))?.state.actor?.system?.attributes?.hp?.value ?? null
+    // P6-R：存档里每个人存完整数据（doc），旧格式才看差别
+    const savedHp = async (id) => { const a = await savedActor(id); return a?.doc?.system?.attributes?.hp?.value ?? a?.state.actor?.system?.attributes?.hp?.value ?? null }
 
     const b = await people.build(owner, { name: 'P6 英雄', items: ['race', 'background', 'class'].map((k) => plan[k].ref), equipment: ['weapon'].map((k) => plan[k].ref) }, { category: 'party' })
     const id = b.built.id
@@ -63,7 +64,7 @@ try {
     const strBase = s0.system.abilities.str.value
     const e1 = await people.edit(owner, id, [{ kind: 'set', path: 'system.abilities.str.value', value: strBase + 2 }, { kind: 'set', path: 'system.attributes.hp.bonuses.overall', value: '3' }])
     const s1 = (await people.sheet(owner, id)).result
-    out.edit = { status: e1.outcome.status, str: s1.system.abilities.str.value, hpMax: s1.system.attributes.hp.max, changed: s1.changed, savedStr: (await savedActor(id)).state.actor?.system?.abilities?.str?.value ?? null }
+    out.edit = { status: e1.outcome.status, str: s1.system.abilities.str.value, hpMax: s1.system.attributes.hp.max, changed: s1.changed, savedStr: (await savedActor(id)).doc?.system?.abilities?.str?.value ?? null }
     const locked = await people.edit(owner, id, [{ kind: 'set', path: 'flags.plutonium.hash', value: 'x' }])
     out.locked = { status: locked.outcome.status, error: locked.outcome.error }
     const rv = await people.revert(owner, id, s1.changed.filter((c) => c.kind === 'setting').map((c) => c.path))
@@ -166,7 +167,8 @@ try {
   const checks = {
     build: r.build.status === 'complete' && r.build.inSave === 1,
     sheet: r.sheet.baseKnown && r.sheet.changed === 0 && (r.sheet.hpClasses?.length ?? 0) > 0 && r.sheet.ac !== null && r.sheet.pp !== null && r.sheet.strMod !== null,
-    edit: r.edit.status === 'complete' && r.edit.changed.some((c) => c.path === 'system.abilities.str.value' && c.kind === 'setting'),
+    // P6-R：没有“自动基准 / 金线”了，改动直接进存档里的完整数据
+    edit: r.edit.status === 'complete' && r.edit.savedStr !== null && r.edit.str === r.edit.savedStr,
     locked: r.locked.status === 'error',
     revert: r.revert.status === 'complete' && r.revert.changed.length === 0,
     undoFixed: r.undo.fixed,
@@ -183,7 +185,6 @@ try {
     view: r.view.sheet === 'CharacterActorSheet' && r.view.parts.includes('header') && r.view.rawAbility === 'dex' && r.view.keysLeft.length === 0,
     monsterView: r.suffixed.sheet === 'NPCActorSheet' && han(r.suffixed.alignment) && !han(r.suffixed.rawAlignment) && r.suffixed.keysLeft.length === 0,
     historyLabels: r.history.labels.length > 0 && r.history.labels.every(([, label]) => han(label)),
-    npcPlayState: r.suffixed.hdSpentKind === 'state',
     glossaryKinds: r.shown.codeTables.length === 0 && han(r.shown.fullCaster),
     shown: r.shown.items.length > 0 && r.shown.items.every(([name, ref]) => han(name) && ref) && han(r.shown.fire) && han(r.shown.common) && han(r.shown.tiny) && r.shown.statuses > 5 && han(r.shown.poisoned)
       && Number.isInteger(r.shown.hd?.value) && Number.isInteger(r.shown.hd?.max) && r.shown.hd.max > 0,
