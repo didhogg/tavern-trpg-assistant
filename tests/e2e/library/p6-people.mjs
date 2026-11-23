@@ -126,6 +126,18 @@ try {
       monster: rows.filter((x) => x.adjustments.category === 'enemy').map((x) => ({ name: x.name, cr: x.cr, type: x.type, loaded: x.loaded })), allNames: rows.map((x) => x.name),
       writeAfterLoad: wrote.outcome.status === 'complete' && !!wrote.kernel }
     await rt2.close(owner)
+    // 不用换算缓存重开：怪物走重新换算那条路，建回的编号也必须是存档里的（驾驶员 2026-11-23 真机：模板怪物装回后换了编号）
+    const rt3 = new h.KernelRuntime({ revisions: h.revisions, pluginRoot: new URL('/', location.href), files: h.files, scoped: h.scoped, service: h.service, container: () => document.body,
+      campaignOf: async () => ({ rule: 'dnd5e2014', library, title: 'P6 人物' }) })
+    const saves3 = new h.kernelSave.constructor({ ...h.kernelSave.deps, compactActors: (k, ids) => rt3.compact(k, ids), mapRef: (k) => rt3.mapRef(k) })
+    const people3 = new h.KernelPeople({ runtime: rt3, saves: saves3 })
+    const cold = await people3.load(owner)
+    const listed = await (await rt3.session(owner)).session.call('preparedActors')
+    const inFrame = (listed.result ?? listed).map((a) => a.source._id)
+    const savedIds = (await saves3.read(owner)).actors.map((a) => a.id)
+    const monsterSheet = await people3.sheet(owner, rows.find((x) => x.adjustments.category === 'enemy').id)
+    out.cold = { statuses: cold.map((x) => x.status), savedIds, inFrame, monsterSheet: monsterSheet.status }
+    await rt3.close(owner)
     return out
   })
   const known = (e) => e.includes('gendata-nav-adventure-book-index.json') || e.includes('requires usable window dimensions') || e.includes('status of 404') || e.includes('api/plutonium')
@@ -148,6 +160,7 @@ try {
     reload: r.reload.statuses.every((s) => s === 'complete') && r.reload.secondLoad.every((s) => s === 'complete') && new Set(r.reload.ids).size === r.reload.ids.length && r.reload.sameHp,
     roster: !!r.reload.hero && r.reload.hero.classes.length > 0 && !!r.reload.hero.race && r.reload.hero.ac !== null && r.reload.hero.pp !== null && r.reload.hero.speed > 0 && r.reload.hero.cat === 'party' && r.reload.monster.length === 2 && r.reload.monster.every((m) => m.loaded),
     writeAfterLoad: r.reload.writeAfterLoad,
+    coldIds: r.cold.statuses.every((x) => x === 'complete') && r.cold.savedIds.every((x) => r.cold.inFrame.includes(x)) && r.cold.monsterSheet === 'complete',
   }
   const ok = Object.values(checks).every(Boolean) && unexplained.length === 0
   await writeFile(`${work}/p6-people-${engine}.json`, JSON.stringify({ engine, ok, checks, ...r, errors, unexplained }, null, 2))

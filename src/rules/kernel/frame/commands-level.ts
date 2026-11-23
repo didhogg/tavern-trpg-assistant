@@ -308,10 +308,13 @@ export function createLevelCommands(operate: Operate, actor: ActorGetter) {
       return actorLevel(a)
     }, [actorId]),
 
-    /** 读档全部命中缓存：一次 createDocuments 批量建（保留编号），再逐个叠状态差别。 */
-    createActorsFromBase: (rows: Array<{ base: any; state?: KernelActorStateLike; off?: OffRow[] }>) => operate([], async () => {
+    /**
+     * 读档全部命中缓存：一次 createDocuments 批量建（保留编号），再逐个叠状态差别。
+     * id = 存档里这个人的编号：缓存的基准是按引用共用的，里面记的编号可能是别人的（同一模板的另一个怪物）或旧的，一律以存档为准。
+     */
+    createActorsFromBase: (rows: Array<{ base: any; id?: string; state?: KernelActorStateLike; off?: OffRow[] }>) => operate([], async () => {
       const ActorClass = g.CONFIG.Actor.documentClass
-      const created = await ActorClass.createDocuments(rows.map((row) => structuredClone(row.base)), { keepId: true })
+      const created = await ActorClass.createDocuments(rows.map((row) => ({ ...structuredClone(row.base), ...(row.id ? { _id: row.id } : {}) })), { keepId: true })
       const out = []
       for (let i = 0; i < created.length; i++) {
         const prepared = await prepareActor(created[i], rows[i].off, rows[i].state)

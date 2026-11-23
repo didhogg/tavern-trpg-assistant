@@ -82,7 +82,8 @@ export function createMonsterCommands(operate: Operate) {
     }),
 
     /** P3-3b 重建怪物：按作者条目重新导入 → 建 Actor → 叠状态差别。 */
-    rebuildMonster: (plan: { entry: any; name: string; state?: KernelActorStateLike; data?: any }) => operate([], async () => {
+    /** id = 存档里这个人的编号：建回存档里的人时编号一律由存档给（驾驶员 2026-11-23：模板怪物装回后换了编号，人物页按存档编号读不到）。 */
+    rebuildMonster: (plan: { entry: any; name: string; state?: KernelActorStateLike; data?: any; id?: string }) => operate([], async () => {
       let data: any
       const status = 'complete'
       if (plan.data) data = structuredClone(plan.data)
@@ -91,7 +92,7 @@ export function createMonsterCommands(operate: Operate) {
       for (const item of data.items ?? []) delete item._id
       for (const effect of data.effects ?? []) delete effect._id
       const ActorClass = g.CONFIG.Actor.documentClass
-      const created = await ActorClass.create({ ...data, name: plan.name })
+      const created = plan.id ? await ActorClass.create({ ...data, _id: plan.id, name: plan.name }, { keepId: true }) : await ActorClass.create({ ...data, name: plan.name })
       const base = created.toObject()
       await applyStateToActor(created, plan.state)
       return { status, id: created.id, ...actorSummary(created), data: created.toObject(), base }

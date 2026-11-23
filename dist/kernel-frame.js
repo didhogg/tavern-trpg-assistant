@@ -1130,16 +1130,20 @@ function bt(e) {
 			e = t.data ? structuredClone(t.data) : await L("monster", t.entry), delete e._id;
 			for (let t of e.items ?? []) delete t._id;
 			for (let t of e.effects ?? []) delete t._id;
-			let n = await pt.CONFIG.Actor.documentClass.create({
+			let n = pt.CONFIG.Actor.documentClass, r = t.id ? await n.create({
+				...e,
+				_id: t.id,
+				name: t.name
+			}, { keepId: !0 }) : await n.create({
 				...e,
 				name: t.name
-			}), r = n.toObject();
-			return await ft(n, t.state), {
+			}), i = r.toObject();
+			return await ft(r, t.state), {
 				status: "complete",
-				id: n.id,
-				...vt(n),
-				data: n.toObject(),
-				base: r
+				id: r.id,
+				...vt(r),
+				data: r.toObject(),
+				base: i
 			};
 		}),
 		importMonsterData: (t) => e([], async () => ({
@@ -2362,7 +2366,10 @@ function lr(e, t) {
 			}), U(e);
 		}, [n]),
 		createActorsFromBase: (t) => e([], async () => {
-			let e = H.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => structuredClone(e.base)), { keepId: !0 }), r = [];
+			let e = H.CONFIG.Actor.documentClass, n = await e.createDocuments(t.map((e) => ({
+				...structuredClone(e.base),
+				...e.id ? { _id: e.id } : {}
+			})), { keepId: !0 }), r = [];
 			for (let i = 0; i < n.length; i++) {
 				let a = await dt(n[i], t[i].off, t[i].state);
 				if (a.problems.length) return await e.deleteDocuments(n.map((e) => e.id)), {

@@ -167,7 +167,7 @@ export class KernelRuntime {
     if (!actor) { o.bases.delete(actorId); o.seeds.delete(actorId); return null }
     const base = o.bases.base(actorId) ?? actor.base ?? null
     if (!base) return this.rebuild(ownerKey, actor)
-    const call = await o.session.call('createActorsFromBase', [{ base, state: actor.state, off: actor.off }])
+    const call = await o.session.call('createActorsFromBase', [{ base, id: actorId, state: actor.state, off: actor.off }])
     const row = (call.result as Array<{ id?: string; data?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: OffChoices }> | null)?.[0]
     if (call.status !== 'complete' || !row?.id || !row.data) return { status: 'error', error: call.error ?? `退回状态：${call.status}`, detail: call }
     o.bases.set(row.id, base, row.view, row.offChoices, o.bases.isStored(row.id) || !!actor.base)
@@ -319,7 +319,7 @@ export class KernelRuntime {
       if (base) hits.push({ index: i, base }); else misses.push(i)
     }
     if (hits.length) {
-      const call = await o.session.call('createActorsFromBase', hits.map((h) => ({ base: h.base, state: actors[h.index].state, off: actors[h.index].off })))
+      const call = await o.session.call('createActorsFromBase', hits.map((h) => ({ base: h.base, ...(actors[h.index].id ? { id: actors[h.index].id } : {}), state: actors[h.index].state, off: actors[h.index].off })))
       const list = (call.result ?? []) as Array<{ id?: string; data?: Record<string, unknown>; base?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: OffChoices }>
       if (call.status !== 'complete' || list.length !== hits.length) {
         for (const h of hits) results[h.index] = { status: 'error', error: call.error ?? `批量重建状态：${call.status}`, detail: call }

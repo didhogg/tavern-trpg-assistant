@@ -24955,7 +24955,8 @@ async function aO(e) {
 		let t = await e.session.call("rebuildMonster", {
 			entry: o[0].entry,
 			name: e.actor.name,
-			state: e.actor.state
+			state: e.actor.state,
+			...e.actor.id ? { id: e.actor.id } : {}
 		});
 		if (t.status === "pending") return {
 			status: "pending",
@@ -25746,6 +25747,7 @@ var IO = class {
 		if (!o) return this.rebuild(e, n);
 		let s = await i.session.call("createActorsFromBase", [{
 			base: o,
+			id: t,
 			state: n.state,
 			off: n.off
 		}]), c = s.result?.[0];
@@ -26005,6 +26007,7 @@ var IO = class {
 		if (s.length) {
 			let e = await r.session.call("createActorsFromBase", s.map((e) => ({
 				base: e.base,
+				...t[e.index].id ? { id: t[e.index].id } : {},
 				state: t[e.index].state,
 				off: t[e.index].off
 			}))), n = e.result ?? [];

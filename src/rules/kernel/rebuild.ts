@@ -126,7 +126,7 @@ export async function rebuildActor(opts: {
   const monsters = entries.filter((e) => e.ref.prop === 'monster' || e.ref.kind === 'creature')
   if (monsters.length) {
     if (entries.length !== 1) return { status: 'error', error: '怪物人物同时带其他顶层条目，无法判断怎么重建' }
-    const result = await opts.session.call('rebuildMonster', { entry: monsters[0].entry, name: opts.actor.name, state: opts.actor.state })
+    const result = await opts.session.call('rebuildMonster', { entry: monsters[0].entry, name: opts.actor.name, state: opts.actor.state, ...(opts.actor.id ? { id: opts.actor.id } : {}) })
     if (result.status === 'pending') return { status: 'pending', error: '重建怪物需要玩家选择' }
     const payload = result.result as { id?: string; seed?: string; data?: Record<string, unknown>; base?: Record<string, unknown> } | null
     if (result.status !== 'complete' || !payload?.data) return { status: 'error', error: result.error ?? `重建状态：${result.status}`, detail: result }
