@@ -91,25 +91,36 @@ function live(v: any, depth = 0, seen: WeakSet<object> = new WeakSet()): any {
 /**
  * 作者导入怪物动作 / 特性 / 传奇动作时记下的编号（flags.plutonium.hash = 名字编号_所属条目编号…）→ 它在英文条目里的位置。
  * 用作者同一套 Renderer.stripTags + UrlUtil.encodeForHash 给条目里每个带名字的对象算编号来对，不比对文字、不认类别名。
- * 传奇动作作者先剥掉末尾的“(Costs N Actions)”再算编号：精确对不上时再试“去掉末尾一个括号”。都只认唯一一个，否则不定位。
+ * 传奇动作作者先剥掉末尾的“(Costs N Actions)”再算编号：精确对不上时再试“去掉末尾一个括号 / 句末标点”；
+ * 巢穴动作列表项没名字，作者截开头当名字：再试“物品名是这段话的开头”。每一档都只认唯一一个，否则不定位。
  */
-function locate(entries: unknown[], hash: string): EntryAt | null {
+function locate(entries: unknown[], hash: string, itemName: string): EntryAt | null {
   const exact: EntryAt[] = []
   const trimmed: EntryAt[] = []
+  const opening: EntryAt[] = []
   const id = (text: string): string => String(g.UrlUtil.encodeForHash(text))
-  const walk = (node: any, entry: number, path: Array<string | number>): void => {
-    if (Array.isArray(node)) { node.forEach((x, i) => walk(x, entry, [...path, i])); return }
+  // 没名字的一段话（巢穴动作）：作者只从“列表”的列表项里取（getListItems），截开头几个词当名字、末尾加“...”→ 用物品名对列表项的开头
+  const head = itemName.replace(/\s*\.\.\.$/, '').trim().toLowerCase()
+  const walk = (node: any, entry: number, path: Array<string | number>, inList = false): void => {
+    if (Array.isArray(node)) { node.forEach((x, i) => walk(x, entry, [...path, i], inList)); return }
+    if (typeof node === 'string') {
+      if (inList && head.length >= 8 && String(g.Renderer.stripTags(node)).trim().toLowerCase().startsWith(head)) opening.push({ entry, path })
+      return
+    }
     if (!node || typeof node !== 'object') return
     if (path.length && typeof node.name === 'string') {
       const plain = String(g.Renderer.stripTags(node.name))
-      const cut = plain.replace(/\s*\([^()]*\)\s*$/, '')
+      // 作者改名去掉的末尾：一个括号（每日次数、消耗动作）或句末标点
+      const cut = plain.replace(/\s*\([^()]*\)\s*$/, '').replace(/\s*[.?!]$/, '')
       if (hash.startsWith(`${id(plain)}_`)) exact.push({ entry, path: [...path, 'name'] })
       else if (cut !== plain && hash.startsWith(`${id(cut)}_`)) trimmed.push({ entry, path: [...path, 'name'] })
     }
-    for (const [k, v] of Object.entries(node)) if (v && typeof v === 'object') walk(v, entry, [...path, k])
+    for (const [k, v] of Object.entries(node)) if (v && typeof v === 'object') walk(v, entry, [...path, k], node.type === 'list' && k === 'items')
   }
   entries.forEach((e, i) => walk(e, i, []))
-  return exact.length === 1 ? exact[0] : !exact.length && trimmed.length === 1 ? trimmed[0] : null
+  if (exact.length) return exact.length === 1 ? exact[0] : null
+  if (trimmed.length) return trimmed.length === 1 ? trimmed[0] : null
+  return opening.length === 1 ? opening[0] : null
 }
 
 /**
@@ -122,7 +133,7 @@ function itemText(i: any, entries: unknown[]): { name: FrameText; author?: { pro
     const author = { propDroppable: f.propDroppable, ...(f.source ? { source: f.source } : {}), hash: f.hash }
     return { name: named(i.name, author), author }
   }
-  const at = typeof f?.hash === 'string' ? locate(entries, f.hash) : null
+  const at = typeof f?.hash === 'string' ? locate(entries, f.hash, String(i.name ?? '')) : null
   return { name: fromEntry(i.name, undefined, at ?? undefined) }
 }
 

@@ -177,7 +177,7 @@ try {
     glossaryKinds: r.shown.codeTables.length === 0 && han(r.shown.fullCaster),
     shown: r.shown.items.length > 0 && r.shown.items.every(([name, ref]) => han(name) && ref) && han(r.shown.fire) && han(r.shown.common) && han(r.shown.tiny) && r.shown.statuses > 5 && han(r.shown.poisoned)
       && Number.isInteger(r.shown.hd?.value) && Number.isInteger(r.shown.hd?.max) && r.shown.hd.max > 0,
-    suffixedNames: r.suffixed.rows.filter(([page]) => /^monster(Action|Trait|Legendary)$/.test(page ?? '')).every(([, name]) => han(name)) && r.suffixed.rows.some(([page]) => page === 'monsterLegendary'),
+    suffixedNames: r.suffixed.rows.filter(([page]) => /^monster(Action|Trait|Legendary|LairActions)$/.test(page ?? '')).every(([, name]) => han(name)) && r.suffixed.rows.some(([page]) => page === 'monsterLegendary'),
     monsterNames: (r.cold.monsterNames ?? []).length > 0 && r.cold.monsterNames.filter(han).length >= r.cold.monsterNames.length / 2,
     coldIds: r.cold.statuses.every((x) => x === 'complete') && r.cold.savedIds.every((x) => r.cold.inFrame.includes(x)) && r.cold.monsterSheet === 'complete',
   }

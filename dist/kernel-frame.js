@@ -2892,24 +2892,28 @@ function K(e, t = 0, n = /* @__PURE__ */ new WeakSet()) {
 	}
 	return r;
 }
-function Yr(e, t) {
-	let n = [], r = [], i = (e) => String(G.UrlUtil.encodeForHash(e)), a = (e, o, s) => {
-		if (Array.isArray(e)) e.forEach((e, t) => a(e, o, [...s, t]));
+function Yr(e, t, n) {
+	let r = [], i = [], a = [], o = (e) => String(G.UrlUtil.encodeForHash(e)), s = n.replace(/\s*\.\.\.$/, "").trim().toLowerCase(), c = (e, n, l, u = !1) => {
+		if (Array.isArray(e)) e.forEach((e, t) => c(e, n, [...l, t], u));
+		else if (typeof e == "string") u && s.length >= 8 && String(G.Renderer.stripTags(e)).trim().toLowerCase().startsWith(s) && a.push({
+			entry: n,
+			path: l
+		});
 		else if (e && typeof e == "object") {
-			if (s.length && typeof e.name == "string") {
-				let a = String(G.Renderer.stripTags(e.name)), c = a.replace(/\s*\([^()]*\)\s*$/, "");
-				t.startsWith(`${i(a)}_`) ? n.push({
-					entry: o,
-					path: [...s, "name"]
-				}) : c !== a && t.startsWith(`${i(c)}_`) && r.push({
-					entry: o,
-					path: [...s, "name"]
+			if (l.length && typeof e.name == "string") {
+				let a = String(G.Renderer.stripTags(e.name)), s = a.replace(/\s*\([^()]*\)\s*$/, "").replace(/\s*[.?!]$/, "");
+				t.startsWith(`${o(a)}_`) ? r.push({
+					entry: n,
+					path: [...l, "name"]
+				}) : s !== a && t.startsWith(`${o(s)}_`) && i.push({
+					entry: n,
+					path: [...l, "name"]
 				});
 			}
-			for (let [t, n] of Object.entries(e)) n && typeof n == "object" && a(n, o, [...s, t]);
+			for (let [t, r] of Object.entries(e)) r && typeof r == "object" && c(r, n, [...l, t], e.type === "list" && t === "items");
 		}
 	};
-	return e.forEach((e, t) => a(e, t, [])), n.length === 1 ? n[0] : !n.length && r.length === 1 ? r[0] : null;
+	return e.forEach((e, t) => c(e, t, [])), r.length ? r.length === 1 ? r[0] : null : i.length ? i.length === 1 ? i[0] : null : a.length === 1 ? a[0] : null;
 }
 function Xr(t, n) {
 	let r = t.flags?.plutonium;
@@ -2924,7 +2928,7 @@ function Xr(t, n) {
 			author: e
 		};
 	}
-	let i = typeof r?.hash == "string" ? Yr(n, r.hash) : null;
+	let i = typeof r?.hash == "string" ? Yr(n, r.hash, String(t.name ?? "")) : null;
 	return { name: e(t.name, void 0, i ?? void 0) };
 }
 async function Zr(e, t, n) {

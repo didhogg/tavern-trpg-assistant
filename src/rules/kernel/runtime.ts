@@ -29,6 +29,7 @@ import { checkAbilities, type AbilityPlan, type AbilityView } from './ability-ru
 import { pairsSource, type PairsOf } from './sidecar'
 import { display, type DisplayResult } from './display'
 import { namerFor } from './naming'
+import { legendaryGroupRefs } from './related-entries'
 import { kernelDataSource } from '../../library/sources'
 import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
@@ -354,18 +355,17 @@ export class KernelRuntime {
 
   /** 唯一显示出口（display.ts）用在本战役的小窗结果上；refs = 文字出自哪些条目。entries = 交给小窗定位用的英文条目，show 按同一顺序取本战役语言版。 */
   async displayFor(ownerKey: string, refs: EntryRef[]): Promise<{ entries: unknown[]; show: <T>(value: T) => Promise<DisplayResult<T>> }> {
-    const o = await this.get(ownerKey)
-    const library = await this.library(ownerKey)
-    const rows = refs.length ? await this.entries(ownerKey, refs).then((got) => got.status === 'complete' ? got.rows : []) : []
+    const [o, library] = await Promise.all([this.get(ownerKey), this.library(ownerKey)])
+    const base = refs.length ? await this.entries(ownerKey, refs).then((got) => got.status === 'complete' ? got.rows : []) : []
+    const groups = await legendaryGroupRefs(this.deps.service, library.codeSet, o.view, base)
+    const rows = [...base, ...(groups.length ? await this.entries(ownerKey, groups).then((got) => got.status === 'complete' ? got.rows : []) : [])]
     const ctx = { translate: library.codeSet !== kernelDataSource().codeSet, pairs: await o.pairsOf(rows), entries: rows, namer: await namerFor(this.deps.scoped, library), author: this.deps.service.texts.reader(library.codeSet) }
     return { entries: rows.map((r) => r.entry), show: (value) => display(value, ctx) }
   }
-
   /** 本战役现在的选书（每次现读，关书/开书后立刻生效）。 */
   private async library(ownerKey: string): Promise<CampaignLibrary> {
     return (await this.deps.campaignOf(ownerKey)).library
   }
-
   /** 作者编号（Plutonium 标记）→ 本战役【库】条目。 */
   async mapRef(ownerKey: string): Promise<KernelRefMapper> {
     return refMapperFor(this.deps.scoped, await this.library(ownerKey))
