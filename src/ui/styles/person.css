@@ -106,3 +106,42 @@
 .ps-history-actor span { color: var(--text2); font-size: var(--fs-sm); }
 .ps-history-actor ul { margin: var(--sp-1) 0 0; padding-left: var(--sp-5); color: var(--text); font-size: var(--fs-sm); }
 .ps-death-count { margin-left: var(--sp-2); }
+/* A 批：行动页 */
+.ps-actions-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+.ps-actions-search { flex: 1 1 200px; max-width: 320px; }
+.ps-act-table { width: 100%; border-collapse: collapse; margin-bottom: var(--sp-5); font-size: var(--fs-sm); }
+.ps-act-table thead th { text-align: left; font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--text2); padding: var(--sp-1) var(--sp-2); border-bottom: var(--border) solid var(--line); white-space: nowrap; }
+.ps-act-table thead th:first-child { font-size: var(--fs-md); color: var(--text); padding-left: 0; }
+.ps-act-table td, .ps-act-table tbody th { padding: var(--sp-2); border-bottom: var(--border) solid var(--line); vertical-align: middle; text-align: left; font-weight: normal; }
+.ps-act-table tbody th { padding-left: 0; }
+.ps-act-table td { white-space: nowrap; color: var(--text); }
+.ps-act-name { border: 0; background: none; padding: 0; color: var(--text); font: inherit; font-weight: var(--fw-semibold); text-align: left; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ps-act-name:hover { text-decoration: underline; }
+.ps-act-row[data-open] .ps-act-name { color: var(--primary); }
+.ps-act-sub { display: none; color: var(--text2); }
+.ps-box { display: inline-block; padding: 1px var(--sp-2); border: var(--border) solid var(--line); border-radius: var(--r-sm); background: var(--surface); font-variant-numeric: tabular-nums; }
+.ps-act-detail td { white-space: normal; padding: var(--sp-3) 0 var(--sp-4); background: var(--bg-side); }
+.trpg-window[data-layout='narrow'] .ps-act-table th:nth-child(4), .trpg-window[data-layout='narrow'] .ps-act-effect { display: none; }
+.trpg-window[data-layout='narrow'] .ps-act-sub { display: block; }
+.trpg-window[data-layout='narrow'] .ps-act-table tbody th { width: auto; }
+/* A 批：属性页 */
+.ps-attr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
+.trpg-window[data-layout='narrow'] .ps-attr { grid-template-columns: minmax(0, 1fr); }
+.ps-attr-col { display: grid; gap: var(--sp-5); min-width: 0; }
+.ps-card h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-md); padding-bottom: var(--sp-1); border-bottom: var(--border) solid var(--line); }
+.ps-saves { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--sp-4); }
+.ps-saves li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: var(--sp-1); min-height: 30px; border-bottom: var(--border) solid var(--line); font-size: var(--fs-sm); }
+.ps-saves-wide { grid-column: 1 / -1; }
+.ps-traits { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--sp-2) var(--sp-4); margin: 0; font-size: var(--fs-sm); }
+.ps-traits dt { color: var(--text2); }
+.ps-traits dd { margin: 0; }
+.ps-fact-part { display: inline-block; white-space: nowrap; margin-right: var(--sp-3); }
+/* 各组的表列宽一致（上下对齐） */
+.ps-act-table { table-layout: fixed; }
+.ps-act-table thead th:nth-child(2) { width: 13%; }
+.ps-act-table thead th:nth-child(3) { width: 20%; }
+.ps-act-table thead th:nth-child(4) { width: 30%; }
+.ps-act-table td:last-child { white-space: normal; }
+.trpg-window[data-layout='narrow'] .ps-act-table thead th:nth-child(2) { width: 24%; }
+.trpg-window[data-layout='narrow'] .ps-act-table thead th:nth-child(3) { width: 34%; }
+.ps-box { white-space: nowrap; margin: 1px var(--sp-1) 1px 0; }

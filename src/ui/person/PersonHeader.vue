@@ -29,16 +29,16 @@ const subtitle = computed(() => {
   return [...cls, npc.value ? creatureType(s.value, g.value) : species(s.value)?.name, npc.value ? size(s.value, g.value) : null, alignment(s.value)].filter(Boolean) as string[]
 })
 const facts = computed(() => {
-  const out: Array<{ label: string; text: string; ref?: unknown }> = []
+  const out: Array<{ label: string; text: string; ref?: unknown; parts?: string[] }> = []
   const sp = species(s.value)
   const bg = background(s.value)
   if (sp) out.push({ label: '种族', text: sp.name, ref: sp.ref })
   if (bg) out.push({ label: '背景', text: bg.name, ref: bg.ref })
   if (!npc.value) { out.push({ label: '体型', text: size(s.value, g.value) }); out.push({ label: '类型', text: creatureType(s.value, g.value) }) }
   const sv = speeds(s.value).filter((x) => x.value)
-  if (sv.length) out.push({ label: '速度', text: sv.map((x) => `${x.label}\u00a0${x.value}\u00a0尺`).join('　') })
+  if (sv.length) { const parts = sv.map((x) => `${x.label} ${x.value} 尺`); out.push({ label: '速度', text: parts.join('　'), parts }) }
   const se = senses(s.value).filter((x) => x.value !== null && x.value !== undefined && x.value !== '')
-  if (se.length) out.push({ label: '感官', text: se.map((x) => `${x.label}\u00a0${x.value}${typeof x.value === 'number' && x.key !== 'passivePerception' ? '\u00a0尺' : ''}`).join('　') })
+  if (se.length) { const parts = se.map((x) => `${x.label} ${x.value}${typeof x.value === 'number' && x.key !== 'passivePerception' ? ' 尺' : ''}`); out.push({ label: '感官', text: parts.join('　'), parts }) }
   const spell = sys.value.attributes.spell
   if (sys.value.attributes.spellcasting && spell?.dc) out.push({ label: '法术', text: `${spell.abilityLabel ?? named(g.value, 'abilities', sys.value.attributes.spellcasting)} DC ${spell.dc}` })
   return out
@@ -111,7 +111,7 @@ const toggleInspiration = () => person.edit(sys.value.attributes.inspiration ? '
     <dl class="ps-facts" data-testid="ps-facts">
       <div v-for="f in facts" :key="f.label">
 <dt>{{ f.label }}</dt>
-        <dd><Term v-if="f.ref" :label="`查看${f.text}`" @open="openEntry(f.ref as never, f.text)">{{ f.text }}</Term><template v-else>{{ f.text }}</template></dd>
+        <dd><Term v-if="f.ref" :label="`查看${f.text}`" @open="openEntry(f.ref as never, f.text)">{{ f.text }}</Term><span v-for="(p, i) in f.parts" v-else-if="f.parts" :key="i" class="ps-fact-part">{{ p }}</span><template v-else>{{ f.text }}</template></dd>
 </div>
     </dl>
 

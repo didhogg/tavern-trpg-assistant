@@ -41,7 +41,10 @@ function copy(v: any, entries: unknown[], skip: Set<object>, seen: Set<object> =
   if (v === g.CONFIG || v === g.CONFIG?.DND5E || v === g.game || skip.has(v)) return undefined
   const F = g.foundry
   if (v instanceof F.abstract.Document) {
-    return v.documentName === 'Item' ? { documentName: 'Item', id: v.id, ...itemText(v, entries) } : { documentName: v.documentName, id: v.id ?? null }
+    if (v.documentName !== 'Item') return { documentName: v.documentName, id: v.id ?? null }
+    // 物品带上官方给它的显示文字（伤害公式与类型、恢复方式、充能、动作类型……），同样过显示出口（驾驶员 11-23 批 G2）
+    const labels = v.labels ? copy(v.labels, entries, skip, seen, depth + 1) : undefined
+    return { documentName: 'Item', id: v.id, ...itemText(v, entries), ...(labels ? { labels } : {}) }
   }
   if (v instanceof F.data.fields.DataField || v instanceof F.applications.api.ApplicationV2) return undefined
   seen.add(v)
@@ -92,5 +95,18 @@ export async function sheetView(a: any, entries: unknown[]): Promise<{ sheet: st
   const codes = registryCodes()
   // 官方数据里那份人物原始数据（_source）和读数交出的原始数据重复，按“是同一个对象”去掉
   const skip = new Set<object>([a._source].filter(Boolean))
+  // 行动页：按动作类型分组用官方 NPC 表自己的“特性”部分；玩家角色也走它（驾驶员 11-23 批 G1）
+  out.actions = await actionsOf(a, app, out)
   return { sheet: app.constructor.name, base: mark(copy(base, entries, skip), texts, codes), parts: mark(copy(out, entries, skip), texts, codes) }
+}
+
+/** 官方 NPC 表“特性”部分的分组（每件物品的次数、命中、豁免 DC 在共用部分的 itemContext，两种表算法相同）。怪物直接用本表已算好的。 */
+async function actionsOf(a: any, app: any, out: Record<string, any>): Promise<{ sections: unknown }> {
+  const NPC = g.dnd5e.applications.actor.NPCActorSheet
+  if (app instanceof NPC) return { sections: out.features?.sections ?? [] }
+  const npc = new NPC({ document: a })
+  const opt = (o: unknown): any => JSON.parse(JSON.stringify(o))
+  const ctx = await npc._prepareContext(opt({ parts: ['features'] }))
+  const part = await npc._preparePartContext('features', Object.assign({}, ctx), opt({}))
+  return { sections: part.sections ?? [] }
 }

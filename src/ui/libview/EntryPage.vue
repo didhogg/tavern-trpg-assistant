@@ -37,7 +37,8 @@ import { openEditMine, openHouseEditor } from './edit-flow'
 import { packTitle, sideOf } from './mine'
 
 /** 条目详情壳（U1b）：弹窗里的一页。在 sheet 弹窗里前进；‹ 返回由宿主给。 */
-const props = defineProps<{ entryRef: EntryRef; selection?: EntrySelection; pageKey?: string }>()
+// bodyOnly：嵌在别处原地看原文（人物行动页展开一行）——只要正文，不带本战役开关、编辑、分页这些库页的操作
+const props = defineProps<{ entryRef: EntryRef; selection?: EntrySelection; pageKey?: string; bodyOnly?: boolean }>()
 const app = useAppStore()
 const lib = useLibViewStore()
 const campaign = useCampaignStore()
@@ -221,7 +222,7 @@ async function setEnabled(next: boolean): Promise<void> {
       <div class="lib-state"><h3>这一条暂时读不出来</h3><p class="lib-muted">点顶部提示里的【重试】再读一次。</p></div>
     </template>
     <template v-else>
-      <div class="lib-dtools">
+      <div v-if="!bodyOnly" class="lib-dtools">
         <span class="trpg-switch-wrap"><Switch :model-value="enabled" label="本战役启用这一条" :disabled="!lib.bound" @update:model-value="setEnabled" /><span>本战役启用</span></span>
         <span class="lib-end">
           <button class="trpg-icon-btn" type="button" :aria-label="mineOf ? '编辑这一条' : '改成房规（原件不动）'" :title="mineOf ? '编辑这一条' : '改成房规（原件不动）'" data-testid="entry-edit" @click="editThis"><Icon name="pencil-simple" :size="18" /></button>
@@ -229,7 +230,7 @@ async function setEnabled(next: boolean): Promise<void> {
         </span>
       </div>
       <TabsRoot v-model="tab" class="lib-entrytabs">
-        <TabsList class="lib-pills lib-entrytabs__list" aria-label="条目内容">
+        <TabsList v-if="!bodyOnly" class="lib-pills lib-entrytabs__list" aria-label="条目内容">
           <TabsTrigger v-for="[value, label] in tabs" :key="value" :value="value" class="trpg-pill">{{ label }}</TabsTrigger>
         </TabsList>
         <TabsContent value="body" class="lib-mscroll">

@@ -12,7 +12,8 @@ const g = globalThis as any
 /** 开机时（main.ts 的 init 钩子，排在 dnd5e 自己的 init 之后、i18nInit 之前）各表、各状态这一格的原值。 */
 let captured: { tables: Record<string, Record<string, string>>; statuses: Record<string, string> } | null = null
 
-const nameField = (v: any): string | null => typeof v?.label === 'string' ? v.label : typeof v?.name === 'string' ? v.name : null
+// 名字字段：label / name，或 labels.title（特质表这类把名字放在 labels 里的，驾驶员 11-23 批）
+const nameField = (v: any): string | null => typeof v?.label === 'string' ? v.label : typeof v?.name === 'string' ? v.name : typeof v?.labels?.title === 'string' ? v.labels.title : null
 
 /** 一张表里每个编号的格子：[编号, 值]（字符串本身，或对象），children 一层层往下。 */
 function cells(table: any, out: Array<[string, any]> = []): Array<[string, any]> {

@@ -56,3 +56,31 @@ export function crText(cr: unknown): string {
   return frac[n] ?? String(n)
 }
 export const signed = (n: unknown): string => { const v = Number(n); return Number.isFinite(v) ? (v >= 0 ? `+${v}` : `−${Math.abs(v)}`) : '' }
+
+// ---- A 批：行动页 / 属性页 ----
+export interface ActionRow { id: string; name: string; ref?: unknown; uses: string; roll: string; effects: string[] }
+export interface ActionGroup { id: string; label: string; rows: ActionRow[] }
+/** 行动页：分组用官方 NPC 表“特性”部分（玩家角色也一样）；每格文字取官方：次数 / 恢复、命中或豁免 DC、伤害标签。被动特性放最后。 */
+export function actionGroups(s: PersonSheet, g: Glossary | null): ActionGroup[] {
+  const ic: Record<string, any> = s.view?.base?.itemContext ?? {}
+  const sections = list<any>(parts(s).actions?.sections).filter((x) => list(x.items).length)
+  const ordered = [...sections.filter((x) => x.id !== 'passive'), ...sections.filter((x) => x.id === 'passive')]
+  return ordered.map((sec) => ({
+    id: String(sec.id), label: String(sec.label ?? ''),
+    rows: list<any>(sec.items).map((it) => {
+      const c = ic[it.id] ?? {}
+      const L = it.labels ?? {}
+      const uses = c.uses?.hasRecharge ? String(L.recharge ?? '') : c.uses?.hasUses ? [`${c.uses.value} / ${c.uses.max}`, L.recovery].filter(Boolean).join(' ') : ''
+      const roll = c.toHit !== null && c.toHit !== undefined ? signed(c.toHit) : c.save?.ability ? `DC ${c.save.dc?.value ?? ''} ${named(g, 'abilities', c.save.ability)}` : ''
+      const effects = list<any>(L.damages).map((d) => String(d.label ?? d.formula ?? '')).filter(Boolean)
+      return { id: String(it.id), name: String(it.name ?? ''), ref: it.ref, uses, roll, effects }
+    }),
+  }))
+}
+/** 工具熟练：和技能同样的官方列表。 */
+export const tools = (s: PersonSheet): ReturnType<typeof skills> => list<any>(parts(s).details?.tools ?? parts(s).sidebar?.tools)
+/** 特质：官方整理好的各组（抗性 / 免疫 / 语言 / 武器护甲熟练……），组名查名字表。 */
+export function traits(s: PersonSheet, g: Glossary | null): Array<{ key: string; label: string; items: string[] }> {
+  const t: Record<string, any> = parts(s).details?.traits ?? parts(s).sidebar?.traits ?? {}
+  return Object.entries(t).map(([key, rows]) => ({ key, label: named(g, 'traits', key), items: list<any>(rows).map((r) => [r.label, r.value].filter((x) => x !== undefined && x !== null && x !== '').join(' ')) })).filter((x) => x.items.length)
+}

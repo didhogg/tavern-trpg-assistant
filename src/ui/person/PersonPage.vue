@@ -1,21 +1,32 @@
 <script setup lang="ts">
 // P6 单元 1 人物详情外壳（线框 p6-6，驾驶员 2026-11-23 批准）：应用条 · 页头 · 分页条 · 左侧栏（技能）；分页内容从 A 批起逐页接上。
 // 从人物列表点一行进来（整页，列表和详情不并排）；‹ 人物 回到列表。
-import { computed, markRaw, ref, watch } from 'vue'
+import { computed, markRaw, onMounted, ref, watch } from 'vue'
 import { usePersonStore } from '../../stores/person'
 import { useModalStore } from '../../stores/modal'
 import { useUiStore } from '../../stores/ui'
+import { useAppStore } from '../../stores/app'
+import { useCampaignStore } from '../../stores/campaign'
+import { useLibViewStore } from '../../stores/libview'
 import { CATEGORIES, categoryOf, useRosterStore, type CategoryId } from '../../stores/roster'
 import Icon from '../kit/Icon.vue'
 import MoreMenu from '../kit/MoreMenu.vue'
 import PersonHeader from './PersonHeader.vue'
 import HistoryDrawer from './HistoryDrawer.vue'
-import { named, signed, skills } from './view'
+import SkillList from './SkillList.vue'
+import ActionsTab from './ActionsTab.vue'
+import AttributesTab from './AttributesTab.vue'
+import { skills } from './view'
 
 const person = usePersonStore()
 const roster = useRosterStore()
 const modal = useModalStore()
 const ui = useUiStore()
+const app = useAppStore()
+const campaign = useCampaignStore()
+const lib = useLibViewStore()
+// 页里会打开库里的原文（种族 / 背景资料卡、行动展开），和从模板加入一样先读好库设置
+onMounted(() => { if (!lib.campaignLib || !lib.bound) void lib.load(app.svc(), campaign.owner?.ownerKey ?? null) })
 
 const TABS = [
   { id: 'action', label: '行动' }, { id: 'attr', label: '属性' }, { id: 'bag', label: '背包' }, { id: 'spell', label: '法术' },
@@ -43,7 +54,6 @@ async function onMore(key: string): Promise<void> {
 }
 const openHistory = () => modal.open({ key: 'person-history', title: '改动记录', component: markRaw(HistoryDrawer), variant: 'dialog', width: 560, height: 600 })
 const skillRows = computed(() => (person.sheet ? skills(person.sheet) : []))
-const PROF = (p: number): string => (p >= 2 ? '◉' : p >= 1 ? '●' : p > 0 ? '◐' : '○')
 const missing = computed(() => person.row?.missing ?? [])
 </script>
 
@@ -79,15 +89,13 @@ const missing = computed(() => person.row?.missing ?? [])
         <aside v-if="sideOpen" class="ps-side" data-testid="ps-side">
           <h3>技能</h3>
           <p v-if="!skillRows.length" class="ps-drawer-note">没有列出的技能。</p>
-          <ul v-else class="ps-skills">
-            <li v-for="k in skillRows" :key="k.key" :title="k.hover">
-<span class="ps-prof" :data-level="k.proficient">{{ PROF(k.proficient) }}</span>
-              <span class="ps-skill-ab">{{ named(person.glossary, 'abilities', k.baseAbility) }}</span><span class="ps-skill-name">{{ k.label }}</span>
-              <b>{{ signed(k.total) }}</b><small>{{ k.passive }}</small>
-</li>
-          </ul>
+          <SkillList v-else :rows="skillRows" testid="ps-side-skills" />
         </aside>
-        <section class="ps-tab" role="tabpanel" :data-testid="`ps-panel-${tab}`"><p class="ps-drawer-note">这一页还在做。</p></section>
+        <section class="ps-tab" role="tabpanel" :data-testid="`ps-panel-${tab}`">
+          <ActionsTab v-if="tab === 'action'" />
+          <AttributesTab v-else-if="tab === 'attr'" />
+          <p v-else class="ps-drawer-note">这一页还在做。</p>
+        </section>
       </div>
     </template>
   </div>
