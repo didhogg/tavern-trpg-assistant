@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
 import type { Glossary } from '../rules/kernel/people'
+import type { EntryRef } from '../library/scopes'
 import type { SheetEdit } from '../rules/kernel/frame/commands-sheet'
 import type { KernelChange } from '../schemas/kernel'
 import { useAppStore } from './app'
@@ -93,6 +94,11 @@ export const usePersonStore = defineStore('person', () => {
   }
 
   const edit = (label: string, edits: SheetEdit[]) => write(label, (k) => backend().edit(k, id.value!, edits))
+  /** 从库里加条目（物品等）：后端加条目的结果改成和改字段同一种 outcome，失败原因照常提示。 */
+  const add = (label: string, refs: EntryRef[]) => write(label, async (k) => {
+    const r = await backend().add(k, id.value!, refs)
+    return { outcome: { status: r.added.status, error: r.added.error } }
+  })
   /** 个人调整（英文名、分类……）。 */
   const adjust = (label: string, patch: Record<string, unknown>) => write(label, (k) => backend().adjust(k, [id.value!], patch))
 
@@ -121,5 +127,5 @@ export const usePersonStore = defineStore('person', () => {
   }
   const history = async () => { const key = ownerKey(); return key ? serial(() => backend().history(key)) : [] }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, adjust, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, adjust, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

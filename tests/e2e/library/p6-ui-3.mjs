@@ -89,6 +89,23 @@ try {
   check('点名字原地展开作者原文（中文）', detail.length > 10 && han(detail) && !/读不出来|没读出来/.test(detail), detail.replace(/\s+/g, ' ').slice(0, 120))
   await shot('03-bag-open')
 
+  // ---- 加物品（从库里选，和从模板加入同一个两栏页）----
+  await page.getByTestId('ps-bag-add').click(); await page.getByTestId('item-pick').waitFor()
+  await page.getByTestId('ip-search').fill('火把'); await settle(page, 800)
+  await page.getByTestId('ip-row').filter({ hasText: /^火把/ }).first().click(); await settle(page, 1500)
+  await shot('05-item-pick')
+  await page.getByTestId('ip-add').click()
+  await page.getByTestId('item-pick').waitFor({ state: 'detached', timeout: 120_000 }); await settle(page, 1500)
+  check('加物品：火把进了背包（一行、数量 1）', (await page.getByTestId('ps-bag-row').filter({ hasText: '火把' }).count()) === 1 && /\b1\b/.test(await row('火把').locator('.trpg-stepper').last().innerText()), await row('火把').innerText().catch(() => '没有火把这一行'))
+  const saved = await page.evaluate(async (P) => {
+    const ps = eval(P); const camp = ps._s.get('campaign'); const be = ps._s.get('app').svc().backend
+    const k = await be.kernelSave.read(camp.owner.ownerKey)
+    return k.actors.flatMap((a) => a.refs.map((r) => r.label))
+  }, pinia)
+  check('加的物品写进了存档（人物的条目引用里有火把）', saved.some((l) => /火把|Torch/.test(String(l))), saved.join('、').slice(0, 200))
+  await page.getByTestId('ps-undo').click(); await settle(page, 1500)
+  check('撤销：火把没了', !/火把/.test(await bagText()))
+
   // ---- 窄屏 ----
   await page.setViewportSize({ width: 390, height: 780 }); await settle(page, 800)
   await toPanel('ps-panel-bag'); await shot('04-narrow-bag')

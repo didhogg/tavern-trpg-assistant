@@ -213,6 +213,15 @@ export class KernelPeople {
     return { outcome, kernel }
   }
 
+  /** 从库里给人物加条目（物品等；驾驶员 11-23 批）：结算内核的加条目，成功就写进存档成一条可撤销的改动；没成功按存档退回。 */
+  async add(ownerKey: string, actorId: string, refs: EntryRef[]) {
+    const added = await this.deps.runtime.addToActor(ownerKey, actorId, refs)
+    const changes = (added.changes ?? []) as KernelChange[]
+    if (added.status !== 'complete') { if (changes.length) await this.cancel(ownerKey, [actorId]); return { added, kernel: null } }
+    const kernel = changes.length ? (await this.deps.saves.apply(ownerKey, changes, await this.rev(ownerKey))).kernel : null
+    return { added, kernel }
+  }
+
   /** 统一改人物（字段 / 加值 / 覆盖 / 物品 / 效果 / 状态与力竭级数）。 */
   edit(ownerKey: string, actorId: string, edits: SheetEdit[]) { return this.act(ownerKey, actorId, 'edit', actorId, edits) }
 

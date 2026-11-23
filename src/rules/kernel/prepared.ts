@@ -11,6 +11,8 @@ interface Entry { base: ActorData; view: ActorData | null; choices: OffChoices; 
 
 export class PreparedActors {
   private readonly rows = new Map<string, Entry>()
+  /** 每次加条目新加进基准的物品编号（一次一批）：撤销 / 退回时存档里已没有这批，就从基准里拿掉。 */
+  private readonly added = new Map<string, Array<Set<string>>>()
 
   /** 记一个人：没给 view（没有取下）= 视图就是基准；stored = 基准是存档里的完整数据（B′，作者整机建的人）。 */
   set(id: string, base: ActorData, view?: ActorData | null, choices?: OffChoices | null, stored = this.rows.get(id)?.stored ?? false): void {
@@ -18,7 +20,7 @@ export class PreparedActors {
   }
   /** 这个人按 B′ 存完整数据（读档直接建回，不按引用重建、不抓成长选择）。 */
   isStored(id: string): boolean { return this.rows.get(id)?.stored ?? false }
-  delete(id: string): void { this.rows.delete(id) }
+  delete(id: string): void { this.rows.delete(id); this.added.delete(id) }
   has(id: string): boolean { return this.rows.has(id) }
   /** 完整基准（缓存、重新准备用）。 */
   base(id: string): ActorData | null { return this.rows.get(id)?.base ?? null }
@@ -29,14 +31,38 @@ export class PreparedActors {
   addItems(id: string, items: Array<Record<string, unknown>>): void {
     const row = this.rows.get(id)
     if (!row) return
+    const fresh = new Set<string>()
     for (const data of row.view ? [row.base, row.view] : [row.base]) {
       const list = data.items
       if (!Array.isArray(list)) continue
       for (const item of items) {
         const index = list.findIndex((x: Record<string, unknown>) => x._id === item._id)
-        if (index >= 0) list[index] = item; else list.push(item)
+        if (index >= 0) list[index] = item
+        else { list.push(item); if (typeof item._id === 'string') fresh.add(item._id) }
       }
     }
+    if (fresh.size) this.added.set(id, [...(this.added.get(id) ?? []), fresh])
+  }
+
+  /**
+   * 按存档退回时取基准（引用建的人）：存档里这个人的条目引用（savedItemIds）一件都不含的那批新加物品，从基准和视图里拿掉
+   * （加条目后又撤销：存档已没有这条引用，基准不能还留着它，不然退回会把它建回来）。一批里有引用在 = 整批保留（连带授予的特性）。
+   */
+  baseFor(id: string, refs: Array<{ itemId?: string }>): ActorData | null {
+    this.dropUnsaved(id, new Set(refs.map((r) => r.itemId).filter((x): x is string => !!x)))
+    return this.base(id)
+  }
+  private dropUnsaved(id: string, savedItemIds: Set<string>): void {
+    const row = this.rows.get(id)
+    const batches = this.added.get(id)
+    if (!row || !batches?.length) return
+    const gone = batches.filter((b) => ![...b].some((x) => savedItemIds.has(x)))
+    if (!gone.length) return
+    const drop = new Set(gone.flatMap((b) => [...b]))
+    for (const data of row.view ? [row.base, row.view] : [row.base]) {
+      if (Array.isArray(data.items)) data.items = data.items.filter((x: Record<string, unknown>) => !drop.has(x._id as string))
+    }
+    this.added.set(id, batches.filter((b) => !gone.includes(b)))
   }
 
   /**

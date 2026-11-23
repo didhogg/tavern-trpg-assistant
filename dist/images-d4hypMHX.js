@@ -147,6 +147,7 @@ var m = {
 			style: "classic",
 			format: "5etools",
 			people: "monster",
+			items: "item",
 			kernel: {
 				adapter: "foundry",
 				settings: {
@@ -179,7 +180,8 @@ var m = {
 			showLegacy: !1,
 			style: "one",
 			format: "5etools",
-			people: "monster"
+			people: "monster",
+			items: "item"
 		}
 	}
 }, h = m.scopes, g = m.rules;

@@ -52,10 +52,12 @@ export interface CardTypeDeps {
 /** 存进 derived 表的部分（中文名、存放类别现取）。 */
 type Memo = Pick<CardType, 'type' | 'label' | 'build'>
 
-const RULES = registry.rules as Record<string, { people?: string }>
+const RULES = registry.rules as Record<string, { people?: string; items?: string }>
 
 /** 这个规则的人物存成【库】哪一类；规则没写 = null。 */
 export const peopleProp = (rule: string): string | null => RULES[rule]?.people ?? null
+/** 这个规则的物品在【库】哪一类（人物详情“加物品”从这里选）；规则没写 = null。 */
+export const itemsProp = (rule: string): string | null => RULES[rule]?.items ?? null
 
 export async function cardTypes(deps: CardTypeDeps, rule: string, codeSet = 'cn'): Promise<CardTypesResult> {
   const store = peopleProp(rule)

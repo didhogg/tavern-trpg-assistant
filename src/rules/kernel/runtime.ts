@@ -169,7 +169,7 @@ export class KernelRuntime {
     const deleted = await o.session.call('deleteActors', [actorId])
     if (deleted.status !== 'complete') throw new Error(`小窗里删不掉人物 ${actorId}：${deleted.error ?? deleted.status}`)
     if (!actor) { o.bases.delete(actorId); o.seeds.delete(actorId); return null }
-    const base = o.bases.base(actorId) ?? actor.base ?? null
+    const base = (actor.base ? o.bases.base(actorId) : o.bases.baseFor(actorId, actor.refs)) ?? actor.base ?? null
     if (!base) return this.rebuild(ownerKey, actor)
     const call = await o.session.call('createActorsFromBase', [{ base, id: actorId, state: actor.state, off: actor.off }])
     const row = (call.result as Array<{ id?: string; data?: Record<string, unknown>; view?: Record<string, unknown>; offChoices?: OffChoices }> | null)?.[0]
@@ -242,19 +242,19 @@ export class KernelRuntime {
   }
 
   /** 给已有人物加条目；调用方只交引用。 */
-  async addToActor(ownerKey: string, actorId: string, refs: EntryRef[]): Promise<{ status: string; result?: any; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
+  async addToActor(ownerKey: string, actorId: string, refs: EntryRef[]): Promise<{ status: string; result?: any; changes?: unknown[]; error?: string; detail?: unknown; noEnglish?: EntryRef[] }> {
     const o = await this.get(ownerKey)
     const rows = await this.entries(ownerKey, refs)
     if (rows.status !== 'complete') return { status: rows.status, error: rows.error, detail: rows }
     const result = await o.session.call('addToActor', actorId, rows.rows.map((row) => ({ prop: row.ref.prop, refKey: refKey(row.ref), entry: row.entry })))
-    if (!executed(result.status)) return { status: result.status, error: result.error ?? `加条目状态：${result.status}`, detail: result }
+    if (!executed(result.status)) return { status: result.status, error: result.error ?? `加条目状态：${result.status}`, detail: result, changes: result.changes ?? [] }
     // B′ 人物的完整基准是存档里固定那份：新条目算后来的改动（整份存进状态），不进基准
     if (o.bases.has(actorId) && !o.bases.isStored(actorId) && Array.isArray(result.result?.added)) {
       const current = await actorData(o.session, actorId)
       const byId = new Map(((current?.items ?? []) as any[]).map((item: any) => [item._id, item]))
       o.bases.addItems(actorId, result.result.added.map((item: any) => byId.get(item._id) ?? item))
     }
-    return { status: 'complete', result: result.result, noEnglish: rows.noEnglish }
+    return { status: 'complete', result: result.result, changes: result.changes ?? [], noEnglish: rows.noEnglish }
   }
 
   /** T5：批量建怪物/NPC/载具/物件；单个也走这里。换算结果由会话缓存读写。 */
