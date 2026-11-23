@@ -27,6 +27,9 @@ import type { BuildPick } from './frame/commands-level'
 import type { SheetEdit } from './frame/commands-sheet'
 import { checkAbilities, type AbilityPlan, type AbilityView } from './ability-rules'
 import { pairsSource, type PairsOf } from './sidecar'
+import { display, type DisplayResult } from './display'
+import { namerFor } from './naming'
+import { kernelDataSource } from '../../library/sources'
 import { checkStarting, startingOptions, type StartingResult, type StartingSelection } from './starting-options'
 export type { BuildPick }
 /** 玩家的选择按条目排：picks[i] 是第 i 件条目（和 items 同序）上做的选择；内部换成按条目引用的键给小窗。 */
@@ -347,6 +350,15 @@ export class KernelRuntime {
       }
     }
     return results
+  }
+
+  /** 唯一显示出口（display.ts）用在本战役的小窗结果上；refs = 这些文字出自哪些条目（怪物动作名等按条目原文位置取字）。 */
+  async display<T>(ownerKey: string, refs: EntryRef[], value: T): Promise<DisplayResult<T>> {
+    const o = await this.get(ownerKey)
+    const library = await this.library(ownerKey)
+    const rows = refs.length ? await this.entries(ownerKey, refs) : null
+    return display(value, { translate: library.codeSet !== kernelDataSource().codeSet, pairs: rows?.status === 'complete' ? await o.pairsOf(rows.rows) : [],
+      namer: await namerFor(this.deps.scoped, library), author: this.deps.service.texts.reader(library.codeSet) })
   }
 
   /** 本战役现在的选书（每次现读，关书/开书后立刻生效）。 */

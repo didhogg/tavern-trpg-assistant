@@ -53,6 +53,10 @@ try {
     const s0 = sh0.result
     out.sheet = { detailsRace: (await rt.baseOf(owner, id))?.system?.details?.race ?? "(空)", raceSpeed: s0.items.find((i) => i.type === 'race')?.system?.movement?.walk ?? null, ac: s0.system.attributes.ac?.value ?? null, pp: s0.system.skills?.prc?.passive ?? null, strMod: s0.system.abilities?.str?.mod ?? null, hp: s0.system.attributes.hp, hpClasses: s0.breakdown.hp?.classes?.map((c) => c.total), acFormula: s0.breakdown.ac?.formulaLabel, items: s0.items.length, changed: s0.changed.length, baseKnown: s0.baseKnown }
 
+    // 详情页对账 B1 / B2 / B5（2026-11-23）：显示文字过唯一出口、现算的值读得到、编号名字整表
+    const gl = await people.glossary(owner)
+    out.shown = { items: s0.shown.items.map((i) => [i.name, !!i.ref]), untranslated: s0.untranslated ?? [], hd: s0.system.attributes.hd,
+      fire: gl.tables.damageTypes?.fire, common: gl.tables.languages?.common, tiny: gl.tables.actorSizes?.tiny, statuses: gl.statuses.length, poisoned: gl.statuses.find((x) => x.id === 'poisoned')?.name, tables: Object.keys(gl.tables).length, glUntranslated: gl.untranslated ?? [], sheetBytes: JSON.stringify(s0).length }
     const strBase = s0.system.abilities.str.value
     const e1 = await people.edit(owner, id, [{ kind: 'set', path: 'system.abilities.str.value', value: strBase + 2 }, { kind: 'set', path: 'system.attributes.hp.bonuses.overall', value: '3' }])
     const s1 = (await people.sheet(owner, id)).result
@@ -136,10 +140,12 @@ try {
     const inFrame = (listed.result ?? listed).map((a) => a.source._id)
     const savedIds = (await saves3.read(owner)).actors.map((a) => a.id)
     const monsterSheet = await people3.sheet(owner, rows.find((x) => x.adjustments.category === 'enemy').id)
-    out.cold = { statuses: cold.map((x) => x.status), savedIds, inFrame, monsterSheet: monsterSheet.status }
+    out.cold = { statuses: cold.map((x) => x.status), savedIds, inFrame, monsterSheet: monsterSheet.status,
+      monsterNames: monsterSheet.result?.shown.items.map((i) => i.name), monsterUntranslated: monsterSheet.result?.untranslated ?? [] }
     await rt3.close(owner)
     return out
   })
+  const han = (t) => /[\u4e00-\u9fff]/.test(String(t ?? ''))
   const known = (e) => e.includes('gendata-nav-adventure-book-index.json') || e.includes('requires usable window dimensions') || e.includes('status of 404') || e.includes('api/plutonium')
     || e.includes('KERNEL_NEEDS_INPUT') || /homebrew|unearthed-arcana/.test(e)
   const unexplained = errors.filter((e) => !known(e))
@@ -160,6 +166,9 @@ try {
     reload: r.reload.statuses.every((s) => s === 'complete') && r.reload.secondLoad.every((s) => s === 'complete') && new Set(r.reload.ids).size === r.reload.ids.length && r.reload.sameHp,
     roster: !!r.reload.hero && r.reload.hero.classes.length > 0 && !!r.reload.hero.race && r.reload.hero.ac !== null && r.reload.hero.pp !== null && r.reload.hero.speed > 0 && r.reload.hero.cat === 'party' && r.reload.monster.length === 2 && r.reload.monster.every((m) => m.loaded),
     writeAfterLoad: r.reload.writeAfterLoad,
+    shown: r.shown.items.length > 0 && r.shown.items.every(([name, ref]) => han(name) && ref) && han(r.shown.fire) && han(r.shown.common) && han(r.shown.tiny) && r.shown.statuses > 5 && han(r.shown.poisoned)
+      && Number.isInteger(r.shown.hd?.value) && Number.isInteger(r.shown.hd?.max) && r.shown.hd.max > 0,
+    monsterNames: (r.cold.monsterNames ?? []).length > 0 && r.cold.monsterNames.filter(han).length >= r.cold.monsterNames.length / 2,
     coldIds: r.cold.statuses.every((x) => x === 'complete') && r.cold.savedIds.every((x) => r.cold.inFrame.includes(x)) && r.cold.monsterSheet === 'complete',
   }
   const ok = Object.values(checks).every(Boolean) && unexplained.length === 0

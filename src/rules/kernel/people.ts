@@ -8,6 +8,7 @@ import { isObject, jsonDiff } from '../../core/saves/state'
 import type { EntryRef } from '../../library/scopes'
 import { kernelActorSchema, type KernelActor, type KernelChange } from '../../schemas/kernel'
 import type { SheetEdit } from './frame/commands-sheet'
+import type { Displayed, FrameText } from './shown'
 import { executed } from './host'
 import type { KernelRuntime } from './runtime'
 import type { KernelNativeBuild } from './native-build'
@@ -23,6 +24,10 @@ export const PLAY_STATE: RegExp[] = [
 ]
 
 export interface ChangedField { path: string; kind: 'state' | 'setting' }
+
+/** 小窗交回的编号名字（未过出口）；Glossary = 过了唯一显示出口的成品：tables[登记表名][编号] = 名字，statuses = 能开关的状态。 */
+interface FrameGlossary { tables: Record<string, Record<string, FrameText>>; statuses: Array<{ id: string; name: FrameText; img: string | null }> }
+export type Glossary = Displayed<FrameGlossary> & { untranslated?: string[] }
 
 /** 装人结果：legacy = 旧格式人物（只有整份内容，不能按引用重建）。 */
 export interface LoadedActor { id: string; name: string; status: 'complete' | 'missing' | 'pending' | 'error' | 'legacy'; error?: string; missing?: Array<{ label: string; reason: string }> }
@@ -87,6 +92,7 @@ const withBase = (kernel: { bases?: Record<string, Record<string, unknown>> }, a
 }
 
 export class KernelPeople {
+  private readonly glossaries = new Map<string, Promise<Glossary>>()
   constructor(private readonly deps: { runtime: KernelRuntime; saves: KernelSaveService; native?: KernelNativeBuild }) {}
 
   private async rev(ownerKey: string): Promise<number> {
@@ -160,6 +166,9 @@ export class KernelPeople {
   async sheet(ownerKey: string, actorId: string) {
     const out = await this.call(ownerKey, 'sheet', actorId)
     if (out.status !== 'complete') return out
+    // 显示文字过唯一出口：物品 / 特性 / 效果名换成本战役语言，带作者编号的配上库条目（ref）
+    const refs = ((await this.saved(ownerKey, actorId))?.refs ?? []).map((r) => ({ set: r.set, prop: r.prop, hash: r.hash }))
+    const shown = await this.deps.runtime.display(ownerKey, refs, out.result.shown)
     const base = await this.deps.runtime.baseOf(ownerKey, actorId)
     const current = ((await this.call(ownerKey, 'preparedActors')) as Array<{ source: Record<string, unknown> }>).find((a) => a.source._id === actorId)?.source ?? null
     const changed: ChangedField[] = base && current ? paths(jsonDiff(strip(base), strip(current))).map((path) => ({ path, kind: kindOf(path) })) : []
@@ -171,7 +180,23 @@ export class KernelPeople {
       const list = paths(jsonDiff(was, item)).filter((p) => !p.startsWith('_stats')).map((path) => ({ path, kind: kindOf(path) }))
       if (list.length) items[id] = list
     }
-    return { ...out, result: { ...out.result, changed, changedItems: items, baseKnown: !!base } }
+    return { ...out, result: { ...out.result, shown: shown.value, changed, changedItems: items, baseKnown: !!base, ...(shown.missed.length ? { untranslated: shown.missed } : {}) } }
+  }
+
+  /** 编号的显示名（伤害类型、语言、体型、技能、物品属性……整表 + 能开关的状态），过唯一出口；本战役只取一次。 */
+  glossary(ownerKey: string) {
+    let pending = this.glossaries.get(ownerKey)
+    if (!pending) {
+      pending = (async () => {
+        const out = await this.call(ownerKey, 'glossary')
+        if (out.status !== 'complete') throw new Error(out.error ?? `取编号名字失败：${out.status}`)
+        const shown = await this.deps.runtime.display(ownerKey, [], out.result as FrameGlossary)
+        return { ...shown.value, ...(shown.missed.length ? { untranslated: shown.missed } : {}) }
+      })()
+      this.glossaries.set(ownerKey, pending)
+      pending.catch(() => this.glossaries.delete(ownerKey))
+    }
+    return pending
   }
 
   /** 小操作：小窗执行，成功就立刻写进存档（一条撤销）；没成功就按存档把这个人退回，免得小窗留着半截改动。 */

@@ -4,6 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档对象没有类型声明。 */
 
 import { itemState, type ActorGetter, type Operate } from './commands-items'
+import { fromEntry, named, type FrameText } from '../shown'
+import { systemText } from './system-text'
 
 const g = globalThis as any
 const NO_DIALOG = { configure: false }
@@ -46,6 +48,16 @@ const effectHost = (a: any, itemId?: string): any => itemId ? a.items.get(itemId
 /** 数据结构里的 JSON 化（去掉文档对象、HTML 锚点这类界面专用的东西）。 */
 const plain = (v: any): any => JSON.parse(JSON.stringify(v ?? null, (k, val) => (k === 'document' || k === 'anchor' || k === 'fields' || k === 'field' || k === 'parent') ? undefined : val))
 
+/** 数据类上写成取值函数的值（dnd5e HitDice 的 value / max 等）：沿原型链收集；Foundry 数据模型基类自己的（schema、parent…）不收。 */
+function computedGetters(v: object): Array<[string, () => unknown]> {
+  const stop = new Set<object>([Object.prototype, g.foundry.abstract.DataModel.prototype])
+  const out: Array<[string, () => unknown]> = []
+  for (let p = Object.getPrototypeOf(v); p && !stop.has(p); p = Object.getPrototypeOf(p)) {
+    for (const [k, d] of Object.entries(Object.getOwnPropertyDescriptors(p))) if (d.get && !out.some(([n]) => n === k)) out.push([k, d.get])
+  }
+  return out
+}
+
 /**
  * 引擎算好的数值（不是 toObject：toObject 只交存起来的原始值，AC、调整值、被动察觉这类算出来的值会丢）。
  * 照对象自己的属性逐层抄成普通数据；跳过文档对象、父链接、下划线开头的内部字段与函数。
@@ -64,6 +76,38 @@ function live(v: any, depth = 0, seen: WeakSet<object> = new WeakSet()): any {
     if (k === 'parent' || k.startsWith('_')) continue
     const x = live(v[k], depth + 1, seen)
     if (x !== undefined) out[k] = x
+  }
+  // 驾驶员 2026-11-23（详情页对账 B2）：生命骰剩余 / 上限这类现算的值以前读不到
+  for (const [k, get] of computedGetters(v)) {
+    if (k in out || k === 'parent' || k.startsWith('_')) continue
+    let raw: unknown
+    try { raw = get.call(v) } catch (error) { raw = undefined; void error } // 取值函数要的上下文不在（例如没挂到人物上）：这一项不交，其余照常
+    const x = live(raw, depth + 1, seen)
+    if (x !== undefined) out[k] = x
+  }
+  return out
+}
+
+/** 物品 / 特性名：带作者编号的按编号取本战役库名（并交编号给出口配库条目）；没编号的（怪物的动作、传奇动作…）取它在条目原文里的位置。 */
+function itemText(i: any): { name: FrameText; author?: { propDroppable: string; source?: string; hash: string } } {
+  const f = i.flags?.plutonium
+  if (f?.propDroppable && typeof f.hash === 'string') {
+    const author = { propDroppable: f.propDroppable, ...(f.source ? { source: f.source } : {}), hash: f.hash }
+    return { name: named(i.name, author), author }
+  }
+  return { name: fromEntry(i.name) }
+}
+
+/** 引擎登记表里一张表的显示名：编号 → 语言键（含 children 一层层往下）；对不上语言键的值（公式、图标路径…）自然不收。 */
+function registryNames(table: any, out: Record<string, FrameText> = {}): Record<string, FrameText> {
+  if (!table || typeof table !== 'object' || Array.isArray(table)) return out
+  for (const [code, v] of Object.entries(table) as Array<[string, any]>) {
+    const label = typeof v === 'string' ? v : typeof v?.label === 'string' ? v.label : null
+    if (label) {
+      const t = g.game.i18n.has(label) ? systemText(g.game.i18n.localize(label), label) : systemText(label)
+      if (t.$t === 'system') out[code] = t
+    }
+    if (v?.children) registryNames(v.children, out)
   }
   return out
 }
@@ -109,6 +153,11 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
           origin: e.origin ?? null, from: e.parent?.documentName === 'Item' ? { itemId: e.parent.id, name: e.parent.name } : null,
           statuses: [...(e.statuses ?? [])], duration: plain(e.duration), changes: plain(e.system?.changes ?? e.changes ?? []),
         })),
+        // 界面显示的文字：标好来路，主线交唯一显示出口（kernel/display.ts）换成本战役语言；数值与编号照上面原样
+        shown: {
+          items: [...a.items].map((i: any) => ({ id: i.id, ...itemText(i) })),
+          effects: [...a.allApplicableEffects()].map((e: any) => { const t = systemText(e.name); return { id: e.id, name: t.$t === 'system' ? t : fromEntry(e.name) } }),
+        },
         breakdown: {
           hp: await configContext(apps.HitPointsConfig, a, ['classes', 'ability', 'effects', 'levels']),
           ac: await configContext(apps.ArmorClassConfig, a, ['calculations', 'formulaLabel']),
@@ -145,6 +194,16 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
       if (!run) throw Error(`没有这种检定：${kind}`)
       return (await run(actor(actorId), key))?.map(rollSummary) ?? null
     }, [actorId]),
+
+    /**
+     * 编号的显示名（本战役每个人共用）：引擎登记表整表交出（伤害类型、语言、体型、技能、物品属性……，不列表名），
+     * 加上能开关的状态（名字 + 图标）。界面拿编号查这里，不自己写名字。
+     */
+    glossary: () => operate([], async () => {
+      const tables = Object.fromEntries(Object.entries(g.CONFIG.DND5E ?? {}).map(([name, t]) => [name, registryNames(t)]).filter(([, rows]) => Object.keys(rows as object).length))
+      const statuses = (g.CONFIG.statusEffects ?? []).map((s: any) => ({ id: s.id, name: systemText(String(s.name ?? s.id)), img: s.img ?? null }))
+      return { tables, statuses }
+    }),
 
     /** 从小窗里删掉人物（删人、撤销加人、按存档退回前用）。 */
     deleteActors: (ids: string[]) => operate([], async () => {

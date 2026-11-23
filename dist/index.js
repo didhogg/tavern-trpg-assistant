@@ -26059,6 +26059,15 @@ var IO = class {
 		}
 		return o;
 	}
+	async display(e, t, n) {
+		let r = await this.get(e), a = await this.library(e), o = t.length ? await this.entries(e, t) : null;
+		return vO(n, {
+			translate: a.codeSet !== i().codeSet,
+			pairs: o?.status === "complete" ? await r.pairsOf(o.rows) : [],
+			namer: await dO(this.deps.scoped, a),
+			author: this.deps.service.texts.reader(a.codeSet)
+		});
+	}
 	async library(e) {
 		return (await this.deps.campaignOf(e)).library;
 	}
@@ -26148,6 +26157,7 @@ var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 	} : t;
 }, KO = class {
 	deps;
+	glossaries = /* @__PURE__ */ new Map();
 	constructor(e) {
 		this.deps = e;
 	}
@@ -26234,28 +26244,46 @@ var WO = (e) => e.replace(/ \d+$/, ""), GO = (e, t) => {
 	async sheet(e, t) {
 		let n = await this.call(e, "sheet", t);
 		if (n.status !== "complete") return n;
-		let r = await this.deps.runtime.baseOf(e, t), i = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, a = r && i ? RO(te(BO(r), BO(i))).map((e) => ({
+		let r = ((await this.saved(e, t))?.refs ?? []).map((e) => ({
+			set: e.set,
+			prop: e.prop,
+			hash: e.hash
+		})), i = await this.deps.runtime.display(e, r, n.result.shown), a = await this.deps.runtime.baseOf(e, t), o = (await this.call(e, "preparedActors")).find((e) => e.source._id === t)?.source ?? null, s = a && o ? RO(te(BO(a), BO(o))).map((e) => ({
 			path: e,
 			kind: zO(e)
-		})) : [], o = {}, s = HO(r);
-		for (let [e, t] of HO(i)) {
-			let n = s.get(e);
+		})) : [], c = {}, l = HO(a);
+		for (let [e, t] of HO(o)) {
+			let n = l.get(e);
 			if (!n) continue;
 			let r = RO(te(n, t)).filter((e) => !e.startsWith("_stats")).map((e) => ({
 				path: e,
 				kind: zO(e)
 			}));
-			r.length && (o[e] = r);
+			r.length && (c[e] = r);
 		}
 		return {
 			...n,
 			result: {
 				...n.result,
-				changed: a,
-				changedItems: o,
-				baseKnown: !!r
+				shown: i.value,
+				changed: s,
+				changedItems: c,
+				baseKnown: !!a,
+				...i.missed.length ? { untranslated: i.missed } : {}
 			}
 		};
+	}
+	glossary(e) {
+		let t = this.glossaries.get(e);
+		return t || (t = (async () => {
+			let t = await this.call(e, "glossary");
+			if (t.status !== "complete") throw Error(t.error ?? `取编号名字失败：${t.status}`);
+			let n = await this.deps.runtime.display(e, [], t.result);
+			return {
+				...n.value,
+				...n.missed.length ? { untranslated: n.missed } : {}
+			};
+		})(), this.glossaries.set(e, t), t.catch(() => this.glossaries.delete(e))), t;
 	}
 	async act(e, t, n, ...r) {
 		let i = await this.call(e, n, ...r), a = i.changes ?? [];
