@@ -2,7 +2,7 @@
 // 结算小窗语言文件工具（build-kernel-lang.mjs）同一编号优先用它，大译名表只补它没有的编号。
 // 模块放在仓库外（不进仓库，只把生成结果放进插件），一模块一个目录：<目录>/<模块>/module.json + 语言文件 + source.json（来源、提交、许可证状况）。
 // 目录取命令行 --community=…、环境变量 TAVERN_FOUNDRY_LANG_DIR、默认位置，三者按这个顺序。
-// 认法只看模块自己的声明，不写死模块名：relationships 写着翻译哪个系统 / 模块；languages 里语言码或语言名对上要生成的语言。
+// 认法只看模块自己的声明，不写死模块名：relationships 写着翻译哪个系统 / 模块（coreTranslation = 翻 Foundry 核心）；languages 里语言码或语言名对上要生成的语言。
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -35,7 +35,9 @@ export async function loadCommunity({ lang, name }, dir = communityDir) {
     const manifest = JSON.parse(await readFile(join(root, 'module.json'), 'utf8'))
     const language = (manifest.languages ?? []).find((l) => l.lang === lang || l.name === name)
     if (!language) continue
+    // 翻哪个包看模块自己的声明：relationships 里的系统 / 模块，或 coreTranslation（翻 Foundry 核心，包编号记作 core）
     const targets = [...(manifest.relationships?.systems ?? []), ...(manifest.relationships?.requires ?? [])].map((r) => r.id).filter(Boolean)
+    if (manifest.coreTranslation === true) targets.push('core')
     if (!targets.length) continue
     const texts = flatten(JSON.parse(await readFile(join(root, language.path), 'utf8')))
     const source = await readFile(join(root, 'source.json'), 'utf8').then(JSON.parse).catch(() => ({}))

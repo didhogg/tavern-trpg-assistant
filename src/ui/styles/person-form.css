@@ -63,3 +63,11 @@
 .pf-base > .pf-fields > .pf-group:first-child { border-top: 0; }
 .pf-formula { max-width: 280px; }
 .pf-name { display: grid; grid-template-columns: minmax(0, 11em) minmax(0, 1fr); align-items: center; gap: var(--sp-3); font-size: var(--fs-sm); }
+/* 效果页：一条改动一行（改哪一项 · 怎么改 · 改多少 · ×） */
+.pf-change { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 6em 28px; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-bottom: var(--border) solid var(--line); }
+.trpg-window[data-layout='narrow'] .pf-change { grid-template-columns: minmax(0, 1fr) 28px; }
+/* 特质勾选页：官方类别 → 具体项（类别灰字不可勾） */
+.pf-tree { list-style: none; margin: 0; padding: var(--sp-2) 0; display: grid; max-height: none; }
+.pf-tree li { display: flex; align-items: center; gap: var(--sp-2); min-height: 32px; padding-right: var(--sp-3); font-size: var(--fs-sm); }
+.pf-tree li[data-cat] { min-height: 28px; margin-top: var(--sp-1); color: var(--text2); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.pf-tree-label { min-width: 0; }

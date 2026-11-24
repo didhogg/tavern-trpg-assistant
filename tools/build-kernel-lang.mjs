@@ -7,7 +7,7 @@
 //   · 同一个英文有几种中文：同一组兄弟键（同一个上级路径，例如全是语言名）里多数词属于哪个分类，整组就优先取那个分类
 //     （Giant 在语言名一组里是「巨人语」，不是生物「巨人」）；仍有几种 → 不翻，记进复核清单，不替人挑。
 // 产出（都是生成的，不手改）：
-//   <包目录>/lang/zh.json                    各包的中文语言文件
+//   <包目录>/lang/zh.json                    各包的中文语言文件（Foundry 核心 = vendor/foundry/lang/zh.json）
 //   vendor/foundry/lang-packs.json           声明：有哪些语言包、每包哪些文件、内容摘要（插件按它登记，不写死语言名单）
 //   vendor/foundry/lang-packs.review.json    复核清单（冲突、统计），不进运行时
 // 译名表换版本或 dnd5e 换版本后重跑：npm run gen:kernel-lang   （译名表位置见 tools/lib/terms.mjs）
@@ -39,6 +39,8 @@ const manifest = JSON.parse(await readFile(join(foundry, 'manifest.json'), 'utf8
 const packages = [
   { type: 'system', id: manifest.system.split(' ')[0], dir: `systems/${manifest.system.split(' ')[0]}`, file: 'system.json' },
   ...Object.keys(manifest.modules).map((id) => ({ type: 'module', id, dir: `modules/${id}`, file: 'module.json' })),
+  // Foundry 核心自己的界面字（效果改法、文档名……）：核心没有包清单，英文文件固定在 lang/en.json；社区里声明 coreTranslation 的模块翻它
+  { type: 'core', id: 'core', dir: '', file: null },
 ]
 
 const leaves = (obj, path = '', out = []) => {
@@ -86,7 +88,7 @@ const upstream = await upstreamMessages(foundry)
 const files = []
 const review = { generatedFrom: version, community: communityFrom, communityDir, lang: LANG, packs: [], upstreamMessages: [], approvedOverrides: applied }
 for (const pkg of packages) {
-  const pkgManifest = JSON.parse(await readFile(join(foundry, pkg.dir, pkg.file), 'utf8'))
+  const pkgManifest = pkg.file ? JSON.parse(await readFile(join(foundry, pkg.dir, pkg.file), 'utf8')) : { languages: [{ lang: 'en', path: 'lang/en.json' }] }
   const en = (pkgManifest.languages ?? []).find((l) => l.lang === 'en')
   if (!en) continue
   const source = JSON.parse(await readFile(join(foundry, pkg.dir, en.path), 'utf8'))

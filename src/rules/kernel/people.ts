@@ -29,6 +29,8 @@ export const PLAY_STATE: RegExp[] = [
   /^system\.attributes\.hd\.spent$/, /^system\.resources\.[^.]+\.spent$/,
 ]
 
+/** 特质勾选页的选项（官方 Trait.choices 摊平，depth = 层级）。 */
+export interface TraitChoices { trait: string; path: string; label: string; rows: Array<{ key: string; label: string; depth: number; selectable: boolean }>; bypasses: Array<{ key: string; label: string }>; communication: Array<{ key: string; label: string }> }
 export interface ChangedField { path: string; kind: 'state' | 'setting' }
 
 /** 小窗交回的编号名字（未过出口）；Glossary = 过了唯一显示出口的成品：tables[登记表名][编号] = 名字，statuses = 能开关的状态。 */
@@ -164,6 +166,13 @@ export class KernelPeople {
     if (out.status !== 'complete') return out
     const shown = await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result as FieldInfo)
     return { ...out, result: shown.value }
+  }
+
+  /** 特质的可选项（官方 Trait.choices，带层级；勾选页用）：只读，文字过唯一出口。 */
+  async traitChoices(ownerKey: string, trait: string) {
+    const out = await this.call(ownerKey, 'traitChoices', trait)
+    if (out.status !== 'complete') return null
+    return (await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result)).value as TraitChoices
   }
 
   /** 官方物品筛选（人物页工具条筛选开关）：只读，交回通过的物品编号。 */

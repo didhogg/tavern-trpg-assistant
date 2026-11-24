@@ -178,6 +178,11 @@ export const usePersonStore = defineStore('person', () => {
     const ids = await serial(() => backend().filterItems(key, who, [...filters].map(String)))
     return ids ? new Set(ids) : null
   }
+  /** 特质勾选页的官方选项（只读）。 */
+  async function traitChoices(trait: string) {
+    const key = ownerKey()
+    return key ? serial(() => backend().traitChoices(key, trait)) : null
+  }
   async function fields(target: { itemId?: string; path: string }): Promise<ShownFieldInfo | null> {
     const key = ownerKey()
     if (!key || !id.value) return null
@@ -187,5 +192,5 @@ export const usePersonStore = defineStore('person', () => {
     return out.result as ShownFieldInfo
   }
 
-  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, create, splitStack, createScroll, convertCurrency, duplicate, remove, replace, adjust, fields, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
+  return { id, sheet, glossary, loading, error, prevId, nextId, row, readOnly, open, close, reload, edit, add, create, splitStack, createScroll, convertCurrency, duplicate, remove, replace, adjust, fields, traitChoices, filterIds, rest, level, levelNative, stopNative, previewHp, cancelHp, confirmHp, undo, undoTo, history }
 })

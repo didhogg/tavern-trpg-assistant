@@ -7,6 +7,7 @@ const g = globalThis as any
 
 import { unsupportedFor, type UnsupportedItem } from './writings'
 import { createItemCommands } from './commands-items'
+import { authorConverters } from './author-classes'
 import { createCombatCommands } from './commands-combat'
 import { createMonsterCommands } from './commands-monsters'
 import { createLevelCommands } from './commands-level'
@@ -152,32 +153,6 @@ const EQUIPMENT_COMMANDS = createEquipmentCommands(operate)
 const IMPORT_COMMANDS = createImportCommands(operate)
 /** P6 第 2 段：建卡专用小窗跑作者完整建卡器。 */
 const NATIVE_COMMANDS = createNativeCommands(operate)
-
-// ⓪ 探路取用的作者类（tests/e2e/library/p3-2-effects.mjs 的 EXPORTS），另加探路里经作用域取到的 SourceUtil、MiscUtil。
-const AUTHOR_CLASSES = ['Config', 'ConfigConsts', 'VetoolsLinks', 'Vetools', 'SideDataInterfaces', 'Dnd5eUtil', 'UtilDamageTypes', 'ImplementationRegistryImportList',
-  'DataConverterClassSubclassFeature', 'DataConverterFeat', 'DataConverterOptionalfeature', 'DataConverterRaceFeature', 'DataConverterSpell', 'DataConverterItem',
-  'DataConverterRace', 'DataConverterBackground', 'DataConverterCreature', 'DataConverterCreatureFeature', 'DataConverterClass', 'SourceUtil', 'MiscUtil']
-let authorClasses: Promise<any> | undefined
-/** 照探路：执行一份 Plutonium 原包源码取出作者类，再按探路的初始化顺序准备（p3-2-effects-browser.mjs）。 */
-function authorConverters(): Promise<any> {
-  return authorClasses ??= (async () => {
-    const src = await (await fetch(new URL('modules/plutonium/js/Bundle.js', document.baseURI))).text()
-    const AsyncFn = Object.getPrototypeOf(async () => undefined).constructor
-    const C = await new AsyncFn(`${src}\n;return { ${AUTHOR_CLASSES.join(', ')} };`)()
-    C.Config._CONFIG_TEMP = { dataSources: { baseSiteUrl: new URL('.', document.baseURI).href }, misc: { rulesVersion: 'classic' } }
-    C.ConfigConsts.prePreInit({ implRegistryImportList: C.ImplementationRegistryImportList.get() })
-    C.Config._CONFIG = C.Config.api_getDefaults()
-    C.Config._CONFIG_PLAYER = C.Config._getDefaultPlayerConfig()
-    C.Vetools.prePreInit_preConfig()
-    C.VetoolsLinks.prePreInit_postConfig()
-    C.Vetools.prePreInit_postConfig()
-    C.UtilDamageTypes.init()
-    C.Dnd5eUtil.init()
-    C.Vetools.init()
-    C.SideDataInterfaces.init()
-    return C
-  })()
-}
 
 const NO_DIALOG = { configure: false }
 const CONVERT_TIMEOUT_MS = 15_000

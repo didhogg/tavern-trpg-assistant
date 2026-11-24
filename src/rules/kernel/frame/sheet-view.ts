@@ -9,7 +9,8 @@
 //         → 英文原文对应的语言键（作者拼的英文短语）或条目原文同位置的中文。
 //   其余原样（图标、样式名、编号、数字）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档 / 程序窗口对象没有类型声明。 */
-import { asData, fromEntry, joined, type FrameText } from '../shown'
+import { asData, fromEntry, joined, named, type FrameText } from '../shown'
+import { baseItemIds } from './author-classes'
 import { nameText, registryCodes } from './registry-keys'
 import { itemText } from './sheet-texts'
 
@@ -72,6 +73,30 @@ function itemNames(a: any, entries: unknown[]): Names {
     .sort((x, y) => y.length - x.length)
     .map((n) => ({ re: new RegExp(`(?<![A-Za-z])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`), text: itemText([...a.items].find((i: any) => i.name === n), entries).name }))
 }
+/**
+ * 这个人身上用到的 dnd5e 基础物品键（武器 / 护甲训练里的具体武器、工具熟练）在显示数据里是 dnd5e 物品库的英文名（Handaxe）：
+ * 按作者换算查回作者编号（author-classes.ts baseItemIds），和物品名同一张“英文名 → 出处”表，显示出口按编号取本战役语言。
+ * 没有这类键就不取作者表（不白读作者程序）。
+ */
+async function baseItemNames(a: any): Promise<Names> {
+  const C = g.CONFIG.DND5E
+  const T = g.dnd5e.documents.Trait
+  const keys = new Set<string>([
+    ...[...(a.system.traits?.weaponProf?.value ?? [])].filter((k: string) => C.weaponIds?.[k]),
+    ...[...(a.system.traits?.armorProf?.value ?? [])].filter((k: string) => C.armorIds?.[k] || C.shieldIds?.[k]),
+    ...Object.keys(a.system.tools ?? {}).filter((k) => C.tools?.[k]),
+  ])
+  if (!keys.size) return []
+  const ids = await baseItemIds()
+  const out: Names = []
+  for (const key of keys) {
+    const label = String(T.getBaseItem(C.weaponIds?.[key] ?? C.armorIds?.[key] ?? C.shieldIds?.[key] ?? C.tools?.[key]?.id ?? key, { indexOnly: true })?.name ?? '')
+    const id = ids.get(key)
+    if (label && /[A-Za-z]/.test(label) && id) out.push({ re: new RegExp(`(?<![A-Za-z])${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`), text: named(label, id, true) })
+  }
+  return out
+}
+
 /** ④ 官方拼好的句子里嵌着物品原名（“Cleric 施法”“Cleric • V、S”）：名字那段按物品出处取本战役语言，其余原样。 */
 function embedded(v: string, names: Names): FrameText | null {
   if (!/[A-Za-z]/.test(v)) return null
@@ -120,7 +145,7 @@ export async function sheetView(a: any, entries: unknown[]): Promise<{ sheet: st
   const skip = new Set<object>([a._source].filter(Boolean))
   // 行动页：按动作类型分组用官方 NPC 表自己的“特性”部分；玩家角色也走它（驾驶员 11-23 批 G1）
   out.actions = await actionsOf(a, app, out)
-  const names = itemNames(a, entries)
+  const names = [...itemNames(a, entries), ...await baseItemNames(a)]
   return { sheet: app.constructor.name, base: mark(copy(base, entries, skip), texts, codes, names), parts: mark(copy(out, entries, skip), texts, codes, names) }
 }
 

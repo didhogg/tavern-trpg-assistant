@@ -3,7 +3,8 @@
 //   选项（官方选项表，官方设置窗口另给的按登记表）、范围、当前底值（存的值）；官方算出来不存的字段只读、给算好的值（明细）；另给：改到这一块的效果（谁改的、怎么改、改多少）。
 /* eslint-disable @typescript-eslint/no-explicit-any -- Foundry / dnd5e 字段定义与文档没有类型声明。 */
 import type { ActorGetter, Operate } from './commands-items'
-import { asData, fromAuthor } from '../shown'
+import { asData, fromAuthor, named } from '../shown'
+import { baseItemIds } from './author-classes'
 import { nameText } from './registry-keys'
 import { itemText } from './sheet-texts'
 import type { FrameText } from '../shown'
@@ -159,6 +160,32 @@ export function createFieldCommands(operate: Operate, actor: ActorGetter) {
       // 效果的改法（官方常量 + 官方语言键），给“添加效果”选
       const modes = Object.entries(g.CONST.ACTIVE_EFFECT_MODES ?? {}).map(([k, v]) => ({ value: Number(v), label: text(`EFFECT.MODE_${k}`) ?? asData(k) }))
       return { tree, effects, attribution: null, derived: null, modes }
+    }),
+
+    /**
+     * 特质的可选项（照官方 TraitsConfig：dnd5e.documents.Trait.choices，带层级——类别 → 具体项、能不能选）：
+     * 基础物品（具体武器 / 护甲 / 工具）按作者编号取名，其余按语言键；抗性 / 免疫 / 易伤另给“无视条件”（官方物品属性里 isPhysical 的），
+     * 语言另给交流方式（官方 communicationTypes）。已选的界面从人物字段读（path = 官方 actorKeyPath）。
+     */
+    traitChoices: (trait: string) => operate([], async () => {
+      const T = g.dnd5e.documents.Trait
+      const ids = ['weapon', 'armor', 'tool'].includes(trait) ? await baseItemIds() : new Map()
+      const leaf = (key: string): string => key.split(':').pop() ?? key
+      const rows: Array<{ key: string; label: FrameText | null; depth: number; selectable: boolean }> = []
+      const walk = (obj: any, depth: number): void => {
+        for (const [key, c] of Object.entries<any>(obj ?? {})) {
+          if (c?.wildcard) continue
+          const label = String(c.label ?? key)
+          const id = ids.get(leaf(key))
+          rows.push({ key, label: id && /[A-Za-z]/.test(label) ? named(label, id, true) : text(label), depth, selectable: c.selectable !== false })
+          if (c.children) walk(c.children, depth + 1)
+        }
+      }
+      walk(await T.choices(trait), 0)
+      const damage = ['dr', 'di', 'dv', 'dm'].includes(trait)
+      const bypasses = damage ? Object.entries<any>(g.CONFIG.DND5E.itemProperties ?? {}).filter(([, p]) => p.isPhysical).map(([key, p]) => ({ key, label: text(String(p.label ?? key)) })) : []
+      const communication = trait === 'languages' ? Object.entries<any>(g.CONFIG.DND5E.communicationTypes ?? {}).map(([key, p]) => ({ key, label: text(String(p.label ?? key)) })) : []
+      return { trait, path: T.actorKeyPath(trait), label: text(T.traitLabel(trait)), rows, bypasses, communication }
     }),
   }
 }

@@ -34,6 +34,8 @@ export class TextPacks {
         const declared = await this.json<{ packs: Record<string, { files: Array<{ package: string; id: string; path: string }> }> }>('lang-packs.json')
         const allowed = new Set(folders)
         for (const file of declared.packs[lang]?.files ?? []) {
+          // Foundry 核心的语言文件在根上 lang/（和英文 lang/en.json 同一处）
+          if (file.package === 'core') { files.push(file.path); continue }
           const folder = `${file.package}s/${file.id}`
           if (allowed.has(folder)) files.push(`${folder}/${file.path}`)
         }

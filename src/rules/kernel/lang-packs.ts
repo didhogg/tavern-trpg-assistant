@@ -4,7 +4,7 @@
 // 没有对应语言包（英文战役、或没生成）就仍是 en.core，行为和以前完全一样。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 包清单是官方原始结构。 */
 
-export interface LangPackFile { package: 'system' | 'module'; id: string; path: string; sha256: string }
+export interface LangPackFile { package: 'system' | 'module' | 'core'; id: string; path: string; sha256: string }
 export interface LangPack { name: string; hash: string; files: LangPackFile[] }
 export interface LangPacks { packs: Record<string, LangPack> }
 
@@ -25,6 +25,8 @@ export function applyLangPack(lang: string, packs: LangPacks, system: any, modul
   const pack = packs.packs[lang]
   if (!pack) return { language: 'en.core' }
   for (const file of pack.files) {
+    // Foundry 核心的语言文件不挂在包清单上：官方客户端按语言设置（<语言>.core）直接取 lang/<语言>.json
+    if (file.package === 'core') continue
     const target = file.package === 'system' ? (system.id === file.id ? system : null) : modules.find((m) => m.id === file.id)
     if (!target) continue
     const languages: any[] = target.languages ??= []

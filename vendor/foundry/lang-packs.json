@@ -1,9 +1,9 @@
 {
- "generatedFrom": "大译名表 terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3；社区 5e_chn@910a980",
+ "generatedFrom": "大译名表 terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3；社区 5e_chn@910a980；社区 foundry_chn@本机参考副本 ",
  "packs": {
   "zh": {
    "name": "中文",
-   "hash": "f1a5cfcf246e95b54fc9fa9e34fea32c6a9b743ae460f5a9710b7946d59b184e",
+   "hash": "886e7a4eb4790ed891e2b09cdab75f38de26520b3421ad700507373bd3afbef2",
    "files": [
     {
      "package": "system",
@@ -22,6 +22,12 @@
      "id": "plutonium",
      "path": "lang/zh.json",
      "sha256": "f2206c517c5d6b3d8b8965c92ee54f7870cf2389b029f69a48099f2ace446898"
+    },
+    {
+     "package": "core",
+     "id": "core",
+     "path": "lang/zh.json",
+     "sha256": "931a921b3b7883c6d0bd90780198887eb4c8778b1ad6a95e6465345a20663d89"
     }
    ]
   }

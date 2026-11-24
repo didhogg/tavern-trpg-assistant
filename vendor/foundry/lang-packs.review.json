@@ -1,7 +1,8 @@
 {
  "generatedFrom": "terms-20261015-105551.json@f23199239dcef60b5662665b628e48c8f22d3c14c8709d80a97a9392b51613d3",
  "community": [
-  "5e_chn@910a980"
+  "5e_chn@910a980",
+  "foundry_chn@本机参考副本 "
  ],
  "communityDir": "/Users/xxx/tavern-trpg-data-next/_upstream/foundry-lang",
  "lang": "zh",
@@ -1790,6 +1791,1224 @@
    "conflictList": [],
    "differsFromTerms": 0,
    "differsList": []
+  },
+  {
+   "package": "core:core",
+   "total": 3533,
+   "translated": 3467,
+   "fromCommunity": 3463,
+   "conflicts": 0,
+   "groupsWithCategory": 30,
+   "conflictList": [],
+   "differsFromTerms": 201,
+   "differsList": [
+    {
+     "key": "ADVENTURE.ImportHeaderOverview",
+     "en": "Overview",
+     "community": "概览",
+     "terms": "概述"
+    },
+    {
+     "key": "ADVENTURE.TABS.summary",
+     "en": "Summary",
+     "community": "摘要",
+     "terms": "概述"
+    },
+    {
+     "key": "AMBIENT_SOUND.SECTIONS.ACTIVATION",
+     "en": "Activation",
+     "community": "激活",
+     "terms": "激活效应"
+    },
+    {
+     "key": "CALENDAR.GREGORIAN.Sunday",
+     "en": "Sunday",
+     "community": "周日",
+     "terms": "太阳日"
+    },
+    {
+     "key": "CALENDAR.GREGORIAN.Spring",
+     "en": "Spring",
+     "community": "春季",
+     "terms": "春"
+    },
+    {
+     "key": "CALENDAR.GREGORIAN.Summer",
+     "en": "Summer",
+     "community": "夏季",
+     "terms": "夏"
+    },
+    {
+     "key": "CALENDAR.GREGORIAN.Fall",
+     "en": "Fall",
+     "community": "秋季",
+     "terms": "秋"
+    },
+    {
+     "key": "CALENDAR.GREGORIAN.Winter",
+     "en": "Winter",
+     "community": "冬季",
+     "terms": "冬"
+    },
+    {
+     "key": "CARDS.HeaderCards",
+     "en": "Cards",
+     "community": "卡牌",
+     "terms": "卡片"
+    },
+    {
+     "key": "CARDS.Number",
+     "en": "Number",
+     "community": "数量",
+     "terms": "数值"
+    },
+    {
+     "key": "CARDS.ACTIONS.Save",
+     "en": "Save",
+     "community": "保存",
+     "terms": "豁免"
+    },
+    {
+     "key": "CARDS.TABS.details",
+     "en": "Details",
+     "community": "详情",
+     "terms": "细节"
+    },
+    {
+     "key": "CARDS.TABS.cards",
+     "en": "Cards",
+     "community": "卡牌",
+     "terms": "卡片"
+    },
+    {
+     "key": "CARD.TABS.details",
+     "en": "Details",
+     "community": "详情",
+     "terms": "细节"
+    },
+    {
+     "key": "CARD.FIELDS.suit.label",
+     "en": "Suit",
+     "community": "同花",
+     "terms": "花色"
+    },
+    {
+     "key": "CARD.FIELDS.value.label",
+     "en": "Value",
+     "community": "点数",
+     "terms": "价值"
+    },
+    {
+     "key": "CARD.FIELDS.face.label",
+     "en": "Face",
+     "community": "正面",
+     "terms": "面"
+    },
+    {
+     "key": "COMBAT.InitiativeRoll",
+     "en": "Roll Initiative",
+     "community": "先攻掷骰",
+     "terms": "掷先攻"
+    },
+    {
+     "key": "COMBAT.Rounds",
+     "en": "Rounds",
+     "community": "战斗轮",
+     "terms": "回合"
+    },
+    {
+     "key": "COMBATANT.Hide",
+     "en": "Hide",
+     "community": "隐藏",
+     "terms": "表皮"
+    },
+    {
+     "key": "COMPENDIUM.Duplicate.Option",
+     "en": "Duplicate",
+     "community": "复制",
+     "terms": "复制术"
+    },
+    {
+     "key": "COMPENDIUM.Duplicate.Submit",
+     "en": "Duplicate",
+     "community": "复制",
+     "terms": "复制术"
+    },
+    {
+     "key": "COMPENDIUM.ToggleLocked.Lock",
+     "en": "Lock",
+     "community": "锁定",
+     "terms": "锁"
+    },
+    {
+     "key": "CONTROLS.TilePlaceHeading",
+     "en": "Place",
+     "community": "放置",
+     "terms": "地点"
+    },
+    {
+     "key": "CONTROLS.WallSecret",
+     "en": "Secret Door",
+     "community": "密门",
+     "terms": "暗门"
+    },
+    {
+     "key": "CONTROLS.CanvasMove",
+     "en": "Move Object",
+     "community": "移动对象",
+     "terms": "动移万物"
+    },
+    {
+     "key": "CONTROLS.Drop",
+     "en": "Drop",
+     "community": "放",
+     "terms": "放下"
+    },
+    {
+     "key": "CONTROLS.KeyMoveDiag",
+     "en": "Diagonal Movement",
+     "community": "斜向移动",
+     "terms": "对角线移动"
+    },
+    {
+     "key": "CONTROLS.CommonHide",
+     "en": "Hide",
+     "community": "隐藏",
+     "terms": "表皮"
+    },
+    {
+     "key": "CONTROLS.CommonPlace",
+     "en": "Place",
+     "community": "放置",
+     "terms": "地点"
+    },
+    {
+     "key": "CONTROLS.CommonChain",
+     "en": "Chain",
+     "community": "链接",
+     "terms": "链之魔契"
+    },
+    {
+     "key": "CONTROLS.CommonLock",
+     "en": "Lock",
+     "community": "锁定",
+     "terms": "锁"
+    },
+    {
+     "key": "DICE.CONFIG.Label",
+     "en": "Dice",
+     "community": "配置骰子",
+     "terms": "骰子"
+    },
+    {
+     "key": "DOCUMENT.Actor",
+     "en": "Actor",
+     "community": "角色",
+     "terms": "演员"
+    },
+    {
+     "key": "DOCUMENT.CardPlural",
+     "en": "Cards",
+     "community": "卡牌",
+     "terms": "卡片"
+    },
+    {
+     "key": "DOCUMENT.Combatant",
+     "en": "Combatant",
+     "community": "参战者",
+     "terms": "战斗员"
+    },
+    {
+     "key": "DOCUMENT.Items",
+     "en": "Items",
+     "community": "物品",
+     "terms": "物件"
+    },
+    {
+     "key": "DOCUMENT.Level",
+     "en": "Level",
+     "community": "层级",
+     "terms": "等级"
+    },
+    {
+     "key": "DOCUMENT.Levels",
+     "en": "Levels",
+     "community": "层级",
+     "terms": "等级"
+    },
+    {
+     "key": "DOCUMENT.Note",
+     "en": "Note",
+     "community": "笔记",
+     "terms": "注"
+    },
+    {
+     "key": "DOCUMENT.Notes",
+     "en": "Notes",
+     "community": "笔记",
+     "terms": "备注"
+    },
+    {
+     "key": "DOCUMENT.Token",
+     "en": "Token",
+     "community": "指示物",
+     "terms": "符"
+    },
+    {
+     "key": "DOCUMENT.Walls",
+     "en": "Walls",
+     "community": "墙",
+     "terms": "墙壁"
+    },
+    {
+     "key": "DOCUMENT.FIELDS.width.label",
+     "en": "Width",
+     "community": "宽",
+     "terms": "宽度"
+    },
+    {
+     "key": "DOCUMENT.FIELDS.levels.label",
+     "en": "Levels",
+     "community": "层级",
+     "terms": "等级"
+    },
+    {
+     "key": "DRAWING.Object",
+     "en": "Object",
+     "community": "对象",
+     "terms": "物件"
+    },
+    {
+     "key": "DRAWING.Information",
+     "en": "Information",
+     "community": "信息",
+     "terms": "消息"
+    },
+    {
+     "key": "DRAWING.TABS.lines",
+     "en": "Lines",
+     "community": "线条",
+     "terms": "线状"
+    },
+    {
+     "key": "DRAWING.FIELDS.shape.width.label",
+     "en": "Width",
+     "community": "宽",
+     "terms": "宽度"
+    },
+    {
+     "key": "EFFECT.StatusAsleep",
+     "en": "Asleep",
+     "community": "睡眠",
+     "terms": "沉睡"
+    },
+    {
+     "key": "EFFECT.StatusBleeding",
+     "en": "Bleeding",
+     "community": "失血",
+     "terms": "流血"
+    },
+    {
+     "key": "EFFECT.StatusBlessed",
+     "en": "Blessed",
+     "community": "祝福",
+     "terms": "受祝福"
+    },
+    {
+     "key": "EFFECT.StatusDisease",
+     "en": "Diseased",
+     "community": "疾病",
+     "terms": "染病"
+    },
+    {
+     "key": "EFFECT.StatusFear",
+     "en": "Frightened",
+     "community": "恐惧",
+     "terms": "恐慌"
+    },
+    {
+     "key": "EFFECT.StatusFireShield",
+     "en": "Fire Shield",
+     "community": "火焰盾",
+     "terms": "火焰护盾"
+    },
+    {
+     "key": "EFFECT.StatusProne",
+     "en": "Prone",
+     "community": "伏地",
+     "terms": "倒地"
+    },
+    {
+     "key": "EFFECT.StatusShocked",
+     "en": "Shocked",
+     "community": "惊慌",
+     "terms": "休克"
+    },
+    {
+     "key": "EFFECT.CHANGES.TYPES.subtract",
+     "en": "Subtract",
+     "community": "减",
+     "terms": "减去"
+    },
+    {
+     "key": "EFFECT.DURATION.UNITS.months",
+     "en": "Months",
+     "community": "月",
+     "terms": "月历"
+    },
+    {
+     "key": "EFFECT.DURATION.UNITS.rounds",
+     "en": "Rounds",
+     "community": "轮",
+     "terms": "回合"
+    },
+    {
+     "key": "EFFECT.FIELDS.changes.element.value.label",
+     "en": "Value",
+     "community": "数值",
+     "terms": "价值"
+    },
+    {
+     "key": "EFFECT.FIELDS.changes.element.phase.label",
+     "en": "Phase",
+     "community": "阶段",
+     "terms": "虚相"
+    },
+    {
+     "key": "EFFECT.FIELDS.start.combatant.label",
+     "en": "Combatant",
+     "community": "参战者",
+     "terms": "战斗员"
+    },
+    {
+     "key": "EFFECT.TABS.details",
+     "en": "Details",
+     "community": "详情",
+     "terms": "细节"
+    },
+    {
+     "key": "EDITOR.Font.Size.Huge",
+     "en": "Huge",
+     "community": "巨大",
+     "terms": "巨型"
+    },
+    {
+     "key": "EDITOR.Font.Size.Large",
+     "en": "Large",
+     "community": "大号",
+     "terms": "大型"
+    },
+    {
+     "key": "EDITOR.Font.Size.Small",
+     "en": "Small",
+     "community": "小号",
+     "terms": "小型"
+    },
+    {
+     "key": "EDITOR.Font.Size.Title",
+     "en": "Size",
+     "community": "大小",
+     "terms": "体型"
+    },
+    {
+     "key": "EDITOR.Font.Title",
+     "en": "Font",
+     "community": "字体",
+     "terms": "洗盆"
+    },
+    {
+     "key": "EDITOR.Block",
+     "en": "Block",
+     "community": "块",
+     "terms": "格挡"
+    },
+    {
+     "key": "EDITOR.Alignment",
+     "en": "Alignment",
+     "community": "对齐",
+     "terms": "阵营"
+    },
+    {
+     "key": "EDITOR.AlignmentJustify",
+     "en": "Justify",
+     "community": "两边对齐",
+     "terms": "证明"
+    },
+    {
+     "key": "EDITOR.ImageSource",
+     "en": "Source",
+     "community": "源",
+     "terms": "来源"
+    },
+    {
+     "key": "EDITOR.Hide",
+     "en": "Hide",
+     "community": "隐藏",
+     "terms": "表皮"
+    },
+    {
+     "key": "FONTS.Styles.Normal",
+     "en": "Normal",
+     "community": "标准",
+     "terms": "正常"
+    },
+    {
+     "key": "HUD.Hide",
+     "en": "Hide",
+     "community": "隐藏",
+     "terms": "表皮"
+    },
+    {
+     "key": "HUD.Lock",
+     "en": "Lock",
+     "community": "展示",
+     "terms": "锁"
+    },
+    {
+     "key": "LIGHT.FIELDS.shadows.label",
+     "en": "Shadows",
+     "community": "阴影",
+     "terms": "幽影"
+    },
+    {
+     "key": "MACRO.FIELDS.command.label",
+     "en": "Command",
+     "community": "命令",
+     "terms": "命令术"
+    },
+    {
+     "key": "MEASUREMENT.Width",
+     "en": "Width",
+     "community": "宽",
+     "terms": "宽度"
+    },
+    {
+     "key": "MODMANAGE.Readme",
+     "en": "Documentation",
+     "community": "文档",
+     "terms": "证明文件"
+    },
+    {
+     "key": "NUE.FirstLaunchHeader",
+     "en": "Getting Started",
+     "community": "入门",
+     "terms": "开始"
+    },
+    {
+     "key": "SCENE.Details",
+     "en": "Details",
+     "community": "详情",
+     "terms": "细节"
+    },
+    {
+     "key": "SCENE.GridAppearance",
+     "en": "Appearance",
+     "community": "外观",
+     "terms": "外貌"
+    },
+    {
+     "key": "SCENE.Perception",
+     "en": "Perception",
+     "community": "感知",
+     "terms": "察觉"
+    },
+    {
+     "key": "SCENE.View",
+     "en": "View",
+     "community": "查看",
+     "terms": "观念"
+    },
+    {
+     "key": "SCENE.ShiftBG",
+     "en": "Shift",
+     "community": "偏移背景",
+     "terms": "移转"
+    },
+    {
+     "key": "SCENE.Transition.Types.wind",
+     "en": "Wind",
+     "community": "风吹",
+     "terms": "风"
+    },
+    {
+     "key": "SCENE.FIELDS.fog.MODES.INDIVIDUAL",
+     "en": "Individual",
+     "community": "个人",
+     "terms": "个体"
+    },
+    {
+     "key": "SCENE.FIELDS.environment.base.shadows.label",
+     "en": "Shadows",
+     "community": "阴影",
+     "terms": "幽影"
+    },
+    {
+     "key": "SCENE.TABS.SHEET.visibility",
+     "en": "Visibility",
+     "community": "可见性",
+     "terms": "能见度"
+    },
+    {
+     "key": "SCENE.TABS.SHEET.levels",
+     "en": "Levels",
+     "community": "层级",
+     "terms": "等级"
+    },
+    {
+     "key": "SCENE_LEVEL.FIELDS.textures.anchor",
+     "en": "Anchor",
+     "community": "锚点",
+     "terms": "锚"
+    },
+    {
+     "key": "SERVER_SETTINGS.FIELDS.sslKey.label",
+     "en": "Key",
+     "community": "密钥",
+     "terms": "钥匙"
+    },
+    {
+     "key": "SETTINGS.PerformanceModeMed",
+     "en": "Medium",
+     "community": "中",
+     "terms": "中等"
+    },
+    {
+     "key": "SETTINGS.PerformanceModeHigh",
+     "en": "High",
+     "community": "高",
+     "terms": "高等"
+    },
+    {
+     "key": "SETTINGS.UI.FIELDS.colorScheme.choices.dark",
+     "en": "Dark",
+     "community": "深色",
+     "terms": "黑暗"
+    },
+    {
+     "key": "SETTINGS.UI.FIELDS.colorScheme.choices.light",
+     "en": "Light",
+     "community": "浅色",
+     "terms": "光线"
+    },
+    {
+     "key": "SETUP.GettingStarted",
+     "en": "Getting Started",
+     "community": "入门",
+     "terms": "开始"
+    },
+    {
+     "key": "SETUP.UpdateDevelopment",
+     "en": "Development",
+     "community": "开发",
+     "terms": "发展"
+    },
+    {
+     "key": "SETUP.UpdateStable",
+     "en": "Stable",
+     "community": "稳定",
+     "terms": "伤势稳定"
+    },
+    {
+     "key": "SETUP.PackageProtected",
+     "en": "Protected",
+     "community": "受保护",
+     "terms": "被保护"
+    },
+    {
+     "key": "SETUP.ACTIONS.Warnings",
+     "en": "Warnings",
+     "community": "警告",
+     "terms": "先兆"
+    },
+    {
+     "key": "SETUP.BACKUPS.Restore",
+     "en": "Restore",
+     "community": "恢复",
+     "terms": "复原"
+    },
+    {
+     "key": "PACKAGE.Type.allPl",
+     "en": "All",
+     "community": "全部",
+     "terms": "所有"
+    },
+    {
+     "key": "PACKAGE.RESULT.Information",
+     "en": "Information",
+     "community": "信息",
+     "terms": "消息"
+    },
+    {
+     "key": "PACKAGE.TABS.relationships",
+     "en": "Relationships",
+     "community": "关系",
+     "terms": "人际关系"
+    },
+    {
+     "key": "PACKAGECONFIG.All",
+     "en": "All",
+     "community": "全部",
+     "terms": "所有"
+    },
+    {
+     "key": "OWNERSHIP.NOCHANGE",
+     "en": "No Change",
+     "community": "不变更",
+     "terms": "无变化"
+    },
+    {
+     "key": "PLACEABLE_PALETTE.CloneSettings",
+     "en": "Clone",
+     "community": "克隆",
+     "terms": "克隆术"
+    },
+    {
+     "key": "REGION.TABS.appearance",
+     "en": "Appearance",
+     "community": "外观",
+     "terms": "外貌"
+    },
+    {
+     "key": "REGION.FIELDS.visibility.label",
+     "en": "Visibility",
+     "community": "可见性",
+     "terms": "能见度"
+    },
+    {
+     "key": "BEHAVIOR.TYPES.adjustDarknessLevel.FIELDS.blur.label",
+     "en": "Blur",
+     "community": "模糊",
+     "terms": "朦胧术"
+    },
+    {
+     "key": "BEHAVIOR.TYPES.applyActiveEffect.FIELDS.effects.label",
+     "en": "Effects",
+     "community": "效果",
+     "terms": "效应"
+    },
+    {
+     "key": "BEHAVIOR.TYPES.displayScrollingText.FIELDS.visibility.label",
+     "en": "Visibility",
+     "community": "可见性",
+     "terms": "能见度"
+    },
+    {
+     "key": "BEHAVIOR.TYPES.executeScript.FIELDS.source.label",
+     "en": "Script",
+     "community": "脚本",
+     "terms": "文字"
+    },
+    {
+     "key": "SIDEBAR.Duplicate",
+     "en": "Duplicate",
+     "community": "复制",
+     "terms": "复制术"
+    },
+    {
+     "key": "SIDEBAR.PLACEABLES.ACTIONS.Clear",
+     "en": "Clear",
+     "community": "清除",
+     "terms": "天晴"
+    },
+    {
+     "key": "SIDEBAR.PLACEABLES.ACTIONS.Hide",
+     "en": "Hide",
+     "community": "隐藏",
+     "terms": "表皮"
+    },
+    {
+     "key": "SIDEBAR.PLACEABLES.ACTIONS.Lock",
+     "en": "Lock",
+     "community": "锁定",
+     "terms": "锁"
+    },
+    {
+     "key": "SIDEBAR.PLACEABLES.Filter.ACTIONS.Clear",
+     "en": "Clear",
+     "community": "清除",
+     "terms": "天晴"
+    },
+    {
+     "key": "SIDEBAR.PLACEABLES.WALLS.secret",
+     "en": "Secret Doors",
+     "community": "密门",
+     "terms": "暗门"
+    },
+    {
+     "key": "SIDEBAR.SETTINGS.ACTIONS.Docs",
+     "en": "Documentation",
+     "community": "查看文档",
+     "terms": "证明文件"
+    },
+    {
+     "key": "SUPPORT.Client",
+     "en": "Client",
+     "community": "客户端",
+     "terms": "顾客"
+    },
+    {
+     "key": "SUPPORT.Warnings",
+     "en": "Warnings",
+     "community": "警告",
+     "terms": "先兆"
+    },
+    {
+     "key": "TABLE.ACTIONS.ChangeMode.View",
+     "en": "View",
+     "community": "查看",
+     "terms": "观念"
+    },
+    {
+     "key": "TABLE.TABS.summary",
+     "en": "Summary",
+     "community": "总结",
+     "terms": "概述"
+    },
+    {
+     "key": "TABLE_RESULT.Details",
+     "en": "Details",
+     "community": "详情",
+     "terms": "细节"
+    },
+    {
+     "key": "TABLE_RESULT.FIELDS.weight.label",
+     "en": "Weight",
+     "community": "权重",
+     "terms": "重量"
+    },
+    {
+     "key": "TILE.TABS.appearance",
+     "en": "Appearance",
+     "community": "外观",
+     "terms": "外貌"
+    },
+    {
+     "key": "TILE.FIELDS.OCCLUSION_MODES.VISION.label",
+     "en": "Vision",
+     "community": "视野",
+     "terms": "感官"
+    },
+    {
+     "key": "TIME.Second.one",
+     "en": "Second",
+     "community": "秒",
+     "terms": "第二"
+    },
+    {
+     "key": "TOKEN.Size",
+     "en": "Size",
+     "community": "尺寸",
+     "terms": "体型"
+    },
+    {
+     "key": "TOKEN.Anchor",
+     "en": "Anchor",
+     "community": "锚点",
+     "terms": "锚"
+    },
+    {
+     "key": "TOKEN.Mirror",
+     "en": "Mirror Image",
+     "community": "镜像",
+     "terms": "镜影术"
+    },
+    {
+     "key": "TOKEN.TABS.identity",
+     "en": "Identity",
+     "community": "本体",
+     "terms": "身份"
+    },
+    {
+     "key": "TOKEN.TABS.appearance",
+     "en": "Appearance",
+     "community": "外观",
+     "terms": "外貌"
+    },
+    {
+     "key": "TOKEN.TABS.vision",
+     "en": "Vision",
+     "community": "视野",
+     "terms": "感官"
+    },
+    {
+     "key": "TOKEN.TABS.light",
+     "en": "Light",
+     "community": "光照",
+     "terms": "光线"
+    },
+    {
+     "key": "TOKEN.FIELDS.level.label",
+     "en": "Level",
+     "community": "层级",
+     "terms": "等级"
+    },
+    {
+     "key": "TOKEN.DISPOSITION.FRIENDLY",
+     "en": "Friendly",
+     "community": "友善",
+     "terms": "友好"
+    },
+    {
+     "key": "TOKEN.DISPOSITION.SECRET",
+     "en": "Secret",
+     "community": "未知",
+     "terms": "秘密"
+    },
+    {
+     "key": "TOKEN.Adjectives.arrogant",
+     "en": "Arrogant",
+     "community": "傲慢的",
+     "terms": "傲慢"
+    },
+    {
+     "key": "TOKEN.Adjectives.brave",
+     "en": "Brave",
+     "community": "勇猛的",
+     "terms": "勇气"
+    },
+    {
+     "key": "TOKEN.Adjectives.calm",
+     "en": "Calm",
+     "community": "镇静的",
+     "terms": "无风"
+    },
+    {
+     "key": "TOKEN.Adjectives.cautious",
+     "en": "Cautious",
+     "community": "谨慎的",
+     "terms": "谨慎"
+    },
+    {
+     "key": "TOKEN.Adjectives.confused",
+     "en": "Confused",
+     "community": "困惑的",
+     "terms": "困惑"
+    },
+    {
+     "key": "TOKEN.Adjectives.cowardly",
+     "en": "Cowardly",
+     "community": "胆怯的",
+     "terms": "胆小怯懦"
+    },
+    {
+     "key": "TOKEN.Adjectives.cruel",
+     "en": "Cruel",
+     "community": "残忍的",
+     "terms": "残忍"
+    },
+    {
+     "key": "TOKEN.Adjectives.curious",
+     "en": "Curious",
+     "community": "好奇的",
+     "terms": "好奇"
+    },
+    {
+     "key": "TOKEN.Adjectives.distracted",
+     "en": "Distracted",
+     "community": "烦心的",
+     "terms": "分心"
+    },
+    {
+     "key": "TOKEN.Adjectives.drunk",
+     "en": "Drunk",
+     "community": "醉酒的",
+     "terms": "醉汉"
+    },
+    {
+     "key": "TOKEN.Adjectives.evil",
+     "en": "Evil",
+     "community": "邪恶的",
+     "terms": "邪恶"
+    },
+    {
+     "key": "TOKEN.Adjectives.furious",
+     "en": "Furious",
+     "community": "暴怒的",
+     "terms": "狂怒"
+    },
+    {
+     "key": "TOKEN.Adjectives.gloomy",
+     "en": "Gloomy",
+     "community": "阴沉的",
+     "terms": "阴郁的"
+    },
+    {
+     "key": "TOKEN.Adjectives.helpless",
+     "en": "Helpless",
+     "community": "无助的",
+     "terms": "无助"
+    },
+    {
+     "key": "TOKEN.Adjectives.hopeful",
+     "en": "Hopeful",
+     "community": "希望的",
+     "terms": "满怀希望"
+    },
+    {
+     "key": "TOKEN.Adjectives.innocent",
+     "en": "Innocent",
+     "community": "天真的",
+     "terms": "无辜者"
+    },
+    {
+     "key": "TOKEN.Adjectives.intimidated",
+     "en": "Intimidated",
+     "community": "被迫的",
+     "terms": "威吓"
+    },
+    {
+     "key": "TOKEN.Adjectives.mad",
+     "en": "Mad",
+     "community": "发狂的",
+     "terms": "疯狂"
+    },
+    {
+     "key": "TOKEN.Adjectives.naive",
+     "en": "Naive",
+     "community": "幼稚的",
+     "terms": "幼稚"
+    },
+    {
+     "key": "TOKEN.Adjectives.numb",
+     "en": "Numb",
+     "community": "呆愣的",
+     "terms": "麻木"
+    },
+    {
+     "key": "TOKEN.Adjectives.overwhelmed",
+     "en": "Overwhelmed",
+     "community": "垮掉的",
+     "terms": "压倒性的攻势"
+    },
+    {
+     "key": "TOKEN.Adjectives.panicked",
+     "en": "Panicked",
+     "community": "恐慌的",
+     "terms": "惊慌"
+    },
+    {
+     "key": "TOKEN.Adjectives.pessimistic",
+     "en": "Pessimistic",
+     "community": "悲观的",
+     "terms": "悲观主义者"
+    },
+    {
+     "key": "TOKEN.Adjectives.selfish",
+     "en": "Selfish",
+     "community": "自私的",
+     "terms": "自私"
+    },
+    {
+     "key": "TOKEN.Adjectives.shocked",
+     "en": "Shocked",
+     "community": "震惊的",
+     "terms": "休克"
+    },
+    {
+     "key": "TOKEN.Adjectives.sleepy",
+     "en": "Sleepy",
+     "community": "瞌睡的",
+     "terms": "瞌睡虫"
+    },
+    {
+     "key": "TOKEN.Adjectives.strong",
+     "en": "Strong",
+     "community": "强健的",
+     "terms": "强"
+    },
+    {
+     "key": "TOKEN.Adjectives.surprised",
+     "en": "Surprised",
+     "community": "惊讶的",
+     "terms": "突袭"
+    },
+    {
+     "key": "TOKEN.Adjectives.suspicious",
+     "en": "Suspicious",
+     "community": "多疑的",
+     "terms": "疑心"
+    },
+    {
+     "key": "TOKEN.Adjectives.trusting",
+     "en": "Trusting",
+     "community": "轻信的",
+     "terms": "信任"
+    },
+    {
+     "key": "TOKEN.DetectionRange",
+     "en": "Range",
+     "community": "距离",
+     "terms": "范围"
+    },
+    {
+     "key": "TOKEN.MOVEMENT.ACTIONS.jump.label",
+     "en": "Jump",
+     "community": "跳跃",
+     "terms": "跳跃术"
+    },
+    {
+     "key": "TOKEN.MOVEMENT.ACTIONS.walk.label",
+     "en": "Walk",
+     "community": "步行",
+     "terms": "走"
+    },
+    {
+     "key": "TYPES.Macro.script",
+     "en": "Script",
+     "community": "脚本宏",
+     "terms": "文字"
+    },
+    {
+     "key": "DETECTION.SeeInvisibility",
+     "en": "See Invisibility",
+     "community": "隐形可见",
+     "terms": "识破隐形"
+    },
+    {
+     "key": "TEXTURE_DATA.FIT.cover",
+     "en": "Cover",
+     "community": "覆盖",
+     "terms": "掩护"
+    },
+    {
+     "key": "WALL.FIELDS.sight.label",
+     "en": "Sight",
+     "community": "视野",
+     "terms": "预见"
+    },
+    {
+     "key": "WALL.FIELDS.animation.double.label",
+     "en": "Double Door",
+     "community": "双开门",
+     "terms": "双扇石门"
+    },
+    {
+     "key": "WALL.SenseTypes.NORMAL",
+     "en": "Normal",
+     "community": "普通",
+     "terms": "正常"
+    },
+    {
+     "key": "WALL.DoorTypes.SECRET",
+     "en": "Secret Door",
+     "community": "密门",
+     "terms": "暗门"
+    },
+    {
+     "key": "WALL.DoorStates.OPEN",
+     "en": "Open",
+     "community": "打开",
+     "terms": "开放"
+    },
+    {
+     "key": "WALL.DoorSounds.Jail",
+     "en": "Jail",
+     "community": "监牢",
+     "terms": "监狱"
+    },
+    {
+     "key": "WALL.DoorSounds.StoneBasic",
+     "en": "Stone",
+     "community": "石制",
+     "terms": "岩石"
+    },
+    {
+     "key": "WEBRTC.TABS.general",
+     "en": "General",
+     "community": "通常",
+     "terms": "通用"
+    },
+    {
+     "key": "WEATHER.Rain",
+     "en": "Rain",
+     "community": "下雨",
+     "terms": "雨"
+    },
+    {
+     "key": "WEATHER.Blizzard",
+     "en": "Blizzard",
+     "community": "暴雪",
+     "terms": "暴风雪"
+    },
+    {
+     "key": "WEATHER.Fog",
+     "en": "Fog",
+     "community": "浓雾",
+     "terms": "雾"
+    },
+    {
+     "key": "SHAPE.TYPES.base.origin.label",
+     "en": "Origin",
+     "community": "原点",
+     "terms": "起源"
+    },
+    {
+     "key": "SHAPE.TYPES.rectangle.anchor.label",
+     "en": "Anchor",
+     "community": "锚点",
+     "terms": "锚"
+    },
+    {
+     "key": "SHAPE.TYPES.cone.name",
+     "en": "Cone",
+     "community": "锥形",
+     "terms": "锥状"
+    },
+    {
+     "key": "SHAPE.TYPES.cone.CURVATURES.round.label",
+     "en": "Round",
+     "community": "圆形",
+     "terms": "轮"
+    },
+    {
+     "key": "SHAPE.TYPES.ring.name",
+     "en": "Ring",
+     "community": "环形",
+     "terms": "戒指"
+    },
+    {
+     "key": "SHAPE.TYPES.line.name",
+     "en": "Line",
+     "community": "线形",
+     "terms": "线状"
+    },
+    {
+     "key": "SHAPE.TYPES.line.FIELDS.width.label",
+     "en": "Width",
+     "community": "宽",
+     "terms": "宽度"
+    },
+    {
+     "key": "SHAPE.TYPES.polygon.FIELDS.origin.label",
+     "en": "Origin",
+     "community": "原点",
+     "terms": "起源"
+    },
+    {
+     "key": "SHAPE.TYPES.token.name",
+     "en": "Token",
+     "community": "指示物",
+     "terms": "符"
+    },
+    {
+     "key": "SHAPE.TYPES.token.FIELDS.width.label",
+     "en": "Width",
+     "community": "宽",
+     "terms": "宽度"
+    },
+    {
+     "key": "SHAPE.TYPES.token.size.label",
+     "en": "Size",
+     "community": "尺寸",
+     "terms": "体型"
+    },
+    {
+     "key": "SHAPE.TYPES.grid.FIELDS.origin.label",
+     "en": "Origin",
+     "community": "原点",
+     "terms": "起源"
+    }
+   ]
   }
  ],
  "upstreamMessages": [
