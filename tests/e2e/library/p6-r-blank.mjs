@@ -126,5 +126,5 @@ try {
   check('没有未解释的页面报错', !known.length, known.slice(0, 4).join(' | '))
   await ctx.close(); server.close()
 }
-if (failures()) { console.log(`FAILED ${failures()}`); process.exit(1) }
+console.log(failures.length ? `FAILED ${failures.length}` : 'ALL PASS'); process.exit(failures.length ? 1 : 0)
 console.log('ALL PASS')

@@ -111,7 +111,7 @@ export const usePersonStore = defineStore('person', () => {
   const remove = (label: string, itemId: string) => write(label, (k) => backend().remove(k, id.value!, itemId))
   /**
    * 空白卡建人 / 从库里加（作者「导入到人物」+ 问答桥）：带着玩家已答的题目问一步；
-   * 交回下一题（这个人已按存档退回）或「会加上什么」（改动留在小窗等 importConfirm / importCancel）。
+   * 交回下一题（作者停在题上，已写的一部分留在小窗）或「会加上什么」（改动留在小窗等 importConfirm / importCancel）。
    */
   async function importStep(ref: EntryRef, answers: AskAnswer[], replaceItemId?: string): Promise<ImportStep | null> {
     const key = ownerKey(); const who = id.value

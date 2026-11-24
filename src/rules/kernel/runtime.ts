@@ -391,10 +391,10 @@ export class KernelRuntime {
         const key = await kernelBaseKey({ base: o.cacheBase, brewFingerprint: o.brewFingerprint, dataVersion: version, actor: compact })
         await o.cache.put(key, full, { rule: o.rule, base: o.cacheBase, official: kernelFilesVersion(version), lang: o.cacheLang })
       }
-      // P6-R：另存完整人物数据（读档 / 撤销按它建回）；引用、选择、差别照旧留着，完整数据缺了也能按引用重建
+      // P6-R：另存完整人物数据（读档 / 撤销按它建回）；小窗里也就按「完整数据建回的人」记（同读档 / 退回：people.ts withBase、restore）
       out.push({ ...compact, doc: current })
+      o.bases.set(id, structuredClone(current), null, {}, true)
     }
     return out
   }
-
 }

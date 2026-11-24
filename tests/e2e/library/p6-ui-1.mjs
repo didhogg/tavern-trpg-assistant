@@ -58,6 +58,8 @@ try {
   check('点一行进整页详情，名字行有职业等级（中文）', (await page.getByTestId('people-view').count()) === 0 && /野蛮人/.test(sub), sub)
   const abil = await page.getByTestId('ps-abilities').innerText()
   check('六属性中文名（力量…魅力）', ['力量', '敏捷', '体质', '智力', '感知', '魅力'].every((w) => abil.includes(w)), abil.replace(/\s+/g, ' '))
+  // 侧栏默认是「收藏」（照 Tidy5e 默认 [收藏, 技能]），切到「技能」再看
+  await page.getByTestId('ps-side').getByRole('group', { name: '侧栏' }).getByRole('button', { name: '技能', exact: true }).click(); await settle(page, 300)
   check('侧栏技能 18 项中文', (await page.getByTestId('ps-side').locator('li').count()) === 18 && han(await page.getByTestId('ps-side').innerText()))
   const facts = await page.getByTestId('ps-facts').innerText()
   check('事实表：种族、背景（中文）、体型、速度', /种族/.test(facts) && /背景/.test(facts) && /速度/.test(facts) && !/DND5E\./.test(facts), facts.replace(/\s+/g, ' '))

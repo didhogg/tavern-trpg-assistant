@@ -62,11 +62,21 @@ function allItems(): Promise<any[]> {
   void pending.catch(() => { if (cache === pending) cache = null })
   return pending
 }
-/** 预读物品资料（起始装备「任选一件」的候选要用）：只读资料、不改人物；问答开始后在后台跑，到装备题不用再等。 */
+/** 作者给人物导入时会对照附加资料的条目种类（CompendiumCacheUtil.getAdditionalDataCompendiums 认的种类里，人物用得到的）。 */
+const CHARACTER_KINDS = ['class', 'subclass', 'classFeature', 'subclassFeature', 'race', 'raceFeature', 'background', 'backgroundFeature', 'feat', 'optionalfeature', 'item', 'spell']
+/**
+ * 预读（问答一开始在后台跑，只读资料、不改人物）：作者的物品资料（起始装备「任选一件」的候选）+ 作者导入时要对照的附加资料合集包
+ * （哪些包由作者设置决定，读法也用作者自己的缓存读取）。一包一包读、中间让出，玩家读题时页面不卡。
+ */
 export const warmItems = async (): Promise<number> => {
   const items = await allItems()
-  // 作者第一次导入装备时会对照 dnd5e 的职业 / 装备合集包和作者附加资料（实测：classes24 / equipment24 两个包）：先读好合集包里的条目（只读）
-  for (const id of ['dnd5e.classes24', 'dnd5e.equipment24']) await g.game.packs.get(id)?.getDocuments?.()
+  const cache = plutoniumBuild?.CompendiumCacheUtil
+  const packs = new Map<string, any>()
+  for (const kind of CHARACTER_KINDS) for (const pack of cache?.getAdditionalDataCompendiums?.({ entityType: kind }) ?? []) packs.set(pack.collection, pack)
+  for (const pack of packs.values()) {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await cache.pGetCompendiumData(pack, { isContent: true })
+  }
   return items.length
 }
 

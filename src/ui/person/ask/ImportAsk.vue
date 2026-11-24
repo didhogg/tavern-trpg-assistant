@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 从库里加一条到这个人（空白卡建人 / 加职业 / 换种族 …）：作者「导入到人物」整路，作者要问的一题一题在这里答（同一个弹窗里换页，不叠窗口）。
-// 一问一答：带着已答的全部回答问下一步（person.importStep）；答完先列出「会加上什么」，确认才写进存档（一条撤销），取消 = 什么都不变。
+// 一问一答：作者在小窗里停在题上，答一题接着跑一段（person.importStep）；答完先列出「会加上什么」，确认才写进存档（一条撤销），取消 = 什么都不变。
 // 已答的题排在上面，点一题 = 回到那题重答（后面的答案丢掉）。题目文字已过唯一显示出口；界面只收选择。
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import type { EntryRef } from '../../../library/scopes'
@@ -26,7 +26,7 @@ const step = shallowRef<ImportStep | null>(null)
 const pending = shallowRef<AskAnswer | null>(null)
 const busy = ref(false)
 const slow = ref(false)
-let staged = false // 小窗里有没确认的改动（答完那一步）
+let staged = false // 小窗里有没确认的改动（作者停在题上时已写了一部分；答完那一步是全部）
 
 async function run(): Promise<void> {
   busy.value = true
@@ -34,7 +34,7 @@ async function run(): Promise<void> {
   try {
     const out = await person.importStep(props.entryRef, answers.value, props.replace?.id)
     step.value = out ?? { status: 'error', error: '没有当前人物', ms: 0 }
-    staged = out?.status === 'ready'
+    staged = out?.status === 'ready' || out?.status === 'question'
     pending.value = null
   } finally { clearTimeout(timer); busy.value = false; slow.value = false }
   // 作者一题都没问（加一瓶药水、没有选项的专长）：不多一步确认，直接写入（和把物品拖上表一样）
