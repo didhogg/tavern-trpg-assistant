@@ -168,3 +168,4 @@
 /* 骰子悬浮球在右下角：分页内容底部留出位置，最后一行不被盖住 */
 .ps-tab { padding-bottom: 72px; }
 .ps-card-head-acts { display: inline-flex; gap: var(--sp-1); }
+.ps-build-crown { margin-left: var(--sp-1); color: var(--accent); vertical-align: -2px; }

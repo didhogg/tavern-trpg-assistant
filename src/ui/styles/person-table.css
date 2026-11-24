@@ -99,3 +99,4 @@
 .ps-enc { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-sm); }
 .ps-cell .trpg-stepper__btn { min-width: 26px; min-height: 28px; padding: 0; }
 .ps-cell .trpg-stepper__val { min-width: 2.4em; padding: 0 var(--sp-1); font-size: var(--fs-sm); }
+.ps-bio-traits-add { padding: var(--sp-2) var(--sp-3) var(--sp-3); }

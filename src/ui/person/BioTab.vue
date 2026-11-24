@@ -1,9 +1,11 @@
 <script setup lang="ts">
-// 背景页（线框 p6-12，照 Tidy5e 传记页）：外貌 · 传记（大卡）| 性格特点 · 理想 · 羁绊 · 缺点 | 特征（性别、信仰：驾驶员 11-15 只留这两项）。
+// 背景页（线框 p6-12，照 Tidy5e 传记页 CharacterBiographyTab）：外貌 · 传记（大卡）| 性格特点 · 理想 · 羁绊 · 缺点 | 特征（官方传记页给的全部项：
+// 阵营、性别、年龄、身高、体重、眼睛、皮肤、头发、信仰……；驾驶员 11-24 定照 Tidy5e 一比一，没填的收成「＋」）。
 // 每张卡 ✎ 原地改，保存 = 写人物的官方字段（可撤销）；没写的收起成「还没写的：＋ 羁绊 ＋ 缺点」。传记是官方的 HTML 字段，编辑框里是普通文字。
 import { computed, ref } from 'vue'
 import { usePersonStore } from '../../stores/person'
 import TextCard from './TextCard.vue'
+import { characteristics } from './view-tabs'
 
 const person = usePersonStore()
 const d = computed(() => person.sheet?.system.details ?? {})
@@ -24,7 +26,11 @@ const empty = computed(() => cards.value.filter((c) => !c.text && !opened.value.
 const refs = ref<Record<string, InstanceType<typeof TextCard> | null>>({})
 async function add(c: Card): Promise<void> { opened.value = new Set([...opened.value, c.key]); await Promise.resolve(); setTimeout(() => refs.value[c.key]?.start(), 0) }
 const save = (c: Card, text: string): void => { void person.edit(`改了${c.title}`, [{ kind: 'set', path: c.path, value: c.html ? textToHtml(text) : text }]) }
-const traits = computed(() => [{ key: 'gender', title: '性别', path: 'system.details.gender', text: String(d.value.gender ?? '') }, { key: 'faith', title: '信仰', path: 'system.details.faith', text: String(d.value.faith ?? '') }])
+/** 特征：官方传记页给的各项（字段路径 + 名字 + 现值）；没填的收成「＋」，点了展开填。 */
+const allTraits = computed(() => (person.sheet ? characteristics(person.sheet) : []).map((c) => ({ key: c.path, title: c.label, path: c.path, text: c.value })))
+const openTraits = ref<Set<string>>(new Set())
+const traits = computed(() => allTraits.value.filter((t) => t.text || openTraits.value.has(t.key)))
+const emptyTraits = computed(() => allTraits.value.filter((t) => !t.text && !openTraits.value.has(t.key)))
 </script>
 
 <template>
@@ -41,6 +47,7 @@ const traits = computed(() => [{ key: 'gender', title: '性别', path: 'system.d
       <div class="ps-bio-trait-grid">
         <TextCard v-for="t in traits" :key="t.key" class="ps-bio-trait" :title="t.title" :text="t.text" single :read-only="person.readOnly" @save="(v) => person.edit(`改了${t.title}`, [{ kind: 'set', path: t.path, value: v }])">{{ t.text || '—' }}</TextCard>
       </div>
+      <p v-if="emptyTraits.length" class="ps-bio-empty ps-bio-traits-add"><button v-for="t in emptyTraits" :key="t.key" type="button" class="ps-add-chip" :disabled="person.readOnly" :data-testid="`ps-bio-trait-add-${t.key}`" @click="openTraits = new Set([...openTraits, t.key])">＋ {{ t.title }}</button></p>
     </section>
   </div>
 </template>
