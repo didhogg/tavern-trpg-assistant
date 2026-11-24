@@ -58,7 +58,8 @@ const shown = (r: DocRow, a: string): boolean => {
 const cols = (g: DocGroup) => {
   const spec = columnsFor(props.domain, g.type)
   // 行按钮占的宽度也要留出来
-  const reserved = 2.5 + acts.value.filter((a) => a !== 'menu' && g.rows.some((r) => shown(r, a))).length * 1.9
+  // 行按钮、组头里的法术位圆点（Tidy5e 组头 SpellSlotTracker）占的宽度也要留出来
+  const reserved = 2.5 + acts.value.filter((a) => a !== 'menu' && g.rows.some((r) => shown(r, a))).length * 1.9 + (g.usesSlots ? g.pips.length * 1.15 + 6 : 0)
   const hide = hiddenColumns(width.value, remPx.value, spec, reserved)
   return spec.sorted.filter((k) => !hide.has(k))
 }

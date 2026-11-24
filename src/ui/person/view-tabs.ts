@@ -12,12 +12,13 @@ export const slotValue = (s: PersonSheet, slot: string): number => Number(s.syst
 
 // ---- 效果 ----
 export interface EffectRow { id: string; parentId: string | null; name: string; source: string; duration: string; disabled: boolean; toggleable: boolean }
+/** 效果分组（官方 effects 部分）；持续只在官方 showDuration 时显示（官方表同样按它决定显示不显示）。 */
 export function effectGroups(s: PersonSheet): Array<{ key: string; label: string; info: string; rows: EffectRow[] }> {
   return Object.entries(parts(s).effects?.effects ?? {}).filter(([, c]: [string, any]) => !c.hidden).map(([key, c]: [string, any]) => ({
     key, label: String(c.label ?? ''), info: String(c.info ?? ''),
     rows: list<any>(c.effects).map((e) => ({
       id: String(e.id), parentId: e.parentId ?? null, name: String(e.name ?? ''), source: String(e.source?.name ?? e.source ?? ''),
-      duration: String(e.duration?.label ?? e.duration?.remaining ?? ''), disabled: !!e.disabled, toggleable: e.toggleable !== false,
+      duration: e.showDuration === false ? '' : String(e.duration?.label ?? e.duration?.remaining ?? ''), disabled: !!e.disabled, toggleable: e.toggleable !== false,
     })),
   }))
 }

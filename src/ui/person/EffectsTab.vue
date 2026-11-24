@@ -82,7 +82,7 @@ const createIn = (key: string, label: string): void => openEffect(`新建${label
       <section v-for="grp in groups" :key="grp.key" class="dt-grp" :data-testid="`ps-eff-${grp.key}`">
         <header class="dt-head">
           <span class="dt-fold"><b>{{ grp.label }}</b><small>{{ grp.rows.length }}</small></span>
-          <span class="dt-cols" aria-hidden="true"><span style="width: 8rem">来源</span><span style="width: 6rem">持续</span><span class="dt-acts-col" style="width: 5rem">
+          <span class="dt-cols" aria-hidden="true"><span class="dt-opt-1" style="width: 8rem">来源</span><span class="dt-opt-2" style="width: 6rem">持续</span><span class="dt-acts-col" style="width: 5rem">
             <button class="dt-add" type="button" :disabled="ro" :aria-label="`新建${grp.label}`" :data-testid="`ps-eff-add-${grp.key}`" @click="createIn(grp.key, grp.label)"><Icon name="plus" :size="14" /></button>
           </span></span>
         </header>
@@ -92,8 +92,8 @@ const createIn = (key: string, label: string): void => openEffect(`新建${label
             <div class="dt-main">
               <span class="dt-initial" aria-hidden="true">{{ e.name.slice(0, 1) }}</span>
               <div class="dt-name"><button type="button" class="dt-title" @click="onMenu(e, 'edit')">{{ e.name }}</button></div>
-              <span class="dt-cell" style="width: 8rem">{{ e.source || '手动' }}</span>
-              <span class="dt-cell" style="width: 6rem" :class="{ 'ps-dim': !e.duration }">{{ e.duration || '—' }}</span>
+              <span class="dt-cell dt-opt-1" style="width: 8rem">{{ e.source || '手动' }}</span>
+              <span class="dt-cell dt-opt-2" style="width: 6rem" :class="{ 'ps-dim': !e.duration }">{{ e.duration || '—' }}</span>
               <span class="dt-acts" style="width: 5rem; justify-content: flex-end">
                 <button v-if="isConc(e)" class="dt-act" type="button" data-on aria-label="打断专注" title="专注中（点了打断专注）" :disabled="ro" @click="breakConc(e)"><Icon name="sparkle" :size="15" /></button>
                 <Switch v-else :model-value="!e.disabled" :label="`${e.name}生效`" :disabled="ro || !e.toggleable" @update:model-value="(v: boolean) => toggleEffect(e, v)" />

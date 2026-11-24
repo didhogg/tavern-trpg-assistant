@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // 表格工具条（照 Tidy5e shared/ItemsActionBar.svelte）：搜索（× 清除）· 排序（官方 listControls.sorting）· 分组方式（官方 listControls.grouping）
 // · 全部展开 / 收起（ExpandCollapseButton）· 右边插槽放这一页的新建 / 从库里加 · 第二行 官方筛选开关（listControls.filters，判断在小窗官方 _filterChildren）。
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import Icon from '../../kit/Icon.vue'
 import MoreMenu from '../../kit/MoreMenu.vue'
 import type { ListControls } from './rows'
@@ -12,6 +12,8 @@ const sort = defineModel<string>('sort', { default: '' })
 const grouping = defineModel<string>('grouping', { default: '' })
 const expand = defineModel<boolean | null>('expand', { default: null })
 const filters = defineModel<string[]>('filters', { default: () => [] })
+/** 筛选选项收在一个按钮里（Tidy5e FilterButtonMenuQuadrone），点开才展开。 */
+const showFilters = ref(false)
 /** 筛选开关三态（照 dnd5e FilterMenu / Tidy5e FilterToggle）：没选 → 只看这类 → 排除这类 → 没选。 */
 const stateOf = (key: string): 'on' | 'off' | null => filters.value.includes(key) ? 'on' : filters.value.includes(`!${key}`) ? 'off' : null
 function cycle(key: string): void {
@@ -40,9 +42,12 @@ const groupLabel = computed(() => groupings.value.find((o) => o.key === grouping
     <button class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :aria-label="expand ? '全部收起' : '全部展开'" :data-testid="`${testid}-expand`" @click="expand = !expand">
       <Icon :name="expand ? 'arrows-in-line-vertical' : 'arrows-out-line-vertical'" :size="14" />{{ expand ? '全部收起' : '全部展开' }}
     </button>
+    <button v-if="controls?.filters.length" class="trpg-btn trpg-btn--small trpg-btn--quiet" type="button" :aria-expanded="showFilters" :data-on="filters.length || undefined" :data-testid="`${testid}-filters`" @click="showFilters = !showFilters">
+      <Icon name="funnel" :size="14" />筛选<b v-if="filters.length" class="dt-filter-count">{{ filters.length }}</b>
+    </button>
     <span class="dt-bar-gap" />
     <slot />
-    <div v-if="controls?.filters.length" class="dt-filters" role="group" aria-label="筛选（点一下只看这类，再点排除这类）">
+    <div v-if="controls?.filters.length && (showFilters || filters.length)" class="dt-filters" role="group" aria-label="筛选（点一下只看这类，再点排除这类）">
       <button v-for="f in controls.filters" :key="f.key" class="dt-filter" type="button" :data-state="stateOf(f.key) ?? undefined" :aria-pressed="stateOf(f.key) === 'on'" :title="stateOf(f.key) === 'off' ? `已排除${f.label}（再点取消）` : stateOf(f.key) === 'on' ? `只看${f.label}（再点改为排除）` : `只看${f.label}`" :data-testid="`${testid}-filter-${f.key}`" @click="cycle(f.key)">
         <Icon v-if="stateOf(f.key) === 'off'" name="x" :size="11" />{{ f.label }}
       </button>
