@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef, watch } from 'vue'
-import type { Glossary, ShownFieldInfo } from '../rules/kernel/people'
+import type { Glossary, ShownFieldInfo, SpecialTraits, TraitChoices } from '../rules/kernel/people'
 import type { EntryRef } from '../library/scopes'
 import type { SheetEdit } from '../rules/kernel/frame/commands-sheet'
 import type { KernelChange } from '../schemas/kernel'
@@ -181,12 +181,12 @@ export const usePersonStore = defineStore('person', () => {
   /** 特殊特质页的官方各项与现值（只读）。 */
   async function specialTraits() {
     const key = ownerKey(); const who = id.value
-    return key && who ? serial(() => backend().specialTraits(key, who)) : null
+    return key && who ? serial(() => backend().shown<SpecialTraits>(key, 'specialTraits', who)) : null
   }
   /** 特质勾选页的官方选项（只读）。 */
   async function traitChoices(trait: string) {
     const key = ownerKey()
-    return key ? serial(() => backend().traitChoices(key, trait)) : null
+    return key ? serial(() => backend().shown<TraitChoices>(key, 'traitChoices', trait)) : null
   }
   async function fields(target: { itemId?: string; path: string }): Promise<ShownFieldInfo | null> {
     const key = ownerKey()

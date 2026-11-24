@@ -6,6 +6,7 @@
 // 旧做法拿翻译后的文字不分大小写反查语言键，"mar" 反查成了日历的“三月”缩写。
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方配置对象没有类型声明 */
 import type { FrameText } from '../shown'
+import { keyChain } from './system-text'
 
 const g = globalThis as any
 
@@ -59,7 +60,7 @@ function keysOfText(text: string): string[] {
 /** 名字 → 标好来路的语言键：给定的真实键在前，显示文字相同的其他键依次作退路（本战役语言包缺哪个退哪个）。 */
 export function nameText(text: string, own: string | null): FrameText | null {
   const keys = [...new Set([...(own && g.game.i18n.has(own) ? [own] : []), ...keysOfText(text)])]
-  return keys.reduceRight<FrameText | null>((fallback, key) => ({ $t: 'system', key, text, ...(fallback ? { fallback } : {}) }), null)
+  return keyChain(keys, text)
 }
 
 /** 运行时最终的一张表：编号 → 名字（按上面三种情况判断）。 */

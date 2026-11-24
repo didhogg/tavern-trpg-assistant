@@ -5,6 +5,7 @@
 import type { ActorGetter, Operate } from './commands-items'
 import { asData, fromAuthor, named } from '../shown'
 import { baseItemIds } from './author-classes'
+import { keyText } from './system-text'
 import { nameText } from './registry-keys'
 import { itemText } from './sheet-texts'
 import type { FrameText } from '../shown'
@@ -34,7 +35,8 @@ export interface FieldNode {
 /** 官方字段名 / 说明：语言键或已翻好的字；都过显示出口。 */
 function text(v: unknown): FrameText | null {
   if (typeof v !== 'string' || !v.trim()) return null
-  if (g.game.i18n.has(v)) return { $t: 'system', key: v, text: g.game.i18n.localize(v) } as FrameText
+  const own = keyText(v)
+  if (own) return own
   return nameText(v, null) ?? fromAuthor(v, null)
 }
 

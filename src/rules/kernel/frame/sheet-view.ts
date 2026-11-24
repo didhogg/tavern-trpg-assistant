@@ -11,6 +11,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- 官方文档 / 程序窗口对象没有类型声明。 */
 import { asData, fromEntry, joined, named, type FrameText } from '../shown'
 import { baseItemIds } from './author-classes'
+import { keyText } from './system-text'
 import { nameText, registryCodes } from './registry-keys'
 import { itemText } from './sheet-texts'
 
@@ -115,7 +116,7 @@ function embedded(v: string, names: Names): FrameText | null {
 function mark(v: any, texts: Set<string>, codes: Set<string>, names: Names): any {
   if (typeof v === 'string') {
     // ① 语言键：带点的键，或 Foundry 自己的单词键（"None" 这类，官方已拼进显示数据但没翻）
-    if (((v.includes('.') && !/\s/.test(v)) || /^[A-Z][A-Za-z]{2,}$/.test(v)) && g.game.i18n.has(v)) return { $t: 'system', key: v, text: g.game.i18n.localize(v) } satisfies FrameText
+    if ((v.includes('.') && !/\s/.test(v)) || /^[A-Z][A-Za-z]{2,}$/.test(v)) { const own = keyText(v); if (own) return own }
     // 只有数字、符号的（页码、年份）不是给人读的文字
     if (texts.has(v) && !codes.has(v) && /\p{L}/u.test(v)) return nameText(v, null) ?? fromEntry(v)
     return embedded(v, names) ?? v

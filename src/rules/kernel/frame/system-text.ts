@@ -43,3 +43,14 @@ export function systemText(text: string, key?: string): FrameText {
 export function generatedText(text: string): FrameText {
   return { $t: 'system', key: `TRPGAssistant.UpstreamText.${sha256Hex(normalize(text)).slice(0, 24)}`, text }
 }
+
+/** 一个确实存在的语言键 → 出处（显示文字由主线按同一语言取）；不存在 = null。语言键出处只从本文件产生。 */
+export function keyText(key: string): FrameText | null {
+  const i18n = g.game.i18n
+  return i18n.has(key) ? { $t: 'system', key, text: i18n.localize(key) } : null
+}
+
+/** 同一段原文对应的几个候选语言键：按顺序串成回退链（前一个取不到再取后一个）；没有键 = null。 */
+export function keyChain(keys: string[], text: string): FrameText | null {
+  return keys.reduceRight<FrameText | null>((fallback, key) => ({ $t: 'system', key, text, ...(fallback ? { fallback } : {}) }), null)
+}

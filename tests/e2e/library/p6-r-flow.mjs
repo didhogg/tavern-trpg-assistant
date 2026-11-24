@@ -20,7 +20,9 @@ page.on('pageerror', (e) => errors.push(String(e.message ?? e).slice(0, 300)))
 page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text().slice(0, 300)}`) })
 const shot = (name) => page.screenshot({ path: `${shots}/${name}.png` })
 const pinia = `(() => { const h = document.querySelector('#trpg-assistant-root'); return [...h.shadowRoot.children].map((c) => c.__vue_app__).find(Boolean).config.globalProperties.$pinia })()`
-const str = () => page.getByTestId('ps-ability-str').locator('span').innerText()
+// 属性卡：上半（调整值）点开设置，下半是属性值原地输入（照 Tidy5e AbilityScore）
+const str = () => page.getByTestId('ps-ability-str').locator('input').inputValue()
+const openStr = () => page.getByTestId('ps-ability-str').locator('.ps-ability-cfg').click()
 const saveEditor = async () => { await page.getByTestId('pf-save').click(); await page.getByTestId('field-editor').waitFor({ state: 'detached' }); await settle(page, 1200) }
 const undo = async () => { await page.getByTestId('ps-undo').click(); await settle(page, 1500) }
 try {
@@ -43,7 +45,7 @@ try {
   const str0 = await str()
 
   // ② 编辑窗口改一个数（力量底值），保存：数变了，别的都在
-  await page.getByTestId('ps-ability-str').click(); await page.getByTestId('field-editor').waitFor(); await settle(page, 800)
+  await openStr(); await page.getByTestId('field-editor').waitFor(); await settle(page, 800)
   await shot('01-editor-str')
   const input = page.locator('[data-path="system.abilities.str.value"] input')
   await input.fill('15')
@@ -54,7 +56,7 @@ try {
   // ③ 撤销：数回去，卡还读得出来；再撤销到加人之前，人从列表里消失（这是对的），再点回来是正常的人
   await undo()
   check('③ 撤销：力量回到原值、卡照常显示', (await str()) === str0 && (await page.getByTestId('ps-head').count()) === 1, await str())
-  await page.getByTestId('ps-ability-str').click(); await page.getByTestId('field-editor').waitFor(); await settle(page, 800)
+  await openStr(); await page.getByTestId('field-editor').waitFor(); await settle(page, 800)
   await page.locator('[data-path="system.abilities.str.value"] input').fill('14'); await saveEditor()
   await page.getByTestId('ps-back').click(); await settle(page, 800)
   await page.getByTestId('pp-row').filter({ hasText: '新人物' }).first().click(); await page.getByTestId('ps-head').waitFor(); await settle(page, 1200)
@@ -75,11 +77,12 @@ try {
   await page.getByTestId('ps-tab-effect').click(); await page.getByTestId('ps-effects').waitFor(); await settle(page, 500)
   await page.getByTestId('ps-cond-poisoned').click(); await settle(page, 1500)
   check('⑤ 点「中毒」→ 状态开着', (await page.getByTestId('ps-cond-poisoned').getAttribute('aria-pressed')) === 'true')
-  await page.getByTestId('ps-effects-add').click(); await page.getByTestId('add-effect').waitFor(); await settle(page, 1500)
+  // 照 Tidy5e：效果组头「＋」新建这一组的效果（被动 = 一直有效）
+  await page.getByTestId('ps-eff-add-passive').click(); await page.getByTestId('effect-page').waitFor(); await page.getByTestId('ae-name').waitFor(); await settle(page, 800)
   await page.getByTestId('ae-name').fill('巨力腰带（测试）')
-  await page.getByTestId('add-effect').getByRole('combobox').first().click(); await page.keyboard.type('力量'); await settle(page, 600)
+  await page.getByTestId('ae-changes').getByRole('combobox').first().click(); await page.keyboard.type('力量'); await settle(page, 600)
   await page.getByRole('option').filter({ hasText: /属性值/ }).first().click()
-  await page.getByTestId('ae-value').fill('1'); await page.getByTestId('ae-save').click(); await page.getByTestId('add-effect').waitFor({ state: 'detached' }); await settle(page, 1500)
+  await page.getByTestId('ae-value').fill('1'); await page.getByTestId('ae-save').click(); await page.getByTestId('effect-page').waitFor({ state: 'detached' }); await settle(page, 1500)
   await shot('04-effects')
   check('⑤ 添加效果：效果页出现「巨力腰带（测试）」', /巨力腰带（测试）/.test(await page.getByTestId('ps-effects').innerText()))
 

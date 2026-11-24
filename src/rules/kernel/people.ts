@@ -7,9 +7,10 @@ import type { KernelActorCompact, KernelSaveService } from '../../core/saves/ker
 import { isObject } from '../../core/saves/state'
 import type { EntryRef } from '../../library/scopes'
 import { kernelActorSchema, type KernelActor, type KernelChange } from '../../schemas/kernel'
-import type { FieldNode } from './frame/commands-fields'
 import type { SheetEdit } from './frame/commands-sheet'
 import type { Displayed, FrameText } from './shown'
+import type { FieldInfo } from './person-views'
+export type { FieldEffect, FieldInfo, ShownField, ShownFieldInfo, SpecialTraits, TraitChoices } from './person-views'
 import { executed } from './host'
 import { actorData } from './rebuild'
 import { baseName, nextNames } from './people-names'
@@ -29,21 +30,11 @@ export const PLAY_STATE: RegExp[] = [
   /^system\.attributes\.hd\.spent$/, /^system\.resources\.[^.]+\.spent$/,
 ]
 
-/** 特殊特质页：官方 characterFlags 按分组。 */
-export interface SpecialTraits { sections: Array<{ label: string; fields: Array<{ key: string; path: string; name: string; hint: string; type: 'boolean' | 'number' | 'string'; choices: Array<{ value: string; label: string }> | null; value: unknown }> }> }
-/** 特质勾选页的选项（官方 Trait.choices 摊平，depth = 层级）。 */
-export interface TraitChoices { trait: string; path: string; label: string; rows: Array<{ key: string; label: string; depth: number; selectable: boolean }>; bypasses: Array<{ key: string; label: string }>; communication: Array<{ key: string; label: string }> }
 export interface ChangedField { path: string; kind: 'state' | 'setting' }
 
 /** 小窗交回的编号名字（未过出口）；Glossary = 过了唯一显示出口的成品：tables[登记表名][编号] = 名字，statuses = 能开关的状态。 */
 interface FrameGlossary { tables: Record<string, Record<string, FrameText>>; statuses: Array<{ id: string; name: FrameText; img: string | null }> }
 export type Glossary = Displayed<FrameGlossary> & { untranslated?: string[] }
-/** 编辑窗口信息（小窗原样，FrameText 过出口后成字）。 */
-/** 改到某一块的效果（一条效果里的一项改动）：manual = 人物页“添加条目”加的手动效果。 */
-export interface FieldEffect { effect: string; itemId: string | null; name: FrameText | null; origin: FrameText | null; active: boolean; disabled: boolean; manual: boolean; key: string; keyLabel: FrameText | null; mode: FrameText | null; modeCode: string; value: string }
-export interface FieldInfo { tree: FieldNode | null; effects: FieldEffect[]; attribution: string | null; derived: unknown; modes: Array<{ value: string; label: FrameText }>; durationUnits?: Array<{ value: string; label: FrameText }> }
-export type ShownField = Displayed<FieldNode>
-export type ShownFieldInfo = Displayed<FieldInfo>
 
 /** 装人结果：legacy = 旧格式人物（只有整份内容，不能按引用重建）。 */
 export interface LoadedActor { id: string; name: string; status: 'complete' | 'missing' | 'pending' | 'error' | 'legacy'; error?: string; missing?: Array<{ label: string; reason: string }> }
@@ -170,18 +161,11 @@ export class KernelPeople {
     return { ...out, result: shown.value }
   }
 
-  /** 特殊特质（官方 characterFlags 逐项 + 现值）：只读，文字过唯一出口。 */
-  async specialTraits(ownerKey: string, actorId: string) {
-    const out = await this.call(ownerKey, 'specialTraits', actorId)
+  /** 只读的小窗取数并过唯一出口（特质选项 traitChoices、特殊特质 specialTraits……）：不写存档；没取成 = null。 */
+  async shown<T>(ownerKey: string, fn: string, ...args: unknown[]): Promise<T | null> {
+    const out = await this.call(ownerKey, fn, ...args)
     if (out.status !== 'complete') return null
-    return (await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result)).value as SpecialTraits
-  }
-
-  /** 特质的可选项（官方 Trait.choices，带层级；勾选页用）：只读，文字过唯一出口。 */
-  async traitChoices(ownerKey: string, trait: string) {
-    const out = await this.call(ownerKey, 'traitChoices', trait)
-    if (out.status !== 'complete') return null
-    return (await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result)).value as TraitChoices
+    return (await (await this.deps.runtime.displayFor(ownerKey, [])).show(out.result)).value as T
   }
 
   /** 官方物品筛选（人物页工具条筛选开关）：只读，交回通过的物品编号。 */

@@ -9,6 +9,7 @@ import { itemText } from './sheet-texts'
 import { itemForStateKey } from '../../../core/saves/state'
 import { sheetView } from './sheet-view'
 import { nameText, registryCaptured, statusKey, tableNames } from './registry-keys'
+import { keyText } from './system-text'
 
 const g = globalThis as any
 const NO_DIALOG = { configure: false }
@@ -207,7 +208,7 @@ export function createSheetCommands(operate: Operate, actor: ActorGetter, rollSu
         const p = parts.slice(0, n).join('.')
         const label = (p.startsWith('system.') ? doc.system?.schema?.getField(p.slice(7)) : doc.schema?.getField(p))?.label
         if (typeof label !== 'string' || !label) continue
-        const field = g.game.i18n.has(label) ? { $t: 'system', key: label, text: g.game.i18n.localize(label) } : nameText(label, null) ?? fromAuthor(label, null)
+        const field = keyText(label) ?? nameText(label, null) ?? fromAuthor(label, null)
         return { field, ...(m[1] ? { item: itemText(doc, []).name } : {}) }
       }
       return null

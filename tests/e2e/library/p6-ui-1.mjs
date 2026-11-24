@@ -85,13 +85,11 @@ try {
   await page.getByRole('button', { name: '用掉一颗' }).first().click(); await settle(page, 1500)
   await closeModal()
   check('生命骰用掉一颗', (await page.getByTestId('ps-hd').innerText()) !== hdBefore, `${hdBefore} → ${await page.getByTestId('ps-hd').innerText()}`)
-  await page.getByTestId('ps-exh').click(); await page.getByTestId('ps-drawer-exhaustion').waitFor(); await settle(page, 800); await shot('04-drawer-exh')
-  await page.getByRole('button', { name: '多一级' }).click(); await settle(page, 1500); await closeModal()
-  check('力竭 1 级', /力竭\s*1 级/.test(await page.getByTestId('ps-exh').innerText()))
-  await page.getByTestId('ps-death').click(); await page.getByTestId('ps-drawer-death').waitFor()
-  await page.getByTestId('ps-drawer-death').getByRole('group', { name: '死亡豁免成功' }).getByRole('button', { name: '设为 2' }).click(); await settle(page, 1500); await shot('05-drawer-death')
-  await closeModal()
-  check('死亡豁免成功 2', /成功 2/.test(await page.getByTestId('ps-death').innerText()))
+  // 力竭、死亡豁免照 Tidy5e 在页头直接点（ActorExhaustionBar / DeathSavesOverlay）
+  await page.getByTestId('ps-exh').getByRole('button', { name: '力竭 1 级' }).click(); await settle(page, 1500); await shot('04-exh')
+  check('力竭 1 级', /1$/.test((await page.getByTestId('ps-exh').innerText()).trim()), await page.getByTestId('ps-exh').innerText())
+  await page.getByTestId('ps-death').getByRole('button', { name: '成功 2' }).click(); await settle(page, 1500); await shot('05-death')
+  check('死亡豁免成功 2', (await page.getByTestId('ps-death').locator('[data-kind=success][data-on]').count()) === 2)
 
   // ---- 身份 / 头像 ----
   await page.getByTestId('ps-ident-edit').click(); await page.getByTestId('ps-drawer-identity').waitFor()
